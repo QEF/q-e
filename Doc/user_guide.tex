@@ -14,6 +14,7 @@
 \oddsidemargin = 0 cm
 
 \def\pw.x{\texttt{pw.x}}
+\def\cp.x{\texttt{cp.x}}
 \def\ph.x{\texttt{ph.x}}
 \def\configure{\texttt{configure}}
 \def\PWscf{\texttt{PWscf}}
@@ -379,7 +380,7 @@ in the "Contacts" page  of the \qe\ web site,
  \texttt{http://www.quantum-espresso.org/contacts.php} -- before 
 posting: many questions are asked over and over again.
 
-{\bf Important notice:} only messages that appear to come from the 
+NOTA BENE: only messages that appear to come from the 
 registered user's e-mail address, in its {\em exact form}, will be
 accepted. Messages "waiting for moderator approval" are
 automatically deleted with no further processing (sorry, too 
@@ -499,7 +500,7 @@ while others are specific to a single package:
                   (\texttt{pwcond.x})\\
 \texttt{vdW/}    &\texttt{VdW}: source files for molecular polarizability
                   calculation at finite frequency\\
-\texttt{CPV/}    &\CP: source files for Car-Parrinello code (\texttt{cp.x})\\
+\texttt{CPV/}    &\CP: source files for Car-Parrinello code (\cp.x)\\
 \texttt{atomic/} &\texttt{atomic}: source files for the pseudopotential
                    generation package (\texttt{ld1.x})\\
 \texttt{atomic\_doc/} &Documentation, tests and examples for \texttt{atomic}\\
@@ -557,28 +558,21 @@ Instructions for the impatient:
 Symlinks to executable programs will be placed in the
 \texttt{bin/}
 subdirectory. Note that both C and Fortran compilers must be in your execution
-path, as specified in the \texttt{PATH} variable.
+path, as specified in the PATH environment variable.
 
-Additional instructions for CRAY XT, NEC SX, Linux PowerPC machines with
-xlf:
+Additional instructions for CRAY XT, NEC SX, Linux PowerPC machines with xlf:
 \begin{verbatim}
     ./configure ARCH=crayxt4
     ./configure ARCH=necsx
     ./configure ARCH=ppc64-mn
 \end{verbatim}
-If you have problems or would like to tweak the default settings, read the
-detailed instructions below.
     
-For cross-compilation, you have to specify the target machine with the
-\texttt{--host} option. This feature has not been extensively
-tested, but we had at least one successful report (compilation for NEC
-SX6 on a PC). 
-    
-Specifically, \configure\ generates the following files:
+\configure\ Generates the following files:
 
 \begin{tabular}{ll}
 \texttt{install/make.sys} &      compilation rules and flags (used by \texttt{Makefile})\\
 \texttt{install/configure.msg} & a report of the configuration run (not needed for compilation)\\
+\texttt{install/config.log} & detailed log of the configuration run (may be needed for debugging)\\
 \texttt{include/fft\_defs.h} &    defines fortran variable for C pointer (used only by FFTW)\\
 \texttt{include/c\_defs.h} &      defines C to fortran calling convention\\
                            & and a few more definitions used by C files\\
@@ -609,8 +603,8 @@ Some environment variables that are relevant to \configure\ are:
 \texttt{MPIF90} &       name of parallel Fortran 95 compiler (using MPI)\\
 \texttt{CPP} &          source file preprocessor (defaults to \$CC -E)\\
 \texttt{LD} &           linker (defaults to \$MPIF90)\\
-\texttt{(C,F,F90,CPP,LD)FLAGS}& compilation/preprocessing/loader flags\\
-\texttt{LIBDIRS}&     extra directories to search for libraries (see below)\\
+\texttt{(C,F,F90,CPP,LD)FLAGS}& compilation/preprocessor/loader flags\\
+\texttt{LIBDIRS}&     extra directories where to search for libraries\\
 \end{tabular}\\
 For example, the following command line:
 \begin{verbatim}
@@ -630,12 +624,13 @@ environmental variables with \configure\ unless they are needed! try
 If your machine type is unknown to \configure, you may use the 
 \texttt{ARCH}
 variable to suggest an architecture among supported ones. Some large
-parallel machines using a front-end (e.g. Cray XT) may need to define
-the correct \texttt{ARCH}  even if they are apparently recognized, because
-\configure\ cannot figure out that cross-compilation is needed.
-Try the one that
-looks more similar to your machine type; you'll probably have to do some
-additional tweaking. Currently supported architectures are:\\
+parallel machines using a front-end (e.g. Cray XT) will actually
+need it, or else \configure\ will correctly recognize the front-end
+but not the specialized compilation environment of those
+machines. In some cases, cross-compilation requires to specify the target machine with the
+\texttt{--host} option. This feature has not been extensively
+tested, but we had at least one successful report (compilation 
+for NEC SX6 on a PC). Currently supported architectures are:\\
 \begin{tabular}{ll}
 \texttt{ia32}&    Intel 32-bit machines (x86) running Linux\\
 \texttt{ia64}&    Intel 64-bit (Itanium) running Linux\\
@@ -690,6 +685,12 @@ there as \texttt{make.sys.in} and contains explanations of the meaning
 of the various variables. The difficult part will be to locate libraries. For the
 choice of preprocessing flags, refer to the documentation in 
 \texttt{include/defs.h.README}.
+
+NOTA BENE: If you change any settings (e.g. preprocessing,
+compilation flags) 
+after a previous (successful or failed) compilation, you must run 
+\texttt{make clean} before recompiling, unless you know exactly which 
+routines are affected by the changed settings and how to force their recompilation.
 
 \subsection{Libraries}
 \label{Sec:Libraries}
@@ -778,11 +779,6 @@ and retry. For example:
 Beware that in this case, \configure\ will blindly accept the specified value,
 and won't do any extra search. 
     
-{\em Please note}: If you change any settings (e.g. preprocessing flags) 
-after a previous (successful or failed) compilation, you must run 
-\texttt{make clean} before recompiling, unless you know exactly which 
-routines are affected by the changed settings and how to force their recompilation.
-
 \subsection{Compilation}
 
 There are a few adjustable parameters in \texttt{Modules/parameters.f90}. 
@@ -888,8 +884,7 @@ The utility programs in  \texttt{pwtools/} are:
   suitable for plotting with XCrySDen, a powerful crystalline and
   molecular structure visualization program
   ( \texttt{http://www.xcrysden.org/}). BEWARE: the  \texttt{pwi2xsf.sh} shell script
-  requires the  \texttt{pwi2xsf.x} executables to be located somewhere in your
-  \$PATH. 
+  requires the  \texttt{pwi2xsf.x} executables to be located somewhere in your PATH. 
 \item  \texttt{band\_plot.x}: undocumented and possibly obsolete 
 \item  \texttt{bs.awk},  \texttt{mv.awk} are scripts that process the output of \pw.x (not
 data files!). Usage: 
@@ -917,46 +912,50 @@ Hanoi University). Compile with \texttt{make vdw}, executables in
 documentation yet, but an example in  \texttt{examples/example34}.
 
 \subsection{Running examples}
-
+\label{SubSec:Examples}
 As a final check that compilation was successful, you may want to run some or
-all of the examples contained within the examples directory of the 
-\qe\ distribution. Those examples try to exercise all the programs
-and features of the \qe\ distribution. A list of examples and
-of what each example does is contained in examples/README. For details,
-see the README file in each example's directory. If you find that any relevant
-feature isn't being tested, please contact us (or even better, write and send
-us a new example yourself !).
-     
+all of the examples. You should first of all ensure that you have downloaded 
+and correctly unpacked the package containing examples (since v.4.1 in a
+separate package). There are two
+different types of examples: 
+\begin{itemize}
+\item automated tests (in directories \texttt{tests/} 
+and \texttt{cptests/}). Quick and exhaustive, but not
+meant to be realistic, implemented only for \pw.x and \cp.x.
+\item examples (in directory \texttt{examples/}).
+Cover many more programs and features of the \qe\ distribution,
+but they require manual inspection of the results. 
+\end{itemize}
+
+Let us first consider the examples. A list of examples and
+of what each example does is contained in \texttt{examples/README}. 
+For details, see the \texttt{README} file in each example's directory. 
+If you find that any relevant feature isn't being tested, please contact us 
+(or even better, write and send us a new example yourself !).
+
 To run the examples, you should follow this procedure:
-
-    
-1. Go to the examples directory and edit the environment variables
-   file, setting the following variables as needed: 
-\begin{verbatim}
-   BIN_DIR= directory where executables reside
-   PSEUDO_DIR= directory where pseudopotential files reside
-   TMP_DIR= directory to be used as temporary storage area
-\end{verbatim}
-If you have downloaded the full \qe\ distribution, you may set 
-BIN\_DIR=\$TOPDIR/bin and PSEUDO\_DIR=\$TOPDIR/pseudo, where =\$TOPDIR
-is the root of the \qe\ source tree. In order to be able
-to run all the examples, the PSEUDO\_DIR directory must contain all the
-needed pseudopotentials. 
-If any of these are missing, you can download them (and many others)
-from the Pseudopotentials Page of the \qe\ web site
-(http://www.quantum-espresso.org/pseudo.php). TMP\_DIR must be a
-directory you 
-have read and write access to, with enough available space to host the
-temporary files produced by the example runs, and possibly offering
-high I/O performance (i.e., don't use an NFS-mounted directory). 
-
-2. If you have compiled the parallel version of \qe\ (this
+\begin{enumerate}   
+\item Go to the \texttt{examples/} directory and edit the 
+  \texttt{environment\_variables} file, setting the following variables as needed: 
+\begin{quote}
+   BIN\_DIR: directory where executables reside\\
+   PSEUDO\_DIR: directory where pseudopotential files reside\\
+   TMP\_DIR: directory to be used as temporary storage area
+\end{quote}
+The default values of BIN\_DIR and PSEUDO\_DIR should be fine, 
+unless you have installed things in nonstandard places. TMP\_DIR 
+must be a directory where you have read and write access to, with 
+enough available space to host the temporary files produced by the 
+example runs, and possibly offering high I/O performance (i.e., don't 
+use an NFS-mounted directory). NOTA BENE: do not use a
+directory containing other data, the examples wil clean it!
+\item If you have compiled the parallel version of \qe\ (this
 is the default if parallel libraries are detected), you will usually
-have to specify a driver program (such as poe or mpiexec) and the
-number of processors: see Sec.\ref{SubSec:para} for
-details. In order to do that, edit again the environment variables file
-and set the PARA\_PREFIX and PARA\_POSTFIX variables as needed. Parallel
-executables will be run by a command like this: 
+have to specify a driver program (such as \texttt{mpirun} or \texttt{mpiexec}) 
+and the number of processors: see Sec.\ref{SubSec:para} for
+details. In order to do that, edit again the \texttt{environment\_variables} file
+and set the PARA\_PREFIX and PARA\_POSTFIX variables as needed. 
+Parallel executables will be run by a command like this: 
 \begin{verbatim}
       $PARA_PREFIX pw.x $PARA_POSTFIX < file.in > file.out
 \end{verbatim}
@@ -966,12 +965,11 @@ For example, if the command line is like this (as for an IBM SP):
 \end{verbatim}
 you should set PARA\_PREFIX="poe", PARA\_POSTFIX="-procs
 4". Furthermore, if your machine does not support interactive use, you
-must run the commands specified below through the batch queueing
+must run the commands specified below through the batch queuing
 system installed on that machine. Ask your system administrator for
 instructions. 
-
-3. To run a single example, go to the corresponding directory (for
-   instance, example/example01) and execute: 
+\item To run a single example, go to the corresponding directory (e.g.
+ \texttt{example/example01}) and execute: 
 \begin{verbatim}
       ./run_example
 \end{verbatim}
@@ -983,31 +981,26 @@ on your system. To run all the examples in one go, execute:
       ./run_all_examples
 \end{verbatim}
 from the examples directory. On a single-processor machine, this
-typically takes a few hours. The make\_clean script cleans the
+typically takes a few hours. The \texttt{make\_clean} script cleans the
 examples tree, by removing all the results subdirectories. However, if
 additional subdirectories have been created, they aren't deleted. 
 
-4. In each example's directory, the reference subdirectory contains
+\item In each example's directory, the \texttt{reference/} subdirectory contains
 verified output files, that you can check your results against. They
 were generated on a Linux PC using the Intel compiler. On different
 architectures the precise numbers could be slightly different, in
 particular if different FFT dimensions are automatically selected. For
 this reason, a plain diff of your results against the reference data
 doesn't work, or at least, it requires human inspection of the
-results. Instead, you can run the  
-check\_example script in the examples directory:
-\begin{verbatim}
-      ./check_example example_dir
-\end{verbatim}
-where example dir is the directory of the example that you want to
-check (e.g., ./check\_example example01). You can specify multiple
-directories.  
+results. 
+\end{enumerate}
 
-{\em Note}: check\_example does only a fair job, and only for a few examples. 
-For \pw.x only, a much better series of automated tests is available in
-directory tests/. Edit variables PARA\_PREFIX, PARA\_POSTFIX (if
-needed) in file "check\_pw.x.j"; explanations on how to run it 
-are in the header of the file.
+Automated tests for \pw.x\ are in directory \texttt{tests/}. The
+file \texttt{tests/README} contains a list of what is tested.
+To run them, go into file \texttt{check\_pw.x.j}, edit variables 
+PARA\_PREFIX, PARA\_POSTFIX if needed, follow the
+explanations in the header of the files. Same for \cp.x,
+this time in directory \texttt{cptests/}.
 
 \subsection{Installation tricks and problems}
 
@@ -1018,10 +1011,11 @@ to compile \qe. Most ``Fortran-90'' compilers actually
 implement the Fortran-95 standard, but older versions 
 may not be Fortran-95 compliant. Moreover, 
 C and Fortran compilers must be in your PATH.
-If \configure says that you have no working compiler, you have 
-no working compiler.
-    
-If you get ``Compiler Internal Error'' or similar messages: your
+If \configure\ says that you have no working compiler, well,
+you have no working compiler, at least not in your PATH, and
+not among those recognized by \configure.
+
+If you get {\em Compiler Internal Error}' or similar messages: your
 compiler version is buggy. Try to lower the optimization level, or to
 remove optimization just for the routine that has problems. If it
 doesn't work, or if you experience weird problems at run time, try to 
@@ -1030,21 +1024,23 @@ at least a few patches for free), or to upgrade to a more recent
 compiler version.
 
 If you get error messages at the loading phase that look like 
-``file XYZ.o: unknown (unrecognized, invalid, wrong, missing, ... ) file
-type'', or  ``file format not recognized for file XYZ.a'', one of
-the following things have happened:
+{\em file XYZ.o: unknown / not recognized/ invalid / wrong
+file type / file format / module version},
+one of the following things have happened:
 \begin{enumerate}
 \item you have leftover object files from a compilation with another
-  compiler: run "make clean" and recompile. 
-\item make does not stop at the first compilation error (it may happen
-  in some software configurations). Remove file XYZ.o and look for the
-  compilation  error. 
+  compiler: run \texttt{make clean} and recompile. 
+\item \make\ did not stop at the first compilation error (it may 
+happen in some software configurations). Remove the file *.o
+that triggers the error message, recompile, look for a 
+compilation error. 
 \end{enumerate}
 If many symbols are missing in the loading phase: you did not specify the
 location of all needed libraries (LAPACK, BLAS, FFTW, machine-specific
 optimized libraries), in the needed order. 
-If only symbols from clib/ are missing, verify that
-you have the correct C-to-Fortran bindings, defined in include/c\_defs.h.
+If only symbols from \texttt{clib/} are missing, verify that
+you have the correct C-to-Fortran bindings, defined in 
+\texttt{include/c\_defs.h}.
 Note that \qe\ is self-contained (with the exception of MPI libraries for 
 parallel compilation): if system libraries are missing, the problem is in
 your compiler/library combination or in their usage, not in \qe.
@@ -1054,7 +1050,7 @@ your compiler, or your mathematical libraries, or MPI libraries,
 or a combination thereof, is very likely buggy. Although the 
 presence of subtle bugs in \qe\ that are not revealed during 
 the testing phase can never be ruled out, it is very unlikely
-that this happens on the previded tests and examples. 
+that this happens on the provided tests and examples. 
 
 \subsubsection{Cray XT machines}
 
@@ -1065,10 +1061,8 @@ machines: T3D, T3E, X1, are no longer supported.
 \subsubsection{IBM AIX}
 On IBM machines with ESSL libraries installed, there is a 
 potential conflict between a few LAPACK routines that are also part of ESSL, 
-but with a different calling sequence. The appearence of run-time errors like
-\begin{verbatim}
-    ON ENTRY TO ZHPEV  PARAMETER NUMBER  1 HAD AN ILLEGAL VALUE
-\end{verbatim}
+but with a different calling sequence. The appearence of run-time errors like {\em
+    ON ENTRY TO ZHPEV  PARAMETER NUMBER  1 HAD AN ILLEGAL VALUE}
 is a signal that you are calling the bad routine. If you have defined 
 \texttt{-D\_\_ESSL} you should load ESSL before LAPACK: see
 variable LAPACK\_LIBS in make.sys.
@@ -1087,39 +1081,34 @@ Currently the following compilers are supported by \configure:
 Intel (ifort), Portland (pgf90), g95, gfortran, Pathscale (pathf95), 
 Sun Studio (sunf95),  AMD Open64 (openf95). The ordering approximately
 reflects the quality of support. Both Intel MKL and AMD acml mathematical
-libraries are suppported. Some combinations of compilers and of libraries
-may however require manual editing of make.sys.
+libraries are supported. Some combinations of compilers and of libraries
+may however require manual editing of \texttt{make.sys}.
 
-It is convenient to create semi-statically linked executables (with only
-libc/libm/libpthread linked dynamically). If you want to produce a binary
+It is usually convenient to create semi-statically linked executables (with only
+libc, libm, libpthread dynamically linked). If you want to produce a binary
 that runs on different machines, compile it on the oldest machine you have
 (i.e. the one with the oldest version of the operating system).
 
-If you get errors like 
-\begin{verbatim}
-    IPO Error: unresolved : __svml_cos2
-\end{verbatim}
+If you get errors like {\em IPO Error: unresolved : \_\_svml\_cos2}
 at the linking stage, your compiler is optimized to use the SSE
 version of sine, cosine etc. contained in the SVML library. Append
-'-lsvml' to the list of libraries in your make.sys file (info by Axel
+\texttt{-lsvml} to the list of libraries in your \texttt{make.sys} file (info by Axel
 Kohlmeyer, oct.2007). 
 
 \paragraph{Linux PCs with Portland compiler (pgf90)}
 
 \qe\ does not work reliably, or not at all, with many old
-versions ($< 6.1$) of the Portland Group compiler 
-(http://www.pgroup.com/). Use the latest version of each 
+versions ($< 6.1$) of the Portland Group compiler (pgf90).
+ Use the latest version of each 
 release of the compiler, with patches if available (see
-the Portland Group web site).
+the Portland Group web site, \texttt{http://www.pgroup.com/}).
 
 \paragraph{Linux PCs with Pathscale compiler}
 
-Version 2.99 of the Pathscale compiler(http://www.pathscale.com/)
+Version 2.99 of the Pathscale EKO compiler (web site
+\texttt{http://www.pathscale.com/})
 works and is recognized by
-\configure, but the preprocessing step:
-\begin{verbatim}
-   pathcc -E
-\end{verbatim}
+\configure, but the preprocessing command, \texttt{pathcc -E},
 causes a mysterious error in compilation of iotk and should be replaced by
 \begin{verbatim}
    /lib/cpp -P --traditional
@@ -1129,40 +1118,37 @@ The MVAPICH parallel environment with Pathscale compilers also works.
 
 \paragraph{Linux PCs with gfortran}
 
-Gfortran v.4.1.2 and later are supported, but only the basic functionalities 
-(notably \pw.x) have been tested.  Earlier gfortran versions used to produce
-nonfunctional phonon executables (segmentation faults and the like). Since
-gfortran is evolving quickly, this may have changed meanwhile.
+gfortran v.4.1.2 and later are supported. Earlier gfortran versions used to produce nonfunctional phonon executables (segmentation faults and the like), but more recent versions should be fine.
 
 If you experience problems in reading files produced by previous versions
-of \qe: "gfortran used 64-bit record markers to allow writing of records 
+of \qe: ``gfortran used 64-bit record markers to allow writing of records 
 larger than 2 GB. Before with 32-bit record markers only records $<$2GB 
 could be written. However, this caused problems with older files and 
 inter-compiler operability. This was solved in GCC 4.2 by using 32-bit 
 record markers but such that one can still store $>$2GB records (following 
 the implementation of Intel). Thus this issue should be gone. See 4.2 
-release notes (item "Fortran") at http://gcc.gnu.org/gcc-4.2/changes.html."
+release notes (item ``Fortran") at 
+\texttt{http://gcc.gnu.org/gcc-4.2/changes.html}."
 (Info by Tobias Burnus, March 2010).
 
-"Using gfortran v.4.4 (after May 27, 2009) and 4.5 (after May 5, 2009) can 
+``Using gfortran v.4.4 (after May 27, 2009) and 4.5 (after May 5, 2009) can 
 produce wrong results, unless the environment variable
-\texttt{GFORTRAN\_UNBUFFERED\_ALL=1} is set. Newer 4.4/4.5 versions
-(later than $\sim$ beginning of April 2010) should be OK. See\\
+GFORTRAN\_UNBUFFERED\_ALL=1 is set. Newer 4.4/4.5 versions
+(later than April 2010) should be OK. See\\
 \texttt{http://gcc.gnu.org/bugzilla/show\_bug.cgi?id=43551}."
 (Info by Tobias Burnus, March 2010).
 
 \paragraph{Linux PCs with g95}
 
-G95 v.0.91 and later (http://www.g95.org) works flawlessy. 
+g95 v.0.91 and later (\texttt{http://www.g95.org}) works flawlessy. 
 The executables it produces are however slower (let us say 20\% or so) 
 that those produced by gfortran, which in turn are slower 
 (by another 20\% or so) than those produced by ifort.
 
 \paragraph{Linux PCs with Sun Studio compiler}
 
-``The Sun Studio compiler \\
-(http://developers.sun.com/sunstudio/) is
-free and comes  
+``The Sun Studio compiler, sunf95, is free (web site:
+\texttt{http://developers.sun.com/sunstudio/} and comes  
 with a set of algebra libraries that can be used in place of the slow 
 built-in libraries. It also supports openmp, which g95 does not. On the 
 other hand, it is a pain to compile mpi with it. Furthermore the most
@@ -1172,34 +1158,33 @@ input/output library (you'll have to compile it with reduced optimization).''
 
 \paragraph{Linux PCs with AMD Open64 suite}
 
-The AMD Open64 compiler suite\\
-(http://developer.amd.com/cpu/open64/pages/default.aspx)
+The AMD Open64 compiler suite, openf95 (web site:
+\texttt{http://developer.amd.com/cpu/open64/pages/default.aspx})
 can be freely downloaded from the AMD site.
-It is recognized by \configure but little tested. It sort of works 
+It is recognized by \configure\ but little tested. It sort of works 
 but it fails to pass several tests.
 (info by Paolo Giannozzi, March 2010).
 
 \paragraph{Linux PCs with Intel compiler (ifort)}
 
-The Intel compiler, ifort\\
- (http://software.intel.com/) is available for 
-free for personal usage. It seem to produce the faster executables, 
+The Intel compiler, ifort, is available for  free for personal 
+usage (\texttt{http://software.intel.com/})  It seem to produce the faster executables, 
 at least on Intel CPUs, but not all versions work as expected.
-ifort v.$<9.1$ are not recommanded, due to the presence of subtle 
+ifort versions $<9.1$ are not recommanded, due to the presence of subtle 
 and insidious bugs. In case of trouble, update your version with 
 the most recent patches,
 available via Intel Premier support (registration free of charge for Linux):
-http://software.intel.com/en-us/articles/intel-software-developer-support.
+\texttt{http://software.intel.com/en-us/articles/intel-software-developer-support}.
 
-If \configure doesn't find the compiler, or if you get 
-``Error loading shared libraries...'' at run time, you may have 
+If \configure\ doesn't find the compiler, or if you get 
+{\em Error loading shared libraries} at run time, you may have 
 forgotten to execute the script that
-sets up the correct path and library path. Unless your system manager has
+sets up the correct PATH and library path. Unless your system manager has
 done this for you, you should execute the appropriate script -- located in
 the directory containing the compiler executable -- in your
 initialization files. Consult the documentation provided by Intel. 
     
-The warning: ''feupdateenv is not implemented and will always fail'', 
+The warning: {\em feupdateenv is not implemented and will always fail}, 
 showing up in recent versions, can be safely ignored.
 Since each major release of ifort
 differs a lot from the previous one. compiled objects from different 
@@ -1210,8 +1195,9 @@ ifort 11.0.081, MKL 10.1.1.019, openMP 1.3.3. The problem disappeared
 with ifort 11.1.056 and MKL 10.2.2.025 (Carlo Nervi, Oct. 2009).
 
 {\bf ifort v.10:} on 64-bit AMD CPUs, at least some versions of ifort 10.1 
-miscompile subroutine write\_rho\_xml in Module/xml\_io\_base.f90 with -O2
-options. Using -O1 instead solves the problem (info by Carlo
+miscompile subroutine \texttt{write\_rho\_xml} in 
+\texttt{Module/xml\_io\_base.f90} with -O2
+optimization. Using -O1 instead solves the problem (info by Carlo
 Cavazzoni, March 2008). 
 
 "The intel compiler version 10.1.008 miscompiles a lot of codes (I have proof 
@@ -1219,11 +1205,8 @@ for CP2K and CPMD) and needs to be updated in any case" (info by Axel
 Kohlmeter, May 2008).
  
 {\bf ifort v.9:} The latest (July 2006) 32-bit version of ifort 9.1
-works flawlessy. Earlier versions yielded ``Compiler Internal Error''.
-
-At least some versions of ifort 9.0 have a buggy preprocessor that either
-prevents compilation of iotk, or produces runtime errors in cft3. Update
-to a more patched version.
+works flawlessy. Earlier versions yielded 
+{\em Compiler Internal Error}.
     
 \paragraph{Linux PCs with MKL libraries}
 On Intel CPUs it is very convenient to use Intel MKL libraries. They can be
@@ -1232,11 +1215,11 @@ libraries, and also together with non-Intel compilers. Note however
 that recent versions of MKL (10.2 and following) do not perform
 well on AMD machines.
 
-\configure should recognize properly installed MKL libraries.
+\configure\ should recognize properly installed MKL libraries.
 By default the non-threaded version of MKL is linked, unless option
 \texttt{configure --with-openmp} is specified. In case of trouble,
 refer to the following web page to find the correct way to link MKL:\\
-http://software.intel.com/en-us/articles/intel-mkl-link-line-advisor/
+\texttt{http://software.intel.com/en-us/articles/intel-mkl-link-line-advisor/}.
 
 MKL contains optimized FFT routines and a FFTW interface, to be separately
 compiled. For 64-bit Intel Core2 processors, they are slightly faster than 
@@ -1251,7 +1234,7 @@ and on the difference between MPI and OpenMP parallelization.
 \paragraph{Linux PCs with ACML libraries}
 For AMD CPUs, especially recent ones, you may find convenient to 
 link AMD acml libraries (can be freely downloaded from AMD web site). 
-\configure should recognize properly installed acml libraries,
+\configure\ should recognize properly installed acml libraries,
 together with the compilers most frequently used on AMD systems:
 pgf90, pathscale, openf95, sunf95.
 
@@ -1269,7 +1252,7 @@ recompile MPI libraries: not all MPI installations contain support for
 the fortran-90 compiler of your choice (or for any fortran-90 compiler
 at all!). Useful step-by-step instructions for MPI comilation can be 
 found in the following post by  Javier Antonio Montoya:\\
-http://www.democritos.it/pipermail/pw\_forum/2008April/008818.htm . 
+\texttt{http://www.democritos.it/pipermail/pw\_forum/2008April/008818.htm}. 
 
 If \qe\ does not work for some reason on a PC cluster,
 try first if it works in serial execution. A frequent problem with parallel
@@ -1279,7 +1262,7 @@ due to the configuration of MPI libraries: see Sec.\ref{SubSec:para}.
 If you are dissatisfied with the performances in parallel execution,
 see Sec.\ref{Sec:para} and in particular Sec.\ref{SubSec:badpara}.
 See also the following post from Axel Kohlmeyer:\\
-http://www.democritos.it/pipermail/pw\_forum/2008-April/008796.html
+\texttt{http://www.democritos.it/pipermail/pw\_forum/2008-April/008796.html}
 
 \subsubsection{Intel Mac OS X}
 
@@ -1302,14 +1285,15 @@ of Developer Tools (XCode 2.4.1 or 2.5), that can be downloaded from
 Apple. Some tests fails with mysterious errors, that disappear if
 fortran BLAS are linked instead of system Atlas libraries. Use: 
 \begin{verbatim}
+   BLAS_LIBS_SWITCH = internal
    BLAS_LIBS      = ../flib/blas.a -latlas
 \end{verbatim}
-(Info by Paolo Giannozzi, jan.2008)
+(Info by Paolo Giannozzi, jan.2008, updated for v.4.2 and following)
 
 \subsubsection{SGI, Alpha}
 
 SGI Mips machines (e.g. Origin) and HP-Compaq Alpha machines are
-no longer supported since v.\version.
+no longer supported since v.4.2.
 
 \newpage
 
@@ -1326,8 +1310,7 @@ on each CPU; each copy lives in a different world, with its own
 private set of data, and communicates with other executables only
 via calls to MPI libraries. MPI parallelization requires compilation 
 for parallel execution, linking with MPI libraries, execution using 
-a launcher program (poe, mpirun, mpiexec, or no launcher at all,
-depending upon the specific machine). The number of CPUs used
+a launcher program (depending upon the specific machine). The number of CPUs used
 is specified at run-time either as an option to the launcher or
 by the batch queue system. 
 \item {\em OpenMP}.  A single executable spawn subprocesses
@@ -1352,7 +1335,8 @@ Library OpenMP is a low-effort parallelization suitable for
 multicore CPUs. Its effectiveness relies upon the quality of 
 the multithreading libraries and the availability of 
 multithreading FFTs. If you are using MKL, you may want 
-to select FFTW3 and to link with the MKL interface to FFTW3. 
+to select FFTW3 (set {\texttt{CPPFLAGS=-D\_\_FFTW3...}
+in \texttt{make.sys}) and to link with the MKL interface to FFTW3. 
 You will get a decent speedup ($\sim 25$\%) on two cores.
 
 Explicit OpenMP is a very recent addition, still at an 
@@ -1371,10 +1355,12 @@ OpenMP-MPI parallelization.
 Parallel execution is strongly system- and installation-dependent. 
 Typically one has to specify:
 \begin{enumerate}
-\item a launcher program, such as poe, mpirun, mpiexec, with or
-  without  appropriate options 
+\item a launcher program (not always needed), 
+such as \texttt{poe}, \texttt{mpirun}, \texttt{mpiexec},
+  with the  appropriate options (if any);
 \item the number of processors, typically as an option to the launcher
-  program,  but in some cases to be specified after the program to be
+  program, but in some cases to be specified after the name of the
+  program to be
   executed; 
 \item the program to be executed, with the proper path if needed: for
   instance, \pw.x, or \texttt{./pw.x}, or \texttt{\$HOME/bin/pw.x}, or
@@ -1388,7 +1374,7 @@ Typically one has to specify:
 \item the number of ``task groups'' into which processors are to be
   grouped;
 \item the number of processors performing iterative diagonalization
-  (for \pw.x) or orthonormalization (for cp.x).
+  (for \pw.x) or orthonormalization (for \cp.x).
 \end{itemize}
 \end{enumerate}
 Items 1) and 2) are machine- and installation-dependent, and may be 
@@ -1410,28 +1396,28 @@ IBM SP machines, batch:
 This should also work interactively, with environment variables NPROC
 set to 16, MP\_HOSTFILE set to the file containing a list of processors.
 
-IBM SP machines, interactive, using poe:
+IBM SP machines, interactive, using \texttt{poe}:
 \begin{verbatim}
    poe pw.x -procs 16 -npool 8 < input
 \end{verbatim}
-PC clusters using mpiexec:
+PC clusters using \texttt{mpiexec}:
 \begin{verbatim}
    mpiexec -n 16 pw.x -npool 8 < input
 \end{verbatim}
-SGI Altix and PC clusters using mpirun:
+SGI Altix and PC clusters using \texttt{mpirun}:
 \begin{verbatim}   mpirun -np 16 pw.x -npool 8 < input
 \end{verbatim}
-IBM BlueGene using mpirun:
+IBM BlueGene using \texttt{mpirun}:
  \begin{verbatim}
   mpirun -np 16 -exe /path/to/executable/pw.x -args "-npool 8" \
     -in /path/to/input -cwd /path/to/work/directory
 \end{verbatim}
 If you want to run in parallel the examples distributed with \qe\
-(see section ''Run examples''), set PARA\_PREFIX to everything
+(see Sec.\ref{SubSec:Examples}), set PARA\_PREFIX to everything
 before the executable (\pw.x in the above examples),
 PARA\_POSTFIX to what follows it until the first redirection sign 
-($<, >, |,..$), if any. For execution using OpenMP, you can
-use PARA\_PREFIX="env OMP\_NUM\_THREADS=n"
+($<, >, |,..$), if any. For execution using OpenMP on N threads, 
+set  PARA\_PREFIX to \texttt{env OMP\_NUM\_THREADS=N}.
 
 \subsection{Parallelization levels}
 
@@ -1474,7 +1460,7 @@ can process several wavefunctions at the same time.
 A further level of parallelization, independent on
 plane-wave (pool) parallelization, is the parallelization of
 subspace diagonalization (\pw.x) or iterative orthonormalization
-(cp.x). Both operations required the diagonalization of 
+(\cp.x). Both operations required the diagonalization of 
 arrays whose dimension is the number of Kohn-Sham states
 (or a small multiple). All such arrays are distributed block-like
 across the "ortho group", a subgroup of the pool of processors,
@@ -1498,21 +1484,23 @@ command line switch: -nimage -npools -ntg can be used.
 The dimension of the ortho group is set to the largest
 value compatible with the number of processors and with
 the number of electronic states. The user can choose a smaller
-value using the command line switch -ndiag (\pw.x) or -northo (cp.x) .
+value using the command line switch {\texttt-ndiag} for \pw.x,
+\texttt{-northo} for \cp.x.
 As an example consider the following command line:
 \begin{verbatim}
 mpirun -np 4096 ./pw.x -nimage 8 -npool 2 -ntg 8 -ndiag 144 -input my.input
 \end{verbatim}
 This executes \PWscf on 4096 processors, to simulate a system
 with 8 images, each of which is distributed across 512 processors.
-K-points are distributed across 2 pools of 256 processors each, 
+k-points are distributed across 2 pools of 256 processors each, 
 3D FFT is performed using 8 task groups (64 processors each, so
 the 3D real-space grid is cut into 64 slices), and the diagonalization
 of the subspace Hamiltonian is distributed to a square grid of 144
 processors (12x12).
 
-Default values are: -nimage 1 -npool 1 -ntg 1 ; ndiag is chosen
-by the code as the fastest $n^2$ (n integer) that fits into the size
+Default values are: \texttt{-nimage 1 -npool 1 -ntg 1} ; 
+\texttt{ndiag} is chosen
+by the code as the largest $n^2$ (integer $n$) that fits into the size
 of each pool.
 
 \paragraph{Massively parallel calculations}
@@ -1532,12 +1520,12 @@ Since v.4.1, Scalapack can be used to diagonalize block distributed
 matrixes, yielding better speed-up than the default algorithms for
 large ($ > 1000$) matrices, when using a large number of processors 
 ($> 512$). If you want to test scalapack  you have to compile adding
--D\_\_SCALAPACK to DFLAGS in make.sys and you have to  
+\texttt{-D\_\_SCALAPACK} to DFLAGS in \texttt{make.sys} and you have to  
 modify the LAPACK\_LIBS variable as in the following example:
 \begin{verbatim}
 LAPACK_LIBS = -lscalapack -lblacs -lblacsF77init -lblacs -llapack
 \end{verbatim}
-The repeated -lblacs is not an error, it is needed! after Scalapack,
+The repeated \texttt{-lblacs} is not an error, it is needed! after Scalapack,
 Blacs, BlacsInit, Blacs again (with their paths if needed), then
 Lapack or a suitable replacement.
 
@@ -1566,10 +1554,11 @@ which in turn are faster than ACML.
 \subsubsection{Understanding parallel I/O}
 In parallel exeution, each processor has its own slice of wavefunctions, 
 to be written to temporary files during the calculation. The way wavefunctions 
-are written by \pw.x is governed by variable wf\_collect, in namelist control. 
-If wf\_collect=.true., the final wavefunctions are collected into a single 
+are written by \pw.x is governed by variable \texttt{wf\_collect}, 
+in namelist \&control. 
+If \texttt{wf\_collect=.true.}, the final wavefunctions are collected into a single 
 directory, written by a single processor, whose format is independent on 
-the number of processors. If wf\_collect=.false. (default) each processor
+the number of processors. If \texttt{wf\_collect=.false.} (default) each processor
 writes its own slice of the final 
 wavefunctions to disk in the internal format used by \PWscf. 
 
@@ -1582,28 +1571,31 @@ all files are on a file system that is visible to all processors
 way to ensure that the distribution of processes on processors will
 follow the same pattern for different jobs).
 
-cp.x instead always collects the final wavefunctions into a single directory.
-Files written by \pw.x can be read by cp.x only if wf\_collect=.true. (and if
+\cp.x instead always collects the final wavefunctions into a single directory.
+Files written by \pw.x can be read by \cp.x only if \texttt{wf\_collect=.true.} (and if
 produced for k=0 case). 
-
-With the new file format (v.3.1 and later) all data (except 
-wavefunctions in \pw.x if wf\_collect=.false.) is written to and read from
-a single directory outdir/prefix.save. A copy of pseudopotential files
-is also written there. If some processor cannot access outdir/prefix.save,
-it reads the pseudopotential files from the pseudopotential directory
-specified in input data. Unpredictable results may follow if those files
+The directory for data is specified in input variables
+\texttt{outdir} and \texttt{prefix} (the former can be specified
+as well in environment variable ESPRESSO\_TMPDIR):
+\texttt{outdir/prefix.save}. A copy of pseudopotential files
+is also written there. If some processor cannot access the
+data directory, the pseudopotential files are read instead
+from the pseudopotential directory specified in input data.
+Unpredictable results may follow if those files
 are not the same as those in the data directory!
 
+{\em IMPORTANT:}
 Avoid I/O to network-mounted disks (via NFS) as much as you can! 
-Ideally the scratch directory (ESPRESSO\_TMPDIR) should be a modern 
+Ideally the scratch directory \texttt{outdir} should be a modern 
 Parallel File System. If you do not have any, you can use local
 scratch disks (i.e. each node is physically connected to a disk
 and writes to it) but you may run into trouble anyway if you 
 need to access your files that are scattered in an unpredictable
 way across disks residing on different nodes.
 
-You can use option "disk\_io='minimal'", or even 'none', if you run
-into trouble (or angry system managers) with eccessive I/O with \pw.x. 
+You can use input variable \texttt{disk\_io='minimal'}, or even 
+\texttt{'none'}, if you run
+into trouble (or into angry system managers) with eccessive I/O with \pw.x. 
 The code will store wavefunctions into RAM during the calculation.
 Note however that this will increase your memory usage and may limit 
 or prevent restarting from interrupted runs.
@@ -1642,7 +1634,7 @@ Apart from the i/o issues the cray xt3 is a really nice and fast machine.
 Some implementations of the MPI library have problems with input 
 redirection in parallel. This typically shows up under the form of
 mysterious errors when reading data. If this happens, use the option 
--in (or -inp or -input), followed by the input file name. 
+\texttt{-in} (or \texttt{-inp} or \texttt{-input}), followed by the input file name. 
 Example:
 \begin{verbatim}
    pw.x -in inputfile npool 4 > outputfile
@@ -1653,8 +1645,8 @@ input file must be accessible by the processor that must read it
 its contents to all other processors).
 
 Apparently the LSF implementation of MPI libraries manages to ignore or to
-confuse even the -in/inp/input mechanism that is present in all
-\qe\ codes. In this case, use the -i option of mpirun.lsf
+confuse even the \texttt{-in/inp/input} mechanism that is present in all
+\qe\ codes. In this case, use the \texttt{-i} option of \texttt{mpirun.lsf}
 to provide an input file.
 
 \paragraph{Trouble with MKL and MPI parallelization}
@@ -1666,7 +1658,7 @@ OMP\_NUM\_THREADS to 1 to disable it.
 Note that if for some reason the correct setting  of variable
 OMP\_NUM\_THREADS  
 does not propagate to all processors, you may equally run into trouble. 
-Lorenzo Paulatto (Nov. 2008) suggests to use the "-x" option to "mpirun" to 
+Lorenzo Paulatto (Nov. 2008) suggests to use the \texttt{-x} option to \texttt{mpirun} to 
 propagate OMP\_NUM\_THREADS to all processors.
 Axel Kohlmeyer suggests the following (April 2008): 
 "(I've) found that Intel is now turning on multithreading without any
@@ -1677,15 +1669,18 @@ actually lose performance. Also if you use the 'numactl' tool on linux
 to bind a job to a specific cpu core, MKL will still try to use all
 available cores (and slow down badly). The cleanest way of avoiding
 this mess is to either link with
-\begin{verbatim}
--lmkl_intel_lp64 -lmkl_sequential -lmkl_core (on 64-bit: x86_64, ia64)
--lmkl_intel -lmkl_sequential -lmkl_core (on 32-bit, i.e. ia32 )
-\end{verbatim}
-or edit the libmkl\_'platform'.a file (I'm using now a file libmkl10.a with:
+\begin{quote}
+\texttt{-lmkl\_intel\_lp64 -lmkl\_sequential -lmkl\_core} (on 64-bit: 
+x86\_64, ia64)\\
+\texttt{-lmkl\_intel -lmkl\_sequential -lmkl\_core} (on 32-bit, i.e. ia32 )
+\end{quote}
+or edit the \texttt{libmkl\_'platform'.a} file. I'm using now a file 
+\texttt{libmkl10.a} with:
 \begin{verbatim}
   GROUP (libmkl_intel_lp64.a libmkl_sequential.a libmkl_core.a)
 \end{verbatim}
-It works like a charm".
+It works like a charm". UPDATE: Since v.4.2, \configure\ links by
+default MKL without multithreaded support.
 
 \paragraph{Trouble with compilers and MPI libraries}
 Many users of \qe, in particular those working on PC clusters,
@@ -1696,7 +1691,7 @@ in \qe, but more often than not are a consequence of buggy
 compilers or of buggy or miscompiled MPI libraries. Very useful step-by-step 
 instructions to compile and install MPI libraries
 can be found in the following post by Javier Antonio Montoya:\\
-http://www.democritos.it/pipermail/pw\_forum/2008-April/008818.htm .
+\texttt{http://www.democritos.it/pipermail/pw\_forum/2008-April/008818.htm}.
 
 On a Xeon quadriprocessor cluster, erratic crashes in parallel
 execution have been reported, apparently correlated with ifort 10.1
@@ -1809,7 +1804,7 @@ low symmetry cases. Variables prefix and outdir, which determine
 the names of input or output files, should be the same in the two runs.\\
 See Example 01.
 
-{\bf Important:} until v.4.0, atomic positions for a non scf calculations 
+NOTA BENE: until v.4.0, atomic positions for a non scf calculations 
 were read from input, while the scf potential was read from the data file
 of the scf calculation. Since v.4.1, both atomic positions and the scf
 potential are read from the data file so that consistency is guaranteed.
@@ -1925,7 +1920,7 @@ on a different machine, you need to convert the binary files to formatted
 and back, using the ''bin/iotk'' script.
 
 The execution stops if you create a file "prefix.EXIT" in the working 
-directory. IMPORTANT NOTE: this is the directory where the program 
+directory. NOTA BENE: this is the directory where the program 
 is executed, NOT the directory "outdir" defined in input, where files 
 are written. Note that with some versions of MPI, the "working directory" 
 is the directory where the \pw.x executable is! The advantage of this 
@@ -2229,7 +2224,7 @@ you need to re-run the electronic minimization stage. Use the input
 of the first run, changing restart\_mode = 'from\_scratch' to 
 restart\_mode = 'restart'.
    
-\paragraph{Important} Unless you are already experienced with the system 
+NOTA BENE: Unless you are already experienced with the system 
 you are studying or with the internals of the code, you wil usually need 
 to tune some input parameters, like emass, dt, and cut-offs. For this 
 purpose, a few trial runs could be useful: you can perform short
@@ -2425,7 +2420,7 @@ ion\_velocities ='from\_input', and add the IONIC\_VELOCITIES
 card, after the ATOMIC\_POSITION card, with the list of velocities in 
 atomic units.
 
-{\em IMPORTANT:} in restarting the dynamics after the first CP run,
+NOTA BENE: in restarting the dynamics after the first CP run,
 remember to remove or comment the velocities parameters:
 \begin{verbatim}
            &electrons

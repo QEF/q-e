@@ -1,4 +1,4 @@
-Incompatible changes in version 5.0:
+Incompatible changes in version 4.2:
 
 * changed defaults:
   startingwfc='atomic+random' in pw.x (instead of 'atomic')
@@ -19,7 +19,7 @@ Incompatible changes in version 5.0:
   many processors to use for orthonormalization/subspace diagonalization
 * "stm_wfc_matching" removed from stm.x
 
-New in version 5.0:
+New in version 4.2:
 
   * Removal of duplicated and unused routines
   * Major reorganization of the distribution itself: external packages
@@ -34,9 +34,12 @@ New in version 5.0:
   * Bug fixes and output cleanup for cp.x autopilot
   * Parallel symmetrization in G-space
 
-Fixed in version 5.0:
+Fixed in version 4.2:
 
   * A few occurrences of uninitialized variables and of incorrect INTENT
+
+  * The value of DFT set in input (instead of DFT read from PP files) was
+    ignored by all codes using the data file (phonon, postprocessing, etc)
 
   * PW: glitches in restart (now it works also with exact exchange)
 

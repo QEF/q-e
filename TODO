@@ -1,4 +1,4 @@
-TODO LIST - April 2010
+TODO LIST - May 2010
 
 1) Organization
 
@@ -105,8 +105,7 @@ TODO LIST - April 2010
   4.2.11 Gamma: same input as for PH
   4.2.12 Cleanup of the 'prefix.EXIT' stuff. Stop with signals?
          Also: stop with 'prefix.EXIT' and restart in D3 and Gamma (KK)
-  4.2.13 PP, PH, etc., should read and use DFT written to xml file 
-  4.2.14 Various defaults for CP (proposed from Princeton):
+  4.2.13 Various defaults for CP (proposed from Princeton):
        - emass(emass=300), dt (dt=7), for preconditioning cutoff (3)
        - automatic box grid for USPP from radii of augmented charge
       - Electronic minimization: damp as default, sd discouraged
@@ -139,12 +138,12 @@ TODO LIST - April 2010
         dt=sqrt(2) dt_default and emass should be increased so to keep
         emass^2/dt constant
       - defaults for the Nose thermostat
-  4.2.15 Add rotation of restart files, similar to what is done in CPMD:
+  4.2.14 Add rotation of restart files, similar to what is done in CPMD:
 	"The number of distinct RESTART files generated during CPMD runs
          is read from the next line. The restart files are written in turn.
          Default is 1. If you specify e.g. 3, then the files RESTART.1,
          RESTART.2, RESTART.3 are used in rotation."
-  4.2.16 EXX preprocessing should be removed, or at least it should be 
+  4.2.15 EXX preprocessing should be removed, or at least it should be 
          confined to just some specialized parts of the code.
 
 4.3 Performance enhancements/Parallelization:
@@ -175,7 +174,7 @@ TODO LIST - April 2010
           other modules
   4.4.2 Avoid monster routines that do too many things at the same time
         depending on the value of too many variables. An example:
-        read_file
+        read_file, readpp
   4.4.3 There is some confusion in the various initialization steps:
          - default values at startup
          - reading of the input data and copy into internal variables
