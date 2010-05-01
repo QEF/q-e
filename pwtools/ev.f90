@@ -1,10 +1,19 @@
 !
-! Copyright (C) 2003 PWSCF group
+! Copyright (C) 2003-2010 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+! Last edition:
+! Date: April 30, 2010
+! Author: Eyvaz Isaev 
+! Department of Physics, Chemistry and Biology (IFM), Linkoping University, Sweden
+! 
+! a) Input: Add lattice parameters units: au or Ang
+! b) Output: More info printed out
+! c) Output: Additional output file with E+PV
+! 
 PROGRAM ev
 !
 !      fit of E(v) to an equation of state (EOS)
@@ -34,14 +43,24 @@ PROGRAM ev
 !            Pfit is the corresponding pressure from the EOS
 !
       USE kinds, only: DP
+      USE constants, only: bohr_radius_angs, ry_kbar
       IMPLICIT NONE
       INTEGER nmaxpar, nmaxpt, nseek, nmin, npar,npt,istat
       PARAMETER(nmaxpar=4, nmaxpt=100, nseek=10000, nmin=4)
-      CHARACTER bravais*3, filin*256
+      CHARACTER bravais*3, au_unit*3, filin*256
       REAL(DP) par(nmaxpar), deltapar(nmaxpar), parmin(nmaxpar), &
              parmax(nmaxpar), v0(nmaxpt), etot(nmaxpt), efit(nmaxpt), &
              fac, emin, chisq, a
+      LOGICAL :: convert_to_au
 !
+!
+      PRINT '(5x,''Lattice parameter or Volume are in '', &
+             &   ''(au, Ang) > '',$)' 
+      READ '(a)', au_unit
+      convert_to_au = au_unit.eq.'Ang' .or. au_unit.eq.'ANG' .or. &
+                        au_unit.eq.'ang'
+      IF (convert_to_au) PRINT '(5x,"Assuming Angstrom")'
+ 
       PRINT '(5x,''Enter type of bravais lattice '', &
              &   ''(fcc, bcc, sc, hex) > '',$)'
       READ '(a)',bravais
@@ -78,8 +97,10 @@ PROGRAM ev
       DO npt=1,nmaxpt
          IF (bravais.EQ.'hex'.OR.bravais.EQ.'HEX') THEN
             READ(2,*,err=10,END=20) v0(npt), etot(npt) 
+	    IF (convert_to_au) v0(npt)=v0(npt)/bohr_radius_angs**3
          ELSE
-            READ(2,*,err=10,END=20) a, etot(npt) 
+            READ(2,*,err=10,END=20) a, etot(npt)
+	    IF (convert_to_au) a = a/bohr_radius_angs
             v0  (npt) = fac*a**3
          END IF
          IF(etot(npt).LT.emin) THEN
@@ -120,25 +141,23 @@ PROGRAM ev
 !
       CALL write_results &
            (npt,bravais,fac,v0,etot,efit,istat,par,npar,emin,chisq)
-
-CONTAINS
-
+!
+      STOP
+    CONTAINS  
+!
 !-----------------------------------------------------------------------
       SUBROUTINE eqstate(npar,par,chisq)
 !-----------------------------------------------------------------------
 !
-      USE kinds, only: DP
       IMPLICIT NONE
       INTEGER nmaxpt, npar, i
       PARAMETER( nmaxpt=100 )
-      REAL(DP) par(npar), k0, dk0, d2k0, c0, c1, x, &
-             vol0, ddk, conv_atomic_unit, chisq
-      PARAMETER ( conv_atomic_unit=6.79777d-6 )
+      REAL(DP) par(npar), k0, dk0, d2k0, c0, c1, x, vol0, ddk, chisq
 !
       vol0 = par(1)
-      k0   = par(2)*conv_atomic_unit ! converts k0 to atomic units...
+      k0   = par(2)/ry_kbar ! converts k0 to Ry atomic units...
       dk0  = par(3)
-      d2k0 = par(4)/conv_atomic_unit ! and d2k0/dp2 ito (a.u.)^(-1)
+      d2k0 = par(4)*ry_kbar ! and d2k0/dp2 to (Ry a.u.)^(-1)
 !
       IF(istat.EQ.1.OR.istat.EQ.2) THEN
          IF(istat.EQ.1) THEN
@@ -182,23 +201,21 @@ CONTAINS
           chisq   = chisq + (etot(i)-efit(i))**2
       ENDDO
       chisq = chisq/npt
-
-      END SUBROUTINE
-
+!
+      RETURN
+    END SUBROUTINE eqstate
+!
 !-----------------------------------------------------------------------
       SUBROUTINE write_results &
             (npt,bravais,fac,v0,etot,efit,istat,par,npar,emin,chisq)
 !-----------------------------------------------------------------------
 !
-      USE kinds, only: DP
-      USE constants, only: BOHR_RADIUS_SI
       IMPLICIT NONE
       INTEGER npt, istat, npar, i, iun, ios
       CHARACTER filout*256, bravais*3
       REAL(DP) v0(npt), etot(npt), efit(npt), par(npar), emin, chisq, fac
-      REAL(DP) p(npt), convfact
+      REAL(DP) p(npt), epv(npt)
 
-      convfact=BOHR_RADIUS_SI*1.e10_DP 
  10   CONTINUE
       PRINT '(5x,''Output file > '',$)'
       READ '(a)',filout
@@ -239,30 +256,61 @@ CONTAINS
             p(i)=keane(v0(i)/par(1),par(2),par(3),par(4))
          END DO
       END IF
+      
+      do i=1,npt
+         epv(i) = etot(i) + p(i)*v0(i) / ry_kbar
+      enddo
 
       IF(bravais.NE.'hex'.AND.bravais.NE.'HEX') THEN
-         WRITE(iun,'(''# a0 ='',f7.3,'' a.u., k0 ='',i5,'' kbar, dk0 ='', &
+         WRITE(iun,'(''# a0 ='',f6.2,'' a.u., k0 ='',i5,'' kbar, dk0 ='', &
                     &f6.2,'' d2k0 ='',f7.3,'' emin ='',f11.5)') &
             (par(1)/fac)**(1d0/3d0), INT(par(2)), par(3), par(4), emin
-         WRITE(iun,'(''# a0 ='',f7.3,'' A,   V0 ='',f7.3,'' (a.u.)^3,  V0 ='', &
+         WRITE(iun,'(''# a0 ='',f7.3,'' Ang, k0 ='', f6.1,'' GPa,  V0 = '',f7.3,'' (a.u.)^3,  V0 ='', &
                     &f7.3,'' A^3 '',/)') &
-              (par(1)/fac)**(1d0/3d0)*convfact, par(1), &
-            par(1)*convfact**3
-         WRITE(iun,'(f7.3,2f12.5,3x,f8.2,3x,f12.5)') &
-              ( (v0(i)/fac)**(1d0/3d0), etot(i), efit(i), p(i), &
-              etot(i)-efit(i), i=1,npt ) 
+              (par(1)/fac)**(1d0/3d0)*bohr_radius_angs, par(2)/10, par(1), &
+           &  par(1)*bohr_radius_angs**3
+
+
+	write(iun,'(73("#"))') 
+	write(iun,'("# Lat.Par", 5x, "E_calc", 8x, "E_fit", 7x, &
+	     & "E_diff", 4x, "Pressure", 6x, "Enthalpy")')
+	write(iun,'("# Ang", 11x, "Ry", 11x, "Ry", 12x, &
+	     & "Ry", 8x, "GPa", 11x, "Ry")')
+	write(iun,'(73("#"))') 
+
+
+         WRITE(iun,'(f7.3,2x,f12.5, 2x,f12.5, f12.5, 3x, f8.2, 3x,f12.5)') &
+              & ( (v0(i)/fac)**(1d0/3d0)*bohr_radius_angs, etot(i), efit(i),  &
+              & etot(i)-efit(i), p(i), epv(i), i=1,npt ) 
       ELSE
-         WRITE(iun,'(''# V0 ='',f8.2,''  k0 ='',i5,'' kbar,  dk0 ='', &
-                    & f6.2,''  d2k0 ='',f7.3,''  emin ='',f11.5/)') &
-                     par(1), INT(par(2)), par(3), par(4), emin
-         WRITE(iun,'(f8.2,2f12.5,3x,f8.2,3x,f12.5)') &
-             ( v0(i), etot(i), efit(i), p(i), etot(i)-efit(i), i=1,npt )
+         WRITE(iun,'(''# V0 ='',f8.2,'' a.u.^3,  k0 ='',i5,'' kbar,  dk0 ='', &
+                    & f6.2,''  d2k0 ='',f7.3,''  emin ='',f11.5)') &
+                    & par(1), INT(par(2)), par(3), par(4), emin
+
+
+         WRITE(iun,'("# V0 =",f8.2,"  Ang^3,  k0 =",f6.1," GPa"/)') &
+                    & par(1)*bohr_radius_angs**3, par(2)/10 
+
+
+	write(iun,'(74("#"))') 
+	write(iun,'("# Vol.", 8x, "E_calc", 8x, "E_fit", 7x, &
+	     & "E_diff", 4x, "Pressure", 6x, "Enthalpy")')
+	write(iun,'("# Ang^3", 9x, "Ry", 11x, "Ry", 12x, &
+	     & "Ry", 8x, "GPa", 11x, "Ry")')
+	write(iun,'(74("#"))') 
+
+
+         WRITE(iun,'(f8.2,2x,f12.5, 2x,f12.5, f12.5, 3x, f8.2, 3x,f12.5)') &
+              ( v0(i)*bohr_radius_angs**3, etot(i), efit(i),  &
+               etot(i)-efit(i), p(i), epv(i), i=1,npt ) 
+
+
       END IF
 
       IF(filout.NE.' ') CLOSE(unit=iun)
-
-      END SUBROUTINE
-
+      RETURN
+    END SUBROUTINE write_results
+!
 !-----------------------------------------------------------------------
       SUBROUTINE find_minimum &
          (npar,par,deltapar,parmin,parmax,nseek,nmin,chisq)
@@ -270,7 +318,6 @@ CONTAINS
 !
 !     Very Stupid Minimization
 !
-      USE kinds, only: DP
       USE random_numbers, ONLY : randy
       IMPLICIT NONE
       INTEGER maxpar, nseek, npar, nmin, n,j,i
@@ -306,13 +353,12 @@ CONTAINS
       ENDDO
 !
       CALL eqstate(npar,par,chisq)
-
-      END SUBROUTINE find_minimum
-
-
+!
+      RETURN
+    END SUBROUTINE find_minimum
+!
       FUNCTION birch(x,k0,dk0,d2k0)
-
-      USE kinds, only: DP
+!
       IMPLICIT NONE
       REAL(DP) birch, x, k0,dk0, d2k0
       REAL(DP) c0, c1
@@ -328,19 +374,16 @@ CONTAINS
            +(       c1-3*c0)*x**( -9.0d0/3d0) &
            +(            c0)*x**(-11.0d0/3d0) )
       RETURN
-      END FUNCTION birch
-
-
+    END FUNCTION birch
+!     
       FUNCTION keane(x,k0,dk0,d2k0)
-
-      USE kinds, only: DP
+!     
       IMPLICIT NONE
       REAL(DP) keane, x, k0, dk0, d2k0, ddk
-
+      
       ddk = dk0 + k0*d2k0/dk0
       keane = k0*dk0/ddk**2*( x**(-ddk) - 1d0 ) + (dk0-ddk)/ddk*LOG(x)
-
-      END FUNCTION keane
-
-END PROGRAM ev
-
+      
+      RETURN
+    END FUNCTION keane
+  END PROGRAM ev
