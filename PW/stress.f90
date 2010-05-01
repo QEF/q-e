@@ -29,6 +29,10 @@ subroutine stress
   USE bp,            ONLY : lelfield
   USE uspp,          ONLY : okvan
   USE london_module, ONLY : stres_london
+#ifdef EXX
+  USE exx,           ONLY : exx_stress
+  USE funct,         ONLY : dft_is_hybrid, exx_is_active
+#endif
   !
   implicit none
   !
@@ -36,7 +40,9 @@ subroutine stress
        sigmaxc (3, 3), sigmaxcc (3, 3), sigmaewa (3, 3), sigmanlc (3, 3), &
        sigmabare (3, 3), sigmah (3, 3), sigmael( 3, 3), sigmaion(3, 3), &
        sigmalon ( 3 , 3 )
-
+#ifdef EXX
+  real(DP) :: sigmaexx(3,3)
+#endif
   integer :: l, m
   !
   WRITE( stdout, '(//5x,"entering subroutine stress ..."/)')
@@ -121,7 +127,15 @@ subroutine stress
                sigmaxc(:,:) + sigmaxcc(:,:) + sigmaewa(:,:) + &
                sigmanlc(:,:) + sigmah(:,:) + sigmael(:,:) +  &
                sigmaion(:,:) + sigmalon(:,:)
-
+#ifdef EXX
+  if (dft_is_hybrid()) then
+    sigmaexx = exx_stress()
+    CALL symmatrix ( sigmaexx )
+    sigma(:,:) = sigma(:,:) + sigmaexx(:,:)
+  else
+    sigmaexx = 0.d0
+  endif
+#endif
   ! Resymmetrize the total stress. This should not be strictly necessary,
   ! but prevents loss of symmetry in long vc-bfgs runs
 
@@ -144,6 +158,11 @@ subroutine stress
      (sigmaewa(l,1)*uakbar,sigmaewa(l,2)*uakbar,sigmaewa(l,3)*uakbar, l=1,3),&
      (sigmah  (l,1)*uakbar,sigmah  (l,2)*uakbar,sigmah  (l,3)*uakbar, l=1,3),&
      (sigmalon(l,1)*uakbar,sigmalon(l,2)*uakbar,sigmalon(l,3)*uakbar, l=1,3)
+#ifdef EXX
+  if (iverbosity.ge.1) WRITE( stdout, 9006) &
+     (sigmaexx(l,1)*uakbar,sigmaexx(l,2)*uakbar,sigmaexx(l,3)*uakbar, l=1,3)
+9006 format (5x,'EXX     stress (kbar)',3f10.2/2(26x,3f10.2/)/ )
+#endif
 
   if(lelfield .and. iverbosity >= 1) then
      write(stdout,*) "Stress tensor electronic el field part:"

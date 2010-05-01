@@ -575,7 +575,6 @@ CONTAINS
        IF ( nks > 1 ) THEN
           READ( iunigk ) igk
           CALL get_buffer (tempevc, nwordwfc, iunwfc, ik)
-          !!! call davcio (tempevc, 2*nwordwfc, iunwfc, ik, -1 )
        ELSE
           tempevc(1:npwx,1:nbnd) = evc(1:npwx,1:nbnd)
        ENDIF
@@ -1283,5 +1282,225 @@ CONTAINS
      return
   end function exx_divergence 
   
+
+
+
+  !-----------------------------------------------------------------------
+  FUNCTION exx_stress()
+  !-----------------------------------------------------------------------
+  !
+  ! This is Eq.(10) of PRB 73, 125120 (2006).
+  !
+  USE constants, ONLY : fpi, e2, pi, tpi
+  USE io_files,  ONLY : iunigk,iunwfc, nwordwfc
+  USE buffers,   ONLY : get_buffer
+  USE cell_base, ONLY : alat, omega, bg, at, tpiba
+  USE symm_base,ONLY : nsym, s
+  USE gvect,     ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, ngm
+  USE gsmooth,   ONLY : nls, nlsm, nr1s, nr2s, nr3s, &
+                        nrx1s, nrx2s, nrx3s, nrxxs, doublegrid
+  USE wvfct,     ONLY : nbnd, npwx, npw, igk, wg, current_k
+  USE control_flags, ONLY : gamma_only
+  USE wavefunctions_module, ONLY : evc
+  USE klist,     ONLY : xk, ngk, nks
+  USE lsda_mod,  ONLY : lsda, current_spin, isk
+  USE gvect,     ONLY : g, nl
+  USE mp_global,  ONLY : inter_pool_comm, intra_pool_comm, inter_image_comm
+  USE mp_global,  ONLY : my_image_id, nimage
+  USE mp,         ONLY : mp_sum
+  ! ---- local variables -------------------------------------------------
+  IMPLICIT NONE
+  real (dp)   :: exx_stress(3,3), exx_stress_(3,3)
+  complex(dp), allocatable :: tempphic(:), temppsic(:)
+  complex(dp), allocatable :: rhoc(:)
+  real(dp), allocatable :: fac(:), fac_tens(:,:,:), fac_stress(:)
+  integer :: jbnd, ibnd, ik, ikk, ig, ikq, iq, isym
+  integer :: half_nbnd, h_ibnd, nqi, iqi
+  real(dp) :: x1, x2, beta
+  real(dp) :: qq, xk_cryst(3), sxk(3), xkq(3), vc(3,3), x, q(3)
+  ! temp array for vcut_spheric
+  real(dp) :: atws(3,3) 
+  real(dp) :: delta(3,3)
+  call start_clock ('exx_stress')
+
+  delta = reshape( (/1.d0,0.d0,0.d0, 0.d0,1.d0,0.d0, 0.d0,0.d0,1.d0/), (/3,3/))
+  exx_stress_ = 0.d0
+  allocate( tempphic(nrxxs), temppsic(nrxxs), rhoc(nrxxs), fac(ngm) )
+  allocate( fac_tens(3,3,ngm), fac_stress(ngm) )
+
+  if ( nks > 1 ) rewind( iunigk )
+  nqi = nqs/nimage
+
+  ! loop over k-points
+  do ikk = 1, nks
+      current_k = ikk
+      if (lsda) current_spin = isk(ikk)
+      npw = ngk(ikk)
+
+      if (nks > 1) then
+          read(iunigk) igk
+          call get_buffer(evc, nwordwfc, iunwfc, ikk)
+      end if
+
+      ! loop over bands
+      do jbnd = 1, nbnd
+          temppsic(:) = ( 0.d0, 0.d0 )
+          temppsic(nls(igk(1:npw))) = evc(1:npw,jbnd)
+          if(gamma_only) temppsic(nlsm(igk(1:npw))) = conjg(evc(1:npw,jbnd))
+          call cft3s(temppsic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, 2)       
+
+          do iqi = 1, nqi
+              iq = iqi + nqi*my_image_id
+              ikq  = index_xkq(current_k,iq)
+              ik   = index_xk(ikq)
+              isym = abs(index_sym(ikq))
+
+              xk_cryst(:)=at(1,:)*xk(1,ik)+at(2,:)*xk(2,ik)+at(3,:)*xk(3,ik)
+              if (index_sym(ikq) < 0) xk_cryst = -xk_cryst
+              sxk(:) = s(:,1,isym)*xk_cryst(1) + &
+                       s(:,2,isym)*xk_cryst(2) + &
+                       s(:,3,isym)*xk_cryst(3) 
+              xkq(:) = bg(:,1)*sxk(1) + bg(:,2)*sxk(2) + bg(:,3)*sxk(3)
+
+              !CALL start_clock ('exxen2_ngmloop')
+              do ig = 1, ngm
+                 q(1)= xk(1,current_k) - xkq(1) + g(1,ig)
+                 q(2)= xk(2,current_k) - xkq(2) + g(2,ig)
+                 q(3)= xk(3,current_k) - xkq(3) + g(3,ig)
+
+                 q = q * tpiba
+                 qq = ( q(1)*q(1) + q(2)*q(2) + q(3)*q(3) )
+
+                 do beta = 1, 3
+                     fac_tens(1:3,beta,ig) = q(1:3)*q(beta)
+                 enddo
+
+                 if (x_gamma_extrapolation) then
+                    on_double_grid = .true.
+                    x= 0.5d0/tpiba*(q(1)*at(1,1)+q(2)*at(2,1)+q(3)*at(3,1))*nq1
+                    on_double_grid = on_double_grid .and. (abs(x-nint(x))<eps)
+                    x= 0.5d0/tpiba*(q(1)*at(1,2)+q(2)*at(2,2)+q(3)*at(3,2))*nq2
+                    on_double_grid = on_double_grid .and. (abs(x-nint(x))<eps)
+                    x= 0.5d0/tpiba*(q(1)*at(1,3)+q(2)*at(2,3)+q(3)*at(3,3))*nq3
+                    on_double_grid = on_double_grid .and. (abs(x-nint(x))<eps)
+                 endif
+
+                 if (use_coulomb_vcut_ws) then
+                    fac(ig) = vcut_get(vcut, q)
+                    fac_stress(ig) = 0.d0   ! not implemented
+                    if (gamma_only .and. qq > 1.d-8) fac(ig) = 2.d0 * fac(ig)
+
+                 else if ( use_coulomb_vcut_spheric ) then
+                    fac(ig) = vcut_spheric_get(vcut, q)
+                    fac_stress(ig) = 0.d0   ! not implemented
+                    if (gamma_only .and. qq > 1.d-8) fac(ig) = 2.d0 * fac(ig) 
+
+                 else if (qq > 1.d-8) then
+                    if ( erfc_scrlen > 0 ) then
+                       fac(ig)=e2*fpi/qq*(1-exp(-qq/4.d0/erfc_scrlen**2)) * grid_factor
+                       fac_stress(ig) = -e2*fpi * 2.d0/qq**2 * ( &
+                           (1.d0+qq/4.d0/erfc_scrlen**2)*exp(-qq/4.d0/erfc_scrlen**2) - 1.d0) * &
+                           grid_factor
+                    else
+                       fac(ig)=e2*fpi/( qq + yukawa ) * grid_factor
+                       fac_stress(ig) = 2.d0 * e2*fpi/(qq+yukawa)**2 * grid_factor
+                    end if
+
+                    if (gamma_only) fac(ig) = 2.d0 * fac(ig)
+                    if (gamma_only) fac_stress(ig) = 2.d0 * fac_stress(ig)
+                    if (on_double_grid) fac(ig) = 0.d0
+                    if (on_double_grid) fac_stress(ig) = 0.d0
+
+                 else
+                    fac(ig)= -exxdiv ! or rather something else (see f.gygi)
+                    fac_stress(ig) = 0.d0  ! or -exxdiv_stress (not yet implemented)
+                    if ( use_yukawa .and. .not. x_gamma_extrapolation) then
+                       fac(ig) = fac(ig) + e2*fpi/( qq + yukawa )
+                       fac_stress(ig) = 2.d0 * e2*fpi/(qq+yukawa)**2
+                    endif
+                    if (erfc_scrlen > 0.d0 .and. .not. x_gamma_extrapolation) then
+                       fac(ig) = e2*fpi / (4.d0*erfc_scrlen**2)
+                       fac_stress(ig) = -e2*fpi / (8.d0*erfc_scrlen**4)
+                    endif
+                 endif
+              enddo
+              !CALL stop_clock ('exxen2_ngmloop')
+
+              if (gamma_only) then
+                  half_nbnd = (nbnd + 1) / 2
+                  h_ibnd = 0
+                  do ibnd=1,nbnd, 2 !for each band of psi
+                      h_ibnd = h_ibnd + 1
+                      x1 = x_occupation(ibnd,ik)
+                      if ( ibnd < nbnd ) then
+                         x2 = x_occupation(ibnd+1,ik)
+                      else
+                         x2 = 0.d0
+                      end if
+                      if ( abs(x1) < 1.d-6 .and. abs(x2) < 1.d-6 ) cycle
+
+                      ! loads the phi from file
+                      do ji=1, nrxxs
+                        tempphic(ji)=exxbuff(ji,ikq,h_ibnd)
+                      enddo
+                
+                      ! calculate rho in real space
+                      rhoc(:)=CONJG(tempphic(:))*temppsic(:) / omega
+                      ! brings it to G-space
+                      CALL cft3s( rhoc,nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, -1 )
+   
+                      vc = 0.d0
+                      do ig=1,ngm
+                        vc(:,:) = vc(:,:) + fac(ig) * x1 * &
+                                  abs( rhoc(nls(ig))+CONJG(rhoc(nlsm(ig))))**2 * &
+                                  (fac_tens(:,:,ig)*fac_stress(ig) - delta(:,:)*fac(ig)/fpi)
+                        vc(:,:) = vc(:,:) + fac(ig) * x2 * &
+                                  abs( rhoc(nls(ig))-CONJG(rhoc(nlsm(ig))))**2 * &
+                                  (fac_tens(:,:,ig)*fac_stress(ig) - delta(:,:)*fac(ig)/fpi)
+                      enddo
+                      vc = vc * pi / omega / nqs / 2.d0
+                      exx_stress_ = exx_stress_ - exxalfa * vc * wg(jbnd,ikk)
+                  enddo
+              else
+                  do ibnd=1,nbnd !for each band of psi
+                     if ( abs(x_occupation(ibnd,ik)) < 1.d-6) cycle
+
+                     ! loads the phi from file
+                     do ji=1, nrxxs
+                       tempphic(ji)=exxbuff(ji,ikq,ibnd)
+                     enddo
+
+                     ! calculate rho in real space
+                     rhoc(:)=CONJG(tempphic(:))*temppsic(:) / omega
+                     ! brings it to G-space
+                     CALL cft3s( rhoc,nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, -1 )
+   
+                     vc = 0.d0
+                     do ig=1,ngm
+                       vc(:,:) = vc(:,:) + rhoc(nls(ig))*CONJG(rhoc(nls(ig))) * &
+                                 (fac_tens(:,:,ig)*fac_stress(ig) - delta(:,:)*fac(ig)/fpi)
+                     end do
+                     vc = vc * x_occupation(ibnd,ik) / nqs / 2.d0
+                     exx_stress_ = exx_stress_ - exxalfa * vc * wg(jbnd,ikk)
+                  end do
+              endif ! gamma or k-points
+
+          enddo ! iqi
+      enddo ! jbnd
+  enddo ! ikk
+
+  deallocate (tempphic, temppsic, rhoc, fac )
+
+  call mp_sum( exx_stress_, inter_image_comm )
+  call mp_sum( exx_stress_, intra_pool_comm )
+  call mp_sum( exx_stress_, inter_pool_comm )
+
+  exx_stress = exx_stress_
+
+  call stop_clock ('exx_stress')
+
+  END FUNCTION exx_stress
+
+
 
 end module exx
