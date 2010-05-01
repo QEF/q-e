@@ -25,9 +25,9 @@ MODULE mp_global
   ! xml punch file
   INTEGER :: world_comm = 0  ! communicator of all processor
 #if defined __SCALAPACK
-  INTEGER :: me_blacs   = 0  ! BLACS processor index starting from 0
-  INTEGER :: np_blacs   = 1  ! BLACS number of processor
-  INTEGER :: world_cntx = 0  ! BLACS context of all processor 
+  INTEGER :: me_blacs   =  0  ! BLACS processor index starting from 0
+  INTEGER :: np_blacs   =  1  ! BLACS number of processor
+  INTEGER :: world_cntx = -1  ! BLACS context of all processor 
 #endif
 
   INTEGER :: kunit = 1  ! granularity of k-point distribution
@@ -72,7 +72,7 @@ MODULE mp_global
   INTEGER :: ortho_comm       = 0  ! communicator used for fast and memory saving ortho
   INTEGER :: ortho_comm_id    = 0  ! id of the ortho_comm
 #if defined __SCALAPACK
-  INTEGER :: ortho_cntx       = 0  ! BLACS context for ortho_comm
+  INTEGER :: ortho_cntx       = -1 ! BLACS context for ortho_comm
 #endif
   !
   ! ... Task Groups parallelization
@@ -300,8 +300,8 @@ CONTAINS
     !
     nproc_pool = nproc_image / npool
     !
-    IF ( MOD( nproc, npool ) /= 0 ) &
-         CALL errore( 'startup', 'nproc /= nproc_pool * npool', 1 )  
+    IF ( MOD( nproc_image, npool ) /= 0 ) &
+         CALL errore( 'startup', 'nproc_image /= nproc_pool * npool', 1 )  
     !
     ! ... my_pool_id  =  pool index for this processor    ( 0 : npool - 1 )
     ! ... me_pool     =  processor index within the pool  ( 0 : nproc_pool - 1 )
@@ -332,11 +332,12 @@ CONTAINS
     !
 #if defined __SCALAPACK
 
+    ! define a 1D grid containing all MPI task of MPI_COMM_WORLD communicator
+    !
     CALL BLACS_PINFO( me_blacs, np_blacs )
-    !WRITE(*,*) 'BLACS me_blacs, np_blacs = ', me_blacs, np_blacs
     CALL BLACS_GET( -1, 0, world_cntx )
-    !WRITE(*,*) 'BLACS world_cntx = ', world_cntx
-
+    CALL BLACS_GRIDINIT( world_cntx, 'Row', 1, np_blacs )
+    !
 #endif
     !
     nproc_ortho = nproc_pool
@@ -452,7 +453,9 @@ CONTAINS
 
 #if defined __SCALAPACK
     INTEGER, ALLOCATABLE :: blacsmap(:,:)
-    INTEGER :: nprow, npcol, myrow, mycol
+    INTEGER, ALLOCATABLE :: ortho_cntx_pe(:,:)
+    INTEGER :: nprow, npcol, myrow, mycol, i, j
+    INTEGER, EXTERNAL :: BLACS_PNUM
 #endif
 
 #if defined __MPI
@@ -471,7 +474,10 @@ CONTAINS
        CALL mp_comm_free( ortho_comm )
        !
 #if defined __SCALAPACK
-       CALL BLACS_GRIDEXIT( ortho_cntx )
+       IF(  ortho_comm_id > 0  ) THEN
+          CALL BLACS_GRIDEXIT( ortho_cntx )
+       ENDIF
+       ortho_cntx = -1
 #endif
        !
     END IF
@@ -548,40 +554,53 @@ CONTAINS
 
 #if defined __SCALAPACK
 
-    IF( ortho_comm_id > 0 ) THEN
-       ALLOCATE( blacsmap( np_ortho(1), np_ortho(2) ) )
-       blacsmap = 0
-       blacsmap( me_ortho(1) + 1, me_ortho(2) + 1 ) = me_blacs
-       nprow = np_ortho(1)
-       npcol = np_ortho(2)
-    ELSE
-       nprow = np_ortho1
-       npcol = 1
-       ALLOCATE( blacsmap( np_ortho1, 1 ) )
-       blacsmap = 0
-       blacsmap( me_ortho1 + 1, 1 ) = me_blacs
-    END IF
+    ALLOCATE( ortho_cntx_pe( npool, nimage ) )
+    ALLOCATE( blacsmap( np_ortho(1), np_ortho(2) ) )
 
-    CALL mp_sum( blacsmap, ortho_comm )
+    DO j = 1, nimage
 
-    !WRITE( 1000 + me_image, * ) '-----'
-    !WRITE( 1000 + me_image, * ) blacsmap
+       DO i = 1, npool
 
-    ortho_cntx = world_cntx
-    CALL BLACS_GRIDMAP( ortho_cntx, blacsmap, nprow, nprow, npcol )
+         CALL BLACS_GET( -1, 0, ortho_cntx_pe( i, j ) ) ! take a default value 
 
-    CALL BLACS_GRIDINFO( ortho_cntx, nprow, npcol, myrow, mycol )
+         blacsmap = 0
+         nprow = np_ortho(1)
+         npcol = np_ortho(2)
 
-    !WRITE( 1000 + me_image, * ) nprow, npcol, myrow, mycol
+         IF( ( j == ( my_image_id + 1 ) ) .and. ( i == ( my_pool_id + 1 ) ) .and. ( ortho_comm_id > 0 ) ) THEN
 
-    IF( ortho_comm_id > 0 ) THEN
-       IF(  np_ortho(1) /= nprow ) CALL errore( ' init_ortho_group ', ' problem with SCALAPACK, wrong nprow ', 1 )
-       IF(  np_ortho(2) /= npcol ) CALL errore( ' init_ortho_group ', ' problem with SCALAPACK, wrong npcol ', 1 )
-       IF(  me_ortho(1) /= myrow ) CALL errore( ' init_ortho_group ', ' problem with SCALAPACK, wrong myrow ', 1 )
-       IF(  me_ortho(2) /= mycol ) CALL errore( ' init_ortho_group ', ' problem with SCALAPACK, wrong mycol ', 1 )
-    END IF
+           blacsmap( me_ortho(1) + 1, me_ortho(2) + 1 ) = BLACS_PNUM( world_cntx, 0, me_blacs )
+
+         END IF
+
+         ! All MPI tasks defined in world comm take part in the definition of the BLACS grid
+
+         CALL mp_sum( blacsmap ) 
+
+         CALL BLACS_GRIDMAP( ortho_cntx_pe(i,j), blacsmap, nprow, nprow, npcol )
+
+         CALL BLACS_GRIDINFO( ortho_cntx_pe(i,j), nprow, npcol, myrow, mycol )
+
+         ! write(1000+mpime,*) j, i, nprow, npcol, myrow, mycol  ! debug
+
+         IF( ( j == ( my_image_id + 1 ) ) .and. ( i == ( my_pool_id + 1 ) ) .and. ( ortho_comm_id > 0 ) ) THEN
+
+            IF(  np_ortho(1) /= nprow ) CALL errore( ' init_ortho_group ', ' problem with SCALAPACK, wrong nprow ', 1 )
+            IF(  np_ortho(2) /= npcol ) CALL errore( ' init_ortho_group ', ' problem with SCALAPACK, wrong npcol ', 1 )
+            IF(  me_ortho(1) /= myrow ) CALL errore( ' init_ortho_group ', ' problem with SCALAPACK, wrong myrow ', 1 )
+            IF(  me_ortho(2) /= mycol ) CALL errore( ' init_ortho_group ', ' problem with SCALAPACK, wrong mycol ', 1 )
+
+            ortho_cntx = ortho_cntx_pe(i,j)
+
+         END IF
+
+       END DO
+
+    END DO 
 
     DEALLOCATE( blacsmap )
+    DEALLOCATE( ortho_cntx_pe )
+
 
 #endif
 
