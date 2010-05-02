@@ -1315,8 +1315,8 @@ CONTAINS
   complex(dp), allocatable :: rhoc(:)
   real(dp), allocatable :: fac(:), fac_tens(:,:,:), fac_stress(:)
   integer :: jbnd, ibnd, ik, ikk, ig, ikq, iq, isym
-  integer :: half_nbnd, h_ibnd, nqi, iqi
-  real(dp) :: x1, x2, beta
+  integer :: half_nbnd, h_ibnd, nqi, iqi, beta
+  real(dp) :: x1, x2
   real(dp) :: qq, xk_cryst(3), sxk(3), xkq(3), vc(3,3), x, q(3)
   ! temp array for vcut_spheric
   real(dp) :: atws(3,3) 
