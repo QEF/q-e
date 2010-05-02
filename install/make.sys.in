@@ -87,12 +87,16 @@ LD_LIBS        = @ld_libs@
 
 # External Libraries (if any) : blas, lapack, fft, MPI
 
-# If you have nothing better, use the local copy : ../flib/blas.a
+# If you have nothing better, use the local copy :
+# BLAS_LIBS = /your/path/to/espresso/BLAS/blas.a
+# BLAS_LIBS_SWITCH = internal
 
 BLAS_LIBS      = @blas_libs@
 BLAS_LIBS_SWITCH = @blas_libs_switch@
 
-FLIB_TARGETS   = all
+# If you have nothing better, use the local copy :
+# LAPACK_LIBS = /your/path/to/espresso/LAPACK/lapack.a
+# LAPACK_LIBS_SWITCH = internal
 
 # The following lapack libraries will be available in flib/ :
 # ../flib/lapack.a : contains all needed routines
@@ -134,6 +138,8 @@ ARFLAGS        = @arflags@
 RANLIB         = @ranlib@
 
 # all internal and external libraries - do not modify
+
+FLIB_TARGETS   = all
 
 LIBOBJS        = ../flib/ptools.a ../flib/flib.a ../clib/clib.a ../iotk/src/libiotk.a ../Multigrid/mglib.a
 LIBS           = $(SCALAPACK_LIBS) $(LAPACK_LIBS) $(FFT_LIBS) $(BLAS_LIBS) $(MPI_LIBS) $(MASS_LIBS) $(PGPLOT_LIBS) $(LD_LIBS)

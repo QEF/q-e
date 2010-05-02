@@ -1277,7 +1277,7 @@ procedure.  I installed just the developer tools from apple, the intel
 fortran compiler and everything went on great" (Info by Riccardo Sabatini, 
 Nov. 2007)
 
-\paragraph{Intel Mac OS X 10.4 and 10.5 with g95 and gfortran}
+\paragraph{Intel Mac OS X 10.4-10.6 with g95 and gfortran}
 
 The stable and unstable versions of g95 are known to work. Recent
 gfortran versions also work, but they may require an updated version
@@ -1286,9 +1286,9 @@ Apple. Some tests fails with mysterious errors, that disappear if
 fortran BLAS are linked instead of system Atlas libraries. Use: 
 \begin{verbatim}
    BLAS_LIBS_SWITCH = internal
-   BLAS_LIBS      = ../flib/blas.a -latlas
+   BLAS_LIBS      = /path/to/espresso/BLAS/blas.a -latlas
 \end{verbatim}
-(Info by Paolo Giannozzi, jan.2008, updated for v.4.2 and following)
+(Info by Paolo Giannozzi, jan.2008, still valid as of April 2010)
 
 \subsubsection{SGI, Alpha}
 
