@@ -752,13 +752,14 @@ SUBROUTINE check_para_diag( nelec )
   USE kinds,            ONLY : DP
   USE control_flags,    ONLY : use_para_diag, gamma_only
   USE io_global,        ONLY : stdout, ionode, ionode_id
-  USE mp_global,        ONLY : nproc_pool, init_ortho_group, np_ortho2, &
+  USE mp_global,        ONLY : nproc_pool, init_ortho_group, nproc_ortho, &
                                np_ortho, intra_pool_comm
 
   IMPLICIT NONE
 
   REAL(DP), INTENT(IN) :: nelec
   LOGICAL, SAVE :: first = .TRUE.
+  INTEGER :: np
 
   !  avoid synchronization problems when more images are active
 
@@ -768,28 +769,18 @@ SUBROUTINE check_para_diag( nelec )
 
   use_para_diag = .TRUE.
   !
-  !  here we initialize the sub group of processors that will take part
+  !  here we re-initialize the sub group of processors that will take part
   !  in the matrix diagonalization. 
   !  NOTE that the maximum number of processors may not be the optimal one,
   !  and -ndiag N argument can be used to force a given number N of processors
   !
-  IF( np_ortho2 < 1 ) THEN
-     !
-     !  use all the available processors
-     !
-     np_ortho2 = MIN( INT( nelec )/2, nproc_pool )
-     !
-     !  avoid problems with systems with a single electron
-     !
-     IF ( np_ortho2 < 1) np_ortho2 = 1
-     !
-  ELSE
-     !
-     np_ortho2 = MIN( INT( nelec )/2, np_ortho2 )
-     !
-  END IF
+  np = MAX( INT( SQRT( DBLE( nproc_ortho ) + 0.1d0 ) ), 1 )
+  !
+  !  Make ortho group compatible with the number of electronic states
+  !
+  np = MIN( INT( nelec )/2, np )
 
-  CALL init_ortho_group( np_ortho2, intra_pool_comm )
+  CALL init_ortho_group( np * np, intra_pool_comm )
 
   IF ( ionode ) THEN
      !

@@ -109,7 +109,7 @@ PROGRAM projwfc
   USE io_files,   ONLY : nd_nmbr, prefix, tmp_dir, trimcheck
   USE noncollin_module, ONLY : noncolin
   USE mp,               ONLY : mp_bcast      
-  USE mp_global,        ONLY : mp_startup, np_ortho2
+  USE mp_global,        ONLY : mp_startup, nproc_ortho
   USE environment,      ONLY : environment_start
   !
   ! for GWW
@@ -216,7 +216,7 @@ PROGRAM projwfc
   IF (noncolin) THEN 
      CALL projwave_nc(filproj, lsym )
   ELSE
-     IF( np_ortho2 > 1 ) THEN
+     IF( nproc_ortho > 1 ) THEN
         CALL pprojwave (filproj, lsym)
      ELSE
         CALL projwave (filproj, lsym, lgww)

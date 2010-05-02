@@ -139,7 +139,7 @@ END SUBROUTINE diagonalize_parallel
    SUBROUTINE mesure_diag_perf( n )
       !
       USE mp_global,   ONLY: nproc_image, me_image, intra_image_comm, root_image
-      USE mp_global,   ONLY: np_ortho2, np_ortho, me_ortho, ortho_comm, ortho_comm_id
+      USE mp_global,   ONLY: nproc_ortho, np_ortho, me_ortho, ortho_comm, ortho_comm_id
       USE io_global,   ONLY: ionode, stdout
       USE mp,          ONLY: mp_sum, mp_bcast, mp_barrier
       USE mp,          ONLY: mp_max
@@ -159,7 +159,7 @@ END SUBROUTINE diagonalize_parallel
       !
       ! Check if number of PEs for orthogonalization/diagonalization is given from the input
       !
-      IF( np_ortho2 > 0 ) THEN
+      IF( nproc_ortho > 0 ) THEN
          use_parallel_diag = .TRUE. 
          RETURN
       END IF
@@ -284,7 +284,7 @@ END SUBROUTINE diagonalize_parallel
    SUBROUTINE mesure_mmul_perf( n )
       !
       USE mp_global,   ONLY: nproc_image, me_image, intra_image_comm, &
-                             root_image, ortho_comm, np_ortho2, np_ortho, &
+                             root_image, ortho_comm, nproc_ortho, np_ortho, &
                              me_ortho, init_ortho_group, ortho_comm_id
       USE io_global,   ONLY: ionode, stdout
       USE mp,          ONLY: mp_sum, mp_bcast, mp_barrier
@@ -303,27 +303,14 @@ END SUBROUTINE diagonalize_parallel
       REAL(DP) :: cclock
       EXTERNAL :: cclock
       !
-      IF( np_ortho2 > 0 ) THEN
-         !
-         !  Here the number of processors is suggested on input
-         !
-         np    = np_ortho2 
-         if( np > MIN( n, nproc_image ) ) np = MIN( n, nproc_image )
-         np    = MAX( INT( SQRT( DBLE( np ) + 0.1d0 ) ), 1 ) 
-         !
-      ELSE
-         !
-         !  Take the maximum number of processors
-         !
-         np    = MIN( n, nproc_image )
-         np    = MAX( INT( SQRT( DBLE( np ) + 0.1d0 ) ), 1 ) 
-         !
-      END IF
-
-      ! 
-      !  Now test the allowed processors mesh sizes
+      np    = MAX( INT( SQRT( DBLE( nproc_ortho ) + 0.1d0 ) ), 1 ) 
       !
-
+      !  Make ortho group compatible with the number of electronic states
+      !
+      np    = MIN( np, n )
+      !
+      !  Now re-define the ortho group and test the performance
+      !
       CALL init_ortho_group( np * np, intra_image_comm )
 
       CALL descla_init( desc, n, n, np_ortho, me_ortho, ortho_comm, ortho_comm_id )
@@ -367,8 +354,6 @@ END SUBROUTINE diagonalize_parallel
       np = 1
 
 #endif
-
-      CALL init_ortho_group( np*np, intra_image_comm )
 
 #if defined __PARA
       IF( ionode ) THEN
