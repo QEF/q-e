@@ -1696,24 +1696,28 @@ can be found in the following post by Javier Antonio Montoya:\\
 On a Xeon quadriprocessor cluster, erratic crashes in parallel
 execution have been reported, apparently correlated with ifort 10.1
 (info by Nathalie Vast and Jelena Sjakste, May 2008).
+\newpage
 
 \section{Using \PWscf}
 
-Input files for the \PWscf codes may be either written by hand (the good old
-way), or produced via the "PWgui" graphical interface by Anton Kokalj, 
-included in the \qe\ distribution. See PWgui-x.y.z/INSTALL
-(where x.y.z is the version number) for more info on PWgui, or GUI/README
-if you are using CVS sources.
+Input files for \PWscf\ codes may be either written by hand 
+or produced via the \texttt{PWgui} graphical interface by Anton Kokalj, 
+included in the \qe\ distribution. See \texttt{PWgui-x.y.z/INSTALL}
+(where x.y.z is the version number) for more info on \texttt{PWgui}, 
+or \texttt{GUI/README} if you are using CVS sources.
     
 You may take the examples distributed with \qe\ as
-templates for writing your own input files: see section 2.3, "Run examples".
-In the following, whenever we mention "Example N", we refer to those. Input
-files are those in the results directories, with names ending in .in 
+templates for writing your own input files: see Sec.\ref{SubSec:Examples}.
+In the following, whenever we mention "Example N", we refer to those. 
+Input files are those in the \texttt{results/} subdirectories, with names ending
+with \texttt{.in} 
 (they will appear after you have run the examples).
     
 Note about exchange-correlation: the type of exchange-correlation used
 in the calculation is read from PP files. All PP's must have been generated
-using the same exchange-correlation.
+using the same exchange-correlation. You can override this choice
+by setting input variable \texttt{input\_dft} (see list of
+allowed values in \texttt{Modules/funct.f90}).
 
 \subsection{Electronic and ionic structure calculations}
 
@@ -1722,62 +1726,63 @@ Electronic and ionic structure calculations are performed by program \pw.x.
 \paragraph{Input data}
 
 The input data is organized as several namelists, followed by other fields
-introduced by keywords.
-    
-The namelists are
-\begin{verbatim}
-      &CONTROL: general variables controlling the run
-      &SYSTEM: structural information on the system under investigation
-      &ELECTRONS: electronic variables: self-consistency, smearing
-      &IONS (optional): ionic variables: relaxation, dynamics
-      &CELL (optional): variable-cell dynamics
-      &EE  (optional): for density counter charge electrostatic corrections
-\end{verbatim}    
+introduced by keywords. The namelists are
+
+\begin{tabular}{ll}
+      \&CONTROL:& general variables controlling the run\\
+      \&SYSTEM: &structural information on the system under investigation\\
+      \&ELECTRONS: &electronic variables: self-consistency, smearing\\
+      \&IONS (optional): &ionic variables: relaxation, dynamics\\
+      \&CELL (optional): &variable-cell dynamics\\
+      \&EE  (optional): &for density counter charge electrostatic corrections
+\end{tabular}    \\
 Optional namelist may be omitted if the calculation to be performed
 does not require them. This depends on the value of variable calculation
 in namelist \&CONTROL. Most variables in namelists have default values. Only
 the following variables in \&SYSTEM must always be specified:
-\begin{verbatim}
-      ibrav (integer): bravais-lattice index
-      celldm (real, dimension 6): crystallographic constants
-      nat (integer): number of atoms in the unit cell
-      ntyp (integer): number of types of atoms in the unit cell
-      ecutwfc (real): kinetic energy cutoff (Ry) for wavefunctions.
-\end{verbatim}    
+
+\begin{tabular}{lll}
+      \texttt{ibrav} & (integer)& bravais-lattice index\\
+      \texttt{celldm} &(real, dimension 6)& crystallographic constants\\
+      \texttt{nat} &(integer)& number of atoms in the unit cell\\
+      \texttt{ntyp} &(integer)& number of types of atoms in the unit cell\\
+      \texttt{ecutwfc} &(real)& kinetic energy cutoff (Ry) for wavefunctions.
+\end{tabular}    \\
 For metallic systems, you have to specify how metallicity is treated
-by setting 
-variable occupations. If you choose occupations='smearing', you have
-to specify the smearing width degauss and optionally the smearing type
-smearing. If you choose occupations='tetrahedra', you need to specify 
-a suitable uniform k-point grid (card K\_POINTS with option automatic).
-Spin-polarized systems must be treated as metallic system, except the 
+in
+variable \texttt{occupations}. If you choose \texttt{occupations='smearing'},
+you have
+to specify the smearing width \texttt{degauss} and optionally the smearing
+type
+\texttt{smearing}. Spin-polarized systems must be treated as metallic system, except the 
 special case of a single k-point, for which occupation numbers can be fixed
-(occupations='from input' and card OCCUPATIONS).
+(\texttt{occupations='from input'} and card OCCUPATIONS).
     
-Explanations for the meaning of variables ibrav and celldm are in file
-INPUT\_PW. Please read them carefully. There is a large number of other
+Explanations for the meaning of variables \texttt{ibrav} and \texttt{celldm},
+as well as on alternative ways to input structural data,
+are in files \texttt{Doc/INPUT\_PW.*}. Please read them carefully. There is a large number of other
 variables, having default values, which may or may not fit your needs.
     
 After the namelists, you have several fields introduced by keywords with
 self-explanatory names:
-\begin{verbatim}
-       ATOMIC_SPECIES
-       ATOMIC_POSITIONS
-       K_POINTS
-       CELL_PARAMETERS (optional)
-       OCCUPATIONS (optional)
-       CLIMBING_IMAGES (optional)
-\end{verbatim}
+\begin{quote}
+       ATOMIC\_SPECIES\\
+       ATOMIC\_POSITIONS\\
+       K\_POINTS\\
+       CELL\_PARAMETERS (optional)\\
+       OCCUPATIONS (optional)\\
+       CLIMBING\_IMAGES (optional)
+\end{quote}
 The keywords may be followed on the same line by an option. Unknown
-fields (including some that are specific \CP) are ignored by 
+fields (including some that are specific to \CP) are ignored by 
 \PWscf.
-See file Doc/INPUT\_PW.* for a detailed explanation of the meaning and format
+See files \texttt{Doc/INPUT\_PW.*} for a detailed explanation of the meaning and format
 of the various fields.
     
 Note about k points: The k-point grid can be either automatically generated 
 or manually provided as a list of k-points and a weight in the Irreducible
 Brillouin Zone only of the Bravais lattice of the crystal. The code will 
-generate (unless instructed not to do so: see variable nosym) all
+generate (unless instructed not to do so: see variable \texttt{nosym}) all
 required k-point 
 and weights if the symmetry of the system is lower than the symmetry of the
 Bravais lattice. The automatic generation of k-points follows the convention
@@ -1787,22 +1792,25 @@ of Monkhorst and Pack.
 We may distinguish the following typical cases for \pw.x:
 
 \paragraph{Single-point (fixed-ion) SCF calculation} 
-Set calculation='scf'.
-Namelists \&IONS and \&CELL need not to be present (this is the default).\\
-See Example 01.
+Set \texttt{calculation='scf'} (this is actually the default).
+Namelists \&IONS and \&CELL will be ignored. See Example 01.
 
 \paragraph{Band structure calculation}
 First perform a SCF calculation as above;
-then do a non-SCF calculation by specifying calculation='bands' or
-calculation='nscf', with the desired k-point grid and number nbnd
-of bands. If you are interested in calculating only the Kohn-Sham states
-for the given set of k-points, use calculation='bands'. If you are
-interested in further processing of the results of non-SCF calculations
-(for instance, in DOS calculations) use calculations='nscf'.
-Specify nosym=.true. to avoid generation of additional k-points in
-low symmetry cases. Variables prefix and outdir, which determine
-the names of input or output files, should be the same in the two runs.\\
-See Example 01.
+then do a non-SCF calculation with the desired k-point grid and 
+number \texttt{nbnd} of bands. 
+Specify \texttt{calculation='bands'} if you are interested in calculating
+only the Kohn-Sham states for the given set of k-points; specify
+\texttt{calculation='nscf'} if you are interested in further processing 
+of the results of non-SCF calculations (for instance, in DOS calculations).
+In the latter case, you should specio a uniform grid of points.
+For DOS calculations you should choose \texttt{occupations='tetrahedra'}, 
+together with an automatically generated uniform k-point grid 
+(card K\_POINTS with option ``automatic'').
+Specify \texttt{nosym=.true.} to avoid generation of additional k-points in
+low symmetry cases. Variables \texttt{prefix} and \texttt{outdir}, which determine
+the names of input or output files, should be the same in the two runs.
+See Example 01, 05, 08,
 
 NOTA BENE: until v.4.0, atomic positions for a non scf calculations 
 were read from input, while the scf potential was read from the data file
@@ -1810,60 +1818,59 @@ of the scf calculation. Since v.4.1, both atomic positions and the scf
 potential are read from the data file so that consistency is guaranteed.
 
 \paragraph{Structural optimization}
-Specify calculation='relax' and add namelist \&IONS.
-
-All options for a single SCF calculation apply, plus a few others. You
+For fixed-cell optimization, specify \texttt{calculation='relax'} and 
+add namelist \&IONS. All options for a single SCF calculation apply, 
+plus a few others. You
 may follow a structural optimization with a non-SCF band-structure
 calculation (since v.4.1, you do not need any longer to update the 
 atomic positions in the input file for non scf calculation).\\
 See Example 03.
 
 \paragraph{Molecular Dynamics} 
-Specify calculation='md' and time step dt.
-
-Use variable ion dynamics in namelist \&IONS for a fine-grained control
+Specify \texttt{calculation='md'}, the time step \texttt{dt}, and possibly the number of MD stops \texttt{nstep}.
+Use variable \texttt{ion\_dynamics} in namelist \&IONS for a fine-grained control
 of the kind of dynamics. Other options for setting the initial
 temperature and for thermalization using velocity rescaling are
 available. Remember: this is MD on the electronic ground state, not
-Car-Parrinello MD.\\
+Car-Parrinello MD.
 See Example 04.
 
 \paragraph{Polarization via Berry Phase}
-See Example 10, its README, and the documentation in the header of
-PW/bp\_c\_phase.f90. 
+See Example 10, file \texttt{example10/README}, and the documentation 
+in the header of \texttt{PW/bp\_c\_phase.f90}. 
 
 \paragraph{Nudged Elastic Band calculation}
-Specify calculation='neb' and add namelist \&IONS.
+Specify \texttt{calculation='neb'} and add namelist \&IONS.
 
 All options for a single SCF calculation apply, plus a few others. In the
 namelist \&IONS the number of images used to discretize the elastic band
 must be specified. All other variables have a default value. Coordinates
 of the initial and final image of the elastic band have to be specified
-in the ATOMIC POSITIONS card. A detailed description of all input
-variables is contained in the file Doc/INPUT PW. See also Example 17.
+in the ATOMIC\_POSITIONS card. A detailed description of all input
+variables is contained in files \texttt{Doc/INPUT\_PW.*}. See Example 17.
 
-An NEB calculation will produce a number of files in the current directory
+A NEB calculation will produce a number of files in the current directory
 (i.e. in the directory were the code is run) containing additional information
-on the minimum-energy path. The files are organized as following, where \$prefix
-is the prefix of the calculation (specified in the input file):
+on the minimum-energy path. The files are organized as following
+(where \texttt{prefix} is specified in the input file):
 \begin{description}
-\item[\$prefix.dat]
+\item[\texttt{prefix.dat}]
 is a three-column file containig the position of each image on the reaction
 coordinate (arb. units), its energy in eV relative to the energy of the first image
 and the residual error for the image in eV/$a_0$.
-\item[\$prefix.int]
+\item[\texttt{prefix.int}]
 contains an interpolation of the path energy profile that pass exactly through each
 image; it is computed using both the image energies and their derivatives
-\item[\$prefix.path]
+\item[\texttt{prefix.path}]
 information used by QE to restart a path calculation, its format depends on the input
 details and is undocumented
-\item[\$prefix.axsf]
-atomic positions of all path images in the XCrySDen animation format,
-{\texttt xcrysden -\--axsf \$prefix.axsf} to open it
-\item[\$prefix.xyz]
+\item[\texttt{prefix.axsf}]
+atomic positions of all path images in the XCrySDen animation format:
+to visualize it, use \texttt{xcrysden -\--axsf prefix.axsf}
+\item[\texttt{prefix.xyz}]
 atomic positions of all path images in the generic xyz format, used by
 many quantum-chemistry softwares
-\item[\$prefix.crd]
+\item[\texttt{prefix.crd}]
 path information in the input format used by \pw.x, suitable for a manual
 restart of the calculation
 \end{description}
@@ -1876,7 +1883,7 @@ free advice:
 \item 
 Don't use Climbing Image (CI) from the beginning. It makes convergence slower, 
 especially if the special image changes during the convergence process (this 
-may happen if CI\_scheme='auto' and if it does it may mess up everything).
+may happen if \texttt{CI\_scheme='auto'} and if it does it may mess up everything).
 Converge your calculation, then restart from the last configuration with
 CI option enabled (note that this will {\em increase} the barrier).
 \item
@@ -1912,18 +1919,18 @@ unless one starts from a very good or very bad initial guess.
 \subsubsection{Data files}
 
 The output data files are written in the directory specified by variable
-outdir, with names specified by variable prefix (a string that is prepended
-to all file names, whose default value is: prefix='pwscf'). The ''iotk''
+\texttt{outdir}, with names specified by variable \texttt{prefix} (a string that is prepended
+to all file names, whose default value is: \texttt{prefix='pwscf'}). The \texttt{iotk}
 toolkit is used to write the file in a XML format, whose definition can
 be found in the Developer Manual. In order to use the data directory
 on a different machine, you need to convert the binary files to formatted
-and back, using the ''bin/iotk'' script.
+and back, using the \texttt{bin/iotk} script.
 
-The execution stops if you create a file "prefix.EXIT" in the working 
+The execution stops if you create a file \texttt{prefix.EXIT} in the working 
 directory. NOTA BENE: this is the directory where the program 
-is executed, NOT the directory "outdir" defined in input, where files 
-are written. Note that with some versions of MPI, the "working directory" 
-is the directory where the \pw.x executable is! The advantage of this 
+is executed, NOT the directory \texttt{outdir} defined in input, where files 
+are written. Note that with some versions of MPI, the working directory 
+is the directory where the \pw.x\ executable is! The advantage of this 
 procedure is that all files are properly closed, whereas  just killing 
 the process may leave data and output files in unusable state.
 
@@ -1933,8 +1940,8 @@ Calculations in the Hartree-Fock approximation, or using hybrid XC functionals
 that include some Hartree-Fock exchange, can be performed by adding
 \texttt{-DEXX} to the preprocessing options \texttt{DFLAGS} in file 
 \texttt{make.sys}. Issue command \texttt{make clean} before recompiling. 
-Documentation on usage can be found in subdirectory \texttt{EXX\_example/}
-of the \texttt{examples/} directory.
+Documentation on usage can be found in subdirectory 
+\texttt{examples/EXX\_example/}.
 
 The algorithm is quite standard: see for instance Chawla and Voth, 
 JCP {bf 108}, 4697 (1998); Sorouri, Foulkes and Hine, JCP {\bf 124}, 
