@@ -1464,10 +1464,14 @@ subspace diagonalization (\pw.x) or iterative orthonormalization
 arrays whose dimension is the number of Kohn-Sham states
 (or a small multiple). All such arrays are distributed block-like
 across the "ortho group", a subgroup of the pool of processors,
-organized in a square 2D grid. The diagonalization is then performed
-in parallel using standard linear algebra operations. 
+organized in a square 2D grid. As aconsequence the number of processors
+in the ortho group is given by $n^2$, where $n$ is an integer;
+$n^2$ must be smaller than the number of precessors of a single pool.
+The diagonalization is then performed
+in parallel using standard linear algebra operations.
 (This diagonalization is used by, but should not be confused with,
-the iterative Davidson algorithm).
+the iterative Davidson algorithm). One can choose to compile
+ScaLAPACK if available, internal built-in algorithms otherwise.
 
 {\bf Communications}:
 Images and pools are loosely coupled and processors communicate
@@ -1479,18 +1483,15 @@ communication hardware (e.g. Mirynet or comparable) is absolutely
 needed beyond 8 processors per pool.
 
 {\bf Choosing parameters}:
-To control the number of images, pools and task groups,
-command line switch: -nimage -npools -ntg can be used.
-The dimension of the ortho group is set to the largest
-value compatible with the number of processors and with
-the number of electronic states. The user can choose a smaller
-value using the command line switch {\texttt-ndiag} for \pw.x,
-\texttt{-northo} for \cp.x.
+To control the number of processors in each group,
+command line switches: \texttt{-nimage}, \texttt{-npools},
+\texttt{-ntg}, \texttt{northo} (for \cp.x) or \texttt{-ndiag}
+(for \pw.x) are used.
 As an example consider the following command line:
 \begin{verbatim}
 mpirun -np 4096 ./pw.x -nimage 8 -npool 2 -ntg 8 -ndiag 144 -input my.input
 \end{verbatim}
-This executes \PWscf on 4096 processors, to simulate a system
+This executes \PWscf\ on 4096 processors, to simulate a system
 with 8 images, each of which is distributed across 512 processors.
 k-points are distributed across 2 pools of 256 processors each, 
 3D FFT is performed using 8 task groups (64 processors each, so
@@ -1499,9 +1500,9 @@ of the subspace Hamiltonian is distributed to a square grid of 144
 processors (12x12).
 
 Default values are: \texttt{-nimage 1 -npool 1 -ntg 1} ; 
-\texttt{ndiag} is chosen
-by the code as the largest $n^2$ (integer $n$) that fits into the size
-of each pool.
+\texttt{ndiag} is set to 1 if ScaLAPACK is not compiled,
+it is set to the square integer smaller than or equal to  half the number 
+of processors of each pool.
 
 \paragraph{Massively parallel calculations}
 For very large jobs (i.e. O(1000) atoms or so) or for very long jobs
@@ -1516,31 +1517,34 @@ occupied states). These are stored as block-distributed matrixes
 (distributed across processors) and diagonalized using custom-taylored
 diagonalization algorithms that work on block-distributed matrixes.
 
-Since v.4.1, Scalapack can be used to diagonalize block distributed
+Since v.4.1, ScaLAPACK can be used to diagonalize block distributed
 matrixes, yielding better speed-up than the default algorithms for
 large ($ > 1000$) matrices, when using a large number of processors 
-($> 512$). If you want to test scalapack  you have to compile adding
-\texttt{-D\_\_SCALAPACK} to DFLAGS in \texttt{make.sys} and you have to  
-modify the LAPACK\_LIBS variable as in the following example:
+($> 512$). If you want to test ScaLAPACK,
+use \texttt{configure --with-scalapack}. This
+will add
+\texttt{-D\_\_SCALAPACK} to DFLAGS in \texttt{make.sys} abd set LAPACK\_LIBS to something
+like:
 \begin{verbatim}
-LAPACK_LIBS = -lscalapack -lblacs -lblacsF77init -lblacs -llapack
+    LAPACK_LIBS = -lscalapack -lblacs -lblacsF77init -lblacs -llapack
 \end{verbatim}
-The repeated \texttt{-lblacs} is not an error, it is needed! after Scalapack,
-Blacs, BlacsInit, Blacs again (with their paths if needed), then
-Lapack or a suitable replacement.
+The repeated \texttt{-lblacs} is not an error, it is needed! If \configure\ does not recognize
+ScaLAPACK, inquire with your system manager
+on the correct way to link them.
 
 A further possibility to expand scalability, especially on machines
 like IBM BlueGene, is to use mixed MPI-OpenMP. The idea is to have
 one (or more) MPI process(es) per multicore node, with OpenMP
-parallelization inside a same node. This option is activated by 
-preprocessing flag -D\_\_OPENMP, by the following compiler options:
+parallelization inside a same node. This option is activated by  \texttt{configure --with-openmp},
+which adds preprocessing flag -D\_\_OPENMP
+and one  of the following compiler options:
 \begin{quote}
  ifort: \texttt{-openmp}\\
  xlf:   \texttt{-qsmp=omp}\\
  PGI:   \texttt{-mp}\\
  ftn:   \texttt{-mp=nonuma}
 \end{quote}
-and is implemented and tested for the following combinations of FFTs
+OpenMP parallelization is currently implemented and tested for the following combinations of FFTs
 and libraries:
 \begin{quote}
  internal FFTW copy: \texttt{-D\_\_FFTW}\\
@@ -1552,10 +1556,10 @@ Currently, ESSL (when available) are faster than internal FFTW,
 which in turn are faster than ACML.
 
 \subsubsection{Understanding parallel I/O}
-In parallel exeution, each processor has its own slice of wavefunctions, 
+In parallel execution, each processor has its own slice of wavefunctions, 
 to be written to temporary files during the calculation. The way wavefunctions 
-are written by \pw.x is governed by variable \texttt{wf\_collect}, 
-in namelist \&control. 
+are written by \pw.x\ is governed by variable \texttt{wf\_collect}, 
+in namelist \&CONTROL 
 If \texttt{wf\_collect=.true.}, the final wavefunctions are collected into a single 
 directory, written by a single processor, whose format is independent on 
 the number of processors. If \texttt{wf\_collect=.false.} (default) each processor
@@ -1571,8 +1575,8 @@ all files are on a file system that is visible to all processors
 way to ensure that the distribution of processes on processors will
 follow the same pattern for different jobs).
 
-\cp.x instead always collects the final wavefunctions into a single directory.
-Files written by \pw.x can be read by \cp.x only if \texttt{wf\_collect=.true.} (and if
+\cp.x\ instead always collects the final wavefunctions into a single directory.
+Files written by \pw.x\ can be read by \cp.x\ only if \texttt{wf\_collect=.true.} (and if
 produced for k=0 case). 
 The directory for data is specified in input variables
 \texttt{outdir} and \texttt{prefix} (the former can be specified
@@ -3715,7 +3719,7 @@ Most likely there is a misspelled variable in namelist xxxx.
 If there isn't any (have you looked carefully? really?? REALLY???), 
 beware control characters like DOS control-M: they can confuse
 the namelist-reading code. If this happens to the first namelist 
-to be read (usually "\&control") in parallel execution, see above.
+to be read (usually "\&CONTROL") in parallel execution, see above.
 
 \paragraph{The code stops with an "error in davcio"}
 
