@@ -54,8 +54,7 @@ MODULE mp_global
   INTEGER :: nproc_image = 1  ! number of processor within an image
   INTEGER :: nproc_image_file  = 1  ! number of processor within a image
   INTEGER :: np_ortho(2) = 1  ! size of the processor grid used in ortho
-  INTEGER :: np_ortho2   = 0  ! size of the ortho group:
-  INTEGER :: np_ortho1   = 1  ! np_ortho2=np_ortho1^2=np_ortho(1)*np_ortho(2)
+  INTEGER :: nproc_ortho = 1  ! size of the ortho group:
   INTEGER :: leg_ortho   = 1  ! the distance in the father communicator
   ! of two neighbour processors in ortho_comm
   INTEGER, ALLOCATABLE :: nolist(:) ! list of processors in my orbital task group 
@@ -80,6 +79,12 @@ MODULE mp_global
   LOGICAL :: &
     use_task_groups = .FALSE.  ! if TRUE task groups parallelization is used
   !
+  ! ... Module Private stuff
+  !
+  LOGICAL, PRIVATE :: user_nproc_ortho = .FALSE.
+  !
+  PRIVATE :: init_pool
+  !
 CONTAINS
   !
   !-----------------------------------------------------------------------
@@ -98,7 +103,7 @@ CONTAINS
     ! ... NPOOL must be a whole divisor of NPROC
     !
     IMPLICIT NONE
-    INTEGER :: world, ntask_groups, nproc_ortho, meta_ionode_id 
+    INTEGER :: world, ntask_groups, nproc_ortho_in, meta_ionode_id 
     INTEGER :: root = 0
     LOGICAL :: meta_ionode
     !
@@ -149,7 +154,17 @@ CONTAINS
        !
        ! ... How many processors involved in diagonalization of Hamiltonian ?
        !
-       CALL get_arg_northo( nproc_ortho )
+       CALL get_arg_northo( nproc_ortho_in )
+       !
+       IF( nproc_ortho_in < 1 ) THEN
+          !  any invalid value means use the default
+          user_nproc_ortho = .FALSE.
+       ELSE
+          user_nproc_ortho = .TRUE.
+       END IF
+       !
+       nproc_ortho_in = MAX( nproc_ortho_in, 1 )
+       nproc_ortho_in = MIN( nproc_ortho_in, nproc )
        !
     END IF
     !
@@ -160,14 +175,14 @@ CONTAINS
     CALL mp_bcast( npool,  meta_ionode_id )
     CALL mp_bcast( nimage, meta_ionode_id )
     CALL mp_bcast( ntask_groups, meta_ionode_id )
-    CALL mp_bcast( nproc_ortho, meta_ionode_id )
+    CALL mp_bcast( nproc_ortho_in, meta_ionode_id )
+    CALL mp_bcast( user_nproc_ortho, meta_ionode_id )
     !
     use_task_groups = ( ntask_groups > 0 )
-    IF ( nproc_ortho > 0 ) np_ortho2 = nproc_ortho
     !
     ! ... all pools are initialized here
     !
-    CALL init_pool( nimage, ntask_groups, nproc_ortho )
+    CALL init_pool( nimage, ntask_groups, nproc_ortho_in )
     !
     RETURN
     !
@@ -238,26 +253,27 @@ CONTAINS
   !
   !
   !----------------------------------------------------------------------------
-  SUBROUTINE init_pool( nimage_ , ntask_groups_ , nproc_ortho_ )
+  SUBROUTINE init_pool( nimage_ , ntask_groups_ , nproc_ortho_in )
     !----------------------------------------------------------------------------
     !
     ! ... This routine initialize the pool :  MPI division in pools and images
     !
     IMPLICIT NONE
     !
-    INTEGER, OPTIONAL, INTENT(IN) :: nimage_
-    INTEGER, OPTIONAL, INTENT(IN) :: ntask_groups_
-    INTEGER, OPTIONAL, INTENT(IN) :: nproc_ortho_
+    INTEGER, INTENT(IN) :: nimage_
+    INTEGER, INTENT(IN) :: ntask_groups_
+    INTEGER, INTENT(IN) :: nproc_ortho_in
     !
+    INTEGER :: nproc_ortho_try
     INTEGER :: ierr = 0
-    INTEGER :: nproc_ortho
     !
 #if defined (__PARA)
     ! 
     !
-    IF( PRESENT( nimage_ ) ) THEN
-       nimage = nimage_
-    END IF
+    IF( nimage < 1 ) &
+       CALL errore( 'init_pool', 'invalid number of images, less than one', 1 )
+    !
+    nimage = nimage_
     !  
     ! ... here we set all parallel indeces (defined in mp_global): 
     !
@@ -267,10 +283,10 @@ CONTAINS
     nproc_image = nproc / nimage
     !
     IF ( nproc < nimage ) &
-         CALL errore( 'startup', 'nproc < nimage', 1 )
+       CALL errore( 'init_pool', 'invalid number of images, nimage > nproc', 1 )
     !
     IF ( MOD( nproc, nimage ) /= 0 ) &
-         CALL errore( 'startup', 'nproc /= nproc_image * nimage', 1 ) 
+       CALL errore( 'init_pool', 'invalid number of images, nproc /= nproc_image * nimage', 1 ) 
     !
     ! ... my_image_id  =  image index for this processor   ( 0 : nimage - 1 )
     ! ... me_image     =  processor index within the image ( 0 : nproc_image - 1 )
@@ -285,7 +301,8 @@ CONTAINS
     CALL MPI_COMM_SPLIT( MPI_COMM_WORLD, &
          my_image_id, mpime, intra_image_comm, ierr )
     !
-    CALL errore( 'init_pool', 'intra_image_comm is wrong', ierr )
+    IF ( ierr /= 0 ) &
+       CALL errore( 'init_pool', 'intra image communicator initialization', ABS(ierr) )
     !
     CALL mp_barrier()
     !
@@ -294,14 +311,15 @@ CONTAINS
     CALL MPI_COMM_SPLIT( MPI_COMM_WORLD, &
          me_image, mpime, inter_image_comm, ierr )  
     !
-    CALL errore( 'init_pool', 'inter_image_comm is wrong', ierr )
+    IF ( ierr /= 0 ) &
+       CALL errore( 'init_pool', 'inter image communicator initialization', ABS(ierr) )
     !
     ! ... number of cpus per pool of k-points (they are created inside each image)
     !
     nproc_pool = nproc_image / npool
     !
     IF ( MOD( nproc_image, npool ) /= 0 ) &
-         CALL errore( 'startup', 'nproc_image /= nproc_pool * npool', 1 )  
+         CALL errore( 'init_pool', 'invalid number of pools, nproc_image /= nproc_pool * npool', 1 )  
     !
     ! ... my_pool_id  =  pool index for this processor    ( 0 : npool - 1 )
     ! ... me_pool     =  processor index within the pool  ( 0 : nproc_pool - 1 )
@@ -316,7 +334,8 @@ CONTAINS
     CALL MPI_COMM_SPLIT( intra_image_comm, &
          my_pool_id, me_image, intra_pool_comm, ierr )
     !
-    CALL errore( 'init_pool', 'intra_pool_comm is wrong', ierr )
+    IF ( ierr /= 0 ) &
+       CALL errore( 'init_pool', 'intra pool communicator initialization', ABS(ierr) )
     !
     CALL mp_barrier( intra_image_comm )
     !
@@ -325,7 +344,8 @@ CONTAINS
     CALL MPI_COMM_SPLIT( intra_image_comm, &
          me_pool, me_image, inter_pool_comm, ierr )
     !
-    call errore( 'init_pool', 'inter_pool_comm is wrong', ierr )
+    IF ( ierr /= 0 ) &
+       CALL errore( 'init_pool', 'inter pool communicator initialization', ABS(ierr) )
     !
 #endif
     !
@@ -340,19 +360,27 @@ CONTAINS
     !
 #endif
     !
-    nproc_ortho = nproc_pool
-    !
-    IF( PRESENT( nproc_ortho_ ) ) THEN
-       IF( nproc_ortho_ < nproc_pool ) nproc_ortho = nproc_ortho_
+    IF( user_nproc_ortho ) THEN
+       ! use the command line value ensuring that it falls in the proper range.
+       nproc_ortho_try = MIN( nproc_ortho_in , nproc_pool )
+       nproc_ortho_try = MAX( nproc_ortho_try , 1 )
+    ELSE
+       ! here we can play with custom architecture specific default definitions
+#if defined __SCALAPACK
+       nproc_ortho_try = MAX( nproc_pool/2, 1 )
+#else
+       nproc_ortho_try = 1
+#endif
     END IF
     !
-    CALL init_ortho_group( nproc_ortho, intra_pool_comm )
+    ! the ortho group for parallel linear algebra is a sub-group of the pool,
+    ! then there are as many ortho groups as pools.
+    !
+    CALL init_ortho_group( nproc_ortho_try, intra_pool_comm )
     !  
-    IF( PRESENT( ntask_groups_ ) ) THEN
-       IF( ntask_groups_ > 0 ) THEN
-          nogrp = ntask_groups_
-          CALL init_task_groups( )
-       END IF
+    IF( ntask_groups_ > 0 ) THEN
+       nogrp = ntask_groups_
+       CALL init_task_groups( )
     END IF
     !
     RETURN
@@ -371,7 +399,7 @@ CONTAINS
     !OF PROCESSORS
     !
     IF( MOD( nproc_pool, nogrp ) /= 0 ) &
-         CALL errore( " init_pool ", " nogrp should be a divisor of nproc_pool ", 1 )
+         CALL errore( " init_task_groups ", "the number of task groups should be a divisor of nproc_pool ", 1 )
     !
     npgrp = nproc_pool / nogrp
 
@@ -406,13 +434,13 @@ CONTAINS
     key   = MOD( me_pool , nogrp )
     CALL MPI_COMM_SPLIT( intra_pool_comm, color, key, ogrp_comm, ierr )
     if( ierr /= 0 ) &
-         CALL errore( ' task_groups_init ', ' creating ogrp_comm ', ABS(ierr) )
+         CALL errore( ' init_task_groups ', ' creating ogrp_comm ', ABS(ierr) )
     CALL MPI_COMM_RANK( ogrp_comm, itsk, IERR )
     CALL MPI_COMM_SIZE( ogrp_comm, ntsk, IERR )
-    IF( nogrp /= ntsk ) CALL errore( ' task_groups_init ', ' ogrp_comm size ', ntsk )
+    IF( nogrp /= ntsk ) CALL errore( ' init_task_groups ', ' ogrp_comm size ', ntsk )
     DO i = 1, nogrp
        IF( me_pool == nolist( i ) ) THEN
-          IF( (i-1) /= itsk ) CALL errore( ' task_groups_init ', ' ogrp_comm rank ', itsk )
+          IF( (i-1) /= itsk ) CALL errore( ' init_task_groups ', ' ogrp_comm rank ', itsk )
        END IF
     END DO
 #endif
@@ -424,13 +452,13 @@ CONTAINS
     key   = me_pool / nogrp
     CALL MPI_COMM_SPLIT( intra_pool_comm, color, key, pgrp_comm, ierr )
     if( ierr /= 0 ) &
-         CALL errore( ' task_groups_init ', ' creating pgrp_comm ', ABS(ierr) )
+         CALL errore( ' init_task_groups ', ' creating pgrp_comm ', ABS(ierr) )
     CALL MPI_COMM_RANK( pgrp_comm, itsk, IERR )
     CALL MPI_COMM_SIZE( pgrp_comm, ntsk, IERR )
-    IF( npgrp /= ntsk ) CALL errore( ' task_groups_init ', ' pgrp_comm size ', ntsk )
+    IF( npgrp /= ntsk ) CALL errore( ' init_task_groups ', ' pgrp_comm size ', ntsk )
     DO i = 1, npgrp
        IF( me_pool == nplist( i ) ) THEN
-          IF( (i-1) /= itsk ) CALL errore( ' task_groups_init ', ' pgrp_comm rank ', itsk )
+          IF( (i-1) /= itsk ) CALL errore( ' init_task_groups ', ' pgrp_comm rank ', itsk )
        END IF
     END DO
     me_pgrp = itsk
@@ -441,15 +469,14 @@ CONTAINS
   END SUBROUTINE init_task_groups
   !
   !
-  SUBROUTINE init_ortho_group( nproc_try, comm_all )
+  SUBROUTINE init_ortho_group( nproc_try_in, comm_all )
     !
     IMPLICIT NONE
 
-    INTEGER, INTENT(IN) :: nproc_try, comm_all
+    INTEGER, INTENT(IN) :: nproc_try_in, comm_all
 
     LOGICAL, SAVE :: first = .true.
-    INTEGER :: ierr, color, key, me_all, nproc_all
-    INTEGER :: np_ortho1
+    INTEGER :: ierr, color, key, me_all, nproc_all, nproc_try
 
 #if defined __SCALAPACK
     INTEGER, ALLOCATABLE :: blacsmap(:,:)
@@ -461,11 +488,11 @@ CONTAINS
 #if defined __MPI
 
     me_all    = mp_rank( comm_all )
+    !
     nproc_all = mp_size( comm_all )
-
-    IF( nproc_try > nproc_all ) THEN
-       CALL errore( " init_ortho_group ", " argument 1 out of range ", nproc_try )
-    END IF
+    !
+    nproc_try = MIN( nproc_try_in, nproc_all )
+    nproc_try = MAX( nproc_try, 1 )
 
     IF( .NOT. first ) THEN
        !  
@@ -486,9 +513,12 @@ CONTAINS
     !
     CALL grid2d_dims( 'S', nproc_try, np_ortho(1), np_ortho(2) )
     !
-    np_ortho1 = np_ortho(1) * np_ortho(2)
+    !  now, and only now, it is possible to define the number of tasks
+    !  in the ortho group for parallel linear algebra
     !
-    IF( nproc_all >= 4*np_ortho1 ) THEN
+    nproc_ortho = np_ortho(1) * np_ortho(2)
+    !
+    IF( nproc_all >= 4*nproc_ortho ) THEN
        !
        !  here we choose a processor every 4, in order not to stress memory BW
        !  on multi core procs, for which further performance enhancements are
@@ -496,16 +526,16 @@ CONTAINS
        !  (to be implemented)
        !
        color = 0
-       IF( me_all < 4*np_ortho1 .AND. MOD( me_all, 4 ) == 0 ) color = 1
+       IF( me_all < 4*nproc_ortho .AND. MOD( me_all, 4 ) == 0 ) color = 1
        !
        leg_ortho = 4
        !
-    ELSE IF( nproc_all >= 2*np_ortho1 ) THEN
+    ELSE IF( nproc_all >= 2*nproc_ortho ) THEN
        !
        !  here we choose a processor every 2, in order not to stress memory BW
        !
        color = 0
-       IF( me_all < 2*np_ortho1 .AND. MOD( me_all, 2 ) == 0 ) color = 1
+       IF( me_all < 2*nproc_ortho .AND. MOD( me_all, 2 ) == 0 ) color = 1
        !
        leg_ortho = 2
        !
@@ -514,7 +544,7 @@ CONTAINS
        !  here we choose the first processors
        !
        color = 0
-       IF( me_all < np_ortho1 ) color = 1
+       IF( me_all < nproc_ortho ) color = 1
        !
        leg_ortho = 1
        !
@@ -522,30 +552,27 @@ CONTAINS
     !
     key   = me_all
     !
-    !  initialize the communicator for the new group
+    !  initialize the communicator for the new group by splitting the input communicator
     !
     CALL MPI_COMM_SPLIT( comm_all, color, key, ortho_comm, ierr )
     IF( ierr /= 0 ) &
-         CALL errore( " init_ortho_group ", " error splitting communicator ", ierr )
+         CALL errore( " init_ortho_group ", " initializing ortho group communicator ", ierr )
     !
     !  Computes coordinates of the processors, in row maior order
     !
-    me_ortho1 = mp_rank( ortho_comm )
-    np_ortho1 = mp_size( ortho_comm )
-    IF( color == 1 .AND. np_ortho1 /= np_ortho(1) * np_ortho(2) ) &
-         CALL errore( " init_ortho_group ", " wrong number of proc in ortho_comm ", ierr )
+    me_ortho1   = mp_rank( ortho_comm )
     !
     IF( me_all == 0 .AND. me_ortho1 /= 0 ) &
-         CALL errore( " init_ortho_group ", " wrong root in ortho_comm ", ierr )
+         CALL errore( " init_ortho_group ", " wrong root task in ortho group ", ierr )
     !
     if( color == 1 ) then
        ortho_comm_id = 1
        CALL GRID2D_COORDS( 'R', me_ortho1, np_ortho(1), np_ortho(2), me_ortho(1), me_ortho(2) )
        CALL GRID2D_RANK( 'R', np_ortho(1), np_ortho(2), me_ortho(1), me_ortho(2), ierr )
        IF( ierr /= me_ortho1 ) &
-            CALL errore( " init_ortho_group ", " wrong coordinates in ortho_comm ", ierr )
+            CALL errore( " init_ortho_group ", " wrong task coordinates in ortho group ", ierr )
        IF( me_ortho1*leg_ortho /= me_all ) &
-            CALL errore( " init_ortho_group ", " wrong rank assignment in ortho_comm ", ierr )
+            CALL errore( " init_ortho_group ", " wrong rank assignment in ortho group ", ierr )
     else
        ortho_comm_id = 0
        me_ortho(1) = me_ortho1
@@ -581,14 +608,16 @@ CONTAINS
 
          CALL BLACS_GRIDINFO( ortho_cntx_pe(i,j), nprow, npcol, myrow, mycol )
 
-         ! write(1000+mpime,*) j, i, nprow, npcol, myrow, mycol  ! debug
-
          IF( ( j == ( my_image_id + 1 ) ) .and. ( i == ( my_pool_id + 1 ) ) .and. ( ortho_comm_id > 0 ) ) THEN
 
-            IF(  np_ortho(1) /= nprow ) CALL errore( ' init_ortho_group ', ' problem with SCALAPACK, wrong nprow ', 1 )
-            IF(  np_ortho(2) /= npcol ) CALL errore( ' init_ortho_group ', ' problem with SCALAPACK, wrong npcol ', 1 )
-            IF(  me_ortho(1) /= myrow ) CALL errore( ' init_ortho_group ', ' problem with SCALAPACK, wrong myrow ', 1 )
-            IF(  me_ortho(2) /= mycol ) CALL errore( ' init_ortho_group ', ' problem with SCALAPACK, wrong mycol ', 1 )
+            IF(  np_ortho(1) /= nprow ) &
+               CALL errore( ' init_ortho_group ', ' problem with SCALAPACK, wrong no. of task rows ', 1 )
+            IF(  np_ortho(2) /= npcol ) &
+               CALL errore( ' init_ortho_group ', ' problem with SCALAPACK, wrong no. of task columns ', 1 )
+            IF(  me_ortho(1) /= myrow ) &
+               CALL errore( ' init_ortho_group ', ' problem with SCALAPACK, wrong task row ID ', 1 )
+            IF(  me_ortho(2) /= mycol ) &
+               CALL errore( ' init_ortho_group ', ' problem with SCALAPACK, wrong task columns ID ', 1 )
 
             ortho_cntx = ortho_cntx_pe(i,j)
 
