@@ -127,7 +127,7 @@
            tf%times(-tf%n:-1)=(-1.d0-x(1:tf%n))*tf%tau/2.d0
            tf%weights_time(0)=0.d0
            tf%weights_time(1:tf%n)=w(1:tf%n)*tf%tau/2.d0
-           tf%weights_time(-tf%n:1)=w(1:tf%n)*tf%tau/2.d0
+           tf%weights_time(-tf%n:-1)=w(1:tf%n)*tf%tau/2.d0
 
         endif
 !frequency grid
@@ -165,7 +165,7 @@
              tf%freqs(-tf%n:-1)=(-1.d0-x(1:tf%n))*tf%omega/2.d0
              tf%weights_freq(0)=0.d0
              tf%weights_freq(1:tf%n)=w(1:tf%n)*tf%omega/2.d0
-             tf%weights_freq(-tf%n:1)=w(1:tf%n)*tf%omega/2.d0
+             tf%weights_freq(-tf%n:-1)=w(1:tf%n)*tf%omega/2.d0
         endif
 
 
