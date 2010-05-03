@@ -817,7 +817,8 @@ CONTAINS
                 !
                 !loads the phi from file
                 !
-
+WRITE(stdout,*) "from vexx, nrxxs: ", nrxxs, ikq, h_ibnd 
+call flush_unit(stdout)
                 do ji=1, nrxxs
                    tempphic(ji)=exxbuff(ji,ikq,h_ibnd)
                    
@@ -849,6 +850,10 @@ CONTAINS
                 !
                 !loads the phi from file
                 !
+WRITE(stdout,*) "from vexx, nrxxs: ", nrxxs, ikq, ibnd
+if(allocated(tempphic)) write(stdout,*) "tempphic allcated"
+if(allocated(exxbuff)) write(stdout,*) "exxbuff allocated"
+call flush_unit(stdout)
                 do ji=1, nrxxs
                    tempphic(ji)=exxbuff(ji,ikq,ibnd)                
                 enddo
