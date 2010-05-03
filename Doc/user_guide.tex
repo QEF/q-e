@@ -1299,20 +1299,20 @@ fortran BLAS are linked instead of system Atlas libraries. Use:
 
 \paragraph{Intel Mac OS X 10.6}
 
-I have performed some limited amount of tests, and everything seems to
+``I have performed some limited amount of tests, and everything seems to
 be fine under macports supplied environment up to now. I have installed
-using the following manner:
-\begin{verbatim}}
-   port install gcc43\\
+using the following manner:''
+\begin{verbatim}
+   port install gcc43
    port install g95
 \end{verbatim}
 (rename apple supplied mpi to something else)\\
 (dowload and install openmpi )
-\begin{verbatim}}
+\begin{verbatim}
   ./configure CC=gcc-mp-4.3 CPP=cpp-mp-4.3 CXX=g++-mp-4.3 F77=g95 FC=g95
 \end{verbatim}
 (download and install \qe)
-\begin{verbatim}}
+\begin{verbatim}
   ./configure CC=gcc-mp-4.3 CPP=cpp-mp-4.3 CXX=g++-mp-4.3 F77=g95 FC=g95
 \end{verbatim}
 (Info by Osman Baris Malcioglu, May 2010)
@@ -1455,8 +1455,9 @@ Processors are organized in a hierarchy of groups,
 which are identified by different MPI communicators level.
 The groups hierarchy is as follow:
 \begin{verbatim}
-  world _ images _ pools _ task   groups
-                \_ linear-algebra groups
+                 /  pools _ task   groups
+  world _ images
+                 \ linear-algebra  groups
 \end{verbatim}
 
 {\bf world}: is the group of all processors (MPI\_COMM\_WORLD).
@@ -1552,7 +1553,7 @@ large ($ > 1000$) matrices, when using a large number of processors
 ($> 512$). If you want to test ScaLAPACK,
 use \texttt{configure --with-scalapack}. This
 will add
-\texttt{-D\_\_SCALAPACK} to DFLAGS in \texttt{make.sys} abd set LAPACK\_LIBS to something
+\texttt{-D\_\_SCALAPACK} to DFLAGS in \texttt{make.sys} and set LAPACK\_LIBS to something
 like:
 \begin{verbatim}
     LAPACK_LIBS = -lscalapack -lblacs -lblacsF77init -lblacs -llapack
@@ -1606,7 +1607,7 @@ follow the same pattern for different jobs).
 
 \cp.x\ instead always collects the final wavefunctions into a single directory.
 Files written by \pw.x\ can be read by \cp.x\ only if \texttt{wf\_collect=.true.} (and if
-produced for k=0 case). 
+produced for $k=0$ case). 
 The directory for data is specified in input variables
 \texttt{outdir} and \texttt{prefix} (the former can be specified
 as well in environment variable ESPRESSO\_TMPDIR):
@@ -1861,7 +1862,7 @@ together with an automatically generated uniform k-point grid
 Specify \texttt{nosym=.true.} to avoid generation of additional k-points in
 low symmetry cases. Variables \texttt{prefix} and \texttt{outdir}, which determine
 the names of input or output files, should be the same in the two runs.
-See Example 01, 05, 08,
+See Examples 01, 05, 08,
 
 NOTA BENE: until v.4.0, atomic positions for a non scf calculations 
 were read from input, while the scf potential was read from the data file
@@ -1899,7 +1900,7 @@ The former is useful for surfaces, especially in conjunction
 with dipolar corrections (\texttt{dipfield=.true.}):
 see \texttt{examples/dipole\_example} for an example of application. 
 Electrc fields viia modern theopry of polarization are documented in
-example 31. The exact meaning of the related variables, for both
+Example 31. The exact meaning of the related variables, for both
 cases, is explained in the general input documentation.
 
 \paragraph{Nudged Elastic Band calculation}
@@ -2014,8 +2015,9 @@ electric field and impose Acoustic Sum Rules at q=0 may be needed.
 In the following, we will indicate by $q$ the phonon wavevectors, 
 whle $k$ will indicate Bloch vectors used for summing over the Brillouin Zone.
 
-Since version 4.0 it is possible to safely stop execution of \ph.x code using
-the same mechanism of the \pw.x code, i.e. by creating a file prefix.EXIT in the 
+Since version 4.0 it is possible to safely stop execution of 
+\ph.x\ code using
+the same mechanism of the \pw.x\ code, i.e. by creating a file \texttt{prefix.EXIT} in the 
 working directory. Execution can be resumed by setting \texttt{recover=.true.} 
 in thesubsequent input data.
 
@@ -2036,7 +2038,7 @@ and which are not), you can run \ph.x.
 The first input line of \ph.x is a job identifier. At the second line the
 namelist \&INPUTPH starts. The meaning of the variables in the namelist
 (most of them having a default value) is described in file 
-\texttt{INPUT\_PH.*}. Variables \texttt{outdir} and \texttt{prefix} 
+\texttt{Doc/INPUT\_PH.*}. Variables \texttt{outdir} and \texttt{prefix} 
 must be the same as in the input data of \pw.x. Presently
 you must also specify \texttt{amass(i)} (a real variable): the atomic mass 
 of atomic type $i$.
@@ -2044,15 +2046,15 @@ of atomic type $i$.
 After the namelist you must specify the q-vector of the phonon mode.
 This must be the same q-vector given in the input of \pw.x.
     
-Notice that the dynamical matrix calculated by \ph.x at q = 0 does not
+Notice that the dynamical matrix calculated by \ph.x at $q=0$ does not
 contain the non-analytic term occuring in polar materials, i.e. there is no
 LO-TO splitting in insulators. Moreover no Acoustic Sum Rule (ASR) is
-applied. In order to have the complete dynamical matrix at q = 0 including
+applied. In order to have the complete dynamical matrix at $q=0$ including
 the non-analytic terms, you need to calculate effective charges by specifying
 option \texttt{epsil=.true.} to \ph.x. This is however not possible (because
 not physical!) for metals (i.e. any system subject to a broadening).
 
-At q = 0, use program \texttt{dynmat.x} to calculate the correct LO-TO 
+At $q=0$, use program \texttt{dynmat.x} to calculate the correct LO-TO 
 splitting, IR cross sections, and to impose various forms of ASR. 
 If \ph.x\ was instructed to calculate Raman coefficients, 
 \texttt{dynmat.x} will also calculate Raman cross sections
@@ -2068,7 +2070,7 @@ grid of q-vectors (only those in the Irreducible Brillouin Zone of the
 crystal are needed). Although this can be done one q-vector at the time, a
 simpler procedure is to specify variable \texttt{ldisp=.true.} and to set 
 variables \texttt{nq1}, \texttt{nq2}, \texttt{nq3} to some suitable 
-Monkhorst-Pack grid, that will be automatically generated, centered at q = 0. 
+Monkhorst-Pack grid, that will be automatically generated, centered at $q=0$. 
 Do not forget to specify \texttt{epsil=.true.} in the input data of \ph.x 
 if you want the correct TO-LO splitting in polar
 materials.
@@ -2097,7 +2099,7 @@ followed by a non-scf one on the dense k-point grid); specify
 option \texttt{la2f=.true.} to \pw.x\ in order to save a file with 
 the eigenvalues on the dense k-point grid. The latter MUST contain 
 all k and k+q grid points used in the subsequent electron-phonon 
-calculation. All grids MUST be unshifted, i.e. include k=0.
+calculation. All grids MUST be unshifted, i.e. include $k=0$.
 \item a normal scf + phonon dispersion calculation on the coarse k-point
 grid, specifying option \texttt{elph=.true.}. and the file name where
 the self-consistent first-order variation of the potential is to be 
@@ -2117,113 +2119,108 @@ For more details, see Example 07.
 
 There are a number of auxiliary codes performing postprocessing tasks such
 as plotting, averaging, and so on, on the various quantities calculated by
-\pw.x\. Such quantities are saved by \pw.x\ into the output data file(s). 
+\pw.x. Such quantities are saved by \pw.x\ into the output data file(s). 
 Postprocessing codes are in the \texttt{PP/} directory. All codes for 
 which input documentation is not explicitly mentioned have documentation
 in the header of the fortran sources.
 
 \subsection{Plotting selected quantities}
   
-The main postprocessing code pp.x reads data file(s), extracts or calculates 
+The main postprocessing code \texttt{pp.x} reads data file(s), extracts or calculates 
 the selected quantity, writes it into a format that is suitable for plotting.
 
 Quantities that can be read or calculated are:
-\begin{verbatim}
-      charge density
-      spin polarization
-      various potentials
-      local density of states at $E_F$
-      local density of electronic entropy
-      STM images
-      selected squared wavefunction
-      ELF (electron localization function)
-      planar averages
+\begin{quote}
+      charge density\\
+      spin polarization\\
+      various potentials\\
+      local density of states at $E_F$\\
+      local density of electronic entropy\\
+      STM images\\
+      selected squared wavefunction\\
+      ELF (electron localization function)\\
+      planar averages\\
       integrated local density of states
-\end{verbatim}
+\end{quote}
 Various types of plotting (along a line, on a plane, three-dimensional, polar)
 and output formats (including the popular cube format) can be specified.
 The output files can be directly read by the free plotting system Gnuplot
-(1D or 2D plots), or by code \texttt{plotrho.x} that comes with \PostProc (2D plots),
+(1D or 2D plots), or by code \texttt{plotrho.x} that comes with \PostProc\ (2D plots),
 or by advanced plotting software XCrySDen and gOpenMol (3D plots).
 
-See file INPUT\_PP.* for a detailed description of the input for code pp.x.
-See example05/ in the examples/ directory for a charge density plot.
+See file \texttt{Doc/INPUT\_PP.*} for a detailed description of the input for code \texttt{pp.x}.
+See Example 05 for an example of a charge density plot.
 
 \subsection{Band structure, Fermi surface}
 
-The code bands.x reads data file(s), extracts eigenvalues,
+The code \texttt{bands.x} reads data file(s), extracts eigenvalues,
 regroups them into bands (the algorithm used to order bands and to resolve
 crossings may not work in all circumstances, though). The output is written
 to a file in a simple format that can be directly read by plotting program
-plotband.x. Unpredictable plots may results if k-points are not in sequence
-along lines. See example05/ in the examples/ directory for a simple band plot.
+\texttt{plotband.x}. Unpredictable plots may results if k-points are not in sequence
+along lines. See Example 05 directory for a simple band plot.
 
-The code bands.x performs as well a symmetry analysis of the band structure:
-see example01/. 
+The code \texttt{bands.x} performs as well a symmetry analysis of the band structure:
+see Example 01. 
 
-The calculation of Fermi surface can be performed using kvecs\_FS.x and
-bands\_FS.x. The resulting file in .xsf format can be read and plotted
-using xcrysden. See example08/ for an example of Fermi surface 
+The calculation of Fermi surface can be performed using 
+\texttt{kvecs\_FS.x} and
+\texttt{bands\_FS.x}. The resulting file in .xsf format can be read and plotted
+using XCrySDen. See Example 08 for an example of Fermi surface 
 visualization (Ni, including the spin-polarized case).
 
 \subsection{Projection over atomic states, DOS}
 
-The code projwfc.x calculates projections of wavefunctions
+The code \texttt{projwfc.x} calculates projections of wavefunctions
 over atomic orbitals. The atomic wavefunctions are those contained
 in the pseudopotential file(s). The L\"owdin population analysis (similar to
 Mulliken analysis) is presently implemented. The projected DOS (or PDOS:
 the DOS projected onto atomic orbitals) can also be calculated and written
 to file(s). More details on the input data are found in file
-INPUT\_PROJWFC.*.  
-The auxiliary code sumpdos.x (courtesy of Andrea Ferretti) 
-can be used to sum selected PDOS, by specifiying the names of files
-containing the desired PDOS. Type sumpdos.x -h or look into the source
-code for more details. The total electronic DOS is instead calculated by code
-PP/dos.x. See example08/ in the examples/ directory for total and projected 
+\texttt{Doc/INPUT\_PROJWFC.*}.  
+The total electronic DOS is instead calculated by code
+\texttt{dos.x}. See Example 08 for total and projected 
 electronic DOS calculations.
 
 \subsection{Tools}
 
-Code sumpdos.x is a small utility that sums the partial DOS of
-selected atoms. See the header of  sumpdos.f90 for instructions.
+Code \texttt{sumpdos.x} (courtesy of Andrea Ferretti) 
+can be used to sum selected PDOS, produced by
+\texttt{projwfc.x}, by specifiying the names of files
+containing the desired PDOS. Type \texttt{sumpdos.x -h} or look into the source
+code for more details. 
 
-The code path\_int.x is intended to be used in the framework of NEB
+The code \texttt{path\_int.x} is intended to be used in the framework of NEB
 calculations. It is a tool to generate a new path (what is actually
 generated is the restart file) starting from an old one through
 interpolation (cubic splines). The new path can be discretized with a
 different number of images (this is its main purpose), images are
 equispaced and the interpolation can be also 
 performed on a subsection of the old path. The input file needed by
-path\_int.x can be easily set up  with the help of the self-explanatory
-path\_int.sh shell script. 
+\texttt{path\_int.x} can be easily set up  with the help of the self-explanatory
+\texttt{path\_int.sh} shell script. 
 
 \section{Using CP}
 
 This section is intended to explain how to perform basic Car-Parrinello (CP)
-simulations using the \CP package.
+simulations using the \CP\ package.
     
 It is important to understand that a CP simulation is a sequence of different 
 runs, some of them used to "prepare" the initial state of the system, and 
 other performed to collect statistics, or to modify the state of the system
 itself, i.e. modify the temperature or the pressure.
     
-To prepare and run a CP simulation you should:
-\begin{enumerate}
-\item Define the system:
-  \begin{enumerate}
-    \item atomic positions
-    \item system cell
-    \item pseudopotentials
-    \item number of electrons and bands
-    \item cut-offs
-    \item FFT grids
-  \end{enumerate}
-\item
-\end{enumerate}
-The first run, when starting from scratch, is always an electronic 
-minimization, with fixed ions and cell, to bring the electronic system 
-on the ground state (GS) relative to the starting atomic configuration.\\
-Example of input file (Benzene Molecule):
+To prepare and run a CP simulation you should first of all
+define the system:
+  \begin{quote}
+    atomic positions\\
+    system cell\\
+    pseudopotentials\\
+    cut-offs\\
+    number of electrons and bands (optional)\\
+    FFT grids (optional)
+  \end{quote}
+An example of input file (Benzene Molecule):
 \begin{verbatim}
          &control
             title = 'Benzene Molecule',
@@ -2256,7 +2253,7 @@ Example of input file (Benzene Molecule):
             nbnd = 15,
             ecutwfc = 40.0,
             nr1b= 10, nr2b = 10, nr3b = 10,
-            xc_type = 'BLYP'
+            input_dft = 'BLYP'
          /
          &electrons
             emass = 400.d0,
@@ -2287,40 +2284,43 @@ Example of input file (Benzene Molecule):
           H    -2.2 2.2 0.0
           H     2.2 2.2 0.0
 \end{verbatim} 
-You can find the description of the input variables in file INPUT\_CP.* 
-in the Doc/ directory. 
+You can find the description of the input variables in file 
+\texttt{Doc/INPUT\_CP.*}.
 
 \subsection{Reaching the electronic ground state}
 
-The first step in a CP scheme is to reach the electronic 
-ground state (GS), for a given set of nuclear positions.
+The first run, when starting from scratch, is always an electronic 
+minimization, with fixed ions and cell, to bring the electronic system on the ground state (GS) relative to the starting atomic configuration. This step is conceptually very similar to
+self-consistentcy in a \pw.x\ run.
+
 Sometimes a single run is not enough to reach the GS. In this case,
 you need to re-run the electronic minimization stage. Use the input 
-of the first run, changing restart\_mode = 'from\_scratch' to 
-restart\_mode = 'restart'.
+of the first run, changing \texttt{restart\_mode = 'from\_scratch'}
+to \texttt{restart\_mode = 'restart'}.
    
 NOTA BENE: Unless you are already experienced with the system 
-you are studying or with the internals of the code, you wil usually need 
-to tune some input parameters, like emass, dt, and cut-offs. For this 
+you are studying or with the internals of the code, you will usually need 
+to tune some input parameters, like \texttt{emass}, \texttt{dt}, and cut-offs. For this 
 purpose, a few trial runs could be useful: you can perform short
 minimizations (say, 10 steps) changing and adjusting these parameters 
 to fit your needs. You can specify the degree of convergence with these
 two thresholds:
-
-etot\_conv\_thr: total energy difference between two consecutive steps
-
-ekin\_conv\_thr: value of the fictitious kinetic energy of the electrons
+\begin{quote}
+\texttt{etot\_conv\_thr}: total energy difference between two consecutive steps\\
+\texttt{ekin\_conv\_thr}: value of the fictitious kinetic energy of the electrons.
+\end{quote}
    
-Usually we consider the system on the GS when ekin conv\_thr $ < 10^{-5}$.
+Usually we consider the system on the GS when 
+\texttt{ekin\_conv\_thr} $ < 10^{-5}$.
 You could check the value of the fictitious kinetic energy on the standard 
 output (column EKINC).
 
 Different strategies are available to minimize electrons, but the most used 
 ones are:
 \begin{itemize}
-\item steepest descent: electron\_dynamics = 'sd'
-\item damped dynamics: electron\_dynamics = 'damp',
-  electron\_damping = a number typically ranging from 0.1 and 0.5 
+\item steepest descent: \texttt{electron\_dynamics = 'sd'}
+\item damped dynamics: \texttt{electron\_dynamics = 'damp'},
+\texttt{electron\_damping} = a number typically ranging from 0.1 and 0.5 
 \end{itemize}
 See the input description to compute the optimal damping factor.
 
@@ -2328,7 +2328,7 @@ See the input description to compute the optimal damping factor.
 
 Once your system is in the GS, depending on how you have prepared the starting
 atomic configuration:
-\begin{itemize}
+\begin{enumerate}
 \item
 if you have set the atomic positions "by hand" and/or from a classical code, 
 check the forces on atoms, and if they are large ($\sim 0.1 \div 1.0$
@@ -2340,19 +2340,15 @@ simulation, check the forces, and if they are too small ($\sim 10^{-4}$
 atomic units), this means that atoms are already in equilibrium positions 
 and, even if left free, they will not move. Then you need to randomize 
 positions a little bit (see below).
-\end{itemize}
+\end{enumerate}
 
-1.) Minimize ionic positions.
-
-As we pointed out in 4) if the interatomic forces are too high, 
-the system could "explode" if we switch on the ionic dynamics. 
-To avoid that we need to relax the system. Again there are 
+Let us consider case 1). There are 
 different strategies to relax the system, but the most used 
-are again steepest descent or damped dynamics for ions and electrons. 
+are again steepest-descent or damped-dynamics for ions and electrons. 
 You could also mix electronic and ionic minimization scheme freely, 
-i.e. ions in steepest and electron in damping or vice versa.
-    
-(a) suppose we want to perform a steepest for ions. Then we should specify 
+i.e. ions in steepest-descent and electron in with damped-dynamics or vice versa.
+\begin{itemize}    
+\item[(a)] suppose we want to perform steepest-descent for ions. Then we should specify 
 the following section for ions:
 \begin{verbatim} 
          &ions
@@ -2369,8 +2365,7 @@ while leaving other input parameters unchanged.
 {\em Note} that if the forces are really high ($> 1.0$ atomic units), you
 should always use steepest descent for the first ($\sim 100$
 relaxation steps. 
-
-(b) as the system approaches the equilibrium positions, the steepest 
+\item[(b)] As the system approaches the equilibrium positions, the steepest 
 descent scheme slows down, so is better to switch to damped dynamics:
 \begin{verbatim} 
          &ions
@@ -2379,7 +2374,7 @@ descent scheme slows down, so is better to switch to damped dynamics:
            ion_velocities = 'zero'
          /
 \end{verbatim}
-A typical value of ion damping between 0.05 is good for many systems. 
+A  value of \texttt{ion\_damping} around 0.05 is good for many systems. 
 It is also better to specify to restart with zero ionic and electronic 
 velocities, since we have changed the masses.
     
@@ -2389,15 +2384,15 @@ Change further the ionic masses to accelerate the minimization:
            C 0.1d0 c_blyp_gia.pp
            H 0.1d0 h.ps
 \end{verbatim}
-
-(c) when the system is really close to the equilibrium, the damped dynamics 
+\item[(c)] when the system is really close to the equilibrium, the damped dynamics 
 slow down too, especially because, since we are moving electron and ions 
 together, the ionic forces are not properly correct, then it is often better 
 to perform a ionic step every N electronic steps, or to move ions only when
 electron are in their GS (within the chosen threshold).
     
-This can be specified by adding, in the ionic section, the ion\_nstepe
-parameter, then the ionic input section become as follows:
+This can be specified by adding, in the ionic section, the 
+\texttt{ion\_nstepe}
+parameter, then the \&IONS namelist become as follows:
 \begin{verbatim} 
          &ions
            ion_dynamics = 'damp',
@@ -2406,20 +2401,21 @@ parameter, then the ionic input section become as follows:
            ion_nstepe = 10
          /
 \end{verbatim}
-Then we specify in the control input section:
+Then we specify in the \&CONTROL namelist:
 \begin{verbatim} 
            etot_conv_thr = 1.d-6,
            ekin_conv_thr = 1.d-5,
            forc_conv_thr = 1.d-3
 \end{verbatim}
 As a result, the code checks every 10 electronic steps whether
-the electronic system satisfies the two thresholds etot\_conv\_thr,
-ekin\_conv\_thr: if it does, the ions are advanced by one step.
+the electronic system satisfies the two thresholds 
+\texttt{etot\_conv\_thr}, \texttt{ekin\_conv\_thr}: if it does, 
+the ions are advanced by one step.
 The process thus continues until the forces become smaller than
-forc\_conv\_thr.
+\texttt{forc\_conv\_thr}.
 
-{\em Note} that to fully relax the system you need many run, and different 
-strategies, that you shold mix and change in order to speed-up the convergence.
+{\em Note} that to fully relax the system you need many runs, and different 
+strategies, that you should mix and change in order to speed-up the convergence.
 The process is not automatic, but is strongly based on experience, and trial 
 and error.
 
@@ -2428,18 +2424,19 @@ the energy threshold for the electronic GS, in fact correct forces (required
 to move ions toward the minimum) are obtained only when electrons are in their 
 GS. Then a small threshold on forces could not be satisfied, if you do not 
 require an even smaller threshold on total energy.
+\end{itemize}
 
-2. Randomization of positions.
+Let us now move to case 2: randomization of positions.
    
 If you have relaxed the system or if the starting system is already in
-the equilibrium positions, then you need to move ions from the equilibrium 
-positions, otherwise they will nott move in a dynamics simulation.
+the equilibrium positions, then you need to dispacee ions from the equilibrium 
+positions, otherwise they will not move in a dynamics simulation.
 After the randomization you should bring electrons on the GS again,
 in order to start a dynamic with the correct forces and with electrons 
 in the GS. Then you should switch off the ionic dynamics and activate 
 the randomization for each species, specifying the amplitude of the 
-randomization itself. This could be done with the following ionic input 
-section:
+randomization itself. This could be done with the following 
+\&IONS namelist:
 \begin{verbatim}
           &ions
             ion_dynamics = 'none',
@@ -2454,7 +2451,7 @@ species 1 and 2. All other input parameters could remain the same.
 Note that the difference in the total energy (etot) between relaxed and
 randomized positions can be used to estimate the temperature that will
 be reached by the system. In fact, starting with zero ionic velocities,
-all the diffrence is potential energy, but in a dynamics simulation, the
+all the difference is potential energy, but in a dynamics simulation, the
 energy will be equipartitioned between kinetic and potential, then to
 estimate the temperature take the difference in energy (de), convert it
 in Kelvins, divide for the number of atoms and multiply by 2/3.
@@ -2464,9 +2461,8 @@ an energy plateau.
 
 \subsection{CP dynamics}
 
-At this point after having minimized the electrons, and with ions dis-
-placed from their equilibrium positions, we are ready to start a CP
-dynamics. We need to specify 'verlet' both in ionic and electronic
+At this point after having minimized the electrons, and with ions displaced from their equilibrium positions, we are ready to start a CP
+dynamics. We need to specify \texttt{'verlet'} both in ionic and electronic
 dynamics. The threshold in control input section will be ignored, like
 any parameter related to minimization strategy. The first time we perform 
 a CP run after a minimization, it is always better to put velocities equal
@@ -2491,7 +2487,7 @@ changes as follow:
 \end{verbatim}
 
 If you want to specify the initial velocities for ions, you have to set
-ion\_velocities ='from\_input', and add the IONIC\_VELOCITIES
+\texttt{ion\_velocities ='from\_input'}, and add the IONIC\_VELOCITIES
 card, after the ATOMIC\_POSITION card, with the list of velocities in 
 atomic units.
 
@@ -2517,19 +2513,19 @@ microcanonical ensemble.
 It is possible to change the temperature of the system or to sample the 
 canonical ensemble fixing the average temperature, this is done using 
 the Nos\'e thermostat. To activate this thermostat for ions you have 
-to specify in the ions input section:
+to specify in namelist \&IONS:
 \begin{verbatim}
            &ions
-              ion_dynamics = 'verletâ',
+              ion_dynamics = 'verlet',
               ion_temperature = 'nose',
               fnosep = 60.0,
               tempw = 300.0
            /  
 \end{verbatim}
-where fnosep is the frequency of the thermostat in THz, thatishould be
+where \texttt{fnosep} is the frequency of the thermostat in THz, that should be
 chosen to be comparable with the center of the vibrational spectrum of
 the system, in order to excite as many vibrational modes as possible.
-tempw is the desired average temperature in Kelvin.
+\texttt{tempw} is the desired average temperature in Kelvin.
    
 {\em Note:} to avoid a strong coupling between the Nos\'e thermostat 
 and the system, proceed step by step. Don't switch on the thermostat 
@@ -2566,9 +2562,12 @@ mild overexcitation of the electrons, however, to do this one will need
 to know rather precisely what is the fictititious kinetic energy due to the
 drag.''
 
-\paragraph{ Self-interaction Correction }
+\subsection{Advanced usage}
 
-The self-interaction correction (SIC) included in the \CP package is based
+\subsubsection{ Self-interaction Correction }
+
+The self-interaction correction (SIC) included in the \CP\
+package is based
 on the Constrained Local-Spin-Density approach proposed my F. Mauri and 
 coworkers (M. D'Avezac et al. PRB 71, 205210 (2005)). It was used for
 the first time in \qe\ by F. Baletto, C. Cavazzoni 
@@ -2577,8 +2576,8 @@ and S.Scandolo (PRL 95, 176801 (2005)).
 This approach is a simple and nice way to treat ONE, and only one, 
 excess charge (EC). It is moreover necessary to check a priori that 
 the spin-up and spin-down eigenvalues are not too different, for the 
-corresponding neutral system. working in the Local-Spin-Density 
-Approximation (setting nspin = 2). If these two conditions are satisfied
+corresponding neutral system, working in the Local-Spin-Density 
+Approximation (setting \texttt{nspin = 2}). If these two conditions are satisfied
 and you are interest in charged systems, you can apply the SIC.
 This approach is a on-the-fly method to correct the self-interaction 
 with the excess charge with itself.
@@ -2606,9 +2605,11 @@ the SIC are:
            ATOMIC_POSITIONS (bohr)
            B 0.00 0.00 0.00 0 0 0 1
 \end{verbatim}
-The two main parameters are:\\
-"force\_pairing = .true.", which forces the paired electrons to be the same;\\ 
-"sic='sic\_mac'," which instructs the code to use Mauri's correction.\\
+The two main parameters are:
+\begin{quote}
+\texttt{force\_pairing = .true.}, which forces the paired electrons to be the same;\\ 
+\texttt{sic='sic\_mac'}, which instructs the code to use Mauri's correction.
+\end{quote}
 Remember to add an extra-column in ATOMIC\_POSITIONS with "1" to activate
 SIC for those atoms.
 
@@ -2617,10 +2618,10 @@ This approach has known problems for dissociation mechanism
 driven by excess electrons.
 
 Comment 1:
-Two parameters, ''sic\_alpha'' and ''sic\_epsilon'', have been introduced 
+Two parameters, \texttt{sic\_alpha} and \texttt{sic\_epsilon'}, have been introduced 
 following the suggestion of M. Sprik (ICR(05)) to treat the radical
 (OH)-H$_2$O. In any case, a complete ab-initio approach is followed 
-using ''sic\_alpha=sic\_epsilon=1''.
+using \texttt{sic\_alpha=1}, \texttt{sic\_epsilon=1}.
 
 Comment 2:
 When you apply this SIC scheme to a molecule or to an atom, which are neutral,
@@ -2631,30 +2632,27 @@ For a cubic box, the correction term due to the Madelung energy is approx.
 given by $1.4186/L_{box} - 1.047/(L_{box})^3$, where $L_{box}$ is the 
 linear dimension of your box (=celldm(1)). The Madelung coefficient is 
 taken from I. Dabo et al. PRB 77, 115139 (2007).
-
 (info by F. Baletto, francesca.baletto@kcl.ac.uk)
 
-\subsection{ Variable-cell MD }
+% \subsubsection{ Variable-cell MD }
 
-The variable-cell MD is when the Car-Parrinello technique is also applied 
-to the cell. This technique is useful to study system at very high pressure.
+%The variable-cell MD is when the Car-Parrinello technique is also applied 
+%to the cell. This technique is useful to study system at very high pressure.
 
-\subsection{ Conjugate Gradient }
-
-This page is under construction.
-
-\paragraph{ ensemble-DFT }
+\subsubsection{ ensemble-DFT }
 
 The ensemble-DFT (eDFT) is a robust method to simulate the metals in the 
 framework of ''ab-initio'' molecular dynamics. It was introduced in 1997 
 by Marzari et al.
 
-The specific subroutines for the eDFT are in ensemble\_dft.f90 where you 
-define all the quantities of interest. The subroutine inner\_loop\_cold.f90
-called by cg\_sub.f90, control the inner loop, and so the minimization of 
+The specific subroutines for the eDFT are in 
+\texttt{CPV/ensemble\_dft.f90} where you 
+define all the quantities of interest. The subroutine 
+\texttt{CPV/inner\_loop\_cold.f90}
+called by \texttt{cg\_sub.f90}, control the inner loop, and so the minimization of 
 the free energy $A$ with respect to the occupation matrix.
 
-To select a eDFT calculations, the user has to choice:
+To select a eDFT calculations, the user has to set:
 \begin{verbatim}
             calculation = 'cp'
             occupations= 'ensemble' 
@@ -2662,32 +2660,32 @@ To select a eDFT calculations, the user has to choice:
             passop= 0.3
             maxiter = 250
 \end{verbatim}
-to use the CG procedure. In the eDFT it is also the outer loop, where thei
+to use the CG procedure. In the eDFT it is also the outer loop, where the
 energy is minimized with respect to the wavefunction keeping fixed the 
 occupation matrix. While the specific parameters for the inner loop.
 Since eDFT was born to treat metals, keep in mind that we want to describe 
 the broadening of the occupations around the Fermi energy.
 Below the new parameters in the electrons list, are listed.
 \begin{itemize}
-\item smearing: used to select the occupation distribution;
+\item \texttt{smearing}: used to select the occupation distribution;
 there are two options: Fermi-Dirac smearing='fd', cold-smearing
 smearing='cs' (recommanded) 
-\item degauss: is the electronic temperature; it controls the broadening
+\item \texttt{degauss}: is the electronic temperature; it controls the broadening
 of the occupation numbers around the Fermi energy. 
-\item ninner: is the number of iterative cycles in the inner loop, 
+\item \texttt{ninner}: is the number of iterative cycles in the inner loop, 
 done to minimize the free energy $A$ with respect the occupation numbers.
 The typical range is 2-8.
-\item conv\_thr: is the threshold value to stop the search of the 'minimum' 
+\item \texttt{conv\_thr}: is the threshold value to stop the search of the 'minimum' 
 free energy.
-\item niter\_cold\_restart: controls the frequency at which a full iterative
-inner cycle is done. It is in the range 1-ninner. It is a trick to speed up 
+\item \texttt{niter\_cold\_restart}: controls the frequency at which a full iterative
+inner cycle is done. It is in the range $1\div$\texttt{ninner}. It is a trick to speed up 
 the calculation.
-\item lambda\_cold: is the length step along the search line for the best 
+\item \texttt{lambda\_cold}: is the length step along the search line for the best 
 value for $A$, when the iterative cycle is not performed. The value is close 
 to 0.03, smaller for large and complicated metallic systems.
 \end{itemize}
-{\em NOTE:} degauss is in Hartree, while in \PWscf is in Ry (!!!). 
-The tyPical range is 0.01-0.02 Ha.
+{\em NOTE:} \texttt{degauss} is in Hartree, while in \PWscf is in Ry (!!!). 
+The typical range is 0.01-0.02 Ha.
 
 The input for an Al surface is:
 \begin{verbatim}
@@ -2713,7 +2711,7 @@ The input for an Al surface is:
              nspin=1,
              ecutwfc= 15,
              nbnd=160,
-             xc_type = 'pbe'
+             input_dft = 'pbe'
              occupations= 'ensemble',
              smearing='cs',
              degauss=0.018,
@@ -2743,19 +2741,19 @@ The input for an Al surface is:
 {\em NOTA1}  remember that the time step is to integrate the ionic dynamics,
 so you can choose something in the range of 1-5 fs. \\
 {\em NOTA2} with eDFT you are simulating metals or systems for which the 
-occupation number is also fractional, so the number of band, nbnd, has to 
+occupation number is also fractional, so the number of band, \texttt{nbnd}, has to 
 be chosen such as to have some empty states. As a rule of thumb, start
 with an initial occupation number of about 1.6-1.8 (the more bands you 
 considera, the more the calculation is accurate, but it also takes longer.
 The CPU time scales almost linearly with the number of bands.) \\
-{\em NOTA3} the parameter emass\_cutoff is used during the preconditioning 
+{\em NOTA3} the parameter \texttt{emass\_cutoff} is used in the preconditioning 
 and it has a completely different meaning with respect to plain CP. 
 It ranges between 4 and 7.
 
-All the other parameters have the same meaning in the usual \CP input, 
+All the other parameters have the same meaning in the usual \CP\ input, 
 and they are discussed above.
 
-\subsection{ About nr1b, nr2b, nr3b}
+\subsubsection{ About nr1b, nr2b, nr3b}
 
 ecutrho defines the resolution on the real space FFT mesh (as expressed 
 by nr1, nr2 and nr3, that the code left on its own sets automatically).
@@ -2862,7 +2860,7 @@ A typical self-consistency or molecular-dynamics run requires a maximum
 memory in the order of O double precision complex numbers, where
 $$ O = m M N + P N + p N_1 N_2 N_3 + q N_{r1} N_{r2} N_{r3}$$
 with m, p, q = small factors; all other variables have the same meaning as
-above. Note that if the $\Gamma-$point only (q = 0) is used to sample the 
+above. Note that if the $\Gamma-$point only ($k=0$) is used to sample the 
 Brillouin Zone, the value of N will be cut into half.
 
 The memory required by the phonon code follows the same patterns, with
@@ -3482,11 +3480,11 @@ sign flags eigenvalues of the dynamical matrix for which $\omega^2 <
 0$. 
 
 \paragraph{'Wrong degeneracy' error in star\_q}
-Verify the q-point for which you are calculating phonons. In order to
+Verify the q-vector for which you are calculating phonons. In order to
 check whether a symmetry operation belongs to the small group of q,
 the code compares q and the rotated q, with an acceptance tolerance of  
 $10^{-5}$ (set in routine PW/eqvect.f90). You may run into trouble if
-your q-point differs from a high-symmetry point by an amount in that
+your q-vector differs from a high-symmetry point by an amount in that
 order of magnitude.
 
 \section{Frequently Asked Questions (FAQ)}
