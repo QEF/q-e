@@ -1,0 +1,1331 @@
+ PROGRAM GWW: Version 0.3
+     done
+ Number of intervals:  100
+ Number of intervals for fit: 100
+ Maximum imaginary time:  10.
+ Print whole Sigma:  F
+ Maximum state considered: 20
+ Prefix:si
+ Rows together in FFT: 96
+ Uses contraction
+ Accurate treatment of conduction states
+ Uses contractions on single states
+ Uses no fft grid for time/space integrations
+ Time grid : 2
+ Frequency grid : 2
+ Max frequency : 20.
+ Consider states from: 1  to  20
+ Maximum number of iterations in minpack:  10000
+ Number of cycles over minpack:  1
+ Uses LDA Hartree : T
+ Uses LDA Exchange : T
+ Uses SYMMETRIZED DIELECTRIC MATRIX
+ Head of dielectric matrix from file
+ Treatment of W divergence: 2
+ Wings of dielectric matrix from file
+ Offset fit : 2
+ Read vcprim terms from file
+ Calculates the polarization directly from the overlaps
+ Number of excluded conduction states 0
+ min -100 0 1 201
+ max 100 0 201 201
+ min pola 0
+ max pola 100
+ min state 1
+ max state 20
+ min state range 1
+ max state range 20
+ ATT1
+ ATT2
+ starting_point <=1
+ Routine go_exchange main1
+ hubbard_u files exist ? lex= F
+ OLD wu%ene_xc( 1 )= -0.769607086758612
+ wu%ene_u( 1 )= 0.
+ OLD wu%ene_xc( 2 )= -0.8292815635754316
+ wu%ene_u( 2 )= 0.
+ OLD wu%ene_xc( 3 )= -0.8292817611790377
+ wu%ene_u( 3 )= 0.
+ OLD wu%ene_xc( 4 )= -0.8247269296250586
+ wu%ene_u( 4 )= 0.
+ OLD wu%ene_xc( 5 )= -0.7356463834703718
+ wu%ene_u( 5 )= 0.
+ OLD wu%ene_xc( 6 )= -0.7402491701461694
+ wu%ene_u( 6 )= 0.
+ OLD wu%ene_xc( 7 )= -0.7402492813716415
+ wu%ene_u( 7 )= 0.
+ OLD wu%ene_xc( 8 )= -0.8004256220077074
+ wu%ene_u( 8 )= 0.
+ OLD wu%ene_xc( 9 )= -0.5941763176453876
+ wu%ene_u( 9 )= 0.
+ OLD wu%ene_xc( 10 )= -0.740269331015368
+ wu%ene_u( 10 )= 0.
+ OLD wu%ene_xc( 11 )= -0.740269364814892
+ wu%ene_u( 11 )= 0.
+ OLD wu%ene_xc( 12 )= -0.6216166158207562
+ wu%ene_u( 12 )= 0.
+ OLD wu%ene_xc( 13 )= -0.6292534049015206
+ wu%ene_u( 13 )= 0.
+ OLD wu%ene_xc( 14 )= -0.6292534772973367
+ wu%ene_u( 14 )= 0.
+ OLD wu%ene_xc( 15 )= -0.5168380745933725
+ wu%ene_u( 15 )= 0.
+ OLD wu%ene_xc( 16 )= -0.7423447492756431
+ wu%ene_u( 16 )= 0.
+ OLD wu%ene_xc( 17 )= -0.7496442824428037
+ wu%ene_u( 17 )= 0.
+ OLD wu%ene_xc( 18 )= -0.7496442984181404
+ wu%ene_u( 18 )= 0.
+ OLD wu%ene_xc( 19 )= -0.7898677532150952
+ wu%ene_u( 19 )= 0.
+ OLD wu%ene_xc( 20 )= -0.7898677850433035
+ wu%ene_u( 20 )= 0.
+ OLD wu%ene_xc( 21 )= -0.769240018148348
+ wu%ene_u( 21 )= 0.
+ OLD wu%ene_xc( 22 )= -0.7692400736904673
+ wu%ene_u( 22 )= 0.
+ OLD wu%ene_xc( 23 )= -0.765496806048519
+ wu%ene_u( 23 )= 0.
+ OLD wu%ene_xc( 24 )= -0.7436650280476592
+ wu%ene_u( 24 )= 0.
+ OLD wu%ene_xc( 25 )= -0.7408481390255041
+ wu%ene_u( 25 )= 0.
+ OLD wu%ene_xc( 26 )= -0.7408481560811934
+ wu%ene_u( 26 )= 0.
+ OLD wu%ene_xc( 27 )= -0.7148485535492151
+ wu%ene_u( 27 )= 0.
+ OLD wu%ene_xc( 28 )= -0.7187810540089233
+ wu%ene_u( 28 )= 0.
+ OLD wu%ene_xc( 29 )= -0.7187809996793761
+ wu%ene_u( 29 )= 0.
+ OLD wu%ene_xc( 30 )= -0.6089484767673118
+ wu%ene_u( 30 )= 0.
+ OLD wu%ene_xc( 31 )= -0.683560275866666
+ wu%ene_u( 31 )= 0.
+ OLD wu%ene_xc( 32 )= -0.6835603021873244
+ wu%ene_u( 32 )= 0.
+ OLD wu%ene_xc( 33 )= -0.6640991184850692
+ wu%ene_u( 33 )= 0.
+ OLD wu%ene_xc( 34 )= -0.6640990975253905
+ wu%ene_u( 34 )= 0.
+ OLD wu%ene_xc( 35 )= -0.6772566961286093
+ wu%ene_u( 35 )= 0.
+ OLD wu%ene_xc( 36 )= -0.6799872379842007
+ wu%ene_u( 36 )= 0.
+ OLD wu%ene_xc( 37 )= -0.6799871925855034
+ wu%ene_u( 37 )= 0.
+ OLD wu%ene_xc( 38 )= -0.7967137005645046
+ wu%ene_u( 38 )= 0.
+ OLD wu%ene_xc( 39 )= -0.7054372309482034
+ wu%ene_u( 39 )= 0.
+ OLD wu%ene_xc( 40 )= -0.7082494404290188
+ wu%ene_u( 40 )= 0.
+ OLD wu%ene_xc( 41 )= -0.7082494738443917
+ wu%ene_u( 41 )= 0.
+ OLD wu%ene_xc( 42 )= -0.6701110745942175
+ wu%ene_u( 42 )= 0.
+ OLD wu%ene_xc( 43 )= -0.6701111687386204
+ wu%ene_u( 43 )= 0.
+ OLD wu%ene_xc( 44 )= -0.6654894108487778
+ wu%ene_u( 44 )= 0.
+ OLD wu%ene_xc( 45 )= -0.7081278833417031
+ wu%ene_u( 45 )= 0.
+ OLD wu%ene_xc( 46 )= -0.7081278730631614
+ wu%ene_u( 46 )= 0.
+ OLD wu%ene_xc( 47 )= -0.7127009514491931
+ wu%ene_u( 47 )= 0.
+ OLD wu%ene_xc( 48 )= -0.6616161305952959
+ wu%ene_u( 48 )= 0.
+ OLD wu%ene_xc( 49 )= -0.6616161025077683
+ wu%ene_u( 49 )= 0.
+ OLD wu%ene_xc( 50 )= -0.6659172473511321
+ wu%ene_u( 50 )= 0.
+ OLD wu%ene_xc( 51 )= -0.6395372394401895
+ wu%ene_u( 51 )= 0.
+ OLD wu%ene_xc( 52 )= -0.6146355340948422
+ wu%ene_u( 52 )= 0.
+ OLD wu%ene_xc( 53 )= -0.614635531859336
+ wu%ene_u( 53 )= 0.
+ OLD wu%ene_xc( 54 )= -0.6132588993240516
+ wu%ene_u( 54 )= 0.
+ OLD wu%ene_xc( 55 )= -0.5719455525499236
+ wu%ene_u( 55 )= 0.
+ OLD wu%ene_xc( 56 )= -0.5719455741503873
+ wu%ene_u( 56 )= 0.
+ OLD wu%ene_xc( 57 )= -0.569075599738066
+ wu%ene_u( 57 )= 0.
+ OLD wu%ene_xc( 58 )= -0.5650264397990872
+ wu%ene_u( 58 )= 0.
+ OLD wu%ene_xc( 59 )= -0.6455436506293608
+ wu%ene_u( 59 )= 0.
+ OLD wu%ene_xc( 60 )= -0.6287828014664928
+ wu%ene_u( 60 )= 0.
+ OLD wu%ene_xc( 61 )= -0.62878280101126
+ wu%ene_u( 61 )= 0.
+ OLD wu%ene_xc( 62 )= -0.6669488045114479
+ wu%ene_u( 62 )= 0.
+ OLD wu%ene_xc( 63 )= -0.6669488185351201
+ wu%ene_u( 63 )= 0.
+ OLD wu%ene_xc( 64 )= -0.6663031730713782
+ wu%ene_u( 64 )= 0.
+ OLD wu%ene_xc( 65 )= -0.6270108213622284
+ wu%ene_u( 65 )= 0.
+ OLD wu%ene_xc( 66 )= -0.734015924741526
+ wu%ene_u( 66 )= 0.
+ OLD wu%ene_xc( 67 )= -0.7370182008713718
+ wu%ene_u( 67 )= 0.
+ OLD wu%ene_xc( 68 )= -0.7370182308585015
+ wu%ene_u( 68 )= 0.
+ OLD wu%ene_xc( 69 )= -0.6994507569128595
+ wu%ene_u( 69 )= 0.
+ OLD wu%ene_xc( 70 )= -0.7520705256519886
+ wu%ene_u( 70 )= 0.
+ OLD wu%ene_xc( 71 )= -0.752070549922254
+ wu%ene_u( 71 )= 0.
+ OLD wu%ene_xc( 72 )= -0.7364743136072835
+ wu%ene_u( 72 )= 0.
+ OLD wu%ene_xc( 73 )= -0.7364743903215424
+ wu%ene_u( 73 )= 0.
+ OLD wu%ene_xc( 74 )= -0.7322176305226977
+ wu%ene_u( 74 )= 0.
+ OLD wu%ene_xc( 75 )= -0.8163414429711825
+ wu%ene_u( 75 )= 0.
+ OLD wu%ene_xc( 76 )= -0.8145593901671895
+ wu%ene_u( 76 )= 0.
+ OLD wu%ene_xc( 77 )= -0.8145594524180612
+ wu%ene_u( 77 )= 0.
+ OLD wu%ene_xc( 78 )= -0.6713290963757269
+ wu%ene_u( 78 )= 0.
+ OLD wu%ene_xc( 79 )= -0.7333239143057042
+ wu%ene_u( 79 )= 0.
+ OLD wu%ene_xc( 80 )= -0.7365933499467968
+ wu%ene_u( 80 )= 0.
+ OLD wu%ene_xc( 81 )= -0.7365933832651794
+ wu%ene_u( 81 )= 0.
+ OLD wu%ene_xc( 82 )= -0.7138660211567122
+ wu%ene_u( 82 )= 0.
+ OLD wu%ene_xc( 83 )= -0.7138661210266801
+ wu%ene_u( 83 )= 0.
+ OLD wu%ene_xc( 84 )= -0.7165475316033759
+ wu%ene_u( 84 )= 0.
+ OLD wu%ene_xc( 85 )= -0.7099218560640135
+ wu%ene_u( 85 )= 0.
+ OLD wu%ene_xc( 86 )= -0.7099218942125219
+ wu%ene_u( 86 )= 0.
+ OLD wu%ene_xc( 87 )= -0.7003478997815974
+ wu%ene_u( 87 )= 0.
+ OLD wu%ene_xc( 88 )= -0.7003480310831983
+ wu%ene_u( 88 )= 0.
+ OLD wu%ene_xc( 89 )= -0.6983003930621939
+ wu%ene_u( 89 )= 0.
+ OLD wu%ene_xc( 90 )= -0.7204227097718272
+ wu%ene_u( 90 )= 0.
+ OLD wu%ene_xc( 91 )= -0.7204224889230229
+ wu%ene_u( 91 )= 0.
+ OLD wu%ene_xc( 92 )= -0.702671448179298
+ wu%ene_u( 92 )= 0.
+ OLD wu%ene_xc( 93 )= -0.7026717014611661
+ wu%ene_u( 93 )= 0.
+ OLD wu%ene_xc( 94 )= -0.7004688383013743
+ wu%ene_u( 94 )= 0.
+ OLD wu%ene_xc( 95 )= -0.631540445029161
+ wu%ene_u( 95 )= 0.
+ OLD wu%ene_xc( 96 )= -0.7055506077241078
+ wu%ene_u( 96 )= 0.
+ NEW wu%ene_xc( 1 )= -0.769607086758612
+ NEW wu%ene_xc( 2 )= -0.8292815635754316
+ NEW wu%ene_xc( 3 )= -0.8292817611790377
+ NEW wu%ene_xc( 4 )= -0.8247269296250586
+ NEW wu%ene_xc( 5 )= -0.7356463834703718
+ NEW wu%ene_xc( 6 )= -0.7402491701461694
+ NEW wu%ene_xc( 7 )= -0.7402492813716415
+ NEW wu%ene_xc( 8 )= -0.8004256220077074
+ NEW wu%ene_xc( 9 )= -0.5941763176453876
+ NEW wu%ene_xc( 10 )= -0.740269331015368
+ NEW wu%ene_xc( 11 )= -0.740269364814892
+ NEW wu%ene_xc( 12 )= -0.6216166158207562
+ NEW wu%ene_xc( 13 )= -0.6292534049015206
+ NEW wu%ene_xc( 14 )= -0.6292534772973367
+ NEW wu%ene_xc( 15 )= -0.5168380745933725
+ NEW wu%ene_xc( 16 )= -0.7423447492756431
+ NEW wu%ene_xc( 17 )= -0.7496442824428037
+ NEW wu%ene_xc( 18 )= -0.7496442984181404
+ NEW wu%ene_xc( 19 )= -0.7898677532150952
+ NEW wu%ene_xc( 20 )= -0.7898677850433035
+ NEW wu%ene_xc( 21 )= -0.769240018148348
+ NEW wu%ene_xc( 22 )= -0.7692400736904673
+ NEW wu%ene_xc( 23 )= -0.765496806048519
+ NEW wu%ene_xc( 24 )= -0.7436650280476592
+ NEW wu%ene_xc( 25 )= -0.7408481390255041
+ NEW wu%ene_xc( 26 )= -0.7408481560811934
+ NEW wu%ene_xc( 27 )= -0.7148485535492151
+ NEW wu%ene_xc( 28 )= -0.7187810540089233
+ NEW wu%ene_xc( 29 )= -0.7187809996793761
+ NEW wu%ene_xc( 30 )= -0.6089484767673118
+ NEW wu%ene_xc( 31 )= -0.683560275866666
+ NEW wu%ene_xc( 32 )= -0.6835603021873244
+ NEW wu%ene_xc( 33 )= -0.6640991184850692
+ NEW wu%ene_xc( 34 )= -0.6640990975253905
+ NEW wu%ene_xc( 35 )= -0.6772566961286093
+ NEW wu%ene_xc( 36 )= -0.6799872379842007
+ NEW wu%ene_xc( 37 )= -0.6799871925855034
+ NEW wu%ene_xc( 38 )= -0.7967137005645046
+ NEW wu%ene_xc( 39 )= -0.7054372309482034
+ NEW wu%ene_xc( 40 )= -0.7082494404290188
+ NEW wu%ene_xc( 41 )= -0.7082494738443917
+ NEW wu%ene_xc( 42 )= -0.6701110745942175
+ NEW wu%ene_xc( 43 )= -0.6701111687386204
+ NEW wu%ene_xc( 44 )= -0.6654894108487778
+ NEW wu%ene_xc( 45 )= -0.7081278833417031
+ NEW wu%ene_xc( 46 )= -0.7081278730631614
+ NEW wu%ene_xc( 47 )= -0.7127009514491931
+ NEW wu%ene_xc( 48 )= -0.6616161305952959
+ NEW wu%ene_xc( 49 )= -0.6616161025077683
+ NEW wu%ene_xc( 50 )= -0.6659172473511321
+ NEW wu%ene_xc( 51 )= -0.6395372394401895
+ NEW wu%ene_xc( 52 )= -0.6146355340948422
+ NEW wu%ene_xc( 53 )= -0.614635531859336
+ NEW wu%ene_xc( 54 )= -0.6132588993240516
+ NEW wu%ene_xc( 55 )= -0.5719455525499236
+ NEW wu%ene_xc( 56 )= -0.5719455741503873
+ NEW wu%ene_xc( 57 )= -0.569075599738066
+ NEW wu%ene_xc( 58 )= -0.5650264397990872
+ NEW wu%ene_xc( 59 )= -0.6455436506293608
+ NEW wu%ene_xc( 60 )= -0.6287828014664928
+ NEW wu%ene_xc( 61 )= -0.62878280101126
+ NEW wu%ene_xc( 62 )= -0.6669488045114479
+ NEW wu%ene_xc( 63 )= -0.6669488185351201
+ NEW wu%ene_xc( 64 )= -0.6663031730713782
+ NEW wu%ene_xc( 65 )= -0.6270108213622284
+ NEW wu%ene_xc( 66 )= -0.734015924741526
+ NEW wu%ene_xc( 67 )= -0.7370182008713718
+ NEW wu%ene_xc( 68 )= -0.7370182308585015
+ NEW wu%ene_xc( 69 )= -0.6994507569128595
+ NEW wu%ene_xc( 70 )= -0.7520705256519886
+ NEW wu%ene_xc( 71 )= -0.752070549922254
+ NEW wu%ene_xc( 72 )= -0.7364743136072835
+ NEW wu%ene_xc( 73 )= -0.7364743903215424
+ NEW wu%ene_xc( 74 )= -0.7322176305226977
+ NEW wu%ene_xc( 75 )= -0.8163414429711825
+ NEW wu%ene_xc( 76 )= -0.8145593901671895
+ NEW wu%ene_xc( 77 )= -0.8145594524180612
+ NEW wu%ene_xc( 78 )= -0.6713290963757269
+ NEW wu%ene_xc( 79 )= -0.7333239143057042
+ NEW wu%ene_xc( 80 )= -0.7365933499467968
+ NEW wu%ene_xc( 81 )= -0.7365933832651794
+ NEW wu%ene_xc( 82 )= -0.7138660211567122
+ NEW wu%ene_xc( 83 )= -0.7138661210266801
+ NEW wu%ene_xc( 84 )= -0.7165475316033759
+ NEW wu%ene_xc( 85 )= -0.7099218560640135
+ NEW wu%ene_xc( 86 )= -0.7099218942125219
+ NEW wu%ene_xc( 87 )= -0.7003478997815974
+ NEW wu%ene_xc( 88 )= -0.7003480310831983
+ NEW wu%ene_xc( 89 )= -0.6983003930621939
+ NEW wu%ene_xc( 90 )= -0.7204227097718272
+ NEW wu%ene_xc( 91 )= -0.7204224889230229
+ NEW wu%ene_xc( 92 )= -0.702671448179298
+ NEW wu%ene_xc( 93 )= -0.7026717014611661
+ NEW wu%ene_xc( 94 )= -0.7004688383013743
+ NEW wu%ene_xc( 95 )= -0.631540445029161
+ NEW wu%ene_xc( 96 )= -0.7055506077241078
+ Routine go_exchange main2
+ routine do_contraction_state_index allocate dimension 96 96 20
+ DO CONT INDEX 1
+ Routine go_exchange main3
+ hubbard_u files exist ? lex= F
+ OLD wu%ene_xc( 1 )= -0.769607086758612
+ wu%ene_u( 1 )= 0.
+ OLD wu%ene_xc( 2 )= -0.8292815635754316
+ wu%ene_u( 2 )= 0.
+ OLD wu%ene_xc( 3 )= -0.8292817611790377
+ wu%ene_u( 3 )= 0.
+ OLD wu%ene_xc( 4 )= -0.8247269296250586
+ wu%ene_u( 4 )= 0.
+ OLD wu%ene_xc( 5 )= -0.7356463834703718
+ wu%ene_u( 5 )= 0.
+ OLD wu%ene_xc( 6 )= -0.7402491701461694
+ wu%ene_u( 6 )= 0.
+ OLD wu%ene_xc( 7 )= -0.7402492813716415
+ wu%ene_u( 7 )= 0.
+ OLD wu%ene_xc( 8 )= -0.8004256220077074
+ wu%ene_u( 8 )= 0.
+ OLD wu%ene_xc( 9 )= -0.5941763176453876
+ wu%ene_u( 9 )= 0.
+ OLD wu%ene_xc( 10 )= -0.740269331015368
+ wu%ene_u( 10 )= 0.
+ OLD wu%ene_xc( 11 )= -0.740269364814892
+ wu%ene_u( 11 )= 0.
+ OLD wu%ene_xc( 12 )= -0.6216166158207562
+ wu%ene_u( 12 )= 0.
+ OLD wu%ene_xc( 13 )= -0.6292534049015206
+ wu%ene_u( 13 )= 0.
+ OLD wu%ene_xc( 14 )= -0.6292534772973367
+ wu%ene_u( 14 )= 0.
+ OLD wu%ene_xc( 15 )= -0.5168380745933725
+ wu%ene_u( 15 )= 0.
+ OLD wu%ene_xc( 16 )= -0.7423447492756431
+ wu%ene_u( 16 )= 0.
+ OLD wu%ene_xc( 17 )= -0.7496442824428037
+ wu%ene_u( 17 )= 0.
+ OLD wu%ene_xc( 18 )= -0.7496442984181404
+ wu%ene_u( 18 )= 0.
+ OLD wu%ene_xc( 19 )= -0.7898677532150952
+ wu%ene_u( 19 )= 0.
+ OLD wu%ene_xc( 20 )= -0.7898677850433035
+ wu%ene_u( 20 )= 0.
+ OLD wu%ene_xc( 21 )= -0.769240018148348
+ wu%ene_u( 21 )= 0.
+ OLD wu%ene_xc( 22 )= -0.7692400736904673
+ wu%ene_u( 22 )= 0.
+ OLD wu%ene_xc( 23 )= -0.765496806048519
+ wu%ene_u( 23 )= 0.
+ OLD wu%ene_xc( 24 )= -0.7436650280476592
+ wu%ene_u( 24 )= 0.
+ OLD wu%ene_xc( 25 )= -0.7408481390255041
+ wu%ene_u( 25 )= 0.
+ OLD wu%ene_xc( 26 )= -0.7408481560811934
+ wu%ene_u( 26 )= 0.
+ OLD wu%ene_xc( 27 )= -0.7148485535492151
+ wu%ene_u( 27 )= 0.
+ OLD wu%ene_xc( 28 )= -0.7187810540089233
+ wu%ene_u( 28 )= 0.
+ OLD wu%ene_xc( 29 )= -0.7187809996793761
+ wu%ene_u( 29 )= 0.
+ OLD wu%ene_xc( 30 )= -0.6089484767673118
+ wu%ene_u( 30 )= 0.
+ OLD wu%ene_xc( 31 )= -0.683560275866666
+ wu%ene_u( 31 )= 0.
+ OLD wu%ene_xc( 32 )= -0.6835603021873244
+ wu%ene_u( 32 )= 0.
+ OLD wu%ene_xc( 33 )= -0.6640991184850692
+ wu%ene_u( 33 )= 0.
+ OLD wu%ene_xc( 34 )= -0.6640990975253905
+ wu%ene_u( 34 )= 0.
+ OLD wu%ene_xc( 35 )= -0.6772566961286093
+ wu%ene_u( 35 )= 0.
+ OLD wu%ene_xc( 36 )= -0.6799872379842007
+ wu%ene_u( 36 )= 0.
+ OLD wu%ene_xc( 37 )= -0.6799871925855034
+ wu%ene_u( 37 )= 0.
+ OLD wu%ene_xc( 38 )= -0.7967137005645046
+ wu%ene_u( 38 )= 0.
+ OLD wu%ene_xc( 39 )= -0.7054372309482034
+ wu%ene_u( 39 )= 0.
+ OLD wu%ene_xc( 40 )= -0.7082494404290188
+ wu%ene_u( 40 )= 0.
+ OLD wu%ene_xc( 41 )= -0.7082494738443917
+ wu%ene_u( 41 )= 0.
+ OLD wu%ene_xc( 42 )= -0.6701110745942175
+ wu%ene_u( 42 )= 0.
+ OLD wu%ene_xc( 43 )= -0.6701111687386204
+ wu%ene_u( 43 )= 0.
+ OLD wu%ene_xc( 44 )= -0.6654894108487778
+ wu%ene_u( 44 )= 0.
+ OLD wu%ene_xc( 45 )= -0.7081278833417031
+ wu%ene_u( 45 )= 0.
+ OLD wu%ene_xc( 46 )= -0.7081278730631614
+ wu%ene_u( 46 )= 0.
+ OLD wu%ene_xc( 47 )= -0.7127009514491931
+ wu%ene_u( 47 )= 0.
+ OLD wu%ene_xc( 48 )= -0.6616161305952959
+ wu%ene_u( 48 )= 0.
+ OLD wu%ene_xc( 49 )= -0.6616161025077683
+ wu%ene_u( 49 )= 0.
+ OLD wu%ene_xc( 50 )= -0.6659172473511321
+ wu%ene_u( 50 )= 0.
+ OLD wu%ene_xc( 51 )= -0.6395372394401895
+ wu%ene_u( 51 )= 0.
+ OLD wu%ene_xc( 52 )= -0.6146355340948422
+ wu%ene_u( 52 )= 0.
+ OLD wu%ene_xc( 53 )= -0.614635531859336
+ wu%ene_u( 53 )= 0.
+ OLD wu%ene_xc( 54 )= -0.6132588993240516
+ wu%ene_u( 54 )= 0.
+ OLD wu%ene_xc( 55 )= -0.5719455525499236
+ wu%ene_u( 55 )= 0.
+ OLD wu%ene_xc( 56 )= -0.5719455741503873
+ wu%ene_u( 56 )= 0.
+ OLD wu%ene_xc( 57 )= -0.569075599738066
+ wu%ene_u( 57 )= 0.
+ OLD wu%ene_xc( 58 )= -0.5650264397990872
+ wu%ene_u( 58 )= 0.
+ OLD wu%ene_xc( 59 )= -0.6455436506293608
+ wu%ene_u( 59 )= 0.
+ OLD wu%ene_xc( 60 )= -0.6287828014664928
+ wu%ene_u( 60 )= 0.
+ OLD wu%ene_xc( 61 )= -0.62878280101126
+ wu%ene_u( 61 )= 0.
+ OLD wu%ene_xc( 62 )= -0.6669488045114479
+ wu%ene_u( 62 )= 0.
+ OLD wu%ene_xc( 63 )= -0.6669488185351201
+ wu%ene_u( 63 )= 0.
+ OLD wu%ene_xc( 64 )= -0.6663031730713782
+ wu%ene_u( 64 )= 0.
+ OLD wu%ene_xc( 65 )= -0.6270108213622284
+ wu%ene_u( 65 )= 0.
+ OLD wu%ene_xc( 66 )= -0.734015924741526
+ wu%ene_u( 66 )= 0.
+ OLD wu%ene_xc( 67 )= -0.7370182008713718
+ wu%ene_u( 67 )= 0.
+ OLD wu%ene_xc( 68 )= -0.7370182308585015
+ wu%ene_u( 68 )= 0.
+ OLD wu%ene_xc( 69 )= -0.6994507569128595
+ wu%ene_u( 69 )= 0.
+ OLD wu%ene_xc( 70 )= -0.7520705256519886
+ wu%ene_u( 70 )= 0.
+ OLD wu%ene_xc( 71 )= -0.752070549922254
+ wu%ene_u( 71 )= 0.
+ OLD wu%ene_xc( 72 )= -0.7364743136072835
+ wu%ene_u( 72 )= 0.
+ OLD wu%ene_xc( 73 )= -0.7364743903215424
+ wu%ene_u( 73 )= 0.
+ OLD wu%ene_xc( 74 )= -0.7322176305226977
+ wu%ene_u( 74 )= 0.
+ OLD wu%ene_xc( 75 )= -0.8163414429711825
+ wu%ene_u( 75 )= 0.
+ OLD wu%ene_xc( 76 )= -0.8145593901671895
+ wu%ene_u( 76 )= 0.
+ OLD wu%ene_xc( 77 )= -0.8145594524180612
+ wu%ene_u( 77 )= 0.
+ OLD wu%ene_xc( 78 )= -0.6713290963757269
+ wu%ene_u( 78 )= 0.
+ OLD wu%ene_xc( 79 )= -0.7333239143057042
+ wu%ene_u( 79 )= 0.
+ OLD wu%ene_xc( 80 )= -0.7365933499467968
+ wu%ene_u( 80 )= 0.
+ OLD wu%ene_xc( 81 )= -0.7365933832651794
+ wu%ene_u( 81 )= 0.
+ OLD wu%ene_xc( 82 )= -0.7138660211567122
+ wu%ene_u( 82 )= 0.
+ OLD wu%ene_xc( 83 )= -0.7138661210266801
+ wu%ene_u( 83 )= 0.
+ OLD wu%ene_xc( 84 )= -0.7165475316033759
+ wu%ene_u( 84 )= 0.
+ OLD wu%ene_xc( 85 )= -0.7099218560640135
+ wu%ene_u( 85 )= 0.
+ OLD wu%ene_xc( 86 )= -0.7099218942125219
+ wu%ene_u( 86 )= 0.
+ OLD wu%ene_xc( 87 )= -0.7003478997815974
+ wu%ene_u( 87 )= 0.
+ OLD wu%ene_xc( 88 )= -0.7003480310831983
+ wu%ene_u( 88 )= 0.
+ OLD wu%ene_xc( 89 )= -0.6983003930621939
+ wu%ene_u( 89 )= 0.
+ OLD wu%ene_xc( 90 )= -0.7204227097718272
+ wu%ene_u( 90 )= 0.
+ OLD wu%ene_xc( 91 )= -0.7204224889230229
+ wu%ene_u( 91 )= 0.
+ OLD wu%ene_xc( 92 )= -0.702671448179298
+ wu%ene_u( 92 )= 0.
+ OLD wu%ene_xc( 93 )= -0.7026717014611661
+ wu%ene_u( 93 )= 0.
+ OLD wu%ene_xc( 94 )= -0.7004688383013743
+ wu%ene_u( 94 )= 0.
+ OLD wu%ene_xc( 95 )= -0.631540445029161
+ wu%ene_u( 95 )= 0.
+ OLD wu%ene_xc( 96 )= -0.7055506077241078
+ wu%ene_u( 96 )= 0.
+ NEW wu%ene_xc( 1 )= -0.769607086758612
+ NEW wu%ene_xc( 2 )= -0.8292815635754316
+ NEW wu%ene_xc( 3 )= -0.8292817611790377
+ NEW wu%ene_xc( 4 )= -0.8247269296250586
+ NEW wu%ene_xc( 5 )= -0.7356463834703718
+ NEW wu%ene_xc( 6 )= -0.7402491701461694
+ NEW wu%ene_xc( 7 )= -0.7402492813716415
+ NEW wu%ene_xc( 8 )= -0.8004256220077074
+ NEW wu%ene_xc( 9 )= -0.5941763176453876
+ NEW wu%ene_xc( 10 )= -0.740269331015368
+ NEW wu%ene_xc( 11 )= -0.740269364814892
+ NEW wu%ene_xc( 12 )= -0.6216166158207562
+ NEW wu%ene_xc( 13 )= -0.6292534049015206
+ NEW wu%ene_xc( 14 )= -0.6292534772973367
+ NEW wu%ene_xc( 15 )= -0.5168380745933725
+ NEW wu%ene_xc( 16 )= -0.7423447492756431
+ NEW wu%ene_xc( 17 )= -0.7496442824428037
+ NEW wu%ene_xc( 18 )= -0.7496442984181404
+ NEW wu%ene_xc( 19 )= -0.7898677532150952
+ NEW wu%ene_xc( 20 )= -0.7898677850433035
+ NEW wu%ene_xc( 21 )= -0.769240018148348
+ NEW wu%ene_xc( 22 )= -0.7692400736904673
+ NEW wu%ene_xc( 23 )= -0.765496806048519
+ NEW wu%ene_xc( 24 )= -0.7436650280476592
+ NEW wu%ene_xc( 25 )= -0.7408481390255041
+ NEW wu%ene_xc( 26 )= -0.7408481560811934
+ NEW wu%ene_xc( 27 )= -0.7148485535492151
+ NEW wu%ene_xc( 28 )= -0.7187810540089233
+ NEW wu%ene_xc( 29 )= -0.7187809996793761
+ NEW wu%ene_xc( 30 )= -0.6089484767673118
+ NEW wu%ene_xc( 31 )= -0.683560275866666
+ NEW wu%ene_xc( 32 )= -0.6835603021873244
+ NEW wu%ene_xc( 33 )= -0.6640991184850692
+ NEW wu%ene_xc( 34 )= -0.6640990975253905
+ NEW wu%ene_xc( 35 )= -0.6772566961286093
+ NEW wu%ene_xc( 36 )= -0.6799872379842007
+ NEW wu%ene_xc( 37 )= -0.6799871925855034
+ NEW wu%ene_xc( 38 )= -0.7967137005645046
+ NEW wu%ene_xc( 39 )= -0.7054372309482034
+ NEW wu%ene_xc( 40 )= -0.7082494404290188
+ NEW wu%ene_xc( 41 )= -0.7082494738443917
+ NEW wu%ene_xc( 42 )= -0.6701110745942175
+ NEW wu%ene_xc( 43 )= -0.6701111687386204
+ NEW wu%ene_xc( 44 )= -0.6654894108487778
+ NEW wu%ene_xc( 45 )= -0.7081278833417031
+ NEW wu%ene_xc( 46 )= -0.7081278730631614
+ NEW wu%ene_xc( 47 )= -0.7127009514491931
+ NEW wu%ene_xc( 48 )= -0.6616161305952959
+ NEW wu%ene_xc( 49 )= -0.6616161025077683
+ NEW wu%ene_xc( 50 )= -0.6659172473511321
+ NEW wu%ene_xc( 51 )= -0.6395372394401895
+ NEW wu%ene_xc( 52 )= -0.6146355340948422
+ NEW wu%ene_xc( 53 )= -0.614635531859336
+ NEW wu%ene_xc( 54 )= -0.6132588993240516
+ NEW wu%ene_xc( 55 )= -0.5719455525499236
+ NEW wu%ene_xc( 56 )= -0.5719455741503873
+ NEW wu%ene_xc( 57 )= -0.569075599738066
+ NEW wu%ene_xc( 58 )= -0.5650264397990872
+ NEW wu%ene_xc( 59 )= -0.6455436506293608
+ NEW wu%ene_xc( 60 )= -0.6287828014664928
+ NEW wu%ene_xc( 61 )= -0.62878280101126
+ NEW wu%ene_xc( 62 )= -0.6669488045114479
+ NEW wu%ene_xc( 63 )= -0.6669488185351201
+ NEW wu%ene_xc( 64 )= -0.6663031730713782
+ NEW wu%ene_xc( 65 )= -0.6270108213622284
+ NEW wu%ene_xc( 66 )= -0.734015924741526
+ NEW wu%ene_xc( 67 )= -0.7370182008713718
+ NEW wu%ene_xc( 68 )= -0.7370182308585015
+ NEW wu%ene_xc( 69 )= -0.6994507569128595
+ NEW wu%ene_xc( 70 )= -0.7520705256519886
+ NEW wu%ene_xc( 71 )= -0.752070549922254
+ NEW wu%ene_xc( 72 )= -0.7364743136072835
+ NEW wu%ene_xc( 73 )= -0.7364743903215424
+ NEW wu%ene_xc( 74 )= -0.7322176305226977
+ NEW wu%ene_xc( 75 )= -0.8163414429711825
+ NEW wu%ene_xc( 76 )= -0.8145593901671895
+ NEW wu%ene_xc( 77 )= -0.8145594524180612
+ NEW wu%ene_xc( 78 )= -0.6713290963757269
+ NEW wu%ene_xc( 79 )= -0.7333239143057042
+ NEW wu%ene_xc( 80 )= -0.7365933499467968
+ NEW wu%ene_xc( 81 )= -0.7365933832651794
+ NEW wu%ene_xc( 82 )= -0.7138660211567122
+ NEW wu%ene_xc( 83 )= -0.7138661210266801
+ NEW wu%ene_xc( 84 )= -0.7165475316033759
+ NEW wu%ene_xc( 85 )= -0.7099218560640135
+ NEW wu%ene_xc( 86 )= -0.7099218942125219
+ NEW wu%ene_xc( 87 )= -0.7003478997815974
+ NEW wu%ene_xc( 88 )= -0.7003480310831983
+ NEW wu%ene_xc( 89 )= -0.6983003930621939
+ NEW wu%ene_xc( 90 )= -0.7204227097718272
+ NEW wu%ene_xc( 91 )= -0.7204224889230229
+ NEW wu%ene_xc( 92 )= -0.702671448179298
+ NEW wu%ene_xc( 93 )= -0.7026717014611661
+ NEW wu%ene_xc( 94 )= -0.7004688383013743
+ NEW wu%ene_xc( 95 )= -0.631540445029161
+ NEW wu%ene_xc( 96 )= -0.7055506077241078
+ ENE H (0.24072407186031342,0.) (0.38959696888923645,0.) (0.3895978033542633,0.) (0.38588884472846985,0.) (0.15828005969524384,0.) (0.16477282345294952,0.) (0.16477319598197937,0.) (0.3639232814311981,0.) (-0.18930910527706146,0.) (0.15606416761875153,0.) (0.1560642123222351,0.) (-0.13126038014888763,0.) (-0.12217866629362106,0.) (-0.1221783384680748,0.) (-0.3933793902397156,0.) (0.19042904675006866,0.) (0.19910120964050293,0.) (0.1991012990474701,0.) (0.3052367866039276,0.) (0.3052368462085724,0.)
+ read ene_x from files
+ DONE: read ene_x from files
+ done
+ go_exchange main hf_ene 0.3140857494654533
+ starting_point <=2
+ GO POLARIZATION
+ hubbard_u files exist ? lex= F
+ OLD wu%ene_xc( 1 )= -0.769607086758612
+ wu%ene_u( 1 )= 0.
+ OLD wu%ene_xc( 2 )= -0.8292815635754316
+ wu%ene_u( 2 )= 0.
+ OLD wu%ene_xc( 3 )= -0.8292817611790377
+ wu%ene_u( 3 )= 0.
+ OLD wu%ene_xc( 4 )= -0.8247269296250586
+ wu%ene_u( 4 )= 0.
+ OLD wu%ene_xc( 5 )= -0.7356463834703718
+ wu%ene_u( 5 )= 0.
+ OLD wu%ene_xc( 6 )= -0.7402491701461694
+ wu%ene_u( 6 )= 0.
+ OLD wu%ene_xc( 7 )= -0.7402492813716415
+ wu%ene_u( 7 )= 0.
+ OLD wu%ene_xc( 8 )= -0.8004256220077074
+ wu%ene_u( 8 )= 0.
+ OLD wu%ene_xc( 9 )= -0.5941763176453876
+ wu%ene_u( 9 )= 0.
+ OLD wu%ene_xc( 10 )= -0.740269331015368
+ wu%ene_u( 10 )= 0.
+ OLD wu%ene_xc( 11 )= -0.740269364814892
+ wu%ene_u( 11 )= 0.
+ OLD wu%ene_xc( 12 )= -0.6216166158207562
+ wu%ene_u( 12 )= 0.
+ OLD wu%ene_xc( 13 )= -0.6292534049015206
+ wu%ene_u( 13 )= 0.
+ OLD wu%ene_xc( 14 )= -0.6292534772973367
+ wu%ene_u( 14 )= 0.
+ OLD wu%ene_xc( 15 )= -0.5168380745933725
+ wu%ene_u( 15 )= 0.
+ OLD wu%ene_xc( 16 )= -0.7423447492756431
+ wu%ene_u( 16 )= 0.
+ OLD wu%ene_xc( 17 )= -0.7496442824428037
+ wu%ene_u( 17 )= 0.
+ OLD wu%ene_xc( 18 )= -0.7496442984181404
+ wu%ene_u( 18 )= 0.
+ OLD wu%ene_xc( 19 )= -0.7898677532150952
+ wu%ene_u( 19 )= 0.
+ OLD wu%ene_xc( 20 )= -0.7898677850433035
+ wu%ene_u( 20 )= 0.
+ OLD wu%ene_xc( 21 )= -0.769240018148348
+ wu%ene_u( 21 )= 0.
+ OLD wu%ene_xc( 22 )= -0.7692400736904673
+ wu%ene_u( 22 )= 0.
+ OLD wu%ene_xc( 23 )= -0.765496806048519
+ wu%ene_u( 23 )= 0.
+ OLD wu%ene_xc( 24 )= -0.7436650280476592
+ wu%ene_u( 24 )= 0.
+ OLD wu%ene_xc( 25 )= -0.7408481390255041
+ wu%ene_u( 25 )= 0.
+ OLD wu%ene_xc( 26 )= -0.7408481560811934
+ wu%ene_u( 26 )= 0.
+ OLD wu%ene_xc( 27 )= -0.7148485535492151
+ wu%ene_u( 27 )= 0.
+ OLD wu%ene_xc( 28 )= -0.7187810540089233
+ wu%ene_u( 28 )= 0.
+ OLD wu%ene_xc( 29 )= -0.7187809996793761
+ wu%ene_u( 29 )= 0.
+ OLD wu%ene_xc( 30 )= -0.6089484767673118
+ wu%ene_u( 30 )= 0.
+ OLD wu%ene_xc( 31 )= -0.683560275866666
+ wu%ene_u( 31 )= 0.
+ OLD wu%ene_xc( 32 )= -0.6835603021873244
+ wu%ene_u( 32 )= 0.
+ OLD wu%ene_xc( 33 )= -0.6640991184850692
+ wu%ene_u( 33 )= 0.
+ OLD wu%ene_xc( 34 )= -0.6640990975253905
+ wu%ene_u( 34 )= 0.
+ OLD wu%ene_xc( 35 )= -0.6772566961286093
+ wu%ene_u( 35 )= 0.
+ OLD wu%ene_xc( 36 )= -0.6799872379842007
+ wu%ene_u( 36 )= 0.
+ OLD wu%ene_xc( 37 )= -0.6799871925855034
+ wu%ene_u( 37 )= 0.
+ OLD wu%ene_xc( 38 )= -0.7967137005645046
+ wu%ene_u( 38 )= 0.
+ OLD wu%ene_xc( 39 )= -0.7054372309482034
+ wu%ene_u( 39 )= 0.
+ OLD wu%ene_xc( 40 )= -0.7082494404290188
+ wu%ene_u( 40 )= 0.
+ OLD wu%ene_xc( 41 )= -0.7082494738443917
+ wu%ene_u( 41 )= 0.
+ OLD wu%ene_xc( 42 )= -0.6701110745942175
+ wu%ene_u( 42 )= 0.
+ OLD wu%ene_xc( 43 )= -0.6701111687386204
+ wu%ene_u( 43 )= 0.
+ OLD wu%ene_xc( 44 )= -0.6654894108487778
+ wu%ene_u( 44 )= 0.
+ OLD wu%ene_xc( 45 )= -0.7081278833417031
+ wu%ene_u( 45 )= 0.
+ OLD wu%ene_xc( 46 )= -0.7081278730631614
+ wu%ene_u( 46 )= 0.
+ OLD wu%ene_xc( 47 )= -0.7127009514491931
+ wu%ene_u( 47 )= 0.
+ OLD wu%ene_xc( 48 )= -0.6616161305952959
+ wu%ene_u( 48 )= 0.
+ OLD wu%ene_xc( 49 )= -0.6616161025077683
+ wu%ene_u( 49 )= 0.
+ OLD wu%ene_xc( 50 )= -0.6659172473511321
+ wu%ene_u( 50 )= 0.
+ OLD wu%ene_xc( 51 )= -0.6395372394401895
+ wu%ene_u( 51 )= 0.
+ OLD wu%ene_xc( 52 )= -0.6146355340948422
+ wu%ene_u( 52 )= 0.
+ OLD wu%ene_xc( 53 )= -0.614635531859336
+ wu%ene_u( 53 )= 0.
+ OLD wu%ene_xc( 54 )= -0.6132588993240516
+ wu%ene_u( 54 )= 0.
+ OLD wu%ene_xc( 55 )= -0.5719455525499236
+ wu%ene_u( 55 )= 0.
+ OLD wu%ene_xc( 56 )= -0.5719455741503873
+ wu%ene_u( 56 )= 0.
+ OLD wu%ene_xc( 57 )= -0.569075599738066
+ wu%ene_u( 57 )= 0.
+ OLD wu%ene_xc( 58 )= -0.5650264397990872
+ wu%ene_u( 58 )= 0.
+ OLD wu%ene_xc( 59 )= -0.6455436506293608
+ wu%ene_u( 59 )= 0.
+ OLD wu%ene_xc( 60 )= -0.6287828014664928
+ wu%ene_u( 60 )= 0.
+ OLD wu%ene_xc( 61 )= -0.62878280101126
+ wu%ene_u( 61 )= 0.
+ OLD wu%ene_xc( 62 )= -0.6669488045114479
+ wu%ene_u( 62 )= 0.
+ OLD wu%ene_xc( 63 )= -0.6669488185351201
+ wu%ene_u( 63 )= 0.
+ OLD wu%ene_xc( 64 )= -0.6663031730713782
+ wu%ene_u( 64 )= 0.
+ OLD wu%ene_xc( 65 )= -0.6270108213622284
+ wu%ene_u( 65 )= 0.
+ OLD wu%ene_xc( 66 )= -0.734015924741526
+ wu%ene_u( 66 )= 0.
+ OLD wu%ene_xc( 67 )= -0.7370182008713718
+ wu%ene_u( 67 )= 0.
+ OLD wu%ene_xc( 68 )= -0.7370182308585015
+ wu%ene_u( 68 )= 0.
+ OLD wu%ene_xc( 69 )= -0.6994507569128595
+ wu%ene_u( 69 )= 0.
+ OLD wu%ene_xc( 70 )= -0.7520705256519886
+ wu%ene_u( 70 )= 0.
+ OLD wu%ene_xc( 71 )= -0.752070549922254
+ wu%ene_u( 71 )= 0.
+ OLD wu%ene_xc( 72 )= -0.7364743136072835
+ wu%ene_u( 72 )= 0.
+ OLD wu%ene_xc( 73 )= -0.7364743903215424
+ wu%ene_u( 73 )= 0.
+ OLD wu%ene_xc( 74 )= -0.7322176305226977
+ wu%ene_u( 74 )= 0.
+ OLD wu%ene_xc( 75 )= -0.8163414429711825
+ wu%ene_u( 75 )= 0.
+ OLD wu%ene_xc( 76 )= -0.8145593901671895
+ wu%ene_u( 76 )= 0.
+ OLD wu%ene_xc( 77 )= -0.8145594524180612
+ wu%ene_u( 77 )= 0.
+ OLD wu%ene_xc( 78 )= -0.6713290963757269
+ wu%ene_u( 78 )= 0.
+ OLD wu%ene_xc( 79 )= -0.7333239143057042
+ wu%ene_u( 79 )= 0.
+ OLD wu%ene_xc( 80 )= -0.7365933499467968
+ wu%ene_u( 80 )= 0.
+ OLD wu%ene_xc( 81 )= -0.7365933832651794
+ wu%ene_u( 81 )= 0.
+ OLD wu%ene_xc( 82 )= -0.7138660211567122
+ wu%ene_u( 82 )= 0.
+ OLD wu%ene_xc( 83 )= -0.7138661210266801
+ wu%ene_u( 83 )= 0.
+ OLD wu%ene_xc( 84 )= -0.7165475316033759
+ wu%ene_u( 84 )= 0.
+ OLD wu%ene_xc( 85 )= -0.7099218560640135
+ wu%ene_u( 85 )= 0.
+ OLD wu%ene_xc( 86 )= -0.7099218942125219
+ wu%ene_u( 86 )= 0.
+ OLD wu%ene_xc( 87 )= -0.7003478997815974
+ wu%ene_u( 87 )= 0.
+ OLD wu%ene_xc( 88 )= -0.7003480310831983
+ wu%ene_u( 88 )= 0.
+ OLD wu%ene_xc( 89 )= -0.6983003930621939
+ wu%ene_u( 89 )= 0.
+ OLD wu%ene_xc( 90 )= -0.7204227097718272
+ wu%ene_u( 90 )= 0.
+ OLD wu%ene_xc( 91 )= -0.7204224889230229
+ wu%ene_u( 91 )= 0.
+ OLD wu%ene_xc( 92 )= -0.702671448179298
+ wu%ene_u( 92 )= 0.
+ OLD wu%ene_xc( 93 )= -0.7026717014611661
+ wu%ene_u( 93 )= 0.
+ OLD wu%ene_xc( 94 )= -0.7004688383013743
+ wu%ene_u( 94 )= 0.
+ OLD wu%ene_xc( 95 )= -0.631540445029161
+ wu%ene_u( 95 )= 0.
+ OLD wu%ene_xc( 96 )= -0.7055506077241078
+ wu%ene_u( 96 )= 0.
+ NEW wu%ene_xc( 1 )= -0.769607086758612
+ NEW wu%ene_xc( 2 )= -0.8292815635754316
+ NEW wu%ene_xc( 3 )= -0.8292817611790377
+ NEW wu%ene_xc( 4 )= -0.8247269296250586
+ NEW wu%ene_xc( 5 )= -0.7356463834703718
+ NEW wu%ene_xc( 6 )= -0.7402491701461694
+ NEW wu%ene_xc( 7 )= -0.7402492813716415
+ NEW wu%ene_xc( 8 )= -0.8004256220077074
+ NEW wu%ene_xc( 9 )= -0.5941763176453876
+ NEW wu%ene_xc( 10 )= -0.740269331015368
+ NEW wu%ene_xc( 11 )= -0.740269364814892
+ NEW wu%ene_xc( 12 )= -0.6216166158207562
+ NEW wu%ene_xc( 13 )= -0.6292534049015206
+ NEW wu%ene_xc( 14 )= -0.6292534772973367
+ NEW wu%ene_xc( 15 )= -0.5168380745933725
+ NEW wu%ene_xc( 16 )= -0.7423447492756431
+ NEW wu%ene_xc( 17 )= -0.7496442824428037
+ NEW wu%ene_xc( 18 )= -0.7496442984181404
+ NEW wu%ene_xc( 19 )= -0.7898677532150952
+ NEW wu%ene_xc( 20 )= -0.7898677850433035
+ NEW wu%ene_xc( 21 )= -0.769240018148348
+ NEW wu%ene_xc( 22 )= -0.7692400736904673
+ NEW wu%ene_xc( 23 )= -0.765496806048519
+ NEW wu%ene_xc( 24 )= -0.7436650280476592
+ NEW wu%ene_xc( 25 )= -0.7408481390255041
+ NEW wu%ene_xc( 26 )= -0.7408481560811934
+ NEW wu%ene_xc( 27 )= -0.7148485535492151
+ NEW wu%ene_xc( 28 )= -0.7187810540089233
+ NEW wu%ene_xc( 29 )= -0.7187809996793761
+ NEW wu%ene_xc( 30 )= -0.6089484767673118
+ NEW wu%ene_xc( 31 )= -0.683560275866666
+ NEW wu%ene_xc( 32 )= -0.6835603021873244
+ NEW wu%ene_xc( 33 )= -0.6640991184850692
+ NEW wu%ene_xc( 34 )= -0.6640990975253905
+ NEW wu%ene_xc( 35 )= -0.6772566961286093
+ NEW wu%ene_xc( 36 )= -0.6799872379842007
+ NEW wu%ene_xc( 37 )= -0.6799871925855034
+ NEW wu%ene_xc( 38 )= -0.7967137005645046
+ NEW wu%ene_xc( 39 )= -0.7054372309482034
+ NEW wu%ene_xc( 40 )= -0.7082494404290188
+ NEW wu%ene_xc( 41 )= -0.7082494738443917
+ NEW wu%ene_xc( 42 )= -0.6701110745942175
+ NEW wu%ene_xc( 43 )= -0.6701111687386204
+ NEW wu%ene_xc( 44 )= -0.6654894108487778
+ NEW wu%ene_xc( 45 )= -0.7081278833417031
+ NEW wu%ene_xc( 46 )= -0.7081278730631614
+ NEW wu%ene_xc( 47 )= -0.7127009514491931
+ NEW wu%ene_xc( 48 )= -0.6616161305952959
+ NEW wu%ene_xc( 49 )= -0.6616161025077683
+ NEW wu%ene_xc( 50 )= -0.6659172473511321
+ NEW wu%ene_xc( 51 )= -0.6395372394401895
+ NEW wu%ene_xc( 52 )= -0.6146355340948422
+ NEW wu%ene_xc( 53 )= -0.614635531859336
+ NEW wu%ene_xc( 54 )= -0.6132588993240516
+ NEW wu%ene_xc( 55 )= -0.5719455525499236
+ NEW wu%ene_xc( 56 )= -0.5719455741503873
+ NEW wu%ene_xc( 57 )= -0.569075599738066
+ NEW wu%ene_xc( 58 )= -0.5650264397990872
+ NEW wu%ene_xc( 59 )= -0.6455436506293608
+ NEW wu%ene_xc( 60 )= -0.6287828014664928
+ NEW wu%ene_xc( 61 )= -0.62878280101126
+ NEW wu%ene_xc( 62 )= -0.6669488045114479
+ NEW wu%ene_xc( 63 )= -0.6669488185351201
+ NEW wu%ene_xc( 64 )= -0.6663031730713782
+ NEW wu%ene_xc( 65 )= -0.6270108213622284
+ NEW wu%ene_xc( 66 )= -0.734015924741526
+ NEW wu%ene_xc( 67 )= -0.7370182008713718
+ NEW wu%ene_xc( 68 )= -0.7370182308585015
+ NEW wu%ene_xc( 69 )= -0.6994507569128595
+ NEW wu%ene_xc( 70 )= -0.7520705256519886
+ NEW wu%ene_xc( 71 )= -0.752070549922254
+ NEW wu%ene_xc( 72 )= -0.7364743136072835
+ NEW wu%ene_xc( 73 )= -0.7364743903215424
+ NEW wu%ene_xc( 74 )= -0.7322176305226977
+ NEW wu%ene_xc( 75 )= -0.8163414429711825
+ NEW wu%ene_xc( 76 )= -0.8145593901671895
+ NEW wu%ene_xc( 77 )= -0.8145594524180612
+ NEW wu%ene_xc( 78 )= -0.6713290963757269
+ NEW wu%ene_xc( 79 )= -0.7333239143057042
+ NEW wu%ene_xc( 80 )= -0.7365933499467968
+ NEW wu%ene_xc( 81 )= -0.7365933832651794
+ NEW wu%ene_xc( 82 )= -0.7138660211567122
+ NEW wu%ene_xc( 83 )= -0.7138661210266801
+ NEW wu%ene_xc( 84 )= -0.7165475316033759
+ NEW wu%ene_xc( 85 )= -0.7099218560640135
+ NEW wu%ene_xc( 86 )= -0.7099218942125219
+ NEW wu%ene_xc( 87 )= -0.7003478997815974
+ NEW wu%ene_xc( 88 )= -0.7003480310831983
+ NEW wu%ene_xc( 89 )= -0.6983003930621939
+ NEW wu%ene_xc( 90 )= -0.7204227097718272
+ NEW wu%ene_xc( 91 )= -0.7204224889230229
+ NEW wu%ene_xc( 92 )= -0.702671448179298
+ NEW wu%ene_xc( 93 )= -0.7026717014611661
+ NEW wu%ene_xc( 94 )= -0.7004688383013743
+ NEW wu%ene_xc( 95 )= -0.631540445029161
+ NEW wu%ene_xc( 96 )= -0.7055506077241078
+ Routine create_polarization_file
+ STATE 1
+ STATE 2
+ STATE 3
+ STATE 4
+ STATE 1
+ STATE 2
+ STATE 3
+ STATE 4
+ STATE 1
+ STATE 2
+ STATE 3
+ STATE 4
+ STATE 1
+ STATE 2
+ STATE 3
+ STATE 4
+ STATE 1
+ STATE 2
+ STATE 3
+ STATE 4
+ STATE 1
+ STATE 2
+ STATE 3
+ STATE 4
+ STATE 1
+ STATE 2
+ STATE 3
+ STATE 4
+ STATE 1
+ STATE 2
+ STATE 3
+ STATE 4
+ STATE 1
+ STATE 2
+ STATE 3
+ STATE 4
+ STATE 1
+ STATE 2
+ STATE 3
+ STATE 4
+ STATE 1
+ STATE 2
+ STATE 3
+ STATE 4
+ STATE 1
+ STATE 2
+ STATE 3
+ STATE 4
+ STATE 1
+ STATE 2
+ STATE 3
+ STATE 4
+ STATE 1
+ STATE 2
+ STATE 3
+ STATE 4
+ STATE 1
+ STATE 2
+ STATE 3
+ STATE 4
+ STATE 1
+ STATE 2
+ STATE 3
+ STATE 4
+ STATE 1
+ STATE 2
+ STATE 3
+ STATE 4
+ STATE 1
+ STATE 2
+ STATE 3
+ STATE 4
+ STATE 1
+ STATE 2
+ STATE 3
+ STATE 4
+ STATE 1
+ STATE 2
+ STATE 3
+ STATE 4
+ STATE 1
+ STATE 2
+ STATE 3
+ STATE 4
+ STATE 1
+ STATE 2
+ STATE 3
+ STATE 4
+ STATE 1
+ STATE 2
+ STATE 3
+ STATE 4
+ STATE 1
+ STATE 2
+ STATE 3
+ STATE 4
+ STATE 1
+ STATE 2
+ STATE 3
+ STATE 4
+ STATE 1
+ STATE 2
+ STATE 3
+ STATE 4
+ STATE 1
+ STATE 2
+ STATE 3
+ STATE 4
+ STATE 1
+ STATE 2
+ STATE 3
+ STATE 4
+ STATE 1
+ STATE 2
+ STATE 3
+ STATE 4
+ STATE 1
+ STATE 2
+ STATE 3
+ STATE 4
+ STATE 1
+ STATE 2
+ STATE 3
+ STATE 4
+ STATE 1
+ STATE 2
+ STATE 3
+ STATE 4
+ STATE 1
+ STATE 2
+ STATE 3
+ STATE 4
+ STATE 1
+ STATE 2
+ STATE 3
+ STATE 4
+ STATE 1
+ STATE 2
+ STATE 3
+ STATE 4
+ STATE 1
+ STATE 2
+ STATE 3
+ STATE 4
+ STATE 1
+ STATE 2
+ STATE 3
+ STATE 4
+ STATE 1
+ STATE 2
+ STATE 3
+ STATE 4
+ STATE 1
+ STATE 2
+ STATE 3
+ STATE 4
+ STATE 1
+ STATE 2
+ STATE 3
+ STATE 4
+ STATE 1
+ STATE 2
+ STATE 3
+ STATE 4
+ STATE 1
+ STATE 2
+ STATE 3
+ STATE 4
+ STATE 1
+ STATE 2
+ STATE 3
+ STATE 4
+ STATE 1
+ STATE 2
+ STATE 3
+ STATE 4
+ STATE 1
+ STATE 2
+ STATE 3
+ STATE 4
+ STATE 1
+ STATE 2
+ STATE 3
+ STATE 4
+ STATE 1
+ STATE 2
+ STATE 3
+ STATE 4
+ STATE 1
+ STATE 2
+ STATE 3
+ STATE 4
+ STATE 1
+ STATE 2
+ STATE 3
+ STATE 4
+ STATE 1
+ STATE 2
+ STATE 3
+ STATE 4
+ STATE 1
+ STATE 2
+ STATE 3
+ STATE 4
+ STATE 1
+ STATE 2
+ STATE 3
+ STATE 4
+ STATE 1
+ STATE 2
+ STATE 3
+ STATE 4
+ STATE 1
+ STATE 2
+ STATE 3
+ STATE 4
+ STATE 1
+ STATE 2
+ STATE 3
+ STATE 4
+ STATE 1
+ STATE 2
+ STATE 3
+ STATE 4
+ STATE 1
+ STATE 2
+ STATE 3
+ STATE 4
+ STATE 1
+ STATE 2
+ STATE 3
+ STATE 4
+ STATE 1
+ STATE 2
+ STATE 3
+ STATE 4
+ STATE 1
+ STATE 2
+ STATE 3
+ STATE 4
+ STATE 1
+ STATE 2
+ STATE 3
+ STATE 4
+ STATE 1
+ STATE 2
+ STATE 3
+ STATE 4
+ STATE 1
+ STATE 2
+ STATE 3
+ STATE 4
+ STATE 1
+ STATE 2
+ STATE 3
+ STATE 4
+ STATE 1
+ STATE 2
+ STATE 3
+ STATE 4
+ STATE 1
+ STATE 2
+ STATE 3
+ STATE 4
+ STATE 1
+ STATE 2
+ STATE 3
+ STATE 4
+ STATE 1
+ STATE 2
+ STATE 3
+ STATE 4
+ STATE 1
+ STATE 2
+ STATE 3
+ STATE 4
+ STATE 1
+ STATE 2
+ STATE 3
+ STATE 4
+ STATE 1
+ STATE 2
+ STATE 3
+ STATE 4
+ STATE 1
+ STATE 2
+ STATE 3
+ STATE 4
+ STATE 1
+ STATE 2
+ STATE 3
+ STATE 4
+ STATE 1
+ STATE 2
+ STATE 3
+ STATE 4
+ STATE 1
+ STATE 2
+ STATE 3
+ STATE 4
+ STATE 1
+ STATE 2
+ STATE 3
+ STATE 4
+ STATE 1
+ STATE 2
+ STATE 3
+ STATE 4
+ STATE 1
+ STATE 2
+ STATE 3
+ STATE 4
+ STATE 1
+ STATE 2
+ STATE 3
+ STATE 4
+ STATE 1
+ STATE 2
+ STATE 3
+ STATE 4
+ STATE 1
+ STATE 2
+ STATE 3
+ STATE 4
+ STATE 1
+ STATE 2
+ STATE 3
+ STATE 4
+ STATE 1
+ STATE 2
+ STATE 3
+ STATE 4
+ STATE 1
+ STATE 2
+ STATE 3
+ STATE 4
+ STATE 1
+ STATE 2
+ STATE 3
+ STATE 4
+ STATE 1
+ STATE 2
+ STATE 3
+ STATE 4
+ STATE 1
+ STATE 2
+ STATE 3
+ STATE 4
+ STATE 1
+ STATE 2
+ STATE 3
+ STATE 4
+ STATE 1
+ STATE 2
+ STATE 3
+ STATE 4
+ STATE 1
+ STATE 2
+ STATE 3
+ STATE 4
+ STATE 1
+ STATE 2
+ STATE 3
+ STATE 4
+ STATE 1
+ STATE 2
+ STATE 3
+ STATE 4
+ STATE 1
+ STATE 2
+ STATE 3
+ STATE 4
+ STATE 1
+ STATE 2
+ STATE 3
+ STATE 4
+ STATE 1
+ STATE 2
+ STATE 3
+ STATE 4
+ STATE 1
+ STATE 2
+ STATE 3
+ STATE 4
+ STATE 1
+ STATE 2
+ STATE 3
+ STATE 4
+ STATE 1
+ STATE 2
+ STATE 3
+ STATE 4
+ STATE 1
+ STATE 2
+ STATE 3
+ STATE 4
+ STATE 1
+ STATE 2
+ STATE 3
+ STATE 4
+ STATE 1
+ STATE 2
+ STATE 3
+ STATE 4
+ starting_point <=3
+ Call FFT
+ Routine go_fft_para2
+ Prima read_polaw_range
+ Dopo read_polaw_range
+ Prima (0.,-1.)
+ number_fft= 2
