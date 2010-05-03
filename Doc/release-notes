@@ -16,14 +16,17 @@ Incompatible changes in version 4.2:
 * ortho_para variable removed from input (CP); diagonalization='cg-serial',
   'david-serial', 'david-para', 'david-distpara', removed as well
   Use command-line option "-ndiag N" or "-northo N" to select how
-  many processors to use for orthonormalization/subspace diagonalization
+  many processors to use for linar-algebra (orthonormalization or
+  subspace diagonalization) parallelization. Note that the default value
+  for ndiag/northo has changed as well: 1 if ScaLAPACK is not compiled,
+  Nproc/2 if Scalapack is compiled
 * "stm_wfc_matching" removed from stm.x
 
 New in version 4.2:
 
   * Removal of duplicated and unused routines
-  * Major reorganization of the distribution itself: external packages
-    no longer in the repository
+  * Major reorganization of the distribution itself:
+    external packages no longer in the repository
   * New package GWW for GW calculations with Wannier functions
   * Grid parallelization for the phonon code, code cleanup
   * Better OpenMP+MPI parallelization

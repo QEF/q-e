@@ -445,7 +445,7 @@ doesn't recognize the "z" flag:
 \begin{verbatim}
      gunzip -c espresso-X.Y.Z.tar.gz | tar xvf -
 \end{verbatim}
-A directory \texttt{espresso-\version/} will be created. Given the size 
+A directory \texttt{espresso-X.Y.Z/} will be created. Given the size 
 of the complete distribution, you may need to download more packages
 and to unpack them following the same procedure (they will unpack into 
 the same directory).
@@ -682,9 +682,12 @@ are provided in the \texttt{install/} directory: they have names of the
 form \texttt{Make.}{\em system}, where {\em system} is a string identifying the 
 architecture and compiler. The template used by \configure\ is also found
 there as \texttt{make.sys.in} and contains explanations of the meaning
-of the various variables. The difficult part will be to locate libraries. For the
-choice of preprocessing flags, refer to the documentation in 
-\texttt{include/defs.h.README}.
+of the various variables. The difficult part will be to locate libraries.
+Note that you will need to select appropriate preprocessing flags
+in conjunction with the desired or available
+libraries (e.g. you need to add \texttt{-D\_\_FFTW}) to \texttt{DFLAGS}
+if you want to link internal FFTW). For a correct choice of preprocessing 
+flags, refer to the documentation in \texttt{include/defs.h.README}.
 
 NOTA BENE: If you change any settings (e.g. preprocessing,
 compilation flags) 
@@ -794,9 +797,10 @@ Here is a list:
 \begin{itemize}
 \item \texttt{make pw} produces \texttt{PW/pw.x} \\
 \pw.x calculates electronic structure, structural optimization, molecular dynamics, barriers with NEB.
-\item \texttt{make ph} produces the following codes for phonon calculations:
+\item \texttt{make ph} produces the following codes in \texttt{PH/}
+for phonon calculations:
 \begin{itemize}
-  \item \texttt{PH/ph.x}: Calculates phonon frequencies and displacement patterns,
+  \item \ph.x: Calculates phonon frequencies and displacement patterns,
     dielectric tensors, effective charges (uses data produced by \pw.x). 
   \item \texttt{dynmat.x}: applies various kinds of Acoustic Sum Rule (ASR),
     calculates LO-TO splitting at ${\bf q} = 0$ in insulators, IR and Raman
@@ -871,7 +875,7 @@ Bader's analysis starting from charge on a regular grid. The required
 "cube" format can be produced by \qe\ using  \texttt{pp.x} (info by G. Lapenna
 who has successfully used this technique). This code should perform 
 decomposition into Voronoi polyhedra as well, in place of obsolete
-code  \texttt{voronoy.x} (removed from distribution after v.4.1).
+code  \texttt{voronoy.x} (removed from distribution since v.4.2).
 
 The utility programs in  \texttt{pwtools/} are:
 \begin{itemize}
@@ -927,8 +931,15 @@ Cover many more programs and features of the \qe\ distribution,
 but they require manual inspection of the results. 
 \end{itemize}
 
-Let us first consider the examples. A list of examples and
-of what each example does is contained in \texttt{examples/README}. 
+Let us first consider the tests. Automated tests for \pw.x\ are in directory 
+\texttt{tests/}. File \texttt{tests/README} contains a list of what is tested.
+To run tests, follow the directions in the header if file 
+\texttt{check\_pw.x.j}, edit variables PARA\_PREFIX, PARA\_POSTFIX 
+if needed (see below). Same for \cp.x, this time in directory 
+\texttt{cptests/}.
+
+Let us now consder examples. A list of examples and of what each example
+does is contained in \texttt{examples/README}. 
 For details, see the \texttt{README} file in each example's directory. 
 If you find that any relevant feature isn't being tested, please contact us 
 (or even better, write and send us a new example yourself !).
@@ -953,7 +964,8 @@ directory containing other data, the examples wil clean it!
 is the default if parallel libraries are detected), you will usually
 have to specify a driver program (such as \texttt{mpirun} or \texttt{mpiexec}) 
 and the number of processors: see Sec.\ref{SubSec:para} for
-details. In order to do that, edit again the \texttt{environment\_variables} file
+details. In order to do that, edit again the \texttt{environment\_variables} 
+file
 and set the PARA\_PREFIX and PARA\_POSTFIX variables as needed. 
 Parallel executables will be run by a command like this: 
 \begin{verbatim}
@@ -995,12 +1007,6 @@ doesn't work, or at least, it requires human inspection of the
 results. 
 \end{enumerate}
 
-Automated tests for \pw.x\ are in directory \texttt{tests/}. The
-file \texttt{tests/README} contains a list of what is tested.
-To run them, go into file \texttt{check\_pw.x.j}, edit variables 
-PARA\_PREFIX, PARA\_POSTFIX if needed, follow the
-explanations in the header of the files. Same for \cp.x,
-this time in directory \texttt{cptests/}.
 
 \subsection{Installation tricks and problems}
 
@@ -1228,7 +1234,7 @@ November 2008).
 
 For parallel (MPI) execution on multiprocessor (SMP) machines, set the
 environmental variable OMP\_NUM\_THREADS to 1 unless you know what you 
-are doing. See the section  on parallelism for more info on this
+are doing. See Sec.\ref{Sec:para} for more info on this
 and on the difference between MPI and OpenMP parallelization. 
 
 \paragraph{Linux PCs with ACML libraries}
@@ -1266,8 +1272,10 @@ See also the following post from Axel Kohlmeyer:\\
 
 \subsubsection{Intel Mac OS X}
 
-Newer Mac OS-X machines with Intel CPUs are supported by \configure,
+Newer Mac OS-X machines (10.4 and later) with Intel CPUs are supported 
+by \configure,
 with gcc4+g95, gfortran, and the Intel compiler ifort with MKL libraries.
+Parallel compilation with OpenMPI also works.
 
 \paragraph{Intel Mac OS X with ifort}
 
@@ -1277,18 +1285,37 @@ procedure.  I installed just the developer tools from apple, the intel
 fortran compiler and everything went on great" (Info by Riccardo Sabatini, 
 Nov. 2007)
 
-\paragraph{Intel Mac OS X 10.4-10.6 with g95 and gfortran}
+\paragraph{Intel Mac OS X 10.4 with g95 and gfortran}
 
-The stable and unstable versions of g95 are known to work. Recent
-gfortran versions also work, but they may require an updated version
-of Developer Tools (XCode 2.4.1 or 2.5), that can be downloaded from
-Apple. Some tests fails with mysterious errors, that disappear if
+An updated version of Developer Tools (XCode 2.4.1 or 2.5), that can be 
+downloaded from Apple, may be needed. Some tests fails with mysterious 
+errors, that disappear if
 fortran BLAS are linked instead of system Atlas libraries. Use: 
 \begin{verbatim}
    BLAS_LIBS_SWITCH = internal
    BLAS_LIBS      = /path/to/espresso/BLAS/blas.a -latlas
 \end{verbatim}
-(Info by Paolo Giannozzi, jan.2008, still valid as of April 2010)
+(Info by Paolo Giannozzi, jan.2008, updated April 2010)
+
+\paragraph{Intel Mac OS X 10.6}
+
+I have performed some limited amount of tests, and everything seems to
+be fine under macports supplied environment up to now. I have installed
+using the following manner:
+\begin{verbatim}}
+   port install gcc43\\
+   port install g95
+\end{verbatim}
+(rename apple supplied mpi to something else)\\
+(dowload and install openmpi )
+\begin{verbatim}}
+  ./configure CC=gcc-mp-4.3 CPP=cpp-mp-4.3 CXX=g++-mp-4.3 F77=g95 FC=g95
+\end{verbatim}
+(download and install \qe)
+\begin{verbatim}}
+  ./configure CC=gcc-mp-4.3 CPP=cpp-mp-4.3 CXX=g++-mp-4.3 F77=g95 FC=g95
+\end{verbatim}
+(Info by Osman Baris Malcioglu, May 2010)
 
 \subsubsection{SGI, Alpha}
 
@@ -1334,8 +1361,10 @@ machine.
 Library OpenMP is a low-effort parallelization suitable for
 multicore CPUs. Its effectiveness relies upon the quality of 
 the multithreading libraries and the availability of 
-multithreading FFTs. If you are using MKL, you may want 
-to select FFTW3 (set {\texttt{CPPFLAGS=-D\_\_FFTW3...}
+multithreading FFTs. If you are using MKL,\footnote{Beware: 
+MKL v.10.2.2 has a buggy \texttt{dsyev} yielding wrong results 
+with more than one thread; fixed in v.10.2.4}
+you may want to select FFTW3 (set \texttt{CPPFLAGS=-D\_\_FFTW3...}
 in \texttt{make.sys}) and to link with the MKL interface to FFTW3. 
 You will get a decent speedup ($\sim 25$\%) on two cores.
 
@@ -1426,8 +1455,8 @@ Processors are organized in a hierarchy of groups,
 which are identified by different MPI communicators level.
 The groups hierarchy is as follow:
 \begin{verbatim}
-  world _ images _ pools _ task groups
-                \_ ortho groups
+  world _ images _ pools _ task   groups
+                \_ linear-algebra groups
 \end{verbatim}
 
 {\bf world}: is the group of all processors (MPI\_COMM\_WORLD).
@@ -1456,16 +1485,16 @@ the number of processors exceeds the number of FFT planes,
 data can be redistributed to "task groups" so that each group 
 can process several wavefunctions at the same time.
 
-{\bf ortho group}:
+{\bf linear-algebra group}:
 A further level of parallelization, independent on
 plane-wave (pool) parallelization, is the parallelization of
 subspace diagonalization (\pw.x) or iterative orthonormalization
 (\cp.x). Both operations required the diagonalization of 
 arrays whose dimension is the number of Kohn-Sham states
 (or a small multiple). All such arrays are distributed block-like
-across the "ortho group", a subgroup of the pool of processors,
-organized in a square 2D grid. As aconsequence the number of processors
-in the ortho group is given by $n^2$, where $n$ is an integer;
+across the ``linear-algebra group'', a subgroup of the pool of processors,
+organized in a square 2D grid. As a consequence the number of processors
+in the linear-algebra group is given by $n^2$, where $n$ is an integer;
 $n^2$ must be smaller than the number of precessors of a single pool.
 The diagonalization is then performed
 in parallel using standard linear algebra operations.
@@ -1508,9 +1537,9 @@ of processors of each pool.
 For very large jobs (i.e. O(1000) atoms or so) or for very long jobs
 to be run on massively parallel  machines (e.g. IBM BlueGene) it is
 crucial to use in an effective way both the "task group" and the
-"ortho group" parallelization. Without a judicious choice of
+"linear-algebra" parallelization. Without a judicious choice of
 parameters, large jobs will find a stumbling block in either memory or 
-CPU requirements. In particular, the "ortho group" parallelization is
+CPU requirements. In particular, the linear-algebra parallelization is
 used in the diagonalization  of matrices in the subspace of Kohn-Sham
 states (whose dimension is as a strict minumum equal to the number of
 occupied states). These are stored as block-distributed matrixes
@@ -1727,7 +1756,7 @@ allowed values in \texttt{Modules/funct.f90}).
 
 Electronic and ionic structure calculations are performed by program \pw.x.
 
-\paragraph{Input data}
+\subsubsection{Input data}
 
 The input data is organized as several namelists, followed by other fields
 introduced by keywords. The namelists are
@@ -1792,7 +1821,25 @@ and weights if the symmetry of the system is lower than the symmetry of the
 Bravais lattice. The automatic generation of k-points follows the convention
 of Monkhorst and Pack.
 
-\subsubsection{Typical cases}
+\subsubsection{Data files}
+
+The output data files are written in the directory specified by variable
+\texttt{outdir}, with names specified by variable \texttt{prefix} (a string that is prepended
+to all file names, whose default value is: \texttt{prefix='pwscf'}). The \texttt{iotk}
+toolkit is used to write the file in a XML format, whose definition can
+be found in the Developer Manual. In order to use the data directory
+on a different machine, you need to convert the binary files to formatted
+and back, using the \texttt{bin/iotk} script.
+
+The execution stops if you create a file \texttt{prefix.EXIT} in the working 
+directory. NOTA BENE: this is the directory where the program 
+is executed, NOT the directory \texttt{outdir} defined in input, where files 
+are written. Note that with some versions of MPI, the working directory 
+is the directory where the \pw.x\ executable is! The advantage of this 
+procedure is that all files are properly closed, whereas  just killing 
+the process may leave data and output files in unusable state.
+
+\subsection{Typical cases}
 We may distinguish the following typical cases for \pw.x:
 
 \paragraph{Single-point (fixed-ion) SCF calculation} 
@@ -1843,6 +1890,18 @@ See Example 04.
 See Example 10, file \texttt{example10/README}, and the documentation 
 in the header of \texttt{PW/bp\_c\_phase.f90}. 
 
+\paragraph{Finite electric fields}
+There are two different implementations of macroscopic electric fields
+in \pw.x: via an external sawtooth potential (input variable
+\texttt{tefield=.true.}) and via the modern theory of polarizability
+(\texttt{lelfield=.true.}).
+The former is useful for surfaces, especially in conjunction
+with dipolar corrections (\texttt{dipfield=.true.}):
+see \texttt{examples/dipole\_example} for an example of application. 
+Electrc fields viia modern theopry of polarization are documented in
+example 31. The exact meaning of the related variables, for both
+cases, is explained in the general input documentation.
+
 \paragraph{Nudged Elastic Band calculation}
 Specify \texttt{calculation='neb'} and add namelist \&IONS.
 
@@ -1866,7 +1925,8 @@ and the residual error for the image in eV/$a_0$.
 contains an interpolation of the path energy profile that pass exactly through each
 image; it is computed using both the image energies and their derivatives
 \item[\texttt{prefix.path}]
-information used by QE to restart a path calculation, its format depends on the input
+information used by \qe\ 
+to restart a path calculation, its format depends on the input
 details and is undocumented
 \item[\texttt{prefix.axsf}]
 atomic positions of all path images in the XCrySDen animation format:
@@ -1891,7 +1951,7 @@ may happen if \texttt{CI\_scheme='auto'} and if it does it may mess up everythin
 Converge your calculation, then restart from the last configuration with
 CI option enabled (note that this will {\em increase} the barrier).
 \item
-Carefully choose the initial path. Remember that QE assumes continuity
+Carefully choose the initial path. Remember that \qe\ assumes continuity
 between the first and the last image at the initial condition. In other 
 words, periodic images are NOT used; you may have to manually translate
 an atom by one or more unit cell base vectors in order to have a meaningful
@@ -1920,30 +1980,13 @@ unless one starts from a very good or very bad initial guess.
 \end{enumerate}
 (Courtesy of Lorenzo Paulatto)
 
-\subsubsection{Data files}
-
-The output data files are written in the directory specified by variable
-\texttt{outdir}, with names specified by variable \texttt{prefix} (a string that is prepended
-to all file names, whose default value is: \texttt{prefix='pwscf'}). The \texttt{iotk}
-toolkit is used to write the file in a XML format, whose definition can
-be found in the Developer Manual. In order to use the data directory
-on a different machine, you need to convert the binary files to formatted
-and back, using the \texttt{bin/iotk} script.
-
-The execution stops if you create a file \texttt{prefix.EXIT} in the working 
-directory. NOTA BENE: this is the directory where the program 
-is executed, NOT the directory \texttt{outdir} defined in input, where files 
-are written. Note that with some versions of MPI, the working directory 
-is the directory where the \pw.x\ executable is! The advantage of this 
-procedure is that all files are properly closed, whereas  just killing 
-the process may leave data and output files in unusable state.
-
-\subsection{Hartree-Fock and Hybrid functionals}
+\paragraph{Hartree-Fock and Hybrid functionals}
 
 Calculations in the Hartree-Fock approximation, or using hybrid XC functionals 
-that include some Hartree-Fock exchange, can be performed by adding
-\texttt{-DEXX} to the preprocessing options \texttt{DFLAGS} in file 
-\texttt{make.sys}. Issue command \texttt{make clean} before recompiling. 
+that include some Hartree-Fock exchange, currently require that
+\texttt{-DEXX} is added to the preprocessing options \texttt{DFLAGS} in file 
+\texttt{make.sys} before compilation (if you change this after the first
+compilation, \texttt{make clean}, recompile). 
 Documentation on usage can be found in subdirectory 
 \texttt{examples/EXX\_example/}.
 
@@ -1968,20 +2011,22 @@ First, you have to find the ground-state atomic and electronic configuration;
 Second, you can calculate phonons using Density-Functional Perturbation Theory.
 Further processing to calculate Interatomic Force Constants, to add macroscopic
 electric field and impose Acoustic Sum Rules at q=0 may be needed.
+In the following, we will indicate by $q$ the phonon wavevectors, 
+whle $k$ will indicate Bloch vectors used for summing over the Brillouin Zone.
 
-Since version 4 it is possible to safely stop execution of \ph.x code using
+Since version 4.0 it is possible to safely stop execution of \ph.x code using
 the same mechanism of the \pw.x code, i.e. by creating a file prefix.EXIT in the 
-working directory. Execution can be resumed by setting 'recover=.true.' in the
-subsequent input data.
+working directory. Execution can be resumed by setting \texttt{recover=.true.} 
+in thesubsequent input data.
 
 \subsection{Single-q calculation}
 
-The phonon code \ph.x calculates normal modes at a given q-vector, starting
+The phonon code \ph.x\ calculates normal modes at a given q-vector, starting
 from data files produced by \pw.x with a simple SCF calculation.
 NOTE: the alternative procedure in which a band-structure calculation 
-with calculation='phonon' was performed as an intermediate step is no
+with \texttt{calculation='phonon} was performed as an intermediate step is no
 longer implemented since version 4.1. It is also no longer needed to
-specify lnscf=.true. for $q\ne 0$.
+specify \texttt{lnscf=.true.} for $q\ne 0$.
 
 The output data file appear in the directory specified by variables outdir,
 with names specified by variable prefix. After the output file(s) has been
@@ -1990,10 +2035,11 @@ and which are not), you can run \ph.x.
     
 The first input line of \ph.x is a job identifier. At the second line the
 namelist \&INPUTPH starts. The meaning of the variables in the namelist
-(most of them having a default value) is described in file INPUT PH. Variables
-outdir and prefix must be the same as in the input data of \pw.x. Presently
-you must also specify amass (real, dimension ntyp): the atomic mass of each
-atomic type.
+(most of them having a default value) is described in file 
+\texttt{INPUT\_PH.*}. Variables \texttt{outdir} and \texttt{prefix} 
+must be the same as in the input data of \pw.x. Presently
+you must also specify \texttt{amass(i)} (a real variable): the atomic mass 
+of atomic type $i$.
 
 After the namelist you must specify the q-vector of the phonon mode.
 This must be the same q-vector given in the input of \pw.x.
@@ -2003,60 +2049,78 @@ contain the non-analytic term occuring in polar materials, i.e. there is no
 LO-TO splitting in insulators. Moreover no Acoustic Sum Rule (ASR) is
 applied. In order to have the complete dynamical matrix at q = 0 including
 the non-analytic terms, you need to calculate effective charges by specifying
-option epsil=.true. to \ph.x.
+option \texttt{epsil=.true.} to \ph.x. This is however not possible (because
+not physical!) for metals (i.e. any system subject to a broadening).
 
-Use program dynmat.x to calculate the correct LO-TO splitting, IR cross
-sections, and to impose various forms of ASR. If \ph.x was instructed to 
-calculate Raman coefficients, dynmat.x will also calculate Raman cross sections
+At q = 0, use program \texttt{dynmat.x} to calculate the correct LO-TO 
+splitting, IR cross sections, and to impose various forms of ASR. 
+If \ph.x\ was instructed to calculate Raman coefficients, 
+\texttt{dynmat.x} will also calculate Raman cross sections
 for a typical experimental setup.
-    
+Input documentation in the header of \texttt{PH/dynmat.f90}.
+
 A sample phonon calculation is performed in Example 02.
 
 \subsection{Calculation of interatomic force constants in real space}
 
-First, dynamical matrices D(q) are calculated and saved for a suitable uniform 
+First, dynamical matrices are calculated and saved for a suitable uniform 
 grid of q-vectors (only those in the Irreducible Brillouin Zone of the
 crystal are needed). Although this can be done one q-vector at the time, a
-simpler procedure is to specify variable ldisp=.true. and to set variables
-nq1,nq2,nq3 to some suitable Monkhorst-Pack grid, that will be automatically
-generated, centered at q = 0. Do not forget to specify epsil=.true.
-in the input data of \ph.x if you want the correct TO-LO splitting in polar
+simpler procedure is to specify variable \texttt{ldisp=.true.} and to set 
+variables \texttt{nq1}, \texttt{nq2}, \texttt{nq3} to some suitable 
+Monkhorst-Pack grid, that will be automatically generated, centered at q = 0. 
+Do not forget to specify \texttt{epsil=.true.} in the input data of \ph.x 
+if you want the correct TO-LO splitting in polar
 materials.
     
-Second, code q2r.x reads the D(q) dynamical matrices produced in the
+Second, code \texttt{q2r.x} reads the dynamical matrices produced in the
 preceding step and Fourier-transform them, writing a file of Interatomic Force
 Constants in real space, up to a distance that depends on the size of the grid
-of q-vectors. Program matdyn.x may be used to produce phonon modes and
+of q-vectors. Input documentation in the header of \texttt{PH/q2r.f90}.
+
+Program \texttt{matdyn.x} may be used to produce phonon modes and
 frequencies at any q using the Interatomic Force Constants file as input.
-See Example 06.
+Input documentation in the header of \texttt{PH/matdyn.f90}.
+
+For more details, see Example 06.
 
 \subsection{Calculation of electron-phonon interaction coefficients}
 
-The calculation of electron-phonon coefficients in metals is made difficult by
-the slow convergence of the sum at the Fermi energy. It is convenient to 
-calculate phonons, for each q-vector of a suitable grid, using a
-smaller k-point 
-grid, saving the dynamical matrix and the self-consistent first-order variation
-of the potential (variable fildvscf). Then a non-SCF calculation with
-a larger k-point grid is performed. Finally the electron-phonon calculation is
-performed by specifying elph=.true., trans=.false., and the input files
-fildvscf, fildyn. The electron-phonon coefficients are calculated using several
-values of gaussian broadening (see PH/elphon.f90) because this quickly
+The calculation of electron-phonon coefficients in metals is made difficult 
+by the slow convergence of the sum at the Fermi energy. It is convenient to 
+use a coarse k-point grid to calculate phonons on a suitable wavevector grid;
+a dense k-point grid to calculate the sum at the Fermi energy. The calculation
+proceeds in this way:
+\begin{enumerate}
+\item a scf calculation for the dense k-point grid (or a scf calculation 
+followed by a non-scf one on the dense k-point grid); specify 
+option \texttt{la2f=.true.} to \pw.x\ in order to save a file with 
+the eigenvalues on the dense k-point grid. The latter MUST contain 
+all k and k+q grid points used in the subsequent electron-phonon 
+calculation. All grids MUST be unshifted, i.e. include k=0.
+\item a normal scf + phonon dispersion calculation on the coarse k-point
+grid, specifying option \texttt{elph=.true.}. and the file name where
+the self-consistent first-order variation of the potential is to be 
+stored: variable \texttt{fildvscf}).
+The electron-phonon coefficients are calculated using several
+values of gaussian broadening (see \texttt{PH/elphon.f90}) because this quickly
 shows whether results are converged or not with respect to the k-point grid
-and Gaussian broadening. 
-
-All of the above must be repeated for all desired q-vectors and the final
-result is summed over all q-vectors, using lambda.x. The input
-data for the latter is described in the header of lambda.f90.
-
-See Example 07.
+and Gaussian broadening.
+\item Finally, you can use \texttt{matdyn.x} and \texttt{lambda.x} 
+(input documentation in the header of \texttt{PH/lambda.f90})
+to get the $\alpha^2F(\omega)$ function, the electron-phonon coefficient
+$\lambda$, and an estimate of the critical temperature $T_c$.
+\end{enumerate}
+For more details, see Example 07.
 
 \section{Post-processing}
 
 There are a number of auxiliary codes performing postprocessing tasks such
 as plotting, averaging, and so on, on the various quantities calculated by
-\pw.x. Such quantities are saved by \pw.x into the output data file(s). 
-Postprocessing codes are in the PP/ directory.
+\pw.x\. Such quantities are saved by \pw.x\ into the output data file(s). 
+Postprocessing codes are in the \texttt{PP/} directory. All codes for 
+which input documentation is not explicitly mentioned have documentation
+in the header of the fortran sources.
 
 \subsection{Plotting selected quantities}
   
