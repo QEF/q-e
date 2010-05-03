@@ -49,9 +49,6 @@ SUBROUTINE read_file()
   USE realus,               ONLY : qpointlist,betapointlist,init_realspace_vars,real_space
   USE io_global,            ONLY : stdout
   USE dfunct,                 only : newd
-#ifdef EXX
-  USE exx, ONLY: exx_grid_init, exx_div_check
-#endif
   !
   IMPLICIT NONE
   !
@@ -243,8 +240,6 @@ SUBROUTINE read_file()
                  ehart, etxc, vtxc, eth, etotefield, charge, v )
 #ifdef EXX
   call pw_readfile('exx', ierr)
-  call exx_grid_init
-  call exx_div_check
 #endif
   !
   ! ... reads the wavefunctions and writes them in 'distributed' form 
