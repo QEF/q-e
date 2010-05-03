@@ -614,9 +614,10 @@ SUBROUTINE iosys()
      !
   END SELECT
   !
-
+  IF ( noncolin .AND. lda_plus_u ) CALL errore('iosys', &
+       'LDA+U not implemented with noncollinear magnetization')
+  !
   two_fermi_energies = ( tot_magnetization /= -1._DP)
- 
   IF ( two_fermi_energies .AND. tot_magnetization < 0._DP) &
      CALL errore( 'iosys', 'tot_magnetization only takes positive values', 1 )
   IF ( two_fermi_energies .AND. .NOT. lsda ) &
