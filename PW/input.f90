@@ -1372,6 +1372,7 @@ SUBROUTINE iosys()
       !
     CASE( 'dcc' )
       !
+      CALL errore('iosys','density countercharge correction currently disabled',1)
       do_comp        = .TRUE.
       do_coarse      = .FALSE.
       do_mltgrid     = .TRUE.
