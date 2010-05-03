@@ -112,10 +112,10 @@
 !read namelist
 
     if(ionode) then
-       iun=find_free_unit()
-       open(iun,file='inputgww')
-       read(iun, NML=inputgww)
-       close(iun)
+      CALL input_from_file()
+      WRITE(stdout, '(5x,a)') "Waiting for input..."
+      READ(5, NML=inputgww)
+      WRITE(stdout, '(5x,a)') "done"
 
 
 !writes on screen
