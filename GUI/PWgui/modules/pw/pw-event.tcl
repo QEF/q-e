@@ -6,54 +6,48 @@
 tracevar calculation w {
 
     set nat    [varvalue nat]
-    set calc   [varvalue calculation]
-    set widget [getWidgetFromVarident ion_dynamics]
+    set calc   [varvalue calculation]    
+
+    set ion_dynamics [varvalue ion_dynamics] 
+    set widget       [getWidgetFromVarident ion_dynamics]
     
-    set all {ions cell phonon vc_md path neb metadyn constraints_card collective_vars_card}
+    set all {ions cell vc_md path neb constraints_card}
     
-    #foreach group $all {
-    #	groupwidget $group disable
-    #}
-	
     set disable {}
     set enable  {}
-
-    widgetconfigure ion_temperature -textvalues {
-	"velocity rescaling via tempw&tolp  <rescaling>"
-	"velocity rescaling via tempw&nraise  <rescale-v>"
-	"velocity rescaling via delta_t  <rescale-T>"
-	"reduce ionic temperature via delta_t&nraise  <reduce-T>"
-	"\"soft\" Berendsen velocity rescaling via tempw&nraise  <berendsen>"
-	"use Andersen thermostat via tempw&nraise  <andersen>"	
-	"not controlled  <not_controlled>"
-    }
 
     switch -exact -- $calc {
 	'scf' - 
 	'nscf' {
 	    set disable $all
-	}
-	'phonon' {
-	    set disable $all
+	    varset ion_dynamics -value {}
 	}
 	'relax' {
 	    set enable  {ions constraints_card}
-	    set disable {cell phonon vc_md path neb metadyn collective_vars_card}
+	    set disable {cell vc_md path neb}
 	    
 	    widget ion_dynamics enable
 	    widgetconfigure ion_dynamics -textvalues {
 		"BFGS quasi-newton method for structural optimization  <bfgs>"
 		"damped dynamics (quick-min Verlet) for structural optimization  <damp>"
 	    }
+
+	    if { ! [regexp bfgs|damp $ion_dynamics] } {
+		varset ion_dynamics -value {}
+	    }
 	}
 	'vc-relax' {
 	    set enable  {ions cell vc_md constraints_card}
-	    set disable {phonon path neb metadyn collective_vars_card}
+	    set disable {path neb}
 
 	    widget ion_dynamics enable
 	    widgetconfigure ion_dynamics -textvalues {
 		"BFGS quasi-newton method for structural optimization  <bfgs>"
 		"Beeman algorithm for variable cell damped dynamics  <damp>"
+	    }
+
+	    if { ! [regexp bfgs|damp $ion_dynamics] } {
+		varset ion_dynamics -value {}
 	    }
 
 	    widget cell_dynamics enable
@@ -65,27 +59,39 @@ tracevar calculation w {
 	    }
 	}
 	'md' {
-	    set enable {ions constraints_card}
-	    set disable {cell phonon vc_md path neb metadyn collective_vars_card}	
+	    set enable  {ions constraints_card}
+	    set disable {cell vc_md path neb}	
 	    
 	    widget ion_dynamics enable
 	    widgetconfigure ion_dynamics -textvalues {
 		"Verlet algorithm for molecular dynamics  <verlet>"
 		"over-damped Langevin dynamics  <langevin>"
 	    }
+	    
+	    if { ! [regexp verlet|langevin $ion_dynamics] } {
+		varset ion_dynamics -value {}
+	    }
 	}
 	'vc-md' {
-	    set enable {ions cell vc_md constraints_card}
-	    set disable {phonon path neb metadyn collective_vars_card}
+	    set enable  {ions cell vc_md constraints_card}
+	    set disable {path neb}
 
 	    widget ion_dynamics enable
 	    widgetconfigure ion_dynamics -textvalues {
 		"Beeman algorithm for variable cell MD  <beeman>"
 	    }
 
+	    if { ! [regexp beeman $ion_dynamics] } {
+		varset ion_dynamics -value {}
+	    }
+
 	    widgetconfigure ion_temperature -textvalues {
 		"velocity rescaling via tempw&tolp  <rescaling>"
 		"not controlled  <not_controlled>"
+	    }
+
+	    if { ! [regexp rescaling [varvalue ion_temperature]] } {
+		varset ion_temperature -value {}
 	    }
 
 	    widget cell_dynamics enable
@@ -97,30 +103,28 @@ tracevar calculation w {
 	}
 	'neb' {
 	    set enable  {ions path neb constraints_card}
-	    set disable {cell phonon vc_md metadyn collective_vars_card}
+	    set disable {cell vc_md}
 
 	    widget opt_scheme enable
 	    widgetconfigure opt_scheme -textvalues {
 		"optimization algorithm based on molecular dynamics  <quick-min>"
-		"second Broyden method  <broyden>"
+		"Broyden method  <broyden>"
+		"Alternate Broyden method  <broyden2>"
 		"steepest descent  <sd>"
 	    }
 	}
 	'smd' {
-	    set enable  {ions path constraints_card collective_vars_card}
-	    set disable {cell phonon vc_md neb metadyn}
+	    set enable  {ions path constraints_card}
+	    set disable {cell vc_md neb}
 
 	    widget opt_scheme enable
 	    widgetconfigure opt_scheme -textvalues {
 		"optimization algorithm based on molecular dynamics  <quick-min>"
-		"second Broyden method  <broyden>"
+		"Broyden method  <broyden>"
+		"Alternate Broyden method  <broyden2>"
 		"steepest descent  <sd>"
 		"finite temperature langevin dynamics  <langevin>"
 	    }
-	}
-	'metadyn' {
-	    set enable  {ions metadyn neb constraints_card collective_vars_card}
-	    set disable {cell phonon vc_md path}
 	}
     }
 
@@ -133,12 +137,12 @@ tracevar calculation w {
     
     # force to update the state of widgets by resetting corresponding variables
 
-    varset ion_dynamics           -value [varvalue ion_dynamics]
-    varset opt_scheme             -value [varvalue opt_scheme]
-    varset CI_scheme              -value [varvalue CI_scheme]
-    varset constraints_enable     -value [varvalue constraints_enable]
-    varset collective_vars_enable -value [varvalue collective_vars_enable]
-
+    varset ion_dynamics       -value [varvalue ion_dynamics]
+    varset ion_temperature    -value [varvalue ion_temperature]
+    varset cell_dynamics      -value [varvalue cell_dynamics]
+    varset opt_scheme         -value [varvalue opt_scheme]
+    varset CI_scheme          -value [varvalue CI_scheme]
+    varset constraints_enable -value [varvalue constraints_enable]
 
     # take care of NEB || SMD coordinates
 
@@ -256,29 +260,6 @@ tracevar ntyp w {
     widgetconfigure Hubbard_alpha -end $ntyp
 }
 
-#tracevar nspin w {
-#    if { [vartextvalue nspin] == "Yes" || [vartextvalue nspin] == "Yes noncollinear"} {
-#	widget starting_magnetization enable
-#	widgetconfigure starting_magnetization -end [varvalue ntyp]
-#        if { [vartextvalue nspin] == "Yes" } {
-#	    groupwidget noncolin_group disable
-#	    #widget angle1 disable
-#	    #widget angle2 disable
-#        } else {
-#	    groupwidget noncolin_group enable
-#	    #widget angle1 enable
-#	    #widget angle2 enable
-#	    widgetconfigure angle1 -end [varvalue ntyp]
-#	    widgetconfigure angle2 -end [varvalue ntyp]
-#        }
-#    } else {
-#	widget starting_magnetization disable
-#	groupwidget noncolin_group disable
-#	#widget angle1 disable
-#	#widget angle2 disable
-#    }
-#}
-
 
 tracevar nspin w {
     if { [vartextvalue nspin] == "Yes" } {
@@ -296,8 +277,6 @@ tracevar nspin w {
 	    groupwidget spin_polarization disable
 	}
 	groupwidget noncolin_group disable
-	#widget angle1 disable
-	#widget angle2 disable
     }
 
     # constrained/fixed magnetization
@@ -325,8 +304,6 @@ tracevar noncolin w {
 	    groupwidget spin_polarization disable
 	}
 	groupwidget noncolin_group disable
-	#widget angle1 disable
-	#widget angle2 disable
     }
 
     # constrained/fixed magnetization
@@ -341,6 +318,18 @@ tracevar tefield w {
     switch -- [vartextvalue tefield] {
 	Yes     { groupwidget tefield_group enable  }
 	default { groupwidget tefield_group disable }
+    }
+}
+
+proc lelfield_widgets {status} {
+    foreach w {nberrycyc efield efield_cart} {
+	widget $w $status
+    }
+}
+tracevar lelfield w {
+    switch -- [vartextvalue lelfield] {
+	Yes     { foreach w {nberrycyc efield efield_cart} {widget $w enable}  }
+	default { foreach w {nberrycyc efield efield_cart} {widget $w disable} }
     }
 }
 
@@ -398,10 +387,11 @@ tracevar ion_dynamics w {
 
     # MD
     switch -exact -- $calc {
-	'scf' - 'nscf' - 'phonon' - 'neb' - 'smd' {
+	'scf' - 'nscf' - 'bands' - 'neb' - 'smd' {
 	    groupwidget md disable
 	}
-	'relax' - 'vc-relax' - 'md' - 'vc-md' - 'metadyn' {	    
+	'relax' - 'vc-relax' {	    
+	    # check !!!
 	    switch -exact -- $iond {
 		'damp' - 'verlet' - 'langevin' - 'beeman' {
 		    groupwidget md enable
@@ -410,6 +400,10 @@ tracevar ion_dynamics w {
 		    groupwidget md disable
 		}
 	    }
+	}
+	'md' - 'vc-md' {	    
+	    # check !!!
+	    groupwidget md enable
 	}
     }
 
@@ -534,7 +528,7 @@ tracevar constraints_enable w {
 
     set calc [varvalue calculation]
 
-    if { [regexp relax|md|metadyn $calc] } {
+    if { [regexp relax|md $calc] } {
 	
 	widget constraints_enable enable
 
@@ -586,38 +580,9 @@ tracevar nconstr w {
     #varset old_nconstr -value $nc
 }
 
-tracevar collective_vars_enable w {
-    set calc [varvalue calculation]
-    
-    if { [regexp smd|metadyn $calc] } {
-	
-	widget collective_vars_enable enable
-
-	if { $calc == "'metadyn'" } {
-	    varset collective_vars_enable -value Yes
-	}
-	if { [varvalue collective_vars_enable] } {
-	    groupwidget collective_vars_card enable
-	} else {
-	    groupwidget collective_vars_card disable
-	}
-	     
-    } else {
-	
-	widget collective_vars_enable disable
-	groupwidget collective_vars_card disable	
-	
-    }
-}
-
-tracevar ncolvars w {
-    set nc [varvalue ncolvars]    
-    widgetconfigure collective_vars_table -rows $nc
-}
-
-tracevar do_ee w {    
-    switch -- [varvalue do_ee] {
-	.true. - .t. { 
+tracevar assume_isolated w {    
+    switch -- [varvalue assume_isolated] {
+	'dcc' { 
 	    groupwidget ee enable 
 	}
 	default {
@@ -649,7 +614,6 @@ postprocess {
     varset diagonalization -value {}
     varset CI_scheme       -value {}
     varset ion_dynamics    -value {}
-    varset do_ee           -value {}
     varset K_POINTS_flags  -value automatic
     varset CELL_PARAMETERS_flags -value cubic
 

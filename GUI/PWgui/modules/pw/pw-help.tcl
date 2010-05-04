@@ -18,8 +18,8 @@ help calculation -helpfmt helpdoc -helptext {
 </li>
 <blockquote><pre>
 a string describing the task to be performed:
-'scf', 'nscf', 'bands', 'phonon', 'relax', 'md',
-'vc-relax', 'vc-md', 'neb', 'smd', 'metadyn'
+'scf', 'nscf', 'bands', 'relax', 'md',
+'vc-relax', 'vc-md', 'neb', 'smd'
 (vc = variable-cell).
          </pre></blockquote>
 </ul>      
@@ -371,6 +371,8 @@ Specifies the amount of disk I/O activity
 'low' :    store wfc in memory, save only at the end
 
 'none':    do not save wfc, not even at the end
+           (guaranteed to work only for 'scf', 'nscf',
+            'band' calculations)
 
 If restarting from an interrupted calculation, the code
 will try to figure out what is available on disk. The
@@ -699,7 +701,9 @@ grouphelp {A B C cosAB cosAC cosBC} -helpfmt helpdoc -helptext {
 Traditional crystallographic constants (a,b,c in ANGSTROM),
 cosab = cosine of the angle between axis a and b
 specify either these OR celldm but NOT both.
-If ibrav=0 only alat = a is used (if present)
+The axis are chosen according to the value of ibrav.
+If ibrav is not specified, the axis are taken from card
+CELL_PARAMETERS and only a is used as lattice parameter.
          </pre></blockquote>
 </ul>
     
@@ -750,7 +754,7 @@ help nbnd -helpfmt helpdoc -helptext {
 <br><li> <em>Type: </em>INTEGER</li>
 <br><li> <em>Default: </em>
 for an insulator, nbnd = number of valence bands
-(nbnd=nelec/2, see below for nelec);
+(nbnd = # of electrons /2);
 for a metal, 20% more (minimum 4 more)
          </li>
 <br><li> <em>Description:</em>
@@ -766,21 +770,23 @@ k-point, not the number of bands per k-point, is doubled
 
 
 # ------------------------------------------------------------------------
-help nelec -helpfmt helpdoc -helptext {
+help tot_charge -helpfmt helpdoc -helptext {
       <ul>
-<li> <em>Variable: </em><big><b>nelec</b></big>
+<li> <em>Variable: </em><big><b>tot_charge</b></big>
 </li>
 <br><li> <em>Type: </em>REAL</li>
-<br><li> <em>Default: </em> the same as ionic charge (neutral cell)
+<br><li> <em>Default: </em> 0.0
          </li>
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-number of electron in the unit cell
-(may be noninteger if you wish)
+total charge of the system. Useful for simulations with charged cells.
+By default the unit cell is assumed to be neutral (tot_charge=0).
+tot_charge=+1 means one electron missing from the system,
+tot_charge=-1 means one additional electron, and so on.
 
-A compensating jellium background is inserted
-to remove divergences if the cell is not neutral
+In a periodic calculation a compensating jellium background is
+inserted to remove divergences if the cell is not neutral.
          </pre></blockquote>
 </ul>      
       
@@ -788,18 +794,50 @@ to remove divergences if the cell is not neutral
 
 
 # ------------------------------------------------------------------------
-help tot_charge -helpfmt helpdoc -helptext {
+help tot_magnetization -helpfmt helpdoc -helptext {
       <ul>
-<li> <em>Variable: </em><big><b>tot_charge</b></big>
+<li> <em>Variable: </em><big><b>tot_magnetization</b></big>
 </li>
-<br><li> <em>Type: </em>INTEGER</li>
-<br><li> <em>Default: </em> 0
+<br><li> <em>Type: </em>REAL</li>
+<br><li> <em>Default: </em> -1 [unspecified]
          </li>
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-total system charge. Used only if nelec is unspecified,
-otherwise it is ignored.
+total majority spin charge - minority spin charge.
+Used to impose a specific total electronic magnetization.
+If unspecified then tot_magnetization variable is ignored and
+the amount of electronic magnetization is determined during
+the self-consistent cycle.
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help starting_magnetization -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variables: </em><big><b>starting_magnetization(i), i=1,ntyp</b></big>
+</li>
+<br><li> <em>Type: </em>REAL</li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+starting spin polarization (values between -1 and 1)
+on atomic type 'i' in a spin-polarized calculation.
+Breaks the symmetry and provides a starting point for
+self-consistency. The default value is zero, BUT a value
+MUST be specified for AT LEAST one atomic type in spin
+polarized calculations. Note that if start from zero
+initial magnetization, you will get zero final magnetization
+in any case. If you desire to start from an antiferromagnetic
+state, you may need to define two different atomic species
+corresponding to sublattices of the same atomic type.
+If you fix the magnetization with "tot_magnetization",
+you should not specify starting_magnetization.
+If you are restarting from a previous run, or from an
+interrupted run, starting_magnetization is ignored.
          </pre></blockquote>
 </ul>      
       
@@ -836,10 +874,17 @@ help ecutrho -helpfmt helpdoc -helptext {
 </li>
 <blockquote><pre>
 kinetic energy cutoff (Ry) for charge density and potential
+For norm-conserving pseudopotential you should stick to the
+default value, you can reduce it by a little but it will
+introduce noise especially on forces and stress.
 If there are ultrasoft PP, a larger value than the default is
 often desirable (ecutrho = 8 to 12 times ecutwfc, typically).
-If all PP are norm-conserving, you should stick to the default;
-you may reduce it to spare time, but not by a large amount.
+PAW datasets can often be used at 4*ecutwfc, but it depends
+on the shape of augmentation charge: testing is mandatory.
+The use of gradient-corrected functional, especially in cells
+with vacuum, or for pseudopotential without non-linear core
+correction, usually requires an higher values of ecutrho
+to be accurately converged.
          </pre></blockquote>
 </ul>      
       
@@ -981,7 +1026,7 @@ help occupations -helpfmt helpdoc -helptext {
 'smearing':     gaussian smearing for metals
                 requires a value for degauss
 
-'tetrahedra' :  for metals and DOS calculation
+'tetrahedra' :  for calculation of DOS in metals
                 (see PRB49, 16223 (1994))
                 Requires uniform grid of k-points,
                 automatically generated (see below)
@@ -1086,105 +1131,6 @@ help noncolin -helpfmt helpdoc -helptext {
 </li>
 <blockquote><pre>
 if .true. the program will perform a noncollinear calculation.
-         </pre></blockquote>
-</ul>      
-      
-}
-
-
-# ------------------------------------------------------------------------
-help starting_magnetization -helpfmt helpdoc -helptext {
-      <ul>
-<li> <em>Variables: </em><big><b>starting_magnetization(i), i=1,ntyp</b></big>
-</li>
-<br><li> <em>Type: </em>REAL</li>
-<br><li> <em>Description:</em>
-</li>
-<blockquote><pre>
-starting spin polarization (values between -1 and 1)
-on atomic type 'i' in a spin-polarized calculation.
-Breaks the symmetry and provides a starting point for
-self-consistency. The default value is zero, BUT a value
-MUST be specified for AT LEAST one atomic type in spin
-polarized calculations. Note that if start from zero
-initial magnetization, you will get zero final magnetization
-in any case. If you desire to start from an antiferromagnetic
-state, you may need to define two different atomic species
-corresponding to sublattices of the same atomic type.
-If you fix the magnetization with "nelup/neldw" or with
-"multiplicity" or with "tot_magnetization", you should
-not specify starting_magnetization.
-If you are restarting from a previous run, or from an
-interrupted run, starting_magnetization is ignored.
-         </pre></blockquote>
-</ul>      
-      
-}
-
-
-# ------------------------------------------------------------------------
-grouphelp {nelup neldw} -helpfmt helpdoc -helptext {
-    <ul>
-<li> <em>Variables: </em><big><b>nelup, neldw</b></big>
-</li>
-<br><li> <em>Type: </em>REAL</li>
-<br><li> <em>Description:</em>
-</li>
-<blockquote><pre>
-number of spin-up and spin-down electrons, respectively
-Note that this fixes the final value of the magnetization.
-The sum must yield nelec that must also be specified
-explicitly in this case. Not valid for spin-unpolarized
-or noncollinear calculations, only for LSDA. Obsolescent:
-use multiplicity or tot_magnetization instead.
-         </pre></blockquote>
-</ul>
-    
-}
-
-
-# ------------------------------------------------------------------------
-help multiplicity -helpfmt helpdoc -helptext {
-      <ul>
-<li> <em>Variable: </em><big><b>multiplicity</b></big>
-</li>
-<br><li> <em>Type: </em>INTEGER</li>
-<br><li> <em>Default: </em> 0 [unspecified]
-         </li>
-<br><li> <em>Description:</em>
-</li>
-<blockquote><pre>
-spin multiplicity (2s+1). 1 is singlet, 2 for doublet etc.
-Note that this fixes the final value of the magnetization.
-if unspecified or a non-zero value is specified in nelup/neldw
-then multiplicity variable is ignored.
-Do not specify both multiplicity and tot_magnetization.
-         </pre></blockquote>
-</ul>      
-      
-}
-
-
-# ------------------------------------------------------------------------
-help tot_magnetization -helpfmt helpdoc -helptext {
-      <ul>
-<li> <em>Variable: </em><big><b>tot_magnetization</b></big>
-</li>
-<br><li> <em>Type: </em>INTEGER</li>
-<br><li> <em>Default: </em> -1 [unspecified]
-         </li>
-<br><li> <em>Description:</em>
-</li>
-<blockquote><pre>
-majority spin - minority spin (nelup - neldw).
-if unspecified or a non-zero value is specified in nelup/neldw
-then tot_magnetization variable is ignored.
-Do not specify both multiplicity and tot_magnetization.
-YES, there is redundancy! nelup/neldw are enough to specify
-the spin state. However these variables are not very convenient
-and will be eliminated from the input in future versions.
-It is recommended to use either 'multiplicity' or equivalently
-'tot_magnetization' to specify the spin state.
          </pre></blockquote>
 </ul>      
       
@@ -1438,13 +1384,14 @@ help eamp -helpfmt helpdoc -helptext {
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-Amplitude of the electric field (in a.u. = 51.44 10^10 V/m )
+Amplitude of the electric field, in ***Hartree*** a.u.;
+1 a.u. = 51.4220632*10^10 V/m). Used only if tefield=.TRUE.
 The sawlike potential increases with slope "eamp" in the
 region from (emaxpos+eopreg-1) to (emaxpos), then decreases
 to 0 until (emaxpos+eopreg), in units of the crystal
 vector "edir". Important: the change of slope of this
 potential must be located in the empty region, or else
-unphysical forces will result. Used only if tefield is .TRUE.
+unphysical forces will result.
          </pre></blockquote>
 </ul>      
       
@@ -1495,6 +1442,8 @@ help constrained_magnetization -helpfmt helpdoc -helptext {
 <br><li> <em>Type: </em>CHARACTER</li>
 <br><li> <em>Default: </em> 'none'
          </li>
+<br><li> <em>See: </em> lambda, fixed_magnetization
+         </li>
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
@@ -1534,7 +1483,9 @@ Currently available choices:
           with the z axis (theta = fixed_magnetization(3))
           is constrained:
 
-          LAMBDA * ( magnetization(1) - magnetization(3)*tan(theta) )**2
+          LAMBDA * ( arccos(magnetization(3)/mag_tot) - theta )**2
+
+          where mag_tot is the modulus of the total magnetization.
 
 'atomic direction':
           not all the components of the atomic
@@ -1542,6 +1493,10 @@ Currently available choices:
           of angle1, and the penalty functional is:
 
           LAMBDA * SUM_{itype} ( mag_mom(3,itype)/mag_mom_tot - cos(angle1(ityp)) )**2
+
+N.B.: symmetrization may prevent to reach the desired orientation
+      of the magnetization. Try not to start with very highly symmetric
+      configurations or use the nosym flag (only as a last remedy)
          </pre></blockquote>
 </ul>      
       
@@ -1555,6 +1510,8 @@ help fixed_magnetization -helpfmt helpdoc -helptext {
 </li>
 <br><li> <em>Type: </em>REAL</li>
 <br><li> <em>Default: </em> 0.d0
+         </li>
+<br><li> <em>See: </em> constrained_magnetization
          </li>
 <br><li> <em>Description:</em>
 </li>
@@ -1573,12 +1530,16 @@ help lambda -helpfmt helpdoc -helptext {
 <li> <em>Variable: </em><big><b>lambda</b></big>
 </li>
 <br><li> <em>Type: </em>REAL</li>
+<br><li> <em>Default: </em> 1.d0
+         </li>
+<br><li> <em>See: </em> constrained_magnetization
+         </li>
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
 parameter used for constrained_magnetization calculations
-NB: LAMBDA is reduced in the first iterations and is increased
-    slowly up to the input value.
+N.B.: if the scf calculation does not converge, try to reduce lambda
+      to obtain convergence, then restart the run with a larger lambda
          </pre></blockquote>
 </ul>      
       
@@ -1626,35 +1587,50 @@ help assume_isolated -helpfmt helpdoc -helptext {
       <ul>
 <li> <em>Variable: </em><big><b>assume_isolated</b></big>
 </li>
-<br><li> <em>Type: </em>LOGICAL</li>
-<br><li> <em>Default: </em> .FALSE.
+<br><li> <em>Type: </em>CHARACTER</li>
+<br><li> <em>Default: </em> 'none'
          </li>
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-if .TRUE. the system is assumed to be isolated (a molecule or cluster
-in a supercell) and the Makov-Payne correction to the total energy is
-computed. An estimate of the vacuum level is also calculated so that
-eigenvalues can be properly aligned.
-         </pre></blockquote>
-</ul>      
-      
-}
+Used to perform calculation assuming the system to be
+isolated (a molecule of a clustr in a 3D supercell).
 
+Currently available choices:
 
-# ------------------------------------------------------------------------
-help do_ee -helpfmt helpdoc -helptext {
-      <ul>
-<li> <em>Variable: </em><big><b>do_ee</b></big>
-</li>
-<br><li> <em>Type: </em>LOGICAL</li>
-<br><li> <em>Default: </em> .FALSE.
-         </li>
-<br><li> <em>Description:</em>
-</li>
-<blockquote><pre>
-if .TRUE. the system is embedded the electrostatic environment
-described in the EE namelist.
+'none' (default): regular periodic calculation w/o any correction.
+
+'makov-payne', 'm-p', 'mp' : the Makov-Payne correction to the
+         total energy is computed. An estimate of the vacuum
+         level is also calculated so that eigenvalues can be
+         properly aligned.
+         Theory:
+         G.Makov, and M.C.Payne,
+         "Periodic boundary conditions in ab initio
+         calculations" , Phys.Rev.B 51, 4014 (1995)
+
+'dcc' :  density counter charge correction.
+         The electrostatic problem is solved in open boundary
+         conditions (OBC). This approach provides the correct
+         scf potential and energies (not just a correction to
+         energies as 'mp'). BEWARE: the molecule should be
+         centered around the middle of the cell, not around
+         the origin (0,0,0).
+         The OBC problem is solved using a multi-grid algorithm
+         that requires additional input provided in the separate
+         namelist EE (see later).
+         Theory described in:
+         I.Dabo, B.Kozinsky, N.E.Singh-Miller and N.Marzari,
+         "Electrostatic periodic boundary conditions and
+         real-space corrections", Phys.Rev.B 77, 115139 (2008)
+
+'martyna-tuckerman', 'm-t', 'mt' : Martyna-Tuckerman correction.
+         As for the dcc correction the scf potential is also
+         corrected. Implementation adapted from:
+         G.J. Martyna, and M.E. Tuckerman,
+         "A reciprocal space based method for treating long
+         range interactions in ab-initio and force-field-based
+         calculation in clusters", J.Chem.Phys. 110, 2810 (1999)
          </pre></blockquote>
 </ul>      
       
@@ -1851,46 +1827,15 @@ help diagonalization -helpfmt helpdoc -helptext {
           Typically slower than 'david' but it uses less memory
           and is more robust (it seldom fails)
 
-'cg-serial' : as above, do not use the parallel subspace
-          diagonalization (see below) between iterations,
-          but only serial diagonalization (for testing purposes)
-
-'david-serial': do not use parallel subspace diagonalization
-          in Davidson algorithm (for testing purposes).
+'cg-serial', 'david-serial': obsolete, use "-ndiag 1 instead"
           The subspace diagonalization in Davidson is performed
           by a fully distributed-memory parallel algorithm on
           4 or more processors, by default. The allocated memory
           scales down with the number of procs. Procs involved
-          in diagonalization can be changed with input parameter
-          "ortho_para". On multicore CPUs often it is convenient
-          to let only one core per CPU to work on linear algebra.
-         </pre></blockquote>
-</ul>      
-      
-}
-
-
-# ------------------------------------------------------------------------
-help ortho_para -helpfmt helpdoc -helptext {
-      <ul>
-<li> <em>Variable: </em><big><b>ortho_para</b></big>
-</li>
-<br><li> <em>Type: </em>INTEGER</li>
-<br><li> <em>Default: </em> 0
-         </li>
-<br><li> <em>Status: </em> OBSOLESCENT: use command-line option " -ndiag XX" instead
-         </li>
-<br><li> <em>Description:</em>
-</li>
-<blockquote><pre>
-meaningful for diagonalization='david' and parallel executables.
-The number of processors to be used for the parallel subspace
-diagonalization algorithm. With the default value (0) the code
-tries to use as many processors as available. Note that the
-algorithm uses a square number of processors (4, 9, 16, 25,...),
-so the actual number of processors used will be the largest
-square number less or equal to ortho_para (if set) or to the
-total number of processors (if ortho_para is not set).
+          in diagonalization can be changed with command-line
+          option "-ndiag N". On multicore CPUs it is often
+          convenient to let just one core per CPU to work
+          on linear algebra.
          </pre></blockquote>
 </ul>      
       
@@ -1913,9 +1858,7 @@ superposition of atomic orbitals; 1.D-5 if starting from a
 charge density. During self consistency the threshold (ethr)
 is automatically reduced when approaching convergence.
 For non-scf calculations, this is the threshold used in the
-iterative diagonalization. The default is conv_thr / nelec.
-For 'phonon' calculations, diago_thr_init is ignored:
-the threshold is always set to  conv_thr / nelec .
+iterative diagonalization. The default is conv_thr /N elec.
          </pre></blockquote>
 </ul>      
       
@@ -1952,8 +1895,10 @@ help diago_david_ndim -helpfmt helpdoc -helptext {
 <blockquote><pre>
 For Davidson diagonalization: dimension of workspace
 (number of wavefunction packets, at least 2 needed).
-A larger value may yield a faster algorithm but uses
-more memory
+A larger value may yield a somewhat faster algorithm
+but uses more memory. The opposite holds for smaller values.
+Try diago_david_ndim=2 if you are tight on memory or if
+your job is large: the speed penalty is often negligible
          </pre></blockquote>
 </ul>      
       
@@ -1992,8 +1937,29 @@ help efield -helpfmt helpdoc -helptext {
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-For finite electric field calculations (lelfield == .TRUE.),
-it defines the intensity of the field in a.u.
+Amplitude of the finite electric field (in Ry a.u.;
+1 a.u. = 36.3609*10^10 V/m). Used only if lelfield=.TRUE.
+and if k-points (K_POINTS card) are not automatic.
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help efield_cart -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variables: </em><big><b>efield_cart(i), i=1,3</b></big>
+</li>
+<br><li> <em>Type: </em>REAL</li>
+<br><li> <em>Default: </em> (0.D0, 0.D0, 0.D0)
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+Finite electric field (in Ry a.u.=36.3609*10^10 V/m) in
+cartesian axis. Used only if lelfield=.TRUE. and if
+k-points (K_POINTS card) are automatic.
          </pre></blockquote>
 </ul>      
       
@@ -2026,7 +1992,7 @@ help startingwfc -helpfmt helpdoc -helptext {
 <li> <em>Variable: </em><big><b>startingwfc</b></big>
 </li>
 <br><li> <em>Type: </em>CHARACTER</li>
-<br><li> <em>Default: </em> 'atomic'
+<br><li> <em>Default: </em> 'atomic+random'
          </li>
 <br><li> <em>Description:</em>
 </li>
@@ -2176,17 +2142,20 @@ help pot_extrapolation -helpfmt helpdoc -helptext {
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-Used to extrapolate the potential from preceding ionic steps.
+   Used to extrapolate the potential from preceding ionic steps.
 
-'none'        :  no extrapolation
+   'none'        :  no extrapolation
 
-'atomic'      :  extrapolate the potential as if it was a sum of
-                 atomic-like orbitals
+   'atomic'      :  extrapolate the potential as if it was a sum of
+                    atomic-like orbitals
 
-'first_order' :  extrapolate the potential with first-order
-                 formula
+   'first_order' :  extrapolate the potential with first-order
+                    formula
 
-'second_order':  as above, with second order formula
+   'second_order':  as above, with second order formula
+
+Note: 'first_order' and 'second-order' extrapolation make sense
+only for molecular dynamics calculations
          </pre></blockquote>
 </ul>      
       
@@ -2204,15 +2173,17 @@ help wfc_extrapolation -helpfmt helpdoc -helptext {
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
- Used to extrapolate the wavefunctions from preceding ionic steps.
+    Used to extrapolate the wavefunctions from preceding ionic steps.
 
-'none'        :  no extrapolation
+   'none'        :  no extrapolation
 
-'first_order' :  extrapolate the wave-functions with first-order
-                 formula - NOT IMPLEMENTED WITH USPP
+   'first_order' :  extrapolate the wave-functions with first-order
+                    formula.
 
-'second_order':  as above, with second order formula
-                 NOT IMPLEMENTED WITH USPP
+   'second_order':  as above, with second order formula.
+
+Note: 'first_order' and 'second-order' extrapolation make sense
+only for molecular dynamics calculations
          </pre></blockquote>
 </ul>      
       
@@ -2583,6 +2554,10 @@ Specify the type of optimization scheme:
 
 'broyden'    : quasi-Newton Broyden's second method (suggested)
 
+'broyden2'   : another variant of the quasi-Newton Broyden's
+               second method to be tested and compared with the
+               previous one.
+
 'quick-min'  : an optimisation algorithm based on the
                projected velocity Verlet scheme
 
@@ -2761,84 +2736,6 @@ are optimised. The other images are kept frozen.
 
 
 # ------------------------------------------------------------------------
-help fe_step -helpfmt helpdoc -helptext {
-      <ul>
-<li> <em>Variables: </em><big><b>fe_step(i), i=1,ncolvar</b></big>
-</li>
-<br><li> <em>Type: </em>REAL</li>
-<br><li> <em>Default: </em> 0.04
-            </li>
-<br><li> <em>Description:</em>
-</li>
-<blockquote><pre>
-Meta-dynamics step length (in principle different for each
-collective variable), defined using the same units used
-to define the collective variables themselves.
-The step also defines the spread of the Gaussian-like bias
-potential.
-            </pre></blockquote>
-</ul>      
-      
-}
-
-
-# ------------------------------------------------------------------------
-help g_amplitude -helpfmt helpdoc -helptext {
-      <ul>
-<li> <em>Variable: </em><big><b>g_amplitude</b></big>
-</li>
-<br><li> <em>Type: </em>REAL</li>
-<br><li> <em>Default: </em> 0.005 Hartree
-            </li>
-<br><li> <em>Description:</em>
-</li>
-<blockquote><pre>
-Amplitude of the gaussians used in meta-dynamics.
-            </pre></blockquote>
-</ul>      
-      
-}
-
-
-# ------------------------------------------------------------------------
-help fe_nstep -helpfmt helpdoc -helptext {
-      <ul>
-<li> <em>Variable: </em><big><b>fe_nstep</b></big>
-</li>
-<br><li> <em>Type: </em>INTEGER</li>
-<br><li> <em>Default: </em> 100
-            </li>
-<br><li> <em>Description:</em>
-</li>
-<blockquote><pre>
-Maximum number of steps used to evaluate the potential of
-mean force.
-            </pre></blockquote>
-</ul>      
-      
-}
-
-
-# ------------------------------------------------------------------------
-help sw_nstep -helpfmt helpdoc -helptext {
-      <ul>
-<li> <em>Variable: </em><big><b>sw_nstep</b></big>
-</li>
-<br><li> <em>Type: </em>INTEGER</li>
-<br><li> <em>Default: </em> 10
-            </li>
-<br><li> <em>Description:</em>
-</li>
-<blockquote><pre>
-Number of steps used to switch to the new values of the
-collective variables.
-            </pre></blockquote>
-</ul>      
-      
-}
-
-
-# ------------------------------------------------------------------------
 help cell_dynamics -helpfmt helpdoc -helptext {
       <ul>
 <li> <em>Variable: </em><big><b>cell_dynamics</b></big>
@@ -2983,69 +2880,6 @@ xyzt    = x1, x2, y2, x3, y3, z3 (i.e. lower xyz triangle of
 
 
 # ------------------------------------------------------------------------
-help modenum -helpfmt helpdoc -helptext {
-      <ul>
-<li> <em>Variable: </em><big><b>modenum</b></big>
-</li>
-<br><li> <em>Type: </em>INTEGER</li>
-<br><li> <em>Default: </em> 0
-         </li>
-<br><li> <em>Description:</em>
-</li>
-<blockquote><pre>
-For single-mode phonon calculation : modenum is the index of the
-irreducible representation (irrep) into which the reducible
-representation formed by the 3*nat atomic displacements are
-decomposed in order to perform the phonon calculation.
-         </pre></blockquote>
-</ul>      
-      
-}
-
-
-# ------------------------------------------------------------------------
-help xqq -helpfmt helpdoc -helptext {
-      <ul>
-<li> <em>Variables: </em><big><b>xqq(i), i=1,3</b></big>
-</li>
-<br><li> <em>Type: </em>REAL</li>
-<br><li> <em>Description:</em>
-</li>
-<blockquote><pre>
-q-point (units 2pi/a) for phonon calculation.
-         </pre></blockquote>
-</ul>      
-      
-}
-
-
-# ------------------------------------------------------------------------
-help which_compensation -helpfmt helpdoc -helptext {
-      <ul>
-<li> <em>Variable: </em><big><b>which_compensation</b></big>
-</li>
-<br><li> <em>Type: </em>CHARACTER</li>
-<br><li> <em>Default: </em> 'none'
-         </li>
-<br><li> <em>Description:</em>
-</li>
-<blockquote><pre>
-'dcc' : density counter charge correction.
-        The electrostatic problem is solved in open boundary
-        conditions. At variance with the Makov-Payne approach
-        that only estimates an energy correction here the
-        scf potential is corrected as well.
-        Theory described in:
-        I.Dabo, B.Kozinsky, N.E.Singh-Miller and N.Marzari,
-        "Electrostatic periodic boundary conditions and
-        real-space corrections", Phys.Rev.B 77, 115139 (2008)
-         </pre></blockquote>
-</ul>      
-      
-}
-
-
-# ------------------------------------------------------------------------
 help ecutcoarse -helpfmt helpdoc -helptext {
       <ul>
 <li> <em>Variable: </em><big><b>ecutcoarse</b></big>
@@ -3156,7 +2990,7 @@ help atomic_species -helpfmt helpdoc -helptext {
 </li>
 <blockquote><pre>
 mass of the atomic species [amu: mass of C = 12]
-not used if calculation='scf','nscf', 'bands', 'phonon'
+not used if calculation='scf', 'nscf', 'bands'
                   </pre></blockquote>
 </ul><ul>
 <li> <em>Variable: </em><big><b>PseudoPot_X</b></big>
@@ -3194,6 +3028,20 @@ angstrom: atomic positions are in cartesian coordinates,
 
 crystal : atomic positions are in crystal coordinates, i.e.
           in relative coordinates of the primitive lattice vectors (see below)
+
+NOTE:
+each atomic coordinate can also be specified as simple algebrical expressions,
+in order to be interpreted correctly each expression must NOT contain any blank
+space and must NOT start with a "+" sign. The available expressions are:
++ (plus), - (minus), / (division), * (multiplication), ^ (power)
+All numerical constants included are considered as double-precision numbers;
+i.e. 1/2 is 0.5, not zero. Other functions, such as sin, sqrt or exp are
+not available, although sqrt can be replaced with ^(1/2). Example:
+   C  1/3  1/2*3^(-1/2)  0
+is equivalent to
+   C 0.333333 0.288675 0.000000
+Please note that this feature is still NOT supported by XCrysDen (which will
+display a wrong structure, or nothing at all).
          </pre>
       
 }
@@ -3247,7 +3095,7 @@ help atomic_coordinates -helpfmt helpdoc -helptext {
 <blockquote><pre>
 component i of the force for this atom is multiplied by if_pos(i),
 which must be either 0 or 1.  Used to keep selected atoms and/or
-selected components fixed in meta-dynamics, neb, smd, MD dynamics or
+selected components fixed in neb, smd, MD dynamics or
 structural optimization run.
                            </pre></blockquote>
 </ul>   
@@ -3549,68 +3397,6 @@ Type of constrain :
 Target for the constrain ( angles are specified in degrees ).
 This variable is optional.
                      </pre></blockquote>
-</ul>   
-    
-}
-
-
-# ------------------------------------------------------------------------
-help ncolvar -helpfmt helpdoc -helptext {
-      <ul>
-<li> <em>Variable: </em><big><b>ncolvar</b></big>
-</li>
-<br><li> <em>Type: </em>INTEGER</li>
-<br><li> <em>Description:</em>
-</li>
-<blockquote><pre> Number of collective variables.
-               </pre></blockquote>
-</ul>      
-      
-}
-
-
-# ------------------------------------------------------------------------
-help colvar_tol -helpfmt helpdoc -helptext {
-      <ul>
-<li> <em>Variable: </em><big><b>colvar_tol</b></big>
-</li>
-<br><li> <em>Type: </em>REAL</li>
-<br><li> <em>Description:</em>
-</li>
-<blockquote><pre> Tolerance used for SHAKE.
-                  </pre></blockquote>
-</ul>      
-      
-}
-
-
-# ------------------------------------------------------------------------
-help collective_vars_table -helpfmt helpdoc -helptext {
-    <ul>
-<li> <em>Variable: </em><big><b>colvar_type</b></big>
-</li>
-<br><li> <em>Type: </em>CHARACTER</li>
-<br><li> <em>See: </em> constr_type
-                  </li>
-<br><li> <em>Description:</em>
-</li>
-<blockquote><pre>
-See the definition of constr_type in the CONSTRAINTS card.
-                  </pre></blockquote>
-</ul><ul>
-<li> <em>Variables: </em><big><b>colvar(1), colvar(2), colvar(3), colvar(4)</b></big>
-</li>
-<br><li> <em>Type: </em>
-</li>
-<br><li> <em>See: </em> constr(1)
-                  </li>
-<br><li> <em>Description:</em>
-</li>
-<blockquote><pre>
-These variables have different meanings for
-different collective variable types. See the
-definition of constr in the CONSTRAINTS card.
-                  </pre></blockquote>
 </ul>   
     
 }

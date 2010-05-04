@@ -65,7 +65,6 @@ module PW -title "PWSCF GUI: module PW.x" -script {
 			'from_scratch'
 			'restart'
 		    }
-		    -default  "from scratch  <from_scratch>"
 		}
 
 		var wf_collect {
@@ -200,6 +199,11 @@ module PW -title "PWSCF GUI: module PW.x" -script {
 		    -value     { .true. .false. }
 		}
 
+		var nberrycyc {
+		    -label "Num. of iterations for lelfield [see help] (nberrycyc):"
+		    -validate posint
+		}
+
 		separator -label "--- Berry phase ---"
 
 		var lberry {
@@ -220,10 +224,6 @@ module PW -title "PWSCF GUI: module PW.x" -script {
 		}
 		var nppstr {
 		    -label "Num. of k-points along each symmetry-reduced string (nppstr):"
-		    -validate posint
-		}
-		var nberrycyc {
-		    -label "Num. of iterations for lelfield [see help] (nberrycyc):"
 		    -validate posint
 		}
 	    }
@@ -612,7 +612,6 @@ module PW -title "PWSCF GUI: module PW.x" -script {
                         "No correction <none>"
 		    }
 		    -value {'makov-payne' 'martyna-tuckerman' 'dcc' 'none'}
-		    -default "No correction <none>"
 		}	
 	    
 		separator -label "--- Semi-empirical van der Waals ---"
@@ -773,6 +772,13 @@ module PW -title "PWSCF GUI: module PW.x" -script {
 		var efield {
 		    -label    "The intensity of the electric field (efield):"
 		    -validate fortranreal
+		}
+
+		dimension efield_cart {
+		    -label    "Finite electric field in cartesian axis (efield_cart):"
+		    -validate fortranreal
+		    -start    1
+		    -end      3
 		}
 
 		separator -label "--- Ultrasoft pseudopotentials ---"
@@ -1166,17 +1172,6 @@ module PW -title "PWSCF GUI: module PW.x" -script {
 
     page eePage -name "EE" {
 	namelist ee -name "EE" {
-
-	    var which_compensation { 
-		-label "Correction for electrostatic environment (which_compensation):"
-		-widget optionmenu
-		-textvalue { 
-		    {None <none>}
-		    {Density counter charge correction <dcc>}
-		}
-		-value {'none' 'dcc'}
-	    }
-
 	    var ecutcoarse {
 		-validate fortranposreal 
 		-label "Kinetic energy cutoff for the open boundary (ecutcoarse):"
@@ -1492,48 +1487,48 @@ module PW -title "PWSCF GUI: module PW.x" -script {
 	    }
 	}    
 	
-	# CARD: COLLECTIVE_VARS
-
-	group collective_vars_group -name "Card: COLLECTIVE_VARS" -decor normal {
-	    
-	    auxilvar collective_vars_enable {
-		-label     "Use collective variables:"
-		-value     {Yes No}
-		-widget    radiobox
-		-default   No
-	    }
-	    
-	    group collective_vars_card -decor none {
-
-		keyword collective_vars COLLECTIVE_VARS\n
-
-		line collective_vars_line1 -decor none {
-		    var ncolvar {
-			-label    "Number of collective variables:"
-			-validate posint
-			-widget   spinint
-			-default  1
-			-outfmt   "  %d "
-		    }
-		    var colvar_tol {
-			-label    "Tolerance for keeping the collective variables satisfied:"
-			-validate fortranposreal
-		    }
-		}
-		
-		table collective_vars_table {
-		    -caption  "Enter data for collective variables:\n    colvar-type   colvar(1,.)   colvar(2,.)   ...  \n\n(see the definition of constr in the CONSTRAINTS card.)"
-		    -head     {colvar-type colvar-specifications ... ... ... ...}
-		    -validate {string fortranreal}
-		    -cols     6
-		    -rows     1
-		    -optionalcols 3
-		    -widgets  {{optionmenu {'type_coord' 'atom_coord' 'distance' 'planar_angle' 'torsional_angle' 'bennett_proj'}} entry}
-		    -outfmt   {"  %s  " %S}
-		    -infmt    {%d %S}
-		}
-	    }
-	}
+	# # CARD: COLLECTIVE_VARS
+        #
+	# group collective_vars_group -name "Card: COLLECTIVE_VARS" -decor normal {
+	#     
+	#     auxilvar collective_vars_enable {
+	# 	-label     "Use collective variables:"
+	# 	-value     {Yes No}
+	# 	-widget    radiobox
+	# 	-default   No
+	#     }
+	#     
+	#     group collective_vars_card -decor none {
+	# 
+	# 	keyword collective_vars COLLECTIVE_VARS\n
+	# 
+	# 	line collective_vars_line1 -decor none {
+	# 	    var ncolvar {
+	# 		-label    "Number of collective variables:"
+	# 		-validate posint
+	# 		-widget   spinint
+	# 		-default  1
+	# 		-outfmt   "  %d "
+	# 	    }
+	# 	    var colvar_tol {
+	# 		-label    "Tolerance for keeping the collective variables satisfied:"
+	# 		-validate fortranposreal
+	# 	    }
+	# 	}
+	# 	
+	# 	table collective_vars_table {
+	# 	    -caption  "Enter data for collective variables:\n    colvar-type   colvar(1,.)   colvar(2,.)   ...  \n\n(see the definition of constr in the CONSTRAINTS card.)"
+	# 	    -head     {colvar-type colvar-specifications ... ... ... ...}
+	# 	    -validate {string fortranreal}
+	# 	    -cols     6
+	# 	    -rows     1
+	# 	    -optionalcols 3
+	# 	    -widgets  {{optionmenu {'type_coord' 'atom_coord' 'distance' 'planar_angle' 'torsional_angle' 'bennett_proj'}} entry}
+	# 	    -outfmt   {"  %s  " %S}
+	# 	    -infmt    {%d %S}
+	# 	}
+	#     }
+	# }
 
 	# CARD: OCCUPATIONS
 	
