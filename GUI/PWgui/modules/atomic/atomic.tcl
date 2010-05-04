@@ -67,6 +67,11 @@ module LD1\#auto -title "PWSCF GUI: module LD1.x" -script {
 		    -widget   radiobox
 		    -textvalue {Yes No} -value {.true. .false.}
 		}
+		var noscf {
+		    -label    "Skip charge calculation and ignore the occupations (noscf):"
+		    -widget    radiobox
+		    -textvalue {Yes No} -value {.true. .false.}
+		}
 		var lsd  {
 		    -label    "LSDA Spin Polarization (lsd):"
 		    -widget    radiobox
@@ -184,6 +189,10 @@ module LD1\#auto -title "PWSCF GUI: module LD1.x" -script {
 		}
 		var deld  {
 		    -label    "Plotting in steps of Delta E [Ry] (deld):"
+		    -validate  fortranposreal
+		}
+		var rpwe {
+		    -label "Radius [a.u.] for partial wave expansions (rpwe):"
 		    -validate  fortranposreal
 		}
 		#
@@ -304,6 +313,11 @@ module LD1\#auto -title "PWSCF GUI: module LD1.x" -script {
 		    -textvalue {Yes No} -value {.true. .false.} -widget radiobox	
  		}
 
+		var lgipaw_reconstruction {
+		    -label "Generate all-electron data for GIPAW (lgipaw_reconstruction):"
+		    -textvalue {Yes No} -value {.true. .false.} -widget radiobox	
+ 		}
+		
 		var author {
 		    -label "Name of the author (author):"
 		    -validate string

@@ -243,6 +243,23 @@ Delta e (Ry) of energy for logarithmic derivatives.
 
 
 # ------------------------------------------------------------------------
+help rpwe -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>rpwe</b></big>
+</li>
+<br><li> <em>Type: </em>REAL</li>
+<br><li> <em>Default: </em> rlderiv
+            </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre> radius (a.u.) at which partial wave expansions are calculated
+            </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
 help rel -helpfmt helpdoc -helptext {
       <ul>
 <li> <em>Variable: </em><big><b>rel</b></big>
@@ -276,6 +293,26 @@ help lsmall -helpfmt helpdoc -helptext {
 </li>
 <blockquote><pre>
 if .true. writes on files the small component
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help noscf -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>noscf</b></big>
+</li>
+<br><li> <em>Type: </em>LOGICAL</li>
+<br><li> <em>Default: </em> .false.
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+if .true. the charge is not computed. The occupations are
+not used and the eigenvalues and eigenfunctions are those
+of a hydrogen-like atom.
          </pre></blockquote>
 </ul>      
       
@@ -545,7 +582,7 @@ help write_coulomb -helpfmt helpdoc -helptext {
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-If .true., a fake pseuopotential file with name X.UPF,
+If .true., a fake pseudo-potential file with name X.UPF,
 where X is the atomic symbol, is written. It contains
 the radial grid and the wavefunctions as specified in input,
 plus the info needed to build the Coulomb potential
@@ -650,7 +687,7 @@ zval is automatically calculated from available data.
 If the value of zval is provided in input, it will be
 checked versus the calculated value. The only case in
 which you need to explicitly provide the value of zval
-is for noninteger zval (i.e. half core-hole pseudopotentials).
+for noninteger zval (i.e. half core-hole pseudo-potentials).
          </pre></blockquote>
 </ul>      
       
@@ -690,7 +727,7 @@ help upf_v1_format -helpfmt helpdoc -helptext {
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-.true. generates pseudopotential file in UPF version 1 format,
+.true. generates pseudo-potential file in UPF version 1 format,
        compatible with QE version 3
          </pre></blockquote>
 </ul>      
@@ -738,7 +775,7 @@ help file_recon -helpfmt helpdoc -helptext {
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-File containing data needed for PAW reconstruction
+File containing data needed for GIPAW reconstruction
 of all-electron wavefunctions from PP results.
 If you want to use additional states to perform the
 reconstruction, add them at the end of the list
@@ -922,7 +959,7 @@ help which_augfun -helpfmt helpdoc -helptext {
 </li>
 <br><li> <em>Type: </em>CHARACTER</li>
 <br><li> <em>Default: </em>
-'AE' for Vanderbilt-Ultrasoft pseudopotentials and 'BESSEL' for PAW datasets.
+'AE' for Vanderbilt-Ultrasoft pseudo-potentials and 'BESSEL' for PAW datasets.
             </li>
 <br><li> <em>Description:</em>
 </li>
@@ -984,8 +1021,39 @@ help lsave_wfc -helpfmt helpdoc -helptext {
 </li>
 <blockquote><pre>
 Set it to .true. to save all-electron and pseudo wavefunctions
-used in the pseudopotential generation in the UPF file. Only
+used in the pseudo-potential generation in the UPF file. Only
 works for UPFv2 format.
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help lgipaw_reconstruction -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>lgipaw_reconstruction</b></big>
+</li>
+<br><li> <em>Type: </em>LOGICAL</li>
+<br><li> <em>Default: </em> .false.
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+Set it to .true. to generate pseudo-potentials containing the
+additional info required for reconstruction of all-electron
+orbitals, used by GIPAW. You will typically need to specify
+additional projectors beyond those used in the generation of
+pseudo-potentials. You should also specify 'file_recon'.
+
+All projectors used in the reconstruction must be listed BOTH
+in the test configuration after namelist &amp;test AND in the
+all-electron configuration (variable 'config', namelist &amp;inputp,
+Use negative occupancies for projectors on unbound states). The
+core radii in the test configuration should be the same as in
+the pseudo-potential generation section and will be used as the
+radius of reconstruction. Projectors not used to generate the
+pseudo-potential should have zero occupation number.
          </pre></blockquote>
 </ul>      
       
