@@ -10,7 +10,7 @@ PWgui source package). However the package depends on the [incr Tcl]
 and related software. Therefore you have two possibilities:
 
    (i)  to use a standalone executable which run out of the box. Works
-	only on the platforms for which it has been built. Currently
+	only on the platforms for which executable has been built. Currently
 	the following platforms are supported: Linux, Windows, Mac. 
 
    (ii) to use source package if required Tcl software is installed

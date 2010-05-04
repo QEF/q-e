@@ -47,9 +47,9 @@ ________________________________________________________________________
 
 To use the source package you need required Tcl software, in
 particular Tcl + Tk + Itcl + Itk + Iwidgets. PWgui requires the Tcl/Tk
-version 8.4 (it does not run on Tcl/Tk 8.5 or 8.6). You may install
-the software from your OS distribution. For example, for GNU/Linux
-Debian-based distributions, execute as root (or sudo):
+version 8.4 or later. You may install the software from your OS
+distribution. For example, for GNU/Linux Debian-based distributions,
+execute as root (or sudo):
 
    * apt-get update; apt-get install iwidgets4 
 
@@ -80,8 +80,9 @@ program, type: pwgui.
 
 You may add the PWgui root directory to your PATH. 
 
-If you would like to copy "pwgui" launcher to some common place such
-as /usr/local/bin, then you need to define PWGUI environmental
-variable, so that "pwgui" will be able to locate its root directory
-(i.e. source files).
+If you would like to copy "pwgui" launcher to some common place, such
+as /usr/local/bin, then you need either to define PWGUI environmental
+variable so that "pwgui" will be able to locate its root directory
+(i.e. source files) or alternatively hardcode it into pwgui lanucher
+itself.
 
