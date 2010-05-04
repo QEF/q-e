@@ -1,4 +1,4 @@
-input_description -distribution {Quantum Espresso} -package PWscf -program cp.x {
+input_description -distribution {Quantum Espresso} -package CP -program cp.x {
 
     toc {}
 
@@ -95,9 +95,16 @@ input_description -distribution {Quantum Espresso} -package PWscf -program cp.x 
 	var calculation -type CHARACTER {
 	    default { 'cp' }
 	    info {
-		a string describing the task to be performed:
-		'cp', 'scf', 'nscf', 'relax', 'vc-relax',
-		'vc-cp', 'neb', 'smd', 'cp-wf'
+	     a string describing the task to be performed:
+		'cp', 
+		'scf', 
+		'nscf', 
+		'relax', 
+		'vc-relax',
+		'vc-cp', 
+		'neb', 'smd', 
+		'cp-wf'
+		
 		(vc = variable-cell).
 	    }
 	}
@@ -112,9 +119,9 @@ input_description -distribution {Quantum Espresso} -package PWscf -program cp.x 
 	var verbosity -type CHARACTER {
 	    info {
 		'high' | 'default' | 'low' | 'minimal' | 'default+projwfc'
-               'default+projwfc'
-                  the codes prints the dafault output quantities
-                  and the projections of the wave functions on atomic wfc
+               
+                'default+projwfc': the codes prints the dafault output quantities
+                                   and the projections of the wave functions on atomic wfc
 	    }
 	}
 
@@ -164,8 +171,8 @@ input_description -distribution {Quantum Espresso} -package PWscf -program cp.x 
 	    default { 10 }
 	    info {
 		Number of steps between successive writings of relevant
-               physical quantities to standard output and to files "fort.3?"
-               or "prefix.???" depending on "prefix" parameter
+		physical quantities to standard output and to files "fort.3?"
+		or "prefix.???" depending on "prefix" parameter
 	    }
 	}
 	
@@ -290,10 +297,10 @@ input_description -distribution {Quantum Espresso} -package PWscf -program cp.x 
 	var disk_io -type CHARACTER { 
 	    info {
                'high', 'default'
-               'high'
-                  CP code will write Kohn-Sham wf files and additional
-                  informations in data-file.xml in order to restart
-                  with a PW calculation or to use postprocessing tools.
+
+               'high': CP code will write Kohn-Sham wf files and additional
+                       informations in data-file.xml in order to restart
+                       with a PW calculation or to use postprocessing tools.
 	    }
 	}
 
@@ -318,7 +325,8 @@ input_description -distribution {Quantum Espresso} -package PWscf -program cp.x 
 	    }
 	}
 
-  }
+    }
+
     #
     # NAMELIST &SYSTEM
     #
@@ -435,31 +443,38 @@ input_description -distribution {Quantum Espresso} -package PWscf -program cp.x 
 	    }	
 	}
 	
-	dimension celldm -start 1 -end 6 -type REAL {
-	    see  { ibrav }
-	    info {
-		Crystallographic constants - see description of ibrav variable.
+	group {
+	    label { Either: }
 
-		* alat = celldm(1) is the lattice parameter "a" (in BOHR)
-		* only needed celldm (depending on ibrav) must be specified
-		* if ibrav=0 only alat = celldm(1) is used (if present)
+	    dimension celldm -start 1 -end 6 -type REAL {
+		see  { ibrav }
+		info {
+		    Crystallographic constants - see description of ibrav variable.
+		    
+		    * alat = celldm(1) is the lattice parameter "a" (in BOHR)
+		    * only needed celldm (depending on ibrav) must be specified
+		    * if ibrav=0 only alat = celldm(1) is used (if present)
+		}
 	    }
-	}
 
-	vargroup -type REAL {
-	    var A
-	    var B
-	    var C
-	    var cosAB
-	    var cosAC
-	    var cosBC
-	    info {
-		Traditional crystallographic constants (a,b,c in ANGSTROM),
-		cosab = cosine of the angle between axis a and b
-		specify either these OR celldm but NOT both.
-                The axis are chosen according to the value of ibrav.
-                If ibrav is not specified, the axis are taken from card
-                CELL_PARAMETERS and only a is used as lattice parameter.
+	    label { Or: }
+
+	    vargroup -type REAL {
+		var A
+		var B
+		var C
+		var cosAB
+		var cosAC
+		var cosBC
+		info {
+		    Traditional crystallographic constants (a,b,c in ANGSTROM),
+		    cosab = cosine of the angle between axis a and b
+		    specify either these OR celldm but NOT both.
+		    
+		    The axis are chosen according to the value of ibrav.
+		    If ibrav is not specified, the axis are taken from card
+		    CELL_PARAMETERS and only a is used as lattice parameter.
+		}
 	    }
 	}
 						   
@@ -659,7 +674,6 @@ input_description -distribution {Quantum Espresso} -package PWscf -program cp.x 
 
             }
         }
-
     }
 
     #
@@ -935,8 +949,6 @@ input_description -distribution {Quantum Espresso} -package PWscf -program cp.x 
                meaningful only if " startingwfc = 'random' "
 	    }
 	}
-
-
     }
 
     
@@ -1285,7 +1297,6 @@ input_description -distribution {Quantum Espresso} -package PWscf -program cp.x 
 		}
 	    }
 	}
-
     }
 
     #
@@ -1521,7 +1532,6 @@ input_description -distribution {Quantum Espresso} -package PWscf -program cp.x 
                (corresponds to Delta in PRL 94 145501 (2005))
             }
         }
-
     }
 
 
@@ -1533,7 +1543,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program cp.x 
 	label {
                 only if calculation = 'cp-wf'
 	}
-        info {
+        message {
 Output files used by Wannier Function options are the following
 
       fort.21: Used only when calwf=5, contains the full list of g-vecs.
@@ -1645,13 +1655,13 @@ Nota Bene 1:   For calwf = 5, wffort is not used. The
 	var maxwfdt -type REAL { 
             default { 0.3D0 }
             info { 
-               The maximum step size to take in the SD/CG direction
-               The code calculates an optimum step size, but that may be
-               either too small (takes forever to converge)  or too large
-               (code goes crazy) . This option keeps the step size between
-               wfdt and maxwfdt. In my experience 0.1 and 0.5 work quite
-               well. (but don't blame me if it doesn't work for you
-            }
+		The maximum step size to take in the SD/CG direction
+		The code calculates an optimum step size, but that may be
+		either too small (takes forever to converge)  or too large
+		(code goes crazy) . This option keeps the step size between
+		wfdt and maxwfdt. In my experience 0.1 and 0.5 work quite
+		well. (but don't blame me if it doesn't work for you)
+	    }
         }
 
 
@@ -1790,11 +1800,7 @@ Nota Bene 1:   For calwf = 5, wffort is not used. The
                G-vectors are written to G_PARA or G_SERL.
             }
         }
-
-
-
-    }
-
+    }	
 
     #
     # card ATOMIC_SPECIES
@@ -1813,7 +1819,7 @@ Nota Bene 1:   For calwf = 5, wffort is not used. The
 		    col PseudoPot_X -type CHARACTER {
 			info {
 			    File containing PP for this species.
-	    
+			    
 			    The pseudopotential file is assumed to be in the new UPF format.
 			    If it doesn't work, the pseudopotential format is determined by
 			    the file name:
@@ -1855,28 +1861,11 @@ Nota Bene 1:   For calwf = 5, wffort is not used. The
 	choose {
 	    when -test "calculation == 'bands' OR calculation == 'nscf'" {
 		message { 
-			IGNORED!  Atomic positions from previous scf calculation will be used instead
-		}
-		syntax {
-		    # non-path calculation
-		    
-		    table atomic_coordinates {
-			rows -start 1 -end nat {
-			    col X -type CHARACTER {
-				info { label of the atom as specified in ATOMIC_SPECIES }
-			    }
-
-			    colgroup -type REAL {
-				info { atomic positions }
-				col x
-				col y
-				col z
-			    }
-			}
-		    }
+		    Specified atomic positions will be IGNORED and those from the
+                    previous scf calculation will be used instead !!!
 		}
 	    }
-	    elsewhen -test "calculation != 'neb' AND calculation != 'smd'" {
+	    when -test "calculation != 'neb' AND calculation != 'smd'" {
 		syntax {
 		    # non-path calculation
 		    
@@ -2014,9 +2003,9 @@ Nota Bene 1:   For calwf = 5, wffort is not used. The
 
 
         message {
-               when starting with ion_velocities="from_input" is convenient
+               when starting with ion_velocities="from_input" it is convenient
                to perform few steps (~5-10) with a smaller time step (0.5 a.u.)
-	    }
+	}
 
 	syntax {
                     table atomic_velocities {
@@ -2259,7 +2248,7 @@ Nota Bene 1:   For calwf = 5, wffort is not used. The
                        rows -start 1 -end nwf {
                             col iwf -type INTEGER {
                                 info {
-                                   These are the indices of the state that you want to output.
+                                   These are the indices of the states that you want to output.
                                    Also used with calwf = 1 and 5. If calwf = 1, then you need
                                    nwf indices here (each in a new line). If CALWF=5, then just
                                    one index in needed.

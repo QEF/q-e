@@ -383,15 +383,13 @@ input_description -distribution {Quantum Espresso} -package PWscf -program ph.x 
     }
 
 
-    group {
-	linecard {
-	    list xq_list -type REAL {
-		format { xq(1)  xq(2)  xq(3) }
-		info {
-		    The phonon wavevector, in units of 2pi/a0
-                    (a0 = lattice parameter).
-		    Not used if ldisp=.true.
-		}
+    linecard {
+	list xq_list -type REAL {
+	    format { xq(1)  xq(2)  xq(3) }
+	    info {
+		The phonon wavevector, in units of 2pi/a0
+		(a0 = lattice parameter).
+		Not used if ldisp=.true.
 	    }
 	}
     }
@@ -425,51 +423,52 @@ input_description -distribution {Quantum Espresso} -package PWscf -program ph.x 
 
 	text {
 
-NB: The program ph.x writes on the tmp_dir/_phprefix.phsave directory a
-file for each representation of each q point. This file is called
+NB: The program ph.x writes on the tmp_dir/_phprefix.phsave directory
+a file for each representation of each q point. This file is called
 data-file.xml.#iq.#irr where #iq is the number of the q point and #irr
 is the number of the representation. These files contain the
 contribution to the dynamical matrix of the irr representation for the
-iq point. If recover=.true. ph.x does not recalculate the
-representations already saved in the tmp_dir/_phprefix.phsave directory.
-Moreover ph.x writes on the files data-file.xml.#iq in the 
-tmp_dir/_phprefix.phsave directory the displacement patterns that 
-it is using. If recover=.true.
-ph.x does not recalculate the displacement patterns found in the
-tmp_dir/_phprefix.phsave directory.
+iq point. 
+
+If recover=.true. ph.x does not recalculate the
+representations already saved in the tmp_dir/_phprefix.phsave
+directory.  Moreover ph.x writes on the files data-file.xml.#iq in the
+tmp_dir/_phprefix.phsave directory the displacement patterns that it
+is using. If recover=.true.  ph.x does not recalculate the
+displacement patterns found in the tmp_dir/_phprefix.phsave directory.
 
 This mechanism allows:
 
-  1) To recover part of the ph.x calculation even if the recover file or 
-     files are corrupted. You just remove the _phprefix.recover files from 
-     the tmp_dir directory. You can also remove all the _ph files and 
-     keep only the _phprefix.phsave directory.
+  1) To recover part of the ph.x calculation even if the recover file
+     or files are corrupted. You just remove the _phprefix.recover
+     files from the tmp_dir directory. You can also remove all the _ph
+     files and keep only the _phprefix.phsave directory.
 
-  2) To split a phonon calculation into several jobs for different machines
-     (or set of nodes). Each machine calculates a subset of the representations
-     and saves its data-file.xml.#iq.#irr files on its
-     tmp_dir/_phprefix.phsave directory. Then you collect all the
-     data-file.xml.#iq.#irr files in one directory and run ph.x to collect
-     all the dynamical matrices and diagonalize them.
+  2) To split a phonon calculation into several jobs for different
+     machines (or set of nodes). Each machine calculates a subset of
+     the representations and saves its data-file.xml.#iq.#irr files on
+     its tmp_dir/_phprefix.phsave directory. Then you collect all the
+     data-file.xml.#iq.#irr files in one directory and run ph.x to
+     collect all the dynamical matrices and diagonalize them.
 
-NB: To split the q points in different machines, use the input variables
-start_q and last_q. To split the irreducible representations, use the input
-variables start_irr, last_irr. Please note that different machines will use,
-in general, different displacement patterns and it is not possible to recollect
-partial dynamical matrices generated with different dispacement patterns.
-A calculation split into different machines will run as follows:
-A preparatory run of ph.x with start_irr=0, last_irr=0 produces the sets
+NB: To split the q points in different machines, use the input
+variables start_q and last_q. To split the irreducible
+representations, use the input variables start_irr, last_irr. Please
+note that different machines will use, in general, different
+displacement patterns and it is not possible to recollect partial
+dynamical matrices generated with different dispacement patterns.  A
+calculation split into different machines will run as follows: A
+preparatory run of ph.x with start_irr=0, last_irr=0 produces the sets
 of displacement patterns and save them on the data-file.xml.#iq files.
-These files are copied in all the tmp_dir/_phprefix.phsave directories of the
-machines where you plan to run ph.x.
-ph.x is run in different machines with complementary sets of start_q, last_q,
-start_irr and last_irr variables.
-All the files data-file.xml.#iq.#irr are collected on a single
-tmp_dir/_phprefix.phsave directory (remember to collect also data-file.xml.#iq.0).
-A final run of ph.x in this machine collects all
-the data contained in the files and diagonalizes the dynamical matrices.
-This is done requesting a complete dispersion calculation without
-using start_q, last_q, start_irr, or last_irr.
+These files are copied in all the tmp_dir/_phprefix.phsave directories
+of the machines where you plan to run ph.x.  ph.x is run in different
+machines with complementary sets of start_q, last_q, start_irr and
+last_irr variables.  All the files data-file.xml.#iq.#irr are
+collected on a single tmp_dir/_phprefix.phsave directory (remember to
+collect also data-file.xml.#iq.0).  A final run of ph.x in this
+machine collects all the data contained in the files and diagonalizes
+the dynamical matrices.  This is done requesting a complete dispersion
+calculation without using start_q, last_q, start_irr, or last_irr.
 
 On parallel machines the q point and the irreps calculations can be split 
 automatically. The procedure is the following:
@@ -479,10 +478,12 @@ automatically. The procedure is the following:
 3) run ph.x with the same input and recover=.true. on nproc processors 
    and npools pools and only one image. 
 
-During the first ph.x run the phonon code split the total amount of work
-into nimage copies. Each image runs with different q and/or representations.
-The second run of ph.x is the final run that collects all the data 
-calculated by the images and writes the files with the dynamical matrices.
-} 
-} 
+During the first ph.x run the phonon code split the total amount of
+work into nimage copies. Each image runs with different q and/or
+representations.  The second run of ph.x is the final run that
+collects all the data calculated by the images and writes the files
+with the dynamical matrices.  
+
+}  
+}  
 }

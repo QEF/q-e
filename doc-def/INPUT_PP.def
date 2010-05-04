@@ -245,12 +245,12 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pp.x 
                 }
 	    }
 
-	    message { 
-		Unfinished and untested option:
-		
-		plot_num = 14, 15, 16  polarisation along x, y, z resp.
-		epsilon  = macroscopic dielectric constant
-	    }
+	    #message { 
+	    #	Unfinished and untested option:
+	    #	
+	    #	plot_num = 14, 15, 16  polarisation along x, y, z respectively.
+	    #	epsilon  = macroscopic dielectric constant
+	    #}
 	}
     }
     # END of namelist &INPUTPP
@@ -269,7 +269,6 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pp.x 
 	}
 	
 	group {
-	    #label { FOR i = 1, nfile: } 
 	    
 	    dimension filepp -start 1 -end nfile -type CHARACTER {
 		default { filepp(1)=filplot } 
@@ -288,13 +287,10 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pp.x 
 		}
 	    }	
 	    
-	    #label {
-	    #	END_FOR 
-	    #}
 	    message {
 		BEWARE: atomic coordinates are read from the first file;
-		if their number is different for different files,
-		the first file must have the largest number of atoms
+		        if their number is different for different files,
+		        the first file must have the largest number of atoms
 	    }     
 	}
 	
@@ -402,17 +398,17 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pp.x 
 		    info {
 			3D vectors which determine the plotting parallelepiped
 			(if present, must be orthogonal)
+
+			e1, e2, and e3 are in alat units !
 		    }
 		}
 		    
 		dimension x0 -start 1 -end 3 -type REAL {
 		    info {
 			3D vector, origin of the parallelepiped
+
+			x0 is in alat units !
 		    }
-		}
-		 
-		message {
-		    !!! x0, e1, e2, e3 are in alat units !!!
 		}
    
 		vargroup -type INTEGER {
