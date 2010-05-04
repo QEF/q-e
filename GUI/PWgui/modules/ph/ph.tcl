@@ -63,6 +63,15 @@ module PH\#auto -title "PWSCF GUI: module PH.x" -script {
 	    	-widget    radiobox
 	    	-fmt       %s
 	    }
+
+	    var nogg {
+		-label     "Disable gamma_gamma tricks (nogg):"
+		-textvalue {Yes No}
+	    	-value     {.true. .false.}
+	    	-widget    radiobox
+	    	-fmt       %s
+	    }
+
 	    group nq -name q-grid {
 		group nq_grid {
 		    packwidgets left
@@ -140,6 +149,14 @@ module PH\#auto -title "PWSCF GUI: module PH.x" -script {
 		-textvalue {Yes No}
 	    	-value     {.true. .false.}
 	    	-widget    radiobox
+	    }
+
+	    var zeu {
+	    	-label     "Compute effective charges from the dielectric responses (zeu):"
+	    	-textvalue {Yes No}
+	    	-value     {.true. .false.}
+	    	-widget    radiobox
+	    	-fmt       %s
 	    }
 
 	    var zue {
@@ -258,13 +275,6 @@ module PH\#auto -title "PWSCF GUI: module PH.x" -script {
 
 	    separator -label "--- Misc control options ---"
 
-	    var lnscf {
-	    	-label    "Perform the non-scf calculation first (lnscf):"
-	    	-textvalue {Yes No}
-	    	-value     {.true. .false.}
-	    	-widget    radiobox
-	    	-fmt       %s
-	    }
 	    var iverbosity {
 	    	-label     "Verbosity of output (iverbosity):"
 	    	-textvalue {"short output" "verbose output"}
@@ -311,7 +321,7 @@ module PH\#auto -title "PWSCF GUI: module PH.x" -script {
   }
 
     page suffixCards -name "Suffix cards" {
-    line xq_line -name "The phonon wavevector" {
+    line xq_list -name "The phonon wavevector" {
 	packwidgets left
 	var xq1 {
 	    -variable xq(1)

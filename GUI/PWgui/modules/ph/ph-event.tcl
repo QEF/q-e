@@ -8,7 +8,6 @@ tracevar ldisp w {
 	widget lraman  disable
 	widget elop    disable
 	widget trans   disable
-	widget lnscf   disable
 	groupwidget xq_line disable
 	groupwidget nq enable
 	groupwidget q_spec enable
@@ -16,7 +15,6 @@ tracevar ldisp w {
 	widget lraman  enable
 	widget elop    enable
 	widget trans   enable
-	widget lnscf   enable
 	groupwidget xq_line enable
 	groupwidget nq disable
 	groupwidget q_spec disable

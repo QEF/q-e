@@ -451,6 +451,27 @@ the use of a different (larger) k-point grid.
 
 
 # ------------------------------------------------------------------------
+help zeu -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>zeu</b></big>
+</li>
+<br><li> <em>Type: </em>LOGICAL</li>
+<br><li> <em>Default: </em> zeu=epsil
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+If .true. in a q=0 calculation for a non metal the
+effective charges are computed from the dielectric
+response. This is the default algorithm. If epsil=.true.
+and zeu=.false. only the dielectric tensor is calculated.
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
 help zue -helpfmt helpdoc -helptext {
       <ul>
 <li> <em>Variable: </em><big><b>zue</b></big>
@@ -463,10 +484,9 @@ help zue -helpfmt helpdoc -helptext {
 <blockquote><pre>
 If .true. in a q=0 calculation for a non metal the
 effective charges are computed from the phonon
-density responses. Note that if trans.and.epsil
-effective charges are calculated using a different
-algorithm. The results should be the same within
-numerical noise.
+density responses. This is an alternative algorithm,
+different from the default one (if trans .and. epsil )
+The results should be the same within numerical noise.
          </pre></blockquote>
 </ul>      
       
@@ -503,28 +523,8 @@ help fpol -helpfmt helpdoc -helptext {
 </li>
 <blockquote><pre>
 If .true. calculate dynamic polarizabilities
-( experimantal stage, see example33 for calculation
+( experimental stage, see example33 for calculation
  of methane ).
-         </pre></blockquote>
-</ul>      
-      
-}
-
-
-# ------------------------------------------------------------------------
-help lnscf -helpfmt helpdoc -helptext {
-      <ul>
-<li> <em>Variable: </em><big><b>lnscf</b></big>
-</li>
-<br><li> <em>Type: </em>LOGICAL</li>
-<br><li> <em>Default: </em> .false.
-         </li>
-<br><li> <em>Description:</em>
-</li>
-<blockquote><pre>
-If .true. the run makes first a pw.x nscf calculation.
-The pw.x data file should not be produced using
-"calculation='phonon'" in this case.
          </pre></blockquote>
 </ul>      
       
@@ -545,8 +545,31 @@ help ldisp -helpfmt helpdoc -helptext {
 If .true. the run calculates phonons for a grid of
 q-points specified by nq1, nq2, nq3 - for direct
 calculation of the entire phonon dispersion.
-The pw.x data file should not be produced using
-"calculation='phonon'" in this case.
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help nogg -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>nogg</b></big>
+</li>
+<br><li> <em>Type: </em>LOGICAL</li>
+<br><li> <em>Default: </em> .false.
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+If .true. disable the "gamma_gamma" trick used to speed
+up calculations at q=0 (phonon wavevector) if the sum over
+the Brillouin Zone includes k=0 only. The gamma_gamma
+trick exploits symmetry and acoustic sum rule to reduce
+the number of linear response calculations to the strict
+minimum, as it is done in code phcg.x. This option MUST
+BE USED if a run with ph.x is to be followed by a run
+with d3.x for third-order terms calculation.
          </pre></blockquote>
 </ul>      
       
@@ -588,8 +611,7 @@ These go together with nq1, nq2, nq3 and allow to choose
 just one point out of the Monkhorst-Pack grid with ldisp=.true.
 Note the the actual point chosen is something like
 (iq1-1)/nq1, (iq2-1)/nq2, (iq3-1)/nq3 (so, check the output
-for what you get). Also make sure that PW left *.wfc
-files behind (no 'phonon' is needed though).
+for what you get).
          </pre></blockquote>
 </ul>
     
