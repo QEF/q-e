@@ -1849,8 +1849,6 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 	        
 	        crystal : atomic positions are in crystal coordinates, i.e.
                           in relative coordinates of the primitive lattice vectors (see below)
-
-		NOTE: 
 	    }
 	}
 
