@@ -18,9 +18,17 @@ help calculation -helpfmt helpdoc -helptext {
 </li>
 <blockquote><pre>
 a string describing the task to be performed:
-'scf', 'nscf', 'bands', 'relax', 'md',
-'vc-relax', 'vc-md', 'neb', 'smd'
-(vc = variable-cell).
+   'scf',
+   'nscf',
+   'bands',
+   'relax',
+   'md',
+   'vc-relax',
+   'vc-md',
+   'neb',
+   'smd'
+
+   (vc = variable-cell).
          </pre></blockquote>
 </ul>      
       
@@ -468,6 +476,27 @@ This is different from "tefield=.true." !
 
 
 # ------------------------------------------------------------------------
+help nberrycyc -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>nberrycyc</b></big>
+</li>
+<br><li> <em>Type: </em>INTEGER</li>
+<br><li> <em>Default: </em> 1
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+In the case of a finite electric field  ( lelfield == .TRUE. )
+it defines the number of iterations for converging the
+wavefunctions in the electric field Hamiltonian, for each
+external iteration on the charge density
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
 help lberry -helpfmt helpdoc -helptext {
       <ul>
 <li> <em>Variable: </em><big><b>lberry</b></big>
@@ -519,27 +548,6 @@ For Berry phase calculation: number of k-points to be
 calculated along each symmetry-reduced string
 The same for calculation with finite electric fields
 (lelfield==.true.)
-         </pre></blockquote>
-</ul>      
-      
-}
-
-
-# ------------------------------------------------------------------------
-help nberrycyc -helpfmt helpdoc -helptext {
-      <ul>
-<li> <em>Variable: </em><big><b>nberrycyc</b></big>
-</li>
-<br><li> <em>Type: </em>INTEGER</li>
-<br><li> <em>Default: </em> 1
-         </li>
-<br><li> <em>Description:</em>
-</li>
-<blockquote><pre>
-In the case of a finite electric field  ( lelfield == .TRUE. )
-it defines the number of iterations for converging the
-wavefunctions in the electric field Hamiltonian, for each
-external iteration on the charge density
          </pre></blockquote>
 </ul>      
       
@@ -674,7 +682,7 @@ help celldm -helpfmt helpdoc -helptext {
 </li>
 <br><li> <em>Type: </em>REAL</li>
 <br><li> <em>See: </em> ibrav
-         </li>
+            </li>
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
@@ -683,7 +691,7 @@ Crystallographic constants - see description of ibrav variable.
 * alat = celldm(1) is the lattice parameter "a" (in BOHR)
 * only needed celldm (depending on ibrav) must be specified
 * if ibrav=0 only alat = celldm(1) is used (if present)
-         </pre></blockquote>
+            </pre></blockquote>
 </ul>      
       
 }
@@ -701,10 +709,11 @@ grouphelp {A B C cosAB cosAC cosBC} -helpfmt helpdoc -helptext {
 Traditional crystallographic constants (a,b,c in ANGSTROM),
 cosab = cosine of the angle between axis a and b
 specify either these OR celldm but NOT both.
+
 The axis are chosen according to the value of ibrav.
 If ibrav is not specified, the axis are taken from card
 CELL_PARAMETERS and only a is used as lattice parameter.
-         </pre></blockquote>
+            </pre></blockquote>
 </ul>
     
 }
@@ -1263,9 +1272,11 @@ element that is not configured there.
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-lda_plus_u, Hubbard_alpha(i), Hubbard_U(i): parameters for LDA+U
-calculations If lda_plus_u = .TRUE. you must specify, for species i,
+lda_plus_u, Hubbard_alpha(i), Hubbard_U(i): parameters for LDA+U calculations
+
+If lda_plus_u = .TRUE. you must specify, for species i,
 the parameters U and (optionally) alpha of the Hubbard model (both in eV).
+
 See: Anisimov, Zaanen, and Andersen, PRB 44, 943 (1991); Anisimov
 et al., PRB 48, 16929 (1993); Liechtenstein, Anisimov, and Zaanen, PRB
 52, R5467 (1994); Cococcioni and de Gironcoli, PRB 71, 035105 (2005).
@@ -3028,20 +3039,6 @@ angstrom: atomic positions are in cartesian coordinates,
 
 crystal : atomic positions are in crystal coordinates, i.e.
           in relative coordinates of the primitive lattice vectors (see below)
-
-NOTE:
-each atomic coordinate can also be specified as simple algebrical expressions,
-in order to be interpreted correctly each expression must NOT contain any blank
-space and must NOT start with a "+" sign. The available expressions are:
-+ (plus), - (minus), / (division), * (multiplication), ^ (power)
-All numerical constants included are considered as double-precision numbers;
-i.e. 1/2 is 0.5, not zero. Other functions, such as sin, sqrt or exp are
-not available, although sqrt can be replaced with ^(1/2). Example:
-   C  1/3  1/2*3^(-1/2)  0
-is equivalent to
-   C 0.333333 0.288675 0.000000
-Please note that this feature is still NOT supported by XCrysDen (which will
-display a wrong structure, or nothing at all).
          </pre>
       
 }
@@ -3063,26 +3060,28 @@ help atomic_coordinates -helpfmt helpdoc -helptext {
 <br><li> <em>Type: </em>REAL</li>
 <br><li> <em>Description:</em>
 </li>
-<blockquote><pre> atomic positions
-                        </pre></blockquote>
-</ul>   
-    
+<blockquote><pre>
+atomic positions
 
-    <ul>
-<li> <em>Variable: </em><big><b>X</b></big>
-</li>
-<br><li> <em>Type: </em>CHARACTER</li>
-<br><li> <em>Description:</em>
-</li>
-<blockquote><pre> label of the atom as specified in ATOMIC_SPECIES
-                        </pre></blockquote>
-</ul><ul>
-<li> <em>Variables: </em><big><b>x, y, z</b></big>
-</li>
-<br><li> <em>Type: </em>REAL</li>
-<br><li> <em>Description:</em>
-</li>
-<blockquote><pre> atomic positions
+NOTE: each atomic coordinate can also be specified as a simple algebrical expression.
+      To be interpreted correctly expression must NOT contain any blank
+      space and must NOT start with a "+" sign. The available expressions are:
+
+        + (plus), - (minus), / (division), * (multiplication), ^ (power)
+
+     All numerical constants included are considered as double-precision numbers;
+     i.e. 1/2 is 0.5, not zero. Other functions, such as sin, sqrt or exp are
+     not available, although sqrt can be replaced with ^(1/2).
+
+    Example:
+                 C  1/3   1/2*3^(-1/2)   0
+
+    is equivalent to
+
+            C  0.333333  0.288675  0.000000
+
+    Please note that this feature is NOT supported by XCrysDen (which will
+    display a wrong structure, or nothing at all).
                         </pre></blockquote>
 </ul><ul>
 <li> <em>Variables: </em><big><b>if_pos(1), if_pos(2), if_pos(3)</b></big>

@@ -488,6 +488,8 @@ help x0 -helpfmt helpdoc -helptext {
 </li>
 <blockquote><pre>
 3D vector, origin of the parallelepiped
+
+x0 is in alat units !
                </pre></blockquote>
 </ul>      
       
@@ -580,6 +582,8 @@ grouphelp {e1 e2 e3} -helpfmt helpdoc -helptext {
 <blockquote><pre>
 3D vectors which determine the plotting parallelepiped
 (if present, must be orthogonal)
+
+e1, e2, and e3 are in alat units !
                </pre></blockquote>
 </ul>
     
