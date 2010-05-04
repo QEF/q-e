@@ -68,9 +68,9 @@ selects what to save in filplot:
 
    0  = charge
 
-   1  = total potential V_bare+V_H + V_xc
+   1  = total potential V_bare + V_H + V_xc
 
-   2  = local ionic potential
+   2  = local ionic potential V_bare
 
    3  = local density of states at e_fermi
 
@@ -80,7 +80,11 @@ selects what to save in filplot:
 
    6  = spin polarization (rho(up)-rho(down))
 
-   7  = |psi|^2
+   7  = contribution of a selected wavefunction to the
+        (pseudo-)charge density. Noncollinear case:
+        contribution of the given state to the charge or
+        to the magnetization along the direction indicated
+        by spin_component (0 = charge, 1 = x, 2 = y, 3 = z )
 
    8  = electron localization function (ELF)
 
@@ -92,9 +96,16 @@ selects what to save in filplot:
 
    11 = the V_bare + V_H potential
 
-   12 = the electric field potential
+   12 = the sawtooth electric field potential (if present)
 
    13 = the noncollinear magnetization.
+
+   17 = all-electron valence charge density
+        can be performed for PAW calculations only
+        requires a very dense real-space grid!
+
+   18 = The exchange and correlation magnetic field in
+        the noncollinear case
          </pre></blockquote>
 </ul>      
       
@@ -187,6 +198,22 @@ for LSDA case only: plot the contribution to ILDOS of
                </pre></blockquote>
 </ul>      
       
+
+      <ul>
+<li> <em>Variable: </em><big><b>spin_component</b></big>
+</li>
+<br><li> <em>Type: </em>INTEGER</li>
+<br><li> <em>Default: </em> 0
+               </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+0=total charge (default value),
+1=spin up charge,
+2=spin down charge.
+               </pre></blockquote>
+</ul>      
+      
 }
 
 
@@ -201,56 +228,6 @@ help sample_bias -helpfmt helpdoc -helptext {
 <blockquote><pre>
 the bias of the sample (Ry) in stm images
                </pre></blockquote>
-</ul>      
-      
-}
-
-
-# ------------------------------------------------------------------------
-help stm_wfc_matching -helpfmt helpdoc -helptext {
-      <ul>
-<li> <em>Variable: </em><big><b>stm_wfc_matching</b></big>
-</li>
-<br><li> <em>Type: </em>LOGICAL</li>
-<br><li> <em>Description:</em>
-</li>
-<blockquote><pre>
-if .true. match the wavefunctions to an exponentially
-          vanishing function
-if .true. specify also (in celldm(1) units): z and dz variables
-               </pre></blockquote>
-</ul>      
-      
-}
-
-
-# ------------------------------------------------------------------------
-help z -helpfmt helpdoc -helptext {
-      <ul>
-<li> <em>Variable: </em><big><b>z</b></big>
-</li>
-<br><li> <em>Type: </em>REAL</li>
-<br><li> <em>Description:</em>
-</li>
-<blockquote><pre>
-height of matching
-                  </pre></blockquote>
-</ul>      
-      
-}
-
-
-# ------------------------------------------------------------------------
-help dz -helpfmt helpdoc -helptext {
-      <ul>
-<li> <em>Variable: </em><big><b>dz</b></big>
-</li>
-<br><li> <em>Type: </em>REAL</li>
-<br><li> <em>Description:</em>
-</li>
-<blockquote><pre>
-distance of next stm image calculation
-                  </pre></blockquote>
 </ul>      
       
 }
@@ -431,10 +408,10 @@ help output_format -helpfmt helpdoc -helptext {
 0  format suitable for gnuplot   (1D)
 1  format suitable for contour.x (2D)
 2  format suitable for plotrho   (2D)
-3  format suitable for XCRYSDEN  (1D, 2D, 3D)
+3  format suitable for XCRYSDEN  (2D or user-supplied 3D region)
 4  format suitable for gOpenMol  (3D)
    (formatted: convert to unformatted *.plt)
-5  format suitable for XCRYSDEN  (3D)
+5  format suitable for XCRYSDEN  (3D, using entire FFT grid)
 6  format as gaussian cube file  (3D)
    (can be read by many programs)
          </pre></blockquote>

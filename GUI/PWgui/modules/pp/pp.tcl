@@ -73,14 +73,6 @@ module PP\#auto -title "PWSCF GUI: module PP.x" -script {
 		    -label    "For STM: the bias of the sample [in Ryd] in STM images (sample_bias):"
 		    -validate fortranreal
 		}
-		var z {
-		    -label    "For STM: height of matching [in celldm(3) units] (z):"
-		    -validate fortranreal
-		}
-		var dz {
-		    -label    "For STM: distance of next STM image calculation (dz):"
-		    -validate fortranreal
-		}
 	    }
 	    
 	    separator -label "--- Options for |psi|^2 ---"
