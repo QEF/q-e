@@ -1899,8 +1899,8 @@ in \pw.x: via an external sawtooth potential (input variable
 The former is useful for surfaces, especially in conjunction
 with dipolar corrections (\texttt{dipfield=.true.}):
 see \texttt{examples/dipole\_example} for an example of application. 
-Electrc fields viia modern theopry of polarization are documented in
-Example 31. The exact meaning of the related variables, for both
+Electric fields via modern theory of polarization are documented in
+example 31. The exact meaning of the related variables, for both
 cases, is explained in the general input documentation.
 
 \paragraph{Nudged Elastic Band calculation}
@@ -1980,6 +1980,12 @@ or twice as many, but more or less that's the order of magnitude,
 unless one starts from a very good or very bad initial guess.
 \end{enumerate}
 (Courtesy of Lorenzo Paulatto)
+
+\paragraph{Dispersion Interactions (DFT-D)}
+For DFT-D (DFT + semiempirical dispersion interactions), see the
+description of input variables \texttt{london*}, sample files
+\texttt{tests/vdw.*}, and the comments in source file
+\texttt{Modules/mm\_dispersion.f90}.
 
 \paragraph{Hartree-Fock and Hybrid functionals}
 
@@ -2114,6 +2120,20 @@ to get the $\alpha^2F(\omega)$ function, the electron-phonon coefficient
 $\lambda$, and an estimate of the critical temperature $T_c$.
 \end{enumerate}
 For more details, see Example 07.
+
+\subsection{Distributed Phonon calculations}
+A complete phonon dispersion calculation can be quite long and
+expensive, but it can be spit into a number of semi-independent 
+calculations, using options \texttt{start\_q}, \texttt{last\_q},
+\texttt{start\_irr}, \texttt{last\_irr}. An example on how to 
+distribute the calculations and collect the results can be found
+in \texttt{examples/GRID\_example}. Reference:\\
+{\it Calculation of Phonon Dispersions on the GRID using Quantum
+     ESPRESSO},
+     R. di Meo, A. Dal Corso, P. Giannozzi, and S. Cozzini, in 
+     {\it Chemistry and Material Science Applications on Grid Infrastructures},
+     editors: S. Cozzini, A. Lagan\`a, ICTP Lecture Notes Series, 
+     Vol. 24, pp.165-183 (2009). 
 
 \section{Post-processing}
 
