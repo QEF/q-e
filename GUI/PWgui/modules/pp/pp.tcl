@@ -46,8 +46,10 @@ module PP\#auto -title "PWSCF GUI: module PP.x" -script {
 		    "the V_bare + V_H potential"
 		    "the electric field potential"
 		    "the noncolinear magnetization"
+		    "all-electron valence charge density (for PAW)"
+		    "exchange-correlation magnetic field (for noncollinear)"
 		}
-		-value { 0 1 2 3 4 5 6 7 7 8 10 11 12 13 }
+		-value { 0 1 2 3 4 5 6 7 7 8 10 11 12 13 17 18 }
 		-fmt %d
 	    }
 	    var spin_component {

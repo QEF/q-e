@@ -1,11 +1,14 @@
 tracevar plot_num w {
 
+    set spin_component_text [vartextvalue spin_component]
+
     ::tclu::DEBUG "Plot_Num ..."
 
     switch -exact -- [vartextvalue plot_num] {
 	"charge density" -
 	"total potential (= V_bare + V_H + V_xc)" -
-	"the V_bare + V_H potential" {
+	"the V_bare + V_H potential" -
+	"all-electron valence charge density (for PAW)" {
 	    widget spin_component enable
 	    widgetconfigure spin_component -textvalues {
 		"total charge/potential"
@@ -15,6 +18,10 @@ tracevar plot_num w {
 	    groupwidget stm   disable 
 	    groupwidget psi2  disable 
 	    groupwidget ildos disable
+
+	    if { ! [regexp {charge/potential} $spin_component_text] } {
+		varset spin_component -value {}
+	    }		
 	}
 
 	"STM images" {
@@ -42,6 +49,10 @@ tracevar plot_num w {
 	    groupwidget stm   disable 
 	    groupwidget psi2  enable  
 	    groupwidget ildos disable
+
+	    if { [regexp {charge/potential} $spin_component_text] } {
+		varset spin_component -value {}
+	    }
 	}
 	
 	"integrated local density of states (ILDOS)" {
@@ -50,6 +61,7 @@ tracevar plot_num w {
 	    groupwidget psi2  disable  
 	    groupwidget ildos enable
 	}
+
 	"the noncolinear magnetization" {
 	    widget spin_component enable
 	    widgetconfigure spin_component -textvalues {
@@ -62,7 +74,11 @@ tracevar plot_num w {
 	    groupwidget psi2  disable  
 	    groupwidget ildos disable
 	    
+	    if { [regexp {charge/potential} $spin_component_text] } {
+		varset spin_component -value {}
+	    }
 	}
+
 	default {
 	    widget spin_component disable 
 	    groupwidget stm   disable 
