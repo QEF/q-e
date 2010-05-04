@@ -79,14 +79,22 @@ foreach {mod subdir def_prefix} $mappings {
 	set deffile    [file join $topdir $subdir $def_prefix.def]
 	set modulefile [file join  $moduledir $mod $mod.tcl]
 
+	# compile the $deffile
+	cd [file join $topdir doc-def]
+	catch {exec make $def_prefix.html}
+	cd $basedir
+	
+	# output info
 	puts "Checking PWgui module: $mod"
 	puts "    *     module file: $modulefile"
 	puts "    * definition file: $deffile"
 
 	# the current $mod-help.tcl file will interfere the process, rename it:	
 	
-	puts "Renaming the current $mod-help.tcl file to $mod-help.tcl.bak"
-	file rename -force [file join $moduledir $mod $mod-help.tcl] [file join $moduledir $mod $mod-help.tcl.bak]
+	if { [file exists [file join $moduledir $mod $mod-help.tcl]] } {
+	    puts "Renaming the current $mod-help.tcl file to $mod-help.tcl.bak"
+	    file rename -force [file join $moduledir $mod $mod-help.tcl] [file join $moduledir $mod $mod-help.tcl.bak]
+	}
 
 	# make a black $mod-help.tcl file
 
@@ -122,5 +130,11 @@ set obj [::guib::loadModule $modulefile]; $obj storeModuleItems
 
 ::helpdoc::checkGui_makeHelpFile $deffile $modulefile
 
+if { [file exists [file join $moduledir $module $module-help.tcl.bak]] } {
+    puts "Renaming back the $module-help.tcl.bak file to $module-help.tcl"
+    file rename -force [file join $moduledir $module $module-help.tcl.bak] [file join $moduledir $module $module-help.tcl]
+}
+
 # ok, we are done; since we loaded Tk, we need an explicit exit !!!
+
 exit 0
