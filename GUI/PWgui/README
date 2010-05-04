@@ -3,11 +3,13 @@
                    * * * README file for PWgui * * *
  ==============================================================================
 
-This is the PWgui---a GUI for the PWscf set of programs (see
-http://www.pwscf.org/). PWgui is written in [incr Tcl]---an extension
-of Tcl scripting language (hence no compilation is needed for the
-PWgui source package). However the package depends on the [incr Tcl]
-and related software. Therefore you have two possibilities:
+This is the PWgui---a GUI for the PWscf set of programs within the
+open-source Quantum ESPRESSO suite for quantum simulation of materials
+(see http://www.quantum-espresso.org). PWgui is written in [incr
+Tcl]---an extension of Tcl scripting language (hence no compilation is
+needed for the PWgui source package). However the package depends on
+the [incr Tcl] and related software. Therefore you have two
+possibilities:
 
    (i)  to use a standalone executable which run out of the box. Works
 	only on the platforms for which executable has been built. Currently

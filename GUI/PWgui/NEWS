@@ -1,3 +1,9 @@
+Version: 4.2
+        * PWgui pages can be scrolled up and down with the mouse-bar
+        * PWgui runs with Tcl/Tk 8.5
+	* syntax (variables) and help files completely updated 
+	* new "welcome" image
+
 Version: 4.0
 	* help files updated (completely)
 	* LD1.X module fully completed
