@@ -95,7 +95,7 @@ $ECHO " done"
 #
 # Run the calculation for the Ni+CO slab with the dipole correction
 # emaxpos, the starting of the potential inversion, has to be carefully
-# placed in a position where there's almost non charge.
+# placed in a position where there's almost no charge.
 #
 cat > ni+co.scf.in << EOF
  &control
