@@ -13,8 +13,8 @@ TK_VERSION = 8.4
 
 ITCL_EXACT = -exact
 
-ITCL_VERSION     = 3.2
-ITK_VERSION      = 3.2
+ITCL_VERSION     = 3.4
+ITK_VERSION      = 3.3
 IWIDGETS_VERSION = 4.0.1
 
 # define the library-directories to be copied
