@@ -122,13 +122,17 @@ CONTAINS
   !
   ! definitions and checks
   !
+#ifdef EXXDEBUG
   IF (ionode) WRITE(stdout,'(/,2x,a,3i4)') "EXX : q-grid dimensions are ", nq1,nq2,nq3
+#endif
   !
   grid_factor = 1.d0
   !
   IF (x_gamma_extrapolation) THEN
       !
+#ifdef EXXDEBUG
       IF (ionode) WRITE (stdout,'(2x,a)') "EXX : q->0 dealt with 8/7 -1/7 trick"
+#endif
       grid_factor = 8.d0/7.d0
       !
   ENDIF
@@ -353,9 +357,10 @@ CONTAINS
      CALL errore(sub_name,'invalid exxdiv_treatment: '//TRIM(exxdiv_treatment), 1)
   END SELECT
   !
+#ifdef EXXDEBUG
   IF ( ionode ) WRITE (stdout,'(2x,"EXX : q->0 dealt with ",a, " trick" )') &
                 TRIM(exxdiv_treatment)
-
+#endif
   !
   ! <AF>
   ! Set variables for Coulomb vcut
@@ -379,9 +384,9 @@ CONTAINS
       IF ( ionode ) CALL vcut_info( stdout, vcut )
       !          
   ENDIF
-
+#ifdef EXXDEBUG
   write (stdout,"(2x,'EXX : exx div treatment check successful')")
- 
+#endif 
   RETURN
   END SUBROUTINE exx_div_check 
 
@@ -440,9 +445,9 @@ CONTAINS
        end do
      end do
   end do
-
+#ifdef EXXDEBUG
   write (stdout,"(2x,'EXX : grid check successful')")
-
+#endif
   return
 
   end subroutine exx_grid_check
@@ -469,7 +474,9 @@ CONTAINS
     erfc_scrlen = get_screening_parameter()
     exxdiv = exx_divergence() 
     exxalfa = get_exx_fraction()
+#ifdef EXXDEBUG
     write (stdout,*) " ! EXXALFA SET TO ", exxalfa
+#endif
     call start_exx
     call weights()
     call exxinit()
@@ -534,7 +541,9 @@ CONTAINS
        erfc_scrlen = get_screening_parameter()
        exxdiv = exx_divergence() 
        exxalfa = get_exx_fraction()
+#ifdef EXXDEBUG
        write (stdout,*) " ! EXXALFA SET TO ", exxalfa
+#endif
        call start_exx
     endif
 
@@ -817,8 +826,10 @@ CONTAINS
                 !
                 !loads the phi from file
                 !
+#ifdef EXXDEBUG
 WRITE(stdout,*) "from vexx, nrxxs: ", nrxxs, ikq, h_ibnd 
 call flush_unit(stdout)
+#endif
                 do ji=1, nrxxs
                    tempphic(ji)=exxbuff(ji,ikq,h_ibnd)
                    
@@ -850,10 +861,12 @@ call flush_unit(stdout)
                 !
                 !loads the phi from file
                 !
+#ifdef EXXDEBUG
 WRITE(stdout,*) "from vexx, nrxxs: ", nrxxs, ikq, ibnd
 if(allocated(tempphic)) write(stdout,*) "tempphic allcated"
 if(allocated(exxbuff)) write(stdout,*) "exxbuff allocated"
 call flush_unit(stdout)
+#endif
                 do ji=1, nrxxs
                    tempphic(ji)=exxbuff(ji,ikq,ibnd)                
                 enddo
@@ -1194,7 +1207,9 @@ call flush_unit(stdout)
      IF ( use_erfc_simple_div .AND. erfc_scrlen > 0 .AND. &
           .NOT. x_gamma_extrapolation ) THEN
         exx_divergence = -e2*pi/(erfc_scrlen**2)
+#ifdef EXXDEBUG
         write(stdout,*) 'exx_divergence', exx_divergence
+#endif
         return
      END IF
 
@@ -1271,17 +1286,18 @@ call flush_unit(stdout)
      end do
      aa = aa * 8.d0 /fpi
      aa = aa + 1.d0/sqrt(alpha*0.25d0*fpi) 
+#ifdef EXXDEBUG
      write (stdout,*) aa, 1.d0/sqrt(alpha*0.25d0*fpi)
-    
+#endif   
      div = div - e2*omega * aa
 
 !     div = div - e2*omega/sqrt(alpha*0.25d0*fpi)
 
      exx_divergence = div * nqs
-
+#ifdef EXXDEBUG
      write (stdout,'(a,i4,a,3f12.4)') 'EXX divergence (',nq1,')= ', &
                                   div, alpha
-
+#endif
      call stop_clock ('exx_div')
 
      return

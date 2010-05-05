@@ -40,7 +40,7 @@ PROGRAM pwscf
      !
 #if defined (EXX)
      WRITE( UNIT = stdout, &
-         & FMT = '(/,5X,"!!! EXPERIMENTAL VERSION WITH EXACT EXCHANGE !!!")' )
+         & FMT = '(/,5X,"EXPERIMENTAL VERSION WITH EXACT EXCHANGE")' )
 #endif
      WRITE( unit = stdout, FMT = 9010 ) &
          ntypx, npk, lmaxx
