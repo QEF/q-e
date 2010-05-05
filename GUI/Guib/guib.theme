@@ -1,3 +1,5 @@
+*Background.selectColor:  White
+
 *Guib*Entry.width:					10
 *Guib*Entryfield.width:				        10
 *Guib*Spinint.width:					10

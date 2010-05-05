@@ -19,7 +19,7 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 #
-# $Id: pwscf.itcl,v 1.13 2010-05-04 14:14:47 kokalj Exp $ 
+# $Id: pwscf.itcl,v 1.14 2010-05-05 09:32:36 kokalj Exp $ 
 #
 
 tk_setPalette  #d9d9d9
@@ -31,6 +31,8 @@ option add *Menubar*activeForeground        \#ffffff   startupFile
 
 option readfile [file join $::env(PWGUI) src pwscf.theme] startupFile
 option readfile [file join $::guib::library guib.theme]   startupFile
+
+option add *selectColor                     \#ffffff   userDefault
 
 #
 # initialization
