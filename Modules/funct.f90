@@ -473,10 +473,10 @@ CONTAINS
 
      if ( present (nomsg) ) return
 
-     write (stdout,'(/,5x,a)') "!!! XC functional enforced from input :"
+     write (stdout,'(/,5x,a)') "XC functional enforced from input :"
      call write_dft_name
      write (stdout,'(5x,a)') "!!! Any further DFT definition will be discarded"
-     write (stdout,'(5x,a)') "!!! Please, verify this is what you really want !"
+     write (stdout,'(5x,a/)') "!!! Please, verify this is what you really want !"
 
      return
   end subroutine enforce_input_dft
@@ -672,7 +672,7 @@ subroutine write_dft_name
 !-----------------------------------------------------------------------
    WRITE( stdout, '(5X,"Exchange-correlation      = ",A, &
         &  " (",4I1,")")') TRIM( dft ), iexch, icorr, igcx, igcc
-   WRITE( stdout, '(5X,"EXX-fraction     =",F6.2)') &
+   WRITE( stdout, '(5X,"EXX-fraction              =",F12.2)') &
         get_exx_fraction()
    return
 end subroutine write_dft_name
