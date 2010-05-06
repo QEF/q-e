@@ -7,7 +7,7 @@ LC_ALL=C
 export LC_ALL
 
 #
-VERSION=4.1
+VERSION=4.2
 #
 ESPRESSO_DIR=espresso-$VERSION
 GUI=PWgui-$VERSION
@@ -45,8 +45,24 @@ tar -xzf ../espresso.tar.gz
 tar -xzf ../$GUI.tgz
 /bin/rm ../$GUI.tgz ../espresso.tar.gz
 cd ..
-tar -cvzf espresso-$VERSION.tar.gz  $ESPRESSO_DIR >  espresso-$VERSION.lst
+mkdir Save
+
+mv  $ESPRESSO_DIR/plugins/archive/*.tar.gz Save/
+
 tar -cvzf $GUI.tar.gz $ESPRESSO_DIR/$GUI >  $GUI.lst
-echo "espresso-$VERSION.tar.gz and  $GUI.tar.gz saved in directory:" `pwd`
-echo "List of files in espresso-$VERSION.lst and $GUI.lst"
+mv  $ESPRESSO_DIR/$GUI Save/
+echo "$GUI.tar.gz saved in directory:" `pwd`
+echo "List of files in $GUI.lst"
+
+tar -cvzf espresso-$VERSION-examples.tar.gz  $ESPRESSO_DIR/examples \
+    $ESPRESSO_DIR/pseudo $ESPRESSO_DIR/tests $ESPRESSO_DIR/cptests  \
+    > espresso-$VERSION-examples.lst
+mv $ESPRESSO_DIR/examples $ESPRESSO_DIR/pseudo $ESPRESSO_DIR/tests \
+   $ESPRESSO_DIR/cptests Save/
+echo "espresso-$VERSION-examples.tar.gz saved in directory:" `pwd`
+echo "List of files in espresso-$VERSION-examples.lst"
+
+tar -cvzf espresso-$VERSION.tar.gz  $ESPRESSO_DIR >  espresso-$VERSION.lst
+echo "espresso-$VERSION.tar.gz saved in directory:" `pwd`
+echo "List of files in espresso-$VERSION.lst"
 
