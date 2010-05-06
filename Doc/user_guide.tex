@@ -87,8 +87,6 @@ It also includes the following more specialized packages:
         K-edge X-ray adsorption spectra.
   \item \texttt{vdW}:
         (experimental) dynamic polarizability. 
-%  \item \texttt{Wannier90}:
-%        maximally localized Wannier functions.
   \item \texttt{GWW}:
         (experimental) GW calculation using Wannier functions.
 %  \item \texttt{TD-DFPT}:
@@ -122,7 +120,9 @@ Finally, several additional packages that exploit data produced by \qe\
 can be installed as {\em plug-ins}:
 \begin{itemize}
 \item \texttt{Wannier90}:
-      maximally localized Wannier functions.
+      maximally localized Wannier functions
+      (\texttt{http://www.wannier.org/}), written by A. Mostofi, 
+     J. Yates, Y.-S Lee.
 \item \texttt{WanT}:
       quantum transport properties with Wannier functions.
 \item \texttt{YAMBO}:
@@ -264,11 +264,11 @@ For \PHonon, we mention in particular:
  \end{itemize}
 For \PostProc, we mention:
 \begin{itemize}
-\item Andrea Benassi (SISSA) for the \texttt{epsilon} utility 
-(calculation of RPA frequency-dependent complex dielectric
-function);
+\item Andrea Benassi (SISSA) for the \texttt{epsilon} utility;
 \item Norbert Nemec (U.Cambridge) for the \texttt{pw2casino} 
-utility.
+utility;
+\item Dmitry Korotin (Inst. Met. Phys. Ekaterinburg) for the
+\texttt{wannier\_ham} utility.
 \end{itemize}
 
 The \CP\ package is based on the original code written by
@@ -312,9 +312,6 @@ and others. Lorenzo Paulatto wrote the PAW extension.
 \item
 \texttt{iotk} (\texttt{http://www.s3.infm.it/iotk}) was written by Giovanni Bussi  (SISSA)  .
 \item
-Wannier90 (\texttt{http://www.wannier.org/}) was written by A. Mostofi, 
-J. Yates, Y.-S Lee (MIT).
-\item
 \texttt{XSPECTRA} was written by Matteo Calandra (Univ. Paris VI)
 and collaborators.
 \item \texttt{VdW} was contributed by Huy-Viet Nguyen (SISSA).
@@ -324,8 +321,9 @@ and collaborators.
 \end{itemize}
 Other relevant contributions to \qe:
 \begin{itemize}
-  \item Andrea Ferretti (MIT) contributed the \texttt{qexml} utility 
-  and helped with file formats;
+  \item Andrea Ferretti (MIT) contributed the \texttt{qexml} and
+  \texttt{sumpdos} utility,
+  helped with file formats and with various problems;
   \item Hannu-Pekka Komsa (CSEA/Lausanne) contributed
   the HSE functional;
   \item Dispersions interaction in the framework of DFT-D were
@@ -336,12 +334,12 @@ Other relevant contributions to \qe:
   \item The initial BlueGene porting was done by Costas Bekas and
   Alessandro Curioni (IBM Zurich);
   \item Gerardo Ballabio wrote the first \configure\ for \qe
-  \item Audrius Alkauskas (IRRMA), 
+  \item Audrius Alkauskas (IRRMA), Uli Aschauer (Princeton),
 Simon Binnie (Univ. College London), Guido Fratesi, Axel Kohlmeyer (UPenn),
 Konstantin Kudin (Princeton), Sergey Lisenkov (Univ.Arkansas), 
 Nicolas Mounet (MIT), William Parker (Ohio State Univ), 
 Guido Roma (CEA), Gabriele Sclauzero (SISSA), Sylvie Stucki (IRRMA), 
-Pascal Thibaudeau (CEA), Vittorio Zecca
+Pascal Thibaudeau (CEA), Vittorio Zecca, Federico Zipoli (Princeton)
 answered questions on the mailing list, found bugs, helped in 
 porting to new architectures, wrote some code.
 \end{itemize}
@@ -431,7 +429,8 @@ and O.pbe-vbc.UPF from\\
 \subsection{Download}
  
 Presently, \qe\ is only distributed in source form; 
-some precompiled executables (binary files) are provided only for PWgui. 
+some precompiled executables (binary files) are provided only for 
+\texttt{PWgui}. 
 Stable releases of the \qe\ source package (current version 
 is \version) can be downloaded from this URL: \\
 \texttt{http://www.quantum-espresso.org/download.php}.
@@ -449,7 +448,10 @@ doesn't recognize the "z" flag:
 A directory \texttt{espresso-X.Y.Z/} will be created. Given the size 
 of the complete distribution, you may need to download more packages
 and to unpack them following the same procedure (they will unpack into 
-the same directory).
+the same directory). Plug-ins should instead be downloaded into
+subdirectory \texttt{plugin/archive} but not unpacked or uncompressed:
+command \texttt{make} will take care of this during installation.
+
 Occasionally, patches for the current version, fixing some errors and bugs,
 may be distributed as a "diff" file. In order to install a patch (for 
 instance):
@@ -489,7 +491,7 @@ while others are specific to a single package:
 \texttt{PW/}      &\PWscf: source files for scf calculations (\pw.x)\\
 \texttt{pwtools/} &\PWscf: source files for miscellaneous analysis programs\\
 \texttt{tests/}   &\PWscf:  automated tests\\
-\texttt{PP/}      &\PostProc: source files for post-processing of \pw.x
+\texttt{PP/}      &\PostProc: source files for post-processing of \pw.x\
                    data file\\
 \texttt{PH/}      &\PHonon: source files for phonon calculations (\ph.x)
                    and analysis\\
@@ -862,7 +864,10 @@ The codes for data postprocessing in \texttt{PP/} are:
 \item  \texttt{average.x} calculates planar averages of quantities produced by
    \texttt{pp.x} (potentials, charge, magnetization densities,...) 
 \item  \texttt{dos.x} calculates electronic Density of States (DOS)
-\item  \texttt{pw2wan.x}: interface with WanT package
+\item \texttt{epsilon.x} calculates RPA frequency-dependent complex dielectric function
+\item  \texttt{pw2wannier.x}: interface with Wannier90 package
+\item  \texttt{wannier\_ham.x}: generate a model Hamiltonian 
+in Wannier functions basis
 \item  \texttt{pmw.x} generates Poor Man's Wannier functions, to be used in
   DFT+U calculations 
 \item  \texttt{pw2casino.x}: interface with CASINO code for Quantum Monte Carlo
@@ -1970,6 +1975,12 @@ calculation without spin orbit. (Andrea Dal Corso, 2007-07-27)
 See Example 13 for non-collinear magnetism, Example 22
 for spin-orbit interactions.
 
+\paragraph{DFT+U}
+DFT+U (formerly known as LDA+U) calculation can be
+performed within a simplified rotationally invariant form 
+of the $U$ Hubbard correction. See Example 25 and references 
+quoted therein.
+
 \paragraph{Dispersion Interactions (DFT-D)}
 For DFT-D (DFT + semiempirical dispersion interactions), see the
 description of input variables \texttt{london*}, sample files
@@ -2336,13 +2347,27 @@ The total electronic DOS is instead calculated by code
 \texttt{dos.x}. See Example 08 for total and projected 
 electronic DOS calculations.
 
+\subsection{Wannier functions}
+
+There are several Wannier-related utilities in \PostProc:
+\begin{enumerate}
+\item The "Poor Man Wannier" code \texttt{pmw.x}, to be used
+in conjunction with DFT+U calculations (see Example 25)
+\item The interface with Wannier90 code, \texttt{pw2wannier.x}:
+see the documentation in \texttt{W90/} (you have to install the 
+Wannier90 plug-in)
+\item The \texttt{wannier\_ham.x} code generates a model Hamiltonian 
+in Wannier functions basis: see \texttt{examples/WannierHam\_example/}.
+\end{enumerate}
+
 \subsection{Other tools}
 
-Code \texttt{sumpdos.x} (courtesy of Andrea Ferretti) 
-can be used to sum selected PDOS, produced by
+Code \texttt{sumpdos.x} can be used to sum selected PDOS, produced by
 \texttt{projwfc.x}, by specifiying the names of files
 containing the desired PDOS. Type \texttt{sumpdos.x -h} or look into the source
 code for more details. 
+
+Code \texttt{epsilon.x} calculates RPA frequency-dependent complex dielectric function. Documentation is in \texttt{Doc/eps\_man.tex}.
 
 The code \texttt{path\_int.x} is intended to be used in the framework of NEB
 calculations. It is a tool to generate a new path (what is actually
