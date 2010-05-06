@@ -8,7 +8,7 @@
 !-----------------------------------------------------------------------
 SUBROUTINE write_casino_wfn(gather,blip,multiplicity,binwrite,single_precision_blips,n_points_for_test)
 
-   USE kinds, ONLY: DP
+   USE kinds, ONLY: DP,sgl
    USE ions_base, ONLY : nat, ntyp => nsp, ityp, tau, zv, atm
    USE cell_base, ONLY: omega, alat, tpiba2, at, bg
    USE printout_base, ONLY: title    ! title of the run
@@ -842,9 +842,9 @@ CONTAINS
          ENDDO
 
          IF(single_precision_blips)THEN
-            WRITE(iob)cmplx(cavc_tmp(:,:,:),kind=kind(1.))
+            WRITE(iob)cmplx(cavc_tmp(:,:,:),kind=sgl)
          ELSE
-            WRITE(iob)cmplx(cavc_tmp(:,:,:),kind=kind(1.d0))
+            WRITE(iob)cmplx(cavc_tmp(:,:,:),kind=DP)
          ENDIF
          RETURN
       ENDIF
@@ -897,9 +897,9 @@ CONTAINS
          ENDIF
 
          IF(single_precision_blips)THEN
-            WRITE(iob)real(avc_tmp(:,:,:),kind=kind(1.))
+            WRITE(iob)real(avc_tmp(:,:,:),kind=sgl)
          ELSE
-            WRITE(iob)real(avc_tmp(:,:,:),kind=kind(1.d0))
+            WRITE(iob)real(avc_tmp(:,:,:),kind=DP)
          ENDIF
          RETURN
       ENDIF
