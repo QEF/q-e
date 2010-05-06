@@ -293,6 +293,10 @@ WAN90_example:
     Wannier90 (http://www.wannier.org) to obtain maximally-localised
     Wannier functions (MLWFs) for the valence bands of diamond.
 
+WannierHam_example:
+    This example shows how to generate a model Hamiltonian in a
+    Wannier functions basis, using pw.x and wannier_ham.x.
+
 XSpectra_example:
     This example tests K-edge X-ray absorption spectra calculation
     for diamond and NiO.
