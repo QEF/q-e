@@ -1772,7 +1772,7 @@ SUBROUTINE a2Fdos &
         enddo  !ndos
         write(ifn,*) " lambda =",lambda,'   Delta = ',DeltaE
         close (ifn)
-        write(400,'(" Broadening ",F8.4," lambda ",F12.4," dos_el ",F8.4)') &
+        write(400,'(" Broadening ",F8.4," lambda ",F12.4," dos(Ef)",F8.4)') &
              deg(isig),lambda, dos_ee(isig)
         !
      endif !dos
