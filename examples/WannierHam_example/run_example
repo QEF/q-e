@@ -1,0 +1,203 @@
+#!/bin/sh
+
+# run from directory where this script is
+cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
+EXAMPLE_DIR=`pwd`
+
+# check whether echo has the -e option
+if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
+
+# function to test the exit status of a job
+. ../check_failure.sh
+
+$ECHO
+$ECHO "$EXAMPLE_DIR : starting"
+$ECHO
+$ECHO "This example shows how to produce a model hamiltonian in Wannier "
+$ECHO "functions basis. The system under consideration is Nickel oxide"
+
+# set the needed environment variables
+. ../environment_variables
+
+# required executables and pseudopotentials
+BIN_LIST="pw.x wannier_ham.x"
+PSEUDO_LIST="O.pz-rrkjus.UPF Ni.pz-nd-rrkjus.UPF"
+
+$ECHO
+$ECHO "  executables directory: $BIN_DIR"
+$ECHO "  pseudo directory:      $PSEUDO_DIR"
+$ECHO "  temporary directory:   $TMP_DIR"
+$ECHO "  checking that needed directories and files exist...\c"
+
+# check for directories
+for DIR in "$BIN_DIR" "$PSEUDO_DIR" ; do
+    if test ! -d $DIR ; then
+        $ECHO
+        $ECHO "ERROR: $DIR not existent or not a directory"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+for DIR in "$TMP_DIR" "$EXAMPLE_DIR/results" ; do
+    if test ! -d $DIR ; then
+        mkdir $DIR
+    fi
+done
+cd $EXAMPLE_DIR/results
+
+# check for executables
+for FILE in $BIN_LIST ; do
+    if test ! -x $BIN_DIR/$FILE ; then
+        $ECHO
+        $ECHO "ERROR: $BIN_DIR/$FILE not existent or not executable"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+
+# check for pseudopotentials
+for FILE in $PSEUDO_LIST ; do
+    if test ! -r $PSEUDO_DIR/$FILE ; then
+        $ECHO
+        $ECHO "ERROR: $PSEUDO_DIR/$FILE not existent or not readable"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+$ECHO " done"
+
+# how to run executables
+PW_COMMAND="$PARA_PREFIX $BIN_DIR/pw.x $PARA_POSTFIX"
+HAM_COMMAND="$BIN_DIR/wannier_ham.x"
+$ECHO
+$ECHO "  running pw.x as: $PW_COMMAND"
+$ECHO "  running wannier_ham.x as: $HAM_COMMAND"
+$ECHO
+
+    # clean TMP_DIR
+    $ECHO "  cleaning $TMP_DIR...\c"
+    rm -rf $TMP_DIR/*
+    $ECHO " done"
+
+    # self-consistent calculation
+    cat > NiO.scf.in << EOF
+    &control
+     calculation = 'scf'
+     prefix='NiO',
+     pseudo_dir = '$PSEUDO_DIR/',
+     outdir='$TMP_DIR/',
+    /
+    &system
+     ibrav=0, celldm(1)=7.92664836, 
+     nat=2, ntyp=2,
+     ecutwfc = 45.0, 
+     occupations='smearing',
+     degauss = 0.01
+     nbnd=11
+    /
+    &electrons
+     conv_thr =  1.0d-5
+    /
+    CELL_PARAMETERS
+     0.0 0.5 0.5
+     0.5 0.0 0.5
+     0.5 0.5 0.0
+    ATOMIC_SPECIES
+     Ni  1.  Ni.pz-nd-rrkjus.UPF
+     O   1.  O.pz-rrkjus.UPF
+    ATOMIC_POSITIONS crystal
+     Ni 0.00 0.00 0.00
+     O 0.50 0.50 0.50
+    K_POINTS automatic
+     4 4 4 0 0 0
+EOF
+    $ECHO "  running the scf calculation for NiO...\c"
+    $PW_COMMAND < NiO.scf.in > NiO.scf.out
+    check_failure $?
+    $ECHO " done"
+    
+    # nscf calculation
+    cat > NiO.nscf.in << EOF
+    &control
+     calculation = 'nscf'
+     prefix='NiO',
+     pseudo_dir = '$PSEUDO_DIR/',
+     outdir='$TMP_DIR/',
+     wf_collect=.true.
+    /
+    &system
+     ibrav=0, celldm(1)=7.92664836, 
+     nat=2, ntyp=2,
+     ecutwfc = 45.0, 
+     occupations='smearing',
+     degauss = 0.01
+     nosym = .true.
+     noinv = .true.
+     nbnd=11
+    /
+    &electrons
+    /
+    CELL_PARAMETERS
+     0.0 0.5 0.5
+     0.5 0.0 0.5
+     0.5 0.5 0.0
+    ATOMIC_SPECIES
+     Ni  1.  Ni.pz-nd-rrkjus.UPF
+     O   1.  O.pz-rrkjus.UPF
+    ATOMIC_POSITIONS crystal
+     Ni 0.00 0.00 0.00
+     O 0.50 0.50 0.50
+    K_POINTS automatic
+     12 12 12 0 0 0
+EOF
+    $ECHO "  running the nscf calculation for NiO...\c"
+    $PW_COMMAND < NiO.nscf.in > NiO.nscf.out
+    check_failure $?
+    $ECHO " done"
+
+cat > wannier_hamilt.in << EOF
+&inputpp
+ prefix='NiO'
+ outdir='$TMP_DIR/'
+ nwan = 8
+/
+WANNIER_AC
+ Wannier# 1 2 9
+ atom 1
+ d 1 1.0
+ Wannier# 2 2 9
+ atom 1
+ d 2 1.0
+ Wannier# 3 2 9
+ atom 1
+ d 3 1.0
+ Wannier# 4 2 9
+ atom 1
+ d 4 1.0
+ Wannier# 5 2 9
+ atom 1
+ d 5 1.0
+ Wannier# 6 2 9
+ atom 2
+ p 1 1.0
+ Wannier# 7 2 9
+ atom 2
+ p 2 1.0
+ Wannier# 8 2 9
+ atom 2
+ p 3 1.0
+/
+EOF
+    $ECHO "  running the hamiltonian generation...\c"
+    $HAM_COMMAND < wannier_hamilt.in > wannier_hamilt.out
+    cp $TMP_DIR/hamilt ./
+    $ECHO " done"
+
+    # clean TMP_DIR
+    $ECHO "  cleaning $TMP_DIR...\c"
+    rm -rf $TMP_DIR/*
+    $ECHO " done"
+
+
+$ECHO
+$ECHO "$EXAMPLE_DIR : done"

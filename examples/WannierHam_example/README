@@ -1,0 +1,158 @@
+This example shows how to generate a model Hamiltonian in Wannier functions basis.
+Detailes of the method are described in:
+﻿[1] Dm. Korotin, A. V. Kozhevnikov, S. L. Skornyakov, I. Leonov, N. Binggeli, V. I. Anisimov, and G. Trimarchi, The European Physical Journal B 65, 91-98 (2008).
+
+
+Generation of a model Hamiltonian consists of three steps:
+
+1. Typical scf calculation. We need converged charge density.
+
+2. Nscf calculation on a regular and dense k-points grid (at least 12x12x12 for reasonable Hamiltonian). Please set 
+nosym=.true.
+noinv=.true.
+integration='smearing'
+degauss=0.01
+wf_collect=.true.  (if you run parallel job)
+in &control namelist
+
+From nscf calculation we need eigenvalues and eigenvectors of full Hamiltonian on every k-point and the Fermi energy (for Wannier functions occupation calculation).
+
+3. Before you will start the model Hamiltonian generation you should know a symmetry of trial atomic orbitals that will be used for projection. And you should know numbers of bands (or energy interval) that you are going to reproduce with the model Hamiltonian. In the current example of NiO we will generate
+8 Wannier functions (5 with Ni-d orbitals symmetry and 3 with O-p orbitals symmetry).
+
+
+The code wannier_ham.x will produce file 'hamilt' with the Hamiltonian for every k-point
+
+Structure of the input data:
+===============================================================================
+
+&INPUTPP
+  ...
+/
+
+WANNIER_AC
+Wannier# 1 2 9
+atom 1
+d 2
+Wannier# 2 2 9
+atom 1
+d 3
+Wannier# 3 2 9
+atom 1
+d 5
+...
+
+
+========================================================================
+NAMELIST: &INPUTPP
+   
+   +--------------------------------------------------------------------
+   Variable:       prefix
+   
+   Type:           CHARACTER
+   Default:        ' '
+   Description:    as usual
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       outdir
+   
+   Type:           CHARACTER
+   Default:        ' '
+   Description:    as usual
+   +--------------------------------------------------------------------
+
+   +--------------------------------------------------------------------
+   Variable:       nwan
+   
+   Type:           INTEGER
+   Default:        ' '
+   Description:    Number of Wannier functions
+   +--------------------------------------------------------------------
+
+   +--------------------------------------------------------------------
+   Variable:       use_energy_int
+   
+   Type:           LOGICAL
+   Default:        '.FALSE.'
+   Description:    If .true. bands will be defined not by numbers, but by
+		   energy range (in eV)!
+   +--------------------------------------------------------------------
+
+   +--------------------------------------------------------------------
+   Variable:       plot_bands
+   
+   Type:           LOGICAL
+   Default:        '.FALSE.'
+   Description:    If .true. bands structures of original and model hamiltonian
+                   will be plotted for comparison
+   +--------------------------------------------------------------------
+
+========================================================================
+CARD: WANNIER_AC
+
+   Definition of trial atomic functions and bands for Wannier generation
+   
+   /////////////////////////////////////////
+   // Syntax:                             //
+   /////////////////////////////////////////
+   
+	Wannier# 1 bands_from bands_to
+	atom iatom
+	l m
+	Wannier# 2 bands_from bands_to
+	atom iatom
+	l m
+	...
+   
+   /////////////////////////////////////////
+   
+   DESCRIPTION OF ITEMS:
+   
+      +--------------------------------------------------------------------
+      Variables:      bands_from, bands_to
+      
+      Type:           REAL or INTEGER
+      Description:    Defines Block functions subspace for projection
+                      procedure. If use_energy_interval=.true. these are
+                      energy values in eV. Otherwise these are bands numbers.
+      +--------------------------------------------------------------------
+
+      +--------------------------------------------------------------------
+      Variables:      iatom
+      
+      Type:           INTEGER
+      Description:    Number of site on that Wannier function centered
+      +--------------------------------------------------------------------
+      
+      +--------------------------------------------------------------------
+      Variables:      l
+      
+      Type:           CHARACTER
+      Description:    Angular channel for trial wavefunction. 's', 'p' or 'd'
+      +--------------------------------------------------------------------
+
+      +--------------------------------------------------------------------
+      Variables:      m
+      
+      Type:           INTEGER
+      Description:    Magnetic quantum number of trial orbital (from 1 to 5)
+                      for d-orbitals
+      +--------------------------------------------------------------------
+
+===END OF CARD==========================================================
+
+
+Format of 'hamilt' file:
+===============================================================================
+num_of_k-points	dimention_of_Hamiltonian
+k-point_weight
+Real(H(1,1)) Imag(H(1,1))
+Real(H(2,1)) Imag(H(2,1))
+....
+k-point_weight
+Real(H(1,1)) Imag(H(1,1))
+Real(H(2,1)) Imag(H(2,1))
+....
+
+
