@@ -1,0 +1,18 @@
+#!/bin/bash
+
+cd SRC
+
+make clean_all
+
+cd ../Examples/Al_FCC
+
+. clean
+
+cd ../Al_SC
+
+. clean
+
+cd ../Fe_AFM
+
+. clean
+

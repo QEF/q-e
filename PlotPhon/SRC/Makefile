@@ -30,3 +30,5 @@ Plot:	$(OBJ3)
 clean:
 	rm -f *.o         
 
+clean_all: clean
+	\rm -f *.x

@@ -1,0 +1,3 @@
+\rm matdyn* ph.grid run* Kpts* kpts *.ps *.pdf *.freq Frequency K_points
+\rm Freq* plot*
+
