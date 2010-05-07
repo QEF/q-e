@@ -11,9 +11,9 @@ rm -f *.o
 
 cd ../bin
 
-ln -s  ../Plot_phonon_dispersions/SRC/bands_to_gnuplot.x bands_to_gnuplot.x
-ln -s  ../Plot_phonon_dispersions/SRC/E_min_max.x E_min_max.x
-ln -s  ../Plot_phonon_dispersions/SRC/k_for_bands.x k_for_bands.x
+ln -s  ../SRC/bands_to_gnuplot.x bands_to_gnuplot.x
+ln -s  ../SRC/E_min_max.x E_min_max.x
+ln -s  ../SRC/k_for_bands.x k_for_bands.x
 
 cd ..
 
