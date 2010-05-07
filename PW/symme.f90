@@ -195,6 +195,7 @@ CONTAINS
      !
      work(:) = vect(1)*at(1,:) + vect(2)*at(2,:) + vect(3)*at(3,:)
      vect = work
+     work=0.0_DP
      do isym = 1, nsym
         segno=1.0_DP
         IF (sname(isym)(1:3)=='inv') segno=-1.0_DP
