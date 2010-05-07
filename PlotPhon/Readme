@@ -1,0 +1,10 @@
+1. Copy the distribution package to QE home directory and unpack it
+
+2. To compile just hit "Compile". To change the compiler see ./SRC/make.inc file
+
+3. User can edit Plot_Input file only (See Examples directory).
+
+4. To start a job hit Run_Plot_Phonons
+
+5. Other scripts should be remained untouched. 
+
