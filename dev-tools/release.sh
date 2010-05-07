@@ -20,6 +20,9 @@ GUI=PWgui-$VERSION
 # "latex2html" and "convert" (from Image-Magick) are needed
 
 if test -d $ESPRESSO_DIR; then /bin/rm -rf $ESPRESSO_DIR; fi
+/bin/rm espresso-$VERSION.tar.gz  espresso-$VERSION.lst
+/bin/rm espresso-$VERSION-examples.tar.gz  espresso-$VERSION-examples.lst
+/bin/rm $GUI.tar.gz  $GUI.lst
 
 # produce updated ChangeLogs
 
@@ -45,12 +48,14 @@ tar -xzf ../espresso.tar.gz
 tar -xzf ../$GUI.tgz
 /bin/rm ../$GUI.tgz ../espresso.tar.gz
 cd ..
-mkdir Save
 
-mv  $ESPRESSO_DIR/plugins/archive/*.tar.gz Save/
+mkdir $ESPRESSO_DIR-Save
+
+mv  $ESPRESSO_DIR/plugins/archive/*.tar.gz $ESPRESSO_DIR-Save/
+/bin/rm -r  $ESPRESSO_DIR/TDDFPT
 
 tar -cvzf $GUI.tar.gz $ESPRESSO_DIR/$GUI >  $GUI.lst
-mv  $ESPRESSO_DIR/$GUI Save/
+mv  $ESPRESSO_DIR/$GUI $ESPRESSO_DIR-Save/
 echo "$GUI.tar.gz saved in directory:" `pwd`
 echo "List of files in $GUI.lst"
 
@@ -58,7 +63,7 @@ tar -cvzf espresso-$VERSION-examples.tar.gz  $ESPRESSO_DIR/examples \
     $ESPRESSO_DIR/pseudo $ESPRESSO_DIR/tests $ESPRESSO_DIR/cptests  \
     > espresso-$VERSION-examples.lst
 mv $ESPRESSO_DIR/examples $ESPRESSO_DIR/pseudo $ESPRESSO_DIR/tests \
-   $ESPRESSO_DIR/cptests Save/
+   $ESPRESSO_DIR/cptests $ESPRESSO_DIR-Save/
 echo "espresso-$VERSION-examples.tar.gz saved in directory:" `pwd`
 echo "List of files in espresso-$VERSION-examples.lst"
 

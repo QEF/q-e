@@ -1,27 +1,3 @@
-Incompatible changes in version 4.2:
-
-* changed defaults:
-  startingwfc='atomic+random' in pw.x (instead of 'atomic')
-* calculations 'fpmd', 'fpmd-neb' removed from CP: use 'cp' or 'neb'
-  instead
-* calculation 'metadyn' and related variables removed from PW and CP:
-  use the "plumed" plugin for QE to perform metadynamics calculations
-* nelec, nelup, neldw, multiplicity variables removed from input:
-  use tot_charge and tot_magnetization instead
-* calculation of empty Kohn-Sham states, and related variables, removed
-  from cp.x: use option disk_io='high' in cp.x to save the charge density,
-  read the charge density so produced with pw.x, specifying option
-  "calculation='nscf'" or "calculation='bands'"
-* "xc_type" input variable in cp.x replaced by "input_dft" (as in pw.x)
-* ortho_para variable removed from input (CP); diagonalization='cg-serial',
-  'david-serial', 'david-para', 'david-distpara', removed as well
-  Use command-line option "-ndiag N" or "-northo N" to select how
-  many processors to use for linar-algebra (orthonormalization or
-  subspace diagonalization) parallelization. Note that the default value
-  for ndiag/northo has changed as well: 1 if ScaLAPACK is not compiled,
-  Nproc/2 if Scalapack is compiled
-* "stm_wfc_matching" removed from stm.x
-
 New in version 4.2:
 
   * Removal of duplicated and unused routines
@@ -50,6 +26,30 @@ Fixed in version 4.2:
     initial release. Since such term is usually very small, the error was 
     also very small. Also: preconditioning was not properly implemented,
     causing unnecessary slow convergence
+
+Incompatible changes in version 4.2:
+
+* changed defaults:
+  startingwfc='atomic+random' in pw.x (instead of 'atomic')
+* calculations 'fpmd', 'fpmd-neb' removed from CP: use 'cp' or 'neb'
+  instead
+* calculation 'metadyn' and related variables removed from PW and CP:
+  use the "plumed" plugin for QE to perform metadynamics calculations
+* nelec, nelup, neldw, multiplicity variables removed from input:
+  use tot_charge and tot_magnetization instead
+* calculation of empty Kohn-Sham states, and related variables, removed
+  from cp.x: use option disk_io='high' in cp.x to save the charge density,
+  read the charge density so produced with pw.x, specifying option
+  "calculation='nscf'" or "calculation='bands'"
+* "xc_type" input variable in cp.x replaced by "input_dft" (as in pw.x)
+* ortho_para variable removed from input (CP); diagonalization='cg-serial',
+  'david-serial', 'david-para', 'david-distpara', removed as well
+  Use command-line option "-ndiag N" or "-northo N" to select how
+  many processors to use for linar-algebra (orthonormalization or
+  subspace diagonalization) parallelization. Note that the default value
+  for ndiag/northo has changed as well: 1 if ScaLAPACK is not compiled,
+  Nproc/2 if Scalapack is compiled
+* "stm_wfc_matching" removed from pp.x
 
 Fixed in version 4.1.3:
 

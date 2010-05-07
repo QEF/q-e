@@ -32,7 +32,7 @@ libee.a: $(EEOBJS)
 	$(AR) $(ARFLAGS) $@ $?
 	$(RANLIB) $@
 clean :
-	- /bin/rm -f *.o *~ *.a *.d *.i *.L *.mod 
+	- /bin/rm -f *.o *~ *.a *.d *.i *.L *.mod *.F90
 
 include make.depend
 
