@@ -20,15 +20,16 @@ GUI=PWgui-$VERSION
 # "latex2html" and "convert" (from Image-Magick) are needed
 
 if test -d $ESPRESSO_DIR; then /bin/rm -rf $ESPRESSO_DIR; fi
+if test -d $ESPRESSO_DIR-Save; then /bin/rm -rf $ESPRESSO_DIR-Save; fi
 /bin/rm espresso-$VERSION.tar.gz  espresso-$VERSION.lst
 /bin/rm espresso-$VERSION-examples.tar.gz  espresso-$VERSION-examples.lst
 /bin/rm $GUI.tar.gz  $GUI.lst
 
 # produce updated ChangeLogs
 
-make log
-mv ChangeLog Doc/ChangeLog-$VERSION
-mv ChangeLog.html Doc/ChangeLog-$VERSION.html
+#make log
+#mv ChangeLog Doc/ChangeLog-$VERSION
+#mv ChangeLog.html Doc/ChangeLog-$VERSION.html
 
 # produce documentation
 
@@ -42,14 +43,12 @@ make tar-gui PWGUI_VERSION=$VERSION
 
 # unpackage in directory with version
 
-mkdir $ESPRESSO_DIR
+mkdir $ESPRESSO_DIR $ESPRESSO_DIR-Save
 cd $ESPRESSO_DIR 
 tar -xzf ../espresso.tar.gz
 tar -xzf ../$GUI.tgz
 /bin/rm ../$GUI.tgz ../espresso.tar.gz
 cd ..
-
-mkdir $ESPRESSO_DIR-Save
 
 mv  $ESPRESSO_DIR/plugins/archive/*.tar.gz $ESPRESSO_DIR-Save/
 /bin/rm -r  $ESPRESSO_DIR/TDDFPT
