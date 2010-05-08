@@ -1441,7 +1441,7 @@ call flush_unit(stdout)
                     endif
                     if (erfc_scrlen > 0.d0 .and. .not. x_gamma_extrapolation) then
                        fac(ig) = e2*fpi / (4.d0*erfc_scrlen**2)
-                       fac_stress(ig) = -e2*fpi / (8.d0*erfc_scrlen**4)
+                       fac_stress(ig) = e2*fpi / (8.d0*erfc_scrlen**4)
                     endif
                  endif
               enddo
@@ -1474,13 +1474,13 @@ call flush_unit(stdout)
                       do ig=1,ngm
                         vc(:,:) = vc(:,:) + fac(ig) * x1 * &
                                   abs( rhoc(nls(ig))+CONJG(rhoc(nlsm(ig))))**2 * &
-                                  (fac_tens(:,:,ig)*fac_stress(ig) - delta(:,:)*fac(ig)/fpi)
+                                  (fac_tens(:,:,ig)*fac_stress(ig)/2.d0 - delta(:,:)*fac(ig))
                         vc(:,:) = vc(:,:) + fac(ig) * x2 * &
                                   abs( rhoc(nls(ig))-CONJG(rhoc(nlsm(ig))))**2 * &
-                                  (fac_tens(:,:,ig)*fac_stress(ig) - delta(:,:)*fac(ig)/fpi)
+                                  (fac_tens(:,:,ig)*fac_stress(ig)/2.d0 - delta(:,:)*fac(ig))
                       enddo
-                      vc = vc * pi / omega / nqs / 2.d0
-                      exx_stress_ = exx_stress_ - exxalfa * vc * wg(jbnd,ikk)
+                      vc = vc / nqs / 4.d0
+                      exx_stress_ = exx_stress_ + exxalfa * vc * wg(jbnd,ikk)
                   enddo
               else
                   do ibnd=1,nbnd !for each band of psi
@@ -1493,16 +1493,17 @@ call flush_unit(stdout)
 
                      ! calculate rho in real space
                      rhoc(:)=CONJG(tempphic(:))*temppsic(:) / omega
+
                      ! brings it to G-space
                      CALL cft3s( rhoc,nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, -1 )
-   
+
                      vc = 0.d0
                      do ig=1,ngm
                        vc(:,:) = vc(:,:) + rhoc(nls(ig))*CONJG(rhoc(nls(ig))) * &
-                                 (fac_tens(:,:,ig)*fac_stress(ig) - delta(:,:)*fac(ig)/fpi)
+                                 (fac_tens(:,:,ig)*fac_stress(ig)/2.d0 - delta(:,:)*fac(ig))
                      end do
-                     vc = vc * x_occupation(ibnd,ik) / nqs / 2.d0
-                     exx_stress_ = exx_stress_ - exxalfa * vc * wg(jbnd,ikk)
+                     vc = vc * x_occupation(ibnd,ik) / nqs / 4.d0
+                     exx_stress_ = exx_stress_ + exxalfa * vc * wg(jbnd,ikk)
                   end do
               endif ! gamma or k-points
 
