@@ -1885,6 +1885,8 @@ END FUNCTION
 !#@@@@
       USE ldaU,             ONLY: e_hubbard
 !#@@@@
+      USE step_penalty,     ONLY: e_pen
+
       IMPLICIT NONE
 !
       LOGICAL :: tlast, tfirst
@@ -2321,7 +2323,7 @@ END FUNCTION
       !
       !     etot is the total energy ; ekin, enl were calculated in rhoofr
       !
-      etot = ekin + eht + epseu + enl + exc + ebac +e_hubbard + eextfor
+      etot = ekin + eht + epseu + enl + exc + ebac +e_hubbard + eextfor + e_pen
       !
       if (abivol) etot = etot + P_ext*volclu
       if (abisur) etot = etot + Surf_t*surfclu
@@ -2432,6 +2434,11 @@ END FUNCTION
       use gvecw,            only: ngw
       use electrons_base,   only: nspin, nx => nbspx
       USE uspp_param,       ONLY: upf
+      USE step_penalty,     ONLY: vpsi_pen, A_pen, sigma_pen, alpha_pen, step_pen
+      use input_parameters, ONLY: step_pen_ => step_pen
+      use input_parameters, ONLY: A_pen_ => A_pen
+      use input_parameters, ONLY: sigma_pen_ => sigma_pen
+      use input_parameters, ONLY: alpha_pen_ => alpha_pen
       !
       implicit none
       integer is, nb, l
@@ -2444,7 +2451,8 @@ END FUNCTION
       allocate(vupsi(ngw,nx))
 
       vupsi=(0.0d0,0.0d0)
-      ! allocate(vpsi_con(ngw,nx)) ! step_constraint 
+      allocate(vpsi_pen(ngw,nx)) ! step_constraint 
+      vpsi_pen=(0.0d0,0.0d0)
       n_atomic_wfc=0
 
       do is=1,nsp
@@ -2477,6 +2485,10 @@ END FUNCTION
       end if
       l = 2 * Hubbard_lmax + 1
       allocate(ns(nat,nspin,l,l))
+      step_pen=step_pen_
+      A_pen=A_pen_
+      sigma_pen=sigma_pen_
+      alpha_pen=alpha_pen_
       return
       end subroutine ldaU_init
 !
@@ -2513,7 +2525,7 @@ return
 end function set_Hubbard_l
 !
 !-----------------------------------------------------------------------
-      subroutine new_ns(c,eigr,betae,hpsi,hpsi_con,forceh)
+      subroutine new_ns(c,eigr,betae,hpsi,hpsi_pen,forceh)
 !-----------------------------------------------------------------------
 !
 ! This routine computes the on site occupation numbers of the Hubbard ions.
@@ -2530,6 +2542,9 @@ end function set_Hubbard_l
       use electrons_base,     only: nspin, n => nbsp, nx => nbspx, ispin, f
       USE ldaU,               ONLY: lda_plus_u, Hubbard_U, Hubbard_l
       USE ldaU,               ONLY: n_atomic_wfc, ns, e_hubbard
+      USE step_penalty,       ONLY: E_pen, A_pen, sigma_pen, alpha_pen
+      USE step_penalty,       ONLY: step_pen
+      USE dspev_module,       only: dspev_drv
 !
       implicit none
 #ifdef __PARA
@@ -2538,8 +2553,8 @@ end function set_Hubbard_l
       integer, parameter :: ldmx = 7
       complex(DP), intent(in) :: c(ngw,nx), eigr(ngw,nat),      &
      &                               betae(ngw,nhsa)
-      complex(DP), intent(out) :: hpsi(ngw,nx), hpsi_con(1,1)
-      real(DP) forceh(3,nat)
+      complex(DP), intent(out) :: hpsi(ngw,nx), hpsi_pen(ngw,nx)
+      real(DP) forceh(3,nat), force_pen(3,nat)
 !
       complex(DP), allocatable:: wfc(:,:), swfc(:,:),dphi(:,:,:),   &
      &                               spsi(:,:)
@@ -2551,7 +2566,7 @@ end function set_Hubbard_l
       real(DP), allocatable   :: ftemp1(:), ftemp2(:)
       real(DP)                :: lambda(ldmx), somma, ntot, nsum,   &
      &                           nsuma, x_value, g_value, step_value
-      real(DP) :: f1 (ldmx, ldmx), vet (ldmx, ldmx)
+      real(DP) :: f1 (ldmx*ldmx), vet (ldmx, ldmx)
       integer is, ia, iat, nb, isp, l, m, m1, m2, k, i, counter, err, ig
       integer iv, jv, inl, jnl,alpha,alpha_a,alpha_s,ipol
       integer, allocatable ::  offset (:,:)
@@ -2666,11 +2681,55 @@ end function set_Hubbard_l
 !
 !      Calculate the potential and energy due to constraint
 !
-      hpsi_con(:,:)=0.d0
+      hpsi_pen(:,:)=0.d0
+
+      if (step_pen) then
+         iat=0
+         E_pen=0
+         do is = 1,nsp
+            do ia = 1, na(is)
+               nsuma = 0.d0
+               iat = iat + 1
+              if (Hubbard_U(is).ne.0.d0) then
+               do isp = 1, nspin
+                  if (A_pen(iat,isp).ne.0.0) then
+                     k = 0
+                     f1=0.0
+                     do m1 = 1, 2 * Hubbard_l(is) + 1
+                        do m2 = m1, 2 * Hubbard_l(is) + 1
+                           k = k + 1
+                           f1 (k) = ns (iat, isp, m2, m1)
+                        enddo
+                     enddo
+                     CALL dspev_drv( 'V', 'L', 2 * Hubbard_l(is) + 1, f1, lambda, vet, ldmx  )
+                     x_value=alpha_pen(iat)-lambda(2*Hubbard_l(is)+1)
+                     call stepfn(A_pen(iat,isp),sigma_pen(iat),x_value, &
+     &                           g_value,step_value)
+                     do i=1, n
+                        do m1 = 1, 2 * Hubbard_l(is) + 1
+                           do m2 = 1, 2 * Hubbard_l(is) + 1
+                              tempsi=-1.d0*f(i)*proj (i,offset(is,ia)+m1)* &
+     &                       vet(m1,2*Hubbard_l(is)+1)*vet(m2,2*Hubbard_l(is)+1)*g_value
+                              call ZAXPY (ngw,tempsi,swfc(1,offset(is,ia)+ &
+     &                           m2),1,hpsi_pen(1,i),1)
+                           enddo
+                        enddo
+                     end do
+                     E_pen=E_pen+step_value
+                  end if
+               enddo
+              endif
+            enddo
+         enddo
+      endif
+
 !
 ! Calculate the contribution to forces on ions due to U and constraint
 !
       forceh=0.d0
+
+      force_pen=0.d0
+
       if ((tfor).or.(tprnfor)) then
         allocate (bp(nhsa,n), dbp(nhsa,n,3), wdb(nhsa,n_atomic_wfc,3))
         allocate(dns(nat,nspin,ldmx,ldmx))
@@ -2706,6 +2765,33 @@ end function set_Hubbard_l
                         end do
                      end if
 ! Occupation constraint add here
+                     if (step_pen) then
+                        do isp = 1, nspin
+                           if ((A_pen(iat,isp).ne.0.0).and.           &
+      &                       (Hubbard_U(is).ne.0.d0)) then
+                              k = 0
+                              f1=0.0
+                              do m1 = 1, 2 * Hubbard_l(is) + 1
+                                 do m2 = m1, 2 * Hubbard_l(is) + 1
+                                    k = k + 1
+                                    f1 (k) = ns (iat, isp, m2, m1)
+                                 enddo
+                              enddo
+                              CALL dspev_drv( 'V', 'L', 2 * Hubbard_l(is) + 1, f1, lambda, vet, ldmx  )
+                              x_value=alpha_pen(iat)-lambda(2*Hubbard_l(is)+1)
+                              call stepfn(A_pen(iat,isp),sigma_pen(iat),x_value,g_value,&
+     &                             step_value)
+                              do m1 = 1,2*Hubbard_l(is) + 1
+                                 do m2 = 1,2*Hubbard_l(is) + 1
+                                    force_pen(ipol,alpha) =                &
+     &                              force_pen(ipol,alpha) +                &
+     &                              g_value * dns(iat,isp,m1,m2)           &
+     &                              *vet(m1,2*Hubbard_l(is)+1)*vet(m2,2*Hubbard_l(is)+1)
+                                 end do
+                              end do
+                           endif
+                        end do
+                     end if
                   end do
                end do
             end do
@@ -2713,7 +2799,10 @@ end function set_Hubbard_l
         end do
         if (nspin.eq.1) then
            forceh = 2.d0 * forceh
+           force_pen=2.d0 * force_pen
         end if
+
+        forceh = forceh + force_pen
 !
         deallocate ( wfc, becwfc, spsi, proj, offset, swfc, dns, bp, dbp, wdb)
       end if
@@ -2739,6 +2828,7 @@ end function set_Hubbard_l
       USE ldaU,             ONLY: n_atomic_wfc, ns, e_hubbard
       USE ldaU,             ONLY: Hubbard_lmax
       use dspev_module,     only : dspev_drv
+      USE step_penalty,     ONLY: step_pen, A_pen, sigma_pen, alpha_pen
 
       implicit none
 
@@ -2757,16 +2847,17 @@ end function set_Hubbard_l
   if ( 2 * Hubbard_lmax + 1 .gt. ldmx ) &
        call errore ('write_ns', 'ldmx is too small', 1)
 
-!  if (step_con) then
-!     do isp=1,nspin
-!        write (6,'(6(a,i2,a,i2,a,f8.4,6x))') &
-!        ('A_con(',is,',',isp,') =', A_con(is,isp),is=1,nsp)
-!     enddo
-!     write (6,'(6(a,i2,a,f8.4,6x))') &
-!           ('sigma_con(',is,') =', sigma_con(is), is=1,nsp)
-!     write (6,'(6(a,i2,a,f8.4,6x))') &
-!        ('alpha_con(',is,') =', alpha_con(is), is=1,nsp)
-!  endif
+  if (step_pen) then
+     do isp=1,nspin
+        write (6,'(6(a,i2,a,i2,a,f8.4,6x))') &
+        ('A_pen(',is,',',isp,') =', A_pen(is,isp),is=1,nsp)
+     enddo
+     write (6,'(6(a,i2,a,f8.4,6x))') &
+           ('sigma_pen(',is,') =', sigma_pen(is), is=1,nsp)
+     write (6,'(6(a,i2,a,f8.4,6x))') &
+        ('alpha_pen(',is,') =', alpha_pen(is), is=1,nsp)
+  endif
+
   write (6,'(6(a,i2,a,f8.4,6x))') &
         ('U(',is,') =', Hubbard_U(is) * autoev, is=1,nsp)
 !  write (6,'(6(a,i2,a,f8.4,6x))') &

@@ -311,16 +311,24 @@ contains
 end module ldaU
 !
 !
-! Occupation constraint ...to be implemented...
+! Occupation constraint 
 !
-module step_constraint
+module step_penalty
   USE kinds
+  use parameters, only: nsx
   implicit none
-  integer, parameter :: natx_ = 5000
-  real(DP) :: E_con
-  real(DP) :: A_con(natx_,2), sigma_con(natx_), alpha_con(natx_)
-  logical :: step_con
-  ! complex(DP), allocatable:: vpsi_con(:,:)
-  complex(DP) :: vpsi_con(1,1)
-end module step_constraint
+  integer, parameter :: natx_ = 10
+  real(DP) :: E_pen = 0.d0
+  real(DP) :: A_pen(natx_,2), sigma_pen(natx_), alpha_pen(natx_)
+  logical :: step_pen
+  complex(DP), allocatable:: vpsi_pen(:,:)
+contains
+  !
+  subroutine deallocate_step_pen()
+     !
+     IF( ALLOCATED( vpsi_pen ) ) DEALLOCATE( vpsi_pen )
+     !
+  end subroutine
+  !
+end module step_penalty
 

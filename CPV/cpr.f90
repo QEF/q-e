@@ -125,7 +125,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
   USE mp_global,                ONLY : root_image, intra_image_comm, np_ortho, me_ortho, ortho_comm, &
                                        me_image
   USE ldaU,                     ONLY : lda_plus_u, vupsi
-  USE step_constraint
+  USE step_penalty,             ONLY : vpsi_pen, step_pen, E_pen
   USE small_box,                ONLY : ainvb
   !
   IMPLICIT NONE
@@ -301,9 +301,10 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
         forceh=0.0d0
         ! vupsi     ! potentials on electrons due to Hubbard U
         vupsi=(0.0d0,0.0d0)
-        ! vpsi_con  ! potentials on electrons due to occupation constraints ...not yet implemented...
-        vpsi_con=(0.0d0,0.0d0)
-        CALL new_ns(c0,eigr,vkb,vupsi,vpsi_con,forceh)
+        ! vpsi_pen  ! potentials on electrons due to occupation constraints 
+        vpsi_pen=(0.0d0,0.0d0)
+        CALL new_ns(c0,eigr,vkb,vupsi,vpsi_pen,forceh)
+        vupsi = vupsi + vpsi_pen
         if ( mod(nfi,iprint).eq.0 ) call write_ns
      endif
      !

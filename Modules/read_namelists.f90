@@ -179,6 +179,10 @@ MODULE read_namelists_module
        lda_plus_U = .FALSE.
        Hubbard_U = 0.0_DP
        Hubbard_alpha = 0.0_DP
+      step_pen=.false.
+      A_pen=0.0_DP
+      sigma_pen=0.01_DP
+      alpha_pen=0.0_DP
        edir = 1
        emaxpos = 0.5_DP
        eopreg = 0.1_DP
@@ -762,6 +766,10 @@ MODULE read_namelists_module
        CALL mp_bcast( lda_plus_U,             ionode_id )
        CALL mp_bcast( Hubbard_U,              ionode_id )
        CALL mp_bcast( Hubbard_alpha,          ionode_id )
+       CALL mp_bcast( step_pen,               ionode_id )
+       CALL mp_bcast( A_pen,                  ionode_id )
+       CALL mp_bcast( sigma_pen,              ionode_id )
+       CALL mp_bcast( alpha_pen,              ionode_id )
        CALL mp_bcast( edir,                   ionode_id )
        CALL mp_bcast( emaxpos,                ionode_id )
        CALL mp_bcast( eopreg,                 ionode_id )
@@ -1301,12 +1309,12 @@ MODULE read_namelists_module
           IF( ANY(starting_magnetization /= SM_NOT_SET ) ) &
              CALL infomsg( sub_name ,&
                           & ' starting_magnetization is not used in CP ')
-          IF( lda_plus_U ) &
-             CALL infomsg( sub_name ,' lda_plus_U is not used in CP ')
+!          IF( lda_plus_U ) &
+!             CALL infomsg( sub_name ,' lda_plus_U is not used in CP ')
           IF( la2F ) &
              CALL infomsg( sub_name ,' la2F is not used in CP ')
-          IF( ANY(Hubbard_U /= 0.0_DP) ) &
-             CALL infomsg( sub_name ,' Hubbard_U is not used in CP ')
+!          IF( ANY(Hubbard_U /= 0.0_DP) ) &
+!             CALL infomsg( sub_name ,' Hubbard_U is not used in CP ')
           IF( ANY(Hubbard_alpha /= 0.0_DP) ) &
              CALL infomsg( sub_name ,' Hubbard_alpha is not used in CP ')
           IF( nosym ) &

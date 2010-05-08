@@ -74,7 +74,7 @@ SUBROUTINE init_run()
   USE wave_types,               ONLY : wave_descriptor_info
   USE xml_io_base,              ONLY : restart_dir, create_directory
   USE orthogonalize_base,       ONLY : mesure_diag_perf, mesure_mmul_perf
-  USE step_constraint,          ONLY : step_con
+  USE step_penalty,             ONLY : step_pen
   USE ions_base,                ONLY : ions_reference_positions, cdmi, taui
   USE ldau
   !
@@ -221,7 +221,7 @@ SUBROUTINE init_run()
   !
   CALL print_legend( )
 
-  step_con = .FALSE.
+  step_pen = .FALSE.
 
   CALL ldau_init()
 

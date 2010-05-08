@@ -368,6 +368,11 @@ MODULE input_parameters
         LOGICAL :: la2F = .FALSE.
           ! For electron-phonon calculations
           !
+        LOGICAL :: step_pen=.FALSE.
+        REAL(DP) :: A_pen(10,nspinx) = 0.0_DP
+        REAL(DP) :: sigma_pen(10) = 0.01_DP
+        REAL(DP) :: alpha_pen(10) = 0.0_DP
+
 #if defined (EXX)
           ! All the variables here are PWSCF ONLY
           !
@@ -452,7 +457,8 @@ MODULE input_parameters
              constrained_magnetization, B_field, fixed_magnetization,         &
              sic, sic_epsilon, force_pairing, sic_alpha,                      &
              tot_charge, tot_magnetization,                                   &
-             spline_ps, one_atom_occupations, london, london_s6, london_rcut
+             spline_ps, one_atom_occupations, london, london_s6, london_rcut, &
+             step_pen, A_pen, sigma_pen, alpha_pen
 !
 !=----------------------------------------------------------------------------=!
 !  EE Namelist Input Parameters
