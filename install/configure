@@ -7339,9 +7339,58 @@ if test "$ac_res" != no; then :
                                fft_libs="$try_loption $LIBS"
 fi
 
-                if test "$ac_cv_search_dfftw_execute_dft" != "no"
+                if test "$ac_cv_search_dfftw_execute_dft" == "-lfftw3"
                 then
                         try_dflags="$try_dflags -D__FFTW3"
+                        break
+                fi
+                { $as_echo "$as_me:${as_lineno-$LINENO}: checking for library containing fftw_f77" >&5
+$as_echo_n "checking for library containing fftw_f77... " >&6; }
+if test "${ac_cv_search_fftw_f77+set}" = set; then :
+  $as_echo_n "(cached) " >&6
+else
+  ac_func_search_save_LIBS=$LIBS
+cat > conftest.$ac_ext <<_ACEOF
+      program main
+      call fftw_f77
+      end
+_ACEOF
+for ac_lib in '' fftw; do
+  if test -z "$ac_lib"; then
+    ac_res="none required"
+  else
+    ac_res=-l$ac_lib
+    LIBS="-l$ac_lib -lm $ac_func_search_save_LIBS"
+  fi
+  if ac_fn_f77_try_link "$LINENO"; then :
+  ac_cv_search_fftw_f77=$ac_res
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext
+  if test "${ac_cv_search_fftw_f77+set}" = set; then :
+  break
+fi
+done
+if test "${ac_cv_search_fftw_f77+set}" = set; then :
+
+else
+  ac_cv_search_fftw_f77=no
+fi
+rm conftest.$ac_ext
+LIBS=$ac_func_search_save_LIBS
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_search_fftw_f77" >&5
+$as_echo "$ac_cv_search_fftw_f77" >&6; }
+ac_res=$ac_cv_search_fftw_f77
+if test "$ac_res" != no; then :
+  test "$ac_res" = "none required" || LIBS="$ac_res $LIBS"
+  have_fft=1
+                               fft_libs="$try_loption $LIBS"
+fi
+
+                if test "$ac_cv_search_fftw_f77" == "-lfftw"
+                then
+                        try_dflags="$try_dflags -D__FFTW"
                         break
                 fi
         done
