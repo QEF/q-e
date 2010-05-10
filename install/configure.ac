@@ -174,8 +174,9 @@ then
                 powerpc64-*-linux-gnu ) arch=ppc64  ;;
                 * )                     AC_MSG_WARN(incorrect host name ?)
         ;;
-
         esac
+
+        test -d /proc/cray_xt && arch=crayxt
 fi
 echo checking architecture... $arch
 
@@ -206,7 +207,8 @@ aix )
         try_dflags="-D__AIX -D__XLF"
         ;;
 crayxt | crayxt4 )
-        try_f90="ftn $try_f90"
+        try_f90="ftn"
+        try_mpif90="ftn"
         ;;
 macppc )
         try_mpif90="mpxlf90 mpf90"
@@ -370,11 +372,46 @@ esac
 echo setting F90... $f90
 echo setting MPIF90... $mpif90
 
+
+
+case "$f90" in
+f90 | fc | ftn )
+    echo $ECHO_N "checking version wrapped by $f90 command... $ECHO_C"
+
+    if $f90 -V 2>&1 | grep -q "Intel(R)" ; then
+        f90_version=ifort
+    elif $f90 -V 2>&1 | grep -q "^sunf95" ; then
+        f90_version=sunf95
+    elif $f90 -V 2>&1 | grep -q "^Open64" ; then
+        f90_version=openf95
+    elif $f90 -V 2>&1 | grep -q "^pgf" ; then
+        f90_version=pgf
+    elif $f90 -v 2>&1 | grep -q "EKOPath" ; then
+        f90_version=pathf95
+    elif $f90 -v 2>&1 | grep -q "g95" ; then
+        f90_version=g95
+    elif $f90 -version 2>&1 | grep -q "PathScale(TM)" ; then
+        f90_version=pathf95
+    elif $f90 -v 2>&1 | grep -q "gcc version" ; then
+        f90_version=gfortran
+    else
+        echo $ECHO_N "unknown, leaving as... $ECHO_C"
+        f90_version=$f90
+    fi
+    echo $f90_version
+    ;;
+* )
+    f90_version=$f90
+    ;;
+esac
+
+
+
 # candidate C and f77 compilers good for all cases
 try_cc="cc gcc"
 try_f77="$f90"
 
-case "$arch:$f90" in
+case "$arch:$f90_version" in
 *:ifort* )
         try_cc="icc ecc $try_cc"
         ;;
@@ -402,7 +439,7 @@ aix:*xlf* )
 sparc:* | solaris:sunf95 )
         try_f77="f77 $f90"
         ;;
-cray*:ftn )
+cray*:* )
         try_cc="cc"
         ;;
 macppc:xlf90 )
@@ -458,7 +495,7 @@ xlf_flags=0
 
 echo using F90... $f90
 
-case "$arch:$f90" in
+case "$arch:$f90_version" in
 ia32:ifort* | ia64:ifort* | x86_64:ifort* | mac686:ifort*  )
         if test "$use_debug" -eq 1; then
             try_fflags="-O2 -assume byterecl -g -traceback -fpe0 -CB"
@@ -565,16 +602,24 @@ sparc:f90 )
         imod="-M"
         have_cpp=0
         ;;
-crayxt*:ftn )
+crayxt*:pgf* )
 # see comment above for pgf*
         try_fflags_openmp="-mp"
         try_fflags="-O3 -r8"
-        try_f90flags="-fast -Mcache_align -r8"
+        try_f90flags="-fast -Mcache_align -r8 -Mpreprocess"
         try_fflags_noopt="-O0"
         try_ldflags_openmp="-mp"
         try_ldflags="-v"
         try_dflags="$try_dflags -D__PGI"
-        have_cpp=0
+        have_cpp=1
+        ;;
+crayxt*:pathf* )
+        try_fflags="-march=auto -O2 -cpp"
+        try_f90flags="\$(FFLAGS)"
+        try_fflags_noopt="-O0"
+        try_ldflags=""
+        try_ldflags_static="-static"
+        have_cpp=1
         ;;
 macppc:* )
         try_fflags="-O4 -qarch=auto -qtune=auto -qsuffix=cpp=f90 \
@@ -788,7 +833,7 @@ then
 
         case "$arch:$f90" in
 
-        x86_64:pgf* | x86_64:path* | x86_64:openf95)
+        x86_64:pgf* | x86_64:path* | x86_64:openf95 | crayxt:* )
                 # check for acml - note that it contains lapack as well
                 try_libdirs="/opt/acml*/pathscale64/lib/"
                 try_libdirs="$libdirs $ld_library_path $try_libdirs"
@@ -1361,9 +1406,9 @@ then
                    try_dflags="$try_dflags $try_dflags_fft_para"
                 fi
                 ;;
-        x86_64)
+        x86_64 | crayxt )
                 # check for acml
-                case $f90 in
+                case $f90_version in
                 pgf* | path* )
                         if test "$have_acml" -ne 0
                         then
