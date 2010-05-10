@@ -261,14 +261,14 @@ esac
 # the check for the parallel compiler (section below) because option
 # --disable-parallel will do very strange things otherwise. The reason
 # seems to be that autoconf does not repeat all tests for the second
-# occurrence of AC_PROG_F77. So the first occurrence is the one that
+# occurrence of AC_PROG_FC. So the first occurrence is the one that
 # must always be performed, the second is optional. PG & CC sep.2006
 
-# use F90 if set, ignore contents of F77 (is stored in f77 for later usage)
-unset F77
+# use F90 if set
 if test "$f90" = "" ; then f90="$try_f90" ; fi
-AC_PROG_F77($f90)
-f90=$F77
+AC_PROG_FC($f90)
+f90=$FC
+AC_FC_SRCEXT(f90)
 
 # check parallel Fortran 90 compiler
 if test "$use_parallel" -eq 0 ;
@@ -276,10 +276,10 @@ then
         mpif90=$f90
 else
         # clear cached values (not sure when and why this is needed)
-        unset F77 ac_cv_prog_ac_ct_F77 ac_cv_f77_compiler_gnu ac_cv_prog_f77_g
+        unset FC ac_cv_prog_ac_ct_FC ac_cv_fc_compiler_gnu ac_cv_prog_fc_g
         if test "$mpif90" = "" ; then mpif90="$try_mpif90 $f90" ; fi
-        AC_PROG_F77($mpif90)
-        mpif90=$F77
+        AC_PROG_FC($mpif90)
+        mpif90=$FC
 fi
 
 # check which compiler does mpif90 wrap
@@ -442,9 +442,6 @@ AC_CHECK_MEMBER([struct mallinfo.arena],
                 [#include <malloc.h>])
 
 fi
-
-# clear cached values
-unset F77 ac_cv_prog_ac_ct_F77 ac_cv_f77_compiler_gnu ac_cv_prog_f77_g
 
 # check serial Fortran 77 compiler (use F77 if it was set)
 if test "$f77" = "" ; then f77="$try_f77" ; fi
