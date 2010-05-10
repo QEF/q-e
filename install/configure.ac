@@ -463,11 +463,11 @@ echo using F90... $f90
 
 case "$arch:$f90" in
 ia32:ifort* | ia64:ifort* | x86_64:ifort* | mac686:ifort*  )
-    if test "$use_debug" -eq 1; then
-        try_fflags="-O2 -assume byterecl -g -traceback -fpe0 -CB"
-    else
-        try_fflags="-O2 -assume byterecl -g -traceback"
-    fi
+        if test "$use_debug" -eq 1; then
+            try_fflags="-O2 -assume byterecl -g -traceback -fpe0 -CB"
+        else
+            try_fflags="-O2 -assume byterecl -g -traceback"
+        fi
         try_fflags_openmp="-openmp"
         try_f90flags="\$(FFLAGS) -nomodule"
         try_fflags_noopt="-O0 -assume byterecl -g -traceback"
@@ -497,22 +497,22 @@ ia32:path* | ia64:path* | x86_64:path* )
         have_cpp=0
         ;;
 *:g95 )
-    if test "$use_debug" -eq 1; then
-        try_fflags="-O3 -g -freal=nan -finteger=12345678 -flogical=none -cpp"
-    else
-        try_fflags="-O3 -cpp"
-    fi
+        if test "$use_debug" -eq 1; then
+            try_fflags="-O3 -g -freal=nan -finteger=12345678 -flogical=none -cpp"
+        else
+            try_fflags="-O3 -cpp"
+        fi
         try_f90flags="\$(FFLAGS)"
         try_fflags_noopt="-O0 -cpp"
         try_ldflags=""
         try_ldflags_static="-static"
         ;;
 *:gfortran )
-    if test "$use_debug" -eq 1; then
-        try_fflags="-O3 -g  -Wall -fbounds-check -frange-check"
-    else
-        try_fflags="-O3 -g"
-    fi
+        if test "$use_debug" -eq 1; then
+            try_fflags="-O3 -g  -Wall -fbounds-check -frange-check"
+        else
+            try_fflags="-O3 -g"
+        fi
         try_fflags_openmp="-fopenmp"
         try_f90flags="\$(FFLAGS) -x f95-cpp-input"
         try_fflags_noopt="-O0 -g"
