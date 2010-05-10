@@ -1107,7 +1107,7 @@ then
                         FFLAGS="$test_fflags"
                         LDFLAGS="$test_ldflags $try_loption"
                         LIBS=""
-                        AC_SEARCH_LIBS(dgemm, blas, have_blas=1
+                        AC_SEARCH_LIBS(dgemm, blas-3 blas, have_blas=1
                                        blas_libs="$try_loption $LIBS")
                         if test "$ac_cv_search_dgemm" != "no"
                         then break ; fi
@@ -1163,7 +1163,7 @@ if test "$use_internal_lapack" -eq 0
                 LDFLAGS="$test_ldflags"
                 LIBS="$blas_libs"
                 AC_SEARCH_LIBS(dspev, essl, have_lapack=1
-                                lapack_libs="-lessl"
+                                lapack_libs="$try_loption $LIBS"
                                 try_dflags="$try_dflags -D__ESSL")
                 # essl may not have been found in previous test on blas
                 if test "$have_lapack" -eq 1; then have_essl=1; fi
@@ -1183,8 +1183,8 @@ if test "$use_internal_lapack" -eq 0
                                 try_loption="-L$dir"
                         fi
                         FFLAGS="$test_fflags"
-                        LDFLAGS="$test_ldflags $try_loption"
-                        LIBS="-llapack $blas_libs"
+                        LDFLAGS="$test_ldflags $try_loption $blas_libs"
+                        LIBS=""
                         AC_SEARCH_LIBS(dspev, lapack, have_lapack=1
                                        lapack_libs="$try_loption $LIBS")
                         if test "$ac_cv_search_dspev" != "no"
@@ -1213,8 +1213,8 @@ if test "$use_internal_lapack" -eq 0
                         FFLAGS="$test_fflags"
                         LDFLAGS="$test_ldflags $try_loption"
                         LIBS="$blas_libs"
-                        AC_SEARCH_LIBS(dspev, lapack, have_lapack=1
-                                       lapack_libs="$try_loption -llapack")
+                        AC_SEARCH_LIBS(dspev, lapack-3 lapack, have_lapack=1
+                                       lapack_libs="$try_loption $LIBS")
                         if test "$ac_cv_search_dspev" != "no"; then
                            # essl must precede lapack (if present)
                            if test "$have_essl" -ne 0 ; then

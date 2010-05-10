@@ -6502,7 +6502,7 @@ cat > conftest.$ac_ext <<_ACEOF
       call dgemm
       end
 _ACEOF
-for ac_lib in '' blas; do
+for ac_lib in '' blas-3 blas; do
   if test -z "$ac_lib"; then
     ac_res="none required"
   else
@@ -6713,7 +6713,7 @@ ac_res=$ac_cv_search_dspev
 if test "$ac_res" != no; then :
   test "$ac_res" = "none required" || LIBS="$ac_res $LIBS"
   have_lapack=1
-                                lapack_libs="-lessl"
+                                lapack_libs="$try_loption $LIBS"
                                 try_dflags="$try_dflags -D__ESSL"
 fi
 
@@ -6735,8 +6735,8 @@ fi
                                 try_loption="-L$dir"
                         fi
                         FFLAGS="$test_fflags"
-                        LDFLAGS="$test_ldflags $try_loption"
-                        LIBS="-llapack $blas_libs"
+                        LDFLAGS="$test_ldflags $try_loption $blas_libs"
+                        LIBS=""
                         { $as_echo "$as_me:${as_lineno-$LINENO}: checking for library containing dspev" >&5
 $as_echo_n "checking for library containing dspev... " >&6; }
 if test "${ac_cv_search_dspev+set}" = set; then :
@@ -6818,7 +6818,7 @@ cat > conftest.$ac_ext <<_ACEOF
       call dspev
       end
 _ACEOF
-for ac_lib in '' lapack; do
+for ac_lib in '' lapack-3 lapack; do
   if test -z "$ac_lib"; then
     ac_res="none required"
   else
@@ -6848,7 +6848,7 @@ ac_res=$ac_cv_search_dspev
 if test "$ac_res" != no; then :
   test "$ac_res" = "none required" || LIBS="$ac_res $LIBS"
   have_lapack=1
-                                       lapack_libs="$try_loption -llapack"
+                                       lapack_libs="$try_loption $LIBS"
 fi
 
                         if test "$ac_cv_search_dspev" != "no"; then
