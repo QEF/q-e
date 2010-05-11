@@ -631,33 +631,62 @@ CONTAINS
 
       IF(binwrite)THEN
          WRITE(iob)&
-            to_c80(title)    ,& ! title
-            to_c80("PWSCF")  ,& ! code
-            to_c80("DFT")    ,& ! method
-            to_c80("unknown"),& ! functional
-            to_c80("unknown"),& ! pseudo_type
-            dble(ecutwfc/2)  ,&  ! plane_wave_cutoff
-            lsda             ,&  ! spin_polarized,
-            dble(etot/e2)    ,&  ! total_energy
-            dble(ek/e2)      ,&  ! kinetic_energy
-            dble(eloc/e2)    ,&  ! local_potential_energy
-            dble(enl/e2)     ,&  ! non_local_potential_energy
-            dble(ehart/e2)   ,&  ! electron_electron_energy
-            dble(ewld/e2)    ,&  ! eionion
-            nint(nelec)      ,&  ! num_electrons
-            nat              ,&  ! nbasis
-            ngtot_g          ,&  ! nwvec
-            nk               ,&  ! nkvec
-            blipgrid(1:3)    ,&  ! nr
-            nbnd             ,&  ! maxband
-            blipreal/=0      ,&  ! gamma_only
-            .true.           ,&  ! ext_orbs_present
-            (/0,0/)          ,&  ! no_loc_orbs
-            alat*at(1:3,1)   ,&  ! pa1
-            alat*at(1:3,2)   ,&  ! pa2
-            alat*at(1:3,3)   ,&  ! pa3
-            2                ,&  ! nspin_check
-            nbnd                 ! num_nonloc_max
+            to_c80(title)    ,&
+            to_c80("PWSCF")  ,&
+            to_c80("DFT")    ,&
+            to_c80("unknown"),&
+            to_c80("unknown"),&
+            dble(ecutwfc/2)  ,&
+            lsda             ,&
+            dble(etot/e2)    ,&
+            dble(ek/e2)      ,&
+            dble(eloc/e2)    ,&
+            dble(enl/e2)     ,&
+            dble(ehart/e2)   ,&
+            dble(ewld/e2)    ,&
+            nint(nelec)      ,&
+            nat              ,&
+            ngtot_g          ,&
+            nk               ,&
+            blipgrid(1:3)    ,&
+            nbnd             ,&
+            blipreal/=0      ,&
+            .true.           ,&
+            (/0,0/)          ,&
+            alat*at(1:3,1)   ,&
+            alat*at(1:3,2)   ,&
+            alat*at(1:3,3)   ,&
+            2                ,&
+            nbnd
+
+!     some old PGI compiler seems to choke on this commented version....
+!             to_c80(title)    ,& ! title
+!             to_c80("PWSCF")  ,& ! code
+!             to_c80("DFT")    ,& ! method
+!             to_c80("unknown"),& ! functional
+!             to_c80("unknown"),& ! pseudo_type
+!             dble(ecutwfc/2)  ,&  ! plane_wave_cutoff
+!             lsda             ,&  ! spin_polarized,
+!             dble(etot/e2)    ,&  ! total_energy
+!             dble(ek/e2)      ,&  ! kinetic_energy
+!             dble(eloc/e2)    ,&  ! local_potential_energy
+!             dble(enl/e2)     ,&  ! non_local_potential_energy
+!             dble(ehart/e2)   ,&  ! electron_electron_energy
+!             dble(ewld/e2)    ,&  ! eionion
+!             nint(nelec)      ,&  ! num_electrons
+!             nat              ,&  ! nbasis
+!             ngtot_g          ,&  ! nwvec
+!             nk               ,&  ! nkvec
+!             blipgrid(1:3)    ,&  ! nr
+!             nbnd             ,&  ! maxband
+!             blipreal/=0      ,&  ! gamma_only
+!             .true.           ,&  ! ext_orbs_present
+!             (/0,0/)          ,&  ! no_loc_orbs
+!             alat*at(1:3,1)   ,&  ! pa1
+!             alat*at(1:3,2)   ,&  ! pa2
+!             alat*at(1:3,3)   ,&  ! pa3
+!             2                ,&  ! nspin_check
+!             nbnd                 ! num_nonloc_max
 
          kvec(:,:) = tpi/alat*xk(1:3,1:nk)
          kprod(1,:)=kvec(1,:)*kvec(1,:)
@@ -669,15 +698,26 @@ CONTAINS
          ksq(:)=kprod(1,:)+kprod(2,:)+kprod(3,:)
 
          WRITE(iob)&
-            kvec                                          ,& ! kvec
-            ksq                                           ,& ! ksq
-            kprod                                         ,& ! kprod
-            (atomic_number(trim(atm(ityp(na)))),na=1,nat) ,& ! atno   -- atomic numbers
-            (alat*tau(1:3,na),na=1,nat)                   ,& ! basis  -- atom positions
-            (nbnd,j=1,nk*2)                               ,& ! nband
-            et(1:nbnd,1:nk*nspin)/e2                      ,& ! eigenvalue
-            (.true.,j=1,nbnd*nk*nspin)                    ,& ! on_this_cpu
-            (/nbnd,nbnd/)                                    ! num_nonloc
+            kvec                                          ,&
+            ksq                                           ,&
+            kprod                                         ,&
+            (atomic_number(trim(atm(ityp(na)))),na=1,nat) ,&
+            (alat*tau(1:3,na),na=1,nat)                   ,&
+            (nbnd,j=1,nk*2)                               ,&
+            et(1:nbnd,1:nk*nspin)/e2                      ,&
+            (.true.,j=1,nbnd*nk*nspin)                    ,&
+            (/nbnd,nbnd/)
+
+!             kvec                                          ,& ! kvec
+!             ksq                                           ,& ! ksq
+!             kprod                                         ,& ! kprod
+!             (atomic_number(trim(atm(ityp(na)))),na=1,nat) ,& ! atno   -- atomic numbers
+!             (alat*tau(1:3,na),na=1,nat)                   ,& ! basis  -- atom positions
+!             (nbnd,j=1,nk*2)                               ,& ! nband
+!             et(1:nbnd,1:nk*nspin)/e2                      ,& ! eigenvalue
+!             (.true.,j=1,nbnd*nk*nspin)                    ,& ! on_this_cpu
+!             (/nbnd,nbnd/)                                    ! num_nonloc
+
          WRITE(iob)single_precision_blips                    ! single_precision_blips
 
          ! IF(no_loc_orbs>0)THEN
@@ -685,10 +725,15 @@ CONTAINS
          ! ENDIF
 
          WRITE(iob)&
-          (0,j=1,nbnd*nk*2) ,& ! orb_map_band
-          (0,j=1,nbnd*nk*2) ,& ! orb_map_ik
-          (0,j=1,nbnd*nk*2) ,& ! orb_map_iorb
-          (0,j=1,nbnd*nk*2)    ! occupied
+          (0,j=1,nbnd*nk*2) ,&
+          (0,j=1,nbnd*nk*2) ,&
+          (0,j=1,nbnd*nk*2) ,&
+          (0,j=1,nbnd*nk*2)
+
+!           (0,j=1,nbnd*nk*2) ,& ! orb_map_band
+!           (0,j=1,nbnd*nk*2) ,& ! orb_map_ik
+!           (0,j=1,nbnd*nk*2) ,& ! orb_map_iorb
+!           (0,j=1,nbnd*nk*2)    ! occupied
          RETURN
       ENDIF
 

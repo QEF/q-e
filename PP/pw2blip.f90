@@ -49,7 +49,7 @@ CONTAINS
       REAL(dp),INTENT(in) :: g_vec(3,ngtot_in)
       REAL(dp),INTENT(in) :: multiplicity
       REAL(dp) :: da(3),k,k2,k4,cosk
-      INTEGER :: ig,ig2,d,g_idx(3),dummy(0)
+      INTEGER :: ig,ig2,d,g_idx(3)
       INTEGER,PARAMETER :: nmax = 5000
 
       ngtot = ngtot_in
