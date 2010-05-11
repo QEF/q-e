@@ -1451,16 +1451,9 @@ then
                 LIBS="$fft_libs"
                 AC_SEARCH_LIBS(dfftw_execute_dft, fftw3, have_fft=1
                                fft_libs="$try_loption $LIBS", , -lm)
-                if test "$ac_cv_search_dfftw_execute_dft" == "-lfftw3"
+                if test "$ac_cv_search_dfftw_execute_dft" != "no"
                 then
                         try_dflags="$try_dflags -D__FFTW3"
-                        break
-                fi
-                AC_SEARCH_LIBS(fftw_f77, fftw, have_fft=1
-                               fft_libs="$try_loption $LIBS", , -lm)
-                if test "$ac_cv_search_fftw_f77" == "-lfftw"
-                then
-                        try_dflags="$try_dflags -D__FFTW"
                         break
                 fi
         done
