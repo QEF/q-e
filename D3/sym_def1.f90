@@ -43,7 +43,7 @@ subroutine sym_def1 (def, irr)
   !
   w_def (:) = (0.d0, 0.d0)
   do ipert = 1, npertg0 (irr)
-     do isym = 1, nsymq
+     do isym = 1, nsymg0
         irot = irgq (isym)
         do jpert = 1, npertg0 (irr)
            w_def (ipert) = w_def (ipert) + tg0 (jpert, ipert, irot, irr) &
