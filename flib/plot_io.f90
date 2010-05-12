@@ -55,7 +55,7 @@ subroutine plot_io (filplot, title, nrx1, nrx2, nrx3, nr1, nr2, &
   if (iflag > 0) then
      write (iunplot, '(a)') title
      write (iunplot, '(8i8)') nrx1, nrx2, nrx3, nr1, nr2, nr3, nat, ntyp
-     write (iunplot, '(i6,6f12.8)') ibrav, celldm
+     write (iunplot, '(i6,2x,6f16.8)') ibrav, celldm
      if (ibrav == 0) then
         do i = 1,3
            write ( iunplot, * ) ( at(ipol,i),ipol=1,3 )
