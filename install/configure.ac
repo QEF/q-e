@@ -206,7 +206,7 @@ aix )
         try_arflags="-X64 ruv"
         try_dflags="-D__AIX -D__XLF"
         ;;
-crayxt | crayxt4 )
+crayxt* )
         try_f90="ftn"
         try_mpif90="ftn"
         ;;
@@ -293,8 +293,8 @@ case "$arch" in
         sunf95_version=`$mpif90 -V 2>&1 | grep "^sunf95"`
         openf95_version=`$mpif90 -V 2>&1 | grep "^Open64"`
         pgf_version=`$mpif90 -V 2>&1 | grep "^pgf"`
-        eko_version=`$mpif90 -v 2>&1 | grep "EKOPath"`
         g95_version=`$mpif90 -v 2>&1 | grep "g95"`
+        eko_version=`$mpif90 -v 2>&1 | grep "EKOPath"` # obsolescent
         pathf95_version=`$mpif90 -version 2>&1 | grep "PathScale(TM)"`
         gfortran_version=`$mpif90 -v 2>&1 | grep "gcc version"`
         #
@@ -317,7 +317,7 @@ case "$arch" in
                         MKL_FLAGS="$MKL_FLAGS -openmp"
                    fi
                 else
-                # flags for MKL - ifort 8 and earlier
+                # flags for MKL - ifort 8 and earlier, obsolescent
                    MKL_LIBS="-lguide -lpthread"
                    MKL_FLAGS=""
                 fi
@@ -386,7 +386,7 @@ f90 | fc | ftn )
         f90_version=openf95
     elif $f90 -V 2>&1 | grep -q "^pgf" ; then
         f90_version=pgf
-    elif $f90 -v 2>&1 | grep -q "EKOPath" ; then
+    elif $f90 -v 2>&1 | grep -q "EKOPath" ; then # obsolescent
         f90_version=pathf95
     elif $f90 -v 2>&1 | grep -q "g95" ; then
         f90_version=g95
@@ -682,6 +682,7 @@ ppc64-mn:* )
         ;;
 
 esac
+
 if test "$use_shared" -eq 0 ; then
   try_ldflags="$try_ldflags $try_ldflags_static" ; fi
 
@@ -833,7 +834,7 @@ then
 
         case "$arch:$f90" in
 
-        x86_64:pgf* | x86_64:path* | x86_64:openf95 | crayxt:* )
+        x86_64:pgf* | x86_64:path* | x86_64:openf95 | crayxt*:* )
                 # check for acml - note that it contains lapack as well
                 try_libdirs="/opt/acml*/pathscale64/lib/"
                 try_libdirs="$libdirs $ld_library_path $try_libdirs"
@@ -1450,7 +1451,7 @@ then
                    try_dflags="$try_dflags $try_dflags_fft_para"
                 fi
                 ;;
-        x86_64 | crayxt )
+        x86_64 | crayxt* )
                 # check for acml
                 case $f90_version in
                 pgf* | path* )
@@ -1674,12 +1675,10 @@ then
    AC_CHECK_PROG(ranlib,ranlib,ranlib,echo)
 fi
 # MacOs walkaround for ranlib
-if test "$arch" == "mac686"
-then
- if test "$ranlib" == "ranlib"
- then
-  ranlib="ranlib -c"
- fi
+if test "$arch" == "mac686"; then
+   if test "$ranlib" == "ranlib"; then
+      ranlib="ranlib -c"
+   fi
 fi
 
 echo setting RANLIB... $ranlib
