@@ -41,7 +41,7 @@ MODULES_FILES = \
 
 SRC_FILES = \
 	src/pwscf.theme \
-	src/about.htm \
+	src/about.html \
 	src/aindex \
 	src/tclIndex \
 	src/*.itcl
