@@ -357,8 +357,7 @@ CONTAINS
                elocg = vloc(igtongl(ig),nt) * &
                        dble ( strf(ig,nt) * conjg(aux(nl(ig))) )
                eloc = eloc + elocg
-               IF( gamma_only .and. (ig>1.or.any(g(:,ig)/=0.d0)) ) &
-                &eloc = eloc + elocg
+               IF( gamma_only .and. ig>=gstart) eloc = eloc + elocg
             ENDDO
          ENDDO
 
