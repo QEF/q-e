@@ -1,0 +1,17 @@
+#!/bin/bash
+
+TOOLDIR=$(dirname $0)
+
+if [[ $# == 0 ]] ; then
+    fnames=$(for suffix in f90 ; do find -type f -name "*.$suffix" ; done)
+else
+    fnames=$*
+fi
+
+for f in $fnames ; do
+    mv $f $f.orig
+    cat $f.orig |\
+    python $TOOLDIR/src-normal.py |\
+    cat > $f
+    diff -q $f $f.orig && mv $f.orig $f
+done
