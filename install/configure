@@ -2720,7 +2720,7 @@ aix )
         try_arflags="-X64 ruv"
         try_dflags="-D__AIX -D__XLF"
         ;;
-crayxt | crayxt4 )
+crayxt* )
         try_f90="ftn"
         try_mpif90="ftn"
         ;;
@@ -3502,8 +3502,8 @@ case "$arch" in
         sunf95_version=`$mpif90 -V 2>&1 | grep "^sunf95"`
         openf95_version=`$mpif90 -V 2>&1 | grep "^Open64"`
         pgf_version=`$mpif90 -V 2>&1 | grep "^pgf"`
-        eko_version=`$mpif90 -v 2>&1 | grep "EKOPath"`
         g95_version=`$mpif90 -v 2>&1 | grep "g95"`
+        eko_version=`$mpif90 -v 2>&1 | grep "EKOPath"` # obsolescent
         pathf95_version=`$mpif90 -version 2>&1 | grep "PathScale(TM)"`
         gfortran_version=`$mpif90 -v 2>&1 | grep "gcc version"`
         #
@@ -3526,7 +3526,7 @@ case "$arch" in
                         MKL_FLAGS="$MKL_FLAGS -openmp"
                    fi
                 else
-                # flags for MKL - ifort 8 and earlier
+                # flags for MKL - ifort 8 and earlier, obsolescent
                    MKL_LIBS="-lguide -lpthread"
                    MKL_FLAGS=""
                 fi
@@ -3547,6 +3547,7 @@ case "$arch" in
                 f90_in_mpif90="pgf90"
         elif test "$eko_version" != ""
         then
+# obsolescent
                 version=`echo $eko_version | awk '{print $6}'`
                 echo "${ECHO_T}pathf95 $version"
                 f90_in_mpif90="pathf95"
@@ -3597,7 +3598,7 @@ f90 | fc | ftn )
         f90_version=openf95
     elif $f90 -V 2>&1 | grep -q "^pgf" ; then
         f90_version=pgf
-    elif $f90 -v 2>&1 | grep -q "EKOPath" ; then
+    elif $f90 -v 2>&1 | grep -q "EKOPath" ; then # obsolescent
         f90_version=pathf95
     elif $f90 -v 2>&1 | grep -q "g95" ; then
         f90_version=g95
@@ -4893,6 +4894,7 @@ ppc64-mn:* )
         ;;
 
 esac
+
 if test "$use_shared" -eq 0 ; then
   try_ldflags="$try_ldflags $try_ldflags_static" ; fi
 
@@ -5722,7 +5724,7 @@ then
 
         case "$arch:$f90" in
 
-        x86_64:pgf* | x86_64:path* | x86_64:openf95 | crayxt:* )
+        x86_64:pgf* | x86_64:path* | x86_64:openf95 | crayxt*:* )
                 # check for acml - note that it contains lapack as well
                 try_libdirs="/opt/acml*/pathscale64/lib/"
                 try_libdirs="$libdirs $ld_library_path $try_libdirs"
@@ -5801,21 +5803,19 @@ fi
                         unset ac_cv_search_dgemm # clear cached value
                         if test "$dir" = "none"
                         then
-                                try_loption="-L$topdir/install"
+                                try_loption=" "
                         else
                                 echo $ECHO_N "in $dir: " $ECHO_C
-                                try_loption="-L$topdir/install -L$dir"
+                                try_loption="-L$dir"
                         fi
                         FFLAGS="$test_fflags"
                         LDFLAGS="$MKL_FLAGS $test_ldflags $try_loption"
                         LIBS="$MKL_LIBS"
                         #
-                        # unthreaded MKL: use install/mkl_ipf_nothread
-                        # multithreaded MKL: use install/mkl_ipf
-                        # (should work for MKL 10.2 and later as well)
+                        # should work for recent MKL versions only
                         #
                         if test "$use_openmp" -eq 0; then
-                           { $as_echo "$as_me:${as_lineno-$LINENO}: checking for library containing dgemm" >&5
+			   { $as_echo "$as_me:${as_lineno-$LINENO}: checking for library containing dgemm" >&5
 $as_echo_n "checking for library containing dgemm... " >&6; }
 if test "${ac_cv_search_dgemm+set}" = set; then :
   $as_echo_n "(cached) " >&6
@@ -5826,12 +5826,12 @@ cat > conftest.$ac_ext <<_ACEOF
       call dgemm
       end
 _ACEOF
-for ac_lib in '' mkl_ipf_nothread; do
+for ac_lib in '' mkl_intel_ipf; do
   if test -z "$ac_lib"; then
     ac_res="none required"
   else
     ac_res=-l$ac_lib
-    LIBS="-l$ac_lib  $ac_func_search_save_LIBS"
+    LIBS="-l$ac_lib -lmkl_sequential -lmkl_core $ac_func_search_save_LIBS"
   fi
   if ac_fn_f77_try_link "$LINENO"; then :
   ac_cv_search_dgemm=$ac_res
@@ -5856,12 +5856,14 @@ ac_res=$ac_cv_search_dgemm
 if test "$ac_res" != no; then :
   test "$ac_res" = "none required" || LIBS="$ac_res $LIBS"
   have_blas=1 have_mkl=1
-                                         blas_libs="$try_loption $LIBS"
-                                         ldflags="$MKL_FLAGS $ldflags"
+                                       blas_libs="$try_loption $LIBS -lmkl_sequential -lmkl_core"
+                                       ldflags="$MKL_FLAGS $ldflags"
+else
+  echo "MKL not found"
 fi
 
                         else
-                           { $as_echo "$as_me:${as_lineno-$LINENO}: checking for library containing dgemm" >&5
+			   { $as_echo "$as_me:${as_lineno-$LINENO}: checking for library containing dgemm" >&5
 $as_echo_n "checking for library containing dgemm... " >&6; }
 if test "${ac_cv_search_dgemm+set}" = set; then :
   $as_echo_n "(cached) " >&6
@@ -5872,12 +5874,12 @@ cat > conftest.$ac_ext <<_ACEOF
       call dgemm
       end
 _ACEOF
-for ac_lib in '' mkl_ipf; do
+for ac_lib in '' mkl_intel_ipf; do
   if test -z "$ac_lib"; then
     ac_res="none required"
   else
     ac_res=-l$ac_lib
-    LIBS="-l$ac_lib  $ac_func_search_save_LIBS"
+    LIBS="-l$ac_lib -lmkl_intel_thread -lmkl_core $ac_func_search_save_LIBS"
   fi
   if ac_fn_f77_try_link "$LINENO"; then :
   ac_cv_search_dgemm=$ac_res
@@ -5902,8 +5904,10 @@ ac_res=$ac_cv_search_dgemm
 if test "$ac_res" != no; then :
   test "$ac_res" = "none required" || LIBS="$ac_res $LIBS"
   have_blas=1 have_mkl=1
-                                         blas_libs="$try_loption $LIBS"
-                                         ldflags="$MKL_FLAGS $ldflags"
+                                       blas_libs="$try_loption $LIBS -lmkl_intel_thread -lmkl_core"
+                                       ldflags="$MKL_FLAGS $ldflags"
+else
+  echo "MKL not found"
 fi
 
                         fi
@@ -5995,21 +5999,19 @@ fi
                         unset ac_cv_search_dgemm # clear cached value
                         if test "$dir" = "none"
                         then
-                                try_loption="-L$topdir/install"
+                                try_loption=" "
                         else
                                 echo $ECHO_N "in $dir: " $ECHO_C
-                                try_loption="-L$topdir/install -L$dir"
+                                try_loption="-L$dir"
                         fi
                         FFLAGS="$test_fflags"
                         LDFLAGS="$MKL_FLAGS $test_ldflags $try_loption"
                         LIBS="$MKL_LIBS"
                         #
-                        # unthreaded MKL: use install/mkl_em64t_nothread
-                        # multithreaded MKL: use install/mkl_em64t
-                        # (should work for MKL 10.2 and later as well)
+                        # should work for recent MKL versions only
                         #
                         if test "$use_openmp" -eq 0; then
-                           { $as_echo "$as_me:${as_lineno-$LINENO}: checking for library containing dgemm" >&5
+			   { $as_echo "$as_me:${as_lineno-$LINENO}: checking for library containing dgemm" >&5
 $as_echo_n "checking for library containing dgemm... " >&6; }
 if test "${ac_cv_search_dgemm+set}" = set; then :
   $as_echo_n "(cached) " >&6
@@ -6020,12 +6022,12 @@ cat > conftest.$ac_ext <<_ACEOF
       call dgemm
       end
 _ACEOF
-for ac_lib in '' mkl_em64t_nothread; do
+for ac_lib in '' mkl_intel_lp64; do
   if test -z "$ac_lib"; then
     ac_res="none required"
   else
     ac_res=-l$ac_lib
-    LIBS="-l$ac_lib  $ac_func_search_save_LIBS"
+    LIBS="-l$ac_lib -lmkl_sequential -lmkl_core $ac_func_search_save_LIBS"
   fi
   if ac_fn_f77_try_link "$LINENO"; then :
   ac_cv_search_dgemm=$ac_res
@@ -6050,12 +6052,14 @@ ac_res=$ac_cv_search_dgemm
 if test "$ac_res" != no; then :
   test "$ac_res" = "none required" || LIBS="$ac_res $LIBS"
   have_blas=1 have_mkl=1
-                                blas_libs="$try_loption $LIBS"
-                                ldflags="$MKL_FLAGS $ldflags"
+                                       blas_libs="$try_loption $LIBS -lmkl_sequential -lmkl_core"
+                                       ldflags="$MKL_FLAGS $ldflags"
+else
+  echo "MKL not found"
 fi
 
                         else
-                           { $as_echo "$as_me:${as_lineno-$LINENO}: checking for library containing dgemm" >&5
+			   { $as_echo "$as_me:${as_lineno-$LINENO}: checking for library containing dgemm" >&5
 $as_echo_n "checking for library containing dgemm... " >&6; }
 if test "${ac_cv_search_dgemm+set}" = set; then :
   $as_echo_n "(cached) " >&6
@@ -6066,12 +6070,12 @@ cat > conftest.$ac_ext <<_ACEOF
       call dgemm
       end
 _ACEOF
-for ac_lib in '' mkl_em64t; do
+for ac_lib in '' mkl_intel_lp64; do
   if test -z "$ac_lib"; then
     ac_res="none required"
   else
     ac_res=-l$ac_lib
-    LIBS="-l$ac_lib  $ac_func_search_save_LIBS"
+    LIBS="-l$ac_lib -lmkl_intel_thread -lmkl_core $ac_func_search_save_LIBS"
   fi
   if ac_fn_f77_try_link "$LINENO"; then :
   ac_cv_search_dgemm=$ac_res
@@ -6096,8 +6100,10 @@ ac_res=$ac_cv_search_dgemm
 if test "$ac_res" != no; then :
   test "$ac_res" = "none required" || LIBS="$ac_res $LIBS"
   have_blas=1 have_mkl=1
-                                blas_libs="$try_loption $LIBS"
-                                ldflags="$MKL_FLAGS $ldflags"
+                                       blas_libs="$try_loption $LIBS -lmkl_intel_thread -lmkl_core"
+                                       ldflags="$MKL_FLAGS $ldflags"
+else
+  echo "MKL not found"
 fi
 
                         fi
@@ -6118,20 +6124,19 @@ fi
                         unset ac_cv_search_dgemm # clear cached value
                         if test "$dir" = "none"
                         then
-                                try_loption="-L$topdir/install"
+                                try_loption="-L "
                         else
                                 echo $ECHO_N "in $dir: " $ECHO_C
-                                try_loption="-L$topdir/install -L$dir"
+                                try_loption="-L$dir"
                         fi
                         FFLAGS="$test_fflags"
                         LDFLAGS="$MKL_FLAGS $test_ldflags $try_loption"
                         LIBS="$MKL_LIBS"
-                        # unthreaded MKL: use install/mkl_ia32_nothread
-                        # multithreaded MKL: use install/mkl_ia32
-                        # (should work for MKL 10.2 and later as well)
+                        #
+                        # should work for recent MKL versions only
                         #
                         if test "$use_openmp" -eq 0; then
-                           { $as_echo "$as_me:${as_lineno-$LINENO}: checking for library containing dgemm" >&5
+			   { $as_echo "$as_me:${as_lineno-$LINENO}: checking for library containing dgemm" >&5
 $as_echo_n "checking for library containing dgemm... " >&6; }
 if test "${ac_cv_search_dgemm+set}" = set; then :
   $as_echo_n "(cached) " >&6
@@ -6142,12 +6147,12 @@ cat > conftest.$ac_ext <<_ACEOF
       call dgemm
       end
 _ACEOF
-for ac_lib in '' mkl_ia32_nothread; do
+for ac_lib in '' mkl_intel; do
   if test -z "$ac_lib"; then
     ac_res="none required"
   else
     ac_res=-l$ac_lib
-    LIBS="-l$ac_lib  $ac_func_search_save_LIBS"
+    LIBS="-l$ac_lib -lmkl_sequential -lmkl_core $ac_func_search_save_LIBS"
   fi
   if ac_fn_f77_try_link "$LINENO"; then :
   ac_cv_search_dgemm=$ac_res
@@ -6172,12 +6177,14 @@ ac_res=$ac_cv_search_dgemm
 if test "$ac_res" != no; then :
   test "$ac_res" = "none required" || LIBS="$ac_res $LIBS"
   have_blas=1 have_mkl=1
-                                blas_libs="$try_loption $LIBS"
-                                ldflags="$MKL_FLAGS $ldflags"
+                                       blas_libs="$try_loption $LIBS -lmkl_sequential -lmkl_core"
+                                       ldflags="$MKL_FLAGS $ldflags"
+else
+  echo "MKL not found"
 fi
 
                         else
-                           { $as_echo "$as_me:${as_lineno-$LINENO}: checking for library containing dgemm" >&5
+			   { $as_echo "$as_me:${as_lineno-$LINENO}: checking for library containing dgemm" >&5
 $as_echo_n "checking for library containing dgemm... " >&6; }
 if test "${ac_cv_search_dgemm+set}" = set; then :
   $as_echo_n "(cached) " >&6
@@ -6188,12 +6195,12 @@ cat > conftest.$ac_ext <<_ACEOF
       call dgemm
       end
 _ACEOF
-for ac_lib in '' mkl_ia32; do
+for ac_lib in '' mkl_intel; do
   if test -z "$ac_lib"; then
     ac_res="none required"
   else
     ac_res=-l$ac_lib
-    LIBS="-l$ac_lib  $ac_func_search_save_LIBS"
+    LIBS="-l$ac_lib -lmkl_intel_thread -lmkl_core $ac_func_search_save_LIBS"
   fi
   if ac_fn_f77_try_link "$LINENO"; then :
   ac_cv_search_dgemm=$ac_res
@@ -6218,8 +6225,10 @@ ac_res=$ac_cv_search_dgemm
 if test "$ac_res" != no; then :
   test "$ac_res" = "none required" || LIBS="$ac_res $LIBS"
   have_blas=1 have_mkl=1
-                                blas_libs="$try_loption $LIBS"
-                                ldflags="$MKL_FLAGS $ldflags"
+                                       blas_libs="$try_loption $LIBS -lmkl_intel_thread -lmkl_core"
+                                       ldflags="$MKL_FLAGS $ldflags"
+else
+  echo "MKL not found"
 fi
 
                         fi
@@ -6471,6 +6480,131 @@ fi
                 have_essl=1
                 try_dflags="$try_dflags -D__LINUX_ESSL"
                 ;;
+	mac686:ifort* )
+                #This solution is tested with MacOs 10.6 and Intel 11.1
+                try_libdirs="/Developer/opt/intel/Compiler/*/*/Frameworks/mkl/lib/universal
+                             /opt/intel/Compiler/11.1/084/Frameworks/mkl/lib/universal
+                             /opt/intel/mkl*/lib/em64t"
+		try_libdirs="$libdirs $try_libdirs $ld_library_path"
+
+		for dir in none $try_libdirs
+		do
+			unset ac_cv_search_dgemm # clear cached value
+			if test "$dir" = "none"
+			then
+				try_loption=" "
+			else
+				echo $ECHO_N "in $dir: " $ECHO_C
+				try_loption="-L$dir"
+			fi
+			FFLAGS="$test_fflags"
+			LDFLAGS="$MKL_FLAGS $test_ldflags $try_loption"
+			LIBS="$MKL_LIBS"
+                        # First, a by-the-apple-book search of MKL... >10.2 requires multiple libraries
+                        # 64 bit
+                        if test "$use_openmp" -eq 0; then
+                        { $as_echo "$as_me:${as_lineno-$LINENO}: checking for library containing dgemm" >&5
+$as_echo_n "checking for library containing dgemm... " >&6; }
+if test "${ac_cv_search_dgemm+set}" = set; then :
+  $as_echo_n "(cached) " >&6
+else
+  ac_func_search_save_LIBS=$LIBS
+cat > conftest.$ac_ext <<_ACEOF
+      program main
+      call dgemm
+      end
+_ACEOF
+for ac_lib in '' mkl_intel_lp64; do
+  if test -z "$ac_lib"; then
+    ac_res="none required"
+  else
+    ac_res=-l$ac_lib
+    LIBS="-l$ac_lib -lmkl_sequential -lmkl_core -lpthread $ac_func_search_save_LIBS"
+  fi
+  if ac_fn_f77_try_link "$LINENO"; then :
+  ac_cv_search_dgemm=$ac_res
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext
+  if test "${ac_cv_search_dgemm+set}" = set; then :
+  break
+fi
+done
+if test "${ac_cv_search_dgemm+set}" = set; then :
+
+else
+  ac_cv_search_dgemm=no
+fi
+rm conftest.$ac_ext
+LIBS=$ac_func_search_save_LIBS
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_search_dgemm" >&5
+$as_echo "$ac_cv_search_dgemm" >&6; }
+ac_res=$ac_cv_search_dgemm
+if test "$ac_res" != no; then :
+  test "$ac_res" = "none required" || LIBS="$ac_res $LIBS"
+  have_blas=1 have_mkl=1
+                                       blas_libs="$try_loption $LIBS -lmkl_sequential -lmkl_core -lpthread"
+                                       ldflags="$MKL_FLAGS $ldflags"
+else
+  echo "MKL not found"
+fi
+
+			else
+                        { $as_echo "$as_me:${as_lineno-$LINENO}: checking for library containing dgemm" >&5
+$as_echo_n "checking for library containing dgemm... " >&6; }
+if test "${ac_cv_search_dgemm+set}" = set; then :
+  $as_echo_n "(cached) " >&6
+else
+  ac_func_search_save_LIBS=$LIBS
+cat > conftest.$ac_ext <<_ACEOF
+      program main
+      call dgemm
+      end
+_ACEOF
+for ac_lib in '' mkl_intel_lp64; do
+  if test -z "$ac_lib"; then
+    ac_res="none required"
+  else
+    ac_res=-l$ac_lib
+    LIBS="-l$ac_lib -lmkl_intel_thread -lmkl_core -openmp -lpthread $ac_func_search_save_LIBS"
+  fi
+  if ac_fn_f77_try_link "$LINENO"; then :
+  ac_cv_search_dgemm=$ac_res
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext
+  if test "${ac_cv_search_dgemm+set}" = set; then :
+  break
+fi
+done
+if test "${ac_cv_search_dgemm+set}" = set; then :
+
+else
+  ac_cv_search_dgemm=no
+fi
+rm conftest.$ac_ext
+LIBS=$ac_func_search_save_LIBS
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_search_dgemm" >&5
+$as_echo "$ac_cv_search_dgemm" >&6; }
+ac_res=$ac_cv_search_dgemm
+if test "$ac_res" != no; then :
+  test "$ac_res" = "none required" || LIBS="$ac_res $LIBS"
+  have_blas=1 have_mkl=1
+                                       blas_libs="$try_loption $LIBS -lmkl_intel_thread -lmkl_core -openmp -lpthread"
+                                       ldflags="$MKL_FLAGS $ldflags"
+else
+  echo "MKL not found"
+fi
+
+			fi
+                        # 32 bit
+                        if test "$ac_cv_search_dgemm" != "no"
+                        then break ; fi
+      		done
+		;;
+
 
         esac
         # blas not (yet) found: look for more possibilities
@@ -7339,7 +7473,7 @@ fi
                    try_dflags="$try_dflags $try_dflags_fft_para"
                 fi
                 ;;
-        x86_64 | crayxt )
+        x86_64 | crayxt* )
                 # check for acml
                 case $f90_version in
                 pgf* | path* )
@@ -7977,12 +8111,10 @@ fi
 
 fi
 # MacOs walkaround for ranlib
-if test "$arch" == "mac686"
-then
- if test "$ranlib" == "ranlib"
- then
-  ranlib="ranlib -c"
- fi
+if test "$arch" == "mac686"; then
+   if test "$ranlib" == "ranlib"; then
+      ranlib="ranlib -c"
+   fi
 fi
 
 echo setting RANLIB... $ranlib

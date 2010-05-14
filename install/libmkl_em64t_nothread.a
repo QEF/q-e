@@ -1,1 +1,0 @@
-GROUP (libmkl_intel_lp64.a libmkl_sequential.a libmkl_core.a)

@@ -338,6 +338,7 @@ case "$arch" in
                 f90_in_mpif90="pgf90"
         elif test "$eko_version" != ""
         then
+# obsolescent
                 version=`echo $eko_version | awk '{print $6}'`
                 echo "${ECHO_T}pathf95 $version"
                 f90_in_mpif90="pathf95"
@@ -871,29 +872,31 @@ then
                         unset ac_cv_search_dgemm # clear cached value
                         if test "$dir" = "none"
                         then
-                                try_loption="-L$topdir/install"
+                                try_loption=" "
                         else
                                 echo $ECHO_N "in $dir: " $ECHO_C
-                                try_loption="-L$topdir/install -L$dir"
+                                try_loption="-L$dir"
                         fi
                         FFLAGS="$test_fflags"
                         LDFLAGS="$MKL_FLAGS $test_ldflags $try_loption"
                         LIBS="$MKL_LIBS"
                         #
-                        # unthreaded MKL: use install/mkl_ipf_nothread
-                        # multithreaded MKL: use install/mkl_ipf
-                        # (should work for MKL 10.2 and later as well)
+                        # should work for recent MKL versions only
                         #
                         if test "$use_openmp" -eq 0; then
-                           AC_SEARCH_LIBS(dgemm, mkl_ipf_nothread,
-                                         have_blas=1 have_mkl=1
-                                         blas_libs="$try_loption $LIBS"
-                                         ldflags="$MKL_FLAGS $ldflags")
+			   AC_SEARCH_LIBS(dgemm, mkl_intel_ipf,
+                                       have_blas=1 have_mkl=1
+                                       blas_libs="$try_loption $LIBS -lmkl_sequential -lmkl_core"
+                                       ldflags="$MKL_FLAGS $ldflags",
+                                       echo "MKL not found",
+                                       -lmkl_sequential -lmkl_core)
                         else
-                           AC_SEARCH_LIBS(dgemm, mkl_ipf,
-                                         have_blas=1 have_mkl=1
-                                         blas_libs="$try_loption $LIBS"
-                                         ldflags="$MKL_FLAGS $ldflags")
+			   AC_SEARCH_LIBS(dgemm, mkl_intel_ipf,
+                                       have_blas=1 have_mkl=1
+                                       blas_libs="$try_loption $LIBS -lmkl_intel_thread -lmkl_core"
+                                       ldflags="$MKL_FLAGS $ldflags",
+                                       echo "MKL not found",
+                                       -lmkl_intel_thread -lmkl_core)
                         fi
                         if test "$ac_cv_search_dgemm" != "no"
                         then break ; fi
@@ -941,29 +944,31 @@ then
                         unset ac_cv_search_dgemm # clear cached value
                         if test "$dir" = "none"
                         then
-                                try_loption="-L$topdir/install"
+                                try_loption=" "
                         else
                                 echo $ECHO_N "in $dir: " $ECHO_C
-                                try_loption="-L$topdir/install -L$dir"
+                                try_loption="-L$dir"
                         fi
                         FFLAGS="$test_fflags"
                         LDFLAGS="$MKL_FLAGS $test_ldflags $try_loption"
                         LIBS="$MKL_LIBS"
                         #
-                        # unthreaded MKL: use install/mkl_em64t_nothread
-                        # multithreaded MKL: use install/mkl_em64t
-                        # (should work for MKL 10.2 and later as well)
+                        # should work for recent MKL versions only
                         #
                         if test "$use_openmp" -eq 0; then
-                           AC_SEARCH_LIBS(dgemm, mkl_em64t_nothread,
-                                have_blas=1 have_mkl=1
-                                blas_libs="$try_loption $LIBS"
-                                ldflags="$MKL_FLAGS $ldflags" )
+			   AC_SEARCH_LIBS(dgemm, mkl_intel_lp64,
+                                       have_blas=1 have_mkl=1
+                                       blas_libs="$try_loption $LIBS -lmkl_sequential -lmkl_core"
+                                       ldflags="$MKL_FLAGS $ldflags",
+                                       echo "MKL not found",
+                                       -lmkl_sequential -lmkl_core)
                         else
-                           AC_SEARCH_LIBS(dgemm, mkl_em64t,
-                                have_blas=1 have_mkl=1
-                                blas_libs="$try_loption $LIBS"
-                                ldflags="$MKL_FLAGS $ldflags")
+			   AC_SEARCH_LIBS(dgemm, mkl_intel_lp64,
+                                       have_blas=1 have_mkl=1
+                                       blas_libs="$try_loption $LIBS -lmkl_intel_thread -lmkl_core"
+                                       ldflags="$MKL_FLAGS $ldflags",
+                                       echo "MKL not found",
+                                       -lmkl_intel_thread -lmkl_core)
                         fi
                         if test "$ac_cv_search_dgemm" != "no"
                         then break ; fi
@@ -982,28 +987,31 @@ then
                         unset ac_cv_search_dgemm # clear cached value
                         if test "$dir" = "none"
                         then
-                                try_loption="-L$topdir/install"
+                                try_loption="-L "
                         else
                                 echo $ECHO_N "in $dir: " $ECHO_C
-                                try_loption="-L$topdir/install -L$dir"
+                                try_loption="-L$dir"
                         fi
                         FFLAGS="$test_fflags"
                         LDFLAGS="$MKL_FLAGS $test_ldflags $try_loption"
                         LIBS="$MKL_LIBS"
-                        # unthreaded MKL: use install/mkl_ia32_nothread
-                        # multithreaded MKL: use install/mkl_ia32
-                        # (should work for MKL 10.2 and later as well)
+                        #
+                        # should work for recent MKL versions only
                         #
                         if test "$use_openmp" -eq 0; then
-                           AC_SEARCH_LIBS(dgemm, mkl_ia32_nothread,
-                                have_blas=1 have_mkl=1
-                                blas_libs="$try_loption $LIBS"
-                                ldflags="$MKL_FLAGS $ldflags" )
+			   AC_SEARCH_LIBS(dgemm, mkl_intel,
+                                       have_blas=1 have_mkl=1
+                                       blas_libs="$try_loption $LIBS -lmkl_sequential -lmkl_core"
+                                       ldflags="$MKL_FLAGS $ldflags",
+                                       echo "MKL not found",
+                                       -lmkl_sequential -lmkl_core)
                         else
-                           AC_SEARCH_LIBS(dgemm, mkl_ia32,
-                                have_blas=1 have_mkl=1
-                                blas_libs="$try_loption $LIBS"
-                                ldflags="$MKL_FLAGS $ldflags")
+			   AC_SEARCH_LIBS(dgemm, mkl_intel,
+                                       have_blas=1 have_mkl=1
+                                       blas_libs="$try_loption $LIBS -lmkl_intel_thread -lmkl_core"
+                                       ldflags="$MKL_FLAGS $ldflags",
+                                       echo "MKL not found",
+                                       -lmkl_intel_thread -lmkl_core)
                         fi
                         if test "$ac_cv_search_dgemm" != "no"
                         then break ; fi
@@ -1086,8 +1094,7 @@ then
                 try_dflags="$try_dflags -D__LINUX_ESSL"
                 ;;
 	mac686:ifort* )
-		#sadly the neat "text file lib" trick does not work in macos
-                #This solution is tested with MacOs 10.6 an Intel 11.1 
+                #This solution is tested with MacOs 10.6 and Intel 11.1 
                 try_libdirs="/Developer/opt/intel/Compiler/*/*/Frameworks/mkl/lib/universal
                              /opt/intel/Compiler/11.1/084/Frameworks/mkl/lib/universal
                              /opt/intel/mkl*/lib/em64t"
@@ -1098,10 +1105,10 @@ then
 			unset ac_cv_search_dgemm # clear cached value
 			if test "$dir" = "none"
 			then
-				try_loption="-L$topdir/install"
+				try_loption=" "
 			else
 				echo $ECHO_N "in $dir: " $ECHO_C
-				try_loption="-L$topdir/install -L$dir"
+				try_loption="-L$dir"
 			fi
 			FFLAGS="$test_fflags"
 			LDFLAGS="$MKL_FLAGS $test_ldflags $try_loption"
