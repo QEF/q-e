@@ -200,8 +200,9 @@ MODULE read_cards_module
           !
        ELSE IF ( TRIM(card) == 'K_POINTS' ) THEN
           !
-          IF ( ( prog == 'CP' ) .AND. ionode ) THEN
-             WRITE( stdout,'(A)') 'Warning: card '//trim(input_line)//' ignored'
+          IF ( ( prog == 'CP' ) ) THEN
+             IF( ionode ) &
+                WRITE( stdout,'(A)') 'Warning: card '//trim(input_line)//' ignored'
           ELSE
              CALL card_kpoints( input_line )
           END IF
