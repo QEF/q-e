@@ -1096,7 +1096,7 @@ then
 	mac686:ifort* )
                 #This solution is tested with MacOs 10.6 and Intel 11.1 
                 try_libdirs="/Developer/opt/intel/Compiler/*/*/Frameworks/mkl/lib/universal
-                             /opt/intel/Compiler/11.1/084/Frameworks/mkl/lib/universal
+                             /opt/intel/Compiler/*/*/Frameworks/mkl/lib/universal
                              /opt/intel/mkl*/lib/em64t"
 		try_libdirs="$libdirs $try_libdirs $ld_library_path"
 
@@ -1105,7 +1105,7 @@ then
 			unset ac_cv_search_dgemm # clear cached value
 			if test "$dir" = "none"
 			then
-				try_loption=" "
+				try_loption=""
 			else
 				echo $ECHO_N "in $dir: " $ECHO_C
 				try_loption="-L$dir"
@@ -1114,16 +1114,16 @@ then
 			LDFLAGS="$MKL_FLAGS $test_ldflags $try_loption"
 			LIBS="$MKL_LIBS"
                         # First, a by-the-apple-book search of MKL... >10.2 requires multiple libraries
-                        # 64 bit
+                        # 64 bit is buggy as of 11.1.088
                         if test "$use_openmp" -eq 0; then
-                        AC_SEARCH_LIBS(dgemm, mkl_intel_lp64,
+                        AC_SEARCH_LIBS(dgemm, mkl_intel,
                                        have_blas=1 have_mkl=1
                                        blas_libs="$try_loption $LIBS -lmkl_sequential -lmkl_core -lpthread"
                                        ldflags="$MKL_FLAGS $ldflags",
                                        echo "MKL not found",
                                        -lmkl_sequential -lmkl_core -lpthread)
 			else 
-                        AC_SEARCH_LIBS(dgemm, mkl_intel_lp64,
+                        AC_SEARCH_LIBS(dgemm, mkl_intel,
                                        have_blas=1 have_mkl=1
                                        blas_libs="$try_loption $LIBS -lmkl_intel_thread -lmkl_core -openmp -lpthread"
                                        ldflags="$MKL_FLAGS $ldflags",

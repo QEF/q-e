@@ -1324,25 +1324,93 @@ fortran BLAS are linked instead of system Atlas libraries. Use:
 \end{verbatim}
 (Info by Paolo Giannozzi, jan.2008, updated April 2010)
 
-\paragraph{Intel Mac OS X 10.6}
+\paragraph{Detailed installation instructions for Mac OS X 10.6}
 
-``I have performed some limited amount of tests, and everything seems to
-be fine under macports supplied environment up to now. I have installed
-using the following manner:''
+(Instructions for 10.6.3 by Osman Baris Malcioglu, tested as of May 2010)
+
+Summary for the hasty: 
+
+GNU:
+Install macports compilers, 
+Install mpi environment,
+Configure Quantum Espresso using
+\begin{verbatim}
+  ./configure CC=gcc-mp-4.3 CPP=cpp-mp-4.3 CXX=g++-mp-4.3 F77=g95 FC=g95
+\end{verbatim}
+
+Intel:
+Use Version >11.1.088
+Use 32 bit compilers
+Install mpi environment,
+install macports provided cpp (optional)
+Configure Quantum Espresso using
+\begin{verbatim}
+ ./configure CC=icc CXX=icpc F77=ifort F90=ifort FC=ifort CPP=cpp-mp-4.3
+\end{verbatim}
+
+Compilation with GNU compilers:
+
+The following instructions use macports version of gnu compilers due to some
+issues in mixing gnu supplied fortran compilers with apple modified gnu compiler
+collection. For more information regarding macports please refer to:
+\texttt{http://www.macports.org/}  
+
+First install necessary compilers from macports
 \begin{verbatim}
    port install gcc43
    port install g95
 \end{verbatim}
-(rename apple supplied mpi to something else)\\
-(dowload and install openmpi )
+The apple supplied mpi environment has to be overriden since there is
+a new set of compilers now (and Apple provided mpif90 is just an empty 
+placeholder since Apple does not provide fortran compilers). I have used
+openmpi for this case. Recommended minimum configuration line is:
 \begin{verbatim}
   ./configure CC=gcc-mp-4.3 CPP=cpp-mp-4.3 CXX=g++-mp-4.3 F77=g95 FC=g95
 \end{verbatim}
-(download and install \qe)
+of course, installation directory should be set accordingly if a multiple
+compiler environment is desired. The default installation directory of 
+openmpi overwrites apple supplied mpi permenantly!\\
+Next step is the Quantum-Espresso itself. Sadly, the Apple suplied accelaration
+libraries tend to misbehave under different tests, and it is much safer to
+use internally supplied replacements. The minimum recommended configuration
+line is (presuming the environment is set correctly):
 \begin{verbatim}
-  ./configure CC=gcc-mp-4.3 CPP=cpp-mp-4.3 CXX=g++-mp-4.3 F77=g95 FC=g95
+  ./configure CC=gcc-mp-4.3 CXX=g++-mp-4.3 F77=g95 F90=g95 FC=g95 CPP=cpp-mp-4.3 --with-internal-blas --with-internal-lapack
 \end{verbatim}
-(Info by Osman Baris Malcioglu, May 2010)
+
+Compilation with Intel compilers
+Newer versions of Intel compiler (>11.1.067) support Mac OS X 10.6, and furthermore they are
+bundled with intel MKL. 32 bit binaries obtained using 11.1.088 are tested and no problems
+have been encountered so far. Sadly, as of 11.1.088 the 64 bit binary misbehave 
+under some tests. Any attempt to compile 64 bit binary using <11.1.088 will result in
+very strange compilation errors.   
+
+Like the previous section, I would recommend installing macports compiler suite. 
+
+First, make sure that you are using the 32 bit version of the compilers,
+i.e.  
+\begin{verbatim}
+. /opt/intel/Compiler/11.1/088/bin/ifortvars.sh ia32
+\end{verbatim}
+\begin{verbatim}
+. /opt/intel/Compiler/11.1/088/bin/iccvars.sh ia32
+\end{verbatim}
+will set the environment for 32 bit compilation in my case. 
+
+Then, the mpi environment has to be set up for intel compilers similar to previous 
+section. 
+
+The recommended compilation line for the Quantum Espresso is: 
+\begin{verbatim}
+ ./configure CC=icc CXX=icpc F77=ifort F90=ifort FC=ifort CPP=cpp-mp-4.3
+\end{verbatim}
+MKL libraries will be detected automatically if they are in their default locations. 
+Otherwise, mklvars32 has to be sourced before the configuration script. 
+
+Security issues: 
+MacOs 10.6 comes with a disabled firewall. Preparing a ipfw based firewall is recommended. 
+Open source and free GUIs such as "WaterRoof" and "NoobProof" are available that may help 
+you in the process.
 
 \subsubsection{SGI, Alpha}
 

@@ -6483,7 +6483,7 @@ fi
 	mac686:ifort* )
                 #This solution is tested with MacOs 10.6 and Intel 11.1
                 try_libdirs="/Developer/opt/intel/Compiler/*/*/Frameworks/mkl/lib/universal
-                             /opt/intel/Compiler/11.1/084/Frameworks/mkl/lib/universal
+                             /opt/intel/Compiler/*/*/Frameworks/mkl/lib/universal
                              /opt/intel/mkl*/lib/em64t"
 		try_libdirs="$libdirs $try_libdirs $ld_library_path"
 
@@ -6492,7 +6492,7 @@ fi
 			unset ac_cv_search_dgemm # clear cached value
 			if test "$dir" = "none"
 			then
-				try_loption=" "
+				try_loption=""
 			else
 				echo $ECHO_N "in $dir: " $ECHO_C
 				try_loption="-L$dir"
@@ -6501,7 +6501,7 @@ fi
 			LDFLAGS="$MKL_FLAGS $test_ldflags $try_loption"
 			LIBS="$MKL_LIBS"
                         # First, a by-the-apple-book search of MKL... >10.2 requires multiple libraries
-                        # 64 bit
+                        # 64 bit is buggy as of 11.1.088
                         if test "$use_openmp" -eq 0; then
                         { $as_echo "$as_me:${as_lineno-$LINENO}: checking for library containing dgemm" >&5
 $as_echo_n "checking for library containing dgemm... " >&6; }
@@ -6514,7 +6514,7 @@ cat > conftest.$ac_ext <<_ACEOF
       call dgemm
       end
 _ACEOF
-for ac_lib in '' mkl_intel_lp64; do
+for ac_lib in '' mkl_intel; do
   if test -z "$ac_lib"; then
     ac_res="none required"
   else
@@ -6562,7 +6562,7 @@ cat > conftest.$ac_ext <<_ACEOF
       call dgemm
       end
 _ACEOF
-for ac_lib in '' mkl_intel_lp64; do
+for ac_lib in '' mkl_intel; do
   if test -z "$ac_lib"; then
     ac_res="none required"
   else
