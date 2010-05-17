@@ -267,20 +267,6 @@ input_description -distribution {Quantum Espresso} -package PWscf -program ph.x 
 	    }
 	}
 
-	vargroup -type INTEGER {
-	    var iq1
-	    var iq2
-	    var iq3 
-	    default { 0,0,0  }	
-	    info {
-		These go together with nq1, nq2, nq3 and allow to choose
-		just one point out of the Monkhorst-Pack grid with ldisp=.true. 
-		Note the the actual point chosen is something like
-		(iq1-1)/nq1, (iq2-1)/nq2, (iq3-1)/nq3 (so, check the output 
-                for what you get). 
-	    }
-	}
-
 	group {
 	    label { Specification of irreducible representation }
 
