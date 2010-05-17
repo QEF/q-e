@@ -1,3 +1,18 @@
+Incompatible changes in CVS version:
+
+  * iq1,iq2,iq3 removed from input in ph,x; use start_q, last_q instead
+
+Fixed in version 4.2.1:
+
+  * CP: incorrect results in parallel execution if the card K_POINTS
+    was present in input and contained a point different from Gamma
+
+  * D3: Fermi energy shift was only symmetrized on the sub-set of the
+    symmetry operations that leave q unchanged.
+
+  * plot_io.f90: for large celldm(1), there was no space between ibrav 
+    and celldm. Courtesy of E. Li.
+
 New in version 4.2:
 
   * Removal of duplicated and unused routines

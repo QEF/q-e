@@ -34,7 +34,6 @@ CONTAINS
 
     LOGICAL           :: exst, debug = .false.
     CHARACTER(LEN=80) :: code_version, uname
-    REAL(DP),         EXTERNAL :: cclock
     CHARACTER(LEN=6), EXTERNAL :: int_to_char
 
     ! ... Intel compilers v .ge.8 allocate a lot of stack space

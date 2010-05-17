@@ -41,7 +41,7 @@ SUBROUTINE phq_readin()
   USE qpoint,        ONLY : nksq, xq
   USE partial,       ONLY : atomo, list, nat_todo, nrapp
   USE output,        ONLY : fildyn, fildvscf, fildrho
-  USE disp,          ONLY : nq1, nq2, nq3, iq1, iq2, iq3
+  USE disp,          ONLY : nq1, nq2, nq3
   USE io_files,      ONLY : tmp_dir, prefix, trimcheck
   USE noncollin_module, ONLY : i_cons, noncolin
   USE ldaU,          ONLY : lda_plus_u
@@ -81,7 +81,7 @@ SUBROUTINE phq_readin()
                        nat_todo, iverbosity, outdir, epsil,  &
                        trans, elph, zue, zeu, nrapp, max_seconds, reduce_io, &
                        modenum, prefix, fildyn, fildvscf, fildrho,   &
-                       ldisp, nq1, nq2, nq3, iq1, iq2, iq3,   &
+                       ldisp, nq1, nq2, nq3, &
                        eth_rps, eth_ns, lraman, elop, dek, recover,  &
                        fpol, asr, lrpa, lnoloc, start_irr, last_irr, &
                        start_q, last_q, nogg
@@ -178,9 +178,6 @@ SUBROUTINE phq_readin()
   nq1          = 0
   nq2          = 0
   nq3          = 0
-  iq1          = 0
-  iq2          = 0
-  iq3          = 0
   dek          = 1.0d-3
   nogg         = .FALSE.
   recover      = .FALSE.

@@ -9,14 +9,14 @@ TODO LIST - May 2010
 1.2 Wiki:
   1.2.1 what is left now: list of papers, bibliography, misc stuff.
         The list of papers should be replaced by a query to some
-        database for dited papers. What is it useful for?
+        database for cited papers. What is it useful for?
 1.3 CVS:
   1.3.1 no pseudopotentials in CVS any longer
   1.3.2 only general-purpose modules in Modules/
-  1.3.3 move to subversion?
+  1.3.3 move to subversion
 1.4 mailing lists:
-  1.4.1 add somewhere instructions on netiquettei and how to post 
-  1.4.2 move to qe-forge?
+  1.4.1 add somewhere instructions on netiquette and how to post 
+  1.4.2 move to qe-forge
 1.5 Interoperability:
   1.5.1 we should maintain somewhere (user guide? wiki? web page?)
         a list of external "QE-interoperable codes", that either
@@ -62,9 +62,6 @@ TODO LIST - May 2010
 4) Development
 
 4.1 Big new developments to add:
-  4.1.0 ready: QHA
-  4.1.1 ready: interface with plumed for metadynamics
-        (complete the removal of old metadynamics stuff)
   4.1.2 maybe ready: TD-DFPT
   4.1.3 coming : XMCD in XSpectra
   4.1.4 coming : vdW with nonlocal xc functional
@@ -77,7 +74,6 @@ TODO LIST - May 2010
   4.2.0 Wyckoff interface
   4.2.1 configure issues:
         - ifort+acml
-        - maybe we should use AC_PROG_FC instead of AC_PROG_F77
         - check if all MKL versions are recognized
         - add search for -lfftw3xf_intel 
         - remove obsolete stuff: next is macppc
@@ -165,7 +161,8 @@ TODO LIST - May 2010
   4.3.5 D3: verify status of parallelization, clean it up if needed
 
 4.4 Cleanup
-  4.4.0 EE/ must be fixed or else removed
+  4.4.0 EE/ must be fixed or else removed. Also:
+        complete the removal of old metadynamics stuff
   4.4.1 Increase modularization by 
         - collecting variables and routines acting on those variables
           into modules

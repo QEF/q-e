@@ -852,8 +852,6 @@ CONTAINS
       REAL(DP) :: WORK(2*N)
       REAL(DP) :: dvar(6)
 
-      REAL(DP)  t2, cclock
-
 !     .. Local __SCALARs ..
       INTEGER            I, ICOMPZ, II, ISCALE, J, JTOT, K, L, L1, LEND, &
      &                   LENDM1, LENDP1, LENDSV, LM1, LSV, M, MM, MM1,   &
@@ -878,8 +876,6 @@ CONTAINS
 !     Test the input parameters.
 !
       INFO = 0
-
-      t2 = cclock()
 
 ! DEBUG START 
 !      if( n > 400 ) then
@@ -1438,7 +1434,6 @@ CONTAINS
      REAL(DP) :: w( * )
      REAL(DP), ALLOCATABLE :: rwork( : )
      COMPLEX(DP), ALLOCATABLE :: cwork( : )
-     REAL(DP) :: t1, t2, cclock
      !
      ALLOCATE( rwork( n ) )
      ALLOCATE( cwork( n ) )

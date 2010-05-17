@@ -77,7 +77,7 @@ It also includes the following more specialized packages:
 \begin{itemize}
   \item \PHonon:
         phonons with Density-Functional Perturbation Theory.
-  \item \PostProc: various utilities for data prostprocessing.
+  \item \PostProc: various utilities for data postprocessing.
   \item \texttt{PWcond}:
         ballistic conductance.
   \item \texttt{GIPAW} 
@@ -247,7 +247,7 @@ We quote in particular:
   for improvements to structural optimization
   and to many other parts;
   \item Paolo Umari (Democritos) for finite electric fields;
-  \item Renata Wentzcovitch and colaborators (Univ. Minnesota)
+  \item Renata Wentzcovitch and collaborators (Univ. Minnesota)
   for variable-cell molecular dynamics;
   \item Lorenzo Paulatto (Univ.Paris VI) for PAW implementation, 
   built  upon previous work by Guido Fratesi (Univ.Milano Bicocca)
@@ -441,7 +441,7 @@ Uncompress and unpack the core distribution using the command:
      tar zxvf espresso-X.Y.Z.tar.gz
 \end{verbatim}
 (a hyphen before "zxvf" is optional) where \texttt{X.Y.Z} stands for the
-verison number. If your version of \texttt{tar} 
+version number. If your version of \texttt{tar} 
 doesn't recognize the "z" flag:
 \begin{verbatim}
      gunzip -c espresso-X.Y.Z.tar.gz | tar xvf -
@@ -664,9 +664,9 @@ Finally, \configure\ recognizes the following command-line options:\\
 \end{tabular}\\
 and the following optional packages:\\
 \begin{tabular}{ll}
-\texttt{--with-internal-blas}&    compile with internal blas (default: no)\\
-\texttt{--with-internal-lapack}&  compile with internal lapack (default: no)\\
-\texttt{--with-scalapack}&        use scalapack if available (default: yes)\\
+\texttt{--with-internal-blas}&    compile with internal BLAS (default: no)\\
+\texttt{--with-internal-lapack}&  compile with internal LAPACK (default: no)\\
+\texttt{--with-scalapack}&        use ScaLAPACK if available (default: yes)\\
 \end{tabular}\\
 If you want to modify the \configure\ script (advanced users only!), 
 see the Developer Manual.
@@ -1074,7 +1074,7 @@ machines: T3D, T3E, X1, are no longer supported.
 \subsubsection{IBM AIX}
 On IBM machines with ESSL libraries installed, there is a 
 potential conflict between a few LAPACK routines that are also part of ESSL, 
-but with a different calling sequence. The appearence of run-time errors like {\em
+but with a different calling sequence. The appearance of run-time errors like {\em
     ON ENTRY TO ZHPEV  PARAMETER NUMBER  1 HAD AN ILLEGAL VALUE}
 is a signal that you are calling the bad routine. If you have defined 
 \texttt{-D\_\_ESSL} you should load ESSL before LAPACK: see
@@ -1153,8 +1153,8 @@ GFORTRAN\_UNBUFFERED\_ALL=1 is set. Newer 4.4/4.5 versions
 
 \paragraph{Linux PCs with g95}
 
-g95 v.0.91 and later (\texttt{http://www.g95.org}) works flawlessy. 
-The executables it produces are however slower (let us say 20\% or so) 
+g95 v.0.91 and later versions (\texttt{http://www.g95.org}) work. 
+The executables thet produce are however slower (let us say 20\% or so) 
 that those produced by gfortran, which in turn are slower 
 (by another 20\% or so) than those produced by ifort.
 
@@ -1163,8 +1163,8 @@ that those produced by gfortran, which in turn are slower
 ``The Sun Studio compiler, sunf95, is free (web site:
 \texttt{http://developers.sun.com/sunstudio/} and comes  
 with a set of algebra libraries that can be used in place of the slow 
-built-in libraries. It also supports openmp, which g95 does not. On the 
-other hand, it is a pain to compile mpi with it. Furthermore the most
+built-in libraries. It also supports OpenMP, which g95 does not. On the 
+other hand, it is a pain to compile MPI with it. Furthermore the most
 recent version has a terrible bug that totally miscompiles the iotk 
 input/output library (you'll have to compile it with reduced optimization).''
 (info by Lorenzo Paulatto, March 2010).
@@ -1183,7 +1183,7 @@ but it fails to pass several tests.
 The Intel compiler, ifort, is available for  free for personal 
 usage (\texttt{http://software.intel.com/})  It seem to produce the faster executables, 
 at least on Intel CPUs, but not all versions work as expected.
-ifort versions $<9.1$ are not recommanded, due to the presence of subtle 
+ifort versions $<9.1$ are not recommended, due to the presence of subtle 
 and insidious bugs. In case of trouble, update your version with 
 the most recent patches,
 available via Intel Premier support (registration free of charge for Linux):
@@ -1204,7 +1204,7 @@ differs a lot from the previous one. compiled objects from different
 releases may be incompatible and should not be mixed.    
 
 {\bf ifort v.11}: Segmentation faults were reported for the combination 
-ifort 11.0.081, MKL 10.1.1.019, openMP 1.3.3. The problem disappeared
+ifort 11.0.081, MKL 10.1.1.019, OpenMP 1.3.3. The problem disappeared
 with ifort 11.1.056 and MKL 10.2.2.025 (Carlo Nervi, Oct. 2009).
 
 {\bf ifort v.10:} on 64-bit AMD CPUs, at least some versions of ifort 10.1 
@@ -1215,11 +1215,10 @@ Cavazzoni, March 2008).
 
 "The intel compiler version 10.1.008 miscompiles a lot of codes (I have proof 
 for CP2K and CPMD) and needs to be updated in any case" (info by Axel
-Kohlmeter, May 2008).
+Kohlmeyer, May 2008).
  
 {\bf ifort v.9:} The latest (July 2006) 32-bit version of ifort 9.1
-works flawlessy. Earlier versions yielded 
-{\em Compiler Internal Error}.
+works. Earlier versions yielded {\em Compiler Internal Error}.
     
 \paragraph{Linux PCs with MKL libraries}
 On Intel CPUs it is very convenient to use Intel MKL libraries. They can be
@@ -1283,7 +1282,7 @@ Apart from such problems, \qe\ compiles and works on all non-buggy, properly
 configured hardware and software combinations. You may have to
 recompile MPI libraries: not all MPI installations contain support for
 the fortran-90 compiler of your choice (or for any fortran-90 compiler
-at all!). Useful step-by-step instructions for MPI comilation can be 
+at all!). Useful step-by-step instructions for MPI compilation can be 
 found in the following post by  Javier Antonio Montoya:\\
 \texttt{http://www.democritos.it/pipermail/pw\_forum/2008April/008818.htm}. 
 
@@ -1332,8 +1331,8 @@ Summary for the hasty:
 
 GNU:
 Install macports compilers, 
-Install mpi environment,
-Configure Quantum Espresso using
+Install MPI environment,
+Configure \qe\  using
 \begin{verbatim}
   ./configure CC=gcc-mp-4.3 CPP=cpp-mp-4.3 CXX=g++-mp-4.3 F77=g95 FC=g95
 \end{verbatim}
@@ -1341,9 +1340,9 @@ Configure Quantum Espresso using
 Intel:
 Use Version >11.1.088
 Use 32 bit compilers
-Install mpi environment,
+Install MPI environment,
 install macports provided cpp (optional)
-Configure Quantum Espresso using
+Configure \qe\ using
 \begin{verbatim}
  ./configure CC=icc CXX=icpc F77=ifort F90=ifort FC=ifort CPP=cpp-mp-4.3
 \end{verbatim}
@@ -1360,25 +1359,25 @@ First install necessary compilers from macports
    port install gcc43
    port install g95
 \end{verbatim}
-The apple supplied mpi environment has to be overriden since there is
+The apple supplied MPI environment has to be overridden since there is
 a new set of compilers now (and Apple provided mpif90 is just an empty 
 placeholder since Apple does not provide fortran compilers). I have used
-openmpi for this case. Recommended minimum configuration line is:
+OpenMPI for this case. Recommended minimum configuration line is:
 \begin{verbatim}
   ./configure CC=gcc-mp-4.3 CPP=cpp-mp-4.3 CXX=g++-mp-4.3 F77=g95 FC=g95
 \end{verbatim}
 of course, installation directory should be set accordingly if a multiple
 compiler environment is desired. The default installation directory of 
-openmpi overwrites apple supplied mpi permenantly!\\
-Next step is the Quantum-Espresso itself. Sadly, the Apple suplied accelaration
+OpenMPI overwrites apple supplied MPI permanently!\\
+Next step is \qe\ itself. Sadly, the Apple supplied optimized BLAS/LAPACK
 libraries tend to misbehave under different tests, and it is much safer to
-use internally supplied replacements. The minimum recommended configuration
+use internal libraries. The minimum recommended configuration
 line is (presuming the environment is set correctly):
 \begin{verbatim}
   ./configure CC=gcc-mp-4.3 CXX=g++-mp-4.3 F77=g95 F90=g95 FC=g95 CPP=cpp-mp-4.3 --with-internal-blas --with-internal-lapack
 \end{verbatim}
 
-Compilation with Intel compilers
+Compilation with Intel compilers:
 Newer versions of Intel compiler (>11.1.067) support Mac OS X 10.6, and furthermore they are
 bundled with intel MKL. 32 bit binaries obtained using 11.1.088 are tested and no problems
 have been encountered so far. Sadly, as of 11.1.088 the 64 bit binary misbehave 
@@ -1397,10 +1396,10 @@ i.e.
 \end{verbatim}
 will set the environment for 32 bit compilation in my case. 
 
-Then, the mpi environment has to be set up for intel compilers similar to previous 
+Then, the MPI environment has to be set up for Intel compilers similar to previous 
 section. 
 
-The recommended compilation line for the Quantum Espresso is: 
+The recommended configuration line for \qe\ is: 
 \begin{verbatim}
  ./configure CC=icc CXX=icpc F77=ifort F90=ifort FC=ifort CPP=cpp-mp-4.3
 \end{verbatim}
@@ -1591,7 +1590,7 @@ arrays whose dimension is the number of Kohn-Sham states
 across the ``linear-algebra group'', a subgroup of the pool of processors,
 organized in a square 2D grid. As a consequence the number of processors
 in the linear-algebra group is given by $n^2$, where $n$ is an integer;
-$n^2$ must be smaller than the number of precessors of a single pool.
+$n^2$ must be smaller than the number of processors of a single pool.
 The diagonalization is then performed
 in parallel using standard linear algebra operations.
 (This diagonalization is used by, but should not be confused with,
@@ -1638,12 +1637,12 @@ parameters, large jobs will find a stumbling block in either memory or
 CPU requirements. In particular, the linear-algebra parallelization is
 used in the diagonalization  of matrices in the subspace of Kohn-Sham
 states (whose dimension is as a strict minumum equal to the number of
-occupied states). These are stored as block-distributed matrixes
-(distributed across processors) and diagonalized using custom-taylored
-diagonalization algorithms that work on block-distributed matrixes.
+occupied states). These are stored as block-distributed matrices
+(distributed across processors) and diagonalized using custom-tailored
+diagonalization algorithms that work on block-distributed matrices.
 
 Since v.4.1, ScaLAPACK can be used to diagonalize block distributed
-matrixes, yielding better speed-up than the default algorithms for
+matrices, yielding better speed-up than the default algorithms for
 large ($ > 1000$) matrices, when using a large number of processors 
 ($> 512$). If you want to test ScaLAPACK,
 use \texttt{configure --with-scalapack}. This
@@ -1724,7 +1723,7 @@ way across disks residing on different nodes.
 
 You can use input variable \texttt{disk\_io='minimal'}, or even 
 \texttt{'none'}, if you run
-into trouble (or into angry system managers) with eccessive I/O with \pw.x. 
+into trouble (or into angry system managers) with excessive I/O with \pw.x. 
 The code will store wavefunctions into RAM during the calculation.
 Note however that this will increase your memory usage and may limit 
 or prevent restarting from interrupted runs.
@@ -1780,7 +1779,7 @@ to provide an input file.
 
 \paragraph{Trouble with MKL and MPI parallelization}
 If you notice very bad parallel performances with MPI and MKL libraries, 
-it is very likely that the OpenMP parallelization perfiormed by the latter 
+it is very likely that the OpenMP parallelization performed by the latter 
 is colliding with MPI. Recent versions of MKL enable autoparallelization
 by default on multicore machines.  You must set the environmental variable
 OMP\_NUM\_THREADS to 1 to disable it. 
@@ -1867,7 +1866,7 @@ in namelist \&CONTROL. Most variables in namelists have default values. Only
 the following variables in \&SYSTEM must always be specified:
 
 \begin{tabular}{lll}
-      \texttt{ibrav} & (integer)& bravais-lattice index\\
+      \texttt{ibrav} & (integer)& Bravais-lattice index\\
       \texttt{celldm} &(real, dimension 6)& crystallographic constants\\
       \texttt{nat} &(integer)& number of atoms in the unit cell\\
       \texttt{ntyp} &(integer)& number of types of atoms in the unit cell\\
@@ -2176,7 +2175,7 @@ restart of the calculation
 \end{description}
 
 "NEB calculation are a bit tricky in general and require extreme care to be
-setup correctly. NEB also takes easily hunders of iteration to converge,
+setup correctly. NEB also takes easily hundreds of iteration to converge,
 of course depending on the number of atoms and of images. Here is some
 free advice:
 \begin{enumerate}
@@ -2230,7 +2229,7 @@ Since version 4.0 it is possible to safely stop execution of
 \ph.x\ code using
 the same mechanism of the \pw.x\ code, i.e. by creating a file \texttt{prefix.EXIT} in the 
 working directory. Execution can be resumed by setting \texttt{recover=.true.} 
-in thesubsequent input data.
+in the subsequent input data.
 
 \subsection{Single-q calculation}
 
@@ -2258,7 +2257,7 @@ After the namelist you must specify the q-vector of the phonon mode.
 This must be the same q-vector given in the input of \pw.x.
     
 Notice that the dynamical matrix calculated by \ph.x at $q=0$ does not
-contain the non-analytic term occuring in polar materials, i.e. there is no
+contain the non-analytic term occurring in polar materials, i.e. there is no
 LO-TO splitting in insulators. Moreover no Acoustic Sum Rule (ASR) is
 applied. In order to have the complete dynamical matrix at $q=0$ including
 the non-analytic terms, you need to calculate effective charges by specifying
@@ -2316,7 +2315,7 @@ grid, specifying option \texttt{elph=.true.}. and the file name where
 the self-consistent first-order variation of the potential is to be 
 stored: variable \texttt{fildvscf}).
 The electron-phonon coefficients are calculated using several
-values of gaussian broadening (see \texttt{PH/elphon.f90}) because this quickly
+values of Gaussian broadening (see \texttt{PH/elphon.f90}) because this quickly
 shows whether results are converged or not with respect to the k-point grid
 and Gaussian broadening.
 \item Finally, you can use \texttt{matdyn.x} and \texttt{lambda.x} 
@@ -2539,7 +2538,7 @@ You can find the description of the input variables in file
 
 The first run, when starting from scratch, is always an electronic 
 minimization, with fixed ions and cell, to bring the electronic system on the ground state (GS) relative to the starting atomic configuration. This step is conceptually very similar to
-self-consistentcy in a \pw.x\ run.
+self-consistency in a \pw.x\ run.
 
 Sometimes a single run is not enough to reach the GS. In this case,
 you need to re-run the electronic minimization stage. Use the input 
@@ -2677,7 +2676,7 @@ require an even smaller threshold on total energy.
 Let us now move to case 2: randomization of positions.
    
 If you have relaxed the system or if the starting system is already in
-the equilibrium positions, then you need to dispacee ions from the equilibrium 
+the equilibrium positions, then you need to displace ions from the equilibrium 
 positions, otherwise they will not move in a dynamics simulation.
 After the randomization you should bring electrons on the GS again,
 in order to start a dynamic with the correct forces and with electrons 
@@ -2807,7 +2806,7 @@ just due pure drag. Neither of this is good.''
 
 ''I think the only workable regime with an electronic thermostat is a 
 mild overexcitation of the electrons, however, to do this one will need 
-to know rather precisely what is the fictititious kinetic energy due to the
+to know rather precisely what is the fictitious kinetic energy due to the
 drag.''
 
 \subsection{Advanced usage}
@@ -2917,7 +2916,7 @@ Below the new parameters in the electrons list, are listed.
 \begin{itemize}
 \item \texttt{smearing}: used to select the occupation distribution;
 there are two options: Fermi-Dirac smearing='fd', cold-smearing
-smearing='cs' (recommanded) 
+smearing='cs' (recommended) 
 \item \texttt{degauss}: is the electronic temperature; it controls the broadening
 of the occupation numbers around the Fermi energy. 
 \item \texttt{ninner}: is the number of iterative cycles in the inner loop, 
@@ -2992,7 +2991,7 @@ so you can choose something in the range of 1-5 fs. \\
 occupation number is also fractional, so the number of band, \texttt{nbnd}, has to 
 be chosen such as to have some empty states. As a rule of thumb, start
 with an initial occupation number of about 1.6-1.8 (the more bands you 
-considera, the more the calculation is accurate, but it also takes longer.
+consider, the more the calculation is accurate, but it also takes longer.
 The CPU time scales almost linearly with the number of bands.) \\
 {\em NOTA3} the parameter \texttt{emass\_cutoff} is used in the preconditioning 
 and it has a completely different meaning with respect to plain CP. 
@@ -3066,7 +3065,7 @@ time for a single iteration, $T_{init}$ = initialization time
 The time required for a single self-consistency iteration $T_{iter}$ is:
 $$T_{iter} = N_k T_{diag} +T_{rho} + T_{scf}$$
 where $N_k$ = number of k-points, $T_{diag}$ = time per 
-hamiltonian iterative diagonalization, $T_{rho}$ = time for charge density 
+Hamiltonian iterative diagonalization, $T_{rho}$ = time for charge density 
 calculation, $T_{scf}$ = time for Hartree and XC potential
 calculation.
     
@@ -3232,9 +3231,9 @@ this is not always true. If the code issues a warning messages and continues,
 pay attention to it but do not assume that something is necessarily wrong in
 your calculation: most warning messages signal harmless problems.
 
-\subsection{\pw.x problems}
+\subsection{pw.x problems}
 
-\paragraph{\pw.x says 'error while loading shared libraries' or
+\paragraph{pw.x says 'error while loading shared libraries' or
   'cannot open shared object file' and does not start} 
 Possible reasons:
 \begin{itemize}
@@ -3262,7 +3261,7 @@ the codes -- on a parallel machine, such as e.g.:
 you may have forgotten 
 the " " in the definitions of PARA\_PREFIX and PARA\_POSTFIX.
 
-\paragraph{\pw.x prints the first few lines and then nothing happens
+\paragraph{pw.x prints the first few lines and then nothing happens
   (parallel execution)} 
 If the code looks like it is not reading from input, maybe
 it isn't: the MPI libraries need to be properly configured to accept input
@@ -3270,7 +3269,7 @@ redirection. Use \texttt{pw.x -inp} and the input file name (see Sec.\ref{SubSec
 your local computer wizard (if any). Since v.4.2, this is for sure the
 reason if the code stops at {\em Waiting for input...}.
 
-\paragraph{\pw.x stops with error while reading data}
+\paragraph{pw.x stops with error while reading data}
 There is an error in the input data, typically a misspelled namelist 
 variable, or an empty input file.
 Unfortunately with most compilers the code just reports {\em Error while
@@ -3288,13 +3287,13 @@ Both may cause the code to crash with rather mysterious error messages.
 If none of the above applies and the code stops at the first namelist
 (\&CONTROL) and you are running in parallel, see the previous item.
 
-\paragraph{\pw.x mumbles something like {\em cannot recover} or 
+\paragraph{pw.x mumbles something like {\em cannot recover} or 
 {\em error reading recover file}} 
 You are trying to restart from a previous job that either
 produced corrupted files, or did not do what you think it did. No luck: you
 have to restart from scratch.
 
-\paragraph{\pw.x stops with {\em inconsistent DFT} error}
+\paragraph{pw.x stops with {\em inconsistent DFT} error}
 As a rule, the flavor of DFT used in the calculation should be the
 same as the one used in the generation of pseudopotentials, which
 should all be generated using the same flavor of DFT. This is actually enforced: the
@@ -3303,7 +3302,7 @@ is read from all PPs. If this does not hold, the code stops with the
 above error message. Use -- at your own risk -- input variable 
 \texttt{input\_dft} to force the usage of the DFT you like.
 
-\paragraph{\pw.x stops with error in cdiaghg or rdiaghg}
+\paragraph{pw.x stops with error in cdiaghg or rdiaghg}
 Possible reasons for such behavior are not always clear, but they
 typically fall into one of the following cases:
 \begin{itemize}
@@ -3326,11 +3325,11 @@ typically fall into one of the following cases:
   reproducible on other architectures or that disappears if the
   calculation is repeated with even minimal changes in
   parameters. Known cases: HP-Compaq alphas with cxml libraries, Mac
-  OS-X with system blas/lapack. Try to use compiled BLAS and LAPACK
+  OS-X with system BLAS/LAPACK. Try to use compiled BLAS and LAPACK
   (or better, ATLAS) instead of machine-optimized libraries. 
 \end{itemize}
 
-\paragraph{\pw.x crashes with no error message at all}
+\paragraph{pw.x crashes with no error message at all}
 This happens quite often in parallel execution, or under a batch
 queue, or if you are writing the output to a file. When the program
 crashes, part of the output, including the error message, may be lost,
@@ -3338,7 +3337,7 @@ or hidden into error files where nobody looks into. It is the fault of
 the operating system, not of the code. Try to run interactively 
 and to write to the screen. If this doesn't help, move to next point.
 
-\paragraph{\pw.x crashes with {\em segmentation fault} or similarly
+\paragraph{pw.x crashes with {\em segmentation fault} or similarly
   obscure messages} 
 Possible reasons:
 \begin{itemize}
@@ -3353,7 +3352,7 @@ a different and incompatible environment.
 have problems with the provided tests and examples.
 \end{itemize}
 
-\paragraph{\pw.x works for simple systems, but not for large systems
+\paragraph{pw.x works for simple systems, but not for large systems
   or whenever more RAM is needed}  
 Possible solutions:
 \begin{itemize}
@@ -3382,7 +3381,7 @@ Possible solutions:
   \texttt{http://www.democritos.it/pipermail/pw\_forum/2007-September/007179.html}. 
 \end{itemize}
 
-\paragraph{\pw.x crashes with {\em error in davcio}}
+\paragraph{pw.x crashes with {\em error in davcio}}
 \texttt{davcio} is the routine that performs most of the I/O operations (read
 from disk and write to disk) in \pw.x; {\em error in davcio} means a
 failure of an I/O operation. 
@@ -3407,7 +3406,7 @@ failure of an I/O operation.
   start before a preceding one has finished.
 \end{itemize}
 
-\paragraph{\pw.x crashes in parallel execution with an obscure message
+\paragraph{pw.x crashes in parallel execution with an obscure message
   related to MPI errors} 
 Random crashes due to MPI errors have often been reported, typically
 in Linux PC clusters. We cannot rule out the possibility that bugs in
@@ -3425,7 +3424,7 @@ doesn't seem to happen, the odds are that the problem is not in
 but consider that reports like {\em it crashes with...(obscure MPI error)}
 contain 0 bits of information and are likely to get 0 bits of answers.
 
-\paragraph{\pw.x stops with error message {\em the system is metallic,
+\paragraph{pw.x stops with error message {\em the system is metallic,
  specify occupations}} 
 You did not specify state occupations, but you need to, since your
 system appears to have an odd number of electrons. The variable
@@ -3435,7 +3434,7 @@ controlling how metallicity is treated is \texttt{occupations} in namelist
 cases, use \texttt{'smearing'} (\texttt{'tetrahedra'} for DOS calculations). 
 See input reference documentation for more details.
 
-\paragraph{\pw.x stops with \texttt{internal error: cannot braket Ef}}
+\paragraph{pw.x stops with {\em internal error: cannot braket Ef}}
 Possible reasons:
 \begin{itemize}
 \item serious error in data, such as bad number of electrons,
@@ -3448,7 +3447,7 @@ Possible reasons:
   Marzari-Vanderbilt 'cold smearing'. 
 \end{itemize}
 
-\paragraph{\pw.x yields \texttt{internal error: cannot braket Ef} message 
+\paragraph{pw.x yields {\em internal error: cannot braket Ef} message 
 but does not stop} 
 This may happen under special circumstances when you are calculating
 the band structure for selected high-symmetry lines. The message
@@ -3456,7 +3455,7 @@ signals that occupations and Fermi energy are not correct (but
 eigenvalues and eigenvectors are). Remove \texttt{occupations='tetrahedra'}
 in the input data to get rid of the message. 
 
-\paragraph{\pw.x runs but nothing happens}
+\paragraph{pw.x runs but nothing happens}
 Possible reasons:
 \begin{itemize}
 \item in parallel execution, the code died on just one
@@ -3468,8 +3467,8 @@ Possible reasons:
 \item maybe your calculation will take more time than you expect.
 \end{itemize}
 
-\paragraph{\pw.x yields weird results}
-If resutlts are really weird (as opposed to misinterpreted):
+\paragraph{pw.x yields weird results}
+If resutls are really weird (as opposed to misinterpreted):
 \begin{itemize}
 \item if this happens after a change in the code or in compilation or
   preprocessing options, try \texttt{make clean}, recompile. The \texttt{make}
@@ -3507,7 +3506,7 @@ waste CPU time and memory for too large values.
 Note that in parallel execution, it is very convenient to have FFT grid
 dimensions along $z$ that are a multiple of the number of processors.
 
-\paragraph{\pw.x does not find all the symmetries you expected} 
+\paragraph{pw.x does not find all the symmetries you expected} 
 \pw.x determines first the symmetry operations (rotations) of the
 Bravais lattice; then checks which of these are symmetry operations of
 the system (including if needed fractional translations). This is done
@@ -3560,7 +3559,7 @@ itself.
 \paragraph{Self-consistency is slow or does not converge at all}
 
 Bad input data will often result in bad scf convergence. Please 
-carefullt check your structure first, e.g. using XCrySDen.
+carefully check your structure first, e.g. using XCrySDen.
  
 Assuming that your input data is sensible :
 \begin{enumerate}
@@ -3666,7 +3665,7 @@ the same quantity, not commensurate with the FFT grid). This sets a limit
 to the accuracy of forces. The situation improves somewhat by increasing
 the \texttt{ecutrho} cutoff.
 
-\paragraph{\pw.x stops during variable-cell optimization in
+\paragraph{pw.x stops during variable-cell optimization in
   checkallsym with {\em non orthogonal operation} error} 
 Variable-cell optimization may occasionally break the starting
 symmetry of the cell. When this happens, the run is stopped because
@@ -3695,26 +3694,26 @@ if you did not set \texttt{wf\_collect=.true.}, the number of processors and
 pools for the phonon run should be the same as for the
 self-consistent run; all files must be visible to all processors.
 
-\subsection{\ph.x errors}
+\subsection{ph.x errors}
 
-\paragraph{\ph.x stops with {\em error reading file}}
+\paragraph{ph.x stops with {\em error reading file}}
 The data file produced by \pw.x
 is bad or incomplete or produced by an incompatible version of the code.
 In parallel execution: if you did not set \texttt{wf\_collect=.true.}, the number
 of processors and pools for the phonon run should be the same as for the
 self-consistent run; all files must be visible to all processors.
 
-\paragraph{\ph.x mumbles something like {\em cannot recover} or {\em error
+\paragraph{ph.x mumbles something like {\em cannot recover} or {\em error
   reading recover file}} 
 You have a bad restart file from a preceding failed execution.
 Remove all files \texttt{recover*} in \texttt{outdir}.
 
-\paragraph{\ph.x says {\em occupation numbers probably wrong} and
+\paragraph{ph.x says {\em occupation numbers probably wrong} and
  continues} You have a
 metallic or spin-polarized system but occupations are not set to 
 \texttt{'smearing'}.
 
-\paragraph{\ph.x does not yield acoustic modes with $\omega=0$ at $q=0$}
+\paragraph{ph.x does not yield acoustic modes with zero frequency at $q=0$}
 This may not be an error: the Acoustic Sum Rule (ASR) is never exactly
 verified, because the system is never exactly translationally
 invariant as it should be.  The calculated frequency of the acoustic
@@ -3739,7 +3738,7 @@ cutoff  (hence there is an effect due to cutoff) induces oscillations
 in rho and b) the reduced gradient is diverging.''(info by Stefano de
 Gironcoli, June 2008) 
 
-\paragraph{\ph.x yields really lousy phonons, with bad or negative
+\paragraph{ph.x yields really lousy phonons, with bad or negative
   frequencies or wrong symmetries or gross ASR violations} 
 Possible reasons
 \begin{itemize}
@@ -3850,7 +3849,7 @@ are in the code itself: most likely the fortran-to-C conventions used
 in file \texttt{include/c\_defs.h} are not appropriate. Edit this file
 and retry.
 
-If the missing symbols are in external libraries (Blas, Lapack, FFT,
+If the missing symbols are in external libraries (BLAS, LAPACK, FFT,
 MPI libraries): 
 there is a name mismatch between what the compiler expects and what the
 library provides. See Sec.\ref{Sec:Installation}).
@@ -4091,7 +4090,7 @@ atomic basis.
 
 \paragraph{I cannot find the Fermi energy, where is it?}  
 
-It is printed in the output. If not, the information on gaussian smearing,
+It is printed in the output. If not, the information on Gaussian smearing,
 needed to calculate a sensible Fermi energy, was not provided in input.
 In this case, \pw.x prints instead the highest occupied and lowest
 unoccupied levels. If not, the number of bands to be calculated was not 
@@ -4164,7 +4163,7 @@ examples/WorkFct\_example.
 phonon mode?} 
 
 A symmetry analyzer was added in v.3.2 by Andrea Dal Corso. 
-Other packages that perform symmetry analysis of phnons and normal modes:\\
+Other packages that perform symmetry analysis of phonons and normal modes:\\
 ISOTROPY package: http://stokes.byu.edu/iso/isotropy.html\\
 ACKJ, ACMI packages: http://www.cpc.cs.qub.ac.uk.
 
@@ -4176,7 +4175,7 @@ the main and most irreducible violation comes from the discreteness
 of the FFT grid. There may be other reasons, though, notably
 insufficient convergence: "Recently I found that the parameters
 \texttt{tr2\_ph} for the phonons and \texttt{conv\_thr} for the 
-groundstate can affect the quality of the phonon calculation,
+ground state can affect the quality of the phonon calculation,
  especially the "vanishing" frequencies for molecules."
 (Info from Katalyn Gaal-Nagy). Anyway: if the nonzero frequencies are
 small, you can impose the ASR to the dynamical matrix, usually with

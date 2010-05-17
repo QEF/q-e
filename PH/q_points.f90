@@ -12,7 +12,6 @@ SUBROUTINE q_points ( )
   USE kinds, only : dp
   USE io_global,  ONLY :  stdout, ionode
   USE disp,  ONLY : nqmax, nq1, nq2, nq3, x_q, nqs
-  USE disp,  ONLY : iq1, iq2, iq3
   USE output, ONLY : fildyn
   USE symm_base, ONLY : nsym, s, time_reversal, t_rev
   USE cell_base, ONLY : bg
@@ -20,7 +19,7 @@ SUBROUTINE q_points ( )
   implicit none
   
   integer :: i, iq, ierr, iudyn = 26
-  logical :: exist_gamma, single_q
+  logical :: exist_gamma
   logical, external :: is_equivalent
   real(DP), allocatable, dimension(:) :: wq  
 
@@ -36,26 +35,6 @@ SUBROUTINE q_points ( )
   call kpoint_grid( nsym, time_reversal, s, t_rev, bg, nqmax, &
                          0,0,0, nq1,nq2,nq3, nqs, x_q, wq )
   deallocate (wq)
-  !
-  !  if a single q-point of the grid requested
-  !
-  IF ( iq1 < 0 .or. iq2 < 0 .or. iq3 < 0 ) &
-     CALL errore('q_points','iq1 or iq2 or iq3 < 0',1)
-  IF ( iq1 > nq1 .or. iq2 > nq2 .or. iq3 > iq3 ) &
-     CALL errore('q_points','iq1 or iq2 or iq3 > nq1 or nq2 or nq3',1)
-  single_q = iq1 > 0 .AND. iq2 > 0 .AND. iq3 > 0
-  IF ( single_q ) THEN
-     DO iq = 1, nqs
-        IF ( is_equivalent ( iq1, iq2, iq3, nq1, nq2, nq3, x_q(1,iq), bg, &
-                             time_reversal, nsym, s, t_rev ) ) THEN
-           x_q(:,1) = x_q(1,iq)
-           nqs = 1
-           GO TO 10
-        END IF
-     END DO
-     CALL errore('q_points','could not find required q-point',1)
-10   CONTINUE
-  END IF
   !
   ! Check if the Gamma point is one of the points and put
   ! it in the first position (it should already be the first)
@@ -79,15 +58,13 @@ SUBROUTINE q_points ( )
   !
   write(stdout, '(//5x,"Dynamical matrices for (", 3(i2,","),") &
            & uniform grid of q-points")') nq1, nq2, nq3
-  if ( single_q ) write(stdout, '(5x, "with only (", 3(i2,","), &
-                                    & ") point requested")') iq1, iq2, iq3
   write(stdout, '(5x,"(",i4,"q-points):")') nqs
   write(stdout, '(5x,"  N         xq(1)         xq(2)         xq(3) " )')
   do iq = 1, nqs
      write(stdout, '(5x,i3, 3f14.9)') iq, x_q(1,iq), x_q(2,iq), x_q(3,iq)
   end do
   !
-  IF ( .NOT. single_q .AND. .NOT. exist_gamma) &
+  IF ( .NOT. exist_gamma) &
      CALL errore('q_points','Gamma is not a q point',1)
   !
   ! ... write the information on the grid of q-points to file
