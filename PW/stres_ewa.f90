@@ -92,7 +92,7 @@ subroutine stres_ewa (alat, nat, ntyp, ityp, zv, at, bg, tau, &
        &', 1)
   upperbound = e2 * charge**2 * sqrt (2 * alpha / tpi) * &
                qe_erfc ( sqrt (tpiba2 * gcutm / 4.0d0 / alpha) )
-  if (upperbound.gt.eps6) goto 12
+  if (upperbound.gt.1d-7) goto 12
   !
   ! G-space sum here
   !
@@ -135,7 +135,7 @@ subroutine stres_ewa (alat, nat, ntyp, ityp, zv, at, bg, tau, &
   ! R-space sum here (only for the processor that contains G=0)
   !
   if (gstart.eq.2) then
-     rmax = 5.0d0 / sqrt (alpha) / alat
+     rmax = 4.0d0 / sqrt (alpha) / alat
      !
      ! with this choice terms up to ZiZj*erfc(5) are counted (erfc(5)=2x10^-1
      !
