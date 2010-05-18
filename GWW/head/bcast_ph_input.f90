@@ -24,7 +24,7 @@ subroutine bcast_ph_input ( )
                          ldisp, lnscf, elph, reduce_io, zue, epsil, trans, &
                          lgamma, nogg
   USE gamma_gamma, ONLY : asr
-  USE disp, ONLY : iq1, iq2, iq3, nq1, nq2, nq3
+  USE disp, ONLY : nq1, nq2, nq3
   USE freq_ph, ONLY : fpol, nfs, fiu
   USE qpoint, ONLY : xq
   USE output, ONLY : fildvscf, fildyn, fildrho
@@ -73,9 +73,6 @@ subroutine bcast_ph_input ( )
   CALL mp_bcast( nq1, ionode_id )
   CALL mp_bcast( nq2, ionode_id )
   CALL mp_bcast( nq3, ionode_id )
-  CALL mp_bcast( iq1, ionode_id )
-  CALL mp_bcast( iq2, ionode_id )
-  CALL mp_bcast( iq3, ionode_id )
   CALL mp_bcast( nfs, ionode_id )
   !
   ! real*8
