@@ -20,7 +20,6 @@ SUBROUTINE q_points ( )
   
   integer :: i, iq, ierr, iudyn = 26
   logical :: exist_gamma
-  logical, external :: is_equivalent
   real(DP), allocatable, dimension(:) :: wq  
 
   !
@@ -83,49 +82,3 @@ SUBROUTINE q_points ( )
   return
 end subroutine q_points
 !
-!-----------------------------------------------------------------------
-LOGICAL FUNCTION is_equivalent ( ik1, ik2, ik3, nk1, nk2, nk3, xk, bg, &
-                                 time_reversal, nsym, s, t_rev )
-!-----------------------------------------------------------------------
-  !
-  ! ... Check if q-point defined by ik1, ik2, ik3 in the uniform grid
-  ! ... is equivalent to xk (cartesian) - used for single-q calculation
-  ! 
-  USE kinds, ONLY: DP
-  IMPLICIT NONE
-  !
-  INTEGER,  INTENT(in) :: ik1,ik2,ik3, nk1,nk2,nk3, nsym, t_rev(48), s(3,3,48)
-  LOGICAL,  INTENT(in) :: time_reversal 
-  REAL(DP), INTENT(in) :: bg(3,3)
-  REAL(DP), INTENT(in) :: xk(3)
-  !
-  REAL(DP), PARAMETER :: eps=1.0d-5
-  REAL(DP) :: xk_(3), xkr(3)
-  INTEGER :: ns
-  !
-  xk_(1) = DBLE(ik1-1)/nk1
-  xk_(2) = DBLE(ik2-1)/nk2
-  xk_(3) = DBLE(ik3-1)/nk3
-  xk_(:) = xk_(:)-NINT(xk_(:))
-  !
-  DO ns=1,nsym
-     !
-     xkr(:) = s(:,1,ns) * xk_(1) &
-            + s(:,2,ns) * xk_(2) &
-            + s(:,3,ns) * xk_(3)
-     xkr(:) = xkr(:) - NINT( xkr(:) )
-     IF (t_rev(ns) == 1) xkr(:) = -xkr(:)
-     ! 
-     CALL cryst_to_cart (1, xkr, bg, 1)
-     !
-     is_equivalent = ABS( xkr(1)-xk(1) ) < eps .AND. &
-                     ABS( xkr(2)-xk(2) ) < eps .AND. &
-                     ABS( xkr(3)-xk(3) ) < eps
-     IF ( is_equivalent)  RETURN 
-     !
-  END DO
-
-  is_equivalent = .false.
-  RETURN 
-
-END FUNCTION is_equivalent
