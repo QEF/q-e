@@ -1,7 +1,8 @@
 # System-dependent definitions for IBM BG/P massively parallel machine
 # Written for the Jugene machine in Juelich - edit according to your needs
 # make.sys.  Generated from make.sys.in by configure.
-# last update by Carlo Cavazzoni 8 July 2009
+# updated by Carlo Cavazzoni 8 July 2009
+# updated by Paolo Giannozzi 19 May 2010
 
 # compilation rules
 
@@ -93,16 +94,18 @@ LD_LIBS        =
 
 # If you have nothing better, use the local copy : ../flib/blas.a
 
-BLAS_LIBS      = -L/opt/ibmmath/essl/4.3/lib/ -lesslbg # ../flib/blas.a
-BLAS_LIBS      = /bgsys/local/blacs/lib/libblacs.a /bgsys/local/blacs/lib/libblacsF77init.a /bgsys/local/blacs/lib/libblacs.a   -L/opt/ibmmath/essl/4.4/lib/ -lesslbg # ../flib/blas.a
+BLAS_LIBS      = -L/opt/ibmmath/essl/4.4/lib/ -lesslbg
+BLAS_LIBS_SWITCH = external
 
-# The following lapack libraries will be available in flib/ :
-# ../flib/lapack.a : contains all needed routines
-# ../flib/lapack_atlas.a: only routines not present in the Atlas library
+FLIB_TARGETS   = all
+
 # For IBM machines with essl (-D__ESSL): load essl BEFORE lapack !
 # remember that LAPACK_LIBS precedes BLAS_LIBS in loading order
 
-LAPACK_LIBS    = /bgsys/local/scalapack/lib/libscalapack.a ../flib/lapack.a
+LAPACK_LIBS    = /homea/hch03/hch033/espresso/lapack-3.2/lapack.a
+LAPACK_LIBS_SWITCH = internal
+
+SCALAPACK_LIBS = /bgsys/local/scalapack/lib/libscalapack.a /bgsys/local/blacs/lib/libblacs.a /bgsys/local/blacs/lib/libblacsF77init.a /bgsys/local/blacs/lib/libblacs.a 
 
 # nothing needed here if the the internal copy of FFTW is compiled
 # (needs -D__FFTW -D__USE_INTERNAL_FFTW in DFLAGS)
@@ -139,5 +142,6 @@ RANLIB         = ranlib
 # all internal and external libraries - do not modify
 
 LIBOBJS        = ../flib/ptools.a ../flib/flib.a ../clib/clib.a ../iotk/src/libiotk.a ../Multigrid/mglib.a
-LIBS           = $(LAPACK_LIBS) $(BLAS_LIBS) $(FFT_LIBS) $(MPI_LIBS) $(MASS_LIBS) $(PGPLOT_LIBS) $(LD_LIBS)
+LIBS           = $(SCALAPACK_LIBS) $(LAPACK_LIBS) $(BLAS_LIBS) $(FFT_LIBS) $(MPI_LIBS) $(MASS_LIBS) $(PGPLOT_LIBS) $(LD_LIBS)
+
 
