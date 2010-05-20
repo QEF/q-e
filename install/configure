@@ -604,7 +604,6 @@ f90rule
 arflags
 ar
 scalapack_libs
-pgplot_libs
 mass_libs
 mpi_libs
 fft_libs
@@ -2588,7 +2587,6 @@ scalapack_dir=$SCALAPACK_LIB  # Where to look for libscalapack.a
 blacs_dir=$BLACS_LIB          # Where to look for libblacs.a
 ar=$AR                   # ar (shouldn't be needed)
 arflags=$ARFLAGS         # Flags for ar (as above)
-pgplot_libs=$PGPLOT_LIBS  # PGPLOT libraries - used only by metadyn_pp.x
 
 # configure for current directory by default
 if test "$topdir" = "" ; then topdir="`pwd`" ; fi
@@ -4887,7 +4885,7 @@ ppc64:*xlf* )
         xlf_flags=1
         ;;
 
-ppc64-mn:* )
+ppc64-mn:*xlf* )
     if test "$use_debug" -eq 1; then
         try_fflags="-g -C -q64 -qstrict -qsuffix=cpp=f90 -qdpc -qalias=nointptr -Q -qtune=ppc970 -qarch=ppc970 -qcache=auto -qhot=vector,simd -qenablevmx"
     else
@@ -4899,7 +4897,7 @@ ppc64-mn:* )
         pre_fdflags="-WF,"
         xlf_flags=1
         ;;
-ppc64-bg:* )
+ppc64-bg:*xlf* )
     if test "$use_debug" -eq 1; then
         try_fflags="-q32 -qalias=noaryovrlp:nointptr -g -C -qdpc=e"
     else
@@ -5755,7 +5753,6 @@ then
         # (maybe they are already searched by default, but I'm not sure)
         ld_library_path=`echo $LD_LIBRARY_PATH | sed 's/:/ /g'`
 
-		  echo "$arch:$f90"
         case "$arch:$f90" in
 
         x86_64:pgf* | x86_64:path* | x86_64:openf95 | crayxt*:* )
@@ -7317,6 +7314,56 @@ if test "$ac_res" != no; then :
 fi
 
             ;;
+        ppc64-bg )
+                # check for esslbg
+                unset ac_cv_search_dcft # clear cached value
+                FFLAGS="$test_fflags"
+                LDFLAGS="$test_ldflags"
+                LIBS="$fft_libs $blas_libs"
+                { $as_echo "$as_me:${as_lineno-$LINENO}: checking for library containing dcft" >&5
+$as_echo_n "checking for library containing dcft... " >&6; }
+if test "${ac_cv_search_dcft+set}" = set; then :
+  $as_echo_n "(cached) " >&6
+else
+  ac_func_search_save_LIBS=$LIBS
+cat > conftest.$ac_ext <<_ACEOF
+      program main
+      call dcft
+      end
+_ACEOF
+for ac_lib in '' esslbg; do
+  if test -z "$ac_lib"; then
+    ac_res="none required"
+  else
+    ac_res=-l$ac_lib
+    LIBS="-l$ac_lib  $ac_func_search_save_LIBS"
+  fi
+  if ac_fn_f77_try_link "$LINENO"; then :
+  ac_cv_search_dcft=$ac_res
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext
+  if test "${ac_cv_search_dcft+set}" = set; then :
+  break
+fi
+done
+if test "${ac_cv_search_dcft+set}" = set; then :
+
+else
+  ac_cv_search_dcft=no
+fi
+rm conftest.$ac_ext
+LIBS=$ac_func_search_save_LIBS
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_search_dcft" >&5
+$as_echo "$ac_cv_search_dcft" >&6; }
+ac_res=$ac_cv_search_dcft
+if test "$ac_res" != no; then :
+  test "$ac_res" = "none required" || LIBS="$ac_res $LIBS"
+  have_fft=1 fft_libs="$LIBS"
+fi
+
+            ;;
         sparc )
                 # check for SUNperf FFT library on Sun Sparcs
                 # but not on solaris PC! it is slower than FFTW
@@ -8200,7 +8247,6 @@ else
 fi
 
 # export settings to generated files
-
 
 
 

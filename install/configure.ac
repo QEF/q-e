@@ -675,7 +675,7 @@ ppc64:*xlf* )
         xlf_flags=1
         ;;
 
-ppc64-mn:* )
+ppc64-mn:*xlf* )
     if test "$use_debug" -eq 1; then
         try_fflags="-g -C -q64 -qstrict -qsuffix=cpp=f90 -qdpc -qalias=nointptr -Q -qtune=ppc970 -qarch=ppc970 -qcache=auto -qhot=vector,simd -qenablevmx"
     else
@@ -687,7 +687,7 @@ ppc64-mn:* )
         pre_fdflags="-WF,"
         xlf_flags=1
         ;;
-ppc64-bg:* )
+ppc64-bg:*xlf* )
     if test "$use_debug" -eq 1; then
         try_fflags="-q32 -qalias=noaryovrlp:nointptr -g -C -qdpc=e"
     else
@@ -865,7 +865,6 @@ then
         # (maybe they are already searched by default, but I'm not sure)
         ld_library_path=`echo $LD_LIBRARY_PATH | sed 's/:/ /g'`
 
-		  echo "$arch:$f90"
         case "$arch:$f90" in
 
         x86_64:pgf* | x86_64:path* | x86_64:openf95 | crayxt*:* )
@@ -1426,6 +1425,14 @@ then
                 LDFLAGS="$test_ldflags"
                 LIBS="$fft_libs"
                 AC_SEARCH_LIBS(dcft, essl, have_fft=1 fft_libs="$LIBS")
+            ;;
+        ppc64-bg )
+                # check for esslbg
+                unset ac_cv_search_dcft # clear cached value
+                FFLAGS="$test_fflags"
+                LDFLAGS="$test_ldflags"
+                LIBS="$fft_libs $blas_libs"
+                AC_SEARCH_LIBS(dcft, esslbg, have_fft=1 fft_libs="$LIBS")
             ;;
         sparc )
                 # check for SUNperf FFT library on Sun Sparcs
