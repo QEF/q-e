@@ -564,12 +564,13 @@ Symlinks to executable programs will be placed in the
 subdirectory. Note that both C and Fortran compilers must be in your execution
 path, as specified in the PATH environment variable.
 
-Additional instructions for CRAY XT, NEC SX, Linux PowerPC machines with xlf:
-\begin{verbatim}
-    ./configure ARCH=crayxt4
-    ./configure ARCH=necsx
-    ./configure ARCH=ppc64-mn
-\end{verbatim}
+Additional instructions for special machines:
+\begin{tabular}{ll}
+    \texttt{./configure ARCH=crayxt4r}& for CRAY XT machines
+    \texttt{./configure ARCH=necsx}   & for NEC SX machines
+    \texttt{./configure ARCH=ppc64-mn}& PowerPC Linux + xlf (Marenostrum)
+    \texttt{./configure ARCH=ppc64-bg}& IBM BG/P (BlueGene)
+\end{tabular}
     
 \configure\ Generates the following files:
 
@@ -649,6 +650,7 @@ for NEC SX6 on a PC). Currently supported architectures are:\\
 \texttt{necsx}&   NEC SX-6 and SX-8 machines\\
 \texttt{ppc64}&   Linux PowerPC machines, 64 bits\\
 \texttt{ppc64-mn}&as above, with IBM xlf compiler\\
+\texttt{ppc64-bg}&IBM BlueGene
 \end{tabular}\\
 {\em Note}: \texttt{x86\_64} replaces \texttt{amd64} since v.4.1. 
 Cray Unicos machines, SGI 
@@ -1079,6 +1081,17 @@ but with a different calling sequence. The appearance of run-time errors like {\
 is a signal that you are calling the bad routine. If you have defined 
 \texttt{-D\_\_ESSL} you should load ESSL before LAPACK: see
 variable LAPACK\_LIBS in make.sys.
+
+\subsubsection{IBM BlueGene}
+
+The current \configure\ is tested and works only on the machine at
+J\"ulich. For other sites, you should try something like
+\begin{verbatim}
+  ./configure ARCH=ppc64-bg BLAS_LIBS=...  LAPACK_LIBS=... \
+              SCALAPACK_DIR=... BLACS_DIR=..."
+\end{verbatim}
+where the various *\_LIBS and *\_DIR "suggest" where the various libraries 
+are located.
 
 \subsubsection{Linux PC}
 
@@ -3434,7 +3447,7 @@ controlling how metallicity is treated is \texttt{occupations} in namelist
 cases, use \texttt{'smearing'} (\texttt{'tetrahedra'} for DOS calculations). 
 See input reference documentation for more details.
 
-\paragraph{pw.x stops with {\em internal error: cannot braket Ef}}
+\paragraph{pw.x stops with {\em internal error: cannot bracket Ef}}
 Possible reasons:
 \begin{itemize}
 \item serious error in data, such as bad number of electrons,
@@ -3447,7 +3460,7 @@ Possible reasons:
   Marzari-Vanderbilt 'cold smearing'. 
 \end{itemize}
 
-\paragraph{pw.x yields {\em internal error: cannot braket Ef} message 
+\paragraph{pw.x yields {\em internal error: cannot bracket Ef} message 
 but does not stop} 
 This may happen under special circumstances when you are calculating
 the band structure for selected high-symmetry lines. The message

@@ -1,5 +1,11 @@
 TODO LIST - May 2010
 
+0) Suspected bugs:
+  0.1  electric field in hexagonal lattice
+  0.2  "image" parallelization in CP
+  0.3  projwfc in CP doesn't work for spin polarized case
+  0.4  CP doesn't read PW files in spin polarized case
+
 1) Organization
 
 1.1 www.quantum-espresso.org:
@@ -27,16 +33,7 @@ TODO LIST - May 2010
 
 2) Documentation
 
-2.1 "Manuale delle giovani marmotte". Start from my notes for the course
-    of Electronic Structure, add more examples, with a short theoretical
-    introduction followed by explanation of practical calculations, ending
-    up with examples using QE. To begin with:
-    - convergence tests with USPP
-    - convergence tests with metals
-    - cohesive energies
-    - formation energies in defects (including charged defects)
-    - variable-cell optimization
-    - XPS spectra calculations
+2.1 Better (and shorter) FAQ list
 2.2 QE-Tutorial: should be moved to the cvs of qe-forge. 
     What are our plans for it, if any???
 2.3 We should decide a strategy on where to put the documentation.
@@ -51,30 +48,34 @@ TODO LIST - May 2010
 3.1 Add Coulomb PPs - require first that we fix 1.1.2
 3.2 Implement Goedecker PPs
 3.3 Extend documentation in pseudo-gen.tex to the case of multiple
-    projectors and to USPP (eventually to PAW)
+    projectors and to USPP (eventually to PAW) - add *.pdf
 3.4 Various proposals to extend the PP table with extensive/automated
     tests  (FM, NM, etc.)
 3.5 Add default cutoff values as well as radii of augmented charge
     in pseudopotential files (they are present in recent PP only)
 3.6 The intermediate hard NCPP is useless for PAW and should not be 
     done when generating a PAW set
+3.7 Merge Meta-GGA code with current atomic code
+3.8 Pseudopotential files are read in parallel by all processors.
+    Maybe this is not a great idea.
 
 4) Development
 
-4.1 Big new developments to add:
-  4.1.2 maybe ready: TD-DFPT
-  4.1.3 coming : XMCD in XSpectra
-  4.1.4 coming : vdW with nonlocal xc functional
-  4.1.5 coming : new GWW
-  4.1.6 coming : electron-phonon with Wannier stuff
-  4.1.7 work in progress: G-space symmetrization also for phonons
-  4.1.8 next: bio-oriented stuff (Solvent Models, PCM, QM-MM)
+4.1  New developments to be added (sooner or later):
+  4.1.0 structure builder + new xml output (RS)
+  4.1.1 NEB structured as a plugin (metdynamics-style)
+  4.1.2 TD-DFPT
+  4.1.3 XMCD in XSpectra
+  4.1.4 vdW with nonlocal xc functional
+  4.1.5 new GWW
+  4.1.6 electron-phonon with Wannier stuff
+  4.1.7 G-space symmetrization also for phonons
+  4.1.8 bio-oriented stuff (QM-MM, Solvent Models, PCM)
 
 4.2 Small new developments, desirable or to be added:
-  4.2.0 Wyckoff interface
   4.2.1 configure issues:
         - ifort+acml
-        - check if all MKL versions are recognized
+        - bluegene
         - add search for -lfftw3xf_intel 
         - remove obsolete stuff: next is macppc
   4.2.2 constraints should be implemented in all cases, or else, the
@@ -93,9 +94,8 @@ TODO LIST - May 2010
         for direct plotting by gnuplot/xmgrace - see also Eyvaz' script
         for phonon plotting. Also about phonons:
         C(R) should be calculated at the end of a dispersion run
-  4.2.8 Move to a xml-based format for the dynamical matrix files
-  4.2.9 Interface to RESP calculation - requires adding radii to xml file
-        Also: elf for USPP/PAW ; delocalization indices
+  4.2.8 Interface to RESP calculation - requires adding radii to xml file
+  4.2.9 elf for USPP/PAW ; delocalization indices
   4.1.10 Collection of tools and utilities for data analysis 
          (things like g(r) from MD simulations)
   4.2.11 Gamma: same input as for PH
@@ -134,12 +134,7 @@ TODO LIST - May 2010
         dt=sqrt(2) dt_default and emass should be increased so to keep
         emass^2/dt constant
       - defaults for the Nose thermostat
-  4.2.14 Add rotation of restart files, similar to what is done in CPMD:
-	"The number of distinct RESTART files generated during CPMD runs
-         is read from the next line. The restart files are written in turn.
-         Default is 1. If you specify e.g. 3, then the files RESTART.1,
-         RESTART.2, RESTART.3 are used in rotation."
-  4.2.15 EXX preprocessing should be removed, or at least it should be 
+  4.2.14 EXX preprocessing should be removed, or at least it should be 
          confined to just some specialized parts of the code.
 
 4.3 Performance enhancements/Parallelization:
@@ -161,8 +156,7 @@ TODO LIST - May 2010
   4.3.5 D3: verify status of parallelization, clean it up if needed
 
 4.4 Cleanup
-  4.4.0 EE/ must be fixed or else removed. Also:
-        complete the removal of old metadynamics stuff
+  4.4.0 Complete the removal of old metadynamics stuff
   4.4.1 Increase modularization by 
         - collecting variables and routines acting on those variables
           into modules
@@ -193,26 +187,17 @@ TODO LIST - May 2010
         - spherical harmonics and integration routines
         - merge of atomic positions! currently CP uses a complex logic
           that is very hard to follow
-  4.4.5 Use qexml for xml file processing so that a single, easily
-        exportable routine, is used everywhere. Requires some though
-        on how to deal with parallelism without filling qexml with
-        parallel stuff. This is also an opportunity to update the
-        file format (and the documentation) with 1) removal of obsolete
-        variables, 2) addition of variables that should be present,
-        3) possibility to reduce the number of files and directories
-        (hardcoded limit, more kpoints per directory, would replace
-         and extend lkpoint_dir)
-        documentation and to update the file format. 
   4.4.6 adding/removing/modifying input variables is too complex
         Why are some checks on input variables performed in read_namelist,
         while others apparently similar are in */input.f90?
-  4.4.7 Units: all units should be clearly documented and reprinted 
-        on output (and also exactly what the printed quantites are)
+  4.4.7 Units: all units should be clearly documented and printed 
+        on output (and also it should be clearly stated what the
+        printed quantites are)
   4.4.8 There should be a function calculating dj_l/dx;
         j_l with l=-1 should not be needed
   4.4.9 too many confusing error messages are still around
   4.4.10 Output should be more informative and less confused, better
-         structured, and ready for automatic reading by xcrysden
+         structured, and ready for automatic reading (.e.g by xcrysden)
   4.4.11 any possibility to merge the various solve_* in PH ?
   4.4.12 Replace "use pwcom" with more "use" statements
   4.4.13 Move all plots requiring Fourier (or real-space) interpolation
@@ -220,13 +205,19 @@ TODO LIST - May 2010
          files. Plots of sums and differences should be performed using
          data files ready for plotting (gnuplot, xsf, cube; may require
          some tools). pp.x should be simplified a lot and intermediate 
-         format should disappear
+         format should disappear. Also: there is no reason to have dos.x
+         together with projwfc.x
   4.4.14 All allocated variables should be deallocated at the end:
          it makes easier to find memory leaks. Currently most variables
          are deallocated, but a few (mostly in ffts and in pseudopotential
          reading) aren't
   4.4.15 __PARA and __MPI are redundant: one of them is sufficient
   4.4.16 add_efield must be rewritten from scratch: it is a mess beyond control
+  4.4.17 Replace generic &inputpp namelist with code-specific namelist
+         in PP (Tone). Maybe at least some postprocesing codes could be
+         used with command-line options instead of fortran input?
+  4.4.18 What about transforming 'bands'/'nscf' into a postprocessing
+         code?
 
 4.5 Trouble-makers. inconsistencies, etc
   4.5.1 Negative Charge problems (see qe-forge, H on graphene)
@@ -247,12 +238,37 @@ TODO LIST - May 2010
         choice of Nr1,Nr2,Nr3 (e.g. different Nr for axis of the
         same length or even worse related by symmetry): this is a
         frequent source of trouble with electron-phonon calculations
-  4.5.8 Still a few quirks with the atomic coordinate parser, if 
+ 4.5.8 Still a few quirks with the atomic coordinate parser, if 
         DOS characters or tabulators are present (Lorenzo)
-  4.5.9 Scratch files are a big mess. It should be possible
-	to open files in places other than tmp_dir without resorting 
-	to obscure coding. This is especially serious for PH, D3 etc
-        Also: there should be a lock mechanism that prevents people
-        from overwriting files of running processes
-  4.5.10 Pseudopotential files are read in parallel by all processors.
-         Maybe this is not a great idea
+ 4.5.10 k-points in crystal IBZ should be correctly calculated also
+        if input k-points are not in the IBZ of the lattice. Is is
+        sufficient to use brute forces instead of gourp theory:
+        expand to full BZ, remove symmetry-equivalent k 
+
+5) Files and I/O
+
+ 5.1 Scratch files are a big mess. It should be possible to open files
+     in places other than tmp_dir without resorting to obscure coding.
+     This is especially serious for PH, D3 etc
+ 5.2 The "buffer" trick to keep wfc in memory wasn't such a great idea 
+     after all: a better approach would be to have a k-point index
+ 5.3 Distributed read/write of wavefunctions for CP as well
+ 5.4 Many inconsistencies between PW and CP in the XML file format
+     (and inconsistencies with the documentation)
+ 5.5 Use qexml for xml file processing so that a single, easily
+     exportable routine, is used everywhere. Requires some though
+     on how to deal with parallelism without filling qexml with
+     parallel stuff. This is also an opportunity to update the
+     file format (and the documentation) with 1) removal of obsolete
+     variables, 2) addition of variables that should be present,
+     3) possibility to reduce the number of files and directories
+     (hardcoded limit, more kpoints per directory, would replace
+     and extend lkpoint_dir)
+ 5.6 There should be a lock mechanism that prevents people from
+     overwriting files of running processes
+ 5.7 Move to a xml-based format for the dynamical matrix file
+ 5.8 Add rotation of restart files, similar to what is done in CPMD:
+    "The number of distinct RESTART files generated during CPMD runs
+     is read from the next line. The restart files are written in turn.
+     Default is 1. If you specify e.g. 3, then the files RESTART.1,
+     RESTART.2, RESTART.3 are used in rotation."

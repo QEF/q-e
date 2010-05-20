@@ -135,7 +135,6 @@ scalapack_dir=$SCALAPACK_LIB  # Where to look for libscalapack.a
 blacs_dir=$BLACS_LIB          # Where to look for libblacs.a
 ar=$AR                   # ar (shouldn't be needed)
 arflags=$ARFLAGS         # Flags for ar (as above)
-pgplot_libs=$PGPLOT_LIBS  # PGPLOT libraries - used only by metadyn_pp.x
 
 # configure for current directory by default
 if test "$topdir" = "" ; then topdir="`pwd`" ; fi
@@ -1796,7 +1795,6 @@ AC_SUBST(lapack_libs_switch)
 AC_SUBST(fft_libs)
 AC_SUBST(mpi_libs)
 AC_SUBST(mass_libs)
-AC_SUBST(pgplot_libs)
 AC_SUBST(scalapack_libs)
 AC_SUBST(ar)
 AC_SUBST(arflags)
