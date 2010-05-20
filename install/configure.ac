@@ -109,8 +109,7 @@ AC_ARG_WITH(internal-lapack,
 # (i.e. F90=/usr/local/bin/f90 may not work, use F90=f90)
 
 topdir=$TOPDIR     # current directory
-arch=$ARCH         # see below for recognized architectures, plus
-                   # "ppc64-mn" for MareNostrum IBM parallel machine
+arch=$ARCH         # see below for recognized architectures
 env_cc=$CC         # C compiler (must be in the execution path)
 cpp=$CPP           # C preprocessor (as above)
 cflags=$CFLAGS     # Flags for C compiler
@@ -145,7 +144,7 @@ if test "$topdir" = "" ; then topdir="`pwd`" ; fi
 AC_CANONICAL_BUILD
 
 # many HPC systems are configured so that running parallel programs
-# interactively is disabled: on those systems, AC_PROG_F77 and AC_PROG_CC
+# interactively is disabled: on those systems, AC_PROG_FC / _F77 / _CC
 # would fail because they can't run the compiled executables.
 # to work around that, let's pretend we are cross-compiling even if we aren't
 # !!! this relies on undocumented Autoconf behavior !!!
@@ -175,8 +174,10 @@ then
                 * )                     AC_MSG_WARN(incorrect host name ?)
         ;;
         esac
-
+	# workarounf for Cray-XT machines
         test -d /proc/cray_xt && arch=crayxt
+	# workarounf for IBM BG machines
+        test -x/usr/bin/bgxlf && arch=ppc64-bg
 fi
 echo checking architecture... $arch
 
@@ -254,8 +255,15 @@ ppc64-mn )
         try_dflags="-D__XLF"
         try_arflags="ruv"
         ;;
+# IBM BlueGene
+ppc64-bg )
+        try_mpif90="mpixlf90_r mpixlf90"
+        try_f90="bgxlf90_r bgxlf90"
+        try_arflags="ruv"
+        try_dflags="-D__AIX -D__XLF"
+        ;;
 * )
-        AC_MSG_WARN(unsupported architecture?)
+        AC_MSG_WARN($arch : unsupported architecture?)
         ;;
 esac
 
@@ -448,6 +456,14 @@ macppc:xlf90 )
         ;;
 necsx:* )
         try_cc="sxcc"
+        ;;
+ppc64-bg:*xlf*_r )
+        try_cc="bgxlc_r"
+        try_f77="bgxlf_r"
+        ;;
+ppc64-bg:*xlf* )
+        try_cc="bgxlc"
+        try_f77="bgxlf"
         ;;
 ppc64:*xlf* | ppc64-mn:*xlf* )
         try_cc="xlc_r $try_cc"
@@ -672,6 +688,19 @@ ppc64-mn:* )
         pre_fdflags="-WF,"
         xlf_flags=1
         ;;
+ppc64-bg:* )
+    if test "$use_debug" -eq 1; then
+        try_fflags="-q32 -qalias=noaryovrlp:nointptr -g -C -qdpc=e"
+    else
+        try_fflags="-q32 -qalias=noaryovrlp:nointptr -O3 -qstrict -qdpc=e"
+    fi
+        try_fflags_openmp="-qsmp=omp"
+        try_f90flags="\$(FFLAGS) $try_fflags -qsuffix=cpp=f90"
+        try_fflags_noopt="-q32 -O0"
+        try_ldflags="-q32"
+        pre_fdflags="-WF,"
+        xlf_flags=1
+        ;;
 
 * )
         # unknown, try these
@@ -738,6 +767,9 @@ necsx:* )
         ;;
 ppc64-mn:* )
         try_cflags="-O3 -q64"
+        ;;
+ppc64-BG:* )
+        try_cflags="-O3 -q32"
         ;;
 esac
 if test "$cflags" = "" ; then cflags=$try_cflags ; fi
@@ -825,6 +857,7 @@ have_mkl=0
 #   SUNperf on sparc
 # atlas is used over blas if available
 # internal version is used if none is found
+
 if test "$use_internal_blas" -eq 0
 then
    if test "$blas_libs" = ""
@@ -833,6 +866,7 @@ then
         # (maybe they are already searched by default, but I'm not sure)
         ld_library_path=`echo $LD_LIBRARY_PATH | sed 's/:/ /g'`
 
+		  echo "$arch:$f90"
         case "$arch:$f90" in
 
         x86_64:pgf* | x86_64:path* | x86_64:openf95 | crayxt*:* )
@@ -1084,7 +1118,7 @@ then
                     try_dflags="$try_dflags -D__LINUX_ESSL"
                 fi
                 ;;
-        ppc64-mn:* )
+        ppc64-*:* )
                 # assume essl
                 unset ac_cv_search_dgemm # clear cached value
                 FFLAGS="$test_fflags"
@@ -1092,6 +1126,14 @@ then
                 have_blas=1
                 have_essl=1
                 try_dflags="$try_dflags -D__LINUX_ESSL"
+		# BlueGene: for some obscure reason the essl test finds
+		# no need to specify anything to have essl linked, while
+		# in reality it is needed to specify where essl are
+		if test "$arch"="ppc64-bg"; then
+		   if test "$blas_libs"=""; then
+		      blas_libs="-L/opt/ibmmath/essl/4.4/lib/ -lesslbg"
+		   fi
+		fi
                 ;;
 	mac686:ifort* )
                 #This solution is tested with MacOs 10.6 and Intel 11.1 
@@ -1312,7 +1354,7 @@ if test "$use_internal_lapack" -eq 0
                         if test "$ac_cv_search_dspev" != "no"; then
                            # essl must precede lapack (if present)
                            if test "$have_essl" -ne 0 ; then
-                                lapack_libs="-lessl $lapack_libs"
+                                lapack_libs="$blas_libs $lapack_libs"
                            fi
                            break
                         fi
@@ -1635,6 +1677,8 @@ then
              then
 # scalapack + blacs
                unset ac_cv_search_pdgemr2d # clear cached value
+	       if test "$scalapack_dir"=""; then scalapack_dir="/bgsys/local/scalapack/lib"; fi
+	       if test "$blacs_dir"=""; then blacs_dir="/bgsys/local/blacs/lib"; fi
                scalapack_libs="-L$scalapack_dir -lscalapack"
                scalapack_libs="$scalapack_libs -L$blacs_dir -lblacs -lblacsF77init -lblacs"
                LIBS="$mpi_libs $scalapack_libs"

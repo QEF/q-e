@@ -92,7 +92,7 @@ LD_LIBS        =
 
 # External Libraries (if any) : blas, lapack, fft, MPI
 
-# If you have nothing better, use the local copy : ../flib/blas.a
+# If you have nothing better, use the local copy : ../BLAS/blas.a
 
 BLAS_LIBS      = -L/opt/ibmmath/essl/4.4/lib/ -lesslbg
 BLAS_LIBS_SWITCH = external
