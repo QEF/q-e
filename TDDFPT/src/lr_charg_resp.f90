@@ -275,7 +275,7 @@ subroutine lr_calc_w_T()
        norm=sum(abs(aimag(w_T(:))/dble(w_T(:))))
        norm=norm/(1.0d0*itermax_int)
        !print *,"norm",norm
-       if (abs(norm) > 0.33) then
+       if (abs(norm) > 0.1) then
          resonance_condition=.true.
          if (allocated(rho_1_tot)) deallocate (rho_1_tot)
          if (.not. allocated(rho_1_tot_im)) allocate(rho_1_tot_im(nrxx,nspin_mag))
