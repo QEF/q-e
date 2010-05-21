@@ -2689,7 +2689,7 @@ $as_echo "$as_me: WARNING: incorrect host name ?" >&2;}
 	# workarounf for Cray-XT machines
         test -d /proc/cray_xt && arch=crayxt
 	# workarounf for IBM BG machines
-        test -x/usr/bin/bgxlf && arch=ppc64-bg
+        test -x /usr/bin/bgxlf && arch=ppc64-bg
 fi
 echo checking architecture... $arch
 
@@ -4904,7 +4904,7 @@ ppc64-bg:*xlf* )
         try_fflags="-q32 -qalias=noaryovrlp:nointptr -O3 -qstrict -qdpc=e"
     fi
         try_fflags_openmp="-qsmp=omp"
-        try_f90flags="\$(FFLAGS) $try_fflags -qsuffix=cpp=f90"
+        try_f90flags="\$(FFLAGS) -qsuffix=cpp=f90"
         try_fflags_noopt="-q32 -O0"
         try_ldflags="-q32"
         pre_fdflags="-WF,"
