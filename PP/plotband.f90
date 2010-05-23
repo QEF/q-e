@@ -34,7 +34,7 @@ program plotband
                      x0=2.0*cm, y0=2.0*cm, eps=1.e-4
 
   logical :: exist_rap
-  logical, allocatable :: todo(:)
+  logical, allocatable :: todo(:,:)
 
 
   call get_file ( filename )
@@ -71,7 +71,7 @@ program plotband
      allocate(e_rap(nbnd,nks))
      allocate(rap(nbnd,nks))
      allocate(k_rap(3,nks))
-     allocate(todo(nbnd))
+     allocate(todo(nbnd,2))
      allocate (is_in_range_rap(nbnd))
   end if
 
@@ -228,6 +228,7 @@ program plotband
            end do
            close (unit = 2)
         endif
+        todo=.true.
         do irap=1, nrap(ilines)
 !
 !     open a file
@@ -267,31 +268,29 @@ program plotband
 !   on the two high symmetry points the representation is different. So for each
 !   band choose the closest eigenvalue available.
 !
-           todo=.true.
            do i=1,nbnd_rapk(point(ilines)+1)
               mine=1.e8
               do j=1,nbnd
                  if (abs(e_rap(i,point(ilines)+1)-e(j,point(ilines)))<mine &
-                                                           .and. todo(j)) then
+                                                        .and. todo(j,1)) then
                     e_rap(i,point(ilines))=e(j,point(ilines))
                     mine=abs( e_rap(i,point(ilines)+1)-e(j,point(ilines)))
                     jnow=j
                  end if
               end do
-              todo(jnow)=.false.
+              todo(jnow,1)=.false.
            end do
-           todo=.true.
            do i=1,nbnd_rapk(point(ilines+1)-1)
               mine=1.e8
               do j=1,nbnd
                  if (abs(e_rap(i,point(ilines+1)-1)- &
-                          e(j,point(ilines+1)))<mine .and. todo(j)) then
+                          e(j,point(ilines+1)))<mine .and. todo(j,2)) then
                     e_rap(i,point(ilines+1))=e(j,point(ilines+1))
                     mine=abs(e_rap(i,point(ilines+1)-1)-e(j,point(ilines+1)) )
                     jnow=j
                  end if
               end do
-              todo(jnow)=.false.
+              todo(jnow,2)=.false.
            end do
            is_in_range_rap=.false.
            do i=1,MINVAL(nbnd_rapk)
