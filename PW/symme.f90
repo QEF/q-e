@@ -780,6 +780,7 @@ gloop:    DO j=ig,ngm_
              magsum(:) = (0.0_dp, 0.0_dp)
              ! S^{-1} are needed here
              DO ns=1,nsym
+
                 sg(:) = s(:,1,invs(ns)) * g0(1,ig) + &
                         s(:,2,invs(ns)) * g0(2,ig) + &
                         s(:,3,invs(ns)) * g0(3,ig)
@@ -809,11 +810,11 @@ gloop:    DO j=ig,ngm_
                             rhog_(isg, 3) * bg(2,:) + &
                             rhog_(isg, 4) * bg(3,:)
                    ! rotate and add magnetization
-                   magrot(:) = s(1,:,ns) * mag(1) + &
-                               s(2,:,ns) * mag(2) + &
-                               s(3,:,ns) * mag(3)
-                   IF (sname(ns)(1:3)=='inv') magrot(:)=-magrot(:)
-                   IF (t_rev(ns) == 1)        magrot(:)=-magrot(:)
+                   magrot(:) = s(1,:,invs(ns)) * mag(1) + &
+                               s(2,:,invs(ns)) * mag(2) + &
+                               s(3,:,invs(ns)) * mag(3)
+                   IF (sname(invs(ns))(1:3)=='inv') magrot(:)=-magrot(:)
+                   IF (t_rev(invs(ns)) == 1)        magrot(:)=-magrot(:)
                 END IF
                 IF ( non_symmorphic (ns) )  THEN
                    arg = tpi * ( g_(1,isg) * ft(1,ns) + &
@@ -845,9 +846,9 @@ gloop:    DO j=ig,ngm_
                 isg = shell(igl)%vect(irot(ns))
                 IF ( nspin_ == 4 ) THEN
                    ! rotate magnetization
-                   magrot(:) = s(1,:,invs(ns)) * magsum(1) + &
-                               s(2,:,invs(ns)) * magsum(2) + &
-                               s(3,:,invs(ns)) * magsum(3)
+                   magrot(:) = s(1,:,ns) * magsum(1) + &
+                               s(2,:,ns) * magsum(2) + &
+                               s(3,:,ns) * magsum(3)
                    IF (sname(ns)(1:3)=='inv') magrot(:)=-magrot(:)
                    IF (t_rev(ns) == 1)        magrot(:)=-magrot(:)
                    ! back to cartesian coordinates
