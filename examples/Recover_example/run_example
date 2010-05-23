@@ -292,7 +292,76 @@ $ECHO "  recovering the phonon calculation for PAW-Cu at Gamma...\c"
 $PH_COMMAND < Cu.phG_pbe.in2 > Cu.phG_pbe.out2
 check_failure $?
 $ECHO " done"
+$ECHO
+
+# self-consistent calculation for PAW Au with spin-orbit
+cat > Au.scf_rel.in << EOF
+ &control
+    calculation='scf',
+    restart_mode='from_scratch',
+    prefix='Au',
+    pseudo_dir = '$PSEUDO_DIR/',
+    outdir='$TMP_DIR/'
+ /
+ &system
+    ibrav = 2, celldm(1) =7.666, nat=  1, ntyp= 1,
+    noncolin=.true.,
+    lspinorb=.true.,
+    occupations='smearing',
+    smearing='mp',
+    degauss=0.04,
+    ecutwfc = 35.0
+    ecutrho = 400.0
+ /
+ &electrons
+    mixing_beta = 0.7
+    conv_thr =  1.0d-9
+ /
+ATOMIC_SPECIES
+Au   0.0  Au.rel-pz-paw_kj.UPF
+ATOMIC_POSITIONS
+Au  0.00 0.00 0.00
+K_POINTS AUTOMATIC
+4 4 4 1 1 1
+EOF
+$ECHO "  running the scf calculation for PAW-Au with spin-orbit...\c"
+$PW_COMMAND < Au.scf_rel.in > Au.scf_rel.out
+check_failure $?
+$ECHO " done"
+
+# phonon calculation at G
+cat > Au.phX_rel.in1 << EOF
+phonons of Au at X
+ &inputph
+  tr2_ph=1.0d-14,
+  prefix='Au',
+  max_seconds=15,
+  fildyn='AuX.dyn',
+  outdir='$TMP_DIR/'
+ /
+1.0 0.0 0.0
+EOF
+$ECHO "  running the phonon calculation for PAW-Au at X...\c"
+$PH_COMMAND < Au.phX_rel.in1 > Au.phX_rel.out1
+
+# phonon calculation at X
+cat > Au.phX_rel.in2 << EOF
+phonons of Au at X
+ &inputph
+  tr2_ph=1.0d-14,
+  prefix='Au',
+  recover=.true.,
+  fildyn='AuX.dyn',
+  outdir='$TMP_DIR/'
+ /
+1.0 0.0 0.0
+EOF
+$ECHO "  recovering the phonon calculation for PAW-Au at X...\c"
+$PH_COMMAND < Au.phX_rel.in2 > Au.phX_rel.out2
+check_failure $?
+$ECHO " done"
 
 
 $ECHO
 $ECHO "$EXAMPLE_DIR: done"
+

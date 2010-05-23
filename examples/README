@@ -246,7 +246,12 @@ example34:
 example35:
     This example tests pw.x and ph.x for the effective charges and
     dielectric constants with the noncollinear or the spin-orbit part of the
-    code  (experimental stage).
+    code (experimental stage).
+
+example36: 
+    This example tests pw.x and ph.x for the noncollinear/spin-orbit case 
+    and PAW (still experimental).
+
 
 Additional feature-specific examples:
 
