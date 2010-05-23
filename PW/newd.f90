@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2010 Quantum ESPRESSO group
+! Copyright (C) 2001-2010 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -202,12 +202,14 @@ SUBROUTINE add_paw_to_deeq(deeq)
         end do
      end do
   end IF 
+  RETURN
   
 END SUBROUTINE add_paw_to_deeq
 !---------------------------------------
 SUBROUTINE newd()
   USE uspp,          ONLY : deeq
   USE realus,        ONLY : newd_r
+  USE noncollin_module, ONLY : noncolin
   USE control_flags, ONLY : tqr
   IMPLICIT NONE
   if (tqr) then
@@ -215,7 +217,7 @@ SUBROUTINE newd()
   else
      call newd_g()
   end if
-  call add_paw_to_deeq(deeq)
+  IF (.not.noncolin) call add_paw_to_deeq(deeq)
   return
 END SUBROUTINE newd
 !----------------------------------------------------------------------------
@@ -282,6 +284,7 @@ SUBROUTINE newd_g()
   END IF
   !
   call newq(v%of_r,deeq,.false.)
+  IF (noncolin) call add_paw_to_deeq(deeq)
   !
   atoms : &
   DO na = 1, nat
@@ -317,6 +320,7 @@ SUBROUTINE newd_g()
      !
   END DO atoms
   !
+
   CALL stop_clock( 'newd' )
   !
   RETURN

@@ -46,6 +46,10 @@ MODULE paw_variables
         ! additional variables for gradient correction
         REAL(DP),POINTER :: dylmt(:,:),&! |d(ylm)/dtheta|**2
                             dylmp(:,:)  ! |d(ylm)/dphi|**2
+        REAL(DP),POINTER :: cos_phi(:)  ! cos(phi)  
+        REAL(DP),POINTER :: sin_phi(:)  ! sin(phi)  
+        REAL(DP),POINTER :: cos_th(:)  ! cos(theta)  (for divergence)
+        REAL(DP),POINTER :: sin_th(:)  ! sin(theta)  (for divergence)
         REAL(DP),POINTER :: cotg_th(:)  ! cos(theta)/sin(theta)  (for divergence)
     END TYPE
     TYPE(paw_radial_integrator), ALLOCATABLE :: &
@@ -63,10 +67,13 @@ MODULE paw_variables
         INTEGER :: b ! number of beta functions = upf(t)%nbeta
         INTEGER :: l ! max angular index l+1 -> (l+1)**2 is max
                      ! lm index, it is used to allocate rho
+        INTEGER :: ae ! tells if we are doing all-electron (1) or pseudo (2)
     END TYPE
 
     ! Analogous to deeq in "uspp_param" (Modules/uspp.f90)
     REAL(DP), ALLOCATABLE :: &
          ddd_paw(:,:,:)  ! D: D^1_{ij} - \tilde{D}^1_{ij} (only Hxc part)
+
+    REAL(DP), ALLOCATABLE ::  vs_rad(:,:,:)
 
  END MODULE paw_variables

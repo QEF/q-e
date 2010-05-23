@@ -68,7 +68,7 @@ SUBROUTINE electrons()
   USE london_module,        ONLY : energy_london
   !
   USE paw_variables,        ONLY : okpaw, ddd_paw, total_core_energy, only_paw
-  USE paw_onecenter,        ONLY : PAW_potential
+  USE paw_onecenter,        ONLY : PAW_potential, PAW_symmetrize
   USE uspp_param,           ONLY : nh, nhm ! used for PAW
 !DCC
   USE ee_mod,               ONLY : n_cycle,                            &
@@ -360,7 +360,11 @@ SUBROUTINE electrons()
            !
            CALL v_of_rho( rhoin, rho_core, rhog_core, &
                           ehart, etxc, vtxc, eth, etotefield, charge, v)
-           IF (okpaw) CALL PAW_potential(rhoin%bec, ddd_paw, epaw)
+           IF (okpaw) THEN
+              CALL PAW_potential(rhoin%bec, ddd_paw, epaw)
+              CALL PAW_symmetrize(ddd_paw)
+           ENDIF
+
            !
            ! ... estimate correction needed to have variational energy:
            ! ... T + E_ion (eband + deband) are calculated in sum_band
@@ -389,7 +393,11 @@ SUBROUTINE electrons()
            !
            CALL v_of_rho( rho,rho_core,rhog_core, &
                           ehart, etxc, vtxc, eth, etotefield, charge, v)
-           if (okpaw) CALL PAW_potential(rho%bec, ddd_PAW, epaw)
+           IF (okpaw) THEN
+              CALL PAW_potential(rho%bec, ddd_paw, epaw)
+              CALL PAW_symmetrize(ddd_paw)
+           ENDIF
+
            !
            vnew%of_r(:,:) = v%of_r(:,:) - vnew%of_r(:,:)
            !

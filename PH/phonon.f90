@@ -24,8 +24,8 @@ PROGRAM phonon
   ! ... At q=0, from the second order response to an electric field,
   ! ... it can calculate also the electro-optic and the raman tensors.
   ! ... Presently implemented: 
-  ! ... dynamical matrix (q/=0)   NC [4], US [4], PAW [3]
-  ! ... dynamical matrix (q=0)    NC [5], US [5], PAW [3]
+  ! ... dynamical matrix (q/=0)   NC [4], US [4], PAW [4]
+  ! ... dynamical matrix (q=0)    NC [5], US [5], PAW [4]
   ! ... dielectric constant       NC [5], US [5], PAW [3] 
   ! ... born effective charges    NC [5], US [5], PAW [3]
   ! ... polarizability (iu)       NC [2], US [2]

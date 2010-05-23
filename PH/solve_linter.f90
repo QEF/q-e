@@ -406,14 +406,10 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
         IF (lmetq0) &
            call ef_shift_paw (drhoscfh, dbecsum, ldos, ldoss, becsum1, &
                                                   dos_ef, irr, npe, .false.)
-        IF (noncolin) THEN
-           call errore('solve_linter','not programmed yet',1)
-        ELSE
-           DO ipert=1,npe
-              dbecsum(:,:,:,ipert)=2.0_DP *dbecsum(:,:,:,ipert) &
+        DO ipert=1,npe
+           dbecsum(:,:,:,ipert)=2.0_DP *dbecsum(:,:,:,ipert) &
                                +becsumort(:,:,:,imode0+ipert)
-           ENDDO
-        ENDIF
+        ENDDO
      ELSE
         IF (lmetq0) call ef_shift(drhoscfh,ldos,ldoss,dos_ef,irr,npe,.false.)
      ENDIF
@@ -435,7 +431,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
            IF (minus_q) CALL PAW_dumqsymmetrize(dbecsum,npe,irr, &
                              npertx,irotmq,rtau,xq,tmq)
            CALL  &
-                PAW_dusymmetrize(dbecsum,npe,irr,npertx,nsymq,irgq,rtau,xq,t)
+              PAW_dusymmetrize(dbecsum,npe,irr,npertx,nsymq,irgq,rtau,xq,t)
         END IF
      ENDIF
      ! 

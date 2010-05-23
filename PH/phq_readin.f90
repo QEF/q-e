@@ -339,6 +339,9 @@ SUBROUTINE phq_readin()
   IF (okpaw.and.(lraman.or.elop.or.elph)) CALL errore('phq_readin',&
      'The phonon code with paw and raman, elop or elph is not yet available',1)
 
+  IF (okpaw.and.noncolin.and.domag) CALL errore('phq_readin',&
+     'The phonon code with paw and domag is not available yet',1)
+
   IF (okvan.and.(lraman.or.elop)) CALL errore('phq_readin',&
      'The phonon code with US-PP and raman or elop not yet available',1)
 

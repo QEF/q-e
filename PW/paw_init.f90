@@ -58,9 +58,14 @@ MODULE paw_init
             IF(associated(rad(nt)%dylmt))   DEALLOCATE (rad(nt)%dylmt)
             IF(associated(rad(nt)%dylmp))   DEALLOCATE (rad(nt)%dylmp)
             IF(associated(rad(nt)%cotg_th)) DEALLOCATE (rad(nt)%cotg_th)
+            IF(associated(rad(nt)%cos_phi)) DEALLOCATE (rad(nt)%cos_phi)
+            IF(associated(rad(nt)%sin_phi)) DEALLOCATE (rad(nt)%sin_phi)
+            IF(associated(rad(nt)%cos_th))  DEALLOCATE (rad(nt)%cos_th)
+            IF(associated(rad(nt)%sin_th))  DEALLOCATE (rad(nt)%sin_th)
         ENDDO
         DEALLOCATE(rad)
     ENDIF
+    IF (allocated(vs_rad)) DEALLOCATE(vs_rad)
     paw_is_init = .false.
 
    RETURN
@@ -101,6 +106,7 @@ SUBROUTINE PAW_post_init()
                                          DEALLOCATE( upf(nt)%paw%ae_rho_atc ) 
         IF (ASSOCIATED(upf(nt)%paw%pfunc)) DEALLOCATE( upf(nt)%paw%pfunc )      
         IF (ASSOCIATED(upf(nt)%paw%ptfunc)) DEALLOCATE( upf(nt)%paw%ptfunc )    
+        IF (ASSOCIATED(upf(nt)%paw%pfunc_rel)) DEALLOCATE(upf(nt)%paw%pfunc_rel)    
         IF (ASSOCIATED(upf(nt)%paw%ae_vloc)) DEALLOCATE( upf(nt)%paw%ae_vloc )    
                   
         info(me_image,nt) = 1
@@ -127,7 +133,7 @@ END SUBROUTINE PAW_post_init
 ! counted in chi (otherwise the array "oc" does not correspond to beta)
 SUBROUTINE PAW_atomic_becsum()
     USE kinds,              ONLY : dp
-    USE uspp,               ONLY : nhtol, indv, becsum
+    USE uspp,               ONLY : nhtoj, nhtol, indv, becsum
     USE scf,                ONLY : rho
     USE uspp_param,         ONLY : upf, nh, nhm
     USE ions_base,          ONLY : nat, ityp
@@ -136,6 +142,7 @@ SUBROUTINE PAW_atomic_becsum()
     USE paw_onecenter,      ONLY : PAW_symmetrize
     USE random_numbers,     ONLY : randy
     USE basis,              ONLY : starting_wfc
+    USE noncollin_module,   ONLY : nspin_mag, angle1, angle2
 
     IMPLICIT NONE
     !REAL(DP), INTENT(INOUT) :: becsum(nhm*(nhm+1)/2,nat,nspin)
@@ -151,9 +158,8 @@ SUBROUTINE PAW_atomic_becsum()
     IF ( starting_wfc=='atomic+random') noise = 0.05_dp
     IF ( starting_wfc=='random')        noise = 0.10_dp
     !
-    if (nspin.GT.2) &
-        CALL errore('PAW_init_becsum', 'Atomic becsum not implemented for nspin>2',1)
     !
+    becsum=0.0_DP
     na_loop: DO na = 1, nat
        nt = ityp(na)
        is_paw: IF (upf(nt)%tpawp) THEN
@@ -168,19 +174,36 @@ SUBROUTINE PAW_atomic_becsum()
                 !
              ELSE IF (nspin==2) THEN
                 !
-                becsum(ijh,na,1) = 0.5_dp * (1._dp + starting_magnetization(nt))* &
+                becsum(ijh,na,1)=0.5_dp*(1._dp+starting_magnetization(nt))* &
                                    upf(nt)%paw%oc(nb) / DBLE(2*nhtol(ih,nt)+1)
-                becsum(ijh,na,2) = 0.5_dp * (1._dp - starting_magnetization(nt))* &
+                becsum(ijh,na,2)=0.5_dp*(1._dp-starting_magnetization(nt))* &
                                    upf(nt)%paw%oc(nb) / DBLE(2*nhtol(ih,nt)+1)
                 !
+             ELSE IF (nspin==4) THEN
+                IF (upf(nt)%has_so) THEN
+                   becsum(ijh,na,1) = upf(nt)%paw%oc(nb) / &
+                                      (2.0_DP*nhtoj(ih,nt)+1.0_DP)
+                ELSE
+                   becsum(ijh,na,1) = upf(nt)%paw%oc(nb)/DBLE(2*nhtol(ih,nt)+1)
+                END IF
+                IF (nspin_mag==4) THEN
+                   becsum(ijh,na,2) = becsum(ijh,na,1)*               &
+                                      starting_magnetization(nt)*     &
+                                      sin(angle1(nt))*cos(angle2(nt))
+                   becsum(ijh,na,3) = becsum(ijh,na,1)*               &
+                                      starting_magnetization(nt)*     &
+                                      sin(angle1(nt))*sin(angle2(nt))
+                   becsum(ijh,na,4) = becsum(ijh,na,1)*               &
+                                      starting_magnetization(nt)*     &
+                                      cos(angle1(nt))
+                END IF
              END IF
              ijh = ijh + 1
              !
              jh_loop: &
               DO jh = ( ih + 1 ), nh(nt)
                 !mb = indv(jh,nt)
-                DO ispin = 1, nspin
-                   becsum(ijh,na,ispin) = 0._dp
+                DO ispin = 1, nspin_mag
                    if (noise > 0._dp) &
                       becsum(ijh,na,ispin) = becsum(ijh,na,ispin) + noise *2._dp*(.5_dp-randy())
                 END DO
@@ -203,17 +226,21 @@ END SUBROUTINE PAW_atomic_becsum
 SUBROUTINE PAW_init_onecenter()
     USE ions_base,          ONLY : nat, ityp, ntyp => nsp
     USE paw_variables,      ONLY : xlm, lm_fact, lm_fact_x, & 
-                                   rad, paw_is_init, &
+                                   rad, paw_is_init, vs_rad, &
                                    total_core_energy, only_paw
     USE atom,               ONLY : g => rgrid
     USE radial_grids,       ONLY : do_mesh
     USE uspp_param,         ONLY : upf
     USE lsda_mod,           ONLY : nspin
+    USE spin_orb,           ONLY : domag
+    USE noncollin_module,   ONLY : noncolin
     USE funct,              ONLY : dft_is_gradient
     USE mp_global,          ONLY : me_image, nproc_image
     USE mp,                 ONLY : mp_sum
 
-    INTEGER :: nt, lmax_safe, lmax_add, ia, ia_s, ia_e, na, mykey
+    INTEGER :: nt, lmax_safe, lmax_add, ia, ia_s, ia_e, na, mykey, max_mesh, &
+               max_nx
+
     CHARACTER(len=12) :: env='            '
 
     IF( paw_is_init ) THEN
@@ -228,6 +255,8 @@ SUBROUTINE PAW_init_onecenter()
     ! Sum all core energies to get...
     total_core_energy = 0._dp
     only_paw = .true.
+    max_nx=0
+    max_mesh=0
     DO na = 1, nat
         only_paw = only_paw .and. upf(ityp(na))%tpawp
         !
@@ -247,6 +276,10 @@ SUBROUTINE PAW_init_onecenter()
         NULLIFY (rad(nt)%dylmt)
         NULLIFY (rad(nt)%dylmp)
         NULLIFY (rad(nt)%cotg_th)
+        NULLIFY (rad(nt)%cos_phi)
+        NULLIFY (rad(nt)%sin_phi)
+        NULLIFY (rad(nt)%cos_th)
+        NULLIFY (rad(nt)%sin_th)
     ENDDO
     !
     types : &
@@ -277,11 +310,14 @@ SUBROUTINE PAW_init_onecenter()
             !READ(env, '(i)'), lmax_safe
             !lmax_safe=max(lmax_safe, upf(nt)%lmax_rho)
             CALL PAW_rad_init(lmax_safe, lmax_add, rad(nt))
+            max_mesh = MAX( max_mesh, g(nt)%mesh )
+            max_nx = MAX( max_nx, rad(nt)%nx )
             !
             CYCLE types
         ENDIF
         ENDDO
     ENDDO types
+    IF (noncolin.and.domag) ALLOCATE(vs_rad(max_mesh,max_nx,nat))
 
     paw_is_init = .true.
 
@@ -332,6 +368,10 @@ SUBROUTINE PAW_increase_lm(incr)
             IF(associated(rad(nt)%wwylm))   DEALLOCATE (rad(nt)%wwylm)
             IF(associated(rad(nt)%dylmt))   DEALLOCATE (rad(nt)%dylmt)
             IF(associated(rad(nt)%dylmp))   DEALLOCATE (rad(nt)%dylmp)
+            IF(associated(rad(nt)%cos_phi)) DEALLOCATE (rad(nt)%cos_phi)
+            IF(associated(rad(nt)%sin_phi)) DEALLOCATE (rad(nt)%sin_phi)
+            IF(associated(rad(nt)%cos_th))  DEALLOCATE (rad(nt)%cos_th)
+            IF(associated(rad(nt)%sin_th))  DEALLOCATE (rad(nt)%sin_th)
             IF(associated(rad(nt)%cotg_th)) DEALLOCATE (rad(nt)%cotg_th)
 
             CALL PAW_rad_init(rad(nt)%lmax+incr, rad(nt))
@@ -435,6 +475,17 @@ SUBROUTINE PAW_rad_init(l, ls, rad)
         ENDDO
     ENDDO
 
+    ALLOCATE(rad%cos_phi(rad%nx) )
+    ALLOCATE(rad%sin_phi(rad%nx) )
+    ALLOCATE(rad%cos_th(rad%nx) )
+    ALLOCATE(rad%sin_th(rad%nx) )
+    DO i = 1, rad%nx
+       rad%cos_phi(i) = cos(aph(i))
+       rad%sin_phi(i) = sin(aph(i))
+       rad%cos_th(i) = cos(ath(i))
+       rad%sin_th(i) = sin(ath(i))
+    ENDDO
+
     ! if gradient corrections will be used than we need
     ! to initialize the gradient of ylm, as we are working in spherical
     ! coordinates the formula involves \hat{theta} and \hat{phi}
@@ -462,9 +513,11 @@ SUBROUTINE PAW_rad_init(l, ls, rad)
                 rad%dylmt(i,lm) = rad%dylmt(i,lm) + aux(i,lm)*vth(ipol)
                 ! CHECK: the 1/sin(th) factor should be correct, but deals wrong result, why?
                 rad%dylmp(i,lm) = rad%dylmp(i,lm) + aux(i,lm)*vph(ipol) !/sin(ath(i))
-                rad%cotg_th(i) = cos(ath(i))/sin(ath(i))
             ENDDO
             ENDDO
+        ENDDO
+        DO i = 1, rad%nx
+           rad%cotg_th(i) = cos(ath(i))/sin(ath(i))
         ENDDO
         DEALLOCATE(aux)
     ENDIF gradient
