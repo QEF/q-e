@@ -362,6 +362,7 @@ CONTAINS
    return
  end subroutine high_frequency_mixing 
 
+
  subroutine diropn_mix_file( iunit, extension, exst )
    implicit none
    character(len=*), intent(in) :: extension
@@ -472,7 +473,7 @@ CONTAINS
         !
         rho_ddot = rho_ddot + &
                    REAL( CONJG( rho1%of_g(ig,1)+rho1%of_g(ig,2) ) * &
-                              ( rho2%of_g(ig,1)+rho2%of_g(ig,2) ) ) / gg(ig)
+                              ( rho2%of_g(ig,1)+rho2%of_g(ig,2) ), DP ) / gg(ig)
         !
      END DO
      !
@@ -490,7 +491,7 @@ CONTAINS
         !
         rho_ddot = rho_ddot + &
                    fac * REAL( CONJG( rho1%of_g(1,1) - rho1%of_g(1,2) ) * &
-                                    ( rho2%of_g(1,1) - rho2%of_g(1,2) ) )
+                                    ( rho2%of_g(1,1) - rho2%of_g(1,2) ), DP )
         !
      END IF
      !
@@ -500,7 +501,7 @@ CONTAINS
         !
         rho_ddot = rho_ddot + &
                    fac * REAL( CONJG( rho1%of_g(ig,1) - rho1%of_g(ig,2) ) * &
-                                    ( rho2%of_g(ig,1) - rho2%of_g(ig,2) ) )
+                                    ( rho2%of_g(ig,1) - rho2%of_g(ig,2) ), DP )
         !
      END DO
      !
@@ -509,7 +510,7 @@ CONTAINS
      DO ig = gstart, gf
         !
         rho_ddot = rho_ddot + &
-                   REAL( CONJG( rho1%of_g(ig,1) )*rho2%of_g(ig,1) ) / gg(ig)
+                   REAL( CONJG( rho1%of_g(ig,1) )*rho2%of_g(ig,1), DP ) / gg(ig)
         !
      END DO
      !
@@ -523,9 +524,9 @@ CONTAINS
         IF ( gstart == 2 ) THEN
            !
            rho_ddot = rho_ddot + &
-                   fac * ( REAL( CONJG( rho1%of_g(1,2))*(rho2%of_g(1,2) ) ) + &
-                           REAL( CONJG( rho1%of_g(1,3))*(rho2%of_g(1,3) ) ) + &
-                           REAL( CONJG( rho1%of_g(1,4))*(rho2%of_g(1,4) ) ) )
+                   fac * ( REAL( CONJG( rho1%of_g(1,2))*(rho2%of_g(1,2) ),DP ) + &
+                           REAL( CONJG( rho1%of_g(1,3))*(rho2%of_g(1,3) ),DP ) + &
+                           REAL( CONJG( rho1%of_g(1,4))*(rho2%of_g(1,4) ),DP ) )
            !
         END IF
         !
@@ -534,9 +535,9 @@ CONTAINS
         DO ig = gstart, gf
            !
            rho_ddot = rho_ddot + &
-                   fac *( REAL( CONJG( rho1%of_g(ig,2))*(rho2%of_g(ig,2) ) ) + &
-                          REAL( CONJG( rho1%of_g(ig,3))*(rho2%of_g(ig,3) ) ) + &
-                          REAL( CONJG( rho1%of_g(ig,4))*(rho2%of_g(ig,4) ) ) )
+                   fac *( REAL( CONJG( rho1%of_g(ig,2))*(rho2%of_g(ig,2) ), DP ) + &
+                          REAL( CONJG( rho1%of_g(ig,3))*(rho2%of_g(ig,3) ), DP ) + &
+                          REAL( CONJG( rho1%of_g(ig,4))*(rho2%of_g(ig,4) ), DP ) )
            !
         END DO
         !
@@ -551,7 +552,7 @@ CONTAINS
   IF (dft_is_meta()) rho_ddot = rho_ddot + tauk_ddot( rho1, rho2, gf )
   IF (lda_plus_u )   rho_ddot = rho_ddot + ns_ddot(rho1,rho2)
   IF (okpaw)         rho_ddot = rho_ddot + paw_ddot(rho1%bec, rho2%bec)
-  IF (dipfield)      rho_ddot = rho_ddot + (e2/2)* &
+  IF (dipfield)      rho_ddot = rho_ddot + (e2/2.0_DP)* &
                                     (rho1%el_dipole * rho2%el_dipole)*omega/fpi
 
   RETURN
