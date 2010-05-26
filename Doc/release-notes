@@ -4,12 +4,13 @@ Incompatible changes in CVS version:
 
 Fixed in version 4.2.1:
 
+  * misc problems in plotband.f90
+  * the new G-space symmetrization was not working properly 
+    for the magnetization in the noncollinear case
   * CP: incorrect results in parallel execution if the card K_POINTS
     was present in input and contained a point different from Gamma
-
   * D3: Fermi energy shift was only symmetrized on the sub-set of the
     symmetry operations that leave q unchanged.
-
   * plot_io.f90: for large celldm(1), there was no space between ibrav 
     and celldm. Courtesy of E. Li.
 

@@ -75,7 +75,6 @@ TODO LIST - May 2010
 4.2 Small new developments, desirable or to be added:
   4.2.1 configure issues:
         - ifort+acml
-        - bluegene
         - add search for -lfftw3xf_intel 
         - remove obsolete stuff: next is macppc
   4.2.2 constraints should be implemented in all cases, or else, the
@@ -90,7 +89,7 @@ TODO LIST - May 2010
   4.2.5 Fermi-Dirac: pass T instead of "broadening", make it possible
         to use it on top of smearing for free-energy calculations
   4.2.6 add traceback in error (error_handler module)
-  4.2.7 dynmat should write frequencies in a format that is suitable
+  4.2.7 matdyn should write frequencies in a format that is suitable
         for direct plotting by gnuplot/xmgrace - see also Eyvaz' script
         for phonon plotting. Also about phonons:
         C(R) should be calculated at the end of a dispersion run
@@ -242,7 +241,7 @@ TODO LIST - May 2010
         DOS characters or tabulators are present (Lorenzo)
  4.5.10 k-points in crystal IBZ should be correctly calculated also
         if input k-points are not in the IBZ of the lattice. Is is
-        sufficient to use brute forces instead of gourp theory:
+        sufficient to use brute forces instead of group theory:
         expand to full BZ, remove symmetry-equivalent k 
 
 5) Files and I/O

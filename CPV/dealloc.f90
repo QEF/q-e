@@ -47,6 +47,8 @@ SUBROUTINE deallocate_modules_var()
   USE ions_positions,       ONLY : deallocate_ions_positions
   USE kohn_sham_states,     ONLY : ks_states_closeup
   USE ldau,                 ONLY : deallocate_lda_plus_u
+  USE step_penalty,         ONLY : deallocate_step_pen
+
   !
   IMPLICIT NONE
   !
@@ -95,6 +97,7 @@ SUBROUTINE deallocate_modules_var()
   CALL ks_states_closeup()
   !
   CALL deallocate_lda_plus_u()
+  CALL deallocate_step_pen()
   !
   RETURN
   !
