@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !-----------------------------------------------------------------------
-SUBROUTINE write_casino_wfn(gather,blip,multiplicity,binwrite,single_precision_blips,n_points_for_test)
+SUBROUTINE write_casino_wfn(gather,blip,multiplicity,binwrite,single_precision_blips,n_points_for_test,postfix)
 
    USE kinds, ONLY: DP,sgl
    USE ions_base, ONLY : nat, ntyp => nsp, ityp, tau, zv, atm
@@ -39,6 +39,7 @@ SUBROUTINE write_casino_wfn(gather,blip,multiplicity,binwrite,single_precision_b
    LOGICAL, INTENT(in) :: gather,blip,binwrite,single_precision_blips
    REAL(dp), INTENT(in) :: multiplicity
    INTEGER, INTENT(in) :: n_points_for_test
+   CHARACTER(*), INTENT(in) :: postfix
 
    INTEGER, PARAMETER :: n_overlap_tests = 12
    REAL(dp), PARAMETER :: eps = 1.d-10
@@ -132,19 +133,19 @@ SUBROUTINE write_casino_wfn(gather,blip,multiplicity,binwrite,single_precision_b
    IF(dowrite)THEN
       IF(blip)THEN
          IF(binwrite)THEN
-            WRITE (6,'(a)')'Writing file '//trim(prefix)//'.bwfn.data.b1 for program CASINO.'
-            OPEN( iob, file=trim(prefix)//'.bwfn.data.b1', form='unformatted', action='write', access='sequential')
+            WRITE (6,'(a)')'Writing file '//trim(prefix)//'.bwfn.data.b1'//trim(postfix)//' for program CASINO.'
+            OPEN( iob, file=trim(prefix)//'.bwfn.data.b1'//trim(postfix), form='unformatted', action='write', access='sequential')
          ELSE
-            WRITE (6,'(a)')'Writing file '//trim(prefix)//'.bwfn.data for program CASINO.'
-            OPEN( io, file=trim(prefix)//'.bwfn.data', form='formatted', action='write', access='sequential')
+            WRITE (6,'(a)')'Writing file '//trim(prefix)//'.bwfn.data'//trim(postfix)//' for program CASINO.'
+            OPEN( io, file=trim(prefix)//'.bwfn.data'//trim(postfix), form='formatted', action='write', access='sequential')
          ENDIF
       ELSE
          IF(gather)THEN
-            WRITE (6,'(a)')'Writing file '//trim(prefix)//'.pwfn.data for program CASINO.'
-            OPEN( io, file=trim(prefix)//'.pwfn.data', form='formatted', action='write', access='sequential')
+            WRITE (6,'(a)')'Writing file '//trim(prefix)//'.pwfn.data'//trim(postfix)//' for program CASINO.'
+            OPEN( io, file=trim(prefix)//'.pwfn.data'//trim(postfix), form='formatted', action='write', access='sequential')
          ELSE
-            WRITE (6,'(a)')'Writing one file per node '//trim(prefix)//'.pwfn.data.XX for program CASINO'
-            CALL seqopn( io, 'pwfn.data', 'formatted',exst)
+            WRITE (6,'(a)')'Writing one file per node '//trim(prefix)//'.pwfn.data'//trim(postfix)//'.XX for program CASINO'
+            CALL seqopn( io, 'pwfn.data'//trim(postfix), 'formatted',exst)
          ENDIF
       ENDIF
       WRITE (6,'(a)')

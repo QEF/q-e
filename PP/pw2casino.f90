@@ -101,7 +101,7 @@ PROGRAM pw2casino
   CALL read_file
   CALL openfil_pp
   !
-  CALL write_casino_wfn(casino_gather,blip_convert,blip_multiplicity,blip_binary,blip_single_prec,n_points_for_test)
+  CALL write_casino_wfn(casino_gather,blip_convert,blip_multiplicity,blip_binary,blip_single_prec,n_points_for_test,'')
   !
   CALL stop_pp
   STOP
