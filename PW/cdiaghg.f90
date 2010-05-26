@@ -76,9 +76,16 @@ SUBROUTINE cdiaghg( n, m, h, s, ldh, e, v )
      ! ... check for optimal block size
      !
      nb = ILAENV( 1, 'ZHETRD', 'U', n, -1, -1, -1 )
-     nb = MAX( 1, n )
      !
-     lwork = ( nb + 1 )*n
+     IF ( nb < 1 .OR. nb >= n) THEN
+        !
+        lwork = 2*n
+        !
+     ELSE
+        !
+        lwork = ( nb + 1 )*n
+        !
+     END IF
      !
      ALLOCATE( work( lwork ) )
      !

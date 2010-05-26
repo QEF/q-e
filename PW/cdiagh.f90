@@ -119,9 +119,16 @@ SUBROUTINE cdiagh( n, h, ldh, e, v )
       ! ... check for the block size
       !
       nb = ILAENV( 1, 'ZHETRD', 'U', n, - 1, - 1, - 1 )
-      nb = MAX( 1, nb )
       !
-      lwork = ( nb + 1 ) * n
+      IF ( nb < 1 .OR. nb >= n ) THEN
+         !
+         lwork = 2*n
+         !
+      ELSE
+         !
+         lwork = ( nb + 1 )*n
+         !
+      END IF
       !
       ! ... only the first processor diagonalize the matrix
       !
