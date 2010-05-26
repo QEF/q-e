@@ -41,7 +41,7 @@ SUBROUTINE cdiaghg( n, m, h, s, ldh, e, v )
   COMPLEX(DP), INTENT(OUT) :: v(ldh,m)
     ! eigenvectors (column-wise)
   !
-  INTEGER                  :: lwork, nb, mm, info, i, j, k
+  INTEGER                  :: lwork, nb, mm, info, i, j
     ! mm = number of calculated eigenvectors
   REAL(DP)                 :: abstol
   INTEGER,     ALLOCATABLE :: iwork(:), ifail(:)
@@ -76,18 +76,9 @@ SUBROUTINE cdiaghg( n, m, h, s, ldh, e, v )
      ! ... check for optimal block size
      !
      nb = ILAENV( 1, 'ZHETRD', 'U', n, -1, -1, -1 )
+     nb = MAX( 1, n )
      !
-     IF ( nb < 1 ) nb = MAX( 1, n )
-     !
-     IF ( nb == 1 .OR. nb >= n ) THEN
-        !
-        lwork = 2*n
-        !
-     ELSE
-        !
-        lwork = ( nb + 1 )*n
-        !
-     END IF
+     lwork = ( nb + 1 )*n
      !
      ALLOCATE( work( lwork ) )
      !
@@ -99,18 +90,6 @@ SUBROUTINE cdiaghg( n, m, h, s, ldh, e, v )
         !
         v(:,:) = h(:,:)
         !
-        !lwork = -1
-!
-!        CALL ZHEGV( 1, 'V', 'U', n, v, ldh, &
-!                    s, ldh, e, work, lwork, rwork, info )
-!        !
-!        lwork = INT( work(1) ) + 1
-!        !
-!        IF( lwork > SIZE( work ) ) THEN
-!           DEALLOCATE( work )
-!           ALLOCATE( work( lwork ) )
-!        END IF
-
         CALL ZHEGV( 1, 'V', 'U', n, v, ldh, &
                     s, ldh, e, work, lwork, rwork, info )
         !
@@ -133,18 +112,20 @@ SUBROUTINE cdiaghg( n, m, h, s, ldh, e, v )
         abstol = 0.D0
        ! abstol = 2.D0*DLAMCH( 'S' )
         !
-        lwork = -1
+        ! ... the following commented lines calculate optimal lwork
         !
-        CALL ZHEGVX( 1, 'V', 'I', 'U', n, h, ldh, s, ldh, &
-                     0.D0, 0.D0, 1, m, abstol, mm, e, v, ldh, &
-                     work, lwork, rwork, iwork, ifail, info )
+        !lwork = -1
         !
-        lwork = INT( work(1) ) + 1
+        !CALL ZHEGVX( 1, 'V', 'I', 'U', n, h, ldh, s, ldh, &
+        !             0.D0, 0.D0, 1, m, abstol, mm, e, v, ldh, &
+        !             work, lwork, rwork, iwork, ifail, info )
         !
-        IF( lwork > SIZE( work ) ) THEN
-           DEALLOCATE( work )
-           ALLOCATE( work( lwork ) )
-        END IF
+        !lwork = INT( work(1) ) + 1
+        !
+        !IF( lwork > SIZE( work ) ) THEN
+        !   DEALLOCATE( work )
+        !   ALLOCATE( work( lwork ) )
+        !END IF
 
         CALL ZHEGVX( 1, 'V', 'I', 'U', n, h, ldh, s, ldh, &
                      0.D0, 0.D0, 1, m, abstol, mm, e, v, ldh, &
@@ -438,187 +419,3 @@ CONTAINS
   !
 END SUBROUTINE pcdiaghg
 !
-!
-!----------------------------------------------------------------------------
-SUBROUTINE pcdiaghg_nodist( n, m, h, s, ldh, e, v )
-  !----------------------------------------------------------------------------
-  !
-  ! ... calculates eigenvalues and eigenvectors of the generalized problem
-  ! ... Hv=eSv, with H hermitean matrix, S overlap matrix.
-  ! ... On output both matrix are unchanged
-  !
-  ! ... Parallel version, matrices are NOT distributed
-  !
-  USE kinds,            ONLY : DP
-  USE control_flags,    ONLY : use_para_diag
-  USE mp,               ONLY : mp_bcast, mp_sum
-  USE mp_global,        ONLY : npool, nproc_pool, me_pool, root_pool, &
-                               intra_pool_comm, &
-                               ortho_comm, np_ortho, me_ortho, ortho_comm_id
-  USE zhpev_module,     ONLY : pzhpev_drv
-  USE descriptors,      ONLY : descla_siz_ , descla_init , lambda_node_ , &
-                               nlax_ , la_nrl_ , ilac_ , ilar_ , nlar_ ,  &
-                               nlac_ , la_npc_ , la_npr_ , la_me_ , la_comm_
-  !
-  IMPLICIT NONE
-  !
-  INTEGER, INTENT(IN) :: n, m, ldh
-    ! dimension of the matrix to be diagonalized
-    ! number of eigenstates to be calculate
-    ! leading dimension of h, as declared in the calling pgm unit
-  COMPLEX(DP), INTENT(INOUT) :: h(ldh,n), s(ldh,n)
-    ! actually intent(in) but compilers don't know and complain
-    ! matrix to be diagonalized
-    ! overlap matrix
-  REAL(DP), INTENT(OUT) :: e(n)
-    ! eigenvalues
-  COMPLEX(DP), INTENT(OUT) :: v(ldh,m)
-    ! eigenvectors (column-wise)
-  !
-  INTEGER                  :: lwork, nb, mm, info, i, j, k
-    ! mm = number of calculated eigenvectors
-  INTEGER                  :: nr, nc, ir, ic, nx, nrl
-    ! local block size
-  REAL(DP)                 :: abstol
-  INTEGER,     ALLOCATABLE :: iwork(:), ifail(:)
-  REAL(DP),    ALLOCATABLE :: rwork(:), sdiag(:), hdiag(:)
-  COMPLEX(DP), ALLOCATABLE :: work(:)
-    ! various work space
-  COMPLEX(DP), ALLOCATABLE :: sl(:,:), hl(:,:), vl(:,:)
-  COMPLEX(DP), ALLOCATABLE :: diag(:,:), vv(:,:)
-    ! work space used only in parallel diagonalization
-  LOGICAL                  :: all_eigenvalues
- ! REAL(DP), EXTERNAL       :: DLAMCH
-  INTEGER,  EXTERNAL       :: ILAENV
-    ! ILAENV returns optimal block size "nb"
-  INTEGER                  :: desc( descla_siz_ )
-  !
-  !
-  CALL start_clock( 'cdiaghg' )
-  !
-  CALL descla_init( desc, n, n, np_ortho, me_ortho, ortho_comm, ortho_comm_id )
-  !
-  ! ... input s and h are copied so that they are not destroyed
-  !
-  IF( desc( lambda_node_ ) > 0 ) THEN
-     ir  = desc( ilar_ )
-     ic  = desc( ilac_ )
-     nr  = desc( nlar_ )
-     nc  = desc( nlac_ )
-     nx  = desc( nlax_ )
-     nrl = desc( la_nrl_ )
-     ALLOCATE( sl( nx , nx ) )
-     ALLOCATE( vl( nx , nx ) )
-     ALLOCATE( hl( nx , nx ) )
-     DO j = 1, nc
-        DO i = 1, nr
-           sl( i, j ) = s( i + ir - 1, j + ic - 1 )
-        END DO
-        DO i = nr+1, nx
-           sl( i, j ) = 0.0d0
-        END DO
-     END DO
-     DO j = nc + 1, nx
-        DO i = 1, nx
-           sl( i, j ) = 0.0d0
-        END DO
-     END DO
-     DO j = 1, nc
-        DO i = 1, nr
-           hl( i, j ) = h( i + ir - 1, j + ic - 1 )
-        END DO
-        DO i = nr+1, nx
-           hl( i, j ) = 0.0d0
-        END DO
-     END DO
-     DO j = nc + 1, nx
-        DO i = 1, nx
-           hl( i, j ) = 0.0d0
-        END DO
-     END DO
-  END IF
-
-  CALL start_clock( 'cdiaghg:choldc' )
-  !
-  ! ... Cholesky decomposition of sl ( L is stored in sl )
-  !
-  IF( desc( lambda_node_ ) > 0 ) THEN
-     !
-     CALL qe_pzpotrf( sl, nx, n, desc )
-     !
-  END IF
-  !
-  CALL stop_clock( 'cdiaghg:choldc' )
-  !
-  ! ... L is inverted ( sl = L^-1 )
-  !
-  CALL start_clock( 'cdiaghg:inversion' )
-  !
-  IF( desc( lambda_node_ ) > 0 ) THEN
-     !
-     CALL qe_pztrtri( sl, nx, n, desc )
-     !
-  END IF
-  !
-  CALL stop_clock( 'cdiaghg:inversion' )
-  !
-  ! ... vl = L^-1*H
-  !
-  CALL start_clock( 'cdiaghg:paragemm' )
-  !
-  IF( desc( lambda_node_ ) > 0 ) THEN
-     !
-     CALL sqr_zmm_cannon( 'N', 'N', n, ONE, sl, nx, hl, nx, ZERO, vl, nx, desc )
-     !
-  END IF
-  !
-  ! ... hl = ( L^-1*H )*(L^-1)^T
-  !
-  IF( desc( lambda_node_ ) > 0 ) THEN
-     !
-     CALL sqr_zmm_cannon( 'N', 'C', n, ONE, vl, nx, sl, nx, ZERO, hl, nx, desc )
-     !
-  END IF
-  !
-  CALL stop_clock( 'cdiaghg:paragemm' )
-  !
-  IF ( desc( lambda_node_ ) > 0 ) THEN
-     ! 
-     CALL qe_pzheevd( .true., n, desc, hl, SIZE( hl, 1 ), e )
-     !
-     vl = hl
-     !
-  END IF
-  !
-  ! ... v = (L^T)^-1 v
-  !
-  CALL start_clock( 'cdiaghg:paragemm' )
-  !
-  v(1:n,1:n) = ZERO
-  !
-  IF ( desc( lambda_node_ ) > 0 ) THEN
-     !
-     CALL sqr_zmm_cannon( 'C', 'N', n, ONE, sl, nx, vl, nx, ZERO, hl, nx, desc )
-     !
-     DO j = 1, nc
-        DO i = 1, nr
-           v( i + ir - 1, j + ic - 1 ) = hl( i, j )
-        END DO
-     END DO
-     !
-  END IF
-  !
-  CALL mp_bcast( e, root_pool, intra_pool_comm )
-  CALL mp_sum( v(1:n,1:n), intra_pool_comm )
-  !
-  CALL stop_clock( 'cdiaghg:paragemm' )
-  !
-  IF ( desc( lambda_node_ ) > 0 ) THEN
-     DEALLOCATE( sl, vl, hl )
-  END IF
-  !
-  CALL stop_clock( 'cdiaghg' )
-  !
-  RETURN
-  !
-END SUBROUTINE pcdiaghg_nodist

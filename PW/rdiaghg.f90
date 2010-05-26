@@ -65,7 +65,7 @@ SUBROUTINE rdiaghg( n, m, h, s, ldh, e, v )
      !
      nb = ILAENV( 1, 'DSYTRD', 'U', n, -1, -1, -1 )
      !
-     IF ( nb < 1 .OR. nb >= n ) THEN
+     IF ( nb < 5 .OR. nb >= n ) THEN
         !
         lwork = 8*n
         !
@@ -173,12 +173,11 @@ SUBROUTINE prdiaghg( n, h, s, ldh, e, v, desc )
   ! ... Hv=eSv, with H symmetric matrix, S overlap matrix.
   ! ... On output both matrix are unchanged
   !
-  ! ... Parallel version with ful data distribution
+  ! ... Parallel version with full data distribution
   !
   USE kinds,            ONLY : DP
   USE mp,               ONLY : mp_bcast
   USE mp_global,        ONLY : root_pool, intra_pool_comm
-  USE dspev_module,     ONLY : pdspev_drv
   USE descriptors,      ONLY : descla_siz_ , lambda_node_ , nlax_ , &
                                la_npc_ , la_npr_ , la_me_ , la_comm_ , &
                                nlar_ , la_myc_ , la_myr_
@@ -328,153 +327,3 @@ SUBROUTINE prdiaghg( n, h, s, ldh, e, v, desc )
   RETURN
   !
 END SUBROUTINE prdiaghg
-!
-!----------------------------------------------------------------------------
-SUBROUTINE prdiaghg_nodist( n, m, h, s, ldh, e, v )
-  !----------------------------------------------------------------------------
-  !
-  ! ... calculates eigenvalues and eigenvectors of the generalized problem
-  ! ... Hv=eSv, with H symmetric matrix, S overlap matrix.
-  ! ... On output both matrix are unchanged
-  !
-  ! ... Parallel version, matrices are NOT distributed
-  !
-  USE kinds,            ONLY : DP
-  USE control_flags,    ONLY : use_para_diag
-  USE mp,               ONLY : mp_bcast
-  USE mp_global,        ONLY : me_pool, root_pool, intra_pool_comm, &
-                               ortho_comm, np_ortho, me_ortho, ortho_comm_id
-  USE parallel_toolkit, ONLY : dsqmdst, dsqmcll
-  USE dspev_module,     ONLY : pdspev_drv
-  USE descriptors,      ONLY : descla_siz_ , descla_init , lambda_node_ , &
-                               nlax_ , la_nrl_ , la_npc_ , la_npr_ , la_me_ ,&
-                               la_comm_ , la_nrlx_
-  !
-  IMPLICIT NONE
-  !
-  INTEGER, INTENT(IN) :: n, m, ldh
-    ! dimension of the matrix to be diagonalized
-    ! number of eigenstates to be calculated
-    ! leading dimension of h, as declared in the calling pgm unit
-  REAL(DP), INTENT(INOUT) :: h(ldh,n), s(ldh,n)
-    ! matrix to be diagonalized
-    ! overlap matrix
-  !
-  REAL(DP), INTENT(OUT) :: e(n)
-    ! eigenvalues
-  REAL(DP), INTENT(OUT) :: v(ldh,m)
-    ! eigenvectors (column-wise)
-  !
-  INTEGER               :: i, j, lwork, nb, mm, info
-    ! mm = number of calculated eigenvectors
-  INTEGER               :: nx, nrl, nrlx
-    ! local block size
-  REAL(DP)              :: abstol
-  REAL(DP), PARAMETER   :: one = 1_DP
-  REAL(DP), PARAMETER   :: zero = 0_DP
-  INTEGER,  ALLOCATABLE :: iwork(:), ifail(:)
-  REAL(DP), ALLOCATABLE :: sl(:,:), hl(:,:), vl(:,:), vv(:,:), diag(:,:)
-  REAL(DP), ALLOCATABLE :: work(:), sdiag(:), hdiag(:)
-  LOGICAL               :: all_eigenvalues
-  INTEGER,  EXTERNAL    :: ILAENV
-    ! ILAENV returns optimal block size "nb"
-  INTEGER               :: desc( descla_siz_ )
-  !
-  CALL start_clock( 'rdiaghg' )
-  !
-  CALL descla_init( desc, n, n, np_ortho, me_ortho, ortho_comm, ortho_comm_id )
-  !
-  nx  = desc( nlax_ )
-  nrl  = desc( la_nrl_ )
-  nrlx = desc( la_nrlx_ )
-  !
-  IF( desc( lambda_node_ ) > 0 ) THEN
-     ALLOCATE( sl( nx , nx ) )
-     ALLOCATE( vl( nx , nx ) )
-     ALLOCATE( hl( nx , nx ) )
-  END IF
-
-  !  distribute matrixes s and h
-  !
-  CALL dsqmdst( n, s, ldh, sl, nx, desc )
-  CALL dsqmdst( n, h, ldh, hl, nx, desc )
-  !
-  !  Call block parallel algorithm
-  !
-  CALL start_clock( 'rdiaghg:choldc' )
-  !
-  ! ... Cholesky decomposition of s ( L is stored in s )
-  !
-  IF( desc( lambda_node_ ) > 0 ) THEN
-     !
-     CALL qe_pdpotrf( sl, nx, n, desc )
-     !
-  END IF
-  !
-  CALL stop_clock( 'rdiaghg:choldc' )
-  !
-  ! ... L is inverted ( s = L^-1 )
-  !
-  CALL start_clock( 'rdiaghg:inversion' )
-  !
-  IF( desc( lambda_node_ ) > 0 ) THEN
-     !
-     CALL qe_pdtrtri ( sl, nx, n, desc )
-     !
-  END IF
-  !
-  CALL stop_clock( 'rdiaghg:inversion' )
-  !
-  ! ... v = L^-1*H
-  !
-  CALL start_clock( 'rdiaghg:paragemm' )
-  !
-  IF( desc( lambda_node_ ) > 0 ) THEN
-     !
-     CALL sqr_mm_cannon( 'N', 'N', n, ONE, sl, nx, hl, nx, ZERO, vl, nx, desc )
-     !
-  END IF
-  !
-  ! ... h = ( L^-1*H )*(L^-1)^T
-  !
-  IF( desc( lambda_node_ ) > 0 ) THEN
-     !
-     CALL sqr_mm_cannon( 'N', 'T', n, ONE, vl, nx, sl, nx, ZERO, hl, nx, desc )
-     !
-  END IF
-  !
-  CALL stop_clock( 'rdiaghg:paragemm' )
-  !
-  IF ( desc( lambda_node_ ) > 0 ) THEN
-     ! 
-     CALL qe_pdsyevd( .true., n, desc, hl, SIZE(hl,1), e )
-     !
-  END IF
-  !
-  ! ... v = (L^T)^-1 v
-  !
-  CALL start_clock( 'rdiaghg:paragemm' )
-  !
-  IF ( desc( lambda_node_ ) > 0 ) THEN
-     !
-     CALL sqr_mm_cannon( 'T', 'N', n, ONE, sl, nx, hl, nx, ZERO, vl, nx, desc )
-     !
-  END IF
-  !
-  CALL mp_bcast( e, root_pool, intra_pool_comm )
-  !
-  CALL stop_clock( 'rdiaghg:paragemm' )
-  !
-  ! CALL prdiaghg( n, hl, sl, nx, e, vl, desc )
-  !
-  !  collect distributed matrix vl into replicated matrix v
-  !
-  CALL dsqmcll( n, vl, nx, v, ldh, desc, intra_pool_comm )
-  !
-  IF( desc( lambda_node_ ) > 0 ) THEN
-     DEALLOCATE( hl, sl, vl )
-  END IF
-  !
-  RETURN
-  !
-END SUBROUTINE prdiaghg_nodist
