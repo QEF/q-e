@@ -39,7 +39,8 @@ PROGRAM pw2casino
   USE mp,         ONLY : mp_bcast
   USE mp_global,  ONLY : mp_startup, npool, nimage, nogrp, npgrp
   USE environment,ONLY : environment_start
-  !
+  USE dfunct,     ONLY : newd
+    !
   IMPLICIT NONE
   INTEGER  :: ios
   LOGICAL  :: casino_gather = .false.
@@ -100,6 +101,9 @@ PROGRAM pw2casino
   !
   CALL read_file
   CALL openfil_pp
+  !
+  CALL init_us_1
+  CALL newd
   !
   CALL write_casino_wfn(casino_gather,blip_convert,blip_multiplicity,blip_binary,blip_single_prec,n_points_for_test,'')
   !

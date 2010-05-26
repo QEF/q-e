@@ -31,7 +31,6 @@ SUBROUTINE write_casino_wfn(gather,blip,multiplicity,binwrite,single_precision_b
    USE funct, ONLY : dft_is_meta
    USE mp_global, ONLY: inter_pool_comm, intra_pool_comm, nproc_pool, me_pool
    USE mp, ONLY: mp_sum, mp_gather, mp_bcast, mp_get
-   USE dfunct, ONLY : newd
 
    USE pw2blip
 
@@ -76,9 +75,6 @@ SUBROUTINE write_casino_wfn(gather,blip,multiplicity,binwrite,single_precision_b
    INTEGER,PARAMETER :: Nran=1009,Nkeep=100 ! See comment on p. 188 of Knuth.
    INTEGER,SAVE :: ran_array_idx=-1
    REAL(DP),SAVE :: ran_array(Nran)
-
-   CALL init_us_1
-   CALL newd
 
    dowrite=ionode.or..not.(gather.or.blip)
 
