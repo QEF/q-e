@@ -263,31 +263,38 @@ SUBROUTINE write_casino_wfn(gather,blip,multiplicity,binwrite,single_precision_b
                      ELSE
                         CALL pw2blip_transform(evc_g(:))
                      ENDIF
-                     CALL test_overlap
                   ENDIF
+                  IF(me_pool <= iorb_node) CALL test_overlap
                   DO inode=0,iorb_node
-                     CALL pw2blip_get(inode)
                      IF(blipreal/=0)THEN
                         IF(ionode)WRITE(6,*)"Transformed real orbital k="//trim(i2s(jk(inode+1)))//&
                            &", spin="//trim(i2s(jspin(inode+1)))//&
                            &", band="//trim(i2s(jbnd(inode+1)))//" on node "//trim(i2s(inode))
                         CALL pw2blip_stat(inode,1)
-                        CALL write_overlap(inode,1)
-                        IF(ionode)CALL write_bwfn_data_gamma(1,jk(inode+1),jspin(inode+1),jbnd(inode+1))
+                        CALL print_overlap(inode,1)
                         IF(modulo(blipreal,2)==0)THEN
                            IF(ionode)WRITE(6,*)"Transformed real orbital k="//trim(i2s(jk2(inode+1)))//&
                               &", spin="//trim(i2s(jspin2(inode+1)))//&
                               &", band="//trim(i2s(jbnd2(inode+1)))//" on node "//trim(i2s(inode))
                            CALL pw2blip_stat(inode,2)
-                           IF(ionode)CALL write_bwfn_data_gamma(2,jk2(inode+1),jspin2(inode+1),jbnd2(inode+1))
                         ENDIF
-                        CALL write_overlap(inode,2)
+                        CALL print_overlap(inode,2)
                      ELSE
                         IF(ionode)WRITE(6,*)"Transformed complex orbital k="//trim(i2s(jk(inode+1)))//&
                            &", spin="//trim(i2s(jspin(inode+1)))//&
                            &", band="//trim(i2s(jbnd(inode+1)))//" on node "//trim(i2s(inode))
                         CALL pw2blip_stat(inode,1)
-                        CALL write_overlap(inode,1)
+                        CALL print_overlap(inode,1)
+                     ENDIF
+                  ENDDO
+                  DO inode=0,iorb_node
+                     CALL pw2blip_get(inode)
+                     IF(blipreal/=0)THEN
+                        IF(ionode)CALL write_bwfn_data_gamma(1,jk(inode+1),jspin(inode+1),jbnd(inode+1))
+                        IF(modulo(blipreal,2)==0)THEN
+                           IF(ionode)CALL write_bwfn_data_gamma(2,jk2(inode+1),jspin2(inode+1),jbnd2(inode+1))
+                        ENDIF
+                     ELSE
                         IF(ionode)CALL write_bwfn_data(jk(inode+1),jspin(inode+1),jbnd(inode+1))
                      ENDIF
                   ENDDO
@@ -582,7 +589,7 @@ CONTAINS
    END SUBROUTINE pweval
 
 
-   SUBROUTINE write_overlap(inode,whichband)
+   SUBROUTINE print_overlap(inode,whichband)
 !-------------------------------------------------------------------------!
 ! Write out the overlaps of the value, gradient and Laplacian of the blip !
 ! orbitals.  Give error bars where possible.                              !
@@ -613,7 +620,7 @@ CONTAINS
          IF(index(char12_arr(k),')')==0)WRITE(char12_arr(k),'(f12.9)')av(k)
       ENDDO ! k
       WRITE(stdout,'(2(1x,a),2x,3(1x,a))')char12_arr(1:5)
-   END SUBROUTINE write_overlap
+   END SUBROUTINE print_overlap
 
 
    FUNCTION to_c80(c)
