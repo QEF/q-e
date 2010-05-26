@@ -2447,7 +2447,7 @@ END FUNCTION
 ! allocate vupsi
 
       lda_plus_u = lda_plus_u_
-
+      IF ( .NOT.lda_plus_u ) RETURN
       allocate(vupsi(ngw,nx))
 
       vupsi=(0.0d0,0.0d0)
