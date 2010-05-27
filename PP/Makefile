@@ -58,9 +58,8 @@ all : tldeps average.x bands.x dos.x epsilon.x initial_state.x \
       pw2casino.x pw2wannier90.x pw_export.x pw2gw.x \
       wannier_ham.x wannier_plot.x
 
-qexml: qexml.x
 qexml.x: qexml.o qexml_example.o
-	$(LD) $(LDFLAGS) -o $@ qexml_example.o qexml.o $(LIBOBJS)
+	$(LD) $(LDFLAGS) -o $@ qexml_example.o qexml.o $(QEOBJS) $(LIBOBJS)
 
 average.x : average.o $(PPOBJS) $(MODULES) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ \
