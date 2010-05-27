@@ -297,7 +297,7 @@ PROGRAM lr_main
   !
   if (project .and. n_ipol == 3) then
       write(stdout,'(/,/5x,"Participation of virtual states to absorbtion coefficent")') 
-      write(stdout,'(5x,"occ",1x,"con",5x,"Re(Tr(F.R))",6x,"Im(TR(F.R))",5x,"fraction in alpha")')
+      write(stdout,'(5x,"occ",1x,"vir",5x,"Re(Tr(F.R))",6x,"Im(TR(F.R))",5x,"fraction in alpha")')
       do ibnd_occ=1,nbnd
        do ibnd_virt=1,(nbnd_total-nbnd)
        sum_f=cmplx(0.0d0,0.0d0,dp)
@@ -307,7 +307,7 @@ PROGRAM lr_main
          sum_c=sum_c+chi(ip,ip)
         enddo
         write(stdout,'(5x,i3,1x,i3,3x,E16.8,2X,E16.8,2X,F8.5)') & 
-       ibnd_occ,ibnd_virt,DBLE(sum_F),AIMAG(sum_F),abs(AIMAG(sum_f)/AIMAG(sum_c)) 
+       ibnd_occ,ibnd_virt,DBLE(sum_F),AIMAG(sum_F),(AIMAG(sum_f)/AIMAG(sum_c)) 
        enddo
       enddo
   endif
