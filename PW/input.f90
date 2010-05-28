@@ -558,14 +558,16 @@ SUBROUTINE iosys()
                    & ' smearing requires gaussian broadening', 1 )
      !
      SELECT CASE ( TRIM( smearing ) )
-     CASE ( 'gaussian', 'gauss' )
+     CASE ( 'gaussian', 'gauss', 'Gaussian', 'Gauss' )
         ngauss = 0
-     CASE ( 'methfessel-paxton', 'm-p', 'mp' )
+     CASE ( 'methfessel-paxton', 'm-p', 'mp', 'Methfessel-Paxton', 'M-P', 'MP' )
         ngauss = 1
-     CASE ( 'marzari-vanderbilt', 'cold', 'm-v', 'mv' )
+     CASE ( 'marzari-vanderbilt', 'cold', 'm-v', 'mv', 'Marzari-Vanderbilt', 'M-V', 'MV')
         ngauss = -1
-     CASE ( 'fermi-dirac', 'f-d', 'fd' )
+     CASE ( 'fermi-dirac', 'f-d', 'fd', 'Fermi-Dirac', 'F-D', 'FD')
         ngauss = -99
+     CASE default
+        CALL errore( ' iosys ', ' smearing '//TRIM(smearing)//' unknown', 1 )
      END SELECT
      !
   CASE( 'tetrahedra' )
