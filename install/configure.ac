@@ -256,8 +256,13 @@ ppc64-mn )
         ;;
 # IBM BlueGene
 ppc64-bg )
-        try_mpif90="mpixlf90_r mpixlf90"
-        try_f90="bgxlf90_r bgxlf90"
+	if test "$use_openmp" -eq 0 ; then
+          try_mpif90="mpixlf90"
+          try_f90="bgxlf90"
+	else
+          try_mpif90="mpixlf90_r"
+          try_f90="bgxlf90_r"
+	fi
         try_arflags="ruv"
         try_dflags="-D__AIX -D__XLF"
         ;;
@@ -456,11 +461,11 @@ macppc:xlf90 )
 necsx:* )
         try_cc="sxcc"
         ;;
-ppc64-bg:*xlf*_r )
+ppc64-bg:*xlf90_r )
         try_cc="bgxlc_r"
         try_f77="bgxlf_r"
         ;;
-ppc64-bg:*xlf* )
+ppc64-bg:*xlf90 )
         try_cc="bgxlc"
         try_f77="bgxlf"
         ;;
@@ -693,7 +698,7 @@ ppc64-bg:*xlf* )
     else
         try_fflags="-q32 -qalias=noaryovrlp:nointptr -O3 -qstrict -qdpc=e"
     fi
-        try_fflags_openmp="-qsmp=omp"
+        try_fflags_openmp="-qsmp=omp -qthreaded"
         try_f90flags="\$(FFLAGS) -qsuffix=cpp=f90"
         try_fflags_noopt="-q32 -O0"
         try_ldflags="-q32"
@@ -767,7 +772,7 @@ necsx:* )
 ppc64-mn:* )
         try_cflags="-O3 -q64"
         ;;
-ppc64-BG:* )
+ppc64-bg:* )
         try_cflags="-O3 -q32"
         ;;
 esac
@@ -1124,12 +1129,16 @@ then
                 have_blas=1
                 have_essl=1
                 try_dflags="$try_dflags -D__LINUX_ESSL"
-		# BlueGene: for some obscure reason the essl test finds
-		# no need to specify anything to have essl linked, while
+		# BlueGene: for some obscure reason there is no need to
+		# specify a library path to have essl linked, while
 		# in reality it is needed to specify where essl are
 		if test "$arch"="ppc64-bg"; then
 		   if test "$blas_libs"=""; then
-		      blas_libs="-L/opt/ibmmath/essl/4.4/lib/ -lesslbg"
+		      if test "$use_openmp" -eq 0 ; then
+		         blas_libs="-L/opt/ibmmath/essl/4.4/lib/ -lesslbg"
+		      else
+		         blas_libs="-L/opt/ibmmath/essl/4.4/lib/ -lesslsmpbg"
+		      fi
 		   fi
 		fi
                 ;;
