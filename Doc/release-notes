@@ -4,6 +4,7 @@ Incompatible changes in CVS version:
 
 Fixed in version 4.2.1:
 
+  * linking error when compiling qexml
   * misc problems in plotband.f90
   * the new G-space symmetrization was not working properly 
     for the magnetization in the noncollinear case

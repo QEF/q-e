@@ -7,6 +7,8 @@ input_description -distribution {Quantum Espresso} -package PWscf -program projw
 	    projects wavefunctions onto orthogonalized atomic wavefunctions, 
 	    calculates Lowdin charges, spilling parameter, projected DOS 
 	    (separated into up and down components for lSDA)
+            alternatively, computes the local DOS(E), integrated in volumes
+            given in input
 
 	Structure of the input data:
 	============================
@@ -75,6 +77,50 @@ input_description -distribution {Quantum Espresso} -package PWscf -program projw
 		file containing the projections
 	    }
 	}
+
+	var tdosinboxes -type LOGICAL {
+	    default { .false. }
+            info {
+		if .true. compute the local DOS integrated in volumes
+		volumes are defined as boxes with edges parallel
+		to the unit cell, containing the points of the
+		(charge density) FFT grid included within
+		irmin and irmax, in the three dimensions:
+		from irmin(j,n) to irmax(j,n) for j=1,2,3
+		(n=1,n_proj_boxes)
+            }
+	}       
+
+	var n_proj_boxes -type INTEGER {
+	    default { 1 }
+            info {
+		number of boxes where the local DOS is computed
+            }
+	}       
+
+	var irmin -type INTEGER {
+	    default { 1 }
+            info {
+		first point to be included in the box
+            }
+	}       
+
+	var irmax -type INTEGER {
+	    default { 0 }
+            info {
+		last point to be included in the box
+            }
+	}       
+
+	var plotboxes -type LOGICAL {
+	    default { .false. }
+            info {
+		if .true., the boxes are written in output as
+		as xsf files with 3D datagrids, valued 1.0
+		inside the box volume and 0 outside
+		(visualize them as isosurfaces with isovalue 0.5)
+            }
+	}       
     }
 
     section -title Notes {
@@ -149,6 +195,19 @@ input_description -distribution {Quantum Espresso} -package PWscf -program projw
 	          3 dzy    (real combination of m=+/-1 with sine)
 	          4 dx2-y2 (real combination of m=+/-2 with cosine)
 	          5 dxy    (real combination of m=+/-1 with sine)
+	    }
+	}
+
+	subsection -title {Defining boxes for the Local DOS(E)} {
+	    text {
+		Boxes are specified using the variables irmin and irmax:
+		FFT grid points are included from irmin(j,n) to irmax(j,n)
+		for j=1,2,3 and n=1,...,n_proj_boxes
+		irmin and irmax range from 1 to nr1 or nr2 or nr3
+		Values larger than nr1/2/3 or smaller than 1 are folded
+		to the unit cell.
+		If irmax<irmin FFT grid points are included from 1 to irmax
+		and from irmin to nr1/2/3
 	    }
 	}
 

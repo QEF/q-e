@@ -11,6 +11,7 @@ PROGRAM projwfc
   ! 
   ! projects wavefunctions onto orthogonalized atomic wavefunctions, 
   ! calculates Lowdin charges, spilling parameter, projected DOS 
+  ! or computes the LDOS in a volume given in input as function of energy
   ! 
   !
   ! Input (namelist &inputpp ... / ):                         Default value
@@ -31,6 +32,13 @@ PROGRAM projwfc
   !    filpdos       prefix for output files containing PDOS(E) prefix
   !    lgww          if .true. take energies from previous GWW calculation 
   !                  (file bands.dat)
+  !    tdosinboxes   if .true., the local DOS in specified      .false.
+  !                  volumes (boxes) is computed
+  !    n_proj_boxes  number of volumes for the local DOS        0
+  !    irmin, irmax  first and last point of the FFT grid       1, 0
+  !                  included in the volume
+  !    plotboxes     if .true., the volumes are given in output .false.
+  !                
   !
   ! Output:
   !
@@ -68,6 +76,13 @@ PROGRAM projwfc
   !      E LDOS(E) PDOS_1(E) ... PDOS_2j+1(E)
   !
   !   All DOS(E) are in states/eV plotted vs E in eV
+  !
+  !   If the local DOS(E) is computed (tdosinboxes),
+  !   projections are written to file "filproj" if given as input.
+  !   Volumes are written as xsf files with 3D datagrids, valued 1.0
+  !   inside the box volume and 0 outside, named filpdos.box#n.xsf
+  !   The local DOS(E) is written to file "filpdos".ldos_boxes, with format
+  !      E totDOS(E) SumLDOS(E) LDOS_1(E) ... LDOS_n(E)
   !
   !  Order of m-components for each l in the output:
   !
@@ -120,7 +135,10 @@ PROGRAM projwfc
   CHARACTER (len=256) :: filpdos, filproj, io_choice, outdir
   REAL (DP)      :: Emin, Emax, DeltaE, degauss1, smoothing
   INTEGER :: ngauss1, ios
-  LOGICAL :: lsym
+  LOGICAL :: lsym, tdosinboxes, plotboxes
+  INTEGER, PARAMETER :: N_MAX_BOXES = 999
+  INTEGER :: n_proj_boxes, irmin(3,N_MAX_BOXES), irmax(3,N_MAX_BOXES)
+ 
   !
   ! for GWW
   INTEGER :: iun, idum
@@ -130,7 +148,8 @@ PROGRAM projwfc
   !
   NAMELIST / inputpp / outdir, prefix, ngauss, degauss, lsym, &
              Emin, Emax, DeltaE, io_choice, smoothing, filpdos, filproj, &
-             lgww !if .true. use GW QP energies from file bands.dat
+             lgww, & !if .true. use GW QP energies from file bands.dat
+             tdosinboxes, n_proj_boxes, irmin, irmax, plotboxes
   !
   ! initialise environment
   !
@@ -152,10 +171,14 @@ PROGRAM projwfc
   ngauss = 0
   lsym   = .true.
   degauss= 0.d0
+  lgww   = .false.
+  tdosinboxes = .false.
+  plotboxes   = .false.
+  n_proj_boxes= 1
+  irmin(:,:)  = 1
+  irmax(:,:)  = 0
   !
   ios = 0
-  !
-  lgww = .false.
   !
   IF ( ionode )  THEN  
      !
@@ -187,6 +210,11 @@ PROGRAM projwfc
   CALL mp_bcast( Emax, ionode_id )
   ! for GWW 
   CALL mp_bcast( lgww, ionode_id )
+  ! for projection on boxes
+  CALL mp_bcast( tdosinboxes, ionode_id )
+  CALL mp_bcast( n_proj_boxes, ionode_id )
+  CALL mp_bcast( irmin, ionode_id )
+  CALL mp_bcast( irmax, ionode_id )
   ! 
   !   Now allocate space for pwscf variables, read and check them. 
   ! 
@@ -213,27 +241,41 @@ PROGRAM projwfc
      lgauss=.TRUE.
   END IF
   !
-  IF (noncolin) THEN 
-     CALL projwave_nc(filproj, lsym )
-  ELSE
-     IF( nproc_ortho > 1 ) THEN
-        CALL pprojwave (filproj, lsym)
-     ELSE
-        CALL projwave (filproj, lsym, lgww)
-     END IF
-  ENDIF
+  IF ( filpdos == ' ') filpdos = prefix
   !
-  IF ( ionode .and. lsym ) THEN 
-     !
-     IF ( filpdos == ' ') filpdos = prefix
-     !
-     IF (noncolin) THEN 
-        CALL partialdos_nc (Emin, Emax, DeltaE, filpdos)
+  IF ( tdosinboxes ) THEN
+     IF( nproc_ortho > 1 ) THEN
+        CALL errore ('projwfc', 'nproc_ortho > 1 not yet implemented', 1) 
      ELSE
-        CALL partialdos (Emin, Emax, DeltaE, filpdos)
+        CALL projwave_boxes (filpdos, filproj, n_proj_boxes, irmin, irmax, plotboxes)
+     END IF
+  ELSE
+     IF (noncolin) THEN 
+        CALL projwave_nc(filproj, lsym )
+     ELSE
+        IF( nproc_ortho > 1 ) THEN
+           CALL pprojwave (filproj, lsym)
+        ELSE
+           CALL projwave (filproj, lsym, lgww)
+        END IF
      ENDIF
-     !
-  END IF 
+  END IF
+  !
+  IF ( ionode ) THEN
+     IF ( tdosinboxes ) THEN
+        CALL partialdos_boxes (Emin, Emax, DeltaE, filpdos, n_proj_boxes)
+     ELSE
+        IF ( lsym ) THEN 
+           !
+           IF (noncolin) THEN 
+              CALL partialdos_nc (Emin, Emax, DeltaE, filpdos)
+           ELSE
+              CALL partialdos (Emin, Emax, DeltaE, filpdos)
+           ENDIF
+           !
+        END IF 
+     END IF 
+  END IF
   !
   CALL stop_pp 
   ! 
@@ -265,6 +307,11 @@ MODULE projections_nc
   COMPLEX (DP), ALLOCATABLE :: proj_aux (:,:,:)
 
 END MODULE projections_nc
+!
+MODULE projections_ldos
+  USE kinds, ONLY : DP 
+  REAL (DP),    ALLOCATABLE :: proj (:,:,:)
+END MODULE projections_ldos
 !
 !----------------------------------------------------------------------- 
 SUBROUTINE projwave( filproj, lsym, lgww )
@@ -2777,3 +2824,403 @@ CONTAINS
   END SUBROUTINE wf_times_roverlap
   !
 END SUBROUTINE pprojwave
+!
+!-----------------------------------------------------------------------
+SUBROUTINE projwave_boxes( filpdos, filproj, n_proj_boxes, irmin, irmax, plotboxes )
+  !----------------------------------------------------------------------- 
+  ! 
+  USE io_global, ONLY : stdout, ionode
+  USE printout_base, ONLY: title
+  USE atom
+  USE ions_base, ONLY : zv, tau, nat, ntyp => nsp, ityp, atm
+  USE basis,     ONLY : natomwfc
+  USE cell_base
+  USE constants, ONLY: rytoev
+  USE gvect
+  USE klist, ONLY: xk, nks, nkstot
+  USE lsda_mod, ONLY: nspin, isk, current_spin, lsda
+  USE wvfct
+  USE control_flags, ONLY: gamma_only 
+  USE uspp, ONLY: okvan
+  USE noncollin_module, ONLY: noncolin, npol
+  USE wavefunctions_module, ONLY: evc,    psic
+  USE wavefunctions_module, ONLY: psic_nc
+  USE io_files,             ONLY : iunwfc, nwordwfc
+  USE scf, ONLY : rho
+  USE projections_ldos
+  USE fft_base,   ONLY: grid_scatter
+  USE mp_global, ONLY : intra_pool_comm
+  USE mp,        ONLY : mp_sum
+!
+  !
+  IMPLICIT NONE
+  !
+  INTEGER, PARAMETER :: N_MAX_BOXES = 999
+  CHARACTER (len=256) :: filpdos
+  CHARACTER (LEN=*) :: filproj
+  INTEGER :: n_proj_boxes, irmin(3,*), irmax(3,*)
+  LOGICAL :: plotboxes
+  !
+  INTEGER :: ik, ibnd, i, ir, ig, ipol, ibox, ir1, ir2, ir3, c_tab, is, iunproj
+  INTEGER :: nri(3)
+  CHARACTER (len=33) :: filextension
+  CHARACTER (len=256):: fileout
+  COMPLEX(DP), ALLOCATABLE :: caux(:)
+  REAL(DP), ALLOCATABLE :: thetabox(:), raux(:), thetathisproc(:,:), union(:), intersection(:)
+  LOGICAL, ALLOCATABLE :: isInside(:,:)
+  REAL(DP), EXTERNAL :: DDOT
+  REAL(DP), ALLOCATABLE :: boxvolume(:), boxcharge(:)
+  ! 
+  WRITE( stdout, '(/5x,"Calling projwave_boxes .... ")')
+  IF ( gamma_only ) THEN
+     WRITE( stdout, '(5x,"gamma-point specific algorithms are used")') 
+  END IF
+  !
+  IF (noncolin) THEN
+     WRITE( stdout, '(/5x,"Non spin-resolved DOS will be computed")')
+  END IF
+  !
+  IF (okvan) THEN
+     CALL errore( 'projwave_boxes', 'Augmentation contributions are currently not included to the DOS in boxes',-1)
+  END IF
+  !
+  IF ( ( n_proj_boxes > N_MAX_BOXES ) .OR. ( n_proj_boxes < 1 ) ) &                     
+     CALL errore ('projwave_boxes', 'n_proj_boxes not correct', ABS (n_proj_boxes) )            
+  !                                                                                        
+  ! ... Define functions with values 1.0
+  ! ... on the specified boxes and 0.0 elsewhere.
+  !
+  ALLOCATE( thetabox (nrx1*nrx2*nrx3) )
+  !
+  ALLOCATE( thetathisproc(nrxx,1:n_proj_boxes) )
+  !
+  ALLOCATE ( isInside ( MAX(nr1,nr2,nr3), 3 ) )
+  !
+  DO ibox = 1, n_proj_boxes
+     !
+     ! A. Do the three directions independently:
+     nri(1)=nr1
+     nri(2)=nr2
+     nri(3)=nr3
+     DO i = 1, 3
+        ! boxes include the points in [irmin,irmax] if irmin<=irmax
+        ! and the points in [1,irmax] and [irmin,nr] if irmin > irmax
+        irmin(i,ibox)=MOD(irmin(i,ibox),nri(i))
+        IF (irmin(i,ibox)<=0) irmin(i,ibox)=irmin(i,ibox)+nri(i)
+        irmax(i,ibox)=MOD(irmax(i,ibox),nri(i))
+        IF (irmax(i,ibox)<=0) irmax(i,ibox)=irmax(i,ibox)+nri(i)
+        DO ir = 1, nri(i)
+           IF (irmin(i,ibox)<=irmax(i,ibox)) THEN
+              isInside(ir,i)=(ir>=irmin(i,ibox)).AND.(ir<=irmax(i,ibox))
+           ELSE
+              isInside(ir,i)=(ir>=irmin(i,ibox)).OR. (ir<=irmax(i,ibox))
+           END IF
+        END DO
+     END DO
+     !
+     ! B. Combine the conditions for the three directions to form a box
+     ir=0
+     DO ir3 = 1, nr3
+        DO ir2 = 1, nr2
+           DO ir1 = 1, nr1
+              ir=ir+1
+              IF ( isInside(ir1,1) .AND. &
+                   isInside(ir2,2) .AND. &
+                   isInside(ir3,3)         ) THEN
+                 thetabox(ir)=1._DP
+              ELSE
+                 thetabox(ir)=0._DP
+              END IF
+           END DO
+        END DO
+        !
+     END DO
+     !
+     ! C. Output the functions thetabox in the XCrySDen format,
+     ! so that the projection boxes can be visualised.
+     IF ( ionode .AND. plotboxes ) THEN
+        filextension='.box#'
+        !             123456
+        c_tab = 6
+        IF (ibox < 10) THEN
+           WRITE (filextension( c_tab : c_tab ),'(i1)') ibox
+           c_tab = c_tab + 1
+        ELSE IF (ibox < 100) THEN
+           WRITE (filextension( c_tab : c_tab+1 ),'(i2)') ibox
+           c_tab = c_tab + 2
+        ELSE IF (ibox < 1000) THEN
+           WRITE (filextension( c_tab : c_tab+2 ),'(i3)') ibox
+           c_tab = c_tab + 3
+        ELSE
+           CALL errore('projwave_boxes',&
+                'file extension not supporting so many boxes', n_proj_boxes)
+        END IF
+        !
+        fileout = TRIM(filpdos)//TRIM(filextension)//'.xsf'
+        OPEN (4,file=fileout,form='formatted', status='unknown')
+        CALL xsf_struct (alat, at, nat, tau, atm, ityp, 4)
+        CALL xsf_fast_datagrid_3d &
+             (thetabox(1:nrx1*nrx2*nrx3), nr1, nr2, nr3, nrx1, nrx2, nrx3, at, alat, 4)
+        CLOSE (4)
+        !
+     END IF
+     !
+     CALL grid_scatter ( thetabox(:), thetathisproc(:,ibox) )
+     !
+  END DO
+  !
+  DEALLOCATE ( isInside )
+  DEALLOCATE ( thetabox )
+  !
+  !
+  ! ... For each box output the volume and the electronic charge contained
+  !
+  ALLOCATE ( boxvolume (1:n_proj_boxes) )
+  ALLOCATE ( boxcharge (1:n_proj_boxes) )
+  ALLOCATE ( raux (nrxx) )
+  !
+  ! A. Integrate the volume
+  DO ibox = 1, n_proj_boxes
+     boxvolume(ibox) = SUM(thetathisproc(1:nrxx,ibox))
+     CALL mp_sum ( boxvolume(ibox) , intra_pool_comm )
+  END DO
+  !
+  ! B1. Copy the total charge density to raux
+  IF (noncolin) THEN
+     call DCOPY (nrxx, rho%of_r, 1, raux, 1)
+  ELSE
+     CALL DCOPY (nrxx, rho%of_r (1, 1), 1, raux, 1)
+     DO is = 2, nspin
+        CALL DAXPY (nrxx, 1.d0, rho%of_r (1, is), 1, raux, 1)
+     END DO
+  END IF
+  !
+  ! B2. Integrate the charge
+  DO ibox = 1, n_proj_boxes
+     boxcharge(ibox) = DDOT(nrxx,raux(:),1,thetathisproc(:,ibox),1) &
+          &   * omega / (nrx1*nrx2*nrx3)
+     CALL mp_sum ( boxcharge(ibox) , intra_pool_comm )
+  END DO
+  !
+  ! C. Write the result
+  IF (ionode) THEN
+     WRITE (stdout,*)
+     DO ibox = 1, n_proj_boxes
+        WRITE (stdout, &
+             '(5x,"Box #",i3," : vol ",f10.6," % = ",f14.6," (a.u.)^3; ",e13.6," elec")') &
+             ibox, 100* boxvolume(ibox) /(nrx1*nrx2*nrx3), omega* boxvolume(ibox) /(nrx1*nrx2*nrx3), boxcharge(ibox)
+     END DO
+  END IF
+  !
+  DEALLOCATE ( boxvolume , boxcharge )
+  !
+  ! ... Here we sum for each k point the contribution
+  ! ... of the wavefunctions to the charge in the specified box
+  !
+  ALLOCATE( proj(1:n_proj_boxes,nbnd,nkstot) )
+  proj(:,:,:)=0._DP
+  !
+  ALLOCATE( caux(nrxx) )
+  !
+  k_loop: DO ik = 1, nks
+     !
+     IF ( lsda ) current_spin = isk(ik)
+     CALL gk_sort (xk (1, ik), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin)
+     CALL davcio (evc, nwordwfc, iunwfc, ik, - 1)
+     !
+     bnd_loop: DO ibnd = 1, nbnd
+        !
+        IF (noncolin) THEN
+           !
+           psic_nc = (0.d0,0.d0)
+           DO ig = 1, npw
+              psic_nc(nl(igk(ig)),1)=evc(ig     ,ibnd)
+              psic_nc(nl(igk(ig)),2)=evc(ig+npwx,ibnd)
+           END DO 
+           raux=0._DP
+           DO ipol=1,npol
+              call cft3 (psic_nc(1,ipol),nr1,nr2,nr3, &
+                                         nrx1,nrx2,nrx3,1)
+              raux(:) = raux(:)+DBLE( psic_nc(:,ipol) )**2 &
+                             + AIMAG( psic_nc(:,ipol) )**2
+           END DO
+           !
+        ELSE
+           !
+           caux(1:nrxx) = (0._DP,0._DP)
+           DO ig = 1, npw
+              caux (nl (igk (ig) ) ) = evc (ig, ibnd)
+           ENDDO
+           IF (gamma_only) THEN
+              DO ig = 1, npw
+                 caux (nlm(igk (ig) ) ) = CONJG(evc (ig, ibnd))
+              ENDDO
+           END IF
+           CALL cft3 (caux, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1)
+           !
+           raux(:) = DBLE( caux(:) )**2 + AIMAG( caux(:) )**2
+           !
+        END IF
+        !
+        ! The contribution of this wavefunction to the LDOS
+        ! integrated in the volume is the projection of the
+        ! squared wfc on a function =1 in the volume itself:
+        !
+        DO ibox = 1, n_proj_boxes
+           proj(ibox,ibnd,ik) = DDOT(nrxx,raux(:),1,thetathisproc(:,ibox),1) &
+                &               / (nrx1*nrx2*nrx3)
+        END DO
+        !
+     END DO bnd_loop
+     !
+     CALL mp_sum ( proj(:,:,ik) , intra_pool_comm )
+     !
+  END DO k_loop
+  !
+  DEALLOCATE ( caux )
+  DEALLOCATE ( raux )
+  DEALLOCATE ( thetathisproc )
+  ! 
+  !   vector proj is distributed across the pools 
+  !   collect data for all k-points to the first pool
+  ! 
+  CALL poolrecover (proj, n_proj_boxes*nbnd, nkstot, nks)
+  !
+  ! Output the projections
+  IF ( ionode ) THEN
+     IF (filproj.ne.' ') THEN
+        iunproj=33
+        CALL write_io_header(filproj, iunproj, title, nrx1, nrx2, nrx3, &
+           nr1, nr2, nr3, nat, ntyp, ibrav, celldm, at, gcutm, dual, ecutwfc, &
+           nkstot,nbnd,natomwfc)
+        DO ibox = 1, n_proj_boxes
+           WRITE (iunproj,'(3i6)') ibox, n_proj_boxes
+           WRITE (iunproj,'(i6,i6,f9.4,e13.6)') &
+                ((ik,ibnd,et(ibnd,ik)*rytoev,proj(ibox,ibnd,ik),ibnd=1,nbnd),ik=1,nkstot)
+        END DO
+        CLOSE (iunproj)
+     END IF
+  END IF
+  ! 
+  RETURN
+  !
+END SUBROUTINE projwave_boxes
+!
+!-----------------------------------------------------------------------
+SUBROUTINE partialdos_boxes(Emin, Emax, DeltaE, filpdos, n_proj_boxes)
+  !----------------------------------------------------------------------- 
+  ! 
+  USE io_global,  ONLY : stdout
+  USE klist, ONLY: wk, nkstot, degauss, ngauss, lgauss
+  USE lsda_mod, ONLY: nspin, isk, current_spin
+  USE wvfct, ONLY: et, nbnd
+  USE constants, ONLY: rytoev
+  USE projections_ldos
+  !
+  IMPLICIT NONE
+  CHARACTER (len=256) :: filpdos
+  REAL(DP) :: Emin, Emax, DeltaE
+  INTEGER :: n_proj_boxes
+  !
+  CHARACTER (len=33) :: filextension
+  CHARACTER (len=256):: fileout
+  ! 
+  INTEGER :: ik, ibnd, ne, ie_mid, ie_delta, ie, is, ibox, nspin0
+  REAL(DP) :: etev, delta, Elw, Eup
+  REAL(DP), ALLOCATABLE :: dostot(:,:), dosbox(:,:,:), dosboxtot(:,:)
+  REAL(DP), EXTERNAL :: w0gauss
+  !
+  ! find band extrema 
+  ! 
+  Elw = et (1, 1)
+  Eup = et (nbnd, 1)
+  DO ik = 2, nkstot
+     Elw = MIN (Elw, et (1, ik) )
+     Eup = MAX (Eup, et (nbnd, ik) )
+  ENDDO
+  IF (degauss.NE.0.d0) THEN
+     Eup = Eup + 3d0 * degauss
+     Elw = Elw - 3d0 * degauss
+  ENDIF
+  Emin = MAX (Emin/rytoev, Elw)
+  Emax = MIN (Emax/rytoev, Eup)
+  DeltaE = DeltaE/rytoev
+  ne = NINT ( (Emax - Emin) / DeltaE+0.500001d0)
+  !
+  IF (nspin==2) THEN
+     nspin0 = 2
+  ELSE
+     nspin0 = 1
+  END IF
+  !
+  ALLOCATE (dosbox(0:ne,1:n_proj_boxes,nspin0))
+  ALLOCATE (dostot(0:ne,nspin0), dosboxtot(0:ne,nspin0) )
+  dosbox(:,:,:) = 0.d0 
+  dostot(:,:) = 0.d0 
+  dosboxtot(:,:)= 0.d0 
+  current_spin = 1
+  ie_delta = 5 * degauss / DeltaE + 1 
+  !
+  DO ik = 1,nkstot 
+     IF ( nspin == 2 ) current_spin = isk ( ik ) 
+     DO ibnd = 1, nbnd 
+        etev = et(ibnd,ik)
+        ie_mid = NINT( (etev-Emin)/DeltaE ) 
+        DO ie = MAX(ie_mid-ie_delta, 0), MIN(ie_mid+ie_delta, ne) 
+           delta = w0gauss((Emin+DeltaE*ie-etev)/degauss,ngauss) &
+                 / degauss / rytoev
+           !
+           DO ibox = 1, n_proj_boxes
+              dosbox(ie,ibox,current_spin)                = &
+                   dosbox(ie,ibox,current_spin)           + & 
+                   wk(ik) * delta * proj (ibox, ibnd, ik)
+           END DO
+           !
+           ! dostot(:,ns) = total DOS (states/eV) for spin "ns" 
+           !
+           dostot(ie,current_spin) = dostot(ie,current_spin) + & 
+                wk(ik) * delta 
+        END DO
+     END DO
+  END DO
+  !
+  ! dosboxtot(:,ns) = sum of all projected DOS
+  !
+  DO is=1,nspin0 
+     DO ie=0,ne 
+        dosboxtot(ie,is) = SUM(dosbox(ie,1:n_proj_boxes,is)) 
+     END DO
+  END DO
+  !
+  fileout = TRIM(filpdos)//'.ldos_boxes'
+  !
+  OPEN (4,file=fileout,form='formatted', & 
+       status='unknown') 
+  IF (nspin == 2) THEN 
+     WRITE (4,'("# E (eV)  tot_up(E)  tot_dw(E)  totldos_up totldos_dw ",$)')
+  ELSE   
+     WRITE (4,'("# E (eV)  tot(E)     totldos    ",$)')
+  END IF
+  DO ibox=1, n_proj_boxes
+     IF (nspin == 2) THEN 
+        WRITE(4,'("#",i3," up(E) ",$)')  ibox
+        WRITE(4,'("#",i3," dw(E) ",$)')  ibox
+     ELSE 
+        WRITE(4,'("#",i3," (E)   ",$)')  ibox
+     END IF
+  END DO
+  WRITE(4,*) 
+  DO ie= 0, ne 
+     etev = Emin + ie * DeltaE 
+     WRITE (4,'(f7.3,4(2e11.3),999(2e11.3))') etev*rytoev,  & 
+             dostot(ie,:), dosboxtot(ie,:), &
+             ( dosbox(ie,ibox,:), ibox = 1, n_proj_boxes )
+  END DO
+  CLOSE (4) 
+  DEALLOCATE (dostot, dosboxtot)
+  DEALLOCATE (dosbox)
+  !
+  DEALLOCATE (proj) 
+  !
+  RETURN 
+END SUBROUTINE partialdos_boxes
