@@ -702,6 +702,7 @@ ppc64-bg:*xlf* )
         try_f90flags="\$(FFLAGS) -qsuffix=cpp=f90"
         try_fflags_noopt="-q32 -O0"
         try_ldflags="-q32"
+        try_ldflags_openmp="-qsmp -qthreaded"
         pre_fdflags="-WF,"
         xlf_flags=1
         ;;
