@@ -8041,8 +8041,8 @@ fi
              then
 # scalapack + blacs
                unset ac_cv_search_pdgemr2d # clear cached value
-	       if test "$scalapack_dir"=""; then scalapack_dir="/bgsys/local/scalapack/lib"; fi
-	       if test "$blacs_dir"=""; then blacs_dir="/bgsys/local/blacs/lib"; fi
+	       if test "$scalapack_dir" = ""; then scalapack_dir="/bgsys/local/scalapack/lib"; fi
+	       if test "$blacs_dir" = ""; then blacs_dir="/bgsys/local/blacs/lib"; fi
                scalapack_libs="-L$scalapack_dir -lscalapack"
                scalapack_libs="$scalapack_libs -L$blacs_dir -lblacs -lblacsF77init -lblacs"
                LIBS="$mpi_libs $scalapack_libs"
