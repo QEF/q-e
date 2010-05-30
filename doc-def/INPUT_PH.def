@@ -455,6 +455,7 @@ collect also data-file.xml.#iq.0).  A final run of ph.x in this
 machine collects all the data contained in the files and diagonalizes
 the dynamical matrices.  This is done requesting a complete dispersion
 calculation without using start_q, last_q, start_irr, or last_irr.
+See an example in examples/GRID_example.
 
 On parallel machines the q point and the irreps calculations can be split 
 automatically. The procedure is the following:
