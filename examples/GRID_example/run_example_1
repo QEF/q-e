@@ -14,7 +14,7 @@ $ECHO
 $ECHO "$EXAMPLE_DIR : starting"
 $ECHO
 $ECHO "This example shows how to calculate the phonon dispersion on a GRID"
-$ECHO "for AlAs in zincblende structure. Both q-points and irreps are split."
+$ECHO "for AlAs in zincblende structure. Only q-points are split."
 
 # set the needed environment variables
 . ../environment_variables
@@ -38,12 +38,12 @@ for DIR in "$BIN_DIR" "$PSEUDO_DIR" ; do
         exit 1
     fi
 done
-for DIR in "$TMP_DIR" "$EXAMPLE_DIR/results" ; do
+for DIR in "$TMP_DIR" "$EXAMPLE_DIR/results_1" ; do
     if test ! -d $DIR ; then
         mkdir $DIR
     fi
 done
-cd $EXAMPLE_DIR/results
+cd $EXAMPLE_DIR/results_1
 
 # check for executables
 for FILE in $BIN_LIST ; do
@@ -118,32 +118,9 @@ $PW_COMMAND < alas.scf.in > alas.scf.out
 check_failure $?
 $ECHO " done"
 
-# phonon calculation on a (444) uniform grid of q-points
-cat > alas.ph.in0 << EOF
-phonons of AlAs
- &inputph
-  tr2_ph=1.0d-12,
-  prefix='alas',
-  ldisp=.true.,
-  nq1=4, nq2=4, nq3=4
-  amass(1)=26.98,
-  amass(2)=74.92,
-  start_irr=0,
-  last_irr=0,
-  outdir='$TMP_DIR/',
-  fildyn='alas.dyn',
- /
-EOF
-$ECHO "  running the phonon calculation ...\c"
-$PH_COMMAND < alas.ph.in0 > alas.ph.out0
-check_failure $?
-$ECHO " done"
-
 for q in `seq 1 8 ` ; do
 
-for irr in `seq 1 6` ; do
-
-cat > input.$q.$irr << EOF
+cat > input.$q << EOF
 phonons of AlAs
  &inputph
   tr2_ph=1.0d-12,
@@ -152,50 +129,27 @@ phonons of AlAs
   nq1=4, nq2=4, nq3=4
   start_q=$q
   last_q=$q
-  start_irr=$irr
-  last_irr=$irr
   recover=.true.,
   amass(1)=26.98,
   amass(2)=74.92,
-  outdir="$TMP_DIR/$q.$irr",
+  outdir="$TMP_DIR/$q",
   fildyn='alas.dyn',
  /
 EOF
 
-mkdir $TMP_DIR/$q.$irr
-cp -r $TMP_DIR/alas.* $TMP_DIR/$q.$irr
-mkdir $TMP_DIR/$q.$irr/_ph0alas.phsave
-cp -r $TMP_DIR/_ph0alas.phsave/* $TMP_DIR/$q.$irr/_ph0alas.phsave
+mkdir $TMP_DIR/$q
+cp -r $TMP_DIR/alas.* $TMP_DIR/$q
 
-$ECHO "  running the phonon calculation for q= " $q " irr=" $irr "...\c"
-$PH_COMMAND < input.$q.$irr > output.$q.$irr
+$ECHO "  running the phonon calculation for q= " $q " ...\c"
+$PH_COMMAND < input.$q > output.$q
 $ECHO " done"
-
-\cp -f $TMP_DIR/$q.$irr/_ph0alas.phsave/data-file.xml.$q.$irr $TMP_DIR/_ph0alas.phsave >& /dev/null
 
 done
-\cp -f $TMP_DIR/$q.1/_ph0alas.phsave/data-file.xml.$q.0 $TMP_DIR/_ph0alas.phsave >& /dev/null
-
-done 
-
-cat > alas.ph.in << EOF
-phonons of AlAs
- &inputph
-  tr2_ph=1.0d-12,
-  prefix='alas',
-  ldisp=.true.,
-  nq1=4, nq2=4, nq3=4
-  amass(1)=26.98,
-  amass(2)=74.92,
-  recover=.true.,
-  outdir='$TMP_DIR/',
-  fildyn='alas.dyn',
- /
-EOF
-$ECHO "  running the phonon calculation to collect the results...\c"
-$PH_COMMAND < alas.ph.in > alas.ph.out
-check_failure $?
-$ECHO " done"
+#
+# Please note: if the previous step was done in different machines
+# here you should copy all the dynamical matrices in the same directory
+# in which you run q2r.x
+#
 
 cat > q2r.in <<EOF
  &input
