@@ -566,9 +566,9 @@ path, as specified in the PATH environment variable.
 
 Additional instructions for special machines:
 \begin{tabular}{ll}
-    \texttt{./configure ARCH=crayxt4r}& for CRAY XT machines
-    \texttt{./configure ARCH=necsx}   & for NEC SX machines
-    \texttt{./configure ARCH=ppc64-mn}& PowerPC Linux + xlf (Marenostrum)
+    \texttt{./configure ARCH=crayxt4r}& for CRAY XT machines \\
+    \texttt{./configure ARCH=necsx}   & for NEC SX machines \\
+    \texttt{./configure ARCH=ppc64-mn}& PowerPC Linux + xlf (Marenostrum) \\
     \texttt{./configure ARCH=ppc64-bg}& IBM BG/P (BlueGene)
 \end{tabular}
     
@@ -1462,7 +1462,7 @@ variable OMP\_NUM\_THREADS.
 MPI is the well-established, general-purpose parallelization.
 In \qe\ several parallelization levels, specified at run-time
 via command-line options to the executable, are implemented
-with MPI. This is your first choice for execution a parallel 
+with MPI. This is your first choice for execution on a parallel 
 machine.
 
 Library OpenMP is a low-effort parallelization suitable for
@@ -2236,7 +2236,7 @@ Second, you can calculate phonons using Density-Functional Perturbation Theory.
 Further processing to calculate Interatomic Force Constants, to add macroscopic
 electric field and impose Acoustic Sum Rules at q=0 may be needed.
 In the following, we will indicate by $q$ the phonon wavevectors, 
-whle $k$ will indicate Bloch vectors used for summing over the Brillouin Zone.
+while $k$ will indicate Bloch vectors used for summing over the Brillouin Zone.
 
 Since version 4.0 it is possible to safely stop execution of 
 \ph.x\ code using
@@ -2340,7 +2340,7 @@ For more details, see Example 07.
 
 \subsection{Distributed Phonon calculations}
 A complete phonon dispersion calculation can be quite long and
-expensive, but it can be spit into a number of semi-independent 
+expensive, but it can be split into a number of semi-independent 
 calculations, using options \texttt{start\_q}, \texttt{last\_q},
 \texttt{start\_irr}, \texttt{last\_irr}. An example on how to 
 distribute the calculations and collect the results can be found
