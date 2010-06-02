@@ -20,7 +20,7 @@ $ECHO "This example shows how to use the recover feature of ph.x "
 
 # required executables and pseudopotentials
 BIN_LIST="pw.x ph.x"
-PSEUDO_LIST="Si.pz-vbc.UPF Ni.pbe-nd-rrkjus.UPF"
+PSEUDO_LIST="Si.pz-vbc.UPF Ni.pbe-nd-rrkjus.UPF Au.rel-pz-paw_kj.UPF"
 
 $ECHO
 $ECHO "  executables directory: $BIN_DIR"
