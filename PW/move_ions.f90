@@ -32,6 +32,7 @@ SUBROUTINE move_ions()
   USE control_flags,          ONLY : istep, nstep, upscale, lbfgs, ldamped, &
                                      lconstrain, lcoarsegrained, conv_ions, &
                                      lmd, llang, history, tr2
+  USE input_parameters,       ONLY : cell_dofree
   USE relax,                  ONLY : epse, epsf, epsp, starting_scf_threshold
   USE lsda_mod,               ONLY : lsda, absmag
   USE metadyn_base,           ONLY : set_target, mean_force
@@ -54,6 +55,7 @@ SUBROUTINE move_ions()
   REAL(DP), ALLOCATABLE :: pos(:), grad(:)
   REAL(DP)              :: h(3,3), fcell(3,3)=0.d0, epsp1
   INTEGER,  ALLOCATABLE :: fixion(:)
+  real(dp) :: tr
   !
   !
   ! ... only one node does the calculation in the parallel case
@@ -144,6 +146,7 @@ SUBROUTINE move_ions()
         !
         IF ( lmovecell ) THEN
            ! changes needed only if cell moves
+           if (cell_dofree == 'shape') call impose_deviatoric_strain(alat*at, h)
            at = h /alat  
            CALL recips( at(1,1),at(1,2),at(1,3), bg(1,1),bg(1,2),bg(1,3) )
            CALL volume( alat, at(1,1), at(1,2), at(1,3), omega )

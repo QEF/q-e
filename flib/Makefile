@@ -38,7 +38,8 @@ transto.o \
 date_and_tim.o \
 volume.o \
 dylmr2.o \
-ylmr2.o
+ylmr2.o \
+deviatoric.o
 
 POBJS = \
 flush_unit.o \

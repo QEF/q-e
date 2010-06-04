@@ -41,6 +41,8 @@ SUBROUTINE vcsmd()
   USE parameters,      ONLY : ntypx
   USE ener,            ONLY : etot
   USE io_files,        ONLY : prefix, delete_if_present
+  USE input_parameters,       ONLY : cell_dofree
+
   !
   IMPLICIT NONE
   !
@@ -412,6 +414,7 @@ SUBROUTINE vcsmd()
   !
   ! ... update configuration in PWSCF variables
   !
+  if (cell_dofree == 'shape') call impose_deviatoric_strain(alat*at, avec)
   at = avec / alat
   !
   CALL volume( alat, at(1,1), at(1,2), at(1,3), omega )

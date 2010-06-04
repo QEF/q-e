@@ -635,7 +635,7 @@ END FUNCTION saw
      thdiag = .false.
      SELECT CASE ( TRIM( cell_dofree ) )
 
-            CASE ( 'all', 'default' )
+            CASE ( 'all', 'default', 'shape' )
               iforceh = 1
             CASE ( 'volume' )
               CALL errore(' init_dofree ', &

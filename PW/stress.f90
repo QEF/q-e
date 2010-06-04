@@ -29,6 +29,7 @@ subroutine stress
   USE bp,            ONLY : lelfield
   USE uspp,          ONLY : okvan
   USE london_module, ONLY : stres_london
+  USE input_parameters,       ONLY : cell_dofree
 #ifdef EXX
   USE exx,           ONLY : exx_stress
   USE funct,         ONLY : dft_is_hybrid, exx_is_active
@@ -139,11 +140,17 @@ subroutine stress
   ! Resymmetrize the total stress. This should not be strictly necessary,
   ! but prevents loss of symmetry in long vc-bfgs runs
 
-   CALL symmatrix ( sigma )
+  CALL symmatrix ( sigma )
+
+  if (cell_dofree == 'shape') then
+      WRITE(stdout,9001) (sigma(1,1) + sigma(2,2) + sigma(3,3)) * uakbar / 3d0
+      WRITE(stdout,*)
+      call impose_deviatoric_stress(sigma)
+  endif
+
   !
   ! write results in Ryd/(a.u.)^3 and in kbar
   !
-
   WRITE( stdout, 9000) (sigma(1,1) + sigma(2,2) + sigma(3,3)) * uakbar / 3d0,  &
                   (sigma(l,1), sigma(l,2), sigma(l,3),                    &
             sigma(l,1)*uakbar, sigma(l,2)*uakbar, sigma(l,3)*uakbar, l=1,3)
@@ -176,6 +183,7 @@ subroutine stress
   return
 9000 format (10x,'total   stress  (Ry/bohr**3) ',18x,'(kbar)', &
              &5x,'P=',f8.2/3 (3f13.8,4x,3f10.2/))
+9001 format (5x,'Isostatic pressure: ',f8.2,' kbar')
 9005 format &
          &  (5x,'kinetic stress (kbar)',3f10.2/2(26x,3f10.2/)/ &
          &   5x,'local   stress (kbar)',3f10.2/2(26x,3f10.2/)/ &
