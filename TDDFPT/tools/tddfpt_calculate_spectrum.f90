@@ -28,7 +28,7 @@ program lr_calculate_spectrum
   integer :: verbosity
   real(kind=dp) :: omeg, omegmax, delta_omeg, z1,z2
   real(kind=dp) :: average(3), av_amplitude(3), epsil
-  real (kind=dp) :: alpha_temp
+  real (kind=dp) :: alpha_temp(3)
   real (kind=dp) :: f_sum 
   complex(kind=dp) :: omeg_c
   complex(kind=dp) :: green(3,3), eps(3,3)
@@ -152,7 +152,11 @@ if (ionode) then !No need for parallelization in this code
   write (stdout,'(/5x,"Data ready, starting to calculate observables")')
   filename = trim(prefix) // ".plot"
   write (stdout,'(/5x,"Output file name: ",A20)') filename
-  write (stdout,'(5x,"alpha:absorption coefficient")')
+  if (n_ipol == 3) then
+   write (stdout,'(5x,"alpha:absorption coefficient")')
+  else
+   write (stdout,'(5x,"Unsufficent info for absorption coefficient")')
+  endif
   write (stdout,'(5x,"CHI:susceptibility tensor")')
   write (stdout,'(5x,"Energy unit in output file is eV")')
 !!!! The output file:
@@ -163,9 +167,9 @@ if (ionode) then !No need for parallelization in this code
   if (verbosity > 0 .and. n_ipol == 3) then ! In order to gain speed, I perform first term seperately
     !
     call calc_chi(omeg,epsil,green(:,:))
-    alpha_temp= -omeg*ry*aimag(green(1,1)+green(2,2)+green(3,3))/3.d0 
+    alpha_temp(3)= -omeg*ry*aimag(green(1,1)+green(2,2)+green(3,3))/3.d0 
     !alpha is ready
-    f_sum=0.3333333333333333d0*delta_omeg*alpha_temp
+    f_sum=0.3333333333333333d0*delta_omeg*alpha_temp(3)
   endif
 !!!!!!!!!!!!!!!!!!OMEGA LOOP!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   do while(omeg<omegmax)
@@ -190,15 +194,17 @@ if (ionode) then !No need for parallelization in this code
         !
         !These are the absorbtion coefficient
         !
-        alpha_temp= -omeg*ry*aimag(green(1,1)+green(2,2)+green(3,3))/3.d0 
+        alpha_temp(1)=alpha_temp(2)
+        alpha_temp(2)=alpha_temp(3)
+        alpha_temp(3)= -omeg*ry*aimag(green(1,1)+green(2,2)+green(3,3))/3.d0 
         ! 
         write(17,'(5x,"alpha",2x,3(e21.15,2x))') &
-            omeg*ry, alpha_temp
+            omeg*ry, alpha_temp(3)
         !
         if (verbosity > 0 ) then
-         if ( is_peak(omeg,alpha_temp)) &
-            write(stdout,'(5x,"Possible resonance in the vicinity of ",F15.8," Ry")') omeg-2.0d0*delta_omeg
-         f_sum=f_sum+integrator(delta_omeg,alpha_temp)
+         if ( is_peak(omeg,alpha_temp(3))) &
+            write(stdout,'(5x,"Possible peak at ",F15.8," Ry; Intensity=",E11.2)') omeg-2.0d0*delta_omeg,alpha_temp(1)
+         f_sum=f_sum+integrator(delta_omeg,alpha_temp(3))
         endif
      end if
      !
