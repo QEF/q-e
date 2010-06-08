@@ -26,7 +26,9 @@
       USE ensemble_dft,     ONLY: tens
       USE mp,               ONLY: mp_bcast
       USE mp_global,        ONLY: root_image, intra_image_comm
-      USE control_flags,    ONLY: tksw, ndw
+      USE control_flags,    ONLY: tksw, ndw, io_level, twfcollect
+      USE xml_io_base,      ONLY: restart_dir, kpoint_dir
+
 !
       implicit none
       integer, INTENT(IN) ::  nfi
@@ -51,7 +53,6 @@
       COMPLEX(DP), ALLOCATABLE :: ctot(:,:)
       REAL(DP),    ALLOCATABLE :: eitot(:,:)
       INTEGER  :: nupdwn_tot( 2 ), iupdwn_tot( 2 )
-
 
       if ( ndw < 1 ) then
          !
@@ -83,12 +84,9 @@
          !
       END IF
       !
-      !  Sincronize lambdas, whose replicas could diverge on
-      !  different processors
-      !
       IF( tens ) THEN
         !
-        CALL cp_writefile( ndw, tmp_dir, .TRUE., nfi, tps, acc, nk, xk, wk,   &
+        CALL cp_writefile( ndw, .TRUE., nfi, tps, acc, nk, xk, wk,   &
           ht, htm, htvel, gvel, xnhh0, xnhhm, vnhh, taui, cdmi , taus,        &
           vels, tausm, velsm, fion, vnhp, xnhp0, xnhpm, nhpcl,nhpdim, occ_f , &
           occ_f , lambda, lambdam, xnhe0, xnhem, vnhe, ekincm, ei,            &
@@ -96,7 +94,7 @@
         !
       ELSE
         ! 
-        CALL cp_writefile( ndw, tmp_dir, .TRUE., nfi, tps, acc, nk, xk, wk,  &
+        CALL cp_writefile( ndw, .TRUE., nfi, tps, acc, nk, xk, wk,  &
              ht, htm, htvel, gvel, xnhh0, xnhhm, vnhh, taui, cdmi , taus,    &
              vels, tausm, velsm, fion, vnhp, xnhp0, xnhpm, nhpcl,nhpdim, occ_f,&
              occ_f , lambda, lambdam, xnhe0, xnhem, vnhe, ekincm, eitot,     &
@@ -153,8 +151,6 @@
       REAL(DP) :: xk(3,1) = 0.0d0, wk(1) = 2.0d0
       REAL(DP), ALLOCATABLE :: occ_ ( : )
       REAL(DP) :: htm1(3,3), b1(3) , b2(3), b3(3), omega
-        
-      LOGICAL::lopen
 
       IF( flag == -1 ) THEN
         CALL cp_read_cell( ndr, tmp_dir, .TRUE., ht, htm, htvel, gvel, xnhh0, xnhhm, vnhh )
@@ -172,19 +168,19 @@
       ALLOCATE( occ_ ( SIZE( occ_f ) ) )
 
       IF( tens ) THEN
-         CALL cp_readfile( ndr, tmp_dir, .TRUE., nfi, tps, acc, nk, xk, wk, &
+         CALL cp_readfile( ndr, .TRUE., nfi, tps, acc, nk, xk, wk, &
                 ht, htm, htvel, gvel, xnhh0, xnhhm, vnhh, taui, cdmi, taus, &
                 vels, tausm, velsm, fion, vnhp, xnhp0, xnhpm, nhpcl,nhpdim,occ_ , &
                 occ_ , lambda, lambdam, b1, b2, b3, &
                 xnhe0, xnhem, vnhe, ekincm, c0, cm, mat_z = mat_z )
       ELSE
-         CALL cp_readfile( ndr, tmp_dir, .TRUE., nfi, tps, acc, nk, xk, wk, &
+         CALL cp_readfile( ndr, .TRUE., nfi, tps, acc, nk, xk, wk, &
                 ht, htm, htvel, gvel, xnhh0, xnhhm, vnhh, taui, cdmi, taus, &
                 vels, tausm, velsm, fion, vnhp, xnhp0, xnhpm, nhpcl,nhpdim,occ_ , &
                 occ_ , lambda, lambdam, b1, b2, b3, &
                 xnhe0, xnhem, vnhe, ekincm, c0, cm )
       END IF
-
+      !
       ! AutoPilot (Dynamic Rules) Implementation
       event_index = 1
 

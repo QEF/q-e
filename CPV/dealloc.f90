@@ -46,7 +46,7 @@ SUBROUTINE deallocate_modules_var()
   USE metagga,              ONLY : deallocate_metagga
   USE ions_positions,       ONLY : deallocate_ions_positions
   USE kohn_sham_states,     ONLY : ks_states_closeup
-  USE ldau,                 ONLY : deallocate_lda_plus_u
+  USE ldau_cp,              ONLY : deallocate_lda_plus_u
   USE step_penalty,         ONLY : deallocate_step_pen
 
   !

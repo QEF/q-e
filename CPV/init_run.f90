@@ -76,7 +76,7 @@ SUBROUTINE init_run()
   USE orthogonalize_base,       ONLY : mesure_diag_perf, mesure_mmul_perf
   USE step_penalty,             ONLY : step_pen
   USE ions_base,                ONLY : ions_reference_positions, cdmi, taui
-  USE ldau
+  USE ldau_cp
   !
   IMPLICIT NONE
   !

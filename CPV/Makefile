@@ -83,6 +83,7 @@ makov_payne.o
 LOBJS = \
 entropy.o 
 
+PWOBJS = ../PW/libpw.a
 QEMODS=../Modules/libqemod.a
 
 TLDEPS= bindir mods libs libiotk
@@ -92,7 +93,7 @@ cp : tldeps libcp.a cp.x cppp.x
 
 cp.x : cprstart.o compute_fes_grads.o compute_scf.o libcp.a $(QEMODS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o cp.x cprstart.o compute_fes_grads.o compute_scf.o \
-		libcp.a $(QEMODS) $(LIBOBJS) $(LIBS)
+		libcp.a $(PWOBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../CPV/cp.x . )
 
 libcp.a : $(FOBJS) $(LOBJS) 

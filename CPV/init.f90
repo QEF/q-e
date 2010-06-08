@@ -123,6 +123,15 @@
 
       ! ... set the sticks mesh and distribute g vectors among processors
       !
+if( ionode ) then
+! debug
+!write(6,*) alat
+!write(6,*) a1
+!write(6,*) a2
+!write(6,*) a3
+!write(6,*) gcut, gkcut, gcut
+!write(6,*) nr1, nr2, nr3, nr1x, nr2x, nr3x, nr1s, nr2s, nr3s, nr1sx, nr2sx, nr3sx, ngw_ , ngm_ , ngs_
+end if
 
       CALL pstickset( dfftp, dffts, alat, a1, a2, a3, gcut, gkcut, gcuts, &
         nr1, nr2, nr3, nr1x, nr2x, nr3x, nr1s, nr2s, nr3s, nr1sx, nr2sx,   &

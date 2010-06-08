@@ -283,19 +283,20 @@ CONTAINS
    !
 END MODULE core
 !
-module ldaU
+module ldau_cp
   use parameters, only: nsx
   USE kinds
   implicit none
+  save
   complex(DP), allocatable :: atomwfc(:,:)
   complex(DP), allocatable :: swfcatom(:,:)
-  real(DP) :: Hubbard_U(nsx), Hubbard_lambda(nsx,2), ns0(nsx,2),   &
-     & Hubbard_alpha(nsx)
+  real(DP) :: Hubbard_U(nsx), Hubbard_lambda(nsx,2), ns0(nsx,2), Hubbard_alpha(nsx)
   real(DP) :: e_hubbard = 0.d0, e_lambda = 0.d0
   real(DP), allocatable :: ns(:,:,:,:)
   integer :: Hubbard_l(nsx), Hubbard_lmax=0, n_atomic_wfc
-  logical lda_plus_u
+  logical :: lda_plus_u
   COMPLEX(DP), allocatable::  vupsi(:,:) !#@@@
+  !
 contains
   !
   subroutine deallocate_lda_plus_u()
@@ -308,7 +309,7 @@ contains
      !
   end subroutine
   !
-end module ldaU
+end module ldau_cp
 !
 !
 ! Occupation constraint 

@@ -124,7 +124,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
   USE mp,                       ONLY : mp_bcast
   USE mp_global,                ONLY : root_image, intra_image_comm, np_ortho, me_ortho, ortho_comm, &
                                        me_image
-  USE ldaU,                     ONLY : lda_plus_u, vupsi
+  USE ldaU_cp,                  ONLY : lda_plus_u, vupsi
   USE step_penalty,             ONLY : vpsi_pen, step_pen, E_pen
   USE small_box,                ONLY : ainvb
   !

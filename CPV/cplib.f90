@@ -1882,9 +1882,7 @@ END FUNCTION
       USE cp_interfaces,    ONLY: pseudo_stress, compute_gagb, stress_hartree, &
                                   add_drhoph, stress_local, force_loc
       USE fft_base,         ONLY: dfftp, dffts
-!#@@@@
-      USE ldaU,             ONLY: e_hubbard
-!#@@@@
+      USE ldau_cp,          ONLY: e_hubbard
       USE step_penalty,     ONLY: e_pen
 
       IMPLICIT NONE
@@ -2426,8 +2424,8 @@ END FUNCTION
 !-----------------------------------------------------------------------
 !
       USE constants,        ONLY: autoev
-      use ldaU,             ONLY: n_atomic_wfc, atomwfc,lda_plus_u, Hubbard_U
-      use ldaU,             ONLY: Hubbard_lmax, Hubbard_l, ns, vupsi
+      use ldaU_cp,          ONLY: n_atomic_wfc, atomwfc,lda_plus_u, Hubbard_U
+      use ldaU_cp,          ONLY: Hubbard_lmax, Hubbard_l, ns, vupsi
       use input_parameters, ONLY: lda_plus_u_ => lda_plus_u
       use input_parameters, ONLY: Hubbard_U_ => Hubbard_U
       use ions_base,        only: na, nsp, nat, atm
@@ -2540,8 +2538,8 @@ end function set_Hubbard_l
       USE uspp,               ONLY: nhsa=>nkb
       USE uspp_param,         ONLY: upf
       use electrons_base,     only: nspin, n => nbsp, nx => nbspx, ispin, f
-      USE ldaU,               ONLY: lda_plus_u, Hubbard_U, Hubbard_l
-      USE ldaU,               ONLY: n_atomic_wfc, ns, e_hubbard
+      USE ldaU_cp,               ONLY: lda_plus_u, Hubbard_U, Hubbard_l
+      USE ldaU_cp,               ONLY: n_atomic_wfc, ns, e_hubbard
       USE step_penalty,       ONLY: E_pen, A_pen, sigma_pen, alpha_pen
       USE step_penalty,       ONLY: step_pen
       USE dspev_module,       only: dspev_drv
@@ -2824,9 +2822,9 @@ end function set_Hubbard_l
       use electrons_base,   only: n => nbsp 
       use ions_base,        only: na, nat, nsp
       use gvecw,            only: ngw
-      USE ldaU,             ONLY: lda_plus_u, Hubbard_U, Hubbard_l
-      USE ldaU,             ONLY: n_atomic_wfc, ns, e_hubbard
-      USE ldaU,             ONLY: Hubbard_lmax
+      USE ldaU_cp,             ONLY: lda_plus_u, Hubbard_U, Hubbard_l
+      USE ldaU_cp,             ONLY: n_atomic_wfc, ns, e_hubbard
+      USE ldaU_cp,             ONLY: Hubbard_lmax
       use dspev_module,     only : dspev_drv
       USE step_penalty,     ONLY: step_pen, A_pen, sigma_pen, alpha_pen
 
@@ -3031,8 +3029,8 @@ end function set_Hubbard_l
       use gvecw, only: ngw
       use electrons_base, only: nspin, n => nbsp, nx => nbspx, ispin, f
       USE uspp,           ONLY: nhsa=>nkb
-      USE ldaU,           ONLY: Hubbard_U, Hubbard_l
-      USE ldaU,           ONLY: n_atomic_wfc, ns
+      USE ldaU_cp,           ONLY: Hubbard_U, Hubbard_l
+      USE ldaU_cp,           ONLY: n_atomic_wfc, ns
       USE kinds,          ONLY: DP
 !
       implicit none
@@ -3112,8 +3110,8 @@ end function set_Hubbard_l
 !      use constants
       USE uspp,           ONLY: nhsa=>nkb, qq
       use cvan,           ONLY: ish
-      USE ldaU,           ONLY: Hubbard_U, Hubbard_l
-      USE ldaU,           ONLY: n_atomic_wfc
+      USE ldaU_cp,           ONLY: Hubbard_U, Hubbard_l
+      USE ldaU_cp,           ONLY: n_atomic_wfc
       use cell_base,      ONLY: tpiba
       USE uspp_param,     only: nh !#@@@
       use mp_global,      only: intra_image_comm

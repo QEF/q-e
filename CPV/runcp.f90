@@ -39,7 +39,7 @@
       use gvecw,               only : ngw, ngwx
       USE cp_interfaces,       ONLY : dforce
       USE task_groups,         ONLY : tg_gather
-      USE ldaU
+      USE ldaU_cp
       !
       IMPLICIT NONE
       !
@@ -251,7 +251,7 @@
       USE mp, ONLY: mp_sum 
       USE mp_global, ONLY: intra_image_comm 
 !#@@@
-      USE ldaU
+      USE ldaU_cp
 !#@@@
   !
       IMPLICIT NONE
