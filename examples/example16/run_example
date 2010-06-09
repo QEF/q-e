@@ -19,7 +19,7 @@ $ECHO "This example shows a calculation of STM maps."
 . ../environment_variables
 
 # required executables and pseudopotentials
-BIN_LIST="pw.x pp.x plotrho.x"
+BIN_LIST="pw.x pp.x plotrho.x projwfc.x sumpdos.x"
 PSEUDO_LIST="Al.pz-vbc.UPF As.pz-bhs.UPF"
 
 $ECHO
@@ -54,6 +54,14 @@ for FILE in $BIN_LIST ; do
     fi
 done
 
+# check for gnuplot
+GP_COMMAND=`which gnuplot 2>/dev/null`
+if [ "$GP_COMMAND" = "" ]; then
+        $ECHO
+        $ECHO "gnuplot not in PATH"
+        $ECHO "Results will not be plotted"
+fi
+
 # check for pseudopotentials
 for FILE in $PSEUDO_LIST ; do
     if test ! -r $PSEUDO_DIR/$FILE ; then
@@ -69,10 +77,15 @@ $ECHO " done"
 PW_COMMAND="$PARA_PREFIX $BIN_DIR/pw.x $PARA_POSTFIX"
 PP_COMMAND="$PARA_PREFIX $BIN_DIR/pp.x $PARA_POSTFIX"
 PLOTRHO_COMMAND="$BIN_DIR/plotrho.x"
+PROJWFC_COMMAND="$PARA_PREFIX $BIN_DIR/projwfc.x $PARA_POSTFIX"
+SUMPDOS_COMMAND="$BIN_DIR/sumpdos.x"
 $ECHO
 $ECHO "  running pw.x as:      $PW_COMMAND"
 $ECHO "  running pp.x as:      $PP_COMMAND"
 $ECHO "  running plotrho.x as: $PLOTRHO_COMMAND"
+$ECHO "  running projwfc.x as: $PROJWFC_COMMAND"
+$ECHO "  running sumpdos.x as: $SUMPDOS_COMMAND"
+$ECHO "  running gnuplot as:   $GP_COMMAND"
 $ECHO
 
 # clean TMP_DIR
@@ -252,6 +265,107 @@ $ECHO "  running plotrho on positive bias data...\c"
 $PLOTRHO_COMMAND < AlAs110.plotrho+.in > AlAs110.plotrho+.out
 check_failure $?
 $ECHO " done"
+
+# Projection of the DOS on volumes (boxes)
+cat > AlAs110.box.projwfc.in << EOF
+ &inputpp
+    prefix  = 'AlAs110'
+    outdir='$TMP_DIR/',
+    ngauss=0
+    degauss=0.01
+    DeltaE=0.02
+    tdosinboxes=.true.
+    plotboxes=.true.
+    n_proj_boxes=8
+
+!! Boxes centered on the first vacuum layer:
+  !! 1) above the surface Al
+    irmin(1,1)= 0, irmax(1,1)= 2, irmin(2,1)= 0, irmax(2,1)= 2, irmin(3,1)=63, irmax(3,1)=65,
+  !! 2) above the surface As
+    irmin(1,2)= 9, irmax(1,2)=11, irmin(2,2)= 5, irmax(2,2)= 7, irmin(3,2)=63, irmax(3,2)=65,
+  !! 3) above the 2nd layer Al
+    irmin(1,3)= 9, irmax(1,3)=11, irmin(2,3)=14, irmax(2,3)=16, irmin(3,3)=63, irmax(3,3)=65,
+  !! 4) as large as the surface unit cell
+    irmin(1,4)= 1, irmax(1,4)=18, irmin(2,4)= 1, irmax(2,4)=27, irmin(3,4)=63, irmax(3,4)=65,
+
+!! Same as above, centered on the second vacuum layer:
+    irmin(1,5)= 0, irmax(1,5)= 2, irmin(2,5)= 0, irmax(2,5)= 2, irmin(3,5)=72, irmax(3,5)=74,
+    irmin(1,6)= 9, irmax(1,6)=11, irmin(2,6)= 5, irmax(2,6)= 7, irmin(3,6)=72, irmax(3,6)=74,
+    irmin(1,7)= 9, irmax(1,7)=11, irmin(2,7)=14, irmax(2,7)=16, irmin(3,7)=72, irmax(3,7)=74,
+    irmin(1,8)= 1, irmax(1,8)=18, irmin(2,8)= 1, irmax(2,8)=27, irmin(3,8)=72, irmax(3,8)=74,
+ /
+EOF
+$ECHO
+$ECHO "  running local DOS calculation...\c"
+$PROJWFC_COMMAND < AlAs110.box.projwfc.in > AlAs110.box.projwfc.out
+check_failure $?
+$ECHO " done"
+
+# Projection of the DOS on atomic wavefunctions
+cat > AlAs110.projwfc.in << EOF
+ &inputpp
+    prefix  = 'AlAs110'
+    outdir='$TMP_DIR/',
+    ngauss=0
+    degauss=0.01
+    DeltaE=0.02
+    tdosinboxes=.false.
+ /
+EOF
+$ECHO
+$ECHO "  running projected DOS calculation...\c"
+$PROJWFC_COMMAND < AlAs110.projwfc.in > AlAs110.projwfc.out
+check_failure $?
+$ECHO " done"
+
+$ECHO
+$ECHO "  summing the atomic PDOS...\c"
+$SUMPDOS_COMMAND AlAs110.pdos_atm\#10\(Al\)_wfc* > "AlAs110.pdos_atm#10(Al)" 2> /dev/null
+$SUMPDOS_COMMAND AlAs110.pdos_atm\#11\(As\)_wfc* > "AlAs110.pdos_atm#11(As)" 2> /dev/null
+$ECHO " done"
+
+#
+#  if gnuplot was found, the results are plotted
+#
+if [ "$GP_COMMAND" = "" ]; then
+    break
+else
+eFermi=`grep "Fermi" AlAs110re.nonscf.out | cut -d  \  -f 14`
+cat > gnuplot.tmp <<EOF
+set term postscript enhanced color solid lw 3 24
+set output 'AlAs110.box.projwfc.ps'
+ef=$eFermi
+set xlabel "Energy - E_F (eV)"
+set ylabel "Local DOS (states/eV)"
+set style data lines
+set key top left Left reverse
+set border 31 lw 0.2
+set title "Projected DOS"
+plot \\
+ './AlAs110.pdos_atm#10(Al)' u (\$1-ef):2 t "Surface Al" ,\\
+ './AlAs110.pdos_atm#11(As)' u (\$1-ef):2 t "Surface As"
+set title "Local DOS centered in the first vacuum layer"
+plot \\
+ './AlAs110.ldos_boxes' u (\$1-ef):4 t "Above Al" ,\\
+ './AlAs110.ldos_boxes' u (\$1-ef):5 t "Above As" ,\\
+ './AlAs110.ldos_boxes' u (\$1-ef):(\$7/54) t "Surface average"
+set title "Local DOS centered in the second vacuum layer"
+plot \\
+ './AlAs110.ldos_boxes' u (\$1-ef):8 t "Above Al" ,\\
+ './AlAs110.ldos_boxes' u (\$1-ef):9 t "Above As" ,\\
+ './AlAs110.ldos_boxes' u (\$1-ef):(\$11/54) t "Surface average"
+EOF
+$ECHO
+$ECHO "  plotting DOS results ...\c"
+$GP_COMMAND < gnuplot.tmp
+$ECHO " done"
+rm gnuplot.tmp
+fi
+
+$ECHO
+$ECHO "  To visualize a volume in which the DOS is integrated, execute:"
+$ECHO "    xcrysden --xsf results/AlAs110.box#1.xsf"
+$ECHO "  and plot the isosurface corresponding to isovalue 0.5"
 
 $ECHO
 $ECHO " $EXAMPLE_DIR: done"

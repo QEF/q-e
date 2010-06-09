@@ -1,0 +1,32 @@
+
+     Program PROJWFC v.4.2      starts on  4Jun2010 at 13: 2:14 
+
+     This program is part of the open-source Quantum ESPRESSO suite
+     for quantum simulation of materials; please acknowledge
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
+          URL http://www.quantum-espresso.org", 
+     in publications or presentations arising from this work. More details at
+     http://www.quantum-espresso.org/wiki/index.php/Citing_Quantum-ESPRESSO
+
+     Parallel version (MPI), running on     1 processors
+
+     Planes per process (thick) : nr3 = 108 npp =  108 ncplane =   486
+ 
+     Proc/  planes cols     G    planes cols    G      columns  G
+     Pool       (dense grid)       (smooth grid)      (wavefct grid)
+        1   108    349    24607  108    349    24607    109     4469
+ 
+
+     Gaussian broadening (read from input): ngauss,degauss=   0    0.010000
+
+
+     Calling projwave_boxes .... 
+ 
+     Box #  1 : vol   0.051440 % =       1.786458 (a.u.)^3;  0.120646E-01 elec
+     Box #  2 : vol   0.051440 % =       1.786458 (a.u.)^3;  0.144389E-02 elec
+     Box #  3 : vol   0.051440 % =       1.786458 (a.u.)^3;  0.204444E-03 elec
+     Box #  4 : vol   2.777778 % =      96.468751 (a.u.)^3;  0.140278E+00 elec
+     Box #  5 : vol   0.051440 % =       1.786458 (a.u.)^3;  0.263548E-04 elec
+     Box #  6 : vol   0.051440 % =       1.786458 (a.u.)^3;  0.739011E-05 elec
+     Box #  7 : vol   0.051440 % =       1.786458 (a.u.)^3;  0.359637E-05 elec
+     Box #  8 : vol   2.777778 % =      96.468751 (a.u.)^3;  0.588339E-03 elec

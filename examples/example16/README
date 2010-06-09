@@ -2,6 +2,9 @@
  surface. The image is obtained by  integrating the density of states
  from the bias potential to the fermi energy, as proposed by Tersoff and
  Hamann [PRB 31, 805 (1985)].
+ The local density of states contributing to STS is then evaluated as a
+ function of energy, with spatial integration in small volumes above
+ different surface atoms.
 
 1) make a self-consistent calculation for the relaxed AlAs (110) surface
    by using a slab supercell.
@@ -28,4 +31,15 @@
    (input=AlAs110.plotrho-.in, output=AlAs110.plotrho-.out)
    (input=AlAs110.plotrho+.in, output=AlAs110.plotrho+.out)
 
- 
+7) computes the local density of states, as function of energy, integrated
+   in volumes outside the AlAs(110) surface, for small volumes on top of
+   the surface Al and As atoms and at various distances from the surface.
+   Output files: 'AlAs110.ldos_boxes' which contains the LDOS(E)
+   and 'AlAs110.box#<N>.xsf' with XCrySDen structure files.
+   (input=AlAs110.box.projwfc.in, output=AlAs110.box.projwfc.out)
+
+8) computes the projected density of states (see example08), for comparison.
+   (input=AlAs110.projwfc.in, output=AlAs110.projwfc.out)
+
+9) plot the LDOS and PDOS by using 'gnuplot', if available. This generate
+   the PostScript file 'AlAs110.box.projwfc.ps'
