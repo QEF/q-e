@@ -51,7 +51,7 @@ module cpmd
   integer :: z, zv
   !
   integer :: mesh_
-  real(8) :: amesh
+  real(8) :: amesh, amesh_
   real(8), allocatable :: r_(:)
   !
   integer ::lmax_
@@ -126,7 +126,6 @@ subroutine read_cpmd(iunps)
      enddo
   else if (matches ("&POTENTIAL", trim(line)) ) then
      found = found + 1
-     !read (iunps,*) mesh_, amesh
      read (iunps,'(a)') line
      read (line,*,iostat=ios) mesh_, amesh
      if ( ios /= 0) then
@@ -149,9 +148,35 @@ subroutine read_cpmd(iunps)
      do i=2,mesh_
         read(iunps, *) r_(i),(vnl(i,l),l=0,lmax_)
      end do
-     ! get amesh if not available directly
-     if (amesh < 0.0d0) print  "('amesh set to:',f10.6)", exp (r_(1) - r_(0))
-     if (amesh < 0.0d0) amesh = exp (r_(1) - r_(0))
+     ! get amesh if not available directly, check its value otherwise
+     print  "('Radial grid r(i) has ',i4,' points')", mesh_
+     print  "('Assuming log radial grid: r(i)=exp[(i-1)*amesh]*r(1), with:')"
+     if (amesh < 0.0d0) then
+        amesh = log (r_(mesh_)/r_(1))/(mesh_-1)
+        print  "('amesh = log (r(mesh)/r(1))/(mesh-1) = ',f10.6)",amesh
+     else
+        ! not clear whether the value of amesh read from file
+        ! matches the above definition, or if it is exp(amesh) ...
+        amesh_ = log (r_(mesh_)/r_(1))/(mesh_-1)
+        if ( abs ( amesh - amesh_ ) > 1.0d-5 ) then
+           if ( abs ( amesh - exp(amesh_) ) < 1.0d-5 ) then
+               amesh = log(amesh)
+               print  "('amesh = log (value read from file) = ',f10.6)",amesh
+           else
+               call errore ('cpmd2upf', 'unknown real-space grid',2)
+           end if 
+        else
+           print  "('amesh = value read from file = ',f10.6)",amesh
+        end if
+     end if
+     ! check if the grid is what we expect
+     do i=2,mesh_
+        if ( abs(r_(i) - exp((i-1)*amesh)*r_(1)) > 1.0d-5) then
+            print  "('grid point ',i4,': found ',f10.6,', expected ',f10.6)",&
+                     i, r_(i),  exp((i-1)*amesh)*r_(1)
+            call errore ('cpmd2upf', 'unknown real-space grid',1)
+        end if 
+     end do
   else if (matches ("&WAVEFUNCTION", trim(line)) ) then
      found = found + 1
      ! read (iunps,*) mesh_, amesh
@@ -286,7 +311,7 @@ subroutine convert_cpmd
   allocate(rab(mesh))
   allocate(  r(mesh))
   r = r_
-  rab = r * log( amesh )
+  rab = r * amesh
 
   allocate (rho_atc(mesh))
   if (nlcc) rho_atc = rho_atc_
