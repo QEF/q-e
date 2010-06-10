@@ -18,7 +18,7 @@ program pw2wannier90
   use lsda_mod,   ONLY : nspin, isk
   use klist,      ONLY : nkstot
   use ktetra,     ONLY : k1, k2, k3, nk1, nk2, nk3
-  use io_files,   ONLY : prefix, tmp_dir
+  use io_files,   ONLY : prefix, tmp_dir, trimcheck
   use noncollin_module, ONLY : noncolin
   use control_flags,    ONLY : gamma_only
   USE environment,   ONLY : environment_start
@@ -72,7 +72,7 @@ program pw2wannier90
      !
      !     Check of namelist variables
      !
-     tmp_dir = TRIM(outdir) 
+     tmp_dir = trimcheck(outdir) 
      ! back to all nodes
   end if
   !
