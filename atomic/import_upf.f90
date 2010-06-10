@@ -77,7 +77,7 @@ subroutine import_upf ( )
         !
         ! r(i+1) = exp(xmin)/zmesh * exp(i*dx)
         !
-        grid%dx=log(grid%r(2)/grid%r(1))
+        grid%dx=log(grid%r(grid%mesh)/grid%r(1))/(grid%mesh-1)
         grid%rmax=grid%r(grid%mesh)
         grid%xmin=log(zed*grid%r(1))
         grid%zmesh=zed
