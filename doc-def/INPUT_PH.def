@@ -336,6 +336,10 @@ input_description -distribution {Quantum Espresso} -package PWscf -program ph.x 
 		    irreducible representation (irrep) into which the reducible
 		    representation formed by the 3*nat atomic displacements are
 		    decomposed in order to perform the phonon calculation.
+		    Note that a single-mode calculation will not give you the
+		    frequency of a single phonon mode: in general, the selected
+		    "modenum" is not an eigenvector. What you get on output is
+		    a column of the dynamical matrix.
 		}
 	    }
 	}
