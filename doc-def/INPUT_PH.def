@@ -316,11 +316,16 @@ input_description -distribution {Quantum Espresso} -package PWscf -program ph.x 
 		info {    
 		    Choose the subset of atoms to be used in the linear response 
 		    calculation: "nat_todo" atoms, specified in input (see below)
-		    are displaced. 
-		
+		    are displaced. Can be used to estimate modes for a molecule
+		    adsorbed over a surface without performing a full fledged
+		    calculation. Use with care, at your own risk,m and be aware
+		    that this is an approximation and may not work.
 		    IMPORTANT:
 		       * nat_todo <= nat
 		       * do not specify "nrapp" together with "nat_todo"
+                       * if linear-response is calculated for a given atom, it
+                         should also be done for all symmetry-equivalent atoms,
+			 or else you will get incorrect results
 		}
 	    }
 

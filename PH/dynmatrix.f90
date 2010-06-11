@@ -34,7 +34,7 @@ subroutine dynmatrix
                             start_irr, last_irr, done_zue, where_rec, &
                             rec_code
   USE ph_restart,    ONLY : ph_writefile
-  USE partial,       ONLY : all_comp, comp_irr, done_irr
+  USE partial,       ONLY : all_comp, comp_irr, done_irr, nat_todo
   USE units_ph,      ONLY : iudyn
   USE ramanm,        ONLY: lraman, ramtns
   implicit none
@@ -115,19 +115,22 @@ subroutine dynmatrix
      call stop_ph (.true.)
   endif
 
-  DO irr=0,nirr
-     IF (done_irr(irr)==0.and..not.ldisp) THEN
-        WRITE(stdout,&
-        '(/,5x,"Stopping because representation", i5, " is not done")') irr
-        CALL close_phq(.TRUE.)
-        CALL stop_ph(.TRUE.)
-     ENDIF
-     IF (done_irr(irr)==0.and.ldisp) THEN
-        WRITE(stdout, '(/5x,"Not diagonalizing because representation", &
-                         & i5, " is not done")') irr
-        RETURN
-     ENDIF
-  ENDDO
+  IF ( nat_todo == 0 ) THEN
+     DO irr=0,nirr
+        IF (done_irr(irr)==0) THEN
+           IF (.not.ldisp) THEN
+              WRITE(stdout, '(/,5x,"Stopping because representation", & 
+                                 & i5, " is not done")') irr
+              CALL close_phq(.TRUE.)
+              CALL stop_ph(.TRUE.)
+           ELSE
+              WRITE(stdout, '(/5x,"Not diagonalizing because representation", &
+                                 & i5, " is not done")') irr
+           END IF
+           RETURN
+        ENDIF
+     ENDDO
+  ENDIF
   !
   !   Generates the star of q
   !
@@ -199,7 +202,7 @@ subroutine dynmatrix
   !
   !   Diagonalizes the dynamical matrix at q
   !
-  IF (all_comp) THEN
+  IF (all_comp .OR. nat_todo > 0) THEN
      call dyndia (xq, nmodes, nat, ntyp, ityp, pmass, iudyn, dyn, w2)
      IF (search_sym) CALL find_mode_sym (dyn, w2, at, bg, nat, nsymq, sr, &
                                      irt, xq, rtau, pmass, ntyp, ityp, 1)
