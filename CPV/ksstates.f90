@@ -10,8 +10,6 @@
 MODULE kohn_sham_states
 
 
-   USE io_files, ONLY: ksunit, ks_file
-
    IMPLICIT NONE
    SAVE
 
@@ -19,6 +17,7 @@ MODULE kohn_sham_states
 
    ! ...   print KS states to file KS.indx_ksout if ksout true
    LOGICAL :: tksout                        
+   CHARACTER(LEN=2 ), PARAMETER :: ks_file       = 'KS'
 
    INTEGER, ALLOCATABLE :: indx_ksout(:,:)  ! (state inds, spin indxs)
    INTEGER, ALLOCATABLE :: n_ksout(:)       ! (spin indxs)

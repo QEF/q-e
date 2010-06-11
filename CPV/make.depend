@@ -546,7 +546,6 @@ ions_positions.o : atoms_type.o
 ksstates.o : ../Modules/electrons_base.o
 ksstates.o : ../Modules/fft_base.o
 ksstates.o : ../Modules/griddim.o
-ksstates.o : ../Modules/io_files.o
 ksstates.o : ../Modules/io_global.o
 ksstates.o : ../Modules/kind.o
 ksstates.o : ../Modules/mp.o
@@ -815,6 +814,7 @@ restart.o : ../Modules/kind.o
 restart.o : ../Modules/mp.o
 restart.o : ../Modules/mp_global.o
 restart.o : ../Modules/recvec.o
+restart.o : ../Modules/xml_io_base.o
 restart.o : cp_autopilot.o
 restart.o : cp_interfaces.o
 restart.o : cp_restart.o

@@ -31,19 +31,7 @@ MODULE io_files
   CHARACTER(LEN=256) :: input_drho = ' '          ! name of the file with the input drho
   CHARACTER(LEN=256) :: output_drho = ' '         ! name of the file with the output drho
   !
-  !
-  CHARACTER(LEN=14), PARAMETER :: rho_name      = 'CHARGE_DENSITY'
-  CHARACTER(LEN=17), PARAMETER :: rho_name_up   = 'CHARGE_DENSITY.UP'
-  CHARACTER(LEN=19), PARAMETER :: rho_name_down = 'CHARGE_DENSITY.DOWN'
-  CHARACTER(LEN=14), PARAMETER :: rho_name_avg  = 'CHARGE_AVERAGE'
-  !
-  CHARACTER(LEN=4 ), PARAMETER :: chifile       = 'CHI2'
-  CHARACTER(LEN=7 ), PARAMETER :: dielecfile    = 'EPSILON'
-  !
   CHARACTER(LEN=5 ), PARAMETER :: crash_file    = 'CRASH'
-  CHARACTER(LEN=7 ), PARAMETER :: stop_file     = '.cpstop'
-  CHARACTER(LEN=2 ), PARAMETER :: ks_file       = 'KS'
-  CHARACTER(LEN=16), PARAMETER :: sfac_file     = 'STRUCTURE_FACTOR'
   CHARACTER (LEN=256) :: &
     dat_file      = 'os.dat',    &! file containing the enegy profile
     int_file      = 'os.int',    &! file containing the interpolated energy profile
@@ -62,12 +50,7 @@ MODULE io_files
   !
   INTEGER :: rhounit     = 17
   INTEGER :: crashunit   = 15
-  INTEGER :: stopunit    = 7
-  INTEGER :: ksunit      = 18
-  INTEGER :: sfacunit    = 20
   INTEGER :: pseudounit  = 10
-  INTEGER :: chiunit     = 20
-  INTEGER :: dielecunit  = 20
   INTEGER :: opt_unit    = 20 ! optional unit 
   !
   ! ... units in pwscf
@@ -116,7 +99,7 @@ MODULE io_files
   !
   INTEGER :: iunefieldp  = 33 !unit to store projectors for hermitean electric field potential
   !
-  ! ... Wannier
+  ! ... For Wannier Hamiltonian
   !
   INTEGER :: iunwpp   = 113
   INTEGER :: iunwf    = 114

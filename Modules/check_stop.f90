@@ -38,7 +38,7 @@ MODULE check_stop
        !
        USE input_parameters, ONLY : max_seconds_ => max_seconds
        USE io_global,        ONLY : stdout
-       USE io_files,         ONLY : prefix, exit_file, stopunit
+       USE io_files,         ONLY : prefix, exit_file
 #if defined __TRAP_SIGUSR1
        USE set_signal,       ONLY : signal_trap_init
 #endif
@@ -77,7 +77,7 @@ MODULE check_stop
        USE mp,         ONLY : mp_bcast
        USE mp_global,  ONLY : intra_image_comm
        USE io_global,  ONLY : ionode, ionode_id, meta_ionode, stdout
-       USE io_files,   ONLY : exit_file, stopunit, iunexit
+       USE io_files,   ONLY : exit_file, iunexit
 #if defined __TRAP_SIGUSR1
        USE set_signal, ONLY : signal_detected
 #endif
