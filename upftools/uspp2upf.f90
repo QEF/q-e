@@ -7,35 +7,35 @@
 !
 !
 !---------------------------------------------------------------------
-program uspp2upf
+PROGRAM uspp2upf
   !---------------------------------------------------------------------
   !
   !     Convert a pseudopotential written in Vanderbilt format
   !     (unformatted) to unified pseudopotential format
   !
-  implicit none
-  character(len=256) filein, fileout
+  IMPLICIT NONE
+  CHARACTER(len=256) filein, fileout
   !
   !
-  call get_file ( filein )
-  open(unit=1,file=filein,status='old',form='unformatted')
-  call read_uspp(1)
-  close (unit=1)
+  CALL get_file ( filein )
+  OPEN(unit=1,file=filein,status='old',form='unformatted')
+  CALL read_uspp(1)
+  CLOSE (unit=1)
 
   ! convert variables read from Vanderbilt format into those needed
   ! by the upf format - add missing quantities
 
-  call convert_uspp
+  CALL convert_uspp
 
   fileout=trim(filein)//'.UPF'
-  print '(''Output PP file in UPF format :  '',a)', fileout
+  PRINT '(''Output PP file in UPF format :  '',a)', fileout
 
-  open(unit=2,file=fileout,status='unknown',form='formatted')
-  call write_upf(2)
-  close (unit=2)
+  OPEN(unit=2,file=fileout,status='unknown',form='formatted')
+  CALL write_upf(2)
+  CLOSE (unit=2)
 
-  stop
-20 write (6,'("uspp2upf: error reading pseudopotential file name")')
-   stop
-end program uspp2upf
+  STOP
+20 WRITE (6,'("uspp2upf: error reading pseudopotential file name")')
+   STOP
+END PROGRAM uspp2upf
 

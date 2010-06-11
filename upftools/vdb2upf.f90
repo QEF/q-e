@@ -7,32 +7,32 @@
 !
 !
 !---------------------------------------------------------------------
-program vdb2upf
+PROGRAM vdb2upf
   !---------------------------------------------------------------------
   !
   !     Convert a pseudopotential written in Vanderbilt format
   !     (formatted) to unified pseudopotential format
   !
-  implicit none
-  character(len=256) filein, fileout
+  IMPLICIT NONE
+  CHARACTER(len=256) filein, fileout
   !
   !
-  call get_file ( filein )
-  open(unit=1,file=filein,status='old',form='formatted')
-  call read_vdb(1)
-  close (unit=1)
+  CALL get_file ( filein )
+  OPEN(unit=1,file=filein,status='old',form='formatted')
+  CALL read_vdb(1)
+  CLOSE (unit=1)
 
   ! convert variables read from Vanderbilt format into those needed
   ! by the upf format - add missing quantities
 
-  call convert_uspp
+  CALL convert_uspp
 
   fileout=trim(filein)//'.UPF'
-  print '(''Output PP file in UPF format :  '',a)', fileout
+  PRINT '(''Output PP file in UPF format :  '',a)', fileout
 
-  open(unit=2,file=fileout,status='unknown',form='formatted')
-  call write_upf(2)
-  close (unit=2)
+  OPEN(unit=2,file=fileout,status='unknown',form='formatted')
+  CALL write_upf(2)
+  CLOSE (unit=2)
 
-  stop
-end program vdb2upf
+  STOP
+END PROGRAM vdb2upf

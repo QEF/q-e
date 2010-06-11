@@ -7,72 +7,72 @@
 !
 !
 !---------------------------------------------------------------------
-program mypp2upf  
+PROGRAM mypp2upf
   !---------------------------------------------------------------------
   !
-  !     Convert a pseudopotential written in a user-supplied format 
+  !     Convert a pseudopotential written in a user-supplied format
   !     to unified pseudopotential format - sample program
   !
-  implicit none
-  character(len=256) filein, fileout
+  IMPLICIT NONE
+  CHARACTER(len=256) filein, fileout
   !
   !
-  call get_file ( filein )
-  open (unit = 1, file = filein, status = 'old', form = 'formatted')
-  call read_mypp(1)
-  close (1)
+  CALL get_file ( filein )
+  OPEN (unit = 1, file = filein, status = 'old', form = 'formatted')
+  CALL read_mypp(1)
+  CLOSE (1)
 
   ! convert variables read from user-supplied format into those needed
   ! by the upf format - add missing quantities
 
-  call convert_mypp
+  CALL convert_mypp
 
   fileout=trim(filein)//'.UPF'
-  print '(''Output PP file in UPF format :  '',a)', fileout
+  PRINT '(''Output PP file in UPF format :  '',a)', fileout
 
-  open(unit=2,file=fileout,status='unknown',form='formatted')
-  call write_upf(2)
-  close (unit=2)
+  OPEN(unit=2,file=fileout,status='unknown',form='formatted')
+  CALL write_upf(2)
+  CLOSE (unit=2)
 
-stop
-20 write (6,'("mypp2upf: error reading pseudopotential file name")')
-   stop
-end program mypp2upf
+STOP
+20 WRITE (6,'("mypp2upf: error reading pseudopotential file name")')
+   STOP
+END PROGRAM mypp2upf
 
-module mypp
+MODULE mypp
   !
   ! All variables read from user-supplied file format
   ! Must have distinct names from variables in the "upf" module
   !
-end module mypp
-! 
+END MODULE mypp
+!
 !     ----------------------------------------------------------
-subroutine read_mypp(iunps)
-  !     ----------------------------------------------------------
-  ! 
-  use mypp
-  implicit none
-  integer :: iunps
-  !
-  !     ----------------------------------------------------------
-  write (6,'(a)') 'Pseudopotential successfully read'
+SUBROUTINE read_mypp(iunps)
   !     ----------------------------------------------------------
   !
-  return
-100 write (6,'("read_mypp: error reading pseudopotential file")')
-    stop
-end subroutine read_mypp
+  USE mypp
+  IMPLICIT NONE
+  INTEGER :: iunps
+  !
+  !     ----------------------------------------------------------
+  WRITE (6,'(a)') 'Pseudopotential successfully read'
+  !     ----------------------------------------------------------
+  !
+  RETURN
+100 WRITE (6,'("read_mypp: error reading pseudopotential file")')
+    STOP
+END SUBROUTINE read_mypp
 
 !     ----------------------------------------------------------
-subroutine convert_mypp
+SUBROUTINE convert_mypp
   !     ----------------------------------------------------------
   !
-  use mypp
-  use upf
-  implicit none
+  USE mypp
+  USE upf
+  IMPLICIT NONE
   !     ----------------------------------------------------------
-  write (6,'(a)') 'Pseudopotential successfully converted'
+  WRITE (6,'(a)') 'Pseudopotential successfully converted'
   !     ----------------------------------------------------------
-  return
-end subroutine convert_mypp
+  RETURN
+END SUBROUTINE convert_mypp
 

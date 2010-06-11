@@ -29,9 +29,9 @@ PROGRAM casino2upf
   PRINT*, 'Enter wavefunction files, starting with the ground state:'
   DO i=1,nofiles
      CALL get_file ( wavefile(i) )
-     OPEN(unit=i,file=wavefile(i),status='old',form='formatted')  
+     OPEN(unit=i,file=wavefile(i),status='old',form='formatted')
   ENDDO
-  OPEN(unit=99,file=filein,status='old',form='formatted')  
+  OPEN(unit=99,file=filein,status='old',form='formatted')
 
   CALL read_casino(99,nofiles)
   CLOSE (unit=99)
@@ -44,7 +44,7 @@ PROGRAM casino2upf
 
   CALL convert_casino
 
-  fileout=TRIM(filein)//'.UPF'
+  fileout=trim(filein)//'.UPF'
   PRINT '(''Output PP file in US format :  '',a)', fileout
 
   OPEN(unit=2,file=fileout,status='unknown',form='formatted')
@@ -56,10 +56,10 @@ PROGRAM casino2upf
 END PROGRAM casino2upf
 
 MODULE casino
-  
+
   !
   ! All variables read from CASINO file format
-  ! 
+  !
   ! trailing underscore means that a variable with the same name
   ! is used in module 'upf' containing variables to be written
   !
@@ -82,17 +82,17 @@ MODULE casino
   REAL(8), ALLOCATABLE:: chi_(:,:),  oc_(:)
 
 END MODULE casino
-! 
+!
 !     ----------------------------------------------------------
 SUBROUTINE read_casino(iunps,nofiles)
   !     ----------------------------------------------------------
-  ! 
+  !
   USE casino
   USE upf , ONLY : els
   USE kinds
   IMPLICIT NONE
   TYPE :: wavfun_list
-     INTEGER :: occ,eup,edwn, nquant, lquant 
+     INTEGER :: occ,eup,edwn, nquant, lquant
      CHARACTER(len=2) :: label
 #ifdef __STD_F95
      REAL*8, POINTER :: wavefunc(:)
@@ -112,7 +112,7 @@ SUBROUTINE read_casino(iunps,nofiles)
   LOGICAL :: groundstate, found
   CHARACTER(len=1), DIMENSION(0:3) :: convel=(/'s','p','d','f'/)
   CHARACTER(len=2) :: label, rellab
-  REAL(DP), parameter :: r_exp=20._dp/1500._dp
+  REAL(DP), PARAMETER :: r_exp=20._dp/1500._dp
   INTEGER :: l, i, ir, nb, gsorbs, j,k,m,tmp, lquant, orbs, nquant
   INTEGER, ALLOCATABLE :: gs(:,:)
 
@@ -122,31 +122,31 @@ SUBROUTINE read_casino(iunps,nofiles)
   nlc = 0              !These two values are always 0 for numeric pps
   nnl = 0              !so lets just hard code them
 
-  nlcc_ = .FALSE.       !Again these two are alwas false for CASINO pps
-  bhstype = .FALSE.    
+  nlcc_ = .false.       !Again these two are alwas false for CASINO pps
+  bhstype = .false.
 
 
- 
-  READ(iunps,'(a2,35x,a2)') rellab, psd_  
+
+  READ(iunps,'(a2,35x,a2)') rellab, psd_
   READ(iunps,*)
-  IF ( rellab .EQ. 'DF' ) THEN
+  IF ( rellab == 'DF' ) THEN
      rel_=1
   ELSE
      rel_=0
   ENDIF
- 
+
   READ(iunps,*) zmesh,zp_  !Here we are reading zmesh (atomic #) and
   DO i=1,3                 !zp_ (pseudo charge)
      READ(iunps,*)
   ENDDO
   READ(iunps,*) lmax_               !reading in lmax
-  IF ( zp_.LE.0d0 ) &
+  IF ( zp_<=0d0 ) &
        CALL errore( 'read_casino','Wrong zp ',1 )
-  IF ( lmax_.GT.3.OR.lmax_.LT.0 ) &
+  IF ( lmax_>3.or.lmax_<0 ) &
        CALL errore( 'read_casino','Wrong lmax ',1 )
 
   lloc=lmax_ !think lloc shoudl always = lmax for this case yes/no ??
- 
+
   !
   !    compute the radial mesh
   !
@@ -165,7 +165,7 @@ SUBROUTINE read_casino(iunps,nofiles)
   ENDDO
   DO ir = 1, mesh_
      rab_(ir) = r_exp  * r_(ir) !hardcoded at the moment
-  END DO
+  ENDDO
 
 
   ALLOCATE(vnl(mesh_,0:lmax_))
@@ -179,7 +179,7 @@ SUBROUTINE read_casino(iunps,nofiles)
      DO ir = 1, mesh_
         vnl(ir,l) = vnl(ir,l)/r_(ir) !Removing the factor of r CASINO has
      ENDDO
-     vnl(1,l) = 0                   !correcting for the divide by zero 
+     vnl(1,l) = 0                   !correcting for the divide by zero
   ENDDO
 
   ALLOCATE(rho_atc_(mesh_))
@@ -192,7 +192,7 @@ SUBROUTINE read_casino(iunps,nofiles)
   !
 
   DO l = 0, lmax_
-     IF ( l.NE.lloc ) vnl(:,l) = vnl(:,l) - vnl(:,lloc)
+     IF ( l/=lloc ) vnl(:,l) = vnl(:,l) - vnl(:,lloc)
   ENDDO
 
 
@@ -202,7 +202,7 @@ SUBROUTINE read_casino(iunps,nofiles)
   mptr => mhead
 
   NULLIFY(mtail%p)
-  groundstate=.TRUE.
+  groundstate=.true.
   DO j=1,nofiles
 
      DO i=1,4
@@ -212,13 +212,13 @@ SUBROUTINE read_casino(iunps,nofiles)
 
      READ(j,*) orbs
 
-     IF ( groundstate ) THEN 
+     IF ( groundstate ) THEN
 
         ALLOCATE( gs(orbs,3) )
 
         gs = 0
         gsorbs = orbs
-     END IF
+     ENDIF
 
      DO i=1,2
         READ(j,*)
@@ -231,20 +231,20 @@ SUBROUTINE read_casino(iunps,nofiles)
         READ(j,*) tmp, nquant, lquant
 
         IF ( groundstate ) THEN
-           found = .TRUE.
+           found = .true.
 
            DO m=1,orbs
 
-              IF ( (nquant==gs(m,1) .AND. lquant==gs(m,2)) ) THEN
+              IF ( (nquant==gs(m,1) .and. lquant==gs(m,2)) ) THEN
                  gs(m,3) = gs(m,3) + 1
-                 EXIT
-              END IF
+                 exit
+              ENDIF
 
-              found = .FALSE.   
+              found = .false.
 
            ENDDO
 
-           IF (.NOT. found ) THEN
+           IF (.not. found ) THEN
 
               DO m=1,orbs
 
@@ -253,7 +253,7 @@ SUBROUTINE read_casino(iunps,nofiles)
                     gs(m,2) = lquant
                     gs(m,3) = 1
 
-                    EXIT
+                    exit
                  ENDIF
 
               ENDDO
@@ -265,9 +265,9 @@ SUBROUTINE read_casino(iunps,nofiles)
      ENDDO
 
      READ(j,*)
-     READ(j,*) 
+     READ(j,*)
 
-     DO i=1,mesh_ 
+     DO i=1,mesh_
         READ(j,*)
      ENDDO
 
@@ -275,34 +275,34 @@ SUBROUTINE read_casino(iunps,nofiles)
         READ(j,'(13x,a2)', err=300) label
         READ(j,*) tmp, nquant, lquant
 
-        IF ( .NOT. groundstate ) THEN
-           found = .FALSE.
+        IF ( .not. groundstate ) THEN
+           found = .false.
 
            DO m = 1,gsorbs
 
-              IF ( nquant == gs(m,1) .AND. lquant == gs(m,2) ) THEN
-                 found = .TRUE.
-                 EXIT
-              END IF
-           END DO
+              IF ( nquant == gs(m,1) .and. lquant == gs(m,2) ) THEN
+                 found = .true.
+                 exit
+              ENDIF
+           ENDDO
            mptr => mhead
            DO
-              IF ( .NOT. ASSOCIATED(mptr) )EXIT
-              IF ( nquant == mptr%nquant .AND. lquant == mptr%lquant ) found = .TRUE.        
+              IF ( .not. associated(mptr) )exit
+              IF ( nquant == mptr%nquant .and. lquant == mptr%lquant ) found = .true.
               mptr =>mptr%p
-           END DO
+           ENDDO
            IF ( found ) THEN
               DO i=1,mesh_
                  READ(j,*)
               ENDDO
 
               CYCLE
-           END IF
-        END IF
+           ENDIF
+        ENDIF
 #ifdef __STD_F95
-        IF ( ASSOCIATED(mtail%wavefunc) ) THEN
+        IF ( associated(mtail%wavefunc) ) THEN
 #else
-        IF ( ALLOCATED(mtail%wavefunc) ) THEN
+        IF ( allocated(mtail%wavefunc) ) THEN
 #endif
            ALLOCATE(mtail%p)
            mtail=>mtail%p
@@ -310,7 +310,7 @@ SUBROUTINE read_casino(iunps,nofiles)
            ALLOCATE( mtail%wavefunc(mesh_) )
         ELSE
            ALLOCATE( mtail%wavefunc(mesh_) )
-        END IF
+        ENDIF
         mtail%label = label
         mtail%nquant = nquant
         mtail%lquant = lquant
@@ -318,17 +318,17 @@ SUBROUTINE read_casino(iunps,nofiles)
 
         READ(j, *, err=300) (mtail%wavefunc(ir),ir=1,mesh_)
      ENDDO
-     groundstate = .FALSE.
+     groundstate = .false.
   ENDDO
 
   nchi =0
   mptr => mhead
   DO
-     IF ( .NOT. ASSOCIATED(mptr) )EXIT
+     IF ( .not. associated(mptr) )exit
      nchi=nchi+1
 
      mptr =>mptr%p
-  END DO
+  ENDDO
 
   ALLOCATE(lchi_(nchi), els(nchi), nns_(nchi))
   ALLOCATE(oc_(nchi))
@@ -336,16 +336,16 @@ SUBROUTINE read_casino(iunps,nofiles)
   oc_ = 0
 
   !Sort out the occupation numbers
-  DO i=1,gsorbs  
+  DO i=1,gsorbs
      oc_(i)=gs(i,3)
   ENDDO
-  deallocate( gs )
+  DEALLOCATE( gs )
 
   i=1
   mptr => mhead
   DO
-     IF ( .NOT. ASSOCIATED(mptr) )EXIT
-     nns_(i) = mptr%nquant 
+     IF ( .not. associated(mptr) )exit
+     nns_(i) = mptr%nquant
      lchi_(i) = mptr%lquant
      els(i) = mptr%label
 
@@ -353,18 +353,18 @@ SUBROUTINE read_casino(iunps,nofiles)
 
         chi_(ir:,i) = mptr%wavefunc(ir)
      ENDDO
-     deallocate( mptr%wavefunc )
+     DEALLOCATE( mptr%wavefunc )
      mptr =>mptr%p
      i=i+1
-  END DO
+  ENDDO
 
   !Clean up the linked list (deallocate it)
   DO
-     IF ( .NOT. ASSOCIATED(mhead) )EXIT
+     IF ( .not. associated(mhead) )exit
      mptr => mhead
      mhead => mhead%p
-     deallocate( mptr )
-  END DO
+     DEALLOCATE( mptr )
+  ENDDO
 
 
   !
@@ -373,9 +373,9 @@ SUBROUTINE read_casino(iunps,nofiles)
   ALLOCATE(rho_at_(mesh_))
   rho_at_(:)=0.d0
   DO nb = 1, nchi
-     IF( oc_(nb).NE.0.d0) &
+     IF( oc_(nb)/=0.d0) &
           &  rho_at_(:) = rho_at_(:) + oc_(nb)*chi_(:,nb)**2
-  END DO
+  ENDDO
   !     ----------------------------------------------------------
   WRITE (6,'(a)') 'Pseudopotential successfully read'
   !     ----------------------------------------------------------
@@ -405,7 +405,7 @@ SUBROUTINE convert_casino
 
 
   rcloc = 0.0d0
-  nwfs  = nchi 
+  nwfs  = nchi
   ALLOCATE( oc(nwfs), epseu(nwfs))
   ALLOCATE(lchi(nwfs), nns(nwfs) )
   ALLOCATE(rcut (nwfs), rcutus (nwfs))
@@ -416,7 +416,7 @@ SUBROUTINE convert_casino
      rcutus(i)= 0.0d0
      oc (i)   = oc_(i)
      epseu(i) = 0.0d0
-  END DO
+  ENDDO
   DEALLOCATE (lchi_, oc_, nns_)
 
   psd = psd_
@@ -430,8 +430,8 @@ SUBROUTINE convert_casino
      lmax = lmax_-1
   ELSE
      lmax = lmax_
-  END IF
-  nbeta= lmax_ 
+  ENDIF
+  nbeta= lmax_
   mesh = mesh_
   ntwfc= nchi
   ALLOCATE( elsw(ntwfc), ocw(ntwfc), lchiw(ntwfc) )
@@ -439,7 +439,7 @@ SUBROUTINE convert_casino
      lchiw(i) = lchi(i)
      ocw(i)   = oc(i)
      elsw(i)  = els(i)
-  END DO
+  ENDDO
   CALL set_dft_from_name(dft_)
   iexch = get_iexch()
   icorr = get_icorr()
@@ -465,12 +465,12 @@ SUBROUTINE convert_casino
      DO ir = 1,mesh
         IF ( r(ir) > rmax ) THEN
            kkbeta=ir
-           EXIT
-        END IF
-     END DO
+           exit
+        ENDIF
+     ENDDO
 
      ! make sure kkbeta is odd as required for simpson
-     IF(MOD(kkbeta,2) == 0) kkbeta=kkbeta-1 
+     IF(mod(kkbeta,2) == 0) kkbeta=kkbeta-1
      ikk2(:) = kkbeta
      ALLOCATE(aux(kkbeta))
      ALLOCATE(betar(mesh,nbeta))
@@ -483,18 +483,18 @@ SUBROUTINE convert_casino
      iv=0
      DO i=1,nchi
         l=lchi(i)
-        IF (l.NE.lloc) THEN
+        IF (l/=lloc) THEN
            iv=iv+1
            lll(iv)=l
            DO ir=1,kkbeta
               betar(ir,iv)=chi_(ir,i)*vnl(ir,l)
               aux(ir) = chi_(ir,i)**2*vnl(ir,l)
 
-           END DO
+           ENDDO
            CALL simpson(kkbeta,aux,rab,vll)
            dion(iv,iv) = 1.0d0/vll
-        END IF
-        IF(iv >= nbeta) EXIT  ! skip additional pseudo wfns
+        ENDIF
+        IF(iv >= nbeta) exit  ! skip additional pseudo wfns
      ENDDO
 
 
@@ -506,13 +506,13 @@ SUBROUTINE convert_casino
      DO iv=1,nbeta
         ikk2(iv)=kkbeta
         DO ir = kkbeta,1,-1
-           IF ( ABS(betar(ir,iv)) > 1.d-12 ) THEN
+           IF ( abs(betar(ir,iv)) > 1.d-12 ) THEN
               ikk2(iv)=ir
-              EXIT
-           END IF
-        END DO
-     END DO
-  END IF
+              exit
+           ENDIF
+        ENDDO
+     ENDDO
+  ENDIF
   ALLOCATE (rho_at(mesh))
   rho_at = rho_at_
   DEALLOCATE (rho_at_)

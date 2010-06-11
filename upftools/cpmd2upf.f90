@@ -7,236 +7,236 @@
 !
 !
 !---------------------------------------------------------------------
-program cpmd2upf  
+PROGRAM cpmd2upf
   !---------------------------------------------------------------------
   !
   !     Convert a pseudopotential written in the CPMD format
   !     (TYPE=NORMCONSERVING NUMERIC only, single radial grid)
   !     to unified pseudopotential format
   !
-  implicit none
-  character(len=256) filein, fileout
+  IMPLICIT NONE
+  CHARACTER(len=256) filein, fileout
   !
   !
-  call get_file ( filein )
-  open (unit = 1, file = filein, status = 'old', form = 'formatted')
-  call read_cpmd(1)
-  close (1)
+  CALL get_file ( filein )
+  OPEN (unit = 1, file = filein, status = 'old', form = 'formatted')
+  CALL read_cpmd(1)
+  CLOSE (1)
 
   ! convert variables read from CPMD format into those needed
   ! by the upf format - add missing quantities
 
-  call convert_cpmd
+  CALL convert_cpmd
 
   fileout=trim(filein)//'.UPF'
-  print '(''Output PP file in UPF format :  '',a)', fileout
+  PRINT '(''Output PP file in UPF format :  '',a)', fileout
 
-  open(unit=2,file=fileout,status='unknown',form='formatted')
-  call write_upf(2)
-  close (unit=2)
+  OPEN(unit=2,file=fileout,status='unknown',form='formatted')
+  CALL write_upf(2)
+  CLOSE (unit=2)
 
-stop
-20 call errore ('cpmd2upf', 'Reading pseudo file name ', 1)
+STOP
+20 CALL errore ('cpmd2upf', 'Reading pseudo file name ', 1)
 
-end program cpmd2upf
+END PROGRAM cpmd2upf
 
-module cpmd
+MODULE cpmd
   !
   ! All variables read from CPMD file format
   !
-  character (len=80) title
+  CHARACTER (len=80) title
   !
-  integer :: ixc
+  INTEGER :: ixc
   real(8) :: alphaxc
-  integer :: z, zv
+  INTEGER :: z, zv
   !
-  integer :: mesh_
+  INTEGER :: mesh_
   real(8) :: amesh, amesh_
-  real(8), allocatable :: r_(:)
+  real(8), ALLOCATABLE :: r_(:)
   !
-  integer ::lmax_
-  real(8), allocatable :: vnl(:,:)
-  real(8), allocatable :: chi_(:,:)
+  INTEGER ::lmax_
+  real(8), ALLOCATABLE :: vnl(:,:)
+  real(8), ALLOCATABLE :: chi_(:,:)
   !
-  logical :: nlcc_
-  real(8), allocatable :: rho_atc_(:)
+  LOGICAL :: nlcc_
+  real(8), ALLOCATABLE :: rho_atc_(:)
   !
-  integer :: maxinfo_, info_lines_
-  parameter (maxinfo_ = 100)
-  character (len=80), allocatable :: info_sect_(:)
+  INTEGER :: maxinfo_, info_lines_
+  PARAMETER (maxinfo_ = 100)
+  CHARACTER (len=80), ALLOCATABLE :: info_sect_(:)
   !------------------------------
 
-end module cpmd
-! 
+END MODULE cpmd
+!
 !     ----------------------------------------------------------
-subroutine read_cpmd(iunps)
+SUBROUTINE read_cpmd(iunps)
   !     ----------------------------------------------------------
-  ! 
-  use cpmd
-  implicit none
-  integer :: iunps
-  !  
-  integer :: found = 0, closed = 0, unknown = 0
-  integer :: i, l, ios
-  character (len=80) line
-  character (len=4) token
+  !
+  USE cpmd
+  IMPLICIT NONE
+  INTEGER :: iunps
+  !
+  INTEGER :: found = 0, closed = 0, unknown = 0
+  INTEGER :: i, l, ios
+  CHARACTER (len=80) line
+  CHARACTER (len=4) token
   real (8) :: vnl0(0:3)
-  logical, external :: matches
-  integer, external :: locate
+  LOGICAL, EXTERNAL :: matches
+  INTEGER, EXTERNAL :: locate
   !
   nlcc_ = .false.
   info_lines_ = 0
-10 read (iunps,'(A)',end=20,err=20) line
-  if (matches ("&ATOM", trim(line)) ) then
+10 READ (iunps,'(A)',end=20,err=20) line
+  IF (matches ("&ATOM", trim(line)) ) THEN
      found = found + 1
      ! Z
-     read (iunps,'(a)',end=200,err=200) line
+     READ (iunps,'(a)',end=200,err=200) line
      l = len_trim(line)
      i = locate('=',line)
-     read (line(i+1:l),*) z
+     READ (line(i+1:l),*) z
      ! ZV
-     read (iunps,'(a)',end=200,err=200) line
+     READ (iunps,'(a)',end=200,err=200) line
      l = len_trim(line)
      i = locate('=',line)
-     read (line(i+1:l),*) zv
+     READ (line(i+1:l),*) zv
      ! XC
-     read (iunps,'(a)',end=200,err=200) line
+     READ (iunps,'(a)',end=200,err=200) line
      l = len_trim(line)
      i = locate('=',line)
-     read (line(i+1:l),*) ixc, alphaxc
+     READ (line(i+1:l),*) ixc, alphaxc
      ! TYPE
-     read (iunps,'(a)',end=200,err=200) line
-     if (.not. matches("NORMCONSERVING",line) .or. &
+     READ (iunps,'(a)',end=200,err=200) line
+     IF (.not. matches("NORMCONSERVING",line) .or. &
          .not. matches("NUMERIC",line) ) &
-             call errore('read_cpmd','unknown type: '//line,1)
-  else if (matches ("&INFO", trim(line)) ) then
+             CALL errore('read_cpmd','unknown type: '//line,1)
+  ELSEIF (matches ("&INFO", trim(line)) ) THEN
      found = found + 1
      ! read (iunps,'(a)') title
      ! store info section for later perusal (FIXME: not yet implemented. 2004/10/12, AK)
-     allocate (info_sect_(maxinfo_))
-     do i=1,maxinfo_
-        read (iunps,'(a)',end=20,err=20) title
-        if (matches ("&END", trim(title)) ) then
+     ALLOCATE (info_sect_(maxinfo_))
+     DO i=1,maxinfo_
+        READ (iunps,'(a)',end=20,err=20) title
+        IF (matches ("&END", trim(title)) ) THEN
            closed = closed + 1
-           goto 10
-        else
+           GOTO 10
+        ELSE
            info_sect_(i) = trim(title)
            info_lines_ = i
-        end if
-     enddo
-  else if (matches ("&POTENTIAL", trim(line)) ) then
+        ENDIF
+     ENDDO
+  ELSEIF (matches ("&POTENTIAL", trim(line)) ) THEN
      found = found + 1
-     read (iunps,'(a)') line
-     read (line,*,iostat=ios) mesh_, amesh
-     if ( ios /= 0) then
-        read (line,*,iostat=ios) mesh_
+     READ (iunps,'(a)') line
+     READ (line,*,iostat=ios) mesh_, amesh
+     IF ( ios /= 0) THEN
+        READ (line,*,iostat=ios) mesh_
         amesh = -1.0d0
-     end if
-     allocate (r_(mesh_))
+     ENDIF
+     ALLOCATE (r_(mesh_))
      !
      ! determine the number of angular momenta
      !
-     read (iunps, '(a)') line
+     READ (iunps, '(a)') line
      ios = 1
      lmax_=4
-     do while (ios /= 0)
+     DO WHILE (ios /= 0)
         lmax_ = lmax_ - 1
-        read(line,*,iostat=ios) r_(1),(vnl0(l),l=0,lmax_)
-     end do
-     allocate (vnl(mesh_,0:lmax_))
+        READ(line,*,iostat=ios) r_(1),(vnl0(l),l=0,lmax_)
+     ENDDO
+     ALLOCATE (vnl(mesh_,0:lmax_))
      vnl(1,0:lmax_) = vnl0(0:lmax_)
-     do i=2,mesh_
-        read(iunps, *) r_(i),(vnl(i,l),l=0,lmax_)
-     end do
+     DO i=2,mesh_
+        READ(iunps, *) r_(i),(vnl(i,l),l=0,lmax_)
+     ENDDO
      ! get amesh if not available directly, check its value otherwise
-     print  "('Radial grid r(i) has ',i4,' points')", mesh_
-     print  "('Assuming log radial grid: r(i)=exp[(i-1)*amesh]*r(1), with:')"
-     if (amesh < 0.0d0) then
+     PRINT  "('Radial grid r(i) has ',i4,' points')", mesh_
+     PRINT  "('Assuming log radial grid: r(i)=exp[(i-1)*amesh]*r(1), with:')"
+     IF (amesh < 0.0d0) THEN
         amesh = log (r_(mesh_)/r_(1))/(mesh_-1)
-        print  "('amesh = log (r(mesh)/r(1))/(mesh-1) = ',f10.6)",amesh
-     else
+        PRINT  "('amesh = log (r(mesh)/r(1))/(mesh-1) = ',f10.6)",amesh
+     ELSE
         ! not clear whether the value of amesh read from file
         ! matches the above definition, or if it is exp(amesh) ...
         amesh_ = log (r_(mesh_)/r_(1))/(mesh_-1)
-        if ( abs ( amesh - amesh_ ) > 1.0d-5 ) then
-           if ( abs ( amesh - exp(amesh_) ) < 1.0d-5 ) then
+        IF ( abs ( amesh - amesh_ ) > 1.0d-5 ) THEN
+           IF ( abs ( amesh - exp(amesh_) ) < 1.0d-5 ) THEN
                amesh = log(amesh)
-               print  "('amesh = log (value read from file) = ',f10.6)",amesh
-           else
-               call errore ('cpmd2upf', 'unknown real-space grid',2)
-           end if 
-        else
-           print  "('amesh = value read from file = ',f10.6)",amesh
-        end if
-     end if
+               PRINT  "('amesh = log (value read from file) = ',f10.6)",amesh
+           ELSE
+               CALL errore ('cpmd2upf', 'unknown real-space grid',2)
+           ENDIF
+        ELSE
+           PRINT  "('amesh = value read from file = ',f10.6)",amesh
+        ENDIF
+     ENDIF
      ! check if the grid is what we expect
-     do i=2,mesh_
-        if ( abs(r_(i) - exp((i-1)*amesh)*r_(1)) > 1.0d-5) then
-            print  "('grid point ',i4,': found ',f10.6,', expected ',f10.6)",&
+     DO i=2,mesh_
+        IF ( abs(r_(i) - exp((i-1)*amesh)*r_(1)) > 1.0d-5) THEN
+            PRINT  "('grid point ',i4,': found ',f10.6,', expected ',f10.6)",&
                      i, r_(i),  exp((i-1)*amesh)*r_(1)
-            call errore ('cpmd2upf', 'unknown real-space grid',1)
-        end if 
-     end do
-  else if (matches ("&WAVEFUNCTION", trim(line)) ) then
+            CALL errore ('cpmd2upf', 'unknown real-space grid',1)
+        ENDIF
+     ENDDO
+  ELSEIF (matches ("&WAVEFUNCTION", trim(line)) ) THEN
      found = found + 1
      ! read (iunps,*) mesh_, amesh
-     read (iunps,'(a)') line
-     read (line,*,iostat=ios) mesh_
-     allocate(chi_(mesh_,lmax_+1))
-     do i=1,mesh_
-        read(iunps, *) r_(i),(chi_(i,l+1),l=0,lmax_)
-     end do
-  else if (matches ("&NLCC", trim(line)) ) then
+     READ (iunps,'(a)') line
+     READ (line,*,iostat=ios) mesh_
+     ALLOCATE(chi_(mesh_,lmax_+1))
+     DO i=1,mesh_
+        READ(iunps, *) r_(i),(chi_(i,l+1),l=0,lmax_)
+     ENDDO
+  ELSEIF (matches ("&NLCC", trim(line)) ) THEN
      found = found + 1
      nlcc_ = .true.
-     read (iunps, '(a)') line
-     if (.not. matches ("NUMERIC", trim(line)) ) &
-          call errore('read_cpmd',' only NUMERIC core-correction supported',1)
-     read(iunps, *) mesh_
-     allocate (rho_atc_(mesh_))
-     read(iunps, * ) (r_(i), rho_atc_(i), i=1,mesh_)
-  else if (matches ("&ATDENS", trim(line)) ) then
+     READ (iunps, '(a)') line
+     IF (.not. matches ("NUMERIC", trim(line)) ) &
+          CALL errore('read_cpmd',' only NUMERIC core-correction supported',1)
+     READ(iunps, *) mesh_
+     ALLOCATE (rho_atc_(mesh_))
+     READ(iunps, * ) (r_(i), rho_atc_(i), i=1,mesh_)
+  ELSEIF (matches ("&ATDENS", trim(line)) ) THEN
      ! skip over &ATDENS section, add others here, if there are more.
-     do while(.not. matches("&END", trim(line)))
-        read (iunps,'(a)') line
-     end do
-  else if (matches ("&END", trim(line)) ) then
+     DO WHILE(.not. matches("&END", trim(line)))
+        READ (iunps,'(a)') line
+     ENDDO
+  ELSEIF (matches ("&END", trim(line)) ) THEN
      closed = closed + 1
-  else
-     print*, 'line ignored: ', line
+  ELSE
+     PRINT*, 'line ignored: ', line
      unknown = unknown + 1
-  end if
-  go to 10
+  ENDIF
+  GOTO 10
 
-20 continue
-  if (nlcc_ .and. found /= 5 .or. .not.nlcc_ .and. found /= 4) &
-       call errore('read_cpmd','some &FIELD card missing',found)
-  if (closed /= found) &
-       call errore('read_cpmd','some &END card missing',closed)
-  if (unknown /= 0 ) print '("WARNING: ",i3," cards not read")', unknown
+20 CONTINUE
+  IF (nlcc_ .and. found /= 5 .or. .not.nlcc_ .and. found /= 4) &
+       CALL errore('read_cpmd','some &FIELD card missing',found)
+  IF (closed /= found) &
+       CALL errore('read_cpmd','some &END card missing',closed)
+  IF (unknown /= 0 ) PRINT '("WARNING: ",i3," cards not read")', unknown
 
-  return
-200 call errore('read_cpmd','error in reading file',1)
+  RETURN
+200 CALL errore('read_cpmd','error in reading file',1)
 
-end subroutine read_cpmd
+END SUBROUTINE read_cpmd
 
 !     ----------------------------------------------------------
-subroutine convert_cpmd
+SUBROUTINE convert_cpmd
   !     ----------------------------------------------------------
   !
-  use cpmd
-  use upf
-  implicit none
-  real(8), parameter :: rmax = 10.0d0
-  real(8), allocatable :: aux(:)
+  USE cpmd
+  USE upf
+  IMPLICIT NONE
+  real(8), PARAMETER :: rmax = 10.0d0
+  real(8), ALLOCATABLE :: aux(:)
   real(8) :: vll
-  character (len=20):: dft  
-  character (len=2), external :: atom_name
-  integer :: lloc, kkbeta, my_lmax
-  integer :: l, i, ir, iv
+  CHARACTER (len=20):: dft
+  CHARACTER (len=2), EXTERNAL :: atom_name
+  INTEGER :: lloc, kkbeta, my_lmax
+  INTEGER :: l, i, ir, iv
   !
-  write(generated, '("Generated using unknown code")')
-  write(date_author,'("Author: unknown    Generation date: as well")')
+  WRITE(generated, '("Generated using unknown code")')
+  WRITE(date_author,'("Author: unknown    Generation date: as well")')
   comment = 'Info: automatically converted from CPMD format'
 
   ! NOTE: many CPMD pseudopotentials created with the 'Hamann' code
@@ -246,34 +246,34 @@ subroutine convert_cpmd
   ! we need to be able to ignore that part or the resulting UPF file
   ! will be useless. so we first print the info section and ask
   ! for the LMAX to really use. AK 2005/03/30.
-  do i=1,info_lines_
-        print '(A)', info_sect_(i)
-  enddo
-  print '("lmax to use. (max.",I2,") > ",$)', lmax_
-  read (5,*) my_lmax
-  if ((my_lmax <= lmax_) .and. (my_lmax >= 0)) lmax_ = my_lmax
-  print '("l local (max.",I2,") > ",$)', lmax_
-  read (5,*) lloc
+  DO i=1,info_lines_
+        PRINT '(A)', info_sect_(i)
+  ENDDO
+  PRINT '("lmax to use. (max.",I2,") > ",$)', lmax_
+  READ (5,*) my_lmax
+  IF ((my_lmax <= lmax_) .and. (my_lmax >= 0)) lmax_ = my_lmax
+  PRINT '("l local (max.",I2,") > ",$)', lmax_
+  READ (5,*) lloc
   ! reasonable assumption
-  if (z > 18) then
+  IF (z > 18) THEN
      rel = 1
-  else
+  ELSE
      rel = 0
-  end if
+  ENDIF
   rcloc = 0.0d0
   nwfs  = lmax_+1
-  allocate( els(nwfs), oc(nwfs), epseu(nwfs))
-  allocate(lchi(nwfs), nns(nwfs) )
-  allocate(rcut (nwfs), rcutus (nwfs))
-  do i=1, nwfs
-     print '("Wavefunction # ",i1,": label, occupancy > ",$)', i
-     read (5,*) els(i), oc(i)
+  ALLOCATE( els(nwfs), oc(nwfs), epseu(nwfs))
+  ALLOCATE(lchi(nwfs), nns(nwfs) )
+  ALLOCATE(rcut (nwfs), rcutus (nwfs))
+  DO i=1, nwfs
+     PRINT '("Wavefunction # ",i1,": label, occupancy > ",$)', i
+     READ (5,*) els(i), oc(i)
      nns (i)  = 0
      lchi(i)  = i-1
      rcut(i)  = 0.0d0
      rcutus(i)= 0.0d0
      epseu(i) = 0.0d0
-  end do
+  ENDDO
   psd   = atom_name (z)
   pseudotype = 'NC'
   nlcc = nlcc_
@@ -281,20 +281,20 @@ subroutine convert_cpmd
   etotps =0.0d0
   ecutrho=0.0d0
   ecutwfc=0.0d0
-  if ( lmax_ == lloc) then
+  IF ( lmax_ == lloc) THEN
      lmax = lmax_-1
-  else
+  ELSE
      lmax = lmax_
-  end if
+  ENDIF
   nbeta= lmax_
   mesh = mesh_
   ntwfc= nwfs
-  allocate( elsw(ntwfc), ocw(ntwfc), lchiw(ntwfc) )
-  do i=1, nwfs
+  ALLOCATE( elsw(ntwfc), ocw(ntwfc), lchiw(ntwfc) )
+  DO i=1, nwfs
      lchiw(i) = lchi(i)
      ocw(i)   = oc(i)
      elsw(i)  = els(i)
-  end do
+  ENDDO
   iexch = ixc/1000
   icorr = (ixc-1000*iexch)/100
   igcx  = (ixc-1000*iexch-100*icorr)/10
@@ -302,91 +302,91 @@ subroutine convert_cpmd
   !
   ! We have igcc=2 (PW91) and 3 (LYP) exchanged wrt CPMD conventions
   !
-  if (igcc.eq.3) then
+  IF (igcc==3) THEN
      igcc=2
-  else if (igcc.eq.2) then
+  ELSEIF (igcc==2) THEN
      igcc=3
-  end if
+  ENDIF
 
-  allocate(rab(mesh))
-  allocate(  r(mesh))
+  ALLOCATE(rab(mesh))
+  ALLOCATE(  r(mesh))
   r = r_
   rab = r * amesh
 
-  allocate (rho_atc(mesh))
-  if (nlcc) rho_atc = rho_atc_
+  ALLOCATE (rho_atc(mesh))
+  IF (nlcc) rho_atc = rho_atc_
 
-  allocate (vloc0(mesh))
+  ALLOCATE (vloc0(mesh))
   ! the factor 2 converts from Hartree to Rydberg
   vloc0(:) = vnl(:,lloc)*2.d0
 
-  if (nbeta > 0) then
+  IF (nbeta > 0) THEN
 
-     allocate(ikk2(nbeta), lll(nbeta))
+     ALLOCATE(ikk2(nbeta), lll(nbeta))
      kkbeta=mesh
-     do ir = 1,mesh
-        if ( r(ir) > rmax ) then
+     DO ir = 1,mesh
+        IF ( r(ir) > rmax ) THEN
            kkbeta=ir
            exit
-        end if
-     end do
+        ENDIF
+     ENDDO
      ikk2(:) = kkbeta
-     allocate(aux(kkbeta))
-     allocate(betar(mesh,nbeta))
-     allocate(qfunc(mesh,nbeta,nbeta))
-     allocate(dion(nbeta,nbeta))
-     allocate(qqq (nbeta,nbeta))
+     ALLOCATE(aux(kkbeta))
+     ALLOCATE(betar(mesh,nbeta))
+     ALLOCATE(qfunc(mesh,nbeta,nbeta))
+     ALLOCATE(dion(nbeta,nbeta))
+     ALLOCATE(qqq (nbeta,nbeta))
      qfunc(:,:,:)=0.0d0
      dion(:,:) =0.d0
      qqq(:,:)  =0.d0
      iv=0
-     do i=1,nwfs
+     DO i=1,nwfs
         l=lchi(i)
-        if (l.ne.lloc) then
+        IF (l/=lloc) THEN
            iv=iv+1
            lll(iv)=l
-           do ir=1,kkbeta
+           DO ir=1,kkbeta
               ! the factor 2 converts from Hartree to Rydberg
               betar(ir,iv) = 2.d0 * chi_(ir,l+1) * &
                    ( vnl(ir,l) - vnl(ir,lloc) )
               aux(ir) = chi_(ir,l+1) * betar(ir,iv)
-           end do
-           call simpson(kkbeta,aux,rab,vll)
+           ENDDO
+           CALL simpson(kkbeta,aux,rab,vll)
            dion(iv,iv) = 1.0d0/vll
-        end if
-     enddo
+        ENDIF
+     ENDDO
 
-  end if
+  ENDIF
 
-  allocate (rho_at(mesh))
+  ALLOCATE (rho_at(mesh))
   rho_at = 0.d0
-  do i=1,nwfs
+  DO i=1,nwfs
      rho_at(:) = rho_at(:) + ocw(i) * chi_(:,i) ** 2
-  end do
-  
-  allocate (chi(mesh,ntwfc))
+  ENDDO
+
+  ALLOCATE (chi(mesh,ntwfc))
   chi = chi_
   !     ----------------------------------------------------------
-  write (6,'(a)') 'Pseudopotential successfully converted'
+  WRITE (6,'(a)') 'Pseudopotential successfully converted'
   !     ----------------------------------------------------------
-  return
-end subroutine convert_cpmd
+  RETURN
+END SUBROUTINE convert_cpmd
 !
 ! ------------------------------------------------------------------
-integer function locate(onechar,string)
+INTEGER FUNCTION locate(onechar,string)
 ! ------------------------------------------------------------------
   !
-  character(len=1) :: onechar
-  character(len=*) :: string
+  CHARACTER(len=1) :: onechar
+  CHARACTER(len=*) :: string
   !
-  integer:: i
+  INTEGER:: i
   !
-  do i=1,len_trim(string)
-     if (string(i:i) .eq. "=") then
+  DO i=1,len_trim(string)
+     IF (string(i:i) == "=") THEN
         locate = i
-        return
-     end if
-  end do
+        RETURN
+     ENDIF
+  ENDDO
   locate = 0
-  return
-end function locate
+  RETURN
+END FUNCTION locate

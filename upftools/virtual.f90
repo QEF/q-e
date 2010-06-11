@@ -6,32 +6,32 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-module pseudo
+MODULE pseudo
   !
   ! All variables to be read from the UPF file
   ! (UPF = unified pseudopotential format)
   !
-  integer ,parameter :: npsx = 2
+  INTEGER ,PARAMETER :: npsx = 2
   ! npsx  : maximum number of different pseudopotentials
-  integer, parameter :: lmaxx  = 3, nchix  = 6, ndm = 2000
-  ! lmaxx : maximum non local angular momentum in PP      
+  INTEGER, PARAMETER :: lmaxx  = 3, nchix  = 6, ndm = 2000
+  ! lmaxx : maximum non local angular momentum in PP
   ! nchix : maximum number of atomic wavefunctions per PP
   ! ndm   : maximum number of points in the radial mesh
-  integer, parameter :: nbrx = 8, lqmax = 5, nqfx = 8
-  ! nbrx  : maximum number of beta functions         
-  ! lqmax : maximum number of angular momentum of Q  
+  INTEGER, PARAMETER :: nbrx = 8, lqmax = 5, nqfx = 8
+  ! nbrx  : maximum number of beta functions
+  ! lqmax : maximum number of angular momentum of Q
   ! nqfx  : maximum number of coefficients in Q smoothing
   !
   ! pp_header
-  character (len=80):: generated, date_author, comment
-  character (len=2) :: psd(npsx), pseudotype
-  character (len=20):: dft(npsx)
-  integer :: lmax(npsx), mesh(npsx), nbeta(npsx), ntwfc(npsx)
-  logical :: nlcc(npsx), isus(npsx)
+  CHARACTER (len=80):: generated, date_author, comment
+  CHARACTER (len=2) :: psd(npsx), pseudotype
+  CHARACTER (len=20):: dft(npsx)
+  INTEGER :: lmax(npsx), mesh(npsx), nbeta(npsx), ntwfc(npsx)
+  LOGICAL :: nlcc(npsx), isus(npsx)
   real(8) :: zp(npsx), ecutrho, ecutwfc, etotps
   real(8) :: oc(nchix,npsx)
-  character(len=2) :: els(nchix,npsx)
-  integer :: lchi(nchix,npsx)
+  CHARACTER(len=2) :: els(nchix,npsx)
+  INTEGER :: lchi(nchix,npsx)
   !
   ! pp_mesh
   real(8) :: r(ndm,npsx), rab(ndm,npsx)
@@ -44,11 +44,11 @@ module pseudo
   ! pp_nonlocal
   ! pp_beta
   real(8) :: betar(ndm, nbrx, npsx)
-  integer :: lll(nbrx,npsx), ikk2(nbrx,npsx)  
+  INTEGER :: lll(nbrx,npsx), ikk2(nbrx,npsx)
   ! pp_dij
   real(8) :: dion(nbrx,nbrx,npsx)
   ! pp_qij
-  integer ::  nqf(npsx), nqlc(npsx)
+  INTEGER ::  nqf(npsx), nqlc(npsx)
   real(8) :: rinner(lqmax,npsx), qqq(nbrx,nbrx,npsx), &
        qfunc(ndm,nbrx,nbrx,npsx)
   ! pp_qfcoef
@@ -59,54 +59,54 @@ module pseudo
   !
   ! pp_rhoatom
   real(8) :: rho_at(ndm,npsx)
-end module pseudo
+END MODULE pseudo
 !
-program virtual
+PROGRAM virtual
   !---------------------------------------------------------------------
   !
   !  Read pseudopotentials in the Unified Pseudopotential Format (UPF)
   !
-  implicit none
-  integer :: is, ios, iunps = 4
+  IMPLICIT NONE
+  INTEGER :: is, ios, iunps = 4
   real (8) :: x
-  character (len=256) :: filein(2), fileout
-  print '('' '')'
-  print '('' Generate the UPF pseudopotential for a virtual atom '')'
-  print '('' combining two pseudopootentials in UPF format '')'
-  print '('' '')'
+  CHARACTER (len=256) :: filein(2), fileout
+  PRINT '('' '')'
+  PRINT '('' Generate the UPF pseudopotential for a virtual atom '')'
+  PRINT '('' combining two pseudopootentials in UPF format '')'
+  PRINT '('' '')'
   !
-  do is=1,2
-     print '(''  Input PP file # '',i2,'' in UPF format > '',$)', is
-     read (5, '(a)', end = 20, err = 20) filein(is)
-     open(unit=iunps,file=filein(is),status='old',form='formatted',iostat=ios)
-     if (ios.ne.0) stop
-     write (*,*) " IOS= ", ios, is, iunps
-     call read_pseudo(is, iunps)
-     close (unit=iunps)
-     print '('' '')'
-  end do
-  print '('' New Pseudo = x '',a,'' + (1-x) '',a)', (trim(filein(is)), is=1,2)
-10 continue
-  print '('' mixing parameter x [0<x<1] = '',$)'
-  read (5,*) x
-  if (x<0.d0 .or. x>1)  go to 10
+  DO is=1,2
+     PRINT '(''  Input PP file # '',i2,'' in UPF format > '',$)', is
+     READ (5, '(a)', end = 20, err = 20) filein(is)
+     OPEN(unit=iunps,file=filein(is),status='old',form='formatted',iostat=ios)
+     IF (ios/=0) STOP
+     WRITE (*,*) " IOS= ", ios, is, iunps
+     CALL read_pseudo(is, iunps)
+     CLOSE (unit=iunps)
+     PRINT '('' '')'
+  ENDDO
+  PRINT '('' New Pseudo = x '',a,'' + (1-x) '',a)', (trim(filein(is)), is=1,2)
+10 CONTINUE
+  PRINT '('' mixing parameter x [0<x<1] = '',$)'
+  READ (5,*) x
+  IF (x<0.d0 .or. x>1)  GOTO 10
 
-  call compute_virtual(x,filein)
+  CALL compute_virtual(x,filein)
 
   fileout='NewPseudo.UPF'
-  print '(''Output PP file in UPF format :  '',a)', fileout
+  PRINT '(''Output PP file in UPF format :  '',a)', fileout
 
-  open(unit=2,file=fileout,status='unknown',form='formatted')
-  call write_upf(2)
-  close (unit=2)
+  OPEN(unit=2,file=fileout,status='unknown',form='formatted')
+  CALL write_upf(2)
+  CLOSE (unit=2)
 
-20 stop
-end program virtual
+20 STOP
+END PROGRAM virtual
 !
 !---------------------------------------------------------------------
-subroutine compute_virtual(x,filein)
-  use pseudo
-  use upf, ONLY : &
+SUBROUTINE compute_virtual(x,filein)
+  USE pseudo
+  USE upf, ONLY : &
            upf_rel => rel, upf_rcloc => rcloc, upf_nwfs => nwfs, &
            upf_oc => oc, upf_rcut => rcut, upf_rcutus => rcutus, &
            upf_epseu => epseu, upf_els => els, &
@@ -133,15 +133,15 @@ subroutine compute_virtual(x,filein)
            upf_qfcoef => qfcoef, &
            upf_chi => chi, &
            upf_rho_at  => rho_at
-  use splinelib
-  use funct, ONLY : set_dft_from_name, get_iexch, get_icorr, get_igcx, get_igcc
-  implicit none
-  integer :: i, j, ib
-  character (len=256) :: filein(2)
-  character (len=5) :: xlabel
+  USE splinelib
+  USE funct, ONLY : set_dft_from_name, get_iexch, get_icorr, get_igcx, get_igcc
+  IMPLICIT NONE
+  INTEGER :: i, j, ib
+  CHARACTER (len=256) :: filein(2)
+  CHARACTER (len=5) :: xlabel
   real (8) :: x, capel
-  real (8), allocatable :: aux1(:,:), aux2(:,:)
-  logical :: interpolate
+  real (8), ALLOCATABLE :: aux1(:,:), aux2(:,:)
+  LOGICAL :: interpolate
   interpolate = .false.
   !
   !pp_info
@@ -152,29 +152,29 @@ subroutine compute_virtual(x,filein)
   upf_generated  = 'Generated using virtual.x code '
   upf_date_author= 'Author and generation date: unknown. '//&
                    'Refer to original pseudopotential files'
-  write( xlabel, '(f5.3)' ) x
+  WRITE( xlabel, '(f5.3)' ) x
   upf_comment    = 'Pseudo = x '//trim(filein(1))//&
                    ' + (1-x) '//trim(filein(2))//', with x='//xlabel
   upf_psd = "Xx"
   upf_pseudotype = "NC"
-  if (isus(1) .or. isus(2)) upf_pseudotype = "US"
-  call set_dft_from_name(dft(1))
+  IF (isus(1) .or. isus(2)) upf_pseudotype = "US"
+  CALL set_dft_from_name(dft(1))
   upf_iexch = get_iexch()
   upf_icorr = get_icorr()
   upf_igcx  = get_igcx()
   upf_igcc  = get_igcc()
-  call set_dft_from_name(dft(2))
-  if (get_iexch().ne.upf_iexch .or. get_icorr().ne.upf_icorr .or. &
-      get_igcx().ne.upf_igcx .or. get_igcc().ne.upf_igcc) &
-      call errore ('virtual','conflicting DFT functionals',1)
+  CALL set_dft_from_name(dft(2))
+  IF (get_iexch()/=upf_iexch .or. get_icorr()/=upf_icorr .or. &
+      get_igcx()/=upf_igcx .or. get_igcc()/=upf_igcc) &
+      CALL errore ('virtual','conflicting DFT functionals',1)
   upf_lmax = max(lmax(1), lmax(2))
-  if (mesh(1).ne.mesh(2) ) then
-     write (*,*) " pseudopotentials have different mesh " 
-     write (*,*) mesh(1),mesh(2)
-     write (*,*) r(1,1), r(1,2)
-     write (*,*) r(mesh(1),1),r(mesh(2),2)
+  IF (mesh(1)/=mesh(2) ) THEN
+     WRITE (*,*) " pseudopotentials have different mesh "
+     WRITE (*,*) mesh(1),mesh(2)
+     WRITE (*,*) r(1,1), r(1,2)
+     WRITE (*,*) r(mesh(1),1),r(mesh(2),2)
      interpolate = .true.
-  end if
+  ENDIF
   upf_mesh = mesh(1)
   upf_nbeta = nbeta(1)+nbeta(2)
   upf_ntwfc = ntwfc(1)
@@ -182,7 +182,7 @@ subroutine compute_virtual(x,filein)
   upf_ecutrho = ecutrho
   upf_ecutwfc = ecutwfc
   upf_etotps  = etotps
-  allocate( upf_ocw(upf_ntwfc), upf_elsw(upf_ntwfc), upf_lchiw(upf_ntwfc) )
+  ALLOCATE( upf_ocw(upf_ntwfc), upf_elsw(upf_ntwfc), upf_lchiw(upf_ntwfc) )
   upf_ocw(1:upf_ntwfc)  = oc(1:upf_ntwfc,1)
   upf_elsw(1:upf_ntwfc) = els(1:upf_ntwfc,1)
   upf_lchiw(1:upf_ntwfc) = lchi(1:upf_ntwfc,1)
@@ -190,513 +190,513 @@ subroutine compute_virtual(x,filein)
   !
   !pp_mesh
   capel = 0.d0
-  do i=1,upf_mesh
+  DO i=1,upf_mesh
      capel = capel + abs(r(i,1)-r(i,2)) + abs(rab(i,1)-rab(i,2))
-  end do
-  if (capel.gt.1.d-6) then
-     write (*,*) " pseudopotentials have different mesh " 
+  ENDDO
+  IF (capel>1.d-6) THEN
+     WRITE (*,*) " pseudopotentials have different mesh "
      interpolate = .true.
-  end if
-  write (*,*) "INTERPOLATE =", interpolate
+  ENDIF
+  WRITE (*,*) "INTERPOLATE =", interpolate
   !if (interpolate) call errore ("virtual", &
   !                "grid interpolation is not working yet",1)
 
-  if (interpolate) allocate ( aux1(1,mesh(1)), aux2(1,mesh(2)) )
+  IF (interpolate) ALLOCATE ( aux1(1,mesh(1)), aux2(1,mesh(2)) )
 
-  allocate( upf_r(upf_mesh), upf_rab(upf_mesh) )
+  ALLOCATE( upf_r(upf_mesh), upf_rab(upf_mesh) )
   upf_r(1:upf_mesh)   = r(1:upf_mesh,1)
   upf_rab(1:upf_mesh) = rab(1:upf_mesh,1)
   !
   !pp_nlcc
-  allocate( upf_rho_atc(upf_mesh) )
-  if (interpolate) then 
-     write (*,*) "interpolate rho_atc"
+  ALLOCATE( upf_rho_atc(upf_mesh) )
+  IF (interpolate) THEN
+     WRITE (*,*) "interpolate rho_atc"
      aux2(1,1:mesh(2)) = rho_atc(1:mesh(2),2)
-     call dosplineint( r(1:mesh(2),2), aux2, upf_r(1:upf_mesh), aux1 )
+     CALL dosplineint( r(1:mesh(2),2), aux2, upf_r(1:upf_mesh), aux1 )
      rho_atc(1:upf_mesh,2) = aux1(1,1:upf_mesh)
-     write (*,*) " done"
-  end if
+     WRITE (*,*) " done"
+  ENDIF
   upf_rho_atc(1:upf_mesh) =    x     * rho_atc(1:upf_mesh,1) + &
                             (1.d0-x) * rho_atc(1:upf_mesh,2)
   !
   !pp_local
-  allocate( upf_vloc0(upf_mesh) )
-  if (interpolate) then 
-     write (*,*) " interpolate vloc0"
+  ALLOCATE( upf_vloc0(upf_mesh) )
+  IF (interpolate) THEN
+     WRITE (*,*) " interpolate vloc0"
      aux2(1,1:mesh(2)) =  vloc0(1:mesh(2),2)
-     
-     call dosplineint( r(1:mesh(2),2), aux2, upf_r(1:upf_mesh), aux1 )
-     
+
+     CALL dosplineint( r(1:mesh(2),2), aux2, upf_r(1:upf_mesh), aux1 )
+
      vloc0(1:upf_mesh,2) = aux1(1,1:upf_mesh)
-    
-     ! Jivtesh - if the mesh of the first atom extends to a larger radius 
+
+     ! Jivtesh - if the mesh of the first atom extends to a larger radius
      ! than the mesh of the second atom, then, for those radii that are
      ! greater than the maximum radius of the second atom, the local potential
-     ! of the second atom is calculated using the expression 
-     ! v_local = (-2)*Z/r instead of using the extrapolated value. 
-     ! This is because, typically extrapolation leads to positive potentials. 
+     ! of the second atom is calculated using the expression
+     ! v_local = (-2)*Z/r instead of using the extrapolated value.
+     ! This is because, typically extrapolation leads to positive potentials.
      ! This is implemented in lines 240-242
-     
-     do i=1,mesh(1)
-        if(r(i,1).GT.r(mesh(2),2)) vloc0(i,2) = -(2.0*zp(2))/r(i,1)
-     end do    
-     
-  end if
+
+     DO i=1,mesh(1)
+        IF(r(i,1)>r(mesh(2),2)) vloc0(i,2) = -(2.0*zp(2))/r(i,1)
+     ENDDO
+
+  ENDIF
   upf_vloc0(1:upf_mesh) =      x     * vloc0(1:upf_mesh,1) +  &
                             (1.d0-x) * vloc0(1:upf_mesh,2)
   !
   !pp_nonlocal
   !pp_beta
-  allocate( upf_betar(upf_mesh,upf_nbeta), &
+  ALLOCATE( upf_betar(upf_mesh,upf_nbeta), &
             upf_lll(upf_nbeta), upf_ikk2(upf_nbeta) )
   ib = 0
-  do i=1,nbeta(1)
+  DO i=1,nbeta(1)
      ib  = ib + 1
      upf_betar(1:upf_mesh,ib) = betar(1:upf_mesh,i,1)
      upf_lll(ib)              = lll(i,1)
      upf_ikk2(ib)             = ikk2(i,1)
-  end do
-  do i=1,nbeta(2)
+  ENDDO
+  DO i=1,nbeta(2)
      ib  = ib + 1
-     if (interpolate) then 
-     write (*,*) " interpolate betar"
+     IF (interpolate) THEN
+     WRITE (*,*) " interpolate betar"
         aux2(1,1:mesh(2)) = betar(1:mesh(2),i,2)
-        call dosplineint( r(1:mesh(2),2), aux2, upf_r(1:upf_mesh), aux1 )
+        CALL dosplineint( r(1:mesh(2),2), aux2, upf_r(1:upf_mesh), aux1 )
         betar(1:upf_mesh,i,2) = aux1(1,1:upf_mesh)
-     end if
+     ENDIF
      upf_betar(1:upf_mesh,ib) = betar(1:upf_mesh,i,2)
      upf_lll(ib)              = lll(i,2)
-     ! SdG - when the meshes of the two pseudo are different the ikk2 limits 
+     ! SdG - when the meshes of the two pseudo are different the ikk2 limits
      ! for the beta functions of the second one must be set properly
      ! This is done in lines 273-277
-     if (interpolate) then
+     IF (interpolate) THEN
         j = 1
-        do while ( upf_r(j) < r( ikk2(i,2), 2) )
+        DO WHILE ( upf_r(j) < r( ikk2(i,2), 2) )
            j = j + 1
-        end do
+        ENDDO
         upf_ikk2(ib)             = j
-     else
+     ELSE
         upf_ikk2(ib)             = ikk2(i,2)
-     end if
-  end do
+     ENDIF
+  ENDDO
   !
   !pp_dij
-  allocate( upf_dion(upf_nbeta, upf_nbeta) )
+  ALLOCATE( upf_dion(upf_nbeta, upf_nbeta) )
   upf_dion(:,:) = 0.d0
-  do i=1,nbeta(1)
-     do j=1,nbeta(1)
+  DO i=1,nbeta(1)
+     DO j=1,nbeta(1)
         upf_dion(i,j) = x * dion(i,j,1)
-     end do
-  end do
-  do i=1,nbeta(2)
-     do j=1,nbeta(2)
+     ENDDO
+  ENDDO
+  DO i=1,nbeta(2)
+     DO j=1,nbeta(2)
         upf_dion(nbeta(1)+i,nbeta(1)+j) = (1.d0-x) * dion(i,j,2)
-     end do
-  end do
+     ENDDO
+  ENDDO
   !
   !pp_qij
-  if (nqf(1).ne.nqf(2)) &
-      call errore ("Virtual","different nqf are not implemented (yet)", 1)
-  if (nqlc(1).ne.nqlc(2)) &
-      call errore ("Virtual","different nqlc are not implemented (yet)", 1)
+  IF (nqf(1)/=nqf(2)) &
+      CALL errore ("Virtual","different nqf are not implemented (yet)", 1)
+  IF (nqlc(1)/=nqlc(2)) &
+      CALL errore ("Virtual","different nqlc are not implemented (yet)", 1)
   upf_nqf = nqf(1)
   upf_nqlc = nqlc(1)
-  allocate( upf_rinner(upf_nqlc), upf_qqq(upf_nbeta,upf_nbeta), &
+  ALLOCATE( upf_rinner(upf_nqlc), upf_qqq(upf_nbeta,upf_nbeta), &
             upf_qfunc(upf_mesh,upf_nbeta,upf_nbeta) )
-  do i=1,upf_nqlc
-    if(rinner(i,1).ne.rinner(i,2)) &
-       call errore("Virtual","different rinner are not implemented (yet)",i)
-  end do
+  DO i=1,upf_nqlc
+    IF(rinner(i,1)/=rinner(i,2)) &
+       CALL errore("Virtual","different rinner are not implemented (yet)",i)
+  ENDDO
   upf_rinner(1:upf_nqlc) = rinner(1:upf_nqlc,1)
-  
+
   upf_qqq(:,:) = 0.d0
   upf_qfunc(:,:,:) = 0.d0
-  do i=1,nbeta(1)
-     do j=1,nbeta(1)
+  DO i=1,nbeta(1)
+     DO j=1,nbeta(1)
         upf_qqq(i,j) = x * qqq(i, j,1)
         upf_qfunc(1:upf_mesh,i,j) = x * qfunc(1:upf_mesh,i,j,1)
-     end do
-  end do
-  do i=1,nbeta(2)
-     do j=1,nbeta(2)
+     ENDDO
+  ENDDO
+  DO i=1,nbeta(2)
+     DO j=1,nbeta(2)
         upf_qqq(nbeta(1)+i,nbeta(1)+j) = (1.d0-x) * qqq(i, j, 2)
-        if (interpolate) then 
-     write (*,*) " interpolate qfunc"
+        IF (interpolate) THEN
+     WRITE (*,*) " interpolate qfunc"
            aux2(1,1:mesh(2) ) = qfunc(1:mesh(2),i,j,2)
-           call dosplineint( r(1:mesh(2),2), aux2, upf_r(1:upf_mesh), aux1 )
+           CALL dosplineint( r(1:mesh(2),2), aux2, upf_r(1:upf_mesh), aux1 )
            qfunc(1:upf_mesh,i,j,2) = aux1(1,1:upf_mesh)
-     write (*,*) " done"
-        end if
+     WRITE (*,*) " done"
+        ENDIF
         upf_qfunc(1:upf_mesh,nbeta(1)+i,nbeta(1)+j) = (1.d0-x) * qfunc(1:upf_mesh,i,j,2)
-     end do
-  end do
+     ENDDO
+  ENDDO
   !
   !pp_qfcoef
-  allocate( upf_qfcoef(upf_nqf,upf_nqlc,upf_nbeta,upf_nbeta) )
+  ALLOCATE( upf_qfcoef(upf_nqf,upf_nqlc,upf_nbeta,upf_nbeta) )
   upf_qfcoef(:,:,:,:) = 0.d0
-  do i=1,nbeta(1)
-     do j=1,nbeta(1)
+  DO i=1,nbeta(1)
+     DO j=1,nbeta(1)
         upf_qfcoef(1:upf_nqf,1:upf_nqlc,i,j) = &
             x * qfcoef(1:upf_nqf,1:upf_nqlc,i,j, 1)
-     end do
-  end do
-  do i=1,nbeta(2)
-     do j=1,nbeta(2)
+     ENDDO
+  ENDDO
+  DO i=1,nbeta(2)
+     DO j=1,nbeta(2)
         upf_qfcoef(1:upf_nqf,1:upf_nqlc,nbeta(1)+i,nbeta(1)+j) = &
             (1.d0-x) * qfcoef(1:upf_nqf,1:upf_nqlc,i,j, 2)
-     end do
-  end do
+     ENDDO
+  ENDDO
   !
   !pp_pswfc
-  
-  allocate (upf_chi(upf_mesh,upf_ntwfc) )
-  
-  if (ntwfc(1).EQ.ntwfc(2)) then
-  
-     do i=1,ntwfc(2)
-        if (interpolate) then 
-           write (*,*) " interpolate chi"
+
+  ALLOCATE (upf_chi(upf_mesh,upf_ntwfc) )
+
+  IF (ntwfc(1)==ntwfc(2)) THEN
+
+     DO i=1,ntwfc(2)
+        IF (interpolate) THEN
+           WRITE (*,*) " interpolate chi"
            aux2(1,1:mesh(2)) = chi(1:mesh(2),i,2)
-           call dosplineint( r(1:mesh(2),2), aux2, upf_r(1:upf_mesh), aux1 )
+           CALL dosplineint( r(1:mesh(2),2), aux2, upf_r(1:upf_mesh), aux1 )
            chi(1:upf_mesh,i,2) = aux1(1,1:upf_mesh)
-           write (*,*) " done"
-        end if
-        ! Jivtesh - The wavefunctions are calcuated to be the average of the 
+           WRITE (*,*) " done"
+        ENDIF
+        ! Jivtesh - The wavefunctions are calcuated to be the average of the
         ! wavefunctions of the two atoms - lines 365-366
         upf_chi(1:upf_mesh,i) =    x     * chi(1:upf_mesh,i,1) + &
-                                (1.d0-x) * chi(1:upf_mesh,i,2) 
-     enddo
-  else     
-     write (*,*) "Number of wavefunctions not the same for the two pseudopotentials" 
-  endif
-  !upf_chi(1:upf_mesh,1:upf_ntwfc) = chi(1:upf_mesh,1:upf_ntwfc,1)  
+                                (1.d0-x) * chi(1:upf_mesh,i,2)
+     ENDDO
+  ELSE
+     WRITE (*,*) "Number of wavefunctions not the same for the two pseudopotentials"
+  ENDIF
+  !upf_chi(1:upf_mesh,1:upf_ntwfc) = chi(1:upf_mesh,1:upf_ntwfc,1)
   !
   !pp_rhoatm
-  
-  allocate (upf_rho_at(upf_mesh) )
-  if (interpolate) then 
-     write (*,*) " interpolate rho_at"
-     aux2(1,1:mesh(2)) = rho_at(1:mesh(2),2)
-     call dosplineint( r(1:mesh(2),2), aux2, upf_r(1:upf_mesh), aux1 )
-     rho_at(1:upf_mesh,2) = aux1(1,1:upf_mesh)
-     write (*,*) " done"
-  end if
-  upf_rho_at(1:upf_mesh) =    x     * rho_at(1:upf_mesh,1) + &
-                           (1.d0-x) * rho_at(1:upf_mesh,2) 
 
-end subroutine compute_virtual
+  ALLOCATE (upf_rho_at(upf_mesh) )
+  IF (interpolate) THEN
+     WRITE (*,*) " interpolate rho_at"
+     aux2(1,1:mesh(2)) = rho_at(1:mesh(2),2)
+     CALL dosplineint( r(1:mesh(2),2), aux2, upf_r(1:upf_mesh), aux1 )
+     rho_at(1:upf_mesh,2) = aux1(1,1:upf_mesh)
+     WRITE (*,*) " done"
+  ENDIF
+  upf_rho_at(1:upf_mesh) =    x     * rho_at(1:upf_mesh,1) + &
+                           (1.d0-x) * rho_at(1:upf_mesh,2)
+
+END SUBROUTINE compute_virtual
 !
 !---------------------------------------------------------------------
-subroutine read_pseudo (is, iunps)  
+SUBROUTINE read_pseudo (is, iunps)
   !---------------------------------------------------------------------
   !
   !  Read pseudopotential in the Unified Pseudopotential Format (UPF)
   !
-  use pseudo
-  implicit none
+  USE pseudo
+  IMPLICIT NONE
   !
-  integer :: is, iunps  
+  INTEGER :: is, iunps
   ! is   : index of this pseudopotential
   ! iunps: unit connected with pseudopotential file
   !
-  if (is < 0 .or. is > npsx ) call errore ('read_pseudo', 'Wrong is number', 1)
-  write ( *, * ) " Reading pseudopotential file in UPF format..."  
+  IF (is < 0 .or. is > npsx ) CALL errore ('read_pseudo', 'Wrong is number', 1)
+  WRITE ( *, * ) " Reading pseudopotential file in UPF format..."
   !------->Search for Header
-  call scan_begin (iunps, "HEADER", .true.)  
-  call read_pseudo_header (is, iunps)  
-  call scan_end (iunps, "HEADER")  
+  CALL scan_begin (iunps, "HEADER", .true.)
+  CALL read_pseudo_header (is, iunps)
+  CALL scan_end (iunps, "HEADER")
 
   !-------->Search for mesh information
-  call scan_begin (iunps, "MESH", .true.)  
-  call read_pseudo_mesh (is, iunps)  
-  call scan_end (iunps, "MESH")  
+  CALL scan_begin (iunps, "MESH", .true.)
+  CALL read_pseudo_mesh (is, iunps)
+  CALL scan_end (iunps, "MESH")
   !-------->If  present, search for nlcc
-  if (nlcc (is) ) then  
-     call scan_begin (iunps, "NLCC", .true.)  
-     call read_pseudo_nlcc (is, iunps)  
-     call scan_end (iunps, "NLCC")  
-  endif
+  IF (nlcc (is) ) THEN
+     CALL scan_begin (iunps, "NLCC", .true.)
+     CALL read_pseudo_nlcc (is, iunps)
+     CALL scan_end (iunps, "NLCC")
+  ENDIF
   !-------->Search for Local potential
-  call scan_begin (iunps, "LOCAL", .true.)  
-  call read_pseudo_local (is, iunps)  
-  call scan_end (iunps, "LOCAL")  
+  CALL scan_begin (iunps, "LOCAL", .true.)
+  CALL read_pseudo_local (is, iunps)
+  CALL scan_end (iunps, "LOCAL")
   !-------->Search for Nonlocal potential
-  call scan_begin (iunps, "NONLOCAL", .true.)  
-  call read_pseudo_nl (is, iunps)  
-  call scan_end (iunps, "NONLOCAL")  
+  CALL scan_begin (iunps, "NONLOCAL", .true.)
+  CALL read_pseudo_nl (is, iunps)
+  CALL scan_end (iunps, "NONLOCAL")
   !-------->Search for atomic wavefunctions
-  call scan_begin (iunps, "PSWFC", .true.)  
-  call read_pseudo_pswfc (is, iunps)  
-  call scan_end (iunps, "PSWFC")  
+  CALL scan_begin (iunps, "PSWFC", .true.)
+  CALL read_pseudo_pswfc (is, iunps)
+  CALL scan_end (iunps, "PSWFC")
   !-------->Search for atomic charge
-  call scan_begin (iunps, "RHOATOM", .true.)  
-  call read_pseudo_rhoatom (is, iunps)  
-  call scan_end (iunps, "RHOATOM")  
+  CALL scan_begin (iunps, "RHOATOM", .true.)
+  CALL read_pseudo_rhoatom (is, iunps)
+  CALL scan_end (iunps, "RHOATOM")
   !
-  write ( *, * ) " ...done"
-  return
-end subroutine read_pseudo
+  WRITE ( *, * ) " ...done"
+  RETURN
+END SUBROUTINE read_pseudo
 !---------------------------------------------------------------------
 
-subroutine scan_begin (iunps, string, rew)  
+SUBROUTINE scan_begin (iunps, string, rew)
   !---------------------------------------------------------------------
   !
-  implicit none
+  IMPLICIT NONE
   ! Unit of the input file
-  integer :: iunps  
+  INTEGER :: iunps
   ! Label to be matched
-  character (len=*) :: string  
-  logical :: rew  
+  CHARACTER (len=*) :: string
+  LOGICAL :: rew
   ! Flag: if .true. rewind the file
-  character (len=80) :: rstring  
+  CHARACTER (len=80) :: rstring
   ! String read from file
-  integer :: ios
-  logical, external :: matches 
+  INTEGER :: ios
+  LOGICAL, EXTERNAL :: matches
 
   ios = 0
-  if (rew) rewind (iunps)  
-  do while (ios.eq.0)  
-     read (iunps, *, iostat = ios, err = 300) rstring  
-     if (matches ("<PP_"//string//">", rstring) ) return  
-  enddo
-300 call errore ('scan_begin', 'No '//string//' block', abs (ios) )  
+  IF (rew) REWIND (iunps)
+  DO WHILE (ios==0)
+     READ (iunps, *, iostat = ios, err = 300) rstring
+     IF (matches ("<PP_"//string//">", rstring) ) RETURN
+  ENDDO
+300 CALL errore ('scan_begin', 'No '//string//' block', abs (ios) )
 
-end subroutine scan_begin
+END SUBROUTINE scan_begin
 !---------------------------------------------------------------------
 
-subroutine scan_end (iunps, string)  
+SUBROUTINE scan_end (iunps, string)
   !---------------------------------------------------------------------
-  implicit none
+  IMPLICIT NONE
   ! Unit of the input file
-  integer :: iunps
+  INTEGER :: iunps
   ! Label to be matched
-  character (len=*) :: string  
+  CHARACTER (len=*) :: string
   ! String read from file
-  character (len=80) :: rstring
-  integer :: ios
-  logical, external :: matches 
+  CHARACTER (len=80) :: rstring
+  INTEGER :: ios
+  LOGICAL, EXTERNAL :: matches
 
-  read (iunps, '(a)', iostat = ios, err = 300) rstring  
-  if (matches ("</PP_"//string//">", rstring) ) return  
-300 call errore ('scan_end', &
+  READ (iunps, '(a)', iostat = ios, err = 300) rstring
+  IF (matches ("</PP_"//string//">", rstring) ) RETURN
+300 CALL errore ('scan_end', &
        'No '//string//' block end statement, possibly corrupted file',  - 1)
-end subroutine scan_end
+END SUBROUTINE scan_end
 !
 !---------------------------------------------------------------------
 
-subroutine read_pseudo_header (is, iunps)  
+SUBROUTINE read_pseudo_header (is, iunps)
   !---------------------------------------------------------------------
   !
-  use pseudo
-  implicit none
+  USE pseudo
+  IMPLICIT NONE
   !
-  integer :: is, iunps  
+  INTEGER :: is, iunps
   !
-  integer :: nv, ios, nw  
-  character (len=75) :: dummy  
-  logical, external :: matches 
+  INTEGER :: nv, ios, nw
+  CHARACTER (len=75) :: dummy
+  LOGICAL, EXTERNAL :: matches
 
-  read (iunps, *, err = 100, iostat = ios) nv, dummy  
-  read (iunps, *, err = 100, iostat = ios) psd (is), dummy  
-  read (iunps, *, err = 100, iostat = ios) pseudotype
-  if (matches (pseudotype, "US") ) isus (is) = .true.  
-  read (iunps, *, err = 100, iostat = ios) nlcc (is), dummy  
-  read (iunps, '(a20,t24,a)', err = 100, iostat = ios) dft(is), dummy
-  read (iunps, * ) zp (is), dummy  
-  read (iunps, * ) etotps, dummy  
-  read (iunps, * ) ecutwfc, ecutrho
-  read (iunps, * ) lmax (is), dummy  
-  read (iunps, *, err = 100, iostat = ios) mesh (is), dummy  
-  read (iunps, *, err = 100, iostat = ios) ntwfc(is), nbeta (is), dummy
-  read (iunps, '(a)', err = 100, iostat = ios) dummy
-  do nw = 1, ntwfc(is)
-     read (iunps, * ) els (nw,is), lchi (nw, is), oc (nw, is)  
-  enddo
-  return  
-100 call errore ('read_pseudo_header', 'Reading pseudo file', abs (ios))
-end subroutine read_pseudo_header
+  READ (iunps, *, err = 100, iostat = ios) nv, dummy
+  READ (iunps, *, err = 100, iostat = ios) psd (is), dummy
+  READ (iunps, *, err = 100, iostat = ios) pseudotype
+  IF (matches (pseudotype, "US") ) isus (is) = .true.
+  READ (iunps, *, err = 100, iostat = ios) nlcc (is), dummy
+  READ (iunps, '(a20,t24,a)', err = 100, iostat = ios) dft(is), dummy
+  READ (iunps, * ) zp (is), dummy
+  READ (iunps, * ) etotps, dummy
+  READ (iunps, * ) ecutwfc, ecutrho
+  READ (iunps, * ) lmax (is), dummy
+  READ (iunps, *, err = 100, iostat = ios) mesh (is), dummy
+  READ (iunps, *, err = 100, iostat = ios) ntwfc(is), nbeta (is), dummy
+  READ (iunps, '(a)', err = 100, iostat = ios) dummy
+  DO nw = 1, ntwfc(is)
+     READ (iunps, * ) els (nw,is), lchi (nw, is), oc (nw, is)
+  ENDDO
+  RETURN
+100 CALL errore ('read_pseudo_header', 'Reading pseudo file', abs (ios))
+END SUBROUTINE read_pseudo_header
 !
 !---------------------------------------------------------------------
-subroutine read_pseudo_local (is, iunps)  
+SUBROUTINE read_pseudo_local (is, iunps)
   !---------------------------------------------------------------------
   !
-  use pseudo
-  implicit none
+  USE pseudo
+  IMPLICIT NONE
   !
-  integer :: is, iunps  
+  INTEGER :: is, iunps
   !
-  integer :: ir, ios  
+  INTEGER :: ir, ios
   !
-  read (iunps, *, err=100, iostat=ios) (vloc0(ir,is) , ir=1,mesh(is))
+  READ (iunps, *, err=100, iostat=ios) (vloc0(ir,is) , ir=1,mesh(is))
 
-100 call errore ('read_pseudo_local','Reading pseudo file', abs(ios) )
+100 CALL errore ('read_pseudo_local','Reading pseudo file', abs(ios) )
 
-  return  
-end subroutine read_pseudo_local
-!
-!---------------------------------------------------------------------
-
-subroutine read_pseudo_mesh (is, iunps)  
-  !---------------------------------------------------------------------
-  !
-  use pseudo
-  implicit none
-  !
-  integer :: is, iunps  
-  !
-  integer :: ir, ios
-  !
-  call scan_begin (iunps, "R", .false.)  
-  read (iunps, *, err = 100, iostat = ios) (r(ir,is), ir=1,mesh(is) )
-  call scan_end (iunps, "R")  
-  call scan_begin (iunps, "RAB", .false.)  
-  read (iunps, *, err = 100, iostat = ios) (rab(ir,is), ir=1,mesh(is) )
-  call scan_end (iunps, "RAB")  
-
-  return  
-
-100 call errore ('read_pseudo_mesh', 'Reading pseudo file', abs (ios) )  
-end subroutine read_pseudo_mesh
+  RETURN
+END SUBROUTINE read_pseudo_local
 !
 !---------------------------------------------------------------------
 
-subroutine read_pseudo_nl (is, iunps)  
+SUBROUTINE read_pseudo_mesh (is, iunps)
   !---------------------------------------------------------------------
   !
-  use pseudo
-  implicit none
+  USE pseudo
+  IMPLICIT NONE
   !
-  integer :: is, iunps
+  INTEGER :: is, iunps
   !
-  integer :: nb, mb, n, ir, nd, ios, idum, ldum, icon, lp, i
+  INTEGER :: ir, ios
+  !
+  CALL scan_begin (iunps, "R", .false.)
+  READ (iunps, *, err = 100, iostat = ios) (r(ir,is), ir=1,mesh(is) )
+  CALL scan_end (iunps, "R")
+  CALL scan_begin (iunps, "RAB", .false.)
+  READ (iunps, *, err = 100, iostat = ios) (rab(ir,is), ir=1,mesh(is) )
+  CALL scan_end (iunps, "RAB")
+
+  RETURN
+
+100 CALL errore ('read_pseudo_mesh', 'Reading pseudo file', abs (ios) )
+END SUBROUTINE read_pseudo_mesh
+!
+!---------------------------------------------------------------------
+
+SUBROUTINE read_pseudo_nl (is, iunps)
+  !---------------------------------------------------------------------
+  !
+  USE pseudo
+  IMPLICIT NONE
+  !
+  INTEGER :: is, iunps
+  !
+  INTEGER :: nb, mb, n, ir, nd, ios, idum, ldum, icon, lp, i
   ! counters
-  character (len=75) :: dummy  
+  CHARACTER (len=75) :: dummy
   !
-  do nb = 1, nbeta (is)  
-     call scan_begin (iunps, "BETA", .false.)  
-     read (iunps, *, err = 100, iostat = ios) idum, lll(nb,is), dummy
-     read (iunps, '(i6)', err = 100, iostat = ios) ikk2(nb,is)  
-     read (iunps, *, err = 100, iostat = ios) &
+  DO nb = 1, nbeta (is)
+     CALL scan_begin (iunps, "BETA", .false.)
+     READ (iunps, *, err = 100, iostat = ios) idum, lll(nb,is), dummy
+     READ (iunps, '(i6)', err = 100, iostat = ios) ikk2(nb,is)
+     READ (iunps, *, err = 100, iostat = ios) &
           (betar(ir,nb,is), ir=1,ikk2(nb,is))
-     do ir = ikk2(nb,is) + 1, mesh (is)  
-        betar (ir, nb, is) = 0.d0  
-     enddo
-     call scan_end (iunps, "BETA")  
-  enddo
+     DO ir = ikk2(nb,is) + 1, mesh (is)
+        betar (ir, nb, is) = 0.d0
+     ENDDO
+     CALL scan_end (iunps, "BETA")
+  ENDDO
 WRITE(*,*)'ikk2',ikk2
 
 
-  call scan_begin (iunps, "DIJ", .false.)  
-  read (iunps, *, err = 100, iostat = ios) nd, dummy  
+  CALL scan_begin (iunps, "DIJ", .false.)
+  READ (iunps, *, err = 100, iostat = ios) nd, dummy
   dion (:,:,is) = 0.d0
-  do icon = 1, nd  
-     read (iunps, *, err = 100, iostat = ios) nb, mb, dion(nb,mb,is)
-     dion (mb,nb,is) = dion (nb,mb,is)  
-  enddo
-  call scan_end (iunps, "DIJ")  
+  DO icon = 1, nd
+     READ (iunps, *, err = 100, iostat = ios) nb, mb, dion(nb,mb,is)
+     dion (mb,nb,is) = dion (nb,mb,is)
+  ENDDO
+  CALL scan_end (iunps, "DIJ")
 
-  if (isus (is) ) then  
-     call scan_begin (iunps, "QIJ", .false.)  
-     read (iunps, *, err = 100, iostat = ios) nqf(is)
+  IF (isus (is) ) THEN
+     CALL scan_begin (iunps, "QIJ", .false.)
+     READ (iunps, *, err = 100, iostat = ios) nqf(is)
      nqlc (is)= 2 * lmax (is) + 1
-     if (nqlc(is).gt.lqmax .or. nqlc(is).lt.0) &
-          call errore (' read_pseudo_nl', 'Wrong  nqlc', nqlc (is) )
-     if (nqf(is).ne.0) then
-        call scan_begin (iunps, "RINNER", .false.)  
-        read (iunps,*,err=100,iostat=ios) &
+     IF (nqlc(is)>lqmax .or. nqlc(is)<0) &
+          CALL errore (' read_pseudo_nl', 'Wrong  nqlc', nqlc (is) )
+     IF (nqf(is)/=0) THEN
+        CALL scan_begin (iunps, "RINNER", .false.)
+        READ (iunps,*,err=100,iostat=ios) &
              (idum,rinner(i,is),i=1,nqlc(is))
-        call scan_end (iunps, "RINNER")  
-     end if
-     do nb = 1, nbeta(is)  
-        do mb = nb, nbeta(is)
+        CALL scan_end (iunps, "RINNER")
+     ENDIF
+     DO nb = 1, nbeta(is)
+        DO mb = nb, nbeta(is)
 
-           read (iunps,*,err=100,iostat=ios) idum, idum, ldum, dummy
+           READ (iunps,*,err=100,iostat=ios) idum, idum, ldum, dummy
            !"  i    j   (l)"
-           if (ldum.ne.lll(mb,is) ) call errore ('read_pseudo_nl', &
+           IF (ldum/=lll(mb,is) ) CALL errore ('read_pseudo_nl', &
                 'inconsistent angular momentum for Q_ij', 1)
 
-           read (iunps,*,err=100,iostat=ios) qqq(nb,mb,is), dummy
+           READ (iunps,*,err=100,iostat=ios) qqq(nb,mb,is), dummy
            ! "Q_int"
-           qqq(mb,nb,is) = qqq(nb,mb,is)  
+           qqq(mb,nb,is) = qqq(nb,mb,is)
 
-           read (iunps,*,err=100,iostat=ios) &
+           READ (iunps,*,err=100,iostat=ios) &
                         (qfunc(n,nb,mb,is), n=1,mesh(is))
-           do n = 0, mesh (is)  
-              qfunc(n,mb,nb,is) = qfunc(n,nb,mb,is)  
-           enddo
+           DO n = 0, mesh (is)
+              qfunc(n,mb,nb,is) = qfunc(n,nb,mb,is)
+           ENDDO
 
-           if (nqf(is).gt.0) then
-              call scan_begin (iunps, "QFCOEF", .false.)  
-              read (iunps,*,err=100,iostat=ios) &
+           IF (nqf(is)>0) THEN
+              CALL scan_begin (iunps, "QFCOEF", .false.)
+              READ (iunps,*,err=100,iostat=ios) &
                         ((qfcoef(i,lp,nb,mb,is),i=1,nqf(is)),lp=1,nqlc(is))
-              call scan_end (iunps, "QFCOEF")  
-           end if
+              CALL scan_end (iunps, "QFCOEF")
+           ENDIF
 
-        enddo
-     enddo
-     call scan_end (iunps, "QIJ")  
-  else  
+        ENDDO
+     ENDDO
+     CALL scan_end (iunps, "QIJ")
+  ELSE
      qqq (:,:,is) = 0.d0
      qfunc(:,:,:,is) =0.d0
-  endif
+  ENDIF
 
-100 call errore ('read_pseudo_nl', 'Reading pseudo file', abs (ios) )  
-  return  
-end subroutine read_pseudo_nl
+100 CALL errore ('read_pseudo_nl', 'Reading pseudo file', abs (ios) )
+  RETURN
+END SUBROUTINE read_pseudo_nl
 !
 !---------------------------------------------------------------------
-subroutine read_pseudo_nlcc (is, iunps)  
+SUBROUTINE read_pseudo_nlcc (is, iunps)
   !---------------------------------------------------------------------
   !
-  use pseudo
-  implicit none
+  USE pseudo
+  IMPLICIT NONE
   !
-  integer :: is, iunps  
+  INTEGER :: is, iunps
   !
-  integer :: ir, ios  
+  INTEGER :: ir, ios
 
-  read (iunps, *, err = 100, iostat = ios) (rho_atc(ir,is), ir=1,mesh(is) )
+  READ (iunps, *, err = 100, iostat = ios) (rho_atc(ir,is), ir=1,mesh(is) )
   !
-100 call errore ('read_pseudo_nlcc', 'Reading pseudo file', abs (ios) )  
-  return  
-end subroutine read_pseudo_nlcc
+100 CALL errore ('read_pseudo_nlcc', 'Reading pseudo file', abs (ios) )
+  RETURN
+END SUBROUTINE read_pseudo_nlcc
 !
 !---------------------------------------------------------------------
-subroutine read_pseudo_pswfc (is, iunps)  
+SUBROUTINE read_pseudo_pswfc (is, iunps)
   !---------------------------------------------------------------------
   !
-  use pseudo
-  implicit none
+  USE pseudo
+  IMPLICIT NONE
   !
-  integer :: is, iunps
+  INTEGER :: is, iunps
   !
-  character (len=75) :: dummy  
-  integer :: nb, ir, ios  
+  CHARACTER (len=75) :: dummy
+  INTEGER :: nb, ir, ios
   !
-  do nb = 1, ntwfc(is)  
-     read (iunps,*,err=100,iostat=ios) dummy  !Wavefunction labels
-     read (iunps,*,err=100,iostat=ios) (chi(ir,nb,is), ir=1,mesh(is))
-  enddo
-100 call errore ('read_pseudo_pswfc', 'Reading pseudo file', abs(ios))
-  return  
+  DO nb = 1, ntwfc(is)
+     READ (iunps,*,err=100,iostat=ios) dummy  !Wavefunction labels
+     READ (iunps,*,err=100,iostat=ios) (chi(ir,nb,is), ir=1,mesh(is))
+  ENDDO
+100 CALL errore ('read_pseudo_pswfc', 'Reading pseudo file', abs(ios))
+  RETURN
 
-end subroutine read_pseudo_pswfc
+END SUBROUTINE read_pseudo_pswfc
 !
 !---------------------------------------------------------------------
-subroutine read_pseudo_rhoatom (is, iunps)  
+SUBROUTINE read_pseudo_rhoatom (is, iunps)
   !---------------------------------------------------------------------
   !
-  use pseudo
-  implicit none
+  USE pseudo
+  IMPLICIT NONE
   !
-  integer :: is, iunps
+  INTEGER :: is, iunps
   !
-  integer :: ir, ios  
+  INTEGER :: ir, ios
 
-  read (iunps,*,err=100,iostat=ios) (rho_at(ir,is), ir=1,mesh(is))
-  return  
+  READ (iunps,*,err=100,iostat=ios) (rho_at(ir,is), ir=1,mesh(is))
+  RETURN
 
-100 call errore ('read_pseudo_rhoatom','Reading pseudo file',abs(ios))
+100 CALL errore ('read_pseudo_rhoatom','Reading pseudo file',abs(ios))
 
-end subroutine read_pseudo_rhoatom
+END SUBROUTINE read_pseudo_rhoatom
 

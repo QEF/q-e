@@ -6,10 +6,10 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !---------------------------------------------------------------------
-PROGRAM read_upf_tofile 
+PROGRAM read_upf_tofile
   !---------------------------------------------------------------------
   !
-  !   This small program reads the pseudopotential in the Unified 
+  !   This small program reads the pseudopotential in the Unified
   !   Pseudopotential Format and writes three files
   !   in a format which can be plotted. The files are:
   !
@@ -21,10 +21,10 @@ PROGRAM read_upf_tofile
   ! PWSCF modules
   !
   !
-  USE constants, only : fpi
+  USE constants, ONLY : fpi
   USE pseudo_types
   USE upf_module
-  USE radial_grids, only : radial_grid_type, nullify_radial_grid
+  USE radial_grids, ONLY : radial_grid_type, nullify_radial_grid
   !
   IMPLICIT NONE
   !
@@ -38,11 +38,11 @@ PROGRAM read_upf_tofile
   TYPE (pseudo_upf) :: upf
   TYPE (radial_grid_type) :: grid
   !
-  WRITE(6,'("Name of the upf file > ", $)') 
-  READ(5,'(a)') file_pseudo 
+  WRITE(6,'("Name of the upf file > ", $)')
+  READ(5,'(a)') file_pseudo
 
   !  nullify objects as soon as they are instantiated
- 
+
   CALL nullify_pseudo_upf( upf )
   CALL nullify_radial_grid( grid )
 
@@ -53,39 +53,39 @@ PROGRAM read_upf_tofile
 
   CALL read_upf(upf, grid, ierr, unit=iunps)
   !
-  IF (ierr .NE. 0) &
-     CALL errore('read_upf_tofile','reading pseudo upf', ABS(ierr))
+  IF (ierr /= 0) &
+     CALL errore('read_upf_tofile','reading pseudo upf', abs(ierr))
   !
   CLOSE(iunps)
   !
   OPEN(UNIT=iunps,FILE='filewfc',STATUS='unknown',FORM='formatted', &
        ERR=200, IOSTAT=ios)
-200   CALL errore('read_upf_tofile','open error on file filewfc',ABS(ios))
+200   CALL errore('read_upf_tofile','open error on file filewfc',abs(ios))
 
   DO n=1,upf%mesh
      WRITE(iunps,'(30f12.6)') upf%r(n), (upf%chi(n,j), j=1,upf%nwfc)
-  END DO
+  ENDDO
 
   CLOSE(iunps)
 
   OPEN(UNIT=iunps,FILE='filebeta',STATUS='unknown',FORM='formatted', &
        ERR=300, IOSTAT=ios)
-300   CALL errore('read_upf_tofile','open error on file filebeta',ABS(ios))
+300   CALL errore('read_upf_tofile','open error on file filebeta',abs(ios))
 
   DO n=1,upf%mesh
      WRITE(iunps,'(30f12.6)') upf%r(n), (upf%beta(n,j), j=1,upf%nbeta)
-  END DO
+  ENDDO
 
   CLOSE(iunps)
 
   OPEN(UNIT=iunps,FILE='filepot',STATUS='unknown',FORM='formatted', &
        ERR=400, IOSTAT=ios)
-400   CALL errore('read_upf_tofile','open error on file filepot',ABS(ios))
+400   CALL errore('read_upf_tofile','open error on file filepot',abs(ios))
 
   DO n=1,upf%mesh
      WRITE(iunps,'(4f12.6)') upf%r(n), upf%vloc(n), &
-               upf%rho_at(n), upf%rho_atc(n)*fpi*upf%r(n)**2 
-  END DO
+               upf%rho_at(n), upf%rho_atc(n)*fpi*upf%r(n)**2
+  ENDDO
 
   CLOSE(iunps)
 

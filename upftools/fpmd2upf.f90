@@ -29,20 +29,20 @@
 ! Example:
 
 
-module fpmd2upf_module
+MODULE fpmd2upf_module
 
   USE kinds, ONLY: DP
   USE parameters
-  use radial_grids, ONLY: ndmx
+  USE radial_grids, ONLY: ndmx
 
-  implicit none
-  save
+  IMPLICIT NONE
+  SAVE
 
   REAL(DP), PRIVATE :: TOLMESH = 1.d-5
 
   TYPE pseudo_ncpp
-     CHARACTER(LEN=4) :: psd         ! Element label
-     CHARACTER(LEN=20) :: pottyp     ! Potential type
+     CHARACTER(len=4) :: psd         ! Element label
+     CHARACTER(len=20) :: pottyp     ! Potential type
      LOGICAL :: tmix
      LOGICAL :: tnlcc
      INTEGER :: igau
@@ -72,53 +72,53 @@ module fpmd2upf_module
    END TYPE pseudo_ncpp
 
 
-contains
+CONTAINS
 
 
-  subroutine read_pseudo_fpmd( ap, psfile )
-    type(pseudo_ncpp) :: ap
-    character(len=256) :: psfile
-    character(len=80) :: error_msg
-    integer :: info, iunit
+  SUBROUTINE read_pseudo_fpmd( ap, psfile )
+    TYPE(pseudo_ncpp) :: ap
+    CHARACTER(len=256) :: psfile
+    CHARACTER(len=80) :: error_msg
+    INTEGER :: info, iunit
 
     iunit = 11
     OPEN(UNIT=iunit,FILE=psfile,STATUS='OLD')
     REWIND( iunit )
 
     CALL read_head_pp( iunit, ap, error_msg, info)
-    IF( info /= 0 ) GO TO 200
-    
+    IF( info /= 0 ) GOTO 200
+
     IF( ap%pottyp == 'GIANNOZ' ) THEN
 
       CALL read_giannoz(iunit, ap, info)
-      IF( info /= 0 ) GO TO 200
+      IF( info /= 0 ) GOTO 200
 
-    ELSE IF( ap%pottyp == 'NUMERIC' ) THEN
+    ELSEIF( ap%pottyp == 'NUMERIC' ) THEN
 
       CALL read_numeric_pp( iunit, ap, error_msg, info)
-      IF( info /= 0 ) GO TO 200
+      IF( info /= 0 ) GOTO 200
 
-    ELSE IF( ap%pottyp == 'ANALYTIC' ) THEN
+    ELSEIF( ap%pottyp == 'ANALYTIC' ) THEN
 
       CALL read_analytic_pp( iunit, ap, error_msg, info)
-      IF( info /= 0 ) GO TO 200
+      IF( info /= 0 ) GOTO 200
 
     ELSE
 
       info = 1
-      error_msg = ' Pseudopotential type '//TRIM(ap%pottyp)//' not implemented '
-      GO TO 200
+      error_msg = ' Pseudopotential type '//trim(ap%pottyp)//' not implemented '
+      GOTO 200
 
-    END IF
+    ENDIF
 200 CONTINUE
     IF( info /= 0 ) THEN
-      CALL errore(' readpseudo ', error_msg, ABS(info) )
-    END IF
+      CALL errore(' readpseudo ', error_msg, abs(info) )
+    ENDIF
 
     CLOSE(iunit)
 
-    return 
-  end subroutine read_pseudo_fpmd
+    RETURN
+  END SUBROUTINE read_pseudo_fpmd
 
 
 !=----------------------------------------------------------------------------=!
@@ -127,28 +127,28 @@ contains
 
 ! ... This sub. check if a given fortran unit 'iunit' contains a UPF pseudopot.
 
-        INTEGER, INTENT(IN) :: iunit
-        INTEGER, INTENT(OUT) :: info
-        CHARACTER(LEN=80) :: dummy
+        INTEGER, INTENT(in) :: iunit
+        INTEGER, INTENT(out) :: info
+        CHARACTER(len=80) :: dummy
         INTEGER :: ios
         LOGICAL, EXTERNAL :: matches
         info = 0
         ios  = 0
-        header_loop: do while (ios == 0)
-          read (iunit, *, iostat = ios, err = 200) dummy  
-          if (matches ("<PP_HEADER>", dummy) ) then
+        header_loop: DO WHILE (ios == 0)
+          READ (iunit, *, iostat = ios, err = 200) dummy
+          IF (matches ("<PP_HEADER>", dummy) ) THEN
             info = 1
             exit header_loop
-          endif
-        enddo header_loop
-200     continue
+          ENDIF
+        ENDDO header_loop
+200     CONTINUE
         RETURN
       END SUBROUTINE check_file_type
 
 !=----------------------------------------------------------------------------=!
 
       SUBROUTINE analytic_to_numeric(ap)
-        TYPE (pseudo_ncpp), INTENT(INOUT) :: ap
+        TYPE (pseudo_ncpp), INTENT(inout) :: ap
         INTEGER :: ir, mesh, lmax, l, n, il, ib, ll
         REAL(DP) :: xmin, zmesh, dx, x
 !        REAL(DP) :: pi        = 3.14159265358979323846_DP
@@ -158,36 +158,36 @@ contains
 
         IF( ap%mesh == 0 ) THEN
 ! ...     Local pseudopotential, define a logaritmic grid
-          mesh  = SIZE( ap%rw )
+          mesh  = size( ap%rw )
           xmin  = -5.0d0
           zmesh = 6.0d0
           dx    =  0.025d0
           DO ir = 1, mesh
-            x = xmin + DBLE(ir-1) * dx
-            ap%rw(ir)  = EXP(x) / zmesh
-            IF( ap%rw(ir) > 1000.0d0 ) EXIT
-          END DO
+            x = xmin + dble(ir-1) * dx
+            ap%rw(ir)  = exp(x) / zmesh
+            IF( ap%rw(ir) > 1000.0d0 ) exit
+          ENDDO
           ap%mesh = mesh
           ap%dx   = dx
           ap%rab  = ap%dx * ap%rw
-        END IF
+        ENDIF
 
         ap%vnl = 0.0d0
         ap%vloc = 0.0d0
         ap%vrps = 0.0d0
-        do l = 1, 3
-          do ir = 1, ap%mesh
-            ap%vnl(ir,l)= - ( ap%wrc(1) * qe_erf(SQRT(ap%rc(1))*ap%rw(ir)) +  &
-                              ap%wrc(2) * qe_erf(SQRT(ap%rc(2))*ap%rw(ir)) ) *&
+        DO l = 1, 3
+          DO ir = 1, ap%mesh
+            ap%vnl(ir,l)= - ( ap%wrc(1) * qe_erf(sqrt(ap%rc(1))*ap%rw(ir)) +  &
+                              ap%wrc(2) * qe_erf(sqrt(ap%rc(2))*ap%rw(ir)) ) *&
                             ap%zv / ap%rw(ir)
-          end do
-          do ir = 1, ap%mesh
-            do n = 1, ap%igau
+          ENDDO
+          DO ir = 1, ap%mesh
+            DO n = 1, ap%igau
               ap%vnl(ir,l)= ap%vnl(ir,l)+ (ap%al(n,l)+ ap%bl(n,l)*ap%rw(ir)**2 )* &
-                   EXP(-ap%rcl(n,l)*ap%rw(ir)**2)
-            end do
-          end do
-        end do
+                   exp(-ap%rcl(n,l)*ap%rw(ir)**2)
+            ENDDO
+          ENDDO
+        ENDDO
 
 ! ...   Copy local component to a separate array
         ap%vloc(:) = ap%vnl(:,ap%lloc)
@@ -195,7 +195,7 @@ contains
           ll=ap%lll(l) + 1  ! find out the angular momentum (ll-1) of the component stored
                          ! in position l
           ap%vrps(:,l) = ( ap%vnl(:,ll) - ap%vloc(:) ) * ap%rps(:,ll)
-        END DO
+        ENDDO
 
         RETURN
       END SUBROUTINE analytic_to_numeric
@@ -205,24 +205,24 @@ contains
       SUBROUTINE read_giannoz(uni, ap, ierr)
 !        USE constants, ONLY : fpi
         IMPLICIT NONE
-        TYPE (pseudo_ncpp), INTENT(INOUT) :: ap
-        INTEGER, INTENT(IN) :: uni
-        INTEGER, INTENT(OUT) :: ierr
-        REAL(DP) :: chi( SIZE(ap%rps, 1), SIZE(ap%rps, 2) )
-        REAL(DP) :: vnl( SIZE(ap%vnl, 1), SIZE(ap%vnl, 2) )
-        REAL(DP) :: rho_core( SIZE(ap%rhoc, 1) )
+        TYPE (pseudo_ncpp), INTENT(inout) :: ap
+        INTEGER, INTENT(in) :: uni
+        INTEGER, INTENT(out) :: ierr
+        REAL(DP) :: chi( size(ap%rps, 1), size(ap%rps, 2) )
+        REAL(DP) :: vnl( size(ap%vnl, 1), size(ap%vnl, 2) )
+        REAL(DP) :: rho_core( size(ap%rhoc, 1) )
         REAL(DP) :: r, ra, rb, fac
-        REAL(DP) :: oc( SIZE(ap%rps, 2) )
-        REAL(DP) :: enl( SIZE(ap%rps, 2) )
+        REAL(DP) :: oc( size(ap%rps, 2) )
+        REAL(DP) :: enl( size(ap%rps, 2) )
         REAL(DP) :: zmesh, xmin, dx, etot
         REAL(DP) :: zval
-        INTEGER   :: nn(SIZE(ap%rps, 2)), ll(SIZE(ap%rps, 2))
+        INTEGER   :: nn(size(ap%rps, 2)), ll(size(ap%rps, 2))
         INTEGER   :: nwf, mesh, i, j, in1, in2, in3, in4, m
         INTEGER   :: lmax, nlc, nnl, lloc, l, il
         LOGICAL   :: nlcc
         CHARACTER(len=80) :: dft
         CHARACTER(len=4)  :: atom
-        CHARACTER(len=2)  :: el( SIZE(ap%rps, 2) )
+        CHARACTER(len=2)  :: el( size(ap%rps, 2) )
         CHARACTER(len=80) :: ppinfo
         CHARACTER(len=80) :: strdum
         CHARACTER(len=2) :: sdum1, sdum2
@@ -236,38 +236,38 @@ contains
 
         ! WRITE(6,*) ' DEBUG ', atom, zval,lmax, nlc, nnl, nlcc, lloc, ppinfo
 
-        IF( (lmax+1) > SIZE(ap%vnl, 2) ) THEN
+        IF( (lmax+1) > size(ap%vnl, 2) ) THEN
           ierr = 1
           RETURN
-        END IF
-        IF( (nlcc .AND. .NOT.ap%tnlcc) .OR. (.NOT.nlcc .AND. ap%tnlcc) ) THEN
+        ENDIF
+        IF( (nlcc .and. .not.ap%tnlcc) .or. (.not.nlcc .and. ap%tnlcc) ) THEN
           ierr = 2
           RETURN
-        END IF
+        ENDIF
 
         READ(uni,fmt='(f8.2,f8.4,f10.6,2i6)') zmesh, xmin, dx, mesh, nwf
 
-        IF( mesh > SIZE(ap%rps, 1) ) THEN
+        IF( mesh > size(ap%rps, 1) ) THEN
           ierr = 3
           RETURN
-        END IF
-        IF( nwf > SIZE(ap%rps, 2) ) THEN
+        ENDIF
+        IF( nwf > size(ap%rps, 2) ) THEN
           ierr = 4
           RETURN
-        END IF
+        ENDIF
 
         DO j = 0, lmax
            READ(uni,fmt="(A16,i1)") strdum, l
            READ(uni,'(4e16.8)') (vnl(i,j+1), i=1,mesh)
-        END DO
+        ENDDO
         IF (nlcc) THEN
           READ(uni,fmt='(4e16.8)') (rho_core(i), i=1,mesh)
-        END IF   
+        ENDIF
         DO j = 1, nwf
           READ(uni,fmt="(A16,a2)") strdum,el(j)
           READ(uni,fmt='(i5,f6.2)') ll(j),oc(j)
           READ(uni,fmt='(4e16.8)') (chi(i,j), i=1,mesh)
-        END DO
+        ENDDO
 
         ap%zv = zval
         ap%nchan = lmax+1
@@ -280,16 +280,16 @@ contains
         ! WRITE(6,*) ' DEBUG ', ap%lloc, ap%numeric, ap%nbeta, ap%raggio, ap%zv
 
         DO i = 1, mesh
-          r = EXP(xmin+DBLE(i-1)*dx)/zmesh
+          r = exp(xmin+dble(i-1)*dx)/zmesh
           ap%rw(i) = r
           DO j = 1, lmax+1
             ap%vnl(i,j) = vnl(i,j) * fac
-          END DO
-        END DO
-        IF( MINVAL( ap%rw(1:mesh) ) <= 0.0d0 ) THEN
+          ENDDO
+        ENDDO
+        IF( minval( ap%rw(1:mesh) ) <= 0.0d0 ) THEN
            ierr = 5
            RETURN
-        END IF
+        ENDIF
         ap%dx  = dx
         ap%rab = ap%dx * ap%rw
         ap%vloc(:) = ap%vnl(:,ap%lloc)
@@ -302,27 +302,27 @@ contains
 !        fac = 1.0d0/SQRT(fpi)
         fac = 1.0d0
         DO i = 1, mesh
-          r = EXP(xmin+DBLE(i-1)*dx)/zmesh
+          r = exp(xmin+dble(i-1)*dx)/zmesh
           DO j = 1, nwf
             ap%rps(i,j) = chi(i,j) * fac
-          END DO
-        END DO
+          ENDDO
+        ENDDO
 
         DO l = 1, ap%nbeta
           il=ap%lll(l) + 1  ! find out the angular momentum (il-1) of the component stored
                          ! in position l
           DO i = 1, mesh
             ap%vrps(i,l) = ( ap%vnl(i,il) - ap%vloc(i) ) * ap%rps(i,il)
-          END DO
-        END DO
+          ENDDO
+        ENDDO
 
         IF( nlcc ) THEN
           ap%rhoc = 0.0d0
           DO i = 1, mesh
-            r = EXP(xmin+DBLE(i-1)*dx)/zmesh
+            r = exp(xmin+dble(i-1)*dx)/zmesh
             ap%rhoc(i) = rho_core(i)
-          END DO
-        END IF
+          ENDDO
+        ENDIF
 
         RETURN
       END SUBROUTINE read_giannoz
@@ -331,24 +331,24 @@ contains
 
 
       SUBROUTINE ap_info( ap )
-        TYPE (pseudo_ncpp), INTENT(IN) :: ap
+        TYPE (pseudo_ncpp), INTENT(in) :: ap
         INTEGER   :: in1, in2, in3, in4, m, il, ib, l, i
 
         IF (ap%nbeta > 0) THEN
           WRITE(6,10) ap%pottyp
           IF (ap%tmix) THEN
-            WRITE(6,107) 
+            WRITE(6,107)
             WRITE(6,106)  (ap%lll(l),l=1,ap%nbeta)
             WRITE(6,105)  (ap%wgv(l),l=1,ap%nbeta)
           ELSE
             WRITE(6,50) ap%lloc
-          END IF
+          ENDIF
           WRITE(6,60) (ap%lll(l),l=1,ap%nbeta)
         ELSE
 ! ...     A local pseudopotential has been read.
           WRITE(6,11) ap%pottyp
           WRITE(6,50) ap%lloc
-        END IF
+        ENDIF
 
    10   FORMAT(   3X,'Type is ',A10,' and NONLOCAL. ')
   107   FORMAT(   3X,'Mixed reference potential:')
@@ -391,15 +391,15 @@ contains
           DO il=1,3
             DO ib=1,ap%igau
               WRITE(6,103) ap%rcl(ib,il),ap%al(ib,il),ap%bl(ib,il)
-            END DO
-          END DO
+            ENDDO
+          ENDDO
    40     FORMAT(   3X,'Hsc radii and coeff. A and B :')
   103     FORMAT(3X,F8.4,2(3X,F15.7))
 
 
-        END IF
+        ENDIF
 
-        IF( ap%nrps > 0 .AND. ap%mesh > 0 ) THEN
+        IF( ap%nrps > 0 .and. ap%mesh > 0 ) THEN
           WRITE(6,141) ap%nrps, ap%mesh, ap%dx
           in1=1
           in2=ap%mesh/4
@@ -411,7 +411,7 @@ contains
           WRITE(6,120) in2,ap%rw(in2),(ap%rps(in2,m),m=1,ap%nrps)
           WRITE(6,120) in3,ap%rw(in3),(ap%rps(in3,m),m=1,ap%nrps)
           WRITE(6,120) in4,ap%rw(in4),(ap%rps(in4,m),m=1,ap%nrps)
-        END IF
+        ENDIF
 
   141   FORMAT(/, 3X,'Atomic wavefunction Grid : Channels = ',I2,&
                    ', Mesh = ',I5,/,30X,'dx   = ',F16.14)
@@ -429,7 +429,7 @@ contains
           WRITE(6,120) in2,ap%rw(in2),ap%rhoc(in2)
           WRITE(6,120) in3,ap%rw(in3),ap%rhoc(in3)
           WRITE(6,120) in4,ap%rw(in4),ap%rhoc(in4)
-        END IF
+        ENDIF
 
   151   FORMAT(/, 3X,'Core correction Grid     : Mesh = ',I5, &
              ', dx   = ',F16.14)
@@ -441,15 +441,15 @@ contains
 !=----------------------------------------------------------------------------=!
 
       REAL(DP) FUNCTION calculate_dx( a, m )
-        REAL(DP), INTENT(IN) :: a(:)
-        INTEGER, INTENT(IN) :: m 
+        REAL(DP), INTENT(in) :: a(:)
+        INTEGER, INTENT(in) :: m
         INTEGER :: n
-        REAL(DP) :: ra, rb 
-          n = MIN( SIZE( a ), m )
+        REAL(DP) :: ra, rb
+          n = min( size( a ), m )
           ra = a(1)
           rb = a(n)
-          calculate_dx = LOG( rb / ra ) / DBLE( n - 1 )
-          write(6,*) 'amesh (dx) = ', calculate_dx
+          calculate_dx = log( rb / ra ) / dble( n - 1 )
+          WRITE(6,*) 'amesh (dx) = ', calculate_dx
         RETURN
       END FUNCTION calculate_dx
 
@@ -457,12 +457,12 @@ contains
 SUBROUTINE read_atomic_wf( iunit, ap, err_msg, ierr)
   USE parser, ONLY: field_count
   IMPLICIT NONE
-  INTEGER, INTENT(IN) :: iunit
-  TYPE (pseudo_ncpp), INTENT(INOUT) :: ap
-  CHARACTER(LEN=*) :: err_msg
-  INTEGER, INTENT(OUT) :: ierr
+  INTEGER, INTENT(in) :: iunit
+  TYPE (pseudo_ncpp), INTENT(inout) :: ap
+  CHARACTER(len=*) :: err_msg
+  INTEGER, INTENT(out) :: ierr
 !
-  CHARACTER(LEN=80) :: input_line
+  CHARACTER(len=80) :: input_line
   INTEGER :: i, j, m, strlen, info, nf, mesh
   REAL(DP) :: rdum
 
@@ -479,7 +479,7 @@ SUBROUTINE read_atomic_wf( iunit, ap, err_msg, ierr)
 
   ! this is for local pseudopotentials
   IF( ap%nbeta == 0 ) RETURN
-              
+
   READ(iunit,'(A80)',end=100) input_line
   CALL field_count(nf, input_line)
 
@@ -488,40 +488,40 @@ SUBROUTINE read_atomic_wf( iunit, ap, err_msg, ierr)
   IF( nf == 2 ) THEN
     READ(input_line(1:strlen),*,IOSTAT=ierr) mesh, ap%nrps
   ELSE
-    READ(input_line(1:strlen),*,IOSTAT=ierr) mesh, ap%nrps, ( ap%oc(j), j=1, MIN(ap%nrps,SIZE(ap%oc)) )
-  END IF
-  IF( ap%nrps > SIZE(ap%rps,2) ) THEN
-    ierr = 2   
+    READ(input_line(1:strlen),*,IOSTAT=ierr) mesh, ap%nrps, ( ap%oc(j), j=1, min(ap%nrps,size(ap%oc)) )
+  ENDIF
+  IF( ap%nrps > size(ap%rps,2) ) THEN
+    ierr = 2
     WRITE( 6, * ) ' nchan = (wf) ', ap%nrps
     err_msg = ' NCHAN NOT PROGRAMMED '
-    GO TO 110
-  END IF
-  IF( mesh > SIZE(ap%rw) .OR. mesh < 0) THEN
+    GOTO 110
+  ENDIF
+  IF( mesh > size(ap%rw) .or. mesh < 0) THEN
     ierr = 4
     err_msg = ' WAVMESH OUT OF RANGE '
-    GO TO 110
-  END IF
+    GOTO 110
+  ENDIF
 
   DO j = 1, mesh
     READ(iunit,*,IOSTAT=ierr) rdum, (ap%rps(j,m),m=1,ap%nrps)
     IF( ap%mesh == 0 ) ap%rw(j) = rdum
-    IF( ABS(rdum - ap%rw(j))/(rdum+ap%rw(j)) > TOLMESH ) THEN
+    IF( abs(rdum - ap%rw(j))/(rdum+ap%rw(j)) > TOLMESH ) THEN
       ierr = 5
       err_msg = ' radial meshes do not match '
-      GO TO 110
-    END IF
-  END DO
+      GOTO 110
+    ENDIF
+  ENDDO
 
   IF( ap%mesh == 0 ) THEN
     ap%mesh = mesh
     ap%dx = calculate_dx( ap%rw, ap%mesh )
     ap%rab  = ap%dx * ap%rw
-  END IF
+  ENDIF
 
   GOTO 110
 100 ierr = 1
 110 CONTINUE
-  
+
   RETURN
 END SUBROUTINE read_atomic_wf
 
@@ -529,12 +529,12 @@ END SUBROUTINE read_atomic_wf
 
 SUBROUTINE read_numeric_pp( iunit, ap, err_msg, ierr)
   IMPLICIT NONE
-  INTEGER, INTENT(IN) :: iunit
-  TYPE (pseudo_ncpp), INTENT(INOUT) :: ap
-  CHARACTER(LEN=*) :: err_msg
-  INTEGER, INTENT(OUT) :: ierr
+  INTEGER, INTENT(in) :: iunit
+  TYPE (pseudo_ncpp), INTENT(inout) :: ap
+  CHARACTER(len=*) :: err_msg
+  INTEGER, INTENT(out) :: ierr
 !
-  CHARACTER(LEN=80) :: input_line
+  CHARACTER(len=80) :: input_line
   INTEGER :: i, j, m, strlen, info, nf, l, ll
 
 ! ... read numeric atomic pseudopotential
@@ -545,22 +545,22 @@ SUBROUTINE read_numeric_pp( iunit, ap, err_msg, ierr)
 
   IF(ap%tmix) THEN
     READ(iunit,*) (ap%wgv(l),l=1,ap%nbeta)
-  END IF
+  ENDIF
 
   READ(iunit,*,IOSTAT=ierr) ap%zv
   READ(iunit,*,IOSTAT=ierr) ap%mesh, ap%nchan
 
-  IF((ap%nchan > SIZE(ap%vnl,2) ) .OR. (ap%nchan < 1)) THEN
+  IF((ap%nchan > size(ap%vnl,2) ) .or. (ap%nchan < 1)) THEN
     ierr = 1
     WRITE( 6, * ) ' nchan (pp) = ', ap%nchan
     err_msg = ' NCHAN NOT PROGRAMMED '
-    GO TO 110
-  END IF
-  IF((ap%mesh > SIZE(ap%rw) ) .OR. (ap%mesh < 0)) THEN
+    GOTO 110
+  ENDIF
+  IF((ap%mesh > size(ap%rw) ) .or. (ap%mesh < 0)) THEN
     info = 2
     err_msg = ' NPOTMESH OUT OF RANGE '
-    GO TO 110
-  END IF
+    GOTO 110
+  ENDIF
 
   ap%rw = 0.0d0
   ap%vnl = 0.0d0
@@ -568,13 +568,13 @@ SUBROUTINE read_numeric_pp( iunit, ap, err_msg, ierr)
   ap%vrps = 0.0d0
   DO j = 1, ap%mesh
     READ(iunit,*,IOSTAT=ierr) ap%rw(j), (ap%vnl(j,l),l=1,ap%nchan)
-  END DO
+  ENDDO
 
-  IF( MINVAL( ap%rw(1:ap%mesh) ) <= 0.0d0 ) THEN
+  IF( minval( ap%rw(1:ap%mesh) ) <= 0.0d0 ) THEN
     info = 30
     err_msg = ' ap rw too small '
-    GO TO 110
-  END IF
+    GOTO 110
+  ENDIF
 
 ! ...  mixed reference potential is in vr(lloc)
   IF(ap%tmix) THEN
@@ -583,31 +583,31 @@ SUBROUTINE read_numeric_pp( iunit, ap, err_msg, ierr)
       DO l=1,ap%nchan
         IF(l /= ap%lloc) THEN
           ap%vnl(j,ap%lloc)=  ap%vnl(j,ap%lloc) + ap%wgv(l) * ap%vnl(j,l)
-        END IF
-      END DO
-    END DO
-  END IF
+        ENDIF
+      ENDDO
+    ENDDO
+  ENDIF
   ap%vloc(:) = ap%vnl(:,ap%lloc)
   ap%dx = calculate_dx( ap%rw, ap%mesh )
   ap%rab  = ap%dx * ap%rw
 
   CALL read_atomic_wf( iunit, ap, err_msg, ierr)
-  IF( ierr /= 0 ) GO TO 110
+  IF( ierr /= 0 ) GOTO 110
 
   DO l = 1, ap%nbeta
-    ll=ap%lll(l) + 1 
+    ll=ap%lll(l) + 1
     ap%vrps(:,l) = ( ap%vnl(:,ll) - ap%vloc(:) ) * ap%rps(:,ll)
-  END DO
+  ENDDO
 
   IF(ap%tnlcc) THEN
     CALL read_atomic_cc( iunit, ap,  err_msg, ierr)
-    IF( ierr /= 0 ) GO TO 110
-  END IF
+    IF( ierr /= 0 ) GOTO 110
+  ENDIF
 
   GOTO 110
 100 ierr = 1
 110 CONTINUE
-  
+
   RETURN
 END SUBROUTINE read_numeric_pp
 
@@ -615,10 +615,10 @@ END SUBROUTINE read_numeric_pp
 
 SUBROUTINE read_head_pp( iunit, ap, err_msg, ierr)
   IMPLICIT NONE
-  INTEGER, INTENT(IN) :: iunit
-  TYPE (pseudo_ncpp), INTENT(INOUT) :: ap
-  CHARACTER(LEN=*) :: err_msg
-  INTEGER, INTENT(OUT) :: ierr
+  INTEGER, INTENT(in) :: iunit
+  TYPE (pseudo_ncpp), INTENT(inout) :: ap
+  CHARACTER(len=*) :: err_msg
+  INTEGER, INTENT(out) :: ierr
 !
   INTEGER :: i, l
 
@@ -629,44 +629,44 @@ SUBROUTINE read_head_pp( iunit, ap, err_msg, ierr)
 
   ap%lll = 0
   READ(iunit, *) ap%tnlcc, ap%tmix
-  READ(iunit, *) ap%pottyp, ap%lloc, ap%nbeta, (ap%lll(l), l = 1, MIN(ap%nbeta, SIZE(ap%lll)) ) 
+  READ(iunit, *) ap%pottyp, ap%lloc, ap%nbeta, (ap%lll(l), l = 1, min(ap%nbeta, size(ap%lll)) )
 
   ap%lll = ap%lll - 1
 
-  IF( ap%nbeta > SIZE(ap%lll) .OR. ap%nbeta < 0 ) THEN
+  IF( ap%nbeta > size(ap%lll) .or. ap%nbeta < 0 ) THEN
     ierr = 1
     err_msg = 'LNL out of range'
-    GO TO 110
-  END IF
-  IF( ap%lloc < 0 .OR. ap%lloc > SIZE(ap%vnl,2) ) THEN
+    GOTO 110
+  ENDIF
+  IF( ap%lloc < 0 .or. ap%lloc > size(ap%vnl,2) ) THEN
     ierr = 3
     err_msg = 'LLOC out of range'
-    GO TO 110
-  END IF
-  IF( ap%tmix .AND. ap%pottyp /= 'NUMERIC' ) THEN
+    GOTO 110
+  ENDIF
+  IF( ap%tmix .and. ap%pottyp /= 'NUMERIC' ) THEN
     ierr = 4
     err_msg = 'tmix not implemented for pseudo ' // ap%pottyp
-    GO TO 110
-  END IF
+    GOTO 110
+  ENDIF
   DO l = 2, ap%nbeta
     IF( ap%lll(l) <= ap%lll(l-1)) THEN
       ierr = 5
       err_msg =' NONLOCAL COMPONENTS MUST BE GIVEN IN ASCENDING ORDER'
-      GO TO 110
-    END IF
-  END DO
+      GOTO 110
+    ENDIF
+  ENDDO
   DO l = 1, ap%nbeta
     IF( ap%lll(l)+1 == ap%lloc) THEN
       ierr = 6
-      err_msg = ' LLOC.EQ.L NON LOCAL!!' 
-      GO TO 110
-    END IF
-  END DO
+      err_msg = ' LLOC.EQ.L NON LOCAL!!'
+      GOTO 110
+    ENDIF
+  ENDDO
 
   GOTO 110
 100 ierr = 1
 110 CONTINUE
-  
+
   RETURN
 END SUBROUTINE read_head_pp
 
@@ -674,10 +674,10 @@ END SUBROUTINE read_head_pp
 
 SUBROUTINE read_analytic_pp( iunit, ap, err_msg, ierr)
   IMPLICIT NONE
-  INTEGER, INTENT(IN) :: iunit
-  TYPE (pseudo_ncpp), INTENT(INOUT) :: ap
-  CHARACTER(LEN=*) :: err_msg
-  INTEGER, INTENT(OUT) :: ierr
+  INTEGER, INTENT(in) :: iunit
+  TYPE (pseudo_ncpp), INTENT(inout) :: ap
+  CHARACTER(len=*) :: err_msg
+  INTEGER, INTENT(out) :: ierr
 !
   INTEGER :: i, l
 
@@ -688,8 +688,8 @@ SUBROUTINE read_analytic_pp( iunit, ap, err_msg, ierr)
 
   READ(iunit,*,IOSTAT=ierr) ap%zv, ap%igau
 
-  ap%mesh = 0 
-  ap%nchan = 0 
+  ap%mesh = 0
+  ap%nchan = 0
   ap%dx = 0.0d0
   ap%rab  = 0.0d0
   ap%rw   = 0.0d0
@@ -708,22 +708,22 @@ SUBROUTINE read_analytic_pp( iunit, ap, err_msg, ierr)
     CASE DEFAULT
       ierr = 1
       err_msg = ' IGAU NOT PROGRAMMED '
-      GO TO 110
+      GOTO 110
   END SELECT
 
   DO l=1,3
     DO i=1,ap%igau
       READ(iunit,*,IOSTAT=ierr) ap%rcl(i,l), ap%al(i,l), ap%bl(i,l)
-    END DO
-  END DO
+    ENDDO
+  ENDDO
 
   CALL read_atomic_wf( iunit, ap, err_msg, ierr)
-  IF( ierr /= 0 ) GO TO 110
+  IF( ierr /= 0 ) GOTO 110
 
   IF(ap%tnlcc) THEN
     CALL read_atomic_cc( iunit, ap, err_msg, ierr)
-    IF( ierr /= 0 ) GO TO 110
-  END IF
+    IF( ierr /= 0 ) GOTO 110
+  ENDIF
 
 ! ... Analytic pseudo are not supported anymore, conversion
 ! ... to numeric form is forced
@@ -732,7 +732,7 @@ SUBROUTINE read_analytic_pp( iunit, ap, err_msg, ierr)
   GOTO 110
 100 ierr = 1
 110 CONTINUE
-  
+
   RETURN
 END SUBROUTINE read_analytic_pp
 
@@ -741,12 +741,12 @@ END SUBROUTINE read_analytic_pp
 
 SUBROUTINE read_atomic_cc( iunit, ap, err_msg, ierr)
   IMPLICIT NONE
-  INTEGER, INTENT(IN) :: iunit
-  TYPE (pseudo_ncpp), INTENT(INOUT) :: ap
-  CHARACTER(LEN=*) :: err_msg
-  INTEGER, INTENT(OUT) :: ierr
+  INTEGER, INTENT(in) :: iunit
+  TYPE (pseudo_ncpp), INTENT(inout) :: ap
+  CHARACTER(len=*) :: err_msg
+  INTEGER, INTENT(out) :: ierr
 !
-  CHARACTER(LEN=80) :: input_line
+  CHARACTER(len=80) :: input_line
   INTEGER :: j, mesh
   REAL(DP) :: rdum
 
@@ -758,41 +758,41 @@ SUBROUTINE read_atomic_cc( iunit, ap, err_msg, ierr)
   ap%rhoc = 0.0d0
 
   READ(iunit,*,IOSTAT=ierr) mesh
-  IF(mesh > SIZE(ap%rw) .OR. mesh < 0 ) THEN
+  IF(mesh > size(ap%rw) .or. mesh < 0 ) THEN
     ierr = 17
     err_msg = '  CORE CORRECTION MESH OUT OF RANGE '
-    GO TO 110
-  END IF
+    GOTO 110
+  ENDIF
   DO j = 1, mesh
     READ(iunit,*,IOSTAT=ierr) rdum, ap%rhoc(j)
     IF( ap%mesh == 0 ) ap%rw(j) = rdum
-    IF( ABS(rdum - ap%rw(j))/(rdum+ap%rw(j)) > TOLMESH ) THEN
+    IF( abs(rdum - ap%rw(j))/(rdum+ap%rw(j)) > TOLMESH ) THEN
       ierr = 5
       err_msg = ' core cor. radial mesh does not match '
-      GO TO 110
-    END IF
-  END DO
+      GOTO 110
+    ENDIF
+  ENDDO
 
   IF( ap%mesh == 0 ) THEN
     ap%mesh = mesh
     ap%dx = calculate_dx( ap%rw, ap%mesh )
     ap%rab  = ap%dx * ap%rw
-  END IF
+  ENDIF
 
   GOTO 110
 100 ierr = 1
 110 CONTINUE
-  
+
   RETURN
 END SUBROUTINE read_atomic_cc
 
 
-end module fpmd2upf_module
+END MODULE fpmd2upf_module
 
 
 
 
-program fpmd2upf
+PROGRAM fpmd2upf
 
   !
   !     Convert a pseudopotential written in the FPMD format
@@ -807,39 +807,39 @@ program fpmd2upf
   IMPLICIT NONE
 
   TYPE (pseudo_ncpp) :: ap
-  CHARACTER(LEN=256) :: psfile
-  CHARACTER(LEN=2)   :: wfl( 10 )
+  CHARACTER(len=256) :: psfile
+  CHARACTER(len=2)   :: wfl( 10 )
   REAL(8)       :: wfoc( 10 )
   INTEGER :: nsp, nspnl, i, lloc, l, ir, iv, kkbeta
   REAL(8) :: rmax = 10
   REAL(8) :: vll
-  REAL(8), allocatable :: aux(:)
+  REAL(8), ALLOCATABLE :: aux(:)
 
-  namelist / fpmd_pseudo / psfile, nwfs, wfl, wfoc, psd, &
+  NAMELIST / fpmd_pseudo / psfile, nwfs, wfl, wfoc, psd, &
                            iexch, icorr, igcx, igcc, zp
 
   ! ... end of declarations
 
-  call input_from_file()
+  CALL input_from_file()
 
-  read( 5, fpmd_pseudo )
+  READ( 5, fpmd_pseudo )
 
   nsp = 1
   CALL read_pseudo_fpmd(ap, psfile)
 
-  write(generated, '("Generated using unknown code")')
-  write(date_author,'("Author: unknown    Generation date: as well")')
+  WRITE(generated, '("Generated using unknown code")')
+  WRITE(date_author,'("Author: unknown    Generation date: as well")')
   comment = 'Info: automatically converted from CPMD format'
 
   rcloc = 0.0d0
 
-  allocate( els(nwfs), oc(nwfs), epseu(nwfs) )
-  allocate( lchi(nwfs), nns(nwfs) )
-  allocate( rcut (nwfs), rcutus (nwfs) )
+  ALLOCATE( els(nwfs), oc(nwfs), epseu(nwfs) )
+  ALLOCATE( lchi(nwfs), nns(nwfs) )
+  ALLOCATE( rcut (nwfs), rcutus (nwfs) )
 
-  els = '?' 
+  els = '?'
   oc  = 0.0d0
-  do i = 1, nwfs
+  DO i = 1, nwfs
      els(i)   = wfl(i)
      oc(i)    = wfoc(i)
      lchi(i)  = i - 1
@@ -847,110 +847,110 @@ program fpmd2upf
      rcut(i)  = 0.0d0
      rcutus(i)= 0.0d0
      epseu(i) = 0.0d0
-  end do
+  ENDDO
 
   pseudotype = 'NC'
   nlcc       = ap%tnlcc
-  if( ap%zv > 0.0d0 ) zp = ap%zv
+  IF( ap%zv > 0.0d0 ) zp = ap%zv
   etotps     = 0.0d0
 
-  lloc  = ap%lloc 
-  lmax  = MAX( MAXVAL( ap%lll( 1:ap%nbeta ) ), ap%lloc - 1 )
+  lloc  = ap%lloc
+  lmax  = max( maxval( ap%lll( 1:ap%nbeta ) ), ap%lloc - 1 )
 
   nbeta = ap%nbeta
   mesh  = ap%mesh
   ntwfc = nwfs
-  allocate( elsw(ntwfc), ocw(ntwfc), lchiw(ntwfc) )
-  do i = 1, nwfs
+  ALLOCATE( elsw(ntwfc), ocw(ntwfc), lchiw(ntwfc) )
+  DO i = 1, nwfs
      lchiw(i) = lchi(i)
      ocw(i)   = oc(i)
      elsw(i)  = els(i)
-  end do
+  ENDDO
 
-  allocate(rab(mesh))
-  allocate(  r(mesh))
+  ALLOCATE(rab(mesh))
+  ALLOCATE(  r(mesh))
   r   = ap%rw
   ap%dx = calculate_dx( ap%rw, ap%mesh )
   rab = ap%rw * ap%dx
 
-  write(6,*) ap%lloc, ap%lll( 1:ap%nbeta ) , ap%nbeta, ap%dx
+  WRITE(6,*) ap%lloc, ap%lll( 1:ap%nbeta ) , ap%nbeta, ap%dx
 
-  allocate (rho_atc(mesh))
-  if (nlcc) rho_atc = ap%rhoc
+  ALLOCATE (rho_atc(mesh))
+  IF (nlcc) rho_atc = ap%rhoc
 
-  allocate (vloc0(mesh))
+  ALLOCATE (vloc0(mesh))
   ! the factor 2 converts from Hartree to Rydberg
   vloc0(:) = ap%vloc * 2.0d0
 
-  if (nbeta > 0) then
+  IF (nbeta > 0) THEN
 
-     allocate(ikk2(nbeta), lll(nbeta))
+     ALLOCATE(ikk2(nbeta), lll(nbeta))
      kkbeta = mesh
-     do ir = 1,mesh
-        if ( r(ir) > rmax ) then
+     DO ir = 1,mesh
+        IF ( r(ir) > rmax ) THEN
            kkbeta=ir
            exit
-        end if
-     end do
+        ENDIF
+     ENDDO
      ikk2(:) = kkbeta
-     allocate(aux(kkbeta))
-     allocate(betar(mesh,nbeta))
-     allocate(qfunc(mesh,nbeta,nbeta))
-     allocate(dion(nbeta,nbeta))
-     allocate(qqq (nbeta,nbeta))
+     ALLOCATE(aux(kkbeta))
+     ALLOCATE(betar(mesh,nbeta))
+     ALLOCATE(qfunc(mesh,nbeta,nbeta))
+     ALLOCATE(dion(nbeta,nbeta))
+     ALLOCATE(qqq (nbeta,nbeta))
      qfunc(:,:,:)=0.0d0
      dion(:,:) =0.d0
      qqq(:,:)  =0.d0
      iv = 0
-     do i = 1, nwfs
+     DO i = 1, nwfs
         l = lchi(i)
-        if ( l .ne. (lloc-1) ) then
+        IF ( l /= (lloc-1) ) THEN
            iv = iv + 1
            lll( iv ) = l
-           do ir = 1, kkbeta
+           DO ir = 1, kkbeta
               ! the factor 2 converts from Hartree to Rydberg
               betar(ir, iv) = 2.d0 * ap%vrps( ir, iv )
               aux(ir) = ap%rps(ir, (l+1) ) * betar(ir, iv)
-           end do
-           call simpson2(kkbeta, aux(1), rab(1), vll)
+           ENDDO
+           CALL simpson2(kkbeta, aux(1), rab(1), vll)
            dion(iv,iv) = 1.0d0/vll
-           write(6,*) aux(2), rab(2), kkbeta, vll
-        end if
-     enddo
+           WRITE(6,*) aux(2), rab(2), kkbeta, vll
+        ENDIF
+     ENDDO
 
-  end if
+  ENDIF
 
-  allocate (rho_at(mesh))
+  ALLOCATE (rho_at(mesh))
   rho_at = 0.d0
-  do i = 1, nwfs
+  DO i = 1, nwfs
      rho_at(:) = rho_at(:) + ocw(i) * ap%rps(:, i) ** 2
-  end do
+  ENDDO
 
-  allocate (chi(mesh,ntwfc))
+  ALLOCATE (chi(mesh,ntwfc))
   chi = ap%rps
   !     ----------------------------------------------------------
-  write (6,'(a)') 'Pseudopotential successfully converted'
+  WRITE (6,'(a)') 'Pseudopotential successfully converted'
   !     ----------------------------------------------------------
 
-  call write_upf( 10 )
+  CALL write_upf( 10 )
 
-100 continue
+100 CONTINUE
 
-end program fpmd2upf
+END PROGRAM fpmd2upf
 
 
 
 !----------------------------------------------------------------------
-subroutine simpson2(mesh,func,rab,asum)
+SUBROUTINE simpson2(mesh,func,rab,asum)
   !-----------------------------------------------------------------------
 !
   !     simpson's rule integrator for function stored on the
   !     radial logarithmic mesh
   !
 
-  implicit none
+  IMPLICIT NONE
 
-  integer :: i, mesh
+  INTEGER :: i, mesh
   real(8) ::  rab(mesh), func(mesh), f1, f2, f3, r12, asum
 
       !     routine assumes that mesh is an odd number so run check
@@ -964,15 +964,15 @@ subroutine simpson2(mesh,func,rab,asum)
   r12 = 1.0d0 / 12.0d0
   f3  = func(1) * rab(1) * r12
 
-  do i = 2,mesh-1,2
+  DO i = 2,mesh-1,2
      f1 = f3
      f2 = func(i) * rab(i) * r12
      f3 = func(i+1) * rab(i+1) * r12
      asum = asum + 4.0d0*f1 + 16.0d0*f2 + 4.0d0*f3
-  enddo
+  ENDDO
 
-  return
-end subroutine simpson2
+  RETURN
+END SUBROUTINE simpson2
 
 
 
