@@ -4,7 +4,8 @@ Incompatible changes in CVS version:
 
 Fixed in version 4.2.1:
 
-  * Support for MKL incomplete (only in packaged version, not in cvs)
+  * not sure cpmd2upf converter was working in all cases - now it should
+  * support for MKL incomplete (only in packaged version, not in cvs)
   * glitch in pw2wannier if / missing at the end of outdir
   * linking error when compiling qexml
   * misc problems in plotband.f90

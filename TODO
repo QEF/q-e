@@ -5,13 +5,15 @@ TODO LIST - May 2010
   0.2  "image" parallelization in CP
   0.3  projwfc in CP doesn't work for spin polarized case
   0.4  CP doesn't read PW files in spin polarized case
+  0.5  Weird spin-polarized results: fixed occupancy yields different
+       results from smearing even in cases where there is no obvious
+       difference
 
 1) Organization
 
 1.1 www.quantum-espresso.org:
   1.1.1 update home page picture and sample applications
   1.1.2 pseudopotential upload facility: to be checked
-  1.1.3 update tools, links on the left columns 
 1.2 Wiki:
   1.2.1 what is left now: list of papers, bibliography, misc stuff.
         The list of papers should be replaced by a query to some
@@ -20,6 +22,7 @@ TODO LIST - May 2010
   1.3.1 no pseudopotentials in CVS any longer
   1.3.2 only general-purpose modules in Modules/
   1.3.3 move to subversion
+  1.3.4 run source-normalizer script dev-tools/src-normal
 1.4 mailing lists:
   1.4.1 add somewhere instructions on netiquette and how to post 
   1.4.2 move to qe-forge
@@ -71,12 +74,15 @@ TODO LIST - May 2010
   4.1.6 electron-phonon with Wannier stuff
   4.1.7 G-space symmetrization also for phonons
   4.1.8 bio-oriented stuff (QM-MM, Solvent Models, PCM)
+  4.1.9 Wannier-based exact-exchange in CP
 
 4.2 Small new developments, desirable or to be added:
   4.2.1 configure issues:
         - ifort+acml
         - add search for -lfftw3xf_intel 
         - remove obsolete stuff: next is macppc
+        - arguments containig spaces: the wrapper doessn't like them
+        - BlueGene: general approach vs suport for specific machines
   4.2.2 constraints should be implemented in all cases, or else, the
         documentation should be more explicit on what works and what doesn't
         Also: add check if constraints break the symmetry
@@ -155,7 +161,8 @@ TODO LIST - May 2010
   4.3.5 D3: verify status of parallelization, clean it up if needed
 
 4.4 Cleanup
-  4.4.0 Complete the removal of old metadynamics stuff
+  4.4.0 Complete the removal of old metadynamics stuff (or leave it for
+        good if actually useful)
   4.4.1 Increase modularization by 
         - collecting variables and routines acting on those variables
           into modules
@@ -178,6 +185,7 @@ TODO LIST - May 2010
         allocation: see recent GIPAW workaround for an example of
         allocation confusion (qnorm, cell_factor in allocate_nlpot)
   4.4.4 More PW/CP merge:
+        - lda+U modules
         - "cell_base_init" from CP to PW
         - "cellmd" module of PW and "cell_base" of CPV
         - PW "real-space" approach / CP "small boxes" 
@@ -251,7 +259,8 @@ TODO LIST - May 2010
      This is especially serious for PH, D3 etc
  5.2 The "buffer" trick to keep wfc in memory wasn't such a great idea 
      after all: a better approach would be to have a k-point index
- 5.3 Distributed read/write of wavefunctions for CP as well
+ 5.3 Distributed read/write of wavefunctions for CP: move needed
+     functions into Modules/, remove dependence upon PW (see also 5.1)
  5.4 Many inconsistencies between PW and CP in the XML file format
      (and inconsistencies with the documentation)
  5.5 Use qexml for xml file processing so that a single, easily
