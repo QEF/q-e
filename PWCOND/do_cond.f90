@@ -20,8 +20,8 @@ SUBROUTINE do_cond(done)
   USE spin_orb,   ONLY : lspinorb
   USE uspp,       ONLY: okvan
   USE symm_base,  ONLY: nsym, s, t_rev, time_reversal
+  USE io_files,   ONLY: outdir, tmp_dir, prefix,  trimcheck
   USE cond 
-  USE io_files 
   !!! RECOVER
   USE cond_restart
   USE input_parameters, ONLY: max_seconds

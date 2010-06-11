@@ -17,11 +17,12 @@ MODULE cond_restart
   !
   USE kinds,     ONLY : DP
   USE xml_io_base, ONLY : create_directory, write_header, attr
-  USE io_files,  ONLY : tmp_dir, tran_prefix, tk_file, xmlpun, iunpun, &
-                        qexml_version, qexml_version_init
+  USE io_files,  ONLY : tmp_dir, xmlpun, iunpun, qexml_version, &
+       qexml_version_init
   USE io_global, ONLY : ionode, ionode_id
   USE mp_global, ONLY : intra_image_comm
   USE mp,        ONLY : mp_bcast
+  USE cond_files,  ONLY : tran_prefix, tk_file
   !
   IMPLICIT NONE
   !

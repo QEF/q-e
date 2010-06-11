@@ -15,14 +15,13 @@ subroutine save_cond (lwrite, lsr, ef, nrz, nocros, noins,  &
   USE parameters, only : npsx
   use radial_grids, only: ndmx
   USE cell_base, ONLY : alat, tpiba, tpiba2, at, bg
-  use io_files, only : save_file
   use lsda_mod, only: nspin
   USE noncollin_module, ONLY : noncolin, npol
   use spin_orb, only : lspinorb
   use cond, only : sarea, nrx, nry, norbf, tblml, crosl, taunewl, &
      zpseul, zpseul_nc, zl, vppotl, tblms, cross, taunews, zpseus,&
      zpseus_nc, zs, vppots, tblmr, crosr, taunewr, zpseur,        &
-     zpseur_nc, zr, vppotr, iofspin, nbrx
+     zpseur_nc, zr, vppotr, iofspin, nbrx, save_file
       
 
   implicit none 

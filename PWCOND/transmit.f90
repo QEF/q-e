@@ -14,11 +14,11 @@ subroutine transmit(ik, ien, tk_out, left_to_right)
 ! the scattering region.
 !
   use io_global,  ONLY :  stdout
-  use io_files,  ONLY :  prefixl, prefixs
+  use cond_files,  ONLY :  prefixl, prefixs
   use lsda_mod, only: nspin
   use noncollin_module, ONLY : noncolin, npol
   use spin_orb, only : lspinorb
-  use cond
+ use cond
 implicit none
 
   integer, intent(in) :: ik, ien

@@ -219,6 +219,24 @@ MODULE cb_cond
   !
 END MODULE cb_cond
 !
+MODULE cond_files
+  !
+  ! ... File names
+  !
+  SAVE
+  !
+  CHARACTER(LEN=256) :: band_file = ' '
+  CHARACTER(LEN=256) :: tran_file = ' '   !
+  CHARACTER(LEN=256) :: save_file = ' '   !
+  CHARACTER(LEN=256) :: prefixt   = ' '
+  CHARACTER(LEN=256) :: prefixl   = ' '
+  CHARACTER(LEN=256) :: prefixs   = ' '
+  CHARACTER(LEN=256) :: prefixr   = ' '
+  CHARACTER(LEN=256) :: tran_prefix = ' '  !  prefix for restart directory
+  CHARACTER(LEN=12), PARAMETER :: tk_file = 'transmission'
+  CHARACTER(LEN=256) :: fil_loc = ' '      !  file with 2D eigenvectors and eigenvalues
+  !
+END MODULE cond_files
 !
 MODULE cond
   use geomcell_cond
@@ -227,5 +245,6 @@ MODULE cond
   USE control_cond
   USE scattnl_cond
   USE cb_cond
+  USE cond_files
 END MODULE cond               
 

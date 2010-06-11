@@ -10,8 +10,7 @@ subroutine summary_tran()
 ! It writes transmission coefficients onto the file tran_file
 !
   USE kinds, only : DP
-  USE io_files, ONLY : tran_file
-  USE cond, ONLY : nenergy, earr, start_e, last_e, tran_tot
+  USE cond, ONLY : nenergy, earr, start_e, last_e, tran_tot, tran_file
   implicit none
 
   integer ::  i

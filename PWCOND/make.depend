@@ -57,7 +57,6 @@ gep_x.o : condcom.o
 gramsh.o : ../Modules/kind.o
 hev_ab.o : ../Modules/kind.o
 init_cond.o : ../Modules/atom.o
-init_cond.o : ../Modules/io_files.o
 init_cond.o : ../Modules/io_global.o
 init_cond.o : ../Modules/ions_base.o
 init_cond.o : ../Modules/kind.o
@@ -129,7 +128,6 @@ rotproc.o : ../Modules/parallel_include.o
 rotproc.o : ../PW/noncol.o
 rotproc.o : condcom.o
 save_cond.o : ../Modules/cell_base.o
-save_cond.o : ../Modules/io_files.o
 save_cond.o : ../Modules/kind.o
 save_cond.o : ../Modules/parameters.o
 save_cond.o : ../Modules/radial_grids.o
@@ -158,17 +156,14 @@ scatter_forw.o : ../Modules/parameters.o
 scatter_forw.o : ../Modules/radial_grids.o
 scatter_forw.o : ../PW/noncol.o
 scatter_forw.o : condcom.o
-summary_band.o : ../Modules/io_files.o
 summary_band.o : ../Modules/io_global.o
 summary_band.o : ../PW/noncol.o
 summary_band.o : ../PW/pwcom.o
 summary_band.o : condcom.o
-summary_tran.o : ../Modules/io_files.o
 summary_tran.o : ../Modules/kind.o
 summary_tran.o : condcom.o
 sunitary.o : ../Modules/io_global.o
 sunitary.o : ../Modules/kind.o
-transmit.o : ../Modules/io_files.o
 transmit.o : ../Modules/io_global.o
 transmit.o : ../PW/noncol.o
 transmit.o : ../PW/pwcom.o

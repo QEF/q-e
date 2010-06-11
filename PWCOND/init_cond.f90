@@ -18,7 +18,6 @@ subroutine init_cond (nregion, flag)
 !
   USE io_global, ONLY : stdout
   USE pwcom
-  USE io_files, ONLY : save_file
   USE noncollin_module, ONLY : noncolin, npol
   USE uspp_param, ONLY : upf, nbetam
   USE atom, ONLY: rgrid

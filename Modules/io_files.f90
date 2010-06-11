@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2005 Quantum ESPRESSO group
+! Copyright (C) 2002-2010 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -23,7 +23,6 @@ MODULE io_files
   CHARACTER(len=6)   :: nd_nmbr = '000000'        ! node number (used only in parallel case)
   CHARACTER(len=256) :: pseudo_dir = './'
   CHARACTER(len=256) :: psfile( ntypx ) = 'UPF'
-  CHARACTER(len=256) :: scradir = './'
   CHARACTER(len=256) :: outdir  = './'
   !
   CHARACTER(len=256) :: qexml_version = ' '       ! the format of the current qexml datafile 
@@ -32,16 +31,6 @@ MODULE io_files
   CHARACTER(LEN=256) :: input_drho = ' '          ! name of the file with the input drho
   CHARACTER(LEN=256) :: output_drho = ' '         ! name of the file with the output drho
   !
-  CHARACTER(LEN=256) :: band_file = ' '
-  CHARACTER(LEN=256) :: tran_file = ' '
-  CHARACTER(LEN=256) :: prefixt   = ' '
-  CHARACTER(LEN=256) :: prefixl   = ' '
-  CHARACTER(LEN=256) :: prefixs   = ' '
-  CHARACTER(LEN=256) :: prefixr   = ' '
-  CHARACTER(LEN=256) :: save_file = ' '
-  CHARACTER(LEN=256) :: tran_prefix = ' '  !  prefix for restart directory
-  CHARACTER(LEN=12), PARAMETER :: tk_file = 'transmission'
-  CHARACTER(LEN=256) :: fil_loc = ' '      !  file with 2D eigenvectors and eigenvalues
   !
   CHARACTER(LEN=14), PARAMETER :: rho_name      = 'CHARGE_DENSITY'
   CHARACTER(LEN=17), PARAMETER :: rho_name_up   = 'CHARGE_DENSITY.UP'
@@ -118,17 +107,6 @@ MODULE io_files
   INTEGER :: iunaxsf     = 2025 ! unit for saving coordinates ( axsf format )
   INTEGER :: iunbroy     = 2026 ! unit for saving broyden's history
   INTEGER :: iuncrd      = 2027 ! unit for saving coordinates in pw.x input format
-  !
-  ! ... meta-dynamics
-  !
-  INTEGER :: iunmeta     = 77 ! unit for saving meta-dynamics history
-  !
-  ! ... Y. Kanai combined smd/cp method
-  !
-  INTEGER :: smwout      = 20 ! base value to compute index for replica files
-  !
-  INTEGER :: vib_out     = 20 ! output of phrozen phonon vibrational calculation
-  INTEGER :: vib_mass    = 21 ! isotope masses used for the dynamical matrix
   !
   !... finite electric field (Umari)
   !

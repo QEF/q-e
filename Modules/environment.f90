@@ -126,7 +126,7 @@ CONTAINS
     !
     WRITE( stdout, '(/5X,"This program is part of the open-source Quantum ",&
          &    "ESPRESSO suite", &
-         &/5X,"for quantum simulation of materials; please acknowledge",   &
+         &/5X,"for quantum simulation of materials; please cite",   &
          &/9X,"""P. Giannozzi et al., J. Phys.:Condens. Matter 21 ",&
          &    "395502 (2009);", &
          &/9X," URL http://www.quantum-espresso.org"", ", &
