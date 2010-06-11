@@ -22,6 +22,7 @@ PROGRAM pw2gw
   USE mp,         ONLY : mp_bcast
   USE mp_global,  ONLY : kunit, nproc, mp_startup
   USE environment,ONLY : environment_start
+  USE us,         ONLY : spline_ps        
   !
   IMPLICIT NONE
   INTEGER :: ios
@@ -65,9 +66,13 @@ PROGRAM pw2gw
   CALL mp_bcast( what, ionode_id )
   CALL mp_bcast( use_gmaps, ionode_id )
   !
+
+  spline_ps = .false.
+
   CALL read_file
   CALL openfil_pp
   !
+  CALL mp_bcast(spline_ps, ionode_id)
 #if defined __PARA
   kunittmp = kunit
 #else
@@ -112,6 +117,12 @@ SUBROUTINE compute_gw( use_gmaps )
   USE scf,       ONLY : rho, rho_core, rhog_core
   USE ener,      ONLY : etxc, vtxc
 
+  USE uspp_param, ONLY : upf, nh
+  USE uspp,       ONLY : nhtol
+  USE us,         ONLY : tab, tab_d2y, spline_ps
+  USE ions_base,  ONLY : ntyp => nsp
+  USE klist,      ONLY : ngk
+
   IMPLICIT NONE
 
   LOGICAL, INTENT(IN) :: use_gmaps
@@ -141,6 +152,10 @@ SUBROUTINE compute_gw( use_gmaps )
   INTEGER :: igwx, igwxx, comm, ierr, ig_max, igwx_r
   INTEGER :: igwx_p(nproc)
   INTEGER, ALLOCATABLE :: igk_l2g(:)
+  !
+  REAL(kind=DP), allocatable :: vkb0(:), djl(:), vec_tab(:), vec_tab_d2y(:)
+  INTEGER :: nb, nt, size_tab, size_tab_d2y, ipw, l
+  !
   ! REAL(kind=DP) :: norma ! Variable needed only for DEBUG
   !
 #if defined __PARA
@@ -418,6 +433,93 @@ SUBROUTINE compute_gw( use_gmaps )
      ENDIF
      WRITE(6,'(1x,3f10.6)') ( (xk_s(i,ik),i=1,3), ik=1,nkpt)
   ENDIF
+! --------------------------
+! vkb0
+! --------------------------
+  do ik=1,nkpt
+    npw = ngk(ik)
+    write(15,*) "npw", npw
+    allocate(vkb0(1:npw))
+
+    size_tab=size(tab,1)
+    size_tab_d2y=size(tab_d2y,1)
+
+    allocate(vec_tab(1:size_tab))
+    if(spline_ps) allocate(vec_tab_d2y(1:size_tab_d2y))
+    do nt = 1, ntyp
+      do nb = 1, upf(nt)%nbeta
+        vkb0(:) = 0.0_dp
+        vec_tab(:) = 0.0_dp
+        if(spline_ps) vec_tab_d2y(:) = 0.0_dp
+        vec_tab(:) = tab(:,nb,nt)
+        if(spline_ps) then
+          write(0,*) "size vec_tab_d2y", size(vec_tab_d2y,1)
+          write(0,*) "size tab_d2y", size(tab_d2y,1)
+          vec_tab_d2y(:) = tab_d2y(:,nb,nt)
+          call gen_us_vkb0(ik,npw,vkb0,size_tab,vec_tab,spline_ps,vec_tab_d2y)
+        else
+          call gen_us_vkb0(ik,npw,vkb0,size_tab,vec_tab,spline_ps)
+        endif
+        WRITE(15,*) "---------------DEBUG-VKB0----------------------"
+        WRITE(15,*) "ik= ", ik
+        WRITE(15,*) "nt= ", nt
+        WRITE(15,*) "nb= ", nb
+        WRITE(15,*) "l= ", upf(nt)%lll(nb)
+        WRITE (15,'(8f15.9)') vkb0
+        WRITE(15,*) "--------------END-DEBUG------------------------"
+!        WRITE(io) vkb0 
+      enddo
+    enddo
+
+   deallocate(vkb0)
+   deallocate(vec_tab)
+   if(spline_ps)  deallocate(vec_tab_d2y)
+
+  enddo
+!---------------------------
+! djl
+!---------------------------
+  do ik=1,nkpt
+    npw = ngk(ik)
+    
+    allocate(djl(1:npw))
+
+    size_tab=size(tab,1)
+    size_tab_d2y=size(tab_d2y,1)
+
+    allocate(vec_tab(1:size_tab))
+    if(spline_ps) allocate(vec_tab_d2y(1:size_tab_d2y))
+    do nt = 1, ntyp
+      do nb = 1, upf(nt)%nbeta
+        djl(:) = 0.0_dp
+        vec_tab(:) = 0.0_dp
+        if(spline_ps) vec_tab_d2y(:) = 0.0_dp
+        vec_tab(:) = tab(:,nb,nt)
+        if(spline_ps) then
+          vec_tab_d2y(:) = tab_d2y(:,nb,nt)
+          call gen_us_djl(ik,npw,djl,size_tab,vec_tab,spline_ps,vec_tab_d2y)
+        else
+          call gen_us_djl(ik,npw,djl,size_tab,vec_tab,spline_ps)
+        endif
+!        WRITE(0,*) "---------------DEBUG-----------------------"
+!        WRITE(0,*) "spline: ", spline_ps
+!        WRITE(0,*) "ik= ", ik
+!        WRITE(0,*) "nt= ", nt
+!        WRITE(0,*) "nb= ", nb
+!        WRITE(0,*) "l= ", upf(nt)%lll(nb)
+!        WRITE (0,'(8f15.9)') djl
+!        WRITE(0,*) "--------------END-DEBUG------------------------"
+!        WRITE(io) djl 
+      enddo
+    enddo
+
+   deallocate(djl)
+   deallocate(vec_tab)
+   if(spline_ps)  deallocate(vec_tab_d2y)
+
+  enddo
+!-----------------------
+!-----------------------
 
   !
   !  WRITE energies (Hartrees) (in ascending order, hopefully they are ordered)
