@@ -90,6 +90,8 @@ gen_at_dj.o \
 gen_at_dy.o \
 gen_us_dj.o \
 gen_us_dy.o \
+gen_us_vkb0.o \
+gen_us_djl.o \
 get_locals.o \
 ggen.o \
 gk_sort.o \
