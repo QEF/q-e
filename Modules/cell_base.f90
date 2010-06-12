@@ -87,8 +87,7 @@
 
         INTEGER   :: iforceh(3,3) = 1  ! if iforceh( i, j ) = 0 then h( i, j ) 
                                        ! is not allowed to move
-        LOGICAL   :: thdiag = .FALSE.  ! True if only cell diagonal elements 
-                                       ! should be updated
+        LOGICAL   :: fix_volume = .FALSE.  ! True if cell volume is kept fixed
 
         REAL(DP) :: wmass = 0.0_DP     ! cell fictitious mass
         REAL(DP) :: press = 0.0_DP     ! external pressure 
@@ -632,11 +631,13 @@ END FUNCTION saw
 
      CHARACTER(LEN=*), INTENT(IN) :: cell_dofree
 
-     thdiag = .false.
      SELECT CASE ( TRIM( cell_dofree ) )
 
-            CASE ( 'all', 'default', 'shape' )
+            CASE ( 'all', 'default' )
               iforceh = 1
+            CASE ( 'shape' )
+              iforceh = 1
+              fix_volume = .true.
             CASE ( 'volume' )
               CALL errore(' init_dofree ', &
                  ' cell_dofree = '//TRIM(cell_dofree)//' not yet implemented ', 1 )
@@ -662,7 +663,6 @@ END FUNCTION saw
               iforceh(2,2) = 1
               iforceh(3,3) = 1
             CASE ('xyz')
-              thdiag       = .true.
               iforceh      = 0
               iforceh(1,1) = 1
               iforceh(2,2) = 1

@@ -12,7 +12,7 @@ subroutine stress
   !
   USE io_global,     ONLY : stdout
   USE kinds,         ONLY : DP
-  USE cell_base,     ONLY : omega, alat, at, bg
+  USE cell_base,     ONLY : omega, alat, at, bg, fix_volume
   USE ions_base,     ONLY : nat, ntyp => nsp, ityp, tau, zv
   USE constants,     ONLY : uakbar
   USE ener,          ONLY : etxc, vtxc
@@ -29,7 +29,6 @@ subroutine stress
   USE bp,            ONLY : lelfield
   USE uspp,          ONLY : okvan
   USE london_module, ONLY : stres_london
-  USE input_parameters,       ONLY : cell_dofree
 #ifdef EXX
   USE exx,           ONLY : exx_stress
   USE funct,         ONLY : dft_is_hybrid, exx_is_active
@@ -142,7 +141,7 @@ subroutine stress
 
   CALL symmatrix ( sigma )
 
-  if (cell_dofree == 'shape') then
+  if (fix_volume) then
       WRITE(stdout,9001) (sigma(1,1) + sigma(2,2) + sigma(3,3)) * uakbar / 3d0
       WRITE(stdout,*)
       call impose_deviatoric_stress(sigma)

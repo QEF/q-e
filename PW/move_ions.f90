@@ -22,7 +22,7 @@ SUBROUTINE move_ions()
   USE io_global,              ONLY : stdout
   USE io_files,               ONLY : tmp_dir, iunupdate
   USE kinds,                  ONLY : DP
-  USE cell_base,              ONLY : alat, at, bg, omega, cell_force
+  USE cell_base,              ONLY : alat, at, bg, omega, cell_force, fix_volume
   USE cellmd,                 ONLY : omega_old, at_old, press, lmovecell, calc
   USE ions_base,              ONLY : nat, ityp, tau, if_pos
   USE gvect,                  ONLY : nr1, nr2, nr3
@@ -32,7 +32,6 @@ SUBROUTINE move_ions()
   USE control_flags,          ONLY : istep, nstep, upscale, lbfgs, ldamped, &
                                      lconstrain, lcoarsegrained, conv_ions, &
                                      lmd, llang, history, tr2
-  USE input_parameters,       ONLY : cell_dofree
   USE relax,                  ONLY : epse, epsf, epsp, starting_scf_threshold
   USE lsda_mod,               ONLY : lsda, absmag
   USE metadyn_base,           ONLY : set_target, mean_force
@@ -146,7 +145,7 @@ SUBROUTINE move_ions()
         !
         IF ( lmovecell ) THEN
            ! changes needed only if cell moves
-           if (cell_dofree == 'shape') call impose_deviatoric_strain(alat*at, h)
+           if (fix_volume) call impose_deviatoric_strain(alat*at, h)
            at = h /alat  
            CALL recips( at(1,1),at(1,2),at(1,3), bg(1,1),bg(1,2),bg(1,3) )
            CALL volume( alat, at(1,1), at(1,2), at(1,3), omega )

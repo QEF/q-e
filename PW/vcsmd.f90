@@ -29,7 +29,7 @@ SUBROUTINE vcsmd()
   USE kinds,           ONLY : DP
   USE io_global,       ONLY : stdout
   USE constants,       ONLY : e2, uakbar, amconv
-  USE cell_base,       ONLY : omega, alat, at, bg, iforceh
+  USE cell_base,       ONLY : omega, alat, at, bg, iforceh, fix_volume
   USE ions_base,       ONLY : tau, nat, ntyp => nsp, ityp, atm
   USE cellmd,          ONLY : nzero, ntimes, calc, press, at_old, omega_old, &
                               cmass, ntcheck, lmovecell
@@ -41,7 +41,6 @@ SUBROUTINE vcsmd()
   USE parameters,      ONLY : ntypx
   USE ener,            ONLY : etot
   USE io_files,        ONLY : prefix, delete_if_present
-  USE input_parameters,       ONLY : cell_dofree
 
   !
   IMPLICIT NONE
@@ -414,7 +413,7 @@ SUBROUTINE vcsmd()
   !
   ! ... update configuration in PWSCF variables
   !
-  if (cell_dofree == 'shape') call impose_deviatoric_strain(alat*at, avec)
+  if (fix_volume) call impose_deviatoric_strain(alat*at, avec)
   at = avec / alat
   !
   CALL volume( alat, at(1,1), at(1,2), at(1,3), omega )

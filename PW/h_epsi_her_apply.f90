@@ -19,7 +19,7 @@ subroutine h_epsi_her_apply(lda, n,nbande, psi, hpsi, pdir, e_field)
 
   USE kinds,    ONLY : DP
   USE us
-  USE wvfct,    ONLY : igk, g2kin, npwx, npw, nbnd, ik => current_k
+  USE wvfct,    ONLY : igk, npwx, npw, nbnd, ik => current_k
   USE gsmooth,  ONLY : nls, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, nrxxs
   USE ldaU,     ONLY : lda_plus_u
   USE lsda_mod, ONLY : current_spin, nspin
@@ -60,8 +60,6 @@ subroutine h_epsi_her_apply(lda, n,nbande, psi, hpsi, pdir, e_field)
 
   INTEGER :: nkbtona(nkb)
    INTEGER :: nkbtonh(nkb)
-  REAL(DP) :: g2kin_bp(npwx)
-  INTEGER :: igk1(npwx)
   COMPLEX(DP) :: sca, sca1, pref
   INTEGER nb,mb, jkb, nhjkb, na, np, nhjkbm,jkb1,i,j
   INTEGER :: jkb_bp,nt,ig, ijkb0,ibnd,jh,ih,ikb
