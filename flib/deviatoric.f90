@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2010 Davide Ceresoli
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -30,8 +30,6 @@ subroutine impose_deviatoric_strain ( at_old, at )
   at = at * (omega_old / omega)**(1.d0/3.d0)
 
 end subroutine impose_deviatoric_strain
-
-
 
 !---------------------------------------------------------------------
 subroutine impose_deviatoric_stress ( sigma )
