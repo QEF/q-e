@@ -12,7 +12,7 @@ subroutine lr_restart(iter_restart,rflag)
   use klist,                only : nks, xk 
   use cell_base,            only : tpiba2
   use gvect,                only : g
-  use io_files,             only : tmp_dir, prefix
+  use io_files,             only : tmp_dir, prefix, diropn
   use lr_variables,         only : itermax,evc1, evc1_new, sevc1_new, rho_1_tot , rho_1_tot_im,&
                                    restart, nwordrestart, iunrestart,project,nbnd_total,F
   use charg_resp,           only : resonance_condition

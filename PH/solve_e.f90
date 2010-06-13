@@ -22,7 +22,7 @@ subroutine solve_e
   USE kinds,                 ONLY : DP
   USE ions_base,             ONLY : nat, ntyp => nsp, ityp
   USE io_global,             ONLY : stdout, ionode
-  USE io_files,              ONLY : prefix, iunigk
+  USE io_files,              ONLY : prefix, iunigk, diropn
   USE cell_base,             ONLY : tpiba2
   USE klist,                 ONLY : lgauss, xk, wk
   USE gvect,                 ONLY : nrxx, g
@@ -130,7 +130,7 @@ subroutine solve_e
   IF ( ionode .AND. fildrho /= ' ') THEN
      INQUIRE (UNIT = iudrho, OPENED = exst)
      IF (exst) CLOSE (UNIT = iudrho, STATUS='keep')
-     CALL DIROPN (iudrho, TRIM(fildrho)//'.E', lrdrho, exst)
+     CALL diropn (iudrho, TRIM(fildrho)//'.E', lrdrho, exst)
   end if
   IF (rec_code_read > -20) convt=.TRUE.
   !

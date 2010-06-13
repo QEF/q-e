@@ -8,7 +8,7 @@ subroutine lr_write_restart()
   ! Modified by Osman Baris Malcioglu (2009)
 #include "f_defs.h"
   !
-  use io_files,             only : tmp_dir, prefix
+  use io_files,             only : tmp_dir, prefix, diropn
   use lr_variables,         only : beta_store, gamma_store, zeta_store, norm0, &
                                    LR_polarization, LR_iteration, n_ipol,F,project,&
                                    evc1,evc1_new,iunrestart, nwordrestart, rho_1_tot, rho_1_tot_im, &

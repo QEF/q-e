@@ -110,7 +110,6 @@ SUBROUTINE read_casino(iunps,nofiles)
   INTEGER :: iunps, nofiles
   !
   LOGICAL :: groundstate, found
-  CHARACTER(len=1), DIMENSION(0:3) :: convel=(/'s','p','d','f'/)
   CHARACTER(len=2) :: label, rellab
   REAL(DP), PARAMETER :: r_exp=20._dp/1500._dp
   INTEGER :: l, i, ir, nb, gsorbs, j,k,m,tmp, lquant, orbs, nquant

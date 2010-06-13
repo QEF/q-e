@@ -296,11 +296,13 @@ postproc.o : ../Modules/mp_global.o
 postproc.o : ../Modules/paw_variables.o
 postproc.o : ../PW/noncol.o
 postproc.o : ../PW/pwcom.o
+projwfc.o : ../Modules/atom.o
 projwfc.o : ../Modules/cell_base.o
 projwfc.o : ../Modules/constants.o
 projwfc.o : ../Modules/control_flags.o
 projwfc.o : ../Modules/descriptors.o
 projwfc.o : ../Modules/environment.o
+projwfc.o : ../Modules/fft_base.o
 projwfc.o : ../Modules/io_files.o
 projwfc.o : ../Modules/io_global.o
 projwfc.o : ../Modules/ions_base.o
@@ -315,6 +317,7 @@ projwfc.o : ../Modules/zhpev_drv.o
 projwfc.o : ../PW/becmod.o
 projwfc.o : ../PW/noncol.o
 projwfc.o : ../PW/pwcom.o
+projwfc.o : ../PW/scf_mod.o
 projwfc.o : ../PW/symm_base.o
 projwfc.o : ../iotk/src/iotk_module.o
 punch_plot.o : ../Modules/cell_base.o
@@ -344,6 +347,7 @@ pw2casino.o : ../Modules/io_global.o
 pw2casino.o : ../Modules/kind.o
 pw2casino.o : ../Modules/mp.o
 pw2casino.o : ../Modules/mp_global.o
+pw2casino.o : ../PW/newd.o
 pw2casino_write.o : ../Modules/cell_base.o
 pw2casino_write.o : ../Modules/constants.o
 pw2casino_write.o : ../Modules/control_flags.o
@@ -358,7 +362,6 @@ pw2casino_write.o : ../Modules/printout_base.o
 pw2casino_write.o : ../Modules/uspp.o
 pw2casino_write.o : ../Modules/wavefunctions.o
 pw2casino_write.o : ../PW/becmod.o
-pw2casino_write.o : ../PW/newd.o
 pw2casino_write.o : ../PW/pwcom.o
 pw2casino_write.o : ../PW/scf_mod.o
 pw2casino_write.o : pw2blip.o
@@ -374,6 +377,7 @@ pw2gw.o : ../Modules/mp.o
 pw2gw.o : ../Modules/mp_global.o
 pw2gw.o : ../Modules/mp_wave.o
 pw2gw.o : ../Modules/parallel_include.o
+pw2gw.o : ../Modules/uspp.o
 pw2gw.o : ../Modules/wavefunctions.o
 pw2gw.o : ../PW/pwcom.o
 pw2gw.o : ../PW/scf_mod.o

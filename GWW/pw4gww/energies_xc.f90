@@ -39,7 +39,7 @@ SUBROUTINE energies_xc( lda, n, m, e_xc, e_h )
   USE io_global,        ONLY : stdout
   USE scf,              ONLY : scf_type, rho, v, vrs, rho_core, rhog_core, vltot
   USE constants,        ONLY : rytoev
-  USE io_files,         ONLY : find_free_unit
+  USE io_files,         ONLY : find_free_unit, diropn
   USE ener,             ONLY : etxc, vtxc, ehart
 
 #ifdef EXX

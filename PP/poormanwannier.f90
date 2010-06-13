@@ -99,7 +99,7 @@ SUBROUTINE projection (first_band, last_band)
   USE uspp,       ONLY: nkb, vkb
   USE becmod,     ONLY: bec_type, becp, calbec, allocate_bec_type, deallocate_bec_type
   USE io_files,   ONLY: nd_nmbr, prefix, tmp_dir, nwordwfc, iunwfc, &
-                        iunsat, nwordatwfc
+                        iunsat, nwordatwfc, diropn
   USE wavefunctions_module, ONLY: evc 
 
   IMPLICIT NONE 

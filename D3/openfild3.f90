@@ -17,7 +17,7 @@ SUBROUTINE openfild3
   USE phcom
   USE d3com
   USE control_flags,   ONLY : twfcollect
-  USE io_files,        ONLY : iunigk, prefix, tmp_dir
+  USE io_files,        ONLY : iunigk, prefix, tmp_dir, diropn
   USE io_global,       ONLY : ionode
   USE mp_global,       ONLY : kunit, me_pool, root_pool
   !

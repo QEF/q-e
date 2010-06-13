@@ -1616,7 +1616,6 @@ end subroutine sort_gvec
               ELSE
                 WRITE( stdout,565)
               END IF
-              ! if( thdiag ) WRITE( stdout,608)
               IF( tzeroc ) THEN
                 WRITE( stdout,563)
               ENDIF
@@ -1644,7 +1643,6 @@ end subroutine sort_gvec
  600  format( 3X, 'internal stress tensor calculated')
  602  format( 3X, 'cell parameters dynamics with frich = ',f7.4,            &
      &        3X, 'and greash = ',f7.4 )
- 608  format( 3X, 'frozen off-diagonal cell parameters'//)
 
         return
       end subroutine cell_print_info

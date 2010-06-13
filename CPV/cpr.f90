@@ -52,8 +52,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
   USE cell_base,                ONLY : a1, a2, a3, b1, b2, b3, ainv, frich, &
                                        greash, tpiba2, omega, alat, ibrav,  &
                                        celldm, h, hold, hnew, velh, deth,   &
-                                       wmass, press, iforceh, cell_force,   &
-                                       thdiag
+                                       wmass, press, iforceh, cell_force
   USE grid_dimensions,          ONLY : nnrx, nr1, nr2, nr3
   USE smooth_grid_dimensions,   ONLY : nnrsx, nr1s, nr2s, nr3s
   USE smallbox_grid_dimensions, ONLY : nr1b, nr2b, nr3b

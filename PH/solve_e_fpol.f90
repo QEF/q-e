@@ -22,7 +22,7 @@ subroutine solve_e_fpol ( iw )
   USE kinds,                 ONLY : DP
   USE ions_base,             ONLY : nat
   USE io_global,             ONLY : stdout, ionode
-  USE io_files,              ONLY : prefix, iunigk
+  USE io_files,              ONLY : prefix, iunigk, diropn
   USE check_stop,            ONLY : check_stop_now
   USE wavefunctions_module,  ONLY : evc
   USE cell_base,             ONLY : tpiba2
@@ -128,7 +128,7 @@ subroutine solve_e_fpol ( iw )
   IF (ionode .AND. fildrho /= ' ') THEN
      INQUIRE (UNIT = iudrho, OPENED = exst)
      IF (exst) CLOSE (UNIT = iudrho, STATUS='keep')
-     CALL DIROPN (iudrho, TRIM(fildrho)//'.E', lrdrho, exst)
+     CALL diropn (iudrho, TRIM(fildrho)//'.E', lrdrho, exst)
   end if
   !
   if (convt) go to 155

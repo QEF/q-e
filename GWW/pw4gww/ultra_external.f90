@@ -12,7 +12,7 @@ subroutine ultra_external( nbnd_start, nbnd_end, radius, itask)
 
 !#ifdef __GWW
 
-  USE io_files,             ONLY : find_free_unit,nwordwfc, iunwfc, prefix
+  USE io_files,             ONLY : find_free_unit,nwordwfc, iunwfc, prefix, diropn
   USE io_global,            ONLY : stdout, ionode_id
   USE gsmooth,              ONLY : nls, nlsm, nr1s, nr2s, nr3s, &
                                    nrx1s, nrx2s, nrx3s, nrxxs, doublegrid
@@ -106,7 +106,7 @@ subroutine ultra_external( nbnd_start, nbnd_end, radius, itask)
 
 
 
-!read orhtonormal wannier
+!read orthonormal wannier
   iun_mlwf=find_free_unit()
   CALL diropn( iun_mlwf, 'wfc_mlwf', nwordwfc, exst )
   CALL davcio(wfc_mlwf,nwordwfc,iun_mlwf,1,-1)

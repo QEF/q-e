@@ -22,7 +22,7 @@ SUBROUTINE openfil()
   USE klist,            ONLY : nks
   USE ldaU,             ONLY : lda_plus_U
   USE io_files,         ONLY : prefix, iunpun, iunat, iunsat, iunwfc, iunigk, &
-                               nwordwfc, nwordatwfc, iunefield, &
+                               nwordwfc, nwordatwfc, iunefield, diropn, &
                                tmp_dir, wfc_dir, iunefieldm, iunefieldp
   USE pw_restart,       ONLY : pw_readfile
   USE noncollin_module, ONLY : npol

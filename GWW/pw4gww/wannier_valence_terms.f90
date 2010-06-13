@@ -9,7 +9,8 @@
 !put results on wpwp_psi array which is written on disk
 
    USE io_global,            ONLY : stdout, ionode
-   USE io_files,             ONLY : find_free_unit, prefix, iunwfc, nwordwfc, iunigk
+   USE io_files,             ONLY : find_free_unit, prefix, iunwfc, nwordwfc,&
+                                    diropn, iunigk
    USE mp_global,            ONLY : nproc_pool, me_pool
    USE kinds,                ONLY : DP
    USE basis
@@ -820,7 +821,8 @@
 !cutoff at distance
 
    USE io_global,            ONLY : stdout, ionode
-   USE io_files,             ONLY : find_free_unit, prefix, iunwfc, nwordwfc, iunigk
+   USE io_files,             ONLY : find_free_unit, prefix, iunwfc, nwordwfc,&
+                                    diropn, iunigk
    USE mp_global,            ONLY : nproc_pool, me_pool
    USE kinds,                ONLY : DP
    USE basis

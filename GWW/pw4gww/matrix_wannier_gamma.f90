@@ -15,7 +15,7 @@ subroutine matrix_wannier_gamma_big( matsincos, ispin, n_set, itask )
   USE cell_base,            ONLY : at, alat, tpiba, omega, tpiba2
   USE constants,            ONLY : e2, pi, tpi, fpi
   USE uspp,                 ONLY : okvan, nkb
-  USE io_files,             ONLY : find_free_unit
+  USE io_files,             ONLY : find_free_unit, diropn
   USE io_global,            ONLY : stdout
   USE gsmooth,              ONLY : nr1s, nr2s, nr3s, &
                                    nrx1s, nrx2s, nrx3s, nrxxs, doublegrid

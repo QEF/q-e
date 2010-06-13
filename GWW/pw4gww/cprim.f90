@@ -9,7 +9,7 @@
 
 ! #ifdef __GWW
    USE io_global,            ONLY : stdout, ionode
-   USE io_files,             ONLY : find_free_unit, prefix
+   USE io_files,             ONLY : find_free_unit, prefix, diropn
    USE kinds,                ONLY : DP
    USE wannier_gw
    USE gvect
@@ -303,7 +303,7 @@ subroutine create_vcw_overlap(n_set, orthonorm,ecutoff)
 
 ! #ifdef __GWW
    USE io_global,            ONLY : stdout, ionode
-   USE io_files,             ONLY : find_free_unit, prefix
+   USE io_files,             ONLY : find_free_unit, prefix, diropn
    USE kinds,                ONLY : DP
    USE wannier_gw
    USE gvect
@@ -539,7 +539,7 @@ subroutine create_upper_states(n_set, lzero, orthonorm,ecutoff)
 
 ! #ifdef __GWW
    USE io_global,            ONLY : stdout, ionode, ionode_id
-   USE io_files,             ONLY : find_free_unit, prefix
+   USE io_files,             ONLY : find_free_unit, prefix, diropn
    USE kinds,                ONLY : DP
    USE wannier_gw
    USE gvect

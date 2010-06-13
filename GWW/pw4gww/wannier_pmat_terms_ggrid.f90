@@ -14,7 +14,7 @@
 !#ifdef __GWW
 
   USE io_global,            ONLY : stdout, ionode, ionode_id
-  USE io_files,             ONLY : find_free_unit, prefix
+  USE io_files,             ONLY : find_free_unit, prefix, diropn
   use mp_global,            ONLY : nproc_pool, me_pool
   USE mp,                   ONLY : mp_bcast, mp_sum
   USE kinds,                ONLY : DP

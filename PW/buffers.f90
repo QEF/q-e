@@ -35,6 +35,8 @@ MODULE buffers
   !     of length nword complex numbers; extension is saved but ignored
   !     exst=T(F) if the buffer is already allocated
   !
+  USE io_files,  ONLY : diropn
+  !
   IMPLICIT NONE
   !
   CHARACTER(LEN=*), INTENT(IN) :: extension
@@ -168,7 +170,7 @@ SUBROUTINE close_buffer ( unit, status )
   !     unit =-1 : deallocate buffer; if "status='keep'" save to file
   !                (using saved value of extension)
   !
-  USE io_files,       ONLY : find_free_unit
+  USE io_files,       ONLY : find_free_unit, diropn
   !
   IMPLICIT NONE
   !
@@ -222,7 +224,7 @@ SUBROUTINE init_buffer ( unit, ierr )
   !                when the buffer was closed (used in NEB calculations)
   !     ierr     : 0 if everything ok, 1 otherwise
   !
-  USE io_files,       ONLY : find_free_unit
+  USE io_files,       ONLY : find_free_unit, diropn
   !
   IMPLICIT NONE
   !

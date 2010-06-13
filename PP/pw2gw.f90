@@ -989,7 +989,7 @@ end subroutine write_gmaps
  
 subroutine read_and_collect( c, ldc, n, ik ) 
   USE io_global,      ONLY : stdout 
-  USE io_files,       ONLY : prefix 
+  USE io_files,       ONLY : prefix
   USE kinds,          ONLY : DP, sgl 
  
   implicit none 

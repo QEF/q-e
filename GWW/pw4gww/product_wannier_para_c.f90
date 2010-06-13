@@ -26,7 +26,7 @@
   USE io_files,             ONLY : find_free_unit
   USE io_files,             ONLY : nwordwfc
   USE io_files,             ONLY : prefix
-  USE io_files,             ONLY : tmp_dir, iunwfc, iunigk
+  USE io_files,             ONLY : tmp_dir, iunwfc, iunigk, diropn
   USE io_global,            ONLY : stdout, ionode
   USE gsmooth,              ONLY : nls, nlsm, nr1s, nr2s, nr3s, &
                                    nrx1s, nrx2s, nrx3s, nrxxs, doublegrid
@@ -39,7 +39,6 @@
   USE basis
   USE klist
   USE constants,            ONLY : e2, pi, tpi, fpi
-  USE io_files,             ONLY : nwordwfc, iunwfc
   USE cell_base,            ONLY : at, alat, tpiba, omega, tpiba2
   USE ions_base,            ONLY : ityp, tau, nat,ntyp => nsp
   USE uspp,                 ONLY : okvan

@@ -8,7 +8,7 @@ subroutine calculate_wing(n_set, orthonorm)
 ! it requires the file .e_head
 !#ifdef __GWW
  USE io_global,            ONLY : stdout, ionode, ionode_id
- USE io_files,             ONLY : find_free_unit, prefix
+ USE io_files,             ONLY : find_free_unit, prefix, diropn
  USE kinds,                ONLY : DP
  USE wannier_gw
  USE mp,                   ONLY : mp_bcast, mp_sum

@@ -23,7 +23,7 @@ subroutine rotate_wannier( rot_u,ispin)
   USE basis
   USE klist
   USE constants, ONLY : e2, pi, tpi, fpi
-  USE io_files, ONLY: nwordwfc, iunwfc,prefix, find_free_unit
+  USE io_files, ONLY: nwordwfc, iunwfc,prefix, find_free_unit, diropn
   USE cell_base, ONLY: at, alat, tpiba, omega, tpiba2
 ! same stuff investigation
   USE wavefunctions_module, ONLY: evc 
@@ -141,7 +141,7 @@ subroutine rotate_wannier_gamma( rot_u,ispin, itrasp )
   USE basis
   USE klist
   USE constants, ONLY : e2, pi, tpi, fpi
-  USE io_files, ONLY: nwordwfc, prefix, find_free_unit
+  USE io_files, ONLY: nwordwfc, prefix, find_free_unit, diropn
   USE cell_base, ONLY: at, alat, tpiba, omega, tpiba2
   USE wavefunctions_module, ONLY: evc
   USE wannier_gw,  ONLY : nbnd_normal

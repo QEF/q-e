@@ -20,7 +20,7 @@ SUBROUTINE ultralocalization_para(nbndv,nbnd_max,ultra_thr,isubspace,max_array2,
 
 !#ifdef __GWW
 
-  USE io_files,             ONLY : find_free_unit
+  USE io_files,             ONLY : find_free_unit, diropn
   USE io_global,            ONLY : stdout, ionode_id
   USE gsmooth,              ONLY : nls, nlsm, nr1s, nr2s, nr3s, &
                                    nrx1s, nrx2s, nrx3s, nrxxs, doublegrid

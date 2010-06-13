@@ -18,7 +18,7 @@ SUBROUTINE cg_setup
   USE uspp_param, ONLY: upf
   USE mp_global,        ONLY : kunit
   USE wavefunctions_module,  ONLY: evc
-  USE io_files, ONLY: prefix, iunpun, iunres
+  USE io_files, ONLY: prefix, iunpun, iunres, diropn
   USE cgcom
   USE funct, only : dft_is_gradient, dmxc
   USE dfunct,                 only : newd

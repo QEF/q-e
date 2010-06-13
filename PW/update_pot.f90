@@ -465,7 +465,7 @@ SUBROUTINE extrapolate_wfcs( wfc_extr )
   USE wvfct,                ONLY : nbnd, npw, npwx, igk, current_k
   USE ions_base,            ONLY : nat, tau
   USE io_files,             ONLY : nwordwfc, iunigk, iunwfc, iunoldwfc, &
-                                   iunoldwfc2
+                                   iunoldwfc2, diropn
   USE buffers,              ONLY : get_buffer, save_buffer
   USE uspp,                 ONLY : nkb, vkb, okvan
   USE wavefunctions_module, ONLY : evc

@@ -55,12 +55,10 @@ compute_ux.o \
 coset.o \
 d_matrix.o \
 data_structure.o \
-davcio.o \
 deriv_drhoc.o \
 divide_class.o \
 divide_class_so.o \
 realus.o \
-diropn.o \
 divide.o \
 divide_et_impera.o \
 dqvan2.o \

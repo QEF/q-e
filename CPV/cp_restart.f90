@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2005 Quantum ESPRESSO group
+! Copyright (C) 2005-2010 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -50,7 +50,8 @@ MODULE cp_restart
       !------------------------------------------------------------------------
       !
       USE control_flags,            ONLY : gamma_only, force_pairing, trhow, tksw, twfcollect
-      USE io_files,                 ONLY : psfile, pseudo_dir, iunwfc, nwordwfc, tmp_dir
+      USE io_files,                 ONLY : psfile, pseudo_dir, iunwfc, &
+                                           nwordwfc, tmp_dir, diropn
       USE mp_global,                ONLY : intra_image_comm, me_image, nproc_image
       USE printout_base,            ONLY : title
       USE grid_dimensions,          ONLY : nr1, nr2, nr3, nr1x, nr2x, nr3l
@@ -919,7 +920,8 @@ MODULE cp_restart
       !------------------------------------------------------------------------
       !
       USE control_flags,            ONLY : gamma_only, force_pairing, iprsta, twfcollect
-      USE io_files,                 ONLY : iunpun, xmlpun, iunwfc, nwordwfc, tmp_dir
+      USE io_files,                 ONLY : iunpun, xmlpun, iunwfc, nwordwfc, &
+                                           tmp_dir, diropn
       USE printout_base,            ONLY : title
       USE grid_dimensions,          ONLY : nr1, nr2, nr3
       USE smooth_grid_dimensions,   ONLY : nr1s, nr2s, nr3s

@@ -41,7 +41,7 @@ pw : bindir mods liblapack libblas libs libiotk eelib
 	( cd PW ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= all ; \
 	else $(MAKE) $(MFLAGS) TLDEPS= all ; fi ) ; fi
 
-cp : bindir mods liblapack libblas libs libiotk pw
+cp : bindir mods liblapack libblas libs libiotk
 	if test -d CPV ; then \
 	( cd CPV ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= cp ; \
 	else $(MAKE) $(MFLAGS) TLDEPS= cp ; fi ) ; fi

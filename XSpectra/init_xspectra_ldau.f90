@@ -7,7 +7,6 @@
 subroutine init_xanes_ldau
   USE ldaU,             ONLY : lda_plus_u, Hubbard_U, Hubbard_l, &
                                  Hubbard_alpha, Hubbard_lmax, U_projection 
-  USE io_files,         ONLY :  iunsat, nwordatwfc , nwordwfc, iunwfc, iunocc 
   USE basis,            only : natomwfc  
   USE xspectra,            only : xread_wf, U_projection_type
   use wvfct,            ONLY : npwx,nbndx,nbnd,npw
@@ -80,7 +79,7 @@ SUBROUTINE init_xanes_ldau_2(ik)
   !
   USE kinds,      ONLY : DP
   USE io_global,  ONLY : stdout
-  USE io_files,   ONLY : iunat, iunsat, nwordatwfc, iunigk
+  USE io_files,   ONLY : iunat, iunsat, nwordatwfc, iunigk, diropn
   USE ions_base,  ONLY : nat
   USE basis,      ONLY : natomwfc
   USE klist,      ONLY : nks, xk, ngk

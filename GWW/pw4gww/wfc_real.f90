@@ -26,6 +26,7 @@ SUBROUTINE wfc_gamma_real(itask)
                                    nrx1s, nrx2s, nrx3s, nrxxs, doublegrid
  
   USE io_files,             ONLY : iunwfc, nwordwfc, iunigk
+  USE io_files,             ONLY : find_free_unit, diropn
   USE wvfct,                ONLY : nbnd, npwx, npw, igk, wg, et
   USE mp,                   ONLY : mp_bcast
   USE io_global,            ONLY : stdout
@@ -34,7 +35,6 @@ SUBROUTINE wfc_gamma_real(itask)
                                    two_fermi_energies, ngk
   USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
   USE wavefunctions_module, ONLY : evc, psic
-  USE io_files,             ONLY : find_free_unit
   USE wannier_gw,           ONLY : becp_gw, becp_gw_c
   USE uspp
   USE becmod,               ONLY : calbec
@@ -191,6 +191,7 @@ SUBROUTINE wfc_gamma_real_after_rot(itask)
                                    nrx1s, nrx2s, nrx3s, nrxxs, doublegrid
 
   USE io_files,             ONLY : iunwfc, nwordwfc, iunigk
+  USE io_files,             ONLY : find_free_unit, diropn
   USE wvfct,                ONLY : nbnd, npwx, npw, igk, wg, et
   USE mp,                   ONLY : mp_bcast
   USE io_global,            ONLY : stdout
@@ -199,7 +200,6 @@ SUBROUTINE wfc_gamma_real_after_rot(itask)
                                    two_fermi_energies, ngk
   USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
   USE wavefunctions_module, ONLY : psic
-  USE io_files,             ONLY : find_free_unit
   USE wannier_gw,           ONLY : becp_gw, becp_gw_c, nbnd_normal
   USE uspp
   USE becmod,               ONLY : calbec
@@ -308,7 +308,7 @@ SUBROUTINE write_wfc_plot(itask)
 !save wannier functions on disk for plotting
      USE io_files,             ONLY : nwordwfc
      USE wavefunctions_module, ONLY : evc
-     USE io_files,             ONLY : find_free_unit
+     USE io_files,             ONLY : find_free_unit, diropn
 
     implicit none
     INTEGER, INTENT(in) :: itask!0 save MLWF, 1 save ULWF

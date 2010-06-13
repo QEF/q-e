@@ -10,7 +10,7 @@ PROGRAM X_Spectra
   USE kinds, ONLY : DP
   USE constants,       ONLY : rytoev,pi,fpi
   USE io_global,       ONLY : stdout,ionode,ionode_id   ! Modules/io_global.f90
-  USE io_files,        ONLY : prefix, tmp_dir
+  USE io_files,        ONLY : prefix, tmp_dir, diropn
   USE parser,          ONLY :  read_line
   USE cell_base,       ONLY : bg, at, celldm
   USE parameters,      ONLY : ntypx,lmaxx,lqmax
@@ -832,8 +832,6 @@ END program X_Spectra
 
 SUBROUTINE xanes_dipole(a,b,ncalcv,xnorm,core_wfn,paw_iltonhb,terminator,verbosity)
   USE constants,       ONLY : fpi
-  USE io_files,        ONLY : nd_nmbr, prefix, tmp_dir, &
-       nwordwfc, iunwfc
   USE io_global,       ONLY : stdout     ! Modules/io_global.f90
   USE kinds,           ONLY : DP
   USE parameters,      ONLY : ntypx
@@ -1213,8 +1211,6 @@ END SUBROUTINE xanes_dipole
 
 
 SUBROUTINE xanes_quadrupole(a,b,ncalcv,xnorm,core_wfn,paw_iltonhb,terminator,verbosity)
-  USE io_files,        ONLY : nd_nmbr, prefix, tmp_dir, &
-       nwordwfc, iunwfc
   USE io_global,       ONLY : stdout     ! Modules/io_global.f90
   USE kinds, ONLY : DP
   USE constants, ONLY : pi
@@ -3334,8 +3330,7 @@ END SUBROUTINE write_status_of_the_code
 
 !<CG>
 SUBROUTINE verify_hpsi
-  USE io_files,         ONLY : nd_nmbr, prefix, tmp_dir, &
-       nwordwfc, iunwfc
+  USE io_files,         ONLY : nwordwfc, iunwfc
   USE io_global,        ONLY : stdout     ! Modules/io_global.f90
   USE kinds,            ONLY : DP
   USE parameters,       ONLY : ntypx

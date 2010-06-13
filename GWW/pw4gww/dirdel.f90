@@ -19,7 +19,7 @@ subroutine dirdel ( extension)
   !     If appropriate, the node number is added to the file name
   !
   USE kinds
-  use io_files, only: prefix, tmp_dir, nd_nmbr, find_free_unit
+  use io_files, only: prefix, tmp_dir, nd_nmbr, find_free_unit, diropn
   use mp_global, only: mpime
   use io_global, only: stdout
   implicit none

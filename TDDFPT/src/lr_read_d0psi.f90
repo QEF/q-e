@@ -9,7 +9,7 @@ subroutine lr_read_d0psi()
 #include "f_defs.h"
   !
   use klist,                only : nks,degauss
-  use io_files,             only : prefix
+  use io_files,             only : prefix, diropn
   use lr_variables,         only : d0psi, n_ipol,LR_polarization
   use lr_variables,         only : nwordd0psi, iund0psi
   use wvfct,                only : nbnd, npwx,et

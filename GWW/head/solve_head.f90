@@ -19,7 +19,7 @@ subroutine solve_head
   !
   USE ions_base,             ONLY : nat
   USE io_global,             ONLY : stdout, ionode,ionode_id
-  USE io_files,              ONLY : prefix, iunigk, find_free_unit
+  USE io_files,              ONLY : prefix, iunigk, find_free_unit, diropn
   use pwcom                
   USE check_stop,            ONLY : max_seconds
   USE wavefunctions_module,  ONLY : evc
@@ -136,7 +136,7 @@ subroutine solve_head
   IF (ionode .AND. fildrho /= ' ') THEN
      INQUIRE (UNIT = iudrho, OPENED = exst)
      IF (exst) CLOSE (UNIT = iudrho, STATUS='keep')
-     CALL DIROPN (iudrho, TRIM(fildrho)//'.E', lrdrho, exst)
+     CALL diropn (iudrho, TRIM(fildrho)//'.E', lrdrho, exst)
   end if
   !
   ! if q=0 for a metal: allocate and compute local DOS at Ef

@@ -19,6 +19,7 @@ MODULE scf
   USE lsda_mod,     ONLY : nspin
   USE ldaU,         ONLY : lda_plus_u, Hubbard_lmax
   USE ions_base,    ONLY : nat
+  USE io_files,     ONLY : diropn
   USE funct,        ONLY : dft_is_meta
   USE gvect,        ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, ngm
   USE gsmooth,      ONLY : ngms

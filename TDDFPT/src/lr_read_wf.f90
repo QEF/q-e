@@ -12,7 +12,7 @@ subroutine lr_read_wf()
   use klist,                only : nks, xk 
   use cell_base,            only : tpiba2
   use gvect,                only : ngm, g, ecutwfc
-  use io_files,             only : nwordwfc, iunwfc, prefix
+  use io_files,             only : nwordwfc, iunwfc, prefix, diropn
   use lr_variables,         only : evc0, sevc0 ,revc0, evc0_virt, sevc0_virt, nbnd_total, &
                                    becp1_virt,becp1_c_virt
   use realus,               only : igk_k,npw_k

@@ -10,7 +10,7 @@ SUBROUTINE wannier_uterms(n_set,l_square,lzero, orthonorm, ecutoff)
 ! #ifdef __GWW
 
   USE io_global,            ONLY : stdout, ionode
-  USE io_files,             ONLY : find_free_unit, prefix
+  USE io_files,             ONLY : find_free_unit, prefix, diropn
   use mp_global,            ONLY : nproc_pool, me_pool
   USE kinds,                ONLY : DP
   USE gvect
@@ -188,7 +188,7 @@ SUBROUTINE wannier_uterms_red(n_set,lzero, ecutoff,vmat,dimr,dimc,n_r,n_c,numpw,
 ! #ifdef __GWW
 
   USE io_global,            ONLY : stdout, ionode
-  USE io_files,             ONLY : find_free_unit, prefix
+  USE io_files,             ONLY : find_free_unit, prefix, diropn
   use mp_global,            ONLY : nproc_pool, me_pool
   USE mp,                   ONLY : mp_sum
   USE kinds,    ONLY : DP

@@ -325,12 +325,8 @@ data_structure.o : ../Modules/mp_global.o
 data_structure.o : ../Modules/stick_base.o
 data_structure.o : ../Modules/task_groups.o
 data_structure.o : pwcom.o
-davcio.o : ../Modules/io_global.o
-davcio.o : ../Modules/kind.o
 deriv_drhoc.o : ../Modules/constants.o
 deriv_drhoc.o : ../Modules/kind.o
-diropn.o : ../Modules/io_files.o
-diropn.o : ../Modules/kind.o
 divide.o : ../Modules/mp_global.o
 divide_class.o : ../Modules/kind.o
 divide_class_so.o : ../Modules/constants.o
@@ -798,6 +794,7 @@ memory_report.o : ../Modules/uspp.o
 memory_report.o : ../Modules/wavefunctions.o
 memory_report.o : noncol.o
 memory_report.o : pwcom.o
+mix_pot.o : ../Modules/io_files.o
 mix_pot.o : ../Modules/kind.o
 mix_pot.o : ../Modules/mp.o
 mix_pot.o : ../Modules/mp_global.o
@@ -1224,6 +1221,7 @@ scf_mod.o : ../Modules/cell_base.o
 scf_mod.o : ../Modules/constants.o
 scf_mod.o : ../Modules/control_flags.o
 scf_mod.o : ../Modules/funct.o
+scf_mod.o : ../Modules/io_files.o
 scf_mod.o : ../Modules/ions_base.o
 scf_mod.o : ../Modules/kind.o
 scf_mod.o : ../Modules/mp.o

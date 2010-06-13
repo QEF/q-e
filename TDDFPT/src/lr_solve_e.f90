@@ -25,6 +25,7 @@ subroutine lr_solve_e
   use kinds,                only : dp
   use gvect,                only : gstart
   use io_global,            only : stdout
+  use io_files,             only : diropn
   use klist,                only : nks, xk, degauss
   use lr_variables,         only : nwordd0psi, iund0psi,LR_polarization, test_case_no
   use lr_variables,         only : n_ipol, evc0, d0psi, evc1, lr_verbosity

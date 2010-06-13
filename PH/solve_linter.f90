@@ -24,7 +24,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
   USE kinds,                ONLY : DP
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
   USE io_global,            ONLY : stdout, ionode
-  USE io_files,             ONLY : prefix, iunigk
+  USE io_files,             ONLY : prefix, iunigk, diropn
   USE check_stop,           ONLY : check_stop_now
   USE wavefunctions_module, ONLY : evc
   USE constants,            ONLY : degspin
@@ -169,7 +169,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
   IF (ionode .AND. fildrho /= ' ') THEN
      INQUIRE (UNIT = iudrho, OPENED = exst)
      IF (exst) CLOSE (UNIT = iudrho, STATUS='keep')
-     CALL DIROPN (iudrho, TRIM(fildrho)//'.u', lrdrho, exst)
+     CALL diropn (iudrho, TRIM(fildrho)//'.u', lrdrho, exst)
   END IF
 
   IF (convt) GOTO 155

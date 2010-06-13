@@ -99,7 +99,7 @@
 
      USE kinds, ONLY : DP
      USE io_global, ONLY : stdout, ionode, ionode_id
-     USE io_files, ONLY : find_free_unit, prefix
+     USE io_files, ONLY : find_free_unit, prefix, diropn
      USE gvect,  ONLY : ngm, gg
      USE cell_base, ONLY: tpiba2
      USE mp,        ONLY : mp_bcast, mp_sum,mp_barrier
@@ -843,7 +843,7 @@
           &l_pmatrix,npcol,nprow,myrow,mycol,icontxt,l_assume_ortho,l_coulomb_analysis
  !u_trans is defined as Psi_i=U_{i,j}w_j 
      USE io_global, ONLY : stdout, ionode, ionode_id
-     USE io_files,  ONLY : find_free_unit, prefix
+     USE io_files,  ONLY : find_free_unit, prefix, diropn
      USE gvect,     ONLY : ngm, gg,gstart
      USE cell_base, ONLY: tpiba2
      USE mp,         ONLY : mp_bcast, mp_sum, mp_barrier
@@ -1552,7 +1552,7 @@ end subroutine do_polarization_analysis_study
 
      USE kinds, ONLY : DP
      USE io_global, ONLY : stdout, ionode, ionode_id
-     USE io_files, ONLY : find_free_unit, prefix
+     USE io_files, ONLY : find_free_unit, prefix, diropn
      USE gvect,  ONLY : ngm, gg
      USE cell_base, ONLY: tpiba2
      USE mp,        ONLY : mp_bcast, mp_sum,mp_barrier
