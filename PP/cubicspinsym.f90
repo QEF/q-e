@@ -12,7 +12,7 @@ SUBROUTINE cubicspinsym(d_spin)
   ! Provides symmetry operations in the spin space for all cubic and
   ! lower-symmetry (excepted Hexagonal and Trigonal) bravais lattices
   !
-  USE kinds   
+  USE kinds
   USE symm_base, ONLY : nsym, sname
   !
   IMPLICIT NONE
@@ -21,11 +21,11 @@ SUBROUTINE cubicspinsym(d_spin)
   !
   COMPLEX(DP) :: d_spin(2,2,48)
   ! output: the symmetries of the system in the j=1/2 subspace
-  ! 
+  !
   !    here the local parameters
   !
-  REAL(DP), parameter :: cost1=0.707106781186547d0, cost2=0.5d0, &
-                         mcost1=-0.707106781186547d0, mcost2=-0.5d0 
+  REAL(DP), PARAMETER :: cost1=0.707106781186547d0, cost2=0.5d0, &
+                         mcost1=-0.707106781186547d0, mcost2=-0.5d0
   !
   !   and the local variables
   !
@@ -33,7 +33,7 @@ SUBROUTINE cubicspinsym(d_spin)
   !
   ! symmetry matrices in the j=1/2 subspace
   !
-  INTEGER :: i,j 
+  INTEGER :: i,j
   !
   ! counter over the rotations
   ! counter over the rotations
@@ -41,7 +41,7 @@ SUBROUTINE cubicspinsym(d_spin)
   CHARACTER :: isname (48) * 45
   !
   ! full name of the rotational part of each symmetry operation
-  ! 
+  !
   data isname/&
        &        'identity                                    ',&
        &        '180 deg rotation - cart. axis [0,0,1]       ',&
@@ -151,6 +151,6 @@ SUBROUTINE cubicspinsym(d_spin)
         ENDIF
      ENDDO
   ENDDO
-  RETURN  
+  RETURN
   !
   END SUBROUTINE cubicspinsym

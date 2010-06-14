@@ -7,44 +7,44 @@
 !
 !
 !--------------------------------------------------------------------
-subroutine dos_g (et, nspin, nbnd, nks, wk, Degauss, ngauss, E, dosg)
+SUBROUTINE dos_g (et, nspin, nbnd, nks, wk, Degauss, ngauss, E, dosg)
   !--------------------------------------------------------------------
   !
-  USE kinds, only : DP
-  implicit none
-  integer :: nspin, nks, nbnd, ngauss
+  USE kinds, ONLY : DP
+  IMPLICIT NONE
+  INTEGER :: nspin, nks, nbnd, ngauss
 
   real(DP) :: wk (nks), et (nbnd, nks), Degauss, E, dosg (2)
   real(DP) :: w0gauss
-  integer :: n, ns, nk0, nk, ik
-  integer :: nspin0
-  external w0gauss
+  INTEGER :: n, ns, nk0, nk, ik
+  INTEGER :: nspin0
+  EXTERNAL w0gauss
   !
-  if (nspin == 1 .or. nspin == 4) then
+  IF (nspin == 1 .or. nspin == 4) THEN
      nk = nks
-  else
+  ELSE
      nk = nks / 2
-  endif
+  ENDIF
   nspin0=nspin
-  if (nspin==4) nspin0=1
+  IF (nspin==4) nspin0=1
   !
-  do ns = 1, nspin0
-     if (ns.eq.1) then
+  DO ns = 1, nspin0
+     IF (ns==1) THEN
         nk0 = 1
-     else
+     ELSE
         nk0 = nks / 2 + 1
-     endif
+     ENDIF
      dosg (ns) = 0.0d0
-     do ik = nk0, nk0 + nk-1
-        do n = 1, nbnd
+     DO ik = nk0, nk0 + nk-1
+        DO n = 1, nbnd
            dosg (ns) = dosg (ns) + wk (ik) * w0gauss ( (E-et (n, ik) ) &
                 / Degauss, ngauss)
-        enddo
-     enddo
+        ENDDO
+     ENDDO
      !
      dosg (ns) = dosg (ns) / Degauss
      !
-  enddo
+  ENDDO
   !
-  return
-end subroutine dos_g
+  RETURN
+END SUBROUTINE dos_g

@@ -7,7 +7,7 @@
 !
 !
 !----------------------------------------------------------------------
-subroutine addusdens1d (plan, prho)
+SUBROUTINE addusdens1d (plan, prho)
   !----------------------------------------------------------------------
   !
   !  This routine adds to the charge density the part which is due to
@@ -15,7 +15,7 @@ subroutine addusdens1d (plan, prho)
   !  reciprocal space. The output of the routine is the planar average
   !  of the charge density.
   !
-  USE kinds, only: DP
+  USE kinds, ONLY: DP
   USE cell_base, ONLY: alat, omega, celldm
   USE ions_base, ONLY: nat, ntyp => nsp, ityp
   USE gvect, ONLY: nr3, nrx3, nrxx, nl, eigts1, eigts2, eigts3, ig1,ig2,ig3
@@ -28,8 +28,8 @@ subroutine addusdens1d (plan, prho)
   !
   !     here the local variables
   !
-  implicit none
-  integer :: ig, na, nt, ih, jh, ijh, ngm1d, ig1dto3d (nr3), &
+  IMPLICIT NONE
+  INTEGER :: ig, na, nt, ih, jh, ijh, ngm1d, ig1dto3d (nr3), &
        igtongl1d (nr3), nl1d (nr3)
   ! counter on G vectors
   ! counter on atoms
@@ -53,73 +53,73 @@ subroutine addusdens1d (plan, prho)
   ! imaginary part of qg
   ! the spherical harmonics
 
-  complex(DP) :: skk, prho (nrxx), qg (nrx3)
+  COMPLEX(DP) :: skk, prho (nrxx), qg (nrx3)
   ! auxiliary variable
   ! auxiliary space for the charge
   ! auxiliary variable for FFT
   ! auxiliary variable for rho(G,nspin)
-  complex(DP), allocatable :: qgm(:), aux (:)
+  COMPLEX(DP), ALLOCATABLE :: qgm(:), aux (:)
 
 
-  call ggen1d (ngm1d, g1d, gg1d, ig1dto3d, nl1d, igtongl1d)
-  allocate (qgm(ngm1d), aux(ngm1d))
-  do ig = 1, ngm1d
+  CALL ggen1d (ngm1d, g1d, gg1d, ig1dto3d, nl1d, igtongl1d)
+  ALLOCATE (qgm(ngm1d), aux(ngm1d))
+  DO ig = 1, ngm1d
      qmod (ig) = sqrt (gg1d (ig) )
-  enddo
+  ENDDO
   aux(:) = (0.d0, 0.d0)
 
-  if (ngm1d > 0) then
-     call ylmr2 (lmaxq * lmaxq, ngm1d, g1d, gg1d, ylmk0)
-     do nt = 1, ntyp
-        if (upf(nt)%tvanp  ) then
+  IF (ngm1d > 0) THEN
+     CALL ylmr2 (lmaxq * lmaxq, ngm1d, g1d, gg1d, ylmk0)
+     DO nt = 1, ntyp
+        IF (upf(nt)%tvanp  ) THEN
            ijh = 0
-           do ih = 1, nh (nt)
-              do jh = ih, nh (nt)
-                 call qvan2 (ngm1d, ih, jh, nt, qmod, qgm, ylmk0)
+           DO ih = 1, nh (nt)
+              DO jh = ih, nh (nt)
+                 CALL qvan2 (ngm1d, ih, jh, nt, qmod, qgm, ylmk0)
                  ijh = ijh + 1
-                 do na = 1, nat
+                 DO na = 1, nat
 
-                    if (ityp (na) == nt) then
+                    IF (ityp (na) == nt) THEN
                        !
                        !  Multiply becsum and qg with the correct structure factor
                        !
-                       do ig = 1, ngm1d
+                       DO ig = 1, ngm1d
 
                           skk = eigts1 (ig1 (ig1dto3d (ig) ), na) * &
                                 eigts2 (ig2 (ig1dto3d (ig) ), na) * &
                                 eigts3 (ig3 (ig1dto3d (ig) ), na)
                           aux (ig) = aux (ig) + qgm (ig) * skk * &
                                becsum (ijh, na, current_spin)
-                       enddo
-                    endif
-                 enddo
-              enddo
-           enddo
-        endif
-     enddo
+                       ENDDO
+                    ENDIF
+                 ENDDO
+              ENDDO
+           ENDDO
+        ENDIF
+     ENDDO
      !
      !     adds to the charge density and converts to real space
      !
      qg(:) = (0.d0, 0.d0)
-     do ig = 1, ngm1d
+     DO ig = 1, ngm1d
         qg (nl1d (ig) ) = aux (ig) + prho (nl (ig1dto3d (ig) ) )
-     enddo
-  else
+     ENDDO
+  ELSE
      qg(:) = (0.d0, 0.d0)
-  endif
+  ENDIF
 #ifdef __PARA
-  call mp_sum(  qg, intra_pool_comm )
+  CALL mp_sum(  qg, intra_pool_comm )
 #endif
   dimz = alat * celldm (3)
-  do ig = 1, nr3
-     qgr (ig) =  DBLE (qg (ig) )
-     qgi (ig) = AIMAG (qg (ig) )
-  enddo
-  call cft (qgr, qgi, nr3, nr3, nr3, 1)
-  do ig = 1, nr3
+  DO ig = 1, nr3
+     qgr (ig) =  dble (qg (ig) )
+     qgi (ig) = aimag (qg (ig) )
+  ENDDO
+  CALL cft (qgr, qgi, nr3, nr3, nr3, 1)
+  DO ig = 1, nr3
      plan (ig) = qgr (ig) * omega / dimz
-  enddo
-  deallocate (aux, qgm)
+  ENDDO
+  DEALLOCATE (aux, qgm)
 
-  return
-end subroutine addusdens1d
+  RETURN
+END SUBROUTINE addusdens1d

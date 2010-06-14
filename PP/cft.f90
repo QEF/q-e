@@ -1,14 +1,14 @@
 !
-! (C) Copyright CERN except where explicitly stated otherwise. 
+! (C) Copyright CERN except where explicitly stated otherwise.
 !     Permission to use and/or redistribute this work is granted
 !     under the terms of the GNU General Public License, The software
 !     and documentation made available under the terms of this license
-!     are provided with no warranty. 
+!     are provided with no warranty.
 !
 ! Slightly modified version of routine D702 of CERN lib
 !
 !----------------------------------------------------------------------
-subroutine cft (a, b, ntot, n, nspan, isn)
+SUBROUTINE cft (a, b, ntot, n, nspan, isn)
   !----------------------------------------------------------------------
   !
   !     multivariate complex fourier transform, computed in place
@@ -63,16 +63,16 @@ subroutine cft (a, b, ntot, n, nspan, isn)
   !     square-free factors must be .le. 210
   !
   USE kinds
-  implicit real(DP)(a - h, o - z)
-  dimension a ( * ), b ( * )
-  dimension nfac (11), np (209)
+  IMPLICIT real(DP)(a - h, o - z)
+  DIMENSION a ( * ), b ( * )
+  DIMENSION nfac (11), np (209)
   !     array storage for maximum prime factor of 23
-  dimension at (23), ck (23), bt (23), sk (23)
-  equivalence (i, ii)
+  DIMENSION at (23), ck (23), bt (23), sk (23)
+  EQUIVALENCE (i, ii)
   !     the following two constants should agree with the array dimension
   maxf = 23
   maxp = 209
-  if (n.lt.2) return
+  IF (n<2) RETURN
   inc = isn
   !     the following constants are rad = 2.*pi , s72 = sin(0.4*pi) ,
   !     c72 = cos(0.4*pi) and s120 = sqrt(0.75)
@@ -80,7 +80,7 @@ subroutine cft (a, b, ntot, n, nspan, isn)
   s72 = 0.95105651629515d0
   c72 = 0.30901699437495d0
   s120 = 0.86602540378444d0
-  if (isn.ge.0) goto 10
+  IF (isn>=0) GOTO 10
   s72 = - s72
   s120 = - s120
   rad = - rad
@@ -90,57 +90,57 @@ subroutine cft (a, b, ntot, n, nspan, isn)
   kspan = ks
   nn = nt - inc
   jc = ks / n
-  radf = rad * DBLE (jc) * 0.5d0
+  radf = rad * dble (jc) * 0.5d0
   i = 0
   jf = 0
   !     determine the factors of n
   m = 0
   k = n
-  goto 20
+  GOTO 20
 15 m = m + 1
   nfac (m) = 4
   k = k / 16
-20 if (k - (k / 16) * 16.eq.0) goto 15
+20 IF (k - (k / 16) * 16==0) GOTO 15
   j = 3
   jj = 9
-  goto 30
+  GOTO 30
 25 m = m + 1
   nfac (m) = j
   k = k / jj
-30 if (mod (k, jj) .eq.0) goto 25
+30 IF (mod (k, jj) ==0) GOTO 25
   j = j + 2
   jj = j**2
-  if (jj.le.k) goto 30
-  if (k.gt.4) goto 40
+  IF (jj<=k) GOTO 30
+  IF (k>4) GOTO 40
   kt = m
   nfac (m + 1) = k
-  if (k.ne.1) m = m + 1
-  goto 80
-40 if (k - (k / 4) * 4.ne.0) goto 50
+  IF (k/=1) m = m + 1
+  GOTO 80
+40 IF (k - (k / 4) * 4/=0) GOTO 50
   m = m + 1
   nfac (m) = 2
   k = k / 4
 50 kt = m
   j = 2
-60 if (mod (k, j) .ne.0) goto 70
+60 IF (mod (k, j) /=0) GOTO 70
   m = m + 1
   nfac (m) = j
   k = k / j
 70 j = ( (j + 1) / 2) * 2 + 1
-  if (j.le.k) goto 60
-80 if (kt.eq.0) goto 100
+  IF (j<=k) GOTO 60
+80 IF (kt==0) GOTO 100
   j = kt
 90 m = m + 1
   nfac (m) = nfac (j)
   j = j - 1
-  if (j.ne.0) goto 90
+  IF (j/=0) GOTO 90
   !     compute fourier transform
-100 sd = radf / DBLE (kspan)
+100 sd = radf / dble (kspan)
   cd = 2.0d0 * sin (sd) **2
   sd = sin (sd+sd)
   kk = 1
   i = i + 1
-  if (nfac (i) .ne.2) goto 400
+  IF (nfac (i) /=2) GOTO 400
   !     transform for factor of 2 (including rotation factor)
   kspan = kspan / 2
   k1 = kspan + 2
@@ -152,10 +152,10 @@ subroutine cft (a, b, ntot, n, nspan, isn)
   a (kk) = a (kk) + ak
   b (kk) = b (kk) + bk
   kk = k2 + kspan
-  if (kk.le.nn) goto 210
+  IF (kk<=nn) GOTO 210
   kk = kk - nn
-  if (kk.le.jc) goto 210
-  if (kk.gt.kspan) goto 800
+  IF (kk<=jc) GOTO 210
+  IF (kk>kspan) GOTO 800
 220 c1 = 1.0d0 - cd
   s1 = sd
 230 k2 = kk + kspan
@@ -166,11 +166,11 @@ subroutine cft (a, b, ntot, n, nspan, isn)
   a (k2) = c1 * ak - s1 * bk
   b (k2) = s1 * ak + c1 * bk
   kk = k2 + kspan
-  if (kk.lt.nt) goto 230
+  IF (kk<nt) GOTO 230
   k2 = kk - nt
   c1 = - c1
   kk = k1 - k2
-  if (kk.gt.k2) goto 230
+  IF (kk>k2) GOTO 230
   ak = c1 - (cd * c1 + sd * s1)
   s1 = (sd * c1 - cd * s1) + s1
   !     the following three statements compensate for truncation
@@ -181,11 +181,11 @@ subroutine cft (a, b, ntot, n, nspan, isn)
   !     next statement should be deleted if non-rounded arithmetic is use
   !     c1=ak
   kk = kk + jc
-  if (kk.lt.k2) goto 230
+  IF (kk<k2) GOTO 230
   k1 = k1 + inc + inc
   kk = (k1 - kspan) / 2 + jc
-  if (kk.le.jc + jc) goto 220
-  goto 100
+  IF (kk<=jc + jc) GOTO 220
+  GOTO 100
   !     transform for factor of 3 (optional code)
 320 k1 = kk + kspan
   k2 = k1 + kspan
@@ -204,12 +204,12 @@ subroutine cft (a, b, ntot, n, nspan, isn)
   a (k2) = ak + bj
   b (k2) = bk - aj
   kk = k2 + kspan
-  if (kk.lt.nn) goto 320
+  IF (kk<nn) GOTO 320
   kk = kk - nn
-  if (kk.le.kspan) goto 320
-  goto 700
+  IF (kk<=kspan) GOTO 320
+  GOTO 700
   !     transform for factor of 4
-400 if (nfac (i) .ne.4) goto 600
+400 IF (nfac (i) /=4) GOTO 600
   kspnn = kspan
   kspan = kspan / 4
 410 c1 = 1.0d0
@@ -229,12 +229,12 @@ subroutine cft (a, b, ntot, n, nspan, isn)
   bjm = b (k1) - b (k3)
   b (kk) = bkp + bjp
   bjp = bkp - bjp
-  if (isn.lt.0) goto 450
+  IF (isn<0) GOTO 450
   akp = akm - bjm
   akm = akm + bjm
   bkp = bkm + ajm
   bkm = bkm - ajm
-  if (s1.eq.0.0d0) goto 460
+  IF (s1==0.0d0) GOTO 460
 430 a (k1) = akp * c1 - bkp * s1
   b (k1) = akp * s1 + bkp * c1
   a (k2) = ajp * c2 - bjp * s2
@@ -242,7 +242,7 @@ subroutine cft (a, b, ntot, n, nspan, isn)
   a (k3) = akm * c3 - bkm * s3
   b (k3) = akm * s3 + bkm * c3
   kk = k3 + kspan
-  if (kk.le.nt) goto 420
+  IF (kk<=nt) GOTO 420
 440 c2 = c1 - (cd * c1 + sd * s1)
   s1 = (sd * c1 - cd * s1) + s1
   !     the following three statements compensate for truncation
@@ -257,16 +257,16 @@ subroutine cft (a, b, ntot, n, nspan, isn)
   c3 = c2 * c1 - s2 * s1
   s3 = c2 * s1 + s2 * c1
   kk = kk - nt + jc
-  if (kk.le.kspan) goto 420
+  IF (kk<=kspan) GOTO 420
   kk = kk - kspan + inc
-  if (kk.le.jc) goto 410
-  if (kspan.eq.jc) goto 800
-  goto 100
+  IF (kk<=jc) GOTO 410
+  IF (kspan==jc) GOTO 800
+  GOTO 100
 450 akp = akm + bjm
   akm = akm - bjm
   bkp = bkm - ajm
   bkm = bkm + ajm
-  if (s1.ne.0.0) goto 430
+  IF (s1/=0.0) GOTO 430
 460 a (k1) = akp
   b (k1) = bkp
   a (k2) = ajp
@@ -274,8 +274,8 @@ subroutine cft (a, b, ntot, n, nspan, isn)
   a (k3) = akm
   b (k3) = bkm
   kk = k3 + kspan
-  if (kk.le.nt) goto 420
-  goto 440
+  IF (kk<=nt) GOTO 420
+  GOTO 440
   !     transform for factor of 5 (optional code)
 510 c2 = c72**2 - s72**2
   s2 = 2.0d0 * c72 * s72
@@ -312,22 +312,22 @@ subroutine cft (a, b, ntot, n, nspan, isn)
   b (k2) = bk + aj
   b (k3) = bk - aj
   kk = k4 + kspan
-  if (kk.lt.nn) goto 520
+  IF (kk<nn) GOTO 520
   kk = kk - nn
-  if (kk.le.kspan) goto 520
-  goto 700
+  IF (kk<=kspan) GOTO 520
+  GOTO 700
   !     transform for odd factors
 600 k = nfac (i)
   kspnn = kspan
   kspan = kspan / k
-  if (k.eq.3) goto 320
-  if (k.eq.5) goto 510
-  if (k.eq.jf) goto 640
+  IF (k==3) GOTO 320
+  IF (k==5) GOTO 510
+  IF (k==jf) GOTO 640
   jf = k
-  s1 = rad / DBLE (k)
+  s1 = rad / dble (k)
   c1 = cos (s1)
   s1 = sin (s1)
-  if (jf.gt.maxf) goto 998
+  IF (jf>maxf) GOTO 998
   ck (jf) = 1.0d0
   sk (jf) = 0.0d0
   j = 1
@@ -337,7 +337,7 @@ subroutine cft (a, b, ntot, n, nspan, isn)
   ck (k) = ck (j)
   sk (k) = - sk (j)
   j = j + 1
-  if (j.lt.k) goto 630
+  IF (j<k) GOTO 630
 640 k1 = kk
   k2 = kk + kspnn
   aa = a (kk)
@@ -356,7 +356,7 @@ subroutine cft (a, b, ntot, n, nspan, isn)
   at (j) = a (k1) - a (k2)
   bt (j) = b (k1) - b (k2)
   k1 = k1 + kspan
-  if (k1.lt.k2) goto 650
+  IF (k1<k2) GOTO 650
   a (kk) = ak
   b (kk) = bk
   k1 = kk
@@ -377,21 +377,21 @@ subroutine cft (a, b, ntot, n, nspan, isn)
   aj = at (k) * sk (jj) + aj
   bj = bt (k) * sk (jj) + bj
   jj = jj + j
-  if (jj.gt.jf) jj = jj - jf
-  if (k.lt.jf) goto 670
+  IF (jj>jf) jj = jj - jf
+  IF (k<jf) GOTO 670
   k = jf - j
   a (k1) = ak - bj
   b (k1) = bk + aj
   a (k2) = ak + bj
   b (k2) = bk - aj
   j = j + 1
-  if (j.lt.k) goto 660
+  IF (j<k) GOTO 660
   kk = kk + kspnn
-  if (kk.le.nn) goto 640
+  IF (kk<=nn) GOTO 640
   kk = kk - nn
-  if (kk.le.kspan) goto 640
+  IF (kk<=kspan) GOTO 640
   !     multiply by rotation factor (except for factors of 2 and 4)
-700 if (i.eq.m) goto 800
+700 IF (i==m) GOTO 800
   kk = jc + 1
 710 c2 = 1.0d0 - cd
   s1 = sd
@@ -402,12 +402,12 @@ subroutine cft (a, b, ntot, n, nspan, isn)
   a (kk) = c2 * ak - s2 * b (kk)
   b (kk) = s2 * ak + c2 * b (kk)
   kk = kk + kspnn
-  if (kk.le.nt) goto 730
+  IF (kk<=nt) GOTO 730
   ak = s1 * s2
   s2 = s1 * c2 + c1 * s2
   c2 = c1 * c2 - ak
   kk = kk - nt + kspan
-  if (kk.le.kspnn) goto 730
+  IF (kk<=kspnn) GOTO 730
   c2 = c1 - (cd * c1 + sd * s1)
   s1 = s1 + (sd * c1 - cd * s1)
   !     the following three statements compensate for truncation
@@ -417,29 +417,29 @@ subroutine cft (a, b, ntot, n, nspan, isn)
   s1 = c1 * s1
   c2 = c1 * c2
   kk = kk - kspnn + jc
-  if (kk.le.kspan) goto 720
+  IF (kk<=kspan) GOTO 720
   kk = kk - kspan + jc + inc
-  if (kk.le.jc + jc) goto 710
-  goto 100
+  IF (kk<=jc + jc) GOTO 710
+  GOTO 100
   !     permute the results to normal order---done in two stages
   !     permutation for square factors of n
 800 np (1) = ks
-  if (kt.eq.0) goto 890
+  IF (kt==0) GOTO 890
   k = kt + kt + 1
-  if (m.lt.k) k = k - 1
+  IF (m<k) k = k - 1
   j = 1
   np (k + 1) = jc
 810 np (j + 1) = np (j) / nfac (j)
   np (k) = np (k + 1) * nfac (j)
   j = j + 1
   k = k - 1
-  if (j.lt.k) goto 810
+  IF (j<k) GOTO 810
   k3 = np (k + 1)
   kspan = np (2)
   kk = jc + 1
   k2 = kspan + 1
   j = 1
-  if (n.ne.ntot) goto 850
+  IF (n/=ntot) GOTO 850
   !     permutation for single-variate transform (optional code)
 820 ak = a (kk)
   a (kk) = a (k2)
@@ -449,19 +449,19 @@ subroutine cft (a, b, ntot, n, nspan, isn)
   b (k2) = bk
   kk = kk + inc
   k2 = kspan + k2
-  if (k2.lt.ks) goto 820
+  IF (k2<ks) GOTO 820
 830 k2 = k2 - np (j)
   j = j + 1
   k2 = np (j + 1) + k2
-  if (k2.gt.np (j) ) goto 830
+  IF (k2>np (j) ) GOTO 830
   j = 1
-840 if (kk.lt.k2) goto 820
+840 IF (kk<k2) GOTO 820
   kk = kk + inc
   k2 = kspan + k2
-  if (k2.lt.ks) goto 840
-  if (kk.lt.ks) goto 830
+  IF (k2<ks) GOTO 840
+  IF (kk<ks) GOTO 830
   jc = k3
-  goto 890
+  GOTO 890
   !     permutation for multivariate transform
 850 k = kk + jc
 860 ak = a (kk)
@@ -472,72 +472,72 @@ subroutine cft (a, b, ntot, n, nspan, isn)
   b (k2) = bk
   kk = kk + inc
   k2 = k2 + inc
-  if (kk.lt.k) goto 860
+  IF (kk<k) GOTO 860
   kk = kk + ks - jc
   k2 = k2 + ks - jc
-  if (kk.lt.nt) goto 850
+  IF (kk<nt) GOTO 850
   k2 = k2 - nt + kspan
   kk = kk - nt + jc
-  if (k2.lt.ks) goto 850
+  IF (k2<ks) GOTO 850
 870 k2 = k2 - np (j)
   j = j + 1
   k2 = np (j + 1) + k2
-  if (k2.gt.np (j) ) goto 870
+  IF (k2>np (j) ) GOTO 870
   j = 1
-880 if (kk.lt.k2) goto 850
+880 IF (kk<k2) GOTO 850
   kk = kk + jc
   k2 = kspan + k2
-  if (k2.lt.ks) goto 880
-  if (kk.lt.ks) goto 870
+  IF (k2<ks) GOTO 880
+  IF (kk<ks) GOTO 870
   jc = k3
-890 if (2 * kt + 1.ge.m) return
+890 IF (2 * kt + 1>=m) RETURN
   kspnn = np (kt + 1)
   !     permutation for square-free factors of n
   j = m - kt
   nfac (j + 1) = 1
 900 nfac (j) = nfac (j) * nfac (j + 1)
   j = j - 1
-  if (j.ne.kt) goto 900
+  IF (j/=kt) GOTO 900
   kt = kt + 1
   nn = nfac (kt) - 1
-  if (nn.gt.maxp) goto 998
+  IF (nn>maxp) GOTO 998
   jj = 0
   j = 0
-  goto 906
+  GOTO 906
 902 jj = jj - k2
   k2 = kk
   k = k + 1
   kk = nfac (k)
 904 jj = kk + jj
-  if (jj.ge.k2) goto 902
+  IF (jj>=k2) GOTO 902
   np (j) = jj
 906 k2 = nfac (kt)
   k = kt + 1
   kk = nfac (k)
   j = j + 1
-  if (j.le.nn) goto 904
+  IF (j<=nn) GOTO 904
   !     determine the permutation cycles of length greater than 1
   j = 0
-  goto 914
+  GOTO 914
 910 k = kk
   kk = np (k)
   np (k) = - kk
-  if (kk.ne.j) goto 910
+  IF (kk/=j) GOTO 910
   k3 = kk
 914 j = j + 1
   kk = np (j)
-  if (kk.lt.0) goto 914
-  if (kk.ne.j) goto 910
+  IF (kk<0) GOTO 914
+  IF (kk/=j) GOTO 910
   np (j) = - j
-  if (j.ne.nn) goto 914
+  IF (j/=nn) GOTO 914
   maxf = inc * maxf
   !     reorder a and b, following the permutation cycles
-  goto 950
+  GOTO 950
 924 j = j - 1
-  if (np (j) .lt.0) goto 924
+  IF (np (j) <0) GOTO 924
   jj = jc
 926 kspan = jj
-  if (jj.gt.maxf) kspan = maxf
+  IF (jj>maxf) kspan = maxf
   jj = jj - kspan
   k = np (j)
   kk = jc * k + ii + jj
@@ -547,7 +547,7 @@ subroutine cft (a, b, ntot, n, nspan, isn)
   at (k2) = a (k1)
   bt (k2) = b (k1)
   k1 = k1 - inc
-  if (k1.ne.kk) goto 928
+  IF (k1/=kk) GOTO 928
 932 k1 = kk + kspan
   k2 = k1 - jc * (k + np (k) )
   k = - np (k)
@@ -555,27 +555,27 @@ subroutine cft (a, b, ntot, n, nspan, isn)
   b (k1) = b (k2)
   k1 = k1 - inc
   k2 = k2 - inc
-  if (k1.ne.kk) goto 936
+  IF (k1/=kk) GOTO 936
   kk = k2
-  if (k.ne.j) goto 932
+  IF (k/=j) GOTO 932
   k1 = kk + kspan
   k2 = 0
 940 k2 = k2 + 1
   a (k1) = at (k2)
   b (k1) = bt (k2)
   k1 = k1 - inc
-  if (k1.ne.kk) goto 940
-  if (jj.ne.0) goto 926
-  if (j.ne.1) goto 924
+  IF (k1/=kk) GOTO 940
+  IF (jj/=0) GOTO 926
+  IF (j/=1) GOTO 924
 950 j = k3 + 1
   nt = nt - kspnn
   ii = nt - inc + 1
-  if (nt.ge.0) goto 924
-  return
+  IF (nt>=0) GOTO 924
+  RETURN
   !     error finish, insufficient array storage
 998 isn = 0
 !  print 999
-  print*,'Array bounds exceeded within subroutine cft'
-  stop
+  PRINT*,'Array bounds exceeded within subroutine cft'
+  STOP
 !999 format(44h0array bounds exceeded within subroutine cft)
-  end subroutine cft
+  END SUBROUTINE cft

@@ -8,7 +8,7 @@
 !
 !
 !----------------------------------------------------------------------
-subroutine compute_ppsi (ppsi, ppsi_us, ik, ipol, nbnd_occ, current_spin)
+SUBROUTINE compute_ppsi (ppsi, ppsi_us, ik, ipol, nbnd_occ, current_spin)
   !----------------------------------------------------------------------
   !
   ! On output: ppsi contains P_c^+ p | psi_ik > for the ipol cartesian
@@ -34,7 +34,7 @@ subroutine compute_ppsi (ppsi, ppsi_us, ik, ipol, nbnd_occ, current_spin)
   USE uspp_param,           ONLY : nh, nhm
   IMPLICIT NONE
   !
-  INTEGER, INTENT(IN) :: ipol, ik, nbnd_occ, current_spin
+  INTEGER, INTENT(in) :: ipol, ik, nbnd_occ, current_spin
   !
   COMPLEX(DP) :: ppsi(npwx,npol,nbnd_occ), ppsi_us(npwx,npol,nbnd_occ)
   ! Local variables
@@ -54,36 +54,36 @@ subroutine compute_ppsi (ppsi, ppsi_us, ik, ipol, nbnd_occ, current_spin)
 
   COMPLEX(DP), EXTERNAL :: zdotc
   !
-  ALLOCATE (work ( npwx, MAX(nkb,1)))
-  ALLOCATE (gk ( 3, npwx))    
+  ALLOCATE (work ( npwx, max(nkb,1)))
+  ALLOCATE (gk ( 3, npwx))
   IF (nkb > 0) THEN
      IF (noncolin) THEN
         ALLOCATE (becp2_nc (nkb, npol, nbnd))
      ELSE
         ALLOCATE (becp2 (nkb, nbnd))
-     END IF
+     ENDIF
 
      ALLOCATE (dvkb (npwx, nkb))
      ALLOCATE (dvkb1(npwx, nkb))
      dvkb (:,:) = (0.d0, 0.d0)
      dvkb1(:,:) = (0.d0, 0.d0)
-  END IF
+  ENDIF
   DO ig = 1, npw
      gk (1, ig) = (xk (1, ik) + g (1, igk (ig) ) ) * tpiba
      gk (2, ig) = (xk (2, ik) + g (2, igk (ig) ) ) * tpiba
      gk (3, ig) = (xk (3, ik) + g (3, igk (ig) ) ) * tpiba
      g2kin (ig) = gk (1, ig) **2 + gk (2, ig) **2 + gk (3, ig) **2
-  END DO
+  ENDDO
   !
   ! this is the kinetic contribution to p :  (k+G)_ipol * psi
   !
   DO ip=1,npol
-     DO ibnd = 1, nbnd_occ 
+     DO ibnd = 1, nbnd_occ
         DO ig = 1, npw
            ppsi(ig,ip,ibnd)=gk(ipol,ig)*evc(ig+npwx*(ip-1),ibnd)
-        END DO
-     END DO
-  END DO
+        ENDDO
+     ENDDO
+  ENDDO
 
   !
   ! and this is the contribution from nonlocal pseudopotentials
@@ -93,16 +93,16 @@ subroutine compute_ppsi (ppsi, ppsi_us, ik, ipol, nbnd_occ, current_spin)
   vers(ipol)=1.d0
   CALL gen_us_dy (ik, vers, dvkb1)
   DO ig = 1, npw
-     IF (g2kin (ig) < 1.0d-10) then
+     IF (g2kin (ig) < 1.0d-10) THEN
         gk (1, ig) = 0.d0
         gk (2, ig) = 0.d0
         gk (3, ig) = 0.d0
      ELSE
-        gk (1, ig) = gk (1, ig) / SQRT (g2kin (ig) )
-        gk (2, ig) = gk (2, ig) / SQRT (g2kin (ig) )
-        gk (3, ig) = gk (3, ig) / SQRT (g2kin (ig) )
-     END IF
-  END DO
+        gk (1, ig) = gk (1, ig) / sqrt (g2kin (ig) )
+        gk (2, ig) = gk (2, ig) / sqrt (g2kin (ig) )
+        gk (3, ig) = gk (3, ig) / sqrt (g2kin (ig) )
+     ENDIF
+  ENDDO
 
   jkb = 0
   DO nt = 1, ntyp
@@ -111,12 +111,12 @@ subroutine compute_ppsi (ppsi, ppsi_us, ik, ipol, nbnd_occ, current_spin)
            DO ikb = 1, nh (nt)
               jkb = jkb + 1
               DO ig = 1, npw
-                 work (ig,jkb)=dvkb1(ig,jkb)+dvkb(ig,jkb)*gk(ipol,ig) 
-              END DO
-           END DO
-        END IF
-     END DO
-  END DO
+                 work (ig,jkb)=dvkb1(ig,jkb)+dvkb(ig,jkb)*gk(ipol,ig)
+              ENDDO
+           ENDDO
+        ENDIF
+     ENDDO
+  ENDDO
   DEALLOCATE (gk)
 
   IF (noncolin) THEN
@@ -132,7 +132,7 @@ subroutine compute_ppsi (ppsi, ppsi_us, ik, ipol, nbnd_occ, current_spin)
   ELSE
      ALLOCATE (ps2( nkb, nbnd_occ, 2))
      ps2=(0.d0,0.d0)
-  END IF
+  ENDIF
   DO nt = 1, ntyp
      DO na = 1, nat
         IF (nt == ityp (na)) THEN
@@ -140,7 +140,7 @@ subroutine compute_ppsi (ppsi, ppsi_us, ik, ipol, nbnd_occ, current_spin)
               ikb = ijkb0 + ih
               DO jh = 1, nh (nt)
                  jkb = ijkb0 + jh
-                 DO ibnd = 1, nbnd_occ 
+                 DO ibnd = 1, nbnd_occ
                     IF (noncolin) THEN
                        IF (lspinorb) THEN
                           psc(ikb,1,ibnd,1)=psc(ikb,1,ibnd,1)+(0.d0,-1.d0)* &
@@ -180,7 +180,7 @@ subroutine compute_ppsi (ppsi, ppsi_us, ik, ipol, nbnd_occ, current_spin)
                               ( becp%nc(jkb,2,ibnd)*(deeq_nc(ih,jh,na,4) &
                                              -et(ibnd,ik)*qq(ih,jh,nt))+ &
                                 becp%nc(jkb,1,ibnd)*deeq_nc(ih,jh,na,3) )
-                       END IF
+                       ENDIF
                     ELSE
                        ps2(ikb,ibnd,1) = ps2(ikb,ibnd,1)+ becp2(jkb,ibnd)* &
                          (0.d0,-1.d0)*(deeq(ih,jh,na,current_spin) &
@@ -189,14 +189,14 @@ subroutine compute_ppsi (ppsi, ppsi_us, ik, ipol, nbnd_occ, current_spin)
                          (0.d0,-1.d0)*(deeq(ih,jh,na,current_spin)&
                          -et(ibnd,ik)*qq(ih,jh,nt))
                     ENDIF
-                 END DO
-              END DO
-           END DO
+                 ENDDO
+              ENDDO
+           ENDDO
            ijkb0=ijkb0+nh(nt)
-        END IF
-     END DO
-  END DO
-  IF (ikb /= nkb .OR. jkb /= nkb) CALL errore ('compute_ppsi', &
+        ENDIF
+     ENDDO
+  ENDDO
+  IF (ikb /= nkb .or. jkb /= nkb) CALL errore ('compute_ppsi', &
                                                'unexpected error',1)
 
   IF (nkb>0) THEN
@@ -214,13 +214,13 @@ subroutine compute_ppsi (ppsi, ppsi_us, ik, ipol, nbnd_occ, current_spin)
         CALL zgemm( 'N', 'N', npw, nbnd_occ, nkb, &
              (0.d0,0.5d0), work(1,1), npwx, ps2(1,1,2), nkb, (1.d0,0.0d0), &
              ppsi, npwx )
-     END IF
-  END IF
+     ENDIF
+  ENDIF
   IF (noncolin) THEN
      DEALLOCATE (psc)
   ELSE
      DEALLOCATE (ps2)
-  END IF
+  ENDIF
 !
 !   ppsi contains p - i/2 [x, V_{nl}-eS] psi_v for the ipol polarization
 !
@@ -234,13 +234,13 @@ subroutine compute_ppsi (ppsi, ppsi_us, ik, ipol, nbnd_occ, current_spin)
      ALLOCATE (dpqq( nhm, nhm, 3, ntyp))
      CALL compute_qdipol(dpqq,ipol)
      IF (noncolin) THEN
-        ALLOCATE (ps_nc(nbnd_occ,npol))    
+        ALLOCATE (ps_nc(nbnd_occ,npol))
         IF (lspinorb) THEN
            ALLOCATE (dpqq_so( nhm, nhm, nspin, 3, ntyp))
            CALL compute_qdipol_so(dpqq, dpqq_so,ipol)
-        END IF
+        ENDIF
      ELSE
-        ALLOCATE (ps(nbnd_occ))    
+        ALLOCATE (ps(nbnd_occ))
      ENDIF
      ijkb0 = 0
      DO nt = 1, ntyp
@@ -252,7 +252,7 @@ subroutine compute_ppsi (ppsi, ppsi_us, ik, ipol, nbnd_occ, current_spin)
                     ps_nc = (0.d0,0.d0)
                  ELSE
                     ps = (0.d0,0.d0)
-                 END IF
+                 ENDIF
                  DO jh = 1, nh (nt)
                     jkb = ijkb0 + jh
                     DO ibnd=1, nbnd_occ
@@ -273,36 +273,36 @@ subroutine compute_ppsi (ppsi, ppsi_us, ik, ipol, nbnd_occ, current_spin)
                                     becp2_nc(jkb,ip,ibnd)*(0.d0,1.d0)*   &
                                     qq(ih,jh,nt)+becp%nc(jkb,ip,ibnd)    &
                                                    *dpqq(ih,jh,ipol,nt)
-                             END IF
-                          END DO
+                             ENDIF
+                          ENDDO
                        ELSE
                           ps(ibnd) = ps(ibnd) + becp2(jkb,ibnd) *  &
                                 (0.d0,1.d0) * qq(ih,jh,nt)   +  &
                                 becp%k(jkb,ibnd) * dpqq(ih,jh,ipol,nt)
-                       END IF
-                    END DO
-                 END DO
-                 DO ibnd = 1, nbnd_occ 
+                       ENDIF
+                    ENDDO
+                 ENDDO
+                 DO ibnd = 1, nbnd_occ
                     IF (noncolin) THEN
                        DO ip=1,npol
                           CALL zaxpy(npw,ps_nc(ibnd,ip),vkb(1,ikb),1,&
                                      ppsi_us(1,ip,ibnd),1)
-                       END DO
+                       ENDDO
                     ELSE
                        CALL zaxpy(npw,ps(ibnd),vkb(1,ikb),1,ppsi_us(1,1,ibnd),1)
                     ENDIF
-                 END DO
-              END DO
+                 ENDDO
+              ENDDO
               ijkb0=ijkb0+nh(nt)
-           END IF
-        END DO
-     END DO
-     IF (jkb.NE.nkb) CALL errore ('compute_ppsi', 'unexpected error', 1)
+           ENDIF
+        ENDDO
+     ENDDO
+     IF (jkb/=nkb) CALL errore ('compute_ppsi', 'unexpected error', 1)
      IF (noncolin) THEN
         DEALLOCATE(ps_nc)
      ELSE
         DEALLOCATE(ps)
-     END IF
+     ENDIF
   ENDIF
 
 
@@ -312,8 +312,8 @@ subroutine compute_ppsi (ppsi, ppsi_us, ik, ipol, nbnd_occ, current_spin)
         DEALLOCATE(becp2_nc)
      ELSE
         DEALLOCATE(becp2)
-     END IF
-  END IF
+     ENDIF
+  ENDIF
   DEALLOCATE (work)
 
   RETURN

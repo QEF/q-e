@@ -8,13 +8,13 @@
 !-----------------------------------------------------------------------
 SUBROUTINE hexspinsym(d_spin)
   !-----------------------------------------------------------------------
-  ! 
-  ! Provides symmetry operations in the spin space for Hexagonal and 
+  !
+  ! Provides symmetry operations in the spin space for Hexagonal and
   ! Trigonal lattices.
   ! The c axis is assumed to be along the z axis
-  ! 
   !
-  USE kinds   
+  !
+  USE kinds
   USE symm_base, ONLY : nsym, sname
   !
   IMPLICIT NONE
@@ -29,7 +29,7 @@ SUBROUTINE hexspinsym(d_spin)
   !
   ! sin3 = sin(pi/3), cos3 = cos(pi/3), msin3 = -sin(pi/3), mcos3 = -sin(pi/3)
   !
-  REAL(DP), parameter :: sin3 = 0.866025403784438597d0, cos3 = 0.5d0, &
+  REAL(DP), PARAMETER :: sin3 = 0.866025403784438597d0, cos3 = 0.5d0, &
                          msin3 =-0.866025403784438597d0, mcos3 = -0.5d0
   !
   !   and the local variables
@@ -38,7 +38,7 @@ SUBROUTINE hexspinsym(d_spin)
   !
   ! symmetry matrices in the j=1/2 subspace
   !
-  INTEGER :: i,j 
+  INTEGER :: i,j
   !
   ! counter over the rotations
   ! counter over the rotations
@@ -82,7 +82,7 @@ SUBROUTINE hexspinsym(d_spin)
                 (0.d0,0.d0), (cos3,msin3), (mcos3,msin3), (0.d0,0.d0), &
                 (0.d0,0.d0), (mcos3,msin3), (cos3,msin3), (0.d0,0.d0), &
                 (0.d0,0.d0), (sin3,mcos3), (msin3,mcos3), (0.d0,0.d0), &
-                (0.d0,0.d0), (msin3,mcos3), (sin3,mcos3), (0.d0,0.d0), & 
+                (0.d0,0.d0), (msin3,mcos3), (sin3,mcos3), (0.d0,0.d0), &
                 (-1.d0,0.d0), (0.d0,0.d0), (0.d0,0.d0), (-1.d0,0.d0), &
                 (0.d0,-1.d0), (0.d0,0.d0), (0.d0,0.d0), (0.d0,1.d0), &
                 (0.d0,0.d0), (1.d0,0.d0), (-1.d0,0.d0), (0.d0,0.d0), &
@@ -105,5 +105,5 @@ SUBROUTINE hexspinsym(d_spin)
      ENDDO
   ENDDO
   RETURN
-  !  
+  !
   END SUBROUTINE hexspinsym

@@ -22,7 +22,7 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
   USE constants,        ONLY : rytoev
   USE cell_base,        ONLY : at, bg, omega, alat, celldm, ibrav
   USE ions_base,        ONLY : nat, ntyp => nsp, ityp, tau, zv, atm
-  USE printout_base,    ONLY : title 
+  USE printout_base,    ONLY : title
   USE extfield,         ONLY : tefield, dipfield
   USE gvect
   USE klist,            ONLY : nks, nkstot, xk
@@ -54,18 +54,18 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
 
   IF (filplot == ' ') RETURN
 #ifdef __PARA
-  ALLOCATE (raux1( nrx1 * nrx2 * nrx3))    
+  ALLOCATE (raux1( nrx1 * nrx2 * nrx3))
 #endif
 
   WRITE( stdout, '(/5x,"Calling punch_plot, plot_num = ",i3)') plot_num
   IF (plot_num == 7 ) &
      WRITE( stdout, '(/5x,"Plotting k_point = ",i3,"  band =", i3  )') &
                                                    kpoint, kband
-  IF (plot_num == 7 .AND. noncolin .AND. spin_component .NE. 0 ) &
+  IF (plot_num == 7 .and. noncolin .and. spin_component /= 0 ) &
      WRITE( stdout, '(/5x,"Plotting spin magnetization ipol = ",i3)') &
                                                           spin_component
   !
-  ALLOCATE (raux( nrxx))    
+  ALLOCATE (raux( nrxx))
   !
   !     Here we decide which quantity to plot
   !
@@ -74,7 +74,7 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
      !      plot of the charge density
      !
      IF (noncolin) THEN
-        call dcopy (nrxx, rho%of_r, 1, raux, 1)
+        CALL dcopy (nrxx, rho%of_r, 1, raux, 1)
      ELSE
         IF (spin_component == 0) THEN
            CALL dcopy (nrxx, rho%of_r (1, 1), 1, raux, 1)
@@ -93,7 +93,7 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
      !       The total self-consistent potential V_H+V_xc on output
      !
      IF (noncolin) THEN
-        call dcopy (nrxx, v%of_r, 1, raux, 1)
+        CALL dcopy (nrxx, v%of_r, 1, raux, 1)
      ELSE
         IF (spin_component == 0) THEN
            CALL dcopy (nrxx, v%of_r, 1, raux, 1)
@@ -118,19 +118,19 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
      !
      !       The local density of states at e_fermi on output
      !
-     if (noncolin) call errore('punch_plot','not implemented yet',1)
+     IF (noncolin) CALL errore('punch_plot','not implemented yet',1)
      CALL local_dos (1, lsign, kpoint, kband, spin_component, emin, emax, raux)
 
   ELSEIF (plot_num == 4) THEN
      !
      !       The local density of electronic entropy on output
      !
-     if (noncolin) call errore('punch_plot','not implemented yet',1)
+     IF (noncolin) CALL errore('punch_plot','not implemented yet',1)
      CALL local_dos (2, lsign, kpoint, kband, spin_component, emin, emax, raux)
 
   ELSEIF (plot_num == 5) THEN
 
-     if (noncolin) call errore('punch_plot','not implemented yet',1)
+     IF (noncolin) CALL errore('punch_plot','not implemented yet',1)
      CALL work_function (wf)
 #ifdef __PARA
      CALL stm (wf, sample_bias, z, dz, raux1)
@@ -138,7 +138,7 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
      CALL stm (wf, sample_bias, z, dz, raux)
 #endif
      WRITE (title, '(" Bias in eV = ",f10.4," # states",i4)') &
-             sample_bias * rytoev, NINT (wf)
+             sample_bias * rytoev, nint (wf)
 
   ELSEIF (plot_num == 6) THEN
      !
@@ -161,16 +161,16 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
         ENDIF
      ELSE
         CALL local_dos (0, lsign, kpoint, kband, spin_component, emin, emax, raux)
-     END IF
+     ENDIF
   ELSEIF (plot_num == 8) THEN
 
-     if (noncolin) &
-        call errore('punch_plot','elf+noncolin not yet implemented',1)
+     IF (noncolin) &
+        CALL errore('punch_plot','elf+noncolin not yet implemented',1)
      CALL do_elf (raux)
 
   ELSEIF (plot_num == 9) THEN
 
-     call errore('punch_plot','no longer implemented, see PP/plan_avg.f90',1)
+     CALL errore('punch_plot','no longer implemented, see PP/plan_avg.f90',1)
 
   ELSEIF (plot_num == 10) THEN
 
@@ -178,14 +178,14 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
 
   ELSEIF (plot_num == 11) THEN
 
-     raux(:) = vltot(:) 
+     raux(:) = vltot(:)
      IF (nspin == 2) THEN
         rho%of_g(:,1) =  rho%of_g(:,1) +  rho%of_g(:,2)
         rho%of_r (:,1) =  rho%of_r (:,1) +  rho%of_r (:,2)
         nspin = 1
-     END IF
+     ENDIF
      CALL v_h (rho%of_g, ehart, charge, raux)
-     IF (tefield.AND.dipfield) CALL add_efield(raux,dummy,rho%of_r,.true.)
+     IF (tefield.and.dipfield) CALL add_efield(raux,dummy,rho%of_r,.true.)
 
   ELSEIF (plot_num == 12) THEN
 
@@ -200,8 +200,8 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
 
      IF (noncolin) THEN
         IF (spin_component==0) THEN
-           raux(:) = SQRT(rho%of_r(:,2)**2 + rho%of_r(:,3)**2 + rho%of_r(:,4)**2 )
-        ELSEIF (spin_component >= 1 .OR. spin_component <=3) THEN
+           raux(:) = sqrt(rho%of_r(:,2)**2 + rho%of_r(:,3)**2 + rho%of_r(:,4)**2 )
+        ELSEIF (spin_component >= 1 .or. spin_component <=3) THEN
            raux(:) = rho%of_r(:,spin_component+1)
         ELSE
            CALL errore('punch_plot','spin_component not allowed',1)
@@ -210,13 +210,13 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
         CALL errore('punch_plot','noncollinear spin required',1)
      ENDIF
 
-  ELSEIF (plot_num == 14 .OR. plot_num == 15 .OR. plot_num == 16 ) THEN
+  ELSEIF (plot_num == 14 .or. plot_num == 15 .or. plot_num == 16 ) THEN
 
      ipol = plot_num - 13
-     call polarization ( spin_component, ipol, epsilon, raux )
+     CALL polarization ( spin_component, ipol, epsilon, raux )
 
   ELSEIF (plot_num == 17) THEN
-     write(stdout, '(7x,a)') "Reconstructing all-electron valence charge."
+     WRITE(stdout, '(7x,a)') "Reconstructing all-electron valence charge."
      ! code partially duplicate from plot_num=0, should be unified
      CALL PAW_make_ae_charge(rho)
      !
@@ -234,8 +234,8 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
 
      IF (noncolin) THEN
         IF (spin_component==0) THEN
-           raux(:) = SQRT(v%of_r(:,2)**2 + v%of_r(:,3)**2 + v%of_r(:,4)**2 )
-        ELSEIF (spin_component >= 1 .OR. spin_component <=3) THEN
+           raux(:) = sqrt(v%of_r(:,2)**2 + v%of_r(:,3)**2 + v%of_r(:,4)**2 )
+        ELSEIF (spin_component >= 1 .or. spin_component <=3) THEN
            raux(:) = v%of_r(:,spin_component+1)
         ELSE
            CALL errore('punch_plot','spin_component not allowed',1)
@@ -250,7 +250,7 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
   ENDIF
 
 #ifdef __PARA
-  IF (.NOT. (plot_num == 5 ) ) CALL grid_gather (raux, raux1)
+  IF (.not. (plot_num == 5 ) ) CALL grid_gather (raux, raux1)
   IF ( ionode ) &
      CALL plot_io (filplot, title, nrx1, &
          nrx2, nrx3, nr1, nr2, nr3, nat, ntyp, ibrav, celldm, at, gcutm, &
@@ -283,35 +283,35 @@ SUBROUTINE polarization ( spin_component, ipol, epsilon, raux )
   INTEGER :: spin_component, ipol, ig
   REAL(DP) :: epsilon, raux (nrxx)
   !
-  IF (ipol < 1 .OR. ipol > 3) CALL errore('polarization', &
+  IF (ipol < 1 .or. ipol > 3) CALL errore('polarization', &
        'wrong component',1)
   !
   IF (spin_component == 0) THEN
-     IF (nspin == 1 .OR. nspin == 4 ) THEN
-        psic(:) = CMPLX(rho%of_r(:,1), 0.d0,kind=DP)
-     ELSE IF (nspin == 2) THEN
-        psic(:) = CMPLX(rho%of_r(:,1) + rho%of_r(:,2), 0.d0,kind=DP) 
-     END IF
-  ELSE 
-     IF (spin_component > nspin .OR. spin_component < 1) &
+     IF (nspin == 1 .or. nspin == 4 ) THEN
+        psic(:) = cmplx(rho%of_r(:,1), 0.d0,kind=DP)
+     ELSEIF (nspin == 2) THEN
+        psic(:) = cmplx(rho%of_r(:,1) + rho%of_r(:,2), 0.d0,kind=DP)
+     ENDIF
+  ELSE
+     IF (spin_component > nspin .or. spin_component < 1) &
           CALL errore('polarization', 'wrong spin component',1)
-     psic(:) = CMPLX(rho%of_r(:,spin_component), 0.d0,kind=DP)
-  END IF
+     psic(:) = cmplx(rho%of_r(:,spin_component), 0.d0,kind=DP)
+  ENDIF
   !
   !   transform to G space
   !
-  call cft3 (psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, - 1)
+  CALL cft3 (psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, - 1)
   !
   IF (gstart == 2) psic (1) = (epsilon - 1.d0) / fpi
   DO ig = gstart, ngm
      psic (nl (ig) ) = psic (nl (ig) ) * g (ipol, ig) / gg (ig) &
        / (0.d0, 1.d0)
-     if (gamma_only) psic (nlm(ig) ) = CONJG ( psic (nl (ig) ) )
-  END DO
+     IF (gamma_only) psic (nlm(ig) ) = conjg ( psic (nl (ig) ) )
+  ENDDO
   !
   CALL cft3 (psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1)
   !
-  raux (:) =  DBLE (psic (:) )
+  raux (:) =  dble (psic (:) )
   !
   RETURN
   !

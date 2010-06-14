@@ -49,8 +49,8 @@ PROGRAM plan_avg
   !
   prefix = 'pwscf'
   CALL get_env( 'ESPRESSO_TMPDIR', outdir )
-  IF ( TRIM( outdir ) == ' ' ) outdir = './'
-  filplot = 'tmp.pp' 
+  IF ( trim( outdir ) == ' ' ) outdir = './'
+  filplot = 'tmp.pp'
   !
   ios = 0
   !
@@ -61,10 +61,10 @@ PROGRAM plan_avg
      READ (5, inputpp, iostat = ios)
      tmp_dir = trimcheck (outdir)
      !
-  END IF
+  ENDIF
   !
   CALL mp_bcast( ios, ionode_id )
-  IF ( ios /= 0 ) CALL errore ('plan_avg', 'reading inputpp namelist', ABS(ios))
+  IF ( ios /= 0 ) CALL errore ('plan_avg', 'reading inputpp namelist', abs(ios))
   !
   ! ... Broadcast variables
   !
@@ -81,8 +81,8 @@ PROGRAM plan_avg
   !
   CALL openfil_pp ( )
   !
-  ALLOCATE (averag( nat, nbnd, nkstot))    
-  ALLOCATE (plan(nr3, nbnd, nkstot))    
+  ALLOCATE (averag( nat, nbnd, nkstot))
+  ALLOCATE (plan(nr3, nbnd, nkstot))
   !
   CALL do_plan_avg (averag, plan, ninter)
   !
@@ -90,7 +90,7 @@ PROGRAM plan_avg
      !
      OPEN (UNIT = iunplot, FILE = filplot, FORM = 'formatted', &
           STATUS = 'unknown', err = 100, IOSTAT = ios)
-100  CALL errore ('plan_avg', 'opening file '//TRIM(filplot), abs (ios) )
+100  CALL errore ('plan_avg', 'opening file '//trim(filplot), abs (ios) )
      WRITE (iunplot, '(a)') title
      WRITE (iunplot, '(8i8)') nrx1, nrx2, nrx3, nr1, nr2, nr3, nat, ntyp
      WRITE (iunplot, '(i6,6f12.8)') ibrav, celldm
@@ -98,7 +98,7 @@ PROGRAM plan_avg
         WRITE ( iunplot, * ) at(:,1)
         WRITE ( iunplot, * ) at(:,2)
         WRITE ( iunplot, * ) at(:,3)
-     END IF
+     ENDIF
      WRITE (iunplot, '(3f20.10,i6)') gcutm, dual, ecutwfc, 9
      WRITE (iunplot, '(i4,3x,a2,3x,f5.2)') &
           (nt, atm (nt), zv (nt), nt=1, ntyp)
@@ -125,7 +125,7 @@ PROGRAM plan_avg
 
 CONTAINS
 !
-subroutine do_plan_avg (averag, plan, ninter)
+SUBROUTINE do_plan_avg (averag, plan, ninter)
   !
   !    This routine computes the planar average on the xy plane
   !    for the charge density of each state of the system.
@@ -153,8 +153,8 @@ subroutine do_plan_avg (averag, plan, ninter)
   USE io_files, ONLY: iunwfc, nwordwfc
   USE becmod, ONLY: bec_type, becp, calbec, allocate_bec_type, deallocate_bec_type
 
-  implicit none
-  integer :: ninter
+  IMPLICIT NONE
+  INTEGER :: ninter
   ! output: the number of planes
   real(DP) :: averag (nat, nbnd, nkstot), plan (nr3, nbnd, nkstot)
   ! output: the average charge on ea
@@ -162,7 +162,7 @@ subroutine do_plan_avg (averag, plan, ninter)
   !
   !      Local variables
   !
-  integer :: ik, ibnd, iin, na, ir, ij, ind, i1 (nat), ntau (nat + 1)
+  INTEGER :: ik, ibnd, iin, na, ir, ij, ind, i1 (nat), ntau (nat + 1)
   ! counter on k points
   ! counter on bands
   ! counter on planes
@@ -178,7 +178,7 @@ subroutine do_plan_avg (averag, plan, ninter)
   ! auxiliary for coordinates
   ! length in a.u. of the cell along z
 
-  if ( celldm(3) == 0.d0 ) celldm(3) = celldm(1)
+  IF ( celldm(3) == 0.d0 ) celldm(3) = celldm(1)
   zdim = alat * celldm (3)
   sp_min = 2.d0 / alat
   !
@@ -190,95 +190,95 @@ subroutine do_plan_avg (averag, plan, ninter)
   z1 (ninter) = tau (3, 1)
   avg (ninter) = tau (3, 1)
   ntau (ninter) = 1
-  do na = 2, nat
-     do iin = 1, ninter
-        if (abs (mod (z1(iin)-tau(3,na), celldm(3)) ) .lt. sp_min) then
+  DO na = 2, nat
+     DO iin = 1, ninter
+        IF (abs (mod (z1(iin)-tau(3,na), celldm(3)) ) < sp_min) THEN
            avg (iin) = avg (iin) + tau (3, na)
            ntau (iin) = ntau (iin) + 1
-           goto 100
-        endif
-     enddo
+           GOTO 100
+        ENDIF
+     ENDDO
      ninter = ninter + 1
      z1 (ninter) = tau (3, na)
      avg (ninter) = tau (3, na)
      ntau (ninter) = 1
-100  continue
-  enddo
+100  CONTINUE
+  ENDDO
   !
   !     for each plane compute the average position of the central plane
   !     and first point in the fft mesh
   !
-  do iin = 1, ninter
+  DO iin = 1, ninter
      z1 (iin) = mod (avg (iin), celldm (3) ) / ntau (iin)
      ind = (z1 (iin) / celldm (3) ) * nr3 + 1
-     if (ind.le.0) ind = ind+nr3
+     IF (ind<=0) ind = ind+nr3
      i1 (iin) = ind
-  enddo
+  ENDDO
   !
   !    order the points
   !
-  do iin = 1, ninter
+  DO iin = 1, ninter
      ntau (iin) = i1 (iin)
-     do ik = iin + 1, ninter
-        if (i1 (ik) .lt.ntau (iin) ) then
+     DO ik = iin + 1, ninter
+        IF (i1 (ik) <ntau (iin) ) THEN
            ij = ntau (iin)
            ntau (iin) = i1 (ik)
            i1 (ik) = ij
-        endif
-     enddo
-  enddo
+        ENDIF
+     ENDDO
+  ENDDO
   ntau (ninter + 1) = ntau (1) + nr3
   !
   !    and compute the point associated to each plane
   !
-  do iin = 1, ninter
+  DO iin = 1, ninter
      i1 (iin) = (ntau (iin) + ntau (iin + 1) ) / 2
-  enddo
+  ENDDO
   !
   !     for each state compute the planar average
   !
   averag(:,:,:) = 0.d0
   plan(:,:,:) = 0.d0
-  call allocate_bec_type ( nkb, nbnd, becp )
+  CALL allocate_bec_type ( nkb, nbnd, becp )
 !  CALL init_us_1 ( )
-  do ik = 1, nks
-     if (lsda) current_spin = isk (ik)
-     call gk_sort (xk (1, ik), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin)
-     call davcio (evc, nwordwfc, iunwfc, ik, - 1)
-     call init_us_2 (npw, igk, xk (1, ik), vkb)
+  DO ik = 1, nks
+     IF (lsda) current_spin = isk (ik)
+     CALL gk_sort (xk (1, ik), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin)
+     CALL davcio (evc, nwordwfc, iunwfc, ik, - 1)
+     CALL init_us_2 (npw, igk, xk (1, ik), vkb)
 
-     call calbec ( npw, vkb, evc, becp)
+     CALL calbec ( npw, vkb, evc, becp)
 
-     do ibnd = 1, nbnd
-        call local_dos1d (ik, ibnd, plan (1, ibnd, ik) )
+     DO ibnd = 1, nbnd
+        CALL local_dos1d (ik, ibnd, plan (1, ibnd, ik) )
         !
         !     compute the integrals of the charge
         !
-        do ir = 1, i1 (1) - 1
+        DO ir = 1, i1 (1) - 1
            averag (1, ibnd, ik) = averag (1, ibnd, ik) + plan (ir, ibnd, ik)
-        enddo
-        do ir = i1 (ninter), nr3
+        ENDDO
+        DO ir = i1 (ninter), nr3
            averag (1, ibnd, ik) = averag (1, ibnd, ik) + plan (ir, ibnd, ik)
-        enddo
+        ENDDO
         averag (1, ibnd, ik) = averag (1, ibnd, ik) * zdim / nr3
         sum = averag (1, ibnd, ik)
-        do iin = 2, ninter
-           do ir = i1 (iin - 1), i1 (iin) - 1
+        DO iin = 2, ninter
+           DO ir = i1 (iin - 1), i1 (iin) - 1
               averag(iin,ibnd,ik) = averag(iin,ibnd,ik) + plan(ir,ibnd,ik)
-           enddo
+           ENDDO
            averag (iin, ibnd, ik) = averag (iin, ibnd, ik) * zdim / nr3
            sum = sum + averag (iin, ibnd, ik)
-        enddo
-     enddo
-  enddo
-  call deallocate_bec_type (becp)
+        ENDDO
+     ENDDO
+  ENDDO
+  CALL deallocate_bec_type (becp)
 #ifdef __PARA
-  call poolrecover (plan, nr3 * nbnd, nkstot, nks)
-  call poolrecover (averag, nat * nbnd, nkstot, nks)
-  call poolrecover (xk, 3, nkstot, nks)
+  CALL poolrecover (plan, nr3 * nbnd, nkstot, nks)
+  CALL poolrecover (averag, nat * nbnd, nkstot, nks)
+  CALL poolrecover (xk, 3, nkstot, nks)
 #endif
-  return
-end subroutine do_plan_avg
+  RETURN
+END SUBROUTINE do_plan_avg
 
 END PROGRAM plan_avg
 

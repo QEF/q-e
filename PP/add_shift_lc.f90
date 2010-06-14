@@ -7,7 +7,7 @@
 !
 !
 !----------------------------------------------------------------------
-subroutine add_shift_lc (nat, tau, ityp, alat, omega, ngm, ngl, &
+SUBROUTINE add_shift_lc (nat, tau, ityp, alat, omega, ngm, ngl, &
      igtongl, nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, g, rho, nl, &
      nspin, gstart, gamma_only, vloc, shift_lc)
   !----------------------------------------------------------------------
@@ -17,11 +17,11 @@ subroutine add_shift_lc (nat, tau, ityp, alat, omega, ngm, ngl, &
   USE mp_global,  ONLY : intra_pool_comm
   USE mp,         ONLY : mp_sum
 
-  implicit none
+  IMPLICIT NONE
   !
   !   first the dummy variables
   !
-  integer :: nat, ngm, nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, nspin, &
+  INTEGER :: nat, ngm, nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, nspin, &
        ngl, gstart, igtongl (ngm), nl (ngm), ityp (nat)
   ! input: the number of atoms in the cell
   ! input: the number of G vectors
@@ -32,7 +32,7 @@ subroutine add_shift_lc (nat, tau, ityp, alat, omega, ngm, ngl, &
   ! input: the correspondence fft mesh <-> G vec
   ! input: the types of atoms
 
-  logical :: gamma_only
+  LOGICAL :: gamma_only
 
   real(DP) :: tau (3, nat), g (3, ngm), vloc (ngl, * ), &
        rho (nrxx, nspin), alat, omega
@@ -46,52 +46,52 @@ subroutine add_shift_lc (nat, tau, ityp, alat, omega, ngm, ngl, &
   real(DP) :: shift_lc ( nat)
   ! output: the local forces on atoms
 
-  integer :: ig, na
+  INTEGER :: ig, na
   ! counter on G vectors
   ! counter on atoms
 
-  real(DP), allocatable :: aux (:,:), shift_(:)
+  real(DP), ALLOCATABLE :: aux (:,:), shift_(:)
   ! auxiliary space for FFT
   real(DP) :: arg, fact
   !
   ! contribution to the force from the local part of the bare potential
   ! F_loc = Omega \Sum_G n*(G) d V_loc(G)/d R_i
   !
-  allocate (aux(2, nrxx), shift_(nat) )
+  ALLOCATE (aux(2, nrxx), shift_(nat) )
   shift_(:) = 0.d0
 
   aux(1,:) = rho(:,1)
-  if (nspin.eq.2) aux(1,:) = aux(1,:) + rho(:,2)
+  IF (nspin==2) aux(1,:) = aux(1,:) + rho(:,2)
   aux(2,:) = 0.d0
-  call cft3 (aux, nr1, nr2, nr3, nrx1, nrx2, nrx3, - 1)
+  CALL cft3 (aux, nr1, nr2, nr3, nrx1, nrx2, nrx3, - 1)
   !
   !    aux contains now  n(G)
   !
-  if (gamma_only) then
+  IF (gamma_only) THEN
      fact = 2.d0
-  else
+  ELSE
      fact = 1.d0
-  end if
-  do na = 1, nat
+  ENDIF
+  DO na = 1, nat
      ! contribution from G=0 is not zero but should be counted only once
-     if (gstart.eq.2) shift_(na)=vloc(igtongl(1),ityp(na))*aux(1,nl(1))/ fact
-     do ig = gstart, ngm
+     IF (gstart==2) shift_(na)=vloc(igtongl(1),ityp(na))*aux(1,nl(1))/ fact
+     DO ig = gstart, ngm
         arg = (g (1, ig) * tau (1, na) + g (2, ig) * tau (2, na) + &
                g (3, ig) * tau (3, na) ) * tpi
         shift_ ( na) = shift_ (na) + &
                 vloc (igtongl (ig), ityp (na) ) * &
                 (cos (arg) * aux(1,nl(ig)) - sin (arg) * aux(2,nl(ig)) )
-     enddo
-     shift_ (na) = fact * shift_ (na) * omega 
-  enddo
+     ENDDO
+     shift_ (na) = fact * shift_ (na) * omega
+  ENDDO
 #ifdef __PARA
-  call mp_sum(  shift_, intra_pool_comm )
+  CALL mp_sum(  shift_, intra_pool_comm )
 #endif
 
   shift_lc(:) = shift_lc(:) + shift_(:)
 
-  deallocate (aux,shift_)
+  DEALLOCATE (aux,shift_)
 
 
-  return
-end subroutine add_shift_lc
+  RETURN
+END SUBROUTINE add_shift_lc

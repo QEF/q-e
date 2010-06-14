@@ -7,7 +7,7 @@
 !
 !
 !-----------------------------------------------------------------------
-subroutine do_shift_ew (alat, nat, ntyp, ityp, zv, delta_zv, at, bg, tau, &
+SUBROUTINE do_shift_ew (alat, nat, ntyp, ityp, zv, delta_zv, at, bg, tau, &
      omega, g, gg, ngm, gcutm, gstart, gamma_only, shift_ion)
   !-----------------------------------------------------------------------
   !
@@ -19,19 +19,19 @@ subroutine do_shift_ew (alat, nat, ntyp, ityp, zv, delta_zv, at, bg, tau, &
   USE constants, ONLY : tpi, e2
   USE mp_global, ONLY : intra_pool_comm
   USE mp, ONLY : mp_sum
-  implicit none
+  IMPLICIT NONE
   !
   !   first the dummy variables
   !
 
-  integer :: nat, ntyp, ityp (nat), ngm, gstart
+  INTEGER :: nat, ntyp, ityp (nat), ngm, gstart
   ! input: number of atoms in the unit cell
   ! input: number of different types of atoms
   ! input: the type of each atom
   ! input: number of plane waves for G sum
   ! input: first non-zero G vector
 
-  logical :: gamma_only
+  LOGICAL :: gamma_only
 
   real(DP) :: tau (3, nat), g (3, ngm), gg (ngm), zv (ntyp), &
        at (3, 3), bg (3, 3), omega, alat, gcutm, delta_zv(ntyp),  &
@@ -50,9 +50,9 @@ subroutine do_shift_ew (alat, nat, ntyp, ityp, zv, delta_zv, at, bg, tau, &
   !
   !    here the local variables
   !
-  integer, parameter :: mxr = 50
+  INTEGER, PARAMETER :: mxr = 50
   ! the maximum number of R vectors included in r
-  integer :: ng, nr, na, nb, nt, nrm, ipol
+  INTEGER :: ng, nr, na, nb, nt, nrm, ipol
   ! counter over reciprocal G vectors
   ! counter over direct vectors
   ! counter on atoms
@@ -74,106 +74,106 @@ subroutine do_shift_ew (alat, nat, ntyp, ityp, zv, delta_zv, at, bg, tau, &
   ! the maximum radius to consider real space sum
   ! buffer variable
   ! used to optimize alpha
-  complex(DP), allocatable :: rhon(:)
-  real(DP), external :: qe_erfc
+  COMPLEX(DP), ALLOCATABLE :: rhon(:)
+  real(DP), EXTERNAL :: qe_erfc
 
-  allocate (rhon(ngm))
+  ALLOCATE (rhon(ngm))
 
   shift_ion(:) = 0.d0
 
   tpiba2 = (tpi / alat) **2
   charge = 0.d0
-  do na = 1, nat
+  DO na = 1, nat
      charge = charge+zv (ityp (na) )
-  enddo
+  ENDDO
   alpha = 2.9d0
 100 alpha = alpha - 0.1d0
   !
   ! choose alpha in order to have convergence in the sum over G
   ! upperbound is a safe upper bound for the error in the sum over G
   !
-  if (alpha.le.0.d0) call errore ('do_shift_ew', 'optimal alpha not found', 1)
+  IF (alpha<=0.d0) CALL errore ('do_shift_ew', 'optimal alpha not found', 1)
   upperbound = 2.d0 * charge**2 * sqrt (2.d0 * alpha / tpi) * qe_erfc ( &
        sqrt (tpiba2 * gcutm / 4.d0 / alpha) )
-  if (upperbound.gt.1.0d-7) goto 100
+  IF (upperbound>1.0d-7) GOTO 100
   !
   ! G-space sum here.
   ! Determine if this processor contains G=0 and set the constant term
   !
-  if (gstart==2) then
-     do na =1,nat
+  IF (gstart==2) THEN
+     DO na =1,nat
         shift_ion(na) = - charge * delta_zv(ityp(na)) /alpha/ 4.0d0
-     end do
-  endif
-  if (gamma_only) then
+     ENDDO
+  ENDIF
+  IF (gamma_only) THEN
      fact = 2.d0
-  else
+  ELSE
      fact = 1.d0
-  end if
-  do ng = gstart, ngm
+  ENDIF
+  DO ng = gstart, ngm
      rhon(ng) = (0.d0, 0.d0)
-     do na =1, nat
+     DO na =1, nat
         arg = (g (1, ng) * tau (1, na) + &
                g (2, ng) * tau (2, na) + &
                g (3, ng) * tau (3, na) ) * tpi
-        rhon(ng) = rhon(ng) + zv (ityp(na)) * CMPLX(cos (arg), -sin (arg),kind=DP)
-     enddo
-  end do
-  do na=1,nat
-     do ng=gstart, ngm
+        rhon(ng) = rhon(ng) + zv (ityp(na)) * cmplx(cos (arg), -sin (arg),kind=DP)
+     ENDDO
+  ENDDO
+  DO na=1,nat
+     DO ng=gstart, ngm
         arg = (g (1, ng) * tau (1, na) + g (2, ng) * tau (2, na) &
              + g (3, ng) * tau (3, na) ) * tpi
         shift_ion(na) = shift_ion(na) + fact * delta_zv(ityp(na)) * &
-                        CONJG(rhon(ng)) * CMPLX(cos (arg), -sin (arg),kind=DP) * &
+                        conjg(rhon(ng)) * cmplx(cos (arg), -sin (arg),kind=DP) * &
                         exp ( -gg(ng)*tpiba2/alpha/4.d0) / gg(ng)/tpiba2
-     enddo
-  enddo
+     ENDDO
+  ENDDO
   shift_ion(:) = 2.d0 * tpi / omega * shift_ion(:)
   !
   !  Here add the other constant term
   !
-  if (gstart.eq.2) then
-     do na = 1, nat
+  IF (gstart==2) THEN
+     DO na = 1, nat
         shift_ion(na) = shift_ion(na) - &
                         zv (ityp (na) ) * delta_zv(ityp(na)) *  &
                         sqrt (8.d0/tpi*alpha)
-     enddo
-  endif
+     ENDDO
+  ENDIF
   !
   ! R-space sum here (only for the processor that contains G=0)
   !
-  if (gstart.eq.2) then
+  IF (gstart==2) THEN
      rmax = 4.d0 / sqrt (alpha) / alat
      !
      ! with this choice terms up to ZiZj*erfc(4) are counted (erfc(4)=2x10^-8
      !
-     do na = 1, nat
-        do nb = 1, nat
-           do ipol = 1, 3
+     DO na = 1, nat
+        DO nb = 1, nat
+           DO ipol = 1, 3
               dtau (ipol) = tau (ipol, na) - tau (ipol, nb)
-           enddo
+           ENDDO
            !
            ! generates nearest-neighbors shells
            !
-           call rgen (dtau, rmax, mxr, at, bg, r, r2, nrm)
+           CALL rgen (dtau, rmax, mxr, at, bg, r, r2, nrm)
            !
            ! and sum to the real space part
            !
-           do nr = 1, nrm
+           DO nr = 1, nrm
               rr = sqrt (r2 (nr) ) * alat
               shift_ion(na) = shift_ion(na) + &
                        delta_zv(ityp(na)) * zv (ityp (nb) ) *  &
                        qe_erfc ( sqrt (alpha) * rr) / rr
-           enddo
-        enddo
-     enddo
-  endif
+           ENDDO
+        ENDDO
+     ENDDO
+  ENDIF
 
   shift_ion(:) = e2 * shift_ion(:)
 
-  call mp_sum ( shift_ion, intra_pool_comm )
+  CALL mp_sum ( shift_ion, intra_pool_comm )
 
-  deallocate (rhon)
-  return
-end subroutine do_shift_ew
+  DEALLOCATE (rhon)
+  RETURN
+END SUBROUTINE do_shift_ew
 

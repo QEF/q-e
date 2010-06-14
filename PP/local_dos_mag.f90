@@ -12,12 +12,12 @@ SUBROUTINE local_dos_mag(spin_component, kpoint, kband, raux)
   !
   ! ... calculates the symmetrized charge density and sum of occupied
   ! ... eigenvalues.
-  ! ... this version works also for metals (gaussian spreading technique)  
+  ! ... this version works also for metals (gaussian spreading technique)
   !
   USE kinds,                ONLY : DP
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
   USE cell_base,            ONLY : omega,tpiba2
-  USE gvect,                ONLY : nrxx, ngm, g, ecutwfc 
+  USE gvect,                ONLY : nrxx, ngm, g, ecutwfc
   USE gsmooth,              ONLY : nls, nr1s, nr2s, nr3s, &
                                    nrx1s, nrx2s, nrx3s, nrxxs, doublegrid
   USE klist,                ONLY : nks, xk
@@ -39,13 +39,13 @@ SUBROUTINE local_dos_mag(spin_component, kpoint, kband, raux)
   REAL(DP) :: raux(nrxx)
 
   INTEGER :: ikb, jkb, ijkb0, ih, jh, ijh, na, np
-  ! counters on beta functions, atoms, pseudopotentials  
+  ! counters on beta functions, atoms, pseudopotentials
   INTEGER :: ir, is, ig, ibnd, ik
   ! counter on 3D r points
   ! counter on spin polarizations
   ! counter on g vectors
   ! counter on bands
-  ! counter on k points  
+  ! counter on k points
   !
   REAL(DP) :: w1
   ! weights
@@ -76,37 +76,37 @@ SUBROUTINE local_dos_mag(spin_component, kpoint, kband, raux)
         !
         DO ibnd = 1, nbnd
            !
-           IF (ibnd == kband) then
+           IF (ibnd == kband) THEN
               psic_nc = (0.D0,0.D0)
               DO ig = 1, npw
                  psic_nc(nls(igk(ig)),1)=evc(ig     ,ibnd)
                  psic_nc(nls(igk(ig)),2)=evc(ig+npwx,ibnd)
-              END DO
+              ENDDO
               DO ipol=1,npol
-                 call cft3s (psic_nc(1,ipol), nr1s, nr2s, nr3s, nrx1s, &
+                 CALL cft3s (psic_nc(1,ipol), nr1s, nr2s, nr3s, nrx1s, &
                                                           nrx2s, nrx3s, 2)
-              END DO
+              ENDDO
               IF (spin_component==1) THEN
                  DO ir = 1,nrxxs
                     rho%of_r(ir,2) = rho%of_r(ir,2) + 2.D0*w1* &
-                         (DBLE(psic_nc(ir,1))* DBLE(psic_nc(ir,2)) + &
-                         AIMAG(psic_nc(ir,1))*AIMAG(psic_nc(ir,2)))
-                 END DO
-              END IF
+                         (dble(psic_nc(ir,1))* dble(psic_nc(ir,2)) + &
+                         aimag(psic_nc(ir,1))*aimag(psic_nc(ir,2)))
+                 ENDDO
+              ENDIF
               IF (spin_component==2) THEN
                  DO ir = 1,nrxxs
                     rho%of_r(ir,3) = rho%of_r(ir,3) + 2.D0*w1* &
-                         (DBLE(psic_nc(ir,1))*AIMAG(psic_nc(ir,2)) - &
-                          DBLE(psic_nc(ir,2))*AIMAG(psic_nc(ir,1)))
-                 END DO
-              END IF
+                         (dble(psic_nc(ir,1))*aimag(psic_nc(ir,2)) - &
+                          dble(psic_nc(ir,2))*aimag(psic_nc(ir,1)))
+                 ENDDO
+              ENDIF
               IF (spin_component==3) THEN
                  DO ir = 1,nrxxs
                     rho%of_r(ir,4) = rho%of_r(ir,4) + w1* &
-                        (DBLE(psic_nc(ir,1))**2+AIMAG(psic_nc(ir,1))**2 &
-                        -DBLE(psic_nc(ir,2))**2-AIMAG(psic_nc(ir,2))**2)
-                 END DO
-              END IF
+                        (dble(psic_nc(ir,1))**2+aimag(psic_nc(ir,1))**2 &
+                        -dble(psic_nc(ir,2))**2-aimag(psic_nc(ir,2))**2)
+                 ENDDO
+              ENDIF
 
               ijkb0 = 0
               DO np = 1, ntyp
@@ -123,8 +123,8 @@ SUBROUTINE local_dos_mag(spin_component, kpoint, kband, raux)
                              DO ih = 1, nh(np)
                                 ikb = ijkb0 + ih
                                 DO kh = 1, nh(np)
-                                   IF ((nhtol(kh,np)==nhtol(ih,np)).AND. &
-                                   (nhtoj(kh,np)==nhtoj(ih,np)).AND.     &
+                                   IF ((nhtol(kh,np)==nhtol(ih,np)).and. &
+                                   (nhtoj(kh,np)==nhtoj(ih,np)).and.     &
                                    (indv(kh,np)==indv(ih,np))) THEN
                                       kkb=ijkb0 + kh
                                       DO is1=1,2
@@ -134,13 +134,13 @@ SUBROUTINE local_dos_mag(spin_component, kpoint, kband, raux)
                                                     becp_nc(kkb,is2,ibnd)
                                             be2(ih,is1)=be2(ih,is1)+ &
                                                fcoef(kh,ih,is2,is1,np)* &
-                                               CONJG(becp_nc(kkb,is2,ibnd))
-                                         END DO
-                                      END DO
-                                   END IF
-                                END DO
-                             END DO
-                          END IF
+                                               conjg(becp_nc(kkb,is2,ibnd))
+                                         ENDDO
+                                      ENDDO
+                                   ENDIF
+                                ENDDO
+                             ENDDO
+                          ENDIF
                           ijh = 1
                           !
                           DO ih = 1, nh(np)
@@ -153,7 +153,7 @@ SUBROUTINE local_dos_mag(spin_component, kpoint, kband, raux)
                                   (be1(ih,2)*be2(ih,1)+ be1(ih,1)*be2(ih,2))
                                 IF (spin_component==2) &
                                    becsum(ijh,na,3)=becsum(ijh,na,3)+ &
-                                         (0.d0,-1.d0)*      &  
+                                         (0.d0,-1.d0)*      &
                                   (be1(ih,2)*be2(ih,1)-be1(ih,1)*be2(ih,2))
                                 IF (spin_component==3) &
                                    becsum(ijh,na,4)=becsum(ijh,na,4)+ &
@@ -161,21 +161,21 @@ SUBROUTINE local_dos_mag(spin_component, kpoint, kband, raux)
                              ELSE
                                 IF (spin_component==1) &
                                    becsum(ijh,na,2)=becsum(ijh,na,2)  &
-                                     + (CONJG(becp_nc(ikb,2,ibnd))   &
+                                     + (conjg(becp_nc(ikb,2,ibnd))   &
                                                  *becp_nc(ikb,1,ibnd)   &
-                                     +     CONJG(becp_nc(ikb,1,ibnd))   &
+                                     +     conjg(becp_nc(ikb,1,ibnd))   &
                                                  *becp_nc(ikb,2,ibnd) )
                                 IF (spin_component==2) &
                                    becsum(ijh,na,3)=becsum(ijh,na,3)+2.d0   &
-                                      *AIMAG(CONJG(becp_nc(ikb,1,ibnd))* &
+                                      *aimag(conjg(becp_nc(ikb,1,ibnd))* &
                                                    becp_nc(ikb,2,ibnd) )
                                 IF (spin_component==3) &
                                    becsum(ijh,na,4) = becsum(ijh,na,4)    &
-                                          + ( CONJG(becp_nc(ikb,1,ibnd)) &
+                                          + ( conjg(becp_nc(ikb,1,ibnd)) &
                                                    *becp_nc(ikb,1,ibnd)  &
-                                          -      CONJG(becp_nc(ikb,2,ibnd)) &
+                                          -      conjg(becp_nc(ikb,2,ibnd)) &
                                                       *becp_nc(ikb,2,ibnd) )
-                             END IF
+                             ENDIF
                              !
                              ijh = ijh + 1
                              !
@@ -202,36 +202,36 @@ SUBROUTINE local_dos_mag(spin_component, kpoint, kband, raux)
                                 ELSE
                                    IF (spin_component==1) &
                                    becsum(ijh,na,2)=becsum(ijh,na,2)+ 2.d0* &
-                                           DBLE(CONJG(becp_nc(ikb,2,ibnd))* &
+                                           dble(conjg(becp_nc(ikb,2,ibnd))* &
                                                       becp_nc(jkb,1,ibnd) + &
-                                                CONJG(becp_nc(ikb,1,ibnd))* &
+                                                conjg(becp_nc(ikb,1,ibnd))* &
                                                       becp_nc(jkb,2,ibnd) )
                                    IF (spin_component==2) &
                                    becsum(ijh,na,3)=becsum(ijh,na,3)+ &
                                                        2.d0* &
-                                            AIMAG(CONJG(becp_nc(ikb,1,ibnd))* &
+                                            aimag(conjg(becp_nc(ikb,1,ibnd))* &
                                                         becp_nc(jkb,2,ibnd) + &
-                                                  CONJG(becp_nc(ikb,1,ibnd))* &
+                                                  conjg(becp_nc(ikb,1,ibnd))* &
                                                         becp_nc(jkb,2,ibnd) )
                                    IF (spin_component==3) &
                                    becsum(ijh,na,4)=becsum(ijh,na,4)+ 2.d0* &
-                                            DBLE(CONJG(becp_nc(ikb,1,ibnd))* &
+                                            dble(conjg(becp_nc(ikb,1,ibnd))* &
                                                        becp_nc(jkb,1,ibnd) - &
-                                                 CONJG(becp_nc(ikb,2,ibnd))* &
+                                                 conjg(becp_nc(ikb,2,ibnd))* &
                                                        becp_nc(jkb,2,ibnd) )
-                                END IF
-                                !            
+                                ENDIF
+                                !
                                 ijh = ijh + 1
                                 !
-                             END DO
+                             ENDDO
                              !
-                          END DO
+                          ENDDO
                           !
                           ijkb0 = ijkb0 + nh(np)
                           !
-                       END IF
+                       ENDIF
                        !
-                    END DO
+                    ENDDO
                     !
                  ELSE
                     !
@@ -239,24 +239,24 @@ SUBROUTINE local_dos_mag(spin_component, kpoint, kband, raux)
                        !
                        IF ( ityp(na) == np ) ijkb0 = ijkb0 + nh(np)
                        !
-                    END DO
+                    ENDDO
                     !
-                 END IF
+                 ENDIF
                  !
-              END DO
+              ENDDO
               !
-           END IF
+           ENDIF
            !
-        END DO
+        ENDDO
         !
-     END IF
+     ENDIF
      !
-  END DO 
+  ENDDO
      !
   IF ( doublegrid ) THEN
     is=spin_component+1
     CALL interpolate( rho%of_r(1,is), rho%of_r(1,is), 1 )
-  END IF
+  ENDIF
   !
   ! ... Here we add the Ultrasoft contribution to the charge and magnetization
   !
@@ -264,7 +264,7 @@ SUBROUTINE local_dos_mag(spin_component, kpoint, kband, raux)
 
   DO ir=1,nrxx
      raux(ir)=rho%of_r(ir,spin_component+1)
-  END DO
+  ENDDO
   !
   IF (lspinorb) DEALLOCATE(be1, be2)
   DEALLOCATE( becp_nc )

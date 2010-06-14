@@ -7,7 +7,7 @@
 !
 !
 !--------------------------------------------------------------------
-subroutine stm (wf, sample_bias, z, dz, stmdos)
+SUBROUTINE stm (wf, sample_bias, z, dz, stmdos)
   !--------------------------------------------------------------------
   !
   !     This routine calculates an stm image defined as the local density
@@ -35,19 +35,19 @@ subroutine stm (wf, sample_bias, z, dz, stmdos)
   USE io_files, ONLY: iunwfc, nwordwfc
   USE constants,      ONLY : degspin
   USE mp,        ONLY : mp_max, mp_min, mp_sum
-  USE mp_global, ONLY : inter_pool_comm, intra_pool_comm 
+  USE mp_global, ONLY : inter_pool_comm, intra_pool_comm
   USE fft_base,  ONLY : grid_gather
 !
-  implicit none
+  IMPLICIT NONE
   real(DP) :: sample_bias, z, dz, stmdos (nrx1 * nrx2 * nrx3)
   ! the stm density of states
   !
   !    And here the local variables
   !
 
-  logical :: uguale
+  LOGICAL :: uguale
 
-  integer :: istates, igs, npws, ir, irx, iry, irz, ig, ibnd, &
+  INTEGER :: istates, igs, npws, ir, irx, iry, irz, ig, ibnd, &
        ik, nbnd_ocp, first_band, last_band
   ! the number of states to compute the image
   ! counter on surface g vectors
@@ -62,19 +62,19 @@ subroutine stm (wf, sample_bias, z, dz, stmdos)
 
   real(DP) :: emin, emax, fac, wf, wf1, x, y, zz, &
        w1, w2, up, up1, down, down1, t0, scnds
-  complex(DP), parameter :: i= (0.d0, 1.d0)
+  COMPLEX(DP), PARAMETER :: i= (0.d0, 1.d0)
 
-  real(DP), allocatable :: gs (:,:)
-  complex(DP), allocatable :: a (:), psi (:,:)
+  real(DP), ALLOCATABLE :: gs (:,:)
+  COMPLEX(DP), ALLOCATABLE :: a (:), psi (:,:)
   ! the coefficients of the matching wfc
   ! plane stm wfc
 
-  real(DP), external :: w0gauss
+  real(DP), EXTERNAL :: w0gauss
 
   t0 = scnds ()
-  allocate (gs( 2, npwx))    
-  allocate (a ( npwx))    
-  allocate (psi(nrx1, nrx2))    
+  ALLOCATE (gs( 2, npwx))
+  ALLOCATE (a ( npwx))
+  ALLOCATE (psi(nrx1, nrx2))
   !
   stmdos(:) = 0.d0
   rho%of_r(:,:) = 0.d0
@@ -82,28 +82,28 @@ subroutine stm (wf, sample_bias, z, dz, stmdos)
   WRITE( stdout, '(5x,"Sample bias          =",f8.4, &
           &       " eV")') sample_bias * rytoev
   !
-  if (.not.lgauss) then
+  IF (.not.lgauss) THEN
      !
      !  for semiconductors, add small broadening
      !
      nbnd_ocp = nint (nelec) / degspin
 
-     if (nbnd.le.nbnd_ocp + 1) call errore ('stm', 'not enough bands', 1)
+     IF (nbnd<=nbnd_ocp + 1) CALL errore ('stm', 'not enough bands', 1)
      emin = et (nbnd_ocp + 1, 1)
-     do ik = 2, nks
+     DO ik = 2, nks
         emin = min (emin, et (nbnd_ocp + 1, ik) )
-     enddo
+     ENDDO
 #ifdef __PARA
      ! find the minimum across pools
-     call mp_min( emin, inter_pool_comm )
+     CALL mp_min( emin, inter_pool_comm )
 #endif
      emax = et (nbnd_ocp, 1)
-     do ik = 2, nks
+     DO ik = 2, nks
         emax = max (emax, et (nbnd_ocp, ik) )
-     enddo
+     ENDDO
 #ifdef __PARA
      ! find the maximum across pools
-     call mp_max( emax, inter_pool_comm )
+     CALL mp_max( emax, inter_pool_comm )
 #endif
      ef = (emin + emax) * 0.5d0
      degauss = 0.00001d0
@@ -112,51 +112,51 @@ subroutine stm (wf, sample_bias, z, dz, stmdos)
      WRITE( stdout, '(/5x,"Occupied bands: ",i6)') nbnd_ocp
      WRITE( stdout, '(/5x,"  Fermi energy: ",f10.2," eV")') ef * rytoev
      WRITE( stdout, '(/5x,"    Gap energy: ",f10.2," eV")')  (emax - emin)  * rytoev
-  endif
+  ENDIF
   !
   !     take only the states in the energy window above or below the fermi
   !     energy as determined by the bias of the sample
   !
-  if (sample_bias.gt.0) then
+  IF (sample_bias>0) THEN
      up = ef + sample_bias
      down = ef
-  else
+  ELSE
      up = ef
      down = ef + sample_bias
-  endif
+  ENDIF
   up1   = up   + 3.d0 * degauss
   down1 = down - 3.d0 * degauss
 
-  do ik = 1, nks
-     do ibnd = 1, nbnd
-        if (et (ibnd, ik) > down .and. et (ibnd, ik) < up) then
+  DO ik = 1, nks
+     DO ibnd = 1, nbnd
+        IF (et (ibnd, ik) > down .and. et (ibnd, ik) < up) THEN
            wg (ibnd, ik) = wk (ik)
-        elseif (et (ibnd, ik) < down) then
+        ELSEIF (et (ibnd, ik) < down) THEN
            wg (ibnd, ik) = wk (ik) * w0gauss ( (down - et (ibnd, ik) ) &
                 / degauss, ngauss)
-        elseif (et (ibnd, ik) > up) then
+        ELSEIF (et (ibnd, ik) > up) THEN
            wg (ibnd, ik) = wk (ik) * w0gauss ( (up - et (ibnd, ik) ) &
                 / degauss, ngauss)
-        endif
-     enddo
-  enddo
+        ENDIF
+     ENDDO
+  ENDDO
   !
   istates = 0
   !
   !     here we sum for each k point the contribution
   !     of the wavefunctions to the stm dos
   !
-  do ik = 1, nks
+  DO ik = 1, nks
      DO ibnd = 1, nbnd
-        if (et(ibnd,ik) < down1) first_band= ibnd+1
-        if (et(ibnd,ik) < up1)   last_band = ibnd
-     END DO
+        IF (et(ibnd,ik) < down1) first_band= ibnd+1
+        IF (et(ibnd,ik) < up1)   last_band = ibnd
+     ENDDO
      istates = istates +  (last_band - first_band + 1)
 
-     call gk_sort (xk (1, ik), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin)
-     call davcio (evc, nwordwfc, iunwfc, ik, - 1)
+     CALL gk_sort (xk (1, ik), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin)
+     CALL davcio (evc, nwordwfc, iunwfc, ik, - 1)
      !
-     if (gamma_only) then
+     IF (gamma_only) THEN
         !
         !     gamma only version of STM.
         !     Two bands computed in a single FT as in the main (PW) code
@@ -170,32 +170,32 @@ subroutine stm (wf, sample_bias, z, dz, stmdos)
               !!! WRITE( stdout, * ) w2, ibnd+1, ik
            ELSE
               w2= 0.d0
-           END IF
+           ENDIF
            !
            !     Compute the contribution of these states only if needed
            !
            psic(:) = (0.d0, 0.d0)
            IF ( ibnd < last_band ) THEN
-              do ig = 1, npw
+              DO ig = 1, npw
                  psic(nl(igk(ig)))  = &
                              evc(ig,ibnd) + (0.D0,1.D0) * evc(ig,ibnd+1)
                  psic(nlm(igk(ig))) = &
-                      CONJG( evc(ig,ibnd) - (0.D0,1.D0) * evc(ig,ibnd+1) )
-              enddo
+                      conjg( evc(ig,ibnd) - (0.D0,1.D0) * evc(ig,ibnd+1) )
+              ENDDO
            ELSE
-              do ig = 1, npw
+              DO ig = 1, npw
                  psic(nl (igk(ig))) =        evc(ig,ibnd)
-                 psic(nlm(igk(ig))) = CONJG( evc(ig,ibnd) )
-              end do
-           END IF
+                 psic(nlm(igk(ig))) = conjg( evc(ig,ibnd) )
+              ENDDO
+           ENDIF
 
-           call cft3 (psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1)
-           do ir = 1, nrxx
-              rho%of_r (ir, 1) = rho%of_r (ir, 1) + w1* DBLE( psic(ir) )**2 + &
-                                                    w2*AIMAG( psic(ir) )**2
-           enddo
-        END DO
-     else
+           CALL cft3 (psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1)
+           DO ir = 1, nrxx
+              rho%of_r (ir, 1) = rho%of_r (ir, 1) + w1* dble( psic(ir) )**2 + &
+                                                    w2*aimag( psic(ir) )**2
+           ENDDO
+        ENDDO
+     ELSE
         !
         !     k-point version of STM.
         !
@@ -207,55 +207,55 @@ subroutine stm (wf, sample_bias, z, dz, stmdos)
            !     Compute the contribution of this state only if needed
            !
            psic(:) = (0.d0, 0.d0)
-           do ig = 1, npw
+           DO ig = 1, npw
               psic(nl(igk(ig)))  = evc(ig,ibnd)
-           end do
+           ENDDO
 
-           call cft3 (psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1)
-           do ir = 1, nrxx
+           CALL cft3 (psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1)
+           DO ir = 1, nrxx
               rho%of_r (ir, 1) = rho%of_r (ir, 1) + w1 * &
-                                ( DBLE(psic (ir) ) **2 + AIMAG(psic (ir) ) **2)
-           enddo
-        END DO
-     end if
-  enddo
+                                ( dble(psic (ir) ) **2 + aimag(psic (ir) ) **2)
+           ENDDO
+        ENDDO
+     ENDIF
+  ENDDO
 #ifdef __PARA
-  call mp_sum( rho%of_r, inter_pool_comm )
+  CALL mp_sum( rho%of_r, inter_pool_comm )
 #endif
   !
   !     symmetrization of the stm dos
   !
-  IF ( .NOT. gamma_only) THEN
+  IF ( .not. gamma_only) THEN
      !
-     CALL sym_rho_init (gamma_only) 
+     CALL sym_rho_init (gamma_only)
      !
-     psic(:) = CMPLX ( rho%of_r(:,1), 0.0_dp, KIND=dp)
+     psic(:) = cmplx ( rho%of_r(:,1), 0.0_dp, kind=dp)
      CALL cft3s (psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, -1)
      rho%of_g(:,1) = psic(nl(:))
      CALL sym_rho (1, rho%of_g)
      psic(:) = (0.0_dp, 0.0_dp)
      psic(nl(:)) = rho%of_g(:,1)
      CALL cft3s (psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1)
-     rho%of_r(:,1) = DBLE(psic(:))
-  END IF
+     rho%of_r(:,1) = dble(psic(:))
+  ENDIF
 #ifdef __PARA
-  call grid_gather (rho%of_r(:,1), stmdos)
+  CALL grid_gather (rho%of_r(:,1), stmdos)
 #else
   stmdos(:) = rho%of_r(:,1)
 #endif
-  deallocate(psi)
-  deallocate(a)
-  deallocate(gs)
+  DEALLOCATE(psi)
+  DEALLOCATE(a)
+  DEALLOCATE(gs)
   WRITE( stdout, '(/5x,"STM:",f10.2,"s cpu time")') scnds ()-t0
   !
   !     use wf to store istates
   !
   wf = istates
 #ifdef __PARA
-  call mp_sum( wf, inter_pool_comm )
+  CALL mp_sum( wf, inter_pool_comm )
 #endif
   z = z / alat
 
   dz = dz / alat
-  return
-end subroutine stm
+  RETURN
+END SUBROUTINE stm

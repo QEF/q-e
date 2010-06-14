@@ -22,7 +22,7 @@ SUBROUTINE PAW_make_ae_charge(rho)
    USE gvect,             ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx
    USE cell_base,         ONLY : at, bg, alat
 
-   TYPE(scf_type), INTENT(INOUT) :: rho
+   TYPE(scf_type), INTENT(inout) :: rho
    TYPE(paw_info)          :: i                     ! minimal info on atoms
    INTEGER                 :: ipol                  ! counter on x,y,z
    INTEGER                 :: ir                    ! counter on grid point
@@ -38,9 +38,9 @@ SUBROUTINE PAW_make_ae_charge(rho)
 
    ! Some initialization
    !
-   inv_nr1 = 1.D0 / DBLE( nr1 )
-   inv_nr2 = 1.D0 / DBLE( nr2 )
-   inv_nr3 = 1.D0 / DBLE( nr3 )
+   inv_nr1 = 1.D0 / dble( nr1 )
+   inv_nr2 = 1.D0 / dble( nr2 )
+   inv_nr3 = 1.D0 / dble( nr3 )
    !
    ! I cannot parallelize on atoms, because it is already parallelized
    ! on charge slabs
@@ -104,7 +104,7 @@ SUBROUTINE PAW_make_ae_charge(rho)
          DEALLOCATE(d1y, d2y)
          !
 #if defined (__PARA)
-         idx0 = nrx1*nrx2 * SUM ( dfftp%npp(1:me_pool) )
+         idx0 = nrx1*nrx2 * sum ( dfftp%npp(1:me_pool) )
 #else
          idx0 = 0
 #endif
@@ -122,17 +122,17 @@ SUBROUTINE PAW_make_ae_charge(rho)
             IF ( l >= nr1 .or. j >= nr2 .or. k >= nr3 ) CYCLE rsp_point
             !
             DO ipol = 1, 3
-               posi(ipol) = DBLE( l )*inv_nr1*at(ipol,1) + &
-                            DBLE( j )*inv_nr2*at(ipol,2) + &
-                            DBLE( k )*inv_nr3*at(ipol,3)
-            END DO
+               posi(ipol) = dble( l )*inv_nr1*at(ipol,1) + &
+                            dble( j )*inv_nr2*at(ipol,2) + &
+                            dble( k )*inv_nr3*at(ipol,3)
+            ENDDO
             !
             ! find the distance of real-space grid's point ir w.r.t
             ! closer periodic image of atom ia
             !
             posi(:) = posi(:) - tau(:,ia)
             CALL cryst_to_cart( 1, posi, bg, -1 )
-            posi(:) = posi(:) - ANINT( posi(:) )
+            posi(:) = posi(:) - anint( posi(:) )
             CALL cryst_to_cart( 1, posi, at, 1 )
             !
             posi(:) = posi(:) * alat
@@ -152,17 +152,17 @@ SUBROUTINE PAW_make_ae_charge(rho)
                   ! do interpolation
                   rho%of_r(ir,is)= rho%of_r(ir,is) + ylm_posi(1,lm) &
                        * splint(g(i%t)%r(:) , rho_lm(:,lm,is), &
-                       wsp_lm(:,lm,is), SQRT(distsq) )
+                       wsp_lm(:,lm,is), sqrt(distsq) )
                ENDDO
             ENDDO
-         END DO rsp_point
+         ENDDO rsp_point
          !
          DEALLOCATE(rho_lm, ylm_posi, wsp_lm)
          !
       ENDIF ifpaw
    ENDDO atoms
-   
+
  END SUBROUTINE PAW_make_ae_charge
- 
+
 END MODULE paw_postproc
 

@@ -7,7 +7,7 @@
 !
 !
 !--------------------------------------------------------------------
-subroutine local_dos (iflag, lsign, kpoint, kband, spin_component, &
+SUBROUTINE local_dos (iflag, lsign, kpoint, kband, spin_component, &
                       emin, emax, dos)
   !--------------------------------------------------------------------
   !
@@ -47,96 +47,96 @@ subroutine local_dos (iflag, lsign, kpoint, kband, spin_component, &
   USE mp,                   ONLY : mp_bcast, mp_sum
   USE mp_global,            ONLY : inter_pool_comm, intra_pool_comm
   USE becmod,               ONLY : calbec
-  implicit none
+  IMPLICIT NONE
   !
   ! input variables
   !
-  integer, intent(in) :: iflag, kpoint, kband, spin_component
-  logical, intent(in) :: lsign
-  real(DP), intent(in) :: emin, emax
+  INTEGER, INTENT(in) :: iflag, kpoint, kband, spin_component
+  LOGICAL, INTENT(in) :: lsign
+  real(DP), INTENT(in) :: emin, emax
   !
-  real(DP), intent(out) :: dos (nrxx)
+  real(DP), INTENT(out) :: dos (nrxx)
   !
   !    local variables
   !
-  integer :: ikb, jkb, ijkb0, ih, jh, kh, na, ijh, np
+  INTEGER :: ikb, jkb, ijkb0, ih, jh, kh, na, ijh, np
   ! counters for US PPs
-  integer :: ir, is, ig, ibnd, ik, irm, isup, isdw, ipol, kkb, is1, is2
+  INTEGER :: ir, is, ig, ibnd, ik, irm, isup, isdw, ipol, kkb, is1, is2
   ! counters
   real(DP) :: w, w1, modulus
-  real(DP), allocatable :: rbecp(:,:), segno(:), maxmod(:)
-  complex(DP), allocatable :: becp(:,:),  &
+  real(DP), ALLOCATABLE :: rbecp(:,:), segno(:), maxmod(:)
+  COMPLEX(DP), ALLOCATABLE :: becp(:,:),  &
                                    becp_nc(:,:,:), be1(:,:), be2(:,:)
-  integer :: who_calculate, iproc
-  complex(DP) :: phase 
-  real(DP), external :: w0gauss, w1gauss
-  logical :: i_am_the_pool
-  integer :: which_pool, kpoint_pool
+  INTEGER :: who_calculate, iproc
+  COMPLEX(DP) :: phase
+  real(DP), EXTERNAL :: w0gauss, w1gauss
+  LOGICAL :: i_am_the_pool
+  INTEGER :: which_pool, kpoint_pool
   !
   ! input checks
   !
-  if (noncolin.and. lsign) call errore('local_dos','not available',1)
-  if (noncolin.and. gamma_only) call errore('local_dos','not available',1)
+  IF (noncolin.and. lsign) CALL errore('local_dos','not available',1)
+  IF (noncolin.and. gamma_only) CALL errore('local_dos','not available',1)
   !
-  if ( (iflag == 0) .and. ( kband < 1 .or. kband > nbnd ) ) &
-       call errore ('local_dos', 'wrong band specified', 1)
-  if ( (iflag == 0) .and. ( kpoint < 1 .or. kpoint > nkstot ) ) &
-       call errore ('local_dos', 'wrong kpoint specified', 1)
-  if (lsign) then
-     if (iflag /= 0) call errore ('local_dos', 'inconsistent flags', 1)
-     if (sqrt(xk(1,kpoint)**2+xk(2,kpoint)**2+xk(3,kpoint)**2) > 1d-9 )  &
-        call errore ('local_dos', 'k must be zero', 1)
-  end if
+  IF ( (iflag == 0) .and. ( kband < 1 .or. kband > nbnd ) ) &
+       CALL errore ('local_dos', 'wrong band specified', 1)
+  IF ( (iflag == 0) .and. ( kpoint < 1 .or. kpoint > nkstot ) ) &
+       CALL errore ('local_dos', 'wrong kpoint specified', 1)
+  IF (lsign) THEN
+     IF (iflag /= 0) CALL errore ('local_dos', 'inconsistent flags', 1)
+     IF (sqrt(xk(1,kpoint)**2+xk(2,kpoint)**2+xk(3,kpoint)**2) > 1d-9 )  &
+        CALL errore ('local_dos', 'k must be zero', 1)
+  ENDIF
   !
-  if (gamma_only) then 
-     allocate (rbecp(nkb,nbnd))
-  else 
-     if (noncolin) then
-        allocate (becp_nc(nkb,npol,nbnd))
-        if (lspinorb) then
-          allocate(be1(nhm,2))
-          allocate(be2(nhm,2))
-        endif
-     else
-        allocate (becp(nkb,nbnd))
-     endif
-  endif
+  IF (gamma_only) THEN
+     ALLOCATE (rbecp(nkb,nbnd))
+  ELSE
+     IF (noncolin) THEN
+        ALLOCATE (becp_nc(nkb,npol,nbnd))
+        IF (lspinorb) THEN
+          ALLOCATE(be1(nhm,2))
+          ALLOCATE(be2(nhm,2))
+        ENDIF
+     ELSE
+        ALLOCATE (becp(nkb,nbnd))
+     ENDIF
+  ENDIF
   rho%of_r(:,:) = 0.d0
   dos(:) = 0.d0
   becsum(:,:,:) = 0.d0
-  if (lsign) allocate(segno(nrxx))
+  IF (lsign) ALLOCATE(segno(nrxx))
   !
   !   calculate the correct weights
   !
-  if (iflag /= 0 .and. .not.lgauss) call errore ('local_dos', &
+  IF (iflag /= 0 .and. .not.lgauss) CALL errore ('local_dos', &
        'gaussian broadening needed', 1)
-  if (iflag == 2 .and. ngauss /= -99) call errore ('local_dos', &
+  IF (iflag == 2 .and. ngauss /= -99) CALL errore ('local_dos', &
        ' beware: not using Fermi-Dirac function ',  - ngauss)
-  do ik = 1, nks
-     do ibnd = 1, nbnd
-        if (iflag == 0) then
+  DO ik = 1, nks
+     DO ibnd = 1, nbnd
+        IF (iflag == 0) THEN
            wg (ibnd, ik) = 0.d0
-        elseif (iflag == 1) then
+        ELSEIF (iflag == 1) THEN
            wg (ibnd, ik) = wk (ik) * w0gauss ( (ef - et (ibnd, ik) ) &
                 / degauss, ngauss) / degauss
-        elseif (iflag == 2) then
+        ELSEIF (iflag == 2) THEN
            wg (ibnd, ik) = - wk (ik) * w1gauss ( (ef - et (ibnd, ik) ) &
                 / degauss, ngauss)
-        elseif (iflag == 3) then
-           if (et (ibnd, ik) <=  emax .and. et (ibnd, ik) >= emin) then
+        ELSEIF (iflag == 3) THEN
+           IF (et (ibnd, ik) <=  emax .and. et (ibnd, ik) >= emin) THEN
               wg (ibnd, ik) = wk (ik)
-           else
+           ELSE
               wg (ibnd, ik) = 0.d0
-           endif
-        else
-           call errore ('local_dos', ' iflag not allowed', abs (iflag) )
-        endif
-     enddo
-  enddo
+           ENDIF
+        ELSE
+           CALL errore ('local_dos', ' iflag not allowed', abs (iflag) )
+        ENDIF
+     ENDDO
+  ENDDO
 
   IF (npool>1) THEN
      CALL xk_pool( kpoint, nkstot, kpoint_pool,  which_pool )
-     if (kpoint_pool<1 .or. kpoint_pool> nks) &
+     IF (kpoint_pool<1 .or. kpoint_pool> nks) &
         CALL errore('local_dos','problems with xk_pool',1)
      i_am_the_pool=(my_pool_id==which_pool)
   ELSE
@@ -144,288 +144,288 @@ subroutine local_dos (iflag, lsign, kpoint, kband, spin_component, &
      kpoint_pool=kpoint
   ENDIF
 
-  if (iflag == 0.and.i_am_the_pool) wg (kband, kpoint_pool) = 1.d0
+  IF (iflag == 0.and.i_am_the_pool) wg (kband, kpoint_pool) = 1.d0
   !
   !     here we sum for each k point the contribution
   !     of the wavefunctions to the density of states
   !
-  do ik = 1, nks
-     if (ik == kpoint_pool .and.i_am_the_pool.or. iflag /= 0) then
-        if (lsda) current_spin = isk (ik)
-        call gk_sort (xk (1, ik), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin)
-        call davcio (evc, nwordwfc, iunwfc, ik, - 1)
-        call init_us_2 (npw, igk, xk (1, ik), vkb)
+  DO ik = 1, nks
+     IF (ik == kpoint_pool .and.i_am_the_pool.or. iflag /= 0) THEN
+        IF (lsda) current_spin = isk (ik)
+        CALL gk_sort (xk (1, ik), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin)
+        CALL davcio (evc, nwordwfc, iunwfc, ik, - 1)
+        CALL init_us_2 (npw, igk, xk (1, ik), vkb)
 
-        if (gamma_only) then
-           call calbec ( npw, vkb, evc, rbecp )
-        else if (noncolin) then
-           call calbec ( npw, vkb, evc, becp_nc )
-        else
-           call calbec ( npw, vkb, evc, becp )
-        end if
+        IF (gamma_only) THEN
+           CALL calbec ( npw, vkb, evc, rbecp )
+        ELSEIF (noncolin) THEN
+           CALL calbec ( npw, vkb, evc, becp_nc )
+        ELSE
+           CALL calbec ( npw, vkb, evc, becp )
+        ENDIF
      !
      !     here we compute the density of states
      !
-        do ibnd = 1, nbnd
-           if (ibnd == kband .or. iflag /= 0) then
-              if (noncolin) then
+        DO ibnd = 1, nbnd
+           IF (ibnd == kband .or. iflag /= 0) THEN
+              IF (noncolin) THEN
                  psic_nc = (0.d0,0.d0)
-                 do ig = 1, npw
+                 DO ig = 1, npw
                     psic_nc(nls(igk(ig)),1)=evc(ig     ,ibnd)
                     psic_nc(nls(igk(ig)),2)=evc(ig+npwx,ibnd)
-                 enddo
-                 do ipol=1,npol
-                    call cft3s (psic_nc(1,ipol),nr1s,nr2s,nr3s, &
+                 ENDDO
+                 DO ipol=1,npol
+                    CALL cft3s (psic_nc(1,ipol),nr1s,nr2s,nr3s, &
                                                 nrx1s,nrx2s,nrx3s,2)
-                 enddo
-              else
+                 ENDDO
+              ELSE
                  psic(1:nrxxs) = (0.d0,0.d0)
-                 do ig = 1, npw
+                 DO ig = 1, npw
                     psic (nls (igk (ig) ) ) = evc (ig, ibnd)
-                 enddo
-                 if (gamma_only) then
-                    do ig = 1, npw
-                       psic (nlsm(igk (ig) ) ) = CONJG(evc (ig, ibnd))
-                    enddo
-                 end if
-                 call cft3s (psic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, 2)
-              endif
+                 ENDDO
+                 IF (gamma_only) THEN
+                    DO ig = 1, npw
+                       psic (nlsm(igk (ig) ) ) = conjg(evc (ig, ibnd))
+                    ENDDO
+                 ENDIF
+                 CALL cft3s (psic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, 2)
+              ENDIF
               w1 = wg (ibnd, ik) / omega
 !
 !  Compute and save the sign of the wavefunction at the gamma point
 !
-              if (lsign) then
-                 if (gamma_only) then
+              IF (lsign) THEN
+                 IF (gamma_only) THEN
                     !  psi(r) is real by construction
-                    segno(1:nrxxs) = DBLE(psic(1:nrxxs))
-                 else
+                    segno(1:nrxxs) = dble(psic(1:nrxxs))
+                 ELSE
                     !  determine the phase factor that makes psi(r) real.
-                    allocate(maxmod(nproc_pool))
+                    ALLOCATE(maxmod(nproc_pool))
                     maxmod(me_pool+1)=0.0_DP
-                    do ir = 1, nrxxs
+                    DO ir = 1, nrxxs
                        modulus=abs(psic(ir))
-                       if (modulus > maxmod(me_pool+1)) then
+                       IF (modulus > maxmod(me_pool+1)) THEN
                           irm=ir
                           maxmod(me_pool+1)=modulus
-                       endif
-                    enddo
+                       ENDIF
+                    ENDDO
                     who_calculate=1
 #ifdef __PARA
-                    call mp_sum(maxmod,intra_pool_comm)
-                    do iproc=2,nproc_pool
-                       if (maxmod(iproc)>maxmod(who_calculate)) &
+                    CALL mp_sum(maxmod,intra_pool_comm)
+                    DO iproc=2,nproc_pool
+                       IF (maxmod(iproc)>maxmod(who_calculate)) &
                           who_calculate=iproc
-                    enddo
+                    ENDDO
 #endif
-                    if (maxmod(who_calculate) < 1.d-10) &
-                       call errore('local_dos','zero wavefunction',1)
+                    IF (maxmod(who_calculate) < 1.d-10) &
+                       CALL errore('local_dos','zero wavefunction',1)
                     IF (me_pool+1==who_calculate) &
                           phase = psic(irm)/maxmod(who_calculate)
-                    deallocate(maxmod)
+                    DEALLOCATE(maxmod)
 #ifdef __PARA
-                    call mp_bcast(phase,who_calculate-1,intra_pool_comm)
+                    CALL mp_bcast(phase,who_calculate-1,intra_pool_comm)
 #endif
-                    segno(1:nrxxs) = DBLE( psic(1:nrxxs)*CONJG(phase) )
-                 endif
-                 if (doublegrid) call interpolate (segno, segno, 1)
+                    segno(1:nrxxs) = dble( psic(1:nrxxs)*conjg(phase) )
+                 ENDIF
+                 IF (doublegrid) CALL interpolate (segno, segno, 1)
                  segno(:) = sign( 1.d0, segno(:) )
-              endif
+              ENDIF
               !
-              if (noncolin) then
-                 do ipol=1,npol
-                    do ir=1,nrxxs
+              IF (noncolin) THEN
+                 DO ipol=1,npol
+                    DO ir=1,nrxxs
                        rho%of_r(ir,current_spin)=rho%of_r(ir,current_spin)+&
-                          w1*(DBLE(psic_nc(ir,ipol))**2+ &
-                             AIMAG(psic_nc(ir,ipol))**2)
-                    enddo
-                 enddo
-              else
-                 do ir=1,nrxxs
+                          w1*(dble(psic_nc(ir,ipol))**2+ &
+                             aimag(psic_nc(ir,ipol))**2)
+                    ENDDO
+                 ENDDO
+              ELSE
+                 DO ir=1,nrxxs
                     rho%of_r(ir,current_spin)=rho%of_r(ir,current_spin) + &
-                      w1 * (DBLE( psic (ir) ) **2 + AIMAG (psic (ir) ) **2)
-                 enddo
-              endif
+                      w1 * (dble( psic (ir) ) **2 + aimag (psic (ir) ) **2)
+                 ENDDO
+              ENDIF
         !
         !    If we have a US pseudopotential we compute here the becsum term
         !
               w1 = wg (ibnd, ik)
               ijkb0 = 0
-              do np = 1, ntyp
-                if (upf(np)%tvanp  ) then
-                  do na = 1, nat
-                    if (ityp (na) == np) then
-                      if (noncolin) then
-                        if (upf(np)%has_so) then
+              DO np = 1, ntyp
+                IF (upf(np)%tvanp  ) THEN
+                  DO na = 1, nat
+                    IF (ityp (na) == np) THEN
+                      IF (noncolin) THEN
+                        IF (upf(np)%has_so) THEN
                           be1=(0.d0,0.d0)
                           be2=(0.d0,0.d0)
-                          do ih = 1, nh(np)
+                          DO ih = 1, nh(np)
                             ikb = ijkb0 + ih
-                            do kh = 1, nh(np)
-                              if ((nhtol(kh,np).eq.nhtol(ih,np)).and. &
-                                  (nhtoj(kh,np).eq.nhtoj(ih,np)).and. &
-                                  (indv(kh,np).eq.indv(ih,np))) then
+                            DO kh = 1, nh(np)
+                              IF ((nhtol(kh,np)==nhtol(ih,np)).and. &
+                                  (nhtoj(kh,np)==nhtoj(ih,np)).and. &
+                                  (indv(kh,np)==indv(ih,np))) THEN
                                  kkb=ijkb0 + kh
-                                 do is1=1,2
-                                   do is2=1,2
+                                 DO is1=1,2
+                                   DO is2=1,2
                                      be1(ih,is1)=be1(ih,is1)+ &
                                            fcoef(ih,kh,is1,is2,np)* &
                                            becp_nc(kkb,is2,ibnd)
                                      be2(ih,is1)=be2(ih,is1)+ &
                                            fcoef(kh,ih,is2,is1,np)* &
-                                        CONJG(becp_nc(kkb,is2,ibnd))
-                                   enddo
-                                 enddo
-                              endif
-                            enddo
-                          enddo
-                        endif
+                                        conjg(becp_nc(kkb,is2,ibnd))
+                                   ENDDO
+                                 ENDDO
+                              ENDIF
+                            ENDDO
+                          ENDDO
+                        ENDIF
                         ijh = 1
-                        do ih = 1, nh (np)
+                        DO ih = 1, nh (np)
                           ikb = ijkb0 + ih
-                          if (upf(np)%has_so) then
+                          IF (upf(np)%has_so) THEN
                             becsum(ijh,na,1)=becsum(ijh,na,1)+ w1*    &
                                (be1(ih,1)*be2(ih,1)+be1(ih,2)*be2(ih,2))
-                          else
+                          ELSE
                             becsum(ijh,na,1) = becsum(ijh,na,1)+  &
-                             w1*(CONJG(becp_nc(ikb,1,ibnd))*      &
+                             w1*(conjg(becp_nc(ikb,1,ibnd))*      &
                                        becp_nc(ikb,1,ibnd)+       &
-                                 CONJG(becp_nc(ikb,2,ibnd))*      &
+                                 conjg(becp_nc(ikb,2,ibnd))*      &
                                        becp_nc(ikb,2,ibnd))
-                          endif
+                          ENDIF
                           ijh = ijh + 1
-                          do jh = ih + 1, nh (np)
+                          DO jh = ih + 1, nh (np)
                             jkb = ijkb0 + jh
-                            if (upf(np)%has_so) then 
+                            IF (upf(np)%has_so) THEN
                               becsum(ijh,na,1)=becsum(ijh,na,1) &
                                  + w1*((be1(jh,1)*be2(ih,1)+   &
                                         be1(jh,2)*be2(ih,2))+  &
                                        (be1(ih,1)*be2(jh,1)+   &
                                         be1(ih,2)*be2(jh,2)) )
-                            else
+                            ELSE
                               becsum(ijh,na,1)= becsum(ijh,na,1)+ &
-                                   w1*2.d0*DBLE(CONJG(becp_nc(ikb,1,ibnd)) &
+                                   w1*2.d0*dble(conjg(becp_nc(ikb,1,ibnd)) &
                                      *becp_nc(jkb,1,ibnd) + &
-                                CONJG(becp_nc(ikb,2,ibnd)) &
+                                conjg(becp_nc(ikb,2,ibnd)) &
                                      *becp_nc(jkb,2,ibnd) )
-                            endif
+                            ENDIF
                             ijh = ijh + 1
-                          enddo
-                        enddo
-                      else
+                          ENDDO
+                        ENDDO
+                      ELSE
                         ijh = 1
-                        do ih = 1, nh (np)
+                        DO ih = 1, nh (np)
                           ikb = ijkb0 + ih
-                          if (gamma_only) then
+                          IF (gamma_only) THEN
                               becsum(ijh,na,current_spin) = &
                                     becsum(ijh,na,current_spin) + w1 * &
                                     rbecp(ikb,ibnd)*rbecp(ikb,ibnd)
-                          else
+                          ELSE
                               becsum(ijh,na,current_spin) = &
                                    becsum(ijh,na,current_spin) + w1 * &
-                               DBLE(CONJG(becp(ikb,ibnd))*becp(ikb,ibnd))
-                          end if
+                               dble(conjg(becp(ikb,ibnd))*becp(ikb,ibnd))
+                          ENDIF
                           ijh = ijh + 1
-                          do jh = ih + 1, nh (np)
+                          DO jh = ih + 1, nh (np)
                              jkb = ijkb0 + jh
-                             if (gamma_only) then
+                             IF (gamma_only) THEN
                                 becsum(ijh,na,current_spin) = &
                                    becsum(ijh,na,current_spin) + 2.d0*w1 * &
                                    rbecp(ikb,ibnd)*rbecp(jkb,ibnd)
-                             else
+                             ELSE
                                 becsum(ijh,na,current_spin) = &
                                   becsum(ijh,na,current_spin) + 2.d0*w1 * &
-                                  DBLE(CONJG(becp(ikb,ibnd))*becp(jkb,ibnd))
-                             endif
+                                  dble(conjg(becp(ikb,ibnd))*becp(jkb,ibnd))
+                             ENDIF
                              ijh = ijh + 1
-                          enddo
-                        enddo
-                      endif
+                          ENDDO
+                        ENDDO
+                      ENDIF
                       ijkb0 = ijkb0 + nh (np)
-                    endif
-                  enddo
-                else
-                  do na = 1, nat
-                    if (ityp (na) == np) ijkb0 = ijkb0 + nh (np)
-                  enddo
-                endif
-              enddo
-           endif
-        enddo
-     endif
-  enddo
-  if (gamma_only) then
-     deallocate(rbecp)
-  else
-     if (noncolin) then
-        if (lspinorb) then
-           deallocate(be1)
-           deallocate(be2)
-        endif
-        deallocate(becp_nc)
-     else
-        deallocate(becp)
-     endif
-  endif
-  if (doublegrid) then
-     if (noncolin) then
-       call interpolate(rho%of_r, rho%of_r, 1)
-     else
-       do is = 1, nspin
-         call interpolate(rho%of_r(1, is), rho%of_r(1, is), 1)
-       enddo
-     endif
-  endif
+                    ENDIF
+                  ENDDO
+                ELSE
+                  DO na = 1, nat
+                    IF (ityp (na) == np) ijkb0 = ijkb0 + nh (np)
+                  ENDDO
+                ENDIF
+              ENDDO
+           ENDIF
+        ENDDO
+     ENDIF
+  ENDDO
+  IF (gamma_only) THEN
+     DEALLOCATE(rbecp)
+  ELSE
+     IF (noncolin) THEN
+        IF (lspinorb) THEN
+           DEALLOCATE(be1)
+           DEALLOCATE(be2)
+        ENDIF
+        DEALLOCATE(becp_nc)
+     ELSE
+        DEALLOCATE(becp)
+     ENDIF
+  ENDIF
+  IF (doublegrid) THEN
+     IF (noncolin) THEN
+       CALL interpolate(rho%of_r, rho%of_r, 1)
+     ELSE
+       DO is = 1, nspin
+         CALL interpolate(rho%of_r(1, is), rho%of_r(1, is), 1)
+       ENDDO
+     ENDIF
+  ENDIF
   !
   !    Here we add the US contribution to the charge
   !
-  call addusdens(rho%of_r(:,:))
+  CALL addusdens(rho%of_r(:,:))
   !
-  if (nspin == 1 .or. nspin==4) then
-     is = 1 
+  IF (nspin == 1 .or. nspin==4) THEN
+     is = 1
      dos(:) = rho%of_r (:, is)
-  else
-     IF ( iflag==3 .AND. (spin_component==1 .OR. spin_component==2 ) ) THEN
+  ELSE
+     IF ( iflag==3 .and. (spin_component==1 .or. spin_component==2 ) ) THEN
         dos(:) = rho%of_r (:, spin_component)
      ELSE
         isup = 1
         isdw = 2
         dos(:) = rho%of_r (:, isup) + rho%of_r (:, isdw)
-     END IF
-  end if
-  if (lsign) then
+     ENDIF
+  ENDIF
+  IF (lsign) THEN
      dos(:) = dos(:) * segno(:)
-     deallocate(segno)
-  endif
+     DEALLOCATE(segno)
+  ENDIF
 #ifdef __PARA
-  call mp_sum( dos, inter_pool_comm )
+  CALL mp_sum( dos, inter_pool_comm )
 #endif
 
-  if (iflag == 0 .OR. gamma_only) return
+  IF (iflag == 0 .or. gamma_only) RETURN
   !
   !    symmetrization of the local dos
   !
-  call sym_rho_init ( gamma_only )
+  CALL sym_rho_init ( gamma_only )
   !
-  psic(:) = CMPLX ( dos(:), 0.0_dp, KIND=dp)
-  call cft3s (psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, -1)
-  rho%of_g(:,1) = psic(nl(:)) 
+  psic(:) = cmplx ( dos(:), 0.0_dp, kind=dp)
+  CALL cft3s (psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, -1)
+  rho%of_g(:,1) = psic(nl(:))
   !
-  call sym_rho (1, rho%of_g)
+  CALL sym_rho (1, rho%of_g)
   !
   psic(:) = (0.0_dp, 0.0_dp)
   psic(nl(:)) = rho%of_g(:,1)
-  call cft3s (psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1)
-  dos(:) = DBLE(psic(:))
+  CALL cft3s (psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1)
+  dos(:) = dble(psic(:))
   !
-  return
+  RETURN
 
-end subroutine local_dos
+END SUBROUTINE local_dos
 
 !------------------------------------------------------------------------
 SUBROUTINE xk_pool( ik, nkstot, ik_pool,  which_pool )
 !------------------------------------------------------------------------
 !
-!  This routine is a simplified version of set_kpoint_vars in 
+!  This routine is a simplified version of set_kpoint_vars in
 !  xml_io_files. It recieves the index ik of a k_point in the complete
 !  k point list and return the index within the pool ik_pool, and
 !  the number of the pool that has that k point.
@@ -435,8 +435,8 @@ USE mp_global,  ONLY : npool, kunit
 !
 IMPLICIT NONE
 
-INTEGER, INTENT(IN)  :: ik, nkstot
-INTEGER, INTENT(OUT) :: ik_pool, which_pool
+INTEGER, INTENT(in)  :: ik, nkstot
+INTEGER, INTENT(out) :: ik_pool, which_pool
 !
 INTEGER :: nkl, nkr, nkbl
 !
@@ -449,7 +449,7 @@ ENDIF
 !
 ! ... find out number of k points blocks
 !
-nkbl = nkstot / kunit  
+nkbl = nkstot / kunit
 !
 ! ... k points per pool
 !
@@ -462,7 +462,7 @@ nkr = ( nkstot - nkl * npool ) / kunit
 ! ... calculate the pool and the index within the pool
 !
 IF (ik<=nkr*(nkl+1)) THEN
-   which_pool=(ik-1)/(nkl+1) 
+   which_pool=(ik-1)/(nkl+1)
    ik_pool=ik-which_pool*(nkl+1)
 ELSE
    which_pool=nkr+(ik-nkr*(nkl+1)-1)/nkl

@@ -1,18 +1,18 @@
 
-! Copyright (C) 2005-2009 Quantum ESPRESSO group 
-! This file is distributed under the terms of the 
-! GNU General Public License. See the file `License' 
-! in the root directory of the present distribution, 
-! or http://www.gnu.org/copyleft/gpl.txt . 
-! 13Aprile2005 
+! Copyright (C) 2005-2009 Quantum ESPRESSO group
+! This file is distributed under the terms of the
+! GNU General Public License. See the file `License'
+! in the root directory of the present distribution,
+! or http://www.gnu.org/copyleft/gpl.txt .
+! 13Aprile2005
 ! GENERATES INPUT for GW code
 !tested on: Silicon bulk, Germanium Bulk, Na4, InP bulk
 ! Please note just symmorphic symm. op. have to be used
 ! Use input option of pw.x: force_symmorphic=.TRUE.
 
-!----------------------------------------------------------------------- 
+!-----------------------------------------------------------------------
 PROGRAM pw2gw
-  !----------------------------------------------------------------------- 
+  !-----------------------------------------------------------------------
 
   ! This subroutine writes files containing plane wave coefficients
   ! and other stuff needed by GW codes
@@ -22,14 +22,14 @@ PROGRAM pw2gw
   USE mp,         ONLY : mp_bcast
   USE mp_global,  ONLY : kunit, nproc, mp_startup
   USE environment,ONLY : environment_start
-  USE us,         ONLY : spline_ps        
+  USE us,         ONLY : spline_ps
   !
   IMPLICIT NONE
   INTEGER :: ios
   INTEGER :: kunittmp
   LOGICAL :: use_gmaps
-  CHARACTER(LEN=20) :: what
-  CHARACTER(LEN=30) :: when
+  CHARACTER(len=20) :: what
+  CHARACTER(len=30) :: when
 
   NAMELIST / inputpp / prefix, outdir, what, use_gmaps
   !
@@ -39,30 +39,30 @@ PROGRAM pw2gw
   CALL mp_startup ( )
 #endif
   CALL environment_start ( 'PW2GW' )
-  ! 
-  !   set default values for variables in namelist 
-  ! 
+  !
+  !   set default values for variables in namelist
+  !
   prefix = 'pwscf'
   CALL get_env( 'ESPRESSO_TMPDIR', outdir )
-  IF ( TRIM( outdir ) == ' ' ) outdir = './'
+  IF ( trim( outdir ) == ' ' ) outdir = './'
   what   = 'gw'
   use_gmaps = .false.
 
   ios = 0
-  IF ( ionode )  THEN 
+  IF ( ionode )  THEN
      !
      READ (5, inputpp, iostat=ios)
      tmp_dir = trimcheck (outdir)
      !
-  END IF
-  ! 
-  CALL mp_bcast( ios, ionode_id ) 
-  IF (ios /= 0)   CALL errore('pw2gw', 'reading inputpp namelist', ABS(ios))
-  ! 
-  ! ... Broadcast variables 
-  ! 
-  CALL mp_bcast( prefix, ionode_id ) 
-  CALL mp_bcast(tmp_dir, ionode_id ) 
+  ENDIF
+  !
+  CALL mp_bcast( ios, ionode_id )
+  IF (ios /= 0)   CALL errore('pw2gw', 'reading inputpp namelist', abs(ios))
+  !
+  ! ... Broadcast variables
+  !
+  CALL mp_bcast( prefix, ionode_id )
+  CALL mp_bcast(tmp_dir, ionode_id )
   CALL mp_bcast( what, ionode_id )
   CALL mp_bcast( use_gmaps, ionode_id )
   !
@@ -79,11 +79,11 @@ PROGRAM pw2gw
   kunittmp = 1
 #endif
   !
-  IF( TRIM( what ) == 'gw' ) THEN
+  IF( trim( what ) == 'gw' ) THEN
     CALL compute_gw  ( use_gmaps )
   ELSE
     CALL write_gmaps ( kunittmp )
-  END IF
+  ENDIF
   !
   CALL stop_pp
 
@@ -95,7 +95,7 @@ SUBROUTINE compute_gw( use_gmaps )
   ! This routine creates the QPLDA and the matrixelements
   ! tform = .false. UNFORMATTED QPLDA
   ! tform = .true.  FORMATTED QPLDA
-  ! tsingle must be always true 
+  ! tsingle must be always true
 
   USE kinds,     ONLY : DP, sgl
   USE constants, ONLY : eps8, pi, AUTOEV, rytoev
@@ -109,7 +109,7 @@ SUBROUTINE compute_gw( use_gmaps )
   USE lsda_mod,      ONLY : nspin
   USE io_files,      ONLY : nwordwfc, iunwfc
   USE wavefunctions_module, ONLY : evc, psic
-  use mp_global, ONLY : mpime, kunit, nproc, intra_image_comm, npool
+  USE mp_global, ONLY : mpime, kunit, nproc, intra_image_comm, npool
   USE io_global, ONLY : ionode, ionode_id
   USE mp,        ONLY : mp_sum , mp_max
   USE mp_wave,   ONLY : mergewf
@@ -125,7 +125,7 @@ SUBROUTINE compute_gw( use_gmaps )
 
   IMPLICIT NONE
 
-  LOGICAL, INTENT(IN) :: use_gmaps
+  LOGICAL, INTENT(in) :: use_gmaps
 
   INTEGER :: ii(16), ngw, nkpt, ig, ik, ir, n, i,j,k, io = 98, iband1, iband2
   INTEGER :: omax, o, iproc
@@ -137,7 +137,7 @@ SUBROUTINE compute_gw( use_gmaps )
   REAL(kind=sgl), ALLOCATABLE :: xk_s(:,:), eig_s(:,:), focc_s(:,:)
   REAL(kind=DP):: g2max, a1(3), a2(3), a3(3),norm, xkgk(3), rrhotwx(3), delta
   REAL(kind=DP):: alpha, egap, halfalpha, Df, const, dummy
-  REAL(kind=DP), parameter :: omegamax = 30.0
+  REAL(kind=DP), PARAMETER :: omegamax = 30.0
   REAL(kind=DP), ALLOCATABLE:: gsort(:), eig(:,:), focc(:,:), kpg(:,:), omegatt(:), omeg(:)
   REAL(kind=DP), ALLOCATABLE:: pp1(:,:), pp2(:,:), pp3(:,:)
   REAL(kind=DP), ALLOCATABLE:: epsx(:,:), epsy(:,:), epsz(:,:)
@@ -148,12 +148,12 @@ SUBROUTINE compute_gw( use_gmaps )
   COMPLEX(kind=DP):: rhotwx(3), ctemp, dasomma(3)
   COMPLEX(kind=DP),  ALLOCATABLE:: c0(:), c0_m(:,:), c0_tmp_dp(:) !, c0_tmp(:) !, c0_gamma(:)
   COMPLEX(kind=sgl), ALLOCATABLE:: c0_s(:), c0_tmp(:) !, c0_gamma_s(:)
-  CHARACTER(LEN=80) :: titleo(2)
+  CHARACTER(len=80) :: titleo(2)
   INTEGER :: igwx, igwxx, comm, ierr, ig_max, igwx_r
   INTEGER :: igwx_p(nproc)
   INTEGER, ALLOCATABLE :: igk_l2g(:)
   !
-  REAL(kind=DP), allocatable :: vkb0(:), djl(:), vec_tab(:), vec_tab_d2y(:)
+  REAL(kind=DP), ALLOCATABLE :: vkb0(:), djl(:), vec_tab(:), vec_tab_d2y(:)
   INTEGER :: nb, nt, size_tab, size_tab_d2y, ipw, l
   !
   ! REAL(kind=DP) :: norma ! Variable needed only for DEBUG
@@ -176,7 +176,7 @@ SUBROUTINE compute_gw( use_gmaps )
      ENDIF
      WRITE (6,'(//" writing matrixelements on unit 98 FORMATTED")')
      OPEN (90, FILE='matrixelements',STATUS='unknown',FORM='FORMATTED')
-  END IF
+  ENDIF
   !
   !  file's title [2 lines]
   !
@@ -184,16 +184,16 @@ SUBROUTINE compute_gw( use_gmaps )
   titleo(2)='test version'
   IF( mpime == 0 ) THEN
      IF (t_form) THEN
-        write (io,'(A80/A80)') titleo(1), titleo(2)
+        WRITE (io,'(A80/A80)') titleo(1), titleo(2)
      ELSE
-        write (io) titleo(1)
-        write (io) titleo(2)
+        WRITE (io) titleo(1)
+        WRITE (io) titleo(2)
      ENDIF
      !
-     write(6,*) 'qplda title'
-     write(6,*) titleo(1)
-     write(6,*) titleo(2)
-  END IF
+     WRITE(6,*) 'qplda title'
+     WRITE(6,*) titleo(1)
+     WRITE(6,*) titleo(2)
+  ENDIF
   !
   !  Read 16 integers (reserved for future flags)
   !  Flags used so far:
@@ -204,13 +204,13 @@ SUBROUTINE compute_gw( use_gmaps )
   ii(:) = 0
   IF (t_form) THEN
      ii(1)=0
-     IF( mpime == 0 ) write (io,'(16I5)') ii
+     IF( mpime == 0 ) WRITE (io,'(16I5)') ii
   ELSE
      ii(1)=1
-     IF( mpime == 0 ) write (io) ii
-  END IF
+     IF( mpime == 0 ) WRITE (io) ii
+  ENDIF
   !
-  write(6,'(16I5)') ii
+  WRITE(6,'(16I5)') ii
   !
   !  write real-space lattice vectors (Cartesian, in au) [3 lines]
   !
@@ -234,11 +234,11 @@ SUBROUTINE compute_gw( use_gmaps )
      ENDIF
      !
      WRITE(6,*) 'Vettori di reticolo diretto'
-     write(6,'(a,3E26.18)') 'a1', a1_s
-     write(6,'(a,3E26.18)') 'a2', a2_s
-     write(6,'(a,3E26.18)') 'a3', a3_s
+     WRITE(6,'(a,3E26.18)') 'a1', a1_s
+     WRITE(6,'(a,3E26.18)') 'a2', a2_s
+     WRITE(6,'(a,3E26.18)') 'a3', a3_s
      !
-  END IF
+  ENDIF
   !
   ! Write symmetry operations.
   ! The matrix s is the transpose of the symmetry matrix in direct space,
@@ -251,12 +251,12 @@ SUBROUTINE compute_gw( use_gmaps )
   ! matrix, in units of a_i, written columnwise
   !
   IF( mpime == 0 ) THEN
-     write(6,*)'nrot=',nsym
-     write(6,'(3E26.18)') (((float(s(i,j,k)),j=1,3),i=1,3),k=1,nsym)
+     WRITE(6,*)'nrot=',nsym
+     WRITE(6,'(3E26.18)') (((float(s(i,j,k)),j=1,3),i=1,3),k=1,nsym)
      IF (t_form) THEN
         WRITE (io,'(I2)') nsym
         WRITE (io,'(3E26.18)') (((float(s(i,j,k)),j=1,3),i=1,3),k=1,nsym)
-        IF (ii(3) == 1) THEN 
+        IF (ii(3) == 1) THEN
            ! READ (10,1020) ((VOFFSET(I,J),I=1,3),J=1,NOP)
            ! WRITE (6,'(//" Run program CNVNSY to convert QPLDA file first.")')
            CALL errore('pw2gw','non-symmorphic translation vectors',ii(3))
@@ -291,24 +291,24 @@ SUBROUTINE compute_gw( use_gmaps )
   igwx  = 0  !  maximum G vector index
   DO ik = 1, nks
      CALL gk_sort (xk (1, ik), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin)
-     g2max = MAX ( g2max, MAXVAL (g2kin(1:npw)) )  
-     ! WRITE( 6, * ) 'DEBUG g2max ', g2max 
+     g2max = max ( g2max, maxval (g2kin(1:npw)) )
+     ! WRITE( 6, * ) 'DEBUG g2max ', g2max
      ! g2max, g2kin = RAGGIO DELLA SFERA |G+k|<cut, non MASSIMO |G| nella sfera
      ! g2max <= ecutwfc / tpiba2   PER COSTRUZIONE
-     igwx = MAX( igwx, MAXVAL( igk(1:npw) ) ) 
-  END DO
+     igwx = max( igwx, maxval( igk(1:npw) ) )
+  ENDDO
   !IF (ionode) write(*,*) "igwx = ", igwx
   !
   !  ngw =  number of G-vectors (complete shells) such that G2 <= G2max
   !  ovvero <= RAGGIO della SFERA, in pratica trova i G2 relativi a GAMMA
   !
-  do ngw = 1, ngm
-     if ( gg(ngw) > g2max + eps8) go to 100
-  end do
-  call errore ( 'pw2gw','max G in PW not found?!?',ngw)
+  DO ngw = 1, ngm
+     IF ( gg(ngw) > g2max + eps8) GOTO 100
+  ENDDO
+  CALL errore ( 'pw2gw','max G in PW not found?!?',ngw)
 100 ngw = ngw - 1
 
-  ! Pongo NGW pari al massimo indice tra i vettori G che fanno parte delle 
+  ! Pongo NGW pari al massimo indice tra i vettori G che fanno parte delle
   ! sfere |G+k|<cut per qualsiasi k
   !
   !IF (ionode) write( 6, * ) ' igwx= ', igwx
@@ -320,14 +320,14 @@ SUBROUTINE compute_gw( use_gmaps )
   !
   ALLOCATE (in1(ngw), in2(ngw), in3(ngw))
   DO ig=1,ngw
-     in1(ig) = NINT ( at(1,1)*g(1,ig) + at(2,1)*g(2,ig) + at(3,1)*g(3,ig) )
-     in2(ig) = NINT ( at(1,2)*g(1,ig) + at(2,2)*g(2,ig) + at(3,2)*g(3,ig) )
-     in3(ig) = NINT ( at(1,3)*g(1,ig) + at(2,3)*g(2,ig) + at(3,3)*g(3,ig) )
-  END DO
+     in1(ig) = nint ( at(1,1)*g(1,ig) + at(2,1)*g(2,ig) + at(3,1)*g(3,ig) )
+     in2(ig) = nint ( at(1,2)*g(1,ig) + at(2,2)*g(2,ig) + at(3,2)*g(3,ig) )
+     in3(ig) = nint ( at(1,3)*g(1,ig) + at(2,3)*g(2,ig) + at(3,3)*g(3,ig) )
+  ENDDO
 
-  igwxx = MAXVAL( ig_l2g( 1:ngw ) )
+  igwxx = maxval( ig_l2g( 1:ngw ) )
   CALL mp_max( igwxx )
-  IF (ionode) write(*,*) "NDIMCP = ", igwxx
+  IF (ionode) WRITE(*,*) "NDIMCP = ", igwxx
 
   igwx_p = 0
   igwx_p( mpime + 1 ) = igwx
@@ -343,7 +343,7 @@ SUBROUTINE compute_gw( use_gmaps )
         in1_tmp( ig_l2g(ig) ) = in1(ig)
         in2_tmp( ig_l2g(ig) ) = in2(ig)
         in3_tmp( ig_l2g(ig) ) = in3(ig)
-     END DO
+     ENDDO
      !
 #if defined __PARA
      ALLOCATE( ig_l2g_rcv( igwxx ) )
@@ -355,16 +355,16 @@ SUBROUTINE compute_gw( use_gmaps )
         CALL MPI_RECV( inx_rcv,    igwx_p( iproc ), MPI_INTEGER, (iproc-1), iproc+NPROC, intra_image_comm, istatus, IERR )
         DO ig = 1, igwx_p( iproc )
            in1_tmp( ig_l2g_rcv( ig ) ) = inx_rcv( ig )
-        END DO
+        ENDDO
         CALL MPI_RECV( inx_rcv,    igwx_p( iproc ), MPI_INTEGER, (iproc-1), iproc+2*NPROC, intra_image_comm, istatus, IERR )
         DO ig = 1, igwx_p( iproc )
            in2_tmp( ig_l2g_rcv( ig ) ) = inx_rcv( ig )
-        END DO
+        ENDDO
         CALL MPI_RECV( inx_rcv,    igwx_p( iproc ), MPI_INTEGER, (iproc-1), iproc+3*NPROC, intra_image_comm, istatus, IERR )
         DO ig = 1, igwx_p( iproc )
            in3_tmp( ig_l2g_rcv( ig ) ) = inx_rcv( ig )
-        END DO
-     END DO
+        ENDDO
+     ENDDO
      !
      DEALLOCATE( ig_l2g_rcv )
      DEALLOCATE( inx_rcv )
@@ -379,9 +379,9 @@ SUBROUTINE compute_gw( use_gmaps )
      CALL MPI_SEND( in3(1), igwx, MPI_INTEGER, 0, mpime+1+3*NPROC, intra_image_comm, IERR )
 #endif
      !
-  END IF
+  ENDIF
 
-  IF (mpime == 0) write(*,*) "fine debug sui punti g"
+  IF (mpime == 0) WRITE(*,*) "fine debug sui punti g"
 
 
 
@@ -389,25 +389,25 @@ SUBROUTINE compute_gw( use_gmaps )
      IF( mpime == 0 ) THEN
         WRITE (io,'(I12)') igwxx
         WRITE (io,'(3I5)') (in1_tmp(ig),in2_tmp(ig),in3_tmp(ig),ig=1,igwxx)
-     END IF
+     ENDIF
   ELSE
      IF( mpime == 0 ) THEN
-        WRITE (io) igwxx 
+        WRITE (io) igwxx
         WRITE (io) (in1_tmp(ig),in2_tmp(ig),in3_tmp(ig),ig=1,igwxx)
-     END IF
+     ENDIF
   ENDIF
   !
   DEALLOCATE ( in1, in2, in3 )
   IF( mpime == 0 ) THEN
      DEALLOCATE ( in1_tmp, in2_tmp, in3_tmp )
-  END IF
+  ENDIF
   !
   !  WRITE k-points (in RL units)
   !
   ! transformation in relative coordinates with respect to b1,b2,b3
   !
   CALL cryst_to_cart (nks, xk, at, -1)
-  ! xk(3,nkpt) in input deve essere in coordinate cartesiane!  
+  ! xk(3,nkpt) in input deve essere in coordinate cartesiane!
   nkpt = nks
   ALLOCATE (xk_s(3,nkpt))
   xk_s(:,:) = xk(:,1:nkpt)
@@ -416,7 +416,7 @@ SUBROUTINE compute_gw( use_gmaps )
      OPEN(65,file='k.dat')
      WRITE(65,'(1x,3f10.6,1x,f10.6)')  ( xk_s(:,ik), wk(ik)*0.5, ik=1,nks )
      CLOSE(unit=65)
-  END IF
+  ENDIF
 
   IF( mpime == 0 ) THEN
      IF (t_form) THEN
@@ -425,41 +425,41 @@ SUBROUTINE compute_gw( use_gmaps )
      ELSE
         WRITE (io) nkpt
         WRITE(6,*) 'nkpt',nkpt
-        if(t_single) then
+        IF(t_single) THEN
            WRITE (io) ((xk_s(i,ik),i=1,3),ik=1,nkpt)
-        else
+        ELSE
            WRITE (io) ((xk(i,ik),i=1,3),ik=1,nkpt)
-        endif
+        ENDIF
      ENDIF
      WRITE(6,'(1x,3f10.6)') ( (xk_s(i,ik),i=1,3), ik=1,nkpt)
   ENDIF
 ! --------------------------
 ! vkb0
 ! --------------------------
-  do ik=1,nkpt
+  DO ik=1,nkpt
     npw = ngk(ik)
-    write(15,*) "npw", npw
-    allocate(vkb0(1:npw))
+    WRITE(15,*) "npw", npw
+    ALLOCATE(vkb0(1:npw))
 
     size_tab=size(tab,1)
     size_tab_d2y=size(tab_d2y,1)
 
-    allocate(vec_tab(1:size_tab))
-    if(spline_ps) allocate(vec_tab_d2y(1:size_tab_d2y))
-    do nt = 1, ntyp
-      do nb = 1, upf(nt)%nbeta
+    ALLOCATE(vec_tab(1:size_tab))
+    IF(spline_ps) ALLOCATE(vec_tab_d2y(1:size_tab_d2y))
+    DO nt = 1, ntyp
+      DO nb = 1, upf(nt)%nbeta
         vkb0(:) = 0.0_dp
         vec_tab(:) = 0.0_dp
-        if(spline_ps) vec_tab_d2y(:) = 0.0_dp
+        IF(spline_ps) vec_tab_d2y(:) = 0.0_dp
         vec_tab(:) = tab(:,nb,nt)
-        if(spline_ps) then
-          write(0,*) "size vec_tab_d2y", size(vec_tab_d2y,1)
-          write(0,*) "size tab_d2y", size(tab_d2y,1)
+        IF(spline_ps) THEN
+          WRITE(0,*) "size vec_tab_d2y", size(vec_tab_d2y,1)
+          WRITE(0,*) "size tab_d2y", size(tab_d2y,1)
           vec_tab_d2y(:) = tab_d2y(:,nb,nt)
-          call gen_us_vkb0(ik,npw,vkb0,size_tab,vec_tab,spline_ps,vec_tab_d2y)
-        else
-          call gen_us_vkb0(ik,npw,vkb0,size_tab,vec_tab,spline_ps)
-        endif
+          CALL gen_us_vkb0(ik,npw,vkb0,size_tab,vec_tab,spline_ps,vec_tab_d2y)
+        ELSE
+          CALL gen_us_vkb0(ik,npw,vkb0,size_tab,vec_tab,spline_ps)
+        ENDIF
         WRITE(15,*) "---------------DEBUG-VKB0----------------------"
         WRITE(15,*) "ik= ", ik
         WRITE(15,*) "nt= ", nt
@@ -467,40 +467,40 @@ SUBROUTINE compute_gw( use_gmaps )
         WRITE(15,*) "l= ", upf(nt)%lll(nb)
         WRITE (15,'(8f15.9)') vkb0
         WRITE(15,*) "--------------END-DEBUG------------------------"
-!        WRITE(io) vkb0 
-      enddo
-    enddo
+!        WRITE(io) vkb0
+      ENDDO
+    ENDDO
 
-   deallocate(vkb0)
-   deallocate(vec_tab)
-   if(spline_ps)  deallocate(vec_tab_d2y)
+   DEALLOCATE(vkb0)
+   DEALLOCATE(vec_tab)
+   IF(spline_ps)  DEALLOCATE(vec_tab_d2y)
 
-  enddo
+  ENDDO
 !---------------------------
 ! djl
 !---------------------------
-  do ik=1,nkpt
+  DO ik=1,nkpt
     npw = ngk(ik)
-    
-    allocate(djl(1:npw))
+
+    ALLOCATE(djl(1:npw))
 
     size_tab=size(tab,1)
     size_tab_d2y=size(tab_d2y,1)
 
-    allocate(vec_tab(1:size_tab))
-    if(spline_ps) allocate(vec_tab_d2y(1:size_tab_d2y))
-    do nt = 1, ntyp
-      do nb = 1, upf(nt)%nbeta
+    ALLOCATE(vec_tab(1:size_tab))
+    IF(spline_ps) ALLOCATE(vec_tab_d2y(1:size_tab_d2y))
+    DO nt = 1, ntyp
+      DO nb = 1, upf(nt)%nbeta
         djl(:) = 0.0_dp
         vec_tab(:) = 0.0_dp
-        if(spline_ps) vec_tab_d2y(:) = 0.0_dp
+        IF(spline_ps) vec_tab_d2y(:) = 0.0_dp
         vec_tab(:) = tab(:,nb,nt)
-        if(spline_ps) then
+        IF(spline_ps) THEN
           vec_tab_d2y(:) = tab_d2y(:,nb,nt)
-          call gen_us_djl(ik,npw,djl,size_tab,vec_tab,spline_ps,vec_tab_d2y)
-        else
-          call gen_us_djl(ik,npw,djl,size_tab,vec_tab,spline_ps)
-        endif
+          CALL gen_us_djl(ik,npw,djl,size_tab,vec_tab,spline_ps,vec_tab_d2y)
+        ELSE
+          CALL gen_us_djl(ik,npw,djl,size_tab,vec_tab,spline_ps)
+        ENDIF
 !        WRITE(0,*) "---------------DEBUG-----------------------"
 !        WRITE(0,*) "spline: ", spline_ps
 !        WRITE(0,*) "ik= ", ik
@@ -509,15 +509,15 @@ SUBROUTINE compute_gw( use_gmaps )
 !        WRITE(0,*) "l= ", upf(nt)%lll(nb)
 !        WRITE (0,'(8f15.9)') djl
 !        WRITE(0,*) "--------------END-DEBUG------------------------"
-!        WRITE(io) djl 
-      enddo
-    enddo
+!        WRITE(io) djl
+      ENDDO
+    ENDDO
 
-   deallocate(djl)
-   deallocate(vec_tab)
-   if(spline_ps)  deallocate(vec_tab_d2y)
+   DEALLOCATE(djl)
+   DEALLOCATE(vec_tab)
+   IF(spline_ps)  DEALLOCATE(vec_tab_d2y)
 
-  enddo
+  ENDDO
 !-----------------------
 !-----------------------
 
@@ -533,21 +533,21 @@ SUBROUTINE compute_gw( use_gmaps )
      IF( mpime == 0 ) WRITE (io,'(3E26.18)') ((eig(i,ik),ik=1,nkpt),i=1,n)
   ELSE
      IF( mpime == 0 ) WRITE (io) n
-     if(t_single) then
-        do ik=1,nkpt
-           do i=1,n
+     IF(t_single) THEN
+        DO ik=1,nkpt
+           DO i=1,n
               eig_s(i,ik)=eig(i,ik)
-           enddo
-        enddo
+           ENDDO
+        ENDDO
         WRITE(6,*) 'nbndsi=',n
         IF( mpime == 0 ) WRITE (io) ((eig_s(i,ik),ik=1,nkpt),i=1,n)
-     else
+     ELSE
         WRITE(6,*) 'nbndsi=',n
         IF( mpime == 0 ) WRITE (io) ((eig(i,ik),ik=1,nkpt),i=1,n)
-     endif
+     ENDIF
   ENDIF
 
-!  write(6,*) 'autovalori energia per 10bande e tutti kpt' 
+!  write(6,*) 'autovalori energia per 10bande e tutti kpt'
 !  WRITE(6,'(10F10.7)') ( ( eig(i,ik)*27.21 ,ik=1,nkpt), i=1,10 )
 !  DEALLOCATE (eig_s, eig)
   !
@@ -556,34 +556,34 @@ SUBROUTINE compute_gw( use_gmaps )
   ALLOCATE (focc(n,nkpt), focc_s(n,nkpt))
 !  focc(:,:)   = wg(:,1:nkpt)
 !  focc_s(:,:) = wg(:,1:nkpt)
-  do j=1,n
-   do ik=1,nkpt
+  DO j=1,n
+   DO ik=1,nkpt
     focc(j,ik)=wg(j,ik)*2.0d0/wk(ik)
-    enddo
-  enddo
-  
+    ENDDO
+  ENDDO
+
   focc_s(:,:) = focc(:,:)
 
   IF( mpime == 0 ) THEN
      IF (t_form) THEN
         WRITE (io,'(3E26.18)') ((focc(i,ik), ik=1,nkpt), i=1,n)
      ELSE
-        if(t_single) then
+        IF(t_single) THEN
            WRITE (io) ((focc_s(i,ik),ik=1,nkpt),i=1,n)
-        else
+        ELSE
            WRITE (io) ((focc(i,ik),ik=1,nkpt),i=1,n)
-        endif
+        ENDIF
      ENDIF
-  END IF
+  ENDIF
 
   WRITE (6,*) nkpt
   WRITE (6,*) 'weights:'
   WRITE (6,'(10f10.7)') (wk(ik), ik=1,nkpt)
 
-  do ik = 1, nkpt
+  DO ik = 1, nkpt
      WRITE (6,*) 'ik=', ik
      WRITE (6,'(10f10.7)') (focc_s(j,ik), j=1,n)
-  enddo
+  ENDDO
 
 !  DEALLOCATE (focc_s, focc)
   !
@@ -598,7 +598,7 @@ SUBROUTINE compute_gw( use_gmaps )
   const = 4.d0*pi**2*AUTOEV**3/omega
   WRITE(6,*) 'const = ', const
 
-  write(*,*) "sono qui 6"
+  WRITE(*,*) "sono qui 6"
   ALLOCATE( omeg(omax+1))
   ALLOCATE( epsx(nkpt,omax+1), epsy(nkpt,omax+1), epsz(nkpt,omax+1) )
   ALLOCATE( epstx(omax+1), epsty(omax+1), epstz(omax+1) )
@@ -638,13 +638,13 @@ SUBROUTINE compute_gw( use_gmaps )
        !
        igk_l2g(ig) = ig_l2g(igk(ig))
        !
-    END DO
+    ENDDO
     !
     IF( use_gmaps ) THEN
       !
       c0_m = 0.0d0
       !
-      CALL read_and_collect( c0_m, SIZE( c0_m, 1 ), n, ik )
+      CALL read_and_collect( c0_m, size( c0_m, 1 ), n, ik )
       !
     ELSE
       !
@@ -654,15 +654,15 @@ SUBROUTINE compute_gw( use_gmaps )
       ! into array c0 with |G| ordering
       !
       DO ig = 1, npw
-         IF( igk(ig) < 1 .OR. igk(ig) > SIZE( c0 ) ) &
+         IF( igk(ig) < 1 .or. igk(ig) > size( c0 ) ) &
             CALL errore(' pw2gw ', ' c0 too small ', 1 )
-      END DO
+      ENDDO
 
       ! read wavefunctions and write the matrixelemnts
 
       DO i = 1, n
 
-        allocate( c0_tmp_dp( igwxx ) )
+        ALLOCATE( c0_tmp_dp( igwxx ) )
 
         CALL mergewf( evc(:,i), c0_tmp_dp, npw, igk_l2g(:), mpime, nproc, 0, intra_image_comm )
         !
@@ -670,44 +670,44 @@ SUBROUTINE compute_gw( use_gmaps )
         c0 (:) = 0.d0
         DO ig=1,npw
           c0(igk(ig)) = evc(ig,i)
-        END DO
+        ENDDO
         c0_m(:,i)=c0(:)
 
         c0_tmp = c0_tmp_dp
         IF( mpime == 0 ) WRITE(io) c0_tmp ! c0_s
 
-        deallocate( c0_tmp_dp )
+        DEALLOCATE( c0_tmp_dp )
 
       ENDDO
     ENDIF
 
     DEALLOCATE( igk_l2g )
-    
+
      ! k + g thet must be in 2piba units
      kpg(:,:) = 0.d0
      DO ig=1,npw
         kpg(:,igk(ig))= xk_s(:,ik)+g(:,igk(ig))
-     END DO
+     ENDDO
 
      DO iband1 = 1,n
-        IF ( focc(iband1,ik).ge.1e-4) THEN
+        IF ( focc(iband1,ik)>=1e-4) THEN
            DO iband2 = 1,n
               delta=2.0d0-focc(iband2,ik)
-              IF (delta.gt.1e-4) THEN
-   
+              IF (delta>1e-4) THEN
+
                  rhotwx = 0.0
                  DO ig=1,igwx
                     xkgk(1)= kpg(1,ig)
                     xkgk(2)= kpg(2,ig)
                     xkgk(3)= kpg(3,ig)
-                    ctemp= CONJG(c0_m(ig,iband1))*c0_m(ig,iband2)
+                    ctemp= conjg(c0_m(ig,iband1))*c0_m(ig,iband2)
                     rhotwx(1) = rhotwx(1) + xkgk(1) * ctemp
                     rhotwx(2) = rhotwx(2) + xkgk(2) * ctemp
                     rhotwx(3) = rhotwx(3) + xkgk(3) * ctemp
                  ENDDO
-   
+
                  CALL mp_sum( rhotwx )
-   
+
                  IF (mpime == 0) THEN
                     rrhotwx(1)=tpiba2* real(rhotwx(1)*conjg(rhotwx(1)))
                     rrhotwx(2)=tpiba2* real(rhotwx(2)*conjg(rhotwx(2)))
@@ -716,10 +716,10 @@ SUBROUTINE compute_gw( use_gmaps )
                     rrhotwx(3),(eig(iband2,ik)-eig(iband1,ik))*AUTOEV, (focc(iband1,ik)-focc(iband2,ik))
                     egap = (eig(iband2,ik)-eig(iband1,ik))*AUTOEV
                     Df = focc(iband1,ik)-focc(iband2,ik)
-                    IF (egap.gt.1e-3.and.Df.gt.1e-4) THEN
+                    IF (egap>1e-3.and.Df>1e-4) THEN
                        DO o=1, omax+1
                           dummy = abs(egap - omeg(o))
-                          IF (dummy.lt.halfalpha) THEN
+                          IF (dummy<halfalpha) THEN
                              pp1(ik,o)=pp1(ik,o)+rrhotwx(1)*Df/egap**2
                              pp2(ik,o)=pp2(ik,o)+rrhotwx(2)*Df/egap**2
                              pp3(ik,o)=pp3(ik,o)+rrhotwx(3)*Df/egap**2
@@ -754,7 +754,7 @@ SUBROUTINE compute_gw( use_gmaps )
          !norma = 0.0d0
          DO ir = 1, nrxx
             vxcdiag = vxcdiag + vxc(ir,nspin) * &
-                      ( DBLE(psic (ir) ) **2 + AIMAG(psic (ir) ) **2)
+                      ( dble(psic (ir) ) **2 + aimag(psic (ir) ) **2)
          !   norma = norma + ( DBLE(psic (ir) ) **2 + AIMAG(psic (ir) ) **2) / nrxx
          ENDDO
          vxcdiag = vxcdiag * rytoev / (nrx1*nrx2*nrx3) !nrxx
@@ -806,10 +806,10 @@ SUBROUTINE compute_gw( use_gmaps )
            epsty(o)=epsty(o)+epsyy
            epstz(o)=epstz(o)+epszz
         ENDDO
-        write(91,"(f15.6,1x,f15.6)") omegatt(o), epstx(o)
-        write(92,"(f15.6,1x,f15.6)") omegatt(o), epsty(o)
-        write(93,"(f15.6,1x,f15.6)") omegatt(o), epstz(o)
-        write(94,"(f15.6,1x,f15.6)") omegatt(o), (epstx(o)+ epsty(o)+ epstz(o))/3.0
+        WRITE(91,"(f15.6,1x,f15.6)") omegatt(o), epstx(o)
+        WRITE(92,"(f15.6,1x,f15.6)") omegatt(o), epsty(o)
+        WRITE(93,"(f15.6,1x,f15.6)") omegatt(o), epstz(o)
+        WRITE(94,"(f15.6,1x,f15.6)") omegatt(o), (epstx(o)+ epsty(o)+ epstz(o))/3.0
      ENDDO
 
      WRITE(6, * )  ' Hey bello sto a fini'
@@ -835,282 +835,282 @@ SUBROUTINE compute_gw( use_gmaps )
 END SUBROUTINE compute_gw
 
 
-!----------------------------------------------------------------------- 
-subroutine write_gmaps ( kunit) 
-  !----------------------------------------------------------------------- 
-  ! 
-  USE io_global, ONLY : stdout 
-  USE cell_base, ONLY : at, bg, tpiba2, alat 
-  USE ions_base, ONLY : atm, nat 
-  USE gvect,     ONLY : ngm, ngm_g, ig_l2g, ig1, ig2, ig3, ecutwfc, & 
-       nr1, nr2, nr3, g 
-  USE lsda_mod,  ONLY : nspin, isk 
-  USE ions_base, ONLY : ntyp => nsp, tau, ityp 
-  USE wvfct,     ONLY : nbnd, npw, npwx, et, g2kin 
-  USE klist,     ONLY : nkstot, ngk, nks, xk 
-  USE wavefunctions_module,  ONLY : evc 
-  use io_files,  only : nd_nmbr, tmp_dir, prefix, iunwfc, nwordwfc 
-  use io_global, only : ionode 
-  use mp_global, only : nproc, nproc_pool, mpime 
-  use mp_global, only : my_pool_id, my_image_id, intra_pool_comm 
-  use mp,        only : mp_sum, mp_max 
- 
- 
-  implicit none 
-  integer :: kunit 
- 
-  integer :: i, j, k, ig, ik, ibnd, na, ngg, ikw 
-  integer, allocatable :: kisort(:) 
-  integer :: npool, nkbl, nkl, nkr, npwx_g 
-  integer :: ike, iks, npw_g, ispin 
-  integer, allocatable :: ngk_g( : ) 
-  integer, allocatable :: ngk_gw( : ) 
-  integer, allocatable :: itmp( :, : ) 
-  integer, allocatable :: igwk( : ) 
-  integer, allocatable :: igk_l2g( :, : ) 
- 
-  real(kind=8) :: wfc_scal  
-  logical :: twf0, twfm, twrite_wfc 
- 
-  ! 
-  ! 
-  IF( ionode ) WRITE( stdout, fmt="(//,'WRITING G-MAPS for each processor' )" ) 
- 
-  IF( nkstot > 0 ) THEN 
- 
-     IF( ( kunit < 1 ) .OR. ( MOD( nkstot, kunit ) /= 0 ) ) & 
-       CALL errore( ' write_wannier ',' wrong kunit ', 1 ) 
- 
-     IF( ( nproc_pool > nproc ) .OR. ( MOD( nproc, nproc_pool ) /= 0 ) ) & 
-       CALL errore( ' write_wannier ',' nproc_pool ', 1 ) 
- 
-     !  find out the number of pools 
-     npool = nproc / nproc_pool 
- 
-     !  find out number of k points blocks 
-     nkbl = nkstot / kunit 
- 
-     !  k points per pool 
-     nkl = kunit * ( nkbl / npool ) 
- 
-     !  find out the reminder 
-     nkr = ( nkstot - nkl * npool ) / kunit 
- 
-     !  Assign the reminder to the first nkr pools 
-     IF( my_pool_id < nkr ) nkl = nkl + kunit 
- 
-     !  find out the index of the first k point in this pool 
-     iks = nkl * my_pool_id + 1 
-     IF( my_pool_id >= nkr ) iks = iks + nkr * kunit 
- 
-     !  find out the index of the last k point in this pool 
-     ike = iks + nkl - 1 
- 
-  END IF 
- 
-  ! find out the global number of G vectors: ngm_g   
-  ngm_g = ngm 
-  call mp_sum( ngm_g, intra_pool_comm ) 
- 
- 
-  ! build the G+k array indexes 
-  allocate ( kisort( npwx ) ) 
-  allocate ( igk_l2g( npwx, ik ) ) 
-  do ik = 1, nks 
-     kisort = 0 
-     call gk_sort (xk (1, ik+iks-1), ngm, g, ecutwfc / tpiba2, npw, kisort(1), g2kin) 
+!-----------------------------------------------------------------------
+SUBROUTINE write_gmaps ( kunit)
+  !-----------------------------------------------------------------------
+  !
+  USE io_global, ONLY : stdout
+  USE cell_base, ONLY : at, bg, tpiba2, alat
+  USE ions_base, ONLY : atm, nat
+  USE gvect,     ONLY : ngm, ngm_g, ig_l2g, ig1, ig2, ig3, ecutwfc, &
+       nr1, nr2, nr3, g
+  USE lsda_mod,  ONLY : nspin, isk
+  USE ions_base, ONLY : ntyp => nsp, tau, ityp
+  USE wvfct,     ONLY : nbnd, npw, npwx, et, g2kin
+  USE klist,     ONLY : nkstot, ngk, nks, xk
+  USE wavefunctions_module,  ONLY : evc
+  USE io_files,  ONLY : nd_nmbr, tmp_dir, prefix, iunwfc, nwordwfc
+  USE io_global, ONLY : ionode
+  USE mp_global, ONLY : nproc, nproc_pool, mpime
+  USE mp_global, ONLY : my_pool_id, my_image_id, intra_pool_comm
+  USE mp,        ONLY : mp_sum, mp_max
+
+
+  IMPLICIT NONE
+  INTEGER :: kunit
+
+  INTEGER :: i, j, k, ig, ik, ibnd, na, ngg, ikw
+  INTEGER, ALLOCATABLE :: kisort(:)
+  INTEGER :: npool, nkbl, nkl, nkr, npwx_g
+  INTEGER :: ike, iks, npw_g, ispin
+  INTEGER, ALLOCATABLE :: ngk_g( : )
+  INTEGER, ALLOCATABLE :: ngk_gw( : )
+  INTEGER, ALLOCATABLE :: itmp( :, : )
+  INTEGER, ALLOCATABLE :: igwk( : )
+  INTEGER, ALLOCATABLE :: igk_l2g( :, : )
+
+  real(kind=8) :: wfc_scal
+  LOGICAL :: twf0, twfm, twrite_wfc
+
+  !
+  !
+  IF( ionode ) WRITE( stdout, fmt="(//,'WRITING G-MAPS for each processor' )" )
+
+  IF( nkstot > 0 ) THEN
+
+     IF( ( kunit < 1 ) .or. ( mod( nkstot, kunit ) /= 0 ) ) &
+       CALL errore( ' write_wannier ',' wrong kunit ', 1 )
+
+     IF( ( nproc_pool > nproc ) .or. ( mod( nproc, nproc_pool ) /= 0 ) ) &
+       CALL errore( ' write_wannier ',' nproc_pool ', 1 )
+
+     !  find out the number of pools
+     npool = nproc / nproc_pool
+
+     !  find out number of k points blocks
+     nkbl = nkstot / kunit
+
+     !  k points per pool
+     nkl = kunit * ( nkbl / npool )
+
+     !  find out the reminder
+     nkr = ( nkstot - nkl * npool ) / kunit
+
+     !  Assign the reminder to the first nkr pools
+     IF( my_pool_id < nkr ) nkl = nkl + kunit
+
+     !  find out the index of the first k point in this pool
+     iks = nkl * my_pool_id + 1
+     IF( my_pool_id >= nkr ) iks = iks + nkr * kunit
+
+     !  find out the index of the last k point in this pool
+     ike = iks + nkl - 1
+
+  ENDIF
+
+  ! find out the global number of G vectors: ngm_g
+  ngm_g = ngm
+  CALL mp_sum( ngm_g, intra_pool_comm )
+
+
+  ! build the G+k array indexes
+  ALLOCATE ( kisort( npwx ) )
+  ALLOCATE ( igk_l2g( npwx, ik ) )
+  DO ik = 1, nks
+     kisort = 0
+     CALL gk_sort (xk (1, ik+iks-1), ngm, g, ecutwfc / tpiba2, npw, kisort(1), g2kin)
      DO ig = 1, npw
         igk_l2g(ig,ik) = ig_l2g(kisort(ig))
-     END DO
-     ngk (ik) = npw 
-  end do 
-  deallocate (kisort) 
- 
-  ! compute the global number of G+k vectors for each k point 
-  allocate( ngk_g( nkstot ) ) 
-  allocate( ngk_gw( nkstot/nspin ) ) 
-  ngk_g = 0 
-  ngk_g( iks:ike ) = ngk( 1:nks ) 
-  CALL mp_sum( ngk_g ) 
- 
-  ! compute the Maximum G vector index among all G+k an processors 
-  npw_g = MAXVAL( ig_l2g(:) ) ! ( igk_l2g(:,:) ) 
-  CALL mp_max( npw_g ) 
- 
-  ! compute the Maximum number of G vector among all k points 
-  npwx_g = MAXVAL( ngk_g( 1:nkstot ) ) 
- 
- 
-  allocate( igwk( npwx_g ) ) 
- 
-  do ik = 1, nkstot 
-    igwk = 0 
-    allocate( itmp( npw_g, 1 ) ) 
-    itmp = 0 
-    if( ik >= iks .AND. ik <= ike ) then  
-      do  ig = 1, ngk( ik-iks+1 ) 
+     ENDDO
+     ngk (ik) = npw
+  ENDDO
+  DEALLOCATE (kisort)
+
+  ! compute the global number of G+k vectors for each k point
+  ALLOCATE( ngk_g( nkstot ) )
+  ALLOCATE( ngk_gw( nkstot/nspin ) )
+  ngk_g = 0
+  ngk_g( iks:ike ) = ngk( 1:nks )
+  CALL mp_sum( ngk_g )
+
+  ! compute the Maximum G vector index among all G+k an processors
+  npw_g = maxval( ig_l2g(:) ) ! ( igk_l2g(:,:) )
+  CALL mp_max( npw_g )
+
+  ! compute the Maximum number of G vector among all k points
+  npwx_g = maxval( ngk_g( 1:nkstot ) )
+
+
+  ALLOCATE( igwk( npwx_g ) )
+
+  DO ik = 1, nkstot
+    igwk = 0
+    ALLOCATE( itmp( npw_g, 1 ) )
+    itmp = 0
+    IF( ik >= iks .and. ik <= ike ) THEN
+      DO  ig = 1, ngk( ik-iks+1 )
         itmp( ig_l2g( ig ), 1 ) = ig_l2g( ig )
-      end do 
-    end if 
-    call mp_sum( itmp ) 
-    ngg = 0 
-    do  ig = 1, npw_g 
-      if( itmp( ig, 1 ) == ig ) then 
-        ngg = ngg + 1 
-        igwk( ngg ) = ig 
-      end if 
-    end do 
-    if( ngg /= ngk_g( ik ) ) then 
-      WRITE( stdout,*) ' ik, ngg, ngk_g = ', ik, ngg, ngk_g( ik ) 
-    end if 
-    deallocate( itmp ) 
-    if( ionode ) then 
-        ! write (40)( igwk(ig), ig = 1, npwx_g ) 
-    end if 
-  end do 
- 
-  deallocate( igwk ) 
- 
-  do ik = 1, nkstot 
-     IF( (ik >= iks) .AND. (ik <= ike) ) THEN 
-        ispin = isk( ik ) 
-        WRITE( 100 + mpime ) ik, iks, ike, nkstot, kunit, nproc, ispin, nspin, npw_g, & 
-                             nbnd, ngk(ik-iks+1), nwordwfc, npwx, iunwfc, nd_nmbr 
-        WRITE( 100 + mpime ) ( igk_l2g( i, ik-iks+1 ), i = 1, ngk(ik-iks+1) ) 
-     END IF 
-  end do 
- 
-  deallocate ( ngk_g ) 
-  deallocate ( ngk_gw ) 
-  deallocate (igk_l2g) 
- 
-end subroutine write_gmaps 
- 
- 
-subroutine read_and_collect( c, ldc, n, ik ) 
-  USE io_global,      ONLY : stdout 
+      ENDDO
+    ENDIF
+    CALL mp_sum( itmp )
+    ngg = 0
+    DO  ig = 1, npw_g
+      IF( itmp( ig, 1 ) == ig ) THEN
+        ngg = ngg + 1
+        igwk( ngg ) = ig
+      ENDIF
+    ENDDO
+    IF( ngg /= ngk_g( ik ) ) THEN
+      WRITE( stdout,*) ' ik, ngg, ngk_g = ', ik, ngg, ngk_g( ik )
+    ENDIF
+    DEALLOCATE( itmp )
+    IF( ionode ) THEN
+        ! write (40)( igwk(ig), ig = 1, npwx_g )
+    ENDIF
+  ENDDO
+
+  DEALLOCATE( igwk )
+
+  DO ik = 1, nkstot
+     IF( (ik >= iks) .and. (ik <= ike) ) THEN
+        ispin = isk( ik )
+        WRITE( 100 + mpime ) ik, iks, ike, nkstot, kunit, nproc, ispin, nspin, npw_g, &
+                             nbnd, ngk(ik-iks+1), nwordwfc, npwx, iunwfc, nd_nmbr
+        WRITE( 100 + mpime ) ( igk_l2g( i, ik-iks+1 ), i = 1, ngk(ik-iks+1) )
+     ENDIF
+  ENDDO
+
+  DEALLOCATE ( ngk_g )
+  DEALLOCATE ( ngk_gw )
+  DEALLOCATE (igk_l2g)
+
+END SUBROUTINE write_gmaps
+
+
+SUBROUTINE read_and_collect( c, ldc, n, ik )
+  USE io_global,      ONLY : stdout
   USE io_files,       ONLY : prefix
-  USE kinds,          ONLY : DP, sgl 
- 
-  implicit none 
- 
-  INTEGER     :: ldc, n, ik 
-  COMPLEX(DP) :: c( ldc, n ) 
-  INTEGER     :: ik_ , iks, ike, nkstot, kunit, nproc_ , ispin, nspin, npw_g , nbnd , ngk 
-  INTEGER     :: nwordwfc, npwx, iunwfc 
-  INTEGER     :: nfile, ip, i, j 
-  COMPLEX(DP), ALLOCATABLE :: evc( :, : ) 
-  INTEGER, ALLOCATABLE :: igk_l2g( : ) 
-  LOGICAL     :: exst 
-  CHARACTER(len=3)  :: nd_nmbr 
- 
-  READ( 100 ) ik_ , iks, ike, nkstot, kunit, nproc_ , ispin, nspin, npw_g , & 
-              nbnd , ngk, nwordwfc, npwx, iunwfc, nd_nmbr 
- 
-  REWIND( 100 ) 
-   
-  nfile = nproc_ 
- 
-  CLOSE( iunwfc ) 
- 
-  DO ip = 0, nfile - 1 
-    READ( 100 + ip ) ik_ , iks, ike, nkstot, kunit, nproc_ , ispin, nspin, npw_g , & 
-                     nbnd , ngk, nwordwfc, npwx, iunwfc, nd_nmbr 
-    WRITE( stdout, * ) 'DEBUG nd_nmbr ', nd_nmbr 
-    IF( ( ik_ == ik ) .AND. ( ik_ >= iks ) .AND. ( ik_ <= ike ) ) THEN 
-      ALLOCATE( evc( npwx, nbnd ) ) 
-      ALLOCATE( igk_l2g( ngk ) ) 
-      READ( 100 + ip )  ( igk_l2g( i ), i = 1, ngk ) 
-      CALL diropn_gw ( 99, TRIM( prefix )//'.wfc', nwordwfc, exst, ip, nd_nmbr ) 
-      call davcio ( evc, nwordwfc, 99, (ik-iks+1), - 1 ) 
-      CLOSE( 99 ) 
-      DO j = 1, n 
-        DO i = 1, ngk 
-          c( igk_l2g( i ), j ) = evc( i, j ) 
-        END DO 
-      END DO 
-      DEALLOCATE( evc ) 
-      DEALLOCATE( igk_l2g ) 
-    END IF 
-    REWIND( 100 + ip ) 
-  END DO 
- 
-  return 
-end subroutine 
- 
-! 
-! Copyright (C) 2001-2003 PWSCF group 
-! This file is distributed under the terms of the 
-! GNU General Public License. See the file `License' 
-! in the root directory of the present distribution, 
-! or http://www.gnu.org/copyleft/gpl.txt . 
-! 
-! 
-!----------------------------------------------------------------------- 
-subroutine diropn_gw (unit, filename, recl, exst, mpime, nd_nmbr_ ) 
-  !----------------------------------------------------------------------- 
-  ! 
-  !     this routine opens a file in tmp_dir for direct I/O access 
-  !     If appropriate, the node number is added to the file name 
-  ! 
-  USE kinds 
-  use io_files 
-  implicit none 
- 
-  ! 
-  !    first the input variables 
-  ! 
-  character(len=*) :: filename 
-  ! input: name of the file to open 
-  integer :: unit, recl 
-  ! input: unit of the file to open 
-  ! input: length of the records 
-  logical :: exst 
-  ! output: if true the file exists 
-  integer :: mpime 
-  ! input: processor index 
-  CHARACTER(LEN=3) :: nd_nmbr_ 
-  ! 
-  !    local variables 
-  ! 
-  character(len=256) :: tempfile 
-  ! complete file name 
-  character(len=80) :: assstr 
-  integer :: ios, unf_recl, ierr 
-  ! used to check I/O operations 
-  ! length of the record 
-  ! error code 
-  logical :: opnd 
-  ! if true the file is already opened 
- 
- 
-  if (unit < 0) call errore ('diropn', 'wrong unit', 1) 
-  ! 
-  !    we first check that the file is not already openend 
-  ! 
-  ios = 0 
-  inquire (unit = unit, opened = opnd) 
-  if (opnd) call errore ('diropn', "can't open a connected unit", abs(unit)) 
-  ! 
-  !      then we check the filename 
-  ! 
- 
-  if (filename == ' ') call errore ('diropn', 'filename not given', 2) 
-  tempfile = trim(tmp_dir) // trim(filename) // trim( nd_nmbr_ ) 
- 
-  inquire (file = tempfile, exist = exst) 
-  ! 
-  !      the unit for record length is unfortunately machine-dependent 
-  ! 
+  USE kinds,          ONLY : DP, sgl
+
+  IMPLICIT NONE
+
+  INTEGER     :: ldc, n, ik
+  COMPLEX(DP) :: c( ldc, n )
+  INTEGER     :: ik_ , iks, ike, nkstot, kunit, nproc_ , ispin, nspin, npw_g , nbnd , ngk
+  INTEGER     :: nwordwfc, npwx, iunwfc
+  INTEGER     :: nfile, ip, i, j
+  COMPLEX(DP), ALLOCATABLE :: evc( :, : )
+  INTEGER, ALLOCATABLE :: igk_l2g( : )
+  LOGICAL     :: exst
+  CHARACTER(len=3)  :: nd_nmbr
+
+  READ( 100 ) ik_ , iks, ike, nkstot, kunit, nproc_ , ispin, nspin, npw_g , &
+              nbnd , ngk, nwordwfc, npwx, iunwfc, nd_nmbr
+
+  REWIND( 100 )
+
+  nfile = nproc_
+
+  CLOSE( iunwfc )
+
+  DO ip = 0, nfile - 1
+    READ( 100 + ip ) ik_ , iks, ike, nkstot, kunit, nproc_ , ispin, nspin, npw_g , &
+                     nbnd , ngk, nwordwfc, npwx, iunwfc, nd_nmbr
+    WRITE( stdout, * ) 'DEBUG nd_nmbr ', nd_nmbr
+    IF( ( ik_ == ik ) .and. ( ik_ >= iks ) .and. ( ik_ <= ike ) ) THEN
+      ALLOCATE( evc( npwx, nbnd ) )
+      ALLOCATE( igk_l2g( ngk ) )
+      READ( 100 + ip )  ( igk_l2g( i ), i = 1, ngk )
+      CALL diropn_gw ( 99, trim( prefix )//'.wfc', nwordwfc, exst, ip, nd_nmbr )
+      CALL davcio ( evc, nwordwfc, 99, (ik-iks+1), - 1 )
+      CLOSE( 99 )
+      DO j = 1, n
+        DO i = 1, ngk
+          c( igk_l2g( i ), j ) = evc( i, j )
+        ENDDO
+      ENDDO
+      DEALLOCATE( evc )
+      DEALLOCATE( igk_l2g )
+    ENDIF
+    REWIND( 100 + ip )
+  ENDDO
+
+  RETURN
+END SUBROUTINE
+
+!
+! Copyright (C) 2001-2003 PWSCF group
+! This file is distributed under the terms of the
+! GNU General Public License. See the file `License'
+! in the root directory of the present distribution,
+! or http://www.gnu.org/copyleft/gpl.txt .
+!
+!
+!-----------------------------------------------------------------------
+SUBROUTINE diropn_gw (unit, filename, recl, exst, mpime, nd_nmbr_ )
+  !-----------------------------------------------------------------------
+  !
+  !     this routine opens a file in tmp_dir for direct I/O access
+  !     If appropriate, the node number is added to the file name
+  !
+  USE kinds
+  USE io_files
+  IMPLICIT NONE
+
+  !
+  !    first the input variables
+  !
+  CHARACTER(len=*) :: filename
+  ! input: name of the file to open
+  INTEGER :: unit, recl
+  ! input: unit of the file to open
+  ! input: length of the records
+  LOGICAL :: exst
+  ! output: if true the file exists
+  INTEGER :: mpime
+  ! input: processor index
+  CHARACTER(len=3) :: nd_nmbr_
+  !
+  !    local variables
+  !
+  CHARACTER(len=256) :: tempfile
+  ! complete file name
+  CHARACTER(len=80) :: assstr
+  INTEGER :: ios, unf_recl, ierr
+  ! used to check I/O operations
+  ! length of the record
+  ! error code
+  LOGICAL :: opnd
+  ! if true the file is already opened
+
+
+  IF (unit < 0) CALL errore ('diropn', 'wrong unit', 1)
+  !
+  !    we first check that the file is not already openend
+  !
+  ios = 0
+  INQUIRE (unit = unit, opened = opnd)
+  IF (opnd) CALL errore ('diropn', "can't open a connected unit", abs(unit))
+  !
+  !      then we check the filename
+  !
+
+  IF (filename == ' ') CALL errore ('diropn', 'filename not given', 2)
+  tempfile = trim(tmp_dir) // trim(filename) // trim( nd_nmbr_ )
+
+  INQUIRE (file = tempfile, exist = exst)
+  !
+  !      the unit for record length is unfortunately machine-dependent
+  !
 #define DIRECT_IO_FACTOR 8
-  unf_recl = DIRECT_IO_FACTOR * recl 
-  if (unf_recl <= 0) call errore ('diropn', 'wrong record length', 3) 
-  ! 
-  open ( unit, file = TRIM(tempfile), iostat = ios, form = 'unformatted', & 
-       status = 'unknown', access = 'direct', recl = unf_recl ) 
- 
-  if (ios /= 0) call errore ('diropn', 'error opening '//filename, unit) 
-  return 
-end subroutine diropn_gw
- 
+  unf_recl = DIRECT_IO_FACTOR * recl
+  IF (unf_recl <= 0) CALL errore ('diropn', 'wrong record length', 3)
+  !
+  OPEN ( unit, file = trim(tempfile), iostat = ios, form = 'unformatted', &
+       status = 'unknown', access = 'direct', recl = unf_recl )
+
+  IF (ios /= 0) CALL errore ('diropn', 'error opening '//filename, unit)
+  RETURN
+END SUBROUTINE diropn_gw
+
 

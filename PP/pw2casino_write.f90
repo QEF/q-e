@@ -387,7 +387,7 @@ CONTAINS
                ijkb0 = 0
                DO nt = 1, ntyp
                   DO na = 1, nat
-                     IF(ityp (na) .eq. nt)THEN
+                     IF(ityp (na) == nt)THEN
                         DO ih = 1, nh (nt)
                            ikb = ijkb0 + ih
                            IF(gamma_only)THEN

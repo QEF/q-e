@@ -7,7 +7,7 @@
 !
 !
 !-----------------------------------------------------------------------
-subroutine add_shift_cc (shift_cc)
+SUBROUTINE add_shift_cc (shift_cc)
   !----------------------------------------------------------------------
   !
   USE kinds, ONLY : DP
@@ -26,7 +26,7 @@ subroutine add_shift_cc (shift_cc)
   USE mp_global,  ONLY : intra_pool_comm
   USE mp,         ONLY : mp_sum
 
-  implicit none
+  IMPLICIT NONE
   !
   !   first the dummy variable
   !
@@ -34,81 +34,81 @@ subroutine add_shift_cc (shift_cc)
   real(DP) :: shift_cc (nat)
   ! output: the local forces on atoms
 
-  integer :: ig, ir, nt, na
+  INTEGER :: ig, ir, nt, na
   ! counter on G vectors
   ! counter on FFT grid points
   ! counter on types of atoms
   ! counter on atoms
 
 
-  real(DP), allocatable :: vxc (:,:), rhocg (:), shift_(:)
+  real(DP), ALLOCATABLE :: vxc (:,:), rhocg (:), shift_(:)
   ! exchange-correlation potential
   ! radial fourier trasform of rho core
   real(DP)  ::  arg, fact
   !
-  if ( ANY (upf(1:ntyp)%nlcc) ) goto 15
-  return
+  IF ( any (upf(1:ntyp)%nlcc) ) GOTO 15
+  RETURN
   !
-15 continue
-   call infomsg ('add_shift_cc','BEWARE: shift with CC never tested !!!')
-  if (gamma_only) then
+15 CONTINUE
+   CALL infomsg ('add_shift_cc','BEWARE: shift with CC never tested !!!')
+  IF (gamma_only) THEN
      fact = 2.d0
-  else
+  ELSE
      fact = 1.d0
-  end if
+  ENDIF
   !
   ! recalculate the exchange-correlation potential
   !
-  allocate ( vxc(nrxx,nspin), shift_(nat) )
+  ALLOCATE ( vxc(nrxx,nspin), shift_(nat) )
   shift_(:) = 0.d0
   !
-  call v_xc (rho, rho_core, rhog_core, etxc, vtxc, vxc)
+  CALL v_xc (rho, rho_core, rhog_core, etxc, vtxc, vxc)
   !
-  if (nspin.eq.1) then
-     do ir = 1, nrxx
+  IF (nspin==1) THEN
+     DO ir = 1, nrxx
         psic (ir) = vxc (ir, 1)
-     enddo
-  else
-     do ir = 1, nrxx
+     ENDDO
+  ELSE
+     DO ir = 1, nrxx
         psic (ir) = 0.5d0 * (vxc (ir, 1) + vxc (ir, 2) )
-     enddo
-  endif
-  deallocate (vxc)
-  call cft3 (psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, - 1)
+     ENDDO
+  ENDIF
+  DEALLOCATE (vxc)
+  CALL cft3 (psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, - 1)
   !
   ! psic contains now Vxc(G)
   !
-  allocate ( rhocg(ngl) )
+  ALLOCATE ( rhocg(ngl) )
   !
   ! core correction term: sum on g of omega*ig*exp(-i*r_i*g)*n_core(g)*vxc
   ! g = 0 term gives no contribution
   !
-  do nt = 1, ntyp
-     if ( upf(nt)%nlcc ) then
+  DO nt = 1, ntyp
+     IF ( upf(nt)%nlcc ) THEN
 
-        call drhoc (ngl, gl, omega, tpiba2, rgrid(nt)%mesh, rgrid(nt)%r, &
+        CALL drhoc (ngl, gl, omega, tpiba2, rgrid(nt)%mesh, rgrid(nt)%r, &
              rgrid(nt)%rab, upf(nt)%rho_atc, rhocg)
-        do na = 1, nat
-           if (nt == ityp (na) ) then
-              if (gstart.eq.2)  shift_(na) = omega * rhocg (igtongl (1) ) * &
-                                                     CONJG(psic (nl (1) ) )
-              do ig = gstart, ngm
+        DO na = 1, nat
+           IF (nt == ityp (na) ) THEN
+              IF (gstart==2)  shift_(na) = omega * rhocg (igtongl (1) ) * &
+                                                     conjg(psic (nl (1) ) )
+              DO ig = gstart, ngm
                  arg = (g (1, ig) * tau (1, na) + g (2, ig) * tau (2, na) &
                       + g (3, ig) * tau (3, na) ) * tpi
                  shift_ (na) = shift_( na) + omega * &
-                         rhocg (igtongl (ig) ) * CONJG(psic (nl (ig) ) ) * &
-                         CMPLX( cos(arg), -sin(arg),kind=DP) * fact
-              enddo
-           endif
-        enddo
-     endif
-  enddo
+                         rhocg (igtongl (ig) ) * conjg(psic (nl (ig) ) ) * &
+                         cmplx( cos(arg), -sin(arg),kind=DP) * fact
+              ENDDO
+           ENDIF
+        ENDDO
+     ENDIF
+  ENDDO
 #ifdef __PARA
-  call mp_sum( shift_ , intra_pool_comm )
+  CALL mp_sum( shift_ , intra_pool_comm )
 #endif
   shift_cc(:) = shift_cc(:) + shift_(:)
-  deallocate (rhocg, shift_)
+  DEALLOCATE (rhocg, shift_)
   !
-  return
-end subroutine add_shift_cc
+  RETURN
+END SUBROUTINE add_shift_cc
 

@@ -19,9 +19,9 @@ SUBROUTINE mk_u(l,mmax,uvalue,jvalue,u2)
    CALL rcl_init(l,uvalue,jvalue,rcl)
    xu = rcl(1)
    xj = 0.d0
-   IF(l.eq.1) xj = rcl(2)/5.d0
-   IF(l.eq.2) xj = (rcl(2)+rcl(3))/14.d0
-   IF(l.eq.3) xj = (4.d0*rcl(2)/15.d0+2.d0*rcl(3)/11.d0+100.d0*rcl(4)/429.d0 )/6.d0
+   IF(l==1) xj = rcl(2)/5.d0
+   IF(l==2) xj = (rcl(2)+rcl(3))/14.d0
+   IF(l==3) xj = (4.d0*rcl(2)/15.d0+2.d0*rcl(3)/11.d0+100.d0*rcl(4)/429.d0 )/6.d0
 ! Produce 4index Coulomb interaction matrix
    CALL u4ind(u,rcl,l)
    DO i = 1, mmax
@@ -70,7 +70,7 @@ SUBROUTINE u4ind(u,rcl,l)
                xm3 = dfloat(ms3-l-1)
                xm  = xm1 - xm3
                DO ms4 = 1,mmax
-                  IF ((ms1+ms2-ms3-ms4).ne.0) CYCLE
+                  IF ((ms1+ms2-ms3-ms4)/=0) CYCLE
                   xm4 = dfloat(ms4-l-1)
                   cgk1 =  cgk(xl,xm3,xk,xm,xl,xm1)
                   cgk2 =  cgk(xl,xm2,xk,xm,xl,xm4)
@@ -103,16 +103,16 @@ SUBROUTINE u4ind(u,rcl,l)
             DO ms4=1,mmax
                DO ms5=1,mmax
                   am1 = dcmplx(yor(ms1,ms5),-yoi(ms1,ms5))
-                  IF (am1.eq.amz) CYCLE
+                  IF (am1==amz) CYCLE
                   DO ms6=1,mmax
                      am2 = dcmplx(yor(ms2,ms6),-yoi(ms2,ms6))
-                     IF (am2.eq.amz) CYCLE
+                     IF (am2==amz) CYCLE
                      DO ms7=1,mmax
                         am3 = dcmplx(yor(ms3,ms7),yoi(ms3,ms7))
-                        IF (am3.eq.amz) CYCLE
+                        IF (am3==amz) CYCLE
                         DO ms8=1,mmax
                            am4 = dcmplx(yor(ms4,ms8),yoi(ms4,ms8))
-                           IF (am4.eq.amz) CYCLE
+                           IF (am4==amz) CYCLE
                            u(ms1,ms2,ms3,ms4) = u(ms1,ms2,ms3,ms4)   &
                                         + am1*am2*am3*am4*uc(ms5,ms6,ms7,ms8)
                         ENDDO
@@ -156,11 +156,11 @@ DOUBLE PRECISION FUNCTION cgk(a,al,b,be,c,ga)
    zmin=max0(i1,-i5,-i6)
    zmax=min0(i2, i3, i4)
    cgk=0.d0
-   IF (dabs(al).gt.a)   RETURN
-   IF (dabs(be).gt.b)   RETURN
-   IF (dabs(ga).gt.c)   RETURN
-   IF ( zmin.gt.zmax )  RETURN
-   IF ( (al+be).ne.ga ) RETURN
+   IF (dabs(al)>a)   RETURN
+   IF (dabs(be)>b)   RETURN
+   IF (dabs(ga)>c)   RETURN
+   IF ( zmin>zmax )  RETURN
+   IF ( (al+be)/=ga ) RETURN
    i7=idint(a-b+c)
    i8=idint(c+b-a)
    i9=idint(c+b+a)
@@ -192,15 +192,15 @@ SUBROUTINE ctormt(yor,yoi,l)
    CALL dinit(yor,7*7)
    CALL dinit(yoi,7*7)
    sqtwo=1.d0/dsqrt(2.d0)
-   IF (l.eq.0) THEN
+   IF (l==0) THEN
       yor(1,1)=1.d0
-   ELSEIF (l.eq.1) THEN
+   ELSEIF (l==1) THEN
       yoi(1,1)= sqtwo
       yoi(1,3)= sqtwo
       yor(2,2)=1.d0
       yor(3,1)= sqtwo
       yor(3,3)=-sqtwo
-   ELSEIF (l.eq.2) THEN
+   ELSEIF (l==2) THEN
       yoi(1,1)= sqtwo
       yoi(1,5)=-sqtwo
       yoi(2,2)= sqtwo
@@ -210,7 +210,7 @@ SUBROUTINE ctormt(yor,yoi,l)
       yor(4,4)=-sqtwo
       yor(5,1)= sqtwo
       yor(5,5)= sqtwo
-   ELSEIF (l.eq.3) THEN
+   ELSEIF (l==3) THEN
       yoi(1,1)= sqtwo
       yoi(1,7)= sqtwo
       yoi(2,2)= sqtwo
@@ -245,12 +245,12 @@ SUBROUTINE rcl_init(l,uvalue,jvalue,rcl)
    uv = uvalue
    jv = jvalue
    rcl(1) = uv
-   IF(l .eq. 1) THEN
+   IF(l == 1) THEN
       rcl(2) = jv *5.d0
-   ELSEIF(l .eq. 2) THEN
+   ELSEIF(l == 2) THEN
       rcl(2) = jv * 14d0 / (1.d0 + 0.63d0)
       rcl(3) = 0.63d0 * rcl(2)
-   ELSEIF(l .eq. 3) THEN
+   ELSEIF(l == 3) THEN
       rcl(2) = 6435.d0 * jv / (286.d0 + 195.d0 *                    &
          451.d0 / 675.d0 + 250.d0 * 1001.d0 / 2025.d0)
       rcl(3) = 451.d0 * rcl(2) / 675.d0
@@ -268,11 +268,11 @@ SUBROUTINE dinit(array,leng)
    INTEGER i,m,mp1
 
    m = mod(leng,5)
-   IF( m .ne. 0 ) THEN
+   IF( m /= 0 ) THEN
       DO i = 1,m
          array(i) = 0.d0
       ENDDO
-      IF( leng .lt. 5 ) RETURN
+      IF( leng < 5 ) RETURN
    ENDIF
    mp1 = m + 1
    DO i = mp1,leng,5

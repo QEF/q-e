@@ -38,11 +38,11 @@ PROGRAM pp
   !
   IF ( ionode )  CALL input_from_file ( )
   !
-  call extract (filplot, plot_num) 
+  CALL extract (filplot, plot_num)
   !
-  call chdens (filplot, plot_num)
+  CALL chdens (filplot, plot_num)
   !
-  call stop_pp()
+  CALL stop_pp()
   !
 END PROGRAM pp
 !
@@ -91,14 +91,14 @@ SUBROUTINE extract (filplot,plot_num)
   !
   prefix = 'pwscf'
   CALL get_env( 'ESPRESSO_TMPDIR', outdir )
-  IF ( TRIM( outdir ) == ' ' ) outdir = './'
-  filplot = 'tmp.pp' 
+  IF ( trim( outdir ) == ' ' ) outdir = './'
+  filplot = 'tmp.pp'
   plot_num = -1
   spin_component = 0
   sample_bias = 0.01d0
   z = 1.d0
   dz = 0.05d0
-  lsign=.FALSE.
+  lsign=.false.
   emin = -999.0d0
   emax = +999.0d0
   epsilon=1.d0
@@ -113,11 +113,11 @@ SUBROUTINE extract (filplot,plot_num)
      !
      tmp_dir = trimcheck ( outdir )
      !
-  END IF
+  ENDIF
   !
-  call mp_bcast (ios, ionode_id)
+  CALL mp_bcast (ios, ionode_id)
   !
-  IF ( ios /= 0) CALL errore ('postproc', 'reading inputpp namelist', ABS(ios))
+  IF ( ios /= 0) CALL errore ('postproc', 'reading inputpp namelist', abs(ios))
   !
   ! ... Broadcast variables
   !
@@ -138,21 +138,21 @@ SUBROUTINE extract (filplot,plot_num)
   !
   ! no task specified: do nothing and return
   !
-  IF (plot_num == -1) return
+  IF (plot_num == -1) RETURN
   !
-  IF (plot_num < 0 .OR. plot_num > 18) CALL errore ('postproc', &
-          'Wrong plot_num', ABS (plot_num) )
+  IF (plot_num < 0 .or. plot_num > 18) CALL errore ('postproc', &
+          'Wrong plot_num', abs (plot_num) )
 
-  IF (plot_num == 7 .OR. plot_num == 13 .OR. plot_num==18) THEN
-     IF  (spin_component < 0 .OR. spin_component > 3) CALL errore &
+  IF (plot_num == 7 .or. plot_num == 13 .or. plot_num==18) THEN
+     IF  (spin_component < 0 .or. spin_component > 3) CALL errore &
           ('postproc', 'wrong spin_component', 1)
-  ELSE IF (plot_num == 10) THEN
-     IF  (spin_component < 0 .OR. spin_component > 2) CALL errore &
+  ELSEIF (plot_num == 10) THEN
+     IF  (spin_component < 0 .or. spin_component > 2) CALL errore &
           ('postproc', 'wrong spin_component', 2)
   ELSE
      IF (spin_component < 0 ) CALL errore &
          ('postproc', 'wrong spin_component', 3)
-  END IF
+  ENDIF
   !
   !   Now allocate space for pwscf variables, read and check them.
   !
@@ -168,7 +168,7 @@ SUBROUTINE extract (filplot,plot_num)
      CALL errore('postproc',&
      'pw.x run with a different number of pools. Use wf_collect=.true.',1)
 
-  IF ( ( two_fermi_energies .or. i_cons /= 0) .AND. &
+  IF ( ( two_fermi_energies .or. i_cons /= 0) .and. &
        ( plot_num==3 .or. plot_num==4 .or. plot_num==5 ) ) &
      CALL errore('postproc',&
      'Post-processing with constrained magnetization is not available yet',1)
@@ -187,7 +187,7 @@ SUBROUTINE extract (filplot,plot_num)
   IF (plot_num == 10) THEN
      emin = emin / 13.6058d0
      emax = emax / 13.6058d0
-  END IF
+  ENDIF
   !
   !
   !   Now do whatever you want

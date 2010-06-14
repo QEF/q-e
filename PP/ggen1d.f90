@@ -5,7 +5,7 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-subroutine ggen1d (ngm1d, g1d, gg1d, ig1dto3d, nl1d, igtongl1d)
+SUBROUTINE ggen1d (ngm1d, g1d, gg1d, ig1dto3d, nl1d, igtongl1d)
   !
   !    This subroutine is the one dimensional equivalent of the ggen
   !    routine. It is used to produce the G vectors in the z directions
@@ -15,8 +15,8 @@ subroutine ggen1d (ngm1d, g1d, gg1d, ig1dto3d, nl1d, igtongl1d)
   USE kinds, ONLY: DP
   USE cell_base, ONLY : at
   USE gvect, ONLY: nr3, ngm, g, gg, igtongl
-  implicit none
-  integer :: ngm1d, ig1dto3d (nr3), igtongl1d (nr3), nl1d (nr3)
+  IMPLICIT NONE
+  INTEGER :: ngm1d, ig1dto3d (nr3), igtongl1d (nr3), nl1d (nr3)
   ! output: the number of 1D G vectors on this processor
   ! output: correspondence 1D with 3D G vectors
   ! output: the correspondence with the shells
@@ -29,35 +29,35 @@ subroutine ggen1d (ngm1d, g1d, gg1d, ig1dto3d, nl1d, igtongl1d)
   !   local variables
   !
 
-  integer :: ig, ig1d
+  INTEGER :: ig, ig1d
   ! counter on 3D vectors
   ! counter on 1D vectors
 
-  real(DP), parameter :: eps = 1.d-12
+  real(DP), PARAMETER :: eps = 1.d-12
 
 
   g1d(:,:) = 0.d0
   gg1d(:) = 0.d0
 
   ig1d = 0
-  do ig = 1, ngm
-     if ( (abs(g(1,ig)).lt.eps) .and. (abs(g(2,ig)) .lt.eps) ) then
+  DO ig = 1, ngm
+     IF ( (abs(g(1,ig))<eps) .and. (abs(g(2,ig)) <eps) ) THEN
         !
         !    a vector of the 1D grid has been found
         !
         ig1d = ig1d+1
-        if (ig1d.gt.nr3) call errore ('ggen1d', 'too many G', 1)
+        IF (ig1d>nr3) CALL errore ('ggen1d', 'too many G', 1)
         g1d (3, ig1d) = g (3, ig)
         gg1d (ig1d) = gg (ig)
         ig1dto3d (ig1d) = ig
         nl1d (ig1d) = nint (g (3, ig) * at (3, 3) ) + 1
-        if (nl1d (ig1d) .lt.1) nl1d (ig1d) = nl1d (ig1d) + nr3
-     endif
-  enddo
+        IF (nl1d (ig1d) <1) nl1d (ig1d) = nl1d (ig1d) + nr3
+     ENDIF
+  ENDDO
 
   ngm1d = ig1d
-  do ig1d = 1, ngm1d
+  DO ig1d = 1, ngm1d
      igtongl1d (ig1d) = igtongl (ig1dto3d (ig1d) )
-  enddo
-  return
-end subroutine ggen1d
+  ENDDO
+  RETURN
+END SUBROUTINE ggen1d

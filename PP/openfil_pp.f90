@@ -15,7 +15,7 @@ SUBROUTINE openfil_pp()
   !
   USE kinds,          ONLY : DP
   USE wvfct,          ONLY : nbnd, npwx
-  use control_flags,  ONLY:  twfcollect
+  USE control_flags,  ONLY:  twfcollect
   USE io_files,       ONLY : prefix, iunwfc, nwordwfc, diropn
   USE noncollin_module, ONLY : npol
   !
@@ -32,9 +32,9 @@ SUBROUTINE openfil_pp()
   !
   CALL diropn( iunwfc, 'wfc', nwordwfc, exst )
   !
-  IF ( .NOT. exst ) THEN
-     call errore ('openfil_pp','file '//TRIM( prefix )//'.wfc'//' not found',1)     
-  END IF
+  IF ( .not. exst ) THEN
+     CALL errore ('openfil_pp','file '//trim( prefix )//'.wfc'//' not found',1)
+  ENDIF
   !
   RETURN
   !

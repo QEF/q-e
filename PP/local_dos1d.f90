@@ -8,7 +8,7 @@
 !
 !
 !--------------------------------------------------------------------
-subroutine local_dos1d (ik, kband, plan)
+SUBROUTINE local_dos1d (ik, kband, plan)
   !--------------------------------------------------------------------
   !
   !     calculates |psi|^2 for band kband at point ik
@@ -25,11 +25,11 @@ subroutine local_dos1d (ik, kband, plan)
   USE spin_orb, ONLY: lspinorb, fcoef
   USE wavefunctions_module,  ONLY: evc, psic, psic_nc
   USE becmod, ONLY: bec_type, becp
-  implicit none
+  IMPLICIT NONE
   !
   ! input variables
   !
-  integer :: ik, kband
+  INTEGER :: ik, kband
   ! input: the k point
   ! input: the band
 
@@ -39,7 +39,7 @@ subroutine local_dos1d (ik, kband, plan)
   !    Additional local variables for Ultrasoft PP's
   !
 
-  integer :: ikb, jkb, ijkb0, ih, jh, na, ijh, ipol, np
+  INTEGER :: ikb, jkb, ijkb0, ih, jh, na, ijh, ipol, np
   ! counter on beta functions
   ! counter on beta functions
   ! auxiliary variable for ijkb0
@@ -51,7 +51,7 @@ subroutine local_dos1d (ik, kband, plan)
   !
   !    And here the local variables
   !
-  integer :: ir, ig, ibnd, is1, is2, kkb, kh
+  INTEGER :: ir, ig, ibnd, is1, is2, kkb, kh
   ! counter on 3D r points
   ! counter on spin polarizations
   ! counter on g vectors
@@ -59,18 +59,18 @@ subroutine local_dos1d (ik, kband, plan)
 
   real(DP) :: w1
   ! the weight of one k point
-  real(DP), allocatable :: aux (:)
+  real(DP), ALLOCATABLE :: aux (:)
   ! auxiliary for rho
 
-  complex(DP), allocatable :: prho (:), be1(:,:), be2(:,:)
+  COMPLEX(DP), ALLOCATABLE :: prho (:), be1(:,:), be2(:,:)
   ! complex charge for fft
 
-  allocate (prho(nrxx))    
-  allocate (aux(nrxx))    
-  if (lspinorb) then
-     allocate(be1(nhm,2))
-     allocate(be2(nhm,2))
-  endif
+  ALLOCATE (prho(nrxx))
+  ALLOCATE (aux(nrxx))
+  IF (lspinorb) THEN
+     ALLOCATE(be1(nhm,2))
+     ALLOCATE(be2(nhm,2))
+  ENDIF
 
   aux(:) = 0.d0
   becsum(:,:,:) = 0.d0
@@ -81,35 +81,35 @@ subroutine local_dos1d (ik, kband, plan)
   !     First compute the square modulus of the state kband,ik on the smooth
   !     mesh
   !
-  if (noncolin) then
+  IF (noncolin) THEN
      psic_nc = (0.d0,0.d0)
-     do ig = 1, npw
+     DO ig = 1, npw
         psic_nc (nls (igk (ig) ), 1 ) = evc (ig     , kband)
         psic_nc (nls (igk (ig) ), 2 ) = evc (ig+npwx, kband)
-     enddo
-     do ipol=1,npol
-        call cft3s (psic_nc(1,ipol), nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, 2)
-     enddo
+     ENDDO
+     DO ipol=1,npol
+        CALL cft3s (psic_nc(1,ipol), nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, 2)
+     ENDDO
 
      w1 = wg (kband, ik) / omega
-     do ipol=1,npol
-        do ir = 1, nrxxs
-           aux(ir) = aux(ir) + w1 * ( DBLE(psic_nc(ir,ipol))**2 + &
-                                     AIMAG(psic_nc(ir,ipol))**2 )
-        enddo
-     enddo
-  else
+     DO ipol=1,npol
+        DO ir = 1, nrxxs
+           aux(ir) = aux(ir) + w1 * ( dble(psic_nc(ir,ipol))**2 + &
+                                     aimag(psic_nc(ir,ipol))**2 )
+        ENDDO
+     ENDDO
+  ELSE
      psic(1:nrxxs) = (0.d0,0.d0)
-     do ig = 1, npw
+     DO ig = 1, npw
         psic (nls (igk (ig) ) ) = evc (ig, kband)
-     enddo
-     call cft3s (psic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, 2)
+     ENDDO
+     CALL cft3s (psic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, 2)
 
      w1 = wg (kband, ik) / omega
-     do ir = 1, nrxxs
-        aux(ir) = aux(ir) + w1 * (DBLE(psic(ir))**2 + AIMAG(psic(ir))**2)
-     enddo
-  endif
+     DO ir = 1, nrxxs
+        aux(ir) = aux(ir) + w1 * (dble(psic(ir))**2 + aimag(psic(ir))**2)
+     ENDDO
+  ENDIF
 
   !
   !    If we have a US pseudopotential we compute here the becsum term
@@ -118,113 +118,113 @@ subroutine local_dos1d (ik, kband, plan)
 
   w1 = wg (ibnd, ik)
   ijkb0 = 0
-  do np = 1, ntyp
-     if (upf(np)%tvanp) then
-        do na = 1, nat
-           if (ityp (na) == np) then
-              if (noncolin) then
-                 if (upf(np)%has_so) then
+  DO np = 1, ntyp
+     IF (upf(np)%tvanp) THEN
+        DO na = 1, nat
+           IF (ityp (na) == np) THEN
+              IF (noncolin) THEN
+                 IF (upf(np)%has_so) THEN
                     be1=(0.d0,0.d0)
                     be2=(0.d0,0.d0)
-                    do ih = 1, nh(np)
+                    DO ih = 1, nh(np)
                        ikb = ijkb0 + ih
-                       do kh = 1, nh(np)
-                          if ((nhtol(kh,np).eq.nhtol(ih,np)).and. &
-                              (nhtoj(kh,np).eq.nhtoj(ih,np)).and. &
-                              (indv(kh,np).eq.indv(ih,np))) then
+                       DO kh = 1, nh(np)
+                          IF ((nhtol(kh,np)==nhtol(ih,np)).and. &
+                              (nhtoj(kh,np)==nhtoj(ih,np)).and. &
+                              (indv(kh,np)==indv(ih,np))) THEN
                              kkb=ijkb0 + kh
-                             do is1=1,2
-                                do is2=1,2
+                             DO is1=1,2
+                                DO is2=1,2
                                    be1(ih,is1)=be1(ih,is1)+ &
                                         fcoef(ih,kh,is1,is2,np)* &
                                         becp%nc(kkb,is2,ibnd)
                                    be2(ih,is1)=be2(ih,is1)+ &
                                         fcoef(kh,ih,is2,is1,np)* &
-                                     CONJG(becp%nc(kkb,is2,ibnd))
-                                enddo
-                             enddo
-                          endif
-                       enddo
-                    enddo
-                 endif
-              endif
+                                     conjg(becp%nc(kkb,is2,ibnd))
+                                ENDDO
+                             ENDDO
+                          ENDIF
+                       ENDDO
+                    ENDDO
+                 ENDIF
+              ENDIF
               ijh = 1
-              do ih = 1, nh (np)
+              DO ih = 1, nh (np)
                  ikb = ijkb0 + ih
-                 if (noncolin) then
-                    if (upf(np)%has_so) then
+                 IF (noncolin) THEN
+                    IF (upf(np)%has_so) THEN
                         becsum(ijh,na,1)=becsum(ijh,na,1)+ w1*    &
                             (be1(ih,1)*be2(ih,1)+be1(ih,2)*be2(ih,2))
-                    else
-                       do ipol=1,npol
+                    ELSE
+                       DO ipol=1,npol
                           becsum(ijh,na,current_spin) = &
                              becsum(ijh,na,current_spin) + w1 * &
-                               DBLE( CONJG(becp%nc(ikb,ipol,ibnd)) * &
+                               dble( conjg(becp%nc(ikb,ipol,ibnd)) * &
                                            becp%nc(ikb,ipol,ibnd) )
-                       enddo
-                    endif
-                 else
+                       ENDDO
+                    ENDIF
+                 ELSE
                     becsum(ijh,na,current_spin) = &
                         becsum(ijh,na,current_spin) + w1 * &
-                        DBLE( CONJG(becp%k(ikb,ibnd)) * becp%k(ikb,ibnd) )
-                 endif
+                        dble( conjg(becp%k(ikb,ibnd)) * becp%k(ikb,ibnd) )
+                 ENDIF
                  ijh = ijh + 1
-                 do jh = ih + 1, nh (np)
+                 DO jh = ih + 1, nh (np)
                     jkb = ijkb0 + jh
-                    if (noncolin) then
-                       if (upf(np)%has_so) then
+                    IF (noncolin) THEN
+                       IF (upf(np)%has_so) THEN
                           becsum(ijh,na,1)=becsum(ijh,na,1) &
                               + w1*((be1(jh,1)*be2(ih,1)+   &
                                      be1(jh,2)*be2(ih,2))+  &
                                     (be1(ih,1)*be2(jh,1)+   &
                                      be1(ih,2)*be2(jh,2)) )
-                       else
-                          do ipol=1,npol
+                       ELSE
+                          DO ipol=1,npol
                              becsum(ijh,na,current_spin) = &
                                 becsum(ijh,na,current_spin) + w1 * 2.d0 * &
-                                DBLE( CONJG(becp%nc(ikb,ipol,ibnd))  &
+                                dble( conjg(becp%nc(ikb,ipol,ibnd))  &
                                         * becp%nc(jkb,ipol,ibnd) )
-                          enddo
-                       endif
-                    else
+                          ENDDO
+                       ENDIF
+                    ELSE
                        becsum(ijh,na,current_spin) = &
                            becsum(ijh,na,current_spin) + w1 * 2.d0 * &
-                           DBLE( CONJG(becp%k(ikb,ibnd)) * becp%k(jkb,ibnd) )
-                    endif
+                           dble( conjg(becp%k(ikb,ibnd)) * becp%k(jkb,ibnd) )
+                    ENDIF
                     ijh = ijh + 1
-                 enddo
-              enddo
+                 ENDDO
+              ENDDO
               ijkb0 = ijkb0 + nh (np)
-           endif
-        enddo
-     else
-        do na = 1, nat
-           if (ityp (na) .eq.np) ijkb0 = ijkb0 + nh (np)
-        enddo
-     endif
-  enddo
+           ENDIF
+        ENDDO
+     ELSE
+        DO na = 1, nat
+           IF (ityp (na) ==np) ijkb0 = ijkb0 + nh (np)
+        ENDDO
+     ENDIF
+  ENDDO
   !
   !    Interpolate on the thick mesh and pass to reciprocal space
   !
-  if (doublegrid) then
-     call interpolate (aux, aux, 1)
-  endif
-  do ir = 1, nrxx
-     prho (ir) = CMPLX(aux (ir), 0.d0,kind=DP)
-  enddo
-  call cft3 (prho, nr1, nr2, nr3, nrx1, nrx2, nrx3, - 1)
+  IF (doublegrid) THEN
+     CALL interpolate (aux, aux, 1)
+  ENDIF
+  DO ir = 1, nrxx
+     prho (ir) = cmplx(aux (ir), 0.d0,kind=DP)
+  ENDDO
+  CALL cft3 (prho, nr1, nr2, nr3, nrx1, nrx2, nrx3, - 1)
   !
   !    Here we add the US contribution to the charge for the atoms which n
   !    it. Or compute the planar average in the NC case.
   !
-  call addusdens1d (plan, prho)
+  CALL addusdens1d (plan, prho)
   !
-  deallocate (aux)
-  deallocate (prho)
-  if (lspinorb) then
-     deallocate(be1)
-     deallocate(be2)
-  endif
+  DEALLOCATE (aux)
+  DEALLOCATE (prho)
+  IF (lspinorb) THEN
+     DEALLOCATE(be1)
+     DEALLOCATE(be2)
+  ENDIF
   !
-  return
-end subroutine local_dos1d
+  RETURN
+END SUBROUTINE local_dos1d

@@ -11,14 +11,14 @@ PROGRAM average
   !-----------------------------------------------------------------------
   !
   !      This program calculates planar and macroscopic averages
-  !      of a quantity defined on a 3D-FFT mesh. 
-  !      The planar average is done on FFT mesh planes. 
+  !      of a quantity defined on a 3D-FFT mesh.
+  !      The planar average is done on FFT mesh planes.
   !      It reads the quantity to average, or several quantities, from
   !      one or several files and adds them with the given weights.
   !      It computes the planar average of the resulting quantity
   !      averaging on planes defined by the FFT mesh points and by one
   !      direction perpendicular to the planes.
-  !      The planar average can be interpolated on a  
+  !      The planar average can be interpolated on a
   !      1D-mesh with an arbitrary number of points.
   !      Finally, it computes the macroscopic average. The size
   !      of the averaging window is given as input.
@@ -115,7 +115,7 @@ PROGRAM average
      !
      inunit = 5
      READ (inunit, *, err = 1100, iostat = ios) nfile
-     IF (nfile.LE.0.OR.nfile.GT.nfilemax) CALL errore ('average ', &
+     IF (nfile<=0.or.nfile>nfilemax) CALL errore ('average ', &
           'nfile is wrong ', 1)
      DO ifile = 1, nfile
         READ (inunit, '(a)', err = 1100, iostat = ios) filename (ifile)
@@ -123,11 +123,11 @@ PROGRAM average
      ENDDO
      READ (inunit, *, err = 1100, iostat = ios) npt
 
-     IF (npt.LT.0.OR.npt.GT.npixmax) CALL errore ('average', ' wrong npt', 1)
+     IF (npt<0.or.npt>npixmax) CALL errore ('average', ' wrong npt', 1)
      READ (inunit, *, err = 1100, iostat = ios) idir
      READ (inunit, *, err = 1100, iostat = ios) awin
 
-1100 CALL errore ('average', 'readin input', ABS (ios) )
+1100 CALL errore ('average', 'readin input', abs (ios) )
 
      CALL read_io_header(filename (1), title, nrx1, nrx2, nrx3, nr1, nr2, nr3, &
           nat, ntyp, ibrav, celldm, at, gcutm, dual, ecutwfc, plot_num)
@@ -140,26 +140,26 @@ PROGRAM average
      tpiba = 2.d0 * pi / alat
      tpiba2 = tpiba**2
 
-     IF (idir.EQ.1) THEN
+     IF (idir==1) THEN
         nfft=nr1
         nfftx=nrx1
-        leng=alat*SQRT(at(1,1)**2+at(2,1)**2+at(3,1)**2)
-     ELSEIF (idir.EQ.2) THEN
+        leng=alat*sqrt(at(1,1)**2+at(2,1)**2+at(3,1)**2)
+     ELSEIF (idir==2) THEN
         nfft=nr2
         nfftx=nrx2
-        leng=alat*SQRT(at(1,2)**2+at(2,2)**2+at(3,2)**2)
-     ELSEIF (idir.EQ.3) THEN
+        leng=alat*sqrt(at(1,2)**2+at(2,2)**2+at(3,2)**2)
+     ELSEIF (idir==3) THEN
         nfft=nr3
         nfftx=nrx3
-        leng=alat*SQRT(at(1,3)**2+at(2,3)**2+at(3,3)**2)
+        leng=alat*sqrt(at(1,3)**2+at(2,3)**2+at(3,3)**2)
      ELSE
         CALL errore('average','idir is wrong',1)
      ENDIF
-     IF (npt.LT.nfft) CALL errore ('average', 'npt smaller than nfft', 1)
+     IF (npt<nfft) CALL errore ('average', 'npt smaller than nfft', 1)
 
      ALLOCATE(tau (3, nat))
      ALLOCATE(ityp(nat))
-     doublegrid = dual.GT.4.d0
+     doublegrid = dual>4.d0
      IF (doublegrid) THEN
         gcutms = 4.d0 * ecutwfc / tpiba2
      ELSE
@@ -169,7 +169,7 @@ PROGRAM average
      ! of a double grid, but the info on nrXs is not read from file!
      nr1s = nr1 ; nr2s = nr2 ; nr3s = nr3
      ! as above: this can be used in allocate_fft
-     nks = 0 
+     nks = 0
 
      CALL volume (alat, at (1, 1), at (1, 2), at (1, 3), omega)
 
@@ -186,7 +186,7 @@ PROGRAM average
           plot_num, atm, ityp, zv, tau, rho%of_r, -1)
      !
      DO ir = 1, nrxx
-        psic (ir) = weight (1) * CMPLX(rho%of_r(ir, 1),0.d0,kind=DP)
+        psic (ir) = weight (1) * cmplx(rho%of_r(ir, 1),0.d0,kind=DP)
      ENDDO
      !
      !       Now we open all the other files
@@ -197,8 +197,8 @@ PROGRAM average
      ! Note that only rho is read; all other quantities are discarded
      !
      DO ifile = 2, nfile
-        ALLOCATE  (taus( 3 , nat))    
-        ALLOCATE  (ityps( nat))    
+        ALLOCATE  (taus( 3 , nat))
+        ALLOCATE  (ityps( nat))
         !
         CALL plot_io (filename (ifile), title, nrx1sa, nrx2sa, nrx3sa, &
              nr1sa, nr2sa, nr3sa, nats, ntyps, ibravs, celldms, ats, gcutmsa, &
@@ -207,66 +207,66 @@ PROGRAM average
         DEALLOCATE (ityps)
         DEALLOCATE (taus)
         !
-        IF (nats.GT.nat) CALL errore ('chdens', 'wrong file order? ', 1)
-        IF (nrx1.NE.nrx1sa.OR.nrx2.NE.nrx2sa) &
+        IF (nats>nat) CALL errore ('chdens', 'wrong file order? ', 1)
+        IF (nrx1/=nrx1sa.or.nrx2/=nrx2sa) &
              CALL errore ('average', 'incompatible nrx1 or nrx2', 1)
-        IF (nr1.NE.nr1sa.OR.nr2.NE.nr2sa.OR.nr3.NE.nr3sa) &
+        IF (nr1/=nr1sa.or.nr2/=nr2sa.or.nr3/=nr3sa) &
              CALL errore ('average', 'incompatible nr1 or nr2 or nr3', 1)
-        IF (ibravs.NE.ibrav) CALL errore ('average', 'incompatible ibrav', 1)
-        IF (gcutmsa.NE.gcutm.OR.duals.NE.dual.OR.ecuts.NE.ecutwfc ) &
+        IF (ibravs/=ibrav) CALL errore ('average', 'incompatible ibrav', 1)
+        IF (gcutmsa/=gcutm.or.duals/=dual.or.ecuts/=ecutwfc ) &
              CALL errore ('average', 'incompatible gcutm or dual or ecut', 1)
         DO i = 1, 6
-           IF (ABS( celldm (i)-celldms (i) ) .GT. 1.0d-7 ) &
+           IF (abs( celldm (i)-celldms (i) ) > 1.0d-7 ) &
                 CALL errore ('chdens', 'incompatible celldm', 1)
         ENDDO
         DO ir = 1, nrxx
-           psic (ir) = psic (ir) + weight(ifile) * CMPLX(rho%of_r(ir, 1),0.d0,kind=DP)
+           psic (ir) = psic (ir) + weight(ifile) * cmplx(rho%of_r(ir, 1),0.d0,kind=DP)
         ENDDO
      ENDDO
      !
      !   compute the direct and reciprocal lattices
      !
-     ALLOCATE (funcr(nfftx))    
-     ALLOCATE (funci(nfftx))    
+     ALLOCATE (funcr(nfftx))
+     ALLOCATE (funci(nfftx))
      !
      !     At this point we start the calculations, first we compute the
      !     planar averages
      !
-     IF (idir.EQ.1) THEN
+     IF (idir==1) THEN
         DO i = 1, nr1
            funcr (i) = 0.d0
            funci (i) = 0.d0
            DO j = 1, nr2
               DO k = 1, nr3
                  ir = i + (j - 1) * nrx1 + (k - 1) * nrx1 * nrx2
-                 funcr (i) = funcr (i) + DBLE (psic(ir))
+                 funcr (i) = funcr (i) + dble (psic(ir))
               ENDDO
            ENDDO
-           funcr (i) = funcr (i) / (DBLE (nr2 * nr3))
+           funcr (i) = funcr (i) / (dble (nr2 * nr3))
         ENDDO
-     ELSEIF (idir.EQ.2) THEN
+     ELSEIF (idir==2) THEN
         DO j = 1, nr2
            funcr (j) = 0.d0
            funci (j) = 0.d0
            DO i = 1, nr1
               DO k = 1, nr3
                  ir = i + (j - 1) * nrx1 + (k - 1) * nrx1 * nrx2
-                 funcr (j) = funcr (j) + DBLE (psic (ir) )
+                 funcr (j) = funcr (j) + dble (psic (ir) )
               ENDDO
            ENDDO
-           funcr (j) = funcr (j) / (DBLE (nr1 * nr3) )
+           funcr (j) = funcr (j) / (dble (nr1 * nr3) )
         ENDDO
-     ELSEIF (idir.EQ.3) THEN
+     ELSEIF (idir==3) THEN
         DO k = 1, nr3
            funcr (k) = 0.d0
            funci (k) = 0.d0
            DO j = 1, nr2
               DO i = 1, nr1
                  ir = i + (j - 1) * nrx1 + (k - 1) * nrx1 * nrx2
-                 funcr (k) = funcr (k) + DBLE (psic (ir) )
+                 funcr (k) = funcr (k) + dble (psic (ir) )
               ENDDO
            ENDDO
-           funcr (k) = funcr (k) / (DBLE (nr1 * nr2) )
+           funcr (k) = funcr (k) / (dble (nr1 * nr2) )
         ENDDO
      ELSE
         CALL errore('average','wrong idir',1)
@@ -278,10 +278,10 @@ PROGRAM average
      CALL dscal (nfft, 1.d0 / nfft, funcr, 1)
      CALL dscal (nfft, 1.d0 / nfft, funci, 1)
      DO k = 1, npt
-        IF (k.LE.nfft / 2) THEN
+        IF (k<=nfft / 2) THEN
            gre (k) = funcr (k)
            gim (k) = funci (k)
-        ELSEIF (k.GT.npt - nfft / 2) THEN
+        ELSEIF (k>npt - nfft / 2) THEN
            gre (k) = funcr (k - npt + nfft)
            gim (k) = funci (k - npt + nfft)
         ELSE
@@ -289,7 +289,7 @@ PROGRAM average
            gim (k) = 0.d0
         ENDIF
      ENDDO
-     IF (MOD (nfft, 2) .EQ.0) THEN
+     IF (mod (nfft, 2) ==0) THEN
         gre (nfft / 2 + 1) = 0.5d0 * funcr (nfft / 2 + 1)
         gim (nfft / 2 + 1) = 0.5d0 * funci (nfft / 2 + 1)
         gre (npt - nfft / 2 + 1) = gre (nfft / 2 + 1)
@@ -305,26 +305,26 @@ PROGRAM average
      !     compute the macroscopic average
      !
      nmacro = npt * (awin / leng )
-     IF (nmacro.LE.0) CALL errore ('average ', 'nmacro is too small ', 1)
+     IF (nmacro<=0) CALL errore ('average ', 'nmacro is too small ', 1)
      DO i = 1, npt
         macros (i) = 0.d0
         DO j = - nmacro / 2, nmacro / 2
            k = i + j
-           IF (k.LE.0) k = k + npt
-           IF (k.GT.npt) k = k - npt
+           IF (k<=0) k = k + npt
+           IF (k>npt) k = k - npt
 
-           if ( (2*j==nmacro) .or. (2*j==-nmacro) ) then
+           IF ( (2*j==nmacro) .or. (2*j==-nmacro) ) THEN
               macros (i) = macros (i) + 0.5d0 * gre(k)
-           else
+           ELSE
               macros (i) = macros (i) + gre (k)
-           end if
+           ENDIF
         ENDDO
-        macros (i) = macros (i) / DBLE (nmacro)
+        macros (i) = macros (i) / dble (nmacro)
      ENDDO
      !
      !     print the results on output
      !
-     deltaz = leng / DBLE (npt)
+     deltaz = leng / dble (npt)
 
 
      WRITE( stdout, '(3f15.9)') (deltaz * (i - 1) , gre (i) , macros (i) , &
@@ -332,7 +332,7 @@ PROGRAM average
      DEALLOCATE(funci)
      DEALLOCATE(funcr)
      !
-  END IF
+  ENDIF
   !
   CALL stop_pp
   !

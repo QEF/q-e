@@ -6,33 +6,33 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !--------------------------------------------------------------------
-subroutine stop_pp
+SUBROUTINE stop_pp
   !--------------------------------------------------------------------
   !
   ! Synchronize processes before stopping.
   !
-  use control_flags, only: twfcollect
-  use io_files, only: iunwfc
-  use mp_global, only: mp_global_end
+  USE control_flags, ONLY: twfcollect
+  USE io_files, ONLY: iunwfc
+  USE mp_global, ONLY: mp_global_end
   USE parallel_include
 #ifdef __PARA
 
-  integer :: info
-  logical :: op
+  INTEGER :: info
+  LOGICAL :: op
 
-  inquire ( iunwfc, opened = op )
+  INQUIRE ( iunwfc, opened = op )
 
-  if ( op ) then
-     if (twfcollect) then
-        close (unit = iunwfc, status = 'delete')
-     else
-        close (unit = iunwfc, status = 'keep')
-     end if
-  end if 
+  IF ( op ) THEN
+     IF (twfcollect) THEN
+        CLOSE (unit = iunwfc, status = 'delete')
+     ELSE
+        CLOSE (unit = iunwfc, status = 'keep')
+     ENDIF
+  ENDIF
 
-  call mp_global_end()
+  CALL mp_global_end()
 
 #endif
 
-  stop
-end subroutine stop_pp
+  STOP
+END SUBROUTINE stop_pp

@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !-----------------------------------------------------------------------
-subroutine do_elf (elf)
+SUBROUTINE do_elf (elf)
   !-----------------------------------------------------------------------
   !
   !  calculatation of the electron localization function
@@ -47,140 +47,140 @@ subroutine do_elf (elf)
   !
   ! I/O variables
   !
-  implicit none
+  IMPLICIT NONE
   real(DP) :: elf (nrxx)
   !
   ! local variables
   !
-  integer :: i, j, k, ibnd, ik, is
+  INTEGER :: i, j, k, ibnd, ik, is
   real(DP) :: gv(3), w1, d, fac
-  real(DP), allocatable :: kkin (:), tbos (:)
-  complex(DP), allocatable :: aux (:), aux2 (:)
+  real(DP), ALLOCATABLE :: kkin (:), tbos (:)
+  COMPLEX(DP), ALLOCATABLE :: aux (:), aux2 (:)
   !
-  call infomsg ('do_elf', 'elf + US not fully implemented')
+  CALL infomsg ('do_elf', 'elf + US not fully implemented')
   !
-  allocate (kkin( nrxx))    
-  allocate (aux ( nrxxs))
+  ALLOCATE (kkin( nrxx))
+  ALLOCATE (aux ( nrxxs))
   aux(:) = (0.d0,0.d0)
   kkin(:) = 0.d0
   !
   ! Calculates local kinetic energy, stored in kkin
   !
-  do ik = 1, nks
+  DO ik = 1, nks
      !
      !    prepare the indices of this k point
      !
-     call gk_sort (xk (1, ik), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin)
+     CALL gk_sort (xk (1, ik), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin)
      !
      !   reads the eigenfunctions
      !
-     call davcio (evc, nwordwfc, iunwfc, ik, - 1)
+     CALL davcio (evc, nwordwfc, iunwfc, ik, - 1)
      !
-     do ibnd = 1, nbnd
-        do j = 1, 3
+     DO ibnd = 1, nbnd
+        DO j = 1, 3
            aux(:) = (0.d0,0.d0)
            w1 = wg (ibnd, ik) / omega
-           do i = 1, npw
+           DO i = 1, npw
               gv (j) = (xk (j, ik) + g (j, igk (i) ) ) * tpiba
-              aux (nls(igk (i) ) ) = CMPLX(0d0, gv (j) ,kind=DP) * evc (i, ibnd)
+              aux (nls(igk (i) ) ) = cmplx(0d0, gv (j) ,kind=DP) * evc (i, ibnd)
               IF (gamma_only) THEN
-                 aux (nlsm(igk (i) ) ) = CMPLX(0d0, -gv (j) ,kind=DP) * &
-                      CONJG ( evc (i, ibnd) )
-              END IF
-           enddo
-           call cft3s (aux, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, 2)
-           do i = 1, nrxxs
-              kkin(i) = kkin(i) + w1 * (DBLE(aux(i))**2 + AIMAG(aux(i))**2)
-           enddo
+                 aux (nlsm(igk (i) ) ) = cmplx(0d0, -gv (j) ,kind=DP) * &
+                      conjg ( evc (i, ibnd) )
+              ENDIF
+           ENDDO
+           CALL cft3s (aux, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, 2)
+           DO i = 1, nrxxs
+              kkin(i) = kkin(i) + w1 * (dble(aux(i))**2 + aimag(aux(i))**2)
+           ENDDO
            ! j
-        enddo
+        ENDDO
         ! ibnd
-     enddo
+     ENDDO
      ! ik
-  enddo
+  ENDDO
 #ifdef __PARA
   !
   ! reduce local kinetic energy across pools
   !
-  call mp_sum( kkin, inter_pool_comm )
+  CALL mp_sum( kkin, inter_pool_comm )
 #endif
   !
   ! interpolate the local kinetic energy to the dense grid
   ! Note that for US PP this term is incomplete: it contains
   ! only the contribution from the smooth part of the wavefunction
   !
-  if (doublegrid) then
-     deallocate (aux)
-     allocate(aux(nrxx))
-     call interpolate (kkin, kkin, 1)
-  end if
+  IF (doublegrid) THEN
+     DEALLOCATE (aux)
+     ALLOCATE(aux(nrxx))
+     CALL interpolate (kkin, kkin, 1)
+  ENDIF
   !
   ! symmetrize the local kinetic energy if needed
   !
-  IF ( .NOT. gamma_only) THEN
+  IF ( .not. gamma_only) THEN
      !
-     CALL sym_rho_init ( gamma_only ) 
+     CALL sym_rho_init ( gamma_only )
      !
-     aux(:) =  CMPLX ( kkin (:), 0.0_dp, KIND=dp)
+     aux(:) =  cmplx ( kkin (:), 0.0_dp, kind=dp)
      CALL cft3s (aux, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, -1)
-     ALLOCATE (aux2(ngm)) 
+     ALLOCATE (aux2(ngm))
      aux2(:) = aux(nl(:))
      !
      ! aux2 contains the local kinetic energy in G-space to be symmetrized
      !
-     CALL sym_rho ( 1, aux2 ) 
+     CALL sym_rho ( 1, aux2 )
      !
      aux(:) = (0.0_dp, 0.0_dp)
      aux(nl(:)) = aux2(:)
      DEALLOCATE (aux2)
      CALL cft3 (aux, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1)
-     kkin (:) = DBLE(aux(:))
+     kkin (:) = dble(aux(:))
      !
-  END IF
+  ENDIF
   !
   ! Calculate the bosonic kinetic density, stored in tbos
   !          aux --> charge density in Fourier space
   !         aux2 --> iG * rho(G)
   !
-  allocate ( tbos(nrxx), aux2(nrxx) )
+  ALLOCATE ( tbos(nrxx), aux2(nrxx) )
   tbos(:) = 0.d0
   !
   ! put the total (up+down) charge density in rho%of_r(*,1)
   !
-  do is = 2, nspin
+  DO is = 2, nspin
      rho%of_r (:, 1) =  rho%of_r (:, 1) + rho%of_r (:, is)
-  enddo
+  ENDDO
   !
-  aux(:) = CMPLX( rho%of_r(:, 1), 0.d0 ,kind=DP)
-  call cft3 (aux, nr1, nr2, nr3, nrx1, nrx2, nrx3, - 1)
+  aux(:) = cmplx( rho%of_r(:, 1), 0.d0 ,kind=DP)
+  CALL cft3 (aux, nr1, nr2, nr3, nrx1, nrx2, nrx3, - 1)
   !
-  do j = 1, 3
+  DO j = 1, 3
      aux2(:) = (0.d0,0.d0)
-     do i = 1, ngm
-        aux2(nl(i)) = aux(nl(i)) * CMPLX(0.0d0, g(j,i)*tpiba,kind=DP)
-     enddo
+     DO i = 1, ngm
+        aux2(nl(i)) = aux(nl(i)) * cmplx(0.0d0, g(j,i)*tpiba,kind=DP)
+     ENDDO
      IF (gamma_only) THEN
-        do i = 1, ngm
-           aux2(nlm(i)) = aux(nlm(i)) * CMPLX(0.0d0,-g(j,i)*tpiba,kind=DP)
-        enddo
-     END IF
+        DO i = 1, ngm
+           aux2(nlm(i)) = aux(nlm(i)) * cmplx(0.0d0,-g(j,i)*tpiba,kind=DP)
+        ENDDO
+     ENDIF
 
-     call cft3 (aux2, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1)
-     do i = 1, nrxx
-        tbos (i) = tbos (i) + DBLE(aux2(i))**2
-     enddo
-  enddo
+     CALL cft3 (aux2, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1)
+     DO i = 1, nrxx
+        tbos (i) = tbos (i) + dble(aux2(i))**2
+     ENDDO
+  ENDDO
   !
   ! Calculates ELF
   !
   fac = 5.d0 / (3.d0 * (3.d0 * pi**2) ** (2.d0 / 3.d0) )
   elf(:) = 0.d0
-  do i = 1, nrxx
-     if (rho%of_r (i,1) > 1.d-30) then
+  DO i = 1, nrxx
+     IF (rho%of_r (i,1) > 1.d-30) THEN
         d = fac / rho%of_r(i,1)**(5d0/3d0) * (kkin(i)-0.25d0*tbos(i)/rho%of_r(i,1))
         elf (i) = 1.0d0 / (1.0d0 + d**2)
-     endif
-  enddo
-  deallocate (aux, aux2, tbos, kkin)
-  return
-end subroutine do_elf
+     ENDIF
+  ENDDO
+  DEALLOCATE (aux, aux2, tbos, kkin)
+  RETURN
+END SUBROUTINE do_elf

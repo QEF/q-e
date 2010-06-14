@@ -7,7 +7,7 @@
 !
 !
 !-----------------------------------------------------------------------
-function cgracsc (nkb, bec1, bec2, nhm, ntyp, nh, qq, nat, ityp, &
+FUNCTION cgracsc (nkb, bec1, bec2, nhm, ntyp, nh, qq, nat, ityp, &
      npw, psi1, psi2, upf)
   !-----------------------------------------------------------------------
   !
@@ -18,17 +18,17 @@ function cgracsc (nkb, bec1, bec2, nhm, ntyp, nh, qq, nat, ityp, &
   !
   !
   USE kinds
-  USE pseudo_types, ONLY : pseudo_upf 
+  USE pseudo_types, ONLY : pseudo_upf
   USE mp_global,  ONLY : intra_pool_comm
   USE mp,         ONLY : mp_sum
 
 
-  implicit none
+  IMPLICIT NONE
   !
   !     here the dummy variables
   !
 
-  integer :: nkb, npw, nhm, ntyp, nat, ityp (nat), nh (ntyp)
+  INTEGER :: nkb, npw, nhm, ntyp, nat, ityp (nat), nh (ntyp)
   ! input: the number of beta functions
   ! input: the number of plane waves
   ! input: the maximum number of solid be
@@ -37,7 +37,7 @@ function cgracsc (nkb, bec1, bec2, nhm, ntyp, nh, qq, nat, ityp, &
   ! input: the type of each atom
   ! input: the number of beta for each ty
 
-  complex(DP) :: bec1 (nkb), bec2 (nkb), psi1 (npw), psi2 (npw), &
+  COMPLEX(DP) :: bec1 (nkb), bec2 (nkb), psi1 (npw), psi2 (npw), &
        cgracsc
   ! input: the product of beta and psi1
   ! input: the product of beta and psi2
@@ -47,13 +47,13 @@ function cgracsc (nkb, bec1, bec2, nhm, ntyp, nh, qq, nat, ityp, &
 
   real(DP) :: qq (nhm, nhm, ntyp)
   ! input: the q values defining S
-  type(pseudo_upf) :: upf (ntyp)
+  TYPE(pseudo_upf) :: upf (ntyp)
   ! input: if true the pseudo is vanderb
   !
   !    Here the local variables
   !
 
-  integer :: ikb, jkb, na, np, ijkb0, ih, jh
+  INTEGER :: ikb, jkb, na, np, ijkb0, ih, jh
   ! counter on total beta functions
   ! counter on total beta functions
   ! counter on atoms
@@ -62,42 +62,42 @@ function cgracsc (nkb, bec1, bec2, nhm, ntyp, nh, qq, nat, ityp, &
   ! counter on solid beta functions
   ! counter on solid beta functions
 
-  complex(DP) :: scal, zdotc
+  COMPLEX(DP) :: scal, zdotc
   !
   scal = zdotc (npw, psi1, 1, psi2, 1)
 #ifdef __PARA
-  call mp_sum(  scal, intra_pool_comm )
+  CALL mp_sum(  scal, intra_pool_comm )
 #endif
   ijkb0 = 0
-  do np = 1, ntyp
-     if (upf(np)%tvanp ) then
-        do na = 1, nat
-           if (ityp (na) .eq.np) then
-              do ih = 1, nh (np)
+  DO np = 1, ntyp
+     IF (upf(np)%tvanp ) THEN
+        DO na = 1, nat
+           IF (ityp (na) ==np) THEN
+              DO ih = 1, nh (np)
                  ikb = ijkb0 + ih
-                 do jh = 1, nh (np)
+                 DO jh = 1, nh (np)
                     jkb = ijkb0 + jh
-                    scal = scal + qq (ih,jh,np)*CONJG(bec1(ikb))*bec2(jkb)
-                 enddo
-              enddo
+                    scal = scal + qq (ih,jh,np)*conjg(bec1(ikb))*bec2(jkb)
+                 ENDDO
+              ENDDO
               ijkb0 = ijkb0 + nh (np)
-           endif
-        enddo
-     else
-        do na = 1, nat
-           if (ityp (na) .eq.np) ijkb0 = ijkb0 + nh (np)
-        enddo
-     endif
+           ENDIF
+        ENDDO
+     ELSE
+        DO na = 1, nat
+           IF (ityp (na) ==np) ijkb0 = ijkb0 + nh (np)
+        ENDDO
+     ENDIF
 
-  enddo
+  ENDDO
 
   cgracsc = scal
-  return
-end function cgracsc
+  RETURN
+END FUNCTION cgracsc
 
 !
 !-----------------------------------------------------------------------
-function cgracsc_nc (nkb, bec1, bec2, nhm, ntyp, nh, nat, ityp, &
+FUNCTION cgracsc_nc (nkb, bec1, bec2, nhm, ntyp, nh, nat, ityp, &
      npw, npol, psi1, psi2, upf)
   !-----------------------------------------------------------------------
   !
@@ -113,12 +113,12 @@ function cgracsc_nc (nkb, bec1, bec2, nhm, ntyp, nh, nat, ityp, &
   USE pseudo_types, ONLY : pseudo_upf
   USE mp_global,  ONLY : intra_pool_comm
   USE mp,         ONLY : mp_sum
-  implicit none
+  IMPLICIT NONE
   !
   !     here the dummy variables
   !
 
-  integer :: nkb, npw, npol, nhm, ntyp, nat, ityp (nat), nh (ntyp)
+  INTEGER :: nkb, npw, npol, nhm, ntyp, nat, ityp (nat), nh (ntyp)
   ! input: the number of beta functions
   ! input: the number of plane waves
   ! input: the maximum number of solid be
@@ -127,7 +127,7 @@ function cgracsc_nc (nkb, bec1, bec2, nhm, ntyp, nh, nat, ityp, &
   ! input: the type of each atom
   ! input: the number of beta for each ty
 
-  complex(DP) :: bec1 (nkb,npol), bec2 (nkb,npol), &
+  COMPLEX(DP) :: bec1 (nkb,npol), bec2 (nkb,npol), &
                       psi1 (npw,npol), psi2 (npw,npol), cgracsc_nc
   ! input: the product of beta and psi1
   ! input: the product of beta and psi2
@@ -135,13 +135,13 @@ function cgracsc_nc (nkb, bec1, bec2, nhm, ntyp, nh, nat, ityp, &
   ! input: the second wavefunction
   ! output: the value of the scalar produ
 
-  type(pseudo_upf) :: upf (ntyp)
+  TYPE(pseudo_upf) :: upf (ntyp)
   ! input: if true the pseudo is vanderb
   !
   !    Here the local variables
   !
 
-  integer :: ikb, jkb, na, np, ijkb0, ih, jh, ipol, jpol, ijh
+  INTEGER :: ikb, jkb, na, np, ijkb0, ih, jh, ipol, jpol, ijh
   ! counter on total beta functions
   ! counter on total beta functions
   ! counter on atoms
@@ -150,48 +150,48 @@ function cgracsc_nc (nkb, bec1, bec2, nhm, ntyp, nh, nat, ityp, &
   ! counter on solid beta functions
   ! counter on solid beta functions
 
-  complex(DP) :: scal, zdotc
+  COMPLEX(DP) :: scal, zdotc
   !
   scal = zdotc (npw*npol, psi1, 1, psi2, 1)
 #ifdef __PARA
-  call mp_sum(  scal, intra_pool_comm )
+  CALL mp_sum(  scal, intra_pool_comm )
 #endif
   ijkb0 = 0
-  do np = 1, ntyp
-     if (upf(np)%tvanp ) then
-        do na = 1, nat
-           if (ityp (na) .eq.np) then
-              do ih = 1, nh (np)
+  DO np = 1, ntyp
+     IF (upf(np)%tvanp ) THEN
+        DO na = 1, nat
+           IF (ityp (na) ==np) THEN
+              DO ih = 1, nh (np)
                  ikb = ijkb0 + ih
-                 do jh = 1, nh (np)
+                 DO jh = 1, nh (np)
                     jkb = ijkb0 + jh
-                    if (lspinorb) then
+                    IF (lspinorb) THEN
                        ijh=0
-                       do ipol=1,npol
-                          do jpol=1,npol
+                       DO ipol=1,npol
+                          DO jpol=1,npol
                             ijh=ijh+1
                             scal=scal+qq_so(ih,jh,ijh,np)* &
-                                      CONJG(bec1(ikb,ipol))*bec2(jkb,jpol)
-                          end do
-                       end do
-                    else
-                       do ipol=1,npol
+                                      conjg(bec1(ikb,ipol))*bec2(jkb,jpol)
+                          ENDDO
+                       ENDDO
+                    ELSE
+                       DO ipol=1,npol
                           scal=scal+qq(ih,jh,np)* &
-                               CONJG(bec1(ikb,ipol))*bec2(jkb,ipol)
-                       end do
-                    end if
-                 end do
-              end do
+                               conjg(bec1(ikb,ipol))*bec2(jkb,ipol)
+                       ENDDO
+                    ENDIF
+                 ENDDO
+              ENDDO
               ijkb0 = ijkb0 + nh (np)
-           end if
-        end do
-     else
-        do na = 1, nat
-           if (ityp (na) .eq.np) ijkb0 = ijkb0 + nh (np)
-        enddo
-     endif
-  enddo
+           ENDIF
+        ENDDO
+     ELSE
+        DO na = 1, nat
+           IF (ityp (na) ==np) ijkb0 = ijkb0 + nh (np)
+        ENDDO
+     ENDIF
+  ENDDO
 
   cgracsc_nc = scal
-  return
-end function cgracsc_nc
+  RETURN
+END FUNCTION cgracsc_nc

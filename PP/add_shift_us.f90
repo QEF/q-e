@@ -45,7 +45,7 @@ SUBROUTINE add_shift_us( shift_nl )
      !
      CALL add_shift_us_k()
      !
-  END IF  
+  ENDIF
   !
   RETURN
   !
@@ -63,15 +63,15 @@ SUBROUTINE add_shift_us( shift_nl )
        IMPLICIT NONE
        !
        REAL(DP), ALLOCATABLE    :: rbecp(:,:), shift_(:)
-       ! auxiliary variables contain <beta|psi> 
+       ! auxiliary variables contain <beta|psi>
        REAL(DP) :: ps
        INTEGER       :: ik, ibnd, ih, jh, na, nt, ikb, jkb, ijkb0
        ! counters
        !
        !
        !
-       ALLOCATE( rbecp( nkb, nbnd ), shift_(nat) )    
-       !   
+       ALLOCATE( rbecp( nkb, nbnd ), shift_(nat) )
+       !
        shift_(:) = 0.d0
        !
        ! ... the forces are a sum over the K points and the bands
@@ -79,11 +79,11 @@ SUBROUTINE add_shift_us( shift_nl )
        DO ik = 1, nks
           IF ( lsda ) current_spin = isk(ik)
           !
-          call gk_sort (xk(1,ik), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin)
+          CALL gk_sort (xk(1,ik), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin)
           IF ( nks > 1 ) THEN
              CALL davcio( evc, nwordwfc, iunwfc, ik, -1 )
              IF ( nkb > 0 ) CALL init_us_2( npw, igk, xk(1,ik), vkb )
-          END IF
+          ENDIF
           !
           CALL calbec ( npw, vkb, evc, rbecp )
           !
@@ -98,12 +98,12 @@ SUBROUTINE add_shift_us( shift_nl )
                               et(ibnd,ik) * qq(ih,ih,nt)
                          shift_(na) = shift_(na) + ps * wg(ibnd,ik) * &
                                       rbecp(ikb,ibnd) * rbecp(ikb,ibnd)
-                      END DO
+                      ENDDO
                       !
-                      IF ( upf(nt)%tvanp .OR. newpseudo(nt) ) THEN
+                      IF ( upf(nt)%tvanp .or. newpseudo(nt) ) THEN
                          !
-                         ! ... in US case there is a contribution for jh<>ih. 
-                         ! ... We use here the symmetry in the interchange 
+                         ! ... in US case there is a contribution for jh<>ih.
+                         ! ... We use here the symmetry in the interchange
                          ! ... of ih and jh
                          !
                          DO jh = ( ih + 1 ), nh(nt)
@@ -112,49 +112,49 @@ SUBROUTINE add_shift_us( shift_nl )
                                ps = deeq(ih,jh,na,current_spin) - &
                                     et(ibnd,ik) * qq(ih,jh,nt)
                                shift_(na) = shift_(na) + ps * wg(ibnd,ik) * &
-                                     2.d0 *rbecp(ikb,ibnd) *rbecp(jkb,ibnd) 
-                            END DO
-                         END DO
-                      END IF
-                   END DO
+                                     2.d0 *rbecp(ikb,ibnd) *rbecp(jkb,ibnd)
+                            ENDDO
+                         ENDDO
+                      ENDIF
+                   ENDDO
                    ijkb0 = ijkb0 + nh(nt)
-                END IF
-             END DO
-          END DO
-       END DO
+                ENDIF
+             ENDDO
+          ENDDO
+       ENDDO
        !
 #ifdef __PARA
        !
        ! ... collect contributions across pools
        !
-       call mp_sum( shift_, inter_pool_comm )
+       CALL mp_sum( shift_, inter_pool_comm )
 #endif
        !
-       ! ... Since our summation over k points was only on the irreducible 
-       ! ... BZ we have to symmetrize the shifts. 
+       ! ... Since our summation over k points was only on the irreducible
+       ! ... BZ we have to symmetrize the shifts.
        !
        CALL symscalar( nat, shift_ )
        !
        shift_nl(:) = shift_nl(:) + shift_(:)
        !
-       DEALLOCATE( rbecp, shift_ ) 
+       DEALLOCATE( rbecp, shift_ )
        !
        RETURN
        !
      END SUBROUTINE add_shift_us_gamma
-     !     
+     !
      !-----------------------------------------------------------------------
      SUBROUTINE add_shift_us_k()
        !-----------------------------------------------------------------------
-       !  
+       !
        USE mp_global,            ONLY: inter_pool_comm, intra_pool_comm
        USE mp,                   ONLY: mp_sum
 
        IMPLICIT NONE
        !
        REAL(DP), ALLOCATABLE :: shift_(:)
-       ! auxiliary variable 
-       COMPLEX(DP), ALLOCATABLE :: becp(:,:) 
+       ! auxiliary variable
+       COMPLEX(DP), ALLOCATABLE :: becp(:,:)
        !  contains products of wavefunctions and beta
 
        REAL(DP) :: ps
@@ -163,17 +163,17 @@ SUBROUTINE add_shift_us( shift_nl )
        !
        ALLOCATE( becp(nkb,nbnd), shift_( nat ) )
        shift_(:) = 0.D0
-       ! 
+       !
        ! ... the shifts are a sum over the K points and the bands
        !
        DO ik = 1, nks
           IF ( lsda ) current_spin = isk(ik)
           !
-          call gk_sort (xk(1,ik), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin)
+          CALL gk_sort (xk(1,ik), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin)
           IF ( nks > 1 ) THEN
              CALL davcio( evc, nwordwfc, iunwfc, ik, -1 )
              IF ( nkb > 0 ) CALL init_us_2( npw, igk, xk(1,ik), vkb )
-          END IF
+          ENDIF
           !
           CALL calbec( npw, vkb, evc, becp )
           !
@@ -187,14 +187,14 @@ SUBROUTINE add_shift_us( shift_nl )
                          ps = deeq(ih,ih,na,current_spin) - &
                               et(ibnd,ik) * qq(ih,ih,nt)
                          shift_(na) = shift_(na) + ps * wg(ibnd,ik) * &
-                                      DBLE( CONJG( becp(ikb,ibnd) ) * &
+                                      dble( conjg( becp(ikb,ibnd) ) * &
                                                    becp(ikb,ibnd) )
-                      END DO
+                      ENDDO
                       !
-                      IF ( upf(nt)%tvanp .OR. newpseudo(nt) ) THEN
+                      IF ( upf(nt)%tvanp .or. newpseudo(nt) ) THEN
                          !
-                         ! ... in US case there is a contribution for jh<>ih. 
-                         ! ... We use here the symmetry in the interchange 
+                         ! ... in US case there is a contribution for jh<>ih.
+                         ! ... We use here the symmetry in the interchange
                          ! ... of ih and jh
                          !
                          DO jh = ( ih + 1 ), nh(nt)
@@ -203,27 +203,27 @@ SUBROUTINE add_shift_us( shift_nl )
                                ps = deeq(ih,jh,na,current_spin) - &
                                     et(ibnd,ik) * qq (ih,jh,nt)
                                shift_(na) = shift_ (na) + ps * wg(ibnd,ik) * &
-                                      2.d0 * DBLE( CONJG( becp(ikb,ibnd) ) * &
+                                      2.d0 * dble( conjg( becp(ikb,ibnd) ) * &
                                                           becp(jkb,ibnd) )
-                            END DO
-                         END DO
-                      END IF
-                   END DO
+                            ENDDO
+                         ENDDO
+                      ENDIF
+                   ENDDO
                    ijkb0 = ijkb0 + nh(nt)
-                END IF
-             END DO
-          END DO
-       END DO
+                ENDIF
+             ENDDO
+          ENDDO
+       ENDDO
        !
 #ifdef __PARA
        !
        ! ... collect contributions across pools
        !
-       call mp_sum( shift_, inter_pool_comm )
+       CALL mp_sum( shift_, inter_pool_comm )
 #endif
        !
-       ! ... Since our summation over k points was only on the irreducible 
-       ! ... BZ we have to symmetrize the forces. 
+       ! ... Since our summation over k points was only on the irreducible
+       ! ... BZ we have to symmetrize the forces.
        !
        CALL symscalar( nat, shift_ )
        !
@@ -234,5 +234,5 @@ SUBROUTINE add_shift_us( shift_nl )
        RETURN
        !
      END SUBROUTINE add_shift_us_k
-     !     
+     !
 END SUBROUTINE add_shift_us

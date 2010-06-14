@@ -30,11 +30,11 @@ SUBROUTINE PAW_make_ae_charge_ ( rho, flag, nx, r, rhopaw )
    USE gvect,             ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx
    USE cell_base,         ONLY : at, bg, alat
    !
-   TYPE(scf_type), INTENT(IN) :: rho           ! only rho%bec is actually needed
-   INTEGER, INTENT (IN)       :: flag          ! -1=core, 0 =valence, 1=both
-   INTEGER, INTENT (IN)       :: nx            ! number of points in space
-   REAL (dp), INTENT(IN)      :: r(3,nx)       ! points in space (alat units)
-   REAL (dp), INTENT(OUT)  :: rhopaw(nx,nspin) ! PAW charge
+   TYPE(scf_type), INTENT(in) :: rho           ! only rho%bec is actually needed
+   INTEGER, INTENT (in)       :: flag          ! -1=core, 0 =valence, 1=both
+   INTEGER, INTENT (in)       :: nx            ! number of points in space
+   REAL (dp), INTENT(in)      :: r(3,nx)       ! points in space (alat units)
+   REAL (dp), INTENT(out)  :: rhopaw(nx,nspin) ! PAW charge
    !
    TYPE(paw_info)          :: i                ! minimal info on atoms
    INTEGER                 :: ip               ! counter on x,y,z
@@ -86,16 +86,16 @@ SUBROUTINE PAW_make_ae_charge_ ( rho, flag, nx, r, rhopaw )
                ENDDO
             ELSE
                rho_lm(:,:,is) = 0.0_dp
-            END IF
+            ENDIF
             !
             ! add core charge (divide by Y_00=1/sqrt(4pi) to get l=0 component)
-            ! 
+            !
             IF ( abs(flag) == 1 ) THEN
                DO ir = 1, i%m
                   rho_lm(ir,1,is) = rho_lm(ir,1,is) + &
                        sqrt( fpi ) * upf(i%t)%paw%ae_rho_atc(ir) / nspin
                ENDDO
-            END IF
+            ENDIF
          ENDDO
 
          ! deallocate asap
@@ -126,7 +126,7 @@ SUBROUTINE PAW_make_ae_charge_ ( rho, flag, nx, r, rhopaw )
             !
             posi(:) = posi(:) - tau(:,ia)
             CALL cryst_to_cart( 1, posi, bg, -1 )
-            posi(:) = posi(:) - ANINT( posi(:) )
+            posi(:) = posi(:) - anint( posi(:) )
             CALL cryst_to_cart( 1, posi, at, 1 )
             !
             posi(:) = posi(:) * alat
@@ -135,7 +135,7 @@ SUBROUTINE PAW_make_ae_charge_ ( rho, flag, nx, r, rhopaw )
             ! don't consider points too far from the atom
             ! (criterion not valid in principle if core charge is present)
             !
-            IF ( abs(flag) == 1 .AND. &
+            IF ( abs(flag) == 1 .and. &
                  distsq > g(i%t)%r2(upf(i%t)%kkbeta) ) CYCLE rsp_point
             !
             ! generate the atomic charge on point posi(:), which means
@@ -149,18 +149,18 @@ SUBROUTINE PAW_make_ae_charge_ ( rho, flag, nx, r, rhopaw )
                   ! do interpolation
                   rhopaw(ir,is)= rhopaw(ir,is) + ylm_posi(1,lm) &
                        * splint(g(i%t)%r(:) , rho_lm(:,lm,is), &
-                       wsp_lm(:,lm,is), SQRT(distsq) )
+                       wsp_lm(:,lm,is), sqrt(distsq) )
                ENDDO
             ENDDO
-         END DO rsp_point
+         ENDDO rsp_point
          !
          DEALLOCATE(rho_lm, ylm_posi, wsp_lm)
          !
       ENDIF ifpaw
    ENDDO atoms
-   
+
  END SUBROUTINE PAW_make_ae_charge_
- 
+
 END MODULE paw_postproc_
 !
 !-----------------------------------------------------------------------
@@ -190,7 +190,7 @@ PROGRAM PAWplot
   REAL(dp) :: e1(3), e2(3), e3(3), x0(3)
   REAL(dp), ALLOCATABLE :: rhoplot(:), rhopaw(:,:), r(:,:)
   COMPLEX(dp), ALLOCATABLE :: rhog(:)
-  LOGICAL, external :: matches
+  LOGICAL, EXTERNAL :: matches
   LOGICAL :: onedim, twodim, tredim
   !
   NAMELIST / inputpp / outdir, prefix, spin_component, &
@@ -209,8 +209,8 @@ PROGRAM PAWplot
   !
   prefix = 'pwscf'
   CALL get_env( 'ESPRESSO_TMPDIR', outdir )
-  IF ( TRIM( outdir ) == ' ' ) outdir = './'
-  filplot = 'pawcharge.dat' 
+  IF ( trim( outdir ) == ' ' ) outdir = './'
+  filplot = 'pawcharge.dat'
   plot    = 'valence'
   spin_component = 0
   e1(:)         = 0.d0
@@ -230,10 +230,10 @@ PROGRAM PAWplot
      !
      tmp_dir = trimcheck ( outdir )
      !
-  END IF
-  call mp_bcast (ios, ionode_id)
+  ENDIF
+  CALL mp_bcast (ios, ionode_id)
   IF ( ios /= 0) &
-       CALL errore ('postproc', 'reading inputpp namelist', ABS(ios))
+       CALL errore ('postproc', 'reading inputpp namelist', abs(ios))
   !
   ! ... Broadcast variables
   !
@@ -270,31 +270,31 @@ PROGRAM PAWplot
         rhog (:) = rho%of_g(:,current_spin)
      ENDIF
   ENDIF
-  !  
-  tredim = ( e3(1)**2 + e3(2)**2 + e3(3)**2 > 1d-6 )
-  twodim = ( e2(1)**2 + e2(2)**2 + e2(3)**2 > 1d-6 ) .AND. .NOT. tredim
-  onedim = ( e1(1)**2 + e1(2)**2 + e1(3)**2 > 1d-6 ) .AND. .NOT. twodim
   !
-  if ( onedim ) then
+  tredim = ( e3(1)**2 + e3(2)**2 + e3(3)**2 > 1d-6 )
+  twodim = ( e2(1)**2 + e2(2)**2 + e2(3)**2 > 1d-6 ) .and. .not. tredim
+  onedim = ( e1(1)**2 + e1(2)**2 + e1(3)**2 > 1d-6 ) .and. .not. twodim
+  !
+  IF ( onedim ) THEN
      !
      !     One-dimensional plot
      !
-     if (nx <= 0 )   call errore ('chdens', 'wrong nx', 1)
+     IF (nx <= 0 )   CALL errore ('chdens', 'wrong nx', 1)
      ALLOCATE ( rhoplot(nx) )
      IF ( okpaw ) THEN
         WRITE (stdout, '(5x,"Reconstructing all-electron charge (PAW)")')
         ALLOCATE ( rhopaw(nx,nspin), r(3,nx) )
         DO is = 1, nx
            r(:, is) = x0 (:) + (is-1) * e1(:) / (nx-1)
-        END DO
+        ENDDO
         !
-        IF ( matches ('core',plot) .AND. matches ('valence',plot) ) THEN
+        IF ( matches ('core',plot) .and. matches ('valence',plot) ) THEN
             flag = 1
-        ELSE IF ( matches ('core',plot) ) THEN
+        ELSEIF ( matches ('core',plot) ) THEN
             flag =-1
         ELSE
-            flag = 0 
-        END IF 
+            flag = 0
+        ENDIF
         CALL PAW_make_ae_charge_ (rho, flag, nx, r, rhopaw )
         !
         IF (spin_component == 0 .and. nspin ==2 ) THEN
@@ -302,105 +302,105 @@ PROGRAM PAWplot
         ELSE
            IF (nspin == 2) current_spin = spin_component
            rhoplot(:) = rhopaw(:,current_spin)
-        END IF
+        ENDIF
         DEALLOCATE ( r, rhopaw )
      ELSE
         rhoplot(:) = 0.0_dp
-     END IF
+     ENDIF
      !
-     call plot_1d_ (nx, x0, e1, rhog, rhoplot, flag, filplot )
+     CALL plot_1d_ (nx, x0, e1, rhog, rhoplot, flag, filplot )
      !
      DEALLOCATE ( rhoplot )
      !
-  else if ( twodim ) then
-     if ( abs(e1(1)*e2(1) + e1(2)*e2(2) + e1(3)*e2(3)) > 1d-6) &
-          call errore ('pawplot', 'e1 and e2 are not orthogonal', 1)
-     if ( nx <= 0 .OR. ny <= 0 )   call errore ('chdens', 'wrong nx or ny', 1)
-  else if (tredim) then
-     if ( nx <= 0 .OR. ny <= 0 .OR. nz <=0 ) &
-          call errore ('chdens', 'wrong nx or ny or nz', 1)
-  END IF
+  ELSEIF ( twodim ) THEN
+     IF ( abs(e1(1)*e2(1) + e1(2)*e2(2) + e1(3)*e2(3)) > 1d-6) &
+          CALL errore ('pawplot', 'e1 and e2 are not orthogonal', 1)
+     IF ( nx <= 0 .or. ny <= 0 )   CALL errore ('chdens', 'wrong nx or ny', 1)
+  ELSEIF (tredim) THEN
+     IF ( nx <= 0 .or. ny <= 0 .or. nz <=0 ) &
+          CALL errore ('chdens', 'wrong nx or ny or nz', 1)
+  ENDIF
   !
   DEALLOCATE (rhog)
-  
-end PROGRAM PAWPLOT
+
+END PROGRAM PAWPLOT
 !
 !-----------------------------------------------------------------------
-subroutine plot_1d_ (nx, x0, e, rhog, rhoplot, flag, filplot )
+SUBROUTINE plot_1d_ (nx, x0, e, rhog, rhoplot, flag, filplot )
   !-----------------------------------------------------------------------
   !
-  USE kinds, only : DP
-  use constants, only:  pi
-  USE io_global, only : stdout, ionode
+  USE kinds, ONLY : DP
+  USE constants, ONLY:  pi
+  USE io_global, ONLY : stdout, ionode
   USE mp_global,  ONLY : intra_pool_comm
   USE mp,         ONLY : mp_sum
   USE gvect,      ONLY : g, gstart, ngm
   USE control_flags, ONLY : gamma_only
 
-  implicit none
-  integer, intent(in) :: nx, flag
+  IMPLICIT NONE
+  INTEGER, INTENT(in) :: nx, flag
   ! number of points along the line
   ! flag=-1: do not add smooth term
-  real(DP), intent(in) :: e (3), x0 (3)
+  real(DP), INTENT(in) :: e (3), x0 (3)
   ! vector defining the line
   ! origin of the line
-  complex(DP), intent(in) :: rhog (ngm)
+  COMPLEX(DP), INTENT(in) :: rhog (ngm)
   ! rho in G space
-  character(LEN=*), intent(in) :: filplot
-  real(DP), intent(inout) :: rhoplot(nx)
+  CHARACTER(len=*), INTENT(in) :: filplot
+  real(DP), INTENT(inout) :: rhoplot(nx)
   !
-  integer :: i, ig, ounit
+  INTEGER :: i, ig, ounit
   real(DP) :: rhosum(nx), rhomin, rhomax, x(3), deltax, arg
   !
-  do i = 1, nx
+  DO i = 1, nx
      x(:) = x0 (:) + (i-1) * e (:) / (nx-1)
      !
      !     for each point we compute the charge from the Fourier components
      !
      rhosum(i) = 0.0_dp
-     do ig = gstart, ngm
+     DO ig = gstart, ngm
         !
         !     NB: G are in 2pi/alat units, r are in alat units
         !
         arg = 2.0_dp*pi* ( x(1)*g(1,ig) + x(2)*g(2,ig) + x(3)*g(3,ig) )
-        rhosum(i) = rhosum(i) + DBLE ( rhog (ig) ) * cos (arg) - &
-                               AIMAG ( rhog (ig) ) * sin (arg)
-     enddo
-     if ( gamma_only )  rhosum(i) = 2.0_dp * rhosum(i)
-     if ( gstart == 2 ) rhosum(i) = rhosum(i) + DBLE( rhog (1) )
+        rhosum(i) = rhosum(i) + dble ( rhog (ig) ) * cos (arg) - &
+                               aimag ( rhog (ig) ) * sin (arg)
+     ENDDO
+     IF ( gamma_only )  rhosum(i) = 2.0_dp * rhosum(i)
+     IF ( gstart == 2 ) rhosum(i) = rhosum(i) + dble( rhog (1) )
      !
-  enddo
-  call mp_sum( rhosum, intra_pool_comm )
+  ENDDO
+  CALL mp_sum( rhosum, intra_pool_comm )
   !
   IF ( flag /= -1) rhoplot (:) = rhoplot(:) + rhosum(:)
   !
   !    Here we check the value of the resulting charge
   !
-  rhomin =  MINVAL ( rhoplot(:) )
-  rhomax =  MAXVAL ( rhoplot(:) )
-  
-  write(stdout, '(5x,"Min, Max charge: ",2f12.6)') rhomin, rhomax
+  rhomin =  minval ( rhoplot(:) )
+  rhomax =  maxval ( rhoplot(:) )
+
+  WRITE(stdout, '(5x,"Min, Max charge: ",2f12.6)') rhomin, rhomax
   !
   !       we print the charge on output
   !
-  if (ionode) then
-     if (filplot /= ' ') then
+  IF (ionode) THEN
+     IF (filplot /= ' ') THEN
         ounit = 1
-        open (unit=ounit, file=filplot, form='formatted', status='unknown')
+        OPEN (unit=ounit, file=filplot, form='formatted', status='unknown')
         WRITE( stdout, '(/5x,"Writing data to be plotted to file ",a)') &
-             TRIM(filplot)
-     else
+             trim(filplot)
+     ELSE
         ounit = 6
-     endif
+     ENDIF
      !
      deltax = sqrt(e(1)**2+e(2)**2+e(3)**2) / (nx - 1)
-     do i = 1, nx
-        write (ounit, '(2f20.10)') deltax*DBLE(i-1), rhoplot(i)
-     enddo
-     if (ounit == 1) CLOSE (unit = ounit, status='keep')
-  end if
-  
-  return
+     DO i = 1, nx
+        WRITE (ounit, '(2f20.10)') deltax*dble(i-1), rhoplot(i)
+     ENDDO
+     IF (ounit == 1) CLOSE (unit = ounit, status='keep')
+  ENDIF
 
-end subroutine plot_1d_
+  RETURN
+
+END SUBROUTINE plot_1d_
 

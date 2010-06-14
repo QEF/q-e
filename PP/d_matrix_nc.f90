@@ -7,12 +7,12 @@
 !
 !
 !---------------------------------------------------------------
-SUBROUTINE d_matrix_nc (dy012, dy112, dy212, dy312)  
+SUBROUTINE d_matrix_nc (dy012, dy112, dy212, dy312)
   !---------------------------------------------------------------
   !
-  ! Provides symmetry operations in the (l, s) subspaces for l=0,1,2,3 
+  ! Provides symmetry operations in the (l, s) subspaces for l=0,1,2,3
   !
-  USE kinds, only: DP
+  USE kinds, ONLY: DP
   USE cell_base, ONLY : ibrav, symm_type
   USE symm_base, ONLY:  nsym, sr
   USE random_numbers, ONLY : randy
@@ -25,7 +25,7 @@ SUBROUTINE d_matrix_nc (dy012, dy112, dy212, dy312)
                       dy312 (14, 14, 48)
   !
   ! output: symmetry matrices in the l=0, l=1, l=2 and l=3 subspace resp.
-  ! 
+  !
   !    here the local parameters
   !
   INTEGER, PARAMETER :: maxl = 3, maxm = 2*maxl+1, &
@@ -38,7 +38,7 @@ SUBROUTINE d_matrix_nc (dy012, dy112, dy212, dy312)
   REAL(DP), PARAMETER :: eps = 1.0d-9
   !
   !   and the local variables
-  !  
+  !
   INTEGER :: m, n, m1, n1, ipol, isym
   INTEGER :: l, n2, ind, ind1, ind2
   REAL(DP) :: ylm(maxm, maxlm), ylms(maxm, maxlm), &
@@ -52,36 +52,36 @@ SUBROUTINE d_matrix_nc (dy012, dy112, dy212, dy312)
   !
   !    Here we find the true symmetries of the crystal
   !
-  IF ( ibrav == 4 .OR. ibrav == 5 ) THEN
+  IF ( ibrav == 4 .or. ibrav == 5 ) THEN
      !
      ! ... here the hexagonal or trigonal bravais lattice
      !
      CALL hexspinsym( s_spin )
      !
-  ELSE IF ( ibrav >=1  .AND. ibrav <= 14 ) THEN
+  ELSEIF ( ibrav >=1  .and. ibrav <= 14 ) THEN
      !
      ! ... here for the cubic bravais lattice
      !
      CALL cubicspinsym( s_spin )
      !
-  ELSE IF ( ibrav == 0 ) THEN
+  ELSEIF ( ibrav == 0 ) THEN
      !
      IF ( symm_type == 'cubic' ) THEN
         !
         CALL cubicspinsym( s_spin )
         !
-     ELSE IF ( symm_type == 'hexagonal' ) THEN
+     ELSEIF ( symm_type == 'hexagonal' ) THEN
         !
         CALL hexspinsym( s_spin )
         !
-     END IF
+     ENDIF
      !
   ELSE
      !
      CALL errore( 'd_matrix_nc', 'wrong ibrav', 1 )
      !
-  END IF
-  ! 
+  ENDIF
+  !
   !  randomly distributed points on a sphere
   !
   DO m = 1, maxm
@@ -89,37 +89,37 @@ SUBROUTINE d_matrix_nc (dy012, dy112, dy212, dy312)
      rl (2, m) = randy () - 0.5d0
      rl (3, m) = randy () - 0.5d0
      rrl (m) = rl (1,m)**2 + rl (2,m)**2 + rl (3,m)**2
-  END DO
+  ENDDO
   CALL ylmr2 ( maxlm, 2*maxl+1, rl, rrl, ylm )
   !
   !  invert Yl for each block of definite l (note the transpose operation)
   !
   !  l = 1 block
-  ! 
-  do m = 1, 3
-     do n = 1, 3
+  !
+  DO m = 1, 3
+     DO n = 1, 3
         yl1 (m, n) = ylm (n, 1+m)
-     end do
-  end do
-  call invmat (3, yl1, yl1_inv, capel)
+     ENDDO
+  ENDDO
+  CALL invmat (3, yl1, yl1_inv, capel)
   !
   !  l = 2 block
   !
-  do m = 1, 5
-     do n = 1, 5
+  DO m = 1, 5
+     DO n = 1, 5
         yl2 (m, n) = ylm (n, 4+m)
-     end do
-  end do
-  call invmat (5, yl2, yl2_inv, capel)
+     ENDDO
+  ENDDO
+  CALL invmat (5, yl2, yl2_inv, capel)
   !
   !  l = 3 block
   !
-  do m = 1, 7
-     do n = 1, 7
+  DO m = 1, 7
+     DO n = 1, 7
         yl3 (m, n) = ylm (n, 9+m)
-     end do
-  end do
-  call invmat (7, yl3, yl3_inv, capel)
+     ENDDO
+  ENDDO
+  CALL invmat (7, yl3, yl3_inv, capel)
   !
   ! now for each symmetry operation of the point-group ...
   !
@@ -138,130 +138,130 @@ SUBROUTINE d_matrix_nc (dy012, dy112, dy212, dy312)
      !
      DO m1 = 1, 2
         DO n1 = 1, 2
-           dy012 (m1, n1, isym)= CONJG( s_spin (n1, m1, isym) )
-        END DO
-     END DO
+           dy012 (m1, n1, isym)= conjg( s_spin (n1, m1, isym) )
+        ENDDO
+     ENDDO
      !
-     !  l = 1 block  
+     !  l = 1 block
      !
      DO m = 1, 3
         DO n = 1, 3
            yl1 (m, n) = ylms (n, 1+m)
-        END DO
-     END DO
+        ENDDO
+     ENDDO
      dy1 (:, :, isym) = matmul (yl1(:,:), yl1_inv(:,:))
      DO m = 1, 3
         DO n = 1, 3
            DO m1 = 1, 2
               DO n1 = 1, 2
-                 dy112 (m+3*(m1-1), n+3*(n1-1), isym) = & 
-                          CMPLX(dy1 (m, n, isym), 0.d0,kind=DP) * s_spin (m1, n1, isym)
-              END DO
-           END DO
-        END DO
-     END DO
+                 dy112 (m+3*(m1-1), n+3*(n1-1), isym) = &
+                          cmplx(dy1 (m, n, isym), 0.d0,kind=DP) * s_spin (m1, n1, isym)
+              ENDDO
+           ENDDO
+        ENDDO
+     ENDDO
      !
-     !  l = 2 block 
+     !  l = 2 block
      !
      DO m = 1, 5
         DO n = 1, 5
            yl2 (m, n) = ylms (n, 4+m)
-        END DO
-     END DO
+        ENDDO
+     ENDDO
      dy2 (:, :, isym) = matmul (yl2(:,:), yl2_inv(:,:))
      DO m = 1, 5
         DO n = 1, 5
            DO m1 = 1, 2
               DO n1 = 1, 2
-                 dy212 (m+5*(m1-1), n+5*(n1-1), isym) =   & 
-                     CMPLX(dy2 (m, n, isym), 0.d0,kind=DP) * s_spin (m1, n1, isym)
-              END DO
-           END DO
-        END DO
-     END DO
+                 dy212 (m+5*(m1-1), n+5*(n1-1), isym) =   &
+                     cmplx(dy2 (m, n, isym), 0.d0,kind=DP) * s_spin (m1, n1, isym)
+              ENDDO
+           ENDDO
+        ENDDO
+     ENDDO
      !
      !  l = 3 block
      !
      DO m = 1, 7
         DO n = 1, 7
            yl3 (m, n) = ylms (n, 9+m)
-        END DO
-     END DO
+        ENDDO
+     ENDDO
      dy3 (:, :, isym) = matmul (yl3(:,:), yl3_inv(:,:))
      DO m = 1, 7
         DO n = 1, 7
            DO m1 = 1, 2
               DO n1 = 1, 2
                  dy312 (m+7*(m1-1), n+7*(n1-1), isym) =  &
-                    CMPLX(dy3 (m, n, isym), 0.d0,kind=DP) * s_spin (m1, n1, isym)
-              END DO
-           END DO
-        END DO
-     END DO
+                    cmplx(dy3 (m, n, isym), 0.d0,kind=DP) * s_spin (m1, n1, isym)
+              ENDDO
+           ENDDO
+        ENDDO
+     ENDDO
      !
-  END DO
+  ENDDO
   !
-  ! check that D_S matrices are unitary as they should 
+  ! check that D_S matrices are unitary as they should
   !
   delta (:,:) = (0.d0,0.d0)
   DO m= 1, 14
      delta(m,m) = (1.d0,0.d0)
-  END DO
+  ENDDO
   DO isym =1,nsym
      !
      !  l = 0 block
      !
      capel = 0.d0
-     dy012_con(:,:) = CONJG( dy012(:,:,isym) )
+     dy012_con(:,:) = conjg( dy012(:,:,isym) )
      DO m = 1, 2
         DO n = 1, 2
            capel = capel +  &
-           ABS(ZDOTU(2,dy012_con(1,m),1,dy012(1,n,isym),1)-delta(m,n))**2
-        END DO
-     END DO
-     IF (capel.gt.eps) CALL errore ('d_matrix_nc', &
+           abs(ZDOTU(2,dy012_con(1,m),1,dy012(1,n,isym),1)-delta(m,n))**2
+        ENDDO
+     ENDDO
+     IF (capel>eps) CALL errore ('d_matrix_nc', &
         'D_S (l=0) for this symmetry operation is not unitary',isym)
      !
      !  l = 1 block
      !
      capel = 0.d0
-     dy112_con(:,:) = CONJG( dy112(:,:,isym) )
+     dy112_con(:,:) = conjg( dy112(:,:,isym) )
      DO m = 1, 6
         DO n = 1, 6
            capel = capel +  &
-           ABS(ZDOTU(6, dy112_con(1,m), 1, dy112(1,n,isym), 1)-delta(m,n))**2
-        END DO
-     END DO
-     IF (capel.gt.eps) CALL errore ('d_matrix_nc', &
+           abs(ZDOTU(6, dy112_con(1,m), 1, dy112(1,n,isym), 1)-delta(m,n))**2
+        ENDDO
+     ENDDO
+     IF (capel>eps) CALL errore ('d_matrix_nc', &
         'D_S (l=1) for this symmetry operation is not unitary',isym)
      !
      !  l = 2 block
      !
      capel = 0.d0
-     dy212_con(:,:)=CONJG(dy212(:,:,isym))
+     dy212_con(:,:)=conjg(dy212(:,:,isym))
      DO m = 1, 10
         DO n = 1, 10
            capel = capel +  &
-           ABS(ZDOTU(10, dy212_con(1,m), 1, dy212(1,n,isym), 1)-delta(m,n))**2
-        END DO
-     END DO
-     IF (capel.gt.eps) CALL errore ('d_matrix_nc', &
+           abs(ZDOTU(10, dy212_con(1,m), 1, dy212(1,n,isym), 1)-delta(m,n))**2
+        ENDDO
+     ENDDO
+     IF (capel>eps) CALL errore ('d_matrix_nc', &
         'D_S (l=2) for this symmetry operation is not unitary',isym)
      !
      !  l = 3 block
      !
      capel = 0.d0
-     dy312_con(:,:)=CONJG(dy312(:,:,isym))
+     dy312_con(:,:)=conjg(dy312(:,:,isym))
      DO m = 1, 14
         DO n = 1, 14
            capel = capel +  &
-           ABS(ZDOTU(14, dy312_con(1,m), 1, dy312(1,n,isym), 1)-delta(m,n))**2
-        END DO
-     END DO
-     IF (capel.gt.eps) CALL errore ('d_matrix_nc', &
+           abs(ZDOTU(14, dy312_con(1,m), 1, dy312(1,n,isym), 1)-delta(m,n))**2
+        ENDDO
+     ENDDO
+     IF (capel>eps) CALL errore ('d_matrix_nc', &
         'D_S (l=3) for this symmetry operation is not unitary',isym)
      !
-  END DO
+  ENDDO
   !
   RETURN
   !

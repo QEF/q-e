@@ -40,7 +40,7 @@ PROGRAM dos
   !    Gaussian broadening is used in all other cases:
   !    - if degauss is set to some value in namelist &inputpp, that value
   !      (and the optional value for ngauss) is used
-  !    - if degauss is NOT set to any value in namelist &inputpp, the 
+  !    - if degauss is NOT set to any value in namelist &inputpp, the
   !      value of degauss and of ngauss are read from the input data
   !      file (they will be the same used in the pw.x calculations)
   !    - if degauss is NOT set to any value in namelist &inputpp, AND
@@ -82,7 +82,7 @@ PROGRAM dos
      !   set default values for variables in namelist
      !
      CALL get_env( 'ESPRESSO_TMPDIR', outdir )
-     IF ( TRIM( outdir ) == ' ' ) outdir = './'
+     IF ( trim( outdir ) == ' ' ) outdir = './'
      prefix ='pwscf'
      fildos =' '
      Emin   =-1000000.d0
@@ -100,10 +100,10 @@ PROGRAM dos
      degauss1 = degauss
      ngauss1  = ngauss
      !
-  END IF
+  ENDIF
   !
   CALL mp_bcast( ios, ionode_id )
-  IF ( ios /= 0 ) CALL errore('dos','reading inputpp namelist',ABS(ios))
+  IF ( ios /= 0 ) CALL errore('dos','reading inputpp namelist',abs(ios))
   !
   ! ... Broadcast variables
   !
@@ -114,19 +114,19 @@ PROGRAM dos
   !
   IF ( ionode ) THEN
      !
-     IF (nks.NE.nkstot) &
+     IF (nks/=nkstot) &
         CALL errore ('dos', 'pools not implemented, or incorrect file read', 1)
      !
-     IF (degauss1.NE.0.d0) THEN
+     IF (degauss1/=0.d0) THEN
         degauss=degauss1
         ngauss =ngauss1
         WRITE( stdout,'(/5x,"Gaussian broadening (read from input): ",&
              &        "ngauss,degauss=",i4,f12.6/)') ngauss,degauss
-        ltetra=.FALSE.
-        lgauss=.TRUE.
-     ELSE IF (ltetra) THEN
+        ltetra=.false.
+        lgauss=.true.
+     ELSEIF (ltetra) THEN
         WRITE( stdout,'(/5x,"Tetrahedra used"/)')
-     ELSE IF (lgauss) THEN
+     ELSEIF (lgauss) THEN
         WRITE( stdout,'(/5x,"Gaussian broadening (read from file): ",&
              &        "ngauss,degauss=",i4,f12.6/)') ngauss,degauss
      ELSE
@@ -134,36 +134,36 @@ PROGRAM dos
         ngauss =0
         WRITE( stdout,'(/5x,"Gaussian broadening (default values): ",&
              &        "ngauss,degauss=",i4,f12.6/)') ngauss,degauss
-        ltetra=.FALSE.
-        lgauss=.TRUE.
-     END IF
+        ltetra=.false.
+        lgauss=.true.
+     ENDIF
      !
      ! find band extrema
      !
      Elw = et (1, 1)
      Eup = et (nbnd, 1)
      DO ik = 2, nks
-        Elw = MIN (Elw, et (1, ik) )
-        Eup = MAX (Eup, et (nbnd, ik) )
+        Elw = min (Elw, et (1, ik) )
+        Eup = max (Eup, et (nbnd, ik) )
      ENDDO
-     IF (degauss.NE.0.d0) THEN
+     IF (degauss/=0.d0) THEN
         Eup = Eup + 3.d0 * degauss
         Elw = Elw - 3.d0 * degauss
      ENDIF
      !
-     Emin=MAX(Emin/rytoev,Elw)
-     Emax=MIN(Emax/rytoev,Eup)
+     Emin=max(Emin/rytoev,Elw)
+     Emax=min(Emax/rytoev,Eup)
      DeltaE = DeltaE / rytoev
-     ndos = NINT ( (Emax - Emin) / DeltaE+0.500001d0)
+     ndos = nint ( (Emax - Emin) / DeltaE+0.500001d0)
      DOSint = 0.d0
      !
-     IF ( fildos == ' ' ) fildos = TRIM(prefix)//'.dos'
+     IF ( fildos == ' ' ) fildos = trim(prefix)//'.dos'
      OPEN (unit = 4, file = fildos, status = 'unknown', form = 'formatted')
-     IF (nspin.EQ.1.OR.nspin.EQ.4) THEN
+     IF (nspin==1.or.nspin==4) THEN
         WRITE(4,'("#  E (eV)   dos(E)     Int dos(E)")')
      ELSE
         WRITE(4,'("#  E (eV)   dosup(E)     dosdw(E)   Int dos(E)")')
-     END IF
+     ENDIF
      DO n= 1, ndos
         E = Emin + (n - 1) * DeltaE
         IF (ltetra) THEN
@@ -171,7 +171,7 @@ PROGRAM dos
         ELSE
            CALL dos_g(et,nspin,nbnd, nks,wk,degauss,ngauss, E, DOSofE)
         ENDIF
-        IF (nspin.EQ.1.OR.nspin.EQ.4) THEN
+        IF (nspin==1.or.nspin==4) THEN
            DOSint = DOSint + DOSofE (1) * DeltaE
            WRITE (4, '(f7.3,2e12.4)') E * rytoev, DOSofE(1)/rytoev, DOSint
         ELSE
@@ -182,7 +182,7 @@ PROGRAM dos
 
      CLOSE (unit = 4)
      !
-  END IF
+  ENDIF
   !
   CALL stop_pp
   !
