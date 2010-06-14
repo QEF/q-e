@@ -113,7 +113,7 @@ CONTAINS
   !         /
   !-----------------------------------------------------------------------
   SUBROUTINE gipaw_readin()
-    USE io_files,      ONLY : nd_nmbr, prefix, tmp_dir, diropn
+    USE io_files,      ONLY : nd_nmbr, prefix, tmp_dir
     USE io_global,     ONLY : ionode
     USE us,            ONLY : spline_ps
     IMPLICIT NONE
@@ -239,7 +239,8 @@ CONTAINS
     USE ldaU,             ONLY : lda_plus_U  
     USE klist,            ONLY : nks
     USE io_files,         ONLY : prefix, iunat, iunsat, iunwfc, iunigk, &
-                                 nwordwfc, nwordatwfc, tmp_dir, wfc_dir
+                                 nwordwfc, nwordatwfc, tmp_dir, wfc_dir,&
+                                 diropn
     USE noncollin_module, ONLY : npol
     USE mp_global,        ONLY : kunit
     USE buffers,          ONLY : open_buffer
