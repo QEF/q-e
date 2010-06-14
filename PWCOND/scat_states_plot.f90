@@ -229,7 +229,7 @@ SUBROUTINE scat_states_comp(nchan, nrzp, norb, nocros, taunew, vec, &
                        nl_2ds, nl_2d, korbl, korbr, funz0, kfunl, xyk, ikind, &
                        n2d, kvall
  USE realus_scatt
- USE pwcom,     ONLY : omega
+ USE cell_base, ONLY : omega
  USE gvect,     ONLY : nr1, nr2, nr3
  USE scf,       ONLY : rho
  USE uspp_param,ONLY : upf, nhm, nh 

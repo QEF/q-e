@@ -10,7 +10,7 @@ SUBROUTINE cond_out ()
   USE ions_base, ONLY: atm
   USE lsda_mod, ONLY: nspin
   USE noncollin_module, ONLY : noncolin, npol
-  USE spin_orb, ONLY : lspinorb
+  USE spin_orb, ONLY : lspinorb, domag
   USE cond
 
 !---------------------------

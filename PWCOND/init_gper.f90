@@ -12,7 +12,8 @@ subroutine init_gper(ik)
 !
   USE io_global,  ONLY :  stdout 
   USE noncollin_module, ONLY : npol
-  USE pwcom
+  USE cell_base,   ONLY : bg, tpiba, tpiba2
+  USE gvect,       ONLY : nr1, nr2
   USE cond  
   implicit none
   integer :: ipol, igper, icount, ik, k, ig, i, il, j, jl, iw 

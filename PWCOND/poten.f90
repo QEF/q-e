@@ -13,7 +13,9 @@ SUBROUTINE poten(vppot,nrz,z)
 ! This subroutine computes the 2D Fourier components of the
 ! local potential in each slab.
 !
-  USE pwcom
+  USE gvect, ONLY : nr1, nr2, nr3, nrxx, nrx1, nrx2, nrx3
+  USE constants, ONLY : tpi
+  USE cell_base, ONLY : at, bg
   USE scf, only : vltot, v
   USE noncollin_module, ONLY : noncolin, npol
   USE cond

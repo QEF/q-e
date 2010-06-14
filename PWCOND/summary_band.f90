@@ -11,7 +11,6 @@ subroutine summary_band(ik,ien)
 ! 
   USE io_global,  ONLY :  stdout
   USE noncollin_module, ONLY : npol
-  use pwcom
   use cond
   implicit none
 

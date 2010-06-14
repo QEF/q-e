@@ -21,7 +21,7 @@ subroutine compbs(lleft, nocros, norb, nchan, kval, kfun,  &
   USE spin_orb,  ONLY : lspinorb
   USE lsda_mod,  ONLY : nspin
   USE cond
-  USE pwcom,     ONLY : alat, at, omega
+  USE cell_base, ONLY : alat, at, omega
   USE ions_base, ONLY : nat, ityp
 
   implicit none

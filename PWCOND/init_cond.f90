@@ -17,11 +17,14 @@ subroutine init_cond (nregion, flag)
 !                the left lead/scat. reg./right lead/all of them
 !
   USE io_global, ONLY : stdout
-  USE pwcom
   USE noncollin_module, ONLY : noncolin, npol
   USE uspp_param, ONLY : upf, nbetam
   USE atom, ONLY: rgrid
   USE ions_base,  ONLY : atm, nat, ityp, ntyp => nsp, tau
+  USE cell_base,  ONLY : at, bg, omega, alat
+  USE ener,       ONLY : ef
+  USE gvect,      ONLY : nrx1, nrx2, nrx3, nr1, nr2, nr3, ecutwfc
+  USE gsmooth,    ONLY : nrx1s, nrx2s, nrx3s, nr1s, nr2s, nr3s
   USE cond 
 
   implicit none 
