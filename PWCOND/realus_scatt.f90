@@ -1,3 +1,11 @@
+!
+! Copyright (C) 2009 A. Smogunov 
+! This file is distributed under the terms of the
+! GNU General Public License. See the file `License'
+! in the root directory of the present distribution,
+! or http://www.gnu.org/copyleft/gpl.txt .
+!
+!
 MODULE realus_scatt
 !
 ! Some extra subroutines to the module realus 

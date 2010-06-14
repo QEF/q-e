@@ -1,3 +1,11 @@
+!
+! Copyright (C) 2009 A. Smogunov 
+! This file is distributed under the terms of the
+! GNU General Public License. See the file `License'
+! in the root directory of the present distribution,
+! or http://www.gnu.org/copyleft/gpl.txt .
+!
+!
 subroutine scat_states_plot(ik,ien,norb,nocros,nchan,vec,veceig,left_to_right)
 !
 ! Writes the the XY integrated and the 3D charge and spin densities of 
