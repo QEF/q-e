@@ -37,7 +37,11 @@ SUBROUTINE cond_out ()
 
   if(nspin.eq.4) then
     if(lspinorb) then
-      write(stdout,'(/,9x, ''Noncollinear calculations with spin-orbit'')')
+      IF (domag) THEN
+         WRITE( stdout, '(5X, "Noncollinear calculation with spin-orbit",/)')
+      ELSE
+         WRITE( stdout, '(5X, "Non magnetic calculation with spin-orbit",/)')
+      ENDIF
     else
       write(stdout,'(/,9x, ''Noncollinear calculations'')')
     endif

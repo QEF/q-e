@@ -17,11 +17,11 @@ SUBROUTINE do_cond(done)
   USE cell_base,  ONLY : at, bg, tpiba
   USE klist,      ONLY : npk, xk, two_fermi_energies
   USE ldaU,       ONLY : lda_plus_U
-  USE spin_orb,   ONLY : lspinorb
+  USE spin_orb,   ONLY : lspinorb, domag
   USE uspp,       ONLY: okvan
   USE symm_base,  ONLY: nsym, s, t_rev, time_reversal
-  USE io_files,   ONLY: outdir, tmp_dir, prefix,  trimcheck
   USE cond 
+  USE io_files,   ONLY: outdir, tmp_dir, prefix,  trimcheck
   !!! RECOVER
   USE cond_restart
   USE input_parameters, ONLY: max_seconds
@@ -343,7 +343,7 @@ endif
 IF (lda_plus_u) call errore('do_cond','PWCOND not working with LDA+U',1)
 
 IF (nkpts==0) THEN
-   time_reversal = .NOT. noncolin
+   time_reversal = .NOT. (noncolin .AND. domag)
    IF (ionode) THEN
       CALL kpoint_grid( nsym, time_reversal, s, t_rev, bg, npk, &
                         k1ts, k2ts, 0, nk1ts, nk2ts, 1, nkpts, xk, wkpt )
