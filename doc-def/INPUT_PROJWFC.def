@@ -78,6 +78,15 @@ input_description -distribution {Quantum Espresso} -package PWscf -program projw
 	    }
 	}
 
+	var kresolveddos -type LOGICAL {
+	    default { .false. }
+            info {
+		if .true. the k-resolved DOS is computed: not summed over
+                all k-points but written as a function of the k-point index.
+                In this case all k-point weights are set to unity
+	    }
+	}
+
 	var tdosinboxes -type LOGICAL {
 	    default { .false. }
             info {
@@ -170,6 +179,10 @@ input_description -distribution {Quantum Espresso} -package PWscf -program projw
 		In this case the format is:
 		    E LDOS(E) PDOS_1(E) ... PDOS_2j+1(E)
 		    ...
+
+                If kresolveddos=.true., the k-point index is prepended
+                to the formats above, e.g. (collinear, spin-unpolarized case)
+                    ik E DOS(E) PDOS(E)
 
 		All DOS(E) are in states/eV plotted vs E in eV
 	    }
