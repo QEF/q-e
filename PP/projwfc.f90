@@ -1417,7 +1417,11 @@ SUBROUTINE  partialdos (Emin, Emax, DeltaE, kresolveddos, filpdos)
   ne = nint ( (Emax - Emin) / DeltaE+0.500001d0)
   !
   IF (kresolveddos) THEN
-     nkseff=nkstot
+     IF ( nspin==2 ) THEN
+        nkseff=nkstot/2
+     ELSE
+        nkseff=nkstot
+     ENDIF
   ELSE
      nkseff=1
   ENDIF
@@ -1436,8 +1440,14 @@ SUBROUTINE  partialdos (Emin, Emax, DeltaE, kresolveddos, filpdos)
      IF (kresolveddos) THEN
         ! set equal weight to all k-points
         wkeff=1.D0
-        ikeff=ik
+        !
+        IF (( nspin==2 ).AND.( isk(ik)==2 )) THEN
+           ikeff=ik-nkstot/2
+        ELSE
+           ikeff=ik
+        ENDIF
      ELSE
+        ! use true weights
         wkeff=wk(ik)
         ! contributions from all k-points are summed in pdos(:,:,:,ikeff)
         ikeff=1
@@ -1646,17 +1656,18 @@ SUBROUTINE  partialdos_nc (Emin, Emax, DeltaE, kresolveddos, filpdos)
   DeltaE = DeltaE/rytoev
   ne = nint ( (Emax - Emin) / DeltaE+0.500001d0)
   !
+  IF (lspinorb) THEN
+     nspin0 = 1
+  ELSE
+     nspin0 = 2
+  ENDIF
+  !
   IF (kresolveddos) THEN
      nkseff=nkstot
   ELSE
      nkseff=1
   ENDIF
   !
-  IF (lspinorb) THEN
-     nspin0 = 1
-  ELSE
-     nspin0 = 2
-  ENDIF
   ALLOCATE (pdos(0:ne,natomwfc,nspin0,nkseff))
   ALLOCATE (dostot(0:ne,nkseff), pdostot(0:ne,nspin0,nkseff), ldos(0:ne,nspin0,nkseff) )
   pdos(:,:,:,:) = 0.d0
@@ -3257,16 +3268,20 @@ SUBROUTINE partialdos_boxes(Emin, Emax, DeltaE, kresolveddos, filpdos, n_proj_bo
   DeltaE = DeltaE/rytoev
   ne = nint ( (Emax - Emin) / DeltaE+0.500001d0)
   !
-  IF (kresolveddos) THEN
-     nkseff=nkstot
-  ELSE
-     nkseff=1
-  ENDIF
-  !
   IF (nspin==2) THEN
      nspin0 = 2
   ELSE
      nspin0 = 1
+  ENDIF
+  !
+  IF (kresolveddos) THEN
+     IF ( nspin==2 ) THEN
+        nkseff=nkstot/2
+     ELSE
+        nkseff=nkstot
+     ENDIF
+  ELSE
+     nkseff=1
   ENDIF
   !
   ALLOCATE (dosbox(0:ne,1:n_proj_boxes,nspin0,nkseff))
@@ -3282,8 +3297,14 @@ SUBROUTINE partialdos_boxes(Emin, Emax, DeltaE, kresolveddos, filpdos, n_proj_bo
      IF (kresolveddos) THEN
         ! set equal weight to all k-points
         wkeff=1.D0
-        ikeff=ik
+        !
+        IF (( nspin==2 ).AND.( isk(ik)==2 )) THEN
+           ikeff=ik-nkstot/2
+        ELSE
+           ikeff=ik
+        ENDIF
      ELSE
+        ! use true weights
         wkeff=wk(ik)
         ! contributions from all k-points are summed in pdos(:,:,:,ikeff)
         ikeff=1
