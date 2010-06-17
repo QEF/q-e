@@ -35,7 +35,7 @@ SUBROUTINE read_file()
   USE scf,                  ONLY : rho, rho_core, rhog_core, v
   USE wavefunctions_module, ONLY : psic
   USE vlocal,               ONLY : strf
-  USE io_files,             ONLY : tmp_dir, prefix, iunpun, nwordwfc, iunwfc, qexml_version
+  USE io_files,             ONLY : tmp_dir, prefix, iunpun, nwordwfc, iunwfc
   USE buffers,              ONLY : open_buffer, close_buffer
   USE uspp_param,           ONLY : upf
   USE noncollin_module,     ONLY : noncolin, npol, nspin_lsda, nspin_mag, nspin_gga

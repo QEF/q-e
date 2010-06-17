@@ -437,8 +437,6 @@ MODULE pw_restart
          !
          CALL iotk_write_begin( iunpun, "BAND_STRUCTURE_INFO" )
          !
-         CALL iotk_write_dat  ( iunpun, "NUMBER_OF_BANDS", nbnd )
-         !
          CALL iotk_write_dat  ( iunpun, "NUMBER_OF_K-POINTS", num_k_points )
          !
          CALL iotk_write_dat  ( iunpun, "NUMBER_OF_SPIN_COMPONENTS", nspin )
@@ -447,7 +445,21 @@ MODULE pw_restart
          !
          CALL iotk_write_dat  ( iunpun, "NUMBER_OF_ATOMIC_WFC", natomwfc )
          !
-         CALL iotk_write_dat  ( iunpun, "NUMBER_OF_ELECTRONS", nelec )
+         IF ( nspin == 2 ) THEN
+            ! Compatibility with CP
+            CALL iotk_write_attr( attr, "UP", nbnd, FIRST = .TRUE. )
+            CALL iotk_write_attr( attr, "DW", nbnd )
+            CALL iotk_write_dat( iunpun, &
+                                 "NUMBER_OF_BANDS", nbnd, ATTR = attr )
+            CALL iotk_write_attr( attr, "UP", NINT(nelup), FIRST = .TRUE. )
+            CALL iotk_write_attr( attr, "DW", NINT(neldw) )
+            CALL iotk_write_dat( iunpun, &
+                                 "NUMBER_OF_ELECTRONS", nelec, ATTR = attr )
+         ELSE
+         !
+            CALL iotk_write_dat  ( iunpun, "NUMBER_OF_BANDS", nbnd )
+            CALL iotk_write_dat  ( iunpun, "NUMBER_OF_ELECTRONS", nelec )
+         END IF
          !
          CALL iotk_write_attr ( attr, "UNITS", "2 pi / a", FIRST = .TRUE. )
          CALL iotk_write_empty( iunpun, "UNITS_FOR_K-POINTS", ATTR = attr )
