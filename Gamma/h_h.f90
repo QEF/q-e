@@ -7,50 +7,50 @@
 !
 !
 !-----------------------------------------------------------------------
-subroutine H_h(e,h,Ah)
+SUBROUTINE H_h(e,h,Ah)
   !-----------------------------------------------------------------------
   !
-  USE kinds, only: DP
+  USE kinds, ONLY: DP
   USE wvfct, ONLY: nbnd, npwx, npw, g2kin, igk
   USE gvect, ONLY : gstart
   USE uspp,     ONLY : vkb, nkb
   USE lsda_mod, ONLY : current_spin
   USE scf,      ONLY : vrs
-  use becmod, only: bec_type, becp, calbec
-  use cgcom
+  USE becmod, ONLY: bec_type, becp, calbec
+  USE cgcom
   !
-  implicit none
+  IMPLICIT NONE
   !
   real(DP):: e(nbnd)
-  complex(DP):: h(npwx,nbnd), Ah(npwx,nbnd)
+  COMPLEX(DP):: h(npwx,nbnd), Ah(npwx,nbnd)
   !
-  integer:: j,ibnd
+  INTEGER:: j,ibnd
   !
-  call start_clock('h_h')
+  CALL start_clock('h_h')
   !
   ! [(k+G)^2 - e ]psi
-  do ibnd = 1,nbnd
+  DO ibnd = 1,nbnd
      ! set to zero the imaginary part of h at G=0
      !  needed for numerical stability
-     if (gstart==2) h(1,ibnd) = CMPLX( DBLE(h(1,ibnd)),0.d0,kind=DP)
-     do j = 1,npw
+     IF (gstart==2) h(1,ibnd) = cmplx( dble(h(1,ibnd)),0.d0,kind=DP)
+     DO j = 1,npw
         ah(j,ibnd) = (g2kin(j)-e(ibnd)) * h(j,ibnd)
-     end do
-  end do
+     ENDDO
+  ENDDO
   ! V_Loc psi
-  call vloc_psi_gamma(npwx, npw, nbnd, h, vrs(1,current_spin), ah)
+  CALL vloc_psi_gamma(npwx, npw, nbnd, h, vrs(1,current_spin), ah)
   ! V_NL psi
-   call calbec  ( npw, vkb, h, becp )
-  if (nkb > 0) call add_vuspsi (npwx, npw, nbnd, ah)
+   CALL calbec  ( npw, vkb, h, becp )
+  IF (nkb > 0) CALL add_vuspsi (npwx, npw, nbnd, ah)
   ! set to zero the imaginary part of ah at G=0
   !  needed for numerical stability
-  if (gstart==2) then
-     do ibnd = 1, nbnd
-        ah(1,ibnd) = CMPLX( DBLE(ah(1,ibnd)),0.d0,kind=DP)
-     end do
-  end if
+  IF (gstart==2) THEN
+     DO ibnd = 1, nbnd
+        ah(1,ibnd) = cmplx( dble(ah(1,ibnd)),0.d0,kind=DP)
+     ENDDO
+  ENDIF
   !
-  call stop_clock('h_h')
+  CALL stop_clock('h_h')
   !
-  return
-end subroutine H_h
+  RETURN
+END SUBROUTINE H_h

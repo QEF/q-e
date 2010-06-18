@@ -6,37 +6,37 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !---------------------------------------------------------------------
-subroutine dvb_cc (nlcc,npseu,ngm,nr1,nr2,nr3,nrx1,nrx2,nrx3,  &
+SUBROUTINE dvb_cc (nlcc,npseu,ngm,nr1,nr2,nr3,nrx1,nrx2,nrx3,  &
      nl,igtongl,rho_core,dmuxc,ga,aux,dvb_nlcc)
   !---------------------------------------------------------------------
   ! calculate the core-correction contribution to Delta V bare
   !
-  implicit none
-  integer:: npseu,ngm,nr1,nr2,nr3,nrx1,nrx2,nrx3,np,ng,i
-  logical :: nlcc(npseu)
-  integer :: nl(ngm), igtongl(ngm)
+  IMPLICIT NONE
+  INTEGER:: npseu,ngm,nr1,nr2,nr3,nrx1,nrx2,nrx3,np,ng,i
+  LOGICAL :: nlcc(npseu)
+  INTEGER :: nl(ngm), igtongl(ngm)
   real(8) :: rho_core(*), dmuxc(nrx1*nrx2*nrx3)
-  complex(8) :: ga(ngm), dvb_nlcc(ngm), aux(nrx1*nrx2*nrx3)
+  COMPLEX(8) :: ga(ngm), dvb_nlcc(ngm), aux(nrx1*nrx2*nrx3)
   !
-  do np=1,npseu
-     if(nlcc(np)) go to 10
-  end do
-  return
-10 continue
+  DO np=1,npseu
+     IF(nlcc(np)) GOTO 10
+  ENDDO
+  RETURN
+10 CONTINUE
   !
   aux(:) = (0.d0, 0.d0)
-  do ng=1,ngm
+  DO ng=1,ngm
      aux(nl(ng)) = ga(ng) * rho_core(igtongl(ng))
-  end do
-  call cft3(aux,nr1,nr2,nr3,nrx1,nr2,nr3,1)
+  ENDDO
+  CALL cft3(aux,nr1,nr2,nr3,nrx1,nr2,nr3,1)
   !
   aux(:) = aux(:) * dmuxc(:)
   !
-  call cft3(aux,nr1,nr2,nr3,nrx1,nr2,nr3,-1)
-  do ng=1,ngm
+  CALL cft3(aux,nr1,nr2,nr3,nrx1,nr2,nr3,-1)
+  DO ng=1,ngm
      dvb_nlcc(ng) = aux(nl(ng))
-  end do
+  ENDDO
   !
-  return
-end subroutine dvb_cc
+  RETURN
+END SUBROUTINE dvb_cc
 

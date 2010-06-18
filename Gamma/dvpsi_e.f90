@@ -7,145 +7,145 @@
 !
 !
 !----------------------------------------------------------------------
-subroutine dvpsi_e(kpoint,ipol)
+SUBROUTINE dvpsi_e(kpoint,ipol)
   !----------------------------------------------------------------------
   !
   ! Calculates x * psi_k  for each k-points and for the 3 polarizations
   ! Requires on input: vkb, evc, igk
   !
   USE ions_base, ONLY : ntyp => nsp, nat, ityp
-  USE kinds, only: DP
-  use pwcom
+  USE kinds, ONLY: DP
+  USE pwcom
   USE uspp, ONLY: nkb, vkb, dvan
   USE uspp_param, ONLY: nh
   USE wavefunctions_module,  ONLY: evc
   USE becmod, ONLY: bec_type, becp, calbec, allocate_bec_type, deallocate_bec_type
-  use cgcom
+  USE cgcom
   !
-  implicit none
-  integer :: kpoint, ipol
-  integer :: i,l, na,nt, ibnd,jbnd, info, ih,jkb, iter
+  IMPLICIT NONE
+  INTEGER :: kpoint, ipol
+  INTEGER :: i,l, na,nt, ibnd,jbnd, info, ih,jkb, iter
   real(DP) :: upol(3,3)
-  real(DP), allocatable :: gk(:,:), q(:), overlap(:,:), &
+  real(DP), ALLOCATABLE :: gk(:,:), q(:), overlap(:,:), &
        becp_(:,:), dbec(:,:), dbec_(:,:)
-  complex(DP), allocatable :: dvkb(:,:), dvkb1(:,:), work(:,:), &
+  COMPLEX(DP), ALLOCATABLE :: dvkb(:,:), dvkb1(:,:), work(:,:), &
        &           gr(:,:), h(:,:)
-  logical:: precondition, orthonormal,startwith0
-  external H_h
+  LOGICAL:: precondition, orthonormal,startwith0
+  EXTERNAL H_h
   data upol /1.0d0,0.0d0,0.0d0, 0.0d0,1.0d0,0.0d0, 0.0d0,0.0d0,1.0d0/
   !
-  call start_clock('dvpsi_e')
+  CALL start_clock('dvpsi_e')
   !
   !   becp contains <beta|psi> - used in H_h
   !
-  call allocate_bec_type ( nkb, nbnd, becp )
-  allocate ( gk   ( 3, npwx) )
-  allocate ( dvkb ( npwx, nkb) )
-  allocate ( dvkb1( npwx, nkb) )
-  allocate ( becp_(nkb,nbnd), dbec ( nkb, nbnd), dbec_(nkb, nbnd) )
+  CALL allocate_bec_type ( nkb, nbnd, becp )
+  ALLOCATE ( gk   ( 3, npwx) )
+  ALLOCATE ( dvkb ( npwx, nkb) )
+  ALLOCATE ( dvkb1( npwx, nkb) )
+  ALLOCATE ( becp_(nkb,nbnd), dbec ( nkb, nbnd), dbec_(nkb, nbnd) )
   !
-  do i = 1,npw
+  DO i = 1,npw
      gk(1,i) = (xk(1,kpoint)+g(1,igk(i)))*tpiba
      gk(2,i) = (xk(2,kpoint)+g(2,igk(i)))*tpiba
      gk(3,i) = (xk(3,kpoint)+g(3,igk(i)))*tpiba
      g2kin(i)= gk(1,i)**2 + gk(2,i)**2 + gk(3,i)**2
-  end do
+  ENDDO
   !
   !  this is  the kinetic contribution to [H,x]:  -2i (k+G)_ipol * psi
   !
-  do ibnd = 1,nbnd
-     do i = 1,npw
+  DO ibnd = 1,nbnd
+     DO i = 1,npw
         dpsi(i,ibnd) = gk(ipol,i)*(0.0d0,-2.0d0) * evc(i,ibnd)
-     end do
-  end do
+     ENDDO
+  ENDDO
   !
-  do i = 1,npw
-     if (g2kin(i).gt.1.0d-10) then
+  DO i = 1,npw
+     IF (g2kin(i)>1.0d-10) THEN
         gk(1,i) = gk(1,i)/sqrt(g2kin(i))
         gk(2,i) = gk(2,i)/sqrt(g2kin(i))
         gk(3,i) = gk(3,i)/sqrt(g2kin(i))
-     endif
-  end do
+     ENDIF
+  ENDDO
   !
   ! and these are the contributions from nonlocal pseudopotentials
   ! ( upol(3,3) are the three unit vectors along x,y,z)
   !
-  call gen_us_dj(kpoint,dvkb)
-  call gen_us_dy(kpoint,upol(1,ipol),dvkb1)
+  CALL gen_us_dj(kpoint,dvkb)
+  CALL gen_us_dy(kpoint,upol(1,ipol),dvkb1)
   !
-  do jkb = 1, nkb
-     do i = 1,npw
+  DO jkb = 1, nkb
+     DO i = 1,npw
         dvkb(i,jkb) =(0.d0,-1.d0)*(dvkb1(i,jkb) + dvkb(i,jkb)*gk(ipol,i))
-     end do
-  end do
+     ENDDO
+  ENDDO
   !
-  call calbec ( npw,  vkb, evc,  becp )
-  call calbec ( npw, dvkb, evc,  dbec )
+  CALL calbec ( npw,  vkb, evc,  becp )
+  CALL calbec ( npw, dvkb, evc,  dbec )
   !
   jkb = 0
-  do nt=1, ntyp
-     do na = 1,nat
-        if (nt.eq.ityp(na)) then
-           do ih=1,nh(nt)
+  DO nt=1, ntyp
+     DO na = 1,nat
+        IF (nt==ityp(na)) THEN
+           DO ih=1,nh(nt)
               jkb=jkb+1
-              do ibnd = 1,nbnd
+              DO ibnd = 1,nbnd
                  dbec_(jkb,ibnd) = dbec(jkb,ibnd)*dvan(ih,ih,nt)
                  becp_(jkb,ibnd) =becp%r(jkb,ibnd)*dvan(ih,ih,nt)
-              enddo
-           end do
-        end if
-     end do
-  end do
+              ENDDO
+           ENDDO
+        ENDIF
+     ENDDO
+  ENDDO
   !
-  if (jkb.ne.nkb) call errore('dvpsi_e','unexpected error',1)
+  IF (jkb/=nkb) CALL errore('dvpsi_e','unexpected error',1)
   !
-  call dgemm ('N', 'N', 2*npw, nbnd, nkb,-1.d0, vkb, &
+  CALL dgemm ('N', 'N', 2*npw, nbnd, nkb,-1.d0, vkb, &
        2*npwx, dbec_, nkb, 1.d0, dpsi, 2*npwx)
-  call dgemm ('N', 'N', 2*npw, nbnd, nkb, 1.d0,dvkb, &
+  CALL dgemm ('N', 'N', 2*npw, nbnd, nkb, 1.d0,dvkb, &
        2*npwx, becp_, nkb, 1.d0, dpsi, 2*npwx)
   !
-  deallocate(dbec, dbec_, becp_)
-  deallocate(dvkb1)
-  deallocate(dvkb)
-  deallocate(gk)
+  DEALLOCATE(dbec, dbec_, becp_)
+  DEALLOCATE(dvkb1)
+  DEALLOCATE(dvkb)
+  DEALLOCATE(gk)
   !
   !   dpsi contains now [H,x] psi_v  for the three cartesian polarizations.
   !   Now solve the linear systems (H-e_v)*(x*psi_v) = [H,x]*psi_v
   !
-  allocate  ( overlap( nbnd, nbnd))    
-  allocate  ( work( npwx, nbnd))    
-  allocate  ( gr( npwx, nbnd))    
-  allocate  ( h ( npwx, nbnd))    
-  allocate  ( q ( npwx))    
+  ALLOCATE  ( overlap( nbnd, nbnd))
+  ALLOCATE  ( work( npwx, nbnd))
+  ALLOCATE  ( gr( npwx, nbnd))
+  ALLOCATE  ( h ( npwx, nbnd))
+  ALLOCATE  ( q ( npwx))
   !
   orthonormal = .false.
   precondition= .true.
   !
-  if (precondition) then
-     do i = 1,npw
+  IF (precondition) THEN
+     DO i = 1,npw
         q(i) = 1.0d0/max(1.d0,g2kin(i))
-     end do
-     call zvscal(npw,npwx,nbnd,q,evc,work)
-     call calbec ( npw, work, evc, overlap )
-     call DPOTRF('U',nbnd,overlap,nbnd,info)
-     if (info.ne.0) call errore('solve_ph','cannot factorize',info)
-  end if
+     ENDDO
+     CALL zvscal(npw,npwx,nbnd,q,evc,work)
+     CALL calbec ( npw, work, evc, overlap )
+     CALL DPOTRF('U',nbnd,overlap,nbnd,info)
+     IF (info/=0) CALL errore('solve_ph','cannot factorize',info)
+  ENDIF
   !
   startwith0= .true.
   dvpsi(:,:) = (0.d0, 0.d0)
   !
-  call cgsolve (H_h,npw,evc,npwx,nbnd,overlap,nbnd,   &
+  CALL cgsolve (H_h,npw,evc,npwx,nbnd,overlap,nbnd,   &
        orthonormal,precondition,q,startwith0,et(1,kpoint),&
        dpsi,gr,h,dpsi,work,niter_ph,tr2_ph,iter,dvpsi)
   !
-  deallocate(q)
-  deallocate(h)
-  deallocate(gr)
-  deallocate(work)
-  deallocate(overlap)
-  call deallocate_bec_type ( becp )
+  DEALLOCATE(q)
+  DEALLOCATE(h)
+  DEALLOCATE(gr)
+  DEALLOCATE(work)
+  DEALLOCATE(overlap)
+  CALL deallocate_bec_type ( becp )
   !
-  call stop_clock('dvpsi_e')
+  CALL stop_clock('dvpsi_e')
   !
-  return
-end subroutine dvpsi_e
+  RETURN
+END SUBROUTINE dvpsi_e

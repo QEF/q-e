@@ -7,23 +7,23 @@
 !
 !
 !----------------------------------------------------------------------
-subroutine macro
+SUBROUTINE macro
   !----------------------------------------------------------------------
   !
-  use pwcom
-  use cgcom
+  USE pwcom
+  USE cgcom
   !
-  implicit none
-  integer:: kpoint, ipol
-  character(len=7) :: filbar
-  logical :: here
+  IMPLICIT NONE
+  INTEGER:: kpoint, ipol
+  CHARACTER(len=7) :: filbar
+  LOGICAL :: here
   !
-  do kpoint=1,nks
+  DO kpoint=1,nks
      ! NB: this version works only for nks = 1 !
-     do ipol=1,3
-        write(filbar,'("filbar",i1)') ipol
+     DO ipol=1,3
+        WRITE(filbar,'("filbar",i1)') ipol
         iubar=ipol
-        call seqopn (iubar,filbar,'unformatted',here)
+        CALL seqopn (iubar,filbar,'unformatted',here)
 !!!            if (.not.here) then
         ! calculate x * psi  (if not already done)
         dvpsi(:,:) = (0.d0, 0.d0)
@@ -31,13 +31,13 @@ subroutine macro
         ! otherwise restart from x * psi that is present on from file
 !!!               read(iubar) dvpsi
 !!!            end if
-        call dvpsi_e(kpoint,ipol)
+        CALL dvpsi_e(kpoint,ipol)
         ! write x * psi
-        rewind(iubar)
-        write(iubar) dvpsi
-        close(unit=iubar,status='keep')
-     end do
-  end do
+        REWIND(iubar)
+        WRITE(iubar) dvpsi
+        CLOSE(unit=iubar,status='keep')
+     ENDDO
+  ENDDO
   !
-  return
-end subroutine macro
+  RETURN
+END SUBROUTINE macro

@@ -30,7 +30,7 @@ SUBROUTINE solve_ph ( )
   !
   CALL start_clock('solve_ph')
   !
-  call allocate_bec_type ( nkb, nbnd, becp )
+  CALL allocate_bec_type ( nkb, nbnd, becp )
   ALLOCATE ( diag( npwx) )
   ALLOCATE ( overlap( nbnd, nbnd) )
   ALLOCATE ( work( npwx, nbnd) )
@@ -42,61 +42,61 @@ SUBROUTINE solve_ph ( )
      g2kin(i) = ( (xk(1,kpoint)+g(1,igk(i)))**2 +                   &
                   (xk(2,kpoint)+g(2,igk(i)))**2 +                   &
                   (xk(3,kpoint)+g(3,igk(i)))**2 ) * tpiba2
-  END DO
+  ENDDO
   !
-  orthonormal = .FALSE.
-  precondition= .TRUE.
+  orthonormal = .false.
+  precondition= .true.
   !
   IF (precondition) THEN
      DO i = 1,npw
-        diag(i) = 1.0d0/MAX(1.d0,g2kin(i))
-     END DO
+        diag(i) = 1.0d0/max(1.d0,g2kin(i))
+     ENDDO
      CALL zvscal(npw,npwx,nbnd,diag,evc,work)
      CALL calbec (npw, work, evc, overlap)
      CALL DPOTRF('U',nbnd,overlap,nbnd,info)
-     IF (info.NE.0) CALL errore('solve_ph','cannot factorize',info)
-  END IF
+     IF (info/=0) CALL errore('solve_ph','cannot factorize',info)
+  ENDIF
   !
   WRITE( stdout,'(/" ***  Starting Conjugate Gradient minimization",   &
        &            9x,"***")')
   !
   !  check if a restart file exists
   !
-  if (recover) THEN
+  IF (recover) THEN
      CALL seqopn( iunres, 'restartph', 'FORMATTED', exst )
-     IF (.NOT. exst) GO TO 1
+     IF (.not. exst) GOTO 1
      READ (iunres,*,err=1,END=1) mode_done
      READ (iunres,*,err=1,END=1) dyn
      CLOSE(unit=iunres)
      PRINT '("  Phonon: modes up to mode ",i3," already done")', mode_done
-     go to 2
+     GOTO 2
 1    CLOSE(unit=iunres)
-  END IF
+  ENDIF
   !  initialisation if not restarting from previous calculation
   CALL  dynmat_init
   mode_done=0
 2 CONTINUE
   !
   DO nu = 1, nmodes
-     IF ( has_equivalent((nu-1)/3+1).EQ.1) THEN
+     IF ( has_equivalent((nu-1)/3+1)==1) THEN
         ! calculate only independent modes
         WRITE( stdout,'(" ***  mode # ",i3," : using symmetry")') nu
         GOTO 10
-     END IF
-     IF ( nu.LE.mode_done) THEN
+     ENDIF
+     IF ( nu<=mode_done) THEN
         ! do not recalculate modes already done
         WRITE( stdout,'(" ***  mode # ",i3," : using previous run")') nu
         GOTO 10
-     END IF
-     IF ( asr .AND. (nu-1)/3+1.EQ.nasr ) THEN
+     ENDIF
+     IF ( asr .and. (nu-1)/3+1==nasr ) THEN
         ! impose ASR on last atom instead of calculating mode
         WRITE( stdout,'(" ***  mode # ",i3," : using asr")') nu
         GOTO 10
-     END IF
+     ENDIF
      ! calculate |b> = dV/dtau*psi
      CALL dvpsi_kb(kpoint,nu)
      ! initialize delta psi
-     startwith0=.TRUE.
+     startwith0=.true.
      dpsi(:,:) = (0.d0, 0.d0)
      ! solve the linear system
      ! NB: dvpsi is used also as work space and is destroyed by cgsolve
@@ -115,19 +115,19 @@ SUBROUTINE solve_ph ( )
         WRITE(iunres,*) dyn
         CLOSE(unit=iunres)
         !
-     END IF
+     ENDIF
      !
      WRITE( stdout,'(" ***  mode # ",i3," : ",i3," iterations")')  &
           &          nu, iter
 10   CONTINUE
-  END DO
+  ENDDO
   !
   DEALLOCATE(h)
   DEALLOCATE(gr)
   DEALLOCATE(overlap)
   DEALLOCATE(work)
   DEALLOCATE(diag)
-  call deallocate_bec_type (becp)
+  CALL deallocate_bec_type (becp)
   !
   CALL stop_clock('solve_ph')
   !
@@ -149,18 +149,18 @@ SUBROUTINE set_asr(nat,nasr,dyn)
   INTEGER na, nb, i,j
   REAL(8) :: sum
 
-  IF (nasr.LE.0 .OR. nasr.GT.nat) RETURN
+  IF (nasr<=0 .or. nasr>nat) RETURN
   DO j=1,3
      DO i=1,3
         DO nb=1,nat
            sum=0.d0
            DO na=1,nat
-              IF (na.NE.nasr) sum = sum + dyn(3*(na-1)+i,3*(nb-1)+j)
-           END DO
+              IF (na/=nasr) sum = sum + dyn(3*(na-1)+i,3*(nb-1)+j)
+           ENDDO
            dyn(3*(nasr-1)+i,3*(nb-1)+j)= -sum
-        END DO
-     END DO
-  END DO
+        ENDDO
+     ENDDO
+  ENDDO
 
   RETURN
 END SUBROUTINE set_asr

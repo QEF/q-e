@@ -6,50 +6,50 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 
-subroutine writedyn ( )
+SUBROUTINE writedyn ( )
   !
   USE ions_base, ONLY : nat, tau, ityp, ntyp => nsp, atm, amass
   USE printout_base, ONLY : title
-  use cgcom
-  use pwcom
-  implicit none
-  integer :: iudyn, nt, na, nb, i, j
+  USE cgcom
+  USE pwcom
+  IMPLICIT NONE
+  INTEGER :: iudyn, nt, na, nb, i, j
   !
   iudyn = 20
-  open(unit=iudyn,file=fildyn,form='formatted',status='unknown')
+  OPEN(unit=iudyn,file=fildyn,form='formatted',status='unknown')
   !
   !  write the dynamical matrix on on file
   !
-  write(iudyn,'(a)') title
-  write(iudyn,'(a)') title_ph
-  write(iudyn,'(i3,i5,i3,6f11.7)') ntyp,nat,ibrav,celldm
-  do nt = 1,ntyp
-     write(iudyn,*) nt," '",atm(nt),"' ",amass(nt)
-  end do
-  do na=1,nat
-     write(iudyn,'(2i5,3f15.7)') na,ityp(na),(tau(j,na),j=1,3)
-  end do
-  write (iudyn, '(/,5x,"Dynamical  Matrix in cartesian axes", &
+  WRITE(iudyn,'(a)') title
+  WRITE(iudyn,'(a)') title_ph
+  WRITE(iudyn,'(i3,i5,i3,6f11.7)') ntyp,nat,ibrav,celldm
+  DO nt = 1,ntyp
+     WRITE(iudyn,*) nt," '",atm(nt),"' ",amass(nt)
+  ENDDO
+  DO na=1,nat
+     WRITE(iudyn,'(2i5,3f15.7)') na,ityp(na),(tau(j,na),j=1,3)
+  ENDDO
+  WRITE (iudyn, '(/,5x,"Dynamical  Matrix in cartesian axes", &
        &         //,5x,"q = ( ",3f14.9," ) ",/)') 0.0d0,0.0d0,0.0d0
-  do na = 1, nat
-     do nb = 1, nat
-        write(iudyn, '(2i3)') na, nb
-        write(iudyn,'(3e24.12)') &
+  DO na = 1, nat
+     DO nb = 1, nat
+        WRITE(iudyn, '(2i3)') na, nb
+        WRITE(iudyn,'(3e24.12)') &
              ( (dyn(3*(na-1)+i,3*(nb-1)+j),0.d0,j=1,3),i=1,3)
-     end do
-  end do
+     ENDDO
+  ENDDO
   !
   !   as above, for dielectric tensor and effective charges
   !
-  if (epsil) then
-     write (iudyn, '(/,5x,"Dielectric Tensor:",/)')
-     write (iudyn, '(3e24.12)') ( (epsilon0(i,j) , j=1,3), i=1,3)
-     write (iudyn, '(/5x, "Effective Charges E-U: Z_{alpha}{s,beta}",/)')
-     do na = 1,nat
-        write (iudyn, '(5x,"atom # ",i4)') na
-        write (iudyn, '(3e24.12)') ( (zstar (i,j, na),j=1,3),i=1,3)
-     end do
-  end if
-  close (unit=iudyn)
-  return
-end subroutine writedyn
+  IF (epsil) THEN
+     WRITE (iudyn, '(/,5x,"Dielectric Tensor:",/)')
+     WRITE (iudyn, '(3e24.12)') ( (epsilon0(i,j) , j=1,3), i=1,3)
+     WRITE (iudyn, '(/5x, "Effective Charges E-U: Z_{alpha}{s,beta}",/)')
+     DO na = 1,nat
+        WRITE (iudyn, '(5x,"atom # ",i4)') na
+        WRITE (iudyn, '(3e24.12)') ( (zstar (i,j, na),j=1,3),i=1,3)
+     ENDDO
+  ENDIF
+  CLOSE (unit=iudyn)
+  RETURN
+END SUBROUTINE writedyn

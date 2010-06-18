@@ -7,7 +7,7 @@
 !
 !
 !-----------------------------------------------------------------------
-subroutine generate_dynamical_matrix   &
+SUBROUTINE generate_dynamical_matrix   &
      (nat, nsym, s, invs, irt, at, bg, n_diff_sites, equiv_atoms, &
      has_equivalent, dyn)
   !-----------------------------------------------------------------------
@@ -15,106 +15,106 @@ subroutine generate_dynamical_matrix   &
   !  generate the complete dynamical matrix from independent modes only
   !  Input: dyn = irreducible dyn.mat.  Output: dyn = complete dyn.mat.
   !
-  USE kinds, only : DP
-  USE symme, only : crys_to_cart, cart_to_crys
-  implicit none
-  integer :: nat, nsym, n_diff_sites, irt(48,nat), invs(48), &
+  USE kinds, ONLY : DP
+  USE symme, ONLY : crys_to_cart, cart_to_crys
+  IMPLICIT NONE
+  INTEGER :: nat, nsym, n_diff_sites, irt(48,nat), invs(48), &
        equiv_atoms(nat,nat), s(3,3,48),  has_equivalent(nat)
   real(DP) :: dyn(3*nat,3*nat), at(3,3), bg(3,3)
   !
-  integer :: isym, na, nb, ni, nj, sni, snj, smu_i, smu_j,  &
+  INTEGER :: isym, na, nb, ni, nj, sni, snj, smu_i, smu_j,  &
        i, j, k, l, mu_k, mu_l
-  real(DP), allocatable :: irreducible_dyn(:,:)
+  real(DP), ALLOCATABLE :: irreducible_dyn(:,:)
   real(DP) :: work(3,3)
-  logical :: no_equivalent_atoms
-  integer, allocatable ::done(:,:)
+  LOGICAL :: no_equivalent_atoms
+  INTEGER, ALLOCATABLE ::done(:,:)
   !
   no_equivalent_atoms=.true.
-  do na = 1,nat
-     no_equivalent_atoms = no_equivalent_atoms .and. has_equivalent(na).eq.0
-  end do
-  if (no_equivalent_atoms) return
+  DO na = 1,nat
+     no_equivalent_atoms = no_equivalent_atoms .and. has_equivalent(na)==0
+  ENDDO
+  IF (no_equivalent_atoms) RETURN
   !
-  allocate  ( irreducible_dyn( 3*nat, 3*nat))    
-  call dcopy(3*nat*3*nat,dyn,1,irreducible_dyn,1)
+  ALLOCATE  ( irreducible_dyn( 3*nat, 3*nat))
+  CALL dcopy(3*nat*3*nat,dyn,1,irreducible_dyn,1)
   !
-  do na = 1,nat
-     if (has_equivalent(na).eq.0 ) then
-        do nb = 1,nat
-           do i = 1,3
-              do j = 1,3
+  DO na = 1,nat
+     IF (has_equivalent(na)==0 ) THEN
+        DO nb = 1,nat
+           DO i = 1,3
+              DO j = 1,3
                  work(i,j) = irreducible_dyn(3*(na-1)+i,3*(nb-1)+j)
-              end do
-           end do
+              ENDDO
+           ENDDO
            !
            !  transform to crystal axis
            !
-           call cart_to_crys ( work )
-           do i = 1,3
-              do j = 1,3
+           CALL cart_to_crys ( work )
+           DO i = 1,3
+              DO j = 1,3
                  irreducible_dyn(3*(na-1)+i,3*(nb-1)+j) = work(i,j)
-              end do
-           end do
-        end do
-     end if
-  end do
+              ENDDO
+           ENDDO
+        ENDDO
+     ENDIF
+  ENDDO
   !
-  allocate  (done( 3*nat, 3*nat))    
-  do smu_i = 1,3*nat
-     do smu_j = 1,3*nat
+  ALLOCATE  (done( 3*nat, 3*nat))
+  DO smu_i = 1,3*nat
+     DO smu_j = 1,3*nat
         dyn(smu_i,smu_j) = 0.0d0
         done(smu_i,smu_j)= 0
-     end do
-  end do
+     ENDDO
+  ENDDO
   !
-  do isym = 1,nsym
-     do na = 1,n_diff_sites
+  DO isym = 1,nsym
+     DO na = 1,n_diff_sites
         ni = equiv_atoms(na,1)
         sni = irt(isym,ni)
-        do i = 1,3
+        DO i = 1,3
            smu_i = 3*(sni-1)+i
-           do nj = 1,nat
+           DO nj = 1,nat
               snj = irt(isym,nj)
-              do j = 1,3
+              DO j = 1,3
                  smu_j = 3*(snj-1)+j
-                 if (done(smu_i,smu_j).eq.0) then
-                    do k = 1,3
+                 IF (done(smu_i,smu_j)==0) THEN
+                    DO k = 1,3
                        mu_k = 3*(ni-1)+k
-                       do l = 1,3
+                       DO l = 1,3
                           mu_l = 3*(nj-1)+l
                           dyn(smu_i,smu_j) = dyn(smu_i,smu_j) + &
                                s(i,k,invs(isym)) * s(j,l,invs(isym)) * &
                                irreducible_dyn(mu_k,mu_l)
                           !  rotation matrices are S^-1
-                       end do
-                    end do
+                       ENDDO
+                    ENDDO
                     done(smu_i,smu_j)=1
-                 end if
-              end do
-           end do
-        end do
-     end do
-  end do
+                 ENDIF
+              ENDDO
+           ENDDO
+        ENDDO
+     ENDDO
+  ENDDO
   !
-  deallocate(done)
-  deallocate(irreducible_dyn)
+  DEALLOCATE(done)
+  DEALLOCATE(irreducible_dyn)
   !
-  do na = 1,nat
-     do nb = 1,nat
-        do i = 1,3
-           do j = 1,3
+  DO na = 1,nat
+     DO nb = 1,nat
+        DO i = 1,3
+           DO j = 1,3
               work(i,j) = dyn(3*(na-1)+i,3*(nb-1)+j)
-           end do
-        end do
+           ENDDO
+        ENDDO
         !  back to cartesian axes
-        call crys_to_cart ( work )
-        do i = 1,3
-           do j = 1,3
+        CALL crys_to_cart ( work )
+        DO i = 1,3
+           DO j = 1,3
               dyn(3*(na-1)+i,3*(nb-1)+j) = work(i,j)
-           end do
-        end do
-     end do
-  end do
+           ENDDO
+        ENDDO
+     ENDDO
+  ENDDO
   !
-  return
-end subroutine generate_dynamical_matrix
+  RETURN
+END SUBROUTINE generate_dynamical_matrix

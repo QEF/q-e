@@ -13,15 +13,15 @@ SUBROUTINE cg_setup
   USE kinds, ONLY: DP
   USE ions_base, ONLY : nat, ntyp => nsp, ityp, tau, amass
   USE pwcom
-  USE scf, only : rho, rho_core, v, vltot, vrs, kedtau
+  USE scf, ONLY : rho, rho_core, v, vltot, vrs, kedtau
   USE uspp, ONLY: vkb
   USE uspp_param, ONLY: upf
   USE mp_global,        ONLY : kunit
   USE wavefunctions_module,  ONLY: evc
   USE io_files, ONLY: prefix, iunpun, iunres, diropn
   USE cgcom
-  USE funct, only : dft_is_gradient, dmxc
-  USE dfunct,                 only : newd
+  USE funct, ONLY : dft_is_gradient, dmxc
+  USE dfunct,                 ONLY : newd
   !
   IMPLICIT NONE
   !
@@ -44,22 +44,22 @@ SUBROUTINE cg_setup
   !
   !  allocate memory for various arrays
   !
-  ALLOCATE  (dmuxc( nrxx))    
-  ALLOCATE  (dvpsi( npwx, nbnd))    
-  ALLOCATE  ( dpsi( npwx, nbnd))    
-  ALLOCATE  ( auxr( nrxx))    
-  ALLOCATE  ( aux2( nrxx))    
-  ALLOCATE  ( aux3( nrxx))    
+  ALLOCATE  (dmuxc( nrxx))
+  ALLOCATE  (dvpsi( npwx, nbnd))
+  ALLOCATE  ( dpsi( npwx, nbnd))
+  ALLOCATE  ( auxr( nrxx))
+  ALLOCATE  ( aux2( nrxx))
+  ALLOCATE  ( aux3( nrxx))
   !
   !  allocate memory for gradient corrections (if needed)
   !
   IF ( dft_is_gradient() ) THEN
-     ALLOCATE  ( dvxc_rr(nrxx,nspin,nspin))    
-     ALLOCATE  ( dvxc_sr(nrxx,nspin,nspin))    
-     ALLOCATE  ( dvxc_ss(nrxx,nspin,nspin))    
-     ALLOCATE  ( dvxc_s (nrxx,nspin,nspin))    
-     ALLOCATE  ( grho   (3, nrxx, nspin))    
-  END IF
+     ALLOCATE  ( dvxc_rr(nrxx,nspin,nspin))
+     ALLOCATE  ( dvxc_sr(nrxx,nspin,nspin))
+     ALLOCATE  ( dvxc_ss(nrxx,nspin,nspin))
+     ALLOCATE  ( dvxc_s (nrxx,nspin,nspin))
+     ALLOCATE  ( grho   (3, nrxx, nspin))
+  ENDIF
   !
   !
   !  initialize structure factor array
@@ -69,7 +69,7 @@ SUBROUTINE cg_setup
   !
   !  compute drhocore/dtau for each atom type (if needed)
   !
-  nlcc_any = ANY  ( upf(1:ntyp)%nlcc )
+  nlcc_any = any  ( upf(1:ntyp)%nlcc )
   !!! if (nlcc_any) call set_drhoc(xq)
   !
   !  local potential
@@ -85,9 +85,9 @@ SUBROUTINE cg_setup
   dmuxc(:) = 0.d0
   DO i = 1,nrxx
      rhotot = rho%of_r(i,current_spin)+rho_core(i)
-     IF ( rhotot.GT. 1.d-30 ) dmuxc(i)= dmxc( rhotot)
-     IF ( rhotot.LT.-1.d-30 ) dmuxc(i)=-dmxc(-rhotot)
-  END DO
+     IF ( rhotot> 1.d-30 ) dmuxc(i)= dmxc( rhotot)
+     IF ( rhotot<-1.d-30 ) dmuxc(i)=-dmxc(-rhotot)
+  ENDDO
   !
   !  initialize data needed for gradient corrections
   !
@@ -99,18 +99,18 @@ SUBROUTINE cg_setup
   !
   lrwfc=2*nbnd*npwx
   CALL diropn(iunpun, 'wfc',lrwfc,exst)
-  IF(.NOT.exst) THEN 
+  IF(.not.exst) THEN
      CALL errore('main','file '//trim(prefix) // '.wfc not found',1)
-  END IF
+  ENDIF
   !  read wave functions and calculate indices
   !
   kpoint=1
   CALL davcio(evc,lrwfc,iunpun,kpoint,-1)
   IF ( exst ) THEN
      CLOSE(unit=iunpun,status='keep')
-  ELSE 
+  ELSE
      CLOSE(unit=iunpun,status='delete')
-  END IF
+  ENDIF
   CALL gk_sort (xk(1,kpoint),ngm,g,ecutwfc/tpiba2,npw,igk,g2kin)
   !
   !  Kleinman-Bylander PPs

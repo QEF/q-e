@@ -7,23 +7,23 @@
 !
 !
 !-----------------------------------------------------------------------
-subroutine drhodv(nu_i)
+SUBROUTINE drhodv(nu_i)
   !-----------------------------------------------------------------------
   !
   !  calculate the electronic term <psi|dv|dpsi> of the dynamical matrix
   !
-  use pwcom
-  use cgcom
+  USE pwcom
+  USE cgcom
   USE mp_global,  ONLY : intra_pool_comm
   USE mp,         ONLY : mp_sum
 
-  implicit none
-  integer :: nu_i
+  IMPLICIT NONE
+  INTEGER :: nu_i
   !
-  integer :: nu_j, ibnd, kpoint
+  INTEGER :: nu_j, ibnd, kpoint
   real(DP) :: dynel(nmodes), work(nbnd)
   !
-  call start_clock('drhodv')
+  CALL start_clock('drhodv')
   !
   dynel(:) = 0.d0
   kpoint = 1
@@ -31,31 +31,31 @@ subroutine drhodv(nu_i)
   !
   !** calculate the dynamical matrix (<DeltaV*psi(ion)|\DeltaPsi(ion)>)
   !
-  do nu_j = 1,nmodes
+  DO nu_j = 1,nmodes
      !
      ! DeltaV*psi(ion) for mode nu_j is recalculated
      !
-     call dvpsi_kb(kpoint,nu_j)
+     CALL dvpsi_kb(kpoint,nu_j)
      !
      !     this is the real part of <DeltaV*Psi(ion)|DeltaPsi(ion)>
      !
-     call pw_dot('N',npw,nbnd,dvpsi,npwx,dpsi ,npwx,work)
-     do ibnd = 1,nbnd
+     CALL pw_dot('N',npw,nbnd,dvpsi,npwx,dpsi ,npwx,work)
+     DO ibnd = 1,nbnd
         dynel(nu_j) = dynel(nu_j) + 2.0d0*wk(kpoint)*work(ibnd)
-     end do
-  end do
+     ENDDO
+  ENDDO
 #ifdef __PARA
-  call mp_sum( dynel, intra_pool_comm )
+  CALL mp_sum( dynel, intra_pool_comm )
 #endif
   !
   ! NB this must be done only at the end of the calculation!
   !
-  do nu_j = 1,nmodes
+  DO nu_j = 1,nmodes
      dyn(nu_i,nu_j) = - (dyn(nu_i,nu_j)+dynel(nu_j))
-  end do
+  ENDDO
   !
-  call stop_clock('drhodv')
+  CALL stop_clock('drhodv')
   !
-  return
-end subroutine drhodv
+  RETURN
+END SUBROUTINE drhodv
 

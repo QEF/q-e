@@ -7,60 +7,60 @@
 !
 !
 !-----------------------------------------------------------------------
-subroutine generate_effective_charges (nat, nsym, s, invs, irt, at, bg, &
+SUBROUTINE generate_effective_charges (nat, nsym, s, invs, irt, at, bg, &
      n_diff_sites, equiv_atoms, has_equivalent, zstar)
   !-----------------------------------------------------------------------
   !
   ! generate all effective charges
   !
-  USE kinds, only : DP
-  USE symme, only : crys_to_cart, cart_to_crys
-  implicit none
-  integer :: nat, nsym, n_diff_sites, irt(48,nat), equiv_atoms(nat,nat),&
+  USE kinds, ONLY : DP
+  USE symme, ONLY : crys_to_cart, cart_to_crys
+  IMPLICIT NONE
+  INTEGER :: nat, nsym, n_diff_sites, irt(48,nat), equiv_atoms(nat,nat),&
        s(3,3,48), has_equivalent(nat), invs(48)
-  integer :: isym, na, ni, nj, sni, i, j, k, l
+  INTEGER :: isym, na, ni, nj, sni, i, j, k, l
   real(DP) :: zstar(3,3,nat), at(3,3), bg(3,3)
-  logical :: done(nat), no_equivalent_atoms
+  LOGICAL :: done(nat), no_equivalent_atoms
   !
   no_equivalent_atoms=.true.
-  do na = 1,nat
-     no_equivalent_atoms = no_equivalent_atoms .and. has_equivalent(na).eq.0
-  end do
-  if (no_equivalent_atoms) return
+  DO na = 1,nat
+     no_equivalent_atoms = no_equivalent_atoms .and. has_equivalent(na)==0
+  ENDDO
+  IF (no_equivalent_atoms) RETURN
   ! transform to crystal axis
-  do na = 1,nat
-     if (has_equivalent(na).eq.0 ) then
-        call cart_to_crys ( zstar(:,:,na) )
+  DO na = 1,nat
+     IF (has_equivalent(na)==0 ) THEN
+        CALL cart_to_crys ( zstar(:,:,na) )
         done(na)=.true.
-     else
+     ELSE
         zstar(:,:,na) = 0.d0
         done(na)=.false.
-     end if
-  end do
+     ENDIF
+  ENDDO
   !
-  do isym = 1,nsym
-     do na = 1,n_diff_sites
+  DO isym = 1,nsym
+     DO na = 1,n_diff_sites
         ni = equiv_atoms(na,1)
         sni = irt(isym,ni)
-        if ( .not.done(sni) ) then
-           do i = 1,3
-              do j = 1,3
-                 do k = 1,3
-                    do l = 1,3
+        IF ( .not.done(sni) ) THEN
+           DO i = 1,3
+              DO j = 1,3
+                 DO k = 1,3
+                    DO l = 1,3
                        zstar(i,j,sni) =  zstar(i,j,sni) +  &
                             s(i,k,invs(isym))*s(j,l,invs(isym))*zstar(k,l,ni)
-                    end do
-                 end do
-              end do
-           end do
+                    ENDDO
+                 ENDDO
+              ENDDO
+           ENDDO
            done(sni)=.true.
-        end if
-     end do
-  end do
+        ENDIF
+     ENDDO
+  ENDDO
   ! back to cartesian axis
-  do na = 1,nat
-     call crys_to_cart ( zstar(:,:,na) )
-  end do
+  DO na = 1,nat
+     CALL crys_to_cart ( zstar(:,:,na) )
+  ENDDO
   !
-  return
-end subroutine generate_effective_charges
+  RETURN
+END SUBROUTINE generate_effective_charges

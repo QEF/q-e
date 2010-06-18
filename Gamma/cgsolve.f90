@@ -7,7 +7,7 @@
 !
 !
 !-----------------------------------------------------------------------
-subroutine cgsolve (operator,npw,evc,npwx,nbnd,overlap,      &
+SUBROUTINE cgsolve (operator,npw,evc,npwx,nbnd,overlap,      &
      &              nbndx,orthonormal,precondition,diagonal, &
      &              startwith0,e,b,u,h,Ah,pu,niter,eps,iter,x)
   !-----------------------------------------------------------------------
@@ -19,136 +19,136 @@ subroutine cgsolve (operator,npw,evc,npwx,nbnd,overlap,      &
   USE io_global, ONLY : stdout
   USE kinds,     ONLY : DP
   USE becmod,    ONLY : calbec
-  implicit none
-  integer npw, npwx, nbnd, nbndx, niter, iter
+  IMPLICIT NONE
+  INTEGER npw, npwx, nbnd, nbndx, niter, iter
   real(DP) :: diagonal(npw), e(nbnd), overlap(nbndx,nbnd)
-  complex(DP) :: x(npwx,nbnd), b(npwx,nbnd), u(npwx,nbnd),          &
+  COMPLEX(DP) :: x(npwx,nbnd), b(npwx,nbnd), u(npwx,nbnd),          &
        h(npwx,nbnd),Ah(npwx,nbnd),evc(npwx,nbnd), pu(npwx,nbnd)
-  logical :: orthonormal, precondition,startwith0
+  LOGICAL :: orthonormal, precondition,startwith0
   !
-  integer :: ibnd, jbnd, i, info
+  INTEGER :: ibnd, jbnd, i, info
   real(DP) :: lagrange(nbnd,nbnd)
   real(DP) :: lambda, u_u, uu0, u_A_h, alfa, eps, uu(nbnd), ddot
-  external ddot, operator
+  EXTERNAL ddot, operator
   !
-  call start_clock('cgsolve')
+  CALL start_clock('cgsolve')
   !
   ! starting gradient |u> = (A|x>-|b>)-lambda|psi> (lambda=<Ax-b|psi_i>)
   !
-  if (.not.startwith0) then
-     call operator(e,x,u)
-  else
+  IF (.not.startwith0) THEN
+     CALL operator(e,x,u)
+  ELSE
      u (:,:) = (0.d0, 0.d0)
      ! note that we assume x=0 on input
-  end if
+  ENDIF
   !
-  call daxpy(2*npwx*nbnd,-1.d0,b,1,u,1)
-  if (precondition) then
-     call zvscal(npw,npwx,nbnd,diagonal,u,pu)
-     call calbec ( npw, evc, pu, lagrange )
-  else
-     call calbec ( npw, evc,  u, lagrange )
-   end if
-  if (.not. orthonormal) &
-       call DPOTRS('U',nbnd,nbnd,overlap,nbndx,lagrange,nbnd,info)
-  if (info.ne.0) call errore('cgsolve','error in potrs',info)
+  CALL daxpy(2*npwx*nbnd,-1.d0,b,1,u,1)
+  IF (precondition) THEN
+     CALL zvscal(npw,npwx,nbnd,diagonal,u,pu)
+     CALL calbec ( npw, evc, pu, lagrange )
+  ELSE
+     CALL calbec ( npw, evc,  u, lagrange )
+   ENDIF
+  IF (.not. orthonormal) &
+       CALL DPOTRS('U',nbnd,nbnd,overlap,nbndx,lagrange,nbnd,info)
+  IF (info/=0) CALL errore('cgsolve','error in potrs',info)
   !
-  call dgemm ('N', 'N', 2*npw, nbnd, nbnd, -1.d0, evc, &
+  CALL dgemm ('N', 'N', 2*npw, nbnd, nbnd, -1.d0, evc, &
        2*npwx, lagrange, nbndx, 1.d0, u, 2*npwx)
   !
   ! starting conjugate gradient |h> = |u>
-  if (precondition) then
-     call zvscal(npw,npwx,nbnd,diagonal,u,h)
-  else
-     call zcopy(npwx,nbnd,u,1,h,1)
-  end if
+  IF (precondition) THEN
+     CALL zvscal(npw,npwx,nbnd,diagonal,u,h)
+  ELSE
+     CALL zcopy(npwx,nbnd,u,1,h,1)
+  ENDIF
   ! uu = <u|h>
-  call pw_dot('Y',npw,nbnd,u,npwx,h,npwx,uu)
+  CALL pw_dot('Y',npw,nbnd,u,npwx,h,npwx,uu)
   u_u = 0.0d0
-  do ibnd=1,nbnd
+  DO ibnd=1,nbnd
      u_u = u_u + uu(ibnd)
-  end do
+  ENDDO
   !
   !      print '("  iter # ",i3,"  u_u = ",e10.4)', 0, u_u
   !
   !   main iteration loop
   !
-  do iter = 1, niter
+  DO iter = 1, niter
      !
      ! calculate A|h>
      !
-     call operator(e,h,Ah)
+     CALL operator(e,h,Ah)
      !
      ! u_A_h = <u|A|h> (NB: must be equal to <h|A|h>)
-     if (precondition) then
-        call zvscal(npw,npwx,nbnd,diagonal,u,pu)
+     IF (precondition) THEN
+        CALL zvscal(npw,npwx,nbnd,diagonal,u,pu)
         ! uu = <u|PA|h>
-        call pw_dot('Y',npw,nbnd,pu,npwx,Ah,npwx,uu)
-     else
+        CALL pw_dot('Y',npw,nbnd,pu,npwx,Ah,npwx,uu)
+     ELSE
         ! uu = <u|A|h>
-        call pw_dot('Y',npw,nbnd, u,npwx,Ah,npwx,uu)
-     end if
+        CALL pw_dot('Y',npw,nbnd, u,npwx,Ah,npwx,uu)
+     ENDIF
      u_A_h = 0.0d0
-     do ibnd=1,nbnd
+     DO ibnd=1,nbnd
         u_A_h = u_A_h + uu(ibnd)
-     end do
+     ENDDO
      !
      lambda = - u_u / u_A_h
      ! update the gradient and the trial solution
      uu0 = u_u
      u_u = 0.0d0
-     call daxpy(2*npwx*nbnd,lambda, h,1,x,1)
-     call daxpy(2*npwx*nbnd,lambda,Ah,1,u,1)
+     CALL daxpy(2*npwx*nbnd,lambda, h,1,x,1)
+     CALL daxpy(2*npwx*nbnd,lambda,Ah,1,u,1)
      ! lagrange multipliers ensure orthogonality of the solution
-     if (precondition) then
-        call zvscal(npw,npwx,nbnd,diagonal,u,pu)
-        call calbec ( npw, evc, pu, lagrange )
-     else
-        call calbec ( npw, evc,  u, lagrange )
-     end if
-     if (.not. orthonormal) &
-          call DPOTRS('U',nbnd,nbnd,overlap,nbndx,lagrange,nbnd,info)
-     if (info.ne.0) call errore('cgsolve','error in potrs',info)
-     call dgemm ('N', 'N', 2*npw, nbnd, nbnd,-1.d0, evc, &
+     IF (precondition) THEN
+        CALL zvscal(npw,npwx,nbnd,diagonal,u,pu)
+        CALL calbec ( npw, evc, pu, lagrange )
+     ELSE
+        CALL calbec ( npw, evc,  u, lagrange )
+     ENDIF
+     IF (.not. orthonormal) &
+          CALL DPOTRS('U',nbnd,nbnd,overlap,nbndx,lagrange,nbnd,info)
+     IF (info/=0) CALL errore('cgsolve','error in potrs',info)
+     CALL dgemm ('N', 'N', 2*npw, nbnd, nbnd,-1.d0, evc, &
           2*npwx, lagrange, nbndx, 1.d0, u, 2*npwx)
-     if (precondition) then
-        call zvscal(npw,npwx,nbnd,diagonal,u,pu)
+     IF (precondition) THEN
+        CALL zvscal(npw,npwx,nbnd,diagonal,u,pu)
         ! uu = <u|A|u>
-        call pw_dot('Y',npw,nbnd, u,npwx,pu,npwx,uu)
-     else
+        CALL pw_dot('Y',npw,nbnd, u,npwx,pu,npwx,uu)
+     ELSE
         ! uu = <u|u>
-        call pw_dot('Y',npw,nbnd, u,npwx, u,npwx,uu)
-     end if
+        CALL pw_dot('Y',npw,nbnd, u,npwx, u,npwx,uu)
+     ENDIF
      u_u = 0.0d0
-     do ibnd=1,nbnd
+     DO ibnd=1,nbnd
         u_u = u_u + uu(ibnd)
-     end do
+     ENDDO
      !         print '("  iter # ",i3,"  u_u = ",e10.4)', iter, u_u
      !
-     if( u_u .le. eps) go to 10
-     if (iter.eq.niter) then
+     IF( u_u <= eps) GOTO 10
+     IF (iter==niter) THEN
         WRITE( stdout,'("   *** Conjugate Gradient minimization",   &
              &    " not converged after ",i3," iterations"/ &
              &    " residual norm |Ax-b|^2 : ",e10.4)') iter,u_u
-        go to 10
-     end if
+        GOTO 10
+     ENDIF
      !   update the conjugate gradient
      alfa =  u_u / uu0
-     do ibnd = 1,nbnd
-        if (precondition) then
-           do i=1,npw
+     DO ibnd = 1,nbnd
+        IF (precondition) THEN
+           DO i=1,npw
               h(i,ibnd) = alfa*h(i,ibnd) + u(i,ibnd)*diagonal(i)
-           end do
-        else
-           do i=1,npw
+           ENDDO
+        ELSE
+           DO i=1,npw
               h(i,ibnd) = alfa*h(i,ibnd) + u(i,ibnd)
-           end do
-        end if
-     end do
-  end do
+           ENDDO
+        ENDIF
+     ENDDO
+  ENDDO
   !
-10 continue
-  call stop_clock('cgsolve')
+10 CONTINUE
+  CALL stop_clock('cgsolve')
   !
-  return
-end subroutine cgsolve
+  RETURN
+END SUBROUTINE cgsolve

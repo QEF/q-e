@@ -6,18 +6,18 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !
-subroutine zvscal(n,lda,m,v,zin,zout)
-  implicit none
-  integer :: n, lda, m
+SUBROUTINE zvscal(n,lda,m,v,zin,zout)
+  IMPLICIT NONE
+  INTEGER :: n, lda, m
   real(8) :: v(n), zin(2,lda,m), zout(2,lda,m)
-  integer :: i,j
+  INTEGER :: i,j
   !
-  do j = 1,m
-     do i = 1,n
+  DO j = 1,m
+     DO i = 1,n
         zout(1,i,j) = zin(1,i,j)*v(i)
         zout(2,i,j) = zin(2,i,j)*v(i)
-     end do
-  end do
+     ENDDO
+  ENDDO
   !
-  return
-end subroutine zvscal
+  RETURN
+END SUBROUTINE zvscal

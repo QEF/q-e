@@ -7,35 +7,35 @@
 !
 !
 !-----------------------------------------------------------------------
-subroutine dielec(do_zstar)
+SUBROUTINE dielec(do_zstar)
   !-----------------------------------------------------------------------
   !
   !      calculates the dielectric tensor and effective charges
   !
   USE ions_base, ONLY : nat, zv, ityp
-  use pwcom
-  use cgcom
+  USE pwcom
+  USE cgcom
   USE mp_global,  ONLY : intra_pool_comm
   USE mp,         ONLY : mp_sum
 
-  implicit none
-  logical :: do_zstar
+  IMPLICIT NONE
+  LOGICAL :: do_zstar
   !
-  integer :: ibnd,ipol,jpol,na,nu,kpoint
-  character(len=7) :: filbar, fildwf
+  INTEGER :: ibnd,ipol,jpol,na,nu,kpoint
+  CHARACTER(len=7) :: filbar, fildwf
   real(DP) ::  w, weight
-  real(DP), allocatable ::  work(:,:)
-  complex(DP), allocatable :: dpsi2(:,:), dpsi3(:,:)
-  logical :: done
+  real(DP), ALLOCATABLE ::  work(:,:)
+  COMPLEX(DP), ALLOCATABLE :: dpsi2(:,:), dpsi3(:,:)
+  LOGICAL :: done
   !
-  call start_clock('dielec')
+  CALL start_clock('dielec')
   !
-  allocate (dpsi2( npwx, nbnd))    
-  allocate (dpsi3( npwx, nbnd))    
-  allocate (work( nbnd, 3))    
+  ALLOCATE (dpsi2( npwx, nbnd))
+  ALLOCATE (dpsi3( npwx, nbnd))
+  ALLOCATE (work( nbnd, 3))
   !
   epsilon0(:,:) = 0.d0
-  if (do_zstar) zstar (:,:,:) = 0.d0
+  IF (do_zstar) zstar (:,:,:) = 0.d0
   !  do kpoint=1,nks
   kpoint=1
   weight = wk(kpoint)
@@ -47,86 +47,86 @@ subroutine dielec(do_zstar)
   ! pol. 1
   ipol=1
   iudwf=10+ipol
-  write(fildwf,'("fildwx",i1)') ipol
-  call  seqopn (iudwf,fildwf,'unformatted',done)
-  read (iudwf) dpsi
-  close(unit=iudwf)
+  WRITE(fildwf,'("fildwx",i1)') ipol
+  CALL  seqopn (iudwf,fildwf,'unformatted',done)
+  READ (iudwf) dpsi
+  CLOSE(unit=iudwf)
   ! pol. 2
   ipol=2
   iudwf=10+ipol
-  write(fildwf,'("fildwx",i1)') ipol
-  call  seqopn (iudwf,fildwf,'unformatted',done)
-  read (iudwf) dpsi2
-  close(unit=iudwf)
+  WRITE(fildwf,'("fildwx",i1)') ipol
+  CALL  seqopn (iudwf,fildwf,'unformatted',done)
+  READ (iudwf) dpsi2
+  CLOSE(unit=iudwf)
   ! pol. 3
   ipol=3
   iudwf=10+ipol
-  write(fildwf,'("fildwx",i1)') ipol
-  call  seqopn (iudwf,fildwf,'unformatted',done)
-  read (iudwf) dpsi3
-  close(unit=iudwf)
+  WRITE(fildwf,'("fildwx",i1)') ipol
+  CALL  seqopn (iudwf,fildwf,'unformatted',done)
+  READ (iudwf) dpsi3
+  CLOSE(unit=iudwf)
   !
-  if (.not.do_zstar) go to 10
+  IF (.not.do_zstar) GOTO 10
   !
-  do nu = 1,nmodes
+  DO nu = 1,nmodes
      na  = (nu-1)/3+1
-     if (has_equivalent(na).eq.0) then
+     IF (has_equivalent(na)==0) THEN
         !     DeltaV*psi(ion) for mode nu is recalculated
-        call dvpsi_kb(kpoint,nu)
+        CALL dvpsi_kb(kpoint,nu)
         !
         jpol= mod(nu-1,3)+1
         ! work is the real part of <DeltaV*Psi(ion)|DeltaPsi(E)>
-        call pw_dot('N',npw,nbnd,dvpsi,npwx,dpsi ,npwx,work(1,1))
-        call pw_dot('N',npw,nbnd,dvpsi,npwx,dpsi2,npwx,work(1,2))
-        call pw_dot('N',npw,nbnd,dvpsi,npwx,dpsi3,npwx,work(1,3))
-        do ipol = 1,3
-           do ibnd = 1,nbnd
+        CALL pw_dot('N',npw,nbnd,dvpsi,npwx,dpsi ,npwx,work(1,1))
+        CALL pw_dot('N',npw,nbnd,dvpsi,npwx,dpsi2,npwx,work(1,2))
+        CALL pw_dot('N',npw,nbnd,dvpsi,npwx,dpsi3,npwx,work(1,3))
+        DO ipol = 1,3
+           DO ibnd = 1,nbnd
               zstar(ipol,jpol,na) = zstar(ipol,jpol,na) + 2.0d0*weight*work(ibnd,ipol)
-           end do
-        end do
-     end if
-  end do
-10 continue
+           ENDDO
+        ENDDO
+     ENDIF
+  ENDDO
+10 CONTINUE
   !** calculate Dielectric Tensor (<DeltaV*psi(E)\DeltaPsi(E)>)
   !
-  do jpol=1,3
+  DO jpol=1,3
      ! read DeltaV*Psi(elec) for polarization jpol
      iubar=jpol
-     write(filbar,'("filbar",i1)') iubar
-     call  seqopn (iubar,filbar,'unformatted',done)
-     read (iubar) dvpsi
-     close(iubar)
+     WRITE(filbar,'("filbar",i1)') iubar
+     CALL  seqopn (iubar,filbar,'unformatted',done)
+     READ (iubar) dvpsi
+     CLOSE(iubar)
      ! now work is the real part of <DeltaV*psi(E)|DeltaPsi(E)>
-     call pw_dot('N',npw,nbnd,dvpsi,npwx,dpsi ,npwx,work(1,1))
-     call pw_dot('N',npw,nbnd,dvpsi,npwx,dpsi2,npwx,work(1,2))
-     call pw_dot('N',npw,nbnd,dvpsi,npwx,dpsi3,npwx,work(1,3))
-     do ipol = 1,3
-        do ibnd = 1,nbnd
+     CALL pw_dot('N',npw,nbnd,dvpsi,npwx,dpsi ,npwx,work(1,1))
+     CALL pw_dot('N',npw,nbnd,dvpsi,npwx,dpsi2,npwx,work(1,2))
+     CALL pw_dot('N',npw,nbnd,dvpsi,npwx,dpsi3,npwx,work(1,3))
+     DO ipol = 1,3
+        DO ibnd = 1,nbnd
            epsilon0(ipol,jpol) = epsilon0(ipol,jpol) + 4.0d0*w*work(ibnd,ipol)
-        end do
-     end do
-  end do
+        ENDDO
+     ENDDO
+  ENDDO
   !     end do
 #ifdef __PARA
-  if (do_zstar) call mp_sum( zstar, intra_pool_comm )
-  call mp_sum( epsilon0, intra_pool_comm )
+  IF (do_zstar) CALL mp_sum( zstar, intra_pool_comm )
+  CALL mp_sum( epsilon0, intra_pool_comm )
 #endif
-  deallocate(work)
-  deallocate(dpsi3)
-  deallocate(dpsi2)
+  DEALLOCATE(work)
+  DEALLOCATE(dpsi3)
+  DEALLOCATE(dpsi2)
   !
   ! add the diagonal part
   !
-  do ipol=1,3
+  DO ipol=1,3
      epsilon0(ipol,ipol) = epsilon0(ipol,ipol) + 1.0d0
-     if (do_zstar) then
-        do na=1,nat
+     IF (do_zstar) THEN
+        DO na=1,nat
            zstar(ipol,ipol,na) = zstar(ipol,ipol,na) + zv(ityp(na))
-        end do
-     end if
-  end do
+        ENDDO
+     ENDIF
+  ENDDO
   !
-  call stop_clock('dielec')
+  CALL stop_clock('dielec')
   !
-  return
-end subroutine dielec
+  RETURN
+END SUBROUTINE dielec

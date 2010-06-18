@@ -7,72 +7,72 @@
 !
 !
 !-----------------------------------------------------------------------
-subroutine solve_e
+SUBROUTINE solve_e
   !-----------------------------------------------------------------------
   !
   USE io_global,      ONLY : stdout
-  use pwcom
+  USE pwcom
   USE uspp,   ONLY: nkb
   USE wavefunctions_module,  ONLY: evc
   USE becmod, ONLY: bec_type, becp, calbec, allocate_bec_type, deallocate_bec_type
-  use cgcom
+  USE cgcom
   !
-  implicit none
+  IMPLICIT NONE
   !
-  integer :: ipol, nrec, i, ibnd, jbnd, info, iter, kpoint
-  real(DP), allocatable ::diag(:)
-  complex(DP), allocatable :: gr(:,:), h(:,:), work(:,:)
-  real(DP), allocatable :: overlap(:,:)
-  logical :: orthonormal, precondition,startwith0,here
-  character(len=7) :: fildwf, filbar
-  external A_h
+  INTEGER :: ipol, nrec, i, ibnd, jbnd, info, iter, kpoint
+  real(DP), ALLOCATABLE ::diag(:)
+  COMPLEX(DP), ALLOCATABLE :: gr(:,:), h(:,:), work(:,:)
+  real(DP), ALLOCATABLE :: overlap(:,:)
+  LOGICAL :: orthonormal, precondition,startwith0,here
+  CHARACTER(len=7) :: fildwf, filbar
+  EXTERNAL A_h
   !
-  call start_clock('solve_e')
+  CALL start_clock('solve_e')
   !
-  call allocate_bec_type ( nkb, nbnd, becp)
-  allocate ( diag( npwx) )
-  allocate ( overlap( nbnd, nbnd) )
-  allocate ( work( npwx, nbnd) )
-  allocate ( gr  ( npwx, nbnd) )
-  allocate ( h   ( npwx, nbnd) )
+  CALL allocate_bec_type ( nkb, nbnd, becp)
+  ALLOCATE ( diag( npwx) )
+  ALLOCATE ( overlap( nbnd, nbnd) )
+  ALLOCATE ( work( npwx, nbnd) )
+  ALLOCATE ( gr  ( npwx, nbnd) )
+  ALLOCATE ( h   ( npwx, nbnd) )
   !
   kpoint = 1
-  do i = 1,npw
+  DO i = 1,npw
      g2kin(i) = ( (xk(1,kpoint)+g(1,igk(i)))**2 +                   &
                   (xk(2,kpoint)+g(2,igk(i)))**2 +                   &
                   (xk(3,kpoint)+g(3,igk(i)))**2 ) * tpiba2
-  end do
+  ENDDO
   !
   orthonormal = .false.
   precondition= .true.
  !
-  if (precondition) then
-     do i = 1,npw
+  IF (precondition) THEN
+     DO i = 1,npw
         diag(i) = 1.0d0/max(1.d0,g2kin(i))
-     end do
-     call zvscal(npw,npwx,nbnd,diag,evc,work)
-     call calbec (npw, work, evc, overlap)
-     call DPOTRF('U',nbnd,overlap,nbnd,info)
-     if (info.ne.0) call errore('solve_e','cannot factorize',info)
-  end if
+     ENDDO
+     CALL zvscal(npw,npwx,nbnd,diag,evc,work)
+     CALL calbec (npw, work, evc, overlap)
+     CALL DPOTRF('U',nbnd,overlap,nbnd,info)
+     IF (info/=0) CALL errore('solve_e','cannot factorize',info)
+  ENDIF
   !
   WRITE( stdout,'(/" ***  Starting Conjugate Gradient minimization",   &
        &            9x,"***")')
   nrec=0
   !
-  do ipol = 1,3
+  DO ipol = 1,3
      !  read |b> = dV/dtau*psi
      iubar=ipol
-     write(filbar,'("filbar",i1)') ipol
-     call seqopn (iubar,filbar,'unformatted',here)
-     if (.not.here) call errore('solve_e','file '//filbar//          &
+     WRITE(filbar,'("filbar",i1)') ipol
+     CALL seqopn (iubar,filbar,'unformatted',here)
+     IF (.not.here) CALL errore('solve_e','file '//filbar//          &
           &        'mysteriously vanished',ipol)
-     read (iubar) dvpsi
-     close(unit=iubar,status='keep')
+     READ (iubar) dvpsi
+     CLOSE(unit=iubar,status='keep')
      !
      iudwf=10+ipol
-     write(fildwf,'("fildwx",i1)') ipol
-     call  seqopn (iudwf,fildwf,'unformatted',here)
+     WRITE(fildwf,'("fildwx",i1)') ipol
+     CALL  seqopn (iudwf,fildwf,'unformatted',here)
 !!!         if (.not.here) then
      !  calculate Delta*psi  (if not already done)
      dpsi(:,:) = (0.d0, 0.d0)
@@ -81,27 +81,27 @@ subroutine solve_e
      !  otherwise restart from Delta*psi that is found on file
 !!!            read(iudwf) dpsi
 !!!         end if
-     call cgsolve (A_h,npw,evc,npwx,nbnd,overlap,nbnd, &
+     CALL cgsolve (A_h,npw,evc,npwx,nbnd,overlap,nbnd, &
                    orthonormal,precondition,diag,      &
                    startwith0,et(1,kpoint),dvpsi,gr,h, &
                    dvpsi,work,niter_ph,tr2_ph,iter,dpsi)
      !  write Delta*psi for an electric field
-     rewind (iudwf)
-     write (iudwf) dpsi
-     close(unit=iudwf)
+     REWIND (iudwf)
+     WRITE (iudwf) dpsi
+     CLOSE(unit=iudwf)
      !
      WRITE( stdout,'(" ***  pol. # ",i3," : ",i3," iterations")')  &
           &              ipol, iter
-  end do
+  ENDDO
   !
-  deallocate(h)
-  deallocate(gr)
-  deallocate(overlap)
-  deallocate(work)
-  deallocate(diag)
-  call deallocate_bec_type (becp)
+  DEALLOCATE(h)
+  DEALLOCATE(gr)
+  DEALLOCATE(overlap)
+  DEALLOCATE(work)
+  DEALLOCATE(diag)
+  CALL deallocate_bec_type (becp)
   !
-  call stop_clock('solve_e')
+  CALL stop_clock('solve_e')
   !
-  return
-end subroutine solve_e
+  RETURN
+END SUBROUTINE solve_e

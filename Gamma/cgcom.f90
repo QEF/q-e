@@ -43,7 +43,7 @@ MODULE flags
       nlcc_any,  &!
       asr,       &!
       recover
-  !    
+  !
 END MODULE flags
 !
 !
@@ -53,10 +53,10 @@ MODULE dielectric
   SAVE
   !
   REAL(DP) :: &
-      epsilon0(3,3)  
+      epsilon0(3,3)
   REAL(DP), ALLOCATABLE :: &
       zstar(:,:,:)
-  !    
+  !
 END MODULE dielectric
 !
 !
@@ -67,7 +67,7 @@ MODULE modes1
   !
   INTEGER :: &
       nmodes
-  REAL(DP), ALLOCATABLE :: & 
+  REAL(DP), ALLOCATABLE :: &
       dyn(:,:),   &!
       u(:,:)       !
   !
@@ -81,7 +81,7 @@ MODULE cgconv
   !
   INTEGER :: &
       niter_ph
-  !    
+  !
   REAL(DP) :: tr2_ph
   !
 END MODULE cgconv
@@ -97,7 +97,7 @@ MODULE AA
        aux3(:)     !
   REAL(DP), ALLOCATABLE, TARGET :: &
        auxr(:)     !
-  !     
+  !
 END MODULE AA
 !
 !
@@ -113,7 +113,7 @@ MODULE dmu
        dvxc_sr(:,:,:),  &!  derivatives of the E_xc functional w.r.t.
        dvxc_ss(:,:,:),  &!  r=rho and s=|grad(rho)|
        dvxc_s (:,:,:)
-  !    
+  !
 END MODULE dmu
 !
 !
@@ -125,7 +125,7 @@ MODULE phon
   COMPLEX(DP), ALLOCATABLE:: &
        dvpsi(:,:),      &!
        dpsi(:,:)         !
-  !     
+  !
 END MODULE phon
 !
 !
@@ -156,7 +156,7 @@ MODULE diffs
        last         !
   REAL(DP) :: &
        deltatau     !
-  !     
+  !
 END MODULE diffs
 !
 !
