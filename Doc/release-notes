@@ -4,6 +4,7 @@ Incompatible changes in CVS version:
 
 Fixed in version 4.2.1:
 
+  * CP could not read data written from PW in spin-polarized cases
   * not sure cpmd2upf converter was working in all cases - now it should
   * support for MKL incomplete (only in packaged version, not in cvs)
   * glitch in pw2wannier if / missing at the end of outdir

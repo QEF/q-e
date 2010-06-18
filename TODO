@@ -1,13 +1,12 @@
-TODO LIST - May 2010
+TODO LIST - June 2010
 
 0) Suspected bugs:
   0.1  electric field in hexagonal lattice
   0.2  "image" parallelization in CP
   0.3  projwfc in CP doesn't work for spin polarized case
-  0.4  CP doesn't read PW files in spin polarized case
-  0.5  Weird spin-polarized results: fixed occupancy yields different
-       results from smearing even in cases where there is no obvious
-       difference
+  0.4  FFT grid dimensions not the same in PW and in CP for same data
+  0.5  Small energy differences between PW and CP - maybe PP-related, but
+       might also be a problem of Ewald calculation in CP ("raggio"?)
 
 1) Organization
 
@@ -77,6 +76,7 @@ TODO LIST - May 2010
   4.1.9 Wannier-based exact-exchange in CP
 
 4.2 Small new developments, desirable or to be added:
+  4.2.0 fractional charge (nelec/nelup/neldw)? is it working?
   4.2.1 configure issues:
         - ifort+acml
         - add search for -lfftw3xf_intel 
@@ -194,6 +194,7 @@ TODO LIST - May 2010
         - spherical harmonics and integration routines
         - merge of atomic positions! currently CP uses a complex logic
           that is very hard to follow
+        - 
   4.4.6 adding/removing/modifying input variables is too complex
         Why are some checks on input variables performed in read_namelist,
         while others apparently similar are in */input.f90?
@@ -245,8 +246,10 @@ TODO LIST - May 2010
         choice of Nr1,Nr2,Nr3 (e.g. different Nr for axis of the
         same length or even worse related by symmetry): this is a
         frequent source of trouble with electron-phonon calculations
- 4.5.8 Still a few quirks with the atomic coordinate parser, if 
+  4.5.8 Still a few quirks with the atomic coordinate parser, if 
         DOS characters or tabulators are present (Lorenzo)
+  4.5.9 Spin-polarized cases: clumsy, error-prone input (e.g.:
+        occupations='fixed' vs 'from_input', input card)
  4.5.10 k-points in crystal IBZ should be correctly calculated also
         if input k-points are not in the IBZ of the lattice. Is is
         sufficient to use brute forces instead of group theory:
@@ -259,8 +262,6 @@ TODO LIST - May 2010
      This is especially serious for PH, D3 etc
  5.2 The "buffer" trick to keep wfc in memory wasn't such a great idea 
      after all: a better approach would be to have a k-point index
- 5.3 Distributed read/write of wavefunctions for CP: move needed
-     functions into Modules/, remove dependence upon PW (see also 5.1)
  5.4 Many inconsistencies between PW and CP in the XML file format
      (and inconsistencies with the documentation)
  5.5 Use qexml for xml file processing so that a single, easily
