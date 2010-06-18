@@ -73,6 +73,7 @@ program elph
   iuelph=4
   do ik=1,nks
      read(5,'(a)') filelph
+     call remove_comments_from_string(filelph)
      open(unit=iuelph,file=filelph,status='old',iostat=ios)
      read (iuelph,*) qread(1),qread(2),qread(3), nsig, nmodes
 !     if ( (qread(1)-q(1,ik))**2 + &
