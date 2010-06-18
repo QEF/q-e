@@ -1,10 +1,10 @@
 !--------------------------------------------------------------------
-subroutine eff_pot (rho, nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, nl,   &
+SUBROUTINE eff_pot (rho, nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, nl,   &
                      ngm, gg, gstart, nspin, alat, omega, ecutwfc,  &
                      charge, vstart, thresh_veff)
   !--------------------------------------------------------------------
   !
-  !     Effective  potential (V_eff) in TF+vW scheme 
+  !     Effective  potential (V_eff) in TF+vW scheme
   !
   USE kinds,                ONLY : DP
   USE constants,            ONLY : fpi, e2
@@ -13,7 +13,7 @@ subroutine eff_pot (rho, nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, nl,   &
   USE klist,                ONLY : nelec
   USE gvect,                ONLY : nlm, g, qcutz, ecfixed, q2sigma
   USE wvfct,                ONLY : g2kin, wg, nbndx, et, nbnd, npwx, &
-                                   igk, npw 
+                                   igk, npw
   USE uspp,                 ONLY : nkb
   USE scf,                  ONLY : v, vltot, vrs, rho_core
   USE gsmooth,              ONLY : nls, nlsm, nr1s, nr2s, nr3s, nrx1s,&
@@ -25,38 +25,38 @@ subroutine eff_pot (rho, nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, nl,   &
   USE control_flags,        ONLY : gamma_only
 !  USE control_vdw,          ONLY : thresh_veff
 !  USE wavefunctions_module, ONLY : evc, psic
-  implicit none
+  IMPLICIT NONE
   !
   !    input
   !
-  integer :: nspin, nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, ngm, ngmw, &
-             gstart, nl (ngm)             
+  INTEGER :: nspin, nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, ngm, ngmw, &
+             gstart, nl (ngm)
   real(kind=DP) :: rho(nrxx, nspin), gg (ngm), alat, omega, ecutwfc, charge, &
                    charge_old
   !
   !    output
   !
-  real(kind=DP), allocatable :: vv (:,:), rho_in(:,:), k_gamma(:) 
+  real(kind=DP), ALLOCATABLE :: vv (:,:), rho_in(:,:), k_gamma(:)
   !
   !    local variables
   !
   real(kind=DP) :: tpiba2, fac
-  real(kind=DP), allocatable ::  aux (:,:), aux1 (:,:), psi (:,:), &
-                                 psi_smooth(:,:), S(:)  
-  complex(kind=DP), allocatable :: ws_psi(:,:), ws_hpsi(:,:), ws_psic(:)
+  real(kind=DP), ALLOCATABLE ::  aux (:,:), aux1 (:,:), psi (:,:), &
+                                 psi_smooth(:,:), S(:)
+  COMPLEX(kind=DP), ALLOCATABLE :: ws_psi(:,:), ws_hpsi(:,:), ws_psic(:)
 
-  integer :: ir, is, ig
+  INTEGER :: ir, is, ig
   real (kind=DP) :: avg1, avg2, eps
-  integer :: nnn, nite, ite = 0
+  INTEGER :: nnn, nite, ite = 0
   real (kind=DP) :: vstart, thresh_veff
-  character (len=10):: str_ite
-  real(kind=DP), external :: qe_erf
+  CHARACTER (len=10):: str_ite
+  real(kind=DP), EXTERNAL :: qe_erf
   !
-  call start_clock('eff_pot')
+  CALL start_clock('eff_pot')
   !
-  allocate (aux(2,nrxx), aux1(2,ngm), psi(2,nrxx), psi_smooth(2,nrxx),S(nrxx) )
-  allocate ( vv(nrxx, nspin) )
-  allocate ( rho_in(nrxx, nspin) )
+  ALLOCATE (aux(2,nrxx), aux1(2,ngm), psi(2,nrxx), psi_smooth(2,nrxx),S(nrxx) )
+  ALLOCATE ( vv(nrxx, nspin) )
+  ALLOCATE ( rho_in(nrxx, nspin) )
   !
   tpiba2 = (fpi / 2.d0 / alat) **2
   !
@@ -69,199 +69,199 @@ subroutine eff_pot (rho, nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, nl,   &
   !
   !  bring psi to G space
   !
-  call cft3 (psi, nr1, nr2, nr3, nrx1, nrx2, nrx3, -1)
+  CALL cft3 (psi, nr1, nr2, nr3, nrx1, nrx2, nrx3, -1)
   !
   !  extract the smooth part of psi in G-space
   !
   psi_smooth(:,:) = 0.d0
-  do ig = 1, ngm
-    if ( (tpiba2 * gg(ig)) .lt. ( ecutwfc ) ) then 
+  DO ig = 1, ngm
+    IF ( (tpiba2 * gg(ig)) < ( ecutwfc ) ) THEN
       psi_smooth(1,nl(ig)) = psi(1,nl(ig))
       psi_smooth(2,nl(ig)) = psi(2,nl(ig))
-    endif
-  enddo
+    ENDIF
+  ENDDO
   !
   aux = psi_smooth
   psi = psi_smooth
   !
   !  bring psi_smooth to real space (approximation of psi)
   !
-  call cft3 (psi_smooth, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1)
+  CALL cft3 (psi_smooth, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1)
   !
-  !  check the difference of the total charge density  
+  !  check the difference of the total charge density
   !
   charge = 0.d0
-  do is = 1, nspin
-     do ir = 1, nrxx
+  DO is = 1, nspin
+     DO ir = 1, nrxx
         charge = charge + abs( rho_in(ir,is)-psi_smooth(is,ir)**2 )
-     enddo
-  enddo
+     ENDDO
+  ENDDO
   charge = charge * omega / (nr1*nr2*nr3) / nelec
 #ifdef __PARA
-  call mp_sum( charge, intra_pool_comm )
+  CALL mp_sum( charge, intra_pool_comm )
 #endif
   WRITE( stdout, '(/,10x,"Charge difference due to FFT   ",f10.8)' ) charge
   !
   ! compute charge density using smooth wfc
   !
-  do is = 1, nspin
-     do ir = 1, nrxx
+  DO is = 1, nspin
+     DO ir = 1, nrxx
         rho_fft(ir,1) = psi_smooth(1,ir)**2
-     enddo
-  enddo
+     ENDDO
+  ENDDO
   !
   !  calculate P^2 |psi> in G-space (NB: V(G=0)=0 )
   !
   aux1(:,:) = 0.d0
-  do ig = 1, ngm
+  DO ig = 1, ngm
      fac =  gg(ig) * tpiba2
      aux1(1,ig) = fac * aux(1,nl(ig))
      aux1(2,ig) = fac * aux(2,nl(ig))
-  enddo
+  ENDDO
   !
   aux(:,:) = 0.d0
-  do ig = 1, ngm
+  DO ig = 1, ngm
      aux(1,nl(ig)) = aux1(1,ig)
      aux(2,nl(ig)) = aux1(2,ig)
-  enddo
+  ENDDO
   !
-  if (gamma_only) then
-     do ig = 1, ngm
+  IF (gamma_only) THEN
+     DO ig = 1, ngm
         aux(1,nlm(ig)) =   aux1(1,ig)
         aux(2,nlm(ig)) = - aux1(2,ig)
-     enddo
-  end if
+     ENDDO
+  ENDIF
   !
-  !      bring P^2 |psi>  to real space, kinetic term is kept 
+  !      bring P^2 |psi>  to real space, kinetic term is kept
   !      in aux
   !
-  call cft3 (aux, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1)
+  CALL cft3 (aux, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1)
   !
   !
   !  compute V_eff  potential by FT and then use it as initial
-  !  potential for iteration  
+  !  potential for iteration
   !
   avg1 = 0.d0
   avg2 = 0.d0
   nnn  = 0
   eps = 0.04d0
   is = 1
-  if (.false.) then
-     do ir = 1, nrxx
+  IF (.false.) THEN
+     DO ir = 1, nrxx
         vv(ir,is) = -aux(1,ir)
-     end do
-  else
-     do ir = 1, nrxx
-        if (abs(psi_smooth(1,ir)) > eps ) then
+     ENDDO
+  ELSE
+     DO ir = 1, nrxx
+        IF (abs(psi_smooth(1,ir)) > eps ) THEN
            vv(ir,is) = -aux(1,ir) / psi_smooth(1,ir)
-        else
+        ELSE
            avg1 = avg1 - aux(1,ir)
            avg2 = avg2 + psi_smooth(1,ir)
            nnn = nnn + 1
-        end if
-     enddo
+        ENDIF
+     ENDDO
 #ifdef __PARA
-     call mp_sum( avg1, intra_pool_comm )
-     call mp_sum( avg2, intra_pool_comm )
-     call mp_sum(nnn, intra_pool_comm) 
+     CALL mp_sum( avg1, intra_pool_comm )
+     CALL mp_sum( avg2, intra_pool_comm )
+     CALL mp_sum(nnn, intra_pool_comm)
 #endif
-     if (nnn > 0 ) then
-        do ir = 1, nrxx
-           if (abs(psi_smooth(1,ir)) <= eps ) then
+     IF (nnn > 0 ) THEN
+        DO ir = 1, nrxx
+           IF (abs(psi_smooth(1,ir)) <= eps ) THEN
               vv(ir,is) = avg1 / avg2
-           end if
-        end do
-     end if
-  end if
+           ENDIF
+        ENDDO
+     ENDIF
+  ENDIF
   !
-  ! uncomment the following loop will set local pot. as initial pot. 
+  ! uncomment the following loop will set local pot. as initial pot.
   !
 vstart=20000
-  do ir = 1, nrxx
+  DO ir = 1, nrxx
      vrs(ir,1) = v%of_r(ir,1) + vltot(ir)
      vv(ir,is) = qe_erf(abs(psi_smooth(1,ir)*dble(vstart)))*vv(ir,is) + &
                 (1.d0-qe_erf( abs( psi_smooth(1,ir)*dble(vstart) ) ))*&
                 vrs(ir,is)
 
-  enddo
+  ENDDO
   !
   !  check the quality of trial potential
   !
   CALL check_v_eff(vv(1,1), charge)
   WRITE( stdout, '(/,10x,"Charge difference due to V_eff (initial)   ",f10.8,/)' ) charge
   !
-  ! iterative procedure of V_eff if necessary 
+  ! iterative procedure of V_eff if necessary
   !
   nite = 0
   charge_old = 1000.d0
-  do while ( charge .gt. thresh_veff )
+  DO WHILE ( charge > thresh_veff )
      !
-     call ite_veff_nhpsi( 1 )
+     CALL ite_veff_nhpsi( 1 )
      !
      !  check the quality of veff by solving equation
      !      p^2|phi> + (veff-mu)|phi> = 0
-     !  whose the GS solution should be the square root 
+     !  whose the GS solution should be the square root
      !  of the charge density
      !
-     call check_v_eff(vv, charge)
+     CALL check_v_eff(vv, charge)
      nite = nite + 1
 !#ifdef __PARA
 !     call ireduce(1, nite)
 !#endif
-     write( stdout, '(10x,"iter #   ", i3, "   charge diff.   ", f10.8, &
+     WRITE( stdout, '(10x,"iter #   ", i3, "   charge diff.   ", f10.8, &
                      & "   thresh_veff   ", f10.8,/)' ) nite, charge, thresh_veff
      !
-     if ( charge_old .lt. charge ) then
+     IF ( charge_old < charge ) THEN
 !        CALL io_pot( 1, TRIM( prefix )//'.veff', v, nspin )
 !        CALL io_pot( 1, TRIM( prefix )//'.rho-coreff', rho_veff, nspin )
-        write(stdout, '( 10x, 10("*"), "unstability happens", 10("*") )' )
+        WRITE(stdout, '( 10x, 10("*"), "unstability happens", 10("*") )' )
 !        goto 100
-     endif
+     ENDIF
      !
      charge_old = charge
      !
-  end do 
+  ENDDO
   !
   ! set the optmized eff. potential to veff
   !
-100 continue
+100 CONTINUE
   veff(:,:) = vv(:,:)
   !
-  deallocate ( vv, rho_in )
-  deallocate (aux,aux1,psi,psi_smooth,S)
+  DEALLOCATE ( vv, rho_in )
+  DEALLOCATE (aux,aux1,psi,psi_smooth,S)
   !
-  call stop_clock('eff_pot')
+  CALL stop_clock('eff_pot')
   !
-  return
+  RETURN
   !
   CONTAINS
      !
      !------------------------------------------------------------------------
      !
-     subroutine ite_veff_nhpsi( nstep )
+     SUBROUTINE ite_veff_nhpsi( nstep )
      !
-     implicit none
+     IMPLICIT NONE
      !
-     integer :: nstep, nveff
+     INTEGER :: nstep, nveff
      !
      real (kind=DP) :: alp, beta, s2r2, sr2, s2r, sr, r2, s2, D, Da, Db, w1
      !
      ! Compute S(r) at first step
      !
-     call start_clock ('ite_veff')
+     CALL start_clock ('ite_veff')
      !
 !write (stdout,*) ' enter ite_veff_nhpsi'
 !CALL flush_unit( stdout )
      s2 = 0.d0
-     do ir = 1, nrxx
+     DO ir = 1, nrxx
         S(ir) = psi_smooth(1,ir) * ( aux(1,ir) + vv(ir,1)*psi_smooth(1,ir) )
         s2 = s2 + S(ir)**2
-     enddo
+     ENDDO
 #ifdef __PARA
-     call mp_sum( s2, intra_pool_comm )
+     CALL mp_sum( s2, intra_pool_comm )
 #endif
      !
-     do nnn = 1, nstep
+     DO nnn = 1, nstep
         !
         !
         ! Compute alpha & beta in Veff = Veff + alp*S(r) + beta
@@ -272,34 +272,34 @@ vstart=20000
         sr   = 0.d0
         r2   = 0.d0
         !
-        do ir = 1, nrxx
+        DO ir = 1, nrxx
            r2   = r2   + psi_smooth(1,ir)**4
            s2r2 = s2r2 + ( S(ir) * psi_smooth(1,ir)**2 )**2
            sr2  = sr2  +   S(ir) * psi_smooth(1,ir)**4
            s2r  = s2r  + ( S(ir)**2) * psi_smooth(1,ir)**2
            sr   = sr   +   S(ir) * psi_smooth(1,ir)**2
-        enddo
+        ENDDO
 #ifdef __PARA
-        call mp_sum( r2, intra_pool_comm )
-        call mp_sum( s2r2, intra_pool_comm )
-        call mp_sum( sr2, intra_pool_comm )
-        call mp_sum( s2r, intra_pool_comm )
-        call mp_sum( sr, intra_pool_comm )
+        CALL mp_sum( r2, intra_pool_comm )
+        CALL mp_sum( s2r2, intra_pool_comm )
+        CALL mp_sum( sr2, intra_pool_comm )
+        CALL mp_sum( s2r, intra_pool_comm )
+        CALL mp_sum( sr, intra_pool_comm )
 #endif
         !
         D  = r2*s2r2 - sr2*sr2
         Da = sr*sr2  - s2r*r2
         Db = sr2*s2r - s2r2*sr
         !
-        if (D.gt.0.d0) then
+        IF (D>0.d0) THEN
            alp = Da/D
            beta = Db/D
-        else
-           write(*,*) 'Det. of Hessian matrix is negative'
-           stop
-        endif
+        ELSE
+           WRITE(*,*) 'Det. of Hessian matrix is negative'
+           STOP
+        ENDIF
         !
-!        if (mod(nnn,100) .eq. 0) then 
+!        if (mod(nnn,100) .eq. 0) then
 !           write(*,*)'iteration ',nnn
 !           write(*,*) 's2 = ',s2
 !           write(*,*) 'D = ' , D
@@ -308,31 +308,31 @@ vstart=20000
 !           write(*,*) 'alp = ',alp
 !           write(*,*) 'beta = ',beta
 !           write(*,*)
-!        endif   
+!        endif
         !
         ! Update V-eff
-        !  
-        do ir = 1, nrxx
+        !
+        DO ir = 1, nrxx
            vv(ir,1)= vv(ir,1) + alp*S(ir) + beta
-           S(ir)   = S(ir) * (1.d0 + alp*psi_smooth(1,ir)**2) + & 
+           S(ir)   = S(ir) * (1.d0 + alp*psi_smooth(1,ir)**2) + &
                      beta*psi_smooth(1,ir)**2
-        enddo
+        ENDDO
         !
         s2 = 0.d0
-        do ir = 1, nrxx
+        DO ir = 1, nrxx
            s2 = s2 + S(ir)**2
-        enddo
+        ENDDO
 #ifdef __PARA
-        call mp_sum( s2, intra_pool_comm )
+        CALL mp_sum( s2, intra_pool_comm )
 #endif
         !
-     enddo
+     ENDDO
      !
-     call stop_clock ('ite_veff')
+     CALL stop_clock ('ite_veff')
      !
-     return
+     RETURN
      !
-     end subroutine ite_veff_nhpsi
+     END SUBROUTINE ite_veff_nhpsi
      !
-end subroutine eff_pot
+END SUBROUTINE eff_pot
 

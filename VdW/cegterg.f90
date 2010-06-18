@@ -29,27 +29,27 @@ SUBROUTINE cegterg_vdw( ndim, ndmx, nvec, nvecx, evc, &
   IMPLICIT NONE
   !
   ! ... on INPUT
-  ! 
+  !
   INTEGER :: ndim, ndmx, nvec, nvecx
     ! dimension of the matrix to be diagonalized
     ! leading dimension of matrix evc, as declared in the calling pgm unit
     ! integer number of searched low-lying roots
     ! maximum dimension of the reduced basis set
     !    (the basis set is refreshed when its dimension would exceed nvecx)
-  COMPLEX (KIND=DP) :: evc(ndmx,nvec)
-    !  evc   contains the  refined estimates of the eigenvectors  
-  REAL (KIND=DP) :: ethr
+  COMPLEX (kind=DP) :: evc(ndmx,nvec)
+    !  evc   contains the  refined estimates of the eigenvectors
+  REAL (kind=DP) :: ethr
     ! energy threshold for convergence
     !   root improvement is stopped, when two consecutive estimates of the root
     !   differ by less than ethr.
   LOGICAL :: overlap
     ! if .FALSE. : do not calculate S|psi>
-  INTEGER, INTENT(IN) :: btype(nvec)
+  INTEGER, INTENT(in) :: btype(nvec)
     ! band type ( 1 = occupied, 0 = empty )
   !
   ! ... on OUTPUT
   !
-  REAL(KIND=DP) :: e(nvec)
+  REAL(kind=DP) :: e(nvec)
     ! contains the estimated roots.
   INTEGER :: iter, notcnv
     ! integer  number of iterations performed
@@ -65,21 +65,21 @@ SUBROUTINE cegterg_vdw( ndim, ndmx, nvec, nvecx, evc, &
     ! dimension of the reduced basis
     ! counter on the reduced basis vectors
     ! do-loop counters
-  COMPLEX (KIND=DP), ALLOCATABLE :: hc(:,:),  sc(:,:), vc(:,:)
+  COMPLEX (kind=DP), ALLOCATABLE :: hc(:,:),  sc(:,:), vc(:,:)
     ! Hamiltonian on the reduced basis
     ! S matrix on the reduced basis
     ! the eigenvectors of the Hamiltonian
-  COMPLEX(KIND=DP), ALLOCATABLE :: psi(:,:), hpsi(:,:), spsi(:,:)
+  COMPLEX(kind=DP), ALLOCATABLE :: psi(:,:), hpsi(:,:), spsi(:,:)
     ! work space, contains psi
     ! the product of H and psi
     ! the product of S and psi
-  COMPLEX(KIND=DP), EXTERNAL :: zdotc
+  COMPLEX(kind=DP), EXTERNAL :: zdotc
     ! auxiliary complex variable
-  REAL(KIND=DP), ALLOCATABLE :: ew(:)
+  REAL(kind=DP), ALLOCATABLE :: ew(:)
     ! eigenvalues of the reduced hamiltonian
   LOGICAL, ALLOCATABLE  :: conv(:)
     ! true if the root is converged
-  REAL (KIND=DP) :: empty_ethr 
+  REAL (kind=DP) :: empty_ethr
     ! threshold for empty bands
   !
   ! ... Called routines:
@@ -95,7 +95,7 @@ SUBROUTINE cegterg_vdw( ndim, ndmx, nvec, nvecx, evc, &
     !    the first nvec columns contain the trial eigenvectors
   !
   !
-  CALL start_clock( 'cegterg' )  
+  CALL start_clock( 'cegterg' )
   !
   ! ... allocate the work arrays
   !
@@ -112,13 +112,13 @@ SUBROUTINE cegterg_vdw( ndim, ndmx, nvec, nvecx, evc, &
   !
   ! ... threshold for empty bands
   !
-  empty_ethr = MAX( ( ethr * 5.D0 ), 1.D-5 )
+  empty_ethr = max( ( ethr * 5.D0 ), 1.D-5 )
   !
   ! ... prepare the hamiltonian for the first iteration
   !
   notcnv = nvec
   nbase  = nvec
-  conv   = .FALSE.
+  conv   = .false.
   !
   IF ( overlap ) spsi = ZERO
   psi  = ZERO
@@ -147,13 +147,13 @@ SUBROUTINE cegterg_vdw( ndim, ndmx, nvec, nvecx, evc, &
      !
      CALL zgemm( 'C', 'N', nbase, nbase, ndim, ONE, &
                  psi, ndmx, spsi, ndmx, ZERO, sc, nvecx )
-     !     
+     !
   ELSE
      !
      CALL zgemm( 'C', 'N', nbase, nbase, ndim, ONE, &
                  psi, ndmx,  psi, ndmx, ZERO, sc, nvecx )
      !
-  END IF
+  ENDIF
   !
   CALL mp_sum( sc, intra_pool_comm )
   !
@@ -177,14 +177,14 @@ SUBROUTINE cegterg_vdw( ndim, ndmx, nvec, nvecx, evc, &
      !
      DO n = 1, nvec
         !
-        IF ( .NOT. conv(n) ) THEN
+        IF ( .not. conv(n) ) THEN
            !
-           ! ... this root not yet converged ... 
+           ! ... this root not yet converged ...
            !
            np = np + 1
            !
            ! ... reorder eigenvectors so that coefficients for unconverged
-           ! ... roots come first. This allows to use quick matrix-matrix 
+           ! ... roots come first. This allows to use quick matrix-matrix
            ! ... multiplications to set a new basis vector (see below)
            !
            IF ( np /= n ) vc(:,np) = vc(:,n)
@@ -193,9 +193,9 @@ SUBROUTINE cegterg_vdw( ndim, ndmx, nvec, nvecx, evc, &
            !
            ew(nbase+np) = e(n)
            !
-        END IF
+        ENDIF
         !
-     END DO
+     ENDDO
      !
      ! ... expand the basis set with new basis vectors ( H - e*S )|psi> ...
      !
@@ -203,13 +203,13 @@ SUBROUTINE cegterg_vdw( ndim, ndmx, nvec, nvecx, evc, &
         !
         CALL zgemm( 'N', 'N', ndim, notcnv, nbase, ONE, spsi, &
                     ndmx, vc, nvecx, ZERO, psi(1,nbase+1), ndmx )
-        !     
+        !
      ELSE
         !
         CALL zgemm( 'N', 'N', ndim, notcnv, nbase, ONE, psi, &
                     ndmx, vc, nvecx, ZERO, psi(1,nbase+1), ndmx )
         !
-     END IF
+     ENDIF
      !
      FORALL( np = 1: notcnv ) &
         psi(:,nbase+np) = - ew(nbase+np) * psi(:,nbase+np)
@@ -231,13 +231,13 @@ SUBROUTINE cegterg_vdw( ndim, ndmx, nvec, nvecx, evc, &
         !
         ew(n) = zdotc( ndim, psi(1,nbase+n), 1, psi (1,nbase+n), 1 )
         !
-     END DO
+     ENDDO
      !
      CALL mp_sum( ew, intra_pool_comm )
      !
      FORALL( n = 1 : notcnv )
         !
-        psi(:,nbase+n) = psi(:,nbase+n) / SQRT( ew(n) )
+        psi(:,nbase+n) = psi(:,nbase+n) / sqrt( ew(n) )
         !
      END FORALL
      !
@@ -261,13 +261,13 @@ SUBROUTINE cegterg_vdw( ndim, ndmx, nvec, nvecx, evc, &
         !
         CALL zgemm( 'C', 'N', nbase+notcnv, notcnv, ndim, ONE, psi, ndmx, &
                     spsi(1,nbase+1), ndmx, ZERO, sc(1,nbase+1), nvecx )
-        !     
+        !
      ELSE
         !
         CALL zgemm( 'C', 'N', nbase+notcnv, notcnv, ndim, ONE, psi, ndmx, &
                     psi(1,nbase+1), ndmx, ZERO, sc(1,nbase+1), nvecx )
         !
-     END IF
+     ENDIF
      !
      CALL mp_sum( sc(:,nbase+1:nbase+notcnv), intra_pool_comm )
      !
@@ -278,22 +278,22 @@ SUBROUTINE cegterg_vdw( ndim, ndmx, nvec, nvecx, evc, &
      ! ifort 8.1 has some weird problem with forall
      !
      ! FORALL( n = 1 : nbase )
-     DO n = 1, nbase 
+     DO n = 1, nbase
         !
-        ! ... the diagonal of hc and sc must be strictly real 
+        ! ... the diagonal of hc and sc must be strictly real
         !
-        hc(n,n) = CMPLX( REAL( hc(n,n) ), 0.D0 ,kind=DP)
-        sc(n,n) = CMPLX( REAL( sc(n,n) ), 0.D0 ,kind=DP)
+        hc(n,n) = cmplx( REAL( hc(n,n) ), 0.D0 ,kind=DP)
+        sc(n,n) = cmplx( REAL( sc(n,n) ), 0.D0 ,kind=DP)
         !
         ! FORALL(  m = n + 1 : nbase )
-        DO m = n + 1, nbase 
+        DO m = n + 1, nbase
            !
-           hc(m,n) = CONJG( hc(n,m) )
-           sc(m,n) = CONJG( sc(n,m) )
+           hc(m,n) = conjg( hc(n,m) )
+           sc(m,n) = conjg( sc(n,m) )
            !
-        END DO !  FORALL
+        ENDDO !  FORALL
         !
-     END DO ! FORALL
+     ENDDO ! FORALL
      !
      ! ... diagonalize the reduced hamiltonian
      !
@@ -303,15 +303,15 @@ SUBROUTINE cegterg_vdw( ndim, ndmx, nvec, nvecx, evc, &
      !
      WHERE( btype(:) == 1 )
         !
-        conv(:) = ( ( ABS( ew(1:nvec) - e(:) ) < ethr ) )
+        conv(:) = ( ( abs( ew(1:nvec) - e(:) ) < ethr ) )
         !
      ELSEWHERE
         !
-        conv(:) = ( ( ABS( ew(1:nvec) - e(:) ) < empty_ethr ) )
+        conv(:) = ( ( abs( ew(1:nvec) - e(:) ) < empty_ethr ) )
         !
      END WHERE
      !
-     notcnv = COUNT( .NOT. conv(:) )
+     notcnv = count( .not. conv(:) )
      !
      e(1:nvec) = ew(1:nvec)
      !
@@ -322,7 +322,7 @@ SUBROUTINE cegterg_vdw( ndim, ndmx, nvec, nvecx, evc, &
      ! ... with the current estimate of the eigenvectors;
      ! ... set the basis dimension to nvec.
      !
-     IF ( notcnv == 0 .OR. nbase+notcnv > nvecx .OR. iter == maxter ) THEN
+     IF ( notcnv == 0 .or. nbase+notcnv > nvecx .or. iter == maxter ) THEN
         !
         CALL start_clock( 'last' )
         !
@@ -335,9 +335,9 @@ SUBROUTINE cegterg_vdw( ndim, ndmx, nvec, nvecx, evc, &
            !
            CALL stop_clock( 'last' )
            !
-           EXIT iterate
+           exit iterate
            !
-        ELSE IF ( iter == maxter ) THEN
+        ELSEIF ( iter == maxter ) THEN
            !
            ! ... last iteration, some roots not converged: return
            !
@@ -347,9 +347,9 @@ SUBROUTINE cegterg_vdw( ndim, ndmx, nvec, nvecx, evc, &
            !
            CALL stop_clock( 'last' )
            !
-           EXIT iterate
+           exit iterate
            !
-        END IF
+        ENDIF
         !
         ! ... refresh psi, H*psi and S*psi
         !
@@ -362,14 +362,14 @@ SUBROUTINE cegterg_vdw( ndim, ndmx, nvec, nvecx, evc, &
            !
            spsi(:,1:nvec) = psi(:,nvec+1:2*nvec)
            !
-        END IF
+        ENDIF
         !
         CALL zgemm( 'N', 'N', ndim, nvec, nbase, ONE, hpsi, &
                     ndmx, vc, nvecx, ZERO, psi(1,nvec+1), ndmx )
         !
         hpsi(:,1:nvec) = psi(:,nvec+1:2*nvec)
         !
-        ! ... refresh the reduced hamiltonian 
+        ! ... refresh the reduced hamiltonian
         !
         nbase = nvec
         !
@@ -387,9 +387,9 @@ SUBROUTINE cegterg_vdw( ndim, ndmx, nvec, nvecx, evc, &
         !
         CALL stop_clock( 'last' )
         !
-     END IF
+     ENDIF
       !
-  END DO iterate
+  ENDDO iterate
   !
   DEALLOCATE( conv )
   DEALLOCATE( ew )

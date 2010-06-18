@@ -7,41 +7,41 @@
 !
 !
 !-----------------------------------------------------------------
-subroutine pbcg_psi (lda, n, m, psi, h_diag, flag)
+SUBROUTINE pbcg_psi (lda, n, m, psi, h_diag, flag)
   !-----------------------------------------------------------------
   !
   !    This routine gives a preconditioning to the linear system solver.
   !    The preconditioning is diagonal in reciprocal space
   !
   !
-  USE kinds, only : DP
-  implicit none
+  USE kinds, ONLY : DP
+  IMPLICIT NONE
 
-  integer :: lda, n, m, flag
+  INTEGER :: lda, n, m, flag
   ! input: the leading dimension of the psi vector
   ! input: the real dimension of the vector
   ! input: the number of vectors
   ! input: flag=1 use h_diag, flag=-1 use CONJG(h_diag)
-  complex(kind=DP) :: psi (lda, m)
+  COMPLEX(kind=DP) :: psi (lda, m)
   ! inp/out: the vector to be preconditioned
 
-  complex(kind=DP) :: h_diag (lda, m)
+  COMPLEX(kind=DP) :: h_diag (lda, m)
   ! input: the preconditioning vector
 
-  integer :: k, i
+  INTEGER :: k, i
   ! counter on bands
   ! counter on the elements of the vector
   !
-  do k = 1, m
-     do i = 1, n
-       if (flag .eq. 1) then
+  DO k = 1, m
+     DO i = 1, n
+       IF (flag == 1) THEN
          psi (i, k) = psi (i, k) * h_diag (i, k)
-       else if (flag .eq. -1) then
-         psi (i, k) = psi (i, k) * CONJG(h_diag (i, k))
-       else
-         print*, 'flag is neither 1 nor -1. Stop'
-       endif  
-     enddo
-  enddo
-  return
-end subroutine pbcg_psi
+       ELSEIF (flag == -1) THEN
+         psi (i, k) = psi (i, k) * conjg(h_diag (i, k))
+       ELSE
+         PRINT*, 'flag is neither 1 nor -1. Stop'
+       ENDIF
+     ENDDO
+  ENDDO
+  RETURN
+END SUBROUTINE pbcg_psi

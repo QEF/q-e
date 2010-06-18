@@ -22,22 +22,22 @@ SUBROUTINE check_v_eff ( veff, charge )
   USE constants,            ONLY : eps4
   USE io_global,            ONLY : stdout
   USE io_files,             ONLY : iunigk, nwordatwfc, iunsat, iunwfc, nwordwfc
-  USE cell_base,            ONLY : tpiba2 
+  USE cell_base,            ONLY : tpiba2
   USE klist,                ONLY : nkstot, nks, xk, nelec
   USE uspp,                 ONLY : okvan
   USE cell_base,            ONLY : omega
   USE uspp,                 ONLY : vkb, nkb
   USE gvect,                ONLY : g, gg, gstart, ecfixed, qcutz, q2sigma, nrxx, &
-                                   nr1, nr2, nr3, nrx1, nrx2, nrx3,ngm, ecutwfc, nl  
+                                   nr1, nr2, nr3, nrx1, nrx2, nrx3,ngm, ecutwfc, nl
   USE wvfct,                ONLY : g2kin, wg, nbndx, et, nbnd, npwx, igk, &
                                    npw
   USE gsmooth,              ONLY : nls, nlsm, nr1s, nr2s, nr3s, &
-                                   nrx1s, nrx2s, nrx3s, nrxxs, doublegrid  
+                                   nrx1s, nrx2s, nrx3s, nrxxs, doublegrid
   USE control_flags,        ONLY : diis_ndim, ethr, lscf, max_cg_iter, isolve
   USE ldaU,                 ONLY : lda_plus_u, swfcatom
   USE scf,                  ONLY : vltot, vrs, v_of_0
   USE lsda_mod,             ONLY : nspin, current_spin, lsda, isk
-  USE wavefunctions_module, ONLY : psic , evc 
+  USE wavefunctions_module, ONLY : psic , evc
   USE g_psi_mod,            ONLY : h_diag, s_diag
   USE eff_v,                ONLY : rho_fft, rho_veff, evc_veff, nelecr
   USE mp_global,            ONLY : intra_pool_comm, inter_pool_comm
@@ -47,16 +47,16 @@ SUBROUTINE check_v_eff ( veff, charge )
   !
   ! ... First the I/O variables
   !
-  REAL(KIND=DP)              :: veff (nrxx, nspin)        ! in: effective potential
-  REAL(KIND=DP), ALLOCATABLE :: vrs_ (:, :)        ! to keep the local potential
-  REAL(KIND=DP) ::    charge    ! out: the charge difference  between  rho_check & rho-fft
+  REAL(kind=DP)              :: veff (nrxx, nspin)        ! in: effective potential
+  REAL(kind=DP), ALLOCATABLE :: vrs_ (:, :)        ! to keep the local potential
+  REAL(kind=DP) ::    charge    ! out: the charge difference  between  rho_check & rho-fft
   !
   ! ... local variables
   !
-  REAL(KIND=DP) :: avg_iter
+  REAL(kind=DP) :: avg_iter
     ! average number of iterations
     ! the average of the potential
-  REAL(KIND=DP), ALLOCATABLE :: k_gamma(:)
+  REAL(kind=DP), ALLOCATABLE :: k_gamma(:)
     ! gamma point
   INTEGER :: ik, ig, ibnd, dav_iter, ntry, notconv
     ! counter on k points
@@ -66,14 +66,14 @@ SUBROUTINE check_v_eff ( veff, charge )
     ! number or repeated call to diagonalization in case of non convergence
     ! number of notconverged elements
   INTEGER, ALLOCATABLE :: btype(:)
-    ! type of band: conduction (1) or valence (0)  
-  COMPLEX (KIND=DP), ALLOCATABLE :: evc_(:,:)
+    ! type of band: conduction (1) or valence (0)
+  COMPLEX (kind=DP), ALLOCATABLE :: evc_(:,:)
     !  evc_   contains the  refined estimates of the eigenvectors
     !
     ! ... external functions
     !
-  REAL(KIND=DP), EXTERNAL :: qe_erf
-    ! error function  
+  REAL(kind=DP), EXTERNAL :: qe_erf
+    ! error function
     !
     !
   CALL start_clock( 'c_bands' )
@@ -81,9 +81,9 @@ SUBROUTINE check_v_eff ( veff, charge )
   ! ... allocate arrays
   !
   ALLOCATE( vrs_ ( nrxx, nspin ) )
-  ALLOCATE( h_diag( npwx,1 ) )    
-  ALLOCATE( s_diag( npwx,1 ) )   
-  ALLOCATE( btype(  nbnd ) )       
+  ALLOCATE( h_diag( npwx,1 ) )
+  ALLOCATE( s_diag( npwx,1 ) )
+  ALLOCATE( btype(  nbnd ) )
   ALLOCATE( evc_(npwx,nbnd ) )
   !
   CALL diag_v_eff()
@@ -95,8 +95,8 @@ SUBROUTINE check_v_eff ( veff, charge )
   DEALLOCATE( btype )
   DEALLOCATE( evc_ )
   DEALLOCATE( vrs_  )
-  !       
-  CALL stop_clock( 'c_bands' )  
+  !
+  CALL stop_clock( 'c_bands' )
   !
   RETURN
   !
@@ -116,8 +116,8 @@ SUBROUTINE check_v_eff ( veff, charge )
        !
        INTEGER :: ir
        !
-       REAL(KIND=DP) :: w1           ! weights
-       !       
+       REAL(kind=DP) :: w1           ! weights
+       !
 !       WRITE( stdout, '(5X,"Davidson diagonalization (with overlap)")')
        !
        avg_iter = 0.D0
@@ -130,12 +130,12 @@ SUBROUTINE check_v_eff ( veff, charge )
           !
           IF ( lsda ) current_spin = isk(ik)
           !
-          ! ... generates the Hamiltonian and the 
+          ! ... generates the Hamiltonian and the
           !     list k+G <-> G of this k point
           !
-          allocate( k_gamma(3) )
+          ALLOCATE( k_gamma(3) )
           k_gamma = 0.d0
-          call gk_sort (k_gamma , ngm, g, ecutwfc / tpiba2, npw, igk, g2kin)
+          CALL gk_sort (k_gamma , ngm, g, ecutwfc / tpiba2, npw, igk, g2kin)
           !
           ! ... various initializations
           !
@@ -173,14 +173,14 @@ SUBROUTINE check_v_eff ( veff, charge )
              DO ig = 1, npw
                 g2kin (ig) = g2kin(ig) + qcutz * &
                          ( 1.D0 + qe_erf( ( g2kin(ig) - ecfixed ) / q2sigma ) )
-             END DO
-          END IF
+             ENDDO
+          ENDIF
           !
           btype(:) = 0
           !
-          ! ... a band is considered empty when its occupation is less 
+          ! ... a band is considered empty when its occupation is less
           ! ... than 1.0 %
-          !   
+          !
           WHERE( wg(:,ik) < 0.01D0 ) btype(:) = 0
           !
           IF ( isolve == 0 ) THEN
@@ -188,7 +188,7 @@ SUBROUTINE check_v_eff ( veff, charge )
              ! ... Davidson diagonalization
              !
              ! ... h_diag are the diagonal matrix elements of the
-             ! ... hamiltonian used in g_psi to evaluate the correction 
+             ! ... hamiltonian used in g_psi to evaluate the correction
              ! ... to the trial eigenvectors
              !
              h_diag(1:npw,1) = g2kin(1:npw) + v_of_0
@@ -218,30 +218,30 @@ SUBROUTINE check_v_eff ( veff, charge )
                 avg_iter = avg_iter + dav_iter
                 !
                 ! ... save wave-functions to be used as input for the
-                ! ... iterative diagonalization of the next scf iteration 
+                ! ... iterative diagonalization of the next scf iteration
                 ! ... and for rho calculation
                 !
 !                IF ( nks > 1 .OR. .NOT. reduce_io ) &
 !                   CALL davcio( evc_, nwordwfc, iunwfc, ik, 1 )
                 !
-                ntry = ntry + 1                
+                ntry = ntry + 1
                 !
                 ! ... exit condition
                 !
-                IF ( test_exit_cond() ) EXIT david_loop                
+                IF ( test_exit_cond() ) exit david_loop
                 !
-             END DO david_loop 
+             ENDDO david_loop
              !
-          END IF
+          ENDIF
           !
-          IF ( notconv > MAX( 5, nbnd / 4 ) ) THEN
+          IF ( notconv > max( 5, nbnd / 4 ) ) THEN
              !
              CALL errore( 'c_bands', &
                         & 'too many bands are not converged', 1 )
              !
-          END IF
+          ENDIF
           !
-       END DO k_loop
+       ENDDO k_loop
        !
        CALL mp_sum( avg_iter, inter_pool_comm )
        !
@@ -251,7 +251,7 @@ SUBROUTINE check_v_eff ( veff, charge )
 !              '( 5X,"ethr = ",1PE9.2,",  avg # of iterations =",0PF5.1 )' ) &
 !           ethr, avg_iter
        !
-       ! compute the charge density from v_eff 
+       ! compute the charge density from v_eff
        !
        rho_veff =   0.D0
        !
@@ -270,12 +270,12 @@ SUBROUTINE check_v_eff ( veff, charge )
           CALL cft3s( psic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, 2 )
           !
           ! compute the weight
-          ! 
+          !
           nelecr = sum(rho_fft) * omega / (nr1*nr2*nr3)
 #ifdef __PARA
-          call mp_sum( nelecr, intra_pool_comm )
+          CALL mp_sum( nelecr, intra_pool_comm )
 #endif
-          w1 =  nelecr  / omega 
+          w1 =  nelecr  / omega
           !
           ! ... increment the charge density ...
           !
@@ -283,25 +283,25 @@ SUBROUTINE check_v_eff ( veff, charge )
              !
              rho_veff(ir,current_spin) = rho_veff(ir,current_spin) + &
                                           w1 * ( REAL( psic(ir) )**2 + &
-                                                 AIMAG( psic(ir) )**2 )
+                                                 aimag( psic(ir) )**2 )
              !
-          END DO
+          ENDDO
           nelecr = sum(rho_veff) * omega / (nr1*nr2*nr3)
 #ifdef __PARA
-          call mp_sum( nelecr, intra_pool_comm )
+          CALL mp_sum( nelecr, intra_pool_comm )
 #endif
           !
-       END DO
+       ENDDO
        !
        !  compute the charge difference
        !
        charge = 0.d0
        DO ir = 1, nrxx
           charge = charge + abs( rho_fft(ir,nspin) - rho_veff(ir,nspin) )
-       END DO
+       ENDDO
        charge = charge * omega / (nr1*nr2*nr3) / nelecr
 #ifdef __PARA
-          call mp_sum( charge, intra_pool_comm )
+          CALL mp_sum( charge, intra_pool_comm )
 #endif
        !
        ! return the value for vrs and keep evc_ in evc_eff
@@ -309,7 +309,7 @@ SUBROUTINE check_v_eff ( veff, charge )
        vrs = vrs_
        evc_veff = evc_
        !
-       deallocate( k_gamma )
+       DEALLOCATE( k_gamma )
        !
        RETURN
        !
@@ -328,10 +328,10 @@ SUBROUTINE check_v_eff ( veff, charge )
        LOGICAL :: test_exit_cond
        !
        !
-       test_exit_cond = .NOT. ( ( ntry <= 5 ) .AND. &
-                                ( ( .NOT. lscf .AND. ( notconv > 0 ) ) .OR. &
-                                  (       lscf .AND. ( notconv > 5 ) ) ) )
-       !                          
+       test_exit_cond = .not. ( ( ntry <= 5 ) .and. &
+                                ( ( .not. lscf .and. ( notconv > 0 ) ) .or. &
+                                  (       lscf .and. ( notconv > 5 ) ) ) )
+       !
      END FUNCTION test_exit_cond
-     !     
+     !
 END SUBROUTINE check_v_eff

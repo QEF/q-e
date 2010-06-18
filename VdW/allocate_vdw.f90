@@ -7,7 +7,7 @@
 !
 !
 !-----------------------------------------------------------------------
-subroutine allocate_vdw
+SUBROUTINE allocate_vdw
   !-----------------------------------------------------------------------
   !
   ! dynamical allocation of arrays:
@@ -19,17 +19,17 @@ subroutine allocate_vdw
   USE qpoint,    ONLY : nksq
   USE eff_v
   !
-  implicit none
+  IMPLICIT NONE
   !
-  allocate (rho_fft (nrxx, nspin))    
-  allocate (rho_veff(nrxx, nspin))    
-  allocate (veff   (nrxx, nspin))    
+  ALLOCATE (rho_fft (nrxx, nspin))
+  ALLOCATE (rho_veff(nrxx, nspin))
+  ALLOCATE (veff   (nrxx, nspin))
   !
-  allocate (evc_veff(npwx, nbnd ))    
-  allocate (et_c(nbnd, nksq ))    
-  allocate (dvext(npwx, 3, nbnd))
-  allocate (dpsi_eff(npwx, 3, nbnd))
+  ALLOCATE (evc_veff(npwx, nbnd ))
+  ALLOCATE (et_c(nbnd, nksq ))
+  ALLOCATE (dvext(npwx, 3, nbnd))
+  ALLOCATE (dpsi_eff(npwx, 3, nbnd))
   !
-  return
-end subroutine allocate_vdw
+  RETURN
+END SUBROUTINE allocate_vdw
 

@@ -7,31 +7,31 @@
 !
 !
 !-----------------------------------------------------------------------
-subroutine dv_of_drho_vdw (mode, dvscf, flag)
+SUBROUTINE dv_of_drho_vdw (mode, dvscf, flag)
   !-----------------------------------------------------------------------
   !
   !     This routine computes the change of the self consistent potential
   !     due to the perturbation.
   !
-  use funct, only : dft_is_gradient, dmxc
-  use pwcom
-  use scf, only : rho, rho_core
-  USE kinds, only : DP
-  use phcom
-  use eff_v,  only : rho_veff
-  implicit none
+  USE funct, ONLY : dft_is_gradient, dmxc
+  USE pwcom
+  USE scf, ONLY : rho, rho_core
+  USE kinds, ONLY : DP
+  USE phcom
+  USE eff_v,  ONLY : rho_veff
+  IMPLICIT NONE
 
-  integer :: mode
+  INTEGER :: mode
   ! input: the mode to do
 
-  complex(kind=DP) :: dvscf (nrxx, nspin)
+  COMPLEX(kind=DP) :: dvscf (nrxx, nspin)
   ! input: the change of the charge,
   ! output: change of the potential
 
-  logical :: flag
+  LOGICAL :: flag
   ! input: if true add core charge
 
-  integer :: ir, is, is1, ig
+  INTEGER :: ir, is, is1, ig
   ! counter on r vectors
   ! counter on spin polarizations
   ! counter on g vectors
@@ -41,7 +41,7 @@ subroutine dv_of_drho_vdw (mode, dvscf, flag)
   ! the structure factor
   ! constant 2/3
 
-  complex(kind=DP), allocatable :: dvaux (:,:), drhoc (:),&
+  COMPLEX(kind=DP), ALLOCATABLE :: dvaux (:,:), drhoc (:),&
                                    dv_tfvw (:,:)
   ! auxiliary variable for potential
   !  the change of the core charge
@@ -49,9 +49,9 @@ subroutine dv_of_drho_vdw (mode, dvscf, flag)
   !
   real(kind=dp) :: rhotot
   !
-  call start_clock ('dv_of_drho')
-  allocate (dvaux( nrxx,  nspin), dv_tfvw( nrxx, nspin))    
-  allocate (drhoc( nrxx))    
+  CALL start_clock ('dv_of_drho')
+  ALLOCATE (dvaux( nrxx,  nspin), dv_tfvw( nrxx, nspin))
+  ALLOCATE (drhoc( nrxx))
   !
   dv_tfvw = dvscf
   !
@@ -59,28 +59,28 @@ subroutine dv_of_drho_vdw (mode, dvscf, flag)
   !
   dvaux (:,:) = (0.d0, 0.d0)
 
-  fac = 1.d0 / DBLE (nspin)
-  if (nlcc_any.and.flag) then
-     call addcore (mode, drhoc)
-     do is = 1, nspin
+  fac = 1.d0 / dble (nspin)
+  IF (nlcc_any.and.flag) THEN
+     CALL addcore (mode, drhoc)
+     DO is = 1, nspin
         rho%of_r(:, is) = rho%of_r(:, is) + fac * rho_core (:)
         dvscf(:, is) = dvscf(:, is) + fac * drhoc (:)
-     enddo
-  endif
+     ENDDO
+  ENDIF
 !  allocate ( dmuxc(nrxx, nspin, nspin) )
   dmuxc(:,:,:) = 0.d0
-  do ir = 1, nrxx
+  DO ir = 1, nrxx
      rhotot = rho%of_r (ir, nspin) + rho_core (ir)
-     if (rhotot.gt.1.d-30) dmuxc (ir, 1, 1) = dmxc (rhotot)
-     if (rhotot.lt. - 1.d-30) dmuxc (ir, 1, 1) = - dmxc ( - rhotot)
-  enddo
-  do is = 1, nspin
-     do is1 = 1, nspin
-        do ir = 1, nrxx
+     IF (rhotot>1.d-30) dmuxc (ir, 1, 1) = dmxc (rhotot)
+     IF (rhotot< - 1.d-30) dmuxc (ir, 1, 1) = - dmxc ( - rhotot)
+  ENDDO
+  DO is = 1, nspin
+     DO is1 = 1, nspin
+        DO ir = 1, nrxx
            dvaux(ir,is) = dvaux(ir,is) + dmuxc(ir,is,is1) * dvscf(ir,is1)
-        enddo
-     enddo
-  enddo
+        ENDDO
+     ENDDO
+  ENDDO
 !  deallocate ( dmuxc )
   !
   ! add gradient correction to xc, NB: if nlcc is true we need to add here
@@ -90,55 +90,55 @@ subroutine dv_of_drho_vdw (mode, dvscf, flag)
 !       (rho%of_r, grho, dvxc_rr, dvxc_sr, dvxc_ss, dvxc_s, xq, &
 !       dvscf, nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, nspin, nl, ngm, g, &
 !       alat, omega, dvaux)
-  if (nlcc_any.and.flag) then
-     do is = 1, nspin
+  IF (nlcc_any.and.flag) THEN
+     DO is = 1, nspin
         rho%of_r(:, is) = rho%of_r(:, is) - fac * rho_core (:)
         dvscf(:, is) = dvscf(:, is) - fac * drhoc (:)
-     enddo
-  endif
+     ENDDO
+  ENDIF
   !
   ! copy the total (up+down) delta rho in dvscf(*,1) and go to G-space
   !
-  if (nspin == 2) then
-     dvscf(:,1) = dvscf(:,1) + dvscf(:,2) 
-  end if
+  IF (nspin == 2) THEN
+     dvscf(:,1) = dvscf(:,1) + dvscf(:,2)
+  ENDIF
   !
-  call cft3 (dvscf, nr1, nr2, nr3, nrx1, nrx2, nrx3, -1)
+  CALL cft3 (dvscf, nr1, nr2, nr3, nrx1, nrx2, nrx3, -1)
   !
   ! hartree contribution is computed in reciprocal space
   !
-  do is = 1, nspin
-     call cft3 (dvaux (1, is), nr1, nr2, nr3, nrx1, nrx2, nrx3, - 1)
-     do ig = 1, ngm
+  DO is = 1, nspin
+     CALL cft3 (dvaux (1, is), nr1, nr2, nr3, nrx1, nrx2, nrx3, - 1)
+     DO ig = 1, ngm
         qg2 = (g(1,ig)+xq(1))**2 + (g(2,ig)+xq(2))**2 + (g(3,ig)+xq(3))**2
-        if (qg2 > 1.d-8) then
+        IF (qg2 > 1.d-8) THEN
            dvaux(nl(ig),is) = dvaux(nl(ig),is) + &
                               e2 * fpi * dvscf(nl(ig),1) / (tpiba2 * qg2)
 !           dvaux(nl(ig),is) = e2 * fpi * dvscf(nl(ig),1) / (tpiba2 * qg2)
-        endif
-     enddo
+        ENDIF
+     ENDDO
      !
      !  and transformed back to real space
      !
-     call cft3 (dvaux (1, is), nr1, nr2, nr3, nrx1, nrx2, nrx3, +1)
-  enddo
+     CALL cft3 (dvaux (1, is), nr1, nr2, nr3, nrx1, nrx2, nrx3, +1)
+  ENDDO
   !
   ! TFvW contribution is computed in real space
   !
   ttd = 2.d0/3.d0
   is = 1
-  dv_tfvw(:, is) = ttd * (0.125d0/ttd*fpi**2)**ttd * dv_tfvw (:, is) & 
-                       * ( abs(rho_veff(:,is))** (-ttd/2.d0) )  
-!  dv_tfvw(:, is) = ttd * (0.125d0/ttd*fpi**2)**ttd * dv_tfvw (:, is) & 
-!                       * ( abs(rhof_r(:,is)+rho_core(:))** (-ttd/2.d0) )  
+  dv_tfvw(:, is) = ttd * (0.125d0/ttd*fpi**2)**ttd * dv_tfvw (:, is) &
+                       * ( abs(rho_veff(:,is))** (-ttd/2.d0) )
+!  dv_tfvw(:, is) = ttd * (0.125d0/ttd*fpi**2)**ttd * dv_tfvw (:, is) &
+!                       * ( abs(rhof_r(:,is)+rho_core(:))** (-ttd/2.d0) )
   !
   ! at the end the three contributes are added
   !
   dvscf (:,:) = dvaux (:,:) + dv_tfvw (:,:)
   !
-  deallocate (drhoc)
-  deallocate (dvaux)
+  DEALLOCATE (drhoc)
+  DEALLOCATE (dvaux)
 
-  call stop_clock ('dv_of_drho')
-  return
-end subroutine dv_of_drho_vdw
+  CALL stop_clock ('dv_of_drho')
+  RETURN
+END SUBROUTINE dv_of_drho_vdw

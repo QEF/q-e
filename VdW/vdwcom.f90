@@ -8,22 +8,22 @@
 !----------------------------------------------------------------------------
 !
 ! ... Common variables for the vdw program
-!  
+!
 MODULE eff_v
   !
   USE kinds,  ONLY : DP
   !
   SAVE
   !
-  REAL (KIND=DP) :: nelecr
+  REAL (kind=DP) :: nelecr
   !
-  REAL (KIND=DP), ALLOCATABLE ::            &
+  REAL (kind=DP), ALLOCATABLE ::            &
      !
      rho_fft(:,:),      &  !charge density using cut-off in FFT
      rho_veff(:,:),     &  !charge density from v_eff
      veff(:,:)            !effective pot in TFvW scheme
      !
-  COMPLEX (KIND=DP), ALLOCATABLE :: &
+  COMPLEX (kind=DP), ALLOCATABLE :: &
      !
      evc_veff (:,:),    &     !eigenvectors corespond to v_eff
      et_c (:,:),        &     !eigenvalues plus imag. freq.
@@ -44,8 +44,8 @@ MODULE control_vdw
   ! Max. # of iterations
   ! number of iterations used in potential mixing
   !
-  REAL (KIND=DP) ::  tr2_vdw, thresh_veff, al_mix_vdw(maxter_vdw)
-  ! Threshold for iterative solution of linear system 
+  REAL (kind=DP) ::  tr2_vdw, thresh_veff, al_mix_vdw(maxter_vdw)
+  ! Threshold for iterative solution of linear system
   ! thresh_hold for iterative optimization of Veff
   ! mixing factor (for each iteration) for updating the scf potential:
   !

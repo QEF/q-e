@@ -14,7 +14,7 @@ PROGRAM vdw
   !    (e.g., atoms, molecules,...) using TF-vW approximation.
   !    The two basic steps are:
   !    1) read the output file produced by pw.
-  !    2) calculate the effective potential 
+  !    2) calculate the effective potential
   !    3) solve the modified Sternheimer equation to determine density response,
   !       hence polarizability
   !
@@ -33,7 +33,7 @@ PROGRAM vdw
   USE check_stop,      ONLY : check_stop_init
   !
   IMPLICIT NONE
-  REAL (KIND=DP) :: charge, vstart
+  REAL (kind=DP) :: charge, vstart
   INTEGER :: i
   !
   ! initialise environment
@@ -45,7 +45,7 @@ PROGRAM vdw
   !
   IF ( ionode )  CALL input_from_file ( )
   !
-  call vdw_init ( ) 
+  CALL vdw_init ( )
   !
   CALL check_stop_init()
   !
@@ -53,8 +53,8 @@ PROGRAM vdw
   !!! called by read_file, called by vdw_init, with nkb set to the "correct"
   !!! value, but we need nkb=0 and vkb array consistently allocated
   nkb  = 0
-  deallocate (vkb)
-  allocate (vkb(npwx,nkb))
+  DEALLOCATE (vkb)
+  ALLOCATE (vkb(npwx,nkb))
   !!!
   nbnd = 1
   nbndx = 4 * nbnd
@@ -64,13 +64,13 @@ PROGRAM vdw
   !
   CALL allocate_vdw()
   !
-  ! Start polarizability calculation 
+  ! Start polarizability calculation
   !
   WRITE( stdout,'(/,5x,"Effective Potential Calculation",/)')
   !
   ! Calculate the effective potential
   !
-  call eff_pot (rho%of_r, nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, nl,&
+  CALL eff_pot (rho%of_r, nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, nl,&
                 ngm, gg, gstart, nspin, alat, omega, ecutwfc,  &
                 charge, vstart, thresh_veff)
   !
@@ -79,7 +79,7 @@ PROGRAM vdw
   ! Electric field calculation
   !
   lgamma = .true.
-  call allocate_phq()
+  CALL allocate_phq()
   ALLOCATE(ikks(nksq), ikqs(nksq))
   ikks(1)=1
   ikqs(1)=1
@@ -91,29 +91,29 @@ PROGRAM vdw
   !
   !
   i = nfs
-  freq_loop : DO WHILE ( i .ge. 1 )
+  freq_loop : DO WHILE ( i >= 1 )
      !
-     call solve_e_vdw ( fiu(i) )
+     CALL solve_e_vdw ( fiu(i) )
      IF ( convt ) CALL polariz_vdw ( fiu(i) )
      i = i - 1
      !
-  END DO freq_loop
+  ENDDO freq_loop
   !
   WRITE( stdout,'(/,5x,"End of Frequency Dependent Polarizability Calculation",/)')
   !
-  call deallocate_phq()
+  CALL deallocate_phq()
   !
   !
   WRITE( stdout, '(/,5x,"End of vdW calculation")')
   !
   !
-  call clean_pw( .TRUE. )
+  CALL clean_pw( .true. )
   !
-  call stop_vdw()
+  CALL stop_vdw()
   !
   CALL stop_clock( 'VdW' )
   !
-END PROGRAM vdw 
+END PROGRAM vdw
 !
 !-----------------------------------------------------------------------
 SUBROUTINE vdw_init ( )
@@ -144,9 +144,9 @@ SUBROUTINE vdw_init ( )
   REAL(DP) :: emin, emax, sample_bias, z, dz, epsilon
   ! directory for temporary files
   CHARACTER(len=256) :: outdir
-  CHARACTER(LEN=256)         :: input_line
-  CHARACTER(LEN=80)          :: card
-  CHARACTER(LEN=1), EXTERNAL :: capital
+  CHARACTER(len=256)         :: input_line
+  CHARACTER(len=80)          :: card
+  CHARACTER(len=1), EXTERNAL :: capital
   LOGICAL                    :: tend
   LOGICAL                    :: end_of_file
   INTEGER                    :: i
@@ -177,20 +177,20 @@ SUBROUTINE vdw_init ( )
      !     reading the namelist inputpp
      !
      READ (5, inputvdw, err = 200, iostat = ios)
-200  CALL errore ('vdw', 'reading inputvdw namelist', ABS (ios) )
+200  CALL errore ('vdw', 'reading inputvdw namelist', abs (ios) )
      tmp_dir = trimcheck ( outdir )
      !
      !   reading frequencies
      !
      READ (5, *, err = 10, iostat = ios) card
      READ (5, *, err = 10, iostat = ios) nfs
-     IF ( nfs .gt. nfsmax ) & 
+     IF ( nfs > nfsmax ) &
         CALL  errore ('extract', 'nfs too large', 1 )
      DO i = 1, nfs
         READ (5, *, err = 10, iostat = ios) fiu(i)
      ENDDO
-10   CALL errore ('extract', 'error or eof while reading frequencies', ABS(ios) )
-  END IF
+10   CALL errore ('extract', 'error or eof while reading frequencies', abs(ios) )
+  ENDIF
   !
   !
   ! ... Broadcast variables

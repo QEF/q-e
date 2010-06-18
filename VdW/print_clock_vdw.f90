@@ -6,51 +6,51 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !-----------------------------------------------------------------------
-subroutine print_clock_vdw
+SUBROUTINE print_clock_vdw
   !-----------------------------------------------------------------------
 
   USE io_global,  ONLY : stdout
-  USE uspp, only: okvan
+  USE uspp, ONLY: okvan
   USE ramanm, ONLY: lraman, elop
   USE nlcc_ph, ONLY: nlcc_any
-  implicit none
+  IMPLICIT NONE
   !
   WRITE( stdout, * )
-  call print_clock ('VdW')
+  CALL print_clock ('VdW')
   !
   WRITE( stdout, * )
   WRITE( stdout,  * ) '    INITIALIZATION: '
-  call print_clock ('vdw_init')
+  CALL print_clock ('vdw_init')
   WRITE( stdout, * )
   !
   WRITE( stdout, * )
   WRITE( stdout,  * ) '    EFFECTIVE POTENTIAL:'
-  call print_clock ('eff_pot')
-  call print_clock ('ite_veff')
+  CALL print_clock ('eff_pot')
+  CALL print_clock ('ite_veff')
   !
   WRITE( stdout, * )
   WRITE( stdout,  * ) '    POLARIZABILITY:'
-  call print_clock ('solve_e')
-  call print_clock ('polariz')
+  CALL print_clock ('solve_e')
+  CALL print_clock ('polariz')
   WRITE( stdout, * )
-  call print_clock ('dvpsi_e')
-  call print_clock ('adddvscf')
-  call print_clock ('gmressolve')
-  call print_clock ('incdrhoscf')
-  call print_clock ('dv_of_drho')
-  call print_clock ('mix_pot')
+  CALL print_clock ('dvpsi_e')
+  CALL print_clock ('adddvscf')
+  CALL print_clock ('gmressolve')
+  CALL print_clock ('incdrhoscf')
+  CALL print_clock ('dv_of_drho')
+  CALL print_clock ('mix_pot')
   !
   WRITE( stdout, * )
   WRITE( stdout,  * ) '    General routines'
-  call print_clock ('calbec')
-  call print_clock ('cft3')
-  call print_clock ('cft3s')
-  call print_clock ('davcio')
+  CALL print_clock ('calbec')
+  CALL print_clock ('cft3')
+  CALL print_clock ('cft3s')
+  CALL print_clock ('davcio')
   WRITE( stdout, * )
 #ifdef __PARA
   WRITE( stdout,  * ) '    Parallel routines'
-  call print_clock ('reduce')
+  CALL print_clock ('reduce')
   WRITE( stdout, * )
 #endif
-  return
-end subroutine print_clock_vdw
+  RETURN
+END SUBROUTINE print_clock_vdw
