@@ -1509,7 +1509,7 @@ MODULE cp_restart
                   IF( nspin == 1 ) THEN
                      CALL iotk_scan_begin( iunpun, "DATAFILE", FOUND = found )
                   ELSE
-                     CALL iotk_scan_begin( iunpun, "DATAFILE//TRIM(cspin)", FOUND = found )
+                     CALL iotk_scan_begin( iunpun, "DATAFILE"//TRIM(cspin), FOUND = found )
                   END IF
                   !
                   CALL iotk_scan_dat  ( iunpun, "OCCUPATIONS", occ_( 1:nbnd_tot ) ) 
@@ -1517,7 +1517,7 @@ MODULE cp_restart
                   IF( nspin == 1 ) THEN
                      CALL iotk_scan_end( iunpun, "DATAFILE" )
                   ELSE
-                     CALL iotk_scan_end( iunpun, "DATAFILE//TRIM(cspin)" )
+                     CALL iotk_scan_end( iunpun, "DATAFILE"//TRIM(cspin) )
                   END IF
                   !
                   IF( found ) THEN
