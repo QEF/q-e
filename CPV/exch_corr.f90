@@ -149,7 +149,7 @@
             end do
          end do
          !
-         dxc = dxc * omega / ( nr1*nr2*nr3 )
+         dxc = dxc * omega / DBLE( nr1*nr2*nr3 )
          !
          call mp_sum ( dxc, intra_image_comm )
          !
@@ -426,6 +426,8 @@ subroutine exch_corr_wrapper(nnr, nspin, grhor, rhor, etxc, v, h)
            CALL xc( arhox, ex, ec, vx(1), vc(1) )
            v(ir,nspin) = e2 * (vx(1) + vc(1) )
            etxc = etxc + e2 * (ex + ec) * rhox
+        else
+           v(ir,nspin) = 0.0D0
         endif
      enddo
 !$omp end parallel do
@@ -454,6 +456,10 @@ subroutine exch_corr_wrapper(nnr, nspin, grhor, rhor, etxc, v, h)
               v(ir,is) = e2 * (vx(is) + vc(is) )
            enddo
            etxc = etxc + e2 * (ex + ec) * rhox
+        else
+           do is = 1, nspin
+              v(ir,is) = 0.0D0
+           end do
         endif
      enddo
   endif

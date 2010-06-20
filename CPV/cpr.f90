@@ -172,9 +172,9 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
   !
   REAL(DP), ALLOCATABLE :: forceh(:,:)
   !
-  !
   etot_out = 0.D0
   enow     = 1.D9
+  stress   = 0.0D0
   !
   tfirst = .TRUE.
   tlast  = .FALSE.

@@ -539,8 +539,9 @@
 
          INTEGER :: k, ig
       
-         DO k = 1, 6
-            DO ig = 1, ngm          
+!$omp parallel do default(shared), private(k)
+         DO ig = 1, ngm          
+            DO k = 1, 6
                gagb( k, ig ) = gx( alpha( k ), ig ) * gx( beta( k ), ig ) * tpiba2
             END DO
          END DO

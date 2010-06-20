@@ -551,14 +551,13 @@ subroutine dqvan2b(ngy,iv,jv,is,ylm,dylm,dqg,dqrad,qradb)
   real(DP),    intent(in)  :: qradb( ngb, nbetam*(nbetam+1)/2, lmaxq, nsp )
 
   integer      :: ivs, jvs, ijvs, ivl, jvl, i, ii, ij, l, lp, ig
-  complex(DP) :: sig, z1, z2
+  complex(DP) :: sig, z1, z2, zfac
   !
   ! 
   !       iv  = 1..8     s_1 p_x1 p_z1 p_y1 s_2 p_x2 p_z2 p_y2
   !       ivs = 1..4     s_1 s_2 p_1 p_2
   !       ivl = 1..4     s p_x p_z p_y
   ! 
-
   ivs=indv(iv,is)
   jvs=indv(jv,is)
   !
@@ -617,9 +616,9 @@ subroutine dqvan2b(ngy,iv,jv,is,ylm,dylm,dqg,dqrad,qradb)
      do ij=1,3
         do ii=1,3
            do ig=1,ngy
-              dqg(ig,ii,ij) = dqg(ig,ii,ij) +  sig *                &
- &                    ( ylm(ig,lp) * dqrad(ig,ijvs,l,is,ii,ij) -    &
- &                     dylm(ig,lp,ii,ij) * qradb(ig,ijvs,l,is)   ) ! SEGNO
+              zfac = ylm(ig,lp) * dqrad(ig,ijvs,l,is,ii,ij)
+              zfac = zfac - dylm(ig,lp,ii,ij) * qradb(ig,ijvs,l,is)
+              dqg(ig,ii,ij) = dqg(ig,ii,ij) +  sig * zfac
            end do
         end do
      end do
@@ -712,4 +711,3 @@ SUBROUTINE print_lambda_x( lambda, n, nshow, ccc, iunit )
 3380   FORMAT(9f8.4)
     RETURN
 END SUBROUTINE print_lambda_x
-

@@ -60,7 +60,7 @@
          !
          IF( nproc_image > 1 ) THEN
             nhx = nh( is ) * na( is )
-            IF( MOD( nhx, 2 ) /= 0 ) nhx = nhx + 1
+            IF( MOD( nhx, 2 ) == 0 ) nhx = nhx + 1
             ALLOCATE( becps( nhx, n ) )
             becps = 0.0d0
          END IF
@@ -728,24 +728,19 @@
 
       integer :: is, ia, i , iv
 !
-!
       call start_clock( 'calbec' )
+      !
       call nlsm1( n, nspmn, nspmx, eigr, c, bec )
 !
       if ( iprsta > 2 ) then
          WRITE( stdout,*)
          do is=1,nspmx
-            if(nspmx.gt.1) then
-               WRITE( stdout,'(33x,a,i4)') ' calbec: bec (is)',is
-               WRITE( stdout,'(8f9.4)')                                       &
-     &              ((bec(ish(is)+(iv-1)*na(is)+1,i),iv=1,nh(is)),i=1,n)
-            else
-               do ia=1,na(is)
+            WRITE( stdout,'(33x,a,i4)') ' calbec: bec (is)',is
+            do ia=1,na(is)
                   WRITE( stdout,'(33x,a,i4)') ' calbec: bec (ia)',ia
                   WRITE( stdout,'(8f9.4)')                                    &
      &             ((bec(ish(is)+(iv-1)*na(is)+ia,i),iv=1,nh(is)),i=1,n)
-               end do
-            end if
+            end do
          end do
       endif
       call stop_clock( 'calbec' )
