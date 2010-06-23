@@ -22,10 +22,12 @@ subroutine init_ns
    USE lsda_mod,  ONLY : nspin, starting_magnetization
    USE ldaU,      ONLY : hubbard_u, hubbard_alpha, hubbard_l
    USE scf,       ONLY : rho
+   USE uspp_param,ONLY : upf
    !
    implicit none
 
    real(DP) :: totoc
+   real(DP), external :: hubbard_occ
 
    integer :: na, nt, is, m1, majs, mins
    logical :: nm        ! true if the atom is non magnetic
@@ -35,7 +37,7 @@ subroutine init_ns
    do na = 1, nat
       nt = ityp (na)
       if (Hubbard_U(nt).ne.0.d0 .or. Hubbard_alpha(nt).ne.0.d0) then
-         call tabd (nt, totoc)
+         totoc = hubbard_occ ( upf(nt)%psd )
          nm=.true.
          if (nspin.eq.2) then
             if (starting_magnetization (nt) .gt.0.d0) then  
