@@ -22,8 +22,8 @@ subroutine ascheq(nn,lam,e,mesh,grid,vpot,ze2,thresh0,y,nstop)
   integer:: nn,nstop,maxter,iter,l1,i,ik,ncross,n, &
        nstart,ns,n2,nst2,ndcr
   real(DP) :: ze2,ddx12,eup,elw,b0e,ymx,rap,rstart,di,expn,  &
-       c1,c2,c3,c4,fe,a0,a1,a2,sum0,f2,sum,sqlhf,f0,f1,dfe,de,eps,&
-       yln,xp,sum1
+       c1,c2,fe,a0,a1,a2,sum0,f2,sum,sqlhf,f0,f1,dfe,de,eps, &
+       yln,xp,sum1,xl1,x4l6
   real(DP):: vpot(mesh), y(mesh)
   real(DP),allocatable:: c(:), el(:), f(:)
   real(DP):: b(0:3),e,thresh0, thresh
@@ -89,6 +89,11 @@ subroutine ascheq(nn,lam,e,mesh,grid,vpot,ze2,thresh0,y,nstop)
   !  determination of the wave-function in the first two points by
   !  series developement
   !
+  xl1=lam+1.0_DP
+  x4l6=4.0_dp*lam+6.0_dp
+  b0e=b(0)-e
+  c1=0.5_dp*ze2/xl1
+  c2=(c1*ze2+b0e)/x4l6
   call start_scheq( lam, e, b, grid, ze2, y )
   !
   !  start outward integration and count number of crossings
