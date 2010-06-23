@@ -1,9 +1,19 @@
+New in CVS version:
+
+  * Additions to projwfc: k-resolved DOS, LDOS integrated in selected
+    real-space regions
+  * Constant-volume variable-cell optimization
+  * Non-colinear and spin-orbit PAW
+  * Penalty functional technique in DFT+U calculations (CP only)
+
 Incompatible changes in CVS version:
 
   * iq1,iq2,iq3 removed from input in ph,x; use start_q, last_q instead
 
 Fixed in version 4.2.1:
 
+  * XC potential in CP was not initialized when condition (rho > 10^(-30)) 
+    was not satisfied; this is usually harmless but potentially dangerous
   * CP could not read data written from PW in spin-polarized cases
   * not sure cpmd2upf converter was working in all cases - now it should
   * support for MKL incomplete (only in packaged version, not in cvs)
