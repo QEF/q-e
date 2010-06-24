@@ -1,0 +1,13 @@
+&input
+       title='Si',
+       zed=14.0,
+       config='[Ne] 3s2 3p2',
+       iswitch=4
+/
+&test
+  file_pseudo='Si.pz-vbc.UPF',
+  file_pseudopw='Si.LDA.0.5.UPF',
+  configts(1)='3s2 3p2',
+  configts(2)='3s2 3p1.75',
+  rcutv=1.0
+/ 

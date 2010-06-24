@@ -1,0 +1,89 @@
+
+     Program LD1 v.4.2          starts on 24Jun2010 at 17:19:45 
+
+     This program is part of the open-source Quantum ESPRESSO suite
+     for quantum simulation of materials; please cite
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
+          URL http://www.quantum-espresso.org", 
+     in publications or presentations arising from this work. More details at
+     http://www.quantum-espresso.org/wiki/index.php/Citing_Quantum-ESPRESSO
+     --------------------------- All-electron run ----------------------------
+
+     Si                                                                         
+
+     atomic number is 14.00
+     dft = SLA  PZ   NOGX NOGC   lsd =0 sic =0 latt =0  beta=0.20 tr2=1.0E-14
+     mesh = 431 r(mesh) =  61.00420 xmin = -4.00 dx = 0.02500
+     1 Ry =  13.60569193 eV
+
+     n l     nl                  e(Ry)          e(Ha)          e(eV)
+     1 0     1S 1( 2.00)      -130.3691       -65.1846     -1773.7621
+     2 0     2S 1( 2.00)       -10.1489        -5.0745      -138.0832
+     2 1     2P 1( 6.00)        -7.0288        -3.5144       -95.6312
+     3 0     3S 1( 2.00)        -0.7966        -0.3983       -10.8387
+     3 1     3P 1( 2.00)        -0.3071        -0.1535        -4.1777
+
+     eps = 5.5E-15  iter = 23
+ 
+     Etot =    -576.383955 Ry,    -288.191977 Ha,   -7842.102524 eV
+
+     Ekin =     574.976434 Ry,     287.488217 Ha,    7822.952223 eV
+     Encl =   -1375.796942 Ry,    -687.898471 Ha,  -18718.669353 eV
+     Eh   =     263.529976 Ry,     131.764988 Ha,    3585.507662 eV
+     Exc  =     -39.093422 Ry,     -19.546711 Ha,    -531.893056 eV
+
+
+     normalization and overlap integrals
+
+     s(1S/1S) =  1.000000  <r> =   0.1120  <r2> =    0.0169  r(max) =   0.0732
+     s(1S/2S) =  0.000000
+     s(1S/3S) =  0.000000
+     s(2S/2S) =  1.000000  <r> =   0.5725  <r2> =    0.3920  r(max) =   0.4543
+     s(2S/3S) =  0.000000
+     s(2P/2P) =  1.000000  <r> =   0.5392  <r2> =    0.3673  r(max) =   0.3910
+     s(2P/3P) =  0.000000
+     s(3S/3S) =  1.000000  <r> =   2.1633  <r2> =    5.4669  r(max) =   1.7967
+     s(3P/3P) =  1.000000  <r> =   2.7921  <r2> =    9.3968  r(max) =   2.1403
+
+     ------------------------ End of All-electron run ------------------------
+
+     --------------------------- All-electron run ----------------------------
+
+     Si                                                                         
+
+     atomic number is 14.00
+     dft = SLA  PZ   NOGX NOGC   lsd =0 sic =0 latt =0  beta=0.20 tr2=1.0E-14
+     mesh = 431 r(mesh) =  61.00420 xmin = -4.00 dx = 0.02500
+     1 Ry =  13.60569193 eV
+
+     n l     nl                  e(Ry)          e(Ha)          e(eV)
+     1 0     1S 1( 2.00)      -130.5278       -65.2639     -1775.9212
+     2 0     2S 1( 2.00)       -10.3055        -5.1528      -140.2135
+     2 1     2P 1( 6.00)        -7.1855        -3.5928       -97.7643
+     3 0     3S 1( 2.00)        -0.9362        -0.4681       -12.7371
+     3 1     3P 1( 1.75)        -0.4352        -0.2176        -5.9217
+
+     eps = 7.6E-15  iter = 26
+ 
+     Etot =    -576.291347 Ry,    -288.145673 Ha,   -7840.842528 eV
+
+     Ekin =     574.893460 Ry,     287.446730 Ha,    7821.823312 eV
+     Encl =   -1373.604536 Ry,    -686.802268 Ha,  -18688.840144 eV
+     Eh   =     261.407554 Ry,     130.703777 Ha,    3556.630647 eV
+     Exc  =     -38.987825 Ry,     -19.493913 Ha,    -530.456343 eV
+
+
+     normalization and overlap integrals
+
+     s(1S/1S) =  1.000000  <r> =   0.1120  <r2> =    0.0169  r(max) =   0.0732
+     s(1S/2S) =  0.000000
+     s(1S/3S) =  0.000000
+     s(2S/2S) =  1.000000  <r> =   0.5725  <r2> =    0.3919  r(max) =   0.4543
+     s(2S/3S) =  0.000000
+     s(2P/2P) =  1.000000  <r> =   0.5391  <r2> =    0.3672  r(max) =   0.3910
+     s(2P/3P) =  0.000000
+     s(3S/3S) =  1.000000  <r> =   2.1380  <r2> =    5.3231  r(max) =   1.7523
+     s(3P/3P) =  1.000000  <r> =   2.6887  <r2> =    8.6293  r(max) =   2.0874
+
+     ------------------------ End of All-electron run ------------------------
+

@@ -1,0 +1,10 @@
+#!/bin/bash
+
+LD1=../../bin/ld1.x
+workd=./results/
+
+mkdir -p $workd
+
+$LD1 < si.lda.0.5.in > si.lda.0.5.out
+mv *.out Si.LDA.0.5.UPF $workd
+rm -f *.wfc
