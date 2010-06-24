@@ -39,7 +39,8 @@ subroutine ld1_readin
                          rmatch_augfun, which_augfun,         & !paw
                          rhos, bmat, lsmall, &              ! extra for paw2us
                          lgipaw_reconstruction, lsave_wfc, &
-                         relpert, noscf
+                         relpert, noscf, &
+                         rcutv ! LDA-1/2
 
   use funct, only : set_dft_from_name
   use radial_grids, only: do_mesh, check_mesh
@@ -105,7 +106,8 @@ subroutine ld1_readin
        ecutmin,       & ! for test with spherical Bessel functions:
        ecutmax,       & ! min and max energy cutoff for j_l(qr),
        decut,         & ! step: ecut = ecutmin, ecutmin+decut, ... , ecutmax
-       rm               ! radius of the box
+       rm,            & ! radius of the box
+       rcutv            ! CUT for LDA-1/2
 
   namelist /inputp/ &
        pseudotype,&! the pseudopotential type
@@ -237,7 +239,8 @@ subroutine ld1_readin
      if (zdum /= zed) call errore &
           ('ld1_readin','inconsistent Z/atom specification',nint(zdum))
   end if
-  if (iswitch < 1 .or. iswitch > 3) &
+! with LDA-1/2 now iswitch <=4
+  if (iswitch < 1 .or. iswitch > 4) &
        call errore('ld1_readin','wrong iswitch',1)
   if (eminld > emaxld) &
        call errore('ld1_readin','eminld or emaxld wrong',1)
@@ -322,7 +325,8 @@ subroutine ld1_readin
   ! generate the radial grid - note that if iswitch = 2 the radial grid
   ! is not generated but read from the pseudopotential file
   !
-  if (iswitch /= 2) then
+! also for LDA-1/2 radial grid has to be read
+  if (iswitch /= 2.or.iswitch/=4) then
      call do_mesh(rmax,zed,xmin,dx,0,grid)
      rhoc=0.0_dp
   endif
@@ -442,10 +446,21 @@ subroutine ld1_readin
   decut   = 5.0_dp
   rm      =30.0_dp
 
+!
+! default value for LDA-1/2
+!
+  rcutv = -1.0
+!
   if (ionode) read(5,test,err=300,iostat=ios)
 300  call mp_bcast(ios, ionode_id)
 
-  if (iswitch==2) call errore('ld1_readin','reading test',abs(ios))
+! LDA-1/2
+  if(iswitch==4) nconf = 2
+  if(iswitch==4.and.rcutv<0.0) call errore('ld1_readin','inconsistent rcutv',1)
+!
+
+! Added iswitch ==4 for LDA-1/2
+  if (iswitch==2.or.iswitch==4) call errore('ld1_readin','reading test',abs(ios))
   call bcast_test()
   call mp_bcast(configts, ionode_id)
   !
@@ -557,7 +572,7 @@ subroutine ld1_readin
   !
   !    PP testing: reading the pseudopotential
   !
-  if (iswitch ==2) then
+  if (iswitch ==2.or.iswitch==4) then
      lpaw=.false.
      !
      if (file_pseudo == ' ') &

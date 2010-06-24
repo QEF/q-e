@@ -71,6 +71,7 @@ pseudovloc.o \
 pseudo_q.o \
 read_pseudo_ncpp.o \
 read_pseudo_rrkj3.o \
+run_lda_half.o \
 run_pseudo.o \
 run_test.o \
 scf.o \

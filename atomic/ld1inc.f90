@@ -155,6 +155,10 @@ module ld1inc
   character(len=2) ::  &
        elts(nwfsx)           ! the label of the states
   !
+  ! for LDA-1/2
+  !
+  real(DP) :: rcutv ! CUT for LDA-1/2
+  !
   !    The control of the run
   !
   integer ::      &

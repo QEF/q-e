@@ -21,7 +21,8 @@ subroutine ld1_writeout
                      nconf , lpaw, rel, pawsetup, pseudotype, &
                      rhoc, vnl, phits, vpsloc, & 
                      elts, llts, octs, rcut, etots, nwfts, &
-                     lmax, lloc, zval, nlc, nnl, alps, alpc, alc, cc, nlcc
+                     lmax, lloc, zval, nlc, nnl, alps, alpc, alc, cc, nlcc, &
+                     iswitch
   use funct, only : get_dft_name
   use paw_type, only : deallocate_pseudo_paw
 
@@ -37,7 +38,7 @@ subroutine ld1_writeout
   
   if (file_pseudopw == ' ') return
 
-  if (nconf > 1) &
+  if (iswitch/=4.and.nconf > 1) &
        call errore('ld1_writeout','more than one test configuration',1)
 
   if ( (( rel == 2) .or. lpaw) &
