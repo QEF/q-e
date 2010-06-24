@@ -97,6 +97,7 @@ input_description -distribution {Quantum Espresso} -program ld1.x {
 		1    all-electron calculation
                 2    PP test calculation
                 3    PP generation
+                4    LDA-1/2 correction, needs a previously generated PP file 
 	    } 
 	    default { 1 }
 	}
@@ -686,10 +687,10 @@ input_description -distribution {Quantum Espresso} -program ld1.x {
     }
 
     namelist TEST {
-	label { needed only if iswitch=2, optional if iswitch=3 }
+	label { needed only if iswitch=2 or iswitch=4, optional if iswitch=3 }
 
 	var nconf  -type INTEGER { 
-	    info {   the number of configurations to be tested }
+	    info {   the number of configurations to be tested. For iswitch = 4 nconf=2 }
 	    default { 1 }
 	}
 	
@@ -766,6 +767,12 @@ input_description -distribution {Quantum Espresso} -program ld1.x {
 		The first configuration must be spin-unpolarized.
 	    }
 	}
+	var rcutv  -type REAL
+	    info {   Cutoff distance (CUT) for the inclusion of LDA-1/2 potential. 
+                     Needed (mandatory) only if iswitch = 4 }
+	    default { -1.0 }
+	}
+
     }
     
     card PseudoPotentialTestCards -nameless 1 {
