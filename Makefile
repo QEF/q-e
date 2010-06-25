@@ -188,9 +188,9 @@ inst :
 
 links : bindir
 	( cd bin/ ; \
-	for exe in ../*/*.x ../GWW/*.x ; \
-	do \
-	      if test -f $$exe ; then ln -fs $$exe . ; fi \
+	rm -f *.x ; \
+	for exe in ../*/*.x ; do \
+	    if test ! -L $$exe ; then ln -fs $$exe . ; fi \
 	done \
 	)
 
