@@ -519,9 +519,9 @@ echo using F90... $f90
 case "$arch:$f90_version" in
 ia32:ifort* | ia64:ifort* | x86_64:ifort* | mac686:ifort*  )
         if test "$use_debug" -eq 1; then
-            try_fflags="-O2 -assume byterecl -g -traceback -fpe0 -CB"
+            try_fflags="-O2 -assume byterecl -g -traceback -par-report0 -vec-report0 -fpe0 -CB"
         else
-            try_fflags="-O2 -assume byterecl -g -traceback"
+            try_fflags="-O2 -assume byterecl -g -traceback -par-report0 -vec-report0"
         fi
         try_fflags_openmp="-openmp"
         try_f90flags="\$(FFLAGS) -nomodule"
