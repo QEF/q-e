@@ -205,7 +205,7 @@ clean :
 	for dir in \
 		CPV D3 Gamma Modules PH PP PW PWCOND VdW EE \
 		atomic clib flib pwtools upftools iotk GIPAW XSpectra \
-		dev-tools GWW extlibs plugins TDDFPT\
+		dev-tools GWW extlibs plugins TDDFPT \
 	; do \
 	    if test -d $$dir ; then \
 		( cd $$dir ; \
@@ -218,28 +218,18 @@ clean :
 
 # remove configuration files too
 distclean veryclean : clean
-
-	- if test -d plugins ; then \
-	( cd plugins ; $(MAKE) veryclean); fi
-	- if test -d extlibs ; then \
-	( cd extlibs ; $(MAKE) veryclean); fi
+	- test -d plugins && ( cd plugins ; $(MAKE) veryclean)
+	- test -d extlibs && ( cd extlibs ; $(MAKE) veryclean)
 	- rm -rf make.sys
-	- cd install ; rm config.log configure.msg config.status autom4te.cache \
+	- cd install ; rm -f config.log configure.msg config.status autom4te.cache \
 	CPV/version.h ChangeLog* intel.pcl */intel.pcl
-	- if test -f espresso.tar.gz ; rm espresso.tar.gz
+	- rm -f espresso.tar.gz
 	- cd examples ; ./make_clean
 	- cd atomic_doc ; ./make_clean
 	- for dir in Doc doc-def; do \
-	    if test -d $$dir ; then \
-		( cd $$dir ; \
-		if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= clean ; \
-		else $(MAKE) $(MFLAGS) TLDEPS= clean ; fi ) \
-	    fi \
+	    test -d $$dir && ( cd $$dir ; $(MAKE) $(MFLAGS) TLDEPS= clean ) \
 	done
-	- if test -d GUI ; then \
-	( cd GUI ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= veryclean ; \
-		else $(MAKE) $(MFLAGS) TLDEPS= veryclean ; fi ) \
-	  fi
+	- test -d GUI && ( cd GUI ;  $(MAKE) $(MFLAGS) TLDEPS= veryclean )
 
 tar :
 	@if test -f espresso.tar.gz ; then /bin/rm espresso.tar.gz ; fi

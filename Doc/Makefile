@@ -4,6 +4,8 @@ LATEX2HTML = latex2html
 PDFS = constraints_HOWTO.pdf  developer_man.pdf  eps_man.pdf  user_guide.pdf
 AUXS = $(PDFS:.pdf=.aux)
 LOGS = $(PDFS:.pdf=.log)
+OUTS = $(PDFS:.pdf=.out)
+TOCS = $(PDFS:.pdf=.toc)
 
 all:  pdf html
 pdf:  $(PDFS)
@@ -14,8 +16,9 @@ $(PDFS): %.pdf: %.tex
 	$(LATEX)  $<
 
 clean:
-	- rm -f $(PDFS) $(AUXS) $(LOGS) *~
-	- rm -rf user_guide developer_man
+	- rm -f $(PDFS) $(AUXS) $(LOGS) $(OUTS) $(TOCS) *~
+	- rm -rf user_guide/ developer_man/
+	- rm -f INPUT_*.html INPUT_*.txt
 
 developer_man: developer_man.pdf
 	rm -rf developer_man/

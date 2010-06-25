@@ -21,4 +21,5 @@ done
 cd pseudo_library
 . make_clean
 cd ..
+rm -f INPUT_*.html INPUT_*.txt
 $ECHO "cleaning all : done"
