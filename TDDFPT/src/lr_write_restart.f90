@@ -29,7 +29,7 @@ subroutine lr_write_restart()
   !
   ! local variables
   !
-  integer :: i, pol_index,ibnd_occ,ibnd_virt
+  integer :: i, j, pol_index,ibnd_occ,ibnd_virt
   character(len=256) :: tempfile, filename
   logical :: exst
   !
@@ -40,7 +40,7 @@ subroutine lr_write_restart()
   !
   !ionode only operations:
   !
-  pol_index=1
+  pol_index=1 !if there is only one polarization dir, storage is one rank less
   if ( n_ipol /= 1 ) pol_index=LR_polarization
   
 #ifdef __PARA
@@ -64,7 +64,10 @@ subroutine lr_write_restart()
      !
      write(158,*) beta_store(pol_index,i)
      write(158,*) gamma_store(pol_index,i)
-     write(158,*) zeta_store (pol_index,:,i)
+     !This is absolutely necessary for cross platform compatibilty
+     do j=1,n_ipol                                    
+      write(158,*) zeta_store (pol_index,j,i)
+     end do
      !
   end do
   !
