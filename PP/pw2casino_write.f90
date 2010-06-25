@@ -18,7 +18,7 @@ SUBROUTINE write_casino_wfn(gather,blip,multiplicity,binwrite,single_precision_b
                     nrxx, g, gg, ecutwfc, gcutm, nl, nlm, igtongl
    USE klist , ONLY: nks, nelec, xk, wk, degauss, ngauss
    USE lsda_mod, ONLY: lsda, nspin
-   USE scf, ONLY: rho, rho_core, rhog_core, vnew
+   USE scf, ONLY: rho, rho_core, rhog_core, v
    USE ldaU, ONLY : eth
    USE vlocal, ONLY: vloc, strf
    USE wvfct, ONLY: npw, npwx, nbnd, igk, g2kin, wg, et
@@ -441,7 +441,7 @@ CONTAINS
       ! compute hartree and xc contribution
       !
       CALL v_of_rho( rho, rho_core, rhog_core, &
-                     ehart, etxc, vtxc, eth, etotefield, charge, vnew )
+                     ehart, etxc, vtxc, eth, etotefield, charge, v )
       !
       etot=(ek + (etxc-etxcc)+ehart+eloc+enl+ewld)+demet
 
