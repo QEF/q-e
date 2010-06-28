@@ -14,16 +14,16 @@ MODULE ms2
 
   PUBLIC
 
-  LOGICAL :: MS2_enabled = .FALSE.       ! Enable the shared memory exchange in MS2
+  LOGICAL :: MS2_enabled = .FALSE.       ! Enable MS2
 
-  CHARACTER(LEN=256) :: MS2_handler = '' ! Name for the shared memory handler in MS2
+  CHARACTER(LEN=256) :: MS2_handler = '' ! Arguments to be passed to the MS2 transport
 
 
 CONTAINS 
 
-SUBROUTINE initialize_shared_memory()
+SUBROUTINE ms2_initialization()
   PRINT *, "Placeholder for the MS2 project. This code shouldn't be used at all!"
-END SUBROUTINE initialize_shared_memory
+END SUBROUTINE ms2_initialization
 
 SUBROUTINE set_positions()
   PRINT *, "Placeholder for the MS2 project. This code shouldn't be used at all!"
