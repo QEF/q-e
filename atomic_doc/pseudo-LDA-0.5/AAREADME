@@ -2,7 +2,8 @@ This directory contains an example of how to generate a pseudo potential
 with the LDA-1/2 correction. Two AE calculations are done one with the same
 configuration as in the initial pseudopotential and an other one with 
 a fraction less of electrons. Usually is 1/2 electron less however in the
-silicon case 1/4 electron less is used (see ref. ). 
+silicon case 1/4 electron less is used (see ref. L. G. Ferreira, M. Marques 
+and L. K. Teles, Phys. Rev. B 78 125116 (2008)). 
 
 LDA-1/2 approach has been implemeted by Leonardo Matheus Marion Jorge, from
 the University of Sao Paolo (Brazil).
