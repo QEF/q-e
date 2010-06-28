@@ -10,6 +10,8 @@
 subroutine run_lda_half
   !
   !   This routine is a driver to correct pseudopotentials with LDA-1/2
+  !   Courtesy of Leonardo Matheus Marion jorge, University of Sao Paolo (Brazil)
+  !   L. G. Ferreira, M. Marques and L. K. Teles, Phys. Rev. B 78 125116 (2008)
   !---------------------------------------------------------------
   !
   use kinds, only : dp
