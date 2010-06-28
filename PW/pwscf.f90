@@ -24,7 +24,7 @@ PROGRAM pwscf
   USE mp_global,        ONLY : mp_startup
 #if defined(__MS2)
   USE ms2,              ONLY : MS2_enabled,                 &
-                               initialize_shared_memory,    &
+                               ms2_initialization,    &
                                set_positions, return_forces
 #endif
   !
@@ -55,7 +55,7 @@ PROGRAM pwscf
   CALL check_stop_init()
   !
 #if defined(__MS2)
-  CALL initialize_shared_memory()
+  CALL ms2_initialization()
 #endif
   !
   IF ( lpath ) THEN
