@@ -139,7 +139,7 @@ SUBROUTINE write_resultsps ( )
   !
   IF (file_wavefunctionsps/=' ') THEN
      counter=1
-     DO i=nwfts,1,-1
+     DO i=1,nwfts
         IF (counter > max_out_wfc) exit
         elaux(counter)=elts(i)
         psiaux(:,counter)=phits(:,i)
