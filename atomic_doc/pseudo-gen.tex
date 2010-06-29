@@ -1,5 +1,6 @@
-\documentclass[12pt]{article}
+\documentclass[12pt,a4paper]{article}
 \usepackage{amssymb}
+\usepackage{graphicx}
 \pagestyle{empty}
 \textwidth = 15.5 cm
 \textheight = 23.5 cm
@@ -530,7 +531,7 @@ levels for the reference configuration. This is done by using executable
 \begin{quote} 
 atomic symbol,\\
 electronic reference configuration,\\
-exchange-correlation functional (default is LDA).\\
+exchange-correlation functional (default is LDA).
 \end{quote}
 A complete description of the input is contained in the documentation.
 For accurate AE results in heavy atoms, you may want to specify a denser 
@@ -551,7 +552,7 @@ The generation step is also done by program \texttt{ld1.x}.
 One has to supply, in addition to AE data: 
 \begin{quote}
 a list of orbitals to be pseudized, with pseudization energies and radii,\\
-the filename where the newly generated PP is written,\\
+the filename where the newly generated PP is written,
 \end{quote}
 plus a number of other optional parameters, 
 fully described in the documentation.
@@ -576,7 +577,7 @@ potential: the dependence of energy levels upon the cutoff in the kinetic
 energy is basically the same for the pseudo-atom in the basis of $j_l (qr)$'s
 and for the same pseudo-atom in a solid-state calculation using PW's.
 
-Another way to check for transferability is to compare AE and PS 
+Another way to check for transferability is to compare AE and pseudo (PS) 
 logarithmic derivatives, also calculated by \texttt{ld1.x}. Typically 
 this comparison is done on the reference configuration,
 but not necessarily so. You should supply on input:
@@ -601,7 +602,183 @@ do not replace the usual checks (convergence tests, bond lengths,
 etc) one has to perform in at least some simple solid-state or 
 molecular systems before starting a serious calculation.
 
-\section{A worked example}
+\section{A worked example: Ti}
+
+Let us consider the Ti atom: $Z=22$, electronic configuration: 
+$1s^2 2s^2 2p^6 3s^2 3p^6 3d^2 4s^2$, with PBE XC functional.
+The input data for the AE calculation is simple:
+\begin{verbatim}
+ &input
+   atom='Ti', dft='PBE', config='[Ar] 3d2 4s2 4p0'
+ /
+\end{verbatim}
+and yields the total energy and Kohn-Sham levels. Let us concentrate
+on the outermost states:
+\begin{verbatim}
+     3 0     3S 1( 2.00)        -4.6035        -2.3017       -62.6334
+     3 1     3P 1( 6.00)        -2.8562        -1.4281       -38.8608
+     3 2     3D 1( 2.00)        -0.3130        -0.1565        -4.2588
+     4 0     4S 1( 2.00)        -0.3283        -0.1641        -4.4667
+     4 1     4P 1( 0.00)        -0.1078        -0.0539        -1.4663
+\end{verbatim}
+and on their spatial extension:
+\begin{verbatim}
+s(3S/3S) =  1.000000  <r> =   1.0069  <r2> =    1.1699  r(max) =   0.8702
+s(3P/3P) =  1.000000  <r> =   1.0860  <r2> =    1.3907  r(max) =   0.8985
+s(3D/3D) =  1.000000  <r> =   1.6171  <r2> =    3.5729  r(max) =   0.9811
+s(4S/4S) =  1.000000  <r> =   3.5138  <r2> =   14.2491  r(max) =   2.9123
+s(4P/4P) =  1.000000  <r> =   4.8653  <r2> =   27.9369  r(max) =   3.8227
+\end{verbatim}
+Note that the $3d$ state has a small spatial extension, comparable to that of
+$3s$ and $3p$ states and much smaller than for $4s$ and $4p$ states; the
+$3d$ energy is instead comparable to that of $4s$ and $4p$ states and much
+higher than the $3s$ and $3p$ energies.. Much of the chemistry of Ti is 
+determined by its $3d$ states. What should we do? We have the choice among 
+several possibilities:
+\begin{enumerate}
+\item single-projector NC-PP with 4 electrons in valence ($3d^2 4s^2$),
+with nonlinear core correction;
+\item single-projector NC-PP with 12 electrons in valence 
+($3s^2 3p^6 3d^2 4s^2$);
+\item multiple-projector NC-PP with 12 electrons in valence;
+\item US-PP with 12 electrons in valence;
+\item US-PP with 4 electrons in valence and nonlinear core correction;
+\item ...
+\end{enumerate}
+The PP of case 1) will be hard due to the presence of $3d$ states, and 
+its transferability may turn out not be sufficient for all purposes;
+PP's for 2) and 3) will be even harder due to the presence of $3d$ and
+semicore $3s$ and $3p$ states; PP 4) can be made soft, but generating
+one is not trivial; PP 5) may suffer from insufficient transferability.
+
+\subsection {Single-projector, norm-conserving, no semicore}
+
+\subsubsection{Generation}
+Let us start from the simplest case. In the \texttt{\&input} namelist,
+we specify the we want to generate a PP (\texttt{iswitch=3}) and to
+calculate \texttt{nld=3} logarithmic derivatives at \texttt{rlderiv=2.90} a.u.
+from the origin, in the energy range \texttt{eminld=-2.0} Ry to 
+\texttt{emaxld=2.0} Ry, in energy steps \texttt{deld=0.01} Ry.
+In the \texttt{\&inputp} namelist, we specify the we want a single-projector,
+NC-PP (\texttt{pseudotype=1}), with nonlinear core correction 
+(\texttt{nlcc=.true.}), using the $l=1$ channel as local (\texttt{lloc=1}).
+The output PP wil be written in UPF format to file \texttt{Ti.pbe-rrkj.UPF}.
+Following the two namelists, there is a list of states used for pseudization:
+the 4S state, with pseudization radius $r_c=2.9$ a.u.; the 3D state,
+ $r_c=1.3$ a.u.; the 4P, $r_c=2.9$ a.u.,  listed as last because it is
+the channel to be chosen as local potential.
+\begin{verbatim}
+ &input
+   atom='Ti',  dft='PBE',  config='[Ar] 3d2 4s2 4p0',
+   rlderiv=2.90, eminld=-2.0, emaxld=2.0, deld=0.01, nld=3,
+   iswitch=3
+ /
+ &inputp
+   pseudotype=1, nlcc=.true., lloc=1,
+   file_pseudopw='Ti.pbe-rrkj.UPF',
+ /
+3
+4S 1 0 2.00  0.00 2.9 2.9
+3D 3 2 2.00  0.00 1.3 1.3
+4P 2 1 0.00  0.00 2.9 2.9
+\end{verbatim}
+There is nothing magic or especially deep in the choice of the local 
+potential and of pseudization radii: it is just a reasonable guess.
+Running the input, one gets an error:
+\begin{verbatim}
+      Wfc   4S  rcut= 2.883  Estimated cut-off energy=   14.82 Ry
+     l=   0 Node at 0.71997236
+      This function has    1 nodes for 0 < r <    2.883
+
+ %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+     from compute_phi : error #         1
+     phi has nodes before r_c
+ %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\end{verbatim}
+This means that the 4S pseudized orbitals has one node. With RRKJ 
+pseudization (the default), this may occasionally happen. One can
+either choose TM pseudization (\texttt{tm=.true.}) or set a small
+value of $\rho(r=0)$ (e.g. \texttt{rho0=0.001}). Let us do the latter.
+You should carefully look at the output, which will consists in
+an all-electron calculation, followed by the pseudopotential generation
+step, followed by a final test. In particular, notice this message
+about the nonlinear core correction:
+\begin{verbatim}
+      Computing core charge for nlcc:
+
+       r > 1.73 : true rho core
+       r < 1.73 : rho core = a sin(br)/r    a=   2.40  b=   1.56
+
+      Integrated core pseudo-charge :   3.43
+\end{verbatim}
+(this is actually not good: the pseudization of the charge density 
+should begin at $r= r_c^{(min)}$, i.e. the smallest among the pseudization 
+radii; in our case, $r_c^{(min)} = r_c^{(l=2)}=1.3$ a.u.). 
+Also notice messages on pseudization:
+\begin{verbatim}
+      Wfc   4S  rcut= 2.883  Estimated cut-off energy=        5.32 Ry
+      Using 4 Bessel functions for this wfc, rho(0) = 0.001
+      This function has    0 nodes for 0 < r <    2.883
+
+      Wfc   3D  rcut= 1.296  Estimated cut-off energy=      137.82 Ry
+      This function has    0 nodes for 0 < r <    1.296
+\end{verbatim}
+(note the large difference between the estimated cutoff for the $s$ and
+the $d$ channel! Of course, it is only the latter the ``problem'' one 
+here); and look at the final consistency check:
+\begin{verbatim}
+     n l     nl             e AE (Ry)        e PS (Ry)    De AE-PS (Ry)
+     1 0     4S   1( 2.00)       -0.32830       -0.32830        0.00000
+     3 2     3D   1( 2.00)       -0.31302       -0.31302        0.00000
+     2 1     4P   1( 0.00)       -0.10777       -0.10777        0.00000
+\end{verbatim}
+You should get exactly 0 (within numerical accuracy) in the columnn
+at the right. 
+
+As a further check, let's have a look at the logaritmic derivatives
+and at pseudized Kohn-Sham orbitals. Logarithmic derivatives are written 
+to files \texttt{ld1.dlog} and \texttt{ld1ps.dlog}, for AE and PS 
+calculations respectively (file names can be changed using variable 
+\texttt{prefix}). They can be plotted using for instance 
+\texttt{gnuplot} and the following commands:
+\begin{verbatim}
+plot [-2:2][-20:20] 'ld1.dlog' u 1:2 w l lt 1,   'ld1.dlog' u 1:3 w l lt 2, \
+                    'ld1.dlog' u 1:4 w l lt 3, 'ld1ps.dlog' u 1:2     lt 1, \
+                  'ld1ps.dlog' u 1:3     lt 2, 'ld1ps.dlog' u 1:4     lt 3
+\end{verbatim}
+PS orbitals and the corresponding AE ones are written to file 
+\texttt{ld1ps.wfc} (PS on the left, AE on the right). They can be 
+plotted using the following commands:
+\begin{verbatim}
+plot [0:5] 'ld1ps.wfc' u 1:2 lt 1    , 'ld1ps.wfc' u 1:3 lt 3    , \
+           'ld1ps.wfc' u 1:4 lt 2    , 'ld1ps.wfc' u 1:5 lt 1 w l, \
+           'ld1ps.wfc' u 1:6 lt 3 w l, 'ld1ps.wfc' u 1:7 lt 2 w l
+\end{verbatim}
+One gets the following plots (AE=lines, PS=points; 
+\texttt{lt 1}=red=$s$; \texttt{lt 2}=green=$p$; \texttt{lt 3}=blue=$d$; 
+note that in the files, orbitals are ordered as given in input, 
+logarithmic derivatives as $s$, $p$, $d$).
+
+\includegraphics[width=7.5cm]{pseudo-gen-fig1.pdf}
+\includegraphics[width=7.5cm]{pseudo-gen-fig2.pdf}
+
+We observe that our first PP seems to reproduced fairly well
+the logarithmic derivatives, with deviations appearing only at 
+relatively high ($> 1$ Ry) energies. AE and PS orbitals match
+very well beyond the pseudization radii; the $3d$ orbital is 
+slightly deformed, because we have chosen a relatively large 
+$r_c^{(l=2)}$.
+
+We have now our first candidate (i.e. not surely wrong) PP. 
+In order to 1) verify if it really does the job, 2) quantify
+its transferability, 3) quantify its hardness, and 4) improve 
+it if possible, we need to perform some testing.
+
+\subsubsection{Testing}
+
+\newpage
+
+
 
 \appendix
 
