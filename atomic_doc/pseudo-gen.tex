@@ -742,9 +742,9 @@ calculations respectively (file names can be changed using variable
 \texttt{prefix}). They can be plotted using for instance 
 \texttt{gnuplot} and the following commands:
 \begin{verbatim}
-plot [-2:2][-20:20] 'ld1.dlog' u 1:2 w l lt 1,   'ld1.dlog' u 1:3 w l lt 2, \
-                    'ld1.dlog' u 1:4 w l lt 3, 'ld1ps.dlog' u 1:2     lt 1, \
-                  'ld1ps.dlog' u 1:3     lt 2, 'ld1ps.dlog' u 1:4     lt 3
+plot [-2:2][-20:20] 'ld1.dlog' u 1:2 w l lt 1, 'ld1.dlog' u 1:3 w l lt 2,\
+                    'ld1.dlog' u 1:4 w l lt 3, 'ld1ps.dlog' u 1:2 lt 1, \
+                  'ld1ps.dlog' u 1:3     lt 2, 'ld1ps.dlog' u 1:4 lt 3
 \end{verbatim}
 PS orbitals and the corresponding AE ones are written to file 
 \texttt{ld1ps.wfc} (PS on the left, AE on the right). They can be 
@@ -762,19 +762,228 @@ logarithmic derivatives as $s$, $p$, $d$).
 \includegraphics[width=7.5cm]{pseudo-gen-fig1.pdf}
 \includegraphics[width=7.5cm]{pseudo-gen-fig2.pdf}
 
-We observe that our first PP seems to reproduced fairly well
+We observe that our PP seems to reproduce fairly well
 the logarithmic derivatives, with deviations appearing only at 
 relatively high ($> 1$ Ry) energies. AE and PS orbitals match
 very well beyond the pseudization radii; the $3d$ orbital is 
 slightly deformed, because we have chosen a relatively large 
-$r_c^{(l=2)}$.
+$r_c^{(l=2)}=1.3$ a.u.. It is easy to verify that a smaller
+$r_c^{(l=2)}$ yields a better $3d$ PS orbital, but also a harder
+$d$ potential: e.g., for $r_c^{(l=2)}=1.0$ a.u., you get
+\begin{verbatim}
+      Wfc   3D  rcut= 1.009  Estimated cut-off energy=      225.64 Ry
+\end{verbatim}
+Before proceding, it is wise to verify whether our PP has ``ghosts''.
+Let us prepare the following input for the testing phase 
+(note the variable \texttt{iswitch=2} and the \texttt{\&test}
+namelist):
+\begin{verbatim}
+ &input
+   atom='Ti',  dft='PBE',  config='[Ar] 3d2 4s2 4p0',
+   iswitch=2
+ /
+ &test
+   file_pseudo='Ti.pbe-rrkj.UPF',
+   nconf=1, configts(1)='3d2 4s2 4p0',
+   ecutmin=50, ecutmax=200, decut=50
+ /
+\end{verbatim}
+This will solve the Kohn-Sham equation for the PP read from  
+\texttt{file\_pseudo}, for a single valence configuration
+(\texttt{nconf=1}) listed in \texttt{configts(1)} (the ground state
+in this case), using a base of spherical waves whose cutoff
+(in Ry) ranges from \texttt{ecutmin} to \texttt{ecutmax} in steps of
+\texttt{decut}. The initial part of the output looks good, but let us
+look at the test with spherical waves, towards the end:
+\begin{verbatim}
+     Cutoff (Ry) :  200.0
+                          N = 1       N = 2       N = 3
+     E(L=0) =        -0.7483 Ry   -0.3282 Ry   -0.0042 Ry
+     E(L=1) =        -0.1077 Ry    0.0192 Ry    0.0630 Ry
+     E(L=2) =        -0.2961 Ry    0.0304 Ry    0.0654 Ry
+\end{verbatim}
+The lowest levels found in this way should be the same\footnote{actually 
+there are numerical differences, especially large for localized states 
+like $3d$, whose origin is under investigation} 
+as those calculated from radial integration (see above). 
+This is true for the $4p$ state (-0.1077 Ry), 
+for the $3d$ state (-0.2961 Ry vs -0.31302 Ry, see footnote),
+for the $4s$ state (-0.3282 Ry)....but note the spurious $4s$ 
+level at -0.7483 Ry! Our PP has a ghost and is unusable. 
+
+What should be do now? we may try to change the definition of the
+local potential. We had chosen $l=1$, let us try $l=2$ and $l=0$.
+The former has the same pathology, the latter has no ghosts.
+So our data for PP generation are as follows:
+\begin{verbatim}
+ &input
+   atom='Ti',  dft='PBE',  config='[Ar] 3d2 4s2 4p0',
+   rlderiv=2.90, eminld=-2.0, emaxld=2.0, deld=0.01, nld=3,
+   iswitch=3
+ /
+ &inputp
+   pseudotype=1, nlcc=.true., lloc=0,
+   file_pseudopw='Ti.pbe-rrkj.UPF',
+ /
+3
+4P 2 1 0.00  0.00 2.9 2.9
+3D 3 2 2.00  0.00 1.3 1.3
+4S 1 0 2.00  0.00 2.9 2.9
+\end{verbatim}
+(note \texttt{lloc=0} and the $4s$ state at the end of the list). 
+Let us plot again logarithmic derivatives and orbitals (they look 
+quite the same as before) and run again the test with spherical 
+waves. We get (see the last section in the output):
+\begin{verbatim}
+     Cutoff (Ry) :   50.0
+                           N = 1       N = 2       N = 3
+     E(L=0) =        -0.3282 Ry   -0.0049 Ry    0.0361 Ry
+     E(L=1) =        -0.1077 Ry    0.0192 Ry    0.0630 Ry
+     E(L=2) =        -0.1469 Ry    0.0311 Ry    0.0682 Ry
+
+     Cutoff (Ry) :  100.0
+                           N = 1       N = 2       N = 3
+     E(L=0) =        -0.3282 Ry   -0.0049 Ry    0.0361 Ry
+     E(L=1) =        -0.1077 Ry    0.0192 Ry    0.0630 Ry
+     E(L=2) =        -0.2959 Ry    0.0303 Ry    0.0652 Ry
+     Cutoff (Ry) :  150.0
+                           N = 1       N = 2       N = 3
+     E(L=0) =        -0.3282 Ry   -0.0049 Ry    0.0361 Ry
+     E(L=1) =        -0.1077 Ry    0.0192 Ry    0.0630 Ry
+     E(L=2) =        -0.2961 Ry    0.0303 Ry    0.0652 Ry
+\end{verbatim}
+This time the first column yields (with a small discrepancy for $3d$)
+the expected levels, and only those levels. It is wise to inspect
+the second column as well for absence of suspiciously low levels: 
+ghosts may appear also as spurious excited states close to occupied
+states. Note how bad the energy for the $3d$ level is at 50 Ry.
+At 100 Ry however we are close to convergence and at 150 Ry 
+well converged, in agreement with the estimate given during 
+the PP generation (138 Ry).
 
 We have now our first candidate (i.e. not surely wrong) PP. 
 In order to 1) verify if it really does the job, 2) quantify
 its transferability, 3) quantify its hardness, and 4) improve 
-it if possible, we need to perform some testing.
+it, if possible, we need to perform some more testing.
 
 \subsubsection{Testing}
+
+As a first idea of how good our PP is, let us verify how it
+behaves on differente electronic configuration. The code
+allows to test several configurations in the following way:
+\begin{verbatim}
+ &input
+   atom='Ti',  dft='PBE',  config='[Ar] 3d2 4s2 4p0',
+   iswitch=2
+ /
+ &test
+   file_pseudo='Ti.pbe-rrkj.UPF',
+   nconf=10
+   configts(1)='3d2 4s2 4p0'
+   configts(2)='3d2 4s1 4p1'
+   configts(3)='3d2 4s1 4p0'
+   configts(4)='3d2 4s0 4p0'
+   configts(5)='3d3 4s1 4p0'
+   configts(6)='3d1 4s2 4p1'
+   configts(7)='3d1 4s2 4p0'
+   configts(8)='3d1 4s1 4p0'
+   configts(9)='3d1 4s0 4p0'
+   configts(10)='3d0 4s0 4p0'
+/
+\end{verbatim}
+here we have chosen 10 different valence configurations 
+(the corresponding AE configurations are obtained by 
+superimposing \texttt{configts} to core states in \texttt{config}).
+Some of them are neutral, some are ionic, the first five leave
+the $3d$ states unchanged, the last one is a completely ionized
+Ti$^{4+}$. For each configuration, the code writes results 
+(e.g. orbitals) into files \texttt{ld1}$N.*$ and \texttt{ld1ps}$N.*$,
+where $N$ is the index of the configuration. A summary is written to
+file \texttt{ld1.test}. For the first configuration, AE and PS 
+eigenvalues and total energies are written:
+\begin{verbatim}
+     3 2     3D   1( 2.00)       -0.31302       -0.31302        0.00000
+     1 0     4S   1( 2.00)       -0.32830       -0.32830        0.00000
+     2 1     4P   1( 0.00)       -0.10777       -0.10777        0.00000
+     Etot =   -1707.131006 Ry,    -853.565503 Ha,  -23226.698556 eV
+     Etotps =    -9.748745 Ry,      -4.874372 Ha,    -132.638416 eV
+\end{verbatim}
+(AE and PS eigenvalues are in this case the same, since this is the
+reference configuration used to build the PP). For the following
+configurations, AE and PS eigenvalues, plus total energy
+{\em differences}\footnote{Reminder: absolute PS total energies 
+depend upon the specific PP! Only energy differences are significant.}
+wrt configuration 1 are printed:
+\begin{verbatim}
+     3 2     3D   1( 2.00)       -0.40319       -0.40457        0.00138
+     1 0     4S   1( 1.00)       -0.38394       -0.38420        0.00026
+     2 1     4P   1( 1.00)       -0.15248       -0.15237       -0.00011
+     dEtot_ae =       0.226061 Ry
+     dEtot_ps =       0.226250 Ry,   Delta E=      -0.000189 Ry
+\end{verbatim}
+The discrepancy between AE and PS energy differences (in this case,
+wrt the ground state) as well as the discrepancies in AE and PS 
+eigenvalues, are a measure of how transferrable a PP is. In this case,
+the AE-PS discrepancy on $\delta E = E(4s^14p^13d^2) - E(4s^24p^03d^2)$
+(look at \texttt{Delta E}) is quite small, $<0.2$ mRy, while the 
+maximum discrepancy of the eigenvalues (rightmost column) $\sim 1$ mRy. 
+These are very good results.
+Unfortunately this is also a configuration that doesn't differ much
+from the reference one. Let us see the other cases:
+\begin{verbatim}
+     3 2     3D   1( 2.00)       -0.83550       -0.83256       -0.00295
+     1 0     4S   1( 1.00)       -0.76075       -0.76163        0.00088
+     2 1     4P   1( 0.00)       -0.48549       -0.48617        0.00068
+     dEtot_ae =       0.539968 Ry
+     dEtot_ps =       0.540344 Ry,   Delta E=      -0.000376 Ry
+ 
+     3 2     3D   1( 2.00)       -1.44648       -1.44538       -0.00110
+     1 0     4S   1( 0.00)       -1.24186       -1.24652        0.00465
+     2 1     4P   1( 0.00)       -0.91224       -0.91599        0.00375
+     dEtot_ae =       1.537516 Ry
+     dEtot_ps =       1.540285 Ry,   Delta E=      -0.002769 Ry
+ 
+     3 2     3D   1( 3.00)       -0.14077       -0.12814       -0.01263
+     1 0     4S   1( 1.00)       -0.27408       -0.28302        0.00894
+     2 1     4P   1( 0.00)       -0.08212       -0.08867        0.00655
+     dEtot_ae =       0.081274 Ry
+     dEtot_ps =       0.095152 Ry,   Delta E=      -0.013878 Ry
+ 
+     3 2     3D   1( 1.00)       -0.68514       -0.74236        0.05722
+     1 0     4S   1( 2.00)       -0.45729       -0.45802        0.00073
+     2 1     4P   1( 1.00)       -0.18855       -0.18471       -0.00383
+     dEtot_ae =       0.343391 Ry
+     dEtot_ps =       0.371650 Ry,   Delta E=      -0.028259 Ry
+ 
+     3 2     3D   1( 1.00)       -1.16621       -1.21438        0.04817
+     1 0     4S   1( 2.00)       -0.87720       -0.87620       -0.00100
+     2 1     4P   1( 0.00)       -0.56807       -0.56137       -0.00670
+     dEtot_ae =       0.716203 Ry
+     dEtot_ps =       0.739110 Ry,   Delta E=      -0.022907 Ry
+ 
+     3 2     3D   1( 1.00)       -1.82248       -1.87471        0.05223
+     1 0     4S   1( 1.00)       -1.39447       -1.39936        0.00489
+     2 1     4P   1( 0.00)       -1.03942       -1.03465       -0.00476
+     dEtot_ae =       1.848995 Ry
+     dEtot_ps =       1.873240 Ry,   Delta E=      -0.024245 Ry
+ 
+     3 2     3D   1( 1.00)       -2.54976       -2.61959        0.06983
+     1 0     4S   1( 0.00)       -1.94361       -1.96745        0.02383
+     2 1     4P   1( 0.00)       -1.53584       -1.54419        0.00835
+     dEtot_ae =       3.518170 Ry
+     dEtot_ps =       3.554733 Ry,   Delta E=      -0.036564 Ry
+ 
+     3 2     3D   1( 0.00)       -3.84145       -3.95251        0.11106
+     1 0     4S   1( 0.00)       -2.73793       -2.81405        0.07612
+     2 1     4P   1( 0.00)       -2.25938       -2.28768        0.02831
+     dEtot_ae =       6.699594 Ry
+     dEtot_ps =       6.831938 Ry,   Delta E=      -0.132344 Ry
+\end{verbatim} 
+It is evident that configurations with $3d^2$ occupancy are well 
+reproduced, with errors on total energy differences $<3$ mRy and
+on eigenvalues$<5$ mRy. Configurations with different $3d$ occupancy,
+however, have errors one order of magnitude higher. For the extreme
+case of Ti$^{4+}$, the error is $\sim$ 0.1 Ry.
 
 \newpage
 
