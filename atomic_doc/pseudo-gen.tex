@@ -16,6 +16,8 @@ Universit\`a di Udine and IOM-Democritos, Trieste\\
 URL: {\tt http://www.fisica.uniud.it/$\thicksim$giannozz}}
 \maketitle
 \date
+\tableofcontents
+
 \section{Introduction} 
 
 When I started to do my first first-principle calculation
@@ -662,7 +664,8 @@ from the origin, in the energy range \texttt{eminld=-2.0} Ry to
 In the \texttt{\&inputp} namelist, we specify the we want a single-projector,
 NC-PP (\texttt{pseudotype=1}), with nonlinear core correction 
 (\texttt{nlcc=.true.}), using the $l=1$ channel as local (\texttt{lloc=1}).
-The output PP wil be written in UPF format to file \texttt{Ti.pbe-rrkj.UPF}.
+The output PP wil be written in UPF format to file \texttt{Ti.pbe-n-rrkj.UPF}
+(following the {\sc quantum ESPRESSO} convention for PP names).
 Following the two namelists, there is a list of states used for pseudization:
 the 4S state, with pseudization radius $r_c=2.9$ a.u.; the 3D state,
  $r_c=1.3$ a.u.; the 4P, $r_c=2.9$ a.u.,  listed as last because it is
@@ -675,7 +678,7 @@ the channel to be chosen as local potential.
  /
  &inputp
    pseudotype=1, nlcc=.true., lloc=1,
-   file_pseudopw='Ti.pbe-rrkj.UPF',
+   file_pseudopw='Ti.pbe-n-rrkj.UPF'
  /
 3
 4S 1 0 2.00  0.00 2.9 2.9
@@ -783,7 +786,7 @@ namelist):
    iswitch=2
  /
  &test
-   file_pseudo='Ti.pbe-rrkj.UPF',
+   file_pseudo='Ti.pbe-n-rrkj.UPF',
    nconf=1, configts(1)='3d2 4s2 4p0',
    ecutmin=50, ecutmax=200, decut=50
  /
@@ -823,7 +826,7 @@ So our data for PP generation are as follows:
  /
  &inputp
    pseudotype=1, nlcc=.true., lloc=0,
-   file_pseudopw='Ti.pbe-rrkj.UPF',
+   file_pseudopw='Ti.pbe-n-rrkj.UPF',
  /
 3
 4P 2 1 0.00  0.00 2.9 2.9
@@ -877,7 +880,7 @@ allows to test several configurations in the following way:
    iswitch=2
  /
  &test
-   file_pseudo='Ti.pbe-rrkj.UPF',
+   file_pseudo='Ti.pbe-n-rrkj.UPF',
    nconf=10
    configts(1)='3d2 4s2 4p0'
    configts(2)='3d2 4s1 4p1'
@@ -985,8 +988,108 @@ on eigenvalues$<5$ mRy. Configurations with different $3d$ occupancy,
 however, have errors one order of magnitude higher. For the extreme
 case of Ti$^{4+}$, the error is $\sim$ 0.1 Ry.
 
-\newpage
+In order to better understand what is going on, let us have a
+look at the AE vs PS orbitals and logarithmic derivatives for
+configuration 10 (i.e. for the bare PP). Let us add a line
+like this:
+\begin{verbatim}
+   rlderiv=2.90, eminld=-4.0, emaxld=0.0, deld=0.01, nld=3,
+\end{verbatim}
+and plot files \texttt{ld10ps.wfc}, \texttt{ld10.dlog},
+\texttt{ld10ps.dlog} using \texttt{gnuplot} as above :
 
+\includegraphics[width=7.5cm]{pseudo-gen-fig3.pdf}
+\includegraphics[width=7.5cm]{pseudo-gen-fig4.pdf}
+
+Both the orbitals and the logarithmic derivatives (note the 
+different energy range) start to exhibit some visible
+discrepancy now.
+
+One can try to fiddle with all generation parameters,
+better if one at the time, to see whether things improve.
+Curiously enough, the pseudization radius for the core
+correction, which in principle should be as small as
+possible, seems to improve things if pushed slightly 
+outwards (try \texttt{rcore=2.0}). Also surprisingly,
+a smaller pseudization radius for the $3d$ state, 0.9 
+or 1.0 a.u., doesn't bring any visible improvement 
+to transferability
+(but it increases a lot the required cutoff!).
+Changing the pseudization radii for $4s$ and $4p$ states
+doesn't affect much the results. 
+
+A different local potential -- a pseudized version 
+of the total self-consistent potential -- can be chosen 
+by setting \texttt{lloc=-1} and setting \texttt{rcloc}
+to the desired pseudization radius (a.u.). For small 
+\texttt{rcloc} ghosts re-appear, but  \texttt{rcloc=2.5} 
+yields slightly better results. Note that the PP so 
+generated will also have a $s$ projector, while the previous
+ones had only $p$ and $d$ projectors. 
+
+One could also generate the PP from a different electronic 
+configuration. Since Ti tends to lose rather than to attract
+electrons, it will be more easily found in a ionized state than
+in the neutral one. One might for instance use the electronic
+configuration of the Bachelet-Hamann-Schl\"uter paper\cite{BHS}:
+$3d^2 4s^{0.75} 4p^{0.25}$. This however doesn't seem to improve
+much. Finally we end up with these generation data:
+\begin{verbatim}
+ &input
+   atom='Ti',  dft='PBE',  config='[Ar] 3d2 4s2 4p0',
+   iswitch=3
+ /
+ &inputp
+   pseudotype=1, nlcc=.true., rcore=2.0, lloc=-1, rcloc=2.5,
+   file_pseudopw='Ti.pbe-n-rrkj.UPF'
+ /
+3
+4P 2 1 0.00  0.00 2.9 2.9
+3D 3 2 2.00  0.00 1.3 1.3
+4S 1 0 2.00  0.00 2.9 2.9
+\end{verbatim}
+
+\subsection {Single-projector, norm-conserving, with semicore states}
+
+The results of transferability tests suggest that a Ti PP with only
+$3d$, $4s$, $4p$ states have limited transferability to cases with 
+different $3d$ configurations. In order to improve it, a possible
+way is to put semicore $3s$ and $3p$ states in valence. The maximum
+for those states (0.87 a.u. and 0.90 a.u. respectively) is in the 
+same range as for $3d$ (0.98 a.u.). Let us try thus the following:
+\begin{verbatim}
+ &input
+   atom='Ti',  dft='PBE',  config='[Ar] 3d2 4s2 4p0',
+   rlderiv=2.90, eminld=-4.0, emaxld=2.0, deld=0.01, nld=3,
+   iswitch=3
+ /
+ &inputp
+   pseudotype=1, lloc=-1, rcloc=2.5, rho0=0.001
+   file_pseudopw='Ti.pbe-sp-rrkj.UPF'
+ /
+3
+3S 1 0 2.00  0.00 1.1 1.1
+3P 2 1 6.00  0.00 1.2 1.2
+3D 3 2 2.00  0.00 1.3 1.3
+ &test
+   configts(1)='3s2 3p6 3d2 4s2 4p0',
+ /
+\end{verbatim}
+Note the presence of the \texttt{\&test} namelist: it is used in this
+context to supply the electronic valence configuration, to be used
+for unscreening. As a first step, we do not include the core correction
+
+\newpage
+\subsection{Testing in molecules and solids}
+
+Even if our PP looks good
+(or not too bad) on paper based on the results of atomic calculations,
+it is always a good idea to test it in simple molecular or solid-state
+systems, for which all-electron data (i.e. calculations performed with
+the same XC functional but without PP's, such as e.g. FLAPW, LMTO,
+Quantum Chemstry calculations) is available. The comparison with
+experiments is of course interesting, but the goal of PP's is to 
+reproduce AE data, not to improve DFT.
 
 
 \appendix
