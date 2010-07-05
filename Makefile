@@ -279,5 +279,5 @@ log :
 
 depend:
 	@echo 'Checking dependencies...'
-	- ( if test -x ./makedeps.sh ; then ./makedeps.sh ; fi)
+	- ( if test -x install/makedeps.sh ; then install/makedeps.sh ; fi)
 

@@ -22,6 +22,11 @@ add_efield.o : ../Modules/kind.o
 add_efield.o : ../Modules/mp.o
 add_efield.o : ../Modules/mp_global.o
 add_efield.o : pwcom.o
+add_paw_to_deeq.o : ../Modules/ions_base.o
+add_paw_to_deeq.o : ../Modules/kind.o
+add_paw_to_deeq.o : ../Modules/paw_variables.o
+add_paw_to_deeq.o : ../Modules/uspp.o
+add_paw_to_deeq.o : pwcom.o
 add_vuspsi.o : ../Modules/control_flags.o
 add_vuspsi.o : ../Modules/ions_base.o
 add_vuspsi.o : ../Modules/kind.o
@@ -662,6 +667,7 @@ init_at_1.o : ../Modules/uspp.o
 init_at_1.o : pwcom.o
 init_ns.o : ../Modules/ions_base.o
 init_ns.o : ../Modules/kind.o
+init_ns.o : ../Modules/uspp.o
 init_ns.o : pwcom.o
 init_ns.o : scf_mod.o
 init_run.o : ../EE/ee_mod.o
@@ -859,7 +865,6 @@ newd.o : ../Modules/ions_base.o
 newd.o : ../Modules/kind.o
 newd.o : ../Modules/mp.o
 newd.o : ../Modules/mp_global.o
-newd.o : ../Modules/paw_variables.o
 newd.o : ../Modules/uspp.o
 newd.o : ../Modules/wavefunctions.o
 newd.o : noncol.o
@@ -1456,7 +1461,6 @@ symmetrize_at.o : ../Modules/kind.o
 symmetrize_at.o : pwcom.o
 symmetrize_at.o : symm_base.o
 tabd.o : ../Modules/kind.o
-tabd.o : ../Modules/uspp.o
 transform_becsum_nc.o : ../Modules/ions_base.o
 transform_becsum_nc.o : ../Modules/kind.o
 transform_becsum_nc.o : ../Modules/uspp.o

@@ -262,6 +262,12 @@ read_pseudo_rrkj3.o : ../Modules/funct.o
 read_pseudo_rrkj3.o : ../Modules/kind.o
 read_pseudo_rrkj3.o : ../Modules/radial_grids.o
 read_pseudo_rrkj3.o : ld1inc.o
+run_lda_half.o : ../Modules/io_global.o
+run_lda_half.o : ../Modules/kind.o
+run_lda_half.o : ../Modules/mp.o
+run_lda_half.o : ../Modules/radial_grids.o
+run_lda_half.o : ld1inc.o
+run_lda_half.o : parameters.o
 run_pseudo.o : ../Modules/kind.o
 run_pseudo.o : ../Modules/radial_grids.o
 run_pseudo.o : atomic_paw.o
