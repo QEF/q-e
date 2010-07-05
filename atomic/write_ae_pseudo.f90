@@ -30,12 +30,12 @@ subroutine write_ae_pseudo
   ELSE
      file_pseudopw = TRIM(atom) // '.UPF'
   END IF
-  iunps=28
-  if (ionode) &
-     open(unit=iunps, file=trim(file_pseudopw), status='unknown',  &
-          form='formatted', err=50, iostat=ios)
-50  call mp_bcast(ios, ionode_id)
-  call errore('write_ae_pseudo','opening file_pseudopw',abs(ios))
+!  iunps=28
+!  if (ionode) &
+!     open(unit=iunps, file=trim(file_pseudopw), status='unknown',  &
+!          form='formatted', err=50, iostat=ios)
+!50  call mp_bcast(ios, ionode_id)
+!  call errore('write_ae_pseudo','opening file_pseudopw',abs(ios))
 
   if ( rel==2 ) call errore('write_ae_pseudo','you cannot be serious!!!',rel)
   if (ionode) then
@@ -43,7 +43,7 @@ subroutine write_ae_pseudo
     lloc = 0
     rcloc = 0.0_DP
     nwfs = 0
-    call write_pseudo_comment(iunps)  
+!    call write_pseudo_comment(iunps)  
     zval = zed
     etots= etot
     nwfts = nwf
@@ -57,13 +57,14 @@ subroutine write_ae_pseudo
     llts(1:nwfts) = ll(1:nwf)
     octs(1:nwfts) = oc(1:nwf)
     phits(1:grid%mesh,1:nwfts) = psi(1:grid%mesh,1,1:nwf )
-    call write_pseudo_header(iunps)  
-    call write_pseudo_mesh(iunps)
-    call write_pseudo_pswfc(iunps)
+!    call write_pseudo_header(iunps)  
+!    call write_pseudo_mesh(iunps)
+!    call write_pseudo_pswfc(iunps)
     rhos(1:grid%mesh,1)= rho(1:grid%mesh,1) 
-    call write_pseudo_rhoatom(iunps)  
+!    call write_pseudo_rhoatom(iunps)  
+    call ld1_writeout()
     !
-    close(iunps)
+!    close(iunps)
     !
   endif
   !
