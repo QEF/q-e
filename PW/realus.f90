@@ -1134,8 +1134,6 @@ MODULE realus
       USE uspp_param,       ONLY : upf, nh, nhm
       USE noncollin_module, ONLY : noncolin, nspin_mag
       USE spin_orb,         ONLY : domag, lspinorb
-      USE dfunct,           ONLY : add_paw_to_deeq
-
       !
       IMPLICIT NONE
       !
