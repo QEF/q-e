@@ -1492,12 +1492,11 @@ MODULE realus
       USE gvect,            ONLY : nr1, nr2, nr3
       USE uspp,             ONLY : okvan, becsum
       USE uspp_param,       ONLY : upf, nh
-      USE noncollin_module, ONLY : noncolin, nspin_mag
+      USE noncollin_module, ONLY : noncolin, nspin_mag, nspin_lsda
       USE spin_orb,         ONLY : domag
       USE mp_global,        ONLY : intra_pool_comm, inter_pool_comm
       USE mp,               ONLY : mp_sum
       USE gvect,                ONLY : nrxx
-      USE noncollin_module,     ONLY : nspin_mag
 
       !
       IMPLICIT NONE
@@ -1560,7 +1559,7 @@ MODULE realus
 
       IF (rescale) THEN
       !OBM, RHO IS NOT NECESSARILY GROUND STATE CHARGE DENSITY, thus rescaling is optional
-       charge = sum( rho_1(:,1:nspin_mag) )*omega / ( nr1*nr2*nr3 )
+       charge = sum( rho_1(:,1:nspin_lsda) )*omega / ( nr1*nr2*nr3 )
 
        CALL mp_sum(  charge , intra_pool_comm )
        CALL mp_sum(  charge , inter_pool_comm )
