@@ -1134,6 +1134,8 @@ MODULE realus
       USE uspp_param,       ONLY : upf, nh, nhm
       USE noncollin_module, ONLY : noncolin, nspin_mag
       USE spin_orb,         ONLY : domag, lspinorb
+      USE dfunct,           ONLY : add_paw_to_deeq
+
       !
       IMPLICIT NONE
       !
@@ -1181,6 +1183,7 @@ MODULE realus
       CALL start_clock( 'newd' )
       !
       CALL newq_r(v%of_r,deeq,.false.)
+      IF (noncolin) call add_paw_to_deeq(deeq)
       !
       DO ia = 1, nat
          !
