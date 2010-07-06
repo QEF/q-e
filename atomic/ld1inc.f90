@@ -266,7 +266,8 @@ module ld1inc
   !
   logical :: &
        lpaw,      &! if true generate or test a PAW dataset
-       lnc2paw     ! if true the PAW dataset is generate from the NC one
+       lnc2paw, &  ! if true the PAW dataset is generate from the NC one
+       use_paw_as_gipaw ! if true, PAW data will be used for GIPAW
   type(paw_t) :: &
        pawsetup    ! the PAW dataset
   real(DP) ::       &

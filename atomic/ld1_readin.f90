@@ -35,7 +35,7 @@ subroutine ld1_readin
                          nld, rpwe, rlderiv, eminld, emaxld, deld, &
                          ecutmin, ecutmax, decut, rytoev_fact, verbosity, &
                          frozen_core, lsdts, new_core_ps, cau_fact, &
-                         lnc2paw, pawsetup,  & !paw
+                         lnc2paw, use_paw_as_gipaw, pawsetup,  & !paw EMINE
                          rmatch_augfun, which_augfun,         & !paw
                          rhos, bmat, lsmall, &              ! extra for paw2us
                          lgipaw_reconstruction, lsave_wfc, &
@@ -142,7 +142,8 @@ subroutine ld1_readin
                         !        pseudo generation are written
        file_recon, &    ! output file needed for the paw reconstruction
        lsave_wfc,&      ! set to true to save all-electron and ps wfc to file
-       lgipaw_reconstruction! write data for (GI)PAW reconstruction
+       lgipaw_reconstruction, & ! write data for (GI)PAW reconstruction
+       use_paw_as_gipaw  ! EMINE: if true gipaw data will be read from paw
 
    !
   prefix       = 'ld1'
@@ -205,6 +206,7 @@ subroutine ld1_readin
   write_coulomb = .false.
   lsave_wfc = .false.
   lgipaw_reconstruction = .false.
+  use_paw_as_gipaw = .false. !EMINE
   relpert = .false.
 
   ! read the namelist input
@@ -634,6 +636,7 @@ subroutine ld1_readin
           'Latter correction not implemented in PAW' ,latt)
      call errore('ld1_readin', &
           'PAW dataset generation and test is experimental' ,-1)
+     if(use_paw_as_gipaw)write(*,*)"PAW DATA WILL BE READ FOR GIPAW CALCULATION"
   endif
 
   return
@@ -681,7 +684,8 @@ subroutine bcast_inputp()
                          file_pseudopw, file_screen, file_core, file_beta, &
                          file_chi, file_qvan, file_wfcaegen, file_wfcncgen, &
                          file_wfcusgen, file_recon, which_augfun, &
-                         rmatch_augfun, lgipaw_reconstruction, lsave_wfc
+                         rmatch_augfun, lgipaw_reconstruction, lsave_wfc, &
+                         use_paw_as_gipaw !EMINE
 implicit none
 #ifdef __PARA
   call mp_bcast( pseudotype, ionode_id )

@@ -14,7 +14,7 @@ SUBROUTINE export_upf(iunps)
   use radial_grids, only : radial_grid_COPY, nullify_radial_grid, &
                            deallocate_radial_grid
   use ld1inc, only : author, nlcc, zval, lpaw, write_coulomb, &
-                     lgipaw_reconstruction, etots, rel, ecutwfc, ecutrho, &
+                     etots, rel, ecutwfc, ecutrho, &
                      nwfts, nbeta, lmax, which_augfun, elts, octs, llts, &
                      nnts, rcutusts, rcutts, rcut, rcutus, els, ikk, nwfs, &
                      lls, nns, ocs, beta, bmat, qq, qvan, qvanl, rcloc, lloc, &
@@ -23,7 +23,8 @@ SUBROUTINE export_upf(iunps)
                      core_state, ll, el, nwf, psi, vpot, nconf, zed, &
                      jjts, vpstot, lltsc, rcuttsc, rcutustsc, eltsc, &
                      lsave_wfc, wfc_ae_recon, wfc_ps_recon, tm, enlts, &
-                     nstoaets, pseudotype, enls, rhoc
+                     nstoaets, pseudotype, enls, rhoc, &
+                     lgipaw_reconstruction, use_paw_as_gipaw
   use funct, only: get_dft_name
   use iotk_module, only: iotk_newline
   !
@@ -75,6 +76,7 @@ SUBROUTINE export_upf(iunps)
   upf%tpawp = lpaw
   upf%tcoulombp = write_coulomb
   upf%has_gipaw = lgipaw_reconstruction
+  upf%paw_as_gipaw = use_paw_as_gipaw
   upf%etotps = etots
   upf%has_so = (rel == 2)
   IF (rel == 2) THEN
@@ -262,6 +264,7 @@ SUBROUTINE export_upf(iunps)
    END SUBROUTINE export_upf_so
    !
    SUBROUTINE export_upf_paw
+      INTEGER :: co,n   !EMINE
       upf%paw_data_format = 2
       !
       upf%paw%core_energy = etot -etots
@@ -295,6 +298,25 @@ SUBROUTINE export_upf(iunps)
       !
       !upf%paw%pfunc(:)  = not used when writing, reconstructed from upf%aewfc
       !upf%paw%ptfunc(:) = not used when writing, reconstructed from upf%pswfc
+      !===============================================================
+      !For PAW pseudopotentials, now we also include core information:
+      !even when lgipaw_reconstruction = .false.
+      !EMINE
+      upf%gipaw_ncore_orbitals = COUNT(core_state(1:nwf))
+      co = upf%gipaw_ncore_orbitals
+      ALLOCATE ( &
+         upf%gipaw_core_orbital_n(co), &
+         upf%gipaw_core_orbital_l(co), &
+         upf%gipaw_core_orbital_el(co), &
+         upf%gipaw_core_orbital(upf%mesh,co))
+      upf%gipaw_core_orbital_n(1:co)  = nn(1:co)
+      upf%gipaw_core_orbital_l(1:co)  = ll(1:co)
+      upf%gipaw_core_orbital_el(1:co) = el(1:co)
+      DO n = 1,co
+         upf%gipaw_core_orbital(1:upf%mesh,n) &
+            = psi(1:upf%mesh,1,n)
+      ENDDO
+      !================================================================
       RETURN
    END SUBROUTINE export_upf_paw
    SUBROUTINE export_upf_gipaw

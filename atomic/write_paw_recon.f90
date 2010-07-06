@@ -12,7 +12,8 @@ subroutine write_paw_recon
   use io_global, only : stdout, ionode, ionode_id
   use mp,        only : mp_bcast
   use ld1inc,    only : file_recon, nwf, nwfts, grid, llts, psi, phits, &
-       lgipaw_reconstruction, wfc_ae_recon, wfc_ps_recon, nstoaets
+       lgipaw_reconstruction, wfc_ae_recon, wfc_ps_recon, nstoaets, &
+       use_paw_as_gipaw
   implicit none
   
   integer :: i, j, n, m, l, ios, iae, isign
@@ -40,7 +41,7 @@ subroutine write_paw_recon
         write (51,*) '</PP_L>'
         write (51,*) '<PP_REC_AE>'
         
-        IF ( lgipaw_reconstruction ) THEN
+        IF ( lgipaw_reconstruction.and.(.not.use_paw_as_gipaw) ) THEN
            ! The data was changed in 'calculate_gipaw_orbitals()'
            psi(:grid%mesh,1,iae) = wfc_ae_recon(:grid%mesh,nstoaets(i))
         END IF
@@ -63,7 +64,7 @@ subroutine write_paw_recon
         write (51,*) '</PP_REC_AE>'
         write (51,*) '<PP_REC_PS>'
         
-        IF ( lgipaw_reconstruction ) THEN
+        IF ( lgipaw_reconstruction.and.(.not.use_paw_as_gipaw) ) THEN
            ! The data was changed in 'calculate_gipaw_orbitals()'
            phits(:grid%mesh,i) = wfc_ps_recon(:grid%mesh,i)
         END IF

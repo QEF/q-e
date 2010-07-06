@@ -24,7 +24,8 @@ SUBROUTINE run_test
                     nwfts, nnts, llts, jjts, iswts, octs, elts, nstoaets, &
                     nwftsc, nntsc, lltsc, jjtsc, iswtsc, octsc, eltsc,nstoaec, &
                     file_wavefunctions, file_logder, &
-                    file_wavefunctionsps, file_logderps
+                    file_wavefunctionsps, file_logderps, &
+                    core_state, use_paw_as_gipaw !EMINE
   implicit none
 
   integer  &
@@ -71,6 +72,8 @@ SUBROUTINE run_test
      nwfts=nwftsc(nc)
      if (nc>1) call save_ae(nwf_old,nn_old,ll_old,jj_old,enl_old,   &
                             oc_old,isw_old, core_state_old,psi_old,lsd_old,-1)
+     !EMINE
+     core_state_old = core_state
      call set_conf(nc)
      call all_electron(.true.,nc)
      if (nc.eq.1) then
@@ -146,6 +149,9 @@ SUBROUTINE run_test
      !
   enddo
   if (ionode) close (unit = 13)  
+
+  !EMINE
+  if(use_paw_as_gipaw)core_state = core_state_old
 
 END SUBROUTINE run_test
 

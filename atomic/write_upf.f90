@@ -7,7 +7,8 @@
 !
 subroutine write_upf_atomic(ounps)
 
-  use ld1inc, only: nlcc, rel, lpaw, lgipaw_reconstruction
+  use ld1inc, only: nlcc, rel, lpaw, lgipaw_reconstruction, &
+                    use_paw_as_gipaw
 
   integer :: ounps
 
@@ -20,7 +21,7 @@ subroutine write_upf_atomic(ounps)
   call write_pseudo_pswfc(ounps)
   call write_pseudo_rhoatom(ounps)  
   if (rel == 2) call write_pseudo_addinfo(ounps)  
-  if ( lgipaw_reconstruction ) call write_pseudo_gipaw(ounps)
+  if ( lgipaw_reconstruction.and.(.not.use_paw_as_gipaw) ) call write_pseudo_gipaw(ounps)
   !
   !
 end subroutine write_upf_atomic
@@ -414,7 +415,7 @@ end subroutine write_pseudo_addinfo
   subroutine write_pseudo_gipaw (ounps)
 !---------------------------------------------------------------------
 !
-!     This routine writes the additional informations needed for PAW
+!     This routine writes the additional informations needed for GIPAW
 !
     IMPLICIT NONE
     integer,intent(in) :: ounps
