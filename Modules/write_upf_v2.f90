@@ -229,7 +229,9 @@ SUBROUTINE write_upf_v2(u, upf, conf) !
          !
          CALL iotk_write_attr(attr, 'has_so',         upf%has_so,     newline=.true.)
          CALL iotk_write_attr(attr, 'has_wfc',        upf%has_wfc,    newline=.true.)
+         !EMINE
          CALL iotk_write_attr(attr, 'has_gipaw',      upf%has_gipaw,  newline=.true.)
+         CALL iotk_write_attr(attr, 'paw_as_gipaw',      upf%paw_as_gipaw,  newline=.true.)
          !
          CALL iotk_write_attr(attr, 'core_correction',upf%nlcc,       newline=.true.)
          CALL iotk_write_attr(attr, 'functional',     upf%dft,        newline=.true.)
@@ -525,7 +527,23 @@ SUBROUTINE write_upf_v2(u, upf, conf) !
       CALL iotk_write_dat(u, 'PP_AE_VLOC', upf%paw%ae_vloc,columns=4)
       !
       CALL iotk_write_end(u, 'PP_PAW')
-
+      !CORE DATA FOR GIPAW
+      !EMINE
+      CALL iotk_write_attr(attr, 'gipaw_data_format', upf%gipaw_data_format, first=.true.)
+      CALL iotk_write_begin(u, 'PP_GIPAW', attr=attr)
+      CALL iotk_write_attr(attr, 'number_of_core_orbitals', upf%gipaw_ncore_orbitals, first=.true.)
+      CALL iotk_write_begin(u, 'PP_GIPAW_CORE_ORBITALS', attr=attr)
+      DO nb = 1,upf%gipaw_ncore_orbitals
+            CALL iotk_write_attr(attr, 'index', nb, first=.true.)
+            CALL iotk_write_attr(attr, 'label', upf%gipaw_core_orbital_el(nb))
+            CALL iotk_write_attr(attr, 'n',     upf%gipaw_core_orbital_n(nb))
+            CALL iotk_write_attr(attr, 'l',     upf%gipaw_core_orbital_l(nb))
+         CALL iotk_write_dat(u, 'PP_GIPAW_CORE_ORBITAL'//iotk_index(nb), &
+                              upf%gipaw_core_orbital(:,nb), columns=4, attr=attr)
+      ENDDO
+      CALL iotk_write_end(u, 'PP_GIPAW_CORE_ORBITALS')
+      CALL iotk_write_end(u, 'PP_GIPAW')
+      !
       RETURN
    END SUBROUTINE write_paw
 !

@@ -142,6 +142,7 @@
 
           ! GIPAW:
           LOGICAL  :: has_gipaw           ! Whether GIPAW data is included
+          LOGICAL  :: paw_as_gipaw        !EMINE
           INTEGER  :: gipaw_data_format   ! The version of the format
           INTEGER  :: gipaw_ncore_orbitals
           REAL(DP), POINTER :: gipaw_core_orbital_n(:)

@@ -59,7 +59,6 @@ SUBROUTINE read_upf_v2(u, upf, grid, ierr)             !
        ierr = 1
        RETURN
    ENDIF
-
    CALL iotk_scan_attr(attr, 'version', upf%nv)
    IF (version_compare(upf%nv, max_version) == 'newer') &
        CALL errore('read_upf_v2',&
@@ -93,6 +92,7 @@ SUBROUTINE read_upf_v2(u, upf, grid, ierr)             !
       ! A null core charge simplifies several functions, mostly in PAW
       upf%rho_atc(1:upf%mesh) = 0._dp
    ENDIF
+
    ! Read local potential
    IF(.not. upf%tcoulombp) THEN
       ALLOCATE( upf%vloc(upf%mesh) )
@@ -112,7 +112,7 @@ SUBROUTINE read_upf_v2(u, upf, grid, ierr)             !
    CALL read_spin_orb(u, upf)
    ! Read additional data for PAW (All-electron charge, wavefunctions, vloc..)
    CALL read_paw(u, upf)
-   ! Read data dor gipaw reconstruction
+   ! Read data for gipaw reconstruction
    CALL read_gipaw(u, upf)
    !
    ! Close the file (not the unit!)
@@ -151,6 +151,8 @@ SUBROUTINE read_upf_v2(u, upf, grid, ierr)             !
          CALL iotk_scan_attr(attr, 'has_so',         upf%has_so,    default=.false.)
          CALL iotk_scan_attr(attr, 'has_wfc',        upf%has_wfc,   default=upf%tpawp)
          CALL iotk_scan_attr(attr, 'has_gipaw',      upf%has_gipaw, default=.false.)
+         !EMINE
+         CALL iotk_scan_attr(attr, 'paw_as_gipaw',      upf%paw_as_gipaw, default=.false.)
          !
          CALL iotk_scan_attr(attr, 'core_correction',upf%nlcc)
          CALL iotk_scan_attr(attr, 'functional',     upf%dft)
@@ -584,7 +586,7 @@ nb_loop: DO nb = 1,upf%nbeta
       !
       INTEGER :: nb
       IF (.not. upf%has_gipaw ) RETURN
-
+      
       CALL iotk_scan_begin(u, 'PP_GIPAW', attr=attr)
          CALL iotk_scan_attr(attr, 'gipaw_data_format', upf%gipaw_data_format)
       IF(upf%gipaw_data_format /= 2) &
@@ -604,43 +606,93 @@ nb_loop: DO nb = 1,upf%nbeta
             CALL iotk_scan_attr(attr, 'l',     upf%gipaw_core_orbital_l(nb))
       ENDDO
       CALL iotk_scan_end(u, 'PP_GIPAW_CORE_ORBITALS')
+
       !
       ! Read valence all-electron and pseudo orbitals and their labels
-      CALL iotk_scan_begin(u, 'PP_GIPAW_ORBITALS', attr=attr)
+      !EMINE
+      IF (upf%paw_as_gipaw) THEN
+         !READ PAW DATA INSTEAD OF GIPAW 
+         upf%gipaw_wfs_nchannels = upf%nbeta
+         ALLOCATE ( upf%gipaw_wfs_el(upf%gipaw_wfs_nchannels) )
+         ALLOCATE ( upf%gipaw_wfs_ll(upf%gipaw_wfs_nchannels) )
+         ALLOCATE ( upf%gipaw_wfs_rcut(upf%gipaw_wfs_nchannels) )
+         ALLOCATE ( upf%gipaw_wfs_rcutus(upf%gipaw_wfs_nchannels) )
+         ALLOCATE ( upf%gipaw_wfs_ae(upf%mesh,upf%gipaw_wfs_nchannels) )
+         ALLOCATE ( upf%gipaw_wfs_ps(upf%mesh,upf%gipaw_wfs_nchannels) )
+         DO nb = 1,upf%gipaw_wfs_nchannels
+            upf%gipaw_wfs_el(nb) = upf%els_beta(nb)
+            upf%gipaw_wfs_ll(nb) = upf%lll(nb)
+            upf%gipaw_wfs_ae(:,nb) = upf%aewfc(:,nb)
+         ENDDO
+         DO nb = 1,upf%gipaw_wfs_nchannels
+            upf%gipaw_wfs_ps(:,nb) = upf%pswfc(:,nb) 
+         ENDDO
+         ALLOCATE ( upf%gipaw_vlocal_ae(upf%mesh) )
+         ALLOCATE ( upf%gipaw_vlocal_ps(upf%mesh) )
+         upf%gipaw_vlocal_ae(:)=  upf%vloc(:)
+         upf%gipaw_vlocal_ps(:)= upf%paw%ae_vloc(:)
+         DO nb = 1,upf%gipaw_wfs_nchannels
+            upf%gipaw_wfs_rcut(nb)=upf%rcut(nb)
+            upf%gipaw_wfs_rcutus(nb)=upf%rcutus(nb)
+         ENDDO
+      ELSEIF (upf%tcoulombp) THEN
+         upf%gipaw_wfs_nchannels = 1
+         ALLOCATE ( upf%gipaw_wfs_el(upf%gipaw_wfs_nchannels) )
+         ALLOCATE ( upf%gipaw_wfs_ll(upf%gipaw_wfs_nchannels) )
+         ALLOCATE ( upf%gipaw_wfs_rcut(upf%gipaw_wfs_nchannels) )
+         ALLOCATE ( upf%gipaw_wfs_rcutus(upf%gipaw_wfs_nchannels) )
+         ALLOCATE ( upf%gipaw_wfs_ae(upf%mesh,upf%gipaw_wfs_nchannels) )
+         ALLOCATE ( upf%gipaw_wfs_ps(upf%mesh,upf%gipaw_wfs_nchannels) )
+         DO nb = 1,upf%gipaw_wfs_nchannels
+            upf%gipaw_wfs_el(nb) = "1S"
+            upf%gipaw_wfs_ll(nb) = 0
+            upf%gipaw_wfs_ae(:,nb) = 0.0d0
+            upf%gipaw_wfs_ps(:,nb) = 0.0d0
+         ENDDO
+         ALLOCATE ( upf%gipaw_vlocal_ae(upf%mesh) )
+         ALLOCATE ( upf%gipaw_vlocal_ps(upf%mesh) )
+         upf%gipaw_vlocal_ae(:)=  0.0d0
+         upf%gipaw_vlocal_ps(:)=  0.0d0
+         DO nb = 1,upf%gipaw_wfs_nchannels
+            upf%gipaw_wfs_rcut(nb)=1.0d0
+            upf%gipaw_wfs_rcutus(nb)=1.0d0
+         ENDDO
+      ELSE
+         CALL iotk_scan_begin(u, 'PP_GIPAW_ORBITALS', attr=attr)
          CALL iotk_scan_attr(attr, 'number_of_valence_orbitals', upf%gipaw_wfs_nchannels)
-      ALLOCATE ( upf%gipaw_wfs_el(upf%gipaw_wfs_nchannels) )
-      ALLOCATE ( upf%gipaw_wfs_ll(upf%gipaw_wfs_nchannels) )
-      ALLOCATE ( upf%gipaw_wfs_rcut(upf%gipaw_wfs_nchannels) )
-      ALLOCATE ( upf%gipaw_wfs_rcutus(upf%gipaw_wfs_nchannels) )
-      ALLOCATE ( upf%gipaw_wfs_ae(upf%mesh,upf%gipaw_wfs_nchannels) )
-      ALLOCATE ( upf%gipaw_wfs_ps(upf%mesh,upf%gipaw_wfs_nchannels) )
-      !
-      DO nb = 1,upf%gipaw_wfs_nchannels
-         CALL iotk_scan_begin(u, 'PP_GIPAW_ORBITAL'//iotk_index(nb), attr=attr)
+         ALLOCATE ( upf%gipaw_wfs_el(upf%gipaw_wfs_nchannels) )
+         ALLOCATE ( upf%gipaw_wfs_ll(upf%gipaw_wfs_nchannels) )
+         ALLOCATE ( upf%gipaw_wfs_rcut(upf%gipaw_wfs_nchannels) )
+         ALLOCATE ( upf%gipaw_wfs_rcutus(upf%gipaw_wfs_nchannels) )
+         ALLOCATE ( upf%gipaw_wfs_ae(upf%mesh,upf%gipaw_wfs_nchannels) )
+         ALLOCATE ( upf%gipaw_wfs_ps(upf%mesh,upf%gipaw_wfs_nchannels) )
+      
+         DO nb = 1,upf%gipaw_wfs_nchannels
+            CALL iotk_scan_begin(u, 'PP_GIPAW_ORBITAL'//iotk_index(nb), attr=attr)
             CALL iotk_scan_attr(attr, 'label', upf%gipaw_wfs_el(nb))
             CALL iotk_scan_attr(attr, 'l',     upf%gipaw_wfs_ll(nb))
             CALL iotk_scan_attr(attr, 'cutoff_radius',           upf%gipaw_wfs_rcut(nb))
             CALL iotk_scan_attr(attr, 'ultrasoft_cutoff_radius', upf%gipaw_wfs_rcutus(nb),&
                                                                  default=upf%gipaw_wfs_rcut(nb))
-         ! read all-electron orbital
-         CALL iotk_scan_dat(u, 'PP_GIPAW_WFS_AE', upf%gipaw_wfs_ae(:,nb))
-         ! read pseudo orbital
-         CALL iotk_scan_dat(u, 'PP_GIPAW_WFS_PS', upf%gipaw_wfs_ps(:,nb))
+        ! read all-electron orbital
+            CALL iotk_scan_dat(u, 'PP_GIPAW_WFS_AE', upf%gipaw_wfs_ae(:,nb))
+        ! read pseudo orbital
+            CALL iotk_scan_dat(u, 'PP_GIPAW_WFS_PS', upf%gipaw_wfs_ps(:,nb))
          !
-         CALL iotk_scan_end(u, 'PP_GIPAW_ORBITAL'//iotk_index(nb))
-      ENDDO
-      CALL iotk_scan_end(u, 'PP_GIPAW_ORBITALS')
-      !
+            CALL iotk_scan_end(u, 'PP_GIPAW_ORBITAL'//iotk_index(nb))
+         ENDDO
+         CALL iotk_scan_end(u, 'PP_GIPAW_ORBITALS')
+      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       ! Read all-electron and pseudo local potentials
-      ALLOCATE ( upf%gipaw_vlocal_ae(upf%mesh) )
-      ALLOCATE ( upf%gipaw_vlocal_ps(upf%mesh) )
-      CALL iotk_scan_begin(u, 'PP_GIPAW_VLOCAL')
-      CALL iotk_scan_dat(u, 'PP_GIPAW_VLOCAL_AE',upf%gipaw_vlocal_ae(:))
-      CALL iotk_scan_dat(u, 'PP_GIPAW_VLOCAL_PS',upf%gipaw_vlocal_ae(:))
-      CALL iotk_scan_end(u, 'PP_GIPAW_VLOCAL')
-      !
-      CALL iotk_scan_end(u, 'PP_GIPAW')
+         ALLOCATE ( upf%gipaw_vlocal_ae(upf%mesh) )
+         ALLOCATE ( upf%gipaw_vlocal_ps(upf%mesh) )
+         CALL iotk_scan_begin(u, 'PP_GIPAW_VLOCAL')
+         CALL iotk_scan_dat(u, 'PP_GIPAW_VLOCAL_AE',upf%gipaw_vlocal_ae(:))
+         CALL iotk_scan_dat(u, 'PP_GIPAW_VLOCAL_PS',upf%gipaw_vlocal_ae(:))
+         CALL iotk_scan_end(u, 'PP_GIPAW_VLOCAL')
 
+      ENDIF
+      CALL iotk_scan_end(u, 'PP_GIPAW')
       RETURN
    END SUBROUTINE read_gipaw
 !
