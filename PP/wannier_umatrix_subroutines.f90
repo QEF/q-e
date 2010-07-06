@@ -49,7 +49,7 @@ SUBROUTINE u4ind(u,rcl,l)
    DOUBLE COMPLEX am1,am2,am3,am4,amz
    DATA amz/(0.d0,0.d0)/
    LOGICAL sw3
-   EXTERNAL dinit, cgk
+   EXTERNAL cgk
 
    INTRINSIC dfloat
 
@@ -187,7 +187,6 @@ SUBROUTINE ctormt(yor,yoi,l)
    IMPLICIT NONE
    INTEGER l
    DOUBLE PRECISION yor(7,7),yoi(7,7),sqtwo
-   EXTERNAL dinit
    INTRINSIC dsqrt
    CALL dinit(yor,7*7)
    CALL dinit(yoi,7*7)
