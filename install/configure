@@ -2689,7 +2689,7 @@ $as_echo "$as_me: WARNING: incorrect host name ?" >&2;}
 	# workarounf for Cray-XT machines
         test -d /proc/cray_xt && arch=crayxt
 	# workarounf for IBM BG machines
-        test -x /usr/bin/bgxlf && arch=ppc64-bg
+        test -d /bgsys && arch=ppc64-bg
 fi
 echo checking architecture... $arch
 
@@ -6515,11 +6515,11 @@ fi
                 LDFLAGS="$test_ldflags"
                 have_blas=1
                 have_essl=1
-                try_dflags="$try_dflags -D__LINUX_ESSL"
 		# BlueGene: for some obscure reason there is no need to
 		# specify a library path to have essl linked, while
 		# in reality it is needed to specify where essl are
 		if test "$arch"="ppc64-bg"; then
+                   try_dflags="$try_dflags -D__ESSL"
 		   if test "$blas_libs"=""; then
 		      if test "$use_openmp" -eq 0 ; then
 		         blas_libs="-L/opt/ibmmath/essl/4.4/lib/ -lesslbg"
@@ -6527,6 +6527,8 @@ fi
 		         blas_libs="-L/opt/ibmmath/essl/4.4/lib/ -lesslsmpbg"
 		      fi
 		   fi
+                else
+                   try_dflags="$try_dflags -D__LINUX_ESSL"
 		fi
                 ;;
 	mac686:ifort* )
