@@ -418,7 +418,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program ph.x 
 
 	text {
 
-NB: The program ph.x writes on the tmp_dir/_phprefix.phsave directory
+NB: The program ph.x writes on the tmp_dir/_ph0{prefix}.phsave directory
 a file for each representation of each q point. This file is called
 data-file.xml.#iq.#irr where #iq is the number of the q point and #irr
 is the number of the representation. These files contain the
@@ -426,23 +426,23 @@ contribution to the dynamical matrix of the irr representation for the
 iq point. 
 
 If recover=.true. ph.x does not recalculate the
-representations already saved in the tmp_dir/_phprefix.phsave
+representations already saved in the tmp_dir/_ph0{prefix}.phsave
 directory.  Moreover ph.x writes on the files data-file.xml.#iq in the
-tmp_dir/_phprefix.phsave directory the displacement patterns that it
+tmp_dir/_ph0{prefix}.phsave directory the displacement patterns that it
 is using. If recover=.true.  ph.x does not recalculate the
-displacement patterns found in the tmp_dir/_phprefix.phsave directory.
+displacement patterns found in the tmp_dir/_ph0{prefix}.phsave directory.
 
 This mechanism allows:
 
   1) To recover part of the ph.x calculation even if the recover file
-     or files are corrupted. You just remove the _phprefix.recover
-     files from the tmp_dir directory. You can also remove all the _ph
-     files and keep only the _phprefix.phsave directory.
+     or files are corrupted. You just remove the _ph0{prefix}.recover
+     files from the tmp_dir directory. You can also remove all the _ph0
+     files and keep only the _ph0{prefix}.phsave directory.
 
   2) To split a phonon calculation into several jobs for different
      machines (or set of nodes). Each machine calculates a subset of
      the representations and saves its data-file.xml.#iq.#irr files on
-     its tmp_dir/_phprefix.phsave directory. Then you collect all the
+     its tmp_dir/_ph0{prefix}.phsave directory. Then you collect all the
      data-file.xml.#iq.#irr files in one directory and run ph.x to
      collect all the dynamical matrices and diagonalize them.
 
@@ -455,11 +455,11 @@ dynamical matrices generated with different dispacement patterns.  A
 calculation split into different machines will run as follows: A
 preparatory run of ph.x with start_irr=0, last_irr=0 produces the sets
 of displacement patterns and save them on the data-file.xml.#iq files.
-These files are copied in all the tmp_dir/_phprefix.phsave directories
+These files are copied in all the tmp_dir/_ph0{prefix}.phsave directories
 of the machines where you plan to run ph.x.  ph.x is run in different
 machines with complementary sets of start_q, last_q, start_irr and
 last_irr variables.  All the files data-file.xml.#iq.#irr are
-collected on a single tmp_dir/_phprefix.phsave directory (remember to
+collected on a single tmp_dir/_ph0{prefix}.phsave directory (remember to
 collect also data-file.xml.#iq.0).  A final run of ph.x in this
 machine collects all the data contained in the files and diagonalizes
 the dynamical matrices.  This is done requesting a complete dispersion
