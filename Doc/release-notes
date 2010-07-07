@@ -12,6 +12,7 @@ Incompatible changes in CVS version:
 
 Fixed in version 4.2.1:
 
+  * real-space Q functions (tqr=.true.) not working in noncollinear case
   * XC potential in CP was not initialized when condition (rho > 10^(-30)) 
     was not satisfied; this is usually harmless but potentially dangerous
   * CP could not read data written from PW in spin-polarized cases

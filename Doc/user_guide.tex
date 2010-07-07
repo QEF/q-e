@@ -929,8 +929,12 @@ documentation yet, but an example in  \texttt{examples/example34}.
 As a final check that compilation was successful, you may want to run some or
 all of the examples. You should first of all ensure that you have downloaded 
 and correctly unpacked the package containing examples (since v.4.1 in a
-separate package). There are two
-different types of examples: 
+separate package):
+\begin{verbatim}
+     tar -zxvf /path/to/package/espresso-X.Y.Z-examples.tar.gz
+\end{verbatim}
+will unpack several subdirectories into \texttt{espresso-X.Y.Z/}.
+There are two different types of examples: 
 \begin{itemize}
 \item automated tests (in directories \texttt{tests/} 
 and \texttt{cptests/}). Quick and exhaustive, but not
@@ -947,7 +951,7 @@ To run tests, follow the directions in the header if file
 if needed (see below). Same for \cp.x, this time in directory 
 \texttt{cptests/}.
 
-Let us now consder examples. A list of examples and of what each example
+Let us now consider examples. A list of examples and of what each example
 does is contained in \texttt{examples/README}. 
 For details, see the \texttt{README} file in each example's directory. 
 If you find that any relevant feature isn't being tested, please contact us 
@@ -1854,10 +1858,6 @@ Input files are those in the \texttt{results/} subdirectories, with names ending
 with \texttt{.in} 
 (they will appear after you have run the examples).
     
-Note about XC: the type of XC used in the calculation is read from PP files. 
-All PPs must have been generated using the same XC. You can override
-this choice by setting input variable \texttt{input\_dft} (see list of
-allowed values in \texttt{Modules/funct.f90}).
 
 \subsection{Input data}
 
@@ -1993,12 +1993,52 @@ convenient in some cases that the two sets are not the same.
 In particular, it is often convenient to have \texttt{nrx1}=\texttt{nr1}+1
 to reduce memory conflicts.
 
+\subsection{Pseudopotential files}
+\label{SubSec:pseudo}
+Pseudopotential files for tests and examples are found in the 
+\texttt{pseudo/}
+subdirectory. A much larger set of PP's can be found under
+the "pseudo'' link of the web site. \qe\ uses a unified 
+pseudopotential format (UPF) for all types of pseudopotentials, 
+but still accepts a number of older formats. If you do not find 
+what you need, you may
+\begin{itemize}
+\item Convert pseudopootentials written in a different format, 
+using the converters listed in \texttt{upftools/UPF} (compile with 
+\texttt{make upf}).
+\item Generate it, using \texttt{atomic}. See the documentation in
+\texttt{atomic\_doc/} and in particular the library of input files
+in \texttt{pseudo\_library/}.
+\item Generate it, using other packages:
+\begin{itemize}
+\item David Vanderbilt's code (UltraSoft and Norm-Conserving)
+\item OPIUM (Norm-Conserving)
+\item The Fritz Haber code (Norm-Conserving)
+\end{itemize}
+The first two codes produce pseudopotentials in one of the 
+supported formats; the third, in a format that can be converted 
+to UPF.
+\end{itemize}
+Remember: {\em always} test the pseudopotentials on simple test
+systems before proceeding to serious calculations. 
+
+Note that the type of XC used in the calculation is read from 
+pseudopotential files. As a rule, you should use only 
+pseudopotentials that have been generated using the same 
+XC that you are using in your simulation. You can override
+this restriction by setting input variable \texttt{input\_dft}. The list of
+allowed XC functionals and of their acronyms can be found in 
+\texttt{Modules/funct.f90}.
+
+More documentation on pseudopotentials and on the UPF format
+can be found in the wiki.
 \section{Using \PWscf}
+
 
 Code \pw.x\ performs various kinds of electronic and ionic structure 
 calculations.
 We may distinguish the following typical cases of usage for \pw.x:
-
+2
 \subsection{Electronic structure calculations}
 \paragraph{Single-point (fixed-ion) SCF calculation} 
 Set \texttt{calculation='scf'} (this is actually the default).
@@ -3882,8 +3922,9 @@ Yes, you can (if implemented, of course: a few kinds of calculations
 are not available with USPP, a few more are not for PAW). A small
 restrictions exists in \texttt{cp.x}, expecting atoms with USPP listed before 
 those with NCPP, which in turn are expected before local PP's (if any).
-Otherwise you can mix and match, as long as the XC functional used in 
-the generation of the PP is the same for all PPs. Note that 
+A further restriction, that can be overriden,
+is that all PP's should be generated with the same XC.
+Otherwise, you can mix and match. Note that 
 it is the hardest atom that determines the cutoff.
 
 \paragraph{Where can I find pseudopotentials for atom X?}
@@ -3891,14 +3932,10 @@ it is the hardest atom that determines the cutoff.
 First, a general rule: when you ask for a pseudopotential, you should
 always specify which kind of PP you need (NCPP, USPP
 PAW, full- or scalar-relativistic, for which XC functional,
-and for many elements, with how many electrons in valence). 
+and, for many elements, with how many electrons in valence).
 If you do not find anything suitable in the ``pseudo'' page of the web 
-site links, we have bad news for you: you have to produce it by yourself. 
-You can use the \texttt{atomic} code: have a look first at the contents
-of the library of input data in \texttt{atomic\_doc/pseudo\_gen}.
-Otherwise, you can use any other code producing a file format that is either
-recognized by \qe\ or for which a converter to the UPF format exists. 
-New contributions to the PP table are very appreciated (and very scarce).
+site, we have bad news for you: you have to produce it by yourself. 
+See \ref{SubSec:pseudo} for more.
 
 \paragraph{Where can I find pseudopotentials for rare-earth X?}
 
