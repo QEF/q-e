@@ -36,7 +36,7 @@ subroutine lr_apply_liouvillian( evc1, evc1_new, sevc1_new, interaction )
                                    betasave, box_beta, maxbox_beta,newq_r
   USE lr_variables,   ONLY : lr_verbosity, charge_response
   USE io_global,      ONLY : stdout
-  USE DFUNCT,         ONLY : newq,add_paw_to_deeq
+  USE dfunct,         ONLY : newq
   USE control_flags,  ONLY : tqr
   
 
