@@ -556,7 +556,7 @@ SUBROUTINE write_upf_v2(u, upf, conf) !
       CHARACTER(len=iotk_attlenx) :: attr
       !
       INTEGER :: nb
-      IF (.not. upf%has_gipaw ) RETURN
+      IF (.not. upf%has_gipaw .or. upf%paw_as_gipaw) RETURN
 
          CALL iotk_write_attr(attr, 'gipaw_data_format', upf%gipaw_data_format, first=.true.)
       CALL iotk_write_begin(u, 'PP_GIPAW', attr=attr)
