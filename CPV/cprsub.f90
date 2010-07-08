@@ -57,7 +57,7 @@ subroutine formf( tfirst, eself )
      WRITE( stdout, 1200 ) eself
   endif
   !
-  1200 format(/,3x,'formf: eself=',f10.5)
+  1200 format(/,3x,'formf: eself=',f12.5)
   !
   IF( tpstab ) THEN
      !

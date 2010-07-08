@@ -15,7 +15,7 @@
       use kinds, only: dp
       use control_flags, only: iprint, thdyn, tpre, iprsta, &
             tfor, taurdr, tprnfor
-      use control_flags, only: ndr, ndw, nbeg, nomore, tsde, tortho, tnosee, &
+      use control_flags, only: nbeg, nomore, tsde, tortho, tnosee, &
             tnosep, trane, tranp, tsdp, tcp, tcap, ampre, amprp, tnoseh
 
       use core, only: nlcc_any
