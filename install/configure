@@ -7872,7 +7872,7 @@ fi
 
 if test "$mass_libs" != ""; then
    try_dflags="$try_dflags -D__MASS"
-   try_ldflags="$try_ldflags -Wl,--allow-multiple-definition"
+   ldflags="$ldflags -Wl,--allow-multiple-definition"
 fi
 
 echo setting MASS_LIBS... $mass_libs

@@ -796,7 +796,8 @@ esac
 if test "$cppflags" = "" ; then cppflags=$try_cppflags ; fi
 echo "${ECHO_T}$cppflags"
 
-# linker and archiver
+# linker and archiver - note that further additions to linker flags
+# should be added to ldflags, not try_ldflags, from now on
 if test "$ld" = ""       ; then ld="$mpif90"           ; fi
 if test "$ldflags" = ""  ; then ldflags="$try_ldflags" ; fi
 if test "$ar" = ""       ; then ar="$try_ar"           ; fi
@@ -1648,7 +1649,7 @@ fi
 
 if test "$mass_libs" != ""; then 
    try_dflags="$try_dflags -D__MASS"
-   try_ldflags="$try_ldflags -Wl,--allow-multiple-definition"
+   ldflags="$ldflags -Wl,--allow-multiple-definition"
 fi
 
 echo setting MASS_LIBS... $mass_libs
