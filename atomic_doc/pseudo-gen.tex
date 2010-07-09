@@ -33,11 +33,12 @@ an official (or unofficial) PP wizard to do this. For this reason
 I want to share here my (little) experience.
 
 These notes are written in general but having in mind the capabilities of
-the {\tt atomic} package, included in the {\sc Quantum ESPRESSO} distribution 
+the {\tt atomic} package, included in the {\sc Quantum ESPRESSO} 
+distribution 
 (\texttt{http://www.quantum-espresso.org}). {\tt atomic}, mostly written
-and maintained by Andrea Dal Corso, is the evolution of an older generation 
-code I maintained for several years. {\tt atomic} can generate both 
-Norm-Conserving (NC) \cite{NC} and Ultrasoft (US) \cite{van} PP's,
+and maintained by Andrea Dal Corso and others, is the evolution of 
+an older code I maintained for several years. {\tt atomic} can generate 
+both Norm-Conserving (NC) \cite{NC} and Ultrasoft (US) \cite{van} PP's,
 plus Projector Augmented Waves (PAW) \cite{PAW} sets.
 It allows multiple projectors, full relativistic calculations,
 spin-split PP's for spin-orbit calculations.
@@ -95,7 +96,7 @@ I recently discovered that Miguel Marques {\em et al.} have
 implemented something like this: see
 {\tt http://www.tddft.org/programs/octopus/pseudo.php}.
 
-\section{Pseudopotential generation, in general} 
+\subsection{Pseudopotential generation, in general} 
 
 In the following I am assuming that the basic PP theory 
 is known to the reader. Otherwise, see 
@@ -656,20 +657,7 @@ one is not trivial; PP 5) may suffer from insufficient transferability.
 \subsection {Single-projector, norm-conserving, no semicore}
 
 \subsubsection{Generation}
-Let us start from the simplest case. In the \texttt{\&input} namelist,
-we specify the we want to generate a PP (\texttt{iswitch=3}) and to
-calculate \texttt{nld=3} logarithmic derivatives at \texttt{rlderiv=2.90} a.u.
-from the origin, in the energy range \texttt{eminld=-2.0} Ry to 
-\texttt{emaxld=2.0} Ry, in energy steps \texttt{deld=0.01} Ry.
-In the \texttt{\&inputp} namelist, we specify the we want a single-projector,
-NC-PP (\texttt{pseudotype=1}), with nonlinear core correction 
-(\texttt{nlcc=.true.}), using the $l=1$ channel as local (\texttt{lloc=1}).
-The output PP wil be written in UPF format to file \texttt{Ti.pbe-n-rrkj.UPF}
-(following the {\sc quantum ESPRESSO} convention for PP names).
-Following the two namelists, there is a list of states used for pseudization:
-the 4S state, with pseudization radius $r_c=2.9$ a.u.; the 3D state,
- $r_c=1.3$ a.u.; the 4P, $r_c=2.9$ a.u.,  listed as last because it is
-the channel to be chosen as local potential.
+Let us start from the simplest case with the following input:
 \begin{verbatim}
  &input
    atom='Ti',  dft='PBE',  config='[Ar] 3d2 4s2 4p0',
@@ -685,7 +673,24 @@ the channel to be chosen as local potential.
 3D 3 2 2.00  0.00 1.3 1.3
 4P 2 1 0.00  0.00 2.9 2.9
 \end{verbatim}
-There is nothing magic or especially deep in the choice of the local 
+In the \texttt{\&input} namelist,
+we specify the we want to generate a PP (\texttt{iswitch=3}) and to
+calculate \texttt{nld=3} logarithmic derivatives at \texttt{rlderiv=2.90} a.u.
+from the origin, in the energy range \texttt{eminld=-2.0} Ry to 
+\texttt{emaxld=2.0} Ry, in energy steps \texttt{deld=0.01} Ry
+(note that these values will not affect PP generation).
+In the \texttt{\&inputp} namelist, we specify the we want a single-projector,
+NC-PP (\texttt{pseudotype=1}), with nonlinear core correction 
+(\texttt{nlcc=.true.}), using the $l=1$ channel as local (\texttt{lloc=1}).
+The output PP will be written in UPF format to file \texttt{Ti.pbe-n-rrkj.UPF}
+(following the {\sc quantum ESPRESSO} convention for PP names).
+Following the two namelists, there is a list of states used for pseudization:
+the 4S state, with pseudization radius $r_c=2.9$ a.u.; the 3D state,
+ $r_c=1.3$ a.u.; the 4P, $r_c=2.9$ a.u.,  listed as last because it is
+the channel to be chosen as local potential.
+
+There is nothing magic or especially deep in the choice of the radius
+and energy range for logarithmic derivatives, of the local 
 potential and of pseudization radii: it is just a reasonable guess.
 Running the input, one gets an error:
 \begin{verbatim}
@@ -714,9 +719,9 @@ about the nonlinear core correction:
 
       Integrated core pseudo-charge :   3.43
 \end{verbatim}
-(this is actually not good: the pseudization of the charge density 
-should begin at $r= r_c^{(min)}$, i.e. the smallest among the pseudization 
-radii; in our case, $r_c^{(min)} = r_c^{(l=2)}=1.3$ a.u.). 
+(this is actually not an ideal situation: the pseudization radius for the 
+charge density should be smaller than all pseudization radii; in our 
+case, smaller than $r_c^{(min)} = r_c^{(l=2)}=1.3$ a.u.). 
 Also notice messages on pseudization:
 \begin{verbatim}
       Wfc   4S  rcut= 2.883  Estimated cut-off energy=        5.32 Ry
@@ -881,20 +886,19 @@ allows to test several configurations in the following way:
  /
  &test
    file_pseudo='Ti.pbe-n-rrkj.UPF',
-   nconf=10
+   nconf=9
    configts(1)='3d2 4s2 4p0'
    configts(2)='3d2 4s1 4p1'
    configts(3)='3d2 4s1 4p0'
    configts(4)='3d2 4s0 4p0'
-   configts(5)='3d3 4s1 4p0'
-   configts(6)='3d1 4s2 4p1'
-   configts(7)='3d1 4s2 4p0'
-   configts(8)='3d1 4s1 4p0'
-   configts(9)='3d1 4s0 4p0'
-   configts(10)='3d0 4s0 4p0'
+   configts(5)='3d1 4s2 4p1'
+   configts(6)='3d1 4s2 4p0'
+   configts(7)='3d1 4s1 4p0'
+   configts(8)='3d1 4s0 4p0'
+   configts(9)='3d0 4s0 4p0'
 /
 \end{verbatim}
-here we have chosen 10 different valence configurations 
+here we have chosen 9 different valence configurations 
 (the corresponding AE configurations are obtained by 
 superimposing \texttt{configts} to core states in \texttt{config}).
 Some of them are neutral, some are ionic, the first five leave
@@ -946,12 +950,6 @@ from the reference one. Let us see the other cases:
      dEtot_ae =       1.537516 Ry
      dEtot_ps =       1.540285 Ry,   Delta E=      -0.002769 Ry
  
-     3 2     3D   1( 3.00)       -0.14077       -0.12814       -0.01263
-     1 0     4S   1( 1.00)       -0.27408       -0.28302        0.00894
-     2 1     4P   1( 0.00)       -0.08212       -0.08867        0.00655
-     dEtot_ae =       0.081274 Ry
-     dEtot_ps =       0.095152 Ry,   Delta E=      -0.013878 Ry
- 
      3 2     3D   1( 1.00)       -0.68514       -0.74236        0.05722
      1 0     4S   1( 2.00)       -0.45729       -0.45802        0.00073
      2 1     4P   1( 1.00)       -0.18855       -0.18471       -0.00383
@@ -990,13 +988,13 @@ case of Ti$^{4+}$, the error is $\sim$ 0.1 Ry.
 
 In order to better understand what is going on, let us have a
 look at the AE vs PS orbitals and logarithmic derivatives for
-configuration 10 (i.e. for the bare PP). Let us add a line
+configuration 9 (i.e. for the bare PP). Let us add a line
 like this:
 \begin{verbatim}
    rlderiv=2.90, eminld=-4.0, emaxld=0.0, deld=0.01, nld=3,
 \end{verbatim}
-and plot files \texttt{ld10ps.wfc}, \texttt{ld10.dlog},
-\texttt{ld10ps.dlog} using \texttt{gnuplot} as above :
+and plot files \texttt{ld19ps.wfc}, \texttt{ld19.dlog},
+\texttt{ld19ps.dlog} using \texttt{gnuplot} as above :
 
 \includegraphics[width=7.5cm]{pseudo-gen-fig3.pdf}
 \includegraphics[width=7.5cm]{pseudo-gen-fig4.pdf}
@@ -1022,9 +1020,10 @@ A different local potential -- a pseudized version
 of the total self-consistent potential -- can be chosen 
 by setting \texttt{lloc=-1} and setting \texttt{rcloc}
 to the desired pseudization radius (a.u.). For small 
-\texttt{rcloc} ghosts re-appear, but  \texttt{rcloc=2.5} 
-yields slightly better results. Note that the PP so 
-generated will also have a $s$ projector, while the previous
+\texttt{rcloc} ghosts re-appear;  \texttt{rcloc=2.9}
+yields slighty better total energy differences but slightly worse
+eigenvalues. Note that the PP so generated will also have a 
+$s$ projector, while the previous
 ones had only $p$ and $d$ projectors. 
 
 One could also generate the PP from a different electronic 
@@ -1033,14 +1032,16 @@ electrons, it will be more easily found in a ionized state than
 in the neutral one. One might for instance use the electronic
 configuration of the Bachelet-Hamann-Schl\"uter paper\cite{BHS}:
 $3d^2 4s^{0.75} 4p^{0.25}$. This however doesn't seem to improve
-much. Finally we end up with these generation data:
+much. 
+
+Finally we end up with these generation data:
 \begin{verbatim}
  &input
    atom='Ti',  dft='PBE',  config='[Ar] 3d2 4s2 4p0',
    iswitch=3
  /
  &inputp
-   pseudotype=1, nlcc=.true., rcore=2.0, lloc=-1, rcloc=2.5,
+   pseudotype=1, nlcc=.true., rcore=2.0, lloc=0,
    file_pseudopw='Ti.pbe-n-rrkj.UPF'
  /
 3
@@ -1064,7 +1065,7 @@ same range as for $3d$ (0.98 a.u.). Let us try thus the following:
    iswitch=3
  /
  &inputp
-   pseudotype=1, lloc=-1, rcloc=2.5, rho0=0.001
+   pseudotype=1, rho0=0.001, ...
    file_pseudopw='Ti.pbe-sp-rrkj.UPF'
  /
 3
@@ -1077,8 +1078,97 @@ same range as for $3d$ (0.98 a.u.). Let us try thus the following:
 \end{verbatim}
 Note the presence of the \texttt{\&test} namelist: it is used in this
 context to supply the electronic valence configuration, to be used
-for unscreening. As a first step, we do not include the core correction
+for unscreening. As a first step, we do not include the core correction.
+In place of the dots we should specify the local reference potential. 
+If we use \texttt{lloc=-1} with large values of \texttt{rcloc},
+(comparable to pseudization radii for the previous case) 
+we get all kinds of mysterious errors:
+\begin{verbatim}
+     from compute_chi : error #         1
+     n is too large
+\end{verbatim}
+for \texttt{rcloc=2.5}, while \texttt{rcloc=2.7} produces an equally 
+mysterious
+\begin{verbatim}
+     from run_pseudo : error #         1
+     Errors in PS-KS equation
+\end{verbatim}
+while smaller values (e.g. 1.5) lead to other errors:
+\begin{verbatim}
+     WARNING! Expected number of nodes: 0 = 2-1-1, number of nodes found: 1.
+\end{verbatim}
+Even if the code doesn't stop, the presence of such messages
+is a signal of something going wrong in the generation algorithm.
+With some more experiments, though, one finds that \texttt{rcloc=1.3} 
+yields a good potential. We still have other choices. In this case, 
+$d$ as reference potential: \texttt{lloc=2}, seems to work as well
+(and produces a PP with less projectors: only $s$ and $p$). 
+The generation algorithm in the latter case yields these 
+results for Kohn-Sham energies:
+\begin{verbatim}
+     n l     nl             e AE (Ry)        e PS (Ry)    De AE-PS (Ry) 
+     1 0     3S   1( 2.00)       -4.60347       -4.60348        0.00001
+     2 1     3P   1( 6.00)       -2.85621       -2.85623        0.00002
+     3 2     3D   1( 2.00)       -0.31302       -0.31301       -0.00001
+     2 0     4S   1( 2.00)       -0.32830       -0.32892        0.00062
+     3 1     4P   1( 0.00)       -0.10777       -0.10732       -0.00045
+\end{verbatim}
+Note that the $3s$, $3p$, $3d$ levels should be the same by construction
+(the difference is numerical noise); the $4s$ and $4p$ levels are not
+guaranteed to be the same. The fact that they are, to a very good degree,
+is very reassuring. A look at the orbitals will reveal that $3s, 3p, 3d$
+are nodeless, $4s$ and $4p$ have one node. The spherical wave basis 
+set confirms the absence of ghosts:
+\begin{verbatim}
+    Cutoff (Ry) :   50.0
+                           N = 1       N = 2       N = 3
+     E(L=0) =        -4.5385 Ry   -0.3263 Ry   -0.0047 Ry
+     E(L=1) =        -2.8427 Ry   -0.1071 Ry    0.0193 Ry
+     E(L=2) =        -0.1511 Ry    0.0311 Ry    0.0685 Ry
 
+     Cutoff (Ry) :  100.0
+                           N = 1       N = 2       N = 3
+     E(L=0) =        -4.5883 Ry   -0.3279 Ry   -0.0048 Ry
+     E(L=1) =        -2.8547 Ry   -0.1073 Ry    0.0193 Ry
+     E(L=2) =        -0.2918 Ry    0.0303 Ry    0.0649 Ry
+
+     Cutoff (Ry) :  150.0
+                           N = 1       N = 2       N = 3
+     E(L=0) =        -4.5899 Ry   -0.3280 Ry   -0.0048 Ry
+     E(L=1) =        -2.8549 Ry   -0.1073 Ry    0.0193 Ry
+     E(L=2) =        -0.2936 Ry    0.0303 Ry    0.0649 Ry
+\end{verbatim}
+Note that for $l=0$ the first ($N=1$) level is the $3s$ level, 
+the second ($N=2$) level is the $4s$ level, and the like for 
+$l=1$. Let us now repeat the testing on the nine
+selected configurations as for the 4-electron PP. You will
+have to add \texttt{3s2 3p6} to all test configurations
+\texttt{configts}. Let us see check the errors on total energy 
+differences:
+\begin{verbatim}
+$ grep Delta ld1.test
+     dEtot_ps =       0.227291 Ry,   Delta E=      -0.001230 Ry
+     dEtot_ps =       0.540886 Ry,   Delta E=      -0.000918 Ry
+     dEtot_ps =       1.540155 Ry,   Delta E=      -0.002640 Ry
+     dEtot_ps =       0.343314 Ry,   Delta E=       0.000077 Ry
+     dEtot_ps =       0.715061 Ry,   Delta E=       0.001142 Ry
+     dEtot_ps =       1.849816 Ry,   Delta E=      -0.000820 Ry
+     dEtot_ps =       3.522904 Ry,   Delta E=      -0.004735 Ry
+     dEtot_ps =       6.702626 Ry,   Delta E=      -0.003032 Ry
+\end{verbatim}
+Energy differences are reproduced with an
+error that does not exceed a few mRy (see column at the rhs). 
+Eigenvalues are also well reproduced, e.g.:
+\begin{verbatim}
+     1 0     3S   1( 2.00)       -8.37382       -8.37230       -0.00152
+     2 1     3P   1( 6.00)       -6.57173       -6.57195        0.00021
+     3 2     3D   1( 0.00)       -3.84145       -3.83518       -0.00627
+     2 0     4S   1( 0.00)       -2.73793       -2.74985        0.01192
+     3 1     4P   1( 0.00)       -2.25938       -2.25525       -0.00412
+\end{verbatim}
+although errors may reach 0.01 Ry (still one order of magnitude 
+better than what we get with the previous 4-electron PP). The price 
+to pay is the presence of more electrons in the valence.
 \newpage
 \subsection{Testing in molecules and solids}
 
