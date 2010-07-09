@@ -1590,9 +1590,9 @@ then
         ld_library_path=`echo $LD_LIBRARY_PATH | sed 's/:/ /g'`
 
         case "$arch" in
-        aix )
+        aix | ppc64-bg )
                 # check for mass (in several directories)
-                try_libdirs="/usr/local/lib /cineca/lib /cineca/lib/mass"
+                try_libdirs="/opt/ibmcmp/xlmass/bg/4.4/bglib /cineca/lib /cineca/lib/mass"
                 try_libdirs="$libdirs $try_libdirs $ld_library_path"
 
                 for dir in none $try_libdirs
@@ -1646,7 +1646,10 @@ then
         esac
 fi
 
-if test "$mass_libs" != ""; then try_dflags="$try_dflags -D__MASS" ; fi
+if test "$mass_libs" != ""; then 
+   try_dflags="$try_dflags -D__MASS"
+   try_ldflags="$try_ldflags -Wl,--allow-multiple-definition"
+fi
 
 echo setting MASS_LIBS... $mass_libs
 
@@ -1767,7 +1770,7 @@ if test "$mpi_libs" != "" ; then
 else
    mpi_line="@delete@"
 fi
-if test "$arch" = "aix" ; then
+if test "$mass_libs" != "" ; then
    mass_line="MASS_LIBS=$mass_libs"
 else
    mass_line="@delete@"
