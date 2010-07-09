@@ -16,7 +16,7 @@ MODULE ph_restart
   USE iotk_module
   !
   USE kinds,     ONLY : DP
-  USE io_files,  ONLY : prefix, iunpun, xmlpun, &
+  USE io_files,  ONLY : prefix, iunpun, xmlpun, xmlpun_base, &
                         qexml_version, qexml_version_init
   USE control_ph, ONLY : tmp_dir_ph
   USE io_global, ONLY : ionode, ionode_id
@@ -102,9 +102,9 @@ MODULE ph_restart
                              & TRIM( xmlpun ), BINARY = .FALSE., IERR = ierr )
          ELSEIF (what=='data' .OR. what=='data_dyn') THEN
             filename= TRIM( dirname ) // '/' // &
-                    & TRIM( xmlpun ) // '.' // TRIM(int_to_char(current_iq))
+                    & TRIM( xmlpun_base ) // '.' // TRIM(int_to_char(current_iq))
             IF (what=='data') &
-               CALL iotk_open_write( iunpun, FILE = TRIM( filename ), &
+               CALL iotk_open_write( iunpun, FILE = TRIM( filename ) // '.xml', &
                                           BINARY = .FALSE., IERR = ierr )
          ELSE
             CALL errore('ph_writefile','unknown what',1)
@@ -278,7 +278,7 @@ MODULE ph_restart
                  !
                  filename1= TRIM(filename) // "." // TRIM(int_to_char(irr))
                  !
-                 CALL iotk_open_write(iunout, FILE = TRIM(filename1), &
+                 CALL iotk_open_write(iunout, FILE = TRIM(filename1)//'.xml', &
                                    BINARY = .FALSE., IERR = ierr )
 
                  CALL iotk_write_begin(iunout, "PARTIAL_MATRIX")
@@ -681,7 +681,7 @@ MODULE ph_restart
     IF ( ionode ) THEN
        !
        filename= TRIM( dirname ) // '/' // &
-               & TRIM( xmlpun ) // '.' // TRIM(int_to_char(current_iq))
+               & TRIM( xmlpun_base ) // '.' // TRIM(int_to_char(current_iq))
        !
     END IF
 
@@ -694,7 +694,7 @@ MODULE ph_restart
           DO irr=0,nirr
              CALL iotk_free_unit( iunout, ierr )
              filename1=TRIM(filename) // "." // TRIM(int_to_char(irr))
-             CALL iotk_open_read(iunout, FILE = TRIM(filename1), &
+             CALL iotk_open_read(iunout, FILE = TRIM(filename1) // '.xml', &
                                        BINARY = .FALSE., IERR = ierr )
              
              IF (ierr == 0 ) then
@@ -776,9 +776,9 @@ MODULE ph_restart
     IF ( ionode ) THEN
        !
        filename= TRIM( dirname ) // '/' // &
-               & TRIM( xmlpun ) // '.' // TRIM(int_to_char(current_iq))
+               & TRIM( xmlpun_base ) // '.' // TRIM(int_to_char(current_iq))
 
-       CALL iotk_open_read( iunpun, FILE = TRIM( filename ), IERR = ierr )
+       CALL iotk_open_read( iunpun, FILE = TRIM( filename ) // '.xml', IERR = ierr )
        !
     END IF
     !
@@ -900,9 +900,9 @@ MODULE ph_restart
         !
         CALL iotk_free_unit( iunout, ierr )
         filename= TRIM( dirname ) // '/' // &
-                & TRIM( xmlpun ) // '.' // TRIM(int_to_char(iq))
+                & TRIM( xmlpun_base ) // '.' // TRIM(int_to_char(iq))
 
-        CALL iotk_open_read( iunout, FILE = TRIM( filename ), IERR = ierr )
+        CALL iotk_open_read( iunout, FILE = TRIM( filename ) // '.xml', IERR = ierr )
         
         IF (ierr /= 0) CYCLE
         CALL iotk_scan_begin( iunout, "TENSOR_INFO" )
@@ -926,7 +926,7 @@ MODULE ph_restart
            ENDDO
            DO irr=0,rep_iq(iq)
               filename1=TRIM(filename) // "." // TRIM(int_to_char(irr))
-              CALL iotk_open_read(iunout, FILE = TRIM(filename1), &
+              CALL iotk_open_read(iunout, FILE = TRIM(filename1) // '.xml', &
                                        BINARY = .FALSE., IERR = ierr )
               IF (ierr /= 0 ) CYCLE
               CALL iotk_scan_begin( iunout, "PARTIAL_MATRIX" )
