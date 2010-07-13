@@ -249,10 +249,9 @@
                               DO ia=1,na(is)
                                  inl = ivoff + ia
                                  jnl = jvoff + ia
-                                 isa = isa + 1
-                                 dd = deeq(iv,jv,isa,iss1) + dv
+                                 dd = deeq(iv,jv,isa+ia,iss1) + dv
                                  af(inl,igrp) = af(inl,igrp) - fi  * dd * bec(jnl,i+idx-1)
-                                 dd = deeq(iv,jv,isa,iss2) + dv
+                                 dd = deeq(iv,jv,isa+ia,iss2) + dv
                                  aa(inl,igrp) = aa(inl,igrp) - fip * dd * bec(jnl,i+idx)
                               END DO
                            ELSE
@@ -260,8 +259,7 @@
                               DO ia=1,na(is)
                                  inl = ivoff + ia
                                  jnl = jvoff + ia
-                                 isa = isa + 1
-                                 dd = deeq(iv,jv,isa,iss1) + dv
+                                 dd = deeq(iv,jv,isa+ia,iss1) + dv
                                  af(inl,igrp) = af(inl,igrp) - fi * dd * bec(jnl,i+idx-1)
                               END DO
                            END IF
