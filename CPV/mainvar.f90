@@ -372,8 +372,9 @@ MODULE cp_main_variables
        !
        !  bec is distributed across row processor, the first column is enough
        !
-       IF( ( desc( lambda_node_ , 1 ) > 0 ) .AND. ( desc( la_myc_ , 1 ) == 1 ) ) THEN
-          ir = desc( ilar_ , 1 )
+
+       IF( desc( lambda_node_ , 1 ) > 0 ) THEN
+       ir = desc( ilar_ , 1 )
           DO i = 1, desc( nlar_ , 1 )
              bec_repl( :, i + ir - 1 ) = bec_dist( :, i )
           END DO
