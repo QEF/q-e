@@ -131,6 +131,9 @@ CONTAINS
          constr_tol = max( constr_tol_inp, colvar_tol_inp )
       ENDIF
       !
+      WRITE(stdout,'(5x,a,i4,a,f12.6)') &
+         'Setting up ',nconstr,' constraints; tolerance:', constr_tol
+      !
       ALLOCATE( lagrange(      nconstr ) )
       ALLOCATE( constr_target( nconstr ) )
       ALLOCATE( constr_type(   nconstr ) )
@@ -183,6 +186,11 @@ CONTAINS
                CALL set_type_coord( ia )
             ENDIF
             !
+            WRITE(stdout,'(7x,i3,a,i3,a,i2,a,2f12.6,a,f12.6)') &
+               ia,') type #',int(constr_inp(1,ia)) ,' coordination wrt type:', int(constr(2,ia)), &
+               ' cutoff distance and smoothing:',  constr(3:4,ia), &
+               '; target:', constr_target(ia)
+            !
          CASE( 'atom_coord' )
             !
             ! ... constraint on local coordination-number, i.e. the average
@@ -194,6 +202,11 @@ CONTAINS
             ELSE
                CALL set_atom_coord( ia )
             ENDIF
+            !
+            WRITE(stdout,'(7x,i3,a,i3,a,i2,a,2f12.6,a,f12.6)') &
+               ia,') atom #',int(constr_inp(1,ia)) ,' coordination wrt type:', int(constr(2,ia)), &
+               ' cutoff distance and smoothing:',  constr(3:4,ia), &
+               '; target:', constr_target(ia)
             !
          CASE( 'distance' )
             !
@@ -222,6 +235,9 @@ CONTAINS
                !
             ENDIF
             !
+            WRITE(stdout,'(7x,i3,a,2i3,a,f12.6)') &
+               ia,') distance between atoms: ', int(constr(1:2,ia)), '; target:',  constr_target(ia)
+            !
          CASE( 'planar_angle' )
             !
             ! ... constraint on planar angle (for the notation used here see
@@ -239,6 +255,9 @@ CONTAINS
                CALL set_planar_angle( ia )
             ENDIF
             !
+            WRITE(stdout, '(7x,i3,a,3i3,a,f12.6)') &
+               ia,') planar angle between atoms: ', int(constr(1:3,ia)), '; target:', 180.0_DP-acos(constr_target(ia))*360.0_DP/tpi
+            !
          CASE( 'torsional_angle' )
             !
             ! ... constraint on torsional angle (for the notation used here
@@ -254,6 +273,9 @@ CONTAINS
             ELSE
                CALL set_torsional_angle( ia )
             ENDIF
+            !
+            WRITE(stdout, '(7x,i3,a,4i3,a,f12.6)') &
+               ia,') torsional angle between atoms: ', int(constr(1:4,ia)), '; target:', acos(constr_target(ia))*360.0_DP/tpi
             !
          CASE( 'struct_fac' )
             !
@@ -424,6 +446,7 @@ CONTAINS
          !-------------------------------------------------------------------
          !
          INTEGER, INTENT(in) :: ia
+         REAL(DP) :: res
          !
          ia0 = anint( constr(1,ia) )
          ia1 = anint( constr(2,ia) )
@@ -443,8 +466,14 @@ CONTAINS
          !
          D01 = C00*C11 - C01*C01
          D12 = C11*C22 - C12*C12
+         IF(D01<eps32.or.D12<eps32)THEN
+            write(stdout,*)'torsional angle constraint #',ia,' contains collinear atoms'
+            CALL errore('set_torsional_angle','collinear atoms in torsional angle constraint')
+         ENDIF
          !
-         constr_target(ia) = ( C01*C12 - C02*C11 ) / sqrt( D01*D12 )
+         res = ( C01*C12 - C02*C11 ) / sqrt( D01*D12 )
+         res = min(1.d0,max(-1.d0,res)) ! protect against numerical errors
+         constr_target(ia) = res
          ! == (cos(AB)*cos(BC)-cos(AC)) / |sin(AB)*sin(BC)|
          !
       END SUBROUTINE set_torsional_angle
