@@ -1507,14 +1507,14 @@ MODULE read_cards_module
                                       constr_inp(2,i), &
                                       constr_inp(3,i), &
                                       constr_inp(4,i), &
-                                      constr_target(i)
+                                      constr_target_inp(i)
                 !
                 constr_target_set(i) = .true.
                 !
                 WRITE(stdout,'(7x,i3,a,i3,a,i2,a,2f12.6,a,f12.6)') &
                    i,') '//constr_type_inp(i)(1:4),int(constr_inp(1,i)) ,' coordination wrt type:', int(constr_inp(2,i)), &
                    ' cutoff distance and smoothing:',  constr_inp(3:4,i), &
-                   '; target:', constr_target(i)
+                   '; target:', constr_target_inp(i)
              ELSE
                 !
                 CALL errore( 'card_constraints', 'type_coord, ' // &
@@ -1530,20 +1530,19 @@ MODULE read_cards_module
                                       constr_inp(1,i), &
                                       constr_inp(2,i)
                 !
-                WRITE(stdout,'(7x,i3,a,i3,a,i3)') &
-                   i,') distance from atom:', int(constr_inp(1,i)), ' to:', int(constr_inp(2,i))
+                WRITE(stdout,'(7x,i3,a,2i3)') &
+                   i,') distance between atoms: ', int(constr_inp(1:2,i))
              ELSEIF ( nfield == 4 ) THEN
                 !
                 READ( input_line, * ) constr_type_inp(i), &
                                       constr_inp(1,i), &
                                       constr_inp(2,i), &
-                                      constr_target(i)
+                                      constr_target_inp(i)
                 !
                 constr_target_set(i) = .true.
                 !
-                WRITE(stdout,'(7x,i3,a,i3,a,i3,a,f12.6)') &
-                   i,') distance from atom', int(constr_inp(1,i)), ' to atom', int(constr_inp(2,i)), &
-                   '; target:',  constr_target(i)
+                WRITE(stdout,'(7x,i3,a,2i3,a,f12.6)') &
+                   i,') distance between atoms: ', int(constr_inp(1:2,i)), '; target:',  constr_target_inp(i)
              ELSE
                 !
                 CALL errore( 'card_constraints', &
@@ -1568,12 +1567,12 @@ MODULE read_cards_module
                                       constr_inp(1,i), &
                                       constr_inp(2,i), &
                                       constr_inp(3,i), &
-                                      constr_target(i)
+                                      constr_target_inp(i)
                 !
                 constr_target_set(i) = .true.
                 !
                 WRITE(stdout, '(7x,i3,a,3i3,a,f12.6)') &
-                   i,') planar angle between atoms: ', int(constr_inp(1:3,i)), '; target:', constr_target(i)
+                   i,') planar angle between atoms: ', int(constr_inp(1:3,i)), '; target:', constr_target_inp(i)
              ELSE
                 !
                 CALL errore( 'card_constraints', &
@@ -1600,12 +1599,12 @@ MODULE read_cards_module
                                       constr_inp(2,i), &
                                       constr_inp(3,i), &
                                       constr_inp(4,i), &
-                                      constr_target(i)
+                                      constr_target_inp(i)
                 !
                 constr_target_set(i) = .true.
                 !
                 WRITE(stdout, '(7x,i3,a,4i3,a,f12.6)') &
-                   i,') torsional angle between atoms: ', int(constr_inp(1:4,i)), '; target:', constr_target(i)
+                   i,') torsional angle between atoms: ', int(constr_inp(1:4,i)), '; target:', constr_target_inp(i)
              ELSE
                 !
                 CALL errore( 'card_constraints', &
@@ -1632,13 +1631,13 @@ MODULE read_cards_module
                                       constr_inp(2,i), &
                                       constr_inp(3,i), &
                                       constr_inp(4,i), &
-                                      constr_target(i)
+                                      constr_target_inp(i)
                 !
                 constr_target_set(i) = .true.
                 !
                 WRITE(stdout, '(7x,i3,a,i3,a,3f12.6,a,f12.6)') &
                    i,') bennet projection of atom ', int(constr_inp(1,i)), ' along vector:', constr_inp(2:4,i), &
-                   '; target:', constr_target(i)
+                   '; target:', constr_target_inp(i)
              ELSE
                 !
                 CALL errore( 'card_constraints', &
