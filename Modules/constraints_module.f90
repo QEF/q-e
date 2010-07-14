@@ -112,6 +112,9 @@ CONTAINS
       REAL(DP)    :: dtau(3), norm_dtau
       REAL(DP)    :: k(3), phase, norm_k
       COMPLEX(DP) :: struc_fac
+      CHARACTER(20),ALLOCATABLE :: tmp_type_inp(:)
+      LOGICAL,ALLOCATABLE ::       tmp_target_set(:)
+      REAL(DP),ALLOCATABLE ::      tmp_target_inp(:)
       !
       CHARACTER(len=6), EXTERNAL :: int_to_char
       !
@@ -120,19 +123,21 @@ CONTAINS
       !
       ! Be careful about what tolerance we want
       !
-      IF (( ncolvar_inp > 0 ) .and. ( nconstr_inp == 0)) &
-      constr_tol = colvar_tol_inp
-      IF (( ncolvar_inp == 0 ) .and. ( nconstr_inp > 0)) &
-      constr_tol = constr_tol_inp
-      IF (( ncolvar_inp > 0 ) .and. ( nconstr_inp > 0)) &
-      constr_tol = max( constr_tol_inp, colvar_tol_inp )
+      IF ( nconstr_inp == 0) THEN
+         constr_tol = colvar_tol_inp
+      ELSEIF ( ncolvar_inp == 0 ) THEN
+         constr_tol = constr_tol_inp
+      ELSE
+         constr_tol = max( constr_tol_inp, colvar_tol_inp )
+      ENDIF
       !
       ALLOCATE( lagrange(      nconstr ) )
       ALLOCATE( constr_target( nconstr ) )
       ALLOCATE( constr_type(   nconstr ) )
       !
       ALLOCATE( constr( nc_fields, nconstr ) )
-      ALLOCATE( gp(          nconstr ) )
+      ALLOCATE( gp(                nconstr ) )
+      ALLOCATE( tmp_type_inp(nconstr),tmp_target_set(nconstr),tmp_target_inp(nconstr) )
       !
       ! ... setting constr to 0 to findout which elements have been
       ! ... set to an atomic index. This is required for CP.
@@ -143,46 +148,39 @@ CONTAINS
       ! ...     for meta-dynamics and free-energy smd), the remaining are real
       ! ...     constraints
       !
-      IF (ncolvar_inp > 0) &
-         constr(:,1:ncolvar_inp)        = colvar_inp(:,1:ncolvar_inp)
-      IF (nconstr_inp > 0) &
-         constr(:,ncolvar_inp+1:nconstr) = constr_inp(:,1:nconstr_inp)
+      IF (ncolvar_inp > 0) THEN
+         constr(:,1:ncolvar_inp)       = colvar_inp(:,1:ncolvar_inp)
+         tmp_type_inp(1:ncolvar_inp)   = colvar_type_inp(1:ncolvar_inp)
+         tmp_target_set(1:ncolvar_inp) = colvar_target_set(1:ncolvar_inp)
+         tmp_target_inp(1:ncolvar_inp) = colvar_target_inp(1:ncolvar_inp)
+      ENDIF
+      IF (nconstr_inp > 0) THEN
+         constr(:,ncolvar_inp+1:nconstr)       = constr_inp(:,1:nconstr_inp)
+         tmp_type_inp(ncolvar_inp+1:nconstr)   = constr_type_inp(1:nconstr_inp)
+         tmp_target_set(ncolvar_inp+1:nconstr) = constr_target_set(1:nconstr_inp)
+         tmp_target_inp(ncolvar_inp+1:nconstr) = constr_target_inp(1:nconstr_inp)
+      ENDIF
       !
       ! ... set the largest possible distance among two atoms within
       ! ... the supercell
       !
-      IF ( ncolvar_inp > 0 ) THEN
-         !
-         IF ( any( colvar_type_inp(:) == 'distance' ) ) CALL compute_dmax()
-         !
-      ELSEIF ( nconstr_inp > 0 ) THEN
-         !
-         IF ( any( constr_type_inp(:) == 'distance' ) ) CALL compute_dmax()
-         !
-      ENDIF
+      IF ( any( tmp_type_inp(:) == 'distance' ) ) CALL compute_dmax()
       !
       ! ... initializations of constr_target values for the constraints :
       !
-      ! ... first the initialization of the collective variables
-      !
-      DO ia = 1, ncolvar_inp
+      DO ia = 1, nconstr
          !
-         SELECT CASE ( colvar_type_inp(ia) )
+         SELECT CASE ( tmp_type_inp(ia) )
          CASE( 'type_coord' )
             !
             ! ... constraint on global coordination-number, i.e. the average
             ! ... number of atoms of type B surrounding the atoms of type A
             !
             constr_type(ia) = 1
-            !
-            IF ( colvar_target_set(ia) ) THEN
-               !
-               constr_target(ia) = colvar_target_inp(ia)
-               !
+            IF ( tmp_target_set(ia) ) THEN
+               constr_target(ia) = tmp_target_inp(ia)
             ELSE
-               !
                CALL set_type_coord( ia )
-               !
             ENDIF
             !
          CASE( 'atom_coord' )
@@ -191,34 +189,19 @@ CONTAINS
             ! ... number of atoms of type A surrounding a specific atom
             !
             constr_type(ia) = 2
-            !
-            IF ( colvar_target_set(ia) ) THEN
-               !
-               constr_target(ia) = colvar_target_inp(ia)
-               !
+            IF ( tmp_target_set(ia) ) THEN
+               constr_target(ia) = tmp_target_inp(ia)
             ELSE
-               !
                CALL set_atom_coord( ia )
-               !
             ENDIF
             !
          CASE( 'distance' )
             !
             constr_type(ia) = 3
-            !
-            IF ( colvar_target_set(ia) ) THEN
-               !
-               constr_target(ia) = colvar_target_inp(ia)
-               !
+            IF ( tmp_target_set(ia) ) THEN
+               constr_target(ia) = tmp_target_inp(ia)
             ELSE
-               !
-               ia1 = anint( constr(1,ia) )
-               ia2 = anint( constr(2,ia) )
-               !
-               dtau(:) = pbc( ( tau(:,ia1) - tau(:,ia2) )*tau_units )
-               !
-               constr_target(ia) = norm( dtau(:) )
-               !
+               CALL set_distance( ia )
             ENDIF
             !
             IF ( constr_target(ia) > dmax )  THEN
@@ -227,9 +210,15 @@ CONTAINS
                               &  5X,"dmax   = ",F12.8)' ) &
                   constr_target(ia), dmax
                !
-               CALL errore( 'init_constraint', 'the target for coll.var. '  //&
-                        & trim( int_to_char( ia ) ) // ' is larger than ' //&
-                        & 'the largest possible value', 1 )
+               IF(ia <= ncolvar_inp)THEN
+                  CALL errore( 'init_constraint', 'the target for coll.var. '  //&
+                           & trim( int_to_char( ia ) ) // ' is larger than ' //&
+                           & 'the largest possible value', 1 )
+               ELSE
+                  CALL errore( 'init_constraint', 'the target for constraint ' //&
+                           & trim( int_to_char( ia-ncolvar_inp ) ) // ' is larger than '  //&
+                           & 'the largest possible value', 1 )
+               ENDIF
                !
             ENDIF
             !
@@ -239,19 +228,15 @@ CONTAINS
             ! ... Appendix C of the Allen-Tildesley book)
             !
             constr_type(ia) = 4
-            !
-            IF ( colvar_target_set(ia) ) THEN
+            IF ( tmp_target_set(ia) ) THEN
                !
                ! ... the input value of target for the torsional angle (given
                ! ... in degrees) is converted to the cosine of the angle
                !
-               constr_target(ia) = cos( ( 180.0_DP - &
-                                          colvar_target_inp(ia) )*tpi/360.0_DP )
-               !
+               constr_target(ia) = &
+                  cos( ( 180.0_DP - tmp_target_inp(ia) )*tpi/360.0_DP )
             ELSE
-               !
                CALL set_planar_angle( ia )
-               !
             ENDIF
             !
          CASE( 'torsional_angle' )
@@ -260,18 +245,14 @@ CONTAINS
             ! ... see Appendix C of the Allen-Tildesley book)
             !
             constr_type(ia) = 5
-            !
-            IF ( colvar_target_set(ia) ) THEN
+            IF ( tmp_target_set(ia) ) THEN
                !
                ! ... the input value of target for the torsional angle (given
                ! ... in degrees) is converted to the cosine of the angle
                !
-               constr_target(ia) = cos( colvar_target_inp(ia)*tpi/360.0_DP )
-               !
+               constr_target(ia) = cos( tmp_target_inp(ia)*tpi/360.0_DP )
             ELSE
-               !
                CALL set_torsional_angle( ia )
-               !
             ENDIF
             !
          CASE( 'struct_fac' )
@@ -279,15 +260,10 @@ CONTAINS
             ! ... constraint on structure factor at a given k-vector
             !
             constr_type(ia) = 6
-            !
-            IF ( colvar_target_set(ia) ) THEN
-               !
-               constr_target(ia) = colvar_target_inp(ia)
-               !
+            IF ( tmp_target_set(ia) ) THEN
+               constr_target(ia) = tmp_target_inp(ia)
             ELSE
-               !
                CALL set_structure_factor( ia )
-               !
             ENDIF
             !
          CASE( 'sph_struct_fac' )
@@ -296,15 +272,10 @@ CONTAINS
             ! ... a given k-vector of norm k
             !
             constr_type(ia) = 7
-            !
-            IF ( colvar_target_set(ia) ) THEN
-               !
-               constr_target(ia) = colvar_target_inp(ia)
-               !
+            IF ( tmp_target_set(ia) ) THEN
+               constr_target(ia) = tmp_target_inp(ia)
             ELSE
-               !
                CALL set_sph_structure_factor( ia )
-               !
             ENDIF
             !
          CASE( 'bennett_proj' )
@@ -316,200 +287,22 @@ CONTAINS
             ! ...   Ed. by A.S. Nowick and J.J. Burton, New York 1975 )
             !
             constr_type(ia) = 8
-            !
-            IF ( colvar_target_set(ia) ) THEN
-               !
-               constr_target(ia) = colvar_target_inp(ia)
-               !
+            IF ( tmp_target_set(ia) ) THEN
+               constr_target(ia) = tmp_target_inp(ia)
             ELSE
-               !
                CALL set_bennett_proj( ia )
-               !
             ENDIF
             !
          CASE DEFAULT
             !
             CALL errore( 'init_constraint', &
-                        'collective-variable type not implemented', 1 )
+                        'collective-variable or constrait type not implemented', 1 )
             !
          END SELECT
          !
       ENDDO
       !
-      ! ... then then the initialization of the real constraints
-      !
-      DO n = 1, nconstr_inp
-         !
-         ia = ncolvar_inp + n
-         !
-         SELECT CASE ( constr_type_inp(n) )
-         CASE( 'type_coord' )
-            !
-            ! ... constraint on global coordination-number, i.e. the average
-            ! ... number of atoms of type B surrounding the atoms of type A
-            !
-            constr_type(ia) = 1
-            !
-            IF ( constr_target_set(n) ) THEN
-               !
-               constr_target(ia) = constr_target_inp(n)
-               !
-            ELSE
-               !
-               CALL set_type_coord( ia )
-               !
-            ENDIF
-            !
-         CASE( 'atom_coord' )
-            !
-            ! ... constraint on local coordination-number, i.e. the average
-            ! ... number of atoms of type A surrounding a specific atom
-            !
-            constr_type(ia) = 2
-            !
-            IF ( constr_target_set(n) ) THEN
-               !
-               constr_target(ia) = constr_target_inp(n)
-               !
-            ELSE
-               !
-               CALL set_atom_coord( ia )
-               !
-            ENDIF
-            !
-         CASE( 'distance' )
-            !
-            constr_type(ia) = 3
-            !
-            IF ( constr_target_set(n) ) THEN
-               !
-               constr_target(ia) = constr_target_inp(n)
-               !
-            ELSE
-               !
-               ia1 = anint( constr(1,ia) )
-               ia2 = anint( constr(2,ia) )
-               !
-               dtau(:) = pbc( ( tau(:,ia1) - tau(:,ia2) )*tau_units )
-               !
-               constr_target(ia) = norm( dtau(:) )
-               !
-            ENDIF
-            !
-            IF ( constr_target(ia) > dmax )  THEN
-               !
-               WRITE( stdout, '(/,5X,"target = ",F12.8,/, &
-                              &  5X,"dmax   = ",F12.8)' ) &
-                  constr_target(ia), dmax
-               !
-               CALL errore( 'init_constraint', 'the target for constraint ' //&
-                        & trim( int_to_char( n ) ) // ' is larger than '  //&
-                        & 'the largest possible value', 1 )
-               !
-            ENDIF
-            !
-         CASE( 'planar_angle' )
-            !
-            ! ... constraint on planar angle (for the notation used here see
-            ! ... Appendix C of the Allen-Tildesley book)
-            !
-            constr_type(ia) = 4
-            !
-            IF ( constr_target_set(n) ) THEN
-               !
-               ! ... the input value of target for the torsional angle (given
-               ! ... in degrees) is converted to the cosine of the angle
-               !
-               constr_target(ia) = cos( ( 180.0_DP - &
-                                          constr_target_inp(n) )*tpi/360.0_DP )
-               !
-            ELSE
-               !
-               CALL set_planar_angle( ia )
-               !
-            ENDIF
-            !
-         CASE( 'torsional_angle' )
-            !
-            ! ... constraint on torsional angle (for the notation used here
-            ! ... see Appendix C of the Allen-Tildesley book)
-            !
-            constr_type(ia) = 5
-            !
-            IF ( constr_target_set(n) ) THEN
-               !
-               ! ... the input value of target for the torsional angle (given
-               ! ... in degrees) is converted to the cosine of the angle
-               !
-               constr_target(ia) = cos( constr_target_inp(n)*tpi/360.0_DP )
-               !
-            ELSE
-               !
-               CALL set_torsional_angle( ia )
-               !
-            ENDIF
-            !
-         CASE( 'struct_fac' )
-            !
-            ! ... constraint on structure factor at a given k-vector
-            !
-            constr_type(ia) = 6
-            !
-            IF ( constr_target_set(n) ) THEN
-               !
-               constr_target(ia) = constr_target_inp(n)
-               !
-            ELSE
-               !
-               CALL set_structure_factor( ia )
-               !
-            ENDIF
-            !
-         CASE( 'sph_struct_fac' )
-            !
-            ! ... constraint on spherical average of the structure factor for
-            ! ... a given k-vector of norm k
-            !
-            constr_type(ia) = 7
-            !
-            IF ( constr_target_set(n) ) THEN
-               !
-               constr_target(ia) = constr_target_inp(n)
-               !
-            ELSE
-               !
-               CALL set_sph_structure_factor( ia )
-               !
-            ENDIF
-            !
-         CASE( 'bennett_proj' )
-            !
-            ! ... constraint on the projection onto a given direction of the
-            ! ... vector defined by the position of one atom minus the center
-            ! ... of mass of the others
-            ! ... ( Ch.H. Bennett in Diffusion in Solids, Recent Developments,
-            ! ...   Ed. by A.S. Nowick and J.J. Burton, New York 1975 )
-            !
-            constr_type(ia) = 8
-            !
-            IF ( constr_target_set(n) ) THEN
-               !
-               constr_target(ia) = constr_target_inp(n)
-               !
-            ELSE
-               !
-               CALL set_bennett_proj( ia )
-               !
-            ENDIF
-            !
-         CASE DEFAULT
-            !
-            CALL errore( 'init_constraint', &
-                        'constraint type not implemented', 1 )
-            !
-         END SELECT
-         !
-      ENDDO
+      DEALLOCATE( tmp_type_inp,tmp_target_set,tmp_target_inp )
       !
       RETURN
       !
@@ -592,6 +385,21 @@ CONTAINS
       END SUBROUTINE set_atom_coord
       !
       !-------------------------------------------------------------------
+      SUBROUTINE set_distance( ia )
+         !-------------------------------------------------------------------
+         !
+         INTEGER, INTENT(in) :: ia
+         !
+         ia1 = anint( constr(1,ia) )
+         ia2 = anint( constr(2,ia) )
+         !
+         dtau(:) = pbc( ( tau(:,ia1) - tau(:,ia2) )*tau_units )
+         !
+         constr_target(ia) = norm( dtau(:) )
+         !
+      END SUBROUTINE set_distance
+      !
+      !-------------------------------------------------------------------
       SUBROUTINE set_planar_angle( ia )
          !-------------------------------------------------------------------
          !
@@ -637,6 +445,7 @@ CONTAINS
          D12 = C11*C22 - C12*C12
          !
          constr_target(ia) = ( C01*C12 - C02*C11 ) / sqrt( D01*D12 )
+         ! == (cos(AB)*cos(BC)-cos(AC)) / |sin(AB)*sin(BC)|
          !
       END SUBROUTINE set_torsional_angle
       !
