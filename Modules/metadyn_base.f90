@@ -110,17 +110,23 @@ MODULE metadyn_base
             IF ( new_target(i) > dmax ) &
                new_target(i) = 2.0_DP*dmax - new_target(i)
             !
-         CASE( 4, 5 )
+         CASE( 4 )
             !
-            ! ... the cosine of the angle (planar or torsional) must be
-            ! ... within -1 and 1
+            ! ... the planar angle must be between 0 and 180
             !
-            IF ( new_target(i) > +1.0_DP ) new_target(i) = +2.0_DP - new_target(i)
-            IF ( new_target(i) < -1.0_DP ) new_target(i) = -2.0_DP - new_target(i)
+            IF ( new_target(i) < 0.0_DP ) new_target(i) = - new_target(i)
+            IF ( new_target(i) > 180.0_DP ) new_target(i) = 360.0_DP - new_target(i)
+            !
+         CASE( 5 )
+            !
+            ! ... the torsional angle must be within -180 and 180
+            !
+            IF ( new_target(i) > +180.0_DP ) new_target(i) = new_target(i) - 360.0_DP
+            IF ( new_target(i) < -180.0_DP ) new_target(i) = new_target(i) + 360.0_DP
             !
          CASE( 6 )
             !
-            ! ... the square modulus of the structure factor is never 
+            ! ... the square modulus of the structure factor is never
             ! ... negative or larger than one
             !
             new_target(i) = ABS( new_target(i) )

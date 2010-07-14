@@ -249,14 +249,13 @@ CONTAINS
                ! ... the input value of target for the torsional angle (given
                ! ... in degrees) is converted to the cosine of the angle
                !
-               constr_target(ia) = &
-                  cos( ( 180.0_DP - tmp_target_inp(ia) )*tpi/360.0_DP )
+               constr_target(ia) = tmp_target_inp(ia)
             ELSE
                CALL set_planar_angle( ia )
             ENDIF
             !
             WRITE(stdout, '(7x,i3,a,3i3,a,f12.6)') &
-               ia,') planar angle between atoms: ', int(constr(1:3,ia)), '; target:', 180.0_DP-acos(constr_target(ia))*360.0_DP/tpi
+               ia,') planar angle between atoms: ', int(constr(1:3,ia)), '; target:', constr_target(ia)
             !
          CASE( 'torsional_angle' )
             !
@@ -269,13 +268,13 @@ CONTAINS
                ! ... the input value of target for the torsional angle (given
                ! ... in degrees) is converted to the cosine of the angle
                !
-               constr_target(ia) = cos( tmp_target_inp(ia)*tpi/360.0_DP )
+               constr_target(ia) = tmp_target_inp(ia)
             ELSE
                CALL set_torsional_angle( ia )
             ENDIF
             !
             WRITE(stdout, '(7x,i3,a,4i3,a,f12.6)') &
-               ia,') torsional angle between atoms: ', int(constr(1:4,ia)), '; target:', acos(constr_target(ia))*360.0_DP/tpi
+               ia,') torsional angle between atoms: ', int(constr(1:4,ia)), '; target:', constr_target(ia)
             !
          CASE( 'struct_fac' )
             !
@@ -437,7 +436,7 @@ CONTAINS
          d0(:) = d0(:) / norm( d0(:) )
          d1(:) = d1(:) / norm( d1(:) )
          !
-         constr_target(ia) = d0(:) .dot. d1(:)
+         constr_target(ia) = acos(- d0(:) .dot. d1(:))*360.0_DP/tpi
          !
       END SUBROUTINE set_planar_angle
       !
@@ -446,7 +445,7 @@ CONTAINS
          !-------------------------------------------------------------------
          !
          INTEGER, INTENT(in) :: ia
-         REAL(DP) :: res
+         REAL(DP) :: x01(3),x12(3),phi,res
          !
          ia0 = anint( constr(1,ia) )
          ia1 = anint( constr(2,ia) )
@@ -457,24 +456,17 @@ CONTAINS
          d1(:) = pbc( ( tau(:,ia1) - tau(:,ia2) )*tau_units )
          d2(:) = pbc( ( tau(:,ia2) - tau(:,ia3) )*tau_units )
          !
-         C00 = d0(:) .dot. d0(:)
-         C01 = d0(:) .dot. d1(:)
-         C11 = d1(:) .dot. d1(:)
-         C02 = d0(:) .dot. d2(:)
-         C12 = d1(:) .dot. d2(:)
-         C22 = d2(:) .dot. d2(:)
+         x01(:) = cross(d0,d1)
+         x12(:) = cross(d1,d2)
          !
-         D01 = C00*C11 - C01*C01
-         D12 = C11*C22 - C12*C12
-         IF(D01<eps32.or.D12<eps32)THEN
+         IF((x01.dot.x01)<eps32 .or. (x12.dot.x12)<eps32)THEN
             write(stdout,*)'torsional angle constraint #',ia,' contains collinear atoms'
             CALL errore('set_torsional_angle','collinear atoms in torsional angle constraint')
          ENDIF
          !
-         res = ( C01*C12 - C02*C11 ) / sqrt( D01*D12 )
-         res = min(1.d0,max(-1.d0,res)) ! protect against numerical errors
-         constr_target(ia) = res
-         ! == (cos(AB)*cos(BC)-cos(AC)) / |sin(AB)*sin(BC)|
+         phi = atan2(sqrt(d1.dot.d1)*d0.dot.x12 , x01.dot.x12)
+         !
+         constr_target(ia) = phi*360.0_DP/tpi
          !
       END SUBROUTINE set_torsional_angle
       !
@@ -585,14 +577,15 @@ CONTAINS
       !
       INTEGER     :: i, j
       INTEGER     :: ia, ia0, ia1, ia2, ia3, n_type_coord1
-      REAL(DP)    :: d0(3), d1(3), d2(3)
+      REAL(DP)    :: d0(3), d1(3), d2(3), n1, x01(3), x12(3), x20(3), phi, X
+      REAL(DP)    :: s012,x01x12,d0phi(3),d1phi(3),d2phi(3)
       REAL(DP)    :: inv_den, fac
       REAL(DP)    :: C00, C01, C02, C11, C12, C22
       REAL(DP)    :: D01, D12, invD01, invD12
       REAL(DP)    :: smoothing, r_c
       INTEGER     :: type_coord1, type_coord2
       REAL(DP)    :: dtau(3), norm_dtau, norm_dtau_sq, expo
-      REAL(DP)    :: r0(3), ri(3), k(3), phase, ksin(3), norm_k, sinxx
+      REAL(DP)    :: r0(3), r1(3), r2(3), ri(3), k(3), phase, ksin(3), norm_k, sinxx
       COMPLEX(DP) :: struc_fac
       !
       REAL(DP), EXTERNAL :: ddot
@@ -725,10 +718,14 @@ CONTAINS
          !
          inv_den = 1.0_DP / sqrt( C00*C11 )
          !
-         g = ( C01 * inv_den - constr_target(idx) )
+         g = ( acos(- C01 * inv_den)*360.d0/tpi - constr_target(idx) )
          !
-         dg(:,ia0) = ( d1(:) - C01/C00*d0(:) ) * inv_den
-         dg(:,ia2) = ( C01/C11*d1(:) - d0(:) ) * inv_den
+         ! d/dx acos(x) = -1/sqrt(1-x**2)
+         ! d/dx acos(-x)*360/tpi = (360/tpi)/sqrt(1-x**2))
+         !
+         X = (360.d0/tpi)/sqrt(1-(C01 * inv_den)**2)
+         dg(:,ia0) = X * ( d1(:) - C01/C00*d0(:) ) * inv_den
+         dg(:,ia2) = X * ( C01/C11*d1(:) - d0(:) ) * inv_den
          dg(:,ia1) = - dg(:,ia0) - dg(:,ia2)
          !
       CASE( 5 )
@@ -741,45 +738,63 @@ CONTAINS
          ia2 = anint( constr(3,idx) )
          ia3 = anint( constr(4,idx) )
          !
-         d0(:) = pbc( ( tau(:,ia0) - tau(:,ia1) )*tau_units )
-         d1(:) = pbc( ( tau(:,ia1) - tau(:,ia2) )*tau_units )
-         d2(:) = pbc( ( tau(:,ia2) - tau(:,ia3) )*tau_units )
+         r0(:) = pbc( ( tau(:,ia0) - tau(:,ia1) )*tau_units )
+         r1(:) = pbc( ( tau(:,ia1) - tau(:,ia2) )*tau_units )
+         r2(:) = pbc( ( tau(:,ia2) - tau(:,ia3) )*tau_units )
+         n1 = sqrt(r1.dot.r1)
          !
-         C00 = d0(:) .dot. d0(:)
-         C01 = d0(:) .dot. d1(:)
-         C11 = d1(:) .dot. d1(:)
-         C02 = d0(:) .dot. d2(:)
-         C12 = d1(:) .dot. d2(:)
-         C22 = d2(:) .dot. d2(:)
+         x01(:) = cross(r0,r1)
+         x12(:) = cross(r1,r2)
+         x20(:) = cross(r2,r0)
          !
-         D01 = C00*C11 - C01*C01
-         D12 = C11*C22 - C12*C12
+         s012 = r0.dot.x12
+         x01x12 = x01.dot.x12
          !
-         IF ( abs( D01 ) < eps32 .or. abs( D12 ) < eps32 ) &
-            CALL errore( 'constraint_grad', 'either D01 or D12 is zero', 1 )
+         phi = atan2(n1*s012 , x01x12)
          !
-         invD01 = 1.0_DP / D01
-         invD12 = 1.0_DP / D12
+         g = phi*360.0_DP/tpi - constr_target(idx)
+         g = modulo(g+180.0_DP,360.0_DP)-180.0_DP
          !
-         fac = C01*C12 - C02*C11
+         ! d/dx atan(x) = 1/1+x**2
+         ! d/dy atan2(y,x) =  x/(x**2+y**2)
+         ! d/dx atan2(y,x) = -y/(x**2+y**2)
+         ! d(atan2(A,B)) = (BdA-AdB)/(A**2+B**2)
          !
-         inv_den = 1.0_DP / sqrt( D01*D12 )
+         ! dd0(:,ia0) =  1 ; dd1(:,ia0) =  0 ; dd2(:,ia0) =  0
+         ! dd0(:,ia1) = -1 ; dd1(:,ia1) =  1 ; dd2(:,ia1) =  0
+         ! dd0(:,ia2) =  0 ; dd1(:,ia2) = -1 ; dd2(:,ia2) =  1
+         ! dd0(:,ia3) =  0 ; dd1(:,ia3) =  0 ; dd2(:,ia3) = -1
          !
-         g = ( ( C01*C12 - C02*C11 )*inv_den - constr_target(idx) )
+         ! d(s012) / d(r0) = x12
+         ! d(s012) / d(r1) = x20
+         ! d(s012) / d(r2) = x01
          !
-         dg(:,ia0) = ( C12*d1(:) - C11*d2(:) - &
-                     invD01*fac*( C11*d0(:) - C01*d1(:) ) )*inv_den
+         ! d(x01x12) / d(r0) = r1 x x12
+         ! d(x01x12) / d(r1) = r2 x x01 + x12 x r0
+         ! d(x01x12) / d(r2) = x01 x r1
          !
-         dg(:,ia2) = ( C01*( d1(:) - d2(:) ) - &
-                     ( C11 + C12 )*d0(:) + 2.0_DP*C02*d1(:) - &
-                     invD12*fac*( ( C11 + C12 )*d2(:) - &
-                                       ( C12 + C22 )*d1(:) ) - &
-                     invD01*fac*( C01*d0(:) - C00*d1(:) ) )*inv_den
+         ! d(n1) / d(r1) = r1 / n1
          !
-         dg(:,ia3) = ( C11*d0(:) - C01*d1(:) - &
-                     invD12*fac*( C12*d1(:) - C11*d2(:) ) )*inv_den
+         ! d(phi) = (x01x12 * d(n1 * s012) - n1*s012 * d(x01x12)
+         !           /
+         !          (x01x12 ** 2 + n1*s012 ** 2)
          !
-         dg(:,ia1) = - dg(:,ia0) - dg(:,ia2) - dg(:,ia3)
+         ! d(phi)/d(d0) = (x01x12 * n1*x12 - n1*s012 * r1 x x12)
+         !                 / DENOM
+         ! d(phi)/d(d1) = (x01x12 * (n1*x20 + d1/n1 * s012) - n1*s012 * (r2 x x01 + x12 x r0))
+         !                 / DENOM
+         ! d(phi)/d(d2) = (x01x12 * n1*x01 - n1*s012 * x01 x r1)
+         !                 / DENOM
+         !
+         inv_den = 1.0_DP / (x01x12 ** 2 + n1*s012 ** 2)
+         d0phi(:) = (x01x12 * n1*x12 - n1*s012 * cross(r1,x12)) * inv_den
+         d1phi(:) = (x01x12 * (n1*x20 + d1/n1 * s012) - n1*s012 * (cross(r2,x01) + cross(x12,r0))) * inv_den
+         d2phi(:) = (x01x12 * n1*x01 - n1*s012 * cross(x01,r1)) * inv_den
+         !
+         dg(:,ia0) = d0phi*360.0_DP/tpi
+         dg(:,ia1) = (d1phi-d0phi)*360.0_DP/tpi
+         dg(:,ia2) = (d2phi-d1phi)*360.0_DP/tpi
+         dg(:,ia3) = (-d2phi)*360.0_DP/tpi
          !
       CASE( 6 )
          !
@@ -1286,6 +1301,23 @@ CONTAINS
       RETURN
       !
    END SUBROUTINE deallocate_constraint
+   !
+   !-----------------------------------------------------------------------
+   FUNCTION cross(A,B)
+      !-----------------------------------------------------------------------
+      !
+      ! ... cross product
+      !
+      IMPLICIT NONE
+      !
+      REAL(DP),INTENT(in) :: A(3),B(3)
+      REAL(DP) cross(3)
+      !
+      cross(1) = A(2)*B(3)-A(3)*B(2)
+      cross(2) = A(3)*B(1)-A(1)*B(3)
+      cross(3) = A(1)*B(2)-A(2)*B(1)
+      !
+   END FUNCTION
    !
    !-----------------------------------------------------------------------
    FUNCTION pbc( vect )
