@@ -14,7 +14,7 @@ MODULE read_cards_module
   ! ...  by Carlo Sbraccia
   !
   USE kinds,     ONLY : DP
-  USE io_global, ONLY : stdout 
+  USE io_global, ONLY : stdout
   USE constants, ONLY : angstrom_au
   USE parser,    ONLY : field_count, read_line, get_field
   USE io_global, ONLY : ionode, ionode_id
@@ -48,7 +48,7 @@ MODULE read_cards_module
        IMPLICIT NONE
        !
        !
-       ! ... mask that control the printing of selected Kohn-Sham occupied 
+       ! ... mask that control the printing of selected Kohn-Sham occupied
        ! ... orbitals, default allocation
        !
        CALL allocate_input_iprnks( 0, nspin )
@@ -56,12 +56,12 @@ MODULE read_cards_module
        !
        ! ... Simulation cell from standard input
        !
-       trd_ht = .FALSE.
+       trd_ht = .false.
        rd_ht  = 0.0_DP
        !
        ! ... dipole
        !
-       tdipole_card = .FALSE.
+       tdipole_card = .false.
        !
        ! ... Constraints
        !
@@ -79,7 +79,7 @@ MODULE read_cards_module
        ! ... k-points
        !
        k_points = 'gamma'
-       tk_inp   = .FALSE.
+       tk_inp   = .false.
        nkstot   = 1
        nk1      = 0
        nk2      = 0
@@ -90,11 +90,11 @@ MODULE read_cards_module
        !
        ! ... Grids
        !
-       t2dpegrid_inp = .FALSE.
+       t2dpegrid_inp = .false.
        !
        ! ... Electronic states
        !
-       tf_inp = .FALSE.
+       tf_inp = .false.
        !
        ! ... Hartree planar mean
        !
@@ -107,12 +107,12 @@ MODULE read_cards_module
        !
        ! ... ion_velocities
        !
-       tavel = .FALSE.
+       tavel = .false.
        !
        ! ... setnfi
        !
        newnfi_card  = -1
-       tnewnfi_card = .FALSE.
+       tnewnfi_card = .false.
        !
        CALL init_autopilot()
        !
@@ -129,10 +129,10 @@ MODULE read_cards_module
        !
        IMPLICIT NONE
        !
-       CHARACTER(LEN=2)           :: prog   ! calling program ( PW, CP, WA )
-       CHARACTER(LEN=256)         :: input_line
-       CHARACTER(LEN=80)          :: card
-       CHARACTER(LEN=1), EXTERNAL :: capital
+       CHARACTER(len=2)           :: prog   ! calling program ( PW, CP, WA )
+       CHARACTER(len=256)         :: input_line
+       CHARACTER(len=80)          :: card
+       CHARACTER(len=1), EXTERNAL :: capital
        LOGICAL                    :: tend
        INTEGER                    :: i
        !
@@ -141,113 +141,113 @@ MODULE read_cards_module
        !
  100   CALL read_line( input_line, end_of_file=tend )
        !
-       IF( tend ) GO TO 120
-       IF( input_line == ' ' .OR. input_line(1:1) == '#' ) GO TO 100
+       IF( tend ) GOTO 120
+       IF( input_line == ' ' .or. input_line(1:1) == '#' ) GOTO 100
        !
        READ (input_line, *) card
        !
-       DO i = 1, LEN_TRIM( input_line )
+       DO i = 1, len_trim( input_line )
           input_line( i : i ) = capital( input_line( i : i ) )
-       END DO
+       ENDDO
        !
-       IF ( TRIM(card) == 'AUTOPILOT' ) THEN
+       IF ( trim(card) == 'AUTOPILOT' ) THEN
           !
           CALL card_autopilot( input_line )
           !
-       ELSE IF ( TRIM(card) == 'ATOMIC_SPECIES' ) THEN
+       ELSEIF ( trim(card) == 'ATOMIC_SPECIES' ) THEN
           !
           CALL card_atomic_species( input_line, prog )
           !
-       ELSE IF ( TRIM(card) == 'ATOMIC_POSITIONS' ) THEN
+       ELSEIF ( trim(card) == 'ATOMIC_POSITIONS' ) THEN
           !
           CALL card_atomic_positions( input_line, prog )
           !
-       ELSE IF ( TRIM(card) == 'ATOMIC_FORCES' ) THEN
+       ELSEIF ( trim(card) == 'ATOMIC_FORCES' ) THEN
           !
           CALL card_atomic_forces( input_line, prog )
           !
-       ELSE IF ( TRIM(card) == 'SETNFI' ) THEN
+       ELSEIF ( trim(card) == 'SETNFI' ) THEN
           !
           CALL card_setnfi( input_line )
-          IF ( ( prog == 'PW' .OR. prog == 'CP' ) .AND. ionode ) &
+          IF ( ( prog == 'PW' .or. prog == 'CP' ) .and. ionode ) &
              WRITE( stdout,'(A)') 'Warning: card '//trim(input_line)//' ignored'
           !
-       ELSE IF ( TRIM(card) == 'CONSTRAINTS' ) THEN
+       ELSEIF ( trim(card) == 'CONSTRAINTS' ) THEN
           !
           CALL card_constraints( input_line )
           !
-       ELSE IF ( TRIM(card) == 'COLLECTIVE_VARS' ) THEN
+       ELSEIF ( trim(card) == 'COLLECTIVE_VARS' ) THEN
           !
           CALL card_collective_vars( input_line )
           !
-       ELSE IF ( TRIM(card) == 'VHMEAN' ) THEN
+       ELSEIF ( trim(card) == 'VHMEAN' ) THEN
           !
           CALL card_vhmean( input_line )
-          IF ( ( prog == 'PW' .OR. prog == 'CP' ) .AND. ionode ) &
+          IF ( ( prog == 'PW' .or. prog == 'CP' ) .and. ionode ) &
              WRITE( stdout,'(A)') 'Warning: card '//trim(input_line)//' ignored'
           !
-       ELSE IF ( TRIM(card) == 'DIPOLE' ) THEN
+       ELSEIF ( trim(card) == 'DIPOLE' ) THEN
           !
           CALL card_dipole( input_line )
-          IF ( ( prog == 'PW' .OR. prog == 'CP' ) .AND. ionode ) &
+          IF ( ( prog == 'PW' .or. prog == 'CP' ) .and. ionode ) &
              WRITE( stdout,'(A)') 'Warning: card '//trim(input_line)//' ignored'
           !
-       ELSE IF ( TRIM(card) == 'ESR' ) THEN
+       ELSEIF ( trim(card) == 'ESR' ) THEN
           !
           CALL card_esr( input_line )
-          IF ( ( prog == 'PW' .OR. prog == 'CP' ) .AND. ionode ) &
+          IF ( ( prog == 'PW' .or. prog == 'CP' ) .and. ionode ) &
              WRITE( stdout,'(A)') 'Warning: card '//trim(input_line)//' ignored'
           !
-       ELSE IF ( TRIM(card) == 'K_POINTS' ) THEN
+       ELSEIF ( trim(card) == 'K_POINTS' ) THEN
           !
           IF ( ( prog == 'CP' ) ) THEN
              IF( ionode ) &
                 WRITE( stdout,'(A)') 'Warning: card '//trim(input_line)//' ignored'
           ELSE
              CALL card_kpoints( input_line )
-          END IF
+          ENDIF
           !
-       ELSE IF ( TRIM(card) == 'OCCUPATIONS' ) THEN
+       ELSEIF ( trim(card) == 'OCCUPATIONS' ) THEN
           !
           CALL card_occupations( input_line )
           !
-       ELSE IF ( TRIM(card) == 'CELL_PARAMETERS' ) THEN
+       ELSEIF ( trim(card) == 'CELL_PARAMETERS' ) THEN
           !
           CALL card_cell_parameters( input_line )
           !
-       ELSE IF ( TRIM(card) == 'ATOMIC_VELOCITIES' ) THEN
+       ELSEIF ( trim(card) == 'ATOMIC_VELOCITIES' ) THEN
           !
           CALL card_ion_velocities( input_line )
-          IF ( ( prog == 'PW' .OR. prog == 'CP' ) .AND. ionode ) &
+          IF ( ( prog == 'PW' .or. prog == 'CP' ) .and. ionode ) &
             WRITE( stdout,'(A)') 'Warning: card '//trim(input_line)//' ignored'
           !
-       ELSE IF ( TRIM(card) == 'KSOUT' ) THEN
+       ELSEIF ( trim(card) == 'KSOUT' ) THEN
           !
           CALL card_ksout( input_line )
-          IF ( ( prog == 'PW' ) .AND. ionode ) &
+          IF ( ( prog == 'PW' ) .and. ionode ) &
             WRITE( stdout,'(a)') 'Warning: card '//trim(input_line)//' ignored'
           !
-       ELSE IF ( TRIM(card) == 'CLIMBING_IMAGES' ) THEN
+       ELSEIF ( trim(card) == 'CLIMBING_IMAGES' ) THEN
           !
           CALL card_climbing_images( input_line )
 
-       ELSE IF ( TRIM(card) == 'PLOT_WANNIER' ) THEN
+       ELSEIF ( trim(card) == 'PLOT_WANNIER' ) THEN
           !
           CALL card_plot_wannier( input_line )
 
-       ELSE IF ( TRIM(card) == 'WANNIER_AC' .AND. ( prog == 'WA' )) THEN
+       ELSEIF ( trim(card) == 'WANNIER_AC' .and. ( prog == 'WA' )) THEN
           !
           CALL card_wannier_ac( input_line )
 
        ELSE
           !
           IF ( ionode ) &
-             WRITE( stdout,'(A)') 'Warning: card '//TRIM(input_line)//' ignored'
+             WRITE( stdout,'(A)') 'Warning: card '//trim(input_line)//' ignored'
           !
-       END IF
+       ENDIF
        !
        ! ... END OF LOOP ... !
-       !   
+       !
        GOTO 100
        !
 120    CONTINUE
@@ -282,8 +282,8 @@ MODULE read_cards_module
      !
      ! Where:
      !
-     !      label(i)  ( character(len=4) )  label of the atomic species 
-     !      mass(i)   ( real )              atomic mass 
+     !      label(i)  ( character(len=4) )  label of the atomic species
+     !      mass(i)   ( real )              atomic mass
      !                                      ( in u.m.a, carbon mass is 12.0 )
      !      psfile(i) ( character(len=80) ) file name of the pseudopotential
      !
@@ -295,29 +295,29 @@ MODULE read_cards_module
        !
        IMPLICIT NONE
        !
-       CHARACTER(LEN=256) :: input_line
-       CHARACTER(LEN=2)   :: prog
+       CHARACTER(len=256) :: input_line
+       CHARACTER(len=2)   :: prog
        INTEGER            :: is, ip, ierr
-       CHARACTER(LEN=4)   :: lb_pos
-       CHARACTER(LEN=256) :: psfile
-       LOGICAL, SAVE      :: tread = .FALSE.
+       CHARACTER(len=4)   :: lb_pos
+       CHARACTER(len=256) :: psfile
+       LOGICAL, SAVE      :: tread = .false.
        !
        !
        IF ( tread ) THEN
           CALL errore( ' card_atomic_species  ', ' two occurrences', 2 )
-       END IF
+       ENDIF
        IF ( ntyp > nsx ) THEN
          CALL errore( ' card_atomic_species ', ' nsp out of range ', ntyp )
-       END IF
+       ENDIF
        !
        DO is = 1, ntyp
           !
           CALL read_line( input_line )
           READ( input_line, *, iostat=ierr ) lb_pos, atom_mass(is), psfile
-            CALL errore( ' card_atomic_species ', 'cannot read atomic specie from: '//TRIM(input_line), ABS(ierr))
-          atom_pfile(is) = TRIM( psfile )
-          lb_pos         = ADJUSTL( lb_pos )
-          atom_label(is) = TRIM( lb_pos )
+            CALL errore( ' card_atomic_species ', 'cannot read atomic specie from: '//trim(input_line), abs(ierr))
+          atom_pfile(is) = trim( psfile )
+          lb_pos         = adjustl( lb_pos )
+          atom_label(is) = trim( lb_pos )
           !
 !          IF ( atom_mass(is) <= 0.0_DP ) THEN
 !             CALL errore( ' card_atomic_species ',' invalid  atom_mass ', is )
@@ -326,12 +326,12 @@ MODULE read_cards_module
              IF ( atom_label(ip) == atom_label(is) ) THEN
                 CALL errore( ' card_atomic_species ', &
                            & ' two occurrences of the same atomic label ', is )
-             END IF
-          END DO
+             ENDIF
+          ENDDO
           !
-       END DO
-       taspc = .TRUE.
-       tread = .TRUE.
+       ENDDO
+       taspc = .true.
+       tread = .true.
        !
        RETURN
        !
@@ -370,7 +370,7 @@ MODULE read_cards_module
      !
      !   label(k) ( character(len=4) )  atomic type
      !   tau(:,k) ( real )              coordinates  of the k-th atom
-     !   mbl(:,k) ( integer )           mbl(i,k) > 0 the i-th coord. of the 
+     !   mbl(:,k) ( integer )           mbl(i,k) > 0 the i-th coord. of the
      !                                  k-th atom is allowed to be moved
      !
      !----------------------------------------------------------------------
@@ -386,13 +386,13 @@ MODULE read_cards_module
        !
        IMPLICIT NONE
        !
-       CHARACTER(LEN=256) :: input_line
-       CHARACTER(LEN=2)   :: prog
-       CHARACTER(LEN=4)   :: lb_pos
+       CHARACTER(len=256) :: input_line
+       CHARACTER(len=2)   :: prog
+       CHARACTER(len=4)   :: lb_pos
        INTEGER            :: ia, k, is, nfield, idx, rep_i
        LOGICAL, EXTERNAL  :: matches
        LOGICAL            :: tend
-       LOGICAL, SAVE      :: tread = .FALSE.
+       LOGICAL, SAVE      :: tread = .false.
        !
        INTEGER            :: ifield, ierr
        REAL(DP)           :: field_value
@@ -401,17 +401,17 @@ MODULE read_cards_module
        !
        IF ( tread ) THEN
           CALL errore( 'card_atomic_positions', 'two occurrences', 2 )
-       END IF
-       IF ( .NOT. taspc ) THEN
+       ENDIF
+       IF ( .not. taspc ) THEN
           CALL errore( 'card_atomic_positions', &
                      & 'ATOMIC_SPECIES must be present before', 2 )
-       END IF
+       ENDIF
        IF ( ntyp > nsx ) THEN
           CALL errore( 'card_atomic_positions', 'nsp out of range', ntyp )
-       END IF
+       ENDIF
        IF ( nat < 1 ) THEN
           CALL errore( 'card_atomic_positions', 'nat out of range', nat )
-       END IF
+       ENDIF
        !
        if_pos = 1
        !
@@ -421,31 +421,31 @@ MODULE read_cards_module
        !
        IF ( matches( "CRYSTAL", input_line ) ) THEN
           atomic_positions = 'crystal'
-       ELSE IF ( matches( "BOHR", input_line ) ) THEN
+       ELSEIF ( matches( "BOHR", input_line ) ) THEN
           atomic_positions = 'bohr'
-       ELSE IF ( matches( "ANGSTROM", input_line ) ) THEN
+       ELSEIF ( matches( "ANGSTROM", input_line ) ) THEN
           atomic_positions = 'angstrom'
-       ELSE IF ( matches( "ALAT", input_line ) ) THEN
+       ELSEIF ( matches( "ALAT", input_line ) ) THEN
           atomic_positions = 'alat'
        ELSE
-          IF ( TRIM( ADJUSTL( input_line ) ) /= 'ATOMIC_POSITIONS' ) THEN
+          IF ( trim( adjustl( input_line ) ) /= 'ATOMIC_POSITIONS' ) THEN
              CALL errore( 'read_cards ', &
                         & 'unknown option for ATOMIC_POSITION: '&
                         & // input_line, 1 )
-          END IF
+          ENDIF
           IF ( prog == 'FP' ) atomic_positions = 'bohr'
           IF ( prog == 'CP' ) atomic_positions = 'bohr'
           IF ( prog == 'PW' ) atomic_positions = 'alat'
-       END IF
+       ENDIF
        !
 
        IF ( full_phs_path_flag ) THEN
           !
-          IF ( ALLOCATED( pos ) ) DEALLOCATE( pos )
+          IF ( allocated( pos ) ) DEALLOCATE( pos )
           ALLOCATE( pos( 3*nat, num_of_images ) )
           pos(:,:) = 0.0_DP
           !
-          IF ( calculation == 'smd' .AND. prog == 'CP' ) THEN
+          IF ( calculation == 'smd' .and. prog == 'CP' ) THEN
              !
              CALL errore( 'read_cards', &
                           'smd no longer implemented in CP', 1 )
@@ -467,7 +467,7 @@ MODULE read_cards_module
                 CALL errore( 'read_cards', &
                              'first_image missing in ATOMIC_POSITION', 1 )
                 !
-             END IF
+             ENDIF
              !
              read_conf_loop: DO
                 !
@@ -488,11 +488,11 @@ MODULE read_cards_module
                    !
                 ELSE
                    !
-                   EXIT read_conf_loop
+                   exit read_conf_loop
                    !
-                END IF
+                ENDIF
                 !
-             END DO read_conf_loop
+             ENDDO read_conf_loop
              !
              IF ( matches( "last_image", input_line ) ) THEN
                 !
@@ -503,13 +503,13 @@ MODULE read_cards_module
                 CALL errore( 'read_cards ', &
                              'last_image missing in ATOMIC_POSITION', 1 )
                 !
-             END IF
+             ENDIF
              !
-          END IF
+          ENDIF
           !
        ELSE
           !
-  
+
           reader_loop : DO ia = 1,nat,1
              !
              CALL read_line( input_line, end_of_file = tend )
@@ -520,7 +520,7 @@ MODULE read_cards_module
              CALL field_count( nfield, input_line )
 
              !
-             IF ( sic /= 'none' .AND. nfield /= 8 ) &
+             IF ( sic /= 'none' .and. nfield /= 8 ) &
                 CALL errore( 'read_cards', &
                             'ATOMIC_POSITIONS with sic, 8 columns required', 1 )
              !
@@ -530,7 +530,7 @@ MODULE read_cards_module
 
              ! read atom symbol (column 1) and coordinate
              CALL get_field(1, lb_pos, input_line)
-             lb_pos = TRIM(lb_pos)
+             lb_pos = trim(lb_pos)
              !
              error_msg = 'Error while parsing atomic position card.'
              ! read field 2 (atom X coordinate)
@@ -549,46 +549,46 @@ MODULE read_cards_module
              IF ( nfield >= 7 ) THEN
                 ! read constrains (fields 5-7, if present)
                 CALL get_field(5, field_str, input_line)
-                read(field_str, *) if_pos(1,ia)
+                READ(field_str, *) if_pos(1,ia)
                 CALL get_field(6, field_str, input_line)
-                read(field_str, *) if_pos(2,ia)
+                READ(field_str, *) if_pos(2,ia)
                 CALL get_field(7, field_str, input_line)
-                read(field_str, *) if_pos(3,ia)
+                READ(field_str, *) if_pos(3,ia)
              ENDIF
                 !
              IF ( nfield == 8 ) THEN
                 CALL get_field(5, field_str, input_line)
-                read(field_str, *) id_loc(ia)
-             END IF
+                READ(field_str, *) id_loc(ia)
+             ENDIF
              !
              match_label: DO is = 1, ntyp
                 !
-                IF ( TRIM(lb_pos) == TRIM( atom_label(is) ) ) THEN
+                IF ( trim(lb_pos) == trim( atom_label(is) ) ) THEN
                    !
                    sp_pos(ia) = is
-                   EXIT match_label
+                   exit match_label
                    !
-                END IF
+                ENDIF
                 !
-             END DO match_label
+             ENDDO match_label
              !
 
 
-             IF( ( sp_pos(ia) < 1 ) .OR. ( sp_pos(ia) > ntyp ) ) THEN
+             IF( ( sp_pos(ia) < 1 ) .or. ( sp_pos(ia) > ntyp ) ) THEN
                 !
-                CALL errore( 'read_cards', 'species '//TRIM(lb_pos)// &
+                CALL errore( 'read_cards', 'species '//trim(lb_pos)// &
                            & ' in ATOMIC_POSITIONS is nonexistent', ia )
                 !
-             END IF
+             ENDIF
              !
              is = sp_pos(ia)
              !
              na_inp(is) = na_inp(is) + 1
              !
 
-          END DO reader_loop
+          ENDDO reader_loop
           !
-       END IF
+       ENDIF
        !
 !       DO is = 1, ntyp
 !          IF( na_inp( is ) < 1 ) THEN
@@ -597,8 +597,8 @@ MODULE read_cards_module
 !          END IF
 !       END DO
        !
-       tapos = .TRUE.
-       tread = .TRUE.
+       tapos = .true.
+       tread = .true.
        !
 
        RETURN
@@ -611,7 +611,7 @@ MODULE read_cards_module
            !
            IMPLICIT NONE
            !
-           INTEGER, INTENT(IN) :: image
+           INTEGER, INTENT(in) :: image
            !
            !
            DO ia = 1, nat
@@ -632,7 +632,7 @@ MODULE read_cards_module
                                                pos((idx+2),image), &
                                                pos((idx+3),image)
                  !
-              ELSE IF ( nfield == 7 ) THEN
+              ELSEIF ( nfield == 7 ) THEN
                  !
                  IF ( image /= 1 ) THEN
                     !
@@ -640,7 +640,7 @@ MODULE read_cards_module
                                & 'wrong number of columns in ' // &
                                & 'ATOMIC_POSITIONS', sp_pos(ia) )
                     !
-                 END IF
+                 ENDIF
                  !
                  READ( input_line, * ) lb_pos, pos((idx+1),image), &
                                                pos((idx+2),image), &
@@ -650,43 +650,43 @@ MODULE read_cards_module
                                                if_pos(3,ia)
                  !
               ELSE
-                 ! 
+                 !
                  CALL errore( 'read_cards', &
                             & 'wrong number of columns in ' // &
                             & 'ATOMIC_POSITIONS', sp_pos(ia) )
                  !
-              END IF
+              ENDIF
               !
               IF ( image == 1 ) THEN
                  !
-                 lb_pos = ADJUSTL( lb_pos )
+                 lb_pos = adjustl( lb_pos )
                  !
                  match_label_path: DO is = 1, ntyp
                     !
-                    IF ( TRIM( lb_pos ) == TRIM( atom_label(is) ) ) THEN
+                    IF ( trim( lb_pos ) == trim( atom_label(is) ) ) THEN
                        !
                        sp_pos(ia) = is
                        !
-                       EXIT match_label_path
+                       exit match_label_path
                        !
-                    END IF
+                    ENDIF
                     !
-                 END DO match_label_path
+                 ENDDO match_label_path
                  !
-                 IF ( ( sp_pos(ia) < 1 ) .OR. ( sp_pos(ia) > ntyp ) ) THEN
+                 IF ( ( sp_pos(ia) < 1 ) .or. ( sp_pos(ia) > ntyp ) ) THEN
                     !
                     CALL errore( 'read_cards', &
                                  'wrong index in ATOMIC_POSITIONS', ia )
                     !
-                 END IF
+                 ENDIF
                  !
                  is = sp_pos(ia)
                  !
                  na_inp( is ) = na_inp( is ) + 1
                  !
-              END IF
+              ENDIF
               !
-           END DO
+           ENDDO
            !
            RETURN
            !
@@ -725,24 +725,24 @@ MODULE read_cards_module
      !------------------------------------------------------------------------
      !
      SUBROUTINE card_atomic_forces( input_line, prog )
-       ! 
+       !
        IMPLICIT NONE
-       ! 
-       CHARACTER(LEN=256) :: input_line
-       CHARACTER(LEN=2)   :: prog
+       !
+       CHARACTER(len=256) :: input_line
+       CHARACTER(len=2)   :: prog
        INTEGER            :: ia, k, nfield
-       LOGICAL, SAVE      :: tread = .FALSE.
-       CHARACTER(LEN=4)   :: lb
+       LOGICAL, SAVE      :: tread = .false.
+       CHARACTER(len=4)   :: lb
        !
        !
        IF( tread ) THEN
           CALL errore( ' card_atomic_forces ', ' two occurrences ', 2 )
-       END IF
+       ENDIF
        !
-       IF( .NOT. taspc ) THEN
+       IF( .not. taspc ) THEN
           CALL errore( ' card_atomic_forces ', &
                      & ' ATOMIC_SPECIES must be present before ', 2 )
-       END IF
+       ENDIF
        !
        rd_for = 0.0_DP
        !
@@ -752,15 +752,15 @@ MODULE read_cards_module
           CALL field_count( nfield, input_line )
           IF ( nfield == 4 ) THEN
              READ(input_line,*) lb, ( rd_for(k,ia), k = 1, 3 )
-          ELSE IF( nfield == 3 ) THEN
+          ELSEIF( nfield == 3 ) THEN
              READ(input_line,*) ( rd_for(k,ia), k = 1, 3 )
           ELSE
              CALL errore( ' iosys ', ' wrong entries in ATOMIC_FORCES ', ia )
-          END IF
+          ENDIF
           !
-       END DO
+       ENDDO
        !
-       tread = .TRUE.
+       tread = .true.
        !
        RETURN
        !
@@ -802,14 +802,14 @@ MODULE read_cards_module
      !
      !   mesh_option == automatic  k points mesh is generated automatically
      !                             with Monkhorst-Pack algorithm
-     !   mesh_option == crystal    k points mesh is given in stdin in scaled 
+     !   mesh_option == crystal    k points mesh is given in stdin in scaled
      !                             units
-     !   mesh_option == tpiba      k points mesh is given in stdin in units 
+     !   mesh_option == tpiba      k points mesh is given in stdin in units
      !                             of ( 2 PI / alat )
-     !   mesh_option == gamma      only gamma point is used ( default in 
+     !   mesh_option == gamma      only gamma point is used ( default in
      !                             CPMD simulation )
-     !   mesh_option == tpiba_b    as tpiba but the weights gives the 
-     !                             number of points between this point 
+     !   mesh_option == tpiba_b    as tpiba but the weights gives the
+     !                             number of points between this point
      !                             and the next
      !   mesh_option == crystal_b  as crystal but the weights gives the
      !                             number of points between this point and
@@ -824,43 +824,43 @@ MODULE read_cards_module
      !------------------------------------------------------------------------
      !
      SUBROUTINE card_kpoints( input_line )
-       ! 
+       !
        IMPLICIT NONE
        !
-       CHARACTER(LEN=256) :: input_line
+       CHARACTER(len=256) :: input_line
        INTEGER            :: i, j
        INTEGER            :: nkaux
        INTEGER, ALLOCATABLE :: wkaux(:)
        REAL(DP), ALLOCATABLE :: xkaux(:,:)
        REAL(DP) :: delta
        LOGICAL, EXTERNAL  :: matches
-       LOGICAL, SAVE      :: tread = .FALSE.
+       LOGICAL, SAVE      :: tread = .false.
        LOGICAL            :: tend,terr
-       LOGICAL            :: kband = .FALSE.
+       LOGICAL            :: kband = .false.
        !
        !
        IF ( tread ) THEN
           CALL errore( ' card_kpoints ', ' two occurrences', 2 )
-       END IF
+       ENDIF
        !
        IF ( matches( "AUTOMATIC", input_line ) ) THEN
           !  automatic generation of k-points
           k_points = 'automatic'
-       ELSE IF ( matches( "CRYSTAL", input_line ) ) THEN
+       ELSEIF ( matches( "CRYSTAL", input_line ) ) THEN
           !  input k-points are in crystal (reciprocal lattice) axis
           k_points = 'crystal'
           IF ( matches( "_B", input_line ) ) kband=.true.
-       ELSE IF ( matches( "TPIBA", input_line ) ) THEN
+       ELSEIF ( matches( "TPIBA", input_line ) ) THEN
           !  input k-points are in 2pi/a units
           k_points = 'tpiba'
           IF ( matches( "_B", input_line ) ) kband=.true.
-       ELSE IF ( matches( "GAMMA", input_line ) ) THEN
+       ELSEIF ( matches( "GAMMA", input_line ) ) THEN
           !  Only Gamma (k=0) is used
           k_points = 'gamma'
        ELSE
           !  by default, input k-points are in 2pi/a units
           k_points = 'tpiba'
-       END IF
+       ENDIF
        !
        IF ( k_points == 'automatic' ) THEN
           !
@@ -868,48 +868,48 @@ MODULE read_cards_module
           !
           nkstot = 0
           CALL read_line( input_line, end_of_file = tend, error = terr )
-          IF (tend) GO TO 10
-          IF (terr) GO TO 20
+          IF (tend) GOTO 10
+          IF (terr) GOTO 20
           READ(input_line, *, END=10, ERR=20) nk1, nk2, nk3, k1, k2 ,k3
-          IF ( k1 < 0 .OR. k1 > 1 .OR. &
-               k2 < 0 .OR. k2 > 1 .OR. &
-               k3 < 0 .OR. k3 > 1 ) CALL errore &
+          IF ( k1 < 0 .or. k1 > 1 .or. &
+               k2 < 0 .or. k2 > 1 .or. &
+               k3 < 0 .or. k3 > 1 ) CALL errore &
                   ('card_kpoints', 'invalid offsets: must be 0 or 1', 1)
-          IF ( nk1 <= 0 .OR. nk2 <= 0 .OR. nk3 <= 0 ) CALL errore &
+          IF ( nk1 <= 0 .or. nk2 <= 0 .or. nk3 <= 0 ) CALL errore &
                   ('card_kpoints', 'invalid values for nk1, nk2, nk3', 1)
 
           !
-       ELSE IF ( ( k_points == 'tpiba' ) .OR. ( k_points == 'crystal' ) ) THEN
+       ELSEIF ( ( k_points == 'tpiba' ) .or. ( k_points == 'crystal' ) ) THEN
           !
           ! ... input k-points are in 2pi/a units
           !
           CALL read_line( input_line, end_of_file = tend, error = terr )
-          IF (tend) GO TO 10
-          IF (terr) GO TO 20
+          IF (tend) GOTO 10
+          IF (terr) GOTO 20
           READ(input_line, *, END=10, ERR=20) nkstot
-          IF ( nkstot > SIZE (xk,2)  ) CALL errore &
+          IF ( nkstot > size (xk,2)  ) CALL errore &
                   ('card_kpoints', 'too many k-points',nkstot)
           !
           DO i = 1, nkstot
              CALL read_line( input_line, end_of_file = tend, error = terr )
-             IF (tend) GO TO 10
-             IF (tend) GO TO 20
+             IF (tend) GOTO 10
+             IF (tend) GOTO 20
              READ(input_line,*, END=10, ERR=20) xk(1,i), xk(2,i), xk(3,i), wk(i)
-          END DO
+          ENDDO
           IF (kband) THEN
              nkaux=nkstot
              ALLOCATE(xkaux(3,nkstot))
              ALLOCATE(wkaux(nkstot))
              xkaux(:,1:nkstot)=xk(:,1:nkstot)
-             wkaux(1:nkstot)=NINT(wk(1:nkstot))
+             wkaux(1:nkstot)=nint(wk(1:nkstot))
              nkstot=0
              DO i=1,nkaux-1
                 delta=1.0_DP/wkaux(i)
                 DO j=0,wkaux(i)-1
                    nkstot=nkstot+1
-                   IF ( nkstot > SIZE (xk,2)  ) CALL errore &
+                   IF ( nkstot > size (xk,2)  ) CALL errore &
                           ('card_kpoints', 'too many k-points',nkstot)
-                   xk(:,nkstot)=xkaux(:,i)+delta*j*(xkaux(:,i+1)-xkaux(:,i)) 
+                   xk(:,nkstot)=xkaux(:,i)+delta*j*(xkaux(:,i+1)-xkaux(:,i))
                    wk(nkstot)=1.0_DP
                 ENDDO
              ENDDO
@@ -920,22 +920,22 @@ MODULE read_cards_module
              DEALLOCATE(wkaux)
           ENDIF
           !
-       ELSE IF ( k_points == 'gamma' ) THEN
+       ELSEIF ( k_points == 'gamma' ) THEN
           !
           nkstot = 1
           xk(:,1) = 0.0_DP
           wk(1) = 1.0_DP
           !
-       END IF
+       ENDIF
        !
-       tread  = .TRUE.
-       tk_inp = .TRUE.
+       tread  = .true.
+       tk_inp = .true.
        !
        RETURN
 10     CALL errore ('card_kpoints', ' end of file while reading ' &
-            & // TRIM(k_points) // ' k points', 1)
+            & // trim(k_points) // ' k points', 1)
 20     CALL errore ('card_kpoints', ' error while reading ' &
-            & // TRIM(k_points) // ' k points', 1)
+            & // trim(k_points) // ' k points', 1)
        !
      END SUBROUTINE card_kpoints
      !
@@ -966,21 +966,21 @@ MODULE read_cards_module
      !------------------------------------------------------------------------
      !
      SUBROUTINE card_setnfi( input_line )
-       ! 
+       !
        IMPLICIT NONE
        !
-       CHARACTER(LEN=256) :: input_line
-       LOGICAL, SAVE      :: tread = .FALSE.
+       CHARACTER(len=256) :: input_line
+       LOGICAL, SAVE      :: tread = .false.
        !
        !
        IF ( tread ) THEN
           CALL errore( ' card_setnfi ', ' two occurrences', 2 )
-       END IF
+       ENDIF
        CALL read_line( input_line )
        READ(input_line,*) newnfi_card
-       tnewnfi_card = .TRUE.
-       tread = .TRUE.
-       ! 
+       tnewnfi_card = .true.
+       tread = .true.
+       !
        RETURN
        !
      END SUBROUTINE card_setnfi
@@ -992,7 +992,7 @@ MODULE read_cards_module
      !
      ! 2DPROCMESH
      !
-     !   Distribute the Y and Z FFT dimensions across processors, 
+     !   Distribute the Y and Z FFT dimensions across processors,
      !   instead of Z dimension only ( default distribution )
      !
      ! Syntax:
@@ -1020,13 +1020,13 @@ MODULE read_cards_module
      ! Syntax (nspin == 1):
      !
      !   OCCUPATIONS
-     !      f(1)  ....   ....  f(10) 
+     !      f(1)  ....   ....  f(10)
      !      f(11) .... f(nbnd)
      !
      ! Syntax (nspin == 2):
      !
      !   OCCUPATIONS
-     !      u(1)  ....   ....  u(10) 
+     !      u(1)  ....   ....  u(10)
      !      u(11) .... u(nbnd)
      !      d(1)  ....   ....  d(10)
      !      d(11) .... d(nbnd)
@@ -1035,17 +1035,17 @@ MODULE read_cards_module
      !
      ! OCCUPATIONS
      !  2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0
-     !  2.0 2.0 2.0 2.0 2.0 1.0 1.0 
+     !  2.0 2.0 2.0 2.0 2.0 1.0 1.0
      !
      ! Where:
      !
-     !      f(:) (real)  these are the occupation numbers 
-     !                   for LDA electronic states. 
+     !      f(:) (real)  these are the occupation numbers
+     !                   for LDA electronic states.
      !
      !      u(:) (real)  these are the occupation numbers
-     !                   for LSD spin == 1 electronic states 
+     !                   for LSD spin == 1 electronic states
      !      d(:) (real)  these are the occupation numbers
-     !                   for LSD spin == 2 electronic states 
+     !                   for LSD spin == 2 electronic states
      !
      !      Note, maximum 10 values per line!
      !
@@ -1058,19 +1058,19 @@ MODULE read_cards_module
        USE wrappers, ONLY: feval_infix
        !
        IMPLICIT NONE
-       ! 
-       CHARACTER(LEN=256) :: input_line, field_str
+       !
+       CHARACTER(len=256) :: input_line, field_str
        INTEGER            :: is, nx10, i, j, nspin0
        INTEGER            :: nfield, nbnd_read, nf, ierr
-       LOGICAL, SAVE      :: tread = .FALSE.
+       LOGICAL, SAVE      :: tread = .false.
        LOGICAL :: tef
        !
        !
        IF ( tread ) THEN
           CALL errore( ' card_occupations ', ' two occurrences', 2 )
-       END IF
+       ENDIF
        nspin0=nspin
-       if (nspin == 4) nspin0=1
+       IF (nspin == 4) nspin0=1
        !
        ALLOCATE ( f_inp ( nbnd, nspin0 ) )
        DO is = 1, nspin0
@@ -1088,15 +1088,15 @@ MODULE read_cards_module
                 !
                 f_inp(nbnd_read,is) = feval_infix(ierr, field_str )
                 CALL errore('card_occupations',&
-                            'Error parsing occupation: '//TRIM(field_str), nbnd_read*ierr)
+                            'Error parsing occupation: '//trim(field_str), nbnd_read*ierr)
             ENDDO
           ENDDO
           !
-       END DO
+       ENDDO
        !
-       tf_inp = .TRUE. 
-       tread = .TRUE.
-       ! 
+       tf_inp = .true.
+       tread = .true.
+       !
        RETURN
        !
      END SUBROUTINE card_occupations
@@ -1128,22 +1128,22 @@ MODULE read_cards_module
      !------------------------------------------------------------------------
      !
      SUBROUTINE card_vhmean( input_line )
-       ! 
+       !
        IMPLICIT NONE
        !
-       CHARACTER(LEN=256) :: input_line
-       LOGICAL, SAVE :: tread = .FALSE.
+       CHARACTER(len=256) :: input_line
+       LOGICAL, SAVE :: tread = .false.
        !
        !
        IF ( tread ) THEN
           CALL errore( ' card_vhmean ', ' two occurrences', 2 )
-       END IF
-       !  
-       tvhmean_inp = .TRUE.
+       ENDIF
+       !
+       tvhmean_inp = .true.
        CALL read_line( input_line )
        READ(input_line,*) &
            vhiunit_inp, vhnr_inp, vhrmin_inp, vhrmax_inp, vhasse_inp
-       tread = .TRUE.
+       tread = .true.
        !
        RETURN
        !
@@ -1172,19 +1172,19 @@ MODULE read_cards_module
      !------------------------------------------------------------------------
      !
      SUBROUTINE card_dipole( input_line )
-       ! 
+       !
        IMPLICIT NONE
        !
-       CHARACTER(LEN=256) :: input_line
-       LOGICAL, SAVE      :: tread = .FALSE.
+       CHARACTER(len=256) :: input_line
+       LOGICAL, SAVE      :: tread = .false.
        !
        !
        IF ( tread ) THEN
           CALL errore( ' card_dipole ', ' two occurrences', 2 )
-       END IF
+       ENDIF
        !
-       tdipole_card = .TRUE.
-       tread = .TRUE.
+       tdipole_card = .true.
+       tread = .true.
        !
        RETURN
        !
@@ -1222,19 +1222,19 @@ MODULE read_cards_module
      !------------------------------------------------------------------------
      !
      SUBROUTINE card_esr( input_line )
-       ! 
+       !
        IMPLICIT NONE
-       ! 
-       CHARACTER(LEN=256) :: input_line
-       LOGICAL, SAVE      :: tread = .FALSE.
-       ! 
+       !
+       CHARACTER(len=256) :: input_line
+       LOGICAL, SAVE      :: tread = .false.
+       !
        IF ( tread ) THEN
           CALL errore( ' card_esr ', ' two occurrences', 2 )
-       END IF
+       ENDIF
        CALL read_line( input_line )
        READ(input_line,*) iesr_inp
        !
-       tread = .TRUE.
+       tread = .true.
        !
        RETURN
        !
@@ -1265,49 +1265,49 @@ MODULE read_cards_module
      !
      ! Where:
      !
-     !      HT(i,j) (real)  cell dimensions ( in a.u. ), 
-     !                      note the relation with lattice vectors: 
-     !                      HT(1,:) = A1, HT(2,:) = A2, HT(3,:) = A3 
+     !      HT(i,j) (real)  cell dimensions ( in a.u. ),
+     !                      note the relation with lattice vectors:
+     !                      HT(1,:) = A1, HT(2,:) = A2, HT(3,:) = A3
      !
      !----------------------------------------------------------------------
      !    END manual
      !------------------------------------------------------------------------
      !
      SUBROUTINE card_cell_parameters( input_line )
-       ! 
+       !
        IMPLICIT NONE
-       ! 
-       CHARACTER(LEN=256) :: input_line
+       !
+       CHARACTER(len=256) :: input_line
        INTEGER            :: i, j
        LOGICAL, EXTERNAL  :: matches
-       LOGICAL, SAVE      :: tread = .FALSE.
+       LOGICAL, SAVE      :: tread = .false.
        !
        !
        IF ( tread ) THEN
           CALL errore( ' card_cell_parameters ', ' two occurrences', 2 )
-       END IF
+       ENDIF
        !
-       IF ( matches( 'HEXAGONAL', input_line ) ) then
+       IF ( matches( 'HEXAGONAL', input_line ) ) THEN
           cell_symmetry = 'hexagonal'
        ELSE
           cell_symmetry = 'cubic'
-       END IF
+       ENDIF
        !
        IF ( matches( "BOHR", input_line ) ) THEN
           cell_units = 'bohr'
-       ELSE IF ( matches( "ANGSTROM", input_line ) ) THEN
+       ELSEIF ( matches( "ANGSTROM", input_line ) ) THEN
           cell_units = 'angstrom'
        ELSE
           cell_units = 'alat'
-       END IF
+       ENDIF
        !
        DO i = 1, 3
           CALL read_line( input_line )
           READ(input_line,*) ( rd_ht( i, j ), j = 1, 3 )
-       END DO
-       ! 
-       trd_ht = .TRUE.
-       tread  = .TRUE.
+       ENDDO
+       !
+       trd_ht = .true.
+       tread  = .true.
        !
        RETURN
        !
@@ -1344,30 +1344,30 @@ MODULE read_cards_module
      !------------------------------------------------------------------------
      !
      SUBROUTINE card_ion_velocities( input_line )
-       ! 
+       !
        IMPLICIT NONE
-       ! 
-       CHARACTER(LEN=256) :: input_line
+       !
+       CHARACTER(len=256) :: input_line
        INTEGER            :: ia, k, is, nfield
-       LOGICAL, SAVE      :: tread = .FALSE.
-       CHARACTER(LEN=4)   :: lb_vel
+       LOGICAL, SAVE      :: tread = .false.
+       CHARACTER(len=4)   :: lb_vel
        !
        !
        IF( tread ) THEN
           CALL errore( ' card_ion_velocities ', ' two occurrences', 2 )
-       END IF
+       ENDIF
        !
-       IF( .NOT. taspc ) THEN
+       IF( .not. taspc ) THEN
           CALL errore( ' card_ion_velocities ', &
                      & ' ATOMIC_SPECIES must be present before ', 2 )
-       END IF
+       ENDIF
        !
        rd_vel = 0.0_DP
        sp_vel = 0
        !
        IF ( ion_velocities == 'from_input' ) THEN
           !
-          tavel = .TRUE.
+          tavel = .true.
           !
           DO ia = 1, nat
              !
@@ -1378,24 +1378,24 @@ MODULE read_cards_module
              ELSE
                 CALL errore( ' iosys ', &
                            & ' wrong entries in ION_VELOCITIES ', ia )
-             END IF
+             ENDIF
              !
              match_label: DO is = 1, ntyp
-                IF ( TRIM( lb_vel ) == atom_label(is) ) THEN
+                IF ( trim( lb_vel ) == atom_label(is) ) THEN
                    sp_vel(ia) = is
-                   EXIT match_label
-                END IF
-             END DO match_label
+                   exit match_label
+                ENDIF
+             ENDDO match_label
              !
-             IF ( sp_vel(ia) < 1 .OR. sp_vel(ia) > ntyp ) THEN
+             IF ( sp_vel(ia) < 1 .or. sp_vel(ia) > ntyp ) THEN
                 CALL errore( ' iosys ', ' wrong LABEL in ION_VELOCITIES ', ia )
-             END IF
+             ENDIF
              !
-          END DO
+          ENDDO
           !
-       END IF
+       ENDIF
        !
-       tread = .TRUE.
+       tread = .true.
        !
        RETURN
        !
@@ -1419,10 +1419,10 @@ MODULE read_cards_module
      !
      !      NCONSTR(INTEGER)    number of constraints
      !
-     !      CONSTR_TOL          tolerance for keeping the constraints 
+     !      CONSTR_TOL          tolerance for keeping the constraints
      !                          satisfied
      !
-     !      CONSTR_TYPE(.)      type of constrain: 
+     !      CONSTR_TYPE(.)      type of constrain:
      !                          1: for fixed distances ( two atom indexes must
      !                             be specified )
      !                          2: for fixed planar angles ( three atom indexes
@@ -1430,10 +1430,10 @@ MODULE read_cards_module
      !
      !      CONSTR(1,.) CONSTR(2,.) ...
      !
-     !                          indices object of the constraint, as 
+     !                          indices object of the constraint, as
      !                          they appear in the 'POSITION' CARD
      !
-     !      CONSTR_TARGET       target for the constrain ( in the case of 
+     !      CONSTR_TARGET       target for the constrain ( in the case of
      !                          planar angles it is the COS of the angle ).
      !                          this variable is optional.
      !
@@ -1442,13 +1442,13 @@ MODULE read_cards_module
      !------------------------------------------------------------------------
      !
      SUBROUTINE card_constraints( input_line )
-       ! 
+       !
        IMPLICIT NONE
-       ! 
-       CHARACTER(LEN=256) :: input_line
+       !
+       CHARACTER(len=256) :: input_line
        INTEGER            :: i, nfield
-       LOGICAL, SAVE      :: tread = .FALSE.
-       ! 
+       LOGICAL, SAVE      :: tread = .false.
+       !
        !
        IF ( tread ) CALL errore( 'card_constraints', 'two occurrences', 2 )
        !
@@ -1460,7 +1460,7 @@ MODULE read_cards_module
           !
           READ( input_line, * ) nconstr_inp
           !
-       ELSE IF ( nfield == 2 ) THEN
+       ELSEIF ( nfield == 2 ) THEN
           !
           READ( input_line, * ) nconstr_inp, constr_tol_inp
           !
@@ -1468,7 +1468,7 @@ MODULE read_cards_module
           !
           CALL errore( 'card_constraints', 'too many fields', nfield )
           !
-       END IF
+       ENDIF
        WRITE(stdout,'(5x,a,i4,a,f12.6)') &
            'Reading',nconstr_inp,' constraints; tolerance:', constr_tol_inp
        !
@@ -1498,9 +1498,9 @@ MODULE read_cards_module
                                       constr_inp(4,i)
                 !
                 WRITE(stdout,'(7x,i3,a,i3,a,i2,a,2f12.6)') &
-                   i,') '//constr_type_inp(i)(1:4),INT(constr_inp(1,i)) ,' coordination wrt type:', INT(constr_inp(2,i)), &
+                   i,') '//constr_type_inp(i)(1:4),int(constr_inp(1,i)) ,' coordination wrt type:', int(constr_inp(2,i)), &
                    ' cutoff distance and smoothing:',  constr_inp(3:4,i)
-             ELSE IF ( nfield == 6 ) THEN
+             ELSEIF ( nfield == 6 ) THEN
                 !
                 READ( input_line, * ) constr_type_inp(i), &
                                       constr_inp(1,i), &
@@ -1509,10 +1509,10 @@ MODULE read_cards_module
                                       constr_inp(4,i), &
                                       constr_target(i)
                 !
-                constr_target_set(i) = .TRUE.
+                constr_target_set(i) = .true.
                 !
                 WRITE(stdout,'(7x,i3,a,i3,a,i2,a,2f12.6,a,f12.6)') &
-                   i,') '//constr_type_inp(i)(1:4),INT(constr_inp(1,i)) ,' coordination wrt type:', INT(constr_inp(2,i)), &
+                   i,') '//constr_type_inp(i)(1:4),int(constr_inp(1,i)) ,' coordination wrt type:', int(constr_inp(2,i)), &
                    ' cutoff distance and smoothing:',  constr_inp(3:4,i), &
                    '; target:', constr_target(i)
              ELSE
@@ -1520,7 +1520,7 @@ MODULE read_cards_module
                 CALL errore( 'card_constraints', 'type_coord, ' // &
                            & 'atom_coord: wrong number of fields', nfield )
                 !
-             END IF
+             ENDIF
              !
           CASE( 'distance' )
              !
@@ -1531,25 +1531,25 @@ MODULE read_cards_module
                                       constr_inp(2,i)
                 !
                 WRITE(stdout,'(7x,i3,a,i3,a,i3)') &
-                   i,') distance from atom:', INT(constr_inp(1,i)), ' to:', INT(constr_inp(2,i))
-             ELSE IF ( nfield == 4 ) THEN
+                   i,') distance from atom:', int(constr_inp(1,i)), ' to:', int(constr_inp(2,i))
+             ELSEIF ( nfield == 4 ) THEN
                 !
                 READ( input_line, * ) constr_type_inp(i), &
                                       constr_inp(1,i), &
                                       constr_inp(2,i), &
                                       constr_target(i)
                 !
-                constr_target_set(i) = .TRUE.
+                constr_target_set(i) = .true.
                 !
                 WRITE(stdout,'(7x,i3,a,i3,a,i3,a,f12.6)') &
-                   i,') distance from atom', INT(constr_inp(1,i)), ' to atom', INT(constr_inp(2,i)), &
+                   i,') distance from atom', int(constr_inp(1,i)), ' to atom', int(constr_inp(2,i)), &
                    '; target:',  constr_target(i)
              ELSE
                 !
                 CALL errore( 'card_constraints', &
                            & 'distance: wrong number of fields', nfield )
                 !
-             END IF
+             ENDIF
              !
           CASE( 'planar_angle' )
              !
@@ -1561,8 +1561,8 @@ MODULE read_cards_module
                                       constr_inp(3,i)
                 !
                 WRITE(stdout, '(7x,i3,a,3i3)') &
-                   i,') planar angle between atoms: ', INT(constr_inp(1:3,i)) 
-             ELSE IF ( nfield == 5 ) THEN
+                   i,') planar angle between atoms: ', int(constr_inp(1:3,i))
+             ELSEIF ( nfield == 5 ) THEN
                 !
                 READ( input_line, * ) constr_type_inp(i), &
                                       constr_inp(1,i), &
@@ -1570,16 +1570,16 @@ MODULE read_cards_module
                                       constr_inp(3,i), &
                                       constr_target(i)
                 !
-                constr_target_set(i) = .TRUE.
+                constr_target_set(i) = .true.
                 !
                 WRITE(stdout, '(7x,i3,a,3i3,a,f12.6)') &
-                   i,') planar angle between atoms: ', INT(constr_inp(1:3,i)), '; target:', constr_target(i) 
+                   i,') planar angle between atoms: ', int(constr_inp(1:3,i)), '; target:', constr_target(i)
              ELSE
                 !
                 CALL errore( 'card_constraints', &
                            & 'planar_angle: wrong number of fields', nfield )
                 !
-             END IF
+             ENDIF
              !
           CASE( 'torsional_angle' )
              !
@@ -1592,8 +1592,8 @@ MODULE read_cards_module
                                       constr_inp(4,i)
                 !
                 WRITE(stdout, '(7x,i3,a,4i3)') &
-                   i,') torsional angle between atoms: ', INT(constr_inp(1:4,i))
-             ELSE IF ( nfield == 6 ) THEN
+                   i,') torsional angle between atoms: ', int(constr_inp(1:4,i))
+             ELSEIF ( nfield == 6 ) THEN
                 !
                 READ( input_line, * ) constr_type_inp(i), &
                                       constr_inp(1,i), &
@@ -1602,16 +1602,16 @@ MODULE read_cards_module
                                       constr_inp(4,i), &
                                       constr_target(i)
                 !
-                constr_target_set(i) = .TRUE.
+                constr_target_set(i) = .true.
                 !
                 WRITE(stdout, '(7x,i3,a,4i3,a,f12.6)') &
-                   i,') torsional angle between atoms: ', INT(constr_inp(1:4,i)), '; target:', constr_target(i)
+                   i,') torsional angle between atoms: ', int(constr_inp(1:4,i)), '; target:', constr_target(i)
              ELSE
                 !
                 CALL errore( 'card_constraints', &
                            & 'torsional_angle: wrong number of fields', nfield )
                 !
-             END IF
+             ENDIF
              !
           CASE( 'bennett_proj' )
              !
@@ -1624,8 +1624,8 @@ MODULE read_cards_module
                                       constr_inp(4,i)
                 !
                 WRITE(stdout, '(7x,i3,a,i3,a,3f12.6)') &
-                   i,') bennet projection of atom ', INT(constr_inp(1,i)), ' along vector:', constr_inp(2:4,i)
-             ELSE IF ( nfield == 6 ) THEN
+                   i,') bennet projection of atom ', int(constr_inp(1,i)), ' along vector:', constr_inp(2:4,i)
+             ELSEIF ( nfield == 6 ) THEN
                 !
                 READ( input_line, * ) constr_type_inp(i), &
                                       constr_inp(1,i), &
@@ -1634,28 +1634,28 @@ MODULE read_cards_module
                                       constr_inp(4,i), &
                                       constr_target(i)
                 !
-                constr_target_set(i) = .TRUE.
+                constr_target_set(i) = .true.
                 !
                 WRITE(stdout, '(7x,i3,a,i3,a,3f12.6,a,f12.6)') &
-                   i,') bennet projection of atom ', INT(constr_inp(1,i)), ' along vector:', constr_inp(2:4,i), &
+                   i,') bennet projection of atom ', int(constr_inp(1,i)), ' along vector:', constr_inp(2:4,i), &
                    '; target:', constr_target(i)
              ELSE
                 !
                 CALL errore( 'card_constraints', &
                            & 'bennett_proj: wrong number of fields', nfield )
                 !
-             END IF
+             ENDIF
              !
           CASE DEFAULT
              !
              CALL errore( 'card_constraints', 'unknown constraint ' // &
-                        & 'type: ' // TRIM( constr_type_inp(i) ), 1 )
+                        & 'type: ' // trim( constr_type_inp(i) ), 1 )
              !
           END SELECT
           !
-       END DO
+       ENDDO
        !
-       tread = .TRUE.
+       tread = .true.
        !
        RETURN
        !
@@ -1665,11 +1665,11 @@ MODULE read_cards_module
        !
        IMPLICIT NONE
        !
-       CHARACTER(LEN=256) :: input_line
+       CHARACTER(len=256) :: input_line
        INTEGER            :: i, nfield
        LOGICAL            :: ltest
-       LOGICAL, SAVE      :: tread = .FALSE.
-       ! 
+       LOGICAL, SAVE      :: tread = .false.
+       !
        !
        IF ( tread ) CALL errore( 'card_collective_vars', 'two occurrences', 2 )
        !
@@ -1681,7 +1681,7 @@ MODULE read_cards_module
           !
           READ( input_line, * ) ncolvar_inp
           !
-       ELSE IF ( nfield == 2 ) THEN
+       ELSEIF ( nfield == 2 ) THEN
           !
           READ( input_line, * ) ncolvar_inp, colvar_tol_inp
           !
@@ -1689,7 +1689,7 @@ MODULE read_cards_module
           !
           CALL errore( 'card_collective_vars', 'too many fields', nfield )
           !
-       END IF
+       ENDIF
        !
        CALL allocate_input_colvar()
        !
@@ -1697,13 +1697,13 @@ MODULE read_cards_module
           !
           input_images = 2
           !
-          IF( ALLOCATED( pos ) ) DEALLOCATE( pos )
+          IF( allocated( pos ) ) DEALLOCATE( pos )
           !
           ALLOCATE( pos( ncolvar_inp, input_images ) )
           !
           pos(:,:) = 0.0_DP
           !
-       END IF
+       ENDIF
        !
        DO i = 1, ncolvar_inp
           !
@@ -1713,12 +1713,12 @@ MODULE read_cards_module
           !
           CALL field_count( nfield, input_line )
           !
-          ltest = ( ( nfield <= nc_fields + 2 ) .OR. &
-                    ( cg_phs_path_flag .AND. ( nfield <= nc_fields + 4 ) ) )
+          ltest = ( ( nfield <= nc_fields + 2 ) .or. &
+                    ( cg_phs_path_flag .and. ( nfield <= nc_fields + 4 ) ) )
           !
-          IF ( .NOT. ltest ) &
+          IF ( .not. ltest ) &
              CALL errore( 'card_collective_vars', 'too many fields for ' // &
-                        & 'this constraint: ' // TRIM( constr_type_inp(i) ), i )
+                        & 'this constraint: ' // trim( constr_type_inp(i) ), i )
           !
           SELECT CASE( colvar_type_inp(i) )
           CASE( 'type_coord', 'atom_coord' )
@@ -1733,7 +1733,7 @@ MODULE read_cards_module
                                       pos(i,1),           &
                                       pos(i,2)
                 !
-             ELSE IF ( nfield == 5 ) THEN
+             ELSEIF ( nfield == 5 ) THEN
                 !
                 READ( input_line, * ) colvar_type_inp(i), &
                                       colvar_inp(1,i), &
@@ -1746,7 +1746,7 @@ MODULE read_cards_module
                 CALL errore( 'card_collective_vars', 'type_coord, ' // &
                            & 'atom_coord: wrong number of fields', nfield )
                 !
-             END IF
+             ENDIF
              !
           CASE( 'distance' )
              !
@@ -1758,7 +1758,7 @@ MODULE read_cards_module
                                       pos(i,1),           &
                                       pos(i,2)
                 !
-             ELSE IF ( nfield == 3 ) THEN
+             ELSEIF ( nfield == 3 ) THEN
                 !
                 READ( input_line, * ) colvar_type_inp(i), &
                                       colvar_inp(1,i), &
@@ -1769,7 +1769,7 @@ MODULE read_cards_module
                 CALL errore( 'card_collective_vars', &
                            & 'distance: wrong number of fields', nfield )
                 !
-             END IF
+             ENDIF
              !
           CASE( 'planar_angle' )
              !
@@ -1782,7 +1782,7 @@ MODULE read_cards_module
                                       pos(i,1),           &
                                       pos(i,2)
                 !
-             ELSE IF ( nfield == 4 ) THEN
+             ELSEIF ( nfield == 4 ) THEN
                 !
                 READ( input_line, * ) colvar_type_inp(i), &
                                       colvar_inp(1,i), &
@@ -1794,7 +1794,7 @@ MODULE read_cards_module
                 CALL errore( 'card_collective_vars', &
                            & 'planar_angle: wrong number of fields', nfield )
                 !
-             END IF
+             ENDIF
              !
           CASE( 'torsional_angle' )
              !
@@ -1808,7 +1808,7 @@ MODULE read_cards_module
                                       pos(i,1),           &
                                       pos(i,2)
                 !
-             ELSE IF ( nfield == 5 ) THEN
+             ELSEIF ( nfield == 5 ) THEN
                 !
                 READ( input_line, * ) colvar_type_inp(i), &
                                       colvar_inp(1,i), &
@@ -1821,7 +1821,7 @@ MODULE read_cards_module
                 CALL errore( 'card_collective_vars', &
                            & 'torsional_angle: wrong number of fields', nfield )
                 !
-             END IF
+             ENDIF
              !
           CASE( 'struct_fac' )
              !
@@ -1834,7 +1834,7 @@ MODULE read_cards_module
                                       pos(i,1),        &
                                       pos(i,2)
                 !
-             ELSE IF ( nfield == 4 ) THEN
+             ELSEIF ( nfield == 4 ) THEN
                 !
                 READ( input_line, * ) colvar_type_inp(i), &
                                       colvar_inp(1,i), &
@@ -1846,7 +1846,7 @@ MODULE read_cards_module
                 CALL errore( 'card_collective_vars', &
                            & 'struct_fac: wrong number of fields', nfield )
                 !
-             END IF
+             ENDIF
              !
           CASE( 'sph_struct_fac' )
              !
@@ -1857,7 +1857,7 @@ MODULE read_cards_module
                                       pos(i,1),        &
                                       pos(i,2)
                 !
-             ELSE IF ( nfield == 2 ) THEN
+             ELSEIF ( nfield == 2 ) THEN
                 !
                 READ( input_line, * ) colvar_type_inp(i), &
                                       colvar_inp(1,i)
@@ -1867,7 +1867,7 @@ MODULE read_cards_module
                 CALL errore( 'card_collective_vars',  &
                            & 'sph_struct_fac: wrong number of fields', nfield )
                 !
-             END IF
+             ENDIF
              !
           CASE( 'bennett_proj' )
              !
@@ -1881,7 +1881,7 @@ MODULE read_cards_module
                                       pos(i,1),        &
                                       pos(i,2)
                 !
-             ELSE IF ( nfield == 5 ) THEN
+             ELSEIF ( nfield == 5 ) THEN
                 !
                 READ( input_line, * ) constr_type_inp(i), &
                                       constr_inp(1,i), &
@@ -1894,18 +1894,18 @@ MODULE read_cards_module
                 CALL errore( 'card_collective_vars', &
                            & 'bennett_proj: wrong number of fields', nfield )
                 !
-             END IF
+             ENDIF
              !
           CASE DEFAULT
              !
              CALL errore( 'card_collective_vars', 'unknown collective ' // &
-                        & 'variable: ' // TRIM( colvar_type_inp(i) ), 1 )
+                        & 'variable: ' // trim( colvar_type_inp(i) ), 1 )
              !
           END SELECT
           !
-       END DO
+       ENDDO
        !
-       tread = .TRUE.
+       tread = .true.
        !
        RETURN
        !
@@ -1914,7 +1914,7 @@ MODULE read_cards_module
      !------------------------------------------------------------------------
      !    BEGIN manual
      !----------------------------------------------------------------------
-     ! 
+     !
      ! KSOUT
      !
      !   Enable the printing of Kohn Sham states
@@ -1936,19 +1936,19 @@ MODULE read_cards_module
      ! Example:
      !
      !   ???
-     !   
+     !
      ! Where:
      !
-     !   nu (integer)     number of spin=1 states to be printed 
-     !   iu(:) (integer)  indexes of spin=1 states, the state iu(k) 
+     !   nu (integer)     number of spin=1 states to be printed
+     !   iu(:) (integer)  indexes of spin=1 states, the state iu(k)
      !                    is saved to file KS_UP.iu(k)
      !
-     !   nd (integer)     number of spin=2 states to be printed 
-     !   id(:) (integer)  indexes of spin=2 states, the state id(k) 
+     !   nd (integer)     number of spin=2 states to be printed
+     !   id(:) (integer)  indexes of spin=2 states, the state id(k)
      !                    is saved to file KS_DW.id(k)
      !
-     !   ns (integer)     number of LDA states to be printed 
-     !   is(:) (integer)  indexes of LDA states, the state is(k) 
+     !   ns (integer)     number of LDA states to be printed
+     !   is(:) (integer)  indexes of LDA states, the state is(k)
      !                    is saved to file KS.is(k)
      !
      !----------------------------------------------------------------------
@@ -1956,22 +1956,22 @@ MODULE read_cards_module
      !------------------------------------------------------------------------
      !
      SUBROUTINE card_ksout( input_line )
-       ! 
+       !
        IMPLICIT NONE
-       ! 
-       CHARACTER(LEN=256) :: input_line
-       LOGICAL, SAVE      :: tread = .FALSE.
+       !
+       CHARACTER(len=256) :: input_line
+       LOGICAL, SAVE      :: tread = .false.
        INTEGER            :: i, s, nksx
        TYPE occupancy_type
-          INTEGER, pointer :: occs(:)
+          INTEGER, POINTER :: occs(:)
        END TYPE occupancy_type
        TYPE(occupancy_type), ALLOCATABLE :: is(:)
        !
        IF ( tread ) THEN
           CALL errore( ' card_ksout ', ' two occurrences', 2 )
-       END IF
+       ENDIF
        !
-       nprnks = 0 
+       nprnks = 0
        nksx   = 0
        !
        ALLOCATE ( is (nspin) )
@@ -1983,16 +1983,16 @@ MODULE read_cards_module
           !
           IF ( nprnks( s ) < 1 ) THEN
              CALL errore( ' card_ksout ', ' wrong number of states ', 2 )
-          END IF
+          ENDIF
           !
           ALLOCATE( is(s)%occs( 1:nprnks(s) ) )
           !
           CALL read_line( input_line )
           READ(input_line, *) ( is(s)%occs(i), i = 1, nprnks( s ) )
           !
-          nksx = MAX( nksx, nprnks( s ) )
+          nksx = max( nksx, nprnks( s ) )
           !
-       END DO
+       ENDDO
        !
        CALL allocate_input_iprnks( nksx, nspin )
        !
@@ -2002,15 +2002,15 @@ MODULE read_cards_module
              !
              iprnks( i, s ) = is(s)%occs(i)
              !
-          END DO
+          ENDDO
           !
           DEALLOCATE( is(s)%occs )
           !
-       END DO
+       ENDDO
        !
        DEALLOCATE( is )
        !
-       tread = .TRUE.
+       tread = .true.
        !
        RETURN
        !
@@ -2021,10 +2021,10 @@ MODULE read_cards_module
      !------------------------------------------------------------------------
      !    BEGIN manual
      !----------------------------------------------------------------------
-     ! 
+     !
      ! CLIMBING_IMAGES
      !
-     !   Needed to explicitly specify which images have to climb 
+     !   Needed to explicitly specify which images have to climb
      !
      ! Syntax:
      !
@@ -2042,15 +2042,15 @@ MODULE read_cards_module
      SUBROUTINE card_climbing_images( input_line )
        !
        IMPLICIT NONE
-       ! 
-       CHARACTER(LEN=256) :: input_line
-       LOGICAL, SAVE      :: tread = .FALSE.
-       LOGICAL, EXTERNAL  :: matches
-       ! 
-       INTEGER          :: i
-       CHARACTER(LEN=5) :: i_char
        !
-       CHARACTER(LEN=6), EXTERNAL :: int_to_char
+       CHARACTER(len=256) :: input_line
+       LOGICAL, SAVE      :: tread = .false.
+       LOGICAL, EXTERNAL  :: matches
+       !
+       INTEGER          :: i
+       CHARACTER(len=5) :: i_char
+       !
+       CHARACTER(len=6), EXTERNAL :: int_to_char
        !
        !
        IF ( tread ) &
@@ -2058,27 +2058,27 @@ MODULE read_cards_module
        !
        IF ( CI_scheme == 'manual' ) THEN
           !
-          IF ( ALLOCATED( climbing ) ) DEALLOCATE( climbing )
+          IF ( allocated( climbing ) ) DEALLOCATE( climbing )
           !
-          ALLOCATE( climbing( num_of_images ) )   
+          ALLOCATE( climbing( num_of_images ) )
           !
-          climbing(:) = .FALSE.
+          climbing(:) = .false.
           !
           CALL read_line( input_line )
           !
           DO i = 1, num_of_images
              !
-             i_char = int_to_char( i ) 
+             i_char = int_to_char( i )
              !
-             IF ( matches( ' ' // TRIM( i_char ) // ',' , & 
-                           ' ' // TRIM( input_line ) // ',' ) ) &
-                climbing(i) = .TRUE.
+             IF ( matches( ' ' // trim( i_char ) // ',' , &
+                           ' ' // trim( input_line ) // ',' ) ) &
+                climbing(i) = .true.
              !
-          END DO
-          !   
-       END IF
-       ! 
-       tread = .TRUE.
+          ENDDO
+          !
+       ENDIF
+       !
+       tread = .true.
        !
        RETURN
        !
@@ -2087,7 +2087,7 @@ MODULE read_cards_module
      !------------------------------------------------------------------------
      !    BEGIN manual
      !----------------------------------------------------------------------
-     ! 
+     !
      ! PLOT WANNIER
      !
      !   Needed to specify the indices of the wannier functions that
@@ -2109,14 +2109,14 @@ MODULE read_cards_module
      SUBROUTINE card_plot_wannier( input_line )
        !
        IMPLICIT NONE
-       ! 
-       CHARACTER(LEN=256) :: input_line
-       LOGICAL, SAVE      :: tread = .FALSE.
+       !
+       CHARACTER(len=256) :: input_line
+       LOGICAL, SAVE      :: tread = .false.
        LOGICAL, EXTERNAL  :: matches
-       ! 
+       !
        INTEGER                    :: i, ib
-       CHARACTER(LEN=5)           :: i_char
-       CHARACTER(LEN=6), EXTERNAL :: int_to_char
+       CHARACTER(len=5)           :: i_char
+       CHARACTER(len=6), EXTERNAL :: int_to_char
        !
        !
        IF ( tread ) &
@@ -2133,10 +2133,10 @@ MODULE read_cards_module
           !
           DO i = 1, nwf_max
              !
-             i_char = int_to_char( i ) 
+             i_char = int_to_char( i )
              !
-             IF ( matches( ' ' // TRIM( i_char ) // ',', & 
-                           ' ' // TRIM( input_line ) // ',' ) ) THEN
+             IF ( matches( ' ' // trim( i_char ) // ',', &
+                           ' ' // trim( input_line ) // ',' ) ) THEN
                 !
                 ib = ib + 1
                 !
@@ -2145,13 +2145,13 @@ MODULE read_cards_module
                 !
                 wannier_index(ib) = i
                 !
-             END IF
+             ENDIF
              !
-          END DO
+          ENDDO
           !
-       END IF
-       ! 
-       tread = .TRUE.
+       ENDIF
+       !
+       tread = .true.
        !
        RETURN
        !
@@ -2185,20 +2185,20 @@ MODULE read_cards_module
      !------------------------------------------------------------------------
      !
      SUBROUTINE card_template( input_line )
-       ! 
+       !
        IMPLICIT NONE
-       ! 
-       CHARACTER(LEN=256) :: input_line
-       LOGICAL, SAVE      :: tread = .FALSE.
-       ! 
+       !
+       CHARACTER(len=256) :: input_line
+       LOGICAL, SAVE      :: tread = .false.
+       !
        !
        IF ( tread ) THEN
           CALL errore( ' card_template ', ' two occurrences', 2 )
-       END IF
+       ENDIF
        !
        ! ....  CODE HERE
-       ! 
-       tread = .TRUE.
+       !
+       tread = .true.
        !
        RETURN
        !
@@ -2229,19 +2229,19 @@ MODULE read_cards_module
      !------------------------------------------------------------------------
      !
      SUBROUTINE card_wannier_ac( input_line )
-       ! 
-       USE wannier_new, only: nwan
-       
+       !
+       USE wannier_new, ONLY: nwan
+
        IMPLICIT NONE
-       ! 
-       CHARACTER(LEN=256) :: input_line
+       !
+       CHARACTER(len=256) :: input_line
        INTEGER :: i,j,k, nfield, iwan, ning, iatom,il,im,ispin
        LOGICAL :: tend
        REAL :: c, b_from, b_to
-       CHARACTER(LEN=10) :: text, lo
-     
+       CHARACTER(len=10) :: text, lo
+
        ispin = 1
-       ! 
+       !
        DO i = 1, nwan
           !
           CALL read_line( input_line, end_of_file = tend )
@@ -2255,14 +2255,14 @@ MODULE read_cards_module
           IF ( nfield == 4 ) THEN
              READ(input_line,*) text, iwan, b_from, b_to
              ning = 1
-          ELSE IF ( nfield == 5 ) THEN
+          ELSEIF ( nfield == 5 ) THEN
              READ(input_line,*) text, iwan, b_from, b_to, ning
           ELSE
              CALL errore( 'read_cards', &
                           'wrong format', nfield )
-          END IF 
-          IF(iwan.ne.i) CALL errore( 'read_cards', 'wrong wannier order', iwan)
-             
+          ENDIF
+          IF(iwan/=i) CALL errore( 'read_cards', 'wrong wannier order', iwan)
+
           ! Read atom number
           CALL read_line( input_line, end_of_file = tend )
           READ(input_line,*) text, iatom
@@ -2271,30 +2271,30 @@ MODULE read_cards_module
           wan_data(iwan,ispin)%ning = ning
           wan_data(iwan,ispin)%bands_from = b_from
           wan_data(iwan,ispin)%bands_to = b_to
-          !           
+          !
           DO j=1, ning
              CALL read_line( input_line, end_of_file = tend )
              !
              IF ( tend ) &
                 CALL errore( 'read_cards', &
                              'not enough wavefunctions', j )
-             IF (ning.eq.1) THEN
+             IF (ning==1) THEN
                 READ(input_line,*) lo,im
                 c = 1.d0
              ELSE
                 READ(input_line,*) lo,im,c
-             END IF
+             ENDIF
 
-             SELECT CASE(TRIM(lo))
-             CASE('s') 
+             SELECT CASE(trim(lo))
+             CASE('s')
                 il = 0
-             CASE('p') 
+             CASE('p')
                 il = 1
-             CASE('d') 
+             CASE('d')
                 il = 2
-             CASE('f') 
+             CASE('f')
                 il = 3
-             CASE DEFAULT 
+             CASE DEFAULT
                 CALL errore( 'read_cards', &
                              'wrong l-label', 1 )
              END SELECT
@@ -2302,17 +2302,17 @@ MODULE read_cards_module
              wan_data(iwan,ispin)%ing(j)%l = il
              wan_data(iwan,ispin)%ing(j)%m = im
              wan_data(iwan,ispin)%ing(j)%c = c
-          END DO
-       END DO
-       
+          ENDDO
+       ENDDO
+
        !Is there spin 2 information?
        CALL read_line( input_line, end_of_file = tend )
        !
-       IF ( .NOT. tend ) then
+       IF ( .not. tend ) THEN
           READ(input_line,*) text
-          IF ( TRIM(text) == 'Spin#2:') then ! ok, there is spin 2 data
+          IF ( trim(text) == 'Spin#2:') THEN ! ok, there is spin 2 data
              ispin = 2
-             ! 
+             !
              DO i = 1, nwan
                 !
                 CALL read_line( input_line, end_of_file = tend )
@@ -2326,14 +2326,14 @@ MODULE read_cards_module
                 IF ( nfield == 4 ) THEN
                    READ(input_line,*) text, iwan, b_from, b_to
                    ning = 1
-                ELSE IF ( nfield == 4 ) THEN
+                ELSEIF ( nfield == 4 ) THEN
                    READ(input_line,*) text, iwan, b_from, b_to, ning
                 ELSE
                    CALL errore( 'read_cards', &
                                 'wrong format', nfield )
-                END IF 
-                IF(iwan.ne.i) CALL errore( 'read_cards', 'wrong wannier order', iwan)
-               
+                ENDIF
+                IF(iwan/=i) CALL errore( 'read_cards', 'wrong wannier order', iwan)
+
                 ! Read atom number
                 CALL read_line( input_line, end_of_file = tend )
                 READ(input_line,*) text, iatom
@@ -2342,30 +2342,30 @@ MODULE read_cards_module
                 wan_data(iwan,ispin)%ning = ning
                 wan_data(iwan,ispin)%bands_from = b_from
                 wan_data(iwan,ispin)%bands_to = b_to
-                !           
+                !
                 DO j=1, ning
                    CALL read_line( input_line, end_of_file = tend )
                    !
                    IF ( tend ) &
                       CALL errore( 'read_cards', &
                                    'not enough wavefunctions', j )
-                   IF (ning.eq.1) THEN
+                   IF (ning==1) THEN
                       READ(input_line,*) lo,im
                       c = 1.d0
                    ELSE
                       READ(input_line,*) lo,im,c
-                   END IF
+                   ENDIF
 
-                   SELECT CASE(TRIM(lo))
-                   CASE('s') 
+                   SELECT CASE(trim(lo))
+                   CASE('s')
                       il = 0
-                   CASE('p') 
+                   CASE('p')
                       il = 1
-                   CASE('d') 
+                   CASE('d')
                       il = 2
-                   CASE('f') 
+                   CASE('f')
                       il = 3
-                   CASE DEFAULT 
+                   CASE DEFAULT
                       CALL errore( 'read_cards', &
                                    'wrong l-label', 1 )
                    END SELECT
@@ -2373,10 +2373,10 @@ MODULE read_cards_module
                    wan_data(iwan,ispin)%ing(j)%l = il
                    wan_data(iwan,ispin)%ing(j)%m = im
                    wan_data(iwan,ispin)%ing(j)%c = c
-                END DO
-             END DO
-          END IF
-       END IF
+                ENDDO
+             ENDDO
+          ENDIF
+       ENDIF
        !
        RETURN
        !
