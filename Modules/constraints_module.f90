@@ -87,12 +87,12 @@ MODULE constraints_module
        ! ... implemented as normal constraints but are read using specific
        ! ... input variables)
        !
-       USE input_parameters, ONLY : constr_target_ => constr_target
        USE input_parameters, ONLY : nconstr_inp, constr_tol_inp, &
                                     ncolvar_inp, colvar_tol_inp, &
                                     constr_type_inp, constr_inp, &
                                     colvar_type_inp, colvar_inp, &
-                                    constr_target_set, colvar_target, &
+                                    constr_target_inp, &
+                                    constr_target_set, colvar_target_inp, &
                                     colvar_target_set, nc_fields
        !
        IMPLICIT NONE
@@ -137,7 +137,7 @@ MODULE constraints_module
        ! ... setting constr to 0 to findout which elements have been
        ! ... set to an atomic index. This is required for CP.
        !
-       constr = 0.0_DP
+       constr(:,:) = 0.0_DP
        !
        ! ... NB: the first "ncolvar" constraints are collective variables (used
        ! ...     for meta-dynamics and free-energy smd), the remaining are real
@@ -146,7 +146,7 @@ MODULE constraints_module
        if (ncolvar_inp > 0) &
           constr(:,1:ncolvar_inp)        = colvar_inp(:,1:ncolvar_inp)
        if (nconstr_inp > 0) &
-         constr(:,ncolvar_inp+1:nconstr) = constr_inp(:,1:nconstr_inp)
+          constr(:,ncolvar_inp+1:nconstr) = constr_inp(:,1:nconstr_inp)
        !
        ! ... set the largest possible distance among two atoms within
        ! ... the supercell
@@ -177,9 +177,7 @@ MODULE constraints_module
              !
              IF ( colvar_target_set(ia) ) THEN
                 !
-                constr_target(ia) = colvar_target(ia)
-                !
-                CYCLE
+                constr_target(ia) = colvar_target_inp(ia)
                 !
              ELSE
                 !
@@ -196,9 +194,7 @@ MODULE constraints_module
              !
              IF ( colvar_target_set(ia) ) THEN
                 !
-                constr_target(ia) = colvar_target(ia)
-                !
-                CYCLE
+                constr_target(ia) = colvar_target_inp(ia)
                 !
              ELSE
                 !
@@ -212,7 +208,7 @@ MODULE constraints_module
              !
              IF ( colvar_target_set(ia) ) THEN
                 !
-                constr_target(ia) = colvar_target(ia)
+                constr_target(ia) = colvar_target_inp(ia)
                 !
              ELSE
                 !
@@ -250,9 +246,7 @@ MODULE constraints_module
                 ! ... in degrees) is converted to the cosine of the angle
                 !
                 constr_target(ia) = COS( ( 180.0_DP - &
-                                           colvar_target(ia) )*tpi/360.0_DP )
-                !
-                CYCLE
+                                           colvar_target_inp(ia) )*tpi/360.0_DP )
                 !
              ELSE
                 !
@@ -272,9 +266,7 @@ MODULE constraints_module
                 ! ... the input value of target for the torsional angle (given
                 ! ... in degrees) is converted to the cosine of the angle
                 !
-                constr_target(ia) = COS( colvar_target(ia)*tpi/360.0_DP )
-                !
-                CYCLE
+                constr_target(ia) = COS( colvar_target_inp(ia)*tpi/360.0_DP )
                 !
              ELSE
                 !
@@ -290,9 +282,7 @@ MODULE constraints_module
              !
              IF ( colvar_target_set(ia) ) THEN
                 !
-                constr_target(ia) = colvar_target(ia)
-                !
-                CYCLE
+                constr_target(ia) = colvar_target_inp(ia)
                 !
              ELSE
                 !
@@ -309,9 +299,7 @@ MODULE constraints_module
              !
              IF ( colvar_target_set(ia) ) THEN
                 !
-                constr_target(ia) = colvar_target(ia)
-                !
-                CYCLE
+                constr_target(ia) = colvar_target_inp(ia)
                 !
              ELSE
                 !
@@ -331,9 +319,7 @@ MODULE constraints_module
              !
              IF ( colvar_target_set(ia) ) THEN
                 !
-                constr_target(ia) = colvar_target(ia)
-                !
-                CYCLE
+                constr_target(ia) = colvar_target_inp(ia)
                 !
              ELSE
                 !
@@ -366,9 +352,7 @@ MODULE constraints_module
              !
              IF ( constr_target_set(n) ) THEN
                 !
-                constr_target(ia) = constr_target_(n)
-                !
-                CYCLE
+                constr_target(ia) = constr_target_inp(n)
                 !
              ELSE
                 !
@@ -385,9 +369,7 @@ MODULE constraints_module
              !
              IF ( constr_target_set(n) ) THEN
                 !
-                constr_target(ia) = constr_target_(n)
-                !
-                CYCLE
+                constr_target(ia) = constr_target_inp(n)
                 !
              ELSE
                 !
@@ -401,7 +383,7 @@ MODULE constraints_module
              !
              IF ( constr_target_set(n) ) THEN
                 !
-                constr_target(ia) = constr_target_(n)
+                constr_target(ia) = constr_target_inp(n)
                 !
              ELSE
                 !
@@ -439,9 +421,7 @@ MODULE constraints_module
                 ! ... in degrees) is converted to the cosine of the angle
                 !
                 constr_target(ia) = COS( ( 180.0_DP - &
-                                           constr_target_(n) )*tpi/360.0_DP )
-                !
-                CYCLE
+                                           constr_target_inp(n) )*tpi/360.0_DP )
                 !
              ELSE
                 !
@@ -461,9 +441,7 @@ MODULE constraints_module
                 ! ... the input value of target for the torsional angle (given
                 ! ... in degrees) is converted to the cosine of the angle
                 !
-                constr_target(ia) = COS( constr_target_(n)*tpi/360.0_DP )
-                !
-                CYCLE
+                constr_target(ia) = COS( constr_target_inp(n)*tpi/360.0_DP )
                 !
              ELSE
                 !
@@ -479,9 +457,7 @@ MODULE constraints_module
              !
              IF ( constr_target_set(n) ) THEN
                 !
-                constr_target(ia) = constr_target_(n)
-                !
-                CYCLE
+                constr_target(ia) = constr_target_inp(n)
                 !
              ELSE
                 !
@@ -498,9 +474,7 @@ MODULE constraints_module
              !
              IF ( constr_target_set(n) ) THEN
                 !
-                constr_target(ia) = constr_target_(n)
-                !
-                CYCLE
+                constr_target(ia) = constr_target_inp(n)
                 !
              ELSE
                 !
@@ -520,9 +494,7 @@ MODULE constraints_module
              !
              IF ( constr_target_set(n) ) THEN
                 !
-                constr_target(ia) = constr_target_(n)
-                !
-                CYCLE
+                constr_target(ia) = constr_target_inp(n)
                 !
              ELSE
                 !

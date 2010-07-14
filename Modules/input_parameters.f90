@@ -1368,7 +1368,7 @@ MODULE input_parameters
       !
       CHARACTER(LEN=20), ALLOCATABLE :: constr_type_inp(:)
       REAL(DP),          ALLOCATABLE :: constr_inp(:,:)
-      REAL(DP),          ALLOCATABLE :: constr_target(:)
+      REAL(DP),          ALLOCATABLE :: constr_target_inp(:)
       LOGICAL,           ALLOCATABLE :: constr_target_set(:)
 
 !
@@ -1379,7 +1379,7 @@ MODULE input_parameters
       !
       CHARACTER(LEN=20), ALLOCATABLE :: colvar_type_inp(:)
       REAL(DP),          ALLOCATABLE :: colvar_inp(:,:)
-      REAL(DP),          ALLOCATABLE :: colvar_target(:)
+      REAL(DP),          ALLOCATABLE :: colvar_target_inp(:)
       LOGICAL,           ALLOCATABLE :: colvar_target_set(:)
 
 !
@@ -1455,18 +1455,18 @@ CONTAINS
     !
     IF ( ALLOCATED( constr_type_inp ) )   DEALLOCATE( constr_type_inp )
     IF ( ALLOCATED( constr_inp ) )        DEALLOCATE( constr_inp )
-    IF ( ALLOCATED( constr_target ) )     DEALLOCATE( constr_target )
+    IF ( ALLOCATED( constr_target_inp ) ) DEALLOCATE( constr_target_inp )
     IF ( ALLOCATED( constr_target_set ) ) DEALLOCATE( constr_target_set )
     !
     ALLOCATE( constr_type_inp(   nconstr_inp ) )
-    ALLOCATE( constr_target(     nconstr_inp ) )
+    ALLOCATE( constr_target_inp( nconstr_inp ) )
     ALLOCATE( constr_target_set( nconstr_inp ) )
     !
     ALLOCATE( constr_inp( nc_fields, nconstr_inp ) )
     !
     constr_type_inp   = ' '
     constr_inp        = 0.0_DP
-    constr_target     = 0.0_DP
+    constr_target_inp = 0.0_DP
     constr_target_set = .FALSE.
     !
     RETURN
@@ -1477,18 +1477,18 @@ CONTAINS
     !
     IF ( ALLOCATED( colvar_type_inp ) )   DEALLOCATE( colvar_type_inp )
     IF ( ALLOCATED( colvar_inp ) )        DEALLOCATE( colvar_inp )
-    IF ( ALLOCATED( colvar_target ) )     DEALLOCATE( colvar_target )
+    IF ( ALLOCATED( colvar_target_inp ) ) DEALLOCATE( colvar_target_inp )
     IF ( ALLOCATED( colvar_target_set ) ) DEALLOCATE( colvar_target_set )
     !
     ALLOCATE( colvar_type_inp(   ncolvar_inp ) )
-    ALLOCATE( colvar_target(     ncolvar_inp ) )
+    ALLOCATE( colvar_target_inp(     ncolvar_inp ) )
     ALLOCATE( colvar_target_set( ncolvar_inp ) )
     !
     ALLOCATE( colvar_inp( nc_fields, ncolvar_inp ) )
     !
     colvar_type_inp   = ' '
     colvar_inp        = 0.0_DP
-    colvar_target     = 0.0_DP
+    colvar_target_inp     = 0.0_DP
     colvar_target_set = .FALSE.
     !
     RETURN
@@ -1526,12 +1526,12 @@ CONTAINS
     !
     IF ( ALLOCATED( constr_type_inp ) )   DEALLOCATE( constr_type_inp )
     IF ( ALLOCATED( constr_inp ) )        DEALLOCATE( constr_inp )
-    IF ( ALLOCATED( constr_target ) )     DEALLOCATE( constr_target )
+    IF ( ALLOCATED( constr_target_inp ) ) DEALLOCATE( constr_target_inp )
     IF ( ALLOCATED( constr_target_set ) ) DEALLOCATE( constr_target_set )
     !
     IF ( ALLOCATED( colvar_type_inp ) )   DEALLOCATE( colvar_type_inp )
     IF ( ALLOCATED( colvar_inp ) )        DEALLOCATE( colvar_inp )
-    IF ( ALLOCATED( colvar_target ) )     DEALLOCATE( colvar_target )
+    IF ( ALLOCATED( colvar_target_inp ) ) DEALLOCATE( colvar_target_inp )
     IF ( ALLOCATED( colvar_target_set ) ) DEALLOCATE( colvar_target_set )
     !
     IF ( ALLOCATED( iprnks ) )       DEALLOCATE( iprnks )
