@@ -16,52 +16,52 @@
 !
 !----------------------------------------------------------------------------
 MODULE dynamics_module
-  !----------------------------------------------------------------------------
-  !
-  USE kinds,     ONLY : DP
-  USE ions_base, ONLY : amass
-  USE io_global, ONLY : stdout
-  USE io_files,  ONLY : prefix, tmp_dir
-  USE constants, ONLY : tpi, fpi
-  USE constants, ONLY : amconv, ry_to_kelvin, au_ps, bohr_radius_cm, uakbar
-  USE constants, ONLY : eps8
-  USE control_flags, ONLY : tolp
-  !
-  USE basic_algebra_routines
-  !
-  IMPLICIT NONE
-  !
-  SAVE
-  !
-  REAL(DP) :: &
-       dt,          &! time step
-       temperature, &! starting temperature
-       virial,      &! virial (used for the pressure)
-       delta_t       ! parameter used in thermalization
-  INTEGER :: &
-       nraise,      &! parameter used in thermalization
-       ndof          ! the number of degrees of freedom
-  LOGICAL :: &
-       vel_defined,  &! if true, vel is used rather than tau_old to do the next step
-       control_temp, &! if true a thermostat is used to control the temperature
-       refold_pos     ! if true the positions are refolded into the supercell
-  CHARACTER(len=10) &
-       thermostat    ! the thermostat used to control the temperature
-  !
-  REAL(DP), ALLOCATABLE :: tau_old(:,:), tau_new(:,:), tau_ref(:,:)
-  REAL(DP), ALLOCATABLE :: vel(:,:), acc(:,:), chi(:,:)
-  REAL(DP), ALLOCATABLE :: mass(:)
-  REAL(DP), ALLOCATABLE :: diff_coeff(:)
-  REAL(DP), ALLOCATABLE :: radial_distr(:,:)
-  !
-  INTEGER, PARAMETER :: hist_len = 1000
-  !
-  CONTAINS
-    !
-    ! ... public methods
-    !
-    !------------------------------------------------------------------------
-    SUBROUTINE allocate_dyn_vars()
+   !----------------------------------------------------------------------------
+   !
+   USE kinds,     ONLY : DP
+   USE ions_base, ONLY : amass
+   USE io_global, ONLY : stdout
+   USE io_files,  ONLY : prefix, tmp_dir
+   USE constants, ONLY : tpi, fpi
+   USE constants, ONLY : amconv, ry_to_kelvin, au_ps, bohr_radius_cm, uakbar
+   USE constants, ONLY : eps8
+   USE control_flags, ONLY : tolp
+   !
+   USE basic_algebra_routines
+   !
+   IMPLICIT NONE
+   !
+   SAVE
+   !
+   REAL(DP) :: &
+         dt,          &! time step
+         temperature, &! starting temperature
+         virial,      &! virial (used for the pressure)
+         delta_t       ! parameter used in thermalization
+   INTEGER :: &
+         nraise,      &! parameter used in thermalization
+         ndof          ! the number of degrees of freedom
+   LOGICAL :: &
+         vel_defined,  &! if true, vel is used rather than tau_old to do the next step
+         control_temp, &! if true a thermostat is used to control the temperature
+         refold_pos     ! if true the positions are refolded into the supercell
+   CHARACTER(len=10) &
+         thermostat    ! the thermostat used to control the temperature
+   !
+   REAL(DP), ALLOCATABLE :: tau_old(:,:), tau_new(:,:), tau_ref(:,:)
+   REAL(DP), ALLOCATABLE :: vel(:,:), acc(:,:), chi(:,:)
+   REAL(DP), ALLOCATABLE :: mass(:)
+   REAL(DP), ALLOCATABLE :: diff_coeff(:)
+   REAL(DP), ALLOCATABLE :: radial_distr(:,:)
+   !
+   INTEGER, PARAMETER :: hist_len = 1000
+   !
+CONTAINS
+   !
+   ! ... public methods
+   !
+   !------------------------------------------------------------------------
+   SUBROUTINE allocate_dyn_vars()
       !------------------------------------------------------------------------
       !
       USE ions_base, ONLY : nat
@@ -81,10 +81,10 @@ MODULE dynamics_module
       IF ( .not.allocated( radial_distr ) ) &
          ALLOCATE( radial_distr( hist_len , nat ) )
       !
-    END SUBROUTINE allocate_dyn_vars
-    !
-    !------------------------------------------------------------------------
-    SUBROUTINE deallocate_dyn_vars()
+   END SUBROUTINE allocate_dyn_vars
+   !
+   !------------------------------------------------------------------------
+   SUBROUTINE deallocate_dyn_vars()
       !------------------------------------------------------------------------
       !
       IF ( allocated( mass ) )          DEALLOCATE( mass )
@@ -97,10 +97,10 @@ MODULE dynamics_module
       IF ( allocated( diff_coeff ) )    DEALLOCATE( diff_coeff )
       IF ( allocated( radial_distr ) )  DEALLOCATE( radial_distr )
       !
-    END SUBROUTINE deallocate_dyn_vars
+   END SUBROUTINE deallocate_dyn_vars
     !
     !------------------------------------------------------------------------
-    SUBROUTINE verlet()
+   SUBROUTINE verlet()
       !------------------------------------------------------------------------
       !
       ! ... This routine performs one step of molecular dynamics evolution
@@ -399,210 +399,210 @@ MODULE dynamics_module
       !
       CALL compute_averages( istep )
       !
-      CONTAINS
-        !
-        !--------------------------------------------------------------------
-        SUBROUTINE md_init()
-          !--------------------------------------------------------------------
-          !
-          IMPLICIT NONE
-          !
-          istep = 0
-          !
-          WRITE( UNIT = stdout, &
-                FMT = '(/,5X,"Molecular Dynamics Calculation")' )
-          !
-          ! ... atoms are refold in the central box if required
-          !
-          IF ( refold_pos ) CALL refold_tau()
-          !
-          ! ... reference positions
-          !
-          tau_ref(:,:) = tau(:,:)
-          !
-          IF ( control_temp ) THEN
-             !
-             WRITE( stdout, &
-                    '(/,5X,"Starting temperature",T27," = ",F8.2," K")' ) &
-                 temperature
-             !
-             SELECT CASE( trim( thermostat ) )
-                !
-             CASE( 'andersen', 'Andersen' )
-                !
-                WRITE( UNIT = stdout, &
-                       FMT = '(/,5X,"temperature is ", &
+   CONTAINS
+      !
+      !--------------------------------------------------------------------
+      SUBROUTINE md_init()
+         !--------------------------------------------------------------------
+         !
+         IMPLICIT NONE
+         !
+         istep = 0
+         !
+         WRITE( UNIT = stdout, &
+               FMT = '(/,5X,"Molecular Dynamics Calculation")' )
+         !
+         ! ... atoms are refold in the central box if required
+         !
+         IF ( refold_pos ) CALL refold_tau()
+         !
+         ! ... reference positions
+         !
+         tau_ref(:,:) = tau(:,:)
+         !
+         IF ( control_temp ) THEN
+            !
+            WRITE( stdout, &
+                  '(/,5X,"Starting temperature",T27," = ",F8.2," K")' ) &
+               temperature
+            !
+            SELECT CASE( trim( thermostat ) )
+               !
+            CASE( 'andersen', 'Andersen' )
+               !
+               WRITE( UNIT = stdout, &
+                     FMT = '(/,5X,"temperature is ", &
                               &     "controlled by Andersen thermostat"/)' )
-                !
-             CASE DEFAULT
-                !
-                WRITE( UNIT = stdout, &
-                       FMT = '(/,5X,"temperature is controlled by ", &
+               !
+            CASE DEFAULT
+               !
+               WRITE( UNIT = stdout, &
+                     FMT = '(/,5X,"temperature is controlled by ", &
                               &     "velocity rescaling (",A,")"/)' )&
                               trim( thermostat )
-                !
-             END SELECT
-             !
-          ENDIF
-          !
-          DO na = 1, nsp
-             !
-             WRITE( UNIT = stdout, &
-                    FMT = '(5X,"mass ",A2,T27," = ",F8.2)' ) atm(na), amass(na)
-             !
-          ENDDO
-          !
-          WRITE( UNIT = stdout, &
-                 FMT = '(5X,"Time step",T27," = ",F8.2," a.u.,",F8.4, &
-                          & " femto-seconds")' ) dt, dt*2.D+3*au_ps
-          !
-          ! ... masses in rydberg atomic units
-          !
-          total_mass = 0.D0
-          !
-          DO na = 1, nat
-             !
-             mass(na) = amass( ityp(na) ) * amconv
-             !
-             total_mass = total_mass + mass(na)
-             !
-          ENDDO
-          !
-          IF ( control_temp ) THEN
-             !
-             ! ... initial thermalization. N.B. tau is in units of alat
-             !
-             CALL start_therm()
-             vel_defined = .true.
-             !
-             temp_new = temperature
-             !
-             temp_av = 0.D0
-             !
-          ELSE
-             !
-             vel(:,:) = 0.0_DP
-             vel_defined = .true.
-             !
-          ENDIF
-          !
-          elapsed_time = 0.D0
-          !
-        END SUBROUTINE md_init
-        !
-        !--------------------------------------------------------------------
-        SUBROUTINE apply_thermostat()
-          !--------------------------------------------------------------------
-          !
-          USE random_numbers, ONLY : randy, gauss_dist
-          !
-          IMPLICIT NONE
-          !
-          REAL(DP) :: sigma, kt
-          !
-          IF(.not.vel_defined)THEN
+               !
+            END SELECT
+            !
+         ENDIF
+         !
+         DO na = 1, nsp
+            !
+            WRITE( UNIT = stdout, &
+                  FMT = '(5X,"mass ",A2,T27," = ",F8.2)' ) atm(na), amass(na)
+            !
+         ENDDO
+         !
+         WRITE( UNIT = stdout, &
+               FMT = '(5X,"Time step",T27," = ",F8.2," a.u.,",F8.4, &
+                        & " femto-seconds")' ) dt, dt*2.D+3*au_ps
+         !
+         ! ... masses in rydberg atomic units
+         !
+         total_mass = 0.D0
+         !
+         DO na = 1, nat
+            !
+            mass(na) = amass( ityp(na) ) * amconv
+            !
+            total_mass = total_mass + mass(na)
+            !
+         ENDDO
+         !
+         IF ( control_temp ) THEN
+            !
+            ! ... initial thermalization. N.B. tau is in units of alat
+            !
+            CALL start_therm()
+            vel_defined = .true.
+            !
+            temp_new = temperature
+            !
+            temp_av = 0.D0
+            !
+         ELSE
+            !
+            vel(:,:) = 0.0_DP
+            vel_defined = .true.
+            !
+         ENDIF
+         !
+         elapsed_time = 0.D0
+         !
+      END SUBROUTINE md_init
+      !
+      !--------------------------------------------------------------------
+      SUBROUTINE apply_thermostat()
+         !--------------------------------------------------------------------
+         !
+         USE random_numbers, ONLY : randy, gauss_dist
+         !
+         IMPLICIT NONE
+         !
+         REAL(DP) :: sigma, kt
+         !
+         IF(.not.vel_defined)THEN
             vel(:,:) = (tau(:,:) - tau_old(:,:)) / dt
-          ENDIF
-          !
-          SELECT CASE( trim( thermostat ) )
-          CASE( 'rescaling' )
-             IF ( abs (temp_new-temperature) > tolp ) THEN
-                !
-                WRITE( UNIT = stdout, &
-                       FMT = '(/,5X,"Velocity rescaling: T (",F6.1,"K) ", &
-                                  & "out of range, reset to " ,F6.1)' ) &
-                            temp_new, temperature
-                CALL thermalize( 0, temp_new, temperature )
-                !
-             ENDIF
-          CASE( 'rescale-v', 'rescale-V', 'rescale_v', 'rescale_V' )
-             IF ( mod( istep, nraise ) == 0 ) THEN
-                !
-                temp_av = temp_av / dble( nraise )
-                !
-                WRITE( UNIT = stdout, &
-                       FMT = '(/,5X,"Velocity rescaling: average T on ",i3, &
-                                  &" steps (",F6.1,"K) reset to ",F6.1)' )  &
-                            nraise, temp_av, temperature
-                !
-                CALL thermalize( 0, temp_new, temperature )
-                !
-                temp_av = 0.D0
-                !
-             ENDIF
-          CASE( 'rescale-T', 'rescale-t', 'rescale_T', 'rescale_t' )
-             IF ( delta_t > 0 ) THEN
-                !
-                temperature = temp_new*delta_t
-                !
-                WRITE( UNIT = stdout, &
-                       FMT = '(/,5X,"Thermalization: T (",F6.1,"K) rescaled ",&
-                                  & "by a factor ",F6.3)' ) temp_new, delta_t
-                !
-                CALL thermalize( 0, temp_new, temperature )
-                !
-             ENDIF
-          CASE( 'reduce-T', 'reduce-t', 'reduce_T', 'reduce_t' )
-             IF ( mod( istep, nraise ) == 0 .and. delta_t < 0 ) THEN
-                !
-                temperature = temp_new + delta_t
-                !
-                WRITE( UNIT = stdout, &
-                       FMT = '(/,5X,"Thermalization: T (",F6.1,"K) reduced ",&
-                                  & "by ",F6.3)' ) temp_new, delta_t
-                !
-                CALL thermalize( 0, temp_new, temperature )
-                !
-             ENDIF
-             !
-          CASE( 'berendsen', 'Berendsen' )
-             !
-             WRITE( UNIT = stdout, &
-                    FMT = '(/,5X,"Soft velocity rescaling with tau=",i3, &
+         ENDIF
+         !
+         SELECT CASE( trim( thermostat ) )
+         CASE( 'rescaling' )
+            IF ( abs (temp_new-temperature) > tolp ) THEN
+               !
+               WRITE( UNIT = stdout, &
+                     FMT = '(/,5X,"Velocity rescaling: T (",F6.1,"K) ", &
+                                 & "out of range, reset to " ,F6.1)' ) &
+                           temp_new, temperature
+               CALL thermalize( 0, temp_new, temperature )
+               !
+            ENDIF
+         CASE( 'rescale-v', 'rescale-V', 'rescale_v', 'rescale_V' )
+            IF ( mod( istep, nraise ) == 0 ) THEN
+               !
+               temp_av = temp_av / dble( nraise )
+               !
+               WRITE( UNIT = stdout, &
+                     FMT = '(/,5X,"Velocity rescaling: average T on ",i3, &
+                                 &" steps (",F6.1,"K) reset to ",F6.1)' )  &
+                           nraise, temp_av, temperature
+               !
+               CALL thermalize( 0, temp_new, temperature )
+               !
+               temp_av = 0.D0
+               !
+            ENDIF
+         CASE( 'rescale-T', 'rescale-t', 'rescale_T', 'rescale_t' )
+            IF ( delta_t > 0 ) THEN
+               !
+               temperature = temp_new*delta_t
+               !
+               WRITE( UNIT = stdout, &
+                     FMT = '(/,5X,"Thermalization: T (",F6.1,"K) rescaled ",&
+                                 & "by a factor ",F6.3)' ) temp_new, delta_t
+               !
+               CALL thermalize( 0, temp_new, temperature )
+               !
+            ENDIF
+         CASE( 'reduce-T', 'reduce-t', 'reduce_T', 'reduce_t' )
+            IF ( mod( istep, nraise ) == 0 .and. delta_t < 0 ) THEN
+               !
+               temperature = temp_new + delta_t
+               !
+               WRITE( UNIT = stdout, &
+                     FMT = '(/,5X,"Thermalization: T (",F6.1,"K) reduced ",&
+                                 & "by ",F6.3)' ) temp_new, delta_t
+               !
+               CALL thermalize( 0, temp_new, temperature )
+               !
+            ENDIF
+            !
+         CASE( 'berendsen', 'Berendsen' )
+            !
+            WRITE( UNIT = stdout, &
+                  FMT = '(/,5X,"Soft velocity rescaling with tau=",i3, &
                         & "*time step: T_new = ",F6.1,"K ")' ) nraise,temp_new
-             !
-             CALL thermalize( nraise, temp_new, temperature )
-             !
-          CASE( 'andersen', 'Andersen' )
-             !
-             kt = temperature / ry_to_kelvin
-             !
-             WRITE( UNIT = stdout, &
-                    FMT = '(/,5X,"Andersen thermostat with acceptance rate ",&
-                               & f6.3,": T_new = ",F6.1,"K ")' ) temp_new
-             !
-             CALL thermalize( nraise, temp_new, temperature )
-             !
-             DO na = 1, nat
-                !
-                IF ( randy() < 1.D0 / dble( nraise ) ) THEN
-                   !
-                   sigma = sqrt( kt / mass(na) )
-                   !
-                   ! ... N.B. velocities must in a.u. units of alat and are zero
-                   ! ...      for fixed ions
-                   !
-                   vel(:,na) = dble( if_pos(:,na) ) * &
-                               gauss_dist( 0.D0, sigma, 3 ) / alat
-                   !
-                ENDIF
-                !
-             ENDDO
-             !
-          END SELECT
-          !
-          ! ... the old positions are updated to reflect the new velocities
-          !
-          IF(.not.vel_defined)THEN
+            !
+            CALL thermalize( nraise, temp_new, temperature )
+            !
+         CASE( 'andersen', 'Andersen' )
+            !
+            kt = temperature / ry_to_kelvin
+            !
+            WRITE( UNIT = stdout, &
+                  FMT = '(/,5X,"Andersen thermostat with acceptance rate ",&
+                              & f6.3,": T_new = ",F6.1,"K ")' ) temp_new
+            !
+            CALL thermalize( nraise, temp_new, temperature )
+            !
+            DO na = 1, nat
+               !
+               IF ( randy() < 1.D0 / dble( nraise ) ) THEN
+                  !
+                  sigma = sqrt( kt / mass(na) )
+                  !
+                  ! ... N.B. velocities must in a.u. units of alat and are zero
+                  ! ...      for fixed ions
+                  !
+                  vel(:,na) = dble( if_pos(:,na) ) * &
+                              gauss_dist( 0.D0, sigma, 3 ) / alat
+                  !
+               ENDIF
+               !
+            ENDDO
+            !
+         END SELECT
+         !
+         ! ... the old positions are updated to reflect the new velocities
+         !
+         IF(.not.vel_defined)THEN
             tau_old(:,:) = tau(:,:) - vel(:,:) * dt
-          ENDIF
-          !
-        END SUBROUTINE apply_thermostat
-        !
-    END SUBROUTINE verlet
-    !
-    !------------------------------------------------------------------------
-    SUBROUTINE proj_verlet()
+         ENDIF
+         !
+      END SUBROUTINE apply_thermostat
+      !
+   END SUBROUTINE verlet
+   !
+   !------------------------------------------------------------------------
+   SUBROUTINE proj_verlet()
       !------------------------------------------------------------------------
       !
       ! ... This routine performs one step of structural relaxation using
@@ -677,13 +677,13 @@ MODULE dynamics_module
          DO na = 1, nat
             !
             WRITE( stdout, &
-                   '(5X,"atom ",I3," type ",I2,3X,"force = ",3F14.8)' ) &
-                na, ityp(na), force(:,na)
+                  '(5X,"atom ",I3," type ",I2,3X,"force = ",3F14.8)' ) &
+               na, ityp(na), force(:,na)
             !
          ENDDO
          !
          WRITE( stdout, &
-                '(/5X,"Total force = ",F12.6)') dnrm2( 3*nat, force, 1 )
+               '(/5X,"Total force = ",F12.6)') dnrm2( 3*nat, force, 1 )
          !
 #endif
          !
@@ -797,10 +797,10 @@ MODULE dynamics_module
       !
       DEALLOCATE( step )
       !
-    END SUBROUTINE proj_verlet
-    !
-    !------------------------------------------------------------------------
-    SUBROUTINE langevin_md()
+   END SUBROUTINE proj_verlet
+   !
+   !------------------------------------------------------------------------
+   SUBROUTINE langevin_md()
       !------------------------------------------------------------------------
       !
       ! ...
@@ -969,10 +969,10 @@ MODULE dynamics_module
       !
 #endif
       !
-    END SUBROUTINE langevin_md
-    !
-    !-----------------------------------------------------------------------
-    SUBROUTINE refold_tau()
+   END SUBROUTINE langevin_md
+   !
+   !-----------------------------------------------------------------------
+   SUBROUTINE refold_tau()
       !-----------------------------------------------------------------------
       !
       USE ions_base,          ONLY : nat, tau
@@ -990,10 +990,10 @@ MODULE dynamics_module
          !
       ENDDO
       !
-    END SUBROUTINE refold_tau
-    !
-    !-----------------------------------------------------------------------
-    SUBROUTINE compute_averages( istep )
+   END SUBROUTINE refold_tau
+   !
+   !-----------------------------------------------------------------------
+   SUBROUTINE compute_averages( istep )
       !-----------------------------------------------------------------------
       !
       USE ions_base,          ONLY : nat, tau, fixatom
@@ -1072,10 +1072,10 @@ MODULE dynamics_module
          !
       ENDDO
       !
-    END SUBROUTINE compute_averages
-    !
-    !-----------------------------------------------------------------------
-    SUBROUTINE print_averages()
+   END SUBROUTINE compute_averages
+   !
+   !-----------------------------------------------------------------------
+   SUBROUTINE print_averages()
       !-----------------------------------------------------------------------
       !
       USE control_flags, ONLY : nstep
@@ -1131,10 +1131,10 @@ MODULE dynamics_module
       !
       CLOSE( UNIT = 4 )
       !
-    END SUBROUTINE print_averages
-    !
-    !-----------------------------------------------------------------------
-    SUBROUTINE force_precond( istep, force, etotold )
+   END SUBROUTINE print_averages
+   !
+   !-----------------------------------------------------------------------
+   SUBROUTINE force_precond( istep, force, etotold )
       !-----------------------------------------------------------------------
       !
       ! ... this routine computes an estimate of H^-1 by using the BFGS
@@ -1267,10 +1267,10 @@ MODULE dynamics_module
       !
 #endif
       !
-    END SUBROUTINE force_precond
-    !
-    !-----------------------------------------------------------------------
-    SUBROUTINE project_velocity()
+   END SUBROUTINE force_precond
+   !
+   !-----------------------------------------------------------------------
+   SUBROUTINE project_velocity()
       !-----------------------------------------------------------------------
       !
       ! ... quick-min algorithm
@@ -1303,10 +1303,10 @@ MODULE dynamics_module
       !
       DEALLOCATE( acc_versor )
       !
-    END SUBROUTINE project_velocity
-    !
-    !-----------------------------------------------------------------------
-    SUBROUTINE start_therm()
+   END SUBROUTINE project_velocity
+   !
+   !-----------------------------------------------------------------------
+   SUBROUTINE start_therm()
       !-----------------------------------------------------------------------
       !
       ! ... Starting thermalization of the system
@@ -1412,10 +1412,10 @@ MODULE dynamics_module
       !
       CALL thermalize( 0, system_temp, temperature )
       !
-    END SUBROUTINE start_therm
-    !
-    !-----------------------------------------------------------------------
-    SUBROUTINE thermalize( nraise, system_temp, required_temp )
+   END SUBROUTINE start_therm
+   !
+   !-----------------------------------------------------------------------
+   SUBROUTINE thermalize( nraise, system_temp, required_temp )
       !-----------------------------------------------------------------------
       !
       IMPLICIT NONE
@@ -1460,6 +1460,6 @@ MODULE dynamics_module
       !
       vel(:,:) = vel(:,:) * aux
       !
-    END SUBROUTINE thermalize
-    !
+   END SUBROUTINE thermalize
+   !
 END MODULE dynamics_module
