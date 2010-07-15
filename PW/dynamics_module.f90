@@ -434,6 +434,11 @@ CONTAINS
                      FMT = '(/,5X,"temperature is ", &
                               &     "controlled by Andersen thermostat"/)' )
                !
+            CASE( 'initial', 'Initial' )
+               !
+               WRITE( UNIT = stdout, &
+                     FMT = '(/,5X,"temperature is set once at start"/)' )
+               !
             CASE DEFAULT
                !
                WRITE( UNIT = stdout, &
@@ -589,6 +594,10 @@ CONTAINS
                !
             ENDDO
             !
+         CASE( 'initial', 'Initial' )
+            !
+            CONTINUE
+            !
          END SELECT
          !
          ! ... the old positions are updated to reflect the new velocities
@@ -634,6 +643,15 @@ CONTAINS
          ! ... the velocity of fixed ions must be zero
          !
          vel = vel * dble( if_pos )
+         !
+         IF ( lconstrain ) THEN
+            !
+            ! ... remove the component of the velocity along the
+            ! ... constraint gradient
+            !
+            CALL remove_constr_vec( nat, tau, if_pos, ityp, alat, vel )
+            !
+         ENDIF
          !
          !IF ( thermostat == 'langevin' ) THEN
          !   !

@@ -1405,6 +1405,9 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 		    'andersen'    control ionic temperature using Andersen thermostat
                                   see parameters "tempw" and "nraise"
 
+		    'initial'     initialize ion velocities to temperature "tempw"
+                                  and leave uncontrolled further on
+
 		    'not_controlled' (default) ionic temperature is not controlled
 		}
 	    }

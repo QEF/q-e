@@ -1102,6 +1102,13 @@ SUBROUTINE iosys()
   CASE( 'not_controlled', 'not-controlled', 'not controlled' )
      !
      control_temp = .false.
+
+     !
+  CASE( 'initial' )
+     !
+     control_temp = .TRUE.
+     thermostat   = TRIM( ion_temperature )
+     temperature  = tempw
      !
   CASE( 'rescaling' )
      !
