@@ -599,6 +599,115 @@ CONTAINS
          !
       END SUBROUTINE apply_thermostat
       !
+      !-----------------------------------------------------------------------
+      SUBROUTINE start_therm()
+         !-----------------------------------------------------------------------
+         !
+         ! ... Starting thermalization of the system
+         !
+         USE symm_base,      ONLY : invsym, nsym, irt
+         USE control_flags,  ONLY : lfixatom
+         USE cell_base,      ONLY : alat
+         USE ions_base,      ONLY : nat, if_pos
+         USE random_numbers, ONLY : gauss_dist
+         !
+         IMPLICIT NONE
+         !
+         INTEGER  :: na, nb
+         REAL(DP) :: total_mass, kt, sigma, ek, ml(3), system_temp
+         !
+         !
+         kt = temperature / ry_to_kelvin
+         !
+         ! ... starting velocities have a Maxwell-Boltzmann distribution
+         !
+         DO na = 1, nat
+            !
+            sigma = sqrt( kt / mass(na) )
+            !
+            ! ... N.B. velocities must in a.u. units of alat
+            !
+            vel(:,na) = gauss_dist( 0.D0, sigma, 3 ) / alat
+            !
+         ENDDO
+         !
+         ! ... the velocity of fixed ions must be zero
+         !
+         vel = vel * dble( if_pos )
+         !
+         !IF ( thermostat == 'langevin' ) THEN
+         !   !
+         !   ! ... vel is used already multiplied by the time step
+         !   !
+         !   vel(:,:) = dt*vel(:,:)
+         !   !
+         !   RETURN
+         !   !
+         !END IF
+         !
+         IF ( invsym ) THEN
+            !
+            ! ... if there is inversion symmetry, equivalent atoms have
+            ! ... opposite velocities
+            !
+            DO na = 1, nat
+               !
+               nb = irt( ( nsym / 2 + 1 ), na )
+               !
+               IF ( nb > na ) vel(:,nb) = - vel(:,na)
+               !
+               ! ... the atom on the inversion center is kept fixed
+               !
+               IF ( na == nb ) vel(:,na) = 0.D0
+               !
+            ENDDO
+            !
+         ELSE
+            !
+            ! ... put total linear momentum equal zero if all atoms
+            ! ... are free to move
+            !
+            ml(:) = 0.D0
+            !
+            IF ( .not. lfixatom ) THEN
+               !
+               total_mass = 0.D0
+               !
+               DO na = 1, nat
+                  !
+                  total_mass = total_mass + mass(na)
+                  !
+                  ml(:) = ml(:) + mass(na)*vel(:,na)
+                  !
+               ENDDO
+               !
+               ml(:) = ml(:) / total_mass
+               !
+            ENDIF
+            !
+         ENDIF
+         !
+         ek = 0.D0
+         !
+         DO na = 1, nat
+            !
+            vel(:,na) = vel(:,na) - ml(:)
+            !
+            ek = ek + 0.5D0 * mass(na) * &
+                     ( ( vel(1,na) )**2 + ( vel(2,na) )**2 + ( vel(3,na) )**2 )
+            !
+         ENDDO
+         !
+         ! ... after the velocity of the center of mass has been subtracted the
+         ! ... temperature is usually changed. Set again the temperature to the
+         ! ... right value.
+         !
+         system_temp = 2.D0 / dble( ndof ) * ek * alat**2 * ry_to_kelvin
+         !
+         CALL thermalize( 0, system_temp, temperature )
+         !
+      END SUBROUTINE start_therm
+      !
    END SUBROUTINE verlet
    !
    !------------------------------------------------------------------------
@@ -1304,115 +1413,6 @@ CONTAINS
       DEALLOCATE( acc_versor )
       !
    END SUBROUTINE project_velocity
-   !
-   !-----------------------------------------------------------------------
-   SUBROUTINE start_therm()
-      !-----------------------------------------------------------------------
-      !
-      ! ... Starting thermalization of the system
-      !
-      USE symm_base,      ONLY : invsym, nsym, irt
-      USE control_flags,  ONLY : lfixatom
-      USE cell_base,      ONLY : alat
-      USE ions_base,      ONLY : nat, if_pos
-      USE random_numbers, ONLY : gauss_dist
-      !
-      IMPLICIT NONE
-      !
-      INTEGER  :: na, nb
-      REAL(DP) :: total_mass, kt, sigma, ek, ml(3), system_temp
-      !
-      !
-      kt = temperature / ry_to_kelvin
-      !
-      ! ... starting velocities have a Maxwell-Boltzmann distribution
-      !
-      DO na = 1, nat
-         !
-         sigma = sqrt( kt / mass(na) )
-         !
-         ! ... N.B. velocities must in a.u. units of alat
-         !
-         vel(:,na) = gauss_dist( 0.D0, sigma, 3 ) / alat
-         !
-      ENDDO
-      !
-      ! ... the velocity of fixed ions must be zero
-      !
-      vel = vel * dble( if_pos )
-      !
-      !IF ( thermostat == 'langevin' ) THEN
-      !   !
-      !   ! ... vel is used already multiplied by the time step
-      !   !
-      !   vel(:,:) = dt*vel(:,:)
-      !   !
-      !   RETURN
-      !   !
-      !END IF
-      !
-      IF ( invsym ) THEN
-         !
-         ! ... if there is inversion symmetry, equivalent atoms have
-         ! ... opposite velocities
-         !
-         DO na = 1, nat
-            !
-            nb = irt( ( nsym / 2 + 1 ), na )
-            !
-            IF ( nb > na ) vel(:,nb) = - vel(:,na)
-            !
-            ! ... the atom on the inversion center is kept fixed
-            !
-            IF ( na == nb ) vel(:,na) = 0.D0
-            !
-         ENDDO
-         !
-      ELSE
-         !
-         ! ... put total linear momentum equal zero if all atoms
-         ! ... are free to move
-         !
-         ml(:) = 0.D0
-         !
-         IF ( .not. lfixatom ) THEN
-            !
-            total_mass = 0.D0
-            !
-            DO na = 1, nat
-               !
-               total_mass = total_mass + mass(na)
-               !
-               ml(:) = ml(:) + mass(na)*vel(:,na)
-               !
-            ENDDO
-            !
-            ml(:) = ml(:) / total_mass
-            !
-         ENDIF
-         !
-      ENDIF
-      !
-      ek = 0.D0
-      !
-      DO na = 1, nat
-         !
-         vel(:,na) = vel(:,na) - ml(:)
-         !
-         ek = ek + 0.5D0 * mass(na) * &
-                   ( ( vel(1,na) )**2 + ( vel(2,na) )**2 + ( vel(3,na) )**2 )
-         !
-      ENDDO
-      !
-      ! ... after the velocity of the center of mass has been subtracted the
-      ! ... temperature is usually changed. Set again the temperature to the
-      ! ... right value.
-      !
-      system_temp = 2.D0 / dble( ndof ) * ek * alat**2 * ry_to_kelvin
-      !
-      CALL thermalize( 0, system_temp, temperature )
-      !
-   END SUBROUTINE start_therm
    !
    !-----------------------------------------------------------------------
    SUBROUTINE thermalize( nraise, system_temp, required_temp )
