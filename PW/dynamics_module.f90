@@ -80,8 +80,6 @@ MODULE dynamics_module
       IF ( .not.allocated( radial_distr ) ) &
          ALLOCATE( radial_distr( hist_len , nat ) )
       !
-      RETURN
-      !
     END SUBROUTINE allocate_dyn_vars
     !
     !------------------------------------------------------------------------
@@ -97,8 +95,6 @@ MODULE dynamics_module
       IF ( allocated( chi )  )          DEALLOCATE( chi )
       IF ( allocated( diff_coeff ) )    DEALLOCATE( diff_coeff )
       IF ( allocated( radial_distr ) )  DEALLOCATE( radial_distr )
-      !
-      RETURN
       !
     END SUBROUTINE deallocate_dyn_vars
     !
@@ -204,8 +200,6 @@ MODULE dynamics_module
                 FMT = '(/,5X,"End of molecular dynamics calculation")' )
          !
          CALL print_averages()
-         !
-         RETURN
          !
       ENDIF
       !
@@ -371,8 +365,6 @@ MODULE dynamics_module
       ! ... compute the average quantities
       !
       CALL compute_averages( istep )
-      !
-      RETURN
       !
       CONTAINS
         !
@@ -690,8 +682,6 @@ MODULE dynamics_module
          !
          CALL output_tau( .true., .true. )
          !
-         RETURN
-         !
       ENDIF
       !
       IF ( istep >= nstep ) THEN
@@ -704,8 +694,6 @@ MODULE dynamics_module
                 FMT = '(/,5X,"End of damped dynamics calculation")' )
          !
          CALL output_tau( .true., .true. )
-         !
-         RETURN
          !
       ENDIF
       !
@@ -778,8 +766,6 @@ MODULE dynamics_module
       !
       DEALLOCATE( step )
       !
-      RETURN
-      !
     END SUBROUTINE proj_verlet
     !
     !------------------------------------------------------------------------
@@ -845,8 +831,6 @@ MODULE dynamics_module
                 FMT = '(/,5X,"The maximum number of steps has been reached.")' )
          WRITE( UNIT = stdout, &
                 FMT = '(/,5X,"End of Langevin Dynamics calculation")' )
-         !
-         RETURN
          !
       ENDIF
       !
@@ -954,8 +938,6 @@ MODULE dynamics_module
       !
 #endif
       !
-      RETURN
-      !
     END SUBROUTINE langevin_md
     !
     !-----------------------------------------------------------------------
@@ -1059,8 +1041,6 @@ MODULE dynamics_module
          !
       ENDDO
       !
-      RETURN
-      !
     END SUBROUTINE compute_averages
     !
     !-----------------------------------------------------------------------
@@ -1119,8 +1099,6 @@ MODULE dynamics_module
       ENDDO
       !
       CLOSE( UNIT = 4 )
-      !
-      RETURN
       !
     END SUBROUTINE print_averages
     !
@@ -1258,8 +1236,6 @@ MODULE dynamics_module
       !
 #endif
       !
-      RETURN
-      !
     END SUBROUTINE force_precond
     !
     !-----------------------------------------------------------------------
@@ -1295,8 +1271,6 @@ MODULE dynamics_module
       vel(:,:) = acc_versor(:,:) * max( 0.D0, projection )
       !
       DEALLOCATE( acc_versor )
-      !
-      RETURN
       !
     END SUBROUTINE project_velocity
     !
@@ -1411,8 +1385,6 @@ MODULE dynamics_module
       !
       vel(:,:) = dt*vel(:,:)
       !
-      RETURN
-      !
     END SUBROUTINE start_therm
     !
     !-----------------------------------------------------------------------
@@ -1460,8 +1432,6 @@ MODULE dynamics_module
       ENDIF
       !
       vel(:,:) = vel(:,:) * aux
-      !
-      RETURN
       !
     END SUBROUTINE thermalize
     !
