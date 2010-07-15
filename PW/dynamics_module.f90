@@ -42,6 +42,7 @@ MODULE dynamics_module
        nraise,      &! parameter used in thermalization
        ndof          ! the number of degrees of freedom
   LOGICAL :: &
+       vel_defined,  &! if true, vel is used rather than tau_old to do the next step
        control_temp, &! if true a thermostat is used to control the temperature
        refold_pos     ! if true the positions are refolded into the supercell
   CHARACTER(len=10) &
@@ -123,8 +124,8 @@ MODULE dynamics_module
       USE control_flags,  ONLY : istep, nstep, conv_ions, lconstrain, &
                                  lfixatom
       !
-      USE constraints_module, ONLY : nconstr
-      USE constraints_module, ONLY : remove_constr_force, check_constraint
+      USE constraints_module, ONLY : nconstr, check_constraint
+      USE constraints_module, ONLY : remove_constr_force, remove_constr_vec
       !
       IMPLICIT NONE
       !
@@ -152,10 +153,11 @@ MODULE dynamics_module
          !
       ENDIF
       !
-      tau_old(:,:) = tau(:,:)
-      tau_new(:,:) = 0.D0
       vel(:,:)     = 0.D0
-      acc(:,:)     = 0.D0
+      vel_defined  = .true. ! by default use vel==0 as starting point
+      tau_old(:,:) = vel(1,1)/vel(2,1) ! improvise a NaN...
+      tau_new(:,:) = vel(1,1)/vel(2,1) ! improvise a NaN...
+      acc(:,:)     = vel(1,1)/vel(2,1) ! improvise a NaN...
       temp_av      = 0.D0
       !
       CALL seqopn( 4, 'md', 'FORMATTED', file_exists )
@@ -168,9 +170,13 @@ MODULE dynamics_module
          !
          IF ( leof ) THEN
             !
+            ! ... the file was created by projected_verlet:  Ignore it
+            !
             CALL md_init()
             !
          ELSE
+            !
+            vel_defined = .false.
             !
             READ( UNIT = 4, FMT = * ) &
                temp_new, temp_av, mass(:), total_mass, elapsed_time, &
@@ -232,7 +238,25 @@ MODULE dynamics_module
       !
       ! ... Verlet integration scheme
       !
-      tau_new(:,:) = 2.D0*tau(:,:) - tau_old(:,:) + dt**2 * acc(:,:)
+      IF (vel_defined) THEN
+         !
+         IF ( lconstrain ) THEN
+            !
+            ! ... remove the component of the velocity along the
+            ! ... constraint gradient
+            !
+            CALL remove_constr_vec( nat, tau, if_pos, ityp, alat, vel )
+            !
+         ENDIF
+         !
+         tau_new(:,:) = tau(:,:) + vel(:,:) * dt + 0.5_DP * acc(:,:) * dt**2
+         tau_old(:,:) = tau(:,:) - vel(:,:) * dt + 0.5_DP * acc(:,:) * dt**2
+         !
+      ELSE
+         !
+         tau_new(:,:) = 2.D0*tau(:,:) - tau_old(:,:) + acc(:,:) * dt**2
+         !
+      ENDIF
       !
       IF ( all( if_pos(:,:) == 1 ) ) THEN
          !
@@ -240,16 +264,20 @@ MODULE dynamics_module
          ! ... center of mass and we subtract it from the displaced positions
          !
          delta(:) = 0.D0
-         !
          DO na = 1, nat
-            !
             delta(:) = delta(:) + mass(na)*( tau_new(:,na) - tau(:,na) )
-            !
          ENDDO
-         !
          delta(:) = delta(:) / total_mass
-         !
          FORALL( na = 1:nat ) tau_new(:,na) = tau_new(:,na) - delta(:)
+         !
+         IF (vel_defined) THEN
+            delta(:) = 0.D0
+            DO na = 1, nat
+               delta(:) = delta(:) + mass(na)*( tau_old(:,na) - tau(:,na) )
+            ENDDO
+            delta(:) = delta(:) / total_mass
+            FORALL( na = 1:nat ) tau_old(:,na) = tau_old(:,na) - delta(:)
+         ENDIF
          !
       ENDIF
       !
@@ -275,13 +303,17 @@ MODULE dynamics_module
          WRITE( stdout, '(/5X,"Total force = ",F12.6)') dnrm2( 3*nat, force, 1 )
          !
 #endif
+
+         IF (vel_defined) THEN
+            CALL check_constraint( nat, tau_old, tau, &
+                                   force, if_pos, ityp, alat, dt**2, amconv )
+         ENDIF
          !
       ENDIF
       !
       ! ... the linear momentum and the kinetic energy are computed here
       !
-      IF ( istep > 1 .or. control_temp ) &
-         vel = ( tau_new - tau_old ) / ( 2.D0*dt ) * dble( if_pos )
+      vel = ( tau_new - tau_old ) / ( 2.D0*dt ) * dble( if_pos )
       !
       ml   = 0.D0
       ekin = 0.D0
@@ -322,7 +354,8 @@ MODULE dynamics_module
       !
       CALL seqopn( 4, 'md', 'FORMATTED',  file_exists )
       !
-      WRITE( UNIT = 4, FMT = * ) etot, istep, tau(:,:), .false.
+      leof = .false.
+      WRITE( UNIT = 4, FMT = * ) etot, istep, tau(:,:), leof
       !
       WRITE( UNIT = 4, FMT = * ) &
           temp_new, temp_av, mass(:), total_mass, elapsed_time, tau_ref(:,:)
@@ -440,20 +473,16 @@ MODULE dynamics_module
              ! ... initial thermalization. N.B. tau is in units of alat
              !
              CALL start_therm()
+             vel_defined = .true.
              !
              temp_new = temperature
              !
              temp_av = 0.D0
              !
-             ! ... the old positions are updated to reflect the initial
-             ! ... velocities ( notice that vel is not the real velocity,
-             ! ... but just a displacement vector )
-             !
-             tau_old(:,:) = tau(:,:) - vel(:,:)
-             !
           ELSE
              !
-             tau_old(:,:) = tau(:,:)
+             vel(:,:) = 0.0_DP
+             vel_defined = .true.
              !
           ENDIF
           !
@@ -471,8 +500,9 @@ MODULE dynamics_module
           !
           REAL(DP) :: sigma, kt
           !
-          !
-          vel(:,:) = tau(:,:) - tau_old(:,:)
+          IF(.not.vel_defined)THEN
+            vel(:,:) = (tau(:,:) - tau_old(:,:)) / dt
+          ENDIF
           !
           SELECT CASE( trim( thermostat ) )
           CASE( 'rescaling' )
@@ -553,7 +583,7 @@ MODULE dynamics_module
                    ! ...      for fixed ions
                    !
                    vel(:,na) = dble( if_pos(:,na) ) * &
-                               gauss_dist( 0.D0, sigma, 3 ) * dt / alat
+                               gauss_dist( 0.D0, sigma, 3 ) / alat
                    !
                 ENDIF
                 !
@@ -562,10 +592,10 @@ MODULE dynamics_module
           END SELECT
           !
           ! ... the old positions are updated to reflect the new velocities
-          ! ... ( notice that vel is not the real velocity, but just a
-          ! ... displacement vector )
           !
-          tau_old(:,:) = tau(:,:) - vel(:,:)
+          IF(.not.vel_defined)THEN
+            tau_old(:,:) = tau(:,:) - vel(:,:) * dt
+          ENDIF
           !
         END SUBROUTINE apply_thermostat
         !
@@ -592,7 +622,7 @@ MODULE dynamics_module
       REAL(DP), ALLOCATABLE :: step(:,:)
       REAL(DP)              :: norm_step, etotold, delta(3)
       INTEGER               :: na
-      LOGICAL               :: file_exists
+      LOGICAL               :: file_exists,leof
       !
       REAL(DP), PARAMETER :: step_max = 0.6D0  ! bohr
       !
@@ -750,7 +780,8 @@ MODULE dynamics_module
       !
       CALL seqopn( 4, 'md', 'FORMATTED',  file_exists )
       !
-      WRITE( UNIT = 4, FMT = * ) etot, istep, tau(:,:), .true.
+      leof = .true.
+      WRITE( UNIT = 4, FMT = * ) etot, istep, tau(:,:), leof
       !
       CLOSE( UNIT = 4, STATUS = 'KEEP' )
       !
@@ -1380,10 +1411,6 @@ MODULE dynamics_module
       system_temp = 2.D0 / dble( ndof ) * ek * alat**2 * ry_to_kelvin
       !
       CALL thermalize( 0, system_temp, temperature )
-      !
-      ! ... vel is used already multiplied by the time step
-      !
-      vel(:,:) = dt*vel(:,:)
       !
     END SUBROUTINE start_therm
     !
