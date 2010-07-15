@@ -117,7 +117,7 @@ SUBROUTINE iosys()
                             errtol_ => errtol, &
                             itmax_ => itmax, &
                             which_compensation_ => which_compensation, &
-                            n_charge_compensation_ => n_charge_compensation, & 
+                            n_charge_compensation_ => n_charge_compensation, &
                             ncompx_ => ncompx, &
                             ncompy_ => ncompy, &
                             ncompz_ => ncompz, &
@@ -259,7 +259,7 @@ SUBROUTINE iosys()
                                errtol,itmax,whichbc,                        &
                                ncompx, ncompy, ncompz,                      &
                                cellmin, cellmax,                            &
-                               nlev 
+                               nlev
   !
   ! ... ELECTRONS namelist
   !
@@ -324,99 +324,99 @@ SUBROUTINE iosys()
   !
   ! ... various initializations of control variables
   !
-  lscf      = .FALSE.
-  lmd       = .FALSE.
-  lpath     = .FALSE.
-  lneb      = .FALSE.
-  lsmd      = .FALSE.
-  lmovecell = .FALSE.
-  lbands    = .FALSE.
-  lbfgs     = .FALSE.
-  ldamped   = .FALSE.
+  lscf      = .false.
+  lmd       = .false.
+  lpath     = .false.
+  lneb      = .false.
+  lsmd      = .false.
+  lmovecell = .false.
+  lbands    = .false.
+  lbfgs     = .false.
+  ldamped   = .false.
   lforce    = tprnfor
   calc      = ' '
   !
-  SELECT CASE( TRIM( calculation ) )
+  SELECT CASE( trim( calculation ) )
   CASE( 'scf' )
      !
-     lscf  = .TRUE.
+     lscf  = .true.
      nstep = 1
      !
   CASE( 'nscf' )
      !
-     lforce = .FALSE.
+     lforce = .false.
      nstep  = 1
      !
   CASE( 'bands' )
      !
-     lforce = .FALSE.
-     lbands = .TRUE.
+     lforce = .false.
+     lbands = .true.
      nstep  = 1
      !
   CASE( 'relax' )
      !
-     lscf   = .TRUE.
-     lforce = .TRUE.
+     lscf   = .true.
+     lforce = .true.
      !
      epse = etot_conv_thr
      epsf = forc_conv_thr
      !
-     SELECT CASE( TRIM( ion_dynamics ) )
+     SELECT CASE( trim( ion_dynamics ) )
      CASE( 'bfgs' )
         !
-        lbfgs = .TRUE.
+        lbfgs = .true.
         !
      CASE ( 'damp' )
         !
-        lmd     = .TRUE.
-        ldamped = .TRUE.
+        lmd     = .true.
+        ldamped = .true.
         !
         ntcheck = nstep + 1
         !
      CASE DEFAULT
         !
-        CALL errore( 'iosys', 'calculation=' // TRIM( calculation ) // &
-                   & ': ion_dynamics=' // TRIM( ion_dynamics ) // &
+        CALL errore( 'iosys', 'calculation=' // trim( calculation ) // &
+                   & ': ion_dynamics=' // trim( ion_dynamics ) // &
                    & ' not supported', 1 )
         !
      END SELECT
      !
   CASE( 'md' )
      !
-     lscf   = .TRUE.
-     lmd    = .TRUE.
-     lforce = .TRUE.
+     lscf   = .true.
+     lmd    = .true.
+     lforce = .true.
      !
-     SELECT CASE( TRIM( ion_dynamics ) )
+     SELECT CASE( trim( ion_dynamics ) )
      CASE( 'verlet' )
         !
         CONTINUE
         !
      CASE( 'langevin' )
         !
-        llang       = .TRUE.
+        llang       = .true.
         temperature = tempw
         !
      CASE DEFAULT
         !
-        CALL errore( 'iosys ', 'calculation=' // TRIM( calculation ) // &
-                   & ': ion_dynamics=' // TRIM( ion_dynamics ) // &
+        CALL errore( 'iosys ', 'calculation=' // trim( calculation ) // &
+                   & ': ion_dynamics=' // trim( ion_dynamics ) // &
                    & ' not supported', 1 )
      END SELECT
      !
   CASE( 'vc-relax' )
      !
-     lscf      = .TRUE.
-     lmd       = .TRUE.
-     lmovecell = .TRUE.
-     lforce    = .TRUE.
-     ldamped   = .TRUE.
+     lscf      = .true.
+     lmd       = .true.
+     lmovecell = .true.
+     lforce    = .true.
+     ldamped   = .true.
      !
      epse =  etot_conv_thr
      epsf =  forc_conv_thr
      epsp = press_conv_thr
      !
-     SELECT CASE( TRIM( cell_dynamics ) )
+     SELECT CASE( trim( cell_dynamics ) )
      CASE( 'none' )
         !
         calc    = 'mm'
@@ -434,33 +434,33 @@ SUBROUTINE iosys()
         !
      CASE( 'bfgs' )
         !
-        lbfgs = .TRUE.
-        lmd   = .FALSE.
-        ldamped = .FALSE.
+        lbfgs = .true.
+        lmd   = .false.
+        ldamped = .false.
         !
      CASE DEFAULT
         !
-        CALL errore( 'iosys', 'calculation=' // TRIM( calculation ) // &
-                   & ': cell_dynamics=' // TRIM( cell_dynamics ) // &
+        CALL errore( 'iosys', 'calculation=' // trim( calculation ) // &
+                   & ': cell_dynamics=' // trim( cell_dynamics ) // &
                    & ' not supported', 1 )
         !
      END SELECT
      !
-     IF ( .NOT. ldamped .AND. .NOT. lbfgs) &
-        CALL errore( 'iosys', 'calculation='// TRIM( calculation ) // &
-                   & ': incompatible ion (' // TRIM( ion_dynamics )// &
-                   & ') and cell dynamics ('// TRIM(cell_dynamics )// ')', 1 )
+     IF ( .not. ldamped .and. .not. lbfgs) &
+        CALL errore( 'iosys', 'calculation='// trim( calculation ) // &
+                   & ': incompatible ion (' // trim( ion_dynamics )// &
+                   & ') and cell dynamics ('// trim(cell_dynamics )// ')', 1 )
      !
   CASE( 'vc-md' )
      !
-     lscf      = .TRUE.
-     lmd       = .TRUE.
-     lmovecell = .TRUE.
-     lforce    = .TRUE.
+     lscf      = .true.
+     lmd       = .true.
+     lmovecell = .true.
+     lforce    = .true.
      !
      ntcheck = nstep + 1
      !
-     SELECT CASE( TRIM( cell_dynamics ) )
+     SELECT CASE( trim( cell_dynamics ) )
      CASE( 'none' )
         !
         calc = 'md'
@@ -475,72 +475,72 @@ SUBROUTINE iosys()
         !
      CASE DEFAULT
         !
-        CALL errore( 'iosys', 'calculation=' // TRIM( calculation ) // &
-                   & ': ion_dynamics=' // TRIM( ion_dynamics ) // &
+        CALL errore( 'iosys', 'calculation=' // trim( calculation ) // &
+                   & ': ion_dynamics=' // trim( ion_dynamics ) // &
                    & ' not supported', 1 )
         !
      END SELECT
      !
-     IF ( TRIM( ion_dynamics ) /= 'beeman' ) &
-        CALL errore( 'iosys', 'calculation=' // TRIM( calculation ) // &
-                   & ': ion_dynamics=' // TRIM( ion_dynamics ) // &
+     IF ( trim( ion_dynamics ) /= 'beeman' ) &
+        CALL errore( 'iosys', 'calculation=' // trim( calculation ) // &
+                   & ': ion_dynamics=' // trim( ion_dynamics ) // &
                    & ' not supported', 1 )
      !
   CASE( 'neb' )
      !
-     lscf  = .TRUE.
-     lpath = .TRUE.
-     lneb  = .TRUE.
+     lscf  = .true.
+     lpath = .true.
+     lneb  = .true.
      !
   CASE( 'smd' )
      !
-     lscf  = .TRUE.
-     lpath = .TRUE.
-     lsmd  = .TRUE.
+     lscf  = .true.
+     lpath = .true.
+     lsmd  = .true.
      !
   CASE DEFAULT
      !
      CALL errore( 'iosys', 'calculation ' // &
-                & TRIM( calculation ) // ' not implemented', 1 )
+                & trim( calculation ) // ' not implemented', 1 )
      !
   END SELECT
   !
   ! ... translate from input to internals of PWscf, various checks
   !
-  if (input_dft /='none') call enforce_input_dft (input_dft)
+  IF (input_dft /='none') CALL enforce_input_dft (input_dft)
   !
 #if defined(EXX)
   ! Set variables for functionals.f90 (HSE)
   ! if enforced in input
-    ! 
-    if (exx_fraction .GE. 0.0_DP) call set_exx_fraction (exx_fraction)
-    if (screening_parameter .GE. 0.0_DP) &
-        & call set_screening_parameter (screening_parameter)
-    ! 
+    !
+    IF (exx_fraction >= 0.0_DP) CALL set_exx_fraction (exx_fraction)
+    IF (screening_parameter >= 0.0_DP) &
+        & CALL set_screening_parameter (screening_parameter)
+    !
 #endif
   !
-  IF ( tefield .AND. ( .NOT. nosym ) ) THEN
-     nosym = .TRUE.
+  IF ( tefield .and. ( .not. nosym ) ) THEN
+     nosym = .true.
      WRITE( stdout, &
             '(5x,"Presently no symmetry can be used with electric field",/)' )
-  END IF
-  IF ( tefield .AND. tstress ) THEN
-     tstress = .FALSE.
+  ENDIF
+  IF ( tefield .and. tstress ) THEN
+     tstress = .false.
      WRITE( stdout, &
             '(5x,"Presently stress not available with electric field",/)' )
-  END IF
-  IF ( tefield .AND. ( nspin > 2 ) ) THEN
+  ENDIF
+  IF ( tefield .and. ( nspin > 2 ) ) THEN
      CALL errore( 'iosys', 'LSDA not available with electric field' , 1 )
-  END IF
+  ENDIF
   !
   twfcollect = wf_collect
   !
   ! ... Set Values for electron and bands
   !
-  tfixed_occ = .FALSE.
-  ltetra     = .FALSE.
+  tfixed_occ = .false.
+  ltetra     = .false.
   !
-  SELECT CASE( TRIM( occupations ) )
+  SELECT CASE( trim( occupations ) )
   CASE( 'fixed' )
      !
      ngauss = 0
@@ -549,7 +549,7 @@ SUBROUTINE iosys()
         CALL errore( ' iosys ', &
                    & ' fixed occupations, gauss. broadening ignored', -1 )
         degauss = 0.D0
-     END IF
+     ENDIF
      !
   CASE( 'smearing' )
      !
@@ -557,7 +557,7 @@ SUBROUTINE iosys()
         CALL errore( ' iosys ', &
                    & ' smearing requires gaussian broadening', 1 )
      !
-     SELECT CASE ( TRIM( smearing ) )
+     SELECT CASE ( trim( smearing ) )
      CASE ( 'gaussian', 'gauss', 'Gaussian', 'Gauss' )
         ngauss = 0
      CASE ( 'methfessel-paxton', 'm-p', 'mp', 'Methfessel-Paxton', 'M-P', 'MP' )
@@ -566,8 +566,8 @@ SUBROUTINE iosys()
         ngauss = -1
      CASE ( 'fermi-dirac', 'f-d', 'fd', 'Fermi-Dirac', 'F-D', 'FD')
         ngauss = -99
-     CASE default
-        CALL errore( ' iosys ', ' smearing '//TRIM(smearing)//' unknown', 1 )
+     CASE DEFAULT
+        CALL errore( ' iosys ', ' smearing '//trim(smearing)//' unknown', 1 )
      END SELECT
      !
   CASE( 'tetrahedra' )
@@ -575,16 +575,16 @@ SUBROUTINE iosys()
      IF( calculation /= 'nscf' ) CALL errore( 'iosys', &
          'tetrahedra should be used only for calculation of DOS', 1 )
      ngauss = 0
-     ltetra = .TRUE.
+     ltetra = .true.
      !
   CASE( 'from_input' )
      !
      ngauss     = 0
-     tfixed_occ = .TRUE.
+     tfixed_occ = .true.
      !
   CASE DEFAULT
      !
-     CALL errore( 'iosys','occupations ' // TRIM( occupations ) // &
+     CALL errore( 'iosys','occupations ' // trim( occupations ) // &
                 & 'not implemented', 1 )
      !
   END SELECT
@@ -595,20 +595,20 @@ SUBROUTINE iosys()
   SELECT CASE( nspin )
   CASE( 1 )
      !
-     lsda = .FALSE.
+     lsda = .false.
      IF ( noncolin ) nspin = 4
      !
   CASE( 2 )
      !
-     lsda = .TRUE.
+     lsda = .true.
      IF ( noncolin ) &
         CALL errore( 'iosys', &
                      'noncolin .and. nspin==2 are conflicting flags', 1 )
      !
   CASE( 4 )
      !
-     lsda = .FALSE.
-     noncolin = .TRUE.
+     lsda = .false.
+     noncolin = .true.
      !
   CASE DEFAULT
      !
@@ -616,35 +616,35 @@ SUBROUTINE iosys()
      !
   END SELECT
   !
-  IF ( noncolin .AND. lda_plus_u ) CALL errore('iosys', &
+  IF ( noncolin .and. lda_plus_u ) CALL errore('iosys', &
        'LDA+U not implemented with noncollinear magnetization')
   !
   two_fermi_energies = ( tot_magnetization /= -1._DP)
-  IF ( two_fermi_energies .AND. tot_magnetization < 0._DP) &
+  IF ( two_fermi_energies .and. tot_magnetization < 0._DP) &
      CALL errore( 'iosys', 'tot_magnetization only takes positive values', 1 )
-  IF ( two_fermi_energies .AND. .NOT. lsda ) &
+  IF ( two_fermi_energies .and. .not. lsda ) &
      CALL errore( 'iosys', 'tot_magnetization requires nspin=2', 1 )
   !
-  ! ... starting_magnetization(nt) = sm_not_set means "not set" 
+  ! ... starting_magnetization(nt) = sm_not_set means "not set"
   ! ... stop if starting_magnetization is not set for at least
   ! ... one atomic type and occupations are not set in any other way
   !
-  IF ( lscf .AND. lsda .AND. ( .NOT. tfixed_occ ) .AND. &
-          ( .NOT. two_fermi_energies )  .AND. &
-          ALL(starting_magnetization(1:ntyp) == sm_not_set) ) &
+  IF ( lscf .and. lsda .and. ( .not. tfixed_occ ) .and. &
+          ( .not. two_fermi_energies )  .and. &
+          all(starting_magnetization(1:ntyp) == sm_not_set) ) &
       CALL errore('iosys','some starting_magnetization MUST be set', 1 )
   !
   DO nt = 1, ntyp
      !
      IF ( starting_magnetization(nt) == sm_not_set ) THEN
         starting_magnetization(nt) = 0.0_dp
-     ELSE IF ( starting_magnetization(nt) > 1.0_dp ) THEN
+     ELSEIF ( starting_magnetization(nt) > 1.0_dp ) THEN
         starting_magnetization(nt) = 1.0_dp
-     ELSE IF ( starting_magnetization(nt) <-1.0_dp ) THEN
+     ELSEIF ( starting_magnetization(nt) <-1.0_dp ) THEN
         starting_magnetization(nt) =-1.0_dp
-     END IF
+     ENDIF
      !
-  END DO
+  ENDDO
   !
   IF (noncolin) THEN
      DO nt = 1, ntyp
@@ -652,13 +652,13 @@ SUBROUTINE iosys()
         angle1(nt) = pi * angle1(nt) / 180.D0
         angle2(nt) = pi * angle2(nt) / 180.D0
         !
-     END DO
+     ENDDO
   ELSE
      angle1=0.d0
      angle2=0.d0
   ENDIF
   !
-  SELECT CASE( TRIM( constrained_magnetization ) )
+  SELECT CASE( trim( constrained_magnetization ) )
   CASE( 'none' )
      !
      i_cons = 0
@@ -673,15 +673,15 @@ SUBROUTINE iosys()
         mcons(2,1) = fixed_magnetization(2)
         mcons(3,1) = fixed_magnetization(3)
         !
-     ELSE IF ( nspin == 2 ) THEN
+     ELSEIF ( nspin == 2 ) THEN
         !
         i_cons = 5
         !
-        two_fermi_energies = .TRUE.
+        two_fermi_energies = .true.
         !
         mcons(3,1) = fixed_magnetization(3)
         !
-        IF ( fixed_magnetization(1) /= 0.D0 .OR. &
+        IF ( fixed_magnetization(1) /= 0.D0 .or. &
              fixed_magnetization(2) /= 0.D0 ) &
            CALL errore( 'iosys', 'only fixed_magnetization(3)' // &
                       & ' can be specified with nspin=2 ', 1 )
@@ -691,7 +691,7 @@ SUBROUTINE iosys()
         CALL errore( 'iosys','constrained total magnetization ' // &
                    & 'requires nspin=2 or 4 ', 1 )
         !
-     END IF
+     ENDIF
      !
   CASE( 'atomic' )
      !
@@ -701,31 +701,31 @@ SUBROUTINE iosys()
      !
      i_cons = 1
      !
-     if (nspin == 4) then
+     IF (nspin == 4) THEN
         ! non-collinear case
         DO nt = 1, ntyp
            !
            theta = angle1(nt)
            phi   = angle2(nt)
            !
-           mcons(1,nt) = starting_magnetization(nt) * SIN( theta ) * COS( phi )
-           mcons(2,nt) = starting_magnetization(nt) * SIN( theta ) * SIN( phi )
-           mcons(3,nt) = starting_magnetization(nt) * COS( theta )
+           mcons(1,nt) = starting_magnetization(nt) * sin( theta ) * cos( phi )
+           mcons(2,nt) = starting_magnetization(nt) * sin( theta ) * sin( phi )
+           mcons(3,nt) = starting_magnetization(nt) * cos( theta )
            !
-        END DO
-     else
+        ENDDO
+     ELSE
         ! collinear case
         DO nt = 1, ntyp
            !
-           mcons(1,nt) = starting_magnetization(nt) 
+           mcons(1,nt) = starting_magnetization(nt)
            !
-        END DO
-     end if
+        ENDDO
+     ENDIF
      !
   CASE( 'total direction' )
      i_cons = 6
      mcons(3,1) = fixed_magnetization(3)
-     IF ( mcons(3,1) < 0.D0 .OR. mcons(3,1) > 180.D0 ) &
+     IF ( mcons(3,1) < 0.D0 .or. mcons(3,1) > 180.D0 ) &
         CALL errore( 'iosys','constrained magnetization angle: ' // &
                    & 'theta must be within [0,180] degrees', 1 )
      !
@@ -743,18 +743,18 @@ SUBROUTINE iosys()
         !
         mcons(3,nt) = cos(theta)
         !
-     END DO
+     ENDDO
      !
   CASE DEFAULT
      !
      CALL errore( 'iosys','constrained magnetization ' // &
-                & TRIM( constrained_magnetization ) // 'not implemented', 1 )
+                & trim( constrained_magnetization ) // 'not implemented', 1 )
      !
   END SELECT
   !
 
-  IF ( B_field(1) /= 0.D0 .OR. &
-       B_field(2) /= 0.D0 .OR. &
+  IF ( B_field(1) /= 0.D0 .or. &
+       B_field(2) /= 0.D0 .or. &
        B_field(3) /= 0.D0 ) THEN
      CALL errore( 'iosys', &
                 & 'B field currently not implemented', 1 )
@@ -772,16 +772,16 @@ SUBROUTINE iosys()
      !   CALL errore( 'iosys', &
      !              & 'only B_field(3) can be specified with nspin=2', 1 )
      !
-  END IF
+  ENDIF
   !
-  IF ( occupations == 'fixed' .AND. lsda  .AND. lscf ) THEN
+  IF ( occupations == 'fixed' .and. lsda  .and. lscf ) THEN
      !
      IF ( two_fermi_energies ) THEN
         !
-        IF ( ABS( NINT(tot_magnetization ) - tot_magnetization ) > eps8 ) &
+        IF ( abs( nint(tot_magnetization ) - tot_magnetization ) > eps8 ) &
            CALL errore( 'iosys', &
                       & 'fixed occupations requires integer tot_magnetization', 1 )
-        IF ( ABS( NINT(tot_charge ) - tot_charge ) > eps8 ) &
+        IF ( abs( nint(tot_charge ) - tot_charge ) > eps8 ) &
            CALL errore( 'iosys', &
                       & 'fixed occupations requires integer charge', 1 )
         !
@@ -790,9 +790,9 @@ SUBROUTINE iosys()
         CALL errore( 'iosys', &
                    & 'fixed occupations and lsda need tot_magnetization', 1 )
         !
-     END IF
+     ENDIF
      !
-  END IF
+  ENDIF
   !
   IF ( ecutrho <= 0.D0 ) THEN
      !
@@ -805,31 +805,31 @@ SUBROUTINE iosys()
      IF ( dual <= 1.D0 ) &
         CALL errore( 'iosys', 'invalid dual?', 1 )
      !
-  END IF
+  ENDIF
   !
-  SELECT CASE( TRIM( restart_mode ) )
+  SELECT CASE( trim( restart_mode ) )
   CASE( 'from_scratch' )
      !
-     restart        = .FALSE.
+     restart        = .false.
      IF ( lscf ) THEN
         startingconfig = 'input'
      ELSE
         startingconfig = 'file'
-     END IF
+     ENDIF
      !
   CASE( 'restart' )
      !
-     IF ( lneb .OR. lsmd ) THEN
+     IF ( lneb .or. lsmd ) THEN
         !
         ! ... "path" specific
         !
-        restart = .FALSE.
+        restart = .false.
         !
      ELSE
         !
-        restart = .TRUE.
+        restart = .true.
         !
-        IF ( TRIM( ion_positions ) == 'from_input' ) THEN
+        IF ( trim( ion_positions ) == 'from_input' ) THEN
            !
            startingconfig = 'input'
            !
@@ -837,18 +837,18 @@ SUBROUTINE iosys()
            !
            startingconfig = 'file'
            !
-        END IF
+        ENDIF
         !
-     END IF
+     ENDIF
      !
   CASE DEFAULT
      !
      CALL errore( 'iosys', &
-                & 'unknown restart_mode ' // TRIM( restart_mode ), 1 )
+                & 'unknown restart_mode ' // trim( restart_mode ), 1 )
      !
   END SELECT
   !
-  SELECT CASE( TRIM( disk_io ) )
+  SELECT CASE( trim( disk_io ) )
   CASE( 'high' )
      !
      io_level = 2
@@ -856,22 +856,22 @@ SUBROUTINE iosys()
   CASE ( 'low' )
      !
      io_level = 0
-     restart  = .FALSE.
+     restart  = .false.
      !
   CASE ( 'none' )
      !
      io_level = -1
-     restart  = .FALSE.
+     restart  = .false.
      IF ( twfcollect ) THEN
         CALL infomsg('iosys', 'minimal I/O required, wf_collect reset to FALSE')
-        twfcollect= .FALSE.
-     END IF
+        twfcollect= .false.
+     ENDIF
      !
   CASE DEFAULT
      !
      io_level = 1
      !
-     IF ( lscf ) restart  = .FALSE.
+     IF ( lscf ) restart  = .false.
      !
   END SELECT
   !
@@ -880,40 +880,40 @@ SUBROUTINE iosys()
   !
   ethr = diago_thr_init
   !
-  IF ( startingpot /= 'atomic' .AND. startingpot /= 'file' ) THEN
+  IF ( startingpot /= 'atomic' .and. startingpot /= 'file' ) THEN
      !
      CALL infomsg( 'iosys', 'wrong startingpot: use default (1)' )
      !
      IF (       lscf ) startingpot = 'atomic'
-     IF ( .NOT. lscf ) startingpot = 'file'
+     IF ( .not. lscf ) startingpot = 'file'
      !
-  END IF
+  ENDIF
   !
-  IF ( .NOT. lscf .AND. startingpot /= 'file' ) THEN
+  IF ( .not. lscf .and. startingpot /= 'file' ) THEN
      !
      CALL infomsg( 'iosys', 'wrong startingpot: use default (2)' )
      !
      startingpot = 'file'
      !
-  END IF
+  ENDIF
   !
-  IF (      startingwfc /= 'atomic' .AND. &
-            startingwfc /= 'random' .AND. &
-            startingwfc /= 'atomic+random' .AND. &
+  IF (      startingwfc /= 'atomic' .and. &
+            startingwfc /= 'random' .and. &
+            startingwfc /= 'atomic+random' .and. &
             startingwfc /= 'file' ) THEN
      !
      CALL infomsg( 'iosys', 'wrong startingwfc: use default' )
      !
      startingwfc = 'atomic'
      !
-  END IF
+  ENDIF
   !
   ! parallel distributed diagonalization is the default
   ! (with more than 4 procs)
   !
-  use_para_diag = .TRUE.
+  use_para_diag = .true.
   !
-  SELECT CASE( TRIM( diagonalization ) )
+  SELECT CASE( trim( diagonalization ) )
   CASE ( 'cg' )
      !
      isolve = 1
@@ -927,15 +927,15 @@ SUBROUTINE iosys()
   CASE DEFAULT
      !
      CALL errore( 'iosys', 'diagonalization ' // &
-                & TRIM( diagonalization ) // ' not implemented', 1 )
+                & trim( diagonalization ) // ' not implemented', 1 )
      !
   END SELECT
   !
   tr2   = conv_thr
   niter = electron_maxstep
-  ! 
+  !
   pot_order = 1
-  SELECT CASE( TRIM( pot_extrapolation ) )
+  SELECT CASE( trim( pot_extrapolation ) )
   CASE( 'from_wfcs', 'from-wfcs' )
      ! not actually implemented
      pot_order =-1
@@ -949,18 +949,18 @@ SUBROUTINE iosys()
      IF ( lmd  ) THEN
         pot_order = 2
      ELSE
-        CALL infomsg('iosys', "pot_extrapolation='"//TRIM(pot_extrapolation)//&
+        CALL infomsg('iosys', "pot_extrapolation='"//trim(pot_extrapolation)//&
                      "' not available, using 'atomic'")
-     END IF
+     ENDIF
      !
   CASE( 'second_order', 'second-order', 'second order' )
      !
      IF ( lmd  ) THEN
         pot_order = 3
      ELSE
-        CALL infomsg('iosys', "pot_extrapolation='"//TRIM(pot_extrapolation)//&
+        CALL infomsg('iosys', "pot_extrapolation='"//trim(pot_extrapolation)//&
                      "' not available, using 'atomic'")
-     END IF
+     ENDIF
      !
   CASE DEFAULT
      !
@@ -969,59 +969,59 @@ SUBROUTINE iosys()
   END SELECT
   !
   wfc_order = 0
-  SELECT CASE( TRIM( wfc_extrapolation ) )
+  SELECT CASE( trim( wfc_extrapolation ) )
      !
   CASE( 'first_order', 'first-order', 'first order' )
      !
      IF ( lmd  ) THEN
         wfc_order = 2
      ELSE
-        CALL infomsg('iosys', "wfc_extrapolation='"//TRIM(pot_extrapolation)//&
+        CALL infomsg('iosys', "wfc_extrapolation='"//trim(pot_extrapolation)//&
                      "' not available, using 'atomic'")
-     END IF
+     ENDIF
      !
   CASE( 'second_order', 'second-order', 'second order' )
      !
      IF ( lmd  ) THEN
         wfc_order = 3
      ELSE
-        CALL infomsg('iosys', "wfc_extrapolation='"//TRIM(pot_extrapolation)//&
+        CALL infomsg('iosys', "wfc_extrapolation='"//trim(pot_extrapolation)//&
                      "' not available, using 'atomic'")
-     END IF
+     ENDIF
      !
   END SELECT
   !
-  lcoarsegrained  = ( TRIM( phase_space ) == 'coarse-grained' )
+  lcoarsegrained  = ( trim( phase_space ) == 'coarse-grained' )
   !
   IF ( lcoarsegrained ) THEN
      !
-     lmd = .TRUE.
+     lmd = .true.
      !
-     SELECT CASE( TRIM( ion_dynamics ) )
+     SELECT CASE( trim( ion_dynamics ) )
      CASE( 'verlet' )
         !
         CONTINUE
         !
      CASE( 'langevin' )
         !
-        llang = .TRUE.
+        llang = .true.
         !
      CASE( 'damp' )
         !
-        ldamped = .TRUE.
+        ldamped = .true.
         !
         epse = etot_conv_thr
         epsf = forc_conv_thr
         !
      CASE DEFAULT
         !
-        CALL errore( 'iosys', 'calculation=' // TRIM( calculation ) // &
-                   & ': ion_dynamics=' // TRIM( ion_dynamics ) // &
+        CALL errore( 'iosys', 'calculation=' // trim( calculation ) // &
+                   & ': ion_dynamics=' // trim( ion_dynamics ) // &
                    & ' not supported', 1 )
         !
      END SELECT
      !
-  END IF
+  ENDIF
   !
   ! ... "path" specific initialization of control variables
   !
@@ -1033,127 +1033,127 @@ SUBROUTINE iosys()
      nstep_path = nstep
      !
      IF ( num_of_images < 2 ) &
-        CALL errore( 'iosys', 'calculation=' // TRIM( calculation ) // &
+        CALL errore( 'iosys', 'calculation=' // trim( calculation ) // &
                    & ': num_of_images must be at least 2', 1 )
      !
-     IF ( ( CI_scheme /= "no-CI"  ) .AND. &
-          ( CI_scheme /= "auto"   ) .AND. &
+     IF ( ( CI_scheme /= "no-CI"  ) .and. &
+          ( CI_scheme /= "auto"   ) .and. &
           ( CI_scheme /= "manual" ) ) THEN
         !
-        CALL errore( 'iosys', 'calculation=' // TRIM( calculation ) // &
+        CALL errore( 'iosys', 'calculation=' // trim( calculation ) // &
                    & ': unknown CI_scheme', 1 )
         !
-     END IF
+     ENDIF
      !
      ! ... initialization of logical variables
      !
-     lsteep_des  = .FALSE.
-     lquick_min  = .FALSE.
-     lbroyden    = .FALSE.
-     lbroyden2   = .FALSE.
+     lsteep_des  = .false.
+     lquick_min  = .false.
+     lbroyden    = .false.
+     lbroyden2   = .false.
      !
      SELECT CASE( opt_scheme )
      CASE( "sd" )
         !
-        lsteep_des = .TRUE.
+        lsteep_des = .true.
         !
      CASE( "quick-min" )
         !
-        lquick_min = .TRUE.
+        lquick_min = .true.
         !
      CASE( "broyden" )
         !
-        lbroyden     = .TRUE.
+        lbroyden     = .true.
         !
      CASE( "broyden2" )
         !
-        lbroyden2    = .TRUE.
+        lbroyden2    = .true.
         !
      CASE( "langevin" )
         !
-        llangevin = .TRUE.
+        llangevin = .true.
         !
         IF ( lneb ) &
-           CALL errore( 'iosys','calculation=' // TRIM( calculation ) // &
+           CALL errore( 'iosys','calculation=' // trim( calculation ) // &
                       & ': langevin dynamics not implemented', 1 )
         !
         temp_req = temp_req / ( eV_to_kelvin * autoev )
         !
         IF ( temp_req <= 0.D0 ) &
-           CALL errore( 'iosys','calculation=' // TRIM( calculation ) // &
+           CALL errore( 'iosys','calculation=' // trim( calculation ) // &
                       & ': tepm_req has not been set', 1 )
         !
         IF ( use_freezing ) &
            WRITE( UNIT = stdout, &
                   FMT = '(5X,"warning: freezing cannot be used in langevin")' )
         !
-        use_freezing = .FALSE.
+        use_freezing = .false.
         !
-     CASE default
+     CASE DEFAULT
         !
-        CALL errore( 'iosys','calculation=' // TRIM( calculation ) // &
+        CALL errore( 'iosys','calculation=' // trim( calculation ) // &
                    & ': unknown opt_scheme', 1 )
         !
      END SELECT
      !
-  END IF
+  ENDIF
   !
-  SELECT CASE( TRIM( ion_temperature ) )
+  SELECT CASE( trim( ion_temperature ) )
   CASE( 'not_controlled', 'not-controlled', 'not controlled' )
      !
-     control_temp = .FALSE.
+     control_temp = .false.
      !
   CASE( 'rescaling' )
      !
-     control_temp = .TRUE.
-     thermostat   = TRIM( ion_temperature )
+     control_temp = .true.
+     thermostat   = trim( ion_temperature )
      temperature  = tempw
      tolp_        = tolp
      !
   CASE( 'rescale-v', 'rescale-V', 'rescale_v', 'rescale_V' )
      !
-     control_temp = .TRUE.
-     thermostat   = TRIM( ion_temperature )
+     control_temp = .true.
+     thermostat   = trim( ion_temperature )
      temperature  = tempw
      nraise_      = nraise
      !
   CASE( 'reduce-T', 'reduce-t', 'reduce_T', 'reduce_t' )
      !
-     control_temp = .TRUE.
-     thermostat   = TRIM( ion_temperature )
+     control_temp = .true.
+     thermostat   = trim( ion_temperature )
      temperature  = tempw
      delta_t_     = delta_t
      nraise_      = nraise
      !
   CASE( 'rescale-T', 'rescale-t', 'rescale_T', 'rescale_t' )
      !
-     control_temp = .TRUE.
-     thermostat   = TRIM( ion_temperature )
+     control_temp = .true.
+     thermostat   = trim( ion_temperature )
      temperature  = tempw
      delta_t_     = delta_t
      !
   CASE( 'berendsen', ' Berendsen' )
      !
-     control_temp = .TRUE.
-     thermostat   = TRIM( ion_temperature )
+     control_temp = .true.
+     thermostat   = trim( ion_temperature )
      temperature  = tempw
      nraise_      = nraise
      !
   CASE( 'andersen', 'Andersen' )
      !
-     control_temp = .TRUE.
-     thermostat   = TRIM( ion_temperature )
+     control_temp = .true.
+     thermostat   = trim( ion_temperature )
      temperature  = tempw
      nraise_      = nraise
      !
   CASE DEFAULT
      !
      CALL errore( 'iosys', &
-                & 'unknown ion_temperature ' // TRIM( ion_temperature ), 1 )
+                & 'unknown ion_temperature ' // trim( ion_temperature ), 1 )
      !
   END SELECT
   !
-  SELECT CASE( TRIM( mixing_mode ) )
+  SELECT CASE( trim( mixing_mode ) )
   CASE( 'plain' )
      !
      imix = 0
@@ -1172,7 +1172,7 @@ SUBROUTINE iosys()
      !
   CASE DEFAULT
      !
-     CALL errore( 'iosys', 'unknown mixing ' // TRIM( mixing_mode ), 1 )
+     CALL errore( 'iosys', 'unknown mixing ' // trim( mixing_mode ), 1 )
      !
   END SELECT
   !
@@ -1180,11 +1180,11 @@ SUBROUTINE iosys()
   nmix = mixing_ndim
   niter_with_fixed_ns = mixing_fixed_ns
   !
-  IF ( ion_dynamics == ' bfgs' .AND. epse <= 20.D0 * ( tr2 / upscale ) ) &
+  IF ( ion_dynamics == ' bfgs' .and. epse <= 20.D0 * ( tr2 / upscale ) ) &
        CALL errore( 'iosys', 'required etot_conv_thr is too small:' // &
                      & ' conv_thr must be reduced', 1 )
   !
-  SELECT CASE( TRIM( verbosity ) )
+  SELECT CASE( trim( verbosity ) )
   CASE( 'high' )
      !
      iverbosity = 1
@@ -1196,11 +1196,11 @@ SUBROUTINE iosys()
   END SELECT
   !
   tmp_dir = trimcheck ( outdir )
-  lstres = ( tstress .AND. lscf )
+  lstres = ( tstress .and. lscf )
   !
-  IF ( lberry .AND. npool > 1 ) &
+  IF ( lberry .and. npool > 1 ) &
      CALL errore( 'iosys', 'Berry Phase not implemented with pools', 1 )
-  IF ( lberry .AND. noncolin ) &
+  IF ( lberry .and. noncolin ) &
      CALL errore( 'iosys', 'Noncolinear Berry Phase not implemented', 1 )
   !
   ! ... Copy values from input module to PW internals
@@ -1220,8 +1220,8 @@ SUBROUTINE iosys()
   dt_         = dt
   tefield_    = tefield
   dipfield_   = dipfield
-  prefix_     = TRIM( prefix )
-  pseudo_dir_ = TRIM( pseudo_dir )
+  prefix_     = trim( prefix )
+  pseudo_dir_ = trim( pseudo_dir )
   nstep_      = nstep
   iprint_     = iprint
   !
@@ -1280,7 +1280,7 @@ SUBROUTINE iosys()
   nqx2_ = nqx2
   nqx3_ = nqx3
   !
-  exxdiv_treatment_ = TRIM(exxdiv_treatment)
+  exxdiv_treatment_ = trim(exxdiv_treatment)
   yukawa_   = yukawa
   ecutvcut_ = ecutvcut
   !
@@ -1331,8 +1331,8 @@ SUBROUTINE iosys()
   ! ...  Charge Compensation
   !
   ecutcoarse_ = ecutcoarse
-  mixing_charge_compensation_ = mixing_charge_compensation 
-  n_charge_compensation_ = n_charge_compensation 
+  mixing_charge_compensation_ = mixing_charge_compensation
+  n_charge_compensation_ = n_charge_compensation
   comp_thr_ = comp_thr
   nlev_ = nlev
   ! more DCC variables
@@ -1348,7 +1348,7 @@ SUBROUTINE iosys()
   cellmin_ = cellmin
   cellmax_ = cellmax
   !
-  IF (TRIM(occupations) /= 'from_input') one_atom_occupations=.FALSE.
+  IF (trim(occupations) /= 'from_input') one_atom_occupations=.false.
   !
   llondon     = london
   lon_rcut    = london_rcut
@@ -1362,40 +1362,40 @@ SUBROUTINE iosys()
   MS2_handler_ = MS2_handler
 #endif
   !
-  SELECT CASE( TRIM( assume_isolated ) )
+  SELECT CASE( trim( assume_isolated ) )
       !
     CASE( 'makov-payne', 'm-p', 'mp' )
       !
-      do_makov_payne = .TRUE.
-      do_comp        = .FALSE.
-      do_coarse      = .FALSE.
-      do_mltgrid     = .FALSE.
-      do_comp_mt     = .FALSE.
+      do_makov_payne = .true.
+      do_comp        = .false.
+      do_coarse      = .false.
+      do_mltgrid     = .false.
+      do_comp_mt     = .false.
       !
     CASE( 'dcc' )
       !
       CALL errore('iosys','density countercharge correction currently disabled',1)
-      do_comp        = .TRUE.
-      do_coarse      = .FALSE.
-      do_mltgrid     = .TRUE.
-      do_makov_payne = .FALSE.
-      do_comp_mt     = .FALSE.
+      do_comp        = .true.
+      do_coarse      = .false.
+      do_mltgrid     = .true.
+      do_makov_payne = .false.
+      do_comp_mt     = .false.
       !
     CASE( 'martyna-tuckerman', 'm-t', 'mt' )
       !
-      do_comp_mt     = .TRUE.
-      do_comp        = .FALSE.
-      do_coarse      = .FALSE.
-      do_mltgrid     = .FALSE.
-      do_makov_payne = .FALSE.
+      do_comp_mt     = .true.
+      do_comp        = .false.
+      do_coarse      = .false.
+      do_mltgrid     = .false.
+      do_makov_payne = .false.
       !
     CASE DEFAULT
       !
-      do_makov_payne = .FALSE.
-      do_comp        = .FALSE.
-      do_comp_mt     = .FALSE.
-      do_coarse      = .FALSE.
-      do_mltgrid     = .FALSE.
+      do_makov_payne = .false.
+      do_comp        = .false.
+      do_comp_mt     = .false.
+      do_coarse      = .false.
+      do_mltgrid     = .false.
       !
   END SELECT
   !
@@ -1411,8 +1411,8 @@ SUBROUTINE iosys()
         ALLOCATE( f_inp( nbnd_, 1 ) )
      ELSE
         ALLOCATE( f_inp( nbnd_, nspin_ ) )
-     END IF
-  END IF
+     ENDIF
+  ENDIF
   !
   IF ( tefield ) ALLOCATE( forcefield( 3, nat_ ) )
   !
@@ -1420,7 +1420,7 @@ SUBROUTINE iosys()
   !
   ! ... set up atomic positions and crystal lattice
   !
-  IF ( celldm_(1) == 0.D0 .AND. a /= 0.D0 ) THEN
+  IF ( celldm_(1) == 0.D0 .and. a /= 0.D0 ) THEN
      !
      celldm_(1) = a / bohr_radius_angs
      celldm_(2) = b / a
@@ -1438,13 +1438,13 @@ SUBROUTINE iosys()
         celldm_(4) = cosbc
         celldm_(5) = cosac
         celldm_(6) = cosab
-     END IF
+     ENDIF
      !
-  ELSE IF ( celldm_(1) /= 0.D0 .AND. a /= 0.D0 ) THEN
+  ELSEIF ( celldm_(1) /= 0.D0 .and. a /= 0.D0 ) THEN
      !
      CALL errore( 'input', 'do not specify both celldm and a,b,c!', 1 )
      !
-  END IF
+  ENDIF
   !
   ! ... generate at (in atomic units) from ibrav and celldm
   !
@@ -1468,21 +1468,21 @@ SUBROUTINE iosys()
      !
      DO image = 1, num_of_images_
         !
-        tau = RESHAPE( pos(1:3*nat_,image), (/ 3 , nat_ /) )
+        tau = reshape( pos(1:3*nat_,image), (/ 3 , nat_ /) )
         !
         CALL convert_tau ( tau_format, nat_, tau)
         !
         ! ... note that this positions array is in Bohr
         !
-        pos(1:3*nat_,image) = RESHAPE( tau, (/ 3 * nat_ /) ) * alat
+        pos(1:3*nat_,image) = reshape( tau, (/ 3 * nat_ /) ) * alat
         !
-     END DO
+     ENDDO
      !
   ELSE
      !
      CALL convert_tau ( tau_format, nat_, tau)
      !
-  END IF
+  ENDIF
   !
   IF ( wmass == 0.D0 ) THEN
      !
@@ -1491,17 +1491,17 @@ SUBROUTINE iosys()
 #if defined __PGI
      DO ia = 1, nat_
         wmass = wmass + amass( ityp(ia) )
-     END DO
+     ENDDO
 #else
-     wmass = SUM( amass(ityp(:)) )
+     wmass = sum( amass(ityp(:)) )
 #endif
      !
      wmass = wmass * amconv
-     IF ( calc == 'nd' .OR. calc == 'nm' ) THEN
+     IF ( calc == 'nd' .or. calc == 'nm' ) THEN
         wmass = 0.75D0 * wmass / pi / pi / omega**( 2.D0 / 3.D0 )
-     ELSE IF ( calc == 'cd' .OR. calc == 'cm' ) THEN
+     ELSEIF ( calc == 'cd' .or. calc == 'cm' ) THEN
         wmass = 0.75D0 * wmass / pi / pi
-     END IF
+     ENDIF
      !
      cmass  = wmass
      !
@@ -1511,7 +1511,7 @@ SUBROUTINE iosys()
      !
      cmass  = wmass * amconv
      !
-  END IF
+  ENDIF
   !
   ! ... unit conversion for pressure
   !
@@ -1519,7 +1519,7 @@ SUBROUTINE iosys()
   !
   ! ... set constraints for cell dynamics/optimization
   !
-  CALL init_dofree ( cell_dofree ) 
+  CALL init_dofree ( cell_dofree )
   !
   ! ... read pseudopotentials
   !
@@ -1527,8 +1527,8 @@ SUBROUTINE iosys()
   !
   ! ... if DFT finite size corrections are needed, define the appropriate volume
   !
-  if (dft_has_finite_size_correction()) &
-      call set_finite_size_volume(REAL(omega*nk1*nk2*nk3))
+  IF (dft_has_finite_size_correction()) &
+      CALL set_finite_size_volume(REAL(omega*nk1*nk2*nk3))
   !
   ! ... In the case of variable cell dynamics save old cell variables
   ! ... and initialize a few other variables
@@ -1537,7 +1537,7 @@ SUBROUTINE iosys()
      !
      at_old    = at
      omega_old = omega
-     lstres    = .TRUE.
+     lstres    = .true.
      !
      IF ( cell_factor_ <= 0.D0 ) cell_factor_ = 1.2D0
      !
@@ -1549,7 +1549,7 @@ SUBROUTINE iosys()
      !
      cell_factor_ = 1.D0
      !
-  END IF
+  ENDIF
   !
   !
   ! ... allocate arrays for dispersion correction
@@ -1574,7 +1574,7 @@ SUBROUTINE iosys()
   !
   CALL verify_tmpdir( tmp_dir )
   !
-  IF ( .NOT. TRIM( wfcdir ) == 'undefined' ) THEN
+  IF ( .not. trim( wfcdir ) == 'undefined' ) THEN
      !
      wfc_dir = trimcheck ( wfcdir )
      !
@@ -1588,11 +1588,11 @@ SUBROUTINE iosys()
   !
   input_drho  = ' '
   output_drho = ' '
-  ! 
-  if (real_space ) then
+  !
+  IF (real_space ) THEN
    WRITE( stdout, '(5x,"Real space treatment of Beta functions, &
          &V.1 (BE SURE TO CHECK MANUAL!)",/)' )
-  endif
+  ENDIF
   RETURN
   !
 END SUBROUTINE iosys
@@ -1629,12 +1629,12 @@ SUBROUTINE read_cards_pw ( psfile, tau_format )
   !
   IMPLICIT NONE
   !
-  CHARACTER (LEN=256) :: psfile(ntyp)
-  CHARACTER (LEN=80)  :: tau_format
+  CHARACTER (len=256) :: psfile(ntyp)
+  CHARACTER (len=80)  :: tau_format
   INTEGER, EXTERNAL :: atomic_number
   REAL(DP), EXTERNAL :: atom_weight
   !
-  LOGICAL :: tcell = .FALSE.
+  LOGICAL :: tcell = .false.
   INTEGER :: is, ia
   !
   !
@@ -1642,9 +1642,9 @@ SUBROUTINE read_cards_pw ( psfile, tau_format )
   !
   CALL read_cards ( 'PW' )
   !
-  IF ( .NOT. taspc ) &
+  IF ( .not. taspc ) &
      CALL errore( 'read_cards_pw', 'atomic species info missing', 1 )
-  IF ( .NOT. tapos ) &
+  IF ( .not. tapos ) &
      CALL errore( 'read_cards_pw', 'atomic position info missing', 1 )
   !
   DO is = 1, ntyp
@@ -1654,14 +1654,14 @@ SUBROUTINE read_cards_pw ( psfile, tau_format )
      atm(is)    = atom_label(is)
      !
      IF ( amass(is) <= 0.0_DP ) amass(is)= &
-              atom_weight(atomic_number(TRIM(atm(is))))
+              atom_weight(atomic_number(trim(atm(is))))
 
      IF ( amass(is) <= 0.D0 ) CALL errore( 'read_cards_pw', 'invalid  mass', is )
      !
-  END DO
+  ENDDO
   !
-  textfor = .FALSE.
-  IF( ANY( rd_for /= 0.0_DP ) ) textfor = .TRUE.
+  textfor = .false.
+  IF( any( rd_for /= 0.0_DP ) ) textfor = .true.
   !
   DO ia = 1, nat
      !
@@ -1669,23 +1669,23 @@ SUBROUTINE read_cards_pw ( psfile, tau_format )
      ityp(ia)  = sp_pos(ia)
      extfor(:,ia) = rd_for(:,ia)
      !
-  END DO
+  ENDDO
   !
   ! ... calculate fixatom
   !
   fixatom = 0
   !
-  IF ( ANY( if_pos(:,1:nat) == 0 ) ) lfixatom = .TRUE.
+  IF ( any( if_pos(:,1:nat) == 0 ) ) lfixatom = .true.
   !
   DO ia = 1, nat
      !
-     IF ( if_pos(1,ia) /= 0 .OR. &
-          if_pos(2,ia) /= 0 .OR. &
+     IF ( if_pos(1,ia) /= 0 .or. &
+          if_pos(2,ia) /= 0 .or. &
           if_pos(3,ia) /= 0 ) CYCLE
      !
      fixatom = fixatom + 1
      !
-  END DO
+  ENDDO
   !
   ! ... The constrain on fixed coordinates is implemented using the array
   ! ... if_pos whose value is 0 when the coordinate is to be kept fixed, 1
@@ -1693,14 +1693,14 @@ SUBROUTINE read_cards_pw ( psfile, tau_format )
   !
   if_pos_(:,:) = if_pos(:,1:nat)
   !
-  tau_format = TRIM( atomic_positions )
+  tau_format = trim( atomic_positions )
   !
   CALL reset_k_points ( )
   gamma_only = ( k_points == 'gamma' )
   !
   IF ( tfixed_occ ) THEN
      !
-     IF ( nkstot_ > 1 .OR. ( nk1 * nk2 * nk3 ) > 1 ) &
+     IF ( nkstot_ > 1 .or. ( nk1 * nk2 * nk3 ) > 1 ) &
         CALL errore( 'read_cards_pw', &
                    & 'only one k point with fixed occupations', 1 )
      !
@@ -1708,19 +1708,19 @@ SUBROUTINE read_cards_pw ( psfile, tau_format )
      !
      DEALLOCATE ( f_inp )
      !
-  END IF
+  ENDIF
   !
   IF ( trd_ht ) THEN
     !
     symm_type = cell_symmetry
-    at        = TRANSPOSE( rd_ht )
-    tcell     = .TRUE.
+    at        = transpose( rd_ht )
+    tcell     = .true.
     !
-  END IF
+  ENDIF
   !
-  IF ( ibrav == 0 .AND. .NOT. tcell ) &
+  IF ( ibrav == 0 .and. .not. tcell ) &
      CALL errore( 'read_cards_pw', 'ibrav=0: must read cell parameters', 1 )
-  IF ( ibrav /= 0 .AND. tcell ) &
+  IF ( ibrav /= 0 .and. tcell ) &
      CALL errore( 'read_cards_pw', 'redundant data for cell parameters', 2 )
   !
   RETURN
@@ -1738,10 +1738,10 @@ SUBROUTINE convert_tau (tau_format, nat_, tau)
   USE constants,     ONLY : bohr_radius_angs
   USE cell_base,     ONLY : at, alat
   IMPLICIT NONE
-  CHARACTER (LEN=*), INTENT(IN)  :: tau_format
-  INTEGER, INTENT(IN)  :: nat_
-  REAL (DP), INTENT(INOUT) :: tau(3,nat_)
-  ! 
+  CHARACTER (len=*), INTENT(in)  :: tau_format
+  INTEGER, INTENT(in)  :: nat_
+  REAL (DP), INTENT(inout) :: tau(3,nat_)
+  !
   SELECT CASE( tau_format )
   CASE( 'alat' )
      !
@@ -1768,7 +1768,7 @@ SUBROUTINE convert_tau (tau_format, nat_, tau)
   CASE DEFAULT
      !
      CALL errore( 'iosys','tau_format=' // &
-                & TRIM( tau_format ) // ' not implemented', 1 )
+                & trim( tau_format ) // ' not implemented', 1 )
      !
   END SELECT
   !
@@ -1791,15 +1791,15 @@ SUBROUTINE verify_tmpdir( tmp_dir )
   !
   IMPLICIT NONE
   !
-  CHARACTER(LEN=*), INTENT(INOUT) :: tmp_dir
+  CHARACTER(len=*), INTENT(inout) :: tmp_dir
   !
   INTEGER             :: ios, image, proc, nofi
   LOGICAL             :: exst
-  CHARACTER (LEN=256) :: file_path, filename
-  CHARACTER(LEN=6), EXTERNAL :: int_to_char
+  CHARACTER (len=256) :: file_path, filename
+  CHARACTER(len=6), EXTERNAL :: int_to_char
   !
   !
-  file_path = TRIM( tmp_dir ) // TRIM( prefix )
+  file_path = trim( tmp_dir ) // trim( prefix )
   !
   ! .... check: is the directory writable?
   !
@@ -1813,14 +1813,14 @@ SUBROUTINE verify_tmpdir( tmp_dir )
         !
         ! ... let us try to create the scratch directory
         !
-        CALL parallel_mkdir ( tmp_dir ) 
+        CALL parallel_mkdir ( tmp_dir )
         !
      ELSE
         !
-        CALL errore( 'outdir: ', TRIM( tmp_dir ) // &
+        CALL errore( 'outdir: ', trim( tmp_dir ) // &
                              & ' non existent or non writable', 1 )
         !
-     END IF
+     ENDIF
      !
   ELSE
      !
@@ -1836,36 +1836,36 @@ SUBROUTINE verify_tmpdir( tmp_dir )
         !
         IF ( ionode ) THEN
            !
-           IF ( .NOT. lbands ) THEN
-               ! 
+           IF ( .not. lbands ) THEN
+               !
                ! save a bck copy of datafile.xml (AF)
-               ! 
-               filename = TRIM( file_path ) // '.save/' // TRIM( xmlpun )
+               !
+               filename = trim( file_path ) // '.save/' // trim( xmlpun )
                INQUIRE( FILE = filename, EXIST = exst )
                !
-               IF ( exst ) CALL copy_file( TRIM(filename), TRIM(filename) // '.bck' )
+               IF ( exst ) CALL copy_file( trim(filename), trim(filename) // '.bck' )
                !
-               CALL delete_if_present( TRIM(filename) )
+               CALL delete_if_present( trim(filename) )
                !
            ENDIF
            !
            ! ... extrapolation file is removed
            !
-           CALL delete_if_present( TRIM( file_path ) // '.update' )
+           CALL delete_if_present( trim( file_path ) // '.update' )
            !
            ! ... MD restart file is removed
            !
-           CALL delete_if_present( TRIM( file_path ) // '.md' )
+           CALL delete_if_present( trim( file_path ) // '.md' )
            !
            ! ... BFGS restart file is removed
            !
-           CALL delete_if_present( TRIM( file_path ) // '.bfgs' )
+           CALL delete_if_present( trim( file_path ) // '.bfgs' )
            !
-        END IF
+        ENDIF
         !
-     END IF
+     ENDIF
      !
-  END IF
+  ENDIF
   !
   ! ... "path" optimisation specific :   in the scratch directory the tree of
   ! ... subdirectories needed by "path" calculations are created
@@ -1879,29 +1879,29 @@ SUBROUTINE verify_tmpdir( tmp_dir )
         !
         ! ... files needed by parallelization among images are removed
         !
-        CALL delete_if_present( TRIM( file_path ) // '.newimage' )
+        CALL delete_if_present( trim( file_path ) // '.newimage' )
         !
         ! ... file containing the broyden's history
         !
         IF ( restart_mode == 'from_scratch' ) THEN
            !
-           CALL delete_if_present( TRIM( file_path ) // '.broyden' )
+           CALL delete_if_present( trim( file_path ) // '.broyden' )
            !
-        END IF
+        ENDIF
         !
-     END IF
+     ENDIF
      !
      nofi = num_of_images
 #if defined(EXX)
-     if( .NOT. lpath .AND. nimage > 1 ) nofi = nimage
+     IF( .not. lpath .and. nimage > 1 ) nofi = nimage
 #endif
      !
      DO image = 1, nofi
         !
-        file_path = TRIM( tmp_dir ) // TRIM( prefix ) //"_" // &
-                    TRIM( int_to_char( image ) ) // '/'
+        file_path = trim( tmp_dir ) // trim( prefix ) //"_" // &
+                    trim( int_to_char( image ) ) // '/'
         !
-        CALL parallel_mkdir ( file_path ) 
+        CALL parallel_mkdir ( file_path )
         !
         ! ... if starting from scratch all temporary files are removed
         ! ... from tmp_dir ( by all the cpus in sequence )
@@ -1914,24 +1914,24 @@ SUBROUTINE verify_tmpdir( tmp_dir )
                  !
                  ! ... extrapolation file is removed
                  !
-                 CALL delete_if_present( TRIM( file_path ) // &
-                                       & TRIM( prefix ) // '.update' )
+                 CALL delete_if_present( trim( file_path ) // &
+                                       & trim( prefix ) // '.update' )
                  !
                  ! ... standard output of the self-consistency is removed
                  !
-                 CALL delete_if_present( TRIM( file_path ) // 'PW.out' )
+                 CALL delete_if_present( trim( file_path ) // 'PW.out' )
                  !
-              END IF
+              ENDIF
               !
               CALL mp_barrier()
               !
-           END DO
+           ENDDO
            !
-        END IF
+        ENDIF
         !
-     END DO
+     ENDDO
      !
-  END IF
+  ENDIF
   !
   RETURN
   !
@@ -1952,29 +1952,29 @@ SUBROUTINE parallel_mkdir ( tmp_dir )
   !
   IMPLICIT NONE
   !
-  CHARACTER(LEN=*), INTENT(IN) :: tmp_dir
+  CHARACTER(len=*), INTENT(in) :: tmp_dir
   !
   INTEGER             :: ios, proc
-  CHARACTER(LEN=6), EXTERNAL :: int_to_char
+  CHARACTER(len=6), EXTERNAL :: int_to_char
   !
   ! ... the scratch directory is created sequentially by all the cpus
   !
   DO proc = 0, nproc - 1
      !
-     IF ( proc == mpime ) ios = f_mkdir( TRIM( tmp_dir ) )
+     IF ( proc == mpime ) ios = f_mkdir( trim( tmp_dir ) )
      CALL mp_barrier()
      !
-  END DO
+  ENDDO
   !
   ! ... each job checks whether the scratch directory is writable
   ! ... note that tmp_dir should end by a "/"
   !
-  OPEN( UNIT = 4, FILE = TRIM(tmp_dir)//'test'//TRIM(int_to_char(mpime)), &
+  OPEN( UNIT = 4, FILE = trim(tmp_dir)//'test'//trim(int_to_char(mpime)), &
             & STATUS = 'UNKNOWN', FORM = 'UNFORMATTED', IOSTAT = ios )
   CLOSE( UNIT = 4, STATUS = 'DELETE' )
   !
   ios = check_writable ( tmp_dir, mpime )
-  IF ( ios /= 0 ) CALL errore( 'parallel_mkdir', TRIM( tmp_dir ) // &
+  IF ( ios /= 0 ) CALL errore( 'parallel_mkdir', trim( tmp_dir ) // &
                              & ' non existent or non writable', 1 )
   !
   RETURN
