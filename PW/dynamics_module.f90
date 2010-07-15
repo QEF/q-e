@@ -405,6 +405,7 @@ CONTAINS
       SUBROUTINE md_init()
          !--------------------------------------------------------------------
          !
+         USE input_parameters, ONLY: tavel, sp_vel, sp_pos, rd_vel
          IMPLICIT NONE
          !
          istep = 0
@@ -473,7 +474,15 @@ CONTAINS
             !
          ENDDO
          !
-         IF ( control_temp ) THEN
+         IF ( tavel ) THEN ! initial velocities available from input file
+            !
+            IF ( ANY ( sp_pos(:) /= sp_vel(:) ) ) &
+               CALL errore("md_init","list of species in block ATOMIC_VELOCITIES &
+                 & must be identical to those in ATOMIC_POSITIONS")
+            !
+            vel(:,:) = rd_vel(:,:)
+            !
+         ELSEIF ( control_temp ) THEN
             !
             ! ... initial thermalization. N.B. tau is in units of alat
             !

@@ -218,7 +218,7 @@ CONTAINS
       ELSEIF ( trim(card) == 'ATOMIC_VELOCITIES' ) THEN
          !
          CALL card_ion_velocities( input_line )
-         IF ( ( prog == 'PW' .or. prog == 'CP' ) .and. ionode ) &
+         IF ( prog == 'CP' .and. ionode ) &
             WRITE( stdout,'(A)') 'Warning: card '//trim(input_line)//' ignored'
          !
       ELSEIF ( trim(card) == 'KSOUT' ) THEN
