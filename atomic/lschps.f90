@@ -1,67 +1,85 @@
 !
-! Copyright (C) 2004 PWSCF group
+! Copyright (C) 2004-2010 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-subroutine lschps(mode,z,grid,nin,mch,n,l,e,u,v,nstop)
-!
+SUBROUTINE lschps (mode, z, grid, nin, mch, n, l, e, v, vtau, u, nstop)
   !
   ! integrates radial pauli-type scalar-relativistic equation
   ! on a logarithmic grid
   ! modified routine to be used in finding norm-conserving
   ! pseudopotential
   !
-  ! mode = 1 is for full potential bound state
-  ! mode = 2 is for pseudopotential bound state
-  ! mode = 3 is for full potential to find log derivative
-  ! mode = 4 is for pseudopotential to find energy which produces
-  !            specified log derivative (fake bound state)
-  ! mode = 5 is for pseudopotential to produce wavefunction beyond
+  ! on input:
+  !   mode = 1 find energy and wavefunction of bound states,
+  !            scalar-relativistic (all-electron)
+  !   mode = 2 find energy and wavefunction of bound state,
+  !            nonrelativistic (pseudopotentials)
+  !   mode = 3 fixed-energy calculation, for logarithmic derivatives
+  !   mode = 4 find energy which produces a specified logarithmic
+  !            derivative (nonrelativistic, pseudopotentials)
+  !   mode = 5 is for pseudopotential to produce wavefunction beyond
   !            radius used for pseudopotential construction
+  !   grid =   structure containing radial grid information
+  !   z    = atomic number
+  !   l, n = main and angular quantum numbers
+  !   v(i) = self-consistent potential
+  !   vtau(i) = metaGGA potential  D E_XC / D tau
+  !   e    = starting estimate of the energy (mode=1,2)
+  !          fixed energy at which the wavefctn is calculated (mode=3,4)
+  !   mch  = matching at index mch
   !
-  use kinds, only : DP
-  use radial_grids, only: radial_grid_type
-  use ld1inc, only : cau_fact
-  implicit none
+  ! on output:
+  !   e    = final energy (mode=1,2)
+  !   u(i) = radial wavefunction (defined as the radial part of the wavefct
+  !          multiplied by r)
+  !   nstop= 0 if regular termination, 1 otherwise
+  !   nin  = last grid point for which the wavefct is calculated?
+  !
+  USE kinds, ONLY : DP
+  USE radial_grids, ONLY: radial_grid_type
+  USE ld1inc, ONLY : cau_fact
+  IMPLICIT NONE
   !
   ! I/O variables
   !
-  integer, intent (in) :: mode
-  real(DP), intent(in) :: z
-  type (radial_grid_type), intent(in) :: grid
-  integer :: nin, mch, n, l, nstop
-  real(DP) :: e
-  real(DP):: v(grid%mesh),u(grid%mesh)
+  INTEGER, INTENT (in) :: mode, n, l
+  real(DP), INTENT(in) :: z
+  TYPE (radial_grid_type), INTENT(in) :: grid
+  real(DP), INTENT(inout) :: v(grid%mesh), vtau(grid%mesh)
+  INTEGER, INTENT(inout) :: nin, mch
+  real(DP), INTENT(inout) :: e
+  INTEGER, INTENT(out) :: nstop
+  real (DP), INTENT(out) :: u(grid%mesh)
   !
   ! local variables
   !
-  real(DP),parameter:: e2=2.0_dp
-  real(DP), external:: aei, aeo, aii, aio
+  real(DP),PARAMETER:: e2=2.0_dp
+  real(DP), EXTERNAL:: aei, aeo, aii, aio
   real(DP):: al, als, ammax,  cn
   real(DP):: de, emax, emin
   real(DP):: eps, fss, gamma, ro, sc
   real(DP):: sls, sn, uld, uout,  upin, upout
   real(DP):: xkap
-  integer:: i, it, mmax, nint, node, ierr
+  INTEGER:: i, it, mmax, nit, node, ierr
 
   ! these arrays are used as work space
-  real(DP),allocatable :: up(:),upp(:),cf(:),dv(:),fr(:),frp(:)
-
-!- modified in order to pass radial grid data 
-!
+  real(DP),ALLOCATABLE :: up(:),upp(:),cf(:),dv(:),fr(:),frp(:)
+  !
+  !
   nstop=0
   ammax= exp(grid%dx)
   al   = grid%dx
   mmax = grid%mesh
 
-  allocate(up(mmax), stat=ierr)
-  allocate(upp(mmax), stat=ierr)
-  allocate(cf(mmax), stat=ierr)
-  allocate(dv(mmax), stat=ierr)
-  allocate(fr(mmax), stat=ierr)
-  allocate(frp(mmax), stat=ierr)
+  ALLOCATE(up(mmax), stat=ierr)
+  ALLOCATE(upp(mmax), stat=ierr)
+  ALLOCATE(cf(mmax), stat=ierr)
+  ALLOCATE(dv(mmax), stat=ierr)
+  ALLOCATE(fr(mmax), stat=ierr)
+  ALLOCATE(frp(mmax), stat=ierr)
 
   uld=0.0_dp
   v=v/e2
@@ -74,56 +92,56 @@ subroutine lschps(mode,z,grid,nin,mch,n,l,e,u,v,nstop)
   !
   ! relativistic - non-relativistic switch
   !
-  if(mode .eq. 1 .or. mode .eq. 3) then
+  IF(mode == 1 .or. mode == 3) THEN
 !     fss=(1.0_dp/137.036_dp)**2
      fss=(1.0_dp/cau_fact)**2
-     if(l == 0) gamma=sqrt(1.0_dp-fss*z**2)
-     if(l .gt. 0) gamma=(l*sqrt(l**2-fss*z**2) + &
+     IF(l == 0) gamma=sqrt(1.0_dp-fss*z**2)
+     IF(l > 0) gamma=(l*sqrt(l**2-fss*z**2) + &
           (l+1)*sqrt((l+1)**2-fss*z**2))/(2*l+1)
-  else
+  ELSE
      fss=1.0e-20_dp
      gamma=l+1
-  end if
+  ENDIF
   !
   sls=l*(l+1)
   !
-  if(mode .eq. 1 .or. mode .eq. 2) then
+  IF(mode == 1 .or. mode == 2) THEN
      emax=v(mmax)+0.5_dp*sls/grid%r(mmax)**2
      emin=0.0_dp
-     do i=1,mmax
+     DO i=1,mmax
         emin=min(emin,v(i)+0.5_dp*sls/grid%r(i)**2)
-        !           if (l.eq.0)  write(6,*) grid%r(i),v(i)  
-     end do
-     !         if (l.eq.0) stop  
-     if(e .gt. emax) e=1.25_dp*emax
-     if(e .lt. emin) e=0.75_dp*emin
-     if(e .gt. emax) e=0.5_dp*(emax+emin)
-  else if(mode .eq. 4) then
+        !           if (l.eq.0)  write(6,*) grid%r(i),v(i)
+     ENDDO
+     !         if (l.eq.0) stop
+     IF(e > emax) e=1.25_dp*emax
+     IF(e < emin) e=0.75_dp*emin
+     IF(e > emax) e=0.5_dp*(emax+emin)
+  ELSEIF(mode == 4) THEN
      emax=e + 10.0_dp
      emin=e - 10.0_dp
-  end if
+  ENDIF
   !
-  do i=1,4
+  DO i=1,4
      u(i)=0.0_dp
      up(i)=0.0_dp
      upp(i)=0.0_dp
-  end do
-  nint=0
+  ENDDO
+  nit=0
   als=al**2
   !
   ! return point for bound state convergence
-10 nint=nint+1
-  if(nint .gt. 60) then
-     print '('' warning: wfc '',2i2,'' not converged'')', n, l
+10 nit=nit+1
+  IF(nit > 60) THEN
+     PRINT '('' warning: wfc '',2i2,'' not converged'')', n, l
      u=0.0_dp
      nstop=1
-     go to 999
-  end if
+     GOTO 999
+  ENDIF
   !
   ! coefficient array for u in differential eq.
-  do i=1,mmax
+  DO i=1,mmax
      cf(i)=als*sls + 2.0_dp*als*(v(i)-e)*grid%r(i)**2
-  end do
+  ENDDO
   !
   ! calculate dv/dr for darwin correction
   dv(1)=(-50.0_dp*v(1)+96.0_dp*v(2)-72.0_dp*v(3)+32.0_dp*v(4) &
@@ -131,121 +149,121 @@ subroutine lschps(mode,z,grid,nin,mch,n,l,e,u,v,nstop)
   dv(2)=(-6.0_dp*v(1)-20.0_dp*v(2)+36.0_dp*v(3)-12.0_dp*v(4) &
        +2.0_dp*v(5))/(24.0_dp*al*grid%r(2))
   !
-  do i=3,mmax-2
+  DO i=3,mmax-2
      dv(i)=(2.0_dp*v(i-2)-16.0_dp*v(i-1)+16.0_dp*v(i+1) &
           -2.0_dp*v(i+2))/(24.0_dp*al*grid%r(i))
-  end do
+  ENDDO
   dv(mmax-1)=( 3.0_dp*v(mmax)+10.0_dp*v(mmax-1)-18.0_dp*v(mmax-2)+ &
        6.0_dp*v(mmax-3)-v(mmax-4))/(12.0_dp*al*grid%r(mmax-1))
   dv(mmax)=( 25.0_dp*v(mmax)-48.0_dp*v(mmax-1)+36.0_dp*v(mmax-2)-&
        16.0_dp*v(mmax-3)+3.0_dp*v(mmax-4))/(12.0_dp*al*grid%r(mmax))
   !
   !  relativistic coefficient arrays for u (fr) and up (frp).
-  do i=1,mmax
+  DO i=1,mmax
      fr(i)=als*(grid%r(i)**2)*(-fss*(v(i)-e)**2 + 0.5_dp*fss*dv(i)/ &
           (grid%r(i)*(1.0_dp+0.5_dp*fss*(e-v(i)))))
      frp(i)=-al*grid%r(i)*0.5_dp*fss*dv(i)/(1.0_dp+0.5_dp*fss*(e-v(i)))
-  end do
+  ENDDO
   !
   ! find classical turning point for matching
-  if(mode .eq. 1 .or. mode .eq. 2) then
-     do i=mmax,2,-1
-        if(cf(i-1) .le. 0.0_dp .and. cf(i) .gt. 0.0_dp) then
+  IF(mode == 1 .or. mode == 2) THEN
+     DO i=mmax,2,-1
+        IF(cf(i-1) <= 0.0_dp .and. cf(i) > 0.0_dp) THEN
            mch=i
-           go to 40
-        end if
-     end do
-     print '('' warning: wfc '',2i2,'' no turning point'')', n, l
+           GOTO 40
+        ENDIF
+     ENDDO
+     PRINT '('' warning: wfc '',2i2,'' no turning point'')', n, l
      e=0.0_dp
-     do i=1,mmax
+     DO i=1,mmax
         u (i)=0.0_dp
-     end do
+     ENDDO
      nstop=1
-     go to 999
-  else
+     GOTO 999
+  ELSE
      nin=mch
-  end if
-40 continue
+  ENDIF
+40 CONTINUE
   !
   ! start wavefunction with series
   !
-  do i=1,4
+  DO i=1,4
      u(i)=grid%r(i)**gamma
      up(i)=al*gamma*grid%r(i)**gamma
      upp(i)=(al+frp(i))*up(i)+(cf(i)+fr(i))*u(i)
-  end do
+  ENDDO
   !
   ! outward integration using predictor once, corrector
   ! twice
   node=0
-  !               
-  do i=4,mch-1
+  !
+  DO i=4,mch-1
      u(i+1)=u(i)+aeo(up,i)
      up(i+1)=up(i)+aeo(upp,i)
-     do it=1,2
+     DO it=1,2
         upp(i+1)=(al+frp(i+1))*up(i+1)+(cf(i+1)+fr(i+1))*u(i+1)
         up(i+1)=up(i)+aio(upp,i)
         u(i+1)=u(i)+aio(up,i)
-     end do
-     if(u(i+1)*u(i) .le. 0.0_dp) node=node+1
-  end do
+     ENDDO
+     IF(u(i+1)*u(i) <= 0.0_dp) node=node+1
+  ENDDO
   !
   uout=u(mch)
   upout=up(mch)
   !
   !
-  if(node-n+l+1 .eq. 0 .or. mode .eq. 3 .or. mode .eq. 5) then
+  IF(node-n+l+1 == 0 .or. mode == 3 .or. mode == 5) THEN
      !
-     if(mode .eq. 1 .or. mode .eq. 2) then
+     IF(mode == 1 .or. mode == 2) THEN
         !
         ! start inward integration at 10*classical turning
         ! point with simple exponential
         nin=mch+2.3_dp/al
-        if(nin+4 .gt. mmax) nin=mmax-4
+        IF(nin+4 > mmax) nin=mmax-4
         xkap=sqrt(sls/grid%r(nin)**2 + 2.0_dp*(v(nin)-e))
         !
-        do i=nin,nin+4
+        DO i=nin,nin+4
            u(i)=exp(-xkap*(grid%r(i)-grid%r(nin)))
            up(i)=-grid%r(i)*al*xkap*u(i)
            upp(i)=(al+frp(i))*up(i)+(cf(i)+fr(i))*u(i)
-        end do
+        ENDDO
         !
         ! integrate inward
         !
-        do i=nin,mch+1,-1
+        DO i=nin,mch+1,-1
            u(i-1)=u(i)+aei(up,i)
            up(i-1)=up(i)+aei(upp,i)
-           do it=1,2
+           DO it=1,2
               upp(i-1)=(al+frp(i-1))*up(i-1)+(cf(i-1)+fr(i-1))*u(i-1)
               up(i-1)=up(i)+aii(upp,i)
               u(i-1)=u(i)+aii(up,i)
-           end do
-        end do
+           ENDDO
+        ENDDO
         !
         ! scale outside wf for continuity
         sc=uout/u(mch)
         !
-        do i=mch,nin
+        DO i=mch,nin
            up(i)=sc*up(i)
            u (i)=sc*u (i)
-        end do
+        ENDDO
         !
         upin=up(mch)
         !
-     else
+     ELSE
         !
         upin=uld*uout
         !
-     end if
+     ENDIF
      !
      ! perform normalization sum
      !
      ro=grid%r(1)/sqrt(ammax)
      sn=ro**(2.0_dp*gamma+1.0_dp)/(2.0_dp*gamma+1.0_dp)
      !
-     do i=1,nin-3
+     DO i=1,nin-3
         sn=sn+al*grid%r(i)*u(i)**2
-     end do
+     ENDDO
      !
      sn=sn + al*(23.0_dp*grid%r(nin-2)*u(nin-2)**2 &
           + 28.0_dp*grid%r(nin-1)*u(nin-1)**2 &
@@ -257,112 +275,112 @@ subroutine lschps(mode,z,grid,nin,mch,n,l,e,u,v,nstop)
      upout=cn*upout
      upin=cn*upin
      !
-     do i=1,nin
+     DO i=1,nin
         up(i)=cn*up(i)
         u(i)=cn*u(i)
-     end do
-     do i=nin+1,mmax
+     ENDDO
+     DO i=nin+1,mmax
         u(i)=0.0_dp
-     end do
+     ENDDO
      !
      ! exit for fixed-energy calculation
      !
-     if(mode .eq. 3 .or. mode .eq. 5) go to 999
+     IF(mode == 3 .or. mode == 5) GOTO 999
 
      ! perturbation theory for energy shift
      de=0.5_dp*uout*(upout-upin)/(al*grid%r(mch))
      !
      ! convergence test and possible exit
      !
-     if ( abs(de) .lt. max(abs(e),0.2_dp)*eps) go to 999
+     IF ( abs(de) < max(abs(e),0.2_dp)*eps) GOTO 999
      !
-     if(de .gt. 0.0_dp) then 
+     IF(de > 0.0_dp) THEN
         emin=e
-     else
+     ELSE
         emax=e
-     end if
+     ENDIF
      e=e+de
-     if(e .gt. emax .or. e .lt. emin) e=0.5_dp*(emax+emin)
+     IF(e > emax .or. e < emin) e=0.5_dp*(emax+emin)
      !
      ! loop back to converge e
      !
-     go to 10
+     GOTO 10
      !
-  else if(node-n+l+1 .lt. 0) then
+  ELSEIF(node-n+l+1 < 0) THEN
      ! too few nodes
      emin=e
      e=0.5_dp*(emin+emax)
-     go to 10
+     GOTO 10
      !
-  else
+  ELSE
      ! too many nodes
      emax=e
      e=0.5_dp*(emin+emax)
-     go to 10
-  end if
+     GOTO 10
+  ENDIF
   !
   ! deallocate arrays and exit
   !
-999 continue
-  deallocate(frp)
-  deallocate(fr)
-  deallocate(dv)
-  deallocate(cf)
-  deallocate(upp)
-  deallocate(up)
+999 CONTINUE
+  DEALLOCATE(frp)
+  DEALLOCATE(fr)
+  DEALLOCATE(dv)
+  DEALLOCATE(cf)
+  DEALLOCATE(upp)
+  DEALLOCATE(up)
   e=e*e2
   v=v*e2
-  return
+  RETURN
 
-end subroutine lschps
+END SUBROUTINE lschps
 !
-function aei(y,j)
+FUNCTION aei(y,j)
   !
-  use kinds, only : DP
-  implicit none
-  integer j
+  USE kinds, ONLY : DP
+  IMPLICIT NONE
+  INTEGER j
   real(DP):: y(j+3), aei
   !
   aei=-(4.16666666667e-2_dp)*(55.0_dp*y(j)-59.0_dp*y(j+1) &
        +37.0_dp*y(j+2)-9.0_dp*y(j+3))
-  return
-end function aei
+  RETURN
+END FUNCTION aei
 !
 ! adams extrapolation and interpolation formulas for
 ! outward and inward integration, abramowitz and
 ! stegun, p. 896
-function aeo(y,j)
+FUNCTION aeo(y,j)
   !
-  use kinds, only : DP
-  implicit none
-  integer:: j   
+  USE kinds, ONLY : DP
+  IMPLICIT NONE
+  INTEGER:: j
   real(DP):: y(j), aeo
   !
   aeo=(4.16666666667e-2_dp)*(55.0_dp*y(j)-59.0_dp*y(j-1) &
        +37.0_dp*y(j-2)-9.0_dp*y(j-3))
-  return
-end function aeo
+  RETURN
+END FUNCTION aeo
 !
-function aii(y,j)
+FUNCTION aii(y,j)
   !
-  use kinds, only : DP
-  implicit none
-  integer:: j
+  USE kinds, ONLY : DP
+  IMPLICIT NONE
+  INTEGER:: j
   real(DP) :: y(j+2), aii
   !
   aii=-(4.16666666667e-2_dp)*(9.0_dp*y(j-1)+19.0_dp*y(j) &
        -5.0_dp*y(j+1)+y(j+2))
-  return
-end function aii
+  RETURN
+END FUNCTION aii
 !
-function aio(y,j)
+FUNCTION aio(y,j)
   !
-  use kinds, only : DP
-  implicit none
-  integer :: j
+  USE kinds, ONLY : DP
+  IMPLICIT NONE
+  INTEGER :: j
   real(DP):: y(j+1), aio
   !
   aio=(4.16666666667e-2_dp)*(9.0_dp*y(j+1)+19.0_dp*y(j) &
        -5.0_dp*y(j-1)+y(j-2))
-  return
-end function aio
+  RETURN
+END FUNCTION aio

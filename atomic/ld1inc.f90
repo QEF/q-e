@@ -5,58 +5,58 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-module ld1inc
-  use kinds, only : dp
-  use ld1_parameters
-  use radial_grids, only: radial_grid_type, ndmx
-  use paw_type, only : paw_t
-  implicit none
-  save
+MODULE ld1inc
+  USE kinds, ONLY : dp
+  USE ld1_parameters
+  USE radial_grids, ONLY: radial_grid_type, ndmx
+  USE paw_type, ONLY : paw_t
+  IMPLICIT NONE
+  SAVE
   PRIVATE :: nwfx, nwfsx, ncmax1
-  integer, parameter :: lmx=3, lmx2=2*lmx
+  INTEGER, PARAMETER :: lmx=3, lmx2=2*lmx
   !
   !    variables for the all-electron calculation
   !
-  integer  ::      &
+  INTEGER  ::      &
        nn(nwfx),   &   ! the main quantum number
        ll(nwfx),   &   ! the orbital angular momentum
        nwf,        &   ! the number of wavefunctions
        isw(nwfx),  &   ! spin of the wfc. if(.not.lsd) all 1 (default)
        nspin           ! 1 (default) or 2 (if lsd=true)
 
-  character(len=2) ::&
+  CHARACTER(len=2) ::&
        el(nwfx)        !  the label of the states
 
   real(DP) ::   &
        jj(nwfx),     & ! the total angular momentum
        oc(nwfx),     & ! the occupations of the all-electron atom
-       zed,          & ! the ionic charge 
+       zed,          & ! the ionic charge
        enne,         & ! the number of electrons
        sl3(0:lmx2,0:lmx2,0:lmx2)
 
   real(DP)::          &
        enl(nwfx),          & ! the energies of the all-electron atom
        psi(ndmx,2,nwfx),    & ! the all-electron (dirac) wavefunctions
-                             ! psi(:,1,n) = major component for state n 
+                             ! psi(:,1,n) = major component for state n
                              ! psi(:,2,n) = minor component for state n
        rho(ndmx,2),         & ! the all-electron density
                              ! rho(:,1) = spin-up, rho(:,2) = spin-down
-       zeta(ndmx),           & ! the all-electron magnetization 
+       zeta(ndmx),           & ! the all-electron magnetization
        ! relativistic perturbative terms
        evel(nwfx),       & ! p^4 ("velocity") correction
        edar(nwfx),       & ! Darwin term
        eso(nwfx)           ! spin-orbit splitting
-       
-  logical :: &
+
+  LOGICAL :: &
        core_state(nwfx)   ! if true the state is in the core
   !
   !    the parameters of the logarithmic mesh
   !
-  type(radial_grid_type) :: grid
+  TYPE(radial_grid_type) :: grid
   !
   !    the variables for computing logarithmic derivatives
   !
-  integer :: &
+  INTEGER :: &
        nld,  &  ! computes the log der of the last nld wavefunctions
        npte     ! number of energy points
 
@@ -69,21 +69,21 @@ module ld1inc
   !
   !   the variables which define the pseudopotential
   !
-  integer ::       &
+  INTEGER ::       &
        nns(nwfsx), & ! the main quantum number of pseudopotential
        lls(nwfsx), & ! the angular momentum of pseudopotential
        isws(nwfsx),& ! the spin of each pseudo-wavefunctions (not used)
        ikk(nwfsx), & ! the maximum ik of each beta functions
        ik(nwfsx),  & ! the ik that correspond to rcut
        ikus(nwfsx), & ! the ik that corresponds to rcutus
-       nwfs,       & ! the number of pseudo wavefunctions 
+       nwfs,       & ! the number of pseudo wavefunctions
        nbeta,      & ! the number of projectors
        nsloc,      & ! the wavefunction which correspond to the loc pot
        lloc,       & ! the l component considered as local
        pseudotype, &  ! the type of pseudopotential
        nstoae(nwfsx)  ! for each pseudo the all-electron
 
-  character(len=2) :: &
+  CHARACTER(len=2) :: &
        els(nwfsx)       !  the label of the states
 
   real(DP) ::       &
@@ -93,7 +93,7 @@ module ld1inc
        rcut(nwfsx),      & ! the cut-off radius for pseudowavefunctions
        rcutus(nwfsx),    & ! the cut-off radius for us-pseudowavefunctions
        rcloc,            & ! cut-off for local potential
-       ecutrho,          & ! suggested cut-off for the change 
+       ecutrho,          & ! suggested cut-off for the change
        ecutwfc,          & ! suggested cut-off for the wavefunctions
        zval,             & ! the ionic pseudo charge
        phis(ndmx,nwfsx),  & ! the pseudo wavefunctions
@@ -110,13 +110,13 @@ module ld1inc
        qvan(ndmx,nwfsx,nwfsx), & ! the augmentation functions
        qvanl(ndmx,nwfsx,nwfsx,0:lmx2) ! the augmentation functions, l dependent
 
-  logical :: &
+  LOGICAL :: &
        tm,            &!  if true use Troullier-Martins for norm-conserving PP
        new(nwfsx)      !  if true the fit is on arbitrary energy
   !
   !    the variable for multiconfigurations
   !
-  integer ::                 &
+  INTEGER ::                 &
        nconf,                & ! number of configuration
        nstoaec(nwfsx,ncmax1),& ! correspondence all-electron test
        lsdts(ncmax1),        & ! for each configuration the lsd
@@ -125,19 +125,19 @@ module ld1inc
                                 ! each configuration
        iswtsc(nwfsx,ncmax1)    ! the spin index
 
-  character(len=2) ::  &
+  CHARACTER(len=2) ::  &
        eltsc(nwfsx,ncmax1)     !  the labels for each configuration
 
   real(DP) ::              &
        rcuttsc(nwfsx,ncmax1),   & ! the cut-off radius of each configuration
        rcutustsc(nwfsx,ncmax1), & ! cut-off radius for us
-       jjtsc(nwfsx,ncmax1),     & ! the j of a configuration 
+       jjtsc(nwfsx,ncmax1),     & ! the j of a configuration
        octsc(nwfsx,ncmax1),     & ! the occupations of each configuration
        enltsc(nwfsx,ncmax1)       ! the energies of each configuration
   !
   ! for tests
   !
-  integer ::        &
+  INTEGER ::        &
        nnts(nwfsx),  &   ! the main quantum number of pseudopotential
        llts(nwfsx),  &   ! the angular momentum of pseudopotential
        iswts(nwfsx), &   ! spin of the wfc. if(.not.lsd) all 1 (default)
@@ -152,7 +152,7 @@ module ld1inc
        jjts(nwfsx),        & ! jj of the test function (rel=2)
        octs(nwfsx)           ! the occupation numbers
 
-  character(len=2) ::  &
+  CHARACTER(len=2) ::  &
        elts(nwfsx)           ! the label of the states
   !
   ! for LDA-1/2
@@ -161,7 +161,7 @@ module ld1inc
   !
   !    The control of the run
   !
-  integer ::      &
+  INTEGER ::      &
        iter,      &  ! iteration conter
        lsd,       &  ! if true lsd calculation
        isic,      &  ! if true uses self-interaction correction
@@ -170,11 +170,11 @@ module ld1inc
        rel           ! 0 nonrelativistic calculation
   ! 1 scalar relativistic calculation
   ! 2 calculation with the full dirac equation
-  logical ::      &
+  LOGICAL ::      &
        lsmall,    &     ! if true writes the small component on file
        relpert,   &     ! compute relativistic perturbative corrections
        frozen_core, &   ! if true the all-electron calculation is frozen core
-       write_coulomb, & ! if true write a fake UPF pseudopotential file named 
+       write_coulomb, & ! if true write a fake UPF pseudopotential file named
                         ! X.coul (X=atomic symbol) - for usage in special cases
                         ! when the bare coulomb potential is required
        noscf            ! if true a hydrogenic atom is solved. The charge
@@ -182,7 +182,7 @@ module ld1inc
 
 
 
-  character(len=4) :: &
+  CHARACTER(len=4) :: &
        verbosity     ! if 'high' writes more information on output
 
 
@@ -193,7 +193,7 @@ module ld1inc
   !
   !    parameters for the old type pseudopotential
   !
-  integer ::   &
+  INTEGER ::   &
        lmin,   &  ! the minimum angular momentum
        lmax,   &  ! the maximum angular momentum
        nlc,    &  ! number of core functions
@@ -215,12 +215,12 @@ module ld1inc
        ehrt,       &    ! Hartree energy
        ecxc,       &    ! exchange-correlation energy
        ecc,        &    ! core-only contribution to the energy
-       evxt,       &    ! external field energy 
+       evxt,       &    ! external field energy
        epseu,      &    ! pseudopotential energy
        ekinc,      &    ! core kinetic energy
        ekinc0,     &    ! core kinetic energy
        ekinv,      &    ! valence kinetic energy
-       enclv, enclc,  & ! nuclear Coulomb energy of valence and core 
+       enclv, enclc,  & ! nuclear Coulomb energy of valence and core
        ehrtvv,     &    ! valence-valence Hartree energy
        ehrtcv,     &    ! core-valence Hartree energy
        ehrtcc,     &    ! core-core Hartree energy
@@ -236,7 +236,7 @@ module ld1inc
        rcore,      &  ! the points where core charge is smooth
        rhoc(ndmx)      ! the core charge
 
-  logical :: &
+  LOGICAL :: &
        new_core_ps, & ! if true pseudize the core charge with bessel functions
        nlcc    ! if true nlcc pseudopotential
   !
@@ -257,18 +257,20 @@ module ld1inc
        vpsloc(ndmx)  ,& ! the local pseudopotential
        vx(ndmx,2)    ,& ! the OEP-X potential (when needed)
        enzero(2)
-  real(DP), allocatable ::  &
+  real(DP) ::  &
+       vtau(ndmx)       ! potential for metaGGA
+  real(DP), ALLOCATABLE ::  &
        vsic(:,:), vsicnew(:), vhn1(:), egc(:) ! potentials for SIC
   !
-  logical :: lsave_wfc  ! if true, wfcs (AE and PS) are saved to the UFP file
+  LOGICAL :: lsave_wfc  ! if true, wfcs (AE and PS) are saved to the UFP file
   !
   !  variables needed for PAW dataset generation and test
   !
-  logical :: &
+  LOGICAL :: &
        lpaw,      &! if true generate or test a PAW dataset
        lnc2paw, &  ! if true the PAW dataset is generate from the NC one
        use_paw_as_gipaw ! if true, PAW data will be used for GIPAW
-  type(paw_t) :: &
+  TYPE(paw_t) :: &
        pawsetup    ! the PAW dataset
   real(DP) ::       &
        rmatch_augfun,     & ! define the matching radius for paw aug.fun.
@@ -278,11 +280,11 @@ module ld1inc
        psccharge(ndmx),   & ! smoothened core charge for PAW
        paw_energy(5,3)
 
-   character(len=20) ::&
+   CHARACTER(len=20) ::&
        which_augfun     ! choose shape of paw fun. (GAUSS, BESSEL..)
   !
   ! conversion factor
-  ! 
+  !
   real(DP) :: &
              rytoev_fact    ! Conversion from Ry and eV. A value
                             ! different from default can be used
@@ -290,7 +292,7 @@ module ld1inc
   real(DP) :: &
              cau_fact       ! speed of light in atomic units.
   !
-  !  Auxiliary quantities for verbose output 
+  !  Auxiliary quantities for verbose output
   !
   real(DP) ::       &
        aevcharge(ndmx,2)     ! the all-electron valence charge
@@ -298,14 +300,14 @@ module ld1inc
   !
   !  file names
   !
-  logical :: upf_v1_format     ! set to true to use version 1 of UPF file format
-  character(len=75)  :: title  ! the title of the run
-  character(len=75)  :: author ! the author of the pseudopotential
-  character(len=240) :: prefix ! prefix for file names
-  character(len=256) ::      & ! 
+  LOGICAL :: upf_v1_format     ! set to true to use version 1 of UPF file format
+  CHARACTER(len=75)  :: title  ! the title of the run
+  CHARACTER(len=75)  :: author ! the author of the pseudopotential
+  CHARACTER(len=240) :: prefix ! prefix for file names
+  CHARACTER(len=256) ::      & !
        file_pseudo,          & ! input file containing the pseudopotential
        file_pseudopw           ! output file where the pseudopot is written
-  character(len=256) ::      & ! output filenames read from input, containing:
+  CHARACTER(len=256) ::      & ! output filenames read from input, containing:
        file_chi,             & ! chi functions
        file_beta,            & ! beta functions
        file_qvan,            & ! qvan functions
@@ -313,7 +315,7 @@ module ld1inc
        file_core,            & ! core charge
        file_recon              ! information for paw reconstruction
   ! the following filenames are determined by "prefix", not read from input
-  character(len=256) ::      & ! output files, containing:
+  CHARACTER(len=256) ::      & ! output files, containing:
        file_wfcaegen,        & ! all-electron wavefunctions for generation
        file_wfcncgen,        & ! norm-conserving wavefunctions for generation
        file_wfcusgen,        & ! ultra-soft wavefunctions for generation
@@ -327,7 +329,7 @@ module ld1inc
   !
   ! vdw calculation
   !
-  logical :: vdw        ! optional variable
+  LOGICAL :: vdw        ! optional variable
   !
   real(DP) :: um,     & ! maximum frequency
               du,     & ! step of frequency
@@ -347,4 +349,4 @@ module ld1inc
   REAL ( dp ) :: wfc_ps_recon(ndmx,nwfsx)
   REAL ( dp ) :: wfc_us_recon(ndmx,nwfsx)
   !
-end module ld1inc
+END MODULE ld1inc

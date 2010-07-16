@@ -7,24 +7,24 @@
 !
 !
 !---------------------------------------------------------------
-subroutine lderiv
+SUBROUTINE lderiv
   !---------------------------------------------------------------
   !
-  !  numerical integration of the radial schroedinger equation 
+  !  numerical integration of the radial schroedinger equation
   !  computing logarithmic derivatives for Coulomb potential
   !
   !
-  use kinds,     only : dp
-  use radial_grids, only : ndmx
-  use io_global, only : stdout, ionode, ionode_id
-  use mp,        only : mp_bcast
-  use ld1_parameters, only : nwfsx
-  use ld1inc,    only : file_logder, grid, vpot, rel, nspin, nld, zed, &
-                        npte, deld, eminld, emaxld, rlderiv
+  USE kinds,     ONLY : dp
+  USE radial_grids, ONLY : ndmx
+  USE io_global, ONLY : stdout, ionode, ionode_id
+  USE mp,        ONLY : mp_bcast
+  USE ld1_parameters, ONLY : nwfsx
+  USE ld1inc,    ONLY : file_logder, grid, vpot, rel, nspin, nld, zed, &
+                        npte, deld, eminld, emaxld, rlderiv, vtau
 
-  implicit none
+  IMPLICIT NONE
 
-  integer ::        &
+  INTEGER ::        &
        lam,    &   ! the angular momentum
        ikrld,  &   ! index of matching radius
        nc,     &   ! counter on logarithmic derivatives
@@ -32,7 +32,7 @@ subroutine lderiv
        is,     &   ! counter on spin
        nstop,  &   ! integer to monitor errors
        ios,    &   ! used for I/O control
-       n,ie        ! generic counter 
+       n,ie        ! generic counter
 
   real(DP) ::           &
        aux(ndmx),         & ! the square of the wavefunction
@@ -41,80 +41,81 @@ subroutine lderiv
        e,                & ! the eigenvalue
        j                   ! total angular momentum for log_der
 
-  real(DP), external :: compute_log
+  real(DP), EXTERNAL :: compute_log
 
-  real(DP), allocatable ::        &
+  real(DP), ALLOCATABLE ::        &
        ene(:),        &    ! the energy grid
        dlchi(:, :)         ! the logarithmic derivative
 
-  character(len=256) :: flld
+  CHARACTER(len=256) :: flld
 
 
-  if (nld == 0 .or. file_logder == ' ') return
-  if (nld > nwfsx) call errore('lderiv','nld is too large',1)
+  IF (nld == 0 .or. file_logder == ' ') RETURN
+  IF (nld > nwfsx) CALL errore('lderiv','nld is too large',1)
 
   ze2=-zed*2.0_dp
 
-  do n=1,grid%mesh
-     if (grid%r(n) > rlderiv) go to 10
-  enddo
-  call errore('lderiv','wrong rlderiv?',1)
+  DO n=1,grid%mesh
+     IF (grid%r(n) > rlderiv) GOTO 10
+  ENDDO
+  CALL errore('lderiv','wrong rlderiv?',1)
 10 ikrld = n-1
-  write(stdout,'(5x,''Computing logarithmic derivative in'',f10.5)') &
+  WRITE(stdout,'(5x,''Computing logarithmic derivative in'',f10.5)') &
        (grid%r(ikrld)+grid%r(ikrld+1))*0.5_dp
 
   npte= (emaxld-eminld)/deld + 1
-  allocate ( dlchi(npte, nld) )
-  allocate ( ene(npte) )
-  do ie=1,npte
+  ALLOCATE ( dlchi(npte, nld) )
+  ALLOCATE ( ene(npte) )
+  DO ie=1,npte
      ene(ie)= eminld+deld*(ie-1)
-  enddo
+  ENDDO
 
-  do is=1,nspin
-     do nc=1,nld
-        if (rel < 2) then
+  DO is=1,nspin
+     DO nc=1,nld
+        IF (rel < 2) THEN
            lam=nc-1
            j=0.0_dp
-        else
+        ELSE
            lam=nc/2
-           if (mod(nc,2)==0) j=lam-0.5_dp
-           if (mod(nc,2)==1) j=lam+0.5_dp
-        endif
-        do ie=1,npte
+           IF (mod(nc,2)==0) j=lam-0.5_dp
+           IF (mod(nc,2)==1) j=lam+0.5_dp
+        ENDIF
+        DO ie=1,npte
            e=ene(ie)
            !
            !    integrate outward up to ikrld+1
            !
-           if (rel == 1) then
-              call lschps(3,zed,grid,idum,ikrld+5,1,lam,e,aux,vpot(1,is),nstop)
-           else if (rel == 2) then
-              call dir_outward(ndmx,ikrld+5,lam,j,e,grid%dx,&
+           IF (rel == 1) THEN
+              CALL lschps (3, zed, grid, idum, ikrld+5, 1, lam, e, &
+                   vpot(1,is), vtau, aux, nstop )
+           ELSEIF (rel == 2) THEN
+              CALL dir_outward(ndmx,ikrld+5,lam,j,e,grid%dx,&
                    aux_dir,grid%r,grid%rab,vpot(1,is))
               aux(:)=aux_dir(:,1)
-           else
-              call intref(lam,e,ikrld+5,grid,vpot(1,is),ze2,aux)
-           endif
+           ELSE
+              CALL intref(lam,e,ikrld+5,grid,vpot(1,is),ze2,aux)
+           ENDIF
            !
            !    compute the logarithmic derivative and save in dlchi
-           !            
+           !
            dlchi(ie, nc) = compute_log(aux(ikrld-3),grid%r(ikrld),grid%dx)
-        enddo
-     enddo
-      
-     if (nspin == 2 .and. is == 1) then
+        ENDDO
+     ENDDO
+
+     IF (nspin == 2 .and. is == 1) THEN
         flld = trim(file_logder)//'up'
-     else if (nspin == 2 .and. is == 2) then
+     ELSEIF (nspin == 2 .and. is == 2) THEN
         flld = trim(file_logder)//'dw'
-     else
+     ELSE
         flld = trim(file_logder)
-     end if
+     ENDIF
 
-     call write_efun(flld,dlchi,ene,npte,nld)
+     CALL write_efun(flld,dlchi,ene,npte,nld)
      !
-  enddo
+  ENDDO
 
-  deallocate (ene)
-  deallocate (dlchi)
-  return
-end subroutine lderiv
+  DEALLOCATE (ene)
+  DEALLOCATE (dlchi)
+  RETURN
+END SUBROUTINE lderiv
 

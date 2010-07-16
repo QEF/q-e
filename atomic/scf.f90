@@ -6,115 +6,115 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !---------------------------------------------------------------
-subroutine scf(ic)
+SUBROUTINE scf(ic)
   !---------------------------------------------------------------
   !
   !   this routine performs the atomic self-consistent procedure
   !   self-interaction-correction allowed
   !
-  use kinds, only : dp
-  use radial_grids, only : ndmx
-  use constants, only: e2
-  use ld1inc, only : grid, zed, psi, isic, vpot, vh, vxt, rho, iter, &
+  USE kinds, ONLY : dp
+  USE radial_grids, ONLY : ndmx
+  USE constants, ONLY: e2
+  USE ld1inc, ONLY : grid, zed, psi, isic, vpot, vh, vxt, rho, iter, &
                      lsd, rel, latt, enne, beta, nspin, tr2, eps0, &
                      nwf, nn, ll, jj, enl, oc, isw, core_state, frozen_core, &
-                     vsic, vsicnew, vhn1, egc, relpert, noscf
-  implicit none
+                     vtau, vsic, vsicnew, vhn1, egc, relpert, noscf
+  IMPLICIT NONE
 
-  integer, intent(in) :: ic
+  INTEGER, INTENT(in) :: ic
 
-  logical:: conv
-  integer:: nerr, nstop, n, i, is, id, nin, mch
+  LOGICAL:: conv
+  INTEGER:: nerr, nstop, n, i, is, id, nin, mch
   real(DP) ::  vnew(ndmx,2), rhoc1(ndmx), ze2
-  integer, parameter :: maxter=200
-  real(DP), parameter :: thresh=1.0e-10_dp
+  INTEGER, PARAMETER :: maxter=200
+  real(DP), PARAMETER :: thresh=1.0e-10_dp
   !
-  ! 
+  !
   ze2 = - zed * e2
   rhoc1=0.0_dp
   id=3
-  if (.not.frozen_core.or.ic==1) psi=0.0_dp
+  IF (.not.frozen_core.or.ic==1) psi=0.0_dp
   !!!
-  if (isic /= 0 .and. relpert)  id=1 ! 
+  IF (isic /= 0 .and. relpert)  id=1 !
   !!!
-  do iter=1,maxter
+  DO iter=1,maxter
      nerr=0
      vnew=vpot
-     do n=1,nwf
-        if (oc(n) >= 0.0_dp) then
-           if (ic==1.or..not.frozen_core.or..not.core_state(n)) then
+     DO n=1,nwf
+        IF (oc(n) >= 0.0_dp) THEN
+           IF (ic==1.or..not.frozen_core.or..not.core_state(n)) THEN
               is=isw(n)
-              if (isic /= 0 .and. iter > 1) vnew(:,is)=vpot(:,is)-vsic(:,n)
-              if (rel == 0) then
-                 call ascheq (nn(n),ll(n),enl(n),grid%mesh,grid,vnew(1,is),&
+              IF (isic /= 0 .and. iter > 1) vnew(:,is)=vpot(:,is)-vsic(:,n)
+              IF (rel == 0) THEN
+                 CALL ascheq (nn(n),ll(n),enl(n),grid%mesh,grid,vnew(1,is),&
                       ze2,thresh,psi(1,1,n),nstop)
-              elseif (rel == 1) then
-                 call lschps (1,zed,grid,nin,mch,nn(n),ll(n),enl(n),&
-                             psi(1,1,n),vnew(1,is),nstop)
-                 if (nstop>0.and.oc(n)<1.e-10_DP) nstop=0
-              elseif (rel == 2) then
-                 call dirsol (ndmx,grid%mesh,nn(n),ll(n),jj(n),iter,enl(n), &
+              ELSEIF (rel == 1) THEN
+                 CALL lschps (1,zed,grid,nin,mch,nn(n),ll(n),enl(n),&
+                             vnew(1,is),vtau,psi(1,1,n),nstop)
+                 IF (nstop>0.and.oc(n)<1.e-10_DP) nstop=0
+              ELSEIF (rel == 2) THEN
+                 CALL dirsol (ndmx,grid%mesh,nn(n),ll(n),jj(n),iter,enl(n), &
                       thresh,grid,psi(1,1,n),vnew(1,is),nstop)
-              else
-                 call errore('scf','relativistic not programmed',1)
-              endif
+              ELSE
+                 CALL errore('scf','relativistic not programmed',1)
+              ENDIF
               !      write(6,*) el(n),enl(n)
               ! if (nstop /= 0) write(6,'(4i6)') iter,nn(n),ll(n),nstop
               nerr=nerr+nstop
-           endif
-        else
+           ENDIF
+        ELSE
            enl(n)=0.0_dp
            psi(:,:,n)=0.0_dp
-        endif
-     enddo
+        ENDIF
+     ENDDO
      !
      ! calculate charge density (spherical approximation)
      !
      rho=0.0_dp
-     if (noscf) goto 500
-     do n=1,nwf
-        do i=1,grid%mesh
+     IF (noscf) GOTO 500
+     DO n=1,nwf
+        DO i=1,grid%mesh
            rho(i,isw(n))=rho(i,isw(n))+oc(n)*(psi(i,1,n)**2+psi(i,2,n)**2)
-        enddo
-     enddo
+        ENDDO
+     ENDDO
      !
      ! calculate new potential
      !
-     call new_potential(ndmx,grid%mesh,grid,zed,vxt,&
+     CALL new_potential(ndmx,grid%mesh,grid,zed,vxt,&
           lsd,.false.,latt,enne,rhoc1,rho,vh,vnew,1)
      !
      ! calculate SIC correction potential (if present)
      !
-     if (isic /= 0) then
-        do n=1,nwf
-           if (oc(n) >= 0.0_dp) then
+     IF (isic /= 0) THEN
+        DO n=1,nwf
+           IF (oc(n) >= 0.0_dp) THEN
               is=isw(n)
-              call sic_correction(n,vhn1,vsicnew,egc)
+              CALL sic_correction(n,vhn1,vsicnew,egc)
               !
               ! use simple mixing for SIC correction
               !
               vsic(:,n) = (1.0_dp-beta)*vsic(:,n)+beta*vsicnew(:)
-           end if
-        enddo
-     endif
+           ENDIF
+        ENDDO
+     ENDIF
      !
      ! mix old and new potential
      !
-     call vpack(grid%mesh,ndmx,nspin,vnew,vpot,1)
-     call dmixp(grid%mesh*nspin,vnew,vpot,beta,tr2,iter,id,eps0,conv,maxter)
-     call vpack(grid%mesh,ndmx,nspin,vnew,vpot,-1)
+     CALL vpack(grid%mesh,ndmx,nspin,vnew,vpot,1)
+     CALL dmixp(grid%mesh*nspin,vnew,vpot,beta,tr2,iter,id,eps0,conv,maxter)
+     CALL vpack(grid%mesh,ndmx,nspin,vnew,vpot,-1)
 !        write(6,*) iter, eps0
      !
-500  if (noscf) then
+500  IF (noscf) THEN
         conv=.true.
         eps0=0.0_DP
-     endif
-     if (conv) then
-        if (nerr /= 0) call infomsg ('scf','errors in KS equations')
-        goto 45
-     endif
-  enddo
-  call infomsg('scf','warning: convergence not achieved')
-45 return
+     ENDIF
+     IF (conv) THEN
+        IF (nerr /= 0) CALL infomsg ('scf','errors in KS equations')
+        GOTO 45
+     ENDIF
+  ENDDO
+  CALL infomsg('scf','warning: convergence not achieved')
+45 RETURN
 
-end subroutine scf
+END SUBROUTINE scf

@@ -7,75 +7,75 @@
 !
 !
 !---------------------------------------------------------------
-subroutine all_electron(ild,ic)
+SUBROUTINE all_electron(ild,ic)
   !---------------------------------------------------------------
   !
   !  this routine is a driver to an all-electron calculation
   !  with the parameters given in input
   !
   !
-  use kinds, only : DP
-  use radial_grids, only: ndmx
-  use ld1inc, only: isic, grid, zeta, rho, enne, vpot, vxt, enl, &
+  USE kinds, ONLY : DP
+  USE radial_grids, ONLY: ndmx
+  USE ld1inc, ONLY: isic, grid, zeta, rho, enne, vpot, vxt, enl, &
                      deld, encl, etot, ecxc, evxt, ehrt, epseu, ekin, &
                      vnl, vh, lsd, nspin, nlcc, vdw, nn, ll, oc, nwf, &
                      zed, zval, vxc, exc, excgga, v0, verbosity, &
                      relpert, evel, edar, eso, vsic, vsicnew, vhn1, egc
-  implicit none
+  IMPLICIT NONE
 
-  integer, intent(in) :: ic   ! counter on configurations
-  logical :: ild    ! if true compute log der
+  INTEGER, INTENT(in) :: ic   ! counter on configurations
+  LOGICAL :: ild    ! if true compute log der
   !
   !    compute an initial estimate of the potential
   !
-  call starting_potential(ndmx,grid%mesh,zval,zed,nwf,oc,nn,ll,grid%r,&
-       enl,v0,vxt,vpot,enne,nspin)
+  CALL starting_potential (ndmx, grid%mesh, zval, zed, nwf, oc, nn, ll,&
+                           grid%r,enl, v0, vxt, vpot, enne, nspin )
   !
   ! allocate variables for SIC, if needed
   !
-  if (isic /= 0) then
-     allocate(vsic(ndmx,nwf), vsicnew(ndmx), vhn1(ndmx), egc(ndmx))
+  IF (isic /= 0) THEN
+     ALLOCATE(vsic(ndmx,nwf), vsicnew(ndmx), vhn1(ndmx), egc(ndmx))
      vsic=0.0_dp
-  endif
+  ENDIF
   !
   !     solve the eigenvalue self-consistent equation
   !
-  call scf(ic)
+  CALL scf(ic)
   !
   !   compute relativistic corrections to the eigenvalues
   !
-  if ( relpert ) call compute_relpert(evel,edar,eso)
+  IF ( relpert ) CALL compute_relpert(evel,edar,eso)
   !
   !  compute total energy
   !
-  call elsd (zed,grid,rho,vxt,vh,vxc,exc,excgga,nwf,nspin,enl,oc,    &
+  CALL elsd (zed,grid,rho,vxt,vh,vxc,exc,excgga,nwf,nspin,enl,oc,    &
              etot,ekin,encl,ehrt,ecxc,evxt)
   !
-  if (verbosity=='high') call elsd_highv(ic)
+  IF (verbosity=='high') CALL elsd_highv(ic)
   !
   !   add sic correction if needed
   !
-  if(isic /= 0) call esic  
+  IF(isic /= 0) CALL esic
   !
   !   print results
   !
-  call write_results 
+  CALL write_results
   !
   !  compute logarithmic derivative
   !
-  if (deld > 0.0_DP .and. ild) call lderiv
+  IF (deld > 0.0_DP .and. ild) CALL lderiv
   !
   ! compute C6 coefficient if required
   !
-  if (vdw) then
-     call c6_tfvw ( grid%mesh, zed, grid, rho(1,1) )
-     call c6_dft  ( grid%mesh, zed, grid )
-  end if
+  IF (vdw) THEN
+     CALL c6_tfvw ( grid%mesh, zed, grid, rho(1,1) )
+     CALL c6_dft  ( grid%mesh, zed, grid )
+  ENDIF
   !
-  if (isic /= 0) then
-     deallocate(egc, vhn1, vsicnew, vsic)
-  endif
+  IF (isic /= 0) THEN
+     DEALLOCATE(egc, vhn1, vsicnew, vsic)
+  ENDIF
   !
-  return
+  RETURN
   !
-end subroutine all_electron
+END SUBROUTINE all_electron
