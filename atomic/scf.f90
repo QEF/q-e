@@ -13,6 +13,7 @@ SUBROUTINE scf(ic)
   !   self-interaction-correction allowed
   !
   USE kinds, ONLY : dp
+  USE funct, ONLY : dft_is_meta
   USE radial_grids, ONLY : ndmx
   USE constants, ONLY: e2
   USE ld1inc, ONLY : grid, zed, psi, isic, vpot, vh, vxt, rho, iter, &
@@ -24,7 +25,7 @@ SUBROUTINE scf(ic)
   INTEGER, INTENT(in) :: ic
 
   LOGICAL:: conv
-  INTEGER:: nerr, nstop, n, i, is, id, nin, mch
+  INTEGER:: nerr, nstop, n, i, is, id, nin
   real(DP) ::  vnew(ndmx,2), rhoc1(ndmx), ze2
   INTEGER, PARAMETER :: maxter=200
   real(DP), PARAMETER :: thresh=1.0e-10_dp
@@ -49,8 +50,13 @@ SUBROUTINE scf(ic)
                  CALL ascheq (nn(n),ll(n),enl(n),grid%mesh,grid,vnew(1,is),&
                       ze2,thresh,psi(1,1,n),nstop)
               ELSEIF (rel == 1) THEN
-                 CALL lschps (1,zed,grid,nin,mch,nn(n),ll(n),enl(n),&
-                             vnew(1,is),vtau,psi(1,1,n),nstop)
+                 IF ( dft_is_meta() ) THEN
+                    CALL lschps_meta (1, zed, thresh, grid, nin, nn(n), ll(n),&
+                         enl(n), vnew(1,is), vtau, psi(1,1,n), nstop)
+                 ELSE
+                    CALL lschps (1, zed, thresh, grid, nin, nn(n), ll(n),&
+                         enl(n), vnew(1,is), psi(1,1,n), nstop)
+                 END IF
                  IF (nstop>0.and.oc(n)<1.e-10_DP) nstop=0
               ELSEIF (rel == 2) THEN
                  CALL dirsol (ndmx,grid%mesh,nn(n),ll(n),jj(n),iter,enl(n), &

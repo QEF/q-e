@@ -12,7 +12,7 @@ SUBROUTINE calculate_gipaw_orbitals
   USE ld1_parameters, ONLY : nwfsx
   USE ld1inc,         ONLY : nld, file_logder, zed, grid, &
        wfc_ae_recon, wfc_ps_recon, nspin, nwftsc, lltsc, enltsc, &
-       nwfs, eltsc, el, nwf, enl, rel, vpot, vtau, nbeta, pseudotype, &
+       nwfs, eltsc, el, nwf, enl, rel, vpot, nbeta, pseudotype, &
        vpstot, nstoaets, enlts, vnl, lls, betas, ddd, qq, jjs, els, &
        rcutus, ikk, nwfts, verbosity
   USE io_global,     ONLY : stdout
@@ -24,7 +24,6 @@ SUBROUTINE calculate_gipaw_orbitals
   INTEGER ::        &
        lam,    &   ! the angular momentum
        nc,     &   ! counter on logarithmic derivatives
-       idum,   &   ! integer variable for lschps
        is,     &   ! counter on spin
        ierr,   &   ! used for allocation control
        ios,    &   ! used for I/O control
@@ -59,7 +58,7 @@ SUBROUTINE calculate_gipaw_orbitals
        nst,nstop,     &  ! auxiliary for integrals
        ind               ! counters on index
 
-  REAL ( dp ) :: r1, r2
+  REAL ( dp ) :: r1, r2, thrdum = 0.0_dp
 
   INTEGER :: ns, outer_r_radial_index, n_idx, ik, i, r_write_max_index
   INTEGER :: ik_stop
@@ -128,8 +127,8 @@ SUBROUTINE calculate_gipaw_orbitals
            !    integrate outward up to ik_stop
            !
            IF (rel == 1) THEN
-              CALL lschps(3,zed,grid,idum,outer_r_radial_index,1,lam, &
-                   e,vpot(1,is),vtau,aux,nstop)
+              CALL lschps(3, zed, thrdum, grid, outer_r_radial_index, &
+                   1, lam, e, vpot(1,is), aux, nstop)
            ELSEIF (rel == 2) THEN
               CALL dir_outward(ndmx,outer_r_radial_index,lam,j,e,grid%dx,&
                    aux_dir,grid%r,grid%rab,vpot(1,is))

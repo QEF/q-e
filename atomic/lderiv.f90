@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2004 PWSCF group
+! Copyright (C) 2004-201 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -20,7 +20,7 @@ SUBROUTINE lderiv
   USE mp,        ONLY : mp_bcast
   USE ld1_parameters, ONLY : nwfsx
   USE ld1inc,    ONLY : file_logder, grid, vpot, rel, nspin, nld, zed, &
-                        npte, deld, eminld, emaxld, rlderiv, vtau
+                        npte, deld, eminld, emaxld, rlderiv
 
   IMPLICIT NONE
 
@@ -28,7 +28,7 @@ SUBROUTINE lderiv
        lam,    &   ! the angular momentum
        ikrld,  &   ! index of matching radius
        nc,     &   ! counter on logarithmic derivatives
-       idum,   &   ! integer variable for lschps
+       nin,    &   ! integer variable for lschps
        is,     &   ! counter on spin
        nstop,  &   ! integer to monitor errors
        ios,    &   ! used for I/O control
@@ -39,7 +39,8 @@ SUBROUTINE lderiv
        aux_dir(ndmx,2),   & ! the square of the wavefunction
        ze2,              & ! the nuclear charge in Ry units
        e,                & ! the eigenvalue
-       j                   ! total angular momentum for log_der
+       j,                & ! total angular momentum for log_der
+       thrdum = 0.0_dp     ! real variable (not used) for lschps
 
   real(DP), EXTERNAL :: compute_log
 
@@ -86,8 +87,9 @@ SUBROUTINE lderiv
            !    integrate outward up to ikrld+1
            !
            IF (rel == 1) THEN
-              CALL lschps (3, zed, grid, idum, ikrld+5, 1, lam, e, &
-                   vpot(1,is), vtau, aux, nstop )
+              nin = ikrld+5
+              CALL lschps (3, zed, thrdum, grid, nin, 1, lam, e, &
+                   vpot(1,is), aux, nstop )
            ELSEIF (rel == 2) THEN
               CALL dir_outward(ndmx,ikrld+5,lam,j,e,grid%dx,&
                    aux_dir,grid%r,grid%rab,vpot(1,is))
