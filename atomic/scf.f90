@@ -24,20 +24,17 @@ SUBROUTINE scf(ic)
 
   INTEGER, INTENT(in) :: ic
 
-  LOGICAL:: conv
+  LOGICAL:: meta, conv
   INTEGER:: nerr, nstop, n, i, is, id, nin
   real(DP) ::  vnew(ndmx,2), vtaunew(ndmx), rhoc1(ndmx), ze2
   INTEGER, PARAMETER :: maxter=200
   real(DP), PARAMETER :: thresh=1.0e-10_dp
   !
   !
+  meta = dft_is_meta() 
   ze2 = - zed * e2
   rhoc1=0.0_dp
-  id=3
   IF (.not.frozen_core.or.ic==1) psi=0.0_dp
-  !!!
-  IF (isic /= 0 .and. relpert)  id=1 !
-  !!!
   DO iter=1,maxter
      nerr=0
      vnew=vpot
@@ -48,10 +45,15 @@ SUBROUTINE scf(ic)
               is=isw(n)
               IF (isic /= 0 .and. iter > 1) vnew(:,is)=vpot(:,is)-vsic(:,n)
               IF (rel == 0) THEN
-                 CALL ascheq (nn(n),ll(n),enl(n),grid%mesh,grid,vnew(1,is),&
+                 IF ( meta ) THEN
+                    CALL lschps_meta (2, zed, thresh, grid, nin, nn(n), ll(n),&
+                         enl(n), vnew(1,is), vtaunew, psi(1,1,n), nstop)
+                 ELSE
+                    CALL ascheq (nn(n),ll(n),enl(n),grid%mesh,grid,vnew(1,is),&
                       ze2,thresh,psi(1,1,n),nstop)
+                 END IF
               ELSEIF (rel == 1) THEN
-                 IF ( dft_is_meta() ) THEN
+                 IF ( meta ) THEN
                     CALL lschps_meta (1, zed, thresh, grid, nin, nn(n), ll(n),&
                          enl(n), vnew(1,is), vtaunew, psi(1,1,n), nstop)
                  ELSE
@@ -87,7 +89,7 @@ SUBROUTINE scf(ic)
      !
      ! calculate kinetc energy density (spherical approximation)
      !
-     IF ( dft_is_meta () ) CALL kin_e_density (ndmx, grid%mesh, nwf, &
+     IF ( meta ) CALL kin_e_density (ndmx, grid%mesh, nwf, &
          ll, oc, psi, grid%r, grid%r2, grid%dx, tau)
      !
      ! calculate new potential
@@ -112,6 +114,9 @@ SUBROUTINE scf(ic)
      !
      ! mix old and new potential
      !
+     id=3
+     IF (isic /= 0 .and. relpert)  id=1
+     !
      CALL vpack(grid%mesh,ndmx,nspin,vnew,vpot,1)
      CALL dmixp(grid%mesh*nspin,vnew,vpot,beta,tr2,iter,id,eps0,conv,maxter)
      CALL vpack(grid%mesh,ndmx,nspin,vnew,vpot,-1)
@@ -119,7 +124,7 @@ SUBROUTINE scf(ic)
      !
      ! mix old and new metaGGA potential - use simple mixing
      !
-     IF ( dft_is_meta () ) vtau(:) = (1.0_dp-beta)*vtaunew(:)+beta*vtau(:)
+     IF ( meta ) vtau(:) = (1.0_dp-beta)*vtaunew(:)+beta*vtau(:)
      !
 500  IF (noscf) THEN
         conv=.true.

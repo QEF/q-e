@@ -24,24 +24,29 @@ SUBROUTINE ld1_setup
                 nwfs,          lls,   jjs,   els,   isws,   ocs, &
                 nwfts,  nnts,  llts,  jjts,  elts,  iswts,  octs, nstoaets, &
                 nwftsc, nntsc, lltsc, jjtsc, eltsc, iswtsc, octsc, nstoaec, lpaw
-  USE funct, ONLY : get_iexch, dft_is_meta, start_exx !, set_dft_from_name
+  USE funct, ONLY : get_iexch, dft_is_meta, start_exx
   IMPLICIT NONE
 
   INTEGER :: n, n1, nc
-  LOGICAL :: hf, oep
+  LOGICAL :: hf, oep, meta
   real(DP) :: ocs_loc
   !
   !
-  IF (dft_is_meta() .and. rel /= 1 ) &
-      CALL errore('setup','meta-GGA only for scalar-relativistic case', 1)
+  meta = dft_is_meta()
+  IF ( meta .and. rel > 1 ) &
+      CALL errore('setup','meta-GGA not implemented for fully-relativistic case', 1)
+  IF ( meta .and. lsd == 1 ) &
+      CALL errore('setup','meta-GGA not implemented for LSDA', 2)
+  IF ( meta .and. iswitch > 1 ) &
+      CALL errore('setup','meta-GGA implemented only for all-electron case', 3)
   hf  = get_iexch()==5
   IF (hf)     CALL errore('setup','HF not implemented yet',1)
   oep = get_iexch()==4
-  IF (oep) CALL start_exx
   IF (oep.and.iswitch>1) &
      CALL errore('setup','OEP is implemented only for all-electron calc.',1)
   IF (oep.and.rel>0) &
      CALL errore('setup','OEP is implemented only for non-relativistic calc.',1)
+  IF (oep) CALL start_exx
   !
   CALL set_sl3(sl3,lmx)
   !

@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2004-2007 Quantum ESPRESSO group
+! Copyright (C) 2004-2010 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -7,8 +7,8 @@
 !
 !
 !---------------------------------------------------------------
-subroutine elsd (zed,grid,rho,vxt,vh,vxc,exc,excgga,nwf,nspin,enl,oc,   &
-                 etot,ekin,encl,ehrt,ecxc,evxt)    
+subroutine elsd ( zed, grid, rho, vxt, vh, vxc, exc, excgga, nwf,&
+                  nspin, enl, oc, etot, ekin, encl, ehrt, ecxc, evxt )    
   !---------------------------------------------------------------
   !
   !   atomic total energy in the local-spin-density scheme
