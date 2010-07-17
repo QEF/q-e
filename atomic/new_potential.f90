@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2004 PWSCF group
+! Copyright (C) 2004-2010 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -15,12 +15,12 @@ subroutine new_potential &
   use constants, only: fpi, e2
   use radial_grids, only: radial_grid_type, hartree
   use kinds, only : DP
-  use funct, only : get_iexch, dft_is_gradient, exc_t, vxc_t
-  use ld1inc, only : nwf, vx, vxc, exc, excgga
+  use funct, only : get_iexch, dft_is_meta, dft_is_gradient, exc_t, vxc_t
+  use ld1inc, only : nwf, vx, vxc, exc, excgga, tau, vtau
   implicit none
   type(radial_grid_type),intent(in):: grid
   integer, intent(in) :: iflag
-  logical :: nlcc, gga, oep
+  logical :: nlcc, gga, oep, meta
   integer :: ndm,mesh,lsd,latt,i,is,nu, nspin, ierr
   real(DP):: rho(ndm,2),vxcp(2),vnew(ndm,2),vxt(ndm),vh(ndm), rhoc(ndm)
   real(DP):: zed,enne,rh(2),rhc
@@ -28,9 +28,10 @@ subroutine new_potential &
 !  real(DP),allocatable:: vx(:,:)
   real(DP),allocatable:: dchi0(:,:)
 
-
-  if (mesh.ne.grid%mesh) call errore('new_potential','mesh dimension is not as expected',1)
+  if (mesh.ne.grid%mesh) &
+       call errore('new_potential','mesh dimension is not as expected',1)
   gga=dft_is_gradient()
+  meta=dft_is_meta()
   oep=get_iexch().eq.4
   nspin=1
   if (lsd.eq.1) nspin=2
@@ -58,8 +59,16 @@ subroutine new_potential &
         rh(is) = rho(i,is)/grid%r2(i)/fpi
      enddo
      if (nlcc) rhc = rhoc(i)/grid%r2(i)/fpi
-     call vxc_t(rh,rhc,lsd,vxcp)
-     exc(i)=exc_t(rh,rhc,lsd)
+     if (meta) then
+        !
+        ! Workaround: the meta-GGA XC functional already contains the LDA part
+        !
+        vxcp(:)=0.0_dp
+        exc(i) =0.0_dp
+     else
+        call vxc_t(rh,rhc,lsd,vxcp)
+        exc(i)=exc_t(rh,rhc,lsd)
+     endif
      do is=1,nspin
         vxc(i,is)=vxcp(is)
         vnew(i,is)= - zed*e2/grid%r(i)+vxt(i)+vh(i)+vxcp(is)
@@ -73,7 +82,8 @@ subroutine new_potential &
      allocate(egc(ndm),stat=ierr)
      call errore('new_potential','allocating vgc and egc',ierr)
 
-     call vxcgc(ndm,mesh,nspin,grid%r,grid%r2,rho,rhoc,vgc,egc,iflag)
+     call vxcgc (ndm, mesh, nspin, grid%r, grid%r2, rho, rhoc, &
+          vgc, egc, tau, vtau, iflag)
      do is=1,nspin
         do i=1,mesh
            vxc(i,is)=vxc(i,is)+vgc(i,is)
@@ -86,8 +96,6 @@ subroutine new_potential &
   else
      excgga=0.0_DP
   end if
-
-
   !
   ! add OEP exchange 
   !

@@ -780,6 +780,8 @@ CONTAINS
          rh(2),        & ! valence charge at a given point without 4 pi r^2
          rhc,          & ! core    charge at a given point without 4 pi r^2
          vxcr(2)         ! exchange-correlation potential at a given point
+    REAL(dp) :: & ! compatibility with metaGGA - not yet used
+         tau(ndmx) = ZERO, vtau(ndmx) = ZERO  !
     !
     INTEGER :: i, is
     INTEGER :: lsd
@@ -836,10 +838,12 @@ CONTAINS
     IF (dft_is_gradient()) THEN
        IF (nlcc_) THEN
           CALL vxcgc(ndmx,pawset_%grid%mesh,nspin_,pawset_%grid%r,&
-                     pawset_%grid%r2,vcharge_,ccharge_,vgc,egc,1)
+                     pawset_%grid%r2,vcharge_,ccharge_,vgc,egc, &
+                     tau, vtau, 1)
        ELSE
           CALL vxcgc(ndmx,pawset_%grid%mesh,nspin_,pawset_%grid%r,&
-                     pawset_%grid%r2,vcharge_,rho_eq_0,vgc,egc,1)
+                     pawset_%grid%r2,vcharge_,rho_eq_0,vgc,egc, &
+                     tau, vtau, 1)
        END IF
        vxc(1:pawset_%grid%mesh,1:nspin_) = vxc(1:pawset_%grid%mesh,1:nspin_) + &
                                       vgc(1:pawset_%grid%mesh,1:nspin_)

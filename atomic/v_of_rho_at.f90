@@ -22,6 +22,9 @@ subroutine v_of_rho_at (rho,rhoc,vh,vxc,exc,excgga,vnew,nlcc,iflag)
   real(DP), intent(out) :: vh(ndmx), vxc(ndmx,2), exc(ndmx), excgga(ndmx), &
                            vnew(ndmx,2)
   logical, intent(in) :: nlcc
+  REAL(dp) :: & ! compatibility with metaGGA - not yet used
+       tau(ndmx) = 0.0_dp, vtau(ndmx) = 0.0_dp
+
   ! Hartree potential, exchange and correlation potential and energy
   ! gga exchange and correlation energy, 
   ! vnew is in output potential vnew = vh+vxc+vxc
@@ -73,7 +76,8 @@ subroutine v_of_rho_at (rho,rhoc,vh,vxc,exc,excgga,vnew,nlcc,iflag)
      allocate(egc(ndmx),stat=ierr)
      call errore('new_potential','allocating egc',ierr)
 
-     call vxcgc(ndmx,grid%mesh,nspin,grid%r,grid%r2,rho,rhoc,vgc,egc,iflag)
+     call vxcgc (ndmx, grid%mesh, nspin, grid%r, grid%r2, rho, rhoc, &
+          vgc, egc, tau, vtau, iflag)
      do is=1,nspin
         do i=1,grid%mesh
            vxc(i,is)=vxc(i,is)+vgc(i,is)

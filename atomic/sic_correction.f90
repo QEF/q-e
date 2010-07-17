@@ -21,6 +21,8 @@ subroutine sic_correction(n,vhn1,vhn2,egc)
   implicit none
   integer :: n
   real(DP):: vhn1(ndmx),vhn2(ndmx), egc(ndmx)
+  REAL(dp) :: & ! compatibility with metaGGA - not yet used
+       tau(ndmx) = 0.0_dp, vtau(ndmx) = 0.0_dp
   !
   integer :: i
   real(DP):: rh(2), rhc, vxcp(2)
@@ -66,7 +68,8 @@ subroutine sic_correction(n,vhn1,vhn2,egc)
   !   add gradient-correction terms to exchange-correlation potential
   !
   egc0=egc
-  call vxcgc(ndmx,grid%mesh,nspin,grid%r,grid%r2,rhotot,rhoc,vgc,egc,1)
+  call vxcgc ( ndmx, grid%mesh, nspin, grid%r, grid%r2, rhotot, rhoc, &
+       vgc, egc, tau, vtau, 1)
   do i=1,grid%mesh
      vhn2(i)=vhn2(i)+vgc(i,1)
      egc(i)=egc(i)*grid%r2(i)*fpi+egc0(i)

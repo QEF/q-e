@@ -7,7 +7,8 @@
 !
 !
 !---------------------------------------------------------------
-subroutine vxcgc(ndm,mesh,nspin,r,r2,rho,rhoc,vgc,egc,iflag)
+subroutine vxcgc ( ndm, mesh, nspin, r, r2, rho, rhoc, vgc, egc, &
+     tau, vtau, iflag)
   !---------------------------------------------------------------
   !
   !
@@ -16,19 +17,22 @@ subroutine vxcgc(ndm,mesh,nspin,r,r2,rho,rhoc,vgc,egc,iflag)
   !     gradient correction.
   !     In input the density is rho(r) (multiplied by 4*pi*r2).
   !
-  !     The units of the potential are Ryd.
+  !     The units of the potential are Ry.
   !
   use kinds, only : DP
-  use constants, only : fpi
-  use funct, only : gcxc, gcx_spin, gcc_spin
+  use constants, only : fpi, e2
+  use funct, only : gcxc, gcx_spin, gcc_spin, dft_is_meta, xc
   implicit none
   integer,  intent(in) :: ndm,mesh,nspin,iflag
   real(DP), intent(in) :: r(mesh), r2(mesh), rho(ndm,2), rhoc(ndm)
   real(DP), intent(out):: vgc(ndm,2), egc(ndm)
+  real(DP), intent(in) :: tau(ndm,2)
+  real(DP), intent(out):: vtau(mesh)
 
   integer :: i, is, ierr
   real(DP) :: sx,sc,v1x,v2x,v1c,v2c
   real(DP) :: v1xup, v1xdw, v2xup, v2xdw, v1cup, v1cdw
+  real(DP) :: v3x, v3c, de_cc, dv1_cc,dv2_cc
   real(DP) :: segno, arho
   real(DP) :: rh, zeta, grh2, grho2(2)
   real(DP),parameter :: eps=1.e-12_dp
@@ -56,25 +60,62 @@ subroutine vxcgc(ndm,mesh,nspin,r,r2,rho,rhoc,vgc,egc,iflag)
 
   if (nspin.eq.1) then
      !
-     !     GGA case
-     !
-     do i=1,mesh
-        arho=abs(rhoaux(i,1)) 
-        segno=sign(1.0_dp,rhoaux(i,1))
-        if (arho.gt.eps.and.abs(grho(i,1)).gt.eps) then
-           call gcxc(arho,grho(i,1)**2,sx,sc,v1x,v2x,v1c,v2c)
-           egc(i)=(sx+sc)*segno
-           vgc(i,1)= v1x+v1c
-           h(i,1)  =(v2x+v2c)*grho(i,1)*r2(i)
-           !            if (i.lt.4) write(6,'(f20.12,e20.12,2f20.12)') &
-           !                          rho(i,1), grho(i,1)**2,  &
-           !                          vgc(i,1),h(i,1)
-        else
-           vgc(i,1)=0.0_dp
-           egc(i)=0.0_dp
-           h(i,1)=0.0_dp
-        endif
-     end do
+     IF ( dft_is_meta ()  ) THEN
+        !
+        !  meta-GGA case
+        !
+        ! for core correction - not implemented
+        de_cc = 0.0_dp
+        dv1_cc= 0.0_dp
+        dv2_cc= 0.0_dp
+        !
+	vtau(:) = 0.0_dp
+        ! 
+       do i=1,mesh
+           arho=abs(rhoaux(i,1)) 
+           segno=sign(1.0_dp,rhoaux(i,1))
+           if (arho.gt.eps.and.abs(grho(i,1)).gt.eps) then
+!
+! currently there is a single meta-GGA implemented (tpss)
+! that calculates all needed terms (LDA, GGA, metaGGA)
+!
+             call tpsscxc ( arho, grho(i,1)**2, tau(i,1)+tau(i,2), &
+                   sx, sc, v1x, v2x, v3x, v1c, v2c, v3c )
+              !
+              egc(i)=sx+sc+de_cc
+              vgc(i,1)= v1x+v1c + dv1_cc
+              h(i,1)  =(v2x+v2c)*grho(i,1)*r2(i)
+              vtau(i) = v3x+v3c
+          else
+              vgc(i,1)=0.0_dp
+              egc(i)=0.0_dp
+              h(i,1)=0.0_dp
+              vtau(i)=0.0_dp
+           endif
+        end do
+
+     ELSE
+        !
+        !     GGA case
+        !
+        do i=1,mesh
+           arho=abs(rhoaux(i,1)) 
+           segno=sign(1.0_dp,rhoaux(i,1))
+           if (arho.gt.eps.and.abs(grho(i,1)).gt.eps) then
+              call gcxc(arho,grho(i,1)**2,sx,sc,v1x,v2x,v1c,v2c)
+              egc(i)=(sx+sc)*segno
+              vgc(i,1)= v1x+v1c
+              h(i,1)  =(v2x+v2c)*grho(i,1)*r2(i)
+              !            if (i.lt.4) write(6,'(f20.12,e20.12,2f20.12)') &
+              !                          rho(i,1), grho(i,1)**2,  &
+              !                          vgc(i,1),h(i,1)
+           else
+              vgc(i,1)=0.0_dp
+              egc(i)=0.0_dp
+              h(i,1)=0.0_dp
+           endif
+        end do
+     END IF
   else
      !
      !   this is the \sigma-GGA case
@@ -124,16 +165,17 @@ subroutine vxcgc(ndm,mesh,nspin,r,r2,rho,rhoc,vgc,egc,iflag)
      !
      !     Finally we compute the total exchange and correlation energy and
      !     potential. We put the original values on the charge and multiply
-     !     by two to have as output Ry units.
+     !     by e^2 = two to have as output Ry units.
 
      do i=1, mesh
         vgc(i,is)=vgc(i,is)-dh(i)/r2(i)
-        vgc(i,is)=2.0_dp*vgc(i,is)
-        if (is.eq.1) egc(i)=2.0_dp*egc(i)
+        vgc(i,is)=e2*vgc(i,is)
+        if (is.eq.1) egc(i)=e2*egc(i)
         !            if (is.eq.1.and.i.lt.4) write(6,'(3f20.12)') &
         !                                      vgc(i,1)
      enddo
   enddo
+  IF ( dft_is_meta () ) vtau(:) = e2*vtau(:)
 
   deallocate(dh)
   deallocate(h)

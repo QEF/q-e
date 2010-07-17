@@ -54,6 +54,7 @@ integrate_outward.o \
 inward.o \
 outward.o \
 intref.o \
+kin_e_density.o \
 ld1_readin.o \
 ld1_setup.o \
 ld1_writeout.o \

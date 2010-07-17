@@ -16,7 +16,7 @@ SUBROUTINE ld1_setup
   !
   USE kinds, ONLY : dp
   USE ld1inc, ONLY : iswitch, lsd, rel,sl3, lmx, nconf, &
-                nbeta, lloc, nsloc, etot, etot0, etots0, vxt, vtau, &
+                nbeta, lloc, nsloc, etot, etot0, etots0, vxt, tau, vtau, &
                 file_wavefunctions, file_logder,  &
                 file_wavefunctionsps, file_logderps, file_pawexp, &
                 prefix, new, core_state, enls, enl,  &
@@ -32,7 +32,8 @@ SUBROUTINE ld1_setup
   real(DP) :: ocs_loc
   !
   !
-  IF (dft_is_meta()) CALL errore('setup','meta-GGA not implemented yet', 1)
+  IF (dft_is_meta() .and. rel /= 1 ) &
+      CALL errore('setup','meta-GGA only for scalar-relativistic case', 1)
   hf  = get_iexch()==5
   IF (hf)     CALL errore('setup','HF not implemented yet',1)
   oep = get_iexch()==4
@@ -156,6 +157,7 @@ SUBROUTINE ld1_setup
   !
   vxt=0.0_dp
   vtau=0.0_dp
+  tau=0.0_dp
   etot0=0.0_dp
   etots0=0.0_dp
   enl=0.0_dp

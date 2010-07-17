@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2004 PWSCF group
+! Copyright (C) 2004i-2010 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -19,14 +19,14 @@ SUBROUTINE scf(ic)
   USE ld1inc, ONLY : grid, zed, psi, isic, vpot, vh, vxt, rho, iter, &
                      lsd, rel, latt, enne, beta, nspin, tr2, eps0, &
                      nwf, nn, ll, jj, enl, oc, isw, core_state, frozen_core, &
-                     vtau, vsic, vsicnew, vhn1, egc, relpert, noscf
+                     tau, vtau, vsic, vsicnew, vhn1, egc, relpert, noscf
   IMPLICIT NONE
 
   INTEGER, INTENT(in) :: ic
 
   LOGICAL:: conv
   INTEGER:: nerr, nstop, n, i, is, id, nin
-  real(DP) ::  vnew(ndmx,2), rhoc1(ndmx), ze2
+  real(DP) ::  vnew(ndmx,2), vtaunew(ndmx), rhoc1(ndmx), ze2
   INTEGER, PARAMETER :: maxter=200
   real(DP), PARAMETER :: thresh=1.0e-10_dp
   !
@@ -41,6 +41,7 @@ SUBROUTINE scf(ic)
   DO iter=1,maxter
      nerr=0
      vnew=vpot
+     vtaunew=vtau
      DO n=1,nwf
         IF (oc(n) >= 0.0_dp) THEN
            IF (ic==1.or..not.frozen_core.or..not.core_state(n)) THEN
@@ -52,7 +53,7 @@ SUBROUTINE scf(ic)
               ELSEIF (rel == 1) THEN
                  IF ( dft_is_meta() ) THEN
                     CALL lschps_meta (1, zed, thresh, grid, nin, nn(n), ll(n),&
-                         enl(n), vnew(1,is), vtau, psi(1,1,n), nstop)
+                         enl(n), vnew(1,is), vtaunew, psi(1,1,n), nstop)
                  ELSE
                     CALL lschps (1, zed, thresh, grid, nin, nn(n), ll(n),&
                          enl(n), vnew(1,is), psi(1,1,n), nstop)
@@ -64,7 +65,7 @@ SUBROUTINE scf(ic)
               ELSE
                  CALL errore('scf','relativistic not programmed',1)
               ENDIF
-              !      write(6,*) el(n),enl(n)
+              !      write(6,*) nn(n),ll(n),enl(n)
               ! if (nstop /= 0) write(6,'(4i6)') iter,nn(n),ll(n),nstop
               nerr=nerr+nstop
            ENDIF
@@ -84,10 +85,15 @@ SUBROUTINE scf(ic)
         ENDDO
      ENDDO
      !
+     ! calculate kinetc energy density (spherical approximation)
+     !
+     IF ( dft_is_meta () ) CALL kin_e_density (ndmx, grid%mesh, nwf, &
+         ll, oc, psi, grid%r, grid%r2, grid%dx, tau)
+     !
      ! calculate new potential
      !
-     CALL new_potential(ndmx,grid%mesh,grid,zed,vxt,&
-          lsd,.false.,latt,enne,rhoc1,rho,vh,vnew,1)
+     CALL new_potential ( ndmx, grid%mesh, grid, zed, vxt, &
+          lsd, .false., latt, enne, rhoc1, rho, vh, vnew, 1 )
      !
      ! calculate SIC correction potential (if present)
      !
@@ -110,6 +116,10 @@ SUBROUTINE scf(ic)
      CALL dmixp(grid%mesh*nspin,vnew,vpot,beta,tr2,iter,id,eps0,conv,maxter)
      CALL vpack(grid%mesh,ndmx,nspin,vnew,vpot,-1)
 !        write(6,*) iter, eps0
+     !
+     ! mix old and new metaGGA potential - use simple mixing
+     !
+     IF ( dft_is_meta () ) vtau(:) = (1.0_dp-beta)*vtaunew(:)+beta*vtau(:)
      !
 500  IF (noscf) THEN
         conv=.true.

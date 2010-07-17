@@ -258,6 +258,7 @@ MODULE ld1inc
        vx(ndmx,2)    ,& ! the OEP-X potential (when needed)
        enzero(2)
   real(DP) ::  &
+       tau(ndmx,2),   & ! kinetic energy density for metaGGA
        vtau(ndmx)       ! potential for metaGGA
   real(DP), ALLOCATABLE ::  &
        vsic(:,:), vsicnew(:), vhn1(:), egc(:) ! potentials for SIC
