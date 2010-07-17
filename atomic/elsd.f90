@@ -16,9 +16,10 @@ subroutine elsd ( zed, grid, rho, vxt, vh, vxc, exc, excgga, nwf,&
   !   gradient correction allowed (A. Dal Corso fecit AD 1993)
   !
   use kinds, only : DP
+  use constants, only: fpi
   use radial_grids, only: ndmx, radial_grid_type
-  use funct, only: get_iexch
-  use ld1inc, only: vx, noscf
+  use funct, only: get_iexch, dft_is_meta
+  use ld1inc, only: vx, noscf, tau, vtau
   implicit none
   integer, intent(in) :: nwf, nspin
   type(radial_grid_type),intent(in)::grid
@@ -30,10 +31,11 @@ subroutine elsd ( zed, grid, rho, vxt, vh, vxc, exc, excgga, nwf,&
   real(DP),allocatable :: f1(:), f2(:), f3(:), f4(:), f5(:)
   real(DP) :: int_0_inf_dr, rhotot
   integer:: i,n,is,ierr
-  logical:: oep
+  logical:: oep, meta
 
   if (noscf) return
   oep=get_iexch().eq.4
+  meta=dft_is_meta()
 
   allocate(f1(grid%mesh),stat=ierr)
   allocate(f2(grid%mesh),stat=ierr)
@@ -72,6 +74,11 @@ subroutine elsd ( zed, grid, rho, vxt, vh, vxc, exc, excgga, nwf,&
            f5(i) = f5(i) - vx(i,is)*rho(i,is)
         end do
      end if
+     if (meta) THEN
+        do is = 1, nspin
+           f5(i) = f5(i) - vtau(i)*tau(i,is)*fpi*grid%r2(i) 
+        end do 
+     end if
   enddo
 !
 !  Now compute the integrals
@@ -80,6 +87,7 @@ subroutine elsd ( zed, grid, rho, vxt, vh, vxc, exc, excgga, nwf,&
   ehrt=0.5_DP*int_0_inf_dr(f2,grid,grid%mesh,2)
   ecxc=       int_0_inf_dr(f3,grid,grid%mesh,2)
   evxt=       int_0_inf_dr(f4,grid,grid%mesh,2)
+  !
 !
 !  The kinetic energy is the sum of the eigenvalues plus the f5 integral
 !
