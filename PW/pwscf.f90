@@ -13,10 +13,8 @@ PROGRAM pwscf
   !
   USE io_global,        ONLY : stdout, ionode
   USE parameters,       ONLY : ntypx, npk, lmaxx
-  USE noncollin_module, ONLY : noncolin
   USE control_flags,    ONLY : conv_elec, conv_ions, lpath, gamma_only
   USE environment,      ONLY : environment_start
-  USE ions_base,        ONLY : tau
   USE path_variables,   ONLY : conv_path
   USE check_stop,       ONLY : check_stop_init
   USE path_base,        ONLY : initialize_path, search_mep
