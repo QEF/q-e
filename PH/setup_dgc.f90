@@ -42,13 +42,11 @@ subroutine setup_dgc
 
   if ( .not. dft_is_gradient() ) return
 
-  IF (noncolin) THEN
-     IF (domag) THEN
-        allocate (segni (nrxx))    
-        allocate (vsgga (nrxx))    
-        allocate (gmag (3, nrxx, nspin_mag))    
-        gmag=0.0_dp
-     ENDIF
+  IF (noncolin.AND.domag) THEN
+     allocate (segni (nrxx))    
+     allocate (vsgga (nrxx))    
+     allocate (gmag (3, nrxx, nspin_mag))    
+     gmag=0.0_dp
   ENDIF
 
   allocate (dvxc_rr(  nrxx , nspin_gga , nspin_gga))    
@@ -170,13 +168,6 @@ subroutine setup_dgc
         enddo
      endif
   endif
-
-!  write(6,*) 'setup dgc'
-!  do k=2,2
-!     write(6,'(3f20.5)') rhoout(k,1), grho(3,k,1)
-!     write(6,'(3f20.5)') rhoout(k,2), grho(3,k,2)
-!  enddo
-!  write(6,*) 'exit setup dgc'
 
   DEALLOCATE(rhoout)
 
