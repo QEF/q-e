@@ -394,7 +394,7 @@ subroutine write_results
             & f12.8," =",f12.8)') charge_large, charge_small, &
                                   charge_large+charge_small
 
-  if (file_wavefunctions.ne.' '.and.ionode) then
+  if (file_wavefunctions.ne.' ') then
      nomefile=TRIM(file_wavefunctions)
      suffix(1) = ' '
      ismax=1

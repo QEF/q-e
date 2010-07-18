@@ -16,7 +16,7 @@ subroutine lderivps
   !
   use kinds,     only : DP
   use radial_grids, only : ndmx
-  use io_global, only : stdout, ionode, ionode_id
+  use io_global, only : stdout
   use mp,        only : mp_bcast
   use radial_grids, only: series
   use ld1_parameters, only : nwfsx

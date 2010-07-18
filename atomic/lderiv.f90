@@ -16,7 +16,7 @@ SUBROUTINE lderiv
   !
   USE kinds,     ONLY : dp
   USE radial_grids, ONLY : ndmx
-  USE io_global, ONLY : stdout, ionode, ionode_id
+  USE io_global, ONLY : stdout
   USE mp,        ONLY : mp_bcast
   USE ld1_parameters, ONLY : nwfsx
   USE ld1inc,    ONLY : file_logder, grid, vpot, rel, nspin, nld, zed, &
