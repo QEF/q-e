@@ -26,7 +26,7 @@ subroutine drhodv (nu_i0, nper, drhoscf)
   USE lsda_mod,  ONLY : current_spin, lsda, isk, nspin
   USE wvfct,     ONLY : npw, npwx, nbnd, igk
   USE uspp,      ONLY : nkb, vkb
-  USE becmod,    ONLY : calbec, bec_type, allocate_bec_type, &
+  USE becmod,    ONLY : calbec, bec_type, becscal, allocate_bec_type, &
                         deallocate_bec_type
   USE io_global, ONLY : stdout
   USE noncollin_module, ONLY : noncolin, npol, nspin_mag
@@ -118,11 +118,7 @@ subroutine drhodv (nu_i0, nper, drhoscf)
      fact = CMPLX(0.d0, tpiba,kind=DP)
      DO ipert=1,nper
         DO ipol=1,3
-           IF (noncolin) THEN
-              dalpq(ipol,ipert)%nc = dalpq(ipol,ipert)%nc * fact
-           ELSE
-              dalpq(ipol,ipert)%k = dalpq(ipol,ipert)%k * fact
-           ENDIF
+            CALL becscal(fact,dalpq(ipol,ipert),nkb,nbnd)
         ENDDO
      ENDDO
      call drhodvnl (ik, ikk, nper, nu_i0, dynwrk, dbecq, dalpq)

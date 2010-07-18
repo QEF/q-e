@@ -50,10 +50,15 @@ MODULE becmod
      MODULE PROCEDURE calbec_k, calbec_gamma, calbec_nc, calbec_bec_type
      !
   END INTERFACE
+
+  INTERFACE becscal
+     !
+     MODULE PROCEDURE becscal_nck, becscal_gamma
+     !
+  END INTERFACE
   !
   PUBLIC :: bec_type, becp, allocate_bec_type, deallocate_bec_type, calbec, &
-            beccopy
-!           becp_, becp_k, becp_nc,
+            beccopy, becscal
   !
 CONTAINS
   !-----------------------------------------------------------------------
@@ -330,5 +335,37 @@ CONTAINS
 
     RETURN
   END SUBROUTINE beccopy
+
+  SUBROUTINE becscal_nck(alpha, bec, nkb, nbnd)
+    IMPLICIT NONE
+    TYPE(bec_type), INTENT(INOUT) :: bec
+    COMPLEX(DP), INTENT(IN) :: alpha
+    INTEGER, INTENT(IN) :: nkb, nbnd
+
+    IF (gamma_only) THEN
+       CALL errore('becscal_nck','called in the wrong case',1)
+    ELSEIF (noncolin) THEN
+       CALL zscal(nkb*npol*nbnd, alpha, bec%nc, 1)
+    ELSE
+       CALL zscal(nkb*nbnd, alpha, bec%k, 1)
+    ENDIF
+
+    RETURN
+  END SUBROUTINE becscal_nck
+
+  SUBROUTINE becscal_gamma(alpha, bec, nkb, nbnd)
+    IMPLICIT NONE
+    TYPE(bec_type), INTENT(INOUT) :: bec
+    REAL(DP), INTENT(IN) :: alpha
+    INTEGER, INTENT(IN) :: nkb, nbnd
+
+    IF (gamma_only) THEN
+       CALL dscal(nkb*nbnd, alpha, bec%r, 1)
+    ELSE
+       CALL errore('becscal_gamma','called in the wrong case',1)
+    ENDIF
+
+    RETURN
+  END SUBROUTINE becscal_gamma
 
 END MODULE becmod

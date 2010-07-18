@@ -19,7 +19,7 @@ subroutine compute_becalp (becq, alpq)
   USE cell_base, ONLY : tpiba
   USE klist,     ONLY : xk
   USE gvect,     ONLY : g
-  USE becmod, ONLY: calbec, bec_type
+  USE becmod, ONLY: calbec, bec_type, becscal
   USE uspp, ONLY: nkb, vkb
   USE noncollin_module, ONLY : noncolin, npol
   USE io_files, ONLY: iunigk
@@ -86,11 +86,7 @@ subroutine compute_becalp (becq, alpq)
 
   DO ik=1,nksq
      DO ipol=1,3
-        IF (noncolin) THEN
-           CALL zscal (nkb*nbnd*npol, fact, alpq(ipol,ik)%nc, 1)
-        ELSE
-           CALL zscal (nkb*nbnd, fact, alpq(ipol,ik)%k, 1)
-        ENDIF
+        CALL becscal(fact,alpq(ipol,ik),nkb,nbnd)
      ENDDO
   ENDDO
 
