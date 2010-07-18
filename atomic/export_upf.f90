@@ -14,7 +14,7 @@ SUBROUTINE export_upf(iunps)
   use radial_grids, only : radial_grid_COPY, nullify_radial_grid, &
                            deallocate_radial_grid
   use ld1inc, only : author, nlcc, zval, lpaw, write_coulomb, &
-                     etots, rel, ecutwfc, ecutrho, &
+                     etots, rel, ecutwfc, ecutrho, iswitch, &
                      nwfts, nbeta, lmax, which_augfun, elts, octs, llts, &
                      nnts, rcutusts, rcutts, rcut, rcutus, els, ikk, nwfs, &
                      lls, nns, ocs, beta, bmat, qq, qvan, qvanl, rcloc, lloc, &
@@ -52,8 +52,13 @@ SUBROUTINE export_upf(iunps)
   CALL nullify_pseudo_upf( upf )
   CALL nullify_radial_grid( internal_grid )
   !
-  upf%generated='Generated using "atomic" code by A. Dal Corso &
-               & (Quantum ESPRESSO distribution)'
+  IF (iswitch < 4 ) THEN
+     upf%generated='Generated using "atomic" code by A. Dal Corso &
+                  & (Quantum ESPRESSO distribution)'
+  ELSE IF (iswitch==4) THEN
+     upf%generated='Generated using LDA-1/2 implemented by Leonardo&
+                  & Matheus Marion Jorge'
+  ENDIF
   upf%author=trim(author)
   upf%date=trim(day)
   upf%nv = "2.0.1" ! format version

@@ -35,7 +35,7 @@ end subroutine write_upf_atomic
     !     This routine writes the comments of the new UPF file
     !
     use ld1inc, only: author, rel, lloc, rcloc, els, nns, lls, nns, rcut, &
-                      rcutus, enls, ocs, nwfs, title
+                      rcutus, enls, ocs, nwfs, title, iswitch
     implicit none
     integer :: ounps  
 
@@ -44,8 +44,13 @@ end subroutine write_upf_atomic
     character(len=9) :: day, hour
 
     call date_and_tim(day,hour)
-    generated='Generated using "atomic" code by A. Dal Corso &
-             & (Quantum ESPRESSO distribution)'
+    IF (iswitch < 4 ) THEN
+       generated='Generated using "atomic" code by A. Dal Corso &
+                & (Quantum ESPRESSO distribution)'
+    ELSEIF (iswitch==4) THEN
+       generated='Generated using LDA-1/2 implemented by Leonardo&
+                  & Matheus Marion Jorge'
+    ENDIF
     date_author='Author: '//TRIM(author)//'   Generation date: '// day 
     comment=title
 
