@@ -24,7 +24,7 @@ SUBROUTINE input_from_file( )
                          ilen, iiarg, nargs, ierr
   ! do not define iargc as external: g95 does not like it
   INTEGER             :: iargc
-  CHARACTER (LEN=80)  :: input_file
+  CHARACTER (LEN=256)  :: input_file
   !
   ! ... Input from file ?
   !
