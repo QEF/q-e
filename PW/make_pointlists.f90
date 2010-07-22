@@ -74,7 +74,7 @@ SUBROUTINE make_pointlists
 
   DO iat = 1,nat
      nt = ityp(iat)
-     DO iat1 = iat,nat
+     DO iat1 = 1,nat
 
         ! posi is the position of a second atom
         DO i = -1,1
