@@ -17,7 +17,7 @@ SUBROUTINE offset_atom_wfc( nat, offset )
   USE noncollin_module, ONLY : noncolin
   USE ions_base,        ONLY : ityp
   USE basis,            ONLY : natomwfc
-  USE ldaU,             ONLY : Hubbard_l
+  USE ldaU,             ONLY : Hubbard_l, Hubbard_U, Hubbard_alpha
   IMPLICIT NONE
   !
   INTEGER, INTENT(IN)  :: nat
@@ -57,13 +57,18 @@ SUBROUTINE offset_atom_wfc( nat, offset )
               !
            ELSE
               !
-              IF ( upf(nt)%lchi(n) == Hubbard_l(nt) )  offset(na) = counter
+              IF ( upf(nt)%oc(n) > 0.D0 .AND. upf(nt)%lchi(n) == Hubbard_l(nt) ) &
+                 offset(na) = counter
               !
               counter = counter + 2 * upf(nt)%lchi(n) + 1
               !
            END IF
         END IF
      END DO
+
+     IF ( (Hubbard_U(nt).NE.0.D0 .OR. Hubbard_alpha(nt).NE.0.D0 ) .AND. &
+         offset(na) < 0 ) CALL errore('offset_atom_wfc', 'wrong offset', na)
+
   END DO
   !
   IF ( counter.NE.natomwfc ) &
