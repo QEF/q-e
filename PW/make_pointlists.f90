@@ -15,32 +15,33 @@ SUBROUTINE make_pointlists
   ! This can be used to simply monitor these quantities during the scf
   ! cycles or in order to calculate constrains on these quantities.
   !
-  ! In the input the integration radius r_m can be given, otherwise it is
-  ! calculated here. The integration is a sum over all points in real
+  ! In the integration radius r_m is calculated here. The integration 
+  ! is a sum over all points in real
   ! space with the weight 1, if they are closer than r_m to an atom
-  ! and    1 - (distance-r_m)/(0.2*r_m) if r_m<distance<1.2*r_m            
+  ! and 1 - (distance-r_m)/(0.2*r_m) if r_m<distance<1.2*r_m            
   !
 
   USE kinds,      ONLY : dp
   USE io_global,  ONLY : stdout
-  USE ions_base,  ONLY : nat, tau
+  USE ions_base,  ONLY : nat, tau, ntyp => nsp, ityp
   USE cell_base,  ONLY : at, bg
   USE gvect,      ONLY : nr1, nr2, nr3, nrx1, nrx2, nrxx
   USE mp_global,  ONLY : me_pool
   USE fft_base,   ONLY : dfftp
 
-  USE noncollin_module
+  USE noncollin_module, ONLY : factlist, pointlist, r_m
   !
   IMPLICIT NONE
   !
   INTEGER idx0,idx,indproc,iat,ir,iat1
-  INTEGER i,j,k,i0,j0,k0,ipol
+  INTEGER i,j,k,i0,j0,k0,ipol,nt
 
-  REAL(DP) :: posi(3),distance, distmin
-  REAL(DP), ALLOCATABLE :: tau0(:,:)
+  REAL(DP) :: posi(3),distance
+  REAL(DP), ALLOCATABLE :: tau0(:,:), distmin(:)
 
   WRITE( stdout,'(5x,"Generating pointlists ...")')
   ALLOCATE(tau0(3,nat))
+  ALLOCATE( distmin(ntyp) )
 
   ! First, the real-space position of every point ir is needed ...
 
@@ -67,9 +68,12 @@ SUBROUTINE make_pointlists
 
   ! Check the minimum distance between two atoms in the system
 
-  distmin = 1.d0
+
+  distmin(:) = 1.d0
+
 
   DO iat = 1,nat
+     nt = ityp(iat)
      DO iat1 = iat,nat
 
         ! posi is the position of a second atom
@@ -86,8 +90,8 @@ SUBROUTINE make_pointlists
                  ENDDO
 
                  distance = SQRT(distance)
-                 IF ((distance.LT.distmin).AND.(distance.GT.1.d-8)) &
-                      &                    distmin = distance
+                 IF ((distance.LT.distmin(nt)).AND.(distance.GT.1.d-8)) &
+                      &                    distmin(nt) = distance
 
               ENDDO ! k
            ENDDO ! j
@@ -96,13 +100,15 @@ SUBROUTINE make_pointlists
      ENDDO                  ! iat1
   ENDDO                     ! iat
 
-  IF ((distmin.LT.(2.d0*r_m*1.2d0)).OR.(r_m.LT.1.d-8)) THEN
+  DO nt = 1, ntyp
+     IF ((distmin(nt).LT.(2.d0*r_m(nt)*1.2d0)).OR.(r_m(nt).LT.1.d-8)) THEN
      ! Set the radius r_m to a value a little smaller than the minimum
      ! distance divided by 2*1.2 (so no point in space can belong to more
      ! than one atom)
-     r_m = 0.5d0*distmin/1.2d0 * 0.99d0
-     WRITE( stdout,'(5x,"new r_m : ",f8.4)') r_m
-  ENDIF
+        r_m(nt) = 0.5d0*distmin(nt)/1.2d0 * 0.99d0
+        WRITE( stdout,'(5x,"new r_m : ",f8.4," for type",i5)') r_m(nt), nt
+     ENDIF
+  ENDDO
 
   ! Now, set for every point in the fft grid an index corresponding
   ! to the atom whose integration sphere the grid point belong to.
@@ -114,6 +120,7 @@ SUBROUTINE make_pointlists
   factlist(:) = 0.d0
 
   DO iat = 1,nat
+     nt=ityp(iat)
      DO ir=1,nrxx
         idx = idx0 + ir - 1
 
@@ -137,11 +144,11 @@ SUBROUTINE make_pointlists
 
                  distance = SQRT(posi(1)**2+posi(2)**2+posi(3)**2)
 
-                 IF (distance.LE.r_m) THEN
+                 IF (distance.LE.r_m(nt)) THEN
                     factlist(ir) = 1.d0
                     pointlist(ir) = iat
-                 ELSE IF (distance.LE.1.2*r_m) THEN
-                    factlist(ir) = 1.d0 - (distance -r_m)/(0.2d0*r_m)
+                 ELSE IF (distance.LE.1.2*r_m(nt)) THEN
+                    factlist(ir) = 1.d0 - (distance -r_m(nt))/(0.2d0*r_m(nt))
                     pointlist(ir) = iat
                  ENDIF
 
@@ -153,6 +160,7 @@ SUBROUTINE make_pointlists
 
   ENDDO                     ! ipol
   DEALLOCATE(tau0)
-
+  DEALLOCATE(distmin)
+ 
 END SUBROUTINE make_pointlists
 
