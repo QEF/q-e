@@ -2176,7 +2176,7 @@ SUBROUTINE pprojwave( filproj, lsym )
   !
   iunaux = find_free_unit()
   WRITE( auxname, fmt='(I6.1)' ) mpime
-  auxname = 'AUX'//trim( adjustl( auxname ) )
+  auxname = TRIM( tmp_dir ) // 'AUX' // TRIM( ADJUSTL( auxname ) )
   OPEN( unit=iunaux, file=trim(auxname), status='unknown', form='unformatted')
   !
   !
@@ -2501,7 +2501,7 @@ SUBROUTINE pprojwave( filproj, lsym )
   !
   CALL poolrecover (proj_aux, 2 * nbnd * natomwfc, nkstot, nks)
   !
-  CLOSE( unit=iunaux )
+  CLOSE( unit=iunaux, status='delete' )
   !
   IF ( ionode ) THEN
      !
