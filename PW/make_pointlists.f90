@@ -34,7 +34,7 @@ SUBROUTINE make_pointlists
   IMPLICIT NONE
   !
   INTEGER idx0,idx,indproc,iat,ir,iat1
-  INTEGER i,j,k,i0,j0,k0,ipol,nt
+  INTEGER i,j,k,i0,j0,k0,ipol,nt,nt1
 
   REAL(DP) :: posi(3),distance
   REAL(DP), ALLOCATABLE :: tau0(:,:), distmin(:)
@@ -75,6 +75,7 @@ SUBROUTINE make_pointlists
   DO iat = 1,nat
      nt = ityp(iat)
      DO iat1 = 1,nat
+        nt1 = ityp(iat1)
 
         ! posi is the position of a second atom
         DO i = -1,1
@@ -92,6 +93,8 @@ SUBROUTINE make_pointlists
                  distance = SQRT(distance)
                  IF ((distance.LT.distmin(nt)).AND.(distance.GT.1.d-8)) &
                       &                    distmin(nt) = distance
+                 IF ((distance.LT.distmin(nt1)).AND.(distance.GT.1.d-8)) &
+                      &                    distmin(nt1) = distance
 
               ENDDO ! k
            ENDDO ! j
