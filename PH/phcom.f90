@@ -46,6 +46,8 @@ MODULE modes
        invsymq        !  if .TRUE. the small group of q has inversion
 
   CHARACTER(15), ALLOCATABLE :: name_rap_mode(:) ! symmetry type of each mode
+  INTEGER, ALLOCATABLE :: num_rap_mode(:)  ! number of the representation for
+                                           ! each mode
   !     
 END MODULE modes
 !

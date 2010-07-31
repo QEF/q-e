@@ -25,8 +25,9 @@ subroutine dynmatrix
   USE printout_base, ONLY : title
   USE dynmat,        ONLY : dyn, w2
   USE qpoint,        ONLY : xq
+  USE noncollin_module, ONLY : nspin_mag
   USE modes,         ONLY : u, nmodes, minus_q, irotmq, nsymq, irgq, &
-                            rtau, npert, nirr
+                            rtau, npert, nirr, name_rap_mode, num_rap_mode
   USE gamma_gamma,   ONLY : nasr, asr, equiv_atoms, has_equivalent, &
                             n_diff_sites
   USE efield_mod,    ONLY : epsilon, zstareu, zstarue0, zstarue
@@ -204,8 +205,9 @@ subroutine dynmatrix
   !
   IF (all_comp .OR. nat_todo > 0) THEN
      call dyndia (xq, nmodes, nat, ntyp, ityp, pmass, iudyn, dyn, w2)
-     IF (search_sym) CALL find_mode_sym (dyn, w2, at, bg, nat, nsymq, sr, &
-                                     irt, xq, rtau, pmass, ntyp, ityp, 1)
+     IF (search_sym) CALL find_mode_sym (dyn, w2, at, bg, tau, nat, nsymq, sr,&
+              irt, xq, rtau, pmass, ntyp, ityp, 1, nspin_mag, &
+                                          name_rap_mode, num_rap_mode)
   END IF
 !
 ! Here we save the dynamical matrix and the effective charges dP/du on 

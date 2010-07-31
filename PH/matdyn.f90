@@ -1556,7 +1556,7 @@ SUBROUTINE gen_qpoints (ibrav, at_, bg_, nat, tau, ityp, nk1, nk2, nk3, &
   !
   USE kinds,      ONLY : DP
   USE cell_base,  ONLY : at, bg
-  USE symm_base,  ONLY : set_sym_bl find_sym, s, ftau, irt, nsym, &
+  USE symm_base,  ONLY : set_sym_bl, find_sym, s, ftau, irt, nsym, &
                          nrot, t_rev, time_reversal,  sname
   !
   IMPLICIT NONE

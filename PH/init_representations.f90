@@ -20,7 +20,8 @@ subroutine init_representations()
   USE cell_base,     ONLY : at, bg  
   USE io_global,     ONLY : stdout
   USE symm_base,     ONLY : nrot, nsym, sr, ftau, irt, t_rev, time_reversal, &
-                            sname, invs, s, inverse_s, copy_sym, s_axis_to_cart
+                            sname, invs, s, inverse_s, copy_sym, &
+                            s_axis_to_cart, symmorphic
   USE rap_point_group,      ONLY : code_group, nclass, nelem, elem, which_irr,&
                                   char_mat, name_rap, gname, name_class, ir_ram
   USE rap_point_group_is,   ONLY : code_group_is, gname_is
@@ -28,12 +29,12 @@ subroutine init_representations()
                             where_rec, current_iq, u_from_file
   USE modes,         ONLY : u, npertx, npert, gi, gimq, nirr, &
                             t, tmq, irotmq, irgq, minus_q, &
-                            nsymq, nmodes, rtau, name_rap_mode
+                            nsymq, nmodes, rtau, name_rap_mode, num_rap_mode
   USE qpoint,        ONLY : xq
   USE disp,          ONLY : x_q, nqs, nsymq_iq, rep_iq, npert_iq
   USE gamma_gamma,   ONLY : has_equivalent, asr, nasr, n_diff_sites, &
                             equiv_atoms, n_equiv_atoms, with_symmetry
-  USE noncollin_module, ONLY : noncolin
+  USE noncollin_module, ONLY : noncolin, nspin_mag
   USE spin_orb,      ONLY : domag
   USE ph_restart,    ONLY : ph_writefile
   USE control_flags, ONLY : iverbosity, modenum, noinv
@@ -59,6 +60,7 @@ subroutine init_representations()
   allocate (rtau ( 3, 48, nat))    
   allocate (u ( 3 * nat, 3 * nat))    
   allocate (name_rap_mode( 3 * nat))    
+  allocate (num_rap_mode( 3 * nat))    
   allocate (npert ( 3 * nat))    
 
   name_rap_mode=' '
@@ -106,13 +108,7 @@ subroutine init_representations()
              irgq, nsymq, minus_q, irotmq, t, tmq, npertx, u, npert, &
              nirr, gi, gimq, iverbosity)
      endif
-     is_symmorphic=.true.
-     DO isym=1,nsymq
-        is_symmorphic=( is_symmorphic.and.(ftau(1,irgq(isym))==0).and.  &
-                                          (ftau(2,irgq(isym))==0).and.  &
-                                          (ftau(3,irgq(isym))==0) )
-  
-     END DO
+     is_symmorphic=symmorphic(nsymq,ftau)
      search_sym=.true.
      IF (.not.is_symmorphic) THEN
         DO isym=1,nsymq
@@ -136,8 +132,9 @@ subroutine init_representations()
            CALL find_group(nsym_is,sr_is,gname_is,code_group_is)
         ENDIF
         IF (.not.lgamma_gamma.and.modenum==0) &
-              CALL find_mode_sym (u, w2, at, bg, nat, nsymq, &
-                        sr, irt, xq, rtau, pmass, ntyp, ityp, 0)
+              CALL find_mode_sym (u, w2, at, bg, tau, nat, nsymq, &
+                 sr, irt, xq, rtau, pmass, ntyp, ityp, 0, nspin_mag, &
+                 name_rap_mode, num_rap_mode)
      ENDIF
 !
 !  Only the modes calculated by node zero are sent to all images
@@ -165,6 +162,7 @@ subroutine init_representations()
   DEALLOCATE(w2)
   DEALLOCATE (rtau)    
   DEALLOCATE (u)    
+  DEALLOCATE (num_rap_mode)
   DEALLOCATE (name_rap_mode)    
   DEALLOCATE (npert)    
 

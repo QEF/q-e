@@ -81,7 +81,7 @@ subroutine phq_setup
   USE output,        ONLY : fildrho
   USE modes,         ONLY : u, ubar, npertx, npert, gi, gimq, nirr, &
                             t, tmq, irotmq, irgq, minus_q, &
-                            nsymq, nmodes, rtau
+                            nsymq, nmodes, rtau, name_rap_mode, num_rap_mode
   USE dynmat,        ONLY : dyn, dyn_rec, dyn00
   USE efield_mod,    ONLY : epsilon, zstareu
   USE qpoint,        ONLY : xq
@@ -365,8 +365,9 @@ subroutine phq_setup
         CALL find_group(nsym_is,sr_is,gname_is,code_group_is)
      ENDIF
      IF (.not.lgamma_gamma.and.modenum==0.and..NOT.u_from_file) &
-              CALL find_mode_sym (u, w2, at, bg, nat, nsymq, &
-                        sr, irt, xq, rtau, pmass, ntyp, ityp, 0)
+              CALL find_mode_sym (u, w2, at, bg, tau, nat, nsymq, &
+                   sr, irt, xq, rtau, pmass, ntyp, ityp, 0, nspin_mag, &
+                   name_rap_mode, num_rap_mode )
   ENDIF
 
   IF (lgamma_gamma) THEN

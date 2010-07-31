@@ -5,37 +5,40 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-SUBROUTINE find_mode_sym (dyn, w2, at, bg, nat, nsym, sr, irt, xq, &
-     rtau, amass, ntyp, ityp, flag)
+SUBROUTINE find_mode_sym (dyn, w2, at, bg, tau, nat, nsym, sr, irt, xq, &
+     rtau, amass, ntyp, ityp, flag, nspin_mag, name_rap_mode, num_rap_mode)
   !
   !   This subroutine finds the irreducible representations which give
   !   the transformation properties of eigenvectors of the dynamical 
   !   matrix. It does NOT work at zone border in non symmorphic space groups.
   !   if flag=1 the true displacements are given in input, otherwise the
-  !   eigenvalues of the dynamical matrix
+  !   eigenvalues of the dynamical matrix are given.
   !  
   !
   USE io_global,  ONLY : stdout
   USE kinds, ONLY : DP
-  USE noncollin_module, ONLY : noncolin
-  USE spin_orb, ONLY : domag
-  USE ions_base, ONLY : tau
+  USE constants, ONLY : RY_TO_CMM1
   USE rap_point_group, ONLY : code_group, nclass, nelem, elem, which_irr, &
        char_mat, name_rap, name_class, gname, ir_ram
   USE rap_point_group_is, ONLY : gname_is
-  USE modes,       ONLY : name_rap_mode
   USE control_ph, ONLY : lgamma, lgamma_gamma
   IMPLICIT NONE
-  INTEGER ::                  &
+
+  CHARACTER(15), INTENT(OUT) :: name_rap_mode( 3 * nat )
+  INTEGER, INTENT(OUT) :: num_rap_mode ( 3 * nat )
+  INTEGER, INTENT(IN) :: nspin_mag
+
+  INTEGER ::             &
        nat, nsym,        & 
        flag,             &
        ntyp, ityp(nat),  &
        irt(48,nat)
 
-  REAL(DP) ::                 &
+  REAL(DP) ::          &
        at(3,3),        &
        bg(3,3),        &
        xq(3),          &
+       tau(3,nat),     &
        rtau(3,48,nat), &
        amass(ntyp),    &
        w2(3*nat),      &
@@ -44,8 +47,7 @@ SUBROUTINE find_mode_sym (dyn, w2, at, bg, nat, nsym, sr, irt, xq, &
   COMPLEX(DP) ::  &
        dyn(3*nat, 3*nat)       
 
-  REAL(DP), PARAMETER :: eps=1.d-5,  &
-       rydcm1 = 13.6058d0 * 8065.5d0
+  REAL(DP), PARAMETER :: eps=1.d-5
 
   INTEGER ::      &
        ngroup, &   ! number of different frequencies groups
@@ -62,6 +64,7 @@ SUBROUTINE find_mode_sym (dyn, w2, at, bg, nat, nsym, sr, irt, xq, &
   COMPLEX(DP), ALLOCATABLE ::  rmode(:), trace(:,:), z(:,:)
   LOGICAL :: is_linear
   CHARACTER(3) :: cdum
+  INTEGER :: counter, counter_s
   !
   !    Divide the modes on the basis of the mode degeneracy.
   !
@@ -88,7 +91,7 @@ SUBROUTINE find_mode_sym (dyn, w2, at, bg, nat, nsym, sr, irt, xq, &
   ENDIF
 
   DO imode=1,nmodes
-     w1(imode)=SIGN(SQRT(ABS(w2(imode)))*rydcm1,w2(imode))
+     w1(imode)=SIGN(SQRT(ABS(w2(imode)))*RY_TO_CMM1,w2(imode))
   ENDDO
 
   ngroup=1
@@ -120,20 +123,22 @@ SUBROUTINE find_mode_sym (dyn, w2, at, bg, nat, nsym, sr, irt, xq, &
            trace(iclass,igroup)=trace(iclass,igroup) + &
                 zdotc(3*nat,z(1,nu_i),1,rmode,1)
         END DO
-        !      write(6,*) igroup,iclass, trace(iclass,igroup)
+!              write(6,*) igroup,iclass, trace(iclass,igroup)
      END DO
   END DO
   !
   !  And now use the character table to identify the symmetry representation
   !  of each group of modes
   !
-  IF (noncolin.and.domag) THEN
+  IF (nspin_mag==4) THEN
      IF (flag==1) WRITE(stdout,  &
           '(/,5x,"Mode symmetry, ",a11," [",a11,"] magnetic point group:",/)') &
           gname, gname_is
   ELSE
      IF (flag==1) WRITE(stdout,'(/,5x,"Mode symmetry, ",a11," point group:",/)') gname
   END IF
+  num_rap_mode=-1
+  counter=1
   DO igroup=1,ngroup
      DO irap=1,nclass
         times=(0.d0,0.d0)
@@ -157,12 +162,23 @@ SUBROUTINE find_mode_sym (dyn, w2, at, bg, nat, nsym, sr, irt, xq, &
                    istart(igroup), istart(igroup+1)-1, w1(istart(igroup)), &
                    name_rap(irap)//" "//cdum
               name_rap_mode(igroup)=name_rap(irap)  
+              counter_s=counter
+              DO imode=counter_s, counter_s+NINT(DBLE(char_mat(irap,1)))-1
+                 num_rap_mode(imode) = irap
+                 counter=counter+1
+              ENDDO
            ELSE
               IF (flag==1) WRITE(stdout,'(5x,"omega(",i3," -",i3,") = ",f12.1,2x,"[cm-1]",3x,"--> ",i3,a19)') &
                    istart(igroup), istart(igroup+1)-1, &
                    w1(istart(igroup)), NINT(DBLE(times)), &
                    name_rap(irap)//" "//cdum
               name_rap_mode(igroup)=name_rap(irap)  
+              counter_s=counter
+              DO imode=counter_s, counter_s+NINT(DBLE(times))*&
+                                            NINT(DBLE(char_mat(irap,1)))-1
+                 num_rap_mode(imode) = irap
+                 counter=counter+1
+              ENDDO
            END IF
         END IF
      END DO
