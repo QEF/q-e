@@ -1556,7 +1556,7 @@ SUBROUTINE gen_qpoints (ibrav, at_, bg_, nat, tau, ityp, nk1, nk2, nk3, &
   !
   USE kinds,      ONLY : DP
   USE cell_base,  ONLY : at, bg
-  USE symm_base,  ONLY : cubicsym, hexsym, find_sym, s, ftau, irt, nsym, &
+  USE symm_base,  ONLY : set_sym_bl find_sym, s, ftau, irt, nsym, &
                          nrot, t_rev, time_reversal,  sname
   !
   IMPLICIT NONE
@@ -1576,27 +1576,7 @@ SUBROUTINE gen_qpoints (ibrav, at_, bg_, nat, tau, ityp, nk1, nk2, nk3, &
   xqq (:) =0.d0
   at = at_
   bg = bg_
-  IF ( ibrav == 4 .OR. ibrav == 5 .OR. &
-     ( ibrav == 0 .AND. symm_type == 'hexagonal' ) )  THEN
-     !
-     ! ... here the hexagonal or trigonal bravais lattice
-     !
-     CALL hexsym( )
-     symm_type='hexagonal'
-     !
-  ELSE IF ( ( ibrav >= 1 .AND. ibrav <= 14 ) .OR. &
-            ( ibrav == 0 .AND. symm_type == 'cubic' ) ) THEN
-     !
-     ! ... here for the cubic bravais lattice
-     !
-     CALL cubicsym( )
-     symm_type='cubic'
-     !
-  ELSE
-     !
-     CALL errore( 'gen_qpoints', 'wrong ibrav/symm_type', 1 )
-     !
-  ENDIF
+  CALL set_sym_bl(ibrav, symm_type)
   !
   CALL kpoint_grid ( nrot, time_reversal, s, t_rev, bg, nqx, &
                            0,0,0, nk1,nk2,nk3, nq, q, wk)

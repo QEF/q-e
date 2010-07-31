@@ -701,16 +701,16 @@ subroutine sgam_at_mag ( nat, m_loc, sym )
   return
 END SUBROUTINE sgam_at_mag
 !
-SUBROUTINE set_sym_bl(ibrav) 
+SUBROUTINE set_sym_bl(ibrav, symm_type) 
 !
-! This subroutine receives as input the index of the Bravais lattice and
-! the at and bg in cell_base and sets all the symmetry matrices of the 
-! Bravais lattice: nrot, s, sname 
+! This subroutine receives as input the index of the Bravais lattice, or
+! symm_type if ibrav=0 and the at and bg in cell_base and sets all the 
+! symmetry matrices of the Bravais lattice: nrot, s, sname 
 !
   IMPLICIT NONE
   INTEGER, INTENT(IN) :: ibrav
 
-  CHARACTER(LEN=9) :: symm_type
+  CHARACTER(LEN=9), INTENT(INOUT) :: symm_type
 
   IF ( ibrav == 4 .OR. ibrav == 5 .OR. &
      ( ibrav == 0 .AND. symm_type == 'hexagonal' ) )  THEN
@@ -736,14 +736,14 @@ SUBROUTINE set_sym_bl(ibrav)
   END SUBROUTINE set_sym_bl
 
   SUBROUTINE set_sym(ibrav, nat, tau, ityp, nspin_mag, m_loc, nr1, nr2, nr3, &
-                   nofrac)
+                   nofrac, symm_type)
   !
-  ! This routine receives as input the bravais lattice, the atoms and
-  ! their positions, if there is noncollinear magnetism and the initial
-  ! magnetic moments, the fft dimesions nr1, nr2, nr3 and it sets the 
-  ! symmetry elements of this module. Note that at and bg are those in 
-  ! cell_base. nrot, nsym, s, sname, sr, invs, ftau, irt, t_rev, 
-  ! time_reversal, and invsym
+  ! This routine receives as input the bravais lattice, (or symm_type if
+  ! ibrav=0) the atoms and their positions, if there is noncollinear 
+  ! magnetism and the initial magnetic moments, the fft dimesions nr1, nr2, 
+  ! nr3 and it sets the symmetry elements of this module. Note that at 
+  ! and bg are those in  cell_base. It sets nrot, nsym, s, sname, sr, invs, 
+  ! ftau, irt, t_rev,  time_reversal, and invsym
   ! 
   ! 
   !-----------------------------------------------------------------------
@@ -754,11 +754,11 @@ SUBROUTINE set_sym_bl(ibrav)
   REAL(DP), INTENT(IN) :: tau(3,nat)
   REAL(DP), INTENT(IN) :: m_loc(3,nat) 
   LOGICAL, INTENT(IN)  ::  nofrac
-  !
+  CHARACTER(LEN=9), INTENT(INOUT) :: symm_type
   !
   time_reversal = (nspin_mag /= 4)
   t_rev(:) = 0
-  CALL set_sym_bl(ibrav)
+  CALL set_sym_bl(ibrav, symm_type)
 
   !
   CALL find_sym ( nat, tau, ityp, nr1, nr2, nr3, nofrac,.not.time_reversal, &
@@ -1027,7 +1027,7 @@ subroutine s_axis_to_cart ( )
   LOGICAL FUNCTION symmorphic(nrot, ftau)
 !
 !  This function receives the fractionary translations and check if
-!  one of them is non zero. In this case the group is non symmorphic and
+!  one of them is non zero. In this case the space group is non symmorphic and
 !  the function returns .false.
 !
   IMPLICIT NONE

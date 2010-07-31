@@ -55,8 +55,8 @@ SUBROUTINE setup()
   USE ktetra,             ONLY : nk1, nk2, nk3, k1, k2, k3, &
                                  tetra, ntetra, ltetra
   USE symm_base,          ONLY : s, t_rev, irt, ftau, nrot, nsym, invsym, &
-                                 d1,d2,d3, time_reversal, sname
-  USE symm_base,          ONLY : hexsym, cubicsym, find_sym
+                                 d1,d2,d3, time_reversal, sname, set_sym_bl, &
+                                 find_sym
   USE wvfct,              ONLY : nbnd, nbndx
   USE control_flags,      ONLY : tr2, ethr, lscf, lmd, lpath, david,  &
                                  isolve, niter, noinv, nosym, nosym_evc, &
@@ -88,7 +88,7 @@ SUBROUTINE setup()
   !
   IMPLICIT NONE
   !
-  INTEGER  :: na, nt, input_nks, tipo, is, ierr, ibnd, ik
+  INTEGER  :: na, nt, input_nks, is, ierr, ibnd, ik
   LOGICAL  :: magnetic_sym
   REAL(DP) :: iocc, ionic_charge
   !
@@ -433,29 +433,7 @@ SUBROUTINE setup()
   !  ... generate transformation matrices for the crystal point group
   !  ... First we generate all the symmetry matrices of the Bravais lattice
   !
-  IF ( ibrav == 4 .OR. ibrav == 5 .OR. &
-     ( ibrav == 0 .AND. symm_type == 'hexagonal' ) )  THEN
-     !
-     ! ... here the hexagonal or trigonal bravais lattice
-     !
-     CALL hexsym( )
-     tipo = 2
-     symm_type='hexagonal'
-     !
-  ELSE IF ( ( ibrav >= 1 .AND. ibrav <= 14 ) .OR. &
-            ( ibrav == 0 .AND. symm_type == 'cubic' ) ) THEN
-     !
-     ! ... here for the cubic bravais lattice
-     !
-     CALL cubicsym( )
-     tipo = 1
-     symm_type='cubic'
-     !
-  ELSE
-     !
-     CALL errore( 'setup', 'wrong ibrav/symm_type', 1 )
-     !
-  END IF
+  call set_sym_bl(ibrav, symm_type)
   !
   ! ... If nosym is true do not use any point-group symmetry
   !
@@ -474,12 +452,7 @@ SUBROUTINE setup()
   !
   ! ... Automatic generation of k-points (if required)
   !
-  IF ( nkstot < 0 ) THEN
-     !
-     CALL setupkpoint( s, nrot, xk, wk, nkstot, npk, nk1, &
-                       nk2, nk3, k1, k2, k3, at, bg, tipo )
-     !
-  ELSE IF ( nkstot == 0 ) THEN
+  IF ( nkstot == 0 ) THEN
      !
      IF (lelfield) THEN
          !

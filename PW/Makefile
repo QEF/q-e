@@ -183,7 +183,6 @@ set_vrs.o \
 setlocal.o \
 setqf.o \
 setup.o \
-setupkpt.o \
 spinor.o \
 sph_ind.o \
 stop_run.o \
