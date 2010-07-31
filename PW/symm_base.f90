@@ -22,7 +22,7 @@ MODULE symm_base
   ! ... Exported variables
   !
   PUBLIC :: s, sr, sname, ftau, nrot, nsym, t_rev, &
-            time_reversal, irt, invs, invsym, d1, d2, d3
+            time_reversal, irt, invs, invsym, is_symmorphic, d1, d2, d3
   INTEGER :: &
        s(3,3,48),            &! symmetry matrices, in crystal axis
        invs(48),             &! index of inverse operation: S^{-1}_i=S(invs(i))
@@ -33,12 +33,13 @@ MODULE symm_base
        sr (3,3,48)            ! symmetry matrices, in cartesian axis
   CHARACTER(LEN=45) ::  sname(48)   ! name of the symmetries
   INTEGER :: &
-       t_rev(48) = 0          ! time reversal flag, for noncolinear magnetisation
+       t_rev(48) = 0          ! time reversal flag, for noncolinear magnetism
   INTEGER, ALLOCATABLE :: &
        irt(:,:)               ! symmetric atom for each atom and sym.op.
   LOGICAL :: &
        time_reversal=.true., &! if .TRUE. the system has time_reversal symmetry
-       invsym                 ! if .TRUE. the system has inversion symmetry
+       invsym,               &! if .TRUE. the system has inversion symmetry
+       is_symmorphic          ! if .TRUE. the space group is symmorphic
   REAL(DP),TARGET :: &
        d1(3,3,48),           &! matrices for rotating spherical
        d2(5,5,48),           &! harmonics (d1 for l=1, ...)
@@ -47,7 +48,7 @@ MODULE symm_base
   ! ... Exported routines
   !
   PUBLIC ::  hexsym, cubicsym, find_sym, inverse_s, copy_sym, checkallsym, &
-             s_axis_to_cart
+             s_axis_to_cart, set_sym, set_sym_bl, symmorphic
   !
 CONTAINS
    !
@@ -444,6 +445,8 @@ SUBROUTINE find_sym ( nat, tau, ityp, nr1, nr2, nr3, nofrac, &
   !
   CALL s_axis_to_cart ( ) 
   !
+  is_symmorphic=symmorphic(nsym, ftau)
+  !
   return
   !
 END SUBROUTINE find_sym
@@ -697,6 +700,73 @@ subroutine sgam_at_mag ( nat, m_loc, sym )
   !
   return
 END SUBROUTINE sgam_at_mag
+!
+SUBROUTINE set_sym_bl(ibrav) 
+!
+! This subroutine receives as input the index of the Bravais lattice and
+! the at and bg in cell_base and sets all the symmetry matrices of the 
+! Bravais lattice: nrot, s, sname 
+!
+  IMPLICIT NONE
+  INTEGER, INTENT(IN) :: ibrav
+
+  CHARACTER(LEN=9) :: symm_type
+
+  IF ( ibrav == 4 .OR. ibrav == 5 .OR. &
+     ( ibrav == 0 .AND. symm_type == 'hexagonal' ) )  THEN
+     !
+     ! ... here the hexagonal or trigonal bravais lattice
+     !
+     CALL hexsym( )
+     symm_type='hexagonal'
+     !
+  ELSE IF ( ( ibrav >= 1 .AND. ibrav <= 14 ) .OR. &
+            ( ibrav == 0 .AND. symm_type == 'cubic' ) ) THEN
+     !
+     ! ... here for the cubic bravais lattice
+     !
+     CALL cubicsym( )
+     symm_type='cubic'
+     !
+  ELSE
+     !
+     CALL errore( 'set_sym_bl', 'wrong ibrav/symm_type', 1 )
+     !
+  ENDIF
+  END SUBROUTINE set_sym_bl
+
+  SUBROUTINE set_sym(ibrav, nat, tau, ityp, nspin_mag, m_loc, nr1, nr2, nr3, &
+                   nofrac)
+  !
+  ! This routine receives as input the bravais lattice, the atoms and
+  ! their positions, if there is noncollinear magnetism and the initial
+  ! magnetic moments, the fft dimesions nr1, nr2, nr3 and it sets the 
+  ! symmetry elements of this module. Note that at and bg are those in 
+  ! cell_base. nrot, nsym, s, sname, sr, invs, ftau, irt, t_rev, 
+  ! time_reversal, and invsym
+  ! 
+  ! 
+  !-----------------------------------------------------------------------
+  !
+  IMPLICIT NONE
+  ! input 
+  INTEGER, INTENT(IN)  :: ibrav, nat, ityp(nat), nspin_mag, nr1, nr2, nr3
+  REAL(DP), INTENT(IN) :: tau(3,nat)
+  REAL(DP), INTENT(IN) :: m_loc(3,nat) 
+  LOGICAL, INTENT(IN)  ::  nofrac
+  !
+  !
+  time_reversal = (nspin_mag /= 4)
+  t_rev(:) = 0
+  CALL set_sym_bl(ibrav)
+
+  !
+  CALL find_sym ( nat, tau, ityp, nr1, nr2, nr3, nofrac,.not.time_reversal, &
+                  m_loc, .FALSE. )
+  !
+  RETURN
+  END SUBROUTINE set_sym
+!
 !
 !-----------------------------------------------------------------------
 INTEGER FUNCTION copy_sym ( nrot_, sym ) 
@@ -953,4 +1023,28 @@ subroutine s_axis_to_cart ( )
   enddo
   !
  end subroutine s_axis_to_cart
+
+  LOGICAL FUNCTION symmorphic(nrot, ftau)
+!
+!  This function receives the fractionary translations and check if
+!  one of them is non zero. In this case the group is non symmorphic and
+!  the function returns .false.
+!
+  IMPLICIT NONE
+  INTEGER, INTENT(IN) :: ftau(3,nrot)
+  INTEGER, INTENT(IN)  :: nrot
+
+  INTEGER :: isym
+
+  symmorphic=.TRUE.
+  DO isym=1,nrot
+     symmorphic=( symmorphic.AND.(ftau(1,isym)==0).AND.  &
+                                 (ftau(2,isym)==0).AND.  &
+                                 (ftau(3,isym)==0) )
+
+  END DO
+
+  RETURN
+  END FUNCTION symmorphic
+
 END MODULE symm_base
