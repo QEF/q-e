@@ -14,8 +14,9 @@ subroutine dyndia (xq, nmodes, nat, ntyp, ityp, amass, iudyn, dyn, w2)
   !   on output from this routine.
   !
   !
-  USE io_global,  ONLY : stdout
   USE kinds, only : DP
+  USE io_global,  ONLY : stdout
+  USE constants, ONLY : RY_TO_THZ, RY_TO_CMM1
   implicit none
   !
   !   first the dummy variables
@@ -39,9 +40,7 @@ subroutine dyndia (xq, nmodes, nat, ntyp, ityp, amass, iudyn, dyn, w2)
   integer :: nta, ntb, nu_i, nu_j, mu, na, nb, i
   ! counters
 
-  real(DP) :: rydthz, rydcm1, w1, unorm
-  ! conversion from a.u. to terahertz
-  ! conversion from a.u. to cm^-1
+  real(DP) :: w1, unorm
   ! the frequency
   ! norm of u
 
@@ -75,11 +74,6 @@ subroutine dyndia (xq, nmodes, nat, ntyp, ityp, amass, iudyn, dyn, w2)
   !
   call cdiagh (nmodes, dyn, 3 * nat, w2, z)
   !
-  !     conversion factors  ryd=>thz e ryd=>1/cm
-  !
-  rydthz = 13.6058d0 * 241.796d0
-  rydcm1 = 13.6058d0 * 8065.5d0
-  !
   !    Writes on output the displacements and the normalized frequencies.
   !
   WRITE( stdout, 9000) (xq (i), i = 1, 3)
@@ -91,8 +85,8 @@ subroutine dyndia (xq, nmodes, nat, ntyp, ityp, amass, iudyn, dyn, w2)
   do nu_i = 1, nmodes
      w1 = sqrt (abs (w2 (nu_i) ) )
      if (w2 (nu_i) < 0.d0) w1 = - w1
-     WRITE( stdout, 9010) nu_i, w1 * rydthz, w1 * rydcm1
-     if (iudyn /= 0) write (iudyn, 9010) nu_i, w1 * rydthz, w1 * rydcm1
+     WRITE( stdout, 9010) nu_i, w1 * RY_TO_THZ, w1 * RY_TO_CMM1
+     if (iudyn /= 0) write (iudyn, 9010) nu_i, w1 * RY_TO_THZ, w1 * RY_TO_CMM1
 9010 format   (5x,'omega(',i2,') =',f15.6,' [THz] =',f15.6,' [cm-1]')
      !
      ! write displacements onto matrix dyn
