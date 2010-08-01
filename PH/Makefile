@@ -102,6 +102,7 @@ phqscf.o \
 polariz.o \
 print_clock_ph.o \
 prepare_q.o \
+prepare_sym_analysis.o \
 psidspsi.o \
 psymdvscf.o \
 psyme.o \

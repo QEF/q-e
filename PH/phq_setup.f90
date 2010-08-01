@@ -62,15 +62,12 @@ subroutine phq_setup
   USE gvect,         ONLY : nrxx, ngm
   USE gsmooth,       ONLY : doublegrid
   USE symm_base,     ONLY : nrot, nsym, s, ftau, irt, t_rev, time_reversal, &
-                            sname, sr, invs, inverse_s, copy_sym
+                            sname, sr, invs, inverse_s, copy_sym, symmorphic
   USE uspp_param,    ONLY : upf
   USE spin_orb,      ONLY : domag
   USE constants,     ONLY : degspin, pi
   USE noncollin_module, ONLY : noncolin, m_loc, angle1, angle2, ux, nspin_mag
   USE wvfct,         ONLY : nbnd, et
-  USE rap_point_group,      ONLY : code_group, nclass, nelem, elem, which_irr,&
-                                  char_mat, name_rap, gname, name_class, ir_ram
-  USE rap_point_group_is,   ONLY : code_group_is, gname_is
   USE nlcc_ph,       ONLY : drc, nlcc_any
   USE eqv,           ONLY : dmuxc
   USE control_ph,    ONLY : rec_code, lgamma_gamma, search_sym, start_irr, &
@@ -335,13 +332,7 @@ subroutine phq_setup
   IF ( isym /= nsymq ) CALL errore('phq_setup',&
              'internal error: mismatch in the order of small group',isym)
   IF (.NOT.time_reversal) minus_q=.false.
-  is_symmorphic=.true.
-  DO isym=1,nsymq
-     is_symmorphic=( is_symmorphic.and.(ftau(1,irgq(isym))==0).and.  &
-                                       (ftau(2,irgq(isym))==0).and.  &
-                                       (ftau(3,irgq(isym))==0) )
-  
-  END DO
+  is_symmorphic=symmorphic(nsymq,ftau)
   search_sym=.true.
   IF (.not.is_symmorphic) THEN
      DO isym=1,nsymq
@@ -351,19 +342,7 @@ subroutine phq_setup
      END DO
   END IF
   IF (search_sym) THEN
-     CALL find_group(nsymq,sr,gname,code_group)
-     CALL set_irr_rap(code_group,nclass,char_mat,name_rap,name_class,ir_ram)
-     CALL divide_class(code_group,nsymq,sr,nclass,nelem,elem,which_irr)
-     IF (noncolin .and. domag) THEN
-        nsym_is=0.d0
-        DO isym=1,nsymq
-           IF (t_rev(isym)==0) THEN
-              nsym_is=nsym_is+1
-              sr_is(:,:,nsym_is) = sr(:,:,isym)
-           ENDIF
-        END DO
-        CALL find_group(nsym_is,sr_is,gname_is,code_group_is)
-     ENDIF
+     CALL prepare_sym_analysis(nsymq,sr,t_rev,magnetic_sym) 
      IF (.not.lgamma_gamma.and.modenum==0.and..NOT.u_from_file) &
               CALL find_mode_sym (u, w2, at, bg, tau, nat, nsymq, &
                    sr, irt, xq, rtau, pmass, ntyp, ityp, 0, nspin_mag, &

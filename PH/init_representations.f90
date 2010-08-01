@@ -22,9 +22,6 @@ subroutine init_representations()
   USE symm_base,     ONLY : nrot, nsym, sr, ftau, irt, t_rev, time_reversal, &
                             sname, invs, s, inverse_s, copy_sym, &
                             s_axis_to_cart, symmorphic
-  USE rap_point_group,      ONLY : code_group, nclass, nelem, elem, which_irr,&
-                                  char_mat, name_rap, gname, name_class, ir_ram
-  USE rap_point_group_is,   ONLY : code_group_is, gname_is
   USE control_ph,    ONLY : rec_code, lgamma_gamma, search_sym, lgamma, &
                             where_rec, current_iq, u_from_file
   USE modes,         ONLY : u, npertx, npert, gi, gimq, nirr, &
@@ -118,19 +115,7 @@ subroutine init_representations()
         END DO
      END IF
      IF (search_sym) THEN
-        CALL find_group(nsymq,sr,gname,code_group)
-        CALL set_irr_rap(code_group,nclass,char_mat,name_rap,name_class,ir_ram)
-        CALL divide_class(code_group,nsymq,sr,nclass,nelem,elem,which_irr)
-        IF (noncolin .and. domag) THEN
-           nsym_is=0.d0
-           DO isym=1,nsymq
-              IF (t_rev(isym)==0) THEN
-                 nsym_is=nsym_is+1
-                 sr_is(:,:,nsym_is) = sr(:,:,isym)
-              ENDIF
-           END DO
-           CALL find_group(nsym_is,sr_is,gname_is,code_group_is)
-        ENDIF
+        CALL prepare_sym_analysis(nsymq,sr,t_rev,magnetic_sym)
         IF (.not.lgamma_gamma.and.modenum==0) &
               CALL find_mode_sym (u, w2, at, bg, tau, nat, nsymq, &
                  sr, irt, xq, rtau, pmass, ntyp, ityp, 0, nspin_mag, &
@@ -144,6 +129,7 @@ subroutine init_representations()
      CALL mp_bcast (npert, root, world_comm)
      CALL mp_bcast (nirr, root, world_comm)
      CALL mp_bcast (name_rap_mode, root, world_comm)
+     CALL mp_bcast (num_rap_mode, root, world_comm)
   
      nsymq_iq(iq) = nsymq
      rep_iq(iq) = nirr
