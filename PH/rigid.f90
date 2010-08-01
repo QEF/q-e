@@ -313,6 +313,7 @@ subroutine writemodes (nax,nat,q,w2,z,iout)
   !   write modes on output file in a readable way
   !
   use kinds, only: dp
+  USE constants, ONLY : RY_TO_THZ, RY_TO_CMM1
   implicit none
   ! input
   integer nax, nat, iout
@@ -327,9 +328,9 @@ subroutine writemodes (nax,nat,q,w2,z,iout)
   !
   !  conversion factors RYD=>THZ, RYD=>1/CM e 1/CM=>THZ
   !
-  rydthz = 13.6058d0*241.796d0
-  rydcm1 = 13.6058d0*8065.5d0
-  cm1thz = 241.796d0/8065.5d0
+  rydthz = RY_TO_THZ
+  rydcm1 = RY_TO_CMM1
+  cm1thz = RY_TO_THZ/RY_TO_CMM1
   !
   !  write frequencies and normalised displacements
   !
