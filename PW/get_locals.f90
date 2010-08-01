@@ -22,7 +22,7 @@
       USE lsda_mod,   ONLY : nspin
       USE mp_global,  ONLY : intra_pool_comm
       USE mp,         ONLY : mp_sum
-      use noncollin_module
+      USE noncollin_module, ONLY : pointlist, factlist, noncolin
 
       implicit none
 !

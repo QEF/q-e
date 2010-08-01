@@ -92,7 +92,8 @@
       aux=sqrt(ux(1)**2+ux(2)**2+ux(3)**2)
       ux=ux/aux
       
-      WRITE( stdout,'(5x,3f12.6)') ux(1),ux(2),ux(3)
+      WRITE( stdout,'(/,5x, "GGA quantization axis:&
+           & (",f8.4,",",f8.4,",",f8.4,"  )")') ux(1),ux(2),ux(3)
 
       do ir=1,nrxx
          amag=sqrt(rho(ir,2)**2+rho(ir,3)**2+rho(ir,4)**2)

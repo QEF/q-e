@@ -201,7 +201,7 @@ MODULE rap_point_group
           which_irr(12)    ! For each class gives its position in the
                            ! character table.
    !
-   COMPLEX(DP) :: char_mat(12,12)       ! the character tables
+   COMPLEX(DP) :: char_mat(12,12)       ! the character tables: rap,class
 
    CHARACTER(len=15) :: name_rap(12)  ! the name of the representation
    CHARACTER(len=3)  :: ir_ram(12)    ! a string I, R or I+R for infrared,

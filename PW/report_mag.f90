@@ -19,7 +19,7 @@
       USE io_global,  ONLY : stdout
       use constants,  ONLY : pi
       USE scf,        ONLY : rho
-      use noncollin_module
+      USE noncollin_module, ONLY : noncolin, mcons, i_cons
       USE lsda_mod,         ONLY : nspin
       implicit none
       real(DP)  ::    theta,phi,norm,norm1
