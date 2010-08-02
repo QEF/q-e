@@ -35,7 +35,7 @@ subroutine dynmatrix
                             start_irr, last_irr, done_zue, where_rec, &
                             rec_code
   USE ph_restart,    ONLY : ph_writefile
-  USE partial,       ONLY : all_comp, comp_irr, done_irr, nat_todo
+  USE partial,       ONLY : all_comp, comp_irr, done_irr, nat_todo_input
   USE units_ph,      ONLY : iudyn
   USE ramanm,        ONLY: lraman, ramtns
   implicit none
@@ -116,7 +116,7 @@ subroutine dynmatrix
      call stop_ph (.true.)
   endif
 
-  IF ( nat_todo == 0 ) THEN
+  IF ( nat_todo_input == 0 ) THEN
      DO irr=0,nirr
         IF (done_irr(irr)==0) THEN
            IF (.not.ldisp) THEN
@@ -203,7 +203,7 @@ subroutine dynmatrix
   !
   !   Diagonalizes the dynamical matrix at q
   !
-  IF (all_comp .OR. nat_todo > 0) THEN
+  IF (all_comp .OR. nat_todo_input > 0) THEN
      call dyndia (xq, nmodes, nat, ntyp, ityp, pmass, iudyn, dyn, w2)
      IF (search_sym) CALL find_mode_sym (dyn, w2, at, bg, tau, nat, nsymq, sr,&
               irt, xq, rtau, pmass, ntyp, ityp, 1, nspin_mag, &

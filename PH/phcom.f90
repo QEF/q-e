@@ -263,9 +263,10 @@ MODULE partial
   ! if 1 this representation has been done
   ! a list of representations (optionally read in input)
   ! list of the atoms that moves
-  INTEGER :: nat_todo, nrapp
+  INTEGER :: nat_todo, nrapp, nat_todo_input
   ! number of atoms to compute
   ! The representation to do
+  ! nat_todo given in input
   LOGICAL :: all_comp
   ! if .TRUE. all representation have been computed
   !

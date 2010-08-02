@@ -40,7 +40,7 @@ SUBROUTINE phq_readin()
   USE save_ph,       ONLY : tmp_dir_save
   USE gamma_gamma,   ONLY : asr
   USE qpoint,        ONLY : nksq, xq
-  USE partial,       ONLY : atomo, list, nat_todo, nrapp
+  USE partial,       ONLY : atomo, list, nat_todo, nrapp, nat_todo_input
   USE output,        ONLY : fildyn, fildvscf, fildrho
   USE disp,          ONLY : nq1, nq2, nq3
   USE io_files,      ONLY : tmp_dir, prefix, trimcheck
@@ -435,6 +435,7 @@ SUBROUTINE phq_readin()
      CALL errore ('phq_readin', 'reading atoms', ABS (ios) )
      CALL mp_bcast(atomo, ionode_id )
   ENDIF
+  nat_todo_input=nat_todo
   IF (nrapp.LT.0.OR.nrapp.GT.3 * nat) CALL errore ('phq_readin', &
        'nrapp is wrong', 1)
   IF (nrapp.NE.0) THEN
