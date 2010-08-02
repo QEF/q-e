@@ -767,7 +767,8 @@ input_description -distribution {Quantum Espresso} -program ld1.x {
 		The first configuration must be spin-unpolarized.
 	    }
 	}
-	var rcutv  -type REAL
+
+	var rcutv  -type REAL {
 	    info {   Cutoff distance (CUT) for the inclusion of LDA-1/2 potential. 
                      Needed (mandatory) only if iswitch = 4 }
 	    default { -1.0 }
