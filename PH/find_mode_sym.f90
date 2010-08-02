@@ -5,8 +5,9 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-SUBROUTINE find_mode_sym (dyn, w2, at, bg, tau, nat, nsym, sr, irt, xq, &
-     rtau, amass, ntyp, ityp, flag, nspin_mag, name_rap_mode, num_rap_mode)
+SUBROUTINE find_mode_sym (u, w2, at, bg, tau, nat, nsym, sr, irt, xq, &
+     rtau, amass, ntyp, ityp, flag, lri, lmolecule, nspin_mag,        &
+     name_rap_mode, num_rap_mode)
   !
   !   This subroutine finds the irreducible representations which give
   !   the transformation properties of eigenvectors of the dynamical 
@@ -21,20 +22,21 @@ SUBROUTINE find_mode_sym (dyn, w2, at, bg, tau, nat, nsym, sr, irt, xq, &
   USE rap_point_group, ONLY : code_group, nclass, nelem, elem, which_irr, &
        char_mat, name_rap, name_class, gname, ir_ram
   USE rap_point_group_is, ONLY : gname_is
-  USE control_ph, ONLY : lgamma, lgamma_gamma
   IMPLICIT NONE
 
   CHARACTER(15), INTENT(OUT) :: name_rap_mode( 3 * nat )
   INTEGER, INTENT(OUT) :: num_rap_mode ( 3 * nat )
   INTEGER, INTENT(IN) :: nspin_mag
 
-  INTEGER ::             &
-       nat, nsym,        & 
-       flag,             &
-       ntyp, ityp(nat),  &
+  INTEGER, INTENT(IN) ::             &
+       nat,         &
+       nsym,        & 
+       flag,        &
+       ntyp,        &
+       ityp(nat),   &
        irt(48,nat)
 
-  REAL(DP) ::          &
+  REAL(DP), INTENT(IN) ::   &
        at(3,3),        &
        bg(3,3),        &
        xq(3),          &
@@ -44,8 +46,11 @@ SUBROUTINE find_mode_sym (dyn, w2, at, bg, tau, nat, nsym, sr, irt, xq, &
        w2(3*nat),      &
        sr(3,3,48)      
 
-  COMPLEX(DP) ::  &
-       dyn(3*nat, 3*nat)       
+  COMPLEX(DP), INTENT(IN) ::  &
+       u(3*nat, 3*nat)       ! The eigenvectors or the displacement pattern
+  LOGICAL, INTENT(IN) :: lri      ! if .true. print the Infrared/Raman flag
+  LOGICAL, INTENT(IN) :: lmolecule ! if .true. these are eigenvalues of an
+                                   ! isolated system
 
   REAL(DP), PARAMETER :: eps=1.d-5
 
@@ -83,11 +88,11 @@ SUBROUTINE find_mode_sym (dyn, w2, at, bg, tau, nat, nsym, sr, irt, xq, &
      DO nu_i = 1, nmodes
         DO mu = 1, nmodes
            na = (mu - 1) / 3 + 1
-           z (mu, nu_i) = dyn (mu, nu_i) * SQRT (amass (ityp (na) ) )
+           z (mu, nu_i) = u (mu, nu_i) * SQRT (amass (ityp (na) ) )
         END DO
      END DO
   ELSE
-     z=dyn
+     z=u
   ENDIF
 
   DO imode=1,nmodes
@@ -97,7 +102,7 @@ SUBROUTINE find_mode_sym (dyn, w2, at, bg, tau, nat, nsym, sr, irt, xq, &
   ngroup=1
   istart(ngroup)=1
   imode1=1
-  IF (lgamma_gamma) THEN
+  IF (lmolecule) THEN
      istart(ngroup)=7
      imode1=6
      IF(is_linear(nat,tau)) istart(ngroup)=6
@@ -140,6 +145,7 @@ SUBROUTINE find_mode_sym (dyn, w2, at, bg, tau, nat, nsym, sr, irt, xq, &
   num_rap_mode=-1
   counter=1
   DO igroup=1,ngroup
+     IF (ABS(w1(istart(igroup)))<1.d-3) CYCLE
      DO irap=1,nclass
         times=(0.d0,0.d0)
         DO iclass=1,nclass
@@ -149,7 +155,7 @@ SUBROUTINE find_mode_sym (dyn, w2, at, bg, tau, nat, nsym, sr, irt, xq, &
         ENDDO
         times=times/nsym
         cdum="   "
-        IF (lgamma) cdum=ir_ram(irap)
+        IF (lri) cdum=ir_ram(irap)
         IF ((ABS(NINT(DBLE(times))-DBLE(times)) > 1.d-4).OR. &
              (ABS(AIMAG(times)) > eps) ) THEN
            IF (flag==1) WRITE(stdout,'(5x,"omega(",i3," -",i3,") = ",f12.1,2x,"[cm-1]",3x, "-->   ?")') &

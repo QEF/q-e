@@ -62,7 +62,7 @@ subroutine phq_setup
   USE gvect,         ONLY : nrxx, ngm
   USE gsmooth,       ONLY : doublegrid
   USE symm_base,     ONLY : nrot, nsym, s, ftau, irt, t_rev, time_reversal, &
-                            sname, sr, invs, inverse_s, copy_sym, symmorphic
+                            sname, sr, invs, inverse_s, copy_sym
   USE uspp_param,    ONLY : upf
   USE spin_orb,      ONLY : domag
   USE constants,     ONLY : degspin, pi
@@ -116,7 +116,7 @@ subroutine phq_setup
   real(DP) :: auxdmuxc(4,4)
   real(DP), allocatable :: w2(:)
 
-  logical :: sym (48), is_symmorphic, magnetic_sym
+  logical :: sym (48), magnetic_sym
   ! the symmetry operations
   integer, allocatable :: ifat(:)
   integer :: ierr
@@ -311,9 +311,10 @@ subroutine phq_setup
           nirr, gi, gimq, iverbosity, modenum)
   else
      if (nsym > 1.and..not.lgamma_gamma) then
-        call set_irr (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
-             irgq, nsymq, minus_q, irotmq, u, npert, &
-             nirr, gi, gimq, iverbosity,u_from_file,w2)
+        call set_irr (nat, at, bg, xq, s, sr, tau, ntyp, ityp, ftau, invs,&
+                    nsym, rtau, irt, irgq, nsymq, minus_q, irotmq, u, npert, &
+                    nirr, gi, gimq, iverbosity, u_from_file, w2, search_sym, &
+                    nspin_mag, t_rev, pmass, num_rap_mode, name_rap_mode)
         npertx = 0
         DO irr = 1, nirr
            npertx = max (npertx, npert (irr) )
@@ -327,27 +328,15 @@ subroutine phq_setup
         call set_irr_nosym (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
              irgq, nsymq, minus_q, irotmq, t, tmq, npertx, u, npert, &
              nirr, gi, gimq, iverbosity)
+        IF (lgamma_gamma) THEN
+           search_sym=.TRUE.
+           CALL prepare_sym_analysis(nsymq,sr,t_rev,magnetic_sym)
+        ENDIF
      endif
   endif
   IF ( isym /= nsymq ) CALL errore('phq_setup',&
              'internal error: mismatch in the order of small group',isym)
   IF (.NOT.time_reversal) minus_q=.false.
-  is_symmorphic=symmorphic(nsymq,ftau)
-  search_sym=.true.
-  IF (.not.is_symmorphic) THEN
-     DO isym=1,nsymq
-        search_sym=( search_sym.and.(abs(gi(1,irgq(isym)))<1.d-8).and.  &
-                                    (abs(gi(2,irgq(isym)))<1.d-8).and.  &
-                                    (abs(gi(3,irgq(isym)))<1.d-8) )
-     END DO
-  END IF
-  IF (search_sym) THEN
-     CALL prepare_sym_analysis(nsymq,sr,t_rev,magnetic_sym) 
-     IF (.not.lgamma_gamma.and.modenum==0.and..NOT.u_from_file) &
-              CALL find_mode_sym (u, w2, at, bg, tau, nat, nsymq, &
-                   sr, irt, xq, rtau, pmass, ntyp, ityp, 0, nspin_mag, &
-                   name_rap_mode, num_rap_mode )
-  ENDIF
 
   IF (lgamma_gamma) THEN
      ALLOCATE(has_equivalent(nat))

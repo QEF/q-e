@@ -7,9 +7,10 @@
 !
 !
 !---------------------------------------------------------------------
-subroutine set_irr (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
-     irgq, nsymq, minus_q, irotmq, u, npert, nirr, gi, gimq, iverbosity, &
-     u_from_file, eigen)
+subroutine set_irr (nat, at, bg, xq, s, sr, tau, ntyp, ityp, ftau, invs, nsym, &
+                    rtau, irt, irgq, nsymq, minus_q, irotmq, u, npert,   &
+                    nirr, gi, gimq, iverbosity, u_from_file, eigen, search_sym,&
+                    nspin_mag, t_rev, pmass, num_rap_mode, name_rap_mode)
 !---------------------------------------------------------------------
 !
 !     This subroutine computes a basis for all the irreducible
@@ -34,6 +35,8 @@ subroutine set_irr (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
   USE kinds, only : DP
   USE constants, ONLY: tpi
   USE random_numbers, ONLY : randy
+  USE symm_base, ONLY : symmorphic
+  USE rap_point_group, ONLY : name_rap
 #ifdef __PARA
   use mp, only: mp_bcast
   use io_global, only : ionode_id
@@ -43,47 +46,59 @@ subroutine set_irr (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
 !
 !   first the dummy variables
 !
-
-  integer ::  nat, nsym, s (3, 3, 48), invs (48), irt (48, nat), &
-       iverbosity, npert (3 * nat), irgq (48), nsymq, irotmq, nirr
+  integer ::  nat, ntyp, nsym, s (3, 3, 48), invs (48), irt (48, nat), &
+       iverbosity, npert (3 * nat), irgq (48), nsymq, irotmq, nirr, &
+       ftau(3,48), nspin_mag, t_rev(48), ityp(nat), num_rap_mode(3*nat)
 ! input: the number of atoms
+! input: the number of types of atoms
 ! input: the number of symmetries
 ! input: the symmetry matrices
 ! input: the inverse of each matrix
 ! input: the rotated of each atom
 ! input: write control
-! output: the dimension of each represe
+! output: the dimension of each representation
 ! output: the small group of q
 ! output: the order of the small group
 ! output: the symmetry sending q -> -q+
-! output: the number of irr. representa
-! input: if rec_code > 0 u, nirr, and npert are read from the recover file 
-!        and are not recalculated here
+! output: the number of irr. representation
+! input: the fractionary translations
+! input: the number of spin components
+! input: the time reversal symmetry
+! input: the type of each atom
+! output: the number of the representation of each mode
 
   real(DP) :: xq (3), rtau (3, 48, nat), at (3, 3), bg (3, 3), &
-       gi (3, 48), gimq (3)
+       gi (3, 48), gimq (3), sr(3,3,48), tau(3,nat), pmass(ntyp)
 ! input: the q point
 ! input: the R associated to each tau
 ! input: the direct lattice vectors
 ! input: the reciprocal lattice vectors
 ! output: [S(irotq)*q - q]
 ! output: [S(irotmq)*q + q]
+! input: symmetry matrices in cartesian coordinates
+! input: the atomic positions
+! input: the mass of each atom
 
   complex(DP) :: u(3*nat, 3*nat)
 ! output: the pattern vectors
-  logical :: minus_q, u_from_file
+  logical :: minus_q, u_from_file, search_sym
 ! output: if true one symmetry send q -
 ! input: if true the displacement patterns are not calculated here
+! output: if true the symmetry of each mode has been calculated
+
+  character(len=15) :: name_rap_mode( 3 * nat )
+  ! output: the name of the representation for each group of modes
 !
 !   here the local variables
 !
   integer :: na, nb, imode, jmode, ipert, jpert, nsymtot, imode0, &
-       irr, ipol, jpol, isymq, irot, sna
+       irr, ipol, jpol, isymq, irot, sna, isym
   ! counters and auxiliary variables
 
-  integer :: info
+  integer :: info, mode_per_rap(12), count_rap(12), rap, init, pos, irap, &
+             num_rap_aux( 3 * nat )
 
-  real(DP) :: eigen (3 * nat), modul, arg
+  real(DP) :: eigen (3 * nat), modul, arg, eig(3*nat)
 ! the eigenvalues of dynamical matrix
 ! the modulus of the mode
 ! the argument of the phase
@@ -96,7 +111,7 @@ subroutine set_irr (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
 ! rotated pattern
 ! the phase factor
 
-  logical :: lgamma
+  logical :: lgamma, is_symmorphic, magnetic_sym
 ! if true gamma point
 !
 !   Allocate the necessary quantities
@@ -106,6 +121,20 @@ subroutine set_irr (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
 !   find the small group of q
 !
   call smallgq (xq,at,bg,s,nsym,irgq,nsymq,irotmq,minus_q,gi,gimq)
+  is_symmorphic=symmorphic(nsymq, ftau)
+  search_sym=.true.
+  IF (.not.is_symmorphic) THEN
+     DO isym=1,nsymq
+        search_sym=( search_sym.and.(abs(gi(1,irgq(isym)))<1.d-8).and.  &
+                                    (abs(gi(2,irgq(isym)))<1.d-8).and.  &
+                                    (abs(gi(3,irgq(isym)))<1.d-8) )
+     END DO
+  END IF
+  num_rap_mode=-1
+  IF (search_sym) THEN
+     magnetic_sym=(nspin_mag==4)
+     CALL prepare_sym_analysis(nsymq,sr,t_rev,magnetic_sym)
+  ENDIF
 
   IF (.NOT. u_from_file) THEN
 !
@@ -177,6 +206,48 @@ subroutine set_irr (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
                ( AIMAG(u(na,imode)), na=1,3*nat )
         end do
      end if
+
+     IF (search_sym) THEN
+        CALL find_mode_sym (u, eigen, at, bg, tau, nat, nsymq, &
+                  sr, irt, xq, rtau, pmass, ntyp, ityp, 0, lgamma, &
+                  .FALSE., nspin_mag, name_rap_mode, num_rap_mode )
+!
+!   Order the modes so that we first make all those that belong to the first
+!   representation, then the second ect. 
+!
+!
+!   First count, for each irreducible representation, how many modes
+!   belong to that representation
+!
+        mode_per_rap=0
+        DO imode=1,3*nat
+           mode_per_rap(num_rap_mode(imode))=mode_per_rap(num_rap_mode(imode))+1
+        ENDDO
+!
+!   The position of each mode on the list is the following:
+!   The positions from 1 to nrap(1) contain the modes that transform according
+!   to the first representation. From nrap(1)+1 to nrap(1)+nrap(2) the
+!   mode that transform according to the second ecc.
+!
+        count_rap=1
+        DO imode=1,3*nat
+           rap=num_rap_mode(imode)
+           IF (rap>12) call errore('set_irr',&
+                                   'problem with the representation',1)
+           init=0
+           DO irap=1,rap-1
+              init=init+mode_per_rap(irap)
+           ENDDO
+           pos=init+count_rap(rap)
+           eig(pos)=eigen(imode)
+           phi(:,pos)=u(:,imode)
+           num_rap_aux(pos)=num_rap_mode(imode)
+           count_rap(rap)=count_rap(rap)+1
+        ENDDO
+        eigen=eig
+        u=phi
+        num_rap_mode=num_rap_aux
+     ENDIF
 !
 !  Here we count the irreducible representations and their dimensions
      do imode = 1, 3 * nat
@@ -195,6 +266,13 @@ subroutine set_irr (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
            npert (nirr) = 1
         endif
      enddo
+     IF (search_sym) THEN
+        imode=1
+        DO irr=1,nirr
+           name_rap_mode(irr)=name_rap(num_rap_mode(imode))
+           imode=imode+npert(irr)
+        ENDDO
+     ENDIF
   endif
 !    Note: the following lines are for testing purposes
 !
@@ -226,6 +304,8 @@ subroutine set_irr (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
   call mp_bcast (irotmq, ionode_id, intra_image_comm)
   call mp_bcast (irgq, ionode_id, intra_image_comm)
   call mp_bcast (minus_q, ionode_id, intra_image_comm)
+  call mp_bcast (num_rap_mode, ionode_id, intra_image_comm)
+  call mp_bcast (name_rap_mode, ionode_id, intra_image_comm)
 #endif
   return
 end subroutine set_irr

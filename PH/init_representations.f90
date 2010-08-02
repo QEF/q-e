@@ -21,7 +21,7 @@ subroutine init_representations()
   USE io_global,     ONLY : stdout
   USE symm_base,     ONLY : nrot, nsym, sr, ftau, irt, t_rev, time_reversal, &
                             sname, invs, s, inverse_s, copy_sym, &
-                            s_axis_to_cart, symmorphic
+                            s_axis_to_cart
   USE control_ph,    ONLY : rec_code, lgamma_gamma, search_sym, lgamma, &
                             where_rec, current_iq, u_from_file
   USE modes,         ONLY : u, npertx, npert, gi, gimq, nirr, &
@@ -48,7 +48,7 @@ subroutine init_representations()
   
   real(DP), allocatable :: w2(:)
 
-  logical :: sym (48), is_symmorphic, magnetic_sym
+  logical :: sym (48), magnetic_sym
   ! the symmetry operations
   integer :: ierr
 
@@ -88,9 +88,10 @@ subroutine init_representations()
      call sgam_ph (at, bg, nsym, s, irt, tau, rtau, nat, sym)
 
      if (nsym > 1.and..not.lgamma_gamma) then
-        call set_irr (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
-             irgq, nsymq, minus_q, irotmq, u, npert, &
-             nirr, gi, gimq, iverbosity,u_from_file,w2)
+        call set_irr (nat, at, bg, xq, s, sr, tau, ntyp, ityp, ftau, invs, &
+                    nsym, rtau, irt, irgq, nsymq, minus_q, irotmq, u, npert,  &
+                    nirr, gi, gimq, iverbosity, u_from_file, w2, search_sym,  &
+                    nspin_mag, t_rev, pmass, num_rap_mode, name_rap_mode)
         npertx = 0
         DO irr = 1, nirr
            npertx = max (npertx, npert (irr) )
@@ -105,22 +106,6 @@ subroutine init_representations()
              irgq, nsymq, minus_q, irotmq, t, tmq, npertx, u, npert, &
              nirr, gi, gimq, iverbosity)
      endif
-     is_symmorphic=symmorphic(nsymq,ftau)
-     search_sym=.true.
-     IF (.not.is_symmorphic) THEN
-        DO isym=1,nsymq
-           search_sym=( search_sym.and.(abs(gi(1,irgq(isym)))<1.d-8).and.  &
-                                       (abs(gi(2,irgq(isym)))<1.d-8).and.  &
-                                       (abs(gi(3,irgq(isym)))<1.d-8) )
-        END DO
-     END IF
-     IF (search_sym) THEN
-        CALL prepare_sym_analysis(nsymq,sr,t_rev,magnetic_sym)
-        IF (.not.lgamma_gamma.and.modenum==0) &
-              CALL find_mode_sym (u, w2, at, bg, tau, nat, nsymq, &
-                 sr, irt, xq, rtau, pmass, ntyp, ityp, 0, nspin_mag, &
-                 name_rap_mode, num_rap_mode)
-     ENDIF
 !
 !  Only the modes calculated by node zero are sent to all images
 !

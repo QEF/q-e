@@ -208,8 +208,8 @@ subroutine dynmatrix
   IF (ldiag_loc) THEN
      call dyndia (xq, nmodes, nat, ntyp, ityp, pmass, iudyn, dyn, w2)
      IF (search_sym) CALL find_mode_sym (dyn, w2, at, bg, tau, nat, nsymq, sr,&
-              irt, xq, rtau, pmass, ntyp, ityp, 1, nspin_mag, &
-                                          name_rap_mode, num_rap_mode)
+              irt, xq, rtau, pmass, ntyp, ityp, 1, lgamma, lgamma_gamma, &
+                                        nspin_mag, name_rap_mode, num_rap_mode)
   END IF
 !
 ! Here we save the dynamical matrix and the effective charges dP/du on 
