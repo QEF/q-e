@@ -796,8 +796,9 @@ esac
 if test "$cppflags" = "" ; then cppflags=$try_cppflags ; fi
 echo "${ECHO_T}$cppflags"
 
-# linker and archiver - note that further additions to linker flags
-# should be added to ldflags, not try_ldflags, from now on
+# linker and archiver
+# note that from this point on, further additions to
+# linker flags should be added to ldflags rather than try_ldflags
 if test "$ld" = ""       ; then ld="$mpif90"           ; fi
 if test "$ldflags" = ""  ; then ldflags="$try_ldflags" ; fi
 if test "$ar" = ""       ; then ar="$try_ar"           ; fi
