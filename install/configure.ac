@@ -1681,46 +1681,50 @@ echo setting MPI_LIBS... $mpi_libs
 
 # final check on availability of parallel environment
 parallel=0
-if test "$use_parallel" -ne 0
-then
-        F77=$mpif90
-        LIBS="$mpi_libs"
-        AC_SEARCH_LIBS(mpi_init, "", parallel=1
-                       try_dflags="$try_dflags -D__MPI -D__PARA")
+for dummy in x # to allow simple 'break' 
+do 
+    test "$use_parallel" -eq 0 && break
+
+    F77=$mpif90
+    LIBS="$mpi_libs"
+    AC_SEARCH_LIBS(mpi_init, "", parallel=1
+                   try_dflags="$try_dflags -D__MPI -D__PARA")
 # look for scalapack if required
-        if test "$parallel" -eq 1
-        then
-           if test "$with_scalapack" -ne 0
-           then
+    test "$parallel" -eq 0 && break
+    test "$with_scalapack" -eq 0 && break
 # no additional libraries needed
-             scalapack_libs=""
-             AC_SEARCH_LIBS(pdgemr2d, "" , have_scalapack=1
-                try_dflags="$try_dflags -D__SCALAPACK")
-             if test "$have_scalapack" -eq 0;
-             then
-# scalapack + blacs
-               unset ac_cv_search_pdgemr2d # clear cached value
-	       if test "$scalapack_dir" = ""; then scalapack_dir="/bgsys/local/scalapack/lib"; fi
-	       if test "$blacs_dir" = ""; then blacs_dir="/bgsys/local/blacs/lib"; fi
-               scalapack_libs="-L$scalapack_dir -lscalapack"
-               scalapack_libs="$scalapack_libs -L$blacs_dir -lblacs -lblacsF77init -lblacs"
-               LIBS="$mpi_libs $scalapack_libs"
-               LDFLAGS=""
-               AC_SEARCH_LIBS(pdgemr2d, "" , have_scalapack=1
-                try_dflags="$try_dflags -D__SCALAPACK")
-             fi
-             if test "$have_scalapack" -eq 0;
-             then
+    scalapack_libs=""
+    AC_SEARCH_LIBS(pdgemr2d, "" , have_scalapack=1
+                   try_dflags="$try_dflags -D__SCALAPACK")
+    test "$have_scalapack" -eq 1 && break
+# intel MKL blacs&scalapack
+    if test "$have_mkl" -eq 1
+    then
+        unset ac_cv_search_pdgemr2d # clear cached value
+        LIBS="-lmkl_blacs_ilp64 $mpi_libs $blas_libs"
+        AC_SEARCH_LIBS(pdgemr2d, "mkl_scalapack_ilp64" , have_scalapack=1
+                       try_dflags="$try_dflags -D__SCALAPACK"
+                       scalapack_libs="-lmkl_scalapack_ilp64 -lmkl_blacs_ilp64" )
+        test "$have_scalapack" -eq 1 && break
+    fi
 # sci libraries (e.g. cray xt)
-               unset ac_cv_search_pdgemr2d # clear cached value
-               scalapack_libs="-lsci"
-               LIBS="$mpi_libs $scalapack_libs"
-               AC_SEARCH_LIBS(pdgemr2d, "" , have_scalapack=1
-                 try_dflags="$try_dflags -D__SCALAPACK")
-             fi
-           fi
-        fi
-fi
+    unset ac_cv_search_pdgemr2d # clear cached value
+    scalapack_libs="-lsci"
+    LIBS="$mpi_libs $scalapack_libs"
+    AC_SEARCH_LIBS(pdgemr2d, "" , have_scalapack=1
+                   try_dflags="$try_dflags -D__SCALAPACK")
+    test "$have_scalapack" -eq 1 && break
+# scalapack + blacs
+    unset ac_cv_search_pdgemr2d # clear cached value
+    if test "$scalapack_dir" = ""; then scalapack_dir="/bgsys/local/scalapack/lib"; fi
+    if test "$blacs_dir" = ""; then blacs_dir="/bgsys/local/blacs/lib"; fi
+    scalapack_libs="-L$scalapack_dir -lscalapack"
+    scalapack_libs="$scalapack_libs -L$blacs_dir -lblacs -lblacsF77init -lblacs"
+    LIBS="$mpi_libs $scalapack_libs"
+    LDFLAGS=""
+    AC_SEARCH_LIBS(pdgemr2d, "" , have_scalapack=1
+                   try_dflags="$try_dflags -D__SCALAPACK")
+done
 
 # preprocessing flag for openmp (experimental)
 if test "$use_openmp" -eq 1 ; then try_dflags="$try_dflags -D__OPENMP" ; fi
