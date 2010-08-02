@@ -480,7 +480,7 @@ CONTAINS
                CALL errore("md_init","list of species in block ATOMIC_VELOCITIES &
                  & must be identical to those in ATOMIC_POSITIONS")
             !
-            vel(:,:) = rd_vel(:,:)
+            vel(:,:) = rd_vel(:,:) / alat
             !
          ELSEIF ( control_temp ) THEN
             !
