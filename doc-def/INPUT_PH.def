@@ -255,6 +255,20 @@ input_description -distribution {Quantum Espresso} -package PWscf -program ph.x 
 	    }
 	}
 
+	var ldiag  -type LOGICAL { 
+	    default { .false. }
+	    info {
+		If .true. forces the diagonalization of the dynamical
+                matrix also when only a part of the dynamical matrix
+                has been calculated. It is used together with start_irr
+                and last_irr. If all modes corresponding to a
+                given irreducible representation have been calculated,
+                the phonon frequencies of that representation are
+                correct. The others are zero or wrong. Use with care.
+	    }
+	}
+
+
 	vargroup -type INTEGER {
 	    var nq1
 	    var nq2

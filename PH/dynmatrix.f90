@@ -33,7 +33,7 @@ subroutine dynmatrix
   USE efield_mod,    ONLY : epsilon, zstareu, zstarue0, zstarue
   USE control_ph,    ONLY : epsil, zue, lgamma, lgamma_gamma, search_sym, ldisp, &
                             start_irr, last_irr, done_zue, where_rec, &
-                            rec_code
+                            rec_code, ldiag
   USE ph_restart,    ONLY : ph_writefile
   USE partial,       ONLY : all_comp, comp_irr, done_irr, nat_todo_input
   USE units_ph,      ONLY : iudyn
@@ -51,10 +51,12 @@ subroutine dynmatrix
   ! list of vectors in the star of q
   real(DP), allocatable :: zstar(:,:,:)
   integer :: icart, jcart
+  logical :: ldiag_loc
   !
   IF (start_irr==0.and.last_irr==0) RETURN
   !
   call start_clock('dynmatrix')
+  ldiag_loc=ldiag.OR.(nat_todo_input > 0).OR.all_comp
   ! 
   !     set all noncomputed elements to zero
   !
@@ -116,7 +118,7 @@ subroutine dynmatrix
      call stop_ph (.true.)
   endif
 
-  IF ( nat_todo_input == 0 ) THEN
+  IF ( .NOT. ldiag_loc ) THEN
      DO irr=0,nirr
         IF (done_irr(irr)==0) THEN
            IF (.not.ldisp) THEN
@@ -203,7 +205,7 @@ subroutine dynmatrix
   !
   !   Diagonalizes the dynamical matrix at q
   !
-  IF (all_comp .OR. nat_todo_input > 0) THEN
+  IF (ldiag_loc) THEN
      call dyndia (xq, nmodes, nat, ntyp, ityp, pmass, iudyn, dyn, w2)
      IF (search_sym) CALL find_mode_sym (dyn, w2, at, bg, tau, nat, nsymq, sr,&
               irt, xq, rtau, pmass, ntyp, ityp, 1, nspin_mag, &
