@@ -114,6 +114,7 @@ PROGRAM q2r
      !
      fildyn = ' '
      flfrc = ' '
+     zasr = 'no'
      !
      la2F=.false.
      !
