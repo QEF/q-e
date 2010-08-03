@@ -32,7 +32,7 @@ SUBROUTINE phq_readin()
   USE spin_orb,      ONLY : domag
   USE printout_base, ONLY : title
   USE control_ph,    ONLY : maxter, alpha_mix, lgamma, lgamma_gamma, epsil, &
-                            zue, zeu,       &
+                            zue, zeu, xmldyn,       &
                             trans, reduce_io, elph, tr2_ph, niter_ph,       &
                             nmix_ph, ldisp, recover, lrpa, lnoloc, start_irr, &
                             last_irr, start_q, last_q, current_iq, tmp_dir_ph, &
@@ -46,12 +46,11 @@ SUBROUTINE phq_readin()
   USE io_files,      ONLY : tmp_dir, prefix, trimcheck
   USE noncollin_module, ONLY : i_cons, noncolin
   USE ldaU,          ONLY : lda_plus_u
-  USE control_flags, ONLY : iverbosity, modenum
+  USE control_flags, ONLY : iverbosity, modenum, twfcollect
   USE io_global,     ONLY : ionode, stdout
   USE mp_global,     ONLY : nproc, nproc_pool, nproc_file, nproc_pool_file, &
                             nimage, my_image_id,    &
                             nproc_image_file, nproc_image
-  USE control_flags, ONLY : twfcollect
   USE paw_variables, ONLY : okpaw
   USE ramanm,        ONLY : eth_rps, eth_ns, lraman, elop, dek
   USE freq_ph,       ONLY : fpol, fiu, nfs, nfsmax
@@ -77,6 +76,7 @@ SUBROUTINE phq_readin()
   INTEGER, EXTERNAL  :: atomic_number
   REAL(DP), EXTERNAL :: atom_weight
   LOGICAL, EXTERNAL  :: imatches
+  LOGICAL, EXTERNAL  :: has_xml
   !
   NAMELIST / INPUTPH / tr2_ph, amass, alpha_mix, niter_ph, nmix_ph,  &
                        nat_todo, iverbosity, outdir, epsil,  &
@@ -120,7 +120,6 @@ SUBROUTINE phq_readin()
   ! last_irr     : 
   ! nogg         : if .true. lgamma_gamma tricks are not used
   ! ldiag        : if .true. force diagonalization of the dyn mat
-
 
   IF (ionode) THEN
   !
@@ -374,6 +373,11 @@ SUBROUTINE phq_readin()
   !
   IF (start_q <= 0 ) CALL errore('phq_readin', 'wrong start_q',1)
   !
+  !  the dynamical matrix is written in xml format if fildyn ends in
+  !  .xml or in the noncollinear case.
+  !
+  xmldyn=has_xml(fildyn)
+  IF (noncolin) xmldyn=.TRUE.
   !
   ! If a band structure calculation needs to be done do not open a file 
   ! for k point

@@ -17,6 +17,7 @@ expint.o \
 functionals.o \
 lsda_functionals.o \
 more_functionals.o \
+has_xml.o \
 iglocal.o \
 inpfile.o \
 int_to_char.o \

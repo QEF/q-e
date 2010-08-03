@@ -344,6 +344,7 @@ MODULE control_ph
              u_from_file=.FALSE.,  & ! if true the u are on file
              recover_read=.FALSE., & ! if true the recover data have been read
              ldiag=.FALSE.,        & ! if true force the diagonalization 
+             xmldyn=.FALSE.,   & ! if true the dynamical matrix is in xml form
              all_done      ! if .TRUE. all representations have been done
   !
 END MODULE control_ph
