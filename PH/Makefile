@@ -195,8 +195,8 @@ ph.x : phonon.o libph.a $(PWOBJS) $(LIBOBJS)
 		 $(PWOBJS) $(EEOBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../PH/ph.x . )
 
-dynmat.x : dynmat.o rigid.o $(PWOBJS)  $(MODULES) $(EEMODS) $(LIBOBJS)
-	$(LD) $(LDFLAGS) -o $@ dynmat.o rigid.o \
+dynmat.x : dynmat.o rigid.o libph.a $(PWOBJS)  $(MODULES) $(EEMODS) $(LIBOBJS)
+	$(LD) $(LDFLAGS) -o $@ dynmat.o rigid.o libph.a \
 		 $(PWOBJS) $(EEOBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../PH/$@ . )
 

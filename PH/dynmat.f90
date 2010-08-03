@@ -11,7 +11,8 @@ Module dynamical
   !
   USE kinds, ONLY: DP
   complex(DP), allocatable :: dyn(:,:,:,:)
-  real(DP), allocatable :: tau(:,:),  zstar(:,:,:), dchi_dtau(:,:,:,:)
+  real(DP), allocatable :: tau(:,:),  zstar(:,:,:), dchi_dtau(:,:,:,:), &
+                           m_loc(:,:)
   integer, allocatable :: ityp(:)
   !
 end Module dynamical
@@ -71,7 +72,8 @@ end Module dynamical
       USE kinds, ONLY: DP
       USE mp,         ONLY : mp_start, mp_env, mp_end, mp_barrier
       USE mp_global,  ONLY : nproc, mpime, mp_global_start
-
+      USE io_dyn_mat, ONLY : read_dyn_mat_param, read_dyn_mat_header, &
+                             read_dyn_mat, read_dyn_mat_tail
       use dynamical
       !
       implicit none
@@ -82,11 +84,16 @@ end Module dynamical
       logical :: lread, gamma
       complex(DP), allocatable :: z(:,:)
       real(DP) :: amass(ntypx), amass_(ntypx), eps0(3,3), a0, omega, &
-           at(3,3), amconv, q(3), q_(3)
+           at(3,3), bg(3,3), amconv, q(3), q_(3)
       real(DP), allocatable :: w2(:)
       integer :: gid
+      integer :: nat, na, nt, ntyp, iout, axis, nax, nspin_mag
+      real(DP) :: celldm(6)
+      logical :: xmldyn, lrigid, lraman
+      logical, external :: has_xml
+      integer :: ibrav, nqs
+      character(len=9) :: symm_type
       integer, allocatable :: itau(:)
-      integer :: nat, na, nt, ntyp, iout, axis, nax
       namelist /input/ amass, asr, axis, fildyn, filout, filmol, filxsf, q
 !
 !
@@ -118,11 +125,34 @@ end Module dynamical
       end if
 !
       ntyp = ntypx ! avoids spurious out-of-bound errors
-      call readmat ( fildyn, asr, axis, nat, ntyp, atm, a0, &
-           at, omega, amass_, eps0, q_ )
+      xmldyn=has_xml(fildyn)
+      IF (xmldyn) THEN
+         CALL read_dyn_mat_param(fildyn,ntyp,nat)
+         ALLOCATE (m_loc(3,nat))
+         ALLOCATE (tau(3,nat))
+         ALLOCATE (ityp(nat))
+         ALLOCATE (zstar(3,3,nat))
+         ALLOCATE (dchi_dtau(3,3,3,nat) )
+         CALL read_dyn_mat_header(ntyp, nat, ibrav, nspin_mag, &
+                 celldm, at, bg, omega, symm_type, atm, amass_, tau, ityp, &
+                 m_loc, nqs, lrigid, eps0, zstar, lraman, dchi_dtau)
+         IF (nqs /= 1) CALL errore('dynmat','only q=0 matrix allowed',1)
+         a0=celldm(1) ! define alat
+         at = at / a0 !  bring at in units of alat
+         ALLOCATE (dyn(3,3,nat,nat) )
+         CALL read_dyn_mat(nat,1,q_,dyn(:,:,:,:))
+         CALL read_dyn_mat_tail(nat)
+         if(asr.ne.'no') then
+             call set_asr ( asr, axis, nat, tau, dyn, zstar )
+         endif
+         amconv = 1.0_DP
+      ELSE
+         call readmat ( fildyn, asr, axis, nat, ntyp, atm, a0, &
+              at, omega, amass_, eps0, q_ )
+         amconv = 1.66042d-24/9.1095d-28*0.5d0
+      ENDIF
       !
       gamma = abs(q_(1)**2+q_(2)**2+q_(3)**2).lt.1.0d-8
-      amconv = 1.66042d-24/9.1095d-28*0.5d0
       do nt=1, ntyp
          if (amass(nt) > 0.0d0) then
             amass(nt)=amass(nt)*amconv
@@ -161,6 +191,14 @@ end Module dynamical
            (nat, omega, w2, z, zstar, eps0, dchi_dtau)
       ENDIF
 !
+      IF (xmldyn) THEN
+         DEALLOCATE (m_loc)
+         DEALLOCATE (tau)
+         DEALLOCATE (ityp)
+         DEALLOCATE (zstar)
+         DEALLOCATE (dchi_dtau)
+         DEALLOCATE (dyn)
+      ENDIF
 
       CALL mp_barrier()
       !
