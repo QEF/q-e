@@ -356,6 +356,7 @@ dynamics_module.o : ../Modules/cell_base.o
 dynamics_module.o : ../Modules/constants.o
 dynamics_module.o : ../Modules/constraints_module.o
 dynamics_module.o : ../Modules/control_flags.o
+dynamics_module.o : ../Modules/input_parameters.o
 dynamics_module.o : ../Modules/io_files.o
 dynamics_module.o : ../Modules/io_global.o
 dynamics_module.o : ../Modules/ions_base.o
@@ -1029,14 +1030,12 @@ pwscf.o : ../Modules/check_stop.o
 pwscf.o : ../Modules/control_flags.o
 pwscf.o : ../Modules/environment.o
 pwscf.o : ../Modules/io_global.o
-pwscf.o : ../Modules/ions_base.o
 pwscf.o : ../Modules/mp_global.o
 pwscf.o : ../Modules/parameters.o
 pwscf.o : ../Modules/path_base.o
 pwscf.o : ../Modules/path_io_routines.o
 pwscf.o : ../Modules/path_variables.o
 pwscf.o : ms2.o
-pwscf.o : noncol.o
 qvan2.o : ../Modules/kind.o
 qvan2.o : ../Modules/uspp.o
 qvan2.o : pwcom.o
@@ -1293,7 +1292,6 @@ setup.o : noncol.o
 setup.o : pw_restart.o
 setup.o : pwcom.o
 setup.o : symm_base.o
-setupkpt.o : ../Modules/kind.o
 sph_ind.o : ../Modules/kind.o
 spinor.o : ../Modules/kind.o
 stop_run.o : ../Modules/constraints_module.o

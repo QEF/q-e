@@ -115,6 +115,7 @@ dvex.o : ../Modules/radial_grids.o
 dvex.o : ld1inc.o
 el_config.o : ../Modules/kind.o
 el_config.o : parameters.o
+elsd.o : ../Modules/constants.o
 elsd.o : ../Modules/funct.o
 elsd.o : ../Modules/kind.o
 elsd.o : ../Modules/radial_grids.o
@@ -280,6 +281,7 @@ run_test.o : ../Modules/radial_grids.o
 run_test.o : ld1inc.o
 run_test.o : parameters.o
 scf.o : ../Modules/constants.o
+scf.o : ../Modules/funct.o
 scf.o : ../Modules/kind.o
 scf.o : ../Modules/radial_grids.o
 scf.o : ld1inc.o
