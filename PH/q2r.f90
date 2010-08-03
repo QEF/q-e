@@ -71,6 +71,9 @@ PROGRAM q2r
   USE mp_global,  ONLY : nproc, mpime, mp_global_start
   USE dynamicalq, ONLY : phiq, tau, ityp, zeu
   USE fft_scalar, ONLY : cfft3d
+  USE io_dyn_mat, ONLY : read_dyn_mat_param, read_dyn_mat_header, &
+                         read_dyn_mat, read_dyn_mat_tail, &
+                         write_dyn_mat_header, write_ifc
   !
   IMPLICIT NONE
   !
@@ -85,22 +88,24 @@ PROGRAM q2r
   CHARACTER(len=9)   :: symm_type
   CHARACTER(LEN=6), EXTERNAL :: int_to_char
   !
-  LOGICAL :: lq, lrigid, lrigid1, lnogridinfo
+  LOGICAL :: lq, lrigid, lrigid1, lnogridinfo, xmldyn
   CHARACTER (LEN=10) :: zasr
   INTEGER :: m1, m2, m3, m(3), l1, l2, l3, i, j, j1, j2, na1, na2, ipol, nn
   INTEGER :: nat, nq, ntyp, iq, icar, nfile, ifile, nqs, nq_log
   INTEGER :: na, nt
   !
-  INTEGER :: gid, ibrav, ierr
+  INTEGER :: gid, ibrav, ierr, nspin_mag
   !
   INTEGER, ALLOCATABLE ::  nc(:,:,:)
   COMPLEX(DP), ALLOCATABLE :: phid(:,:,:,:,:)
+  REAL(DP), ALLOCATABLE :: m_loc(:,:)
   !
   REAL(DP) :: celldm(6), at(3,3), bg(3,3)
-  REAL(DP) :: q(3,48),omega, xq, amass(ntypx), resi
+  REAL(DP) :: q(3,48), omega, xq, amass(ntypx), resi
   REAL(DP) :: epsil(3,3)
   !
   logical           :: la2F
+  LOGICAL, EXTERNAL :: has_xml
   !
   NAMELIST / input / fildyn, flfrc, zasr, la2F
   !
@@ -126,6 +131,8 @@ PROGRAM q2r
      !
      IF (flfrc == ' ')  CALL errore ('q2r',' bad flfrc',1)
      !
+     xmldyn=has_xml(fildyn)
+
      OPEN (unit=1, file=TRIM(fildyn)//'0', status='old', form='formatted', &
           iostat=ierr)
      lnogridinfo = ( ierr /= 0 )
@@ -169,10 +176,34 @@ PROGRAM q2r
            filin = TRIM(fildyn) // TRIM( int_to_char( ifile ) )
         END IF
         WRITE (6,*) ' reading force constants from file ',TRIM(filin)
-        OPEN (unit=1, file=filin, status='old', form='formatted', iostat=ierr)
-        IF (ierr /= 0) CALL errore('q2r','file '//TRIM(filin)//' missing!',1)
-        CALL read_file (nqs, q, epsil, lrigid,  &
-             ntyp, nat, ibrav, symm_type, celldm, at, atm, amass)
+        IF (xmldyn) THEN
+           CALL read_dyn_mat_param(filin,ntyp,nat)
+           IF (ifile==1) THEN
+              ALLOCATE (m_loc(3,nat))
+              ALLOCATE (tau(3,nat))
+              ALLOCATE (ityp(nat))
+              ALLOCATE (zeu(3,3,nat))
+           ENDIF
+           IF (ifile==1) THEN
+              CALL read_dyn_mat_header(ntyp, nat, ibrav, nspin_mag, &
+                 celldm, at, bg, omega, symm_type, atm, amass, tau, ityp, &
+                 m_loc, nqs, lrigid, epsil, zeu )
+           ELSE
+              CALL read_dyn_mat_header(ntyp, nat, ibrav, nspin_mag, &
+                 celldm, at, bg, omega, symm_type, atm, amass, tau, ityp, &
+                 m_loc, nqs)
+           ENDIF
+           ALLOCATE (phiq(3,3,nat,nat,nqs) )
+           DO iq=1,nqs
+              CALL read_dyn_mat(nat,iq,q(:,iq),phiq(:,:,:,:,iq))
+           ENDDO
+           CALL read_dyn_mat_tail(nat)
+        ELSE
+           OPEN (unit=1, file=filin,status='old',form='formatted',iostat=ierr)
+           IF (ierr /= 0) CALL errore('q2r','file '//TRIM(filin)//' missing!',1)
+           CALL read_file (nqs, q, epsil, lrigid,  &
+                ntyp, nat, ibrav, symm_type, celldm, at, atm, amass)
+        ENDIF
         IF (ifile == 1) THEN
            ! it must be allocated here because nat is read from file
            ALLOCATE (phid(nr1*nr2*nr3,3,3,nat,nat) )
@@ -221,6 +252,7 @@ PROGRAM q2r
               CALL errore('init',' nc already filled: wrong q grid or wrong nr',1)
            END IF
         END DO
+        IF (xmldyn) DEALLOCATE(phiq)
      END DO
      !
      ! Check grid dimension
@@ -249,6 +281,18 @@ PROGRAM q2r
      !
      ! Real space force constants written to file (analytical part)
      !
+     IF (xmldyn) THEN
+        IF (lrigid) THEN
+           CALL write_dyn_mat_header( flfrc, ntyp, nat, ibrav, nspin_mag,  &
+                celldm, at, bg, omega, symm_type, atm, amass, tau, ityp,   &
+                m_loc, nqs, epsil, zeu)
+        ELSE
+           CALL write_dyn_mat_header( fildyn, ntyp, nat, ibrav, nspin_mag,  &
+                celldm, at, bg, omega, symm_type, atm, amass, tau, ityp,    &
+                m_loc, nqs) 
+        ENDIF
+        CALL write_ifc(nr1,nr2,nr3,nat,phid)
+     ELSE
      OPEN(unit=2,file=flfrc,status='unknown',form='formatted')
      WRITE(2,'(i3,i5,i3,6f11.7)') ntyp,nat,ibrav,celldm
      if (ibrav==0) then
@@ -290,6 +334,7 @@ PROGRAM q2r
         END DO
      END DO
      CLOSE(2)
+     ENDIF
      resi = SUM ( ABS (AIMAG ( phid ) ) )
      IF (resi > eps12) THEN
         WRITE (6,"(/5x,' fft-check warning: sum of imaginary terms = ',e12.7)") resi
@@ -297,7 +342,8 @@ PROGRAM q2r
         WRITE (6,"(/5x,' fft-check success (sum of imaginary terms < 10^-12)')")
      END IF
      !
-     DEALLOCATE(phid, phiq, zeu, nc)
+     DEALLOCATE(phid, zeu, nc)
+     IF (.NOT.xmldyn) DEALLOCATE(phiq)
      !
      IF(la2F) CALL gammaq2r ( nfile, nat, nr1, nr2, nr3, at )
      !

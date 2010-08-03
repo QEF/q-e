@@ -205,8 +205,8 @@ matdyn.x : matdyn.o rigid.o $(PWOBJS)  $(MODULES) $(EEMODS) $(LIBOBJS)
 		 $(PWOBJS) $(EEOBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../PH/$@ . )
 
-q2r.x : q2r.o rigid.o $(PWOBJS)  $(MODULES) $(EEMODS) $(LIBOBJS)
-	$(LD) $(LDFLAGS) -o $@ q2r.o rigid.o \
+q2r.x : q2r.o rigid.o libph.a $(PWOBJS)  $(MODULES) $(EEMODS) $(LIBOBJS)
+	$(LD) $(LDFLAGS) -o $@ q2r.o rigid.o libph.a \
 		 $(PWOBJS) $(EEOBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../PH/$@ . )
 
