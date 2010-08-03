@@ -102,6 +102,8 @@ PROGRAM matdyn
                          read_ifc_param, read_ifc
   USE cell_base,  ONLY : at, bg
   USE constants,  ONLY : RY_TO_THZ, RY_TO_CMM1
+  USE symm_base,  ONLY : set_sym
+  USE rap_point_group,  ONLY : code_group
 
   USE ifconstants
   !
@@ -117,7 +119,7 @@ PROGRAM matdyn
   REAL(DP), PARAMETER :: eps=1.0d-6,   &
        amconv = 1.66042d-24/9.1095d-28*0.5d0
   INTEGER :: nr1, nr2, nr3, nsc, nk1, nk2, nk3, ntetra, ibrav
-  CHARACTER(LEN=256) :: flfrc, flfrq, flvec, fltau, fldos
+  CHARACTER(LEN=256) :: flfrc, flfrq, flvec, fltau, fldos, filename
   CHARACTER(LEN=10)  :: asr
   CHARACTER(LEN=9)   :: symm_type
   LOGICAL :: dos, has_zstar
@@ -136,15 +138,21 @@ PROGRAM matdyn
   !
   INTEGER :: nat, nat_blk, ntyp, ntyp_blk, &
              l1, l2, l3,                   &! supercell dimensions
-             nrws                          ! number of nearest neighbor
+             nrws,                         &! number of nearest neighbor
+             code_group_old
+
   INTEGER :: nspin_mag, nqs
   !
-  LOGICAL :: readtau, la2F, xmlifc
+  LOGICAL :: readtau, la2F, xmlifc, lo_to_split
   !
   REAL(DP) :: qhat(3), qh, DeltaE, Emin=0._dp, Emax, E, DOSofE(1)
   REAL(DP) :: celldm(6)
   INTEGER :: n, i, j, it, nq, nqx, na, nb, ndos, iout
   LOGICAL, EXTERNAL :: has_xml
+  CHARACTER(LEN=15), ALLOCATABLE :: name_rap_mode(:)
+  INTEGER, ALLOCATABLE :: num_rap_mode(:,:)
+  LOGICAL, ALLOCATABLE :: high_sym(:)
+
   !
   NAMELIST /input/ flfrc, amass, asr, flfrq, flvec, at, dos,  &
        &           fldos, nk1, nk2, nk3, l1, l2, l3, ntyp, readtau, fltau, & 
@@ -330,10 +338,18 @@ PROGRAM matdyn
      ALLOCATE ( z(3*nat,3*nat), w2(3*nat,nq) )
 
      if(la2F) open(300,file='dyna2F',status='unknown')
+     IF (xmlifc) CALL set_sym(ibrav, nat, tau, ityp, nspin_mag, m_loc, &
+                      6, 6, 6, .FALSE., symm_type )
+
+     ALLOCATE(num_rap_mode(3*nat,nq))
+     ALLOCATE(high_sym(nq))
+     num_rap_mode=-1
+     high_sym=.TRUE.
 
      DO n=1, nq
         dyn(:,:,:,:) = (0.d0, 0.d0)
 
+        lo_to_split=.FALSE.
         CALL setupmat (q(1,n), dyn, nat, at, bg, tau, itau_blk, nsc, alat, &
              dyn_blk, nat_blk, at_blk, bg_blk, tau_blk, omega_blk,  &
              epsil, zeu, frc, nr1,nr2,nr3, has_zstar, rws, nrws)
@@ -366,9 +382,13 @@ PROGRAM matdyn
            qh = SQRT(qhat(1)**2+qhat(2)**2+qhat(3)**2)
            ! write(*,*) ' qh,  has_zstar ',qh,  has_zstar
            IF (qh /= 0.d0) qhat(:) = qhat(:) / qh
-           IF (qh /= 0.d0 .AND. .NOT. has_zstar) CALL infomsg  &
+           IF (qh /= 0.d0 .AND. .NOT. has_zstar) THEN
+                CALL infomsg  &
                 ('matdyn','Z* not found in file '//TRIM(flfrc)// &
                           ', TO-LO splitting at q=0 will be absent!')
+           ELSE
+              lo_to_split=.TRUE.
+           ENDIF
            !
            CALL nonanal (nat, nat_blk, itau_blk, epsil, qhat, zeu, omega, dyn)
            !
@@ -376,6 +396,19 @@ PROGRAM matdyn
         !
         CALL dyndiag(nat,ntyp,amass,ityp,dyn,w2(1,n),z)
         !
+        ! Cannot use the small group of \Gamma to analize the symmetry
+        ! of the mode if there is and electric field.
+        !
+        IF (xmlifc.AND..NOT.lo_to_split) THEN
+             ALLOCATE(name_rap_mode(3*nat))
+             CALL find_representations_mode_q(nat,ntyp,q(:,n), &
+                       w2(:,n),z,tau,ityp,amass,name_rap_mode, &
+                       num_rap_mode(:,n), nspin_mag)
+            IF (code_group==code_group_old.OR.high_sym(n-1)) high_sym(n)=.FALSE.
+            code_group_old=code_group
+            DEALLOCATE(name_rap_mode)
+         ENDIF
+
         if(la2F) then
            write(300,*) n
            do na=1,3*nat
@@ -409,6 +442,19 @@ PROGRAM matdyn
         CLOSE(unit=2)
      END IF
      !
+     !  If the force constants are in the xml format we write also
+     !  the file with the representations of each mode
+     !
+     IF (flfrq.NE.' '.AND.xmlifc) THEN
+        filename=TRIM(flfrq)//'.rap'
+        OPEN (unit=2,file=filename ,status='unknown',form='formatted')
+        WRITE(2, '(" &plot_rap nbnd_rap=",i4,", nks_rap=",i4," /")') 3*nat, nq
+        DO n=1, nq
+           WRITE(2,'(10x,3f10.6,l6)')  q(1,n), q(2,n), q(3,n), high_sym(n)
+           WRITE(2,'(6i10)') (num_rap_mode(i,n), i=1,3*nat)
+        END DO
+        CLOSE(unit=2)
+     END IF
      !
      IF (dos) THEN
         Emin = 0.0d0 
@@ -460,6 +506,9 @@ PROGRAM matdyn
      !
   END IF
   ! 
+  DEALLOCATE(num_rap_mode)
+  DEALLOCATE(high_sym)
+
   CALL mp_barrier()
   !
   CALL mp_end()
@@ -2046,3 +2095,67 @@ subroutine readfg ( ifn, nr1, nr2, nr3, nat, frcg )
   !
   return
 end subroutine readfg
+!
+!
+SUBROUTINE find_representations_mode_q( nat, ntyp, xq, w2, u, tau, ityp, pmass,&
+                  name_rap_mode, num_rap_mode, nspin_mag )
+
+  USE kinds,      ONLY : DP
+  USE cell_base,  ONLY : at, bg
+  USE symm_base,  ONLY : find_sym, s, sr, ftau, irt, nsym, &
+                         nrot, t_rev, time_reversal, sname, copy_sym, &
+                         s_axis_to_cart, symmorphic
+
+  IMPLICIT NONE
+  INTEGER, INTENT(IN) :: nat, ntyp, nspin_mag
+  REAL(DP), INTENT(IN) :: xq(3), pmass(ntyp), tau(3,nat)
+  REAL(DP), INTENT(IN) :: w2(3*nat)
+  INTEGER, INTENT(IN) :: ityp(nat)
+  COMPLEX(DP), INTENT(IN) :: u(3*nat,3*nat)
+  CHARACTER(15), INTENT(OUT) :: name_rap_mode(3*nat) 
+  INTEGER, INTENT(OUT) :: num_rap_mode(3*nat)
+  REAL(DP) :: gi (3, 48), gimq (3), sr_is(3,3,48), rtau(3,48,nat) 
+  INTEGER :: irgq (48), irotmq, nsymq, nsym_is, isym, i
+  LOGICAL :: minus_q, search_sym, is_symmorphic, sym(48), magnetic_sym
+!
+!  find the small group of q
+!
+  IF (.NOT.time_reversal) minus_q=.FALSE.
+
+  sym(1:nsym)=.true.
+  call smallg_q (xq, 0, at, bg, nsym, s, ftau, sym, minus_q)
+  nsymq=copy_sym(nsym,sym )
+  call s_axis_to_cart ()
+
+  CALL smallgq (xq,at,bg,s,nsym,irgq,nsymq,irotmq,minus_q,gi,gimq)
+!
+!  decide if the small group of q is symmorphic
+!
+  is_symmorphic=symmorphic(nsymq,ftau)
+!
+!  if it is non symmorphic search the symmetries only if there are no
+!  G such that Sq -> q+G
+!
+  search_sym=.TRUE.
+  IF (.NOT.is_symmorphic) THEN
+     DO isym=1,nsymq
+        search_sym=( search_sym.and.(abs(gi(1,irgq(isym)))<1.d-8).and.  &
+                                    (abs(gi(2,irgq(isym)))<1.d-8).and.  &
+                                    (abs(gi(3,irgq(isym)))<1.d-8) )
+     END DO
+  END IF
+!
+!  Set the representations tables of the small group of q and
+!  find the mode symmetry
+!
+  IF (search_sym) THEN
+     magnetic_sym=(nspin_mag==4)   
+     CALL prepare_sym_analysis(nsymq,sr,t_rev,magnetic_sym)
+     sym (1:nsym) = .TRUE.
+     CALL sgam_ph (at, bg, nsym, s, irt, tau, rtau, nat, sym)
+     CALL find_mode_sym (u, w2, at, bg, tau, nat, nsymq, sr, irt, xq, rtau, &
+                         pmass, ntyp, ityp, 1, .FALSE., .FALSE., &
+                         nspin_mag, name_rap_mode, num_rap_mode)
+  ENDIF
+  RETURN
+  END SUBROUTINE find_representations_mode_q
