@@ -69,6 +69,9 @@ end Module dynamical
 !                    (default: filmol='dynmat.axsf') 
 !
       USE kinds, ONLY: DP
+      USE mp,         ONLY : mp_start, mp_env, mp_end, mp_barrier
+      USE mp_global,  ONLY : nproc, mpime, mp_global_start
+
       use dynamical
       !
       implicit none
@@ -81,11 +84,17 @@ end Module dynamical
       real(DP) :: amass(ntypx), amass_(ntypx), eps0(3,3), a0, omega, &
            at(3,3), amconv, q(3), q_(3)
       real(DP), allocatable :: w2(:)
+      integer :: gid
       integer, allocatable :: itau(:)
       integer :: nat, na, nt, ntyp, iout, axis, nax
       namelist /input/ amass, asr, axis, fildyn, filout, filmol, filxsf, q
 !
 !
+      CALL mp_start()
+      !
+      CALL mp_env( nproc, mpime, gid )
+
+      IF (mpime==0) THEN
       asr  = 'no'
       axis = 3
       fildyn='matdyn'
@@ -150,8 +159,13 @@ end Module dynamical
 !
       if (gamma) call RamanIR &
            (nat, omega, w2, z, zstar, eps0, dchi_dtau)
+      ENDIF
 !
-      stop
+
+      CALL mp_barrier()
+      !
+      CALL mp_end()
+
       end program dynmat
 !
 !-----------------------------------------------------------------------
