@@ -84,6 +84,7 @@ incdrhous.o \
 incdrhous_nc.o \
 initialize_ph.o \
 init_representations.o \
+io_dyn_mat.o \
 io_pattern.o \
 localdos.o \
 mode_group.o \
