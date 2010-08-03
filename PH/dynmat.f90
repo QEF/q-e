@@ -344,7 +344,7 @@ subroutine RamanIR (nat, omega, w2, z, zstar, eps0, dchi_dtau)
   !             dchi_dtau = derivatives of chi wrt atomic displacement
   !                         (units: A^2)
  USE kinds, ONLY: DP
- USE constants, ONLY : fpi, BOHR_RADIUS_ANGS
+ USE constants, ONLY : fpi, BOHR_RADIUS_ANGS, RY_TO_THZ, RY_TO_CMM1
  implicit none
  ! input
  integer, intent(in) :: nat
@@ -355,15 +355,11 @@ subroutine RamanIR (nat, omega, w2, z, zstar, eps0, dchi_dtau)
  integer na, nu, ipol, jpol, lpol
  logical noraman
  real(DP), allocatable :: infrared(:), raman(:,:,:)
- real(DP):: polar(3), rydcm1, cm1thz, freq, r1fac, irfac
+ real(DP):: polar(3), cm1thz, freq, r1fac, irfac
  real(DP):: cmfac, alpha, beta2
  !
- !  conversion factors Ry => THz, Ry=>cm^(-1) e cm^(-1)=>THz
  !
- !  FIXME: there is more to be used from the constants module (for consistency).
- !
- rydcm1 = 13.6058d0*8065.5d0
- cm1thz = 241.796d0/8065.5d0
+ cm1thz = RY_TO_THZ/RY_TO_CMM1
  !
  !   conversion factor from (Ry au for mass)^(-1) to amu(-1)
  !
@@ -445,7 +441,7 @@ subroutine RamanIR (nat, omega, w2, z, zstar, eps0, dchi_dtau)
  !
  do nu = 1,3*nat
     !
-    freq = sqrt(abs(w2(nu)))*rydcm1
+    freq = sqrt(abs(w2(nu)))*RY_TO_CMM1
     if (w2(nu).lt.0.0) freq = -freq
     !
     ! alpha, beta2: see PRB 54, 7830 (1996) and refs quoted therein

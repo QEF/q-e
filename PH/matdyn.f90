@@ -101,6 +101,7 @@ PROGRAM matdyn
   USE io_dyn_mat, ONLY : read_dyn_mat_param, read_dyn_mat_header, &
                          read_ifc_param, read_ifc
   USE cell_base,  ONLY : at, bg
+  USE constants,  ONLY : RY_TO_THZ, RY_TO_CMM1
 
   USE ifconstants
   !
@@ -113,7 +114,7 @@ PROGRAM matdyn
   !
   INTEGER:: nax, nax_blk
   INTEGER, PARAMETER:: ntypx=10, nrwsx=200
-  REAL(DP), PARAMETER :: eps=1.0d-6,  rydcm1 = 13.6058d0*8065.5d0, &
+  REAL(DP), PARAMETER :: eps=1.0d-6,   &
        amconv = 1.66042d-24/9.1095d-28*0.5d0
   INTEGER :: nr1, nr2, nr3, nsc, nk1, nk2, nk3, ntetra, ibrav
   CHARACTER(LEN=256) :: flfrc, flfrq, flvec, fltau, fldos
@@ -393,7 +394,7 @@ PROGRAM matdyn
      DO n=1,nq
         ! freq(i,n) = frequencies in cm^(-1), with negative sign if omega^2 is negative
         DO i=1,3*nat
-           freq(i,n)= SQRT(ABS(w2(i,n))) * rydcm1
+           freq(i,n)= SQRT(ABS(w2(i,n))) * RY_TO_CMM1
            IF (w2(i,n) < 0.0d0) freq(i,n) = -freq(i,n)
         END DO
      END DO
@@ -433,7 +434,7 @@ PROGRAM matdyn
            ! that accounts for the spin in the electron DOS.
            !
            !WRITE (2, '(F15.10,F15.2,F15.6,F20.5)') &
-           !     E, E*rydcm1, E*rydTHz, 0.5d0*DOSofE(1)
+           !     E, E*RY_TO_CMM1, E*RY_TO_THZ, 0.5d0*DOSofE(1)
            WRITE (2, '(E12.4,E12.4)') E, 0.5d0*DOSofE(1)
         END DO
         CLOSE(unit=2)
@@ -446,9 +447,9 @@ PROGRAM matdyn
          !
          ! convert frequencies to Ry
          !
-         freq(:,:)= freq(:,:) / rydcm1
-         Emin  = Emin / rydcm1
-         DeltaE=DeltaE/ rydcm1
+         freq(:,:)= freq(:,:) / RY_TO_CMM1
+         Emin  = Emin / RY_TO_CMM1
+         DeltaE=DeltaE/ RY_TO_CMM1
          !
          call a2Fdos (nat, nq, nr1, nr2, nr3, ibrav, at, bg, tau, alat, &
                            nsc, nat_blk, at_blk, bg_blk, itau_blk, omega_blk, &
@@ -1633,7 +1634,7 @@ SUBROUTINE a2Fdos &
   !
   USE kinds,      ONLY : DP
   USE ifconstants
-  USE constants,  ONLY : pi
+  USE constants,  ONLY : pi, RY_TO_THZ
   !
   IMPLICIT NONE
   !
@@ -1652,7 +1653,7 @@ SUBROUTINE a2Fdos &
 
   real(DP)                 :: lambda, dos_a2F(50), temp, dos_ee(10), dos_tot, &
                               deg(10), fermi(10), E
-  real(DP), parameter      :: rydTHz = 3289.828d0, eps_w2 = 0.0000001d0 
+  real(DP), parameter      :: eps_w2 = 0.0000001d0 
   integer                  :: isig, ifn, n, m, na, nb, nc, nu, nmodes, &
                               i,j,k, ngauss, jsig, p1, p2, p3, filea2F
   character(len=14)        :: name
@@ -1791,7 +1792,7 @@ SUBROUTINE a2Fdos &
         write(20,'(" Broadening ",F8.4)')  deg(isig)
         write(6,'(" Broadening ",F8.4)')  deg(isig)
         do n=1, nq
-           write(20,1030) n,(gamma(i,n)*rydTHz,i=1,3*nat)
+           write(20,1030) n,(gamma(i,n)*RY_TO_THZ,i=1,3*nat)
            write(6,1040) n, (gamma(i,n),i=1,3*nat)
         end do
      endif
