@@ -10,13 +10,16 @@ Module ifconstants
   ! All variables read from file that need dynamical allocation
   !
   USE kinds, ONLY: DP
-  REAL(DP), ALLOCATABLE :: frc(:,:,:,:,:,:,:), tau_blk(:,:),  zeu(:,:,:)
+  REAL(DP), ALLOCATABLE :: frc(:,:,:,:,:,:,:), tau_blk(:,:),  zeu(:,:,:), &
+               m_loc(:,:)
   ! frc : interatomic force constants in real space
   ! tau_blk : atomic positions for the original cell
   ! zeu : effective charges for the original cell
+  ! m_loc: the magnetic moments of each atom
   INTEGER, ALLOCATABLE  :: ityp_blk(:)
   ! ityp_blk : atomic types for each atom of the original cell
   !
+  CHARACTER(LEN=3), ALLOCATABLE :: atm(:)
 end Module ifconstants
 !
 !---------------------------------------------------------------------
@@ -95,6 +98,10 @@ PROGRAM matdyn
   USE kinds,      ONLY : DP
   USE mp,         ONLY : mp_start, mp_env, mp_end, mp_barrier
   USE mp_global,  ONLY : nproc, mpime, mp_global_start  
+  USE io_dyn_mat, ONLY : read_dyn_mat_param, read_dyn_mat_header, &
+                         read_ifc_param, read_ifc
+  USE cell_base,  ONLY : at, bg
+
   USE ifconstants
   !
   IMPLICIT NONE
@@ -117,7 +124,7 @@ PROGRAM matdyn
   COMPLEX(DP), ALLOCATABLE :: z(:,:)
   REAL(DP), ALLOCATABLE:: tau(:,:), q(:,:), w2(:,:), freq(:,:)
   INTEGER, ALLOCATABLE:: tetra(:,:), ityp(:), itau_blk(:)
-  REAL(DP) :: at(3,3), bg(3,3), omega,alat, &! cell parameters and volume
+  REAL(DP) ::     omega,alat, &! cell parameters and volume
                   at_blk(3,3), bg_blk(3,3),  &! original cell
                   omega_blk,                 &! original cell volume
                   epsil(3,3),                &! dielectric tensor
@@ -129,11 +136,14 @@ PROGRAM matdyn
   INTEGER :: nat, nat_blk, ntyp, ntyp_blk, &
              l1, l2, l3,                   &! supercell dimensions
              nrws                          ! number of nearest neighbor
+  INTEGER :: nspin_mag, nqs
   !
-  LOGICAL :: readtau, la2F
+  LOGICAL :: readtau, la2F, xmlifc
   !
   REAL(DP) :: qhat(3), qh, DeltaE, Emin=0._dp, Emax, E, DOSofE(1)
+  REAL(DP) :: celldm(6)
   INTEGER :: n, i, j, it, nq, nqx, na, nb, ndos, iout
+  LOGICAL, EXTERNAL :: has_xml
   !
   NAMELIST /input/ flfrc, amass, asr, flfrq, flvec, at, dos,  &
        &           fldos, nk1, nk2, nk3, l1, l2, l3, ntyp, readtau, fltau, & 
@@ -183,9 +193,27 @@ PROGRAM matdyn
      ! read force constants 
      !
      ntyp_blk = ntypx ! avoids fake out-of-bound error
-     CALL readfc ( flfrc, nr1, nr2, nr3, epsil, nat_blk, &
-          ibrav, symm_type, alat, at_blk, ntyp_blk, &
-          amass_blk, omega_blk, has_zstar)
+     xmlifc=has_xml(flfrc)
+     IF (xmlifc) THEN
+        CALL read_dyn_mat_param(flfrc,ntyp_blk,nat_blk)
+        ALLOCATE (m_loc(3,nat_blk))
+        ALLOCATE (tau_blk(3,nat_blk))
+        ALLOCATE (ityp_blk(nat_blk))
+        ALLOCATE (atm(ntyp_blk))
+        ALLOCATE (zeu(3,3,nat_blk))
+        CALL read_dyn_mat_header(ntyp_blk, nat_blk, ibrav, nspin_mag, &
+                 celldm, at_blk, bg_blk, omega_blk, symm_type, atm, amass_blk, &
+                 tau_blk, ityp_blk,  m_loc, nqs, has_zstar, epsil, zeu )
+        alat=celldm(1)
+        call volume(alat,at_blk(1,1),at_blk(1,2),at_blk(1,3),omega_blk)
+        CALL read_ifc_param(nr1,nr2,nr3)
+        ALLOCATE(frc(nr1,nr2,nr3,3,3,nat_blk,nat_blk))
+        CALL read_ifc(nr1,nr2,nr3,nat_blk,frc)
+     ELSE
+        CALL readfc ( flfrc, nr1, nr2, nr3, epsil, nat_blk, &
+            ibrav, symm_type, alat, at_blk, ntyp_blk, &
+            amass_blk, omega_blk, has_zstar)
+     ENDIF
      !
      CALL recips ( at_blk(1,1),at_blk(1,2),at_blk(1,3),  &
           bg_blk(1,1),bg_blk(1,2),bg_blk(1,3) )

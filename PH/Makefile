@@ -200,8 +200,8 @@ dynmat.x : dynmat.o rigid.o libph.a $(PWOBJS)  $(MODULES) $(EEMODS) $(LIBOBJS)
 		 $(PWOBJS) $(EEOBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../PH/$@ . )
 
-matdyn.x : matdyn.o rigid.o $(PWOBJS)  $(MODULES) $(EEMODS) $(LIBOBJS)
-	$(LD) $(LDFLAGS) -o $@ matdyn.o rigid.o \
+matdyn.x : matdyn.o rigid.o libph.a $(PWOBJS)  $(MODULES) $(EEMODS) $(LIBOBJS)
+	$(LD) $(LDFLAGS) -o $@ matdyn.o rigid.o libph.a \
 		 $(PWOBJS) $(EEOBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../PH/$@ . )
 
