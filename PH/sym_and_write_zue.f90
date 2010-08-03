@@ -20,6 +20,7 @@ subroutine sym_and_write_zue
   USE symme,      ONLY : symtensor
   USE efield_mod, ONLY : zstarue, zstarue0
   USE modes,      ONLY : u
+  USE control_ph, ONLY : xmldyn
   USE units_ph,   ONLY : iudyn
 
   implicit none
@@ -80,6 +81,7 @@ subroutine sym_and_write_zue
   !
   ! write Z_{s,alpha}{beta} on iudyn
   !
+  IF (.NOT. xmldyn) THEN
   write (iudyn, '(/5x, &
        &               "Effective Charges U-E: Z_{s,alpha}{beta}",/)')
   do na = 1, nat
@@ -87,6 +89,7 @@ subroutine sym_and_write_zue
      write (iudyn, '(3e24.12)') ( (zstarue (ipol, na, jpol) , jpol = 1, &
           3) , ipol = 1, 3)
   enddo
+  ENDIF
   !
   ! write Z_{s,alpha}{beta} on standard output
   !

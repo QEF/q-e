@@ -15,6 +15,8 @@ subroutine q2qstar_ph (dyn, at, bg, nat, nsym, s, invs, irt, rtau, &
   ! dynamical matrix those conditions related to time reversal symmetry.
   !
   USE kinds, only : DP
+  USE io_dyn_mat, only : write_dyn_mat
+  USE control_ph, only : xmldyn
   implicit none
   ! input variables
   integer :: nat, nsym, s (3, 3, 48), invs (48), irt (48, nat), &
@@ -39,12 +41,13 @@ subroutine q2qstar_ph (dyn, at, bg, nat, nsym, s, invs, irt, rtau, &
   ! list of q in the star
   !
   !  local variables
-  integer :: na, nb, iq, nsq, isym, icar, jcar, i, j
+  integer :: na, nb, iq, nsq, isym, icar, jcar, i, j, counter
   ! counters
   ! nsq: number of sym.op. giving each q in the list
 
   complex(DP) :: phi (3, 3, nat, nat), phi2 (3, 3, nat, nat)
   ! work space
+  counter=0
   !
   ! Sets number of symmetry operations giving each q in the list
   !
@@ -137,7 +140,12 @@ subroutine q2qstar_ph (dyn, at, bg, nat, nsym, s, invs, irt, rtau, &
      !
      ! Writes the dynamical matrix in cartesian coordinates on file
      !
-     call write_dyn_on_file (sxq (1, iq), phi2, nat, iudyn)
+     counter=counter+1
+     IF (xmldyn) THEN
+        call write_dyn_mat(nat, counter, sxq(1,iq), phi2)
+     ELSE
+        call write_dyn_on_file (sxq (1, iq), phi2, nat, iudyn)
+     ENDIF
      if (imq == 0) then
         !
         ! if -q is not in the star recovers its matrix by time reversal
@@ -155,7 +163,12 @@ subroutine q2qstar_ph (dyn, at, bg, nat, nsym, s, invs, irt, rtau, &
         ! and writes it (changing temporarily sign to q)
         !
         sxq (:, iq) = - sxq (:, iq)
-        call write_dyn_on_file (sxq (1, iq), phi2, nat, iudyn)
+        counter=counter+1
+        IF (xmldyn) THEN
+           call write_dyn_mat(nat, counter, sxq(1,iq), phi2)
+        ELSE
+           call write_dyn_on_file (sxq (1, iq), phi2, nat, iudyn)
+        ENDIF
         sxq (:, iq) = - sxq (:, iq)
      endif
   enddo

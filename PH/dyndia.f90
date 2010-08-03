@@ -17,6 +17,8 @@ subroutine dyndia (xq, nmodes, nat, ntyp, ityp, amass, iudyn, dyn, w2)
   USE kinds, only : DP
   USE io_global,  ONLY : stdout
   USE constants, ONLY : RY_TO_THZ, RY_TO_CMM1
+  USE io_dyn_mat, ONLY : write_dyn_mat_tail
+  USE control_ph, ONLY : xmldyn
   implicit none
   !
   !   first the dummy variables
@@ -97,11 +99,16 @@ subroutine dyndia (xq, nmodes, nat, ntyp, ityp, amass, iudyn, dyn, w2)
         dyn (mu, nu_i) = z (mu, nu_i) / sqrt (amass (ityp (na) ) )
         unorm = unorm + dyn (mu, nu_i) * CONJG(dyn (mu, nu_i) )
      enddo
-     if (iudyn /= 0) write (iudyn, '(" (",6f10.6," ) ")') &
+     if (iudyn /= 0) then
+         write (iudyn, '(" (",6f10.6," ) ")') &
           (dyn (mu, nu_i) / sqrt (unorm) , mu = 1, 3 * nat)
+     else
+         z(:,nu_i)=dyn (:, nu_i) / sqrt (unorm)
+     endif
   enddo
   WRITE( stdout, '(1x,74("*"))')
   if (iudyn /= 0) write (iudyn, '(1x,74("*"))')
+  IF (xmldyn) CALL write_dyn_mat_tail(nat, w2, z) 
   return
 
 end subroutine dyndia

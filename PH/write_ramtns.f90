@@ -12,6 +12,7 @@ subroutine write_ramtns (iudyn, ramtns)
   USE constants, ONLY : fpi, BOHR_RADIUS_ANGS
   USE cell_base, ONLY : omega
   USE ions_base, ONLY : nat
+  USE control_ph, ONLY : xmldyn
   !
   implicit none
   integer, intent(in) :: iudyn  ! unit
@@ -25,6 +26,7 @@ subroutine write_ramtns (iudyn, ramtns)
   !
   ! write raman tensor (D chi/d tau in A^2) to iudyn
   !
+  IF (xmldyn) RETURN
   write(iudyn,'(/5x,"Raman tensor (A^2)",/)')
   do na = 1, nat
      do kc = 1, 3

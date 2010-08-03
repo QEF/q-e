@@ -16,10 +16,11 @@ subroutine dynmatrix
   !
   !
   USE kinds,         ONLY : DP
+  USE constants,     ONLY : FPI, BOHR_RADIUS_ANGS
   USE ions_base,     ONLY : nat, ntyp => nsp, ityp, tau, atm, pmass, zv
   USE io_global,     ONLY : stdout
   USE control_flags, ONLY : modenum
-  USE cell_base,     ONLY : at, bg, celldm, ibrav, symm_type
+  USE cell_base,     ONLY : at, bg, celldm, ibrav, omega, symm_type
   USE gvect,         ONLY : nr1, nr2, nr3
   USE symm_base,     ONLY : s, sr, irt, nsym, time_reversal, invs
   USE printout_base, ONLY : title
@@ -33,20 +34,24 @@ subroutine dynmatrix
   USE efield_mod,    ONLY : epsilon, zstareu, zstarue0, zstarue
   USE control_ph,    ONLY : epsil, zue, lgamma, lgamma_gamma, search_sym, ldisp, &
                             start_irr, last_irr, done_zue, where_rec, &
-                            rec_code, ldiag
+                            rec_code, ldiag, done_epsil, done_zeu, xmldyn
   USE ph_restart,    ONLY : ph_writefile
   USE partial,       ONLY : all_comp, comp_irr, done_irr, nat_todo_input
   USE units_ph,      ONLY : iudyn
+  USE noncollin_module, ONLY : m_loc, nspin_mag
+  USE output,        ONLY : fildyn
+  USE io_dyn_mat,    ONLY : write_dyn_mat_header
   USE ramanm,        ONLY: lraman, ramtns
   implicit none
   ! local variables
   !
   integer :: nq, isq (48), imq, na, nt, imode0, jmode0, irr, jrr, &
-       ipert, jpert, mu, nu, i, j
+       ipert, jpert, mu, nu, i, j, nqq
   ! nq :  degeneracy of the star of q
   ! isq: index of q in the star of a given sym.op.
   ! imq: index of -q in the star of q (0 if not present)
 
+  real (DP), parameter ::   convfact = BOHR_RADIUS_ANGS**2
   real(DP) :: sxq (3, 48), work(3)
   ! list of vectors in the star of q
   real(DP), allocatable :: zstar(:,:,:)
@@ -141,19 +146,20 @@ subroutine dynmatrix
   !
   ! write on file information on the system
   !
-  write (iudyn, '("Dynamical matrix file")') 
-  write (iudyn, '(a)') title
-  write (iudyn, '(i3,i5,i3,6f11.7)') ntyp, nat, ibrav, celldm
-  if (ibrav==0) then
-     write (iudyn,'(a)') symm_type
-     write (iudyn,'(2x,3f15.9)') ((at(i,j),i=1,3),j=1,3)
-  end if
-  do nt = 1, ntyp
-     write (iudyn, * ) nt, ' ''', atm (nt) , ' '' ', pmass (nt)
-  enddo
-  do na = 1, nat
-     write (iudyn, '(2i5,3f15.7)') na, ityp (na) , (tau (j, na) , j = 1, 3)
-  enddo
+  IF (xmldyn) THEN
+     nqq=nq
+     IF (imq==0) nqq=2*nq
+     IF (lgamma.AND.done_epsil.AND.done_zeu) THEN
+        CALL write_dyn_mat_header( fildyn, ntyp, nat, ibrav, nspin_mag, &
+             celldm, at, bg, omega, symm_type, atm, pmass, tau, ityp, m_loc, &
+             nqq, epsilon, zstareu, lraman, ramtns*omega/fpi*convfact)
+     ELSE
+        CALL write_dyn_mat_header( fildyn, ntyp, nat, ibrav, nspin_mag, &
+             celldm, at, bg, omega, symm_type, atm, pmass, tau,ityp,m_loc,nqq)
+     ENDIF
+  ELSE
+     CALL write_old_dyn_mat(iudyn)
+  ENDIF
   !
   !   Rotates and writes on iudyn the dynamical matrices of the star of q
   !
@@ -223,3 +229,35 @@ subroutine dynmatrix
   call stop_clock('dynmatrix')
   return
 end subroutine dynmatrix
+
+  SUBROUTINE write_old_dyn_mat(iudyn)
+!
+!  This routine is here for compatibility with the old code.
+!  It will be removed when the xml file format of the dynamical matrix 
+!  will be tested.
+!
+  USE ions_base, ONLY : ntyp => nsp, nat, ityp, tau, atm, pmass
+  USE cell_base, ONLY : ibrav, celldm, at, symm_type
+  USE printout_base, ONLY : title
+
+  IMPLICIT NONE
+  INTEGER, INTENT(IN) :: iudyn
+  INTEGER :: nt, na, i, j 
+
+  WRITE (iudyn, '("Dynamical matrix file")') 
+  WRITE (iudyn, '(a)') title
+  WRITE (iudyn, '(i3,i5,i3,6f11.7)') ntyp, nat, ibrav, celldm
+  IF (ibrav==0) THEN
+     WRITE (iudyn,'(a)') symm_type
+     WRITE (iudyn,'(2x,3f15.9)') ((at(i,j),i=1,3),j=1,3)
+  END IF
+  DO nt = 1, ntyp
+     WRITE (iudyn, * ) nt, ' ''', atm (nt) , ' '' ', pmass (nt)
+  ENDDO
+  DO na = 1, nat
+     WRITE (iudyn, '(2i5,3f15.7)') na, ityp (na) , (tau (j, na) , j = 1, 3)
+  ENDDO
+  
+  RETURN
+  END SUBROUTINE write_old_dyn_mat
+!
