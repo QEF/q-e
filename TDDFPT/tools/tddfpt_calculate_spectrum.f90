@@ -14,7 +14,15 @@ program lr_calculate_spectrum
   !
   integer, parameter :: dp=kind(0.d0)
   real(dp), parameter :: pi=3.14159265d0
-  real(dp), parameter :: ry=13.6056981d0 
+  real(dp), parameter :: ry=13.6056981d0
+  real(dp),parameter :: vis_start=0.116829041,vis_start_wl=780
+  real(dp),parameter :: vis_end=0.239806979,vis_end_wl=380
+  real(dp) :: perceived_red=0.0d0,perceived_green=0.0d0,perceived_blue=0.0d0
+  real(dp) :: perceived_renorm
+  integer  :: perceived_itermax,perceived_iter
+  real(dp), allocatable :: perceived_intensity(:)
+  real(dp), allocatable :: perceived_evaluated(:)
+  logical  :: do_perceived 
   real(dp) :: omega, q
   integer :: n_ipol, ipol
   real(dp), allocatable, dimension(:,:) :: beta_store, gamma_store
@@ -22,13 +30,13 @@ program lr_calculate_spectrum
   real(dp) :: norm0(3)
   integer :: itermax, itermax0, itermax_actual
   !
-  integer :: i, info, ip, ip2, counter
+  integer :: i,j, info, ip, ip2, counter
   integer :: ios
   integer :: sym_op
   integer :: verbosity
   real(kind=dp) :: omeg, omegmax, delta_omeg, z1,z2
   real(kind=dp) :: average(3), av_amplitude(3), epsil
-  real (kind=dp) :: alpha_temp(3)
+  real (kind=dp) :: alpha_temp(3),scale,wl
   real (kind=dp) :: f_sum 
   complex(kind=dp) :: omeg_c
   complex(kind=dp) :: green(3,3), eps(3,3)
@@ -155,21 +163,62 @@ if (ionode) then !No need for parallelization in this code
   if (n_ipol == 3) then
    write (stdout,'(5x,"alpha:absorption coefficient")')
   else
-   write (stdout,'(5x,"Unsufficent info for absorption coefficient")')
+   write (stdout,'(5x,"Insufficent info for absorption coefficient")')
   endif
   write (stdout,'(5x,"CHI:susceptibility tensor")')
   write (stdout,'(5x,"Energy unit in output file is eV")')
 !!!! The output file:
   open(17,file=filename,status="unknown")
+
+
+
+!  The perceived color analysis uses the perception fit from the following program:
+!      RGB VALUES FOR VISIBLE WAVELENGTHS   by Dan Bruton (astro@tamu.edu)
+!
+!
+! Lets see if the environment is suitable for perceived color analysis
+!
+
+  if (verbosity > 1 .and. omeg<vis_start .and. omegmax>vis_end .and. delta_omeg < 0.01 .and. n_ipol == 3) then
+   do_perceived=.true.
+   perceived_iter=1
+   perceived_itermax=int((vis_end-vis_start)/delta_omeg)
+   allocate(perceived_intensity(perceived_itermax))
+   allocate(perceived_evaluated(perceived_itermax))
+   perceived_intensity(:)=0.0d0
+   perceived_evaluated(:)=-1.0d0
+   perceived_renorm=-9999999.0d0
+  else
+   if (verbosity>1) write (stdout,'(5x,"Will not calculate perceived color")')
+   do_perceived=.false.
+  endif
   !   Start the omega loop
   !
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!FIRST STEP!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   if (verbosity > 0 .and. n_ipol == 3) then ! In order to gain speed, I perform first term seperately
     !
-    call calc_chi(omeg,epsil,green(:,:))
+    call calc_chi(omeg,epsil,green(:,:)) 
+    do ip=1,n_ipol
+        !
+        do ip2=1,n_ipol
+              !
+              !eps(ip,ip2)=(1.d0,0.d0)-(32.d0*pi/omega)*green(ip,ip2)
+              !
+              write(17,'(5x,"chi_",i1,"_",i1,"=",2x,3(e21.15,2x))') &
+                  ip2, ip, ry*omeg, dble(green(ip,ip2)), aimag(green(ip,ip2))
+!              write(*,'(5x,"eps_",i1,"_",i1,"=",2x,3(e21.15,2x))') &
+!                  ip2, ip, ry*omeg, dble(eps), aimag(eps)
+              !
+           end do
+          !
+      end do
+
     alpha_temp(3)= -omeg*ry*aimag(green(1,1)+green(2,2)+green(3,3))/3.d0 
     !alpha is ready
+    write(17,'(5x,"alpha",2x,3(e21.15,2x))') &
+            omeg*ry, alpha_temp(3)
     f_sum=0.3333333333333333d0*delta_omeg*alpha_temp(3)
+    omeg=omeg+delta_omeg
   endif
 !!!!!!!!!!!!!!!!!!OMEGA LOOP!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   do while(omeg<omegmax)
@@ -205,20 +254,139 @@ if (ionode) then !No need for parallelization in this code
          if ( is_peak(omeg,alpha_temp(3))) &
             write(stdout,'(5x,"Possible peak at ",F15.8," Ry; Intensity=",E11.2)') omeg-2.0d0*delta_omeg,alpha_temp(1)
          f_sum=f_sum+integrator(delta_omeg,alpha_temp(3))
+         if ( do_perceived ) then
+            if (omeg >vis_start .and. omeg<vis_end) then
+             perceived_intensity(perceived_iter)=alpha_temp(3)
+             perceived_evaluated(perceived_iter)=omeg
+             perceived_iter=perceived_iter+1
+             if (alpha_temp(3) > perceived_renorm) perceived_renorm=alpha_temp(3) !Renormalization to 1
+            endif
+           if (omeg>vis_end .or. perceived_iter >perceived_itermax) do_perceived=.false.
+         endif
         endif
      end if
      !
      omeg=omeg+delta_omeg
      !
   enddo
-  !
+  ! 
+! In order to gain speed, I perform last term seperately
+ if (verbosity > 0 .and. n_ipol == 3) then    
+    call calc_chi(omeg,epsil,green(:,:)) 
+    do ip=1,n_ipol
+        !
+        do ip2=1,n_ipol
+              !
+              !eps(ip,ip2)=(1.d0,0.d0)-(32.d0*pi/omega)*green(ip,ip2)
+              !
+              write(17,'(5x,"chi_",i1,"_",i1,"=",2x,3(e21.15,2x))') &
+                  ip2, ip, ry*omeg, dble(green(ip,ip2)), aimag(green(ip,ip2))
+!              write(*,'(5x,"eps_",i1,"_",i1,"=",2x,3(e21.15,2x))') &
+!                  ip2, ip, ry*omeg, dble(eps), aimag(eps)
+              !
+           end do
+          !
+      end do
+
+    alpha_temp(3)= -omeg*ry*aimag(green(1,1)+green(2,2)+green(3,3))/3.d0 
+    !alpha is ready
+    write(17,'(5x,"alpha",2x,3(e21.15,2x))') &
+            omeg*ry, alpha_temp(3)
+    f_sum=f_sum+0.3333333333333333d0*delta_omeg*alpha_temp(3)
+  endif
+
 close(17)
   !
   if ( n_ipol==3 .and. verbosity >0 )  then 
    !S(w)=2m_e/(pi e^2 hbar)
    f_sum=f_sum/ry !since the integration was done in omege in Ry units
-   write(stdout,'(5x,"Integral of absorbtion coefficient x 4/pi=",F15.8)') f_sum*4.0d0/pi
+   write(stdout,'(5x,"Integral of absorbtion coefficient ",F15.8)') f_sum
+
+! The perceived color analysis!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   if (allocated(perceived_intensity)) then
+   write(stdout,'(5x,"Perceived color analysis is experimental")')
+    perceived_intensity(:)=perceived_intensity(:)/perceived_renorm
+    perceived_intensity(:)=1.0d0-perceived_intensity(:) !inverse spectrum
+    filename = trim(prefix) // "-spectra.ppm"
+    open(UNIT=20,FILE=filename,STATUS='UNKNOWN')
+    write(20, '(A2)') 'P6'
+    write(20, '(I0,'' '',I0)') perceived_itermax, int(perceived_itermax/8)
+    write(20, '(A)') '255'
+ 
+    do j=1, int(perceived_itermax/8)
+       do i=1,perceived_itermax
+        if (perceived_evaluated(i)<0.0d0) then
+          write(20, '(3A1)', advance='no') achar(0), achar(0), achar(0)
+         else
+          wl=91.1266519/perceived_evaluated(i) !hc/hbar.omega=lambda (hbar.omega in rydberg units)
+          call wl_to_color(wl,alpha_temp(1),alpha_temp(2),alpha_temp(3))
+          !Now the intensities
+          !First the degradation toward the end
+          if (wl >700) then
+            scale=.3+.7* (780.-wl)/(780.-700.)
+          else if (wl<420.) then
+            scale=.3+.7*(wl-380.)/(420.-380.)
+         else
+            scale=1.
+         endif
+         alpha_temp(:)=scale*alpha_temp(:)
+         !Then the data from absorbtion spectrum
+         alpha_temp(:)=perceived_intensity(i)*alpha_temp(:)
+         !The perceived color can also be calculated here
+         if (j==1) then
+          perceived_red=perceived_red+alpha_temp(1)
+          perceived_green=perceived_green+alpha_temp(2)
+          perceived_blue=perceived_blue+alpha_temp(3)
+         endif
+         if (alpha_temp(1)>1.0d0) print *,alpha_temp(1)
+          write(20, '(3A1)', advance='no') achar(int(255*alpha_temp(1))), &
+                                           achar(int(255*alpha_temp(2))), &
+                                           achar(int(255*alpha_temp(3)))
+        endif
+     end do
+    end do
+    close(20)
+    !Now lets write a file with perceived color
+    write(stdout,'(5x,"Perceived R G B ",3(F15.8,1X))') perceived_red,perceived_green,perceived_blue
+    perceived_red=perceived_red/(1.0d0*perceived_itermax)
+    perceived_green=perceived_green/(1.0d0*perceived_itermax)
+    perceived_blue=perceived_blue/(1.0d0*perceived_itermax)
+    write(stdout,'(5x,"Perceived R G B ",3(F15.8,1X))') perceived_red,perceived_green,perceived_blue
+    filename = trim(prefix) // "-perceived.ppm"
+    open(UNIT=20,FILE=filename,STATUS='UNKNOWN')
+    write(20, '(A2)') 'P6'
+    write(20, '(I0,'' '',I0)') 180,180
+    write(20, '(A)') '255'
+    do j=1, 180
+     do i=1, 180
+          write(20, '(3A1)', advance='no') achar(int(255*perceived_red)), &
+                                            achar(int(255*perceived_green)), &
+                                            achar(int(255*perceived_blue))
+
+     enddo
+    enddo
+    close(20)
+   endif
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   endif
+  if (verbosity > 9) then
+   omeg=0.0
+   f_sum=0.0
+   do while (omeg<omegmax)
+     f_sum=f_sum+integrator(delta_omeg,omeg)
+     omeg=omeg+delta_omeg
+   enddo
+   f_sum=f_sum+0.3333333333333333d0*delta_omeg*omegmax
+   write(stdout,'(5x,"Integral test:",F15.8,"actual: ",F15.8:)') f_sum,0.5*omeg*omeg
+  endif
+
+
+  !
+  !Deallocations
+  !
+  if (allocated(perceived_intensity)) deallocate(perceived_intensity)
+  if (allocated(perceived_evaluated)) deallocate(perceived_evaluated)
+  !
   if (allocated(beta_store)) deallocate(beta_store)
   if (allocated(gamma_store)) deallocate(gamma_store)
   if (allocated(zeta_store)) deallocate(zeta_store)
@@ -580,6 +748,43 @@ complex(kind=dp), intent(out) :: chi(:,:)
     enddo
 end subroutine calc_chi
 !------------------------------------------------
+subroutine wl_to_color(wavelength,red,green,blue)
+! Gives the colour intensity of a given wavelength in terms of red green and blue
+IMPLICIT NONE
+real(kind=dp), intent(in) :: wavelength
+real(kind=dp), intent(out) :: red,green,blue
+
+ if ((wavelength>=380.).and.(wavelength<=440.)) then
+              red = -1.*(wavelength-440.)/(440.-380.)
+              green = 0.
+              blue = 1.
+ endif
+ if ((wavelength>=440.).and.(wavelength<=490.)) then
+   red = 0.
+   green = (wavelength-440.)/(490.-440.)
+   blue = 1.
+ endif
+ if ((wavelength>=490.).and.(wavelength<=510.)) then 
+   red = 0.
+   green = 1.
+   blue = -1.*(wavelength-510.)/(510.-490.)
+ endif
+ if ((wavelength>=510.).and.(wavelength<=580.)) then 
+   red = (wavelength-510.)/(580.-510.)
+   green = 1.
+   blue = 0.
+ endif
+ if ((wavelength>=580.).and.(wavelength<=645.)) then
+   red = 1.
+   green = -1.*(wavelength-645.)/(645.-580.)
+   blue = 0.
+ endif
+ if ((wavelength>=645.).and.(wavelength<=780.)) then
+   red = 1.
+   green = 0.
+   blue = 0.
+ endif
+end subroutine wl_to_color
 
 !------------------------------------------------
 
