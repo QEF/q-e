@@ -370,7 +370,6 @@ close(17)
   !
   if ( n_ipol==3 .and. verbosity >0 )  then 
    !S(w)=2m_e/(pi e^2 hbar)
-   f_sum=f_sum/ry !since the integration was done in omege in Ry units
    write(stdout,'(5x,"Integral of absorbtion coefficient ",F15.8)') f_sum
 
 ! The perceived color analysis!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
