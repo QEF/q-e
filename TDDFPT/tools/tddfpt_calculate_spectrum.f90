@@ -12,9 +12,47 @@ program lr_calculate_spectrum
   
   implicit none
   !
+  !Constants
+  !
   integer, parameter :: dp=kind(0.d0)
   real(dp), parameter :: pi=3.14159265d0
   real(dp), parameter :: ry=13.6056981d0
+  real(dp), parameter :: ev2nm=1239.84172
+  real(dp), parameter :: ry2nm=91.1266519
+  !
+  !User controlled variables
+  !
+  real(dp) :: omega
+  integer :: ipol
+  integer :: itermax, itermax0, itermax_actual
+  integer :: sym_op
+  integer :: verbosity
+  real(kind=dp) :: start,end,increment
+  real(kind=dp) :: omegmax,delta_omeg
+  character(len=60) :: terminator
+  character(len=256) :: outdir, filename
+  integer :: units
+  !
+  !General use variables & counters
+  !
+  integer :: n_ipol
+  real(dp), allocatable, dimension(:,:) :: beta_store, gamma_store
+  complex(dp), allocatable, dimension(:,:,:) :: zeta_store
+  real(dp) :: norm0(3)
+  integer :: i,j, info, ip, ip2, counter
+  real(kind=dp) :: average(3), av_amplitude(3), epsil
+  integer :: ios
+  real (kind=dp) :: alpha_temp(3),scale,wl
+  real (kind=dp) :: f_sum 
+  complex(kind=dp) :: omeg_c
+  complex(kind=dp) :: green(3,3), eps(3,3)
+  complex(kind=dp), allocatable :: a(:), b(:), c(:), r(:,:)
+  logical :: skip, exst
+  real(kind=dp) :: omeg, z1,z2
+  ! 
+  !
+  !For perceived color analysis
+  !
   real(dp),parameter :: vis_start=0.116829041,vis_start_wl=780
   real(dp),parameter :: vis_end=0.239806979,vis_end_wl=380
   real(dp) :: perceived_red=0.0d0,perceived_green=0.0d0,perceived_blue=0.0d0
@@ -23,29 +61,8 @@ program lr_calculate_spectrum
   real(dp), allocatable :: perceived_intensity(:)
   real(dp), allocatable :: perceived_evaluated(:)
   logical  :: do_perceived 
-  real(dp) :: omega, q
-  integer :: n_ipol, ipol
-  real(dp), allocatable, dimension(:,:) :: beta_store, gamma_store
-  complex(dp), allocatable, dimension(:,:,:) :: zeta_store
-  real(dp) :: norm0(3)
-  integer :: itermax, itermax0, itermax_actual
   !
-  integer :: i,j, info, ip, ip2, counter
-  integer :: ios
-  integer :: sym_op
-  integer :: verbosity
-  real(kind=dp) :: omeg, omegmax, delta_omeg, z1,z2
-  real(kind=dp) :: average(3), av_amplitude(3), epsil
-  real (kind=dp) :: alpha_temp(3),scale,wl
-  real (kind=dp) :: f_sum 
-  complex(kind=dp) :: omeg_c
-  complex(kind=dp) :: green(3,3), eps(3,3)
-  complex(kind=dp), allocatable :: a(:), b(:), c(:), r(:,:)
-  logical :: parallel, skip, exst
-  character(len=60) :: terminator
-  
-  character(len=256) :: outdir, filename
-  
+  !Subroutines etc.
   !
   complex(kind=dp), external :: zdotc
   character(len=6), external :: int_to_char
@@ -57,8 +74,8 @@ program lr_calculate_spectrum
   !User controlled variable initialisation
   !
   namelist / lr_input / itermax, itermax0, itermax_actual, terminator,&
-                      & omegmax, delta_omeg, omeg, parallel, ipol, outdir, prefix,&
-                      & epsil, sym_op, verbosity
+                      & end, increment, start, ipol, outdir, prefix,&
+                      & epsil, sym_op, verbosity, units,omeg,omegmax,delta_omeg
   !
   prefix = 'pwscf'
   outdir = './'
@@ -66,15 +83,19 @@ program lr_calculate_spectrum
   itermax0=1000
   !itermax_actual=1000
   terminator="no"
-  omegmax=2.50d0
-  delta_omeg=0.001d0
-  omeg=0.0d0
+  end=2.50d0
+  increment=0.001d0
+  start=0.0d0
   epsil=0.02
-  parallel=.true.
   ipol=1
   sym_op=0
   verbosity=0
+  units=0
+  omeg=-1
+  delta_omeg=-1
+  omegmax=-1
   !
+  !Other initialisation
   !
   f_sum=0.0d0
   !
@@ -122,7 +143,23 @@ if (ionode) then !No need for parallelization in this code
      itermax0=itermax
      !
   end if
-
+  !
+  !Chek the unit system used
+  !
+  if (units < 0 .or. units >2) then 
+   call errore("tddfpt_pp","Unsupported unit system",1)
+  endif
+  if ( units /= 0 .and. verbosity > 0) then
+    write(stdout,'(5x,"Verbosity is not supported when non-default units are used")')
+    verbosity=0
+  endif
+  !
+  if (omeg>0 .or. omegmax>0 .or. delta_omeg>0) then
+    write(stdout,'(5x,"Warning, omeg, omegmax and delta_omeg depreciated, use start,end,increment instead")')
+    start=omeg
+    end=omegmax
+    increment=delta_omeg
+  endif
   !
   !Initialisation of coefficients
   !
@@ -166,7 +203,13 @@ if (ionode) then !No need for parallelization in this code
    write (stdout,'(5x,"Insufficent info for absorption coefficient")')
   endif
   write (stdout,'(5x,"CHI:susceptibility tensor")')
-  write (stdout,'(5x,"Energy unit in output file is eV")')
+  if (units == 0) then
+   write (stdout,'(5x,"Functions are reported as a function of hbar.omega (Ry)")')
+  else if (units == 1) then
+   write (stdout,'(5x,"Functions are reported as a function of hbar.omega (eV)")')
+  else if (units == 2) then
+   write (stdout,'(5x,"Functions are reported as a function of wavelength (nm)")')
+  endif
 !!!! The output file:
   open(17,file=filename,status="unknown")
 
@@ -179,10 +222,10 @@ if (ionode) then !No need for parallelization in this code
 ! Lets see if the environment is suitable for perceived color analysis
 !
 
-  if (verbosity > 1 .and. omeg<vis_start .and. omegmax>vis_end .and. delta_omeg < 0.01 .and. n_ipol == 3) then
+  if (verbosity > 1 .and. start<vis_start .and. end>vis_end .and. increment < 0.01 .and. n_ipol == 3) then
    do_perceived=.true.
    perceived_iter=1
-   perceived_itermax=int((vis_end-vis_start)/delta_omeg)
+   perceived_itermax=int((vis_end-vis_start)/increment)
    allocate(perceived_intensity(perceived_itermax))
    allocate(perceived_evaluated(perceived_itermax))
    perceived_intensity(:)=0.0d0
@@ -192,7 +235,18 @@ if (ionode) then !No need for parallelization in this code
    if (verbosity>1) write (stdout,'(5x,"Will not calculate perceived color")')
    do_perceived=.false.
   endif
+  !
   !   Start the omega loop
+  !
+  !Units conversion
+  if (units == 0) then
+   omeg=start
+  else if (units == 1) then
+   omeg=start/ry
+  else if (units == 2) then
+   omeg=ry2nm/start
+  endif
+   
   !
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!FIRST STEP!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   if (verbosity > 0 .and. n_ipol == 3) then ! In order to gain speed, I perform first term seperately
@@ -217,11 +271,19 @@ if (ionode) then !No need for parallelization in this code
     !alpha is ready
     write(17,'(5x,"alpha",2x,3(e21.15,2x))') &
             omeg*ry, alpha_temp(3)
-    f_sum=0.3333333333333333d0*delta_omeg*alpha_temp(3)
-    omeg=omeg+delta_omeg
+    f_sum=0.3333333333333333d0*increment*alpha_temp(3)
+    start=start+increment
   endif
 !!!!!!!!!!!!!!!!!!OMEGA LOOP!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  do while(omeg<omegmax)
+  do while(start<end) 
+   !Units conversion
+    if (units == 0) then
+      omeg=start
+    else if (units == 1) then
+     omeg=start/ry
+    else if (units == 2) then
+     omeg=ry2nm/start
+    endif
      !
      call calc_chi(omeg,epsil,green(:,:))
      !
@@ -232,7 +294,7 @@ if (ionode) then !No need for parallelization in this code
               !eps(ip,ip2)=(1.d0,0.d0)-(32.d0*pi/omega)*green(ip,ip2)
               !
               write(17,'(5x,"chi_",i1,"_",i1,"=",2x,3(e21.15,2x))') &
-                  ip2, ip, ry*omeg, dble(green(ip,ip2)), aimag(green(ip,ip2))
+                  ip2, ip, start, dble(green(ip,ip2)), aimag(green(ip,ip2))
 !              write(*,'(5x,"eps_",i1,"_",i1,"=",2x,3(e21.15,2x))') &
 !                  ip2, ip, ry*omeg, dble(eps), aimag(eps)
               !
@@ -245,15 +307,15 @@ if (ionode) then !No need for parallelization in this code
         !
         alpha_temp(1)=alpha_temp(2)
         alpha_temp(2)=alpha_temp(3)
-        alpha_temp(3)= -omeg*ry*aimag(green(1,1)+green(2,2)+green(3,3))/3.d0 
+        alpha_temp(3)= -omeg*aimag(green(1,1)+green(2,2)+green(3,3))/3.d0 
         ! 
         write(17,'(5x,"alpha",2x,3(e21.15,2x))') &
-            omeg*ry, alpha_temp(3)
+            start, alpha_temp(3)
         !
         if (verbosity > 0 ) then
          if ( is_peak(omeg,alpha_temp(3))) &
-            write(stdout,'(5x,"Possible peak at ",F15.8," Ry; Intensity=",E11.2)') omeg-2.0d0*delta_omeg,alpha_temp(1)
-         f_sum=f_sum+integrator(delta_omeg,alpha_temp(3))
+            write(stdout,'(5x,"Possible peak at ",F15.8," Ry; Intensity=",E11.2)') omeg-2.0d0*increment,alpha_temp(1)
+         f_sum=f_sum+integrator(increment,alpha_temp(3))
          if ( do_perceived ) then
             if (omeg >vis_start .and. omeg<vis_end) then
              perceived_intensity(perceived_iter)=alpha_temp(3)
@@ -266,12 +328,21 @@ if (ionode) then !No need for parallelization in this code
         endif
      end if
      !
-     omeg=omeg+delta_omeg
+     start=start+increment
      !
   enddo
   ! 
 ! In order to gain speed, I perform last term seperately
- if (verbosity > 0 .and. n_ipol == 3) then    
+ if (verbosity > 0 .and. n_ipol == 3) then     
+  !Units conversion
+    if (units == 0) then
+      omeg=start
+    else if (units == 1) then
+     omeg=start/ry
+    else if (units == 2) then
+     omeg=ry2nm/start
+    endif
+
     call calc_chi(omeg,epsil,green(:,:)) 
     do ip=1,n_ipol
         !
@@ -280,7 +351,7 @@ if (ionode) then !No need for parallelization in this code
               !eps(ip,ip2)=(1.d0,0.d0)-(32.d0*pi/omega)*green(ip,ip2)
               !
               write(17,'(5x,"chi_",i1,"_",i1,"=",2x,3(e21.15,2x))') &
-                  ip2, ip, ry*omeg, dble(green(ip,ip2)), aimag(green(ip,ip2))
+                  ip2, ip, start, dble(green(ip,ip2)), aimag(green(ip,ip2))
 !              write(*,'(5x,"eps_",i1,"_",i1,"=",2x,3(e21.15,2x))') &
 !                  ip2, ip, ry*omeg, dble(eps), aimag(eps)
               !
@@ -288,11 +359,11 @@ if (ionode) then !No need for parallelization in this code
           !
       end do
 
-    alpha_temp(3)= -omeg*ry*aimag(green(1,1)+green(2,2)+green(3,3))/3.d0 
+    alpha_temp(3)= -omeg*aimag(green(1,1)+green(2,2)+green(3,3))/3.d0 
     !alpha is ready
     write(17,'(5x,"alpha",2x,3(e21.15,2x))') &
-            omeg*ry, alpha_temp(3)
-    f_sum=f_sum+0.3333333333333333d0*delta_omeg*alpha_temp(3)
+            start, alpha_temp(3)
+    f_sum=f_sum+0.3333333333333333d0*increment*alpha_temp(3)
   endif
 
 close(17)
@@ -347,7 +418,6 @@ close(17)
     end do
     close(20)
     !Now lets write a file with perceived color
-    write(stdout,'(5x,"Perceived R G B ",3(F15.8,1X))') perceived_red,perceived_green,perceived_blue
     perceived_red=perceived_red/(1.0d0*perceived_itermax)
     perceived_green=perceived_green/(1.0d0*perceived_itermax)
     perceived_blue=perceived_blue/(1.0d0*perceived_itermax)
@@ -370,13 +440,13 @@ close(17)
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   endif
   if (verbosity > 9) then
-   omeg=0.0
+   start=0.0
    f_sum=0.0
-   do while (omeg<omegmax)
-     f_sum=f_sum+integrator(delta_omeg,omeg)
-     omeg=omeg+delta_omeg
+   do while (start<end)
+     f_sum=f_sum+integrator(increment,start)
+     start=start+increment
    enddo
-   f_sum=f_sum+0.3333333333333333d0*delta_omeg*omegmax
+   f_sum=f_sum+0.3333333333333333d0*increment*start
    write(stdout,'(5x,"Integral test:",F15.8,"actual: ",F15.8:)') f_sum,0.5*omeg*omeg
   endif
 
