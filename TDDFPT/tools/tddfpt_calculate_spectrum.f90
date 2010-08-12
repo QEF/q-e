@@ -22,7 +22,7 @@ program lr_calculate_spectrum
   !
   !User controlled variables
   !
-  real(dp) :: omega
+  real(dp) :: omega(3)
   integer :: ipol
   integer :: itermax, itermax0, itermax_actual
   integer :: sym_op
@@ -149,9 +149,9 @@ if (ionode) then !No need for parallelization in this code
   if (units < 0 .or. units >2) then 
    call errore("tddfpt_pp","Unsupported unit system",1)
   endif
-  if ( units /= 0 .and. verbosity > 0) then
-    write(stdout,'(5x,"Verbosity is not supported when non-default units are used")')
-    verbosity=0
+  if ( units /= 0 .and. verbosity > 4) then
+    write(stdout,'(5x,"Verbosity this high is not supported when non-default units are used")')
+    verbosity=4
   endif
   !
   if (omeg>0 .or. omegmax>0 .or. delta_omeg>0) then
@@ -210,6 +210,24 @@ if (ionode) then !No need for parallelization in this code
   else if (units == 2) then
    write (stdout,'(5x,"Functions are reported as a function of wavelength (nm)")')
   endif
+  !
+  ! The static polarizability
+  !
+  if (verbosity>0) then
+  write (stdout,'(5x,"Static Polarizability Tensor:")')
+  call calc_chi(0.0d0,epsil,green(:,:)) 
+    do ip=1,n_ipol
+        !
+        do ip2=1,n_ipol
+              !
+              write(stdout,'(5x,"chi_",i1,"_",i1,"=",2x,e21.15," + i",e21.15)') &
+                  ip2, ip, dble(green(ip,ip2)), aimag(green(ip,ip2))
+              !
+           end do
+          !
+      end do
+  endif
+
 !!!! The output file:
   open(17,file=filename,status="unknown")
 
@@ -222,36 +240,51 @@ if (ionode) then !No need for parallelization in this code
 ! Lets see if the environment is suitable for perceived color analysis
 !
 
-  if (verbosity > 1 .and. start<vis_start .and. end>vis_end .and. increment < 0.01 .and. n_ipol == 3) then
-   do_perceived=.true.
-   perceived_iter=1
-   perceived_itermax=int((vis_end-vis_start)/increment)
-   allocate(perceived_intensity(perceived_itermax))
-   allocate(perceived_evaluated(perceived_itermax))
-   perceived_intensity(:)=0.0d0
-   perceived_evaluated(:)=-1.0d0
-   perceived_renorm=-9999999.0d0
-  else
-   if (verbosity>1) write (stdout,'(5x,"Will not calculate perceived color")')
-   do_perceived=.false.
+  if (verbosity > 2) then
+   if (units == 0 .and. start<vis_start .and. end>vis_end .and. n_ipol == 3) then
+    write (stdout,'(5x,"Will attempt to calculate perceived color")')
+    do_perceived=.true.
+    perceived_iter=1
+    perceived_itermax=int((vis_end-vis_start)/increment)
+    allocate(perceived_intensity(perceived_itermax))
+    allocate(perceived_evaluated(perceived_itermax))
+    perceived_intensity(:)=0.0d0
+    perceived_evaluated(:)=-1.0d0
+    perceived_renorm=-9999999.0d0
+   elseif (units == 2 .and. start<vis_end_wl .and. end>vis_start_wl .and. n_ipol == 3) then
+    write (stdout,'(5x,"Will attempt to calculate perceived color")')
+    do_perceived=.true.
+    perceived_iter=1
+    perceived_itermax=int((vis_start_wl-vis_end_wl)/increment)
+    allocate(perceived_intensity(perceived_itermax))
+    allocate(perceived_evaluated(perceived_itermax))
+    perceived_intensity(:)=0.0d0
+    perceived_evaluated(:)=-1.0d0
+    perceived_renorm=-9999999.0d0
+   elseif (verbosity>2) then
+    write (stdout,'(5x,"Will not calculate perceived color")')
+    do_perceived=.false.
+   endif
   endif
   !
   !   Start the omega loop
   !
-  !Units conversion
+  !Units conversion and omega history
+  omega(1)=omega(2)
+  omega(2)=omega(3)
   if (units == 0) then
-   omeg=start
+   omega(3)=start
   else if (units == 1) then
-   omeg=start/ry
+   omega(3)=start/ry
   else if (units == 2) then
-   omeg=ry2nm/start
+   omega(3)=ry2nm/start
   endif
    
   !
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!FIRST STEP!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   if (verbosity > 0 .and. n_ipol == 3) then ! In order to gain speed, I perform first term seperately
-    !
-    call calc_chi(omeg,epsil,green(:,:)) 
+    ! 
+    call calc_chi(omega(3),epsil,green(:,:)) 
     do ip=1,n_ipol
         !
         do ip2=1,n_ipol
@@ -259,7 +292,7 @@ if (ionode) then !No need for parallelization in this code
               !eps(ip,ip2)=(1.d0,0.d0)-(32.d0*pi/omega)*green(ip,ip2)
               !
               write(17,'(5x,"chi_",i1,"_",i1,"=",2x,3(e21.15,2x))') &
-                  ip2, ip, ry*omeg, dble(green(ip,ip2)), aimag(green(ip,ip2))
+                  ip2, ip, start, dble(green(ip,ip2)), aimag(green(ip,ip2))
 !              write(*,'(5x,"eps_",i1,"_",i1,"=",2x,3(e21.15,2x))') &
 !                  ip2, ip, ry*omeg, dble(eps), aimag(eps)
               !
@@ -267,25 +300,27 @@ if (ionode) then !No need for parallelization in this code
           !
       end do
 
-    alpha_temp(3)= -omeg*ry*aimag(green(1,1)+green(2,2)+green(3,3))/3.d0 
+    alpha_temp(3)= -omega(3)*aimag(green(1,1)+green(2,2)+green(3,3))/3.d0 
     !alpha is ready
     write(17,'(5x,"alpha",2x,3(e21.15,2x))') &
-            omeg*ry, alpha_temp(3)
+            start, alpha_temp(3)
     f_sum=0.3333333333333333d0*increment*alpha_temp(3)
     start=start+increment
   endif
 !!!!!!!!!!!!!!!!!!OMEGA LOOP!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   do while(start<end) 
-   !Units conversion
+   !Units conversion and omega history
+    omega(1)=omega(2)
+    omega(2)=omega(3)
     if (units == 0) then
-      omeg=start
+      omega(3)=start
     else if (units == 1) then
-     omeg=start/ry
+     omega(3)=start/ry
     else if (units == 2) then
-     omeg=ry2nm/start
+     omega(3)=ry2nm/start
     endif
      !
-     call calc_chi(omeg,epsil,green(:,:))
+     call calc_chi(omega(3),epsil,green(:,:))
      !
      do ip=1,n_ipol
         !
@@ -307,23 +342,20 @@ if (ionode) then !No need for parallelization in this code
         !
         alpha_temp(1)=alpha_temp(2)
         alpha_temp(2)=alpha_temp(3)
-        alpha_temp(3)= -omeg*aimag(green(1,1)+green(2,2)+green(3,3))/3.d0 
+        alpha_temp(3)= -omega(3)*aimag(green(1,1)+green(2,2)+green(3,3))/3.d0 
         ! 
         write(17,'(5x,"alpha",2x,3(e21.15,2x))') &
             start, alpha_temp(3)
         !
         if (verbosity > 0 ) then
-         if ( is_peak(omeg,alpha_temp(3))) &
-            write(stdout,'(5x,"Possible peak at ",F15.8," Ry; Intensity=",E11.2)') omeg-2.0d0*increment,alpha_temp(1)
+         if ( is_peak(omega(3),alpha_temp(3))) &
+            write(stdout,'(5x,"Possible peak at ",F15.8," Ry; Intensity=",E11.2)') omega(1),alpha_temp(1)
          f_sum=f_sum+integrator(increment,alpha_temp(3))
-         if ( do_perceived ) then
-            if (omeg >vis_start .and. omeg<vis_end) then
+         if ( omega(3)<vis_end .and. omega(3)>vis_start .and. do_perceived ) then
              perceived_intensity(perceived_iter)=alpha_temp(3)
-             perceived_evaluated(perceived_iter)=omeg
+             perceived_evaluated(perceived_iter)=omega(3)
              perceived_iter=perceived_iter+1
              if (alpha_temp(3) > perceived_renorm) perceived_renorm=alpha_temp(3) !Renormalization to 1
-            endif
-           if (omeg>vis_end .or. perceived_iter >perceived_itermax) do_perceived=.false.
          endif
         endif
      end if
@@ -336,14 +368,14 @@ if (ionode) then !No need for parallelization in this code
  if (verbosity > 0 .and. n_ipol == 3) then     
   !Units conversion
     if (units == 0) then
-      omeg=start
+      omega(3)=start
     else if (units == 1) then
-     omeg=start/ry
+     omega(3)=start/ry
     else if (units == 2) then
-     omeg=ry2nm/start
+     omega(3)=ry2nm/start
     endif
 
-    call calc_chi(omeg,epsil,green(:,:)) 
+    call calc_chi(omega(3),epsil,green(:,:)) 
     do ip=1,n_ipol
         !
         do ip2=1,n_ipol
@@ -359,7 +391,7 @@ if (ionode) then !No need for parallelization in this code
           !
       end do
 
-    alpha_temp(3)= -omeg*aimag(green(1,1)+green(2,2)+green(3,3))/3.d0 
+    alpha_temp(3)= -omega(3)*aimag(green(1,1)+green(2,2)+green(3,3))/3.d0 
     !alpha is ready
     write(17,'(5x,"alpha",2x,3(e21.15,2x))') &
             start, alpha_temp(3)
@@ -368,10 +400,10 @@ if (ionode) then !No need for parallelization in this code
 
 close(17)
   !
-  if ( n_ipol==3 .and. verbosity >0 )  then 
+  if ( n_ipol==3 .and. verbosity >4 )  then 
    !S(w)=2m_e/(pi e^2 hbar)
    write(stdout,'(5x,"Integral of absorbtion coefficient ",F15.8)') f_sum
-
+  endif
 ! The perceived color analysis!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    if (allocated(perceived_intensity)) then
    write(stdout,'(5x,"Perceived color analysis is experimental")')
@@ -382,7 +414,6 @@ close(17)
     write(20, '(A2)') 'P6'
     write(20, '(I0,'' '',I0)') perceived_itermax, int(perceived_itermax/8)
     write(20, '(A)') '255'
- 
     do j=1, int(perceived_itermax/8)
        do i=1,perceived_itermax
         if (perceived_evaluated(i)<0.0d0) then
@@ -437,7 +468,6 @@ close(17)
     close(20)
    endif
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  endif
   if (verbosity > 9) then
    start=0.0
    f_sum=0.0
@@ -446,7 +476,7 @@ close(17)
      start=start+increment
    enddo
    f_sum=f_sum+0.3333333333333333d0*increment*start
-   write(stdout,'(5x,"Integral test:",F15.8,"actual: ",F15.8:)') f_sum,0.5*omeg*omeg
+   write(stdout,'(5x,"Integral test:",F15.8,"actual: ",F15.8:)') f_sum,0.5*start*start
   endif
 
 
@@ -764,7 +794,7 @@ if (trim(terminator).ne."no") then
   !
 end if
   !
- if (verbosity > 0) then
+ if (verbosity > -1) then
     ! Write all the coefficients in a file for detailed post-processing
    do ip=1,n_ipol
      if (n_ipol==3) filename = trim(prefix) // ".beta_term." // trim(int_to_char(ip))
