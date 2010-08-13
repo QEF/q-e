@@ -158,6 +158,12 @@
           REAL(DP), POINTER :: gipaw_wfs_rcut(:)
           REAL(DP), POINTER :: gipaw_wfs_rcutus(:)
           REAL(DP), POINTER :: gipaw_wfs_ps(:,:)
+!
+!  MD5 checksum ... used to verify integrity of the information contained
+!  in the pseudopotential file w.r.t previous run
+!
+          CHARACTER(len=32) :: MD5_cksum = 'NOT SET'
+
         END TYPE
 
       CONTAINS

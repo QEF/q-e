@@ -359,6 +359,7 @@ SUBROUTINE print_ps_info
      !
      WRITE( stdout, '(/5x,"PseudoPot. #",i2," for ",a2," read from file ",a)')&
              nt, upf(nt)%psd, TRIM (psfile(nt))
+     WRITE( stdout, '(5x,"MD5 check sum: ", a )') upf(nt)%md5_cksum
      !
      WRITE( stdout, '( 5x,"Pseudo is ",a,", Zval =",f5.1)') &
             TRIM (ps), upf(nt)%zp

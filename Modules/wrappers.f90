@@ -15,6 +15,7 @@ MODULE wrappers
   ! strings to C turned out to be non portable and not safe
   !
    USE kinds, ONLY : DP
+   USE io_global,  ONLY : stdout
    IMPLICIT NONE
    SAVE
 CONTAINS
@@ -84,4 +85,31 @@ CONTAINS
      RETURN
    END FUNCTION
    !
+
+   SUBROUTINE md5_from_file (filename, md5)
+     
+     CHARACTER(LEN=*), INTENT (IN) :: filename
+     CHARACTER(len=32), INTENT (OUT) :: md5
+     CHARACTER(LEN=len_trim(filename)) :: ftrim
+
+     INTEGER , EXTERNAL :: file_md5
+     INTEGER, ALLOCATABLE :: istr(:)
+     INTEGER :: getter(32), retval, i, ilen
+
+     ftrim = TRIM(filename)     
+     ilen = LEN(ftrim )
+     ALLOCATE( istr( ilen ) )
+     DO i = 1, ilen
+        istr(i) = ichar( ftrim(i:i) )
+     ENDDO
+     
+     retval = file_md5( istr, ilen, getter )
+
+     DO i = 1,32
+        md5(i:i) = char(  getter(i) )
+     ENDDO
+  
+  END SUBROUTINE 
+  !
+
 END MODULE

@@ -26,12 +26,13 @@ subroutine readpp
   USE uspp_param, ONLY : upf
   use upf_module, ONLY : read_upf
   use radial_grids, ONLY : deallocate_radial_grid, nullify_radial_grid
-
+  use wrappers,     ONLY : md5_from_file
   implicit none
   !
   real(DP), parameter :: rcut = 10.d0, eps = 1.0D-08
   !
   character(len=256) :: file_pseudo
+  
   ! file name complete with path
   real(DP), allocatable :: chi2r(:)
   real(DP):: norm
@@ -88,6 +89,10 @@ subroutine readpp
      else
         file_pseudo = pseudo_dir (1:l) //psfile (nt)
      endif
+     
+
+     !
+     ! Try to open the pseudo
      !
      open (unit = iunps, file = file_pseudo, status = 'old', form = &
           'formatted', action='read', iostat = ios)
@@ -141,6 +146,10 @@ subroutine readpp
      endif
         !
      close (iunps)
+     !
+     ! Calculate MD5 checksum for this pseudopotential
+     !
+     CALL md5_from_file(file_pseudo, upf(nt)%md5_cksum) 
      !
      ! ... Zv = valence charge of the (pseudo-)atom, read from PP files,
      ! ... is set equal to Zp = pseudo-charge of the pseudopotential
