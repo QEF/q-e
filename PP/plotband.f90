@@ -44,7 +44,7 @@ PROGRAM plotband
   IF (nks <= 0 .or. nbnd <= 0 .or. ios /= 0) THEN
      STOP 'Error reading file header'
   ELSE
-     PRINT '("Reading ",i4," bands at ",i4," k-points")', nbnd, nks
+     PRINT '("Reading ",i4," bands at ",i6," k-points")', nbnd, nks
   ENDIF
 
   filename1=trim(filename)//".rap"

@@ -438,11 +438,11 @@ SUBROUTINE punch_band (filband, spin_component, lsigma, no_overlap)
      !
      DO ik=nks1tot,nks2tot
         IF (ik == nks1) THEN
-           WRITE (iunpun, '(" &plot nbnd=",i4,", nks=",i4," /")') &
+           WRITE (iunpun, '(" &plot nbnd=",i4,", nks=",i6," /")') &
              nbnd, nks2tot-nks1tot+1
            DO ipol=1,4
               IF (lsigma(ipol)) WRITE(iunpun_sigma(ipol), &
-                            '(" &plot nbnd=",i4,", nks=",i4," /")') &
+                            '(" &plot nbnd=",i4,", nks=",i6," /")') &
                              nbnd, nks2tot-nks1tot+1
            ENDDO
         ENDIF
