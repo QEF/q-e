@@ -104,6 +104,7 @@ SUBROUTINE print_ks_energies()
               ELSE
                  IF ( f_inp(kbnd,1) > 0.D0 ) ibnd_up   = kbnd
                  IF ( f_inp(kbnd,2) > 0.D0 ) ibnd_dw = kbnd
+                 ibnd = MAX(ibnd_up, ibnd_dw)
               END IF
            END DO
         ELSE
