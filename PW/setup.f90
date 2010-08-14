@@ -67,7 +67,7 @@ SUBROUTINE setup()
   USE ldaU,               ONLY : lda_plus_u, Hubbard_U, &
                                  Hubbard_l, Hubbard_alpha, Hubbard_lmax, oatwfc
   USE bp,                 ONLY : gdir, lberry, nppstr, lelfield, nx_el, nppstr_3d,l3dstring, efield
-  USE fixed_occ,          ONLY : f_inp, tfixed_occ
+  USE fixed_occ,          ONLY : f_inp, tfixed_occ, one_atom_occupations
   USE funct,              ONLY : set_dft_from_name
   USE mp_global,          ONLY : nimage, kunit
   USE spin_orb,           ONLY : lspinorb, domag
@@ -621,6 +621,14 @@ SUBROUTINE setup()
   nks = nkstot
   !
 #endif
+  IF (one_atom_occupations) THEN
+     DO ik=1,nkstot
+        DO ibnd=natomwfc+1, nbnd
+           IF (f_inp(ibnd,ik)> 0.0_DP) CALL errore('setup', &
+               'no atomic wavefunction for some band',1)
+        ENDDO
+     ENDDO
+  ENDIF
   !
   ! ... initialize d1 and d2 to rotate the spherical harmonics
   !

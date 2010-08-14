@@ -86,14 +86,13 @@ SUBROUTINE new_occ()
 #endif
 
      IF (one_atom_occupations) THEN
-        IF (nbnd > natomwfc) CALL errore('new_occ','too many bands',1)
 !        DO ibnd=1,nbnd
 !           write(6,*) 'bands ', ibnd
-!           write(6,'(8f9.4)') (ABS(proj(i,ibnd)), i=1,nbnd)
+!           write(6,'(8f9.4)') (ABS(proj(i,ibnd)), i=1,natomwfc)
 !        END DO
         wg(:,ik)=0.0_DP
         first_available_band=1
-        DO iatwfc=1,nbnd
+        DO iatwfc=1,natomwfc
            IF (f_inp(iatwfc,ik)>0.0_DP) THEN
               max_value=ABS(proj(iatwfc,first_available_band))
               select_ibnd=first_available_band
