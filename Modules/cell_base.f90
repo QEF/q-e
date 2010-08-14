@@ -325,7 +325,7 @@
         s = s - box%perd*nint(s)
         rout = matmul(box%hmat(:,:),s)
         IF (present(nl)) THEN
-          s = DBLE(nl)
+          s = REAL( nl, DP )
           rout = rout + matmul(box%hmat(:,:),s)
         END IF
       END FUNCTION pbc
@@ -398,7 +398,7 @@ END FUNCTION saw
         REAL(DP),  INTENT(IN)  :: X1,Y1,Z1
         REAL(DP),  INTENT(OUT) :: X2,Y2,Z2
         REAL(DP) MIC
-        MIC = DBLE(M)
+        MIC = REAL( M, DP )
         X2 = X1 - DNINT(X1/MIC)*MIC
         Y2 = Y1 - DNINT(Y1/MIC)*MIC
         Z2 = Z1 - DNINT(Z1/MIC)*MIC
@@ -415,7 +415,7 @@ END FUNCTION saw
         REAL(DP),  INTENT(IN)  :: v(3)
         REAL(DP),  INTENT(OUT) :: w(3)
         REAL(DP) :: MIC
-        MIC = DBLE(M)
+        MIC = REAL( M, DP )
         w(1) = v(1) - DNINT(v(1)/MIC)*MIC
         w(2) = v(2) - DNINT(v(2)/MIC)*MIC
         w(3) = v(3) - DNINT(v(3)/MIC)*MIC
@@ -441,7 +441,7 @@ END FUNCTION saw
     REAL(DP), INTENT(IN) :: a_ , b_ , c_ , cosab, cosac, cosbc
     CHARACTER(LEN=*), INTENT(IN) :: cell_dofree
     REAL(DP),  INTENT(IN) :: wc_ , frich_ , greash_ , total_ions_mass
-    REAL(DP),  INTENT(IN) :: press_  ! external pressure from imput ( GPa )
+    REAL(DP),  INTENT(IN) :: press_  ! external pressure from imput ( in KBar = 0.1 GPa )
 
 
     REAL(DP) :: b1(3), b2(3), b3(3)
@@ -467,14 +467,15 @@ END FUNCTION saw
       CALL errore( ' cell_base_init ', ' do not specify both celldm and a,b,c!', 1 )
     END IF
 
-    press  = press_ / au_gpa
+    press  = press_ / 10.0_DP ! convert press in KBar to GPa
+    press  = press  / au_gpa  ! convert to AU
     !  frich  = frich_   ! for the time being this is set elsewhere
     greash = greash_
 
     WRITE( stdout, 105 )
     WRITE( stdout, 110 ) press_
 105 format(/,3X,'Simulation Cell Parameters (from input)')
-110 format(  3X,'external pressure       = ',f15.2,' [GPa]')
+110 format(  3X,'external pressure       = ',f15.2,' [KBar]')
 
     wmass  = wc_
     IF( wmass == 0.0_DP ) THEN
@@ -765,7 +766,7 @@ END FUNCTION saw
     dt2 = delt * delt
     DO j=1,3
       DO i=1,3
-        hnew(i,j) = h(i,j) + dt2 * fcell(i,j) * iforceh(i,j)
+        hnew(i,j) = h(i,j) + dt2 * fcell(i,j) * REAL( iforceh(i,j), DP )
       ENDDO
     ENDDO
     RETURN
@@ -782,7 +783,7 @@ END FUNCTION saw
     LOGICAL,      INTENT(IN) :: tnoseh
 
     REAL(DP) :: htmp(3,3)
-    REAL(DP) :: verl1, verl2, verl3, dt2, ftmp
+    REAL(DP) :: verl1, verl2, verl3, dt2, ftmp, v1, v2, v3
     INTEGER      :: i, j
   
     dt2 = delt * delt
@@ -795,15 +796,18 @@ END FUNCTION saw
       htmp = 0.0_DP
     END IF
 
-    verl1 = 2.0_DP / ( 1.0_DP + ftmp )
+    verl1 = 2.0_DP / ( 1.0_DP + ftmp ) 
     verl2 = 1.0_DP - verl1
     verl3 = dt2 / ( 1.0_DP + ftmp )
+    verl1 = verl1 - 1.0_DP
+
   
     DO j=1,3
       DO i=1,3
-        hnew(i,j) = h(i,j) + ( ( verl1 - 1.0_DP ) * h(i,j)               &
-     &     + verl2 * hold(i,j) + &
-             verl3 * ( fcell(i,j) - htmp(i,j) ) ) * iforceh(i,j)
+        v1 = verl1 * h(i,j)
+        v2 = verl2 * hold(i,j)
+        v3 = verl3 * ( fcell(i,j) - htmp(i,j) )
+        hnew(i,j) = h(i,j) + ( v1 + v2 + v3 ) * REAL( iforceh(i,j), DP )
       ENDDO
     ENDDO
     RETURN
@@ -870,6 +874,8 @@ END FUNCTION saw
     logical,  intent(in) :: tnoseh, tsdc
 
     REAL(DP) :: hnos(3,3)
+
+    hnew = 0.0
 
     if( tnoseh ) then
       hnos = vnhh * velh
