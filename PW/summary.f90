@@ -169,7 +169,7 @@ SUBROUTINE summary()
   !
   WRITE( stdout, '(5X, &
        &     "crystal axes: (cart. coord. in units of a_0)",/, &
-       &       3(15x,"a(",i1,") = (",3f10.6," )  ",/ ) )')  (apol,  &
+       &       3(15x,"a(",i1,") = (",3f11.6," )  ",/ ) )')  (apol,  &
        (at (ipol, apol) , ipol = 1, 3) , apol = 1, 3)
   !
   WRITE( stdout, '(5x, &
