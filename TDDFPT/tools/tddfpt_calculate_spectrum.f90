@@ -159,6 +159,7 @@ if (ionode) then !No need for parallelization in this code
     start=omeg
     end=omegmax
     increment=delta_omeg
+    units = 0
   endif
   !
   !Initialisation of coefficients
