@@ -215,6 +215,11 @@ lambda.x : lambda.o $(PWOBJS) $(QEMODS) $(LIBOBJS)
                  $(PWOBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../PH/$@ . )
 
+fqha.x : fqha.o $(PWOBJS) $(QEMODS) $(LIBOBJS)
+	$(LD) $(LDFLAGS) -o $@ fqha.o \
+                 $(PWOBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
+	- ( cd ../bin ; ln -fs ../PH/$@ . )
+
 tldeps:
 	test -n "$(TLDEPS)" && ( cd .. ; $(MAKE) $(MFLAGS) $(TLDEPS) || exit 1) || :
 
