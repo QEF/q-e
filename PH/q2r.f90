@@ -287,7 +287,7 @@ PROGRAM q2r
                 celldm, at, bg, omega, symm_type, atm, amass, tau, ityp,   &
                 m_loc, nqs, epsil, zeu)
         ELSE
-           CALL write_dyn_mat_header( fildyn, ntyp, nat, ibrav, nspin_mag,  &
+           CALL write_dyn_mat_header( flfrc, ntyp, nat, ibrav, nspin_mag,  &
                 celldm, at, bg, omega, symm_type, atm, amass, tau, ityp,    &
                 m_loc, nqs) 
         ENDIF
