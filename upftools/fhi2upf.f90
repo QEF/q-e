@@ -172,14 +172,14 @@ SUBROUTINE read_fhi(iunps)
   WRITE (6,'(a)') 'Pseudopotential with NLCC successfully read'
   !     ----------------------------------------------------------
   RETURN
+20 WRITE(6,'("read_fhi: error reading core charge, assuming no core charge")')
+   WRITE(6,'("this error may be due to the presence of additional", &
+ &           " lines at the end of file")')
 10 CONTINUE
   !     ----------------------------------------------------------
   WRITE (6,'(a)') 'Pseudopotential without NLCC successfully read'
   !     ----------------------------------------------------------
   RETURN
-  !
-20 WRITE(6,'("read_fhi: error reading core charge")')
-  STOP
   !
 100  WRITE(6,'("read_fhi: error reading pseudopotential file")')
   STOP
