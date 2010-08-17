@@ -983,13 +983,15 @@
             c = fpi / sqrt(omega)
             do iv = 1, nh(is)
                lp = nhtolm(iv,is)
-               betagl = betagx(1,iv,is)
-               do i=1,3
-                  do j=1,3
-                     dbeta( 1, iv, is, i, j ) = -0.5d0 * beta( 1, iv, is ) * ainv( j, i )    &
-     &                                          - c * dylm( 1, lp, i, j ) * betagl         ! SEGNO
+               if( ngw > 0 ) then
+                  betagl = betagx(1,iv,is)
+                  do i=1,3
+                     do j=1,3
+                        dbeta( 1, iv, is, i, j ) = -0.5d0 * beta( 1, iv, is ) * ainv( j, i )    &
+     &                                             - c * dylm( 1, lp, i, j ) * betagl         ! SEGNO
+                     enddo
                   enddo
-               enddo
+               end if
                do ig = gstart, ngw
                   gg = g(ig) * tpiba * tpiba / refg
                   jj=int(gg)+1
