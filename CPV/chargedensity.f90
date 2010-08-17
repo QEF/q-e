@@ -197,6 +197,9 @@
       !
       IF( ttstress ) THEN
          !
+         IF( .NOT. ALLOCATED( drhovan ) ) &
+            CALL errore( ' rhoofr ', ' drhovan not allocated ', 1 )
+         !
          CALL dennl( bec, dbec, drhovan, denl ) 
          !
       END IF
@@ -383,7 +386,7 @@
          !
          !
          IF ( ttstress ) &
-            CALL drhov( irb, eigrb, rhovan, rhog, rhor, drhog, drhor )
+            CALL drhov( irb, eigrb, rhovan, drhovan, rhog, rhor, drhog, drhor )
          !
          CALL rhov( irb, eigrb, rhovan, rhog, rhor )
 
@@ -750,7 +753,7 @@
 
 
 !-----------------------------------------------------------------------
-SUBROUTINE drhov(irb,eigrb,rhovan,rhog,rhor,drhog,drhor)
+SUBROUTINE drhov(irb,eigrb,rhovan,drhovan,rhog,rhor,drhog,drhor)
 !-----------------------------------------------------------------------
 !     this routine calculates arrays drhog drhor, derivatives wrt h of:
 !
@@ -772,7 +775,6 @@ SUBROUTINE drhov(irb,eigrb,rhovan,rhog,rhor,drhog,drhor)
       USE smallbox_grid_dimensions, ONLY: nr1b, nr2b, nr3b, nr1bx, nr2bx, nr3bx, nnrb => nnrbx
       USE cell_base,                ONLY: ainv
       USE qgb_mod,                  ONLY: qgb
-      USE cdvan,                    ONLY: drhovan
       USE dqgb_mod,                 ONLY: dqgb
       USE recvecs_indexes,          ONLY: nm, np
       USE cp_interfaces,            ONLY: fwfft, invfft
@@ -783,6 +785,7 @@ SUBROUTINE drhov(irb,eigrb,rhovan,rhog,rhor,drhog,drhor)
       INTEGER,     INTENT(IN) ::  irb(3,nat)
       REAL(DP),    INTENT(IN) ::  rhor(nnr,nspin)
       REAL(DP),    INTENT(IN) ::  rhovan(nhm*(nhm+1)/2,nat,nspin)
+      REAL(DP),    INTENT(IN) ::  drhovan(nhm*(nhm+1)/2,nat,nspin,3,3)
       COMPLEX(DP), INTENT(IN) ::  eigrb(ngb,nat), rhog(ng,nspin)
 ! output
       REAL(DP),    INTENT(OUT) :: drhor(nnr,nspin,3,3)
@@ -790,12 +793,16 @@ SUBROUTINE drhov(irb,eigrb,rhovan,rhog,rhor,drhog,drhor)
 ! local
       INTEGER i, j, isup, isdw, nfft, ifft, iv, jv, ig, ijv, is, iss,   &
      &     isa, ia, ir
-      REAL(DP) sum, dsum
+      REAL(DP) :: asumt, dsumt
       COMPLEX(DP) fp, fm, ci
       COMPLEX(DP), ALLOCATABLE :: v(:)
       COMPLEX(DP), ALLOCATABLE:: dqgbt(:,:)
       COMPLEX(DP), ALLOCATABLE :: qv(:)
 !
+#ifdef __OPENMP
+      INTEGER :: itid, mytid, ntids, omp_get_thread_num, omp_get_num_threads
+      EXTERNAL :: omp_get_thread_num, omp_get_num_threads
+#endif
 !
       DO j=1,3
          DO i=1,3
@@ -810,11 +817,9 @@ SUBROUTINE drhov(irb,eigrb,rhovan,rhog,rhor,drhog,drhor)
          END DO
       END DO
 
-      IF ( nvb == 0 ) RETURN
+      IF ( nvb < 0 ) RETURN
 
       ALLOCATE( v( nnr ) )
-      ALLOCATE( qv( nnrb ) )
-      ALLOCATE( dqgbt( ngb, 2 ) )
 
       ci =( 0.0d0, 1.0d0 )
 
@@ -827,6 +832,21 @@ SUBROUTINE drhov(irb,eigrb,rhovan,rhog,rhor,drhog,drhor)
 
                v(:) = (0.d0, 0.d0)
 
+!$omp parallel default(none) &
+!$omp          shared(nvb, na, nnrb, ngb, nh, eigrb, dfftb, irb, v, &
+!$omp                 nmb, ci, npb, i, j, dqgb, qgb, nhm, rhovan, drhovan ) &
+!$omp          private(mytid, ntids, is, ia, nfft, ifft, iv, jv, ijv, ig, iss, isa, &
+!$omp                  qv, itid, dqgbt, dsumt, asumt )
+
+               ALLOCATE( qv( nnrb ) )
+               ALLOCATE( dqgbt( ngb, 2 ) )
+
+#ifdef __OPENMP
+               mytid = omp_get_thread_num()  ! take the thread ID
+               ntids = omp_get_num_threads() ! take the number of threads
+               itid  = 0
+#endif
+
                iss=1
                isa=1
 
@@ -834,30 +854,45 @@ SUBROUTINE drhov(irb,eigrb,rhovan,rhog,rhor,drhog,drhor)
 #ifdef __PARA
                   DO ia=1,na(is)
                      nfft=1
-                     IF ( dfftb%np3( isa ) <= 0 ) go to 15
+                     IF ( dfftb%np3( isa ) <= 0 ) then
+                        isa = isa + nfft
+                        CYCLE
+                     END IF
 #else
                   DO ia=1,na(is),2
-                     nfft=2
-#endif
-                     dqgbt(:,:) = (0.d0, 0.d0) 
-                     IF (ia.EQ.na(is)) nfft=1
                      !
                      !  nfft=2 if two ffts at the same time are performed
                      !
+                     nfft=2
+                     IF (ia.EQ.na(is)) nfft=1
+#endif
+
+#ifdef __OPENMP
+                     IF ( mytid /= itid ) THEN
+                        isa = isa + nfft
+                        itid = MOD( itid + 1, ntids )
+                        CYCLE
+                     ELSE
+                        itid = MOD( itid + 1, ntids )
+                     END IF
+#endif
+
+                     dqgbt(:,:) = (0.d0, 0.d0) 
+                     qv(:) = (0.d0, 0.d0)
                      DO ifft=1,nfft
                         DO iv=1,nh(is)
                            DO jv=iv,nh(is)
                               ijv = (jv-1)*jv/2 + iv
-                              sum = rhovan(ijv,isa+ifft-1,iss)
-                              dsum=drhovan(ijv,isa+ifft-1,iss,i,j)
                               IF(iv.NE.jv) THEN
-                                 sum =2.d0*sum
-                                 dsum=2.d0*dsum
+                                 asumt = 2.0d0 *  rhovan( ijv, isa+ifft-1, iss )
+                                 dsumt = 2.0d0 * drhovan( ijv, isa+ifft-1, iss, i, j )
+                              ELSE
+                                 asumt =  rhovan( ijv, isa+ifft-1, iss )
+                                 dsumt = drhovan( ijv, isa+ifft-1, iss, i, j )
                               ENDIF
                               DO ig=1,ngb
-                                 dqgbt(ig,ifft)=dqgbt(ig,ifft) +        &
-     &                                (sum*dqgb(ig,ijv,is,i,j) +        &
-     &                                dsum*qgb(ig,ijv,is) )
+                                 dqgbt(ig,ifft)=dqgbt(ig,ifft) + asumt*dqgb(ig,ijv,is,i,j)
+                                 dqgbt(ig,ifft)=dqgbt(ig,ifft) + dsumt*qgb(ig,ijv,is)
                               END DO
                            END DO
                         END DO
@@ -865,24 +900,21 @@ SUBROUTINE drhov(irb,eigrb,rhovan,rhog,rhor,drhog,drhor)
                      !     
                      ! add structure factor
                      !
-                     qv(:) = (0.d0, 0.d0)
                      IF(nfft.EQ.2) THEN
                         DO ig=1,ngb
                            qv(npb(ig)) = eigrb(ig,isa   )*dqgbt(ig,1)  &
      &                        + ci*      eigrb(ig,isa+1 )*dqgbt(ig,2)
-                           qv(nmb(ig))=                                 &
-     &                             CONJG(eigrb(ig,isa  )*dqgbt(ig,1)) &
-     &                        + ci*CONJG(eigrb(ig,isa+1)*dqgbt(ig,2))
+                           qv(nmb(ig))=  CONJG(eigrb(ig,isa  )*dqgbt(ig,1)) &
+     &                        + ci*      CONJG(eigrb(ig,isa+1)*dqgbt(ig,2))
                         END DO
                      ELSE
                         DO ig=1,ngb
-                           qv(npb(ig)) = eigrb(ig,isa)*dqgbt(ig,1)
-                           qv(nmb(ig)) =                                &
-     &                             CONJG(eigrb(ig,isa)*dqgbt(ig,1))
+                           qv(npb(ig)) =       eigrb(ig,isa)*dqgbt(ig,1)
+                           qv(nmb(ig)) = CONJG(eigrb(ig,isa)*dqgbt(ig,1))
                         END DO
                      ENDIF
-!
-                     CALL invfft('Box',qv, dfftb, isa)
+                     !
+                     CALL invfft( 'Box', qv, dfftb, isa )
                      !
                      !  qv = US contribution in real space on box grid
                      !       for atomic species is, real(qv)=atom ia, imag(qv)=atom ia+1
@@ -892,11 +924,18 @@ SUBROUTINE drhov(irb,eigrb,rhovan,rhog,rhor,drhog,drhor)
                      CALL box2grid( irb(1,isa), 1, qv, v )
                      IF (nfft.EQ.2) CALL box2grid(irb(1,isa+1),2,qv,v)
 
-  15                 isa = isa + nfft
+                     isa = isa + nfft
 !
                   END DO
                END DO
+
+               DEALLOCATE( dqgbt )
+               DEALLOCATE( qv )
 !
+!$omp end parallel
+
+               iss = 1
+
                DO ir=1,nnr
                   drhor(ir,iss,i,j) = drhor(ir,iss,i,j) + DBLE(v(ir))
                END DO
@@ -919,6 +958,8 @@ SUBROUTINE drhov(irb,eigrb,rhovan,rhog,rhor,drhog,drhor)
          DO i=1,3
             DO j=1,3
                v(:) = (0.d0, 0.d0)
+               ALLOCATE( qv( nnrb ) )
+               ALLOCATE( dqgbt( ngb, 2 ) )
                isa=1
                DO is=1,nvb
                   DO ia=1,na(is)
@@ -930,16 +971,16 @@ SUBROUTINE drhov(irb,eigrb,rhovan,rhog,rhor,drhog,drhor)
                         DO iv= 1,nh(is)
                            DO jv=iv,nh(is)
                               ijv = (jv-1)*jv/2 + iv
-                              sum=rhovan(ijv,isa,iss)
-                              dsum =drhovan(ijv,isa,iss,i,j)
+                              asumt=rhovan(ijv,isa,iss)
+                              dsumt =drhovan(ijv,isa,iss,i,j)
                               IF(iv.NE.jv) THEN
-                                 sum =2.d0*sum
-                                 dsum=2.d0*dsum
+                                 asumt =2.d0*asumt
+                                 dsumt=2.d0*dsumt
                               ENDIF
                               DO ig=1,ngb
                                  dqgbt(ig,iss)=dqgbt(ig,iss)  +         &
-     &                               (sum*dqgb(ig,ijv,is,i,j) +         &
-     &                               dsum*qgb(ig,ijv,is))
+     &                               (asumt*dqgb(ig,ijv,is,i,j) +         &
+     &                               dsumt*qgb(ig,ijv,is))
                               END DO
                            END DO
                         END DO
@@ -968,11 +1009,15 @@ SUBROUTINE drhov(irb,eigrb,rhovan,rhog,rhor,drhog,drhor)
                      !
                   END DO
                END DO
+
+               DEALLOCATE( dqgbt )
+               DEALLOCATE( qv )
 !
                DO ir=1,nnr
                   drhor(ir,isup,i,j) = drhor(ir,isup,i,j) + DBLE(v(ir))
                   drhor(ir,isdw,i,j) = drhor(ir,isdw,i,j) +AIMAG(v(ir))
                ENDDO
+
 !
                CALL fwfft('Dense', v, dfftp )
                DO ig=1,ng
@@ -987,9 +1032,8 @@ SUBROUTINE drhov(irb,eigrb,rhovan,rhog,rhor,drhog,drhor)
             END DO
          END DO
       ENDIF
-      DEALLOCATE(dqgbt)
+
       DEALLOCATE( v )
-      DEALLOCATE( qv )
 !
       RETURN
 END SUBROUTINE drhov
@@ -1041,6 +1085,11 @@ SUBROUTINE rhov(irb,eigrb,rhovan,rhog,rhor)
       COMPLEX(DP), ALLOCATABLE :: v(:)
       COMPLEX(DP), ALLOCATABLE :: qv(:)
 
+#ifdef __OPENMP
+      INTEGER :: itid, mytid, ntids, omp_get_thread_num, omp_get_num_threads
+      EXTERNAL :: omp_get_thread_num, omp_get_num_threads
+#endif
+
       !  Quick return if this sub is not needed
       !
       IF ( nvb == 0 ) RETURN
@@ -1050,17 +1099,43 @@ SUBROUTINE rhov(irb,eigrb,rhovan,rhog,rhor)
 !
 !
       ALLOCATE( v( nnr ) )
-      ALLOCATE( qv( nnrb ) )
-      v (:) = (0.d0, 0.d0)
-      ALLOCATE( qgbt( ngb, 2 ) )
 
+      ! private variable need to be initialized, otherwise
+      ! outside the parallel region they have an undetermined value
+      !
+      mytid = 0
+      ntids = 1
+      itid  = 0
+      iss   = 1
+      isa   = 1
 !
       IF(nspin.EQ.1) THEN
          ! 
          !     nspin=1 : two fft at a time, one per atom, if possible
          !
+
+!$omp parallel default(none) &
+!$omp          shared(nvb, na, nnrb, ngb, nh, rhovan, qgb, eigrb, dfftb, iprsta, omegab, irb, v, nr1b, &
+!$omp                 nr2b, nr3b, nmb, stdout, ci, npb ) &
+!$omp          private(mytid, ntids, is, ia, nfft, ifft, iv, jv, ijv, sumrho, qgbt, ig, iss, isa, ca, &
+!$omp                  qv, itid )
+
          iss=1
          isa=1
+
+!$omp workshare
+         v (:) = (0.d0, 0.d0)
+!$omp end workshare
+
+#ifdef __OPENMP
+         mytid = omp_get_thread_num()  ! take the thread ID
+         ntids = omp_get_num_threads() ! take the number of threads
+         itid  = 0
+#endif
+
+         ALLOCATE( qgbt( ngb, 2 ) )
+         ALLOCATE( qv( nnrb ) )
+
 
          DO is = 1, nvb
 
@@ -1068,18 +1143,30 @@ SUBROUTINE rhov(irb,eigrb,rhovan,rhog,rhor)
 
             DO ia = 1, na(is)
                nfft = 1
-               IF ( dfftb%np3( isa ) <= 0 ) go to 15
+               IF ( dfftb%np3( isa ) <= 0 ) THEN
+                  isa = isa + nfft
+                  CYCLE
+               END IF
+
 #else
 
             DO ia = 1, na(is), 2
-               nfft = 2
-#endif
-
-               IF( ia .EQ. na(is) ) nfft = 1
-
                !
                !  nfft=2 if two ffts at the same time are performed
                !
+               nfft = 2
+               IF( ia .EQ. na(is) ) nfft = 1
+#endif
+
+#ifdef __OPENMP
+               IF ( mytid /= itid ) THEN
+                  isa = isa + nfft
+                  itid = MOD( itid + 1, ntids )
+                  CYCLE
+               ELSE
+                  itid = MOD( itid + 1, ntids )
+               END IF
+#endif
                DO ifft=1,nfft
                   qgbt(:,ifft) = (0.d0, 0.d0)
                   DO iv= 1,nh(is)
@@ -1113,8 +1200,8 @@ SUBROUTINE rhov(irb,eigrb,rhovan,rhog,rhor)
                   END DO
                ENDIF
 
-               CALL invfft('Box',qv,dfftb,isa)
 
+               CALL invfft( 'Box', qv, dfftb, isa )
                !
                !  qv = US augmentation charge in real space on box grid
                !       for atomic species is, real(qv)=atom ia, imag(qv)=atom ia+1
@@ -1135,10 +1222,18 @@ SUBROUTINE rhov(irb,eigrb,rhovan,rhog,rhor)
                !
                CALL  box2grid(irb(1,isa),1,qv,v)
                IF (nfft.EQ.2) CALL  box2grid(irb(1,isa+1),2,qv,v)
-  15           isa=isa+nfft
+
+               isa = isa + nfft
 !
             END DO
          END DO
+
+         DEALLOCATE(qv)
+         DEALLOCATE(qgbt)
+
+!$omp end parallel
+
+         iss = 1
          !
          !  rhor(r) = total (smooth + US) charge density in real space
          !
@@ -1179,6 +1274,10 @@ SUBROUTINE rhov(irb,eigrb,rhovan,rhog,rhor)
          !
          isup=1
          isdw=2
+
+         ALLOCATE( qgbt( ngb, 2 ) )
+         ALLOCATE( qv( nnrb ) )
+
          isa=1
          DO is=1,nvb
             DO ia=1,na(is)
@@ -1270,12 +1369,13 @@ SUBROUTINE rhov(irb,eigrb,rhovan,rhog,rhor)
      &        ' rhov: n_v(g=0) up   = ',omega*DBLE (rhog(1,isup))
          IF(iprsta.GT.2) WRITE( stdout,'(a,2f12.8)')                          &
      &        ' rhov: n_v(g=0) down = ',omega*DBLE(rhog(1,isdw))
+
+         DEALLOCATE(qgbt)
+         DEALLOCATE( qv )
 !
       ENDIF
 
-      DEALLOCATE(qgbt)
       DEALLOCATE( v )
-      DEALLOCATE( qv )
 
       CALL stop_clock( 'rhov' )
 !
@@ -1416,3 +1516,5 @@ END SUBROUTINE rhov
       !
       return
       end subroutine old_write_rho
+
+

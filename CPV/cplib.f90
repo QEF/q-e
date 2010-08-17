@@ -939,6 +939,8 @@ END FUNCTION
          END DO
       END DO
 
+      ! initialize FFT descriptor
+
       CALL fft_box_set( dfftb, nr1b, nr2b, nr3b, nr1bx, nr2bx, nr3bx, &
                         nat, irb, me_image+1, nproc_image, dfftp%npp, dfftp%ipp )
 
@@ -1007,10 +1009,16 @@ END FUNCTION
       REAL(DP)  fion(3,nat)
 ! local
       INTEGER isup,isdw,iss, iv,ijv,jv, ik, nfft, isa, ia, is, ig
-      REAL(DP)  fvan(3,nat,nvb), fac, fac1, fac2, boxdotgrid
+      REAL(DP)  fvan(3,nat,nvb), fac, fac1, fac2, boxdotgrid, res
       COMPLEX(DP) ci, facg1, facg2
       COMPLEX(DP), ALLOCATABLE :: qv(:)
       EXTERNAL boxdotgrid
+
+#ifdef __OPENMP
+      INTEGER :: itid, mytid, ntids, omp_get_thread_num, omp_get_num_threads
+      EXTERNAL :: omp_get_thread_num, omp_get_num_threads
+#endif
+
 !
       IF ( nr1b==0 .OR. nr2b==0 .OR. nr3b==0 ) RETURN
       CALL start_clock( 'newd' )
@@ -1019,20 +1027,50 @@ END FUNCTION
       deeq (:,:,:,:) = 0.d0
       fvan (:,:,:) = 0.d0
 
+
+!$omp parallel default(none) &
+!$omp          shared(nvb, na, nnrb, ngb, nh, qgb, eigrb, dfftb, irb, vr, nmb, npb, ci, deeq, &
+!$omp                 fac, nspin ) &
+!$omp          private(mytid, ntids, is, ia, nfft, iv, jv, ijv, ig, isa, qv, itid, res, iss )
+
+      isa = 1
+
+#ifdef __OPENMP
+      mytid = omp_get_thread_num()  ! take the thread ID
+      ntids = omp_get_num_threads() ! take the number of threads
+      itid  = 0
+#endif
+
+
       ALLOCATE( qv( nnrb ) )
 !
 ! calculation of deeq_i,lm = \int V_eff(r) q_i,lm(r) dr
 !
-      isa=1
-      DO is=1,nvb
+
+      DO is = 1, nvb
+
 #ifdef __PARA
          DO ia=1,na(is)
-            nfft=1
-            IF ( dfftb%np3( isa ) <= 0 ) go to 15
+             nfft = 1
+             IF ( dfftb%np3( isa ) <= 0 ) THEN
+                isa = isa + nfft
+                CYCLE
+             END IF
 #else
          DO ia=1,na(is),2
             nfft=2
 #endif
+
+#ifdef __OPENMP
+            IF ( mytid /= itid ) THEN
+               isa = isa + nfft
+               itid = MOD( itid + 1, ntids )
+               CYCLE
+            ELSE
+               itid = MOD( itid + 1, ntids )
+            END IF
+#endif
+
             IF( ia .EQ. na(is) ) nfft=1
 !
 ! two ffts at the same time, on two atoms (if possible: nfft=2)
@@ -1058,26 +1096,29 @@ END FUNCTION
                      END DO
                   END IF
 !
-                  CALL invfft('Box',qv,dfftb,isa)
+                  CALL invfft( 'Box', qv, dfftb, isa )
 !
                   DO iss=1,nspin
-                     deeq(iv,jv,isa,iss) = fac *                        &
-     &                    boxdotgrid(irb(1,isa),1,qv,vr(1,iss))
+                     res = boxdotgrid(irb(1,isa),1,qv,vr(1,iss))
+                     deeq(iv,jv,isa,iss) = fac * res  
                      IF (iv.NE.jv)                                      &
      &                    deeq(jv,iv,isa,iss)=deeq(iv,jv,isa,iss)
-!
                      IF (nfft.EQ.2) THEN
-                        deeq(iv,jv,isa+1,iss) = fac*                    &
-     &                       boxdotgrid(irb(1,isa+1),2,qv,vr(1,iss))
+                        res = boxdotgrid(irb(1,isa+1),2,qv,vr(1,iss))
+                        deeq(iv,jv,isa+1,iss) = fac * res 
                         IF (iv.NE.jv)                                   &
      &                       deeq(jv,iv,isa+1,iss)=deeq(iv,jv,isa+1,iss)
                      END IF
                   END DO
                END DO
             END DO
-  15        isa=isa+nfft
+            isa=isa+nfft
          END DO
       END DO
+
+      DEALLOCATE( qv )
+
+!$omp end parallel
 
       CALL mp_sum( deeq, intra_image_comm )
 
@@ -1085,21 +1126,53 @@ END FUNCTION
 !
 ! calculation of fion_i = \int V_eff(r) \sum_lm rho_lm (dq_i,lm(r)/dR_i) dr
 !
-      isa=1
-      IF(nspin.EQ.1) THEN
-!     =================================================================
-!     case nspin=1: two ffts at the same time, on two atoms (if possible)
-!     -----------------------------------------------------------------
+
+      IF( nspin == 1 ) THEN
+
+         !     =================================================================
+         !     case nspin=1: two ffts at the same time, on two atoms (if possible)
+         !     -----------------------------------------------------------------
+
+!$omp parallel default(none) &
+!$omp          shared(nvb, na, nnrb, ngb, nh, qgb, eigrb, dfftb, irb, vr, nmb, npb, ci, deeq, &
+!$omp                 fac, nspin, rhovan, tpibab, gxb, fvan ) &
+!$omp          private(mytid, ntids, is, ia, ik, nfft, iv, jv, ijv, ig, isa, qv, itid, res, iss, &
+!$omp                  fac1, fac2, facg1, facg2 )
+
+
+         ALLOCATE( qv( nnrb ) )
+
          iss=1
          isa=1
-         DO is=1,nvb
+
+#ifdef __OPENMP
+         mytid = omp_get_thread_num()  ! take the thread ID
+         ntids = omp_get_num_threads() ! take the number of threads
+         itid  = 0
+#endif
+
+         DO is = 1, nvb
+
 #ifdef __PARA
             DO ia=1,na(is)
                nfft=1
-               IF ( dfftb%np3( isa ) <= 0 ) go to 20
+               IF ( dfftb%np3( isa ) <= 0 ) THEN
+                  isa = isa + nfft
+                  CYCLE
+               END IF
 #else
             DO ia=1,na(is),2
                nfft=2
+#endif
+
+#ifdef __OPENMP
+               IF ( mytid /= itid ) THEN
+                  isa = isa + nfft
+                  itid = MOD( itid + 1, ntids )
+                  CYCLE
+               ELSE
+                  itid = MOD( itid + 1, ntids )
+               END IF
 #endif
                IF( ia.EQ.na(is)) nfft=1
                DO ik=1,3
@@ -1144,19 +1217,29 @@ END FUNCTION
 !
                   CALL invfft('Box',qv,dfftb,isa)
 !
-                  fvan(ik,ia,is) =                                      &
-     &                    boxdotgrid(irb(1,isa),1,qv,vr(1,iss))
+                  res = boxdotgrid(irb(1,isa),1,qv,vr(1,iss))
+                  fvan(ik,ia,is) = res
 !
-                  IF (nfft.EQ.2) fvan(ik,ia+1,is) =                     &
-     &                    boxdotgrid(irb(1,isa+1),2,qv,vr(1,iss))
+                  IF (nfft.EQ.2) THEN
+                     res = boxdotgrid(irb(1,isa+1),2,qv,vr(1,iss))
+                     fvan(ik,ia+1,is) = res
+                  END IF
                END DO
- 20            isa = isa+nfft
+               isa = isa+nfft
             END DO
          END DO
+
+         DEALLOCATE( qv )
+
+!$omp end parallel
+
       ELSE
-!     =================================================================
-!     case nspin=2: up and down spin fft's combined into a single fft
-!     -----------------------------------------------------------------
+
+         !     =================================================================
+         !     case nspin=2: up and down spin fft's combined into a single fft
+         !     -----------------------------------------------------------------
+
+         ALLOCATE( qv( nnrb ) )
          isup=1
          isdw=2
          isa=1
@@ -1200,6 +1283,9 @@ END FUNCTION
 25             isa = isa+1
             END DO
          END DO
+
+         DEALLOCATE( qv )
+
       END IF
 
       CALL mp_sum( fvan, intra_image_comm )
@@ -1213,7 +1299,6 @@ END FUNCTION
       END DO
 
   10  CONTINUE
-      DEALLOCATE( qv )
 !
       CALL stop_clock( 'newd' )
 !
