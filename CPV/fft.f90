@@ -72,6 +72,10 @@
              dfft%nr1x /= dfftb%nr1x .OR. dfft%nr2x /= dfftb%nr2x .OR. dfft%nr3x /= dfftb%nr3x ) &
             CALL errore( ' invfft ', ' inconsistent descriptor for Box fft ' , 1 )
 !$omp master
+         !
+         ! clocks called inside a parallel region do not work properly!
+         ! in the next future we probably need a thread safe version of the clock
+         !
          call start_clock( 'fftb' )
 !$omp end master 
       ELSE 
