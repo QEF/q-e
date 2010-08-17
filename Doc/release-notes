@@ -8,10 +8,17 @@ New in CVS version:
 
 Incompatible changes in CVS version:
 
-  * iq1,iq2,iq3 removed from input in ph,x; use start_q, last_q instead
+  * iq1,iq2,iq3 removed from input in ph.x; use start_q, last_q instead
+
+Fixed in CVS version:
+
+  * CP: Input external pressure is in KBar and not in GPa like it was
+    formerly in CP. Input value for variable "press" in cell namelist
+    should be given in KBar as stated in the documentation!
 
 Fixed in version 4.2.1:
 
+  * CP: problem in electronic forces with OpenMP parallelization
   * real-space Q functions (tqr=.true.) not working in noncollinear case
   * XC potential in CP was not initialized when condition (rho > 10^(-30)) 
     was not satisfied; this is usually harmless but potentially dangerous

@@ -1,32 +1,44 @@
-TODO LIST - June 2010
+TODO LIST - Aiugust 2010
 
 
-
-0) Suspected bugs:
+0) Suspected bugs/problems:
   0.1  electric field in hexagonal lattice
   0.2  "image" parallelization in CP
   0.3  projwfc in CP doesn't work for spin polarized case
   0.4  FFT grid dimensions not the same in PW and in CP for same data
   0.5  Small energy differences between PW and CP - maybe PP-related, but
        might also be a problem of Ewald calculation in CP ("raggio"?)
+  0.6  Numerical instabilities with BLYP and TPSS
+  0.7  Very often the first step of structural relaxation is too big.
+       A better estimate of hessian would be the ultimate solution.
 
 1) Organization
 
 1.1 www.quantum-espresso.org:
   1.1.1 update home page picture and sample applications
-  1.1.2 pseudopotential upload facility: to be checked
+  1.1.2 pseudopotential upload facility:
+        there is a problem with link to *.info files
 1.2 Wiki:
   1.2.1 what is left now: list of papers, bibliography, misc stuff.
         The list of papers should be replaced by a query to some
-        database for cited papers. What is it useful for?
-1.3 CVS:
+        database for cited papers.
+1.3 CVS/packaging:
+  1.3.0 move to subversion
   1.3.1 no pseudopotentials in CVS any longer
   1.3.2 only general-purpose modules in Modules/
-  1.3.3 move to subversion
-  1.3.4 run source-normalizer script dev-tools/src-normal
+  1.3.3 run source-normalizer script dev-tools/src-normal
+  1.3.4 files in flib/ use modules in Modules/, while some files in
+        Modules in turn call files in flib/. This is a source of trouble
+        because some linkers are unable to resolve cross-references.
+        Most of the trouble comes for module kinds, that could be
+        replaced by a single instruction. Also: Modules/mm_dispersions,f90
+        calls PW/rgen.f90. This is also a potential source of trouble.
+  1.3.5 Everything that is not in the "core" QE or that satisfies special purposes
+        should be extracted and moved into external libs / plugins / whatever .
 1.4 mailing lists:
   1.4.1 add somewhere instructions on netiquette and how to post 
-  1.4.2 move to qe-forge
+        Send monthly reminder?
+  1.4.2 move to qe-forge, changin names
 1.5 Interoperability:
   1.5.1 we should maintain somewhere (user guide? wiki? web page?)
         a list of external "QE-interoperable codes", that either
@@ -37,11 +49,11 @@ TODO LIST - June 2010
 
 2) Documentation
 
-2.1 Better (and shorter) FAQ list
-2.2 QE-Tutorial: should be moved to the cvs of qe-forge. 
-    What are our plans for it, if any???
+2.1 Better (and shorter) FAQ list. Notably missing:
+    - hardware for QE
+2.2 QE-Tutorial: should be moved to the cvs or svn of qe-forge.
 2.3 We should decide a strategy on where to put the documentation.
-    Now it is in Doc/ for everything, except for atomic and GWW.
+    Now it is in Doc/ for everything, except for atomic/ and GWW/.
     We should decide which packages should have the documentation
     in other places. The same applies to examples.
 2.4 Documentation on how to generate PP for GIPAW calculation is missing
@@ -49,7 +61,9 @@ TODO LIST - June 2010
 
 3) Pseudopotentials 
 
-3.1 Add Coulomb PPs to PP library - require first that we fix 1.1.2
+3.1 Add Coulomb PPs to PP library - requires extending the name
+    convention to cover this case and updating the scripts that
+    generate the PP table
 3.2 Implement Goedecker PPs
 3.3 Implement OEP PPs
 3.4 Standard recipe for generating reasonable PPs:
@@ -62,38 +76,43 @@ TODO LIST - June 2010
     in pseudopotential files (they are present in recent PP only)
 3.7 The intermediate hard NCPP is useless for PAW and should not be 
     done when generating a PAW set
-3.8 Merge Meta-GGA (TPSS) code with current atomic code
+3.8 Finish merge of Meta-GGA (TPSS) code into atomic code
 3.9 Pseudopotential files are read in parallel by all processors.
-    Maybe this is not a great idea.
+    They should be read by one processor, broadcast to all others.
 
 4) Development
 
+4.0  Major highly desirable restructuring:
+  4.0.1 NEB structured as a plugin (metdynamics-style) or re-organized
+        (including the possibility to be run in a dynamical way, with a
+         home-made scheduler that executes tasks as soon as resources are
+         free; might be used for image parallelization, also for phonons)
+  4.0.2 Better-structured relaxation and molecular dynamics (including the
+        variable-cell case), with more extenisive integration of PW and CP
+
 4.1  New developments to be added (sooner or later):
-  4.1.0 structure builder + new xml output (RS)
-  4.1.1.a NEB structured as a plugin (metdynamics-style) or re-organized
-  4.1.1.b Same for structure optimization, variable cell and molecular dynamics
-  4.1.2 TD-DFPT
-  4.1.3 XMCD in XSpectra
-  4.1.4 vdW with nonlocal xc functional
-  4.1.5 new GWW
-  4.1.6 electron-phonon with Wannier stuff
-  4.1.7 G-space symmetrization also for phonons
-  4.1.8 bio-oriented stuff :
+  4.1.1 Moka structure builder + new xml input/output (RS)
+  4.1.2 XMCD in XSpectra
+  4.1.3 vdW with nonlocal xc functional
+  4.1.4 new GWW
+  4.1.5 EPW (electron-phonon with Wannier stuff)
+  4.1.6 G-space symmetrization also for phonons. In the meantime:
+        rimove check on nonsymmeorphic symmetries in pw.x, leave it only
+        in the phonon code
+  4.1.7 bio-oriented stuff :
         - MS2 plugin for QM-MM
         - Solvent Models
         - PCM
-  4.1.9 Wannier-based exact-exchange in CP (version available)
-  4.1.10 Wannier-based exact-exchange in PW 
-  
+  4.1.8 Wannier-based exact-exchange in CP (version available)
+  4.1.9 Wannier-based exact-exchange in PW (to be done)
 
 4.2 Small new developments, desirable or to be added:
   4.2.0 fractional charge (nelec/nelup/neldw)? is it working?
   4.2.1 configure issues:
         - ifort+acml
+        - ifort+mkl+scalapack troubles
         - add search for -lfftw3xf_intel 
         - remove obsolete stuff: next is macppc
-        - arguments containig spaces: the wrapper doessn't like them
-        - BlueGene: general approach vs suport for specific machines
   4.2.2 constraints should be implemented in all cases, or else, the
         documentation should be more explicit on what works and what doesn't
         Also: add check if constraints break the symmetry
@@ -109,11 +128,15 @@ TODO LIST - June 2010
   4.2.7 matdyn should write frequencies in a format that is suitable
         for direct plotting by gnuplot/xmgrace - see also Eyvaz' script
         for phonon plotting. Also about phonons:
-        C(R) should be calculated at the end of a dispersion run
+        - C(R) should be calculated at the end of a dispersion run
+        - projected phonon DOS with tetrahedra
+        - adapt plotband.x to phonon case; in general, simplify phonon plotting
+        - QHA calculations inside matdyn? see fqha.f90
   4.2.8 Interface to RESP calculation - requires adding radii to xml file
   4.2.9 elf for USPP/PAW ; delocalization indices
   4.1.10 Collection of tools and utilities for data analysis 
-         (things like g(r) from MD simulations)
+         (things like g(r) from MD simulations). Also: for ev.x,
+         write output file with E(V) for direct plotting of EOS
   4.2.11 Gamma: same input as for PH
   4.2.12 Cleanup of the 'prefix.EXIT' stuff. Stop with signals?
          Also: stop with 'prefix.EXIT' and restart in D3 and Gamma (KK)
@@ -150,8 +173,8 @@ TODO LIST - June 2010
         dt=sqrt(2) dt_default and emass should be increased so to keep
         emass^2/dt constant
       - defaults for the Nose thermostat
-  4.2.14 EXX preprocessing should be removed, or at least it should be 
-         confined to just some specialized parts of the code.
+  4.2.14 -DEXX should be removed, or at least it should be confined to just
+         some specialized parts of the code.
 
 4.3 Performance enhancements/Parallelization:
   4.3.1 make hpsi/spsi/CG  faster
@@ -168,6 +191,7 @@ TODO LIST - June 2010
   4.3.2 Try the new "Density-Matrix-Based" diagonalization algorithm
   4.3.3 grid-ization/parallelization of the phonon code: irreps and
         q-vectors should be distributed across processors/grid computers
+        (might be done in the same way as for NEB?)
   4.3.4 PH: use charge mixing instead of potential mixing
   4.3.5 D3: verify status of parallelization, clean it up if needed
 
@@ -198,14 +222,13 @@ TODO LIST - June 2010
   4.4.4 More PW/CP merge:
         - lda+U modules
         - "cell_base_init" from CP to PW
-        - "cellmd" module of PW and "cell_base" of CPV
+        - "cellmd" module of PW and "cell_base" of CP
         - PW "real-space" approach / CP "small boxes" 
         - there should be a single function or routine for periodic boundary 
           conditions (i.e. bringing all atoms inside the unit cell)
         - spherical harmonics and integration routines
         - merge of atomic positions! currently CP uses a complex logic
           that is very hard to follow
-        - 
   4.4.6 adding/removing/modifying input variables is too complex
         Why are some checks on input variables performed in read_namelist,
         while others apparently similar are in */input.f90?
@@ -268,13 +291,18 @@ TODO LIST - June 2010
 
 5) Files and I/O
 
- 5.1 Scratch files are a big mess. It should be possible to open files
+ 5.1 The "buffer" trick to keep wfc in memory wasn't such a great idea 
+     after all: a better approach would be to have a k-point index
+ 5.2 Scratch files are a big mess. It should be possible to open files
      in places other than tmp_dir without resorting to obscure coding.
      This is especially serious for PH, D3 etc
- 5.2 The "buffer" trick to keep wfc in memory wasn't such a great idea 
-     after all: a better approach would be to have a k-point index
+ 5.3 There should be a clearer distinction, both in the code and
+     in the input data, between directories to be read (and left
+     unchanged), directories to be (over-)written, temporary files
+     or directories
  5.4 Many inconsistencies between PW and CP in the xml file format
-     (and inconsistencies with the documentation)
+     (and inconsistencies with the documentation). Also: CP should
+     behave like PW and create a directory if not existent
  5.5 Use qexml for xml file processing so that a single, easily
      exportable routine, is used everywhere. Requires some though
      on how to deal with parallelism without filling qexml with
@@ -286,7 +314,6 @@ TODO LIST - June 2010
      and extend lkpoint_dir)
  5.6 There should be a lock mechanism that prevents people from
      overwriting files of running processes
- 5.7 Move to a xml-based format for the dynamical matrix file
  5.8 Add rotation of restart files, similar to what is done in CPMD:
     "The number of distinct RESTART files generated during CPMD runs
      is read from the next line. The restart files are written in turn.
