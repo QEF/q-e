@@ -17,7 +17,7 @@
 
 #include "fft_defs.h"
 !=----------------------------------------------------------------------=!
-       MODULE fft_scalar
+   MODULE fft_scalar
 !=----------------------------------------------------------------------=!
        USE kinds
 
@@ -27,6 +27,7 @@
         PRIVATE
         PUBLIC :: cft_1z, cft_2xy, cft_b, cfft3d, cfft3ds
         PUBLIC :: good_fft_dimension, allowed, good_fft_order
+        PUBLIC :: cft_b_omp_init, cft_b_omp
 
 ! ...   Local Parameter
 
@@ -40,7 +41,7 @@
         !   in order to avoid multiple copies of the same workspace
         !   lwork:   Dimension of the work space array (if any)
 
-#if ( defined __ESSL || defined __LINUX_ESSL ) && !defined __FFTW
+#if ( defined __ESSL || defined __LINUX_ESSL ) && ! ( defined __FFTW || defined __FFTW3 )
 
         !   ESSL IBM library: see the ESSL manual for DCFT
 
@@ -60,6 +61,15 @@
 
 #define  FFTW_MEASURE  0
 #define  FFTW_ESTIMATE 64
+
+#endif
+
+#if defined __FFTW 
+
+        INTEGER   :: cft_b_dims( 4 )
+        C_POINTER :: cft_b_bw_planz = 0
+        C_POINTER :: cft_b_bw_planx = 0
+        C_POINTER :: cft_b_bw_plany = 0
 
 #endif
 
@@ -1759,6 +1769,7 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, isign, &
 !
 !=----------------------------------------------------------------------=!
 !
+
    SUBROUTINE cft_b ( f, nx, ny, nz, ldx, ldy, ldz, imin3, imax3, sgn )
 
 !     driver routine for 3d complex fft's on box grid, parallel case
@@ -1781,6 +1792,8 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, isign, &
 #if defined __FFTW || __FFTW3
 
       C_POINTER, save :: bw_planz(  ndims ) = 0
+      C_POINTER, save :: bw_planx(  ndims ) = 0
+      C_POINTER, save :: bw_plany(  ndims ) = 0
       C_POINTER, save :: bw_planxy( ndims ) = 0
 
 #elif defined __ACML
@@ -1852,6 +1865,14 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, isign, &
              call DESTROY_PLAN_1D( bw_planz(icurrent) )
         call CREATE_PLAN_1D( bw_planz(icurrent), nz, 1 )
 
+        if ( bw_planx(icurrent) /= 0 ) &
+             call DESTROY_PLAN_1D( bw_planx(icurrent) )
+        call CREATE_PLAN_1D( bw_planx(icurrent), nx, 1 )
+
+        if ( bw_plany(icurrent) /= 0 ) &
+             call DESTROY_PLAN_1D( bw_plany(icurrent) )
+        call CREATE_PLAN_1D( bw_plany(icurrent), ny, 1 )
+
         if ( bw_planxy(icurrent) /= 0 ) &
              call DESTROY_PLAN_2D( bw_planxy(icurrent) )
         call CREATE_PLAN_2D( bw_planxy(icurrent), nx, ny, 1 )
@@ -1921,8 +1942,18 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, isign, &
 
 #if defined __FFTW
 
+      !
+      !  fft along Z
+      !
       call FFTW_INPLACE_DRV_1D( bw_planz(ip), ldx*ldy, f(1), ldx*ldy, 1 )
-      call FFTW_INPLACE_DRV_2D( bw_planxy(ip), nplanes, f(nstart), 1, ldx*ldy )
+      !
+      !  fft along Y
+      !  fft along X
+      !
+      do k = imin3, imax3
+        call FFTW_INPLACE_DRV_1D( bw_plany(ip), nx, f((k-1)*ldx*ldy + 1), ldx, 1 )
+        call FFTW_INPLACE_DRV_1D( bw_planx(ip), ny, f((k-1)*ldx*ldy + 1), 1, ldx )
+      end do   
 
 #elif defined __ACML
 
@@ -1982,6 +2013,111 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, isign, &
 #endif
      RETURN
    END SUBROUTINE cft_b
+
+!
+!=----------------------------------------------------------------------=!
+!
+!
+!
+!   3D parallel FFT on sub-grids, to be called inside OpenMP region
+!
+!
+!
+!=----------------------------------------------------------------------=!
+!
+
+   SUBROUTINE cft_b_omp_init ( nx, ny, nz )
+
+!     driver routine for 3d complex fft's on box grid, init subroutine
+!
+      implicit none
+      integer, INTENT(IN) :: nx,ny,nz
+      !
+      !   Here initialize table 
+      !
+#if defined __FFTW
+
+!$omp single
+
+      IF( cft_b_bw_planz  == 0 ) THEN
+         CALL CREATE_PLAN_1D( cft_b_bw_planz, nz, 1 )
+         cft_b_dims(3) = nz
+      END IF
+      IF( cft_b_bw_planx  == 0 ) THEN
+         CALL CREATE_PLAN_1D( cft_b_bw_planx, nx, 1 )
+         cft_b_dims(1) = nx
+      END IF
+      IF( cft_b_bw_plany  == 0 ) THEN
+         CALL CREATE_PLAN_1D( cft_b_bw_plany, ny, 1 )
+         cft_b_dims(2) = ny
+      END IF
+
+!$omp end single
+
+#else
+
+      CALL errore(' cft_b_omp_init ',' no scalar fft driver specified ', 1)
+
+#endif
+
+     RETURN
+   END SUBROUTINE cft_b_omp_init
+
+
+   SUBROUTINE cft_b_omp ( f, nx, ny, nz, ldx, ldy, ldz, imin3, imax3, sgn )
+
+!     driver routine for 3d complex fft's on box grid, parallel (MPI+OpenMP) case
+!     fft along xy is done only on planes that correspond to dense grid
+!     planes on the current processor, i.e. planes with imin3 <= nz <= imax3
+!     implemented ONLY for internal fftw, and only for sgn=1 (f(R) => f(G))
+!     (beware: here the "essl" convention for the sign of the fft is used!)
+!
+!     This driver is meant for calls inside parallel OpenMP sections
+!
+      implicit none
+      integer, INTENT(IN) :: nx,ny,nz,ldx,ldy,ldz,imin3,imax3,sgn
+      complex(8) :: f(:)
+
+      INTEGER, SAVE :: k
+!$omp threadprivate (k)
+
+      IF ( ( cft_b_bw_planz == 0 ) .or. ( cft_b_bw_planx == 0 ) .or. ( cft_b_bw_plany == 0 ) ) THEN
+         CALL errore('cft_b_omp','plan not initialized',1)
+      END IF
+
+      if ( -sgn > 0 ) then
+         CALL errore('cft_b_omp','forward transform not implemented',1)
+      end if
+
+      !  first check consistency
+
+      IF ( ( nx /= cft_b_dims(1) ) .or. ( ny /= cft_b_dims(2) ) .or. ( nz /= cft_b_dims(3) ) ) THEN
+         CALL errore('cft_b_omp', 'dimensions are inconsistent with the existing plan',1) 
+      END IF
+
+#if defined __FFTW
+      !
+      !  fft along Z
+      !
+      call FFTW_INPLACE_DRV_1D( cft_b_bw_planz, ldx*ldy, f(1), ldx*ldy, 1 )
+      !
+      !  fft along Y
+      !  fft along X
+      !
+      do k = imin3, imax3
+        call FFTW_INPLACE_DRV_1D( cft_b_bw_plany, nx, f((k-1)*ldx*ldy + 1), ldx, 1 )
+        call FFTW_INPLACE_DRV_1D( cft_b_bw_planx, ny, f((k-1)*ldx*ldy + 1), 1, ldx )
+      end do   
+
+#else
+
+      CALL errore(' cft_b_omp ',' no scalar fft driver specified ', 1)
+
+#endif
+
+     RETURN
+   END SUBROUTINE cft_b_omp
+
 
 !
 !=----------------------------------------------------------------------=!
