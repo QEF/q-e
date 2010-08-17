@@ -38,7 +38,8 @@ MODULE path_io_routines
        !-----------------------------------------------------------------------
        !
        USE input_parameters, ONLY : restart_mode, calculation, opt_scheme
-       USE control_flags,    ONLY : lneb, lsmd, lcoarsegrained
+!       USE control_flags,    ONLY : lneb, lsmd, lcoarsegrained
+       USE control_flags,    ONLY : lneb, lsmd
        USE path_variables,   ONLY : climbing, nstep_path, num_of_images, &
                                     path_length, path_thr, ds, use_masses, &
                                     first_last_opt, temp_req, use_freezing, &
@@ -75,9 +76,9 @@ MODULE path_io_routines
        WRITE( UNIT = iunpath, &
               FMT = '(5X,"first_last_opt",T35," = ",1X,L1)' ) first_last_opt
        !
-       WRITE( UNIT = iunpath, &
-              FMT = '(5X,"coarse-grained phase-space",T35, " = ",1X,L1)' ) &
-           lcoarsegrained
+!       WRITE( UNIT = iunpath, &
+!              FMT = '(5X,"coarse-grained phase-space",T35, " = ",1X,L1)' ) &
+!           lcoarsegrained
        !
        WRITE( UNIT = iunpath, &
               FMT = '(5X,"use_freezing",T35," = ",1X,L1)' ) use_freezing
@@ -142,7 +143,8 @@ MODULE path_io_routines
      SUBROUTINE read_restart()
        !-----------------------------------------------------------------------
        !
-       USE control_flags,          ONLY : lsmd, lcoarsegrained
+!       USE control_flags,          ONLY : lsmd, lcoarsegrained
+       USE control_flags,          ONLY : lsmd
        USE io_files,               ONLY : iunpath, iunrestart, path_file
        USE input_parameters,       ONLY : if_pos
        USE path_variables,         ONLY : nim => num_of_images
@@ -220,21 +222,21 @@ MODULE path_io_routines
              !
           END IF
           !
-          IF ( lcoarsegrained ) THEN
+!          IF ( lcoarsegrained ) THEN
              !
-             DO i = 1, nim_inp
+!             DO i = 1, nim_inp
                 !
-                READ( UNIT = iunrestart, FMT = * )
+!                READ( UNIT = iunrestart, FMT = * )
                 !
-                DO j = 1, dim1
+!                DO j = 1, dim1
                    !
-                   READ( UNIT = iunrestart, FMT = * ) pos(j,i), grad_pes(j,i)
+!                   READ( UNIT = iunrestart, FMT = * ) pos(j,i), grad_pes(j,i)
                    !
-                END DO
+!                END DO
                 !
-             END DO
+!             END DO
              !
-          ELSE
+!          ELSE
              !
              READ( UNIT = iunrestart, FMT = * )
              READ( UNIT = iunrestart, FMT = * ) pes(1)
@@ -285,7 +287,7 @@ MODULE path_io_routines
                 !
              END DO
              !
-          END IF
+!          END IF
           !
           READ( UNIT = iunrestart, FMT = '(256A)', IOSTAT = ierr ) input_line
           !
@@ -295,22 +297,22 @@ MODULE path_io_routines
                 !
                 ! ... optional fields
                 !
-                IF ( lcoarsegrained ) THEN
+!                IF ( lcoarsegrained ) THEN
                    !
-                   DO i = 1, nim_inp
+!                   DO i = 1, nim_inp
                       !
-                      READ( UNIT = iunrestart, FMT = * )
-                      READ( UNIT = iunrestart, FMT = * ) frozen(i)
+!                      READ( UNIT = iunrestart, FMT = * )
+!                      READ( UNIT = iunrestart, FMT = * ) frozen(i)
                       !
-                      DO j = 1, dim1
+!                      DO j = 1, dim1
                          !
-                         READ( UNIT = iunrestart, FMT = * ) posold(j,i)
+!                         READ( UNIT = iunrestart, FMT = * ) posold(j,i)
                          !
-                      END DO
+!                      END DO
                       !
-                   END DO
+!                   END DO
                    !
-                ELSE
+!                ELSE
                    !
                    DO i = 1, nim_inp
                       !
@@ -331,7 +333,7 @@ MODULE path_io_routines
                       !
                    END DO
                    !
-                END IF
+!                END IF
                 !
              END IF
              !
@@ -400,7 +402,8 @@ MODULE path_io_routines
        !
        USE input_parameters, ONLY : if_pos
        USE io_files,         ONLY : iunrestart, path_file, tmp_dir
-       USE control_flags,    ONLY : conv_elec, lcoarsegrained
+!       USE control_flags,    ONLY : conv_elec, lcoarsegrained
+       USE control_flags,    ONLY : conv_elec
        USE path_variables,   ONLY : istep_path, nstep_path, pending_image, &
                                     dim1, num_of_images, pos, pes, grad_pes, &
                                     posold, frozen, lquick_min
@@ -484,16 +487,16 @@ MODULE path_io_routines
               !
               WRITE( UNIT = in_unit, FMT = '("Image: ",I4)' ) i
               !
-              IF ( lcoarsegrained ) THEN
+!              IF ( lcoarsegrained ) THEN
                  !
-                 DO j = 1, dim1
+!                 DO j = 1, dim1
                     !
-                    WRITE( UNIT = in_unit, &
-                           FMT = '(2(2X,F18.12))' ) pos(j,i), grad_pes(j,i)
+!                    WRITE( UNIT = in_unit, &
+!                           FMT = '(2(2X,F18.12))' ) pos(j,i), grad_pes(j,i)
                     !
-                 END DO
+!                 END DO
                  !
-              ELSE
+!              ELSE
                  !
                  WRITE( UNIT = in_unit, FMT = energy ) pes(i)
                  !
@@ -530,7 +533,7 @@ MODULE path_io_routines
                     !
                  END DO
                  !
-              END IF
+!              END IF
               !
            END DO
            !
@@ -555,16 +558,16 @@ MODULE path_io_routines
               WRITE( UNIT = in_unit, &
                      FMT = '(2(L1,1X))' ) frozen(i)
               !
-              IF ( lcoarsegrained ) THEN
+!              IF ( lcoarsegrained ) THEN
                  !
-                 DO j = 1, dim1
+!                 DO j = 1, dim1
                     !
-                    WRITE( UNIT = in_unit, &
-                           FMT = '(2X,F18.12)' ) posold(j,i)
+!                    WRITE( UNIT = in_unit, &
+!                           FMT = '(2X,F18.12)' ) posold(j,i)
                     !
-                 END DO
+!                 END DO
                  !
-              ELSE
+!              ELSE
                  !
                  DO j = 1, dim1, 3
                     !
@@ -575,7 +578,7 @@ MODULE path_io_routines
                     !
                  END DO
                  !
-              END IF
+!              END IF
               !
            END DO
            !
@@ -590,7 +593,7 @@ MODULE path_io_routines
        !-----------------------------------------------------------------------
        !
        USE constants,        ONLY : pi
-       USE control_flags,    ONLY : lcoarsegrained
+!       USE control_flags,    ONLY : lcoarsegrained
        USE cell_base,        ONLY : alat, at, bg
        USE ions_base,        ONLY : ityp, nat, if_pos, atm, tau_format
        USE path_formats,     ONLY : dat_fmt, int_fmt, xyz_fmt, axsf_fmt
@@ -685,7 +688,7 @@ MODULE path_io_routines
        CLOSE( UNIT = iundat )
        CLOSE( UNIT = iunint )
        !
-       IF ( lcoarsegrained ) RETURN
+!       IF ( lcoarsegrained ) RETURN
        !
        ! ... the *.xyz file is written here
        !

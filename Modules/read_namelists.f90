@@ -1496,22 +1496,22 @@ MODULE read_namelists_module
        !
        IF ( calculation == 'neb' .OR. calculation == 'smd' ) THEN
           !
-          IF ( phase_space == 'coarse-grained' ) THEN
+!          IF ( phase_space == 'coarse-grained' ) THEN
              !
-             full_phs_path_flag = .FALSE.
-             cg_phs_path_flag   = .TRUE.
+!             full_phs_path_flag = .FALSE.
+!             cg_phs_path_flag   = .TRUE.
              !
-             IF ( calculation /= 'neb' .AND. calculation /= 'smd' ) &
-                CALL errore( sub_name, &
-                           & ' coarse-grained phase-space is presently' // &
-                           & ' allowed only for neb or smd ', 1 )
+!             IF ( calculation /= 'neb' .AND. calculation /= 'smd' ) &
+!                CALL errore( sub_name, &
+!                           & ' coarse-grained phase-space is presently' // &
+!                           & ' allowed only for neb or smd ', 1 )
              !
-          ELSE
+!          ELSE
              !
              full_phs_path_flag = .TRUE.
              cg_phs_path_flag   = .FALSE.
              !
-          END IF
+!          END IF
           !
        END IF
        !

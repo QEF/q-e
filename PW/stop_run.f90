@@ -16,8 +16,10 @@ SUBROUTINE stop_run( flag )
   USE io_global,          ONLY : ionode
   USE mp_global,          ONLY : nimage, mp_global_end
   USE environment,        ONLY : environment_end
+!  USE control_flags,      ONLY : lpath, twfcollect, lconstrain, &
+!                                 lcoarsegrained, io_level, llondon
   USE control_flags,      ONLY : lpath, twfcollect, lconstrain, &
-                                 lcoarsegrained, io_level, llondon
+                                 io_level, llondon
   USE io_files,           ONLY : iunwfc, iunigk, iunefield, iunefieldm,&
                                  iunefieldp, iuntmp
   USE buffers,            ONLY : close_buffer
@@ -25,7 +27,7 @@ SUBROUTINE stop_run( flag )
   USE image_io_routines,   ONLY : io_image_stop
   USE london_module,      ONLY : dealloca_london
   USE constraints_module, ONLY : deallocate_constraint
-  USE metadyn_vars,       ONLY : deallocate_metadyn_vars
+!  USE metadyn_vars,       ONLY : deallocate_metadyn_vars
   USE input_parameters,   ONLY : deallocate_input_parameters
   USE bp,                 ONLY : lelfield
   !
@@ -120,7 +122,7 @@ SUBROUTINE stop_run( flag )
   !
   IF ( lconstrain ) CALL deallocate_constraint()
   !
-  IF ( lcoarsegrained ) CALL deallocate_metadyn_vars()
+!  IF ( lcoarsegrained ) CALL deallocate_metadyn_vars()
   !
   IF ( lpath ) CALL path_deallocation()
   !

@@ -167,7 +167,8 @@ SUBROUTINE iosys()
                             tqr_              => tqr, &
                             io_level, ethr, lscf, lbfgs, lmd, lpath, lneb,   &
                             lsmd, ldamped, lbands, llang,                    &
-                            lconstrain, lcoarsegrained, restart, twfcollect, &
+!                            lconstrain, lcoarsegrained, restart, twfcollect, &
+                            lconstrain, restart, twfcollect, &
                             use_para_diag, llondon, nofrac, do_makov_payne
   !
   USE wvfct,         ONLY : nbnd_ => nbnd
@@ -301,7 +302,7 @@ SUBROUTINE iosys()
   USE input_parameters, ONLY : nconstr_inp, ncolvar_inp
   !
   USE constraints_module,    ONLY : init_constraint
-  USE metadyn_vars,          ONLY : init_metadyn_vars
+!  USE metadyn_vars,          ONLY : init_metadyn_vars
   USE read_namelists_module, ONLY : read_namelists, sm_not_set
   USE london_module,         ONLY : init_london, lon_rcut, scal6
   USE us, ONLY : spline_ps_ => spline_ps
@@ -991,37 +992,37 @@ SUBROUTINE iosys()
      !
   END SELECT
   !
-  lcoarsegrained  = ( trim( phase_space ) == 'coarse-grained' )
+!  lcoarsegrained  = ( trim( phase_space ) == 'coarse-grained' )
   !
-  IF ( lcoarsegrained ) THEN
+!  IF ( lcoarsegrained ) THEN
      !
-     lmd = .true.
+!     lmd = .true.
      !
-     SELECT CASE( trim( ion_dynamics ) )
-     CASE( 'verlet' )
+!     SELECT CASE( trim( ion_dynamics ) )
+!     CASE( 'verlet' )
         !
-        CONTINUE
+!        CONTINUE
         !
-     CASE( 'langevin' )
+!     CASE( 'langevin' )
         !
-        llang = .true.
+!        llang = .true.
         !
-     CASE( 'damp' )
+!     CASE( 'damp' )
         !
-        ldamped = .true.
+!        ldamped = .true.
         !
-        epse = etot_conv_thr
-        epsf = forc_conv_thr
+!        epse = etot_conv_thr
+!        epsf = forc_conv_thr
         !
-     CASE DEFAULT
+!     CASE DEFAULT
         !
-        CALL errore( 'iosys', 'calculation=' // trim( calculation ) // &
-                   & ': ion_dynamics=' // trim( ion_dynamics ) // &
-                   & ' not supported', 1 )
+!        CALL errore( 'iosys', 'calculation=' // trim( calculation ) // &
+!                   & ': ion_dynamics=' // trim( ion_dynamics ) // &
+!                   & ' not supported', 1 )
         !
-     END SELECT
+!     END SELECT
      !
-  ENDIF
+!  ENDIF
   !
   ! ... "path" specific initialization of control variables
   !
@@ -1571,7 +1572,7 @@ SUBROUTINE iosys()
   !
   ! ... set variables for metadynamics
   !
-  IF ( lcoarsegrained ) CALL init_metadyn_vars()
+!  IF ( lcoarsegrained ) CALL init_metadyn_vars()
   !
   ! ... read atomic positions and unit cell from data file
   ! ... must be done before "verify_tmpdir" because the latter

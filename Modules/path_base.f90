@@ -61,9 +61,10 @@ MODULE path_base
       USE input_parameters, ONLY : pos_      => pos, &
                                    climbing_ => climbing, &
                                    restart_mode, nstep, input_images
-      USE control_flags,    ONLY : conv_elec, lcoarsegrained
+!      USE control_flags,    ONLY : conv_elec, lcoarsegrained
+      USE control_flags,    ONLY : conv_elec
       USE ions_base,        ONLY : nat, amass, ityp, if_pos
-      USE metadyn_vars,     ONLY : ncolvar
+!      USE metadyn_vars,     ONLY : ncolvar
       USE io_files,         ONLY : prefix, tmp_dir, path_file, dat_file, crd_file, &
                                    int_file, xyz_file, axsf_file, broy_file
       USE path_variables,   ONLY : climbing, pos, istep_path, nstep_path,    &
@@ -101,18 +102,18 @@ MODULE path_base
       ! ... the dimension of all "path" arrays (dim1) is set here
       ! ... ( it corresponds to the dimension of the configurational space )
       !
-      IF ( lcoarsegrained ) THEN
+!      IF ( lcoarsegrained ) THEN
          !
-         dim1 = ncolvar
+!         dim1 = ncolvar
          !
-         use_masses   = .FALSE.
-         use_freezing = .FALSE.
+!         use_masses   = .FALSE.
+!         use_freezing = .FALSE.
          !
-      ELSE
+!      ELSE
          !
          dim1 = 3*nat
          !
-      END IF
+!      END IF
       !
       IF ( nimage > 1 ) THEN
          !
@@ -902,7 +903,8 @@ MODULE path_base
     SUBROUTINE search_mep()
       !-----------------------------------------------------------------------
       !
-      USE control_flags,    ONLY : lneb, lsmd, lcoarsegrained
+!      USE control_flags,    ONLY : lneb, lsmd, lcoarsegrained
+      USE control_flags,    ONLY : lneb, lsmd
       USE path_variables,   ONLY : conv_path, istep_path, nstep_path,  &
                                    pending_image, activation_energy, &
                                    err_max, pes, climbing, CI_scheme,  &
@@ -956,15 +958,15 @@ MODULE path_base
          ! ... energies and gradients acting on each image of the path (in real
          ! ... space) are computed calling a driver for the scf calculations
          !
-         IF ( lcoarsegrained ) THEN
+!         IF ( lcoarsegrained ) THEN
             !
-            CALL born_oppenheimer_fes( stat )
+!            CALL born_oppenheimer_fes( stat )
             !
-         ELSE
+!         ELSE
             !
             CALL born_oppenheimer_pes( stat )
             !
-         END IF
+!         END IF
          !
          IF ( .NOT. stat ) THEN
             !
@@ -984,7 +986,7 @@ MODULE path_base
          !
          IF ( .NOT. fixed_tan ) tangent(:,:) = new_tangent()
          !
-         IF ( lcoarsegrained ) CALL fe_profile()
+!         IF ( lcoarsegrained ) CALL fe_profile()
          !
          IF ( CI_scheme == "auto" ) THEN
             !
@@ -1025,7 +1027,7 @@ MODULE path_base
          !
          CALL optimisation_step()
          !
-         IF ( lcoarsegrained ) CALL check_domain()
+!         IF ( lcoarsegrained ) CALL check_domain()
          !
          IF ( lsmd ) CALL reparametrise()
          !

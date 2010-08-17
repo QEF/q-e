@@ -185,7 +185,7 @@ MODULE control_flags
     lbands  =.FALSE., &! if .TRUE. the calc. is band structure
     lconstrain=.FALSE.,&! if .TRUE. the calc. is constraint
     ldamped =.FALSE., &! if .TRUE. the calc. is a damped dynamics
-    lcoarsegrained=.FALSE., &! if .TRUE. a coarse-grained phase-space is used
+!    lcoarsegrained=.FALSE., &! if .TRUE. a coarse-grained phase-space is used
     llondon =.FALSE., & ! if .TRUE. compute semi-empirical dispersion correction
     restart =.FALSE.   ! if .TRUE. restart from results of a preceding run
   !

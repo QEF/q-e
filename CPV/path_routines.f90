@@ -55,9 +55,10 @@ MODULE path_routines
       USE cell_base,     ONLY : alat, a1, a2, a3
       USE mp_global,     ONLY : mpime
       USE mp,            ONLY : mp_bcast, mp_barrier, mp_sum
-      USE control_flags, ONLY : lpath, lneb, lcoarsegrained, lconstrain, &
+!      USE control_flags, ONLY : lpath, lneb, lcoarsegrained, lconstrain, &
+      USE control_flags, ONLY : lpath, lneb, lconstrain, &
                                 lmd, tprnfor
-      USE metadyn_vars,  ONLY : init_metadyn_vars
+!      USE metadyn_vars,  ONLY : init_metadyn_vars
       USE wrappers,      ONLY : f_mkdir
       !
       IMPLICIT NONE
@@ -72,38 +73,38 @@ MODULE path_routines
       tprnfor    = .TRUE.
       nstep_path = nstep
       !
-      SELECT CASE( TRIM( phase_space ) )
-      CASE( 'full' )
+!      SELECT CASE( TRIM( phase_space ) )
+!      CASE( 'full' )
         !
-        lcoarsegrained  = .FALSE.
+!        lcoarsegrained  = .FALSE.
         !
-      CASE ( 'coarse-grained' )
+!      CASE ( 'coarse-grained' )
         !
-        lcoarsegrained  = .TRUE.
+!        lcoarsegrained  = .TRUE.
         !
-      END SELECT
+!      END SELECT
       !
-      IF ( lcoarsegrained ) THEN
+!      IF ( lcoarsegrained ) THEN
         !
-        CALL init_metadyn_vars()
+!        CALL init_metadyn_vars()
         !
-        lmd        = .TRUE.
-        lconstrain = .TRUE.
+!        lmd        = .TRUE.
+!        lconstrain = .TRUE.
         !
-        SELECT CASE( TRIM( ion_dynamics ) )
-        CASE( 'verlet', 'damp' )
+!        SELECT CASE( TRIM( ion_dynamics ) )
+!        CASE( 'verlet', 'damp' )
            !
-           CONTINUE
+!           CONTINUE
            !
-        CASE DEFAULT
+!        CASE DEFAULT
            !
-           CALL errore( 'iosys_path ', 'calculation=' // TRIM( calculation ) // &
-                      & ': ion_dynamics=' // TRIM( ion_dynamics ) // &
-                      & ' not supported', 1 )
+!           CALL errore( 'iosys_path ', 'calculation=' // TRIM( calculation ) // &
+!                      & ': ion_dynamics=' // TRIM( ion_dynamics ) // &
+!                      & ' not supported', 1 )
            !
-        END SELECT
+!        END SELECT
         !
-      END IF
+!      END IF
       !
       IF ( num_of_images < 2 ) &
          CALL errore( ' iosys ', 'calculation=' // TRIM( calculation ) // &

@@ -15,7 +15,8 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
   USE control_flags,            ONLY : iprint, isave, thdyn, tpre, iprsta,     &
                                        tfor, remove_rigid_rot, taurdr,         &
                                        tprnfor, tsdc, lconstrain, lwf, lneb,   &
-                                       lcoarsegrained, ndr, ndw, nomore, tsde, &
+!                                       lcoarsegrained, ndr, ndw, nomore, tsde, &
+                                        ndr, ndw, nomore, tsde, &
                                        tortho, tnosee, tnosep, trane, tranp,   &
                                        tsdp, tcp, tcap, ampre, amprp, tnoseh,  &
                                        tolp, ortho_eps, ortho_max, printwfc,   &
@@ -115,7 +116,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
   USE cp_interfaces,            ONLY : writefile, eigs, strucf, phfacs
   USE cp_interfaces,            ONLY : ortho, elec_fakekine, print_projwfc
   USE constraints_module,       ONLY : check_constraint, remove_constr_force
-  USE metadyn_base,             ONLY : set_target, mean_force
+!  USE metadyn_base,             ONLY : set_target, mean_force
   USE cp_autopilot,             ONLY : pilot
   USE ions_nose,                ONLY : ions_nose_allocate, ions_nose_shiftvar
   USE orthogonalize_base,       ONLY : updatc
@@ -400,7 +401,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
               usrt_tau0(:,:) = tau0(:,ind_bck(:))
               usrt_fion(:,:) = fion(:,ind_bck(:))
               !
-              IF ( lcoarsegrained ) CALL set_target()
+!              IF ( lcoarsegrained ) CALL set_target()
               !
               ! ... we first remove the component of the force along the 
               ! ... constrain gradient (this constitutes the initial guess 
@@ -438,7 +439,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
               !
               ! ... average value of the lagrange multipliers
               !
-              IF ( lcoarsegrained ) CALL mean_force( nfi, etot, 1.D0 )
+!              IF ( lcoarsegrained ) CALL mean_force( nfi, etot, 1.D0 )
               !
               DEALLOCATE( usrt_tau0, usrt_taup, usrt_fion )
               !

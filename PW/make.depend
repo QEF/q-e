@@ -720,7 +720,6 @@ input.o : ../Modules/io_files.o
 input.o : ../Modules/io_global.o
 input.o : ../Modules/ions_base.o
 input.o : ../Modules/kind.o
-input.o : ../Modules/metadyn_vars.o
 input.o : ../Modules/mm_dispersion.o
 input.o : ../Modules/mp.o
 input.o : ../Modules/mp_global.o
@@ -828,7 +827,6 @@ move_ions.o : ../Modules/io_files.o
 move_ions.o : ../Modules/io_global.o
 move_ions.o : ../Modules/ions_base.o
 move_ions.o : ../Modules/kind.o
-move_ions.o : ../Modules/metadyn_base.o
 move_ions.o : ../Modules/mp.o
 move_ions.o : ../Modules/mp_global.o
 move_ions.o : dynamics_module.o
@@ -1304,7 +1302,6 @@ stop_run.o : ../Modules/image_io_routines.o
 stop_run.o : ../Modules/input_parameters.o
 stop_run.o : ../Modules/io_files.o
 stop_run.o : ../Modules/io_global.o
-stop_run.o : ../Modules/metadyn_vars.o
 stop_run.o : ../Modules/mm_dispersion.o
 stop_run.o : ../Modules/mp_global.o
 stop_run.o : ../Modules/path_variables.o

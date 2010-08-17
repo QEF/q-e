@@ -165,7 +165,8 @@ MODULE input
      USE io_global,     ONLY : stdout
      USE autopilot,     ONLY : auto_check
      USE autopilot,     ONLY : restart_p
-     USE control_flags, ONLY : lcoarsegrained, ldamped
+!     USE control_flags, ONLY : lcoarsegrained, ldamped
+     USE control_flags, ONLY : ldamped
      USE control_flags, ONLY : ndw_        => ndw, &
                                ndr_        => ndr, &
                                iprint_     => iprint, &
@@ -568,16 +569,16 @@ MODULE input
           CALL errore(' control_flags ',' unknown electron_temperature '//TRIM(electron_temperature), 1 )
       END SELECT
       
-      SELECT CASE( TRIM( phase_space ) )
-      CASE( 'full' )
+!      SELECT CASE( TRIM( phase_space ) )
+!      CASE( 'full' )
          !
-         lcoarsegrained  = .FALSE.
+!         lcoarsegrained  = .FALSE.
          !
-      CASE ( 'coarse-grained' )
+!      CASE ( 'coarse-grained' )
          !
-         lcoarsegrained  = .TRUE.
+!         lcoarsegrained  = .TRUE.
          !
-      END SELECT
+!      END SELECT
       !
       ! ... Ions dynamics
 

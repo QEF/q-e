@@ -836,8 +836,10 @@ MODULE input_parameters
           ! 'coarse-grained'   a coarse-grained phase-space, defined by a set
           !                    of constraints, is used for the ionic dynamics
 
-        CHARACTER(len=80) :: phase_space_allowed(2)
-        DATA phase_space_allowed / 'full', 'coarse-grained' /
+!        CHARACTER(len=80) :: phase_space_allowed(2)
+!        DATA phase_space_allowed / 'full', 'coarse-grained' /
+        CHARACTER(len=80) :: phase_space_allowed(1)
+        DATA phase_space_allowed / 'full' /
 
         CHARACTER(len=80) :: ion_dynamics = 'none'
           ! set how ions should be moved
