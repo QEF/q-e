@@ -36,6 +36,7 @@
       use gvecs,                    only: gcuts
       use gvecb,                    only: gcutb
       USE fft_base,                 ONLY: dfftp, dffts
+      USE fft_scalar,               ONLY: cft_b_omp_init
       USE stick_base,               ONLY: pstickset
       USE control_flags,            ONLY: tdipole
       USE berry_phase,              ONLY: berry_setup
@@ -183,6 +184,10 @@ end if
          gcutb = ecut / tpibab / tpibab
          !
          CALL ggenb ( b1b, b2b, b3b, nr1b, nr2b, nr3b, nr1bx, nr2bx, nr3bx, gcutb )
+
+         ! initialize FFT table
+         
+         CALL cft_b_omp_init( nr1b, nr2b, nr3b )
 
       ELSE IF( okvan .OR. nlcc_any ) THEN
 
