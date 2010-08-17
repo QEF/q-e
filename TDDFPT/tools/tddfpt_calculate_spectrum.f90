@@ -301,7 +301,7 @@ if (ionode) then !No need for parallelization in this code
           !
       end do
 
-    alpha_temp(3)= -omega(3)*aimag(green(1,1)+green(2,2)+green(3,3))/3.d0 
+    alpha_temp(3)= omega(3)*aimag(green(1,1)+green(2,2)+green(3,3))/3.d0 
     !alpha is ready
     write(17,'(5x,"alpha",2x,3(e21.15,2x))') &
             start, alpha_temp(3)
@@ -343,7 +343,7 @@ if (ionode) then !No need for parallelization in this code
         !
         alpha_temp(1)=alpha_temp(2)
         alpha_temp(2)=alpha_temp(3)
-        alpha_temp(3)= -omega(3)*aimag(green(1,1)+green(2,2)+green(3,3))/3.d0 
+        alpha_temp(3)= omega(3)*aimag(green(1,1)+green(2,2)+green(3,3))/3.d0 
         ! 
         write(17,'(5x,"alpha",2x,3(e21.15,2x))') &
             start, alpha_temp(3)
@@ -392,7 +392,7 @@ if (ionode) then !No need for parallelization in this code
           !
       end do
 
-    alpha_temp(3)= -omega(3)*aimag(green(1,1)+green(2,2)+green(3,3))/3.d0 
+    alpha_temp(3)= omega(3)*aimag(green(1,1)+green(2,2)+green(3,3))/3.d0 
     !alpha is ready
     write(17,'(5x,"alpha",2x,3(e21.15,2x))') &
             start, alpha_temp(3)
@@ -421,6 +421,9 @@ close(17)
           write(20, '(3A1)', advance='no') achar(0), achar(0), achar(0)
          else
           wl=91.1266519/perceived_evaluated(i) !hc/hbar.omega=lambda (hbar.omega in rydberg units)
+          !
+          !WARNING alpha_temp duty change: now contains R G and B
+          !
           call wl_to_color(wl,alpha_temp(1),alpha_temp(2),alpha_temp(3))
           !Now the intensities
           !First the degradation toward the end
@@ -841,8 +844,14 @@ complex(kind=dp), intent(out) :: chi(:,:)
         call zgtsv(itermax,1,b,a,c,r(ip,:),itermax,info) !|w_t|=(w-L) |1,0,0,...,0|
         if(info /= 0) &
          call errore("tddfpt_pp", "Unable to solve tridiagonal system",1)
+
+        !p=-div.rho'
+        !p= chi . E
+        ! Thus
+        !chi = - <zeta|w_t>
+        ! Notice that brodening has a positive sign, thus the abs. coefficient is Im(tr(chi)) not -Im(Tr(chi)) as usual
         do ip2=1,n_ipol
-              chi(ip,ip2)=ZDOTC(itermax,zeta_store(ip,ip2,:),1,r(ip,:),1)
+              chi(ip,ip2)=-ZDOTC(itermax,zeta_store(ip,ip2,:),1,r(ip,:),1)
               chi(ip,ip2)=chi(ip,ip2)*cmplx(norm0(ip),0.0d0,dp)
         enddo
     enddo
