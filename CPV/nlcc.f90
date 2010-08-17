@@ -206,35 +206,72 @@
 ! output
       real(8), intent(inout):: fion1(3,nat)
 ! local
-      integer iss, ix, ig, is, ia, nfft, isa
-      real(8) fcc(3,nat), fac, boxdotgrid
+      integer :: iss, ix, ig, is, ia, nfft, isa
+      real(8) :: fac, res, boxdotgrid
       complex(8) ci, facg
       complex(8), allocatable :: qv(:)
+      real(8), allocatable :: fcc(:,:)
       external  boxdotgrid
+
+#ifdef __OPENMP
+      INTEGER :: itid, mytid, ntids, omp_get_thread_num, omp_get_num_threads
+      EXTERNAL :: omp_get_thread_num, omp_get_num_threads
+#endif
 !
       call start_clock( 'forcecc' )
       ci = (0.d0,1.d0)
-      fac = omega/DBLE(nr1*nr2*nr3*nspin)
-      fcc = 0.d0
 
+      fac = omega/DBLE(nr1*nr2*nr3*nspin)
+
+!$omp parallel default(none) &      
+!$omp          shared(nsp, na, nnrb, ngb, eigrb, dfftb, irb, nmb, npb, ci, rhocb, &
+!$omp                 gxb, nat, fac, upf, vxc, nspin, tpibab, fion1 ) &
+!$omp          private(mytid, ntids, is, ia, nfft, ig, isa, qv, itid, res, ix, fcc, facg, iss )
+
+
+      allocate( fcc( 3, nat ) )
       allocate( qv( nnrb ) )
+
+      fcc(:,:) = 0.d0
 
       isa = 0
 
-      do is=1,nsp
-         if( .not. upf(is)%nlcc ) go to 10
-#ifdef __PARA
-         do ia=1,na(is)
-            nfft=1
-            if ( dfftb%np3( ia + isa ) <= 0 ) go to 15
-#else
-         do ia=1,na(is),2
-!
-! two fft's on two atoms at the same time (when possible)
-!
-            nfft=2
-            if(ia.eq.na(is)) nfft=1
+#ifdef __OPENMP
+      mytid = omp_get_thread_num()  ! take the thread ID
+      ntids = omp_get_num_threads() ! take the number of threads
+      itid  = 0
 #endif
+
+      do is = 1, nsp
+
+         if( .not. upf(is)%nlcc ) then
+            isa = isa + na(is) 
+            cycle
+         end if 
+
+#ifdef __PARA
+
+         do ia = 1, na(is)
+            nfft = 1
+            if ( dfftb%np3( ia + isa ) <= 0 ) cycle
+#else
+         !
+         ! two fft's on two atoms at the same time (when possible)
+         !
+         do ia=1,na(is),2
+            nfft=2
+            if( ia .eq. na(is) ) nfft=1
+#endif
+
+#ifdef __OPENMP
+            IF ( mytid /= itid ) THEN
+               itid = MOD( itid + 1, ntids )
+               CYCLE
+            ELSE
+               itid = MOD( itid + 1, ntids )
+            END IF
+#endif
+
             do ix=1,3
                qv(:) = (0.d0, 0.d0)
                if (nfft.eq.2) then
@@ -253,31 +290,39 @@
                   end do
                end if
 !
-               call invfft('Box',qv,dfftb,ia+isa)
+               call invfft( 'Box', qv, dfftb, ia+isa )
                !
                ! note that a factor 1/2 is hidden in fac if nspin=2
                !
                do iss=1,nspin
-                  fcc(ix,ia+isa) = fcc(ix,ia+isa) + fac *               &
-     &                 boxdotgrid(irb(1,ia  +isa),1,qv,vxc(1,iss))
-                  if (nfft.eq.2)                                         &
-     &               fcc(ix,ia+1+isa) = fcc(ix,ia+1+isa) + fac *           &
-     &                    boxdotgrid(irb(1,ia+1+isa),2,qv,vxc(1,iss))
+                  res = boxdotgrid(irb(1,ia  +isa),1,qv,vxc(1,iss))
+                  fcc(ix,ia+isa) = fcc(ix,ia+isa) + fac * res
+                  if (nfft.eq.2) then
+                     res = boxdotgrid(irb(1,ia+1+isa),2,qv,vxc(1,iss))
+                     fcc(ix,ia+1+isa) = fcc(ix,ia+1+isa) + fac * res 
+                  end if
                end do
             end do
-15          continue
          end do
-10       continue
+
          isa = isa + na(is)
+
       end do
+
 !
+!$omp critical
       do ia = 1, nat
         fion1(:,ia) = fion1(:,ia) + fcc(:,ia)
       end do
+!$omp end critical
 
       deallocate( qv )
+      deallocate( fcc )
+
+!$omp end parallel
 !
       call stop_clock( 'forcecc' )
+
       return
       end subroutine force_cc
 
@@ -312,29 +357,62 @@
       complex(8) ci
       complex(8), allocatable :: wrk1(:)
       complex(8), allocatable :: qv(:)
+
+#ifdef __OPENMP
+      INTEGER :: itid, mytid, ntids, omp_get_thread_num, omp_get_num_threads
+      EXTERNAL :: omp_get_thread_num, omp_get_num_threads
+#endif
 !
       call start_clock( 'set_cc' )
       ci=(0.d0,1.d0)
-!
-      allocate( qv ( nnrb ) )
+
       allocate( wrk1 ( nnr ) )
       wrk1 (:) = (0.d0, 0.d0)
 !
+!$omp parallel default(none) &      
+!$omp          shared(nsp, na, nnrb, ngb, eigrb, dfftb, irb, nmb, npb, ci, rhocb, &
+!$omp                 nat, upf, wrk1 ) &
+!$omp          private(mytid, ntids, is, ia, nfft, ig, isa, qv, itid )
+
+      allocate( qv ( nnrb ) )
+!
       isa = 0
-      do is=1,nsp
-         if (.not.upf(is)%nlcc) go to 10
+
+#ifdef __OPENMP
+      mytid = omp_get_thread_num()  ! take the thread ID
+      ntids = omp_get_num_threads() ! take the number of threads
+      itid  = 0
+#endif
+
+      do is = 1, nsp
+         !
+         if (.not.upf(is)%nlcc) then
+            isa = isa + na(is)
+            cycle
+         end if
+         !
 #ifdef __PARA
          do ia=1,na(is)
             nfft=1
-            if ( dfftb%np3( ia + isa ) <= 0 ) go to 15
+            if ( dfftb%np3( ia + isa ) <= 0 ) cycle
 #else
+         !
+         ! two ffts at the same time, on two atoms (if possible: nfft=2)
+         !
          do ia=1,na(is),2
             nfft=2
             if( ia.eq.na(is) ) nfft=1
-!
-! two ffts at the same time, on two atoms (if possible: nfft=2)
-!
 #endif
+
+#ifdef __OPENMP
+            IF ( mytid /= itid ) THEN
+               itid = MOD( itid + 1, ntids )
+               CYCLE
+            ELSE
+               itid = MOD( itid + 1, ntids )
+            END IF
+#endif
+
             qv(:) = (0.d0, 0.d0)
             if(nfft.eq.2)then
                do ig=1,ngb
@@ -350,20 +428,21 @@
                end do
             endif
 !
-            call invfft('Box',qv,dfftb,isa+ia)
+            call invfft( 'Box', qv, dfftb, isa+ia )
 !
             call box2grid(irb(1,ia+isa),1,qv,wrk1)
             if (nfft.eq.2) call box2grid(irb(1,ia+1+isa),2,qv,wrk1)
 !
-15          continue
          end do
-10       continue
          isa = isa + na(is)
       end do
 !
-      call dcopy(nnr,wrk1,2,rhoc,1)
-
       deallocate( qv  )
+
+!$omp end parallel
+
+      call dcopy( nnr, wrk1, 2, rhoc, 1 )
+
       deallocate( wrk1 )
 !
       call stop_clock( 'set_cc' )
