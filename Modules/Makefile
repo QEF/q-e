@@ -30,6 +30,7 @@ fft_scalar.o \
 fft_types.o \
 funct.o \
 griddim.o \
+image_io_routines.o \
 input_parameters.o \
 io_files.o \
 io_global.o  \

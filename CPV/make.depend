@@ -553,6 +553,7 @@ ksstates.o : ../Modules/mp_global.o
 ksstates.o : ../Modules/recvec.o
 ksstates.o : ../Modules/xml_io_base.o
 ksstates.o : cp_interfaces.o
+main_loops.o : ../Modules/image_io_routines.o
 main_loops.o : ../Modules/ions_base.o
 main_loops.o : ../Modules/kind.o
 main_loops.o : ../Modules/path_base.o
@@ -864,11 +865,11 @@ spline.o : ../Modules/kind.o
 stop_run.o : ../Modules/constraints_module.o
 stop_run.o : ../Modules/control_flags.o
 stop_run.o : ../Modules/environment.o
+stop_run.o : ../Modules/image_io_routines.o
 stop_run.o : ../Modules/io_files.o
 stop_run.o : ../Modules/io_global.o
 stop_run.o : ../Modules/metadyn_vars.o
 stop_run.o : ../Modules/mp_global.o
-stop_run.o : ../Modules/path_io_routines.o
 stop_run.o : ../Modules/path_variables.o
 stop_run.o : ../Modules/recvec.o
 stress.o : ../Modules/cell_base.o

@@ -22,7 +22,7 @@ SUBROUTINE stop_run( flag )
                                  iunefieldp, iuntmp
   USE buffers,            ONLY : close_buffer
   USE path_variables,     ONLY : path_deallocation
-  USE path_io_routines,   ONLY : io_path_stop
+  USE image_io_routines,   ONLY : io_image_stop
   USE london_module,      ONLY : dealloca_london
   USE constraints_module, ONLY : deallocate_constraint
   USE metadyn_vars,       ONLY : deallocate_metadyn_vars
@@ -42,7 +42,7 @@ SUBROUTINE stop_run( flag )
 #endif
   IF ( flag2 ) THEN
      !
-     CALL io_path_stop()
+     CALL io_image_stop()
      !
   ELSE
      !

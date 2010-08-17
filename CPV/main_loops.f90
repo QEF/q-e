@@ -17,13 +17,14 @@ SUBROUTINE neb_loop( )
   !
   USE path_base,        ONLY : initialize_path, search_mep
   USE path_routines,    ONLY : iosys_path
-  USE path_io_routines, ONLY : io_path_start, io_path_stop, path_summary
+  USE path_io_routines, ONLY : path_summary
+  USE image_io_routines, ONLY : io_image_start, io_image_stop
   !
   IMPLICIT NONE
   !
   CALL iosys_path()
   !
-  CALL io_path_start()
+  CALL io_image_start()
   !
   CALL initialize_path()
   !
@@ -31,7 +32,7 @@ SUBROUTINE neb_loop( )
   !
   CALL search_mep()
   !
-  CALL io_path_stop()
+  CALL io_image_stop()
   !
   RETURN
   !

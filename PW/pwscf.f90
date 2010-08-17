@@ -18,7 +18,8 @@ PROGRAM pwscf
   USE path_variables,   ONLY : conv_path
   USE check_stop,       ONLY : check_stop_init
   USE path_base,        ONLY : initialize_path, search_mep
-  USE path_io_routines, ONLY : io_path_start, path_summary
+  USE path_io_routines, ONLY : path_summary
+  USE image_io_routines, ONLY : io_image_start
   USE mp_global,        ONLY : mp_startup
 #if defined(__MS2)
   USE ms2,              ONLY : MS2_enabled,                 &
@@ -58,7 +59,7 @@ PROGRAM pwscf
   !
   IF ( lpath ) THEN
      !
-     CALL io_path_start()
+     CALL io_image_start()
      !
      CALL initialize_path()
      !

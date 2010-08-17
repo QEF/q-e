@@ -26,63 +26,12 @@ MODULE path_io_routines
   !
   PRIVATE
   !
-  PUBLIC :: io_path_start, io_path_stop
   PUBLIC :: path_summary
   PUBLIC :: read_restart
   PUBLIC :: write_restart, write_dat_files, write_output
   PUBLIC :: new_image_init, get_new_image, stop_other_images
   !
   CONTAINS
-     !
-     !-----------------------------------------------------------------------
-     SUBROUTINE io_path_start()
-       !-----------------------------------------------------------------------
-       !
-       USE io_global, ONLY : stdout
-       USE io_global, ONLY : ionode, ionode_id
-       USE mp_global, ONLY : me_image, root_image
-       !
-       IMPLICIT NONE
-       !
-       !
-       ! ... the I/O node is set again according to the number of parallel
-       ! ... images that have been required: for each parallel image there
-       ! ... is only one node that does I/O
-       !
-       ionode = ( me_image == root_image )
-       ionode_id = root_image
-       !
-       ! ... stdout is connected to a file ( different for each image )
-       ! ... via unit 117 ( only root_image performs I/O )
-       !
-       IF ( ionode ) stdout = 117
-       !
-       RETURN
-       !
-     END SUBROUTINE io_path_start
-     !
-     !
-     !-----------------------------------------------------------------------
-     SUBROUTINE io_path_stop()
-       !-----------------------------------------------------------------------
-       !
-       USE io_global, ONLY : stdout, io_global_start
-       USE mp_global, ONLY : mpime, root
-       !
-       IMPLICIT NONE
-       !
-       !
-       ! ... the original I/O node is set again
-       !
-       CALL io_global_start( mpime, root )
-       !
-       ! ... stdout is reconnected to standard output unit
-       !
-       stdout = 6
-       !
-       RETURN
-       !
-     END SUBROUTINE io_path_stop
      !
      !-----------------------------------------------------------------------
      SUBROUTINE path_summary()

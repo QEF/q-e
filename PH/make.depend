@@ -694,9 +694,9 @@ phescf.o : phcom.o
 phescf.o : ramanm.o
 phonon.o : ../Modules/check_stop.o
 phonon.o : ../Modules/environment.o
+phonon.o : ../Modules/image_io_routines.o
 phonon.o : ../Modules/io_global.o
 phonon.o : ../Modules/mp_global.o
-phonon.o : ../Modules/path_io_routines.o
 phonon.o : ph_restart.o
 phonon.o : phcom.o
 phonon.o : save_ph_input.o

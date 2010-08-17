@@ -78,6 +78,10 @@ griddim.o : io_global.o
 griddim.o : kind.o
 griddim.o : mp.o
 griddim.o : mp_global.o
+image_io_routines.o : io_global.o
+image_io_routines.o : kind.o
+image_io_routines.o : mp.o
+image_io_routines.o : mp_global.o
 input_parameters.o : kind.o
 input_parameters.o : parameters.o
 input_parameters.o : wannier_new.o
@@ -270,6 +274,7 @@ wave_base.o : mp.o
 wave_base.o : mp_global.o
 wave_base.o : random_numbers.o
 wavefunctions.o : kind.o
+wrappers.o : io_global.o
 wrappers.o : kind.o
 write_upf_v2.o : ../iotk/src/iotk_module.o
 write_upf_v2.o : kind.o

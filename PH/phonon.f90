@@ -47,7 +47,7 @@ PROGRAM phonon
   USE ph_restart,      ONLY : ph_writefile, destroy_status_run
   USE save_ph,         ONLY : clean_input_variables
   USE mp_global,       ONLY: mp_startup, nimage
-  USE path_io_routines, ONLY : io_path_start
+  USE image_io_routines, ONLY : io_image_start
   USE environment,     ONLY: environment_start
 
   !
@@ -62,7 +62,7 @@ PROGRAM phonon
   !
 #ifdef __PARA
   CALL mp_startup ( )
-  IF (nimage>1) CALL io_path_start()
+  IF (nimage>1) CALL io_image_start()
 #endif
   CALL environment_start ( code )
   !

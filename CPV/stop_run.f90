@@ -18,7 +18,7 @@ SUBROUTINE stop_run( flag )
   USE io_files,           ONLY : prefix
   USE environment,        ONLY : environment_end
   USE path_variables,     ONLY : path_deallocation
-  USE path_io_routines,   ONLY : io_path_stop
+  USE image_io_routines,   ONLY : io_image_stop
   USE constraints_module, ONLY : deallocate_constraint
   USE metadyn_vars,       ONLY : deallocate_metadyn_vars
   USE mp_global,          ONLY : mp_global_end
@@ -32,7 +32,7 @@ SUBROUTINE stop_run( flag )
   !
   CALL environment_end( program_name )
   !
-  IF ( lpath ) CALL io_path_stop()
+  IF ( lpath ) CALL io_image_stop()
   !
   CALL deallocate_modules_var()
   !

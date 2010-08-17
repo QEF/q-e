@@ -564,6 +564,7 @@ gen_us_dy.o : ../Modules/kind.o
 gen_us_dy.o : ../Modules/splinelib.o
 gen_us_dy.o : ../Modules/uspp.o
 gen_us_dy.o : pwcom.o
+gen_us_test.o : ../Modules/kind.o
 gen_us_vkb0.o : ../Modules/cell_base.o
 gen_us_vkb0.o : ../Modules/constants.o
 gen_us_vkb0.o : ../Modules/io_global.o
@@ -1029,6 +1030,7 @@ pwcom.o : ../Modules/recvec.o
 pwscf.o : ../Modules/check_stop.o
 pwscf.o : ../Modules/control_flags.o
 pwscf.o : ../Modules/environment.o
+pwscf.o : ../Modules/image_io_routines.o
 pwscf.o : ../Modules/io_global.o
 pwscf.o : ../Modules/mp_global.o
 pwscf.o : ../Modules/parameters.o
@@ -1092,6 +1094,7 @@ read_pseudo.o : ../Modules/read_uspp.o
 read_pseudo.o : ../Modules/upf.o
 read_pseudo.o : ../Modules/upf_to_internal.o
 read_pseudo.o : ../Modules/uspp.o
+read_pseudo.o : ../Modules/wrappers.o
 realus.o : ../Modules/atom.o
 realus.o : ../Modules/cell_base.o
 realus.o : ../Modules/constants.o
@@ -1297,13 +1300,13 @@ spinor.o : ../Modules/kind.o
 stop_run.o : ../Modules/constraints_module.o
 stop_run.o : ../Modules/control_flags.o
 stop_run.o : ../Modules/environment.o
+stop_run.o : ../Modules/image_io_routines.o
 stop_run.o : ../Modules/input_parameters.o
 stop_run.o : ../Modules/io_files.o
 stop_run.o : ../Modules/io_global.o
 stop_run.o : ../Modules/metadyn_vars.o
 stop_run.o : ../Modules/mm_dispersion.o
 stop_run.o : ../Modules/mp_global.o
-stop_run.o : ../Modules/path_io_routines.o
 stop_run.o : ../Modules/path_variables.o
 stop_run.o : buffers.o
 stop_run.o : pwcom.o
