@@ -38,7 +38,7 @@
 !
       USE kinds,         ONLY: DP
       use fft_base,      only: dfftp, dffts, dfftb
-      use fft_scalar,    only: cfft3d, cfft3ds, cft_b
+      use fft_scalar,    only: cfft3d, cfft3ds, cft_b, cft_b_omp
       use fft_parallel,  only: tg_cft3s
       USE fft_types,     only: fft_dlay_descriptor
       use mp_global,     only: use_task_groups
@@ -71,27 +71,29 @@
          IF( dfft%nr1  /= dfftb%nr1  .OR. dfft%nr2  /= dfftb%nr2  .OR. dfft%nr3  /= dfftb%nr3 .OR. &
              dfft%nr1x /= dfftb%nr1x .OR. dfft%nr2x /= dfftb%nr2x .OR. dfft%nr3x /= dfftb%nr3x ) &
             CALL errore( ' invfft ', ' inconsistent descriptor for Box fft ' , 1 )
+!$omp master
          call start_clock( 'fftb' )
+!$omp end master 
       ELSE 
          call errore( ' invfft ', ' unknown grid: '//grid_type , 1 )
       END IF
 
 #if defined __PARA && !defined __USE_3D_FFT
 
-      IF( grid_type == 'Box' ) THEN
-         imin3 = dfftb%imin3( ia )
-         imax3 = dfftb%imax3( ia )
-         np3   = dfftb%np3( ia )   ! imax3 - imin3 + 1
-      END IF
-      
       IF( grid_type == 'Dense' ) THEN
          call tg_cft3s( f, dfftp, 1 )
       ELSE IF( grid_type == 'Smooth' ) THEN
          call tg_cft3s( f, dffts, 1 )
       ELSE IF( grid_type == 'Wave' ) THEN
          call tg_cft3s( f, dffts, 2, use_task_groups )
-      ELSE IF( grid_type == 'Box' .AND. np3 > 0 ) THEN
-         call cft_b( f, dfftb%nr1, dfftb%nr2, dfftb%nr3, dfftb%nr1x, dfftb%nr2x, dfftb%nr3x, imin3, imax3, 1 )
+      ELSE IF( grid_type == 'Box' .AND.  dfftb%np3( ia ) > 0 ) THEN
+#if defined __OPENMP && defined __FFTW
+         call cft_b_omp( f, dfftb%nr1, dfftb%nr2, dfftb%nr3, &
+                            dfftb%nr1x, dfftb%nr2x, dfftb%nr3x, dfftb%imin3( ia ), dfftb%imax3( ia ), 1 )
+#else
+         call cft_b( f, dfftb%nr1, dfftb%nr2, dfftb%nr3, &
+                        dfftb%nr1x, dfftb%nr2x, dfftb%nr3x, dfftb%imin3( ia ), dfftb%imax3( ia ), 1 )
+#endif
       END IF
 
 #else
@@ -115,7 +117,9 @@
       ELSE IF( grid_type == 'Wave' ) THEN
          call stop_clock('fftw')
       ELSE IF( grid_type == 'Box' ) THEN
+!$omp master
          call stop_clock( 'fftb' )
+!$omp end master
       END IF
 !
       return
@@ -485,7 +489,9 @@
      &                 CALL errore('box2grid','ibig1 wrong',ibig1)
                   ibig=ibig1+(ibig2-1)*nr1x+(ibig3-1)*nr1x*nr2x
                   ir=ir1+(ir2-1)*nr1bx+(ir3-1)*nr1bx*nr2bx
+!$omp critical
                   vr(ibig) = vr(ibig)+qv(nfft,ir)
+!$omp end critical
                END DO
             END DO
          END IF
