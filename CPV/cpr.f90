@@ -725,7 +725,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
         !
      END IF
      !
-     IF ( thdyn ) CALL emass_precond( ema0bg, ggp, ngw, tpiba2, emass_cutoff )
+     IF ( thdyn .AND. tfirst ) CALL emass_precond( ema0bg, ggp, ngw, tpiba2, emass_cutoff )
      !
      ekincm = ekinc0
      !  
