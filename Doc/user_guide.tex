@@ -1,5 +1,5 @@
 \documentclass[12pt,a4paper]{article}
-\def\version{4.2.0}
+\def\version{post4.2}
 \def\qe{{\sc Quantum ESPRESSO}}
 
 \usepackage{html}
@@ -3836,11 +3836,14 @@ links ``learn'' for documentation, ``contacts'' if you need
 somebody to talk with. The mailing list \texttt{pw\_forum} is
 the typical place where to ask questions about \qe.
 
+%More FAQS:
 % how/where to submit problems 
 % whom to contact for which problem (download, web, wiki, qeforge,
-% mailing list, bug, help ...)
+%    mailing list, bug, help ...)
 % how to contact maintainers
 % how to submit a bug report
+% which hardware for QE
+% How to find E(V) for a noncubic crystal  
 
 \subsection{Installation}
 
@@ -3977,6 +3980,8 @@ is another excellent place to
 find structures, though you will have to use it in conjunction with
 the Bilbao crystallography server (\texttt{http://www.cryst.ehu.es}),  
 and have some understanding of space groups and Wyckoff positions".
+See also:
+\texttt{http://cci.lbl.gov/cctbx/index.html}.
 
 \paragraph{How can I generate a supercell?}
 
@@ -3987,7 +3992,7 @@ small program to translate atoms, you can
 (http://exciting-code.org) to generate the supercell,
 use 'fropho' (http://fropho.sourceforge.net) to check the symmetry''
 (Kun Yin, April 2009)
-\item ``use the PHON code: http://chianti.geol.ucl.ac.uk/\~{}dario/''
+\item ``use the PHON code: http://www.homepages.ucl.ac.uk/\~{}ucfbdxa/''
 (Eyvaz Isaev, April 2009).
 \end{itemize}
 
@@ -4260,5 +4265,3 @@ in insulators?}
 You cannot: the current implementation is for metals only.
 
 \end{document}
-More FAQS:
-- How to find E(V) for a noncubic crystal  
