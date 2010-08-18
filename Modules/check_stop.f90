@@ -46,7 +46,6 @@ MODULE check_stop
        !
        IMPLICIT NONE
        !
-       LOGICAL            :: tex
        REAL(DP), EXTERNAL :: cclock
        !
        IF ( tinit ) &

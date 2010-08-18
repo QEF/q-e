@@ -788,7 +788,6 @@
 
           IF (ionode) WRITE( stdout,118)
  118      FORMAT(3X,'            n.st   n.stw   n.sts    n.g    n.gw   n.gs')
- 119      FORMAT(3X,'     PEs    n.st   n.stw   n.sts    n.g    n.gw   n.gs')
           WRITE( stdout,121) minval(nstp),  minval(nstpw), minval(nstps), minval(sstp), minval(sstpw), minval(sstps)
           WRITE( stdout,122) maxval(nstp),  maxval(nstpw), maxval(nstps), maxval(sstp), maxval(sstpw), maxval(sstps)
 !          DO ip = 1, nproc_pool
@@ -802,7 +801,6 @@
  120      FORMAT(3X,7I8)
  121      FORMAT(3X,'min    ',6I8)
  122      FORMAT(3X,'max    ',6I8)
- 123      FORMAT(3X,'total  ',6I8)
 
 
           DEALLOCATE( ist )

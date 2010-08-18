@@ -2081,22 +2081,22 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, isign, &
       INTEGER, SAVE :: k
 !$omp threadprivate (k)
 
-      IF ( ( cft_b_bw_planz == 0 ) .or. ( cft_b_bw_planx == 0 ) .or. ( cft_b_bw_plany == 0 ) ) THEN
-         CALL errore('cft_b_omp','plan not initialized',1)
-      END IF
-
       if ( -sgn > 0 ) then
          CALL errore('cft_b_omp','forward transform not implemented',1)
       end if
 
-      !  first check consistency
+#if defined __FFTW
+
+      IF ( ( cft_b_bw_planz == 0 ) .or. ( cft_b_bw_planx == 0 ) .or. ( cft_b_bw_plany == 0 ) ) THEN
+         CALL errore('cft_b_omp','plan not initialized',1)
+      END IF
+
+      !  consistency check
 
       IF ( ( nx /= cft_b_dims(1) ) .or. ( ny /= cft_b_dims(2) ) .or. ( nz /= cft_b_dims(3) ) ) THEN
          CALL errore('cft_b_omp', 'dimensions are inconsistent with the existing plan',1) 
       END IF
 
-#if defined __FFTW
-      !
       !  fft along Z
       !
       call FFTW_INPLACE_DRV_1D( cft_b_bw_planz, ldx*ldy, f(1), ldx*ldy, 1 )

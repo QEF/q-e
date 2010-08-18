@@ -103,10 +103,8 @@ CONTAINS
       REAL(DP), INTENT(in) :: tau_units
       !
       INTEGER     :: i, j
-      INTEGER     :: n, ia, ia0, ia1, ia2, ia3, n_type_coord1
+      INTEGER     :: ia, ia0, ia1, ia2, ia3, n_type_coord1
       REAL(DP)    :: d0(3), d1(3), d2(3)
-      REAL(DP)    :: C00, C01, C02, C11, C12, C22
-      REAL(DP)    :: D01, D12
       REAL(DP)    :: smoothing, r_c
       INTEGER     :: type_coord1, type_coord2
       REAL(DP)    :: dtau(3), norm_dtau
@@ -445,7 +443,7 @@ CONTAINS
          !-------------------------------------------------------------------
          !
          INTEGER, INTENT(in) :: ia
-         REAL(DP) :: x01(3),x12(3),phi,res
+         REAL(DP) :: x01(3),x12(3),phi
          !
          ia0 = anint( constr(1,ia) )
          ia1 = anint( constr(2,ia) )
@@ -579,9 +577,8 @@ CONTAINS
       INTEGER     :: ia, ia0, ia1, ia2, ia3, n_type_coord1
       REAL(DP)    :: d0(3), d1(3), d2(3), n1, x01(3), x12(3), x20(3), phi, X
       REAL(DP)    :: s012,x01x12,d0phi(3),d1phi(3),d2phi(3)
-      REAL(DP)    :: inv_den, fac
-      REAL(DP)    :: C00, C01, C02, C11, C12, C22
-      REAL(DP)    :: D01, D12, invD01, invD12
+      REAL(DP)    :: inv_den
+      REAL(DP)    :: C00, C01, C11
       REAL(DP)    :: smoothing, r_c
       INTEGER     :: type_coord1, type_coord2
       REAL(DP)    :: dtau(3), norm_dtau, norm_dtau_sq, expo
