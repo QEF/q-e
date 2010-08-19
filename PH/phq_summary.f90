@@ -24,7 +24,7 @@ subroutine phq_summary
   USE klist,         ONLY : lgauss, degauss, ngauss, nkstot, xk, wk
   USE gvect,         ONLY : ecutwfc, dual, nr1, nr2, nr3, gcutm, ngm
   USE gsmooth,       ONLY : doublegrid, nr1s, nr2s, nr3s, gcutms, ngms
-  USE symm_base,     ONLY : s, sr, ftau, sname
+  USE symm_base,     ONLY : s, sr, ftau, sname, t_rev
   USE constants,     ONLY : amconv
   USE noncollin_module, ONLY : noncolin
   USE spin_orb,      ONLY : lspinorb, domag
@@ -155,6 +155,9 @@ subroutine phq_summary
            isym = irgq (isymq)
         endif
         WRITE( stdout, '(/6x,"isym = ",i2,5x,a45/)') isymq, sname (isym)
+        IF (noncolin.and.domag) &
+            WRITE(stdout,'(1x, "Time Reversal",i3)') t_rev(isym)
+
         if (ftau (1, isym) .ne.0.or.ftau (2, isym) .ne.0.or.ftau (3, &
              isym) .ne.0) then
            ft1 = at (1, 1) * ftau (1, isym) / nr1 + at (1, 2) * ftau ( &
