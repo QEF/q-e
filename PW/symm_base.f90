@@ -21,7 +21,7 @@ MODULE symm_base
   !
   ! ... Exported variables
   !
-  PUBLIC :: s, sr, sname, ftau, nrot, nsym, t_rev, &
+  PUBLIC :: s, sr, sname, ftau, nrot, nsym, t_rev, no_t_rev, &
             time_reversal, irt, invs, invsym, is_symmorphic, d1, d2, d3
   INTEGER :: &
        s(3,3,48),            &! symmetry matrices, in crystal axis
@@ -39,7 +39,9 @@ MODULE symm_base
   LOGICAL :: &
        time_reversal=.true., &! if .TRUE. the system has time_reversal symmetry
        invsym,               &! if .TRUE. the system has inversion symmetry
-       is_symmorphic          ! if .TRUE. the space group is symmorphic
+       is_symmorphic,        &! if .TRUE. the space group is symmorphic
+       no_t_rev=.FALSE.       ! if .TRUE. remove the symmetries that 
+                              ! require time reversal               
   REAL(DP),TARGET :: &
        d1(3,3,48),           &! matrices for rotating spherical
        d2(5,5,48),           &! harmonics (d1 for l=1, ...)
@@ -686,8 +688,12 @@ subroutine sgam_at_mag ( nat, m_loc, sym )
            ! not a magnetic symmetry
            sym(irot) = .false.
         else if( t2 .and. .not. t1 ) then
-           ! magnetic symmetry with time reversal
-           t_rev(irot) = 1
+           ! magnetic symmetry with time reversal, if allowed
+           IF (no_t_rev) THEN
+              sym(irot) = .false.
+           ELSE
+              t_rev(irot) = 1
+           ENDIF
         end if
         !
      end if

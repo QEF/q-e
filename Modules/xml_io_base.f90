@@ -864,12 +864,13 @@ MODULE xml_io_base
     !
     !------------------------------------------------------------------------
     SUBROUTINE write_symmetry( ibrav, symm_type, nrot, nsym, invsym, noinv, &
+                               time_reversal, no_t_rev, &
                                nr1, nr2, nr3, ftau, s, sname, irt, nat, t_rev )
       !------------------------------------------------------------------------
       !
       INTEGER,          INTENT(IN) :: ibrav, nrot, nsym,  nr1, nr2, nr3
       CHARACTER(LEN=*), INTENT(IN) :: symm_type
-      LOGICAL,          INTENT(IN) :: invsym, noinv
+      LOGICAL,          INTENT(IN) :: invsym, noinv, time_reversal, no_t_rev
       INTEGER,          INTENT(IN) :: s(:,:,:), ftau(:,:)
       CHARACTER(LEN=*), INTENT(IN) :: sname(:)
       INTEGER,          INTENT(IN) :: irt(:,:), nat, t_rev(:)
@@ -889,6 +890,10 @@ MODULE xml_io_base
       CALL iotk_write_dat( iunpun, "INVERSION_SYMMETRY", invsym )
       !
       CALL iotk_write_dat( iunpun, "DO_NOT_USE_TIME_REVERSAL", noinv )
+      !
+      CALL iotk_write_dat( iunpun, "TIME_REVERSAL_FLAG", time_reversal )
+      !
+      CALL iotk_write_dat( iunpun, "NO_TIME_REV_OPERATIONS", no_t_rev )
       !
       CALL iotk_write_dat( iunpun, "NUMBER_OF_ATOMS", nat )
       !

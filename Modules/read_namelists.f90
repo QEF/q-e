@@ -204,6 +204,8 @@ MODULE read_namelists_module
        angle2 = 0.0_DP
        report = 1
        !
+       no_t_rev = .FALSE.
+       !
        assume_isolated = 'none'
        !
        one_atom_occupations=.FALSE.
@@ -797,6 +799,7 @@ MODULE read_namelists_module
        CALL mp_bcast( london_s6,                 ionode_id )
        CALL mp_bcast( london_rcut,               ionode_id )
        !
+       CALL mp_bcast( no_t_rev,                  ionode_id )
 
        RETURN
        !

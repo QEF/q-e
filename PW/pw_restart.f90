@@ -95,7 +95,7 @@ MODULE pw_restart
                                        Hubbard_U, Hubbard_alpha
       USE spin_orb,             ONLY : lspinorb, domag
       USE symm_base,            ONLY : nrot, nsym, invsym, s, ftau, irt, &
-                                       t_rev, sname
+                                       t_rev, sname, time_reversal, no_t_rev
       USE lsda_mod,             ONLY : nspin, isk, lsda, starting_magnetization
       USE noncollin_module,     ONLY : angle1, angle2, i_cons, mcons, bfield, &
                                        lambda
@@ -341,6 +341,7 @@ MODULE pw_restart
 !-------------------------------------------------------------------------------
          !
          CALL write_symmetry( ibrav, symm_type, nrot, nsym, invsym, noinv, &
+                              time_reversal, no_t_rev, &
                               nr1, nr2, nr3, ftau, s, sname, irt, nat, t_rev )
          !
 !-------------------------------------------------------------------------------
@@ -1693,7 +1694,8 @@ MODULE pw_restart
       !------------------------------------------------------------------------
       !
       USE symm_base, ONLY : nrot, nsym, invsym, s, ftau, irt, t_rev, sname, &
-                            sr, invs, inverse_s, s_axis_to_cart
+                            sr, invs, inverse_s, s_axis_to_cart,  &
+                            time_reversal, no_t_rev
       USE control_flags, ONLY : noinv
       USE gvect, ONLY : nr1, nr2, nr3
       !
@@ -1741,6 +1743,8 @@ MODULE pw_restart
             noinv=.FALSE.
             t_rev(nsym) = 0
             invs(1)=1
+            time_reversal=.TRUE.
+            no_t_rev=.FALSE.
             !
          ELSE
             !
@@ -1753,6 +1757,12 @@ MODULE pw_restart
             CALL iotk_scan_dat( iunpun, "DO_NOT_USE_TIME_REVERSAL", &
                              noinv, FOUND = found )
             IF (.NOT. found) noinv = .FALSE.
+            CALL iotk_scan_dat( iunpun, "TIME_REVERSAL_FLAG", &
+                             time_reversal, FOUND = found )
+            IF (.NOT. found) time_reversal = .TRUE.
+            CALL iotk_scan_dat( iunpun, "NO_TIME_REV_OPERATIONS", &
+                             no_t_rev, FOUND = found )
+            IF (.NOT. found) no_t_rev = .FALSE.
             !
             CALL iotk_scan_dat( iunpun, "NUMBER_OF_ATOMS", nat_ )
             !
@@ -1804,6 +1814,8 @@ MODULE pw_restart
       CALL mp_bcast( nrot,   ionode_id, intra_image_comm )
       CALL mp_bcast( invsym, ionode_id, intra_image_comm )
       CALL mp_bcast( noinv,  ionode_id, intra_image_comm )
+      CALL mp_bcast( time_reversal,  ionode_id, intra_image_comm )
+      CALL mp_bcast( no_t_rev,  ionode_id, intra_image_comm )
       CALL mp_bcast( s,      ionode_id, intra_image_comm )
       CALL mp_bcast( ftau,   ionode_id, intra_image_comm )
       CALL mp_bcast( sname,  ionode_id, intra_image_comm )

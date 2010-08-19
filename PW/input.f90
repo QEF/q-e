@@ -200,6 +200,8 @@ SUBROUTINE iosys()
   !
   USE spin_orb, ONLY : lspinorb_ => lspinorb
   !
+  USE symm_base, ONLY : no_t_rev_=> no_t_rev
+  !
   USE bfgs_module,   ONLY : bfgs_ndim_        => bfgs_ndim, &
                             trust_radius_max_ => trust_radius_max, &
                             trust_radius_min_ => trust_radius_min, &
@@ -250,7 +252,7 @@ SUBROUTINE iosys()
                                angle1, angle2, constrained_magnetization,     &
                                B_field, fixed_magnetization, report, lspinorb,&
                                assume_isolated, spline_ps, london, london_s6, &
-                               london_rcut, one_atom_occupations
+                               london_rcut, one_atom_occupations, no_t_rev
   !
   ! ... EE namelist
   !
@@ -1263,6 +1265,8 @@ SUBROUTINE iosys()
   report_   = report
   lambda_   = lambda
   one_atom_occupations_ = one_atom_occupations
+  !
+  no_t_rev_ = no_t_rev
   !
   spline_ps_ = spline_ps
   !

@@ -676,6 +676,14 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 	    }
 	}
 
+	var no_t_rev -type LOGICAL { 
+	    default { .FALSE. }
+	    info {
+		if (.TRUE.) disable the usage of symmetry operations that
+		require time reversal. 
+	    }
+	}
+
        var force_symmorphic -type LOGICAL { 
            default { .FALSE. }
            info {

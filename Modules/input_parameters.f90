@@ -410,6 +410,7 @@ MODULE input_parameters
         REAL(DP) :: angle2(nsx) = 0.0_DP
         INTEGER  :: report = 1
           ! Various parameters for noncollinear calculationso
+        LOGICAL  :: no_t_rev = .FALSE.
 
         CHARACTER(len=80) :: constrained_magnetization = 'none'
           ! Used to perform constrained calculations in magnetic systems
@@ -458,7 +459,7 @@ MODULE input_parameters
              sic, sic_epsilon, force_pairing, sic_alpha,                      &
              tot_charge, tot_magnetization,                                   &
              spline_ps, one_atom_occupations, london, london_s6, london_rcut, &
-             step_pen, A_pen, sigma_pen, alpha_pen
+             step_pen, A_pen, sigma_pen, alpha_pen, no_t_rev
 !
 !=----------------------------------------------------------------------------=!
 !  EE Namelist Input Parameters
