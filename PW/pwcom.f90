@@ -124,6 +124,7 @@ MODULE klist
   REAL(DP) :: &
        xk(3,npk),         &! coordinates of k points
        wk(npk),           &! weight of k points
+       xqq(3),            &! coordinates of q point (used in the ACFDT part)
        degauss,           &! smearing parameter
        nelec,             &! number of electrons
        nelup=0.0_dp,      &! number of spin-up electrons (if two_fermi_energies=t)

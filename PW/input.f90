@@ -227,7 +227,7 @@ SUBROUTINE iosys()
                                wfcdir, prefix, etot_conv_thr, forc_conv_thr, &
                                pseudo_dir, disk_io, tefield, dipfield, lberry, &
                                gdir, nppstr, wf_collect,lelfield, efield, &
-                               nberrycyc, lkpoint_dir, efield_cart
+                               nberrycyc, lkpoint_dir, efield_cart, lecrpa
 #if defined __MS2
   USE input_parameters, ONLY : MS2_enabled, MS2_handler
 #endif

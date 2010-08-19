@@ -242,6 +242,10 @@ MODULE input_parameters
 
         LOGICAL :: use_wannier = .false. ! use or not Wannier functions
 
+        LOGICAL :: lecrpa = .FALSE.
+          ! if true symmetry in scf run is neglected for RPA Ec calculation
+          ! 
+
 #if defined (__MS2)
         LOGICAL :: MS2_enabled = .false.       ! Enable the shared memory exchange in MS2
         CHARACTER(len=256) :: MS2_handler = '' ! Name for the shared memory handler in MS2
@@ -252,7 +256,8 @@ MODULE input_parameters
           prefix, wfcdir, max_seconds, ekin_conv_thr, etot_conv_thr,      &
           forc_conv_thr, pseudo_dir, disk_io, tefield, dipfield, lberry,  &
           gdir, nppstr, wf_collect, printwfc, lelfield, nberrycyc, refg,  &
-          tefield2, saverho, tabps, lkpoint_dir, use_wannier
+          tefield2, saverho, tabps, lkpoint_dir, use_wannier, lecrpa
+
 
 #if defined ( __MS2)
         NAMELIST / control / MS2_enabled, MS2_handler

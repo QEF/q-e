@@ -75,7 +75,7 @@ SUBROUTINE setup()
                                  angle1, angle2, bfield, ux, nspin_lsda, &
                                  nspin_gga, nspin_mag
   USE pw_restart,         ONLY : pw_readfile
-  USE input_parameters,   ONLY : restart_mode
+  USE input_parameters,   ONLY : restart_mode, lecrpa
 #if defined (EXX)
   USE exx,                ONLY : exx_grid_init, exx_div_check
 #endif
@@ -434,6 +434,10 @@ SUBROUTINE setup()
   !  ... First we generate all the symmetry matrices of the Bravais lattice
   !
   call set_sym_bl(ibrav, symm_type)
+  !
+  ! ... If lecrpa is true, nosym must be set to true also
+  !
+  IF ( lecrpa ) nosym = .TRUE.
   !
   ! ... If nosym is true do not use any point-group symmetry
   !

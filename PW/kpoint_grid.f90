@@ -13,6 +13,7 @@ subroutine kpoint_grid ( nrot, time_reversal, s, t_rev, bg, npk, &
 !  Automatic generation of a uniform grid of k-points
 !
   USE kinds, only: DP
+  USE input_parameters, only: lecrpa
   implicit none
   !
   integer, intent(in):: nrot, npk, k1, k2, k3, nk1, nk2, nk3, &
@@ -54,6 +55,9 @@ subroutine kpoint_grid ( nrot, time_reversal, s, t_rev, bg, npk, &
   do nk=1,nkr
      equiv(nk)=nk
   end do
+
+  if ( .not.lecrpa ) then
+    !
 
   do nk=1,nkr
      !  check if this k-point has already been found equivalent to another
@@ -112,6 +116,13 @@ subroutine kpoint_grid ( nrot, time_reversal, s, t_rev, bg, npk, &
         end do
      end if
   end do
+    !
+  else
+    call infomsg('kpoint_grid', 'ATTENTION: skip check of k-points equivalence')
+    wkk = 1.d0
+  end if 
+  ! 
+
 
   !  count irreducible points and order them
 

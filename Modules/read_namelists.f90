@@ -105,6 +105,7 @@ MODULE read_namelists_module
        lelfield = .FALSE.
        nberrycyc  = 1
        lkpoint_dir = .TRUE.
+       lecrpa   = .TRUE.   
        !
        saverho = .TRUE.
        !
@@ -696,6 +697,7 @@ MODULE read_namelists_module
        CALL mp_bcast( lelfield,      ionode_id )
        CALL mp_bcast( nberrycyc,     ionode_id )
        CALL mp_bcast( saverho,       ionode_id )
+       CALL mp_bcast( lecrpa,        ionode_id )
        !
        RETURN
        !
