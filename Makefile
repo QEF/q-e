@@ -81,6 +81,11 @@ vdw : bindir mods libs pw ph pp
 	( cd VdW ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= all ; \
 	else $(MAKE) $(MFLAGS) TLDEPS= all ; fi ) ; fi
 
+acfdt : bindir mods libs pw
+	if test -d ACFDT ; then \
+	( cd ACFDT ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= all ; \
+	else $(MAKE) $(MFLAGS) TLDEPS= all ; fi ) ; fi
+
 gipaw : bindir mods libs pw
 	if test -d GIPAW ; then \
 	( cd GIPAW ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= all ; \
