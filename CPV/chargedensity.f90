@@ -1103,9 +1103,11 @@ SUBROUTINE rhov(irb,eigrb,rhovan,rhog,rhor)
       ! private variable need to be initialized, otherwise
       ! outside the parallel region they have an undetermined value
       !
+#ifdef __OPENMP
       mytid = 0
       ntids = 1
       itid  = 0
+#endif
       iss   = 1
       isa   = 1
 !
