@@ -798,10 +798,9 @@ SUBROUTINE drhov(irb,eigrb,rhovan,drhovan,rhog,rhor,drhog,drhor)
       COMPLEX(DP), ALLOCATABLE :: v(:)
       COMPLEX(DP), ALLOCATABLE:: dqgbt(:,:)
       COMPLEX(DP), ALLOCATABLE :: qv(:)
-
-      INTEGER :: itid, mytid, ntids
 !
 #ifdef __OPENMP
+      INTEGER  :: itid, mytid, ntids
       INTEGER  :: omp_get_thread_num, omp_get_num_threads
       EXTERNAL :: omp_get_thread_num, omp_get_num_threads
 #endif
@@ -1086,9 +1085,9 @@ SUBROUTINE rhov(irb,eigrb,rhovan,rhog,rhor)
       COMPLEX(DP), ALLOCATABLE :: qgbt(:,:)
       COMPLEX(DP), ALLOCATABLE :: v(:)
       COMPLEX(DP), ALLOCATABLE :: qv(:)
-      INTEGER     :: itid, mytid, ntids
 
 #ifdef __OPENMP
+      INTEGER  :: itid, mytid, ntids
       INTEGER  :: omp_get_thread_num, omp_get_num_threads
       EXTERNAL :: omp_get_thread_num, omp_get_num_threads
 #endif
