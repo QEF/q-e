@@ -105,7 +105,7 @@ MODULE read_namelists_module
        lelfield = .FALSE.
        nberrycyc  = 1
        lkpoint_dir = .TRUE.
-       lecrpa   = .TRUE.   
+       lecrpa   = .FALSE.   
        !
        saverho = .TRUE.
        !
