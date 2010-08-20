@@ -384,7 +384,6 @@
          !     add vanderbilt contribution to the charge density
          !     drhov called before rhov because input rho must be the smooth part
          !
-         !
          IF ( ttstress ) &
             CALL drhov( irb, eigrb, rhovan, drhovan, rhog, rhor, drhog, drhor )
          !
@@ -996,7 +995,7 @@ SUBROUTINE drhov(irb,eigrb,rhovan,drhovan,rhog,rhor,drhog,drhor)
                         qv(nmb(ig))= CONJG(eigrb(ig,isa)*dqgbt(ig,1)) &
      &                    +       ci*CONJG(eigrb(ig,isa)*dqgbt(ig,2))
                      END DO
-!
+
                      CALL invfft('Box',qv, dfftb, isa )
                      !
                      !  qv is the now the US augmentation charge for atomic species is
@@ -1021,6 +1020,7 @@ SUBROUTINE drhov(irb,eigrb,rhovan,drhovan,rhog,rhor,drhog,drhor)
 
 !
                CALL fwfft('Dense', v, dfftp )
+
                DO ig=1,ng
                   fp=v(np(ig))+v(nm(ig))
                   fm=v(np(ig))-v(nm(ig))
@@ -1033,6 +1033,7 @@ SUBROUTINE drhov(irb,eigrb,rhovan,drhovan,rhog,rhor,drhog,drhor)
             END DO
          END DO
       ENDIF
+
 
       DEALLOCATE( v )
 !
@@ -1278,6 +1279,8 @@ SUBROUTINE rhov(irb,eigrb,rhovan,rhog,rhor)
          !
          isup=1
          isdw=2
+
+         v (:) = (0.d0, 0.d0)
 
          ALLOCATE( qgbt( ngb, 2 ) )
          ALLOCATE( qv( nnrb ) )
