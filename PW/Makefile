@@ -238,7 +238,7 @@ TLDEPS=bindir mods libs liblapack libblas eelib
 
 all : tldeps pw.x
 
-pw.x : $(PWOBJS) libpw.a
+pw.x : $(PWOBJS) libpw.a $(LIBOBJS) 
 	$(LD) $(LDFLAGS) -o $@ \
 	   $(PWOBJS) libpw.a $(EEOBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
 	- ( cd ../bin; ln -fs ../PW/$@ . )

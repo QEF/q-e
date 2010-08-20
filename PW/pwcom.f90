@@ -121,6 +121,8 @@ MODULE klist
   !
   SAVE
   !
+  CHARACTER (len=32) :: &
+       smearing            ! smearing type
   REAL(DP) :: &
        xk(3,npk),         &! coordinates of k points
        wk(npk),           &! weight of k points

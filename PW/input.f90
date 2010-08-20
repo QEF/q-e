@@ -93,6 +93,7 @@ SUBROUTINE iosys()
                             nr3s_ => nr3s
   !
   USE klist,         ONLY : ngauss, two_fermi_energies, &
+                            smearing_          => smearing, &
                             degauss_           => degauss, &
                             tot_charge_        => tot_charge, &
                             tot_magnetization_ => tot_magnetization
@@ -563,12 +564,16 @@ SUBROUTINE iosys()
      SELECT CASE ( trim( smearing ) )
      CASE ( 'gaussian', 'gauss', 'Gaussian', 'Gauss' )
         ngauss = 0
+        smearing_ = 'gaussian'
      CASE ( 'methfessel-paxton', 'm-p', 'mp', 'Methfessel-Paxton', 'M-P', 'MP' )
         ngauss = 1
+        smearing_ = 'Methfessel-Paxton'
      CASE ( 'marzari-vanderbilt', 'cold', 'm-v', 'mv', 'Marzari-Vanderbilt', 'M-V', 'MV')
         ngauss = -1
+        smearing_ = 'Marzari-Vanderbilt'
      CASE ( 'fermi-dirac', 'f-d', 'fd', 'Fermi-Dirac', 'F-D', 'FD')
         ngauss = -99
+        smearing_ = 'Fermi-Dirac'
      CASE DEFAULT
         CALL errore( ' iosys ', ' smearing '//trim(smearing)//' unknown', 1 )
      END SELECT

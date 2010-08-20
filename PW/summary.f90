@@ -30,7 +30,7 @@ SUBROUTINE summary()
   USE lsda_mod,        ONLY : lsda, starting_magnetization
   USE ldaU,            ONLY : lda_plus_U, Hubbard_u, Hubbard_alpha, &
                               Hubbard_l, Hubbard_lmax
-  USE klist,           ONLY : degauss, ngauss, lgauss, nkstot, xk, wk, &
+  USE klist,           ONLY : degauss, smearing, lgauss, nkstot, xk, wk, &
                               nelec, nelup, neldw, two_fermi_energies
   USE ktetra,          ONLY : ltetra
   USE control_flags,   ONLY : imix, nmix, mixing_beta, nstep, lscf, &
@@ -256,9 +256,9 @@ SUBROUTINE summary()
   ENDIF
 
   IF (lgauss) THEN
-     WRITE( stdout, '(/5x,"number of k points=",i6, &
-          &               "  gaussian broad. (Ry)=",f8.4,5x, &
-          &               "ngauss = ",i3)') nkstot, degauss, ngauss
+     WRITE( stdout, '(/5x,"number of k points=", i6, 2x, &
+          &             a," smearing, width (Ry)=",f8.4)') &
+          &             nkstot, TRIM(smearing), degauss
   ELSE IF (ltetra) THEN
      WRITE( stdout,'(/5x,"number of k points=",i6, &
           &        " (tetrahedron method)")') nkstot
