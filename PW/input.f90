@@ -170,7 +170,8 @@ SUBROUTINE iosys()
                             lsmd, ldamped, lbands, llang,                    &
 !                            lconstrain, lcoarsegrained, restart, twfcollect, &
                             lconstrain, restart, twfcollect, &
-                            use_para_diag, llondon, nofrac, do_makov_payne
+                            use_para_diag, llondon, nofrac, do_makov_payne, &
+                            lecrpa_           => lecrpa
   !
   USE wvfct,         ONLY : nbnd_ => nbnd
   !
@@ -1239,6 +1240,7 @@ SUBROUTINE iosys()
   pseudo_dir_ = trim( pseudo_dir )
   nstep_      = nstep
   iprint_     = iprint
+  lecrpa_     = lecrpa
   !
   celldm_  = celldm
   ibrav_   = ibrav
