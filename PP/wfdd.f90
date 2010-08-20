@@ -465,7 +465,7 @@ SUBROUTINE ddyn(m,Omat,Umat)
      gr(inw, :)=wfg(inw,1)*b1(:)+wfg(inw,2)*b2(:)+wfg(inw,3)*b3(:)
   ENDDO
 !
-! set up a matrix with the element (i,j) is G_i·G_j·weight(j)
+! set up a matrix with the element (i,j) is G_i * G_j * weight(j)
 ! to check the correctness of choices on G vectors
 !
   DO i=1, nw
@@ -830,7 +830,7 @@ SUBROUTINE ddyn(m,Omat,Umat)
      gr(inw, :)=wfg(inw,1)*b1(:)+wfg(inw,2)*b2(:)+wfg(inw,3)*b3(:)
   ENDDO
 !
-! set up a matrix with the element (i,j) is G_i·G_j·weight(j)
+! set up a matrix with the element (i,j) is G_i * G_j * weight(j)
 ! to check the correctness of choices on G vectors
 !
   DO i=1, nw
