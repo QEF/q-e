@@ -858,7 +858,8 @@ SUBROUTINE caldbec( ngw, nkb, n, nspmn, nspmx, eigr, c, dbec )
                  nss    = nupdwn( iss )
                  do ii = 1, nr
                     do iw = 1, nanh
-                       dbec( iw + inl - 1, ii + (iss-1)*nspin, i, j ) = dwrk( iw, ii + ir - 1 + istart - 1 )
+                       dbec( iw + inl - 1, ii + (iss-1)*nlam, i, j ) = dwrk( iw, ii + ir - 1 + istart - 1 )
+                       !dbec( iw + inl - 1, ii + (iss-1)*nspin, i, j ) = dwrk( iw, ii + ir - 1 + istart - 1 )
                     end do
                  end do
               END IF
@@ -1036,9 +1037,10 @@ subroutine nlfq( c, eigr, bec, becdr, fion )
   !
   DO k = 1, 3
 
-#ifdef __OPENMP
 !$omp parallel default(shared), &
 !$omp private(tmpbec,tmpdr,isa,is,ia,iss,nss,istart,ir,nr,ioff,iv,jv,inl,temp,i,mytid,ntids)
+
+#ifdef __OPENMP
      mytid = omp_get_thread_num()  ! take the thread ID
      ntids = omp_get_num_threads() ! take the number of threads
 #endif
@@ -1107,9 +1109,7 @@ subroutine nlfq( c, eigr, bec, becdr, fion )
         END DO
      END DO
      deallocate ( tmpbec, tmpdr )
-#ifdef __OPENMP
 !$omp end parallel
-#endif
   END DO
   !
   CALL mp_sum( fion_loc, intra_image_comm )
