@@ -1697,16 +1697,40 @@ do
     AC_SEARCH_LIBS(pdgemr2d, "" , have_scalapack=1
                    try_dflags="$try_dflags -D__SCALAPACK")
     test "$have_scalapack" -eq 1 && break
-# intel MKL blacs&scalapack
-    if test "$have_mkl" -eq 1
-    then
-        unset ac_cv_search_pdgemr2d # clear cached value
-        LIBS="-lmkl_blacs_ilp64 $mpi_libs $blas_libs"
-        AC_SEARCH_LIBS(pdgemr2d, "mkl_scalapack_ilp64" , have_scalapack=1
-                       try_dflags="$try_dflags -D__SCALAPACK"
-                       scalapack_libs="-lmkl_scalapack_ilp64 -lmkl_blacs_ilp64" )
-        test "$have_scalapack" -eq 1 && break
-    fi
+# Intel MKL blacs&scalapack
+#
+# Norbert Nemec 2010/08/20 this compiles and links
+# but is untested and automatic configuration does not yet work properly
+# 
+# Carlo Cavazzoni writes
+#      If you have a fast network (like IB or a custom CRAY/IBM network)
+#      it is always better to use scalapack for system with large
+#      number of bands (let say above 500-1000 bands).
+#      If you want to use the version of scalapack distributed with MKL
+#      you should be careful about:
+#      1) the size of the integer variable when calling MKL subroutine,
+#      QE (up to now) uses integer*4, so you should link version with
+#       the suffix: lp64 and NOT ilp64 .
+#      Unfortunately the configure, by default, seems to prefer ilp64 ...
+#      2) you shuold link the appropriate blacs for your MPI library:
+#      INTEL MPI   -> libmkl_blacs_intelmpi_lp64.a
+#      OpenMPI -> libmkl_blacs_openmpi_lp64.a
+#      SGI MPI -> libmkl_blacs_sgimpt_lp64.a
+#
+#      if you are in doubt or if you have another version of MPI
+#      you can always build BLACS by yourself.
+#
+#
+#    if test "$have_mkl" -eq 1
+#    then
+#        unset ac_cv_search_pdgemr2d # clear cached value
+#        LIBS="-lmkl_blacs_lp64 $mpi_libs $blas_libs"
+#        AC_SEARCH_LIBS(pdgemr2d, "mkl_scalapack_lp64" , have_scalapack=1
+#                       try_dflags="$try_dflags -D__SCALAPACK"
+#                       scalapack_libs="-lmkl_scalapack_lp64 -lmkl_blacs_openmpi_lp64" )
+#        test "$have_scalapack" -eq 1 && break
+#    fi
+#
 # sci libraries (e.g. cray xt)
     unset ac_cv_search_pdgemr2d # clear cached value
     scalapack_libs="-lsci"
