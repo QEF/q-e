@@ -170,7 +170,7 @@ SUBROUTINE find_mode_sym (u, w2, at, bg, tau, nat, nsym, sr, irt, xq, &
               name_rap_mode(igroup)=name_rap(irap)  
               counter_s=counter
               DO imode=counter_s, counter_s+NINT(DBLE(char_mat(irap,1)))-1
-                 num_rap_mode(imode) = irap
+                 IF (imode <= 3*nat) num_rap_mode(imode) = irap
                  counter=counter+1
               ENDDO
            ELSE
@@ -182,7 +182,7 @@ SUBROUTINE find_mode_sym (u, w2, at, bg, tau, nat, nsym, sr, irt, xq, &
               counter_s=counter
               DO imode=counter_s, counter_s+NINT(DBLE(times))*&
                                             NINT(DBLE(char_mat(irap,1)))-1
-                 num_rap_mode(imode) = irap
+                 IF (imode <= 3 * nat) num_rap_mode(imode) = irap
                  counter=counter+1
               ENDDO
            END IF
