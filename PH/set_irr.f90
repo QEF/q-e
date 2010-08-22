@@ -122,7 +122,6 @@ subroutine set_irr (nat, at, bg, xq, s, sr, tau, ntyp, ityp, ftau, invs, nsym, &
 !
   call smallgq (xq,at,bg,s,nsym,irgq,nsymq,irotmq,minus_q,gi,gimq)
   is_symmorphic=symmorphic(nsymq, ftau)
-  search_sym=.true.
   IF (.not.is_symmorphic) THEN
      DO isym=1,nsymq
         search_sym=( search_sym.and.(abs(gi(1,irgq(isym)))<1.d-8).and.  &

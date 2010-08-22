@@ -36,7 +36,8 @@ SUBROUTINE phq_readin()
                             trans, reduce_io, elph, tr2_ph, niter_ph,       &
                             nmix_ph, ldisp, recover, lrpa, lnoloc, start_irr, &
                             last_irr, start_q, last_q, current_iq, tmp_dir_ph, &
-                            ext_recover, ext_restart, u_from_file, ldiag
+                            ext_recover, ext_restart, u_from_file, ldiag, &
+                            search_sym
   USE save_ph,       ONLY : tmp_dir_save
   USE gamma_gamma,   ONLY : asr
   USE qpoint,        ONLY : nksq, xq
@@ -85,7 +86,7 @@ SUBROUTINE phq_readin()
                        ldisp, nq1, nq2, nq3, &
                        eth_rps, eth_ns, lraman, elop, dek, recover,  &
                        fpol, asr, lrpa, lnoloc, start_irr, last_irr, &
-                       start_q, last_q, nogg, ldiag
+                       start_q, last_q, nogg, ldiag, search_sym
   ! tr2_ph       : convergence threshold
   ! amass        : atomic masses
   ! alpha_mix    : the mixing parameter
@@ -120,6 +121,7 @@ SUBROUTINE phq_readin()
   ! last_irr     : 
   ! nogg         : if .true. lgamma_gamma tricks are not used
   ! ldiag        : if .true. force diagonalization of the dyn mat
+  ! search_sym   : if .true. analyze symmetry if possible
 
   IF (ionode) THEN
   !
@@ -189,6 +191,7 @@ SUBROUTINE phq_readin()
   start_q      = 1
   last_q       =-1000
   ldiag        =.FALSE.
+  search_sym   =.TRUE.
   !
   ! ...  reading the namelist inputph
   !
