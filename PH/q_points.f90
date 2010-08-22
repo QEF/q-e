@@ -13,13 +13,15 @@ SUBROUTINE q_points ( )
   USE io_global,  ONLY :  stdout, ionode
   USE disp,  ONLY : nqmax, nq1, nq2, nq3, x_q, nqs
   USE output, ONLY : fildyn
-  USE symm_base, ONLY : nsym, s, time_reversal, t_rev
-  USE cell_base, ONLY : bg
+  USE symm_base, ONLY : nsym, s, time_reversal, t_rev, invs
+  USE cell_base, ONLY : at, bg
+  USE control_ph, ONLY : search_sym
 
   implicit none
   
   integer :: i, iq, ierr, iudyn = 26
-  logical :: exist_gamma
+  logical :: exist_gamma, check
+  logical, external :: check_q_points_sym
   real(DP), allocatable, dimension(:) :: wq  
 
   !
@@ -65,6 +67,21 @@ SUBROUTINE q_points ( )
   !
   IF ( .NOT. exist_gamma) &
      CALL errore('q_points','Gamma is not a q point',1)
+!
+!  Check that the q point grid is compatible with the symmetry.
+!  If this test is not passed, q2r will stop in any case.
+!
+  IF (search_sym) THEN
+     check=check_q_points_sym(nqs, x_q, at, bg, nsym, s, invs, nq1, nq2, nq3)
+     IF (.NOT.check) THEN
+        WRITE(stdout, '(/,5x,"This q-mesh breaks symmetry!")') 
+        WRITE(stdout, '(5x,"Try to choose different nq1, nq2, nq3")') 
+        WRITE(stdout, '(5x,"You can also continue by setting &
+                   &search_sym=.false.")')
+        WRITE(stdout, '(5x,"but be careful because q2r will not work")') 
+        CALL errore('q_points', 'q-mesh breaks symmetry', 1)
+     ENDIF
+  ENDIF
   !
   ! ... write the information on the grid of q-points to file
   !

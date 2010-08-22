@@ -34,6 +34,7 @@ cgsolve_all.o \
 cgsolve_all_imfreq.o \
 ch_psi_all.o \
 check_initial_status.o \
+check_q_points_sym.o \
 check_restart_recover.o \
 clean_pw_ph.o \
 clinear.o \

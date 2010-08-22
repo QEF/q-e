@@ -42,7 +42,7 @@ subroutine d3matrix
   !
   ! Generates the star of q
   !
-  call star_q (xq, at, bg, nsymg0, s, invs, nq, sxq, isq, imq)
+  call star_q (xq, at, bg, nsymg0, s, invs, nq, sxq, isq, imq, .TRUE.)
   !
   ! Write on file information on the system
   !
