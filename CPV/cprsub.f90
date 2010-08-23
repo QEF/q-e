@@ -203,7 +203,7 @@ subroutine nlfh_x( stress, bec, dbec, lambda )
   use constants,         ONLY : pi, fpi, au_gpa
   use io_global,         ONLY : stdout
   use control_flags,     ONLY : iprsta
-  USE cp_main_variables, ONLY : descla, la_proc
+  USE cp_main_variables, ONLY : descla, la_proc, nlam
   USE descriptors,       ONLY : nlar_ , nlac_ , ilar_ , ilac_ , nlax_
   USE mp,                ONLY : mp_sum
   USE mp_global,         ONLY : intra_image_comm
@@ -267,7 +267,7 @@ subroutine nlfh_x( stress, bec, dbec, lambda )
                     do iv=1,nh(is)
                        inl=ish(is)+(iv-1)*na(is)+ia
                        do i = 1, nr
-                          tmpdh(i,iv) = dbec( inl, i + (iss-1)*nspin, ii, jj )
+                          tmpdh(i,iv) = dbec( inl, i + (iss-1)*nlam, ii, jj )
                        end do
                     end do
 
