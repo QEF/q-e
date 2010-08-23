@@ -2424,7 +2424,7 @@ MODULE pw_restart
       USE lsda_mod,       ONLY : lsda, nspin
       USE fixed_occ,      ONLY : tfixed_occ, f_inp
       USE ktetra,         ONLY : ntetra, tetra, ltetra
-      USE klist,          ONLY : lgauss, ngauss, degauss
+      USE klist,          ONLY : lgauss, ngauss, degauss, smearing
       USE electrons_base, ONLY : nupdwn 
       USE wvfct,          ONLY : nbnd
       !
@@ -2458,6 +2458,19 @@ MODULE pw_restart
          IF ( lgauss ) THEN
             !
             CALL iotk_scan_dat( iunpun, "SMEARING_TYPE", ngauss )
+            SELECT CASE (ngauss )
+            CASE (0)
+               smearing = 'gaussian'
+            CASE (1)
+               smearing = 'Methfessel-Paxton'
+            CASE (-1)
+               smearing = 'Marzari-Vanderbilt'
+            CASE (-99)
+               smearing = 'Fermi-Dirac'
+            CASE DEFAULT
+                 CALL errore('read_occupations',&
+                              'wrong smearing index', abs(1000+ngauss) )
+            END SELECT
             !
             CALL iotk_scan_dat( iunpun, "SMEARING_PARAMETER", degauss )
             !
