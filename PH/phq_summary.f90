@@ -21,7 +21,7 @@ subroutine phq_summary
   USE ions_base,     ONLY : nat, ityp, atm, tau, ntyp => nsp, amass
   USE io_global,     ONLY : stdout
   USE cell_base,     ONLY : at, bg, ibrav, alat, omega, celldm
-  USE klist,         ONLY : lgauss, degauss, ngauss, nkstot, xk, wk
+  USE klist,         ONLY : lgauss, smearing, degauss, ngauss, nkstot, xk, wk
   USE gvect,         ONLY : ecutwfc, dual, nr1, nr2, nr3, gcutm, ngm
   USE gsmooth,       ONLY : doublegrid, nr1s, nr2s, nr3s, gcutms, ngms
   USE symm_base,     ONLY : s, sr, ftau, sname, t_rev
@@ -212,9 +212,9 @@ subroutine phq_summary
   if (.NOT.lgauss) then
      WRITE( stdout, '(5x,"number of k points=",i6)') nkstot
   else
-     WRITE( stdout, '(5x,"number of k points=",i6, &
-          &               "  gaussian broad. (Ry)=",f8.4,5x, &
-          &               "ngauss = ",i3)') nkstot, degauss, ngauss
+     WRITE( stdout, '(/5x,"number of k points=", i6, 2x, &
+          &             a," smearing, width (Ry)=",f8.4)') &
+          &             nkstot, TRIM(smearing), degauss
   endif
   IF (iverbosity==1 .or. (nkstot < 100 .and. .not.ldisp) ) then
      WRITE( stdout, '(23x,"cart. coord. in units 2pi/a_0")')
