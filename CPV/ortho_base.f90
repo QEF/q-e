@@ -687,7 +687,7 @@ END SUBROUTINE diagonalize_parallel
 
 
 !-------------------------------------------------------------------------
-   SUBROUTINE sigset( cp, ngwx, becp, nkbx, qbecp, n, nss, ist, sig, ldx, desc )
+   SUBROUTINE sigset( cp, ngwx, becp_dist, nkbx, qbecp, n, nss, ist, sig, ldx, desc )
 !-----------------------------------------------------------------------
 !     input: cp (non-orthonormal), becp, qbecp
 !     computes the matrix
@@ -713,7 +713,8 @@ END SUBROUTINE diagonalize_parallel
 !
       INTEGER     :: nss, ist, ngwx, nkbx, n, ldx, nx
       COMPLEX(DP) :: cp( ngwx, n )
-      REAL(DP)    :: becp( nkbx, n ), qbecp( nkbx, ldx )
+      REAL(DP)    :: qbecp( nkbx, ldx )
+      REAL(DP)    :: becp_dist( nkbx, ldx )
       REAL(DP)    :: sig( ldx, ldx )
       INTEGER     :: desc( descla_siz_ )
 !
@@ -791,8 +792,10 @@ END SUBROUTINE diagonalize_parallel
          END IF
          !
          IF( nvb > 0 ) THEN
-            CALL dgemm( 'T', 'N', nr, nc, nkbus, -1.0d0, becp( 1, ist+ir-1 ), &
+            CALL dgemm( 'T', 'N', nr, nc, nkbus, -1.0d0, becp_dist( 1, 1 ), &
                          nkbx, qbecp( 1, 1 ), nkbx, 1.0d0, sig, ldx )
+            !CALL dgemm( 'T', 'N', nr, nc, nkbus, -1.0d0, becp( 1, ist+ir-1 ), &
+            !             nkbx, qbecp( 1, 1 ), nkbx, 1.0d0, sig, ldx )
          ENDIF
          !
          IF( iprsta > 4 ) THEN
@@ -1068,7 +1071,7 @@ END SUBROUTINE diagonalize_parallel
 
 !
 !-------------------------------------------------------------------------
-   SUBROUTINE updatc( ccc, n, x0, nx0, phi, ngwx, bephi, nkbx, becp, bec, cp, nss, istart, desc )
+   SUBROUTINE updatc( ccc, n, x0, nx0, phi, ngwx, bephi, nkbx, becp_dist, bec, cp, nss, istart, desc )
 !-----------------------------------------------------------------------
 !
       !     input ccc : dt**2/emass OR 1.0d0 demending on ortho
@@ -1100,7 +1103,8 @@ END SUBROUTINE diagonalize_parallel
       COMPLEX(DP) :: cp( ngwx, n ), phi( ngwx, n )
       REAL(DP), INTENT(IN) :: ccc
       REAL(DP)    :: bec( nkbx, n ), x0( nx0, nx0 )
-      REAL(DP)    :: bephi( :, : ), becp( nkbx, n )
+      REAL(DP)    :: bephi( :, : )
+      REAL(DP)    :: becp_dist( :, : )
 
       ! local variables
 
@@ -1108,6 +1112,7 @@ END SUBROUTINE diagonalize_parallel
       REAL(DP),    ALLOCATABLE :: wtemp(:,:) 
       REAL(DP),    ALLOCATABLE :: xd(:,:) 
       REAL(DP),    ALLOCATABLE :: bephi_tmp(:,:) 
+      REAL(DP),    ALLOCATABLE :: becp_tmp(:,:) 
       REAL(DP) :: beta
       INTEGER :: ipr, ipc, nx, root
       INTEGER :: np( 2 ), coor_ip( 2 )
@@ -1136,6 +1141,7 @@ END SUBROUTINE diagonalize_parallel
       IF( nvb > 0 )THEN
          ALLOCATE( wtemp( nx, nkb ) )
          ALLOCATE( bephi_tmp( nkbx, nx ) )
+         ALLOCATE( becp_tmp( nkbx, nx ) )
          DO i = 1, nss
             DO inl = 1, nkbus
                bec( inl, i + istart - 1 ) = 0.0d0
@@ -1161,6 +1167,8 @@ END SUBROUTINE diagonalize_parallel
             ! 
             IF( me_image == root ) bephi_tmp = bephi
             CALL mp_bcast( bephi_tmp, root, intra_image_comm )
+            IF( me_image == root ) becp_tmp = becp_dist
+            CALL mp_bcast( becp_tmp, root, intra_image_comm )
             !
          END IF
 
@@ -1205,6 +1213,13 @@ END SUBROUTINE diagonalize_parallel
                      bec( inl, i + istart + ir - 2 ) = bec( inl, i + istart + ir - 2 ) + wtemp( i, inl ) 
                   END DO
                END DO
+               IF( ipr == ipc )THEN
+                  DO i = 1, nr
+                     DO inl = 1, nkbus
+                        bec( inl, i + istart + ir - 2 ) = bec( inl, i + istart + ir - 2 ) + becp_tmp( inl, i ) 
+                     END DO
+                  END DO
+               END IF
                !
             END IF
 
@@ -1215,11 +1230,12 @@ END SUBROUTINE diagonalize_parallel
       IF( nvb > 0 )THEN
          DEALLOCATE( wtemp )
          DEALLOCATE( bephi_tmp )
-         DO i = istart, istart + nss - 1
-            DO inl = 1, nkbus
-               bec( inl, i ) = bec( inl, i ) + becp( inl, i ) 
-            END DO
-         END DO
+         DEALLOCATE( becp_tmp )
+         !DO i = istart, istart + nss - 1
+         !   DO inl = 1, nkbus
+         !      bec( inl, i ) = bec( inl, i ) + becp( inl, i ) 
+         !   END DO
+         !END DO
       END IF
 !
       IF ( iprsta > 2 ) THEN

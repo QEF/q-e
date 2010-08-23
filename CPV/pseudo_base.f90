@@ -65,6 +65,9 @@
         real(DP), allocatable :: fint(:), jl(:), djl(:)
         real(DP) :: c, xg
       
+!$omp parallel default(none) private(ig,c,xg,fint,jl,djl,ir) &
+!$omp          shared(mesh,what,omegab,ngb,tpibab2,gb,r,rho_atc,rhocb,rab,drhocb)
+
         allocate(fint(mesh))
         allocate(jl(mesh))
         if( what == 1 ) then
@@ -75,6 +78,7 @@
           call errore(" compute_rhocg ", " parameter what is out of range ", 1 )
 
         c = fpi / omegab
+!$omp do
         do ig = 1, ngb
            xg = sqrt( gb(ig) * tpibab2 )
            call sph_bes ( mesh, r(1), xg, 0, jl )
@@ -91,22 +95,25 @@
               call simpson_cp90( mesh, fint, rab(1), drhocb(ig) )
            end if
         end do
+!$omp do
         do ig=1,ngb
            rhocb(ig) = c * rhocb(ig)
         end do
         if( what == 1 ) then
+!$omp do
            do ig=1,ngb
               drhocb(ig) = c * drhocb(ig)
            end do
         end if
-
-        if(iprsta >= 4) &
-             WRITE( stdout,'(a,f12.8)') ' integrated core charge= ',omegab*rhocb(1)
-        
         deallocate( jl, fint )
         if( what == 1 ) then
            deallocate(djl)
         end if
+!$omp end parallel
+
+        if(iprsta >= 4) &
+             WRITE( stdout,'(a,f12.8)') ' integrated core charge= ',omegab*rhocb(1)
+        
 
         return
       end subroutine compute_rhocg
@@ -209,9 +216,9 @@
         real(DP), allocatable:: df(:), dfigl(:)
         real(DP), external :: qe_erf, qe_erfc
 !
-        allocate( figl(ngs), f(mesh), vscr(mesh) )
+        allocate( vscr(mesh), figl(ngs) )
         if (tpre) then
-           allocate( dfigl(ngs), df(mesh) )
+           allocate( dfigl(ngs) )
         end if
         !
         !     definition of irmax: gridpoint beyond which potential is zero
@@ -237,18 +244,30 @@
         ! ... dv0 is the correction to the G=0 term in CP needed to
         ! ...  reproduce the results from other PW codes
         !
+!$omp parallel default(none) private( ig, xg, ir, f, df ) &
+!$omp          shared( irmax, r, rcmax, mesh, oldvan, rab, dv0, tpiba2, g, ngs, vscr, tpre, zv, figl, vps, dvps, omega, dfigl )
+
+        allocate( f(mesh) )
+        if (tpre) then
+           allocate( df(mesh) )
+        end if
         DO ir = 1, irmax
            f(ir) = fpi * ( zv * qe_erfc( r(ir)/rcmax ) ) * r(ir)
         END DO
         DO ir = irmax + 1, mesh
           f(ir)=0.0d0
         END DO
+
+!$omp master
         IF ( oldvan ) THEN
            CALL herman_skillman_int( mesh, f, rab, dv0 )
         ELSE
            CALL simpson_cp90( mesh, f, rab, dv0 )
         END IF
+!$omp end master
         !
+
+!$omp do
         do ig = 1, ngs
           xg = sqrt( g(ig) * tpiba2 )
           if( xg < gsmall ) then
@@ -298,6 +317,7 @@
           end if
         end do
         !
+!$omp do
         do ig = 1, ngs
           xg = sqrt( g(ig) * tpiba2 )
           if( xg < gsmall ) then
@@ -319,10 +339,17 @@
             endif
           end if
         end do
-        !
-        deallocate( figl, f, vscr )
+
+        deallocate( f )
         if (tpre) then
-           deallocate( dfigl, df )
+           deallocate( df )
+        end if
+
+!$omp end parallel
+        !
+        deallocate( figl, vscr )
+        if (tpre) then
+           deallocate( dfigl )
         end if
         !
       return

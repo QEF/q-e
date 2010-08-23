@@ -54,7 +54,8 @@ MODULE cp_main_variables
   ! ...    deeq  = \int V_eff(r) q_lm(r) dr
   !
   REAL(DP), ALLOCATABLE :: bec(:,:), becdr(:,:,:)
-  REAL(DP), ALLOCATABLE :: bephi(:,:), becp(:,:)
+  REAL(DP), ALLOCATABLE :: bephi(:,:)
+  REAL(DP), ALLOCATABLE :: becp_dist(:,:)  ! distributed becp
   !
   ! ... mass preconditioning
   !
@@ -210,9 +211,13 @@ MODULE cp_main_variables
       ALLOCATE( becdr( nhsa, nspin*nlax, 3 ) )  
       !
       ALLOCATE( bec( nhsa, n ) )
+      !ALLOCATE( bec_dist(  nhsa, 2*nlax*nspin ) )  
+      ! factor 2 in the second dim is required because each task need 
+      ! at the same time row and colum component of becp
       !
       ALLOCATE( bephi( nhsa, nspin*nlax ) )
-      ALLOCATE( becp(  nhsa, n ) )
+      ALLOCATE( becp_dist( nhsa, nlax*nspin ) )  
+      !
       !
       CALL wave_descriptor_init( wfill, ngw, ngwt, nupdwn,  nupdwn, &
             1, 1, nspin, 'gamma', gzero )
@@ -240,7 +245,7 @@ MODULE cp_main_variables
       IF( ALLOCATED( bec ) )     DEALLOCATE( bec )
       IF( ALLOCATED( becdr ) )   DEALLOCATE( becdr )
       IF( ALLOCATED( bephi ) )   DEALLOCATE( bephi )
-      IF( ALLOCATED( becp ) )    DEALLOCATE( becp )
+      IF( ALLOCATED( becp_dist ) )    DEALLOCATE( becp_dist )
       IF( ALLOCATED( ema0bg ) )  DEALLOCATE( ema0bg )
       IF( ALLOCATED( lambda ) )  DEALLOCATE( lambda )
       IF( ALLOCATED( lambdam ) ) DEALLOCATE( lambdam )

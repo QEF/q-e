@@ -419,7 +419,7 @@
 
    INTERFACE ortho
       SUBROUTINE ortho_cp &
-         ( eigr, cp, phi, ngwx, x0, descla, diff, iter, ccc, bephi, becp, nbsp, nspin, nupdwn, iupdwn)
+         ( eigr, cp, phi, ngwx, x0, descla, diff, iter, ccc, bephi, becp_dist, nbsp, nspin, nupdwn, iupdwn)
          USE kinds,          ONLY: DP
          USE ions_base,      ONLY: nat
          USE uspp,           ONLY: nkb
@@ -431,13 +431,14 @@
          COMPLEX(DP) :: cp(ngwx,nbsp), phi(ngwx,nbsp), eigr(ngwx,nat)
          REAL(DP)    :: x0( :, :, : ), diff, ccc
          INTEGER     :: iter
-         REAL(DP)    :: bephi(:,:), becp(:,:)
+         REAL(DP)    :: bephi(:,:)
+         REAL(DP)    :: becp_dist(:,:)
       END SUBROUTINE
    END INTERFACE
 
    INTERFACE ortho_gamma
       SUBROUTINE ortho_gamma_x &
-         ( iopt, cp, ngwx, phi, becp, qbecp, nkbx, bephi, qbephi, &
+         ( iopt, cp, ngwx, phi, becp_dist, qbecp, nkbx, bephi, qbephi, &
            x0, nx0, descla, diff, iter, n, nss, istart )
          USE kinds,          ONLY: DP
          USE descriptors,    ONLY: descla_siz_
@@ -446,7 +447,8 @@
          INTEGER,  INTENT(IN)  :: ngwx, nkbx, nx0
          INTEGER,  INTENT(IN)  :: n, nss, istart
          COMPLEX(DP) :: phi( ngwx, n ), cp( ngwx, n )
-         REAL(DP)    :: bephi( :, : ), becp( :, : )
+         REAL(DP)    :: bephi( :, : )
+         REAL(DP)    :: becp_dist(:,:)
          REAL(DP)    :: qbephi( :, : ), qbecp( :, : )
          REAL(DP)    :: x0( nx0, nx0 )
          INTEGER,  INTENT(IN)  :: descla( descla_siz_ )

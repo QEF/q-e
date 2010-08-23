@@ -54,7 +54,7 @@ SUBROUTINE from_scratch( )
     USE wavefunctions_module, ONLY : c0, cm, phi => cp
     USE grid_dimensions,      ONLY : nr1, nr2, nr3
     USE time_step,            ONLY : delt
-    USE cp_main_variables,    ONLY : setval_lambda, descla, bephi, becp, becdr, nfi, &
+    USE cp_main_variables,    ONLY : setval_lambda, descla, bephi, becp_dist, becdr, nfi, &
                                      sfac, eigr, ei1, ei2, ei3, bec, taub, irb, eigrb, &
                                      lambda, lambdam, lambdap, ema0bg, rhog, rhor, rhos, &
                                      vpot, ht0, edft, nlax
@@ -240,7 +240,7 @@ SUBROUTINE from_scratch( )
 
          if( tortho ) then
             CALL ortho( eigr, c0, phi, ngw, lambda, descla, &
-                        bigr, iter, ccc, bephi, becp, nbsp, nspin, nupdwn, iupdwn )
+                        bigr, iter, ccc, bephi, becp_dist, nbsp, nspin, nupdwn, iupdwn )
          else
             CALL gram( vkb, bec, nkb, c0, ngw, nbsp )
          endif
@@ -257,7 +257,7 @@ SUBROUTINE from_scratch( )
                i1 = (iss-1)*nlax+1
                i2 = iss*nlax
                CALL updatc( ccc, nbsp, lambda(:,:,iss), SIZE(lambda,1), phi, SIZE(phi,1), &
-                            bephi(:,i1:i2), SIZE(bephi,1), becp, bec, c0, nupdwn(iss), iupdwn(iss), &
+                            bephi(:,i1:i2), SIZE(bephi,1), becp_dist(:,i1:i2), bec, c0, nupdwn(iss), iupdwn(iss), &
                             descla(:,iss) )
             END DO
          END IF

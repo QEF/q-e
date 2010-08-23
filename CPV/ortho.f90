@@ -8,7 +8,7 @@
 
 
 !=----------------------------------------------------------------------------=!
-   SUBROUTINE ortho_gamma_x( iopt, cp, ngwx, phi, becp, qbecp, nkbx, bephi, qbephi, &
+   SUBROUTINE ortho_gamma_x( iopt, cp, ngwx, phi, becp_dist, qbecp, nkbx, bephi, qbephi, &
                            x0, nx0, descla, diff, iter, n, nss, istart )
 !=----------------------------------------------------------------------------=!
       !
@@ -30,7 +30,8 @@
       INTEGER,  INTENT(IN)  :: ngwx, nkbx, nx0
       INTEGER,  INTENT(IN)  :: n, nss, istart
       COMPLEX(DP) :: phi( ngwx, n ), cp( ngwx, n )
-      REAL(DP)    :: bephi( :, : ), becp( :, : )
+      REAL(DP)    :: bephi( :, : )
+      REAL(DP)    :: becp_dist( :, : )
       REAL(DP)    :: qbephi( :, : ), qbecp( :, : )
       REAL(DP)    :: x0( nx0, nx0 )
       INTEGER,  INTENT(IN)  :: descla( descla_siz_ )
@@ -152,7 +153,7 @@
       !
       !     sig = 1-<cp|s|cp>
       !
-      CALL sigset( cp, ngwx, becp, nkbx, qbecp, n, nss, istart, sig, nlam, descla )
+      CALL sigset( cp, ngwx, becp_dist, nkbx, qbecp, n, nss, istart, sig, nlam, descla )
       !
       !     tau = <s'c0|s|s'c0>
       !
@@ -232,7 +233,7 @@
 
 !=----------------------------------------------------------------------------=!
    SUBROUTINE ortho_cp( eigr, cp, phi, ngwx, x0, descla, diff, iter, ccc, &
-                        bephi, becp, nbsp, nspin, nupdwn, iupdwn )
+                        bephi, becp_dist, nbsp, nspin, nupdwn, iupdwn )
 !=----------------------------------------------------------------------------=!
       !
       !     input = cp (non-orthonormal), beta
@@ -258,7 +259,7 @@
       USE io_global,      ONLY: stdout, ionode
       USE cp_interfaces,  ONLY: ortho_gamma
       USE descriptors,    ONLY: nlac_ , ilac_ , descla_siz_ , nlar_ , ilar_
-      USE cp_main_variables,  ONLY: nlam, la_proc, nlax
+      USE cp_main_variables,  ONLY: nlam, la_proc, nlax, collect_bec
       USE mp_global,          ONLY: nproc_image, me_image, intra_image_comm  ! DEBUG
       !
       IMPLICIT NONE
@@ -269,10 +270,11 @@
       COMPLEX(DP) :: cp(ngwx,nbsp), phi(ngwx,nbsp), eigr(ngwx,nat)
       REAL(DP)    :: x0(:,:,:), diff, ccc
       INTEGER     :: iter
-      REAL(DP)    :: bephi(:,:), becp(:,:)
+      REAL(DP)    :: bephi(:,:)
+      REAL(DP)    :: becp_dist(:,:)
       !
       REAL(DP), ALLOCATABLE :: xloc(:,:)
-      REAL(DP), ALLOCATABLE :: qbephi(:,:,:), qbecp(:,:,:), bephi_c(:,:)
+      REAL(DP), ALLOCATABLE :: qbephi(:,:,:), qbecp(:,:,:), bec_col(:,:)
 
       INTEGER :: nkbx
       INTEGER :: istart, nss, ifail, i, j, iss, iv, jv, ia, is, inl, jnl
@@ -291,7 +293,10 @@
       !
       CALL start_clock( 'ortho' )
 
-      CALL nlsm1( nbsp, 1, nvb, eigr,  cp,  becp )
+      !CALL nlsm1( nbsp, 1, nvb, eigr,  cp,  becp )
+
+      CALL nlsm1_dist ( nbsp, 1, nvb, eigr, cp, becp_dist, nlax, nspin, descla )
+      !CALL collect_bec( becp, becp_dist, descla, nspin )
 
       CALL nlsm1_dist ( nbsp, 1, nvb, eigr, phi, bephi, nlax, nspin, descla )
       !
@@ -300,10 +305,10 @@
       ALLOCATE( qbephi( nkbx, nx0, nspin ) )
       !
       IF( nvb > 0 ) THEN
-         ALLOCATE( bephi_c ( nkbx, nlax*nspin ) )
-         CALL redist_row2col( nupdwn(1), bephi, bephi_c, nkbx, nlax, descla(1,1) )
+         ALLOCATE( bec_col ( nkbx, nlax*nspin ) )
+         CALL redist_row2col( nupdwn(1), bephi, bec_col, nkbx, nlax, descla(1,1) )
          IF( nspin == 2 ) THEN
-            CALL redist_row2col( nupdwn(2), bephi(1,nlax+1), bephi_c(1,nlax+1), nkbx, nlax, descla(1,2) )
+            CALL redist_row2col( nupdwn(2), bephi(1,nlax+1), bec_col(1,nlax+1), nkbx, nlax, descla(1,2) )
          END IF
       END IF
       !
@@ -323,7 +328,7 @@
                      IF( la_proc ) THEN
                         DO i = 1, nc
                            icc=i+ic-1
-                           CALL daxpy( na(is), qqf, bephi_c(jnl+1,i+(iss-1)*nlax),1,qbephi(inl+1,i,iss), 1 ) 
+                           CALL daxpy( na(is), qqf, bec_col(jnl+1,i+(iss-1)*nlax),1,qbephi(inl+1,i,iss), 1 ) 
                         END DO
                      END IF
                   END DO
@@ -332,11 +337,17 @@
          END DO
       END DO
 
-      IF( nvb > 0 ) DEALLOCATE( bephi_c )
       !
       ALLOCATE( qbecp ( nkbx, nx0, nspin ) )
 
       qbecp  = 0.d0
+
+      IF( nvb > 0 ) THEN
+         CALL redist_row2col( nupdwn(1), becp_dist, bec_col, nkbx, nlax, descla(1,1) )
+         IF( nspin == 2 ) THEN
+            CALL redist_row2col( nupdwn(2), becp_dist(1,nlax+1), bec_col(1,nlax+1), nkbx, nlax, descla(1,2) )
+         END IF
+      END IF
 
       DO is=1,nvb
          DO iv=1,nh(is)
@@ -351,8 +362,9 @@
                      ic     = descla( ilac_ , iss ) + istart - 1
                      IF( la_proc ) THEN
                         DO i = 1, nc
-                           icc=i+ic-1
-                           CALL daxpy( na(is), qqf, becp (jnl+1,icc),1, qbecp(inl+1,i,iss), 1 )
+                           !icc=i+ic-1
+                           !CALL daxpy( na(is), qqf, becp (jnl+1,icc),1, qbecp(inl+1,i,iss), 1 )
+                           CALL daxpy( na(is), qqf, bec_col(jnl+1,i+(iss-1)*nlax),1, qbecp(inl+1,i,iss), 1 )
                         END DO
                      END IF
                   END DO
@@ -360,6 +372,8 @@
             END DO
          END DO
       END DO
+      !
+      IF( nvb > 0 ) DEALLOCATE( bec_col )
       !
       ALLOCATE( xloc( nx0, nx0 ) )
       !
@@ -373,7 +387,8 @@
 
          IF( la_proc ) xloc = x0(:,:,iss) * ccc
 
-         CALL ortho_gamma( 0, cp, ngwx, phi, becp, qbecp(:,:,iss), nkbx, bephi(:,((iss-1)*nlax+1):iss*nlax), &
+         CALL ortho_gamma( 0, cp, ngwx, phi, becp_dist(:,(iss-1)*nlax+1:iss*nlax), qbecp(:,:,iss), nkbx, &
+                           bephi(:,((iss-1)*nlax+1):iss*nlax), &
                            qbephi(:,:,iss), xloc, nx0, descla(:,iss), diff, iter, nbsp, nss, istart )
 
          IF( iter > ortho_max ) THEN
