@@ -186,9 +186,9 @@ end if
          CALL ggenb ( b1b, b2b, b3b, nr1b, nr2b, nr3b, nr1bx, nr2bx, nr3bx, gcutb )
 
          ! initialize FFT table
-         
+#if defined __OPENMP && defined __FFTW 
          CALL cft_b_omp_init( nr1b, nr2b, nr3b )
-
+#endif
       ELSE IF( okvan .OR. nlcc_any ) THEN
 
          CALL errore( ' init_dimensions ', ' nr1b, nr2b, nr3b must be given for ultrasoft and core corrected pp ', 1 )
