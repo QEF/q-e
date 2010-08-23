@@ -13,7 +13,7 @@ if test $# = 0
 then
     dirs=" Modules clib PW CPV flib pwtools upftools PP PWCOND \
            Gamma PH D3 atomic GIPAW VdW EE XSpectra \
-	   GWW//gww GWW//pw4gww GWW//head" 
+	   GWW//gww GWW//pw4gww GWW//head ACFDT" 
           
 else
     dirs=$*
@@ -31,7 +31,7 @@ do
                   DEPENDS="$DEPENDS ../Modules "            ;;
 	PW | CPV )
 		  DEPENDS="$DEPENDS ../Modules ../EE"       ;;
-	PP | PWCOND | Gamma | PH | GIPAW | pwtools )
+	PP | PWCOND | Gamma | PH | GIPAW | pwtools | ACFDT )
 		  DEPENDS="$DEPENDS ../Modules ../EE ../PW" ;;
 	D3 | VdW ) 
                   DEPENDS="$DEPENDS ../Modules ../EE ../PW ../PH" ;;
@@ -47,35 +47,35 @@ do
 		  ../../PW ../../EE ../../PH ../pw4gww " ;;
     esac
 
-    # generate dependencies file
+    # generate dependencies file (only for directories that are present)
     if test -d $TOPDIR/../$DIR
     then
 	cd $TOPDIR/../$DIR
        
 	$TOPDIR/moduledep.sh $DEPENDS > make.depend
 	$TOPDIR/includedep.sh $DEPENDS >> make.depend
-    fi
 
-    # handle special cases
-    sed '/@\/cineca\/prod\/hpm\/include\/f_hpm.h@/d' \
-        make.depend > make.depend.tmp
-    sed '/@iso_c_binding@/d' make.depend.tmp > make.depend
+        # handle special cases
+        sed '/@\/cineca\/prod\/hpm\/include\/f_hpm.h@/d' \
+            make.depend > make.depend.tmp
+        sed '/@iso_c_binding@/d' make.depend.tmp > make.depend
+    
+        if test "$DIR" = "clib"
+        then
+            mv make.depend make.depend.tmp
+            sed 's/@fftw.c@/fftw.c/' make.depend.tmp > make.depend
+        fi
 
-    if test "$DIR" = "clib"
-    then
-        mv make.depend make.depend.tmp
-        sed 's/@fftw.c@/fftw.c/' make.depend.tmp > make.depend
-    fi
+        rm -f make.depend.tmp
 
-    rm -f make.depend.tmp
-
-    # check for missing dependencies
-    if grep @ make.depend
-    then
-	notfound=1
-	echo WARNING: dependencies not found in directory $DIR
-    else
-        echo directory $DIR : ok
+        # check for missing dependencies 
+        if grep @ make.depend
+        then
+	   notfound=1
+	   echo WARNING: dependencies not found in directory $DIR
+       else
+           echo directory $DIR : ok
+       fi
     fi
 done
 if test "$notfound" = ""
