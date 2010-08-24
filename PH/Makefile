@@ -189,7 +189,7 @@ QEMODS = ../Modules/libqemod.a
 
 TLDEPS= bindir mods libs pw
 
-all : tldeps libph.a ph.x dynmat.x matdyn.x q2r.x lambda.x
+all : tldeps libph.a ph.x dynmat.x matdyn.x q2r.x lambda.x fqha.x
 
 ph.x : phonon.o libph.a $(PWOBJS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o ph.x phonon.o libph.a \

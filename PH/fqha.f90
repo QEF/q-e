@@ -33,9 +33,10 @@ program fqha
       end if
       if ( i > 1 ) then
          de = nu(i) - nu(i-1)
-      else if ( i > 2 ) then
-         de_ = nu(i) - nu(i-1)
-         if ( abs(de - de_) > 1.0d-4 ) stop ' wrong grid: not uniform' 
+         if ( i > 2 ) then
+            de_ = nu(i) - nu(i-1)
+            if ( abs(de - de_) > 1.0d-4 ) stop ' wrong grid: not uniform' 
+         end if
       end if
   enddo
   read(1,*,end=10,err=20) nu_,dos_
@@ -52,7 +53,7 @@ program fqha
   write(*,"('Check: 3*Nat = ',f8.4,5x'zero-point energy (Ry)=',f15.8)") norm,F0
   write (*,"('Output file for the Free energy >>> ',$)")
   read(*,'(a)') filename
-  if ( filename /= '') then
+  if ( filename == '') then
      filename = 'fqha.out'
      write(*,"(' output to file ',a)") trim(filename)
   end if
