@@ -216,6 +216,9 @@ lambda.x : lambda.o $(PWOBJS) $(QEMODS) $(LIBOBJS)
                  $(PWOBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../PH/$@ . )
 
+fqha.o :
+	$(MPIF90) $(FFLAGS_NOOPT) -c fqha.f90
+
 fqha.x : fqha.o $(PWOBJS) $(QEMODS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ fqha.o \
                  $(PWOBJS) $(QEMODS) $(LIBOBJS) $(LIBS)

@@ -38,11 +38,11 @@ program fqha
             if ( abs(de - de_) > 1.0d-4 ) stop ' wrong grid: not uniform' 
          end if
       end if
+      ndiv=i
   enddo
   read(1,*,end=10,err=20) nu_,dos_
   write(*,"('File read only up to line # ',i5)") ndivx
 10 close(1)
-  ndiv=i-1
   write(*,"('Read ',i5,' lines; Delta e (cm^-1) =',f10.6)") ndiv,de
   ! zero point energy : \sum (\hbar\omega/2) g(omega) d\omega
   F0 = 0.5 * de * dot_product ( dos(1:ndiv), nu(1:ndiv) ) 
