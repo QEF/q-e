@@ -9,22 +9,23 @@
 SUBROUTINE tpssmeta(nnr, nspin,grho,rho,kedtau,etxc)
   !     ===================
   !--------------------------------------------------------------------
+  use kinds, only: dp
   use gvecp, only: ng => ngm
   IMPLICIT NONE
   !
   ! input
   integer nspin , nnr
-  real(8)  grho(nnr,3,nspin), rho(nnr,nspin),kedtau(nnr,nspin)
+  real(dp)  grho(nnr,3,nspin), rho(nnr,nspin),kedtau(nnr,nspin)
   ! output: excrho: exc * rho ;  E_xc = \int excrho(r) d_r
   ! output: rhor:   contains the exchange-correlation potential
-  real(8)  etxc
-  REAL(8) :: zeta, rh, grh2
+  real(dp)  etxc
+  REAL(dp) :: zeta, rh, grh2
   INTEGER :: k, ipol, is
-  REAL(8) :: grho2 (2), sx, sc, v1x, v2x, v3x,v1c, v2c, v3c, &
+  REAL(dp) :: grho2 (2), sx, sc, v1x, v2x, v3x,v1c, v2c, v3c, &
        v1xup, v1xdw, v2xup, v2xdw, v1cup, v1cdw ,v2cup(3),v2cdw(3), &
        v3xup, v3xdw,grhoup(3),grhodw(3),&
   segno, arho, atau
-  REAL(8), PARAMETER :: epsr = 1.0d-6, epsg = 1.0d-10
+  REAL(dp), PARAMETER :: epsr = 1.0d-6, epsg = 1.0d-10
   etxc = 0.d0
   ! calculate the gradient of rho+rho_core in real space
   DO k = 1, nnr

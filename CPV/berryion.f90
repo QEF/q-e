@@ -20,30 +20,31 @@ subroutine berryion( tau0,fion, tfor,ipol,evalue,enbi)
 !  evalue  : input, scale for electric field
 !  enbi    : output, berry phase energy of the ions
 
+  use kinds,      only : dp
   use constants,  only : pi, fpi
   use ions_base,  ONLY : nsp, na, zv
   use cell_base,  only : a1, a2, a3
 
   implicit none
 
-  real(8) tau0(3,*)
-  real(8) fion(3,*)
-  real(8) enbi, evalue
+  real(dp) tau0(3,*)
+  real(dp) fion(3,*)
+  real(dp) enbi, evalue
   integer ipol, isa
   logical tfor
 
 !local variables
-  real(8) gmes
-  real(8) pola
+  real(dp) gmes
+  real(dp) pola
   integer is, ia
-  complex(8) temp, ci
+  complex(dp) temp, ci
 
-  temp = (0.d0,0.d0)
-  ci = (0.d0,1.d0)
+  temp = (0.0_dp,0.0_dp)
+  ci = (0.0_dp,1.0_dp)
 
   if(ipol.eq.1) then
      gmes=a1(1)**2+a1(2)**2+a1(3)**2
-     gmes=2*pi/SQRT(gmes)
+     gmes=2.0_dp*pi/SQRT(gmes)
   endif
   if(ipol.eq.2) then
      gmes=a2(1)**2+a2(2)**2+a2(3)**2
@@ -51,9 +52,9 @@ subroutine berryion( tau0,fion, tfor,ipol,evalue,enbi)
   endif
   if(ipol.eq.3) then
      gmes=a3(1)**2+a3(2)**2+a3(3)**2
-     gmes=2*pi/SQRT(gmes)
+     gmes=2.0_dp*pi/SQRT(gmes)
   endif
-  pola=0.d0
+  pola=0.0_dp
   isa = 0
   do is=1,nsp
      do ia=1,na(is)
@@ -79,13 +80,13 @@ end subroutine berryion
 !-----------------------------------------------------------------------
 !this subroutine gives the center of the ionic charge
 
-
+      use kinds, only : dp
       use ions_base, only: na, nsp, zv
 !
       implicit none
-      real(8) tau(3,*), cdz(3)
+      real(dp) tau(3,*), cdz(3)
 ! local variables
-      real(8) zmas
+      real(dp) zmas
       integer is,i,ia,isa
 !
       zmas=0.0d0
@@ -116,21 +117,22 @@ end subroutine berryion
         subroutine noforce(fion, ipol)
 !----------------------------------------------------
 
-! this subroutine adds a electric force, in order
+! this subroutine adds an electric force, in order
 ! to keep steady the center of mass along the electric
 ! field direction
 
+          use kinds,     only : dp
           use ions_base, ONLY : na, nsp, zv
 
           implicit none
 
-          real(8) fion(3,*)
+          real(dp) fion(3,*)
           integer ipol!el. field polarization
 
 
           integer i,ia,is,isa
-          real(8) fcm!force appplied on center of mass
-          real(8) tch!total charge
+          real(dp) fcm!force appplied on center of mass
+          real(dp) tch!total charge
 
           fcm=0.d0
           tch=0.d0

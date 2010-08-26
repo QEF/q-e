@@ -250,16 +250,16 @@ subroutine dforceb(c0, i, betae, ipol, bec0, ctabin, gqq, gqqm, qmat, dq2, df)
  subroutine enberry( detq,  ipol, enb)
 
    use constants
-   use parameters
+   use kinds, only: dp
    use cell_base, only: a1, a2, a3
    USE electrons_base, ONLY : nspin
 
    implicit none
 
-   complex(8) detq
-   real(8) enb
+   complex(dp) detq
+   real(dp) enb
    integer ipol
-   real(8) gmes
+   real(dp) gmes
 
      
    if(ipol.eq.1) then

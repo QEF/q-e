@@ -38,9 +38,9 @@
       USE gvecw,                  ONLY: ngw, ggp
       USE cell_base,              ONLY: tpiba2
       USE ensemble_dft,           ONLY: tens
-      USE fft_base,               ONLY: dffts
       USE funct,                  ONLY: dft_is_meta
-      USE cp_interfaces,          ONLY: fwfft, invfft
+      USE fft_base,               ONLY: dffts
+      USE fft_interfaces,         ONLY: fwfft, invfft
       USE mp_global,              ONLY: nogrp, me_image, ogrp_comm, &
                                         use_task_groups
 !

@@ -258,8 +258,8 @@
       REAL(DP)    :: ainvb(3,3)
 ! local           
       integer :: i,j,k, is, ia, ig, isa
-      complex(8), allocatable:: ei1b(:,:), ei2b(:,:), ei3b(:,:)
-      real(8), allocatable :: taus(:,:)
+      complex(dp), allocatable:: ei1b(:,:), ei2b(:,:), ei3b(:,:)
+      real(dp), allocatable :: taus(:,:)
 !
       allocate(ei1b(-nr1b:nr1b,nat))
       allocate(ei2b(-nr2b:nr2b,nat))

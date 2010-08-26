@@ -27,7 +27,8 @@ SUBROUTINE vol_clu(rho_real,rho_g,s_fac,flag)
       use cp_main_variables, only: drhor
       use control_flags, only: tpre
       use local_pseudo
-      USE cp_interfaces,    ONLY: fwfft, invfft
+      use fft_base, ONLY : dfftP
+      USE fft_interfaces,    ONLY: invfft
       use grid_dimensions, only: nr1, nr2, nr3,                         &
      &                   nr1x, nr2x, nr3x, nnr => nnrx
       use pres_ai_mod, only: rho_thr, n_cntr, cntr, step_rad, fill_vac, &
@@ -36,7 +37,6 @@ SUBROUTINE vol_clu(rho_real,rho_g,s_fac,flag)
      &                       posv, xc0, weight, volclu, stress_vol,     &
      &                       surfclu, n_ele, jellium, R_j, h_j, e_j,    &
      &                       nelect, P_ext
-      use fft_base
 #ifdef __PARA
       use mp_global, only: nproc, mpime
       use io_global, only: ionode

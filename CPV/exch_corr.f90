@@ -273,8 +273,8 @@
       use grid_dimensions, only: nr1, nr2, nr3, nnr => nnrx, nr1x, nr2x, nr3x
       use cell_base, only: ainv, tpiba, omega
       use cp_main_variables, only: drhog
-      USE cp_interfaces, ONLY: fwfft, invfft
-      USE fft_base,      ONLY: dfftp
+      USE fft_interfaces, ONLY: fwfft, invfft
+      USE fft_base,       ONLY: dfftp
 !                 
       implicit none  
 ! input                   

@@ -14,6 +14,7 @@ subroutine qqberry2( gqq,gqqm, ipol)
 
 !   gqq output: as defined above
 
+  use kinds,              only: dp
   use uspp_param,         only: upf, lmaxq, nbetam, nh, nhm, oldvan
   use uspp,               only: indv, lpx, lpl, ap,nhtolm
   use atom,               only: rgrid
@@ -32,20 +33,20 @@ subroutine qqberry2( gqq,gqqm, ipol)
   
   implicit none
 
-  complex(8) gqq(nhm,nhm,nas,nsp)
-  complex(8) gqqm(nhm,nhm,nas,nsp)
-  real(8) gmes
+  complex(dp) gqq(nhm,nhm,nas,nsp)
+  complex(dp) gqqm(nhm,nhm,nas,nsp)
+  real(dp) gmes
   integer :: ipol
 
 ! local variables
 
   integer :: ndm, ig, is, iv, jv, i, istart, il,l,ir, igi,ia
-  real(8), allocatable:: fint(:),jl(:)
-  real(8), allocatable:: qrl(:,:,:), qradb2(:,:,:,:) 
-  real(8) c, xg
-  complex(8) qgbs,sig
+  real(dp), allocatable:: fint(:),jl(:)
+  real(dp), allocatable:: qrl(:,:,:), qradb2(:,:,:,:) 
+  real(dp) c, xg
+  complex(dp) qgbs,sig
   integer :: ivs, jvs, ivl, jvl, lp, ijv
-  real(8), allocatable:: ylm(:,:)
+  real(dp), allocatable:: ylm(:,:)
 
   IF( .NOT. ALLOCATED( rgrid ) ) &
      CALL errore( ' qqberry2 ', ' rgrid not allocated ', 1 )
@@ -213,6 +214,7 @@ subroutine qqupdate(eigr, gqqm0, gqq, gqqm, ipol)
 
 !   gqq output: as defined above
 
+  use kinds, only : dp
   use cvan
   use gvecw, only: ngw
   use ions_base, only : nas => nax, nat, na, nsp
@@ -224,10 +226,10 @@ subroutine qqupdate(eigr, gqqm0, gqq, gqqm, ipol)
   implicit none
 
  
-  complex(8) eigr(ngw,nat)
-  complex(8) gqq(nhm,nhm,nas,nsp)
-  complex(8) gqqm(nhm,nhm,nas,nsp)
-  complex(8) gqqm0(nhm,nhm,nas,nsp)
+  complex(dp) eigr(ngw,nat)
+  complex(dp) gqq(nhm,nhm,nas,nsp)
+  complex(dp) gqqm(nhm,nhm,nas,nsp)
+  complex(dp) gqqm0(nhm,nhm,nas,nsp)
 
   integer ipol
   

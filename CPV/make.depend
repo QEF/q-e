@@ -63,6 +63,7 @@ chargedensity.o : ../Modules/constants.o
 chargedensity.o : ../Modules/control_flags.o
 chargedensity.o : ../Modules/electrons_base.o
 chargedensity.o : ../Modules/fft_base.o
+chargedensity.o : ../Modules/fft_interfaces.o
 chargedensity.o : ../Modules/funct.o
 chargedensity.o : ../Modules/griddim.o
 chargedensity.o : ../Modules/io_files.o
@@ -150,7 +151,6 @@ cp_fpmd.o : cpr_mod.o
 cp_fpmd.o : pseudopot.o
 cp_interfaces.o : ../Modules/cell_base.o
 cp_interfaces.o : ../Modules/descriptors.o
-cp_interfaces.o : ../Modules/fft_types.o
 cp_interfaces.o : ../Modules/griddim.o
 cp_interfaces.o : ../Modules/ions_base.o
 cp_interfaces.o : ../Modules/kind.o
@@ -189,6 +189,7 @@ cplib.o : ../Modules/dspev_drv.o
 cplib.o : ../Modules/electrons_base.o
 cplib.o : ../Modules/energies.o
 cplib.o : ../Modules/fft_base.o
+cplib.o : ../Modules/fft_interfaces.o
 cplib.o : ../Modules/fft_types.o
 cplib.o : ../Modules/funct.o
 cplib.o : ../Modules/griddim.o
@@ -212,6 +213,7 @@ cplib_meta.o : ../Modules/control_flags.o
 cplib_meta.o : ../Modules/electrons_base.o
 cplib_meta.o : ../Modules/energies.o
 cplib_meta.o : ../Modules/fft_base.o
+cplib_meta.o : ../Modules/fft_interfaces.o
 cplib_meta.o : ../Modules/griddim.o
 cplib_meta.o : ../Modules/io_global.o
 cplib_meta.o : ../Modules/ions_base.o
@@ -219,7 +221,6 @@ cplib_meta.o : ../Modules/kind.o
 cplib_meta.o : ../Modules/mp.o
 cplib_meta.o : ../Modules/mp_global.o
 cplib_meta.o : ../Modules/recvec.o
-cplib_meta.o : cp_interfaces.o
 cplib_meta.o : modules.o
 cpr.o : ../Modules/autopilot.o
 cpr.o : ../Modules/cell_base.o
@@ -352,6 +353,7 @@ exch_corr.o : ../Modules/cell_base.o
 exch_corr.o : ../Modules/constants.o
 exch_corr.o : ../Modules/control_flags.o
 exch_corr.o : ../Modules/fft_base.o
+exch_corr.o : ../Modules/fft_interfaces.o
 exch_corr.o : ../Modules/funct.o
 exch_corr.o : ../Modules/griddim.o
 exch_corr.o : ../Modules/io_global.o
@@ -365,9 +367,6 @@ exch_corr.o : cp_interfaces.o
 exch_corr.o : mainvar.o
 exch_corr.o : modules.o
 fft.o : ../Modules/fft_base.o
-fft.o : ../Modules/fft_parallel.o
-fft.o : ../Modules/fft_scalar.o
-fft.o : ../Modules/fft_types.o
 fft.o : ../Modules/griddim.o
 fft.o : ../Modules/kind.o
 fft.o : ../Modules/mp_global.o
@@ -376,6 +375,7 @@ forces.o : ../Modules/cell_base.o
 forces.o : ../Modules/constants.o
 forces.o : ../Modules/control_flags.o
 forces.o : ../Modules/fft_base.o
+forces.o : ../Modules/fft_interfaces.o
 forces.o : ../Modules/funct.o
 forces.o : ../Modules/griddim.o
 forces.o : ../Modules/ions_base.o
@@ -384,7 +384,6 @@ forces.o : ../Modules/mp_global.o
 forces.o : ../Modules/parallel_include.o
 forces.o : ../Modules/recvec.o
 forces.o : ../Modules/uspp.o
-forces.o : cp_interfaces.o
 forces.o : ensemble_dft.o
 forces.o : modules.o
 fpmdpp.o : ../Modules/constants.o
@@ -425,9 +424,9 @@ fromscra.o : modules.o
 fromscra.o : ortho_base.o
 gradrho.o : ../Modules/cell_base.o
 gradrho.o : ../Modules/fft_base.o
+gradrho.o : ../Modules/fft_interfaces.o
 gradrho.o : ../Modules/griddim.o
 gradrho.o : ../Modules/recvec.o
-gradrho.o : cp_interfaces.o
 gtable.o : ../Modules/io_global.o
 gtable.o : ../Modules/mp.o
 gtable.o : ../Modules/mp_global.o
@@ -438,6 +437,7 @@ init.o : ../Modules/berry_phase.o
 init.o : ../Modules/cell_base.o
 init.o : ../Modules/control_flags.o
 init.o : ../Modules/fft_base.o
+init.o : ../Modules/fft_scalar.o
 init.o : ../Modules/fft_types.o
 init.o : ../Modules/griddim.o
 init.o : ../Modules/io_files.o
@@ -544,6 +544,7 @@ ions_positions.o : ../Modules/printout_base.o
 ions_positions.o : atoms_type.o
 ksstates.o : ../Modules/electrons_base.o
 ksstates.o : ../Modules/fft_base.o
+ksstates.o : ../Modules/fft_interfaces.o
 ksstates.o : ../Modules/griddim.o
 ksstates.o : ../Modules/io_global.o
 ksstates.o : ../Modules/kind.o
@@ -551,7 +552,6 @@ ksstates.o : ../Modules/mp.o
 ksstates.o : ../Modules/mp_global.o
 ksstates.o : ../Modules/recvec.o
 ksstates.o : ../Modules/xml_io_base.o
-ksstates.o : cp_interfaces.o
 main_loops.o : ../Modules/image_io_routines.o
 main_loops.o : ../Modules/ions_base.o
 main_loops.o : ../Modules/kind.o
@@ -624,6 +624,7 @@ nlcc.o : ../Modules/cell_base.o
 nlcc.o : ../Modules/control_flags.o
 nlcc.o : ../Modules/electrons_base.o
 nlcc.o : ../Modules/fft_base.o
+nlcc.o : ../Modules/fft_interfaces.o
 nlcc.o : ../Modules/griddim.o
 nlcc.o : ../Modules/io_global.o
 nlcc.o : ../Modules/ions_base.o
@@ -699,6 +700,7 @@ potentials.o : ../Modules/cell_base.o
 potentials.o : ../Modules/constants.o
 potentials.o : ../Modules/control_flags.o
 potentials.o : ../Modules/fft_base.o
+potentials.o : ../Modules/fft_interfaces.o
 potentials.o : ../Modules/griddim.o
 potentials.o : ../Modules/io_files.o
 potentials.o : ../Modules/io_global.o
@@ -709,7 +711,6 @@ potentials.o : ../Modules/mp_global.o
 potentials.o : ../Modules/recvec.o
 potentials.o : ../Modules/sic.o
 potentials.o : atoms_type.o
-potentials.o : cp_interfaces.o
 potentials.o : mainvar.o
 pres_ai_mod.o : ../Modules/constants.o
 pres_ai_mod.o : ../Modules/kind.o
@@ -889,6 +890,7 @@ vol_clu.o : ../Modules/constants.o
 vol_clu.o : ../Modules/control_flags.o
 vol_clu.o : ../Modules/electrons_base.o
 vol_clu.o : ../Modules/fft_base.o
+vol_clu.o : ../Modules/fft_interfaces.o
 vol_clu.o : ../Modules/griddim.o
 vol_clu.o : ../Modules/io_global.o
 vol_clu.o : ../Modules/ions_base.o
@@ -896,7 +898,6 @@ vol_clu.o : ../Modules/mp.o
 vol_clu.o : ../Modules/mp_global.o
 vol_clu.o : ../Modules/parameters.o
 vol_clu.o : ../Modules/recvec.o
-vol_clu.o : cp_interfaces.o
 vol_clu.o : ions_positions.o
 vol_clu.o : mainvar.o
 vol_clu.o : modules.o
@@ -931,6 +932,7 @@ wf.o : ../Modules/constants.o
 wf.o : ../Modules/control_flags.o
 wf.o : ../Modules/electrons_base.o
 wf.o : ../Modules/fft_base.o
+wf.o : ../Modules/fft_interfaces.o
 wf.o : ../Modules/griddim.o
 wf.o : ../Modules/io_global.o
 wf.o : ../Modules/ions_base.o
@@ -942,7 +944,6 @@ wf.o : ../Modules/parallel_include.o
 wf.o : ../Modules/printout_base.o
 wf.o : ../Modules/recvec.o
 wf.o : ../Modules/uspp.o
-wf.o : cp_interfaces.o
 wf.o : modules.o
 wf.o : wannier.o
 wf.o : wannier_base.o

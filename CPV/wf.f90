@@ -44,7 +44,7 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
   USE mp,                       ONLY : mp_barrier, mp_sum
   USE mp_wave,                  ONLY : redistwf
   USE mp_global,                ONLY : nproc_image, me_image, root_image, intra_image_comm
-  USE cp_interfaces,            ONLY : invfft
+  USE fft_interfaces,           ONLY : invfft
   USE fft_base,                 ONLY : dfftp, dfftb
   USE printout_base,            ONLY : printout_base_open, printout_base_unit, &
                                        printout_base_close

@@ -121,7 +121,8 @@
                                     use_task_groups, ogrp_comm, nolist
       USE funct,              ONLY: dft_is_meta
       USE cg_module,          ONLY: tcg
-      USE cp_interfaces,      ONLY: fwfft, invfft, stress_kin
+      USE cp_interfaces,      ONLY: stress_kin
+      USE fft_interfaces,     ONLY: fwfft, invfft
       USE fft_base,           ONLY: dffts, dfftp
       USE cp_interfaces,      ONLY: checkrho
       USE cdvan,              ONLY: dbec, drhovan
@@ -647,7 +648,7 @@
       use grid_dimensions,    only: nr1, nr2, nr3, &
                                     nr1x, nr2x, nr3x, nnrx
       use cell_base,          only: tpiba
-      USE cp_interfaces,      ONLY: invfft
+      USE fft_interfaces,     ONLY: invfft
       USE fft_base,           ONLY: dfftp
 !
       implicit none
@@ -776,7 +777,7 @@ SUBROUTINE drhov(irb,eigrb,rhovan,drhovan,rhog,rhor,drhog,drhor)
       USE qgb_mod,                  ONLY: qgb
       USE dqgb_mod,                 ONLY: dqgb
       USE recvecs_indexes,          ONLY: nm, np
-      USE cp_interfaces,            ONLY: fwfft, invfft
+      USE fft_interfaces,           ONLY: fwfft, invfft
       USE fft_base,                 ONLY: dfftb, dfftp
 
       IMPLICIT NONE
@@ -1068,7 +1069,7 @@ SUBROUTINE rhov(irb,eigrb,rhovan,rhog,rhor)
       USE control_flags,            ONLY: iprint, iprsta, tpre
       USE qgb_mod,                  ONLY: qgb
       USE recvecs_indexes,          ONLY: np, nm
-      USE cp_interfaces,            ONLY: fwfft, invfft
+      USE fft_interfaces,           ONLY: fwfft, invfft
       USE fft_base,                 ONLY: dfftb, dfftp
 !
       IMPLICIT NONE

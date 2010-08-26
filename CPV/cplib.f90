@@ -204,7 +204,7 @@ END FUNCTION
       USE mp_global,          ONLY: intra_image_comm
       USE uspp_param,         ONLY: upf
       USE grid_dimensions,    ONLY: nr1, nr2, nr3, nr1x, nr2x, nr3x
-      USE cp_interfaces,      ONLY: fwfft
+      USE fft_interfaces,     ONLY: fwfft
       USE fft_base,           ONLY: dfftp
 
       IMPLICIT NONE
@@ -996,7 +996,7 @@ END FUNCTION
       USE control_flags,            ONLY: iprint, thdyn, tfor, tprnfor
       USE mp,                       ONLY: mp_sum
       USE mp_global,                ONLY: intra_image_comm
-      USE cp_interfaces,            ONLY: invfft
+      USE fft_interfaces,           ONLY: invfft
       USE fft_base,                 ONLY: dfftb
 !
       IMPLICIT NONE
@@ -1793,6 +1793,7 @@ END FUNCTION
 !     Requires on input: c=psi, bec=<c|beta>, rhoup(r), rhodw(r)
 !     Assumes real psi, with only half G vectors.
 !
+      USE kinds, only: dp
       USE electrons_base, ONLY: nx => nbspx, n => nbsp, iupdwn, nupdwn, f, nel, nspin
       USE io_global, ONLY: stdout
       USE mp_global, ONLY: intra_image_comm
@@ -1809,12 +1810,12 @@ END FUNCTION
 !
       IMPLICIT NONE
 ! input
-      REAL(8) bec(nhsa,n), rhor(nnr,nspin)
-      COMPLEX(8) c(ngw,nx)
+      REAL(dp) bec(nhsa,n), rhor(nnr,nspin)
+      COMPLEX(dp) c(ngw,nx)
 ! local variables
       INTEGER nup, ndw, ir, i, j, jj, ig, ia, is, iv, jv, inl, jnl
-      REAL(8) spin0, spin1, spin2, fup, fdw
-      REAL(8), ALLOCATABLE:: overlap(:,:), temp(:)
+      REAL(dp) spin0, spin1, spin2, fup, fdw
+      REAL(dp), ALLOCATABLE:: overlap(:,:), temp(:)
       LOGICAL frac
 !
 !
@@ -1961,11 +1962,11 @@ END FUNCTION
       USE funct,            ONLY: dft_is_meta
       USE pres_ai_mod,      ONLY: abivol, abisur, v_vol, P_ext, volclu,  &
                                   Surf_t, surfclu
-      USE cp_interfaces,    ONLY: fwfft, invfft, self_vofhar
+      USE fft_interfaces,   ONLY: fwfft, invfft
       USE sic_module,       ONLY: self_interaction, sic_epsilon, sic_alpha
       USE energies,         ONLY: self_exc, self_ehte
       USE cp_interfaces,    ONLY: pseudo_stress, compute_gagb, stress_hartree, &
-                                  add_drhoph, stress_local, force_loc
+                                  add_drhoph, stress_local, force_loc, self_vofhar
       USE fft_base,         ONLY: dfftp, dffts
       USE ldau_cp,          ONLY: e_hubbard
       USE step_penalty,     ONLY: e_pen

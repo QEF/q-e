@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2006 Quantum ESPRESSO group
+! Copyright (C) 2006-2010 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -54,7 +54,7 @@
 !   like infiniband, ethernet, myrinet
 !
 !-----------------------------------------------------------------------
-SUBROUTINE fft_scatter ( f_in, nrx3, nxx_, f_aux, ncp_, npp_, sign, use_tg )
+SUBROUTINE fft_scatter ( f_in, nr3x, nxx_, f_aux, ncp_, npp_, sign, use_tg )
   !-----------------------------------------------------------------------
   !
   ! transpose the fft grid across nodes
@@ -62,8 +62,8 @@ SUBROUTINE fft_scatter ( f_in, nrx3, nxx_, f_aux, ncp_, npp_, sign, use_tg )
   !
   !    "columns" (or "pencil") representation:
   !    processor "me" has ncp_(me) contiguous columns along z
-  !    Each column has nrx3 elements for a fft of order nr3
-  !    nrx3 can be =nr3+1 in order to reduce memory conflicts.
+  !    Each column has nr3x elements for a fft of order nr3
+  !    nr3x can be =nr3+1 in order to reduce memory conflicts.
   !
   !    The transpose take places in two steps:
   !    1) on each processor the columns are divided into slices along z
@@ -93,7 +93,7 @@ SUBROUTINE fft_scatter ( f_in, nrx3, nxx_, f_aux, ncp_, npp_, sign, use_tg )
 
   IMPLICIT NONE
 
-  INTEGER, INTENT(in)           :: nrx3, nxx_, sign, ncp_ (:), npp_ (:)
+  INTEGER, INTENT(in)           :: nr3x, nxx_, sign, ncp_ (:), npp_ (:)
   COMPLEX (DP), INTENT(inout)   :: f_in (nxx_), f_aux (nxx_)
   LOGICAL, OPTIONAL, INTENT(in) :: use_tg
 
@@ -200,33 +200,33 @@ SUBROUTINE fft_scatter ( f_in, nrx3, nxx_, f_aux, ncp_, npp_, sign, use_tg )
         SELECT CASE ( npp_ ( gproc ) )
         CASE ( 1 )
            DO k = 1, ncp_ (me)
-              f_aux (dest + (k - 1) ) =  f_in (from + (k - 1) * nrx3 )
+              f_aux (dest + (k - 1) ) =  f_in (from + (k - 1) * nr3x )
            ENDDO
         CASE ( 2 )
            DO k = 1, ncp_ (me)
-              f_aux ( dest + (k - 1) * 2 - 1 + 1 ) =  f_in ( from + (k - 1) * nrx3 - 1 + 1 )
-              f_aux ( dest + (k - 1) * 2 - 1 + 2 ) =  f_in ( from + (k - 1) * nrx3 - 1 + 2 )
+              f_aux ( dest + (k - 1) * 2 - 1 + 1 ) =  f_in ( from + (k - 1) * nr3x - 1 + 1 )
+              f_aux ( dest + (k - 1) * 2 - 1 + 2 ) =  f_in ( from + (k - 1) * nr3x - 1 + 2 )
            ENDDO
         CASE ( 3 )
 !$omp parallel do
            DO k = 1, ncp_ (me)
-              f_aux ( dest + (k - 1) * 3 - 1 + 1 ) =  f_in ( from + (k - 1) * nrx3 - 1 + 1 )
-              f_aux ( dest + (k - 1) * 3 - 1 + 2 ) =  f_in ( from + (k - 1) * nrx3 - 1 + 2 )
-              f_aux ( dest + (k - 1) * 3 - 1 + 3 ) =  f_in ( from + (k - 1) * nrx3 - 1 + 3 )
+              f_aux ( dest + (k - 1) * 3 - 1 + 1 ) =  f_in ( from + (k - 1) * nr3x - 1 + 1 )
+              f_aux ( dest + (k - 1) * 3 - 1 + 2 ) =  f_in ( from + (k - 1) * nr3x - 1 + 2 )
+              f_aux ( dest + (k - 1) * 3 - 1 + 3 ) =  f_in ( from + (k - 1) * nr3x - 1 + 3 )
            ENDDO
         CASE ( 4 )
 !$omp parallel do
            DO k = 1, ncp_ (me)
-              f_aux ( dest + (k - 1) * 4 - 1 + 1 ) =  f_in ( from + (k - 1) * nrx3 - 1 + 1 )
-              f_aux ( dest + (k - 1) * 4 - 1 + 2 ) =  f_in ( from + (k - 1) * nrx3 - 1 + 2 )
-              f_aux ( dest + (k - 1) * 4 - 1 + 3 ) =  f_in ( from + (k - 1) * nrx3 - 1 + 3 )
-              f_aux ( dest + (k - 1) * 4 - 1 + 4 ) =  f_in ( from + (k - 1) * nrx3 - 1 + 4 )
+              f_aux ( dest + (k - 1) * 4 - 1 + 1 ) =  f_in ( from + (k - 1) * nr3x - 1 + 1 )
+              f_aux ( dest + (k - 1) * 4 - 1 + 2 ) =  f_in ( from + (k - 1) * nr3x - 1 + 2 )
+              f_aux ( dest + (k - 1) * 4 - 1 + 3 ) =  f_in ( from + (k - 1) * nr3x - 1 + 3 )
+              f_aux ( dest + (k - 1) * 4 - 1 + 4 ) =  f_in ( from + (k - 1) * nr3x - 1 + 4 )
            ENDDO
         CASE DEFAULT
 !$omp parallel do default(shared), private(i, kdest, kfrom)
            DO k = 1, ncp_ (me)
               kdest = dest + (k - 1) * npp_ ( gproc ) - 1
-              kfrom = from + (k - 1) * nrx3 - 1
+              kfrom = from + (k - 1) * nr3x - 1
               DO i = 1, npp_ ( gproc )
                  f_aux ( kdest + i ) =  f_in ( kfrom + i )
               ENDDO
@@ -366,32 +366,32 @@ SUBROUTINE fft_scatter ( f_in, nrx3, nxx_, f_aux, ncp_, npp_, sign, use_tg )
                  SELECT CASE ( npp_ ( gproc ) )
                  CASE ( 1 )
                     DO k = 1, ncp_ (me)
-                       f_in ( dest + (k - 1) * nrx3 ) = f_aux ( from + k - 1 )
+                       f_in ( dest + (k - 1) * nr3x ) = f_aux ( from + k - 1 )
                     ENDDO
                  CASE ( 2 )
                     DO k = 1, ncp_ ( me )
-                       f_in ( dest + (k - 1) * nrx3 - 1 + 1 ) = f_aux( from + (k - 1) * 2 - 1 + 1 )
-                       f_in ( dest + (k - 1) * nrx3 - 1 + 2 ) = f_aux( from + (k - 1) * 2 - 1 + 2 )
+                       f_in ( dest + (k - 1) * nr3x - 1 + 1 ) = f_aux( from + (k - 1) * 2 - 1 + 1 )
+                       f_in ( dest + (k - 1) * nr3x - 1 + 2 ) = f_aux( from + (k - 1) * 2 - 1 + 2 )
                     ENDDO
                  CASE ( 3 )
 !$omp parallel do
                     DO k = 1, ncp_ ( me )
-                       f_in ( dest + (k - 1) * nrx3 - 1 + 1 ) = f_aux( from + (k - 1) * 3 - 1 + 1 )
-                       f_in ( dest + (k - 1) * nrx3 - 1 + 2 ) = f_aux( from + (k - 1) * 3 - 1 + 2 )
-                       f_in ( dest + (k - 1) * nrx3 - 1 + 3 ) = f_aux( from + (k - 1) * 3 - 1 + 3 )
+                       f_in ( dest + (k - 1) * nr3x - 1 + 1 ) = f_aux( from + (k - 1) * 3 - 1 + 1 )
+                       f_in ( dest + (k - 1) * nr3x - 1 + 2 ) = f_aux( from + (k - 1) * 3 - 1 + 2 )
+                       f_in ( dest + (k - 1) * nr3x - 1 + 3 ) = f_aux( from + (k - 1) * 3 - 1 + 3 )
                     ENDDO
                  CASE ( 4 )
 !$omp parallel do
                     DO k = 1, ncp_ ( me )
-                       f_in ( dest + (k - 1) * nrx3 - 1 + 1 ) = f_aux( from + (k - 1) * 4 - 1 + 1 )
-                       f_in ( dest + (k - 1) * nrx3 - 1 + 2 ) = f_aux( from + (k - 1) * 4 - 1 + 2 )
-                       f_in ( dest + (k - 1) * nrx3 - 1 + 3 ) = f_aux( from + (k - 1) * 4 - 1 + 3 )
-                       f_in ( dest + (k - 1) * nrx3 - 1 + 4 ) = f_aux( from + (k - 1) * 4 - 1 + 4 )
+                       f_in ( dest + (k - 1) * nr3x - 1 + 1 ) = f_aux( from + (k - 1) * 4 - 1 + 1 )
+                       f_in ( dest + (k - 1) * nr3x - 1 + 2 ) = f_aux( from + (k - 1) * 4 - 1 + 2 )
+                       f_in ( dest + (k - 1) * nr3x - 1 + 3 ) = f_aux( from + (k - 1) * 4 - 1 + 3 )
+                       f_in ( dest + (k - 1) * nr3x - 1 + 4 ) = f_aux( from + (k - 1) * 4 - 1 + 4 )
                     ENDDO
                  CASE DEFAULT
 !$omp parallel do default(shared), private(i, kdest, kfrom)
                     DO k = 1, ncp_ ( me )
-                       kdest = dest + (k - 1) * nrx3 - 1
+                       kdest = dest + (k - 1) * nr3x - 1
                        kfrom = from + (k - 1) * npp_ ( gproc ) - 1
                        DO i = 1, npp_ ( gproc )
                           f_in ( kdest + i ) = f_aux( kfrom + i )
@@ -431,7 +431,7 @@ END SUBROUTINE fft_scatter
 !   with a defined topology, like on bluegene and cray machine
 !
 !-----------------------------------------------------------------------
-SUBROUTINE fft_scatter ( f_in, nrx3, nxx_, f_aux, ncp_, npp_, sign, use_tg )
+SUBROUTINE fft_scatter ( f_in, nr3x, nxx_, f_aux, ncp_, npp_, sign, use_tg )
   !-----------------------------------------------------------------------
   !
   ! transpose the fft grid across nodes
@@ -439,8 +439,8 @@ SUBROUTINE fft_scatter ( f_in, nrx3, nxx_, f_aux, ncp_, npp_, sign, use_tg )
   !
   !    "columns" (or "pencil") representation:
   !    processor "me" has ncp_(me) contiguous columns along z
-  !    Each column has nrx3 elements for a fft of order nr3
-  !    nrx3 can be =nr3+1 in order to reduce memory conflicts.
+  !    Each column has nr3x elements for a fft of order nr3
+  !    nr3x can be =nr3+1 in order to reduce memory conflicts.
   !
   !    The transpose take places in two steps:
   !    1) on each processor the columns are divided into slices along z
@@ -470,7 +470,7 @@ SUBROUTINE fft_scatter ( f_in, nrx3, nxx_, f_aux, ncp_, npp_, sign, use_tg )
 
   IMPLICIT NONE
 
-  INTEGER, INTENT(in)           :: nrx3, nxx_, sign, ncp_ (:), npp_ (:)
+  INTEGER, INTENT(in)           :: nr3x, nxx_, sign, ncp_ (:), npp_ (:)
   COMPLEX (DP), INTENT(inout)   :: f_in (nxx_), f_aux (nxx_)
   LOGICAL, OPTIONAL, INTENT(in) :: use_tg
 
@@ -555,17 +555,17 @@ SUBROUTINE fft_scatter ( f_in, nrx3, nxx_, f_aux, ncp_, npp_, sign, use_tg )
         !
         IF( npp_ ( gproc ) > 128 ) THEN
            DO k = 1, ncp_ (me)
-              CALL DCOPY (2 * npp_ ( gproc ), f_in (from + (k - 1) * nrx3), &
+              CALL DCOPY (2 * npp_ ( gproc ), f_in (from + (k - 1) * nr3x), &
                    1, f_aux (dest + (k - 1) * npp_ ( gproc ) ), 1)
            ENDDO
         ELSEIF( npp_ ( gproc ) == 1 ) THEN
            DO k = 1, ncp_ (me)
-              f_aux (dest + (k - 1) ) =  f_in (from + (k - 1) * nrx3 )
+              f_aux (dest + (k - 1) ) =  f_in (from + (k - 1) * nr3x )
            ENDDO
         ELSE
            DO k = 1, ncp_ (me)
               kdest = dest + (k - 1) * npp_ ( gproc ) - 1
-              kfrom = from + (k - 1) * nrx3 - 1
+              kfrom = from + (k - 1) * nr3x - 1
               DO i = 1, npp_ ( gproc )
                  f_aux ( kdest + i ) =  f_in ( kfrom + i )
               ENDDO
@@ -632,15 +632,15 @@ SUBROUTINE fft_scatter ( f_in, nrx3, nxx_, f_aux, ncp_, npp_, sign, use_tg )
         IF( npp_ ( gproc ) > 128 ) THEN
            DO k = 1, ncp_ (me)
               CALL DCOPY ( 2 * npp_ ( gproc ), f_aux (from + (k - 1) * npp_ ( gproc ) ), 1, &
-                                            f_in  (dest + (k - 1) * nrx3 ), 1 )
+                                            f_in  (dest + (k - 1) * nr3x ), 1 )
            ENDDO
         ELSEIF ( npp_ ( gproc ) == 1 ) THEN
            DO k = 1, ncp_ (me)
-              f_in ( dest + (k - 1) * nrx3 ) = f_aux ( from + (k - 1) )
+              f_in ( dest + (k - 1) * nr3x ) = f_aux ( from + (k - 1) )
            ENDDO
         ELSE
            DO k = 1, ncp_ (me)
-              kdest = dest + (k - 1) * nrx3 - 1
+              kdest = dest + (k - 1) * nr3x - 1
               kfrom = from + (k - 1) * npp_ ( gproc ) - 1
               DO i = 1, npp_ ( gproc )
                  f_in ( kdest + i ) = f_aux( kfrom + i )
@@ -675,7 +675,7 @@ SUBROUTINE grid_gather( f_in, f_out )
   ! ... gathers nproc_pool distributed data on the first processor of every pool
   !
   ! ... REAL*8  f_in  = distributed variable (nxx)
-  ! ... REAL*8  f_out = gathered variable (nrx1*nrx2*nrx3)
+  ! ... REAL*8  f_out = gathered variable (nr1x*nr2x*nr3x)
   !
   USE kinds,     ONLY : DP
   USE parallel_include
@@ -739,7 +739,7 @@ SUBROUTINE grid_scatter( f_in, f_out )
   !
   ! ... scatters data from the first processor of every pool
   !
-  ! ... REAL*8  f_in  = gathered variable (nrx1*nrx2*nrx3)
+  ! ... REAL*8  f_in  = gathered variable (nr1x*nr2x*nr3x)
   ! ... REAL*8  f_out = distributed variable (nxx)
   !
   USE mp_global, ONLY : intra_pool_comm, nproc_pool, &
@@ -808,7 +808,7 @@ SUBROUTINE cgather_sym( f_in, f_out )
   !
   ! ... gather complex data for symmetrization (in phonon code)
   ! ... COMPLEX*16  f_in  = distributed variable (nrxx)
-  ! ... COMPLEX*16  f_out = gathered variable (nrx1*nrx2*nrx3)
+  ! ... COMPLEX*16  f_out = gathered variable (nr1x*nr2x*nr3x)
   !
   USE mp_global, ONLY : intra_pool_comm, intra_image_comm, &
                         nproc_pool, me_pool
@@ -870,7 +870,7 @@ SUBROUTINE cgather_smooth ( f_in, f_out )
   ! ... gathers nproc_pool distributed data on the first processor of every pool
   !
   ! ... COMPLEX*16  f_in  = distributed variable ( dffts%nnr )
-  ! ... COMPLEX*16  f_out = gathered variable (nrx1s*nrx2s*nrx3s)
+  ! ... COMPLEX*16  f_out = gathered variable (nr1sx*nr2sx*nr3sx)
   !
   USE mp_global, ONLY : intra_pool_comm, nproc_pool, me_pool, root_pool
   USE mp,        ONLY : mp_barrier
@@ -929,7 +929,7 @@ SUBROUTINE cscatter_sym( f_in, f_out )
   !
   ! ... scatters data from the first processor of every pool
   !
-  ! ... COMPLEX*16  f_in  = gathered variable (nrx1*nrx2*nrx3)
+  ! ... COMPLEX*16  f_in  = gathered variable (nr1x*nr2x*nr3x)
   ! ... COMPLEX*16  f_out = distributed variable (nxx)
   !
   USE mp_global, ONLY : intra_pool_comm, nproc_pool, &
@@ -991,7 +991,7 @@ SUBROUTINE cscatter_smooth( f_in, f_out )
   ! ... scatters data on the smooth AND complex fft grid
   ! ... scatters data from the first processor of every pool
   !
-  ! ... COMPLEX*16  f_in  = gathered variable (nrx1s*nrx2s*nrx3s)
+  ! ... COMPLEX*16  f_in  = gathered variable (nr1sx*nr2sx*nr3sx)
   ! ... COMPLEX*16  f_out = distributed variable ( dffts%nnr)
   !
   USE mp_global, ONLY : intra_pool_comm, nproc_pool, &
@@ -1057,7 +1057,7 @@ SUBROUTINE gather_smooth ( f_in, f_out )
   ! ... gathers nproc_pool distributed data on the first processor of every pool
   !
   ! ... REAL*8      f_in  = distributed variable ( dffts%nnr )
-  ! ... REAL*8      f_out = gathered variable (nrx1s*nrx2s*nrx3s)
+  ! ... REAL*8      f_out = gathered variable (nr1sx*nr2sx*nr3sx)
   !
   USE mp_global, ONLY : intra_pool_comm, nproc_pool, me_pool, root_pool
   USE mp,        ONLY : mp_barrier
@@ -1115,7 +1115,7 @@ SUBROUTINE scatter_smooth( f_in, f_out )
   ! ... scatters data on the smooth AND real fft grid
   ! ... scatters data from the first processor of every pool
   !
-  ! ... REAL*8      f_in  = gathered variable (nrx1s*nrx2s*nrx3s)
+  ! ... REAL*8      f_in  = gathered variable (nr1sx*nr2sx*nr3sx)
   ! ... REAL*8      f_out = distributed variable ( dffts%nnr)
   !
   USE mp_global, ONLY : intra_pool_comm, nproc_pool, &

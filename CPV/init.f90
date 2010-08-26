@@ -19,6 +19,7 @@
       !     initialize G-vectors and related quantities
       !
 
+      USE kinds,                    ONLY: dp
       use io_global,                only: stdout, ionode
       use control_flags,            only: gamma_only
       use grid_dimensions,          only: nr1, nr2, nr3, nr1x, nr2x, nr3x, nnr => nnrx
@@ -50,8 +51,8 @@
       implicit none
 ! 
       integer  :: i
-      real(8) :: rat1, rat2, rat3
-      real(8) :: b1(3), b2(3), b3(3)
+      real(dp) :: rat1, rat2, rat3
+      real(dp) :: b1(3), b2(3), b3(3)
       integer :: ng_ , ngs_ , ngm_ , ngw_
 
       IF( ionode ) THEN

@@ -1780,7 +1780,7 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, isign, &
 !
       implicit none
       integer nx,ny,nz,ldx,ldy,ldz,imin3,imax3,sgn
-      complex(8) :: f(:)
+      complex(dp) :: f(:)
 
       integer isign, naux, ibid, nplanes, nstart, k
       real(DP) :: tscale
@@ -1808,17 +1808,17 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, isign, &
 #elif defined __ESSL || defined __LINUX_ESSL
 
       INTEGER, PARAMETER :: ltabl = 20000 + 3 * nfftx
-      real(8), save :: aux3( ltabl, ndims )
-      real(8), save :: aux2( ltabl, ndims )
-      real(8), save :: aux1( ltabl, ndims )
+      real(dp), save :: aux3( ltabl, ndims )
+      real(dp), save :: aux2( ltabl, ndims )
+      real(dp), save :: aux1( ltabl, ndims )
 
 #elif defined __SCSL
 
      INTEGER, PARAMETER :: ltabl = 2 * nfftx + 256
-     real(8), save :: bw_coeffz( ltabl,  ndims )
-     real(8), save :: bw_coeffy( ltabl,  ndims )
-     real(8), save :: bw_coeffx( ltabl,  ndims )
-     REAL (DP)    :: DUMMY
+     real(dp), save :: bw_coeffz( ltabl,  ndims )
+     real(dp), save :: bw_coeffy( ltabl,  ndims )
+     real(dp), save :: bw_coeffx( ltabl,  ndims )
+     REAL(DP)    :: DUMMY
      INTEGER, SAVE :: isys(0:1) = (/ 1, 1 /)
 
 #endif
@@ -2076,7 +2076,7 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, isign, &
 !
       implicit none
       integer, INTENT(IN) :: nx,ny,nz,ldx,ldy,ldz,imin3,imax3,sgn
-      complex(8) :: f(:)
+      complex(dp) :: f(:)
 
       INTEGER, SAVE :: k
 !$omp threadprivate (k)

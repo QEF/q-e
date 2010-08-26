@@ -140,9 +140,9 @@ CONTAINS
         USE io_global, ONLY: ionode, ionode_id
         USE io_global, ONLY: stdout
         USE gvecw, ONLY: ngw
-        USE fft_base, ONLY: dfftp, dffts
         USE grid_dimensions, ONLY: nr1, nr2, nr3, nr1x, nr2x, nr3x, nnrx
-        USE cp_interfaces, ONLY: invfft
+        USE fft_base, ONLY: dfftp, dffts
+        USE fft_interfaces, ONLY: invfft
         USE xml_io_base, ONLY: write_rho_xml
         USE mp_global,       ONLY: nproc_image, me_image, intra_image_comm
 

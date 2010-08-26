@@ -62,6 +62,12 @@ fft_base.o : kind.o
 fft_base.o : mp.o
 fft_base.o : mp_global.o
 fft_base.o : parallel_include.o
+fft_interfaces.o : fft_base.o
+fft_interfaces.o : fft_parallel.o
+fft_interfaces.o : fft_scalar.o
+fft_interfaces.o : fft_types.o
+fft_interfaces.o : kind.o
+fft_interfaces.o : mp_global.o
 fft_parallel.o : fft_base.o
 fft_parallel.o : fft_scalar.o
 fft_parallel.o : fft_types.o

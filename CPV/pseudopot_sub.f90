@@ -1051,12 +1051,12 @@
       LOGICAL, INTENT(IN) :: tpre
 
       integer  is, l, ig, ir, iv, jv, ijv, i,j, jj, ierr
-      real(8), allocatable:: fint(:), jl(:), dqradb(:,:,:,:)
-      real(8), allocatable:: ylmb(:,:), dylmb(:,:,:,:)
+      real(dp), allocatable:: fint(:), jl(:), dqradb(:,:,:,:)
+      real(dp), allocatable:: ylmb(:,:), dylmb(:,:,:,:)
       REAL(DP), ALLOCATABLE :: dqrad( :, :, :, :, :, : )
       REAL(DP), ALLOCATABLE :: qradb( :, :, :, : )
-      complex(8), allocatable:: dqgbs(:,:,:)
-      real(8) xg, c, betagl, dbetagl, gg
+      complex(dp), allocatable:: dqgbs(:,:,:)
+      real(dp) xg, c, betagl, dbetagl, gg
 !
       !
       if( nvb < 1 ) &

@@ -25,6 +25,7 @@ energies.o \
 environment.o \
 error_handler.o \
 fft_base.o \
+fft_interfaces.o \
 fft_parallel.o \
 fft_scalar.o \
 fft_types.o \

@@ -113,7 +113,7 @@
       use gvecp,              only: ngm
       use grid_dimensions,    only: nr1, nr2, nr3, &
                                     nr1x, nr2x, nr3x, nnrx
-      USE cp_interfaces,      ONLY: fwfft
+      USE fft_interfaces,     ONLY: fwfft
       USE fft_base,           ONLY: dfftp
 !
       implicit none
@@ -191,7 +191,7 @@
       use small_box,       only: tpibab
       use uspp_param,      only: upf
       use core,            only: rhocb
-      use cp_interfaces,   only: invfft
+      use fft_interfaces,  only: invfft
       use fft_base,        only: dfftb
       use reciprocal_vectors, only: gstart
       use smallbox_grid_dimensions, only: nr1b, nr2b, nr3b, &
@@ -201,16 +201,16 @@
 
 ! input
       integer, intent(in)        :: irb(3,nat)
-      complex(8), intent(in):: eigrb(ngb,nat)
-      real(8), intent(in)   :: vxc(nnr,nspin)
+      complex(dp), intent(in):: eigrb(ngb,nat)
+      real(dp), intent(in)   :: vxc(nnr,nspin)
 ! output
-      real(8), intent(inout):: fion1(3,nat)
+      real(dp), intent(inout):: fion1(3,nat)
 ! local
       integer :: iss, ix, ig, is, ia, nfft, isa
-      real(8) :: fac, res, boxdotgrid
-      complex(8) ci, facg
-      complex(8), allocatable :: qv(:)
-      real(8), allocatable :: fcc(:,:)
+      real(dp) :: fac, res, boxdotgrid
+      complex(dp) ci, facg
+      complex(dp), allocatable :: qv(:)
+      real(dp), allocatable :: fcc(:,:)
       external  boxdotgrid
 
 #ifdef __OPENMP
@@ -334,14 +334,15 @@
 !
 !     Calculate core charge contribution in real space, rhoc(r)
 !     Same logic as for rhov: use box grid for core charges
-!
+! 
+      use kinds, only: dp
       use ions_base,       only: nsp, na, nat
       use uspp_param,      only: upf
       use grid_dimensions, only: nr3, nnr => nnrx
       use gvecb,           only: ngb, npb, nmb
       use control_flags,   only: iprint
       use core,            only: rhocb
-      use cp_interfaces,   only: invfft
+      use fft_interfaces,  only: invfft
       use fft_base,        only: dfftb
       use smallbox_grid_dimensions, only: nr1b, nr2b, nr3b, &
             nr1bx, nr2bx, nr3bx, nnrb => nnrbx
@@ -349,14 +350,14 @@
       implicit none
 ! input
       integer, intent(in)        :: irb(3,nat)
-      complex(8), intent(in):: eigrb(ngb,nat)
+      complex(dp), intent(in):: eigrb(ngb,nat)
 ! output
-      real(8), intent(out)  :: rhoc(nnr)
+      real(dp), intent(out)  :: rhoc(nnr)
 ! local
       integer nfft, ig, is, ia, isa
-      complex(8) ci
-      complex(8), allocatable :: wrk1(:)
-      complex(8), allocatable :: qv(:)
+      complex(dp) ci
+      complex(dp), allocatable :: wrk1(:)
+      complex(dp), allocatable :: qv(:)
 
 #ifdef __OPENMP
       INTEGER :: itid, mytid, ntids, omp_get_thread_num, omp_get_num_threads

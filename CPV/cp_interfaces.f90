@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2005 FPMD-CPV groups
+! Copyright (C) 2002-2010 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -41,9 +41,6 @@
 
    PUBLIC :: runcp_uspp
    PUBLIC :: runcp_uspp_force_pairing
-
-   PUBLIC :: invfft
-   PUBLIC :: fwfft
 
    PUBLIC :: eigs
    PUBLIC :: fermi_energy
@@ -359,30 +356,6 @@
          REAL(DP) :: intermed
          LOGICAL, OPTIONAL, INTENT(in) :: fromscra
          LOGICAL, OPTIONAL, INTENT(in) :: restart
-      END SUBROUTINE
-   END INTERFACE
-
-
-   INTERFACE invfft
-      SUBROUTINE invfft_x( grid_type, f, dfft, ia )
-         USE fft_types,  only: fft_dlay_descriptor
-         USE kinds,      ONLY: DP
-         IMPLICIT NONE
-         INTEGER, OPTIONAL, INTENT(IN) :: ia
-         CHARACTER(LEN=*),  INTENT(IN) :: grid_type
-         TYPE(fft_dlay_descriptor), INTENT(IN) :: dfft
-         COMPLEX(DP) :: f(:)
-      END SUBROUTINE
-   END INTERFACE
-
-   INTERFACE fwfft
-      SUBROUTINE fwfft_x( grid_type, f, dfft )
-         USE fft_types,  only: fft_dlay_descriptor
-         USE kinds,      ONLY: DP
-         IMPLICIT NONE
-         CHARACTER(LEN=*), INTENT(IN) :: grid_type
-         TYPE(fft_dlay_descriptor), INTENT(IN) :: dfft
-         COMPLEX(DP) :: f(:)
       END SUBROUTINE
    END INTERFACE
 

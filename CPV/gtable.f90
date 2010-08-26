@@ -19,7 +19,7 @@ subroutine gtable( ipol, ctable)
   !    negative = conjugate
   !   ipol   : input polarization direction
   !            a orthorombic primitive cell is supposed
-
+  use kinds, only: dp
   use gvecw, only: ngw  
   use reciprocal_vectors, only: mill_l
   use mp, only: mp_sum
@@ -31,7 +31,7 @@ subroutine gtable( ipol, ctable)
   !local variables
   integer :: i,j,k, ig, jg
   logical :: found
-  real(8) :: test
+  real(dp) :: test
 
   test=0.d0
   do ig=1,ngw!loop on g vectors
@@ -113,6 +113,7 @@ subroutine gtablein( ipol, ctabin)
   !   ipol   : input polarization direction
   !            a orthorombic primitive cell is supposed
 
+  use kinds, only: dp
   use gvecw, only: ngw  
   use reciprocal_vectors, only: mill_l
   use mp, only: mp_sum
@@ -126,7 +127,7 @@ subroutine gtablein( ipol, ctabin)
   !local variables
   integer :: i,j,k, ig, jg
   logical :: found
-  real(8) :: test
+  real(dp) :: test
 
   test=0.d0
   

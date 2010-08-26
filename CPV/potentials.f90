@@ -130,7 +130,7 @@
       USE kinds,           ONLY: DP
       USE mp_global,       ONLY: me_image
       USE fft_base,        ONLY: dfftp
-      USE cp_interfaces,   ONLY: fwfft
+      USE fft_interfaces,  ONLY: fwfft
       USE gvecp,           ONLY: ngm
       USE constants,       ONLY: gsmall, pi
       USE cell_base,       ONLY: tpiba2, s_to_r, alat
@@ -839,7 +839,7 @@
       USE gvecp, ONLY: ngm
       USE gvecw, ONLY: ngw
       use grid_dimensions, only: nr1, nr2, nr3, nr1l, nr2l, nr3l, nnrx
-      USE cp_interfaces, ONLY: fwfft, invfft
+      USE fft_interfaces, ONLY: fwfft, invfft
 
       IMPLICIT NONE
 

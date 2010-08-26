@@ -20,17 +20,17 @@
                                          nr1sx, nr2sx, nr3sx, nnrs => nnrsx
       use cell_base,              only : tpiba2
       USE metagga,                ONLY : kedtaus
-      USE cp_interfaces,          ONLY : fwfft, invfft
+      USE fft_interfaces,         ONLY : fwfft, invfft
       USE fft_base,               ONLY: dffts
 !
       implicit none
 !
-      complex(8) c(ngw), ca(ngw), df(ngw), da(ngw),psi(nnrs)
+      complex(dp) c(ngw), ca(ngw), df(ngw), da(ngw),psi(nnrs)
       integer iss1, iss2
-      real(8) fi, fip
+      real(dp) fi, fip
 ! local variables
       integer ir,ig, ipol !metagga
-      complex(8) fp,fm,ci
+      complex(dp) fp,fm,ci
 !
 !
       ci=(0.0d0,1.0d0)
@@ -85,20 +85,20 @@
       use dener
       use metagga, ONLY : kedtaur, kedtaus, kedtaug, crosstaus, gradwfc, &
                           dkedtaus
-      USE cp_interfaces, ONLY: fwfft, invfft
-      USE fft_base,      ONLY: dffts, dfftp
+      USE fft_interfaces, ONLY: fwfft, invfft
+      USE fft_base,       ONLY: dffts, dfftp
       
       implicit none
 
       integer, intent(in) :: npsi, npsis
-      complex(8) :: c(ngw,nx)
-      complex(8) :: psi( npsi ), psis( npsis )
+      complex(dp) :: c(ngw,nx)
+      complex(dp) :: psi( npsi ), psis( npsis )
 
 ! local variables
       integer iss, isup, isdw, iss1, iss2, ios, i, ir, ig
       integer ipol, ix,iy, ipol2xy(3,3)
-      real(8) sa1, sa2
-      complex(8) ci,fp,fm
+      real(dp) sa1, sa2
+      complex(dp) ci,fp,fm
 !
       psi( : ) = (0.d0,0.d0)
 !
@@ -280,15 +280,15 @@
       use mp,      ONLY : mp_sum
       use mp_global, ONLY : intra_image_comm
       use metagga, ONLY : kedtaur, kedtaug, kedtaus, dkedtaus
-      USE cp_interfaces, ONLY: fwfft, invfft
-      USE fft_base,      ONLY: dffts, dfftp
+      USE fft_interfaces, ONLY: fwfft, invfft
+      USE fft_base,       ONLY: dffts, dfftp
 !
       implicit none
 !
       integer iss, isup, isdw, ig, ir,i,j,k,is, ia
-      real(8) dkedxc(3,3) !metagga
-      complex(8)  fp, fm, ci
-      complex(8)  v(nnr), vs(nnrs)
+      real(dp) dkedxc(3,3) !metagga
+      complex(dp)  fp, fm, ci
+      complex(dp)  v(nnr), vs(nnrs)
 !
       ci=(0.d0,1.d0)
 

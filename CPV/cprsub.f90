@@ -344,7 +344,8 @@ subroutine nlinit
   !     beta and qradb are first calculated on a fixed linear grid in |G|
   !     (betax, qradx) then calculated on the box grid by interpolation
   !     (this is done in routine newnlinit)
-  !     
+  !
+      use kinds,           ONLY : dp
       use control_flags,   ONLY : iprint, tpre
       use io_global,       ONLY : stdout, ionode
       use gvecw,           ONLY : ngw
@@ -369,9 +370,9 @@ subroutine nlinit
       implicit none
 !
       integer  is, il, l, ir, iv, jv, lm, ind, ltmp, i0
-      real(8), allocatable:: fint(:), jl(:),  jltmp(:), djl(:),    &
+      real(dp), allocatable:: fint(:), jl(:),  jltmp(:), djl(:),    &
      &              dfint(:)
-      real(8) xg, xrg, fac
+      real(dp) xg, xrg, fac
 
 
       IF( ionode ) THEN

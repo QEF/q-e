@@ -24,7 +24,7 @@ subroutine bforceion(fion,tfor,ipol,qmatinv,bec0,becdr,gqq,evalue)
  
   use ions_base, only : nas => nax, na, nsp
   use cvan
-  use parameters
+  use kinds, only : dp
   use constants
   use cell_base, only: a1, a2, a3
   use uspp_param, only: nh, nhm
@@ -35,19 +35,19 @@ subroutine bforceion(fion,tfor,ipol,qmatinv,bec0,becdr,gqq,evalue)
 
   implicit none
 
-  real(8) evalue
-  complex(8) qmatinv(nx,nx),gqq(nhm,nhm,nas,nsp)
-  real(8) bec0(nhsa,n),becdr(nhsa,nspin*nlax,3)
-  real(8) fion(3,*)
+  real(dp) evalue
+  complex(dp) qmatinv(nx,nx),gqq(nhm,nhm,nas,nsp)
+  real(dp) bec0(nhsa,n),becdr(nhsa,nspin*nlax,3)
+  real(dp) fion(3,*)
   integer ipol
   logical tfor
 
 !local variables
 
-  complex(8) ci, temp, temp1,temp2,temp3
-  real(8) gmes
+  complex(dp) ci, temp, temp1,temp2,temp3
+  real(dp) gmes
   integer iv,jv,ia,is,k,i,j,isa,ilm,jlm,inl,jnl,ism
-  real(8), allocatable :: becdr_repl(:,:,:)
+  real(dp), allocatable :: becdr_repl(:,:,:)
       
   if(.not. tfor) return
 
