@@ -123,6 +123,8 @@
 
 #if defined __OPENMP
      INTEGER :: offset, ldz_t
+     INTEGER :: omp_get_max_threads
+     EXTERNAL :: omp_get_max_threads
 #endif
 
 
@@ -461,10 +463,12 @@
 #if defined __HPM
      INTEGER :: OMP_GET_THREAD_NUM
 #endif
-     INTEGER :: tid
 #if defined __OPENMP
      INTEGER :: offset
      INTEGER :: nx_t, ny_t, nzl_t, ldx_t, ldy_t
+     INTEGER  :: itid, mytid, ntids
+     INTEGER  :: omp_get_thread_num, omp_get_num_threads
+     EXTERNAL :: omp_get_thread_num, omp_get_num_threads
 #endif
 
 #if defined __FFTW || defined __FFTW3
@@ -700,42 +704,67 @@
      !
      IF( isign < 0 ) THEN
         !
-!$omp parallel default(none) private(offset,tid,k,j,i)  shared(r,dofft,ip,fw_plan,nzl,nx)  &
+        tscale = 1.0_DP / ( nx * ny )
+        !
+!$omp parallel default(none) private(offset,itid,mytid,ntids,k,j,i)  shared(r,dofft,ip,fw_plan,nzl,nx,ny,ldx,ldy,tscale)  &
 !$omp & firstprivate(nx_t, ny_t, nzl_t, ldx_t, ldy_t)
+
 !$omp do
         DO i=1,nzl
            offset = 1+ ((i-1)*(ldx_t*ldy_t))
            CALL FFT_X_STICK_SINGLE( fw_plan(1,ip), r(offset), nx_t, ny_t, nzl_t, ldx_t, ldy_t )
         END DO
 !$omp end do
-!$omp do
+
+        mytid = omp_get_thread_num()  ! take the thread ID
+        ntids = omp_get_num_threads() ! take the number of threads
+        itid  = 0
+
         do i = 1, nx
           do k = 1, nzl
             IF( dofft( i ) ) THEN
-              j = i + ldx_t*ldy_t * ( k - 1 )
-              call FFT_Y_STICK(fw_plan(2,ip), r(j), ny_t, ldx_t)
+              IF( itid == mytid ) THEN
+                j = i + ldx_t*ldy_t * ( k - 1 )
+                call FFT_Y_STICK(fw_plan(2,ip), r(j), ny_t, ldx_t)
+              END IF
+              itid = MOD( itid + 1, ntids )
             END IF
           end do
         end do
-!$omp end do
+
+!$omp barrier
+ 
+!$omp workshare
+        r = r * tscale
+!$omp end workshare
+
 !$omp end parallel
-        tscale = 1.0_DP / ( nx * ny )
-        CALL ZDSCAL( ldx * ldy * nzl, tscale, r(1), 1)
+
+        ! CALL ZDSCAL( ldx * ldy * nzl, tscale, r(1), 1)
         !
      ELSE IF( isign > 0 ) THEN
         !
-!$omp parallel default(none) private(offset,tid,k,j,i) shared(r,nx,nzl,dofft,ip,bw_plan) &
+!$omp parallel default(none) private(offset,itid,mytid,ntids,k,j,i) shared(r,nx,nzl,dofft,ip,bw_plan) &
 !$omp & firstprivate(nx_t, ny_t, nzl_t, ldx_t, ldy_t)
-!$omp do
+
+        mytid = omp_get_thread_num()  ! take the thread ID
+        ntids = omp_get_num_threads() ! take the number of threads
+        itid  = 0
+
         do i = 1, nx
           do k = 1, nzl
             IF( dofft( i ) ) THEN
-              j = i + ldx_t*ldy_t * ( k - 1 )
-              call FFT_Y_STICK( bw_plan(2,ip), r(j), ny_t, ldx_t)
+              IF( itid == mytid ) THEN
+                j = i + ldx_t*ldy_t * ( k - 1 )
+                call FFT_Y_STICK( bw_plan(2,ip), r(j), ny_t, ldx_t)
+              END IF
+              itid = MOD( itid + 1, ntids )
             END IF
           end do
         end do
-!$omp end do
+
+!$omp barrier
+
 !$omp do
         DO i=1,nzl
            offset = 1+ ((i-1)*(ldx_t*ldy_t))
@@ -749,6 +778,7 @@
 #else
 
      IF( isign < 0 ) THEN
+
        CALL FFT_X_STICK( fw_plan(1,ip), r(1), nx, ny, nzl, ldx, ldy )
 
        do i = 1, nx
@@ -775,7 +805,7 @@
 
        CALL FFT_X_STICK( bw_plan(1,ip), r(1), nx, ny, nzl, ldx, ldy )
 
-END IF
+    END IF
 
 #endif
 
