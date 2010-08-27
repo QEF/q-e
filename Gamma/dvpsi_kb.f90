@@ -19,8 +19,9 @@ SUBROUTINE dvpsi_kb(kpoint,nu)
   USE ions_base,  ONLY: ntyp => nsp, nat, ityp, tau
   USE uspp_param, ONLY: upf, nh, nhm
   USE uspp,       ONLY: dvan, nkb, vkb
-  USE gvect,      ONLY : gstart, nl, nlm, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
-       nrxx, ngl, ngm, g, gg, gl, igtongl
+  USE fft_base,   ONLY: dfftp
+  USE fft_interfaces, ONLY : invfft
+  USE gvect,      ONLY : gstart, nl, nlm, nrxx, ngl, ngm, g, gg, gl, igtongl
   USE vlocal,     ONLY: vloc
   USE wvfct,      ONLY: nbnd, npwx, npw, g2kin, igk
   USE wavefunctions_module,  ONLY: evc, psic
@@ -71,7 +72,7 @@ SUBROUTINE dvpsi_kb(kpoint,nu)
   !
   !   dVloc/dtau in real space
   !
-  CALL cft3(dvloc, nr1,nr2,nr3,nrx1,nrx2,nrx3,+1)
+  CALL invfft ('Dense', dvloc, dfftp)
   DO ir = 1,nrxx
      dv(ir) =  dble(dvloc(ir))
   ENDDO
@@ -79,7 +80,7 @@ SUBROUTINE dvpsi_kb(kpoint,nu)
      DO ng = gstart,ngm
         dvb_cc (nlm(ng))=conjg(dvb_cc(nl(ng)))
      ENDDO
-     CALL cft3(dvb_cc,nr1,nr2,nr3,nrx1,nrx2,nrx3,+1)
+     CALL invfft ('Dense', dvb_cc, dfftp)
      DO ir = 1,nrxx
         dv(ir) = dv(ir) +  dble(dvb_cc(ir)) * dmuxc(ir)
      ENDDO

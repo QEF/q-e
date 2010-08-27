@@ -7,18 +7,15 @@
 !
 !--------------------------------------------------------------------
 SUBROUTINE dgradcor1 (rho, grho, dvxc_rr, dvxc_sr, dvxc_ss, dvxc_s, &
-     drho, drhoc, nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, nspin, &
-     nl, nlm, ngm, g, alat, omega, dvxc)
+     drho, drhoc, nrxx, nspin, nl, nlm, ngm, g, alat, omega, dvxc)
   !     ===================
   !--------------------------------------------------------------------
   !  ADD Gradient Correction contibution to screening potential
   !  phonon calculation, half G-vectors
   USE kinds, ONLY : DP
   IMPLICIT NONE
-
   !
-  INTEGER :: nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, ngm, nspin, &
-       nl (ngm), nlm(ngm)
+  INTEGER :: nrxx, ngm, nspin, nl (ngm), nlm(ngm)
 
   real(DP) :: rho (nrxx, nspin), grho (3, nrxx, nspin), &
        dvxc_rr(nrxx, nspin, nspin), dvxc_sr (nrxx, nspin, nspin), &
@@ -41,8 +38,7 @@ SUBROUTINE dgradcor1 (rho, grho, dvxc_rr, dvxc_sr, dvxc_ss, dvxc_s, &
 
   h (:,:,:) = (0.d0, 0.d0)
   DO is = 1, nspin
-     CALL gradient1 (nrx1, nrx2, nrx3, nr1, nr2, nr3, nrxx, &
-         drhoc(1, is), ngm, g, nl, nlm, alat, gdrho (1, 1, is) )
+     CALL gradient1 (nrxx, drhoc(1, is), ngm, g, nl, nlm, alat, gdrho (1, 1, is) )
   ENDDO
   DO k = 1, nrxx
      grho2 = grho(1, k, 1)**2 + grho(2, k, 1)**2 + grho(3, k, 1)**2
@@ -140,8 +136,7 @@ SUBROUTINE dgradcor1 (rho, grho, dvxc_rr, dvxc_sr, dvxc_ss, dvxc_s, &
   ENDDO
   ! linear variation of the second term
   DO is = 1, nspin
-     CALL grad_dot1 (nrx1, nrx2, nrx3, nr1, nr2, nr3, nrxx, &
-          h (1, 1, is), ngm, g, nl, nlm, alat, dh)
+     CALL grad_dot1 (nrxx, h (1, 1, is), ngm, g, nl, nlm, alat, dh)
      DO k = 1, nrxx
         dvxc (k, is) = dvxc (k, is) - dh (k)
      ENDDO
@@ -153,15 +148,16 @@ SUBROUTINE dgradcor1 (rho, grho, dvxc_rr, dvxc_sr, dvxc_ss, dvxc_s, &
 END SUBROUTINE dgradcor1
 !
 !--------------------------------------------------------------------
-SUBROUTINE gradient1(nrx1, nrx2, nrx3, nr1, nr2, nr3, nrxx, &
-     a, ngm, g, nl, nlm, alat, ga)
+SUBROUTINE gradient1( nrxx, a, ngm, g, nl, nlm, alat, ga)
   !--------------------------------------------------------------------
   ! Calculates ga = \grad a in R-space (a is G-space)
   USE kinds, ONLY : DP
   USE constants, ONLY : tpi
+  USE fft_base, ONLY : dfftp
+  USE fft_interfaces, ONLY : fwfft, invfft
+  !
   IMPLICIT NONE
-  INTEGER :: nrx1, nrx2, nrx3, nr1, nr2, nr3, nrxx, ngm, nl (ngm), &
-        nlm(ngm)
+  INTEGER :: nrxx, ngm, nl (ngm), nlm(ngm)
   COMPLEX(DP) :: a (nrxx)
   real(DP) :: ga (3, nrxx), g (3, ngm), alat
   INTEGER :: n, ipol
@@ -187,7 +183,7 @@ SUBROUTINE gradient1(nrx1, nrx2, nrx3, nr1, nr2, nr3, nrxx, &
      ENDDO
      ! bring back to R-space, (\grad_ipol a)(r) ...
 
-     CALL cft3 (gaux, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1)
+     CALL invfft ('Dense', gaux, dfftp )
      ! ...and add the factor 2\pi/a  missing in the definition of q+G
      DO n = 1, nrxx
         ga (ipol  , n) =  dble(gaux (n)) * tpiba
@@ -203,7 +199,7 @@ SUBROUTINE gradient1(nrx1, nrx2, nrx3, nr1, nr2, nr3, nrxx, &
         gaux(nlm(n)) = conjg(gaux(nl(n)))
      ENDDO
      ! bring back to R-space, (\grad_ipol a)(r) ...
-     CALL cft3 (gaux, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1)
+     CALL invfft ('Dense', gaux, dfftp )
      ! ...and add the factor 2\pi/a  missing in the definition of q+G
      DO n = 1, nrxx
         ga (ipol, n) =  dble(gaux (n)) * tpiba
@@ -214,15 +210,15 @@ SUBROUTINE gradient1(nrx1, nrx2, nrx3, nr1, nr2, nr3, nrxx, &
 
 END SUBROUTINE gradient1
 !--------------------------------------------------------------------
-SUBROUTINE grad_dot1 (nrx1, nrx2, nrx3, nr1, nr2, nr3, nrxx, &
-     a, ngm, g, nl, nlm, alat, da)
+SUBROUTINE grad_dot1 ( nrxx, a, ngm, g, nl, nlm, alat, da)
   !--------------------------------------------------------------------
   ! Calculates da = \sum_i \grad_i a_i in R-space
   USE kinds, ONLY : DP
   USE constants, ONLY : tpi
+  USE fft_base, ONLY : dfftp
+  USE fft_interfaces, ONLY : fwfft, invfft
   IMPLICIT NONE
-  INTEGER :: nrx1, nrx2, nrx3, nr1, nr2, nr3, nrxx, ngm, nl (ngm), &
-        nlm(ngm)
+  INTEGER :: nrxx, ngm, nl (ngm), nlm(ngm)
   COMPLEX(DP) :: a (3, nrxx), da (nrxx)
 
   real(DP) :: g (3, ngm), alat
@@ -245,7 +241,7 @@ SUBROUTINE grad_dot1 (nrx1, nrx2, nrx3, nr1, nr2, nr3, nrxx, &
         aux (n) = cmplx( dble(a(ipol, n)), dble(a(ipol+1, n)),kind=DP)
      ENDDO
      ! bring a(ipol,r) to G-space, a(G) ...
-     CALL cft3 (aux, nr1, nr2, nr3, nrx1, nrx2, nrx3, - 1)
+     CALL fwfft ('Dense', aux, dfftp)
      ! multiply by i(q+G) to get (\grad_ipol a)(q+G) ...
      DO n = 1, ngm
         fp = (aux(nl (n)) + aux (nlm(n)))*0.5d0
@@ -262,7 +258,7 @@ SUBROUTINE grad_dot1 (nrx1, nrx2, nrx3, nr1, nr2, nr3, nrxx, &
         aux (n) = a(ipol, n)
      ENDDO
      ! bring a(ipol,r) to G-space, a(G) ...
-     CALL cft3 (aux, nr1, nr2, nr3, nrx1, nrx2, nrx3, - 1)
+     CALL fwfft ('Dense', aux, dfftp)
      ! multiply by i(q+G) to get (\grad_ipol a)(q+G) ...
      DO n = 1, ngm
         da (nl(n)) = da (nl(n)) + cmplx(0.d0, g(ipol, n),kind=DP) * aux(nl(n))
@@ -272,7 +268,7 @@ SUBROUTINE grad_dot1 (nrx1, nrx2, nrx3, nr1, nr2, nr3, nrxx, &
      da(nlm(n)) = conjg(da(nl(n)))
   ENDDO
   !  bring back to R-space, (\grad_ipol a)(r) ...
-  CALL cft3 (da, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1)
+  CALL invfft ('Dense', da, dfftp )
   ! ...add the factor 2\pi/a  missing in the definition of q+G and sum
   DO n = 1, nrxx
      da (n) = da (n) * tpiba

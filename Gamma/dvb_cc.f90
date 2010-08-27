@@ -6,17 +6,20 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !---------------------------------------------------------------------
-SUBROUTINE dvb_cc (nlcc,npseu,ngm,nr1,nr2,nr3,nrx1,nrx2,nrx3,  &
+SUBROUTINE dvb_cc (nlcc,npseu,ngm,nrxx,  &
      nl,igtongl,rho_core,dmuxc,ga,aux,dvb_nlcc)
   !---------------------------------------------------------------------
   ! calculate the core-correction contribution to Delta V bare
   !
+  USE kinds, ONLY : dp
+  USE fft_base, ONLY : dffts, dfftp
+  USE fft_interfaces, ONLY : fwfft, invfft
   IMPLICIT NONE
-  INTEGER:: npseu,ngm,nr1,nr2,nr3,nrx1,nrx2,nrx3,np,ng,i
+  INTEGER:: npseu,ngm,nrxx,np,ng,i
   LOGICAL :: nlcc(npseu)
   INTEGER :: nl(ngm), igtongl(ngm)
-  real(8) :: rho_core(*), dmuxc(nrx1*nrx2*nrx3)
-  COMPLEX(8) :: ga(ngm), dvb_nlcc(ngm), aux(nrx1*nrx2*nrx3)
+  real(dp) :: rho_core(*), dmuxc(nrxx)
+  COMPLEX(dp) :: ga(ngm), dvb_nlcc(ngm), aux(nrxx)
   !
   DO np=1,npseu
      IF(nlcc(np)) GOTO 10
@@ -28,11 +31,11 @@ SUBROUTINE dvb_cc (nlcc,npseu,ngm,nr1,nr2,nr3,nrx1,nrx2,nrx3,  &
   DO ng=1,ngm
      aux(nl(ng)) = ga(ng) * rho_core(igtongl(ng))
   ENDDO
-  CALL cft3(aux,nr1,nr2,nr3,nrx1,nr2,nr3,1)
+  CALL invfft ('Dense', aux, dfftp)
   !
   aux(:) = aux(:) * dmuxc(:)
   !
-  CALL cft3(aux,nr1,nr2,nr3,nrx1,nr2,nr3,-1)
+  CALL fwfft ('Dense', aux, dfftp)
   DO ng=1,ngm
      dvb_nlcc(ng) = aux(nl(ng))
   ENDDO

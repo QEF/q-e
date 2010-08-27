@@ -12,16 +12,25 @@ SUBROUTINE rhod2vkb(dyn0)
   !
   !  calculate the electronic term: <psi|V''|psi>  of the dynamical matrix
   !
+  USE kinds, ONLY: dp
+  USE constants, ONLY: tpi
   USE ions_base, ONLY : nat, tau, ityp, ntyp => nsp
-  USE pwcom
-  USE scf, ONLY : rho
+  USE cell_base, ONLY : tpiba2, tpiba, omega
+  USE lsda_mod,  ONLY : current_spin
+  USE gvect,  ONLY : nrxx, ecutwfc, ngm, g, igtongl, nl
+  USE wvfct,  ONLY: nbnd, npwx, npw, g2kin, igk
+  USE klist,  ONLY : xk, nks, wk
+  USE scf,    ONLY : rho
+  USE vlocal, ONLY: vloc
   USE wavefunctions_module,  ONLY: evc, psic
-  USE uspp, ONLY: nkb, vkb, dvan
+  USE uspp,   ONLY: nkb, vkb, dvan
   USE uspp_param, ONLY: nh
   USE becmod, ONLY: calbec
   USE cgcom
   USE mp_global,  ONLY : intra_pool_comm
   USE mp,         ONLY : mp_sum
+  USE fft_base, ONLY : dffts, dfftp
+  USE fft_interfaces, ONLY : fwfft, invfft
   !
   IMPLICIT NONE
   real(DP) :: dyn0(3*nat,3*nat)
@@ -42,7 +51,7 @@ SUBROUTINE rhod2vkb(dyn0)
   DO ir = 1,nrxx
      psic(ir) = rho%of_r(ir,current_spin)
   ENDDO
-  CALL cft3(psic,nr1,nr2,nr3,nrx1,nr2,nr3,-1)
+  CALL fwfft ('Dense', psic, dfftp)
   DO nu_i = 1,nmodes
      IF (has_equivalent( (nu_i-1)/3+1)==1 ) GOTO 10
      DO na = 1, nat

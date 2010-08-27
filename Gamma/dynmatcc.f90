@@ -17,8 +17,9 @@ SUBROUTINE dynmatcc(dyncc)
   USE cell_base,  ONLY : omega, tpiba2
   USE ener,       ONLY : etxc, vtxc
   USE uspp_param, ONLY : upf
-  USE gvect,      ONLY : nl, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
-       nrxx, ngm, igtongl, ngl, g, gg, gl
+  USE fft_base,   ONLY : dfftp
+  USE fft_interfaces, ONLY : fwfft
+  USE gvect,      ONLY : nl, nrxx, ngm, igtongl, ngl, g, gg, gl
   USE scf,        ONLY : rho, rho_core, rhog_core
   USE wavefunctions_module,  ONLY: psic
   USE wvfct,      ONLY: nbnd, npwx, npw, g2kin, igk
@@ -51,7 +52,7 @@ SUBROUTINE dynmatcc(dyncc)
   !
   CALL v_xc  (rho, rho_core, rhog_core, etxc, vtxc, vxc)
   !
-  CALL cft3(vxc,nr1,nr2,nr3,nrx1,nrx2,nrx3,-1)
+  CALL fwfft ( 'Dense', vxc, dfftp )
   !
   dyncc1(:,:,:,:) = 0.d0
   ! temporary
@@ -80,7 +81,7 @@ SUBROUTINE dynmatcc(dyncc)
            ENDDO
         ENDDO
         DO i=1,3
-           CALL dvb_cc  (nlcc,nt,ngm,nr1,nr2,nr3,nrx1,nrx2,nrx3, &
+           CALL dvb_cc  (nlcc, nt, ngm, nrxx, &
                 nl,igtongl,rhocg,dmuxc,gc(1,i),aux3,gc(1,i))
         ENDDO
         DO nb=1,nat

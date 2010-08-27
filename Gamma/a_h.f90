@@ -16,8 +16,9 @@ SUBROUTINE A_h(e,h,ah)
   USE wvfct, ONLY: nbnd, npwx, npw, g2kin, igk
   USE wavefunctions_module,  ONLY: evc, psic
   USE scf,      ONLY : vrs, rho
-  USE gvect,    ONLY : gstart, nl, nlm, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
-       nrxx, ngm, g, gg
+  USE fft_base, ONLY : dffts, dfftp
+  USE fft_interfaces, ONLY : fwfft, invfft
+  USE gvect,    ONLY : gstart, nl, nlm, nrxx, ngm, g, gg
   USE constants,  ONLY: degspin, e2, fpi
   USE becmod, ONLY: bec_type, becp, calbec
   USE cgcom
@@ -69,14 +70,14 @@ SUBROUTINE A_h(e,h,ah)
            dpsic(nlm(igk(j))) = conjg(   h(j,ibnd))
         ENDDO
      ENDIF
-     CALL cft3s( psic,nr1,nr2,nr3,nrx1,nr2,nr3,2)
-     CALL cft3s(dpsic,nr1,nr2,nr3,nrx1,nr2,nr3,2)
+     CALL invfft ('Wave', psic, dffts)
+     CALL invfft ('Wave',dpsic, dffts)
      DO j = 1,nrxx
         drho(j) = drho(j) - 2.0d0*degspin/omega *   &
               dble(psic(j)*conjg(dpsic(j)))
         dpsic(j) = dpsic(j) * vrs(j,current_spin)
      ENDDO
-     CALL cft3s(dpsic,nr1,nr2,nr3,nrx1,nr2,nr3,-2)
+     CALL fwfft ('Wave',dpsic, dffts)
      IF (ibnd<nbnd) THEN
         ! two ffts at the same time
         DO j = 1,npw
@@ -100,7 +101,7 @@ SUBROUTINE A_h(e,h,ah)
   DO j = 1,nrxx
      drhoc(j) = cmplx(drho(j),0.d0,kind=DP)
   ENDDO
-  CALL cft3(drhoc,nr1,nr2,nr3,nrx1,nr2,nr3,-1)
+  CALL fwfft ('Dense', drhoc, dfftp)
   !
   ! drho is deltarho(r), drhoc is deltarho(g)
   !
@@ -116,8 +117,7 @@ SUBROUTINE A_h(e,h,ah)
   CALL start_clock('dgradcorr')
   IF (dft_is_gradient() ) CALL dgradcor1  &
        (rho%of_r, grho, dvxc_rr, dvxc_sr, dvxc_ss, dvxc_s,            &
-        drho, drhoc, nr1,nr2,nr3, nrx1, nrx2, nrx3, nrxx, nspin, &
-        nl, nlm, ngm, g, alat, omega, dvxc)
+        drho, drhoc, nrxx, nspin, nl, nlm, ngm, g, alat, omega, dvxc)
   CALL stop_clock('dgradcorr')
   NULLIFY (drho)
   !
@@ -131,7 +131,7 @@ SUBROUTINE A_h(e,h,ah)
      drhoc(nl (j)) = e2*fpi*drhoc(nl(j))/ (tpiba2*gg(j))
      drhoc(nlm(j)) = conjg(drhoc(nl (j)))
   ENDDO
-  CALL cft3(drhoc,nr1,nr2,nr3,nrx1,nr2,nr3,+1)
+  CALL invfft ('Dense', drhoc, dfftp)
   !
   ! drhoc now contains deltaV_hartree
   !
