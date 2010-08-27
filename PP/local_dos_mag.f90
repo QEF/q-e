@@ -17,9 +17,10 @@ SUBROUTINE local_dos_mag(spin_component, kpoint, kband, raux)
   USE kinds,                ONLY : DP
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
   USE cell_base,            ONLY : omega,tpiba2
+  USE fft_base,             ONLY : dffts
+  USE fft_interfaces,       ONLY : invfft
   USE gvect,                ONLY : nrxx, ngm, g, ecutwfc
-  USE gsmooth,              ONLY : nls, nr1s, nr2s, nr3s, &
-                                   nrx1s, nrx2s, nrx3s, nrxxs, doublegrid
+  USE gsmooth,              ONLY : nls, nrxxs, doublegrid
   USE klist,                ONLY : nks, xk
   USE scf,                  ONLY : rho
   USE io_files,             ONLY : iunwfc, nwordwfc
@@ -83,8 +84,7 @@ SUBROUTINE local_dos_mag(spin_component, kpoint, kband, raux)
                  psic_nc(nls(igk(ig)),2)=evc(ig+npwx,ibnd)
               ENDDO
               DO ipol=1,npol
-                 CALL cft3s (psic_nc(1,ipol), nr1s, nr2s, nr3s, nrx1s, &
-                                                          nrx2s, nrx3s, 2)
+                 CALL invfft ('Wave', psic_nc(:,ipol), dffts)
               ENDDO
               IF (spin_component==1) THEN
                  DO ir = 1,nrxxs

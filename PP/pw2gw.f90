@@ -103,8 +103,9 @@ SUBROUTINE compute_gw( use_gmaps )
   USE symm_base, ONLY : s, nsym
   USE wvfct,     ONLY : npw, npwx, nbnd, igk, g2kin, wg, et
   USE control_flags, ONLY : gamma_only
-  USE gvect,         ONLY : ngm, g, gg, ig_l2g, ecutwfc, nl, nrx1, nrx2, nrx3, &
-                            nr1, nr2, nr3, nrxx
+  USE gvect,         ONLY : ngm, g, gg, ig_l2g, ecutwfc, nl, nr1, nr2, nr3, nrxx
+  USE fft_base,  ONLY: dfftp
+  USE fft_interfaces, ONLY : fwfft, invfft
   USE klist ,        ONLY : nks, xk, wk
   USE lsda_mod,      ONLY : nspin
   USE io_files,      ONLY : nwordwfc, iunwfc
@@ -749,15 +750,15 @@ SUBROUTINE compute_gw( use_gmaps )
             psic(nl(igk(ig)))  = evc(ig,iband1)
          ENDDO
 
-         CALL cft3 (psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1)
+         CALL invfft ('Dense', psic, dfftp)
          vxcdiag = 0.0d0
          !norma = 0.0d0
          DO ir = 1, nrxx
             vxcdiag = vxcdiag + vxc(ir,nspin) * &
                       ( dble(psic (ir) ) **2 + aimag(psic (ir) ) **2)
-         !   norma = norma + ( DBLE(psic (ir) ) **2 + AIMAG(psic (ir) ) **2) / nrxx
+         !   norma = norma + ( DBLE(psic (ir) ) **2 + AIMAG(psic (ir) ) **2) / (nr1*nr2*nr3)
          ENDDO
-         vxcdiag = vxcdiag * rytoev / (nrx1*nrx2*nrx3) !nrxx
+         vxcdiag = vxcdiag * rytoev / (nr1*nr2*nr3) ! PG: this is the correct integral - 27/8/2010
          CALL mp_sum( vxcdiag ) !, intra_pool_comm )
          ! ONLY FOR DEBUG!
          !IF (norma /= 1.0) THEN
@@ -842,8 +843,7 @@ SUBROUTINE write_gmaps ( kunit)
   USE io_global, ONLY : stdout
   USE cell_base, ONLY : at, bg, tpiba2, alat
   USE ions_base, ONLY : atm, nat
-  USE gvect,     ONLY : ngm, ngm_g, ig_l2g, ig1, ig2, ig3, ecutwfc, &
-       nr1, nr2, nr3, g
+  USE gvect,     ONLY : ngm, ngm_g, ig_l2g, ig1, ig2, ig3, ecutwfc, g
   USE lsda_mod,  ONLY : nspin, isk
   USE ions_base, ONLY : ntyp => nsp, tau, ityp
   USE wvfct,     ONLY : nbnd, npw, npwx, et, g2kin

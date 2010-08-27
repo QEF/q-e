@@ -27,10 +27,10 @@ SUBROUTINE local_dos (iflag, lsign, kpoint, kband, spin_component, &
   USE cell_base,            ONLY : omega, tpiba2
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
   USE ener,                 ONLY : ef
-  USE gvect,                ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, &
-                                   nl, ngm, g, ecutwfc
-  USE gsmooth,              ONLY : nls, nlsm, nr1s, nr2s, nr3s, &
-                                   nrx1s, nrx2s, nrx3s, nrxxs, doublegrid
+  USE fft_base,             ONLY : dffts, dfftp
+  USE fft_interfaces,       ONLY : fwfft, invfft
+  USE gvect,                ONLY : nrxx, nl, ngm, g, ecutwfc
+  USE gsmooth,              ONLY : nls, nlsm, nrxxs, doublegrid
   USE klist,                ONLY : lgauss, degauss, ngauss, nks, wk, xk, nkstot
   USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
   USE scf,                  ONLY : rho
@@ -175,8 +175,7 @@ SUBROUTINE local_dos (iflag, lsign, kpoint, kband, spin_component, &
                     psic_nc(nls(igk(ig)),2)=evc(ig+npwx,ibnd)
                  ENDDO
                  DO ipol=1,npol
-                    CALL cft3s (psic_nc(1,ipol),nr1s,nr2s,nr3s, &
-                                                nrx1s,nrx2s,nrx3s,2)
+                    CALL invfft ('Wave', psic_nc(:,ipol), dffts)
                  ENDDO
               ELSE
                  psic(1:nrxxs) = (0.d0,0.d0)
@@ -188,7 +187,7 @@ SUBROUTINE local_dos (iflag, lsign, kpoint, kband, spin_component, &
                        psic (nlsm(igk (ig) ) ) = conjg(evc (ig, ibnd))
                     ENDDO
                  ENDIF
-                 CALL cft3s (psic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, 2)
+                 CALL invfft ('Wave', psic, dffts)
               ENDIF
               w1 = wg (ibnd, ik) / omega
 !
@@ -407,14 +406,14 @@ SUBROUTINE local_dos (iflag, lsign, kpoint, kband, spin_component, &
   CALL sym_rho_init ( gamma_only )
   !
   psic(:) = cmplx ( dos(:), 0.0_dp, kind=dp)
-  CALL cft3s (psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, -1)
+  CALL fwfft ('Dense', psic, dfftp)
   rho%of_g(:,1) = psic(nl(:))
   !
   CALL sym_rho (1, rho%of_g)
   !
   psic(:) = (0.0_dp, 0.0_dp)
   psic(nl(:)) = rho%of_g(:,1)
-  CALL cft3s (psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1)
+  CALL invfft ('Dense', psic, dfftp)
   dos(:) = dble(psic(:))
   !
   RETURN

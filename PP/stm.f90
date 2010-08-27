@@ -23,7 +23,9 @@ SUBROUTINE stm (wf, sample_bias, z, dz, stmdos)
   USE constants, ONLY: tpi, rytoev
   USE io_global, ONLY : stdout
   USE cell_base, ONLY: tpiba2, tpiba, omega, at, alat
-  USE gvect, ONLY: nrx1, nrx2, nrx3, nr1, nr2, nr3, ngm, g, ecutwfc, &
+  USE fft_base,  ONLY: dfftp
+  USE fft_interfaces, ONLY : fwfft, invfft
+  USE gvect, ONLY: nrx1, nrx2, nrx3, ngm, g, ecutwfc, &
        nl, nlm, nrxx
   USE klist, ONLY: xk, lgauss, degauss, ngauss, wk, nks, nelec
   USE ener, ONLY: ef
@@ -189,7 +191,7 @@ SUBROUTINE stm (wf, sample_bias, z, dz, stmdos)
               ENDDO
            ENDIF
 
-           CALL cft3 (psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1)
+           CALL invfft ('Dense', psic, dfftp)
            DO ir = 1, nrxx
               rho%of_r (ir, 1) = rho%of_r (ir, 1) + w1* dble( psic(ir) )**2 + &
                                                     w2*aimag( psic(ir) )**2
@@ -211,7 +213,7 @@ SUBROUTINE stm (wf, sample_bias, z, dz, stmdos)
               psic(nl(igk(ig)))  = evc(ig,ibnd)
            ENDDO
 
-           CALL cft3 (psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1)
+           CALL invfft ('Dense', psic, dfftp)
            DO ir = 1, nrxx
               rho%of_r (ir, 1) = rho%of_r (ir, 1) + w1 * &
                                 ( dble(psic (ir) ) **2 + aimag(psic (ir) ) **2)
@@ -230,12 +232,12 @@ SUBROUTINE stm (wf, sample_bias, z, dz, stmdos)
      CALL sym_rho_init (gamma_only)
      !
      psic(:) = cmplx ( rho%of_r(:,1), 0.0_dp, kind=dp)
-     CALL cft3s (psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, -1)
+     CALL fwfft ('Dense', psic, dfftp)
      rho%of_g(:,1) = psic(nl(:))
      CALL sym_rho (1, rho%of_g)
      psic(:) = (0.0_dp, 0.0_dp)
      psic(nl(:)) = rho%of_g(:,1)
-     CALL cft3s (psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1)
+     CALL invfft ('Dense', psic, dfftp)
      rho%of_r(:,1) = dble(psic(:))
   ENDIF
 #ifdef __PARA

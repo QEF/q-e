@@ -2966,11 +2966,12 @@ SUBROUTINE projwave_boxes( filpdos, filproj, n_proj_boxes, irmin, irmax, plotbox
   USE wavefunctions_module, ONLY: evc,    psic
   USE wavefunctions_module, ONLY: psic_nc
   USE io_files,             ONLY : iunwfc, nwordwfc
-  USE scf, ONLY : rho
+  USE scf,                  ONLY : rho
   USE projections_ldos
-  USE fft_base,   ONLY: grid_scatter
-  USE mp_global, ONLY : intra_pool_comm
-  USE mp,        ONLY : mp_sum
+  USE fft_base,             ONLY : grid_scatter, dfftp
+  USE fft_interfaces,       ONLY : invfft
+  USE mp_global,            ONLY : intra_pool_comm
+  USE mp,                   ONLY : mp_sum
 !
   !
   IMPLICIT NONE
@@ -3159,8 +3160,7 @@ SUBROUTINE projwave_boxes( filpdos, filproj, n_proj_boxes, irmin, irmax, plotbox
            ENDDO
            raux=0._DP
            DO ipol=1,npol
-              CALL cft3 (psic_nc(1,ipol),nr1,nr2,nr3, &
-                                         nrx1,nrx2,nrx3,1)
+              CALL invfft ('Dense', psic_nc(:,ipol), dfftp)
               raux(:) = raux(:)+dble( psic_nc(:,ipol) )**2 &
                              + aimag( psic_nc(:,ipol) )**2
            ENDDO
@@ -3176,7 +3176,7 @@ SUBROUTINE projwave_boxes( filpdos, filproj, n_proj_boxes, irmin, irmax, plotbox
                  caux (nlm(igk (ig) ) ) = conjg(evc (ig, ibnd))
               ENDDO
            ENDIF
-           CALL cft3 (caux, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1)
+           CALL invfft ('Dense', caux, dfftp)
            !
            raux(:) = dble( caux(:) )**2 + aimag( caux(:) )**2
            !

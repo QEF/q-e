@@ -23,11 +23,12 @@ SUBROUTINE chdens (filplot,plot_num)
   USE cell_base
   USE ions_base,  ONLY : nat, ityp, atm, ntyp => nsp, tau, zv
   USE lsda_mod,   ONLY: nspin
+  USE fft_base,   ONLY: grid_scatter, dfftp
+  USE fft_interfaces, ONLY : fwfft
   USE gvect
   USE gsmooth
   USE wavefunctions_module,  ONLY: psic
   USE io_files, ONLY: nd_nmbr
-  USE fft_base,   ONLY: grid_scatter
   USE printout_base, ONLY: title
   USE control_flags, ONLY: gamma_only
 
@@ -373,7 +374,7 @@ SUBROUTINE chdens (filplot,plot_num)
 #else
      psic(:) = cmplx(rhor(:), 0.d0,kind=DP)
 #endif
-     CALL cft3 (psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, -1)
+     CALL fwfft ('Dense', psic, dfftp)
      !
      !    we store the fourier components in the array rhog
      !

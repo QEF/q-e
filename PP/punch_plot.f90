@@ -24,7 +24,9 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
   USE ions_base,        ONLY : nat, ntyp => nsp, ityp, tau, zv, atm
   USE printout_base,    ONLY : title
   USE extfield,         ONLY : tefield, dipfield
-  USE gvect
+  USE fft_base,         ONLY : dfftp
+  USE fft_interfaces,   ONLY : fwfft, invfft
+  USE gvect,            ONLY : nrxx, gcutm, dual, ecutwfc, nr1,nr2,nr3,nrx1,nrx2,nrx3
   USE klist,            ONLY : nks, nkstot, xk
   USE lsda_mod,         ONLY : nspin, current_spin
   USE ener,             ONLY : ehart
@@ -272,8 +274,9 @@ SUBROUTINE polarization ( spin_component, ipol, epsilon, raux )
   !
   USE kinds,     ONLY : DP
   USE constants, ONLY : fpi
-  USE gvect, ONLY: nr1, nr2, nr3, nrx1, nrx2, nrx3, nl, nlm, &
-       ngm, nrxx, gstart, g, gg
+  USE fft_base,  ONLY: dfftp
+  USE fft_interfaces, ONLY : fwfft, invfft
+  USE gvect, ONLY: nl, nlm, ngm, nrxx, gstart, g, gg
   USE lsda_mod,  ONLY : nspin
   USE scf, ONLY: rho
   USE control_flags,    ONLY : gamma_only
@@ -300,7 +303,7 @@ SUBROUTINE polarization ( spin_component, ipol, epsilon, raux )
   !
   !   transform to G space
   !
-  CALL cft3 (psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, - 1)
+  CALL fwfft ('Dense', psic, dfftp)
   !
   IF (gstart == 2) psic (1) = (epsilon - 1.d0) / fpi
   DO ig = gstart, ngm
@@ -309,7 +312,7 @@ SUBROUTINE polarization ( spin_component, ipol, epsilon, raux )
      IF (gamma_only) psic (nlm(ig) ) = conjg ( psic (nl (ig) ) )
   ENDDO
   !
-  CALL cft3 (psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1)
+  CALL invfft ('Dense', psic, dfftp)
   !
   raux (:) =  dble (psic (:) )
   !

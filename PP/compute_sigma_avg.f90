@@ -19,7 +19,7 @@ USE uspp_param,           ONLY : upf, nh, nhm
 USE wvfct,                ONLY : nbnd, npwx, npw, igk
 USE wavefunctions_module, ONLY : evc, psic_nc
 USE klist,                ONLY : nks, xk
-USE gvect,                ONLY : g,gg,nr1,nr2,nr3,nrx1,nrx2,nrx3,nrxx
+USE gvect,                ONLY : g,gg,nr1,nr2,nr3,nrxx
 USE gsmooth,              ONLY : nls, nlsm, nr1s, nr2s, nr3s, &
                                   nrx1s, nrx2s, nrx3s, nrxxs, doublegrid
 USE scf,                  ONLY : rho
@@ -27,6 +27,7 @@ USE ions_base,            ONLY : nat, ntyp => nsp, ityp
 USE mp_global,            ONLY : me_pool, intra_pool_comm
 USE mp,                   ONLY : mp_sum
 USE fft_base,             ONLY : dffts
+USE fft_interfaces,       ONLY : invfft
 
 
 IMPLICIT NONE
@@ -114,7 +115,7 @@ DO ibnd = 1, nbnd
       psic_nc(nls(igk(ig)), 2)=evc(ig+npwx,ibnd)
    ENDDO
    DO ipol=1,npol
-      CALL cft3s (psic_nc(1,ipol), nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, 2)
+      CALL invfft ('Wave', psic_nc(:,ipol), dffts)
    ENDDO
    !
    ! Calculate the three components of the magnetization
@@ -156,8 +157,8 @@ DO ibnd = 1, nbnd
                           (0.d0,1.d0)*evc(npwi:npwf,ibnd)
          dfy(nls(igk(1:npw))) = (xk(2,ik)+g(2,igk(1:npw)))*tpiba* &
                           (0.d0,1.d0)*evc(npwi:npwf,ibnd)
-         CALL cft3s( dfx, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, 2 )
-         CALL cft3s( dfy, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, 2 )
+         CALL invfft ('Wave', dfx, dffts)
+         CALL invfft ('Wave', dfy, dffts)
          DO i = 1, nr1s
             xx = (i-1)*dx - x0
             DO j = 1, nr2s

@@ -560,7 +560,6 @@ SUBROUTINE read_nnkp
   INTEGER numk, i, j
   INTEGER, ALLOCATABLE :: ig_check(:,:)
   real(DP) :: xx(3), xnorm, znorm, coseno
-  CHARACTER(len=80) :: line1, line2
   LOGICAL :: have_nnkp
 
   IF (ionode) THEN  ! Read nnkp file on ionode only
@@ -825,7 +824,9 @@ SUBROUTINE compute_mmn
    USE wvfct,           ONLY : nbnd, npw, npwx, igk, g2kin
    USE control_flags,   ONLY : gamma_only
    USE wavefunctions_module, ONLY : evc, psic, psic_nc
-   USE gsmooth,         ONLY: nls, nlsm, nrxxs, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s
+   USE fft_base,        ONLY : dffts
+   USE fft_interfaces,  ONLY : fwfft, invfft
+   USE gsmooth,         ONLY : nls, nlsm, nrxxs
    USE klist,           ONLY : nkstot, xk
    USE io_files,        ONLY : nwordwfc, iunwfc
    USE io_files,        ONLY : find_free_unit
@@ -1030,7 +1031,7 @@ SUBROUTINE compute_mmn
 ! compute the phase
          phase(:) = (0.d0,0.d0)
          IF ( ig_(ik,ib)>0) phase( nls(ig_(ik,ib)) ) = (1.d0,0.d0)
-         CALL cft3s (phase, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, +2)
+         CALL invfft ('Wave', phase, dffts)
          !
          !  USPP
          !
@@ -1109,18 +1110,18 @@ SUBROUTINE compute_mmn
                   istart=(ipol-1)*npwx+1
                   iend=istart+npw-1
                   psic_nc(nls (igk (1:npw) ),ipol ) = evc(istart:iend, m)
-                  CALL cft3s (psic_nc(1,ipol), nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, +2)
+                  CALL invfft ('Wave', psic_nc(:,ipol), dffts)
                   psic_nc(1:nrxxs,ipol) = psic_nc(1:nrxxs,ipol) * phase(1:nrxxs)
-                  CALL cft3s (psic_nc(1,ipol), nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, -2)
+                  CALL fwfft ('Wave', psic_nc(:,ipol), dffts)
                   aux_nc(1:npwq,ipol) = psic_nc(nls (igkq(1:npwq) ),ipol )
                ENDDO
             ELSE
                psic(:) = (0.d0, 0.d0)
                psic(nls (igk (1:npw) ) ) = evc (1:npw, m)
                IF(gamma_only) psic(nlsm(igk (1:npw) ) ) = conjg(evc (1:npw, m))
-               CALL cft3s (psic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, +2)
+               CALL invfft ('Wave', psic, dffts)
                psic(1:nrxxs) = psic(1:nrxxs) * phase(1:nrxxs)
-               CALL cft3s (psic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, -2)
+               CALL fwfft ('Wave', psic, dffts)
                aux(1:npwq)  = psic(nls (igkq(1:npwq) ) )
             ENDIF
             IF(gamma_only) THEN
@@ -1496,7 +1497,8 @@ SUBROUTINE write_plot
    USE klist,           ONLY : nkstot, xk
    USE gvect,           ONLY : g, ngm, ecutwfc
    USE cell_base,       ONLY : tpiba2
-   USE fft_base,        ONLY : cgather_smooth
+   USE fft_base,        ONLY : cgather_smooth, dffts
+   USE fft_interfaces,  ONLY : invfft
    USE noncollin_module,ONLY : noncolin
 
    IMPLICIT NONE
@@ -1564,7 +1566,7 @@ SUBROUTINE write_plot
          psic(:) = (0.d0, 0.d0)
          psic(nls (igk (1:npw) ) ) = evc (1:npw, ibnd)
          IF (gamma_only)  psic(nlsm(igk (1:npw) ) ) = conjg(evc (1:npw, ibnd))
-         CALL cft3s (psic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, +2)
+         CALL invfft ('Wave', psic, dffts)
          IF (reduce_unk) pos=0
 #ifdef __PARA
          CALL cgather_smooth(psic,psic_all)
@@ -2030,7 +2032,7 @@ SUBROUTINE wan2sic
   USE io_files, ONLY : iunwfc, iunatsicwfc, nwordwfc, nwordwann
   USE cell_base, ONLY : omega, tpiba2
   USE gvect, ONLY : g, ngm, ecutwfc
-  USE gsmooth, ONLY: nls, nrxxs, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s
+  USE gsmooth, ONLY: nls, nrxxs
   USE wavefunctions_module, ONLY : evc, psic
   USE wvfct, ONLY : nbnd, npwx, npw, igk, g2kin
   USE klist, ONLY : nkstot, xk, wk

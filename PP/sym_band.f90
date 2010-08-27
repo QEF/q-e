@@ -463,7 +463,9 @@ SUBROUTINE rotate_psi(evc,evcr,s,ftau,gk,nl,igk,nr1,nr2,nr3, &
 
   USE kinds,     ONLY : DP
   USE constants, ONLY : tpi
-  USE fft_base,             ONLY : cgather_sym, cscatter_sym
+  USE fft_base,  ONLY : cgather_sym, cscatter_sym, dfftp
+  USE fft_interfaces, ONLY : fwfft, invfft
+
   IMPLICIT NONE
 
   INTEGER :: nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, ngm, npw, nbnd
@@ -491,7 +493,7 @@ SUBROUTINE rotate_psi(evc,evcr,s,ftau,gk,nl,igk,nr1,nr2,nr3, &
   !
   psic(nl(igk(1:npw))) = evc(1:npw)
   !
-  CALL cft3( psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1 )
+  CALL invfft ('Dense', psic, dfftp)
   !
 #if defined  (__PARA)
   !
@@ -565,7 +567,7 @@ SUBROUTINE rotate_psi(evc,evcr,s,ftau,gk,nl,igk,nr1,nr2,nr3, &
   !
 #endif
   !
-  CALL cft3( psir, nr1, nr2, nr3, nrx1, nrx2, nrx3, -1 )
+  CALL fwfft ('Dense', psir, dfftp)
   !
   evcr(1:npw) = psir(nl(igk(1:npw)))
   !
@@ -794,7 +796,9 @@ SUBROUTINE rotate_psi_so(evc_nc,evcr,s,ftau,d_spin,has_e,gk,nl,igk,npol, &
   !
   USE kinds,     ONLY : DP
   USE constants, ONLY : tpi
-  USE fft_base,             ONLY : cgather_sym, cscatter_sym
+  USE fft_base,  ONLY : cgather_sym, cscatter_sym, dfftp
+  USE fft_interfaces, ONLY : fwfft, invfft
+
   IMPLICIT NONE
 
   INTEGER :: npol, nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, ngm, npw, nbnd, npwx
@@ -828,7 +832,7 @@ SUBROUTINE rotate_psi_so(evc_nc,evcr,s,ftau,d_spin,has_e,gk,nl,igk,npol, &
   DO ipol=1,npol
      !
      psic(nl(igk(1:npw)),ipol) = evc_nc(1:npw,ipol)
-     CALL cft3( psic(1,ipol), nr1, nr2, nr3, nrx1, nrx2, nrx3, 1 )
+     CALL invfft ('Dense', psic(:,ipol), dfftp)
      !
 #if defined  (__PARA)
      !
@@ -896,7 +900,7 @@ SUBROUTINE rotate_psi_so(evc_nc,evcr,s,ftau,d_spin,has_e,gk,nl,igk,npol, &
      !
 #endif
      !
-     CALL cft3( psir(1,ipol), nr1, nr2, nr3, nrx1, nrx2, nrx3, -1 )
+     CALL fwfft ('Dense', psir(:,ipol), dfftp)
      !
      evcr_save(1:npw,ipol) = psir(nl(igk(1:npw)),ipol)
      !

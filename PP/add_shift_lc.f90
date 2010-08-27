@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2010 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -8,12 +8,13 @@
 !
 !----------------------------------------------------------------------
 SUBROUTINE add_shift_lc (nat, tau, ityp, alat, omega, ngm, ngl, &
-     igtongl, nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, g, rho, nl, &
-     nspin, gstart, gamma_only, vloc, shift_lc)
+     igtongl, nrxx, g, rho, nl, nspin, gstart, gamma_only, vloc, shift_lc)
   !----------------------------------------------------------------------
   !
   USE kinds, ONLY : DP
   USE constants, ONLY : tpi
+  USE fft_base,  ONLY: dfftp
+  USE fft_interfaces, ONLY : fwfft
   USE mp_global,  ONLY : intra_pool_comm
   USE mp,         ONLY : mp_sum
 
@@ -21,11 +22,10 @@ SUBROUTINE add_shift_lc (nat, tau, ityp, alat, omega, ngm, ngl, &
   !
   !   first the dummy variables
   !
-  INTEGER :: nat, ngm, nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, nspin, &
+  INTEGER :: nat, ngm, nrxx, nspin, &
        ngl, gstart, igtongl (ngm), nl (ngm), ityp (nat)
   ! input: the number of atoms in the cell
   ! input: the number of G vectors
-  ! input: FFT dimensions
   ! input: number of spin polarizations
   ! input: the number of shells
   ! input: correspondence G <-> shell of G
@@ -50,20 +50,23 @@ SUBROUTINE add_shift_lc (nat, tau, ityp, alat, omega, ngm, ngl, &
   ! counter on G vectors
   ! counter on atoms
 
-  real(DP), ALLOCATABLE :: aux (:,:), shift_(:)
+  real(DP), ALLOCATABLE :: shift_(:)
+  complex(DP), ALLOCATABLE :: aux (:)
   ! auxiliary space for FFT
   real(DP) :: arg, fact
   !
   ! contribution to the force from the local part of the bare potential
   ! F_loc = Omega \Sum_G n*(G) d V_loc(G)/d R_i
   !
-  ALLOCATE (aux(2, nrxx), shift_(nat) )
+  ALLOCATE (aux(nrxx), shift_(nat) )
   shift_(:) = 0.d0
 
-  aux(1,:) = rho(:,1)
-  IF (nspin==2) aux(1,:) = aux(1,:) + rho(:,2)
-  aux(2,:) = 0.d0
-  CALL cft3 (aux, nr1, nr2, nr3, nrx1, nrx2, nrx3, - 1)
+  IF (nspin==2) THEN
+     aux(:) = CMPLX ( rho(:,1)+rho(:,2), 0.0_dp, KIND=dp )
+  ELSE
+     aux(:) = CMPLX ( rho(:,1), 0.0_dp, KIND=dp )
+  END IF
+  CALL fwfft ('Dense', aux, dfftp)
   !
   !    aux contains now  n(G)
   !
@@ -74,13 +77,13 @@ SUBROUTINE add_shift_lc (nat, tau, ityp, alat, omega, ngm, ngl, &
   ENDIF
   DO na = 1, nat
      ! contribution from G=0 is not zero but should be counted only once
-     IF (gstart==2) shift_(na)=vloc(igtongl(1),ityp(na))*aux(1,nl(1))/ fact
+     IF (gstart==2) shift_(na) = vloc(igtongl(1),ityp(na)) * DBLE (aux(nl(1))) / fact
      DO ig = gstart, ngm
         arg = (g (1, ig) * tau (1, na) + g (2, ig) * tau (2, na) + &
                g (3, ig) * tau (3, na) ) * tpi
         shift_ ( na) = shift_ (na) + &
                 vloc (igtongl (ig), ityp (na) ) * &
-                (cos (arg) * aux(1,nl(ig)) - sin (arg) * aux(2,nl(ig)) )
+                (cos (arg) * DBLE (aux(nl(ig))) - sin (arg) * AIMAG (aux(nl(ig))) )
      ENDDO
      shift_ (na) = fact * shift_ (na) * omega
   ENDDO

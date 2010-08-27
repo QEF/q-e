@@ -13,10 +13,13 @@ SUBROUTINE local_dos1d (ik, kband, plan)
   !
   !     calculates |psi|^2 for band kband at point ik
   !
+  USE kinds,     ONLY: dp
   USE cell_base, ONLY: omega
   USE ions_base, ONLY: nat, ntyp=>nsp, ityp
-  USE gvect
-  USE gsmooth
+  USE fft_base,  ONLY: dffts, dfftp
+  USE fft_interfaces, ONLY : fwfft, invfft
+  USE gvect,     ONLY : nrxx, nr3
+  USE gsmooth,   ONLY : nrxxs, nls, doublegrid
   USE lsda_mod, ONLY: current_spin
   USE uspp, ONLY: becsum, indv, nhtol, nhtoj
   USE uspp_param, ONLY: upf, nh, nhm
@@ -88,7 +91,7 @@ SUBROUTINE local_dos1d (ik, kband, plan)
         psic_nc (nls (igk (ig) ), 2 ) = evc (ig+npwx, kband)
      ENDDO
      DO ipol=1,npol
-        CALL cft3s (psic_nc(1,ipol), nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, 2)
+        CALL invfft ('Wave', psic_nc(:,ipol), dffts)
      ENDDO
 
      w1 = wg (kband, ik) / omega
@@ -103,7 +106,7 @@ SUBROUTINE local_dos1d (ik, kband, plan)
      DO ig = 1, npw
         psic (nls (igk (ig) ) ) = evc (ig, kband)
      ENDDO
-     CALL cft3s (psic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, 2)
+     CALL invfft ('Wave', psic, dffts)
 
      w1 = wg (kband, ik) / omega
      DO ir = 1, nrxxs
@@ -212,7 +215,7 @@ SUBROUTINE local_dos1d (ik, kband, plan)
   DO ir = 1, nrxx
      prho (ir) = cmplx(aux (ir), 0.d0,kind=DP)
   ENDDO
-  CALL cft3 (prho, nr1, nr2, nr3, nrx1, nrx2, nrx3, - 1)
+  CALL fwfft ('Dense', prho, dfftp)
   !
   !    Here we add the US contribution to the charge for the atoms which n
   !    it. Or compute the planar average in the NC case.

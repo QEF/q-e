@@ -96,6 +96,8 @@ SUBROUTINE plot_wannier(nc,n0)
   USE buffers
   USE symm_base,  ONLY : nsym
   USE ldaU,       ONLY : swfcatom
+  USE fft_base,    ONLY: dffts
+  USE fft_interfaces, ONLY : invfft
   USE gvect
   USE gsmooth
   USE cell_base
@@ -147,7 +149,7 @@ SUBROUTINE plot_wannier(nc,n0)
         psic (nls (igk (j) ) ) = wan_func (j, plot_wan_num)
      ENDDO
 
-     CALL cft3s (psic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, 2)
+     CALL invfft ('Wave', psic, dffts)
 
      DO k=1, nrx3s
         DO j=1,nrx2s

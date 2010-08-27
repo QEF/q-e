@@ -14,7 +14,9 @@ SUBROUTINE write_casino_wfn(gather,blip,multiplicity,binwrite,single_precision_b
    USE printout_base, ONLY: title    ! title of the run
    USE constants, ONLY: tpi, e2
    USE ener, ONLY: ewld, ehart, etxc, vtxc, etot, etxcc, demet, ef
-   USE gvect, ONLY: ngm, gstart, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
+   USE fft_base,  ONLY: dfftp
+   USE fft_interfaces, ONLY : fwfft
+   USE gvect, ONLY: ngm, gstart, &
                     nrxx, g, gg, ecutwfc, gcutm, nl, nlm, igtongl
    USE klist , ONLY: nks, nelec, xk, wk, degauss, ngauss
    USE lsda_mod, ONLY: lsda, nspin
@@ -341,7 +343,7 @@ CONTAINS
          !      bring rho to G-space
          !
          aux(:) = cmplx( rho%of_r(:,ispin), 0.d0,kind=DP)
-         CALL cft3(aux,nr1,nr2,nr3,nrx1,nrx2,nrx3,-1)
+         CALL fwfft ('Dense', aux, dfftp)
          !
          DO nt=1,ntyp
             DO ig = 1, ngm

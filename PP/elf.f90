@@ -30,10 +30,10 @@ SUBROUTINE do_elf (elf)
   USE kinds, ONLY: DP
   USE constants, ONLY: pi
   USE cell_base, ONLY: omega, tpiba, tpiba2
-  USE gvect, ONLY: nr1,nr2,nr3, nrx1,nrx2,nrx3, nrxx, gcutm, ecutwfc, &
-       dual, g, ngm, nl, nlm
-  USE gsmooth, ONLY : nls, nlsm, nr1s, nr2s, nr3s, ngms, &
-                      nrx1s, nrx2s, nrx3s, nrxxs, doublegrid
+  USE fft_base,  ONLY: dffts, dfftp
+  USE fft_interfaces, ONLY : fwfft, invfft
+  USE gvect, ONLY: nrxx, gcutm, ecutwfc, dual, g, ngm, nl, nlm
+  USE gsmooth, ONLY : nls, nlsm, ngms, nrxxs, doublegrid
   USE io_files, ONLY: iunwfc, nwordwfc
   USE klist, ONLY: nks, xk
   USE lsda_mod, ONLY: nspin
@@ -88,7 +88,7 @@ SUBROUTINE do_elf (elf)
                       conjg ( evc (i, ibnd) )
               ENDIF
            ENDDO
-           CALL cft3s (aux, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, 2)
+           CALL invfft ('Wave', aux, dffts)
            DO i = 1, nrxxs
               kkin(i) = kkin(i) + w1 * (dble(aux(i))**2 + aimag(aux(i))**2)
            ENDDO
@@ -122,7 +122,7 @@ SUBROUTINE do_elf (elf)
      CALL sym_rho_init ( gamma_only )
      !
      aux(:) =  cmplx ( kkin (:), 0.0_dp, kind=dp)
-     CALL cft3s (aux, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, -1)
+     CALL fwfft ('Smooth', aux, dffts)
      ALLOCATE (aux2(ngm))
      aux2(:) = aux(nl(:))
      !
@@ -133,7 +133,7 @@ SUBROUTINE do_elf (elf)
      aux(:) = (0.0_dp, 0.0_dp)
      aux(nl(:)) = aux2(:)
      DEALLOCATE (aux2)
-     CALL cft3 (aux, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1)
+     CALL invfft ('Dense', aux, dfftp)
      kkin (:) = dble(aux(:))
      !
   ENDIF
@@ -152,7 +152,7 @@ SUBROUTINE do_elf (elf)
   ENDDO
   !
   aux(:) = cmplx( rho%of_r(:, 1), 0.d0 ,kind=DP)
-  CALL cft3 (aux, nr1, nr2, nr3, nrx1, nrx2, nrx3, - 1)
+  CALL fwfft ('Dense', aux, dfftp)
   !
   DO j = 1, 3
      aux2(:) = (0.d0,0.d0)
@@ -165,7 +165,7 @@ SUBROUTINE do_elf (elf)
         ENDDO
      ENDIF
 
-     CALL cft3 (aux2, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1)
+     CALL invfft ('Dense', aux2, dffts)
      DO i = 1, nrxx
         tbos (i) = tbos (i) + dble(aux2(i))**2
      ENDDO
