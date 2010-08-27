@@ -1122,9 +1122,9 @@ SUBROUTINE rhov(irb,eigrb,rhovan,rhog,rhor)
 
 !$omp parallel default(none) &
 !$omp          shared(nvb, na, nnrb, ngb, nh, rhovan, qgb, eigrb, dfftb, iprsta, omegab, irb, v, nr1b, &
-!$omp                 nr2b, nr3b, nmb, stdout, ci, npb ) &
+!$omp                 nr2b, nr3b, nmb, stdout, ci, npb, rhor ) &
 !$omp          private(mytid, ntids, is, ia, nfft, ifft, iv, jv, ijv, sumrho, qgbt, ig, iss, isa, ca, &
-!$omp                  qv, itid )
+!$omp                  qv, itid, ir, nnr )
 
          iss=1
          isa=1
@@ -1236,16 +1236,17 @@ SUBROUTINE rhov(irb,eigrb,rhovan,rhog,rhor)
 
          DEALLOCATE(qv)
          DEALLOCATE(qgbt)
-
-!$omp end parallel
-
-         iss = 1
          !
          !  rhor(r) = total (smooth + US) charge density in real space
          !
+!$omp end parallel
+
+         iss = 1
+
          DO ir=1,nnr
             rhor(ir,iss)=rhor(ir,iss)+DBLE(v(ir))        
          END DO
+
 !
          IF(iprsta.GT.2) THEN
             ca = SUM(v)

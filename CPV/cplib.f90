@@ -593,7 +593,7 @@ END FUNCTION
       !
       kmax = i - 1
       !
-!$omp parallel default(shared), private( temp, k, ig )
+!$omp parallel default(shared), private( temp, k, ig, inl )
 
       ALLOCATE( temp( ngw ) )
 
@@ -609,17 +609,10 @@ END FUNCTION
          ENDIF
       END DO
 !$omp end do
-
-      DEALLOCATE( temp )
-
-!$omp end parallel
-
-      CALL mp_sum( csc( 1:kmax ), intra_image_comm )
-
-      ALLOCATE( temp( ngw ) )
       !
       !     calculate bec(i)=<cp(i)|beta>
       !
+!$omp do
       DO inl=1,nhsavb
          DO ig=1,ngw
             temp(ig)=cp(1,ig,i)* DBLE(betae(ig,inl))+             &
@@ -628,11 +621,18 @@ END FUNCTION
          bec(inl,i)=2.d0*SUM(temp)
          IF (gstart == 2) bec(inl,i)= bec(inl,i)-temp(1)
       END DO
+!$omp end do
 
+      DEALLOCATE( temp )
+
+!$omp end parallel
+
+      CALL mp_sum( csc( 1:kmax ), intra_image_comm )
       CALL mp_sum( bec( 1:nhsavb, i ), intra_image_comm )
 !
 !     calculate csc(k)=<cp(i)|S|cp(k)>,  k<i
 !
+!$omp parallel do default(shared), private( k, is, iv, jv, ia, inl, jnl, rsum )
       DO k=1,kmax
          IF (ispin(i).EQ.ispin(k)) THEN
             rsum=0.d0
@@ -652,6 +652,7 @@ END FUNCTION
             csc(k)=csc(k)+rsum
          ENDIF
       END DO
+!$omp end parallel do
 !
 !     orthogonalized cp(i) : |cp(i)>=|cp(i)>-\sum_k<i csc(k)|cp(k)>
 !
@@ -663,7 +664,6 @@ END FUNCTION
          END DO
       END DO
 
-      DEALLOCATE( temp )
 !
       RETURN
       END SUBROUTINE gracsc
@@ -807,7 +807,10 @@ END FUNCTION
       REAL(DP) :: anorm, cscnorm
       REAL(DP), ALLOCATABLE :: csc( : )
       INTEGER :: i,k
-      EXTERNAL cscnorm
+      EXTERNAL :: cscnorm
+      REAL(DP), PARAMETER :: one  =  1.d0
+      REAL(DP), PARAMETER :: mone = -1.d0
+
 !
       CALL start_clock( 'gram' )
 
@@ -819,9 +822,9 @@ END FUNCTION
          !
          ! calculate orthogonalized cp(i) : |cp(i)>=|cp(i)>-\sum_k<i csc(k)|cp(k)>
          !
-         DO k = 1, i - 1
-            CALL daxpy( 2*ngw, -csc(k), cp(1,k), 1, cp(1,i), 1 )
-         END DO
+         IF( i > 1 ) &
+            CALL dgemv( 'N', 2*ngw, i-1, mone, cp(1,1), 2*ngwx, csc(1), 1, one, cp(1,i), 1 )
+
          anorm = cscnorm( bec, nkbx, cp, ngwx, i, n )
          CALL dscal( 2*ngw, 1.0d0/anorm, cp(1,i), 1 )
          !

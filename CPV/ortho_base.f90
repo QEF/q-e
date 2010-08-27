@@ -794,8 +794,6 @@ END SUBROUTINE diagonalize_parallel
          IF( nvb > 0 ) THEN
             CALL dgemm( 'T', 'N', nr, nc, nkbus, -1.0d0, becp_dist( 1, 1 ), &
                          nkbx, qbecp( 1, 1 ), nkbx, 1.0d0, sig, ldx )
-            !CALL dgemm( 'T', 'N', nr, nc, nkbus, -1.0d0, becp( 1, ist+ir-1 ), &
-            !             nkbx, qbecp( 1, 1 ), nkbx, 1.0d0, sig, ldx )
          ENDIF
          !
          IF( iprsta > 4 ) THEN
