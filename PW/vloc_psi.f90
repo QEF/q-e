@@ -14,11 +14,12 @@ SUBROUTINE vloc_psi_gamma(lda, n, m, psi, v, hpsi)
   !
   USE parallel_include
   USE kinds,   ONLY : DP
-  USE gsmooth, ONLY : nls, nlsm, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, nrxxs
+  USE gsmooth, ONLY : nls, nlsm, nrx1s, nrx2s, nrx3s, nrxxs
   USE wvfct,   ONLY : igk
   USE mp_global,     ONLY : nogrp, ogrp_comm, me_pool, nolist, use_task_groups
   USE fft_parallel,  ONLY : tg_cft3s
   USE fft_base,      ONLY : dffts
+  USE fft_interfaces,ONLY : fwfft, invfft
   USE task_groups,   ONLY : tg_gather
   USE wavefunctions_module,  ONLY: psic
   !
@@ -118,13 +119,13 @@ SUBROUTINE vloc_psi_gamma(lda, n, m, psi, v, hpsi)
         !
      ELSE
         !
-        CALL cft3s (psic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, 2)
+        CALL invfft ('Wave', psic, dffts)
         !
         DO j = 1, nrxxs
            psic (j) = psic (j) * v(j)
         ENDDO
         !
-        CALL cft3s (psic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, - 2)
+        CALL fwfft ('Wave', psic, dffts)
         !
      ENDIF
      !
@@ -189,11 +190,12 @@ SUBROUTINE vloc_psi_k(lda, n, m, psi, v, hpsi)
   !
   USE parallel_include
   USE kinds,   ONLY : DP
-  USE gsmooth, ONLY : nls, nlsm, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, nrxxs
+  USE gsmooth, ONLY : nls, nlsm, nrx1s, nrx2s, nrxxs
   USE wvfct,   ONLY : igk
   USE mp_global,     ONLY : nogrp, ogrp_comm, me_pool, nolist, use_task_groups
   USE fft_parallel,  ONLY : tg_cft3s
   USE fft_base,      ONLY : dffts
+  USE fft_interfaces,ONLY : fwfft, invfft
   USE task_groups,   ONLY : tg_gather
   USE wavefunctions_module,  ONLY: psic
   !
@@ -259,7 +261,7 @@ SUBROUTINE vloc_psi_k(lda, n, m, psi, v, hpsi)
         psic(:) = (0.d0, 0.d0)
         psic (nls (igk(1:n))) = psi(1:n, ibnd)
         !
-        CALL cft3s (psic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, 2)
+        CALL invfft ('Wave', psic, dffts)
         !
      ENDIF
      !
@@ -285,7 +287,7 @@ SUBROUTINE vloc_psi_k(lda, n, m, psi, v, hpsi)
         ENDDO
 !$omp end parallel do
         !
-        CALL cft3s (psic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, - 2)
+        CALL fwfft ('Wave', psic, dffts)
         !
      ENDIF
      !
@@ -337,12 +339,13 @@ SUBROUTINE vloc_psi_nc (lda, n, m, psi, v, hpsi)
   !
   USE parallel_include
   USE kinds,   ONLY : DP
-  USE gsmooth, ONLY : nls, nlsm, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, nrxxs
+  USE gsmooth, ONLY : nls, nlsm, nrx1s, nrx2s, nrxxs
   USE gvect,   ONLY : nrxx
   USE wvfct,   ONLY : igk
   USE mp_global,     ONLY : nogrp, ogrp_comm, me_pool, nolist, use_task_groups
   USE fft_parallel,  ONLY : tg_cft3s
   USE fft_base,      ONLY : dffts
+  USE fft_interfaces,ONLY : fwfft, invfft
   USE task_groups,   ONLY : tg_gather
   USE noncollin_module,     ONLY: npol
   USE wavefunctions_module, ONLY: psic_nc
@@ -412,7 +415,7 @@ SUBROUTINE vloc_psi_nc (lda, n, m, psi, v, hpsi)
            DO j = 1, n
               psic_nc(nls(igk(j)),ipol) = psi(j+(ipol-1)*lda,ibnd)
            ENDDO
-           CALL cft3s (psic_nc(1,ipol), nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, 2)
+           CALL invfft ('Wave', psic_nc(:,ipol), dffts)
         ENDDO
      ENDIF
 
@@ -466,7 +469,7 @@ SUBROUTINE vloc_psi_nc (lda, n, m, psi, v, hpsi)
      ELSE
 
         DO ipol=1,npol
-           CALL cft3s (psic_nc(1,ipol), nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, -2)
+           CALL fwfft ('Wave', psic_nc(:,ipol), dffts)
         ENDDO
         !
         !   addition to the total product

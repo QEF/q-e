@@ -87,7 +87,7 @@ SUBROUTINE v_xc_meta( rho, rho_core, rhog_core, etxc, vtxc, v, kedtaur )
   USE kinds,            ONLY : DP
   USE constants,        ONLY : e2, eps8
   USE io_global,        ONLY : stdout
-  USE gvect,            ONLY : nr1, nr2, nr3, nrxx, ngm
+  USE gvect,            ONLY : nrxx, ngm
   USE lsda_mod,         ONLY : nspin
   USE cell_base,        ONLY : omega
   USE spin_orb,         ONLY : domag
@@ -130,9 +130,7 @@ SUBROUTINE v_xc_tpss( rho, rho_core, rhog_core, etxc, vtxc, v, kedtaur )
   !--------------------------------------------------------------------
 !  use gvecp, only: ng => ngm
   USE kinds,            ONLY : DP
-  USE gvect,            ONLY : nrxx, nrx1,nrx2,nrx3,nr1,nr2,nr3, &
-                               g,nl,ngm
-  USE gsmooth,          ONLY : nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, nrxxs
+  USE gvect,            ONLY : nr1, nr2, nr3, nrxx, g,nl,ngm
   USE scf,              ONLY : scf_type
   USE lsda_mod,         ONLY : nspin
   USE cell_base,        ONLY : omega, alat
@@ -182,8 +180,7 @@ SUBROUTINE v_xc_tpss( rho, rho_core, rhog_core, etxc, vtxc, v, kedtaur )
      rhoout(:,is)  = fac * rho_core(:)  + rhoout(:,is)
      rhogsum(:,is) = fac * rhog_core(:) + rhogsum(:,is)
      !
-     CALL gradrho( nrx1, nrx2, nrx3, nr1, nr2, nr3, nrxx, &
-                   rhogsum(1,is), ngm, g, nl, grho(1,1,is) )
+     CALL gradrho( nrxx, rhogsum(1,is), ngm, g, nl, grho(1,1,is) )
      !
   END DO
   !
@@ -267,8 +264,7 @@ SUBROUTINE v_xc_tpss( rho, rho_core, rhog_core, etxc, vtxc, v, kedtaur )
   !
   DO is = 1, nspin
      !
-     CALL grad_dot( nrx1, nrx2, nrx3, nr1, nr2, nr3, &
-                    nrxx, h(1,1,is), ngm, g, nl, alat, dh )
+     CALL grad_dot( nrxx, h(1,1,is), ngm, g, nl, alat, dh )
      !
      v(:,is) = v(:,is) - dh(:)
      !
@@ -496,8 +492,9 @@ SUBROUTINE v_h( rhog, ehart, charge, v )
   !
   USE constants, ONLY : fpi, e2
   USE kinds,     ONLY : DP
-  USE gvect,     ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, &
-                        nl, nlm, ngm, gg, gstart
+  USE fft_base,  ONLY : dfftp
+  USE fft_interfaces,ONLY : invfft
+  USE gvect,     ONLY : nrxx, nl, nlm, ngm, gg, gstart
   USE lsda_mod,  ONLY : nspin
   USE cell_base, ONLY : omega, tpiba2
   USE control_flags, ONLY : gamma_only
@@ -513,15 +510,15 @@ SUBROUTINE v_h( rhog, ehart, charge, v )
   REAL(DP),    INTENT(OUT) :: ehart, charge
   !
   REAL(DP)              :: fac
-  REAL(DP), ALLOCATABLE :: aux(:,:), aux1(:,:)
+  REAL(DP), ALLOCATABLE :: aux1(:,:)
   REAL(DP)              :: rgtot_re, rgtot_im, eh_corr
   INTEGER               :: is, ig
-  COMPLEX(DP), ALLOCATABLE :: rgtot(:), vaux(:)
+  COMPLEX(DP), ALLOCATABLE :: aux(:), rgtot(:), vaux(:)
   INTEGER               :: nt
   !
   CALL start_clock( 'v_h' )
   !
-  ALLOCATE( aux( 2, nrxx ), aux1( 2, ngm ) )
+  ALLOCATE( aux( nrxx ), aux1( 2, ngm ) )
   charge = 0.D0
   !
   IF ( gstart == 2 ) THEN
@@ -591,34 +588,32 @@ SUBROUTINE v_h( rhog, ehart, charge, v )
   !
   CALL mp_sum(  ehart , intra_pool_comm )
   ! 
-  aux(:,:) = 0.D0
+  aux(:) = 0.D0
   !
-  aux(:,nl(1:ngm)) = aux1(:,1:ngm)
-  !
+  aux(nl(1:ngm)) = CMPLX ( aux1(1,1:ngm), aux1(2,1:ngm), KIND=dp )
   !
   IF ( gamma_only ) THEN
      !
-     aux(1,nlm(1:ngm)) =   aux1(1,1:ngm)
-     aux(2,nlm(1:ngm)) = - aux1(2,1:ngm)
+     aux(nlm(1:ngm)) = CMPLX ( aux1(1,1:ngm), -aux1(2,1:ngm), KIND=dp )
      !
   END IF
   
   !
   ! ... transform hartree potential to real space
   !
-  CALL cft3( aux, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1 )
+  CALL invfft ('Dense', aux, dfftp)
   !
   ! ... add hartree potential to the xc potential
   !
   IF ( nspin == 4 ) THEN
      !
-     v(:,1) = v(:,1) + aux(1,:)
+     v(:,1) = v(:,1) + DBLE (aux(:))
      !
   ELSE
      !
      DO is = 1, nspin
         !
-        v(:,is) = v(:,is) + aux(1,:)
+        v(:,is) = v(:,is) + DBLE (aux(:))
         !
      END DO
      !

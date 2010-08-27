@@ -30,8 +30,8 @@ subroutine atomic_rho (rhoa, nspina)
   USE atom,                 ONLY : rgrid, msh
   USE ions_base,            ONLY : ntyp => nsp
   USE cell_base,            ONLY : tpiba, omega
-  USE gvect,                ONLY : ngm, ngl, nrxx, nr1, nr2, nr3, nrx1, nrx2, &
-                                   nrx3, gstart, nl, nlm, gl, igtongl
+  USE gvect,                ONLY : ngm, ngl, nrxx, nr1, nr2, nr3, &
+                                   gstart, nl, nlm, gl, igtongl
   USE lsda_mod,             ONLY : starting_magnetization, lsda
   USE vlocal,               ONLY : strf
   USE control_flags,        ONLY : gamma_only
@@ -40,6 +40,9 @@ subroutine atomic_rho (rhoa, nspina)
   USE uspp_param,           ONLY : upf
   USE mp_global,            ONLY : intra_pool_comm
   USE mp,                   ONLY : mp_sum
+  USE fft_base,             ONLY : dfftp
+  USE fft_interfaces,       ONLY : invfft
+
   !
   implicit none
   !
@@ -145,7 +148,7 @@ subroutine atomic_rho (rhoa, nspina)
      psic(:) = (0.d0,0.d0)
      psic (nl (:) ) = rhocg (:, is)
      if (gamma_only) psic ( nlm(:) ) = CONJG( rhocg (:, is) )
-     call cft3 (psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1)
+     CALL invfft ('Dense', psic, dfftp)
      !
      ! we check that everything is correct
      !

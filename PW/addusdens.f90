@@ -40,11 +40,11 @@ subroutine addusdens_g(rho)
   !
   USE kinds,                ONLY : DP
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
-  USE gvect,                ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, &
-                                   ngm, nl, nlm, gg, g, eigts1, eigts2, &
-                                   eigts3, ig1, ig2, ig3
+  USE fft_base,             ONLY : dfftp
+  USE fft_interfaces,       ONLY : invfft
+  USE gvect,                ONLY : nrxx, ngm, nl, nlm, gg, g, &
+                                   eigts1, eigts2, eigts3, ig1, ig2, ig3
   USE noncollin_module,     ONLY : noncolin, nspin_mag
-  !USE scf,                  ONLY : rho
   USE uspp,                 ONLY : becsum, okvan
   USE uspp_param,           ONLY : upf, lmaxq, nh
   USE control_flags,        ONLY : gamma_only
@@ -132,7 +132,7 @@ subroutine addusdens_g(rho)
      psic(:) = (0.d0, 0.d0)
      psic( nl(:) ) = aux(:,is)
      if (gamma_only) psic( nlm(:) ) = CONJG(aux(:,is))
-     call cft3 (psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1)
+     CALL invfft ('Dense', psic, dfftp)
      rho(:, is) = rho(:, is) +  DBLE (psic (:) )
   enddo
   deallocate (aux)

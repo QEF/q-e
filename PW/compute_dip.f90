@@ -84,7 +84,6 @@ SUBROUTINE compute_el_dip(emaxpos, eopreg, edir, charge, e_dipole)
   USE fft_base,   ONLY : dfftp
   USE mp_global,  ONLY : me_pool, intra_pool_comm
   USE mp,         ONLY : mp_sum
-  USE fft_base,  ONLY : grid_gather  
   !
   IMPLICIT NONE
   !

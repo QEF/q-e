@@ -19,8 +19,9 @@ SUBROUTINE newq(vr,deeq,skip_vltot)
   USE kinds,                ONLY : DP
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
   USE cell_base,            ONLY : omega
-  USE gvect,                ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, &
-                                   g, gg, ngm, gstart, ig1, ig2, ig3, &
+  USE fft_base,             ONLY : dfftp
+  USE fft_interfaces,       ONLY : fwfft
+  USE gvect,                ONLY : g, gg, ngm, gstart, ig1, ig2, ig3, &
                                    eigts1, eigts2, eigts3, nl, nrxx
   USE lsda_mod,             ONLY : nspin
   USE scf,                  ONLY : vltot
@@ -89,7 +90,7 @@ SUBROUTINE newq(vr,deeq,skip_vltot)
         !
      END IF
      !
-     CALL cft3( psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, - 1 )
+     CALL fwfft ('Dense', psic, dfftp)
      !
      aux(1:ngm,is) = psic( nl(1:ngm) )
      !

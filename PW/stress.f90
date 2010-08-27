@@ -78,8 +78,7 @@ subroutine stress
   !  xc contribution: add gradient corrections (non diagonal)
   !
   call stres_gradcorr ( rho%of_r, rho%of_g, rho_core, rhog_core, nspin, &
-                        nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, nl, &
-                        ngm, g, alat, omega, sigmaxc)
+                        nr1, nr2, nr3, nrxx, nl, ngm, g, alat, omega, sigmaxc)
   !
   ! core correction contribution
   !

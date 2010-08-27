@@ -12,8 +12,7 @@ SUBROUTINE gradcorr( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
   !
   USE constants,            ONLY : e2
   USE kinds,                ONLY : DP
-  USE gvect,                ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, &
-                                   nl, ngm, g
+  USE gvect,                ONLY : nr1, nr2, nr3, nrxx, nl, ngm, g
   USE lsda_mod,             ONLY : nspin
   USE cell_base,            ONLY : omega, alat
   USE funct,                ONLY : gcxc, gcx_spin, gcc_spin, &
@@ -21,6 +20,9 @@ SUBROUTINE gradcorr( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
   USE spin_orb,             ONLY : domag
   USE noncollin_module,     ONLY : ux
   USE wavefunctions_module, ONLY : psic
+  USE fft_base,             ONLY : dfftp
+  USE fft_interfaces,       ONLY : fwfft
+
   !
   IMPLICIT NONE
   !
@@ -84,7 +86,7 @@ SUBROUTINE gradcorr( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
         !
         psic(:) = rhoout(:,is)
         !
-        CALL cft3( psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, -1 )
+        CALL fwfft ('Dense', psic, dfftp)
         !
         rhogsum(:,is) = psic(nl(:))
         !
@@ -100,8 +102,7 @@ SUBROUTINE gradcorr( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
      rhoout(:,is)  = fac * rho_core(:)  + rhoout(:,is)
      rhogsum(:,is) = fac * rhog_core(:) + rhogsum(:,is)
      !
-     CALL gradrho( nrx1, nrx2, nrx3, nr1, nr2, nr3, nrxx, &
-                   rhogsum(1,is), ngm, g, nl, grho(1,1,is) )
+     CALL gradrho( nrxx, rhogsum(1,is), ngm, g, nl, grho(1,1,is) )
      !
   END DO
   !
@@ -255,8 +256,7 @@ SUBROUTINE gradcorr( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
   !
   DO is = 1, nspin0
      !
-     CALL grad_dot( nrx1, nrx2, nrx3, nr1, nr2, nr3, &
-                    nrxx, h(1,1,is), ngm, g, nl, alat, dh )
+     CALL grad_dot( nrxx, h(1,1,is), ngm, g, nl, alat, dh )
      !
      v(:,is) = v(:,is) - dh(:)
      !
@@ -297,8 +297,7 @@ SUBROUTINE gradcorr( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
 END SUBROUTINE gradcorr
 !
 !----------------------------------------------------------------------------
-SUBROUTINE gradrho( nrx1, nrx2, nrx3, &
-                    nr1, nr2, nr3, nrxx, a, ngm, g, nl, ga )
+SUBROUTINE gradrho( nrxx, a, ngm, g, nl, ga )
   !----------------------------------------------------------------------------
   !
   ! ... Calculates ga = \grad a in R-space (a is in G-space)
@@ -308,10 +307,13 @@ SUBROUTINE gradrho( nrx1, nrx2, nrx3, &
   USE cell_base, ONLY : tpiba
   USE gvect,     ONLY : nlm
   USE control_flags, ONLY : gamma_only
+  USE fft_base,      ONLY : dfftp
+  USE fft_interfaces,ONLY : invfft
+
   !
   IMPLICIT NONE
   !
-  INTEGER,     INTENT(IN)  :: nrx1, nrx2, nrx3, nr1, nr2, nr3, nrxx
+  INTEGER,     INTENT(IN)  :: nrxx
   INTEGER,     INTENT(IN)  :: ngm, nl(ngm)
   COMPLEX(DP), INTENT(IN)  :: a(ngm)
   REAL(DP),    INTENT(IN)  :: g(3,ngm)
@@ -341,7 +343,7 @@ SUBROUTINE gradrho( nrx1, nrx2, nrx3, &
      !
      ! ... bring back to R-space, (\grad_ipol a)(r) ...
      !
-     CALL cft3( gaux, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1 )
+     CALL invfft ('Dense', gaux, dfftp)
      !
      ! ...and add the factor 2\pi/a  missing in the definition of G
      !
@@ -356,8 +358,7 @@ SUBROUTINE gradrho( nrx1, nrx2, nrx3, &
 END SUBROUTINE gradrho
 !
 !----------------------------------------------------------------------------
-SUBROUTINE gradient( nrx1, nrx2, nrx3, &
-                     nr1, nr2, nr3, nrxx, a, ngm, g, nl, ga )
+SUBROUTINE gradient( nrxx, a, ngm, g, nl, ga )
   !----------------------------------------------------------------------------
   !
   ! ... Calculates ga = \grad a in R-space (a is also in R-space)
@@ -367,10 +368,12 @@ SUBROUTINE gradient( nrx1, nrx2, nrx3, &
   USE kinds,     ONLY : DP
   USE gvect,     ONLY : nlm
   USE control_flags, ONLY : gamma_only
+  USE fft_base,      ONLY : dfftp
+  USE fft_interfaces,ONLY : fwfft, invfft
   !
   IMPLICIT NONE
   !
-  INTEGER,  INTENT(IN)  :: nrx1, nrx2, nrx3, nr1, nr2, nr3, nrxx
+  INTEGER,  INTENT(IN)  :: nrxx
   INTEGER,  INTENT(IN)  :: ngm, nl(ngm)
   REAL(DP), INTENT(IN)  :: a(nrxx), g(3,ngm)
   REAL(DP), INTENT(OUT) :: ga(3,nrxx)
@@ -386,7 +389,7 @@ SUBROUTINE gradient( nrx1, nrx2, nrx3, &
   !
   ! ... bring a(r) to G-space, a(G) ...
   !
-  CALL cft3( aux, nr1, nr2, nr3, nrx1, nrx2, nrx3, -1 )
+  CALL fwfft ('Dense', aux, dfftp)
   !
   ! ... multiply by (iG) to get (\grad_ipol a)(G) ...
   !
@@ -405,7 +408,7 @@ SUBROUTINE gradient( nrx1, nrx2, nrx3, &
      !
      ! ... bring back to R-space, (\grad_ipol a)(r) ...
      !
-     CALL cft3( gaux, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1 )
+     CALL invfft ('Dense', gaux, dfftp)
      !
      ! ...and add the factor 2\pi/a  missing in the definition of G
      !
@@ -421,8 +424,7 @@ SUBROUTINE gradient( nrx1, nrx2, nrx3, &
 END SUBROUTINE gradient
 !
 !----------------------------------------------------------------------------
-SUBROUTINE grad_dot( nrx1, nrx2, nrx3, nr1, nr2, nr3, &
-                     nrxx, a, ngm, g, nl, alat, da )
+SUBROUTINE grad_dot( nrxx, a, ngm, g, nl, alat, da )
   !----------------------------------------------------------------------------
   !
   ! ... Calculates da = \sum_i \grad_i a_i in R-space
@@ -432,11 +434,12 @@ SUBROUTINE grad_dot( nrx1, nrx2, nrx3, nr1, nr2, nr3, &
   USE kinds,     ONLY : DP
   USE gvect,     ONLY : nlm
   USE control_flags, ONLY : gamma_only
+  USE fft_base,      ONLY : dfftp
+  USE fft_interfaces,ONLY : fwfft, invfft
   !
   IMPLICIT NONE
   !
-  INTEGER,  INTENT(IN)     :: nrx1, nrx2, nrx3, nr1, nr2, nr3, &
-                              nrxx, ngm, nl(ngm)
+  INTEGER,  INTENT(IN)     :: nrxx, ngm, nl(ngm)
   REAL(DP), INTENT(IN)     :: a(3,nrxx), g(3,ngm), alat
   REAL(DP), INTENT(OUT)    :: da(nrxx)
   !
@@ -454,7 +457,7 @@ SUBROUTINE grad_dot( nrx1, nrx2, nrx3, nr1, nr2, nr3, &
      !
      ! ... bring a(ipol,r) to G-space, a(G) ...
      !
-     CALL cft3( aux, nr1, nr2, nr3, nrx1, nrx2, nrx3, -1 )
+     CALL fwfft ('Dense', aux, dfftp)
      !
      DO n = 1, ngm
         !
@@ -477,7 +480,7 @@ SUBROUTINE grad_dot( nrx1, nrx2, nrx3, nr1, nr2, nr3, &
   !
   ! ... bring back to R-space, (\grad_ipol a)(r) ...
   !
-  CALL cft3( gaux, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1 )
+  CALL invfft ('Dense', gaux, dfftp)
   !
   ! ... add the factor 2\pi/a  missing in the definition of G and sum
   !

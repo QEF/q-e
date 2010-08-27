@@ -8,7 +8,7 @@
 !
 !----------------------------------------------------------------------
 subroutine force_lc (nat, tau, ityp, alat, omega, ngm, ngl, &
-     igtongl, nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, g, rho, nl, &
+     igtongl, nrxx, g, rho, nl, &
      nspin, gstart, gamma_only, vloc, forcelc)
   !----------------------------------------------------------------------
   !
@@ -16,6 +16,8 @@ subroutine force_lc (nat, tau, ityp, alat, omega, ngm, ngl, &
   USE constants, ONLY : tpi
   USE mp_global, ONLY : intra_pool_comm
   USE mp,        ONLY : mp_sum
+  USE fft_base,  ONLY : dfftp
+  USE fft_interfaces, ONLY : fwfft
   implicit none
   !
   !   first the dummy variables
@@ -50,18 +52,20 @@ subroutine force_lc (nat, tau, ityp, alat, omega, ngm, ngl, &
   ! counter on G vectors
   ! counter on atoms
 
-  real(DP), allocatable :: aux (:,:)
+  complex(DP), allocatable :: aux (:)
   ! auxiliary space for FFT
   real(DP) :: arg, fact
   !
   ! contribution to the force from the local part of the bare potential
   ! F_loc = Omega \Sum_G n*(G) d V_loc(G)/d R_i
   !
-  allocate (aux(2, nrxx))
-  aux(1,:) = rho(:,1)
-  if (nspin.eq.2) aux(1,:) = aux(1,:) + rho(:,2)
-  aux(2,:) = 0.d0
-  call cft3 (aux, nr1, nr2, nr3, nrx1, nrx2, nrx3, - 1)
+  allocate (aux(nrxx))
+  if ( nspin == 2) then
+      aux(:) = CMPLX( rho(:,1)+rho(:,2), 0.0_dp, kind=dp )
+  else
+      aux(:) = CMPLX( rho(:,1), 0.0_dp, kind=dp )
+  end if
+  CALL fwfft ('Dense', aux, dfftp)
   !
   !    aux contains now  n(G)
   !
@@ -81,7 +85,7 @@ subroutine force_lc (nat, tau, ityp, alat, omega, ngm, ngl, &
         do ipol = 1, 3
            forcelc (ipol, na) = forcelc (ipol, na) + &
                 g (ipol, ig) * vloc (igtongl (ig), ityp (na) ) * &
-                (sin (arg) * aux(1,nl(ig)) + cos (arg) * aux(2,nl(ig)) )
+                (sin(arg)*DBLE(aux(nl(ig))) + cos(arg)*AIMAG(aux(nl(ig))) )
         enddo
      enddo
      do ipol = 1, 3

@@ -19,7 +19,6 @@
       USE kinds,         ONLY : DP
       USE mp,            ONLY : mp_sum
       USE mp_global,     ONLY : intra_pool_comm
-      USE fft_base,      ONLY : grid_gather
       !
       IMPLICIT NONE
       !

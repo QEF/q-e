@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2005 PWSCF group
+! Copyright (C) 2005-2010 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -497,7 +497,7 @@ CONTAINS
                                      tmp_dir, prefix
     USE io_global,            ONLY : stdout
     USE buffers,              ONLY : get_buffer
-    USE gvect,                ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx
+    USE gvect,                ONLY : nrxx
     USE gsmooth,              ONLY : nls, nlsm, nr1s, nr2s, nr3s, &
                                      nrx1s, nrx2s, nrx3s, nrxxs, doublegrid
     USE wvfct,                ONLY : nbnd, npwx, npw, igk, wg, et
@@ -508,7 +508,8 @@ CONTAINS
     use mp_global,            ONLY : nproc_pool, me_pool
     use funct,                ONLY : get_exx_fraction, start_exx, exx_is_active, &
                                      get_screening_parameter 
-    use fft_base,             ONLY : cgather_smooth, cscatter_smooth
+    use fft_base,             ONLY : cgather_smooth, cscatter_smooth, dffts
+    use fft_interfaces,       ONLY : invfft
 
     implicit none
     integer :: ik,ibnd, i, j, k, ir, ri, rj, rk, isym, ikq
@@ -605,7 +606,7 @@ CONTAINS
                 temppsic(nls (igk(1:npw))) = tempevc(1:npw,ibnd) 
                 temppsic(nlsm(igk(1:npw))) = CONJG( tempevc(1:npw,ibnd) ) 
              end if
-             CALL cft3s( temppsic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, 2 )
+             CALL invfft ('Wave', temppsic, dffts)
 
              do ikq=1,nkqs
                 if (index_xk(ikq) .ne. ik) cycle
@@ -633,7 +634,7 @@ CONTAINS
           do ibnd =1, nbnd     
              temppsic(:) = ( 0.D0, 0.D0 )
              temppsic(nls(igk(1:npw))) = tempevc(1:npw,ibnd)
-             CALL cft3s( temppsic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, 2 )
+             CALL invfft ('Wave', temppsic, dffts)
 
              do ikq=1,nkqs
                 if (index_xk(ikq) .ne. ik) cycle
@@ -695,14 +696,15 @@ CONTAINS
     USE constants, ONLY : fpi, e2, pi
     USE cell_base, ONLY : alat, omega, bg, at, tpiba
     USE symm_base, ONLY : nsym, s
-    USE gvect,     ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, ngm
-    USE gsmooth,   ONLY : nls, nlsm, nr1s, nr2s, nr3s, &
-                           nrx1s, nrx2s, nrx3s, nrxxs, doublegrid
+    USE gvect,     ONLY : nrxx, ngm
+    USE gsmooth,   ONLY : nls, nlsm, nrxxs, doublegrid
     USE wvfct,     ONLY : nbnd, npwx, npw, igk, current_k
     USE control_flags, ONLY : gamma_only
     USE klist,     ONLY : xk
     USE lsda_mod,  ONLY : lsda, current_spin, isk
     USE gvect,     ONLY : g, nl
+    use fft_base,  ONLY : dffts
+    use fft_interfaces, ONLY : fwfft, invfft
 
     USE parallel_include  
     USE mp_global, ONLY : nproc, inter_image_comm, me_image, my_image_id, nimage, nproc_image
@@ -741,7 +743,7 @@ CONTAINS
        temppsic(:) = ( 0.D0, 0.D0 )
        temppsic(nls(igk(1:npw))) = psi(1:npw,im)
        if (gamma_only) temppsic(nlsm(igk(1:npw))) = CONJG(psi(1:npw,im))
-       CALL cft3s( temppsic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, 2 )
+       CALL invfft ('Wave', temppsic, dffts)
        
        result(:) = (0.d0,0.d0)
 
@@ -839,13 +841,13 @@ call flush_unit(stdout)
                 !calculate rho in real space
                 rhoc(:)=CONJG(tempphic(:))*temppsic(:) / omega
                 !brings it to G-space
-                CALL cft3s( rhoc,nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, -1 )
+                CALL fwfft ('Smooth', rhoc, dffts)
    
                 vc(:) = ( 0.D0, 0.D0 )
                 vc(nls(1:ngm))  = fac(1:ngm) * rhoc(nls(1:ngm))
                 vc(nlsm(1:ngm)) = fac(1:ngm) * rhoc(nlsm(1:ngm))
                 !brings back v in real space
-                CALL cft3s( vc, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, 1 ) 
+                CALL invfft ('Smooth', vc, dffts) 
 
                 vc = CMPLX( x1 * DBLE (vc), x2 * AIMAG(vc) ,kind=DP)/ nqs
 
@@ -876,7 +878,7 @@ call flush_unit(stdout)
                 !calculate rho in real space
                 rhoc(:)=CONJG(tempphic(:))*temppsic(:) / omega
                 !brings it to G-space
-                CALL cft3s( rhoc,nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, -1 )
+                CALL fwfft ('Smooth', rhoc, dffts)
    
                 vc(:) = ( 0.D0, 0.D0 )
                 vc(nls(1:ngm)) = fac(1:ngm) * rhoc(nls(1:ngm))
@@ -884,7 +886,7 @@ call flush_unit(stdout)
                 vc = vc * x_occupation(ibnd,ik) / nqs
 
                 !brings back v in real space
-                CALL cft3s( vc, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, 1 ) 
+                CALL invfft ('Smooth', vc, dffts) 
 
                 !accumulates over bands and k points
                 result(1:nrxxs)=result(1:nrxxs)+vc(1:nrxxs)*tempphic(1:nrxxs)
@@ -895,7 +897,7 @@ call flush_unit(stdout)
        CALL mp_sum( result(1:nrxxs), inter_image_comm )
        !write(*,*) 'result is:  ',result(1), result(nrxxs), nrxxs, my_image_id
        !brings back result in G-space
-       CALL cft3s( result, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, -2 )
+       CALL fwfft ('Wave', result, dffts)
        !adds it to hpsi
        hpsi(1:npw,im)=hpsi(1:npw,im) - exxalfa*result(nls(igk(1:npw)))
     end do
@@ -974,18 +976,19 @@ call flush_unit(stdout)
     USE buffers,   ONLY : get_buffer
     USE cell_base, ONLY : alat, omega, bg, at, tpiba
     USE symm_base,ONLY : nsym, s
-    USE gvect,     ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, ngm
-    USE gsmooth,   ONLY : nls, nlsm, nr1s, nr2s, nr3s, &
-                          nrx1s, nrx2s, nrx3s, nrxxs, doublegrid
+    USE gvect,     ONLY : nrxx, ngm
+    USE gsmooth,   ONLY : nls, nlsm, nrxxs, doublegrid
     USE wvfct,     ONLY : nbnd, npwx, npw, igk, wg, current_k
     USE control_flags, ONLY : gamma_only
     USE wavefunctions_module, ONLY : evc
     USE klist,     ONLY : xk, ngk, nks
     USE lsda_mod,  ONLY : lsda, current_spin, isk
     USE gvect,     ONLY : g, nl
-    USE mp_global,  ONLY : inter_pool_comm, intra_pool_comm, inter_image_comm
-    USE mp_global,  ONLY : my_image_id, nimage
-    USE mp,         ONLY : mp_sum
+    USE mp_global, ONLY : inter_pool_comm, intra_pool_comm, inter_image_comm
+    USE mp_global, ONLY : my_image_id, nimage
+    USE mp,        ONLY : mp_sum
+    use fft_base,  ONLY : dffts
+    use fft_interfaces, ONLY : fwfft, invfft
 
     IMPLICIT NONE
     REAL (DP)   :: exxenergy2,  energy
@@ -1025,7 +1028,7 @@ call flush_unit(stdout)
           temppsic(nls(igk(1:npw))) = evc(1:npw,jbnd)
           if(gamma_only) temppsic(nlsm(igk(1:npw))) = CONJG(evc(1:npw,jbnd))
 
-          CALL cft3s( temppsic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, 2 )
+          CALL invfft ('Wave', temppsic, dffts)
        
 !          do iq = 1, nqs
           do iqi=1,nqi
@@ -1117,7 +1120,7 @@ call flush_unit(stdout)
                    !calculate rho in real space
                    rhoc(:)=CONJG(tempphic(:))*temppsic(:) / omega
                    !brings it to G-space
-                   CALL cft3s( rhoc,nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, -1 )
+                   CALL fwfft ('Smooth', rhoc, dffts)
    
                    vc = 0.D0
                    do ig=1,ngm
@@ -1146,7 +1149,7 @@ call flush_unit(stdout)
                    !calculate rho in real space
                    rhoc(:)=CONJG(tempphic(:))*temppsic(:) / omega
                    !brings it to G-space
-                   CALL cft3s( rhoc,nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, -1 )
+                   CALL fwfft ('Smooth', rhoc, dffts)
    
                    vc = 0.D0
                    do ig=1,ngm
@@ -1317,18 +1320,19 @@ call flush_unit(stdout)
   USE buffers,   ONLY : get_buffer
   USE cell_base, ONLY : alat, omega, bg, at, tpiba
   USE symm_base,ONLY : nsym, s
-  USE gvect,     ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, ngm
-  USE gsmooth,   ONLY : nls, nlsm, nr1s, nr2s, nr3s, &
-                        nrx1s, nrx2s, nrx3s, nrxxs, doublegrid
+  USE gvect,     ONLY : nrxx, ngm
+  USE gsmooth,   ONLY : nls, nlsm, nrxxs, doublegrid
   USE wvfct,     ONLY : nbnd, npwx, npw, igk, wg, current_k
   USE control_flags, ONLY : gamma_only
   USE wavefunctions_module, ONLY : evc
   USE klist,     ONLY : xk, ngk, nks
   USE lsda_mod,  ONLY : lsda, current_spin, isk
   USE gvect,     ONLY : g, nl
-  USE mp_global,  ONLY : inter_pool_comm, intra_pool_comm, inter_image_comm
-  USE mp_global,  ONLY : my_image_id, nimage
-  USE mp,         ONLY : mp_sum
+  USE mp_global, ONLY : inter_pool_comm, intra_pool_comm, inter_image_comm
+  USE mp_global, ONLY : my_image_id, nimage
+  USE mp,        ONLY : mp_sum 
+  use fft_base,  ONLY : dffts
+  use fft_interfaces, ONLY : fwfft, invfft
   ! ---- local variables -------------------------------------------------
   IMPLICIT NONE
   real (dp)   :: exx_stress(3,3), exx_stress_(3,3)
@@ -1368,7 +1372,7 @@ call flush_unit(stdout)
           temppsic(:) = ( 0.d0, 0.d0 )
           temppsic(nls(igk(1:npw))) = evc(1:npw,jbnd)
           if(gamma_only) temppsic(nlsm(igk(1:npw))) = conjg(evc(1:npw,jbnd))
-          call cft3s(temppsic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, 2)       
+          CALL invfft ('Wave', temppsic, dffts)       
 
           do iqi = 1, nqi
               iq = iqi + nqi*my_image_id
@@ -1468,7 +1472,7 @@ call flush_unit(stdout)
                       ! calculate rho in real space
                       rhoc(:)=CONJG(tempphic(:))*temppsic(:) / omega
                       ! brings it to G-space
-                      CALL cft3s( rhoc,nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, -1 )
+                      CALL fwfft ('Smooth', rhoc, dffts)
    
                       vc = 0.d0
                       do ig=1,ngm
@@ -1495,7 +1499,7 @@ call flush_unit(stdout)
                      rhoc(:)=CONJG(tempphic(:))*temppsic(:) / omega
 
                      ! brings it to G-space
-                     CALL cft3s( rhoc,nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, -1 )
+                     CALL fwfft ('Smooth', rhoc, dffts)
 
                      vc = 0.d0
                      do ig=1,ngm

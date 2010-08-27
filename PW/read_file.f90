@@ -27,10 +27,11 @@ SUBROUTINE read_file()
   USE ktetra,               ONLY : tetra, ntetra 
   USE extfield,             ONLY : forcefield, tefield
   USE cellmd,               ONLY : cell_factor, lmovecell
+  USE fft_base,             ONLY : dfftp
+  USE fft_interfaces,       ONLY : fwfft
   USE gvect,                ONLY : gg, ecutwfc, ngm, g, nr1, nr2, nr3, nrxx,&
-                                   nrx1, nrx2, nrx3, eigts1, eigts2, eigts3, &
-                                   nl, gstart
-  USE gsmooth,              ONLY : ngms, nls, nrx1s, nr1s, nr2s, nr3s
+                                   eigts1, eigts2, eigts3, nl, gstart
+  USE gsmooth,              ONLY : ngms, nls 
   USE spin_orb,             ONLY : lspinorb, domag
   USE scf,                  ONLY : rho, rho_core, rhog_core, v
   USE wavefunctions_module, ONLY : psic
@@ -228,7 +229,7 @@ SUBROUTINE read_file()
      !
      psic(:) = rho%of_r(:,is)
      !
-     CALL cft3( psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, -1 )
+     CALL fwfft ('Dense', psic, dfftp)
      !
      rho%of_g(:,is) = psic(nl(:))
      !

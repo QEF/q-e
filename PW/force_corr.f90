@@ -23,8 +23,10 @@ subroutine force_corr (forcescc)
   USE uspp_param,           ONLY : upf
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp, tau
   USE cell_base,            ONLY : tpiba
-  USE gvect,                ONLY : ngm, gstart, nr1, nr2, nr3, nrx1, nrx2, &
-                                   nrx3, nrxx, nl, g, ngl, gl, igtongl
+  USE fft_base,             ONLY : dfftp
+  USE fft_interfaces,       ONLY : fwfft
+  USE gvect,                ONLY : ngm, gstart, &
+                                   nrxx, nl, g, ngl, gl, igtongl
   USE lsda_mod,             ONLY : nspin
   USE scf,                  ONLY : vnew
   USE control_flags,        ONLY : gamma_only
@@ -58,7 +60,7 @@ subroutine force_corr (forcescc)
 
   forcescc(:,:) = 0.d0
 
-  call cft3 (psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, - 1)
+  CALL fwfft ('Dense', psic, dfftp)
 
   if (gamma_only) then
      fact = 2.d0

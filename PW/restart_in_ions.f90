@@ -8,20 +8,21 @@
 !-----------------------------------------------------------------------
 subroutine restart_in_ions (iter, ik_, dr2)
   !-----------------------------------------------------------------------
+  USE kinds,      ONLY: DP
   USE io_global,  ONLY : stdout
   USE io_files,   ONLY : iunwfc, nwordwfc, iunres, prefix
-  USE kinds, ONLY: DP
-  USE cell_base, ONLY: omega, alat
-  USE ions_base,     ONLY : nat, ityp, ntyp => nsp
-  USE ener,  ONLY: etot, ehart, etxc, vtxc, epaw
-  USE gvect, ONLY: gstart, g, gg, nl, ngm, nr1,nr2,nr3, nrx1,nrx2,nrx3, &
-       nrxx
-  USE klist, ONLY: nks
-  USE lsda_mod, ONLY: nspin
-  USE scf, ONLY : rho, rho_core, rhog_core, v, vnew
-  USE ldaU, ONLY : eth
+  USE cell_base,  ONLY: omega, alat
+  USE ions_base,  ONLY : nat, ityp, ntyp => nsp
+  USE ener,       ONLY: etot, ehart, etxc, vtxc, epaw
+  USE fft_base,   ONLY : dfftp
+  USE fft_interfaces,ONLY : fwfft
+  USE gvect,      ONLY: gstart, g, gg, nl, ngm, nrxx
+  USE klist,      ONLY: nks
+  USE lsda_mod,   ONLY: nspin
+  USE scf,        ONLY : rho, rho_core, rhog_core, v, vnew
+  USE ldaU,       ONLY : eth
   USE control_flags, ONLY: restart, tr2, ethr
-  USE wvfct, ONLY: nbnd, et
+  USE wvfct,      ONLY: nbnd, et
   USE wavefunctions_module,    ONLY : evc, psic
   USE uspp,  ONLY: becsum
   USE paw_variables,  ONLY: okpaw, ddd_PAW
@@ -75,7 +76,7 @@ subroutine restart_in_ions (iter, ik_, dr2)
      !
      psic(:) = rho%of_r(:,is)
      !
-     CALL cft3( psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, -1 )
+     CALL fwfft ('Dense', psic, dfftp)
      !
      rho%of_g(:,is) = psic(nl(:))
      !

@@ -14,8 +14,9 @@ subroutine stres_loc (sigmaloc)
   USE atom,                 ONLY : msh, rgrid
   USE ions_base,            ONLY : ntyp => nsp
   USE cell_base,            ONLY : omega, tpiba2
-  USE gvect,                ONLY : ngm, gstart, nr1, nr2, nr3, nrx1, nrx2, &
-                                   nrx3, nrxx, nl, g, ngl, gl, igtongl
+  USE fft_base,             ONLY : dfftp
+  USE fft_interfaces,       ONLY : fwfft
+  USE gvect,                ONLY : ngm, gstart, nrxx, nl, g, ngl, gl, igtongl
   USE lsda_mod,             ONLY : nspin
   USE scf,                  ONLY : rho
   USE vlocal,               ONLY : strf, vloc
@@ -44,7 +45,7 @@ subroutine stres_loc (sigmaloc)
      call daxpy (nrxx, 1.d0, rho%of_r (1, is), 1, psic, 2)
   enddo
 
-  call cft3 (psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, - 1)
+  CALL fwfft ('Dense', psic, dfftp)
   ! psic contains now the charge density in G space
   if (gamma_only) then
      fact = 2.d0

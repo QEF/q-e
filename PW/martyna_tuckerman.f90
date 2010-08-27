@@ -126,6 +126,7 @@ CONTAINS
 !----------------------------------------------------------------------------
   USE mp_global,     ONLY : me_pool
   USE fft_base,      ONLY : dfftp
+  USE fft_interfaces,ONLY : fwfft, invfft
   USE control_flags, ONLY : gamma_only_ => gamma_only
   USE gvect,         ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, &
                             ngm, gg, gstart_ => gstart, nl, nlm, ecutwfc, dual
@@ -201,7 +202,7 @@ CONTAINS
 
   END DO
 
-  CALL cft3( aux, nr1, nr2, nr3, nrx1, nrx2, nrx3, -1 )
+  CALL fwfft ('Dense', aux, dfftp)
 
   do ig =1, ngm
      wg_corr(ig) = omega * REAL(aux(nl(ig))) - smooth_coulomb_g( tpiba2*gg(ig))
@@ -217,7 +218,7 @@ CONTAINS
      ALLOCATE(plot(nrxx))
 
      filplot = 'wg_corr_r'
-     CALL cft3( aux, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1 )
+     CALL invfft ('Dense', aux, dfftp)
      plot(:) = REAL(aux(:))
      call  write_wg_on_file(filplot, plot)
 
@@ -228,7 +229,7 @@ CONTAINS
      end do
      if (gamma_only) aux(nlm(1:ngm)) = CONJG( aux(nl(1:ngm)) )
 
-     CALL cft3( aux, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1 )
+     CALL invfft ('Dense', aux, dfftp)
      plot(:) = REAL(aux(:))
      call  write_wg_on_file(filplot, plot)
 
@@ -239,7 +240,7 @@ CONTAINS
         aux(:) = 0.5_dp * aux(:) 
         aux(nlm(1:ngm)) = aux(nlm(1:ngm)) + CONJG( aux(nl(1:ngm)) )
      end if
-     CALL cft3( aux, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1 )
+     CALL invfft ('Dense', aux, dfftp)
      plot(:) = REAL(aux(:))
      call  write_wg_on_file(filplot, plot)
 

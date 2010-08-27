@@ -66,8 +66,7 @@ SUBROUTINE update_pot()
   USE io_global,     ONLY : ionode, ionode_id
   USE cell_base,     ONLY : bg
   USE ions_base,     ONLY : nat, tau, nsp, ityp
-  USE gvect,         ONLY : ngm, g, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
-                            eigts1, eigts2, eigts3
+  USE gvect,         ONLY : ngm, g, eigts1, eigts2, eigts3
   USE vlocal,        ONLY : strf
   USE mp,            ONLY : mp_bcast
   USE mp_global,     ONLY : intra_image_comm
@@ -221,8 +220,10 @@ SUBROUTINE extrapolate_charge( rho_extr )
   USE kinds,                ONLY : DP
   USE cell_base,            ONLY : omega, bg
   USE ions_base,            ONLY : nat, tau, nsp, ityp
+  USE fft_base,             ONLY : dfftp, dffts
+  USE fft_interfaces,       ONLY : fwfft, invfft
   USE gvect,                ONLY : nrxx, ngm, g, gg, gstart, nr1, nr2, nr3, &
-                                   nl, eigts1, eigts2, eigts3, nrx1, nrx2, nrx3
+                                   nl, eigts1, eigts2, eigts3
   USE lsda_mod,             ONLY : lsda, nspin
   USE scf,                  ONLY : rho, rho_core, rhog_core, v
   USE ldaU,                 ONLY : eth
@@ -424,7 +425,7 @@ SUBROUTINE extrapolate_charge( rho_extr )
      !
      psic(:) = rho%of_r(:,is)
      !
-     CALL cft3( psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, -1 )
+     CALL fwfft ('Dense', psic, dfftp)
      !
      rho%of_g(:,is) = psic(nl(:))
      !

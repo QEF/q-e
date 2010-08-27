@@ -16,10 +16,11 @@ subroutine interpolate (v, vs, iflag)
   !     V and Vs are real and in real space . V and Vs may coincide
   !
   USE kinds, ONLY: DP
-  USE gvect,  ONLY: nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, nl, nlm
-  USE gsmooth,ONLY: nr1s,nr2s,nr3s,nrx1s,nrx2s,nrx3s,nrxxs,ngms, &
-       nls, nlsm, doublegrid
+  USE gvect,  ONLY: nrxx, nl, nlm
+  USE gsmooth,ONLY: nrxxs,ngms, nls, nlsm, doublegrid
   USE control_flags, ONLY: gamma_only
+  USE fft_base,      ONLY : dfftp, dffts
+  USE fft_interfaces,ONLY : fwfft, invfft
   !
   implicit none
   real(DP) :: v (nrxx), vs (nrxxs)
@@ -44,7 +45,7 @@ subroutine interpolate (v, vs, iflag)
         allocate (aux( nrxx))    
         allocate (auxs(nrxxs))    
         aux (:) = v (:)
-        call cft3 (aux, nr1, nr2, nr3, nrx1, nrx2, nrx3, - 1)
+        CALL fwfft ('Dense', aux, dfftp)
         auxs (:) = (0.d0, 0.d0)
         do ig = 1, ngms
            auxs (nls (ig) ) = aux (nl (ig) )
@@ -54,7 +55,7 @@ subroutine interpolate (v, vs, iflag)
               auxs (nlsm(ig) ) = aux (nlm(ig) )
            enddo
         end if
-        call cft3s (auxs, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, 1)
+        CALL invfft ('Smooth', auxs, dffts)
         vs (:) = auxs (:)
         deallocate (auxs)
         deallocate (aux)
@@ -71,7 +72,7 @@ subroutine interpolate (v, vs, iflag)
         allocate (aux( nrxx))    
         allocate (auxs(nrxxs))    
         auxs (:) = vs (:)
-        call cft3s (auxs, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, - 1)
+        CALL fwfft ('Smooth', auxs, dffts)
         aux (:) = (0.d0, 0.d0)
         do ig = 1, ngms
            aux (nl (ig) ) = auxs (nls (ig) )
@@ -81,7 +82,7 @@ subroutine interpolate (v, vs, iflag)
               aux (nlm(ig) ) = auxs (nlsm(ig) )
            enddo
         end if
-        call cft3 (aux, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1)
+        CALL invfft ('Dense', aux, dfftp)
         v (:) = aux (:)
         deallocate (auxs)
         deallocate (aux)
@@ -105,10 +106,11 @@ subroutine cinterpolate (v, vs, iflag)
   !     V and Vs are complex and in real space . V and Vs may coincide
   !
   USE kinds, ONLY: DP
-  USE gvect,  ONLY: nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, nl, nlm
-  USE gsmooth,ONLY: nr1s,nr2s,nr3s,nrx1s,nrx2s,nrx3s,nrxxs,ngms, &
-       nls, nlsm, doublegrid
+  USE gvect,  ONLY: nrxx, nl, nlm
+  USE gsmooth,ONLY: nrxxs, ngms, nls, nlsm, doublegrid
   USE control_flags, ONLY: gamma_only
+  USE fft_base,      ONLY : dfftp, dffts
+  USE fft_interfaces,ONLY : fwfft, invfft
   !
   IMPLICIT NONE
   complex(DP) :: v (nrxx), vs (nrxxs)
@@ -133,12 +135,12 @@ subroutine cinterpolate (v, vs, iflag)
      if (doublegrid) then
         allocate (aux ( nrxx))    
         aux (:) = v(:) 
-        call cft3 (aux, nr1, nr2, nr3, nrx1, nrx2, nrx3, - 1)
+        CALL fwfft ('Dense', aux, dfftp)
         vs (:) = (0.d0, 0.d0)
         do ig = 1, ngms
            vs (nls (ig) ) = aux (nl (ig) )
         enddo
-        call cft3s (vs, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, 1)
+        CALL invfft ('Smooth', vs, dffts)
         deallocate (aux)
      else
         call zcopy (nrxx, v, 1, vs, 1)
@@ -150,12 +152,12 @@ subroutine cinterpolate (v, vs, iflag)
      if (doublegrid) then
         allocate (auxs ( nrxxs))    
         auxs (:) = vs(:)
-        call cft3s (auxs, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, -1)
+        CALL fwfft ('Smooth', auxs, dffts)
         v (:) = (0.d0, 0.d0)
         do ig = 1, ngms
            v (nl (ig) ) = auxs (nls (ig) )
         enddo
-        call cft3 (v, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1)
+        CALL invfft ('Dense', v, dfftp)
         deallocate (auxs)
      else
         call zcopy (nrxx, vs, 1, v, 1)

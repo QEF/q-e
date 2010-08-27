@@ -17,7 +17,8 @@ subroutine addusforce (forcenl)
   USE kinds,      ONLY : DP
   USE ions_base,  ONLY : nat, ntyp => nsp, ityp
   USE cell_base,  ONLY : omega, tpiba
-  USE gvect,      ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, ngm, &
+  USE fft_base,   ONLY : dfftp
+  USE gvect,      ONLY : nrxx, ngm, &
                          nl, nlm, gg, g, eigts1, eigts2, eigts3, ig1, ig2, ig3
   USE lsda_mod,   ONLY : nspin
   USE scf,        ONLY : v, vltot
@@ -26,6 +27,7 @@ subroutine addusforce (forcenl)
   USE mp_global,  ONLY : intra_pool_comm
   USE mp,         ONLY : mp_sum
   USE control_flags, ONLY : gamma_only
+  USE fft_interfaces,ONLY : fwfft
   !
   implicit none
   !
@@ -57,7 +59,7 @@ subroutine addusforce (forcenl)
      else
         vg (:) = vltot (:) + v%of_r (:, is)
      endif
-     call cft3 (vg, nr1, nr2, nr3, nrx1, nrx2, nrx3, - 1)
+     CALL fwfft ('Dense', vg, dfftp)
      aux (:, is) = vg (nl (:) ) * tpiba * (0.d0, -1.d0)
   enddo
   deallocate (vg)

@@ -383,8 +383,7 @@ SUBROUTINE approx_screening( drho )
   USE kinds,         ONLY : DP
   USE constants,     ONLY : e2, pi, fpi
   USE cell_base,     ONLY : omega, tpiba2
-  USE gvect,         ONLY : gg, ngm, &
-                            nr1, nr2, nr3, nrx1, nrx2, nrx3, nl, nlm
+  USE gvect,         ONLY : gg, ngm, nl, nlm
   USE klist,         ONLY : nelec
   USE lsda_mod,      ONLY : nspin
   USE control_flags, ONLY : ngm0, gamma_only
@@ -433,10 +432,8 @@ SUBROUTINE approx_screening2( drho, rhobest )
   USE kinds,                ONLY : DP
   USE constants,            ONLY : e2, pi, tpi, fpi, eps8, eps32
   USE cell_base,            ONLY : omega, tpiba2
-  USE gsmooth,              ONLY : nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, &
-                                   nrxxs, nls, nlsm
-  USE gvect,                ONLY : gg, ngm, &
-                                   nr1, nr2, nr3, nrx1, nrx2, nrx3, nl, nlm
+  USE gsmooth,              ONLY : nr1s, nr2s, nr3s, nrxxs, nls, nlsm
+  USE gvect,                ONLY : gg, ngm, nl, nlm
   USE wavefunctions_module, ONLY : psic
   USE klist,                ONLY : nelec
   USE lsda_mod,             ONLY : nspin
@@ -444,6 +441,8 @@ SUBROUTINE approx_screening2( drho, rhobest )
   USE scf,                  ONLY : mix_type, local_tf_ddot
   USE mp,                   ONLY : mp_max, mp_min, mp_sum
   USE mp_global,            ONLY : intra_image_comm, intra_pool_comm
+  USE fft_base,             ONLY : dffts
+  USE fft_interfaces,       ONLY : fwfft, invfft
   !
   IMPLICIT NONE
   !
@@ -516,7 +515,7 @@ SUBROUTINE approx_screening2( drho, rhobest )
   !
   IF ( gamma_only ) psic(nlsm(:ngm0)) = CONJG( psic(nls(:ngm0)) )
   !
-  CALL cft3s( psic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, 1 )
+  CALL invfft ('Smooth', psic, dffts)
   !
   alpha(:) = REAL( psic(1:nrxxs) )
   !
@@ -559,11 +558,11 @@ SUBROUTINE approx_screening2( drho, rhobest )
   !
   IF ( gamma_only ) psic(nlsm(:ngm0)) = CONJG( psic(nls(:ngm0)) )
   !
-  CALL cft3s( psic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, +1 )
+  CALL invfft ('Smooth', psic, dffts)
   !
   psic(:nrxxs) = psic(:nrxxs) * alpha(:)
   !
-  CALL cft3s( psic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, -1 )
+  CALL fwfft ('Smooth', psic, dffts)
   !
   dv(:) = psic(nls(:ngm0)) * gg(:ngm0) * tpiba2
   v(:,1)= psic(nls(:ngm0)) * gg(:ngm0) / ( gg(:ngm0) + agg0 )
@@ -584,11 +583,11 @@ SUBROUTINE approx_screening2( drho, rhobest )
      !
      IF ( gamma_only ) psic(nlsm(:ngm0)) = CONJG( psic(nls(:ngm0)) )
      !
-     CALL cft3s( psic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, +1 )
+     CALL invfft ('Smooth', psic, dffts)
      !
      psic(:nrxxs) = psic(:nrxxs) * alpha(:)
      !
-     CALL cft3s( psic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, -1 )
+     CALL fwfft ('Smooth', psic, dffts)
      !
      w(:,m) = w(:,m) + gg(:ngm0) * tpiba2 * psic(nls(:ngm0))
      !

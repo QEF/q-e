@@ -8,7 +8,7 @@
 !
 !----------------------------------------------------------------------------
 subroutine stres_gradcorr( rho, rhog, rho_core, rhog_core, nspin, &
-                           nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, nl, &
+                           nr1, nr2, nr3, nrxx, nl, &
                            ngm, g, alat, omega, sigmaxc )
   !----------------------------------------------------------------------------
   !
@@ -21,8 +21,7 @@ subroutine stres_gradcorr( rho, rhog, rho_core, rhog_core, nspin, &
   !
   IMPLICIT NONE
   !
-  integer :: nspin, nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, ngm, &
-       nl (ngm)
+  integer :: nspin, nr1, nr2, nr3, nrxx, ngm, nl (ngm)
   real(DP) :: rho (nrxx, nspin), rho_core (nrxx), g (3, ngm), &
        alat, omega, sigmaxc (3, 3)
   complex(DP) :: rhog(ngm, nspin), rhog_core(ngm)
@@ -55,8 +54,7 @@ subroutine stres_gradcorr( rho, rhog, rho_core, rhog_core, nspin, &
      rho(:,is)  = fac * rho_core(:)  + rho(:,is)
      rhog(:,is) = fac * rhog_core(:) + rhog(:,is)
      !
-     CALL gradrho( nrx1, nrx2, nrx3, nr1, nr2, nr3, &
-                   nrxx, rhog(1,is), ngm, g, nl, grho(1,1,is) )
+     CALL gradrho( nrxx, rhog(1,is), ngm, g, nl, grho(1,1,is) )
      !
   END DO
   !

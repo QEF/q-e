@@ -19,10 +19,10 @@ SUBROUTINE sum_band()
   USE control_flags,        ONLY : diago_full_acc, gamma_only, tqr
   USE cell_base,            ONLY : at, bg, omega, tpiba
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
-  USE gvect,                ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, &
-                                   ngm, g, nl, nlm
-  USE gsmooth,              ONLY : nls, nlsm, nr1s, nr2s, nr3s, &
-                                   nrx1s, nrx2s, nrx3s, nrxxs, doublegrid
+  USE fft_base,             ONLY : dfftp, dffts
+  USE fft_interfaces,       ONLY : fwfft, invfft
+  USE gvect,                ONLY : nrxx, ngm, g, nl, nlm
+  USE gsmooth,              ONLY : nls, nlsm, nrxxs, doublegrid
   USE klist,                ONLY : nks, nkstot, wk, xk, ngk
   USE fixed_occ,            ONLY : one_atom_occupations
   USE ldaU,                 ONLY : lda_plus_U
@@ -168,7 +168,7 @@ SUBROUTINE sum_band()
   !
   DO is = 1, nspin
      psic(:) = rho%of_r(:,is)
-     CALL cft3( psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, -1 )
+     CALL fwfft ('Dense', psic, dfftp)
      rho%of_g(:,is) = psic(nl(:))
   END DO
   !
@@ -181,7 +181,7 @@ SUBROUTINE sum_band()
   IF ( dft_is_meta()) THEN
      DO is = 1, nspin
         psic(:) = rho%kin_r(:,is)
-        CALL cft3( psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, -1 )
+        CALL fwfft ('Dense', psic, dfftp)
         rho%kin_g(:,is) = psic(nl(:))
      END DO
      IF (.NOT. gamma_only) CALL sym_rho( nspin, rho%kin_g(1,1) )
@@ -194,7 +194,7 @@ SUBROUTINE sum_band()
      psic(:) = ( 0.D0, 0.D0 )
      psic(nl(:)) = rho%of_g(:,is)
      IF ( gamma_only ) psic(nlm(:)) = CONJG( rho%of_g(:,is) )
-     CALL cft3( psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1 )
+     CALL invfft ('Dense', psic, dfftp)
      rho%of_r(:,is) = psic(:)
      !
   END DO
@@ -207,7 +207,7 @@ SUBROUTINE sum_band()
         psic(:) = ( 0.D0, 0.D0 )
         psic(nl(:)) = rho%kin_g(:,is)
         IF ( gamma_only ) psic(nlm(:)) = CONJG( rho%kin_g(:,is) )
-        CALL cft3( psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1 )
+        CALL invfft ('Dense', psic, dfftp)
         rho%kin_r(:,is) = psic(:)
         !
      END DO
@@ -229,7 +229,6 @@ SUBROUTINE sum_band()
        !
        USE becmod,        ONLY : bec_type, becp, calbec
        USE fft_parallel,  ONLY : tg_cft3s
-       USE fft_base,      ONLY : dffts
        USE mp_global,     ONLY : nogrp, nolist, ogrp_comm, me_pool, &
                                  use_task_groups
        USE mp,            ONLY : mp_sum
@@ -378,7 +377,7 @@ SUBROUTINE sum_band()
                    !
                 END IF
                 !
-                CALL cft3s( psic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, 2 )
+                CALL invfft ('Wave', psic, dffts)
                 !
                 w1 = wg(ibnd,ik) / omega
                 !
@@ -421,7 +420,7 @@ SUBROUTINE sum_band()
                                        CONJG( evc(1:npw,ibnd) )
                    END IF
                    !
-                   CALL cft3s( psic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, 2 )
+                   CALL invfft ('Wave', psic, dffts)
                    !
                    ! ... increment the kinetic energy density ...
                    !
@@ -557,7 +556,6 @@ SUBROUTINE sum_band()
        !
        USE becmod, ONLY : bec_type, becp, calbec
        USE fft_parallel,  ONLY : tg_cft3s
-       USE fft_base,      ONLY : dffts
        USE mp_global,     ONLY : nogrp, nolist, ogrp_comm, me_pool, &
                                  use_task_groups
        USE mp,            ONLY : mp_sum
@@ -647,10 +645,8 @@ SUBROUTINE sum_band()
                    psic_nc(nls(igk(ig)),1)=evc(ig     ,ibnd)
                    psic_nc(nls(igk(ig)),2)=evc(ig+npwx,ibnd)
                 END DO
-                call cft3s (psic_nc(1,1), nr1s, nr2s, nr3s, &
-                                          nrx1s,nrx2s,nrx3s, 2)
-                call cft3s (psic_nc(1,2), nr1s, nr2s, nr3s, &
-                                          nrx1s,nrx2s,nrx3s, 2)
+                CALL invfft ('Wave', psic_nc(:,1), dffts)
+                CALL invfft ('Wave', psic_nc(:,2), dffts)
                 !
                 ! increment the charge density ...
                 !
@@ -728,7 +724,7 @@ SUBROUTINE sum_band()
                    !
                    psic(nls(igk(1:npw))) = evc(1:npw,ibnd)
                    !
-                   CALL cft3s( psic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, 2 )
+                   CALL invfft ('Wave', psic, dffts)
                    !
                    ! ... increment the charge density ...
                    !
@@ -744,7 +740,7 @@ SUBROUTINE sum_band()
                       psic(nls(igk(1:npw))) = CMPLX(0d0, kplusg(1:npw),kind=DP) * &
                                               evc(1:npw,ibnd)
                       !
-                      CALL cft3s( psic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, 2 )
+                      CALL invfft ('Wave', psic, dffts)
                       !
                       ! ... increment the kinetic energy density ...
                       !

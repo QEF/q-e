@@ -21,7 +21,8 @@ SUBROUTINE v_h_from_rho_r( rhotot, nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, nl, nl
   USE cell_base,      ONLY : tpiba2
   USE mp_global,      ONLY : me_pool, intra_pool_comm
   USE mp,             ONLY : mp_sum
-  USE fft_base,      ONLY : grid_gather, grid_scatter
+  USE fft_base,       ONLY : grid_gather, grid_scatter, dfftp
+  USE fft_interfaces, ONLY : fwfft, invfft
   USE control_flags,  ONLY : gamma_only
   !
   IMPLICIT NONE
@@ -41,7 +42,7 @@ SUBROUTINE v_h_from_rho_r( rhotot, nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, nl, nl
   ! ... local variables
   !
   REAL (DP)              :: fac
-  REAL (DP), ALLOCATABLE :: aux(:,:), aux1(:,:)
+  COMPLEX (DP), ALLOCATABLE :: aux(:), aux1(:)
   INTEGER                     :: ir, is, ig
   !
 
@@ -57,37 +58,36 @@ SUBROUTINE v_h_from_rho_r( rhotot, nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, nl, nl
 #endif
   
   !
-  ALLOCATE( aux( 2, nrxx ), aux1( 2, ngm ) )
+  ALLOCATE( aux( nrxx ), aux1( ngm ) )
   !
   ! ... copy total rho in aux
   !
-  aux(2,:) = 0.D0
-  aux(1,:) = rho(:)
+  aux(:) = CMPLX ( rho(:), 0.0_dp, KIND=dp )
   !
   ! ... bring rho (aux) to G space
   ! 
-  CALL cft3( aux, nr1, nr2, nr3, nrx1, nrx2, nrx3, -1 )
+  CALL fwfft ('Dense', aux, dfftp)
+
   !
   charge = 0.D0
   !
 
-  IF ( gstart == 2 ) charge = omega * aux(1,nl(1))
+  IF ( gstart == 2 ) charge = omega * DBLE (aux(nl(1)))
   !
   CALL mp_sum( charge, intra_pool_comm )
   !
   ! ... calculate hartree potential in G-space (NB: V(G=0)=0 )
   !
-  ehart     = 0.D0
-  aux1(:,:) = 0.D0
+  ehart   = 0.D0
+  aux1(:) = 0.D0
   !
   DO ig = gstart, ngm
      !
      fac = 1.D0 / gg(ig)
      !
-     ehart = ehart + ( aux(1,nl(ig))**2 + aux(2,nl(ig))**2 ) * fac
+     ehart = ehart + ( DBLE(aux(nl(ig)))**2 + AIMAG(aux(nl(ig)))**2 ) * fac
      !
-     aux1(1,ig) = aux(1,nl(ig)) * fac
-     aux1(2,ig) = aux(2,nl(ig)) * fac
+     aux1(ig) = aux(nl(ig)) * fac
      !
   ENDDO
   !
@@ -109,12 +109,11 @@ SUBROUTINE v_h_from_rho_r( rhotot, nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, nl, nl
   !
   CALL mp_sum( ehart, intra_pool_comm )
   !
-  aux(:,:) = 0.D0
+  aux(:) = 0.D0
   !
   DO ig = 1, ngm
      !
-     aux(1,nl(ig)) = aux1(1,ig)
-     aux(2,nl(ig)) = aux1(2,ig)
+     aux(nl(ig)) = aux1(ig)
      !
   END DO
   !
@@ -122,8 +121,7 @@ SUBROUTINE v_h_from_rho_r( rhotot, nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, nl, nl
      !
      DO ig = 1, ngm
         !
-        aux(1,nlm(ig)) =   aux1(1,ig)
-        aux(2,nlm(ig)) = - aux1(2,ig)
+        aux(nlm(ig)) =  CONJG( aux1(ig) )
         !
      END DO
      !
@@ -131,11 +129,11 @@ SUBROUTINE v_h_from_rho_r( rhotot, nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, nl, nl
   !
   ! ... transform hartree potential to real space
   !
-  CALL cft3( aux, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1 )
+  CALL invfft ('Dense', aux, dfftp)
   !
   ! ... add hartree potential to the xc potential
   !
-  v(:) = v(:) + aux(1,:) 
+  v(:) = v(:) + DBLE ( aux(:) )
   !
   DEALLOCATE( aux, aux1 )
   !

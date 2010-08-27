@@ -20,7 +20,9 @@ subroutine setlocal
   USE gvect,     ONLY : igtongl, gg
   USE scf,       ONLY : rho, v_of_0, vltot
   USE vlocal,    ONLY : strf, vloc
-  USE gvect,     ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, nl, nlm, ngm
+  USE fft_base,  ONLY : dfftp
+  USE fft_interfaces,ONLY : invfft
+  USE gvect,     ONLY : nrxx, nl, nlm, ngm
   USE control_flags, ONLY : gamma_only
   USE mp_global, ONLY : intra_pool_comm
   USE mp,        ONLY : mp_sum
@@ -63,7 +65,7 @@ subroutine setlocal
   !
   ! ... aux = potential in G-space . FFT to real space
   !
-  call cft3 (aux, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1)
+  CALL invfft ('Dense', aux, dfftp)
   !
   vltot (:) =  DBLE (aux (:) )
   !

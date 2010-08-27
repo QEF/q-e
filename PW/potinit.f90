@@ -30,8 +30,9 @@ SUBROUTINE potinit()
   USE basis,                ONLY : starting_pot
   USE klist,                ONLY : nelec
   USE lsda_mod,             ONLY : lsda, nspin
-  USE gvect,                ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, &
-                                   ngm, gstart, nl, g, gg
+  USE fft_base,             ONLY : dfftp
+  USE fft_interfaces,       ONLY : fwfft
+  USE gvect,                ONLY : nr1, nr2, nr3, nrxx, ngm, gstart, nl, g, gg
   USE gsmooth,              ONLY : doublegrid
   USE control_flags,        ONLY : lscf
   USE scf,                  ONLY : rho, rho_core, rhog_core, &
@@ -182,7 +183,7 @@ SUBROUTINE potinit()
      !
      psic(:) = rho%of_r(:,is)
      !
-     CALL cft3( psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, -1 )
+     CALL fwfft ('Dense', psic, dfftp)
      !
      rho%of_g(:,is) = psic(nl(:))
      !
@@ -194,7 +195,7 @@ SUBROUTINE potinit()
      DO is = 1, nspin
         rho%kin_r(:,is) = fact * abs(rho%of_r(:,is)*nspin)**(5.0/3.0)/nspin
         psic(:) = rho%kin_r(:,is)
-        CALL cft3( psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, -1 )
+        CALL fwfft ('Dense', psic, dfftp)
         rho%kin_g(:,is) = psic(nl(:))
      END DO
      !

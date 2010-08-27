@@ -15,13 +15,15 @@ subroutine addusstres (sigmanlc)
   USE kinds,      ONLY : DP
   USE ions_base,  ONLY : nat, ntyp => nsp, ityp
   USE cell_base,  ONLY : omega, tpiba
-  USE gvect,      ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, ngm, &
+  USE fft_base,   ONLY : dfftp
+  USE gvect,      ONLY : nrxx, ngm, &
                          nl, nlm, gg, g, eigts1, eigts2, eigts3, ig1, ig2, ig3
   USE lsda_mod,   ONLY : nspin
   USE scf,        ONLY : v, vltot
   USE uspp,       ONLY : becsum, okvan
   USE uspp_param, ONLY : upf, lmaxq, nh, nhm
   USE control_flags, ONLY : gamma_only
+  USE fft_interfaces,ONLY : fwfft
   !
   implicit none
   !
@@ -79,7 +81,7 @@ subroutine addusstres (sigmanlc)
         vg(:) = vltot(:) + v%of_r(:,is)
         !
      END IF
-     call cft3 (vg, nr1, nr2, nr3, nrx1, nrx2, nrx3, - 1)
+     CALL fwfft ('Dense', vg, dfftp)
      do ig = 1, ngm
         aux (ig, is) = vg (nl (ig) )
      enddo

@@ -2210,11 +2210,11 @@ MODULE realus
   ! ibnd: band index
   ! nbnd: total number of bands
     USE wavefunctions_module,     ONLY : psic
-    USE gsmooth,                  ONLY : nr1s,nr2s,nr3s,nrx1s,nrx2s,&
-       nrx3s,nrxxs,nls,nlsm,doublegrid
+    USE gsmooth,                  ONLY : nrxxs,nls,nlsm,doublegrid
     USE kinds,         ONLY : DP
     USE fft_parallel,  ONLY : tg_cft3s
     USE fft_base,      ONLY : dffts
+    USE fft_interfaces,ONLY : invfft
     USE task_groups,   ONLY : tg_gather
     USE mp_global,     ONLY : nogrp, ogrp_comm, me_pool, nolist, &
                               use_task_groups
@@ -2316,7 +2316,7 @@ MODULE realus
         ENDIF
         !
         !
-       CALL cft3s (psic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, 2)
+       CALL invfft ('Wave', psic, dffts)
         !
         !
         IF (present(conserved)) THEN
@@ -2350,7 +2350,7 @@ MODULE realus
     !      enddo
     !   endif
     !   !
-    !   call cft3s(psic,nr1s,nr2s,nr3s,nrx1s,nrx2s,nrx3s,2)
+    !   CALL invfft ('Wave', psic, dffts)
     CALL stop_clock( 'fft_orbital' )
 
   END SUBROUTINE fft_orbital_gamma
@@ -2369,11 +2369,11 @@ MODULE realus
   ! ibnd: band index
   ! nbnd: total number of bands
     USE wavefunctions_module,     ONLY : psic
-    USE gsmooth,                  ONLY : nr1s,nr2s,nr3s,nrx1s,nrx2s,&
-       nrx3s,nrxxs,nls,nlsm,doublegrid
+    USE gsmooth,                  ONLY : nrxxs,nls,nlsm,doublegrid
     USE kinds,         ONLY : DP
     USE fft_parallel,  ONLY : tg_cft3s
     USE fft_base,      ONLY : dffts
+    USE fft_interfaces,ONLY : fwfft
     USE task_groups,   ONLY : tg_gather
     USE mp_global,     ONLY : nogrp, ogrp_comm, me_pool, nolist, &
                               use_task_groups
@@ -2433,7 +2433,7 @@ MODULE realus
 
     ELSE !Non task_groups version
          !larger memory slightly faster
-        CALL cft3s(psic,nr1s,nr2s,nr3s,nrx1s,nrx2s,nrx3s,-2)
+        CALL fwfft ('Wave', psic, dffts)
 
 
         IF (ibnd < nbnd) THEN
@@ -2458,7 +2458,7 @@ MODULE realus
     ENDIF
     !! OLD VERSION Based on the algorithm found in lr_apply_liovillian
     !!print * ,"a"
-    !call cft3s(psic,nr1s,nr2s,nr3s,nrx1s,nrx2s,nrx3s,-2)
+    !CALL fwfft ('Wave', psic, dffts)
     !!
     !!print *, "b"
     !if (ibnd<nbnd) then
@@ -2504,11 +2504,11 @@ MODULE realus
   ! ibnd: band index
   ! nbnd: total number of bands
     USE wavefunctions_module,     ONLY : psic
-    USE gsmooth,                  ONLY : nr1s,nr2s,nr3s,nrx1s,nrx2s,&
-       nrx3s,nrxxs,nls,nlsm,doublegrid
+    USE gsmooth,                  ONLY : nrxxs,nls,nlsm,doublegrid
     USE kinds,         ONLY : DP
     USE fft_parallel,  ONLY : tg_cft3s
     USE fft_base,      ONLY : dffts
+    USE fft_interfaces,ONLY : invfft
     USE mp_global,     ONLY : nogrp, ogrp_comm, me_pool, nolist, &
                               use_task_groups
     USE wvfct,         ONLY : igk
@@ -2559,7 +2559,7 @@ MODULE realus
              !
              psic(nls(igk(:))) = orbital(:,ibnd)
              !
-             CALL cft3s( psic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, 2 )
+             CALL invfft ('Wave', psic, dffts)
              IF (present(conserved)) THEN
               IF (conserved .eqv. .true.) THEN
                IF (.not. allocated(psic_temp) ) ALLOCATE (psic_temp(size(psic)))
@@ -2581,11 +2581,11 @@ MODULE realus
     ! ibnd: band index
     ! nbnd: total number of bands
     USE wavefunctions_module,     ONLY : psic
-    USE gsmooth,                  ONLY : nr1s,nr2s,nr3s,nrx1s,nrx2s,&
-       nrx3s,nrxxs,nls,nlsm,doublegrid
+    USE gsmooth,                  ONLY : nrxxs,nls,nlsm,doublegrid
     USE kinds,         ONLY : DP
     USE fft_parallel,  ONLY : tg_cft3s
     USE fft_base,      ONLY : dffts
+    USE fft_interfaces,ONLY : fwfft
     USE mp_global,     ONLY : nogrp, ogrp_comm, me_pool, nolist, &
                               use_task_groups
     USE wvfct,         ONLY : igk
@@ -2628,7 +2628,7 @@ MODULE realus
          !
     ELSE !non task groups version
              !
-             CALL cft3s( psic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, -2 )
+             CALL fwfft ('Wave', psic, dffts)
              !
              orbital(:,ibnd) = psic(nls(igk(:)))
              !
@@ -2648,8 +2648,7 @@ MODULE realus
     ! OBM 241008
     !
     USE wavefunctions_module,     ONLY : psic
-    USE gsmooth,                  ONLY : nr1s,nr2s,nr3s,nrx1s,nrx2s,&
-       nrx3s,nrxxs,nls,nlsm,doublegrid
+    USE gsmooth,       ONLY : nrx1s,nrx2s,nrxxs,nls,nlsm,doublegrid
     USE kinds,         ONLY : DP
     USE fft_parallel,  ONLY : tg_cft3s
     USE fft_base,      ONLY : dffts

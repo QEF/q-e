@@ -20,7 +20,9 @@ subroutine set_rhoc
   USE ions_base, ONLY : ntyp => nsp
   USE cell_base, ONLY : omega, tpiba2
   USE ener,      ONLY : etxcc
-  USE gvect,     ONLY : ngm, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
+  USE fft_base,  ONLY : dfftp
+  USE fft_interfaces,ONLY : invfft
+  USE gvect,     ONLY : ngm, nr1, nr2, nr3, &
                         nrxx, nl, nlm, ngl, gl, igtongl
   USE scf,       ONLY : rho_core, rhog_core
   USE lsda_mod,  ONLY : nspin
@@ -92,7 +94,7 @@ subroutine set_rhoc
   !
   !   the core charge in real space
   !
-  call cft3 (aux, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1)
+  CALL invfft ('Dense', aux, dfftp)
   !
   !    test on the charge and computation of the core energy
   !

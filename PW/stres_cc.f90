@@ -15,8 +15,9 @@ subroutine stres_cc (sigmaxcc)
   USE uspp_param,           ONLY : upf
   USE ions_base,            ONLY : ntyp => nsp
   USE cell_base,            ONLY : alat, omega, tpiba, tpiba2
-  USE gvect,                ONLY : ngm, gstart, nr1, nr2, nr3, nrx1, nrx2, &
-                                   nrx3, nrxx, nl, g, gg, ngl, gl, igtongl
+  USE fft_base,             ONLY : dfftp
+  USE fft_interfaces,       ONLY : fwfft
+  USE gvect,                ONLY : ngm, gstart, nrxx, nl, g, gg, ngl, gl,igtongl
   USE ener,                 ONLY : etxc, vtxc
   USE lsda_mod,             ONLY : nspin
   USE scf,                  ONLY : rho, rho_core, rhog_core
@@ -57,7 +58,7 @@ subroutine stres_cc (sigmaxcc)
      enddo
   endif
   deallocate (vxc)
-  call cft3 (psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, - 1)
+  CALL fwfft ('Dense', psic, dfftp)
   !
   ! psic contains now Vxc(G)
   !

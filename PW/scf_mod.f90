@@ -21,11 +21,13 @@ MODULE scf
   USE ions_base,    ONLY : nat
   USE io_files,     ONLY : diropn
   USE funct,        ONLY : dft_is_meta
-  USE gvect,        ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, ngm
+  USE fft_base,     ONLY : dfftp
+  USE fft_interfaces,ONLY : invfft
+  USE gvect,        ONLY : nrxx, ngm
   USE gsmooth,      ONLY : ngms
   USE paw_variables,ONLY : okpaw
   USE uspp_param,   ONLY : nhm
-  USE extfield,      ONLY : dipfield, emaxpos, eopreg, edir
+  USE extfield,     ONLY : dipfield, emaxpos, eopreg, edir
   !
   SAVE
   !
@@ -222,7 +224,7 @@ CONTAINS
       psic(:) = ( 0.D0, 0.D0 )
       psic(nl(:)) = rho_s%of_g(:,is)
       IF ( gamma_only ) psic(nlm(:)) = CONJG( rho_s%of_g(:,is) )
-      CALL cft3( psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1 )
+      CALL invfft ('Dense', psic, dfftp)
       rho_s%of_r(:,is) = psic(:)
    END DO
 
@@ -233,7 +235,7 @@ CONTAINS
          psic(:) = ( 0.D0, 0.D0 )
          psic(nl(:)) = rho_s%kin_g(:,is)
          IF ( gamma_only ) psic(nlm(:)) = CONJG( rho_s%kin_g(:,is) )
-         CALL cft3( psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1 )
+         CALL invfft ('Dense', psic, dfftp)
          rho_s%kin_r(:,is) = psic(:)
       END DO
    end if
@@ -335,7 +337,7 @@ CONTAINS
          psic(:) = ( 0.D0, 0.D0 )
          psic(nl(:)) = rhoin%of_g(:,is)
          IF ( gamma_only ) psic(nlm(:)) = CONJG( rhoin%of_g(:,is) )
-         CALL cft3( psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1 )
+         CALL invfft ('Dense', psic, dfftp)
          rhoin%of_r(:,is) = psic(:)
       END DO
       !
@@ -347,7 +349,7 @@ CONTAINS
             psic(:) = ( 0.D0, 0.D0 )
             psic(nl(:)) = rhoin%kin_g(:,is)
             IF ( gamma_only ) psic(nlm(:)) = CONJG( rhoin%kin_g(:,is) )
-            CALL cft3( psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1 )
+            CALL invfft ('Dense', psic, dfftp)
             rhoin%kin_r(:,is) = psic(:)
          END DO
       end if
