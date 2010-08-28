@@ -33,7 +33,7 @@ SUBROUTINE psym_dmage (dvtosym)
 
   CALL start_clock ('psym_dmage')
 
-  ALLOCATE (ddvtosym ( nrx1 * nrx2 * nrx3, nspin, 3))    
+  ALLOCATE (ddvtosym ( nrx1 * nrx2 * nrx3, nspin, 3))
   npp0 = 1
   DO i = 1, me_pool
      npp0 = npp0 + dfftp%npp (i) * dfftp%nnp

@@ -10,7 +10,7 @@ subroutine add_zstar_ue_us(imode0,npe)
 !----------===============-------------------------------
   ! add the contribution of the modes imode0+1 -> imode+npe
   ! to the effective charges Z(Us,E) (Us=scf,E=bare)
-  ! 
+  !
   ! This subroutine is just for the USPP case
   !
   ! trans =.true. is needed for this calculation to be meaningful
@@ -37,8 +37,8 @@ subroutine add_zstar_ue_us(imode0,npe)
   implicit none
 
   integer, intent(in) :: imode0, npe
-  
-  integer :: ik, jpol, nrec, mode, ipert, ibnd, jbnd, i,j 
+
+  integer :: ik, jpol, nrec, mode, ipert, ibnd, jbnd, i,j
 
   real(DP) :: weight
 
@@ -48,7 +48,7 @@ subroutine add_zstar_ue_us(imode0,npe)
 
   call start_clock('add_zstar_us')
 !  call compute_qdipol(dpqq)
-  
+
   allocate (pdsp(nbnd,nbnd))
   allocate (dvkb(npwx,nkb,3))
   if (nksq.gt.1) rewind (iunigk)
@@ -68,7 +68,7 @@ subroutine add_zstar_ue_us(imode0,npe)
            call dvpsi_e(ik,jpol)
            !
            ! Calculate the matrix elements <psi_v'k|dS/du|psi_vk>
-           ! Note: we need becp1 
+           ! Note: we need becp1
            !
            pdsp = (0.d0,0.d0)
            call psidspsi (ik, u (1, mode), pdsp,npw)
@@ -90,8 +90,8 @@ subroutine add_zstar_ue_us(imode0,npe)
            dvpsi = (0.d0,0.d0)
            dpsi  = (0.d0,0.d0)
            !
-           ! For the last part, we read the commutator from disc, 
-           ! but this time we calculate 
+           ! For the last part, we read the commutator from disc,
+           ! but this time we calculate
            ! dS/du P_c [H-eS]|psi> + (dK(r)/du - dS/du)r|psi>
            !
            ! first we read  P_c [H-eS]|psi> and store it in dpsi
@@ -107,7 +107,7 @@ subroutine add_zstar_ue_us(imode0,npe)
            !
            call add_dkmds(ik, u(1,mode),jpol, dvkb)
            !
-           ! And calculate finally the scalar product 
+           ! And calculate finally the scalar product
            !
            do ibnd = 1, nbnd_occ(ik)
               zstarue0_rec(mode,jpol)=zstarue0_rec(mode,jpol) - weight *   &
@@ -116,7 +116,7 @@ subroutine add_zstar_ue_us(imode0,npe)
         enddo
      enddo
   enddo
-  
+
   deallocate(dvkb)
   deallocate(pdsp)
   call stop_clock('add_zstar_us')

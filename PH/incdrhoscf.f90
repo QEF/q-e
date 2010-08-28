@@ -17,7 +17,9 @@ subroutine incdrhoscf (drhoscf, weight, ik, dbecsum)
   USE kinds, only : DP
   USE cell_base, ONLY : omega
   USE ions_base, ONLY : nat
-  USE gsmooth,   ONLY : nrxxs, nls, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s
+  USE fft_base,  ONLY: dffts
+  USE fft_interfaces, ONLY: invfft
+  USE gsmooth,   ONLY : nrxxs, nls
   USE wvfct,     ONLY : npw, igk
   USE uspp_param,ONLY: nhm
   USE wavefunctions_module,  ONLY: evc
@@ -50,8 +52,8 @@ subroutine incdrhoscf (drhoscf, weight, ik, dbecsum)
   ! counters
 
   call start_clock ('incdrhoscf')
-  allocate (dpsic(  nrxxs))    
-  allocate (psi  (  nrxxs))    
+  allocate (dpsic(  nrxxs))
+  allocate (psi  (  nrxxs))
   wgt = 2.d0 * weight / omega
   ikk = ikks(ik)
   !
@@ -64,14 +66,14 @@ subroutine incdrhoscf (drhoscf, weight, ik, dbecsum)
         psi (nls (igk (ig) ) ) = evc (ig, ibnd)
      enddo
 
-     call cft3s (psi, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, + 2)
+     CALL invfft ('Wave', psi, dffts)
 
      dpsic(:) = (0.d0, 0.d0)
      do ig = 1, npwq
         dpsic (nls (igkq (ig) ) ) = dpsi (ig, ibnd)
      enddo
 
-     call cft3s (dpsic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, + 2)
+     CALL invfft ('Wave', dpsic, dffts)
      do ir = 1, nrxxs
         drhoscf (ir) = drhoscf (ir) + wgt * CONJG(psi (ir) ) * dpsic (ir)
      enddo

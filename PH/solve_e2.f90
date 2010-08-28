@@ -20,7 +20,7 @@ subroutine solve_e2
   USE lsda_mod,              ONLY : lsda, nspin
   USE gvect,                 ONLY : nrxx, g
   USE gsmooth,               ONLY : nrxxs, doublegrid, nls, &
-                                    nr1s,nr2s,nr3s,nrx1s,nrx2s,nrx3s 
+                                    nr1s,nr2s,nr3s,nrx1s,nrx2s,nrx3s
   USE wvfct,                 ONLY : npw, npwx, nbnd, igk, g2kin, et
   USE io_files,  ONLY: prefix, iunigk
   USE ions_base, ONLY: nat
@@ -99,7 +99,7 @@ subroutine solve_e2
   if (lgauss.or..not.lgamma) &
         call errore ('solve_e2', 'called in the wrong case', 1)
   !
-  !   The outside loop is over the iterations 
+  !   The outside loop is over the iterations
   !
 
   do kter = 1, niter_ph
@@ -242,5 +242,5 @@ subroutine solve_e2
 
   call stop_clock('solve_e2')
 
-  return 
+  return
 end subroutine solve_e2

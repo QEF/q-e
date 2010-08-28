@@ -42,7 +42,7 @@ subroutine dvpsi_e2
   ! the record number
   real(DP), allocatable  :: raux6 (:,:), d2muxc (:)
   ! function on the real space smooth-mesh
-  ! second derivative of the XC-potential 
+  ! second derivative of the XC-potential
   real(DP) ::  d2mxc, rhotot
   ! external function
   ! total charge on a point
@@ -58,7 +58,7 @@ subroutine dvpsi_e2
   ! function on the real space smooth-mesh
   ! function on the real space thick-mesh
   complex(DP) :: tmp, weight
-  ! working space              
+  ! working space
   ! weight in k-point summation
   !
   call start_clock('dvpsi_e2')
@@ -193,7 +193,7 @@ subroutine dvpsi_e2
 #else
   call syme2 (aux6)
 #endif
-  deallocate (d2muxc) 
+  deallocate (d2muxc)
   deallocate (aux3)
 
 

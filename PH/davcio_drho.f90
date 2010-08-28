@@ -48,7 +48,7 @@ SUBROUTINE davcio_drho( drho, lrec, iunit, nrec, isw )
      ! ... First task is the only task allowed to write the file
      !
      DO is = 1, nspin_mag
-        !   
+        !
         CALL cgather_sym( drho(:,is), ddrho(:,is) )
         !
      END DO
@@ -68,7 +68,7 @@ SUBROUTINE davcio_drho( drho, lrec, iunit, nrec, isw )
      ! ... distributes ddrho between between the tasks of the pool
      !
      DO is = 1, nspin_mag
-        !   
+        !
         CALL cscatter_sym ( ddrho(:,is), drho(:,is) )
         !
      END DO

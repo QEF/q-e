@@ -10,7 +10,7 @@ subroutine incdrhous_nc (drhoscf, weight, ik, dbecsum, evcr, wgg, becq, &
      alpq, mode)
   !-----------------------------------------------------------------------
   !
-  !     This routine computes the change of the charge density 
+  !     This routine computes the change of the charge density
   !     and of the magnetization due
   !     to the displacement of the augmentation charge. Only the
   !     smooth part is computed here.
@@ -19,7 +19,9 @@ subroutine incdrhous_nc (drhoscf, weight, ik, dbecsum, evcr, wgg, becq, &
   USE cell_base, ONLY : omega
   USE ions_base, ONLY : ntyp => nsp, nat, ityp
   USE gvect,     ONLY : nrxx
-  USE gsmooth,   ONLY : nrxxs, nls, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s
+  USE fft_base,  ONLY : dffts
+  USE fft_interfaces, ONLY: invfft
+  USE gsmooth,   ONLY : nrxxs, nls
   USE lsda_mod,  ONLY : nspin
   USE spin_orb,  ONLY : lspinorb, domag
   USE noncollin_module, ONLY : npol, nspin_mag
@@ -70,8 +72,8 @@ subroutine incdrhous_nc (drhoscf, weight, ik, dbecsum, evcr, wgg, becq, &
   ! counters
 
   call start_clock ('incdrhous')
-  allocate (dpsir(nrxxs,npol))    
-  allocate (ps1 (nbnd, nbnd))    
+  allocate (dpsir(nrxxs,npol))
+  allocate (ps1 (nbnd, nbnd))
 
   call divide (nbnd, startb, lastb)
   ps1 (:,:) = (0.d0, 0.d0)
@@ -144,8 +146,8 @@ subroutine incdrhous_nc (drhoscf, weight, ik, dbecsum, evcr, wgg, becq, &
         dpsir(nls(igkq(ig)),1) = dpsi (ig, ibnd)
         dpsir(nls(igkq(ig)),2) = dpsi (ig+npwx, ibnd)
      enddo
-     call cft3s (dpsir, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, + 2)
-     call cft3s (dpsir(1,2), nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, + 2)
+     CALL invfft ('Wave', dpsir(:,1), dffts)
+     CALL invfft ('Wave', dpsir(:,2), dffts)
      do ir = 1, nrxxs
         drhoscf(ir,1)=drhoscf(ir,1)+wgt* &
                                    (dpsir(ir,1)*CONJG(evcr(ir,1,ibnd))+ &
@@ -153,7 +155,7 @@ subroutine incdrhous_nc (drhoscf, weight, ik, dbecsum, evcr, wgg, becq, &
         IF (domag) THEN
            drhoscf(ir,2)=drhoscf(ir,2)+ &
                                 wgt*(dpsir(ir,1)*CONJG(evcr(ir,2,ibnd))+ &
-                                     dpsir(ir,2)*CONJG(evcr(ir,1,ibnd))) 
+                                     dpsir(ir,2)*CONJG(evcr(ir,1,ibnd)))
            drhoscf(ir,3)=drhoscf(ir,3)+ &
                        wgt*(dpsir(ir,1)*CONJG(evcr(ir,2,ibnd)) - &
                        dpsir(ir,2)*CONJG(evcr(ir,1,ibnd)) ) *(0.d0,-1.d0)

@@ -75,14 +75,14 @@ subroutine psidspsi (ik, uact, pdsp)
   ! used to save time
 
   if (noncolin) then
-     allocate (ps1_nc ( nkb, npol, nbnd ))    
+     allocate (ps1_nc ( nkb, npol, nbnd ))
      allocate (ps2_nc ( nkb, npol, 3, nbnd))
   else
-     allocate (ps1 ( nkb, nbnd ))    
+     allocate (ps1 ( nkb, nbnd ))
      allocate (ps2 ( nkb, 3, nbnd))
   endif
   allocate (dspsi (npwx*npol, nbnd))
-  allocate (aux ( npwx*npol ))    
+  allocate (aux ( npwx*npol ))
 
   if (lgamma) then
      ikk = ik

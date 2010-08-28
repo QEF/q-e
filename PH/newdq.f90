@@ -19,8 +19,9 @@ subroutine newdq (dvscf, npe)
   USE ions_base,            ONLY : nat, ityp, ntyp => nsp
   USE noncollin_module,     ONLY : noncolin, nspin_mag
   USE cell_base,            ONLY : omega
-  USE gvect,                ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, &
-                                   nrxx, g, gg, ngm, ig1, ig2, ig3, &
+  USE fft_base,             ONLY : dfftp
+  USE fft_interfaces,       ONLY : fwfft
+  USE gvect,                ONLY : nrxx, g, gg, ngm, ig1, ig2, ig3, &
                                    eigts1, eigts2, eigts3, nl
   USE uspp,                 ONLY: okvan
   USE uspp_param,           ONLY : upf, lmaxq, nh, nhm
@@ -64,14 +65,14 @@ subroutine newdq (dvscf, npe)
   call start_clock ('newdq')
 
   int3 (:,:,:,:,:) = (0.d0, 0.0d0)
-  allocate (aux1 (ngm))    
-  allocate (aux2 (ngm , nspin_mag))    
-  allocate (veff (nrxx))    
-  allocate (ylmk0(ngm , lmaxq * lmaxq))    
-  allocate (qgm  (ngm))    
-  allocate (qmod (ngm))    
+  allocate (aux1 (ngm))
+  allocate (aux2 (ngm , nspin_mag))
+  allocate (veff (nrxx))
+  allocate (ylmk0(ngm , lmaxq * lmaxq))
+  allocate (qgm  (ngm))
+  allocate (qmod (ngm))
 
-  if (.not.lgamma) allocate (qg (3,  ngm))    
+  if (.not.lgamma) allocate (qg (3,  ngm))
   !
   !    first compute the spherical harmonics
   !
@@ -98,7 +99,7 @@ subroutine newdq (dvscf, npe)
         do ir = 1, nrxx
            veff (ir) = dvscf (ir, is, ipert)
         enddo
-        call cft3 (veff, nr1, nr2, nr3, nrx1, nrx2, nrx3, - 1)
+        CALL fwfft ('Dense', veff, dfftp)
         do ig = 1, ngm
            aux2 (ig, is) = veff (nl (ig) )
         enddo

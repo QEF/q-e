@@ -10,7 +10,7 @@ SUBROUTINE run_pwscf(do_band)
   !-----------------------------------------------------------------------
   !
   ! ... This is the main driver of the pwscf program called from the
-  ! ... phonon code. 
+  ! ... phonon code.
   !
   !
   USE control_flags,   ONLY : conv_ions, twfcollect
@@ -58,7 +58,7 @@ SUBROUTINE run_pwscf(do_band)
   IF (do_band) CALL electrons()
   !
   IF (.NOT.reduce_io.and.do_band) THEN
-     twfcollect=.FALSE. 
+     twfcollect=.FALSE.
      CALL punch( 'all' )
      done_bands=.TRUE.
   ENDIF

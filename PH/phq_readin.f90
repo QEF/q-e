@@ -116,9 +116,9 @@ SUBROUTINE phq_readin()
   ! recover      : recover=.true. to restart from an interrupted run
   ! asr          : in the gamma_gamma case apply acoustic sum rule
   ! start_q      : in q list does the q points from start_q to last_q
-  ! last_q       : 
+  ! last_q       :
   ! start_irr    : does the irred. representation from start_irr to last_irr
-  ! last_irr     : 
+  ! last_irr     :
   ! nogg         : if .true. lgamma_gamma tricks are not used
   ! ldiag        : if .true. force diagonalization of the dyn mat
   ! search_sym   : if .true. analyze symmetry if possible
@@ -202,7 +202,7 @@ SUBROUTINE phq_readin()
    CALL errore( 'phq_readin', 'reading inputph namelist', ABS( ios ) )
   !
   IF (ionode) tmp_dir = trimcheck (outdir)
-  CALL bcast_ph_input ( ) 
+  CALL bcast_ph_input ( )
   CALL mp_bcast(nogg, ionode_id )
   !
   ! ... Check all namelist variables
@@ -277,8 +277,8 @@ SUBROUTINE phq_readin()
      CALL mp_bcast(ios, ionode_id )
      CALL errore ('phq_readin', 'reading number of FREQUENCIES', ABS(ios) )
      CALL mp_bcast(nfs, ionode_id )
-     if (nfs > nfsmax) call errore('phq_readin','Too many frequencies',1) 
-     if (nfs < 1) call errore('phq_readin','Too few frequencies',1) 
+     if (nfs > nfsmax) call errore('phq_readin','Too many frequencies',1)
+     if (nfs < 1) call errore('phq_readin','Too few frequencies',1)
      IF (ionode) THEN
         IF ( TRIM(card) == 'FREQUENCIES' .OR. &
              TRIM(card) == 'frequencies' .OR. &
@@ -295,7 +295,7 @@ SUBROUTINE phq_readin()
      nfs=0
      fiu=0.0_DP
   END IF
-  
+
   !
   !
   !   Here we finished the reading of the input file.
@@ -322,7 +322,7 @@ SUBROUTINE phq_readin()
      tmp_dir=tmp_dir_save
      IF (ldisp) lgamma = (current_iq==1)
 !
-!  If there is a restart or a recover file ph.x has saved its own data-file 
+!  If there is a restart or a recover file ph.x has saved its own data-file
 !  and we read the initial information from that file
 !
      IF ((ext_recover.OR.ext_restart).AND..NOT.lgamma) &
@@ -382,7 +382,7 @@ SUBROUTINE phq_readin()
   xmldyn=has_xml(fildyn)
   IF (noncolin) xmldyn=.TRUE.
   !
-  ! If a band structure calculation needs to be done do not open a file 
+  ! If a band structure calculation needs to be done do not open a file
   ! for k point
   !
   lkpoint_dir=.FALSE.
@@ -466,7 +466,7 @@ SUBROUTINE phq_readin()
      nat_todo = 0
      list (1) = modenum
   ENDIF
-  
+
   IF (modenum > 0 .OR. lraman ) lgamma_gamma=.FALSE.
   IF (.NOT.lgamma_gamma) asr=.FALSE.
   !

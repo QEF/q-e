@@ -7,12 +7,12 @@
 !
 !----------------------------------------------------------------------------
 !
-MODULE el_phon 
+MODULE el_phon
   USE kinds, ONLY :  DP
   !
   SAVE
   !
   COMPLEX(DP), ALLOCATABLE :: &
        el_ph_mat(:,:,:,:)    !  nbnd, nbnd, nks, 3*nat
-  !     
+  !
 END MODULE el_phon

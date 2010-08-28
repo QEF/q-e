@@ -59,8 +59,8 @@ subroutine sym_dmag (nper, irr, dmagtosym)
   if (nsymq == 1.and. (.not.minus_q) ) return
   call start_clock ('sym_dmag')
 
-  allocate (dmagsym(  nrx1 , nrx2 , nrx3 , 3, nper))    
-  allocate (dmags( 3, nper))    
+  allocate (dmagsym(  nrx1 , nrx2 , nrx3 , 3, nper))
+  allocate (dmags( 3, nper))
   !
   ! if necessary we symmetrize with respect to  S(irotmq)*q = -q + Gi
   !

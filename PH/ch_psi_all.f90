@@ -54,9 +54,9 @@ subroutine ch_psi_all (n, h, ah, e, ik, m)
   ! the product of the S matrix and h
 
   call start_clock ('ch_psi')
-  allocate (ps  ( nbnd , m))    
-  allocate (hpsi( npwx*npol , m))    
-  allocate (spsi( npwx*npol , m))    
+  allocate (ps  ( nbnd , m))
+  allocate (hpsi( npwx*npol , m))
+  allocate (spsi( npwx*npol , m))
   hpsi (:,:) = (0.d0, 0.d0)
   spsi (:,:) = (0.d0, 0.d0)
   !

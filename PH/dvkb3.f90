@@ -36,7 +36,7 @@ subroutine dvkb3(kpoint,dvkb)
   if (this_dvkb3_is_on_file(kpoint)) then
      call davcio (dvkb, lrdvkb3, iudvkb3, kpoint, -1)
   else
-     allocate (work(npwx,nkb))    
+     allocate (work(npwx,nkb))
      allocate (gk(3, npwx))
 !
      do ig = 1, npw

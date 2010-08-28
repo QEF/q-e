@@ -53,7 +53,7 @@ subroutine solve_e
 
   USE mp_global,             ONLY : inter_pool_comm, intra_pool_comm
   USE mp,                    ONLY : mp_sum
-  
+
   implicit none
 
   real(DP) ::  thresh, anorm, averlt, dr2
@@ -93,21 +93,21 @@ subroutine solve_e
 
 
   call start_clock ('solve_e')
-  allocate (dvscfin( nrxx, nspin_mag, 3))    
+  allocate (dvscfin( nrxx, nspin_mag, 3))
   if (doublegrid) then
-     allocate (dvscfins(  nrxxs, nspin_mag, 3))    
+     allocate (dvscfins(  nrxxs, nspin_mag, 3))
   else
      dvscfins => dvscfin
   endif
-  allocate (dvscfout( nrxx , nspin_mag, 3))    
+  allocate (dvscfout( nrxx , nspin_mag, 3))
   IF (okpaw) THEN
      ALLOCATE (mixin(nrxx*nspin_mag*3+(nhm*(nhm+1)*nat*nspin_mag*3)/2) )
      ALLOCATE (mixout(nrxx*nspin_mag*3+(nhm*(nhm+1)*nat*nspin_mag*3)/2) )
   ENDIF
-  allocate (dbecsum( nhm*(nhm+1)/2, nat, nspin_mag, 3))    
+  allocate (dbecsum( nhm*(nhm+1)/2, nat, nspin_mag, 3))
   IF (noncolin) allocate (dbecsum_nc (nhm, nhm, nat, nspin, 3))
-  allocate (aux1(nrxxs,npol))    
-  allocate (h_diag(npwx*npol, nbnd))    
+  allocate (aux1(nrxxs,npol))
+  allocate (h_diag(npwx*npol, nbnd))
   IF (okpaw) mixin=(0.0_DP,0.0_DP)
 
   if (rec_code_read == -20.AND.ext_recover) then
@@ -272,7 +272,7 @@ subroutine solve_e
 #ifdef __PARA
      !
      !  The calculation of dbecsum is distributed across processors
-     !  (see addusdbec) - we sum over processors the contributions 
+     !  (see addusdbec) - we sum over processors the contributions
      !  coming from each slice of bands
      !
      IF (noncolin) THEN
@@ -323,7 +323,7 @@ subroutine solve_e
         ENDIF
      enddo
      !
-     !   mix the new potential with the old 
+     !   mix the new potential with the old
      !
      IF (okpaw) THEN
      !
@@ -364,7 +364,7 @@ subroutine solve_e
      call newdq(dvscfin,3)
 
      averlt = DBLE (ltaver) / DBLE (lintercall)
-  
+
      tcpu = get_clock ('PHONON')
      WRITE( stdout, '(/,5x," iter # ",i3," total cpu time :",f8.1, &
           &      " secs   av.it.: ",f5.1)') iter, tcpu, averlt

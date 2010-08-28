@@ -31,7 +31,7 @@ subroutine star_q (xq, at, bg, nsym, s, invs, nq, sxq, isq, imq, verbosity )
 
   real(DP), intent(out) :: sxq (3, 48)
   ! list of vectors in the star of q
-  logical, intent(in) :: verbosity 
+  logical, intent(in) :: verbosity
   ! if true prints several messages.
   !
   integer :: nsq (48), isym, ism1, iq, i
@@ -86,7 +86,7 @@ subroutine star_q (xq, at, bg, nsym, s, invs, nq, sxq, isq, imq, verbosity )
         nq = nq + 1
         nsq (nq) = 1
         isq (isym) = nq
-        saq(:,nq) = raq(:) 
+        saq(:,nq) = raq(:)
         do i = 1, 3
            sxq (i, nq) = bg (i, 1) * saq (1, nq) &
                        + bg (i, 2) * saq (2, nq) &
@@ -97,7 +97,7 @@ subroutine star_q (xq, at, bg, nsym, s, invs, nq, sxq, isq, imq, verbosity )
   !
   ! set imq index if needed and check star degeneracy
   !
-  raq (:) = - aq(:) 
+  raq (:) = - aq(:)
   imq = 0
   do iq = 1, nq
      if (eqvect (raq, saq (1, iq), zero) ) imq = iq

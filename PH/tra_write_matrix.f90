@@ -15,8 +15,8 @@ subroutine tra_write_matrix (alpha, adyn, u, nat)
   USE qpoint, only : xq
   implicit none
   !
-  !    This routine writes on output the symmetrized dynamical matrix in 
-  !    cartesian coordinates. The input matrix adyn is in the basis of 
+  !    This routine writes on output the symmetrized dynamical matrix in
+  !    cartesian coordinates. The input matrix adyn is in the basis of
   !    the modes.
   !    On output adyn is unchanged
   !

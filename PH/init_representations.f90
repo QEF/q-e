@@ -17,7 +17,7 @@ subroutine init_representations()
   !
   USE kinds,         ONLY : DP
   USE ions_base,     ONLY : tau, nat, ntyp => nsp, ityp, pmass
-  USE cell_base,     ONLY : at, bg  
+  USE cell_base,     ONLY : at, bg
   USE io_global,     ONLY : stdout
   USE symm_base,     ONLY : nrot, nsym, sr, ftau, irt, t_rev, time_reversal, &
                             sname, invs, s, inverse_s, copy_sym, &
@@ -45,7 +45,7 @@ subroutine init_representations()
   integer :: ir,  isym, jsym, &
        mu, nu, irr, na, it, nt, is, js, nsym_is, iq
   ! counters
-  
+
   real(DP), allocatable :: w2(:)
 
   logical :: sym (48), magnetic_sym
@@ -54,18 +54,18 @@ subroutine init_representations()
 
   call start_clock ('init_rep')
 
-  allocate (rtau ( 3, 48, nat))    
-  allocate (u ( 3 * nat, 3 * nat))    
-  allocate (name_rap_mode( 3 * nat))    
-  allocate (num_rap_mode( 3 * nat))    
-  allocate (npert ( 3 * nat))    
+  allocate (rtau ( 3, 48, nat))
+  allocate (u ( 3 * nat, 3 * nat))
+  allocate (name_rap_mode( 3 * nat))
+  allocate (num_rap_mode( 3 * nat))
+  allocate (npert ( 3 * nat))
 
   name_rap_mode=' '
   u_from_file=.FALSE.
 
   magnetic_sym = noncolin .AND. domag
   time_reversal = .NOT. noinv .AND. .NOT. magnetic_sym
-  ! 
+  !
   ! allocate and calculate rtau, the rotated position of each atom
   !
   !
@@ -115,7 +115,7 @@ subroutine init_representations()
      CALL mp_bcast (nirr, root, world_comm)
      CALL mp_bcast (name_rap_mode, root, world_comm)
      CALL mp_bcast (num_rap_mode, root, world_comm)
-  
+
      nsymq_iq(iq) = nsymq
      rep_iq(iq) = nirr
      DO irr=1, nirr
@@ -131,11 +131,11 @@ subroutine init_representations()
   u_from_file=.TRUE.
 
   DEALLOCATE(w2)
-  DEALLOCATE (rtau)    
-  DEALLOCATE (u)    
+  DEALLOCATE (rtau)
+  DEALLOCATE (u)
   DEALLOCATE (num_rap_mode)
-  DEALLOCATE (name_rap_mode)    
-  DEALLOCATE (npert)    
+  DEALLOCATE (name_rap_mode)
+  DEALLOCATE (npert)
 
   CALL stop_clock ('init_rep')
   RETURN

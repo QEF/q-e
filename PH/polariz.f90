@@ -10,7 +10,7 @@
 subroutine polariz ( iw )
   !-----------------------------------------------------------------------
   !
-  !      calculates the frequency dependent polarizability 
+  !      calculates the frequency dependent polarizability
   !
 
   USE io_global,    ONLY : stdout

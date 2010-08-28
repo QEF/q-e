@@ -21,9 +21,10 @@ subroutine localdos (ldos, ldoss, dos_ef)
   USE cell_base, ONLY : omega
   USE ions_base, ONLY : nat, ityp, ntyp => nsp
   USE ener,      ONLY : ef
-  USE gvect,     ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx
-  USE gsmooth,   ONLY : doublegrid, nrxxs, nls, &
-                        nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s
+  USE fft_base,  ONLY: dffts
+  USE fft_interfaces, ONLY: invfft
+  USE gvect,     ONLY : nrxx
+  USE gsmooth,   ONLY : doublegrid, nrxxs, nls
   USE klist,     ONLY : xk, wk, degauss, ngauss
   USE lsda_mod,  ONLY : nspin, lsda, current_spin, isk
   USE noncollin_module, ONLY : noncolin, npol, nspin_mag
@@ -111,8 +112,8 @@ subroutine localdos (ldos, ldoss, dos_ef)
               psic_nc (nls (igk (ig)), 1 ) = evc (ig, ibnd)
               psic_nc (nls (igk (ig)), 2 ) = evc (ig+npwx, ibnd)
            enddo
-           call cft3s (psic_nc, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, + 1)
-           call cft3s (psic_nc(1,2), nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, + 1)
+           CALL invfft ('Smooth', psic_nc(:,1), dffts)
+           CALL invfft ('Smooth', psic_nc(:,2), dffts)
            do j = 1, nrxxs
               ldoss (j, current_spin) = ldoss (j, current_spin) + &
                     w1 * ( DBLE(psic_nc(j,1))**2+AIMAG(psic_nc(j,1))**2 + &
@@ -123,7 +124,7 @@ subroutine localdos (ldos, ldoss, dos_ef)
            do ig = 1, npw
               psic (nls (igk (ig) ) ) = evc (ig, ibnd)
            enddo
-           call cft3s (psic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, + 1)
+           CALL invfft ('Smooth', psic, dffts)
            do j = 1, nrxxs
               ldoss (j, current_spin) = ldoss (j, current_spin) + &
                     w1 * ( DBLE ( psic (j) ) **2 + AIMAG (psic (j) ) **2)
@@ -193,7 +194,7 @@ subroutine localdos (ldos, ldoss, dos_ef)
         call cinterpolate (ldos (1, is), ldoss (1, is), 1)
      enddo
   else
-     ldos (:,:) = ldoss (:,:) 
+     ldos (:,:) = ldoss (:,:)
   endif
 
   IF (noncolin.and.okvan) THEN
@@ -254,9 +255,10 @@ subroutine localdos_paw (ldos, ldoss, becsum1, dos_ef)
   USE cell_base, ONLY : omega
   USE ions_base, ONLY : nat, ityp, ntyp => nsp
   USE ener,      ONLY : ef
-  USE gvect,     ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx
-  USE gsmooth,   ONLY : doublegrid, nrxxs, nls, &
-                        nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s
+  USE fft_base,  ONLY : dffts
+  USE fft_interfaces, ONLY: invfft
+  USE gvect,     ONLY : nrxx
+  USE gsmooth,   ONLY : doublegrid, nrxxs, nls
   USE klist,     ONLY : xk, wk, degauss, ngauss
   USE lsda_mod,  ONLY : nspin, lsda, current_spin, isk
   USE noncollin_module, ONLY : noncolin, npol, nspin_mag
@@ -309,7 +311,7 @@ subroutine localdos_paw (ldos, ldoss, becsum1, dos_ef)
      becsum1_nc=(0.d0,0.d0)
   ENDIF
 
-  call allocate_bec_type (nkb, nbnd, becp)  
+  call allocate_bec_type (nkb, nbnd, becp)
 
   becsum1 (:,:,:) = 0.d0
   ldos (:,:) = (0d0, 0.0d0)
@@ -345,8 +347,8 @@ subroutine localdos_paw (ldos, ldoss, becsum1, dos_ef)
               psic_nc (nls (igk (ig)), 1 ) = evc (ig, ibnd)
               psic_nc (nls (igk (ig)), 2 ) = evc (ig+npwx, ibnd)
            enddo
-           call cft3s (psic_nc, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, + 1)
-           call cft3s (psic_nc(1,2), nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, + 1)
+           CALL invfft ('Smooth', psic_nc(:,1), dffts)
+           CALL invfft ('Smooth', psic_nc(:,2), dffts)
            do j = 1, nrxxs
               ldoss (j, current_spin) = ldoss (j, current_spin) + &
                     w1 * ( DBLE(psic_nc(j,1))**2+AIMAG(psic_nc(j,1))**2 + &
@@ -357,7 +359,7 @@ subroutine localdos_paw (ldos, ldoss, becsum1, dos_ef)
            do ig = 1, npw
               psic (nls (igk (ig) ) ) = evc (ig, ibnd)
            enddo
-           call cft3s (psic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, + 1)
+           CALL invfft ('Smooth', psic, dffts)
            do j = 1, nrxxs
               ldoss (j, current_spin) = ldoss (j, current_spin) + &
                     w1 * ( DBLE ( psic (j) ) **2 + AIMAG (psic (j) ) **2)
@@ -427,7 +429,7 @@ subroutine localdos_paw (ldos, ldoss, becsum1, dos_ef)
         call cinterpolate (ldos (1, is), ldoss (1, is), 1)
      enddo
   else
-     ldos (:,:) = ldoss (:,:) 
+     ldos (:,:) = ldoss (:,:)
   endif
 
   IF (noncolin.and.okvan) THEN

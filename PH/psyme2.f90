@@ -29,7 +29,7 @@ subroutine psyme2 (dvtosym)
   ! the potential to symmetrize
 
   allocate (ddvtosym ( nrx1 * nrx2 * nrx3, 6))
-      
+
   npp0 = 0
   do i = 1, me_pool
      npp0 = npp0 + dfftp%npp (i)

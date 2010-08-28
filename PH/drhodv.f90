@@ -10,9 +10,9 @@ subroutine drhodv (nu_i0, nper, drhoscf)
   !-----------------------------------------------------------------------
   !
   !    This subroutine computes the electronic term
-  !    <psi|dv - e ds|dpsi> of the dynamical matrix. 
+  !    <psi|dv - e ds|dpsi> of the dynamical matrix.
   !    Eq. B35 of PRB 64, 235118 (2001). The contribution of
-  !    the nonlocal potential is calculated in rhodvnl, the 
+  !    the nonlocal potential is calculated in rhodvnl, the
   !    contribution of the local potential in drhodvloc.
   !    Note that drhoscf contain only the smooth part of the
   !    induced charge density, calculated in solve linter.
@@ -58,7 +58,7 @@ subroutine drhodv (nu_i0, nper, drhoscf)
 
   complex(DP) :: fact, ps, dynwrk (3 * nat, 3 * nat), &
        wdyn (3 * nat, 3 * nat), zdotc
-  complex(DP), allocatable ::  aux (:,:) 
+  complex(DP), allocatable ::  aux (:,:)
   ! work space
 
   TYPE (bec_type), POINTER :: dbecq(:), dalpq(:,:)
@@ -75,7 +75,7 @@ subroutine drhodv (nu_i0, nper, drhoscf)
         call allocate_bec_type ( nkb, nbnd, dalpq(ipol,ipert) )
      ENDDO
   END DO
-  allocate (aux   ( npwx*npol , nbnd))    
+  allocate (aux   ( npwx*npol , nbnd))
   dynwrk(:,:) = (0.d0, 0.d0)
   wdyn  (:,:) = (0.d0, 0.d0)
   !
@@ -153,7 +153,7 @@ subroutine drhodv (nu_i0, nper, drhoscf)
   !      call tra_write_matrix('drhodv dyn',dyn,u,nat)
   !      call tra_write_matrix('drhodv wdyn',wdyn,u,nat)
 
-  dyn (:,:) = dyn (:,:) + wdyn (:,:) 
+  dyn (:,:) = dyn (:,:) + wdyn (:,:)
   dyn_rec(:,:) = dyn_rec(:,:) + wdyn(:,:)
 
   deallocate (aux)

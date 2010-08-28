@@ -16,18 +16,20 @@ subroutine addusddens (drhoscf, dbecsum, mode0, npe, iflag)
   !  change of the becsum term. It calculates Eq. B31 of Ref [1].
   !  If called from drho (iflag=1), dbecsum and drhoscf contain the
   !  orthogonalization contribution to the change of the wavefunctions
-  !  and the terms with alphasum and becsum are added. If called 
-  !  from solve_* (iflag=0) drhoscf and dbecsum contain the contribution 
+  !  and the terms with alphasum and becsum are added. If called
+  !  from solve_* (iflag=0) drhoscf and dbecsum contain the contribution
   !  of the solution of the linear system and the terms due to alphasum
-  !  and becsum are not added. In this case the change of the charge 
-  !  calculated by drho (called \Delta \rho in [1]) is read from file 
-  !  and added. The contribution of the change of 
+  !  and becsum are not added. In this case the change of the charge
+  !  calculated by drho (called \Delta \rho in [1]) is read from file
+  !  and added. The contribution of the change of
   !  the Fermi energy is not calculated here but added later by ef_shift.
   !  [1] PRB 64, 235118 (2001).
   !
   !
   USE kinds, only : DP
-  USE gvect,  ONLY : gg, ngm, nrxx, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
+  use fft_base,  only: dfftp
+  use fft_interfaces, only: invfft
+  USE gvect,  ONLY : gg, ngm, nrxx, &
                      nl, g, eigts1, eigts2, eigts3, ig1, ig2, ig3
   USE uspp,     ONLY : okvan, becsum
   USE cell_base, ONLY : tpiba
@@ -89,12 +91,12 @@ subroutine addusddens (drhoscf, dbecsum, mode0, npe, iflag)
 
   if (.not.okvan) return
   call start_clock ('addusddens')
-  allocate (aux(  ngm , nspin_mag , npe))    
-  allocate (sk (  ngm))    
-  allocate (ylmk0(ngm , lmaxq * lmaxq))    
-  allocate (qgm(  ngm))    
-  allocate (qmod( ngm))    
-  if (.not.lgamma) allocate (qpg( 3  , ngm))    
+  allocate (aux(  ngm , nspin_mag , npe))
+  allocate (sk (  ngm))
+  allocate (ylmk0(ngm , lmaxq * lmaxq))
+  allocate (qgm(  ngm))
+  allocate (qmod( ngm))
+  if (.not.lgamma) allocate (qpg( 3  , ngm))
   !      WRITE( stdout,*) aux, ylmk0, qmod
   !
   !  And then we compute the additional charge in reciprocal space
@@ -187,7 +189,7 @@ subroutine addusddens (drhoscf, dbecsum, mode0, npe, iflag)
         do ig = 1, ngm
            psic (nl (ig) ) = aux (ig, is, ipert)
         enddo
-        call cft3 (psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1)
+        CALL invfft ('Dense', psic, dfftp)
         call daxpy (2*nrxx, 1.0_DP, psic, 1, drhoscf(1,is,ipert), 1)
      enddo
   enddo
@@ -199,7 +201,7 @@ subroutine addusddens (drhoscf, dbecsum, mode0, npe, iflag)
   deallocate (aux)
 
   if (iflag == 0) then
-     allocate (drhous( nrxx, nspin_mag))    
+     allocate (drhous( nrxx, nspin_mag))
      do ipert = 1, npe
         mu = mode0 + ipert
         call davcio (drhous, lrdrhous, iudrhous, mu, -1)

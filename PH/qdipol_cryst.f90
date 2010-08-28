@@ -7,7 +7,7 @@
 !
 subroutine qdipol_cryst()
 !
-! This subroutine puts the dipole of Q on the crystal basis 
+! This subroutine puts the dipole of Q on the crystal basis
 !
 
 USE kinds,     ONLY : DP

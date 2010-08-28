@@ -72,7 +72,7 @@ subroutine cgsolve_all_imfreq (h_psi, cg_psi, e, d0psi, dpsi, h_diag, &
              anorm,   & ! output: the norm of the error in the solution
              h_diag(ndmx,nbnd), & ! input: an estimate of ( H - \epsilon )
              ethr,&     ! input: the required precision
-             freq       !the imaginary frequency    
+             freq       !the imaginary frequency
 
   complex(DP) :: &
              dpsi (ndmx, nbnd), & ! output: the solution of the linear syst
@@ -112,11 +112,11 @@ subroutine cgsolve_all_imfreq (h_psi, cg_psi, e, d0psi, dpsi, h_diag, &
   COMPLEX(kind=DP), ALLOCATABLE :: tmp_psi0(:,:),tmp_psi1(:,:)
 
   call start_clock ('cgsolve')
-  allocate ( g(ndmx,nbnd), t(ndmx,nbnd), h(ndmx,nbnd), hold(ndmx ,nbnd) )    
-  allocate (a(nbnd), c(nbnd))    
-  allocate (conv ( nbnd))    
-  allocate (rho(nbnd),rhoold(nbnd))    
-  allocate (eu (  nbnd))    
+  allocate ( g(ndmx,nbnd), t(ndmx,nbnd), h(ndmx,nbnd), hold(ndmx ,nbnd) )
+  allocate (a(nbnd), c(nbnd))
+  allocate (conv ( nbnd))
+  allocate (rho(nbnd),rhoold(nbnd))
+  allocate (eu (  nbnd))
   allocate( zz(nbnd),tmp_psi0(ndmx,nbnd),tmp_psi1(ndmx,nbnd))
   !      WRITE( stdout,*) g,t,h,hold
 
@@ -184,7 +184,7 @@ subroutine cgsolve_all_imfreq (h_psi, cg_psi, e, d0psi, dpsi, h_diag, &
      do ibnd = 1, nbnd
         if (conv (ibnd) .eq.0) then
 !
-!          change sign to h 
+!          change sign to h
 !
            call DSCAL (2 * ndim, - 1.d0, h (1, ibnd), 1)
            if (iter.ne.1) then
@@ -194,7 +194,7 @@ subroutine cgsolve_all_imfreq (h_psi, cg_psi, e, d0psi, dpsi, h_diag, &
 
 !
 ! here hold is used as auxiliary vector in order to efficiently compute t = A*h
-! it is later set to the current (becoming old) value of h 
+! it is later set to the current (becoming old) value of h
 !
            lbnd = lbnd+1
            call ZCOPY (ndim, h (1, ibnd), 1, hold (1, lbnd), 1)
@@ -243,7 +243,7 @@ subroutine cgsolve_all_imfreq (h_psi, cg_psi, e, d0psi, dpsi, h_diag, &
            call ZAXPY (ndim, dclambda, t(1,lbnd), 1, g(1,ibnd), 1)
            !
            !    save current (now old) h and rho for later use
-           ! 
+           !
            call ZCOPY (ndim, h(1,ibnd), 1, hold(1,ibnd), 1)
            rhoold (ibnd) = rho (ibnd)
         endif

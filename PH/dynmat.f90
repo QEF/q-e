@@ -5,7 +5,7 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-Module dynamical 
+Module dynamical
   !
   ! All variables read from file that need dynamical allocation
   !
@@ -27,7 +27,7 @@ end Module dynamical
 !    applies the chosen Acoustic Sum Rule (if q=0)
 !  - diagonalise the dynamical matrix
 !  - calculates IR and Raman cross sections (if Z* and Raman tensors
-!    are read from file, respectively) 
+!    are read from file, respectively)
 !  - writes the results to files, both for inspection and for plotting
 !
 !  Input data (namelist "input")
@@ -40,10 +40,10 @@ end Module dynamical
 !                    (default: amass is read from file fildyn)
 !  asr   character   indicates the type of Acoustic Sum Rule imposed
 !                     - 'no': no Acoustic Sum Rules imposed (default)
-!                     - 'simple':  previous implementation of the asr used 
-!                     (3 translational asr imposed by correction of 
+!                     - 'simple':  previous implementation of the asr used
+!                     (3 translational asr imposed by correction of
 !                     the diagonal elements of the dynamical matrix)
-!                     - 'crystal': 3 translational asr imposed by optimized 
+!                     - 'crystal': 3 translational asr imposed by optimized
 !                     correction of the dyn. matrix (projection).
 !                     - 'one-dim': 3 translational asr + 1 rotational asr
 !                     imposed by optimized correction of the dyn. mat. (the
@@ -51,23 +51,23 @@ end Module dynamical
 !                     will work only if this axis considered is one of
 !                     the cartesian axis).
 !                     - 'zero-dim': 3 translational asr + 3 rotational asr
-!                     imposed by optimized correction of the dyn. mat. 
+!                     imposed by optimized correction of the dyn. mat.
 !                     Note that in certain cases, not all the rotational asr
-!                     can be applied (e.g. if there are only 2 atoms in a 
-!                     molecule or if all the atoms are aligned, etc.). 
+!                     can be applied (e.g. if there are only 2 atoms in a
+!                     molecule or if all the atoms are aligned, etc.).
 !                     In these cases the supplementary asr are cancelled
 !                     during the orthonormalization procedure (see below).
 !                     Finally, in all cases except 'no' a simple correction
-!                     on the effective charges is performed (same as in the 
+!                     on the effective charges is performed (same as in the
 !                     previous implementation).
 !  axis    integer    indicates the rotation axis for a 1D system
 !                     (1=Ox, 2=Oy, 3=Oz ; default =3)
 !  filout  character output file containing frequencies and modes
 !                    (default: filout='dynmat.out')
 !  filmol  character as above, in a format suitable for 'molden'
-!                    (default: filmol='dynmat.mold') 
+!                    (default: filmol='dynmat.mold')
 !  filxsf  character as above, in axsf format suitable for xcrysden
-!                    (default: filmol='dynmat.axsf') 
+!                    (default: filmol='dynmat.axsf')
 !
       USE kinds, ONLY: DP
       USE mp,         ONLY : mp_start, mp_env, mp_end, mp_barrier
@@ -156,7 +156,7 @@ end Module dynamical
       do nt=1, ntyp
          if (amass(nt) > 0.0d0) then
             amass(nt)=amass(nt)*amconv
-         else 
+         else
             amass(nt)=amass_(nt)
          end if
       end do
@@ -262,7 +262,7 @@ end Module dynamical
       read(1,'(a)') line
       read(1,'(a)') line
       read(line(11:80),*) (q(i),i=1,3)
-      qfinito=q(1).ne.0.0 .or. q(2).ne.0.0 .or. q(3).ne.0.0 
+      qfinito=q(1).ne.0.0 .or. q(2).ne.0.0 .or. q(3).ne.0.0
       if (qfinito .and. asr .ne. 'no') &
            call errore('readmat','Acoustic Sum Rule for q != 0 ?',1)
       do na = 1,nat
@@ -287,7 +287,7 @@ end Module dynamical
                do j=1,3
                   do i=1,3
                      zstar(i,j,na)=0.0d0
-                  end do 
+                  end do
                end do
             end do
             do j=1,3
@@ -325,7 +325,7 @@ end Module dynamical
       end if
       if (noraman) dchi_dtau=0.d0
 !
-      if(asr.ne.'no') then 
+      if(asr.ne.'no') then
           call set_asr ( asr, axis, nat, tau, dyn, zstar )
       endif
 !
@@ -384,7 +384,7 @@ subroutine RamanIR (nat, omega, w2, z, zstar, eps0, dchi_dtau)
  do jpol=1,3
     do ipol=1,3
        if (ipol == jpol) then
-          chi(ipol,jpol) = (eps0(ipol,jpol)-1.d0) 
+          chi(ipol,jpol) = (eps0(ipol,jpol)-1.d0)
        else
           chi(ipol,jpol) = eps0(ipol,jpol)
        end if
@@ -420,7 +420,7 @@ subroutine RamanIR (nat, omega, w2, z, zstar, eps0, dchi_dtau)
           do na=1,nat
              do lpol=1,3
                 raman(ipol,jpol,nu) = raman(ipol,jpol,nu) + &
-                     dchi_dtau(ipol,jpol,lpol,na) * z((na-1)*3+lpol,nu) 
+                     dchi_dtau(ipol,jpol,lpol,na) * z((na-1)*3+lpol,nu)
              end do
           end do
           noraman=noraman .and. abs(raman(ipol,jpol,nu)).lt.1.d-12
@@ -493,14 +493,14 @@ subroutine set_asr ( asr, axis, nat, tau, dyn, zeu )
   !
   integer ind_v(9*nat*nat,2,4)
   real(DP) v(9*nat*nat,2)
-  ! These are the "vectors" associated with symmetry conditions, coded by 
+  ! These are the "vectors" associated with symmetry conditions, coded by
   ! indicating the positions (i.e. the four indices) of the non-zero elements
   ! (there should be only 2 of them) and the value of that element.
-  ! We do so in order to use limit the amount of memory used. 
+  ! We do so in order to use limit the amount of memory used.
   !
   real(DP) w(3,3,nat,nat), x(3,3,nat,nat)
   real(DP) sum, scal, norm2
-  ! temporary vectors and parameters  
+  ! temporary vectors and parameters
   !
   real(DP) zeu_u(6*3,3,3,nat)
   ! These are the "vectors" associated with the sum rules on effective charges
@@ -515,7 +515,7 @@ subroutine set_asr ( asr, axis, nat, tau, dyn, zeu )
   ! Initialization
   ! n is the number of sum rules to be considered (if asr.ne.'simple')
   ! 'axis' is the rotation axis in the case of a 1D system (i.e. the rotation
-  !  axis is (Ox) if axis='1', (Oy) if axis='2' and (Oz) if axis='3') 
+  !  axis is (Ox) if axis='1', (Oy) if axis='2' and (Oz) if axis='3')
   !
   if ( (asr.ne.'simple') .and. (asr.ne.'crystal') .and. (asr.ne.'one-dim') &
                          .and.(asr.ne.'zero-dim')) then
@@ -523,7 +523,7 @@ subroutine set_asr ( asr, axis, nat, tau, dyn, zeu )
   endif
   if(asr.eq.'crystal') n=3
   if(asr.eq.'one-dim') then
-     write(6,'("asr rotation axis in 1D system= ",I4)') axis 
+     write(6,'("asr rotation axis in 1D system= ",I4)') axis
      n=4
   endif
   if(asr.eq.'zero-dim') n=6
@@ -543,7 +543,7 @@ subroutine set_asr ( asr, axis, nat, tau, dyn, zeu )
         end do
      end do
   else
-     ! generating the vectors of the orthogonal of the subspace to project 
+     ! generating the vectors of the orthogonal of the subspace to project
      ! the effective charges matrix on
      !
      zeu_u(:,:,:,:)=0.0d0
@@ -558,7 +558,7 @@ subroutine set_asr ( asr, axis, nat, tau, dyn, zeu )
      p=0
      do i=1,3
         do j=1,3
-           ! These are the 3*3 vectors associated with the 
+           ! These are the 3*3 vectors associated with the
            ! translational acoustic sum rules
            p=p+1
            zeu_u(p,i,j,:)=1.0d0
@@ -568,7 +568,7 @@ subroutine set_asr ( asr, axis, nat, tau, dyn, zeu )
      !
      if (n.eq.4) then
         do i=1,3
-           ! These are the 3 vectors associated with the 
+           ! These are the 3 vectors associated with the
            ! single rotational sum rule (1D system)
            p=p+1
            do na=1,nat
@@ -582,7 +582,7 @@ subroutine set_asr ( asr, axis, nat, tau, dyn, zeu )
      if (n.eq.6) then
         do i=1,3
            do j=1,3
-              ! These are the 3*3 vectors associated with the 
+              ! These are the 3*3 vectors associated with the
               ! three rotational sum rules (0D system - typ. molecule)
               p=p+1
               do na=1,nat
@@ -620,7 +620,7 @@ subroutine set_asr ( asr, axis, nat, tau, dyn, zeu )
      enddo
      !
      !
-     ! Projection of the effective charge "vector" on the orthogonal of the 
+     ! Projection of the effective charge "vector" on the orthogonal of the
      ! subspace of the vectors verifying the sum rules
      !
      zeu_w(:,:,:)=0.0d0
@@ -678,7 +678,7 @@ subroutine set_asr ( asr, axis, nat, tau, dyn, zeu )
      end do
      !
   else
-     ! generating the vectors of the orthogonal of the subspace to project 
+     ! generating the vectors of the orthogonal of the subspace to project
      ! the dyn. matrix on
      !
      allocate (u(6*3*nat,3,3,nat,nat))
@@ -698,7 +698,7 @@ subroutine set_asr ( asr, axis, nat, tau, dyn, zeu )
      do i=1,3
         do j=1,3
            do na=1,nat
-              ! These are the 3*3*nat vectors associated with the 
+              ! These are the 3*3*nat vectors associated with the
               ! translational acoustic sum rules
               p=p+1
               do nb=1,nat
@@ -712,7 +712,7 @@ subroutine set_asr ( asr, axis, nat, tau, dyn, zeu )
      if (n.eq.4) then
         do i=1,3
            do na=1,nat
-              ! These are the 3*nat vectors associated with the 
+              ! These are the 3*nat vectors associated with the
               ! single rotational sum rule (1D system)
               p=p+1
               do nb=1,nat
@@ -729,7 +729,7 @@ subroutine set_asr ( asr, axis, nat, tau, dyn, zeu )
         do i=1,3
            do j=1,3
               do na=1,nat
-                 ! These are the 3*3*nat vectors associated with the 
+                 ! These are the 3*3*nat vectors associated with the
                  ! three rotational sum rules (0D system - typ. molecule)
                  p=p+1
                  do nb=1,nat
@@ -833,7 +833,7 @@ subroutine set_asr ( asr, axis, nat, tau, dyn, zeu )
         endif
      enddo
      !
-     ! Projection of the dyn. "vector" on the orthogonal of the 
+     ! Projection of the dyn. "vector" on the orthogonal of the
      ! subspace of the vectors verifying the sum rules and symmetry contraints
      !
      w(:,:,:,:)=0.0d0
@@ -902,7 +902,7 @@ end subroutine set_asr
 subroutine sp_zeu(zeu_u,zeu_v,nat,scal)
   !-----------------------------------------------------------------------
   !
-  ! does the scalar product of two effective charges matrices zeu_u and zeu_v 
+  ! does the scalar product of two effective charges matrices zeu_u and zeu_v
   ! (considered as vectors in the R^(3*3*nat) space, and coded in the usual way)
   !
   USE kinds, ONLY: DP
@@ -910,7 +910,7 @@ subroutine sp_zeu(zeu_u,zeu_v,nat,scal)
   integer i,j,na,nat
   real(DP) zeu_u(3,3,nat)
   real(DP) zeu_v(3,3,nat)
-  real(DP) scal  
+  real(DP) scal
   !
   !
   scal=0.0d0
@@ -939,7 +939,7 @@ subroutine sp1(u,v,nat,scal)
   integer i,j,na,nb,nat
   real(DP) u(3,3,nat,nat)
   real(DP) v(3,3,nat,nat)
-  real(DP) scal  
+  real(DP) scal
   !
   !
   scal=0.0d0
@@ -963,7 +963,7 @@ subroutine sp2(u,v,ind_v,nat,scal)
   !
   ! does the scalar product of two dyn. matrices u and v (considered as
   ! vectors in the R^(3*3*nat*nat) space). u is coded in the usual way
-  ! but v is coded as explained when defining the vectors corresponding to the 
+  ! but v is coded as explained when defining the vectors corresponding to the
   ! symmetry constraints
   !
   USE kinds, ONLY: DP
@@ -972,7 +972,7 @@ subroutine sp2(u,v,ind_v,nat,scal)
   real(DP) u(3,3,nat,nat)
   integer ind_v(2,4)
   real(DP) v(2)
-  real(DP) scal  
+  real(DP) scal
   !
   !
   scal=0.0d0
@@ -990,15 +990,15 @@ subroutine sp3(u,v,i,na,nat,scal)
   !
   ! like sp1, but in the particular case when u is one of the u(k)%vec
   ! defined in set_asr (before orthonormalization). In this case most of the
-  ! terms are zero (the ones that are not are characterized by i and na), so 
-  ! that a lot of computer time can be saved (during Gram-Schmidt). 
+  ! terms are zero (the ones that are not are characterized by i and na), so
+  ! that a lot of computer time can be saved (during Gram-Schmidt).
   !
   USE kinds, ONLY: DP
   implicit none
   integer i,j,na,nb,nat
   real(DP) u(3,3,nat,nat)
   real(DP) v(3,3,nat,nat)
-  real(DP) scal  
+  real(DP) scal
   !
   !
   scal=0.0d0

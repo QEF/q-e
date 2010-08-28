@@ -40,7 +40,7 @@ subroutine phq_summary
   USE qpoint,        ONLY : xq
   USE ramanm,        ONLY : lraman, elop
   USE control_flags, ONLY : iverbosity
-  
+
   implicit none
 
   integer :: i, mu, nu, ipol, apol, na, isymq, isym, nsymtot, &
@@ -86,7 +86,7 @@ subroutine phq_summary
   !
   IF (noncolin) THEN
      IF (lspinorb) THEN
-        IF (domag) THEN 
+        IF (domag) THEN
            WRITE( stdout, '(5x, "Noncollinear calculation with spin-orbit",/)')
         ELSE
            WRITE( stdout, '(5x, "Non magnetic calculation with spin-orbit",/)')
@@ -95,7 +95,7 @@ subroutine phq_summary
         WRITE( stdout, '(5x, "Noncollinear calculation without spin-orbit",/)')
      END IF
   ELSE
-     WRITE(stdout,'(/)') 
+     WRITE(stdout,'(/)')
   END IF
   !
   !    and here more detailed information. Description of the unit cell
@@ -249,16 +249,16 @@ subroutine phq_summary
      ELSE
         WRITE( stdout, '(5x,"Dielectric constant")')
      END IF
-     IF (zue.AND.zeu) THEN 
+     IF (zue.AND.zeu) THEN
              WRITE( stdout, '(5x,"Born effective charges in two ways ")' )
      ELSEIF (zue) THEN
              WRITE( stdout, '(5x,"Born effective charges as d P / d u")')
      ELSEIF (zeu) THEN
              WRITE( stdout, '(5x,"Born effective charges as d Force / d E")')
      END IF
-     IF (lraman) & 
+     IF (lraman) &
           WRITE( stdout, '(5x,"Raman tensor")')
-     IF (elop) & 
+     IF (elop) &
           WRITE( stdout, '(5x,"Electro-optic tensor")')
      IF (fpol)  THEN
         WRITE( stdout, '(5x,"Frequency Dependent Polarizability at (Ry) ")' )

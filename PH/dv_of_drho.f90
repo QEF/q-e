@@ -15,8 +15,9 @@ subroutine dv_of_drho (mode, dvscf, flag)
   !
   USE kinds,     ONLY : DP
   USE constants, ONLY : e2, fpi
-  USE gvect,     ONLY : nrxx, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
-                    nl, ngm, g,nlm
+  USE fft_base,  ONLY: dfftp
+  USE fft_interfaces, ONLY: fwfft, invfft
+  USE gvect,     ONLY : nrxx, nl, ngm, g,nlm
   USE cell_base, ONLY : alat, tpiba2
   USE noncollin_module, ONLY : nspin_lsda, nspin_mag, nspin_gga
   USE funct,     ONLY : dft_is_gradient
@@ -57,7 +58,7 @@ subroutine dv_of_drho (mode, dvscf, flag)
   call start_clock ('dv_of_drho')
   allocate (dvaux( nrxx,  nspin_mag))
   dvaux (:,:) = (0.d0, 0.d0)
-  if (flag) allocate (drhoc( nrxx))    
+  if (flag) allocate (drhoc( nrxx))
   !
   ! the exchange-correlation contribution is computed in real space
   !
@@ -77,16 +78,15 @@ subroutine dv_of_drho (mode, dvscf, flag)
         enddo
      enddo
   enddo
- 
-  
+
+
   !
   ! add gradient correction to xc, NB: if nlcc is true we need to add here
   ! its contribution. grho contains already the core charge
   !
   if ( dft_is_gradient() ) call dgradcorr &
        (rho%of_r, grho, dvxc_rr, dvxc_sr, dvxc_ss, dvxc_s, xq, &
-       dvscf, nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, nspin_mag, nspin_gga, &
-       nl, ngm, g, alat, dvaux)
+       dvscf, nrxx, nspin_mag, nspin_gga, nl, ngm, g, alat, dvaux)
   if (nlcc_any.and.flag) then
      do is = 1, nspin_lsda
         rho%of_r(:, is) = rho%of_r(:, is) - fac * rho_core (:)
@@ -100,10 +100,10 @@ subroutine dv_of_drho (mode, dvscf, flag)
   ! copy the total (up+down) delta rho in dvscf(*,1) and go to G-space
   !
   if (nspin_mag == 2) then
-     dvscf(:,1) = dvscf(:,1) + dvscf(:,2) 
+     dvscf(:,1) = dvscf(:,1) + dvscf(:,2)
   end if
   !
-  call cft3 (dvscf, nr1, nr2, nr3, nrx1, nrx2, nrx3, -1)
+  CALL fwfft ('Dense', dvscf(:,1), dfftp)
   !
   ! hartree contribution is computed in reciprocal space
   !
@@ -121,17 +121,17 @@ subroutine dv_of_drho (mode, dvscf, flag)
       !
       !  and transformed back to real space
       !
-      call cft3 (dvhart (1, is), nr1, nr2, nr3, nrx1, nrx2, nrx3, +1)
+      CALL invfft ('Dense', dvhart (:, is), dfftp)
     enddo
     !
     ! at the end the two contributes are added
     dvscf  = dvaux  + dvhart
-    !OBM : Again not totally convinced about this trimming. 
+    !OBM : Again not totally convinced about this trimming.
     !dvscf (:,:) = cmplx(DBLE(dvscf(:,:)),0.0d0,dp)
     deallocate(dvhart)
   else
     do is = 1, nspin_lsda
-       call cft3 (dvaux (1, is), nr1, nr2, nr3, nrx1, nrx2, nrx3, - 1)
+       CALL fwfft ('Dense', dvaux (:, is), dfftp)
        do ig = 1, ngm
           qg2 = (g(1,ig)+xq(1))**2 + (g(2,ig)+xq(2))**2 + (g(3,ig)+xq(3))**2
           if (qg2 > 1.d-8) then
@@ -142,7 +142,7 @@ subroutine dv_of_drho (mode, dvscf, flag)
        !
        !  and transformed back to real space
        !
-       call cft3 (dvaux (1, is), nr1, nr2, nr3, nrx1, nrx2, nrx3, +1)
+       CALL invfft ('Dense', dvaux (:, is), dfftp)
     enddo
     !
     ! at the end the two contributes are added

@@ -15,7 +15,9 @@ subroutine ef_shift (drhoscf, ldos, ldoss, dos_ef, irr, npe, flag)
   USE io_global,            ONLY : stdout
   USE wavefunctions_module, ONLY : evc
   USE cell_base,            ONLY : omega
-  USE gvect,                ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, gg, nl
+  USE fft_base,             ONLY : dfftp
+  USE fft_interfaces,       ONLY : fwfft, invfft
+  USE gvect,                ONLY : nrxx, gg, nl
   USE gsmooth,              ONLY : nrxxs
   USE lsda_mod,             ONLY : nspin
   USE wvfct,                ONLY : npw, npwx, et
@@ -83,9 +85,9 @@ subroutine ef_shift (drhoscf, ldos, ldoss, dos_ef, irr, npe, flag)
      do ipert = 1, npert (irr)
         delta_n = (0.d0, 0.d0)
         do is = 1, nspin_lsda
-           call cft3 (drhoscf(1,is,ipert), nr1, nr2, nr3, nrx1, nrx2, nrx3, -1)
+           CALL fwfft ('Dense', drhoscf(:,is,ipert), dfftp)
            if (gg(1).lt.1.0d-8) delta_n = delta_n + omega*drhoscf(nl(1),is,ipert)
-           call cft3 (drhoscf(1,is,ipert), nr1, nr2, nr3, nrx1, nrx2, nrx3, +1)
+           CALL invfft ('Dense', drhoscf(:,is,ipert), dfftp)
         enddo
         call mp_sum ( delta_n, intra_pool_comm )
         def (ipert) = - delta_n / dos_ef
@@ -160,7 +162,9 @@ subroutine ef_shift_paw (drhoscf, dbecsum, ldos, ldoss, becsum1, &
   USE ions_base,            ONLY : nat
   USE wavefunctions_module, ONLY : evc
   USE cell_base,            ONLY : omega
-  USE gvect,                ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, gg, nl
+  USE fft_base,             ONLY : dfftp
+  USE fft_interfaces,       ONLY : fwfft, invfft
+  USE gvect,                ONLY : nrxx, gg, nl
   USE gsmooth,              ONLY : nrxxs
   USE lsda_mod,             ONLY : nspin
   USE uspp_param,           ONLY : nhm
@@ -230,9 +234,9 @@ subroutine ef_shift_paw (drhoscf, dbecsum, ldos, ldoss, becsum1, &
      do ipert = 1, npert (irr)
         delta_n = (0.d0, 0.d0)
         do is = 1, nspin_lsda
-           call cft3 (drhoscf(1,is,ipert), nr1, nr2, nr3, nrx1, nrx2, nrx3, -1)
+           CALL fwfft ('Dense', drhoscf(:,is,ipert), dfftp)
            if (gg(1).lt.1.0d-8) delta_n = delta_n + omega*drhoscf(nl(1),is,ipert)
-           call cft3 (drhoscf(1,is,ipert), nr1, nr2, nr3, nrx1, nrx2, nrx3, +1)
+           CALL invfft ('Dense', drhoscf(:,is,ipert), dfftp)
         enddo
         call mp_sum ( delta_n, intra_pool_comm )
         def (ipert) = - delta_n / dos_ef

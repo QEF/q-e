@@ -1,10 +1,10 @@
-! 
+!
 ! Copyright (C) 2002-2003 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
-! 
+!
 ! Last edition: September 5, 2008
 ! Edition author:  Eyvaz Isaev
 ! Department of Theoretical Physics, Moscow State Institute of Steel and Alloys, Russia
@@ -44,9 +44,9 @@ program elph
   !
   ! emax (THz)    : alpha2F is plotted from 0 to "emax" in "nex" steps
   ! degaussq (THz): gaussian smearing for sum over q
-  !                 NB: not the same used in phonon ! 
+  !                 NB: not the same used in phonon !
   ! ngaussq       : 0 for simple gaussian, 1 for Methfessel-Paxton etc.
-  ! nks           : number of q-points used in the sum  
+  ! nks           : number of q-points used in the sum
   ! q, wk         : q-points and weights
   ! filelph       : output files from phonon, one for each q-point
   !                 May contain "nsig" calculations done with different
@@ -87,7 +87,7 @@ program elph
      if (ik.eq.1) then
         do ng=1,nsig
            lambda(ng)=0.d0
-           do i=1,nex                  
+           do i=1,nex
               alpha2F(i,ng)=0.d0
            end do
         end do
@@ -156,7 +156,7 @@ program elph
 
  read(5,*) mustar
 
-  write(6,'("lambda", 8x, "omega_log", 10x, "T_c")') 
+  write(6,'("lambda", 8x, "omega_log", 10x, "T_c")')
   do i =1, nsig
         x=lambda(i)
          Tc = omegalog(i)/1.2*exp(-1.04*(1+x)/(x-mustar*(1+0.62*x)))

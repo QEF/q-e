@@ -24,7 +24,7 @@ SUBROUTINE write_rec(where, irr, dr2, iter, convt, npe, dvscfin, &
                      drhoscfh, dbecsum)
 !-----------------------------------------------------------------------
 !
-!  This routine saves the information needed to recover the phonon 
+!  This routine saves the information needed to recover the phonon
 !
 USE kinds, ONLY : DP
 USE ions_base, ONLY : nat

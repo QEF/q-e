@@ -14,7 +14,7 @@ subroutine dvqpsi_us_only (ik, uact)
   ! with a given q. The displacements are described by a vector uact.
   ! The result is stored in dvpsi. The routine is called for each k point
   ! and for each pattern u. It computes simultaneously all the bands.
-  ! This routine implements Eq. B29 of PRB 64, 235118 (2001). 
+  ! This routine implements Eq. B29 of PRB 64, 235118 (2001).
   ! Only the contribution of the nonlocal potential is calculated here.
   !
   !
@@ -75,15 +75,15 @@ subroutine dvqpsi_us_only (ik, uact)
 
   call start_clock ('dvqpsi_us_on')
   if (noncolin) then
-     allocate (ps1_nc(nkb , npol, nbnd))    
-     allocate (ps2_nc(nkb , npol, nbnd , 3))    
+     allocate (ps1_nc(nkb , npol, nbnd))
+     allocate (ps2_nc(nkb , npol, nbnd , 3))
      allocate (deff_nc(nhm, nhm, nat, nspin))
   else
-     allocate (ps1 ( nkb , nbnd))    
-     allocate (ps2 ( nkb , nbnd , 3))    
+     allocate (ps1 ( nkb , nbnd))
+     allocate (ps2 ( nkb , nbnd , 3))
      allocate (deff(nhm, nhm, nat))
   end if
-  allocate (aux ( npwx))    
+  allocate (aux ( npwx))
   ikk = ikks(ik)
   ikq = ikqs(ik)
   if (lsda) current_spin = isk (ikk)
@@ -123,8 +123,8 @@ subroutine dvqpsi_us_only (ik, uact)
                                    ijs=ijs+1
                                    ps1_nc(ikb,is,ibnd)=ps1_nc(ikb,is,ibnd) +  &
                                       deff_nc(ih,jh,na,ijs) * &
-                                      alphap(ipol, ik)%nc(jkb,js,ibnd)* & 
-                                       uact(mu + ipol) 
+                                      alphap(ipol, ik)%nc(jkb,js,ibnd)* &
+                                       uact(mu + ipol)
                                    ps2_nc(ikb,is,ibnd,ipol)=               &
                                           ps2_nc(ikb,is,ibnd,ipol)+        &
                                           deff_nc(ih,jh,na,ijs) *          &

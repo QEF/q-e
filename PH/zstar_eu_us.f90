@@ -9,7 +9,7 @@
 subroutine zstar_eu_us
 !----------===========-----------------------------------------
   !
-  ! Calculates the additional part of the Born effective charges 
+  ! Calculates the additional part of the Born effective charges
   ! in the case of USPP
   !
   !
@@ -43,7 +43,7 @@ subroutine zstar_eu_us
   !
   implicit none
   integer :: ibnd, jbnd, ipol, jpol, imode0, irr, imode, nrec, mode
-  integer :: ik,  ig, ir, is, i, j, mu, ipert 
+  integer :: ik,  ig, ir, is, i, j, mu, ipert
   integer :: ih, jh, ijh
   integer :: iuhxc, lrhxc
   !
@@ -80,8 +80,8 @@ subroutine zstar_eu_us
   dbecsum = (0.d0,0.d0)
   if (noncolin) dbecsum_nc=(0.d0,0.d0)
   !
-  ! first we calculate the perturbed charge density and the perturbed 
-  ! Hartree and exchange and correlation potential , which we need later 
+  ! first we calculate the perturbed charge density and the perturbed
+  ! Hartree and exchange and correlation potential , which we need later
   ! for the calculation of the Hartree and xc part
   !
   if (nksq.gt.1) rewind (iunigk)
@@ -115,7 +115,7 @@ subroutine zstar_eu_us
   call stop_clock('zstar_us_1')
   call start_clock('zstar_us_2')
 #endif
-  
+
   if (doublegrid) then
      do is = 1, nspin
         do ipol = 1, 3
@@ -137,11 +137,11 @@ subroutine zstar_eu_us
   call start_clock('zstar_us_3')
 #endif
 
-  if (nlcc_any) call addnlcc_zstar_eu_us (dvscf) 
+  if (nlcc_any) call addnlcc_zstar_eu_us (dvscf)
 
   do ipol = 1, 3
      !
-     ! Instead of recalculating the perturbed charge density, 
+     ! Instead of recalculating the perturbed charge density,
      ! it can also be read from file
      ! NB: Then the variable fildrho must be set
      !
@@ -160,11 +160,11 @@ subroutine zstar_eu_us
   call start_clock('zstar_us_4')
 #endif
 !
-! Calculate the parts with the perturbed Hartree and exchange and correlation 
-! potenial  
+! Calculate the parts with the perturbed Hartree and exchange and correlation
+! potenial
 !
   imode0 = 0
-  allocate(drhoscfh(nrxx,nspin)) 
+  allocate(drhoscfh(nrxx,nspin))
   do irr = 1, nirr
      npe = npert(irr)
      do imode = 1, npe
@@ -174,7 +174,7 @@ subroutine zstar_eu_us
            do is=1,nspin_mag
               zstareu0(jpol,mode) =  zstareu0(jpol,mode) -                  &
                  dot_product(dvscf(1:nrxx,is,jpol),drhoscfh(1:nrxx,is)) &
-               * omega / DBLE(nr1*nr2*nr3) 
+               * omega / DBLE(nr1*nr2*nr3)
            end do
         end do
      end do
@@ -203,7 +203,7 @@ subroutine zstar_eu_us
            mode = imode+imode0
            do jpol = 1, 3
               dvpsi = (0.d0,0.d0)
-              ! 
+              !
               ! read the Commutator+add. terms
               !
               nrec = (jpol - 1) * nksq + ik
@@ -228,8 +228,8 @@ subroutine zstar_eu_us
               dvpsi = (0.d0,0.d0)
               dpsi  = (0.d0,0.d0)
               !
-              ! For the last part, we read the commutator from disc, 
-              ! but this time we calculate 
+              ! For the last part, we read the commutator from disc,
+              ! but this time we calculate
               ! dS/du P_c [H-eS]|psi> + (dK(r)/du - dS/du)r|psi>
               !
               ! first we read  P_c [H-eS]|psi> and store it in dpsi
@@ -245,7 +245,7 @@ subroutine zstar_eu_us
               !
               call add_dkmds(ik, u(1,mode), jpol, dvkb)
               !
-              ! And calculate finally the scalar product 
+              ! And calculate finally the scalar product
               !
               do ibnd = 1, nbnd_occ(ik)
                  zstareu0(jpol,mode)=zstareu0(jpol, mode) - weight *  &

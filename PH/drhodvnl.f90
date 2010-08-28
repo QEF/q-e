@@ -16,7 +16,7 @@ subroutine drhodvnl (ik, ikk, nper, nu_i0, wdyn, dbecq, dalpq)
   !
   !
   USE kinds,     ONLY : DP
-  USE ions_base, ONLY : nat, ntyp => nsp, ityp 
+  USE ions_base, ONLY : nat, ntyp => nsp, ityp
   USE noncollin_module, ONLY : noncolin, npol
   USE uspp,      ONLY : okvan, nkb
   USE uspp_param,ONLY : nh, nhm
@@ -55,14 +55,14 @@ subroutine drhodvnl (ik, ikk, nper, nu_i0, wdyn, dbecq, dalpq)
 
   IF (noncolin) THEN
      allocate (ps1_nc ( nkb, npol, nbnd))
-     allocate (ps2_nc ( nkb, npol, nbnd, 3))    
-     allocate (deff_nc ( nhm, nhm, nat, nspin ))    
+     allocate (ps2_nc ( nkb, npol, nbnd, 3))
+     allocate (deff_nc ( nhm, nhm, nat, nspin ))
      ps1_nc = (0.d0, 0.d0)
      ps2_nc = (0.d0, 0.d0)
   ELSE
      allocate (ps1 (  nkb , nbnd))
-     allocate (ps2 (  nkb , nbnd , 3))    
-     allocate (deff ( nhm, nhm, nat ))    
+     allocate (ps2 (  nkb , nbnd , 3))
+     allocate (deff ( nhm, nhm, nat ))
      ps1 = (0.d0, 0.d0)
      ps2 = (0.d0, 0.d0)
   END IF
@@ -87,7 +87,7 @@ subroutine drhodvnl (ik, ikk, nper, nu_i0, wdyn, dbecq, dalpq)
                  ikb = ijkb0 + ih
                  do jh = 1, nh (nt)
                     jkb = ijkb0 + jh
-                    IF (noncolin) THEN 
+                    IF (noncolin) THEN
                        ijs=0
                        DO is=1, npol
                           DO js=1, npol
@@ -126,7 +126,7 @@ subroutine drhodvnl (ik, ikk, nper, nu_i0, wdyn, dbecq, dalpq)
                                    ps2_nc (ikb, is, ibnd, ipol) =        &
                                         ps2_nc (ikb, is, ibnd, ipol)   + &
                                         int1_nc(ih, jh, ipol, na, ijs) * &
-                                        becp1(ik)%nc (jkb, js, ibnd)  
+                                        becp1(ik)%nc (jkb, js, ibnd)
                                 END DO
                              END DO
                           ELSE
@@ -196,17 +196,17 @@ subroutine drhodvnl (ik, ikk, nper, nu_i0, wdyn, dbecq, dalpq)
                                                ijs=ijs+1
                                                ps_nc(is)=ps_nc(is)+ &
                                                 int2_so(ih,jh,ipol,na,nb,ijs)*&
-                                              becp1(ik)%nc(jkb, js, ibnd) 
+                                              becp1(ik)%nc(jkb, js, ibnd)
                                             END DO
                                          END DO
                                       ELSE
                                          DO is=1, npol
                                             ps_nc(is)=ps_nc(is)+ &
                                                int2(ih,jh,ipol,na,nb)*&
-                                              becp1(ik)%nc(jkb, is, ibnd) 
+                                              becp1(ik)%nc(jkb, is, ibnd)
                                          END DO
                                       END IF
-                                   ELSE 
+                                   ELSE
                                       ps = ps + int2 (ih, jh, ipol, na, nb) * &
                                         becp1(ik)%k (jkb, ibnd)
                                    ENDIF
@@ -217,7 +217,7 @@ subroutine drhodvnl (ik, ikk, nper, nu_i0, wdyn, dbecq, dalpq)
                                       DO is=1, npol
                                          dynwrk (nu, mu) = dynwrk (nu, mu) + &
                                         2.d0 * wk (ikk) * ps_nc(is) * &
-                                        CONJG(dbecq(iper)%nc(ikb, is, ibnd)) 
+                                        CONJG(dbecq(iper)%nc(ikb, is, ibnd))
                                       END DO
                                    ELSE
                                       dynwrk (nu, mu) = dynwrk (nu, mu) + &

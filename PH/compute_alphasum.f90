@@ -26,7 +26,7 @@ subroutine compute_alphasum
   USE wvfct,      ONLY : nbnd, wg
   USE noncollin_module, ONLY : noncolin, npol
   USE uspp, ONLY: okvan
-  USE uspp_param, ONLY: upf, nh 
+  USE uspp_param, ONLY: upf, nh
   USE paw_variables, ONLY : okpaw
 
   USE phus,       ONLY : alphasum, alphasum_nc, becp1, alphap
@@ -104,7 +104,7 @@ subroutine compute_alphasum
                                  (CONJG(alphap(ipol,ik)%nc(ikb,is1,ibnd))* &
                                              becp1(ik)%nc(jkb,is2,ibnd)+      &
                                        CONJG(becp1(ik)%nc(ikb,is1,ibnd))*      &
-                                        alphap(ipol,ik)%nc(jkb,is2,ibnd) ) 
+                                        alphap(ipol,ik)%nc(jkb,is2,ibnd) )
                                    END DO
                                 END DO
                              ELSE

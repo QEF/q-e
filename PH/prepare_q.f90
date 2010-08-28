@@ -52,8 +52,8 @@ SUBROUTINE prepare_q(auxdyn, do_band, do_iq, setup_pw, iq)
      RETURN
   ENDIF
   !
-  !  Case 2) This q point is not calculated because it has too few 
-  !          representation and the starting representation is larger 
+  !  Case 2) This q point is not calculated because it has too few
+  !          representation and the starting representation is larger
   !          than the number of available representations
   !
   IF (start_irr>rep_iq(iq)) THEN
@@ -84,7 +84,7 @@ SUBROUTINE prepare_q(auxdyn, do_band, do_iq, setup_pw, iq)
         !
         IF ( .NOT. lgauss ) THEN
            !
-           ! ... in the case of an insulator at q=0 one has to calculate 
+           ! ... in the case of an insulator at q=0 one has to calculate
            ! ... the dielectric constant and the Born eff. charges
            ! ... the other flags depend on input
            !

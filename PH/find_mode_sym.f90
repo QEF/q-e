@@ -10,11 +10,11 @@ SUBROUTINE find_mode_sym (u, w2, at, bg, tau, nat, nsym, sr, irt, xq, &
      name_rap_mode, num_rap_mode)
   !
   !   This subroutine finds the irreducible representations which give
-  !   the transformation properties of eigenvectors of the dynamical 
+  !   the transformation properties of eigenvectors of the dynamical
   !   matrix. It does NOT work at zone border in non symmorphic space groups.
   !   if flag=1 the true displacements are given in input, otherwise the
   !   eigenvalues of the dynamical matrix are given.
-  !  
+  !
   !
   USE io_global,  ONLY : stdout
   USE kinds, ONLY : DP
@@ -30,7 +30,7 @@ SUBROUTINE find_mode_sym (u, w2, at, bg, tau, nat, nsym, sr, irt, xq, &
 
   INTEGER, INTENT(IN) ::             &
        nat,         &
-       nsym,        & 
+       nsym,        &
        flag,        &
        ntyp,        &
        ityp(nat),   &
@@ -44,7 +44,7 @@ SUBROUTINE find_mode_sym (u, w2, at, bg, tau, nat, nsym, sr, irt, xq, &
        rtau(3,48,nat), &
        amass(ntyp),    &
        w2(3*nat),      &
-       sr(3,3,48)      
+       sr(3,3,48)
 
   COMPLEX(DP), INTENT(IN) ::  &
        u(3*nat, 3*nat)       ! The eigenvectors or the displacement pattern
@@ -62,8 +62,8 @@ SUBROUTINE find_mode_sym (u, w2, at, bg, tau, nat, nsym, sr, irt, xq, &
 
   INTEGER, ALLOCATABLE :: istart(:)
 
-  COMPLEX(DP) :: times              ! safe dimension 
-  ! in case of accidental degeneracy 
+  COMPLEX(DP) :: times              ! safe dimension
+  ! in case of accidental degeneracy
   COMPLEX(DP), EXTERNAL :: zdotc
   REAL(DP), ALLOCATABLE :: w1(:)
   COMPLEX(DP), ALLOCATABLE ::  rmode(:), trace(:,:), z(:,:)
@@ -167,7 +167,7 @@ SUBROUTINE find_mode_sym (u, w2, at, bg, tau, nat, nsym, sr, irt, xq, &
               IF (flag==1) WRITE(stdout,'(5x, "omega(",i3," -",i3,") = ",f12.1,2x,"[cm-1]",3x,"--> ",a19)') &
                    istart(igroup), istart(igroup+1)-1, w1(istart(igroup)), &
                    name_rap(irap)//" "//cdum
-              name_rap_mode(igroup)=name_rap(irap)  
+              name_rap_mode(igroup)=name_rap(irap)
               counter_s=counter
               DO imode=counter_s, counter_s+NINT(DBLE(char_mat(irap,1)))-1
                  IF (imode <= 3*nat) num_rap_mode(imode) = irap
@@ -178,7 +178,7 @@ SUBROUTINE find_mode_sym (u, w2, at, bg, tau, nat, nsym, sr, irt, xq, &
                    istart(igroup), istart(igroup+1)-1, &
                    w1(istart(igroup)), NINT(DBLE(times)), &
                    name_rap(irap)//" "//cdum
-              name_rap_mode(igroup)=name_rap(irap)  
+              name_rap_mode(igroup)=name_rap(irap)
               counter_s=counter
               DO imode=counter_s, counter_s+NINT(DBLE(times))*&
                                             NINT(DBLE(char_mat(irap,1)))-1
@@ -241,7 +241,7 @@ FUNCTION is_linear(nat,tau)
   INTEGER :: na
 
   is_linear=.TRUE.
-  IF (nat<=2) RETURN 
+  IF (nat<=2) RETURN
 
   u(:)=tau(:,2)-tau(:,1)
   umod=sqrt(u(1)**2+u(2)**2+u(3)**2)
@@ -249,7 +249,7 @@ FUNCTION is_linear(nat,tau)
      v(:)=tau(:,na)-tau(:,1)
      vmod=sqrt(v(1)**2+v(2)**2+v(3)**2)
      is_linear=is_linear.AND.(abs(1.0_DP- &
-          abs(u(1)*v(1)+u(2)*v(2)+u(3)*v(3))/umod/vmod)<1.d-4) 
+          abs(u(1)*v(1)+u(2)*v(2)+u(3)*v(3))/umod/vmod)<1.d-4)
   ENDDO
 
   RETURN

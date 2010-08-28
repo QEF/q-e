@@ -10,7 +10,7 @@ SUBROUTINE transform_dbecsum_nc(dbecsum_nc,dbecsum,na,modes)
 !----------------------------------------------------------------------------
 !
 ! This routine multiply dbecsum_nc by the identity and the Pauli
-! matrices and saves it in dbecsum to use it in the calculation of 
+! matrices and saves it in dbecsum to use it in the calculation of
 ! the charge and magnetization.
 !
 USE kinds,                ONLY : DP

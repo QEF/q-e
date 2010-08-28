@@ -11,7 +11,7 @@ Module dynamicalq
   ! All variables read from file that need dynamical allocation
   !
   USE kinds, ONLY: DP
-  COMPLEX(DP), ALLOCATABLE :: phiq(:,:,:,:,:) 
+  COMPLEX(DP), ALLOCATABLE :: phiq(:,:,:,:,:)
   REAL(DP), ALLOCATABLE ::  tau(:,:), zeu(:,:,:)
   INTEGER, ALLOCATABLE ::  ityp(:)
   !
@@ -21,12 +21,12 @@ end Module dynamicalq
 PROGRAM q2r
   !----------------------------------------------------------------------------
   !
-  !  q2r.x: 
+  !  q2r.x:
   !     reads force constant matrices C(q) produced by the phonon code
-  !     for a grid of q-points, calculates the corresponding set of 
+  !     for a grid of q-points, calculates the corresponding set of
   !     interatomic force constants (IFC), C(R)
   !
-  !  Input data: Namelist "input" 
+  !  Input data: Namelist "input"
   !     fildyn     :  input file name (character, must be specified)
   !                   "fildyn"0 contains information on the q-point grid
   !                   "fildyn"1-N contain force constans C_n = C(q_n)
@@ -36,13 +36,13 @@ PROGRAM q2r
   !                   on input to the phonon code
   !     flfrc      :  output file containing the IFC in real space
   !                   (character, must be specified)
-  !     zasr       :  Indicates type of Acoustic Sum Rules used for the Born 
-  !                   effective charges (character):            
+  !     zasr       :  Indicates type of Acoustic Sum Rules used for the Born
+  !                   effective charges (character):
   !                   - 'no': no Acoustic Sum Rules imposed (default)
-  !                   - 'simple':  previous implementation of the asr used 
-  !                     (3 translational asr imposed by correction of 
+  !                   - 'simple':  previous implementation of the asr used
+  !                     (3 translational asr imposed by correction of
   !                     the diagonal elements of the force-constants matrix)
-  !                   - 'crystal': 3 translational asr imposed by optimized 
+  !                   - 'crystal': 3 translational asr imposed by optimized
   !                      correction of the IFC (projection).
   !                   - 'one-dim': 3 translational asr + 1 rotational asr
   !                     imposed by optimized correction of the IFC (the
@@ -50,15 +50,15 @@ PROGRAM q2r
   !                     will work only if this axis considered is one of
   !                     the cartesian axis).
   !                   - 'zero-dim': 3 translational asr + 3 rotational asr
-  !                     imposed by optimized correction of the IFC. 
+  !                     imposed by optimized correction of the IFC.
   !                   Note that in certain cases, not all the rotational asr
-  !                   can be applied (e.g. if there are only 2 atoms in a 
-  !                   molecule or if all the atoms are aligned, etc.). 
+  !                   can be applied (e.g. if there are only 2 atoms in a
+  !                   molecule or if all the atoms are aligned, etc.).
   !                   In these cases the supplementary asr are cancelled
   !                   during the orthonormalization procedure (see below).
   !
   !  If a file "fildyn"0 is not found, the code will ignore variable "fildyn"
-  !  and will try to read from the following cards the missing information 
+  !  and will try to read from the following cards the missing information
   !  on the q-point grid and file names:
   !     nr1,nr2,nr3:  dimensions of the FFT grid formed by the q-point grid
   !     nfile      :  number of files containing C(q_n), n=1,nfile
@@ -123,7 +123,7 @@ PROGRAM q2r
      !
      la2F=.false.
      !
-     CALL input_from_file ( ) 
+     CALL input_from_file ( )
      !
      READ ( 5, input )
      !
@@ -211,7 +211,7 @@ PROGRAM q2r
            lrigid1=lrigid
 
            CALL latgen(ibrav,celldm,at(1,1),at(1,2),at(1,3),omega)
-           at = at / celldm(1)  !  bring at in units of alat 
+           at = at / celldm(1)  !  bring at in units of alat
 
            CALL volume(celldm(1),at(1,1),at(1,2),at(1,3),omega)
            CALL recips(at(1,1),at(1,2),at(1,3),bg(1,1),bg(1,2),bg(1,3))
@@ -236,7 +236,7 @@ PROGRAM q2r
               iq = NINT(xq)
               !
               m(ipol)= MOD(iq,nr(ipol)) + 1
-              IF (m(ipol) .LT. 1) m(ipol) = m(ipol) + nr(ipol) 
+              IF (m(ipol) .LT. 1) m(ipol) = m(ipol) + nr(ipol)
            END DO
            IF (.NOT.lq) CALL errore('init','q not allowed',1)
 
@@ -289,7 +289,7 @@ PROGRAM q2r
         ELSE
            CALL write_dyn_mat_header( flfrc, ntyp, nat, ibrav, nspin_mag,  &
                 celldm, at, bg, omega, symm_type, atm, amass, tau, ityp,    &
-                m_loc, nqs) 
+                m_loc, nqs)
         ENDIF
         CALL write_ifc(nr1,nr2,nr3,nat,phid)
      ELSE
@@ -313,7 +313,7 @@ PROGRAM q2r
            WRITE(2,'(3f15.7)') ((zeu(i,j,na),j=1,3),i=1,3)
         END DO
      END IF
-     WRITE (2,'(4i4)') nr1, nr2, nr3 
+     WRITE (2,'(4i4)') nr1, nr2, nr3
      DO j1=1,3
         DO j2=1,3
            DO na1=1,nat
@@ -350,7 +350,7 @@ PROGRAM q2r
      DEALLOCATE (tau, ityp)
      !
   END IF
-  ! 
+  !
   CALL mp_barrier()
   !
   CALL mp_end()
@@ -457,7 +457,7 @@ SUBROUTINE gammaq2r( nqtot, nat, nr1, nr2, nr3, at )
      !
      WRITE(filea2F,*) deg, ef, dosscf
      write(filea2F,'(3i4)') nr1, nr2, nr3
-     
+
      do j1=1,3
         do j2=1,3
            do na1=1,nat
@@ -475,12 +475,12 @@ SUBROUTINE gammaq2r( nqtot, nat, nr1, nr2, nr3, at )
                  END DO
               end do  ! na2
            end do  ! na1
-        end do   !  j2 
+        end do   !  j2
      end do   ! j1
      close(filea2F)
 
      resi = SUM ( ABS ( AIMAG( gamout ) ) )
-     
+
      IF (resi > eps12) THEN
         WRITE (6,"(/5x,' fft-check warning: sum of imaginary terms = ',e12.7)") resi
      ELSE
@@ -521,8 +521,8 @@ SUBROUTINE read_file( nqs, xq, epsil, lrigid, &
   CHARACTER(LEN=9) symm_type1
   LOGICAL, SAVE :: first =.TRUE.
   !
-  READ(1,*) 
-  READ(1,*) 
+  READ(1,*)
+  READ(1,*)
   IF (first) THEN
      !
      ! read cell information from file
@@ -600,7 +600,7 @@ SUBROUTINE read_file( nqs, xq, epsil, lrigid, &
      IF (nqs.EQ.0) CALL errore('read',' stop with nqs=0 !!',1)
      q2 = xq(1,nqs)**2 + xq(2,nqs)**2 + xq(3,nqs)**2
      IF (q2.NE.0.d0) RETURN
-     DO WHILE (line(6:15).NE.'Dielectric') 
+     DO WHILE (line(6:15).NE.'Dielectric')
         READ(1,'(a)',err=200, END=200) line
      END DO
      lrigid=.TRUE.
@@ -618,15 +618,15 @@ SUBROUTINE read_file( nqs, xq, epsil, lrigid, &
      END DO
      RETURN
 200  WRITE (*,*) ' Dielectric Tensor not found'
-     lrigid=.FALSE.     
+     lrigid=.FALSE.
      RETURN
   END IF
   !
   nqs = nqs + 1
-  READ(1,*) 
+  READ(1,*)
   READ(1,'(a)') line
   READ(line(11:75),*) (xq(i,nqs),i=1,3)
-  READ(1,*) 
+  READ(1,*)
   !
   DO na=1,nat
      DO nb=1,nat
@@ -666,7 +666,7 @@ subroutine read_gamma (nqs, nat, ifn, xq, gaminp)
   !
   Do iq=1,nqs
      READ(ifn,*)
-     READ(ifn,*) 
+     READ(ifn,*)
      READ(ifn,*)
      READ(ifn,'(11X,3F14.9)')  (xq(i,iq),i=1,3)
      !     write(*,*) 'xq    ',iq,(xq(i,iq),i=1,3)
@@ -697,7 +697,7 @@ SUBROUTINE trasl( phid, phiq, nq, nr1, nr2, nr3, nat, m1, m2, m3 )
   USE kinds, ONLY : DP
   !
   IMPLICIT NONE
-  INTEGER, intent(in) ::  nr1, nr2, nr3, m1, m2, m3, nat, nq 
+  INTEGER, intent(in) ::  nr1, nr2, nr3, m1, m2, m3, nat, nq
   COMPLEX(DP), intent(in) :: phiq(3,3,nat,nat,48)
   COMPLEX(DP), intent(out) :: phid(nr1,nr2,nr3,3,3,nat,nat)
   !
@@ -715,7 +715,7 @@ SUBROUTINE trasl( phid, phiq, nq, nr1, nr2, nr3, nat, m1, m2, m3 )
      END DO
   END DO
   !
-  RETURN 
+  RETURN
 END SUBROUTINE trasl
 !----------------------------------------------------------------------
 subroutine set_zasr ( zasr, nr1,nr2,nr3, nat, ibrav, tau, zeu)
@@ -744,8 +744,8 @@ subroutine set_zasr ( zasr, nr1,nr2,nr3, nat, ibrav, tau, zeu)
   ! Initialization.
   ! n is the number of sum rules to be considered (if zasr.ne.'simple')
   ! and 'axis' is the rotation axis in the case of a 1D system
-  ! (i.e. the rotation axis is (Ox) if axis='1', (Oy) if axis='2' 
-  ! and (Oz) if axis='3') 
+  ! (i.e. the rotation axis is (Ox) if axis='1', (Oy) if axis='2'
+  ! and (Oz) if axis='3')
   !
   if((zasr.ne.'simple').and.(zasr.ne.'crystal').and.(zasr.ne.'one-dim') &
                        .and.(zasr.ne.'zero-dim')) then
@@ -790,7 +790,7 @@ subroutine set_zasr ( zasr, nr1,nr2,nr3, nat, ibrav, tau, zeu)
          end do
       end do
    else
-      ! generating the vectors of the orthogonal of the subspace to project 
+      ! generating the vectors of the orthogonal of the subspace to project
       ! the effective charges matrix on
       !
       zeu_u(:,:,:,:)=0.0d0
@@ -805,7 +805,7 @@ subroutine set_zasr ( zasr, nr1,nr2,nr3, nat, ibrav, tau, zeu)
       p=0
       do i=1,3
          do j=1,3
-            ! These are the 3*3 vectors associated with the 
+            ! These are the 3*3 vectors associated with the
             ! translational acoustic sum rules
             p=p+1
             zeu_u(p,i,j,:)=1.0d0
@@ -815,7 +815,7 @@ subroutine set_zasr ( zasr, nr1,nr2,nr3, nat, ibrav, tau, zeu)
       !
       if (n.eq.4) then
          do i=1,3
-            ! These are the 3 vectors associated with the 
+            ! These are the 3 vectors associated with the
             ! single rotational sum rule (1D system)
             p=p+1
             do na=1,nat
@@ -829,7 +829,7 @@ subroutine set_zasr ( zasr, nr1,nr2,nr3, nat, ibrav, tau, zeu)
       if (n.eq.6) then
          do i=1,3
             do j=1,3
-               ! These are the 3*3 vectors associated with the 
+               ! These are the 3*3 vectors associated with the
                ! three rotational sum rules (0D system - typ. molecule)
                p=p+1
                do na=1,nat
@@ -866,7 +866,7 @@ subroutine set_zasr ( zasr, nr1,nr2,nr3, nat, ibrav, tau, zeu)
          endif
       enddo
       !
-      ! Projection of the effective charge "vector" on the orthogonal of the 
+      ! Projection of the effective charge "vector" on the orthogonal of the
       ! subspace of the vectors verifying the sum rules
       !
       zeu_w(:,:,:)=0.0d0
@@ -916,14 +916,14 @@ subroutine set_zasr ( zasr, nr1,nr2,nr3, nat, ibrav, tau, zeu)
 subroutine sp_zeu(zeu_u,zeu_v,nat,scal)
   !-----------------------------------------------------------------------
   !
-  ! does the scalar product of two effective charges matrices zeu_u and zeu_v 
+  ! does the scalar product of two effective charges matrices zeu_u and zeu_v
   ! (considered as vectors in the R^(3*3*nat) space, and coded in the usual way)
   !
   implicit none
   integer i,j,na,nat
   real(8) zeu_u(3,3,nat)
   real(8) zeu_v(3,3,nat)
-  real(8) scal  
+  real(8) scal
   !
   !
   scal=0.0d0

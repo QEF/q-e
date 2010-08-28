@@ -10,7 +10,7 @@ subroutine drhodvloc (nu_i0, npe, drhoscf, wdyn)
   !-----------------------------------------------------------------------
   !
   !    This subroutine computes the contribution of the local
-  !    potential to the electronic term <psi|dv-e ds|dpsi> of the dynamical 
+  !    potential to the electronic term <psi|dv-e ds|dpsi> of the dynamical
   !    matrix. It can be used both for KB and for US pseudopotentials.
   !
   USE kinds,     ONLY : DP
@@ -43,7 +43,7 @@ subroutine drhodvloc (nu_i0, npe, drhoscf, wdyn)
   complex(DP), allocatable :: dvloc (:)
   ! d Vloc / dtau
 
-  allocate (dvloc( nrxxs))    
+  allocate (dvloc( nrxxs))
   dynwrk (:,:) = (0.d0, 0.d0)
   !
   ! We need a sum over all perturbations

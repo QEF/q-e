@@ -28,9 +28,10 @@ subroutine solve_e_fpol ( iw )
   USE cell_base,             ONLY : tpiba2
   USE klist,                 ONLY : lgauss, nkstot, wk, xk
   USE lsda_mod,              ONLY : lsda, nspin, current_spin, isk
+  USE fft_base,              ONLY : dffts
+  USE fft_interfaces,        ONLY : fwfft, invfft
   USE gvect,                 ONLY : nrxx, g
-  USE gsmooth,               ONLY : nrxxs, doublegrid, nls, &
-                                    nr1s,nr2s,nr3s,nrx1s,nrx2s,nrx3s
+  USE gsmooth,               ONLY : nrxxs, doublegrid, nls
   USE becmod,                ONLY : becp, calbec
   USE wvfct,                 ONLY : npw, npwx, nbnd, igk, g2kin, et
   USE uspp,                  ONLY : okvan, vkb
@@ -45,7 +46,7 @@ subroutine solve_e_fpol ( iw )
                                     lrdrho
   USE mp_global,             ONLY : inter_pool_comm, intra_pool_comm
   USE mp,                    ONLY : mp_sum
-  
+
   implicit none
 
   real(DP) ::  thresh, anorm, averlt, dr2
@@ -86,19 +87,19 @@ subroutine solve_e_fpol ( iw )
   if (lsda) call errore ('solve_e', ' LSDA not implemented', 1)
 
   call start_clock ('solve_e')
-  allocate (dvscfin( nrxx, nspin, 3))    
+  allocate (dvscfin( nrxx, nspin, 3))
   if (doublegrid) then
-     allocate (dvscfins(  nrxxs, nspin, 3))    
+     allocate (dvscfins(  nrxxs, nspin, 3))
   else
      dvscfins => dvscfin
   endif
-  allocate (dvscfout( nrxx , nspin, 3))    
-  allocate (dbecsum( nhm*(nhm+1)/2, nat, nspin, 3))    
-  allocate (auxg(npwx))    
-  allocate (aux1(nrxxs))    
-  allocate (ps  (nbnd,nbnd))    
+  allocate (dvscfout( nrxx , nspin, 3))
+  allocate (dbecsum( nhm*(nhm+1)/2, nat, nspin, 3))
+  allocate (auxg(npwx))
+  allocate (aux1(nrxxs))
+  allocate (ps  (nbnd,nbnd))
   ps (:,:) = (0.d0, 0.d0)
-  allocate (h_diag(npwx, nbnd))    
+  allocate (h_diag(npwx, nbnd))
 
   allocate (etc(nbnd, nkstot))
   etc(:,:) = CMPLX( et(:,:), iw ,kind=DP)
@@ -187,11 +188,11 @@ subroutine solve_e_fpol ( iw )
                  do ig = 1, npw
                     aux1 (nls(igk(ig)))=evc(ig,ibnd)
                  enddo
-                 call cft3s (aux1,nr1s,nr2s,nr3s,nrx1s,nrx2s,nrx3s,+2)
+                 CALL invfft ('Wave', aux1, dffts)
                  do ir = 1, nrxxs
                     aux1(ir)=aux1(ir)*dvscfins(ir,current_spin,ipol)
                  enddo
-                 call cft3s (aux1,nr1s,nr2s,nr3s,nrx1s,nrx2s,nrx3s,-2)
+                 CALL fwfft ('Wave', aux1, dffts)
                  do ig = 1, npwq
                     dvpsi(ig,ibnd)=dvpsi(ig,ibnd)+aux1(nls(igkq(ig)))
                  enddo
@@ -291,7 +292,7 @@ subroutine solve_e_fpol ( iw )
 #ifdef __PARA
      !
      !  The calculation of dbecsum is distributed across processors
-     !  (see addusdbec) - we sum over processors the contributions 
+     !  (see addusdbec) - we sum over processors the contributions
      !  coming from each slice of bands
      !
      call mp_sum ( dbecsum, intra_pool_comm )
@@ -326,7 +327,7 @@ subroutine solve_e_fpol ( iw )
         call dv_of_drho (0, dvscfout (1, 1, ipol), .false.)
      enddo
      !
-     !   mix the new potential with the old 
+     !   mix the new potential with the old
      !
      call mix_potential (2 * 3 * nrxx *nspin, dvscfout, dvscfin, alpha_mix ( &
           kter), dr2, 3 * tr2_ph, iter, nmix_ph, flmixdpot, convt)
@@ -341,7 +342,7 @@ subroutine solve_e_fpol ( iw )
      call newdq(dvscfin,3)
 
      averlt = DBLE (ltaver) / DBLE (lintercall)
-  
+
      tcpu = get_clock ('PHONON')
      WRITE( stdout, '(/,5x," iter # ",i3," total cpu time :",f8.1, &
           &      " secs   av.it.: ",f5.1)') iter, tcpu, averlt

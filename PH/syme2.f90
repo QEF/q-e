@@ -42,7 +42,7 @@ subroutine syme2 (dvsym)
   enddo
   dvsym (:,:,:,:) = (0.d0, 0.d0)
   !
-  !  symmmetrize 
+  !  symmmetrize
   !
   do kx = 1, nr3
   do jx = 1, nr2

@@ -66,7 +66,7 @@ SUBROUTINE initialize_ph()
   !
   CALL openfilq()
   !
-  !  Initialize all quantities which do not depend on the 
+  !  Initialize all quantities which do not depend on the
   !  linear response to the perturbation
   !
   CALL phq_init()
@@ -74,5 +74,5 @@ SUBROUTINE initialize_ph()
   CALL print_clock( 'PHONON' )
   !
   RETURN
-  
+
 END SUBROUTINE initialize_ph

@@ -16,7 +16,9 @@ subroutine addusldos (ldos, becsum1)
   !
   USE kinds, ONLY : DP
   USE ions_base, ONLY : nat, ityp, ntyp => nsp
-  USE gvect, ONLY : nrxx, nrx1, nrx2, nrx3, nr1, nr2, nr3, nl, &
+  use fft_base,  only: dfftp
+  use fft_interfaces, only: invfft
+  USE gvect, ONLY : nrxx, nl, &
                     eigts1, eigts2, eigts3, ig1, ig2, ig3, gg, g, ngm
   USE wavefunctions_module,  ONLY: psic
   USE uspp, ONLY: okvan
@@ -42,8 +44,8 @@ subroutine addusldos (ldos, becsum1)
   complex(DP), allocatable :: aux (:,:), qgm (:)
   ! work space
 
-  allocate (aux ( ngm , nspin_mag))    
-  allocate (ylmk0(ngm , lmaxq * lmaxq))    
+  allocate (aux ( ngm , nspin_mag))
+  allocate (ylmk0(ngm , lmaxq * lmaxq))
   allocate (qgm ( ngm))
   allocate (qmod( ngm))
 
@@ -88,7 +90,7 @@ subroutine addusldos (ldos, becsum1)
         do ig = 1, ngm
            psic (nl (ig) ) = aux (ig, is)
         enddo
-        call cft3 (psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1)
+        CALL invfft ('Dense', psic, dfftp)
         call daxpy (nrxx, 1.d0, psic, 2, ldos(1,is), 2 )
      enddo
   endif

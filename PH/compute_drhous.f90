@@ -22,8 +22,10 @@ subroutine compute_drhous (drhous, dbecsum, wgg, becq, alpq)
   USE uspp_param, ONLY : nhm
   USE lsda_mod,   ONLY : lsda, nspin, current_spin, isk
   USE klist,      ONLY : xk, wk
+  USE fft_base,   ONLY: dffts
+  USE fft_interfaces, ONLY: invfft
   USE gvect,      ONLY : nrxx
-  USE gsmooth,    ONLY : nrxxs, nr1s,nr2s,nr3s, nrx1s,nrx2s,nrx3s, nls
+  USE gsmooth,    ONLY : nrxxs, nls
   USE wvfct,      ONLY : npw, nbnd, igk
 
   USE qpoint,     ONLY : nksq, igkq, npwq, ikks, ikqs
@@ -38,7 +40,7 @@ subroutine compute_drhous (drhous, dbecsum, wgg, becq, alpq)
   !
 
   complex(DP) :: dbecsum (nhm * (nhm + 1) / 2, nat, nspin, 3 * nat) &
-       , drhous (nrxx, nspin, 3 * nat) 
+       , drhous (nrxx, nspin, 3 * nat)
   !output:the derivative of becsum
   ! output: add the orthogonality term
   type (bec_type) :: becq(nksq), & ! (nkb, nbnd)
@@ -70,7 +72,7 @@ subroutine compute_drhous (drhous, dbecsum, wgg, becq, alpq)
   if (.not.okvan) return
 
   call start_clock ('com_drhous')
-  allocate (evcr( nrxxs , nbnd))    
+  allocate (evcr( nrxxs , nbnd))
   !
   drhous(:,:,:) = (0.d0, 0.d0)
   dbecsum (:,:,:,:) = (0.d0, 0.d0)
@@ -105,7 +107,7 @@ subroutine compute_drhous (drhous, dbecsum, wgg, becq, alpq)
         do ig = 1, npw
            evcr (nls (igk (ig) ), ibnd) = evc (ig, ibnd)
         enddo
-        call cft3s (evcr (1, ibnd), nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s,+2)
+        CALL invfft ('Wave', evcr (:, ibnd), dffts)
      enddo
      !
      !   Read the wavefunctions at k+q

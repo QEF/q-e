@@ -41,7 +41,7 @@ subroutine hdiag( max_iter, avg_iter, xk_, et_ )
   ! number or repeated call to diagonalization in case of non convergence
   ! number of notconverged elements
   INTEGER, ALLOCATABLE :: btype(:)
-    ! type of band: valence (1) or conduction (0)  
+    ! type of band: valence (1) or conduction (0)
   REAl(DP), ALLOCATABLE :: h_prec(:)
     ! preconditioning matrix (diagonal)
 

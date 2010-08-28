@@ -102,7 +102,7 @@ subroutine cgsolve_all (h_psi, cg_psi, e, d0psi, dpsi, h_diag, &
   complex(DP) ::  dcgamma, dclambda
   !  the ratio between rho
   !  step length
-  complex(DP), external :: zdotc 
+  complex(DP), external :: zdotc
   !  the scalar product
   real(DP), allocatable :: rho (:), rhoold (:), eu (:), a(:), c(:)
   ! the residue
@@ -113,11 +113,11 @@ subroutine cgsolve_all (h_psi, cg_psi, e, d0psi, dpsi, h_diag, &
   !
   call start_clock ('cgsolve')
   allocate ( g(ndmx*npol,nbnd), t(ndmx*npol,nbnd), h(ndmx*npol,nbnd), &
-             hold(ndmx*npol ,nbnd) )    
-  allocate (a(nbnd), c(nbnd))    
-  allocate (conv ( nbnd))    
-  allocate (rho(nbnd),rhoold(nbnd))    
-  allocate (eu (  nbnd))    
+             hold(ndmx*npol ,nbnd) )
+  allocate (a(nbnd), c(nbnd))
+  allocate (conv ( nbnd))
+  allocate (rho(nbnd),rhoold(nbnd))
+  allocate (eu (  nbnd))
   !      WRITE( stdout,*) g,t,h,hold
 
   kter_eff = 0.d0
@@ -182,7 +182,7 @@ subroutine cgsolve_all (h_psi, cg_psi, e, d0psi, dpsi, h_diag, &
      do ibnd = 1, nbnd
         if (conv (ibnd) .eq.0) then
 !
-!          change sign to h 
+!          change sign to h
 !
            call dscal (2 * ndmx * npol, - 1.d0, h (1, ibnd), 1)
            if (iter.ne.1) then
@@ -192,7 +192,7 @@ subroutine cgsolve_all (h_psi, cg_psi, e, d0psi, dpsi, h_diag, &
 
 !
 ! here hold is used as auxiliary vector in order to efficiently compute t = A*h
-! it is later set to the current (becoming old) value of h 
+! it is later set to the current (becoming old) value of h
 !
            lbnd = lbnd+1
            call zcopy (ndmx*npol, h (1, ibnd), 1, hold (1, lbnd), 1)
@@ -234,7 +234,7 @@ subroutine cgsolve_all (h_psi, cg_psi, e, d0psi, dpsi, h_diag, &
            call zaxpy (ndmx*npol, dclambda, t(1,lbnd), 1, g(1,ibnd), 1)
            !
            !    save current (now old) h and rho for later use
-           ! 
+           !
            call zcopy (ndmx*npol, h(1,ibnd), 1, hold(1,ibnd), 1)
            rhoold (ibnd) = rho (ibnd)
         endif

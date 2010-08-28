@@ -43,7 +43,7 @@ subroutine symdvscf (nper, irr, dvtosym)
   if (nsymq == 1.and. (.not.minus_q) ) return
   call start_clock ('symdvscf')
 
-  allocate (dvsym(  nrx1 , nrx2 , nrx3 , nper))    
+  allocate (dvsym(  nrx1 , nrx2 , nrx3 , nper))
   !
   ! if necessary we symmetrize with respect to  S(irotmq)*q = -q + Gi
   !

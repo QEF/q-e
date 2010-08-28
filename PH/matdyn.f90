@@ -25,9 +25,9 @@ end Module ifconstants
 !---------------------------------------------------------------------
 PROGRAM matdyn
   !-----------------------------------------------------------------------
-  !  this program calculates the phonon frequencies for a list of generic 
-  !  q vectors starting from the interatomic force constants generated 
-  !  from the dynamical matrices as written by DFPT phonon code through 
+  !  this program calculates the phonon frequencies for a list of generic
+  !  q vectors starting from the interatomic force constants generated
+  !  from the dynamical matrices as written by DFPT phonon code through
   !  the companion program q2r
   !
   !  matdyn can generate a supercell of the original cell for mass
@@ -39,21 +39,21 @@ PROGRAM matdyn
   !     flfrc     file produced by q2r containing force constants (needed)
   !      asr      (character) indicates the type of Acoustic Sum Rule imposed
   !               - 'no': no Acoustic Sum Rules imposed (default)
-  !               - 'simple':  previous implementation of the asr used 
-  !                  (3 translational asr imposed by correction of 
+  !               - 'simple':  previous implementation of the asr used
+  !                  (3 translational asr imposed by correction of
   !                  the diagonal elements of the force constants matrix)
-  !               - 'crystal': 3 translational asr imposed by optimized 
+  !               - 'crystal': 3 translational asr imposed by optimized
   !                  correction of the force constants (projection).
   !               - 'one-dim': 3 translational asr + 1 rotational asr
   !                  imposed by optimized correction of the force constants
-  !                  (the rotation axis is the direction of periodicity; 
+  !                  (the rotation axis is the direction of periodicity;
   !                   it will work only if this axis considered is one of
   !                   the cartesian axis).
   !               - 'zero-dim': 3 translational asr + 3 rotational asr
   !                  imposed by optimized correction of the force constants
   !               Note that in certain cases, not all the rotational asr
-  !               can be applied (e.g. if there are only 2 atoms in a 
-  !               molecule or if all the atoms are aligned, etc.). 
+  !               can be applied (e.g. if there are only 2 atoms in a
+  !               molecule or if all the atoms are aligned, etc.).
   !               In these cases the supplementary asr are cancelled
   !               during the orthonormalization procedure (see below).
   !     dos       if .true. calculate phonon Density of States (DOS)
@@ -63,7 +63,7 @@ PROGRAM matdyn
   !               supplied in input
   !     nk1,nk2,nk3  uniform q-point grid for DOS calculation (includes q=0)
   !     deltaE    energy step, in cm^(-1), for DOS calculation: from min
-  !               to max phonon energy (default: 1 cm^(-1) if ndos is 
+  !               to max phonon energy (default: 1 cm^(-1) if ndos is
   !               not specified)
   !     ndos      number of energy steps for DOS calculations
   !               (no default: calculated from deltaE if not specified)
@@ -72,7 +72,7 @@ PROGRAM matdyn
   !               and is normalised to 3*nat, i.e. the number of phonons
   !     flfrq     output file for frequencies (default: 'matdyn.freq')
   !     flvec     output file for normal modes (default: 'matdyn.modes')
-  !     at        supercell lattice vectors - must form a superlattice of the 
+  !     at        supercell lattice vectors - must form a superlattice of the
   !               original lattice
   !     l1,l2,l3  supercell lattice vectors are original cell vectors
   !               multiplied by l1, l2, l3 respectively
@@ -90,14 +90,14 @@ PROGRAM matdyn
   !     (q(i,n), i=1,3)    nq q-points in 2pi/a units
   !  If q = 0, the direction qhat (q=>0) for the non-analytic part
   !  is extracted from the sequence of q-points as follows:
-  !     qhat = q(n) - q(n-1)  or   qhat = q(n) - q(n+1) 
+  !     qhat = q(n) - q(n-1)  or   qhat = q(n) - q(n+1)
   !  depending on which one is available and nonzero.
   !  For low-symmetry crystals, specify twice q = 0 in the list
   !  if you want to have q = 0 results for two different directions
   !
   USE kinds,      ONLY : DP
   USE mp,         ONLY : mp_start, mp_env, mp_end, mp_barrier
-  USE mp_global,  ONLY : nproc, mpime, mp_global_start  
+  USE mp_global,  ONLY : nproc, mpime, mp_global_start
   USE io_dyn_mat, ONLY : read_dyn_mat_param, read_dyn_mat_header, &
                          read_ifc_param, read_ifc
   USE cell_base,  ONLY : at, bg
@@ -155,7 +155,7 @@ PROGRAM matdyn
 
   !
   NAMELIST /input/ flfrc, amass, asr, flfrq, flvec, at, dos,  &
-       &           fldos, nk1, nk2, nk3, l1, l2, l3, ntyp, readtau, fltau, & 
+       &           fldos, nk1, nk2, nk3, l1, l2, l3, ntyp, readtau, fltau, &
                    la2F, ndos, DeltaE
   !
   !
@@ -172,9 +172,9 @@ PROGRAM matdyn
      dos = .FALSE.
      deltaE = 1.0d0
      ndos = 1
-     nk1 = 0 
-     nk2 = 0 
-     nk3 = 0 
+     nk1 = 0
+     nk2 = 0
+     nk3 = 0
      asr  ='no'
      readtau=.FALSE.
      flfrc=' '
@@ -199,7 +199,7 @@ PROGRAM matdyn
      !
      amass(:) = amass(:) * amconv
      !
-     ! read force constants 
+     ! read force constants
      !
      ntyp_blk = ntypx ! avoids fake out-of-bound error
      xmlifc=has_xml(flfrc)
@@ -236,7 +236,7 @@ PROGRAM matdyn
      end if
      !
      ! masses (for mass approximation)
-     ! 
+     !
      DO it=1,ntyp
         IF (amass(it) < 0.d0) THEN
            CALL errore ('matdyn','wrong mass in the namelist',it)
@@ -457,7 +457,7 @@ PROGRAM matdyn
      END IF
      !
      IF (dos) THEN
-        Emin = 0.0d0 
+        Emin = 0.0d0
         Emax = 0.0d0
         DO n=1,nq
            DO i=1, 3*nat
@@ -469,11 +469,11 @@ PROGRAM matdyn
         if (ndos > 1) then
            DeltaE = (Emax - Emin)/(ndos-1)
         else
-           ndos = NINT ( (Emax - Emin) / DeltaE + 1.51d0 )  
+           ndos = NINT ( (Emax - Emin) / DeltaE + 1.51d0 )
         end if
         OPEN (unit=2,file=fldos,status='unknown',form='formatted')
-        DO n= 1, ndos  
-           E = Emin + (n - 1) * DeltaE  
+        DO n= 1, ndos
+           E = Emin + (n - 1) * DeltaE
            CALL dos_t(freq, 1, 3*nat, nq, ntetra, tetra, E, DOSofE)
            !
            ! The factor 0.5 corrects for the factor 2 in dos_t,
@@ -505,7 +505,7 @@ PROGRAM matdyn
      DEALLOCATE ( freq)
      !
   END IF
-  ! 
+  !
   DEALLOCATE(num_rap_mode)
   DEALLOCATE(high_sym)
 
@@ -580,7 +580,7 @@ SUBROUTINE readfc ( flfrc, nr1, nr2, nr3, epsil, nat,    &
   IF (has_zstar) THEN
      READ(1,*) ((epsil(i,j),j=1,3),i=1,3)
      DO na=1,nat
-        READ(1,*) 
+        READ(1,*)
         READ(1,*) ((zeu(i,j,na),j=1,3),i=1,3)
      END DO
   ELSE
@@ -619,7 +619,7 @@ END SUBROUTINE readfc
 SUBROUTINE frc_blk(dyn,q,tau,nat,nr1,nr2,nr3,frc,at,bg,rws,nrws)
   !-----------------------------------------------------------------------
   ! calculates the dynamical matrix at q from the (short-range part of the)
-  ! force constants 
+  ! force constants
   !
   USE kinds,      ONLY : DP
   USE constants,  ONLY : tpi
@@ -783,7 +783,7 @@ SUBROUTINE set_asr (asr, nr1, nr2, nr3, frc, zeu, nat, ibrav, tau)
   type vector
      real(DP),pointer :: vec(:,:,:,:,:,:,:)
   end type vector
-  ! 
+  !
   type (vector) u(6*3*nat)
   ! These are the "vectors" associated with the sum rules on force-constants
   !
@@ -793,13 +793,13 @@ SUBROUTINE set_asr (asr, nr1, nr2, nr3, frc, zeu, nat, ibrav, tau)
   !
   integer, allocatable :: ind_v(:,:,:)
   real(DP), allocatable :: v(:,:)
-  ! These are the "vectors" associated with symmetry conditions, coded by 
+  ! These are the "vectors" associated with symmetry conditions, coded by
   ! indicating the positions (i.e. the seven indices) of the non-zero elements (there
   ! should be only 2 of them) and the value of that element. We do so in order
-  ! to limit the amount of memory used. 
+  ! to limit the amount of memory used.
   !
   real(DP), allocatable :: w(:,:,:,:,:,:,:), x(:,:,:,:,:,:,:)
-  ! temporary vectors and parameters  
+  ! temporary vectors and parameters
   real(DP) :: scal,norm2, sum
   !
   real(DP) :: zeu_u(6*3,3,3,nat)
@@ -814,7 +814,7 @@ SUBROUTINE set_asr (asr, nr1, nr2, nr3, frc, zeu, nat, ibrav, tau)
 
   ! Initialization. n is the number of sum rules to be considered (if asr.ne.'simple')
   ! and 'axis' is the rotation axis in the case of a 1D system
-  ! (i.e. the rotation axis is (Ox) if axis='1', (Oy) if axis='2' and (Oz) if axis='3') 
+  ! (i.e. the rotation axis is (Ox) if axis='1', (Oy) if axis='2' and (Oz) if axis='3')
   !
   if((asr.ne.'simple').and.(asr.ne.'crystal').and.(asr.ne.'one-dim') &
                       .and.(asr.ne.'zero-dim')) then
@@ -824,7 +824,7 @@ SUBROUTINE set_asr (asr, nr1, nr2, nr3, frc, zeu, nat, ibrav, tau)
   if(asr.eq.'simple') then
      !
      ! Simple Acoustic Sum Rule on effective charges
-     !     
+     !
      do i=1,3
         do j=1,3
            sum=0.0d0
@@ -858,7 +858,7 @@ SUBROUTINE set_asr (asr, nr1, nr2, nr3, frc, zeu, nat, ibrav, tau)
          end do
       end do
       !
-      return 
+      return
       !
    end if
 
@@ -888,7 +888,7 @@ SUBROUTINE set_asr (asr, nr1, nr2, nr3, frc, zeu, nat, ibrav, tau)
   !
   ! Acoustic Sum Rule on effective charges
   !
-  ! generating the vectors of the orthogonal of the subspace to project 
+  ! generating the vectors of the orthogonal of the subspace to project
   ! the effective charges matrix on
   !
   zeu_u(:,:,:,:)=0.0d0
@@ -903,7 +903,7 @@ SUBROUTINE set_asr (asr, nr1, nr2, nr3, frc, zeu, nat, ibrav, tau)
   p=0
   do i=1,3
      do j=1,3
-        ! These are the 3*3 vectors associated with the 
+        ! These are the 3*3 vectors associated with the
         ! translational acoustic sum rules
         p=p+1
         zeu_u(p,i,j,:)=1.0d0
@@ -913,7 +913,7 @@ SUBROUTINE set_asr (asr, nr1, nr2, nr3, frc, zeu, nat, ibrav, tau)
   !
   if (n.eq.4) then
      do i=1,3
-        ! These are the 3 vectors associated with the 
+        ! These are the 3 vectors associated with the
         ! single rotational sum rule (1D system)
         p=p+1
         do na=1,nat
@@ -927,7 +927,7 @@ SUBROUTINE set_asr (asr, nr1, nr2, nr3, frc, zeu, nat, ibrav, tau)
   if (n.eq.6) then
      do i=1,3
         do j=1,3
-           ! These are the 3*3 vectors associated with the 
+           ! These are the 3*3 vectors associated with the
            ! three rotational sum rules (0D system - typ. molecule)
            p=p+1
            do na=1,nat
@@ -964,7 +964,7 @@ SUBROUTINE set_asr (asr, nr1, nr2, nr3, frc, zeu, nat, ibrav, tau)
      endif
   enddo
   !
-  ! Projection of the effective charge "vector" on the orthogonal of the 
+  ! Projection of the effective charge "vector" on the orthogonal of the
   ! subspace of the vectors verifying the sum rules
   !
   zeu_w(:,:,:)=0.0d0
@@ -1008,7 +1008,7 @@ SUBROUTINE set_asr (asr, nr1, nr2, nr3, frc, zeu, nat, ibrav, tau)
   ! Acoustic Sum Rule on force constants
   !
   !
-  ! generating the vectors of the orthogonal of the subspace to project 
+  ! generating the vectors of the orthogonal of the subspace to project
   ! the force-constants matrix on
   !
   do k=1,18*nat
@@ -1036,7 +1036,7 @@ SUBROUTINE set_asr (asr, nr1, nr2, nr3, frc, zeu, nat, ibrav, tau)
   do i=1,3
      do j=1,3
         do na=1,nat
-           ! These are the 3*3*nat vectors associated with the 
+           ! These are the 3*3*nat vectors associated with the
            ! translational acoustic sum rules
            p=p+1
            u(p) % vec (:,:,:,i,j,na,:)=1.0d0
@@ -1048,7 +1048,7 @@ SUBROUTINE set_asr (asr, nr1, nr2, nr3, frc, zeu, nat, ibrav, tau)
   if (n.eq.4) then
      do i=1,3
         do na=1,nat
-           ! These are the 3*nat vectors associated with the 
+           ! These are the 3*nat vectors associated with the
            ! single rotational sum rule (1D system)
            p=p+1
            do nb=1,nat
@@ -1064,7 +1064,7 @@ SUBROUTINE set_asr (asr, nr1, nr2, nr3, frc, zeu, nat, ibrav, tau)
      do i=1,3
         do j=1,3
            do na=1,nat
-              ! These are the 3*3*nat vectors associated with the 
+              ! These are the 3*3*nat vectors associated with the
               ! three rotational sum rules (0D system - typ. molecule)
               p=p+1
               do nb=1,nat
@@ -1189,7 +1189,7 @@ SUBROUTINE set_asr (asr, nr1, nr2, nr3, frc, zeu, nat, ibrav, tau)
      endif
   enddo
   !
-  ! Projection of the force-constants "vector" on the orthogonal of the 
+  ! Projection of the force-constants "vector" on the orthogonal of the
   ! subspace of the vectors verifying the sum rules and symmetry contraints
   !
   w(:,:,:,:,:,:,:)=0.0d0
@@ -1267,7 +1267,7 @@ end subroutine set_asr
 subroutine sp_zeu(zeu_u,zeu_v,nat,scal)
   !-----------------------------------------------------------------------
   !
-  ! does the scalar product of two effective charges matrices zeu_u and zeu_v 
+  ! does the scalar product of two effective charges matrices zeu_u and zeu_v
   ! (considered as vectors in the R^(3*3*nat) space, and coded in the usual way)
   !
   USE kinds, ONLY: DP
@@ -1275,7 +1275,7 @@ subroutine sp_zeu(zeu_u,zeu_v,nat,scal)
   integer i,j,na,nat
   real(DP) zeu_u(3,3,nat)
   real(DP) zeu_v(3,3,nat)
-  real(DP) scal  
+  real(DP) scal
   !
   !
   scal=0.0d0
@@ -1304,7 +1304,7 @@ subroutine sp1(u,v,nr1,nr2,nr3,nat,scal)
   integer nr1,nr2,nr3,i,j,na,nb,n1,n2,n3,nat
   real(DP) u(nr1,nr2,nr3,3,3,nat,nat)
   real(DP) v(nr1,nr2,nr3,3,3,nat,nat)
-  real(DP) scal  
+  real(DP) scal
   !
   !
   scal=0.0d0
@@ -1334,7 +1334,7 @@ subroutine sp2(u,v,ind_v,nr1,nr2,nr3,nat,scal)
   !
   ! does the scalar product of two force-constants matrices u and v (considered as
   ! vectors in the R^(3*3*nat*nat*nr1*nr2*nr3) space). u is coded in the usual way
-  ! but v is coded as explained when defining the vectors corresponding to the 
+  ! but v is coded as explained when defining the vectors corresponding to the
   ! symmetry constraints
   !
   USE kinds, ONLY: DP
@@ -1343,7 +1343,7 @@ subroutine sp2(u,v,ind_v,nr1,nr2,nr3,nat,scal)
   real(DP) u(nr1,nr2,nr3,3,3,nat,nat)
   integer ind_v(2,7)
   real(DP) v(2)
-  real(DP) scal  
+  real(DP) scal
   !
   !
   scal=0.0d0
@@ -1362,15 +1362,15 @@ subroutine sp3(u,v,i,na,nr1,nr2,nr3,nat,scal)
   !
   ! like sp1, but in the particular case when u is one of the u(k)%vec
   ! defined in set_asr (before orthonormalization). In this case most of the
-  ! terms are zero (the ones that are not are characterized by i and na), so 
-  ! that a lot of computer time can be saved (during Gram-Schmidt). 
+  ! terms are zero (the ones that are not are characterized by i and na), so
+  ! that a lot of computer time can be saved (during Gram-Schmidt).
   !
   USE kinds, ONLY: DP
   implicit none
   integer nr1,nr2,nr3,i,j,na,nb,n1,n2,n3,nat
   real(DP) u(nr1,nr2,nr3,3,3,nat,nat)
   real(DP) v(nr1,nr2,nr3,3,3,nat,nat)
-  real(DP) scal  
+  real(DP) scal
   !
   !
   scal=0.0d0
@@ -1624,7 +1624,7 @@ SUBROUTINE write_tau(fltau,nat,tau,ityp)
   END DO
   CLOSE (4)
   !
-  RETURN 
+  RETURN
 END SUBROUTINE write_tau
 !
 !-----------------------------------------------------------------------
@@ -1638,11 +1638,11 @@ SUBROUTINE gen_qpoints (ibrav, at_, bg_, nat, tau, ityp, nk1, nk2, nk3, &
                          nrot, t_rev, time_reversal,  sname
   !
   IMPLICIT NONE
-  ! input 
+  ! input
   INTEGER :: ibrav, nat, nk1, nk2, nk3, ntetra, ityp(*)
   REAL(DP) :: at_(3,3), bg_(3,3), tau(3,nat)
   character(LEN=9)    :: symm_type
-  ! output 
+  ! output
   INTEGER :: nqx, nq, tetra(4,ntetra)
   REAL(DP) :: q(3,nqx)
   ! local
@@ -1702,7 +1702,7 @@ SUBROUTINE a2Fdos &
 
   real(DP)                 :: lambda, dos_a2F(50), temp, dos_ee(10), dos_tot, &
                               deg(10), fermi(10), E
-  real(DP), parameter      :: eps_w2 = 0.0000001d0 
+  real(DP), parameter      :: eps_w2 = 0.0000001d0
   integer                  :: isig, ifn, n, m, na, nb, nc, nu, nmodes, &
                               i,j,k, ngauss, jsig, p1, p2, p3, filea2F
   character(len=14)        :: name
@@ -1724,7 +1724,7 @@ SUBROUTINE a2Fdos &
      write(400,*)
   ELSE
      open (20,file='gam.lines' ,status='unknown')
-     write(20,*) 
+     write(20,*)
      write(20,*) ' Gamma lines for all modes [THz] '
      write(20,*)
      write(6,*)
@@ -1738,7 +1738,7 @@ SUBROUTINE a2Fdos &
   !
   frcg(:,:,:,:,:,:,:) = 0.d0
   DO isig = 1, 10
-     filea2F = 60 + isig 
+     filea2F = 60 + isig
      CALL readfg ( filea2F, nr1, nr2, nr3, nat, frcg )
      !
      if ( asr /= 'no') then
@@ -1788,7 +1788,7 @@ SUBROUTINE a2Fdos &
      ! after we know gamma(q) and lambda(q) calculate  DOS(omega) for spectrum a2F
      !
      if(dos) then
-        ! 
+        !
         if(isig.le.9) then
            write(name,'(A8,I1.1)') 'a2F.dos.',isig
         else
@@ -1805,9 +1805,9 @@ SUBROUTINE a2Fdos &
         !      correction for small frequencies
         !
         do n = 1, nq
-           do i = 1, nmodes 
+           do i = 1, nmodes
               if (freq(i,n).LE.eps_w2) then
-                 gamma(i,n) = 0.0d0                 
+                 gamma(i,n) = 0.0d0
               endif
            enddo
         enddo
@@ -1816,7 +1816,7 @@ SUBROUTINE a2Fdos &
         do n= 1, ndos
            !
            E = Emin + (n-1)*DeltaE + 0.5d0*DeltaE
-           dos_tot = 0.0d0 
+           dos_tot = 0.0d0
            do j=1,nmodes
               !
               dos_a2F(j) = dos_gam(nmodes, nq, j, ntetra, tetra, &
@@ -1825,7 +1825,7 @@ SUBROUTINE a2Fdos &
               dos_tot = dos_tot + dos_a2F(j)
               !
            enddo
-           lambda = lambda + 2.d0 * dos_tot/E * DeltaE 
+           lambda = lambda + 2.d0 * dos_tot/E * DeltaE
            write (ifn, 1050) E, dos_tot, (dos_a2F(j),j=1,nmodes)
         enddo  !ndos
         write(ifn,*) " lambda =",lambda,'   Delta = ',DeltaE
@@ -1923,7 +1923,7 @@ subroutine setgam (q, gam, nat, at,bg,tau,itau_blk,nsc,alat, &
                  gam(i,j,na,nb) = gam(i,j,na,nb) + cfac(nb) * &
                      gam_blk(i,j,na_blk,nb_blk)
               end do ! j
-              end do ! i 
+              end do ! i
         end do ! nb
      end do ! na
      !
@@ -1936,9 +1936,9 @@ end subroutine setgam
 function dos_gam (nbndx, nq, jbnd, ntetra, tetra, gamma, et, ef)
   !--------------------------------------------------------------------
   ! calculates weights with the tetrahedron method (Bloechl version)
-  ! this subroutine is based on tweights.f90 belonging to PW 
+  ! this subroutine is based on tweights.f90 belonging to PW
   ! it calculates a2F on the surface of given frequency <=> histogram
-  ! Band index means the frequency mode here 
+  ! Band index means the frequency mode here
   ! and "et" means the frequency(mode,q-point)
   !
   USE kinds,       ONLY: DP
@@ -1948,7 +1948,7 @@ function dos_gam (nbndx, nq, jbnd, ntetra, tetra, gamma, et, ef)
   !
   integer :: nq, nbndx, ntetra, tetra(4,ntetra), jbnd
   real(DP) :: et(nbndx,nq), gamma(nbndx,nq), func
-  
+
   real(DP) :: ef
   real(DP) :: e1, e2, e3, e4, c1, c2, c3, c4, etetra(4)
   integer      :: ik, ibnd, nt, nk, ns, i, ik1, ik2, ik3, ik4, itetra(4)
@@ -1993,13 +1993,13 @@ function dos_gam (nbndx, nq, jbnd, ntetra, tetra, gamma, et, ef)
      Y2  = gamma(ibnd,ik2)/et(ibnd,ik2)
      Y3  = gamma(ibnd,ik3)/et(ibnd,ik3)
      Y4  = gamma(ibnd,ik4)/et(ibnd,ik4)
-     
+
      IF ( e3 < ef .and. ef < e4) THEN
-        
+
         f14 = (ef-e4)/(e1-e4)
         f24 = (ef-e4)/(e2-e4)
         f34 = (ef-e4)/(e3-e4)
-        
+
         G  =  3.0_dp * f14 * f24 * f34 / (e4-ef)
         P1 =  f14 * o13
         P2 =  f24 * o13
@@ -2007,7 +2007,7 @@ function dos_gam (nbndx, nq, jbnd, ntetra, tetra, gamma, et, ef)
         P4 =  (3.0_dp - f14 - f24 - f34 ) * o13
 
      ELSE IF ( e2 < ef .and. ef < e3 ) THEN
-        
+
         f13 = (ef-e3)/(e1-e3)
         f31 = 1.0_dp - f13
         f14 = (ef-e4)/(e1-e4)
@@ -2016,29 +2016,29 @@ function dos_gam (nbndx, nq, jbnd, ntetra, tetra, gamma, et, ef)
         f32 = 1.0_dp - f23
         f24 = (ef-e4)/(e2-e4)
         f42 = 1.0_dp - f24
-        
+
         G   =  3.0_dp * (f23*f31 + f32*f24)
         P1  =  f14 * o13 + f13*f31*f23 / G
         P2  =  f23 * o13 + f24*f24*f32 / G
         P3  =  f32 * o13 + f31*f31*f23 / G
         P4  =  f41 * o13 + f42*f24*f32 / G
         G   =  G / (e4-e1)
-        
+
      ELSE IF ( e1 < ef .and. ef < e2 ) THEN
-        
+
         f12 = (ef-e2)/(e1-e2)
         f21 = 1.0_dp - f12
         f13 = (ef-e3)/(e1-e3)
         f31 = 1.0_dp - f13
         f14 = (ef-e4)/(e1-e4)
         f41 = 1.0_dp - f14
-        
+
         G  =  3.0_dp * f21 * f31 * f41 / (ef-e1)
         P1 =  o13 * (f12 + f12 + f14)
         P2 =  o13 * f21
         P3 =  o13 * f31
         P4 =  o13 * f41
-        
+
      ELSE
 
         G = 0.0_dp
@@ -2046,12 +2046,12 @@ function dos_gam (nbndx, nq, jbnd, ntetra, tetra, gamma, et, ef)
      END IF
 
      Tint = Tint + G * (Y1*P1 + Y2*P2 + Y3*P3 + Y4*P4) * vol
-     
+
   enddo   ! ntetra
 
 
   dos_gam = Tint  !2 because DOS_ee is per 1 spin
-  
+
   return
 end function dos_gam
 !
@@ -2079,7 +2079,7 @@ subroutine readfg ( ifn, nr1, nr2, nr3, nat, frcg )
            do nb=1,nat
               read (ifn,*) ibid, jbid, nabid, nbbid
               if(i.ne.ibid.or.j.ne.jbid.or.na.ne.nabid.or.nb.ne.nbbid)  then
-                  write(*,*) i,j,na,nb,'  <>  ', ibid, jbid, nabid, nbbid 
+                  write(*,*) i,j,na,nb,'  <>  ', ibid, jbid, nabid, nbbid
                   call errore  ('readfG','error in reading',1)
               else
                   read (ifn,*) (((m1bid, m2bid, m3bid,     &
@@ -2112,9 +2112,9 @@ SUBROUTINE find_representations_mode_q( nat, ntyp, xq, w2, u, tau, ityp, pmass,&
   REAL(DP), INTENT(IN) :: w2(3*nat)
   INTEGER, INTENT(IN) :: ityp(nat)
   COMPLEX(DP), INTENT(IN) :: u(3*nat,3*nat)
-  CHARACTER(15), INTENT(OUT) :: name_rap_mode(3*nat) 
+  CHARACTER(15), INTENT(OUT) :: name_rap_mode(3*nat)
   INTEGER, INTENT(OUT) :: num_rap_mode(3*nat)
-  REAL(DP) :: gi (3, 48), gimq (3), sr_is(3,3,48), rtau(3,48,nat) 
+  REAL(DP) :: gi (3, 48), gimq (3), sr_is(3,3,48), rtau(3,48,nat)
   INTEGER :: irgq (48), irotmq, nsymq, nsym_is, isym, i
   LOGICAL :: minus_q, search_sym, is_symmorphic, sym(48), magnetic_sym
 !
@@ -2149,7 +2149,7 @@ SUBROUTINE find_representations_mode_q( nat, ntyp, xq, w2, u, tau, ityp, pmass,&
 !  find the mode symmetry
 !
   IF (search_sym) THEN
-     magnetic_sym=(nspin_mag==4)   
+     magnetic_sym=(nspin_mag==4)
      CALL prepare_sym_analysis(nsymq,sr,t_rev,magnetic_sym)
      sym (1:nsym) = .TRUE.
      CALL sgam_ph (at, bg, nsym, s, irt, tau, rtau, nat, sym)

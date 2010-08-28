@@ -40,7 +40,7 @@ subroutine sym_dmage (dvsym)
      end do
   end do
   if (nsym == 1) return
-  allocate (aux(nrx1 , nrx2 , nrx3 , 3, 3))    
+  allocate (aux(nrx1 , nrx2 , nrx3 , 3, 3))
 
   do is = 2, 4
      do ipol = 1, 3

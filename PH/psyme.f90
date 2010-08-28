@@ -31,7 +31,7 @@ SUBROUTINE psyme (dvtosym)
     ! the potential to symmet
   !
   !
-  ALLOCATE (ddvtosym ( nrx1 * nrx2 * nrx3, nspin_mag, 3))    
+  ALLOCATE (ddvtosym ( nrx1 * nrx2 * nrx3, nspin_mag, 3))
   npp0 = 0
   DO i = 1, me_pool
      npp0 = npp0 + dfftp%npp (i)

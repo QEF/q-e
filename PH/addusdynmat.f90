@@ -75,8 +75,8 @@ subroutine addusdynmat (dynwrk)
                           DO is2=1,npol
                              ijs=ijs+1
                              dynwrk(nu_i, nu_j)=dynwrk(nu_i, nu_j)  + &
-                                  int4_nc(ih,jh,ipol,jpol,na,ijs)   * & 
-                                  becsum_nc(ijh,na,is1,is2)  
+                                  int4_nc(ih,jh,ipol,jpol,na,ijs)   * &
+                                  becsum_nc(ijh,na,is1,is2)
                              IF (ih.NE.jh) THEN
                                 dynwrk(nu_i, nu_j)=dynwrk(nu_i, nu_j) + &
                                      int4_nc(jh,ih,ipol,jpol,na,ijs)  * &

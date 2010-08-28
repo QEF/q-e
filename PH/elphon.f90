@@ -47,7 +47,7 @@ SUBROUTINE elphon()
         DO is = 1, nspin
            DO ipert = 1, npert(irr)
               CALL cinterpolate (dvscfin(1,is,ipert),dvscfins(1,is,ipert),-1)
-           ENDDO 
+           ENDDO
         ENDDO
      ELSE
         dvscfins => dvscfin
@@ -191,8 +191,8 @@ SUBROUTINE elphel (npe, imode0, dvscfins)
   COMPLEX(DP) , ALLOCATABLE :: aux1 (:), elphmat (:,:,:)
   COMPLEX(DP) :: zdotc
   !
-  ALLOCATE (aux1    ( nrxxs))    
-  ALLOCATE (elphmat ( nbnd , nbnd , npe))    
+  ALLOCATE (aux1    ( nrxxs))
+  ALLOCATE (elphmat ( nbnd , nbnd , npe))
   !
   !  Start the loops over the k-points
   !
@@ -296,7 +296,7 @@ SUBROUTINE elphsum ( )
   !
   !      Sum over BZ of the electron-phonon matrix elements el_ph_mat
   !      Original routine written by Francesco Mauri, modified by PG
-  !      New version by  Malgorzata Wierzbowska 
+  !      New version by  Malgorzata Wierzbowska
   !
   USE kinds,     ONLY : DP
   USE constants, ONLY : pi, rytoev
@@ -404,7 +404,7 @@ SUBROUTINE elphsum ( )
   !
   do isig=1,nsig
      !
-     ! recalculate Ef = effit and DOS at Ef N(Ef) = dosfit using dense grid 
+     ! recalculate Ef = effit and DOS at Ef N(Ef) = dosfit using dense grid
      ! for value "deg" of gaussian broadening
      !
      deg(isig) = isig * 0.005d0
@@ -439,7 +439,7 @@ SUBROUTINE elphsum ( )
   if (abs(qz-nk3fit*xq(3)) > eps) &
        call errore('elphsum','q is not a vector in the dense grid',3)
   if (qz < 0) qz = qz + nk3fit
-  if (qz > nk3fit) qz = qz - nk3fit  
+  if (qz > nk3fit) qz = qz - nk3fit
   call cryst_to_cart (1, xq, bg, 1)
   !
   eqqfit(:) = 0
@@ -447,11 +447,11 @@ SUBROUTINE elphsum ( )
      do j=1,nk2fit
         do k=1,nk3fit
            ik = k-1 + (j-1)*nk3fit + (i-1)*nk2fit*nk3fit + 1
-           iq = i+qx 
+           iq = i+qx
            if (iq > nk1fit) iq = iq - nk1fit
-           jq = j+qy 
+           jq = j+qy
            if (jq > nk2fit) jq = jq - nk2fit
-           kq = k+qz 
+           kq = k+qz
            if (kq > nk3fit) kq = kq - nk3fit
            nn = (kq-1)+(jq-1)*nk3fit+(iq-1)*nk2fit*nk3fit + 1
            eqqfit(ik) = eqkfit(nn)
@@ -461,7 +461,7 @@ SUBROUTINE elphsum ( )
   !
   ! calculate the electron-phonon coefficient using the dense grid
   !
-  nti  = nk1fit/nk1 
+  nti  = nk1fit/nk1
   ntj  = nk2fit/nk2
   ntk  = nk3fit/nk3
   nkBZ  = nk1*nk2*nk3
@@ -530,14 +530,14 @@ SUBROUTINE elphsum ( )
                     ctemp(ik) = noint(ik)* wqa * w0g1 * w0g2
                  enddo
                  gf(ipert,jpert,isig) = gf(ipert,jpert,isig) + &
-                      SUM (ctemp) 
-              enddo ! isig 
+                      SUM (ctemp)
+              enddo ! isig
            enddo    ! ipert
         enddo    !jpert
         deallocate (point, noint, ctemp)
         deallocate (g2)
-        ! 
-     enddo    ! ibnd 
+        !
+     enddo    ! ibnd
   enddo    ! jbnd
 
   deallocate (eqqfit, eqkfit)
@@ -615,7 +615,7 @@ SUBROUTINE elphsum ( )
   !
   do isig=1,nsig
      write(name,"(A7,I2)") 'a2Fq2r.',50 + isig
-     if (ionode) then 
+     if (ionode) then
         iuelph = 4
         open(iuelph, file=name, STATUS = 'unknown', FORM = 'formatted', &
              POSITION='append')
@@ -633,7 +633,7 @@ SUBROUTINE elphsum ( )
      if (ionode) CLOSE( UNIT = iuelph, STATUS = 'KEEP' )
   enddo
   deallocate (gf)
-  !    
+  !
 9000 FORMAT(5x,'Gaussian Broadening: ',f7.3,' Ry, ngauss=',i4)
 9005 FORMAT(5x,'DOS =',f10.6,' states/spin/Ry/Unit Cell at Ef=', &
           &       f10.6,' eV')

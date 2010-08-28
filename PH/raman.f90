@@ -33,7 +33,7 @@ subroutine raman
      write (6,'(/,5x,''Skipping computation of Pc [DH,Drho] |psi> '')')
   ELSE
      write (6,'(/,5x,''Computing Pc [DH,Drho] |psi> '')')
-     call dhdrhopsi ( ) 
+     call dhdrhopsi ( )
   END IF
   !
   ! Computes the electro-optic tensor
@@ -44,7 +44,7 @@ subroutine raman
   !
   ! Computes the potential that remains unchanged in the scf-cycle
   !
-  call dvpsi_e2 ( ) 
+  call dvpsi_e2 ( )
   !
   ! Self-consistent cycle to compute the second derivative of the charge
   !

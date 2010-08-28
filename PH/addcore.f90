@@ -16,8 +16,9 @@ subroutine addcore (mode, drhoc)
   use uspp_param, only: upf
   use ions_base, only: nat, ityp
   use cell_base, only: tpiba
-  use gvect, only: ngm, nrxx, nrx1, nrx2, nrx3, nr1, nr2, nr3, nl, &
-       ig1, ig2, ig3, eigts1, eigts2, eigts3, g
+  use fft_base,  only: dfftp
+  use fft_interfaces, only: invfft
+  use gvect, only: ngm, nrxx, nl, ig1, ig2, ig3, eigts1, eigts2, eigts3, g
   use modes, only: u
   use qpoint, only: eigqts, xq
   use nlcc_ph, only: nlcc_any, drc
@@ -68,7 +69,7 @@ subroutine addcore (mode, drhoc)
   !
   !   transform to real space
   !
-  call cft3 (drhoc, nr1, nr2, nr3, nrx1, nrx2, nrx3, + 1)
+  CALL invfft ('Dense', drhoc, dfftp)
   !
   return
 

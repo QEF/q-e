@@ -63,9 +63,9 @@ SUBROUTINE punch_plot_e()
   !
   !    reads drho from the file
   !
-  ALLOCATE (aux  (  nrxx,nspin_mag,3))    
-  ALLOCATE (aux1 (  nrxx,nspin_mag,3))    
-  ALLOCATE (raux (  nrxx))    
+  ALLOCATE (aux  (  nrxx,nspin_mag,3))
+  ALLOCATE (aux1 (  nrxx,nspin_mag,3))
+  ALLOCATE (raux (  nrxx))
   !
   !     reads the delta_rho on the aux variable
   !
@@ -121,7 +121,7 @@ SUBROUTINE punch_plot_e()
      IF (lsda) CALL daxpy (nrxx, 1.d0, aux1 (1,2, ipol), 2, raux, 1)
      !
 #if defined (__PARA)
-     ALLOCATE (raux1( nrx1 * nrx2 * nrx3))    
+     ALLOCATE (raux1( nrx1 * nrx2 * nrx3))
      CALL grid_gather (raux, raux1)
      IF ( ionode ) WRITE (iunplot, '(5(1pe17.9))') &
           (raux1 (ir) , ir = 1, nrx1 * nrx2 * nrx3)

@@ -59,8 +59,8 @@ subroutine addnlcc (imode0, drhoscf, npe)
 
   if (.not.nlcc_any) return
 
-  allocate (drhoc(  nrxx))    
-  allocate (dvaux(  nrxx , nspin_mag))    
+  allocate (drhoc(  nrxx))
+  allocate (dvaux(  nrxx , nspin_mag))
 
   dyn1 (:,:) = (0.d0, 0.d0)
 !
@@ -98,8 +98,8 @@ subroutine addnlcc (imode0, drhoscf, npe)
      !
      if ( dft_is_gradient() ) &
        call dgradcorr (rho%of_r, grho, dvxc_rr, dvxc_sr, dvxc_ss, dvxc_s, xq, &
-          drhoscf (1, 1, ipert), nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, &
-          nspin_mag, nspin_gga, nl, ngm, g, alat, dvaux)
+          drhoscf (1, 1, ipert), nrxx, nspin_mag, nspin_gga, nl, ngm, g, alat,&
+          dvaux)
      do is = 1, nspin_lsda
         call daxpy (2 * nrxx, - fac, drhoc, 1, drhoscf (1, is, ipert), 1)
      enddo
@@ -125,7 +125,7 @@ subroutine addnlcc (imode0, drhoscf, npe)
   !
   call mp_sum ( dyn1, intra_pool_comm )
 #endif
-  dyn (:,:) = dyn(:,:) + dyn1(:,:) 
+  dyn (:,:) = dyn(:,:) + dyn1(:,:)
   dyn_rec(:,:)=dyn_rec(:,:)+dyn1(:,:)
   deallocate (dvaux)
   deallocate (drhoc)

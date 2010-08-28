@@ -40,7 +40,7 @@ subroutine ccg_psi (lda, n, m, psi, h_diag, flag)
          psi (i, k) = psi (i, k) * CONJG(h_diag (i, k))
        else
          print*, 'flag is neither 1 nor -1. Stop'
-       endif  
+       endif
      enddo
   enddo
   return

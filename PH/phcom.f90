@@ -8,7 +8,7 @@
 !----------------------------------------------------------------------------
 !
 ! ... Common variables for the phonon program
-!  
+!
 MODULE modes
   USE kinds,  ONLY : DP
   !
@@ -22,7 +22,7 @@ MODULE modes
   ! selects the symmetry sending q <-> -q+G
   ! number of irreducible representations contained in the dynamical matrix
   ! number of modes
-  ! number of crystal sym.ops. for q=0 
+  ! number of crystal sym.ops. for q=0
   INTEGER, ALLOCATABLE, TARGET :: npert(:) !3 * nat )
   ! the number of perturbations per IR
   INTEGER :: npertx
@@ -48,14 +48,14 @@ MODULE modes
   CHARACTER(15), ALLOCATABLE :: name_rap_mode(:) ! symmetry type of each mode
   INTEGER, ALLOCATABLE :: num_rap_mode(:)  ! number of the representation for
                                            ! each mode
-  !     
+  !
 END MODULE modes
 !
 !
 MODULE dynmat
   USE kinds, ONLY :  DP
   !
-  ! ... The dynamical matrix 
+  ! ... The dynamical matrix
   !
   SAVE
   !
@@ -100,13 +100,13 @@ END MODULE qpoint
 MODULE eqv
   USE kinds, ONLY :  DP
   !
-  ! ... The wavefunctions at point k+q 
+  ! ... The wavefunctions at point k+q
   !
   SAVE
   !
   COMPLEX (DP), POINTER :: evq(:,:)
   !
-  ! ... The variable describing the linear response problem 
+  ! ... The variable describing the linear response problem
   !
   COMPLEX (DP), ALLOCATABLE :: dvpsi(:,:), dpsi(:,:), drhoscfs (:,:,:)
   ! the product of dV psi
@@ -124,7 +124,7 @@ MODULE efield_mod
   USE kinds, ONLY :  DP
   !
   ! ... the variables for the electric field perturbation
-  !  
+  !
   SAVE
   !
   REAL (DP) :: epsilon (3, 3)
@@ -199,9 +199,9 @@ MODULE phus
   REAL (DP), ALLOCATABLE :: &
        alphasum(:,:,:,:),   &! nhm*(nhm+1)/2,3,nat,nspin)
                              ! used to compute modes
-       dpqq(:,:,:,:)         ! (nhm, nhm, 3, ntyp) 
+       dpqq(:,:,:,:)         ! (nhm, nhm, 3, ntyp)
   ! alphasum contains \sum_i <psi_i| d/du (|\beta_n><beta_m|) | psi_i> + (m-n)
-  ! dipole moment of each Q 
+  ! dipole moment of each Q
   COMPLEX (DP), ALLOCATABLE :: &
        int1(:,:,:,:,:),     &! nhm, nhm, 3, nat, nspin),&
        int2(:,:,:,:,:),     &! nhm, nhm, 3,nat, nat),&
@@ -222,13 +222,13 @@ MODULE phus
 !  int4 -> \int V_eff d^2/dudu (Q) d^3r
 !  int5 -> \int d/du (V_loc) d/du (Q) d^3r
 !
-!  int3_paw contains d/du (D^1-\tilde D^1) 
-!  
-! 
+!  int3_paw contains d/du (D^1-\tilde D^1)
+!
+!
        becsum_nc(:,:,:,:),     &! nhm*(nhm+1)/2,nat,npol,npol)
        becsumort(:,:,:,:),     &! nhm*(nhm+1)/2,nat,nspin,3*nat)
        alphasum_nc(:,:,:,:,:), &! nhm*(nhm+1)/2,3,nat,npol,npol)
-       dpqq_so(:,:,:,:,:)       ! nhm, nhm, nspin, 3, ntyp 
+       dpqq_so(:,:,:,:,:)       ! nhm, nhm, nspin, 3, ntyp
 !
 !  becsum contains \sum_i <\psi_i | \beta_n><\beta_m| \psi_i > + (m-n)
 !  besumort contains alphasum+\sum_i <\psi_i | \beta_n><\beta_m| \delta \psi_i >
@@ -237,12 +237,12 @@ MODULE phus
   type (bec_type),  ALLOCATABLE, TARGET :: &
        becp1(:)              ! (nksq); (nkbtot, nbnd)
   !
-  ! becp1 contains < beta_n | \psi_i > 
+  ! becp1 contains < beta_n | \psi_i >
   !
   type (bec_type),  ALLOCATABLE, TARGET :: &
        alphap(:,:)           ! nkbtot, nbnd, 3, nksq)
   !
-  ! alphap contains < d\du (\beta_n) | psi_i> 
+  ! alphap contains < d\du (\beta_n) | psi_i>
   !
 END MODULE phus
 !
@@ -253,7 +253,7 @@ MODULE partial
   ! ... the variables needed for partial computation of dynamical matrix
   !
   SAVE
-  !  
+  !
   INTEGER, ALLOCATABLE :: &
        comp_irr(:),           &! 3 * nat ),
        done_irr(:),           &! 3 * nat), &
@@ -317,7 +317,7 @@ MODULE control_ph
   INTEGER :: rec_code, &   ! code for recover
              rec_code_read=-1000 ! code for recover. Not changed during the run
   LOGICAL :: lgamma,      &! if .TRUE. this is a q=0 computation
-             lgamma_gamma,&! if .TRUE. this is a q=0 computation with k=0 only 
+             lgamma_gamma,&! if .TRUE. this is a q=0 computation with k=0 only
              convt,       &! if .TRUE. the phonon has converged
              epsil,       &! if .TRUE. computes dielec. const and eff. charges
              done_epsil=.FALSE.,  &! .TRUE. when diel. constant is available
@@ -338,12 +338,12 @@ MODULE control_ph
              ldisp,       &! if .TRUE. the run calculates full phonon dispersion
              reduce_io,   &! if .TRUE. reduces needed I/O
              done_bands,  &! if .TRUE. the bands have been calculated
-             bands_computed=.FALSE., & ! if .TRUE. the bands were computed 
+             bands_computed=.FALSE., & ! if .TRUE. the bands were computed
                                        ! in this run
              nogg,        &! if .TRUE. gamma_gamma tricks are disabled
              u_from_file=.FALSE.,  & ! if true the u are on file
              recover_read=.FALSE., & ! if true the recover data have been read
-             ldiag=.FALSE.,        & ! if true force the diagonalization 
+             ldiag=.FALSE.,        & ! if true force the diagonalization
              xmldyn=.FALSE.,   & ! if true the dynamical matrix is in xml form
              all_done      ! if .TRUE. all representations have been done
   !
@@ -427,7 +427,7 @@ MODULE disp
   INTEGER :: nq1, nq2, nq3
     ! number of q-points in each direction
   INTEGER :: nqs
-    ! number of q points to be calculated 
+    ! number of q points to be calculated
   REAL (DP), ALLOCATABLE :: x_q(:,:)
     ! coordinates of the q points
   INTEGER, ALLOCATABLE :: done_iq(:)
@@ -441,7 +441,7 @@ MODULE disp
   INTEGER, ALLOCATABLE :: nsymq_iq(:)
     ! dimension of the small group of q
   INTEGER, ALLOCATABLE :: comp_irr_iq(:,:)
-    ! for each q, comp_irr. Used for image parallelization 
+    ! for each q, comp_irr. Used for image parallelization
   INTEGER, ALLOCATABLE :: npert_iq(:,:)
     ! for each q, the number of perturbation of each irr
   !
@@ -463,5 +463,5 @@ MODULE phcom
   USE units_ph
   USE output
   USE gamma_gamma
-  USE disp 
+  USE disp
 END MODULE phcom

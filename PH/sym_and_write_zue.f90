@@ -47,7 +47,7 @@ subroutine sym_and_write_zue
 
   enddo
   !
-  ! copy to work (a vector with E-U index order) and transform to 
+  ! copy to work (a vector with E-U index order) and transform to
   ! cartesian axis (NOTA BENE: the E index is in crystal axis)
   !
   work(:,:,:) = 0.d0

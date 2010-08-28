@@ -12,7 +12,7 @@ SUBROUTINE transform_int1_so(int1,na,iflag)
 !
 ! This routine multiply int1 by the identity and the Pauli
 ! matrices, rotate it as appropriate for the spin-orbit case
-! and saves it in int1_nc.  
+! and saves it in int1_nc.
 !
 USE kinds,                ONLY : DP
 USE ions_base,            ONLY : nat, ityp
@@ -53,7 +53,7 @@ DO ih = 1, nh(np)
                                int1_nc(ih,jh,ipol,na,ijs) +                  &
                                fact(1)*                       &
                              (fcoef(ih,kh,is1,1,np)*fcoef(lh,jh,1,is2,np)  + &
-                             fcoef(ih,kh,is1,2,np)*fcoef(lh,jh,2,is2,np)   ) 
+                             fcoef(ih,kh,is1,2,np)*fcoef(lh,jh,2,is2,np)   )
                            IF (domag) THEN
                               IF (iflag==0) THEN
                                  fact(2)=int1 (kh,lh,ipol,na,2)
@@ -98,7 +98,7 @@ SUBROUTINE transform_int2_so(int2,nb,iflag)
 !
 USE kinds,                ONLY : DP
 USE ions_base,            ONLY : nat, ityp
-USE uspp_param,           ONLY : nh, nhm 
+USE uspp_param,           ONLY : nh, nhm
 USE noncollin_module,     ONLY : npol
 USE spin_orb,             ONLY : fcoef
 USE phus,                 ONLY : int2_so
@@ -120,13 +120,13 @@ DO ih = 1, nh(np)
          DO jh = 1, nh(np)
             DO lh= 1, nh(np)
                IF (same_lj(lh,jh,np)) THEN
-                  DO na=1,nat 
+                  DO na=1,nat
                      DO ipol=1,3
                         IF (iflag==0) THEN
-                           fact=int2(kh,lh,ipol,na,nb) 
+                           fact=int2(kh,lh,ipol,na,nb)
                         ELSE
                            fact=CONJG(int2(kh,lh,ipol,na,nb))
-                        ENDIF 
+                        ENDIF
                         ijs=0
                         DO is1=1,npol
                            DO is2=1,npol
@@ -156,7 +156,7 @@ SUBROUTINE transform_int3_so(int3,na,npert)
 !
 ! This routine multiply int3 by the identity and the Pauli
 ! matrices, rotate it as appropriate for the spin-orbit case
-! and saves it in int3_nc.  
+! and saves it in int3_nc.
 !
 USE kinds,                ONLY : DP
 USE ions_base,            ONLY : nat, ityp
@@ -191,7 +191,7 @@ DO ih = 1, nh(np)
                                int3_nc(ih,jh,ipol,na,ijs) +                  &
                                int3 (kh,lh,ipol,na,1)*                       &
                              (fcoef(ih,kh,is1,1,np)*fcoef(lh,jh,1,is2,np)  + &
-                             fcoef(ih,kh,is1,2,np)*fcoef(lh,jh,2,is2,np)   ) 
+                             fcoef(ih,kh,is1,2,np)*fcoef(lh,jh,2,is2,np)   )
                            IF (domag) THEN
                               int3_nc(ih,jh,ipol,na,ijs)=                     &
                                  int3_nc(ih,jh,ipol,na,ijs) +                 &
@@ -225,7 +225,7 @@ SUBROUTINE transform_int4_so(int4,na)
 !
 ! This routine multiply int4 by the identity and the Pauli
 ! matrices, rotate it as appropriate for the spin-orbit case
-! and saves it in int4_nc.  
+! and saves it in int4_nc.
 !
 USE kinds,                ONLY : DP
 USE ions_base,            ONLY : nat, ityp
@@ -309,7 +309,7 @@ SUBROUTINE transform_int5_so(int5,nb)
 !
 USE kinds,                ONLY : DP
 USE ions_base,            ONLY : nat, ityp
-USE uspp_param,           ONLY : nh, nhm 
+USE uspp_param,           ONLY : nh, nhm
 USE noncollin_module,     ONLY : npol
 USE spin_orb,             ONLY : fcoef
 USE phus,                 ONLY : int5_so
@@ -341,7 +341,7 @@ DO ih = 1, nh(np)
             DO lh= 1, nh(np)
                IF (same_lj(lh,jh,np)) THEN
                   ijh_l=ijh_save(kh,lh)
-                  DO na=1,nat 
+                  DO na=1,nat
                      DO ipol=1,3
                         DO jpol=1,3
                            ijs=0

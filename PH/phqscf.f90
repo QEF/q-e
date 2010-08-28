@@ -60,7 +60,7 @@ SUBROUTINE phqscf
   DO irr = 1, nirr
      IF ( (comp_irr (irr) == 1) .AND. (done_irr (irr) == 0) ) THEN
         npe=npert(irr)
-        ALLOCATE (drhoscfs( nrxx , nspin_mag, npe))    
+        ALLOCATE (drhoscfs( nrxx , nspin_mag, npe))
         imode0 = 0
         DO irr1 = 1, irr - 1
            imode0 = imode0 + npert (irr1)

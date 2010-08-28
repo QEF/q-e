@@ -123,7 +123,7 @@ subroutine chi_test (dvscfs, chif, ik, depsi, auxr, auxg)
      enddo
   enddo
 !
-!---------------------------------------------------------- 
+!----------------------------------------------------------
 !
   do ip = 1, 3
      dpsi (:,:) = (0.d0, 0.d0)
@@ -145,7 +145,7 @@ subroutine chi_test (dvscfs, chif, ik, depsi, auxr, auxg)
      enddo
   enddo
 !
-!---------------------------------------------------------- 
+!----------------------------------------------------------
 ! If everything is ok, ps1 should be equal to ps2; if not
 ! there is a problem
 !

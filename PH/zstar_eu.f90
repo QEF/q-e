@@ -91,7 +91,7 @@ subroutine zstar_eu
 #endif
   !
   ! bring the mode index to cartesian coordinates
-  ! NOTA BENE: the electric field is in crystal axis 
+  ! NOTA BENE: the electric field is in crystal axis
   !
   do jpol = 1, 3
      do mu = 1, 3 * nat

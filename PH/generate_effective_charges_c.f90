@@ -20,7 +20,7 @@ subroutine generate_effective_charges_c &
   implicit none
   integer :: nat, nsym, n_diff_sites, irt(48,nat), equiv_atoms(nat,nat),&
        s(3,3,48), invs(48), has_equivalent(nat), nasr
-  logical :: asr      
+  logical :: asr
   integer :: isym, na, ni, sni, i, j, k, l
   integer :: ityp(nat), ntyp
   real(DP) :: zstar(3,3,nat), at(3,3), bg(3,3), sumz, zv(ntyp)

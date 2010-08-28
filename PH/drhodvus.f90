@@ -11,12 +11,12 @@ subroutine drhodvus (irr, imode0, dvscfin, npe)
   !-----------------------------------------------------------------------
   !
   !    This subroutine calculates the term of the dynamical matrix
-  !    which comes from the interaction of the change of the self 
+  !    which comes from the interaction of the change of the self
   !    consistent potential with the change of the charge density
   !    at fixed wavefunctions.
   !    See Eq.B36 of PRB 64, 235118 (2001).
   !    In the PAW case this part of the dynamical matrix has an additional
-  !    contribution. 
+  !    contribution.
   !
   !
   USE kinds,     ONLY : DP
@@ -60,11 +60,11 @@ subroutine drhodvus (irr, imode0, dvscfin, npe)
   complex(DP), external :: zdotc
 
   if (.not.okvan) then
-     dyn_rec=(0.0_DP,0.0_DP) 
+     dyn_rec=(0.0_DP,0.0_DP)
      return
   endif
   call start_clock ('drhodvus')
-  allocate (drhous ( nrxx , nspin_mag))    
+  allocate (drhous ( nrxx , nspin_mag))
   dyn1 (:,:) = (0.d0, 0.d0)
   nrtot = nr1 * nr2 * nr3
   mode0 = 0
@@ -90,7 +90,7 @@ subroutine drhodvus (irr, imode0, dvscfin, npe)
   call mp_sum ( dyn1, intra_pool_comm )
 #endif
 !
-!  PAW contribution: this part of the dynamical matrix is present only 
+!  PAW contribution: this part of the dynamical matrix is present only
 !  with PAW. PAW and US dynamical matrices differ only at this point.
 !
   IF (okpaw) THEN

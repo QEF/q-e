@@ -33,7 +33,7 @@ SUBROUTINE clean_pw_ph(iq)
   DO irr=1,nirr
      IF (done_irr(irr)==0) done_iq(iq)=0
   ENDDO
-  twfcollect=.FALSE. 
+  twfcollect=.FALSE.
   CALL clean_pw( .FALSE. )
   CALL deallocate_phq()
   rec_code_read=-1000

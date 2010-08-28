@@ -17,8 +17,10 @@ subroutine compute_dvloc (mode, dvlocin)
   !
   !
   USE kinds,     ONLY : DP
-  USE gvect,     ONLY : eigts1, eigts2, eigts3, ig1,ig2,ig3, g 
-  USE gsmooth,   ONLY : nrxxs, ngms, nr1s,nr2s,nr3s, nrx1s,nrx2s,nrx3s, nls
+  USE fft_base,  ONLY : dffts
+  USE fft_interfaces, ONLY: invfft
+  USE gvect,     ONLY : eigts1, eigts2, eigts3, ig1,ig2,ig3, g
+  USE gsmooth,   ONLY : nrxxs, ngms, nls
   USE cell_base, ONLY : tpiba
   USE ions_base, ONLY : nat, ityp
   USE modes,     ONLY : u
@@ -67,7 +69,7 @@ subroutine compute_dvloc (mode, dvlocin)
   ! Now we compute dV_loc/dtau in real space
   !
 
-  call cft3s (dvlocin, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, + 1)
+  CALL invfft ('Smooth', dvlocin, dffts)
 
   call stop_clock ('com_dvloc')
   return

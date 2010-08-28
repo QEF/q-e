@@ -10,10 +10,10 @@
 subroutine dvpsi_e (ik, ipol)
   !----------------------------------------------------------------------
   !
-  ! On output: dvpsi contains P_c^+ x | psi_ik > in crystal axis 
+  ! On output: dvpsi contains P_c^+ x | psi_ik > in crystal axis
   !            (projected on at(*,ipol) )
   !
-  ! dvpsi is READ from file if this_pcxpsi_is_on_file(ik,ipol)=.true. 
+  ! dvpsi is READ from file if this_pcxpsi_is_on_file(ik,ipol)=.true.
   ! otherwise dvpsi is COMPUTED and WRITTEN on file (vkb,evc,igk must be set)
   !
   USE kinds,           ONLY : DP
@@ -75,7 +75,7 @@ subroutine dvpsi_e (ik, ipol)
   call commutator_Hx_psi (ik, nbnd_occ(ik), becp1(ik), becp2, ipol, dpsi, dvpsi )
   !
   !    orthogonalize dpsi to the valence subspace: ps = <evc|dpsi>
-  !    Apply -P^+_c  
+  !    Apply -P^+_c
   !    NB it uses dvpsi as workspace
   !
   CALL orthogonalize(dpsi, evc, ik, ik, dvpsi)
@@ -86,9 +86,9 @@ subroutine dvpsi_e (ik, ipol)
   !
 
   do ig = 1, npw
-     g2kin (ig) = SUM((xk(1:3,ik) +g (1:3, igk (ig)) ) **2) *tpiba2 
+     g2kin (ig) = SUM((xk(1:3,ik) +g (1:3, igk (ig)) ) **2) *tpiba2
   enddo
-  allocate (h_diag( npwx*npol, nbnd))    
+  allocate (h_diag( npwx*npol, nbnd))
   h_diag=0.d0
   do ibnd = 1, nbnd_occ (ik)
      do ig = 1, npw
@@ -116,7 +116,7 @@ subroutine dvpsi_e (ik, ipol)
   deallocate (h_diag)
   !
   ! we have now obtained P_c x |psi>.
-  ! In the case of USPP this quantity is needed for the Born 
+  ! In the case of USPP this quantity is needed for the Born
   ! effective charges, so we save it to disc
   !
   ! In the US case we obtain P_c x |psi>, but we need P_c^+ x | psi>,
@@ -130,7 +130,7 @@ subroutine dvpsi_e (ik, ipol)
      nrec = (ipol - 1) * nksq + ik
      call davcio (dvpsi, lrcom, iucom, nrec, 1)
      !
-     allocate (spsi ( npwx*npol, nbnd))    
+     allocate (spsi ( npwx*npol, nbnd))
      CALL calbec (npw, vkb, dvpsi, becp )
      CALL s_psi(npwx,npw,nbnd,dvpsi,spsi)
      call dcopy(2*npwx*npol*nbnd,spsi,1,dvpsi,1)

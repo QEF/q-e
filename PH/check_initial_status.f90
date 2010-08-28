@@ -10,7 +10,7 @@ SUBROUTINE check_initial_status(auxdyn)
   !-----------------------------------------------------------------------
   !
   ! This routine checks the initial status of the phonon run and prepares
-  ! the control of the dispersion calculation. The grid is determined 
+  ! the control of the dispersion calculation. The grid is determined
   ! by the following variables:
   ! nqs : the number of q points
   ! x_q : the coordinates of the q points
@@ -67,7 +67,7 @@ SUBROUTINE check_initial_status(auxdyn)
         iq_start=current_iq
      ENDIF
 !
-!  check which representation files are available on the disk and 
+!  check which representation files are available on the disk and
 !  sets which q points and representations have been already calculated
 !
      CALL check_status_run()
@@ -124,10 +124,10 @@ SUBROUTINE check_initial_status(auxdyn)
      !
      ! This routine initialize the grid control in order to
      ! calculate all q and all representations. The representations are
-     ! written on file and read again by phq_setup. 
+     ! written on file and read again by phq_setup.
      !
      CALL init_status_run()
-     CALL init_representations() 
+     CALL init_representations()
      !
   END IF
   !
@@ -154,30 +154,30 @@ SUBROUTINE check_initial_status(auxdyn)
 !
 !  This routine is an example of the load balancing among images.
 !  It decides which image makes which q and which irreducible representations
-!  The algorithm at the moment is straightforward. Possibly better 
-!  methods could be found. 
+!  The algorithm at the moment is straightforward. Possibly better
+!  methods could be found.
 !  It receives as input:
-!  nsym  : the dimension of the point group 
+!  nsym  : the dimension of the point group
 !  nsymq_iq  : the dimension of the small group of q for each q
 !  rep_iq : the number of representation for each q
 !  npert_iq : for each q and each irrep its dimension
 !  It provides as output the two arrays
 !  comp_iq : if this q has to be calculated by the present image
 !  comp_irr_iq : for each q the array to be copied into comp_irr
-  
+
    USE ions_base, ONLY : nat
    USE disp, ONLY : rep_iq, npert_iq, comp_iq, comp_irr_iq, nqs, &
                     nq1, nq2, nq3, nsymq_iq
    USE control_ph, ONLY : start_q, last_q
-   USE io_global,  ONLY : stdout 
+   USE io_global,  ONLY : stdout
    USE mp_global,  ONLY : nimage, my_image_id
    USE symm_base,  ONLY : nsym
-   
+
    IMPLICIT NONE
    INTEGER, INTENT(IN) :: iq_start ! the calculation start from this q.
-                               ! It can be different from start_q in a 
+                               ! It can be different from start_q in a
                                ! recovered run. The division of the work
-                               ! is done from start_q to last_q. 
+                               ! is done from start_q to last_q.
    INTEGER :: total_work,  &  ! total amount of work to do
               total_nrapp, &  ! total number of representations
               work_per_image  ! approximate minimum work per image
@@ -204,12 +204,12 @@ SUBROUTINE check_initial_status(auxdyn)
 
    work_per_image = total_work / nimage
 !
-!  If nimage=total_nrapp we put one representation per image 
+!  If nimage=total_nrapp we put one representation per image
 !  No load balancing is possible. Otherwise we try to minimize the number of
 !  different q per image doing all representations of a given q until
 !  the work becomes too large.
 !  The initialization is done by the image with the first representation of
-!  each q point. 
+!  each q point.
 !
    image=0
    work=0
@@ -223,7 +223,7 @@ SUBROUTINE check_initial_status(auxdyn)
             image_iq(0,iq)=image
             work(image)=work(image) + nsym / nsymq_iq(iq)
             work_so_far=work_so_far + nsym / nsymq_iq(iq)
-         ENDIF 
+         ENDIF
 
 !
 !  The logic is the following. We know how much work the current image
@@ -231,7 +231,7 @@ SUBROUTINE check_initial_status(auxdyn)
 !  Note that actual_diff is a positive number in the usual case in which
 !  we are below the target. Then we calculate the work that the current
 !  image would do if we would give it the next representation. If the work is
-!  still below the target, diff_for_next is negative and we give the 
+!  still below the target, diff_for_next is negative and we give the
 !  representation to the current image. If the work is above the target,
 !  we give it to the current image only if its distance from the target
 !  is less than actual_diff.
@@ -246,7 +246,7 @@ SUBROUTINE check_initial_status(auxdyn)
          ELSE
             diff_for_next=0
          ENDIF
-         
+
          IF ((nimage==total_nrapp.OR.diff_for_next>actual_diff).AND. &
                               (image < nimage-1)) THEN
             work_per_image= (total_work-work_so_far) / (nimage-image-1)
@@ -301,7 +301,7 @@ SUBROUTINE check_initial_status(auxdyn)
 
    SUBROUTINE collect_grid_files()
    !
-   !  This subroutine collects all the xml files contained in different 
+   !  This subroutine collects all the xml files contained in different
    !  directories and created by the diffent images in the phsave directory
    !  of the image 0
    !
@@ -322,7 +322,7 @@ SUBROUTINE check_initial_status(auxdyn)
    CHARACTER(LEN=6), EXTERNAL :: int_to_char
 
    CALL mp_barrier(intra_image_comm)
-   IF (nimage == 1) RETURN 
+   IF (nimage == 1) RETURN
    IF (my_image_id==0) RETURN
 
    DO iq=1,nqs
@@ -339,9 +339,9 @@ SUBROUTINE check_initial_status(auxdyn)
                     &    // '.' // TRIM(int_to_char(irr))
 
             INQUIRE (FILE = TRIM(file_input), EXIST = exst)
-            IF (exst) CALL copy_file(file_input, file_output) 
+            IF (exst) CALL copy_file(file_input, file_output)
          ENDIF
       ENDDO
    ENDDO
    RETURN
-   END SUBROUTINE 
+   END SUBROUTINE

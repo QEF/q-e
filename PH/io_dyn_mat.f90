@@ -10,7 +10,7 @@
 MODULE io_dyn_mat
   !----------------------------------------------------------------------------
   !
-  ! ... this module contains methods to read and write the dynamical 
+  ! ... this module contains methods to read and write the dynamical
   !     matrix and the interatomic force constants files in xml format.
   !
   USE iotk_module
@@ -43,13 +43,13 @@ MODULE io_dyn_mat
     INTEGER, INTENT(IN) :: ntyp, nat, ibrav, nspin_mag, nqs
     CHARACTER(LEN=256), INTENT(IN) :: fildyn
     CHARACTER(LEN=9), INTENT(IN) :: symm_type
-    CHARACTER(LEN=3), INTENT(IN) :: atm(ntyp) 
+    CHARACTER(LEN=3), INTENT(IN) :: atm(ntyp)
     REAL(DP), INTENT(IN) :: celldm(6)
-    REAL(DP), INTENT(IN) :: at(3,3) 
-    REAL(DP), INTENT(IN) :: bg(3,3) 
+    REAL(DP), INTENT(IN) :: at(3,3)
+    REAL(DP), INTENT(IN) :: bg(3,3)
     REAL(DP), INTENT(IN) :: omega
-    REAL(DP), INTENT(IN) :: amass(ntyp) 
-    REAL(DP), INTENT(IN) :: tau(3,nat) 
+    REAL(DP), INTENT(IN) :: amass(ntyp)
+    REAL(DP), INTENT(IN) :: tau(3,nat)
     REAL(DP), INTENT(IN) :: m_loc(3,nat)
     REAL(DP), INTENT(IN), OPTIONAL :: epsil(3,3)
     REAL(DP), INTENT(IN), OPTIONAL :: zstareu(3,3,nat)
@@ -127,7 +127,7 @@ MODULE io_dyn_mat
                 CALL iotk_write_begin(iunout,"RAMAN_TENSOR_A2")
                 DO na = 1, nat
                    DO kc = 1, 3
-                      aux(:,:) = ramtns(:, :, kc, na) 
+                      aux(:,:) = ramtns(:, :, kc, na)
                       CALL iotk_write_dat(iunout, &
                              "RAMAN_S_ALPHA"//TRIM(iotk_index(na)) &
                               // TRIM(iotk_index(kc)),aux, COLUMNS=3)
@@ -146,7 +146,7 @@ MODULE io_dyn_mat
     SUBROUTINE write_dyn_mat(nat,iq,xq,phi)
 
     INTEGER, INTENT(IN) :: nat, iq
-    REAL(DP), INTENT(IN) :: xq(3)  
+    REAL(DP), INTENT(IN) :: xq(3)
     COMPLEX(DP), INTENT(IN) :: phi(3,3,nat,nat)
 
     INTEGER :: na, nb
@@ -161,7 +161,7 @@ MODULE io_dyn_mat
        DO nb=1,nat
           CALL iotk_write_dat(iunout,"PHI"//TRIM(iotk_index(na))&
                    &//TRIM(iotk_index(nb)),phi(:,:,na,nb),COLUMNS=1)
-       ENDDO 
+       ENDDO
     ENDDO
 
     CALL iotk_write_end(iunout, "DYNAMICAL_MAT_"//TRIM(iotk_index(iq)) )
@@ -181,7 +181,7 @@ MODULE io_dyn_mat
     INTEGER :: mu
 
     IF (.NOT. ionode) RETURN
-   
+
     CALL iotk_write_begin( iunout, "FREQUENCIES_THZ_CMM1" )
 
     DO mu=1,3*nat
@@ -210,7 +210,7 @@ MODULE io_dyn_mat
     REAL(DP) :: aux(3,3)
 
     IF (.NOT.ionode) RETURN
-    
+
     meshfft(1)=nr1
     meshfft(2)=nr2
     meshfft(3)=nr3
@@ -244,7 +244,7 @@ MODULE io_dyn_mat
     CALL iotk_close_write( iunout )
     RETURN
     END SUBROUTINE write_ifc
-    
+
     SUBROUTINE read_dyn_mat_param(fildyn, ntyp, nat )
 
     CHARACTER(LEN=256), INTENT(IN) :: fildyn
@@ -408,7 +408,7 @@ MODULE io_dyn_mat
 !   be already opened. iq is the number of the dynamical matrix to read.
 !
     INTEGER, INTENT(IN) :: nat, iq
-    REAL(DP), INTENT(OUT) :: xq(3)  
+    REAL(DP), INTENT(OUT) :: xq(3)
     COMPLEX(DP), INTENT(OUT) :: dyn(3,3,nat,nat)
 
     INTEGER :: na, nb
@@ -422,7 +422,7 @@ MODULE io_dyn_mat
           DO nb=1,nat
              CALL iotk_scan_dat(iunout,"PHI"//TRIM(iotk_index(na))&
                    &//TRIM(iotk_index(nb)),dyn(:,:,na,nb))
-          ENDDO 
+          ENDDO
        ENDDO
 
        CALL iotk_scan_end(iunout, "DYNAMICAL_MAT_"//TRIM(iotk_index(iq)) )
@@ -480,7 +480,7 @@ MODULE io_dyn_mat
 !
     INTEGER, INTENT(OUT) :: nr1, nr2, nr3
     INTEGER :: meshfft(3)
-    
+
     IF (ionode) THEN
        CALL iotk_scan_begin( iunout, "INTERATOMIC_FORCE_CONSTANTS" )
        CALL iotk_scan_dat( iunout, "MESH_NQ1_NQ2_NQ3", meshfft )
@@ -500,10 +500,9 @@ MODULE io_dyn_mat
 
     INTEGER, INTENT(IN) :: nr1, nr2, nr3, nat
     REAL(DP), INTENT(OUT) :: phid(nr1*nr2*nr3,3,3,nat,nat)
-    INTEGER :: meshfft(3)
     INTEGER :: na, nb, nn, m1, m2, m3
     REAL(DP) :: aux(3,3)
-    
+
     IF (ionode) THEN
        CALL iotk_scan_begin( iunout, "INTERATOMIC_FORCE_CONSTANTS" )
 

@@ -35,7 +35,7 @@ subroutine generate_dynamical_matrix   &
   end do
   if (no_equivalent_atoms) return
   !
-  allocate  ( irreducible_dyn( 3*nat, 3*nat))    
+  allocate  ( irreducible_dyn( 3*nat, 3*nat))
   call zcopy(3*nat*3*nat,dyn,1,irreducible_dyn,1)
   !
   do na = 1,nat
@@ -59,7 +59,7 @@ subroutine generate_dynamical_matrix   &
      end if
   end do
   !
-  allocate  (done( 3*nat, 3*nat))    
+  allocate  (done( 3*nat, 3*nat))
   do smu_i = 1,3*nat
      do smu_j = 1,3*nat
         dyn(smu_i,smu_j) = (0.d0,0.d0)

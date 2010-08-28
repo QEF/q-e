@@ -12,7 +12,7 @@ SUBROUTINE transform_alphasum_so(alphasum_nc,na)
 !
 ! This routine multiply alphasum_nc by the identity and the Pauli
 ! matrices, rotate it as appropriate for the spin-orbit case
-! and saves it in alphasum to use it in the calculation of 
+! and saves it in alphasum to use it in the calculation of
 ! the change of the charge and of the magnetization.
 !
 USE kinds,                ONLY : DP

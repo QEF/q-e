@@ -1,4 +1,4 @@
-! 
+!
 ! Copyright (C) 2001-2007 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
@@ -11,7 +11,7 @@ subroutine add_dkmds(kpoint, uact, jpol, dvkb)
   !
   ! This subroutine adds to dvpsi the terms which depend on the augmentation
   ! charge. It assumes that the variable dpqq, has been set. In the noncollinear
-  ! and spin_orbit case the variable dpqq_so must be set. 
+  ! and spin_orbit case the variable dpqq_so must be set.
   !
 
   USE kinds, ONLY : DP
@@ -45,22 +45,22 @@ subroutine add_dkmds(kpoint, uact, jpol, dvkb)
 
   logical :: ok
 
-  complex(DP), allocatable :: ps1(:,:), ps2(:,:,:) 
-  complex(DP), allocatable :: ps1_nc(:,:,:), ps2_nc(:,:,:,:) 
+  complex(DP), allocatable :: ps1(:,:), ps2(:,:,:)
+  complex(DP), allocatable :: ps1_nc(:,:,:), ps2_nc(:,:,:,:)
   complex(DP), allocatable :: alphadk(:,:,:), becp2(:,:)
   complex(DP), allocatable :: alphadk_nc(:,:,:,:), becp2_nc(:,:,:)
   complex(DP), allocatable :: aux(:), aux1(:,:)
 
 
-  integer :: i,j,is 
+  integer :: i,j,is
 
 #ifdef TIMING_ADD_DKMDS
   call start_clock('add_dkmds')
   call start_clock('add_dkmds2')
-#endif 
+#endif
   allocate(aux(npwx))
   allocate(aux1(npwx*npol,nbnd))
-  if (nkb.gt.0) then 
+  if (nkb.gt.0) then
      if (noncolin) then
         allocate (ps1_nc(nkb,npol,nbnd))
         allocate (ps2_nc(nkb,npol,3,nbnd))
@@ -100,12 +100,12 @@ subroutine add_dkmds(kpoint, uact, jpol, dvkb)
   do ipol = 1, 3
      do ibnd = 1, nbnd
         do ig = 1, npw
-           aux1 (ig, ibnd) = evc(ig,ibnd) * tpiba * (0.d0,1.d0) * & 
+           aux1 (ig, ibnd) = evc(ig,ibnd) * tpiba * (0.d0,1.d0) * &
                 ( xk(ipol,kpoint) + g(ipol,igk(ig)) )
         enddo
         if (noncolin) then
            do ig = 1, npw
-              aux1 (ig+npwx, ibnd) = evc(ig+npwx,ibnd)*tpiba*(0.d0,1.d0) * & 
+              aux1 (ig+npwx, ibnd) = evc(ig+npwx,ibnd)*tpiba*(0.d0,1.d0) * &
                 ( xk(ipol,kpoint) + g(ipol,igk(ig)) )
            enddo
         endif
@@ -133,13 +133,13 @@ subroutine add_dkmds(kpoint, uact, jpol, dvkb)
                  ikb = ijkb0 + ih
                  do jh = 1, nh (nt)
                     jkb = ijkb0 + jh
-                    do ipol = 1, 3 
+                    do ipol = 1, 3
                        do ibnd=1, nbnd_occ(kpoint)
                           !
-                          ! first we calculate the part coming from the 
+                          ! first we calculate the part coming from the
                           ! overlapp matrix S
                           !
-                          if (noncolin) then 
+                          if (noncolin) then
                              if (lspinorb) then
                                 ps1_nc (ikb,1,ibnd)=ps1_nc(ikb,1,ibnd) +      &
                                      (qq_so(ih,jh,1,nt)*                      &
@@ -223,7 +223,7 @@ subroutine add_dkmds(kpoint, uact, jpol, dvkb)
                                   qq (ih, jh, nt) *                           &
                                   becp2(jkb, ibnd) *                          &
                                   uact (mu + ipol) * tpiba
-                          ! 
+                          !
                           !  and here the part of the matrix K(r)
                           !
                              ps1 (ikb, ibnd) = ps1 (ikb, ibnd) +      &
@@ -258,7 +258,7 @@ subroutine add_dkmds(kpoint, uact, jpol, dvkb)
      else
         call zgemm ('N', 'N', npwq, nbnd*npol, nkb, &
          (1.d0, 0.d0), vkb, npwx, ps1, nkb, (1.d0, 0.d0) , dvpsi, npwx)
-!        dvpsi = matmul(vkb, ps1) + dvpsi 
+!        dvpsi = matmul(vkb, ps1) + dvpsi
      endif
   endif
 #ifdef TIMING_ADD_DKMDS

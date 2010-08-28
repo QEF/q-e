@@ -17,7 +17,7 @@ subroutine adddvscf (ipert, ik)
   !
 
   USE kinds,      ONLY : DP
-  USE uspp_param, ONLY : upf, nh 
+  USE uspp_param, ONLY : upf, nh
   USE uspp,       ONLY : vkb, okvan
 ! modules from pwcom
   USE lsda_mod,   ONLY : lsda, current_spin, isk

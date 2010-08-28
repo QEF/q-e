@@ -11,7 +11,7 @@ subroutine set_irr_sym (nat, at, bg, xq, s, rtau, irt, &
      irgq, nsymq, minus_q, irotmq, t, tmq, u, npert, nirr, npertx )
 !---------------------------------------------------------------------
 !
-!     This subroutine computes: 
+!     This subroutine computes:
 !     1) the matrices which represent the small group of q on the
 !        pattern basis.
 !

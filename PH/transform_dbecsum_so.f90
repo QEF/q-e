@@ -12,7 +12,7 @@ SUBROUTINE transform_dbecsum_so(dbecsum_nc,dbecsum,na,modes)
 !
 ! This routine multiply dbecsum_nc by the identity and the Pauli
 ! matrices, rotate it as appropriate for the spin-orbit case
-! and saves it in dbecsum to use it in the calculation of 
+! and saves it in dbecsum to use it in the calculation of
 ! the charge and magnetization.
 !
 USE kinds,                ONLY : DP
@@ -82,7 +82,7 @@ DO mode=1,modes
          END IF
       END DO
    END DO
-END DO      
+END DO
 DEALLOCATE(ijh_save)
 RETURN
 END SUBROUTINE transform_dbecsum_so

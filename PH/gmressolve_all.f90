@@ -48,7 +48,7 @@ subroutine gmressolve_all (h_psi, cg_psi, e, d0psi, dpsi, h_diag, &
   !                          eq (1), defined as l.h.s. - r.h.s., becomes
   !                          less than ethr in norm.
   !
-  !                 m        integer  # of basis vectors  
+  !                 m        integer  # of basis vectors
   !
   !     on output:  dpsi     contains the refined estimate of the
   !                          solution vector.
@@ -91,7 +91,7 @@ subroutine gmressolve_all (h_psi, cg_psi, e, d0psi, dpsi, h_diag, &
   !
   integer, parameter :: maxter = 5000
   ! the maximum number of iterations
-  integer :: iter, ibnd, i, j, bnd 
+  integer :: iter, ibnd, i, j, bnd
   ! counters on iteration, bands
   ! control variables
   integer , allocatable :: conv (:)
@@ -109,11 +109,11 @@ subroutine gmressolve_all (h_psi, cg_psi, e, d0psi, dpsi, h_diag, &
   complex(kind=DP), external ::  zdotc
   !  the scalar product
   real(kind=DP) :: t
-  complex(kind=DP):: c, s, ei 
+  complex(kind=DP):: c, s, ei
   real(kind=DP), allocatable :: bet (:)
   real(kind=DP), allocatable :: res (:)
   complex(kind=DP) :: hm (m+1,m),   & ! the Hessenberg matrix
-                      e1(m+1)          ! unit vector 
+                      e1(m+1)          ! unit vector
   complex(kind=DP) :: hm4para(1)      ! temp variable for hm in paralell calculation
 !  real(kind=DP), allocatable :: rho (:), rhoold (:), eu (:), a(:), c(:)
   ! the residue
@@ -137,8 +137,8 @@ subroutine gmressolve_all (h_psi, cg_psi, e, d0psi, dpsi, h_diag, &
   endif
   !
   allocate ( r(ndmx,nbnd), v(ndmx,nbnd,m+1), w(ndmx,nbnd))
-  allocate (conv ( nbnd))    
-  allocate (bet(nbnd), res(nbnd))    
+  allocate (conv ( nbnd))
+  allocate (bet(nbnd), res(nbnd))
   !      WRITE( stdout,*) g,t,h,hold
 
   kter_eff = 0.d0
@@ -169,7 +169,7 @@ subroutine gmressolve_all (h_psi, cg_psi, e, d0psi, dpsi, h_diag, &
            call cg_psi(ndmx, ndim, 1, r(1,ibnd), h_diag(1,ibnd), 1 )
 !print*,'r3',sum(dpsi),sum(d0psi)
            ! norm of pre. r : bet = |r|
-           bet(ibnd) = zdotc (ndim, r(1,ibnd), 1, r(1,ibnd), 1) 
+           bet(ibnd) = zdotc (ndim, r(1,ibnd), 1, r(1,ibnd), 1)
 #ifdef __PARA
            call mp_sum ( bet(ibnd), intra_pool_comm  )
 #endif
@@ -188,7 +188,7 @@ subroutine gmressolve_all (h_psi, cg_psi, e, d0psi, dpsi, h_diag, &
            lbnd = lbnd + 1
 !if (mod(iter,10) .eq. 0) print*, iter, bet(ibnd), ethr
            if (bet(ibnd) .lt. ethr) conv(ibnd) = 1
-        endif 
+        endif
         !
      enddo
      kter_eff = kter_eff + DBLE (lbnd) / DBLE (nbnd)
@@ -209,18 +209,18 @@ subroutine gmressolve_all (h_psi, cg_psi, e, d0psi, dpsi, h_diag, &
         ! normalize pre. r and keep in v(1)
         call dscal (2 * ndim, 1.d0/bet(ibnd), r (1, ibnd), 1)
         j = 1
-        call zcopy (ndim, r (1, ibnd), 1, v (1, ibnd, j), 1)     
+        call zcopy (ndim, r (1, ibnd), 1, v (1, ibnd, j), 1)
 !print*,'v',sum(r(1:ndim,ibnd))
         !
         !
         !   loop to construct basis set
         !
-        !     
+        !
         do j = 1, m
            ! w = A*v
            call h_psi (ndim, v(1,ibnd,j), w(1,ibnd), e, ik, 1)       ! NEED to be checked
 !print*,'w1',sum(w(:,ibnd))
-           ! 
+           !
            ! compute w = M^-1*A*v
            call cg_psi(ndmx, ndim, 1, w(1,ibnd), h_diag(1,ibnd), 1 )
 !print*,'w2',sum(w(:,ibnd))
@@ -228,7 +228,7 @@ subroutine gmressolve_all (h_psi, cg_psi, e, d0psi, dpsi, h_diag, &
            !
            do i = 1, j
               !
-              ! compute hm(i,j) 
+              ! compute hm(i,j)
 !              hm(i,j) = zdotc (ndim, w(1,ibnd), 1, v(1,ibnd,i), 1)
               hm4para(1) = zdotc (ndim, w(1,ibnd), 1, v(1,ibnd,i), 1)
 #ifdef __PARA
@@ -265,7 +265,7 @@ subroutine gmressolve_all (h_psi, cg_psi, e, d0psi, dpsi, h_diag, &
            c = hm(i,i) / t
            s = hm(i+1,i) / t
            !
-           do j = i, m 
+           do j = i, m
               !
               ei = hm(i,j)
               hm(i,j) = hm(i,j) * c + hm(i+1,j) * s
@@ -275,7 +275,7 @@ subroutine gmressolve_all (h_psi, cg_psi, e, d0psi, dpsi, h_diag, &
            ei = e1(i)
            e1(i) = e1(i)*c + e1(i+1)*s
            e1(i+1) = - ei*s + e1(i+1)*c
-           ! 
+           !
         enddo
         !
         res(ibnd) = e1(m+1)
@@ -286,7 +286,7 @@ subroutine gmressolve_all (h_psi, cg_psi, e, d0psi, dpsi, h_diag, &
         !
         do i = m-1, 1, -1
            do j = m, i+1, -1
-              e1(i) = e1(i) - e1(j)*hm(i,j)  
+              e1(i) = e1(i) - e1(j)*hm(i,j)
            enddo
            e1(i) = e1(i) / hm(i,i)
         enddo

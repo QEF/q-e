@@ -17,7 +17,9 @@ subroutine incdrhous (drhoscf, weight, ik, dbecsum, evcr, wgg, becq, &
   USE kinds, only : DP
   USE ions_base, ONLY : ntyp => nsp, nat, ityp
   USE cell_base, ONLY : omega
-  USE gsmooth,   ONLY : nrxxs, nls, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s
+  USE fft_base,  ONLY : dffts
+  USE fft_interfaces, ONLY: invfft
+  USE gsmooth,   ONLY : nrxxs, nls
   USE noncollin_module, ONLY : npol
   USE uspp,      ONLY : nkb, qq
   USE uspp_param,ONLY : nhm, nh
@@ -42,7 +44,7 @@ subroutine incdrhous (drhoscf, weight, ik, dbecsum, evcr, wgg, becq, &
   ! input: the weights
 
   complex(DP) :: evcr (nrxxs, nbnd), drhoscf (nrxxs), &
-       dbecsum(nhm * (nhm + 1) / 2, nat) 
+       dbecsum(nhm * (nhm + 1) / 2, nat)
   ! input: the wavefunctions at k in real
   ! output: the change of the charge densi
   ! inp/out: the accumulated dbec
@@ -65,8 +67,8 @@ subroutine incdrhous (drhoscf, weight, ik, dbecsum, evcr, wgg, becq, &
   ! counters
 
   call start_clock ('incdrhous')
-  allocate (dpsir( nrxxs))    
-  allocate (ps1  ( nbnd , nbnd))    
+  allocate (dpsir( nrxxs))
+  allocate (ps1  ( nbnd , nbnd))
 
   call divide (nbnd, startb, lastb)
   ps1 (:,:) = (0.d0, 0.d0)
@@ -116,7 +118,7 @@ subroutine incdrhous (drhoscf, weight, ik, dbecsum, evcr, wgg, becq, &
      do ig = 1, npwq
         dpsir(nls(igkq(ig))) = dpsi (ig, ibnd)
      enddo
-     call cft3s (dpsir, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, + 2)
+     CALL invfft ('Wave', dpsir, dffts)
      do ir = 1, nrxxs
         drhoscf(ir) = drhoscf(ir) + wgt * dpsir(ir) * CONJG(evcr(ir,ibnd))
      enddo

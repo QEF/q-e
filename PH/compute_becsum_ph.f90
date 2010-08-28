@@ -63,7 +63,7 @@ subroutine compute_becsum_ph
                                 becsum_nc(ijh,na,is1,is2) = &
                                    becsum_nc(ijh,na,is1,is2) + wgg1* &
                                    CONJG(becp1(ik)%nc(ikb,is1,ibnd))* &
-                                         becp1(ik)%nc(ikb,is2,ibnd) 
+                                         becp1(ik)%nc(ikb,is2,ibnd)
                              END DO
                           END DO
                        ELSE

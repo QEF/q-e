@@ -212,7 +212,7 @@ subroutine set_irr (nat, at, bg, xq, s, sr, tau, ntyp, ityp, ftau, invs, nsym, &
                   .FALSE., nspin_mag, name_rap_mode, num_rap_mode )
 !
 !   Order the modes so that we first make all those that belong to the first
-!   representation, then the second ect. 
+!   representation, then the second ect.
 !
 !
 !   First count, for each irreducible representation, how many modes

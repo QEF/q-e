@@ -9,14 +9,14 @@ LOGICAL FUNCTION check_q_points_sym(nqs, q, at, bg, nsym, s, invs, &
                                     nq1, nq2, nq3)
 !
 !  This function returns .true. if the mesh of q points given as input
-!  is compatible with the FFT mesh. It returns .false. if a rotation of 
-!  the point group gives a q point that is not in the FFT mesh. 
+!  is compatible with the FFT mesh. It returns .false. if a rotation of
+!  the point group gives a q point that is not in the FFT mesh.
 !
 !
 USE kinds, ONLY : DP
-IMPLICIT NONE 
+IMPLICIT NONE
 INTEGER, INTENT(IN) :: nqs, nsym
-INTEGER, INTENT(IN) :: nq1, nq2, nq3 
+INTEGER, INTENT(IN) :: nq1, nq2, nq3
 INTEGER, INTENT(IN) :: s(3,3,48), invs(48)
 REAL(DP), INTENT(IN) :: q(3,nqs), at(3,3), bg(3,3)
 

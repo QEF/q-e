@@ -40,7 +40,7 @@ DO ih = 1, nh(np)
                int1_nc(ih,jh,ipol,na,2)=                                       &
                   int1(ih,jh,ipol,na,2) - (0.d0, 1.d0) * int1(ih,jh,ipol,na,3)
                int1_nc(ih,jh,ipol,na,3)=                                       &
-                  int1(ih,jh,ipol,na,2) + (0.d0, 1.d0) * int1(ih,jh,ipol,na,3) 
+                  int1(ih,jh,ipol,na,2) + (0.d0, 1.d0) * int1(ih,jh,ipol,na,3)
                int1_nc(ih,jh,ipol,na,4)=                                       &
                   int1(ih,jh,ipol,na,1) - int1(ih,jh,ipol,na,4)
             ELSE
@@ -54,7 +54,7 @@ DO ih = 1, nh(np)
                int1_nc(ih,jh,ipol,na,2)=CONJG(int1(ih,jh,ipol,na,2)) - &
                            (0.d0, 1.d0)*CONJG(int1(ih,jh,ipol,na,3))
                int1_nc(ih,jh,ipol,na,3)=CONJG(int1(ih,jh,ipol,na,2)) + &
-                           (0.d0, 1.d0)*CONJG(int1(ih,jh,ipol,na,3)) 
+                           (0.d0, 1.d0)*CONJG(int1(ih,jh,ipol,na,3))
                int1_nc(ih,jh,ipol,na,4)=                               &
                   CONJG(int1(ih,jh,ipol,na,1) - int1(ih,jh,ipol,na,4))
             ELSE
@@ -93,7 +93,7 @@ np=ityp(nb)
 DO ih = 1, nh(np)
    DO jh = 1, nh(np)
       DO na=1,nat
-         DO ipol=1,3 
+         DO ipol=1,3
             IF (iflag==0) THEN
                int2_so(ih,jh,ipol,na,nb,1)=int2(ih,jh,ipol,na,nb)
                int2_so(ih,jh,ipol,na,nb,4)=int2(ih,jh,ipol,na,nb)
@@ -105,7 +105,7 @@ DO ih = 1, nh(np)
       END DO
    END DO
 END DO
-       
+
 RETURN
 END SUBROUTINE transform_int2_nc
 
@@ -141,7 +141,7 @@ DO ih = 1, nh(np)
             int3_nc(ih,jh,ipol,na,2)=                                       &
                int3(ih,jh,ipol,na,2) - (0.d0, 1.d0) * int3(ih,jh,ipol,na,3)
             int3_nc(ih,jh,ipol,na,3)=                                       &
-               int3(ih,jh,ipol,na,2) + (0.d0, 1.d0) * int3(ih,jh,ipol,na,3) 
+               int3(ih,jh,ipol,na,2) + (0.d0, 1.d0) * int3(ih,jh,ipol,na,3)
             int3_nc(ih,jh,ipol,na,4)=                                       &
                int3(ih,jh,ipol,na,1) - int3(ih,jh,ipol,na,4)
          ELSE
@@ -186,7 +186,7 @@ DO ih = 1, nh(np)
       DO ipol=1,3
          DO jpol=1,3
             IF (domag) THEN
-               int4_nc(ih,jh,ipol,jpol,na,1)=                              & 
+               int4_nc(ih,jh,ipol,jpol,na,1)=                              &
                    int4(ijh,ipol,jpol,na,1)+int4(ijh,ipol,jpol,na,4)
                int4_nc(ih,jh,ipol,jpol,na,2)=                           &
                  int4(ijh,ipol,jpol,na,2)-(0.d0,1.d0)*int4(ijh,ipol,jpol,na,3)
@@ -232,7 +232,7 @@ DO ih = 1, nh(np)
    DO jh = 1, nh(np)
       ijh=find_ijh(ih,jh,nh(np))
       DO na=1,nat
-         DO ipol=1,3 
+         DO ipol=1,3
             DO jpol=1,3
                int5_so(ih,jh,ipol,jpol,na,nb,1)=int5(ijh,ipol,jpol,na,nb)
                int5_so(ih,jh,ipol,jpol,na,nb,4)=int5(ijh,ipol,jpol,na,nb)
@@ -241,6 +241,6 @@ DO ih = 1, nh(np)
       END DO
    END DO
 END DO
-       
+
 RETURN
 END SUBROUTINE transform_int5_nc

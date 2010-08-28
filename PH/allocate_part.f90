@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !-----------------------------------------------------------------------
-subroutine allocate_part ( nat ) 
+subroutine allocate_part ( nat )
   !-----------------------------------------------------------------------
   !
   ! dynamical allocation of arrays for the control of partial computation
@@ -18,9 +18,9 @@ subroutine allocate_part ( nat )
   !
   !  allocate space for several arrays which control the run
   !
-  allocate (comp_irr (  0:3 * nat)) 
-  allocate (done_irr (  0:3 * nat))    
-  allocate (list     (  3 * nat)) 
+  allocate (comp_irr (  0:3 * nat))
+  allocate (done_irr (  0:3 * nat))
+  allocate (list     (  3 * nat))
   allocate (atomo    (  nat))
   list(:) = 0
   atomo(:) = 0

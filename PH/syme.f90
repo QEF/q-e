@@ -41,7 +41,7 @@ subroutine syme (dvsym)
      end do
   end do
   if (nsym == 1) return
-  allocate (aux(nrx1 , nrx2 , nrx3 , 3))    
+  allocate (aux(nrx1 , nrx2 , nrx3 , 3))
   do is = 1, nspin_lsda
      do ipol = 1, 3
         aux(:,:,:,ipol) = dvsym(:,:,:,is,ipol)

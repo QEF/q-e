@@ -35,9 +35,9 @@ subroutine adddvepsi_us(becp2,ipol,kpoint)
   integer:: ijkb0, nt, na, ih, jh, ikb, jkb, ibnd, ip, is, js, ijs
 
   IF (noncolin) THEN
-     allocate (ps_nc(nbnd,npol))    
+     allocate (ps_nc(nbnd,npol))
   ELSE
-     allocate (ps(nbnd))    
+     allocate (ps(nbnd))
   END IF
 
   ijkb0 = 0
@@ -78,7 +78,7 @@ subroutine adddvepsi_us(becp2,ipol,kpoint)
                     ELSE
                        ps(ibnd) = ps(ibnd)+qq(ih,jh,nt)*becp2%k(jkb,ibnd) &
                            *(0.d0,1.d0) +  &
-                            dpqq(ih,jh,ipol,nt)* becp1(kpoint)%k(jkb,ibnd) 
+                            dpqq(ih,jh,ipol,nt)* becp1(kpoint)%k(jkb,ibnd)
                     END IF
                  enddo
               enddo
@@ -104,7 +104,7 @@ subroutine adddvepsi_us(becp2,ipol,kpoint)
   ELSE
      deallocate(ps)
   END IF
-  
+
 
   RETURN
 END SUBROUTINE adddvepsi_us

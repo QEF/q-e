@@ -4,10 +4,10 @@
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
-!  
+!
 !
 !------------------------------------------------
-SUBROUTINE addnlcc_zstar_eu_us( drhoscf ) 
+SUBROUTINE addnlcc_zstar_eu_us( drhoscf )
 !----------===================-------------------
 
   USE kinds, ONLY : DP
@@ -26,10 +26,10 @@ SUBROUTINE addnlcc_zstar_eu_us( drhoscf )
   USE gc_ph,   ONLY: grho, dvxc_rr,  dvxc_sr,  dvxc_ss, dvxc_s
 
   USE mp_global, ONLY : my_pool_id
-  
-  
+
+
   IMPLICIT NONE
-  
+
   COMPLEX(DP) :: drhoscf (nrxx,nspin,3)
 
 
@@ -37,7 +37,7 @@ SUBROUTINE addnlcc_zstar_eu_us( drhoscf )
   INTEGER :: imode0, npe, ipol
 
   REAL(DP) :: fac
-  
+
   COMPLEX(DP), DIMENSION(nrxx) :: drhoc
   COMPLEX(DP), DIMENSION(nrxx,nspin) :: dvaux
 
@@ -56,10 +56,10 @@ SUBROUTINE addnlcc_zstar_eu_us( drhoscf )
         fac = 1.d0 / DBLE (nspin_lsda)
         DO ipert = 1, npe
            mode = imode0 + ipert
-           
+
            dvaux = (0.0_dp,0.0_dp)
            CALL addcore (mode, drhoc)
-           
+
            DO is = 1, nspin_lsda
               rho%of_r(:,is) = rho%of_r(:,is) + fac * rho_core
            END DO
@@ -79,18 +79,18 @@ SUBROUTINE addnlcc_zstar_eu_us( drhoscf )
            !
 
            IF ( dft_is_gradient() ) &
-                CALL dgradcorr (rho%of_r, grho, dvxc_rr, dvxc_sr, dvxc_ss, dvxc_s, &
-                    xq, drhoscf (1, 1, ipert), nr1, nr2, nr3, nrx1, nrx2, &
-                    nrx3, nrxx, nspin, nspin_gga, nl, ngm, g, alat, dvaux)
-        
+                CALL dgradcorr (rho%of_r, grho, &
+                    dvxc_rr, dvxc_sr, dvxc_ss, dvxc_s, xq, drhoscf (1,1,ipert),&
+                    nrxx, nspin, nspin_gga, nl, ngm, g, alat, dvaux)
+
            DO is = 1, nspin_lsda
               rho%of_r(:,is) = rho%of_r(:,is) - fac * rho_core
            END DO
-           
+
            DO is = 1, nspin_lsda
               zstareu0(ipol,mode) = zstareu0(ipol,mode) -                  &
                    omega * fac / REAL(nrtot, DP) *         &
-                   DOT_PRODUCT(dvaux(1:nrxx,is),drhoc(1:nrxx)) 
+                   DOT_PRODUCT(dvaux(1:nrxx,is),drhoc(1:nrxx))
            END DO
         END DO
         imode0 = imode0 + npe

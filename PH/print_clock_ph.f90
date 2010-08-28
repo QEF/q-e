@@ -32,7 +32,7 @@ subroutine print_clock_ph
   call print_clock ('drho')
   if ((epsil.or.zue).and.okvan) call print_clock ('cmpt_qdipol')
 
-  if(epsil) then 
+  if(epsil) then
      WRITE( stdout, * )
      WRITE( stdout,  * ) '    DIELECTRIC CONSTANT AND EFFECTIVE CHARGES:'
      call print_clock ('solve_e')
@@ -57,7 +57,7 @@ subroutine print_clock_ph
      call print_clock ('add_dkmds5')
      call print_clock ('add_dkmds6')
 #endif
-     if (lraman.OR.elop) then 
+     if (lraman.OR.elop) then
         WRITE( stdout, * )
         WRITE( stdout,  * ) '    RAMAN COEFFICIENTS, THIRD-ORDER CHI:'
         call print_clock ('dhdrhopsi')
@@ -66,7 +66,7 @@ subroutine print_clock_ph
      if (lraman) call print_clock ('dvpsi_e2')
      if (lraman) call print_clock ('solve_e2')
   endif
-  if(trans) then 
+  if(trans) then
      WRITE( stdout, * )
      WRITE( stdout,  * ) '    DYNAMICAL MATRIX:'
      call print_clock ('dynmat0')

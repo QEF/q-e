@@ -48,7 +48,7 @@ subroutine compute_becalp (becq, alpq)
   if (lgamma) return
   IF (rec_code_read >= -20.AND..NOT.okpaw) RETURN
 
-  allocate (aux ( npwx*npol , nbnd))    
+  allocate (aux ( npwx*npol , nbnd))
   if (nksq.gt.1) rewind (iunigk)
   do ik = 1, nksq
 

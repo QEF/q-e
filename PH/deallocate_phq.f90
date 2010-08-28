@@ -38,7 +38,7 @@ subroutine deallocate_phq
   IMPLICIT NONE
   INTEGER :: ik, ipol
 
-  if(allocated(ramtns)) deallocate (ramtns)  
+  if(allocated(ramtns)) deallocate (ramtns)
   if (lgamma) then
      if(associated(evq)) nullify(evq)
      if(associated(igkq)) nullify(igkq)
@@ -46,9 +46,9 @@ subroutine deallocate_phq
      if(associated(evq)) deallocate(evq)
      if(associated(igkq)) deallocate(igkq)
   end if
-  
-  if(allocated(dvpsi)) deallocate (dvpsi)    
-  if(allocated(dpsi)) deallocate ( dpsi)    
+
+  if(allocated(dvpsi)) deallocate (dvpsi)
+  if(allocated(dpsi)) deallocate ( dpsi)
   !
   if(allocated(vlocq)) deallocate (vlocq)
   if(allocated(dmuxc)) deallocate (dmuxc)
@@ -69,14 +69,14 @@ subroutine deallocate_phq
 
   CALL deallocate_pert()
 
-  if(allocated(npert)) deallocate (npert)    
-  if(allocated(zstareu)) deallocate (zstareu)    
-  if(allocated(zstareu0)) deallocate (zstareu0)    
-  if(allocated(zstarue)) deallocate (zstarue)    
-  if(allocated(zstarue0)) deallocate (zstarue0)    
-  if(allocated(zstarue0_rec)) deallocate (zstarue0_rec)    
+  if(allocated(npert)) deallocate (npert)
+  if(allocated(zstareu)) deallocate (zstareu)
+  if(allocated(zstareu0)) deallocate (zstareu0)
+  if(allocated(zstarue)) deallocate (zstarue)
+  if(allocated(zstarue0)) deallocate (zstarue0)
+  if(allocated(zstarue0_rec)) deallocate (zstarue0_rec)
 
-  if(allocated(int1)) deallocate (int1)    
+  if(allocated(int1)) deallocate (int1)
   if(allocated(int2)) deallocate (int2)
   if(allocated(int3)) deallocate (int3)
   if(allocated(int3_paw)) deallocate (int3_paw)
@@ -94,7 +94,7 @@ subroutine deallocate_phq
   if(allocated(dpqq_so)) deallocate(dpqq_so)
 
   if(allocated(alphasum)) deallocate (alphasum)
-  if(allocated(this_dvkb3_is_on_file)) deallocate (this_dvkb3_is_on_file)    
+  if(allocated(this_dvkb3_is_on_file)) deallocate (this_dvkb3_is_on_file)
 
   if(allocated(this_pcxpsi_is_on_file)) deallocate (this_pcxpsi_is_on_file)
   if(allocated(alphap)) then
@@ -113,16 +113,16 @@ subroutine deallocate_phq
   end if
   call deallocate_bec_type ( becp )
 
-  if(allocated(el_ph_mat)) deallocate (el_ph_mat)    
+  if(allocated(el_ph_mat)) deallocate (el_ph_mat)
   if(allocated(m_loc))     deallocate(m_loc)
 
   if(allocated(drc)) deallocate(drc)
 
-  if(allocated(dvxc_rr)) deallocate (dvxc_rr)    
-  if(allocated(dvxc_sr)) deallocate (dvxc_sr)    
-  if(allocated(dvxc_ss)) deallocate (dvxc_ss)    
-  if(allocated(dvxc_s)) deallocate (dvxc_s)    
-  if(allocated(grho)) deallocate (grho)  
+  if(allocated(dvxc_rr)) deallocate (dvxc_rr)
+  if(allocated(dvxc_sr)) deallocate (dvxc_sr)
+  if(allocated(dvxc_ss)) deallocate (dvxc_ss)
+  if(allocated(dvxc_s)) deallocate (dvxc_s)
+  if(allocated(grho)) deallocate (grho)
   if(allocated(segni)) deallocate (segni)
   if(allocated(vsgga)) deallocate (vsgga)
   if(allocated(gmag))  deallocate (gmag)

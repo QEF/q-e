@@ -8,18 +8,18 @@
 !-----------------------------------------------------------------------
 subroutine rgd_blk (nr1,nr2,nr3,nat,dyn,q,tau,epsil,zeu,bg,omega,sign)
   !-----------------------------------------------------------------------
-  ! compute the rigid-ion (long-range) term for q 
+  ! compute the rigid-ion (long-range) term for q
   ! The long-range term used here, to be added to or subtracted from the
   ! dynamical matrices, is exactly the same of the formula introduced in:
-  ! X. Gonze et al, PRB 50. 13035 (1994) . Only the G-space term is 
-  ! implemented: the Ewald parameter alpha must be large enough to 
+  ! X. Gonze et al, PRB 50. 13035 (1994) . Only the G-space term is
+  ! implemented: the Ewald parameter alpha must be large enough to
   ! have negligible r-space contribution
   !
   use kinds, only: dp
   use constants, only: pi, fpi, e2
   implicit none
   integer ::  nr1, nr2, nr3    !  FFT grid
-  integer ::  nat              ! number of atoms 
+  integer ::  nat              ! number of atoms
   complex(DP) :: dyn(3,3,nat,nat) ! dynamical matrix
   real(DP) &
        q(3),           &! q-vector
@@ -42,7 +42,7 @@ subroutine rgd_blk (nr1,nr2,nr3,nat,dyn,q,tau,epsil,zeu,bg,omega,sign)
   !
   ! alph is the Ewald parameter, geg is an estimate of G^2
   ! such that the G-space sum is convergent for that alph
-  ! very rough estimate: geg/4/alph > gmax = 14 
+  ! very rough estimate: geg/4/alph > gmax = 14
   ! (exp (-14) = 10^-6)
   !
   gmax= 14.d0
@@ -50,23 +50,23 @@ subroutine rgd_blk (nr1,nr2,nr3,nat,dyn,q,tau,epsil,zeu,bg,omega,sign)
   geg = gmax*alph*4.0d0
 
   ! Estimate of nrx1,nrx2,nrx3 generating all vectors up to G^2 < geg
-  ! Only for dimensions where periodicity is present, e.g. if nr1=1 
+  ! Only for dimensions where periodicity is present, e.g. if nr1=1
   ! and nr2=1, then the G-vectors run along nr3 only.
   ! (useful if system is in vacuum, e.g. 1D or 2D)
   !
-  if (nr1 == 1) then 
+  if (nr1 == 1) then
      nrx1=0
   else
      nrx1 = int ( sqrt (geg) / &
                   sqrt (bg (1, 1) **2 + bg (2, 1) **2 + bg (3, 1) **2) ) + 1
   endif
-  if (nr2 == 1) then 
+  if (nr2 == 1) then
      nrx2=0
   else
      nrx2 = int ( sqrt (geg) / &
                   sqrt (bg (1, 2) **2 + bg (2, 2) **2 + bg (3, 2) **2) ) + 1
   endif
-  if (nr3 == 1) then 
+  if (nr3 == 1) then
      nrx3=0
   else
      nrx3 = int ( sqrt (geg) / &
@@ -103,10 +103,10 @@ subroutine rgd_blk (nr1,nr2,nr3,nat,dyn,q,tau,epsil,zeu,bg,omega,sign)
               zcg(:) = g1*zeu(1,:,nb) + g2*zeu(2,:,nb) + g3*zeu(3,:,nb)
               fnat(:) = fnat(:) + zcg(:)*cos(arg)
            end do
-           do j=1,3 
-              do i=1,3 
+           do j=1,3
+              do i=1,3
                  dyn(i,j,na,na) = dyn(i,j,na,na) - facgd * &
-                                  zag(i) * fnat(j) 
+                                  zag(i) * fnat(j)
               end do
            end do
         end do
@@ -133,8 +133,8 @@ subroutine rgd_blk (nr1,nr2,nr3,nat,dyn,q,tau,epsil,zeu,bg,omega,sign)
                               g3 * (tau(3,na)-tau(3,nb)))
               !
               facg = facgd * CMPLX(cos(arg),sin(arg),kind=DP)
-              do j=1,3 
-                 do i=1,3 
+              do j=1,3
+                 do i=1,3
                     dyn(i,j,na,nb) = dyn(i,j,na,nb) + facg *      &
                                      zag(i) * zbg(j)
                  end do
@@ -163,7 +163,7 @@ subroutine nonanal(nat, nat_blk, itau_blk, epsil, q, zeu, omega, dyn )
  !       of a dyn.mat. constructed in the mass approximation)
  !  nat_blk: number of atoms in the original cell (the same as nat if
  !       we are not using the mass approximation to build a supercell)
- !  itau_blk(na): atom in the original cell corresponding to 
+ !  itau_blk(na): atom in the original cell corresponding to
  !                atom na in the supercell
  !
  complex(DP), intent(inout) :: dyn(3,3,nat,nat) ! dynamical matrix

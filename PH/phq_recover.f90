@@ -24,14 +24,14 @@ subroutine phq_recover
   !  -40         phq_setup    Only the displacements u have been read from file
   !  -30         phq_init     u and dyn(0) read from file
   !  -25                      not active yet. Restart in solve_e_fpol
-  !  -20         solve_e      all previous. Stopped within solve_e. There 
+  !  -20         solve_e      all previous. Stopped within solve_e. There
   !                           should be a recover file.
-  !  -10         solve_e2     epsilon and zstareu are available if requested. 
-  !                           Stopped within solve_e2. There should be a 
+  !  -10         solve_e2     epsilon and zstareu are available if requested.
+  !                           Stopped within solve_e2. There should be a
   !                           recover file.
   !   2          phescf       all previous, raman tenson and elop tensor are
   !                           available if required.
-  !   10         solve_linter all previous. Stopped within solve linter. 
+  !   10         solve_linter all previous. Stopped within solve linter.
   !                           There should be a recover file.
   !   20         phqscf       all previous dyn_rec(irr) and zstarue0(irr) are
   !                           available.
@@ -43,7 +43,7 @@ subroutine phq_recover
   ! false it disables completely the recover.
   ! The control of the code is given by the arrays:
   ! comp_iq, done_iq : for each q point if it has to be calculated or
-  !                    if it is already available. These are calculated 
+  !                    if it is already available. These are calculated
   !                    only once by check_initial_status or read from file
   !                    by the same routine.
   ! comp_irr, done_irr : for each irreducible representation if it has
@@ -56,15 +56,15 @@ subroutine phq_recover
   ! set by prepare_q, or read from file by phq_setup.
   !
   ! The position where the code stopped is in the variable rec_code_read
-  ! defined above. This variable allows to exit from a routine if the quantity 
-  ! calculated by this routine is already saved on file. 
+  ! defined above. This variable allows to exit from a routine if the quantity
+  ! calculated by this routine is already saved on file.
   ! It is the responsibility of the routine (not of the calling code)
   ! to known if it has to make the calculation or just exit because the
   ! value of rec_code_read is too high.
   !
-  ! if rec_code_read = (-25), -20, -10, 10  
-  !    It is expected that an unformatted recover file exists. 
-  !    The following data are in the 
+  ! if rec_code_read = (-25), -20, -10, 10
+  !    It is expected that an unformatted recover file exists.
+  !    The following data are in the
   !    unformatted file and are read by
   !    routines solve_e (-20), solve_e2 (-10), solve_linter (10):
   ! iter, dr2, convt
@@ -74,7 +74,7 @@ subroutine phq_recover
   ! if (okpaw) dbecsum
   !    the change of the D coefficients calculated so far.
   ! if (okvan) int1, int2, int3
-  !    arrays used with US potentials : int1 and int2 calculated in dvanqq, 
+  !    arrays used with US potentials : int1 and int2 calculated in dvanqq,
   !    int3 calculatec in newdq (depends upon self-consistency)
   !
   !    rec_code_read is valid only for the first q. For the following q
@@ -104,14 +104,14 @@ subroutine phq_recover
   character(len=256) :: filename
 
   ierr=0
-  IF (recover) THEN 
+  IF (recover) THEN
      CALL ph_readfile('data',ierr)
      IF (rec_code_read==-40) THEN
-        WRITE( stdout, '(/,4x," Modes are read from file ")') 
+        WRITE( stdout, '(/,4x," Modes are read from file ")')
      ELSEIF (rec_code_read==-20) THEN
         WRITE( stdout, '(/,4x," Restart in Electric Field calculation")')
      ELSEIF (rec_code_read==-10) then
-        WRITE( stdout, '(/,4x," Restart in Raman calculation")') 
+        WRITE( stdout, '(/,4x," Restart in Raman calculation")')
      ELSEIF (rec_code_read==2) THEN
         WRITE( stdout, '(/,4x," Restart after Electric Field calculation")')
      ELSEIF (rec_code_read==10.OR.rec_code_read==20) then
@@ -127,8 +127,8 @@ subroutine phq_recover
   ext_recover = ext_recover .AND. ierr==0
 !
 ! The case in which everything has been already calculated and we just
-! recollect all the results must be treated in a special way (it does 
-! not require any initialization). 
+! recollect all the results must be treated in a special way (it does
+! not require any initialization).
 ! We check here if everything has been done
 !
   all_done=.true.

@@ -25,7 +25,9 @@ subroutine dvanqq
   USE kinds, only : DP
   USE cell_base, ONLY : omega, tpiba2, tpiba
   USE ions_base, ONLY : nat, ityp, ntyp => nsp
-  use gvect, only : ngm, gg, nrxx, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
+  USE fft_base,   ONLY: dfftp
+  USE fft_interfaces, ONLY: fwfft
+  use gvect, only : ngm, gg, nrxx, &
                     nl, g, ig1, ig2, ig3, eigts1, eigts2, eigts3
   use spin_orb, only : lspinorb
   use scf, only : v, vltot
@@ -75,18 +77,18 @@ subroutine dvanqq
   int2(:,:,:,:,:) = (0.d0, 0.d0)
   int4(:,:,:,:,:) = (0.d0, 0.d0)
   int5(:,:,:,:,:) = (0.d0, 0.d0)
-  allocate (sk  (  ngm))    
-  allocate (aux1(  ngm))    
-  allocate (aux2(  ngm))    
-  allocate (aux3(  ngm))    
-  allocate (aux5(  ngm))    
-  allocate (qmodg( ngm))    
-  allocate (ylmk0( ngm , lmaxq * lmaxq))    
-  allocate (qgm  ( ngm))    
+  allocate (sk  (  ngm))
+  allocate (aux1(  ngm))
+  allocate (aux2(  ngm))
+  allocate (aux3(  ngm))
+  allocate (aux5(  ngm))
+  allocate (qmodg( ngm))
+  allocate (ylmk0( ngm , lmaxq * lmaxq))
+  allocate (qgm  ( ngm))
   if (.not.lgamma) then
-     allocate (ylmkq(ngm , lmaxq * lmaxq))    
-     allocate (qmod( ngm))    
-     allocate (qgmq( ngm))    
+     allocate (ylmkq(ngm , lmaxq * lmaxq))
+     allocate (qmod( ngm))
+     allocate (qgmq( ngm))
   else
      qgmq =>qgm
   endif
@@ -98,7 +100,7 @@ subroutine dvanqq
      qmodg (ig) = sqrt (gg (ig) )
   enddo
   if (.not.lgamma) then
-     allocate (qpg (3, ngm))    
+     allocate (qpg (3, ngm))
      call setqmod (ngm, xq, g, qmod, qpg)
      call ylmr2 (lmaxq * lmaxq, ngm, qpg, qmod, ylmkq)
      deallocate (qpg)
@@ -109,7 +111,7 @@ subroutine dvanqq
   !
   !   we start by computing the FT of the effective potential
   !
-  allocate (veff ( nrxx , nspin_mag))    
+  allocate (veff ( nrxx , nspin_mag))
   do is = 1, nspin_mag
      if (nspin_mag.ne.4.or.is==1) then
         do ir = 1, nrxx
@@ -120,7 +122,7 @@ subroutine dvanqq
            veff (ir, is) = CMPLX(v%of_r (ir, is), 0.d0,kind=DP)
         enddo
      endif
-     call cft3 (veff (1, is), nr1, nr2, nr3, nrx1, nrx2, nrx3, - 1)
+     CALL fwfft ('Dense', veff (:, is), dfftp)
   enddo
   !
   !     We compute here four of the five integrals needed in the phonon
@@ -159,7 +161,7 @@ subroutine dvanqq
                        do ig=1, ngm
                           sk(ig)=vlocq(ig,nta) * eigts1(ig1 (ig), na) &
                                                * eigts2(ig2 (ig), na) &
-                                               * eigts3(ig3 (ig), na) 
+                                               * eigts3(ig3 (ig), na)
                        enddo
                        do ipol = 1, 3
                           do ig=1, ngm

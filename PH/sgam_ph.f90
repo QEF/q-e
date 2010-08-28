@@ -40,7 +40,7 @@ subroutine sgam_ph (at, bg, nsym, s, irt, tau, rtau, nat, sym)
   real(DP) , allocatable :: xau (:,:)
   real(DP) :: ft (3)
   !
-  allocate (xau(3,nat))    
+  allocate (xau(3,nat))
   !
   !   compute the atomic coordinates in crystal axis, xau
   !

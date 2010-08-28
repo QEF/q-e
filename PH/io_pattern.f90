@@ -12,7 +12,7 @@ SUBROUTINE io_pattern (fildrho,nirr,npert,u,iflag)
   USE kinds, ONLY : DP
   USE ions_base, ONLY : nat
   USE io_global,  ONLY : stdout
-  
+
   IMPLICIT NONE
 !
 !   the i/o variables first

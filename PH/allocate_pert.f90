@@ -10,7 +10,7 @@
 subroutine allocate_pert()
   !-----------------------------------------------------------------------
   !
-  ! dynamical allocation of arrays: quantities depending on the 
+  ! dynamical allocation of arrays: quantities depending on the
   ! maximum number of perturbations npertx
   !
   USE ions_base, ONLY : nat
@@ -22,8 +22,8 @@ subroutine allocate_pert()
   !  allocate space for the quantities with dimensions that depend
   !  on the maximum number of perturbations
   !
-  ALLOCATE ( t ( npertx, npertx, 48, 3 * nat ) )    
-  ALLOCATE ( tmq ( npertx, npertx, 3 * nat ) )    
+  ALLOCATE ( t ( npertx, npertx, 48, 3 * nat ) )
+  ALLOCATE ( tmq ( npertx, npertx, 3 * nat ) )
 
   RETURN
 END SUBROUTINE allocate_pert
@@ -32,7 +32,7 @@ END SUBROUTINE allocate_pert
 subroutine deallocate_pert()
   !-----------------------------------------------------------------------
   !
-  ! dynamical allocation of arrays: quantities depending on the 
+  ! dynamical allocation of arrays: quantities depending on the
   ! maximum number of perturbations npertx
   !
   USE modes, ONLY : t, tmq
@@ -42,8 +42,8 @@ subroutine deallocate_pert()
   !  allocate space for the quantities with dimensions that depend
   !  on the maximum number of perturbations
   !
-  IF (ASSOCIATED(t)) DEALLOCATE ( t )    
-  IF (ASSOCIATED(tmq)) DEALLOCATE ( tmq )    
+  IF (ASSOCIATED(t)) DEALLOCATE ( t )
+  IF (ASSOCIATED(tmq)) DEALLOCATE ( tmq )
 
   RETURN
 END SUBROUTINE deallocate_pert

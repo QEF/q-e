@@ -11,17 +11,19 @@ subroutine addusddense (drhoscf, dbecsum)
   !----------------------------------------------------------------------
   !
   !  This routine adds to the change of the charge and magnetization
-  !  densities due to an electric field perturbation 
+  !  densities due to an electric field perturbation
   !  the part due to the US augmentation.
   !  It assumes that the array dbecsum has already accumulated the
-  !  change of the becsum term. 
+  !  change of the becsum term.
   !  The expression implemented is given in Eq. B32 of PRB 64, 235118
   !  (2001) with b=c=0.
   !
-  
+
   USE kinds, only : DP
   USE ions_base, ONLY : nat, ityp, ntyp => nsp
-  USE gvect, ONLY : nrxx, nrx1, nrx2, nrx3, nr1, nr2, nr3, nl, g, gg, &
+  use fft_base,  only: dfftp
+  use fft_interfaces, only: invfft
+  USE gvect, ONLY : nrxx, nl, g, gg, &
                     ngm, eigts1, eigts2, eigts3, ig1, ig2, ig3
   USE uspp, ONLY: okvan
   USE uspp_param, ONLY: upf, lmaxq, nh, nhm
@@ -60,12 +62,12 @@ subroutine addusddense (drhoscf, dbecsum)
 
   if (.not.okvan) return
   call start_clock ('addusddense')
-  allocate (aux(  ngm, nspin_mag, 3))    
-  allocate (sk (  ngm))    
-  allocate (qg (  nrxx))    
-  allocate (ylmk0(ngm , lmaxq * lmaxq))    
-  allocate (qgm  (ngm))    
-  allocate (qmod (ngm))    
+  allocate (aux(  ngm, nspin_mag, 3))
+  allocate (sk (  ngm))
+  allocate (qg (  nrxx))
+  allocate (ylmk0(ngm , lmaxq * lmaxq))
+  allocate (qgm  (ngm))
+  allocate (qmod (ngm))
 
   !
   !  And then we compute the additional charge in reciprocal space
@@ -114,7 +116,7 @@ subroutine addusddense (drhoscf, dbecsum)
      do ipert = 1, 3
         qg (:) = (0.d0, 0.d0)
         qg (nl (:) ) = aux (:, is, ipert)
-        call cft3 (qg, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1)
+        CALL invfft ('Dense', qg, dfftp)
         drhoscf(:,is,ipert) = drhoscf(:,is,ipert) + 2.d0*qg(:)
      enddo
   enddo

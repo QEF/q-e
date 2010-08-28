@@ -26,7 +26,7 @@ MODULE save_ph
             clean_input_variables
   !
   INTEGER, PRIVATE :: nat_todo_save, nrapp_save
-  INTEGER, ALLOCATABLE, PRIVATE :: list_save(:), atomo_save(:) 
+  INTEGER, ALLOCATABLE, PRIVATE :: list_save(:), atomo_save(:)
   CHARACTER(LEN=256), PUBLIC :: tmp_dir_save
   !
   !
@@ -73,7 +73,7 @@ MODULE save_ph
     IMPLICIT NONE
 
     DEALLOCATE(list_save)
-    DEALLOCATE(atomo_save)    
+    DEALLOCATE(atomo_save)
 
     RETURN
     END SUBROUTINE clean_input_variables

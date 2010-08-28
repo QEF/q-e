@@ -19,7 +19,7 @@ subroutine dhdrhopsi
   ! |chi> is a function that should depend on two polarization indexes.
   ! Since it is symmetric per exchange of the two indexes; we are considering
   ! only one index (running from 1 to 6) that is related to the two polarizat.
-  ! by the common variables: jab(3,3),  a1j(6), a2j(6) --see the comment 
+  ! by the common variables: jab(3,3),  a1j(6), a2j(6) --see the comment
   ! written in phcom.f90
   !
   ! |chi> = Pc [ DH , D\rho ] |psi> is computed in two different steps:
@@ -85,7 +85,7 @@ subroutine dhdrhopsi
   complex(DP) , allocatable :: ev_sw (:,:),  chif (:,:,:),  &
          depsi (:,:,:), auxg(:), dvscfs (:,:), &
          auxr (:), au2r (:), ps0 (:), ps1 (:,:), ps2 (:,:,:)
-  TYPE(bec_type) :: becp1_sw 
+  TYPE(bec_type) :: becp1_sw
   ! wavefunctions swap space
   ! the chi-wavefunction
   ! auxiliary space
@@ -131,7 +131,7 @@ subroutine dhdrhopsi
 
   !
   ! Read the variation of the charge-density and calculates the
-  ! local part of first-order variation of the self-consistent 
+  ! local part of first-order variation of the self-consistent
   ! Hamiltonian on the smooth grid --kept in dvscfs(nrxxs,3)--
   !
   call set_dvscf(dvscfs)
@@ -281,7 +281,7 @@ subroutine dhdrhopsi
                                      chif (1, ibnd, ipa), 1)
            enddo
 #ifdef __PARA
-           call mp_sum ( ps0, intra_pool_comm ) 
+           call mp_sum ( ps0, intra_pool_comm )
 #endif
            do jbnd = 1, nbnd_occ (ik)
               call zaxpy (npw, ps0 (jbnd), evc (1, jbnd), 1, auxg, 1)
@@ -299,8 +299,8 @@ subroutine dhdrhopsi
   enddo
 
 #ifdef __PARA
-  call mp_sum ( avg_iter1, inter_pool_comm ) 
-  call mp_sum ( avg_iter2, inter_pool_comm ) 
+  call mp_sum ( avg_iter1, inter_pool_comm )
+  call mp_sum ( avg_iter2, inter_pool_comm )
 #endif
   avg_iter1 = avg_iter1 / nkstot
   avg_iter2 = avg_iter2 / nkstot

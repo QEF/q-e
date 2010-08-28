@@ -62,7 +62,7 @@ subroutine dynmatrix
   !
   call start_clock('dynmatrix')
   ldiag_loc=ldiag.OR.(nat_todo_input > 0).OR.all_comp
-  ! 
+  !
   !     set all noncomputed elements to zero
   !
   if (.not.lgamma_gamma) then
@@ -127,7 +127,7 @@ subroutine dynmatrix
      DO irr=0,nirr
         IF (done_irr(irr)==0) THEN
            IF (.not.ldisp) THEN
-              WRITE(stdout, '(/,5x,"Stopping because representation", & 
+              WRITE(stdout, '(/,5x,"Stopping because representation", &
                                  & i5, " is not done")') irr
               CALL close_phq(.TRUE.)
               CALL stop_ph(.TRUE.)
@@ -204,7 +204,7 @@ subroutine dynmatrix
         CALL sym_and_write_zue
      ENDIF
   ELSEIF (lgamma) THEN
-     IF (done_zue) CALL summarize_zue() 
+     IF (done_zue) CALL summarize_zue()
   ENDIF
 
   if (lraman) call write_ramtns (iudyn, ramtns)
@@ -218,7 +218,7 @@ subroutine dynmatrix
                                         nspin_mag, name_rap_mode, num_rap_mode)
   END IF
 !
-! Here we save the dynamical matrix and the effective charges dP/du on 
+! Here we save the dynamical matrix and the effective charges dP/du on
 ! the recover file. If a recover file with this very high recover code
 ! is found only the final result is rewritten on output.
 !
@@ -233,7 +233,7 @@ end subroutine dynmatrix
   SUBROUTINE write_old_dyn_mat(iudyn)
 !
 !  This routine is here for compatibility with the old code.
-!  It will be removed when the xml file format of the dynamical matrix 
+!  It will be removed when the xml file format of the dynamical matrix
 !  will be tested.
 !
   USE ions_base, ONLY : ntyp => nsp, nat, ityp, tau, atm, pmass
@@ -242,9 +242,9 @@ end subroutine dynmatrix
 
   IMPLICIT NONE
   INTEGER, INTENT(IN) :: iudyn
-  INTEGER :: nt, na, i, j 
+  INTEGER :: nt, na, i, j
 
-  WRITE (iudyn, '("Dynamical matrix file")') 
+  WRITE (iudyn, '("Dynamical matrix file")')
   WRITE (iudyn, '(a)') title
   WRITE (iudyn, '(i3,i5,i3,6f11.7)') ntyp, nat, ibrav, celldm
   IF (ibrav==0) THEN
@@ -257,7 +257,7 @@ end subroutine dynmatrix
   DO na = 1, nat
      WRITE (iudyn, '(2i5,3f15.7)') na, ityp (na) , (tau (j, na) , j = 1, 3)
   ENDDO
-  
+
   RETURN
   END SUBROUTINE write_old_dyn_mat
 !

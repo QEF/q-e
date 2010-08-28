@@ -118,7 +118,7 @@ subroutine el_opt
                                               aux3(:,ipa) * &
                                               aux3(:,ipb) * &
                                               aux3(:,ipc) ) ) * &
-                                 omega / (nr1*nr2*nr3) 
+                                 omega / (nr1*nr2*nr3)
         enddo
      enddo
   enddo

@@ -78,11 +78,11 @@ subroutine add_for_charges (ik, uact)
      CALL allocate_bec_type(nkb,nbnd,alphapp(ipol))
   ENDDO
   IF (noncolin) THEN
-     allocate (ps1_nc ( nkb, npol, nbnd))    
-     allocate (ps2_nc ( nkb, npol, nbnd , 3))    
+     allocate (ps1_nc ( nkb, npol, nbnd))
+     allocate (ps2_nc ( nkb, npol, nbnd , 3))
   ELSE
-     allocate (ps1 ( nkb , nbnd))    
-     allocate (ps2 ( nkb , nbnd , 3))    
+     allocate (ps1 ( nkb , nbnd))
+     allocate (ps2 ( nkb , nbnd , 3))
   ENDIF
   if (lgamma) then
      ikk = ik
@@ -112,7 +112,7 @@ subroutine add_for_charges (ik, uact)
   aux1  = (0.d0, 0.d0)
 
   !
-  ! first we calculate the products of the beta functions with dpsi 
+  ! first we calculate the products of the beta functions with dpsi
   !
   CALL calbec (npw, vkb, dpsi, bedp)
   do ipol = 1, 3
@@ -120,13 +120,13 @@ subroutine add_for_charges (ik, uact)
      do ibnd = 1, nbnd
         do ig = 1, npw
            aux1 (ig, ibnd) = dpsi(ig,ibnd) *           &
-                tpiba * (0.d0,1.d0) *                  & 
+                tpiba * (0.d0,1.d0) *                  &
                 ( xk(ipol,ikk) + g(ipol,igk(ig)) )
         enddo
         if (noncolin) then
            do ig = 1, npw
               aux1 (ig+npwx, ibnd) = dpsi(ig+npwx,ibnd) *           &
-                   tpiba * (0.d0,1.d0) *                  & 
+                   tpiba * (0.d0,1.d0) *                  &
                   ( xk(ipol,ikk) + g(ipol,igk(ig)) )
            enddo
         endif

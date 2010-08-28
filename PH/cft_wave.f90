@@ -23,7 +23,9 @@ subroutine cft_wave (evc_g, evc_r, isw)
 
   USE kinds, ONLY : DP
   USE wvfct, ONLY : npwx, npw, igk
-  USE gsmooth, ONLY : nrxxs, nrx1s, nrx2s, nrx3s, nr1s, nr2s, nr3s, nls
+  USE fft_base,   ONLY: dffts
+  USE fft_interfaces, ONLY: fwfft, invfft
+  USE gsmooth, ONLY : nrxxs, nls
   use noncollin_module, ONLY : noncolin, npol
   use qpoint, ONLY : npwq, igkq
   implicit none
@@ -38,22 +40,22 @@ subroutine cft_wave (evc_g, evc_r, isw)
      do ig = 1, npw
         evc_r (nls (igk (ig) ),1 ) = evc_g (ig)
      enddo
-     call cft3s (evc_r, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, +2)
+     CALL invfft ('Wave', evc_r(:,1), dffts)
      IF (noncolin) THEN
         DO ig = 1, npw
-           evc_r (nls(igk(ig)),2)=evc_g(ig+npwx)
+           evc_r (nls(igk(ig)),2) = evc_g (ig+npwx)
         ENDDO
-        CALL cft3s (evc_r(1,2),nr1s,nr2s,nr3s,nrx1s,nrx2s,nrx3s,+2)
+        CALL invfft ('Wave', evc_r(:,2), dffts)
      ENDIF
   else if(isw.eq.-1) then
-     call cft3s (evc_r, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, -2)
+     CALL fwfft ('Wave', evc_r(:,1), dffts)
      do ig = 1, npwq
         evc_g (ig) = evc_g (ig) + evc_r (nls (igkq (ig) ), 1 )
      enddo
      IF (noncolin) THEN
-        CALL cft3s(evc_r(1,2),nr1s,nr2s,nr3s,nrx1s,nrx2s,nrx3s,-2)
+        CALL fwfft ('Wave', evc_r(:,2), dffts)
         DO ig = 1, npwq
-           evc_g(ig+npwx)=evc_g(ig+npwx)+evc_r(nls(igkq(ig)),2)
+           evc_g (ig+npwx) = evc_g (ig+npwx) + evc_r (nls(igkq(ig)),2)
         ENDDO
      ENDIF
   else

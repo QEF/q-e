@@ -63,17 +63,17 @@ subroutine compute_nldyn (wdyn, wgg, becq, alpq)
   IF (rec_code_read >=-20) return
 
   IF (noncolin) THEN
-     allocate (ps1_nc (  nkb, npol, nbnd))    
-     allocate (ps2_nc (  nkb, npol, nbnd , 3))    
-     allocate (ps3_nc (  nkb, npol, nbnd))    
-     allocate (ps4_nc (  nkb, npol, nbnd , 3))    
-     allocate (deff_nc (  nhm, nhm, nat, nspin))    
+     allocate (ps1_nc (  nkb, npol, nbnd))
+     allocate (ps2_nc (  nkb, npol, nbnd , 3))
+     allocate (ps3_nc (  nkb, npol, nbnd))
+     allocate (ps4_nc (  nkb, npol, nbnd , 3))
+     allocate (deff_nc (  nhm, nhm, nat, nspin))
   ELSE
-     allocate (ps1 (  nkb, nbnd))    
-     allocate (ps2 (  nkb, nbnd , 3))    
-     allocate (ps3 (  nkb, nbnd))    
-     allocate (ps4 (  nkb, nbnd , 3))    
-     allocate (deff ( nhm, nhm, nat ))    
+     allocate (ps1 (  nkb, nbnd))
+     allocate (ps2 (  nkb, nbnd , 3))
+     allocate (ps3 (  nkb, nbnd))
+     allocate (ps4 (  nkb, nbnd , 3))
+     allocate (deff ( nhm, nhm, nat ))
   END IF
 
   dynwrk (:,:) = (0.d0, 0.d0)
@@ -119,7 +119,7 @@ subroutine compute_nldyn (wdyn, wgg, becq, alpq)
                                 ps1_nc (ikb, is, ibnd) =      &
                                    ps1_nc (ikb, is, ibnd) +  &
                                    deff_nc(ih,jh,na,ijs)*    &
-                                   becp1(ik)%nc (jkb, js, ibnd) 
+                                   becp1(ik)%nc (jkb, js, ibnd)
                              END DO
                           END DO
                           IF (lspinorb) THEN
@@ -156,7 +156,7 @@ subroutine compute_nldyn (wdyn, wgg, becq, alpq)
                                        deff_nc(ih,jh,na,ijs) *              &
                                        alphap(ipol,ik)%nc(jkb, js, ibnd)+ &
                                        int1_nc(ih, jh, ipol, na, ijs) *     &
-                                        becp1(ik)%nc (jkb, js, ibnd)           
+                                        becp1(ik)%nc (jkb, js, ibnd)
                                 END DO
                              END DO
                              IF (lspinorb) THEN
@@ -239,7 +239,7 @@ subroutine compute_nldyn (wdyn, wgg, becq, alpq)
                                                ijs=ijs+1
                                                ps_nc(is) = ps_nc(is) + &
                                                int2_so(ih,jh,ipol,na,nb,ijs)*&
-                                               becp1(ik)%nc(jkb,js,ibnd)    
+                                               becp1(ik)%nc(jkb,js,ibnd)
                                             END DO
                                          END DO
                                       ELSE

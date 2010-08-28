@@ -60,7 +60,7 @@ subroutine addusdbec_nc (ik, wgt, psi, dbecsum_nc)
   if (.not.okvan) return
 
   call start_clock ('addusdbec_nc')
-  allocate (dbecq_nc( nkb,npol, nbnd))    
+  allocate (dbecq_nc( nkb,npol, nbnd))
   ikk = ikks(ik)
   !
   !     First compute the product of psi and vkb

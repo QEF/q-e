@@ -52,7 +52,7 @@ subroutine phq_setup
   !
   USE kinds,         ONLY : DP
   USE ions_base,     ONLY : tau, nat, ntyp => nsp, ityp, pmass
-  USE cell_base,     ONLY : at, bg  
+  USE cell_base,     ONLY : at, bg
   USE io_global,     ONLY : stdout
   USE ener,          ONLY : Ef
   USE klist,         ONLY : xk, lgauss, degauss, ngauss, nks, nelec
@@ -125,9 +125,9 @@ subroutine phq_setup
   ! 0) A few checks
   !
   IF (dft_is_gradient().and.(lraman.or.elop)) call errore('phq_setup', &
-     'third order derivatives not implemented with GGA', 1) 
+     'third order derivatives not implemented with GGA', 1)
   !
-  !  read the displacement patterns 
+  !  read the displacement patterns
   !
   IF (u_from_file) THEN
      CALL ph_readfile('data_u',ierr)
@@ -141,7 +141,7 @@ subroutine phq_setup
   ! 2) Set non linear core correction stuff
   !
   nlcc_any = ANY ( upf(1:ntyp)%nlcc )
-  if (nlcc_any) allocate (drc( ngm, ntyp))    
+  if (nlcc_any) allocate (drc( ngm, ntyp))
   !
   !  3) If necessary calculate the local magnetization. This information is
   !      needed in find_sym
@@ -196,7 +196,7 @@ subroutine phq_setup
   call setup_dgc
   !
   ! 4) Computes the inverse of each matrix of the crystal symmetry group
-  ! 
+  !
   call inverse_s ( )
   !
   ! 5) Computes the number of occupied bands for each k point
@@ -236,7 +236,7 @@ subroutine phq_setup
   else
      if (lsda) call infomsg('phq_setup','occupation numbers probably wrong')
      if (noncolin) then
-        nbnd_occ = nint (nelec) 
+        nbnd_occ = nint (nelec)
      else
         do ik = 1, nks
            nbnd_occ (ik) = nint (nelec) / degspin
@@ -279,7 +279,7 @@ subroutine phq_setup
   !
   magnetic_sym = noncolin .AND. domag
   time_reversal = .NOT. noinv .AND. .NOT. magnetic_sym
-  ! 
+  !
   ! allocate and calculate rtau, the rotated position of each atom
   !
   sym (1:nsym) = .true.
@@ -404,14 +404,14 @@ subroutine phq_setup
   comp_irr(0)=1
   IF (nrapp==0 .AND. nat_todo==0) THEN
      !
-     !  Case 1)  The partial computation option is not used, make all 
+     !  Case 1)  The partial computation option is not used, make all
      !           representation between start_irr and last_irr
      !
      IF (start_irr <= last_irr_eff) comp_irr(start_irr: last_irr_eff) = 1
      !
   ELSEIF (nat_todo /= 0) THEN
      !
-     !   Case 2) Sets the atoms which must be computed: the requested 
+     !   Case 2) Sets the atoms which must be computed: the requested
      !   atoms and all the symmetry related atoms
      !
      ifat = 0
@@ -474,7 +474,7 @@ subroutine phq_setup
            comp_irr(3*(nasr-1)+ipol)=0
            with_symmetry(3*(nasr-1)+ipol)=0
         enddo
-     endif     
+     endif
      IF (start_irr <= last_irr_eff) THEN
         DO irr=1,start_irr-1
            comp_irr(irr) = 0
@@ -532,7 +532,7 @@ subroutine phq_setup
      npertx = max (npertx, npert (irr) )
   ENDDO
 !
-!  set to zero the variable written on file 
+!  set to zero the variable written on file
 !
   dyn=(0.0_DP,0.0_DP)
   dyn00=(0.0_DP,0.0_DP)

@@ -9,7 +9,7 @@
 SUBROUTINE setup_nscf (xq)
   !----------------------------------------------------------------------------
   !
-  ! ... This routine initializes variables for the non-scf calculations at k 
+  ! ... This routine initializes variables for the non-scf calculations at k
   ! ... and k+q required by the linear response calculation at finite q.
   ! ... In particular: finds the symmetry group of the crystal that leaves
   ! ... the phonon q-vector (xq) or the single atomic displacement (modenum)
@@ -81,7 +81,7 @@ SUBROUTINE setup_nscf (xq)
   !
   ! ... time_reversal = use q=>-q symmetry for k-point generation
   !
-  magnetic_sym = noncolin .AND. domag 
+  magnetic_sym = noncolin .AND. domag
   time_reversal = .NOT. noinv .AND. .NOT. magnetic_sym
   !
   ! ... smallg_q flags in symmetry operations of the crystal
@@ -91,9 +91,9 @@ SUBROUTINE setup_nscf (xq)
   call smallg_q (xq, modenum, at, bg, nsym, s, ftau, sym, minus_q)
   IF ( .not. time_reversal ) minus_q = .false.
   !
-  ! ... for single-mode calculation: find symmetry operations 
+  ! ... for single-mode calculation: find symmetry operations
   ! ... that leave the chosen mode unchanged. Note that array irt
-  ! ... must be available: it is allocated and read from xml file 
+  ! ... must be available: it is allocated and read from xml file
   !
   if (modenum /= 0) then
      allocate(rtau (3, 48, nat))
@@ -116,7 +116,7 @@ SUBROUTINE setup_nscf (xq)
   !
   !  Since the order of the s matrices is changed we need to recalculate:
   !
-  call s_axis_to_cart () 
+  call s_axis_to_cart ()
   IF (okpaw) CALL d_matrix(d1,d2,d3)
   !
   ! ... Input k-points are assumed to be  given in the IBZ of the Bravais

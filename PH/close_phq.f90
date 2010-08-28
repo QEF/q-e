@@ -24,7 +24,7 @@ SUBROUTINE close_phq( flag )
   USE recover_mod,   ONLY : clean_recover
   USE output,        ONLY : fildrho, fildvscf
   USE ramanm,        ONLY : lraman, elop, iuchf, iud2w, iuba2
-  ! 
+  !
   IMPLICIT NONE
   !
   LOGICAL :: flag

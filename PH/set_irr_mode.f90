@@ -100,7 +100,7 @@ subroutine set_irr_mode (nat, at, bg, xq, s, invs, nsym, rtau, &
   !   And we compute the matrices which represent the symmetry transformat
   !   in the basis of the displacements
   !
-  
+
   t(:, :, :, :) = (0.d0, 0.d0)
   tmq (:, :, :) = (0.d0, 0.d0)
   if (minus_q) then

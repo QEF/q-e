@@ -108,7 +108,7 @@ subroutine dyndia (xq, nmodes, nat, ntyp, ityp, amass, iudyn, dyn, w2)
   enddo
   WRITE( stdout, '(1x,74("*"))')
   if (iudyn /= 0) write (iudyn, '(1x,74("*"))')
-  IF (xmldyn) CALL write_dyn_mat_tail(nat, w2, z) 
+  IF (xmldyn) CALL write_dyn_mat_tail(nat, w2, z)
   return
 
 end subroutine dyndia

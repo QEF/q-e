@@ -117,7 +117,7 @@ MODULE ph_restart
       CALL errore( 'ph_writefile ', &
                    'cannot open xml_recover file for writing', ierr )
       !
-      IF ( ionode ) THEN  
+      IF ( ionode ) THEN
          !
          ! ... here we start writing the ph-punch-file
          !
@@ -130,21 +130,21 @@ MODULE ph_restart
             CALL write_header( "PH", TRIM(version_number) )
          !
 !-------------------------------------------------------------------------------
-! ... STATUS 
+! ... STATUS
 !-------------------------------------------------------------------------------
-!   With what='init' the routine writes the status of the code 
+!   With what='init' the routine writes the status of the code
 !   needed to control the main flow of the dispersion calculation.
-!   The mesh of q points, the current q, the main flags that control 
-!   the run and the flag done_bands, that tells if this routine is 
+!   The mesh of q points, the current q, the main flags that control
+!   the run and the flag done_bands, that tells if this routine is
 !   called before or after the band calculation.
 !
             CALL write_status_ph(current_iq, done_bands)
 !-------------------------------------------------------------------------------
-! ... CONTROL 
+! ... CONTROL
 !-------------------------------------------------------------------------------
          !
             CALL write_control_ph( ldisp, epsil, trans, elph, zue, zeu, &
-                      lraman, elop ) 
+                      lraman, elop )
          !
 !-------------------------------------------------------------------------------
 ! ... Q POINTS
@@ -153,7 +153,7 @@ MODULE ph_restart
             CALL write_q( nqs, x_q )
          !
             CALL iotk_close_write( iunpun )
-         ELSEIF (what=='data') THEN 
+         ELSEIF (what=='data') THEN
          !
 !-------------------------------------------------------------------------------
 ! ... PARTIAL ITEMS
@@ -161,10 +161,10 @@ MODULE ph_restart
 !
 ! with what='data' this routine writes the information on the irreducible
 ! representations. Number of irreducible representations, number of modes
-! for each representation and displacements u. Moreover it writes the 
-! point in which the phonon code has written the recover file: where_rec 
-! and rec_code give the same information, where_rec is a string 
-! and rec_code an integer. The former is easy to read in the xml file, 
+! for each representation and displacements u. Moreover it writes the
+! point in which the phonon code has written the recover file: where_rec
+! and rec_code give the same information, where_rec is a string
+! and rec_code an integer. The former is easy to read in the xml file,
 ! the latter is simpler to use in the code. Moreover this routine saves
 ! the tensors that contain the result of the calculations done so far:
 ! epsilon, zstareu, ramtns, eloptns, dyn, zstarue.
@@ -173,11 +173,11 @@ MODULE ph_restart
          !
          !
              CALL iotk_close_write( iunpun )
-         ELSEIF (what=='data_dyn') THEN 
+         ELSEIF (what=='data_dyn') THEN
 !
 ! with what='data_dyn' this routine writes the information calculated
 ! separately for each irreducible representation. The contributions
-! of the representation to the dynamical matrix and to the Born effective 
+! of the representation to the dynamical matrix and to the Born effective
 ! charges dP/du.
 !
              CALL write_ph_dyn(filename,irr)
@@ -190,7 +190,7 @@ MODULE ph_restart
       RETURN
       !
       CONTAINS
-      
+
          SUBROUTINE write_partial_ph()
             USE modes, ONLY : nirr, npert, u, name_rap_mode, nsymq
             USE partial, ONLY : done_irr
@@ -293,10 +293,10 @@ MODULE ph_restart
            RETURN
         END SUBROUTINE write_ph_dyn
 
-    END SUBROUTINE ph_writefile 
+    END SUBROUTINE ph_writefile
 
     SUBROUTINE write_control_ph( ldisp, epsil, trans, elph, zue, zeu, &
-                      lraman, elop) 
+                      lraman, elop)
       !------------------------------------------------------------------------
       !
       IMPLICIT NONE
@@ -421,7 +421,7 @@ MODULE ph_restart
          !
       END SELECT
       !
-      IF ( lheader ) THEN 
+      IF ( lheader ) THEN
          !
          CALL read_header( dirname, ierr )
          IF (ierr /= 0 ) RETURN
@@ -506,7 +506,7 @@ MODULE ph_restart
       !
       CALL mp_bcast( qexml_version,       ionode_id, intra_image_comm )
       CALL mp_bcast( qexml_version_init,  ionode_id, intra_image_comm )
-      
+
       !
       ! init logical variables for versioning
       !
@@ -546,9 +546,9 @@ MODULE ph_restart
          !
          CALL iotk_scan_begin( iunpun, "STATUS_PH" )
          !
-         CALL iotk_scan_dat( iunpun, "DONE_BANDS", done_bands )         
+         CALL iotk_scan_dat( iunpun, "DONE_BANDS", done_bands )
          !
-         CALL iotk_scan_dat( iunpun, "CURRENT_Q", current_iq )         
+         CALL iotk_scan_dat( iunpun, "CURRENT_Q", current_iq )
          !
          CALL iotk_scan_end( iunpun, "STATUS_PH" )
          !
@@ -696,7 +696,7 @@ MODULE ph_restart
              filename1=TRIM(filename) // "." // TRIM(int_to_char(irr))
              CALL iotk_open_read(iunout, FILE = TRIM(filename1) // '.xml', &
                                        BINARY = .FALSE., IERR = ierr )
-             
+
              IF (ierr == 0 ) then
                 CALL iotk_scan_begin( iunout, "PARTIAL_MATRIX" )
                 CALL iotk_scan_dat(iunout,"DONE_IRR",done_irr(irr))
@@ -744,9 +744,9 @@ MODULE ph_restart
 !    -40         phq_setup    Only the displacements u have been read from file
 !    -30         phq_init     u and dyn(0) read from file
 !    -25                      not yet active. Restart in solve_e_fpol
-!    -20         solve_e      all previous. Stopped within solve_e. There 
+!    -20         solve_e      all previous. Stopped within solve_e. There
 !                             should be a recover file.
-!    -10         solve_e2     epsilon and zstareu are available if requested. 
+!    -10         solve_e2     epsilon and zstareu are available if requested.
 !                             Within solve_e2. There should be a recover file.
 !     2          phescf       all previous, raman tenson and elop tensor are
 !                             available if required.
@@ -875,17 +875,17 @@ MODULE ph_restart
   ! ...
   ! ... This routine sets the situation of the grid according to
   ! ... the files that it finds on the directory .phsave.
-  ! ... Check if representation files exist and which representations 
+  ! ... Check if representation files exist and which representations
   ! ... have been already calculated.
   ! ... set the initial information on the grid
-  ! ... it sets done_iq and done_rep_iq to 1 for the q and the 
+  ! ... it sets done_iq and done_rep_iq to 1 for the q and the
   ! ... representations that have already been done.
   ! ... Moreover it sets rep_iq, the number of representation for each q.
   !
   USE disp, ONLY : nqs, done_iq, done_rep_iq, rep_iq, nsymq_iq, npert_iq
   USE ions_base, ONLY : nat
   USE control_ph, ONLY : trans, zeu
-  ! 
+  !
   IMPLICIT NONE
   !
   CHARACTER(LEN=256)  :: dirname, filename, filename1
@@ -903,7 +903,7 @@ MODULE ph_restart
                 & TRIM( xmlpun_base ) // '.' // TRIM(int_to_char(iq))
 
         CALL iotk_open_read( iunout, FILE = TRIM( filename ) // '.xml', IERR = ierr )
-        
+
         IF (ierr /= 0) CYCLE
         CALL iotk_scan_begin( iunout, "TENSOR_INFO" )
         !
@@ -940,8 +940,8 @@ MODULE ph_restart
                  done_iq(iq)=0
                  EXIT
               ENDIF
-           ENDDO    
-        END IF 
+           ENDDO
+        END IF
      END IF
   END DO
   !
@@ -998,8 +998,8 @@ MODULE ph_restart
    IF (ALLOCATED(comp_iq)) DEALLOCATE(comp_iq)
    IF (ALLOCATED(comp_irr_iq)) DEALLOCATE(comp_irr_iq)
 !
-! Note that these two variables are allocated by read_file. 
-! They cannot be deallocated by clean_pw because the starting xk and wk 
+! Note that these two variables are allocated by read_file.
+! They cannot be deallocated by clean_pw because the starting xk and wk
 ! points must be known at each q point.
 ! The logic of these two variables must be improved.
 !

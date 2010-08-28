@@ -84,14 +84,14 @@ SUBROUTINE phq_init()
   !
   CALL start_clock( 'phq_init' )
   !
-  ALLOCATE( aux1( npwx*npol, nbnd ) )    
-  !                 
+  ALLOCATE( aux1( npwx*npol, nbnd ) )
+  !
   DO na = 1, nat
      !
      arg = ( xq(1) * tau(1,na) + &
              xq(2) * tau(2,na) + &
              xq(3) * tau(3,na) ) * tpi
-     !        
+     !
      eigqts(na) = CMPLX( COS( arg ), - SIN( arg ) ,kind=DP)
      !
   END DO
@@ -137,7 +137,7 @@ SUBROUTINE phq_init()
         !
         npwq = npw
         !
-     ELSE   
+     ELSE
         !
         CALL gk_sort( xk(1,ikq), ngm, g, ( ecutwfc / tpiba2 ), &
                       npwq, igkq, g2kin )
@@ -177,12 +177,12 @@ SUBROUTINE phq_init()
         aux1=(0.d0,0.d0)
         DO ibnd = 1, nbnd
            DO ig = 1, npw
-              aux1(ig,ibnd) = evc(ig,ibnd) * tpiba * ( 0.D0, 1.D0 ) * & 
+              aux1(ig,ibnd) = evc(ig,ibnd) * tpiba * ( 0.D0, 1.D0 ) * &
                               ( xk(ipol,ikk) + g(ipol,igk(ig)) )
            END DO
            IF (noncolin) THEN
               DO ig = 1, npw
-                 aux1(ig+npwx,ibnd)=evc(ig+npwx,ibnd)*tpiba*(0.D0,1.D0)*& 
+                 aux1(ig+npwx,ibnd)=evc(ig+npwx,ibnd)*tpiba*(0.D0,1.D0)*&
                            ( xk(ipol,ikk) + g(ipol,igk(ig)) )
               END DO
            END IF
@@ -194,7 +194,7 @@ SUBROUTINE phq_init()
      IF ( .NOT. lgamma ) &
         CALL davcio( evq, lrwfc, iuwfc, ikq, -1 )
      !
-     ! diagonal elements of the unperturbed Hamiltonian, 
+     ! diagonal elements of the unperturbed Hamiltonian,
      ! needed for preconditioning
      !
      do ig = 1, npwq

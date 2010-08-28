@@ -18,11 +18,11 @@ SUBROUTINE q_points ( )
   USE control_ph, ONLY : search_sym
 
   implicit none
-  
+
   integer :: i, iq, ierr, iudyn = 26
   logical :: exist_gamma, check
   logical, external :: check_q_points_sym
-  real(DP), allocatable, dimension(:) :: wq  
+  real(DP), allocatable, dimension(:) :: wq
 
   !
   !  calculate the Monkhorst-Pack grid
@@ -49,7 +49,7 @@ SUBROUTINE q_points ( )
         if (iq .ne. 1) then
            do i = 1, 3
               x_q(i,iq) = x_q(i,1)
-              x_q(i,1) = 0.0_dp 
+              x_q(i,1) = 0.0_dp
            end do
         end if
      end if
@@ -74,11 +74,11 @@ SUBROUTINE q_points ( )
   IF (search_sym) THEN
      check=check_q_points_sym(nqs, x_q, at, bg, nsym, s, invs, nq1, nq2, nq3)
      IF (.NOT.check) THEN
-        WRITE(stdout, '(/,5x,"This q-mesh breaks symmetry!")') 
-        WRITE(stdout, '(5x,"Try to choose different nq1, nq2, nq3")') 
+        WRITE(stdout, '(/,5x,"This q-mesh breaks symmetry!")')
+        WRITE(stdout, '(5x,"Try to choose different nq1, nq2, nq3")')
         WRITE(stdout, '(5x,"You can also continue by setting &
                    &search_sym=.false.")')
-        WRITE(stdout, '(5x,"but be careful because q2r will not work")') 
+        WRITE(stdout, '(5x,"but be careful because q2r will not work")')
         CALL errore('q_points', 'q-mesh breaks symmetry', 1)
      ENDIF
   ENDIF

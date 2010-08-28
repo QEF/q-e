@@ -30,7 +30,7 @@ SUBROUTINE summarize_epsilon()
   !
   IF (.NOT. done_epsil) RETURN
   !
-  IF (lnoloc) THEN 
+  IF (lnoloc) THEN
       WRITE( stdout, '(/,10x,"Dielectric constant in cartesian axis (DV_Hxc=0)",/)')
   ELSE IF (lrpa) THEN
      WRITE( stdout, '(/,10x,"RPA dielectric constant in cartesian axis (DV_xc=0)",/)')
@@ -88,11 +88,11 @@ SUBROUTINE summarize_zeu()
   DO na = 1, nat
      WRITE( stdout, '(10x," atom ",i6, a6)') na, atm(ityp(na))
      WRITE( stdout, '(6x,"Ex  (",3f15.5," )")')  (zstareu (1, jpol, na), &
-            jpol = 1, 3) 
+            jpol = 1, 3)
      WRITE( stdout, '(6x,"Ey  (",3f15.5," )")')  (zstareu (2, jpol, na), &
-            jpol = 1, 3) 
+            jpol = 1, 3)
      WRITE( stdout, '(6x,"Ez  (",3f15.5," )")')  (zstareu (3, jpol, na), &
-            jpol = 1, 3) 
+            jpol = 1, 3)
   ENDDO
 
   RETURN
@@ -123,11 +123,11 @@ SUBROUTINE summarize_zue
   DO na = 1, nat
      WRITE( stdout, '(10x," atom ",i6,a6)') na, atm(ityp(na))
      WRITE( stdout, '(6x,"Px  (",3f15.5," )")') (zstarue (ipol, na, 1), &
-            ipol = 1, 3) 
+            ipol = 1, 3)
      WRITE( stdout, '(6x,"Py  (",3f15.5," )")') (zstarue (ipol, na, 2), &
-            ipol = 1, 3) 
+            ipol = 1, 3)
      WRITE( stdout, '(6x,"Pz  (",3f15.5," )")') (zstarue (ipol, na, 3), &
-            ipol = 1, 3) 
+            ipol = 1, 3)
   ENDDO
   !
   RETURN
@@ -151,7 +151,7 @@ WRITE(stdout, '(/,10x,''    Electro-optic tensor is defined as '')' )
 WRITE(stdout, '(10x  ,''  the derivative of the dielectric tensor '')' )
 WRITE(stdout, '(10x  ,''    with respect to one electric field '')' )
 WRITE(stdout, '(10x  ,''       units are Rydberg a.u. '',/)' )
-WRITE(stdout, '(10x  ,''  to obtain the static chi^2 multiply by 1/2  '',/)' ) 
+WRITE(stdout, '(10x  ,''  to obtain the static chi^2 multiply by 1/2  '',/)' )
 WRITE(stdout, '(10x  ,''  to convert to pm/Volt multiply per 2.7502  '',/)' )
 WRITE(stdout, '(/,10x,''Electro-optic tensor in cartesian axis: '',/)' )
 

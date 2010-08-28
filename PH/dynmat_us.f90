@@ -19,8 +19,9 @@ SUBROUTINE dynmat_us()
   USE ions_base,            ONLY : nat, ityp, ntyp => nsp, tau
   USE uspp,                 ONLY : nkb, vkb
   USE scf,                  ONLY : rho
-  USE gvect,                ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx
-  USE gvect,                ONLY : g, ngm, nl, igtongl
+  USE fft_base,             ONLY : dfftp
+  USE fft_interfaces,       ONLY : fwfft
+  USE gvect,                ONLY : nrxx, g, ngm, nl, igtongl
   USE wvfct,                ONLY : npw, npwx, nbnd, igk, wg, et
   USE lsda_mod,             ONLY : lsda, current_spin, isk, nspin
   USE vlocal,               ONLY : vloc
@@ -67,14 +68,14 @@ SUBROUTINE dynmat_us()
   ! work space
 
   CALL start_clock ('dynmat_us')
-  ALLOCATE (rhog  ( nrxx))    
-  ALLOCATE (work1 ( npwx))    
-  ALLOCATE (work2 ( npwx))    
-  ALLOCATE (aux1  ( npwx*npol , nbnd))    
+  ALLOCATE (rhog  ( nrxx))
+  ALLOCATE (work1 ( npwx))
+  ALLOCATE (work2 ( npwx))
+  ALLOCATE (aux1  ( npwx*npol , nbnd))
   IF (noncolin) THEN
-     ALLOCATE (deff_nc( nhm, nhm, nat, nspin ))    
+     ALLOCATE (deff_nc( nhm, nhm, nat, nspin ))
   ELSE
-     ALLOCATE (deff(nhm, nhm, nat ))    
+     ALLOCATE (deff(nhm, nhm, nat ))
   END IF
   DO icart=1,3
      DO jcart=1,3
@@ -96,7 +97,7 @@ SUBROUTINE dynmat_us()
      rhog (:) = rhog (:) + CMPLX(rho%of_r(:, is), 0.d0,kind=DP)
   ENDDO
 
-  CALL cft3 (rhog, nr1, nr2, nr3, nrx1, nrx2, nrx3, - 1)
+  CALL fwfft ('Dense', rhog, dfftp)
   !
   ! there is a delta ss'
   !
@@ -191,7 +192,7 @@ SUBROUTINE dynmat_us()
                              IF (noncolin) THEN
                                 ijs=0
                                 DO is=1,npol
-                                   DO js=1,npol 
+                                   DO js=1,npol
                                       ijs=ijs+1
                                       dynwrk(na_icart,na_jcart) = &
                                         dynwrk(na_icart,na_jcart) + &
@@ -236,7 +237,6 @@ SUBROUTINE dynmat_us()
   !
   CALL addusdynmat (dynwrk)
   !
-500 continue
   CALL mp_sum ( dynwrk, inter_pool_comm )
   !
   !      do na = 1,nat

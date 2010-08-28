@@ -16,9 +16,11 @@ subroutine dynmatcc
   USE constants, ONLY : tpi
   USE cell_base, ONLY : tpiba2, omega
   USE ions_base, ONLY : nat, ityp, tau
-  USE gvect,     ONLY : nrxx, nr1,nr2,nr3, nrx1,nrx2,nrx3, nl, ngm, g
+  USE fft_base,  ONLY : dfftp
+  USE fft_interfaces, ONLY : fwfft
+  USE gvect,     ONLY : nrxx, nl, ngm, g
   USE lsda_mod,  ONLY : nspin
-  use scf, only : rho, rho_core, rhog_core
+  use scf,       ONLY : rho, rho_core, rhog_core
   USE modes,     ONLY : u
   USE qpoint,    ONLY : xq
   USE nlcc_ph,   ONLY : nlcc_any, drc
@@ -44,8 +46,8 @@ subroutine dynmatcc
   !
   ! allocate workspace
   !
-  allocate (vxc( nrxx))    
-  allocate (v  ( nrxx , nspin))    
+  allocate (vxc( nrxx))
+  allocate (v  ( nrxx , nspin))
   !
   call v_xc (rho, rho_core, rhog_core, etxcd, vtxcd, v)
   !
@@ -63,7 +65,7 @@ subroutine dynmatcc
   end if
   deallocate (v)
   !
-  call cft3 (vxc, nr1, nr2, nr3, nrx1, nrx2, nrx3, - 1)
+  CALL fwfft ('Dense', vxc, dfftp)
   !
   ! vxc is the spin-averaged XC potential (in G-space)
   !
@@ -73,7 +75,7 @@ subroutine dynmatcc
   ! set_drhoc produces drc=Drho_core(G)/DG , without struct.fact.
   !
   dynwrk (:,:) = (0.d0, 0.d0)
-  allocate (work (nrxx))    
+  allocate (work (nrxx))
   do na = 1, nat
      nta = ityp (na)
      work (:) = (0.d0, 0.d0)

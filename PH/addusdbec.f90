@@ -10,7 +10,7 @@
 subroutine addusdbec (ik, wgt, psi, dbecsum)
   !----------------------------------------------------------------------
   !
-  !  This routine adds to dbecsum the contribution of this 
+  !  This routine adds to dbecsum the contribution of this
   !  k point. It implements Eq. B15 of PRB 64, 235118 (2001).
   !
   USE kinds, only : DP
@@ -57,7 +57,7 @@ subroutine addusdbec (ik, wgt, psi, dbecsum)
 
   call start_clock ('addusdbec')
 
-  allocate (dbecq( nkb, nbnd))    
+  allocate (dbecq( nkb, nbnd))
   ikk = ikks(ik)
   !
   !     First compute the product of psi and vkb

@@ -19,8 +19,10 @@ subroutine compute_drhous_nc (drhous, dbecsum, wgg, becq, alpq)
   USE ions_base,  ONLY : nat
   USE lsda_mod,   ONLY : lsda, nspin, current_spin, isk
   USE klist,      ONLY : xk, wk
+  USE fft_base,   ONLY : dffts
+  USE fft_interfaces, ONLY: invfft
   USE gvect,      ONLY : nrxx
-  USE gsmooth,    ONLY : nrxxs, nr1s,nr2s,nr3s, nrx1s,nrx2s,nrx3s, nls
+  USE gsmooth,    ONLY : nrxxs, nls
   USE wvfct,      ONLY : npw, npwx, nbnd, igk
   USE noncollin_module, ONLY : noncolin, npol, nspin_mag
   USE wavefunctions_module,  ONLY: evc
@@ -73,7 +75,7 @@ subroutine compute_drhous_nc (drhous, dbecsum, wgg, becq, alpq)
 
   call start_clock ('com_drhous')
 
-  allocate (evcr( nrxxs, npol, nbnd))    
+  allocate (evcr( nrxxs, npol, nbnd))
   !
   drhous(:,:,:) = (0.d0, 0.d0)
   dbecsum  = (0.d0, 0.d0)
@@ -109,8 +111,8 @@ subroutine compute_drhous_nc (drhous, dbecsum, wgg, becq, alpq)
            evcr (nls (igk (ig) ), 1, ibnd) = evc (ig, ibnd)
            evcr (nls (igk (ig) ), 2, ibnd) = evc (ig+npwx, ibnd)
         enddo
-        call cft3s (evcr (1, 1, ibnd), nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s,+2)
-        call cft3s (evcr (1, 2, ibnd),nr1s,nr2s,nr3s,nrx1s,nrx2s,nrx3s,+2)
+        CALL invfft ('Wave', evcr (:, 1, ibnd), dffts)
+        CALL invfft ('Wave', evcr (:, 2, ibnd), dffts)
      enddo
      !
      !   Read the wavefunctions at k+q

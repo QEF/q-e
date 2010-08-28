@@ -13,7 +13,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
   !    Driver routine for the solution of the linear system which
   !    defines the change of the wavefunction due to a lattice distorsion
   !    It performs the following tasks:
-  !     a) computes the bare potential term Delta V | psi > 
+  !     a) computes the bare potential term Delta V | psi >
   !        and an additional term in the case of US pseudopotentials
   !     b) adds to it the screening term Delta V_{SCF} | psi >
   !     c) applies P_c^+ (orthogonalization to valence states)
@@ -88,7 +88,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
   ! functions computing the delta and theta function
 
   complex(DP), allocatable, target :: dvscfin(:,:,:)
-  ! change of the scf potential 
+  ! change of the scf potential
   complex(DP), pointer :: dvscfins (:,:,:)
   ! change of the scf potential (smooth part only)
   complex(DP), allocatable :: drhoscfh (:,:,:), dvscfout (:,:,:)
@@ -132,23 +132,23 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
   IF (rec_code_read > 20 ) RETURN
 
   call start_clock ('solve_linter')
-  allocate (dvscfin ( nrxx , nspin_mag , npe))    
+  allocate (dvscfin ( nrxx , nspin_mag , npe))
   if (doublegrid) then
-     allocate (dvscfins ( nrxxs , nspin_mag , npe))    
+     allocate (dvscfins ( nrxxs , nspin_mag , npe))
   else
      dvscfins => dvscfin
   endif
-  allocate (drhoscfh ( nrxx , nspin_mag , npe))    
-  allocate (dvscfout ( nrxx , nspin_mag , npe))    
-  allocate (dbecsum ( (nhm * (nhm + 1))/2 , nat , nspin_mag , npe))    
+  allocate (drhoscfh ( nrxx , nspin_mag , npe))
+  allocate (dvscfout ( nrxx , nspin_mag , npe))
+  allocate (dbecsum ( (nhm * (nhm + 1))/2 , nat , nspin_mag , npe))
   IF (okpaw) THEN
      allocate (mixin(nrxx*nspin_mag*npe+(nhm*(nhm+1)*nat*nspin_mag*npe)/2) )
      allocate (mixout(nrxx*nspin_mag*npe+(nhm*(nhm+1)*nat*nspin_mag*npe)/2) )
      mixin=(0.0_DP,0.0_DP)
   ENDIF
   IF (noncolin) allocate (dbecsum_nc (nhm,nhm, nat , nspin , npe))
-  allocate (aux1 ( nrxxs, npol))    
-  allocate (h_diag ( npwx*npol, nbnd))    
+  allocate (aux1 ( nrxxs, npol))
+  allocate (h_diag ( npwx*npol, nbnd))
   !
   if (rec_code_read == 10.AND.ext_recover) then
      ! restart from Phonon calculation
@@ -180,10 +180,10 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
 
   lmetq0 = lgauss.and.lgamma
   if (lmetq0) then
-     allocate ( ldos ( nrxx  , nspin_mag) )    
-     allocate ( ldoss( nrxxs , nspin_mag) )    
+     allocate ( ldos ( nrxx  , nspin_mag) )
+     allocate ( ldoss( nrxxs , nspin_mag) )
      IF (okpaw) THEN
-        allocate (becsum1 ( (nhm * (nhm + 1))/2 , nat , nspin_mag))    
+        allocate (becsum1 ( (nhm * (nhm + 1))/2 , nat , nspin_mag))
         call localdos_paw ( ldos , ldoss , becsum1, dos_ef )
      ELSE
         call localdos ( ldos , ldoss , dos_ef )
@@ -192,7 +192,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
   !
   !
   ! In this case it has recovered after computing the contribution
-  ! to the dynamical matrix. This is a new iteration that has to 
+  ! to the dynamical matrix. This is a new iteration that has to
   ! start from the beginning.
   !
   IF (iter0==-1000) iter0=0
@@ -277,14 +277,14 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
               !
               call start_clock ('vpsifft')
               do ibnd = 1, nbnd_occ (ikk)
-                 call cft_wave (evc (1, ibnd), aux1, +1) 
+                 call cft_wave (evc (1, ibnd), aux1, +1)
                  call apply_dpot(aux1, dvscfins(1,1,ipert), current_spin)
                  call cft_wave (dvpsi (1, ibnd), aux1, -1)
               enddo
               call stop_clock ('vpsifft')
               !
-              !  In the case of US pseudopotentials there is an additional 
-              !  selfconsist term which comes from the dependence of D on 
+              !  In the case of US pseudopotentials there is an additional
+              !  selfconsist term which comes from the dependence of D on
               !  V_{eff} on the bare change of the potential
               !
               call adddvscf (ipert, ik)
@@ -316,7 +316,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
               !
               !  At the first iteration dpsi and dvscfin are set to zero
               !
-              dpsi(:,:) = (0.d0, 0.d0) 
+              dpsi(:,:) = (0.d0, 0.d0)
               dvscfin (:, :, ipert) = (0.d0, 0.d0)
               !
               ! starting threshold for iterative solution of the linear system
@@ -414,8 +414,8 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
         IF (lmetq0) call ef_shift(drhoscfh,ldos,ldoss,dos_ef,irr,npe,.false.)
      ENDIF
      !
-     !   After the loop over the perturbations we have the linear change 
-     !   in the charge density for each mode of this representation. 
+     !   After the loop over the perturbations we have the linear change
+     !   in the charge density for each mode of this representation.
      !   Here we symmetrize them ...
      !
      IF (.not.lgamma_gamma) THEN
@@ -434,9 +434,9 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
               PAW_dusymmetrize(dbecsum,npe,irr,npertx,nsymq,irgq,rtau,xq,t)
         END IF
      ENDIF
-     ! 
-     !   ... save them on disk and 
-     !   compute the corresponding change in scf potential 
+     !
+     !   ... save them on disk and
+     !   compute the corresponding change in scf potential
      !
      do ipert = 1, npe
         if (fildrho.ne.' ') call davcio_drho (drhoscfh(1,1,ipert), lrdrho, &
@@ -522,9 +522,9 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
 155 iter0=0
   !
   !    A part of the dynamical matrix requires the integral of
-  !    the self consistent change of the potential and the variation of 
-  !    the charge due to the displacement of the atoms. 
-  !    We compute it here. 
+  !    the self consistent change of the potential and the variation of
+  !    the charge due to the displacement of the atoms.
+  !    We compute it here.
   !
   if (convt) then
      call drhodvus (irr, imode0, dvscfin, npe)

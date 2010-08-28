@@ -22,10 +22,11 @@ subroutine dvqpsi_us (ik, uact, addnlcc)
   USE kinds, only : DP
   USE ions_base, ONLY : nat, ityp
   USE cell_base, ONLY : tpiba
+  USE fft_base,   ONLY: dfftp, dffts
+  USE fft_interfaces, ONLY: fwfft, invfft
   USE gvect,     ONLY : nrxx, eigts1, eigts2, eigts3, ig1,ig2,ig3, g, nl, &
-                        ngm, nr1,nr2,nr3,nrx1,nrx2,nrx3
-  USE gsmooth,   ONLY : nrxxs, ngms, doublegrid, nls, &
-                        nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s
+                        ngm
+  USE gsmooth,   ONLY : nrxxs, ngms, doublegrid, nls
   USE lsda_mod,  ONLY : lsda, isk
   USE noncollin_module, ONLY : npol
   use uspp_param,ONLY : upf
@@ -66,15 +67,15 @@ subroutine dvqpsi_us (ik, uact, addnlcc)
 
   call start_clock ('dvqpsi_us')
   if (nlcc_any.and.addnlcc) then
-     allocate (aux( nrxx))    
+     allocate (aux( nrxx))
      if (doublegrid) then
-        allocate (auxs( nrxxs))    
+        allocate (auxs( nrxxs))
      else
         auxs => aux
      endif
   endif
-  allocate (aux1( nrxxs))    
-  allocate (aux2( nrxxs))    
+  allocate (aux1( nrxxs))
+  allocate (aux2( nrxxs))
   !
   !    We start by computing the contribution of the local potential.
   !    The computation of the derivative of the local potential is done in
@@ -129,7 +130,7 @@ subroutine dvqpsi_us (ik, uact, addnlcc)
             endif
          endif
       enddo
-      call cft3(aux,nr1,nr2,nr3,nrx1,nrx2,nrx3,+1)
+      CALL invfft ('Dense', aux, dfftp)
       if (.not.lsda) then
          do ir=1,nrxx
             aux(ir) = aux(ir) * dmuxc(ir,1,1)
@@ -141,7 +142,7 @@ subroutine dvqpsi_us (ik, uact, addnlcc)
                  (dmuxc(ir,is,1)+dmuxc(ir,is,2))
          enddo
       endif
-      call cft3(aux,nr1,nr2,nr3,nrx1,nrx2,nrx3,-1)
+      CALL fwfft ('Dense', aux, dfftp)
       if (doublegrid) then
          auxs(:) = (0.d0, 0.d0)
          do ig=1,ngms
@@ -153,7 +154,7 @@ subroutine dvqpsi_us (ik, uact, addnlcc)
   !
   ! Now we compute dV_loc/dtau in real space
   !
-  call cft3s (aux1, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, + 1)
+  CALL invfft ('Smooth', aux1, dffts)
   do ibnd = 1, nbnd
      do ip=1,npol
         aux2(:) = (0.d0, 0.d0)
@@ -169,14 +170,14 @@ subroutine dvqpsi_us (ik, uact, addnlcc)
         !
         !  This wavefunction is computed in real space
         !
-        call cft3s (aux2, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, + 2)
+        CALL invfft ('Wave', aux2, dffts)
         do ir = 1, nrxxs
            aux2 (ir) = aux2 (ir) * aux1 (ir)
         enddo
         !
         ! and finally dV_loc/dtau * psi is transformed in reciprocal space
         !
-        call cft3s (aux2, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, - 2)
+        CALL fwfft ('Wave', aux2, dffts)
         if (ip==1) then
            do ig = 1, npwq
               dvpsi (ig, ibnd) = aux2 (nls (igkq (ig) ) )
@@ -198,7 +199,7 @@ subroutine dvqpsi_us (ik, uact, addnlcc)
   !
   !   We add the contribution of the nonlocal potential in the US form
   !   First a term similar to the KB case.
-  !   Then a term due to the change of the D coefficients. 
+  !   Then a term due to the change of the D coefficients.
   !
   call dvqpsi_us_only (ik, uact)
 

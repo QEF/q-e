@@ -18,8 +18,10 @@ subroutine solve_e_nscf( avg_iter, thresh, ik, ipol, dvscfs, auxr )
   use kinds,                 ONLY : DP
   USE cell_base,             ONLY : tpiba2
   USE klist,                 ONLY : xk
+  USE fft_base,              ONLY : dffts
+  USE fft_interfaces,        ONLY : fwfft, invfft
   USE gvect,                 ONLY : g
-  USE gsmooth,               ONLY : nrxxs, nls, nr1s,nr2s,nr3s,nrx1s,nrx2s,nrx3s
+  USE gsmooth,               ONLY : nrxxs, nls
   USE wvfct,                 ONLY : npw, igk, g2kin,  et
   USE wavefunctions_module,  ONLY : evc
   USE eqv,                   ONLY : dpsi, dvpsi
@@ -72,11 +74,11 @@ subroutine solve_e_nscf( avg_iter, thresh, ik, ipol, dvscfs, auxr )
      do ig = 1, npw
         auxr (nls (igk (ig))) = evc (ig, ibnd)
      end do
-     call cft3s (auxr, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, +2)
+     CALL invfft ('Wave', auxr, dffts)
      do ir = 1, nrxxs
         auxr (ir) = auxr(ir) * dvscfs(ir, ipol)
      end do
-     call cft3s (auxr, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, -2)
+     CALL fwfft ('Wave', auxr, dffts)
      do ig = 1, npwq
         dvpsi (ig, ibnd) = dvpsi(ig, ibnd) + auxr(nls (igkq (ig)))
      enddo
@@ -89,7 +91,7 @@ subroutine solve_e_nscf( avg_iter, thresh, ik, ipol, dvscfs, auxr )
   call pcgreen (avg_iter, thresh, ik, et (1, ik))
 !
 !  The pcxpsi on file could be at k+dk and cannot be used by the following
-!  codes that require pcxpsi at k. 
+!  codes that require pcxpsi at k.
 !
   this_pcxpsi_is_on_file(ik,ipol)=.false.
 

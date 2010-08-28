@@ -9,7 +9,7 @@
 SUBROUTINE phescf()
   !-----------------------------------------------------------------------
   !
-  ! ... This is the main driver for the calculation of the 
+  ! ... This is the main driver for the calculation of the
   ! ... response to an electric field and related quantities.
   !
   USE io_global,       ONLY : stdout

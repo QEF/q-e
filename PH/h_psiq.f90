@@ -22,7 +22,9 @@ subroutine h_psiq (lda, n, m, psi, hpsi, spsi)
   USE becmod, ONLY : bec_type, becp, calbec
   USE noncollin_module, ONLY : noncolin, npol
   USE lsda_mod, ONLY : current_spin
-  USE gsmooth,  ONLY : nls, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, nrxxs
+  USE fft_base, ONLY : dffts
+  USE fft_interfaces, ONLY: fwfft, invfft
+  USE gsmooth,  ONLY : nls, nrxxs
   USE spin_orb, ONLY : domag
   USE scf,    ONLY : vrs
   USE uspp,   ONLY : vkb
@@ -82,14 +84,14 @@ subroutine h_psiq (lda, n, m, psi, hpsi, spsi)
            psic_nc(nls(igkq(j)),1) = psi (j, ibnd)
            psic_nc(nls(igkq(j)),2) = psi (j+lda, ibnd)
         enddo
-        call cft3s (psic_nc(1,1), nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, 2)
-        call cft3s (psic_nc(1,2), nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, 2)
+        CALL invfft ('Wave', psic_nc(:,1), dffts)
+        CALL invfft ('Wave', psic_nc(:,2), dffts)
      ELSE
         psic(:) = (0.d0, 0.d0)
         do j = 1, n
            psic (nls(igkq(j))) = psi (j, ibnd)
         enddo
-        call cft3s (psic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, 2)
+        CALL invfft ('Wave', psic, dffts)
      END IF
      call stop_clock ('firstfft')
      !
@@ -121,8 +123,8 @@ subroutine h_psiq (lda, n, m, psi, hpsi, spsi)
      !
      call start_clock ('secondfft')
      IF (noncolin) THEN
-        call cft3s(psic_nc(1,1),nr1s,nr2s,nr3s,nrx1s,nrx2s,nrx3s,-2)
-        call cft3s(psic_nc(1,2),nr1s,nr2s,nr3s,nrx1s,nrx2s,nrx3s,-2)
+        CALL fwfft ('Wave', psic_nc(:,1), dffts)
+        CALL fwfft ('Wave', psic_nc(:,2), dffts)
      !
      !   addition to the total product
      !
@@ -131,7 +133,7 @@ subroutine h_psiq (lda, n, m, psi, hpsi, spsi)
            hpsi (j+lda, ibnd) = hpsi (j+lda, ibnd) + psic_nc (nls(igkq(j)), 2)
         enddo
      ELSE
-        call cft3s (psic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, - 2)
+        CALL fwfft ('Wave', psic, dffts)
      !
      !   addition to the total product
      !

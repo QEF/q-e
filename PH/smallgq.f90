@@ -88,7 +88,7 @@ subroutine smallgq (xq, at, bg, s, nsym, irgq, nsymq, irotmq, &
            wrk (ipol) = raq (ipol) - aq (ipol)
         enddo
         call cryst_to_cart (1, wrk, bg, 1)
-        gi (:, nsymq) = wrk (:) 
+        gi (:, nsymq) = wrk (:)
         !
         !   ... and in -q+G
         !
@@ -101,7 +101,7 @@ subroutine smallgq (xq, at, bg, s, nsym, irgq, nsymq, irotmq, &
                  wrk (ipol) = - raq (ipol) + aq (ipol)
               enddo
               call cryst_to_cart (1, wrk, bg, 1)
-              gimq (:) = wrk (:) 
+              gimq (:) = wrk (:)
            endif
         endif
      endif

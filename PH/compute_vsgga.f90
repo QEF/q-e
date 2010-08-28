@@ -146,7 +146,7 @@ SUBROUTINE compute_vsgga( rhoout, grho, vsgga )
      !
   END DO
   !
-  ALLOCATE( dh( nrxx ) )    
+  ALLOCATE( dh( nrxx ) )
   !
   ! ... second term of the gradient correction :
   ! ... \sum_alpha (D / D r_alpha) ( D(rho*Exc)/D(grad_alpha rho) )

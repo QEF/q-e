@@ -90,13 +90,13 @@ subroutine drho
   !
   !    then compute the weights
   !
-  allocate (wgg (nbnd ,nbnd , nksq))    
+  allocate (wgg (nbnd ,nbnd , nksq))
   if (lgamma) then
      becq => becp1
      alpq => alphap
   else
-     allocate (becq ( nksq))    
-     allocate (alpq ( 3, nksq))    
+     allocate (becq ( nksq))
+     allocate (alpq ( 3, nksq))
      do ik =1,nksq
         call allocate_bec_type (  nkb, nbnd, becq(ik))
         DO ipol=1,3
@@ -115,11 +115,11 @@ subroutine drho
   !   now we compute the change of the charge density due to the change of
   !   the orthogonality constraint
   !
-  allocate (drhous ( nrxx , nspin_mag , 3 * nat))    
-  allocate (dbecsum( nhm * (nhm + 1) /2, nat, nspin_mag, 3 * nat))    
+  allocate (drhous ( nrxx , nspin_mag , 3 * nat))
+  allocate (dbecsum( nhm * (nhm + 1) /2, nat, nspin_mag, 3 * nat))
   dbecsum=(0.d0,0.d0)
   IF (noncolin) THEN
-     allocate (dbecsum_nc( nhm, nhm, nat, nspin, 3 * nat))    
+     allocate (dbecsum_nc( nhm, nhm, nat, nspin, 3 * nat))
      dbecsum_nc=(0.d0,0.d0)
      call compute_drhous_nc (drhous, dbecsum_nc, wgg, becq, alpq)
   ELSE
@@ -141,7 +141,7 @@ subroutine drho
   !  The part of C^3 (Eq. 37) which contain the local potential can be
   !  evaluated with an integral of this change of potential and drhous
   !
-  allocate (dvlocin( nrxxs))    
+  allocate (dvlocin( nrxxs))
 
   wdyn (:,:) = (0.d0, 0.d0)
   nrstot = nr1s * nr2s * nr3s
@@ -173,7 +173,7 @@ subroutine drho
   !
   do nu_i = 1, 3 * nat
      do nu_j = 1, nu_i
-        dyn00(nu_i,nu_j) = 0.5d0*( dyn00(nu_i,nu_j) + CONJG(dyn00(nu_j,nu_i))) 
+        dyn00(nu_i,nu_j) = 0.5d0*( dyn00(nu_i,nu_j) + CONJG(dyn00(nu_j,nu_i)))
         dyn00(nu_j,nu_i) = CONJG(dyn00(nu_i,nu_j))
      enddo
   enddo
@@ -181,7 +181,7 @@ subroutine drho
   !
   !    add the augmentation term to the charge density and save it
   !
-  allocate (drhoust( nrxx , nspin_mag , npertx))    
+  allocate (drhoust( nrxx , nspin_mag , npertx))
   drhoust=(0.d0,0.d0)
 #ifdef __PARA
   !
@@ -224,7 +224,7 @@ subroutine drho
    !
    !  Collect the sum over k points in different pools.
    !
-   IF (okpaw) call mp_sum ( becsumort, inter_pool_comm ) 
+   IF (okpaw) call mp_sum ( becsumort, inter_pool_comm )
 #endif
 
   deallocate (drhoust)
