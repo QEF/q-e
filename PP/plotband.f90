@@ -153,7 +153,13 @@ PROGRAM plotband
            npoints(nlines+1) = 1
         ENDIF
         point(nlines+1)=n
-        WRITE( stdout,'("high-symmetry point: ",3f7.4)') (k(i,n),i=1,3)
+        IF (n==1) THEN
+           WRITE( stdout,'("high-symmetry point: ",3f7.4,&
+                         &"   x coordinate   0.0000")') (k(i,n),i=1,3)
+        ELSE
+           WRITE( stdout,'("high-symmetry point: ",3f7.4,&
+                         &"   x coordinate",f9.4)') (k(i,n),i=1,3), kx(n)
+        ENDIF
      ELSE
         npoints(nlines+1) = npoints(nlines+1)+1
      ENDIF
