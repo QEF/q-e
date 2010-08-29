@@ -212,7 +212,7 @@ vibrations of ch4
   zue=.true.,
   epsil=.true.,
   trans=.true.,
-  fildyn='ch4.dyn',
+  fildyn='ch4.dyn.xml',
  /
 0.0 0.0 0.0
 EOF
@@ -220,6 +220,17 @@ $ECHO "  running normal mode calculation for CH4...\c"
 $PH_COMMAND < ch4.nm.in > ch4.nm.out
 check_failure $?
 $ECHO " done"
+
+# IR cross sections  for CH4
+cat > ch4.dyn.in << EOF
+ &input fildyn='ch4.dyn.xml', asr='zero-dim' /
+EOF
+
+$ECHO "  running IR cross section calculation for CH4...\c"
+$DYNMAT_COMMAND < ch4.dyn.in > ch4.dyn.out
+check_failure $?
+$ECHO " done"
+
 
 $ECHO
 $ECHO "$EXAMPLE_DIR: done"
