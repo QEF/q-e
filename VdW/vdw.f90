@@ -70,8 +70,7 @@ PROGRAM vdw
   !
   ! Calculate the effective potential
   !
-  CALL eff_pot (rho%of_r, nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, nl,&
-                ngm, gg, gstart, nspin, alat, omega, ecutwfc,  &
+  CALL eff_pot (rho%of_r, nspin, alat, omega, &
                 charge, vstart, thresh_veff)
   !
   WRITE( stdout,'(/,5x,"End of Effective Potential Calculation",/)')

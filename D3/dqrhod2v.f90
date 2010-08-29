@@ -15,6 +15,8 @@ SUBROUTINE dqrhod2v (ipert, drhoscf)
   !
   USE ions_base,            ONLY : nat, ityp, ntyp => nsp, tau
   USE kinds,                ONLY : DP
+  USE fft_base,             ONLY : dfftp
+  USE fft_interfaces,       ONLY : fwfft
   USE pwcom
   USE uspp,                 ONLY : vkb, dvan
   USE uspp_param,           ONLY : nh
@@ -48,14 +50,14 @@ SUBROUTINE dqrhod2v (ipert, drhoscf)
        work1 (:), work2 (:), work3 (:), work4 (:), work5 (:), work6 (:)
   ! work space
 
-  ALLOCATE  (d3dywrk( 3 * nat, 3 * nat))    
-  ALLOCATE  (work0( nrxx))    
-  ALLOCATE  (work1( npwx))    
-  ALLOCATE  (work2( npwx))    
-  ALLOCATE  (work3( npwx))    
-  ALLOCATE  (work4( npwx))    
-  ALLOCATE  (work5( npwx))    
-  ALLOCATE  (work6( npwx))    
+  ALLOCATE  (d3dywrk( 3 * nat, 3 * nat))
+  ALLOCATE  (work0( nrxx))
+  ALLOCATE  (work1( npwx))
+  ALLOCATE  (work2( npwx))
+  ALLOCATE  (work3( npwx))
+  ALLOCATE  (work4( npwx))
+  ALLOCATE  (work5( npwx))
+  ALLOCATE  (work6( npwx))
 
   d3dywrk (:,:) = (0.d0, 0.d0)
   !
@@ -66,7 +68,7 @@ SUBROUTINE dqrhod2v (ipert, drhoscf)
   IF ( my_pool_id == 0 ) THEN
      !
      work0 (:) = drhoscf(:)
-     CALL cft3 (work0, nr1, nr2, nr3, nrx1, nrx2, nrx3, - 1)
+     CALL fwfft ('Dense', work0, dfftp)
      DO na = 1, nat
         DO icart = 1, 3
            na_icart = 3 * (na - 1) + icart

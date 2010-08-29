@@ -27,17 +27,17 @@ subroutine dpsidpsidv
        ps3_ij (:,:), ps2_ji (:,:), d3dyn1 (:,:,:), d3dyn2 (:,:,:),&
        d3dyn3 (:,:,:)
 
-  allocate  (dqpsi( npwx, nbnd))    
+  allocate  (dqpsi( npwx, nbnd))
   if (degauss /= 0.d0) then
-     allocate  (ps1_ij( nbnd, nbnd))    
-     allocate  (ps1_ji( nbnd, nbnd))    
-     allocate  (ps3_ij( nbnd, nbnd))    
-     allocate  (ps2_ji( nbnd, nbnd))    
+     allocate  (ps1_ij( nbnd, nbnd))
+     allocate  (ps1_ji( nbnd, nbnd))
+     allocate  (ps3_ij( nbnd, nbnd))
+     allocate  (ps2_ji( nbnd, nbnd))
   endif
-  allocate  (d3dyn1( 3 * nat, 3 * nat, 3 * nat))    
+  allocate  (d3dyn1( 3 * nat, 3 * nat, 3 * nat))
   if (.not.allmodes) then
-     allocate  (d3dyn2( 3 * nat, 3 * nat, 3 * nat))    
-     allocate  (d3dyn3( 3 * nat, 3 * nat, 3 * nat))    
+     allocate  (d3dyn2( 3 * nat, 3 * nat, 3 * nat))
+     allocate  (d3dyn3( 3 * nat, 3 * nat, 3 * nat))
   endif
   d3dyn1 (:,:,:) = (0.d0, 0.d0)
   if (.not.allmodes) then

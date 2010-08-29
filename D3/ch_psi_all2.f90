@@ -48,9 +48,9 @@ subroutine ch_psi_all2 (n, h, ah, e, ik, m)
 
 
   call start_clock ('ch_psi')
-  allocate (ps( nbnd, m))    
-  allocate (hpsi( npwx, m))    
-  allocate (spsi( npwx, m))    
+  allocate (ps( nbnd, m))
+  allocate (hpsi( npwx, m))
+  allocate (spsi( npwx, m))
 
   hpsi = (0.d0, 0.d0)
   spsi = (0.d0, 0.d0)

@@ -23,10 +23,10 @@ SUBROUTINE d3_exc
   USE io_global, ONLY : ionode_id
   USE mp_global, ONLY : inter_pool_comm, my_pool_id, &
                         npool, intra_pool_comm
-  USE mp,        ONLY : mp_bcast, mp_sum 
+  USE mp,        ONLY : mp_bcast, mp_sum
 
   IMPLICIT NONE
-  
+
   INTEGER :: errcode, ir, ipert, jpert, kpert, npert1, npert2
   REAL (DP) :: d2mxc, rhotot, xq0 (3)
   REAL (DP), ALLOCATABLE :: d2muxc (:)
@@ -34,11 +34,11 @@ SUBROUTINE d3_exc
   COMPLEX (DP), ALLOCATABLE :: work1 (:), work2 (:), &
                                       work3 (:), d3dyn1 (:,:,:)
 
-  ALLOCATE (d2muxc( nrxx))    
-  ALLOCATE (work1 ( nrxx))    
-  ALLOCATE (work2 ( nrxx))    
-  ALLOCATE (work3 ( nrxx))    
-  ALLOCATE (d3dyn1( 3*nat, 3*nat, 3*nat))    
+  ALLOCATE (d2muxc( nrxx))
+  ALLOCATE (work1 ( nrxx))
+  ALLOCATE (work2 ( nrxx))
+  ALLOCATE (work3 ( nrxx))
+  ALLOCATE (d3dyn1( 3*nat, 3*nat, 3*nat))
 
 !  IF ( my_pool_id == 0 ) THEN
      !

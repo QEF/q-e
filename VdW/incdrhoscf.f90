@@ -19,6 +19,8 @@ SUBROUTINE incdrhoscf_vdw (drhoscf, weight, ik, mode)
 !  USE wavefunctions_module,  ONLY: evc
   USE uspp_param,             ONLY : nhm
   USE eff_v,                  ONLY : evc => evc_veff
+  USE fft_base,               ONLY : dffts
+  USE fft_interfaces,         ONLY : fwfft, invfft
   USE pwcom
   USE phcom
   IMPLICIT NONE
@@ -65,14 +67,14 @@ SUBROUTINE incdrhoscf_vdw (drhoscf, weight, ik, mode)
         psi (nls (igk (ig) ) ) = evc (ig, ibnd)
      ENDDO
 
-     CALL cft3s (psi, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, + 2)
+     CALL invfft ('Wave', psi, dffts)
 
      dpsic(:) = (0.d0, 0.d0)
      DO ig = 1, npwq
         dpsic (nls (igkq (ig) ) ) = dpsi (ig, ibnd)
      ENDDO
 
-     CALL cft3s (dpsic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, + 2)
+     CALL invfft ('Wave', dpsic, dffts)
      DO ir = 1, nrxxs
 !        drhoscf (ir) = drhoscf (ir) + wgt * CONJG (psi (ir) ) * dpsic (ir)
         drhoscf (ir) = drhoscf (ir) + wgt * REAL( conjg(psi(ir)) * dpsic (ir) )

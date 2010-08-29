@@ -30,14 +30,14 @@ subroutine d3_valence
        pdvp_k (:,:), aux1 (:,:,:), aux2 (:,:,:), aux3 (:,:,:), aux4 (:,:,:)
 
   if (degauss == 0.d0) return
-  allocate  (pdvp_i( nbnd, nbnd))    
-  allocate  (pdvp_j( nbnd, nbnd))    
-  allocate  (pdvp_k( nbnd, nbnd))    
-  allocate  (aux1  ( 3 * nat, 3 * nat, 3 * nat))    
-  allocate  (aux2  ( 3 * nat, 3 * nat, 3 * nat))    
-  allocate  (aux3  ( 3 * nat, 3 * nat, 3 * nat))    
-  allocate  (aux4  ( 3 * nat, 3 * nat, 3 * nat))    
-  allocate  (dpsidvpsi( nbnd, nbnd))    
+  allocate  (pdvp_i( nbnd, nbnd))
+  allocate  (pdvp_j( nbnd, nbnd))
+  allocate  (pdvp_k( nbnd, nbnd))
+  allocate  (aux1  ( 3 * nat, 3 * nat, 3 * nat))
+  allocate  (aux2  ( 3 * nat, 3 * nat, 3 * nat))
+  allocate  (aux3  ( 3 * nat, 3 * nat, 3 * nat))
+  allocate  (aux4  ( 3 * nat, 3 * nat, 3 * nat))
+  allocate  (dpsidvpsi( nbnd, nbnd))
 
   aux1(:,:,:) = (0.d0, 0.d0)
   aux2(:,:,:) = (0.d0, 0.d0)

@@ -52,7 +52,7 @@ subroutine d3_symdyn (d3dyn, u, ug0, xq, s, invs, rtau, irt, irgq, &
   complex (DP), allocatable :: phi (:,:,:,:,:,:)
   ! the dynamical matrix
 
-  allocate  (phi( 3, 3, 3, nat, nat, nat))    
+  allocate  (phi( 3, 3, 3, nat, nat, nat))
   !
   ! First we transform in the cartesian coordinates
   !

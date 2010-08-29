@@ -46,8 +46,8 @@ subroutine qstar_d3 (d3dyn, at, bg, nat, nsym, s, invs, irt, rtau, &
   complex (DP), allocatable :: phi (:,:,:,:,:,:), phi2 (:,:,:,:,:,:)
   ! work space
 
-  allocate  (phi (3,3,3,nat,nat,nat))    
-  allocate  (phi2(3,3,3,nat,nat,nat))    
+  allocate  (phi (3,3,3,nat,nat,nat))
+  allocate  (phi2(3,3,3,nat,nat,nat))
   !
   ! Sets number of symmetry operations giving each q in the list
   !

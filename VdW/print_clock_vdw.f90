@@ -43,8 +43,9 @@ SUBROUTINE print_clock_vdw
   WRITE( stdout, * )
   WRITE( stdout,  * ) '    General routines'
   CALL print_clock ('calbec')
-  CALL print_clock ('cft3')
-  CALL print_clock ('cft3s')
+  CALL print_clock ('fft')
+  CALL print_clock ('ffts')
+  CALL print_clock ('fftw')
   CALL print_clock ('davcio')
   WRITE( stdout, * )
 #ifdef __PARA

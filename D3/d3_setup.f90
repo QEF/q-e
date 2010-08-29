@@ -174,7 +174,7 @@ SUBROUTINE d3_setup()
   ! 5.0) Computes the inverse of each matrix
   !
   ! TEMP TEMP TEMP TEMP: ths should not be needed any longer
-  ! 
+  !
   modenum = 0
   magnetic_sym = .false.
   CALL find_sym ( nat, tau, ityp, nr1, nr2, nr3, .FALSE., &
@@ -205,9 +205,9 @@ SUBROUTINE d3_setup()
   ! if such a symmetry has been found
   minus_q = (modenum .eq. 0)
   !
-  ! BEWARE: In set_irr, smallgq is called 
+  ! BEWARE: In set_irr, smallgq is called
   !
-  ! FIXME: workaround for filename mess - needed to find where 
+  ! FIXME: workaround for filename mess - needed to find where
   !        the patterns are
   tmp_dir_save=tmp_dir
   if ( lgamma ) tmp_dir=TRIM(tmp_dir)//'_ph0'
@@ -239,7 +239,7 @@ SUBROUTINE d3_setup()
         npertx=1
         CALL allocate_pert_d3()
         CALL set_irr_nosym (nat, at, bg, xq, s, invs, nsym, rtau, &
-             irt, irgq, nsymq, minus_q, irotmq, t, tmq, npertx, u, & 
+             irt, irgq, nsymq, minus_q, irotmq, t, tmq, npertx, u, &
              npert, nirr, gi, gimq, iverbosity)
      ENDIF
   ENDIF
@@ -279,7 +279,7 @@ SUBROUTINE d3_setup()
      !
   ENDIF
   !
-  ! FIXME: workaround for filename mess - needed to find where 
+  ! FIXME: workaround for filename mess - needed to find where
   !        the patterns are
   tmp_dir=tmp_dir_save
   ! FIXME END
@@ -295,7 +295,7 @@ SUBROUTINE d3_setup()
   !
   nlcc_any = ANY ( upf(1:ntyp)%nlcc )
   !
-  IF (nlcc_any) ALLOCATE (drc( ngm, ntyp))    
+  IF (nlcc_any) ALLOCATE (drc( ngm, ntyp))
   !
   ! 7) Sets up variables needed to distribute one loop between pools
   !

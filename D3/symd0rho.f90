@@ -44,7 +44,7 @@ subroutine symd0rho (npertx, nper, irr, d0rho, s, ftau, nsymq, &
 
   if (nsymq == 1) return
 
-  allocate  (aux1( nrx1, nrx2, nrx3, nper))    
+  allocate  (aux1( nrx1, nrx2, nrx3, nper))
   !
   ! Here we symmetrize with respect to the group
   !

@@ -31,7 +31,7 @@ SUBROUTINE openfild3
   ! logical variable to check file existe
   INTEGER       :: ndr, kunittmp, ierr
   REAL(DP) :: edum(1,1), wdum(1,1)
-  
+
   twfcollect=.FALSE.
 
   IF (LEN_TRIM(prefix) == 0) CALL errore ('openfild3', 'wrong prefix', 1)

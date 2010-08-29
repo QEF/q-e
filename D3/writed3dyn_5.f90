@@ -44,7 +44,7 @@ SUBROUTINE writed3dyn_5 (d3dyn_x, filename, isw)
 
   IF ( .NOT. ionode ) RETURN
 
-  ALLOCATE  (aux( 3 * nat, 3 * nat, 3 * nat))    
+  ALLOCATE  (aux( 3 * nat, 3 * nat, 3 * nat))
   IF (isw.EQ. + 1) THEN
      CALL zcopy (27 * nat * nat * nat, d3dyn_x, 1, aux, 1)
   ELSEIF (isw.EQ. - 1) THEN

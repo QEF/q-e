@@ -15,9 +15,10 @@ subroutine dvdpsi (nu_i, xq_, dvloc, vkb_, vkbq_, psi_, dvpsi_)
 !
   USE ions_base,  ONLY : nat, ityp, ntyp => nsp
   USE cell_base,  ONLY : tpiba
+  USE fft_base,   ONLY : dffts
+  USE fft_interfaces,  ONLY : fwfft, invfft
   USE gvect,      ONLY : nrxx, g
-  USE gsmooth,    ONLY : nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, nrxxs, &
-                         nls
+  USE gsmooth,    ONLY : nrxxs, nls
   USE wvfct,      ONLY : nbnd, npwx, npw, igk
   use phcom
   use d3com
@@ -49,9 +50,9 @@ subroutine dvdpsi (nu_i, xq_, dvloc, vkb_, vkbq_, psi_, dvpsi_)
   complex (DP) , external:: zdotc
   logical :: q_eq_zero
   !
-  allocate  (aux( nrxx))    
-  allocate  (ps( 2, nbnd))    
-  allocate  (wrk2( npwx))    
+  allocate  (aux( nrxx))
+  allocate  (ps( 2, nbnd))
+  allocate  (wrk2( npwx))
   q_eq_zero = xq_ (1) == 0.d0 .and. xq_ (2) == 0.d0 .and. xq_ (3) == 0.d0
   if (q_eq_zero) then
      u_x => ug0
@@ -64,11 +65,11 @@ subroutine dvdpsi (nu_i, xq_, dvloc, vkb_, vkbq_, psi_, dvpsi_)
      do ig = 1, npw
         aux (nls (igk (ig) ) ) = psi_ (ig, ibnd)
      enddo
-     call cft3s (aux, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, + 2)
+     CALL invfft ('Wave', aux, dffts)
      do ir = 1, nrxxs
         aux (ir) = aux (ir) * dvloc (ir)
      enddo
-     call cft3s (aux, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, - 2)
+     CALL fwfft ('Wave', aux, dffts)
      do ig = 1, npwq
         dvpsi_ (ig, ibnd) = aux (nls (igkq (ig) ) )
      enddo

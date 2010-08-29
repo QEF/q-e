@@ -82,7 +82,7 @@ subroutine d3_symdynph (xq, phi, s, invs, rtau, irt, irgq, nsymq, &
   !
 
   if ( (nsymq == 1) .and. (.not.minus_q) ) return
-  allocate  (phip( 3, 3, 3, nat, nat, nat))    
+  allocate  (phip( 3, 3, 3, nat, nat, nat))
   !
   !    Then we impose the symmetry q -> -q+G if present
   !
@@ -135,7 +135,7 @@ subroutine d3_symdynph (xq, phi, s, invs, rtau, irt, irgq, nsymq, &
   !
   if (nsymq == 1) return
 
-  allocate  (iflb( nat, nat, nat))    
+  allocate  (iflb( nat, nat, nat))
   do na = 1, nat
      do nb = 1, nat
         do nc = 1, nat

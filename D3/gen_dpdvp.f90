@@ -39,8 +39,8 @@ subroutine gen_dpdvp
 
 
   if (degauss.eq.0.d0) return
-  allocate (dvloc( nrxx))    
-  allocate (dpsidvpsi( nbnd, nbnd))    
+  allocate (dvloc( nrxx))
+  allocate (dpsidvpsi( nbnd, nbnd))
   rewind (unit = iunigk)
 
   zero = 0.0_dp

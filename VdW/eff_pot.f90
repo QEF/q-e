@@ -1,7 +1,5 @@
 !--------------------------------------------------------------------
-SUBROUTINE eff_pot (rho, nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, nl,   &
-                     ngm, gg, gstart, nspin, alat, omega, ecutwfc,  &
-                     charge, vstart, thresh_veff)
+SUBROUTINE eff_pot (rho, nspin, alat, omega, charge, vstart, thresh_veff)
   !--------------------------------------------------------------------
   !
   !     Effective  potential (V_eff) in TF+vW scheme
@@ -11,13 +9,16 @@ SUBROUTINE eff_pot (rho, nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, nl,   &
   USE io_global,            ONLY : stdout
   USE io_files,             ONLY : prefix, nwordwfc, iunwfc
   USE klist,                ONLY : nelec
-  USE gvect,                ONLY : nlm, g, qcutz, ecfixed, q2sigma
+  USE fft_base,             ONLY : dfftp
+  USE fft_interfaces,       ONLY : fwfft, invfft
+  USE gvect,                ONLY : nlm, g, qcutz, ecfixed, q2sigma, &
+                                   nr1, nr2, nr3, nrxx, nl, ngm, gg,&
+                                   ecutwfc, gstart
   USE wvfct,                ONLY : g2kin, wg, nbndx, et, nbnd, npwx, &
                                    igk, npw
   USE uspp,                 ONLY : nkb
   USE scf,                  ONLY : v, vltot, vrs, rho_core
-  USE gsmooth,              ONLY : nls, nlsm, nr1s, nr2s, nr3s, nrx1s,&
-                                   nrx2s, nrx3s, nrxxs, doublegrid
+  USE gsmooth,              ONLY : nls, nlsm, nrxxs, doublegrid
   USE eff_v,                ONLY : rho_fft, veff
   USE mp_global,            ONLY : intra_pool_comm
   USE mp,                   ONLY : mp_sum
@@ -29,10 +30,8 @@ SUBROUTINE eff_pot (rho, nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, nl,   &
   !
   !    input
   !
-  INTEGER :: nspin, nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, ngm, ngmw, &
-             gstart, nl (ngm)
-  real(kind=DP) :: rho(nrxx, nspin), gg (ngm), alat, omega, ecutwfc, charge, &
-                   charge_old
+  INTEGER :: nspin 
+  real(kind=DP) :: rho(nrxx, nspin), alat, omega, charge, charge_old
   !
   !    output
   !
@@ -41,8 +40,8 @@ SUBROUTINE eff_pot (rho, nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, nl,   &
   !    local variables
   !
   real(kind=DP) :: tpiba2, fac
-  real(kind=DP), ALLOCATABLE ::  aux (:,:), aux1 (:,:), psi (:,:), &
-                                 psi_smooth(:,:), S(:)
+  real(kind=DP), ALLOCATABLE :: S(:), psi_smooth(:)
+  COMPLEX(kind=DP), ALLOCATABLE ::  aux (:), aux1 (:), psi (:)
   COMPLEX(kind=DP), ALLOCATABLE :: ws_psi(:,:), ws_hpsi(:,:), ws_psic(:)
 
   INTEGER :: ir, is, ig
@@ -54,7 +53,7 @@ SUBROUTINE eff_pot (rho, nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, nl,   &
   !
   CALL start_clock('eff_pot')
   !
-  ALLOCATE (aux(2,nrxx), aux1(2,ngm), psi(2,nrxx), psi_smooth(2,nrxx),S(nrxx) )
+  ALLOCATE ( aux(nrxx), aux1(ngm), psi(nrxx), psi_smooth(nrxx), S(nrxx) )
   ALLOCATE ( vv(nrxx, nspin) )
   ALLOCATE ( rho_in(nrxx, nspin) )
   !
@@ -64,37 +63,36 @@ SUBROUTINE eff_pot (rho, nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, nl,   &
   !
   !  set value for psi in real space
   !
-  psi(2,:) = 0.d0
-  psi(1,:) = sqrt( rho_in (:,1) )
+  psi(:) = CMPLX ( sqrt( rho_in (:,1) ), 0.0_dp, KIND=dp )
   !
   !  bring psi to G space
   !
-  CALL cft3 (psi, nr1, nr2, nr3, nrx1, nrx2, nrx3, -1)
+  CALL fwfft ('Dense', psi, dfftp)
   !
   !  extract the smooth part of psi in G-space
   !
-  psi_smooth(:,:) = 0.d0
   DO ig = 1, ngm
-    IF ( (tpiba2 * gg(ig)) < ( ecutwfc ) ) THEN
-      psi_smooth(1,nl(ig)) = psi(1,nl(ig))
-      psi_smooth(2,nl(ig)) = psi(2,nl(ig))
+    IF ( (tpiba2 * gg(ig)) > ecutwfc ) THEN
+      psi(nl(ig)) = (0.0_dp, 0.0_dp)
     ENDIF
   ENDDO
   !
-  aux = psi_smooth
-  psi = psi_smooth
+  aux = psi
   !
   !  bring psi_smooth to real space (approximation of psi)
   !
-  CALL cft3 (psi_smooth, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1)
+  CALL invfft ('Dense', psi, dfftp)
+  psi_smooth(:) = DBLE ( psi(:) )
+  deallocate ( psi )
   !
   !  check the difference of the total charge density
   !
   charge = 0.d0
   DO is = 1, nspin
      DO ir = 1, nrxx
-        charge = charge + abs( rho_in(ir,is)-psi_smooth(is,ir)**2 )
-     ENDDO
+        !  NB: the following will work only if nspin = 1 !
+        charge = charge + abs( rho_in(ir,is)-psi_smooth(ir)**2 )
+     END DO
   ENDDO
   charge = charge * omega / (nr1*nr2*nr3) / nelec
 #ifdef __PARA
@@ -106,36 +104,33 @@ SUBROUTINE eff_pot (rho, nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, nl,   &
   !
   DO is = 1, nspin
      DO ir = 1, nrxx
-        rho_fft(ir,1) = psi_smooth(1,ir)**2
+        rho_fft(ir,1) = psi_smooth(ir)**2
      ENDDO
   ENDDO
   !
   !  calculate P^2 |psi> in G-space (NB: V(G=0)=0 )
   !
-  aux1(:,:) = 0.d0
+  aux1(:) = 0.d0
   DO ig = 1, ngm
      fac =  gg(ig) * tpiba2
-     aux1(1,ig) = fac * aux(1,nl(ig))
-     aux1(2,ig) = fac * aux(2,nl(ig))
+     aux1(ig) = fac * aux(nl(ig))
   ENDDO
   !
-  aux(:,:) = 0.d0
+  aux(:) = 0.d0
   DO ig = 1, ngm
-     aux(1,nl(ig)) = aux1(1,ig)
-     aux(2,nl(ig)) = aux1(2,ig)
+     aux(nl(ig)) = aux1(ig)
   ENDDO
   !
   IF (gamma_only) THEN
      DO ig = 1, ngm
-        aux(1,nlm(ig)) =   aux1(1,ig)
-        aux(2,nlm(ig)) = - aux1(2,ig)
+        aux(nlm(ig)) = CONJG( aux1(ig) )
      ENDDO
   ENDIF
   !
   !      bring P^2 |psi>  to real space, kinetic term is kept
   !      in aux
   !
-  CALL cft3 (aux, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1)
+  CALL invfft ('Dense', aux, dfftp)
   !
   !
   !  compute V_eff  potential by FT and then use it as initial
@@ -148,15 +143,15 @@ SUBROUTINE eff_pot (rho, nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, nl,   &
   is = 1
   IF (.false.) THEN
      DO ir = 1, nrxx
-        vv(ir,is) = -aux(1,ir)
+        vv(ir,is) = -DBLE(aux(ir))
      ENDDO
   ELSE
      DO ir = 1, nrxx
-        IF (abs(psi_smooth(1,ir)) > eps ) THEN
-           vv(ir,is) = -aux(1,ir) / psi_smooth(1,ir)
+        IF (abs(psi_smooth(ir)) > eps ) THEN
+           vv(ir,is) = -DBLE(aux(ir)) / psi_smooth(ir)
         ELSE
-           avg1 = avg1 - aux(1,ir)
-           avg2 = avg2 + psi_smooth(1,ir)
+           avg1 = avg1 - DBLE(aux(ir))
+           avg2 = avg2 + psi_smooth(ir)
            nnn = nnn + 1
         ENDIF
      ENDDO
@@ -167,7 +162,7 @@ SUBROUTINE eff_pot (rho, nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, nl,   &
 #endif
      IF (nnn > 0 ) THEN
         DO ir = 1, nrxx
-           IF (abs(psi_smooth(1,ir)) <= eps ) THEN
+           IF (abs(psi_smooth(ir)) <= eps ) THEN
               vv(ir,is) = avg1 / avg2
            ENDIF
         ENDDO
@@ -179,10 +174,8 @@ SUBROUTINE eff_pot (rho, nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, nl,   &
 vstart=20000
   DO ir = 1, nrxx
      vrs(ir,1) = v%of_r(ir,1) + vltot(ir)
-     vv(ir,is) = qe_erf(abs(psi_smooth(1,ir)*dble(vstart)))*vv(ir,is) + &
-                (1.d0-qe_erf( abs( psi_smooth(1,ir)*dble(vstart) ) ))*&
-                vrs(ir,is)
-
+     vv(ir,is) = qe_erf( abs(psi_smooth(ir)*dble(vstart)))*vv(ir,is) + &
+           (1.d0-qe_erf( abs(psi_smooth(ir)*dble(vstart))))*vrs(ir,is)
   ENDDO
   !
   !  check the quality of trial potential
@@ -228,7 +221,7 @@ vstart=20000
   veff(:,:) = vv(:,:)
   !
   DEALLOCATE ( vv, rho_in )
-  DEALLOCATE (aux,aux1,psi,psi_smooth,S)
+  DEALLOCATE (aux,aux1,psi_smooth,S)
   !
   CALL stop_clock('eff_pot')
   !
@@ -254,7 +247,7 @@ vstart=20000
 !CALL flush_unit( stdout )
      s2 = 0.d0
      DO ir = 1, nrxx
-        S(ir) = psi_smooth(1,ir) * ( aux(1,ir) + vv(ir,1)*psi_smooth(1,ir) )
+        S(ir) = psi_smooth(ir) * DBLE (aux(ir)) + vv(ir,1)*psi_smooth(ir)
         s2 = s2 + S(ir)**2
      ENDDO
 #ifdef __PARA
@@ -273,11 +266,11 @@ vstart=20000
         r2   = 0.d0
         !
         DO ir = 1, nrxx
-           r2   = r2   + psi_smooth(1,ir)**4
-           s2r2 = s2r2 + ( S(ir) * psi_smooth(1,ir)**2 )**2
-           sr2  = sr2  +   S(ir) * psi_smooth(1,ir)**4
-           s2r  = s2r  + ( S(ir)**2) * psi_smooth(1,ir)**2
-           sr   = sr   +   S(ir) * psi_smooth(1,ir)**2
+           r2   = r2   + psi_smooth(ir)**4
+           s2r2 = s2r2 + ( S(ir) * psi_smooth(ir)**2 )**2
+           sr2  = sr2  +   S(ir) * psi_smooth(ir)**4
+           s2r  = s2r  + ( S(ir)**2) * psi_smooth(ir)**2
+           sr   = sr   +   S(ir) * psi_smooth(ir)**2
         ENDDO
 #ifdef __PARA
         CALL mp_sum( r2, intra_pool_comm )
@@ -314,8 +307,8 @@ vstart=20000
         !
         DO ir = 1, nrxx
            vv(ir,1)= vv(ir,1) + alp*S(ir) + beta
-           S(ir)   = S(ir) * (1.d0 + alp*psi_smooth(1,ir)**2) + &
-                     beta*psi_smooth(1,ir)**2
+           S(ir)   = S(ir) * (1.d0 + alp*psi_smooth(ir)**2) + &
+                     beta*psi_smooth(ir)**2
         ENDDO
         !
         s2 = 0.d0

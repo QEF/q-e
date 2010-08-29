@@ -30,12 +30,12 @@ subroutine dpsidvdpsi (nu_q0)
        d3dyn2 (:,:,:), d3dyn3 (:,:,:)
 
 
-  allocate  (dqpsi( npwx, nbnd))    
-  allocate  (dvloc( nrxx))    
-  allocate  (d3dyn1( 3 * nat, 3 * nat, 3 * nat))    
+  allocate  (dqpsi( npwx, nbnd))
+  allocate  (dvloc( nrxx))
+  allocate  (d3dyn1( 3 * nat, 3 * nat, 3 * nat))
   if (.not.allmodes) then
-     allocate  (d3dyn2( 3 * nat, 3 * nat, 3 * nat))    
-     allocate  (d3dyn3( 3 * nat, 3 * nat,3 * nat))    
+     allocate  (d3dyn2( 3 * nat, 3 * nat, 3 * nat))
+     allocate  (d3dyn3( 3 * nat, 3 * nat,3 * nat))
   endif
 
   zero = 0.d0

@@ -93,12 +93,12 @@ subroutine solve_linter_d3 (irr, imode0, npe, isw_sl)
   external ch_psi_all2, cg_psi
   !
   call start_clock ('solve_linter')
-  allocate  (drhoscf( nrxx, npe))    
-  allocate  (dvloc( nrxx, npe))    
-  allocate  (spsi( npwx))    
-  allocate  (auxg( npwx))    
-  if (degauss /= 0.d0) allocate  (dpsiaux( npwx, nbnd))    
-  allocate  (h_diag( npwx, nbnd))    
+  allocate  (drhoscf( nrxx, npe))
+  allocate  (dvloc( nrxx, npe))
+  allocate  (spsi( npwx))
+  allocate  (auxg( npwx))
+  if (degauss /= 0.d0) allocate  (dpsiaux( npwx, nbnd))
+  allocate  (h_diag( npwx, nbnd))
   ltaver = 0
   lintercall = 0
   lmetq0 = (degauss /= 0.d0) .and. (isw_sl >= 3)

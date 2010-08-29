@@ -19,6 +19,8 @@ subroutine d3dyn_cc
   USE ions_base,  ONLY : nat, ityp, tau
   USE kinds, only : DP
   USE funct, only : xc
+  USE fft_base,              ONLY : dfftp
+  USE fft_interfaces,        ONLY : fwfft
   use pwcom
   use scf, only : rho, rho_core
   use phcom
@@ -44,13 +46,13 @@ subroutine d3dyn_cc
        d3dyn1 (:,:,:), d3dyn2 (:,:,:), d3dyn3 (:,:,:), d3dyn4 (:,:,:)
 
   if (.not.nlcc_any) return
-  allocate  (aux ( nrxx))    
-  allocate  (drc_exp ( ngm, nat))    
-  allocate  (d3dyn0 ( 3 * nat, 3 * nat, 3 * nat))    
-  allocate  (d3dyn1 ( 3 * nat, 3 * nat, 3 * nat))    
-  allocate  (d3dyn2 ( 3 * nat, 3 * nat, 3 * nat))    
-  allocate  (d3dyn3 ( 3 * nat, 3 * nat, 3 * nat))    
-  allocate  (d3dyn4 ( 3 * nat, 3 * nat, 3 * nat))    
+  allocate  (aux ( nrxx))
+  allocate  (drc_exp ( ngm, nat))
+  allocate  (d3dyn0 ( 3 * nat, 3 * nat, 3 * nat))
+  allocate  (d3dyn1 ( 3 * nat, 3 * nat, 3 * nat))
+  allocate  (d3dyn2 ( 3 * nat, 3 * nat, 3 * nat))
+  allocate  (d3dyn3 ( 3 * nat, 3 * nat, 3 * nat))
+  allocate  (d3dyn4 ( 3 * nat, 3 * nat, 3 * nat))
 
   d3dyn0(:,:,:) = (0.d0, 0.d0)
   d3dyn1(:,:,:) = (0.d0, 0.d0)
@@ -77,7 +79,7 @@ subroutine d3dyn_cc
      endif
   enddo
 
-  call cft3 (aux, nr1, nr2, nr3, nrx1, nrx2, nrx3, - 1)
+  CALL fwfft ('Dense', aux, dfftp)
   do na_i = npert_i, npert_f
      na = (na_i - 1) / 3 + 1
      i_cart = na_i - 3 * (na - 1)
@@ -111,7 +113,7 @@ subroutine d3dyn_cc
         aux (ir) = aux (ir) * dmuxc (ir, 1, 1)
      enddo
 
-     call cft3 (aux, nr1, nr2, nr3, nrx1, nrx2, nrx3, - 1)
+     CALL fwfft ('Dense', aux, dfftp)
 
      do na = 1, nat
         do i_cart = 1, 3
@@ -159,7 +161,7 @@ subroutine d3dyn_cc
         aux (ir) = aux (ir) * dmuxc (ir, 1, 1)
      enddo
 
-     call cft3 (aux, nr1, nr2, nr3, nrx1, nrx2, nrx3, - 1)
+     CALL fwfft ('Dense', aux, dfftp)
 
      do na = 1, nat
         do i_cart = 1, 3

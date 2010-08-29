@@ -19,7 +19,7 @@ SUBROUTINE davcio_drho2 (drho, lrec, iunit, nrec, isw)
   USE kinds,     ONLY : DP
   USE phcom
   USE io_global, ONLY : ionode_id, ionode
-  USE mp_global, ONLY : intra_pool_comm, inter_pool_comm, me_pool, root_pool 
+  USE mp_global, ONLY : intra_pool_comm, inter_pool_comm, me_pool, root_pool
   USE mp,        ONLY : mp_bcast, mp_barrier
   USE fft_base,  ONLY : dfftp, cgather_sym
   !
@@ -34,7 +34,7 @@ SUBROUTINE davcio_drho2 (drho, lrec, iunit, nrec, isw)
   INTEGER :: root, errcode, itmp, proc
   COMPLEX(DP), ALLOCATABLE :: ddrho (:)
 
-  ALLOCATE (ddrho( nrx1 * nrx2 * nrx3 ))    
+  ALLOCATE (ddrho( nrx1 * nrx2 * nrx3 ))
 
   IF (isw == 1) THEN
      !

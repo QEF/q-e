@@ -41,7 +41,7 @@ subroutine psymd0rho (nper, irr, dvtosym)
 
   call start_clock ('psymd0rho')
 
-  allocate ( ddvtosym( nrx1 * nrx2 * nrx3, nper))    
+  allocate ( ddvtosym( nrx1 * nrx2 * nrx3, nper))
   npp0 = 0
   do i = 1, me_pool
      npp0 = npp0 + dfftp%npp (i)

@@ -27,12 +27,13 @@ SUBROUTINE check_v_eff ( veff, charge )
   USE uspp,                 ONLY : okvan
   USE cell_base,            ONLY : omega
   USE uspp,                 ONLY : vkb, nkb
-  USE gvect,                ONLY : g, gg, gstart, ecfixed, qcutz, q2sigma, nrxx, &
-                                   nr1, nr2, nr3, nrx1, nrx2, nrx3,ngm, ecutwfc, nl
+  USE fft_base,             ONLY : dffts
+  USE fft_interfaces,       ONLY : fwfft, invfft
+  USE gvect,                ONLY : g, gg, gstart, ecfixed, qcutz, q2sigma, &
+                                   nrxx, nr1, nr2, nr3, ngm, ecutwfc, nl
   USE wvfct,                ONLY : g2kin, wg, nbndx, et, nbnd, npwx, igk, &
                                    npw
-  USE gsmooth,              ONLY : nls, nlsm, nr1s, nr2s, nr3s, &
-                                   nrx1s, nrx2s, nrx3s, nrxxs, doublegrid
+  USE gsmooth,              ONLY : nls, nlsm, nrxxs, doublegrid
   USE control_flags,        ONLY : diis_ndim, ethr, lscf, max_cg_iter, isolve
   USE ldaU,                 ONLY : lda_plus_u, swfcatom
   USE scf,                  ONLY : vltot, vrs, v_of_0
@@ -155,7 +156,7 @@ SUBROUTINE check_v_eff ( veff, charge )
              !
              psic(1:nrxx) = sqrt(abs(rho_fft(1:nrxx,1)))
              !
-             CALL cft3s( psic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, -2 )
+             CALL fwfft ('Wave', psic, dffts)
              !
              evc_(1:npw,ibnd) = psic(nls(igk(1:npw)))
              !
@@ -267,7 +268,7 @@ SUBROUTINE check_v_eff ( veff, charge )
           !
           psic(nls(igk(1:npw))) = evc_(1:npw,ibnd)
           !
-          CALL cft3s( psic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, 2 )
+          CALL invfft ('Wave', psic, dffts)
           !
           ! compute the weight
           !

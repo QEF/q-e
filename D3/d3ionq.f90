@@ -42,7 +42,7 @@ SUBROUTINE d3ionq (nat, ntyp, ityp, zv, tau, alat, omega, q, at, &
 ! (\delta_{\alpha\beta}x_{\gamma}+\delta_{\alpha\gamma}x_{\beta}+\delta_{\beta\gamma}x_{\alpha})f_{1}(x)
 !  &  & +x_{\alpha}x_{\beta}x_{\gamma}f_{3}(x)\end{eqnarray*}
 ! \begin{eqnarray*}
-! f_{1}(x) &=& \frac{3erfc(\eta x)+a(\eta x)(3+2x^{2}\eta^{2})}{x^{5}} 
+! f_{1}(x) &=& \frac{3erfc(\eta x)+a(\eta x)(3+2x^{2}\eta^{2})}{x^{5}}
 ! f_{3}(x) &=& -\frac{15erfc(\eta x)+a(\eta x)(15+10\eta^{2}x^{2}+4\eta^{4}x^{4})}{x^{7}}
 ! a(\xi) &=& \frac{2\xi}{\sqrt{\pi}}e^{-\xi^{2}}
 ! \end{eqnarray*}
@@ -81,7 +81,7 @@ SUBROUTINE d3ionq (nat, ntyp, ityp, zv, tau, alat, omega, q, at, &
   COMPLEX (DP), INTENT(INOUT) :: d3dyn (3*nat, nmodes, 3*nat) ! derivative of the dyn. matrix
 
   LOGICAL, INTENT(IN) :: q0mode (300) ! if .true. this mode is to be computed
-  ! Actually: all the modes between npert_1 and npert_f are always computed, 
+  ! Actually: all the modes between npert_1 and npert_f are always computed,
   ! but only the ones in q0mode are added to the dynamical matrix
   !
   !   Local variables
@@ -286,7 +286,7 @@ SUBROUTINE d3ionq (nat, ntyp, ityp, zv, tau, alat, omega, q, at, &
 CONTAINS
     !-------------------------------------------------------------------
     !
-    ! dumping factor of Ewald sum 
+    ! dumping factor of Ewald sum
     ! 2/sqrt(pi) eta*x exp(-eta**2 x**2)
     !-----------------------------------------------------------------------
     FUNCTION a_fct(xeta)
@@ -342,7 +342,7 @@ CONTAINS
         REAL(DP),INTENT(IN) :: x(3), xx, eta
         INTEGER,INTENT(IN)  :: abc(3)
         !
-        REAL(DP) :: delta3 ! delta_{a,b} x_c + delta_{a,c} x_b + delta_{b,c} x_a 
+        REAL(DP) :: delta3 ! delta_{a,b} x_c + delta_{a,c} x_b + delta_{b,c} x_a
         REAL(DP) :: xa_xb_xc ! x_a * x_b * x_c
         !
         d3f_abc=0._dp

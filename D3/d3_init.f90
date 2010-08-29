@@ -17,7 +17,7 @@ SUBROUTINE d3_init
   USE d3com
   USE mp,         ONLY : mp_barrier
   USE symm_base,  ONLY : s, ftau
-  
+
   IMPLICIT NONE
 
   INTEGER :: nt, irr, irr1, ipert, imode0, errcode
@@ -26,7 +26,7 @@ SUBROUTINE d3_init
   COMPLEX (DP), ALLOCATABLE :: drhoscf (:,:)
   COMPLEX (DP), ALLOCATABLE :: drhoscf2 (:,:,:)
 
-  ALLOCATE (drhoscf( nrxx, 3))    
+  ALLOCATE (drhoscf( nrxx, 3))
 
 !
 !  the fourier trasform of the core charge both for q=0 and q.ne.0
@@ -37,7 +37,7 @@ SUBROUTINE d3_init
 !
      IF (.NOT.lgamma) THEN
 
-        ALLOCATE (d0rc( ngm, ntyp))    
+        ALLOCATE (d0rc( ngm, ntyp))
         work = 0.d0
         CALL set_drhoc (work)
         d0rc (:,:) = drc (:,:)

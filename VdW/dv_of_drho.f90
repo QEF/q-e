@@ -14,6 +14,8 @@ SUBROUTINE dv_of_drho_vdw (mode, dvscf, flag)
   !     due to the perturbation.
   !
   USE funct, ONLY : dft_is_gradient, dmxc
+  USE fft_base,  ONLY : dfftp
+  USE fft_interfaces, ONLY : fwfft, invfft
   USE pwcom
   USE scf, ONLY : rho, rho_core
   USE kinds, ONLY : DP
@@ -103,12 +105,12 @@ SUBROUTINE dv_of_drho_vdw (mode, dvscf, flag)
      dvscf(:,1) = dvscf(:,1) + dvscf(:,2)
   ENDIF
   !
-  CALL cft3 (dvscf, nr1, nr2, nr3, nrx1, nrx2, nrx3, -1)
+  CALL fwfft ('Dense', dvscf(:,1), dfftp)
   !
   ! hartree contribution is computed in reciprocal space
   !
   DO is = 1, nspin
-     CALL cft3 (dvaux (1, is), nr1, nr2, nr3, nrx1, nrx2, nrx3, - 1)
+     CALL fwfft ('Dense', dvaux (:, is), dfftp)
      DO ig = 1, ngm
         qg2 = (g(1,ig)+xq(1))**2 + (g(2,ig)+xq(2))**2 + (g(3,ig)+xq(3))**2
         IF (qg2 > 1.d-8) THEN
@@ -120,7 +122,7 @@ SUBROUTINE dv_of_drho_vdw (mode, dvscf, flag)
      !
      !  and transformed back to real space
      !
-     CALL cft3 (dvaux (1, is), nr1, nr2, nr3, nrx1, nrx2, nrx3, +1)
+     CALL invfft ('Dense', dvaux (:, is), dfftp)
   ENDDO
   !
   ! TFvW contribution is computed in real space

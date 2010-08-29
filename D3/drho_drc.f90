@@ -15,6 +15,8 @@ SUBROUTINE drho_drc (iudrho_x, u_x, xq_x, drc_x, scalef)
   !
   USE ions_base,  ONLY : nat, ityp, ntyp => nsp, tau
   USE kinds,      ONLY : DP
+  USE fft_base,   ONLY : dfftp
+  USE fft_interfaces, ONLY : invfft
   USE pwcom
   USE phcom
   USE d3com
@@ -38,9 +40,9 @@ SUBROUTINE drho_drc (iudrho_x, u_x, xq_x, drc_x, scalef)
   COMPLEX (DP), ALLOCATABLE :: drhoc (:), drhov (:), uact (:)
 
 
-  ALLOCATE  (drhoc( nrxx))    
-  ALLOCATE  (drhov( nrxx))    
-  ALLOCATE  (uact( 3 * nat))    
+  ALLOCATE  (drhoc( nrxx))
+  ALLOCATE  (drhov( nrxx))
+  ALLOCATE  (uact( 3 * nat))
 
   DO ipert = 1, 3 * nat
      drhoc(:) = (0.d0, 0.d0)
@@ -66,7 +68,7 @@ SUBROUTINE drho_drc (iudrho_x, u_x, xq_x, drc_x, scalef)
         ENDIF
      ENDDO
 
-     CALL cft3 (drhoc, nr1, nr2, nr3, nrx1, nrx2, nrx3, + 1)
+     CALL invfft ('Dense', drhoc, dfftp)
      CALL davcio_drho2 (drhov, lrdrho, iudrho_x, ipert, - 1)
      drhov(:) = drhov(:) + scalef * drhoc(:)
      CALL davcio_drho2 (drhov, lrdrho, iudrho_x, ipert, + 1)

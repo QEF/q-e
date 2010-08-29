@@ -119,8 +119,8 @@ SUBROUTINE set_sym_irr (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
      !   And we compute the matrices which represent the symmetry transformat
      !   in the basis of the displacements
      !
-     t(:,:,:,:) = (0.d0, 0.d0) 
-     tmq(:,:,:) = (0.d0, 0.d0) 
+     t(:,:,:,:) = (0.d0, 0.d0)
+     tmq(:,:,:) = (0.d0, 0.d0)
      IF (minus_q) THEN
         nsymtot = nsymq + 1
      ELSE

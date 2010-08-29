@@ -31,7 +31,7 @@ subroutine drhod2v
   complex (DP), allocatable :: drhoscf (:)
   ! the change of density due to perturbations
 
-  allocate  (drhoscf( nrxx))    
+  allocate  (drhoscf( nrxx))
 
   call read_ef
   if (.not.allmodes) then

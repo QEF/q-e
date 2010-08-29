@@ -13,6 +13,8 @@ subroutine set_efsh (drhoscf, imode0, irr, npe)
   !
   USE kinds, only : DP
   USE io_global,  ONLY : stdout
+  USE fft_base,   ONLY : dfftp
+  USE fft_interfaces, ONLY : fwfft
   use pwcom
   use phcom
   use d3com
@@ -67,7 +69,7 @@ subroutine set_efsh (drhoscf, imode0, irr, npe)
   !
   WRITE( stdout, * )
   do ipert = 1, npe
-     call cft3 (drhoscf (1, ipert), nr1, nr2, nr3, nrx1, nrx2, nrx3, - 1)
+     CALL fwfft ('Dense', drhoscf (:, ipert), dfftp)
 #ifdef __PARA
      delta_n = (0.d0, 0.d0)
      if (gg (1) < 1.0d-8) delta_n = omega * drhoscf (nl (1), ipert)

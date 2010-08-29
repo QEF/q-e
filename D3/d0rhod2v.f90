@@ -19,6 +19,8 @@ SUBROUTINE d0rhod2v (ipert, drhoscf)
   USE kinds,                 ONLY : DP
   USE uspp,                  ONLY : dvan
   USE uspp_param,            ONLY : nh
+  USE fft_base,              ONLY : dfftp
+  USE fft_interfaces,        ONLY : fwfft
   USE pwcom
   USE wavefunctions_module,  ONLY : evc
   USE phcom
@@ -58,13 +60,13 @@ SUBROUTINE d0rhod2v (ipert, drhoscf)
                                       work6 (:)
   ! auxiliary space
 
-  ALLOCATE (work0(nrxx))    
-  ALLOCATE (work1(npwx))    
-  ALLOCATE (work2(npwx))    
-  ALLOCATE (work3(npwx))    
-  ALLOCATE (work4(npwx))    
-  ALLOCATE (work5(npwx))    
-  ALLOCATE (work6(npwx))    
+  ALLOCATE (work0(nrxx))
+  ALLOCATE (work1(npwx))
+  ALLOCATE (work2(npwx))
+  ALLOCATE (work3(npwx))
+  ALLOCATE (work4(npwx))
+  ALLOCATE (work5(npwx))
+  ALLOCATE (work6(npwx))
 
   d3dywrk (:,:) = (0.d0, 0.d0)
   !
@@ -75,7 +77,7 @@ SUBROUTINE d0rhod2v (ipert, drhoscf)
      !   ... computed only by the first pool (no sum over k needed)
      !
      work0 (:) = drhoscf (:)
-     CALL cft3 (work0, nr1, nr2, nr3, nrx1, nrx2, nrx3, -1)
+     CALL fwfft ('Dense', work0, dfftp)
      DO na = 1, nat
         DO icart = 1,3
            na_icart = 3*(na-1)+icart
@@ -106,7 +108,7 @@ SUBROUTINE d0rhod2v (ipert, drhoscf)
      !
   END IF
   !
-  ! each pool contributes to next term 
+  ! each pool contributes to next term
   !
   ! Here we compute the nonlocal (Kleinman-Bylander) contribution.
   !

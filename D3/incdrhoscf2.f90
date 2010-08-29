@@ -17,6 +17,8 @@ subroutine incdrhoscf2 (drhoscf, weight, ik, dbecsum, mode, flag)
   !
   USE ions_base,  ONLY : nat
   USE kinds, only : DP
+  USE fft_base,   ONLY : dffts
+  USE fft_interfaces, ONLY : invfft
   use pwcom
   USE wavefunctions_module,  ONLY: evc
   USE uspp, ONLY: okvan
@@ -50,8 +52,8 @@ subroutine incdrhoscf2 (drhoscf, weight, ik, dbecsum, mode, flag)
   ! counters
 
   call start_clock ('incdrhoscf')
-  allocate  (dpsic( nrxxs))    
-  allocate  (psi  ( nrxxs))    
+  allocate  (dpsic( nrxxs))
+  allocate  (psi  ( nrxxs))
   wgt = 2.d0 * weight / omega
   if (lgamma) then
      ikk = ik
@@ -68,7 +70,7 @@ subroutine incdrhoscf2 (drhoscf, weight, ik, dbecsum, mode, flag)
      do ig = 1, npw
         psi (nls (igk (ig) ) ) = evc (ig, ibnd)
      enddo
-     call cft3s (psi, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, + 2)
+     CALL invfft ('Wave', psi, dffts)
      dpsic(:) =(0.d0, 0.d0)
      !
      !    here we add the term in the valence due to the change of the
@@ -93,7 +95,7 @@ subroutine incdrhoscf2 (drhoscf, weight, ik, dbecsum, mode, flag)
         dpsic (nls (igkq (ig) ) ) = dvpsi (ig, ibnd)
      enddo
 
-     call cft3s (dpsic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, + 2)
+     CALL invfft ('Wave', dpsic, dffts)
      do ir = 1, nrxxs
         drhoscf (ir) = drhoscf (ir) + wgt * CONJG(psi (ir) ) * dpsic (ir)
         !            if (ir.lt.20) WRITE( stdout,*)   drhoscf(ir)
@@ -105,7 +107,7 @@ subroutine incdrhoscf2 (drhoscf, weight, ik, dbecsum, mode, flag)
   !      do ig=1,20
   !         WRITE( stdout,*) dbecsum(ig,1)
   !      enddo
-  !      call stoallocate  (ph(.true.))    
+  !      call stoallocate  (ph(.true.))
   deallocate (psi)
   deallocate (dpsic)
 

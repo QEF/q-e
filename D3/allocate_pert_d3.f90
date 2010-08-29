@@ -10,7 +10,7 @@
 subroutine allocate_pert_d3()
   !-----------------------------------------------------------------------
   !
-  ! dynamical allocation of arrays: quantities depending on the 
+  ! dynamical allocation of arrays: quantities depending on the
   ! maximum number of perturbations
   !
   USE kinds, only : DP
@@ -25,8 +25,8 @@ subroutine allocate_pert_d3()
   !  allocate space for the quantities with dimensions that depend
   !  on the maximum number of perturbations
   !
-  ALLOCATE (t (npertx, npertx, 48, 3*nat))    
-  ALLOCATE (tmq (npertx, npertx, 3*nat))    
+  ALLOCATE (t (npertx, npertx, 48, 3*nat))
+  ALLOCATE (tmq (npertx, npertx, 3*nat))
   IF (lgamma) THEN
      tg0 => t
   ELSE

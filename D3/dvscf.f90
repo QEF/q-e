@@ -14,8 +14,10 @@ subroutine dvscf (nu_i, dvloc, xq_x)
 !   calculates the variation of the local part of the variation of the
 !   K-S potential.
 !
-  USE ions_base,  ONLY : nat, ityp, tau
-  USE kinds, only : DP
+  USE ions_base, ONLY : nat, ityp, tau
+  USE kinds,     ONLY : DP
+  USE fft_base,  ONLY : dfftp
+  USE fft_interfaces, ONLY : fwfft, invfft
   use pwcom
   USE uspp_param, ONLY: upf
   use phcom
@@ -53,8 +55,8 @@ subroutine dvscf (nu_i, dvloc, xq_x)
   logical :: q_eq_zero
   ! true if xq equal zero
 
-  allocate  (aux1( nrxx))    
-  allocate  (aux2( nrxx))    
+  allocate  (aux1( nrxx))
+  allocate  (aux2( nrxx))
 
   q_eq_zero = xq_x(1) == 0.d0 .and. xq_x(2) == 0.d0 .and. xq_x(3) == 0.d0
   if (q_eq_zero) then
@@ -80,7 +82,7 @@ subroutine dvscf (nu_i, dvloc, xq_x)
 !  return
 
   dvloc (:) = aux2(:) * dmuxc(:,1,1)
-  call cft3 (aux2, nr1, nr2, nr3, nrx1, nrx2, nrx3, - 1)
+  CALL fwfft ('Dense', aux2, dfftp)
 
   aux1 (:) = (0.d0, 0.d0)
   do ig = 1, ngm
@@ -114,10 +116,10 @@ subroutine dvscf (nu_i, dvloc, xq_x)
      endif
 
   enddo
-  call cft3 (aux1, nr1, nr2, nr3, nrx1, nrx2, nrx3, + 1)
+  CALL invfft ('Dense', aux1, dfftp)
   dvloc (:) = dvloc(:) + aux1 (:)
   if (nlcc_any) then
-     call cft3 (aux2, nr1, nr2, nr3, nrx1, nrx2, nrx3, + 1)
+     CALL invfft ('Dense', aux2, dfftp)
      dvloc (:) = dvloc(:) + aux2 (:) * dmuxc(:,1,1)
   endif
 

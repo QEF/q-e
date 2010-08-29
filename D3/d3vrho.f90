@@ -22,13 +22,15 @@ subroutine d3vrho()
   USE gvect,                ONLY : g, ngm, nl, igtongl
   USE wvfct,                ONLY : npw, npwx, nbnd, igk, wg
   USE vlocal,               ONLY : vloc
-  USE klist,                ONLY : xk  
+  USE klist,                ONLY : xk
   USE cell_base,            ONLY : omega, tpiba, tpiba2
   USE uspp_param,           ONLY : nh
   USE wavefunctions_module, ONLY : evc
   USE io_files,             ONLY : iunigk
   USE mp_global,            ONLY : inter_pool_comm, intra_pool_comm
   USE mp,                   ONLY : mp_sum
+  USE fft_base,             ONLY : dfftp
+  USE fft_interfaces,       ONLY : fwfft
   USE phcom
   USE d3com
   !
@@ -46,18 +48,18 @@ subroutine d3vrho()
   complex (DP), allocatable :: d3dynwrk (:,:,:), d3dynwrk2 (:,:,:), &
        rhog (:), work1 (:,:), work2 (:,:), work3 (:)
 
-  allocate  (rhog( nrxx))    
-  allocate  (d3dynwrk( 3 * nat, 3 * nat, 3 * nat))    
-  allocate  (d3dynwrk2(3 * nat, 3 * nat, 3 * nat))    
-  allocate  (work1(  npwx, 3))    
-  allocate  (work2(  npwx, 3))    
-  allocate  (work3(  npwx))    
+  allocate  (rhog( nrxx))
+  allocate  (d3dynwrk( 3 * nat, 3 * nat, 3 * nat))
+  allocate  (d3dynwrk2(3 * nat, 3 * nat, 3 * nat))
+  allocate  (work1(  npwx, 3))
+  allocate  (work2(  npwx, 3))
+  allocate  (work3(  npwx))
 
   d3dynwrk (:,:,:) = (0.d0, 0.d0)
   do ir = 1, nrxx
      rhog (ir) = CMPLX(rho%of_r (ir, 1), 0.d0,kind=DP)
   enddo
-  call cft3 (rhog, nr1, nr2, nr3, nrx1, nrx2, nrx3, - 1)
+  CALL fwfft ('Dense', rhog, dfftp)
   !
   !     Contribution deriving from the local part of the potential
   !
@@ -181,8 +183,8 @@ subroutine d3vrho()
 #ifdef __PARA
   call mp_sum( d3dynwrk2, inter_pool_comm )
 #endif
-  d3dyn (:,:,:) = d3dyn (:,:,:) +  d3dynwrk2 (:,:,:) 
-  d3dyn_aux1(:,:,:) = d3dynwrk2 (:,:,:) 
+  d3dyn (:,:,:) = d3dyn (:,:,:) +  d3dynwrk2 (:,:,:)
+  d3dyn_aux1(:,:,:) = d3dynwrk2 (:,:,:)
 
   deallocate (work1)
   deallocate (work2)

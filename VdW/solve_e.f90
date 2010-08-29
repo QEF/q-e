@@ -24,6 +24,8 @@ SUBROUTINE solve_e_vdw ( iu )
   USE cell_base,             ONLY : omega, alat
   USE io_global,             ONLY : stdout
   USE io_files,              ONLY : iunigk, prefix, iunwfc, nwordwfc
+  USE fft_base,              ONLY : dffts
+  USE fft_interfaces,        ONLY : fwfft, invfft
   USE pwcom
   USE scf, ONLY : vrs
   USE check_stop,            ONLY : check_stop_now
@@ -228,11 +230,11 @@ SUBROUTINE solve_e_vdw ( iu )
                  DO ig = 1, npw
                     aux1 (nls(igk(ig)))=evc(ig,ibnd)
                  ENDDO
-                 CALL cft3s (aux1,nr1s,nr2s,nr3s,nrx1s,nrx2s,nrx3s,+2)
+                 CALL invfft ('Wave', aux1, dffts)
                  DO ir = 1, nrxxs
                     aux1(ir)=aux1(ir)*dvscfins(ir,current_spin,ipol)
                  ENDDO
-                 CALL cft3s (aux1,nr1s,nr2s,nr3s,nrx1s,nrx2s,nrx3s,-2)
+                 CALL fwfft ('Wave', aux1, dffts)
                  DO ig = 1, npwq
                     dvpsi(ig,ibnd)=dvpsi(ig,ibnd)+aux1(nls(igkq(ig)))
                  ENDDO

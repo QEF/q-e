@@ -16,7 +16,8 @@ SUBROUTINE h_psiq_vdw (lda, n, m, psi, hpsi, spsi)
   !     wavefunctions and then with the routines hus_1psi and
   !     s_psi computes for each band the required products
   !
-
+  USE fft_base, ONLY : dffts
+  USE fft_interfaces, ONLY : fwfft, invfft
   USE pwcom
   USE scf, ONLY : vrs
   USE wavefunctions_module,  ONLY: psic
@@ -64,7 +65,7 @@ SUBROUTINE h_psiq_vdw (lda, n, m, psi, hpsi, spsi)
      DO j = 1, n
         psic (nls(igkq(j))) = psi (j, ibnd)
      ENDDO
-     CALL cft3s (psic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, 2)
+     CALL invfft ('Wave', psic, dffts)
      CALL stop_clock ('firstfft')
      !
      !   and then the product with the potential vrs = (vltot+vr) on the smoo
@@ -76,7 +77,7 @@ SUBROUTINE h_psiq_vdw (lda, n, m, psi, hpsi, spsi)
      !   back to reciprocal space
      !
      CALL start_clock ('secondfft')
-     CALL cft3s (psic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, - 2)
+     CALL fwfft ('Wave', psic, dffts)
      !
      !   addition to the total product
      !
