@@ -2212,7 +2212,6 @@ MODULE realus
     USE wavefunctions_module,     ONLY : psic
     USE gsmooth,                  ONLY : nrxxs,nls,nlsm,doublegrid
     USE kinds,         ONLY : DP
-    USE fft_parallel,  ONLY : tg_cft3s
     USE fft_base,      ONLY : dffts
     USE fft_interfaces,ONLY : invfft
     USE task_groups,   ONLY : tg_gather
@@ -2242,13 +2241,17 @@ MODULE realus
     INTEGER :: recv_cnt( nogrp ), recv_displ( nogrp )
     INTEGER :: v_siz
 
-
     !The new task group version based on vloc_psi
     !print *, "->Real space"
     CALL start_clock( 'fft_orbital' )
-    use_tg = ( use_task_groups ) .and. ( nbnd >= nogrp )
+    !
+    ! The following is dirty trick to prevent usage of task groups if
+    ! the number of bands is smaller than the number of task groups 
+    ! 
+    use_tg = use_task_groups
+    use_task_groups = ( use_task_groups ) .and. ( nbnd >= nogrp )
 
-    IF( use_tg ) THEN
+    IF( use_task_groups ) THEN
         !
 
         tg_psic = (0.d0, 0.d0)
@@ -2258,13 +2261,15 @@ MODULE realus
 
            IF( idx + ibnd - 1 < nbnd ) THEN
               DO j = 1, npw_k(1)
-                 tg_psic(nls (igk_k(j,1))+ioff) =        orbital(j,idx+ibnd-1) + (0.0d0,1.d0) * orbital(j,idx+ibnd)
-                 tg_psic(nlsm(igk_k(j,1))+ioff) = conjg( orbital(j,idx+ibnd-1) - (0.0d0,1.d0) * orbital(j,idx+ibnd) )
+                 tg_psic(nls (igk_k(j,1))+ioff) =      orbital(j,idx+ibnd-1) +&
+                      (0.0d0,1.d0) * orbital(j,idx+ibnd)
+                 tg_psic(nlsm(igk_k(j,1))+ioff) =conjg(orbital(j,idx+ibnd-1) -&
+                      (0.0d0,1.d0) * orbital(j,idx+ibnd) )
               ENDDO
            ELSEIF( idx + ibnd - 1 == nbnd ) THEN
               DO j = 1, npw_k(1)
                  tg_psic(nls (igk_k(j,1))+ioff) =        orbital(j,idx+ibnd-1)
-                 tg_psic(nlsm(igk_k(j,1))+ioff) = conjg( orbital(j,idx+ibnd-1) )
+                 tg_psic(nlsm(igk_k(j,1))+ioff) = conjg( orbital(j,idx+ibnd-1))
               ENDDO
            ENDIF
 
@@ -2273,7 +2278,7 @@ MODULE realus
         ENDDO
         !
         !
-        CALL tg_cft3s ( tg_psic, dffts, 2, use_tg )
+        CALL invfft ('Wave', tg_psic, dffts)
         !
         !
         IF (present(conserved)) THEN
@@ -2328,6 +2333,8 @@ MODULE realus
 
     ENDIF
 
+    use_task_groups = use_tg
+
     !if (.not. allocated(psic)) CALL errore( 'fft_orbital_gamma', 'psic not allocated', 2 )
     ! OLD VERSION ! Based on an algorithm found somewhere in the TDDFT codes, generalised to k points
     !
@@ -2371,7 +2378,6 @@ MODULE realus
     USE wavefunctions_module,     ONLY : psic
     USE gsmooth,                  ONLY : nrxxs,nls,nlsm,doublegrid
     USE kinds,         ONLY : DP
-    USE fft_parallel,  ONLY : tg_cft3s
     USE fft_base,      ONLY : dffts
     USE fft_interfaces,ONLY : fwfft
     USE task_groups,   ONLY : tg_gather
@@ -2400,18 +2406,22 @@ MODULE realus
     !print *, "->fourier space"
     CALL start_clock( 'bfft_orbital' )
     !New task_groups versions
-    use_tg = ( use_task_groups ) .and. ( nbnd >= nogrp )
-    IF( use_tg ) THEN
-        CALL tg_cft3s ( tg_psic, dffts, -2, use_tg )
-              !
+    use_tg = use_task_groups
+    use_task_groups = ( use_task_groups ) .and. ( nbnd >= nogrp )
+    IF( use_task_groups ) THEN
+       !
+        CALL fwfft ('Wave', tg_psic, dffts )
+        !
         ioff   = 0
         !
         DO idx = 1, 2*nogrp, 2
            !
            IF( idx + ibnd - 1 < nbnd ) THEN
               DO j = 1, npw_k(1)
-                 fp= ( tg_psic( nls(igk_k(j,1)) + ioff ) +  tg_psic( nlsm(igk_k(j,1)) + ioff ) ) * 0.5d0
-                 fm= ( tg_psic( nls(igk_k(j,1)) + ioff ) -  tg_psic( nlsm(igk_k(j,1)) + ioff ) ) * 0.5d0
+                 fp= ( tg_psic( nls(igk_k(j,1)) + ioff ) +  &
+                      tg_psic( nlsm(igk_k(j,1)) + ioff ) ) * 0.5d0
+                 fm= ( tg_psic( nls(igk_k(j,1)) + ioff ) -  &
+                      tg_psic( nlsm(igk_k(j,1)) + ioff ) ) * 0.5d0
                  orbital (j, ibnd+idx-1) =  cmplx( dble(fp), aimag(fm),kind=DP)
                  orbital (j, ibnd+idx  ) =  cmplx(aimag(fp),- dble(fm),kind=DP)
               ENDDO
@@ -2456,6 +2466,7 @@ MODULE realus
          ENDIF
         ENDIF
     ENDIF
+    use_task_groups = use_tg
     !! OLD VERSION Based on the algorithm found in lr_apply_liovillian
     !!print * ,"a"
     !CALL fwfft ('Wave', psic, dffts)
@@ -2506,7 +2517,6 @@ MODULE realus
     USE wavefunctions_module,     ONLY : psic
     USE gsmooth,                  ONLY : nrxxs,nls,nlsm,doublegrid
     USE kinds,         ONLY : DP
-    USE fft_parallel,  ONLY : tg_cft3s
     USE fft_base,      ONLY : dffts
     USE fft_interfaces,ONLY : invfft
     USE mp_global,     ONLY : nogrp, ogrp_comm, me_pool, nolist, &
@@ -2526,48 +2536,50 @@ MODULE realus
     LOGICAL :: use_tg
 
     CALL start_clock( 'fft_orbital' )
-    use_tg = ( use_task_groups ) .and. ( nbnd >= nogrp )
+    use_tg = use_task_groups
+    use_task_groups = ( use_task_groups ) .and. ( nbnd >= nogrp )
 
-    IF( use_tg ) THEN
-             !
-             tg_psic = ( 0.D0, 0.D0 )
-             ioff   = 0
-             !
-             DO idx = 1, nogrp
-                !
-                IF( idx + ibnd - 1 <= nbnd ) THEN
-                   !DO j = 1, size(orbital,1)
-                      tg_psic( nls( igk(:) ) + ioff ) = orbital(:,idx+ibnd-1)
-                   !END DO
-                ENDIF
-
-                ioff = ioff + dffts%nnrx
-
-             ENDDO
-             !
-             CALL tg_cft3s ( tg_psic, dffts, 2, use_tg )
-             IF (present(conserved)) THEN
-              IF (conserved .eqv. .true.) THEN
-               IF (.not. allocated(tg_psic_temp)) ALLOCATE( tg_psic_temp( dffts%nnrx * nogrp ) )
-               tg_psic_temp=tg_psic
-              ENDIF
-             ENDIF
-             !
+    IF( use_task_groups ) THEN
+       !
+       tg_psic = ( 0.D0, 0.D0 )
+       ioff   = 0
+       !
+       DO idx = 1, nogrp
+          !
+          IF( idx + ibnd - 1 <= nbnd ) THEN
+             !DO j = 1, size(orbital,1)
+             tg_psic( nls( igk(:) ) + ioff ) = orbital(:,idx+ibnd-1)
+             !END DO
+          ENDIF
+          
+          ioff = ioff + dffts%nnrx
+          
+       ENDDO
+       !
+       CALL invfft ('Wave', tg_psic, dffts)
+       IF (present(conserved)) THEN
+          IF (conserved .eqv. .true.) THEN
+             IF (.not. allocated(tg_psic_temp)) ALLOCATE( tg_psic_temp( dffts%nnrx * nogrp ) )
+             tg_psic_temp=tg_psic
+          ENDIF
+       ENDIF
+       !
     ELSE  !non task_groups version
-             !
-             psic(1:nrxxs) = ( 0.D0, 0.D0 )
-             !
-             psic(nls(igk(:))) = orbital(:,ibnd)
-             !
-             CALL invfft ('Wave', psic, dffts)
-             IF (present(conserved)) THEN
-              IF (conserved .eqv. .true.) THEN
-               IF (.not. allocated(psic_temp) ) ALLOCATE (psic_temp(size(psic)))
-               psic_temp=psic
-              ENDIF
-             ENDIF
-             !
+       !
+       psic(1:nrxxs) = ( 0.D0, 0.D0 )
+       !
+       psic(nls(igk(:))) = orbital(:,ibnd)
+       !
+       CALL invfft ('Wave', psic, dffts)
+       IF (present(conserved)) THEN
+          IF (conserved .eqv. .true.) THEN
+             IF (.not. allocated(psic_temp) ) ALLOCATE (psic_temp(size(psic)))
+             psic_temp=psic
+          ENDIF
+       ENDIF
+       !
     ENDIF
+    use_task_groups = use_tg
     CALL stop_clock( 'fft_orbital' )
     END SUBROUTINE fft_orbital_k
    !--------------------------------------------------------------------------
@@ -2583,7 +2595,6 @@ MODULE realus
     USE wavefunctions_module,     ONLY : psic
     USE gsmooth,                  ONLY : nrxxs,nls,nlsm,doublegrid
     USE kinds,         ONLY : DP
-    USE fft_parallel,  ONLY : tg_cft3s
     USE fft_base,      ONLY : dffts
     USE fft_interfaces,ONLY : fwfft
     USE mp_global,     ONLY : nogrp, ogrp_comm, me_pool, nolist, &
@@ -2603,41 +2614,43 @@ MODULE realus
     LOGICAL :: use_tg
 
    CALL start_clock( 'bfft_orbital' )
-    use_tg = ( use_task_groups ) .and. ( nbnd >= nogrp )
+   use_tg = use_task_groups
+   use_task_groups = ( use_task_groups ) .and. ( nbnd >= nogrp )
 
-    IF( use_tg ) THEN
-             !
-             CALL tg_cft3s ( tg_psic, dffts, -2, use_tg )
-             !
-             ioff   = 0
-             !
-             DO idx = 1, nogrp
-                !
-                IF( idx + ibnd - 1 <= nbnd ) THEN
-                   orbital (:, ibnd+idx-1) = tg_psic( nls(igk(:)) + ioff )
-                ENDIF
-                !
-                ioff = ioff + dffts%nr3x * dffts%nsw( me_pool + 1 )
-                !
-             ENDDO
-            IF (present(conserved)) THEN
-             IF (conserved .eqv. .true.) THEN
-              IF (allocated(tg_psic_temp)) DEALLOCATE( tg_psic_temp )
-             ENDIF
-            ENDIF
-         !
+    IF( use_task_groups ) THEN
+       !
+       CALL fwfft ('Wave', tg_psic, dffts)
+       !
+       ioff   = 0
+       !
+       DO idx = 1, nogrp
+          !
+          IF( idx + ibnd - 1 <= nbnd ) THEN
+             orbital (:, ibnd+idx-1) = tg_psic( nls(igk(:)) + ioff )
+          ENDIF
+          !
+          ioff = ioff + dffts%nr3x * dffts%nsw( me_pool + 1 )
+          !
+       ENDDO
+       IF (present(conserved)) THEN
+          IF (conserved .eqv. .true.) THEN
+             IF (allocated(tg_psic_temp)) DEALLOCATE( tg_psic_temp )
+          ENDIF
+       ENDIF
+       !
     ELSE !non task groups version
-             !
-             CALL fwfft ('Wave', psic, dffts)
-             !
-             orbital(:,ibnd) = psic(nls(igk(:)))
-             !
-        IF (present(conserved)) THEN
-         IF (conserved .eqv. .true.) THEN
-           IF (allocated(psic_temp) ) DEALLOCATE(psic_temp)
-         ENDIF
-        ENDIF
+       !
+       CALL fwfft ('Wave', psic, dffts)
+       !
+       orbital(:,ibnd) = psic(nls(igk(:)))
+       !
+       IF (present(conserved)) THEN
+          IF (conserved .eqv. .true.) THEN
+             IF (allocated(psic_temp) ) DEALLOCATE(psic_temp)
+          ENDIF
+       ENDIF
     ENDIF
+    use_task_groups = use_tg
     CALL stop_clock( 'bfft_orbital' )
     END SUBROUTINE bfft_orbital_k
   !--------------------------------------------------------------------------
@@ -2650,7 +2663,6 @@ MODULE realus
     USE wavefunctions_module,     ONLY : psic
     USE gsmooth,       ONLY : nrx1s,nrx2s,nrxxs,nls,nlsm,doublegrid
     USE kinds,         ONLY : DP
-    USE fft_parallel,  ONLY : tg_cft3s
     USE fft_base,      ONLY : dffts
     USE task_groups,   ONLY : tg_gather
     USE mp_global,     ONLY : nogrp, ogrp_comm, me_pool, nolist, &
@@ -2668,15 +2680,14 @@ MODULE realus
     !Internal temporary variables
     COMPLEX(DP) :: fp, fm
     INTEGER :: i,  j, incr, ierr, idx, ioff, nsiz
-    LOGICAL :: use_tg
 
     !Task groups
     REAL(DP),    ALLOCATABLE :: tg_v(:)
     INTEGER :: recv_cnt( nogrp ), recv_displ( nogrp )
     INTEGER :: v_siz
     CALL start_clock( 'v_loc_psir' )
-        use_tg = ( use_task_groups ) .and. ( nbnd >= nogrp )
-     IF( use_tg ) THEN
+
+    IF( use_task_groups .and. nbnd >= nogrp  ) THEN
         IF (ibnd == 1 ) THEN
           CALL tg_gather( dffts, vrs(:,current_spin), tg_v ) !if ibnd==1 this is a new calculation, and tg_v should be distributed.
         ENDIF

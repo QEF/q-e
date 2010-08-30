@@ -579,7 +579,6 @@ gen_us_dy.o : ../Modules/kind.o
 gen_us_dy.o : ../Modules/splinelib.o
 gen_us_dy.o : ../Modules/uspp.o
 gen_us_dy.o : pwcom.o
-gen_us_test.o : ../Modules/kind.o
 gen_us_vkb0.o : ../Modules/cell_base.o
 gen_us_vkb0.o : ../Modules/constants.o
 gen_us_vkb0.o : ../Modules/io_global.o
@@ -1127,7 +1126,6 @@ realus.o : ../Modules/constants.o
 realus.o : ../Modules/control_flags.o
 realus.o : ../Modules/fft_base.o
 realus.o : ../Modules/fft_interfaces.o
-realus.o : ../Modules/fft_parallel.o
 realus.o : ../Modules/io_files.o
 realus.o : ../Modules/io_global.o
 realus.o : ../Modules/ions_base.o
@@ -1447,7 +1445,6 @@ sum_band.o : ../Modules/cell_base.o
 sum_band.o : ../Modules/control_flags.o
 sum_band.o : ../Modules/fft_base.o
 sum_band.o : ../Modules/fft_interfaces.o
-sum_band.o : ../Modules/fft_parallel.o
 sum_band.o : ../Modules/funct.o
 sum_band.o : ../Modules/io_files.o
 sum_band.o : ../Modules/ions_base.o
@@ -1580,7 +1577,6 @@ vloc_of_g.o : ../Modules/constants.o
 vloc_of_g.o : ../Modules/kind.o
 vloc_psi.o : ../Modules/fft_base.o
 vloc_psi.o : ../Modules/fft_interfaces.o
-vloc_psi.o : ../Modules/fft_parallel.o
 vloc_psi.o : ../Modules/kind.o
 vloc_psi.o : ../Modules/mp_global.o
 vloc_psi.o : ../Modules/parallel_include.o

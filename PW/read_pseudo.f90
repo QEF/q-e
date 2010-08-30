@@ -149,7 +149,7 @@ subroutine readpp
      !
      ! Calculate MD5 checksum for this pseudopotential
      !
-     CALL md5_from_file(file_pseudo, upf(nt)%md5_cksum) 
+     CALL md5_from_file(file_pseudo, upf(nt)%md5_cksum)
      !
      ! ... Zv = valence charge of the (pseudo-)atom, read from PP files,
      ! ... is set equal to Zp = pseudo-charge of the pseudopotential

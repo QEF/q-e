@@ -228,7 +228,6 @@ SUBROUTINE sum_band()
        ! ... gamma version
        !
        USE becmod,        ONLY : bec_type, becp, calbec
-       USE fft_parallel,  ONLY : tg_cft3s
        USE mp_global,     ONLY : nogrp, nolist, ogrp_comm, me_pool, &
                                  use_task_groups
        USE mp,            ONLY : mp_sum
@@ -250,11 +249,12 @@ SUBROUTINE sum_band()
        !
        IF ( nks > 1 ) REWIND( iunigk )
        !
-       use_tg = ( use_task_groups ) .AND. ( nbnd >= nogrp )
+       use_tg = use_task_groups 
+       use_task_groups = ( use_task_groups ) .AND. ( nbnd >= nogrp )
        !
        incr = 2
        !
-       IF( use_tg ) THEN
+       IF( use_task_groups ) THEN
           !
           IF( dft_is_meta() ) &
              CALL errore( ' sum_band ', ' task groups with meta dft, not yet implemented ', 1 )
@@ -299,7 +299,7 @@ SUBROUTINE sum_band()
           !
           DO ibnd = 1, nbnd, incr
              !
-             IF( use_tg ) THEN
+             IF( use_task_groups ) THEN
                 !
                 tg_psi(:) = ( 0.D0, 0.D0 )
                 ioff   = 0
@@ -324,7 +324,7 @@ SUBROUTINE sum_band()
 
                 END DO
                 !
-                CALL tg_cft3s ( tg_psi, dffts, 2, use_tg )
+                CALL invfft ('Wave', tg_psi, dffts)
                 !
                 ! Now the first proc of the group holds the first two bands
                 ! of the 2*nogrp bands that we are processing at the same time,
@@ -437,7 +437,7 @@ SUBROUTINE sum_band()
              !
           END DO
           !
-          IF( use_tg ) THEN
+          IF( use_task_groups ) THEN
              !
              ! reduce the group charge
              !
@@ -538,10 +538,11 @@ SUBROUTINE sum_band()
           !
        END DO k_loop
        !
-       IF( use_tg ) THEN
+       IF( use_task_groups ) THEN
           DEALLOCATE( tg_psi )
           DEALLOCATE( tg_rho )
        END IF
+       use_task_groups = use_tg
        !
        RETURN
        !
@@ -555,7 +556,6 @@ SUBROUTINE sum_band()
        ! ... k-points version
        !
        USE becmod, ONLY : bec_type, becp, calbec
-       USE fft_parallel,  ONLY : tg_cft3s
        USE mp_global,     ONLY : nogrp, nolist, ogrp_comm, me_pool, &
                                  use_task_groups
        USE mp,            ONLY : mp_sum
@@ -588,13 +588,13 @@ SUBROUTINE sum_band()
        !
        IF ( nks > 1 ) REWIND( iunigk )
        !
-       use_tg = ( use_task_groups ) .AND. ( nbnd >= nogrp )
-       use_tg = use_tg .AND. ( .NOT. noncolin )
-       use_tg = use_tg .AND. ( .NOT. dft_is_meta() )
+       use_tg = use_task_groups
+       use_task_groups = ( use_task_groups ) .AND. ( nbnd >= nogrp ) &
+            .AND. ( .NOT. noncolin ) .AND. ( .NOT. dft_is_meta() )
        !
        incr = 1
        !
-       IF( use_tg ) THEN
+       IF( use_task_groups ) THEN
           !
           v_siz = dffts%nnrx * nogrp
           !
@@ -607,7 +607,7 @@ SUBROUTINE sum_band()
        !
        k_loop: DO ik = 1, nks
           !
-          IF( use_tg ) tg_rho = 0.0_DP
+          IF( use_task_groups ) tg_rho = 0.0_DP
 
           IF ( lsda ) current_spin = isk(ik)
           npw = ngk (ik)
@@ -626,7 +626,7 @@ SUBROUTINE sum_band()
           !
           DO ibnd = 1, nbnd, incr
              !
-             IF( use_tg ) THEN
+             IF( use_task_groups ) THEN
                 DO idx = 1, nogrp
                    IF( idx + ibnd - 1 <= nbnd ) eband = eband + et( idx + ibnd - 1, ik ) * wg( idx + ibnd - 1, ik )
                 END DO
@@ -665,7 +665,7 @@ SUBROUTINE sum_band()
                 !
              ELSE
                 !
-                IF( use_tg ) THEN
+                IF( use_task_groups ) THEN
                    !
 !$omp parallel default(shared), private(j,ioff,idx)
 !$omp do
@@ -693,7 +693,7 @@ SUBROUTINE sum_band()
                    END DO
 !$omp end parallel
                    !
-                   CALL tg_cft3s ( tg_psi, dffts, 2, use_tg )
+                   CALL invfft ('Wave', tg_psi, dffts)
                    !
                    ! Now the first proc of the group holds the first band
                    ! of the nogrp bands that we are processing at the same time,
@@ -752,7 +752,7 @@ SUBROUTINE sum_band()
              !
           END DO
           !
-          IF( use_tg ) THEN
+          IF( use_task_groups ) THEN
              !
              ! reduce the group charge
              !
@@ -902,10 +902,11 @@ SUBROUTINE sum_band()
           !
        END DO k_loop
 
-       IF( use_tg ) THEN
+       IF( use_task_groups ) THEN
           DEALLOCATE( tg_psi )
           DEALLOCATE( tg_rho )
        END IF
+       use_task_groups = use_tg
 
        IF (noncolin.and.okvan) THEN
           DO np = 1, ntyp
