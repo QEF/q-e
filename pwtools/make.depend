@@ -9,5 +9,5 @@ path_int.o : ../Modules/cell_base.o
 path_int.o : ../Modules/constants.o
 path_int.o : ../Modules/io_files.o
 path_int.o : ../Modules/kind.o
-path_int.o : ../Modules/path_formats.o
 path_int.o : ../Modules/splinelib.o
+path_int.o : ../NEB/path_formats.o
