@@ -1,17 +1,20 @@
 
-     Program PWSCF     v.4.1a   starts ...
-     Today is 11Jul2009 at  9:36: 7 
+     Program PWSCF v.4.2        starts on 30Aug2010 at  7:43:26 
 
-     For Norm-Conserving or Ultrasoft (Vanderbilt) Pseudopotentials or PAW
+     This program is part of the open-source Quantum ESPRESSO suite
+     for quantum simulation of materials; please cite
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
+          URL http://www.quantum-espresso.org", 
+     in publications or presentations arising from this work. More details at
+     http://www.quantum-espresso.org/wiki/index.php/Citing_Quantum-ESPRESSO
 
-     Current dimensions of program pwscf are:
+     Current dimensions of program PWSCF are:
      Max number of different atomic species (ntypx) = 10
      Max number of k-points (npk) =  40000
      Max angular momentum in pseudopotentials (lmaxx) =  3
      Waiting for input...
 
      gamma-point specific algorithms are used
-
 
 
      bravais-lattice index     =            2
@@ -27,14 +30,15 @@
      mixing beta               =       0.7000
      number of iterations used =            8  plain     mixing
      Exchange-correlation      =  SLA  PW   PBX  PBC (1434)
+     EXX-fraction              =        0.00
 
      celldm(1)=  25.000000  celldm(2)=   0.000000  celldm(3)=   0.000000
      celldm(4)=   0.000000  celldm(5)=   0.000000  celldm(6)=   0.000000
 
      crystal axes: (cart. coord. in units of a_0)
-               a(1) = ( -0.500000  0.000000  0.500000 )  
-               a(2) = (  0.000000  0.500000  0.500000 )  
-               a(3) = ( -0.500000  0.500000  0.000000 )  
+               a(1) = (  -0.500000   0.000000   0.500000 )  
+               a(2) = (   0.000000   0.500000   0.500000 )  
+               a(3) = (  -0.500000   0.500000   0.000000 )  
 
      reciprocal axes: (cart. coord. in units 2 pi/a_0)
                b(1) = ( -1.000000 -1.000000  1.000000 )  
@@ -43,6 +47,7 @@
 
 
      PseudoPot. # 1 for  O read from file O.pbe-paw_kj.UPF
+     MD5 check sum: 90f4868982d1b5f8aada8373f3a0510a
      Pseudo is Projector augmented-wave + core cor, Zval =  6.0
      Generated using "atomic" code by A. Dal Corso (espresso distribution)
      Shape of augmentation charge: BESSEL
@@ -65,7 +70,7 @@
      site n.     atom                  positions (a_0 units)
          1           O   tau(  1) = (   0.0000000   0.0000000   0.0000000  )
 
-     number of k points=    1
+     number of k points=     1
                        cart. coord. in units 2pi/a_0
         k(    1) = (   0.0000000   0.0000000   0.0000000), wk =   2.0000000
 
@@ -95,9 +100,9 @@
      negative rho (up, down):  0.174E-02 0.000E+00
      Starting wfc are    4 atomic +    2 random wfc
 
-     total cpu time spent up to now is      1.34 secs
+     total cpu time spent up to now is      1.52 secs
 
-     per-process dynamical memory:    36.7 Mb
+     per-process dynamical memory:    37.7 Mb
 
      Self-consistent Calculation
 
@@ -109,103 +114,106 @@
      Diagonalizing with lowered threshold
 
      Davidson diagonalization with overlap
-     ethr =  3.85E-07,  avg # of iterations = 19.0
+     ethr =  3.12E-07,  avg # of iterations = 19.0
 
      negative rho (up, down):  0.167E-02 0.000E+00
 
-     total cpu time spent up to now is      2.27 secs
+     total cpu time spent up to now is      2.81 secs
 
-     total energy              =     -41.12628420 Ry
+     total energy              =     -41.12628421 Ry
      Harris-Foulkes estimate   =     -41.12628356 Ry
-     estimated scf accuracy    <       0.00002393 Ry
+     estimated scf accuracy    <       0.00001951 Ry
 
      iteration #  2     ecut=    30.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  3.99E-07,  avg # of iterations =  2.0
+     ethr =  3.25E-07,  avg # of iterations =  2.0
 
      negative rho (up, down):  0.166E-02 0.000E+00
 
-     total cpu time spent up to now is      2.79 secs
+     total cpu time spent up to now is      3.46 secs
 
-     total energy              =     -41.12628895 Ry
-     Harris-Foulkes estimate   =     -41.12629005 Ry
-     estimated scf accuracy    <       0.00000399 Ry
+     total energy              =     -41.12628892 Ry
+     Harris-Foulkes estimate   =     -41.12629004 Ry
+     estimated scf accuracy    <       0.00000401 Ry
 
      iteration #  3     ecut=    30.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  6.66E-08,  avg # of iterations =  2.0
+     ethr =  6.68E-08,  avg # of iterations =  2.0
 
      negative rho (up, down):  0.165E-02 0.000E+00
-  27   -2.000000    2.000000   -2.000000   0.121763E-02   0.000000E+00
-  28    2.000000    2.000000    2.000000   0.121763E-02   0.000000E+00
-  29   -2.000000   -2.000000    2.000000   0.121763E-02   0.000000E+00
-  30   -2.000000    2.000000    2.000000   0.121763E-02   0.000000E+00
 
-     total cpu time spent up to now is      3.28 secs
+     total cpu time spent up to now is      4.06 secs
 
      End of self-consistent calculation
 
           k = 0.0000 0.0000 0.0000 (  5425 PWs)   bands (ev):
 
-   -23.7509  -8.8672  -8.8672  -8.8672  -0.5478   1.9246
+   -23.7516  -8.8679  -8.8679  -8.8679  -0.5478   1.9246
 
-     highest occupied, lowest unoccupied level (ev):    -8.8672   -0.5478
+     highest occupied, lowest unoccupied level (ev):    -8.8679   -0.5478
 
-!    total energy              =     -41.12628986 Ry
-     Harris-Foulkes estimate   =     -41.12628987 Ry
-     estimated scf accuracy    <       0.00000030 Ry
+!    total energy              =     -41.12628989 Ry
+     Harris-Foulkes estimate   =     -41.12628978 Ry
+     estimated scf accuracy    <       0.00000021 Ry
 
      total all-electron energy =      -149.887036 Ry
 
      The total energy is the sum of the following terms:
 
-     one-electron contribution =     -38.80272756 Ry
-     hartree contribution      =      20.73935801 Ry
-     xc contribution           =      -6.48336809 Ry
+     one-electron contribution =     -38.80296655 Ry
+     hartree contribution      =      20.73967149 Ry
+     xc contribution           =      -6.48343875 Ry
      ewald contribution        =      -6.60220143 Ry
-     one-center paw contrib.   =      -9.97735080 Ry
+     one-center paw contrib.   =      -9.97735465 Ry
 
      convergence has been achieved in   3 iterations
 
      Writing output data file pwscf.save
  
-     PWSCF        :     3.37s CPU time,    3.50s wall time
-
-     init_run     :     1.10s CPU
-     electrons    :     1.94s CPU
+     init_run     :      1.24s CPU      1.27s WALL (       1 calls)
+     electrons    :      2.48s CPU      2.54s WALL (       1 calls)
 
      Called by init_run:
-     wfcinit      :     0.03s CPU
-     potinit      :     0.28s CPU
+     wfcinit      :      0.06s CPU      0.06s WALL (       1 calls)
+     potinit      :      0.32s CPU      0.33s WALL (       1 calls)
 
      Called by electrons:
-     c_bands      :     0.60s CPU (       4 calls,   0.151 s avg)
-     sum_band     :     0.36s CPU (       4 calls,   0.089 s avg)
-     v_of_rho     :     0.73s CPU (       4 calls,   0.182 s avg)
-     newd         :     0.17s CPU (       4 calls,   0.042 s avg)
-     mix_rho      :     0.04s CPU (       4 calls,   0.010 s avg)
+     c_bands      :      0.99s CPU      0.99s WALL (       4 calls)
+     sum_band     :      0.40s CPU      0.41s WALL (       4 calls)
+     v_of_rho     :      0.87s CPU      0.92s WALL (       4 calls)
+     newd         :      0.18s CPU      0.19s WALL (       4 calls)
+     mix_rho      :      0.05s CPU      0.06s WALL (       4 calls)
 
      Called by c_bands:
-     init_us_2    :     0.02s CPU (       9 calls,   0.002 s avg)
-     regterg      :     0.59s CPU (       4 calls,   0.147 s avg)
+     init_us_2    :      0.02s CPU      0.02s WALL (       9 calls)
+     regterg      :      0.98s CPU      0.98s WALL (       4 calls)
 
      Called by *egterg:
-     h_psi        :     0.53s CPU (      34 calls,   0.016 s avg)
-     s_psi        :     0.00s CPU (      34 calls,   0.000 s avg)
-     g_psi        :     0.01s CPU (      29 calls,   0.001 s avg)
-     rdiaghg      :     0.01s CPU (      32 calls,   0.000 s avg)
+     h_psi        :      0.94s CPU      0.94s WALL (      34 calls)
+     s_psi        :      0.00s CPU      0.00s WALL (      34 calls)
+     g_psi        :      0.01s CPU      0.01s WALL (      29 calls)
+     rdiaghg      :      0.00s CPU      0.01s WALL (      32 calls)
 
      Called by h_psi:
-     add_vuspsi   :     0.01s CPU (      34 calls,   0.000 s avg)
+     add_vuspsi   :      0.00s CPU      0.00s WALL (      34 calls)
 
      General routines
-     calbec       :     0.01s CPU (      38 calls,   0.000 s avg)
-     cft3         :     0.26s CPU (      50 calls,   0.005 s avg)
-     cft3s        :     0.41s CPU (     120 calls,   0.003 s avg)
-     davcio       :     0.00s CPU (       3 calls,   0.000 s avg)
+     calbec       :      0.02s CPU      0.01s WALL (      38 calls)
+     fft          :      0.54s CPU      0.54s WALL (      54 calls)
+     fftw         :      0.86s CPU      0.86s WALL (     120 calls)
+     davcio       :      0.00s CPU      0.00s WALL (       3 calls)
  
  
      PAW routines
-     PAW_pot      :     0.26s CPU (       4 calls,   0.066 s avg)
-     PAW_ddot     :     0.00s CPU (       6 calls,   0.001 s avg)
-     PAW_symme    :     0.00s CPU (       5 calls,   0.000 s avg)
+     PAW_pot      :      0.23s CPU      0.23s WALL (       4 calls)
+     PAW_ddot     :      0.01s CPU      0.01s WALL (       6 calls)
+     PAW_symme    :      0.00s CPU      0.00s WALL (       8 calls)
+ 
+     PWSCF        :     4.05s CPU         4.17s WALL
+
+ 
+   This run was terminated on:   7:43:31  30Aug2010            
+
+=------------------------------------------------------------------------------=
+   JOB DONE.
+=------------------------------------------------------------------------------=

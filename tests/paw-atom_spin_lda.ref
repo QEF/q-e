@@ -1,17 +1,20 @@
 
-     Program PWSCF     v.4.1a   starts ...
-     Today is 11Jul2009 at  9:36:30 
+     Program PWSCF v.4.2        starts on 30Aug2010 at  7:44: 5 
 
-     For Norm-Conserving or Ultrasoft (Vanderbilt) Pseudopotentials or PAW
+     This program is part of the open-source Quantum ESPRESSO suite
+     for quantum simulation of materials; please cite
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
+          URL http://www.quantum-espresso.org", 
+     in publications or presentations arising from this work. More details at
+     http://www.quantum-espresso.org/wiki/index.php/Citing_Quantum-ESPRESSO
 
-     Current dimensions of program pwscf are:
+     Current dimensions of program PWSCF are:
      Max number of different atomic species (ntypx) = 10
      Max number of k-points (npk) =  40000
      Max angular momentum in pseudopotentials (lmaxx) =  3
      Waiting for input...
 
      gamma-point specific algorithms are used
-
 
 
      bravais-lattice index     =            2
@@ -27,14 +30,15 @@
      mixing beta               =       0.7000
      number of iterations used =            8  plain     mixing
      Exchange-correlation      =  SLA  PZ   NOGX NOGC (1100)
+     EXX-fraction              =        0.00
 
      celldm(1)=  25.000000  celldm(2)=   0.000000  celldm(3)=   0.000000
      celldm(4)=   0.000000  celldm(5)=   0.000000  celldm(6)=   0.000000
 
      crystal axes: (cart. coord. in units of a_0)
-               a(1) = ( -0.500000  0.000000  0.500000 )  
-               a(2) = (  0.000000  0.500000  0.500000 )  
-               a(3) = ( -0.500000  0.500000  0.000000 )  
+               a(1) = (  -0.500000   0.000000   0.500000 )  
+               a(2) = (   0.000000   0.500000   0.500000 )  
+               a(3) = (  -0.500000   0.500000   0.000000 )  
 
      reciprocal axes: (cart. coord. in units 2 pi/a_0)
                b(1) = ( -1.000000 -1.000000  1.000000 )  
@@ -43,6 +47,7 @@
 
 
      PseudoPot. # 1 for  O read from file O.lda-paw_kj.UPF
+     MD5 check sum: bb913733245261b4623cea235e432065
      Pseudo is Projector augmented-wave + core cor, Zval =  6.0
      Generated using "atomic" code by A. Dal Corso (espresso distribution)
      Shape of augmentation charge: BESSEL
@@ -61,14 +66,14 @@
      atomic species   magnetization
         O            0.000
 
-     No symmetry!
+     No symmetry found
 
    Cartesian axes
 
      site n.     atom                  positions (a_0 units)
          1           O   tau(  1) = (   0.0000000   0.0000000   0.0000000  )
 
-     number of k points=    2
+     number of k points=     2
                        cart. coord. in units 2pi/a_0
         k(    1) = (   0.0000000   0.0000000   0.0000000), wk =   1.0000000
         k(    2) = (   0.0000000   0.0000000   0.0000000), wk =   1.0000000
@@ -106,9 +111,9 @@
      negative rho (up, down):  0.780E-02 0.780E-02
      Starting wfc are    4 atomic +    3 random wfc
 
-     total cpu time spent up to now is      1.28 secs
+     total cpu time spent up to now is      1.39 secs
 
-     per-process dynamical memory:    41.0 Mb
+     per-process dynamical memory:    40.6 Mb
 
      Self-consistent Calculation
 
@@ -118,116 +123,112 @@
 
      negative rho (up, down):  0.122E-01 0.694E-02
 
-     total cpu time spent up to now is      2.06 secs
+     total cpu time spent up to now is      2.47 secs
 
      total energy              =     -40.22343807 Ry
      Harris-Foulkes estimate   =     -40.13459053 Ry
-     estimated scf accuracy    <       0.14446231 Ry
+     estimated scf accuracy    <       0.13984897 Ry
 
      total magnetization       =     2.00 Bohr mag/cell
      absolute magnetization    =     2.03 Bohr mag/cell
 
      iteration #  2     ecut=    30.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  2.41E-03,  avg # of iterations =  1.0
+     ethr =  2.33E-03,  avg # of iterations =  1.0
 
-     negative rho (up, down):  0.131E-01 0.454E-02
+     negative rho (up, down):  0.131E-01 0.453E-02
 
-     total cpu time spent up to now is      2.67 secs
+     total cpu time spent up to now is      3.26 secs
 
-     total energy              =     -40.23114154 Ry
+     total energy              =     -40.23114008 Ry
      Harris-Foulkes estimate   =     -40.23199052 Ry
-     estimated scf accuracy    <       0.16376968 Ry
+     estimated scf accuracy    <       0.15376419 Ry
 
      total magnetization       =     2.00 Bohr mag/cell
      absolute magnetization    =     2.04 Bohr mag/cell
 
      iteration #  3     ecut=    30.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  2.41E-03,  avg # of iterations =  1.0
+     ethr =  2.33E-03,  avg # of iterations =  1.0
 
-     negative rho (up, down):  0.150E-01 0.514E-02
+     negative rho (up, down):  0.150E-01 0.511E-02
 
-     total cpu time spent up to now is      3.28 secs
+     total cpu time spent up to now is      4.08 secs
 
-     total energy              =     -40.24142881 Ry
-     Harris-Foulkes estimate   =     -40.23497653 Ry
-     estimated scf accuracy    <       0.04200364 Ry
+     total energy              =     -40.24141767 Ry
+     Harris-Foulkes estimate   =     -40.23507208 Ry
+     estimated scf accuracy    <       0.04018921 Ry
 
      total magnetization       =     2.00 Bohr mag/cell
      absolute magnetization    =     2.04 Bohr mag/cell
 
      iteration #  4     ecut=    30.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  7.00E-04,  avg # of iterations =  2.0
+     ethr =  6.70E-04,  avg # of iterations =  2.0
 
-     negative rho (up, down):  0.151E-01 0.549E-02
+     negative rho (up, down):  0.151E-01 0.547E-02
 
-     total cpu time spent up to now is      3.93 secs
+     total cpu time spent up to now is      4.93 secs
 
-     total energy              =     -40.24255989 Ry
-     Harris-Foulkes estimate   =     -40.24215958 Ry
-     estimated scf accuracy    <       0.01865803 Ry
+     total energy              =     -40.24253868 Ry
+     Harris-Foulkes estimate   =     -40.24214753 Ry
+     estimated scf accuracy    <       0.01785505 Ry
 
      total magnetization       =     2.00 Bohr mag/cell
      absolute magnetization    =     2.05 Bohr mag/cell
 
      iteration #  5     ecut=    30.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  3.11E-04,  avg # of iterations =  1.0
+     ethr =  2.98E-04,  avg # of iterations =  1.0
 
-     negative rho (up, down):  0.152E-01 0.625E-02
+     negative rho (up, down):  0.152E-01 0.624E-02
 
-     total cpu time spent up to now is      4.57 secs
+     total cpu time spent up to now is      5.75 secs
 
-     total energy              =     -40.24325812 Ry
-     Harris-Foulkes estimate   =     -40.24266755 Ry
-     estimated scf accuracy    <       0.01147867 Ry
+     total energy              =     -40.24324205 Ry
+     Harris-Foulkes estimate   =     -40.24264521 Ry
+     estimated scf accuracy    <       0.01100588 Ry
 
      total magnetization       =     2.00 Bohr mag/cell
      absolute magnetization    =     2.06 Bohr mag/cell
 
      iteration #  6     ecut=    30.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  1.91E-04,  avg # of iterations =  1.0
+     ethr =  1.83E-04,  avg # of iterations =  1.0
 
-     negative rho (up, down):  0.153E-01 0.733E-02
+     negative rho (up, down):  0.153E-01 0.740E-02
 
-     total cpu time spent up to now is      5.22 secs
+     total cpu time spent up to now is      6.59 secs
 
-     total energy              =     -40.24381194 Ry
-     Harris-Foulkes estimate   =     -40.24334545 Ry
-     estimated scf accuracy    <       0.00491153 Ry
+     total energy              =     -40.24381830 Ry
+     Harris-Foulkes estimate   =     -40.24333244 Ry
+     estimated scf accuracy    <       0.00467451 Ry
 
      total magnetization       =     2.00 Bohr mag/cell
      absolute magnetization    =     2.06 Bohr mag/cell
 
      iteration #  7     ecut=    30.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  8.19E-05,  avg # of iterations =  2.0
+     ethr =  7.79E-05,  avg # of iterations =  2.0
 
-     negative rho (up, down):  0.153E-01 0.840E-02
+     negative rho (up, down):  0.153E-01 0.841E-02
 
-     total cpu time spent up to now is      5.91 secs
+     total cpu time spent up to now is      7.49 secs
 
-     total energy              =     -40.24401801 Ry
-     Harris-Foulkes estimate   =     -40.24390929 Ry
-     estimated scf accuracy    <       0.00104018 Ry
+     total energy              =     -40.24402535 Ry
+     Harris-Foulkes estimate   =     -40.24393028 Ry
+     estimated scf accuracy    <       0.00084675 Ry
 
      total magnetization       =     2.00 Bohr mag/cell
      absolute magnetization    =     2.06 Bohr mag/cell
 
      iteration #  8     ecut=    30.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  1.73E-05,  avg # of iterations =  3.0
+     ethr =  1.41E-05,  avg # of iterations =  9.5
 
-     negative rho (up, down):  0.153E-01 0.840E-02
-  27   -2.000000    2.000000   -2.000000   0.816189E-03   0.580279E-08
-  28    2.000000    2.000000    2.000000   0.816232E-03  -0.524815E-08
-  29   -2.000000   -2.000000    2.000000   0.817363E-03   0.732590E-08
-  30   -2.000000    2.000000    2.000000   0.817521E-03   0.281578E-08
+     negative rho (up, down):  0.152E-01 0.840E-02
 
-     total cpu time spent up to now is      6.50 secs
+     total cpu time spent up to now is      8.57 secs
 
      End of self-consistent calculation
 
@@ -236,30 +237,30 @@
 
           k = 0.0000 0.0000 0.0000 (  5425 PWs)   bands (ev):
 
-   -24.7106 -10.7433 -10.7431  -8.9573  -0.7761   1.7611   1.8064
+   -24.7108 -10.7449 -10.7432  -8.9559  -0.7763   1.7386   1.7513
 
  ------ SPIN DOWN ----------
 
 
           k = 0.0000 0.0000 0.0000 (  5425 PWs)   bands (ev):
 
-   -21.5497  -7.3111  -7.0691  -7.0686  -0.7274   1.8081   1.8513
+   -21.5493  -7.3110  -7.0688  -7.0680  -0.7275   1.7930   1.8388
 
-     highest occupied, lowest unoccupied level (ev):    -7.3111   -7.0691
+     highest occupied, lowest unoccupied level (ev):    -7.3110   -7.0688
 
-!    total energy              =     -40.24408950 Ry
-     Harris-Foulkes estimate   =     -40.24408959 Ry
-     estimated scf accuracy    <       0.00000029 Ry
+!    total energy              =     -40.24409014 Ry
+     Harris-Foulkes estimate   =     -40.24409018 Ry
+     estimated scf accuracy    <       0.00000054 Ry
 
-     total all-electron energy =      -149.044243 Ry
+     total all-electron energy =      -149.044244 Ry
 
      The total energy is the sum of the following terms:
 
-     one-electron contribution =     -38.82096699 Ry
-     hartree contribution      =      20.94886706 Ry
-     xc contribution           =      -6.51414595 Ry
+     one-electron contribution =     -38.82062498 Ry
+     hartree contribution      =      20.94843183 Ry
+     xc contribution           =      -6.51405588 Ry
      ewald contribution        =      -6.60220143 Ry
-     one-center paw contrib.   =      -9.25564218 Ry
+     one-center paw contrib.   =      -9.25563968 Ry
 
      total magnetization       =     2.00 Bohr mag/cell
      absolute magnetization    =     2.06 Bohr mag/cell
@@ -268,42 +269,49 @@
 
      Writing output data file pwscf.save
  
-     PWSCF        :     6.59s CPU time,    6.75s wall time
-
-     init_run     :     1.06s CPU
-     electrons    :     5.22s CPU
+     init_run     :      1.14s CPU      1.16s WALL (       1 calls)
+     electrons    :      7.08s CPU      7.18s WALL (       1 calls)
 
      Called by init_run:
-     wfcinit      :     0.09s CPU
-     potinit      :     0.16s CPU
+     wfcinit      :      0.15s CPU      0.15s WALL (       1 calls)
+     potinit      :      0.18s CPU      0.19s WALL (       1 calls)
 
      Called by electrons:
-     c_bands      :     1.83s CPU (       8 calls,   0.229 s avg)
-     sum_band     :     1.10s CPU (       8 calls,   0.138 s avg)
-     v_of_rho     :     0.79s CPU (       9 calls,   0.088 s avg)
-     newd         :     0.49s CPU (       9 calls,   0.055 s avg)
-     mix_rho      :     0.45s CPU (       8 calls,   0.056 s avg)
+     c_bands      :      3.08s CPU      3.10s WALL (       8 calls)
+     sum_band     :      1.63s CPU      1.64s WALL (       8 calls)
+     v_of_rho     :      0.82s CPU      0.83s WALL (       9 calls)
+     newd         :      0.57s CPU      0.58s WALL (       9 calls)
+     mix_rho      :      0.51s CPU      0.53s WALL (       8 calls)
 
      Called by c_bands:
-     init_us_2    :     0.07s CPU (      34 calls,   0.002 s avg)
-     regterg      :     1.77s CPU (      16 calls,   0.111 s avg)
+     init_us_2    :      0.06s CPU      0.07s WALL (      34 calls)
+     regterg      :      3.02s CPU      3.03s WALL (      16 calls)
 
      Called by *egterg:
-     h_psi        :     1.67s CPU (      50 calls,   0.033 s avg)
-     s_psi        :     0.01s CPU (      50 calls,   0.000 s avg)
-     g_psi        :     0.03s CPU (      32 calls,   0.001 s avg)
-     rdiaghg      :     0.01s CPU (      48 calls,   0.000 s avg)
+     h_psi        :      2.92s CPU      2.92s WALL (      63 calls)
+     s_psi        :      0.01s CPU      0.01s WALL (      63 calls)
+     g_psi        :      0.03s CPU      0.04s WALL (      45 calls)
+     rdiaghg      :      0.01s CPU      0.01s WALL (      61 calls)
 
      Called by h_psi:
-     add_vuspsi   :     0.01s CPU (      50 calls,   0.000 s avg)
+     add_vuspsi   :      0.01s CPU      0.01s WALL (      63 calls)
 
      General routines
-     calbec       :     0.03s CPU (      66 calls,   0.001 s avg)
-     cft3         :     0.42s CPU (      79 calls,   0.005 s avg)
-     cft3s        :     1.43s CPU (     382 calls,   0.004 s avg)
-     davcio       :     0.00s CPU (      50 calls,   0.000 s avg)
+     calbec       :      0.04s CPU      0.04s WALL (      79 calls)
+     fft          :      0.94s CPU      0.94s WALL (      95 calls)
+     fftw         :      2.85s CPU      2.85s WALL (     412 calls)
+     davcio       :      0.00s CPU      0.02s WALL (      50 calls)
  
  
      PAW routines
-     PAW_pot      :     0.28s CPU (       9 calls,   0.032 s avg)
-     PAW_ddot     :     0.12s CPU (      85 calls,   0.001 s avg)
+     PAW_pot      :      0.20s CPU      0.20s WALL (       9 calls)
+     PAW_ddot     :      0.12s CPU      0.12s WALL (      85 calls)
+ 
+     PWSCF        :     8.51s CPU         8.67s WALL
+
+ 
+   This run was terminated on:   7:44:14  30Aug2010            
+
+=------------------------------------------------------------------------------=
+   JOB DONE.
+=------------------------------------------------------------------------------=
