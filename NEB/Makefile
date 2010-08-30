@@ -9,7 +9,7 @@ MODFLAGS= $(MOD_FLAG)../iotk/src \
 
 #location of needed libraries
 LIBOBJS= ../iotk/src/libiotk.a ../flib/flib.a \
-         ../clib/clib.a ../flib/ptools.a ../multigrid/mglib.a
+         ../clib/clib.a ../flib/ptools.a ../Multigrid/mglib.a
 
 NEBOBJS = \
 string_methods.o \
@@ -35,7 +35,7 @@ all : tldeps neb.x
 
 neb.x : $(NEBOBJS) libneb.a $(LIBOBJS) $(PWOBJS) $(QEMODS)
 	$(LD) $(LDFLAGS) -o $@ \
-	$(NEBOBJS) libneb.a $(EEOBJS) $(LIBOBJS) $(QEMODS) $(PWOBJS) $(LIBS)
+	$(NEBOBJS) libneb.a $(PWOBJS) $(EEOBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
 	- ( cd ../bin; ln -fs ../NEB/$@ . )
 
 libneb.a : $(NEBLIBS)
