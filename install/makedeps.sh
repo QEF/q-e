@@ -13,7 +13,7 @@ if test $# = 0
 then
     dirs=" Modules clib PW CPV flib pwtools upftools PP PWCOND \
            Gamma PH D3 atomic GIPAW VdW EE XSpectra \
-	   GWW//gww GWW//pw4gww GWW//head ACFDT" 
+	   GWW//gww GWW//pw4gww GWW//head ACFDT NEB" 
           
 else
     dirs=$*
@@ -29,11 +29,13 @@ do
     case $DIR in 
         EE | flib | upftools | atomic )
                   DEPENDS="$DEPENDS ../Modules "            ;;
-	PW | CPV )
-		  DEPENDS="$DEPENDS ../Modules ../EE"       ;;
-	PP | PWCOND | Gamma | PH | GIPAW | pwtools )
-		  DEPENDS="$DEPENDS ../Modules ../EE ../PW" ;;
-	D3 | VdW | ACFDT ) 
+	PW )
+		  DEPENDS="$DEPENDS ../Modules ../EE ../NEB "       ;;
+	CPV )
+		  DEPENDS="$DEPENDS ../Modules ../EE "       ;;
+	PP | PWCOND | Gamma | PH | GIPAW | pwtools | ACFDT )
+		  DEPENDS="$DEPENDS ../Modules ../EE ../PW ../NEB" ;;
+	D3 | VdW ) 
                   DEPENDS="$DEPENDS ../Modules ../EE ../PW ../PH" ;;
 	XSpectra  )
 		  DEPENDS="$DEPENDS ../Modules ../PW ../PP ../GIPAW"  ;;
@@ -45,6 +47,9 @@ do
 	GWW/head )
                   DEPENDS="../../include ../../iotk/src ../../Modules \
 		  ../../PW ../../EE ../../PH ../pw4gww " ;;
+	NEB )
+		  DEPENDS="$DEPENDS ../Modules ../PW ../EE" ;;
+
     esac
 
     # generate dependencies file (only for directories that are present)
