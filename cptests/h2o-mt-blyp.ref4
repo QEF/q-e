@@ -1,18 +1,12 @@
-=------------------------------------------------------------------------------=
 
-     CP: variable-cell Car-Parrinello molecular dynamics
-     using norm-conserving and ultrasoft Vanderbilt pseudopotentials
+     Program CP v.4.2           starts on 30Aug2010 at 11:46:22 
 
-     Version: 4.2CVS - Sat Mar 14 02:50:54 CET 2009                       
-     Authors: Alfredo Pasquarello, Kari Laasonen, Andrea Trave, Roberto Car,
-       Paolo Giannozzi, Nicola Marzari, Carlo Cavazzoni, Guido Chiarotti,
-       Sandro Scandolo, Paolo Focher, Gerardo Ballabio, and others
-
-=------------------------------------------------------------------------------=
-
-   This run was started on:   7:52:21  21Mar2010               
-
-   Serial Build
+     This program is part of the open-source Quantum ESPRESSO suite
+     for quantum simulation of materials; please cite
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
+          URL http://www.quantum-espresso.org", 
+     in publications or presentations arising from this work. More details at
+     http://www.quantum-espresso.org/wiki/index.php/Citing_Quantum-ESPRESSO
 
    Job Title:  Water Molecule
 
@@ -41,7 +35,7 @@
    emass cut-off                      =       2.50
 
    Simulation Cell Parameters (from input)
-   external pressure       =            0.00 [GPa]
+   external pressure       =            0.00 [KBar]
    wmass (calculated)      =         2493.41 [AU]
    ibrav =   14
    alat  =    12.00000000
@@ -80,7 +74,7 @@
      Exchange functional: BECKE                                                       
      Correlation functional: PERDEW AND WANG                                             
      Exchange-correlation      =  SLA  LYP  B88  BLYP (1313)
-     EXX-fraction     =  0.00
+     EXX-fraction              =        0.00
 
 
    Ions Simulation Parameters
@@ -217,10 +211,10 @@
  
 
    reading restart file: /scratch/daily_test/espresso/tmp//h2o_51.save
-   restart file read in    0.017 sec.
+   restart file read in    0.018 sec.
 
 
-   formf: eself=  18.94976
+   formf: eself=    18.94976
    formf:     vps(g=0)=  -0.0063239     rhops(g=0)=  -0.0034722
    formf: sum_g vps(g)=  -4.3546661 sum_g rhops(g)=  -1.0540044
    formf:     vps(g=0)=  -0.0011896     rhops(g=0)=  -0.0005787
@@ -320,7 +314,7 @@
 
   -24.78  -12.60   -9.05   -6.92
  
-   Allocated memory (kb) =     85808
+   Allocated memory (kb) =     84184
  
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
@@ -362,7 +356,7 @@
   400  0.00013    0.0   76.2   -17.17830   -17.17830   -17.17753   -17.17739  0.0000  0.0000  0.0000  0.0000
 
    writing restart file: /scratch/daily_test/espresso/tmp//h2o_51.save
-   restart file written in    0.063 sec.
+   restart file written in    0.064 sec.
 
   401  0.00013    0.0   74.6   -17.17828   -17.17828   -17.17752   -17.17739  0.0000  0.0000  0.0000  0.0000
   402  0.00013    0.0   72.1   -17.17825   -17.17825   -17.17752   -17.17739  0.0000  0.0000  0.0000  0.0000
@@ -486,7 +480,7 @@
 
   -24.55  -12.69   -8.80   -6.88
  
-   Allocated memory (kb) =     85808
+   Allocated memory (kb) =     84184
  
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
@@ -528,7 +522,7 @@
   500  0.00001    0.0    6.4   -17.17747   -17.17747   -17.17741   -17.17739  0.0000  0.0000  0.0000  0.0000
 
    writing restart file: /scratch/daily_test/espresso/tmp//h2o_51.save
-   restart file written in    0.062 sec.
+   restart file written in    0.063 sec.
 
   501  0.00001    0.0    4.0   -17.17744   -17.17744   -17.17741   -17.17739  0.0000  0.0000  0.0000  0.0000
   502  0.00001    0.0    2.3   -17.17743   -17.17743   -17.17740   -17.17739  0.0000  0.0000  0.0000  0.0000
@@ -581,36 +575,35 @@
    volume        :     1728.00000    1728.00000 (AU)
 
 
-     initialize   :     0.53s CPU
-     total_time   :   111.77s CPU (     200 calls,   0.559 s avg)
-     formf        :     0.18s CPU
-     rhoofr       :    19.88s CPU (     200 calls,   0.099 s avg)
-     vofrho       :    78.60s CPU (     200 calls,   0.393 s avg)
-     dforce       :    11.18s CPU (     400 calls,   0.028 s avg)
-     calphi       :     0.07s CPU (     200 calls,   0.000 s avg)
-     ortho        :     0.16s CPU (     200 calls,   0.001 s avg)
-     ortho_iter   :     0.00s CPU (     200 calls,   0.000 s avg)
-     rsg          :     0.01s CPU (     200 calls,   0.000 s avg)
-     rhoset       :     0.07s CPU (     200 calls,   0.000 s avg)
-     updatc       :     0.03s CPU (     200 calls,   0.000 s avg)
-     newd         :     0.00s CPU (     200 calls,   0.000 s avg)
-     calbec       :     0.02s CPU (     201 calls,   0.000 s avg)
-     prefor       :     0.02s CPU (     401 calls,   0.000 s avg)
-     strucf       :     0.71s CPU (     201 calls,   0.004 s avg)
-     nlfl         :     0.00s CPU (     200 calls,   0.000 s avg)
-     nlfq         :     0.12s CPU (     200 calls,   0.001 s avg)
-     nlsm1        :     0.02s CPU (     601 calls,   0.000 s avg)
-     nlsm2        :     0.12s CPU (     200 calls,   0.001 s avg)
-     fft          :    26.67s CPU (    1600 calls,   0.017 s avg)
-     ffts         :     6.77s CPU (     400 calls,   0.017 s avg)
-     fftw         :    13.31s CPU (    1200 calls,   0.011 s avg)
+     initialize   :      0.53s CPU      0.54s WALL (       1 calls)
+     total_time   :    152.02s CPU    155.19s WALL (     200 calls)
+     formf        :      0.18s CPU      0.19s WALL (       1 calls)
+     rhoofr       :     61.90s CPU     62.15s WALL (     200 calls)
+     vofrho       :     77.02s CPU     79.59s WALL (     200 calls)
+     dforce       :     10.94s CPU     11.02s WALL (     400 calls)
+     calphi       :      0.06s CPU      0.06s WALL (     200 calls)
+     ortho        :      0.15s CPU      0.16s WALL (     200 calls)
+     ortho_iter   :      0.00s CPU      0.00s WALL (     200 calls)
+     rsg          :      0.00s CPU      0.00s WALL (     200 calls)
+     rhoset       :      0.06s CPU      0.07s WALL (     200 calls)
+     updatc       :      0.04s CPU      0.03s WALL (     200 calls)
+     calbec       :      0.02s CPU      0.03s WALL (     201 calls)
+     prefor       :      0.04s CPU      0.03s WALL (     401 calls)
+     strucf       :      0.73s CPU      0.72s WALL (     201 calls)
+     nlfl         :      0.00s CPU      0.00s WALL (     200 calls)
+     nlfq         :      0.13s CPU      0.13s WALL (     200 calls)
+     nlsm1        :      0.02s CPU      0.03s WALL (     601 calls)
+     nlsm2        :      0.13s CPU      0.13s WALL (     200 calls)
+     fft          :     58.89s CPU     59.16s WALL (    3400 calls)
+     ffts         :      6.77s CPU      6.79s WALL (     400 calls)
+     fftw         :     12.91s CPU     13.00s WALL (    1200 calls)
  
  
  
-     CP           :  1m52.36s CPU time,     1m54.90s wall time
+     CP           :  2m32.62s CPU     2m35.80s WALL
 
  
-   This run was terminated on:   7:54:16  21Mar2010            
+   This run was terminated on:  11:48:57  30Aug2010            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

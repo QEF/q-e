@@ -178,10 +178,9 @@ check_cp () {
 get_times () {
   # convert from "1h23m45.6s" to seconds
   # the following line prevents cases such as "2m 7.5s"
-  grep 'wall time' $1.ref$2 | sed 's/m /m0/' > $1.tmp
-  # in order to get cpu instead of wall time, replace $3 to $6
-  tref=`awk '/wall time/ \
-                { str = $6; h = m = s = 0;
+  grep 'WALL$' $1.ref$2 | sed 's/m /m0/' > $1.tmp
+  # in order to get cpu instead of wall time, replace $3 to $5
+  tref=`awk '{ str = $5; h = m = s = 0;
                   if (split(str, x, "h") == 2) { h = x[1]; str = x[2]; }
                   if (split(str, x, "m") == 2) { m = x[1]; str = x[2]; }
                   if (split(str, x, "s") == 2) { s = x[1]; str = x[2]; }
@@ -189,9 +188,8 @@ get_times () {
                 END { printf("%.2f\n", t); }' \
                $1.tmp`
   # as above for file *.out
-  grep 'wall time' $1.out$2 | sed 's/m /m0/' > $1.tmp 
-  tout=`awk '/wall time/ \
-                { str = $6; h = m = s = 0;
+  grep 'WALL$' $1.out$2 | sed 's/m /m0/' > $1.tmp 
+  tout=`awk '{ str = $5; h = m = s = 0;
                   if (split(str, x, "h") == 2) { h = x[1]; str = x[2]; }
                   if (split(str, x, "m") == 2) { m = x[1]; str = x[2]; }
                   if (split(str, x, "s") == 2) { s = x[1]; str = x[2]; }

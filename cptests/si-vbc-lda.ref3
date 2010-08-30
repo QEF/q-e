@@ -1,18 +1,12 @@
-=------------------------------------------------------------------------------=
 
-     CP: variable-cell Car-Parrinello molecular dynamics
-     using norm-conserving and ultrasoft Vanderbilt pseudopotentials
+     Program CP v.4.2           starts on 30Aug2010 at 11:58: 3 
 
-     Version: 4.2CVS - Sat Mar 14 02:50:54 CET 2009                       
-     Authors: Alfredo Pasquarello, Kari Laasonen, Andrea Trave, Roberto Car,
-       Paolo Giannozzi, Nicola Marzari, Carlo Cavazzoni, Guido Chiarotti,
-       Sandro Scandolo, Paolo Focher, Gerardo Ballabio, and others
-
-=------------------------------------------------------------------------------=
-
-   This run was started on:   8: 1: 1  21Mar2010               
-
-   Serial Build
+     This program is part of the open-source Quantum ESPRESSO suite
+     for quantum simulation of materials; please cite
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
+          URL http://www.quantum-espresso.org", 
+     in publications or presentations arising from this work. More details at
+     http://www.quantum-espresso.org/wiki/index.php/Citing_Quantum-ESPRESSO
 
    Job Title:  Silicon vbc
 
@@ -37,7 +31,7 @@
    emass cut-off                      =       2.00
 
    Simulation Cell Parameters (from input)
-   external pressure       =            0.00 [GPa]
+   external pressure       =            0.00 [KBar]
    wmass (calculated)      =        31117.79 [AU]
    ibrav =   14
    alat  =    10.60000000
@@ -76,7 +70,7 @@
      Exchange functional: SLATER                                                      
      Correlation functional: PERDEW AND ZUNGER                                           
      Exchange-correlation      =  SLA  PZ   NOGX NOGC (1100)
-     EXX-fraction     =  0.00
+     EXX-fraction              =        0.00
 
 
    Ions Simulation Parameters
@@ -237,7 +231,7 @@
  Ionic velocities set to zero
  Electronic velocities set to zero
 
-   formf: eself=  63.83076
+   formf: eself=    63.83076
    formf:     vps(g=0)=  -0.0088167     rhops(g=0)=  -0.0033585
    formf: sum_g vps(g)=  -1.8106621 sum_g rhops(g)=  -0.7031023
    Delta V(G=0):   0.054021Ry,    1.469977eV
@@ -316,7 +310,7 @@
    -7.26   -3.49   -3.46   -3.45   -3.41   -3.40   -3.37    1.21    1.22    1.23
     1.25    1.26    1.28    3.97    4.00    4.01
  
-   Allocated memory (kb) =     10496
+   Allocated memory (kb) =     10012
  
    CELL_PARAMETERS
    10.60000000    0.00000000    0.00000000
@@ -493,7 +487,7 @@
    -7.26   -3.49   -3.45   -3.44   -3.41   -3.40   -3.38    1.21    1.23    1.24
     1.25    1.26    1.26    3.95    3.98    4.04
  
-   Allocated memory (kb) =     10496
+   Allocated memory (kb) =     10012
  
    CELL_PARAMETERS
    10.60000000    0.00000000    0.00000000
@@ -670,7 +664,7 @@
    -7.27   -3.49   -3.48   -3.47   -3.41   -3.41   -3.35    1.20    1.21    1.23
     1.24    1.26    1.28    3.91    3.99    4.02
  
-   Allocated memory (kb) =     10496
+   Allocated memory (kb) =     10012
  
    CELL_PARAMETERS
    10.60000000    0.00000000    0.00000000
@@ -847,7 +841,7 @@
    -7.29   -3.51   -3.49   -3.47   -3.45   -3.43   -3.40    1.18    1.21    1.22
     1.23    1.23    1.25    3.90    3.90    3.96
  
-   Allocated memory (kb) =     10496
+   Allocated memory (kb) =     10012
  
    CELL_PARAMETERS
    10.60000000    0.00000000    0.00000000
@@ -1024,7 +1018,7 @@
    -7.35   -3.63   -3.56   -3.51   -3.50   -3.46   -3.41    1.08    1.15    1.20
     1.22    1.24    1.26    3.69    3.75    3.85
  
-   Allocated memory (kb) =     10496
+   Allocated memory (kb) =     10012
  
    CELL_PARAMETERS
    10.60000000    0.00000000    0.00000000
@@ -1201,7 +1195,7 @@
    -7.43   -3.80   -3.76   -3.54   -3.48   -3.43   -3.40    0.92    1.09    1.14
     1.24    1.28    1.39    3.31    3.43    3.68
  
-   Allocated memory (kb) =     10496
+   Allocated memory (kb) =     10012
  
    CELL_PARAMETERS
    10.60000000    0.00000000    0.00000000
@@ -1378,7 +1372,7 @@
    -7.51   -3.92   -3.88   -3.44   -3.34   -3.23   -2.99    0.72    0.88    1.16
     1.33    1.52    1.82    2.74    2.86    3.25
  
-   Allocated memory (kb) =     10496
+   Allocated memory (kb) =     10012
  
    CELL_PARAMETERS
    10.60000000    0.00000000    0.00000000
@@ -1555,7 +1549,7 @@
    -8.44   -4.63   -4.39   -3.60   -3.43   -2.82   -1.91   -0.31    0.18    0.57
     0.77    0.94    1.35    2.22    2.80    3.26
  
-   Allocated memory (kb) =     10496
+   Allocated memory (kb) =     10012
  
    CELL_PARAMETERS
    10.60000000    0.00000000    0.00000000
@@ -1611,7 +1605,7 @@
  1000  0.00398    0.0 7759.8   -31.45204   -31.45204   -31.15716   -31.15318  0.0000  0.0000  0.0000  0.0000
 
    writing restart file: /scratch/daily_test/espresso/tmp//si_50.save
-   restart file written in    0.029 sec.
+   restart file written in    0.030 sec.
 
  1001  0.00400    0.0 7802.5   -31.45368   -31.45368   -31.15717   -31.15318  0.0000  0.0000  0.0000  0.0000
  1002  0.00401    0.0 7844.0   -31.45527   -31.45527   -31.15719   -31.15318  0.0000  0.0000  0.0000  0.0000
@@ -1736,7 +1730,7 @@
    -9.49   -5.43   -5.17   -4.58   -4.04   -3.39   -1.63   -0.83   -0.05    0.07
     0.34    0.50    1.00    1.40    2.48    3.90
  
-   Allocated memory (kb) =     10496
+   Allocated memory (kb) =     10012
  
    CELL_PARAMETERS
    10.60000000    0.00000000    0.00000000
@@ -1913,7 +1907,7 @@
    -8.46   -5.56   -4.50   -3.61   -3.07   -2.29   -1.68   -0.63    0.30    0.56
     0.66    1.61    1.76    2.29    2.58    2.85
  
-   Allocated memory (kb) =     10496
+   Allocated memory (kb) =     10012
  
    CELL_PARAMETERS
    10.60000000    0.00000000    0.00000000
@@ -1926,8 +1920,8 @@
    Center of mass square displacement (a.u.):   0.000417
 
    Total stress (GPa)
-        4.05284972         7.22646356        -5.91279172
-        7.22646356         0.54992973        -2.72938006
+        4.05284972         7.22646357        -5.91279172
+        7.22646357         0.54992973        -2.72938006
        -5.91278305        -2.72940642         6.92039416
    ATOMIC_POSITIONS
    Si  -0.396075E+01  0.772873E+00  0.232795E+01
@@ -2021,7 +2015,7 @@
  1250  0.00601    0.0 5134.2   -31.35427   -31.35427   -31.15916   -31.15316  0.0000  0.0000  0.0000  0.0000
 
    writing restart file: /scratch/daily_test/espresso/tmp//si_50.save
-   restart file written in    0.029 sec.
+   restart file written in    0.030 sec.
 
 
 
@@ -2038,36 +2032,36 @@
    volume        :     1191.01600    1191.01600 (AU)
 
 
-     initialize   :     0.26s CPU
-     total_time   :    26.68s CPU (    1000 calls,   0.027 s avg)
-     formf        :     0.02s CPU
-     rhoofr       :     6.57s CPU (    1000 calls,   0.007 s avg)
-     vofrho       :     7.06s CPU (    1000 calls,   0.007 s avg)
-     dforce       :     7.96s CPU (    8000 calls,   0.001 s avg)
-     calphi       :     0.09s CPU (    1000 calls,   0.000 s avg)
-     ortho        :     0.43s CPU (    1000 calls,   0.000 s avg)
-     ortho_iter   :     0.05s CPU (    1000 calls,   0.000 s avg)
-     rsg          :     0.08s CPU (    1000 calls,   0.000 s avg)
-     rhoset       :     0.10s CPU (    1000 calls,   0.000 s avg)
-     updatc       :     0.12s CPU (    1000 calls,   0.000 s avg)
-     newd         :     0.00s CPU (    1000 calls,   0.000 s avg)
-     calbec       :     0.28s CPU (    1001 calls,   0.000 s avg)
-     prefor       :     0.14s CPU (    2001 calls,   0.000 s avg)
-     strucf       :     0.30s CPU (    1001 calls,   0.000 s avg)
-     nlfl         :     0.00s CPU (    1000 calls,   0.000 s avg)
-     nlfq         :     0.89s CPU (    1000 calls,   0.001 s avg)
-     nlsm1        :     0.28s CPU (    3001 calls,   0.000 s avg)
-     nlsm2        :     0.87s CPU (    1000 calls,   0.001 s avg)
-     fft          :     2.16s CPU (    3000 calls,   0.001 s avg)
-     ffts         :     1.45s CPU (    2000 calls,   0.001 s avg)
-     fftw         :    10.47s CPU (   24000 calls,   0.000 s avg)
+     initialize   :      0.26s CPU      0.26s WALL (       1 calls)
+     total_time   :     33.42s CPU     34.03s WALL (    1000 calls)
+     formf        :      0.02s CPU      0.02s WALL (       1 calls)
+     rhoofr       :     13.71s CPU     13.73s WALL (    1000 calls)
+     vofrho       :      6.92s CPU      7.37s WALL (    1000 calls)
+     dforce       :      7.65s CPU      7.68s WALL (    8000 calls)
+     calphi       :      0.07s CPU      0.07s WALL (    1000 calls)
+     ortho        :      0.48s CPU      0.45s WALL (    1000 calls)
+     ortho_iter   :      0.06s CPU      0.06s WALL (    1000 calls)
+     rsg          :      0.10s CPU      0.08s WALL (    1000 calls)
+     rhoset       :      0.11s CPU      0.11s WALL (    1000 calls)
+     updatc       :      0.08s CPU      0.10s WALL (    1000 calls)
+     newd         :      0.01s CPU      0.00s WALL (    1000 calls)
+     calbec       :      0.26s CPU      0.28s WALL (    1001 calls)
+     prefor       :      0.17s CPU      0.17s WALL (    2001 calls)
+     strucf       :      0.28s CPU      0.30s WALL (    1001 calls)
+     nlfl         :      0.00s CPU      0.00s WALL (    1000 calls)
+     nlfq         :      0.90s CPU      0.91s WALL (    1000 calls)
+     nlsm1        :      0.26s CPU      0.28s WALL (    3001 calls)
+     nlsm2        :      0.87s CPU      0.88s WALL (    1000 calls)
+     fft          :      8.81s CPU      8.83s WALL (   12000 calls)
+     ffts         :      1.44s CPU      1.46s WALL (    2000 calls)
+     fftw         :     10.00s CPU     10.03s WALL (   24000 calls)
  
  
  
-     CP           :    26.98s CPU time,       27.86s wall time
+     CP           :    33.72s CPU        34.35s WALL
 
  
-   This run was terminated on:   8: 1:29  21Mar2010            
+   This run was terminated on:  11:58:37  30Aug2010            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

@@ -1,18 +1,12 @@
-=------------------------------------------------------------------------------=
 
-     CP: variable-cell Car-Parrinello molecular dynamics
-     using norm-conserving and ultrasoft Vanderbilt pseudopotentials
+     Program CP v.4.2           starts on 30Aug2010 at 11:57:54 
 
-     Version: 4.2CVS - Sat Mar 14 02:50:54 CET 2009                       
-     Authors: Alfredo Pasquarello, Kari Laasonen, Andrea Trave, Roberto Car,
-       Paolo Giannozzi, Nicola Marzari, Carlo Cavazzoni, Guido Chiarotti,
-       Sandro Scandolo, Paolo Focher, Gerardo Ballabio, and others
-
-=------------------------------------------------------------------------------=
-
-   This run was started on:   8: 0:54  21Mar2010               
-
-   Serial Build
+     This program is part of the open-source Quantum ESPRESSO suite
+     for quantum simulation of materials; please cite
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
+          URL http://www.quantum-espresso.org", 
+     in publications or presentations arising from this work. More details at
+     http://www.quantum-espresso.org/wiki/index.php/Citing_Quantum-ESPRESSO
 
    Job Title:  Silicon vbc
 
@@ -37,7 +31,7 @@
    emass cut-off                      =       2.00
 
    Simulation Cell Parameters (from input)
-   external pressure       =            0.00 [GPa]
+   external pressure       =            0.00 [KBar]
    wmass (calculated)      =        31117.79 [AU]
    ibrav =   14
    alat  =    10.60000000
@@ -78,7 +72,7 @@
      Exchange functional: SLATER                                                      
      Correlation functional: PERDEW AND ZUNGER                                           
      Exchange-correlation      =  SLA  PZ   NOGX NOGC (1100)
-     EXX-fraction     =  0.00
+     EXX-fraction              =        0.00
 
 
    Ions Simulation Parameters
@@ -226,7 +220,7 @@
     2.00 2.00 2.00 2.00 2.00 2.00 2.00 2.00 2.00 2.00
     2.00 2.00 2.00 2.00 2.00 2.00
 
-   formf: eself=  63.83076
+   formf: eself=    63.83076
    formf:     vps(g=0)=  -0.0088167     rhops(g=0)=  -0.0033585
    formf: sum_g vps(g)=  -1.8106621 sum_g rhops(g)=  -0.7031023
    Delta V(G=0):   0.054021Ry,    1.469977eV
@@ -358,7 +352,7 @@
    -7.32   -3.54   -3.49   -3.49   -3.49   -3.48   -3.45    1.15    1.17    1.18
     1.20    1.21    1.22    3.92    3.92    4.11
  
-   Allocated memory (kb) =     10500
+   Allocated memory (kb) =     10012
  
    CELL_PARAMETERS
    10.60000000    0.00000000    0.00000000
@@ -414,7 +408,7 @@
   100  0.00348    0.0    0.0   -31.13815   -31.13815   -31.13815   -31.13467  0.0000  0.0000  0.0000  0.0000
 
    writing restart file: /scratch/daily_test/espresso/tmp//si_50.save
-   restart file written in    0.049 sec.
+   restart file written in    0.029 sec.
 
   101  0.00338    0.0    0.0   -31.13942   -31.13942   -31.13942   -31.13604  0.0000  0.0000  0.0000  0.0000
   102  0.00326    0.0    0.0   -31.14063   -31.14063   -31.14063   -31.13737  0.0000  0.0000  0.0000  0.0000
@@ -539,7 +533,7 @@
    -7.26   -3.43   -3.43   -3.43   -3.43   -3.43   -3.43    1.24    1.24    1.24
     1.24    1.24    1.24    3.99    3.99    3.99
  
-   Allocated memory (kb) =     10500
+   Allocated memory (kb) =     10012
  
    CELL_PARAMETERS
    10.60000000    0.00000000    0.00000000
@@ -595,7 +589,7 @@
   200  0.00000    0.0    0.0   -31.15379   -31.15379   -31.15379   -31.15379  0.0000  0.0000  0.0000  0.0000
 
    writing restart file: /scratch/daily_test/espresso/tmp//si_50.save
-   restart file written in    0.039 sec.
+   restart file written in    0.030 sec.
 
 
 
@@ -612,37 +606,37 @@
    volume        :     1191.01600    1191.01600 (AU)
 
 
-     initialize   :     0.28s CPU
-     total_time   :     5.23s CPU (     200 calls,   0.026 s avg)
-     formf        :     0.02s CPU
-     rhoofr       :     1.32s CPU (     201 calls,   0.007 s avg)
-     vofrho       :     1.40s CPU (     201 calls,   0.007 s avg)
-     dforce       :     1.58s CPU (    1608 calls,   0.001 s avg)
-     calphi       :     0.02s CPU (     201 calls,   0.000 s avg)
-     ortho        :     0.09s CPU (     201 calls,   0.000 s avg)
-     ortho_iter   :     0.01s CPU (     201 calls,   0.000 s avg)
-     rsg          :     0.02s CPU (     201 calls,   0.000 s avg)
-     rhoset       :     0.02s CPU (     201 calls,   0.000 s avg)
-     updatc       :     0.02s CPU (     201 calls,   0.000 s avg)
-     gram         :     0.00s CPU
-     newd         :     0.00s CPU (     201 calls,   0.000 s avg)
-     calbec       :     0.05s CPU (     202 calls,   0.000 s avg)
-     prefor       :     0.02s CPU (     201 calls,   0.000 s avg)
-     strucf       :     0.00s CPU
-     nlfl         :     0.00s CPU (     201 calls,   0.000 s avg)
-     nlfq         :     0.18s CPU (     201 calls,   0.001 s avg)
-     nlsm1        :     0.05s CPU (     604 calls,   0.000 s avg)
-     nlsm2        :     0.17s CPU (     201 calls,   0.001 s avg)
-     fft          :     0.44s CPU (     603 calls,   0.001 s avg)
-     ffts         :     0.29s CPU (     402 calls,   0.001 s avg)
-     fftw         :     2.09s CPU (    4824 calls,   0.000 s avg)
+     initialize   :      0.28s CPU      0.29s WALL (       1 calls)
+     total_time   :      6.52s CPU      6.64s WALL (     200 calls)
+     formf        :      0.02s CPU      0.03s WALL (       1 calls)
+     rhoofr       :      2.69s CPU      2.72s WALL (     201 calls)
+     vofrho       :      1.40s CPU      1.46s WALL (     201 calls)
+     dforce       :      1.49s CPU      1.52s WALL (    1608 calls)
+     calphi       :      0.01s CPU      0.01s WALL (     201 calls)
+     ortho        :      0.12s CPU      0.09s WALL (     201 calls)
+     ortho_iter   :      0.02s CPU      0.02s WALL (     201 calls)
+     rsg          :      0.02s CPU      0.02s WALL (     201 calls)
+     rhoset       :      0.02s CPU      0.02s WALL (     201 calls)
+     updatc       :      0.01s CPU      0.02s WALL (     201 calls)
+     gram         :      0.00s CPU      0.00s WALL (       1 calls)
+     newd         :      0.00s CPU      0.00s WALL (     201 calls)
+     calbec       :      0.04s CPU      0.06s WALL (     202 calls)
+     prefor       :      0.03s CPU      0.02s WALL (     201 calls)
+     strucf       :      0.00s CPU      0.00s WALL (       1 calls)
+     nlfl         :      0.00s CPU      0.00s WALL (     201 calls)
+     nlfq         :      0.18s CPU      0.18s WALL (     201 calls)
+     nlsm1        :      0.04s CPU      0.06s WALL (     604 calls)
+     nlsm2        :      0.18s CPU      0.18s WALL (     201 calls)
+     fft          :      1.75s CPU      1.74s WALL (    2412 calls)
+     ffts         :      0.28s CPU      0.29s WALL (     402 calls)
+     fftw         :      1.94s CPU      1.99s WALL (    4824 calls)
  
  
  
-     CP           :     5.55s CPU time,        5.77s wall time
+     CP           :     6.84s CPU         6.96s WALL
 
  
-   This run was terminated on:   8: 1: 0  21Mar2010            
+   This run was terminated on:  11:58: 1  30Aug2010            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

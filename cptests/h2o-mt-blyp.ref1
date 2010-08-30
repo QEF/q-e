@@ -1,18 +1,12 @@
-=------------------------------------------------------------------------------=
 
-     CP: variable-cell Car-Parrinello molecular dynamics
-     using norm-conserving and ultrasoft Vanderbilt pseudopotentials
+     Program CP v.4.2           starts on 30Aug2010 at 11:42: 4 
 
-     Version: 4.2CVS - Sat Mar 14 02:50:54 CET 2009                       
-     Authors: Alfredo Pasquarello, Kari Laasonen, Andrea Trave, Roberto Car,
-       Paolo Giannozzi, Nicola Marzari, Carlo Cavazzoni, Guido Chiarotti,
-       Sandro Scandolo, Paolo Focher, Gerardo Ballabio, and others
-
-=------------------------------------------------------------------------------=
-
-   This run was started on:   7:49: 9  21Mar2010               
-
-   Serial Build
+     This program is part of the open-source Quantum ESPRESSO suite
+     for quantum simulation of materials; please cite
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
+          URL http://www.quantum-espresso.org", 
+     in publications or presentations arising from this work. More details at
+     http://www.quantum-espresso.org/wiki/index.php/Citing_Quantum-ESPRESSO
 
    Job Title:  Water Molecule
 
@@ -41,7 +35,7 @@
    emass cut-off                      =       2.50
 
    Simulation Cell Parameters (from input)
-   external pressure       =            0.00 [GPa]
+   external pressure       =            0.00 [KBar]
    wmass (calculated)      =         2493.41 [AU]
    ibrav =   14
    alat  =    12.00000000
@@ -82,7 +76,7 @@
      Exchange functional: BECKE                                                       
      Correlation functional: PERDEW AND WANG                                             
      Exchange-correlation      =  SLA  LYP  B88  BLYP (1313)
-     EXX-fraction     =  0.00
+     EXX-fraction              =        0.00
 
 
    Ions Simulation Parameters
@@ -209,7 +203,7 @@
    nbnd =     4
     2.00 2.00 2.00 2.00
 
-   formf: eself=  18.94976
+   formf: eself=    18.94976
    formf:     vps(g=0)=  -0.0063239     rhops(g=0)=  -0.0034722
    formf: sum_g vps(g)=  -4.3546661 sum_g rhops(g)=  -1.0540044
    formf:     vps(g=0)=  -0.0011896     rhops(g=0)=  -0.0005787
@@ -342,7 +336,7 @@
 
   -24.73  -12.71   -8.94   -6.91
  
-   Allocated memory (kb) =     85800
+   Allocated memory (kb) =     84188
  
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
@@ -384,7 +378,7 @@
   100  0.00000    0.0    0.0   -17.17842   -17.17842   -17.17842   -17.17842  0.0000  0.0000  0.0000  0.0000
 
    writing restart file: /scratch/daily_test/espresso/tmp//h2o_51.save
-   restart file written in    0.104 sec.
+   restart file written in    0.064 sec.
 
 
 
@@ -401,37 +395,36 @@
    volume        :     1728.00000    1728.00000 (AU)
 
 
-     initialize   :     1.10s CPU
-     total_time   :    56.45s CPU (     100 calls,   0.564 s avg)
-     formf        :     0.19s CPU
-     rhoofr       :    10.04s CPU (     101 calls,   0.099 s avg)
-     vofrho       :    40.76s CPU (     101 calls,   0.404 s avg)
-     dforce       :     5.65s CPU (     202 calls,   0.028 s avg)
-     calphi       :     0.04s CPU (     101 calls,   0.000 s avg)
-     ortho        :     0.07s CPU (     101 calls,   0.001 s avg)
-     ortho_iter   :     0.00s CPU (     101 calls,   0.000 s avg)
-     rsg          :     0.00s CPU (     101 calls,   0.000 s avg)
-     rhoset       :     0.03s CPU (     101 calls,   0.000 s avg)
-     updatc       :     0.02s CPU (     101 calls,   0.000 s avg)
-     gram         :     0.00s CPU
-     newd         :     0.00s CPU (     101 calls,   0.000 s avg)
-     calbec       :     0.01s CPU (     102 calls,   0.000 s avg)
-     prefor       :     0.01s CPU (     101 calls,   0.000 s avg)
-     strucf       :     0.00s CPU
-     nlfl         :     0.00s CPU (     101 calls,   0.000 s avg)
-     nlfq         :     0.05s CPU (     101 calls,   0.001 s avg)
-     nlsm1        :     0.01s CPU (     304 calls,   0.000 s avg)
-     nlsm2        :     0.05s CPU (     101 calls,   0.001 s avg)
-     fft          :    13.54s CPU (     808 calls,   0.017 s avg)
-     ffts         :     3.44s CPU (     202 calls,   0.017 s avg)
-     fftw         :     6.67s CPU (     606 calls,   0.011 s avg)
+     initialize   :      1.29s CPU      1.36s WALL (       1 calls)
+     total_time   :     76.29s CPU     77.87s WALL (     100 calls)
+     formf        :      0.18s CPU      0.19s WALL (       1 calls)
+     rhoofr       :     31.13s CPU     31.33s WALL (     101 calls)
+     vofrho       :     39.84s CPU     41.12s WALL (     101 calls)
+     dforce       :      5.51s CPU      5.55s WALL (     202 calls)
+     calphi       :      0.03s CPU      0.03s WALL (     101 calls)
+     ortho        :      0.08s CPU      0.08s WALL (     101 calls)
+     ortho_iter   :      0.00s CPU      0.00s WALL (     101 calls)
+     rsg          :      0.00s CPU      0.00s WALL (     101 calls)
+     rhoset       :      0.03s CPU      0.03s WALL (     101 calls)
+     updatc       :      0.01s CPU      0.02s WALL (     101 calls)
+     gram         :      0.00s CPU      0.00s WALL (       1 calls)
+     calbec       :      0.02s CPU      0.01s WALL (     102 calls)
+     prefor       :      0.01s CPU      0.01s WALL (     101 calls)
+     strucf       :      0.00s CPU      0.01s WALL (       1 calls)
+     nlfl         :      0.00s CPU      0.00s WALL (     101 calls)
+     nlfq         :      0.06s CPU      0.06s WALL (     101 calls)
+     nlsm1        :      0.02s CPU      0.01s WALL (     304 calls)
+     nlsm2        :      0.06s CPU      0.06s WALL (     101 calls)
+     fft          :     29.64s CPU     29.79s WALL (    1717 calls)
+     ffts         :      3.40s CPU      3.43s WALL (     202 calls)
+     fftw         :      6.49s CPU      6.55s WALL (     606 calls)
  
  
  
-     CP           :    57.62s CPU time,       59.20s wall time
+     CP           :  1m17.64s CPU     1m19.31s WALL
 
  
-   This run was terminated on:   7:50: 8  21Mar2010            
+   This run was terminated on:  11:43:23  30Aug2010            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

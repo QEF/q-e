@@ -1,18 +1,12 @@
-=------------------------------------------------------------------------------=
 
-     CP: variable-cell Car-Parrinello molecular dynamics
-     using norm-conserving and ultrasoft Vanderbilt pseudopotentials
+     Program CP v.4.2           starts on 30Aug2010 at 11:43:23 
 
-     Version: 4.2CVS - Sat Mar 14 02:50:54 CET 2009                       
-     Authors: Alfredo Pasquarello, Kari Laasonen, Andrea Trave, Roberto Car,
-       Paolo Giannozzi, Nicola Marzari, Carlo Cavazzoni, Guido Chiarotti,
-       Sandro Scandolo, Paolo Focher, Gerardo Ballabio, and others
-
-=------------------------------------------------------------------------------=
-
-   This run was started on:   7:50: 8  21Mar2010               
-
-   Serial Build
+     This program is part of the open-source Quantum ESPRESSO suite
+     for quantum simulation of materials; please cite
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
+          URL http://www.quantum-espresso.org", 
+     in publications or presentations arising from this work. More details at
+     http://www.quantum-espresso.org/wiki/index.php/Citing_Quantum-ESPRESSO
 
    Job Title:  Water Molecule
 
@@ -41,7 +35,7 @@
    emass cut-off                      =       2.50
 
    Simulation Cell Parameters (from input)
-   external pressure       =            0.00 [GPa]
+   external pressure       =            0.00 [KBar]
    wmass (calculated)      =         2493.41 [AU]
    ibrav =   14
    alat  =    12.00000000
@@ -81,7 +75,7 @@
      Exchange functional: BECKE                                                       
      Correlation functional: PERDEW AND WANG                                             
      Exchange-correlation      =  SLA  LYP  B88  BLYP (1313)
-     EXX-fraction     =  0.00
+     EXX-fraction              =        0.00
 
 
    Ions Simulation Parameters
@@ -223,7 +217,7 @@
      0.152708 -0.018692 -0.000008    0.145814 -0.026230  0.008111
     -0.018692  0.152708  0.000017   -0.015180  0.151227 -0.004431
 
-   formf: eself=  18.94976
+   formf: eself=    18.94976
    formf:     vps(g=0)=  -0.0063239     rhops(g=0)=  -0.0034722
    formf: sum_g vps(g)=  -4.3546661 sum_g rhops(g)=  -1.0540044
    formf:     vps(g=0)=  -0.0011896     rhops(g=0)=  -0.0005787
@@ -263,7 +257,7 @@
 
   -24.92  -12.99   -8.84   -6.94
  
-   Allocated memory (kb) =     85808
+   Allocated memory (kb) =     84184
  
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
@@ -335,7 +329,7 @@
 
   -24.96  -13.03   -8.87   -6.96
  
-   Allocated memory (kb) =     85808
+   Allocated memory (kb) =     84184
  
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
@@ -411,7 +405,7 @@
 
   -24.96  -13.03   -8.87   -6.95
  
-   Allocated memory (kb) =     85808
+   Allocated memory (kb) =     84184
  
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
@@ -457,7 +451,7 @@
    MAIN: convergence achieved for system relaxation
 
    writing restart file: /scratch/daily_test/espresso/tmp//h2o_51.save
-   restart file written in    0.066 sec.
+   restart file written in    0.064 sec.
 
 
 
@@ -474,36 +468,35 @@
    volume        :     1728.00000    1728.00000 (AU)
 
 
-     initialize   :     0.53s CPU
-     total_time   :    16.64s CPU (      30 calls,   0.555 s avg)
-     formf        :     0.18s CPU
-     rhoofr       :     2.98s CPU (      30 calls,   0.099 s avg)
-     vofrho       :    11.82s CPU (      30 calls,   0.394 s avg)
-     dforce       :     1.67s CPU (      60 calls,   0.028 s avg)
-     calphi       :     0.01s CPU (      30 calls,   0.000 s avg)
-     ortho        :     0.02s CPU (      30 calls,   0.001 s avg)
-     ortho_iter   :     0.00s CPU (      30 calls,   0.000 s avg)
-     rsg          :     0.00s CPU (      30 calls,   0.000 s avg)
-     rhoset       :     0.01s CPU (      30 calls,   0.000 s avg)
-     updatc       :     0.00s CPU (      30 calls,   0.000 s avg)
-     newd         :     0.00s CPU (      30 calls,   0.000 s avg)
-     calbec       :     0.00s CPU (      31 calls,   0.000 s avg)
-     prefor       :     0.00s CPU (      31 calls,   0.000 s avg)
-     strucf       :     0.00s CPU
-     nlfl         :     0.00s CPU (      30 calls,   0.000 s avg)
-     nlfq         :     0.02s CPU (      30 calls,   0.001 s avg)
-     nlsm1        :     0.00s CPU (      91 calls,   0.000 s avg)
-     nlsm2        :     0.02s CPU (      30 calls,   0.001 s avg)
-     fft          :     4.02s CPU (     240 calls,   0.017 s avg)
-     ffts         :     1.02s CPU (      60 calls,   0.017 s avg)
-     fftw         :     1.99s CPU (     180 calls,   0.011 s avg)
+     initialize   :      0.52s CPU      0.54s WALL (       1 calls)
+     total_time   :     22.76s CPU     23.20s WALL (      30 calls)
+     formf        :      0.18s CPU      0.18s WALL (       1 calls)
+     rhoofr       :      9.36s CPU      9.42s WALL (      30 calls)
+     vofrho       :     11.58s CPU     11.92s WALL (      30 calls)
+     dforce       :      1.64s CPU      1.65s WALL (      60 calls)
+     calphi       :      0.01s CPU      0.01s WALL (      30 calls)
+     ortho        :      0.02s CPU      0.02s WALL (      30 calls)
+     ortho_iter   :      0.00s CPU      0.00s WALL (      30 calls)
+     rsg          :      0.00s CPU      0.00s WALL (      30 calls)
+     rhoset       :      0.01s CPU      0.01s WALL (      30 calls)
+     updatc       :      0.01s CPU      0.00s WALL (      30 calls)
+     calbec       :      0.00s CPU      0.00s WALL (      31 calls)
+     prefor       :      0.00s CPU      0.00s WALL (      31 calls)
+     strucf       :      0.00s CPU      0.00s WALL (       1 calls)
+     nlfl         :      0.00s CPU      0.00s WALL (      30 calls)
+     nlfq         :      0.02s CPU      0.02s WALL (      30 calls)
+     nlsm1        :      0.00s CPU      0.00s WALL (      91 calls)
+     nlsm2        :      0.02s CPU      0.02s WALL (      30 calls)
+     fft          :      8.97s CPU      8.99s WALL (     510 calls)
+     ffts         :      1.02s CPU      1.02s WALL (      60 calls)
+     fftw         :      1.94s CPU      1.95s WALL (     180 calls)
  
  
  
-     CP           :    17.24s CPU time,       17.72s wall time
+     CP           :    23.33s CPU        23.81s WALL
 
  
-   This run was terminated on:   7:50:26  21Mar2010            
+   This run was terminated on:  11:43:47  30Aug2010            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

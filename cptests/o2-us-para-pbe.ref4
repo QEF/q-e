@@ -1,18 +1,12 @@
-=------------------------------------------------------------------------------=
 
-     CP: variable-cell Car-Parrinello molecular dynamics
-     using norm-conserving and ultrasoft Vanderbilt pseudopotentials
+     Program CP v.4.2           starts on 30Aug2010 at 11:51:37 
 
-     Version: 4.2CVS - Sat Mar 14 02:50:54 CET 2009                       
-     Authors: Alfredo Pasquarello, Kari Laasonen, Andrea Trave, Roberto Car,
-       Paolo Giannozzi, Nicola Marzari, Carlo Cavazzoni, Guido Chiarotti,
-       Sandro Scandolo, Paolo Focher, Gerardo Ballabio, and others
-
-=------------------------------------------------------------------------------=
-
-   This run was started on:   7:56:57  21Mar2010               
-
-   Serial Build
+     This program is part of the open-source Quantum ESPRESSO suite
+     for quantum simulation of materials; please cite
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
+          URL http://www.quantum-espresso.org", 
+     in publications or presentations arising from this work. More details at
+     http://www.quantum-espresso.org/wiki/index.php/Citing_Quantum-ESPRESSO
 
    Job Title: O2 Crystal
 
@@ -37,7 +31,7 @@
    emass cut-off                      =       2.80
 
    Simulation Cell Parameters (from input)
-   external pressure       =            0.00 [GPa]
+   external pressure       =            0.00 [KBar]
    wmass (calculated)      =         4432.73 [AU]
    ibrav =   14
    alat  =    12.00000000
@@ -80,7 +74,7 @@
      Exchange functional: PERDEW BURKE ERNZERHOF                                      
      Correlation functional: PERDEW BURKE ERNZERHOF                                      
      Exchange-correlation      =  SLA  PW   PBE  PBE (1434)
-     EXX-fraction     =  0.00
+     EXX-fraction              =        0.00
 
 
    Ions Simulation Parameters
@@ -245,7 +239,7 @@
      0.271668  0.190575  0.429347    0.264694  0.180843  0.450990
      0.271717  0.190632  0.624172    0.283176  0.193204  0.621864
 
-   formf: eself=  28.72384
+   formf: eself=    28.72384
    formf:     vps(g=0)=  -0.0087653     rhops(g=0)=  -0.0034722
    formf: sum_g vps(g)=  -2.4887968 sum_g rhops(g)=  -0.5404975
    Delta V(G=0):   0.021817Ry,    0.593660eV
@@ -290,7 +284,7 @@
 
   -34.07  -18.01  -13.08  -12.61  -12.59
  
-   Allocated memory (kb) =    101176
+   Allocated memory (kb) =    100856
  
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
@@ -303,9 +297,9 @@
    Center of mass square displacement (a.u.):   0.016027
 
    Total stress (GPa)
-      -23.79338858         5.40276197        -8.96406002
-        1.61976879       -25.02560613        -4.02814325
-       -2.76612154        -2.05426399         2.16829766
+       -3.40753452         0.43218602        -1.14918219
+        0.43218602        -3.75374890        -1.22003291
+       -1.14918453        -1.22003452        11.40234512
    ATOMIC_POSITIONS
    O    0.317633E+01  0.217012E+01  0.541188E+01
    O    0.339811E+01  0.231845E+01  0.746237E+01
@@ -365,7 +359,7 @@
 
   -34.42  -17.43  -12.59  -12.57  -12.55
  
-   Allocated memory (kb) =    101176
+   Allocated memory (kb) =    100856
  
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
@@ -378,9 +372,9 @@
    Center of mass square displacement (a.u.):   0.016027
 
    Total stress (GPa)
-      -22.09728470         4.68881243        -8.02940700
-        1.22267751       -22.87066787        -2.68970909
-       -1.40128947        -0.98530754         1.30771517
+        0.15588943         0.12518850        -0.15806225
+        0.12518850         0.07095398        -0.19964963
+       -0.15806270        -0.19964993        13.81829891
    ATOMIC_POSITIONS
    O    0.317633E+01  0.217012E+01  0.541188E+01
    O    0.339811E+01  0.231845E+01  0.746237E+01
@@ -440,7 +434,7 @@
 
   -34.71  -17.43  -12.72  -12.71  -12.53
  
-   Allocated memory (kb) =    101176
+   Allocated memory (kb) =    100856
  
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
@@ -453,9 +447,9 @@
    Center of mass square displacement (a.u.):   0.016027
 
    Total stress (GPa)
-      -21.35271416         5.07568790        -6.55767259
-        1.23366196       -22.08860819        -1.72329307
-        0.35952254         0.26776554         0.19337817
+        0.76637989         0.06354459         1.85821522
+        0.06354459         0.71444367         1.29659584
+        1.85821403         1.29659503        12.21401255
    ATOMIC_POSITIONS
    O    0.317633E+01  0.217012E+01  0.541188E+01
    O    0.339811E+01  0.231845E+01  0.746237E+01
@@ -515,7 +509,7 @@
 
   -34.69  -17.48  -12.73  -12.73  -12.61
  
-   Allocated memory (kb) =    101176
+   Allocated memory (kb) =    100856
  
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
@@ -528,9 +522,9 @@
    Center of mass square displacement (a.u.):   0.016027
 
    Total stress (GPa)
-      -21.88947313         5.04783793        -6.95094039
-        1.24898062       -22.65117485        -2.03902191
-       -0.14677147        -0.10785813         0.33432860
+        0.18390478         0.09066726         1.30705192
+        0.09066726         0.10884868         0.87427388
+        1.30705098         0.87427326        12.18286560
    ATOMIC_POSITIONS
    O    0.317633E+01  0.217012E+01  0.541188E+01
    O    0.339811E+01  0.231845E+01  0.746237E+01
@@ -594,7 +588,7 @@
 
   -34.72  -17.51  -12.76  -12.76  -12.64
  
-   Allocated memory (kb) =    101176
+   Allocated memory (kb) =    100856
  
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
@@ -607,9 +601,9 @@
    Center of mass square displacement (a.u.):   0.016027
 
    Total stress (GPa)
-      -21.95696994         5.03037239        -6.96973921
-        1.26163070       -22.72842213        -2.04679425
-       -0.14530545        -0.11637101         0.29365968
+       -0.07881850         0.10504306         1.31551050
+        0.10504306        -0.16192204         0.87440403
+        1.31550953         0.87440338        12.08144713
    ATOMIC_POSITIONS
    O    0.317633E+01  0.217012E+01  0.541188E+01
    O    0.339811E+01  0.231845E+01  0.746237E+01
@@ -632,7 +626,7 @@
   210  0.00002    0.0    0.0   -31.71501   -31.71501   -31.71501   -31.71498  0.0000  0.0000  0.0000  0.0000
 
    writing restart file: /scratch/daily_test/espresso/tmp//o2_53.save
-   restart file written in    0.085 sec.
+   restart file written in    0.084 sec.
 
 
 
@@ -645,42 +639,42 @@
    temperature   :        0.17226       0.00000 (K )
    enthalpy      :      -30.46336     -31.66844 (AU)
    econs         :      -30.46336     -31.66844 (AU)
-   pressure      :      -11.95317     -14.58972 (Gpa)
+   pressure      :        8.98620       4.10493 (Gpa)
    volume        :     1728.00000    1728.00000 (AU)
 
 
-     initialize   :     7.11s CPU
-     total_time   :    42.03s CPU (      50 calls,   0.841 s avg)
-     formf        :     0.27s CPU
-     rhoofr       :    11.18s CPU (      50 calls,   0.224 s avg)
-     vofrho       :    26.95s CPU (      50 calls,   0.539 s avg)
-     dforce       :     1.33s CPU (     300 calls,   0.004 s avg)
-     calphi       :     0.02s CPU (      50 calls,   0.000 s avg)
-     ortho        :     0.10s CPU (      50 calls,   0.002 s avg)
-     ortho_iter   :     0.01s CPU (     100 calls,   0.000 s avg)
-     rsg          :     0.00s CPU (     100 calls,   0.000 s avg)
-     rhoset       :     0.00s CPU (     100 calls,   0.000 s avg)
-     updatc       :     0.01s CPU (     100 calls,   0.000 s avg)
-     newd         :     1.88s CPU (      50 calls,   0.038 s avg)
-     calbec       :     0.00s CPU (      51 calls,   0.000 s avg)
-     prefor       :     0.01s CPU (      51 calls,   0.000 s avg)
-     strucf       :     0.00s CPU
-     nlfl         :     0.00s CPU (      50 calls,   0.000 s avg)
-     nlfq         :     0.10s CPU (      50 calls,   0.002 s avg)
-     rhov         :     0.77s CPU (      50 calls,   0.015 s avg)
-     nlsm1        :     0.06s CPU (     151 calls,   0.000 s avg)
-     nlsm2        :     0.09s CPU (      50 calls,   0.002 s avg)
-     fft          :     9.35s CPU (    1150 calls,   0.008 s avg)
-     ffts         :     0.32s CPU (     100 calls,   0.003 s avg)
-     fftw         :     1.71s CPU (     900 calls,   0.002 s avg)
-     fftb         :     1.25s CPU (    3100 calls,   0.000 s avg)
+     initialize   :      7.10s CPU      7.14s WALL (       1 calls)
+     total_time   :     41.30s CPU     42.02s WALL (      50 calls)
+     formf        :      0.27s CPU      0.27s WALL (       1 calls)
+     rhoofr       :     10.97s CPU     11.01s WALL (      50 calls)
+     vofrho       :     26.46s CPU     27.05s WALL (      50 calls)
+     dforce       :      1.27s CPU      1.27s WALL (     300 calls)
+     calphi       :      0.02s CPU      0.02s WALL (      50 calls)
+     ortho        :      0.10s CPU      0.10s WALL (      50 calls)
+     ortho_iter   :      0.00s CPU      0.00s WALL (     100 calls)
+     rsg          :      0.00s CPU      0.00s WALL (     100 calls)
+     rhoset       :      0.02s CPU      0.01s WALL (     100 calls)
+     updatc       :      0.01s CPU      0.01s WALL (     100 calls)
+     newd         :      1.91s CPU      1.92s WALL (      50 calls)
+     calbec       :      0.00s CPU      0.00s WALL (      51 calls)
+     prefor       :      0.01s CPU      0.01s WALL (      51 calls)
+     strucf       :      0.00s CPU      0.00s WALL (       1 calls)
+     nlfl         :      0.00s CPU      0.00s WALL (      50 calls)
+     nlfq         :      0.10s CPU      0.09s WALL (      50 calls)
+     rhov         :      0.76s CPU      0.76s WALL (      50 calls)
+     nlsm1        :      0.06s CPU      0.06s WALL (     151 calls)
+     nlsm2        :      0.10s CPU      0.09s WALL (      50 calls)
+     fft          :      9.16s CPU      9.15s WALL (    1150 calls)
+     ffts         :      0.33s CPU      0.33s WALL (     100 calls)
+     fftw         :      1.64s CPU      1.63s WALL (     900 calls)
+     fftb         :      1.33s CPU      1.32s WALL (    3100 calls)
  
  
  
-     CP           :    49.23s CPU time,       50.13s wall time
+     CP           :    48.49s CPU        49.27s WALL
 
  
-   This run was terminated on:   7:57:47  21Mar2010            
+   This run was terminated on:  11:52:26  30Aug2010            
 
 =------------------------------------------------------------------------------=
    JOB DONE.
