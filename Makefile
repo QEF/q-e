@@ -8,6 +8,7 @@ default :
 	@echo '  pw           basic code for scf, structure optimization, MD'
 	@echo '  cp           CP code: CP MD with ultrasoft pseudopotentials'
 	@echo '  ph           phonon code'
+	@echo '  neb          neb code'
 	@echo '  tddfpt       time dependent dft code'
 	@echo '  pp           postprocessing programs'
 	@echo '  gamma        Gamma-only version of phonon code'
@@ -49,6 +50,11 @@ cp : bindir mods liblapack libblas libs libiotk
 ph : bindir mods libs pw
 	if test -d PH ; then \
 	( cd PH ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= all ; \
+	else $(MAKE) $(MFLAGS) TLDEPS= all ; fi ) ; fi
+
+neb : bindir mods liblapack libblas libs libiotk pw eelib
+	if test -d NEB ; then \
+	( cd NEB ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= all ; \
 	else $(MAKE) $(MFLAGS) TLDEPS= all ; fi ) ; fi
 
 tddfpt : bindir mods libs pw ph
