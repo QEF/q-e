@@ -36,7 +36,7 @@ MODULE path_routines
                                    phase_space, ion_dynamics, etot_conv_thr,  &
                                    forc_conv_thr
       !
-      USE path_variables, ONLY : lsteep_des, lquick_min, lbroyden, lbroyden2, &
+      USE path_variables_pre, ONLY : lsteep_des, lquick_min, lbroyden, lbroyden2, &
                                  nstep_path, &
                                  num_of_images_  => num_of_images, &
                                  CI_scheme_      => CI_scheme, &

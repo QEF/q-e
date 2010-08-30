@@ -17,7 +17,7 @@ SUBROUTINE compute_fes_grads( fii, lii, stat )
                                  nbeg, tfor, taurdr, tnosep, ndr, isave
   USE metadyn_vars,       ONLY : ncolvar, new_target, to_target, dfe_acc, &
                                  sw_nstep, fe_nstep, eq_nstep, to_new_target
-  USE path_variables,     ONLY : pos, grad_fes => grad_pes, &
+  USE path_variables_pre,     ONLY : pos, grad_fes => grad_pes, &
                                  num_of_images, istep_path, pending_image
   USE constraints_module, ONLY : lagrange, constr_target, &
                                  init_constraint, deallocate_constraint
@@ -25,7 +25,7 @@ SUBROUTINE compute_fes_grads( fii, lii, stat )
   USE cp_main_variables,  ONLY : nfi
   USE ions_base,          ONLY : tau, nat, nsp, ityp, if_pos, sort_tau, &
                                  tau_srt, ind_srt
-  USE path_formats,       ONLY : scf_fmt, scf_fmt_para
+  USE path_formats_pre,       ONLY : scf_fmt, scf_fmt_para
   USE io_files,           ONLY : prefix, tmp_dir, iunpath, iunaxsf, &
                                  iunupdate, exit_file, iunexit
   USE constants,          ONLY : bohr_radius_angs
@@ -36,7 +36,7 @@ SUBROUTINE compute_fes_grads( fii, lii, stat )
   USE check_stop,         ONLY : check_stop_now
   USE input,              ONLY : modules_setup
   USE xml_io_base,        ONLY : check_restartfile
-  USE path_io_routines,   ONLY : new_image_init, get_new_image, &
+  USE path_io_routines_pre,   ONLY : new_image_init, get_new_image, &
                                  stop_other_images
   USE metadyn_base,       ONLY : add_domain_potential
   USE metadyn_io,         ONLY : write_axsf_file

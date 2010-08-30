@@ -20,8 +20,8 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
   USE cp_main_variables, ONLY : nfi
   USE io_files,          ONLY : iunpath, iunexit, tmp_dir, prefix
   USE io_global,         ONLY : stdout, ionode
-  USE path_formats,      ONLY : scf_fmt
-  USE path_variables,    ONLY : pos, pes, grad_pes, num_of_images, &
+  USE path_formats_pre,      ONLY : scf_fmt
+  USE path_variables_pre,    ONLY : pos, pes, grad_pes, num_of_images, &
                                 dim1, pending_image, frozen
   USE check_stop,        ONLY : check_stop_now
   USE xml_io_base,       ONLY : check_restartfile

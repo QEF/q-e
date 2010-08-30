@@ -4,11 +4,12 @@ atoms_type.o : ../Modules/parameters.o
 berryion.o : ../Modules/cell_base.o
 berryion.o : ../Modules/constants.o
 berryion.o : ../Modules/ions_base.o
+berryion.o : ../Modules/kind.o
 bforceion.o : ../Modules/cell_base.o
 bforceion.o : ../Modules/constants.o
 bforceion.o : ../Modules/electrons_base.o
 bforceion.o : ../Modules/ions_base.o
-bforceion.o : ../Modules/parameters.o
+bforceion.o : ../Modules/kind.o
 bforceion.o : ../Modules/uspp.o
 bforceion.o : mainvar.o
 bforceion.o : modules.o
@@ -97,9 +98,9 @@ compute_fes_grads.o : ../Modules/metadyn_io.o
 compute_fes_grads.o : ../Modules/metadyn_vars.o
 compute_fes_grads.o : ../Modules/mp.o
 compute_fes_grads.o : ../Modules/mp_global.o
-compute_fes_grads.o : ../Modules/path_formats.o
-compute_fes_grads.o : ../Modules/path_io_routines.o
-compute_fes_grads.o : ../Modules/path_variables.o
+compute_fes_grads.o : ../Modules/path_formats_pre.o
+compute_fes_grads.o : ../Modules/path_io_routines_pre.o
+compute_fes_grads.o : ../Modules/path_variables_pre.o
 compute_fes_grads.o : ../Modules/wave_base.o
 compute_fes_grads.o : ../Modules/xml_io_base.o
 compute_fes_grads.o : input.o
@@ -111,8 +112,8 @@ compute_scf.o : ../Modules/io_files.o
 compute_scf.o : ../Modules/io_global.o
 compute_scf.o : ../Modules/ions_base.o
 compute_scf.o : ../Modules/kind.o
-compute_scf.o : ../Modules/path_formats.o
-compute_scf.o : ../Modules/path_variables.o
+compute_scf.o : ../Modules/path_formats_pre.o
+compute_scf.o : ../Modules/path_variables_pre.o
 compute_scf.o : ../Modules/xml_io_base.o
 compute_scf.o : input.o
 compute_scf.o : mainvar.o
@@ -428,6 +429,7 @@ gradrho.o : ../Modules/fft_interfaces.o
 gradrho.o : ../Modules/griddim.o
 gradrho.o : ../Modules/recvec.o
 gtable.o : ../Modules/io_global.o
+gtable.o : ../Modules/kind.o
 gtable.o : ../Modules/mp.o
 gtable.o : ../Modules/mp_global.o
 gtable.o : ../Modules/parallel_include.o
@@ -555,8 +557,8 @@ ksstates.o : ../Modules/xml_io_base.o
 main_loops.o : ../Modules/image_io_routines.o
 main_loops.o : ../Modules/ions_base.o
 main_loops.o : ../Modules/kind.o
-main_loops.o : ../Modules/path_base.o
-main_loops.o : ../Modules/path_io_routines.o
+main_loops.o : ../Modules/path_base_pre.o
+main_loops.o : ../Modules/path_io_routines_pre.o
 main_loops.o : path_routines.o
 mainvar.o : ../Modules/cell_base.o
 mainvar.o : ../Modules/descriptors.o
@@ -582,6 +584,7 @@ makov_payne.o : ../Modules/parallel_include.o
 makov_payne.o : ../Modules/recvec.o
 makov_payne.o : ions_positions.o
 makov_payne.o : mainvar.o
+metaxc.o : ../Modules/kind.o
 metaxc.o : ../Modules/recvec.o
 modules.o : ../Modules/kind.o
 modules.o : ../Modules/parameters.o
@@ -676,7 +679,7 @@ path_routines.o : ../Modules/ions_base.o
 path_routines.o : ../Modules/kind.o
 path_routines.o : ../Modules/mp.o
 path_routines.o : ../Modules/mp_global.o
-path_routines.o : ../Modules/path_variables.o
+path_routines.o : ../Modules/path_variables_pre.o
 path_routines.o : ../Modules/wrappers.o
 phasefactor.o : ../Modules/cell_base.o
 phasefactor.o : ../Modules/constants.o
@@ -784,6 +787,7 @@ qqberry.o : ../Modules/atom.o
 qqberry.o : ../Modules/cell_base.o
 qqberry.o : ../Modules/constants.o
 qqberry.o : ../Modules/ions_base.o
+qqberry.o : ../Modules/kind.o
 qqberry.o : ../Modules/mp.o
 qqberry.o : ../Modules/mp_global.o
 qqberry.o : ../Modules/recvec.o
@@ -868,7 +872,7 @@ stop_run.o : ../Modules/image_io_routines.o
 stop_run.o : ../Modules/io_files.o
 stop_run.o : ../Modules/io_global.o
 stop_run.o : ../Modules/mp_global.o
-stop_run.o : ../Modules/path_variables.o
+stop_run.o : ../Modules/path_variables_pre.o
 stop_run.o : ../Modules/recvec.o
 stress.o : ../Modules/cell_base.o
 stress.o : ../Modules/constants.o
