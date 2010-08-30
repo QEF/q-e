@@ -166,9 +166,8 @@ SUBROUTINE iosys()
                             modenum_          => modenum, &
                             lkpoint_dir_      => lkpoint_dir, &
                             tqr_              => tqr, &
-                            io_level, ethr, lscf, lbfgs, lmd, lpath, lneb,   &
-                            lsmd, ldamped, lbands, llang,                    &
-!                            lconstrain, lcoarsegrained, restart, twfcollect, &
+                            io_level, ethr, lscf, lbfgs, lmd, &
+                            ldamped, lbands, llang,                    &
                             lconstrain, restart, twfcollect, &
                             use_para_diag, llondon, nofrac, do_makov_payne, &
                             lecrpa_           => lecrpa
@@ -177,21 +176,6 @@ SUBROUTINE iosys()
   !
   USE fixed_occ,     ONLY : tfixed_occ, f_inp, &
                             one_atom_occupations_ => one_atom_occupations
-  !
-  USE path_variables, ONLY : nstep_path, lsteep_des, lquick_min, &
-                             lbroyden, lbroyden2, &
-                             llangevin, &
-                             ds_              => ds, &
-                             use_masses_      => use_masses, &
-                             CI_scheme_       => CI_scheme, &
-                             fixed_tan_       => fixed_tan, &
-                             use_freezing_    => use_freezing, &
-                             k_max_           => k_max, &
-                             k_min_           => k_min, &
-                             num_of_images_   => num_of_images, &
-                             first_last_opt_  => first_last_opt, &
-                             temp_req_        => temp_req, &
-                             path_thr_        => path_thr
   !
   USE noncollin_module, ONLY : i_cons, mcons, &
                                noncolin_  => noncolin, &
@@ -281,9 +265,6 @@ SUBROUTINE iosys()
                                tempw, delta_t, nraise, ion_temperature,        &
                                refold_pos, remove_rigid_rot, upscale,          &
                                pot_extrapolation,  wfc_extrapolation,          &
-                               num_of_images, path_thr, CI_scheme, opt_scheme, &
-                               use_masses, first_last_opt, temp_req, k_max,    &
-                               k_min, ds, use_freezing, fixed_tan,             &
                                w_1, w_2, trust_radius_max, trust_radius_min,   &
                                trust_radius_ini, bfgs_ndim
   !
@@ -301,12 +282,10 @@ SUBROUTINE iosys()
   !
   ! ... "path" specific
   !
-  USE input_parameters, ONLY : pos, full_phs_path_flag
   !
   USE input_parameters, ONLY : nconstr_inp, ncolvar_inp
   !
   USE constraints_module,    ONLY : init_constraint
-!  USE metadyn_vars,          ONLY : init_metadyn_vars
   USE read_namelists_module, ONLY : read_namelists, sm_not_set
   USE london_module,         ONLY : init_london, lon_rcut, scal6
   USE us, ONLY : spline_ps_ => spline_ps
@@ -331,9 +310,6 @@ SUBROUTINE iosys()
   !
   lscf      = .false.
   lmd       = .false.
-  lpath     = .false.
-  lneb      = .false.
-  lsmd      = .false.
   lmovecell = .false.
   lbands    = .false.
   lbfgs     = .false.
@@ -490,18 +466,6 @@ SUBROUTINE iosys()
         CALL errore( 'iosys', 'calculation=' // trim( calculation ) // &
                    & ': ion_dynamics=' // trim( ion_dynamics ) // &
                    & ' not supported', 1 )
-     !
-  CASE( 'neb' )
-     !
-     lscf  = .true.
-     lpath = .true.
-     lneb  = .true.
-     !
-  CASE( 'smd' )
-     !
-     lscf  = .true.
-     lpath = .true.
-     lsmd  = .true.
      !
   CASE DEFAULT
      !
@@ -828,25 +792,15 @@ SUBROUTINE iosys()
      !
   CASE( 'restart' )
      !
-     IF ( lneb .or. lsmd ) THEN
+     restart = .true.
+     !
+     IF ( trim( ion_positions ) == 'from_input' ) THEN
         !
-        ! ... "path" specific
-        !
-        restart = .false.
+        startingconfig = 'input'
         !
      ELSE
         !
-        restart = .true.
-        !
-        IF ( trim( ion_positions ) == 'from_input' ) THEN
-           !
-           startingconfig = 'input'
-           !
-        ELSE
-           !
-           startingconfig = 'file'
-           !
-        ENDIF
+        startingconfig = 'file'
         !
      ENDIF
      !
@@ -999,113 +953,6 @@ SUBROUTINE iosys()
      ENDIF
      !
   END SELECT
-  !
-!  lcoarsegrained  = ( trim( phase_space ) == 'coarse-grained' )
-  !
-!  IF ( lcoarsegrained ) THEN
-     !
-!     lmd = .true.
-     !
-!     SELECT CASE( trim( ion_dynamics ) )
-!     CASE( 'verlet' )
-        !
-!        CONTINUE
-        !
-!     CASE( 'langevin' )
-        !
-!        llang = .true.
-        !
-!     CASE( 'damp' )
-        !
-!        ldamped = .true.
-        !
-!        epse = etot_conv_thr
-!        epsf = forc_conv_thr
-        !
-!     CASE DEFAULT
-        !
-!        CALL errore( 'iosys', 'calculation=' // trim( calculation ) // &
-!                   & ': ion_dynamics=' // trim( ion_dynamics ) // &
-!                   & ' not supported', 1 )
-        !
-!     END SELECT
-     !
-!  ENDIF
-  !
-  ! ... "path" specific initialization of control variables
-  !
-  IF ( lpath ) THEN
-     !
-     IF( io_level < 0) CALL errore ( 'iosys', &
-                       'NEB, SMD do not work with "disk_io" set to "none"', 1)
-     !
-     nstep_path = nstep
-     !
-     IF ( num_of_images < 2 ) &
-        CALL errore( 'iosys', 'calculation=' // trim( calculation ) // &
-                   & ': num_of_images must be at least 2', 1 )
-     !
-     IF ( ( CI_scheme /= "no-CI"  ) .and. &
-          ( CI_scheme /= "auto"   ) .and. &
-          ( CI_scheme /= "manual" ) ) THEN
-        !
-        CALL errore( 'iosys', 'calculation=' // trim( calculation ) // &
-                   & ': unknown CI_scheme', 1 )
-        !
-     ENDIF
-     !
-     ! ... initialization of logical variables
-     !
-     lsteep_des  = .false.
-     lquick_min  = .false.
-     lbroyden    = .false.
-     lbroyden2   = .false.
-     !
-     SELECT CASE( opt_scheme )
-     CASE( "sd" )
-        !
-        lsteep_des = .true.
-        !
-     CASE( "quick-min" )
-        !
-        lquick_min = .true.
-        !
-     CASE( "broyden" )
-        !
-        lbroyden     = .true.
-        !
-     CASE( "broyden2" )
-        !
-        lbroyden2    = .true.
-        !
-     CASE( "langevin" )
-        !
-        llangevin = .true.
-        !
-        IF ( lneb ) &
-           CALL errore( 'iosys','calculation=' // trim( calculation ) // &
-                      & ': langevin dynamics not implemented', 1 )
-        !
-        temp_req = temp_req / ( eV_to_kelvin * autoev )
-        !
-        IF ( temp_req <= 0.D0 ) &
-           CALL errore( 'iosys','calculation=' // trim( calculation ) // &
-                      & ': tepm_req has not been set', 1 )
-        !
-        IF ( use_freezing ) &
-           WRITE( UNIT = stdout, &
-                  FMT = '(5X,"warning: freezing cannot be used in langevin")' )
-        !
-        use_freezing = .false.
-        !
-     CASE DEFAULT
-        !
-        CALL errore( 'iosys','calculation=' // trim( calculation ) // &
-                   & ': unknown opt_scheme', 1 )
-        !
-     END SELECT
-     !
-  ENDIF
   !
   SELECT CASE( trim( ion_temperature ) )
   CASE( 'not_controlled', 'not-controlled', 'not controlled' )
@@ -1316,21 +1163,8 @@ SUBROUTINE iosys()
   press_            = press
   cell_factor_      = cell_factor
   !
-  ! ... "path"-optimization variables
-  !
-  ds_             = ds
-  num_of_images_  = num_of_images
-  first_last_opt_ = first_last_opt
-  use_masses_     = use_masses
-  use_freezing_   = use_freezing
-  temp_req_       = temp_req
-  path_thr_       = path_thr
-  CI_scheme_      = CI_scheme
-  k_max_          = k_max
-  k_min_          = k_min
-  fixed_tan_      = fixed_tan
-  !
   ! ... for WANNIER_AC
+  !
   use_wannier_ = use_wannier
   use_energy_int_ = use_energy_int
   nwan_ = nwan
@@ -1481,27 +1315,7 @@ SUBROUTINE iosys()
   !
   CALL recips( at(1,1), at(1,2), at(1,3), bg(1,1), bg(1,2), bg(1,3) )
   !
-  IF ( full_phs_path_flag ) THEN
-     !
-     ! ... "path" optimizations specific
-     !
-     DO image = 1, num_of_images_
-        !
-        tau = reshape( pos(1:3*nat_,image), (/ 3 , nat_ /) )
-        !
-        CALL convert_tau ( tau_format, nat_, tau)
-        !
-        ! ... note that this positions array is in Bohr
-        !
-        pos(1:3*nat_,image) = reshape( tau, (/ 3 * nat_ /) ) * alat
-        !
-     ENDDO
-     !
-  ELSE
-     !
-     CALL convert_tau ( tau_format, nat_, tau)
-     !
-  ENDIF
+  CALL convert_tau ( tau_format, nat_, tau)
   !
   IF ( wmass == 0.D0 ) THEN
      !
@@ -1580,10 +1394,6 @@ SUBROUTINE iosys()
   lconstrain = ( ncolvar_inp + nconstr_inp > 0 )
   !
   IF ( lconstrain ) CALL init_constraint( nat, tau, ityp, alat )
-  !
-  ! ... set variables for metadynamics
-  !
-!  IF ( lcoarsegrained ) CALL init_metadyn_vars()
   !
   ! ... read atomic positions and unit cell from data file
   ! ... must be done before "verify_tmpdir" because the latter
@@ -1798,12 +1608,11 @@ SUBROUTINE verify_tmpdir( tmp_dir )
   !
   USE wrappers,         ONLY : f_mkdir
   USE input_parameters, ONLY : restart_mode
-  USE control_flags,    ONLY : lpath, lbands
+  USE control_flags,    ONLY : lbands
   USE io_files,         ONLY : prefix, xmlpun, &
                                delete_if_present, check_writable
   USE pw_restart,       ONLY : pw_readfile
-  USE path_variables,   ONLY : num_of_images
-  USE mp_global,        ONLY : mpime, nproc, nimage
+  USE mp_global,        ONLY : mpime, nproc
   USE io_global,        ONLY : ionode
   USE mp,               ONLY : mp_barrier
   USE xml_io_base,      ONLY : copy_file
@@ -1883,72 +1692,6 @@ SUBROUTINE verify_tmpdir( tmp_dir )
         ENDIF
         !
      ENDIF
-     !
-  ENDIF
-  !
-  ! ... "path" optimisation specific :   in the scratch directory the tree of
-  ! ... subdirectories needed by "path" calculations are created
-  !
-#if defined(EXX)
-  IF ( lpath .or. nimage > 1 ) THEN
-#else
-  IF ( lpath ) THEN
-#endif
-     IF ( ionode ) THEN
-        !
-        ! ... files needed by parallelization among images are removed
-        !
-        CALL delete_if_present( trim( file_path ) // '.newimage' )
-        !
-        ! ... file containing the broyden's history
-        !
-        IF ( restart_mode == 'from_scratch' ) THEN
-           !
-           CALL delete_if_present( trim( file_path ) // '.broyden' )
-           !
-        ENDIF
-        !
-     ENDIF
-     !
-     nofi = num_of_images
-#if defined(EXX)
-     IF( .not. lpath .and. nimage > 1 ) nofi = nimage
-#endif
-     !
-     DO image = 1, nofi
-        !
-        file_path = trim( tmp_dir ) // trim( prefix ) //"_" // &
-                    trim( int_to_char( image ) ) // '/'
-        !
-        CALL parallel_mkdir ( file_path )
-        !
-        ! ... if starting from scratch all temporary files are removed
-        ! ... from tmp_dir ( by all the cpus in sequence )
-        !
-        IF ( restart_mode == 'from_scratch' ) THEN
-           !
-           DO proc = 0, nproc - 1
-              !
-              IF ( proc == mpime ) THEN
-                 !
-                 ! ... extrapolation file is removed
-                 !
-                 CALL delete_if_present( trim( file_path ) // &
-                                       & trim( prefix ) // '.update' )
-                 !
-                 ! ... standard output of the self-consistency is removed
-                 !
-                 CALL delete_if_present( trim( file_path ) // 'PW.out' )
-                 !
-              ENDIF
-              !
-              CALL mp_barrier()
-              !
-           ENDDO
-           !
-        ENDIF
-        !
-     ENDDO
      !
   ENDIF
   !

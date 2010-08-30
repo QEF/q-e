@@ -15,10 +15,10 @@ PROGRAM pwscf
   USE parameters,       ONLY : ntypx, npk, lmaxx
   USE control_flags,    ONLY : conv_elec, conv_ions, lpath, gamma_only
   USE environment,      ONLY : environment_start
-  USE path_variables,   ONLY : conv_path
+!  USE path_variables,   ONLY : conv_path
   USE check_stop,       ONLY : check_stop_init
-  USE path_base,        ONLY : initialize_path, search_mep
-  USE path_io_routines, ONLY : path_summary
+!  USE path_base,        ONLY : initialize_path, search_mep
+!  USE path_io_routines, ONLY : path_summary
   USE image_io_routines, ONLY : io_image_start
   USE mp_global,        ONLY : mp_startup
 #if defined(__MS2)
@@ -57,19 +57,19 @@ PROGRAM pwscf
   CALL ms2_initialization()
 #endif
   !
-  IF ( lpath ) THEN
+!  IF ( lpath ) THEN
      !
-     CALL io_image_start()
+!     CALL io_image_start()
      !
-     CALL initialize_path()
+!     CALL initialize_path()
      !
-     CALL path_summary()
+!     CALL path_summary()
      !
-     CALL search_mep()
+!     CALL search_mep()
      !
-     CALL stop_run( conv_path )
+!     CALL stop_run( conv_path )
      !
-  ELSE
+!  ELSE
      !
 #if defined (EXX)
      CALL exx_loop()
@@ -116,7 +116,7 @@ PROGRAM pwscf
      !
      CALL stop_run( conv_ions )
      !
-  END IF      
+!  END IF      
   !
   STOP
   !

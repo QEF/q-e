@@ -7,9 +7,7 @@ MODFLAGS= $(MOD_FLAG)../iotk/src $(MOD_FLAG)../Modules \
           $(MOD_FLAG)../EE $(MOD_FLAG).
 
 PWOBJS = \
-pwscf.o \
-compute_fes_grads.o \
-compute_scf.o
+pwscf.o 
 
 PWLIBS = \
 a2fmod.o \

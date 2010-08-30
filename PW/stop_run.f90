@@ -23,7 +23,7 @@ SUBROUTINE stop_run( flag )
   USE io_files,           ONLY : iunwfc, iunigk, iunefield, iunefieldm,&
                                  iunefieldp, iuntmp
   USE buffers,            ONLY : close_buffer
-  USE path_variables,     ONLY : path_deallocation
+!  USE path_variables,     ONLY : path_deallocation
   USE image_io_routines,   ONLY : io_image_stop
   USE london_module,      ONLY : dealloca_london
   USE constraints_module, ONLY : deallocate_constraint
@@ -124,7 +124,7 @@ SUBROUTINE stop_run( flag )
   !
 !  IF ( lcoarsegrained ) CALL deallocate_metadyn_vars()
   !
-  IF ( lpath ) CALL path_deallocation()
+!  IF ( lpath ) CALL path_deallocation()
   !
   IF ( flag ) THEN
      !
