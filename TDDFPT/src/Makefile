@@ -60,7 +60,7 @@ all :  tldeps tddfpt.x
 #
 tddfpt.x : $(LROBJS) $(PWOBJS) $(QEMODS) $(PHOBJS) $(PWOBJS) $(EEOBJS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ \
-		$(LROBJS)  $(PWOBJS) $(QEMODS) $(PHOBJS) $(EEOBJS) $(LIBOBJS) $(LIBS)
+		$(LROBJS) $(PHOBJS) $(PWOBJS) $(EEOBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
 	- ( cd ../../bin ; ln -fs ../TDDFPT/src/$@ . )
 	- if [ -d ../bin ] ; then  ( cd ../bin ; ln -fs ../src/$@ . ); fi
 

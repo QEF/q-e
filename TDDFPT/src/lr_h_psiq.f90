@@ -55,7 +55,7 @@ subroutine lr_h_psiq (lda, n, m, psi, hpsi, spsi)
   !OBM debug
   !real(DP) :: obm_debug
   !complex(kind=dp), external :: ZDOTC
- 
+
 
   call start_clock ('h_psiq')
   If (lr_verbosity > 5) WRITE(stdout,'("<lr_h_psiq>")')
@@ -66,7 +66,7 @@ subroutine lr_h_psiq (lda, n, m, psi, hpsi, spsi)
   endif
   call stop_clock ('h_psiq')
   return
-contains 
+contains
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !k point part
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -107,14 +107,14 @@ contains
            psic_nc(nls(igk(j)),1) = psi (j, ibnd)
            psic_nc(nls(igk(j)),2) = psi (j+lda, ibnd)
         enddo
-        call cft3s (psic_nc(1,1), nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, 2)
-        call cft3s (psic_nc(1,2), nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, 2)
+        CALL invfft ('Wave', psic_nc(1,1), dffts)
+        CALL invfft ('Wave', psic_nc(1,2), dffts)
      ELSE
         psic(:) = (0.d0, 0.d0)
         do j = 1, n
            psic (nls(igk(j))) = psi (j, ibnd)
         enddo
-        call cft3s (psic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, 2)
+        CALL invfft ('Wave', psic, dffts)
      END IF
      call stop_clock ('firstfft')
      !
@@ -146,8 +146,8 @@ contains
      !
      call start_clock ('secondfft')
      IF (noncolin) THEN
-        call cft3s(psic_nc(1,1),nr1s,nr2s,nr3s,nrx1s,nrx2s,nrx3s,-2)
-        call cft3s(psic_nc(1,2),nr1s,nr2s,nr3s,nrx1s,nrx2s,nrx3s,-2)
+        CALL fwfft ('Wave', psic_nc(1,1), dffts)
+        CALL fwfft ('Wave', psic_nc(1,2), dffts)
      !
      !   addition to the total product
      !
@@ -156,7 +156,7 @@ contains
            hpsi (j+lda, ibnd) = hpsi (j+lda, ibnd) + psic_nc (nls(igk(j)), 2)
         enddo
      ELSE
-        call cft3s (psic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, - 2)
+        CALL fwfft ('Wave', psic, dffts)
      !
      !   addition to the total product
      !
@@ -188,13 +188,13 @@ contains
     use uspp,                  only : nkb
 
     IMPLICIT NONE
-    
+
     call start_clock ('init')
     !
     ! Here we apply the kinetic energy (k+G)^2 psi
     !
     if(gstart==2) psi(1,:)=cmplx(real(psi(1,:),dp),0.0d0,dp)
-    ! 
+    !
     !!OBM debug
     !  obm_debug=0
     !  do ibnd=1,m
@@ -209,7 +209,7 @@ contains
        do j=1,n
           hpsi(j,ibnd)=g2kin(j)*psi(j,ibnd)
        enddo
-    enddo 
+    enddo
     !!OBM debug
     !  obm_debug=0
     !  do ibnd=1,m
@@ -260,9 +260,9 @@ contains
      ! print *, "lr_h_psiq becp", obm_debug
      !!obm_debug
 
-    
+
      call add_vuspsi (lda, n, m, hpsi)
-     !END IF 
+     !END IF
      !!OBM debug
      !  obm_debug=0
      !  do ibnd=1,m

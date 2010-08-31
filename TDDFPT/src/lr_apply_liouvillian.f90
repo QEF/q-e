@@ -5,12 +5,12 @@ subroutine lr_apply_liouvillian( evc1, evc1_new, sevc1_new, interaction )
   ! OBM: or to be more exact this function is responsible for calculating L.q(i) and (L^T).p(i)
   ! where q is evc1 and return partial qdash(i+1) and pdash(i+1) in evc1_new . Ultrasoft additions are
   ! handled here...
-  ! interaction=.true. corresponds to eq.(32) 
+  ! interaction=.true. corresponds to eq.(32)
   ! interaction=.false. corresponds to eq.(33)
-  ! in Ralph Gebauer, Brent Walker  J. Chem. Phys., 127, 164106 (2007) 
-  !---------------------------------------------------------------------   
+  ! in Ralph Gebauer, Brent Walker  J. Chem. Phys., 127, 164106 (2007)
+  !---------------------------------------------------------------------
   !
-  ! Modified by Osman Baris Malcioglu in 2009 
+  ! Modified by Osman Baris Malcioglu in 2009
 #include "f_defs.h"
   !
   use ions_base,            only : ityp, nat, ntyp=>nsp
@@ -28,7 +28,7 @@ subroutine lr_apply_liouvillian( evc1, evc1_new, sevc1_new, interaction )
   use uspp,                 only : vkb, nkb, okvan
   use uspp_param,           only : nhm, nh
   use wavefunctions_module, only : psic
-  use wvfct,                only : nbnd, npwx, igk, g2kin, et 
+  use wvfct,                only : nbnd, npwx, igk, g2kin, et
   use control_flags,        only : gamma_only
   USE realus,               ONLY : real_space, fft_orbital_gamma, initialisation_level, &
                                    bfft_orbital_gamma, calbec_rs_gamma, add_vuspsir_gamma, &
@@ -38,7 +38,7 @@ subroutine lr_apply_liouvillian( evc1, evc1_new, sevc1_new, interaction )
   USE io_global,      ONLY : stdout
   USE dfunct,         ONLY : newq
   USE control_flags,  ONLY : tqr
-  
+
 
   !
   implicit none
@@ -88,16 +88,16 @@ subroutine lr_apply_liouvillian( evc1, evc1_new, sevc1_new, interaction )
        dvrs(:,1)=rho_1(:,1)
        !
        !call lr_dv_of_drho(dvrs)
-       allocate( dvrs_temp(nrxx, nspin) ) 
+       allocate( dvrs_temp(nrxx, nspin) )
          dvrs_temp=CMPLX(dvrs,0.0d0)         !OBM: This memory copy was hidden in lr_dv_of_drho, can it be avoided?
        call dv_of_drho(0,dvrs_temp,.false.)
        dvrs=DBLE(dvrs_temp)
        deallocate(dvrs_temp)
        !
-       if ( okvan )  then 
+       if ( okvan )  then
         if ( tqr ) then
          call newq_r(dvrs,d_deeq,.true.)
-        else 
+        else
          call newq(dvrs,d_deeq,.true.)
         endif
        endif
@@ -135,7 +135,7 @@ subroutine lr_apply_liouvillian( evc1, evc1_new, sevc1_new, interaction )
      !
      !   Tamm-dancoff interaction
      !
-     write(stdout,'(5X,"lr_apply_liouvillian: applying interaction: tamm-dancoff")') 
+     write(stdout,'(5X,"lr_apply_liouvillian: applying interaction: tamm-dancoff")')
      !
      !   Here evc1_new contains the interaction
      !
@@ -217,7 +217,7 @@ contains
     if ( interaction ) then
        !
        call start_clock('interaction')
-       
+
        if (nkb > 0 .and. okvan) then
           ! calculation of becp2
           becp2(:,:) = 0.0d0
@@ -245,7 +245,7 @@ contains
                          enddo
                          !
                       enddo
-                      ! 
+                      !
                    enddo
                    !
                    ijkb0 = ijkb0 + nh(nt)
@@ -300,8 +300,8 @@ contains
                           DO jh = 1, nh(nt)
                           !
                           jkb = ijkb0 + jh
-                          w1(ih) = w1(ih) + becp2(jkb, ibnd) 
-                          IF ( ibnd+1 .le. nbnd ) w2(ih) = w2(ih) + becp2(jkb, ibnd+1) 
+                          w1(ih) = w1(ih) + becp2(jkb, ibnd)
+                          IF ( ibnd+1 .le. nbnd ) w2(ih) = w2(ih) + becp2(jkb, ibnd+1)
                           !
                           END DO
                         !
@@ -357,9 +357,9 @@ contains
     !
     call h_psi(npwx,npw_k(1),nbnd,evc1(1,1,1),sevc1_new(1,1,1))
     !
-    ! spsi1 = s*evc1 
+    ! spsi1 = s*evc1
     !
-    if (real_space_debug > 9 ) then 
+    if (real_space_debug > 9 ) then
         do ibnd=1,nbnd,2
          call fft_orbital_gamma(evc1(:,:,1),ibnd,nbnd)
          call s_psir_gamma(ibnd,nbnd)
@@ -405,7 +405,7 @@ contains
        call start_clock('interaction')
        !
        !   evc1_new is used as a container for the interaction
-       !        
+       !
        evc1_new(:,:,:)=(0.0d0,0.0d0)
        !
        do ik=1,nks
@@ -422,7 +422,7 @@ contains
              !
              !   Back to reciprocal space
              !
-             call cft3s(psic,nr1s,nr2s,nr3s,nrx1s,nrx2s,nrx3s,-2)
+             CALL fwfft ('Wave', psic, dffts)
              !
              do ig=1,npw_k(ik)
                 !
@@ -478,7 +478,7 @@ contains
                 !
              enddo
              !
-             !evc1_new(ik) = evc1_new(ik) + vkb*becp2(ik) 
+             !evc1_new(ik) = evc1_new(ik) + vkb*becp2(ik)
              call zgemm( 'N', 'N', npw_k(ik), nbnd, nkb, (1.d0,0.d0), vkb, &
                   npwx, becp2, nkb, (1.d0,0.d0), evc1_new(:,:,ik), npwx )
              !

@@ -1,13 +1,13 @@
 !-----------------------------------------------------------------------
 subroutine lr_calc_dens( evc1, response_calc )
   !---------------------------------------------------------------------
-  ! ... calculates response charge density from linear response 
+  ! ... calculates response charge density from linear response
   ! ... orbitals and ground state orbitals
   !---------------------------------------------------------------------
   !
-  ! Modified by Osman Baris Malcioglu in 2009 
+  ! Modified by Osman Baris Malcioglu in 2009
   !
-  ! Input : evc1 (qdash etc) Output: rho_1 (=2*sum_v (revc0_v(r) . revc1_v(r,w)  v:valance state index, r denotes a transformation to real space)
+  ! Input : evc1 (qdash etc) Output: rho_1 (=2*sum_v (revc0_v(r) . revc1_v(r,w)  v:valance state index, r denotes a transformation t
   ! in case of uspps becsum is also calculated here
   ! in case of charge response calculation, the rho_tot is calculated here
 
@@ -54,14 +54,14 @@ subroutine lr_calc_dens( evc1, response_calc )
   logical, intent(in) :: response_calc
   !
   ! functions
-  real(kind=dp) :: ddot 
+  real(kind=dp) :: ddot
   !
   ! local variables
   integer :: ir,ik,ibnd,jbnd,ig,ijkb0,np,na,ijh,ih,jh,ikb,jkb,ispin
-  integer :: i, j, k, l 
+  integer :: i, j, k, l
   real(kind=dp) :: w1,w2,scal
   real(kind=dp) :: rho_sum!,weight
-  real(kind=dp), allocatable :: rho_sum_resp_x(:),rho_sum_resp_y(:),rho_sum_resp_z(:) ! These are temporary buffers for response charge storage
+  real(kind=dp), allocatable :: rho_sum_resp_x(:),rho_sum_resp_y(:),rho_sum_resp_z(:) ! These are temporary buffers for response cha
 
   !complex(kind=dp), external :: ZDOTC
   !complex(kind=dp), allocatable :: spsi(:,:)
@@ -88,9 +88,9 @@ subroutine lr_calc_dens( evc1, response_calc )
   else
      call lr_calc_dens_k()
   endif
-  !print *, "rho_1 after lr_calc_dens calculates",SUM(rho_1) 
+  !print *, "rho_1 after lr_calc_dens calculates",SUM(rho_1)
   !print *, "norm of evc1 after lr_calc_dens calculates", lr_dot(evc1(1,1,1),evc1(1,1,1))
-  
+
   !
   ! ... If a double grid is used, interpolate onto the fine grid
   !
@@ -99,18 +99,18 @@ subroutine lr_calc_dens( evc1, response_calc )
   ! ... Here we add the Ultrasoft contribution to the charge
   !
   !IF ( okvan ) CALL lr_addusdens(rho_1)
-  !print *, "rho_1 before addusdens",SUM(rho_1) 
+  !print *, "rho_1 before addusdens",SUM(rho_1)
   !call start_clock('lrcd_usdens') !TQR makes a huge gain here
   if(okvan) then
    if (tqr) then
     CALL addusdens_r(rho_1,.false.)
    else
-    CALL addusdens(rho_1) 
+    CALL addusdens(rho_1)
    endif
   endif
   !call stop_clock('lrcd_usdens')
   !
-  !print *, "rho_1 after addusdens",SUM(rho_1) 
+  !print *, "rho_1 after addusdens",SUM(rho_1)
 #ifdef __PARA
   !call poolreduce(nrxx,rho_1)
   call mp_sum(rho_1, inter_pool_comm)
@@ -119,7 +119,7 @@ subroutine lr_calc_dens( evc1, response_calc )
   ! check response charge density sums to 0
   !call start_clock('lrcd_sp') !Minimal lag, no need to improve
 if (lr_verbosity > 0) then
-  
+
   do ispin = 1, nspin_mag
    rho_sum=0.0d0
    rho_sum=SUM(rho_1(:,ispin))
@@ -182,7 +182,7 @@ endif
 #endif
      write(stdout,'(5X,"Dumping plane sums of densities for iteration ",I4)') LR_iteration
      !
-     filename = trim(prefix) // ".density_x" 
+     filename = trim(prefix) // ".density_x"
      tempfile = trim(tmp_dir) // trim(filename)
      !
      open (158, file = tempfile, form = 'formatted', status = 'unknown', position = 'append')
@@ -227,9 +227,9 @@ endif
   IF (charge_response == 2 .and. response_calc) then
     if (LR_iteration < itermax) WRITE(stdout,'(5x,"Calculating total response charge density")')
     ! the charge response, it is actually equivalent to an element of
-    ! V^T . phi_v where V^T is the is the transpose of the Krylov subspace generated 
+    ! V^T . phi_v where V^T is the is the transpose of the Krylov subspace generated
     ! by the Lanczos algorithm. The total charge density can be written
-    ! as 
+    ! as
     ! \sum_(lanczos iterations) (V^T.phi_v) . w_T
     ! Where w_T is the corresponding eigenvector from the solution of
     ! (w-L)e_1 = w_T
@@ -254,7 +254,7 @@ endif
      call daxpy(nrxx, dble(w_T(LR_iteration)),rho_1(:,1),1,rho_1_tot(:,1),1) !spin not implemented
     endif
     If (lr_verbosity > 9) THEN
-     if (LR_iteration == 2) then 
+     if (LR_iteration == 2) then
        call lr_dump_rho_tot_cube(rho_1(:,1),"first-rho1")
      endif
      if (LR_iteration == itermax .or. LR_iteration == itermax-1) call lr_dump_rho_tot_cube(rho_1(:,1),"last--rho1")
@@ -285,7 +285,7 @@ contains
                            real_space_debug
 
     !
-      
+
     do ibnd=1,nbnd,2
        call fft_orbital_gamma(evc1(:,:,1),ibnd,nbnd)
        !
@@ -298,30 +298,30 @@ contains
        endif
        !call start_clock('lrcd-lp1')
        ! OBM:
-       ! (n'(r,w)=2*sum_v (psi_v(r) . q_v(r,w)) 
+       ! (n'(r,w)=2*sum_v (psi_v(r) . q_v(r,w))
        ! where psi are the ground state valance orbitals
-       ! and q_v are the standart batch representation (rotated) 
+       ! and q_v are the standart batch representation (rotated)
        ! response orbitals
        ! Here, since the ith iteration is the best approximate we have
        ! for the most dominant eigenvalues/vectors, an estimate for the response
        ! charge density can be calculated. This is in no way the final
-       ! response charge density. 
-       ! the loop is over real space points. 
+       ! response charge density.
+       ! the loop is over real space points.
        do ir=1,nrxxs
           rho_1(ir,1)=rho_1(ir,1) &
                +2.0d0*(w1*real(revc0(ir,ibnd,1),dp)*real(psic(ir),dp)&
                +w2*aimag(revc0(ir,ibnd,1))*aimag(psic(ir)))
        enddo
-       ! 
+       !
        !call stop_clock('lrcd-lp1')
-       ! OBM - psic now contains the response functions at 
+       ! OBM - psic now contains the response functions at
        ! real space, eagerly putting all the real space stuff at this point.
        ! notice that betapointlist() is called in lr_readin at the very start
        IF ( real_space_debug > 6 .and. okvan) then
         ! The rbecp term
         call calbec_rs_gamma(ibnd,nbnd,becp%r)
-       endif 
-       ! End of real space stuff 
+       endif
+       ! End of real space stuff
     enddo
     !
     ! ... If we have a US pseudopotential we compute here the becsum term
@@ -359,7 +359,7 @@ contains
                       do ih = 1, nh(np)
                          !
                          ikb = ijkb0 + ih
-                         ! 
+                         !
                          becsum(ijh,na,current_spin) = &
                               becsum(ijh,na,current_spin) + &
                               2.d0 * w1 * becp%r(ikb,ibnd) * becp1(ikb,ibnd)
@@ -428,7 +428,7 @@ contains
              psic(nls(igk_k(ig,ik)))=evc1(ig,ibnd,ik)
           enddo
           !
-          call cft3s(psic,nr1s,nr2s,nr3s,nrx1s,nrx2s,nrx3s,2)
+          CALL invfft ('Wave', psic, dffts)
           !
           w1=wg(ibnd,ik)/omega
           !
@@ -453,7 +453,7 @@ contains
           becsum(:,:,:) = 0.0d0
           !
           IF ( nkb > 0 .and. okvan ) then
-             ! call ccalbec(nkb,npwx,npw_k(ik),nbnd,becp,vkb,evc1) 
+             ! call ccalbec(nkb,npwx,npw_k(ik),nbnd,becp,vkb,evc1)
              call calbec(npw_k(ik),vkb,evc1(:,:,ik),becp)
           endif
           !
