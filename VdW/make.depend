@@ -14,6 +14,8 @@ ch_psi_all.o : ../PW/pwcom.o
 check_v_eff.o : ../Modules/cell_base.o
 check_v_eff.o : ../Modules/constants.o
 check_v_eff.o : ../Modules/control_flags.o
+check_v_eff.o : ../Modules/fft_base.o
+check_v_eff.o : ../Modules/fft_interfaces.o
 check_v_eff.o : ../Modules/io_files.o
 check_v_eff.o : ../Modules/io_global.o
 check_v_eff.o : ../Modules/kind.o
@@ -25,6 +27,8 @@ check_v_eff.o : ../PW/g_psi_mod.o
 check_v_eff.o : ../PW/pwcom.o
 check_v_eff.o : ../PW/scf_mod.o
 check_v_eff.o : vdwcom.o
+dv_of_drho.o : ../Modules/fft_base.o
+dv_of_drho.o : ../Modules/fft_interfaces.o
 dv_of_drho.o : ../Modules/funct.o
 dv_of_drho.o : ../Modules/kind.o
 dv_of_drho.o : ../PH/phcom.o
@@ -43,6 +47,8 @@ dvpsi_e.o : ../PW/pwcom.o
 dvpsi_e.o : vdwcom.o
 eff_pot.o : ../Modules/constants.o
 eff_pot.o : ../Modules/control_flags.o
+eff_pot.o : ../Modules/fft_base.o
+eff_pot.o : ../Modules/fft_interfaces.o
 eff_pot.o : ../Modules/io_files.o
 eff_pot.o : ../Modules/io_global.o
 eff_pot.o : ../Modules/kind.o
@@ -52,12 +58,16 @@ eff_pot.o : ../Modules/uspp.o
 eff_pot.o : ../PW/pwcom.o
 eff_pot.o : ../PW/scf_mod.o
 eff_pot.o : vdwcom.o
+h_psiq.o : ../Modules/fft_base.o
+h_psiq.o : ../Modules/fft_interfaces.o
 h_psiq.o : ../Modules/kind.o
 h_psiq.o : ../Modules/wavefunctions.o
 h_psiq.o : ../PH/phcom.o
 h_psiq.o : ../PW/becmod.o
 h_psiq.o : ../PW/pwcom.o
 h_psiq.o : ../PW/scf_mod.o
+incdrhoscf.o : ../Modules/fft_base.o
+incdrhoscf.o : ../Modules/fft_interfaces.o
 incdrhoscf.o : ../Modules/ions_base.o
 incdrhoscf.o : ../Modules/kind.o
 incdrhoscf.o : ../Modules/uspp.o
@@ -81,6 +91,8 @@ print_clock_vdw.o : ../PH/phcom.o
 print_clock_vdw.o : ../PH/ramanm.o
 solve_e.o : ../Modules/cell_base.o
 solve_e.o : ../Modules/check_stop.o
+solve_e.o : ../Modules/fft_base.o
+solve_e.o : ../Modules/fft_interfaces.o
 solve_e.o : ../Modules/io_files.o
 solve_e.o : ../Modules/io_global.o
 solve_e.o : ../Modules/ions_base.o

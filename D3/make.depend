@@ -27,6 +27,8 @@ close_open.o : ../Modules/io_global.o
 close_open.o : ../PH/phcom.o
 close_open.o : ../PW/pwcom.o
 close_open.o : d3com.o
+d0rhod2v.o : ../Modules/fft_base.o
+d0rhod2v.o : ../Modules/fft_interfaces.o
 d0rhod2v.o : ../Modules/io_files.o
 d0rhod2v.o : ../Modules/io_global.o
 d0rhod2v.o : ../Modules/ions_base.o
@@ -109,6 +111,8 @@ d3_valence.o : ../PH/phcom.o
 d3_valence.o : ../PW/pwcom.o
 d3_valence.o : d3com.o
 d3com.o : ../Modules/kind.o
+d3dyn_cc.o : ../Modules/fft_base.o
+d3dyn_cc.o : ../Modules/fft_interfaces.o
 d3dyn_cc.o : ../Modules/funct.o
 d3dyn_cc.o : ../Modules/ions_base.o
 d3dyn_cc.o : ../Modules/kind.o
@@ -142,6 +146,8 @@ d3toten.o : ../PW/pwcom.o
 d3toten.o : d3com.o
 d3vrho.o : ../Modules/cell_base.o
 d3vrho.o : ../Modules/constants.o
+d3vrho.o : ../Modules/fft_base.o
+d3vrho.o : ../Modules/fft_interfaces.o
 d3vrho.o : ../Modules/io_files.o
 d3vrho.o : ../Modules/ions_base.o
 d3vrho.o : ../Modules/kind.o
@@ -180,6 +186,8 @@ dpsidvdpsi.o : ../Modules/uspp.o
 dpsidvdpsi.o : ../PH/phcom.o
 dpsidvdpsi.o : ../PW/pwcom.o
 dpsidvdpsi.o : d3com.o
+dqrhod2v.o : ../Modules/fft_base.o
+dqrhod2v.o : ../Modules/fft_interfaces.o
 dqrhod2v.o : ../Modules/io_files.o
 dqrhod2v.o : ../Modules/ions_base.o
 dqrhod2v.o : ../Modules/kind.o
@@ -194,6 +202,8 @@ drho_cc.o : ../Modules/kind.o
 drho_cc.o : ../PH/phcom.o
 drho_cc.o : ../PW/pwcom.o
 drho_cc.o : d3com.o
+drho_drc.o : ../Modules/fft_base.o
+drho_drc.o : ../Modules/fft_interfaces.o
 drho_drc.o : ../Modules/ions_base.o
 drho_drc.o : ../Modules/kind.o
 drho_drc.o : ../Modules/mp.o
@@ -207,6 +217,8 @@ drhod2v.o : ../PH/phcom.o
 drhod2v.o : ../PW/pwcom.o
 drhod2v.o : d3com.o
 dvdpsi.o : ../Modules/cell_base.o
+dvdpsi.o : ../Modules/fft_base.o
+dvdpsi.o : ../Modules/fft_interfaces.o
 dvdpsi.o : ../Modules/ions_base.o
 dvdpsi.o : ../Modules/mp.o
 dvdpsi.o : ../Modules/mp_global.o
@@ -214,6 +226,8 @@ dvdpsi.o : ../Modules/uspp.o
 dvdpsi.o : ../PH/phcom.o
 dvdpsi.o : ../PW/pwcom.o
 dvdpsi.o : d3com.o
+dvscf.o : ../Modules/fft_base.o
+dvscf.o : ../Modules/fft_interfaces.o
 dvscf.o : ../Modules/ions_base.o
 dvscf.o : ../Modules/kind.o
 dvscf.o : ../Modules/uspp.o
@@ -234,6 +248,8 @@ gen_dwfc.o : ../Modules/io_global.o
 gen_dwfc.o : ../PH/phcom.o
 gen_dwfc.o : ../PW/pwcom.o
 gen_dwfc.o : d3com.o
+incdrhoscf2.o : ../Modules/fft_base.o
+incdrhoscf2.o : ../Modules/fft_interfaces.o
 incdrhoscf2.o : ../Modules/ions_base.o
 incdrhoscf2.o : ../Modules/kind.o
 incdrhoscf2.o : ../Modules/uspp.o
@@ -271,6 +287,8 @@ set_d3irr.o : ../PH/phcom.o
 set_d3irr.o : ../PW/pwcom.o
 set_d3irr.o : ../PW/symm_base.o
 set_d3irr.o : d3com.o
+set_efsh.o : ../Modules/fft_base.o
+set_efsh.o : ../Modules/fft_interfaces.o
 set_efsh.o : ../Modules/io_global.o
 set_efsh.o : ../Modules/kind.o
 set_efsh.o : ../Modules/mp.o

@@ -954,7 +954,6 @@ SUBROUTINE terminate_run()
   CALL print_clock( 'ffts' )
   CALL print_clock( 'fftw' )
   CALL print_clock( 'fftb' )
-  CALL print_clock( 'cft3s' )
   CALL print_clock( 'fft_scatter' )
   !
   IF (tcg) call print_clock_tcg()

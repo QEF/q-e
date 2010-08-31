@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2003-2009 A. Smogunov 
+! Copyright (C) 2003-2009 A. Smogunov
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -7,10 +7,10 @@
 !
 !
 SUBROUTINE do_cond(done)
-!  
+!
 !   This is the main driver of the pwcond.x program.
 !   It calculates the complex band structure, solves the
-!   scattering problem and calculates the transmission coefficient. 
+!   scattering problem and calculates the transmission coefficient.
 !
   USE constants,  ONLY : rytoev
   USE ions_base,  ONLY : nat, ityp, ntyp => nsp, tau
@@ -20,12 +20,12 @@ SUBROUTINE do_cond(done)
   USE spin_orb,   ONLY : lspinorb, domag
   USE uspp,       ONLY: okvan
   USE symm_base,  ONLY: nsym, s, t_rev, time_reversal
-  USE cond 
+  USE cond
   USE io_files,   ONLY: outdir, tmp_dir, prefix,  trimcheck
   !!! RECOVER
   USE cond_restart
   USE input_parameters, ONLY: max_seconds
-  USE check_stop, ONLY: check_stop_init, check_stop_now 
+  USE check_stop, ONLY: check_stop_init, check_stop_now
   !!!
   USE noncollin_module, ONLY : noncolin, i_cons
   USE io_global, ONLY : stdout, ionode, ionode_id
@@ -40,7 +40,7 @@ SUBROUTINE do_cond(done)
   LOGICAL, INTENT(OUT) :: done
   !
   REAL(DP) :: wtot, tk
-  INTEGER :: ik, ipol, ien, ios 
+  INTEGER :: ik, ipol, ien, ios
   LOGICAL :: lso_l, lso_s, lso_r
   !!! RECOVER
   LOGICAL :: tran_save
@@ -48,9 +48,9 @@ SUBROUTINE do_cond(done)
 
   NAMELIST /inputcond/ outdir, prefixt, prefixl, prefixs, prefixr,     &
                        band_file, tran_file, save_file, fil_loc,       &
-                       lwrite_loc, lread_loc, lwrite_cond, lread_cond, & 
+                       lwrite_loc, lread_loc, lwrite_cond, lread_cond, &
                        tran_prefix, recover, max_seconds,              &
-                       orbj_in,orbj_fin,ikind,iofspin,llocal,          & 
+                       orbj_in,orbj_fin,ikind,iofspin,llocal,          &
                        bdl, bds, bdr, nz1, energy0, denergy, ecut2d,   &
                        start_e, last_e, start_k, last_k,               &
                        ewind, epsproj, delgep, cutplot,                &
@@ -65,7 +65,7 @@ SUBROUTINE do_cond(done)
   CALL start_clock('init')
 !
 !   set default values for variables in namelist
-!                                             
+!
   CALL get_env( 'ESPRESSO_TMPDIR', outdir )
   IF ( TRIM( outdir ) == ' ' ) outdir = './'
   prefixt = ' '
@@ -74,7 +74,7 @@ SUBROUTINE do_cond(done)
   prefixr = ' '
   band_file = ' '
   tran_file = ' '
-  save_file = ' ' 
+  save_file = ' '
   fil_loc = ' '
   lwrite_loc = .FALSE.
   lread_loc = .FALSE.
@@ -150,13 +150,13 @@ SUBROUTINE do_cond(done)
         !   the list of energies is read
         DO ien = 1, nenergy
            READ(5, *, err=400, iostat=ios) earr(ien)
-           tran_tot(ien) = 0.d0 
+           tran_tot(ien) = 0.d0
         ENDDO
      ELSE
         !   the array of energies is automatically formed
         DO ien = 1, nenergy
            earr(ien) = energy0 + (ien-1)*denergy
-           tran_tot(ien) = 0.d0 
+           tran_tot(ien) = 0.d0
         ENDDO
      ENDIF
 
@@ -258,7 +258,7 @@ SUBROUTINE do_cond(done)
 !
 ! Now allocate space for pwscf variables, read and check them.
 !
-  
+
 IF (lread_cond) THEN
   call save_cond (.false.,1,efl,nrzl,nocrosl,noinsl,   &
                   norbl,rl,rabl,betarl)
@@ -282,7 +282,7 @@ ELSE
   lso_r=.false.
   IF (prefixt.ne.' ') then
     prefix = prefixt
-    
+
     call read_file
     IF (ikind.eq.0) then
       CALL init_cond(1,'t')
@@ -416,14 +416,14 @@ CALL mp_bcast( last_k, ionode_id )
 
     CALL init_gper(ik)
 
-    CALL local 
+    CALL local
 
     DO ien=start_e, last_e
 
       !!! RECOVER
       ! if recover mechanism is enabled
       IF (recover .AND. ikind.NE.0) THEN
-         ! 
+         !
          WRITE(stdout,'(A)') 'Reading transmission from restart file:'
          ! check if the transmission has already been calculated for
          ! this specific k-point and energy value
@@ -450,9 +450,9 @@ CALL mp_bcast( last_k, ionode_id )
       eryd = earr(ien)/rytoev + efl
       CALL form_zk(n2d, nrzpl, zkrl, zkl, eryd, tpiba)
       CALL scatter_forw(nrzl, nrzpl, zl, psiperl, zkl, norbl,     &
-                        tblml, crosl, taunewl, rl, rabl, betarl) 
+                        tblml, crosl, taunewl, rl, rabl, betarl)
       CALL compbs(1, nocrosl, norbl, nchanl, kvall, kfunl, kfundl, &
-                  kintl, kcoefl, ik, ien) 
+                  kintl, kcoefl, ik, ien)
 
       IF (ikind.EQ.2) THEN
         eryd = earr(ien)/rytoev + efr
@@ -460,7 +460,7 @@ CALL mp_bcast( last_k, ionode_id )
         CALL scatter_forw(nrzr, nrzpr, zr, psiperr, zkr, norbr,    &
                           tblmr, crosr, taunewr, rr, rabr, betarr)
         CALL compbs(0, nocrosr, norbr, nchanr, kvalr, kfunr, kfundr,&
-                     kintr, kcoefr, ik, ien) 
+                     kintr, kcoefr, ik, ien)
       ENDIF
 
       CALL summary_band(ik,ien)
@@ -476,7 +476,7 @@ CALL mp_bcast( last_k, ionode_id )
          if (lorb) CALL transmit(ik, ien, tk, .false.)
 
          !
-         ! To add T(k) to the total T 
+         ! To add T(k) to the total T
          !
          tran_tot(ien) = tran_tot(ien) + wkpt(ik)*tk
          !
@@ -490,7 +490,7 @@ CALL mp_bcast( last_k, ionode_id )
                CALL stop_clock('PWCOND')
                CALL print_clock_pwcond()
                done = .FALSE.
-               RETURN 
+               RETURN
             ENDIF
          ENDIF
          !!!

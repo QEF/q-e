@@ -10,11 +10,11 @@ SUBROUTINE test_f_sum_rule
   !-----------------------------------------------------------------------
   !
   ! ... Test the f-sum rule
-  ! ... 2/N_k sum_k sum_n^{occ} 
-  ! ...   <u_{nk}| p_{k,\alpha} G_k v_{k,\beta} | u_{nk}> = 
+  ! ... 2/N_k sum_k sum_n^{occ}
+  ! ...   <u_{nk}| p_{k,\alpha} G_k v_{k,\beta} | u_{nk}> =
   ! ...   = -N_{el} \delta_{\alpha,\beta}
   ! ...
-  ! ... where: p_k = -i\nabla + k and v_k = -i [r, H_k]  
+  ! ... where: p_k = -i\nabla + k and v_k = -i [r, H_k]
   !
   USE kinds,                       ONLY : DP
   USE io_global,                   ONLY : stdout
@@ -59,7 +59,7 @@ SUBROUTINE test_f_sum_rule
     current_k = ik
     current_spin = isk(ik)
 
-    ! initialize at k-point k 
+    ! initialize at k-point k
     call gk_sort(xk(1,ik), ngm, g, ecutwfc/tpiba2, npw, igk, g2kin)
     g2kin(:) = g2kin(:) * tpiba2
     call init_us_2(npw,igk,xk(1,ik),vkb)

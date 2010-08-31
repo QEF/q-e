@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2009 A. Smogunov 
+! Copyright (C) 2009 A. Smogunov
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -8,8 +8,8 @@
 !
 subroutine scat_states_plot(ik,ien,norb,nocros,nchan,vec,veceig,left_to_right)
 !
-! Writes the the XY integrated and the 3D charge and spin densities of 
-! right-moving scattering states (or Bloch states if ikind = 0). 
+! Writes the the XY integrated and the 3D charge and spin densities of
+! right-moving scattering states (or Bloch states if ikind = 0).
 !
   use kinds,            ONLY : DP
   USE constants,        ONLY : tpi, rytoev
@@ -22,12 +22,12 @@ subroutine scat_states_plot(ik,ien,norb,nocros,nchan,vec,veceig,left_to_right)
   USE cell_base,        ONLY : alat, at
   USE cond,             ONLY : ikind, n2d, nrzpl, nrzps, taunewl, taunews,  &
                                lorb3d, funz0, lcharge, denergy, rho_scatt,  &
-                               sarea, nenergy, nkpts, wkpt      
+                               sarea, nenergy, nkpts, wkpt
 
   implicit none
 
-  INTEGER  :: ik, ien, nspin0, ichan, nchan, ipol, ix, iy, iz, ij, ounit, ios, norb, nocros, &  
-              c_tab 
+  INTEGER  :: ik, ien, nspin0, ichan, nchan, ipol, ix, iy, iz, ij, ounit, ios, norb, nocros, &
+              c_tab
   real(DP) :: raux1, raux2
   real(DP), allocatable    :: spin_mag(:,:,:), zdata(:), mag(:), aux_plot(:)
   COMPLEX(DP), PARAMETER   :: one=(1.d0,0.d0), zero=(0.d0,0.d0)
@@ -56,7 +56,7 @@ subroutine scat_states_plot(ik,ien,norb,nocros,nchan,vec,veceig,left_to_right)
 
   allocate( zdata(nr3) )
   allocate( aux_plot(nr1*nr2*nr3) )
- 
+
 !-- z-mezh (in \AA)
   raux1 = at(3,3)*alat*0.5291772108d0 / nr3
   zdata(1) = 0.d0
@@ -103,10 +103,10 @@ subroutine scat_states_plot(ik,ien,norb,nocros,nchan,vec,veceig,left_to_right)
              mag(ipol) = mag(ipol) + spin_mag(ipol,ichan,ij)
            enddo
         enddo
-        mag(ipol) = mag(ipol) * sarea / (nr1*nr2) 
+        mag(ipol) = mag(ipol) * sarea / (nr1*nr2)
         if (lcharge) rho_scatt(iz,ipol) = rho_scatt(iz,ipol) + mag(ipol)*raux2
       enddo
-      write(stdout,'(5f12.6)') zdata(iz), (mag(ipol), ipol = 1, nspin0) 
+      write(stdout,'(5f12.6)') zdata(iz), (mag(ipol), ipol = 1, nspin0)
     enddo
   enddo
 !--
@@ -128,7 +128,7 @@ subroutine scat_states_plot(ik,ien,norb,nocros,nchan,vec,veceig,left_to_right)
         mag(ipol) = mag(ipol) + rho_scatt(iz,ipol)
       enddo
     enddo
-    mag(:) = mag(:) / nr3 * at(3,3) * alat 
+    mag(:) = mag(:) / nr3 * at(3,3) * alat
     if (noncolin) then
      write(stdout,'(''Nelec and Magn. Moment '',4f12.6)') (mag(ipol), ipol = 1, nspin0)
     else
@@ -192,7 +192,7 @@ subroutine scat_states_plot(ik,ien,norb,nocros,nchan,vec,veceig,left_to_right)
 100   CALL errore('write_states','opening file'//filename,ABS(ios))
       call xsf_struct (alat, at, nat, tau, atm, ityp, ounit)
       ix = 1
-      IF (noncolin.AND.domag) ix = nspin 
+      IF (noncolin.AND.domag) ix = nspin
       do ipol = 1, ix
         do ij = 1, nr1*nr2*nr3
            aux_plot(ij) = spin_mag(ipol,ichan,ij)
@@ -232,8 +232,8 @@ SUBROUTINE scat_states_comp(nchan, nrzp, norb, nocros, taunew, vec, &
  USE cell_base, ONLY : omega
  USE gvect,     ONLY : nr1, nr2, nr3
  USE scf,       ONLY : rho
- USE uspp_param,ONLY : upf, nhm, nh 
- USE uspp,      ONLY : nkb, vkb, becsum 
+ USE uspp_param,ONLY : upf, nhm, nh
+ USE uspp,      ONLY : nkb, vkb, becsum
  USE gvect,     ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx
  USE gsmooth,   ONLY : nls, nlsm, nr1s, nr2s, nr3s, &
                         nrx1s, nrx2s, nrx3s, nrxxs, doublegrid
@@ -241,9 +241,9 @@ SUBROUTINE scat_states_comp(nchan, nrzp, norb, nocros, taunew, vec, &
  USE fft_scalar,ONLY : cft_2xy
  USE splinelib, ONLY : spline, splint
 ! USE becmod,    ONLY : bec_type, becp
-  
+
  IMPLICIT NONE
- INTEGER :: nocros, nchan, nrzp, norb, irun, nrun 
+ INTEGER :: nocros, nchan, nrzp, norb, irun, nrun
  COMPLEX(DP) :: x1, vec(4*n2d+npol*(norb+2*nocros),nchan), veceig(nchan,nchan)
  LOGICAL :: norm_flag, left_to_right
  INTEGER :: ik, ig, ir, mu, ig1, ichan, ichan1, ipol, iat, ih, jh, ijh, np
@@ -258,7 +258,7 @@ SUBROUTINE scat_states_comp(nchan, nrzp, norb, nocros, taunew, vec, &
  COMPLEX(DP), ALLOCATABLE :: funr(:)
 
  REAL(DP), ALLOCATABLE :: spin_mag(:,:), becsum_orig(:,:,:)
- REAL(DP), ALLOCATABLE :: xdata(:), xdatax(:), ydata(:), ydatax(:), y2d(:) 
+ REAL(DP), ALLOCATABLE :: xdata(:), xdatax(:), ydata(:), ydatax(:), y2d(:)
  INTEGER, ALLOCATABLE :: ipiv(:), ind(:)
 
 
@@ -384,8 +384,8 @@ SUBROUTINE scat_states_comp(nchan, nrzp, norb, nocros, taunew, vec, &
 !----------
 
 !----------
-!   Construct becsum_orig and becsum for original atom and for its copy  
-!   in the z direction if the atom crosses the cell boundary   
+!   Construct becsum_orig and becsum for original atom and for its copy
+!   in the z direction if the atom crosses the cell boundary
 
  becsum = 0.d0
  becsum_orig = 0.d0
@@ -395,10 +395,10 @@ SUBROUTINE scat_states_comp(nchan, nrzp, norb, nocros, taunew, vec, &
    if (upf(np)%tvanp) then
      iorb = (ind(iat)-1)*npol + 1
      nrun = 1
-!--  crossing orbs need 2 runs (for the original and copy atomic positions) 
+!--  crossing orbs need 2 runs (for the original and copy atomic positions)
      if (iorb.le.nocros*npol.or.iorb.gt.(norb-nocros)*npol) nrun = 2
 !--
-     do irun = 1, nrun   
+     do irun = 1, nrun
         ijh = 1
         do ih = 1, nh(np)
          if(noncolin) then
@@ -476,7 +476,7 @@ SUBROUTINE scat_states_comp(nchan, nrzp, norb, nocros, taunew, vec, &
 !   spin_mag = 0.d0
 !---
 
-!-- Pseudo wave function in the real space 
+!-- Pseudo wave function in the real space
     DO ik=1,nrzp
        DO ipol=1,npol
           fung=(0.d0,0.d0)
@@ -525,7 +525,7 @@ SUBROUTINE scat_states_comp(nchan, nrzp, norb, nocros, taunew, vec, &
   enddo
 !----------
 
-!------- 
+!-------
 ! collecting the density and magnetizations on fine mesh
 
   r_aux1 = 1.d0/nr3s
@@ -540,7 +540,7 @@ SUBROUTINE scat_states_comp(nchan, nrzp, norb, nocros, taunew, vec, &
   if(me_pool.eq.0) then
    ik = 0
   else
-   ik = SUM(dffts%npp(1:me_pool))   
+   ik = SUM(dffts%npp(1:me_pool))
   endif
 
   do ipol = 1, nspin
@@ -576,7 +576,7 @@ SUBROUTINE scat_states_comp(nchan, nrzp, norb, nocros, taunew, vec, &
 !-------
 ! Normalization
  IF (norm_flag) THEN
-    r_aux1 = SUM(spin_mag(:,1)) 
+    r_aux1 = SUM(spin_mag(:,1))
     r_aux1 = r_aux1*omega/(nr1*nr2*nr3)
     r_aux1 = 1.d0/r_aux1
     CALL dscal(nrx1*nrx2*nrx3*nspin,r_aux1,spin_mag,1)

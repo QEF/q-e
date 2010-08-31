@@ -42,7 +42,7 @@ SUBROUTINE symmetrize_field(field, iflag)
     call cart_to_crys ( tmp )
     field(i,:,:) = tmp(:,:)
   enddo
-  
+
   ! symmetrize
   call syme2(field, iflag)
 
@@ -129,7 +129,7 @@ subroutine syme2 (dvsym, iflag)
   allocate (aux(nrx1 , nrx2 , nrx3 , 3, 3))
 
   call dcopy (nrx1 * nrx2 * nrx3 * 9, dvsym, 1, aux, 1)
-  
+
   ! compute determinants of transformation matrixes
   do irot = 1, nsym
     if (iflag == 1) then  ! pseudo-tensor
@@ -150,7 +150,7 @@ subroutine syme2 (dvsym, iflag)
 
   dvsym (:,:,:,:,:) = 0.d0
   !
-  !  symmmetrize 
+  !  symmmetrize
   !
   do kx = 1, nr3
   do jx = 1, nr2

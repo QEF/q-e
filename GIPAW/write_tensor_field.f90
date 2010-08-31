@@ -13,7 +13,7 @@ SUBROUTINE write_tensor_field(name, ispin, field)
   !
   USE kinds,                       ONLY : DP
   USE io_global,                   ONLY : stdout
-  USE mp_global,                   ONLY : me_pool  
+  USE mp_global,                   ONLY : me_pool
   USE cell_base,                   ONLY : at, bg, alat
   USE ions_base,                   ONLY : nat, tau, atm, ityp
   USE pwcom
@@ -26,7 +26,7 @@ SUBROUTINE write_tensor_field(name, ispin, field)
   integer, parameter :: ounit = 48
   character*80 :: fname
   integer :: ios, ipol
-  
+
   if (me_pool /= 0) return
 
   do ipol = 1, 3
@@ -69,7 +69,7 @@ end subroutine write_tensor_field
 ! -------------------------------------------------------------------
 subroutine xsf_struct (alat, at, nat, tau, atm, ityp, nr, ounit)
   USE kinds, only : DP
-  USE constants, only : BOHR_RADIUS_ANGS 
+  USE constants, only : BOHR_RADIUS_ANGS
   implicit none
   integer          :: nat, ityp (nat), nr, ounit
   character(len=3) :: atm(*)
@@ -108,7 +108,7 @@ end subroutine xsf_struct
 subroutine xsf_vector_3d(v, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
                          at, bg, alat, ounit)
   USE kinds, only : DP
-  USE constants, only : BOHR_RADIUS_ANGS 
+  USE constants, only : BOHR_RADIUS_ANGS
   implicit none
   integer  :: nrx1, nrx2, nrx3, nr1, nr2, nr3, ounit
   real(DP) :: at(3,3), bg(3,3), x(3), alat, v(nrx1,nrx2,nrx3,3)
@@ -118,8 +118,8 @@ subroutine xsf_vector_3d(v, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
     do i2 = 1, nr2
       do i3 = 1, nr3
         ! coordinate in angstrom
-        x(1) = dble(i1)/dble(nr1)     
-        x(2) = dble(i2)/dble(nr2)     
+        x(1) = dble(i1)/dble(nr1)
+        x(2) = dble(i2)/dble(nr2)
         x(3) = dble(i3)/dble(nr3)
         ! crystal to cartesian
         call cryst_to_cart (1, x, bg, 1)

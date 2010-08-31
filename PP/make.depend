@@ -2,6 +2,8 @@ add_shift_cc.o : ../Modules/atom.o
 add_shift_cc.o : ../Modules/cell_base.o
 add_shift_cc.o : ../Modules/constants.o
 add_shift_cc.o : ../Modules/control_flags.o
+add_shift_cc.o : ../Modules/fft_base.o
+add_shift_cc.o : ../Modules/fft_interfaces.o
 add_shift_cc.o : ../Modules/ions_base.o
 add_shift_cc.o : ../Modules/kind.o
 add_shift_cc.o : ../Modules/mp.o
@@ -11,6 +13,8 @@ add_shift_cc.o : ../Modules/wavefunctions.o
 add_shift_cc.o : ../PW/pwcom.o
 add_shift_cc.o : ../PW/scf_mod.o
 add_shift_lc.o : ../Modules/constants.o
+add_shift_lc.o : ../Modules/fft_base.o
+add_shift_lc.o : ../Modules/fft_interfaces.o
 add_shift_lc.o : ../Modules/kind.o
 add_shift_lc.o : ../Modules/mp.o
 add_shift_lc.o : ../Modules/mp_global.o
@@ -79,6 +83,7 @@ chdens.o : ../Modules/cell_base.o
 chdens.o : ../Modules/constants.o
 chdens.o : ../Modules/control_flags.o
 chdens.o : ../Modules/fft_base.o
+chdens.o : ../Modules/fft_interfaces.o
 chdens.o : ../Modules/io_files.o
 chdens.o : ../Modules/io_global.o
 chdens.o : ../Modules/ions_base.o
@@ -100,6 +105,7 @@ compute_ppsi.o : ../PW/noncol.o
 compute_ppsi.o : ../PW/pwcom.o
 compute_sigma_avg.o : ../Modules/cell_base.o
 compute_sigma_avg.o : ../Modules/fft_base.o
+compute_sigma_avg.o : ../Modules/fft_interfaces.o
 compute_sigma_avg.o : ../Modules/ions_base.o
 compute_sigma_avg.o : ../Modules/kind.o
 compute_sigma_avg.o : ../Modules/mp.o
@@ -149,6 +155,8 @@ dosg.o : ../Modules/kind.o
 elf.o : ../Modules/cell_base.o
 elf.o : ../Modules/constants.o
 elf.o : ../Modules/control_flags.o
+elf.o : ../Modules/fft_base.o
+elf.o : ../Modules/fft_interfaces.o
 elf.o : ../Modules/io_files.o
 elf.o : ../Modules/kind.o
 elf.o : ../Modules/mp.o
@@ -188,6 +196,8 @@ initial_state.o : ../Modules/wavefunctions.o
 initial_state.o : ../PW/pwcom.o
 local_dos.o : ../Modules/cell_base.o
 local_dos.o : ../Modules/control_flags.o
+local_dos.o : ../Modules/fft_base.o
+local_dos.o : ../Modules/fft_interfaces.o
 local_dos.o : ../Modules/io_files.o
 local_dos.o : ../Modules/ions_base.o
 local_dos.o : ../Modules/kind.o
@@ -201,13 +211,18 @@ local_dos.o : ../PW/pwcom.o
 local_dos.o : ../PW/scf_mod.o
 local_dos.o : ../PW/symme.o
 local_dos1d.o : ../Modules/cell_base.o
+local_dos1d.o : ../Modules/fft_base.o
+local_dos1d.o : ../Modules/fft_interfaces.o
 local_dos1d.o : ../Modules/ions_base.o
+local_dos1d.o : ../Modules/kind.o
 local_dos1d.o : ../Modules/uspp.o
 local_dos1d.o : ../Modules/wavefunctions.o
 local_dos1d.o : ../PW/becmod.o
 local_dos1d.o : ../PW/noncol.o
 local_dos1d.o : ../PW/pwcom.o
 local_dos_mag.o : ../Modules/cell_base.o
+local_dos_mag.o : ../Modules/fft_base.o
+local_dos_mag.o : ../Modules/fft_interfaces.o
 local_dos_mag.o : ../Modules/io_files.o
 local_dos_mag.o : ../Modules/ions_base.o
 local_dos_mag.o : ../Modules/kind.o
@@ -303,6 +318,7 @@ projwfc.o : ../Modules/control_flags.o
 projwfc.o : ../Modules/descriptors.o
 projwfc.o : ../Modules/environment.o
 projwfc.o : ../Modules/fft_base.o
+projwfc.o : ../Modules/fft_interfaces.o
 projwfc.o : ../Modules/io_files.o
 projwfc.o : ../Modules/io_global.o
 projwfc.o : ../Modules/ions_base.o
@@ -324,6 +340,7 @@ punch_plot.o : ../Modules/cell_base.o
 punch_plot.o : ../Modules/constants.o
 punch_plot.o : ../Modules/control_flags.o
 punch_plot.o : ../Modules/fft_base.o
+punch_plot.o : ../Modules/fft_interfaces.o
 punch_plot.o : ../Modules/io_global.o
 punch_plot.o : ../Modules/ions_base.o
 punch_plot.o : ../Modules/kind.o
@@ -351,6 +368,8 @@ pw2casino.o : ../PW/newd.o
 pw2casino_write.o : ../Modules/cell_base.o
 pw2casino_write.o : ../Modules/constants.o
 pw2casino_write.o : ../Modules/control_flags.o
+pw2casino_write.o : ../Modules/fft_base.o
+pw2casino_write.o : ../Modules/fft_interfaces.o
 pw2casino_write.o : ../Modules/funct.o
 pw2casino_write.o : ../Modules/io_files.o
 pw2casino_write.o : ../Modules/io_global.o
@@ -369,6 +388,8 @@ pw2gw.o : ../Modules/cell_base.o
 pw2gw.o : ../Modules/constants.o
 pw2gw.o : ../Modules/control_flags.o
 pw2gw.o : ../Modules/environment.o
+pw2gw.o : ../Modules/fft_base.o
+pw2gw.o : ../Modules/fft_interfaces.o
 pw2gw.o : ../Modules/io_files.o
 pw2gw.o : ../Modules/io_global.o
 pw2gw.o : ../Modules/ions_base.o
@@ -387,6 +408,7 @@ pw2wannier90.o : ../Modules/constants.o
 pw2wannier90.o : ../Modules/control_flags.o
 pw2wannier90.o : ../Modules/environment.o
 pw2wannier90.o : ../Modules/fft_base.o
+pw2wannier90.o : ../Modules/fft_interfaces.o
 pw2wannier90.o : ../Modules/io_files.o
 pw2wannier90.o : ../Modules/io_global.o
 pw2wannier90.o : ../Modules/ions_base.o
@@ -425,6 +447,7 @@ stm.o : ../Modules/cell_base.o
 stm.o : ../Modules/constants.o
 stm.o : ../Modules/control_flags.o
 stm.o : ../Modules/fft_base.o
+stm.o : ../Modules/fft_interfaces.o
 stm.o : ../Modules/io_files.o
 stm.o : ../Modules/io_global.o
 stm.o : ../Modules/kind.o
@@ -441,6 +464,7 @@ stop_pp.o : ../Modules/parallel_include.o
 sym_band.o : ../Modules/cell_base.o
 sym_band.o : ../Modules/constants.o
 sym_band.o : ../Modules/fft_base.o
+sym_band.o : ../Modules/fft_interfaces.o
 sym_band.o : ../Modules/io_files.o
 sym_band.o : ../Modules/io_global.o
 sym_band.o : ../Modules/ions_base.o
@@ -473,6 +497,8 @@ wannier_hamiltonians.o : ../PW/pwcom.o
 wannier_plot.o : ../Modules/cell_base.o
 wannier_plot.o : ../Modules/constants.o
 wannier_plot.o : ../Modules/environment.o
+wannier_plot.o : ../Modules/fft_base.o
+wannier_plot.o : ../Modules/fft_interfaces.o
 wannier_plot.o : ../Modules/io_files.o
 wannier_plot.o : ../Modules/io_global.o
 wannier_plot.o : ../Modules/ions_base.o

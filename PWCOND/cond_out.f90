@@ -14,7 +14,7 @@ SUBROUTINE cond_out ()
   USE cond
 
 !---------------------------
-! Some output 
+! Some output
 !---------------------------
 
   implicit none
@@ -71,7 +71,7 @@ SUBROUTINE cond_out ()
     WRITE( stdout, '(8x,"k(",i5,") = (",2f12.7,"), wk =",f12.7)') k, &
          (xyk (ipol, k) , ipol = 1, 2) , wkpt (k)
  ENDDO
- 
+
 
  IF (start_k.GT.1 .OR. last_k.LT.nkpts)   &
    WRITE(stdout,'(5x,"WARNING: computing from k(",i5,") to k(",i5,")"/)') &
@@ -149,7 +149,7 @@ SUBROUTINE cond_out ()
          k,zs(k),zs(k+1),zs(k+1)-zs(k),(cross(iorb,k),iorb=1,norbs)
       enddo
     endif
-  endif 
+  endif
 
   return
 end subroutine cond_out

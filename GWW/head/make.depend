@@ -86,6 +86,8 @@ phq_readin.o : ../../PW/noncol.o
 phq_readin.o : ../../PW/pwcom.o
 phq_readin.o : ../pw4gww/wannier_gw.o
 solve_head.o : ../../Modules/check_stop.o
+solve_head.o : ../../Modules/fft_base.o
+solve_head.o : ../../Modules/fft_interfaces.o
 solve_head.o : ../../Modules/io_files.o
 solve_head.o : ../../Modules/io_global.o
 solve_head.o : ../../Modules/ions_base.o

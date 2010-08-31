@@ -2255,7 +2255,7 @@ MODULE realus
         !
 
         tg_psic = (0.d0, 0.d0)
-        ioff   = 0  !print *, "cft3s sign",sign
+        ioff   = 0  
         !
         DO idx = 1, 2*nogrp, 2
 

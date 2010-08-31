@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2003 A. Smogunov 
+! Copyright (C) 2003 A. Smogunov
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -8,14 +8,14 @@
 subroutine summary_band(ik,ien)
 !
 ! It gives a PWCOND summary on complex band structures of leads.
-! 
+!
   USE io_global,  ONLY :  stdout
   USE noncollin_module, ONLY : npol
   use cond
   implicit none
 
   character(len=14) :: extension
-  integer ::  i, k, irun, ik, ien, nstl, nstr 
+  integer ::  i, k, irun, ik, ien, nstl, nstr
   real(DP) :: dim, dre, eev
 
   eev = earr(ien)
@@ -51,7 +51,7 @@ subroutine summary_band(ik,ien)
       if(ien.eq.1) then
         write(3,'("# k-point", i5)') ik
         write(4,'("# k-point", i5)') ik
-        write(11,'("# k-point", i5)') ik 
+        write(11,'("# k-point", i5)') ik
         write(12,'("# k-point", i5)') ik
         write(13,'("# k-point", i5)') ik
       endif
@@ -133,4 +133,4 @@ subroutine summary_band(ik,ien)
   endif
 
   return
-end subroutine summary_band            
+end subroutine summary_band

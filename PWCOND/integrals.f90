@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2003 A. Smogunov 
+! Copyright (C) 2003 A. Smogunov
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -20,7 +20,7 @@ function int1d(fun, zk, dz, dz1, nz1, tpiba, sign)
       nz1,    &        ! input: the number of integration points
       sign             ! input: the sign of the exponential
   real(DP), parameter :: eps=1.d-8
-  real(DP) :: tpi, dz, dz1, tpiba 
+  real(DP) :: tpi, dz, dz1, tpiba
   complex(DP), parameter :: cim = (0.d0,1.d0)
   complex(DP) ::  &
       zk,              & ! the exponential k
@@ -29,7 +29,7 @@ function int1d(fun, zk, dz, dz1, nz1, tpiba, sign)
       arg,             & ! auxiliary
       int1d              ! output: the value of the integral
 
-  tpi = 8.d0*atan(1.d0)       
+  tpi = 8.d0*atan(1.d0)
 
   int1d = (0.d0,0.d0)
   arg = sign*tpi*cim*zk*dz1
@@ -59,7 +59,7 @@ function int2d(fun1, fun2, int1, int2, fact1, fact2, zk, dz1, tpiba, nz1 )
   USE constants, ONLY : tpi
   implicit none
   integer ::    &
-     nz1,       &  ! number of points for the slab integration 
+     nz1,       &  ! number of points for the slab integration
      ik       ! counters on the slab points
   real(DP), parameter :: eps=1.d-8
   real(DP) :: dz1, tpiba
@@ -69,13 +69,13 @@ function int2d(fun1, fun2, int1, int2, fact1, fact2, zk, dz1, tpiba, nz1 )
      int1(nz1), int2(nz1),  &  ! auxiliary arrays for integration
      fact1(nz1), fact2(nz1),&
      s1, s2, s3, ff,        &  ! auxiliary for integration
-     fact,fact0,            &  ! auxiliary 
+     fact,fact0,            &  ! auxiliary
      f1, f2, zk,            &  ! the complex k of the exponent
      int2d                     ! output: the result of the integration
 
   s1=(0.d0,0.d0)
   s2=(0.d0,0.d0)
-  s3=(0.d0,0.d0) 
+  s3=(0.d0,0.d0)
 !
 ! integral for i > = j
 !
@@ -103,10 +103,10 @@ end function int2d
 
 subroutine setint(fun,int1,int2,fact1,fact2,nz1)
 
-  USE kinds, only : DP 
+  USE kinds, only : DP
   implicit none
   integer ::    &
-     nz1,       &  ! number of points for the slab integration 
+     nz1,       &  ! number of points for the slab integration
      ik            ! counters on the slab points
   complex(DP) ::       &
      fun(nz1),              &  ! the arrays to be integrated
@@ -121,6 +121,6 @@ subroutine setint(fun,int1,int2,fact1,fact2,nz1)
   do ik=nz1-1,1,-1
      int2(ik)=int2(ik+1)+fun(ik+1)*fact1(ik+1)
   enddo
-   
+
   return
 end subroutine setint

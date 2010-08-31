@@ -14,7 +14,7 @@ SUBROUTINE greenfunction(ik, psi, g_psi, q)
   ! ... energy: G => G / ryd_to_hartree
   !
   USE kinds,                       ONLY : DP
-  USE io_global,                   ONLY : stdout  
+  USE io_global,                   ONLY : stdout
   USE becmod,                      ONLY : bec_type, becp, calbec, &
                                           allocate_bec_type, deallocate_bec_type
   USE wavefunctions_module,        ONLY : evc
@@ -43,7 +43,7 @@ SUBROUTINE greenfunction(ik, psi, g_psi, q)
   logical :: conv_root, q_is_zero
   complex(dp), external :: zdotc
   external ch_psi_all, cg_psi
- 
+
   ! start clock
   call start_clock ('greenf')
 
@@ -53,7 +53,7 @@ SUBROUTINE greenfunction(ik, psi, g_psi, q)
 
   ! check if |q| is zero
   q_is_zero = .false.
-  if (sqrt(q(1)*q(1)+q(2)*q(2)+q(3)*q(3)) < 1d-8) q_is_zero = .true.  
+  if (sqrt(q(1)*q(1)+q(2)*q(2)+q(3)*q(3)) < 1d-8) q_is_zero = .true.
   if (q_is_zero) evq(:,:) = evc(:,:)
 
   !====================================================================
@@ -123,17 +123,17 @@ SUBROUTINE greenfunction(ik, psi, g_psi, q)
   endif
   !it was: call ccalbec (nkb, npwx, npw, nbnd, becp, vkb, psi)
   call calbec (npw, vkb, psi, becp, nbnd)
-    
+
   ! initial guess
   g_psi(:,:) = (0.d0, 0.d0)
 
-  ! solve linear system  
+  ! solve linear system
   conv_root = .true.
   call cgsolve_all (ch_psi_all, cg_psi, et(1,ik), psi, g_psi, &
        h_diag, npwx, npw, thresh, ik, lter, conv_root, anorm, &
        nbnd_occ(ik) )
 
-  !! debug  
+  !! debug
   !!write(stdout, '(5X,''cgsolve_all converged in '',I3,'' iterations'')') &
   !!      lter
 
@@ -146,7 +146,7 @@ SUBROUTINE greenfunction(ik, psi, g_psi, q)
 
   call flush_unit( stdout )
   call stop_clock('greenf')
- 
+
   ! free memory
   deallocate (work, h_diag, eprec, ps)
   call deallocate_bec_type (becp)

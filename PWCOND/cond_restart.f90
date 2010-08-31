@@ -59,7 +59,7 @@ MODULE cond_restart
       INTEGER :: ierr
       CHARACTER(LEN=6), EXTERNAL :: int_to_char
 
-      
+
       ! look for an empty unit for transmission files,
       ! (while info file goes in iunpun defined in io_files)
       IF ( ionode )  CALL iotk_free_unit(iunout, ierr)
@@ -98,7 +98,7 @@ MODULE cond_restart
       CALL errore('cond_writefile ', &
                   'cannot open xml_recover file for writing', ierr )
       !
-      IF ( ionode ) THEN  
+      IF ( ionode ) THEN
          !
          ! here we start writing the cond-punch-file
          IF ( what=='init' ) THEN
@@ -111,7 +111,7 @@ MODULE cond_restart
             !
             CALL iotk_close_write(iunpun)
             !
-         ELSEIF ( what=='tran' ) THEN 
+         ELSEIF ( what=='tran' ) THEN
             !
             CALL write_transmission(ecurr, kcurr, tcurr)
             !
@@ -124,7 +124,7 @@ MODULE cond_restart
 
       RETURN
       !
-    END SUBROUTINE cond_writefile 
+    END SUBROUTINE cond_writefile
     !
     !
     !------------------------------------------------------------------------
@@ -166,7 +166,7 @@ MODULE cond_restart
       DO ik = 1, nk
          !
          CALL iotk_write_attr( attr, "XY", klist(:,ik), FIRST = .TRUE. )
-         !            
+         !
          CALL iotk_write_attr( attr, "WEIGHT", wk(ik) )
          !
          CALL iotk_write_empty( iunpun, "K-POINT" // &
@@ -285,7 +285,7 @@ MODULE cond_restart
       !
       CALL mp_bcast( qexml_version,       ionode_id, intra_image_comm )
       CALL mp_bcast( qexml_version_init,  ionode_id, intra_image_comm )
-      
+
       !
       ! init logical variables for versioning
       !
@@ -395,7 +395,7 @@ MODULE cond_restart
                ierr = ik+1
                EXIT
             ENDIF
-            ! 
+            !
             CALL iotk_scan_attr( attr, "WEIGHT", wk_ )
             !
             IF ( abs(wk_ - wk(ik)) .GT. 1.d-10 ) THEN

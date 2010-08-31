@@ -14,64 +14,64 @@ MODULE gipaw_module
   USE kinds, ONLY : DP
   USE constants, ONLY : a0_to_cm => bohr_radius_cm
   USE parameters, ONLY : npk, ntypx, lmaxx
-  
+
   IMPLICIT NONE
   SAVE
-  
+
   INTEGER, PARAMETER:: natx=20000 ! max number of atoms
   INTEGER, PARAMETER:: nbrx=14   ! max number of beta functions
   ! alpha
   REAL(DP), PARAMETER :: alpha = 1.0_dp / 137.03599911_dp
-  
+
   ! speed of light in atomic units: c = 1/alpha
   !REAL(DP), PARAMETER :: c = 137.03599911d0
-  
+
   ! avogadro number
   REAL(DP), PARAMETER :: avogadro = 6.022142e23_dp
-  
+
   ! number of occupied bands at each k-point
   INTEGER :: nbnd_occ(npk)
-  
+
   ! alpha shift of the projector on the valence wfcs
   REAL(DP) :: alpha_pv
-  
+
   ! eigenvalues and eigenfunctions at k+q
   COMPLEX(DP), ALLOCATABLE :: evq(:,:)
-  
+
   ! induced current (bare term) and induced magnetic field
   REAL(DP), ALLOCATABLE :: j_bare(:,:,:,:), b_ind_r(:,:,:)
-  
+
   ! induced magnetic field in reciprocal space
   COMPLEX(DP), ALLOCATABLE :: b_ind(:,:,:)
-  
+
   ! convergence threshold for diagonalizationa and greenfunction
   REAL(DP) :: conv_threshold
-  
+
   ! q for the perturbation (in bohrradius^{-1})
   REAL(DP) :: q_gipaw
-  
+
   ! q for the EFG
   REAL(DP) :: q_efg ( ntypx )
-  
+
   ! verbosity
   INTEGER :: iverbosity
- 
+
   ! diagonalization method
   INTEGER :: isolve
- 
+
   ! job: nmr, g_tensor, efg, hyperfine
   CHARACTER(80) :: job
-  
+
   ! format for a rank-2 tensor
   CHARACTER(*), PARAMETER :: tens_fmt = '(3(5X,3(F14.4,2X)/))'
-  
+
   ! for plotting the induced current and induced field
   CHARACTER(80) :: filcurr, filfield
-  
+
   ! macroscopic shape for the NMR
   LOGICAL :: use_nmr_macroscopic_shape
   REAL(DP) :: nmr_macroscopic_shape ( 3, 3 )
-  
+
   ! parametres for hyper-fine interaction
   CHARACTER ( LEN = 10 ) :: hfi_input_unit
   CHARACTER ( LEN = 10 ) :: hfi_output_unit
@@ -80,7 +80,7 @@ MODULE gipaw_module
   LOGICAL :: radial_integral_splines
   LOGICAL :: hfi_via_reconstruction_only
   INTEGER :: hfi_extrapolation_npoints
-  
+
   !<apsi>
   CHARACTER(256) :: file_reconstruction ( ntypx )
   LOGICAL :: read_recon_in_paratec_fmt
@@ -93,12 +93,12 @@ MODULE gipaw_module
   REAL(dp), ALLOCATABLE :: radial_integral_diamagnetic_so(:,:,:)
   REAL(dp), ALLOCATABLE :: radial_integral_rmc(:,:,:)
   !<apsi>
-  
+
   ! contribution to NMR chemical shift due to core contribution
   REAL ( dp ) :: nmr_shift_core(ntypx)
-  
+
 CONTAINS
-  
+
   !-----------------------------------------------------------------------
   ! Read in the gipaw input file.
   ! Format: &inputgipaw
@@ -127,15 +127,15 @@ CONTAINS
                          hfi_nuclear_g_factor, radial_integral_splines, &
                          hfi_via_reconstruction_only, &
                          hfi_extrapolation_npoints
-    
+
     if ( .not. ionode ) goto 400
-    
+
     CALL input_from_file()
-    
+
     job = ''
     prefix = 'pwscf'
-    CALL get_env( 'ESPRESSO_TMPDIR', tmp_dir ) 
-    IF ( TRIM( tmp_dir ) == ' ' ) tmp_dir = './scratch/' 
+    CALL get_env( 'ESPRESSO_TMPDIR', tmp_dir )
+    IF ( TRIM( tmp_dir ) == ' ' ) tmp_dir = './scratch/'
     conv_threshold = 1e-14_dp
     q_gipaw = 0.01_dp
     iverbosity = 0
@@ -147,7 +147,7 @@ CONTAINS
     nmr_macroscopic_shape = 2.0_dp / 3.0_dp
     spline_ps = .true.    ! TRUE in this case!!!!!
     isolve = 0
-    
+
     hfi_output_unit = 'MHz'
     hfi_isotope ( : ) = 0
     hfi_nuclear_g_factor ( : ) = 1.0
@@ -155,19 +155,19 @@ CONTAINS
     hfi_via_reconstruction_only = .TRUE.
     hfi_extrapolation_npoints = 10000
     q_efg = 1.0
-    
+
     read( 5, inputgipaw, err = 200, iostat = ios )
-    
+
 200 call errore( 'gipaw_readin', 'reading inputgipaw namelist', abs( ios ) )
-    
+
 400 continue
-    
+
     call gipaw_bcast_input
-    
+
   END SUBROUTINE gipaw_readin
-  
+
   !-----------------------------------------------------------------------
-  ! Broadcast input data to all processors 
+  ! Broadcast input data to all processors
   !-----------------------------------------------------------------------
   SUBROUTINE gipaw_bcast_input
 #ifdef __PARA
@@ -208,16 +208,16 @@ CONTAINS
     USE pwcom
     USE ions_base,     ONLY : ntyp => nsp
     USE paw_gipaw,     ONLY : paw_recon
-    
+
     IMPLICIT NONE
-    
+
     allocate(evq(npwx,nbnd))
     allocate(j_bare(nrxxs,3,3,nspin), b_ind_r(nrxxs,3,3), b_ind(ngm,3,3))
     if (.not. allocated(paw_recon) ) allocate ( paw_recon(ntyp) )
-    
+
   END SUBROUTINE gipaw_allocate
-  
-  
+
+
   !-----------------------------------------------------------------------
   ! Print a short summary of the calculation
   !-----------------------------------------------------------------------
@@ -227,7 +227,7 @@ CONTAINS
 
     CALL flush_unit( stdout )
   END SUBROUTINE gipaw_summary
-  
+
 
   !-----------------------------------------------------------------------
   ! Open files needed for GIPAW
@@ -236,7 +236,7 @@ CONTAINS
     USE io_global,        ONLY : stdout
     USE basis,            ONLY : natomwfc, starting_wfc
     USE wvfct,            ONLY : nbnd, npwx
-    USE ldaU,             ONLY : lda_plus_U  
+    USE ldaU,             ONLY : lda_plus_U
     USE klist,            ONLY : nks
     USE io_files,         ONLY : prefix, iunat, iunsat, iunwfc, iunigk, &
                                  nwordwfc, nwordatwfc, tmp_dir, wfc_dir,&
@@ -244,15 +244,15 @@ CONTAINS
     USE noncollin_module, ONLY : npol
     USE mp_global,        ONLY : kunit
     USE buffers,          ONLY : open_buffer
-    USE control_flags,    ONLY : io_level    
-    IMPLICIT NONE  
+    USE control_flags,    ONLY : io_level
+    IMPLICIT NONE
     LOGICAL            :: exst
     ! ... nwordwfc is the record length (IN COMPLEX WORDS)
     ! ... for the direct-access file containing wavefunctions
     nwordwfc = nbnd*npwx*npol
 
     ! ... iunwfc=10: read/write wfc from/to file
-    ! ... iunwfc=-1: copy wfc to/from RAM 
+    ! ... iunwfc=-1: copy wfc to/from RAM
     IF ( io_level > 0 ) THEN
       iunwfc = 10
     ELSE
@@ -261,10 +261,10 @@ CONTAINS
     CALL open_buffer( iunwfc, 'wfc', nwordwfc, nks, exst )
 
     ! ... Needed for LDA+U
-    ! ... iunat  contains the (orthogonalized) atomic wfcs 
+    ! ... iunat  contains the (orthogonalized) atomic wfcs
     ! ... iunsat contains the (orthogonalized) atomic wfcs * S
     ! ... iunocc contains the atomic occupations computed in new_ns
-    ! ... it is opened and closed for each reading-writing operation  
+    ! ... it is opened and closed for each reading-writing operation
     nwordatwfc = 2*npwx*natomwfc*npol
     IF ( lda_plus_u ) then
        CALL diropn( iunat,  'atwfc',  nwordatwfc, exst )
@@ -272,7 +272,7 @@ CONTAINS
     END IF
 
     ! ... iunigk contains the number of PW and the indices igk
-    ! ... Note that unit 15 is reserved for error messages 
+    ! ... Note that unit 15 is reserved for error messages
     CALL seqopn( iunigk, 'igk', 'UNFORMATTED', exst )
     RETURN
   END SUBROUTINE gipaw_openfil
@@ -286,7 +286,7 @@ CONTAINS
     IMPLICIT NONE
 
     WRITE( stdout, * )
-    call print_clock ('GIPAW') 
+    call print_clock ('GIPAW')
     WRITE( stdout,  * ) '    INITIALIZATION: '
     call print_clock ('gipaw_setup')
     WRITE( stdout, * )
@@ -340,15 +340,15 @@ CONTAINS
                               read_recon, read_recon_paratec, set_paw_upf
     USE symm_base,     ONLY : nsym, s
     USE uspp_param,    ONLY : upf
-    USE mp_global,     ONLY : inter_pool_comm 
-    USE mp,            ONLY : mp_max, mp_min 
+    USE mp_global,     ONLY : inter_pool_comm
+    USE mp,            ONLY : mp_max, mp_min
     USE dfunct,                 only : newd
 
     IMPLICIT none
     integer :: ik, nt, ibnd
     ! logical :: nlcc_any
     real(dp) :: emin, emax
-    
+
     !<apsi>
     integer :: il, lm, l, m, lm1, lm2, m1, m2, abs_m1, abs_m2
     integer :: sign_m1, sign_m2, il1, il2, l1, l2, j, kkpsi, nrc
@@ -357,25 +357,25 @@ CONTAINS
     integer :: kkpsi_max
     real(dp), allocatable :: work(:), kinetic_aephi(:), kinetic_psphi(:)
     real(dp), allocatable :: aephi_dvloc_dr(:), psphi_dvloc_dr(:)
-    
+
     real(dp) :: mysum1 ( 3, lmaxx ) !TMPTMPTMP
     real(dp) :: mysum2 ( 3, 1:lmaxx ) !TMPTMPTMP
     logical :: vloc_set
-    
+
     INTEGER :: core_orb
     REAL ( dp ) :: integral, occupation
     !</apsi>
-    
+
     call start_clock ('gipaw_setup')
-    
+
     ! Test whether the symmetry operations map the Cartesian axis to each
     ! other - if not, remove them (how to check the k point mesh then? - oops!
-    
-!*apsi*    CALL test_symmetries ( s, nsym )    
-    
+
+!*apsi*    CALL test_symmetries ( s, nsym )
+
     ! initialize pseudopotentials
     call init_us_1
-    
+
     ! initialise data, also for the case that no GIPAW is present
     IF ( .NOT. ALLOCATED ( paw_recon ) ) ALLOCATE ( paw_recon(ntyp) )
     paw_recon(:)%gipaw_data_in_upf_file = .FALSE.
@@ -387,11 +387,11 @@ CONTAINS
     DO nt = 1, ntyp
        paw_recon(nt)%paw_lll(:) = 0
     END DO
-    
+
     ! Read in qe format
     DO nt = 1, ntyp
        IF ( read_recon_in_paratec_fmt ) THEN
-          
+
           ! Read in paratec format
           CALL read_recon_paratec ( file_reconstruction(nt), nt, &
                paw_recon(nt), vloc_set )
@@ -400,14 +400,14 @@ CONTAINS
                   "no local potential set in read_recon_paratec", 1 )
              stop
           END IF
-          
+
        ELSE
           CALL set_paw_upf (nt, upf(nt))
           CALL read_recon ( file_reconstruction(nt), nt, paw_recon(nt) )
           !!!paw_recon(nt)%paw_nbeta = 0
        END IF
     END DO
-    
+
     if ( iverbosity > 20 ) then
        ! Write the wave functions and local potentials for debugging/testing
        do nt = 1, ntyp
@@ -420,7 +420,7 @@ CONTAINS
              write(1100+nt,*) " "
           end do
        end do
-       
+
        do nt = 1, ntyp
           do j = 1, MIN(SIZE(rgrid(nt)%r),SIZE(paw_recon(nt)%gipaw_ae_vloc))
              write(1200+nt,*) rgrid(nt)%r(j), paw_recon(nt)%gipaw_ae_vloc(j)
@@ -430,7 +430,7 @@ CONTAINS
           write(1300+nt,*) " "
        end do
     end if
-    
+
     ! initialize paw
     do nt = 1, ntyp
        do il = 1, paw_recon(nt)%paw_nbeta
@@ -449,13 +449,13 @@ CONTAINS
           END IF
        enddo
     enddo
-    
+
     call init_gipaw_1()
-    
+
     allocate ( paw_vkb(npwx,paw_nkb) )
     allocate ( paw_becp(paw_nkb,nbnd) )
     allocate ( paw_becp2(paw_nkb,nbnd) )
-    
+
     allocate ( radial_integral_diamagnetic(paw_nkb,paw_nkb,ntypx) )
     allocate ( radial_integral_paramagnetic(paw_nkb,paw_nkb,ntypx) )
     allocate ( radial_integral_diamagnetic_so(paw_nkb,paw_nkb,ntypx) )
@@ -466,22 +466,22 @@ CONTAINS
     radial_integral_diamagnetic_so = 0.0_dp
     radial_integral_paramagnetic_so = 0.0_dp
     radial_integral_rmc = 0.0_dp
-    
+
     do nt=1, ntyp
-       
+
        do il1=1, paw_recon(nt)%paw_nbeta
           l1 = paw_recon(nt)%psphi(il1)%label%l
           kkpsi = paw_recon(nt)%aephi(il1)%kkpsi
-          
+
           nrc = paw_recon(nt)%psphi(il1)%label%nrc
-          
+
           allocate ( work(kkpsi) )
-          
+
           do il2 = 1, paw_recon(nt)%paw_nbeta
              l2 = paw_recon(nt)%psphi(il2)%label%l
-             
+
              IF ( l1 /= l2 ) CYCLE
-             
+
              !
              ! NMR shielding, diamagnetic
              !
@@ -489,7 +489,7 @@ CONTAINS
                 work(j) = (paw_recon(nt)%aephi(il1)%psi(j)*paw_recon(nt)%aephi(il2)%psi(j)-&
                      paw_recon(nt)%psphi(il1)%psi(j)*paw_recon(nt)%psphi(il2)%psi(j))/rgrid(nt)%r(j)
              enddo
-             
+
              CALL simpson( nrc, work, rgrid(nt)%rab(:nrc), &
                   radial_integral_diamagnetic(il1,il2,nt) )
              if (iverbosity > 10) then
@@ -497,11 +497,11 @@ CONTAINS
                      radial_integral_diamagnetic(il1,il2,nt) &
                      * alpha ** 2 * 1e6 * 4
              end if
-             
+
              !
              ! NMR shielding, paramagnetic
              !
-             ! calculate radial integration on atom site 
+             ! calculate radial integration on atom site
              ! <aephi|1/r^3|aephi>-<psphi|1/r^3|psphi>
              !
              do j = 1, nrc
@@ -510,7 +510,7 @@ CONTAINS
                      - paw_recon(nt)%psphi(il1)%psi(j) * paw_recon(nt)%psphi(il2)%psi(j) ) &
                      / rgrid(nt)%r(j) ** 3
              end do
-             
+
              call simpson( nrc, work, rgrid(nt)%rab(:nrc), &
                   radial_integral_paramagnetic(il1,il2,nt) )
              if (iverbosity > 10) then
@@ -518,11 +518,11 @@ CONTAINS
                      radial_integral_paramagnetic(il1,il2,nt) &
                      * alpha ** 2 * 1e6 * 4
              end if
-             
+
              ! Calculate the radial integral only if the radial potential
              !    is present
              IF ( .NOT. paw_recon(nt)%vloc_present ) CYCLE
-             
+
              !
              ! g tensor, relativistic mass correction
              !
@@ -531,29 +531,29 @@ CONTAINS
                   paw_recon(nt)%aephi(il2)%psi(:nrc), kinetic_aephi(:nrc) )
              CALL radial_kinetic_energy ( l2, rgrid(nt)%r(:nrc), &
                   paw_recon(nt)%psphi(il2)%psi(:nrc), kinetic_psphi(:nrc) )
-             
+
              do j = 1, nrc
                 work(j) = ( paw_recon(nt)%aephi(il1)%psi(j) * kinetic_aephi(j) &
                      - paw_recon(nt)%psphi(il1)%psi(j) * kinetic_psphi(j) )
              end do
              DEALLOCATE ( kinetic_aephi, kinetic_psphi )
-             
+
              CALL simpson ( nrc, work, rgrid(nt)%rab(:nrc), &
                   radial_integral_rmc(il1,il2,nt) )
              if (iverbosity > 10) then
                 write(stdout,*) "RMC (SO)  :", nt, l1, l2, &
                      radial_integral_rmc(il1,il2,nt)
              end if
-             
+
              ALLOCATE ( aephi_dvloc_dr ( nrc ), psphi_dvloc_dr ( nrc ) )
-             
+
              CALL radial_derivative ( rgrid(nt)%r(:nrc), &
                   paw_recon(nt)%gipaw_ae_vloc(:nrc), &
                   aephi_dvloc_dr(:nrc) )
              CALL radial_derivative ( rgrid(nt)%r(:nrc), &
                   paw_recon(nt)%gipaw_ps_vloc(:nrc), &
                   psphi_dvloc_dr ( :nrc ) )
-             
+
              !
              ! g tensor, diamagnetic
              !
@@ -563,14 +563,14 @@ CONTAINS
                      * psphi_dvloc_dr(j) * paw_recon(nt)%psphi(il2)%psi(j) ) &
                      * rgrid(nt)%r(j)
              end do
-             
+
              call simpson( nrc, work, rgrid(nt)%rab(:nrc), &
                   radial_integral_diamagnetic_so(il1,il2,nt) )
              if (iverbosity > 10) then
                 write(stdout,*) "DIA (SO)  :", nt, l1, l2, &
                      radial_integral_diamagnetic_so(il1,il2,nt) * alpha
              end if
-             
+
              !
              ! g tensor, paramagnetic
              !
@@ -580,7 +580,7 @@ CONTAINS
                      * psphi_dvloc_dr(j) * paw_recon(nt)%psphi(il2)%psi(j) ) &
                      / rgrid(nt)%r(j)
              end do
-             
+
              if ( iverbosity > 20 ) then
                 if ( l1 == 0 ) then
                    do j = 1, nrc
@@ -589,31 +589,31 @@ CONTAINS
                    write(90,*) ""
                 end if
              end if
-             
+
              call simpson( nrc,work,rgrid(nt)%rab(:nrc), &
                   radial_integral_paramagnetic_so(il1,il2,nt) )
              if ( iverbosity > 10 ) then
                 write(stdout,*) "PARA (SO) :", nt, l1, l2, &
                      radial_integral_paramagnetic_so(il1,il2,nt) * alpha
              end if
-             
+
              DEALLOCATE ( aephi_dvloc_dr, psphi_dvloc_dr )
-             
+
           enddo
-          
+
           DEALLOCATE ( work )
-          
+
        enddo
     enddo
-    
+
     ! terms for paramagnetic
-    
+
     allocate ( lx ( lmaxx**2, lmaxx**2 ) )
     allocate ( ly ( lmaxx**2, lmaxx**2 ) )
     allocate ( lz ( lmaxx**2, lmaxx**2 ) )
-    
+
     allocate ( lm2l ( lmaxx**2 ), lm2m ( lmaxx**2 ) )
-    
+
     lm = 0
     do l = 0, lmaxx - 1
        do m = 0, l
@@ -627,19 +627,19 @@ CONTAINS
           end if
        end do
     end do
-    
+
     lx = 0.0_dp
     ly = 0.0_dp
     lz = 0.0_dp
     do lm2 = 1, lmaxx**2
        do lm1 = 1, lmaxx**2
           if ( lm2l ( lm1 ) /= lm2l ( lm2 ) ) cycle
-          
+
           l = lm2l ( lm1 )
-          
+
           m1 = lm2m ( lm1 )
           m2 = lm2m ( lm2 )
-          
+
           ! L_x, L_y
           if ( m2 == 0 ) then
              if ( m1 == -1 ) then
@@ -670,25 +670,25 @@ CONTAINS
                      / sign_m2
              end if
           end if
-          
+
           ! L_z
           if ( m1 == - m2 ) then
              lz ( lm1, lm2 ) = - m2
           end if
-          
+
        end do
     end do
-    
+
     if (iverbosity > 20) then
        write(stdout,'(A)') "lx:"
        write(stdout,'(9F8.5)') lx
-       
+
        write(stdout,'(A)') "ly:"
        write(stdout,'(9F8.5)') ly
-       
+
        write(stdout,'(A)') "lz:"
        write(stdout,'(9F8.5)') lz
-       
+
        ! Checks
        mysum1 = 0
        mysum2 = 0
@@ -696,7 +696,7 @@ CONTAINS
           do lm1 = 1, lmaxx**2
              if ( lm2l ( lm1 ) /= lm2l ( lm2 ) ) cycle
              l = lm2l ( lm2 )
-             
+
              mysum1(1,l+1) = mysum1(1,l+1) + lx(lm1,lm2)
              mysum2(1,l+1) = mysum2(1,l+1) + lx(lm1,lm2)**2
              mysum1(2,l+1) = mysum1(2,l+1) + ly(lm1,lm2)
@@ -712,39 +712,39 @@ CONTAINS
        write(stdout,'(A,9F8.4)') "Debug, sum2: y = ", mysum2(2,:)
        write(stdout,'(A,9F8.4)') "Debug, sum2: z = ", mysum2(3,:)
     end if
-    
+
     deallocate ( lm2l, lm2m )
-    
+
     ! Compute the shift due to core orbitals
     DO nt = 1, ntyp
-       
+
        IF ( paw_recon(nt)%gipaw_ncore_orbital == 0 ) CYCLE
-       
+
        ALLOCATE ( work(rgrid(nt)%mesh) )
-       
+
        nmr_shift_core(nt) = 0.0
-       
+
        DO core_orb = 1, paw_recon(nt)%gipaw_ncore_orbital
-          
+
           DO j = 1, SIZE(work)
              work(j) = paw_recon(nt)%gipaw_core_orbital(j,core_orb) ** 2 &
                   / rgrid(nt)%r(j)
           END DO
-          
+
           CALL simpson( SIZE(work), work, rgrid(nt)%rab(:), &
                integral )
-          
+
           occupation = 2 * ( &
                2 * paw_recon(nt)%gipaw_core_orbital_l(core_orb) + 1 )
           nmr_shift_core(nt) = nmr_shift_core(nt) + occupation * integral
        END DO
-       
+
        DEALLOCATE ( work )
-       
+
        nmr_shift_core(nt) = nmr_shift_core(nt) * 17.75045395 * 1e-6
-       
+
     END DO
-    
+
     WRITE ( stdout, '()' )
     DO nt = 1, ntyp
        IF ( paw_recon(nt)%gipaw_ncore_orbital == 0 ) THEN
@@ -759,21 +759,21 @@ CONTAINS
        END IF
     END DO
     WRITE ( stdout, '()' )
-    
+
     ! computes the total local potential (external+scf) on the smooth grid
     call setlocal
     call set_vrs (vrs, vltot, v%of_r, kedtau, v%kin_r, nrxx, nspin, doublegrid)
-    
+
     ! compute the D for the pseudopotentials
     call newd
-    
+
     ! set non linear core correction stuff
     !! nlcc_any = ANY ( upf(1:ntyp)%nlcc )
     !!if (nlcc_any) allocate (drc( ngm, ntyp))
-    
+
     !! setup all gradient correction stuff
     !!call setup_dgc
-    
+
     ! computes the number of occupied bands for each k point
     nbnd_occ (:) = 0
     do ik = 1, nks
@@ -783,7 +783,7 @@ CONTAINS
           end if
        end do
     end do
-    
+
     ! computes alpha_pv
     emin = et (1, 1)
     do ik = 1, nks
@@ -812,184 +812,184 @@ CONTAINS
     endif
     ! avoid zero value for alpha_pv
     alpha_pv = max (alpha_pv, 1.0d-2)
-    
+
     call stop_clock('gipaw_setup')
-    
+
   CONTAINS
-    
+
     SUBROUTINE radial_kinetic_energy ( l, rdata, ydata, kin_ydata )
       USE splinelib
-      
+
       INTEGER, INTENT ( IN ) :: l
       REAL(dp), INTENT ( IN ) :: rdata ( : ), ydata ( : )
       REAL(dp), INTENT ( OUT ) :: kin_ydata ( : )
-      
+
       REAL(dp) :: d1
-      
+
       d1 = ( ydata(2) - ydata(1) ) / ( rdata(2) - rdata(1) )
       CALL spline ( rdata, ydata, 0.0_dp, d1, kin_ydata )
-      
+
       kin_ydata = - kin_ydata + l*(l+1) * ydata / rdata ** 2
-      
+
     END SUBROUTINE radial_kinetic_energy
-    
+
     SUBROUTINE radial_derivative ( rdata, ydata, dydata_dr )
       USE splinelib
-      
+
       ! ydata passed as y * r
       REAL(dp), INTENT ( IN ) :: rdata ( : ), ydata ( : )
       REAL(dp), INTENT ( OUT ) :: dydata_dr ( : )
-      
+
       INTEGER :: j
       REAL(dp) :: d1, tab_d2y ( SIZE ( ydata ) )
-      
+
       d1 = ( ydata(2) - ydata(1) ) / ( rdata(2) - rdata(1) )
       CALL spline ( rdata, ydata, 0.0_dp, d1, tab_d2y )
-      
+
       DO j = 1, SIZE ( ydata )
          dydata_dr ( j ) = &
               ( splint_deriv ( rdata, ydata, tab_d2y, rdata ( j ) ) &
               - ydata ( j ) / rdata ( j ) ) / rdata ( j )
       END DO
-      
+
     END SUBROUTINE radial_derivative
-    
+
   END SUBROUTINE gipaw_setup
-  
+
   !****************************************************************************
 
   FUNCTION spline_integration ( xdata, ydata )
-    
+
     USE splinelib, ONLY : spline
-    
+
     IMPLICIT NONE
-    
+
     ! Return type
     REAL ( dp ) :: spline_integration
-    
+
     ! Arguments
     REAL ( dp ), INTENT ( IN ) :: xdata(:), ydata(:)
-    
+
     ! Local
     INTEGER  :: n
     REAL ( dp ) :: startd, startu
     REAL ( dp ) :: d2y(SIZE(xdata))
-    
+
     !--------------------------------------------------------------------------
-    
+
     IF ( SIZE ( xdata ) /= SIZE ( ydata ) ) &
          CALL errore ( "spline_interpolation", &
          "sizes of arguments do not match", 1 )
-    
+
     startu = ( ydata(2) - ydata(1) ) / ( xdata(2) - xdata(1) )
     startu = 0.0
     startd = 0.0
-    
+
     CALL spline ( xdata, ydata, startu, startd, d2y )
-    
+
     spline_integration = 0.0
     DO n = 1, SIZE ( xdata )
        spline_integration = spline_integration &
             + splint_integr ( xdata, ydata, d2y, xdata(n) )
     END DO
-    
+
   END FUNCTION spline_integration
-  
+
   !****************************************************************************
-  
+
   FUNCTION spline_integration_mirror ( xdata, ydata )
-    
+
     !
     ! Like 'spline_integration' but assumes the function to be symmetric
     !    on x axis [i.e. f(-x) = f(x) ]
-    
+
     USE splinelib, ONLY : spline
-    
+
     IMPLICIT NONE
-    
+
     ! Return type
     REAL ( dp ) :: spline_integration_mirror
-    
+
     ! Arguments
     REAL ( dp ), INTENT ( IN ) :: xdata(:), ydata(:)
-    
+
     ! Local
     INTEGER  :: n
     REAL ( dp ) :: startd, startu
     REAL ( dp ) :: xdata2(2*SIZE(xdata)), ydata2(2*SIZE(ydata))
     REAL ( dp ) :: d2y(2*SIZE(xdata))
-    
+
     !--------------------------------------------------------------------------
-    
+
     IF ( SIZE ( xdata ) /= SIZE ( ydata ) ) &
          CALL errore ( "spline_interpolation", &
          "sizes of arguments do not match", 1 )
-    
+
     xdata2(SIZE ( xdata ):1:-1) = - xdata
     xdata2(SIZE ( xdata )+1:) = xdata
-    
+
     ydata2(SIZE ( xdata ):1:-1) = ydata
     ydata2(SIZE ( xdata )+1:) = ydata
-    
+
     startu = ( ydata(2) - ydata(1) ) / ( xdata(2) - xdata(1) )
     startu = 0.0
     startd = 0.0
-    
+
     CALL spline ( xdata2, ydata2, startu, startd, d2y )
-    
+
     spline_integration_mirror = 0.0
     DO n = 1, SIZE ( xdata2 )
        spline_integration_mirror = spline_integration_mirror &
             + splint_integr ( xdata2, ydata2, d2y, xdata2(n) )
     END DO
-    
+
     spline_integration_mirror = spline_integration_mirror / 2
-    
+
   END FUNCTION spline_integration_mirror
-  
+
   !****************************************************************************
-  
+
   FUNCTION splint_integr ( xdata, ydata, d2y, x )
-    
+
     USE splinelib, ONLY : spline
-    
+
     IMPLICIT NONE
-    
+
     ! Return type
     REAL ( dp ) :: splint_integr
-    
+
     ! Arguments
     REAL ( dp ), INTENT ( IN ) :: xdata(:), ydata(:), d2y(:), x
-    
+
     ! Local
     INTEGER  :: khi, klo, xdim
     REAL ( dp ) :: a, b, da, db, h
-    
+
     !--------------------------------------------------------------------------
-    
+
     xdim = SIZE( xdata )
-    
+
     klo = 1
     khi = xdim
-    
+
     klo = MAX( MIN( locate( xdata, x ), ( xdim - 1 ) ), 1 )
-    
+
     khi = klo + 1
-    
+
     h = xdata(khi) - xdata(klo)
-    
+
     a = ( xdata(khi) - x ) / h
     b = ( x - xdata(klo) ) / h
     da = -1 / h
     db =  1 / h
-    
+
     splint_integr = -0.5 * ydata(klo) / da + 0.5 * ydata(khi) / db &
          + (  0.25 / da * d2y(klo) &
          + ( -0.25 / db * d2y(khi) ) ) &
          * ( h**2 ) / 6.D0
-        
+
   END FUNCTION splint_integr
-  
+
   !****************************************************************************
 
          !-------------------------------------------------------------------
@@ -1044,114 +1044,114 @@ CONTAINS
            END IF
            !
          END FUNCTION locate
-  
+
   !****************************************************************************
-  
+
   FUNCTION spline_mirror_extrapolate ( xdata, ydata, x )
-    
+
     USE splinelib, ONLY : spline, splint
-    
+
     IMPLICIT NONE
-    
+
     ! Return type
     REAL ( dp ) :: spline_mirror_extrapolate
-    
+
     ! Arguments
     REAL ( dp ), INTENT ( IN ) :: xdata(:), ydata(:), x
-    
+
     ! Local
     INTEGER  :: n
     REAL ( dp ) :: startd, startu
     REAL ( dp ) :: xdata2(2*SIZE(xdata)), ydata2(2*SIZE(ydata))
     REAL ( dp ) :: d2y(2*SIZE(xdata))
-    
+
     !--------------------------------------------------------------------------
-    
+
     IF ( SIZE ( xdata ) /= SIZE ( ydata ) ) &
          CALL errore ( "spline_mirror_extrapolate", &
          "sizes of arguments do not match", 1 )
-    
+
     n = SIZE ( xdata )
-    
+
     xdata2(n:1:-1) = - xdata
     xdata2(n+1:) = xdata
-    
+
     ydata2(n:1:-1) = ydata
     ydata2(n+1:) = ydata
-    
+
     startu = 0.0
     startd = 0.0
-    
+
     CALL spline ( xdata2, ydata2, startu, startd, d2y )
-    
+
     spline_mirror_extrapolate = splint ( xdata2, ydata2, d2y, x )
-    
+
   END FUNCTION spline_mirror_extrapolate
-  
+
   !****************************************************************************
-  
+
   SUBROUTINE radial_extrapolation ( x, y, x_extrapolate, y_extrapolate, &
        norders )
-    
+
     IMPLICIT NONE
-    
+
     ! Arguments
     REAL ( dp ), INTENT ( IN ) :: x(:), y(:)
     REAL ( dp ), INTENT ( IN ) :: x_extrapolate(:)
     REAL ( dp ), INTENT ( OUT ) :: y_extrapolate(:)
     INTEGER, INTENT ( IN ) :: norders
-    
+
     ! Local
     INTEGER :: n, i, j
-    
+
     REAL ( dp ) :: a(0:norders,0:norders), b(0:norders), c(0:norders)
-    
+
     !--------------------------------------------------------------------------
-    
+
     ! Dirac delta function
     do j = 0, norders
        a(0:norders,j) = x(1:norders+1) ** j
        b(0:norders) = y(1:norders+1)
     END DO
-    
+
     CALL invert ( a, norders + 1 )
-    
+
     c = MATMUL ( a, b )
-    
+
     y_extrapolate = 0.0
     DO i = 1, SIZE ( x_extrapolate )
        DO j = 0, norders
           y_extrapolate(i) = y_extrapolate(i) + c(j) * x_extrapolate(i) ** j
        END DO
     END DO
-    
+
   END SUBROUTINE radial_extrapolation
-  
+
   !****************************************************************************
-  
+
   SUBROUTINE invert ( a, n )
-    
+
     IMPLICIT NONE
-    
+
     ! Arguments
     INTEGER, INTENT ( IN ) :: n
     REAL ( dp ), INTENT ( INOUT ) :: a(n,n)
-    
+
     ! Local
     INTEGER :: ipvt(n)
     INTEGER :: info
     REAL ( dp ) :: cwork(n)
-    
+
     !--------------------------------------------------------------------------
-    
+
     CALL dgetrf ( n, n, a, n, ipvt, info )
     IF ( info /= 0 ) &
          CALL errore ( "invert_in_hypefile", "dgetrf failed", ABS ( info ) )
-    
+
     CALL dgetri ( n, a, n, ipvt, cwork, n, info )
     IF ( info /= 0 ) &
          CALL errore ( "invert_in_hypefile", "dgetri failed", ABS ( info ) )
-    
+
   END SUBROUTINE invert
 
 
@@ -1159,59 +1159,59 @@ CONTAINS
   ! Test whether symmetry axis map into each other
   !-----------------------------------------------------------------------
   SUBROUTINE test_symmetries ( s, nsym )
-    
+
     USE pwcom, ONLY : at, bg
-    
+
     IMPLICIT NONE
-    
+
     ! Arguments
     INTEGER, INTENT ( INOUT ) :: s(3,3,48)
     INTEGER, INTENT ( INOUT ) :: nsym
-    
+
     ! Local
     INTEGER :: i, isym, j
     INTEGER :: s_new(3,3,48)
     INTEGER :: isym_now
     REAL ( dp ) :: vect(3,3), vec2(3), vec3(3), vec4(3)
     REAL ( dp ) :: vect_len, vec4_len
-    
+
     !--------------------------------------------------------------------------
-    
+
     vect = 0.0
     vect(1,1) = 1.0
     vect(2,2) = 1.0
     vect(3,3) = 1.0
-    
+
     isym_now = 0
-    
+
     DO isym = 1, nsym
        DO i = 1, 3
-          
+
           write(6,*) ">>>>>>>>>> ", i, isym
           write(6,'(A,3F12.6)') "AAA ", vect(:,i)
-          
+
           ! Transfer into reciprocal lattice vectors
           vec2 = MATMUL ( TRANSPOSE ( bg ), vect(:,i) )
           write(6,'(A,3F12.6)') "BBB ", vec2
-          
+
           ! Multiply with symmetry operation
           vec3 = MATMUL ( s(:,:,isym), vec2 )
           write(6,'(A,3F12.6)') "CCC ", vec3
-          
+
           ! Transfer into Cartesian coordinates
           vec4 = MATMUL ( at, vec3 )
           write(6,'(A,3F12.6)') "DDD ", vec4
-          
+
           ! Check if the length is the same...
           vect_len = SQRT ( SUM ( vect(:,i) ** 2 ) )
           vec4_len = SQRT ( SUM ( vec4(:) ** 2 ) )
-          
+
           IF ( ABS ( vect_len - vec4_len ) > 1e-8 ) THEN
              write(6,*) "DEBUG: ", vect_len, vec4_len
              CALL errore ( "test_symmetries", &
                   "length of vectors cannot change", -1 )
           END IF
-          
+
           vec4 = vec4 / vec4_len
           DO j = 1, 3
              vec4(j) = ABS ( vec4(j) )
@@ -1224,18 +1224,18 @@ CONTAINS
              isym_now = isym_now + 1
              s_new(:,:,isym_now) = s(:,:,isym)
           END IF
-          
+
           write(6,*) "<<<<<<<<<<<< ", i, isym
-          
+
        END DO
     END DO
-    
+
 !    nsym = isym_now
 !    s = s_new
-    
+
   END SUBROUTINE test_symmetries
-  
- 
+
+
 !-----------------------------------------------------------------------
 END MODULE gipaw_module
 !-----------------------------------------------------------------------

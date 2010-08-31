@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2003 A. Smogunov 
+! Copyright (C) 2003 A. Smogunov
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -11,7 +11,7 @@
 SUBROUTINE local
 !
 ! This subroutine computes 2D eigenfunctions and eigenvalues for
-! the local potential in each slab and performs 2D reduction of 
+! the local potential in each slab and performs 2D reduction of
 ! the plane wave basis set (local_1). Using this reduced basis
 ! set it solves again 2D EV problem (local_2).
 !
@@ -21,11 +21,11 @@ SUBROUTINE local
   USE io_files
   USE cond
 
-  IMPLICIT NONE 
-  
+  IMPLICIT NONE
+
   INTEGER :: ig, il, k, kin, kfin
   REAL(DP) :: edummy
-  COMPLEX(DP), ALLOCATABLE :: psibase(:,:)  
+  COMPLEX(DP), ALLOCATABLE :: psibase(:,:)
   LOGICAL :: exst
 
 !
@@ -119,7 +119,7 @@ SUBROUTINE local
 
   deallocate( psibase )
 
-  call local_2(nrzl,nrzpl,vppotl,psiperl,zkrl)   
+  call local_2(nrzl,nrzpl,vppotl,psiperl,zkrl)
   if(ikind.gt.0) call local_2(nrzs,nrzps,vppots,psipers,zkrs)
   if(ikind.gt.1) call local_2(nrzr,nrzpr,vppotr,psiperr,zkrr)
 
@@ -144,7 +144,7 @@ SUBROUTINE local
      WRITE(4) (((psiperr(ig,il,k),ig=1,n2d),il=1,n2d), &
                                                k=1,nrzpr)
      WRITE(4) ((zkrr(il,k),il=1,n2d),k=1,nrzpr)
-    endif 
+    endif
     CLOSE(unit=4)
   ENDIF
 
@@ -153,7 +153,7 @@ SUBROUTINE local
 END SUBROUTINE local
 !-----------------------------------
 
-subroutine local_1 (edummy, nrz, vppot, n2d, psibase) 
+subroutine local_1 (edummy, nrz, vppot, n2d, psibase)
 
   USE kinds, only : DP
   USE cell_base, ONLY : at, tpiba2
@@ -163,10 +163,10 @@ subroutine local_1 (edummy, nrz, vppot, n2d, psibase)
   USE io_global, ONLY : ionode, ionode_id
   USE parallel_include
   use cond, only : nrx, nry, ngper, gper, ewind, epsproj
-  
+
   IMPLICIT NONE
 
-  INTEGER :: nrz, n2d 
+  INTEGER :: nrz, n2d
   INTEGER :: i, il, j, jl, ig, jg, ipol,      &
              idx, number, nprob, nteam, nteamnow,     &
              info, kin, kfin, is, js
@@ -178,29 +178,29 @@ subroutine local_1 (edummy, nrz, vppot, n2d, psibase)
   REAL(DP), ALLOCATABLE :: el(:), gp(:)
   complex(DP) :: psibase(ngper*npol,ngper*npol),   &
                       vppot(nrz,nrx*nry,npol,npol)
-  COMPLEX(DP), ALLOCATABLE :: amat(:,:), psiprob(:,:)  
+  COMPLEX(DP), ALLOCATABLE :: amat(:,:), psiprob(:,:)
   COMPLEX(DP),PARAMETER :: one=(1.d0,0.d0), zero=(0.d0,0.d0)
 
 
   ALLOCATE( gp( 2 ) )
-  ALLOCATE( el( ngper * npol ) )  
+  ALLOCATE( el( ngper * npol ) )
   ALLOCATE( amat( ngper * npol, ngper * npol ) )
   ALLOCATE( psiprob( ngper * npol, ngper * npol ) )
-  ALLOCATE( fftxy(-nrx:nrx,-nry:nry) )  
+  ALLOCATE( fftxy(-nrx:nrx,-nry:nry) )
 
 !
 ! To form fftxy correspondence
-!      
+!
   fftxy = 0
   DO i=1, nrx
     il=i-1
-    IF (il.GT.nrx/2) il=il-nrx 
+    IF (il.GT.nrx/2) il=il-nrx
     DO j=1, nry
        jl=j-1
-       IF (jl.GT.nry/2) jl=jl-nry  
-       fftxy(il,jl)=i+(j-1)*nrx   
+       IF (jl.GT.nry/2) jl=jl-nry
+       fftxy(il,jl)=i+(j-1)*nrx
     ENDDO
-  ENDDO     
+  ENDDO
 
 !
 ! Starting k and number of CPU
@@ -212,8 +212,8 @@ subroutine local_1 (edummy, nrz, vppot, n2d, psibase)
   nprob=0
 !
 ! set and solve the eigenvalue equation for each slab
-!                                                       
-  DO WHILE(kin.LE.kfin) 
+!
+  DO WHILE(kin.LE.kfin)
 
      amat=(0.d0,0.d0)
      DO ig=1, ngper
@@ -237,7 +237,7 @@ subroutine local_1 (edummy, nrz, vppot, n2d, psibase)
              amat(ig+(is-1)*ngper,ig+(is-1)*ngper)+ &
                    (gper(1,ig)**2 + gper(2,ig)**2)*tpiba2
         ENDDO
-     ENDDO       
+     ENDDO
      CALL hev_ab(ngper*npol, amat, ngper*npol, el, psiprob,      &
                      -1.d1, edummy+ewind, nprob)
 
@@ -245,30 +245,30 @@ subroutine local_1 (edummy, nrz, vppot, n2d, psibase)
     IF ( me_pool.ne.root_pool ) THEN
         CALL mpi_send(nprob,1,MPI_INTEGER,0,17,     &
                                     MPI_COMM_WORLD,info )
-      CALL errore ('n2d reduction','info<>0 in send',info)       
+      CALL errore ('n2d reduction','info<>0 in send',info)
       CALL mpi_send(psiprob,2*ngper*npol*ngper*npol,MPI_DOUBLE_PRECISION,0,18,&
-                                    MPI_COMM_WORLD,info )           
+                                    MPI_COMM_WORLD,info )
       CALL errore ('n2d reduction','info<>0 in send',info)
     ELSE
       CALL gramsh(ngper*npol,nprob,1,nprob,           &
-                 psibase,psiprob,n2d,epsproj) 
+                 psibase,psiprob,n2d,epsproj)
 
       nteamnow=kfin-kin+1
       IF(nteamnow.GT.nteam) nteamnow=nteam
 
-      DO ig=1, nteamnow-1 
+      DO ig=1, nteamnow-1
         CALL mpi_recv(nprob,1,MPI_INTEGER,       &
                        ig,17,MPI_COMM_WORLD,status,info )
         CALL errore ('n2d reduction','info<>0 in recv',info)
         CALL mpi_recv(psiprob,2*ngper*npol*ngper*npol,MPI_DOUBLE_PRECISION,  &
-                       ig,18,MPI_COMM_WORLD,status,info )         
+                       ig,18,MPI_COMM_WORLD,status,info )
         CALL errore ('n2d reduction','info<>0 in recv',info)
         CALL gramsh(ngper*npol,nprob,1,nprob,         &
-                 psibase,psiprob,n2d,epsproj)  
+                 psibase,psiprob,n2d,epsproj)
       ENDDO
     ENDIF
 #else
-    CALL gramsh(ngper*npol,nprob,1,nprob,psibase,psiprob,n2d,epsproj) 
+    CALL gramsh(ngper*npol,nprob,1,nprob,psibase,psiprob,n2d,epsproj)
 #endif
     kin=kin+nteam
 
@@ -277,7 +277,7 @@ subroutine local_1 (edummy, nrz, vppot, n2d, psibase)
 #ifdef __PARA
   CALL mp_barrier()
   CALL mp_bcast(n2d,ionode_id)
-  CALL mp_bcast(psibase,ionode_id) 
+  CALL mp_bcast(psibase,ionode_id)
 #endif
 
   deallocate( gp )
@@ -289,25 +289,25 @@ subroutine local_1 (edummy, nrz, vppot, n2d, psibase)
   return
 end subroutine local_1
 
-subroutine local_2(nrz, nrzp, vppot, psiper, zkr) 
+subroutine local_2(nrz, nrzp, vppot, psiper, zkr)
 
   USE kinds, only : DP
   USE cell_base, ONLY : at, tpiba2
   USE mp,         ONLY : mp_barrier
   USE noncollin_module, ONLY : npol
-  use cond, only : nrx, nry, ngper, n2d, gper, newbg 
+  use cond, only : nrx, nry, ngper, n2d, gper, newbg
 
   IMPLICIT NONE
 
   INTEGER :: nrz, nrzp
   INTEGER :: i, il, j, jl, ig, jg, ipol, k, kp, &
-             info, idx, number, kin, kfin, is, js 
+             info, idx, number, kin, kfin, is, js
   INTEGER, ALLOCATABLE :: fftxy(:,:)
   REAL(DP) :: zkr(n2d,nrzp)
   REAL(DP), ALLOCATABLE :: gp(:)
   complex(DP) :: psiper(n2d,n2d,nrzp),   &
                       vppot(nrz,nrx*nry,npol,npol), aij, zdotc
-  COMPLEX(DP), ALLOCATABLE :: amat(:,:), amat1(:,:), ymat(:,:)  
+  COMPLEX(DP), ALLOCATABLE :: amat(:,:), amat1(:,:), ymat(:,:)
   COMPLEX(DP),PARAMETER :: one=(1.d0,0.d0), zero=(0.d0,0.d0)
 
   allocate( gp( 2 ) )
@@ -396,17 +396,17 @@ end subroutine local_2
 
 FUNCTION number(gp, at, fftxy, nrx, nry)
 !
-! This function receives as input the coordinates of 2D g vector 
-! and write on output its fft position. 
+! This function receives as input the coordinates of 2D g vector
+! and write on output its fft position.
 !
   USE kinds, ONLY: DP
   IMPLICIT NONE
   INTEGER :: nrx, nry, fftxy(-nrx:nrx, -nry:nry), &
              number, n1, n2
-  REAL(DP) :: gp(2), at(3,3), x1, x2 
+  REAL(DP) :: gp(2), at(3,3), x1, x2
 
   x1=gp(1)*at(1,1)+gp(2)*at(2,1)
-  x2=gp(1)*at(1,2)+gp(2)*at(2,2) 
+  x2=gp(1)*at(1,2)+gp(2)*at(2,2)
   n1=NINT(x1)
   n2=NINT(x2)
   IF (n1.LE.nrx/2.AND.n1.GE.-(nrx-1)/2.AND.    &
@@ -420,5 +420,5 @@ FUNCTION number(gp, at, fftxy, nrx, nry)
   ENDIF
 
   RETURN
-END FUNCTION number 
-      
+END FUNCTION number
+

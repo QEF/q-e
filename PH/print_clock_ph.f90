@@ -146,8 +146,9 @@ subroutine print_clock_ph
   WRITE( stdout, * )
   WRITE( stdout,  * ) '     General routines'
   call print_clock ('calbec')
-  call print_clock ('cft3')
-  call print_clock ('cft3s')
+  call print_clock ('fft')
+  call print_clock ('ffts')
+  call print_clock ('fftw')
   call print_clock ('cinterpolate')
   call print_clock ('davcio')
   call print_clock ('write_rec')

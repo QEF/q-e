@@ -51,12 +51,12 @@ subroutine init_us_2_no_phase (npw_, igk_, q_, vkb_)
   !
   if (lmaxkb.lt.0) return
   call start_clock ('init_us_2')
-  allocate (vkb1( npw_,nhm))    
-  allocate (  sk( npw_))    
-  allocate (  qg( npw_))    
-  allocate (  vq( npw_))    
-  allocate ( ylm( npw_, (lmaxkb + 1) **2))    
-  allocate (  gk( 3, npw_))    
+  allocate (vkb1( npw_,nhm))
+  allocate (  sk( npw_))
+  allocate (  qg( npw_))
+  allocate (  vq( npw_))
+  allocate ( ylm( npw_, (lmaxkb + 1) **2))
+  allocate (  gk( 3, npw_))
   !
   do ig = 1, npw_
      gk (1,ig) = q_(1) + g(1, igk_(ig) )
@@ -95,8 +95,8 @@ subroutine init_us_2_no_phase (npw_, igk_, q_, vkb_)
              i0 = INT( qg (ig) / dq ) + 1
              i1 = i0 + 1
              i2 = i0 + 2
-             i3 = i0 + 3     
-             !*apsi TMPTMPTMP      
+             i3 = i0 + 3
+             !*apsi TMPTMPTMP
              if ( i3 > size(tab,1) ) then
                 vq(ig) = 0.0_dp
              else

@@ -8,11 +8,11 @@
 subroutine init_cond (nregion, flag)
 !
 !  This subroutine computes and allocates the z mesh and
-!  the local potential for the left/right leads or for the 
+!  the local potential for the left/right leads or for the
 !  scattering region
 !
 !  input:
-!    nregion  -  number of regions to divide the unit cell    
+!    nregion  -  number of regions to divide the unit cell
 !    flag     -  'l'/'s'/'r'/'t' if the unit cell containes
 !                the left lead/scat. reg./right lead/all of them
 !
@@ -25,18 +25,18 @@ subroutine init_cond (nregion, flag)
   USE ener,       ONLY : ef
   USE gvect,      ONLY : nrx1, nrx2, nrx3, nr1, nr2, nr3, ecutwfc
   USE gsmooth,    ONLY : nrx1s, nrx2s, nrx3s, nr1s, nr2s, nr3s
-  USE cond 
+  USE cond
 
-  implicit none 
+  implicit none
 
-  character(len=1) :: flag 
+  character(len=1) :: flag
   integer :: nregion, nrztot, iz, naux, k, mmax, &
-             nt, ib, ir, nrz1, info, na        
+             nt, ib, ir, nrz1, info, na
   real(DP), parameter :: epsbeta=1.d-4, eps=1.d-8
   real(DP) :: zlen, dz1, dz2, bd1, bd2, bd3, bd4, bd5, &
                    bmax
   real(DP), allocatable :: ztot(:), rsph(:,:), dwid(:), &
-              nrzreg(:)   
+              nrzreg(:)
   complex(DP), allocatable :: vppottot(:,:,:,:)
 
   nrx = nr1s
@@ -111,8 +111,8 @@ subroutine init_cond (nregion, flag)
       mmax = max(mmax, upf(nt)%lll(ib))
       bmax=0.d0
       do ir=2, rgrid(nt)%mesh
-         bmax=max(bmax, upf(nT)%beta(ir,ib)/rgrid(nt)%r(ir)) 
-      enddo  
+         bmax=max(bmax, upf(nT)%beta(ir,ib)/rgrid(nt)%r(ir))
+      enddo
       ir=rgrid(nt)%mesh
       do while (abs(upf(nt)%beta(ir,ib)/rgrid(nt)%r(ir)).le.epsbeta*bmax)
         ir=ir-1
@@ -124,7 +124,7 @@ subroutine init_cond (nregion, flag)
   if (mmax.gt.3) call errore ('allocate','for l>3 -orbitals  &
         &                  the method is not implemented',1)
 !
-! We set up the radii of US spheres to be the same (to avoid 
+! We set up the radii of US spheres to be the same (to avoid
 ! the problem with the spheres crossing or not the boundaries)
 !
   do nt=1, ntyp
@@ -135,12 +135,12 @@ subroutine init_cond (nregion, flag)
       enddo
       do ib=1, upf(nt)%nbeta
          rsph(ib,nt)=bmax
-      enddo  
+      enddo
    endif
-  enddo              
+  enddo
 
 !
-! Move all atoms into the unit cell 
+! Move all atoms into the unit cell
 !
   do na=1, nat
     if(tau(3,na).gt.zlen) tau(3,na)=tau(3,na)-zlen
@@ -182,7 +182,7 @@ subroutine init_cond (nregion, flag)
       &         ( na,atm(ityp(na)),na,                          &
       &         ( tau(nt,na),nt=1,3),na=1,nat )
   write (stdout, 300) nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s,     &
-                 nr1, nr2, nr3, nrx1, nrx2, nrx3 
+                 nr1, nr2, nr3, nrx1, nrx2, nrx3
 300   format (/,5x,                                         &
         &      'nr1s                      = ',i12,/,5x,     &
         &      'nr2s                      = ',i12,/,5x,     &
@@ -255,13 +255,13 @@ subroutine init_cond (nregion, flag)
     efr = ef
   endif
 
-  deallocate(dwid) 
+  deallocate(dwid)
   deallocate (ztot)
   deallocate (rsph)
   deallocate (nrzreg)
   deallocate (vppottot)
 
-  return 
+  return
 end subroutine init_cond
 
 
@@ -269,12 +269,12 @@ subroutine potz_split(vppottot,ztot,vppot,z,nrztot,nrz,nrxy,npol,iz0)
 !
 ! vppottot and ztot --> vppot and z
 !
-  use kinds, only : DP 
+  use kinds, only : DP
   implicit none
   integer :: nrztot, nrz, nrxy, npol, iz0, iz, ixy, ipol1, ipol2
   real(DP) :: ztot(nrztot+1), z(nrz+1), zinit
   complex(DP) ::   vppottot (nrztot, nrxy, npol, npol), &
-                        vppot (nrz, nrxy, npol, npol) 
+                        vppot (nrz, nrxy, npol, npol)
   do iz = 1, nrz
    do ixy = 1, nrxy
      do ipol1 = 1, npol

@@ -26,7 +26,7 @@ SUBROUTINE compute_u_kq(ik, q)
   USE ldaU,                 ONLY : lda_plus_u, swfcatom
   USE lsda_mod,             ONLY : current_spin, lsda, isk
   USE noncollin_module,     ONLY : noncolin, npol
-  USE wavefunctions_module, ONLY : evc  
+  USE wavefunctions_module, ONLY : evc
   USE gvect,                ONLY : g, ngm, ecutwfc, ngl, nrxx, &
                                    nr1, nr2, nr3, nrx1, nrx2, nrx3
   USE cell_base,            ONLY : at, bg, omega, tpiba, tpiba2
@@ -70,7 +70,7 @@ SUBROUTINE compute_u_kq(ik, q)
   allocate( et_old(nbnd,nkstot) )
   et_old = et
 
-  !! debug 
+  !! debug
   !!WRITE(stdout, '(5X,"compute_u_kq: q = (",F10.4,",",F10.4,",",F10.4,")")') q
   !!WRITE(stdout, '(5X,"  isolve = ", I2)') isolve
 
@@ -140,7 +140,7 @@ SUBROUTINE compute_u_kq(ik, q)
   evq = evc
   CALL get_buffer( evc, nwordwfc, iunwfc, ik)
 
-  CALL stop_clock( 'c_bands' )  
+  CALL stop_clock( 'c_bands' )
   RETURN
 
 END SUBROUTINE compute_u_kq

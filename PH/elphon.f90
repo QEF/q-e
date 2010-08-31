@@ -169,7 +169,7 @@ SUBROUTINE elphel (npe, imode0, dvscfins)
   !      Original routine written by Francesco Mauri
   !
   USE kinds, ONLY : DP
-  USE gsmooth, ONLY: nrxxs, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, nls
+  USE gsmooth, ONLY: nrxxs, nls
   USE wavefunctions_module,  ONLY: evc
   USE io_files, ONLY: iunigk
   USE klist, ONLY: xk
@@ -302,7 +302,6 @@ SUBROUTINE elphsum ( )
   USE constants, ONLY : pi, rytoev
   USE ions_base,     ONLY : nat, ityp, tau
   USE cell_base,     ONLY : at, bg, ibrav, symm_type
-  USE gvect, ONLY: nr1, nr2, nr3
   USE lsda_mod, ONLY: isk
   USE klist, ONLY: nks, xk, wk, nelec
   USE ktetra, ONLY: nk1, nk2, nk3

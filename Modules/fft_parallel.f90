@@ -82,8 +82,6 @@ SUBROUTINE tg_cft3s( f, dfft, isgn, use_task_groups )
   LOGICAL                    :: use_tg
   !
   !
-  CALL start_clock( 'cft3s' )
-  !
   IF( present( use_task_groups ) ) THEN
      use_tg = use_task_groups
   ELSE
@@ -188,8 +186,6 @@ SUBROUTINE tg_cft3s( f, dfft, isgn, use_task_groups )
   IF( use_tg ) THEN
      DEALLOCATE( yf )
   ENDIF
-  !
-  CALL stop_clock( 'cft3s' )
   !
   RETURN
   !

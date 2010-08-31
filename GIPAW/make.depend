@@ -9,6 +9,8 @@ apply_vel.o : ../PW/becmod.o
 apply_vel.o : ../PW/pwcom.o
 apply_vel.o : gipaw_module.o
 biot_savart.o : ../Modules/constants.o
+biot_savart.o : ../Modules/fft_base.o
+biot_savart.o : ../Modules/fft_interfaces.o
 biot_savart.o : ../Modules/kind.o
 biot_savart.o : ../PW/pwcom.o
 biot_savart.o : gipaw_module.o
@@ -48,6 +50,8 @@ compute_u_kq.o : gipaw_module.o
 efg.o : ../Modules/atom.o
 efg.o : ../Modules/cell_base.o
 efg.o : ../Modules/constants.o
+efg.o : ../Modules/fft_base.o
+efg.o : ../Modules/fft_interfaces.o
 efg.o : ../Modules/io_files.o
 efg.o : ../Modules/io_global.o
 efg.o : ../Modules/ions_base.o
@@ -66,6 +70,8 @@ efg.o : gipaw_module.o
 efg.o : paw_gipaw.o
 g_tensor_crystal.o : ../Modules/cell_base.o
 g_tensor_crystal.o : ../Modules/constants.o
+g_tensor_crystal.o : ../Modules/fft_base.o
+g_tensor_crystal.o : ../Modules/fft_interfaces.o
 g_tensor_crystal.o : ../Modules/io_files.o
 g_tensor_crystal.o : ../Modules/io_global.o
 g_tensor_crystal.o : ../Modules/ions_base.o
@@ -122,6 +128,8 @@ greenfunction.o : ../PW/becmod.o
 greenfunction.o : ../PW/noncol.o
 greenfunction.o : ../PW/pwcom.o
 greenfunction.o : gipaw_module.o
+h_psiq.o : ../Modules/fft_base.o
+h_psiq.o : ../Modules/fft_interfaces.o
 h_psiq.o : ../Modules/kind.o
 h_psiq.o : ../Modules/uspp.o
 h_psiq.o : ../Modules/wavefunctions.o
@@ -157,6 +165,8 @@ init_us_2_no_phase.o : ../Modules/kind.o
 init_us_2_no_phase.o : ../Modules/splinelib.o
 init_us_2_no_phase.o : ../Modules/uspp.o
 init_us_2_no_phase.o : ../PW/pwcom.o
+j_para.o : ../Modules/fft_base.o
+j_para.o : ../Modules/fft_interfaces.o
 j_para.o : ../Modules/kind.o
 j_para.o : ../PW/pwcom.o
 j_para.o : gipaw_module.o

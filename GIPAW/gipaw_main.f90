@@ -9,7 +9,7 @@
 PROGRAM gipaw_main
   !-----------------------------------------------------------------------
   !
-  ! ... This is the main driver of the magnetic response program. 
+  ! ... This is the main driver of the magnetic response program.
   ! ... It controls the initialization routines.
   ! ... Features: NMR chemical shifts
   !...            EPR g-tensor
@@ -55,47 +55,47 @@ PROGRAM gipaw_main
   !
   CALL gipaw_readin()
   io_level = 1
- 
+
   ! read ground state wavefunctions
   cell_factor = 1.1d0
   call read_file
   call gipaw_openfil
-  
+
   if ( gamma_only ) call errore ( 'gipaw_main', 'gamma_only == .true.', 1 )
-  
+
   CALL gipaw_allocate()
   CALL gipaw_setup()
   CALL gipaw_summary()
   CALL print_clock( 'GIPAW' )
-  
+
   ! convert q_gipaw into units of tpiba
   q_gipaw = q_gipaw / tpiba
-  
+
   ! calculation
   select case ( trim(job) )
   case ( 'nmr' )
-     call suscept_crystal   
-     
+     call suscept_crystal
+
   case ( 'g_tensor' )
      call g_tensor_crystal
-     
+
   case ( 'f-sum' )
-     call test_f_sum_rule 
-     
+     call test_f_sum_rule
+
   case ( 'efg' )
      call efg
-     
+
   case ( 'hyperfine' )
      call hyperfine
-     
+
   case default
      call errore('gipaw_main', 'wrong or undefined job in input', 1)
   end select
-  
+
   ! print timings and stop the code
   CALL print_clock_gipaw()
   CALL stop_code( .TRUE. )
-  
+
   STOP
-  
+
 END PROGRAM gipaw_main

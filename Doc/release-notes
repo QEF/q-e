@@ -8,6 +8,8 @@ New in CVS version:
 
 Incompatible changes in CVS version:
 
+  * pw.x no longer performs NEB calculations. iNEB is now computed
+    by a separate code, NEB/neb.x
   * iq1,iq2,iq3 removed from input in ph.x; use start_q, last_q instead
 
 Fixed in CVS version:
@@ -15,6 +17,7 @@ Fixed in CVS version:
   * CP: Input external pressure is in KBar and not in GPa like it was
     formerly in CP. Input value for variable "press" in cell namelist
     should be given in KBar as stated in the documentation!
+  * CP: incorrect stress calculated in the spin-polarized case 
 
 Fixed in version 4.2.1:
 

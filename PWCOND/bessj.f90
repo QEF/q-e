@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2003 A. Smogunov 
+! Copyright (C) 2003 A. Smogunov
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -10,31 +10,31 @@ function bessj(n,x)
 ! It computes the Bessel functions J(n,x)
 !
   USE kinds, only : DP
-  
+
   implicit none
-  integer, parameter :: iacc=40 
-  integer :: n, j, jsum, m   
+  integer, parameter :: iacc=40
+  integer :: n, j, jsum, m
   real(DP), parameter :: bigno=1.d10, bigni=1.d-10
   real(DP) :: x, bessj, bessj0, bessj1, bj, bjm, bjp, &
                    sum, tox, ans
-     
-  if (n.lt.2) then 
+
+  if (n.lt.2) then
      if (n.eq.0) bessj=bessj0(x)
      if (n.eq.1) bessj=bessj1(x)
   else
-     if (x.eq.0.d0) then 
+     if (x.eq.0.d0) then
        ans=0.d0
-     elseif (abs(x).gt.1.d0*n) then 
+     elseif (abs(x).gt.1.d0*n) then
         tox=2.d0/abs(x)
         bjm=bessj0(abs(x))
         bj=bessj1(abs(x))
-        do j=1, n-1  
+        do j=1, n-1
           bjp=j*tox*bj-bjm
           bjm=bj
           bj=bjp
-        enddo 
+        enddo
         ans=bj
-     else 
+     else
         tox=2.d0/abs(x)
         m=2*((n+nint(sqrt(1.d0*(iacc*n))))/2)
         ans=0.d0
@@ -42,11 +42,11 @@ function bessj(n,x)
         sum=0.d0
         bjp=0.d0
         bj=1.d0
-        do j=m, 1, -1  
+        do j=m, 1, -1
            bjm=j*tox*bj-bjp
            bjp=bj
            bj=bjm
-           if (abs(bj).gt.bigno) then 
+           if (abs(bj).gt.bigno) then
               bj=bj*bigni
               bjp=bjp*bigni
               ans=ans*bigni
@@ -79,7 +79,7 @@ function bessj0(x)
      ans2=57568490411.d0+y*(1029532985.d0+y*(9494680.718d0+     &
       y*(59272.64853d0+y*(267.8532712d0+y*1.d0))))
      bessj0=ans1/ans2
-  else 
+  else
      ax=abs(x)
      z=8.d0/ax
      y=z**2
@@ -94,12 +94,12 @@ function bessj0(x)
   endif
 
   return
-end function bessj0 
+end function bessj0
 !-----------------------------------
 
 function bessj1(x)
   USE kinds, only : DP
-  real(DP) :: x, ax, xx, y, z, ans, ans1, ans2, bessj1      
+  real(DP) :: x, ax, xx, y, z, ans, ans1, ans2, bessj1
 
   if (abs(x).le.8.d0) then
      y=x**2

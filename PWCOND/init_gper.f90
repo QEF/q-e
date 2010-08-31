@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2003 A. Smogunov 
+! Copyright (C) 2003 A. Smogunov
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -7,28 +7,28 @@
 !
 subroutine init_gper(ik)
 !
-! - To compute the number of 2D G vectors with |G+k|^2<ecut2d (ngper), 
+! - To compute the number of 2D G vectors with |G+k|^2<ecut2d (ngper),
 ! - the number of shells (ngpsh) for them,
 !
-  USE io_global,  ONLY :  stdout 
+  USE io_global,  ONLY :  stdout
   USE noncollin_module, ONLY : npol
   USE cell_base,   ONLY : bg, tpiba, tpiba2
   USE gvect,       ONLY : nr1, nr2
-  USE cond  
+  USE cond
   implicit none
-  integer :: ipol, igper, icount, ik, k, ig, i, il, j, jl, iw 
+  integer :: ipol, igper, icount, ik, k, ig, i, il, j, jl, iw
   integer, allocatable :: nshell(:,:)
   real(DP) :: norm2
   real(DP), parameter :: eps=1.d-8
   real(DP), allocatable :: gnorm2(:)
 
-  allocate( gnorm2( nrx * nry ) ) 
+  allocate( gnorm2( nrx * nry ) )
   allocate( nshell( nrx, nry ) )
 !
 ! Compute ngper, ngpsh, and (i,j) --> shell
 !
   do i=1, nrx
-    do j=1, nry 
+    do j=1, nry
       nshell(i,j)=0
     enddo
   enddo
@@ -49,10 +49,10 @@ subroutine init_gper(ik)
                  tpiba2
       if (norm2.le.ecut2d.and.(i*j).ne.1) then
          ngper=ngper+1
-         icount=0  
+         icount=0
          do iw=1, ngpsh
            if (abs(norm2-gnorm2(iw)).gt.eps) then
-             icount=icount+1 
+             icount=icount+1
            else
              nshell(i,j)=iw
            endif
@@ -61,10 +61,10 @@ subroutine init_gper(ik)
            ngpsh=ngpsh+1
            gnorm2(ngpsh)=norm2
            nshell(i,j)=ngpsh
-         endif 
+         endif
       endif
     enddo
-  enddo              
+  enddo
 
 !
 ! Global variables
@@ -73,7 +73,7 @@ subroutine init_gper(ik)
   if (lorb) allocate( nl_2ds( npol*ngper ) )
   if (lorb) allocate( nl_2d( npol*ngper ) )
   allocate( ninsh( ngpsh ) )
-  allocate( gnsh( ngpsh ) ) 
+  allocate( gnsh( ngpsh ) )
 !
 ! construct the g perpendicular vectors
 !
@@ -119,7 +119,7 @@ subroutine init_gper(ik)
          END IF
       endif
     enddo
-  enddo             
+  enddo
 !
 ! To set up |g| and number of g in each shell
 !
@@ -134,8 +134,8 @@ subroutine init_gper(ik)
 
   WRITE( stdout,*) 'ngper, shell number = ', ngper, ngpsh
 
-  deallocate(gnorm2) 
-  deallocate(nshell) 
+  deallocate(gnorm2)
+  deallocate(nshell)
 
-  return 
+  return
 end subroutine init_gper

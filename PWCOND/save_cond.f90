@@ -9,7 +9,7 @@ subroutine save_cond (lwrite, lsr, ef, nrz, nocros, noins,  &
                       norb, r, rab, betar)
 !
 !  This subroutine writes/reads variables needed for PWCOND
-!  so that the punch file from PW calculations is not needed.  
+!  so that the punch file from PW calculations is not needed.
 !
   use kinds, only : DP
   USE parameters, only : npsx
@@ -22,14 +22,14 @@ subroutine save_cond (lwrite, lsr, ef, nrz, nocros, noins,  &
      zpseul, zpseul_nc, zl, vppotl, tblms, cross, taunews, zpseus,&
      zpseus_nc, zs, vppots, tblmr, crosr, taunewr, zpseur,        &
      zpseur_nc, zr, vppotr, iofspin, nbrx, save_file
-      
 
-  implicit none 
 
-  integer :: lsr, nrz, nocros, noins, norb, i, j, k, l, m     
+  implicit none
+
+  integer :: lsr, nrz, nocros, noins, norb, i, j, k, l, m
   logical :: lwrite
   REAL(DP) :: ef, r(ndmx,npsx), rab(ndmx,npsx),    &
-                   betar(ndmx,nbrx,npsx) 
+                   betar(ndmx,nbrx,npsx)
   integer, ALLOCATABLE :: ind(:,:), tblm(:,:), cros(:,:)
   REAL(DP), ALLOCATABLE :: z(:), zpseu(:,:,:), re(:,:,:,:), &
                                 im(:,:,:,:), c(:), taunew(:,:)
@@ -65,8 +65,8 @@ subroutine save_cond (lwrite, lsr, ef, nrz, nocros, noins,  &
       taunew = taunewl
       tblm = tblml
       cros = crosl
-      if (noncolin) then 
-         zpseu_nc = zpseul_nc 
+      if (noncolin) then
+         zpseu_nc = zpseul_nc
       else
          zpseu = zpseul
       endif
@@ -96,7 +96,7 @@ subroutine save_cond (lwrite, lsr, ef, nrz, nocros, noins,  &
     open (3,file=trim(save_file)//ext,form='formatted', &
                       status='unknown')
     write(3,*) nspin, npol, noncolin, lspinorb
-    if(nspin.eq.2) write(3,*) iofspin 
+    if(nspin.eq.2) write(3,*) iofspin
     write(3,*) alat, tpiba, tpiba2
     write(3,'(6f20.14)') ((at(i,j),i=1,3),j=1,3)
     write(3,'(6f20.14)') ((bg(i,j),i=1,3),j=1,3)
@@ -219,7 +219,7 @@ subroutine save_cond (lwrite, lsr, ef, nrz, nocros, noins,  &
     allocate( taunew(4,norb) )
     allocate( tblm(4,norb) )
     allocate( cros(norb, nrz) )
-    if (noncolin) then 
+    if (noncolin) then
        allocate(zpseu_nc(2, norb, norb, nspin))
     else
        allocate( zpseu(2, norb, norb) )
@@ -305,7 +305,7 @@ subroutine save_cond (lwrite, lsr, ef, nrz, nocros, noins,  &
       allocate( taunewl(4,norb) )
       allocate( tblml(4,norb) )
       allocate( crosl(norb, nrz) )
-      if (noncolin) then 
+      if (noncolin) then
         allocate(zpseul_nc(2, norb, norb, nspin))
       else
         allocate( zpseul(2, norb, norb) )
@@ -326,7 +326,7 @@ subroutine save_cond (lwrite, lsr, ef, nrz, nocros, noins,  &
       allocate( taunews(4,norb) )
       allocate( tblms(4,norb) )
       allocate( cross(norb, nrz) )
-      if (noncolin) then 
+      if (noncolin) then
         allocate(zpseus_nc(2, norb, norb, nspin))
       else
         allocate( zpseus(2, norb, norb) )
@@ -336,7 +336,7 @@ subroutine save_cond (lwrite, lsr, ef, nrz, nocros, noins,  &
       taunews = taunew
       tblms = tblm
       cross = cros
-      if (noncolin) then 
+      if (noncolin) then
         zpseus_nc = zpseu_nc
       else
         zpseus = zpseu
@@ -347,7 +347,7 @@ subroutine save_cond (lwrite, lsr, ef, nrz, nocros, noins,  &
       allocate( taunewr(4,norb) )
       allocate( tblmr(4,norb) )
       allocate( crosr(norb, nrz) )
-      if (noncolin) then 
+      if (noncolin) then
         allocate(zpseur_nc(2, norb, norb, nspin))
       else
         allocate( zpseur(2, norb, norb) )
@@ -357,7 +357,7 @@ subroutine save_cond (lwrite, lsr, ef, nrz, nocros, noins,  &
       taunewr = taunew
       tblmr = tblm
       crosr = cros
-      if (noncolin) then 
+      if (noncolin) then
         zpseur_nc = zpseu_nc
       else
         zpseur = zpseu
@@ -370,12 +370,12 @@ subroutine save_cond (lwrite, lsr, ef, nrz, nocros, noins,  &
     deallocate( taunew )
     deallocate( tblm )
     deallocate( cros )
-    if (noncolin) then 
+    if (noncolin) then
       deallocate(zpseu_nc)
     else
       deallocate( zpseu )
     endif
- 
+
     call stop_clock('save_cond')
 
 end subroutine save_cond

@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2009 A. Smogunov 
+! Copyright (C) 2009 A. Smogunov
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -8,20 +8,20 @@
 !
 MODULE realus_scatt
 !
-! Some extra subroutines to the module realus 
-! needed for the scattering problem 
+! Some extra subroutines to the module realus
+! needed for the scattering problem
 !
- INTEGER,  ALLOCATABLE :: orig_or_copy(:,:) 
+ INTEGER,  ALLOCATABLE :: orig_or_copy(:,:)
 
  CONTAINS
 
  SUBROUTINE realus_scatt_0()
 !
-! Calculates orig_or_copy array 
+! Calculates orig_or_copy array
 !
    USE constants,        ONLY : pi
    USE ions_base,        ONLY : nat, tau, ityp
-   USE cell_base,        ONLY : at, bg 
+   USE cell_base,        ONLY : at, bg
    USE realus
    USE gvect,            ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx
    USE uspp,             ONLY : okvan
@@ -106,7 +106,7 @@ MODULE realus_scatt
    USE ions_base,        ONLY : nat, ityp
    USE lsda_mod,         ONLY : nspin
    USE scf,              ONLY : rho
-   USE realus          
+   USE realus
    USE uspp,             ONLY : okvan, becsum
    USE uspp_param,       ONLY : upf, nhm, nh
    USE noncollin_module, ONLY : noncolin

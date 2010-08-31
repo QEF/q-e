@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2003 A. Smogunov 
+! Copyright (C) 2003 A. Smogunov
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -27,15 +27,15 @@ subroutine kbloch(ntot, val)
      g2=AIMAG(val(in))
      rho=DSQRT(g1**2+g2**2)
      k1=DACOS(g1/rho)
-     k2=-DLOG(rho)       
-     if (g2.le.0.d0) k1=tpi-k1 
+     k2=-DLOG(rho)
+     if (g2.le.0.d0) k1=tpi-k1
      k1=k1/tpi
      k2=k2/tpi
-     k1=k1-1.d0*INT(k1) 
-     if (k1.gt.0.5d0) k1=k1-1.d0        
-     val(in)=CMPLX(k1,k2,kind=DP) 
+     k1=k1-1.d0*INT(k1)
+     if (k1.gt.0.5d0) k1=k1-1.d0
+     val(in)=CMPLX(k1,k2,kind=DP)
   !   WRITE( stdout,'(i5, 2f12.7)') in,  DBLE(val(in)), AIMAG(val(in))
-  enddo          
+  enddo
 
   return
 end subroutine kbloch

@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2003 A. Smogunov 
+! Copyright (C) 2003 A. Smogunov
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -92,7 +92,7 @@ implicit none
   amat=(0.d0,0.d0)
 !
 ! To form  zps=zpseu-e*qq
-!                                                                            
+!
   do iorb=1, norbs
     do iorb1=1, norbs
       if (noncolin) then
@@ -145,7 +145,7 @@ implicit none
       amat(ig+2*n2d,2*n2d+iorb)=funl1(ig, iorb)
       amat(ig+3*n2d,2*n2d+iorb)=fundl1(ig, iorb)
     enddo
-  enddo                                                                 
+  enddo
 !     4) to add reflection and transmission parts
   do ig=1, n2d
     do n=1, n2d+npol*nocrosl
@@ -158,7 +158,7 @@ implicit none
     enddo
   enddo
 !
-!     3) Part coming from the definion of C_alpha 
+!     3) Part coming from the definion of C_alpha
 !
   do iorb=1, norbs*npol
     do n=1, 2*n2d
@@ -202,7 +202,7 @@ implicit none
       amat(4*n2d+npol*(norbs+nocrosl)+ig,3*n2d+npol*(norbs+nocrosl)+n)= &
                          -kcoefr(ig,n)
     enddo
-  enddo                                                                 
+  enddo
 !     7) to match C_alpha for crossing orbitals with the tips ones
   do ig=1, nocrosl*npol
     amat(4*n2d+norbs*npol+ig,2*n2d+ig)=(1.d0,0.d0)
@@ -244,7 +244,7 @@ implicit none
 !
 ! Solve the system on the coefficiens vec1 of scattering states
 !
-  call ZGESV(ntran, nchan_in, amat, ntran, ipiv, vec1, ntran, info) 
+  call ZGESV(ntran, nchan_in, amat, ntran, ipiv, vec1, ntran, info)
 
   if (info.ne.0) call errore('transmit','problems with the linear system', &
                                                               abs(info))
@@ -280,7 +280,7 @@ implicit none
 !
   if (nchan_out.ne.0) then
     call sunitary(nchan_in, nchan_out, smat, info)
-    call errore('transmit','S matrix is not unitary',-abs(info)) 
+    call errore('transmit','S matrix is not unitary',-abs(info))
   endif
 !--
 
@@ -430,5 +430,5 @@ implicit none
   deallocate(veceig)
 
   return
-end subroutine transmit                                     
+end subroutine transmit
 

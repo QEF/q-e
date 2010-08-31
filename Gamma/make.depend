@@ -1,5 +1,7 @@
 a_h.o : ../Modules/cell_base.o
 a_h.o : ../Modules/constants.o
+a_h.o : ../Modules/fft_base.o
+a_h.o : ../Modules/fft_interfaces.o
 a_h.o : ../Modules/funct.o
 a_h.o : ../Modules/kind.o
 a_h.o : ../Modules/uspp.o
@@ -45,6 +47,8 @@ d2ion.o : ../Modules/kind.o
 d2ion.o : ../Modules/mp.o
 d2ion.o : ../Modules/mp_global.o
 dgradcorr.o : ../Modules/constants.o
+dgradcorr.o : ../Modules/fft_base.o
+dgradcorr.o : ../Modules/fft_interfaces.o
 dgradcorr.o : ../Modules/kind.o
 dielec.o : ../Modules/ions_base.o
 dielec.o : ../Modules/mp.o
@@ -55,6 +59,9 @@ drhodv.o : ../Modules/mp.o
 drhodv.o : ../Modules/mp_global.o
 drhodv.o : ../PW/pwcom.o
 drhodv.o : cgcom.o
+dvb_cc.o : ../Modules/fft_base.o
+dvb_cc.o : ../Modules/fft_interfaces.o
+dvb_cc.o : ../Modules/kind.o
 dvpsi_e.o : ../Modules/ions_base.o
 dvpsi_e.o : ../Modules/kind.o
 dvpsi_e.o : ../Modules/uspp.o
@@ -65,6 +72,8 @@ dvpsi_e.o : cgcom.o
 dvpsi_kb.o : ../Modules/atom.o
 dvpsi_kb.o : ../Modules/cell_base.o
 dvpsi_kb.o : ../Modules/constants.o
+dvpsi_kb.o : ../Modules/fft_base.o
+dvpsi_kb.o : ../Modules/fft_interfaces.o
 dvpsi_kb.o : ../Modules/ions_base.o
 dvpsi_kb.o : ../Modules/kind.o
 dvpsi_kb.o : ../Modules/uspp.o
@@ -80,6 +89,8 @@ dynmat_init.o : cgcom.o
 dynmatcc.o : ../Modules/atom.o
 dynmatcc.o : ../Modules/cell_base.o
 dynmatcc.o : ../Modules/constants.o
+dynmatcc.o : ../Modules/fft_base.o
+dynmatcc.o : ../Modules/fft_interfaces.o
 dynmatcc.o : ../Modules/ions_base.o
 dynmatcc.o : ../Modules/kind.o
 dynmatcc.o : ../Modules/mp.o
@@ -119,7 +130,12 @@ pw_dot.o : ../Modules/kind.o
 pw_dot.o : ../Modules/mp.o
 pw_dot.o : ../Modules/mp_global.o
 pw_dot.o : ../PW/pwcom.o
+rhod2vkb.o : ../Modules/cell_base.o
+rhod2vkb.o : ../Modules/constants.o
+rhod2vkb.o : ../Modules/fft_base.o
+rhod2vkb.o : ../Modules/fft_interfaces.o
 rhod2vkb.o : ../Modules/ions_base.o
+rhod2vkb.o : ../Modules/kind.o
 rhod2vkb.o : ../Modules/mp.o
 rhod2vkb.o : ../Modules/mp_global.o
 rhod2vkb.o : ../Modules/uspp.o

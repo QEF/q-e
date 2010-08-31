@@ -225,9 +225,9 @@ subroutine localdos (ldos, ldoss, dos_ef)
   !check
   !      check =0.d0
   !      do is=1,nspin_mag
-  !         call cft3(ldos(1,is),nr1,nr2,nr3,nrx1,nrx2,nrx3,-1)
+  !         call fwfft('Dense',ldos(:,is),dfftp)
   !         check = check + omega* DBLE(ldos(nl(1),is))
-  !         call cft3(ldos(1,is),nr1,nr2,nr3,nrx1,nrx2,nrx3,+1)
+  !         call invfft('Dense',ldos(:,is),dfftp)
   !      end do
   !      WRITE( stdout,*) ' check ', check, dos_ef
   !check
@@ -461,9 +461,9 @@ subroutine localdos_paw (ldos, ldoss, becsum1, dos_ef)
   !check
   !      check =0.d0
   !      do is=1,nspin_mag
-  !         call cft3(ldos(1,is),nr1,nr2,nr3,nrx1,nrx2,nrx3,-1)
+  !         call fwfft('Dense',ldos(:,is),dfftp)
   !         check = check + omega* DBLE(ldos(nl(1),is))
-  !         call cft3(ldos(1,is),nr1,nr2,nr3,nrx1,nrx2,nrx3,+1)
+  !         call invfft('Dense',ldos(:,is),dfftp)
   !      end do
   !      WRITE( stdout,*) ' check ', check, dos_ef
   !check

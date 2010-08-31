@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2003 A. Smogunov 
+! Copyright (C) 2003 A. Smogunov
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -9,7 +9,7 @@
 !
 subroutine allocate_cond
 !
-! This subroutine allocates some needed variables 
+! This subroutine allocates some needed variables
 !
   USE gvect,            ONLY : nr3
   use lsda_mod,         ONLY : nspin
@@ -30,10 +30,10 @@ subroutine allocate_cond
   allocate( zkrr( n2d, nrzpr ) )
 
 
-  allocate( fun0(n2d, 2*n2d) ) 
+  allocate( fun0(n2d, 2*n2d) )
   allocate( fun1(n2d, 2*n2d) )
   allocate( fund0(n2d, 2*n2d) )
-  allocate( fund1(n2d, 2*n2d) ) 
+  allocate( fund1(n2d, 2*n2d) )
 
   IF (lorb) THEN
     allocate( funz0(n2d, 2*n2d+norbf*npol, MAX(nrzpl,nrzps)) )
@@ -51,7 +51,7 @@ subroutine allocate_cond
   ENDIF
 
   IF (norbf>0) THEN
-     allocate( funl0(n2d, norbf*npol) )     
+     allocate( funl0(n2d, norbf*npol) )
      allocate( funl1(n2d, norbf*npol) )
      allocate( fundl0(n2d, norbf*npol) )
      allocate( fundl1(n2d, norbf*npol) )
@@ -61,20 +61,20 @@ subroutine allocate_cond
   ENDIF
 
   allocate( kvall(2*(n2d+npol*nocrosl)) )
-  allocate( kfunl(n2d, 2*(n2d+npol*nocrosl)) ) 
-  allocate( kfundl(n2d, 2*(n2d+npol*nocrosl)) )  
+  allocate( kfunl(n2d, 2*(n2d+npol*nocrosl)) )
+  allocate( kfundl(n2d, 2*(n2d+npol*nocrosl)) )
   IF (nocrosl>0) THEN
-     allocate( kintl(nocrosl*npol, 2*(n2d+npol*nocrosl)) )  
-     allocate( kcoefl(nocrosl*npol, 2*(n2d+npol*nocrosl)) )  
+     allocate( kintl(nocrosl*npol, 2*(n2d+npol*nocrosl)) )
+     allocate( kcoefl(nocrosl*npol, 2*(n2d+npol*nocrosl)) )
   ENDIF
 
   if(ikind.ne.0) then
-    allocate( kvalr(2*(n2d+npol*nocrosr)) ) 
+    allocate( kvalr(2*(n2d+npol*nocrosr)) )
     allocate( kfunr(n2d, 2*(n2d+npol*nocrosr)) )
     allocate( kfundr(n2d, 2*(n2d+npol*nocrosr)) )
     IF (nocrosr>0) THEN
        allocate( kintr(nocrosr*npol, 2*(n2d+npol*nocrosr)) )
-       allocate( kcoefr(nocrosr*npol, 2*(n2d+npol*nocrosr)) )      
+       allocate( kcoefr(nocrosr*npol, 2*(n2d+npol*nocrosr)) )
     ENDIF
   endif
 

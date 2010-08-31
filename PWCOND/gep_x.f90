@@ -7,11 +7,11 @@
 !
 subroutine gep_x(n, amt, bmt, eigen, veigen)
 !
-! It solves GEP: A X = lambda B X using LAPACK routines 
+! It solves GEP: A X = lambda B X using LAPACK routines
 !
   USE kinds, only : DP
-  USE cond, only : delgep 
-  implicit none  
+  USE cond, only : delgep
+  implicit none
 
   integer :: i, n, info, lwork
   complex(DP) :: trywork
@@ -19,7 +19,7 @@ subroutine gep_x(n, amt, bmt, eigen, veigen)
   complex(DP) ::                                   &
                  amt(n,n),  &  ! A
                  bmt(n,n),  &  ! B
-                 eigen(n),  &  ! lambda 
+                 eigen(n),  &  ! lambda
                  veigen(n,n)   ! X
   complex(DP), allocatable :: alpha(:), beta(:), work(:)
 
@@ -28,7 +28,7 @@ subroutine gep_x(n, amt, bmt, eigen, veigen)
   allocate( rwork( 8*n ) )
 !
 !  for some reason the lapack routine does not work if the diagonal elements
-!  of the matrices are exactly zero. We tested these routines on 
+!  of the matrices are exactly zero. We tested these routines on
 !  pc_ifc, ibmsp and origin.
 !
   do i=1,n
@@ -37,27 +37,27 @@ subroutine gep_x(n, amt, bmt, eigen, veigen)
   enddo
 
   call ZGGEV('N', 'V', n, amt, n, bmt, n, alpha, beta, veigen, n, veigen, &
-              n, trywork, -1, rwork, info)          
+              n, trywork, -1, rwork, info)
 
   lwork=abs(trywork)
   allocate( work( lwork ) )
 
-  call ZGGEV('N', 'V', n, amt, n, bmt, n, alpha, beta, veigen, n, veigen, & 
-              n, work, lwork, rwork, info)          
+  call ZGGEV('N', 'V', n, amt, n, bmt, n, alpha, beta, veigen, n, veigen, &
+              n, work, lwork, rwork, info)
 
   if(info.ne.0) call errore('gep_x','error on zggev',info)
 !
 ! lambda = alpha / beta
-!          
+!
   do i=1, n
     eigen(i)=alpha(i)/beta(i)
 !    write(6,'(i5, 2f40.20)') i,  DBLE(eigen(i)), AIMAG(eigen(i))
   enddo
 
   deallocate(work)
-  deallocate(rwork)   
+  deallocate(rwork)
   deallocate(beta)
   deallocate(alpha)
 
   return
-end subroutine gep_x 
+end subroutine gep_x

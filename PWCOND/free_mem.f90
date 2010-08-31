@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2003 A. Smogunov 
+! Copyright (C) 2003 A. Smogunov
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -26,7 +26,7 @@ subroutine free_mem
 
   deallocate(newbg)
 
-  deallocate(fun0) 
+  deallocate(fun0)
   deallocate(fun1)
   deallocate(fund0)
   deallocate(fund1)
@@ -55,7 +55,7 @@ subroutine free_mem
      deallocate(kcoefl)
   END IF
 
-  if (ikind.ne.0) then 
+  if (ikind.ne.0) then
     deallocate(kvalr)
     deallocate(kfunr)
     deallocate(kfundr)

@@ -38,7 +38,6 @@ data_structure_coarse.o : ../Modules/mp_global.o
 data_structure_coarse.o : ../Modules/stick_base.o
 data_structure_coarse.o : gcoarse_mod.o
 dvdr_tao.o : ../Modules/cell_base.o
-dvdr_tao.o : ../Modules/fft_base.o
 dvdr_tao.o : ../Modules/ions_base.o
 dvdr_tao.o : ../Modules/kind.o
 dvdr_tao.o : ../Modules/mp.o
@@ -77,6 +76,7 @@ v_h_from_rho_r.o : ../Modules/cell_base.o
 v_h_from_rho_r.o : ../Modules/constants.o
 v_h_from_rho_r.o : ../Modules/control_flags.o
 v_h_from_rho_r.o : ../Modules/fft_base.o
+v_h_from_rho_r.o : ../Modules/fft_interfaces.o
 v_h_from_rho_r.o : ../Modules/kind.o
 v_h_from_rho_r.o : ../Modules/mp.o
 v_h_from_rho_r.o : ../Modules/mp_global.o

@@ -17,7 +17,7 @@ SUBROUTINE apply_vel(psi, vel_psi, ik, ipol, q)
   USE kinds,                ONLY : DP
   USE ions_base,            ONLY : nat, ityp, ntyp => nsp
   USE klist,                ONLY : xk
-  USE wvfct,                ONLY : nbnd, npwx, npw, igk  
+  USE wvfct,                ONLY : nbnd, npwx, npw, igk
   USE becmod,               ONLY : bec_type, becp, calbec, &
                                    allocate_bec_type, deallocate_bec_type
   USE uspp,                 ONLY : nkb, vkb
@@ -47,7 +47,7 @@ SUBROUTINE apply_vel(psi, vel_psi, ik, ipol, q)
 
   ! set dk
   dk = q_gipaw/2.d0
-  
+
   ! if no projectors, return
   if (nkb == 0) return
 
@@ -61,7 +61,7 @@ SUBROUTINE apply_vel(psi, vel_psi, ik, ipol, q)
 
 #if 1
   !====================================================================
-  ! compute (1/2|dk|) ( V^{NL}_{k+dk+q,k+dk} |psi> - 
+  ! compute (1/2|dk|) ( V^{NL}_{k+dk+q,k+dk} |psi> -
   !                     V^{NL}_{k-dk+q,k-dk} |psi> )
   !====================================================================
   call allocate_bec_type (nkb, nbnd, becp)
@@ -122,7 +122,7 @@ SUBROUTINE apply_vel(psi, vel_psi, ik, ipol, q)
 
   ! restore NL-potential at k
   vkb = vkb_save
-  
+
   ! free memory
   deallocate(aux, vkb_save)
 

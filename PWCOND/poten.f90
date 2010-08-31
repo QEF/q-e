@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2003 A. Smogunov 
+! Copyright (C) 2003 A. Smogunov
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -8,7 +8,7 @@
 ! Generalized to spinor wavefunctions and spin-orbit Oct. 2004 (ADC).
 !
 !
-SUBROUTINE poten(vppot,nrz,z) 
+SUBROUTINE poten(vppot,nrz,z)
 !
 ! This subroutine computes the 2D Fourier components of the
 ! local potential in each slab.
@@ -20,17 +20,17 @@ SUBROUTINE poten(vppot,nrz,z)
   USE noncollin_module, ONLY : noncolin, npol
   USE cond
   USE mp,               ONLY : mp_bcast
-  USE io_global,        ONLY : ionode_id 
+  USE io_global,        ONLY : ionode_id
   USE fft_scalar,       ONLY : cfft3d
   USE fft_base,         ONLY : grid_gather
 
   IMPLICIT NONE
 
-  INTEGER ::                                                & 
+  INTEGER ::                                                &
              i, j, ij, ijx, k, n, p, il, &
              ix, jx, kx, nrz, info
   INTEGER :: iis, jjs, is(4), js(4), ispin, nspin_eff
-  INTEGER, ALLOCATABLE :: ipiv(:) 
+  INTEGER, ALLOCATABLE :: ipiv(:)
 
   REAL(DP), PARAMETER :: eps = 1.d-8
   REAL(DP) :: arg, bet, z(nrz+1), zlen
@@ -108,7 +108,7 @@ DO ispin=1,nspin_eff
          auxr(:) = v%of_r(:,ispin)
       ENDIF
    ELSE
-      auxr(:) = vltot(:) + v%of_r(:,iofspin) 
+      auxr(:) = vltot(:) + v%of_r(:,iofspin)
    ENDIF
 !
 ! To collect the potential from different CPUs
@@ -128,7 +128,7 @@ DO ispin=1,nspin_eff
 
   DO i = 1, nrx
     IF(i.GT.nrx/2+1) THEN
-        ix = nr1-(nrx-i) 
+        ix = nr1-(nrx-i)
     ELSE
         ix = i
     ENDIF
@@ -137,20 +137,20 @@ DO ispin=1,nspin_eff
          jx = nr2-(nry-j)
       ELSE
          jx = j
-      ENDIF 
+      ENDIF
       ij = i+(j-1)*nrx
-      ijx = ix+(jx-1)*nrx1 
+      ijx = ix+(jx-1)*nrx1
 
       DO k = 1, nrz
         il = k-1
         IF (il.GT.nrz/2) il = il-nrz
         IF(il.LE.nr3/2.AND.il.GE.-(nr3-1)/2) THEN
 
-         IF(k.GT.nrz/2+1) THEN 
-            kx = nr3-(nrz-k)  
+         IF(k.GT.nrz/2+1) THEN
+            kx = nr3-(nrz-k)
          ELSE
             kx = k
-         ENDIF 
+         ENDIF
          vppot(k, ij, is(ispin), js(ispin)) = aux(ijx+(kx-1)*nrx1*nrx2)
 
         ENDIF
@@ -181,12 +181,12 @@ ENDIF
 !  enddo
 !  stop
 
-  DEALLOCATE(ipiv) 
-  DEALLOCATE(gz) 
-  DEALLOCATE(aux) 
-  DEALLOCATE(auxr) 
-  DEALLOCATE(amat) 
-  DEALLOCATE(amat0) 
+  DEALLOCATE(ipiv)
+  DEALLOCATE(gz)
+  DEALLOCATE(aux)
+  DEALLOCATE(auxr)
+  DEALLOCATE(amat)
+  DEALLOCATE(amat0)
 #ifdef __PARA
   deallocate(allv)
 #endif

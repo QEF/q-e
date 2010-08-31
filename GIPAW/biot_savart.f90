@@ -16,9 +16,10 @@ SUBROUTINE biot_savart(jpol)
   USE kinds,                ONLY : DP
   USE constants,            ONLY : fpi
   USE klist,                ONLY : xk
-  USE wvfct,                ONLY : nbnd, npwx, npw, igk  
-  USE gvect,                ONLY : ngm, gstart, nr1, nr2, nr3, nrx1, nrx2, &
-                                   nrx3, nrxx, nl, nlm, g, gg, ecutwfc, gcutm
+  USE wvfct,                ONLY : nbnd, npwx, npw, igk
+  USE gvect,                ONLY : ngm, gstart, nrxx, nl, nlm, g, gg
+  USE fft_base,             ONLY : dffts
+  USE fft_interfaces,       ONLY : fwfft, invfft
   USE pwcom
   USE gipaw_module,         ONLY : b_ind, b_ind_r, j_bare, alpha
 
@@ -28,21 +29,20 @@ SUBROUTINE biot_savart(jpol)
 
   !-- local variables ----------------------------------------------------
   COMPLEX(DP), allocatable :: aux(:), j_of_g(:,:)
-  REAL(DP) :: gk
   complex(dp) :: fact
   INTEGER :: ig, ipol, ispin
 
   call start_clock('biot_savart')
 
   ! allocate memory
-  allocate(aux(nrxxs), j_of_g(1:ngm,3))  
+  allocate(aux(nrxxs), j_of_g(1:ngm,3))
 
   ! transform current to reciprocal space
   j_of_g(:,:) = 0.0_dp
   do ispin = 1, nspin
     do ipol = 1, 3
       aux(1:nrxxs) = j_bare(1:nrxxs,ipol,jpol,ispin)
-      call cft3s(aux, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, -1)
+      CALL fwfft ('Smooth', aux, dffts)
       j_of_g(1:ngm,ipol) = j_of_g(1:ngm,ipol) + aux(nl(1:ngm))
     enddo
   enddo
@@ -59,10 +59,10 @@ SUBROUTINE biot_savart(jpol)
   do ipol = 1, 3
     aux = (0.0_dp,0.0_dp)
     aux(nl(1:ngm)) = b_ind(1:ngm,ipol,jpol)
-    call cft3s(aux, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, 1)
+    CALL invfft ('Smooth', aux, dffts)
     b_ind_r(1:nrxxs,ipol,jpol) = real(aux(1:nrxxs))
   enddo
-  
+
   deallocate(aux, j_of_g)
   call stop_clock('biot_savart')
 
@@ -72,11 +72,12 @@ END SUBROUTINE biot_savart
 
 SUBROUTINE field_to_reciprocal_space
   USE kinds,                ONLY : DP
-  USE gvect,                ONLY : ngm, gstart, nr1, nr2, nr3, nrx1, nrx2, &
-                                   nrx3, nrxx, nl, nlm, g, gg, ecutwfc, gcutm
-  USE pwcom
+  USE fft_base,             ONLY : dffts
+  USE fft_interfaces,       ONLY : fwfft
+  USE gvect,                ONLY : ngm, gstart, nrxx, nl, nlm, g, gg
+  USE gsmooth,              ONLY : nrxxs
   USE gipaw_module
- 
+
   IMPLICIT NONE
   complex(dp), allocatable :: aux(:)
   integer :: ipol, jpol
@@ -86,7 +87,7 @@ SUBROUTINE field_to_reciprocal_space
   do ipol = 1, 3
     do jpol = 1, 3
       aux(1:nrxxs) = b_ind_r(1:nrxxs,ipol,jpol)
-      call cft3s(aux, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, -1)
+      CALL fwfft ('Smooth', aux, dffts)
       b_ind(1:ngm,ipol,jpol) = aux(nl(1:ngm))
     enddo
   enddo

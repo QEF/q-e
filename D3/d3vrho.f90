@@ -18,8 +18,7 @@ subroutine d3vrho()
   USE ions_base,            ONLY : nat, ityp, ntyp => nsp, tau
   USE uspp,                 ONLY : dvan
   USE scf,                  ONLY : rho
-  USE gvect,                ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx
-  USE gvect,                ONLY : g, ngm, nl, igtongl
+  USE gvect,                ONLY : nrxx, g, ngm, nl, igtongl
   USE wvfct,                ONLY : npw, npwx, nbnd, igk, wg
   USE vlocal,               ONLY : vloc
   USE klist,                ONLY : xk

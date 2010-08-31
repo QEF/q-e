@@ -19,7 +19,7 @@ subroutine init_orbitals (zlen, bd1, bd2, z, nrz, rsph, lsr)
 !   bd1, bd2 -  two boundaries of the region under interest
 !   z(nrz)   -  mesh in the z direction
 !   rsph     -  radii of the spheres
-!   lsr      -  1/2/3 if the region is left lead/scat. reg./right lead 
+!   lsr      -  1/2/3 if the region is left lead/scat. reg./right lead
 !
 
   use cond
@@ -28,7 +28,7 @@ subroutine init_orbitals (zlen, bd1, bd2, z, nrz, rsph, lsr)
   use spin_orb, only: lspinorb
   use ions_base,  only : atm, nat, ityp, ntyp=>nsp, tau
   use uspp_param, only : upf, nbetam
-  use uspp,       only : deeq, deeq_nc, qq, qq_so 
+  use uspp,       only : deeq, deeq_nc, qq, qq_so
   use atom,       only : rgrid
 
   implicit none
@@ -39,7 +39,7 @@ subroutine init_orbitals (zlen, bd1, bd2, z, nrz, rsph, lsr)
   integer, allocatable :: orbind(:,:), tblm(:,:), cros(:,:), natih(:,:)
   real(DP), parameter :: eps=1.d-8
   real(DP) :: ledge, redge, ledgel, redgel, ledger, redger, &
-                   bd1, bd2, zlen, z(nrz+1), rsph(nbetam, ntyp)   
+                   bd1, bd2, zlen, z(nrz+1), rsph(nbetam, ntyp)
   real(DP), allocatable :: taunew(:,:), zpseu(:,:,:)
 
   complex(DP), allocatable :: zpseu_nc(:,:,:,:)
@@ -58,13 +58,13 @@ subroutine init_orbitals (zlen, bd1, bd2, z, nrz, rsph, lsr)
      do ib = 1, upf(nt)%nbeta
         ledge = tau(3,na)-rsph(ib,nt)
         ledgel = ledge-zlen
-        ledger = ledge+zlen 
+        ledger = ledge+zlen
         redge = tau(3,na)+rsph(ib,nt)
         redgel = redge-zlen
         redger = redge+zlen
         if (ledge.le.bd1.and.redge.gt.bd2) &
             call errore ('init_orbitals','Too big atomic spheres',1)
-        if (ledge.gt.bd1.and.redge.le.bd2) then  
+        if (ledge.gt.bd1.and.redge.le.bd2) then
            noins = noins+2*upf(nt)%lll(ib)+1
            orbind(na,ib) = 0
 
@@ -74,7 +74,7 @@ subroutine init_orbitals (zlen, bd1, bd2, z, nrz, rsph, lsr)
            if(ledger.le.bd2.and.redger.gt.bd2) then
              rnocros = rnocros+2*upf(nt)%lll(ib)+1
              orbind(na,ib) = 2
-           endif 
+           endif
 
         elseif(ledger.le.bd2.and.redger.gt.bd2) then
            rnocros = rnocros+2*upf(nt)%lll(ib)+1
@@ -83,7 +83,7 @@ subroutine init_orbitals (zlen, bd1, bd2, z, nrz, rsph, lsr)
 
         elseif(ledge.le.bd2.and.redge.gt.bd2) then
            rnocros = rnocros+2*upf(nt)%lll(ib)+1
-           orbind(na,ib) = 4 
+           orbind(na,ib) = 4
            if(ledgel.le.bd1.and.redgel.gt.bd1) then
              lnocros = lnocros+2*upf(nt)%lll(ib)+1
              orbind(na,ib) = 5
@@ -97,7 +97,7 @@ subroutine init_orbitals (zlen, bd1, bd2, z, nrz, rsph, lsr)
      enddo
   enddo
   norb = noins + lnocros + rnocros
-  nocros = (lnocros + rnocros)/2 
+  nocros = (lnocros + rnocros)/2
 !------------------------------------
 
 !-----------------------------
@@ -116,9 +116,9 @@ subroutine init_orbitals (zlen, bd1, bd2, z, nrz, rsph, lsr)
   ENDIF
 
   ilocros = 0
-  ioins =  lnocros 
+  ioins =  lnocros
   irocros = ioins + noins
-  
+
   do na = 1, nat
     nt = ityp(na)
     ih = 0
@@ -150,7 +150,7 @@ subroutine init_orbitals (zlen, bd1, bd2, z, nrz, rsph, lsr)
             taunew(ipol,ilocros)=tau(ipol,na)
           enddo
           taunew(4,ilocros) = rsph(ib,nt)
-        endif 
+        endif
         if(orbind(na,ib).eq.2.or.orbind(na,ib).eq.3) then
           irocros = irocros + 1
           natih(1,irocros)=na
@@ -178,7 +178,7 @@ subroutine init_orbitals (zlen, bd1, bd2, z, nrz, rsph, lsr)
           enddo
           taunew(4,irocros) = rsph(ib,nt)
         endif
-        if(orbind(na,ib).eq.5.or.orbind(na,ib).eq.6) then         
+        if(orbind(na,ib).eq.5.or.orbind(na,ib).eq.6) then
           ilocros = ilocros + 1
           natih(1,ilocros)=na
           natih(2,ilocros)=ih
@@ -201,7 +201,7 @@ subroutine init_orbitals (zlen, bd1, bd2, z, nrz, rsph, lsr)
 !
   do iorb=1,lnocros
      do iorb1=iorb+1,lnocros
-        if (taunew(3,iorb1).lt.taunew(3,iorb)-1.d-8) then 
+        if (taunew(3,iorb1).lt.taunew(3,iorb)-1.d-8) then
            do ind=iorb,iorb1-1
               call exchange(natih(1,ind),tblm(1,ind),taunew(1,ind), &
                            natih(1,iorb1),tblm(1,iorb1),taunew(1,iorb1) )
@@ -234,7 +234,7 @@ subroutine init_orbitals (zlen, bd1, bd2, z, nrz, rsph, lsr)
 
   do iorb = 1, norb
     taunew(3,iorb) = taunew(3,iorb) - bd1
-  enddo 
+  enddo
 !--------------------------
 
 !-------------------------
@@ -268,7 +268,7 @@ subroutine init_orbitals (zlen, bd1, bd2, z, nrz, rsph, lsr)
   orbin = 1
   orbfin = lnocros+noins
   do k = 1, 2
-   do iorb = orbin, orbfin 
+   do iorb = orbin, orbfin
      nt = tblm(1,iorb)
      ib = tblm(2,iorb)
      if(upf(nt)%tvanp.or.lspinorb) then
@@ -290,7 +290,7 @@ subroutine init_orbitals (zlen, bd1, bd2, z, nrz, rsph, lsr)
            else
              zpseu(1,iorb,iorb1)=deeq(ih,ih1,na,iofspin)
              zpseu(2,iorb,iorb1) = qq(ih,ih1,nt)
-           endif  
+           endif
          endif
        enddo
      else
@@ -315,7 +315,7 @@ subroutine init_orbitals (zlen, bd1, bd2, z, nrz, rsph, lsr)
 !--------------------------
 
 !--------------------------
-! Allocation 
+! Allocation
 !
   if(lsr.eq.1) then
     norbl = norb
@@ -370,7 +370,7 @@ subroutine init_orbitals (zlen, bd1, bd2, z, nrz, rsph, lsr)
           zpseus_nc = zpseu_nc
        else
           zpseus = zpseu
-       endif      
+       endif
        do ips=1, ntyp
           rs(1:rgrid(ips)%mesh,ips) = rgrid(ips)%r(1:rgrid(ips)%mesh)
           rabs(1:rgrid(ips)%mesh,ips) = rgrid(ips)%rab(1:rgrid(ips)%mesh)

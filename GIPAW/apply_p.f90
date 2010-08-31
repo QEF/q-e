@@ -10,10 +10,10 @@ SUBROUTINE apply_p(psi, p_psi, ik, ipol, q)
   !
   ! ... Apply the kinetic part of the velocity operator
   ! ... |p_psi> = (G+k+q/2)_{ipol} |psi>
-  !  
+  !
   USE kinds,                ONLY : DP
   USE klist,                ONLY : xk
-  USE wvfct,                ONLY : nbnd, npwx, npw, igk  
+  USE wvfct,                ONLY : nbnd, npwx, npw, igk
   USE pwcom
   USE gipaw_module
 
@@ -42,4 +42,4 @@ SUBROUTINE apply_p(psi, p_psi, ik, ipol, q)
 
 END SUBROUTINE apply_p
 
- 
+

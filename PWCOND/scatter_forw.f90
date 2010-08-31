@@ -1,6 +1,6 @@
 
 !
-! Copyright (C) 2003 A. Smogunov 
+! Copyright (C) 2003 A. Smogunov
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -18,8 +18,8 @@ subroutine scatter_forw(nrz, nrzp, z, psiper, zk, norb, tblm, cros, &
 ! solutions of the Schrodinger equation in the region zin<z<zfin
 ! on which the general solution may be constructed:
 !        \sum a_n Phi_n + \sum a_alpha Phi_alpha
-! It computes also the integrals (intw1, intw2) of  Phi_n and 
-! Phi_alpha over beta-functions inside the unit cell. 
+! It computes also the integrals (intw1, intw2) of  Phi_n and
+! Phi_alpha over beta-functions inside the unit cell.
 !
   USE constants, ONLY : tpi
   USE parameters, only : npsx
@@ -31,7 +31,7 @@ subroutine scatter_forw(nrz, nrzp, z, psiper, zk, norb, tblm, cros, &
   IMPLICIT NONE
 
   INTEGER ::      &
-        nrz, nrzp, norb,& 
+        nrz, nrzp, norb,&
         cros(norb,nrz), &
         tblm(4,norb),   &
         k, kz, n, lam, ig, lam1, mdim, itt, nbb, iorb, iorb1,   &
@@ -39,23 +39,23 @@ subroutine scatter_forw(nrz, nrzp, z, psiper, zk, norb, tblm, cros, &
   INTEGER :: i, j, kp1, info
   INTEGER, ALLOCATABLE :: ipiv(:), inslab(:)
   real(DP) :: z(nrz+1), r(1:ndmx,npsx), rab(1:ndmx,npsx),        &
-                   betar(1:ndmx,nbrx,npsx), taunew(4,norb) 
+                   betar(1:ndmx,nbrx,npsx), taunew(4,norb)
   REAL(DP), PARAMETER :: eps=1.d-8
-  REAL(DP) :: ddot, dz, tr, dz1 
+  REAL(DP) :: ddot, dz, tr, dz1
   COMPLEX(DP), PARAMETER :: cim=(0.d0,1.d0), one=(1.d0, 0.d0), &
-                                 zero=(0.d0,0.d0) 
+                                 zero=(0.d0,0.d0)
   COMPLEX(DP) :: int1d, int2d, c, d, e, f, arg,&
                       zdotc, fact, factm, psiper(n2d,n2d,nrzp), &
                       zk(n2d,nrzp)
   COMPLEX(DP), ALLOCATABLE ::   &
      psigper(:,:), & ! psigper(g,lam)=newbg(g,lam1) psiper(lam1,lam)
      w0(:,:,:),    & ! w0(z,g,m) are 2D Fourier components (see four.f)
-     w(:,:,:),     & ! w(z,lam,m)=psigper(g,lam)^* \exp{-igr^m_perp} 
-                     !                            w0(z,g,m) 
-     hmat(:,:),    & ! ci(m,lam,k)=\int_{z(k)}^{z(k+1)} dz 
+     w(:,:,:),     & ! w(z,lam,m)=psigper(g,lam)^* \exp{-igr^m_perp}
+                     !                            w0(z,g,m)
+     hmat(:,:),    & ! ci(m,lam,k)=\int_{z(k)}^{z(k+1)} dz
                      !          w(z,lam,m)^*\exp{izk(lam,k)(z-z(k))}
      amat(:,:),    & ! di(m,lam,k)=\int_{z(k)}^{z(k+1)} dz
-                     !          w(z,lam,m)^*\exp{izk(lam,k)(z(k+1)-z)}   
+                     !          w(z,lam,m)^*\exp{izk(lam,k)(z(k+1)-z)}
      xmat(:,:),    & !
      ci(:,:),      & ! ci(m,lam,k)=\int_{z(k)}^{z(k+1)} dz
                      !          w(z,lam,m)^*\exp{izk(lam,k)(z-z(k))}
@@ -65,7 +65,7 @@ subroutine scatter_forw(nrz, nrzp, z, psiper, zk, norb, tblm, cros, &
      dix(:,:,:),   & !
      f0(:,:), f1(:,:), f2(:,:), f_aux(:,:), &
      zkk(:), ezk(:), emzk(:), zk2(:), ezk1(:,:), emzk1(:,:)
-                               
+
   CALL start_clock('scatter_forw')
 
 !
@@ -129,7 +129,7 @@ subroutine scatter_forw(nrz, nrzp, z, psiper, zk, norb, tblm, cros, &
 !--- initial conditions for a_n coefficients
   xmat = 0.d0
   do lam = n2d+1, 2*n2d
-    xmat(lam,lam) = 1.d0 
+    xmat(lam,lam) = 1.d0
   enddo
 !---
 
@@ -142,7 +142,7 @@ subroutine scatter_forw(nrz, nrzp, z, psiper, zk, norb, tblm, cros, &
 !
     do lam=1,n2d
       arg=cim*tpi*zk(lam, kp)*dz
-      zkk(lam)=cim*zk(lam,kp)*tpiba  
+      zkk(lam)=cim*zk(lam,kp)*tpiba
       ezk(lam)=exp(arg)
       emzk(lam)=exp(-arg)
       zk2(lam)=cim/(2.d0*zk(lam,kp)*tpiba)
@@ -236,7 +236,7 @@ subroutine scatter_forw(nrz, nrzp, z, psiper, zk, norb, tblm, cros, &
 !----
 
 !-----------
-! computes f1 and f2 
+! computes f1 and f2
 !
     IF (norb>0) THEN
        f1 = 0.d0
@@ -281,14 +281,14 @@ subroutine scatter_forw(nrz, nrzp, z, psiper, zk, norb, tblm, cros, &
           do lam = 1, n2d
              f1(lam,i) = -zkk(lam)*f1(lam,i)
           enddo
-       enddo 
+       enddo
        CALL zgemm('n','n',n2d,norb*npol,n2d,-one,psiper(1,1,kp), &
                   n2d,f1,n2d,one,fundl1,n2d)
     END IF
 !-------
 
 !------
-!    constructs matrices 
+!    constructs matrices
     do i = 1, n2d
       do j = 1, n2d
         amat(i,j) = fun1(i,j)
@@ -320,7 +320,7 @@ subroutine scatter_forw(nrz, nrzp, z, psiper, zk, norb, tblm, cros, &
           do j = 1, n2d
              f_aux(i,j) = intw1(i,j)
           enddo
-       enddo   
+       enddo
        call zgemm('n','n',norb*npol,n2d,n2d,one,f_aux,norb*npol,      &
                   xmat(1,n2d+1),2*n2d,one,intw1(1,n2d+1),norbf*npol)
        call zgemm('n','n',norb*npol,norb*npol,n2d,one,f_aux,norb*npol,&
@@ -351,7 +351,7 @@ subroutine scatter_forw(nrz, nrzp, z, psiper, zk, norb, tblm, cros, &
 ! rotates all previous functions if lorb is .true.
 !
     IF (lorb) THEN
-       DO kp1=kp,2,-1 
+       DO kp1=kp,2,-1
           DO i = 1, n2d
              DO j = 1, n2d
                 amat(i,j) = funz0(i,j,kp1)
@@ -364,7 +364,7 @@ subroutine scatter_forw(nrz, nrzp, z, psiper, zk, norb, tblm, cros, &
        END DO
     END IF
 
-11  continue 
+11  continue
 
 !------
 !   Add to the integrals
@@ -407,8 +407,8 @@ subroutine scatter_forw(nrz, nrzp, z, psiper, zk, norb, tblm, cros, &
      amat(i,i) = amat(i,i) + 1.d0
      amat(n2d+i,i) = amat(n2d+i,i) - zkk(i)
      do j = 1, norb*npol
-       f1(i,j)=xmat(n2d+i,2*n2d+j)*ezk(i)+f2(i,j) 
-       f2(i,j)=f1(i,j)*zkk(i) 
+       f1(i,j)=xmat(n2d+i,2*n2d+j)*ezk(i)+f2(i,j)
+       f2(i,j)=f1(i,j)*zkk(i)
      enddo
     enddo
     CALL zgemm('n','n',n2d,2*n2d,n2d,one,psiper(1,1,kp),     &
@@ -440,7 +440,7 @@ subroutine scatter_forw(nrz, nrzp, z, psiper, zk, norb, tblm, cros, &
 !    wave functions on the left boundary
   do lam = 1, n2d
     arg = cim*tpi*zk(lam,1)*dz
-    zkk(lam) = cim*zk(lam,1)*tpiba  
+    zkk(lam) = cim*zk(lam,1)*tpiba
     ezk(lam) = exp(arg)
   enddo
 
@@ -452,8 +452,8 @@ subroutine scatter_forw(nrz, nrzp, z, psiper, zk, norb, tblm, cros, &
     amat(i,n2d+i) = amat(i,n2d+i) + 1.d0
     amat(n2d+i,n2d+i) = amat(n2d+i,n2d+i) + zkk(i)
     do j = 1, norb*npol
-      f1(i,j) = funl0(i,j)*ezk(i)+f0(i,j) 
-      f2(i,j) = -f1(i,j)*zkk(i) 
+      f1(i,j) = funl0(i,j)*ezk(i)+f0(i,j)
+      f2(i,j) = -f1(i,j)*zkk(i)
     enddo
   enddo
   CALL zgemm('n','n',n2d,2*n2d,n2d,one,psiper(1,1,1),     &

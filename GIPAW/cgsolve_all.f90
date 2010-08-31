@@ -109,11 +109,11 @@ subroutine cgsolve_all (h_psi, cg_psi, e, d0psi, dpsi, h_diag, &
   ! coefficient of quadratic form
   !
   call start_clock ('cgsolve')
-  allocate ( g(ndmx,nbnd), t(ndmx,nbnd), h(ndmx,nbnd), hold(ndmx ,nbnd) )    
-  allocate (a(nbnd), c(nbnd))    
-  allocate (conv ( nbnd))    
-  allocate (rho(nbnd),rhoold(nbnd))    
-  allocate (eu (  nbnd))    
+  allocate ( g(ndmx,nbnd), t(ndmx,nbnd), h(ndmx,nbnd), hold(ndmx ,nbnd) )
+  allocate (a(nbnd), c(nbnd))
+  allocate (conv ( nbnd))
+  allocate (rho(nbnd),rhoold(nbnd))
+  allocate (eu (  nbnd))
   !      WRITE( stdout,*) g,t,h,hold
 
   kter_eff = 0.d0
@@ -167,7 +167,7 @@ subroutine cgsolve_all (h_psi, cg_psi, e, d0psi, dpsi, h_diag, &
      do ibnd = 1, nbnd
         if (conv (ibnd) .eq.0) then
 !
-!          change sign to h 
+!          change sign to h
 !
            call dscal (2 * ndim, - 1.d0, h (1, ibnd), 1)
            if (iter.ne.1) then
@@ -177,7 +177,7 @@ subroutine cgsolve_all (h_psi, cg_psi, e, d0psi, dpsi, h_diag, &
 
 !
 ! here hold is used as auxiliary vector in order to efficiently compute t = A*h
-! it is later set to the current (becoming old) value of h 
+! it is later set to the current (becoming old) value of h
 !
            lbnd = lbnd+1
            call zcopy (ndim, h (1, ibnd), 1, hold (1, lbnd), 1)
@@ -219,7 +219,7 @@ subroutine cgsolve_all (h_psi, cg_psi, e, d0psi, dpsi, h_diag, &
            call zaxpy (ndim, dclambda, t(1,lbnd), 1, g(1,ibnd), 1)
            !
            !    save current (now old) h and rho for later use
-           ! 
+           !
            call zcopy (ndim, h(1,ibnd), 1, hold(1,ibnd), 1)
            rhoold (ibnd) = rho (ibnd)
         endif

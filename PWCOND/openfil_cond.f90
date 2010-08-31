@@ -48,7 +48,7 @@ SUBROUTINE openfil_cond()
 
   !
   ! ... iunwfc=10: read/write wfc from/to file
-  ! ... iunwfc=-1: copy wfc to/from RAM 
+  ! ... iunwfc=-1: copy wfc to/from RAM
   !
   IF ( io_level > 0 ) THEN
      iunwfc = 10

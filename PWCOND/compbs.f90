@@ -9,10 +9,10 @@
 !
 !
 subroutine compbs(lleft, nocros, norb, nchan, kval, kfun,  &
-                  kfund, kint, kcoef, ikk, ien)  
+                  kfund, kint, kcoef, ikk, ien)
 !
 ! Using the basis functions obtained by scatter_forw it computes
-! the complex band structure (CBS) of the lead. 
+! the complex band structure (CBS) of the lead.
 ! Some variables needed for wave-function matching in transmission
 ! calculation are constructed and saved.
 !
@@ -27,24 +27,24 @@ subroutine compbs(lleft, nocros, norb, nchan, kval, kfun,  &
   implicit none
   integer ::   &
      nocros,   & ! number of orbitals crossing the boundary
-     noins,    & ! number of interior orbitals 
+     noins,    & ! number of interior orbitals
      norb,     & ! total number of orbitals
-     lleft       ! 1/0 if it is left/right tip    
+     lleft       ! 1/0 if it is left/right tip
   integer :: ik, ikk, i, j, ig, n, iorb, iorb1, &
              iorb2, aorb, borb, nchan,     &
              ij, is, js, ichan, ien
   REAL(DP), PARAMETER :: eps=1.d-8
   REAL(DP) :: raux, ddot
   REAL(DP), ALLOCATABLE :: zpseu(:,:,:), zps(:,:)
-  COMPLEX(DP), PARAMETER :: cim=(0.d0,1.d0) 
+  COMPLEX(DP), PARAMETER :: cim=(0.d0,1.d0)
   COMPLEX(DP) :: x1,          &
             kval(2*(n2d+npol*nocros)), kfun(n2d,2*(n2d+npol*nocros)),  &
             kint(nocros*npol,2*(n2d+npol*nocros)),                     &
             kcoef(nocros*npol,2*(n2d+npol*nocros)),                    &
-            kfund(n2d,2*(n2d+npol*nocros))   
+            kfund(n2d,2*(n2d+npol*nocros))
   COMPLEX(DP), ALLOCATABLE :: amat(:,:), bmat(:,:), vec(:,:), &
                               zpseu_nc(:,:,:,:), zps_nc(:,:), &
-                              aux(:,:), veceig(:,:), korb(:,:) 
+                              aux(:,:), veceig(:,:), korb(:,:)
   COMPLEX(DP), PARAMETER :: one=(1.d0,0.d0), zero=(0.d0,0.d0)
 
 
@@ -89,7 +89,7 @@ subroutine compbs(lleft, nocros, norb, nchan, kval, kfun,  &
 ! zps=zpseu-e*qq for US-PP and zps=zpseu for norm-conserv. PP
 !
   do iorb=1, norb
-    do iorb1=1, norb 
+    do iorb1=1, norb
       if (noncolin) then
         ij=0
         do is=1,npol
@@ -113,7 +113,7 @@ subroutine compbs(lleft, nocros, norb, nchan, kval, kfun,  &
         zps(iorb,iorb1)=zpseu(1,iorb,iorb1)-eryd*zpseu(2,iorb,iorb1)
       endif
     enddo
-  enddo 
+  enddo
 
 !
 ! Forming the matrices A and B for generalized eigenvalue problem
@@ -131,34 +131,34 @@ subroutine compbs(lleft, nocros, norb, nchan, kval, kfun,  &
   enddo
 
 !
-!   2 
+!   2
 !
   do iorb=1, norb*npol
     do ig=1, n2d
       amat(ig, 2*n2d+iorb)=funl1(ig, iorb)
-      amat(n2d+ig, 2*n2d+iorb)=fundl1(ig, iorb)      
+      amat(n2d+ig, 2*n2d+iorb)=fundl1(ig, iorb)
       bmat(ig, 2*n2d+iorb)=funl0(ig, iorb)
-      bmat(n2d+ig, 2*n2d+iorb)=fundl0(ig, iorb) 
+      bmat(n2d+ig, 2*n2d+iorb)=fundl0(ig, iorb)
     enddo
-  enddo 
+  enddo
 !
 !  3
 !
   do iorb=1, norb*npol
     aorb=iorb
     borb=iorb
-    if (iorb.le.npol*nocros) aorb=iorb+npol*(noins+nocros) 
-    if (iorb.gt.npol*nocros) borb=iorb-npol*(noins+nocros) 
+    if (iorb.le.npol*nocros) aorb=iorb+npol*(noins+nocros)
+    if (iorb.gt.npol*nocros) borb=iorb-npol*(noins+nocros)
     do n=1, 2*n2d
-      do iorb1=1, norb*npol 
+      do iorb1=1, norb*npol
         if (noncolin) then
            amat(2*n2d+iorb,n)=amat(2*n2d+iorb,n)+                  &
-                             zps_nc(aorb, iorb1)*intw1(iorb1,n)         
+                             zps_nc(aorb, iorb1)*intw1(iorb1,n)
            if (borb.gt.0) bmat(2*n2d+iorb,n)=                      &
               bmat(2*n2d+iorb,n)-zps_nc(borb,iorb1)*intw1(iorb1,n)
         else
            amat(2*n2d+iorb,n)=amat(2*n2d+iorb,n)+                  &
-                             zps(aorb,iorb1)*intw1(iorb1,n)         
+                             zps(aorb,iorb1)*intw1(iorb1,n)
            if (borb.gt.0) bmat(2*n2d+iorb,n)=                      &
               bmat(2*n2d+iorb,n)-zps(borb,iorb1)*intw1(iorb1,n)
         endif
@@ -186,7 +186,7 @@ subroutine compbs(lleft, nocros, norb, nchan, kval, kfun,  &
                          bmat(2*n2d+iorb,2*n2d+iorb)+(1.d0,0.d0)
   enddo
 !
-!   5 
+!   5
 !
   do iorb=1, norb*npol
     aorb=iorb
@@ -200,18 +200,18 @@ subroutine compbs(lleft, nocros, norb, nchan, kval, kfun,  &
            amat(2*n2d+iorb,2*n2d+iorb1)=amat(2*n2d+iorb,2*n2d+iorb1)+  &
                    zps(aorb,iorb2)*intw2(iorb2, iorb1)
         endif
-      enddo  
+      enddo
     enddo
     if (aorb.eq.iorb) amat(2*n2d+iorb,2*n2d+iorb)=                  &
-                        amat(2*n2d+iorb,2*n2d+iorb)-(1.d0,0.d0)             
-  enddo  
+                        amat(2*n2d+iorb,2*n2d+iorb)-(1.d0,0.d0)
+  enddo
 
 !
 ! To reduce matrices and solve GEP A X = c B X; X = {a_n, a_\alpha}
-! 
+!
 
   call compbs_2(npol*nocros, npol*norb, n2d, 2*(n2d+npol*nocros),   &
-                amat, bmat, vec, kval) 
+                amat, bmat, vec, kval)
 
 !
 ! To normalize (over XY plane) all the states
@@ -250,19 +250,19 @@ subroutine compbs(lleft, nocros, norb, nchan, kval, kfun,  &
   kfund=(0.d0,0.d0)
   kint=(0.d0,0.d0)
 !
-! To account for the case of the right lead  
+! To account for the case of the right lead
 !
   if (lleft.eq.0) then
     do i=1, 2*n2d
       do j=1, 2*n2d+npol*norb
-        amat(i,j)=bmat(i,j) 
+        amat(i,j)=bmat(i,j)
       enddo
     enddo
     do i=2*n2d+1, 2*n2d+npol*nocros
-      do j=1, 2*n2d+npol*norb 
-        amat(i,j)=-bmat(i+npol*(nocros+noins),j) 
+      do j=1, 2*n2d+npol*norb
+        amat(i,j)=-bmat(i+npol*(nocros+noins),j)
       enddo
-    enddo  
+    enddo
   endif
 !
 ! psi_k and psi'_k on the scattering region boundary
@@ -279,17 +279,17 @@ subroutine compbs(lleft, nocros, norb, nchan, kval, kfun,  &
                one, aux, n2d, vec, 2*n2d+npol*norb, zero, kfund, n2d)
 
 !
-! kint(iorb, ik)=\sum_{iorb1} D_{iorb,iorb1} 
+! kint(iorb, ik)=\sum_{iorb1} D_{iorb,iorb1}
 !            \int_{cell} W_iorb1^* psi_ik )
 ! for the orbitals crossing the boundary
-!                              
+!
   do ik=1,  2*(n2d+npol*nocros)
     do iorb=1, nocros*npol
-      do j=1, 2*n2d+npol*norb 
+      do j=1, 2*n2d+npol*norb
         kint(iorb,ik)=kint(iorb,ik)+amat(2*n2d+iorb,j)*vec(j,ik)
       enddo
     enddo
-  enddo 
+  enddo
 !
 ! a_iorb = kcoef(iorb,ik) = \sum_{iorb1} D_{iorb,iorb1}
 !           \int_{all space} W_iorb1^* psi_ik )
@@ -297,19 +297,19 @@ subroutine compbs(lleft, nocros, norb, nchan, kval, kfun,  &
 !
   do ik=1, 2*(n2d+npol*nocros)
     do iorb=1, nocros*npol
-      if (lleft.eq.0) then 
+      if (lleft.eq.0) then
         kcoef(iorb,ik)=vec(2*n2d+iorb,ik)
       else
         kcoef(iorb,ik)=vec(2*n2d+npol*(nocros+noins)+iorb,ik)
-      endif   
+      endif
     enddo
-  enddo 
+  enddo
 
 !
 ! to set up B.S. for the right lead in the case of identical tips
 !
   if(lleft.eq.1.and.ikind.eq.1) then
-    nchanr=nchan 
+    nchanr=nchan
     call dcopy(2*(n2d+npol*nocros), kval, 1, kvalr, 1)
     kfunr=(0.d0,0.d0)
     kfundr=(0.d0,0.d0)
@@ -324,7 +324,7 @@ subroutine compbs(lleft, nocros, norb, nchan, kval, kfun,  &
       do j=1, 2*n2d+npol*norb
         amat(i,j)=-bmat(i+npol*(nocros+noins),j)
       enddo
-    enddo               
+    enddo
 
     do ik=1, 2*(n2d+npol*nocros)
       do ig=1, n2d
@@ -333,7 +333,7 @@ subroutine compbs(lleft, nocros, norb, nchan, kval, kfun,  &
           kfundr(ig,ik)= kfundr(ig,ik)+amat(n2d+ig,j)*vec(j,ik)
         enddo
       enddo
-    enddo        
+    enddo
     do ik=1,  2*(n2d+npol*nocros)
       do iorb=1, nocros*npol
         do j=1, 2*n2d+npol*norb
@@ -345,7 +345,7 @@ subroutine compbs(lleft, nocros, norb, nchan, kval, kfun,  &
       do iorb=1, nocros*npol
         kcoefr(iorb,ik)=vec(2*n2d+iorb,ik)
       enddo
-    enddo                     
+    enddo
 
   endif
 
@@ -443,4 +443,4 @@ subroutine compbs(lleft, nocros, norb, nchan, kval, kfun,  &
   call stop_clock('compbs')
 
   return
-end subroutine compbs  
+end subroutine compbs

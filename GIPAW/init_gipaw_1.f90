@@ -11,7 +11,7 @@ subroutine init_gipaw_1
   !----------------------------------------------------------------------
   !
   ! This routine initialize the variables of the paw projector
-  ! and create the projectors in radial part (paw_betar) 
+  ! and create the projectors in radial part (paw_betar)
   !
   USE kinds ,      ONLY : dp
   USE parameters , ONLY : lqmax , lmaxx
@@ -50,12 +50,12 @@ subroutine init_gipaw_1
   ! interpolated value
 
   real(DP) rc,rs,pow
-  
+
   integer :: n_overlap_warnings
-  
+
   real(DP), allocatable :: xdata(:)
   real(DP) :: d1, scaling_factor
-  
+
   call start_clock ('init_gipaw_1')
   !
   !    Initialization of the variables
@@ -64,7 +64,7 @@ subroutine init_gipaw_1
   allocate ( aux(ndm) )
   allocate ( aux1(ndm) )
   allocate ( besr(ndm) )
-  
+
   paw_lmaxkb = 0
   do nt = 1, ntyp
      lmaxkb = 0
@@ -75,7 +75,7 @@ subroutine init_gipaw_1
         lmaxkb = max ( lmaxkb, l )
      end do
      paw_lmaxkb = max ( paw_lmaxkb, lmaxkb )
-     
+
      allocate ( paw_recon(nt)%paw_nhtol(paw_recon(nt)%paw_nh) )
      allocate ( paw_recon(nt)%paw_nhtom(paw_recon(nt)%paw_nh) )
      allocate ( paw_recon(nt)%paw_indv(paw_recon(nt)%paw_nh) )
@@ -83,7 +83,7 @@ subroutine init_gipaw_1
      allocate ( paw_recon(nt)%paw_nl(0:lmaxkb) )
      allocate ( paw_recon(nt)%paw_iltonh(0:lmaxkb,paw_recon(nt)%paw_nh) )
   END DO
-  
+
   ! calculate the number of beta functions of the solid
   !
   paw_nkb = 0
@@ -91,13 +91,13 @@ subroutine init_gipaw_1
      nt = ityp(na)
      paw_nkb = paw_nkb + paw_recon(nt)%paw_nh
   end do
-  
+
   n_overlap_warnings = 0
-  
+
   prefr = fpi / omega
   !
   !   For each pseudopotential we initialize the indices nhtol, nhtom,
-  !   indv, 
+  !   indv,
   !
   do nt = 1, ntyp
      paw_recon(nt)%paw_nl = 0
@@ -114,11 +114,11 @@ subroutine init_gipaw_1
            ih = ih + 1
         end do
      end do
-     
+
      !
      ! Rescale the wavefunctions so that int_0^rc f|psi|^2=1
-     ! 
-     
+     !
+
      pow = 1.0_dp
      do j = 1, paw_recon(nt)%paw_nbeta
         rc = paw_recon(nt)%psphi(j)%label%rc
@@ -137,27 +137,27 @@ subroutine init_gipaw_1
         paw_recon(nt)%aephi(j)%label%nrc = nrc
         paw_recon(nt)%psphi(j)%label%nrs = nrs
         paw_recon(nt)%aephi(j)%label%nrs = nrs
-        
+
         !<apsi> Scaling removed
         !scaling_factor = paw_recon(nt)%aephi(j)%psi(nrc) &
         !     / paw_recon(nt)%psphi(j)%psi(nrc)
         !paw_recon(nt)%psphi(j)%psi(:) = paw_recon(nt)%psphi(j)%psi(:) &
         !     * scaling_factor
         !</apsi>
-        
+
         call step_f ( aux, paw_recon(nt)%psphi(j)%psi**2, rgrid(nt)%r(:), &
              nrs, nrc, pow, msh(nt) )
         call simpson ( msh(nt), aux, rgrid(nt)%rab, norm )
-        
+
         paw_recon(nt)%psphi(j)%psi = paw_recon(nt)%psphi(j)%psi / sqrt(norm)
         paw_recon(nt)%aephi(j)%psi = paw_recon(nt)%aephi(j)%psi / sqrt(norm)
-        
+
      end do
-     
+
      !
      !   calculate the overlap matrix
      !
-     
+
      aux = 0.0_dp
      do l = 0, ubound(paw_recon(nt)%paw_nl,1)
         if ( paw_recon(nt)%paw_nl(l) > 0 ) then
@@ -167,18 +167,18 @@ subroutine init_gipaw_1
               n1 = paw_recon(nt)%paw_iltonh(l,ih)
               do jh = 1, paw_recon(nt)%paw_nl(l)
                  n2 = paw_recon(nt)%paw_iltonh(l,jh)
-                 
+
                  nrc = MIN ( paw_recon(nt)%psphi(n1)%label%nrc, &
                       paw_recon(nt)%psphi(n2)%label%nrc )
                  nrs = MIN ( paw_recon(nt)%psphi(n1)%label%nrs, &
                       paw_recon(nt)%psphi(n2)%label%nrs )
-                 
+
                  call step_f ( aux, paw_recon(nt)%psphi(n1)%psi(1:msh(nt)) &
                       * paw_recon(nt)%psphi(n2)%psi(1:msh(nt)), &
                       rgrid(nt)%r(:), nrs, nrc, pow, msh(nt) )
-                 
+
                  CALL simpson ( msh(nt), aux, rgrid(nt)%rab, s(ih,jh) )
-                 
+
                  !<apsi>
                  IF ( ih > jh ) THEN
                     IF ( ABS ( ABS ( s(ih,jh) ) - 1.0_dp ) < 1.e-5_dp ) THEN
@@ -204,10 +204,10 @@ subroutine init_gipaw_1
                     END IF
                  END IF
                  !</apsi>
-                 
+
               end do
            end do
-           
+
 #if defined ( __DEBUG_MINE_APSI )
            !<apsi>
            IF ( iverbatim > 5 ) THEN
@@ -220,25 +220,25 @@ subroutine init_gipaw_1
            END IF
            !</apsi>
 #endif
-           
+
            call invmat ( paw_recon(nt)%paw_nl(l), s, sinv, norm)
-           
+
            do ih = 1, paw_recon(nt)%paw_nl(l)
               n1 = paw_recon(nt)%paw_iltonh(l,ih)
-              
+
               paw_recon(nt)%paw_betar(1:msh(nt),n1) = 0.0
-              
+
               do jh = 1, paw_recon(nt)%paw_nl(l)
                  n2 = paw_recon(nt)%paw_iltonh(l,jh)
-                 
+
                  paw_recon(nt)%paw_betar(1:msh(nt),n1) &
                       = paw_recon(nt)%paw_betar(1:msh(nt),n1) &
                       + sinv(ih,jh) * paw_recon(nt)%psphi(n2)%psi(1:msh(nt))
               end do
-              
+
               nrc = paw_recon(nt)%psphi(n1)%label%nrc
               nrs = paw_recon(nt)%psphi(n1)%label%nrs
-              
+
               call step_f ( aux, &
                    paw_recon(nt)%paw_betar(1:msh(nt),n1),rgrid(nt)%r(:), &
                    nrs,nrc,pow,msh(nt))
@@ -246,14 +246,14 @@ subroutine init_gipaw_1
            end do
            deallocate (sinv)
            deallocate (s)
-           
+
         end if
      end do
   end do
   IF ( n_overlap_warnings > 0 ) THEN
      WRITE ( stdout, '(A)' ) ""
   END IF
-  
+
 !    Check the orthogonality for projectors
 !
 !     nt=1
@@ -271,13 +271,13 @@ subroutine init_gipaw_1
 !     call simpson(msh (nt), aux, rab (1, nt), norm)
 !     print *,'11',norm
 
-  
+
   !
   !  compute Clebsch-Gordan coefficients
   !
-  
+
   call aainit ( lmaxx+1 )
-  
+
   !
   !     fill the interpolation table tab
   !
@@ -285,7 +285,7 @@ subroutine init_gipaw_1
   call divide ( nqx, startq, lastq )
   do nt = 1, ntyp
      paw_recon(nt)%paw_tab (:,:) = 0.0_dp
-     
+
      do nb = 1, paw_recon(nt)%paw_nbeta
         l = paw_recon(nt)%aephi(nb)%label%l
         do iq = startq, lastq
@@ -299,13 +299,13 @@ subroutine init_gipaw_1
            paw_recon(nt)%paw_tab(iq,nb) = vqint * pref
         end do
      end do
-  
+
 #ifdef __PARA
      call mp_sum ( paw_recon(nt)%paw_tab(:,:), intra_pool_comm )
 #endif
-     
+
   end do
-  
+
   ! initialize spline interpolation
   if ( spline_ps ) then
      allocate(xdata(nqx))
@@ -325,14 +325,14 @@ subroutine init_gipaw_1
      end do
      deallocate ( xdata )
   end if
-  
+
   deallocate (besr)
   deallocate (aux1)
   deallocate (aux)
-  
+
   call stop_clock ('init_gipaw_1')
   return
-  
+
 end subroutine init_gipaw_1
 
 
@@ -344,18 +344,18 @@ subroutine step_f(f2,f,r,nrs,nrc,pow,mesh)
 
   !
   ! This routine apply a fonction which go smoothly to zero from rs to rc
-  ! 
+  !
 
   implicit none
   integer :: mesh
   real(DP), Intent(out):: f2(mesh)
   real(DP), Intent(in) :: f(mesh), r(mesh)
   real(DP), Intent(in) :: pow
-  integer :: nrs, nrc 
+  integer :: nrs, nrc
 
   Integer :: i
   real(DP) :: rcp, rsp
- 
+
   rcp = r(nrc)
   rsp = r(nrs)
 

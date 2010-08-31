@@ -10,6 +10,8 @@ calculate_wing.o : ../../PW/pwcom.o
 calculate_wing.o : wannier_gw.o
 cprim.o : ../../Modules/cell_base.o
 cprim.o : ../../Modules/constants.o
+cprim.o : ../../Modules/fft_base.o
+cprim.o : ../../Modules/fft_interfaces.o
 cprim.o : ../../Modules/io_files.o
 cprim.o : ../../Modules/io_global.o
 cprim.o : ../../Modules/kind.o
@@ -26,6 +28,8 @@ cprim.o : wannier_gw.o
 dft_exchange.o : ../../Modules/cell_base.o
 dft_exchange.o : ../../Modules/constants.o
 dft_exchange.o : ../../Modules/control_flags.o
+dft_exchange.o : ../../Modules/fft_base.o
+dft_exchange.o : ../../Modules/fft_interfaces.o
 dft_exchange.o : ../../Modules/io_files.o
 dft_exchange.o : ../../Modules/io_global.o
 dft_exchange.o : ../../Modules/ions_base.o
@@ -67,6 +71,8 @@ energies_u.o : wannier_gw.o
 energies_xc.o : ../../Modules/cell_base.o
 energies_xc.o : ../../Modules/constants.o
 energies_xc.o : ../../Modules/control_flags.o
+energies_xc.o : ../../Modules/fft_base.o
+energies_xc.o : ../../Modules/fft_interfaces.o
 energies_xc.o : ../../Modules/funct.o
 energies_xc.o : ../../Modules/io_files.o
 energies_xc.o : ../../Modules/io_global.o
@@ -132,6 +138,8 @@ produce_wannier_gamma.o : ../../PW/pwcom.o
 produce_wannier_gamma.o : wannier_gw.o
 product_wannier.o : ../../Modules/cell_base.o
 product_wannier.o : ../../Modules/constants.o
+product_wannier.o : ../../Modules/fft_base.o
+product_wannier.o : ../../Modules/fft_interfaces.o
 product_wannier.o : ../../Modules/io_files.o
 product_wannier.o : ../../Modules/io_global.o
 product_wannier.o : ../../Modules/ions_base.o
@@ -146,6 +154,7 @@ product_wannier_para.o : ../../Modules/cell_base.o
 product_wannier_para.o : ../../Modules/constants.o
 product_wannier_para.o : ../../Modules/control_flags.o
 product_wannier_para.o : ../../Modules/fft_base.o
+product_wannier_para.o : ../../Modules/fft_interfaces.o
 product_wannier_para.o : ../../Modules/io_files.o
 product_wannier_para.o : ../../Modules/io_global.o
 product_wannier_para.o : ../../Modules/ions_base.o
@@ -161,6 +170,7 @@ product_wannier_para_c.o : ../../Modules/cell_base.o
 product_wannier_para_c.o : ../../Modules/constants.o
 product_wannier_para_c.o : ../../Modules/control_flags.o
 product_wannier_para_c.o : ../../Modules/fft_base.o
+product_wannier_para_c.o : ../../Modules/fft_interfaces.o
 product_wannier_para_c.o : ../../Modules/io_files.o
 product_wannier_para_c.o : ../../Modules/io_global.o
 product_wannier_para_c.o : ../../Modules/ions_base.o
@@ -220,6 +230,7 @@ stop_pp.o : ../../Modules/parallel_include.o
 ultra_external.o : ../../Modules/cell_base.o
 ultra_external.o : ../../Modules/constants.o
 ultra_external.o : ../../Modules/fft_base.o
+ultra_external.o : ../../Modules/fft_interfaces.o
 ultra_external.o : ../../Modules/io_files.o
 ultra_external.o : ../../Modules/io_global.o
 ultra_external.o : ../../Modules/ions_base.o
@@ -301,6 +312,8 @@ wannier_uterms_c.o : wannier_gw.o
 wannier_valence_terms.o : ../../Modules/cell_base.o
 wannier_valence_terms.o : ../../Modules/constants.o
 wannier_valence_terms.o : ../../Modules/control_flags.o
+wannier_valence_terms.o : ../../Modules/fft_base.o
+wannier_valence_terms.o : ../../Modules/fft_interfaces.o
 wannier_valence_terms.o : ../../Modules/io_files.o
 wannier_valence_terms.o : ../../Modules/io_global.o
 wannier_valence_terms.o : ../../Modules/kind.o
@@ -313,6 +326,8 @@ wannier_valence_terms.o : ../../PW/pwcom.o
 wannier_valence_terms.o : ../../PW/realus.o
 wannier_valence_terms.o : wannier_gw.o
 wfc_real.o : ../../Modules/control_flags.o
+wfc_real.o : ../../Modules/fft_base.o
+wfc_real.o : ../../Modules/fft_interfaces.o
 wfc_real.o : ../../Modules/io_files.o
 wfc_real.o : ../../Modules/io_global.o
 wfc_real.o : ../../Modules/kind.o

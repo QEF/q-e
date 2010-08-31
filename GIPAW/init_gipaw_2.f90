@@ -18,7 +18,7 @@ subroutine init_gipaw_2 (npw_, igk_, q_, vkb_)
   USE wvfct ,     ONLY : npwx
   USE cell_base , ONLY : tpiba
   USE ions_base,  ONLY : nat, ntyp => nsp, ityp, tau
-  USE gvect ,     ONLY : eigts1, eigts2, eigts3, g, ig1, ig2, ig3 
+  USE gvect ,     ONLY : eigts1, eigts2, eigts3, g, ig1, ig2, ig3
   USE paw_gipaw,  ONLY : paw_nkb, paw_recon, paw_lmaxkb
   USE us,         ONLY : nqx, dq, spline_ps
   USE splinelib
@@ -49,11 +49,11 @@ subroutine init_gipaw_2 (npw_, igk_, q_, vkb_)
   !
   if (paw_lmaxkb.lt.0) return
   call start_clock ('init_gipaw_2')
-  allocate (  sk( npw_))    
-  allocate (  qg( npw_))    
-  allocate (  vq( npw_))    
-  allocate ( ylm( npw_, (paw_lmaxkb + 1) **2))    
-  allocate (  gk( 3, npw_))    
+  allocate (  sk( npw_))
+  allocate (  qg( npw_))
+  allocate (  vq( npw_))
+  allocate ( ylm( npw_, (paw_lmaxkb + 1) **2))
+  allocate (  gk( 3, npw_))
   !
 
   do ig = 1, npw_
@@ -81,7 +81,7 @@ subroutine init_gipaw_2 (npw_, igk_, q_, vkb_)
   jkb = 0
   do nt = 1, ntyp
      allocate ( vkb1(npw_,paw_recon(nt)%paw_nh) )
-     
+
      ! calculate beta in G-space using an interpolation table
      do nb = 1, paw_recon(nt)%paw_nbeta
         do ig = 1, npw_
@@ -110,7 +110,7 @@ subroutine init_gipaw_2 (npw_, igk_, q_, vkb_)
               lm = l * l + paw_recon(nt)%paw_nhtom(ih)
               do ig = 1, npw_
                  vkb1(ig,ih) = ylm(ig,lm) * vq(ig)
-              enddo 
+              enddo
            endif
         enddo
      enddo
@@ -137,15 +137,15 @@ subroutine init_gipaw_2 (npw_, igk_, q_, vkb_)
               do ig = 1, npw_
                  vkb_(ig, jkb) = vkb1 (ig,ih) * sk (ig) * pref
               enddo
-              
+
            enddo
         endif
- 
+
      enddo
-     
+
      deallocate (vkb1)
   enddo
-  
+
   deallocate (gk)
   deallocate (ylm)
   deallocate (vq)
@@ -177,7 +177,7 @@ subroutine init_gipaw_2_no_phase (npw_, igk_, q_, vkb_)
   USE wvfct ,     ONLY : npwx
   USE cell_base , ONLY : tpiba
   USE ions_base,  ONLY : nat, ntyp => nsp, ityp, tau
-  USE gvect ,     ONLY : eigts1, eigts2, eigts3, g, ig1, ig2, ig3 
+  USE gvect ,     ONLY : eigts1, eigts2, eigts3, g, ig1, ig2, ig3
   USE paw_gipaw,  ONLY : paw_nkb, paw_recon, paw_lmaxkb
   USE us,         ONLY : nqx, dq, spline_ps
   USE splinelib
@@ -208,11 +208,11 @@ subroutine init_gipaw_2_no_phase (npw_, igk_, q_, vkb_)
   !
   if (paw_lmaxkb.lt.0) return
   call start_clock ('init_gipaw_2')
-  allocate (  sk( npw_))    
-  allocate (  qg( npw_))    
-  allocate (  vq( npw_))    
-  allocate ( ylm( npw_, (paw_lmaxkb + 1) **2))    
-  allocate (  gk( 3, npw_))    
+  allocate (  sk( npw_))
+  allocate (  qg( npw_))
+  allocate (  vq( npw_))
+  allocate ( ylm( npw_, (paw_lmaxkb + 1) **2))
+  allocate (  gk( 3, npw_))
   !
 
   do ig = 1, npw_
@@ -240,7 +240,7 @@ subroutine init_gipaw_2_no_phase (npw_, igk_, q_, vkb_)
   jkb = 0
   do nt = 1, ntyp
      allocate ( vkb1(npw_,paw_recon(nt)%paw_nh) )
-     
+
      ! calculate beta in G-space using an interpolation table
      do nb = 1, paw_recon(nt)%paw_nbeta
         do ig = 1, npw_
@@ -269,7 +269,7 @@ subroutine init_gipaw_2_no_phase (npw_, igk_, q_, vkb_)
               lm = l * l + paw_recon(nt)%paw_nhtom(ih)
               do ig = 1, npw_
                  vkb1(ig,ih) = ylm(ig,lm) * vq(ig)
-              enddo 
+              enddo
            endif
         enddo
      enddo
@@ -296,15 +296,15 @@ subroutine init_gipaw_2_no_phase (npw_, igk_, q_, vkb_)
               do ig = 1, npw_
                  vkb_(ig, jkb) = vkb1 (ig,ih) * sk (ig) * pref
               enddo
-              
+
            enddo
         endif
- 
+
      enddo
-     
+
      deallocate (vkb1)
   enddo
-  
+
   deallocate (gk)
   deallocate (ylm)
   deallocate (vq)
