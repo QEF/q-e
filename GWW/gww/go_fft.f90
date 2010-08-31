@@ -1,8 +1,8 @@
 !
 ! P.Umari Program GWW
 !
- SUBROUTINE go_fft(tf, options) 
-!this subroutine perform FFT on polarization written on disk 
+ SUBROUTINE go_fft(tf, options)
+!this subroutine perform FFT on polarization written on disk
 
    USE kinds,              ONLY : DP
    USE io_global,          ONLY : stdout, ionode
@@ -44,7 +44,7 @@
          if(lastr > numpw) lastr=numpw
 
 !create fft descriptor
- 
+
          call create_fft_data(tf,firstr,lastr,options%tau,options%n,iw,fftd,options%debug)
 
 !write on file
@@ -72,7 +72,7 @@
 !update polaw's
 
          call save_fft_data(tf,fftd,options%debug)
-         
+
          call write_fft_data(fftd,options%debug)
 
       enddo
@@ -81,11 +81,11 @@
    call free_memory_fft_data(fftd)
    return
  END SUBROUTINE go_fft
- 
+
 
  SUBROUTINE go_fft_para(tf, options)
 !this subroutine perform FFT on polarization written on disk
- 
+
    USE kinds,              ONLY : DP
    USE io_global,          ONLY : stdout, ionode
    USE input_gw,           ONLY : input_options
@@ -93,21 +93,21 @@
                                     &fake_polarization_io
    USE fft_gw
    USE mp_global,          ONLY : mpime, nproc
-   USE mp,                 ONLY : mp_barrier 
+   USE mp,                 ONLY : mp_barrier
    USE times_gw,           ONLY : times_freqs
 
 
    implicit none
- 
+
    TYPE(times_freqs), INTENT(in) :: tf!for time and frequency grids
    TYPE(input_options), INTENT(in) :: options! for imaginary time range,number of samples and number of rows
- 
+
    TYPE(fft_data) :: fftd
    TYPE(polaw) :: pw
    INTEGER :: iw
    INTEGER :: numpw
    INTEGER :: firstr,lastr
- 
+
    INTEGER :: number_fft
    LOGICAL, ALLOCATABLE :: is_my_fft(:)
    INTEGER  number_my_fft, done_fft, fft_first
@@ -116,21 +116,21 @@
 
 
 !read in polarization for checks
-   
+
       call initialize_polaw(pw)
 
       call read_polaw_range(options%n,pw,options%debug,1,1,.true.)
 
       numpw  = pw%numpw
       ontime = pw%ontime
- 
+
       if(numpw < options%num_rows) then
          write(stdout,*) 'Routine go_fft: num_rows too big'
          stop
       endif
       write(stdout,*) 'Prima'!ATTENZIONE
       call free_memory_polaw(pw)
- 
+
       number_fft = ceiling(real(numpw)/real(options%num_rows))
       number_my_fft=0
       ndelta = number_fft / nproc
@@ -153,7 +153,7 @@
 
       call mp_barrier
 !sencond loop, read fftd, perform fftd, and update polaw's
- 
+
       done_fft=0
       do it = 1, ndelta
        iw = it + fft_first - 1
@@ -166,17 +166,17 @@
            ! write(stdout,*) 'Continue FFT: ',iw , firstr, lastr, numpw
 
            if(lastr > numpw) lastr=numpw
- 
+
 ! read fftd descriptor
 
-           write(stdout,*) 'Create iw = ', iw ! ATTENZIONE 
+           write(stdout,*) 'Create iw = ', iw ! ATTENZIONE
            call create_fft_data(tf,firstr,lastr,options%tau,options%n,iw,fftd,options%debug)
 
            ! avoid reading time/freq parameter from matrix,
            ! use the one read at the beginning.
 
-           fftd%ontime = ontime  
- 
+           fftd%ontime = ontime
+
 !do fft
            write(stdout,*) 'Transform'!ATTENZIONE
            if(options%l_fft_timefreq) then
@@ -184,16 +184,16 @@
            else
               call transform_fft_data_grid(tf,fftd)
            endif
- 
+
 !update polaw's
            write(stdout,*) 'Save'!ATTENZIONE
            call save_fft_data(tf,fftd,options%debug)
-          
+
         else
            call fake_polarization_io(options%n)
         endif
       enddo
- 
+
    call free_memory_fft_data(fftd)
    deallocate(is_my_fft)
    return
@@ -203,7 +203,7 @@
 
  SUBROUTINE go_fft_para2(tf, options)
 !this subroutine perform FFT on polarization written on disk
- 
+
    USE kinds,              ONLY : DP
    USE io_global,          ONLY : stdout, ionode
    USE input_gw,           ONLY : input_options
@@ -216,16 +216,16 @@
 
 
    implicit none
- 
+
    TYPE(times_freqs), INTENT(in) :: tf!for time and frequency grids
    TYPE(input_options), INTENT(in) :: options! for imaginary time range,number of samples and number of rows
- 
+
    TYPE(fft_data) :: fftd
    TYPE(polaw) :: pw
    INTEGER :: iw
    INTEGER :: numpw
    INTEGER :: firstr,lastr
- 
+
    INTEGER :: number_fft
    INTEGER  number_my_fft, done_fft, fft_first
    INTEGER :: iqq,ndelta, it, ip, iblk, ipown
@@ -234,7 +234,7 @@
 
 !read in polarization for checks
 
-   
+
       call initialize_polaw( pw )
 
        write(stdout,*) 'Routine go_fft_para2'!ATTENZIONE
@@ -253,7 +253,7 @@
       numpw  = pw%numpw
       ontime = pw%ontime
       factor = pw%factor
- 
+
       if( numpw < options%num_rows ) then
          write(stdout,*) 'Routine go_fft: num_rows too big'
          stop
@@ -265,8 +265,8 @@
       ! options%num_rows, number of rows to be read by each proc.
       ! from its own files
       ! number_fft, number of collective read cycles
-      ! 
- 
+      !
+
       number_fft = ceiling( real(numpw)/ real(options%num_rows) )
       write(stdout,*) 'number_fft=', number_fft !ATTENZIONE
       call flush_unit(stdout)
@@ -280,8 +280,8 @@
          lastr  = (iblk  ) * options%num_rows
          if( lastr > numpw ) lastr = numpw
          !
-         fftd%ontime = ontime  
-         fftd%numpw  = numpw  
+         fftd%ontime = ontime
+         fftd%numpw  = numpw
          fftd%factor = factor
 
          CALL create_fft_data2( tf, firstr, lastr, options%tau, options%n, fftd, options%debug )
@@ -298,9 +298,9 @@
          write(stdout,*) 'Save'!ATTENZIONE
          call flush_unit(stdout)
          call save_fft_data2( tf, fftd, options%debug )
-         
+
       end do
-      
+
 
 
    call free_memory_fft_data(fftd)

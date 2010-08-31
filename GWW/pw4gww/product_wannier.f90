@@ -27,6 +27,8 @@ SUBROUTINE product_wannier(nbndv)
   use mp_global,            ONLY : nproc_pool, me_pool
   USE kinds,                ONLY : DP
   USE us
+  USE fft_base,             ONLY : dfftp, dffts
+  USE fft_interfaces,       ONLY : fwfft
   USE wvfct,                ONLY : igk, g2kin, npwx, npw, nbnd, nbndx
   USE gvect
   USE basis
@@ -76,7 +78,7 @@ SUBROUTINE product_wannier(nbndv)
    LOGICAL :: is_even
 
    REAL(kind=DP) :: sum_vcvc!for consistency control
-  
+
 
    write(stdout,*) 'Routine product_wannier: start'
 
@@ -106,13 +108,13 @@ SUBROUTINE product_wannier(nbndv)
 
 ! open files for ouput product in g space and their centers and radii
 
-   
+
    iungprod = find_free_unit()
    if(.not.lsmallgrid) then
      CALL diropn( iungprod, 'wiwjwfc', ngm*2, exst )
    else
     CALL diropn( iungprod, 'wiwjwfc', npw0*2, exst )
-   endif 
+   endif
    iunprod = find_free_unit()
    open( unit= iunprod, file=trim(prefix)//'.wiwjprod', status='unknown',form='unformatted')
 
@@ -171,7 +173,7 @@ SUBROUTINE product_wannier(nbndv)
 !determines bottoms and tops of boxes in grid units
 
         match = .true.
-        
+
         do i=1,3
            ndist=ndistance(w_centers(i,iw),w_centers(i,jw),rspacel(i))
            if(ndist-w_radii(i)-w_radii(j) > 0 ) then
@@ -189,15 +191,15 @@ SUBROUTINE product_wannier(nbndv)
             &wiwj%center(i),wiwj%radius(i),rspacel(i))
             if(is_even(rspacel(i)).and.wiwj%radius(i)==(rspacel(i)/2)) &
                 & wiwj%radius(i)=wiwj%radius(i)-1
-         enddo 
-            
+         enddo
+
          write(stdout,*) 'Center:', wiwj%center(1:3),wiwj%radius(1:3)
 
 !read wannier function jw
 
 
          tmpreal(:) =0.d0
- 
+
          write(nfilej,'(5i1)') jw/10000,mod(jw,10000)/1000,mod(jw,1000)/100,mod(jw,100)/10,mod(jw,10)
          iunrealwan = find_free_unit()
          open(unit=iunrealwan,file='realwan'// nfilej,status='old', form='unformatted')
@@ -261,7 +263,7 @@ SUBROUTINE product_wannier(nbndv)
                  if(n3>nr3) n3=n3-nr3
 
                  nn=(n3-1)*nrx1*nrx2+(n2-1)*nrx1+n1
-                 rsca=rsca+(tmpspacei(nn)*tmpspacej(nn)+tmpreal2(nn))**2.d0  
+                 rsca=rsca+(tmpspacei(nn)*tmpspacej(nn)+tmpreal2(nn))**2.d0
                  tmpreal(iz*(2*wiwj%radius(2)+1)*(2*wiwj%radius(1)+1)+iy*(2*wiwj%radius(1)+1)+ix+1)=&
                  &tmpspacei(nn)*tmpspacej(nn)+tmpreal2(nn)
 
@@ -271,7 +273,7 @@ SUBROUTINE product_wannier(nbndv)
 
         rsca=rsca/real(rspacel(1)*rspacel(2)*rspacel(3))
 !check if there is overlap
-        if(rsca >= cutoff_wpr) then  
+        if(rsca >= cutoff_wpr) then
            write(stdout,*) 'OVERLAP :', iw,jw,rsca
            if(jw > nbndv) sum_vcvc = sum_vcvc + rsca
 
@@ -287,7 +289,7 @@ SUBROUTINE product_wannier(nbndv)
              open(unit=iunrprod,file= 'w_prod_r'//nfilei//nfilej,status='unknown',form='unformatted')
              write(iunrprod) tmpreal(1:(2*wiwj%radius(1)+1)*(2*wiwj%radius(2)+1)*(2*wiwj%radius(3)+1))
              close(iunrprod)
-           endif           
+           endif
 
 !put on grid for Fourier transform
           tmpspacej(:)=(0.d0,0.d0)
@@ -325,7 +327,7 @@ SUBROUTINE product_wannier(nbndv)
             enddo
             write(*,*) 'RSCA', rsca/(nr1*nr2*nr3)!ATTENZIONE
             !CALL cft3s( tmpspacec,nr1, nr2, nr3, nrx1, nrx2, nrx3, -1 )
-             CALL cft3( tmpspacec,nr1, nr2, nr3, nrx1, nrx2, nrx3, -1 )
+             CALL fwfft ('Dense', tmpspacec, dfftp)
              rsca=0.d0
             do nn=1,ngm
               rsca=rsca+2.d0*conjg( tmpspacec(nl(nn)))*tmpspacec(nl(nn))
@@ -340,7 +342,7 @@ SUBROUTINE product_wannier(nbndv)
               tmpspacejs(:)=tmpspacej(:)
             endif
             tmpspacec(:)=dcmplx(tmpspacejs(:),0.d0)
-            CALL cft3s( tmpspacec,nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, -2 )
+            CALL fwfft ('Wave', tmpspacec, dffts)
           endif
 
 
@@ -352,13 +354,13 @@ SUBROUTINE product_wannier(nbndv)
             warray(1:npw0)=tmpspacec(nls(igk0(1:npw0)))
             CALL davcio(warray,npw0*2,iungprod,numw_prod,1)
           endif
-          
+
 
           endif!overlap
- 
- 
 
- 
+
+
+
         endif!match
 
 
@@ -369,7 +371,7 @@ SUBROUTINE product_wannier(nbndv)
   write(stdout,*) 'SUM VCVC', sum_vcvc
 
   close(iungprod)
-  close(iunprod)  
+  close(iunprod)
   deallocate(tmpspacei)
   deallocate(tmpspacej)
   deallocate(tmpreal)
@@ -387,11 +389,11 @@ FUNCTION ndistance(n1,n2,l)
 
 
   implicit none
- 
-  INTEGER :: ndistance 
+
+  INTEGER :: ndistance
   INTEGER :: n1,n2,l
   INTEGER :: i, nmin, imin
- 
+
   nmin=2*l
   do i=-1,1
      if(abs(n1-(n2+i*l)) < nmin) then
@@ -404,7 +406,7 @@ FUNCTION ndistance(n1,n2,l)
 END FUNCTION ndistance
 
 
-SUBROUTINE noverlap(n1,n2,r1,r2,c1,r,l) 
+SUBROUTINE noverlap(n1,n2,r1,r2,c1,r,l)
 
 !find center and radius of overlap with periodicity l
 
@@ -433,10 +435,10 @@ SUBROUTINE noverlap(n1,n2,r1,r2,c1,r,l)
     if(r>=l/2) r=l/2
    else
     c1=nint(real((n1-n22))/real(2)) + n22
-  
+
     if(c1 < 1) c1 = l + c1
     if(c1 > l) c1 = c1 - l
-  
+
     r=nint(real(((n1+r1)-(n22-r2)))/real(2))
     if(r>=l/2) r=l/2
 

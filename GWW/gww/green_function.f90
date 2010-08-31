@@ -2,9 +2,9 @@
 !Program GWW
 
   MODULE green_function
-!this module descibes the green function in imaginary time/frequency 
-!and contains subroutine to read/write from disk and to create 
-   
+!this module descibes the green function in imaginary time/frequency
+!and contains subroutine to read/write from disk and to create
+
     USE kinds, ONLY : DP
 
       TYPE green
@@ -31,7 +31,7 @@
     END SUBROUTINE
 
 
- 
+
     SUBROUTINE free_memory_green(gr)
 !this subroutine deallocates the green descriptor
       implicit none
@@ -40,15 +40,15 @@
       nullify(gr%gf)
       if(associated(gr%gf_p)) deallocate(gr%gf_p)
       nullify(gr%gf_p)
-      return 
-    END SUBROUTINE 
-      
+      return
+    END SUBROUTINE
+
     SUBROUTINE create_green(gr,wu,time,debug,zero_time_neg,l_hf_energies,ene_hf)
 !this subroutine creates a green function on imagynary time
 !on the basis of wanniers:
 !the KS energies are fixed so that the fermi level is at 0
 !  G_{i,j}=i*\sum_v U^{+}_{v,i}*U_{j,v}*exp(e_v*t)  t>=0
-!         =-i*\sum_c U^{+}_{c,i}*U_{j,c}*exp(e_c*t) t<0 
+!         =-i*\sum_c U^{+}_{c,i}*U_{j,c}*exp(e_c*t) t<0
 !if required uses HF energies
 
 
@@ -57,7 +57,7 @@
       USE basic_structures, ONLY : wannier_u
 
       implicit none
- 
+
       TYPE(green) :: gr!the green function on output
       TYPE(wannier_u) :: wu!data on U and e_i
       REAL(kind=DP) :: time!imaginary time
@@ -71,7 +71,7 @@
       REAL(kind=DP) :: offset
 
 !calculates energy offset
-      
+
       if(.not.l_hf_energies) then
          if(wu%nums > wu%nums_occ) then
             offset=-(wu%ene(wu%nums_occ+1)+wu%ene(wu%nums_occ))/2.d0
@@ -85,7 +85,7 @@
             offset=-ene_hf(wu%nums_occ)
          endif
       endif
-!sets data and allocate 
+!sets data and allocate
 !      call free_memory_green(gr)
       gr%nums=wu%nums
       allocate(gr%gf(gr%nums,gr%nums))
@@ -128,7 +128,7 @@
                         & exp((ene_hf(kw)+offset)*time)
                 endif
                  if(debug) then
-                   write(stdout,*) 'Create green:' ,time,iw,jw,wu%ene(kw),wu%umat(kw,iw),wu%umat(kw,jw) 
+                   write(stdout,*) 'Create green:' ,time,iw,jw,wu%ene(kw),wu%umat(kw,iw),wu%umat(kw,jw)
                  endif
              enddo
              gr%gf(jw,iw)=conjg(gr%gf(iw,jw))
@@ -139,7 +139,7 @@
         enddo
 
       endif
-      
+
 
       return
 
@@ -177,7 +177,7 @@
       call free_memory_green(gr)
 
       gr%l_part=.true.
-     
+
 !calculates energy offset
 
       if(.not.l_hf_energies) then
@@ -278,7 +278,7 @@
         open( unit=iung, file='green.'// nfile, status='unknown',form='formatted')
       endif
     else
-      write(nfile,'(5i1)') &          
+      write(nfile,'(5i1)') &
       & -gr%label/10000,mod(-gr%label,10000)/1000,mod(-gr%label,1000)/100,mod(-gr%label,100)/10,mod(-gr%label,10)
       iung = find_free_unit()
       if(.not.debug) then
@@ -297,7 +297,7 @@
       write(iung) gr%factor
       if(.not.gr%l_part) then
          do iw=1,gr%nums
-            write(iung)  gr%gf(1:gr%nums,iw)  
+            write(iung)  gr%gf(1:gr%nums,iw)
          enddo
       else
          do iw=1,gr%nums
@@ -329,7 +329,7 @@
    close(iung)
    return
  END SUBROUTINE write_green
-   
+
    SUBROUTINE  read_green(label, gr, debug,zero_time_neg)
 !this subroutine reads the green function from disk
 !the file name is taken from the label
@@ -347,7 +347,7 @@
 !first deallocate
     call free_memory_green(gr)
     if(label > 0 .or. (label == 0 .and. .not.zero_time_neg))  then
-      write(nfile,'(5i1)') label/10000,mod(label,10000)/1000,mod(label,1000)/100,mod(label,100)/10,mod(label,10)  
+      write(nfile,'(5i1)') label/10000,mod(label,10000)/1000,mod(label,1000)/100,mod(label,100)/10,mod(label,10)
       iung = find_free_unit()
       if(.not.debug) then
         open( unit=iung, file='green.'// nfile, status='old',form='unformatted')
@@ -399,7 +399,7 @@
       read(iung,*) gr%factor
 
 !now allocate
-     
+
       if(.not. gr%l_part) then
          allocate(gr%gf(gr%nums,gr%nums))
          nullify(gr%gf_p)
@@ -407,7 +407,7 @@
          allocate(gr%gf_p(gr%nums,gr%nums))
          nullify(gr%gf)
       endif
-        
+
       if(.not. gr%l_part) then
          do iw=1,gr%nums
             do jw=1,gr%nums

@@ -1,8 +1,8 @@
 ! FOR GWW
 !
 ! This module checks the amount of free memory
-! based on the value of the memory per core 
-! available (provided by the user) 
+! based on the value of the memory per core
+! available (provided by the user)
 ! Such value is defined in mem_per_core
 !
 ! Author: G. Stenuit

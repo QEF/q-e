@@ -29,6 +29,7 @@ subroutine ultra_external( nbnd_start, nbnd_end, radius, itask)
   USE realus,               ONLY : adduspos_real, augmentation_qq
   USE mp_global,            ONLY : intra_image_comm, me_pool
   USE fft_base,             ONLY : dfftp, dffts
+  USE fft_interfaces,       ONLY : fwfft, invfft
   USE mp,                   ONLY : mp_sum
   USE wavefunctions_module, ONLY : psic, evc
   USE ions_base,            ONLY : nat
@@ -40,13 +41,13 @@ subroutine ultra_external( nbnd_start, nbnd_end, radius, itask)
   INTEGER, INTENT(in) :: nbnd_start!first band defining the manifold to be localized
   INTEGER, INTENT(in) :: nbnd_end!last band defining the manifold to be localized
   REAL(kind=DP), INTENT(in) :: radius!localization radius
-  INTEGER, INTENT(in) :: itask !if == 1 ultralocalizes {C'} 
+  INTEGER, INTENT(in) :: itask !if == 1 ultralocalizes {C'}
 !--------------------------------
 ! definition of lecture unit for wannierized evc --> vc1
   integer :: iun_wannier
 !---------------------------------
   COMPLEX(kind=DP), ALLOCATABLE :: wfc_mlwf(:,:)
-  REAL(kind=DP), ALLOCATABLE :: ultra_trans(:,:) 
+  REAL(kind=DP), ALLOCATABLE :: ultra_trans(:,:)
   INTEGER :: n_man
   INTEGER :: iun_mlwf
   LOGICAL :: exst
@@ -62,18 +63,18 @@ subroutine ultra_external( nbnd_start, nbnd_end, radius, itask)
   REAL(kind=DP), ALLOCATABLE :: becp_gw2(:,:)
 
 !-------------------------------------------
-! delcarion of temporary wannierized evc --> evc1   
+! delcarion of temporary wannierized evc --> evc1
   COMPLEX(kind=DP), ALLOCATABLE :: evc1(:,:)
 !-------------------------------------------
 
-! open 
+! open
 
 
   n_man=nbnd_end-nbnd_start+1
   allocate( wfc_mlwf( npwx, nbnd ) )
   allocate(ultra_trans(n_man,n_man))
 
-!---------------------------------------  
+!---------------------------------------
 ! allocation of temporary wannierized evc --> evc1
 !!   allocate(evc1(npwx, nbnd))
   allocate(evc1(npw,nbnd_normal))
@@ -112,7 +113,7 @@ subroutine ultra_external( nbnd_start, nbnd_end, radius, itask)
   CALL davcio(wfc_mlwf,nwordwfc,iun_mlwf,1,-1)
   close(iun_mlwf)
 
-!calculate becs                                                                      
+!calculate becs
   if  ( nkb > 0 .and. okvan) then
      CALL init_us_2( npw, igk, xk(1,1), vkb )
      call calbec(npw, vkb, wfc_mlwf, becp_ext, nbnd)
@@ -152,7 +153,7 @@ subroutine ultra_external( nbnd_start, nbnd_end, radius, itask)
      enddo
      if(okvan) then
         allocate(op_real(nrxx))
-!calculate operator O        
+!calculate operator O
         do ix=1,nr1
            do iy=1,nr2
               do iz=1,dfftp%npp(me_pool+1)
@@ -185,11 +186,11 @@ subroutine ultra_external( nbnd_start, nbnd_end, radius, itask)
      call flush_unit(stdout)
  !calculate product wfc*O in real space and back on G space
         psic(:) = ( 0.D0, 0.D0 )
-        psic(nls(igk(1:npw)))  = wfc_mlwf(1:npw,ii)     
-        psic(nlsm(igk(1:npw))) = CONJG( wfc_mlwf(1:npw,ii)) 
-        CALL cft3s( psic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, 2 )
+        psic(nls(igk(1:npw)))  = wfc_mlwf(1:npw,ii)
+        psic(nlsm(igk(1:npw))) = CONJG( wfc_mlwf(1:npw,ii))
+        CALL invfft ('Wave', psic, dffts)
         op(:)=op(:)*dble(psic(:))
-        CALL cft3s( op, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, -2 )
+        CALL fwfft ('Wave', op, dffts)
         op_wfc(1:npw)=op(nls(igk(1:npw)))
    ! calculates factors and normalizatio factor
         do jj=nbnd_start,nbnd_end
@@ -203,7 +204,7 @@ subroutine ultra_external( nbnd_start, nbnd_end, radius, itask)
            if(okvan) call adduspos_real(sca,qq_op,becp_ext(:,ii),becp_ext(:,jj))
          !  write(*,*) 'SCA',ii,jj,sca
            call flush_unit(stdout)
-           ultra_trans(ii-nbnd_start+1,jj-nbnd_start+1)=-sca           
+           ultra_trans(ii-nbnd_start+1,jj-nbnd_start+1)=-sca
         enddo
        ! ultra_trans(ii-nbnd_start+1,ii-nbnd_start+1)=ultra_trans(ii-nbnd_start+1,ii-nbnd_start+1)+1.d0
         ultra_trans(ii-nbnd_start+1,ii-nbnd_start+1)=1.d0!ATTENZIONE
@@ -251,14 +252,14 @@ subroutine ultra_external( nbnd_start, nbnd_end, radius, itask)
     call rotate_wannier_gamma( u_trans_old,1,1)
     deallocate(u_trans_old)
 
-!--------------------------------------------------    
+!--------------------------------------------------
 ! as old evc has been transformed, now is evc1, by rotate_wannier_gamma
-! davcio on evc1 iun_wannier  
+! davcio on evc1 iun_wannier
    iun_wannier = find_free_unit()
    call diropn(iun_wannier,"wfc_w",2*nwordwfc,exst)
    call davcio(evc1,nwordwfc,iun_wannier,1,-1)
    close(iun_wannier)
-!---------------------------------------------------    
+!---------------------------------------------------
 
 !update becs
     if(okvan) then
@@ -288,27 +289,27 @@ subroutine ultra_external( nbnd_start, nbnd_end, radius, itask)
           psic(nls(igk(1:npw)))  = evc1(1:npw,ii)
           psic(nlsm(igk(1:npw))) = CONJG( evc1(1:npw,ii) )
        END IF
-       CALL cft3s( psic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, 2 )
-       
-!put on array 
+       CALL invfft ('Wave', psic, dffts)
+
+!put on array
        tmpreals(:)=dble(psic(:))
        if(doublegrid) then
           call interpolate(tmpreal,tmpreals,1)
        else
           tmpreal(:)=tmpreals(:)
        endif
-!writes on file                                                                                                        
-       
+!writes on file
+
 !if itask==1 writes {c'} from position 1
-                                                                                      
+
        if(itask /= 1) then
           call  davcio( tmpreal,nrxx,iunrealwan2,ii,1)
        else
           call  davcio( tmpreal,nrxx,iunrealwan2,ii-nbnd_start+1,1)
        endif
        if ( ii < nbnd_end ) then
-!put on array                   
-                                                                                              
+!put on array
+
           tmpreals(:)=aimag(psic(:))
           if(doublegrid) then
              call interpolate(tmpreal,tmpreals,1)
@@ -336,7 +337,7 @@ subroutine ultra_external( nbnd_start, nbnd_end, radius, itask)
     close(iunrealwan2)
 
 
-!#endif 
+!#endif
   return
 
 end subroutine ultra_external

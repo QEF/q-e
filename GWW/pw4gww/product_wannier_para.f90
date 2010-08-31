@@ -34,7 +34,7 @@ SUBROUTINE product_wannier_para(nbndv, lcomplete, ene_loc, lambda)
   USE kinds,                ONLY : DP
   USE us
   USE wvfct,                ONLY : igk, g2kin, npwx, npw, nbndx
-  USE control_flags,        ONLY : gamma_only 
+  USE control_flags,        ONLY : gamma_only
   USE gvect
   USE basis
   USE klist
@@ -44,7 +44,8 @@ SUBROUTINE product_wannier_para(nbndv, lcomplete, ene_loc, lambda)
   USE uspp,                 ONLY : okvan
   USE wannier_gw
   USE realus,               ONLY : adduspos_gamma_r
-  USE fft_base,             ONLY : dfftp
+  USE fft_base,             ONLY : dfftp, dffts
+  USE fft_interfaces,       ONLY : fwfft
   USE mp,                   ONLY : mp_bcast, mp_barrier, mp_sum
 
 
@@ -55,7 +56,7 @@ SUBROUTINE product_wannier_para(nbndv, lcomplete, ene_loc, lambda)
   REAL(kind=DP), INTENT(in) :: ene_loc(nbnd_normal)!in input the KS energies on output the expectation values of
                                               !the energy operator for the localized states
   REAL(kind=DP), INTENT(in) :: lambda!paramter of energy operator, if >0. when calculating  valence * conduction products
-                                     !consider energy dependent cutoff 
+                                     !consider energy dependent cutoff
 
 
   INTEGER :: iunwannier,iungprod,iunprod,iunrprod
@@ -113,11 +114,11 @@ SUBROUTINE product_wannier_para(nbndv, lcomplete, ene_loc, lambda)
      nr3_end=nr3_end+dfftp%npp(i)
   end do
 #endif
-  
-  
+
+
 
   write(stdout,*) 'Routine product_wannier_para: start', lsmallgrid
-  
+
   if(okvan .and. lsmallgrid) write(stdout,*) 'ATTENTION: USPP AND SMALLGRID'
 
   allocate(tmpspacei(nrxx,nbndv),tmpspacej(nrxx),tmpreal(nrxx),tmpreal2(nrxx))
@@ -145,7 +146,7 @@ SUBROUTINE product_wannier_para(nbndv, lcomplete, ene_loc, lambda)
 
 ! open files for ouput product in g space and their centers and radii
 
-   
+
    iungprod = find_free_unit()
    if(.not.lsmallgrid) then
       CALL diropn( iungprod, 'wiwjwfc', max_ngm*2, exst )
@@ -215,12 +216,12 @@ SUBROUTINE product_wannier_para(nbndv, lcomplete, ene_loc, lambda)
 !determines bottoms and tops of boxes in grid units
 
          match = .true.
-  
+
          if(.not.lcomplete) then
             write(stdout,*) 'Center iw', iw, w_centers(1:3,iw)
             write(stdout,*) 'Center jw', jw, w_centers(1:3,jw)
 
-      
+
             do i=1,3
                ndist=ndistance(w_centers(i,iw),w_centers(i,jw),rspacel(i))
                if(ndist-w_radii(iw)-w_radii(jw) > 0 ) then
@@ -240,14 +241,14 @@ SUBROUTINE product_wannier_para(nbndv, lcomplete, ene_loc, lambda)
            if(is_even(rspacel(i)).and.wiwj%radius(i)==(rspacel(i)/2)) &
                 & wiwj%radius(i)=wiwj%radius(i)-1
         enddo
-            
+
          write(stdout,*) 'Center:', wiwj%center(1:3),wiwj%radius(1:3)
 
 !read wannier function jw
 
          call davcio( tmpspacej,nrxx,iunrealwan,jw,-1)
 
- 
+
          ! calculates product in R space
 
 !determines origin
@@ -259,7 +260,7 @@ SUBROUTINE product_wannier_para(nbndv, lcomplete, ene_loc, lambda)
 
 
 !        call mp_barrier
-        
+
 
         tmpreal(:)=0.d0
 !adds US term if required
@@ -274,11 +275,11 @@ SUBROUTINE product_wannier_para(nbndv, lcomplete, ene_loc, lambda)
                     n1=nop(1)+ix
                     if(n1<1) n1=nr1+n1
                     if(n1>nr1) n1=n1-nr1
-                    
+
                     n2=nop(2)+iy
                     if(n2<1) n2=nr2+n2
                     if(n2>nr2) n2=n2-nr2
-                    
+
                     n3=nop(3)+iz
                     if(n3<1) n3=nr3+n3
                     if(n3>nr3) n3=n3-nr3
@@ -288,7 +289,7 @@ SUBROUTINE product_wannier_para(nbndv, lcomplete, ene_loc, lambda)
                        if(nn<1 .or. nn > nrxx)  then
                           CALL errore( 'rsca', 'rsca', nn )
                        endif
-                       rsca=rsca+(tmpspacei(nn,iw)*tmpspacej(nn)+tmpreal2(nn))**2.d0  
+                       rsca=rsca+(tmpspacei(nn,iw)*tmpspacej(nn)+tmpreal2(nn))**2.d0
                        tmpreal(nn)=&
                             &tmpspacei(nn,iw)*tmpspacej(nn)+tmpreal2(nn)
                     endif
@@ -305,22 +306,22 @@ SUBROUTINE product_wannier_para(nbndv, lcomplete, ene_loc, lambda)
 
          rsca=rsca/real(rspacel(1)*rspacel(2)*rspacel(3))
 
-         
-         
+
+
          call mp_sum(rsca)
 
          write(stdout,*) 'RSCA :', iw,jw,rsca!ATTENZIONE
 
 !check if there is overlap
-         if(rsca >= cutoff_wpr_tmp) then  
+         if(rsca >= cutoff_wpr_tmp) then
             write(stdout,*) 'OVERLAP :', iw,jw,rsca
-            
+
 
             numw_prod=numw_prod+1
 
             wiwj%i=iw
             wiwj%j=jw
-            
+
             if(ionode) write(iunprod) wiwj
 
 
@@ -340,7 +341,7 @@ SUBROUTINE product_wannier_para(nbndv, lcomplete, ene_loc, lambda)
             enddo
             call mp_sum(rsca)
             write(stdout,*) 'RSCA', rsca/(nr1*nr2*nr3)!ATTENZIONE
-            CALL cft3( tmpspacec,nr1, nr2, nr3, nrx1, nrx2, nrx3, -1 )
+            CALL fwfft ('Dense', tmpspacec, dfftp)
              rsca=0.d0
             do nn=1,ngm
               rsca=rsca+2.d0*conjg( tmpspacec(nl(nn)))*tmpspacec(nl(nn))
@@ -350,7 +351,7 @@ SUBROUTINE product_wannier_para(nbndv, lcomplete, ene_loc, lambda)
             endif
             call mp_sum(rsca)
             write(stdout,*) 'RSCA', rsca!ATTENZIONE
-            !if(jw>nbndv) 
+            !if(jw>nbndv)
             sum_vcvc =sum_vcvc+rsca
           else
 !if smallgrid and doublegrid, a interpolation to smallgrid is required
@@ -360,7 +361,7 @@ SUBROUTINE product_wannier_para(nbndv, lcomplete, ene_loc, lambda)
               tmpspacejs(:)=tmpspacej(:)
             endif
             tmpspacec(:)=dcmplx(tmpspacejs(:),0.d0)
-            CALL cft3s( tmpspacec,nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, -2 )
+            CALL fwfft ('Wave', tmpspacec, dffts)
           endif
 
 
@@ -377,10 +378,10 @@ SUBROUTINE product_wannier_para(nbndv, lcomplete, ene_loc, lambda)
           if(jw>nbndv) numw_prod_val_cond= numw_prod
           if(jw>nbndv+num_nbnd_first) numw_prod_val_cond_sec = numw_prod
           endif!overlap
- 
- 
 
- 
+
+
+
         endif!match
 
 
@@ -393,7 +394,7 @@ SUBROUTINE product_wannier_para(nbndv, lcomplete, ene_loc, lambda)
   write(stdout,*) 'SUM VCVC', sum_vcvc
 
   close(iungprod)
-  if(ionode) close(iunprod)  
+  if(ionode) close(iunprod)
   close(iunrealwan)
   deallocate(tmpspacei)
   deallocate(tmpspacej)

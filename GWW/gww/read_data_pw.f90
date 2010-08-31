@@ -98,11 +98,11 @@ SUBROUTINE read_data_pw_u(wu,prefix)
     ! MODIFY the xc and add the U contribution:
     do iw=1,wu%nums
        write(stdout,*) 'OLD wu%ene_xc(',iw,')=', wu%ene_xc(iw)
-       write(stdout,*) 'wu%ene_u(',iw,')=', wu%ene_u(iw) 
+       write(stdout,*) 'wu%ene_u(',iw,')=', wu%ene_u(iw)
     enddo
     call flush_unit(stdout)
     !
-    wu%ene_xc=wu%ene_xc+wu%ene_u 
+    wu%ene_xc=wu%ene_xc+wu%ene_u
     !
     do iw=1,wu%nums
        write(stdout,*) 'NEW wu%ene_xc(',iw,')=', wu%ene_xc(iw)
@@ -211,7 +211,7 @@ END SUBROUTINE read_data_pw_v
 
 
 SUBROUTINE read_data_pw_q(qm,prefix,l_v_products)
-!this subroutine reads in and allocate the arrays for the 
+!this subroutine reads in and allocate the arrays for the
 !description of overlaps of (orthonormalized) products of wanniers
 !with products of wannier
 
@@ -254,7 +254,7 @@ SUBROUTINE read_data_pw_q(qm,prefix,l_v_products)
 
        if(ionode)    read(iunq) qm%wp(iw)%numij
        call mp_bcast(qm%wp(iw)%numij, ionode_id)
-       
+
 !for each descriptor allocates arrays
        allocate(qm%wp(iw)%ij(2,qm%wp(iw)%numij))
        allocate(qm%wp(iw)%o(qm%wp(iw)%numij))
@@ -329,7 +329,7 @@ END SUBROUTINE read_data_pw_ortho_polaw
 
 SUBROUTINE read_data_pw_wp_psi(wp,prefix)
 !this subroutine reads in and allocate the arrays for the
-!description of products of valence^2 times two wannier products 
+!description of products of valence^2 times two wannier products
 
     USE kinds,                ONLY : DP
     USE io_global,            ONLY : stdout, ionode, ionode_id
@@ -354,7 +354,7 @@ SUBROUTINE read_data_pw_wp_psi(wp,prefix)
 
 !read in basis length
        read(iunq) wp%numpw
-       read(iunq) wp%nums_psi     
+       read(iunq) wp%nums_psi
     endif
     call mp_bcast(wp%numpw, ionode_id)
     call mp_bcast(wp%nums_psi, ionode_id)
@@ -433,7 +433,7 @@ END SUBROUTINE read_data_pw_u_prim
 
 
 SUBROUTINE read_data_pw_v_pot_prim(vp,prefix, l_zero)
-!this subroutine reads in the coulombian potential and the overlap index 
+!this subroutine reads in the coulombian potential and the overlap index
 
     USE kinds,                ONLY : DP
     USE io_global,            ONLY : stdout, ionode, ionode_id
@@ -534,7 +534,7 @@ SUBROUTINE read_data_pw_wp_psi_cutoff_index(wpi,prefix)
     call mp_bcast(wpi%numpw, ionode_id)
     call mp_bcast(wpi%nums_psi, ionode_id)
     call mp_bcast(wpi%numpwpw, ionode_id)
-    
+
     allocate(wpi%index(2,wpi%numpwpw))
 
     if(ionode) then
@@ -545,7 +545,7 @@ SUBROUTINE read_data_pw_wp_psi_cutoff_index(wpi,prefix)
     endif
 
     call mp_bcast(wpi%index, ionode_id)
-    
+
     return
 END SUBROUTINE read_data_pw_wp_psi_cutoff_index
 
@@ -570,11 +570,11 @@ SUBROUTINE read_data_pw_wp_psi_cutoff_data(wpi,wp,prefix)
     INTEGER :: i, pos,state
     REAL(kind=DP) :: w
 
-    
+
     wp%numpw=wpi%numpw
     wp%nums_psi=wpi%nums_psi
     wp%numpwpw=wpi%numpwpw
-    
+
     allocate(wp%wwp(wp%numpwpw,wp%nums_psi))
 
     if(ionode) then
@@ -665,7 +665,7 @@ SUBROUTINE read_data_pw_head_epsilon(he, prefix, l_wing_epsilon)
     endif
     call mp_bcast(he%freqs, ionode_id)
     call mp_bcast(he%head, ionode_id)
-    
+
     if(ionode) then
        iun = find_free_unit()
        open( unit=iun, file=trim(prefix)//'.gzero', status='old',form='unformatted')
@@ -705,7 +705,7 @@ SUBROUTINE read_data_pw_head_epsilon(he, prefix, l_wing_epsilon)
           do i=1,he%n+1
              read(iun) he%wing_c(1:he%numpw,i)
           enddo
-          
+
           close(iun)
        endif
        do i=1,he%n+1
@@ -731,7 +731,7 @@ SUBROUTINE read_data_pw_cprim_prod(cpp, prefix, l_vc, ok_read, l_vcw_overlap, l_
 
     implicit none
 
-    
+
     TYPE(cprim_prod) :: cpp!the structure to be read
     CHARACTER(LEN=256) ::  prefix!to designate the PW files
     LOGICAL ::  l_vc !if true reads in the vc terms
@@ -825,7 +825,7 @@ SUBROUTINE read_data_pw_cprim_prod(cpp, prefix, l_vc, ok_read, l_vcw_overlap, l_
        enddo
     endif
     if(ionode) close(iunsterms)
-    
+
     cpp%is_parallel=.false.
     cpp%numpw_para=cpp%numpw
     cpp%first_para=1
@@ -867,7 +867,7 @@ END SUBROUTINE read_data_pw_dft_xc
 
 SUBROUTINE read_data_pw_dft_u(ene_dft_u,max_i,prefix)
 !this subroutine reads in the expectation value dur to the u energies
-   
+
     USE kinds,                ONLY : DP
     USE io_global,            ONLY : stdout, ionode, ionode_id
     USE io_files,             ONLY : find_free_unit
@@ -923,8 +923,8 @@ SUBROUTINE read_data_pw_upper_states(us,prefix)
 
     implicit none
 
-    TYPE(upper_states) :: us!structure to be read and initialized  
-    CHARACTER(LEN=256) ::  prefix!to designate the PW files        
+    TYPE(upper_states) :: us!structure to be read and initialized
+    CHARACTER(LEN=256) ::  prefix!to designate the PW files
 
     INTEGER :: iunu
     INTEGER :: ii
@@ -942,7 +942,7 @@ SUBROUTINE read_data_pw_upper_states(us,prefix)
     call mp_bcast(us%nums, ionode_id)
     call mp_bcast(us%nums_occ, ionode_id)
     call mp_bcast(us%nums_reduced, ionode_id)
-    
+
     allocate(us%ene(us%nums_reduced))
 
     if(ionode) then

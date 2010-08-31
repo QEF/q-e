@@ -4,7 +4,7 @@
   MODULE expansion
 !this module conatins descriptions and subroutine for a multipole expansion
 !of the self energy
-   USE kinds, ONLY : DP 
+   USE kinds, ONLY : DP
 
 
    TYPE self_expansion
@@ -20,7 +20,7 @@
   END TYPE self_expansion
 
   CONTAINS
- 
+
   SUBROUTINE free_memory_self_expansion(se)
 !if allocated deallocates
    implicit none
@@ -87,14 +87,14 @@
     allocate(a_good(se%n_multipoles))
     allocate(b_good(se%n_multipoles))
 
-  
+
   !  allocate(z(ss%n_grid_fit),s(ss%n_grid_fit))
     allocate(z(options%n_fit),s(options%n_fit))
 
 !allocate and set data arrays
       totalperiod=2.d0*ss%tau+2.d0*ss%tau/real(ss%n)
       df=2.d0*pi/totalperiod
-  
+
     if(options%offset_fit == 0) then
          do ii=1,options%n_fit-1
             if(tf%l_fft_timefreq) then
@@ -145,7 +145,7 @@
                   s(jj-options%offset_fit+1)=ss%diag_freq_fit(ii,jj+ss%n_grid_fit+1)!ATTENZIONE
                 enddo
              endif
-       
+
              se%a_0(ii)=(0.0,0.0d0)
              do jj=1,options%n_multipoles
                 se%a(jj,ii)=cmplx(real(jj)*(0.01d0),0.d0)
@@ -162,7 +162,7 @@
                    b_old(jj)=se%b(jj,ii)
                 enddo
 
-                
+
                 if(options%n_max_minpack /= 0) then
                    write(stdout,*) 'Calling minpack'!ATTENZIONE
                    call fit_multipole_minpack(options%n_fit, &
@@ -188,7 +188,7 @@
                    se%a(jj,ii)=a_old(jj)
                    se%b(jj,ii)=b_old(jj)
                 enddo
-            
+
              enddo
              se%a_0(ii)=a_0_good
              do jj=1,options%n_multipoles
@@ -213,7 +213,7 @@
    deallocate(a_good,b_good)
   return
 END SUBROUTINE create_self_energy_fit
- 
+
   SUBROUTINE func_fit(se,z,i,fz)
 !this functions returns the value of the fit at z,
 !relative to the i-th parameters
@@ -244,7 +244,7 @@ END SUBROUTINE create_self_energy_fit
    return
 
 
-  END SUBROUTINE 
+  END SUBROUTINE
 
   SUBROUTINE print_fit_onfile(tf, se,ss)
 !this subroutines prints the resulta of the fit on file:
@@ -263,7 +263,7 @@ END SUBROUTINE create_self_energy_fit
    TYPE(times_freqs), INTENT(in) :: tf!for frequency grid
    TYPE(self_expansion) :: se!parameters of fit
    TYPE(self_storage)   :: ss!self energy data
-   
+
 
    INTEGER :: ii,jj
    INTEGER :: iun
@@ -298,14 +298,14 @@ END SUBROUTINE create_self_energy_fit
             zz=cmplx(0.d0,freq)
             call value_on_frequency(se,ii,freq,gz)
             !call func_fit(se,zz,ii,fz)
-            call value_on_frequency_complex(se,ii,zz,fz)            
+            call value_on_frequency_complex(se,ii,zz,fz)
             if(tf%grid_fit==0) then
-               write(iun,'(4f12.6)') freq, real(fz),real(ss%diag(ii,jj+ss%n)),real( gz)     
+               write(iun,'(4f12.6)') freq, real(fz),real(ss%diag(ii,jj+ss%n)),real( gz)
             else
                write(iun,'(4f12.6)') freq, real(fz),real(ss%diag_freq_fit(ii,jj+ss%n_grid_fit+1)),real( gz)
             endif
          enddo
-         
+
          close(iun)
 
 
@@ -351,8 +351,8 @@ END SUBROUTINE create_self_energy_fit
    INTEGER,INTENT(in) :: is!state considered
    REAL(kind=DP), INTENT(in) :: omega!real frequency considered
    COMPLEX(kind=DP), INTENT(out) :: sigma! <\Psi_i|\Sigma_c(w)|\Psi_i>
- 
-   INTEGER :: ii 
+
+   INTEGER :: ii
 !control is
    if(is>se%max_i) then
      write(stdout,*) 'Routine value_on_frequency is too large'
@@ -369,12 +369,12 @@ END SUBROUTINE create_self_energy_fit
      do ii=1,se%n_multipoles
        sigma=sigma+conjg(se%a(ii,is))/(cmplx(omega,0.d0)-conjg(se%b(ii,is)))
      enddo
-   endif  
+   endif
 
    return
 
   END SUBROUTINE
- 
+
 
 
   SUBROUTINE derivative_on_frequency(se,is,omega,dsigma)

@@ -40,12 +40,12 @@ subroutine  allocate_wannier
 end subroutine allocate_wannier
 
 subroutine  deallocate_wannier
-!#ifdef __GWW                                                                                                                    
+!#ifdef __GWW
   USE wannier_gw,   ONLY :  wannier_centers, wannier_radii, u_trans, w_centers, w_radii, becp_gw, &
        & w_radii_c, w_centers_c, becp_gw_c
-                                                                                                                             
+
   implicit none
-                                                                                                                             
+
   if(allocated(wannier_centers)) deallocate(wannier_centers)
   if(allocated(wannier_radii))   deallocate(wannier_radii)
   if(allocated(u_trans))         deallocate(u_trans)
@@ -56,7 +56,7 @@ subroutine  deallocate_wannier
   if(allocated(w_radii_c))         deallocate(w_radii_c)
   if(allocated(becp_gw_c))         deallocate(becp_gw_c)
 
-  
-!#endif                                                                                                                             
+
+!#endif
   return
 end subroutine deallocate_wannier

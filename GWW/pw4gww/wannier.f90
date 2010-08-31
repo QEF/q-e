@@ -8,7 +8,7 @@ subroutine go_wannier( iun_wannier, tresh, maxiter,nbndv, itask, l_on_ene, ene_l
 !-------------------------
 ! this routine read the wfcs from iun_wannier then
 ! transfrom to real wfcs, transform to wannier functions
-! with treshold tresh and maxiter 
+! with treshold tresh and maxiter
 ! using Gygi scheme
 ! and writes wfcs on iun_wannier and writes wannier_centers file
 ! it's possible to localized two different subspaces
@@ -30,7 +30,7 @@ subroutine go_wannier( iun_wannier, tresh, maxiter,nbndv, itask, l_on_ene, ene_l
   USE wannier_gw
   USE mp, ONLY : mp_sum, mp_bcast, mp_barrier
   USE mp_global,  ONLY : mpime, nproc
-  
+
   implicit none
 
   INTEGER, INTENT(in) :: iun_wannier !units for reading wfc
@@ -42,7 +42,7 @@ subroutine go_wannier( iun_wannier, tresh, maxiter,nbndv, itask, l_on_ene, ene_l
   REAL(kind=DP), INTENT(inout) :: ene_loc(nbnd_normal)!in input the KS energies on output the expectation values of
                                               !the energy operator for the localized states
   REAL(kind=DP), INTENT(in) :: lambda!paramter of energy operator
-  
+
 
   !  --- Internal definitions ---
   INTEGER :: i,j,k,l,it,iw, ii
@@ -56,7 +56,7 @@ subroutine go_wannier( iun_wannier, tresh, maxiter,nbndv, itask, l_on_ene, ene_l
   REAL(kind=DP) :: theta, theta4, d2, aa(2), cc, ss, tempi, tempj
   REAL(kind=DP) :: omg0,omg1!omega for testi convergence
   COMPLEX(kind=DP) :: sca
- 
+
   REAL(kind=DP), ALLOCATABLE :: tmp_mat(:,:)
   INTEGER :: nbnd_second
 
@@ -81,17 +81,17 @@ subroutine go_wannier( iun_wannier, tresh, maxiter,nbndv, itask, l_on_ene, ene_l
      ALLOCATE( matsincos(nbnd_normal,nbnd_normal,7))
   endif
 
-  
+
 
 
 
 !transfrom to real wfcs:
-  
+
   write(stdout,*) 'Transform to real wfcs'
   call flush_unit(stdout)
 
   if(nbndv<1 .OR. nbndv > nbnd_normal) call errore('go_wannier','nbndv: illegal value',1)
-  !if(mod(nbndv,2) /= 0 ) call errore('go_wannier','nbndv, odd',1) 
+  !if(mod(nbndv,2) /= 0 ) call errore('go_wannier','nbndv, odd',1)
 
   if(.not.gamma_only) then
     call real_wfc(u_trans, 1, iun_wannier,nbndv)
@@ -116,7 +116,7 @@ subroutine go_wannier( iun_wannier, tresh, maxiter,nbndv, itask, l_on_ene, ene_l
   call  flush_unit(stdout)
 
 
-! set weights 
+! set weights
 
   do i=1,3
      w(i)=((at(i,i)*alat)/pi)
@@ -142,7 +142,7 @@ subroutine go_wannier( iun_wannier, tresh, maxiter,nbndv, itask, l_on_ene, ene_l
         matsincos(i,i,7)=lambda*ene_loc(i)
      enddo
   endif
-  
+
   if(l_on_ene) then
      n_oper=7
   else
@@ -174,10 +174,10 @@ subroutine go_wannier( iun_wannier, tresh, maxiter,nbndv, itask, l_on_ene, ene_l
         omg0=omg0 + matsincos(i,i,k)*matsincos(i,i,k)
      enddo
   enddo
-  
+
   write(stdout ,*) 'LOCALIZING WANNIER FUNCTIONS:',omg0
   call flush_unit(stdout)
-  
+
 
 ! Start Iteration =====================================================
 
@@ -185,7 +185,7 @@ subroutine go_wannier( iun_wannier, tresh, maxiter,nbndv, itask, l_on_ene, ene_l
   do it=1,maxiter
      do i=1,nbndv
         do j=i+1,nbndv
-           
+
 ! Construct aa
            aa(:)=0.d0
            do k=1,n_oper
@@ -195,7 +195,7 @@ subroutine go_wannier( iun_wannier, tresh, maxiter,nbndv, itask, l_on_ene, ene_l
               aa(2)=aa(2)+matsincos(i,j,k)*matsincos(i,j,k)
               aa(2)=aa(2)-0.25d0*diff*diff
               !!!aa(1)=aa(1)+matsincos(i,j,k)*(matsincos(i,i,k)-matsincos(j,j,k))
-              !!!aa(2)=aa(2)+matsincos(i,j,k)*matsincos(i,j,k)-0.25d0*(matsincos(i,i,k)-matsincos(j,j,k))*(matsincos(i,i,k)-matsincos(j,j,k))
+              !!!aa(2)=aa(2)+matsincos(i,j,k)*matsincos(i,j,k)-0.25d0*(matsincos(i,i,k)-matsincos(j,j,k))*(matsincos(i,i,k)-matsinco
            end do
            !!! for debugging
            !write(stdout ,*) 'aa(1)=', aa(1) , 'and aa(2)=', aa(2)
@@ -206,7 +206,7 @@ subroutine go_wannier( iun_wannier, tresh, maxiter,nbndv, itask, l_on_ene, ene_l
               theta4=-aa(1)/aa(2)
               theta=0.25*datan(theta4)
            elseif (abs(aa(1)).lt. accuracy_sincos ) then
-              theta=0.d0  
+              theta=0.d0
               aa(2)=0.d0
            else
               theta=pi/4.d0
@@ -218,7 +218,7 @@ subroutine go_wannier( iun_wannier, tresh, maxiter,nbndv, itask, l_on_ene, ene_l
            !!! for debugging
            !write(stdout ,*) 'd2=', d2
 
-           if(d2.le.0.d0) theta=theta+pi/4.d0 
+           if(d2.le.0.d0) theta=theta+pi/4.d0
 !
            cc=dcos(theta)
            ss=dsin(theta)
@@ -253,23 +253,23 @@ subroutine go_wannier( iun_wannier, tresh, maxiter,nbndv, itask, l_on_ene, ene_l
 !
         end do
      end do
-     
+
      omg1=0.d0
      do k=1,n_oper
         do i=1,nbndv
            omg1=omg1+matsincos(i,i,k)*matsincos(i,i,k)
         end do
      end do
-   
- 
+
+
      write(stdout,*) 'Spread', omg1,omg0,nbnd_normal,nbndv
      call flush_unit(stdout)
-     
+
      error_relative=abs(omg1-omg0)/omg0
 
      write(stdout,*) 'error_relative=', error_relative, ' while tresh=', tresh
      call flush_unit(stdout)
- 
+
      if(error_relative .lt. tresh ) EXIT
      omg0=omg1
 
@@ -321,14 +321,14 @@ subroutine go_wannier( iun_wannier, tresh, maxiter,nbndv, itask, l_on_ene, ene_l
               omg0=omg0 + matsincos(i,i,k)*matsincos(i,i,k)
            enddo
         enddo
-        
+
         write(stdout,*) 'LOCALIZING WANNIER FUNCTIONS:'
         call flush_unit(stdout)
 
 ! Start Iteration =====================================================
 
 !parallelization strategy:
-!copy matsincos in smaller array and distribute among processors for each operation 
+!copy matsincos in smaller array and distribute among processors for each operation
         n_oper_par=n_oper/nproc
         if(n_oper_par*nproc < n_oper) n_oper_par=n_oper_par+1
         oper_start=mpime*n_oper_par+1
@@ -364,13 +364,13 @@ subroutine go_wannier( iun_wannier, tresh, maxiter,nbndv, itask, l_on_ene, ene_l
                     theta4=-aa(1)/aa(2)
                     theta=0.25*datan(theta4)
                  elseif (abs(aa(1)).lt. accuracy_sincos ) then
-                    theta=0.d0  
+                    theta=0.d0
                     aa(2)=0.d0
                  else
                     theta=pi/4.d0
                  endif
                  d2=aa(1)*dsin(4.*theta)-aa(2)*dcos(4.*theta)
-                 if(d2.le.0.d0) theta=theta+pi/4.d0 
+                 if(d2.le.0.d0) theta=theta+pi/4.d0
 !
                  cc=dcos(theta)
                  ss=dsin(theta)
@@ -382,7 +382,7 @@ subroutine go_wannier( iun_wannier, tresh, maxiter,nbndv, itask, l_on_ene, ene_l
                  if(oper_start>0) then
                     do l=1,oper_end-oper_start+1
                        ! AR
-                   
+
                        do k=nbnd_start,nbnd_end
                           tempi=matsincos_par(k,i,l)*cc+matsincos_par(k,j,l)*ss
                           tempj=-matsincos_par(k,i,l)*ss+matsincos_par(k,j,l)*cc
@@ -390,14 +390,14 @@ subroutine go_wannier( iun_wannier, tresh, maxiter,nbndv, itask, l_on_ene, ene_l
                           matsincos_par(k,j,l)=tempj
                        end do
 
-                     
+
                        do k=nbnd_start,nbnd_end
                           tempi=cc*matsincos_par(i,k,l)+ss*matsincos_par(j,k,l)
                           tempj=-ss*matsincos_par(i,k,l)+cc*matsincos_par(j,k,l)
                           matsincos_par(i,k,l)=tempi
                           matsincos_par(j,k,l)=tempj
                        end do
-                     
+
                     end do
                  endif
 
@@ -417,7 +417,7 @@ subroutine go_wannier( iun_wannier, tresh, maxiter,nbndv, itask, l_on_ene, ene_l
 
 !#else
                  call start_clock('vettor1')
-               
+
                  do k=nbnd_start_me,nbnd_end_me
                     tempi=rot_u(k,i)*cc+rot_u(k,j)*ss
                     tempj=-rot_u(k,i)*ss+rot_u(k,j)*cc
@@ -426,7 +426,7 @@ subroutine go_wannier( iun_wannier, tresh, maxiter,nbndv, itask, l_on_ene, ene_l
                  enddo
 
 !
-!               
+!
 !#endif
 !
                  call mp_barrier
@@ -438,7 +438,7 @@ subroutine go_wannier( iun_wannier, tresh, maxiter,nbndv, itask, l_on_ene, ene_l
            call print_clock('vettor0')
            call print_clock('vettor1')
 
-     
+
            omg1=0.d0
            if(oper_start>0) then
               do k=1,oper_end-oper_start+1
@@ -448,7 +448,7 @@ subroutine go_wannier( iun_wannier, tresh, maxiter,nbndv, itask, l_on_ene, ene_l
               end do
            endif
            call mp_sum(omg1)
- 
+
            write(stdout,*) 'Spread', omg1,omg0
            call flush_unit(stdout)
 
@@ -459,7 +459,7 @@ subroutine go_wannier( iun_wannier, tresh, maxiter,nbndv, itask, l_on_ene, ene_l
 
            if(error_relative .lt. tresh ) EXIT
            omg0=omg1
-           
+
         end do
 
 !re-distribute rotation matrix
@@ -475,7 +475,7 @@ subroutine go_wannier( iun_wannier, tresh, maxiter,nbndv, itask, l_on_ene, ene_l
         call print_clock('trigo0')
         call print_clock('vettor0')
 
-        !centers of wanniers                                                                                                          
+        !centers of wanniers
 
         do i=nbnd_start,nbnd_end
            sca_mat(:)=0.d0
@@ -495,7 +495,7 @@ subroutine go_wannier( iun_wannier, tresh, maxiter,nbndv, itask, l_on_ene, ene_l
            write(stdout,*) 'Center Wannier:', wannier_centers(1,i)*alat,wannier_centers(2,i)*alat,wannier_centers(3,i)*alat
         enddo
         call flush_unit(stdout)
-        
+
      endif
 
 
@@ -508,7 +508,7 @@ subroutine go_wannier( iun_wannier, tresh, maxiter,nbndv, itask, l_on_ene, ene_l
  if(nbndv<nbnd_normal .and. num_nbnd_first /=0 .and. itask == 0) then
 
 
-    
+
 
 
 !loop on conduction states manifolds
@@ -516,7 +516,7 @@ subroutine go_wannier( iun_wannier, tresh, maxiter,nbndv, itask, l_on_ene, ene_l
      nbnd_start=nbndv+num_nbnd_first+1
      nbnd_end=nbnd_normal
      nbnd_second=nbnd_end-nbnd_start+1
-     
+
 
      allocate(tmp_mat(nbnd_second,nbnd_second))
 
@@ -555,7 +555,7 @@ subroutine go_wannier( iun_wannier, tresh, maxiter,nbndv, itask, l_on_ene, ene_l
         write(stdout,*) 'LOCALIZING WANNIER FUNCTIONS:'
         call flush_unit(stdout)
 
-               
+
 
 
 ! Start Iteration =====================================================
@@ -591,7 +591,7 @@ subroutine go_wannier( iun_wannier, tresh, maxiter,nbndv, itask, l_on_ene, ene_l
 
 
 
-                
+
                  d2=aa(1)*dsin(4.d0*theta)-aa(2)*dcos(4.d0*theta)
                  if(d2.le.0.d0) theta=theta+pi/4.d0
 
@@ -600,7 +600,7 @@ subroutine go_wannier( iun_wannier, tresh, maxiter,nbndv, itask, l_on_ene, ene_l
                  cc=dcos(theta)
                  ss=dsin(theta)
 
-                 
+
 
                  call stop_clock('trigo')
                  call start_clock('vettor')
@@ -643,21 +643,21 @@ subroutine go_wannier( iun_wannier, tresh, maxiter,nbndv, itask, l_on_ene, ene_l
 !                       tmp_mat(k,j)=tempj
 !                    end do
 
-!                     vtmpi(:)=cc*tmp_mat(:,i)+ss*tmp_mat(:,j) 
+!                     vtmpi(:)=cc*tmp_mat(:,i)+ss*tmp_mat(:,j)
 !                     vtmpj(:)=-ss*tmp_mat(:,i)+cc*tmp_mat(:,j)
 !                     tmp_mat(:,i)=vtmpi(:)
 !                     tmp_mat(:,j)=vtmpj(:)
 
 !                    call mytranspose(tmp_mat,nbnd_second,matsincos(:,:,l),nbnd,nbnd_second,nbnd_second)
 
-                    
+
 
                     endif
                   end do
 
 ! update U : U=UR
 
-                 
+
 !                 do k=nbnd_start,nbnd_end
 !                    tempi=rot_u(k,i)*cc+rot_u(k,j)*ss
 !                    tempj=-rot_u(k,i)*ss+rot_u(k,j)*cc
@@ -739,14 +739,14 @@ subroutine go_wannier( iun_wannier, tresh, maxiter,nbndv, itask, l_on_ene, ene_l
      endif
 
 
-    
- 
+
+
      deallocate(matsincos)
 
 
 
 
- 
+
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 !------ rotate wfc
@@ -782,7 +782,7 @@ subroutine go_wannier( iun_wannier, tresh, maxiter,nbndv, itask, l_on_ene, ene_l
 !crot_u and u_trans are complex, rot_u is real
 
   allocate(crot_u(nbnd_normal,nbnd_normal),crot_u_tmp(nbnd_normal,nbnd_normal))
- 
+
 !  crot_u(:,:)=(0.d0,0.d0)
 !  do i=1,nbnd
 !    do j=1,nbnd
@@ -815,7 +815,7 @@ subroutine go_wannier( iun_wannier, tresh, maxiter,nbndv, itask, l_on_ene, ene_l
 
 
 
- 
+
   deallocate(rot_u)
   deallocate(crot_u,crot_u_tmp)
 
@@ -961,7 +961,7 @@ function fast_cos(theta,na,nb,table_sin_a, table_sin_b, table_cos_a, table_cos_b
    REAL(kind=DP) :: table_sin_b(nb)!tabel of sin (pi/2)/Na  from 0 to pi/2
    REAL(kind=DP) :: table_cos_a(na)!tabel of cos (pi/2)/Na  from 0 to pi/2
    REAL(kind=DP) :: table_cos_b(nb)!tabel of cos (pi/2)/Na  from 0 to pi/2
-   
+
    INTEGER, PARAMETER :: n=20!number of bisections
 
    REAL(kind=DP) :: sign, tang
@@ -973,13 +973,13 @@ function fast_cos(theta,na,nb,table_sin_a, table_sin_b, table_cos_a, table_cos_b
 
    if(tg >= 0.d0) then
       sign=1.d0
-      tang=tg 
+      tang=tg
    else
       sign=-1.d0
       tang=-tg
    endif
 
-   
+
    ang=pi/4.d0
    delta=pi/4.d0
    do i=1,n
@@ -992,7 +992,7 @@ function fast_cos(theta,na,nb,table_sin_a, table_sin_b, table_cos_a, table_cos_b
          ang=ang-delta
       endif
    enddo
-   
+
    fast_atan=sign*ang
 
    return

@@ -61,14 +61,14 @@ SUBROUTINE wannier_uterms(n_set,l_square,lzero, orthonorm, ecutoff)
       if(gg(ig)*tpiba2 >= ecutoff) exit
       ngm_max=ngm_max+1
    enddo
-   
+
    write(stdout,*) 'NGM MAX:', ngm_max, ngm
 
 
-  
 
 
-  
+
+
 ! reads wfcs from iunwfc
 
    CALL gk_sort(xk(1,1),ngm,g,ecutwfc/tpiba2, &
@@ -91,9 +91,9 @@ SUBROUTINE wannier_uterms(n_set,l_square,lzero, orthonorm, ecutoff)
 
    do ig=1,max_ngm
       qq = g(1,ig)**2.d0 + g(2,ig)**2.d0 + g(3,ig)**2.d0
-      
+
       if(.not.l_truncated_coulomb) then
-         
+
          if (qq > 1.d-8) then
             fac(ig)=e2*fpi/(tpiba2*qq + yukawa )
          else
@@ -112,8 +112,8 @@ SUBROUTINE wannier_uterms(n_set,l_square,lzero, orthonorm, ecutoff)
       endif
 
    end do
- 
-   
+
+
    fac(:)=fac(:)/omega
    if(lzero .and. gstart==2) fac(1)=0.d0
    if(l_square) fac(:)=dsqrt(fac(:))
@@ -129,7 +129,7 @@ SUBROUTINE wannier_uterms(n_set,l_square,lzero, orthonorm, ecutoff)
       write(stdout,*) 'uterms iiw', iiw
       do iw=(iiw-1)*n_set+1,min(iiw*n_set,numw_prod)
          CALL davcio(tmpspacei(:,iw-(iiw-1)*n_set),max_ngm*2,iungprod,iw,-1)
-         
+
         if(gamma_only .and. gstart == 2) then
            tmpspacei(1,iw-(iiw-1)*n_set)=dble(tmpspacei(1,iw-(iiw-1)*n_set))
         endif
@@ -250,14 +250,14 @@ SUBROUTINE wannier_uterms_red(n_set,lzero, ecutoff,vmat,dimr,dimc,n_r,n_c,numpw,
       if(gg(ig)*tpiba2 >= ecutoff) exit
       ngm_max=ngm_max+1
    enddo
-   
+
    write(stdout,*) 'NGM MAX:', ngm_max, ngm
 
 
-  
 
 
-  
+
+
 ! reads wfcs from iunwfc
 
    CALL gk_sort(xk(1,1),ngm,g,ecutwfc/tpiba2, &
@@ -282,9 +282,9 @@ SUBROUTINE wannier_uterms_red(n_set,lzero, ecutoff,vmat,dimr,dimc,n_r,n_c,numpw,
 
    do ig=1,max_ngm
       qq = g(1,ig)**2.d0 + g(2,ig)**2.d0 + g(3,ig)**2.d0
-      
+
       if(.not.l_truncated_coulomb) then
-         
+
          if (qq > 1.d-8) then
             fac(ig)=e2*fpi/(tpiba2*qq + yukawa )
          else
@@ -303,7 +303,7 @@ SUBROUTINE wannier_uterms_red(n_set,lzero, ecutoff,vmat,dimr,dimc,n_r,n_c,numpw,
       endif
 
    end do
- 
+
 
    fac(:)=fac(:)/omega
    if(lzero .and. gstart==2) fac(1)=0.d0
@@ -314,7 +314,7 @@ SUBROUTINE wannier_uterms_red(n_set,lzero, ecutoff,vmat,dimr,dimc,n_r,n_c,numpw,
       write(stdout,*) 'uterms iiw', iiw
       do iw=(iiw-1)*n_set+1,min(iiw*n_set,numpw)
          CALL davcio(tmpspacei(:,iw-(iiw-1)*n_set),max_ngm*2,iungprod,iw,-1)
-         
+
          if(gamma_only .and. gstart == 2) then
             tmpspacei(1,iw-(iiw-1)*n_set)=dble(tmpspacei(1,iw-(iiw-1)*n_set))
          endif

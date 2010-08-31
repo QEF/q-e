@@ -14,9 +14,9 @@ subroutine distance_wannier
   USE io_global,            ONLY : ionode, stdout
   USE gvect
   USE cell_base, ONLY: at, alat
-  
+
   implicit none
-  
+
   INTEGER :: ii,jj, i
   INTEGER :: iun, n(3)
   INTEGER :: rspacel(3)
@@ -42,10 +42,10 @@ subroutine distance_wannier
            dist=dsqrt(d(1))**2.d0+d(2)**2.d0+d(3)**2.d0
            write(iun) dist
         enddo
-     enddo     
+     enddo
      close(iun)
   endif
-  
+
   return
 
 end subroutine distance_wannier

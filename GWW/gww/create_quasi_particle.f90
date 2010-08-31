@@ -9,7 +9,7 @@
    USE basic_structures, ONLY : wannier_u, free_memory
    USE expansion,        ONLY : self_expansion, value_on_frequency, derivative_on_frequency,value_on_frequency_complex
    USE input_gw,         ONLY : input_options
-   USE constants,        ONLY : tpi, RYTOEV 
+   USE constants,        ONLY : tpi, RYTOEV
    USE energies_gww,         ONLY : quasi_particles
    USE kinds,            ONLY : DP
 

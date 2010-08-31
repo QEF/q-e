@@ -9,7 +9,7 @@
 #endif
   MODULE  times_gw
     USE kinds, only : DP
-   
+
     TYPE times_freqs
        INTEGER :: grid_time!0=Gauss Legendre 1=Gauss Laguerre
        INTEGER :: grid_freq!0=Gauss Legendre 1=Gauss Laguerre
@@ -20,7 +20,7 @@
        REAL(kind=DP), __ALLOCATABLE :: weights_time(:)!weights on time
        REAL(kind=DP), __ALLOCATABLE :: freqs(:)!frequency grid
        REAL(kind=DP), __ALLOCATABLE :: weights_freq(:)!weights on frequency
-       LOGICAL :: l_fft_timefreq!if true uses fft old-style and not grids  
+       LOGICAL :: l_fft_timefreq!if true uses fft old-style and not grids
        LOGICAL :: l_fourier_fit_time!if true fits the tails in time
        LOGICAL :: l_fourier_fit_freq!if true fits the tails in freq
        REAL(kind=DP) :: r_tau!ratio for finding outer time point
@@ -32,12 +32,12 @@
        INTEGER :: n_grid_fit!number of grid points on half-axes
        REAL(kind=DP), __ALLOCATABLE :: freqs_fit(:)!frequency grid fot fit
     END TYPE times_freqs
-   
+
 
     CONTAINS
 
       SUBROUTINE free_memory_times_freqs( tf)
-        
+
         implicit none
 
         TYPE(times_freqs) :: tf
@@ -56,7 +56,7 @@
 
         USE input_gw,   ONLY : input_options
         USE io_global,  ONLY : stdout
-        
+
         implicit none
 
         TYPE(input_options) :: options
@@ -96,7 +96,7 @@
               call legzo(tf%n*2+1,x,w)
               tf%times(-tf%n:tf%n)=-x(1:2*tf%n+1)*tf%tau
               tf%weights_time(-tf%n:tf%n)=w(1:2*tf%n+1)*tf%tau
-           else 
+           else
               call legzo(tf%n*2+1-2,x,w)
               tf%times(-tf%n+1:tf%n-1)=-x(1:2*tf%n-1)*tf%tau
               tf%weights_time(-tf%n+1:tf%n-1)=w(1:2*tf%n-1)*tf%tau
@@ -172,7 +172,7 @@
         deallocate(x,w)
 
 !setup frequency grid for fit
-        
+
         tf%grid_fit=options%grid_fit
         tf%omega_fit=options%omega_fit
         tf%n_grid_fit=options%n_grid_fit
@@ -197,7 +197,7 @@
            tf%freqs_fit(-tf%n_grid_fit:tf%n_grid_fit)=-x(1:2*tf%n_grid_fit+1)*tf%omega_fit
            deallocate(x,w)
         endif
-           
+
 
 
         return

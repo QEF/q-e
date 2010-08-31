@@ -49,9 +49,9 @@
 
 !loop on time samples
       dt=options%tau/real(options%n)
-      
+
       write(stdout,*) 'GO POLARIZATION1' !ATTENZIONE
-      
+
       if(options%use_contractions .and. .not.options%l_pola_beta) then
          call read_data_pw_u(uu,options%prefix)
          write(stdout,*) 'Calculates contraction of polarization'
@@ -61,7 +61,7 @@
             call do_contraction_pola_state(qm, uu, options)
          endif
       endif
-      
+
       if(options%l_pola_beta) then
          call read_data_pw_u(uu,options%prefix)
       endif
@@ -103,7 +103,7 @@
       enddo
 
       call mp_barrier
-      
+
       call free_memory(qm)
       call free_memory_green(gp)
       call free_memory_green(gm)

@@ -26,8 +26,8 @@ subroutine rotate_wannier( rot_u,ispin)
   USE io_files, ONLY: nwordwfc, iunwfc,prefix, find_free_unit, diropn
   USE cell_base, ONLY: at, alat, tpiba, omega, tpiba2
 ! same stuff investigation
-  USE wavefunctions_module, ONLY: evc 
- 
+  USE wavefunctions_module, ONLY: evc
+
   implicit none
 
   INTEGER, INTENT(in) :: ispin!+1 or -1
@@ -49,11 +49,11 @@ subroutine rotate_wannier( rot_u,ispin)
   INTEGER :: ik
 
   LOGICAL :: exst
-  
+
 
   allocate( evc0(npwx,nbnd))
   allocate( evc1(npwx,nbnd))
-  
+
  !reads wfcs from iun_wannier
 
   iun_wannier = find_free_unit()
@@ -62,12 +62,12 @@ subroutine rotate_wannier( rot_u,ispin)
   do ik=1,nks
 
     CALL gk_sort(xk(1,ik),ngm,g,ecutwfc/tpiba2, &
-                &    npw0,igk0,g2kin_bp) 
+                &    npw0,igk0,g2kin_bp)
     CALL davcio(evc,nwordwfc,iunwfc,ik,-1)
 
 ! maybe not necessary as evc is still in mem
 !  CALL davcio(evc0,nwordwfc,iun_wannier,1,-1)
-! added just association evc0 with evc 
+! added just association evc0 with evc
     evc0(:,:) = evc(:,:)
 
     evc1=(0.d0,0.d0)
@@ -89,7 +89,7 @@ subroutine rotate_wannier( rot_u,ispin)
 ! do i=1,nbnd
 !      do j=1,nbnd
 !         sca=(0.d0,0.d0)
-!         do ig=1,npw0 
+!         do ig=1,npw0
 !           sca=sca+conjg(evc1(ig,i))*evc1(ig,j)
 !         enddo
 !         write(*,*) 'rotata_wannier_check :', i,j, sca
@@ -103,7 +103,7 @@ subroutine rotate_wannier( rot_u,ispin)
 !  evc(1:npw0,1:nbnd)=evc1(1:npw0,1:nbnd)
 
 !-------------------------------------------------------
-! writing wannierized evc --> evc1 in file  
+! writing wannierized evc --> evc1 in file
   write(stdout,*) 'writing wannier wfcs on file'!ATTENZIONE
 
       CALL davcio(evc1,nwordwfc,iun_wannier,ik,1)
@@ -111,7 +111,7 @@ subroutine rotate_wannier( rot_u,ispin)
   close(iun_wannier)
 ! -----------------------------------------------------
 
-  
+
   DEALLOCATE(evc0)
   DEALLOCATE(evc1)
 
@@ -169,11 +169,11 @@ subroutine rotate_wannier_gamma( rot_u,ispin, itrasp )
 !-----------------------------------------
 ! add allocation
   allocate( evc1(npw,nbnd_normal))
-!----------------------------------------  
+!----------------------------------------
 
 
 
-  
+
 
 
 !now real part
@@ -186,12 +186,12 @@ subroutine rotate_wannier_gamma( rot_u,ispin, itrasp )
   else
      evc0(:,:)=dble(evc(:,:))
      call dgemm('N','T',npw,nbnd_normal,nbnd_normal,1.d0,evc0,npw,rot_u,nbnd_normal,0.d0,evc_re,npw)
-     !now imaginary part                                                                                                
+     !now imaginary part
      evc0(:,:)=dimag(evc(:,:))
      call dgemm('N','T',npw,nbnd_normal,nbnd_normal,1.d0,evc0,npw,rot_u,nbnd_normal,0.d0,evc_im,npw)
   endif
 
-  
+
 !  do i=1,nbnd
 !     do ig=1,npw
 !        evc(ig,i)=dcmplx(evc_re(ig,i),evc_im(ig,i))
@@ -205,7 +205,7 @@ subroutine rotate_wannier_gamma( rot_u,ispin, itrasp )
   evc1(:,1:nbnd_normal)=dcmplx(evc_re(:,1:nbnd_normal),evc_im(:,1:nbnd_normal))
 
 !-------------------------------------------------------
-! added davcio because it wasn't present in the original rotate_wannier_gamma 
+! added davcio because it wasn't present in the original rotate_wannier_gamma
 ! maybe needed
   write(stdout,*) 'writing wannier wfcs on file'!ATTENZIONE
 
@@ -230,7 +230,7 @@ subroutine rotate_wannier_gamma( rot_u,ispin, itrasp )
 
   DEALLOCATE(evc0)
 ! add deallocation of evc1
-  DEALLOCATE(evc1)   
+  DEALLOCATE(evc1)
   deallocate(evc_re,evc_im)
 
 

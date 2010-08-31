@@ -5,9 +5,9 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-! Author: L. Martin-Samos 
+! Author: L. Martin-Samos
 !
-subroutine start_pw4gww 
+subroutine start_pw4gww
   !
   !  Usage: [mpirun, mpprun, whatever] postproc [-npool N]
   !
@@ -22,6 +22,6 @@ subroutine start_pw4gww
   CALL mp_startup ( )
 #endif
   CALL environment_start ( code )
-  ! 
+  !
   return
 end subroutine start_pw4gww

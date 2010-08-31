@@ -9,7 +9,7 @@
 
 ! #ifdef __GWW
 
-  
+
 
   USE kinds,      ONLY : DP
   USE wannier_gw, ONLY : u_trans, num_nbndv, lnonorthogonal, num_nbndc_set, nbnd_normal
@@ -53,7 +53,7 @@
   endif
 
   iunu = find_free_unit()
-  
+
   open(unit=iunu,file=trim(prefix)//'.wannier_prim',status='unknown',form='unformatted')
 
 
@@ -65,7 +65,7 @@
   do iw=1,num_nbndc_set
      write(iunu) u_trans_c(1:num_nbndc_set,iw)
   enddo
-  
+
   close(iunu)
 
   deallocate(u_trans_c)
@@ -73,5 +73,5 @@
 ! #endif
   return
 end subroutine write_wannier_matrix_c
-  
+
 

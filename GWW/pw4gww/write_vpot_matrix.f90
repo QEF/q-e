@@ -18,7 +18,7 @@
   implicit none
 
   REAL(kind=DP) :: vmat(numw_prod,numw_prod)
-  INTEGER :: ort!if ort==0 writes nonorthogonal file, if ort==1 writes orthogonal file, 
+  INTEGER :: ort!if ort==0 writes nonorthogonal file, if ort==1 writes orthogonal file,
                 !if ort==2 writes nonorthogonal ^1/2 file
   INTEGER :: iunu, iw
 
@@ -27,7 +27,7 @@
   if(ort == 1) then
      open(unit=iunu,file=trim(prefix)//'.vpot',status='unknown',form='unformatted')
      !     open(unit=iunu,file=trim(prefix)//'.vpot',status='unknown',form='formatted')
-  else if(ort==0) then 
+  else if(ort==0) then
      open(unit=iunu,file=trim(prefix)//'.vpot_no',status='unknown',form='unformatted')
 !     open(unit=iunu,file=trim(prefix)//'.vpot_no',status='unknown',form='formatted')
   else if(ort==2) then

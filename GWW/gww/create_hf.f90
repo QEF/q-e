@@ -7,7 +7,7 @@
 
    USE basic_structures, ONLY : wannier_u, free_memory
    USE input_gw, ONLY : input_options
-   USE constants, ONLY : RYTOEV 
+   USE constants, ONLY : RYTOEV
    USE kinds, ONLY : DP
    USE energies_gww, ONLY : quasi_particles
    USE io_global, ONLY : stdout

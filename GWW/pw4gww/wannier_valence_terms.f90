@@ -20,9 +20,10 @@
    USE control_flags,        ONLY : gamma_only
    USE cell_base,            ONLY : at, alat, tpiba, omega, tpiba2
    USE wannier_gw
+   USE fft_base,             ONLY : dffts, dfftp
+   USE fft_interfaces,       ONLY : fwfft, invfft
    USE gvect
-   USE gsmooth,              ONLY : nls, nlsm, nr1s, nr2s, nr3s, &
-                                   nrx1s, nrx2s, nrx3s, nrxxs, doublegrid
+   USE gsmooth,              ONLY : nls, nlsm, nrxxs, doublegrid
    USE uspp
    USE wavefunctions_module, ONLY : psic, evc
    USE realus,               ONLY : adduspos_gamma_r
@@ -42,7 +43,7 @@
    INTEGER, INTENT(in)  :: nbnd_v !number of KS states considered
    INTEGER, INTENT(in)  :: n_set  !defines the number of states to be read from disk at the same time
    INTEGER, INTENT(in)  :: n_setv  !defines the number of valence states to be read from disk at the same time
-   
+
    INTEGER :: iungprod, iunuterms
 
   !  --- Internal definitions ---
@@ -67,14 +68,14 @@
 
 
    write(stdout,*) 'Routine wannier_valence_terms : start',nbnd_v,n_set,n_setv
-   
+
 
    allocate(wpwp_psi(numw_prod,numw_prod,nbnd_v))
    allocate(tmpreal1(nrxx),tmpreals1(nrxxs))
    allocate(tmpreal2(nrxx),tmpreals2(nrxxs))
    allocate(tmpspacec(nrxx))
    if(okvan) allocate(becpr(nkb,nbnd_v))
-  
+
 ! reads wfcs from iunwfc
 
    CALL gk_sort(xk(1,1),ngm,g,ecutwfc/tpiba2, &
@@ -104,11 +105,11 @@
 
 
 !open output file
-   
+
    do hhw=1,ceiling(real(nbnd_v)/real(n_setv))
 
 
-      
+
 !      allocate( evc( npwx, nbnd ) )
 
       write(stdout,*) 'READ HW0',npwx,nbnd,nwordwfc,iunwfc!ATTENZIONE
@@ -124,7 +125,7 @@
             tmpspacev(1,hw-(hhw-1)*n_setv)=dble(tmpspacev(1,hw-(hhw-1)*n_setv))
          endif
       enddo
-      
+
       write(stdout,*) 'READ HW'!ATTENZIONE
 
 !      deallocate(evc)
@@ -177,7 +178,7 @@
             else
                allocate(tmpspacej(npw0,n_set))
             endif
-      
+
             write(stdout,*) 'READ JW0',jjw,numw_prod!ATTENZIONE
             do jw=(jjw-1)*n_set+1,min(jjw*n_set,numw_prod)
                if(.not.lsmallgrid) then
@@ -203,20 +204,20 @@
                   psic(nls(igk(1:npw)))  = tmpspacev(1:npw,hw-(hhw-1)*n_setv) + &
                        ( 0.D0, 1.D0 ) * tmpspacev(1:npw,hw-(hhw-1)*n_setv+1)
                   psic(nlsm(igk(1:npw))) = CONJG( tmpspacev(1:npw,hw-(hhw-1)*n_setv) - &
-                       ( 0.D0, 1.D0 ) * tmpspacev(1:npw,hw-(hhw-1)*n_setv+1) ) 
-               ELSE        
+                       ( 0.D0, 1.D0 ) * tmpspacev(1:npw,hw-(hhw-1)*n_setv+1) )
+               ELSE
                   psic(nls(igk(1:npw)))  = tmpspacev(1:npw,hw-(hhw-1)*n_setv)
-                  psic(nlsm(igk(1:npw))) = CONJG( tmpspacev(1:npw,hw-(hhw-1)*n_setv) ) 
+                  psic(nlsm(igk(1:npw))) = CONJG( tmpspacev(1:npw,hw-(hhw-1)*n_setv) )
                END IF
 
-               CALL cft3s( psic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s,2)
+               CALL invfft ('Wave', psic, dffts)
 
                tmpreals1(1:nrxxs)=dble(psic(1:nrxxs))*dble(psic(1:nrxxs))
                 if(  hw < min(hhw*n_setv,nbnd_v) ) then
                    tmpreals2(1:nrxxs)=dimag(psic(1:nrxxs))*dimag(psic(1:nrxxs))
                 endif
 
-                
+
                 if(doublegrid) then
                    call interpolate(tmpreal1,tmpreals1,1)
                 else
@@ -250,36 +251,36 @@
                       tmpspacec(nl(1:ngm))=tmpspacei(1:ngm,iw-(iiw-1)*n_set)
                       tmpspacec(nlm(1:ngm))=CONJG(tmpspacei(1:ngm,iw-(iiw-1)*n_set))
 
-                      CALL cft3( tmpspacec,nr1, nr2, nr3, nrx1, nrx2, nrx3, 1)
+                      CALL invfft ('Dense', tmpspacec, dfftp)
 
                       tmpspacei1(:)=(0.d0,0.d0)
                       tmpspacec(:)=dble(tmpspacec(:)*tmpreal1(:))
-                      CALL cft3( tmpspacec,nr1, nr2, nr3, nrx1, nrx2, nrx3, -1)
+                      CALL fwfft ('Dense', tmpspacec, dfftp)
                       tmpspacei1(1:ngm)=tmpspacec(nl(1:ngm))
 
                       if(  hw < min(hhw*n_setv,nbnd_v) ) then
                          tmpspacec(:)=(0.d0,0.d0)
                          tmpspacec(nl(1:ngm))=tmpspacei(1:ngm,iw-(iiw-1)*n_set)
                          tmpspacec(nlm(1:ngm))=CONJG(tmpspacei(1:ngm,iw-(iiw-1)*n_set))
-                         CALL cft3( tmpspacec,nr1, nr2, nr3, nrx1, nrx2, nrx3, 1)
+                         CALL invfft ('Dense', tmpspacec, dfftp)
                          tmpspacec(:)=dble(tmpspacec(:)*tmpreal2(:))
-                         CALL cft3( tmpspacec,nr1, nr2, nr3, nrx1, nrx2, nrx3, -1)
+                         CALL fwfft ('Dense', tmpspacec, dfftp)
                          tmpspacei2(1:ngm)=tmpspacec(nl(1:ngm))
                       endif
 
                    else
                       tmpspacec(:)=(0.d0,0.d0)
                       tmpspacec(nls(igk0(1:npw0)))=tmpspacei(1:npw0,iw-(iiw-1)*n_set)
-                      CALL cft3s( tmpspacec,nr1s, nr2s, nr3s, nrx1s, nrx2s,nrx3s,2)
+                      CALL invfft ('Wave', tmpspacec, dffts)
                       tmpspacec(1:nrxxs)=dble(tmpspacec(1:nrxxs)*tmpreal1(1:nrxxs))
-                      CALL cft3s( tmpspacec,nr1s, nr2s, nr3s, nrx1s, nrx2s,nrx3s,-2)
+                      CALL fwfft ('Wave', tmpspacec, dffts)
                       tmpspacei1(1:npw0)=tmpspacec(nls(igk0(1:npw0)))
                       if(  hw < min(hhw*n_setv,nbnd_v) ) then
                           tmpspacec(:)=(0.d0,0.d0)
                           tmpspacec(nls(igk0(1:npw0)))=tmpspacei(1:npw0,iw-(iiw-1)*n_set)
-                          CALL cft3s( tmpspacec,nr1s, nr2s, nr3s, nrx1s, nrx2s,nrx3s,2)
+                          CALL invfft ('Wave', tmpspacec, dffts)
                           tmpspacec(1:nrxxs)=dble(tmpspacec(1:nrxxs)*tmpreal2(1:nrxxs))
-                          CALL cft3s( tmpspacec,nr1s, nr2s, nr3s, nrx1s, nrx2s,nrx3s,-2)
+                          CALL fwfft ('Wave', tmpspacec, dffts)
                           tmpspacei2(1:npw0)=tmpspacec(nls(igk0(1:npw0)))
                        endif
                    endif
@@ -311,7 +312,7 @@
                          endif
                       endif
                       call mp_sum(wpwp_psi(iw,jw,hw))
-                      
+
                       wpwp_psi(jw,iw,hw)=wpwp_psi(iw,jw,hw)
                       if(  hw < min(hhw*n_setv,nbnd_v) ) then
                          wpwp_psi(iw,jw,hw+1)=0.d0
@@ -383,9 +384,10 @@
    USE control_flags,        ONLY : gamma_only
    USE cell_base,            ONLY : at, alat, tpiba, omega, tpiba2
    USE wannier_gw
+   USE fft_base,             ONLY : dffts, dfftp
+   USE fft_interfaces,       ONLY : fwfft, invfft
    USE gvect
-   USE gsmooth,              ONLY : nls, nlsm, nr1s, nr2s, nr3s, &
-                                   nrx1s, nrx2s, nrx3s, nrxxs, doublegrid
+   USE gsmooth,              ONLY : nls, nlsm, nrxxs, doublegrid
    USE uspp
    USE wavefunctions_module, ONLY : psic, evc
    USE realus,               ONLY : adduspos_gamma_r
@@ -395,8 +397,8 @@
 
    implicit none
 
-   
- 
+
+
 
    REAL(kind=DP) :: sca
    INTEGER :: ir
@@ -407,7 +409,7 @@
    INTEGER, INTENT(in)  :: nbnd_v !number of KS states considered
    INTEGER, INTENT(in)  :: n_set  !defines the number of states to be read from disk at the same time
    INTEGER, INTENT(in)  :: n_setv  !defines the number of valence states to be read from disk at the same time
-   
+
    INTEGER :: iungprod, iunuterms
 
   !  --- Internal definitions ---
@@ -446,7 +448,7 @@
    numw_prodprod=0
 
    if(okvan) allocate(becpr(nkb,nbnd_v))
-  
+
 ! reads wfcs from iunwfc
 
    CALL gk_sort(xk(1,1),ngm,g,ecutwfc/tpiba2, &
@@ -482,11 +484,11 @@
 
 
 !open output file
-   
+
    do hhw=1,ceiling(real(nbnd_v)/real(n_setv))
 
 
-      
+
 !      allocate( evc( npwx, nbnd ) )
 
       write(stdout,*) 'READ HW0',npwx,nbnd,nwordwfc,iunwfc!ATTENZIONE
@@ -502,7 +504,7 @@
             tmpspacev(1,hw-(hhw-1)*n_setv)=dble(tmpspacev(1,hw-(hhw-1)*n_setv))
          endif
       enddo
-      
+
       write(stdout,*) 'READ HW'!ATTENZIONE
 
 !      deallocate(evc)
@@ -555,7 +557,7 @@
             else
                allocate(tmpspacej(npw0,n_set))
             endif
-      
+
             write(stdout,*) 'READ JW0',jjw,numw_prod!ATTENZIONE
             do jw=(jjw-1)*n_set+1,min(jjw*n_set,numw_prod)
                if(.not.lsmallgrid) then
@@ -577,12 +579,12 @@
             do iw=(iiw-1)*n_set+1,min(iiw*n_set,numw_prod)
 
                if(.not.lsmallgrid) then
-                  
+
                   tmpspaced(:,iw-(iiw-1)*n_set)=(0.d0,0.d0)
                   tmpspaced(nl(1:ngm), iw-(iiw-1)*n_set)=tmpspacei(1:ngm,iw-(iiw-1)*n_set)
                   tmpspaced(nlm(1:ngm),iw-(iiw-1)*n_set)=CONJG(tmpspacei(1:ngm,iw-(iiw-1)*n_set))
-                  
-                  CALL cft3( tmpspaced(:,iw-(iiw-1)*n_set),nr1, nr2, nr3, nrx1, nrx2, nrx3, 1)
+
+                  CALL invfft ('Dense', tmpspaced(:,iw-(iiw-1)*n_set), dfftp)
                else
                   write(stdout,*) 'lsmallgrid not implemented'
                   stop
@@ -590,11 +592,11 @@
             end do
 
             do jw=(jjw-1)*n_set+1,min(jjw*n_set,numw_prod)
-               if(.not.lsmallgrid) then                  
+               if(.not.lsmallgrid) then
                   tmpspacec(:)=(0.d0,0.d0)
                   tmpspacec(nl(1:ngm))=tmpspacej(1:ngm,jw-(jjw-1)*n_set)
                   tmpspacec(nlm(1:ngm))=CONJG(tmpspacej(1:ngm,jw-(jjw-1)*n_set))
-                  CALL cft3( tmpspacec,nr1, nr2, nr3, nrx1, nrx2, nrx3, 1)
+                  CALL invfft ('Dense', tmpspacec, dfftp)
                else
                   write(stdout,*) 'lsmallgrid not implemented'
                   stop
@@ -605,7 +607,7 @@
                   iw_begin=(iiw-1)*n_set+1
                endif
                do iw=iw_begin,min(iiw*n_set,numw_prod)
-               
+
                   sca=0.d0
                   do ir=1,nrxx
                      sca=sca+(tmpspacec(ir)*tmpspaced(ir, iw-(iiw-1)*n_set))**2.d0
@@ -622,7 +624,7 @@
                   endif
                enddo
             enddo
-                     
+
 
 
 
@@ -635,20 +637,20 @@
                   psic(nls(igk(1:npw)))  = tmpspacev(1:npw,hw-(hhw-1)*n_setv) + &
                        ( 0.D0, 1.D0 ) * tmpspacev(1:npw,hw-(hhw-1)*n_setv+1)
                   psic(nlsm(igk(1:npw))) = CONJG( tmpspacev(1:npw,hw-(hhw-1)*n_setv) - &
-                       ( 0.D0, 1.D0 ) * tmpspacev(1:npw,hw-(hhw-1)*n_setv+1) ) 
-               ELSE        
+                       ( 0.D0, 1.D0 ) * tmpspacev(1:npw,hw-(hhw-1)*n_setv+1) )
+               ELSE
                   psic(nls(igk(1:npw)))  = tmpspacev(1:npw,hw-(hhw-1)*n_setv)
-                  psic(nlsm(igk(1:npw))) = CONJG( tmpspacev(1:npw,hw-(hhw-1)*n_setv) ) 
+                  psic(nlsm(igk(1:npw))) = CONJG( tmpspacev(1:npw,hw-(hhw-1)*n_setv) )
                END IF
 
-               CALL cft3s( psic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s,2)
-               
+               CALL invfft ('Wave', psic, dffts)
+
                tmpreals1(1:nrxxs)=dble(psic(1:nrxxs))*dble(psic(1:nrxxs))
                 if(  hw < min(hhw*n_setv,nbnd_v) ) then
                    tmpreals2(1:nrxxs)=dimag(psic(1:nrxxs))*dimag(psic(1:nrxxs))
                 endif
 
-                
+
                 if(doublegrid) then
                    call interpolate(tmpreal1,tmpreals1,1)
                 else
@@ -682,36 +684,36 @@
                       tmpspacec(nl(1:ngm))=tmpspacei(1:ngm,iw-(iiw-1)*n_set)
                       tmpspacec(nlm(1:ngm))=CONJG(tmpspacei(1:ngm,iw-(iiw-1)*n_set))
 
-                      CALL cft3( tmpspacec,nr1, nr2, nr3, nrx1, nrx2, nrx3, 1)
+                      CALL invfft ('Dense', tmpspacec, dfftp)
 
                       tmpspacei1(:)=(0.d0,0.d0)
                       tmpspacec(:)=dble(tmpspacec(:)*tmpreal1(:))
-                      CALL cft3( tmpspacec,nr1, nr2, nr3, nrx1, nrx2, nrx3, -1)
+                      CALL fwfft ('Dense', tmpspacec, dfftp)
                       tmpspacei1(1:ngm)=tmpspacec(nl(1:ngm))
 
                       if(  hw < min(hhw*n_setv,nbnd_v) ) then
                          tmpspacec(:)=(0.d0,0.d0)
                          tmpspacec(nl(1:ngm))=tmpspacei(1:ngm,iw-(iiw-1)*n_set)
                          tmpspacec(nlm(1:ngm))=CONJG(tmpspacei(1:ngm,iw-(iiw-1)*n_set))
-                         CALL cft3( tmpspacec,nr1, nr2, nr3, nrx1, nrx2, nrx3, 1)
+                         CALL invfft ('Dense', tmpspacec, dfftp)
                          tmpspacec(:)=dble(tmpspacec(:)*tmpreal2(:))
-                         CALL cft3( tmpspacec,nr1, nr2, nr3, nrx1, nrx2, nrx3, -1)
+                         CALL fwfft ('Dense', tmpspacec, dfftp)
                          tmpspacei2(1:ngm)=tmpspacec(nl(1:ngm))
                       endif
 
                    else
                       tmpspacec(:)=(0.d0,0.d0)
                       tmpspacec(nls(igk0(1:npw0)))=tmpspacei(1:npw0,iw-(iiw-1)*n_set)
-                      CALL cft3s( tmpspacec,nr1s, nr2s, nr3s, nrx1s, nrx2s,nrx3s,2)
+                      CALL invfft ('Wave', tmpspacec, dffts)
                       tmpspacec(1:nrxxs)=dble(tmpspacec(1:nrxxs)*tmpreal1(1:nrxxs))
-                      CALL cft3s( tmpspacec,nr1s, nr2s, nr3s, nrx1s, nrx2s,nrx3s,-2)
+                      CALL fwfft ('Wave', tmpspacec, dffts)
                       tmpspacei1(1:npw0)=tmpspacec(nls(igk0(1:npw0)))
                       if(  hw < min(hhw*n_setv,nbnd_v) ) then
                           tmpspacec(:)=(0.d0,0.d0)
                           tmpspacec(nls(igk0(1:npw0)))=tmpspacei(1:npw0,iw-(iiw-1)*n_set)
-                          CALL cft3s( tmpspacec,nr1s, nr2s, nr3s, nrx1s, nrx2s,nrx3s,2)
+                          CALL invfft ('Wave', tmpspacec, dffts)
                           tmpspacec(1:nrxxs)=dble(tmpspacec(1:nrxxs)*tmpreal2(1:nrxxs))
-                          CALL cft3s( tmpspacec,nr1s, nr2s, nr3s, nrx1s, nrx2s,nrx3s,-2)
+                          CALL fwfft ('Wave', tmpspacec, dffts)
                           tmpspacei2(1:npw0)=tmpspacec(nls(igk0(1:npw0)))
                        endif
                    endif
@@ -832,9 +834,10 @@
    USE control_flags,        ONLY : gamma_only
    USE cell_base,            ONLY : at, alat, tpiba, omega, tpiba2
    USE wannier_gw
+   USE fft_base,             ONLY : dffts, dfftp
+   USE fft_interfaces,       ONLY : fwfft, invfft
    USE gvect
-   USE gsmooth,              ONLY : nls, nlsm, nr1s, nr2s, nr3s, &
-                                   nrx1s, nrx2s, nrx3s, nrxxs, doublegrid
+   USE gsmooth,              ONLY : nls, nlsm, nrxxs, doublegrid
    USE uspp
    USE wavefunctions_module, ONLY : psic, evc
    USE realus,               ONLY : adduspos_gamma_r
@@ -1028,7 +1031,7 @@
                   tmpspaced(nl(1:ngm), iw-(iiw-1)*n_set)=tmpspacei(1:ngm,iw-(iiw-1)*n_set)
                   tmpspaced(nlm(1:ngm),iw-(iiw-1)*n_set)=CONJG(tmpspacei(1:ngm,iw-(iiw-1)*n_set))
 
-                  CALL cft3( tmpspaced(:,iw-(iiw-1)*n_set),nr1, nr2, nr3, nrx1, nrx2, nrx3, 1)
+                  CALL invfft ('Dense', tmpspaced(:,iw-(iiw-1)*n_set), dfftp)
                else
                   write(stdout,*) 'lsmallgrid not implemented'
                   stop
@@ -1040,7 +1043,7 @@
                   tmpspacec(:)=(0.d0,0.d0)
                   tmpspacec(nl(1:ngm))=tmpspacej(1:ngm,jw-(jjw-1)*n_set)
                   tmpspacec(nlm(1:ngm))=CONJG(tmpspacej(1:ngm,jw-(jjw-1)*n_set))
-                  CALL cft3( tmpspacec,nr1, nr2, nr3, nrx1, nrx2, nrx3, 1)
+                  CALL invfft ('Dense', tmpspacec, dfftp)
                else
                   write(stdout,*) 'lsmallgrid not implemented'
                   stop
@@ -1081,7 +1084,7 @@
                   psic(nlsm(igk(1:npw))) = CONJG( tmpspacev(1:npw,hw-(hhw-1)*n_setv) )
                END IF
 
-               CALL cft3s( psic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s,2)
+               CALL invfft ('Wave', psic, dffts)
 
                tmpreals1(1:nrxxs)=dble(psic(1:nrxxs))*dble(psic(1:nrxxs))
                 if(  hw < min(hhw*n_setv,nbnd_v) ) then
@@ -1122,36 +1125,36 @@
                       tmpspacec(nl(1:ngm))=tmpspacei(1:ngm,iw-(iiw-1)*n_set)
                       tmpspacec(nlm(1:ngm))=CONJG(tmpspacei(1:ngm,iw-(iiw-1)*n_set))
 
-                      CALL cft3( tmpspacec,nr1, nr2, nr3, nrx1, nrx2, nrx3, 1)
+                      CALL invfft ('Dense', tmpspacec, dfftp)
 
                       tmpspacei1(:)=(0.d0,0.d0)
                       tmpspacec(:)=dble(tmpspacec(:)*tmpreal1(:))
-                      CALL cft3( tmpspacec,nr1, nr2, nr3, nrx1, nrx2, nrx3, -1)
+                      CALL fwfft ('Dense', tmpspacec, dfftp)
                       tmpspacei1(1:ngm)=tmpspacec(nl(1:ngm))
 
                       if(  hw < min(hhw*n_setv,nbnd_v) ) then
                          tmpspacec(:)=(0.d0,0.d0)
                          tmpspacec(nl(1:ngm))=tmpspacei(1:ngm,iw-(iiw-1)*n_set)
                          tmpspacec(nlm(1:ngm))=CONJG(tmpspacei(1:ngm,iw-(iiw-1)*n_set))
-                         CALL cft3( tmpspacec,nr1, nr2, nr3, nrx1, nrx2, nrx3, 1)
+                         CALL invfft ('Dense', tmpspacec, dfftp)
                          tmpspacec(:)=dble(tmpspacec(:)*tmpreal2(:))
-                         CALL cft3( tmpspacec,nr1, nr2, nr3, nrx1, nrx2, nrx3, -1)
+                         CALL fwfft ('Dense', tmpspacec, dfftp)
                          tmpspacei2(1:ngm)=tmpspacec(nl(1:ngm))
                       endif
 
                    else
                       tmpspacec(:)=(0.d0,0.d0)
                       tmpspacec(nls(igk0(1:npw0)))=tmpspacei(1:npw0,iw-(iiw-1)*n_set)
-                      CALL cft3s( tmpspacec,nr1s, nr2s, nr3s, nrx1s, nrx2s,nrx3s,2)
+                      CALL invfft ('Wave', tmpspacec, dffts)
                       tmpspacec(1:nrxxs)=dble(tmpspacec(1:nrxxs)*tmpreal1(1:nrxxs))
-                      CALL cft3s( tmpspacec,nr1s, nr2s, nr3s, nrx1s, nrx2s,nrx3s,-2)
+                      CALL fwfft ('Wave', tmpspacec, dffts)
                       tmpspacei1(1:npw0)=tmpspacec(nls(igk0(1:npw0)))
                       if(  hw < min(hhw*n_setv,nbnd_v) ) then
                           tmpspacec(:)=(0.d0,0.d0)
                           tmpspacec(nls(igk0(1:npw0)))=tmpspacei(1:npw0,iw-(iiw-1)*n_set)
-                          CALL cft3s( tmpspacec,nr1s, nr2s, nr3s, nrx1s, nrx2s,nrx3s,2)
+                          CALL invfft ('Wave', tmpspacec, dffts)
                           tmpspacec(1:nrxxs)=dble(tmpspacec(1:nrxxs)*tmpreal2(1:nrxxs))
-                          CALL cft3s( tmpspacec,nr1s, nr2s, nr3s, nrx1s, nrx2s,nrx3s,-2)
+                          CALL fwfft ('Wave', tmpspacec, dffts)
                           tmpspacei2(1:npw0)=tmpspacec(nls(igk0(1:npw0)))
                        endif
                    endif

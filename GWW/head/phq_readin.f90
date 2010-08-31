@@ -5,7 +5,7 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-! Taken from Phonon code 
+! Taken from Phonon code
 ! Modified by P. Umari and G. Stenuit
 !
 !----------------------------------------------------------------------------
@@ -123,9 +123,9 @@ SUBROUTINE phq_readin()
   ! recover      : recover=.true. to restart from an interrupted run
   ! asr          : in the gamma_gamma case apply acoustic sum rule
   ! start_q      : in q list does the q points from start_q to last_q
-  ! last_q       : 
+  ! last_q       :
   ! start_irr    : does the irred. representation from start_irr to last_irr
-  ! last_irr     : 
+  ! last_irr     :
   ! nogg         : if .true. gamma_gamma tricks are not used
 
   !
@@ -260,7 +260,7 @@ SUBROUTINE phq_readin()
   tmp_dir = trimcheck (outdir)
   !
 400 CONTINUE
-  CALL bcast_ph_input ( ) 
+  CALL bcast_ph_input ( )
   !
   !   Here we finished the reading of the input file.
   !   Now allocate space for pwscf variables, read and check them.
@@ -281,12 +281,12 @@ SUBROUTINE phq_readin()
         recover=.FALSE.
         GOTO 1001
      ENDIF
-     tmp_dir=tmp_dir_ph   
+     tmp_dir=tmp_dir_ph
      CALL check_restart_recover(exst_recover, exst_restart)
      tmp_dir=tmp_dir_save
      IF (ldisp) lgamma = (current_iq==1)
 !
-!  In this case ph.x has already saved its own data-file and we read 
+!  In this case ph.x has already saved its own data-file and we read
 !  initial information from that file
 !
      IF ((exst_recover.OR.exst_restart).AND..NOT.lgamma) tmp_dir=tmp_dir_ph
@@ -328,7 +328,7 @@ SUBROUTINE phq_readin()
   IF (noncolin.and.fpol) &
               CALL errore('phonon','noncolinear and fpol not programed',1)
   !
-  ! If a band structure calculation needs to be done do not open a file 
+  ! If a band structure calculation needs to be done do not open a file
   ! for k point
   !
   IF (lnscf.or.ldisp) lkpoint_dir=.FALSE.
@@ -397,7 +397,7 @@ SUBROUTINE phq_readin()
 
 800 CONTINUE
 
-  CALL bcast_ph_input1 ( ) 
+  CALL bcast_ph_input1 ( )
 
   IF (epsil.AND.lgauss) &
         CALL errore ('phq_readin', 'no elec. field with metals', 1)
@@ -414,7 +414,7 @@ SUBROUTINE phq_readin()
   IF ((nat_todo /= 0 .or. nrapp /= 0 ) .and. lgamma_gamma) CALL errore( &
      'phq_readin', 'gamma_gamma tricks with nat_todo or nrapp &
       & not available. Use nogg=.true.', 1)
-  
+
   IF (modenum > 0 .OR. ldisp .OR. lraman ) lgamma_gamma=.FALSE.
   IF (.not.lgamma_gamma) asr=.FALSE.
   !

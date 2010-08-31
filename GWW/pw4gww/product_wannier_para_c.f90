@@ -44,7 +44,8 @@
   USE uspp,                 ONLY : okvan
   USE wannier_gw
   USE realus,               ONLY : adduspos_gamma_r
-  USE fft_base,             ONLY : dfftp
+  USE fft_base,             ONLY : dfftp, dffts
+  USE fft_interfaces,       ONLY : fwfft
   USE mp,                   ONLY : mp_bcast, mp_barrier, mp_sum
 
 
@@ -109,11 +110,11 @@
      nr3_end=nr3_end+dfftp%npp(i)
   end do
 #endif
-  
-  
+
+
 
   write(stdout,*) 'Routine product_wannier_para: start', lsmallgrid
-  
+
   if(okvan .and. lsmallgrid) write(stdout,*) 'ATTENTION: USPP AND SMALLGRID'
 
   allocate(tmpspacei(nrxx,num_nbndc_set),tmpspacej(nrxx),tmpreal(nrxx),tmpreal2(nrxx))
@@ -141,7 +142,7 @@
 
 ! open files for ouput product in g space and their centers and radii
 
-   
+
    iungprod = find_free_unit()
    if(.not.lsmallgrid) then
       CALL diropn( iungprod, 'wiwjwfc_prim', max_ngm*2, exst )
@@ -187,13 +188,13 @@
 !determines bottoms and tops of boxes in grid units
 
          match = .true.
-         
+
          if(.not.lrestart .and. .not.lcomplete) then
-  
+
            ! write(stdout,*) 'Center iw', iw, w_centers_c(1:3,iw)
            ! write(stdout,*) 'Center jw', jw, w_centers(1:3,jw)
 
-      
+
             do i=1,3
                ndist=ndistance(w_centers_c(i,iw),w_centers(i,jw),rspacel(i))
                if(ndist-w_radii_c(iw)-w_radii(jw) > 0 ) then
@@ -204,7 +205,7 @@
          endif
 
          if( match) then
-            
+
            if(ionode) write(stdout,*) 'Matching :', iw,jw
 !determine center of product and radii
             if(.not.lrestart) then
@@ -214,14 +215,14 @@
                   if(is_even(rspacel(i)).and.wiwj%radius(i)==(rspacel(i)/2)) &
                        & wiwj%radius(i)=wiwj%radius(i)-1
                enddo
-            
+
              !  write(stdout,*) 'Center:', wiwj%center(1:3),wiwj%radius(1:3)
             endif
 !read wannier function jw
 
             call davcio( tmpspacej,nrxx,iunrealwan,jw,-1)
 
- 
+
 
          !   write(stdout,*) 'read wannier'
 
@@ -234,7 +235,7 @@
                   if(nop(i)<1) nop(i)=rspacel(i)+nop(i)
                   if(nop(i)>rspacel(i)) nop(i)=nop(i)-rspacel(i)
                enddo
-            
+
 
 
             endif
@@ -243,7 +244,7 @@
 !adds US term if required
         tmpreal2(:)=0.d0
         if(okvan) call adduspos_gamma_r(iw+nbndv,jw,tmpreal2,1,becp_gw_c(:,iw+nbndv),becp_gw(:,jw))
-       
+
 
 
 
@@ -256,21 +257,21 @@
                     n1=nop(1)+ix
                     if(n1<1) n1=nr1+n1
                     if(n1>nr1) n1=n1-nr1
-                    
+
                     n2=nop(2)+iy
                     if(n2<1) n2=nr2+n2
                     if(n2>nr2) n2=n2-nr2
-                    
+
                     n3=nop(3)+iz
                     if(n3<1) n3=nr3+n3
                     if(n3>nr3) n3=n3-nr3
-                    
+
                     if(n3 >= nr3_start .and. n3 <= nr3_end) then
                        nn=(n3-nr3_start)*nrx1*nrx2+(n2-1)*nrx1+n1
                        if(nn<1 .or. nn > nrxx)  then
                           CALL errore( 'rsca', 'rsca', nn )
                        endif
-                       rsca=rsca+(tmpspacei(nn,iw)*tmpspacej(nn)+tmpreal2(nn))**2.d0  
+                       rsca=rsca+(tmpspacei(nn,iw)*tmpspacej(nn)+tmpreal2(nn))**2.d0
                        tmpreal(nn)=&
                             &tmpspacei(nn,iw)*tmpspacej(nn)+tmpreal2(nn)
                     endif
@@ -288,19 +289,19 @@
 
          rsca=rsca/real(rspacel(1)*rspacel(2)*rspacel(3))
 
-         
+
          call mp_sum(rsca)
 
 !check if there is overlap
-         if(rsca >= cutoff_product) then  
+         if(rsca >= cutoff_product) then
          if(ionode)   write(stdout,*) 'OVERLAP :', iw,jw,rsca
-            
+
 
             numw_prod_c=numw_prod_c+1
 
             wiwj%i=iw
             wiwj%j=jw
-            
+
             if(ionode) write(iunprod) wiwj
             if(ionode) write(iuncouples) iw, jw
 
@@ -319,7 +320,7 @@
               rsca=rsca+conjg( tmpspacec(nn))*tmpspacec(nn)
             enddo
             call mp_sum(rsca)
-            CALL cft3( tmpspacec,nr1, nr2, nr3, nrx1, nrx2, nrx3, -1 )
+            CALL fwfft ('Dense', tmpspacec, dfftp)
              rsca=0.d0
             do nn=1,ngm
               rsca=rsca+2.d0*conjg( tmpspacec(nl(nn)))*tmpspacec(nl(nn))
@@ -337,7 +338,7 @@
               tmpspacejs(:)=tmpspacej(:)
             endif
             tmpspacec(:)=dcmplx(tmpspacejs(:),0.d0)
-            CALL cft3s( tmpspacec,nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, -2 )
+            CALL fwfft ('Wave', tmpspacec, dffts)
           endif
 
 
@@ -353,10 +354,10 @@
         if(ionode)  write(stdout,*) 'written', numw_prod_c
 
           endif!overlap
- 
- 
 
- 
+
+
+
         endif!match
 
 
@@ -384,5 +385,5 @@
   return
 end subroutine product_wannier_para_c
 
-        
+
 

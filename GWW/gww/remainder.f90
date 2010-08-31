@@ -68,13 +68,13 @@ SUBROUTINE remainder(options, qp)
 
 !allocates
    allocate(qp%ene_remainder(options%max_i))
-   
+
    call initialize_green(gg)
    call initialize_green(gm)
    call initialize_polaw(ww)
 
 
-      
+
 !read U matrix
   call read_data_pw_u(uu,options%prefix)
 !read overlap matrix Q
@@ -95,7 +95,7 @@ SUBROUTINE remainder(options, qp)
 
 
   write(stdout,*) 'enter remainder COH'
-  
+
 
   if(options%remainder /= 4) then!not needed if calculated through pw
      if(options%l_remainder_cutoff) then
@@ -106,10 +106,10 @@ SUBROUTINE remainder(options, qp)
      endif
   endif
 
-         
+
   call read_green(0,gg,options%debug,.false.)
   call read_green(0,gm,options%debug,.true.)
-  
+
 
   call read_polaw(0,ww,options%debug)
 
@@ -121,7 +121,7 @@ SUBROUTINE remainder(options, qp)
         WRITE(*,*) 'PW_RED OUT', pw_red(1)
      endif
   endif
-      
+
 
   time=0.d0
 
@@ -168,23 +168,23 @@ SUBROUTINE remainder(options, qp)
             else
                call self_energy_remainder(ii,sca,time,wp,ww)
             endif
-            
+
             qp%ene_remainder(ii)=qp%ene_remainder(ii)+0.5d0*dble(sca)
             write(*,*) 'REMAINDER SENE 3', ii, 0.5d0*sca
          endif
       endif
    enddo
-      
 
 
- 
+
+
 
    call free_memory_polaw(ww)
    call free_memory_green(gg)
    call free_memory_green(gm)
    write(*,*)  'in of cycle'!ATTENZIONE
-   
-   
+
+
    if(options%remainder /= 4) then
       if(options%l_remainder_cutoff) then
          deallocate(pw_red)
@@ -261,7 +261,7 @@ SUBROUTINE addconduction_remainder(qp, options)
     nullify(wup%umat)
     nullify(vpp%ij)
     nullify(vpp%vmat)
-    
+
 
     call initialize_green(gg)
 
@@ -297,7 +297,7 @@ SUBROUTINE addconduction_remainder(qp, options)
           enddo
        enddo
     enddo
- 
+
     call free_memory(vpp)
 
     call read_data_pw_v(vp,options%prefix,options%debug,0,.false.)
@@ -358,7 +358,7 @@ SUBROUTINE addconduction_remainder(qp, options)
              sene(ii) = sene(ii) + ddot(op%numpw,qg(:,iw),1,pwcp_t(:,iw),1)*gg%factor*ww%factor
           enddo
 
-         
+
           deallocate(pwcp_t)
           deallocate(qg)
           sene(ii)=sene(ii)*(0.d0,1.d0)
@@ -409,7 +409,7 @@ SUBROUTINE addconduction_remainder(qp, options)
 
     INTEGER iw,jw,kw,it,ii
     REAL(kind=DP), ALLOCATABLE :: wtemp(:,:)
-    
+
 
     nullify(vp%vmat)
     nullify(vpi%vmat)
@@ -432,7 +432,7 @@ SUBROUTINE addconduction_remainder(qp, options)
     call orthonormalize_vpot(op,vp)
     call invert_v_pot(vp,vpi)
     call free_memory(vp)
-  
+
     call invert_ortho_polaw(op,opi)
 
 
@@ -456,7 +456,7 @@ SUBROUTINE addconduction_remainder(qp, options)
        ww%label=-99999
        call write_polaw(ww,options%debug)
     endif
-     
+
 !!!!!!!!!!!
     call free_memory(op)
     call free_memory(opi)

@@ -68,7 +68,7 @@
       call  go_exchange_main( options, qp)
       call write_quasi_particles(qp, options,.false.)
    else
-      if(options%starting_point >= 6 .and. (options%remainder==3 .or. options%remainder==4)) then 
+      if(options%starting_point >= 6 .and. (options%remainder==3 .or. options%remainder==4)) then
          call read_quasi_particles(qp,options,.true.)
       else
          call read_quasi_particles(qp,options,.false.)

@@ -21,10 +21,10 @@ SUBROUTINE wfc_gamma_real(itask)
 
   USE kinds,                ONLY : DP
   USE control_flags,        ONLY : gamma_only
-  USE gvect,                ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, gstart
-  USE gsmooth,              ONLY : nls, nlsm, nr1s, nr2s, nr3s, &
-                                   nrx1s, nrx2s, nrx3s, nrxxs, doublegrid
- 
+  USE fft_base,             ONLY : dffts
+  USE fft_interfaces,       ONLY : invfft
+  USE gvect,                ONLY : nrxx, gstart
+  USE gsmooth,              ONLY : nls, nlsm, nrxxs, doublegrid
   USE io_files,             ONLY : iunwfc, nwordwfc, iunigk
   USE io_files,             ONLY : find_free_unit, diropn
   USE wvfct,                ONLY : nbnd, npwx, npw, igk, wg, et
@@ -38,7 +38,7 @@ SUBROUTINE wfc_gamma_real(itask)
   USE wannier_gw,           ONLY : becp_gw, becp_gw_c
   USE uspp
   USE becmod,               ONLY : calbec
- 
+
   IMPLICIT NONE
 
   INTEGER, INTENT(in) :: itask !if ==1 consider subspace{c'}
@@ -99,12 +99,12 @@ SUBROUTINE wfc_gamma_real(itask)
         endif
      endif
           !
-  
+
           !
           ! ... here we compute the band energy: the sum of the eigenvalues
           !
 ! --------------------------------------------------------
-! pourquoi??? nei altri posti dove si fa fft non e cosi!!! 
+! pourquoi??? nei altri posti dove si fa fft non e cosi!!!
 !     if(gstart==2) then
 !       do ibnd=1,nbnd
 !          evc(1,ibnd)=dble(evc(1,ibnd))
@@ -116,7 +116,7 @@ SUBROUTINE wfc_gamma_real(itask)
         call flush_unit(stdout)
              !
 !  write(stdout,*) "nrxx=",nrxx
-!  write(stdout,*) "nls=", ubound(nls(:)) 
+!  write(stdout,*) "nls=", ubound(nls(:))
    write(stdout,*) 'lbound and ubound of psic: ', lbound(psic), ubound(psic)
 !  write(stdout,*)"npw, lbound evc", ubound(evc(:,:),1), ubound(evc(:,:),2)
 !  write(stdout,*) "ubound(igk)", ubound(igk(:))
@@ -147,7 +147,7 @@ SUBROUTINE wfc_gamma_real(itask)
         write(stdout,*) 'before'
         call flush_unit(stdout)
 
-        CALL cft3s( psic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, 2 )
+        CALL invfft ('Wave', psic, dffts)
              !
         !
         ! ... increment the charge density ...
@@ -167,7 +167,7 @@ SUBROUTINE wfc_gamma_real(itask)
              !
      END DO ! over the bands
           !
-         
+
           !
   END DO k_loop
   CLOSE(iunwfcreal)
@@ -186,10 +186,10 @@ SUBROUTINE wfc_gamma_real_after_rot(itask)
 ! HAS TO BE USED AFTER rotate_wannier_gamma in order to read the evc1 from files wfc_w
   USE kinds,                ONLY : DP
   USE control_flags,        ONLY : gamma_only
-  USE gvect,                ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, gstart
-  USE gsmooth,              ONLY : nls, nlsm, nr1s, nr2s, nr3s, &
-                                   nrx1s, nrx2s, nrx3s, nrxxs, doublegrid
-
+  USE fft_base,             ONLY : dffts
+  USE fft_interfaces,       ONLY : invfft
+  USE gvect,                ONLY : nrxx, gstart
+  USE gsmooth,              ONLY : nls, nlsm, nrxxs, doublegrid
   USE io_files,             ONLY : iunwfc, nwordwfc, iunigk
   USE io_files,             ONLY : find_free_unit, diropn
   USE wvfct,                ONLY : nbnd, npwx, npw, igk, wg, et
@@ -215,7 +215,7 @@ SUBROUTINE wfc_gamma_real_after_rot(itask)
   REAL(kind=DP), ALLOCATABLE :: tmpreal(:)
   integer :: ipw, iigk
   !
-  ! declaration of temporary wannierized evc --> evc1   
+  ! declaration of temporary wannierized evc --> evc1
   COMPLEX(kind=DP), ALLOCATABLE :: evc1(:,:)
   !
   write(stdout,*) 'FUNCTION WFC_REAL' !ATTENZIONE
@@ -284,7 +284,7 @@ SUBROUTINE wfc_gamma_real_after_rot(itask)
            !
         END IF
         !
-        CALL cft3s( psic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, 2 )
+        CALL invfft ('Wave', psic, dffts)
         write(stdout,*) 'after'
         call flush_unit(stdout)
 

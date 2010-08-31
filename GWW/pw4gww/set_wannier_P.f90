@@ -48,7 +48,7 @@
    if(.not.l_pmatrix) then
 !ONLY IONODE_ID is allocating this array
       if(ionode) then
-         do iw=1,numpw!loop on w_P                 
+         do iw=1,numpw!loop on w_P
             noverlap=0
             do jw=1,numpw_vvc!loop on w_prod
                rsca=qmat(jw,iw)
@@ -57,7 +57,7 @@
                   ij(1,noverlap)=w_prod(jw)%i
                   ij(2,noverlap)=w_prod(jw)%j
                   o(noverlap)=rsca
-! write(*,*) 'w_P', iw,ij(1,noverlap),ij(2,noverlap),noverlap,qmat(jw,iw)                         
+! write(*,*) 'w_P', iw,ij(1,noverlap),ij(2,noverlap),noverlap,qmat(jw,iw)
                else
                   write(stdout,*) 'Set_wannier_P eliminated:', iw, jw,rsca
                endif
@@ -72,7 +72,7 @@
       endif
    else
 #ifdef __SCALAPACK
-      do iw=1,numpw!loop on w_P                                                                                           
+      do iw=1,numpw!loop on w_P
          noverlap=0
          allocate(sndbuf(numpw_vvc,nprow*npcol),ibuf(numpw_vvc,nprow*npcol))
          allocate(ipos(nprow*npcol),rvect(numpw_vvc))

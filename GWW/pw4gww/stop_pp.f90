@@ -31,7 +31,7 @@ subroutine stop_pp
      else
         close (unit = iunwfc, status = 'keep')
      end if
-  end if 
+  end if
 #endif
 
   call mp_global_end()

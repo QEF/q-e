@@ -13,7 +13,7 @@ SUBROUTINE gram_schmidt_pwannier(npwan, o_mat, nrmat, a_real_mat, ncmat,a_comp_m
   USE kinds,      ONLY : DP
   USE io_global,   ONLY : stdout
   USE wannier_gw, ONLY : real_matrix_pointer, complex_matrix_pointer
-  USE mp_global,  ONLY : mpime, nproc, world_comm 
+  USE mp_global,  ONLY : mpime, nproc, world_comm
   USE mp,         ONLY : mp_sum, mp_barrier, mp_bcast
 
 
@@ -38,7 +38,7 @@ SUBROUTINE gram_schmidt_pwannier(npwan, o_mat, nrmat, a_real_mat, ncmat,a_comp_m
 
   ALLOCATE(r_row(npwan),r_column(npwan),c_row(npwan),c_column(npwan))
 
-  do n=1,npwan!external loop 
+  do n=1,npwan!external loop
 ! calculates alfa
 
     alfa=0.d0
@@ -140,7 +140,7 @@ SUBROUTINE gram_schmidt_pwannier(npwan, o_mat, nrmat, a_real_mat, ncmat,a_comp_m
             call mp_bcast(r_row(i),mod(i,nproc))
          endif
       enddo
-         
+
       do j=1,n-1
          if(mod(j,nproc)==mpime) then
             do i=1,npwan
@@ -157,12 +157,12 @@ SUBROUTINE gram_schmidt_pwannier(npwan, o_mat, nrmat, a_real_mat, ncmat,a_comp_m
             r_column(i)=r_column(i)*alfa
          endif
       enddo
-      
+
 
 
 ! updates A
      a_real_mat(nr)%p(n,:)=r_row(:)
-     a_real_mat(nr)%p(:,n)=r_column(:) 
+     a_real_mat(nr)%p(:,n)=r_column(:)
   enddo
 
 !updates complex matrices
@@ -192,7 +192,7 @@ SUBROUTINE gram_schmidt_pwannier(npwan, o_mat, nrmat, a_real_mat, ncmat,a_comp_m
 !terms A_{n,i}, A_{i,n}, i/=n
       do i=1,npwan
         if(i/=n) then
-           if(mod(i,nproc)==mpime) then           
+           if(mod(i,nproc)==mpime) then
               c_row(i)=a_comp_mat(nc)%p(n,i)
               c_column(i)=a_comp_mat(nc)%p(i,n)
               do j=1,n-1
@@ -222,7 +222,7 @@ SUBROUTINE gram_schmidt_pwannier(npwan, o_mat, nrmat, a_real_mat, ncmat,a_comp_m
       r_column(:)=0.d0
 !terms b_{i,n}
 !      do i=1,npwan
-!         if(mod(i,nproc)==mpime) then                  
+!         if(mod(i,nproc)==mpime) then
 !            r_column(i)=b_real_mat(nr)%p(i,n)
 !            do j=1,n-1
 !               r_column(i)=r_column(i)-o_mat(j,n)*b_real_mat(nr)%p(i,j)
@@ -266,7 +266,7 @@ SUBROUTINE gram_schmidt_pwannier(npwan, o_mat, nrmat, a_real_mat, ncmat,a_comp_m
 !terms o_{i<n,n}, o_{n,i<n}
       do i=1,n-1
          r_row(i)=0.d0
-      enddo 
+      enddo
 !terms o_{n,i}, o_{i,n}, i/=n
       do i=n+1,npwan
         if(i/=n) then

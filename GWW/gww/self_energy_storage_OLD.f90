@@ -3,12 +3,12 @@
 !
 MODULE self_energy_storage
 !this modules contains the structure and subroutines
-!to store the expectation values of the self-energy 
+!to store the expectation values of the self-energy
 !and to perform ffts and fits
 !in parallel version the calculations on times are parallelized
 
-  USE kinds, ONLY  : DP 
- 
+  USE kinds, ONLY  : DP
+
   TYPE self_storage
 !descriptor of <Psi_i|\Sigma|\Psi_j>
      LOGICAL :: ontime!if .true. data is on imaginary time , otherwise imaginary frequency
@@ -20,8 +20,8 @@ MODULE self_energy_storage
      INTEGER :: i_max!maximum state to be calculated
      REAL(kind=DP) :: tau!max time (on imaginary axes)
      COMPLEX(kind=DP), DIMENSION(:,:), POINTER :: diag !values <Psi_i|\Sigma|\Psi_i>,time_j
-     COMPLEX(kind=DP), DIMENSION(:,:,:), POINTER :: whole !values  <Psi_i|\Sigma|\Psi_j>,time_k 
-     COMPLEX(kind=DP), DIMENSION(:,:), POINTER :: diag_freq_fit !values <Psi_i|\Sigma|\Psi_i>,on frequency for fit 
+     COMPLEX(kind=DP), DIMENSION(:,:,:), POINTER :: whole !values  <Psi_i|\Sigma|\Psi_j>,time_k
+     COMPLEX(kind=DP), DIMENSION(:,:), POINTER :: diag_freq_fit !values <Psi_i|\Sigma|\Psi_i>,on frequency for fit
      COMPLEX(kind=DP), DIMENSION(:,:,:), POINTER :: whole_freq_fit !values  <Psi_i|\Sigma|\Psi_j>, on frequency for fit
      REAL(kind=DP), POINTER, DIMENSION(:) :: ene_remainder!for storing remainders
   END  TYPE self_storage
@@ -140,7 +140,7 @@ CONTAINS
 
     TYPE(self_storage) :: ss!the self_energy descriptor to be read from file
     TYPE(input_options) :: options!for debug flag
-    
+
     INTEGER :: iw, jw, kw, iun
 
     if(ionode) then
@@ -200,7 +200,7 @@ CONTAINS
       allocate(ss%diag(ss%max_i,2*ss%n+1))
       nullify(ss%whole)
     endif
-    
+
 
 
     allocate(ss%ene_remainder(ss%max_i))
@@ -309,7 +309,7 @@ CONTAINS
 
   SUBROUTINE set_remainder(ss, qp)
 !this subroutine simply copy the self-energy remainders
-!from ss to qp, in order to allow restarting 
+!from ss to qp, in order to allow restarting
     USE energies_gww, ONLY : quasi_particles
 
     implicit none
@@ -319,7 +319,7 @@ CONTAINS
 
     if(.not.associated(qp%ene_remainder))  allocate(qp%ene_remainder(ss%max_i))
     qp%ene_remainder(:)=ss%ene_remainder(:)
-    
+
     return
   END SUBROUTINE set_remainder
 
@@ -328,7 +328,7 @@ CONTAINS
 !this subroutine creates the structure self_storege
 !on imaginary time
    USE  constants,         ONLY : eps8
-   USE io_global,          ONLY : stdout, ionode 
+   USE io_global,          ONLY : stdout, ionode
    USE input_gw,           ONLY : input_options
    USE basic_structures,   ONLY : q_mat, wannier_u, wp_psi,v_pot,free_memory
    USE green_function,     ONLY : green,read_green,free_memory_green, initialize_green
@@ -397,7 +397,7 @@ CONTAINS
   ss%n=options%n
   ss%tau=options%tau
   ss%whole_s=options%whole_s
-  
+
   if(tf%grid_fit/=0) then
      ss%n_grid_fit=tf%n_grid_fit
   else
@@ -431,9 +431,9 @@ CONTAINS
 
 
   if(.not.options%lvcprim_file .and. .not.options%l_self_beta) then
-  
+
 !read U matrix
-     call read_data_pw_u(uu,options%prefix) 
+     call read_data_pw_u(uu,options%prefix)
 !read overlap matrix Q
      call read_data_pw_q(qm,options%prefix, options%l_self_from_pola)
      dt = ss%tau/real(ss%n)
@@ -449,7 +449,7 @@ CONTAINS
            call read_contraction_index(cri, options)
         endif
      endif
-     !loop   
+     !loop
      call initialize_green(gg)
      call initialize_polaw(ww)
 
@@ -469,7 +469,7 @@ CONTAINS
            call flush_unit(stdout)
            time=dt*real(iw)
 !read dressed interaction
-!we take care of the symmetry t ==> -t          
+!we take care of the symmetry t ==> -t
            call read_polaw(abs(iw),ww,options%debug)
 
 !some controls
@@ -483,7 +483,7 @@ CONTAINS
                  stop
               endif
            endif
-           
+
            if(options%l_self_from_pola) then
 !if required  obtains the dressed polarization
               call collect_v_pot(vpi,vpid)
@@ -539,11 +539,11 @@ CONTAINS
                  endif
               enddo
            endif
-           
+
 !at zero time 1/2 positive G and 1/2 negative
-           
+
            if(iw==0) then
-              
+
               do ii=1,ss%max_i
                  ss%diag(ii,iw+ss%n+1)=0.5d0*ss%diag(ii,iw+ss%n+1)
               enddo
@@ -575,13 +575,13 @@ CONTAINS
 
         endif!on is_my_time
      enddo
-  
+
      call free_memory(vpid)
 !if required add remainder time to negative ones
      if(options%remainder==1 .or. options%remainder==2) then
-      
+
         write(stdout,*) 'enter remainder'
-    
+
         call read_data_pw_wp_psi(wp,options%prefix)
 
 
@@ -599,15 +599,15 @@ CONTAINS
               offset=-qp%ene_hf(uu%nums_occ)
            endif
         endif
-        
-        call read_green(0,gg,options%debug,.false.)               
+
+        call read_green(0,gg,options%debug,.false.)
         call read_green(0,gm,options%debug,.true.)
-        
+
         do iw=-ss%n,0
-           if(is_my_pola(-iw)) then 
+           if(is_my_pola(-iw)) then
               write(stdout,*) 'Remainder time:', iw
               if(ss%whole_s) then
-                 write(stdout,*) 'Routine create_self_ontime: remainder and whole matrix not implemented YET'            
+                 write(stdout,*) 'Routine create_self_ontime: remainder and whole matrix not implemented YET'
                  stop
               else
                  if(tf%l_fft_timefreq) then
@@ -615,14 +615,14 @@ CONTAINS
                  else
                     time=tf%times(iw)
                  endif
-                 call read_polaw(iw,ww,options%debug) 
-                 
-                 do ii=ss%i_min,ss%i_max             
+                 call read_polaw(iw,ww,options%debug)
+
+                 do ii=ss%i_min,ss%i_max
                     if(options%l_contraction_single_state) then
                        crs%state=ii
                        call read_contraction_state(cri,crs,options)
                     endif
-                    if(.not.options%use_contractions) then        
+                    if(.not.options%use_contractions) then
                        call self_energy(ii,ii,sene,time,qm,uu,gg,ww)
                     else
                        if(.not.options%l_contraction_single_state) then
@@ -641,11 +641,11 @@ CONTAINS
 !sene changes sign because we are on the negative axes!!
 
                     if(iw==0) sene=sene*0.5d0
-                    
+
                     ss%diag(ii,iw+ss%n+1)=ss%diag(ii,iw+ss%n+1)+sene
-                    
+
                     write(stdout,*) 'SENE 0', iw, sene
-                    
+
                     if(.not.options%use_contractions) then
                        call self_energy(ii,ii,sene,time,qm,uu,gm,ww)
                     else
@@ -664,10 +664,10 @@ CONTAINS
                    endif
                    if(iw==0) sene=sene*0.5d0
 
-                 
+
                    ss%diag(ii,iw+ss%n+1)=ss%diag(ii,iw+ss%n+1)-sene
                    write(stdout,*) 'SENE 1', iw, sene
-                   
+
                    call self_energy_remainder(ii,sene,time,wp,ww)
                    if(options%remainder==1) then
                       if(.not.options%l_hf_energies) then
@@ -677,9 +677,9 @@ CONTAINS
                       endif
                    endif
                    if(iw==0) sene=sene*0.5d0
-                   
+
                    ss%diag(ii,iw+ss%n+1)=ss%diag(ii,iw+ss%n+1)+sene
-                   
+
                    write(stdout,*) 'SENE 2', iw, sene
                    if(options%l_contraction_single_state) &
                         & call free_memory_contraction_state(crs)
@@ -689,21 +689,21 @@ CONTAINS
        enddo
        call free_memory(wp)
     endif
-    
-    
+
+
     if(ss%whole_s) then
        call mp_sum(ss%whole(:,:,:))
     else
        call mp_sum(ss%diag(:,:))
     end if
-    
+
     call free_memory(uu)
     call free_memory(qm)
     call free_memory_polaw(ww)
     call free_memory_green(gg)
     if(.not.options%l_contraction_single_state) &
          & call free_memory_contraction(cr)
-  
+
 
 
 
@@ -722,7 +722,7 @@ CONTAINS
         stop
      endif
      call setup_gv_time(gt)
-     
+
      do iw=1,2*gt%n+1
         ss%diag(:,iw)=ss%diag(:,iw)+gt%ex(:,iw)
      enddo
@@ -730,7 +730,7 @@ CONTAINS
   endif
 
   return
- 
+
 END SUBROUTINE create_self_ontime
 
 
@@ -775,7 +775,7 @@ END SUBROUTINE create_self_ontime
           write(stdout,*) '--------Sigma on imaginary frequency----------'
           totalperiod=2.d0*ss%tau+2.d0*ss%tau/real(ss%n)
           totalfrequency=(2.d0*pi/totalperiod)
-          
+
           do iw=-ss%n,ss%n
              if(tf%l_fft_timefreq) then
                 omega=totalfrequency*real(iw)
@@ -913,7 +913,7 @@ END SUBROUTINE create_self_ontime
                b_m=0.d0
             endif
 
-           
+
             do jj=1,nmesh
                fp(jj)=a_p*exp(-b_p*x(jj))*w(jj)
             enddo
@@ -978,7 +978,7 @@ END SUBROUTINE create_self_ontime
    totalperiod=2.d0*ss%tau+2.d0*ss%tau/real(ss%n)
    totalfrequency=(2.d0*pi/totalperiod)*real(2*ss%n+2)
    allocate(inz(2*ss%n+2),outz(2*ss%n+2))
-  
+
    if(.not.ss%whole_s) then
      if(ss%ontime) then!time to frequency transformation
        ss%ontime=.false.
@@ -1063,8 +1063,8 @@ END SUBROUTINE create_self_ontime
    endif
   deallocate(inz,outz)
   return
-    
-  END SUBROUTINE 
+
+  END SUBROUTINE
 
   SUBROUTINE test_fft(tf)
 !just a fft test
@@ -1092,15 +1092,15 @@ END SUBROUTINE create_self_ontime
   n=tf%n
   allocate(ss%diag(1,2*n+1))
   nullify(ss%whole)
-  
+
   do iw=-n,n
     ss%diag(1,iw+n+1)=exp(-(real(iw)*tau/real(n)/lambda)**2.)
   enddo
- 
+
   call write_storage(tf,ss)
 
   call fft_storage(ss)
-  
+
   call write_storage(tf,ss)
 
   call fft_storage(ss)
@@ -1109,7 +1109,7 @@ END SUBROUTINE create_self_ontime
 
   call free_memory_self_storage(ss)
   return
-  END SUBROUTINE  
+  END SUBROUTINE
 
   SUBROUTINE addconduction_self_ontime(ss, options)
 !this subroutine adds to the self_energy of conduction states
@@ -1125,7 +1125,7 @@ END SUBROUTINE create_self_ontime
     USE mp,                ONLY : mp_sum
     USE para_gww,          ONLY : is_my_pola
     USE mp_global,            ONLY : nproc,mpime
-  
+
     implicit none
 
     TYPE(input_options) :: options
@@ -1264,7 +1264,7 @@ END SUBROUTINE create_self_ontime
 
           call read_polaw(abs(it),ww,options%debug)
           write(stdout,*) 'addconduction_self_ontime6 ww', ww%numpw!ATTENZIONE
-           if(options%lnonorthogonal) then 
+           if(options%lnonorthogonal) then
               call collect_ortho_polaw(opi,opid)
               write(stdout,*) 'dimensions', opi%numpw, opid%numpw
               call orthonormalize_inverse(opi,ww)
@@ -1286,8 +1286,8 @@ END SUBROUTINE create_self_ontime
           call free_memory(vpi)
 
           deallocate(wtemp)
-          
-          if(options%lnonorthogonal) then 
+
+          if(options%lnonorthogonal) then
              call collect_ortho_polaw(op,opd)
              call orthonormalize_inverse(op,ww)
              call free_memory(op)
@@ -1304,7 +1304,7 @@ END SUBROUTINE create_self_ontime
           enddo
 
           do ii=i_first,ss%i_max
-             write(stdout,*) 'II' , ii 
+             write(stdout,*) 'II' , ii
              call flush_unit(stdout)
              allocate(qg(ww%numpw,wup%nums-wup%nums_occ))
              call dgemm('N','N',ww%numpw,wup%nums-wup%nums_occ,wup%nums-wup%nums_occ,1.d0,&
@@ -1329,15 +1329,15 @@ END SUBROUTINE create_self_ontime
           enddo
           deallocate(gf_t)
        else
-          if(options%lnonorthogonal) then 
+          if(options%lnonorthogonal) then
              call collect_ortho_polaw(opi,opid)
              call free_memory(opi)
           endif
           call collect_v_pot(vpi,vpid)
           call free_memory(vpi)
-          if(options%lnonorthogonal) then 
+          if(options%lnonorthogonal) then
              call collect_ortho_polaw(op,opd)
-             call free_memory(op)          
+             call free_memory(op)
           endif
        endif
     enddo
@@ -1349,7 +1349,7 @@ END SUBROUTINE create_self_ontime
     enddo
 !!!!!!!!!!!
     call free_memory(vpid)
-    if(options%lnonorthogonal) then 
+    if(options%lnonorthogonal) then
        call free_memory(opd)
        call free_memory(opi)
        call free_memory(opid)
@@ -1394,7 +1394,7 @@ END SUBROUTINE create_self_ontime
    allocate(tmpc(2*tf%n+1))
    allocate(factors(-tf%n:tf%n, -tf%n_grid_fit:tf%n_grid_fit))
 
-   
+
 
 
 !setup factors for every time position
@@ -1548,7 +1548,7 @@ END SUBROUTINE create_self_ontime
    REAL(kind=DP), ALLOCATABLE:: wtemp(:,:), vtemp(:)
    REAL(kind=DP), EXTERNAL :: ddot
    LOGICAL :: ok_read
-   
+
    nullify(vp%vmat)
    nullify(vpi%vmat)
    nullify(op%on_mat)
@@ -1618,8 +1618,8 @@ END SUBROUTINE create_self_ontime
    nbegin=mpime*l_blk+1 -(ss%n+1)
    nend=nbegin+l_blk-1
    if(nend > 0) nend = 0
-   
-   
+
+
    write(stdout,*) 'addconduction_self_ontime5',nbegin,l_blk!ATTENZIONE
    call flush_unit(stdout)
 
@@ -1647,7 +1647,7 @@ END SUBROUTINE create_self_ontime
          allocate(wtemp(ww%numpw,ww%numpw))
 
          call collect_v_pot(vpi,vpid)
-            
+
          call dgemm('N','N',ww%numpw,ww%numpw,ww%numpw,1.d0,vpi%vmat,ww%numpw,ww%pw,ww%numpw,&
                  &0.d0, wtemp,ww%numpw)
 
@@ -1664,10 +1664,10 @@ END SUBROUTINE create_self_ontime
          call orthonormalize_inverse(op,ww)
          call free_memory(op)
 
-!!now ww contains \tilde{ww}    
+!!now ww contains \tilde{ww}
          write(stdout,*) 'addconduction_self_ontime8'!ATTENZIONE
          call flush_unit(stdout)
-        
+
 !read in cprim_prod
 !first multiplication
 !second multiplication
@@ -1680,13 +1680,13 @@ END SUBROUTINE create_self_ontime
 !loop on c
             allocate(vtemp(cpp%numpw))
             do jj=1,cpp%nums_cond
-            
+
 !multiply W_ijS_jc =T_ic
                call dgemv('N',ww%numpw,ww%numpw,1.d0,ww%pw,ww%numpw,cpp%cpmat(:,jj),1,0.d0,vtemp,1)
 !multiply S_icTi_c
                sene(it,ii)=sene(it,ii)+ddot(cpp%numpw,vtemp,1,cpp%cpmat(:,jj),1)*&
                     & exp((wu%ene(jj+wu%nums_occ)+offset)*tf%times(it))*ww%factor*(0.d0,-1.d0)
-         
+
             enddo
             sene(it,ii)=sene(it,ii)*(0.d0,1.d0)
             if(it==0) sene(it,ii)=sene(it,ii)*0.5d0
@@ -1713,7 +1713,7 @@ END SUBROUTINE create_self_ontime
           ss%diag(ii,it+ss%n+1)=ss%diag(ii, it+ss%n+1)+sene(it,ii)
        enddo
     enddo
-   
+
  !copy sene results on ss with opportune factors
 !!!!!!!!!!!
    call free_memory(vpid)
@@ -1843,7 +1843,7 @@ END SUBROUTINE create_self_ontime
    if(options%lnonorthogonal) then
       call distribute_ortho_polaw(op,opd)
       call free_memory(op)
-  
+
       write(stdout,*) 'addconduction_self_ontime1_6 opd',opd%numpw!ATTENZIONE
       call flush_unit(stdout)
       call distribute_ortho_polaw(opi,opid)
@@ -1879,7 +1879,7 @@ END SUBROUTINE create_self_ontime
          call read_data_pw_u_prim(wup,options%prefix)
       endif
    endif
-      
+
 
 
 !loop on negative imaginary times
@@ -1946,7 +1946,7 @@ END SUBROUTINE create_self_ontime
                   do jj=cpp%nums_occ+1,cpp%nums
 !multiply W_ijS_jc =T_ic
 !                     call dgemv('N',ww%numpw,ww%numpw,1.d0,ww%pw,ww%numpw,cpp%cpmat(:,jj),1,0.d0,vtemp,1)
-                    
+
 !multiply S_icTi_c
                      sene(it,ii)=sene(it,ii)+ddot(cpp%numpw,vtemp(:,jj-cpp%nums_occ),1,cpp%cpmat(:,jj),1)*&
                           & exp((wu%ene(jj)+offset)*tf%times(it))*ww%factor*(0.d0,-1.d0)
@@ -1957,7 +1957,7 @@ END SUBROUTINE create_self_ontime
                   call flush_unit(stdout)
                endif
                !!!!!!!!!! end negative time
-               !!!!!!!!!! positive time 
+               !!!!!!!!!! positive time
                if(it >= 0) then
                    call dgemm('N','N',ww%numpw,cpp%nums_occ,ww%numpw,1.d0,ww%pw,ww%numpw,&
                        &cpp%cpmat(:,1:cpp%nums_occ),cpp%lda,0.d0,vtemp,ww%numpw)
@@ -1974,7 +1974,7 @@ END SUBROUTINE create_self_ontime
                   sene(it,ii)=sene(it,ii)*(0.d0,1.d0)
                   write(stdout,*) 'Conduction contribution', it,ii, sene(it,ii)
                   call flush_unit(stdout)
-               endif 
+               endif
                !!!!!!! end positive time
                if(it==0) sene(it,ii)=sene(it,ii)*0.5d0
                deallocate(vtemp)
@@ -2227,7 +2227,7 @@ END SUBROUTINE create_self_ontime
          do ii=options%i_min,options%i_max
             cpp%cprim=ii
             call read_data_pw_cprim_prod(cpp, options%prefix,.true.,ok_read,.false.,.true.)
-            
+
             if(ok_read) then
 
 !loop on c
@@ -2282,8 +2282,8 @@ END SUBROUTINE create_self_ontime
 
  !copy sene results on ss with opportune factors
 !!!!!!!!!!!
-   
-    
+
+
    call free_memory(vpid)
    if(options%lnonorthogonal) then
       call free_memory(opd)

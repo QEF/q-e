@@ -155,9 +155,9 @@ SUBROUTINE openfilq()
      IF (recover.AND..NOT.exst) &
          CALL errore ('openfilq', 'file '//trim(prefix)//'.com not found', 1)
   !
-  !    In the USPP case we also need a file in  order to store derivatives 
+  !    In the USPP case we also need a file in  order to store derivatives
   !    of kb projectors
-  !  
+  !
      iudvkb3 = 29
      lrdvkb3 = 2 * npwx * nkb * 3
      CALL diropn (iudvkb3, 'dvkb3', lrdvkb3, exst)

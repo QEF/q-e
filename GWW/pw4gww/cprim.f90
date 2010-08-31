@@ -18,13 +18,14 @@
    USE exx,                  ONLY : exx_divergence, yukawa
    USE wvfct,                ONLY : igk, g2kin, npwx, npw, nbnd, nbndx
    USE wavefunctions_module, ONLY : evc, psic
-   USE gsmooth,              ONLY : nls, nlsm, nr1s, nr2s, nr3s, &
-                                    nrx1s, nrx2s, nrx3s, nrxxs, doublegrid
+   USE fft_base,             ONLY : dffts, dfftp
+   USE fft_interfaces,       ONLY : fwfft, invfft
+   USE gsmooth,              ONLY : nls, nlsm, nrxxs, doublegrid
    USE uspp,                 ONLY : nkb, vkb, okvan
    USE realus,               ONLY : adduspos_gamma_r
    USE mp,                   ONLY : mp_sum
    USE mp_global,            ONLY : mpime
-   USE klist,                ONLY : xk 
+   USE klist,                ONLY : xk
    USE memory_limit
    USE becmod,               ONLY : calbec
 
@@ -67,7 +68,7 @@
   !! NEW PART
   !!! evaluation of the new n_set: n_set_new to optimize the speed vs memry used:
 
-  mem_used=0 
+  mem_used=0
   mem_used=mem_used+ngm_max*8
   mem_used=mem_used+nrxx*8
   mem_used=mem_used+numw_prod*nbnd_normal*8
@@ -100,13 +101,13 @@
 
   do ig=1,ngm_max
      qq = g(1,ig)**2.d0 + g(2,ig)**2.d0 + g(3,ig)**2.d0
-     
+
      if(.not.l_truncated_coulomb) then
-        
+
         if (qq > 1.d-8) then
            fac(ig)=e2*fpi/(tpiba2*qq + yukawa )
         else
-           fac(ig)= - exxdiv 
+           fac(ig)= - exxdiv
            if (yukawa .gt. 1.d-8 ) then
               fac(ig) = fac(ig) + e2*fpi/(tpiba2*qq + yukawa )
            end if
@@ -118,7 +119,7 @@
            fac(ig)=e2*fpi*(truncation_radius**2.d0/2.d0)
         endif
      endif
-     
+
   end do
     write(stdout,*) 'ATTENZIONE2'
     call flush_unit(stdout)
@@ -147,7 +148,7 @@
         psic(nls(igk(1:npw)))  = evc(1:npw,ii)
         psic(nlsm(igk(1:npw))) = CONJG( evc(1:npw,ii) )
      END IF
-     CALL cft3s( psic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, 2 )
+     CALL invfft ('Wave', psic, dffts)
      tmp_reals(:, ii-cprim_first+1)= DBLE(psic(:))
      if(ii+1 <= cprim_last) then
         tmp_reals(:, ii+1-cprim_first+1)=dimag(psic(:))
@@ -170,8 +171,8 @@
 !loop on w_p bufferized on n_set_new
   !ncpu=number_cpu()
   n_set_new=numw_prod
-  call test_allocation_mp(ngm_max, n_set_new, 2, mem_used) 
-   
+  call test_allocation_mp(ngm_max, n_set_new, 2, mem_used)
+
 
   write(stdout,*) '=> n_set_new=', n_set_new
   call flush_unit(stdout)
@@ -204,7 +205,7 @@
      do ii=cprim_first,cprim_last
         write(stdout,*) 'State:', ii
         call flush_unit(stdout)
- !open file S_c' 
+ !open file S_c'
 
 !N in case re-read from disk
 
@@ -237,7 +238,7 @@
               rewind(iunsterms)
            endif
         endif
-        
+
 
  !loop on c
         if(.not.lcprim) then
@@ -250,8 +251,8 @@
            psic(:) = ( 0.D0, 0.D0 )
            psic(nls(igk(1:npw)))  = evc(1:npw,jj)
            psic(nlsm(igk(1:npw))) = CONJG( evc(1:npw,jj) )
-  
-           CALL cft3s( psic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, 2 )
+
+           CALL invfft ('Wave', psic, dffts)
            tmp_reals_jj(:)= DBLE(psic(:))
 
            tmp_prod(1:nrxxs)=tmp_reals(:,ii-cprim_first+1)*tmp_reals_jj(:)
@@ -261,13 +262,13 @@
            if(okvan) call adduspos_gamma_r(ii,jj,tmp_prod,1,becp_gw_c(:,ii),becp_gw_c(:,jj))
 !trasform to g-space
            psic(1:nrxx)=cmplx(tmp_prod(1:nrxx),0.d0)
-           CALL cft3( psic,nr1, nr2, nr3, nrx1, nrx2, nrx3, -1 )
+           CALL fwfft ('Dense', psic, dfftp)
            do ig=1,ngm_max
               tmp_g(ig)=psic(nl(ig))*fac(ig)
            enddo
-!the following line for calling blas routine 
+!the following line for calling blas routine
            if(gstart==2) tmp_g(1) = 0.5d0*tmp_g(1)
-       
+
            call dgemv('T',2*ngm_max,i_last-i_first+1,2.d0,tmp_wp,2*ngm_max,tmp_g,1,0.d0,sca_vec,1)
 
            call mp_sum(sca_vec(1: i_last-i_first+1))
@@ -312,8 +313,9 @@ subroutine create_vcw_overlap(n_set, orthonorm,ecutoff)
    USE exx,                  ONLY : exx_divergence, yukawa
    USE wvfct,                ONLY : igk, g2kin, npwx, npw, nbnd, nbndx
    USE wavefunctions_module, ONLY : evc, psic
-   USE gsmooth,              ONLY : nls, nlsm, nr1s, nr2s, nr3s, &
-                                    nrx1s, nrx2s, nrx3s, nrxxs, doublegrid
+   USE fft_base,             ONLY : dffts, dfftp
+   USE fft_interfaces,       ONLY : fwfft, invfft
+   USE gsmooth,              ONLY : nls, nlsm,nrxxs, doublegrid
    USE uspp,                 ONLY : nkb, vkb, okvan
    USE realus,               ONLY : adduspos_gamma_r
    USE mp,                   ONLY : mp_sum
@@ -398,7 +400,7 @@ subroutine create_vcw_overlap(n_set, orthonorm,ecutoff)
         psic(nls(igk(1:npw)))  = evc(1:npw,ii)
         psic(nlsm(igk(1:npw))) = CONJG( evc(1:npw,ii) )
      END IF
-     CALL cft3s( psic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, 2 )
+     CALL invfft ('Wave', psic, dffts)
      tmp_reals(:, ii-cprim_first+1)= DBLE(psic(:))
      if(ii+1 <= cprim_last_eff) then
         tmp_reals(:, ii+1-cprim_first+1)=dimag(psic(:))
@@ -421,7 +423,7 @@ subroutine create_vcw_overlap(n_set, orthonorm,ecutoff)
 !loop on w_p bufferized on n_set_new
 
   n_set_new=numw_prod
-  call test_allocation_mp(ngm_max,n_set_new,2,mem_used) 
+  call test_allocation_mp(ngm_max,n_set_new,2,mem_used)
   write(stdout,*) '=> n_set_new=', n_set_new
   call flush_unit(stdout)
 
@@ -485,7 +487,7 @@ subroutine create_vcw_overlap(n_set, orthonorm,ecutoff)
            psic(nls(igk(1:npw)))  = evc(1:npw,jj)
            psic(nlsm(igk(1:npw))) = CONJG( evc(1:npw,jj) )
 
-           CALL cft3s( psic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, 2 )
+           CALL invfft ('Wave', psic, dffts)
            tmp_reals_jj(:)= DBLE(psic(:))
 
            tmp_prod(1:nrxxs)=tmp_reals(:,ii-cprim_first+1)*tmp_reals_jj(:)
@@ -495,14 +497,14 @@ subroutine create_vcw_overlap(n_set, orthonorm,ecutoff)
            if(okvan) call adduspos_gamma_r(ii,jj,tmp_prod,1,becp_gw_c(:,ii),becp_gw_c(:,jj))
 !trasform to g-space
            psic(1:nrxx)=cmplx(tmp_prod(1:nrxx),0.d0)
-           CALL cft3( psic,nr1, nr2, nr3, nrx1, nrx2, nrx3, -1 )
+           CALL fwfft ('Dense', psic, dfftp)
            do ig=1,max_ngm
                tmp_g(ig)=psic(nl(ig))
             enddo
 
 !the following line for calling blas routine
             if(gstart==2) tmp_g(1) = 0.5d0*tmp_g(1)
-            
+
             call dgemv('T',2*ngm_max,i_last-i_first+1,2.d0,tmp_wp,2*ngm_max,tmp_g,1,0.d0,sca_vec, 1)
 
             call mp_sum(sca_vec(1: i_last-i_first+1))
@@ -548,8 +550,9 @@ subroutine create_upper_states(n_set, lzero, orthonorm,ecutoff)
    USE exx,                  ONLY : exx_divergence, yukawa
    USE wvfct,                ONLY : igk, g2kin, npwx, npw, nbnd, nbndx, et
    USE wavefunctions_module, ONLY : evc, psic
-   USE gsmooth,              ONLY : nls, nlsm, nr1s, nr2s, nr3s, &
-                                    nrx1s, nrx2s, nrx3s, nrxxs, doublegrid
+   USE fft_base,             ONLY : dffts, dfftp
+   USE fft_interfaces,       ONLY : fwfft, invfft
+   USE gsmooth,              ONLY : nls, nlsm, nrxxs, doublegrid
    USE uspp,                 ONLY : nkb, vkb, okvan
    USE realus,               ONLY : adduspos_gamma_r
    USE mp,                   ONLY : mp_sum, mp_bcast
@@ -559,11 +562,11 @@ subroutine create_upper_states(n_set, lzero, orthonorm,ecutoff)
 
   implicit none
 
-  INTEGER, INTENT(in)  :: n_set  !defines the number of product states to be read from disk at the same time             
-  LOGICAL, INTENT(in)  :: lzero !if true put the term G=0,G=0 of v to zero      
-  INTEGER, INTENT(in)  :: orthonorm!if == 1 opens orthonormalized products of wannier file, 
+  INTEGER, INTENT(in)  :: n_set  !defines the number of product states to be read from disk at the same time
+  LOGICAL, INTENT(in)  :: lzero !if true put the term G=0,G=0 of v to zero
+  INTEGER, INTENT(in)  :: orthonorm!if == 1 opens orthonormalized products of wannier file,
                                     !if==2 opens reduced orthonormalized products
-  REAL(kind=DP), INTENT(in) :: ecutoff!cutoff in Rydberg for g sum              
+  REAL(kind=DP), INTENT(in) :: ecutoff!cutoff in Rydberg for g sum
 
 
   INTEGER :: ngm_max, ig, ii, jj, iw, jw, id, i, j, m
@@ -588,7 +591,7 @@ subroutine create_upper_states(n_set, lzero, orthonorm,ecutoff)
 
   if(nbnd_normal >= nbnd) return
 
-!determine ngm_max 
+!determine ngm_max
   ngm_max=0
   do ig=1,ngm
      if(gg(ig)*tpiba2 >= ecutoff) exit
@@ -597,7 +600,7 @@ subroutine create_upper_states(n_set, lzero, orthonorm,ecutoff)
 
   write(stdout,*) 'NGM MAX:', ngm_max, ngm
 
-  !calculate becs     
+  !calculate becs
   if  ( nkb > 0 .and. okvan) then
      CALL init_us_2( npw, igk, xk(1,1), vkb )
      CALL calbec(npw, vkb, evc, becp_gw_c, nbnd)
@@ -609,7 +612,7 @@ subroutine create_upper_states(n_set, lzero, orthonorm,ecutoff)
      exxdiv = 0.d0
   endif
 
-  !calculate V(G)      
+  !calculate V(G)
   allocate(fac(ngm_max))
   do ig=1,ngm_max
      qq = g(1,ig)**2.d0 + g(2,ig)**2.d0 + g(3,ig)**2.d0
@@ -638,7 +641,7 @@ subroutine create_upper_states(n_set, lzero, orthonorm,ecutoff)
 
   allocate(tmp_reals(nrxxs, cprim_last-cprim_first+1))
 
-!put states on reals grid                                                       
+!put states on reals grid
   do ii = cprim_first, cprim_last, 2
      psic(:) = ( 0.D0, 0.D0 )
      IF ( ii < cprim_last) THEN
@@ -650,7 +653,7 @@ subroutine create_upper_states(n_set, lzero, orthonorm,ecutoff)
         psic(nls(igk(1:npw)))  = evc(1:npw,ii)
         psic(nlsm(igk(1:npw))) = CONJG( evc(1:npw,ii) )
      END IF
-     CALL cft3s( psic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, 2 )
+     CALL invfft ('Wave', psic, dffts)
      tmp_reals(:, ii-cprim_first+1)= DBLE(psic(:))
      if(ii+1 <= cprim_last) then
         tmp_reals(:, ii+1-cprim_first+1)=dimag(psic(:))
@@ -659,7 +662,7 @@ subroutine create_upper_states(n_set, lzero, orthonorm,ecutoff)
 
 
 !if n_set >= numw_prod read in and store products of wanniers
-!open product of wanniers filed     
+!open product of wanniers filed
   if(n_set >= numw_prod) then
      iungprod = find_free_unit()
      if(orthonorm == 0) then
@@ -686,9 +689,9 @@ subroutine create_upper_states(n_set, lzero, orthonorm,ecutoff)
 
 !states are already in evc
 
-  
-  
-!loop on delta 
+
+
+!loop on delta
   ndelta=(nbnd-nbnd_normal)/num_nbnd_delta
   if(ndelta*num_nbnd_delta < (nbnd-nbnd_normal)) ndelta=ndelta+1
   allocate(tmp_reals_up(nrxxs, num_nbnd_delta))
@@ -724,7 +727,7 @@ subroutine create_upper_states(n_set, lzero, orthonorm,ecutoff)
            psic(nls(igk(1:npw)))  = evc(1:npw,ii)
            psic(nlsm(igk(1:npw))) = CONJG( evc(1:npw,ii) )
         END IF
-        CALL cft3s( psic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, 2 )
+        CALL invfft ('Wave', psic, dffts)
         tmp_reals_up(:, ii-id_first+1)= DBLE(psic(:))
         if(ii+1 <= id_last) then
            tmp_reals_up(:, ii+1-id_first+1)=dimag(psic(:))
@@ -734,7 +737,7 @@ subroutine create_upper_states(n_set, lzero, orthonorm,ecutoff)
      allocate(o_eigen(id_states), o_vector(id_states,id_upper))
     !loop on i
      do ii = cprim_first, cprim_last
-        
+
        !form products
         do jj=1,id_states
            tmp_prod(1:nrxxs)=tmp_reals(:,ii-cprim_first+1)*tmp_reals_up(:,jj)
@@ -744,19 +747,19 @@ subroutine create_upper_states(n_set, lzero, orthonorm,ecutoff)
            if(okvan) call adduspos_gamma_r &
                 &(ii,jj,tmp_prod,1,becp_gw_c(:,ii),becp_gw_c(:,jj+id_first-1))
            psic(1:nrxx)=cmplx(tmp_prod(1:nrxx),0.d0)
-           CALL cft3( psic,nr1, nr2, nr3, nrx1, nrx2, nrx3, -1 )
+           CALL fwfft ('Dense', psic, dfftp)
            do ig=1,ngm_max
               tmp_g(ig,jj)=psic(nl(ig))
            enddo
         enddo
-        
+
        !calculate overlap matrix
-      
+
     !    call zgemm('C','N',id_states,id_states,ngm_max,(1.d0,0.d0),tmp_g,&
     !            &ngm_max,tmp_g,ngm_max,(0.d0,0.d0),z_mat,id_states)
         call dgemm('T','N',id_states,id_states,2*ngm_max,2.d0,tmp_g,&
               &2*ngm_max,tmp_g,2*ngm_max,0.d0,o_mat,id_states)
-      
+
         if(gstart==2) then
            do i=1,id_states
               do j=1,id_states
@@ -764,9 +767,9 @@ subroutine create_upper_states(n_set, lzero, orthonorm,ecutoff)
               enddo
            enddo
         endif
-      
+
         call mp_sum(o_mat(:,:))
-        
+
 
         !calculate num_nbnd_upper upper eigenvalues/eigenvectors of o_mat
         if(mpime==0) then
@@ -792,26 +795,26 @@ subroutine create_upper_states(n_set, lzero, orthonorm,ecutoff)
         call mp_bcast(o_eigen(:), ionode_id)
        !calculate reduced basis
         allocate( tmp_sigma(ngm_max,id_upper))
-   
+
        !calculate reduced states
      !   call zgemm('N','N',ngm_max,id_upper,id_states,(1.d0,0.d0),tmp_g,ngm_max, z_vector,&
      !        &id_states, (0.d0,0.d0),tmp_sigma,ngm_max)
         call dgemm('N','N',2*ngm_max,id_upper,id_states,1.d0,tmp_g,2*ngm_max, o_vector,&
              &id_states, 0.d0,tmp_sigma,2*ngm_max)
-          
-        
+
+
 
        !calculate products
         allocate(vmat(numw_prod,id_upper),smat(numw_prod, id_upper))
-            
+
 
         if(n_set >= numw_prod) then
         !overlap products
            if(ii <= num_nbndv) then
-              
+
              ! call zgemm('C','N',numw_prod,id_upper,ngm_max,(1.d0,0.d0),tmp_wp,ngm_max, tmp_sigma,ngm_max, &
              !      &(0.d0,0.d0),z_smat,numw_prod)
-              
+
               !smat(:,:)=2.d0*dble(z_smat(:,:))
                call dgemm('T','N',numw_prod,id_upper,2*ngm_max,2.d0,tmp_wp,2*ngm_max, tmp_sigma,2*ngm_max, &
                     &0.d0,smat,numw_prod)
@@ -822,7 +825,7 @@ subroutine create_upper_states(n_set, lzero, orthonorm,ecutoff)
                     enddo
                  enddo
               endif
-              
+
            endif
            do iw=1,id_upper
               tmp_sigma(1:ngm_max,iw)=tmp_sigma(1:ngm_max,iw)*fac(1:ngm_max)
@@ -872,7 +875,7 @@ subroutine create_upper_states(n_set, lzero, orthonorm,ecutoff)
            close(iungprod)
         endif
         call mp_sum(vmat(:,:))
-      
+
         if(ii<=num_nbndv) call mp_sum(smat(:,:))
  !write products on disk
         if(ionode) then
@@ -922,7 +925,7 @@ subroutine create_upper_states(n_set, lzero, orthonorm,ecutoff)
      enddo
      deallocate(o_mat, o_eigen, o_vector)
   enddo
-    
+
   deallocate(tmp_g, tmp_prod)
   deallocate(fac)
   deallocate(tmp_reals)
@@ -941,8 +944,8 @@ subroutine create_upper_states(n_set, lzero, orthonorm,ecutoff)
   enddo
   close(iunsterms)
   deallocate(ene_reduced)
-                 
-! #endif 
-  
+
+! #endif
+
   return
 end subroutine create_upper_states

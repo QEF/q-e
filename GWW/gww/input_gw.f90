@@ -32,7 +32,7 @@
       LOGICAL :: lnonorthogonal=.false.!if true a non orthogonal basis set is considered
       LOGICAL :: l_hf_energies=.false.! if true uses perturbative HF energies for calculating G and W
       INTEGER :: n_fit!number of time intervals in the positive or negative range to be used for fit
-      INTEGER :: remainder=0!if 0 not remainder if 1,2 our remainders , 3 Chelikowsky COH remainder, 4 Chelikowsky 
+      INTEGER :: remainder=0!if 0 not remainder if 1,2 our remainders , 3 Chelikowsky COH remainder, 4 Chelikowsky
                          !reaminder calculated in PW
       LOGICAL :: lconduction=.true.!if true accurate calculation of self_energy for conduction states
       LOGICAL :: l_remainder_cutoff=.false.!if true uses the reduced based for the remainder description
@@ -58,7 +58,7 @@
 !the following defines the range of states we want to studi
       INTEGER :: i_min=1!minimum state
       INTEGER :: i_max!maximum state
-      
+
       INTEGER :: n_max_minpack=10000!maximum number of minpack iterations
       INTEGER :: cyc_minpack=1!number of minpack cycles
 
@@ -76,7 +76,7 @@
                                !a RPA external calculation, OTHERWISE it's set to zero
       INTEGER :: offset_fit=2!offset for fit from 0
 
-      LOGICAL :: lcprim_file=.false. !if true read S_{ c' c i} terms from file   
+      LOGICAL :: lcprim_file=.false. !if true read S_{ c' c i} terms from file
       LOGICAL :: lvcprim_file=.true. !if truem read S_{ i, v,c i} terms from file
       LOGICAL :: l_dft_xc_file=.false.!if true read dft exchange and correlation energies from file
       LOGICAL :: lpola_file=.true.!if true calculates the polarization directly from the psi_v psi_c \tilde{w}^P_i file

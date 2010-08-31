@@ -1,7 +1,7 @@
 ! FOR GWW
-! Author: P. Umari 
-! Modified by G. Stenuit 
-! 
+! Author: P. Umari
+! Modified by G. Stenuit
+!
 !----------------------------------------------------------------------------
 SUBROUTINE produce_wannier_gamma
   !----------------------------------------------------------------------------
@@ -20,8 +20,8 @@ SUBROUTINE produce_wannier_gamma
   USE io_global,            ONLY : stdout, ionode, ionode_id
   USE wvfct,                ONLY : nbnd, et, wg,npwx,npw
   USE ener,                 ONLY : etot, eband, deband, ehart, vtxc, etxc, &
-                                   etxcc, ewld, demet, ef, ef_up, ef_dw 
-  USE io_files,             ONLY : prefix, iunwfc, nwordwfc, find_free_unit 
+                                   etxcc, ewld, demet, ef, ef_up, ef_dw
+  USE io_files,             ONLY : prefix, iunwfc, nwordwfc, find_free_unit
   USE wavefunctions_module, ONLY : evc
 #if defined (EXX)
   USE funct,                ONLY : dft_is_hybrid, exx_is_active
@@ -48,7 +48,7 @@ SUBROUTINE produce_wannier_gamma
   IMPLICIT NONE
   !
   ! ... a few local variables
-  !  
+  !
 #if defined (EXX)
   REAL(DP) :: dexx
   REAL(DP) :: fock0,  fock1,  fock2
@@ -102,7 +102,7 @@ SUBROUTINE produce_wannier_gamma
 #endif
          endif
 
-       
+
 
          !set ngm max
          call max_ngm_set
@@ -119,7 +119,7 @@ SUBROUTINE produce_wannier_gamma
          ene_loc(:)= et(:,1)*rytoev
          call exx_grid_init()
 
-!         if(remainder /= 4 .and. remainder /= 5 )then !otherwise just post-processing remainder calculation 
+!         if(remainder /= 4 .and. remainder /= 5 )then !otherwise just post-processing remainder calculation
             !
             if(restart_gww <= 0) then
                write(stdout,*) 'restart_gww <= 0'
@@ -190,7 +190,7 @@ SUBROUTINE produce_wannier_gamma
                !!!! or changed wfc_gamma_real !!!
 !!!!!               call wfc_gamma_real(0)
 ! MODIFIED to
-               call wfc_gamma_real_after_rot(0)                
+               call wfc_gamma_real_after_rot(0)
                ! reput it to check if QE will be OK
 ! pourquoi????               call wfc_gamma_real(0)
                !if required save MLWF for plotting
@@ -202,7 +202,7 @@ SUBROUTINE produce_wannier_gamma
                !               deallocate(evc)
                call distance_wannier
                CALL flush_unit( stdout )
-               ! call appropriate routine for ultralocalization 
+               ! call appropriate routine for ultralocalization
                if(.not.l_ultra_external) then
                   call ultralocalization_para(num_nbndv,nbnd_normal,1.d-5,0,num_nbndv,0)
                   write(stdout,*) 'Ultralocalization valence wfcs'!ATTENZIONE
@@ -227,7 +227,7 @@ SUBROUTINE produce_wannier_gamma
                if(l_plot_ulwf) then
                   !                   ALLOCATE( evc( npwx, nbnd ) )
                   !                   CALL get_buffer ( evc, nwordwfc, iunwfc, 1)
-                  allocate(tmp_rot(nbnd_normal,nbnd_normal)) 
+                  allocate(tmp_rot(nbnd_normal,nbnd_normal))
                   tmp_rot(:,:)=dble(u_trans(:,:))
                   call rotate_wannier_gamma( tmp_rot,1,1)
                   deallocate(tmp_rot)
@@ -241,7 +241,7 @@ SUBROUTINE produce_wannier_gamma
                !!!
                ! to check
                write(stdout,*) '------------------------------'
-               write(stdout,*) 'e_xc(1:nbnd)=', e_xc(1:nbnd) 
+               write(stdout,*) 'e_xc(1:nbnd)=', e_xc(1:nbnd)
                write(stdout,*) '------------------------------'
                write(stdout,*) 'e_h(1:nbnd)=', e_h(1:nbnd)
                write(stdout,*) '------------------------------'
@@ -254,7 +254,7 @@ SUBROUTINE produce_wannier_gamma
                enddo
                ! u_trans TO BE BROADCASTED
                deallocate(e_xc,e_h)
-               ! 
+               !
                call product_wannier_para(num_nbndv,.true., ene_loc, lambda_ene)
                !
                ! now it can delete the wavefunctions in real space
@@ -265,7 +265,7 @@ SUBROUTINE produce_wannier_gamma
                !
                CALL flush_unit( stdout )
                ! calculate terms for calculating residual part
-               ! not in use now 
+               ! not in use now
                !
                !               if(remainder==0) then
                !                  call wannier_valence_terms(num_nbnds,nset,num_nbnds)
@@ -280,7 +280,7 @@ SUBROUTINE produce_wannier_gamma
             else
                !                deallocate(evc)
             endif  !!!!!!! endif gww<=0   !!!!! endif of the first restart gww
-            !  
+            !
             if(restart_gww <= 1 ) then
                 write(stdout,*) 'restart_gww <= 1 and numw_prod= ', numw_prod
                 call flush_unit(stdout)
@@ -299,7 +299,7 @@ SUBROUTINE produce_wannier_gamma
                       numw_prod_dimr=ceiling (real(numw_prod)/real(numw_prod_r*nprow))*numw_prod_r
                       numw_prod_dimc=ceiling (real(numw_prod)/real(numw_prod_c*npcol))*numw_prod_c
                       allocate(omat(numw_prod_dimr,numw_prod_dimc))
-                   
+
 #endif
                    endif
                    write(stdout,*) 'CALL wannier_pmat_terms_ggrid',numw_prod_dimr,numw_prod_dimc
@@ -361,7 +361,7 @@ SUBROUTINE produce_wannier_gamma
                      write(stdout,*) 'CALL set_wannier_P'
                      call flush_unit(stdout)
                      !
-                     ! 
+                     !
                      call set_wannier_P(numw_prod,numw_prod_vvc,w_prod,omat,numw_prod_dimr,&
                      numw_prod_dimc,cutoff_overlap,w_P, num_wp_dimr, num_wp_r, numw_prod_r,numw_prod_c)
                      CALL flush_unit( stdout )
@@ -379,12 +379,12 @@ SUBROUTINE produce_wannier_gamma
                         cutoff_polarization,numw_prod,&
                               &numw_prod_vvc, nset, ecutoff_global, .true.,omat,numw_prod_dimr,&
                               numw_prod_dimc,nc_polarization_analysis,numw_prod_r,numw_prod_c)
-                        ! 
+                        !
                         write(stdout,*) 'OMAT4', omat(1,1)
                         !
                         ! deallocate memory
                         !ATTENZIONE the following is now done in do_polarization_analysis
-                        !                         do iw=1,numw_prod_old   
+                        !                         do iw=1,numw_prod_old
                         !                            call free_memory(w_P(iw))
                         !                         enddo
                         deallocate(w_P)
@@ -426,7 +426,7 @@ SUBROUTINE produce_wannier_gamma
                            call coulomb_analysis(numw_prod,numw_prod_old,numw_prod_vvc,vmat, numw_prod_dimr, &
                                   &numw_prod_dimc,cutoff_coulomb_analysis, nset, ecutoff_global, .true.,omat, &
                                   &numw_prod_vvc_dimr,numw_prod_vvc_dimc,numw_prod_vvc_r,numw_prod_vvc_c)
-                           ! 
+                           !
                            !deallocate
                            deallocate(vmat)
                         endif  !!! of if(l_coulomb_analysis)
@@ -481,10 +481,10 @@ SUBROUTINE produce_wannier_gamma
                               numw_prod_vvc_r=ceiling(real(numw_prod_vvc)/real(nprow))
                               numw_prod_vvc_dimr=ceiling (real(numw_prod_vvc)/real(numw_prod_vvc_r*nprow))*numw_prod_vvc_r
                            endif
-                           ! 
+                           !
                            allocate(vmat(numw_prod_vvc_dimr,numw_prod_dimc))
                            !calculate vmat matrix
-                           ! 
+                           !
                            call  wannier_uterms_red(nset,l_zero, ecutoff_global,vmat,numw_prod_vvc_dimr,numw_prod_dimc,&
                                  &numw_prod_vvc_r,numw_prod_c,numw_prod,numw_prod_vvc,0,.false.)
                            !treat is as products of wanniers
@@ -523,7 +523,7 @@ SUBROUTINE produce_wannier_gamma
                             !call dirdel('wiwjwfc')!ATTENZIONE
                         endif
                         call dirdel('wiwjwfc_on')
-                     else  !!! f(l_polarization_analysis) 
+                     else  !!! f(l_polarization_analysis)
                         if(.not. l_pmatrix) then
                            do iw=1,numw_prod_old
                               if(ionode) call free_memory(w_P(iw))
@@ -536,12 +536,12 @@ SUBROUTINE produce_wannier_gamma
                              endif
                           enddo
 #endif
-                        endif !!!! endif of if(.not. l_pmatrix) 
+                        endif !!!! endif of if(.not. l_pmatrix)
                         deallocate(omat)
-                     endif !!!!!!! endif if(l_polarization_analysis)   
+                     endif !!!!!!! endif if(l_polarization_analysis)
                   else  !!!!! else of if(l_wpwt_terms.or.l_pola ...
                      deallocate(omat)
-                  endif !!!!! endif of if if(l_wpwt_terms.or.l_pola ... 
+                  endif !!!!! endif of if if(l_wpwt_terms.or.l_pola ...
                 endif  !!!! if(l_orthonorm_products)
                 !
                 if(.not. l_zero) then
@@ -590,7 +590,7 @@ SUBROUTINE produce_wannier_gamma
                    allocate(uterms(numw_prod,numw_prod))
                    if(ionode) then
                      iunuterms =  find_free_unit()
-                     open( unit= iunuterms, file=trim(prefix)//'.uterms', status='old',form='unformatted') 
+                     open( unit= iunuterms, file=trim(prefix)//'.uterms', status='old',form='unformatted')
                    endif
                    write(stdout,*) 'WRITE UTERMS'
                    call flush_unit(stdout)
@@ -617,7 +617,7 @@ SUBROUTINE produce_wannier_gamma
                 call flush_unit(stdout)
                 call mp_barrier
                 !
-            endif  !!!! endif restartgw<=1 
+            endif  !!!! endif restartgw<=1
 
             if(restart_gww <= 2) then
               !!!! for after ...
@@ -639,11 +639,11 @@ SUBROUTINE produce_wannier_gamma
                     endif
                  endif
               endif
-              !   
+              !
               ! if required ultralocalized subspace {C'} and calculates Vc',c'p matrix elements
               if(cprim_type == 0) then !usual treatment
                  if(num_nbndc_set > 0 ) then
-                    !    
+                    !
                     !                     ALLOCATE( evc( npwx, nbnd ) )
                     !                     CALL get_buffer ( evc, nwordwfc, iunwfc, 1)
                     ! pourquoi???         CALL wfc_gamma_real(1)
@@ -692,7 +692,7 @@ SUBROUTINE produce_wannier_gamma
                            endif
                         endif
                         CALL flush_unit( stdout )
-                        
+
                      endif
                      call write_wannier_matrix_c
 
@@ -713,18 +713,18 @@ SUBROUTINE produce_wannier_gamma
                        endif
                     endif
 
-!                    DEALLOCATE( evc) 
+!                    DEALLOCATE( evc)
 
                  else
 !direct treatment of selected states in bands again
                     write(stdout,*) 'Inside'
                     write(stdout,*) 'evc(1,1)=', evc(1,1), 'evc(1,2)=', evc(1,2)
                     call flush_unit(stdout)
-                    !!!! since it seems the evc have changed ! I have removed these comments 
+                    !!!! since it seems the evc have changed ! I have removed these comments
 !                    ALLOCATE( evc( npwx, nbnd ) )
                     !evc(:,:) = (0.D0,0.D0)
-!                    CALL davcio(evc, nwordwfc, iunwfc, 1, - 1) 
-!                   ALLOCATE( evc( npwx, nbnd ) ) 
+!                    CALL davcio(evc, nwordwfc, iunwfc, 1, - 1)
+!                   ALLOCATE( evc( npwx, nbnd ) )
 !                   CALL get_buffer ( evc, nwordwfc, iunwfc, 1)
                     write(stdout,*) 'after get_buffer'
                     write(stdout,*) 'evc(1,1)=', evc(1,1), 'evc(1,2)=', evc(1,2)

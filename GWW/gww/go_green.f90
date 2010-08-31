@@ -14,7 +14,7 @@
    USE io_global,          ONLY : stdout
    USE energies_gww,           ONLY : quasi_particles
    USE times_gw,        ONLY : times_freqs
-   
+
    implicit none
 
    TYPE(times_freqs), INTENT(in)     :: tf!time grid
@@ -51,9 +51,9 @@
          call write_green(gr,options%debug)
       endif
    enddo
-  
+
 !now insert the zero time negative one
-   
+
    if(is_my_last) then
       write(stdout,*) 'green 0'
       call create_green_part(gr,wu,0.d0,options%debug,.true.,options%l_hf_energies, qp%ene_hf)
@@ -69,5 +69,5 @@
    return
 
  END SUBROUTINE
- 
- 
+
+

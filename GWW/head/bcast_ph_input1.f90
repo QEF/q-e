@@ -12,7 +12,7 @@ subroutine bcast_ph_input1
   !
 #ifdef __PARA
 
-  use partial, only : nat_todo, atomo, nrapp, list 
+  use partial, only : nat_todo, atomo, nrapp, list
   use mp, only: mp_bcast
   USE io_global, ONLY : ionode_id
   implicit none

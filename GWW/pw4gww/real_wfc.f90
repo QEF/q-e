@@ -2,7 +2,7 @@
 !
 ! Author: P. Umari
 ! Modified by G. Stenuit
-! 
+!
 !-----------------------------------------
 subroutine real_wfc( u_trans, ispin, iun_wannier,nbndv)
 !----------------------------------------
@@ -29,14 +29,14 @@ subroutine real_wfc( u_trans, ispin, iun_wannier,nbndv)
   USE uspp
   USE uspp_param
   USE becmod,               ONLY : calbec
- 
+
   implicit none
 
   COMPLEX(kind=DP) :: u_trans(nbnd,nbnd)!transform unitarian matrix w_i=\sum_j U_{i,j}\Psi_j
   INTEGER, INTENT(in) :: ispin!+1 or -1
   INTEGER, INTENT(in) :: iun_wannier !units for reading wfc
   INTEGER, INTENT(in) :: nbndv!number of first bands wich taken real separately
-  
+
 
   !  --- Internal definitions ---
 
@@ -55,7 +55,7 @@ subroutine real_wfc( u_trans, ispin, iun_wannier,nbndv)
    COMPLEX(dp) :: becp1(nkb,nbnd)
    INTEGER :: nt,na, ih, jh, ikb, jkb, ijkb0
    REAL(kind=DP) :: eps,sca
-   COMPLEX(kind=DP) :: scaz   
+   COMPLEX(kind=DP) :: scaz
 
    ALLOCATE( evc0(npwx,nbndx))
    ALLOCATE( evc1(npwx,nbndx))
@@ -72,9 +72,9 @@ subroutine real_wfc( u_trans, ispin, iun_wannier,nbndv)
    !reads wfcs from iunwfc
 
    CALL gk_sort(xk(1,1),ngm,g,ecutwfc/tpiba2, &
-              &    npw0,igk0,g2kin_bp) 
+              &    npw0,igk0,g2kin_bp)
    CALL davcio(evc0,nwordwfc,iunwfc,1,-1)
-   
+
    write(6,*) 'Routine real_wfc: out of davcio'
 
 
@@ -101,7 +101,7 @@ subroutine real_wfc( u_trans, ispin, iun_wannier,nbndv)
    enddo
 
 !now valence subspace
-   
+
    do i=1,nbndv!loop on bands
 
       max_p=0.d0
@@ -111,7 +111,7 @@ subroutine real_wfc( u_trans, ispin, iun_wannier,nbndv)
          evcp(ig)=0.5d0*(evc0(ig,i)+conjg(evc0(minusg(ig),i)))
          evcm(ig)=0.5d0*(0.d0,-1.d0)*(evc0(ig,i)-conjg(evc0(minusg(ig),i)))
          if(abs(evcp(ig)) > max_p) max_p = abs(evcp(ig))
-         if(abs(evcm(ig)) > max_m) max_m = abs(evcm(ig))           
+         if(abs(evcm(ig)) > max_m) max_m = abs(evcm(ig))
       enddo
 
       if(max_p > max_m) then
@@ -148,7 +148,7 @@ subroutine real_wfc( u_trans, ispin, iun_wannier,nbndv)
 
 
    evc1(1:npw0,1)=evc1(1:npw0,1)/sqrt(norm)
-   
+
    do i=2,nbndv
       CALL calbec(npw0, vkb, evc1, becp1, nbnd)
       do j=1,i-1
@@ -217,7 +217,7 @@ subroutine real_wfc( u_trans, ispin, iun_wannier,nbndv)
          evcp(ig)=0.5d0*(evc0(ig,i)+conjg(evc0(minusg(ig),i)))
          evcm(ig)=0.5d0*(0.d0,-1.d0)*(evc0(ig,i)-conjg(evc0(minusg(ig),i)))
          if(abs(evcp(ig)) > max_p) max_p = abs(evcp(ig))
-         if(abs(evcm(ig)) > max_m) max_m = abs(evcm(ig))           
+         if(abs(evcm(ig)) > max_m) max_m = abs(evcm(ig))
       enddo
 
       if(max_p > max_m) then
@@ -254,7 +254,7 @@ subroutine real_wfc( u_trans, ispin, iun_wannier,nbndv)
 
 
    evc1(1:npw0,nbndv+1)=evc1(1:npw0,nbndv+1)/sqrt(norm)
-   
+
    do i=nbndv+2,nbnd
       CALL calbec(npw0, vkb, evc1, becp1, nbnd)
       do j=nbndv+1,i-1
@@ -314,7 +314,7 @@ subroutine real_wfc( u_trans, ispin, iun_wannier,nbndv)
 
 
 
-   endif 
+   endif
 
 ! calculate unitaria rotation
 !U_ij = <\Psi_j|S|w_i>
@@ -364,7 +364,7 @@ subroutine real_wfc( u_trans, ispin, iun_wannier,nbndv)
 ! re-writes on file iun_wannier
 
      CALL davcio(evc1,nwordwfc,iun_wannier,1,1)
-     
+
 
      DEALLOCATE(evc0)
      DEALLOCATE(evc1)

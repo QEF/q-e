@@ -20,13 +20,13 @@ subroutine solve_head
   USE ions_base,             ONLY : nat
   USE io_global,             ONLY : stdout, ionode,ionode_id
   USE io_files,              ONLY : prefix, iunigk, find_free_unit, diropn
-  use pwcom                
+  use pwcom
   USE check_stop,            ONLY : max_seconds
   USE wavefunctions_module,  ONLY : evc
   USE kinds,                 ONLY : DP
   USE becmod,                ONLY : bec_type, becp
   USE uspp_param,            ONLY : nhm
-  USE uspp,                  ONLY : nkb, vkb, okvan       
+  USE uspp,                  ONLY : nkb, vkb, okvan
   use phcom,                 ONLY : dpsi, dvpsi, reduce_io, fildrho, iudrho, lrdrho, lgamma, &
                                     nksq, lrwfc, iuwfc, npwq, nbnd_occ, lrebar, iuebar
   USE wannier_gw,            ONLY : n_gauss, omega_gauss, grid_type
@@ -37,6 +37,8 @@ subroutine solve_head
   USE mp,                    ONLY : mp_sum, mp_barrier, mp_bcast
   USE becmod,                ONLY : calbec
   USE symme,                 ONLY : symmatrix, crys_to_cart
+  USE fft_base,             ONLY : dffts, dfftp
+  USE fft_interfaces,       ONLY : fwfft, invfft
 
   implicit none
 
@@ -49,7 +51,7 @@ subroutine solve_head
   ! h_diag: diagonal part of the Hamiltonian
   ! eprec : array fo preconditioning
 
- 
+
   complex(DP) , allocatable :: auxg (:), aux1 (:),  ps (:,:)
 
   complex(DP), EXTERNAL :: ZDOTC      ! the scalar product function
@@ -92,7 +94,7 @@ subroutine solve_head
 
   allocate(e_head(ngm,n_gauss+1))
   allocate(e_head_pol(ngm,n_gauss+1,3))
-  e_head(:,:) =(0.d0,0.d0)  
+  e_head(:,:) =(0.d0,0.d0)
   allocate(x(2*n_gauss+1),w(2*n_gauss+1), freqs(n_gauss+1))
   allocate(head(n_gauss+1),head_tmp(n_gauss+1))
   head(:)=0.d0
@@ -118,21 +120,21 @@ subroutine solve_head
      write(stdout,*) 'Freq',i,freqs(i)
   enddo
   CALL flush_unit( stdout )
-  
+
   deallocate(x,w)
   head(:)=0.d0
 
   if (lsda) call errore ('solve_head', ' LSDA not implemented', 1)
 
   call start_clock ('solve_head')
- 
-  allocate (auxg(npwx))    
-  allocate (aux1(nrxxs))    
-  allocate (ps  (nbnd,nbnd))    
+
+  allocate (auxg(npwx))
+  allocate (aux1(nrxxs))
+  allocate (ps  (nbnd,nbnd))
   ps (:,:) = (0.d0, 0.d0)
-  allocate (h_diag(npwx, nbnd))    
+  allocate (h_diag(npwx, nbnd))
   allocate (eprec(nbnd))
- 
+
   IF (ionode .AND. fildrho /= ' ') THEN
      INQUIRE (UNIT = iudrho, OPENED = exst)
      IF (exst) CLOSE (UNIT = iudrho, STATUS='keep')
@@ -152,14 +154,14 @@ subroutine solve_head
   !
   !   only one iteration is required
   !
-  !   rebuild global miller index array    
+  !   rebuild global miller index array
   !
   allocate(mill_g(3,ngm_g))
   mill_g(:,:) = 0
   do ig = 1, ngm
-     i = nint( g(1,ig)*bg(1,1) + g(2,ig)*bg(2,1) + g(3,ig)*bg(3,1) ) 
-     j = nint( g(1,ig)*bg(1,2) + g(2,ig)*bg(2,2) + g(3,ig)*bg(3,2) ) 
-     k = nint( g(1,ig)*bg(1,3) + g(2,ig)*bg(2,3) + g(3,ig)*bg(3,3) ) 
+     i = nint( g(1,ig)*bg(1,1) + g(2,ig)*bg(2,1) + g(3,ig)*bg(3,1) )
+     j = nint( g(1,ig)*bg(1,2) + g(2,ig)*bg(2,2) + g(3,ig)*bg(3,2) )
+     k = nint( g(1,ig)*bg(1,3) + g(2,ig)*bg(2,3) + g(3,ig)*bg(3,3) )
      mill_g (1, ig_l2g(ig)) = i
      mill_g (2, ig_l2g(ig)) = j
      mill_g (3, ig_l2g(ig)) = k
@@ -167,7 +169,7 @@ subroutine solve_head
   call mp_sum( mill_g )
   !
   if(ionode) then
-  
+
      inquire(file=trim(prefix)//'.head_status', exist = exst)
      if(.not. exst) then
         i_start=1
@@ -184,7 +186,7 @@ subroutine solve_head
      endif
   endif
   call mp_bcast(i_start,ionode_id)
- 
+
   do i=i_start,n_gauss+1
      write(stdout,*) 'Freq',i
      call flush_unit(stdout)
@@ -214,7 +216,7 @@ subroutine solve_head
         do ibnd=1,nbnd
            psi_v(:,ibnd) = ( 0.D0, 0.D0 )
            psi_v(nls(igk(1:npw)),ibnd) = evc(1:npw,ibnd)
-           CALL cft3s( psi_v(:,ibnd), nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, 2 )
+           CALL invfft ('Wave', psi_v(:,ibnd), dffts)
         enddo !do ibnd=1,nbnd
         !
         ! compute the kinetic energy
@@ -257,9 +259,9 @@ subroutine solve_head
                 dvpsi(1,1), npwx )
            ! starting threshold for the iterative solution of the linear
            thresh = tr2_ph!ATTENZIONE
-           ! 
+           !
            ! iterative solution of the linear system (H-e)*dpsi=dvpsi
-           ! dvpsi=-P_c+ (dvbare)*psi 
+           ! dvpsi=-P_c+ (dvbare)*psi
            !
            do ibnd = 1, nbnd_occ (ik)
               do ig = 1, npw
@@ -299,7 +301,7 @@ subroutine solve_head
               prod(:) = ( 0.D0, 0.D0 )
               prod(nls(igk(1:npw))) = dpsi(1:npw,ibnd)
               !
-              CALL cft3s( prod, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, 2 )
+              CALL invfft ('Wave', prod, dffts)
               !      product dpsi * psi_v
               prod(1:nrxxs)=conjg(prod(1:nrxxs))*psi_v(1:nrxxs,ibnd)
               if(doublegrid) then
@@ -309,7 +311,7 @@ subroutine solve_head
               if(okvan) call adduspos_r(prod,becpd(:,ibnd),becp%k(:,ibnd))
               !
               pola_charge(:,1,ipol)=pola_charge(:,1,ipol)+prod(:)*ww
-              ! 
+              !
            enddo ! do ibnd=1,nbnd
            !
         enddo ! do ipol = 1,3 (on polarization) line 224
@@ -320,7 +322,7 @@ subroutine solve_head
            nrec = (ipol - 1) * nksq + ik
            call davcio (dvpsi, lrebar, iuebar, nrec, - 1)
            do jpol = 1, 3
-              ! 
+              !
               do ibnd = 1, nbnd_occ (ik)
                  !
                  !  this is the real part of <DeltaV*psi(E)|DeltaPsi(E)>
@@ -346,7 +348,7 @@ subroutine solve_head
 #endif
      !
      do ipol=1,3
-        CALL cft3( pola_charge(:,1,ipol),nr1, nr2, nr3, nrx1, nrx2, nrx3, -1 )
+        CALL fwfft ('Dense', pola_charge(:,1,ipol), dfftp)
         !
         tmp_g(:)=(0.d0,0.d0)
         tmp_g(gstart:ngm)=pola_charge(nl(gstart:ngm),1,ipol)
@@ -361,7 +363,7 @@ subroutine solve_head
         do ig=gstart,ngm
            e_head_pol(ig,i,ipol)=e_head_pol(ig,i,ipol)-4.d0*tmp_g(ig)
         enddo
-     enddo ! do ipol=1,3 
+     enddo ! do ipol=1,3
      !
 #ifdef __PARA
      call mp_sum (epsilon_g(:,:,i), intra_pool_comm)
@@ -391,8 +393,8 @@ subroutine solve_head
      WRITE( stdout, '(/,10x,"Dielectric constant in cartesian axis ",/)')
 
      WRITE( stdout, '(10x,"(",3f18.9," )")') ((epsilon_g(ipol,jpol,i), ipol=1,3), jpol=1,3)
-     
-     ! reminder i runs over freq (do i=i_start,n_gauss+1, line 183) 
+
+     ! reminder i runs over freq (do i=i_start,n_gauss+1, line 183)
      head(i) = (epsilon_g(1,1,i)+epsilon_g(2,2,i)+epsilon_g(3,3,i))/3.d0
      e_head(:,i)=(e_head_pol(:,i,1)+e_head_pol(:,i,2)+e_head_pol(:,i,3))/3.0
      !
@@ -400,17 +402,17 @@ subroutine solve_head
      write(stdout,*) 'ionode=', ionode
      call flush_unit(stdout)
      if(ionode) then
-        !      
+        !
         write(stdout,*) 'HEAD:',freqs(i),head(i)
-        !   
+        !
         write(stdout,*) 'E_HEAD :', i, e_head(2, i)
         write(stdout,*) i,e_head_pol(2,i,1)
         write(stdout,*) i,e_head_pol(2,i,2)
         write(stdout,*) i,e_head_pol(2,i,3)
-        !   
+        !
      endif
      !
-     call flush_unit(stdout) 
+     call flush_unit(stdout)
      !
      ! writes on file
      !
@@ -462,7 +464,7 @@ subroutine solve_head
         iun =  find_free_unit()
         if(i==1) then
            open( unit= iun, file=trim(prefix)//'.e_head', status='unknown',form='unformatted')
-         
+
            write(stdout,*) 'n_gauss=',n_gauss
            write(stdout,*) 'omega_gauss=',omega_gauss
            write(stdout,*) 'freqs(1:n_gauss+1)=', freqs(1:n_gauss+1)
@@ -491,7 +493,7 @@ subroutine solve_head
            enddo
            write(stdout,*) 'check4 inside if(ionode) and if(i==1)'
            call flush_unit(stdout)
-        else 
+        else
            if(i/=(n_gauss+1)) then
               open( unit= iun, file=trim(prefix)//'.e_head', status='old',position='append',form='unformatted')
               do ig=1,ngm_g
@@ -552,7 +554,7 @@ subroutine solve_head
         write(iun,*) i
         close(iun)
         !
-     endif ! if(ionode) then 
+     endif ! if(ionode) then
      !
      !write(stdout,*) 'file .head_status updated'
      !call flush_unit(stdout)
@@ -563,7 +565,7 @@ subroutine solve_head
      !write(stdout,*) 'Freq=', i, ' DONE'
      !call flush_unit(stdout)
      !
-  enddo ! do i=i_start,n_gauss+1 (on the Freq) line 183 
+  enddo ! do i=i_start,n_gauss+1 (on the Freq) line 183
   !
   deallocate (mill_g)
   deallocate (eprec)

@@ -27,26 +27,26 @@ program pp_punch
   !
   ! writes PWSCF data for postprocessing purposes in XML format using IOTK lib
   ! Wave-functions are collected and written using IO_BASE module.
-  ! 
+  !
   ! input:  namelist "&inputpp", with variables
   !   prefix       prefix of input files saved by program pwscf
   !   outdir       temporary directory where files resides
-  !   pp_file      output file. If it is omitted, a directory 
+  !   pp_file      output file. If it is omitted, a directory
   !                "prefix.export/" is created in outdir and
-  !                some output files are put there. Anyway all the data 
+  !                some output files are put there. Anyway all the data
   !                are accessible through the "prefix.export/index.xml" file which
   !                contains implicit pointers to all the other files in the
   !                export directory. If reading is done by the IOTK library
   !                all data appear to be in index.xml even if physically it
-  !                is not. 
-  !   uspp_spsi    using US PP if set .TRUE. writes S | psi > 
-  !                and | psi > separately in the output file 
+  !                is not.
+  !   uspp_spsi    using US PP if set .TRUE. writes S | psi >
+  !                and | psi > separately in the output file
   !   single_file  one-file output is produced
   !   ascii        ....
   !
   !   pseudo_dir   pseudopotential directory
-  !   psfile(:)    name of the pp file for each species 
-  !    
+  !   psfile(:)    name of the pp file for each species
+  !
 
   USE kinds,     ONLY : i4b
   use pwcom
@@ -137,7 +137,7 @@ program pp_punch
                                 l_coulomb_analysis,&
                                 cutoff_coulomb_analysis,&
                                 mem_per_core
- 
+
   !
   implicit none
   integer :: i, kunittmp, ios
@@ -376,7 +376,7 @@ program pp_punch
        CALL mp_bcast(mem_per_core, ionode_id)
   !
 
-  call read_file 
+  call read_file
 
 
 #if defined __PARA
@@ -404,7 +404,7 @@ program pp_punch
 !
   CALL hinit0()
 !
-  if(lda_plus_u) then 
+  if(lda_plus_u) then
     CALL init_ns()
   endif
 
@@ -442,7 +442,7 @@ program pp_punch
 
   IF(l_exchange) THEN
     IF(gamma_only) THEN
-      call dft_exchange(num_nbndv,num_nbnds,nset) 
+      call dft_exchange(num_nbndv,num_nbnds,nset)
     ELSE
       !!! add this, since wk are used in dft_exchange_k
       !
@@ -486,9 +486,9 @@ subroutine read_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
   use iotk_module
 
 
-  use kinds,          ONLY : DP 
-  use pwcom  
-  use control_flags,  ONLY : gamma_only  
+  use kinds,          ONLY : DP
+  use pwcom
+  use control_flags,  ONLY : gamma_only
   use becmod,         ONLY : bec_type, becp, calbec, &
                              allocate_bec_type, deallocate_bec_type
   use symm_base,       ONLY : nsym, s, invsym, irt, ftau
@@ -527,7 +527,7 @@ subroutine read_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
   integer, allocatable :: igk_l2g( :, : )
 
 
-  real(DP) :: wfc_scal 
+  real(DP) :: wfc_scal
   logical :: twf0, twfm
   character(iotk_attlenx) :: attr
   complex(DP), allocatable :: sevc (:,:)
@@ -568,7 +568,7 @@ subroutine read_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
 
   write(stdout,*) "after first init"
 
-  ! find out the global number of G vectors: ngm_g  
+  ! find out the global number of G vectors: ngm_g
   ngm_g = ngm
   call mp_sum( ngm_g , intra_pool_comm )
 
@@ -594,8 +594,8 @@ subroutine read_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
   call cryst_to_cart( ngm_g, rtmp_g, bg , 1 )
   !
   ! compute squared moduli
-  do  ig = 1, ngm_g 
-     rtmp_gg(ig) = rtmp_g(1,ig)**2 + rtmp_g(2,ig)**2 + rtmp_g(3,ig)**2 
+  do  ig = 1, ngm_g
+     rtmp_gg(ig) = rtmp_g(1,ig)**2 + rtmp_g(2,ig)**2 + rtmp_g(3,ig)**2
   enddo
   deallocate( rtmp_g )
 
@@ -648,10 +648,10 @@ subroutine read_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
     ALLOCATE( itmp1( npw_g ), STAT= ierr )
     IF ( ierr/=0 ) CALL errore('pw_export','allocating itmp1', ABS(ierr) )
     itmp1 = 0
-    ! 
-    IF( ik >= iks .AND. ik <= ike ) THEN 
+    !
+    IF( ik >= iks .AND. ik <= ike ) THEN
       DO  ig = 1, ngk( ik-iks+1 )
-        itmp1( igk_l2g( ig, ik-iks+1 ) ) = igk_l2g( ig, ik-iks+1 ) 
+        itmp1( igk_l2g( ig, ik-iks+1 ) ) = igk_l2g( ig, ik-iks+1 )
       END DO
     END IF
     !
@@ -673,13 +673,13 @@ subroutine read_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
   ENDDO
   !
   deallocate( itmp_g )
-  
+
   write(stdout,*)"after wfc waves"
 
 #ifdef __PARA
   call poolrecover (et, nbnd, nkstot, nks)
 #endif
- 
+
   wfc_scal = 1.0d0
   twf0 = .true.
   twfm = .false.
@@ -710,17 +710,17 @@ subroutine read_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
 
 
      ispin = isk( ik )
-     !  WRITE(0,*) ' ### ', ik,nkstot,iks,ike,kunit,nproc,nproc_pool 
+     !  WRITE(0,*) ' ### ', ik,nkstot,iks,ike,kunit,nproc,nproc_pool
      deallocate(l2g_new)
   end do
-  !  
+  !
 
   write(stdout,*) "after davcio"
 
-  ! If specified and if USPP are used the wfcs S_psi are written  
-  ! | spsi_nk > = \hat S | psi_nk >  
-  ! where S is the overlap operator of US PP 
-  !  
+  ! If specified and if USPP are used the wfcs S_psi are written
+  ! | spsi_nk > = \hat S | psi_nk >
+  ! where S is the overlap operator of US PP
+  !
   IF ( uspp_spsi .AND. nkb > 0 ) THEN
 
        ALLOCATE( sevc(npwx,nbnd), STAT=ierr )
@@ -732,16 +732,16 @@ subroutine read_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
        CALL allocate_bec_type (nkb,nbnd,becp)
 
        do ik = 1, nkstot
- 
+
            local_pw = 0
            IF( (ik >= iks) .AND. (ik <= ike) ) THEN
-               
+
                CALL gk_sort (xk (1, ik+iks-1), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin)
                CALL davcio (evc, nwordwfc, iunwfc, (ik-iks+1), - 1)
 
                CALL init_us_2(npw, igk, xk(1, ik), vkb)
                local_pw = ngk(ik-iks+1)
-                            
+
                IF ( gamma_only ) THEN
                   CALL calbec ( ngk_g(ik), vkb, evc, becp )
                ELSE
@@ -766,7 +766,7 @@ subroutine read_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
            ispin = isk( ik )
            DEALLOCATE(l2g_new)
        ENDDO
-      
+
        DEALLOCATE( sevc, STAT=ierr )
        IF ( ierr/= 0 ) CALL errore('read_export','Unable to deallocate SEVC',ABS(ierr))
        CALL deallocate_bec_type ( becp )

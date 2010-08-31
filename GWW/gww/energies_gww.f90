@@ -15,7 +15,7 @@
     COMPLEX(kind=DP), POINTER, DIMENSION(:) :: ene_x!effective exchange part
      COMPLEX(kind=DP), POINTER, DIMENSION(:) :: ene_h!effective hartree part
     COMPLEX(kind=DP), POINTER, DIMENSION(:) :: ene_gw!quasi particle GW eigenenergies
-    COMPLEX(kind=DP), POINTER, DIMENSION(:) :: ene_gw_pert!perturbative quasi particle GW eigenenergies 
+    COMPLEX(kind=DP), POINTER, DIMENSION(:) :: ene_gw_pert!perturbative quasi particle GW eigenenergies
     REAL(kind=DP), POINTER, DIMENSION(:) :: ene_hf!perturbative hf energies
     REAL(kind=DP), POINTER, DIMENSION(:) :: ene_remainder!for storing remainders
  END TYPE quasi_particles
@@ -45,7 +45,7 @@
          else
             open(unit=iun, file='quasi_particles', status='unknown',form='formatted')
          endif
-         
+
          if(.not. options%debug) then
             write(iun) qp%max_i
             write(iun) qp%ene_dft_ks(1:qp%max_i)
@@ -185,9 +185,9 @@
 !this subroutine nullify all arrays
 
       implicit none
-      
+
       TYPE(quasi_particles) :: qp
-      
+
       nullify(qp%ene_dft_ks)
       nullify(qp%ene_dft_xc)
       nullify(qp%ene_dft_h)
@@ -300,9 +300,9 @@
      !
      write(iun,*) qp%max_i
      do ii=1,qp%max_i
-        write(iun,'(i5,f10.5,f10.5,f10.5,f10.5)') ii, qp%ene_dft_ks(ii)*RYTOEV, & 
+        write(iun,'(i5,f10.5,f10.5,f10.5,f10.5)') ii, qp%ene_dft_ks(ii)*RYTOEV, &
                      & real(qp%ene_gw_pert(ii))*RYTOEV, &
-                     & real(qp%ene_gw(ii))*RYTOEV, qp%ene_hf(ii)*RYTOEV 
+                     & real(qp%ene_gw(ii))*RYTOEV, qp%ene_hf(ii)*RYTOEV
      enddo
      close(iun)
   endif
@@ -310,7 +310,7 @@
   return
 
   END SUBROUTINE
-  
+
 
 
 
@@ -320,4 +320,4 @@
  END MODULE energies_gww
 
 
- 
+

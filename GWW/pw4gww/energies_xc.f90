@@ -25,12 +25,14 @@ SUBROUTINE energies_xc( lda, n, m, e_xc, e_h )
   !       e_xc
   !       e_h
   USE kinds,            ONLY : DP
-  USE control_flags,    ONLY : gamma_only 
+  USE control_flags,    ONLY : gamma_only
   USE uspp,             ONLY : vkb, nkb
   USE wvfct,            ONLY : igk, g2kin
-  USE gsmooth,          ONLY : nls, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, nrxxs,doublegrid
-  USE gvect,            ONLY : ngm, gstart, nr1, nr2, nr3, nrx1, nrx2, &
-                               nrx3, nrxx, nl, nlm, g, gg, ecutwfc, gcutm
+  USE fft_base,         ONLY : dffts
+  USE fft_interfaces,   ONLY : fwfft, invfft
+  USE gsmooth,          ONLY : nls, nrxxs,doublegrid
+  USE gvect,            ONLY : ngm, gstart, nr1, nr2, nr3,  &
+                               nrxx, nl, nlm, g, gg, ecutwfc, gcutm
   USE cell_base,        ONLY :  alat, omega
   USE lsda_mod,         ONLY : nspin
   USE ldaU,             ONLY : lda_plus_u
@@ -53,25 +55,25 @@ SUBROUTINE energies_xc( lda, n, m, e_xc, e_h )
   ! ... input/output arguments
   !
   INTEGER          :: lda, n, m
-!  COMPLEX(DP) :: psi(lda,m) 
+!  COMPLEX(DP) :: psi(lda,m)
   REAL(kind=DP) :: e_xc(m), e_h(m)
   !
   !
   CALL start_clock( 'h_psi' )
-  !  
+  !
   IF ( gamma_only ) THEN
      !
      write(stdout,*) 'BEFORE energies_xc_gamma'
-     call flush_unit(stdout) 
+     call flush_unit(stdout)
      CALL energies_xc_gamma()
      write(stdout,*) 'AFTER energies_xc_gamma'
      call flush_unit(stdout)
      !
-  ELSE  
+  ELSE
      !
      CALL energies_xc_k( )
      !
-  END IF  
+  END IF
   !
   CALL stop_clock( 'h_psi' )
   !
@@ -90,7 +92,7 @@ SUBROUTINE energies_xc( lda, n, m, e_xc, e_h )
        !
        IMPLICIT NONE
        !
-      
+
        INTEGER :: ibnd, j,is, ig
        !!! REAL(dp) :: etxc,vtxc
        ! counters
@@ -127,7 +129,7 @@ SUBROUTINE energies_xc( lda, n, m, e_xc, e_h )
           !
           psic(nls(igk(1:n))) = evc(1:n,ibnd)
           !
-          CALL cft3s( psic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, 2 )
+          CALL invfft ('Wave', psic, dffts)
           !
           CALL stop_clock( 'firstfft' )
           !
@@ -139,14 +141,14 @@ SUBROUTINE energies_xc( lda, n, m, e_xc, e_h )
           !
           CALL start_clock( 'secondfft' )
           !
-          CALL cft3s( psic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, -2 )
+          CALL fwfft ('Wave', psic, dffts)
           !
           ! ... addition to the total product
           !
           e_xc(ibnd)=0.d0
           do ig=1,n
              e_xc(ibnd)=e_xc(ibnd)+real(conjg(evc(ig,ibnd))*psic(nls(igk(ig))))
-          enddo          
+          enddo
           write(stdout,*) 'Routine energies_xc :', ibnd, e_xc(ibnd)*rytoev
 !
           CALL stop_clock( 'secondfft' )
@@ -157,12 +159,12 @@ SUBROUTINE energies_xc( lda, n, m, e_xc, e_h )
        !
        RETURN
        !
-     END SUBROUTINE energies_xc_k     
+     END SUBROUTINE energies_xc_k
 !!!!!!!!!!!!!!!!
 !!!!!!!!!!!!!!!!
      SUBROUTINE energies_xc_gamma
- 
-       USE uspp,                 ONLY : okvan   
+
+       USE uspp,                 ONLY : okvan
        USE wannier_gw,           ONLY : becp_gw, restart_gww
        USE realus,               ONLY : adduspos_gamma_r
        USE wvfct,                ONLY : npwx, npw, nbnd, et, g2kin
@@ -214,9 +216,9 @@ SUBROUTINE energies_xc( lda, n, m, e_xc, e_h )
          call h_psi( npwx, npw, nbnd, psi, hpsi )
          et(:,1)=0.d0
 
-         !!! for info: 
+         !!! for info:
           write(stdout,*) 'gstart=', gstart, ' and nbnd=', nbnd, &
-                          ' and npw=', npw,  ' and npwx=', npwx 
+                          ' and npw=', npw,  ' and npwx=', npwx
          call flush_unit(stdout)
          do ibnd=1,nbnd
 
@@ -229,7 +231,7 @@ SUBROUTINE energies_xc( lda, n, m, e_xc, e_h )
               et(ibnd,1)=et(ibnd,1)-dble(conjg(evc(1,ibnd))*hpsi(1,ibnd))
            endif
          enddo
-         
+
          call mp_sum(et(:,1))
 
          do ibnd=1,nbnd
@@ -315,7 +317,7 @@ SUBROUTINE energies_xc( lda, n, m, e_xc, e_h )
          call flush_unit(stdout)
          !
        enddo
-       ! 
+       !
        v%of_r(:,:)=0.d0
        !
        CALL v_h( rho%of_g, ehart, charge, v%of_r )
@@ -330,7 +332,7 @@ SUBROUTINE energies_xc( lda, n, m, e_xc, e_h )
            else
               psi_r(:)=psi_rs(:)
            endif
-           ! 
+           !
            do ir=1,nrxx
               psi_r(ir)=psi_r(ir)**2.d0
            enddo
@@ -359,7 +361,7 @@ SUBROUTINE energies_xc( lda, n, m, e_xc, e_h )
               e_h(ibnd)=e_h(ibnd)+psi_r(ir)*v%of_r(ir,1)!the 1 is for the spin NOT IMPLEMENTED YET
            enddo
            e_h(ibnd)=e_h(ibnd)/dble(nr1*nr2*nr3)
-           ! 
+           !
            call mp_sum(e_h(ibnd))
            write(stdout,*) 'Routine energies_h :', ibnd, e_h(ibnd)*rytoev
            !
@@ -369,7 +371,7 @@ SUBROUTINE energies_xc( lda, n, m, e_xc, e_h )
        !
        close(iunwfcreal)
        !
-       return     
+       return
        !
   END SUBROUTINE energies_xc_gamma
      !
@@ -385,21 +387,21 @@ SUBROUTINE write_energies_xc(e_xc)
   USE io_files, ONLY : find_free_unit, prefix
   USE io_global, ONLY : ionode
   USE wvfct,    ONLY : nbnd
-  
+
   implicit none
-  
+
   REAL(kind=DP), intent(in) :: e_xc(nbnd)!exchange and correlation energies
 
   INTEGER :: iunu, iw
- 
+
 
   if(ionode) then
      iunu = find_free_unit()
-     
+
      open(unit=iunu,file=trim(prefix)//'.dft_xc',status='unknown',form='unformatted')
-  
+
      write(iunu) nbnd_normal
-  
+
 
      do iw=1,nbnd_normal
         write(iunu) e_xc(iw)
@@ -407,7 +409,7 @@ SUBROUTINE write_energies_xc(e_xc)
 
      close(iunu)
   endif
-  ! 
+  !
   !
   return
 

@@ -41,14 +41,14 @@
 
 
 
-      
+
      TYPE contraction_pola
 !this structure described the localized and normalized products of wanniers with U matrices
       INTEGER :: numpw!number of wannier-products
       INTEGER :: nums!number of KS or wannier states
       INTEGER :: nums_occ!number of occupied states
       COMPLEX(kind=DP),DIMENSION(:,:,:), POINTER :: ou!contraction terms
-    END TYPE contraction_pola     
+    END TYPE contraction_pola
 
     TYPE contraction_pola_state
 !this structure described the localized and normalized products of wanniers with U matrices
@@ -66,14 +66,14 @@
 
     SUBROUTINE  free_memory_contraction_pola(cp)
       implicit none
-      
+
       TYPE(contraction_pola) :: cp
 
       if(associated(cp%ou)) then
         deallocate(cp%ou)
         nullify(cp%ou)
       endif
-      
+
       return
     END SUBROUTINE free_memory_contraction_pola
 
@@ -198,7 +198,7 @@
        endif
        close(iun)
     endif
-    return         
+    return
 
   END SUBROUTINE  write_contraction
 
@@ -220,7 +220,7 @@
     INTEGER :: iw, jw, kw, iun, ii
     INTEGER maxl
 
-    if(ionode) then 
+    if(ionode) then
        iun = find_free_unit()
        if(.not. options%debug) then
           open( unit=iun, file='contraction', status='old',form='unformatted')
@@ -258,7 +258,7 @@
     if(ionode) then
        write(stdout,*) 'CR-READ',cr%numpw,maxl,cr%max_i
 
-       if(.not.options%debug) then    
+       if(.not.options%debug) then
           read(iun) cr%numl(1:cr%numpw)
           do iw=1,cr%numpw
              read(iun) cr%l(1:cr%numl(iw),iw)
@@ -395,7 +395,7 @@
     maxl=cr%nums
     allocate(cr%numl(cr%numpw))
     allocate(cr%l(maxl,cr%numpw))
-    
+
     if(ionode) then
        write(stdout,*) 'CR-READ',cr%numpw,maxl,cr%max_i
 
@@ -572,12 +572,12 @@
       allocate(cr%l(maxl,cr%numpw))
       allocate(cr%q(cr%numpw,maxl,max_i))
 
-  
+
 
 !do contractions
       do ii=1,cr%numpw
         posi(:)=0
-        kk=0      
+        kk=0
         cr%q(ii,:,:)=(0.d0,0.d0)
         do jj=1,qm%wp(ii)%numij
 !first index
@@ -597,7 +597,7 @@
             endif
             cr%q(ii,posi(qm%wp(ii)%ij(2,jj)),1:max_i) =  cr%q(ii,posi(qm%wp(ii)%ij(2,jj)),1:max_i)+&
                                &qm%wp(ii)%o(jj)*conjg(uu%umat(1:max_i, qm%wp(ii)%ij(1,jj)))
-            endif 
+            endif
         enddo
         cr%numl(ii)=kk
       enddo
@@ -605,7 +605,7 @@
 
 
       deallocate(posi)
-      
+
     END SUBROUTINE
 
 
@@ -626,17 +626,17 @@
       TYPE(q_mat)  :: qm!descriptors of overlaps of othonormalized wannier producs with wannier products
       TYPE(wannier_u) :: uu!descriptor of transformation matrix from KS states to wanniers
       INTEGER :: max_i !maximum number of states to be clauclates
-      TYPE(input_options) :: options!for calling I/O routines 
+      TYPE(input_options) :: options!for calling I/O routines
 
       INTEGER :: ii,jj,kk,maxl, num_l, is
       INTEGER, ALLOCATABLE :: posi(:)
-      
+
       TYPE(contraction_index) :: cri! the contraction index descriptor to be calculated
       TYPE(contraction_state) :: crs!the contraction state to be calculated
 
 
 !free and allocates arrays
-      
+
       cri%numpw=qm%numpw
       cri%nums=uu%nums
       cri%max_i=max_i
@@ -644,7 +644,7 @@
       crs%numpw=qm%numpw
       crs%nums=uu%nums
       crs%max_i=max_i
-      
+
 
 
       allocate(posi(cri%nums))
@@ -716,7 +716,7 @@
                   endif
                enddo
             enddo
-         
+
 !writes of file
             call write_contraction_state(cri, crs, options)
          endif
@@ -778,20 +778,20 @@
                 enddo
              enddo
           enddo
-       enddo                   
+       enddo
 
 !      do iw=1,cp%numpw
 !        do jw=iw,cp%numpw
 !           do vv=1,cp%nums_occ
 !              do cc=cp%nums_occ+1,cp%nums
-!                 do ii=1,qm%wp(iw)%numij 
+!                 do ii=1,qm%wp(iw)%numij
 !                    do jj=1,qm%wp(jw)%numij
-               
+
 !                       k=qm%wp(iw)%ij(1,ii)
 !                       m=qm%wp(iw)%ij(2,ii)
 !                       l=qm%wp(jw)%ij(1,jj)
 !                       n=qm%wp(jw)%ij(2,jj)
-                       
+
 !                       o_ii=qm%wp(iw)%o(ii)
 !                       o_jj=qm%wp(jw)%o(jj)
 
@@ -820,7 +820,7 @@
 !           cp%q(jw,iw,:,:)=conjg(cp%q(iw,jw,:,:))
 !        enddo
 !      enddo
-    END SUBROUTINE 
+    END SUBROUTINE
 
     SUBROUTINE do_contraction_pola_state(qm,uu, options)
 !this routine calculates contraction for all states and writes on disk
@@ -829,7 +829,7 @@
       USE input_gw,             ONLY : input_options
       USE mp_global,            ONLY : mpime, nproc
       USE mp,                   ONLY : mp_barrier
-      
+
       implicit none
 
       TYPE(q_mat)  :: qm!descriptors of overlaps of othonormalized wannier producs with wannier products
@@ -840,7 +840,7 @@
       TYPE(contraction_pola_state) :: cps
 
       do vv=1,uu%nums_occ
-         if(mod(vv,nproc)==mpime) then         
+         if(mod(vv,nproc)==mpime) then
             write(stdout,*) 'Contracting occupied state :', vv
             call do_contraction_pola_state_single(vv,qm,uu,cps)
          !if(ionode) call write_contraction_pola_state(cps, options)
@@ -889,7 +889,7 @@
       allocate(cps%ou(nums_con,cps%numpw))
 
       cps%ou(:,:)=0.d0
- 
+
 
       do iw=1,cps%numpw
 !         do cc=cps%nums_occ+1,cps%nums
@@ -909,7 +909,7 @@
          enddo
 !         call mp_sum(cps%ou(:,iw))
       enddo
-       
+
 
     END SUBROUTINE do_contraction_pola_state_single
 

@@ -25,7 +25,7 @@ SUBROUTINE close_phq( flag )
   USE control_ph,    ONLY : zue, epsil
   USE output,        ONLY : fildrho, fildvscf
   USE ramanm,        ONLY : lraman, elop, iuchf, iud2w, iuba2
-  ! 
+  !
 !#ifdef __GWW
   USE wannier_gw,    ONLY : l_head
 !#endif __GWW

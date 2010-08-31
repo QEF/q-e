@@ -28,7 +28,7 @@ SUBROUTINE openfil_pw4gww()
   !
   LOGICAL       :: exst
   !
-  INTEGER, EXTERNAL :: n_atom_wfc 
+  INTEGER, EXTERNAL :: n_atom_wfc
   !
   twfcollect=.false.
   !
@@ -40,11 +40,11 @@ SUBROUTINE openfil_pw4gww()
   CALL diropn( iunwfc, 'wfc', nwordwfc, exst )
   !
   IF ( .NOT. exst ) THEN
-     call errore ('openfil_pw4gww','file '//TRIM( prefix )//'.wfc'//' not found',1)     
+     call errore ('openfil_pw4gww','file '//TRIM( prefix )//'.wfc'//' not found',1)
   END IF
   !
   !!!! ... iunigk contains the number of PW and the indices igk
-  !!!! ... Note that unit 15 is reserved for error messages 
+  !!!! ... Note that unit 15 is reserved for error messages
   !
   !!!! CALL seqopn( iunigk, 'igk', 'UNFORMATTED', exst )
   !!!!
@@ -54,10 +54,10 @@ SUBROUTINE openfil_pw4gww()
   !
   ! ... Needed for LDA+U
   !
-  ! ... iunat  contains the (orthogonalized) atomic wfcs 
+  ! ... iunat  contains the (orthogonalized) atomic wfcs
   ! ... iunsat contains the (orthogonalized) atomic wfcs * S
   ! ... iunocc contains the atomic occupations computed in new_ns
-  ! ... it is opened and closed for each reading-writing operation  
+  ! ... it is opened and closed for each reading-writing operation
   !
   natomwfc = n_atom_wfc( nat, ityp )
   nwordatwfc = 2*npwx*natomwfc*npol

@@ -17,7 +17,7 @@
    USE input_gw,           ONLY : input_options
    USE io_global,          ONLY : stdout, ionode
    USE kinds,              ONLY : DP
-   USE constants,          ONLY : RYTOEV 
+   USE constants,          ONLY : RYTOEV
 
 
    implicit none
@@ -30,7 +30,7 @@
    TYPE(green)       :: gg!green function
    TYPE(q_mat)       :: qm!overlap of wannier products
    TYPE(wannier_u)   :: uu!transformation matrix ks to wannier
-   
+
    REAL(kind=DP)     :: dumm(1)
 
    nullify(cr%numl)
@@ -46,7 +46,7 @@
    !read U matrix
    call read_data_pw_u(uu,options%prefix)
 !read overlap matrix Q
-  
+
    call read_data_pw_q(qm,options%prefix,options%l_self_from_pola)
 
      write(stdout,*) 'Routine go_exchange main2'
@@ -92,7 +92,7 @@
   write(*,*) 'go_exchange main hf_ene', qp%ene_hf(2)*RYTOEV !ATTENZIONE
 
   return
-   
+
 END SUBROUTINE go_exchange_main
 
 
@@ -105,7 +105,7 @@ END SUBROUTINE go_exchange_main
 
   SUBROUTINE go_exchange(options, ene_x, ene_h, n_max)
 !this subroutine calculates the terms, in imaginary time=0
-!<\Psi_i|\Sigma(it)_HF|\Psi_j> 
+!<\Psi_i|\Sigma(it)_HF|\Psi_j>
 !=O^{P}_n,kl G_{lm}V_{n,o} O^{P}_o,mp U_ki U^{+}_j,p
 !for n_max states
 !if required calculates also the hartree terms
@@ -114,7 +114,7 @@ END SUBROUTINE go_exchange_main
 
 
    USE kinds,                ONLY : DP
-   USE io_global,            ONLY : stdout 
+   USE io_global,            ONLY : stdout
    USE basic_structures,     ONLY : wannier_u, q_mat, v_pot, ortho_polaw,free_memory, v_pot_prim, wannier_u_prim
    USE green_function,       ONLY : green, read_green, free_memory_green, initialize_green
    USE input_gw,             ONLY : input_options
@@ -135,7 +135,7 @@ END SUBROUTINE go_exchange_main
    REAL(kind=DP) :: sene!self energy element
    TYPE(q_mat)  :: qm!descriptors of overlaps of othonormalized wannier producs with wannier products
    TYPE(wannier_u) :: uu!descriptor of transformation matrix from KS states to wanniers
-   TYPE(green) :: gf!descriptor of green function 
+   TYPE(green) :: gf!descriptor of green function
    TYPE(v_pot) :: vp!bare interaction
    TYPE(contraction) :: cr!for contracted products scheme
    TYPE(contraction_index) :: cri!for contracted products scheme, index part
@@ -167,7 +167,7 @@ END SUBROUTINE go_exchange_main
       endif
    endif
    write(stdout,*) 'contraction read'
-   
+
    if(.not.options%use_contractions) then
       call read_data_pw_u(uu,options%prefix)
       call read_data_pw_q(qm,options%prefix,.false.)
@@ -188,9 +188,9 @@ END SUBROUTINE go_exchange_main
      call orthonormalize_vpot_inverse_para(op,vp)
      if(options%l_lda_hartree) call free_memory(op)
    endif
-  
+
     write(stdout,*) 'invert potential inverted'
-   
+
    ene_x(:)=0.d0
    ene_h(:)=0.d0
 
@@ -247,7 +247,7 @@ END SUBROUTINE go_exchange_main
                  write(*,*) 'Interno', cr%numpw,cr%nums
                  allocate(qg(cr%numpw,cr%nums))
                  qg(:,:)=0.d0
-                 
+
                  do n=1,cr%numpw!loop on orthonormalized wannier products
                     do m=1,cr%nums
                        do l=1,cr%numl(n)
@@ -255,7 +255,7 @@ END SUBROUTINE go_exchange_main
                        enddo
                     enddo
                  enddo
-                 
+
                  sene=0.d0
                  do n=1,cr%numpw!loop on orthonormalized wannier products
                     do o=1,cr%numpw!loop on orthonormalized wannier products
@@ -346,7 +346,6 @@ END SUBROUTINE go_exchange_main
     call free_memory_green(gf)
     return
   END SUBROUTINE go_exchange
-  
 
 
 
@@ -372,6 +371,7 @@ END SUBROUTINE go_exchange_main
 
 
 
- 
-        
+
+
+
 

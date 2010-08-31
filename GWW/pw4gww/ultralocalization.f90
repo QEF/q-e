@@ -27,7 +27,7 @@ SUBROUTINE ultralocalization(nbndv,ultra_thr,isubspace,max_array)
   USE wannier_gw
   USE uspp,                 ONLY : okvan,nkb
   USE realus,               ONLY : adduspos_gamma_r
-  
+
   implicit none
 
   REAL(kind=DP), INTENT(in) :: ultra_thr!threshold for convergence
@@ -83,7 +83,7 @@ SUBROUTINE ultralocalization(nbndv,ultra_thr,isubspace,max_array)
   allocate(eig_set(nmaxeig))
   allocate(eigvector_set(nbnd,nmaxeig),eigvector_tmp(nbnd))
 
- 
+
   allocate(tmpreal(nrxx))
   allocate(eigenvector2(nbnd),eigenvector_old(nbnd,max_array))
   allocate(iwork(5*nbnd),ifail(nbnd))
@@ -107,7 +107,7 @@ SUBROUTINE ultralocalization(nbndv,ultra_thr,isubspace,max_array)
     write(stdout,*) 'ultralocalization isubspace ILLEGAL'
     stop
  endif
-  
+
  alfa=0.01d0
 
  allocate(tmpreali(nrxxs,n_bands))
@@ -120,7 +120,7 @@ SUBROUTINE ultralocalization(nbndv,ultra_thr,isubspace,max_array)
 
   nrsmin=min(nr1,nr2)
   nrsmin=min(nr3,nrsmin)
-!if nrsmin is even set to nrsmin -1, 
+!if nrsmin is even set to nrsmin -1,
   if(is_even(nrsmin)) then
     nrsmin=nrsmin-1
     write(stdout,*) 'nrsmin set to:', nrsmin
@@ -134,7 +134,7 @@ SUBROUTINE ultralocalization(nbndv,ultra_thr,isubspace,max_array)
 !read in wave-functions
   do iw=n_first,n_last
     CALL davcio( tmpreali(:,iw-n_first+1),nrxxs,iunrealwan,iw,-1)
-  enddo 
+  enddo
    CLOSE(iunrealwan)
 !first valence subspace
 
@@ -262,7 +262,7 @@ SUBROUTINE ultralocalization(nbndv,ultra_thr,isubspace,max_array)
                      if(max_1(iy,iz,iqq)==0 .and. min_1(iy,iz,iqq)/=0)  then
                        max_1(iy,iz,iqq)=ix
                        exit
-                     endif                    
+                     endif
                   endif
                 enddo
                 if(min_1(iy,iz,iqq)/=0 .and. max_1(iy,iz,iqq)==0)  max_1(iy,iz,iqq)=nr1s+1
@@ -274,7 +274,7 @@ SUBROUTINE ultralocalization(nbndv,ultra_thr,isubspace,max_array)
                     rz=rdistance(real(iz)*at(3,3)/real(nr3s),center(3,iqq),at(3,3))
                     if(sqrt(rx**2.d0+ry**2.d0+rz**2.d0) <= radmax) then
                       if(max_2(iy,iz,iqq)==0) max_2(iy,iz,iqq)=ix
-                    else 
+                    else
                       if(min_2(iy,iz,iqq)==0 .and. max_2(iy,iz,iqq)/=0) then
                         min_2(iy,iz,iqq)=ix
                         exit
@@ -292,7 +292,7 @@ SUBROUTINE ultralocalization(nbndv,ultra_thr,isubspace,max_array)
            enddo
          enddo
         endif
-      enddo  
+      enddo
 !now calculate localization matrix
       loc_mat(:,:,:)=0.d0
       do jw=n_first,n_last
@@ -362,7 +362,7 @@ SUBROUTINE ultralocalization(nbndv,ultra_thr,isubspace,max_array)
                        if(max_1(iy,iz,iqq)==0 .and. min_1(iy,iz,iqq)/=0)  then
                          max_1(iy,iz,iqq)=ix
                          exit
-                       endif                    
+                       endif
                     endif
                   enddo
                   if(min_1(iy,iz,iqq)/=0 .and. max_1(iy,iz,iqq)==0)  max_1(iy,iz,iqq)=nr1+1
@@ -374,7 +374,7 @@ SUBROUTINE ultralocalization(nbndv,ultra_thr,isubspace,max_array)
                       rz=rdistance(real(iz)*at(3,3)/real(nr3),center(3,iqq),at(3,3))
                       if(sqrt(rx**2.d0+ry**2.d0+rz**2.d0) <= radmax) then
                         if(max_2(iy,iz,iqq)==0) max_2(iy,iz,iqq)=ix
-                      else 
+                      else
                         if(min_2(iy,iz,iqq)==0 .and. max_2(iy,iz,iqq)/=0) then
                           min_2(iy,iz,iqq)=ix
                           exit
@@ -392,7 +392,7 @@ SUBROUTINE ultralocalization(nbndv,ultra_thr,isubspace,max_array)
              enddo
            enddo
           endif
-        enddo  
+        enddo
 !now calculate localization matrix
         do jw=n_first,n_last
           jww=jw-n_first+1
@@ -473,7 +473,7 @@ SUBROUTINE ultralocalization(nbndv,ultra_thr,isubspace,max_array)
                do  ii=1,n_bands
                  sca=sca+eigenvector(ii,itt)*eigvector_tmp(ii)
                enddo
-               eigvector_tmp(:)=eigvector_tmp(:)-sca*eigenvector(:,itt) 
+               eigvector_tmp(:)=eigvector_tmp(:)-sca*eigenvector(:,itt)
              enddo
              sca=0.d0
              do  ii=1,n_bands
@@ -497,7 +497,7 @@ SUBROUTINE ultralocalization(nbndv,ultra_thr,isubspace,max_array)
             eigenvector(:,iw-n_first+1)=eigenvector_old(:,iqq)
             center(:,iqq)=center_old(:,iqq)
             converged(iqq)=.true.
-          endif         
+          endif
           if(abs(eigen(iqq)-eigenold(iqq))<= ultra_thr) converged(iqq)=.true.
           if( it == max_loc_ite) converged(iqq)=.true.
           if(.not.converged(iqq)) then
@@ -516,9 +516,9 @@ SUBROUTINE ultralocalization(nbndv,ultra_thr,isubspace,max_array)
             center_berry=(0.d0,0.d0)
             do ii=n_first,n_last
               center_berry=center_berry+eigenvector(ii-n_first+1,iw-n_first+1)*eigenvector2(ii)
-            enddo      
+            enddo
             center(1,iqq)=aimag(log(center_berry))*at(1,1)/tpi
-  
+
             do ii=n_first,n_last
               eigenvector2(ii)=(0.d0,0.d0)
               do jj=n_first,n_last
@@ -542,7 +542,7 @@ SUBROUTINE ultralocalization(nbndv,ultra_thr,isubspace,max_array)
               center_berry=center_berry+eigenvector(ii-n_first+1,iw-n_first+1)*eigenvector2(ii)
             enddo
            center(3,iqq)=aimag(log(center_berry))*at(3,3)/tpi
-         endif 
+         endif
        endif
         enddo!on iw
       enddo!on iterations it
@@ -580,7 +580,7 @@ SUBROUTINE ultralocalization(nbndv,ultra_thr,isubspace,max_array)
       nc2=aint(center(2,iqq)/(at(2,2))*real(nr2))
       nc3=aint(center(3,iqq)/(at(3,3))*real(nr3))
 
- 
+
       if(nc1<1) nc1=nr1+nc1
       if(nc1>nr1) nc1=nc1-nr1
 
@@ -649,7 +649,7 @@ SUBROUTINE ultralocalization(nbndv,ultra_thr,isubspace,max_array)
                 do ix=0,2*nll
                   do iy=0,2*nll
                     do iz=0,2*nll
-                 
+
                       n1=no1+ix
                       if(n1<1) n1=nr1+n1
                       if(n1>nr1) n1=n1-nr1
@@ -668,12 +668,12 @@ SUBROUTINE ultralocalization(nbndv,ultra_thr,isubspace,max_array)
                 enddo
               enddo
 
-!put on arrays center and radius 
+!put on arrays center and radius
 
               w_centers(1,iw)=nc1
               w_centers(2,iw)=nc2
               w_centers(3,iw)=nc3
-              w_radii(iw)=nll          
+              w_radii(iw)=nll
 
 
 !writes on file
@@ -704,7 +704,7 @@ SUBROUTINE ultralocalization(nbndv,ultra_thr,isubspace,max_array)
   if(okvan) deallocate(becp_gw2)
 
 !update u_trans
- 
+
   allocate(c_mat(nbnd,nbnd))
   c_mat(:,:)=(0.d0,0.d0)
 

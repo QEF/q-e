@@ -25,18 +25,18 @@
   USE cell_base,            ONLY : at, alat, tpiba, omega, tpiba2
   USE wvfct,                ONLY : igk, g2kin, npwx, npw, nbnd, nbndx
   USE wannier_gw
-  
+
 
 
   implicit none
 
-!  COMPLEX(kind=DP), INTENT(inout) :: pmat(3,numw_prod,numw_prod)  
+!  COMPLEX(kind=DP), INTENT(inout) :: pmat(3,numw_prod,numw_prod)
   INTEGER, INTENT(in) :: numw_prod_dimr,numw_prod_dimc
   REAL(kind=DP), INTENT(inout)  :: omat(numw_prod_dimr,numw_prod_dimc)
 !  INTEGER, INTENT(in) :: gtable(npwx,3)!G-->G+1 correspondence
   INTEGER, INTENT(in) :: n_set  !defines the number of states to be read from disk at the same time
   REAL(kind=DP), INTENT(in) :: ecutoff!cutoff in Rydberg for g sum
-    
+
 
   !  --- Internal definitions ---
 
@@ -56,7 +56,7 @@
   INTEGER :: npw0
   LOGICAL :: exst
   INTEGER :: mdir
- 
+
   INTEGER :: iun_g
   REAL(kind=DP), ALLOCATABLE :: wpg(:)
   REAL(kind=DP) :: sca
@@ -104,17 +104,17 @@
       write(iun_g) numw_prod
    endif
 
-  
+
    CALL gk_sort(xk(1,1),ngm,g,ecutwfc/tpiba2, &
               &    npw0,igk0,g2kin_bp)
    iungprod = find_free_unit()
 
- 
+
    allocate(tmpgi(max_ngm,n_set),tmpgj(max_ngm,n_set))
    allocate(omat_tmp(n_set,n_set))
-   
+
    CALL diropn( iungprod, 'wiwjwfc', max_ngm*2, exst )
-   
+
    write(stdout,*) 'ATTENZIONE1'
    call flush_unit(stdout)
 
@@ -145,15 +145,15 @@
      write(stdout,*) 'IIW', iiw
      call flush_unit(stdout)
       do iw=(iiw-1)*n_set+1,min(iiw*n_set,numw_prod)
-       
+
          CALL davcio(tmpgi(:,iw-(iiw-1)*n_set),max_ngm*2,iungprod,iw,-1)
-         
+
          sca=0.d0
          if(gstart==2) sca=dble(tmpgi(1,iw-(iiw-1)*n_set))
          call mp_sum(sca)
          if(ionode) write(iun_g) sca
-           
-       
+
+
       enddo
       write(stdout,*) 'ATTENZIONE3'
       call flush_unit(stdout)
@@ -167,14 +167,14 @@
 
          do jw=(jjw-1)*n_set+1,min(jjw*n_set,numw_prod)
             CALL davcio(tmpgj(:,jw-(jjw-1)*n_set),max_ngm*2,iungprod,jw,-1)
-            
+
          enddo
          jw_min=(jjw-1)*n_set+1
          jw_max=min(jjw*n_set,numw_prod)
 !!!!!!!!!!!!!!!!!!!!!!!!!!!
 !uses  blas routine
 
-         
+
          if(gstart==2) tmpgj(1,:)=0.5d0*tmpgj(1,:)
 !         call zgemm('C','N',n_set,n_set,ngm_max,(1.d0,0.d0),tmpgi,max_ngm,tmpgj,max_ngm,(0.d0,0.d0),omat_tmp,n_set)
 !         call mp_sum(omat_tmp(:,:))

@@ -28,7 +28,7 @@ SUBROUTINE wannier_uterms_c(n_set, lzero, orthonorm, ecutoff)
 
   INTEGER, INTENT(in)  :: n_set  !defines the number of states to be read from disk at the same time
   LOGICAL, INTENT(in)  :: lzero !if true put the term G=0,G=0 of v to zero
-  INTEGER, INTENT(in)  :: orthonorm!if ==1 opens orthonormalized products, if ==2 reduced ones 
+  INTEGER, INTENT(in)  :: orthonorm!if ==1 opens orthonormalized products, if ==2 reduced ones
   REAL(kind=DP), INTENT(in) :: ecutoff!cutoff in Rydberg for g sum
 
   INTEGER :: iungprod, iungprodprim,iunuterms
@@ -63,7 +63,7 @@ SUBROUTINE wannier_uterms_c(n_set, lzero, orthonorm, ecutoff)
 
 
 
-    
+
 ! reads wfcs from iunwfc
 
    CALL gk_sort(xk(1,1),ngm,g,ecutwfc/tpiba2, &
@@ -99,7 +99,7 @@ SUBROUTINE wannier_uterms_c(n_set, lzero, orthonorm, ecutoff)
 !this has already  been called   call exx_grid_init()
    exxdiv=exx_divergence()
 
- 
+
    if(.not.lsmallgrid) then
      do ig=1,max_ngm
          qq = g(1,ig)**2.d0 + g(2,ig)**2.d0 + g(3,ig)**2.d0
@@ -216,7 +216,7 @@ SUBROUTINE wannier_uterms_c(n_set, lzero, orthonorm, ecutoff)
           endif
           call mp_sum(uterms(iw,jw))
         enddo
-      enddo     
+      enddo
     enddo
    enddo
    if(ionode) then

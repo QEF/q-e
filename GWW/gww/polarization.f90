@@ -14,7 +14,7 @@
         LOGICAL :: ontime!if .true. is on imaginary time, otherwise frequency
         REAL(kind=DP) :: time!imaginary time or frequency
         INTEGER :: numpw!number of states (products of wanniers)
-        REAL(kind=DP), DIMENSION(:,:), POINTER :: pw!the P or W 
+        REAL(kind=DP), DIMENSION(:,:), POINTER :: pw!the P or W
         COMPLEX(kind=DP) :: factor!complex factor to be multiplied to the real matrix pw
       END TYPE polaw
 
@@ -33,7 +33,7 @@
     SUBROUTINE free_memory_polaw(pw)
 !this subroutine deallocates the green descriptor
       implicit none
-      TYPE(polaw) pw 
+      TYPE(polaw) pw
       if(associated(pw%pw)) deallocate(pw%pw)
       nullify(pw%pw)
       return
@@ -69,11 +69,11 @@
       iung = find_free_unit()
       if(.not.debug) then
         open( unit=iung, file='polaw.'// nfile, status='unknown',form='unformatted')
-      else 
+      else
         open( unit=iung, file='polaw.'// nfile, status='unknown',form='formatted')
       endif
     else
-      write(nfile,'(5i1)') &         
+      write(nfile,'(5i1)') &
         & -pw%label/10000,mod(-pw%label,10000)/1000,mod(-pw%label,1000)/100,mod(-pw%label,100)/10,mod(-pw%label,10)
       iung = find_free_unit()
       if(.not.debug) then
@@ -109,7 +109,7 @@
     endif
 
     close(iung)
-    
+
     if(direct_file) then
        iung = find_free_unit()
        if(pw%label >= 0 ) then
@@ -122,7 +122,7 @@
        enddo
        close(iung)
     endif
-       
+
 
     return
    END SUBROUTINE
@@ -432,9 +432,9 @@
 
 
    SUBROUTINE create_polarization(time,pr,gf_p,gf_m,qm,debug)
-!this subroutine set the polarization in imaginary time 
+!this subroutine set the polarization in imaginary time
 ! as P(r,r',it)=G(r,r',it)*G(r,r',-it)
-! for our basis 
+! for our basis
 ! P_{i,j}=\sum_{l,n,m,o} Q_{i,lm}Q_{j,mo}G_{lm}(it)G_{no}(-it)
 !THERE IS ALSO A SPIN FACTOR 2
 
@@ -464,7 +464,7 @@
       write(stdout,*) 'Subroutine polarization: times are wrong',gf_p%time,gf_m%time
       stop
    endif
-    
+
 !set pr
    pr%ontime=.true.
    pr%time=time
@@ -512,7 +512,7 @@
     pr%factor=(0.d0,-1.d0)
 !now spin factor
     pr%pw(:,:)=2.d0*pr%pw(:,:)
-    
+
     return
 
   END subroutine
@@ -525,7 +525,7 @@
     USE io_global,            ONLY : stdout
     USE basic_structures,     ONLY : v_pot, head_epsilon
 
-    implicit none 
+    implicit none
     TYPE(v_pot)  :: vp!coulomb potential
     TYPE(polaw)  :: pp!polarization on imaginary frequency, destroyed on exit
     TYPE(polaw)  :: ww!dressed interaction to be calculated
@@ -624,13 +624,13 @@
    write(stdout,*) 'Dimension', workd!ATTENZIONE
    allocate(work(int(workd)))
    call dgetri(ww%numpw,dtmp,ww%numpw,ipiv,work,int(workd),info)
-   
+
    if(info /= 0) then
      write(stdout,*) 'Routine calculate_w: problem with zgetri :', info
      stop
    endif
 
-   
+
    if(.not.xc_together) then
       do iw=1,ww%numpw
          dtmp(iw,iw)=dtmp(iw,iw)-1.d0
@@ -795,7 +795,7 @@
     call free_memory(opi)
     opi%numpw=op%numpw
     allocate(opi%on_mat( opi%numpw, opi%numpw))
-    opi%on_mat(:,:)=op%on_mat(:,:)   
+    opi%on_mat(:,:)=op%on_mat(:,:)
 
    call dgetrf(opi%numpw,opi%numpw,opi%on_mat,opi%numpw,ipiv,info)
    if(info /= 0) then
@@ -826,7 +826,7 @@
     USE io_global, ONLY : stdout
     USE basic_structures, ONLY : ortho_polaw, free_memory
     USE mp_global,            ONLY : nproc,mpime
-    
+
     implicit none
 
     TYPE(ortho_polaw), INTENT(in) :: op !the descriptor of the orthonormalization matrix to be distributed
@@ -838,15 +838,15 @@
 
     opd%numpw = op%numpw
     opd%inverse = op%inverse
-    
+
      l_blk= op%numpw/nproc
      if(l_blk*nproc < op%numpw) l_blk = l_blk+1
      nbegin=mpime*l_blk+1
      nend=nbegin+l_blk-1
      if(nend > op%numpw) nend = op%numpw
-     
+
      allocate(opd%on_mat(op%numpw,l_blk))
-     
+
      do ii=nbegin,nend
         opd%on_mat(:,ii-nbegin+1)=op%on_mat(:,ii)
      enddo
@@ -890,12 +890,12 @@
 #else
       op%on_mat(:,:)=opd%on_mat
 #endif
-     
+
 
      return
    END SUBROUTINE collect_ortho_polaw
-     
-  
+
+
 
 
 
@@ -908,13 +908,13 @@
 
     implicit none
 
-    TYPE(polaw), INTENT(inout) :: pw!data 
+    TYPE(polaw), INTENT(inout) :: pw!data
     TYPE(ortho_polaw), INTENT(in) :: op!trasform
 
     INTEGER :: iw,jw,kw
     REAL(kind=DP), ALLOCATABLE :: mat(:,:)
 
-    
+
 
     if(op%numpw /= pw%numpw) then
       write(stdout,*) 'ROUTINE ORTHONORMALIZE: BASIS INCONSISTENT'
@@ -931,11 +931,11 @@
     call dgemm('N','T',op%numpw,op%numpw,op%numpw,1.d0,&
          & mat,op%numpw,op%on_mat,op%numpw,0.d0,pw%pw,op%numpw)
 
-     
+
     deallocate(mat)
 
     return
-   
+
   END SUBROUTINE
 
   SUBROUTINE orthonormalize_inverse(op,pw)
@@ -961,7 +961,7 @@
     endif
 
     allocate(mat(op%numpw,op%numpw))
- 
+
     call dgemm('T','N',op%numpw,op%numpw,op%numpw,1.d0,&
                  & op%on_mat,op%numpw,pw%pw,op%numpw,0.d0,mat,op%numpw)
 
@@ -1023,7 +1023,7 @@
 
     call dgemm('N','N',op%numpw,op%numpw,op%numpw,1.d0,mat,op%numpw,op%on_mat,op%numpw,0.d0,vp%vmat,op%numpw)
 
-    
+
 
 
     deallocate(mat)
@@ -1214,7 +1214,7 @@
    enddo
    return
  END SUBROUTINE fake_polarization_io
-   
+
   SUBROUTINE orthonormalize_vpot_inverse_para(op,vp)
 !this subroutine rotates the v_pot data on the basis of the trasform op
 !perform the trasform \sum_{i',j'} B_{i',i}P_{i',j'}B_{j',j}
@@ -1389,9 +1389,9 @@
 
       call free_memory_contraction_pola_state(cps)
    enddo
-   do jw=1,pr%numpw 
-      do iw=jw,pr%numpw   
-         pr%pw(jw,iw)=pr%pw(iw,jw) 
+   do jw=1,pr%numpw
+      do iw=jw,pr%numpw
+         pr%pw(jw,iw)=pr%pw(iw,jw)
       enddo
    enddo
 !   pr%pw(:,:)=(0.d0,-1.d0)*pr%pw(:,:)
@@ -1407,7 +1407,7 @@
  END SUBROUTINE create_polarization_contraction_state
 
 
- 
+
  SUBROUTINE distribute_v_pot(vp,vpd)
 !this subroutine distributes the coulomb matrix
 ! among processors
@@ -1426,7 +1426,7 @@
     call free_memory(vpd)
 
     vpd%numpw = vp%numpw
- 
+
 
      l_blk= vp%numpw/nproc
      if(l_blk*nproc < vp%numpw) l_blk = l_blk+1
@@ -1569,7 +1569,7 @@
       sca=sca-agz(iw)**2.d0
    enddo
    alpha=1.d0/sqrt(sca)
-   
+
    write(stdout,*) 'ALPHA :', alpha
    call flush_unit(stdout)
 
@@ -1610,7 +1610,7 @@
        dtmp(ww%numpw+1,iw)=dtmp(ww%numpw+1,iw)+head*agz(iw)/alpha
        dtmp(iw,ww%numpw+1)=dtmp(iw,ww%numpw+1)+head*agz(iw)/alpha
     enddo
-   
+
 
 
 !if required add the wings
@@ -1749,7 +1749,7 @@
 
 
  SUBROUTINE create_polarization_file(uu, tf, prefix, nc_minus)
-   
+
    USE basic_structures, ONLY : wannier_u, cprim_prod, free_memory, &
                               &initialize_memory_cprim_prod
    USE times_gw,  ONLY : times_freqs
@@ -1784,7 +1784,7 @@
     if(l_blk*nproc < (tf%n+1)) l_blk = l_blk+1
     nbegin=mpime*l_blk
     nend=nbegin+l_blk-1
-    
+
     do it=nbegin,nend
 
 
@@ -1805,7 +1805,7 @@
              call mp_barrier
              call initialize_memory_cprim_prod(cpp)
 
-   !!read in Svci 
+   !!read in Svci
              cpp%cprim=iv
               call read_data_pw_cprim_prod(cpp, prefix, .true., ok_read, .true.,.false.)
 !if required allocate polaw
@@ -1921,20 +1921,20 @@
       endif
       e_va(iw)=dsqrt(e_va(iw))
    enddo
-   
+
 !reform the matrix
 
    pw(:,:)=0.d0
 
 
-   do kw=1,numpw  
+   do kw=1,numpw
       do jw=1,numpw
          do iw=1,numpw
             pw(iw,jw)=pw(iw,jw)+tmp_pw(iw,kw)*tmp_pw(jw,kw)*e_va(kw)
          enddo
       enddo
    enddo
-      
+
    deallocate(tmp_pw)
    deallocate(work)
    deallocate(e_va)
@@ -1958,12 +1958,12 @@
    implicit none
 
    REAL(kind=DP), INTENT(in) :: time! imaginary time tau
-   TYPE(wannier_u), INTENT(in) :: uu!for the energies and trasformation matrix               
+   TYPE(wannier_u), INTENT(in) :: uu!for the energies and trasformation matrix
    TYPE(polaw), INTENT(out)   :: pr!polarization P(it) to be created
    TYPE(q_mat), INTENT(in) :: qm ! for S matrices
-                      
 
-   INTEGER :: i,j,k, ip, ii, jj 
+
+   INTEGER :: i,j,k, ip, ii, jj
    INTEGER :: nums_cond!number of conduction states
    INTEGER :: iw,jw
    REAL(kind=DP), ALLOCATABLE :: v_val(:,:), exp_table_v(:), v_cond(:,:), exp_table_c(:)
@@ -1979,7 +1979,7 @@
    pr%time=time
    pr%numpw=qm%numpw
    pr%factor=(0.d0,-1.d0)
-!allocate                                                                                                                  
+!allocate
    allocate(pr%pw( pr%numpw,pr%numpw))
    pr%pw(:,:) =(0.d0,0.d0)
 
@@ -2059,26 +2059,26 @@
             enddo
          endif
       enddo
-   
+
 !calculate Q v''c''=T_{v''c'}V_{c'c''}
       allocate( q(uu%nums_occ,nums_cond))
       call dgemm('N','N',uu%nums_occ,nums_cond,nums_cond,1.d0,t,uu%nums_occ,v_cond,nums_cond,0.d0,&
            &q,uu%nums_occ)
       deallocate(t)
-   
+
 !put q on a right order for multiplication with S_{j,v''c''}
 !WARNING WARNING ATTENZIONE
 !it suppose that the wp(:)%ij are all the same
       allocate(v(qm%wp(1)%numij))
       v(:)=0.d0
       do ip=1,qm%wp(iw)%numij
-         i=qm%wp(iw)%ij(1,ip)!valence only                                                                        
+         i=qm%wp(iw)%ij(1,ip)!valence only
          j=qm%wp(iw)%ij(2,ip)!valence and conduction
          if(j > uu%nums_occ) then
             v(ip)=q(i,j-uu%nums_occ)
          endif
       enddo
-    
+
       deallocate(q)
 !product with jw
       do jw=iw,pr%numpw
@@ -2088,8 +2088,8 @@
 
       deallocate(v)
    enddo
-!now spin factor 
-                                                                                                             
+!now spin factor
+
     pr%pw(:,:)=2.d0*pr%pw(:,:)
 
     deallocate(v_val,v_cond)
@@ -2099,7 +2099,7 @@
 
 
  SUBROUTINE create_polarization_upper(uu, tf, prefix)
-!this subroutine adds to the polarization the part from upper reduced states   
+!this subroutine adds to the polarization the part from upper reduced states
 
    USE basic_structures, ONLY : wannier_u, cprim_prod, free_memory, &
                               &initialize_memory, upper_states
@@ -2141,7 +2141,7 @@
     if(l_blk*nproc < (tf%n+1)) l_blk = l_blk+1
     nbegin=mpime*l_blk
     nend=nbegin+l_blk-1
-    
+
     do it=nbegin,nend
 
 
@@ -2162,11 +2162,11 @@
 
              call initialize_memory(cpp)
 
-   !!read in Svci 
+   !!read in Svci
              cpp%cprim=iv
              call read_data_pw_cprim_prod(cpp, prefix, .true., ok_read, .true.,.true.)
 !if required allocate polaw
-                 
+
 !!!!the following for using blas routine
               allocate(cpmat_tmp(us%nums_reduced,cpp%numpw))
               call mytranspose(cpp%cpmat, cpp%numpw, cpmat_tmp, us%nums_reduced, cpp%numpw, us%nums_reduced)

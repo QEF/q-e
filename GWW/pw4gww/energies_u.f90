@@ -13,12 +13,12 @@ SUBROUTINE energies_u_gamma( e_u )
   !----------------------------------------------------------------------------
   !
   ! #ifdef __GWW
-  ! This routine computes the expectation value of the Hubbard potential 
-  ! The result is e_u 
+  ! This routine computes the expectation value of the Hubbard potential
+  ! The result is e_u
   ! ... output:
-  !       e_u   expection values due to the Hubbard U 
+  !       e_u   expection values due to the Hubbard U
   USE kinds,                ONLY : DP
-  USE control_flags,        ONLY : gamma_only 
+  USE control_flags,        ONLY : gamma_only
   USE io_global,            ONLY : stdout
   USE constants,            ONLY : rytoev
   USE uspp,                 ONLY : okvan, vkb, nkb
@@ -49,7 +49,7 @@ SUBROUTINE energies_u_gamma( e_u )
      write(stdout,*) 'NOT YET IMPLEMENTED !'
      stop
      !
-  END IF  
+  END IF
   !
   !
   !if required calculates also the KS energies
@@ -64,7 +64,7 @@ SUBROUTINE energies_u_gamma( e_u )
   !
   allocate(hupsi(npwx,nbnd))
   !
-  ! since in vhpsi, the result is added to hupsi => 
+  ! since in vhpsi, the result is added to hupsi =>
   ! we have to initialize all the hupsi to zero
   hupsi(:,:)=0.d0
   !
@@ -87,7 +87,7 @@ SUBROUTINE energies_u_gamma( e_u )
   e_u(:)=0.d0
   !
   !!! for info:
-  write(stdout,*) 'npwx=', npwx, ' and evc(1,1)=', evc(1,1) 
+  write(stdout,*) 'npwx=', npwx, ' and evc(1,1)=', evc(1,1)
   write(stdout,*) 'gstart=', gstart, ' and nbnd=', nbnd, ' and npw=', npw
   call flush_unit(stdout)
   do ibnd=1,nbnd
@@ -99,7 +99,7 @@ SUBROUTINE energies_u_gamma( e_u )
           e_u(ibnd)=e_u(ibnd)-dble(conjg(evc(1,ibnd))*hupsi(1,ibnd))
       endif
   enddo
-  !  
+  !
   call mp_sum(e_u(:))
   !
   do ibnd=1,nbnd
@@ -108,7 +108,7 @@ SUBROUTINE energies_u_gamma( e_u )
   call flush_unit(stdout)
   deallocate(hupsi,becp%r)
   !
-  return     
+  return
   !
 END SUBROUTINE energies_u_gamma
   !
@@ -133,7 +133,7 @@ SUBROUTINE write_energies_u(e_u_in)
   if(ionode) then
      iunu = find_free_unit()
      !
-     open(unit=iunu,file=trim(prefix)//'.hubbard_u',status='unknown',form='unformatted') 
+     open(unit=iunu,file=trim(prefix)//'.hubbard_u',status='unknown',form='unformatted')
      !open(unit=iunu,file=trim(prefix)//'.hubbard_u',status='unknown',form='unformatted')
      !
      write(iunu) nbnd_normal
@@ -144,7 +144,7 @@ SUBROUTINE write_energies_u(e_u_in)
      !
      close(iunu)
   endif
-  ! 
+  !
   ! #endif __GWW
   !
   return

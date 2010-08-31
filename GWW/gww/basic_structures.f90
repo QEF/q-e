@@ -2,10 +2,10 @@
 ! Modified by G. Stenuit
 !
 MODULE basic_structures
-!this module describes the basis structures 
+!this module describes the basis structures
 !which are obtained from a DFT code
   USE kinds, ONLY : DP
-  
+
   TYPE wannier_u
 !this structure describes the  transformation
 !from KS to Wannier states together with the KS eigenenergies
@@ -59,9 +59,9 @@ MODULE basic_structures
 !products of wannier \int dr w^P_i(r) w^P_j(r) Psi_v(r) Psi_v(r)
     INTEGER :: numpw!number of states (products of wanniers)
     INTEGER :: nums_psi!number of states (KS)
-    REAL(kind=DP), DIMENSION(:,:,:), POINTER :: wwp!terms 
+    REAL(kind=DP), DIMENSION(:,:,:), POINTER :: wwp!terms
  END TYPE wp_psi
- 
+
  TYPE wannier_u_prim
 !this structure describes the  transformation
 !from KS to Wannier states in the manifold C'
@@ -95,7 +95,7 @@ MODULE basic_structures
     INTEGER :: numpw!number of states (products of wanniers)
     INTEGER :: nums_psi!number of states (KS)
     INTEGER :: numpwpw!number of products of wannier products
-    REAL(kind=DP), DIMENSION(:,:), POINTER :: wwp!  of dimension (numpwpw,nums_psi) 
+    REAL(kind=DP), DIMENSION(:,:), POINTER :: wwp!  of dimension (numpwpw,nums_psi)
  END TYPE wp_psi_cutoff_data
 
  TYPE  head_epsilon
@@ -132,9 +132,9 @@ MODULE basic_structures
 
  TYPE upper_states
 !this structure contains the data for the reduced upper states
-    INTEGER :: nums!total number of REGULAR states 
+    INTEGER :: nums!total number of REGULAR states
     INTEGER :: nums_occ!number of occupied states
-    INTEGER :: nums_reduced!number of reduced states 
+    INTEGER :: nums_reduced!number of reduced states
     INTEGER :: nums_tot!number of TOTAL states
     REAL(kind=DP), DIMENSION(:), POINTER :: ene!KS energies of reduced states
  END TYPE upper_states
@@ -146,7 +146,7 @@ MODULE basic_structures
          MODULE PROCEDURE free_wannier_u,free_wannier_P,free_v_pot, free_q_mat,  free_memory_ortho_polaw, &
               &free_memory_wp_psi, free_memory_wannier_u_prim, free_memory_v_pot_prim, free_memory_wp_psi_cutoff_index,&
               &free_memory_wp_psi_cutoff_data, free_memory_head_epsilon, free_cprim_prod, free_memory_upper_states
-         
+
       END INTERFACE
 
 
@@ -181,7 +181,7 @@ MODULE basic_structures
         if(associated(w_P%ij)) deallocate(w_P%ij)
         nullify(w_P%ij)
         if(associated(w_P%o))  deallocate(w_P%o)
-        nullify(w_P%o) 
+        nullify(w_P%o)
         return
       end subroutine free_wannier_P
 
@@ -207,7 +207,7 @@ MODULE basic_structures
         endif
         return
       end subroutine free_q_mat
-      
+
       SUBROUTINE free_memory_ortho_polaw(op)
         !this subroutine deallocates the green descriptor
         implicit none
@@ -242,7 +242,7 @@ MODULE basic_structures
         if(associated(vp%vmat)) deallocate(vp%vmat)
         nullify(vp%vmat)
       END SUBROUTINE free_memory_v_pot_prim
-        
+
       SUBROUTINE free_memory_wp_psi_cutoff_index(wpi)
         implicit none
         TYPE(wp_psi_cutoff_index) :: wpi
@@ -273,7 +273,7 @@ MODULE basic_structures
         if (associated(he%wing_c)) deallocate(he%wing_c)
         nullify(he%wing_c)
 
-        
+
       END SUBROUTINE free_memory_head_epsilon
 
 
@@ -308,7 +308,7 @@ MODULE basic_structures
         TYPE(upper_states) :: us
         nullify(us%ene)
       END SUBROUTINE initialize_memory_upper_states
-       
+
  END MODULE basic_structures
 
 

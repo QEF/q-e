@@ -77,7 +77,7 @@ MODULE wannier_gw
   INTEGER :: restart_gww!for restarting the calculation of gww stuff, 0 begins from beginning
 
   REAL(kind=DP) :: cutoff_wpr_vc!cutoff for w_i*w_j for V-C first block
-  REAL(kind=DP) :: cutoff_wpr_vc2!cutoff for w_i*w_j for V-C second block 
+  REAL(kind=DP) :: cutoff_wpr_vc2!cutoff for w_i*w_j for V-C second block
   INTEGER :: num_nbnd_first!defines first block of conduction states
 
   REAL(kind=DP) :: cutoff_wpr_prim!cutoff for w_i*w_j for C-C' first block
@@ -89,7 +89,7 @@ MODULE wannier_gw
   INTEGER :: n_gauss!number of frequency steps for head calculation
   REAL(kind=DP) :: omega_gauss!period for frequency calculation
   LOGICAL :: l_exchange!if true calculate the exchange terms with k-points sampling
-  REAL(kind=DP) :: tau_gauss!period for the calculation of the gauss legendre time grid 
+  REAL(kind=DP) :: tau_gauss!period for the calculation of the gauss legendre time grid
 
   LOGICAL :: l_zero!if .true. calculate also the v e v^1/2 operators with G=0,G'=0 put to 0
 
@@ -142,7 +142,7 @@ MODULE wannier_gw
 
   INTEGER :: nbnd_normal!max number of bands with normal treatment if == 0 sets nbnd_max = nbnd
   INTEGER :: num_nbnd_delta!number of upper bands for which the same energy is considered
-  INTEGER :: num_nbnd_upper!number of upper bands AFTER THE REDUCTION for which the same energy is considered 
+  INTEGER :: num_nbnd_upper!number of upper bands AFTER THE REDUCTION for which the same energy is considered
 
 
   INTEGER :: max_ngm!max number of g vector for charge grid effctively stored
@@ -171,7 +171,7 @@ MODULE wannier_gw
   END INTERFACE
 
   CONTAINS
-   
+
     subroutine free_complex( c)
       implicit none
       type(complex_matrix_pointer) :: c
@@ -195,14 +195,14 @@ MODULE wannier_gw
       deallocate(w_P%o)
       return
     end subroutine
-      
-      
+
+
     subroutine  max_ngm_set
  !set the value of max_ngm
       use io_global, only : stdout
       use gvect, only :     ngm,gg
       use cell_base, only : tpiba2
-      
+
       implicit none
 
       integer :: ig
@@ -216,9 +216,9 @@ MODULE wannier_gw
       write(stdout,*) 'MAX_NGM:', max_ngm, ngm
 
 end subroutine max_ngm_set
-          
- 
-   
+
+
+
 
 END MODULE wannier_gw
 

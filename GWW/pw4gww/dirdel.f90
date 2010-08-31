@@ -14,7 +14,7 @@ subroutine dirdel ( extension)
   !-----------------------------------------------------------------------
 ! #ifdef __GWW
   !
-  !     this routine opens a file named "prefix"."extension" in tmp_dir 
+  !     this routine opens a file named "prefix"."extension" in tmp_dir
   !     for direct I/O access
   !     If appropriate, the node number is added to the file name
   !
@@ -55,17 +55,17 @@ subroutine dirdel ( extension)
   IF ( exst ) THEN
        !
        iunit = find_free_unit()
-      
+
        OPEN(  UNIT = iunit, FILE = tempfile , STATUS = 'OLD' )
        CLOSE( UNIT = iunit, STATUS = 'DELETE' )
        !
-      
+
        WRITE( UNIT = stdout, FMT = '(/,5X,"WARNING: ",A, &
             & " file was present; old file deleted")' ) tempfile
-      
+
     ENDIF
 
-  
+
 ! #endif __GWW
   return
 end subroutine dirdel

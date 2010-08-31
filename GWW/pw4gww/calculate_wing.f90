@@ -188,7 +188,7 @@ subroutine calculate_wing(n_set, orthonorm)
 
    write(stdout,*) 'ATT4'
   call flush_unit(stdout)
- 
+
 !write terms on file
 
    if(ionode) then

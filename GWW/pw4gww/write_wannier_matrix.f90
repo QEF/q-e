@@ -10,7 +10,7 @@
 
 ! #ifdef __GWW
 
-  
+
 
   USE kinds, ONLY : DP
   USE wannier_gw, ONLY : u_trans, num_nbndv, lnonorthogonal,nbnd_normal
@@ -52,7 +52,7 @@
     CALL zgefa(u_trans,nbnd_normal,nbnd_normal,ivpt,info)
     CALL errore('write_wannier_matrix','error in zgefa',abs(info))
     write(stdout,*) "before zgedi"
-    call flush_unit(stdout) 
+    call flush_unit(stdout)
     CALL zgedi(u_trans,nbnd_normal,nbnd_normal,ivpt,cdet,cdwork,11)
     det=cdet(1)*10.d0**cdet(2)
     write(stdout,*) 'DETERMINANT OF A MATRIX:', det
@@ -60,7 +60,7 @@
   endif
 
   iunu = find_free_unit()
-  
+
   open(unit=iunu,file=trim(prefix)//'.wannier',status='unknown',form='unformatted')
 
   write(iunu) nbnd_normal
@@ -75,11 +75,11 @@
      write(iunu) u_trans(1:nbnd_normal,iw)
 
   enddo
-  
+
   close(iunu)
 
 ! #endif
   return
   end subroutine
-  
+
 

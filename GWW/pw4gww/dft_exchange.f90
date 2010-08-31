@@ -5,21 +5,22 @@
 subroutine dft_exchange_k(nbnd_v,nbnd_s, ecutoff)
 !this subroutine calculates the exchange
 !energi term for every state and writes on disk
-!if l_truncated_coulomb is false assumes that the 
-!first k-point is gamma and this will not  be used for the 
+!if l_truncated_coulomb is false assumes that the
+!first k-point is gamma and this will not  be used for the
 !calculation
 !IT WILL REQUIRE SOME WORK FOR IMPEMENTING SPIN
 
 ! #ifdef __GWW
-  
+
   USE io_global,            ONLY : stdout, ionode, ionode_id
   USE io_files,             ONLY : find_free_unit, prefix, iunwfc, nwordwfc, iunigk
   USE kinds,                ONLY : DP
   USE cell_base,            ONLY: at, alat, tpiba, omega, tpiba2
   USE wannier_gw
+  USE fft_base,             ONLY : dffts, dfftp
+  USE fft_interfaces,       ONLY : fwfft, invfft
   USE gvect
-  USE gsmooth,              ONLY : nls, nlsm, nr1s, nr2s, nr3s, &
-                                   nrx1s, nrx2s, nrx3s, nrxxs, doublegrid
+  USE gsmooth,              ONLY : nls, nlsm, nrxxs, doublegrid
   USE uspp
   USE wavefunctions_module, ONLY : psic, evc
   USE cell_base,            ONLY : at, bg, omega
@@ -82,7 +83,7 @@ subroutine dft_exchange_k(nbnd_v,nbnd_s, ecutoff)
    alpha=5.d0
 
    ex(:,:)=0.d0
- 
+
 !calculate fermi level
    e_fermi=(minval(et(nbnd_v+1,1:nks))-maxval(et(nbnd_v,1:nks)))/2.d0 &
                     &  +maxval(et(nbnd_v,1:nks))
@@ -97,7 +98,7 @@ subroutine dft_exchange_k(nbnd_v,nbnd_s, ecutoff)
  !!!!!
  !write(stdout,*) 'E FERMI from OLD VERSION:', e_fermi
  !call flush_unit(stdout)
- 
+
 !set up Gauss Legendre time grid
    allocate(x(2*n_gauss+1),w(2*n_gauss+1),times(2*n_gauss+1))
    x(:)=0.d0
@@ -121,9 +122,9 @@ subroutine dft_exchange_k(nbnd_v,nbnd_s, ecutoff)
 
 
 !k=Gamma which correspons to kpoint1
-!set up 
+!set up
    !write(stdout,*) 'nks=', nks, ' and nkb=', nkb
-   !call flush_unit(stdout) 
+   !call flush_unit(stdout)
 
    !!!! just for testing purpose, I set all igk to 0
    !!!!! igk(1:npwx)=0.0
@@ -131,27 +132,27 @@ subroutine dft_exchange_k(nbnd_v,nbnd_s, ecutoff)
    !!!write(stdout,*) 'ubound(igk(:))=', ubound(igk(:))
    !!!write(stdout,*) 'igk(:)=', igk(:)
    !!!call flush_unit(stdout)
- 
+
    !!!IF ( nks > 1 ) REWIND( iunigk ) ! en theorie il devrait deja les connaitre
    !!npw = ngk(ik)
-  
+
    !write(stdout,*) 'COUCOU0 and npw=', npw
    !call flush_unit(stdout)
-   
+
    !!! the idea is to replace all the READ( iunigk ) npw, igk
-   !!! by only READ( iunigk ) igk   
+   !!! by only READ( iunigk ) igk
    !!!IF ( nks > 1 ) READ( iunigk ) npw, igk
 !!!! from PH, it seems we have to read in the old way !!!!
-!!!   IF ( nks > 1 ) READ( iunigk ) npw, igk   
+!!!   IF ( nks > 1 ) READ( iunigk ) npw, igk
    !!!IF ( nks > 1 ) READ( iunigk ) igk ! en theorie connu
    !
    CALL gk_sort(xk(1,1), ngm, g, ecutwfc/tpiba2, npw, igk, g2kin)
    !
    !write(stdout,*) 'igk(:)', igk(:)
    !call flush_unit(stdout)
-  
+
    npw = ngk(1)
-  
+
    !write(stdout,*) 'COUCOU1 npw=', npw
    !call flush_unit(stdout)
 
@@ -161,7 +162,7 @@ subroutine dft_exchange_k(nbnd_v,nbnd_s, ecutoff)
    !call flush_unit(stdout)
 
 !read in wavefunctions
-   !!!! I have removed the comment, since I am not sure 
+   !!!! I have removed the comment, since I am not sure
    !!! the evc are defined already for each ik =>
    IF( nks > 1 ) CALL davcio( evc, nwordwfc, iunwfc, 1, -1 )
 !   IF ( nks > 1 ) CALL get_buffer( evc, nwordwfc, iunwfc, 1)
@@ -173,13 +174,13 @@ subroutine dft_exchange_k(nbnd_v,nbnd_s, ecutoff)
    !write(stdout,*) 'evc(1,2)=', evc(1,2) , ' and evc(npw,2)=', evc(npw,2)
    !write(stdout,*) 'ubound(igk) : ', ubound(igk(:))
    !write(stdout,*) 'igk(1) = ', igk(1)
-   !call flush_unit(stdout) 
+   !call flush_unit(stdout)
 !writes the wavefunctions in real space coarse grid
 
    do ii=1,nbnd_s
       wfcs_s(:,ii) = ( 0.D0, 0.D0 )
       wfcs_s(nls(igk(1:npw)),ii) = evc(1:npw,ii)
-      CALL cft3s( wfcs_s(:,ii), nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, 2 )
+      CALL invfft ('Wave', wfcs_s(:,ii), dffts)
    enddo
    IF ( nkb > 0 ) &
         CALL calbec(npw, vkb, evc, bec_s, nbnd)
@@ -203,7 +204,7 @@ subroutine dft_exchange_k(nbnd_v,nbnd_s, ecutoff)
                     (-xk(2,1)+xk(2,ik)+g(2,ig))**2.d0 + &
                     (-xk(3,1)+xk(3,ik)+g(3,ig))**2.d0
                qsca=qsca*tpiba2
-               f_gauss(ik)=f_gauss(ik)+exp(-alpha*qsca)/qsca             
+               f_gauss(ik)=f_gauss(ik)+exp(-alpha*qsca)/qsca
             enddo
             call mp_sum(f_gauss(ik))
          enddo
@@ -223,7 +224,7 @@ subroutine dft_exchange_k(nbnd_v,nbnd_s, ecutoff)
    endif
 
    !write(stdout,*) 'coucou2'
-   !call flush_unit(stdout)  
+   !call flush_unit(stdout)
 
 !---------------------------------------------------------
    do ik=1,nks
@@ -255,11 +256,11 @@ subroutine dft_exchange_k(nbnd_v,nbnd_s, ecutoff)
       !write(stdout,*) 'igk(1) = ', igk(1)
       !write(stdout,*) 'xk(1,ik) = ', xk(1,ik)
       !call flush_unit(stdout)
- 
+
       do ii=1,nbnd
          wfcs_vc(:,ii) = ( 0.D0, 0.D0 )
          wfcs_vc(nls(igk(1:npw)),ii) = evc(1:npw,ii)
-         CALL cft3s( wfcs_vc(:,ii), nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, 2 )
+         CALL invfft ('Wave', wfcs_vc(:,ii), dffts)
       enddo
       IF ( nkb > 0 ) &
            CALL calbec(npw, vkb, evc, bec_vc, nbnd)
@@ -273,7 +274,7 @@ subroutine dft_exchange_k(nbnd_v,nbnd_s, ecutoff)
 !calcolate qsca
 !calcolate fac(q)
 
-      
+
       do ig=1,ngm_max
          qsca = (-xk(1,1)+xk(1,ik)+g(1,ig))**2.d0 + &
               (-xk(2,1)+xk(2,ik)+g(2,ig))**2.d0 + &
@@ -297,12 +298,12 @@ subroutine dft_exchange_k(nbnd_v,nbnd_s, ecutoff)
          endif
       enddo
       fac(:)=fac(:)/omega
-      
+
       !write(stdout,*) 'fac(1) = ', fac(1)
       !call flush_unit(stdout)
 
-!loop on s states 
-  
+!loop on s states
+
       do ii=1,nbnd_s
          write(stdout,*) 'II:', ii
          call flush_unit(stdout)
@@ -311,17 +312,17 @@ subroutine dft_exchange_k(nbnd_v,nbnd_s, ecutoff)
 
 !loop on c states
          do jj=nbnd_v+1,nbnd
-          
 
-         
+
+
 !calcolate charge
             call start_clock('k prod')
 
             prods(:)=conjg(wfcs_s(:,ii))*wfcs_vc(:,jj)
             !write(stdout,*) 'nrxxs=', nrxxs
             !write(stdout,*) 'prods(1)=', prods(1), 'prodsnrxxs)=', prods(nrxxs)
-            !call flush_unit(stdout)           
- 
+            !call flush_unit(stdout)
+
             call stop_clock('k prod')
 
             call start_clock('k inte')
@@ -334,15 +335,15 @@ subroutine dft_exchange_k(nbnd_v,nbnd_s, ecutoff)
 !ULTRASOFT STUFF TO BE ADDED ATTENZIONE
 
             call start_clock('k add')
-           
+
             if(okvan) call adduspos_r(prod,bec_s(:,ii),bec_vc(:,jj))
             call stop_clock('k add')
-           
+
             call start_clock('k fft')
-            CALL cft3( prod, nr1, nr2, nr3, nrx1, nrx2, nrx3, -1 )
+            CALL fwfft ('Dense', prod, dfftp)
             call stop_clock('k fft')
 
-            
+
 !calculate energy
             call start_clock('k sum')
             sca=0.d0
@@ -363,10 +364,10 @@ subroutine dft_exchange_k(nbnd_v,nbnd_s, ecutoff)
                   ex(ii,2*n_gauss+2)=ex(ii,2*n_gauss+2)+sca*wk(ik)*exp((et(jj,ik)-e_fermi)*times(it))
                endif
             enddo
-          
+
             !write(stdout,*) 'ex(', ii ,',1) = ', ex(ii,1)
             !call flush_unit(stdout)
- 
+
             if(l_gauss .and. .not.l_truncated_coulomb) then
                if(ii==jj) then
                   do it=1,n_gauss+1
@@ -384,17 +385,17 @@ subroutine dft_exchange_k(nbnd_v,nbnd_s, ecutoff)
                         ex(ii,2*n_gauss+2)=ex(ii,2*n_gauss+2)+wk(ik)*exp((et(jj,ik)-e_fermi)*times(it))*f_gauss_int
                      endif
                   enddo
-                  
+
                endif
             endif
             call stop_clock('k other')
          enddo
          !loop on v states
          do jj=1,nbnd_v
-           
+
 
             !calcolate charge
-            
+
             prods(:)=conjg(wfcs_s(:,ii))*wfcs_vc(:,jj)
 
 
@@ -404,11 +405,11 @@ subroutine dft_exchange_k(nbnd_v,nbnd_s, ecutoff)
             ELSE
                prod(:)=prods(:)
             ENDIF
-!ULTRASOFT STUFF 
+!ULTRASOFT STUFF
 
             if(okvan) call adduspos_r(prod,bec_s(:,ii),bec_vc(:,jj))
 
-            CALL cft3( prod, nr1, nr2, nr3, nrx1, nrx2, nrx3, -1 )
+            CALL fwfft ('Dense', prod, dfftp)
 
 
 !calculate energy
@@ -435,7 +436,7 @@ subroutine dft_exchange_k(nbnd_v,nbnd_s, ecutoff)
                endif
             endif
 
-           
+
          enddo
          call print_clock('k prod')
          call print_clock('k inte')
@@ -457,7 +458,7 @@ subroutine dft_exchange_k(nbnd_v,nbnd_s, ecutoff)
    do it=1,2*n_gauss+2
       write(stdout,*) it,ex(nbnd_v+1,it),ex(nbnd_v+2,it)
    enddo
-   
+
 
 !write on file exchange parte
 
@@ -497,7 +498,7 @@ subroutine dft_exchange_k(nbnd_v,nbnd_s, ecutoff)
    deallocate(ex)
    deallocate(times,x,w)
    deallocate(f_gauss)
-      
+
 ! #endif
 
  end subroutine dft_exchange_k
@@ -508,7 +509,7 @@ subroutine dft_exchange(nbnd_v,nbnd_s,n_set)
 !energi term for every state and writes on disk
 
 ! #ifdef __GWW
-  
+
   USE io_global,            ONLY : stdout, ionode, ionode_id
   USE io_files,             ONLY : find_free_unit, prefix, iunwfc, nwordwfc, iunigk
   USE mp_global,            ONLY : nproc_pool, me_pool
@@ -520,9 +521,10 @@ subroutine dft_exchange(nbnd_v,nbnd_s,n_set)
   USE control_flags,        ONLY: gamma_only
   USE cell_base,            ONLY: at, alat, tpiba, omega, tpiba2
   USE wannier_gw
+  USE fft_base,             ONLY : dffts, dfftp
+  USE fft_interfaces,       ONLY : fwfft, invfft
   USE gvect
-  USE gsmooth,              ONLY : nls, nlsm, nr1s, nr2s, nr3s, &
-                                   nrx1s, nrx2s, nrx3s, nrxxs, doublegrid
+  USE gsmooth,              ONLY : nls, nlsm, nrxxs, doublegrid
   USE uspp
   USE wavefunctions_module, ONLY : psic, evc
   USE realus,               ONLY : adduspos_gamma_r
@@ -536,7 +538,7 @@ subroutine dft_exchange(nbnd_v,nbnd_s,n_set)
    INTEGER, INTENT(in)  :: nbnd_v !number of valence states
    INTEGER, INTENT(in)  :: nbnd_s !number of states considered
    INTEGER, INTENT(in)  :: n_set  !defines the number of states to be read from disk at the same time
-   REAL(kind=DP), ALLOCATABLE :: fac(:) 
+   REAL(kind=DP), ALLOCATABLE :: fac(:)
    REAL(kind=DP), ALLOCATABLE :: e_x(:)
    REAL(kind=DP) :: qq_fact,exxdiv
    INTEGER :: ig,iiv,iv,jjs,js,hw
@@ -558,9 +560,9 @@ subroutine dft_exchange(nbnd_v,nbnd_s,n_set)
    exxdiv=exx_divergence()
    do ig=1,ngm
       qq_fact = g(1,ig)**2.d0 + g(2,ig)**2.d0 + g(3,ig)**2.d0
-      
+
       if(.not.l_truncated_coulomb) then
-         
+
          if (qq_fact > 1.d-8) then
             fac(ig)=e2*fpi/(tpiba2*qq_fact + yukawa )
          else
@@ -575,10 +577,10 @@ subroutine dft_exchange(nbnd_v,nbnd_s,n_set)
             fac(ig)=(e2*fpi/(tpiba2*qq_fact))*(1.d0-dcos(dsqrt(qq_fact)*truncation_radius*tpiba))
          else
             fac(ig)=e2*fpi*(truncation_radius**2.d0/2.d0)
-         
+
          endif
       endif
-      
+
    end do
    fac(:)=fac(:)/omega
 
@@ -629,8 +631,8 @@ subroutine dft_exchange(nbnd_v,nbnd_s,n_set)
             psic(nls(igk(1:npw0)))  = evc(1:npw0,hw)
             psic(nlsm(igk(1:npw0))) = CONJG( evc(1:npw0,hw) )
          END IF
-         
-         CALL cft3s( psic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s,2)
+
+         CALL invfft ('Wave', psic, dffts)
          tmpreal1(1:nrxxs)=dble(psic(1:nrxxs))
          if(doublegrid) then
             call interpolate(tmpreal_v(:,hw-(iiv-1)*n_set),tmpreal1,1)
@@ -649,7 +651,7 @@ subroutine dft_exchange(nbnd_v,nbnd_s,n_set)
     enddo
 
     do jjs=iiv,ceiling(real(nbnd_s)/real(n_set))
-   !external loop on states 
+   !external loop on states
       !read states and do fourier transform
        do hw=(jjs-1)*n_set+1,min(jjs*n_set,nbnd_s),2
          psic(:)=(0.d0,0.d0)
@@ -664,7 +666,7 @@ subroutine dft_exchange(nbnd_v,nbnd_s,n_set)
             psic(nlsm(igk(1:npw0))) = CONJG( evc(1:npw0,hw) )
          END IF
 
-         CALL cft3s( psic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s,2)
+         CALL invfft ('Wave', psic, dffts)
          tmpreal1(1:nrxxs)=dble(psic(1:nrxxs))
          if(doublegrid) then
             call interpolate(tmpreal_s(:,hw-(jjs-1)*n_set),tmpreal1,1)
@@ -692,7 +694,7 @@ subroutine dft_exchange(nbnd_v,nbnd_s,n_set)
                jmin=(jjs-1)*n_set+1
             endif
             jmax=min(jjs*n_set,nbnd_s)
-            
+
             do js=jmin,jmax
                !do product in real speace
                prod_r(:)=tmpreal_v(:,iv-(iiv-1)*n_set)*tmpreal_s(:,js-(jjs-1)*n_set)
@@ -700,7 +702,7 @@ subroutine dft_exchange(nbnd_v,nbnd_s,n_set)
                (iv,js, prod_r(:),1,becpr(:,iv),becpr(:,js))
 
                prod_c(:)=dcmplx(prod_r(:),0.d0)
-               CALL cft3(prod_c,nr1, nr2, nr3, nrx1, nrx2, nrx3, -1 )
+               CALL fwfft ('Dense', prod_c, dfftp)
                !go to g_space
                prod_g(1:ngm)=prod_c(nl(1:ngm))
                !calculated exchange
@@ -719,7 +721,7 @@ subroutine dft_exchange(nbnd_v,nbnd_s,n_set)
          enddo
       enddo
    enddo
-   
+
    do iv=1,nbnd_s
       write(stdout,*) 'Exchange energy', iv, e_x(iv)
    enddo
@@ -732,7 +734,7 @@ subroutine dft_exchange(nbnd_v,nbnd_s,n_set)
       write(iun) e_x(1:nbnd_s)
       close(iun)
    endif
-  
+
 
 
 
@@ -759,9 +761,10 @@ subroutine addus_charge(r_ij,becp_iw,becp_jw)
   !
   USE kinds,                ONLY : DP
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
-  USE gvect,                ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, &
-                                   ngm, nl, nlm, gg, g, eigts1, eigts2, &
-                                   eigts3, ig1, ig2, ig3
+  USE fft_base,             ONLY : dfftp
+  USE fft_interfaces,       ONLY : fwfft, invfft
+  USE gvect,                ONLY : nrxx, ngm, nl, nlm, gg, g, &
+                                   eigts1, eigts2, eigts3, ig1, ig2, ig3
   USE lsda_mod,             ONLY : nspin
   USE scf,                  ONLY : rho
   USE uspp,                 ONLY : okvan, nkb
@@ -808,12 +811,12 @@ subroutine addus_charge(r_ij,becp_iw,becp_jw)
   do ig = 1, ngm
      qmod (ig) = sqrt (gg (ig) )
   enddo
-  
+
 !found index correspondence
 
 
   allocate(ind_cor(ntyp,nat,maxval(nh(1:ntyp))))
-  
+
   ijkb0 = 0
   do  np = 1, ntyp
      if ( upf(np)%tvanp ) then
@@ -832,9 +835,9 @@ subroutine addus_charge(r_ij,becp_iw,becp_jw)
        enddo
     endif
  enddo
- 
- 
-  
+
+
+
 
 
 
@@ -878,7 +881,7 @@ subroutine addus_charge(r_ij,becp_iw,becp_jw)
      psic(:) = (0.d0, 0.d0)
      psic( nl(:) ) = aux(:,is)
      if (gamma_only) psic( nlm(:) ) = CONJG(aux(:,is))
-     call cft3 (psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1)
+     CALL invfft ('Dense', psic, dfftp)
      r_ij(:)=r_ij(:)+psic(:)
   enddo
   deallocate (aux)

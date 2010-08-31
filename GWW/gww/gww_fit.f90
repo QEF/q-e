@@ -16,7 +16,7 @@
    USE  para_gww
    USE  times_gw
    USE  w_divergence
-   USE constants,            ONLY : RYTOEV 
+   USE constants,            ONLY : RYTOEV
 
 
    implicit none
@@ -35,9 +35,9 @@
    COMPLEX(kind=DP) :: zz, sigmac,dsigmac
    REAL(kind=DP)  :: offset
    INTEGER :: i_homo
-   REAL(kind=DP), ALLOCATABLE :: ene_dft_u(:)  
+   REAL(kind=DP), ALLOCATABLE :: ene_dft_u(:)
    REAL(kind=DP), ALLOCATABLE :: ss_r(:),ss_i(:)
- 
+
 
 !setup MPI environment
 
@@ -60,8 +60,8 @@
    call flush_unit(stdout)
    call setup_para_gww(options%n, options%max_i, options%i_min, options%i_max)
 ! setup time/frequency grid if required
-   
-   
+
+
 
    call setup_timefreq(tf,options)
    call flush_unit(stdout)
@@ -74,8 +74,8 @@
    allocate(qp%ene_gw(options%max_i))
    allocate(qp%ene_gw_pert(options%max_i))
 
-!!! this file bands.dat can be created by doing 
-! 1. grep LDA out_00001 and remove the first two lines 
+!!! this file bands.dat can be created by doing
+! 1. grep LDA out_00001 and remove the first two lines
 ! 2. awk '{print NR,$4,$7,$10,$13}' of the previous output
 ! 3. put in the first line the numero of the HOMO level
    iun = find_free_unit()
@@ -97,7 +97,7 @@
       write(stdout,*) 'Read the file .hubbard_u'
       call flush_unit(stdout)
       allocate(ene_dft_u(options%max_i))
-      iunu = find_free_unit() 
+      iunu = find_free_unit()
       open(unit=iunu,file=trim(options%prefix)//'.hubbard_u',status='old',form='unformatted')
       read(iunu) idumm
       do ii=1,options%max_i
@@ -110,7 +110,7 @@
       qp%ene_hf(:)=qp%ene_hf(:)-ene_dft_u(:)
       deallocate(ene_dft_u)
       close(iunu)
-   endif 
+   endif
 
 
 !setup ss and read in date from fit graphs
@@ -160,23 +160,23 @@
       deallocate(ss_r,ss_i)
    enddo
 
-   
-   call create_self_energy_fit( tf, se, ss, options)  
+
+   call create_self_energy_fit( tf, se, ss, options)
    call free_memory_self_storage(ss)
 
-   
-  
+
+
    offset=-(qp%ene_dft_ks(i_homo+1)+qp%ene_dft_ks(i_homo))/2.d0
    do ii=options%i_min,options%i_max
       call value_on_frequency(se,ii,qp%ene_dft_ks(ii)+offset,sigmac)
       call derivative_on_frequency(se,ii,qp%ene_dft_ks(ii)+offset,dsigmac)
-      
+
       write(stdout,*) 'value, zeta:',ii,sigmac,dsigmac,offset
       zz=(1.d0,0.d0)-dsigmac
-     
+
       qp%ene_gw(ii)=qp%ene_dft_ks(ii)+offset +&
          (sigmac+qp%ene_hf(ii)-qp%ene_dft_ks(ii))/zz
-     
+
       write(stdout,*) 'GW-PERT energy', ii,real(qp%ene_gw(ii)-offset)*RYTOEV
 
       qp%ene_gw_pert(ii)=qp%ene_gw(ii)-offset
@@ -184,9 +184,9 @@
       do it=1,10
          call value_on_frequency_complex(se,ii,qp%ene_gw(ii),sigmac)
          write(stdout,*) 'Iteration energy',it,sigmac
-      
-         qp%ene_gw(ii)=qp%ene_dft_ks(ii)+offset+sigmac+qp%ene_hf(ii)-qp%ene_dft_ks(ii) 
-      
+
+         qp%ene_gw(ii)=qp%ene_dft_ks(ii)+offset+sigmac+qp%ene_hf(ii)-qp%ene_dft_ks(ii)
+
       enddo
       qp%ene_gw(ii)= qp%ene_gw(ii)-offset
    enddo
@@ -194,7 +194,7 @@
    !call create_quasi_particles(options,qp,se)
    call free_memory_self_expansion(se)
    call printout_quasi_particles(qp)
-      
+
     !if(ionode) then
     !  write(stdout,*) 'QUASI-PARTICLES ENERGIES IN Ev:'
     !  do ii=options%i_min,options%i_max
@@ -209,7 +209,7 @@
     !  enddo
     !endif
 
-   
+
 
 
 

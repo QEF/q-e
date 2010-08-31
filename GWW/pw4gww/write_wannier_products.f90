@@ -34,7 +34,7 @@
 
   if(ionode) then
      iunu = find_free_unit()
-     
+
      if(ifile==0) then
         open(unit=iunu,file=trim(prefix)//'.wp',status='unknown',form='unformatted')
      else
@@ -93,9 +93,9 @@
 !this subroutine calculate the inverse transformation matrix U
 !\{w}^P_i = U_ij \tilde{w}^P_j
 !then apply a cut off on the eigenvalues
-!and write the orthonormalize wannier products on file   
+!and write the orthonormalize wannier products on file
 !Note:for calculations without scalapack omat_eff is now local to the first processor
- 
+
 
      USE kinds, ONLY : DP
      USE io_global, ONLY : stdout, ionode, ionode_id
@@ -109,12 +109,12 @@
      implicit none
 
      INTEGER, INTENT(inout) :: numpw!dimension of matrices in  MODIFIED IN OUTPUT
-     INTEGER, INTENT(in) :: numpw_max!maximum number on which orthogonalizing 
+     INTEGER, INTENT(in) :: numpw_max!maximum number on which orthogonalizing
      INTEGER, INTENT(in) :: numpw_offset!offset for first product to be considered, starting from 0
 !it is orthogonalizing from numpw_offset+1 and numpw_max
-     INTEGER, INTENT(out) :: numpw_original!dimension of original matrices  
+     INTEGER, INTENT(out) :: numpw_original!dimension of original matrices
      REAL(kind=DP) :: omat(numpwdimr,numpwdimc)!overlap matrix ON OUTPUT contains the terms <\tilde{w}_j|w_i>
-     INTEGER,INTENT(in) :: numpwdimr,numpwdimc!dimensions of omat 
+     INTEGER,INTENT(in) :: numpwdimr,numpwdimc!dimensions of omat
      REAL(kind=DP) :: cutoff!cutoff for eigenvalues
      INTEGER :: n_set !length of buffer for products of wannier
      REAL(kind=DP), INTENT(in) :: ecutoff!cutoff in Rydberg for g sum
@@ -156,8 +156,8 @@
 
      REAL(kind=DP), ALLOCATABLE :: sndbuf(:,:)
      INTEGER, ALLOCATABLE :: ileng(:), ipos(:),ibuf(:,:)
-     REAL(kind=DP), ALLOCATABLE :: omat_eff_bcast(:) !part of omat_eff to be broadcast form 1st processor 
-  
+     REAL(kind=DP), ALLOCATABLE :: omat_eff_bcast(:) !part of omat_eff to be broadcast form 1st processor
+
 
      call mp_barrier!ATTENZIONE
      write(stdout,*) 'ROUTINE orthonormalize_producs_cutoff',numpw,numpw_max,numpw_offset,numpw_original,&
@@ -207,7 +207,7 @@
         call mp_bcast(eigen(:), ionode_id)
      else
 #ifdef __SCALAPACK
-        
+
         write(stdout,*) 'ORTHO1'
         call flush_unit(stdout)
 
@@ -228,7 +228,7 @@
            allocate(omat_eff(numpw_eff_dimr,numpw_eff_dimc))
            allocate(eigen(numpw_eff))
            allocate(gap(numpw_eff),ifail(numpw_eff),iclustr(numpw_eff))
-           
+
            write(stdout,*) 'ORTHO2'
            call flush_unit(stdout)
 
@@ -241,14 +241,14 @@
                call flush_unit(stdout)
 
                ipos(:)=0
-             
+
                do iw=1,numpw_eff
                   icrow = indxg2p(jw+numpw_offset,numpw_r,0,0,nprow)
                   iccol = indxg2p(iw+numpw_offset,numpw_c,0,0,npcol)
-                  iproc=icrow*npcol+iccol 
+                  iproc=icrow*npcol+iccol
                   ipos(iproc+1)=ipos(iproc+1)+1
                   ibuf(ipos(iproc+1),iproc+1)=iw
-                  if(myrow==icrow .and. mycol==iccol) then 
+                  if(myrow==icrow .and. mycol==iccol) then
                      ilrow=indxg2l(jw+numpw_offset,numpw_r,0,0,nprow)
                      ilcol=indxg2l(iw+numpw_offset,numpw_c,0,0,npcol)
                      sndbuf(ipos(iproc+1),iproc+1)=omat(ilrow,ilcol)
@@ -263,15 +263,15 @@
                         icrow = indxg2p(jw,numpw_eff_r,0,0,nprow)
                         iccol = indxg2p(iw,numpw_eff_c,0,0,npcol)
                          if(myrow==icrow .and. mycol==iccol) then
-                            ilrow=indxg2l(jw,numpw_eff_r,0,0,nprow) 
+                            ilrow=indxg2l(jw,numpw_eff_r,0,0,nprow)
                             ilcol=indxg2l(iw,numpw_eff_c,0,0,npcol)
                             omat_eff_l(ilrow,ilcol)=sndbuf(ii,ip)
                          endif
                       enddo
                    endif
                 enddo
-               
-                
+
+
 
 !                  icrow = indxg2p(jw+numpw_offset,numpw_r,0,0,nprow)
 !                  iccol = indxg2p(iw+numpw_offset,numpw_c,0,0,npcol)
@@ -290,10 +290,10 @@
 !                      omat_eff_l(ilrow,ilcol)=rsca
 !                  endif
              enddo
-            
+
             deallocate(sndbuf,ibuf)
             deallocate(ipos)
-          
+
 
 !        omat_eff(1:numpw_eff,1:numpw_eff)=omat(numpw_offset+1:numpw_max,numpw_offset+1:numpw_max)
 ! A = omat_eff_l
@@ -316,14 +316,14 @@
              desc_b(7)=0
              desc_b(8)=0
              desc_b(9)=numpw_eff_dimr
-             
+
              allocate(work(1),iwork(1))
-             
+
              write(stdout,*) 'ORTHO3'
              call flush_unit(stdout)
 
 
-             
+
 
 !             call pdsyevd('V','U',numpw_eff,omat_eff_l,1,1,desc_a,eigen,omat_eff,1,1,desc_b,work,-1,iwork,-1,info)
              call pdsyevx('V','A','U',numpw_eff,omat_eff_l,1,1,desc_a,0.d0,0.d0,0,0,0.d0,&
@@ -346,9 +346,9 @@
              deallocate(work,iwork)
              deallocate(gap,iclustr,ifail)
              deallocate(omat_eff_l)
-             
-!  call  DSYEV( 'V', 'U', numpw_eff, omat_eff, numpw_eff, eigen, work, -1, info )            
-           
+
+!  call  DSYEV( 'V', 'U', numpw_eff, omat_eff, numpw_eff, eigen, work, -1, info )
+
           endif
 #endif
       endif
@@ -372,7 +372,7 @@
      iungprod_on = find_free_unit()
      CALL diropn( iungprod_on, 'wiwjwfc_on', max_ngm*2, exst )
 
-  
+
 
 !allocate file
      allocate(tmpspacei(max_ngm,n_set),tmpspacej(max_ngm,n_set))
@@ -398,7 +398,7 @@
                      numpw_on=numpw_on+1
                      on_cor(iw)=numpw_on
                   endif
-                  
+
                   if(.not.l_pmatrix) then
                      if(ionode) omat_eff_bcast(:)=omat_eff(:,iw)
                      call mp_barrier
@@ -433,7 +433,7 @@
                      enddo
                      do ip=1,nprow*npcol
                         if(ipos(ip)>0) then
-                           !call mp_barrier                                                                        
+                           !call mp_barrier
                            call mp_bcast(sndbuf(1:ipos(ip),ip),ip-1)
                            do ii=1,ipos(ip)
                               jw=ibuf(ii,ip)
@@ -448,7 +448,7 @@
                   endif
 !                  do jw=(jjw-1)*n_set+1,min(jjw*n_set,numpw_eff)
 !                     if(.not.l_pmatrix) then
-!                        tmpspacei(1:ngm_max,iw-(iiw-1)*n_set)=tmpspacei(1:ngm_max,iw-(iiw-1)*n_set)+(1.d0/dsqrt(eigen(iw)))*omat_eff(jw,iw)*&
+!                        tmpspacei(1:ngm_max,iw-(iiw-1)*n_set)=tmpspacei(1:ngm_max,iw-(iiw-1)*n_set)+(1.d0/dsqrt(eigen(iw)))*omat_ef
 !                             &tmpspacej(1:ngm_max,jw-(jjw-1)*n_set)
 !                     else
 !#ifdef __SCALAPACK
@@ -463,7 +463,7 @@
 !                           rsca=omat_eff(ilrow,ilcol)
 !                        endif
 !                        call mp_bcast(rsca,iproc)
-                        
+
 
 !                          tmpspacei(1:ngm_max,iw-(iiw-1)*n_set)=tmpspacei(1:ngm_max,iw-(iiw-1)*n_set)+&
 ! &(1.d0/dsqrt(eigen(iw)))*rsca*tmpspacej(1:ngm_max,jw-(jjw-1)*n_set)
@@ -481,7 +481,7 @@
       enddo
 
 
-  
+
 
      close(iungprod)
      close(iungprod_on)
@@ -493,16 +493,16 @@
      if(ionode) then
         allocate(tmp_str(numpw_on))
         iunu = find_free_unit()
-        
+
         open(unit=iunu,file=trim(prefix)//'.orthonorm',status='unknown',form='unformatted')
         write(iunu) numpw_on
-     
+
         do  i=1,numpw_on
            tmp_str(:)=0.d0
            tmp_str(i)=1.d0
            write(iunu) tmp_str
         enddo
-     
+
         close(iunu)
         deallocate(tmp_str)
      endif
@@ -510,9 +510,9 @@
      call mp_barrier
      write(stdout,*) 'TOTAL NUMBER OF ORTHONORMAL PRODUCTS:', numpw_on
      call flush_unit(stdout)
-     
+
 !calculate terms <\tilde{w}_j|w_i>
-     
+
 !     do iw=1,numpw
 !        if(on_cor(iw) /= 0) then
 !           omat(:,on_cor(iw))=omat(:,iw)*dsqrt(eigen(iw))
@@ -552,7 +552,7 @@
            numpw_on_c=ceiling(real(numpw_on)/real(npcol))
            numpw_on_dimr=ceiling (real(numpw_on)/real(numpw_on_r*nprow))*numpw_on_r
            numpw_on_dimc=ceiling (real(numpw_on)/real(numpw_on_c*npcol))*numpw_on_c
-           
+
            write(stdout,*) 'NUMPW R',numpw, numpw_r, numpw_dimr
            write(stdout,*) 'NUMPW C',numpw, numpw_c, numpw_dimc
 
@@ -563,11 +563,11 @@
            write(stdout,*) 'NUMPW_ON C',numpw_on, numpw_on_c, numpw_on_dimc
 
 
-       
+
 
            allocate(omat_eff_l(numpw_eff_dimr,numpw_on_dimc))
 
-       
+
 
            do iw=1,numpw_eff
               if(on_cor(iw) /=0) then
@@ -589,7 +589,7 @@
                  enddo
                  do ip=1,nprow*npcol
                     if(ipos(ip)>0) then
-                     !call mp_barrier 
+                     !call mp_barrier
                        call mp_bcast(sndbuf(1:ipos(ip),ip),ip-1)
                        do ii=1,ipos(ip)
                           jw=ibuf(ii,ip)
@@ -604,7 +604,7 @@
                     endif
                  enddo
                  deallocate(sndbuf,ipos,ibuf)
-!!!!!!!!!!!!!!!!!!!!!!!!!                
+!!!!!!!!!!!!!!!!!!!!!!!!!
 !                 do jw=1,numpw_eff
 !                    icrow = indxg2p(jw,numpw_eff_r,0,0,nprow)
 !                    iccol = indxg2p(iw,numpw_eff_c,0,0,npcol)
@@ -625,20 +625,20 @@
 !                 enddo
               endif
            enddo
-           
-          
+
+
            write(stdout,*) 'OMAT EFF L', omat_eff_l(1,1)!ATTENZIONE
 
 
 !       allocate(omat_tmp(numpw,numpw_eff))
-           
+
            allocate(omat_tmp(numpw_dimr, numpw_eff_dimc))
            do jw=1,numpw
 
               allocate(sndbuf(numpw_eff,nprow*npcol),ibuf(numpw_eff,nprow*npcol))
               allocate(ipos(nprow*npcol))
               ipos(:)=0
-              
+
               do iw=1,numpw_eff
                  icrow = indxg2p(jw,numpw_r,0,0,nprow)
                  iccol = indxg2p(iw+numpw_offset,numpw_c,0,0,npcol)
@@ -667,7 +667,7 @@
                  endif
               enddo
               deallocate(sndbuf,ibuf,ipos)
-                 
+
 !                 icrow = indxg2p(jw,numpw_r,0,0,nprow)
 !                 iccol = indxg2p(iw+numpw_offset,numpw_c,0,0,npcol)
 !                 iproc= icrow*npcol+iccol
@@ -685,11 +685,11 @@
 !                   omat_tmp(ilrow,ilcol)=rsca
 !                 endif
            enddo
-           
 
 
 
-       
+
+
 !pdgemm
 ! A = omat_tmp
              desc_a(1)=1
@@ -729,7 +729,7 @@
              desc_c(8)=0
              desc_c(9)=numpw_dimr
 
-          
+
 
 
 
@@ -831,7 +831,7 @@
   !
    subroutine do_polarization_analysis( wp, num_wp_dimr, num_wp_r,mcut,numpw,numpw_original, &
                                 n_set, ecutoff, lcutoff,omat,newdimr, newdimc,nc_max,n_r,n_c)
-!this subroutine 
+!this subroutine
 !1)construct the polarization matrix at zero time
 !2)find the  eigenvalues above cutoff
 !3)redefines the products of wannier functions
@@ -841,7 +841,7 @@
      USE kinds,      ONLY : DP
      USE wannier_gw, ONLY : wannier_P, u_trans,num_nbndv, free_memory,nbnd_normal,max_ngm, &
           &l_pmatrix,npcol,nprow,myrow,mycol,icontxt,l_assume_ortho,l_coulomb_analysis
- !u_trans is defined as Psi_i=U_{i,j}w_j 
+ !u_trans is defined as Psi_i=U_{i,j}w_j
      USE io_global, ONLY : stdout, ionode, ionode_id
      USE io_files,  ONLY : find_free_unit, prefix, diropn
      USE gvect,     ONLY : ngm, gg,gstart
@@ -854,8 +854,8 @@
      INTEGER, INTENT(inout) :: numpw!dimension of matrices in  MODIFIED IN OUTPUT
      INTEGER, INTENT(in) :: numpw_original!dimension of original matrices
      INTEGER :: n_set !length of buffer for products of wannier
-     REAL(kind=DP), INTENT(in) :: ecutoff!cutoff in Rydberg for g sum 
-     LOGICAL, INTENT(in) :: lcutoff !if true uses cutoff on G defined by ecutoff POTENTIALLY DANGEROUS    
+     REAL(kind=DP), INTENT(in) :: ecutoff!cutoff in Rydberg for g sum
+     LOGICAL, INTENT(in) :: lcutoff !if true uses cutoff on G defined by ecutoff POTENTIALLY DANGEROUS
      TYPE(wannier_P), INTENT(inout) :: wp(num_wp_dimr)!descriptor of products of wanniers
      INTEGER, INTENT(in) :: num_wp_dimr!dimension of wp
      INTEGER, INTENT(in) :: num_wp_r!periodicity of wp for parallel matrix execution
@@ -865,10 +865,10 @@
                                                     !to be updated
      INTEGER, INTENT(in) :: nc_max!number of conduction states to be used for building the polarization matrix
      INTEGER, INTENT(in) :: n_r, n_c!in parallel case periodicity on rows and columns
-     
+
 
 !internal variables
-     
+
      REAL(kind=DP), ALLOCATABLE :: contv_ci(:,:), pola(:,:)
      INTEGER :: nbndc
      INTEGER :: iv,ic,iw,jw, ii, jj,kk,ll,ip
@@ -905,7 +905,7 @@
      write(stdout,*) 'DO POLARIZATION ANALYSIS:',newdimr, newdimc,nc_max,n_r,n_c
      call flush_unit(stdout)
 
-!allocate and set to zero 
+!allocate and set to zero
      nbndc=nbnd_normal-num_nbndv
      allocate(pola(numpw,numpw))
      allocate(contv_ci(nbndc,numpw))
@@ -933,7 +933,7 @@
                        if(jj>num_nbndv) then!IMPORTANT the definiton of product order
                           do ll=1,min(nbndc,nc_max)
                              contv_ci(ll,iw)=contv_ci(ll,iw)+ &
-                                  &dble(u_trans(iv,ii))*dble(u_trans(ll+num_nbndv,jj))*wp(iw)%o(jw) 
+                                  &dble(u_trans(iv,ii))*dble(u_trans(ll+num_nbndv,jj))*wp(iw)%o(jw)
                           enddo
                        endif
                     enddo
@@ -965,8 +965,8 @@
 #endif
               endif
            enddo
-           if(l_pmatrix) call mp_sum(contv_ci(:,:)) 
-!loop on i,j,c  
+           if(l_pmatrix) call mp_sum(contv_ci(:,:))
+!loop on i,j,c
 !calculate polarization
            do iw=1,numpw
               do jw=1,numpw
@@ -1006,7 +1006,7 @@
 
 
 
-    
+
 
      allocate(eigen(numpw))
      if(.not. l_assume_ortho) then
@@ -1123,23 +1123,23 @@
      if(ionode) then
         allocate(tmp_str(numpw_red))
         iunu = find_free_unit()
-        
+
         open(unit=iunu,file=trim(prefix)//'.orthonorm',status='unknown',form='unformatted')
         write(iunu) numpw_red
-     
+
         do  i=1,numpw_red
            tmp_str(:)=0.d0
            tmp_str(i)=1.d0
            write(iunu) tmp_str
         enddo
-     
+
         close(iunu)
         deallocate(tmp_str)
      endif
 
      write(stdout,*) 'TOTAL NUMBER OF ORTHONORMAL PRODUCTS:', numpw_red
      call flush_unit(stdout)
-  
+
 !update overlap matrix omat
      deallocate(tmpspacei,tmpspacej)
 
@@ -1171,7 +1171,7 @@
         numpw_original_c=n_c!ceiling(real(numpw_original)/real(npcol))
         numpw_original_dimr=newdimr!ceiling (real(numpw_original)/real(numpw_original_r*nprow))*numpw_original_r
         numpw_original_dimc=newdimc!ceiling (real(numpw_original)/real(numpw_original_c*npcol))*numpw_original_c
-       allocate(omat_tmp(numpw_original_dimr,numpw_dimc))      
+       allocate(omat_tmp(numpw_original_dimr,numpw_dimc))
      endif
      do iw=1,numpw
         if(on_cor(iw)/=0) then
@@ -1248,8 +1248,8 @@
         enddo
      else
 #ifdef __SCALAPACK
-!fatto fin qui  
-        allocate(pola_tmp(numpw_dimr,newdimc))        
+!fatto fin qui
+        allocate(pola_tmp(numpw_dimr,newdimc))
         do jw=1,numpw
            do iw=1,numpw
               icrow = indxg2p(jw,numpw_r,0,0,nprow)
@@ -1306,7 +1306,7 @@
      endif
      if(ionode) deallocate(omat_tmp)
 
-!update dimension of reduced orthonormal products of wanniers 
+!update dimension of reduced orthonormal products of wanniers
      numpw=numpw_red
 
 
@@ -1330,7 +1330,7 @@ end subroutine do_polarization_analysis
  ! ------------------------------------------------
  !
 subroutine do_polarization_analysis_study( wp,mcut,numpw,numpw_original, n_set, ecutoff, lcutoff,omat,nc_max)
-!this subroutine 
+!this subroutine
 !1)construct the polarization matrix at zero time
 !2)find the  eigenvalues above cutoff
 !3)redefines the products of wannier functions
@@ -1340,7 +1340,7 @@ subroutine do_polarization_analysis_study( wp,mcut,numpw,numpw_original, n_set, 
      USE kinds,      ONLY : DP
      USE wannier_gw, ONLY : wannier_P, u_trans,num_nbndv, free_memory,max_ngm
      USE wvfct,      ONLY : nbnd, et
- !u_trans is defined as Psi_i=U_{i,j}w_j 
+ !u_trans is defined as Psi_i=U_{i,j}w_j
      USE io_global, ONLY : stdout, ionode, ionode_id
      USE io_files,  ONLY : find_free_unit, prefix
      USE gvect,     ONLY : ngm, gg,gstart
@@ -1353,8 +1353,8 @@ subroutine do_polarization_analysis_study( wp,mcut,numpw,numpw_original, n_set, 
      INTEGER, INTENT(inout) :: numpw!dimension of matrices in  MODIFIED IN OUTPUT
      INTEGER, INTENT(in) :: numpw_original!dimension of original matrices
      INTEGER :: n_set !length of buffer for products of wannier
-     REAL(kind=DP), INTENT(in) :: ecutoff!cutoff in Rydberg for g sum 
-     LOGICAL, INTENT(in) :: lcutoff !if true uses cutoff on G defined by ecutoff POTENTIALLY DANGEROUS    
+     REAL(kind=DP), INTENT(in) :: ecutoff!cutoff in Rydberg for g sum
+     LOGICAL, INTENT(in) :: lcutoff !if true uses cutoff on G defined by ecutoff POTENTIALLY DANGEROUS
      TYPE(wannier_P), INTENT(inout) :: wp(numpw)!descriptor of products of wanniers
      REAL(kind=DP), INTENT(in)      :: mcut!cutoff for eigenvalues of the polarization matrix
      REAL(kind=DP), INTENT(inout) :: omat(numpw_original, numpw_original)!overlap matrix <\tilde{w}^P_i|{w}^P'_j>
@@ -1363,7 +1363,7 @@ subroutine do_polarization_analysis_study( wp,mcut,numpw,numpw_original, n_set, 
 
 
 !internal variables
-     
+
      REAL(kind=DP), ALLOCATABLE :: contv_ci(:,:), pola(:,:,:)
      INTEGER :: nbndc
      INTEGER :: iv,ic,iw,jw, ii, jj,kk,ll, it, ie
@@ -1406,7 +1406,7 @@ subroutine do_polarization_analysis_study( wp,mcut,numpw,numpw_original, n_set, 
         open(unit=iun_proj,file='projections.dat',status='unknown')
      endif
 
-!allocate and set to zero 
+!allocate and set to zero
      nbndc=nbnd-num_nbndv
      allocate(pola(numpw,numpw,n_times))
      allocate(contv_ci(nbndc,numpw))
@@ -1443,7 +1443,7 @@ subroutine do_polarization_analysis_study( wp,mcut,numpw,numpw_original, n_set, 
                  endif
                  call mp_bcast(contv_ci(:,iw),ionode_id)
               enddo
-!loop on i,j,c  
+!loop on i,j,c
 !calculate polarization
               do iw=1,numpw
                  do jw=1,numpw
@@ -1457,7 +1457,7 @@ subroutine do_polarization_analysis_study( wp,mcut,numpw,numpw_original, n_set, 
         do iw=1,numpw
            call mp_sum(pola(:,iw,it))
         enddo
-     
+
 
 !calculate eigen values eigen vectors of polarization matrix
 !apply cut off
@@ -1466,7 +1466,7 @@ subroutine do_polarization_analysis_study( wp,mcut,numpw,numpw_original, n_set, 
 
 
 
-    
+
 
         allocate(eigen(numpw))
         if(ionode) then
@@ -1523,12 +1523,12 @@ subroutine do_polarization_analysis_study( wp,mcut,numpw,numpw_original, n_set, 
         allocate(o_proj_tmp(numpw,numpw))
         call dgemm('N','N',numpw,numpw,numpw,1.d0,o_proj(:,:,1),numpw,o_proj(:,:,2),numpw,0.d0,o_proj_mul,numpw)
 !        call dgemm('N','N',numpw,numpw,numpw,1.d0,o_proj_tmp,numpw,o_proj(:,:,3),numpw,0.d0,o_proj_mul,numpw)
-        
+
         trace=0.d0
         do iw=1,numpw
            trace=trace+o_proj_mul(iw,iw)
         enddo
-  
+
         write(stdout,*) 'TRACE:',ie, trace
            !deallocate descriptors of wannier products
 
@@ -1561,9 +1561,9 @@ end subroutine do_polarization_analysis_study
      implicit none
 
      INTEGER, INTENT(inout) :: numpw!dimension of matrices in  MODIFIED IN OUTPUT
-     INTEGER, INTENT(out) :: numpw_original!dimension of original matrices  
+     INTEGER, INTENT(out) :: numpw_original!dimension of original matrices
      REAL(kind=DP) :: vmat(numpwdimr,numpwdimc)!overlap matrix ON OUTPUT contains the terms <\tilde{w}_j|w_i>
-     INTEGER,INTENT(in) :: numpwdimr,numpwdimc!dimensions of omat 
+     INTEGER,INTENT(in) :: numpwdimr,numpwdimc!dimensions of omat
      REAL(kind=DP) :: cutoff!cutoff for eigenvalues
      INTEGER :: n_set !length of buffer for products of wannier
      REAL(kind=DP), INTENT(in) :: ecutoff!cutoff in Rydberg for g sum
@@ -1572,7 +1572,7 @@ end subroutine do_polarization_analysis_study
      INTEGER, INTENT(in) :: newdimr,newdimc!dimensions of omat
      INTEGER, INTENT(in) :: n_r, n_c!periodicity of omat
      INTEGER :: numpw_vvc!total number of non-orthonomal wannier products
-     
+
 
      REAL(kind=DP), ALLOCATABLE :: eigen(:),work(:)
      INTEGER :: lwork,info,liwork
@@ -1589,7 +1589,7 @@ end subroutine do_polarization_analysis_study
      REAL(kind=DP), ALLOCATABLE :: tmp_str(:)
      LOGICAL :: exst
      INTEGER :: ngm_max
-     
+
 
 
 
@@ -1608,7 +1608,7 @@ end subroutine do_polarization_analysis_study
      write(stdout,*) 'ROUTINE coulomb_analysis'
 
 
-   
+
      !determine ngm_max
      if(lcutoff) then
         ngm_max=0
@@ -1626,9 +1626,9 @@ end subroutine do_polarization_analysis_study
 
      if(.not.l_pmatrix) then
 
-   
-        
-   
+
+
+
 
         allocate(eigen(numpw))
         if(ionode) then
@@ -1659,11 +1659,11 @@ end subroutine do_polarization_analysis_study
         numpw_dimc=ceiling (real(numpw)/real(numpw_c*npcol))*numpw_c
 
         if((myrow+1) <= nprow .and. (mycol+1) <= npcol) then
-          
+
            allocate(eigen(numpw))
            allocate(gap(numpw),ifail(numpw),iclustr(numpw))
            allocate(vmat_states(numpw_dimr,numpw_dimc))
-     
+
 
 
 
@@ -1688,10 +1688,10 @@ end subroutine do_polarization_analysis_study
              desc_b(7)=0
              desc_b(8)=0
              desc_b(9)=numpw_dimr
-             
+
              allocate(work(1),iwork(1))
 
-             
+
 
 
              call pdsyevx('V','A','U',numpw,vmat,1,1,desc_a,0.d0,0.d0,0,0,0.d0,&
@@ -1716,17 +1716,17 @@ end subroutine do_polarization_analysis_study
 
              deallocate(work,iwork)
              deallocate(gap,iclustr,ifail)
-                       
-           
+
+
           endif
 #endif
        endif
 
 
-     
+
        call mp_bcast(eigen(:),ionode_id)
 
-   
+
        do iw=1,numpw
           write(stdout,*) 'EIGEN:',iw, eigen(iw)
        enddo
@@ -1738,7 +1738,7 @@ end subroutine do_polarization_analysis_study
        iungprod_on = find_free_unit()
        CALL diropn( iungprod_on, 'wiwjwfc_red', max_ngm*2, exst )
 
-  
+
 
 !allocate file
        allocate(tmpspacei(max_ngm,n_set),tmpspacej(max_ngm,n_set))
@@ -1798,7 +1798,7 @@ end subroutine do_polarization_analysis_study
        enddo
 
 
-  
+
 
        close(iungprod)
        close(iungprod_on)
@@ -1810,31 +1810,31 @@ end subroutine do_polarization_analysis_study
        if(ionode) then
           allocate(tmp_str(numpw_on))
           iunu = find_free_unit()
-        
+
           open(unit=iunu,file=trim(prefix)//'.orthonorm',status='unknown',form='unformatted')
           write(iunu) numpw_on
-          
+
           do  i=1,numpw_on
              tmp_str(:)=0.d0
              tmp_str(i)=1.d0
              write(iunu) tmp_str
           enddo
-          
+
           close(iunu)
           deallocate(tmp_str)
        endif
 
        write(stdout,*) 'TOTAL NUMBER OF ORTHONORMAL PRODUCTS:', numpw_on
        call flush_unit(stdout)
-     
+
 
 
 !calculate terms <\tilde{w}_j|w_i>
-     
+
        write(stdout,*) 'ATTENZIONE1'
        call flush_unit(stdout)
 
-  
+
 !update overlap matrix omat
        deallocate(tmpspacei,tmpspacej)
 
@@ -1849,7 +1849,7 @@ end subroutine do_polarization_analysis_study
           numpw_vvc_c=n_c
           numpw_vvc_dimr=newdimr
           numpw_vvc_dimc=newdimc
-          allocate(omat_tmp(numpw_vvc_dimr,numpw_dimc))      
+          allocate(omat_tmp(numpw_vvc_dimr,numpw_dimc))
        endif
 
 
@@ -1873,7 +1873,7 @@ end subroutine do_polarization_analysis_study
                 endif
                 call mp_barrier!ATTENZIONE
                 call mp_bcast(rsca,iproc)
-                
+
                 icrow = indxg2p(jw,numpw_vvc_r,0,0,nprow)
                 iccol = indxg2p(iw,numpw_c,0,0,npcol)
                 if(myrow==icrow .and. mycol==iccol) then
@@ -1889,7 +1889,7 @@ end subroutine do_polarization_analysis_study
         write(stdout,*) 'ATTENZIONE4'
        call flush_unit(stdout)
 
-     
+
        if(.not. l_pmatrix) then
           do iw=1,numpw
              if(on_cor(iw)/=0) then
@@ -1917,7 +1917,7 @@ end subroutine do_polarization_analysis_study
                  call mp_bcast(rsca,iproc)
 
 
-                 
+
                  icrow = indxg2p(jw,numpw_r,0,0,nprow)
                  iccol = indxg2p(on_cor(iw),numpw_c,0,0,npcol)
                  if(myrow==icrow .and. mycol==iccol) then
@@ -1987,10 +1987,10 @@ end subroutine do_polarization_analysis_study
      endif
      deallocate(omat_tmp)
 
-!update dimension of reduced orthonormal products of wanniers 
+!update dimension of reduced orthonormal products of wanniers
      numpw_original=numpw
-     numpw=numpw_on 
-     
+     numpw=numpw_on
+
 
 
      deallocate(eigen, on_cor)

@@ -20,8 +20,8 @@
 
    implicit none
 
-   TYPE(input_options) :: options! for imaginary time range,number of samples 
-   
+   TYPE(input_options) :: options! for imaginary time range,number of samples
+
    TYPE(v_pot) :: vp!bare coulomb potential
    TYPE(polaw) :: pp,ww!polarization and dressed interaction
    TYPE(ortho_polaw) :: op!orthonormalization matrices
@@ -48,7 +48,7 @@
    else
       call read_data_pw_v(vp,options%prefix,options%debug,0,.false.)
    endif
-   
+
     write(stdout,*) 'ATTEZNIONE2'
     call flush_unit(stdout)
 
@@ -63,7 +63,7 @@
 !if symmetric do symmetrize
       if(options%l_symm_epsilon) call square_root_polaw(vp%vmat,vp%numpw)
 
-  
+
 
     write(stdout,*) 'ATTEZNIONE3'
     call flush_unit(stdout)
@@ -132,7 +132,7 @@
              else
                 awing(:)=he%wing(:,iw+1)
                 awing_c(:)=he%wing_c(:,iw+1)
-                
+
              endif
           else
              awing(:)=0.d0
@@ -157,7 +157,7 @@
 
       endif
    enddo
-   
+
    call mp_sum(inv_epsi)
 
    call free_memory(vp)
@@ -189,16 +189,16 @@
          gt%inv_epsi(iw)=inv_epsi(ii)
          ii=ii+1
       enddo
-      
+
       call write_gv_time(gt)
       call free_memory_gv_time(gt)
    endif
    deallocate(inv_epsi)
-   
+
    return
 
  END SUBROUTINE go_dressed_w
-  
+
   SUBROUTINE control_polarization(options)
 
    USE kinds,              ONLY : DP

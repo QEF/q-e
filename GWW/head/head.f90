@@ -9,7 +9,7 @@
 ! Modified by G. Stenuit
 !
 !-----------------------------------------------------------------------
-PROGRAM head 
+PROGRAM head
   !-----------------------------------------------------------------------
   !
   ! ... This is the main driver of the phonon program. It controls
@@ -201,7 +201,7 @@ PROGRAM head
            !
            IF ( .NOT. lgauss ) THEN
               !
-              ! ... in the case of an insulator at q=0 one has to calculate 
+              ! ... in the case of an insulator at q=0 one has to calculate
               ! ... the dielectric constant and the Born eff. charges
               !
               epsil = .TRUE.
@@ -216,7 +216,7 @@ PROGRAM head
            !
         ELSE
            !
-           ! ... for q != 0 no calculation of the dielectric tensor 
+           ! ... for q != 0 no calculation of the dielectric tensor
            ! ...           and Born eff. charges
            !
            epsil = .FALSE.
@@ -274,7 +274,7 @@ PROGRAM head
         IF (do_band) CALL electrons()
         !
         IF (.NOT.reduce_io.and.do_band) THEN
-           twfcollect=.FALSE. 
+           twfcollect=.FALSE.
            CALL punch( 'all' )
            done_bands=.TRUE.
         ENDIF
@@ -310,7 +310,7 @@ PROGRAM head
      !
      CALL ph_writefile('init',0)
      !
-     ! ... Calculation of the dispersion: do all modes 
+     ! ... Calculation of the dispersion: do all modes
      !
      CALL allocate_phq()
      !
@@ -394,7 +394,7 @@ PROGRAM head
      DO irr=1,nirr
         IF (done_irr(irr)==0) done_iq(iq)=0
      ENDDO
-     twfcollect=.FALSE. 
+     twfcollect=.FALSE.
      CALL clean_pw( .FALSE. )
      CALL deallocate_phq()
      !
@@ -419,4 +419,4 @@ PROGRAM head
   !
   STOP
   !
-END PROGRAM head 
+END PROGRAM head
