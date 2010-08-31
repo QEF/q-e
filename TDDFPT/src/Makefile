@@ -1,6 +1,6 @@
 # Makefile for PW
 #Modified for v4.0 by obm
-
+# test
 
 include ../../make.sys
 IFLAGS         = -I../../include
