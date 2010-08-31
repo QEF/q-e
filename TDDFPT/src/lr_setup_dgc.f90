@@ -16,7 +16,7 @@ subroutine lr_setup_dgc
   ! Modified by Osman Baris Malcioglu (2009)
 #include "f_defs.h"
 
-  use pwcom,          only : nrxx, nspin, nrx1, nrx2, nrx3, nr1, nr2, nr3, ngm, g, nl, e2
+  use pwcom,          only : nrxx, nspin, ngm, g, nl, e2
   USE kinds,          only : DP
   use lr_variables,   only : lr_verbosity
   use funct,          only : dft_is_gradient, gcxc, gcx_spin, gcc_spin, &
@@ -59,8 +59,7 @@ subroutine lr_setup_dgc
      enddo
   endif
   do is = 1, nspin
-     call gradrho (nrx1, nrx2, nrx3, nr1, nr2, nr3, nrxx, rho%of_g (1, is), &
-          ngm, g, nl, grho (1, 1, is) )
+     call gradrho (nrxx, rho%of_g (1, is), ngm, g, nl, grho (1, 1, is) )
   enddo
   do k = 1, nrxx
      grho2 (1) = grho (1, k, 1) **2 + grho (2, k, 1) **2 + grho (3, k, 1) **2

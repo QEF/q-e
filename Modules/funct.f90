@@ -1013,6 +1013,8 @@ subroutine gcxc (rho, grho, sx, sc, v1x, v2x, v1c, v2c)
      call hcth(rho, grho, sx, v1x, v2x)
   elseif (igcx == 6) then
      call optx (rho, grho, sx, v1x, v2x)
+  ! case igcx == 7 (meta-GGA) must be treated in a separate call to another
+  ! routine: needs kinetic energy density in addition to rho and grad rho
   elseif (igcx == 8) then ! 'pbe0'
      call pbex (rho, grho, 1, sx, v1x, v2x)
      if (exx_started) then
@@ -1057,6 +1059,8 @@ subroutine gcxc (rho, grho, sx, sc, v1x, v2x, v1c, v2c)
      call glyp (rho, grho, sc, v1c, v2c)
   elseif (igcc == 4) then
      call pbec (rho, grho, 1, sc, v1c, v2c)
+  ! igcc == 5 (HCTH) is calculated together with case igcx=5
+  ! igcc == 6 (meta-GGA) is treated in a different routine
   elseif (igcc == 7) then !'B3LYP'
      call glyp (rho, grho, sc, v1c, v2c)
      if (exx_started) then
@@ -1067,7 +1071,6 @@ subroutine gcxc (rho, grho, sx, sc, v1x, v2x, v1c, v2c)
   elseif (igcc == 8) then ! 'PBEsol'
      call pbec (rho, grho, 2, sc, v1c, v2c)
   else
-     ! note that if igcc == 5 the hcth functional is called above
      sc = 0.0_DP
      v1c = 0.0_DP
      v2c = 0.0_DP
@@ -1233,6 +1236,10 @@ subroutine gcx_spin (rhoup, rhodw, grhoup2, grhodw2, &
      sx = 0.5_DP * (sxup + sxdw)
      v2xup = 2.0_DP * v2xup
      v2xdw = 2.0_DP * v2xdw
+
+  ! case igcx == 5 (HCTH) and 6 (OPTX) not implemented
+  ! case igcx == 7 (meta-GGA) must be treated in a separate call to another
+  ! routine: needs kinetic energy density in addition to rho and grad rho
 
   else
      call errore ('gcx_spin', 'not implemented', igcx)

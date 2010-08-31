@@ -1,4 +1,4 @@
-TODO LIST - Aiugust 2010
+TODO LIST - August 2010
 
 
 0) Suspected bugs/problems:
@@ -79,14 +79,15 @@ TODO LIST - Aiugust 2010
 3.8 Finish merge of Meta-GGA (TPSS) code into atomic code
 3.9 Pseudopotential files are read in parallel by all processors.
     They should be read by one processor, broadcast to all others.
+    Also: when restarting, the copy of the PP in the restart file
+    should be read.
 
 4) Development
 
 4.0  Major highly desirable restructuring:
-  4.0.1 NEB structured as a plugin (metdynamics-style) or re-organized
-        (including the possibility to be run in a dynamical way, with a
+  4.0.1  Add the possibility to run NEB/PH in a dynamical way, with a
          home-made scheduler that executes tasks as soon as resources are
-         free; might be used for image parallelization, also for phonons).
+         free; might be used for image parallelization as well.
   4.0.2 Better-structured relaxation and molecular dynamics (including the
         variable-cell case), with more extenisive integration of PW and CP
   4.0.3 Image parallelization on k-points of EXX should be removed and
@@ -191,9 +192,9 @@ TODO LIST - Aiugust 2010
           and not the two vector separately ... compute it in one single
           call. In this way S|psi> is inexpensive
   4.3.2 Try the new "Density-Matrix-Based" diagonalization algorithm
-  4.3.3 grid-ization/parallelization of the phonon code: irreps and
-        q-vectors should be distributed across processors/grid computers
-        (might be done in the same way as for NEB?)
+  4.3.3 image parallelization of the phonon code: irreps and q-vectors
+        should be distributed across processors/grid computers.
+        Could be done in the same way as for NEB?
   4.3.4 PH: use charge mixing instead of potential mixing
   4.3.5 D3: verify status of parallelization, clean it up if needed
 
@@ -257,9 +258,9 @@ TODO LIST - Aiugust 2010
          reading) aren't
   4.4.15 __PARA and __MPI are redundant: one of them is sufficient
   4.4.16 add_efield must be rewritten from scratch: it is a mess beyond control
-  4.4.17 Replace generic &inputpp namelist with code-specific namelist
-         in PP (Tone). Maybe at least some postprocesing codes could be
-         used with command-line options instead of fortran input?
+  4.4.17 Replace generic &inputpp namelist with code-specific namelist in
+         postprocessing (Tone). Maybe at least some postprocessing codes 
+         could be used with command-line options instead of fortran input?
   4.4.18 What about transforming 'bands'/'nscf' into a postprocessing
          code?
 
@@ -315,7 +316,9 @@ TODO LIST - Aiugust 2010
      (hardcoded limit, more kpoints per directory, would replace
      and extend lkpoint_dir)
  5.6 There should be a lock mechanism that prevents people from
-     overwriting files of running processes
+     overwriting files of running processes. Should be done with
+     care, or else every time a code crashes will make the following
+     one crash as well! 
  5.8 Add rotation of restart files, similar to what is done in CPMD:
     "The number of distinct RESTART files generated during CPMD runs
      is read from the next line. The restart files are written in turn.

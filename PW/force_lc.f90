@@ -22,8 +22,8 @@ subroutine force_lc (nat, tau, ityp, alat, omega, ngm, ngl, &
   !
   !   first the dummy variables
   !
-  integer :: nat, ngm, nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, nspin, &
-       ngl, gstart, igtongl (ngm), nl (ngm), ityp (nat)
+  integer, intent(in) :: nat, ngm, nrxx, nspin, ngl, gstart, &
+                         igtongl (ngm), nl (ngm), ityp (nat)
   ! input: the number of atoms in the cell
   ! input: the number of G vectors
   ! input: FFT dimensions

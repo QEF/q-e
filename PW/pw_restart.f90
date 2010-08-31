@@ -81,7 +81,7 @@ MODULE pw_restart
       USE klist,                ONLY : nks, nkstot, xk, ngk, wk, qnorm, &
                                        lgauss, ngauss, degauss, nelec, &
                                        two_fermi_energies, nelup, neldw
-      USE gvect,                ONLY : nr1, nr2, nr3, nrx1, nrx2, ngm, ngm_g, &
+      USE gvect,                ONLY : nr1, nr2, nr3, ngm, ngm_g, &
                                        g, ig1, ig2, ig3, ecutwfc, dual
       USE basis,                ONLY : natomwfc
       USE gsmooth,              ONLY : nr1s, nr2s, nr3s, ngms_g

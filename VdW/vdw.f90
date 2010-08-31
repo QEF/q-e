@@ -18,8 +18,6 @@ PROGRAM vdw
   !    3) solve the modified Sternheimer equation to determine density response,
   !       hence polarizability
   !
-  !    DESCRIPTION of the INPUT : see file Docs/INPUT_VdW
-  !
   USE kinds,           ONLY : DP
   USE environment,     ONLY : environment_start
   USE mp_global,       ONLY : mp_startup
