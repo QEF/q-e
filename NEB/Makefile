@@ -31,12 +31,17 @@ EEOBJS=../EE/libee.a
 
 TLDEPS=bindir mods libs liblapack libblas pw eelib
 
-all : tldeps neb.x
+all : tldeps neb.x path_int.x
 
 neb.x : $(NEBOBJS) libneb.a $(LIBOBJS) $(PWOBJS) $(QEMODS)
 	$(LD) $(LDFLAGS) -o $@ \
 	$(NEBOBJS) libneb.a $(PWOBJS) $(EEOBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
 	- ( cd ../bin; ln -fs ../NEB/$@ . )
+
+path_int.x : path_int.o $(PWOBJS) $(QEMODS) $(LIBOBJS)
+	$(LD) $(LDFLAGS) -o $@ \
+	path_int.o $(PWOBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
+	- ( cd ../bin ; ln -fs ../NEB/$@ . )
 
 libneb.a : $(NEBLIBS)
 	$(AR) $(ARFLAGS) $@ $?
