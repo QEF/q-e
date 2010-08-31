@@ -10,7 +10,7 @@ PROGRAM X_Spectra
   USE kinds, ONLY : DP
   USE constants,       ONLY : rytoev,pi,fpi
   USE io_global,       ONLY : stdout,ionode,ionode_id   ! Modules/io_global.f90
-  USE io_files,        ONLY : prefix, tmp_dir, diropn
+  USE io_files,        ONLY : prefix, tmp_dir
   USE parser,          ONLY :  read_line
   USE cell_base,       ONLY : bg, at, celldm
   USE parameters,      ONLY : ntypx,lmaxx,lqmax
@@ -3330,7 +3330,7 @@ END SUBROUTINE write_status_of_the_code
 
 !<CG>
 SUBROUTINE verify_hpsi
-  USE io_files,         ONLY : nwordwfc, iunwfc
+  USE io_files,         ONLY : nwordwfc, iunwfc, diropn
   USE io_global,        ONLY : stdout     ! Modules/io_global.f90
   USE kinds,            ONLY : DP
   USE parameters,       ONLY : ntypx
