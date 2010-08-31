@@ -15,10 +15,10 @@ subroutine lr_apply_liouvillian( evc1, evc1_new, sevc1_new, interaction )
   !
   use ions_base,            only : ityp, nat, ntyp=>nsp
   use cell_base,            only : tpiba2
-  use gsmooth,              only : nr1s, nr2s, nr3s,&
-       nrx1s, nrx2s, nrx3s, nrxxs, nls, nlsm
-  use gvect,                only : nr1, nr2, nr3, nrx1, nrx2, nrx3,&
-       nrxx, nl, ngm, gstart, g, gg
+  use fft_base,             only : dffts
+  use fft_interfaces,       only : fwfft
+  use gsmooth,              only : nrxxs, nls, nlsm
+  use gvect,                only : nrxx, nl, ngm, gstart, g, gg
   use io_global,            only : stdout
   use kinds,                only : dp
   use klist,                only : nks, xk

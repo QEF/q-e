@@ -20,7 +20,9 @@ subroutine lr_read_wf()
   use wvfct,                only : npw, igk, nbnd, g2kin, npwx
   use control_flags,        only : gamma_only
   !use wavefunctions_module, only : evc
-  use gsmooth,              only : nr1s, nr2s, nr3s,nrx1s, nrx2s, nrx3s, nls, nlsm
+  use gsmooth,              only : nls, nlsm
+  use fft_base,             only : dffts
+  use fft_interfaces,       only : invfft
   use uspp,                 only : vkb, nkb, okvan
   use becmod,               only : bec_type, becp, calbec
   !use lr_variables,         only : real_space

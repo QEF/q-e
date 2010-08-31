@@ -119,8 +119,11 @@ contains
     use becmod,               only : allocate_bec_type, bec_type, becp
     !
     if (nkb > 0) then
-       !allocate(rbecp(nkb,nbnd))
+#ifdef __STD_F95
+       if (.not. associated(becp%r)) call allocate_bec_type(nkb,nbnd,becp)
+#else
        if (.not. allocated(becp%r)) call allocate_bec_type(nkb,nbnd,becp)
+#endif
        becp%r(:,:)=0.0d0
        allocate(becp1(nkb,nbnd))
        becp1(:,:)=0.0d0
@@ -137,7 +140,11 @@ contains
     use becmod,               only : allocate_bec_type, bec_type, becp
     !
     if (nkb > 0) then
+#ifdef __STD_F95
+       if(.not. associated(becp%k)) call allocate_bec_type(nkb,nbnd,becp) 
+#else
        if(.not. allocated(becp%k)) call allocate_bec_type(nkb,nbnd,becp) 
+#endif
        becp%k(:,:)=(0.0d0,0.0d0)
        allocate(becp1_c(nkb,nbnd,nks))
        becp1_c(:,:,:)=(0.0d0,0.0d0)  

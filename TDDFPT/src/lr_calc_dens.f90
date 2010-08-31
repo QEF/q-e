@@ -16,9 +16,10 @@ subroutine lr_calc_dens( evc1, response_calc )
   use ions_base,                    only : ityp,nat,ntyp=>nsp
   use cell_base,                    only : omega
   use ener,                     only : ef
-  use gsmooth,                  only : nr1s,nr2s,nr3s,nrx1s,nrx2s,&
-       nrx3s,nrxxs,nls,nlsm,doublegrid
+  use gsmooth,                  only : nrxxs,nls,nlsm,doublegrid
   use gvect,                    only : nrxx,gstart,nr1,nr2,nr3
+  use fft_base,                 only : dffts
+  use fft_interfaces,           only : invfft
   use io_global,                only : stdout
   use kinds,                    only : dp
   use klist,                    only : nks,xk,wk
