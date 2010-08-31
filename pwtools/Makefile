@@ -4,16 +4,15 @@ include ../make.sys
 
 # location of needed modules
 MODFLAGS= $(MOD_FLAG)../iotk/src $(MOD_FLAG)../Modules \
-	  $(MOD_FLAG)../NEB $(MOD_FLAG)../PW $(MOD_FLAG). 
+	  $(MOD_FLAG)../PW $(MOD_FLAG). 
 
 PWOBJS = ../PW/libpw.a
-NEBOBJS = ../NEB/libneb.a
 QEMODS = ../Modules/libqemod.a
 
-TLDEPS= bindir mods libs pw neb
+TLDEPS= bindir mods libs pw
 
 all : tldeps band_plot.x dist.x ev.x kpoints.x \
-      path_int.x pwi2xsf.x bands_FS.x kvecs_FS.x
+      pwi2xsf.x bands_FS.x kvecs_FS.x
 
 band_plot.x : band_plot.o $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ band_plot.o $(QEMODS) $(LIBOBJS) $(LIBS)
@@ -32,11 +31,6 @@ ev.x : ev.o $(PWOBJS) $(QEMODS) $(LIBOBJS)
 kpoints.x : kpoints.o $(PWOBJS) $(QEMODS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ \
 		kpoints.o $(PWOBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
-	- ( cd ../bin ; ln -fs ../pwtools/$@ . )
-
-path_int.x : path_int.o $(PWOBJS) $(QEMODS) $(NEBOBJS) $(LIBOBJS)
-	$(LD) $(LDFLAGS) -o $@ \
-		path_int.o $(PWOBJS) $(QEMODS) $(NEBOBJS) $(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../pwtools/$@ . )
 
 pwi2xsf.x : pwi2xsf.o $(PWOBJS) $(QEMODS) $(LIBOBJS)
