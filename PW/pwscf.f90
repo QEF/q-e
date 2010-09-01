@@ -57,66 +57,47 @@ PROGRAM pwscf
   CALL ms2_initialization()
 #endif
   !
-!  IF ( lpath ) THEN
+  CALL setup ()
+  !
+#if defined(__MS2)
+  CALL set_positions()
+#endif
+  !
+  CALL init_run()
+  !
+  main_loop: DO
      !
-!     CALL io_image_start()
      !
-!     CALL initialize_path()
+     ! ... electronic self-consistentcy
      !
-!     CALL path_summary()
+     CALL electrons()
      !
-!     CALL search_mep()
+     IF ( .NOT. conv_elec ) CALL stop_run( conv_elec )
      !
-!     CALL stop_run( conv_path )
+     ! ... if requested ions are moved
      !
-!  ELSE
+     CALL ions()
      !
-#if defined (EXX)
-     CALL exx_loop()
-#else
+#if defined(__MS2)
+     CALL return_forces()
+#endif
      !
-     CALL setup ()
+     ! ... exit condition (ionic convergence) is checked here
+     !
+     IF ( conv_ions ) EXIT main_loop
+     !
+     ! ... the ionic part of the hamiltonian is reinitialized
      !
 #if defined(__MS2)
      CALL set_positions()
 #endif
+     CALL hinit1()
      !
-     CALL init_run()
-     !
-     main_loop: DO
-        !
-        !
-        ! ... electronic self-consistentcy
-        !
-        CALL electrons()
-        !
-        IF ( .NOT. conv_elec ) CALL stop_run( conv_elec )
-        !
-        ! ... if requested ions are moved
-        !
-        CALL ions()
-        !
-#if defined(__MS2)
-        CALL return_forces()
-#endif
-        !
-        ! ... exit condition (ionic convergence) is checked here
-        !
-        IF ( conv_ions ) EXIT main_loop
-        !
-        ! ... the ionic part of the hamiltonian is reinitialized
-        !
-#if defined(__MS2)
-        CALL set_positions()
-#endif
-        CALL hinit1()
-        !
-     END DO main_loop
-#endif
-     !
-     CALL stop_run( conv_ions )
-     !
-!  END IF      
+  END DO main_loop
+  !
+  CALL stop_run( conv_ions )
+  !
+  !  END IF      
   !
   STOP
   !
