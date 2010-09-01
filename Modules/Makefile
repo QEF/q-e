@@ -66,6 +66,9 @@ read_ncpp.o \
 read_upf_v1.o \
 read_upf_v2.o \
 read_uspp.o \
+read_xml.o \
+read_xml_cards.o \
+read_xml_fields.o \
 recvec.o \
 set_signal.o \
 sic.o \

@@ -52,6 +52,9 @@ MODULE io_files
   INTEGER :: crashunit   = 15
   INTEGER :: pseudounit  = 10
   INTEGER :: opt_unit    = 20 ! optional unit 
+  INTEGER :: xmlinputunit  = 50
+  INTEGER :: xmloutputunit = 51
+  INTEGER :: xmltmpunit    = 52
   !
   ! ... units in pwscf
   !

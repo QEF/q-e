@@ -26,6 +26,16 @@ MODULE read_namelists_module
   !
   PUBLIC :: read_namelists, sm_not_set
   !
+  ! ... modules needed by read_xml.f90
+  !
+  PUBLIC :: control_defaults, system_defaults, ee_defaults, &
+       electrons_defaults, wannier_ac_defaults, ions_defaults, &
+       cell_defaults, press_ai_defaults, wannier_defaults, control_bcast, &
+       system_bcast, ee_bcast, electrons_bcast, ions_bcast, cell_bcast, &
+       press_ai_bcast, wannier_bcast, wannier_ac_bcast, control_checkin, &
+       system_checkin, electrons_checkin, ions_checkin, cell_checkin, &
+       wannier_checkin, wannier_ac_checkin, fixval
+  !
   !  ... end of module-scope declarations
   !
   !  ----------------------------------------------

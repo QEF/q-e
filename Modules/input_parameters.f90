@@ -1422,6 +1422,8 @@ MODULE input_parameters
 !  END manual
 ! ----------------------------------------------------------------------
 
+      LOGICAL :: xmloutput = .false.
+      ! if .true. PW produce an xml output
 CONTAINS
 
   SUBROUTINE allocate_input_ions( ntyp, nat )
