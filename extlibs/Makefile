@@ -61,7 +61,7 @@ mglib:
 #Multigrid
 libiotk:
 	if test ! -d ../S3DE; then \
-	(gzip -dc archive/iotk-1.1.beta.tar.gz | (cd ../; tar -xvf -)) ; \
+	(gzip -dc archive/iotk-1.2.beta.tar.gz | (cd ../; tar -xvf -)) ; \
 	if test -e install/Makefile_iotk; then \
         (cp install/Makefile_iotk ../S3DE/iotk/src/Makefile); fi; \
 	if test -e install/iotk_config.h; then \
