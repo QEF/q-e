@@ -1331,15 +1331,6 @@ MODULE read_namelists_module
              CALL infomsg( sub_name ,' noinv not implemented in CP ')
        END IF
        !
-       ! ... non collinear check
-       !
-       IF ( noncolin ) THEN
-          !
-          IF ( diagonalization == 'cg' ) &
-             CALL errore( sub_name ,' cg not allowed with noncolin ', 1 )
-          !
-       END IF
-       !
        ! ... control on SIC variables
        !
        IF ( sic /= 'none' ) THEN
