@@ -29,7 +29,9 @@ SUBROUTINE iosys()
                             uakbar, amconv, bohr_radius_angs, eps8
   USE mp_global,     ONLY : npool, nproc_pool
   !
-  USE io_global,     ONLY : stdout, ionode
+  USE io_global,     ONLY : stdout, ionode, ionode_id
+  !
+  USE mp,            ONLY : mp_bcast
   !
   USE bp,            ONLY : nppstr_    => nppstr, &
                             gdir_      => gdir, &
@@ -75,7 +77,8 @@ SUBROUTINE iosys()
   USE io_files,      ONLY : input_drho, output_drho, trimcheck, &
                             psfile, tmp_dir, wfc_dir, &
                             prefix_     => prefix, &
-                            pseudo_dir_ => pseudo_dir
+                            pseudo_dir_ => pseudo_dir, &
+                            xmlinputunit
   !
   USE force_mod,     ONLY : lforce, lstres, force
   !
@@ -290,21 +293,64 @@ SUBROUTINE iosys()
   USE london_module,         ONLY : init_london, lon_rcut, scal6
   USE us, ONLY : spline_ps_ => spline_ps
   !
+  USE read_xml_module,       ONLY : read_xml
+  USE iotk_module,           ONLY : iotk_open_read, iotk_close_read,iotk_attlenx
+  !
   IMPLICIT NONE
   !
   INTEGER  :: ia, image, nt
   REAL(DP) :: theta, phi
+  INTEGER  :: iiarg, nargs, iargc, ierr
+  CHARACTER (len=iotk_attlenx) :: attr
+  CHARACTER (len=50) :: arg
+  LOGICAL :: xmlinput
+  !
+  !
+#if defined(__ABSOFT)
+#   define getarg getarg_
+#   define iargc  iargc_
+#endif
   !
   !
   IF ( ionode ) THEN
-    CALL input_from_file()
-    WRITE(stdout, '(5x,a)') "Waiting for input..."
+     !
+     ! ... check if use xml input or not
+     !
+     xmlinput = .false.
+     nargs = iargc()
+     !
+     DO iiarg = 1, ( nargs - 1 )
+        !
+        CALL getarg( iiarg, arg )
+        !
+        IF ( trim( arg ) == '-xmlinput') THEN
+           CALL getarg( ( iiarg + 1 ) , arg )
+           xmlinput = .true.
+           WRITE(stdout, '(5x,a)') "Waiting for xml input..."
+           CALL iotk_open_read( xmlinputunit, arg, attr = attr, qe_syntax = .true., ierr = ierr)
+           IF (ierr /= 0) CALL errore('iosys','error opening xml file', 1)
+           EXIT
+        ENDIF
+        !
+     ENDDO
+     !
+     IF (.not.xmlinput) THEN
+        CALL input_from_file()
+        WRITE(stdout, '(5x,a)') "Waiting for input..."
+     ENDIF
+     !
   ENDIF
+  !
+  CALL mp_bcast( xmlinput , ionode_id )
+  CALL mp_bcast( attr , ionode_id )
   !
   ! ... all namelists are read
   !
-  CALL read_namelists( 'PW' )
-
+  IF ( xmlinput ) THEN
+     CALL read_xml ('PW', 1 , attr = attr )
+  ELSE
+     CALL read_namelists( 'PW' )
+  ENDIF
   !
   ! ... various initializations of control variables
   !
@@ -1269,7 +1315,7 @@ SUBROUTINE iosys()
   !
   IF ( tefield ) ALLOCATE( forcefield( 3, nat_ ) )
   !
-  CALL read_cards_pw ( psfile, tau_format )
+  CALL read_cards_pw ( psfile, tau_format, xmlinput )
   !
   ! ... set up atomic positions and crystal lattice
   !
@@ -1427,7 +1473,7 @@ SUBROUTINE iosys()
 END SUBROUTINE iosys
 !
 !----------------------------------------------------------------------------
-SUBROUTINE read_cards_pw ( psfile, tau_format )
+SUBROUTINE read_cards_pw ( psfile, tau_format, xmlinput )
   !----------------------------------------------------------------------------
   !
   USE kinds,              ONLY : DP
@@ -1455,6 +1501,7 @@ SUBROUTINE read_cards_pw ( psfile, tau_format )
   USE ions_base,          ONLY : amass
   USE control_flags,      ONLY : lfixatom, gamma_only, textfor
   USE read_cards_module,  ONLY : read_cards
+  USE read_xml_module,    ONLY : read_xml
   !
   IMPLICIT NONE
   !
@@ -1462,6 +1509,7 @@ SUBROUTINE read_cards_pw ( psfile, tau_format )
   CHARACTER (len=80)  :: tau_format
   INTEGER, EXTERNAL :: atomic_number
   REAL(DP), EXTERNAL :: atom_weight
+  LOGICAL, INTENT(in) :: xmlinput
   !
   LOGICAL :: tcell = .false.
   INTEGER :: is, ia
@@ -1469,7 +1517,11 @@ SUBROUTINE read_cards_pw ( psfile, tau_format )
   !
   amass = 0
   !
-  CALL read_cards ( 'PW' )
+  IF ( xmlinput ) THEN
+        CALL read_xml ( 'PW', 2 )
+  ELSE
+     CALL read_cards ( 'PW' )
+  ENDIF
   !
   IF ( .not. taspc ) &
      CALL errore( 'read_cards_pw', 'atomic species info missing', 1 )

@@ -199,14 +199,6 @@ cegterg.o : ../Modules/kind.o
 cegterg.o : ../Modules/mp.o
 cegterg.o : ../Modules/mp_global.o
 cegterg.o : ../Modules/ptoolkit.o
-cft3.o : ../Modules/fft_base.o
-cft3.o : ../Modules/fft_parallel.o
-cft3.o : ../Modules/fft_scalar.o
-cft3.o : ../Modules/kind.o
-cft3s.o : ../Modules/fft_base.o
-cft3s.o : ../Modules/fft_parallel.o
-cft3s.o : ../Modules/fft_scalar.o
-cft3s.o : ../Modules/kind.o
 clean_pw.o : ../Modules/atom.o
 clean_pw.o : ../Modules/control_flags.o
 clean_pw.o : ../Modules/fft_base.o
@@ -738,9 +730,11 @@ input.o : ../Modules/mp_global.o
 input.o : ../Modules/printout_base.o
 input.o : ../Modules/read_cards.o
 input.o : ../Modules/read_namelists.o
+input.o : ../Modules/read_xml.o
 input.o : ../Modules/wannier_new.o
 input.o : ../Modules/wrappers.o
 input.o : ../Modules/xml_io_base.o
+input.o : ../iotk/src/iotk_module.o
 input.o : a2fmod.o
 input.o : dynamics_module.o
 input.o : exx.o
