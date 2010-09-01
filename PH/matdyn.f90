@@ -503,11 +503,11 @@ PROGRAM matdyn
                            ntetra, tetra, asr, q, freq)
      END IF
      DEALLOCATE ( freq)
+     DEALLOCATE(num_rap_mode)
+     DEALLOCATE(high_sym)
      !
   END IF
   !
-  DEALLOCATE(num_rap_mode)
-  DEALLOCATE(high_sym)
 
   CALL mp_barrier()
   !
