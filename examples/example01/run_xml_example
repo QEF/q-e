@@ -1,0 +1,1294 @@
+#!/bin/sh
+
+# run from directory where this script is
+cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
+EXAMPLE_DIR=`pwd`
+
+# check whether echo has the -e option
+if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
+
+# function to test the exit status of a job
+. ../check_failure.sh
+
+$ECHO
+$ECHO "$EXAMPLE_DIR : starting"
+$ECHO
+$ECHO "This example shows how to use pw.x to calculate the total energy and"
+$ECHO "the band structure of four simple systems: Si, Al, Cu, Ni."
+
+# set the needed environment variables
+. ../environment_variables
+
+# required executables and pseudopotentials
+BIN_LIST="pw.x bands.x"
+PSEUDO_LIST="Si.pz-vbc.UPF Al.pz-vbc.UPF Cu.pz-d-rrkjus.UPF Ni.pz-nd-rrkjus.UPF"
+
+$ECHO
+$ECHO "  executables directory: $BIN_DIR"
+$ECHO "  pseudo directory:      $PSEUDO_DIR"
+$ECHO "  temporary directory:   $TMP_DIR"
+$ECHO "  checking that needed directories and files exist...\c"
+
+# check for directories
+for DIR in "$BIN_DIR" "$PSEUDO_DIR" ; do
+    if test ! -d $DIR ; then
+        $ECHO
+        $ECHO "ERROR: $DIR not existent or not a directory"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+for DIR in "$TMP_DIR" "$EXAMPLE_DIR/results" ; do
+    if test ! -d $DIR ; then
+        mkdir $DIR
+    fi
+done
+cd $EXAMPLE_DIR/results
+
+# check for executables
+for FILE in $BIN_LIST ; do
+    if test ! -x $BIN_DIR/$FILE ; then
+        $ECHO
+        $ECHO "ERROR: $BIN_DIR/$FILE not existent or not executable"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+
+# check for pseudopotentials
+for FILE in $PSEUDO_LIST ; do
+    if test ! -r $PSEUDO_DIR/$FILE ; then
+        $ECHO
+        $ECHO "ERROR: $PSEUDO_DIR/$FILE not existent or not readable"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+$ECHO " done"
+
+# how to run executables
+PW_COMMAND="$PARA_PREFIX $BIN_DIR/pw.x $PARA_POSTFIX"
+BANDS_COMMAND="$PARA_PREFIX $BIN_DIR/bands.x $PARA_POSTFIX"
+$ECHO
+$ECHO "  running pw.x as: $PW_COMMAND"
+$ECHO "  running bands.x as: $BANDS_COMMAND"
+$ECHO
+
+for diago in david cg ; do
+
+    # clean TMP_DIR
+    $ECHO "  cleaning $TMP_DIR...\c"
+    rm -rf $TMP_DIR/*
+    $ECHO " done"
+
+    # self-consistent calculation
+    cat > si.scf.$diago.xml << EOF
+ <?xml version="1.0" encoding="UTF-8"?>
+
+
+<INPUT calculation="scf" prefix="silicon">
+
+	<CELL type="qecell">
+		<QECELL ibrav="2" alat="10.20">
+			<REAL rank="1" n1="5">
+				0.0 0.0 0.0 0.0 0.0
+			</REAL>
+		</QECELL>
+	</CELL>
+
+	<ATOMIC_SPECIES ntyp="1">
+		<SPECIE name="Si" mass="28.086">
+			<STRING>Si.pz-vbc.UPF</STRING>
+		</SPECIE>
+	</ATOMIC_SPECIES>
+
+	<ATOMIC_LIST units="alat" nat="2" >
+		<ATOM name="Si">
+			<POSITION>
+				<REAL rank="1" n1="3">
+					0.00 0.00 0.00
+				</REAL>
+			</POSITION>
+		</ATOM>	
+		<ATOM name="Si">
+			<POSITION>
+				<REAL rank="1" n1="3">
+					0.25 0.25 0.25
+				</REAL>
+			</POSITION>
+		</ATOM>						
+	</ATOMIC_LIST>		
+
+	<FIELD name="InputOutput">
+
+		<PARAMETER name="restart_mode">
+			<STRING>
+				from_scratch
+			</STRING>
+		</PARAMETER>
+
+		<PARAMETER name="pseudo_dir">
+			<STRING>
+				$PSEUDO_DIR/
+			</STRING>
+		</PARAMETER>
+		
+		<PARAMETER name="outdir">
+			<STRING>
+				$TMP_DIR/
+			</STRING>
+		</PARAMETER>
+		
+		<PARAMETER name="tstress">
+			<LOGICAL>
+				true
+			</LOGICAL>
+		</PARAMETER>	
+		
+		<PARAMETER name="tprnfor">
+			<LOGICAL>
+				true
+			</LOGICAL>
+		</PARAMETER>
+					
+	</FIELD>
+	
+	<FIELD name="Numerics">
+
+		<PARAMETER name="ecutwfc">
+			<REAL>
+				18.0
+			</REAL>
+		</PARAMETER>
+		
+		<PARAMETER name="diagonalization">
+			<STRING>
+				$diago
+			</STRING>
+		</PARAMETER>
+		
+		<PARAMETER name="mixing_mode">
+			<STRING>
+				plain
+			</STRING>
+		</PARAMETER>
+		
+		<PARAMETER name="mixing_beta">
+			<REAL>
+				0.7
+			</REAL>
+		</PARAMETER>
+		
+		<PARAMETER name="conv_thr">
+			<REAL>
+				1.0d-8
+			</REAL>
+		</PARAMETER>
+	
+	</FIELD>
+
+	<K_POINTS type="tpiba">
+		<MESH npoints="10">
+			<REAL rank="2" n1="4" n2="10">
+				 0.1250000  0.1250000  0.1250000   1.00
+   				 0.1250000  0.1250000  0.3750000   3.00
+   				 0.1250000  0.1250000  0.6250000   3.00
+			         0.1250000  0.1250000  0.8750000   3.00
+			         0.1250000  0.3750000  0.3750000   3.00
+			         0.1250000  0.3750000  0.6250000   6.00
+			         0.1250000  0.3750000  0.8750000   6.00
+			         0.1250000  0.6250000  0.6250000   3.00
+			         0.3750000  0.3750000  0.3750000   1.00
+			         0.3750000  0.3750000  0.6250000   3.00
+			</REAL>
+		</MESH>
+	</K_POINTS>	
+
+</INPUT>
+EOF
+    $ECHO "  running the scf calculation for Si...\c"
+    $PW_COMMAND -xmlinput si.scf.$diago.xml > si.scf.$diago.out
+    check_failure $?
+    $ECHO " done"
+
+    # band structure calculation along delta, sigma and lambda lines
+    cat > si.band.$diago.xml << EOF
+ <?xml version="1.0" encoding="UTF-8"?>
+
+
+<INPUT calculation="bands" prefix="silicon">
+
+	<CELL type="qecell">
+		<QECELL ibrav="2" alat="10.20">
+			<REAL rank="1" n1="5">
+				0.0 0.0 0.0 0.0 0.0
+			</REAL>
+		</QECELL>
+	</CELL>
+
+	<ATOMIC_SPECIES ntyp="1">
+		<SPECIE name="Si" mass="28.086">
+			<STRING>Si.pz-vbc.UPF</STRING>
+		</SPECIE>
+	</ATOMIC_SPECIES>
+
+	<ATOMIC_LIST units="alat" nat="2" >
+		<ATOM name="Si">
+			<POSITION>
+				<REAL rank="1" n1="3">
+					0.00 0.00 0.00
+				</REAL>
+			</POSITION>
+		</ATOM>
+		<ATOM name="Si">
+			<POSITION>
+				<REAL rank="1" n1="3">
+					0.25 0.25 0.25
+				</REAL>
+			</POSITION>
+		</ATOM>				
+	</ATOMIC_LIST>		
+	
+	
+	<FIELD name="InputOutput">
+
+		<PARAMETER name="pseudo_dir">
+			<STRING>
+				$PSEUDO_DIR/
+			</STRING>
+		</PARAMETER>
+		
+		<PARAMETER name="outdir">
+			<STRING>
+				$TMP_DIR/
+			</STRING>
+		</PARAMETER>
+		
+	</FIELD>
+	
+	<FIELD name="Numerics">
+
+		<PARAMETER name="ecutwfc">
+			<REAL>
+				18.0
+			</REAL>
+		</PARAMETER>
+		
+		
+		<PARAMETER name="diagonalization">
+			<STRING>
+				$diago
+			</STRING>
+		</PARAMETER>
+		
+	</FIELD>
+	
+	<FIELD name="Options">
+
+		<PARAMETER name="nbnd">
+			<INTEGER>
+				8
+			</INTEGER>
+		</PARAMETER>
+	
+	</FIELD>
+	
+	<K_POINTS type="tpiba">
+		<MESH npoints="28">
+			<REAL rank="2" n1="4" n2="28">
+				   0.0 0.0 0.0 1.0
+				   0.0 0.0 0.1 1.0
+				   0.0 0.0 0.2 1.0
+				   0.0 0.0 0.3 1.0
+				   0.0 0.0 0.4 1.0
+				   0.0 0.0 0.5 1.0
+				   0.0 0.0 0.6 1.0
+				   0.0 0.0 0.7 1.0
+				   0.0 0.0 0.8 1.0
+				   0.0 0.0 0.9 1.0
+				   0.0 0.0 1.0 1.0
+				   0.0 0.0 0.0 1.0
+				   0.0 0.1 0.1 1.0
+				   0.0 0.2 0.2 1.0
+				   0.0 0.3 0.3 1.0
+				   0.0 0.4 0.4 1.0
+				   0.0 0.5 0.5 1.0
+				   0.0 0.6 0.6 1.0
+				   0.0 0.7 0.7 1.0
+				   0.0 0.8 0.8 1.0
+				   0.0 0.9 0.9 1.0
+				   0.0 1.0 1.0 1.0
+				   0.0 0.0 0.0 1.0
+				   0.1 0.1 0.1 1.0
+				   0.2 0.2 0.2 1.0
+				   0.3 0.3 0.3 1.0
+				   0.4 0.4 0.4 1.0
+				   0.5 0.5 0.5 1.0
+			</REAL>
+		</MESH>
+	</K_POINTS>
+</INPUT>
+EOF
+    $ECHO "  running the band-structure calculation for Si...\c"
+    $PW_COMMAND -xmlinput si.band.$diago.xml > si.band.$diago.out
+    check_failure $?
+    $ECHO " done"
+
+cat > si.bands.in << EOF
+ &inputpp
+    prefix='silicon',
+    outdir='$TMP_DIR'
+    filband='si.band'
+    lsym=.true.,
+ /
+EOF
+    if test "`echo $diago`" = "david";
+    then
+       $ECHO "  running the symmetry analysis for Si bands...\c"
+       $BANDS_COMMAND < si.bands.in > si.bands.out
+       $ECHO " done"
+    fi
+
+    # clean TMP_DIR
+    $ECHO "  cleaning $TMP_DIR...\c"
+    rm -rf $TMP_DIR/*
+    $ECHO " done"
+
+    # self-consistent calculation
+    cat > al.scf.$diago.xml << EOF
+ <?xml version="1.0" encoding="UTF-8"?>
+
+
+<INPUT calculation="scf" prefix="al">
+
+	<CELL type="qecell">
+		<QECELL ibrav="2" alat="7.50">
+			<REAL rank="1" n1="5">
+				0.0 0.0 0.0 0.0 0.0
+			</REAL>
+		</QECELL>
+	</CELL>
+
+	<ATOMIC_SPECIES ntyp="1">
+		<SPECIE name="Al" mass="26.98">
+			<STRING>Al.pz-vbc.UPF</STRING>
+		</SPECIE>
+	</ATOMIC_SPECIES>
+
+	<ATOMIC_LIST units="alat" nat="1" >
+		<ATOM name="Al">
+			<POSITION>
+				<REAL rank="1" n1="3">
+					0.00 0.00 0.00
+				</REAL>
+			</POSITION>
+		</ATOM>		
+	</ATOMIC_LIST>	
+	
+	<FIELD name="InputOutput">
+
+		<PARAMETER name="restart_mode">
+			<STRING>
+				from_scratch
+			</STRING>
+		</PARAMETER>
+
+		<PARAMETER name="pseudo_dir">
+			<STRING>
+				$PSEUDO_DIR/
+			</STRING>
+		</PARAMETER>
+		
+		<PARAMETER name="outdir">
+			<STRING>
+				$TMP_DIR/
+			</STRING>
+		</PARAMETER>
+		
+		<PARAMETER name="tstress">
+			<LOGICAL>
+				true
+			</LOGICAL>
+		</PARAMETER>	
+		
+		<PARAMETER name="tprnfor">
+			<LOGICAL>
+				true
+			</LOGICAL>
+		</PARAMETER>
+					
+	</FIELD>
+	
+	<FIELD name="Numerics">
+
+		<PARAMETER name="ecutwfc">
+			<REAL>
+				15.0
+			</REAL>
+		</PARAMETER>
+		
+		<PARAMETER name="diagonalization">
+			<STRING>
+				$diago
+			</STRING>
+		</PARAMETER>
+		
+		<PARAMETER name="mixing_beta">
+			<REAL>
+				0.7
+			</REAL>
+		</PARAMETER>
+	
+	</FIELD>
+	
+	<FIELD name="Options">
+
+		<PARAMETER name="occupations">
+			<STRING>
+				smearing
+			</STRING>
+		</PARAMETER>
+		
+		<PARAMETER name="smearing">
+			<STRING>
+				marzari-vanderbilt
+			</STRING>
+		</PARAMETER>
+		
+		<PARAMETER name="degauss">
+			<REAL>
+				0.05
+			</REAL>
+		</PARAMETER>		
+	
+	</FIELD>		
+
+	
+	<K_POINTS type="tpiba">
+		<MESH npoints="60">
+			<REAL rank="2" n1="4" n2="60">
+				   0.0625000  0.0625000  0.0625000   1.00
+				   0.0625000  0.0625000  0.1875000   3.00
+				   0.0625000  0.0625000  0.3125000   3.00
+				   0.0625000  0.0625000  0.4375000   3.00
+				   0.0625000  0.0625000  0.5625000   3.00
+				   0.0625000  0.0625000  0.6875000   3.00
+				   0.0625000  0.0625000  0.8125000   3.00
+				   0.0625000  0.0625000  0.9375000   3.00
+				   0.0625000  0.1875000  0.1875000   3.00
+				   0.0625000  0.1875000  0.3125000   6.00
+				   0.0625000  0.1875000  0.4375000   6.00
+				   0.0625000  0.1875000  0.5625000   6.00
+				   0.0625000  0.1875000  0.6875000   6.00
+				   0.0625000  0.1875000  0.8125000   6.00
+				   0.0625000  0.1875000  0.9375000   6.00
+				   0.0625000  0.3125000  0.3125000   3.00
+				   0.0625000  0.3125000  0.4375000   6.00
+				   0.0625000  0.3125000  0.5625000   6.00
+				   0.0625000  0.3125000  0.6875000   6.00
+				   0.0625000  0.3125000  0.8125000   6.00
+				   0.0625000  0.3125000  0.9375000   6.00
+				   0.0625000  0.4375000  0.4375000   3.00
+				   0.0625000  0.4375000  0.5625000   6.00
+				   0.0625000  0.4375000  0.6875000   6.00
+				   0.0625000  0.4375000  0.8125000   6.00
+				   0.0625000  0.4375000  0.9375000   6.00
+				   0.0625000  0.5625000  0.5625000   3.00
+				   0.0625000  0.5625000  0.6875000   6.00
+				   0.0625000  0.5625000  0.8125000   6.00
+				   0.0625000  0.6875000  0.6875000   3.00
+				   0.0625000  0.6875000  0.8125000   6.00
+				   0.0625000  0.8125000  0.8125000   3.00
+				   0.1875000  0.1875000  0.1875000   1.00
+				   0.1875000  0.1875000  0.3125000   3.00
+				   0.1875000  0.1875000  0.4375000   3.00
+				   0.1875000  0.1875000  0.5625000   3.00
+				   0.1875000  0.1875000  0.6875000   3.00
+				   0.1875000  0.1875000  0.8125000   3.00
+				   0.1875000  0.3125000  0.3125000   3.00
+				   0.1875000  0.3125000  0.4375000   6.00
+				   0.1875000  0.3125000  0.5625000   6.00
+				   0.1875000  0.3125000  0.6875000   6.00
+				   0.1875000  0.3125000  0.8125000   6.00
+				   0.1875000  0.4375000  0.4375000   3.00
+				   0.1875000  0.4375000  0.5625000   6.00
+				   0.1875000  0.4375000  0.6875000   6.00
+				   0.1875000  0.4375000  0.8125000   6.00
+				   0.1875000  0.5625000  0.5625000   3.00
+				   0.1875000  0.5625000  0.6875000   6.00
+				   0.1875000  0.6875000  0.6875000   3.00
+				   0.3125000  0.3125000  0.3125000   1.00
+				   0.3125000  0.3125000  0.4375000   3.00
+				   0.3125000  0.3125000  0.5625000   3.00
+				   0.3125000  0.3125000  0.6875000   3.00
+				   0.3125000  0.4375000  0.4375000   3.00
+				   0.3125000  0.4375000  0.5625000   6.00
+				   0.3125000  0.4375000  0.6875000   6.00
+				   0.3125000  0.5625000  0.5625000   3.00
+				   0.4375000  0.4375000  0.4375000   1.00
+				   0.4375000  0.4375000  0.5625000   3.00
+			</REAL>
+		</MESH>
+	</K_POINTS>
+</INPUT>
+EOF
+    $ECHO "  running the scf calculation for Al...\c"
+    $PW_COMMAND -xmlinput al.scf.$diago.xml > al.scf.$diago.out
+    check_failure $?
+    $ECHO " done"
+
+    # band structure calculation along delta, sigma and lambda lines
+    cat > al.band.$diago.xml << EOF
+ <?xml version="1.0" encoding="UTF-8"?>
+
+
+<INPUT calculation="bands" prefix="al">
+
+	<CELL type="qecell">
+		<QECELL ibrav="2" alat="7.50">
+			<REAL rank="1" n1="5">
+				0.0 0.0 0.0 0.0 0.0
+			</REAL>
+		</QECELL>
+	</CELL>
+
+	<ATOMIC_SPECIES ntyp="1">
+		<SPECIE name="Al" mass="26.98">
+			<STRING>Al.pz-vbc.UPF</STRING>
+		</SPECIE>
+	</ATOMIC_SPECIES>
+
+	<ATOMIC_LIST units="alat" nat="1" >
+		<ATOM name="Al">
+			<POSITION>
+				<REAL rank="1" n1="3">
+					0.00 0.00 0.00
+				</REAL>
+			</POSITION>
+		</ATOM>		
+	</ATOMIC_LIST>			
+	
+	
+	<FIELD name="InputOutput">
+
+		<PARAMETER name="pseudo_dir">
+			<STRING>
+				$PSEUDO_DIR/
+			</STRING>
+		</PARAMETER>
+		
+		<PARAMETER name="outdir">
+			<STRING>
+				$TMP_DIR/
+			</STRING>
+		</PARAMETER>
+	
+	</FIELD>
+	
+	<FIELD name="Numerics">
+
+		<PARAMETER name="ecutwfc">
+			<REAL>
+				15.0
+			</REAL>
+		</PARAMETER>
+		
+		<PARAMETER name="diagonalization">
+			<STRING>
+				$diago
+			</STRING>
+		</PARAMETER>
+	
+	</FIELD>
+	
+	<FIELD name="Options">
+
+		<PARAMETER name="nbnd">
+			<INTEGER>
+				8
+			</INTEGER>
+		</PARAMETER>
+	
+	</FIELD>
+	
+
+	
+	<K_POINTS type="tpiba">
+		<MESH npoints="28">
+			<REAL rank="2" n1="4" n2="28">
+				 0.0 0.0 0.0 1.0
+			     0.0 0.0 0.1 1.0
+			     0.0 0.0 0.2 1.0
+			     0.0 0.0 0.3 1.0
+			     0.0 0.0 0.4 1.0
+			     0.0 0.0 0.5 1.0
+			     0.0 0.0 0.6 1.0
+			     0.0 0.0 0.7 1.0
+			     0.0 0.0 0.8 1.0
+			     0.0 0.0 0.9 1.0
+			     0.0 0.0 1.0 1.0
+			     0.0 0.0 0.0 1.0
+			     0.0 0.1 0.1 1.0
+			     0.0 0.2 0.2 1.0
+			     0.0 0.3 0.3 1.0
+			     0.0 0.4 0.4 1.0
+			     0.0 0.5 0.5 1.0
+			     0.0 0.6 0.6 1.0
+			     0.0 0.7 0.7 1.0
+			     0.0 0.8 0.8 1.0
+			     0.0 0.9 0.9 1.0
+			     0.0 1.0 1.0 1.0
+			     0.0 0.0 0.0 1.0
+			     0.1 0.1 0.1 1.0
+			     0.2 0.2 0.2 1.0
+			     0.3 0.3 0.3 1.0
+			     0.4 0.4 0.4 1.0
+			     0.5 0.5 0.5 1.0
+			</REAL>
+		</MESH>
+	</K_POINTS>
+</INPUT>
+EOF
+    $ECHO "  running the band-structure calculation for Al...\c"
+    $PW_COMMAND -xmlinput al.band.$diago.xml > al.band.$diago.out
+    check_failure $?
+    $ECHO " done"
+
+    # clean TMP_DIR
+    $ECHO "  cleaning $TMP_DIR...\c"
+    rm -rf $TMP_DIR/*
+    $ECHO " done"
+
+    # self-consistent calculation
+    cat > cu.scf.$diago.xml << EOF
+ <?xml version="1.0" encoding="UTF-8"?>
+
+
+<INPUT calculation="scf" prefix="cu">
+
+	<CELL type="qecell">
+		<QECELL ibrav="2" alat="6.73">
+			<REAL rank="1" n1="5">
+				0.0 0.0 0.0 0.0 0.0
+			</REAL>
+		</QECELL>
+	</CELL>
+
+	<ATOMIC_SPECIES ntyp="1">
+		<SPECIE name="Cu" mass="63.55">
+			<STRING>Cu.pz-d-rrkjus.UPF</STRING>
+		</SPECIE>
+	</ATOMIC_SPECIES>
+
+	<ATOMIC_LIST units="alat" nat="1" >
+		<ATOM name="Cu">
+			<POSITION>
+				<REAL rank="1" n1="3">
+					0.0 0.0 0.0
+				</REAL>
+			</POSITION>
+		</ATOM>		
+	</ATOMIC_LIST>	
+	
+	
+	<FIELD name="InputOutput">
+
+		<PARAMETER name="restart_mode">
+			<STRING>
+				from_scratch
+			</STRING>
+		</PARAMETER>
+
+		<PARAMETER name="pseudo_dir">
+			<STRING>
+				$PSEUDO_DIR/
+			</STRING>
+		</PARAMETER>
+		
+		<PARAMETER name="outdir">
+			<STRING>
+				$TMP_DIR/
+			</STRING>
+		</PARAMETER>
+		
+		<PARAMETER name="tstress">
+			<LOGICAL>
+				true
+			</LOGICAL>
+		</PARAMETER>	
+		
+		<PARAMETER name="tprnfor">
+			<LOGICAL>
+				true
+			</LOGICAL>
+		</PARAMETER>
+					
+	</FIELD>
+	
+	<FIELD name="Numerics">
+
+		<PARAMETER name="ecutwfc">
+			<REAL>
+				25.0
+			</REAL>
+		</PARAMETER>
+		
+		<PARAMETER name="ecutrho">
+			<REAL>
+				300.0
+			</REAL>
+		</PARAMETER>
+		
+		<PARAMETER name="diagonalization">
+			<STRING>
+				$diago
+			</STRING>
+		</PARAMETER>
+		
+		<PARAMETER name="conv_thr">
+			<REAL>
+				1.0e-8
+			</REAL>
+		</PARAMETER>
+		
+		<PARAMETER name="mixing_beta">
+			<REAL>
+				0.7
+			</REAL>
+		</PARAMETER>
+	
+	</FIELD>
+	
+	<FIELD name="Options">
+
+		<PARAMETER name="occupations">
+			<STRING>
+				smearing
+			</STRING>
+		</PARAMETER>
+		
+		<PARAMETER name="smearing">
+			<STRING>
+				gaussian
+			</STRING>
+		</PARAMETER>
+		
+		<PARAMETER name="degauss">
+			<REAL>
+				0.02
+			</REAL>
+		</PARAMETER>		
+	
+	</FIELD>		
+
+	
+	<K_POINTS type="automatic">
+		<MESH>
+			<INTEGER rank="1" n1="6">
+				 8 8 8 0 0 0
+			</INTEGER>
+		</MESH>
+	</K_POINTS>
+</INPUT>
+EOF
+    $ECHO "  running the scf calculation for Cu...\c"
+    $PW_COMMAND -xmlinput cu.scf.$diago.xml > cu.scf.$diago.out
+    check_failure $?
+    $ECHO " done"
+
+    # band structure calculation along delta, sigma and lambda lines
+    cat > cu.band.$diago.xml << EOF
+<?xml version="1.0" encoding="UTF-8"?>
+
+
+<INPUT calculation="bands" prefix="cu">
+
+	<CELL type="qecell">
+		<QECELL ibrav="2" alat="6.73">
+			<REAL rank="1" n1="5">
+				0.0 0.0 0.0 0.0 0.0
+			</REAL>
+		</QECELL>
+	</CELL>
+
+	<ATOMIC_SPECIES ntyp="1">
+		<SPECIE name="Cu" mass="63.55">
+			<STRING>Cu.pz-d-rrkjus.UPF</STRING>
+		</SPECIE>
+	</ATOMIC_SPECIES>
+
+	<ATOMIC_LIST units="alat" nat="1" >
+		<ATOM name="Cu">
+			<POSITION>
+				<REAL rank="1" n1="3">
+					0.0 0.0 0.0
+				</REAL>
+			</POSITION>
+		</ATOM>		
+	</ATOMIC_LIST>		
+	
+	
+	<FIELD name="InputOutput">
+
+		<PARAMETER name="pseudo_dir">
+			<STRING>
+				$PSEUDO_DIR/
+			</STRING>
+		</PARAMETER>
+		
+		<PARAMETER name="outdir">
+			<STRING>
+				$TMP_DIR/
+			</STRING>
+		</PARAMETER>
+		
+	</FIELD>
+	
+	<FIELD name="Numerics">
+
+		<PARAMETER name="ecutwfc">
+			<REAL>
+				25.0
+			</REAL>
+		</PARAMETER>
+		
+		<PARAMETER name="ecutrho">
+			<REAL>
+				300.0
+			</REAL>
+		</PARAMETER>
+		
+		<PARAMETER name="diagonalization">
+			<STRING>
+				$diago
+			</STRING>
+		</PARAMETER>
+		
+	</FIELD>
+	
+	<FIELD name="Options">
+
+		<PARAMETER name="nbnd">
+			<INTEGER>
+				8
+			</INTEGER>
+		</PARAMETER>
+	
+	</FIELD>	
+
+	
+	<K_POINTS type="tpiba">
+		<MESH npoints="28">
+			<REAL rank="2" n1="4" n2="28">
+				   0.0 0.0 0.0 1.0
+				   0.0 0.0 0.1 1.0
+				   0.0 0.0 0.2 1.0
+				   0.0 0.0 0.3 1.0
+				   0.0 0.0 0.4 1.0
+				   0.0 0.0 0.5 1.0
+				   0.0 0.0 0.6 1.0
+				   0.0 0.0 0.7 1.0
+				   0.0 0.0 0.8 1.0
+				   0.0 0.0 0.9 1.0
+				   0.0 0.0 1.0 1.0
+				   0.0 0.0 0.0 1.0
+				   0.0 0.1 0.1 1.0
+				   0.0 0.2 0.2 1.0
+				   0.0 0.3 0.3 1.0
+				   0.0 0.4 0.4 1.0
+				   0.0 0.5 0.5 1.0
+				   0.0 0.6 0.6 1.0
+				   0.0 0.7 0.7 1.0
+				   0.0 0.8 0.8 1.0
+				   0.0 0.9 0.9 1.0
+				   0.0 1.0 1.0 1.0
+				   0.0 0.0 0.0 1.0
+				   0.1 0.1 0.1 1.0
+				   0.2 0.2 0.2 1.0
+				   0.3 0.3 0.3 1.0
+				   0.4 0.4 0.4 1.0
+				   0.5 0.5 0.5 1.0
+
+			</REAL>
+		</MESH>
+	</K_POINTS>
+</INPUT>
+EOF
+    $ECHO "  running the band-structure calculation for Cu...\c"
+    $PW_COMMAND -xmlinput cu.band.$diago.xml > cu.band.$diago.out
+    check_failure $?
+    $ECHO " done"
+
+cat > cu.bands.in << EOF
+ &inputpp
+    prefix='cu',
+    outdir='$TMP_DIR'
+    filband='cu.band'
+    lsym=.true.,
+ /
+EOF
+    if test "`echo $diago`" = "david";
+    then
+       $ECHO "  running the symmetry analysis for Cu bands...\c"
+       $BANDS_COMMAND < cu.bands.in > cu.bands.out
+       $ECHO " done"
+    fi
+
+
+    # clean TMP_DIR
+    $ECHO "  cleaning $TMP_DIR...\c"
+    rm -rf $TMP_DIR/*
+    $ECHO " done"
+
+    # self-consistent calculation
+    cat > ni.scf.$diago.xml << EOF
+ <?xml version="1.0" encoding="UTF-8"?>
+
+
+<INPUT calculation="scf" prefix="ni">
+
+	<CELL type="qecell">
+		<QECELL ibrav="2" alat="6.48">
+			<REAL rank="1" n1="5">
+				0.0 0.0 0.0 0.0 0.0
+			</REAL>
+		</QECELL>
+	</CELL>
+
+	<ATOMIC_SPECIES ntyp="1">
+		<SPECIE name="Ni" mass="58.69">
+			<STRING>Ni.pz-nd-rrkjus.UPF</STRING>
+		</SPECIE>
+	</ATOMIC_SPECIES>
+
+	<ATOMIC_LIST units="alat" nat="1" >
+		<ATOM name="Ni">
+			<POSITION>
+				<REAL rank="1" n1="3">
+					0.0 0.0 0.0
+				</REAL>
+			</POSITION>
+		</ATOM>		
+	</ATOMIC_LIST>			
+	
+	
+	<FIELD name="InputOutput">
+
+		<PARAMETER name="restart_mode">
+			<STRING>
+				from_scratch
+			</STRING>
+		</PARAMETER>
+
+		<PARAMETER name="pseudo_dir">
+			<STRING>
+				$PSEUDO_DIR/
+			</STRING>
+		</PARAMETER>
+		
+		<PARAMETER name="outdir">
+			<STRING>
+				$TMP_DIR/
+			</STRING>
+		</PARAMETER>
+		
+		<PARAMETER name="tstress">
+			<LOGICAL>
+				true
+			</LOGICAL>
+		</PARAMETER>	
+		
+		<PARAMETER name="tprnfor">
+			<LOGICAL>
+				true
+			</LOGICAL>
+		</PARAMETER>
+					
+	</FIELD>
+	
+	<FIELD name="Numerics">
+
+		<PARAMETER name="ecutwfc">
+			<REAL>
+				24.0
+			</REAL>
+		</PARAMETER>
+		
+		<PARAMETER name="ecutrho">
+			<REAL>
+				288.0
+			</REAL>
+		</PARAMETER>
+		
+		<PARAMETER name="diagonalization">
+			<STRING>
+				$diago
+			</STRING>
+		</PARAMETER>
+		
+		<PARAMETER name="conv_thr">
+			<REAL>
+				1.0e-8
+			</REAL>
+		</PARAMETER>
+		
+		<PARAMETER name="mixing_beta">
+			<REAL>
+				0.7
+			</REAL>
+		</PARAMETER>
+	
+	</FIELD>
+	
+	<FIELD name="Options">
+
+		<PARAMETER name="occupations">
+			<STRING>
+				smearing
+			</STRING>
+		</PARAMETER>
+		
+		<PARAMETER name="smearing">
+			<STRING>
+				methfessel-paxton
+			</STRING>
+		</PARAMETER>
+		
+		<PARAMETER name="degauss">
+			<REAL>
+				0.02
+			</REAL>
+		</PARAMETER>		
+	
+	</FIELD>
+	
+	<FIELD name="Fields">
+
+		<PARAMETER name="starting_magnetization">
+			<REAL rank="1" n1="1">
+				0.7
+			</REAL>
+		</PARAMETER>
+		
+		<PARAMETER name="nspin">
+			<INTEGER>
+				2
+			</INTEGER>
+		</PARAMETER>
+		
+	</FIELD>	
+	
+	<K_POINTS type="tpiba">
+		<MESH npoints="60">
+			<REAL rank="2" n1="4" n2="60">
+				   0.0625000  0.0625000  0.0625000   1.00
+				   0.0625000  0.0625000  0.1875000   3.00
+				   0.0625000  0.0625000  0.3125000   3.00
+				   0.0625000  0.0625000  0.4375000   3.00
+				   0.0625000  0.0625000  0.5625000   3.00
+				   0.0625000  0.0625000  0.6875000   3.00
+				   0.0625000  0.0625000  0.8125000   3.00
+				   0.0625000  0.0625000  0.9375000   3.00
+				   0.0625000  0.1875000  0.1875000   3.00
+				   0.0625000  0.1875000  0.3125000   6.00
+				   0.0625000  0.1875000  0.4375000   6.00
+				   0.0625000  0.1875000  0.5625000   6.00
+				   0.0625000  0.1875000  0.6875000   6.00
+				   0.0625000  0.1875000  0.8125000   6.00
+				   0.0625000  0.1875000  0.9375000   6.00
+				   0.0625000  0.3125000  0.3125000   3.00
+				   0.0625000  0.3125000  0.4375000   6.00
+				   0.0625000  0.3125000  0.5625000   6.00
+				   0.0625000  0.3125000  0.6875000   6.00
+				   0.0625000  0.3125000  0.8125000   6.00
+				   0.0625000  0.3125000  0.9375000   6.00
+				   0.0625000  0.4375000  0.4375000   3.00
+				   0.0625000  0.4375000  0.5625000   6.00
+				   0.0625000  0.4375000  0.6875000   6.00
+				   0.0625000  0.4375000  0.8125000   6.00
+				   0.0625000  0.4375000  0.9375000   6.00
+				   0.0625000  0.5625000  0.5625000   3.00
+				   0.0625000  0.5625000  0.6875000   6.00
+				   0.0625000  0.5625000  0.8125000   6.00
+				   0.0625000  0.6875000  0.6875000   3.00
+				   0.0625000  0.6875000  0.8125000   6.00
+				   0.0625000  0.8125000  0.8125000   3.00
+				   0.1875000  0.1875000  0.1875000   1.00
+				   0.1875000  0.1875000  0.3125000   3.00
+				   0.1875000  0.1875000  0.4375000   3.00
+				   0.1875000  0.1875000  0.5625000   3.00
+				   0.1875000  0.1875000  0.6875000   3.00
+				   0.1875000  0.1875000  0.8125000   3.00
+				   0.1875000  0.3125000  0.3125000   3.00
+				   0.1875000  0.3125000  0.4375000   6.00
+				   0.1875000  0.3125000  0.5625000   6.00
+				   0.1875000  0.3125000  0.6875000   6.00
+				   0.1875000  0.3125000  0.8125000   6.00
+				   0.1875000  0.4375000  0.4375000   3.00
+				   0.1875000  0.4375000  0.5625000   6.00
+				   0.1875000  0.4375000  0.6875000   6.00
+				   0.1875000  0.4375000  0.8125000   6.00
+				   0.1875000  0.5625000  0.5625000   3.00
+				   0.1875000  0.5625000  0.6875000   6.00
+				   0.1875000  0.6875000  0.6875000   3.00
+				   0.3125000  0.3125000  0.3125000   1.00
+				   0.3125000  0.3125000  0.4375000   3.00
+				   0.3125000  0.3125000  0.5625000   3.00
+				   0.3125000  0.3125000  0.6875000   3.00
+				   0.3125000  0.4375000  0.4375000   3.00
+				   0.3125000  0.4375000  0.5625000   6.00
+				   0.3125000  0.4375000  0.6875000   6.00
+				   0.3125000  0.5625000  0.5625000   3.00
+				   0.4375000  0.4375000  0.4375000   1.00
+				   0.4375000  0.4375000  0.5625000   3.00
+			</REAL>
+		</MESH>
+	</K_POINTS>
+</INPUT>
+EOF
+    $ECHO "  running the scf calculation for Ni...\c"
+    $PW_COMMAND -xmlinput ni.scf.$diago.xml > ni.scf.$diago.out
+    check_failure $?
+    $ECHO " done"
+
+    # band structure calculation along delta, sigma and lambda lines
+    cat > ni.band.$diago.xml << EOF
+<?xml version="1.0" encoding="UTF-8"?>
+
+
+<INPUT calculation="bands" prefix="ni">
+
+	<CELL type="qecell">
+		<QECELL ibrav="2" alat="6.48">
+			<REAL rank="1" n1="5">
+				0.0 0.0 0.0 0.0 0.0
+			</REAL>
+		</QECELL>
+	</CELL>
+
+	<ATOMIC_SPECIES ntyp="1">
+		<SPECIE name="Ni" mass="58.69">
+			<STRING>Ni.pz-nd-rrkjus.UPF</STRING>
+		</SPECIE>
+	</ATOMIC_SPECIES>
+
+	<ATOMIC_LIST units="alat" nat="1" >
+		<ATOM name="Ni">
+			<POSITION>
+				<REAL rank="1" n1="3">
+					0.0 0.0 0.0
+				</REAL>
+			</POSITION>
+		</ATOM>		
+	</ATOMIC_LIST>		
+	
+	
+	<FIELD name="InputOutput">
+
+		<PARAMETER name="pseudo_dir">
+			<STRING>
+				$PSEUDO_DIR/
+			</STRING>
+		</PARAMETER>
+		
+		<PARAMETER name="outdir">
+			<STRING>
+				$TMP_DIR/
+			</STRING>
+		</PARAMETER>
+		
+	</FIELD>
+	
+	<FIELD name="Numerics">
+
+		<PARAMETER name="ecutwfc">
+			<REAL>
+				24.0
+			</REAL>
+		</PARAMETER>
+		
+		<PARAMETER name="ecutrho">
+			<REAL>
+				288.0
+			</REAL>
+		</PARAMETER>
+		
+		<PARAMETER name="diagonalization">
+			<STRING>
+				$diago
+			</STRING>
+		</PARAMETER>
+		
+	</FIELD>
+	
+	<FIELD name="Options">
+
+		<PARAMETER name="nbnd">
+			<INTEGER>
+				8
+			</INTEGER>
+		</PARAMETER>
+	
+	</FIELD>
+	
+	<FIELD name="Fields">
+
+		<PARAMETER name="starting_magnetization">
+			<REAL rank="1" n1="1">
+				0.7
+			</REAL>
+		</PARAMETER>
+		
+		<PARAMETER name="nspin">
+			<INTEGER>
+				2
+			</INTEGER>
+		</PARAMETER>
+		
+	</FIELD>	
+
+	
+	<K_POINTS type="tpiba">
+		<MESH npoints="28">
+			<REAL rank="2" n1="4" n2="28">
+				   0.0 0.0 0.0 1.0
+				   0.0 0.0 0.1 1.0
+				   0.0 0.0 0.2 1.0
+				   0.0 0.0 0.3 1.0
+				   0.0 0.0 0.4 1.0
+				   0.0 0.0 0.5 1.0
+				   0.0 0.0 0.6 1.0
+				   0.0 0.0 0.7 1.0
+				   0.0 0.0 0.8 1.0
+				   0.0 0.0 0.9 1.0
+				   0.0 0.0 1.0 1.0
+				   0.0 0.0 0.0 1.0
+				   0.0 0.1 0.1 1.0
+				   0.0 0.2 0.2 1.0
+				   0.0 0.3 0.3 1.0
+				   0.0 0.4 0.4 1.0
+				   0.0 0.5 0.5 1.0
+				   0.0 0.6 0.6 1.0
+				   0.0 0.7 0.7 1.0
+				   0.0 0.8 0.8 1.0
+				   0.0 0.9 0.9 1.0
+				   0.0 1.0 1.0 1.0
+				   0.0 0.0 0.0 1.0
+				   0.1 0.1 0.1 1.0
+				   0.2 0.2 0.2 1.0
+				   0.3 0.3 0.3 1.0
+				   0.4 0.4 0.4 1.0
+				   0.5 0.5 0.5 1.0
+			</REAL>
+		</MESH>
+	</K_POINTS>
+</INPUT>
+EOF
+    $ECHO "  running the band-structure calculation for Ni...\c"
+    $PW_COMMAND -xmlinput ni.band.$diago.xml > ni.band.$diago.out|
+    check_failure $?
+    $ECHO " done"
+done
+
+$ECHO
+$ECHO "$EXAMPLE_DIR : done"
