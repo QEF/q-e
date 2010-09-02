@@ -88,7 +88,7 @@ CONTAINS
           !
           CALL iotk_scan_begin(xmlinputunit, 'PARAMETER', attr, direction = direction2, ierr = ierr )
           IF ( ierr /= 0 ) CALL errore ( 'read_xml_fields', 'error scanning begin of PARAMETER &
-               node inside '//trim(field)//' field', ABS( ierr ) )
+              &node inside '//trim(field)//' field', ABS( ierr ) )
           !
           IF ( direction2 == -1 ) THEN
              !
@@ -100,7 +100,7 @@ CONTAINS
           !
           CALL iotk_scan_attr( attr, 'name', name, ierr = ierr )
           IF ( ierr /= 0 ) CALL errore ( 'read_xml_fields', 'error scanning the name of a PARAMETER &
-               inside '//trim(field)//' field', ABS( ierr ) )
+              &inside '//trim(field)//' field', ABS( ierr ) )
           !
           !
           ! ... association string -> name of variable and reading of its value
