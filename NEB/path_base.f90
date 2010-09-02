@@ -269,7 +269,7 @@ MODULE path_base
       !
       USE input_parameters, ONLY : input_images
       USE path_variables,   ONLY : pos, dim1, num_of_images, path_length
-      USE path_formats,     ONLY : summary_fmt
+!      USE path_formats,     ONLY : summary_fmt
       USE io_files,         ONLY : iunpath
       !
       IMPLICIT NONE

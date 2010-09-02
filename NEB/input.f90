@@ -7,7 +7,7 @@
 !
 !
 !----------------------------------------------------------------------------
-SUBROUTINE iosys()
+SUBROUTINE ioneb()
   !-----------------------------------------------------------------------------
   !
   ! ...  this subroutine reads input data from standard input ( unit 5 )
@@ -75,7 +75,8 @@ SUBROUTINE iosys()
   USE io_files,      ONLY : input_drho, output_drho, trimcheck, &
                             psfile, tmp_dir, wfc_dir, &
                             prefix_     => prefix, &
-                            pseudo_dir_ => pseudo_dir
+                            pseudo_dir_ => pseudo_dir, &
+                            xmlinputunit
   !
   USE force_mod,     ONLY : lforce, lstres, force
   !
@@ -311,15 +312,46 @@ SUBROUTINE iosys()
   USE london_module,         ONLY : init_london, lon_rcut, scal6
   USE us, ONLY : spline_ps_ => spline_ps
   !
+  USE read_xml_module,       ONLY : read_xml
+  USE iotk_module,           ONLY : iotk_open_read, iotk_close_read,iotk_attlenx
+  !
   IMPLICIT NONE
   !
   INTEGER  :: ia, image, nt
   REAL(DP) :: theta, phi
+  INTEGER  :: iiarg, nargs, iargc, ierr
+  CHARACTER (len=iotk_attlenx) :: attr
+  CHARACTER (len=50) :: arg
+  LOGICAL :: xmlinput
   !
   !
   IF ( ionode ) THEN
-    CALL input_from_file()
-    WRITE(stdout, '(5x,a)') "Waiting for input..."
+     !
+     ! ... check if use xml input or not
+     !
+     xmlinput = .false.
+     nargs = iargc()
+     !
+     DO iiarg = 1, ( nargs - 1 )
+        !
+        CALL getarg( iiarg, arg )
+        !
+        IF ( trim( arg ) == '-xmlinput') THEN
+           CALL getarg( ( iiarg + 1 ) , arg )
+           xmlinput = .true.
+           WRITE(stdout, '(5x,a)') "Waiting for xml input..."
+           CALL iotk_open_read( xmlinputunit, arg, attr = attr, qe_syntax = .true., ierr = ierr)
+           IF (ierr /= 0) CALL errore('iosys','error opening xml file', 1)
+           EXIT
+        ENDIF
+        !
+     ENDDO
+     !
+     IF (.not.xmlinput) THEN
+        CALL input_from_file()
+        WRITE(stdout, '(5x,a)') "Waiting for input..."
+     ENDIF
+     !
   ENDIF
   !
   ! ... all namelists are read
@@ -1000,42 +1032,9 @@ SUBROUTINE iosys()
      !
   END SELECT
   !
-!  lcoarsegrained  = ( trim( phase_space ) == 'coarse-grained' )
-  !
-!  IF ( lcoarsegrained ) THEN
-     !
-!     lmd = .true.
-     !
-!     SELECT CASE( trim( ion_dynamics ) )
-!     CASE( 'verlet' )
-        !
-!        CONTINUE
-        !
-!     CASE( 'langevin' )
-        !
-!        llang = .true.
-        !
-!     CASE( 'damp' )
-        !
-!        ldamped = .true.
-        !
-!        epse = etot_conv_thr
-!        epsf = forc_conv_thr
-        !
-!     CASE DEFAULT
-        !
-!        CALL errore( 'iosys', 'calculation=' // trim( calculation ) // &
-!                   & ': ion_dynamics=' // trim( ion_dynamics ) // &
-!                   & ' not supported', 1 )
-        !
-!     END SELECT
-     !
-!  ENDIF
-  !
-  ! ... "path" specific initialization of control variables
-  !
   IF ( lpath ) THEN
      !
+write(0,*) "if lpath"
      IF( io_level < 0) CALL errore ( 'iosys', &
                        'NEB, SMD do not work with "disk_io" set to "none"', 1)
      !
@@ -1064,21 +1063,26 @@ SUBROUTINE iosys()
      SELECT CASE( opt_scheme )
      CASE( "sd" )
         !
+write(0,*) "case sd"
         lsteep_des = .true.
         !
      CASE( "quick-min" )
+write(0,*) "case quick-min"
         !
         lquick_min = .true.
         !
      CASE( "broyden" )
         !
+write(0,*) "case broyden"
         lbroyden     = .true.
         !
      CASE( "broyden2" )
+write(0,*) "case broyden2"
         !
         lbroyden2    = .true.
         !
      CASE( "langevin" )
+write(0,*) "case langevin"
         !
         llangevin = .true.
         !
@@ -1192,6 +1196,7 @@ SUBROUTINE iosys()
      !
   END SELECT
   !
+write(0,*) "after ions dyn and mixing mode"
   starting_scf_threshold = tr2
   nmix = mixing_ndim
   niter_with_fixed_ns = mixing_fixed_ns
@@ -1373,14 +1378,6 @@ SUBROUTINE iosys()
   lon_rcut    = london_rcut
   scal6       = london_s6
   !
-#if defined __MS2
-  !
-  ! MS2 specific parameters
-  !
-  MS2_enabled_ = MS2_enabled
-  MS2_handler_ = MS2_handler
-#endif
-  !
   SELECT CASE( trim( assume_isolated ) )
       !
     CASE( 'makov-payne', 'm-p', 'mp' )
@@ -1435,7 +1432,9 @@ SUBROUTINE iosys()
   !
   IF ( tefield ) ALLOCATE( forcefield( 3, nat_ ) )
   !
-  CALL read_cards_pw ( psfile, tau_format )
+write(0,*) "before read cards pw"
+  CALL read_cards_pw ( psfile, tau_format, xmlinput )
+write(0,*) "after read cards pw"
   !
   ! ... set up atomic positions and crystal lattice
   !
@@ -1591,13 +1590,17 @@ SUBROUTINE iosys()
   !
   IF ( startingconfig == 'file' ) CALL read_config_from_file()
   !
-  CALL verify_tmpdir( tmp_dir )
+!  CALL verify_tmpdir( tmp_dir )
+write(0,*) "before verify neb dir"
+  CALL verify_neb_tmpdir( tmp_dir )
+write(0,*) "after verify neb dir"
   !
   IF ( .not. trim( wfcdir ) == 'undefined' ) THEN
      !
      wfc_dir = trimcheck ( wfcdir )
      !
      CALL verify_tmpdir( wfc_dir )
+! uuuu questo bisogna vedere
      !
   ENDIF
   !
@@ -1614,186 +1617,10 @@ SUBROUTINE iosys()
   ENDIF
   RETURN
   !
-END SUBROUTINE iosys
-!
-!----------------------------------------------------------------------------
-SUBROUTINE read_cards_pw ( psfile, tau_format )
-  !----------------------------------------------------------------------------
-  !
-  USE kinds,              ONLY : DP
-  USE input_parameters,   ONLY : atom_label, atom_pfile, atom_mass, taspc, &
-                                 tapos, rd_pos, atomic_positions, if_pos,  &
-                                 sp_pos, k_points, xk, wk, nk1, nk2, nk3,  &
-                                 k1, k2, k3, nkstot, cell_symmetry, rd_ht, &
-                                 trd_ht, f_inp, rd_for
-  USE cell_base,          ONLY : at, ibrav, symm_type
-  USE ions_base,          ONLY : nat, ntyp => nsp, ityp, tau, atm, extfor
-  USE klist,              ONLY : nkstot_ => nkstot
-  USE ktetra,             ONLY : nk1_   => nk1, &
-                                 nk2_   => nk2, &
-                                 nk3_   => nk3, &
-                                 k1_    => k1,  &
-                                 k2_    => k2,  &
-                                 k3_    => k3
-  USE klist,              ONLY : lxkcry, &
-                                 xk_    => xk, &
-                                 wk_    => wk
-  USE fixed_occ,          ONLY : tfixed_occ, &
-                                 f_inp_ => f_inp
-  USE ions_base,          ONLY : fixatom, &
-                                 if_pos_ =>  if_pos
-  USE ions_base,          ONLY : amass
-  USE control_flags,      ONLY : lfixatom, gamma_only, textfor
-  USE read_cards_module,  ONLY : read_cards
-  !
-  IMPLICIT NONE
-  !
-  CHARACTER (len=256) :: psfile(ntyp)
-  CHARACTER (len=80)  :: tau_format
-  INTEGER, EXTERNAL :: atomic_number
-  REAL(DP), EXTERNAL :: atom_weight
-  !
-  LOGICAL :: tcell = .false.
-  INTEGER :: is, ia
-  !
-  !
-  amass = 0
-  !
-  CALL read_cards ( 'PW' )
-  !
-  IF ( .not. taspc ) &
-     CALL errore( 'read_cards_pw', 'atomic species info missing', 1 )
-  IF ( .not. tapos ) &
-     CALL errore( 'read_cards_pw', 'atomic position info missing', 1 )
-  !
-  DO is = 1, ntyp
-     !
-     amass(is)  = atom_mass(is)
-     psfile(is) = atom_pfile(is)
-     atm(is)    = atom_label(is)
-     !
-     IF ( amass(is) <= 0.0_DP ) amass(is)= &
-              atom_weight(atomic_number(trim(atm(is))))
-
-     IF ( amass(is) <= 0.D0 ) CALL errore( 'read_cards_pw', 'invalid  mass', is )
-     !
-  ENDDO
-  !
-  textfor = .false.
-  IF( any( rd_for /= 0.0_DP ) ) textfor = .true.
-  !
-  DO ia = 1, nat
-     !
-     tau(:,ia) = rd_pos(:,ia)
-     ityp(ia)  = sp_pos(ia)
-     extfor(:,ia) = rd_for(:,ia)
-     !
-  ENDDO
-  !
-  ! ... calculate fixatom
-  !
-  fixatom = 0
-  !
-  IF ( any( if_pos(:,1:nat) == 0 ) ) lfixatom = .true.
-  !
-  DO ia = 1, nat
-     !
-     IF ( if_pos(1,ia) /= 0 .or. &
-          if_pos(2,ia) /= 0 .or. &
-          if_pos(3,ia) /= 0 ) CYCLE
-     !
-     fixatom = fixatom + 1
-     !
-  ENDDO
-  !
-  ! ... The constrain on fixed coordinates is implemented using the array
-  ! ... if_pos whose value is 0 when the coordinate is to be kept fixed, 1
-  ! ... otherwise. fixatom is maintained for compatibility. ( C.S. 15/10/2003 )
-  !
-  if_pos_(:,:) = if_pos(:,1:nat)
-  !
-  tau_format = trim( atomic_positions )
-  !
-  CALL reset_k_points ( )
-  gamma_only = ( k_points == 'gamma' )
-  !
-  IF ( tfixed_occ ) THEN
-     !
-     IF ( nkstot_ > 1 .or. ( nk1 * nk2 * nk3 ) > 1 ) &
-        CALL errore( 'read_cards_pw', &
-                   & 'only one k point with fixed occupations', 1 )
-     !
-     f_inp_ = f_inp
-     !
-     DEALLOCATE ( f_inp )
-     !
-  ENDIF
-  !
-  IF ( trd_ht ) THEN
-    !
-    symm_type = cell_symmetry
-    at        = transpose( rd_ht )
-    tcell     = .true.
-    !
-  ENDIF
-  !
-  IF ( ibrav == 0 .and. .not. tcell ) &
-     CALL errore( 'read_cards_pw', 'ibrav=0: must read cell parameters', 1 )
-  IF ( ibrav /= 0 .and. tcell ) &
-     CALL errore( 'read_cards_pw', 'redundant data for cell parameters', 2 )
-  !
-  RETURN
-  !
-END SUBROUTINE read_cards_pw
+END SUBROUTINE ioneb
 !
 !-----------------------------------------------------------------------
-SUBROUTINE convert_tau (tau_format, nat_, tau)
-!-----------------------------------------------------------------------
-  !
-  ! ... convert input atomic positions to internally used format:
-  ! ... tau in a0 units
-  !
-  USE kinds,         ONLY : DP
-  USE constants,     ONLY : bohr_radius_angs
-  USE cell_base,     ONLY : at, alat
-  IMPLICIT NONE
-  CHARACTER (len=*), INTENT(in)  :: tau_format
-  INTEGER, INTENT(in)  :: nat_
-  REAL (DP), INTENT(inout) :: tau(3,nat_)
-  !
-  SELECT CASE( tau_format )
-  CASE( 'alat' )
-     !
-     ! ... input atomic positions are divided by a0: do nothing
-     !
-  CASE( 'bohr' )
-     !
-     ! ... input atomic positions are in a.u.: divide by alat
-     !
-     tau = tau / alat
-     !
-  CASE( 'crystal' )
-     !
-     ! ... input atomic positions are in crystal axis
-     !
-     CALL cryst_to_cart( nat_, tau, at, 1 )
-     !
-  CASE( 'angstrom' )
-     !
-     ! ... atomic positions in A: convert to a.u. and divide by alat
-     !
-     tau = tau / bohr_radius_angs / alat
-     !
-  CASE DEFAULT
-     !
-     CALL errore( 'iosys','tau_format=' // &
-                & trim( tau_format ) // ' not implemented', 1 )
-     !
-  END SELECT
-  !
-END SUBROUTINE convert_tau
-!-----------------------------------------------------------------------
-SUBROUTINE verify_tmpdir( tmp_dir )
+SUBROUTINE verify_neb_tmpdir( tmp_dir )
   !-----------------------------------------------------------------------
   !
   USE wrappers,         ONLY : f_mkdir
@@ -1842,58 +1669,11 @@ SUBROUTINE verify_tmpdir( tmp_dir )
      ENDIF
      !
   ELSE
+write(0,*) "verify neb dir ok"
      !
      ! ... if starting from scratch all temporary files are removed
      ! ... from tmp_dir ( only by the master node )
      !
-     IF ( restart_mode == 'from_scratch' ) THEN
-        !
-        ! ... xml data file in save directory is removed
-        !     but, header is read anyway to store qexml version
-        !
-        CALL pw_readfile( 'header', ios )
-        !
-        IF ( ionode ) THEN
-           !
-           IF ( .not. lbands ) THEN
-               !
-               ! save a bck copy of datafile.xml (AF)
-               !
-               filename = trim( file_path ) // '.save/' // trim( xmlpun )
-               INQUIRE( FILE = filename, EXIST = exst )
-               !
-               IF ( exst ) CALL copy_file( trim(filename), trim(filename) // '.bck' )
-               !
-               CALL delete_if_present( trim(filename) )
-               !
-           ENDIF
-           !
-           ! ... extrapolation file is removed
-           !
-           CALL delete_if_present( trim( file_path ) // '.update' )
-           !
-           ! ... MD restart file is removed
-           !
-           CALL delete_if_present( trim( file_path ) // '.md' )
-           !
-           ! ... BFGS restart file is removed
-           !
-           CALL delete_if_present( trim( file_path ) // '.bfgs' )
-           !
-        ENDIF
-        !
-     ENDIF
-     !
-  ENDIF
-  !
-  ! ... "path" optimisation specific :   in the scratch directory the tree of
-  ! ... subdirectories needed by "path" calculations are created
-  !
-#if defined(EXX)
-  IF ( lpath .or. nimage > 1 ) THEN
-#else
-  IF ( lpath ) THEN
-#endif
      IF ( ionode ) THEN
         !
         ! ... files needed by parallelization among images are removed
@@ -1908,12 +1688,9 @@ SUBROUTINE verify_tmpdir( tmp_dir )
            !
         ENDIF
         !
-     ENDIF
+     ENDIF ! end if ionode
      !
      nofi = num_of_images
-#if defined(EXX)
-     IF( .not. lpath .and. nimage > 1 ) nofi = nimage
-#endif
      !
      DO image = 1, nofi
         !
@@ -1946,57 +1723,12 @@ SUBROUTINE verify_tmpdir( tmp_dir )
               !
            ENDDO
            !
-        ENDIF
+        ENDIF ! end restart_mode
         !
-     ENDDO
+     ENDDO ! end do image
      !
   ENDIF
   !
   RETURN
   !
-END SUBROUTINE verify_tmpdir
-
-!-----------------------------------------------------------------------
-SUBROUTINE parallel_mkdir ( tmp_dir )
-  !-----------------------------------------------------------------------
-  !
-  ! ... Safe creation of the scratch directory in the parallel case
-  ! ... Works on both parallel and distributed file systems
-  ! ... Not really a smart algorithm, though
-  !
-  USE wrappers,      ONLY : f_mkdir
-  USE mp_global,     ONLY : mpime, nproc
-  USE mp,            ONLY : mp_barrier, mp_sum
-  USE io_files,      ONLY : check_writable
-  !
-  IMPLICIT NONE
-  !
-  CHARACTER(len=*), INTENT(in) :: tmp_dir
-  !
-  INTEGER             :: ios, proc
-  CHARACTER(len=6), EXTERNAL :: int_to_char
-  !
-  ! ... the scratch directory is created sequentially by all the cpus
-  !
-  DO proc = 0, nproc - 1
-     !
-     IF ( proc == mpime ) ios = f_mkdir( trim( tmp_dir ) )
-     CALL mp_barrier()
-     !
-  ENDDO
-  !
-  ! ... each job checks whether the scratch directory is writable
-  ! ... note that tmp_dir should end by a "/"
-  !
-  OPEN( UNIT = 4, FILE = trim(tmp_dir)//'test'//trim(int_to_char(mpime)), &
-            & STATUS = 'UNKNOWN', FORM = 'UNFORMATTED', IOSTAT = ios )
-  CLOSE( UNIT = 4, STATUS = 'DELETE' )
-  !
-  ios = check_writable ( tmp_dir, mpime )
-  IF ( ios /= 0 ) CALL errore( 'parallel_mkdir', trim( tmp_dir ) // &
-                             & ' non existent or non writable', 1 )
-  !
-  RETURN
-  !
-END SUBROUTINE parallel_mkdir
-
+END SUBROUTINE verify_neb_tmpdir

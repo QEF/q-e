@@ -46,7 +46,9 @@ PROGRAM sm
      !
   END IF   
   !
-  CALL iosys()
+write(0,*) "before ioneb" 
+  CALL ioneb()
+write(0,*) "after ioneb"
   !
   IF ( gamma_only ) WRITE( UNIT = stdout, &
      & FMT = '(/,5X,"gamma-point specific algorithms are used")' )

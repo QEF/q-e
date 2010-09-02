@@ -49,8 +49,8 @@ input.o : ../Modules/mm_dispersion.o
 input.o : ../Modules/mp.o
 input.o : ../Modules/mp_global.o
 input.o : ../Modules/printout_base.o
-input.o : ../Modules/read_cards.o
 input.o : ../Modules/read_namelists.o
+input.o : ../Modules/read_xml.o
 input.o : ../Modules/wannier_new.o
 input.o : ../Modules/wrappers.o
 input.o : ../Modules/xml_io_base.o
@@ -64,6 +64,7 @@ input.o : ../PW/pw_restart.o
 input.o : ../PW/pwcom.o
 input.o : ../PW/realus.o
 input.o : ../PW/symm_base.o
+input.o : ../iotk/src/iotk_module.o
 input.o : path_variables.o
 path_base.o : ../Modules/basic_algebra_routines.o
 path_base.o : ../Modules/constants.o
