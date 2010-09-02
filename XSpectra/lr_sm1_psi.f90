@@ -35,7 +35,6 @@ SUBROUTINE sm1_psi( recalc, lda, n, m, psi, spsi)
   USE uspp,         ONLY : okvan, vkb, nkb, qq
   USE uspp_param, ONLY : upf, nh
   USE wvfct,      ONLY : igk, g2kin
-  USE gsmooth,    ONLY : nls, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, nrxxs
   USE ldaU,       ONLY : lda_plus_u
   USE ions_base,   ONLY : nat, ntyp => nsp, ityp  
   use becmod, only : calbec

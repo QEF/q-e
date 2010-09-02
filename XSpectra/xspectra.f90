@@ -1637,7 +1637,6 @@ SUBROUTINE lanczos (a,b,psi,ncalcv, terminator)
   USE wvfct,  ONLY:  npwx,nbndx, nbnd,npw,igk,g2kin
   !USE wavefunctions_module, ONLY : psic
   USE becmod, ONLY:becp
-  USE gsmooth,  ONLY : nls, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, nrxxs
   USE uspp,   ONLY : vkb, nkb
   USE cell_base, ONLY:omega
   USE xspectra, ONLY : xniter, xnepoint, xcheck_conv,xnitermax,xemin,xemax,xgamma,xerror
@@ -1824,7 +1823,6 @@ SUBROUTINE lanczos_uspp (a,b,psi,ncalcv, terminator)
   USE wvfct,  ONLY:  npwx,nbndx, nbnd,npw,igk,g2kin
   !USE wavefunctions_module, ONLY : psic
   USE becmod, ONLY: becp, calbec
-  USE gsmooth,  ONLY : nls, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, nrxxs
   USE uspp,   ONLY : vkb, nkb
   USE cell_base, ONLY:omega
   USE xspectra, ONLY : xniter, xnepoint,xcheck_conv,xnitermax,xemin,xemax,xgamma,xerror

@@ -24,7 +24,6 @@ SUBROUTINE sm1_psi( recalculate, ik, lda, n, m, psi, spsi)
   USE uspp,       ONLY : okvan, vkb, nkb, qq
   USE uspp_param, ONLY : nh, upf
   USE wvfct,      ONLY : igk, g2kin
-  USE gsmooth,    ONLY : nls, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, nrxxs
   USE ldaU,       ONLY : lda_plus_u
   USE ions_base,  ONLY : ityp,nat,ntyp=>nsp
   use mp,         only : mp_sum

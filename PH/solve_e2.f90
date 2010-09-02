@@ -19,8 +19,7 @@ subroutine solve_e2
   USE klist,                 ONLY : lgauss, wk, xk
   USE lsda_mod,              ONLY : lsda, nspin
   USE gvect,                 ONLY : nrxx, g
-  USE gsmooth,               ONLY : nrxxs, doublegrid, nls, &
-                                    nr1s,nr2s,nr3s,nrx1s,nrx2s,nrx3s
+  USE gsmooth,               ONLY : nrxxs, doublegrid
   USE wvfct,                 ONLY : npw, npwx, nbnd, igk, g2kin, et
   USE io_files,  ONLY: prefix, iunigk
   USE ions_base, ONLY: nat

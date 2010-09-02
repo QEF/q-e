@@ -20,7 +20,6 @@ subroutine h_epsi_her_apply(lda, n,nbande, psi, hpsi, pdir, e_field)
   USE kinds,    ONLY : DP
   USE us
   USE wvfct,    ONLY : igk, npwx, npw, nbnd, ik => current_k
-  USE gsmooth,  ONLY : nls, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, nrxxs
   USE ldaU,     ONLY : lda_plus_u
   USE lsda_mod, ONLY : current_spin, nspin
   USE scf,      ONLY : vrs  

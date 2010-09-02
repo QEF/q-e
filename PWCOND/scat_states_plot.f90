@@ -230,13 +230,11 @@ SUBROUTINE scat_states_comp(nchan, nrzp, norb, nocros, taunew, vec, &
                        n2d, kvall
  USE realus_scatt
  USE cell_base, ONLY : omega
- USE gvect,     ONLY : nr1, nr2, nr3
  USE scf,       ONLY : rho
  USE uspp_param,ONLY : upf, nhm, nh
  USE uspp,      ONLY : nkb, vkb, becsum
+ USE gsmooth,   ONLY : nr3s
  USE gvect,     ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx
- USE gsmooth,   ONLY : nls, nlsm, nr1s, nr2s, nr3s, &
-                        nrx1s, nrx2s, nrx3s, nrxxs, doublegrid
  USE ions_base, ONLY : ityp, zv, nat, ntyp => nsp, tau, atm
  USE fft_scalar,ONLY : cft_2xy
  USE splinelib, ONLY : spline, splint
