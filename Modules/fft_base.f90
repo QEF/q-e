@@ -208,14 +208,12 @@ SUBROUTINE fft_scatter ( f_in, nr3x, nxx_, f_aux, ncp_, npp_, sign, use_tg )
               f_aux ( dest + (k - 1) * 2 - 1 + 2 ) =  f_in ( from + (k - 1) * nr3x - 1 + 2 )
            ENDDO
         CASE ( 3 )
-!$omp parallel do
            DO k = 1, ncp_ (me)
               f_aux ( dest + (k - 1) * 3 - 1 + 1 ) =  f_in ( from + (k - 1) * nr3x - 1 + 1 )
               f_aux ( dest + (k - 1) * 3 - 1 + 2 ) =  f_in ( from + (k - 1) * nr3x - 1 + 2 )
               f_aux ( dest + (k - 1) * 3 - 1 + 3 ) =  f_in ( from + (k - 1) * nr3x - 1 + 3 )
            ENDDO
         CASE ( 4 )
-!$omp parallel do
            DO k = 1, ncp_ (me)
               f_aux ( dest + (k - 1) * 4 - 1 + 1 ) =  f_in ( from + (k - 1) * nr3x - 1 + 1 )
               f_aux ( dest + (k - 1) * 4 - 1 + 2 ) =  f_in ( from + (k - 1) * nr3x - 1 + 2 )
@@ -223,7 +221,6 @@ SUBROUTINE fft_scatter ( f_in, nr3x, nxx_, f_aux, ncp_, npp_, sign, use_tg )
               f_aux ( dest + (k - 1) * 4 - 1 + 4 ) =  f_in ( from + (k - 1) * nr3x - 1 + 4 )
            ENDDO
         CASE DEFAULT
-!$omp parallel do default(shared), private(i, kdest, kfrom)
            DO k = 1, ncp_ (me)
               kdest = dest + (k - 1) * npp_ ( gproc ) - 1
               kfrom = from + (k - 1) * nr3x - 1
@@ -374,14 +371,12 @@ SUBROUTINE fft_scatter ( f_in, nr3x, nxx_, f_aux, ncp_, npp_, sign, use_tg )
                        f_in ( dest + (k - 1) * nr3x - 1 + 2 ) = f_aux( from + (k - 1) * 2 - 1 + 2 )
                     ENDDO
                  CASE ( 3 )
-!$omp parallel do
                     DO k = 1, ncp_ ( me )
                        f_in ( dest + (k - 1) * nr3x - 1 + 1 ) = f_aux( from + (k - 1) * 3 - 1 + 1 )
                        f_in ( dest + (k - 1) * nr3x - 1 + 2 ) = f_aux( from + (k - 1) * 3 - 1 + 2 )
                        f_in ( dest + (k - 1) * nr3x - 1 + 3 ) = f_aux( from + (k - 1) * 3 - 1 + 3 )
                     ENDDO
                  CASE ( 4 )
-!$omp parallel do
                     DO k = 1, ncp_ ( me )
                        f_in ( dest + (k - 1) * nr3x - 1 + 1 ) = f_aux( from + (k - 1) * 4 - 1 + 1 )
                        f_in ( dest + (k - 1) * nr3x - 1 + 2 ) = f_aux( from + (k - 1) * 4 - 1 + 2 )
@@ -389,7 +384,6 @@ SUBROUTINE fft_scatter ( f_in, nr3x, nxx_, f_aux, ncp_, npp_, sign, use_tg )
                        f_in ( dest + (k - 1) * nr3x - 1 + 4 ) = f_aux( from + (k - 1) * 4 - 1 + 4 )
                     ENDDO
                  CASE DEFAULT
-!$omp parallel do default(shared), private(i, kdest, kfrom)
                     DO k = 1, ncp_ ( me )
                        kdest = dest + (k - 1) * nr3x - 1
                        kfrom = from + (k - 1) * npp_ ( gproc ) - 1
