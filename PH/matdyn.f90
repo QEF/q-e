@@ -85,7 +85,12 @@ PROGRAM matdyn
   !
   !  if (readtau) atom types and positions in the supercell follow:
   !     (tau(i,na),i=1,3), ityp(na)
-  !  Then, if (.not.dos) :
+  !  IF (q_in_band_form.and..not.dos) THEN
+  !     nq     ! number of q points
+  !     (q(i,n),i=1,3), nptq   nptq is the number of points between this
+  !                            point and the next. These points are generated
+  !                            automatically
+  !  ELSE, if (.not.dos) :
   !     nq         number of q-points
   !     (q(i,n), i=1,3)    nq q-points in 2pi/a units
   !  If q = 0, the direction qhat (q=>0) for the non-analytic part
@@ -146,17 +151,20 @@ PROGRAM matdyn
   LOGICAL :: readtau, la2F, xmlifc, lo_to_split
   !
   REAL(DP) :: qhat(3), qh, DeltaE, Emin=0._dp, Emax, E, DOSofE(1)
-  REAL(DP) :: celldm(6)
-  INTEGER :: n, i, j, it, nq, nqx, na, nb, ndos, iout
+  REAL(DP) :: celldm(6), delta
+  REAL(DP), ALLOCATABLE :: xqaux(:,:)
+  INTEGER, ALLOCATABLE :: nqb(:)
+  INTEGER :: n, i, j, it, nq, nqx, na, nb, ndos, iout, nqtot
   LOGICAL, EXTERNAL :: has_xml
   CHARACTER(LEN=15), ALLOCATABLE :: name_rap_mode(:)
   INTEGER, ALLOCATABLE :: num_rap_mode(:,:)
   LOGICAL, ALLOCATABLE :: high_sym(:)
+  LOGICAL :: q_in_band_form
 
   !
   NAMELIST /input/ flfrc, amass, asr, flfrq, flvec, at, dos,  &
        &           fldos, nk1, nk2, nk3, l1, l2, l3, ntyp, readtau, fltau, &
-                   la2F, ndos, DeltaE
+                   la2F, ndos, DeltaE, q_in_band_form
   !
   !
   CALL mp_start()
@@ -190,6 +198,7 @@ PROGRAM matdyn
      l2=1
      l3=1
      la2F=.false.
+     q_in_band_form=.FALSE.
      !
      CALL input_from_file ( )
      !
@@ -317,9 +326,34 @@ PROGRAM matdyn
         READ (5,*) nq
         ALLOCATE ( q(3,nq) )
         ALLOCATE( tetra(1,1) )
-        DO n = 1,nq
-           READ (5,*) (q(i,n),i=1,3)
-        END DO
+        IF (.NOT.q_in_band_form) THEN
+           DO n = 1,nq
+              READ (5,*) (q(i,n),i=1,3)
+           END DO
+        ELSE
+           ALLOCATE(nqb(nq))
+           ALLOCATE(xqaux(3,nq))
+           DO n = 1,nq
+              READ (5,*) (q(i,n),i=1,3), nqb(n)
+           END DO
+           nqtot=SUM(nqb(1:nq-1))+1
+           xqaux(:,1:nq)=q(:,1:nq)
+           DEALLOCATE(q)
+           ALLOCATE(q(3,nqtot))
+           nqtot=0
+           DO i=1,nq-1
+              delta=1.0_DP/nqb(i)
+              DO j=0,nqb(i)-1
+                 nqtot=nqtot+1
+                 q(:,nqtot)=xqaux(:,i)+delta*j*(xqaux(:,i+1)-xqaux(:,i))
+              ENDDO
+           ENDDO
+           nqtot=nqtot+1
+           q(:,nqtot)=xqaux(:,nq)
+           nq=nqtot
+           DEALLOCATE(xqaux)
+           DEALLOCATE(nqb)
+        END IF
      END IF
      !
      IF (asr /= 'no') THEN
@@ -397,7 +431,7 @@ PROGRAM matdyn
         CALL dyndiag(nat,ntyp,amass,ityp,dyn,w2(1,n),z)
         !
         ! Cannot use the small group of \Gamma to analize the symmetry
-        ! of the mode if there is and electric field.
+        ! of the mode if there is an electric field.
         !
         IF (xmlifc.AND..NOT.lo_to_split) THEN
              ALLOCATE(name_rap_mode(3*nat))
