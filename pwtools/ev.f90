@@ -85,7 +85,8 @@ PROGRAM ev
       ELSEIF(bravais=='sc'.or.bravais=='SC') THEN
          fac = 1.0d0
       ELSEIF(bravais=='hex'.or.bravais=='HEX') THEN
-         fac = sqrt(3d0)/2d0 ! not used
+!         fac = sqrt(3d0)/2d0 ! not used
+         fac = 0.0_DP ! not used
       ELSE
          PRINT '(5x,"ev: unexpected lattice ",a3)', bravais
          STOP
