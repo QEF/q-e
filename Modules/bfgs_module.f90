@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2003-2007 Quantum ESPRESSO group
+! Copyright (C) 2003-2010 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -12,13 +12,23 @@ MODULE bfgs_module
    ! ... Ionic relaxation through the Newton-Raphson optimization scheme
    ! ... based on the Broyden-Fletcher-Goldfarb-Shanno algorithm for the
    ! ... estimate of the inverse Hessian matrix.
-   ! ... The ionic relaxation is performed in cartesian coordinates using
-   ! ... a "trust radius" line search based on Wolfe conditions.
+   ! ... The ionic relaxation is performed converting cartesian (and cell) 
+   ! ... positions into internal coordinates.
+   ! ... The algorithm uses a "trust radius" line search based on Wolfe 
+   ! ... conditions. Steps are rejected until the first Wolfe condition
+   ! ... (sufficient energy decrease) is satisfied. Updated step length
+   ! ... is estimated from quadratic interpolation. 
+   ! ... When the step is accepted inverse hessian is updated according to 
+   ! ... BFGS scheme and a new search direction is obtained from NR or GDIIS
+   ! ... method. The corresponding step length is limited by trust_radius_max 
+   ! ... and can't be larger than the previous step multiplied by a certain 
+   ! ... factor determined by Wolfe and other convergence conditions.
    !
-   ! ... Written by Carlo Sbraccia ( 5/12/2003 )
-   ! ... Maintained by Carlo Sbraccia ( 2003-2007 )
-   ! ... Modified for variable-cell-shape relaxation by 
-   ! ...   Javier Antonio Montoya and Stefano de Gironcoli (Dec 2007)
+   ! ... Originally written ( 5/12/2003 ) and maintained ( 2003-2007 ) by 
+   ! ... Carlo Sbraccia
+   ! ... Modified for variable-cell-shape relaxation ( 2007-2008 ) by 
+   ! ...   Javier Antonio Montoya, Lorenzo Paulatto and Stefano de Gironcoli
+   ! ... Re-analyzed by Stefano de Gironcoli ( 2010 )
    !
    ! ... references :
    !
@@ -50,65 +60,64 @@ MODULE bfgs_module
    ! ... public variables
    !
    PUBLIC :: bfgs_ndim,        &
-             trust_radius_max, &
-             trust_radius_min, &
-             trust_radius_ini, &
-             w_1,              &
-             w_2
+             trust_radius_ini, trust_radius_min, trust_radius_max, &
+             w_1,              w_2
    !
-   ! ... global variables
+   ! ... global module variables
    !
    SAVE
    !
    CHARACTER (len=8) :: fname="energy" ! name of the function to be minimized
    !
    REAL(DP), ALLOCATABLE :: &
-      pos(:),                &! positions + cell
-      grad(:),              &! gradients + cell_force
-      pos_p(:),           &! positions at the previous iteration
-      grad_p(:),         &! gradients at the previous iteration
-      inv_hess(:,:),   &! inverse hessian matrix ( updated using BFGS formula )
-      metric(:,:),      &
-      h_block(:,:),         &
-      hinv_block(:,:),       &
-      step(:),                &! the last bfgs step
-      step_old(:),            &! old bfgs steps
-      pos_old(:,:),           &! list of m old positions
-      grad_old(:,:),          &! list of m old gradients
-      pos_best(:)              ! best extrapolated positions
+      pos(:),            &! positions + cell
+      grad(:),           &! gradients + cell_force
+      pos_p(:),          &! positions at the previous accepted iteration
+      grad_p(:),         &! gradients at the previous accepted iteration
+      inv_hess(:,:),     &! inverse hessian matrix (updated using BFGS formula)
+      metric(:,:),       &
+      h_block(:,:),      &
+      hinv_block(:,:),   &
+      step(:),           &! the (new) search direction (normalized NR step)
+      step_old(:),       &! the previous search direction (normalized NR step)
+      pos_old(:,:),      &! list of m old positions - used only by gdiis
+      grad_old(:,:),     &! list of m old gradients - used only by gdiis
+      pos_best(:)         ! best extrapolated positions - used only by gdiis
    REAL(DP) :: &
-      trust_radius,             &! displacement along the bfgs direction
-      trust_radius_old,         &! old displacement along the bfgs direction
-      energy_p                   ! energy at the previous iteration
+      nr_step_length,    &! length of (new) Newton-Raphson step
+      nr_step_length_old,&! length of previous Newton-Raphson step
+      trust_radius,      &! new displacement along the search direction
+      trust_radius_old,  &! old displacement along the search direction
+      energy_p            ! energy at previous accepted iteration
    INTEGER :: &
-      scf_iter,              &! number of scf iterations
-      bfgs_iter,           &! number of bfgs iterations
-      gdiis_iter               ! number of gdiis iterations
+      scf_iter,          &! number of scf iterations
+      bfgs_iter,         &! number of bfgs iterations
+      gdiis_iter          ! number of gdiis iterations
    !
    LOGICAL :: &
-      tr_min_hit               ! .TRUE. if the trust_radius has already been
-                               !  set to the minimum value at the previous step
-   !
+      tr_min_hit          ! .TRUE. if the trust_radius has already been
+                          !  set to the minimum value at the previous step
    LOGICAL :: &
-      conv_bfgs                ! .TRUE. when bfgs convergence has been achieved
+      conv_bfgs           ! .TRUE. when bfgs convergence has been achieved
    !
-   ! ... default values for all these variables are set in
+   ! ... default values for the following variables are set in
    ! ... Modules/read_namelist.f90 (SUBROUTINE ions_defaults)
-   !
-   INTEGER :: &
-      bfgs_ndim                ! dimension of the subspace for GDIIS
-                               ! fixed to 1 for standard BFGS algorithm
-   REAL(DP)  :: &
-      trust_radius_max,       &! maximum allowed displacement
-      trust_radius_min,       &! minimum allowed displacement
-      trust_radius_ini         ! initial displacement
-   REAL(DP)  :: &
-      w_1,                    &! parameters for Wolfe conditions
-      w_2                      ! parameters for Wolfe conditions
    !
    ! ... Note that trust_radius_max, trust_radius_min, trust_radius_ini,
    ! ... w_1, w_2, bfgs_ndim have a default value, but can also be assigned
    ! ... in the input.
+   !
+   INTEGER :: &
+      bfgs_ndim           ! dimension of the subspace for GDIIS
+                          ! fixed to 1 for standard BFGS algorithm
+   REAL(DP)  :: &
+      trust_radius_ini,  &! suggested initial displacement
+      trust_radius_min,  &! minimum allowed displacement
+      trust_radius_max    ! maximum allowed displacement
+
+   REAL(DP)  ::          &! parameters for Wolfe conditions
+      w_1,               &! 1st Wolfe condition: sufficient energy decrease
+      w_2                 ! 2nd Wolfe condition: sufficient gradient decrease
    !
 CONTAINS
    !
@@ -245,7 +254,8 @@ CONTAINS
       !
       ! ... the bfgs algorithm starts here
       !
-      IF ( ( energy > energy_p ) .AND. ( scf_iter > 1 ) ) THEN
+   
+      IF ( .NOT. energy_wolfe_condition( energy ) .AND. (scf_iter > 1) ) THEN
          !
          ! ... the previous step is rejected, line search goes on
          !
@@ -260,21 +270,18 @@ CONTAINS
          !
          ! ... s_min = - 0.5*( dE(0)*s'*s' ) / ( E(s') - E(0) - dE(0)*s' )
          !
-         dE0s = ( grad_p(:) .dot. step_old(:) )
+         if (abs(scnorm(step_old(:))-1._DP) > 1.d-10) call errore('bfgs', &
+                  ' step_old is NOT normalized ',1)
+         ! (normalized) search direction is the same as in previous step
+         step(:) = step_old(:)
          !
+         dE0s = ( grad_p(:) .dot. step(:) ) * trust_radius_old
+         IF (dE0s > 0._DP ) CALL errore( 'bfgs', &
+                  'dE0s is positive which should never happen', 1 )
          den = energy - energy_p - dE0s
          !
-         IF ( den > eps16 ) THEN
-            !
-            trust_radius = - 0.5_DP*dE0s*trust_radius_old / den
-            !
-         ELSE
-            !
-            ! ... no quadratic interpolation is possible: we use bisection
-            !
-            trust_radius = 0.5_DP*trust_radius_old
-            !
-         END IF
+         ! estimate new trust radius by interpolation
+         trust_radius = - 0.5_DP*dE0s*trust_radius_old / den
          !
          WRITE( UNIT = stdout, &
               & FMT = '(5X,"new trust radius",T30,"= ",F18.10," bohr")' ) &
@@ -295,29 +302,23 @@ CONTAINS
                    FMT = '(/,5X,"trust_radius < trust_radius_min")' )
             WRITE( UNIT = stdout, FMT = '(/,5X,"resetting bfgs history",/)' )
             !
-            IF ( tr_min_hit ) THEN
-               !
-               ! ... the history has already been reset at the previous step :
-               ! ... something is going wrong
-               !
-               CALL errore( 'bfgs', &
+            ! ... if tr_min_hit the history has already been reset at the 
+            ! ... previous step : something is going wrong
+            IF ( tr_min_hit ) CALL errore( 'bfgs', &
                             'bfgs history already reset at previous step', 1 )
-               !
-            END IF
             !
             CALL reset_bfgs( n )
             !
             step(:) = - ( inv_hess(:,:) .times. grad(:) )
+            ! normalize step but remember its length
+            nr_step_length = scnorm(step)
+            step(:) = step(:) / nr_step_length
             !
-            trust_radius = trust_radius_min
+            trust_radius = min(trust_radius_ini, nr_step_length)
             !
             tr_min_hit = .TRUE.
             !
          ELSE
-            !
-            ! ... old bfgs direction ( normalized ) is recovered
-            !
-            step(:) = step_old(:) / trust_radius_old
             !
             tr_min_hit = .FALSE.
             !
@@ -333,14 +334,13 @@ CONTAINS
             !
             ! ... first iteration
             !
-            IF ( grad_error < 0.01_DP ) &
-               trust_radius_ini = MIN( 0.2_DP, trust_radius_ini )
-            !
             step_accepted = .FALSE.
             !
          ELSE
             !
             step_accepted = .TRUE.
+            !
+            nr_step_length_old = nr_step_length
             !
             WRITE( UNIT = stdout, &
                  & FMT = '(5X,"CASE: ",A,"_new < ",A,"_old",/)' ) fname,fname
@@ -350,7 +350,7 @@ CONTAINS
             CALL update_inverse_hessian( pos, grad, n, stdout )
             !
          END IF
-         !
+         ! compute new search direction and store NR step length
          IF ( bfgs_ndim > 1 ) THEN
             !
             ! ... GDIIS extrapolation
@@ -364,29 +364,29 @@ CONTAINS
             step(:) = - ( inv_hess(:,:) .times. grad(:) )
             !
          END IF
-         !
          IF ( ( grad(:) .dot. step(:) ) > 0.0_DP ) THEN
             !
             WRITE( UNIT = stdout, &
                    FMT = '(5X,"uphill step: resetting bfgs history",/)' )
             !
             CALL reset_bfgs( n )
-            !
             step(:) = - ( inv_hess(:,:) .times. grad(:) )
             !
          END IF
+         !
+         ! normalize the step and save the step length
+         nr_step_length = scnorm(step)
+         step(:) = step(:) / nr_step_length
          !
          ! ... the new trust radius is computed
          !
          IF ( bfgs_iter == 1 ) THEN
             !
-            trust_radius = trust_radius_ini
+            trust_radius = min(trust_radius_ini, nr_step_length)
             !
             tr_min_hit = .FALSE.
             !
          ELSE
-            !
-            trust_radius = trust_radius_old
             !
             CALL compute_trust_radius( lwolfe, energy, grad, n, stdout )
             !
@@ -400,10 +400,8 @@ CONTAINS
       !
       ! ... step along the bfgs direction
       !
-      IF ( scnorm( step(:) ) < eps16 ) &
+      IF ( nr_step_length < eps16 ) &
          CALL errore( 'bfgs', 'NR step-length unreasonably short', 1 )
-      !
-      step(:) = trust_radius*step(:)/scnorm( step(:) )
       !
       ! ... information required by next iteration is saved here ( this must
       ! ... be done before positions are updated )
@@ -412,7 +410,7 @@ CONTAINS
       !
       ! ... positions and cell are updated
       !
-      pos(:) = pos(:) + step(:)
+      pos(:) = pos(:) + trust_radius * step(:)
       !
 1000  CONTINUE
       ! ... input ions+cell variables
@@ -590,12 +588,13 @@ CONTAINS
          READ( iunbfgs, * ) grad_old
          READ( iunbfgs, * ) inv_hess
          READ( iunbfgs, * ) tr_min_hit
+         READ( iunbfgs, * ) nr_step_length
          !
          CLOSE( UNIT = iunbfgs )
          !
-         trust_radius_old = scnorm( pos(:) - pos_p(:) )
-         !
-         step_old = ( pos(:) - pos_p(:) ) / trust_radius_old
+         step_old = ( pos(:) - pos_p(:) ) 
+         trust_radius_old = scnorm( step_old )
+         step_old = step_old / trust_radius_old
          !
       ELSE
          !
@@ -613,6 +612,7 @@ CONTAINS
          gdiis_iter = 0
          energy_p   = energy
          step_old   = 0.0_DP
+         nr_step_length = 0.0_DP
          !
          trust_radius_old = trust_radius_ini
          !
@@ -650,6 +650,7 @@ CONTAINS
       WRITE( iunbfgs, * ) grad_old
       WRITE( iunbfgs, * ) inv_hess
       WRITE( iunbfgs, * ) tr_min_hit
+      WRITE( iunbfgs, * ) nr_step_length
       !
       CLOSE( UNIT = iunbfgs )
       !
@@ -714,13 +715,32 @@ CONTAINS
       REAL(DP), INTENT(IN)  :: grad(:)
       LOGICAL,  INTENT(OUT) :: lwolfe
       !
-      !
-      lwolfe = ( energy - energy_p ) < w_1 * ( grad_p .dot. step_old )
-      !
-      lwolfe = lwolfe .AND. &
-               ABS( grad .dot. step_old ) > - w_2 * ( grad_p .dot. step_old )
+      lwolfe =  energy_wolfe_condition ( energy ) .AND. &
+                gradient_wolfe_condition ( grad )
       !
    END SUBROUTINE check_wolfe_conditions
+   !
+   !------------------------------------------------------------------------
+   LOGICAL FUNCTION energy_wolfe_condition ( energy )
+      !------------------------------------------------------------------------
+      IMPLICIT NONE
+      REAL(DP), INTENT(IN)  :: energy
+      !
+      energy_wolfe_condition = &
+          ( energy-energy_p ) < w_1 * ( grad_p.dot.step_old ) * trust_radius_old
+      !
+   END FUNCTION energy_wolfe_condition
+   !
+   !------------------------------------------------------------------------
+   LOGICAL FUNCTION gradient_wolfe_condition ( grad )
+      !------------------------------------------------------------------------
+      IMPLICIT NONE
+      REAL(DP), INTENT(IN)  :: grad(:)
+      !
+      gradient_wolfe_condition = &
+          ABS( grad .dot. step_old ) < - w_2 * ( grad_p .dot. step_old )
+      !
+   END FUNCTION gradient_wolfe_condition
    !
    !------------------------------------------------------------------------
    SUBROUTINE compute_trust_radius( lwolfe, energy, grad, n, stdout )
@@ -737,52 +757,37 @@ CONTAINS
       REAL(DP) :: a
       LOGICAL  :: ltest
       !
-      !
-      ltest = ( energy - energy_p ) < w_1 * ( grad_p .dot. step_old )
-      ltest = ltest .AND. ( scnorm( step ) > trust_radius_old )
+      ltest = ( energy - energy_p ) < w_1 * ( grad_p .dot. step_old ) * trust_radius_old
+      ltest = ltest .AND. ( nr_step_length_old > trust_radius_old )
       !
       IF ( ltest ) THEN
-         !
          a = 1.5_DP
-         !
       ELSE
-         !
          a = 1.1_DP
-         !
       END IF
+      IF ( lwolfe ) a = 2._DP * a
       !
-      IF ( lwolfe ) THEN
-         !
-         trust_radius = MIN( trust_radius_max, 2.0_DP*a*trust_radius_old )
-         !
-      ELSE
-         !
-         trust_radius = MIN( trust_radius_max, &
-                             a*trust_radius_old, scnorm( step ) )
-         !
-      END IF
+      trust_radius = MIN( trust_radius_max, a*trust_radius_old, nr_step_length )
       !
       IF ( trust_radius < trust_radius_min ) THEN
          !
          ! ... the history is reset
          !
-         IF ( tr_min_hit ) THEN
-            !
-            ! ... the history has already been reset at the previous step :
-            ! ... something is going wrong
-            !
-            CALL errore( 'bfgs', 'history already reset at previous step', 1 )
-            !
-         END IF
+         ! ... if tr_min_hit the history has already been reset at the 
+         ! ... previous step : something is going wrong
+         IF ( tr_min_hit ) CALL errore( 'bfgs', &
+                         'bfgs history already reset at previous step', 1 )
          !
          WRITE( UNIT = stdout, &
                 FMT = '(5X,"small trust_radius: resetting bfgs history",/)' )
          !
          CALL reset_bfgs( n )
-         !
          step(:) = - ( inv_hess(:,:) .times. grad(:) )
          !
-         trust_radius = trust_radius_min
+         nr_step_length = scnorm(step)
+         step(:) = step(:) / nr_step_length
+         !
+         trust_radius = min(trust_radius_min, nr_step_length )
          !
          tr_min_hit = .TRUE.
          !
@@ -795,12 +800,35 @@ CONTAINS
    END SUBROUTINE compute_trust_radius
    !
    !----------------------------------------------------------------------- 
-   REAL(DP) FUNCTION scnorm( vect )
+   REAL(DP) FUNCTION scnorm1( vect )
       !-----------------------------------------------------------------------
       IMPLICIT NONE
       REAL(DP), INTENT(IN) :: vect(:)
       !
-      scnorm = SQRT( DOT_PRODUCT( vect  ,  MATMUL( metric, vect ) ) )
+      scnorm1 = SQRT( DOT_PRODUCT( vect  ,  MATMUL( metric, vect ) ) )
+      !
+   END FUNCTION scnorm1
+   !
+   !----------------------------------------------------------------------- 
+   REAL(DP) FUNCTION scnorm( vect )
+      !-----------------------------------------------------------------------
+      IMPLICIT NONE
+      REAL(DP), INTENT(IN) :: vect(:)
+      REAL(DP) :: ss
+      INTEGER :: i,k,l,n
+      !
+      scnorm = 0._DP
+      n = SIZE (vect) / 3
+      do i=1,n
+         ss = 0._DP
+         do k=1,3
+            do l=1,3
+               ss = ss + &
+                    vect(k+(i-1)*3)*metric(k+(i-1)*3,l+(i-1)*3)*vect(l+(i-1)*3)
+            end do
+         end do
+         scnorm = MAX (scnorm, SQRT (ss) )
+      end do
       !
    END FUNCTION scnorm
    !
