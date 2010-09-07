@@ -23,9 +23,9 @@ dist.x : dist.o $(PWOBJS) $(QEMODS) $(LIBOBJS)
 		dist.o $(PWOBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../pwtools/$@ . )
 
-ev.x : ev.o $(PWOBJS) $(QEMODS) $(LIBOBJS)
+ev.x : ev.o ev_xml.o $(PWOBJS) $(QEMODS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ \
-		ev.o $(PWOBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
+		ev.o ev_xml.o $(PWOBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../pwtools/$@ . )
 
 kpoints.x : kpoints.o $(PWOBJS) $(QEMODS) $(LIBOBJS)

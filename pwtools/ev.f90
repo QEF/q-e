@@ -58,17 +58,27 @@ PROGRAM ev
 !!
       USE kinds, ONLY: DP
       USE constants, ONLY: bohr_radius_angs, ry_kbar
+      USE ev_xml,    ONLY : write_evdata_xml
+      USE mp,        ONLY : mp_start, mp_env
+      USE mp_global, ONLY : mp_global_end, nproc, mpime
       IMPLICIT NONE
       INTEGER, PARAMETER:: nmaxpar=4, nmaxpt=100, nseek=10000, nmin=4
-      INTEGER :: npar,npt,istat,ios
+      INTEGER :: npar,npt,istat,ios,gid
       CHARACTER :: bravais*3, au_unit*3, filin*256
       REAL(DP) :: par(nmaxpar), deltapar(nmaxpar), parmin(nmaxpar), &
              parmax(nmaxpar), v0(nmaxpt), etot(nmaxpt), efit(nmaxpt), &
              fac, emin, chisq, a
       REAL(DP), PARAMETER :: gpa_kbar = 10.0_dp
       LOGICAL :: in_angstrom
+      CHARACTER(LEN=256) :: fileout
 !
 !
+  CALL mp_start()
+  !
+  CALL mp_env( nproc, mpime, gid )
+  !
+  IF ( mpime == 0 ) THEN
+
       PRINT '(5x,"Lattice parameter or Volume are in (au, Ang) > ",$)'
       READ '(a)', au_unit
       in_angstrom = au_unit=='Ang' .or. au_unit=='ANG' .or. &
@@ -158,8 +168,15 @@ PROGRAM ev
            (npar,par,deltapar,parmin,parmax,nseek,nmin,chisq)
 !
       CALL write_results &
-           (npt,in_angstrom,fac,v0,etot,efit,istat,par,npar,emin,chisq)
+           (npt,in_angstrom,fac,v0,etot,efit,istat,par,npar,emin,chisq, &
+            fileout)
 !
+      CALL write_evdata_xml  &
+           (npt,fac,v0,etot,efit,istat,par,npar,emin,chisq,fileout)
+
+  ENDIF
+  CALL mp_global_end()
+
       STOP
     CONTAINS
 !
@@ -227,18 +244,20 @@ PROGRAM ev
 !
 !-----------------------------------------------------------------------
       SUBROUTINE write_results &
-            (npt,in_angstrom,fac,v0,etot,efit,istat,par,npar,emin,chisq)
+            (npt,in_angstrom,fac,v0,etot,efit,istat,par,npar,emin,chisq, &
+             filout)
 !-----------------------------------------------------------------------
 !
       IMPLICIT NONE
       INTEGER, INTENT(in) :: npt, istat, npar
       REAL(DP), INTENT(in):: v0(npt), etot(npt), efit(npt), emin, chisq, fac
       REAL(DP), INTENT(inout):: par(npar)
+      REAL(DP), EXTERNAL :: keane, birch
       LOGICAL, INTENT(in) :: in_angstrom
+      CHARACTER(len=256), intent(inout) :: filout
       !
       REAL(DP) :: p(npt), epv(npt)
       INTEGER :: i, iun
-      CHARACTER(len=256) :: filout
       LOGICAL :: exst
 
       PRINT '(5x,"Output file > ",$)'
@@ -398,8 +417,11 @@ PROGRAM ev
       RETURN
     END SUBROUTINE find_minimum
 !
+  END PROGRAM ev
+
       FUNCTION birch(x,k0,dk0,d2k0)
 !
+      USE kinds, ONLY : DP
       IMPLICIT NONE
       REAL(DP) birch, x, k0,dk0, d2k0
       REAL(DP) c0, c1
@@ -419,6 +441,7 @@ PROGRAM ev
 !
       FUNCTION keane(x,k0,dk0,d2k0)
 !
+      USE kinds, ONLY : DP
       IMPLICIT NONE
       REAL(DP) keane, x, k0, dk0, d2k0, ddk
 
@@ -427,4 +450,3 @@ PROGRAM ev
 
       RETURN
     END FUNCTION keane
-  END PROGRAM ev
