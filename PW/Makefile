@@ -211,10 +211,7 @@ vcsubs.o \
 vhpsi.o \
 vloc_of_g.o \
 vloc_psi.o \
-w0gauss.o \
-w1gauss.o \
 wfcinit.o \
-wgauss.o \
 write_ns.o \
 wsweight.o \
 weights.o \

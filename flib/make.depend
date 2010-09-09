@@ -31,6 +31,12 @@ sph_bes.o : ../Modules/kind.o
 sph_dbes.o : ../Modules/constants.o
 sph_dbes.o : ../Modules/kind.o
 volume.o : ../Modules/kind.o
+w0gauss.o : ../Modules/constants.o
+w0gauss.o : ../Modules/kind.o
+w1gauss.o : ../Modules/constants.o
+w1gauss.o : ../Modules/kind.o
+wgauss.o : ../Modules/constants.o
+wgauss.o : ../Modules/kind.o
 ylmr2.o : ../Modules/constants.o
 ylmr2.o : ../Modules/kind.o
 transto.o : ../include/opt_param.h

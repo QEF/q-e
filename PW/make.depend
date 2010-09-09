@@ -199,6 +199,9 @@ cegterg.o : ../Modules/kind.o
 cegterg.o : ../Modules/mp.o
 cegterg.o : ../Modules/mp_global.o
 cegterg.o : ../Modules/ptoolkit.o
+cegterg_x.o : ../Modules/kind.o
+cegterg_x.o : ../Modules/mp.o
+cegterg_x.o : ../Modules/mp_global.o
 clean_pw.o : ../Modules/atom.o
 clean_pw.o : ../Modules/control_flags.o
 clean_pw.o : ../Modules/fft_base.o
@@ -847,6 +850,14 @@ move_ions.o : pwcom.o
 move_ions.o : symm_base.o
 ms2.o : ../Modules/mp.o
 ms2.o : ../Modules/mp_global.o
+mt.o : ../Modules/cell_base.o
+mt.o : ../Modules/constants.o
+mt.o : ../Modules/control_flags.o
+mt.o : ../Modules/fft_base.o
+mt.o : ../Modules/ions_base.o
+mt.o : ../Modules/kind.o
+mt.o : ../Modules/ws_base.o
+mt.o : pwcom.o
 n_plane_waves.o : ../Modules/kind.o
 n_plane_waves.o : ../Modules/mp.o
 n_plane_waves.o : ../Modules/mp_global.o
@@ -1572,10 +1583,6 @@ vloc_psi.o : ../Modules/task_groups.o
 vloc_psi.o : ../Modules/wavefunctions.o
 vloc_psi.o : noncol.o
 vloc_psi.o : pwcom.o
-w0gauss.o : ../Modules/constants.o
-w0gauss.o : ../Modules/kind.o
-w1gauss.o : ../Modules/constants.o
-w1gauss.o : ../Modules/kind.o
 wannier_check.o : ../Modules/control_flags.o
 wannier_check.o : ../Modules/io_global.o
 wannier_check.o : ../Modules/ions_base.o
@@ -1638,8 +1645,6 @@ wfcinit.o : becmod.o
 wfcinit.o : buffers.o
 wfcinit.o : noncol.o
 wfcinit.o : pwcom.o
-wgauss.o : ../Modules/constants.o
-wgauss.o : ../Modules/kind.o
 write_ns.o : ../Modules/constants.o
 write_ns.o : ../Modules/io_global.o
 write_ns.o : ../Modules/ions_base.o
