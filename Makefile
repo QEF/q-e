@@ -127,7 +127,7 @@ xspectra : bindir mods libs pw pp gipaw
 	( cd XSpectra ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= all ; \
 	else $(MAKE) $(MFLAGS) TLDEPS= all ; fi ) ; fi
 
-pwall : pw ph pp gamma pwcond d3 vdw tools acfdt
+pwall : pw neb ph pp gamma pwcond d3 vdw tools acfdt
 all   : pwall cp ld1 upf gww tddfpt
 
 ###########################################################
