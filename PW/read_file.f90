@@ -135,7 +135,7 @@ SUBROUTINE read_file()
   END IF
   !
   if (cell_factor == 0.d0) cell_factor = 1.D0
-  lmovecell = .FALSE.
+!  lmovecell = .FALSE.
   !
   ! ... allocate memory for eigenvalues and weights (read from file)
   !

@@ -45,7 +45,7 @@ MODULE xml_io_base
             restart_dir, check_restartfile, check_file_exst,             &
             pp_check_file, save_history, save_print_counter,             &
             read_print_counter, set_kpoints_vars,                        &
-            write_header, write_control,                                 &
+            write_header, write_control, write_moving_cell,              &
             write_cell, write_ions, write_symmetry, write_planewaves,    &
             write_efield, write_spin, write_magnetization, write_xc,     &
 #ifdef EXX
@@ -777,6 +777,17 @@ MODULE xml_io_base
       !
     END SUBROUTINE write_cell
     !
+    SUBROUTINE write_moving_cell(lmovecell, cell_factor)
+
+    LOGICAL, INTENT(IN) :: lmovecell
+    REAL(DP), INTENT(IN) :: cell_factor
+
+    CALL iotk_write_begin( iunpun, "MOVING_CELL" )
+    CALL iotk_write_dat( iunpun, "CELL_FACTOR", cell_factor)
+    CALL iotk_write_end( iunpun, "MOVING_CELL"  )
+
+    RETURN
+    END SUBROUTINE write_moving_cell
     !------------------------------------------------------------------------
     SUBROUTINE write_ions( nsp, nat, atm, ityp, psfile, &
                            pseudo_dir, amass, tau, if_pos, dirname, pos_unit )

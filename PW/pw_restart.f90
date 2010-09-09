@@ -114,6 +114,7 @@ MODULE pw_restart
       USE exx,                  ONLY : x_gamma_extrapolation, nq1, nq2, nq3, &
                                        exxdiv_treatment, yukawa, ecutvcut
 #endif
+      USE cellmd,               ONLY : lmovecell, cell_factor 
 
       !
       IMPLICIT NONE
@@ -328,6 +329,7 @@ MODULE pw_restart
          !
          CALL write_cell( ibrav, symm_type, celldm, alat, &
                           at(:,1), at(:,2), at(:,3), bg(:,1), bg(:,2), bg(:,3) )
+         IF (lmovecell) CALL write_moving_cell(lmovecell, cell_factor)
          !
 !-------------------------------------------------------------------------------
 ! ... IONS
@@ -1421,6 +1423,7 @@ MODULE pw_restart
       USE printout_base, ONLY: title
       USE cell_base, ONLY : ibrav, alat, symm_type, at, bg, celldm
       USE cell_base, ONLY : tpiba, tpiba2, omega
+      USE cellmd,    ONLY : lmovecell, cell_factor
       !
       IMPLICIT NONE
       !
@@ -1524,6 +1527,12 @@ MODULE pw_restart
          !
          CALL iotk_scan_end( iunpun, "CELL" )
          !
+         CALL iotk_scan_begin( iunpun, "MOVING_CELL", found=lmovecell )
+         IF (lmovecell) THEN
+            CALL iotk_scan_dat( iunpun, "CELL_FACTOR", cell_factor)
+            CALL iotk_scan_end( iunpun, "MOVING_CELL"  )
+         END IF
+         !
          CALL iotk_close_read( iunpun )
          !
       END IF
@@ -1537,6 +1546,12 @@ MODULE pw_restart
       CALL mp_bcast( omega,     ionode_id, intra_image_comm )
       CALL mp_bcast( at,        ionode_id, intra_image_comm )
       CALL mp_bcast( bg,        ionode_id, intra_image_comm )
+      CALL mp_bcast( lmovecell, ionode_id, intra_image_comm )
+      IF (lmovecell) THEN
+         CALL mp_bcast( cell_factor,  ionode_id, intra_image_comm )
+      ELSE
+         cell_factor=1.0_DP
+      END IF
       !
       title = ' '
       !

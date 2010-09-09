@@ -30,6 +30,7 @@ SUBROUTINE phq_readin()
   USE fixed_occ,     ONLY : tfixed_occ
   USE lsda_mod,      ONLY : lsda, nspin
   USE spin_orb,      ONLY : domag
+  USE cellmd,        ONLY : lmovecell
   USE printout_base, ONLY : title
   USE control_ph,    ONLY : maxter, alpha_mix, lgamma, lgamma_gamma, epsil, &
                             zue, zeu, xmldyn,       &
@@ -353,6 +354,9 @@ SUBROUTINE phq_readin()
 
   IF (noncolin.and.(lraman.or.elop.or.elph)) CALL errore('phq_readin', &
       'lraman, elop, or e-ph and noncolin not programed',1)
+
+  IF (lmovecell) CALL errore('phq_readin', &
+      'The phonon code is not working after vc-relax',1)
 
   IF (nproc_image /= nproc_image_file .and. .not. twfcollect)  &
      CALL errore('phq_readin',&
