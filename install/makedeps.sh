@@ -33,9 +33,9 @@ do
 		  DEPENDS="$DEPENDS ../Modules ../EE ../NEB "       ;;
 	CPV )
 		  DEPENDS="$DEPENDS ../Modules ../EE "       ;;
-	PP | PWCOND | Gamma | PH | GIPAW | pwtools | ACFDT )
+	PP | PWCOND | Gamma | PH | GIPAW | pwtools )
 		  DEPENDS="$DEPENDS ../Modules ../EE ../PW ../NEB" ;;
-	D3 | VdW ) 
+	D3 | VdW | ACFDT ) 
                   DEPENDS="$DEPENDS ../Modules ../EE ../PW ../PH" ;;
 	XSpectra  )
 		  DEPENDS="$DEPENDS ../Modules ../PW ../PP ../GIPAW"  ;;
