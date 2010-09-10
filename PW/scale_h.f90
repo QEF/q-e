@@ -22,6 +22,7 @@ subroutine scale_h
   USE klist,      ONLY : xk, wk, nkstot
   USE us,         ONLY : nqxq, nqx, qrad, tab, tab_at, dq
   USE control_flags, ONLY : iverbosity
+  USE start_k,    ONLY : xk_start
 #ifdef __MPI
   USE mp,         ONLY : mp_max
   USE mp_global,  ONLY : intra_pool_comm
@@ -39,6 +40,8 @@ subroutine scale_h
   !
   call cryst_to_cart (nkstot, xk, at_old, - 1)
   call cryst_to_cart (nkstot, xk, bg, + 1)
+  call cryst_to_cart (nkstot, xk_start, at_old, - 1)
+  call cryst_to_cart (nkstot, xk_start, bg, + 1)
   IF (iverbosity==1 .OR. nkstot < 100) THEN
      WRITE( stdout, '(5x,a)' ) 'NEW k-points:'
      do ik = 1, nkstot

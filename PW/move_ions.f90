@@ -49,7 +49,9 @@ SUBROUTINE move_ions()
   IMPLICIT NONE
   !
   LOGICAL, SAVE         :: lcheck_mag = .TRUE., &
-                           restart_with_starting_magnetiz = .FALSE.
+                           restart_with_starting_magnetiz = .FALSE., &
+                           lcheck_cell= .TRUE., &
+                           final_cell_calculation=.FALSE.
     ! .TRUE. if a check on zero absolute magnetization is required
   REAL(DP), ALLOCATABLE :: tauold(:,:,:)
   REAL(DP)              :: energy_error, gradient_error, cell_error
@@ -168,6 +170,13 @@ SUBROUTINE move_ions()
               !                        A check on this configuration is needed
               restart_with_starting_magnetiz = .true.
               ! 
+           ELSE IF (lmovecell.and.lcheck_cell) THEN
+              !
+              !  After the cell relaxation we make a final calculation
+              !  with the correct g vectors corresponding to the relaxed
+              !  cell.
+              !
+              final_cell_calculation=.TRUE.
            ELSE
               !
               CALL terminate_bfgs ( etot, epse, epsf, epsp, lmovecell, &
@@ -197,10 +206,11 @@ SUBROUTINE move_ions()
            END IF
            !
            ! ... the logical flag lcheck_mag is set again to .TRUE. (needed if 
-           ! ... a new configuration with zero zero absolute magnetization is 
+           ! ... a new configuration with zero absolute magnetization is 
            ! ... identified in the following steps of the relaxation)
            !
            lcheck_mag = .TRUE.
+           IF (lmovecell) lcheck_cell = .TRUE.
            !
         END IF
         !
@@ -254,21 +264,36 @@ SUBROUTINE move_ions()
   END IF
 
   CALL mp_bcast(restart_with_starting_magnetiz,ionode_id,intra_image_comm)
+  CALL mp_bcast(final_cell_calculation,ionode_id,intra_image_comm)
   !
-  if (restart_with_starting_magnetiz) then
+  if (restart_with_starting_magnetiz.or.final_cell_calculation) then
      ! ... lsda relaxation :  a final configuration with zero 
      ! ... absolute magnetization has been found and we check 
      ! ... if it is really the minimum energy structure by 
      ! ... performing a new scf iteration without any "electronic" history
      !
-     WRITE( UNIT = stdout, FMT = 9010 )
-     WRITE( UNIT = stdout, FMT = 9020 )
-     !
-     ! ... the system is reinitialized
-     !
-     CALL potinit()
-     CALL newd()
-     CALL wfcinit()
+     IF (final_cell_calculation) THEN
+        WRITE( UNIT = stdout, FMT = 9110 )
+        WRITE( UNIT = stdout, FMT = 9120 )
+        !
+        CALL clean_pw( .FALSE. )
+        CALL close_files()
+        lmovecell=.FALSE.
+        lcheck_cell=.FALSE.
+        final_cell_calculation=.FALSE.
+        lbfgs=.FALSE.
+        lmd=.FALSE.
+        CALL init_run()
+     ELSE
+        WRITE( UNIT = stdout, FMT = 9010 )
+        WRITE( UNIT = stdout, FMT = 9020 )
+        !
+        ! ... the system is reinitialized
+        !
+        CALL potinit()
+        CALL newd()
+        CALL wfcinit()
+     END IF
      !
      ! ... this check is performed only once
      !
@@ -300,7 +325,7 @@ SUBROUTINE move_ions()
   END IF
   !
   RETURN
-  !
+
 9010 FORMAT( /5X,'lsda relaxation :  a final configuration with zero', &
            & /5X,'                   absolute magnetization has been found' )
 9020 FORMAT( /5X,'the program is checking if it is really ', &
@@ -308,4 +333,8 @@ SUBROUTINE move_ions()
            & /5X,'by performing a new scf iteration ',       & 
            &     'without any "electronic" history' )               
   !
+9110 FORMAT( /5X,'A final scf calculation at the relaxed structure.' )
+9120 FORMAT( /5X,'The G-vectors are recalculated. ' )
+  !
 END SUBROUTINE move_ions
+  !
