@@ -108,7 +108,7 @@ SUBROUTINE local_dos (iflag, lsign, kpoint, kband, spin_component, &
   !
   !   calculate the correct weights
   !
-  IF (iflag /= 0 .and. .not.lgauss) CALL errore ('local_dos', &
+  IF (iflag /= 0.and. iflag /=3 .and. .not.lgauss) CALL errore ('local_dos', &
        'gaussian broadening needed', 1)
   IF (iflag == 2 .and. ngauss /= -99) CALL errore ('local_dos', &
        ' beware: not using Fermi-Dirac function ',  - ngauss)
