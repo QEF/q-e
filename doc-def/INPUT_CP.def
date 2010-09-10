@@ -735,7 +735,7 @@ input_description -distribution {Quantum Espresso} -package CP -program cp.x {
             default { 0.D0 }
             info {
                 Amplitude of the finite electric field (in a.u.;
-                1 a.u. = 36.3609*10^10 V/m). Used only if tefield=.TRUE.
+                1 a.u. = 51.4220632*10^10 V/m). Used only if tefield=.TRUE.
 	    }
 	}
 
