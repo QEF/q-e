@@ -210,7 +210,7 @@ MODULE realus
       USE constants,  ONLY : pi, fpi, eps8, eps16
       USE ions_base,  ONLY : nat, nsp, ityp, tau
       USE cell_base,  ONLY : at, bg, omega, alat
-      USE gvect,      ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx
+      USE gvect,      ONLY : nr1, nr2, nr3, nrxx
       USE uspp,       ONLY : okvan, indv, nhtol, nhtolm, ap, nhtoj, lpx, lpl
       USE uspp_param, ONLY : upf, lmaxq, nh, nhm
       USE atom,       ONLY : rgrid
@@ -290,9 +290,9 @@ MODULE realus
       mby = mbr*sqrt( bg(2,1)**2 + bg(2,2)**2 + bg(2,3)**2 )
       mbz = mbr*sqrt( bg(3,1)**2 + bg(3,2)**2 + bg(3,3)**2 )
       !
-      dmbx = 2*anint( mbx*nrx1 ) + 2
-      dmby = 2*anint( mby*nrx2 ) + 2
-      dmbz = 2*anint( mbz*nrx3 ) + 2
+      dmbx = 2*anint( mbx*dfftp%nr1x ) + 2
+      dmby = 2*anint( mby*dfftp%nr2x ) + 2
+      dmbz = 2*anint( mbz*dfftp%nr3x ) + 2
       !
       roughestimate = anint( dble( dmbx*dmby*dmbz ) * pi / 6.D0 )
       !
@@ -313,7 +313,7 @@ MODULE realus
       ! ... now we find the points
       !
 #if defined (__PARA)
-      idx0 = nrx1*nrx2 * sum ( dfftp%npp(1:me_pool) )
+      idx0 = dfftp%nr1x*dfftp%nr2x * sum ( dfftp%npp(1:me_pool) )
 #else
       idx0 = 0
 #endif
@@ -339,10 +339,10 @@ MODULE realus
             ! ... three dimensional indices (i,j,k)
             !
             idx   = idx0 + ir - 1
-            k     = idx / (nrx1*nrx2)
-            idx   = idx - (nrx1*nrx2)*k
-            j     = idx / nrx1
-            idx   = idx - nrx1*j
+            k     = idx / (dfftp%nr1x*dfftp%nr2x)
+            idx   = idx - (dfftp%nr1x*dfftp%nr2x)*k
+            j     = idx / dfftp%nr1x
+            idx   = idx - dfftp%nr1x*j
             i     = idx
             !
             ! ... do not include points outside the physical range!
@@ -658,7 +658,7 @@ MODULE realus
       USE constants,  ONLY : pi, eps8, eps16
       USE ions_base,  ONLY : nat, nsp, ityp, tau
       USE cell_base,  ONLY : at, bg, omega, alat
-      USE gsmooth,    ONLY : nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, nrxxs
+      USE gsmooth,    ONLY : nr1s, nr2s, nr3s, nrxxs
       USE uspp,       ONLY : okvan, indv, nhtol, nhtolm, ap
       USE uspp_param, ONLY : upf, lmaxq, nh, nhm
       USE atom,       ONLY : rgrid
@@ -740,9 +740,9 @@ MODULE realus
       mby = mbr*sqrt( bg(2,1)**2 + bg(2,2)**2 + bg(2,3)**2 )
       mbz = mbr*sqrt( bg(3,1)**2 + bg(3,2)**2 + bg(3,3)**2 )
       !
-      dmbx = 2*anint( mbx*nrx1s ) + 2
-      dmby = 2*anint( mby*nrx2s ) + 2
-      dmbz = 2*anint( mbz*nrx3s ) + 2
+      dmbx = 2*anint( mbx*dffts%nr1x ) + 2
+      dmby = 2*anint( mby*dffts%nr2x ) + 2
+      dmbz = 2*anint( mbz*dffts%nr3x ) + 2
       !
       roughestimate = anint( dble( dmbx*dmby*dmbz ) * pi / 6.D0 )
       !
@@ -772,7 +772,7 @@ MODULE realus
       !   index0 = index0 + nrx1s*nrx2s*dffts%npp(i)
       !END DO
       !
-      index0 = nrx1s*nrx2s * sum ( dffts%npp(1:me_pool) )
+      index0 = dffts%nr1x*dffts%nr2x * sum ( dffts%npp(1:me_pool) )
 #else
       index0 = 0
 #endif
@@ -796,10 +796,10 @@ MODULE realus
             ! ... three dimensional indexes
             !
             index = index0 + ir - 1
-            k     = index / (nrx1s*nrx2s)
-            index = index - (nrx1s*nrx2s)*k
-            j     = index / nrx1s
-            index = index - nrx1s*j
+            k     = index / (dffts%nr1x*dffts%nr2x)
+            index = index - (dffts%nr1x*dffts%nr2x)*k
+            j     = index / dffts%nr1x
+            index = index - dffts%nr1x*j
             i     = index
             !
             DO ipol = 1, 3
@@ -2661,7 +2661,7 @@ MODULE realus
     ! OBM 241008
     !
     USE wavefunctions_module,     ONLY : psic
-    USE gsmooth,       ONLY : nrx1s,nrx2s,nrxxs,nls,nlsm,doublegrid
+    USE gsmooth,       ONLY : nrxxs,nls,nlsm,doublegrid
     USE kinds,         ONLY : DP
     USE fft_base,      ONLY : dffts
     USE task_groups,   ONLY : tg_gather
@@ -2692,7 +2692,7 @@ MODULE realus
           CALL tg_gather( dffts, vrs(:,current_spin), tg_v ) !if ibnd==1 this is a new calculation, and tg_v should be distributed.
         ENDIF
         !
-        DO j = 1, nrx1s * nrx2s * dffts%tg_npp( me_pool + 1 )
+        DO j = 1, dffts%nr1x*dffts%nr2x*dffts%tg_npp( me_pool + 1 )
            tg_psic (j) = tg_psic (j) + tg_psic_temp (j) * tg_v(j)
         ENDDO
         !
@@ -2727,7 +2727,7 @@ MODULE realus
   !
   USE kinds,                ONLY : DP
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
-  USE gvect,                ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, &
+  USE gvect,                ONLY : nr1, nr2, nr3, nrxx, &
                                    ngm, nl, nlm, gg, g, eigts1, eigts2, &
                                    eigts3, ig1, ig2, ig3
   USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
@@ -2835,7 +2835,7 @@ MODULE realus
 
   USE kinds,                ONLY : DP
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
-  USE gvect,                ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, &
+  USE gvect,                ONLY : nr1, nr2, nr3, nrxx, &
                                    ngm, nl, nlm, gg, g, eigts1, eigts2, &
                                    eigts3, ig1, ig2, ig3
   USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
@@ -2929,7 +2929,7 @@ MODULE realus
 
   USE kinds,                ONLY : DP
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
-  USE gvect,                ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, &
+  USE gvect,                ONLY : nr1, nr2, nr3, nrxx, &
                                    ngm, nl, nlm, gg, g, eigts1, eigts2, &
                                    eigts3, ig1, ig2, ig3
   USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
@@ -3019,7 +3019,7 @@ MODULE realus
   !
   USE kinds,                ONLY : DP
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
-  USE gvect,                ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, &
+  USE gvect,                ONLY : nr1, nr2, nr3, nrxx, &
                                    ngm, nl, nlm, gg, g, eigts1, eigts2, &
                                    eigts3, ig1, ig2, ig3
   USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk

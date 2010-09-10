@@ -14,7 +14,7 @@ SUBROUTINE vloc_psi_gamma(lda, n, m, psi, v, hpsi)
   !
   USE parallel_include
   USE kinds,   ONLY : DP
-  USE gsmooth, ONLY : nls, nlsm, nrx1s, nrx2s, nrx3s, nrxxs
+  USE gsmooth, ONLY : nls, nlsm, nrxxs
   USE wvfct,   ONLY : igk
   USE mp_global,     ONLY : nogrp, ogrp_comm, me_pool, nolist, use_task_groups
   USE fft_base,      ONLY : dffts
@@ -114,7 +114,7 @@ SUBROUTINE vloc_psi_gamma(lda, n, m, psi, v, hpsi)
         !
         CALL invfft ('Wave', tg_psic, dffts)
         !
-        DO j = 1, nrx1s * nrx2s * dffts%tg_npp( me_pool + 1 )
+        DO j = 1, dffts%nr1x*dffts%nr2x*dffts%tg_npp( me_pool + 1 )
            tg_psic (j) = tg_psic (j) * tg_v(j)
         ENDDO
         !
@@ -201,7 +201,7 @@ SUBROUTINE vloc_psi_k(lda, n, m, psi, v, hpsi)
   !
   USE parallel_include
   USE kinds,   ONLY : DP
-  USE gsmooth, ONLY : nls, nlsm, nrx1s, nrx2s, nrxxs
+  USE gsmooth, ONLY : nls, nlsm, nrxxs
   USE wvfct,   ONLY : igk
   USE mp_global,     ONLY : nogrp, ogrp_comm, me_pool, nolist, use_task_groups
   USE fft_base,      ONLY : dffts
@@ -286,7 +286,7 @@ SUBROUTINE vloc_psi_k(lda, n, m, psi, v, hpsi)
      IF( use_task_groups ) THEN
         !
 !$omp parallel do
-        DO j = 1, nrx1s * nrx2s * dffts%tg_npp( me_pool + 1 )
+        DO j = 1, dffts%nr1x*dffts%nr2x*dffts%tg_npp( me_pool + 1 )
            tg_psic (j) = tg_psic (j) * tg_v(j)
         ENDDO
 !$omp end parallel do
@@ -354,7 +354,7 @@ SUBROUTINE vloc_psi_nc (lda, n, m, psi, v, hpsi)
   !
   USE parallel_include
   USE kinds,   ONLY : DP
-  USE gsmooth, ONLY : nls, nlsm, nrx1s, nrx2s, nrxxs
+  USE gsmooth, ONLY : nls, nlsm, nrxxs
   USE gvect,   ONLY : nrxx
   USE wvfct,   ONLY : igk
   USE mp_global,     ONLY : nogrp, ogrp_comm, me_pool, nolist, use_task_groups
@@ -441,7 +441,7 @@ SUBROUTINE vloc_psi_nc (lda, n, m, psi, v, hpsi)
      !   product with the potential v = (vltot+vr) on the smooth grid
      !
      IF( use_task_groups ) THEN
-        DO j=1, nrx1s * nrx2s * dffts%tg_npp( me_pool + 1 )
+        DO j=1, dffts%nr1x*dffts%nr2x*dffts%tg_npp( me_pool + 1 )
            sup = tg_psic(j,1) * (tg_v(j,1)+tg_v(j,4)) + &
                  tg_psic(j,2) * (tg_v(j,2)-(0.d0,1.d0)*tg_v(j,3))
            sdwn = tg_psic(j,2) * (tg_v(j,1)-tg_v(j,4)) + &
