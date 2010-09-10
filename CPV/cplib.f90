@@ -203,7 +203,7 @@ END FUNCTION
       USE mp,                 ONLY: mp_sum
       USE mp_global,          ONLY: intra_image_comm
       USE uspp_param,         ONLY: upf
-      USE grid_dimensions,    ONLY: nr1, nr2, nr3, nr1x, nr2x, nr3x
+      USE grid_dimensions,    ONLY: nr1, nr2, nr3
       USE fft_interfaces,     ONLY: fwfft
       USE fft_base,           ONLY: dfftp
 
@@ -1947,10 +1947,8 @@ END FUNCTION
       USE cell_base,          ONLY: a1, a2, a3, tpiba2, h, ainv
       USE reciprocal_vectors, ONLY: gstart, g, gx
       USE recvecs_indexes,    ONLY: np, nm
-      USE grid_dimensions,    ONLY: nr1, nr2, nr3, &
-                                    nr1x, nr2x, nr3x, nnr => nnrx
-      USE smooth_grid_dimensions, ONLY: nr1s, nr2s, nr3s, &
-                                        nr1sx, nr2sx, nr3sx, nnrsx
+      USE grid_dimensions,    ONLY: nr1, nr2, nr3, nnr => nnrx
+      USE smooth_grid_dimensions, ONLY: nnrsx
       USE electrons_base,   ONLY: nspin
       USE constants,        ONLY: pi, fpi, au_gpa
       USE energies,         ONLY: etot, eself, enl, ekin, epseu, esr, eht, exc, eextfor 

@@ -16,8 +16,7 @@
       use reciprocal_vectors
       use gvecs
       use gvecw,                  only : ngw
-      use smooth_grid_dimensions, only : nr1s, nr2s, nr3s, &
-                                         nr1sx, nr2sx, nr3sx, nnrs => nnrsx
+      use smooth_grid_dimensions, only : nnrs => nnrsx
       use cell_base,              only : tpiba2
       USE metagga,                ONLY : kedtaus
       USE fft_interfaces,         ONLY : fwfft, invfft
@@ -76,8 +75,7 @@
       use grid_dimensions, only: nr1, nr2, nr3, &
             nr1x, nr2x, nr3x, nnr => nnrx
       use cell_base
-      use smooth_grid_dimensions, only: nr1s, nr2s, nr3s, &
-            nr1sx, nr2sx, nr3sx, nnrsx
+      use smooth_grid_dimensions, only: nnrsx
       use electrons_base, only: nx => nbspx, n => nbsp, f, ispin, nspin
       use constants, only: pi, fpi
 !
@@ -267,8 +265,7 @@
       use recvecs_indexes, only: np, nm
       use grid_dimensions, only: nr1, nr2, nr3, &
             nr1x, nr2x, nr3x, nnr => nnrx
-      use smooth_grid_dimensions, only: nr1s, nr2s, nr3s, &
-            nr1sx, nr2sx, nr3sx, nnrs => nnrsx
+      use smooth_grid_dimensions, only: nr1s, nr2s, nr3s, nnrs => nnrsx
       use electrons_base, only: nspin
       use constants, only: pi, fpi
       use energies, only: etot, eself, enl, ekin, epseu, esr, eht, exc

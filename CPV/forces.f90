@@ -31,8 +31,7 @@
       USE cvan,                   ONLY: ish
       USE uspp,                   ONLY: nhsa=>nkb, dvan, deeq
       USE uspp_param,             ONLY: nhm, nh
-      USE smooth_grid_dimensions, ONLY: nr1s, nr2s, nr3s, &
-                                        nr1sx, nr2sx, nr3sx, nnrsx
+      USE smooth_grid_dimensions, ONLY: nnrsx
       USE constants,              ONLY: pi, fpi
       USE ions_base,              ONLY: nsp, na, nat
       USE gvecw,                  ONLY: ngw, ggp
@@ -125,7 +124,7 @@
       IF( use_task_groups ) THEN
          !
 !$omp parallel do 
-         DO ir = 1, nr1sx * nr2sx * dffts%tg_npp( me_image + 1 )
+         DO ir = 1, dffts%nr1x*dffts%nr2x*dffts%tg_npp( me_image + 1 )
             psi(ir) = CMPLX ( v(ir,iss1) * DBLE( psi(ir) ), &
                               v(ir,iss2) *AIMAG( psi(ir) ) ,kind=DP)
          END DO
@@ -197,7 +196,7 @@
             END IF
          END IF
 
-         eig_offset = eig_offset + nr3sx * dffts%nsw(me_image+1)
+         eig_offset = eig_offset + dffts%nr3x * dffts%nsw(me_image+1)
 
          ! We take into account the number of elements received from other members of the orbital group
 

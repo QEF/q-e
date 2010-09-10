@@ -39,7 +39,7 @@
       use cell_base, only: ainv, a1, a2, a3
       use cell_base, only: omega, alat
       use cell_base, only: h, hold, deth, wmass, tpiba2
-      use smooth_grid_dimensions, only: nnrsx, nr1s, nr2s, nr3s
+      use smooth_grid_dimensions, only: nnrsx
       use smallbox_grid_dimensions, only: nnrb => nnrbx, nr1b, nr2b, nr3b
       use local_pseudo, only: vps, rhops
       use io_global,                ONLY : io_global_start, stdout, ionode, ionode_id

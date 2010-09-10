@@ -1372,15 +1372,14 @@ SUBROUTINE grid_map()
   !
   USE kinds,                  ONLY : DP
   USE efcalc,                 ONLY : xdist, ydist, zdist
-  USE smooth_grid_dimensions, ONLY : nnrsx, nr1s, nr2s, nr3s, &
-                                     nr1sx, nr2sx, nr3sx
+  USE smooth_grid_dimensions, ONLY : nnrsx
   USE fft_base,               ONLY : dffts
   USE mp_global,              ONLY : me_image
   USE parallel_include
   !
   IMPLICIT NONE
   !
-  INTEGER :: ir1, ir2, ir3, ibig3, me
+  INTEGER :: ir1, ir2, ir3, ibig3, me, nr1s, nr2s, nr3s, nr1sx, nr2sx, nr3sx
   !
   me = me_image + 1
   !
@@ -1388,6 +1387,12 @@ SUBROUTINE grid_map()
   ALLOCATE(ydist(nnrsx))
   ALLOCATE(zdist(nnrsx))
   !
+  nr1s = dffts%nr1
+  nr2s = dffts%nr2
+  nr1sx = dffts%nr1x
+  nr2sx = dffts%nr2x
+  nr3sx = dffts%nr3x
+  nr3s = dffts%nr3
   DO ir3=1,nr3s
 #ifdef __PARA
      ibig3 = ir3 - dffts%ipp( me )
@@ -2483,7 +2488,6 @@ SUBROUTINE wfsteep( m, Omat, Umat, b1, b2, b3 )
   USE control_flags,          ONLY : iprsta
   USE cell_base,              ONLY : alat
   USE constants,              ONLY : tpi, autoaf => BOHR_RADIUS_ANGS
-  USE smooth_grid_dimensions, ONLY : nr1s, nr2s, nr3s
   USE mp_global,              ONLY : me_image
   USE printout_base,          ONLY : printout_base_open, printout_base_unit, &
                                      printout_base_close
@@ -2916,7 +2920,6 @@ SUBROUTINE jacobi_rotation( m, Omat, Umat, b1, b2, b3 )
   USE control_flags,          ONLY : iprsta
   USE cell_base,              ONLY : alat
   USE constants,              ONLY : tpi
-  USE smooth_grid_dimensions, ONLY : nr1s, nr2s, nr3s
   USE mp_global,              ONLY : me_image
   USE printout_base,          ONLY : printout_base_open, printout_base_unit, &
                                      printout_base_close
