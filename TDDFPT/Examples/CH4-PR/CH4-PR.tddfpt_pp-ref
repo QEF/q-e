@@ -1,0 +1,41 @@
+
+     Program TDDFPT_PP v.4.2    starts on 12Sep2010 at 23:18:13 
+
+     This program is part of the open-source Quantum ESPRESSO suite
+     for quantum simulation of materials; please cite
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
+          URL http://www.quantum-espresso.org", 
+     in publications or presentations arising from this work. More details at
+     http://www.quantum-espresso.org/wiki/index.php/Citing_Quantum-ESPRESSO
+
+     Parallel version (MPI), running on     1 processors
+
+     Reading    500 Lanczos steps for direction 1
+        500 steps will be considered
+
+     Reading    500 Lanczos steps for direction 2
+        500 steps will be considered
+
+     Reading    500 Lanczos steps for direction 3
+        500 steps will be considered
+
+     Data ready, starting to calculate observables
+
+     Broadening =      0.00100000 Ry
+
+     Output file name: ch4-pr.plot         
+     alpha:absorption coefficient
+     CHI:susceptibility tensor
+     Functions are reported as a function of hbar.omega (Ry)
+     Static Polarizability Tensor:
+     chi_1_1=  0.238993229105366E+01 + i0.000000000000000E+00
+     chi_2_1=  0.246212302127900E-05 + i0.000000000000000E+00
+     chi_3_1=  -.126345391136001E-05 + i0.000000000000000E+00
+     chi_1_2=  0.246212302103447E-05 + i0.000000000000000E+00
+     chi_2_2=  0.238993226836416E+01 + i0.000000000000000E+00
+     chi_3_2=  -.609468691431850E-06 + i0.000000000000000E+00
+     chi_1_3=  -.126345391116435E-05 + i0.000000000000000E+00
+     chi_2_3=  -.609468691343730E-06 + i0.000000000000000E+00
+     chi_3_3=  0.238993293314604E+01 + i0.000000000000000E+00
+     Possible peak at      0.65460000 Ry; Intensity=   0.53E+02
+     Possible peak at      0.70390000 Ry; Intensity=   0.25E+02

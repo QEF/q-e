@@ -196,10 +196,11 @@ if (ionode) then !No need for parallelization in this code
   !
   !
   write (stdout,'(/5x,"Data ready, starting to calculate observables")')
+  write (stdout,'(/5x,"Broadening = ",f15.8," Ry")') epsil
   filename = trim(prefix) // ".plot"
   write (stdout,'(/5x,"Output file name: ",A20)') filename
   if (n_ipol == 3) then
-   write (stdout,'(5x,"alpha:absorption coefficient")')
+   write (stdout,'(5x,"alpha:absorption coefficient")') 
   else
    write (stdout,'(5x,"Insufficent info for absorption coefficient")')
   endif

@@ -1,0 +1,10 @@
+&lr_input
+    prefix="ch4-pr",
+    outdir='./out',
+    restart_step=250,
+/
+&lr_control
+    itermax=500,
+    ipol=4
+/
+
