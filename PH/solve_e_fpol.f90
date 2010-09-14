@@ -286,7 +286,7 @@ subroutine solve_e_fpol ( iw )
            ! calculates dvscf, sum over k => dvscf_q_ipert
            !
            call incdrhoscf (dvscfout(1,current_spin,ipol), wk(ik), &
-                            ik, dbecsum(1,1,current_spin,ipol))
+                            ik, dbecsum(1,1,current_spin,ipol), dpsi)
         enddo   ! on polarizations
      enddo      ! on k points
 #ifdef __PARA

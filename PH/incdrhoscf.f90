@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !-----------------------------------------------------------------------
-subroutine incdrhoscf (drhoscf, weight, ik, dbecsum)
+subroutine incdrhoscf (drhoscf, weight, ik, dbecsum, dpsi)
   !-----------------------------------------------------------------------
   !
   !     This routine computes the change of the charge density due to the
@@ -20,27 +20,27 @@ subroutine incdrhoscf (drhoscf, weight, ik, dbecsum)
   USE fft_base,  ONLY: dffts
   USE fft_interfaces, ONLY: invfft
   USE gsmooth,   ONLY : nrxxs, nls
-  USE wvfct,     ONLY : npw, igk
+  USE wvfct,     ONLY : npw, igk, npwx, nbnd
   USE uspp_param,ONLY: nhm
   USE wavefunctions_module,  ONLY: evc
-  USE eqv,       ONLY : dpsi
   USE qpoint,    ONLY : npwq, igkq, ikks
   USE control_ph, ONLY : nbnd_occ
 
   implicit none
-
+  ! I/O variables
   integer :: ik
   ! input: the k point
-
   real(DP) :: weight
   ! input: the weight of the k point
+  complex(DP) :: dpsi (npwx,nbnd)
+  ! input: the perturbed wfc for the given k point
   complex(DP) :: drhoscf (nrxxs), dbecsum (nhm*(nhm+1)/2,nat)
   ! output: the change of the charge densit
   ! inp/out: the accumulated dbec
   !
+  !
   !   here the local variable
   !
-
   real(DP) :: wgt
   ! the effective weight of the k point
 

@@ -354,7 +354,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
                                        dbecsum_nc(1,1,1,1,ipert))
            ELSE
               call incdrhoscf (drhoscf(1,current_spin,ipert), weight, ik, &
-                            dbecsum(1,1,current_spin,ipert))
+                            dbecsum(1,1,current_spin,ipert), dpsi)
            END IF
            ! on perturbations
         enddo

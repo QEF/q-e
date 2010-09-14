@@ -166,7 +166,7 @@ subroutine solve_e2
            !
            weight = wk (ik)
            call incdrhoscf (dvscfout (1,1,ipol), weight, ik, &
-                            dbecsum (1, 1))
+                            dbecsum (1, 1), dpsi)
            enddo   ! on perturbations
         enddo      ! on k points
 #ifdef __PARA

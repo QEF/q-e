@@ -99,7 +99,8 @@ subroutine zstar_eu_us
            call incdrhoscf_nc (dvscf(1,1,jpol),weight,ik, &
                               dbecsum_nc(1,1,1,1,jpol))
         else
-           call incdrhoscf (dvscf(1,current_spin,jpol),weight,ik, dbecsum(1,1,current_spin,jpol))
+           call incdrhoscf (dvscf(1,current_spin,jpol),weight,ik, &
+                            dbecsum(1,1,current_spin,jpol), dpsi)
         endif
      end do
   end do

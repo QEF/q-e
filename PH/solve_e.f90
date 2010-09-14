@@ -265,7 +265,7 @@ subroutine solve_e
                                        dbecsum_nc(1,1,1,1,ipol))
            ELSE
               call incdrhoscf (dvscfout(1,current_spin,ipol), wk(ik), &
-                            ik, dbecsum(1,1,current_spin,ipol))
+                            ik, dbecsum(1,1,current_spin,ipol), dpsi)
            ENDIF
         enddo   ! on polarizations
      enddo      ! on k points
