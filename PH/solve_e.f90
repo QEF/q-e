@@ -262,7 +262,7 @@ subroutine solve_e
            !
            IF (noncolin) THEN
               call incdrhoscf_nc(dvscfout(1,1,ipol),wk(ik),ik, &
-                                       dbecsum_nc(1,1,1,1,ipol))
+                                 dbecsum_nc(1,1,1,1,ipol), dpsi)
            ELSE
               call incdrhoscf (dvscfout(1,current_spin,ipol), wk(ik), &
                             ik, dbecsum(1,1,current_spin,ipol), dpsi)

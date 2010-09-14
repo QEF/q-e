@@ -28,15 +28,14 @@ subroutine incdrhoscf (drhoscf, weight, ik, dbecsum, dpsi)
 
   implicit none
   ! I/O variables
-  integer :: ik
+  integer, INTENT (IN) :: ik
   ! input: the k point
-  real(DP) :: weight
+  real(DP), INTENT (IN) :: weight
   ! input: the weight of the k point
-  complex(DP) :: dpsi (npwx,nbnd)
+  complex(DP), INTENT (IN) :: dpsi (npwx,nbnd)
   ! input: the perturbed wfc for the given k point
-  complex(DP) :: drhoscf (nrxxs), dbecsum (nhm*(nhm+1)/2,nat)
-  ! output: the change of the charge densit
-  ! inp/out: the accumulated dbec
+  complex(DP), INTENT (INOUT) :: drhoscf (nrxxs), dbecsum (nhm*(nhm+1)/2,nat)
+  ! input/output: the accumulated change to the charge density and dbecsum
   !
   !
   !   here the local variable

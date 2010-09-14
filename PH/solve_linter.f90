@@ -351,7 +351,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
            weight = wk (ikk)
            IF (noncolin) THEN
               call incdrhoscf_nc(drhoscf(1,1,ipert),weight,ik, &
-                                       dbecsum_nc(1,1,1,1,ipert))
+                                 dbecsum_nc(1,1,1,1,ipert), dpsi)
            ELSE
               call incdrhoscf (drhoscf(1,current_spin,ipert), weight, ik, &
                             dbecsum(1,1,current_spin,ipert), dpsi)

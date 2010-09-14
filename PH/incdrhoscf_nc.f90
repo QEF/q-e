@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !-----------------------------------------------------------------------
-subroutine incdrhoscf_nc (drhoscf, weight, ik, dbecsum)
+subroutine incdrhoscf_nc (drhoscf, weight, ik, dbecsum, dpsi)
   !-----------------------------------------------------------------------
   !
   !     This routine computes the change of the charge density due to the
@@ -25,22 +25,23 @@ subroutine incdrhoscf_nc (drhoscf, weight, ik, dbecsum)
   USE spin_orb,  ONLY : domag
   USE noncollin_module, ONLY : npol, nspin_mag
   USE uspp_param,ONLY : nhm
-  USE wvfct,     ONLY : npw, npwx, igk
+  USE wvfct,     ONLY : npw, npwx, igk, nbnd
   USE wavefunctions_module,  ONLY: evc
   USE qpoint,    ONLY : npwq, igkq, ikks
-  USE eqv,       ONLY : dpsi
   USE control_ph, ONLY : nbnd_occ
 
   implicit none
 
-  integer :: ik
+  ! I/O variables
+  INTEGER, INTENT(IN) :: ik
   ! input: the k point
-
-  real(DP) :: weight
+  REAL(DP), INTENT(IN) :: weight
   ! input: the weight of the k point
-  complex(DP) :: drhoscf (nrxx,nspin_mag), dbecsum (nhm,nhm,nat,nspin)
-  ! output: the change of the charge densit
-  ! inp/out: the accumulated dbec
+  COMPLEX(DP), INTENT(IN) :: dpsi(npwx*npol,nbnd)
+  ! input: the perturbed wfcs at the given k point
+  COMPLEX(DP), INTENT(INOUT) :: drhoscf (nrxx,nspin_mag), dbecsum (nhm,nhm,nat,nspin)
+  ! input/output: the accumulated change of the charge density and dbecsum
+  !
   !
   !   here the local variable
   !
