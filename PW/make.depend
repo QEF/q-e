@@ -764,8 +764,6 @@ io_rho_xml.o : ../Modules/paw_variables.o
 io_rho_xml.o : ../Modules/xml_io_base.o
 io_rho_xml.o : pwcom.o
 io_rho_xml.o : scf_mod.o
-ions.o : ../Modules/control_flags.o
-ions.o : pwcom.o
 irrek.o : ../Modules/kind.o
 iweights.o : ../Modules/kind.o
 iweights.o : ../Modules/mp.o
@@ -1055,11 +1053,11 @@ pwcom.o : ../Modules/recvec.o
 pwscf.o : ../Modules/check_stop.o
 pwscf.o : ../Modules/control_flags.o
 pwscf.o : ../Modules/environment.o
-pwscf.o : ../Modules/image_io_routines.o
 pwscf.o : ../Modules/io_global.o
 pwscf.o : ../Modules/mp_global.o
 pwscf.o : ../Modules/parameters.o
 pwscf.o : ms2.o
+pwscf.o : pwcom.o
 qvan2.o : ../Modules/kind.o
 qvan2.o : ../Modules/uspp.o
 qvan2.o : pwcom.o

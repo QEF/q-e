@@ -13,13 +13,11 @@ PROGRAM pwscf
   !
   USE io_global,        ONLY : stdout, ionode
   USE parameters,       ONLY : ntypx, npk, lmaxx
-  USE control_flags,    ONLY : conv_elec, conv_ions, lpath, gamma_only
+  USE control_flags,    ONLY : conv_elec, lpath, gamma_only, lscf
+  USE control_flags,    ONLY : conv_ions, istep, nstep, restart, lmd, lbfgs
+  USE force_mod,        ONLY : lforce, lstres
   USE environment,      ONLY : environment_start
-!  USE path_variables,   ONLY : conv_path
   USE check_stop,       ONLY : check_stop_init
-!  USE path_base,        ONLY : initialize_path, search_mep
-!  USE path_io_routines, ONLY : path_summary
-  USE image_io_routines, ONLY : io_image_start
   USE mp_global,        ONLY : mp_startup
 #if defined(__MS2)
   USE ms2,              ONLY : MS2_enabled,                 &
@@ -67,7 +65,6 @@ PROGRAM pwscf
   !
   main_loop: DO
      !
-     !
      ! ... electronic self-consistentcy
      !
      CALL electrons()
@@ -76,7 +73,40 @@ PROGRAM pwscf
      !
      ! ... if requested ions are moved
      !
-     CALL ions()
+!  CALL ions()
+  !
+  CALL start_clock( 'ions' )
+  !
+  conv_ions = .TRUE.
+  !
+  ! ... recover from a previous run, if appropriate
+  !
+  IF ( restart .AND. lscf ) CALL restart_in_ions()
+  !
+  IF ( lforce ) CALL forces()
+  !
+  IF ( lstres ) CALL stress()
+  !
+  IF ( lmd .OR. lbfgs ) THEN
+     !
+     ! ... first we move the ions
+     !
+     CALL move_ions()
+     !
+     ! ... then we save restart information for the new configuration
+     !
+     IF ( istep < nstep .AND. .NOT. conv_ions ) THEN
+        !
+        CALL punch( 'config' )
+        !
+        CALL save_in_ions()
+        !
+     END IF
+     !
+  END IF
+  !
+  CALL stop_clock( 'ions' )
+  !
      !
 #if defined(__MS2)
      CALL return_forces()

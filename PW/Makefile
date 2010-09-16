@@ -108,7 +108,6 @@ init_vloc.o \
 input.o \
 interpolate.o \
 io_rho_xml.o \
-ions.o \
 irrek.o \
 iweights.o \
 kpoint_grid.o \
