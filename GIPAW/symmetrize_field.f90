@@ -14,7 +14,7 @@ SUBROUTINE symmetrize_field(field, iflag)
   !     iflag = 0  => tensor         (e.g. induced B field)
   !     iflag = 1  => pseudo-tensor  (e.g. induced current)
   !
-  !     don't use nrxxs: in the parallel case nrx1s*nrx2s*nrx3s /= nrxxs
+  !     don't use nrxxs: in the parallel case nr1sx*nr2sx*nr3sx /= nrxxs
   !
   USE kinds,                           ONLY : DP
   USE cell_base,                       ONLY : at, bg
@@ -25,7 +25,7 @@ SUBROUTINE symmetrize_field(field, iflag)
 
   !-- parameters ------------------------------------------------------
   IMPLICIT NONE
-  REAL(DP), INTENT(INOUT) :: field(nrx1s*nrx2s*nrx3s,3,3)
+  REAL(DP), INTENT(INOUT) :: field(nr1sx*nr2sx*nr3sx,3,3)
   INTEGER :: iflag
 
   !-- local variables ----------------------------------------------------
@@ -37,7 +37,7 @@ SUBROUTINE symmetrize_field(field, iflag)
   if (nsym.eq.1) return
 
   ! cartesian to crystal
-  do i = 1, nrx1s*nrx2s*nrx3s
+  do i = 1, nr1sx*nr2sx*nr3sx
     tmp(:,:) = field(i,:,:)
     call cart_to_crys ( tmp )
     field(i,:,:) = tmp(:,:)
@@ -47,7 +47,7 @@ SUBROUTINE symmetrize_field(field, iflag)
   call syme2(field, iflag)
 
   ! crystal to cartesian
-  do i = 1, nrx1s*nrx2s*nrx3s
+  do i = 1, nr1sx*nr2sx*nr3sx
     tmp(:,:) = field(i,:,:)
     call crys_to_cart ( tmp )
     field(i,:,:) = tmp(:,:)
@@ -84,7 +84,7 @@ SUBROUTINE psymmetrize_field(field, iflag)
   ! if no symmetries, return
   if (nsym.eq.1) return
 
-  allocate( aux(nrx1s*nrx2s*nrx3s,3,3) )
+  allocate( aux(nr1sx*nr2sx*nr3sx,3,3) )
   do i = 1, 3
     do j = 1, 3
       call grid_gather(field(:,i,j), aux(:,i,j))
@@ -113,7 +113,7 @@ subroutine syme2 (dvsym, iflag)
   use pwcom
   implicit none
 
-  real(DP) :: dvsym (nrx1, nrx2, nrx3, 3, 3)
+  real(DP) :: dvsym (nr1x, nr2x, nr3x, 3, 3)
   real(DP), allocatable :: aux (:,:,:,:,:)
   ! the function to symmetrize
   ! auxiliary space
@@ -126,9 +126,9 @@ subroutine syme2 (dvsym, iflag)
   real(dp) :: det(48), sc(3,3), d
 
   if (nsym.eq.1) return
-  allocate (aux(nrx1 , nrx2 , nrx3 , 3, 3))
+  allocate (aux(nr1x , nr2x , nr3x , 3, 3))
 
-  call dcopy (nrx1 * nrx2 * nrx3 * 9, dvsym, 1, aux, 1)
+  call dcopy (nr1x * nr2x * nr3x * 9, dvsym, 1, aux, 1)
 
   ! compute determinants of transformation matrixes
   do irot = 1, nsym
@@ -179,7 +179,7 @@ subroutine syme2 (dvsym, iflag)
   enddo
   enddo
 
-  call dscal (nrx1 * nrx2 * nrx3 * 9, 1.d0 / DBLE (nsym), dvsym , 1)
+  call dscal (nr1x * nr2x * nr3x * 9, 1.d0 / DBLE (nsym), dvsym , 1)
 
   deallocate (aux)
   return

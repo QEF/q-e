@@ -28,7 +28,7 @@ SUBROUTINE openfilq()
   USE qpoint,         ONLY : nksq
   USE output,         ONLY : fildyn, fildvscf
   USE wvfct,          ONLY : nbnd, npwx
-  USE gvect,          ONLY : nrx1, nrx2, nrx3, nrxx
+  USE gvect,          ONLY : nr1x, nr2x, nr3x, nrxx
   USE lsda_mod,       ONLY : nspin
   USE uspp,           ONLY : nkb, okvan
   USE io_files,       ONLY : prefix, iunigk
@@ -105,7 +105,7 @@ SUBROUTINE openfilq()
   !  and solve_linter). Used for third-order calculations.
   !
   iudrho = 23
-  lrdrho = 2 * nrx1 * nrx2 * nrx3 * nspin
+  lrdrho = 2 * nr1x * nr2x * nr3x * nspin
   !
   !
   !   Here the sequential files

@@ -19,10 +19,10 @@ SUBROUTINE ggen()
    USE cell_base,          ONLY : at, bg
    USE reciprocal_vectors, ONLY : ig_l2g
    USE gvect,              ONLY : g, gg, ngm, ngm_g, ngm_l, nr1, nr2, nr3, &
-                                    gcutm, nrx1, nrx2, nrx3, ig1, ig2, ig3,  &
+                                    gcutm, nr1x, nr2x, nr3x, ig1, ig2, ig3,  &
                                     nl, gstart, gl, ngl, igtongl
    USE gsmooth,            ONLY : ngms, gcutms, ngms_g, nr1s, nr2s, nr3s, &
-                                    nrx1s, nrx3s, nls
+                                    nr1sx, nr3sx, nls
    USE control_flags,      ONLY : gamma_only
    USE cellmd,             ONLY : lmovecell
    USE constants,          ONLY : eps8
@@ -129,7 +129,7 @@ SUBROUTINE ggen()
       IF (m1 < 1) m1 = m1 + nr1
       m2 = mod (j, nr2) + 1
       IF (m2 < 1) m2 = m2 + nr2
-      mc = m1 + (m2 - 1) * nrx1
+      mc = m1 + (m2 - 1) * nr1x
       IF ( dfftp%isind ( mc ) == 0) CYCLE ngloop
 #endif
 
@@ -185,13 +185,13 @@ SUBROUTINE ggen()
          CALL errore('ggen','Mesh too small?',ng)
 
 #if defined (__PARA) && !defined (__USE_3D_FFT)
-      nl (ng) = n3 + ( dfftp%isind (n1 + (n2 - 1) * nrx1) - 1) * nrx3
+      nl (ng) = n3 + ( dfftp%isind (n1 + (n2 - 1) * nr1x) - 1) * nr3x
       IF (ng <= ngms) &
-         nls (ng) = n3s + ( dffts%isind (n1s + (n2s - 1) * nrx1s) - 1) * nrx3s
+         nls (ng) = n3s + ( dffts%isind (n1s + (n2s - 1) * nr1sx) - 1) * nr3sx
 #else
-      nl (ng) = n1 + (n2 - 1) * nrx1 + (n3 - 1) * nrx1 * nrx2
+      nl (ng) = n1 + (n2 - 1) * nr1x + (n3 - 1) * nr1x * nr2x
       IF (ng <= ngms) &
-         nls (ng) = n1s + (n2s - 1) * nrx1s + (n3s - 1) * nrx1s * nr2s
+         nls (ng) = n1s + (n2s - 1) * nr1sx + (n3s - 1) * nr1sx * nr2s
 #endif
    ENDDO
    !
@@ -248,8 +248,8 @@ SUBROUTINE index_minusg()
    !     between the fft mesh points and -G (for gamma-only calculations)
    !
    USE gvect,   ONLY : ngm, nr1, nr2, nr3, &
-                        nrx1, nrx2, nrx3, nlM, ig1, ig2, ig3
-   USE gsmooth, ONLY : nr1s, nr2s, nr3s, nrx1s, nrx3s, nlsm, ngms
+                        nr1x, nr2x, nr3x, nlM, ig1, ig2, ig3
+   USE gsmooth, ONLY : nr1s, nr2s, nr3s, nr1sx, nr3sx, nlsm, ngms
    USE fft_base,  ONLY : dfftp, dffts
    IMPLICIT NONE
    !
@@ -277,13 +277,13 @@ SUBROUTINE index_minusg()
       ENDIF
 
 #if defined (__PARA) && !defined (__USE_3D_FFT)
-      nlm(ng) = n3 + (dfftp%isind (n1 + (n2 - 1) * nrx1) - 1) * nrx3
+      nlm(ng) = n3 + (dfftp%isind (n1 + (n2 - 1) * nr1x) - 1) * nr3x
       IF (ng<=ngms) &
-         nlsm(ng) = n3s + (dffts%isind (n1s + (n2s - 1) * nrx1s) - 1) * nrx3s
+         nlsm(ng) = n3s + (dffts%isind (n1s + (n2s - 1) * nr1sx) - 1) * nr3sx
 #else
-      nlm(ng) = n1 + (n2 - 1) * nrx1 + (n3 - 1) * nrx1 * nrx2
+      nlm(ng) = n1 + (n2 - 1) * nr1x + (n3 - 1) * nr1x * nr2x
       IF (ng<=ngms) &
-         nlsm(ng) = n1s + (n2s - 1) * nrx1s + (n3s - 1) * nrx1s * nr2s
+         nlsm(ng) = n1s + (n2s - 1) * nr1sx + (n3s - 1) * nr1sx * nr2s
 #endif
    ENDDO
 

@@ -658,7 +658,7 @@ SUBROUTINE projwave( filproj, lsym, lgww )
               nkslast=nkstot
            ENDIF
            iunproj=33
-           CALL write_io_header(filename, iunproj, title, nrx1, nrx2, nrx3, &
+           CALL write_io_header(filename, iunproj, title, nr1x, nr2x, nr3x, &
                 nr1, nr2, nr3, nat, ntyp, ibrav, celldm, at, gcutm, dual, &
                 ecutwfc, nkstot/nspin,nbnd,natomwfc)
            DO nwfc = 1, natomwfc
@@ -1188,7 +1188,7 @@ SUBROUTINE projwave_nc(filproj, lsym )
      !
      IF (filproj/=' ') THEN
         iunproj=33
-        CALL write_io_header(filproj, iunproj, title, nrx1, nrx2, nrx3, &
+        CALL write_io_header(filproj, iunproj, title, nr1x, nr2x, nr3x, &
            nr1, nr2, nr3, nat, ntyp, ibrav, celldm, at, gcutm, dual, ecutwfc, &
            nkstot,nbnd,natomwfc)
         DO nwfc = 1, natomwfc
@@ -1900,7 +1900,7 @@ SUBROUTINE  partialdos_nc (Emin, Emax, DeltaE, kresolveddos, filpdos)
 END SUBROUTINE partialdos_nc
 !
 !-----------------------------------------------------------------------
-SUBROUTINE write_io_header(filplot, iunplot, title, nrx1, nrx2, nrx3, &
+SUBROUTINE write_io_header(filplot, iunplot, title, nr1x, nr2x, nr3x, &
            nr1, nr2, nr3, nat, ntyp, ibrav, celldm, at, gcutm, dual, ecutwfc, &
            nkstot,nbnd,natomwfc)
    !-----------------------------------------------------------------------
@@ -1913,7 +1913,7 @@ SUBROUTINE write_io_header(filplot, iunplot, title, nrx1, nrx2, nrx3, &
    IMPLICIT NONE
    CHARACTER (len=*) :: filplot
    CHARACTER (len=*) :: title
-   INTEGER :: nrx1, nrx2, nrx3, nr1, nr2, nr3, nat, ntyp, ibrav
+   INTEGER :: nr1x, nr2x, nr3x, nr1, nr2, nr3, nat, ntyp, ibrav
    REAL(DP) :: celldm (6), gcutm, dual, ecutwfc, at(3,3)
    INTEGER :: iunplot, ios, na, nt, i
    INTEGER :: nkstot,nbnd,natomwfc
@@ -1924,7 +1924,7 @@ SUBROUTINE write_io_header(filplot, iunplot, title, nrx1, nrx2, nrx3, &
          STATUS = 'unknown', ERR = 101, IOSTAT = ios)
    101     CALL errore ('write_io_h', 'opening file '//trim(filplot), abs (ios) )
    WRITE (iunplot, '(a)') title
-   WRITE (iunplot, '(8i8)') nrx1, nrx2, nrx3, nr1, nr2, nr3, nat, ntyp
+   WRITE (iunplot, '(8i8)') nr1x, nr2x, nr3x, nr1, nr2, nr3, nat, ntyp
    WRITE (iunplot, '(i6,6f12.8)') ibrav, celldm
    IF  (ibrav == 0) THEN
        WRITE ( iunplot, * ) at(:,1)
@@ -2520,7 +2520,7 @@ SUBROUTINE pprojwave( filproj, lsym )
               nkslast=nkstot
            ENDIF
            iunproj=33
-           CALL write_io_header(filename, iunproj, title, nrx1, nrx2, nrx3, &
+           CALL write_io_header(filename, iunproj, title, nr1x, nr2x, nr3x, &
                 nr1, nr2, nr3, nat, ntyp, ibrav, celldm, at, gcutm, dual, &
                 ecutwfc, nkstot/nspin,nbnd,natomwfc)
            DO nwfc = 1, natomwfc
@@ -3011,7 +3011,7 @@ SUBROUTINE projwave_boxes( filpdos, filproj, n_proj_boxes, irmin, irmax, plotbox
   ! ... Define functions with values 1.0
   ! ... on the specified boxes and 0.0 elsewhere.
   !
-  ALLOCATE( thetabox (nrx1*nrx2*nrx3) )
+  ALLOCATE( thetabox (nr1x*nr2x*nr3x) )
   !
   ALLOCATE( thetathisproc(nrxx,1:n_proj_boxes) )
   !
@@ -3081,7 +3081,7 @@ SUBROUTINE projwave_boxes( filpdos, filproj, n_proj_boxes, irmin, irmax, plotbox
         OPEN (4,file=fileout,form='formatted', status='unknown')
         CALL xsf_struct (alat, at, nat, tau, atm, ityp, 4)
         CALL xsf_fast_datagrid_3d &
-             (thetabox(1:nrx1*nrx2*nrx3), nr1, nr2, nr3, nrx1, nrx2, nrx3, at, alat, 4)
+             (thetabox(1:nr1x*nr2x*nr3x), nr1, nr2, nr3, nr1x, nr2x, nr3x, at, alat, 4)
         CLOSE (4)
         !
      ENDIF
@@ -3119,7 +3119,7 @@ SUBROUTINE projwave_boxes( filpdos, filproj, n_proj_boxes, irmin, irmax, plotbox
   ! B2. Integrate the charge
   DO ibox = 1, n_proj_boxes
      boxcharge(ibox) = DDOT(nrxx,raux(:),1,thetathisproc(:,ibox),1) &
-          &   * omega / (nrx1*nrx2*nrx3)
+          &   * omega / (nr1x*nr2x*nr3x)
      CALL mp_sum ( boxcharge(ibox) , intra_pool_comm )
   ENDDO
   !
@@ -3129,7 +3129,7 @@ SUBROUTINE projwave_boxes( filpdos, filproj, n_proj_boxes, irmin, irmax, plotbox
      DO ibox = 1, n_proj_boxes
         WRITE (stdout, &
              '(5x,"Box #",i3," : vol ",f10.6," % = ",f14.6," (a.u.)^3; ",e13.6," elec")') &
-             ibox, 100* boxvolume(ibox) /(nrx1*nrx2*nrx3), omega* boxvolume(ibox) /(nrx1*nrx2*nrx3), boxcharge(ibox)
+             ibox, 100* boxvolume(ibox) /(nr1x*nr2x*nr3x), omega* boxvolume(ibox) /(nr1x*nr2x*nr3x), boxcharge(ibox)
      ENDDO
   ENDIF
   !
@@ -3188,7 +3188,7 @@ SUBROUTINE projwave_boxes( filpdos, filproj, n_proj_boxes, irmin, irmax, plotbox
         !
         DO ibox = 1, n_proj_boxes
            proj(ibox,ibnd,ik) = DDOT(nrxx,raux(:),1,thetathisproc(:,ibox),1) &
-                &               / (nrx1*nrx2*nrx3)
+                &               / (nr1x*nr2x*nr3x)
         ENDDO
         !
      ENDDO bnd_loop
@@ -3210,7 +3210,7 @@ SUBROUTINE projwave_boxes( filpdos, filproj, n_proj_boxes, irmin, irmax, plotbox
   IF ( ionode ) THEN
      IF (filproj/=' ') THEN
         iunproj=33
-        CALL write_io_header(filproj, iunproj, title, nrx1, nrx2, nrx3, &
+        CALL write_io_header(filproj, iunproj, title, nr1x, nr2x, nr3x, &
            nr1, nr2, nr3, nat, ntyp, ibrav, celldm, at, gcutm, dual, ecutwfc, &
            nkstot,nbnd,natomwfc)
         DO ibox = 1, n_proj_boxes

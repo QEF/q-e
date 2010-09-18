@@ -1493,7 +1493,7 @@ SUBROUTINE write_plot
    USE wavefunctions_module, ONLY : evc, psic
    USE io_files, ONLY : find_free_unit, nwordwfc, iunwfc
    USE wannier
-   USE gsmooth,         ONLY : nls, nlsm, nrxxs, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s
+   USE gsmooth,         ONLY : nls, nlsm, nrxxs, nr1s, nr2s, nr3s, nr1sx, nr2sx, nr3sx
    USE klist,           ONLY : nkstot, xk
    USE gvect,           ONLY : g, ngm, ecutwfc
    USE cell_base,       ONLY : tpiba2
@@ -1513,7 +1513,7 @@ SUBROUTINE write_plot
 #ifdef __PARA
    INTEGER nxxs
    COMPLEX(DP),ALLOCATABLE :: psic_all(:)
-   nxxs = nrx1s * nrx2s * nrx3s
+   nxxs = nr1sx * nr2sx * nr3sx
    ALLOCATE(psic_all(nxxs) )
 #endif
 

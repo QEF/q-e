@@ -11,7 +11,7 @@
 !
 !--------------------------------------------------------------------
       SUBROUTINE add_dcc_field( vpot, vcorr, rhotot,nelec, &
-                                nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, &
+                                nr1, nr2, nr3, nr1x, nr2x, nr3x, nrxx, &
                                 nl, nlm, g, gg, ngm, gstart, nspin  )
 
 !--------------------------------------------------------------------
@@ -41,14 +41,14 @@
       !
       ! ... Declares variables
       !
-      INTEGER, INTENT(IN)     :: nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, nspin, &
+      INTEGER, INTENT(IN)     :: nr1, nr2, nr3, nr1x, nr2x, nr3x, nrxx, nspin, &
                                  ngm, gstart, nl( ngm ), nlm( ngm)
 
       REAL( DP ), INTENT(IN)  :: g( ngm ), gg( ngm ), nelec
 
-      REAL( DP ), INTENT(IN)  :: rhotot( nrx1*nrx2*nrx3 )
-      REAL( DP )              :: vpot( nrx1*nrx2*nrx3 ), &
-                                 vcorr( nrx1*nrx2*nrx3 )
+      REAL( DP ), INTENT(IN)  :: rhotot( nr1x*nr2x*nr3x )
+      REAL( DP )              :: vpot( nr1x*nr2x*nr3x ), &
+                                 vcorr( nr1x*nr2x*nr3x )
       !
       REAL( DP )              :: t1, t2, t3
       REAL( DP )              :: delta1n, delta2n, delta3n
@@ -93,7 +93,7 @@
       ! ... taking into account the fact that the
       ! ... average of the local potential is not zero
       !
-      ALLOCATE( old_vcorr( nrx1 * nrx2 * nrx3 ) )
+      ALLOCATE( old_vcorr( nr1x * nr2x * nr3x ) )
       old_vcorr = vcorr
       !
       ! ... the electronic charge density adopts 
@@ -127,10 +127,10 @@
       ! ... with periodic boundary conditions 
       !
 
-      ALLOCATE( aux(nrx1*nrx2*nrx3) )
+      ALLOCATE( aux(nr1x*nr2x*nr3x) )
       aux(:)=vpot
 
-      CALL v_h_from_rho_r( rhotot, nr1, nr2, nr3, nrx1, nrx2, nrx3,  &
+      CALL v_h_from_rho_r( rhotot, nr1, nr2, nr3, nr1x, nr2x, nr3x,  &
                  nrxx, nl,nlm, ngm, gg, gstart, alat, omega, ehart,  &
                  rhocharge, aux )
 

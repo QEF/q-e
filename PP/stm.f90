@@ -25,7 +25,7 @@ SUBROUTINE stm (wf, sample_bias, z, dz, stmdos)
   USE cell_base, ONLY: tpiba2, tpiba, omega, at, alat
   USE fft_base,  ONLY: dfftp
   USE fft_interfaces, ONLY : fwfft, invfft
-  USE gvect, ONLY: nrx1, nrx2, nrx3, ngm, g, ecutwfc, &
+  USE gvect, ONLY: nr1x, nr2x, nr3x, ngm, g, ecutwfc, &
        nl, nlm, nrxx
   USE klist, ONLY: xk, lgauss, degauss, ngauss, wk, nks, nelec
   USE ener, ONLY: ef
@@ -41,7 +41,7 @@ SUBROUTINE stm (wf, sample_bias, z, dz, stmdos)
   USE fft_base,  ONLY : grid_gather
 !
   IMPLICIT NONE
-  real(DP) :: sample_bias, z, dz, stmdos (nrx1 * nrx2 * nrx3)
+  real(DP) :: sample_bias, z, dz, stmdos (nr1x * nr2x * nr3x)
   ! the stm density of states
   !
   !    And here the local variables
@@ -76,7 +76,7 @@ SUBROUTINE stm (wf, sample_bias, z, dz, stmdos)
   t0 = scnds ()
   ALLOCATE (gs( 2, npwx))
   ALLOCATE (a ( npwx))
-  ALLOCATE (psi(nrx1, nrx2))
+  ALLOCATE (psi(nr1x, nr2x))
   !
   stmdos(:) = 0.d0
   rho%of_r(:,:) = 0.d0

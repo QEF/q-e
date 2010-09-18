@@ -10,7 +10,7 @@
 ! contributions by E. Lamas and S. de Gironcoli (SISSA/DEMOCRITOS)
 !
 !--------------------------------------------------------------------
-      SUBROUTINE calc_ecomp( rho, nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, nspin )
+      SUBROUTINE calc_ecomp( rho, nr1, nr2, nr3, nr1x, nr2x, nr3x, nrxx, nspin )
 !--------------------------------------------------------------------
       !
       ! ... Calculates the periodic-image-correction
@@ -32,7 +32,7 @@
       !
       ! ... Declares variables
       !
-      INTEGER, INTENT(IN)    :: nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, nspin 
+      INTEGER, INTENT(IN)    :: nr1, nr2, nr3, nr1x, nr2x, nr3x, nrxx, nspin 
       REAL(DP), INTENT(IN)   :: rho( nrxx, nspin )
       !
       INTEGER                :: ir,                                    &
@@ -67,7 +67,7 @@
 
       REAL( DP ), allocatable :: aux (:),rhotot(:)
 
-      nrx123=nrx1*nrx2*nrx3
+      nrx123=nr1x*nr2x*nr3x
 
       allocate ( rhotot(nrx123) )
 
@@ -137,14 +137,14 @@
                      * PINTERP( t2, b, bound2 )                        &
                      * PINTERP( t3, c, bound3 )
            df1 = 0.5D0 * (                                             &
-             vcomp( COMPINDEX( ir1+a+1,ir2+b,ir3+c,nrx1,nrx2,nrx3 ) )     &
-           - vcomp( COMPINDEX( ir1+a-1,ir2+b,ir3+c,nrx1,nrx2,nrx3 ) ) )
+             vcomp( COMPINDEX( ir1+a+1,ir2+b,ir3+c,nr1x,nr2x,nr3x ) )     &
+           - vcomp( COMPINDEX( ir1+a-1,ir2+b,ir3+c,nr1x,nr2x,nr3x ) ) )
            df2 = 0.5D0 * (                                             &
-             vcomp( COMPINDEX( ir1+a,ir2+b+1,ir3+c,nrx1,nrx2,nrx3 ) )     &
-           - vcomp( COMPINDEX( ir1+a,ir2+b-1,ir3+c,nrx1,nrx2,nrx3 ) ) )
+             vcomp( COMPINDEX( ir1+a,ir2+b+1,ir3+c,nr1x,nr2x,nr3x ) )     &
+           - vcomp( COMPINDEX( ir1+a,ir2+b-1,ir3+c,nr1x,nr2x,nr3x ) ) )
            df3 = 0.5D0 * (                                             &
-             vcomp( COMPINDEX( ir1+a,ir2+b,ir3+c+1,nrx1,nrx2,nrx3 ) )     &
-           - vcomp( COMPINDEX( ir1+a,ir2+b,ir3+c-1,nrx1,nrx2,nrx3 ) ) )
+             vcomp( COMPINDEX( ir1+a,ir2+b,ir3+c+1,nr1x,nr2x,nr3x ) )     &
+           - vcomp( COMPINDEX( ir1+a,ir2+b,ir3+c-1,nr1x,nr2x,nr3x ) ) )
            g = g + df1 * QINTERP( t1, a, bound1 )                      &
                        * PINTERP( t2, b, bound2 )                      &
                        * PINTERP( t3, c, bound3 )                      &

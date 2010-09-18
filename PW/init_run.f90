@@ -20,7 +20,7 @@ SUBROUTINE init_run()
   USE paw_init,           ONLY : paw_post_init
 #endif
   USE bp,                 ONLY : lberry, lelfield
-  USE gvect,              ONLY : nrxx, nrx1, nrx2, nrx3, nr1, nr2, nr3, ecutwfc
+  USE gvect,              ONLY : nrxx, nr1x, nr2x, nr3x, nr1, nr2, nr3, ecutwfc
 ! DCC
   USE ee_mod,             ONLY : do_comp, do_coarse
 ! Wannier_ac
@@ -64,7 +64,7 @@ SUBROUTINE init_run()
 ! DCC
   ! ... Initializes EE variables
   !
-  IF ( do_comp ) CALL init_ee(nrx1,nrx2,nrx3)
+  IF ( do_comp ) CALL init_ee(nr1x,nr2x,nr3x)
   !
   IF ( do_coarse )  THEN
     CALL ggen_coarse()

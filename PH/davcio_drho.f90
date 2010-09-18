@@ -20,7 +20,7 @@ SUBROUTINE davcio_drho( drho, lrec, iunit, nrec, isw )
   USE io_global, ONLY : ionode, ionode_id
   USE mp_global, ONLY : inter_pool_comm, me_pool, intra_image_comm
   USE mp,        ONLY : mp_bcast, mp_barrier
-  USE gvect,     ONLY : nrx1, nrx2, nrx3, nrxx
+  USE gvect,     ONLY : nr1x, nr2x, nr3x, nrxx
   USE noncollin_module,  ONLY : nspin_mag
   !
   IMPLICIT NONE
@@ -41,7 +41,7 @@ SUBROUTINE davcio_drho( drho, lrec, iunit, nrec, isw )
   CALL mp_bcast(exst,ionode_id, intra_image_comm)
   IF (.NOT.exst) RETURN
 
-  ALLOCATE( ddrho( nrx1 * nrx2 * nrx3 , nspin_mag) )
+  ALLOCATE( ddrho( nr1x * nr2x * nr3x , nspin_mag) )
   !
   IF ( isw == 1 ) THEN
      !

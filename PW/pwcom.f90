@@ -40,9 +40,9 @@ MODULE gvect
        nr1,           &! fft dimension along x
        nr2,           &! fft dimension along y
        nr3,           &! fft dimension along z
-       nrx1,          &! maximum fft dimension along x
-       nrx2,          &! maximum fft dimension along y
-       nrx3,          &! maximum fft dimension along z
+       nr1x,          &! maximum fft dimension along x
+       nr2x,          &! maximum fft dimension along y
+       nr3x,          &! maximum fft dimension along z
        nrxx,          &! maximum total fft
        ngl             ! number of |g| shells
   !INTEGER, ALLOCATABLE :: &
@@ -97,9 +97,9 @@ MODULE gsmooth
        nr1s,        &!
        nr2s,        &! the dimension of the smooth grid
        nr3s,        &!
-       nrx1s,       &! maximum dimension of the smooth grid
-       nrx2s,       &! maximum dimension of the smooth grid
-       nrx3s,       &! maximum dimension of the smooth grid
+       nr1sx,       &! maximum dimension of the smooth grid
+       nr2sx,       &! maximum dimension of the smooth grid
+       nr3sx,       &! maximum dimension of the smooth grid
        nrxxs         ! the total dimension of the smooth grid
   INTEGER, POINTER :: &
        nls(:),      &! the correspondence  G <-> smooth mesh

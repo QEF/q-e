@@ -14,7 +14,7 @@ subroutine sym_dmag (nper, irr, dmagtosym)
   !
   USE kinds, only : DP
   USE constants, ONLY: tpi
-  USE gvect, ONLY: nr1, nr2, nr3, nrx1, nrx2, nrx3
+  USE gvect, ONLY: nr1, nr2, nr3, nr1x, nr2x, nr3x
   USE cell_base, ONLY : at, bg
   USE symm_base, ONLY : s, ftau, t_rev, sname, invs
   USE noncollin_module, ONLY: nspin_mag
@@ -27,7 +27,7 @@ subroutine sym_dmag (nper, irr, dmagtosym)
   ! the number of perturbations
   ! the representation under conside
 
-  complex(DP) :: dmagtosym (nrx1, nrx2, nrx3, nspin_mag, nper)
+  complex(DP) :: dmagtosym (nr1x, nr2x, nr3x, nspin_mag, nper)
   ! the magnetization to symmetrize (only 2:4 components)
 
   integer :: is, ri, rj, rk, i, j, k, ipert, jpert, ipol, isym, &
@@ -59,7 +59,7 @@ subroutine sym_dmag (nper, irr, dmagtosym)
   if (nsymq == 1.and. (.not.minus_q) ) return
   call start_clock ('sym_dmag')
 
-  allocate (dmagsym(  nrx1 , nrx2 , nrx3 , 3, nper))
+  allocate (dmagsym(  nr1x , nr2x , nr3x , 3, nper))
   allocate (dmags( 3, nper))
   !
   ! if necessary we symmetrize with respect to  S(irotmq)*q = -q + Gi

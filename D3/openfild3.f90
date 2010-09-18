@@ -94,7 +94,7 @@ SUBROUTINE openfild3
   iudrho = 25
   iud0rho = 33
   IF (lgamma) iud0rho = iudrho
-  lrdrho = 2 * nrx1 * nrx2 * nrx3 * nspin
+  lrdrho = 2 * nr1x * nr2x * nr3x * nspin
   !
   !   is opened only by the first task of each pool
   !

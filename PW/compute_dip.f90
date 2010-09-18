@@ -80,7 +80,7 @@ SUBROUTINE compute_el_dip(emaxpos, eopreg, edir, charge, e_dipole)
   USE constants, ONLY : fpi
   USE kinds,      ONLY : DP
   USE cell_base,  ONLY : at, bg, omega, alat, saw
-  USE gvect,      ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx
+  USE gvect,      ONLY : nr1, nr2, nr3, nr1x, nr2x, nr3x, nrxx
   USE fft_base,   ONLY : dfftp
   USE mp_global,  ONLY : me_pool, intra_pool_comm
   USE mp,         ONLY : mp_sum
@@ -126,7 +126,7 @@ SUBROUTINE compute_el_dip(emaxpos, eopreg, edir, charge, e_dipole)
 #if defined (__PARA)
   !
   DO i = 1, me_pool
-     index0 = index0 + nrx1*nrx2*dfftp%npp(i)
+     index0 = index0 + nr1x*nr2x*dfftp%npp(i)
   END DO
   !
 #endif
@@ -139,10 +139,10 @@ SUBROUTINE compute_el_dip(emaxpos, eopreg, edir, charge, e_dipole)
      ! ... three dimensional indexes
      !
      index = index0 + ir - 1
-     k     = index / (nrx1*nrx2)
-     index = index - (nrx1*nrx2)*k
-     j     = index / nrx1
-     index = index - nrx1*j
+     k     = index / (nr1x*nr2x)
+     index = index - (nr1x*nr2x)*k
+     j     = index / nr1x
+     index = index - nr1x*j
      i     = index
      
      !

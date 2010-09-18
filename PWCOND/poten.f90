@@ -13,7 +13,7 @@ SUBROUTINE poten(vppot,nrz,z)
 ! This subroutine computes the 2D Fourier components of the
 ! local potential in each slab.
 !
-  USE gvect, ONLY : nr1, nr2, nr3, nrxx, nrx1, nrx2, nrx3
+  USE gvect, ONLY : nr1, nr2, nr3, nrxx, nr1x, nr2x, nr3x
   USE constants, ONLY : tpi
   USE cell_base, ONLY : at, bg
   USE scf, only : vltot, v
@@ -44,7 +44,7 @@ SUBROUTINE poten(vppot,nrz,z)
   CALL start_clock('poten')
   ALLOCATE( ipiv( nrz ) )
   ALLOCATE( gz( nrz ) )
-  ALLOCATE( aux( nrx1*nrx2*nrx3 ) )
+  ALLOCATE( aux( nr1x*nr2x*nr3x ) )
   ALLOCATE( auxr( nrxx ) )
   ALLOCATE( amat( nrz, nrz ) )
   ALLOCATE( amat0( nrz, nrz ) )
@@ -96,7 +96,7 @@ ENDIF
 !
 !
 #ifdef __PARA
-  allocate ( allv(nrx1*nrx2*nrx3) )
+  allocate ( allv(nr1x*nr2x*nr3x) )
 #endif
 
 vppot = 0.d0
@@ -124,7 +124,7 @@ DO ispin=1,nspin_eff
 !  To find FFT of the local potential
 !  (use serial FFT even in the parallel case)
 !
-  CALL cfft3d (aux,nr1,nr2,nr3,nrx1,nrx2,nrx3,-1)
+  CALL cfft3d (aux,nr1,nr2,nr3,nr1x,nr2x,nr3x,-1)
 
   DO i = 1, nrx
     IF(i.GT.nrx/2+1) THEN
@@ -139,7 +139,7 @@ DO ispin=1,nspin_eff
          jx = j
       ENDIF
       ij = i+(j-1)*nrx
-      ijx = ix+(jx-1)*nrx1
+      ijx = ix+(jx-1)*nr1x
 
       DO k = 1, nrz
         il = k-1
@@ -151,7 +151,7 @@ DO ispin=1,nspin_eff
          ELSE
             kx = k
          ENDIF
-         vppot(k, ij, is(ispin), js(ispin)) = aux(ijx+(kx-1)*nrx1*nrx2)
+         vppot(k, ij, is(ispin), js(ispin)) = aux(ijx+(kx-1)*nr1x*nr2x)
 
         ENDIF
       ENDDO

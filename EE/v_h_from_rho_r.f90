@@ -10,7 +10,7 @@
 ! contributions by E. Lamas and S. de Gironcoli (SISSA/DEMOCRITOS)
 !
 !----------------------------------------------------------------------------
-SUBROUTINE v_h_from_rho_r( rhotot, nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, nl, nlm, &
+SUBROUTINE v_h_from_rho_r( rhotot, nr1, nr2, nr3, nr1x, nr2x, nr3x, nrxx, nl, nlm, &
                 ngm, gg, gstart, alat, omega, ehart, charge, vltot )
   !----------------------------------------------------------------------------
   !
@@ -27,12 +27,12 @@ SUBROUTINE v_h_from_rho_r( rhotot, nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, nl, nl
   !
   IMPLICIT NONE
   !
-  INTEGER, INTENT(IN) :: nr1, nr2, nr3, nrx1, nrx2, nrx3, &
+  INTEGER, INTENT(IN) :: nr1, nr2, nr3, nr1x, nr2x, nr3x, &
                          nrxx, ngm, gstart, nl(ngm), nlm(ngm)
   !
-  REAL (DP), INTENT(IN) :: rhotot(nrx1*nrx2*nrx3), gg(ngm), alat, omega
+  REAL (DP), INTENT(IN) :: rhotot(nr1x*nr2x*nr3x), gg(ngm), alat, omega
   !
-  REAL (DP), INTENT(OUT) :: vltot(nrx1*nrx2*nrx3), ehart, charge
+  REAL (DP), INTENT(OUT) :: vltot(nr1x*nr2x*nr3x), ehart, charge
 
 
   REAL (DP),ALLOCATABLE  :: rho(:)

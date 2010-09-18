@@ -499,7 +499,7 @@ CONTAINS
     USE buffers,              ONLY : get_buffer
     USE gvect,                ONLY : nrxx
     USE gsmooth,              ONLY : nls, nlsm, nr1s, nr2s, nr3s, &
-                                     nrx1s, nrx2s, nrx3s, nrxxs, doublegrid
+                                     nr1sx, nr2sx, nr3sx, nrxxs, doublegrid
     USE wvfct,                ONLY : nbnd, npwx, npw, igk, wg, et
     USE control_flags,        ONLY : gamma_only
     USE klist,                ONLY : wk, ngk, nks
@@ -526,10 +526,10 @@ CONTAINS
     call start_clock ('exxinit')
 
 #ifdef __PARA
-    nxxs = nrx1s * nrx2s * nrx3s
+    nxxs = nr1sx * nr2sx * nr3sx
     allocate(psic_all(nxxs), temppsic_all(nxxs) )
 #endif
-    allocate(present(nsym),rir(nrx1s*nrx2s*nrx3s,nsym))
+    allocate(present(nsym),rir(nr1sx*nr2sx*nr3sx,nsym))
     allocate(temppsic(nrxxs), psic(nrxxs),tempevc( npwx, nbnd ))
 
     if( .not. allocated( exxbuff ) ) allocate( exxbuff( nrxxs, nkqs, nbnd ) )
@@ -563,7 +563,7 @@ CONTAINS
                mod (s (2, 3, isym) * nr3s, nr2s) .ne.0 ) then
              call errore ('exxinit',' EXX + smooth grid is not working',isym)
           end if
-          do ir=1, nrx1s * nrx2s * nrx3s
+          do ir=1, nr1sx * nr2sx * nr3sx
              rir(ir,isym) = ir
           end do
           do k = 1, nr3s
@@ -571,8 +571,8 @@ CONTAINS
                 do i = 1, nr1s
                    call ruotaijk (s(1,1,isym), ftau(1,isym), i, j, k, &
                                   nr1s, nr2s, nr3s, ri, rj , rk )
-                   ir =   i + ( j-1)*nrx1s + ( k-1)*nrx1s*nrx2s
-                   rir(ir,isym) = ri + (rj-1)*nrx1s + (rk-1)*nrx1s*nrx2s
+                   ir =   i + ( j-1)*nr1sx + ( k-1)*nr1sx*nr2sx
+                   rir(ir,isym) = ri + (rj-1)*nr1sx + (rk-1)*nr1sx*nr2sx
                 end do
              end do
           end do

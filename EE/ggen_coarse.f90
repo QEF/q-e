@@ -22,7 +22,7 @@ SUBROUTINE ggen_coarse(g, gg, ngm)
   USE kinds,              ONLY : DP
   USE cell_base,          ONLY : at
   USE gcoarse,            ONLY : ngmc, gcutmc, ngmc_g, nr1c, nr2c, nr3c, &
-                                 nrx1c, nrx2c, nrx3c, nlc
+                                 nr1cx, nr2cx, nr3cx, nlc
 
   IMPLICIT NONE
   !
@@ -49,7 +49,7 @@ SUBROUTINE ggen_coarse(g, gg, ngm)
         IF (n3c.LT.1) n3c = n3c + nr3c
         !
         IF (gg(ng).LE.gcutmc) THEN
-           nlc (ng) = n1c + (n2c - 1) * nrx1c + (n3c - 1) * nrx1c * nrx2c
+           nlc (ng) = n1c + (n2c - 1) * nr1cx + (n3c - 1) * nr1cx * nr2cx
            ngmc = ngmc + 1
         END IF
         !

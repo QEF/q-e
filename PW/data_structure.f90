@@ -18,9 +18,9 @@ SUBROUTINE data_structure( lgamma )
   USE kinds,      ONLY : DP
   USE cell_base,  ONLY : bg, tpiba, tpiba2
   USE klist,      ONLY : xk, nks
-  USE gvect,      ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, &
+  USE gvect,      ONLY : nr1, nr2, nr3, nr1x, nr2x, nr3x, nrxx, &
                          ngm, ngm_l, ngm_g, gcutm, ecutwfc
-  USE gsmooth,    ONLY : nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, nrxxs, &
+  USE gsmooth,    ONLY : nr1s, nr2s, nr3s, nr1sx, nr2sx, nr3sx, nrxxs, &
                          ngms, ngms_l, ngms_g, gcutms
   USE mp,         ONLY : mp_sum, mp_max
   USE mp_global,  ONLY : intra_pool_comm, nproc_pool, me_pool, my_image_id, &
@@ -81,16 +81,16 @@ SUBROUTINE data_structure( lgamma )
   !
   ! set the values of fft arrays
   !
-  nrx1  = good_fft_dimension (nr1)
-  nrx1s = good_fft_dimension (nr1s)
-  nrx2  = nr2          ! nrx2 is there just for compatibility
-  nrx2s = nr2s
-  nrx3  = good_fft_dimension (nr3)
-  nrx3s = good_fft_dimension (nr3s)
+  nr1x  = good_fft_dimension (nr1)
+  nr1sx = good_fft_dimension (nr1s)
+  nr2x  = nr2          ! nr2x is there just for compatibility
+  nr2sx = nr2s
+  nr3x  = good_fft_dimension (nr3)
+  nr3sx = good_fft_dimension (nr3s)
 
   ! compute number of points per plane
-  ncplane  = nrx1 * nrx2
-  ncplanes = nrx1s * nrx2s
+  ncplane  = nr1x * nr2x
+  ncplanes = nr1sx * nr2sx
 
   !
   ! check the number of plane per process
@@ -187,17 +187,17 @@ SUBROUTINE data_structure( lgamma )
     ENDIF
   ENDIF
 
-  CALL fft_dlay_allocate( dfftp, nproc_pool, nrx1,  nrx2  )
-  CALL fft_dlay_allocate( dffts, nproc_pool, nrx1s, nrx2s )
+  CALL fft_dlay_allocate( dfftp, nproc_pool, nr1x,  nr2x  )
+  CALL fft_dlay_allocate( dffts, nproc_pool, nr1sx, nr2sx )
 
   !  here set the fft data layout structures for dense and smooth mesh,
   !  according to stick distribution
 
   CALL fft_dlay_set( dfftp, &
-       tk, nct, nr1, nr2, nr3, nrx1, nrx2, nrx3, (me_pool+1), &
+       tk, nct, nr1, nr2, nr3, nr1x, nr2x, nr3x, (me_pool+1), &
        nproc_pool, nogrp, ub, lb, idx, in1(:), in2(:), ncp, nkcp, ngp, ngkp, st, stw)
   CALL fft_dlay_set( dffts, &
-       tk, ncts, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, (me_pool+1), &
+       tk, ncts, nr1s, nr2s, nr3s, nr1sx, nr2sx, nr3sx, (me_pool+1), &
        nproc_pool, nogrp, ub, lb, idx, in1(:), in2(:), ncps, nkcp, ngps, ngkp, sts, stw)
 
   !  if tk = .FALSE. only half reciprocal space is considered, then we
@@ -278,26 +278,26 @@ SUBROUTINE data_structure( lgamma )
 
 #else
 
-  nrx1 = good_fft_dimension (nr1)
-  nrx1s = good_fft_dimension (nr1s)
+  nr1x = good_fft_dimension (nr1)
+  nr1sx = good_fft_dimension (nr1s)
   !
-  !     nrx2 and nrx3 are there just for compatibility
+  !     nr2x and nr3x are there just for compatibility
   !
-  nrx2 = nr2
-  nrx3 = nr3
+  nr2x = nr2
+  nr3x = nr3
 
-  nrxx = nrx1 * nrx2 * nrx3
-  nrx2s = nr2s
-  nrx3s = nr3s
-  nrxxs = nrx1s * nrx2s * nrx3s
+  nrxx = nr1x * nr2x * nr3x
+  nr2sx = nr2s
+  nr3sx = nr3s
+  nrxxs = nr1sx * nr2sx * nr3sx
 
   ! nxx is just a copy
   !
   nxx   = nrxx
   nxxs  = nrxxs
 
-  CALL fft_dlay_allocate( dfftp, nproc_pool, max(nrx1, nrx3),  nrx2  )
-  CALL fft_dlay_allocate( dffts, nproc_pool, max(nrx1s, nrx3s), nrx2s )
+  CALL fft_dlay_allocate( dfftp, nproc_pool, max(nr1x, nr3x),  nr2x  )
+  CALL fft_dlay_allocate( dffts, nproc_pool, max(nr1sx, nr3sx), nr2sx )
 
   CALL calculate_gkcut()
 
@@ -351,8 +351,8 @@ SUBROUTINE data_structure( lgamma )
 10   CONTINUE
   ENDDO
 
-  CALL fft_dlay_scalar( dfftp, ub, lb, nr1, nr2, nr3, nrx1, nrx2, nrx3, stw )
-  CALL fft_dlay_scalar( dffts, ub, lb, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, stw )
+  CALL fft_dlay_scalar( dfftp, ub, lb, nr1, nr2, nr3, nr1x, nr2x, nr3x, stw )
+  CALL fft_dlay_scalar( dffts, ub, lb, nr1s, nr2s, nr3s, nr1sx, nr2sx, nr3sx, stw )
 
   DEALLOCATE( stw )
 

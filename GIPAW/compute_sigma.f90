@@ -13,7 +13,7 @@ SUBROUTINE compute_sigma_bare(chi_bare, sigma_bare)
   USE kinds,                ONLY : DP
   USE klist,                ONLY : xk
   USE wvfct,                ONLY : nbnd, npwx, npw, igk
-  USE gvect,                ONLY : ngm, gstart, nrx3, nrxx, nl, nlm, g, gg
+  USE gvect,                ONLY : ngm, gstart, nr3x, nrxx, nl, nlm, g, gg
   USE ions_base,            ONLY : nat, tau, atm, ityp
   USE io_global,            ONLY : stdout
   USE symme,                ONLY : symtensor

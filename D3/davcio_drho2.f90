@@ -34,7 +34,7 @@ SUBROUTINE davcio_drho2 (drho, lrec, iunit, nrec, isw)
   INTEGER :: root, errcode, itmp, proc
   COMPLEX(DP), ALLOCATABLE :: ddrho (:)
 
-  ALLOCATE (ddrho( nrx1 * nrx2 * nrx3 ))
+  ALLOCATE (ddrho( nr1x * nr2x * nr3x ))
 
   IF (isw == 1) THEN
      !

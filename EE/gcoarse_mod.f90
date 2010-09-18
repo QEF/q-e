@@ -29,9 +29,9 @@ MODULE gcoarse
        nr1c,        &!
        nr2c,        &! the dimension of the smooth grid
        nr3c,        &!
-       nrx1c,       &! maximum dimension of the smooth grid
-       nrx2c,       &! maximum dimension of the smooth grid
-       nrx3c,       &! maximum dimension of the smooth grid
+       nr1cx,       &! maximum dimension of the smooth grid
+       nr2cx,       &! maximum dimension of the smooth grid
+       nr3cx,       &! maximum dimension of the smooth grid
        nrxxc         ! the total dimension of the smooth grid
   TYPE ( fft_dlay_descriptor ) :: dfftc ! coarse grid (dcc method)
 

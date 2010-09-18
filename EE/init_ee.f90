@@ -10,7 +10,7 @@
 ! contributions by E. Lamas and S. de Gironcoli (SISSA/DEMOCRITOS)
 !
 !--------------------------------------------------------------------
-      SUBROUTINE init_ee(nrx1,nrx2,nrx3)
+      SUBROUTINE init_ee(nr1x,nr2x,nr3x)
 !--------------------------------------------------------------------
  
       
@@ -23,16 +23,16 @@
       IMPLICIT NONE      
       !
       !
-      INTEGER, INTENT (IN) :: nrx1
-      INTEGER, INTENT (IN) :: nrx2
-      INTEGER, INTENT (IN) :: nrx3
+      INTEGER, INTENT (IN) :: nr1x
+      INTEGER, INTENT (IN) :: nr2x
+      INTEGER, INTENT (IN) :: nr3x
       INTEGER :: nrx123
       !
       INTEGER :: i
       INTEGER :: j
       INTEGER :: k
       !
-      nrx123 = nrx1*nrx2*nrx3
+      nrx123 = nr1x*nr2x*nr3x
       !
       ! ... Allocates self-interaction variables
       !

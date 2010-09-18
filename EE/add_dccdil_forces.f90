@@ -11,7 +11,7 @@
 !
 !--------------------------------------------------------------------
       SUBROUTINE add_dccdil_forces( vcomp, force_vcorr, &
-                                    nr1, nr2, nr3, nrx1,nrx2, nrx3, nrxx )
+                                    nr1, nr2, nr3, nr1x,nr2x, nr3x, nrxx )
 !--------------------------------------------------------------------
       !
       ! ... Calculates the dpot = nabla pot
@@ -25,8 +25,8 @@
       !
       IMPLICIT NONE
       !
-      INTEGER, INTENT(IN)         :: nr1, nr2, nr3, nrx1,nrx2,nrx3,nrxx
-      REAL( DP )                  :: vcomp( nrx1*nrx2*nrx3 )
+      INTEGER, INTENT(IN)         :: nr1, nr2, nr3, nr1x,nr2x,nr3x,nrxx
+      REAL( DP )                  :: vcomp( nr1x*nr2x*nr3x )
       REAL( DP )                  :: force_vcorr(3, nat )
       !
       REAL( DP )                  :: dvdtao(3, nat )
@@ -39,7 +39,7 @@
       force_vcorr(:,:) = 0.D0
       dvdtao(:,:) = 0.D0
 
-      call dvdr_tao(dvdtao, vcomp, nr1, nr2, nr3, nrx1, nrx2, nrx3 )
+      call dvdr_tao(dvdtao, vcomp, nr1, nr2, nr3, nr1x, nr2x, nr3x )
 
       DO na = 1,nat
          force_vcorr(1:3, na)  = force_vcorr(1:3, na)   &

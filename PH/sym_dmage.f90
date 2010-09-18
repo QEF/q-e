@@ -16,12 +16,12 @@ subroutine sym_dmage (dvsym)
   !
   USE kinds, only : DP
   USE cell_base,only : at, bg
-  USE gvect,    only : nr1,nr2,nr3, nrx1,nrx2,nrx3
+  USE gvect,    only : nr1,nr2,nr3, nr1x,nr2x,nr3x
   USE symm_base,only : nsym, sname, s, ftau, t_rev, invs
   USE lsda_mod, only : nspin
   implicit none
 
-  complex(DP) :: dvsym (nrx1, nrx2, nrx3, nspin, 3)
+  complex(DP) :: dvsym (nr1x, nr2x, nr3x, nspin, 3)
   complex(DP), allocatable ::  aux (:,:,:,:,:)
   complex(DP) ::  dmags(3,3), mag(3), magrot(3)
   ! the potential to symmetrize
@@ -40,7 +40,7 @@ subroutine sym_dmage (dvsym)
      end do
   end do
   if (nsym == 1) return
-  allocate (aux(nrx1 , nrx2 , nrx3 , 3, 3))
+  allocate (aux(nr1x , nr2x , nr3x , 3, 3))
 
   do is = 2, 4
      do ipol = 1, 3

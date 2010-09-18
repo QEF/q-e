@@ -51,7 +51,7 @@ SUBROUTINE add_efield(vpoten,etotefield,rho,iflag)
   USE extfield,      ONLY : tefield, dipfield, edir, eamp, emaxpos, &
                             eopreg, forcefield
   USE force_mod,     ONLY : lforce
-  USE gvect,         ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx
+  USE gvect,         ONLY : nr1, nr2, nr3, nr1x, nr2x, nr3x, nrxx
   USE io_global,     ONLY : stdout,ionode
   USE control_flags, ONLY : mixing_beta
   USE lsda_mod,      ONLY : nspin
@@ -231,7 +231,7 @@ SUBROUTINE add_efield(vpoten,etotefield,rho,iflag)
 #if defined (__PARA)
   !
   DO i = 1, me_pool
-     index0 = index0 + nrx1*nrx2*dfftp%npp(i)
+     index0 = index0 + nr1x*nr2x*dfftp%npp(i)
   END DO
   !
 #endif
@@ -244,10 +244,10 @@ SUBROUTINE add_efield(vpoten,etotefield,rho,iflag)
      ! ... three dimensional indexes
      !
      index = index0 + ir - 1
-     k     = index / (nrx1*nrx2)
-     index = index - (nrx1*nrx2)*k
-     j     = index / nrx1
-     index = index - nrx1*j
+     k     = index / (nr1x*nr2x)
+     index = index - (nr1x*nr2x)*k
+     j     = index / nr1x
+     index = index - nr1x*j
      i     = index
      
      if (edir.eq.1) sawarg = (i*1._dp)/(nr1*1._dp)

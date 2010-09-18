@@ -113,7 +113,7 @@ SUBROUTINE energies_xc( lda, n, m, e_xc, e_h )
       !if(.not.allocated(v%of_r)) write(stdout,*) 'v not allocated'
       !
       call v_xc (rho, rho_core, rhog_core, etxc, vtxc, v%of_r)
-      !!!! CALL v_xc(rho,rho_core,nr1,nr2,nr3,nrx1,nrx2,nrx3,&
+      !!!! CALL v_xc(rho,rho_core,nr1,nr2,nr3,nr1x,nr2x,nr3x,&
       !!!!&nrxx, nl,ngm,g,nspin,alat,omega,etxc,vtxc,v%of_r)
 
        do is=1,nspin
@@ -253,14 +253,14 @@ SUBROUTINE energies_xc( lda, n, m, e_xc, e_h )
        allocate(rho_fake_core(nrxx))
        rho_fake_core(:)=0.d0
        CALL v_xc( rho, rho_core, rhog_core, etxc, vtxc, v%of_r )
-       !!CALL v_xc(rho,rho_core,nr1,nr2,nr3,nrx1,nrx2,nrx3,&
+       !!CALL v_xc(rho,rho_core,nr1,nr2,nr3,nr1x,nr2x,nr3x,&
        !!     &nrxx, nl,ngm,g,nspin,alat,omega,etxc,vtxc,v%of_r)
        !
        !!! to test non-linear core correction :
        !! replace rho_core by rho_fake_core in
        !! CALL v_xc( rho, rho_core, rhog_core, etxc, vtxc, v%of_r )
        !
-       !  CALL v_xc(rho,rho_fake_core,nr1,nr2,nr3,nrx1,nrx2,nrx3,&
+       !  CALL v_xc(rho,rho_fake_core,nr1,nr2,nr3,nr1x,nr2x,nr3x,&
        !    &nrxx, nl,ngm,g,nspin,alat,omega,etxc,vtxc,vr)
        deallocate(rho_fake_core)
        !
@@ -321,7 +321,7 @@ SUBROUTINE energies_xc( lda, n, m, e_xc, e_h )
        v%of_r(:,:)=0.d0
        !
        CALL v_h( rho%of_g, ehart, charge, v%of_r )
-       !!CALL v_h( rho, nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, nl, &
+       !!CALL v_h( rho, nr1, nr2, nr3, nr1x, nr2x, nr3x, nrxx, nl, &
        !!         ngm, gg, gstart, nspin, alat, omega, ehart, charge, v%of_r )
        !
        do ibnd=1,m!loop on states

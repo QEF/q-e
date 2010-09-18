@@ -16,9 +16,9 @@ SUBROUTINE ultralocalization(nbndv,ultra_thr,isubspace,max_array)
   USE io_files,             ONLY : find_free_unit, diropn
   USE io_global,            ONLY : stdout
   USE gsmooth,              ONLY : nls, nlsm, nr1s, nr2s, nr3s, &
-                                   nrx1s, nrx2s, nrx3s, nrxxs, doublegrid
-  USE gvect,                ONLY : nr1, nr2, nr3, nrx1, nrx2, &
-                                   nrx3, nrxx
+                                   nr1sx, nr2sx, nr3sx, nrxxs, doublegrid
+  USE gvect,                ONLY : nr1, nr2, nr3, nr1x, nr2x, &
+                                   nr3x, nrxx
   use mp_global,            ONLY : nproc_pool, me_pool
   USE wvfct,                ONLY : igk, g2kin, npwx, npw, nbnd, nbndx
   USE basis
@@ -148,7 +148,7 @@ SUBROUTINE ultralocalization(nbndv,ultra_thr,isubspace,max_array)
   do ix=1,nr1s
      do iy=1,nr2s
         do iz=1,nr3s
-           nn=(iz-1)*nrx1s*nrx2s+(iy-1)*nrx1s+ix
+           nn=(iz-1)*nr1sx*nr2sx+(iy-1)*nr1sx+ix
            exp_x(nn)=exp((0.d0,1.d0)*tpi*real(ix)/real(nr1s))
            exp_y(nn)=exp((0.d0,1.d0)*tpi*real(iy)/real(nr2s))
            exp_z(nn)=exp((0.d0,1.d0)*tpi*real(iz)/real(nr3s))
@@ -188,7 +188,7 @@ SUBROUTINE ultralocalization(nbndv,ultra_thr,isubspace,max_array)
     do ix=1,nr1
        do iy=1,nr2
           do iz=1,nr3
-             nn=(iz-1)*nrx1*nrx2+(iy-1)*nrx1+ix
+             nn=(iz-1)*nr1x*nr2x+(iy-1)*nr1x+ix
              exp_x(nn)=exp((0.d0,1.d0)*tpi*real(ix)/real(nr1))
              exp_y(nn)=exp((0.d0,1.d0)*tpi*real(iy)/real(nr2))
              exp_z(nn)=exp((0.d0,1.d0)*tpi*real(iz)/real(nr3))
@@ -252,7 +252,7 @@ SUBROUTINE ultralocalization(nbndv,ultra_thr,isubspace,max_array)
                 min_2(iy,iz,iqq)=0
                 max_2(iy,iz,iqq)=0
                 do ix=1,nr1s
-                  nn=(iz-1)*nrx1s*nrx2s+(iy-1)*nrx1s+ix
+                  nn=(iz-1)*nr1sx*nr2sx+(iy-1)*nr1sx+ix
                   rx=rdistance(real(ix)*at(1,1)/real(nr1s),center(1,iqq),at(1,1))
                   ry=rdistance(real(iy)*at(2,2)/real(nr2s),center(2,iqq),at(2,2))
                   rz=rdistance(real(iz)*at(3,3)/real(nr3s),center(3,iqq),at(3,3))
@@ -268,7 +268,7 @@ SUBROUTINE ultralocalization(nbndv,ultra_thr,isubspace,max_array)
                 if(min_1(iy,iz,iqq)/=0 .and. max_1(iy,iz,iqq)==0)  max_1(iy,iz,iqq)=nr1s+1
                 if(min_1(iy,iz,iqq)==1 .and. max_1(iy,iz,iqq)/=(nr1s+1)) then
                   do ix=nr1s,1,-1
-                    nn=(iz-1)*nrx1s*nrx2s+(iy-1)*nrx1s+ix
+                    nn=(iz-1)*nr1sx*nr2sx+(iy-1)*nr1sx+ix
                     rx=rdistance(real(ix)*at(1,1)/real(nr1s),center(1,iqq),at(1,1))
                     ry=rdistance(real(iy)*at(2,2)/real(nr2s),center(2,iqq),at(2,2))
                     rz=rdistance(real(iz)*at(3,3)/real(nr3s),center(3,iqq),at(3,3))
@@ -305,7 +305,7 @@ SUBROUTINE ultralocalization(nbndv,ultra_thr,isubspace,max_array)
             do iz=1,nr3s
               sca=0.d0
               do ix=1,nr1s
-                nn=(iz-1)*nrx1s*nrx2s+(iy-1)*nrx1s+ix
+                nn=(iz-1)*nr1sx*nr2sx+(iy-1)*nr1sx+ix
                 sca=sca+tmp_s(nn)
                 sums(ix,iy,iz)=sca
               enddo
@@ -352,7 +352,7 @@ SUBROUTINE ultralocalization(nbndv,ultra_thr,isubspace,max_array)
                   min_2(iy,iz,iqq)=0
                   max_2(iy,iz,iqq)=0
                   do ix=1,nr1
-                    nn=(iz-1)*nrx1*nrx2+(iy-1)*nrx1+ix
+                    nn=(iz-1)*nr1x*nr2x+(iy-1)*nr1x+ix
                     rx=rdistance(real(ix)*at(1,1)/real(nr1),center(1,iqq),at(1,1))
                     ry=rdistance(real(iy)*at(2,2)/real(nr2),center(2,iqq),at(2,2))
                     rz=rdistance(real(iz)*at(3,3)/real(nr3),center(3,iqq),at(3,3))
@@ -368,7 +368,7 @@ SUBROUTINE ultralocalization(nbndv,ultra_thr,isubspace,max_array)
                   if(min_1(iy,iz,iqq)/=0 .and. max_1(iy,iz,iqq)==0)  max_1(iy,iz,iqq)=nr1+1
                   if(min_1(iy,iz,iqq)==1 .and. max_1(iy,iz,iqq)/=(nr1+1)) then
                     do ix=nr1,1,-1
-                      nn=(iz-1)*nrx1*nrx2+(iy-1)*nrx1+ix
+                      nn=(iz-1)*nr1x*nr2x+(iy-1)*nr1x+ix
                       rx=rdistance(real(ix)*at(1,1)/real(nr1),center(1,iqq),at(1,1))
                       ry=rdistance(real(iy)*at(2,2)/real(nr2),center(2,iqq),at(2,2))
                       rz=rdistance(real(iz)*at(3,3)/real(nr3),center(3,iqq),at(3,3))
@@ -405,7 +405,7 @@ SUBROUTINE ultralocalization(nbndv,ultra_thr,isubspace,max_array)
               do iz=1,nr3
                 sca=0.d0
                 do ix=1,nr1
-                  nn=(iz-1)*nrx1*nrx2+(iy-1)*nrx1+ix
+                  nn=(iz-1)*nr1x*nr2x+(iy-1)*nr1x+ix
                   sca=sca+tmp_r(nn)
                   sums(ix,iy,iz)=sca
                 enddo
@@ -613,7 +613,7 @@ SUBROUTINE ultralocalization(nbndv,ultra_thr,isubspace,max_array)
                  if(n3<1) n3=nr3+n3
                  if(n3>nr3) n3=n3-nr3
 
-                 nn=(n3-1)*nrx1*nrx2+(n2-1)*nrx1+n1
+                 nn=(n3-1)*nr1x*nr2x+(n2-1)*nr1x+n1
                  norm=norm+tmp_r(nn)
                enddo
              enddo
@@ -661,7 +661,7 @@ SUBROUTINE ultralocalization(nbndv,ultra_thr,isubspace,max_array)
                       n3=no3+iz
                       if(n3<1) n3=nr3+n3
                       if(n3>nr3) n3=n3-nr3
-                      nn=(n3-1)*nrx1*nrx2+(n2-1)*nrx1+n1
+                      nn=(n3-1)*nr1x*nr2x+(n2-1)*nr1x+n1
                      tmpreal(iz*(2*nll+1)*(2*nll+1)+iy*(2*nll+1)+ix+1)=&
                 &  tmp_r(nn)
                   enddo

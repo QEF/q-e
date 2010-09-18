@@ -61,7 +61,7 @@ SUBROUTINE compute_e_dipole( x0, e_dipole, e_quadrupole )
   USE kinds,      ONLY : DP
   USE ions_base,  ONLY : nat, tau
   USE cell_base,  ONLY : at, bg, omega, alat
-  USE gvect,      ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx
+  USE gvect,      ONLY : nr1, nr2, nr3, nr1x, nr2x, nr3x, nrxx
   USE scf,        ONLY : rho
   USE lsda_mod,   ONLY : nspin
   USE fft_base,   ONLY : dfftp
@@ -90,7 +90,7 @@ SUBROUTINE compute_e_dipole( x0, e_dipole, e_quadrupole )
 #if defined (__PARA)
   !
   DO i = 1, me_pool
-     index0 = index0 + nrx1*nrx2*dfftp%npp(i)
+     index0 = index0 + nr1x*nr2x*dfftp%npp(i)
   END DO
   !
 #endif
@@ -100,10 +100,10 @@ SUBROUTINE compute_e_dipole( x0, e_dipole, e_quadrupole )
      ! ... three dimensional indexes
      !
      index = index0 + ir - 1
-     k     = index / (nrx1*nrx2)
-     index = index - (nrx1*nrx2)*k
-     j     = index / nrx1
-     index = index - nrx1*j
+     k     = index / (nr1x*nr2x)
+     index = index - (nr1x*nr2x)*k
+     j     = index / nr1x
+     index = index - nr1x*j
      i     = index
      !
      DO ip = 1, 3

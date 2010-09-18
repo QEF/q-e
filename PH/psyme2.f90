@@ -14,7 +14,7 @@ subroutine psyme2 (dvtosym)
 #ifdef __PARA
 
   use kinds, only : DP
-  USE gvect,      ONLY : nrxx, nrx1,nrx2,nrx3
+  USE gvect,      ONLY : nrxx, nr1x,nr2x,nr3x
   USE mp_global, ONLY: me_pool
   USE fft_base,  ONLY: dfftp, cgather_sym
   implicit none
@@ -28,7 +28,7 @@ subroutine psyme2 (dvtosym)
   complex(DP), allocatable :: ddvtosym (:,:)
   ! the potential to symmetrize
 
-  allocate (ddvtosym ( nrx1 * nrx2 * nrx3, 6))
+  allocate (ddvtosym ( nr1x * nr2x * nr3x, 6))
 
   npp0 = 0
   do i = 1, me_pool

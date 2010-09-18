@@ -128,7 +128,7 @@ CONTAINS
   USE fft_base,      ONLY : dfftp
   USE fft_interfaces,ONLY : fwfft, invfft
   USE control_flags, ONLY : gamma_only_ => gamma_only
-  USE gvect,         ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, &
+  USE gvect,         ONLY : nr1, nr2, nr3, nr1x, nr2x, nr3x, nrxx, &
                             ngm, gg, gstart_ => gstart, nl, nlm, ecutwfc, dual
   USE cell_base,     ONLY : at, alat, tpiba2, omega
 
@@ -169,7 +169,7 @@ CONTAINS
   index0 = 0
 #if defined (__PARA)
   DO i = 1, me_pool
-     index0 = index0 + nrx1*nrx2*dfftp%npp(i)
+     index0 = index0 + nr1x*nr2x*dfftp%npp(i)
   END DO
 #endif
   !
@@ -180,10 +180,10 @@ CONTAINS
      ! ... three dimensional indexes
      !
      index = index0 + ir - 1
-     k     = index / (nrx1*nrx2)
-     index = index - (nrx1*nrx2)*k
-     j     = index / nrx1
-     index = index - nrx1*j
+     k     = index / (nr1x*nr2x)
+     index = index - (nr1x*nr2x)*k
+     j     = index / nr1x
+     index = index - nr1x*j
      i     = index
 
      r(:) = ( at(:,1)/nr1 * i + at(:,2)/nr2 * j + at(:,3)/nr3 * k )
@@ -258,7 +258,7 @@ CONTAINS
 !----------------------------------------------------------------------------
   SUBROUTINE write_wg_on_file(filplot, plot)
 !----------------------------------------------------------------------------
-  USE gvect,         ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, &
+  USE gvect,         ONLY : nr1, nr2, nr3, nr1x, nr2x, nr3x, nrxx, &
                             ecutwfc, dual, gcutm
   USE cell_base,     ONLY : at, alat, tpiba2, omega, ibrav, celldm
   USE ions_base,     ONLY : zv, ntyp => nsp, nat, ityp, atm, tau
@@ -267,7 +267,7 @@ CONTAINS
   CHARACTER (LEN=25) :: title
   INTEGER :: plot_num=0, iflag=+1
 
-  CALL plot_io (filplot, title, nrx1, nrx2, nrx3, nr1, nr2, &
+  CALL plot_io (filplot, title, nr1x, nr2x, nr3x, nr1, nr2, &
      nr3, nat, ntyp, ibrav, celldm, at, gcutm, dual, ecutwfc, plot_num, atm, &
      ityp, zv, tau, plot, iflag)
   RETURN

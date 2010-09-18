@@ -45,7 +45,7 @@ PROGRAM average
   USE io_global,            ONLY : stdout
   USE cell_base,            ONLY : ibrav, alat, omega, celldm, tpiba, &
                                    tpiba2, at, bg
-  USE gvect,                ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, &
+  USE gvect,                ONLY : nr1, nr2, nr3, nr1x, nr2x, nr3x, nrxx, &
                                    gcutm, ecutwfc, dual
   USE gsmooth,              ONLY : nr1s, nr2s, nr3s, doublegrid, gcutms
   USE ions_base,            ONLY : zv, tau, nat, ntyp => nsp, ityp, atm
@@ -64,7 +64,7 @@ PROGRAM average
   !
   PARAMETER (npixmax = 5000, nfilemax = 7)
   !
-  INTEGER :: ibravs, nrx1sa, nrx2sa, nrx3sa, nr1sa, nr2sa, nr3sa, &
+  INTEGER :: ibravs, nr1sxa, nr2sxa, nr3sxa, nr1sa, nr2sa, nr3sa, &
        ntyps, nats
   INTEGER :: npt, inunit, plot_num, ios, nfile, ifile, nmacro,  &
        ir, i, j, k
@@ -129,7 +129,7 @@ PROGRAM average
 
 1100 CALL errore ('average', 'readin input', abs (ios) )
 
-     CALL read_io_header(filename (1), title, nrx1, nrx2, nrx3, nr1, nr2, nr3, &
+     CALL read_io_header(filename (1), title, nr1x, nr2x, nr3x, nr1, nr2, nr3, &
           nat, ntyp, ibrav, celldm, at, gcutm, dual, ecutwfc, plot_num)
      nspin = 1
      CALL latgen (ibrav, celldm, at(1,1), at(1,2), at(1,3), omega )
@@ -142,15 +142,15 @@ PROGRAM average
 
      IF (idir==1) THEN
         nfft=nr1
-        nfftx=nrx1
+        nfftx=nr1x
         leng=alat*sqrt(at(1,1)**2+at(2,1)**2+at(3,1)**2)
      ELSEIF (idir==2) THEN
         nfft=nr2
-        nfftx=nrx2
+        nfftx=nr2x
         leng=alat*sqrt(at(1,2)**2+at(2,2)**2+at(3,2)**2)
      ELSEIF (idir==3) THEN
         nfft=nr3
-        nfftx=nrx3
+        nfftx=nr3x
         leng=alat*sqrt(at(1,3)**2+at(2,3)**2+at(3,3)**2)
      ELSE
         CALL errore('average','idir is wrong',1)
@@ -181,7 +181,7 @@ PROGRAM average
      !
      ! Read first file
      !
-     CALL plot_io (filename (1), title, nrx1, nrx2, nrx3, nr1, nr2, &
+     CALL plot_io (filename (1), title, nr1x, nr2x, nr3x, nr1, nr2, &
           nr3, nat, ntyp, ibrav, celldm, at, gcutm, dual, ecutwfc, &
           plot_num, atm, ityp, zv, tau, rho%of_r, -1)
      !
@@ -200,7 +200,7 @@ PROGRAM average
         ALLOCATE  (taus( 3 , nat))
         ALLOCATE  (ityps( nat))
         !
-        CALL plot_io (filename (ifile), title, nrx1sa, nrx2sa, nrx3sa, &
+        CALL plot_io (filename (ifile), title, nr1sxa, nr2sxa, nr3sxa, &
              nr1sa, nr2sa, nr3sa, nats, ntyps, ibravs, celldms, ats, gcutmsa, &
              duals, ecuts, plot_num, atms, ityps, zvs, taus, rho%of_r, - 1)
         !
@@ -208,8 +208,8 @@ PROGRAM average
         DEALLOCATE (taus)
         !
         IF (nats>nat) CALL errore ('chdens', 'wrong file order? ', 1)
-        IF (nrx1/=nrx1sa.or.nrx2/=nrx2sa) &
-             CALL errore ('average', 'incompatible nrx1 or nrx2', 1)
+        IF (nr1x/=nr1sxa.or.nr2x/=nr2sxa) &
+             CALL errore ('average', 'incompatible nr1x or nr2x', 1)
         IF (nr1/=nr1sa.or.nr2/=nr2sa.or.nr3/=nr3sa) &
              CALL errore ('average', 'incompatible nr1 or nr2 or nr3', 1)
         IF (ibravs/=ibrav) CALL errore ('average', 'incompatible ibrav', 1)
@@ -238,7 +238,7 @@ PROGRAM average
            funci (i) = 0.d0
            DO j = 1, nr2
               DO k = 1, nr3
-                 ir = i + (j - 1) * nrx1 + (k - 1) * nrx1 * nrx2
+                 ir = i + (j - 1) * nr1x + (k - 1) * nr1x * nr2x
                  funcr (i) = funcr (i) + dble (psic(ir))
               ENDDO
            ENDDO
@@ -250,7 +250,7 @@ PROGRAM average
            funci (j) = 0.d0
            DO i = 1, nr1
               DO k = 1, nr3
-                 ir = i + (j - 1) * nrx1 + (k - 1) * nrx1 * nrx2
+                 ir = i + (j - 1) * nr1x + (k - 1) * nr1x * nr2x
                  funcr (j) = funcr (j) + dble (psic (ir) )
               ENDDO
            ENDDO
@@ -262,7 +262,7 @@ PROGRAM average
            funci (k) = 0.d0
            DO j = 1, nr2
               DO i = 1, nr1
-                 ir = i + (j - 1) * nrx1 + (k - 1) * nrx1 * nrx2
+                 ir = i + (j - 1) * nr1x + (k - 1) * nr1x * nr2x
                  funcr (k) = funcr (k) + dble (psic (ir) )
               ENDDO
            ENDDO

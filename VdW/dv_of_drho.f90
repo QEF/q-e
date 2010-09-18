@@ -90,7 +90,7 @@ SUBROUTINE dv_of_drho_vdw (mode, dvscf, flag)
   !
 !  if (igcx /= 0 .or. igcc /= 0) call dgradcorr &
 !       (rho%of_r, grho, dvxc_rr, dvxc_sr, dvxc_ss, dvxc_s, xq, &
-!       dvscf, nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, nspin, nl, ngm, g, &
+!       dvscf, nr1, nr2, nr3, nr1x, nr2x, nr3x, nrxx, nspin, nl, ngm, g, &
 !       alat, omega, dvaux)
   IF (nlcc_any.and.flag) THEN
      DO is = 1, nspin

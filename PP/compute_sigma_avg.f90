@@ -21,7 +21,7 @@ USE wavefunctions_module, ONLY : evc, psic_nc
 USE klist,                ONLY : nks, xk
 USE gvect,                ONLY : g,gg,nr1,nr2,nr3,nrxx
 USE gsmooth,              ONLY : nls, nlsm, nr1s, nr2s, nr3s, &
-                                  nrx1s, nrx2s, nrx3s, nrxxs, doublegrid
+                                  nr1sx, nr2sx, nr3sx, nrxxs, doublegrid
 USE scf,                  ONLY : rho
 USE ions_base,            ONLY : nat, ntyp => nsp, ityp
 USE mp_global,            ONLY : me_pool, intra_pool_comm
@@ -166,12 +166,12 @@ DO ibnd = 1, nbnd
                r_aux = DSQRT (xx**2 + yy**2)
                IF (r_aux<=r_cut) THEN
                   DO k = 1, dffts%npp(me_pool+1)
-                     ijk = i + (j-1) * nrx1s + (k-1) * nrx1s * nrx2s
+                     ijk = i + (j-1) * nr1sx + (k-1) * nr1sx * nr2sx
                      dfx(ijk) = xx * dfy(ijk) - yy * dfx(ijk)
                   ENDDO
                ELSE
                   DO k = 1, dffts%npp(me_pool+1)
-                     ijk = i + (j-1) * nrx1s + (k-1) * nrx1s * nrx2s
+                     ijk = i + (j-1) * nr1sx + (k-1) * nr1sx * nr2sx
                      dfx (ijk) = 0.d0
                   ENDDO
                ENDIF

@@ -14,7 +14,7 @@ subroutine symdvscf (nper, irr, dvtosym)
   !
   USE kinds, only : DP
   USE constants, ONLY: tpi
-  USE gvect, ONLY: nr1, nr2, nr3, nrx1, nrx2, nrx3
+  USE gvect, ONLY: nr1, nr2, nr3, nr1x, nr2x, nr3x
   USE cell_base, ONLY : at
   USE symm_base, ONLY : s, ftau
   USE noncollin_module, ONLY : nspin_lsda, nspin_mag
@@ -25,7 +25,7 @@ subroutine symdvscf (nper, irr, dvtosym)
   ! the number of perturbations
   ! the representation under conside
 
-  complex(DP) :: dvtosym (nrx1, nrx2, nrx3, nspin_mag, nper)
+  complex(DP) :: dvtosym (nr1x, nr2x, nr3x, nspin_mag, nper)
   ! the potential to be symmetrized
 
   integer :: is, ri, rj, rk, i, j, k, ipert, jpert, ipol, isym, &
@@ -43,7 +43,7 @@ subroutine symdvscf (nper, irr, dvtosym)
   if (nsymq == 1.and. (.not.minus_q) ) return
   call start_clock ('symdvscf')
 
-  allocate (dvsym(  nrx1 , nrx2 , nrx3 , nper))
+  allocate (dvsym(  nr1x , nr2x , nr3x , nper))
   !
   ! if necessary we symmetrize with respect to  S(irotmq)*q = -q + Gi
   !

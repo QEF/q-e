@@ -17,13 +17,13 @@ subroutine syme (dvsym)
   !
   !
 
-  USE gvect,     only : nr1,nr2,nr3, nrx1,nrx2,nrx3
+  USE gvect,     only : nr1,nr2,nr3, nr1x,nr2x,nr3x
   USE symm_base, only : nsym, s, ftau
   USE noncollin_module, only : nspin_lsda, nspin_mag
   USE kinds, only : DP
   implicit none
 
-  complex(DP) :: dvsym (nrx1, nrx2, nrx3, nspin_mag, 3)
+  complex(DP) :: dvsym (nr1x, nr2x, nr3x, nspin_mag, 3)
   complex(DP), allocatable ::  aux (:,:,:,:)
   ! the potential to symmetrize
   ! auxiliary quantity
@@ -41,7 +41,7 @@ subroutine syme (dvsym)
      end do
   end do
   if (nsym == 1) return
-  allocate (aux(nrx1 , nrx2 , nrx3 , 3))
+  allocate (aux(nr1x , nr2x , nr3x , 3))
   do is = 1, nspin_lsda
      do ipol = 1, 3
         aux(:,:,:,ipol) = dvsym(:,:,:,is,ipol)

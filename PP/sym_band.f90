@@ -14,7 +14,7 @@ SUBROUTINE sym_band(filband, spin_component, firstk, lastk)
   USE ions_base,            ONLY : nat, ityp, ntyp => nsp
   USE cell_base,            ONLY : tpiba2, at, bg, ibrav
   USE constants,            ONLY : rytoev
-  USE gvect,                ONLY : nrx1, nrx2, nrx3, nrxx, nr1, nr2, &
+  USE gvect,                ONLY : nr1x, nr2x, nr3x, nrxx, nr1, nr2, &
        nr3, ngm, nl, g, ecutwfc
   USE lsda_mod,             ONLY : nspin
   USE wvfct,                ONLY : et, nbnd, npwx, npw, igk, g2kin
@@ -116,18 +116,18 @@ SUBROUTINE sym_band(filband, spin_component, firstk, lastk)
         IF (domag) THEN
            CALL find_band_sym_so(evc,et(1,ik),at,nbnd,npw,nsym_is, &
                 ngm,sk_is,ftau_is,d_spin_is,gk_is,xk(1,ik),igk,nl,nr1,nr2,&
-                nr3,nrx1,nrx2,nrx3,nrxx,npwx,rap_et(1,ik),times(1,1,ik), &
+                nr3,nr1x,nr2x,nr3x,nrxx,npwx,rap_et(1,ik),times(1,1,ik), &
                 ngroup(ik),istart(1,ik),accuracy)
         ELSE
            CALL find_band_sym_so(evc,et(1,ik),at,nbnd,npw,nsymk,ngm, &
-                sk,ftauk,d_spink,gk,xk(1,ik),igk,nl,nr1,nr2,nr3,nrx1, &
-                nrx2,nrx3,nrxx,npwx,rap_et(1,ik),times(1,1,ik),ngroup(ik),&
+                sk,ftauk,d_spink,gk,xk(1,ik),igk,nl,nr1,nr2,nr3,nr1x, &
+                nr2x,nr3x,nrxx,npwx,rap_et(1,ik),times(1,1,ik),ngroup(ik),&
                 istart(1,ik),accuracy)
         ENDIF
      ELSE
         CALL find_band_sym (evc, et(1,ik), at, nbnd, npw, nsymk, ngm, &
-             sk, ftauk, gk, xk(1,ik), igk, nl, nr1, nr2, nr3, nrx1, &
-             nrx2, nrx3, nrxx, npwx, rap_et(1,ik), times(1,1,ik), ngroup(ik),&
+             sk, ftauk, gk, xk(1,ik), igk, nl, nr1, nr2, nr3, nr1x, &
+             nr2x, nr3x, nrxx, npwx, rap_et(1,ik), times(1,1,ik), ngroup(ik),&
              istart(1,ik),accuracy)
      ENDIF
 
@@ -264,7 +264,7 @@ SUBROUTINE sym_band(filband, spin_component, firstk, lastk)
 END SUBROUTINE sym_band
 !
 SUBROUTINE find_band_sym (evc,et,at,nbnd,npw,nsym,ngm,s,ftau,gk, &
-     xk,igk,nl,nr1,nr2,nr3,nrx1,nrx2,nrx3,nrxx,npwx, &
+     xk,igk,nl,nr1,nr2,nr3,nr1x,nr2x,nr3x,nrxx,npwx, &
      rap_et,times,ngroup,istart,accuracy)
   !
   !   This subroutine finds the irreducible representations which give
@@ -288,7 +288,7 @@ SUBROUTINE find_band_sym (evc,et,at,nbnd,npw,nsym,ngm,s,ftau,gk, &
 
   REAL(DP), INTENT(in) :: accuracy
 
-  INTEGER :: nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, ngm, npw, npwx
+  INTEGER :: nr1, nr2, nr3, nr1x, nr2x, nr3x, nrxx, ngm, npw, npwx
 
   INTEGER ::                  &
        nsym,             &
@@ -360,8 +360,8 @@ SUBROUTINE find_band_sym (evc,et,at,nbnd,npw,nsym,ngm,s,ftau,gk, &
      !
      DO ibnd=1,nbnd
         CALL rotate_psi(evc(1,ibnd),evcr(1,ibnd),s(1,1,irot), &
-             ftau(1,irot),gk(1,irot),nl,igk,nr1,nr2,nr3,nrx1, &
-             nrx2,nrx3,nrxx,ngm,npw)
+             ftau(1,irot),gk(1,irot),nl,igk,nr1,nr2,nr3,nr1x, &
+             nr2x,nr3x,nrxx,ngm,npw)
 
      ENDDO
      !
@@ -459,7 +459,7 @@ SUBROUTINE find_band_sym (evc,et,at,nbnd,npw,nsym,ngm,s,ftau,gk, &
 END SUBROUTINE find_band_sym
 
 SUBROUTINE rotate_psi(evc,evcr,s,ftau,gk,nl,igk,nr1,nr2,nr3, &
-     nrx1,nrx2,nrx3,nrxx,ngm,npw)
+     nr1x,nr2x,nr3x,nrxx,ngm,npw)
 
   USE kinds,     ONLY : DP
   USE constants, ONLY : tpi
@@ -468,7 +468,7 @@ SUBROUTINE rotate_psi(evc,evcr,s,ftau,gk,nl,igk,nr1,nr2,nr3, &
 
   IMPLICIT NONE
 
-  INTEGER :: nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, ngm, npw, nbnd
+  INTEGER :: nr1, nr2, nr3, nr1x, nr2x, nr3x, nrxx, ngm, npw, nbnd
   INTEGER :: s(3,3), ftau(3), gk(3), nl(ngm), igk(npw)
 
   COMPLEX(DP), ALLOCATABLE :: psic(:), psir(:)
@@ -497,8 +497,8 @@ SUBROUTINE rotate_psi(evc,evcr,s,ftau,gk,nl,igk,nr1,nr2,nr3, &
   !
 #if defined  (__PARA)
   !
-  ALLOCATE (psic_collect(nrx1*nrx2*nrx3))
-  ALLOCATE (psir_collect(nrx1*nrx2*nrx3))
+  ALLOCATE (psic_collect(nr1x*nr2x*nr3x))
+  ALLOCATE (psir_collect(nr1x*nr2x*nr3x))
   !
   CALL cgather_sym( psic, psic_collect )
   !
@@ -509,8 +509,8 @@ SUBROUTINE rotate_psi(evc,evcr,s,ftau,gk,nl,igk,nr1,nr2,nr3, &
         DO j = 1, nr2
            DO i = 1, nr1
               CALL ruotaijk (s, ftau, i, j, k, nr1, nr2, nr3, ri, rj, rk )
-              ir=i+(j-1)*nrx1+(k-1)*nrx1*nrx2
-              rir=ri+(rj-1)*nrx1+(rk-1)*nrx1*nrx2
+              ir=i+(j-1)*nr1x+(k-1)*nr1x*nr2x
+              rir=ri+(rj-1)*nr1x+(rk-1)*nr1x*nr2x
               arg=tpi*( (gk(1)*(i-1))/dble(nr1)+(gk(2)*(j-1))/dble(nr2)+ &
                    (gk(3)*(k-1))/dble(nr3) )
               phase=cmplx(cos(arg),sin(arg),kind=DP)
@@ -523,8 +523,8 @@ SUBROUTINE rotate_psi(evc,evcr,s,ftau,gk,nl,igk,nr1,nr2,nr3, &
         DO j = 1, nr2
            DO i = 1, nr1
               CALL ruotaijk (s, ftau, i, j, k, nr1, nr2, nr3, ri, rj, rk )
-              ir=i+(j-1)*nrx1+(k-1)*nrx1*nrx2
-              rir=ri+(rj-1)*nrx1+(rk-1)*nrx1*nrx2
+              ir=i+(j-1)*nr1x+(k-1)*nr1x*nr2x
+              rir=ri+(rj-1)*nr1x+(rk-1)*nr1x*nr2x
               psir_collect(ir)=psic_collect(rir)
            ENDDO
         ENDDO
@@ -543,8 +543,8 @@ SUBROUTINE rotate_psi(evc,evcr,s,ftau,gk,nl,igk,nr1,nr2,nr3, &
         DO j = 1, nr2
            DO i = 1, nr1
               CALL ruotaijk (s, ftau, i, j, k, nr1, nr2, nr3, ri, rj, rk )
-              ir=i+(j-1)*nrx1+(k-1)*nrx1*nrx2
-              rir=ri+(rj-1)*nrx1+(rk-1)*nrx1*nrx2
+              ir=i+(j-1)*nr1x+(k-1)*nr1x*nr2x
+              rir=ri+(rj-1)*nr1x+(rk-1)*nr1x*nr2x
               arg=tpi*( (gk(1)*(i-1))/dble(nr1)+(gk(2)*(j-1))/dble(nr2)+ &
                    (gk(3)*(k-1))/dble(nr3) )
               phase=cmplx(cos(arg),sin(arg),kind=DP)
@@ -557,8 +557,8 @@ SUBROUTINE rotate_psi(evc,evcr,s,ftau,gk,nl,igk,nr1,nr2,nr3, &
         DO j = 1, nr2
            DO i = 1, nr1
               CALL ruotaijk (s, ftau, i, j, k, nr1, nr2, nr3, ri, rj, rk )
-              ir=i+(j-1)*nrx1+(k-1)*nrx1*nrx2
-              rir=ri+(rj-1)*nrx1+(rk-1)*nrx1*nrx2
+              ir=i+(j-1)*nr1x+(k-1)*nr1x*nr2x
+              rir=ri+(rj-1)*nr1x+(rk-1)*nr1x*nr2x
               psir(ir)=psic(rir)
            ENDDO
         ENDDO
@@ -578,7 +578,7 @@ SUBROUTINE rotate_psi(evc,evcr,s,ftau,gk,nl,igk,nr1,nr2,nr3, &
 END SUBROUTINE rotate_psi
 
 SUBROUTINE find_band_sym_so (evc,et,at,nbnd,npw,nsym,ngm,s,ftau,d_spin,gk, &
-     xk,igk,nl,nr1,nr2,nr3,nrx1,nrx2,nrx3,nrxx,npwx, &
+     xk,igk,nl,nr1,nr2,nr3,nr1x,nr2x,nr3x,nrxx,npwx, &
      rap_et,times,ngroup,istart,accuracy)
 
   !
@@ -608,7 +608,7 @@ SUBROUTINE find_band_sym_so (evc,et,at,nbnd,npw,nsym,ngm,s,ftau,d_spin,gk, &
 
   REAL(DP), INTENT(in) :: accuracy
 
-  INTEGER :: nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, ngm, npw, npwx
+  INTEGER :: nr1, nr2, nr3, nr1x, nr2x, nr3x, nrxx, ngm, npw, npwx
 
   INTEGER ::                  &
        nsym,             &
@@ -687,7 +687,7 @@ SUBROUTINE find_band_sym_so (evc,et,at,nbnd,npw,nsym,ngm,s,ftau,d_spin,gk, &
      DO ibnd=1,nbnd
         CALL rotate_psi_so(evc(1,ibnd),evcr(1,ibnd),s(1,1,irot),        &
              ftau(1,irot),d_spin(1,1,irot),has_e(1,iclass),gk(1,irot), &
-             nl,igk,npol,nr1,nr2,nr3,nrx1,nrx2,nrx3,nrxx,ngm,npw,npwx)
+             nl,igk,npol,nr1,nr2,nr3,nr1x,nr2x,nr3x,nrxx,ngm,npw,npwx)
      ENDDO
      !
      !   and apply S in the US case.
@@ -788,7 +788,7 @@ SUBROUTINE find_band_sym_so (evc,et,at,nbnd,npw,nsym,ngm,s,ftau,d_spin,gk, &
 END SUBROUTINE find_band_sym_so
 
 SUBROUTINE rotate_psi_so(evc_nc,evcr,s,ftau,d_spin,has_e,gk,nl,igk,npol, &
-     nr1,nr2,nr3,nrx1,nrx2,nrx3,nrxx,ngm,npw,npwx)
+     nr1,nr2,nr3,nr1x,nr2x,nr3x,nrxx,ngm,npw,npwx)
   !
   !  This subroutine rotates a spinor wavefunction according to the symmetry
   !  s. d_spin contains the 2x2 rotation matrix in the spin space.
@@ -801,7 +801,7 @@ SUBROUTINE rotate_psi_so(evc_nc,evcr,s,ftau,d_spin,has_e,gk,nl,igk,npol, &
 
   IMPLICIT NONE
 
-  INTEGER :: npol, nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, ngm, npw, nbnd, npwx
+  INTEGER :: npol, nr1, nr2, nr3, nr1x, nr2x, nr3x, nrxx, ngm, npw, nbnd, npwx
   INTEGER :: s(3,3), ftau(3), gk(3), nl(ngm), igk(npw), has_e
 
   COMPLEX(DP), ALLOCATABLE :: psic(:,:), psir(:,:), evcr_save(:,:)
@@ -816,8 +816,8 @@ SUBROUTINE rotate_psi_so(evc_nc,evcr,s,ftau,d_spin,has_e,gk,nl,igk,npol, &
   COMPLEX (DP), ALLOCATABLE :: psir_collect(:)
   COMPLEX (DP), ALLOCATABLE :: psic_collect(:)
   !
-  ALLOCATE (psic_collect(nrx1*nrx2*nrx3))
-  ALLOCATE (psir_collect(nrx1*nrx2*nrx3))
+  ALLOCATE (psic_collect(nr1x*nr2x*nr3x))
+  ALLOCATE (psir_collect(nr1x*nr2x*nr3x))
 #endif
   !
   ALLOCATE(psic(nrxx,npol))
@@ -846,8 +846,8 @@ SUBROUTINE rotate_psi_so(evc_nc,evcr,s,ftau,d_spin,has_e,gk,nl,igk,npol, &
            DO j = 1, nr2
               DO i = 1, nr1
                  CALL ruotaijk (s, ftau, i, j, k, nr1, nr2, nr3, ri, rj, rk )
-                 ir=i+(j-1)*nrx1+(k-1)*nrx1*nrx2
-                 rir=ri+(rj-1)*nrx1+(rk-1)*nrx1*nrx2
+                 ir=i+(j-1)*nr1x+(k-1)*nr1x*nr2x
+                 rir=ri+(rj-1)*nr1x+(rk-1)*nr1x*nr2x
                  arg=tpi*( (gk(1)*(i-1))/dble(nr1)+(gk(2)*(j-1))/dble(nr2)+ &
                       (gk(3)*(k-1))/dble(nr3) )
                  phase=cmplx(cos(arg),sin(arg),kind=DP)
@@ -860,8 +860,8 @@ SUBROUTINE rotate_psi_so(evc_nc,evcr,s,ftau,d_spin,has_e,gk,nl,igk,npol, &
            DO j = 1, nr2
               DO i = 1, nr1
                  CALL ruotaijk (s, ftau, i, j, k, nr1, nr2, nr3, ri, rj, rk )
-                 ir=i+(j-1)*nrx1+(k-1)*nrx1*nrx2
-                 rir=ri+(rj-1)*nrx1+(rk-1)*nrx1*nrx2
+                 ir=i+(j-1)*nr1x+(k-1)*nr1x*nr2x
+                 rir=ri+(rj-1)*nr1x+(rk-1)*nr1x*nr2x
                  psir_collect(ir)=psic_collect(rir)
               ENDDO
            ENDDO
@@ -876,8 +876,8 @@ SUBROUTINE rotate_psi_so(evc_nc,evcr,s,ftau,d_spin,has_e,gk,nl,igk,npol, &
            DO j = 1, nr2
               DO i = 1, nr1
                  CALL ruotaijk (s, ftau, i, j, k, nr1, nr2, nr3, ri, rj, rk )
-                 ir=i+(j-1)*nrx1+(k-1)*nrx1*nrx2
-                 rir=ri+(rj-1)*nrx1+(rk-1)*nrx1*nrx2
+                 ir=i+(j-1)*nr1x+(k-1)*nr1x*nr2x
+                 rir=ri+(rj-1)*nr1x+(rk-1)*nr1x*nr2x
                  arg=tpi*( (gk(1)*(i-1))/dble(nr1)+(gk(2)*(j-1))/dble(nr2)+ &
                       (gk(3)*(k-1))/dble(nr3) )
                  phase=cmplx(cos(arg),sin(arg),kind=DP)
@@ -890,8 +890,8 @@ SUBROUTINE rotate_psi_so(evc_nc,evcr,s,ftau,d_spin,has_e,gk,nl,igk,npol, &
            DO j = 1, nr2
               DO i = 1, nr1
                  CALL ruotaijk (s, ftau, i, j, k, nr1, nr2, nr3, ri, rj, rk )
-                 ir=i+(j-1)*nrx1+(k-1)*nrx1*nrx2
-                 rir=ri+(rj-1)*nrx1+(rk-1)*nrx1*nrx2
+                 ir=i+(j-1)*nr1x+(k-1)*nr1x*nr2x
+                 rir=ri+(rj-1)*nr1x+(rk-1)*nr1x*nr2x
                  psir(ir,ipol)=psic(rir,ipol)
               ENDDO
            ENDDO

@@ -19,7 +19,7 @@ SUBROUTINE data_structure_coarse( lgamma, nr1, nr2, nr3, ecutwfc )
   !
   USE kinds,      ONLY : DP
   USE cell_base,  ONLY : bg,  tpiba
-  USE gcoarse,    ONLY : dfftc, nr1c, nr2c, nr3c, nrx1c, nrx2c, nrx3c, nrxxc, &
+  USE gcoarse,    ONLY : dfftc, nr1c, nr2c, nr3c, nr1cx, nr2cx, nr3cx, nrxxc, &
                          ngmc, ngmc_l, ngmc_g, gcutmc
   USE mp,         ONLY : mp_sum
   USE mp_global,  ONLY : intra_pool_comm, nproc_pool, me_pool, my_image_id
@@ -53,14 +53,14 @@ SUBROUTINE data_structure_coarse( lgamma, nr1, nr2, nr3, ecutwfc )
   !
   ! ... Sets the dimensions of the coarse grdi
   !
-  nrx1c = good_fft_dimension( nr1c )
-  nrx2c = nr2c
-  nrx3c = nr3c
-  nrxxc = nrx1c * nrx2c * nrx3c
+  nr1cx = good_fft_dimension( nr1c )
+  nr2cx = nr2c
+  nr3cx = nr3c
+  nrxxc = nr1cx * nr2cx * nr3cx
   !
   ! ...
   !
-  CALL fft_dlay_allocate( dfftc, nproc_pool, max( nrx1c, nrx3c ),  nrx2c )
+  CALL fft_dlay_allocate( dfftc, nproc_pool, max( nr1cx, nr3cx ),  nr2cx )
   !
   ! ... Computes the number of g necessary to the calculation
   !
@@ -88,7 +88,7 @@ SUBROUTINE data_structure_coarse( lgamma, nr1, nr2, nr3, ecutwfc )
     ENDDO
   ENDDO
   !
-  CALL fft_dlay_scalar( dfftc, ub, lb, nr1c, nr2c, nr3c, nrx1c, nrx2c, nrx3c, stw )
+  CALL fft_dlay_scalar( dfftc, ub, lb, nr1c, nr2c, nr3c, nr1cx, nr2cx, nr3cx, stw )
   !
   DEALLOCATE( stw )
   !

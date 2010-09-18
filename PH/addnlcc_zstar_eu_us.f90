@@ -15,7 +15,7 @@ SUBROUTINE addnlcc_zstar_eu_us( drhoscf )
   USE scf, only : rho, rho_core
   USE cell_base, ONLY : omega, alat
   USE lsda_mod, ONLY : nspin
-  USE gvect, ONLY : nrxx, ngm, nl, g, nrx1, nrx2, nrx3, nr1, nr2, nr3
+  USE gvect, ONLY : nrxx, ngm, nl, g, nr1x, nr2x, nr3x, nr1, nr2, nr3
   USE noncollin_module, ONLY : nspin_lsda, nspin_gga
 
   USE efield_mod, ONLY : zstareu0

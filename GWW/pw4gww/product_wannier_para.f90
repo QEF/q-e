@@ -284,7 +284,7 @@ SUBROUTINE product_wannier_para(nbndv, lcomplete, ene_loc, lambda)
                     if(n3>nr3) n3=n3-nr3
 
                     if(n3 >= nr3_start .and. n3 <= nr3_end) then
-                       nn=(n3-nr3_start)*nrx1*nrx2+(n2-1)*nrx1+n1
+                       nn=(n3-nr3_start)*nr1x*nr2x+(n2-1)*nr1x+n1
                        if(nn<1 .or. nn > nrxx)  then
                           CALL errore( 'rsca', 'rsca', nn )
                        endif

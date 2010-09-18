@@ -15,7 +15,7 @@ PROGRAM plan_avg
   USE kinds,     ONLY : DP
   USE printout_base, ONLY: title
   USE cell_base, ONLY : ibrav, celldm, at
-  USE gvect,     ONLY : nrx1, nrx2, nrx3, nr1, nr2, nr3, gcutm, dual, ecutwfc
+  USE gvect,     ONLY : nr1x, nr2x, nr3x, nr1, nr2, nr3, gcutm, dual, ecutwfc
   USE klist,     ONLY : nkstot, xk
   USE ions_base, ONLY : nat, ntyp=>nsp, ityp, tau, atm, zv
   USE io_files,  ONLY : tmp_dir, prefix, trimcheck
@@ -92,7 +92,7 @@ PROGRAM plan_avg
           STATUS = 'unknown', err = 100, IOSTAT = ios)
 100  CALL errore ('plan_avg', 'opening file '//trim(filplot), abs (ios) )
      WRITE (iunplot, '(a)') title
-     WRITE (iunplot, '(8i8)') nrx1, nrx2, nrx3, nr1, nr2, nr3, nat, ntyp
+     WRITE (iunplot, '(8i8)') nr1x, nr2x, nr3x, nr1, nr2, nr3, nat, ntyp
      WRITE (iunplot, '(i6,6f12.8)') ibrav, celldm
      IF  (ibrav == 0) THEN
         WRITE ( iunplot, * ) at(:,1)

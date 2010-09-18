@@ -19,7 +19,7 @@ SUBROUTINE PAW_make_ae_charge(rho)
    USE fft_base,          ONLY : dfftp
    USE mp_global,         ONLY : me_pool
    USE splinelib,         ONLY : spline, splint
-   USE gvect,             ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx
+   USE gvect,             ONLY : nr1, nr2, nr3, nr1x, nr2x, nr3x, nrxx
    USE cell_base,         ONLY : at, bg, alat
 
    TYPE(scf_type), INTENT(inout) :: rho
@@ -104,7 +104,7 @@ SUBROUTINE PAW_make_ae_charge(rho)
          DEALLOCATE(d1y, d2y)
          !
 #if defined (__PARA)
-         idx0 = nrx1*nrx2 * sum ( dfftp%npp(1:me_pool) )
+         idx0 = nr1x*nr2x * sum ( dfftp%npp(1:me_pool) )
 #else
          idx0 = 0
 #endif
@@ -112,10 +112,10 @@ SUBROUTINE PAW_make_ae_charge(rho)
             !
             ! three dimensional indices (i,j,k)
             idx   = idx0 + ir - 1
-            k     = idx / (nrx1*nrx2)
-            idx   = idx - (nrx1*nrx2)*k
-            j     = idx / nrx1
-            idx   = idx - nrx1*j
+            k     = idx / (nr1x*nr2x)
+            idx   = idx - (nr1x*nr2x)*k
+            j     = idx / nr1x
+            idx   = idx - nr1x*j
             l     = idx
             !
             ! ... do not include points outside the physical range!

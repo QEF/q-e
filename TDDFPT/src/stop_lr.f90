@@ -24,7 +24,6 @@ SUBROUTINE stop_lr( )
   USE io_global,      ONLY : stdout
   ! For gaussian cube file
   USE ions_base,  ONLY : nat, ityp, atm, ntyp => nsp, tau
-  use gvect,      ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx
   USE cell_base,  ONLY : celldm, at, bg
   !
   IMPLICIT NONE

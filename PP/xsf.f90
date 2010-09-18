@@ -51,12 +51,12 @@ END SUBROUTINE xsf_struct
 !   in XSF format using the FFT mesh (i.e. fast write)
 ! -------------------------------------------------------------------
 SUBROUTINE xsf_fast_datagrid_3d &
-     (rho, nr1, nr2, nr3, nrx1, nrx2, nrx3, at, alat, ounit)
+     (rho, nr1, nr2, nr3, nr1x, nr2x, nr3x, at, alat, ounit)
   USE kinds, ONLY : DP
   USE constants, ONLY : BOHR_RADIUS_ANGS
   IMPLICIT NONE
-  INTEGER       :: nrx1, nrx2, nrx3, nr1, nr2, nr3, ounit
-  real(DP) :: alat, at (3, 3), rho(nrx1,nrx2,nrx3)
+  INTEGER       :: nr1x, nr2x, nr3x, nr1, nr2, nr3, ounit
+  real(DP) :: alat, at (3, 3), rho(nr1x,nr2x,nr3x)
   ! --
   INTEGER       :: i1, i2, i3, ix, iy, iz, count, i, &
        ind_x(10), ind_y(10),ind_z(10)
@@ -90,7 +90,7 @@ SUBROUTINE xsf_fast_datagrid_3d &
            !ix = mod(i1,nr1)
            ix = mod(i1,nr1) + 1
 
-           !ii = (1+ix) + iy*nrx1 + iz*nrx1*nrx2
+           !ii = (1+ix) + iy*nr1x + iz*nr1x*nr2x
            IF (count<6) THEN
               count = count + 1
               !ind(count) = ii

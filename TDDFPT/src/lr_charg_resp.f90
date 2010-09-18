@@ -425,7 +425,7 @@ subroutine lr_dump_rho_tot_cube(rho,identifier)
   !-----------------------------------------------------------------------
   USE io_files,              ONLY : prefix
   USE lr_variables,          ONLY : LR_polarization, LR_iteration, cube_save
-  use gvect,                    only : nrxx,gstart,nr1,nr2,nr3,nrx1,nrx2,nrx3
+  use gvect,                    only : nrxx,gstart,nr1,nr2,nr3,nr1x,nr2x,nr3x
   use cell_base
   USE ions_base,                ONLY : nat, ityp, atm, ntyp => nsp, tau
   use mp,                   only : mp_barrier, mp_sum, mp_bcast, mp_get
@@ -508,7 +508,7 @@ subroutine lr_dump_rho_tot_cube(rho,identifier)
          enddo
    endif
 ! Header is complete, now dump the charge density, as derived from xyzd subroutine
-         ALLOCATE( rho_plane( nrx3 ) )
+         ALLOCATE( rho_plane( nr3x ) )
          !ALLOCATE( kowner( nr3 ) ) 
         !
         ! ... find the index of the pool that will write rho
@@ -535,7 +535,7 @@ subroutine lr_dump_rho_tot_cube(rho,identifier)
         !ELSE
         ! kowner = ionode_id
         !ENDIF
-        ldr = nrx1*nrx2
+        ldr = nr1x*nr2x
       !
       !
       ! Each processor is on standby to send its plane to ionode
@@ -552,7 +552,7 @@ subroutine lr_dump_rho_tot_cube(rho,identifier)
                    !
                    DO  i3=1, dfftp%npp(i)
                          !
-                         rho_temp(i3) = rho(i1+(i2-1)*nrx1+(i3-1)*ldr)
+                         rho_temp(i3) = rho(i1+(i2-1)*nr1x+(i3-1)*ldr)
                          !
                       !
                    END DO
@@ -648,9 +648,9 @@ subroutine lr_dump_rho_tot_cube(rho,identifier)
   do i1=1,nr1
    do i2=1,nr2
     do i3=1,nr3
-         !i(i3-1)*nrx1*nrx2+(i2-1)*nrx1+(i1-1)+1
+         !i(i3-1)*nr1x*nr2x+(i2-1)*nr1x+(i1-1)+1
          i=i+1
-         write(158,'(E13.5)',advance='no') (rho((i3-1)*nrx1*nrx2+(i2-1)*nrx1+i1))
+         write(158,'(E13.5)',advance='no') (rho((i3-1)*nr1x*nr2x+(i2-1)*nr1x+i1))
          if (i == 6 ) then 
           write(158,'("")')
           i=0
@@ -675,7 +675,7 @@ subroutine lr_dump_rho_tot_xyzd(rho,identifier)
   !-----------------------------------------------------------------------
   USE io_files,             ONLY : prefix
   USE lr_variables,         ONLY : LR_polarization, LR_iteration, cube_save
-  use gvect,                only : nrxx,gstart,nr1,nr2,nr3,nrx1,nrx2,nrx3
+  use gvect,                only : nrxx,gstart,nr1,nr2,nr3,nr1x,nr2x,nr3x
   use cell_base
   USE ions_base,            ONLY : nat, ityp, atm, ntyp => nsp, tau
   use mp,                   only : mp_barrier, mp_sum, mp_bcast, mp_get
@@ -756,7 +756,7 @@ subroutine lr_dump_rho_tot_xyzd(rho,identifier)
         ELSE
          kowner = ionode_id
         ENDIF
-        ldr = nrx1*nrx2
+        ldr = nr1x*nr2x
       !
       !
       ! Each processor is on standby to send its plane to ionode
@@ -773,7 +773,7 @@ subroutine lr_dump_rho_tot_xyzd(rho,identifier)
                !
                DO i1 = 1, nr1
                   !
-                  rho_plane(i1+(i2-1)*nr1) = rho(i1+(i2-1)*nrx1+(kk-1)*ldr)
+                  rho_plane(i1+(i2-1)*nr1) = rho(i1+(i2-1)*nr1x+(kk-1)*ldr)
                   !
                END DO
                !
@@ -862,7 +862,7 @@ subroutine lr_dump_rho_tot_xcrys(rho, identifier)
   USE constants,             ONLY : BOHR_RADIUS_ANGS
   USE io_files,              ONLY : prefix
   USE lr_variables,          ONLY : LR_polarization, LR_iteration, cube_save
-  use gvect,                 only : nrxx,gstart,nr1,nr2,nr3,nrx1,nrx2,nrx3
+  use gvect,                 only : nrxx,gstart,nr1,nr2,nr3,nr1x,nr2x,nr3x
   use cell_base
   USE ions_base,             ONLY : nat, ityp, atm, ntyp => nsp, tau
   use mp,                   only : mp_barrier, mp_sum, mp_bcast, mp_get
@@ -971,7 +971,7 @@ subroutine lr_dump_rho_tot_xcrys(rho, identifier)
         ELSE
          kowner = ionode_id
         ENDIF
-        ldr = nrx1*nrx2
+        ldr = nr1x*nr2x
       !
       !
       ! Each processor is on standby to send its plane to ionode
@@ -988,7 +988,7 @@ subroutine lr_dump_rho_tot_xcrys(rho, identifier)
                !
                DO i1 = 1, nr1
                   !
-                  rho_plane(i1+(i2-1)*nr1) = rho(i1+(i2-1)*nrx1+(kk-1)*ldr)
+                  rho_plane(i1+(i2-1)*nr1) = rho(i1+(i2-1)*nr1x+(kk-1)*ldr)
                   !
                END DO
                !
@@ -1082,7 +1082,7 @@ subroutine lr_dump_rho_tot_xcrys(rho, identifier)
            ix = mod(i1,nr1)
            !ix = mod(i1,nr1) + 1
 
-           !ii = (1+ix) + iy*nrx1 + iz*nrx1*nrx2
+           !ii = (1+ix) + iy*nr1x + iz*nr1x*nr2x
            if (count.lt.6) then
               count = count + 1
               !ind(count) = ii

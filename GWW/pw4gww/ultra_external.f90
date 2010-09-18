@@ -15,9 +15,9 @@ subroutine ultra_external( nbnd_start, nbnd_end, radius, itask)
   USE io_files,             ONLY : find_free_unit,nwordwfc, iunwfc, prefix, diropn
   USE io_global,            ONLY : stdout, ionode_id
   USE gsmooth,              ONLY : nls, nlsm, nr1s, nr2s, nr3s, &
-                                   nrx1s, nrx2s, nrx3s, nrxxs, doublegrid
-  USE gvect,                ONLY : nr1, nr2, nr3, nrx1, nrx2, &
-                                   nrx3, nrxx, gstart
+                                   nr1sx, nr2sx, nr3sx, nrxxs, doublegrid
+  USE gvect,                ONLY : nr1, nr2, nr3, nr1x, nr2x, &
+                                   nr3x, nrxx, gstart
   use mp_global,            ONLY : nproc_pool, me_pool
   USE wvfct,                ONLY : igk, g2kin, npwx, npw, nbnd, nbndx
   USE basis
@@ -130,7 +130,7 @@ subroutine ultra_external( nbnd_start, nbnd_end, radius, itask)
      do ix=1,nr1s
         do iy=1,nr2s
            do iz=1,dffts%npp(me_pool+1)
-              nn=(iz-1)*nrx1s*nrx2s+(iy-1)*nrx1s+ix
+              nn=(iz-1)*nr1sx*nr2sx+(iy-1)*nr1sx+ix
               r(1)=(dble(ix-1)/dble(nr1s))*at(1,1)*alat
               r(2)=(dble(iy-1)/dble(nr2s))*at(2,2)*alat
               r(3)=(dble(iz+nr3s_start-1-1)/dble(nr3s))*at(3,3)*alat
@@ -157,7 +157,7 @@ subroutine ultra_external( nbnd_start, nbnd_end, radius, itask)
         do ix=1,nr1
            do iy=1,nr2
               do iz=1,dfftp%npp(me_pool+1)
-                 nn=(iz-1)*nrx1*nrx2+(iy-1)*nrx1+ix
+                 nn=(iz-1)*nr1x*nr2x+(iy-1)*nr1x+ix
                  r(1)=(dble(ix-1)/dble(nr1))*at(1,1)*alat
                  r(2)=(dble(iy-1)/dble(nr2))*at(2,2)*alat
                  r(3)=(dble(iz+nr3_start-1-1)/dble(nr3))*at(3,3)*alat

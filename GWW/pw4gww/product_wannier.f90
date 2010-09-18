@@ -23,7 +23,7 @@ SUBROUTINE product_wannier(nbndv)
   USE io_files,             ONLY : tmp_dir, iunwfc, iunigk, diropn
   USE io_global,            ONLY : stdout
   USE gsmooth,              ONLY : nls, nlsm, nr1s, nr2s, nr3s, &
-                                   nrx1s, nrx2s, nrx3s, nrxxs, doublegrid
+                                   nr1sx, nr2sx, nr3sx, nrxxs, doublegrid
   use mp_global,            ONLY : nproc_pool, me_pool
   USE kinds,                ONLY : DP
   USE us
@@ -156,7 +156,7 @@ SUBROUTINE product_wannier(nbndv)
                n3=no3+iz
                if(n3<1) n3=nr3+n3
                if(n3>nr3) n3=n3-nr3
-               nn=(n3-1)*nrx1*nrx2+(n2-1)*nrx1+n1
+               nn=(n3-1)*nr1x*nr2x+(n2-1)*nr1x+n1
                tmpspacei(nn)=tmpreal(iz*(2*nll+1)*(2*nll+1)+iy*(2*nll+1)+ix+1)
 
              enddo
@@ -223,7 +223,7 @@ SUBROUTINE product_wannier(nbndv)
                  n3=no3+iz
                  if(n3<1) n3=nr3+n3
                  if(n3>nr3) n3=n3-nr3
-                 nn=(n3-1)*nrx1*nrx2+(n2-1)*nrx1+n1
+                 nn=(n3-1)*nr1x*nr2x+(n2-1)*nr1x+n1
                  tmpspacej(nn)=tmpreal(iz*(2*nll+1)*(2*nll+1)+iy*(2*nll+1)+ix+1)
 
                enddo
@@ -262,7 +262,7 @@ SUBROUTINE product_wannier(nbndv)
                  if(n3<1) n3=nr3+n3
                  if(n3>nr3) n3=n3-nr3
 
-                 nn=(n3-1)*nrx1*nrx2+(n2-1)*nrx1+n1
+                 nn=(n3-1)*nr1x*nr2x+(n2-1)*nr1x+n1
                  rsca=rsca+(tmpspacei(nn)*tmpspacej(nn)+tmpreal2(nn))**2.d0
                  tmpreal(iz*(2*wiwj%radius(2)+1)*(2*wiwj%radius(1)+1)+iy*(2*wiwj%radius(1)+1)+ix+1)=&
                  &tmpspacei(nn)*tmpspacej(nn)+tmpreal2(nn)
@@ -309,7 +309,7 @@ SUBROUTINE product_wannier(nbndv)
                    if(n3<1) n3=nr3+n3
                    if(n3>nr3) n3=n3-nr3
 
-                   nn=(n3-1)*nrx1*nrx2+(n2-1)*nrx1+n1
+                   nn=(n3-1)*nr1x*nr2x+(n2-1)*nr1x+n1
                    tmpspacej(nn)=tmpreal(iz*(2*wiwj%radius(2)+1)*(2*wiwj%radius(1)+1)+iy*(2*wiwj%radius(1)+1)+ix+1)
                  enddo
               enddo
@@ -326,7 +326,7 @@ SUBROUTINE product_wannier(nbndv)
               rsca=rsca+conjg( tmpspacec(nn))*tmpspacec(nn)
             enddo
             write(*,*) 'RSCA', rsca/(nr1*nr2*nr3)!ATTENZIONE
-            !CALL cft3s( tmpspacec,nr1, nr2, nr3, nrx1, nrx2, nrx3, -1 )
+            !CALL cft3s( tmpspacec,nr1, nr2, nr3, nr1x, nr2x, nr3x, -1 )
              CALL fwfft ('Dense', tmpspacec, dfftp)
              rsca=0.d0
             do nn=1,ngm

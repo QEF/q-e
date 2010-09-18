@@ -18,7 +18,7 @@ SUBROUTINE addusdens1d (plan, prho)
   USE kinds, ONLY: DP
   USE cell_base, ONLY: alat, omega, celldm
   USE ions_base, ONLY: nat, ntyp => nsp, ityp
-  USE gvect, ONLY: nr3, nrx3, nrxx, nl, eigts1, eigts2, eigts3, ig1,ig2,ig3
+  USE gvect, ONLY: nr3, nr3x, nrxx, nl, eigts1, eigts2, eigts3, ig1,ig2,ig3
   USE lsda_mod, ONLY: current_spin
   USE uspp, ONLY: becsum
   USE uspp_param, ONLY: upf, lmaxq, nh
@@ -53,7 +53,7 @@ SUBROUTINE addusdens1d (plan, prho)
   ! imaginary part of qg
   ! the spherical harmonics
 
-  COMPLEX(DP) :: skk, prho (nrxx), qg (nrx3)
+  COMPLEX(DP) :: skk, prho (nrxx), qg (nr3x)
   ! auxiliary variable
   ! auxiliary space for the charge
   ! auxiliary variable for FFT

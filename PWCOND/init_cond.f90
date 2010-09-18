@@ -23,8 +23,8 @@ subroutine init_cond (nregion, flag)
   USE ions_base,  ONLY : atm, nat, ityp, ntyp => nsp, tau
   USE cell_base,  ONLY : at, bg, omega, alat
   USE ener,       ONLY : ef
-  USE gvect,      ONLY : nrx1, nrx2, nrx3, nr1, nr2, nr3, ecutwfc
-  USE gsmooth,    ONLY : nrx1s, nrx2s, nrx3s, nr1s, nr2s, nr3s
+  USE gvect,      ONLY : nr1x, nr2x, nr3x, nr1, nr2, nr3, ecutwfc
+  USE gsmooth,    ONLY : nr1sx, nr2sx, nr3sx, nr1s, nr2s, nr3s
   USE cond
 
   implicit none
@@ -181,21 +181,21 @@ subroutine init_cond (nregion, flag)
   write(stdout, '(7x,i4,8x,a6,'' tau('',i3,'')=('',3f8.4,''  )'')')  &
       &         ( na,atm(ityp(na)),na,                          &
       &         ( tau(nt,na),nt=1,3),na=1,nat )
-  write (stdout, 300) nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s,     &
-                 nr1, nr2, nr3, nrx1, nrx2, nrx3
+  write (stdout, 300) nr1s, nr2s, nr3s, nr1sx, nr2sx, nr3sx,     &
+                 nr1, nr2, nr3, nr1x, nr2x, nr3x
 300   format (/,5x,                                         &
         &      'nr1s                      = ',i12,/,5x,     &
         &      'nr2s                      = ',i12,/,5x,     &
         &      'nr3s                      = ',i12,/,5x,     &
-        &      'nrx1s                     = ',i12,/,5x,     &
-        &      'nrx2s                     = ',i12,/,5x,     &
-        &      'nrx3s                     = ',i12,/,5x,     &
+        &      'nr1sx                     = ',i12,/,5x,     &
+        &      'nr2sx                     = ',i12,/,5x,     &
+        &      'nr3sx                     = ',i12,/,5x,     &
         &      'nr1                       = ',i12,/,5x,     &
         &      'nr2                       = ',i12,/,5x,     &
         &      'nr3                       = ',i12,/,5x,     &
-        &      'nrx1                      = ',i12,/,5x,     &
-        &      'nrx2                      = ',i12,/,5x,     &
-        &      'nrx3                      = ',i12,/,5x)
+        &      'nr1x                      = ',i12,/,5x,     &
+        &      'nr2x                      = ',i12,/,5x,     &
+        &      'nr3x                      = ',i12,/,5x)
 
   write(stdout,*) '_______________________________'
   write(stdout,*) ' Radii of nonlocal spheres: '

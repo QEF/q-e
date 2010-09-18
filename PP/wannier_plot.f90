@@ -119,10 +119,10 @@ SUBROUTINE plot_wannier(nc,n0)
 
   ALLOCATE(wan_func(npwx,nwan))
   ALLOCATE(psic(nrxxs))
-  ALLOCATE(psic3(nrx1s,nrx2s,nrx3s))
-  ALLOCATE(psic3_0(nrx1s,nrx2s,nrx3s))
-  ALLOCATE(psic_sum(nc(1)*nrx1s,nc(2)*nrx2s,nc(3)*nrx3s,nspin))
-  ALLOCATE(rho(nc(1)*nrx1s,nc(2)*nrx2s,nc(3)*nrx3s,nspin))
+  ALLOCATE(psic3(nr1sx,nr2sx,nr3sx))
+  ALLOCATE(psic3_0(nr1sx,nr2sx,nr3sx))
+  ALLOCATE(psic_sum(nc(1)*nr1sx,nc(2)*nr2sx,nc(3)*nr3sx,nspin))
+  ALLOCATE(rho(nc(1)*nr1sx,nc(2)*nr2sx,nc(3)*nr3sx,nspin))
 
   CALL init_us_1
   CALL init_at_1
@@ -151,30 +151,30 @@ SUBROUTINE plot_wannier(nc,n0)
 
      CALL invfft ('Wave', psic, dffts)
 
-     DO k=1, nrx3s
-        DO j=1,nrx2s
-           DO i=1,nrx1s
-              n = i + (j-1)*nrx1s + (k-1)*nrx2s*nrx1s
+     DO k=1, nr3sx
+        DO j=1,nr2sx
+           DO i=1,nr1sx
+              n = i + (j-1)*nr1sx + (k-1)*nr2sx*nr1sx
               psic3_0(i,j,k) = psic(n)
            ENDDO
         ENDDO
      ENDDO
 
-     DO k=1, (nrx3s-1)*nc(3)
-        DO j=1, (nrx2s-1)*nc(2)
-           DO i=1, (nrx1s-1)*nc(1)
+     DO k=1, (nr3sx-1)*nc(3)
+        DO j=1, (nr2sx-1)*nc(2)
+           DO i=1, (nr1sx-1)*nc(1)
               ! r = n0(1)*at(1,:)+n0(2)*at(2,:)+n0(3)*at(3,:)
-              ! r = r + DBLE(i-1)*at(1,:)/DBLE(nrx1s-1)+DBLE(j-1)*at(2,:)/DBLE(nrx2s-1)+DBLE(k-1)*at(3,:)/DBLE(nrx3s-1)
+              ! r = r + DBLE(i-1)*at(1,:)/DBLE(nr1sx-1)+DBLE(j-1)*at(2,:)/DBLE(nr2sx-1)+DBLE(k-1)*at(3,:)/DBLE(nr3sx-1)
               r = n0(1)*at(:,1)+n0(2)*at(:,2)+n0(3)*at(:,3)
-              r = r + dble(i-1)*at(:,1)/dble(nrx1s-1) + &
-                      dble(j-1)*at(:,2)/dble(nrx2s-1) + &
-                      dble(k-1)*at(:,3)/dble(nrx3s-1)
+              r = r + dble(i-1)*at(:,1)/dble(nr1sx-1) + &
+                      dble(j-1)*at(:,2)/dble(nr2sx-1) + &
+                      dble(k-1)*at(:,3)/dble(nr3sx-1)
               phase = cos(tpi*(xk(1,ik)*r(1)+xk(2,ik)*r(2)+xk(3,ik)*r(3))) + &
           (0.d0,1.d0)*sin(tpi*(xk(1,ik)*r(1)+xk(2,ik)*r(2)+xk(3,ik)*r(3)))
 
-              i1 = i - floor(dble(i-0.01)/dble(nrx1s-1))*(nrx1s-1)
-              j1 = j - floor(dble(j-0.01)/dble(nrx2s-1))*(nrx2s-1)
-              k1 = k - floor(dble(k-0.01)/dble(nrx3s-1))*(nrx3s-1)
+              i1 = i - floor(dble(i-0.01)/dble(nr1sx-1))*(nr1sx-1)
+              j1 = j - floor(dble(j-0.01)/dble(nr2sx-1))*(nr2sx-1)
+              k1 = k - floor(dble(k-0.01)/dble(nr3sx-1))*(nr3sx-1)
               psic_sum(i,j,k,current_spin) = psic_sum(i,j,k,current_spin)+ &
                    cmplx(wk(ik),0.d0,kind=DP)*psic3_0(i1,j1,k1)*phase
            ENDDO
@@ -186,9 +186,9 @@ SUBROUTINE plot_wannier(nc,n0)
   rho = 0.d0
 
   DO n=1, nspin
-     DO i=1, nrx1s*nc(1)
-        DO j=1, nrx2s*nc(2)
-           DO k=1,nrx3s*nc(3)
+     DO i=1, nr1sx*nc(1)
+        DO j=1, nr2sx*nc(2)
+           DO k=1,nr3sx*nc(3)
               rho(i,j,k,n) = dreal(psic_sum(i,j,k,n))**2+aimag(psic_sum(i,j,k,n))**2
            ENDDO
         ENDDO
@@ -199,22 +199,22 @@ SUBROUTINE plot_wannier(nc,n0)
 100 CALL errore ('plot_wannier', 'Opening out file', abs (ios) )
 
   ! I want to write .dx file for dataexplorer
-  WRITE(10,'(a36,3i6)') 'object 1 class gridpositions counts ', nrx3s*nc(3), nrx2s*nc(2), nrx1s*nc(1)
+  WRITE(10,'(a36,3i6)') 'object 1 class gridpositions counts ', nr3sx*nc(3), nr2sx*nc(2), nr1sx*nc(1)
   WRITE(10,*) 'origin', n0(1)*at(:,1)+n0(2)*at(:,2)+n0(3)*at(:,3)
-  !  write(10,'(a5, 3f9.5)') 'delta', (at(3,i)/(1.d0*(nrx3s-1)),i=1,3)
-  !  write(10,'(a5, 3f9.5)') 'delta', (at(2,i)/(1.d0*(nrx2s-1)),i=1,3)
-  !  write(10,'(a5, 3f9.5)') 'delta', (at(1,i)/(1.d0*(nrx1s-1)),i=1,3)
-  WRITE(10,'(a5, 3f9.5)') 'delta', (at(i,1)/(1.d0*(nrx3s-1)),i=1,3)
-  WRITE(10,'(a5, 3f9.5)') 'delta', (at(i,2)/(1.d0*(nrx2s-1)),i=1,3)
-  WRITE(10,'(a5, 3f9.5)') 'delta', (at(i,3)/(1.d0*(nrx1s-1)),i=1,3)
-  WRITE(10,'(a38,3i6)') 'object 2 class gridconnections counts ', nrx3s*nc(3), nrx2s*nc(2), nrx1s*nc(1)
+  !  write(10,'(a5, 3f9.5)') 'delta', (at(3,i)/(1.d0*(nr3sx-1)),i=1,3)
+  !  write(10,'(a5, 3f9.5)') 'delta', (at(2,i)/(1.d0*(nr2sx-1)),i=1,3)
+  !  write(10,'(a5, 3f9.5)') 'delta', (at(1,i)/(1.d0*(nr1sx-1)),i=1,3)
+  WRITE(10,'(a5, 3f9.5)') 'delta', (at(i,1)/(1.d0*(nr3sx-1)),i=1,3)
+  WRITE(10,'(a5, 3f9.5)') 'delta', (at(i,2)/(1.d0*(nr2sx-1)),i=1,3)
+  WRITE(10,'(a5, 3f9.5)') 'delta', (at(i,3)/(1.d0*(nr1sx-1)),i=1,3)
+  WRITE(10,'(a38,3i6)') 'object 2 class gridconnections counts ', nr3sx*nc(3), nr2sx*nc(2), nr1sx*nc(1)
   WRITE(10,*) 'attribute "element type" string "cubes"'
   WRITE(10,*) 'attribute "ref" string "positions"'
-  WRITE(10,'(a44,i10,a13)') 'object 3 class array type float rank 0 items', nrx3s*nc(3)*nrx2s*nc(2)*nrx1s*nc(1), 'data follows'
+  WRITE(10,'(a44,i10,a13)') 'object 3 class array type float rank 0 items', nr3sx*nc(3)*nr2sx*nc(2)*nr1sx*nc(1), 'data follows'
 
-  DO i=1, nrx3s*nc(3)
-     DO j=1,nrx2s*nc(2)
-        DO k=1,nrx1s*nc(1)
+  DO i=1, nr3sx*nc(3)
+     DO j=1,nr2sx*nc(2)
+        DO k=1,nr1sx*nc(1)
            WRITE(10,'(f13.7)') rho(k,j,i,plot_wan_spin)
            ! write(10,'(f13.7)') aimag(psic_sum(k,j,i,plot_wan_spin))
         ENDDO

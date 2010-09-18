@@ -25,7 +25,7 @@ SUBROUTINE make_pointlists
   USE io_global,  ONLY : stdout
   USE ions_base,  ONLY : nat, tau, ntyp => nsp, ityp
   USE cell_base,  ONLY : at, bg
-  USE gvect,      ONLY : nr1, nr2, nr3, nrx1, nrx2, nrxx
+  USE gvect,      ONLY : nr1, nr2, nr3, nr1x, nr2x, nrxx
   USE mp_global,  ONLY : me_pool
   USE fft_base,   ONLY : dfftp
 
@@ -51,7 +51,7 @@ SUBROUTINE make_pointlists
   idx0 = 0
 #ifdef __PARA
   DO indproc=1,me_pool
-     idx0 = idx0 + nrx1*nrx2*dfftp%npp(indproc)
+     idx0 = idx0 + nr1x*nr2x*dfftp%npp(indproc)
   ENDDO
 
 #endif
@@ -127,10 +127,10 @@ SUBROUTINE make_pointlists
      DO ir=1,nrxx
         idx = idx0 + ir - 1
 
-        k0  = idx/(nrx1*nrx2)
-        idx = idx - (nrx1*nrx2) * k0
-        j0  = idx / nrx1
-        idx = idx - nrx1*j0
+        k0  = idx/(nr1x*nr2x)
+        idx = idx - (nr1x*nr2x) * k0
+        j0  = idx / nr1x
+        idx = idx - nr1x*j0
         i0  = idx
 
         DO i = i0-nr1,i0+nr1, nr1

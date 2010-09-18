@@ -35,7 +35,7 @@ subroutine rgd_blk (nr1,nr2,nr3,nat,dyn,q,tau,epsil,zeu,bg,omega,sign)
   !
   real(DP):: geg                    !  <q+G| epsil | q+G>
   integer :: na,nb, i,j, m1, m2, m3
-  integer :: nrx1, nrx2, nrx3
+  integer :: nr1x, nr2x, nr3x
   real(DP) :: alph, fac,g1,g2,g3, facgd, arg, gmax
   real(DP) :: zag(3),zbg(3),zcg(3), fnat(3)
   complex(dp) :: facg
@@ -49,27 +49,27 @@ subroutine rgd_blk (nr1,nr2,nr3,nat,dyn,q,tau,epsil,zeu,bg,omega,sign)
   alph= 1.0d0
   geg = gmax*alph*4.0d0
 
-  ! Estimate of nrx1,nrx2,nrx3 generating all vectors up to G^2 < geg
+  ! Estimate of nr1x,nr2x,nr3x generating all vectors up to G^2 < geg
   ! Only for dimensions where periodicity is present, e.g. if nr1=1
   ! and nr2=1, then the G-vectors run along nr3 only.
   ! (useful if system is in vacuum, e.g. 1D or 2D)
   !
   if (nr1 == 1) then
-     nrx1=0
+     nr1x=0
   else
-     nrx1 = int ( sqrt (geg) / &
+     nr1x = int ( sqrt (geg) / &
                   sqrt (bg (1, 1) **2 + bg (2, 1) **2 + bg (3, 1) **2) ) + 1
   endif
   if (nr2 == 1) then
-     nrx2=0
+     nr2x=0
   else
-     nrx2 = int ( sqrt (geg) / &
+     nr2x = int ( sqrt (geg) / &
                   sqrt (bg (1, 2) **2 + bg (2, 2) **2 + bg (3, 2) **2) ) + 1
   endif
   if (nr3 == 1) then
-     nrx3=0
+     nr3x=0
   else
-     nrx3 = int ( sqrt (geg) / &
+     nr3x = int ( sqrt (geg) / &
                   sqrt (bg (1, 3) **2 + bg (2, 3) **2 + bg (3, 3) **2) ) + 1
   endif
   !
@@ -77,9 +77,9 @@ subroutine rgd_blk (nr1,nr2,nr3,nat,dyn,q,tau,epsil,zeu,bg,omega,sign)
        call errore ('rgd_blk',' wrong value for sign ',1)
   !
   fac = sign*e2*fpi/omega
-  do m1 = -nrx1,nrx1
-  do m2 = -nrx2,nrx2
-  do m3 = -nrx3,nrx3
+  do m1 = -nr1x,nr1x
+  do m2 = -nr2x,nr2x
+  do m3 = -nr3x,nr3x
      !
      g1 = m1*bg(1,1) + m2*bg(1,2) + m3*bg(1,3)
      g2 = m1*bg(2,1) + m2*bg(2,2) + m3*bg(2,3)

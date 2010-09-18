@@ -234,7 +234,7 @@ SUBROUTINE scat_states_comp(nchan, nrzp, norb, nocros, taunew, vec, &
  USE uspp_param,ONLY : upf, nhm, nh
  USE uspp,      ONLY : nkb, vkb, becsum
  USE gsmooth,   ONLY : nr3s
- USE gvect,     ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx
+ USE gvect,     ONLY : nr1, nr2, nr3, nr1x, nr2x, nr3x, nrxx
  USE ions_base, ONLY : ityp, zv, nat, ntyp => nsp, tau, atm
  USE fft_scalar,ONLY : cft_2xy
  USE splinelib, ONLY : spline, splint
@@ -267,7 +267,7 @@ SUBROUTINE scat_states_comp(nchan, nrzp, norb, nocros, taunew, vec, &
  ALLOCATE( amat(norb*npol,norb*npol) )
  ALLOCATE( vec1(norb*npol) )
  ALLOCATE( ipiv(norb*npol) )
- ALLOCATE( spin_mag(nrx1*nrx2*nrx3,nspin) )
+ ALLOCATE( spin_mag(nr1x*nr2x*nr3x,nspin) )
  ALLOCATE( xdata(nr3s+1) )
  ALLOCATE( ydata(nr3s+1) )
  ALLOCATE( xdatax(nr3) )
@@ -508,7 +508,7 @@ SUBROUTINE scat_states_comp(nchan, nrzp, norb, nocros, taunew, vec, &
     DO ix=1,nr1
       DO jx=1,nr2
        ig=ix + (jx - 1) * nr1 + (ik - 1) * nr1 * nr2
-       ig1=ix + (jx - 1) * nrx1 + (ik - 1) * nrx1 * nrx2
+       ig1=ix + (jx - 1) * nr1x + (ik - 1) * nr1x * nr2x
        rho%of_r(ig1,1) = DBLE(aux_proc(ig,1))**2+AIMAG(aux_proc(ig,1))**2
        IF (noncolin) THEN
         rho%of_r(ig1,2) = 2.D0*(DBLE(aux_proc(ig,1))*DBLE(aux_proc(ig,2)) + &
@@ -547,7 +547,7 @@ SUBROUTINE scat_states_comp(nchan, nrzp, norb, nocros, taunew, vec, &
 
      ydata = 0.d0
      do ig = 1, nrzp
-      ig1=ix + (jx - 1) * nrx1 + (ig - 1) * nrx1 * nrx2
+      ig1=ix + (jx - 1) * nr1x + (ig - 1) * nr1x * nr2x
       ydata(ik+ig) = rho%of_r(ig1,ipol)
      enddo
      CALL mp_sum(ydata, intra_pool_comm )
@@ -562,7 +562,7 @@ SUBROUTINE scat_states_comp(nchan, nrzp, norb, nocros, taunew, vec, &
        ydatax(ig) = splint( xdata, ydata, y2d, xdatax(ig) )
      enddo
      do ig = 1, nr3
-       ig1=ix + (jx - 1) * nrx1 + (ig - 1) * nrx1 * nrx2
+       ig1=ix + (jx - 1) * nr1x + (ig - 1) * nr1x * nr2x
        spin_mag(ig1,ipol) = spin_mag(ig1,ipol) + ydatax(ig)
      enddo
 
@@ -577,7 +577,7 @@ SUBROUTINE scat_states_comp(nchan, nrzp, norb, nocros, taunew, vec, &
     r_aux1 = SUM(spin_mag(:,1))
     r_aux1 = r_aux1*omega/(nr1*nr2*nr3)
     r_aux1 = 1.d0/r_aux1
-    CALL dscal(nrx1*nrx2*nrx3*nspin,r_aux1,spin_mag,1)
+    CALL dscal(nr1x*nr2x*nr3x*nspin,r_aux1,spin_mag,1)
  END IF
 !-------
 
@@ -587,7 +587,7 @@ SUBROUTINE scat_states_comp(nchan, nrzp, norb, nocros, taunew, vec, &
     DO jx = 1, nr2
       do ig = 1, nr3
         ir = ix + (jx - 1) * nr1 + (ig - 1) * nr1 * nr2
-        ig1= ix + (jx - 1) * nrx1 + (ig - 1) * nrx1 * nrx2
+        ig1= ix + (jx - 1) * nr1x + (ig - 1) * nr1x * nr2x
         do ipol = 1, nspin
           spin_mag_tot(ipol,ichan,ir) = spin_mag(ig1,ipol)
         enddo

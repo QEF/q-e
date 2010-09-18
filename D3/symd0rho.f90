@@ -7,7 +7,7 @@
 !
 !---------------------------------------------------------------------
 subroutine symd0rho (npertx, nper, irr, d0rho, s, ftau, nsymq, &
-     irgq, t, nat, nr1, nr2, nr3, nrx1, nrx2, nrx3)
+     irgq, t, nat, nr1, nr2, nr3, nr1x, nr2x, nr3x)
   !---------------------------------------------------------------------
   !  symmetrizes q=0 drho
   !
@@ -15,11 +15,11 @@ subroutine symd0rho (npertx, nper, irr, d0rho, s, ftau, nsymq, &
   USE kinds, only : DP
   implicit none
   integer :: nper, irr, s (3, 3, 48), ftau (3, 48), nsymq, irgq (48) &
-       , nat, nr1, nr2, nr3, nrx1, nrx2, nrx3, npertx
+       , nat, nr1, nr2, nr3, nr1x, nr2x, nr3x, npertx
   ! nper: the number of perturbations
   ! irr: the representation under consideration
 
-  complex (DP) :: d0rho (nrx1, nrx2, nrx3, nper),        &
+  complex (DP) :: d0rho (nr1x, nr2x, nr3x, nper),        &
        t (npertx, npertx, 48, 3 * nat)
   ! charge variation to symmetrize
 
@@ -44,7 +44,7 @@ subroutine symd0rho (npertx, nper, irr, d0rho, s, ftau, nsymq, &
 
   if (nsymq == 1) return
 
-  allocate  (aux1( nrx1, nrx2, nrx3, nper))
+  allocate  (aux1( nr1x, nr2x, nr3x, nper))
   !
   ! Here we symmetrize with respect to the group
   !

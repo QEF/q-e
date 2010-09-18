@@ -18,10 +18,10 @@ subroutine matrix_wannier_gamma_big( matsincos, ispin, n_set, itask )
   USE io_files,             ONLY : find_free_unit, diropn
   USE io_global,            ONLY : stdout
   USE gsmooth,              ONLY : nr1s, nr2s, nr3s, &
-                                   nrx1s, nrx2s, nrx3s, nrxxs, doublegrid
+                                   nr1sx, nr2sx, nr3sx, nrxxs, doublegrid
   USE realus,               ONLY : qsave, box,maxbox
-  USE gvect,                ONLY : nr1, nr2, nr3, nrx1, nrx2, &
-                                   nrx3, nrxx
+  USE gvect,                ONLY : nr1, nr2, nr3, nr1x, nr2x, &
+                                   nr3x, nrxx
   USE wannier_gw,           ONLY : becp_gw, expgsave, becp_gw_c, maxiter2,num_nbnd_first,num_nbndv,nbnd_normal
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
   USE uspp_param,           ONLY : upf, lmaxq, nh, nhm
@@ -86,7 +86,7 @@ subroutine matrix_wannier_gamma_big( matsincos, ispin, n_set, itask )
   do ix=1,nr1s
      do iy=1,nr2s
         do iz=1,nr3s
-           iqq=(iz-1)*(nrx1s*nrx2s)+(iy-1)*nrx1s+ix
+           iqq=(iz-1)*(nr1sx*nr2sx)+(iy-1)*nr1sx+ix
            tmpexp2(iqq,1) = exp(cmplx(0.d0,1.d0)*tpi*real(ix-1)/real(nr1s))
            tmpexp2(iqq,2) = exp(cmplx(0.d0,1.d0)*tpi*real(iy-1)/real(nr2s))
            tmpexp2(iqq,3) = exp(cmplx(0.d0,1.d0)*tpi*real(iz-1)/real(nr3s))
@@ -100,7 +100,7 @@ subroutine matrix_wannier_gamma_big( matsincos, ispin, n_set, itask )
 
 #else
   write(stdout,*) 'NRS', nr1s,nr2s,nr3s
-  write(stdout,*) 'NRXS', nrx1s,nrx2s,nrx3s
+  write(stdout,*) 'NRXS', nr1sx,nr2sx,nr3sx
   nr3s_start=0
   nr3s_end =0
   do ii=1,me_pool + 1
@@ -111,7 +111,7 @@ subroutine matrix_wannier_gamma_big( matsincos, ispin, n_set, itask )
   do iz=1,dffts%npp(me_pool+1)
      do iy=1,nr2s
         do ix=1,nr1s
-           iqq=(iz-1)*(nrx1s*nrx2s)+(iy-1)*nrx1s+ix
+           iqq=(iz-1)*(nr1sx*nr2sx)+(iy-1)*nr1sx+ix
            tmpexp2(iqq,1) = exp(cmplx(0.d0,1.d0)*tpi*real(ix-1)/real(nr1s))
            tmpexp2(iqq,2) = exp(cmplx(0.d0,1.d0)*tpi*real(iy-1)/real(nr2s))
            tmpexp2(iqq,3) = exp(cmplx(0.d0,1.d0)*tpi*real(iz+nr3s_start-1-1)/real(nr3s))
@@ -211,7 +211,7 @@ subroutine matrix_wannier_gamma_big( matsincos, ispin, n_set, itask )
             ee=exp(cmplx(0.d0,1.d0)*tpi*real(ix)/real(nr1))
             do iy=1,nr2
               do  iz=1,nr3
-                 nn=(iz-1)*nrx1*nrx2+(iy-1)*nrx1+ix
+                 nn=(iz-1)*nr1x*nr2x+(iy-1)*nr1x+ix
                  tmpexp(nn)=ee
               enddo
            enddo
@@ -221,7 +221,7 @@ subroutine matrix_wannier_gamma_big( matsincos, ispin, n_set, itask )
             ee=exp(cmplx(0.d0,1.d0)*tpi*real(iy)/real(nr2))
             do ix=1,nr1
               do  iz=1,nr3
-                 nn=(iz-1)*nrx1*nrx2+(iy-1)*nrx1+ix
+                 nn=(iz-1)*nr1x*nr2x+(iy-1)*nr1x+ix
                  tmpexp(nn)=ee
               enddo
             enddo
@@ -231,7 +231,7 @@ subroutine matrix_wannier_gamma_big( matsincos, ispin, n_set, itask )
          ee=exp(cmplx(0.d0,1.d0)*tpi*real(iz)/real(nr3))
             do ix=1,nr1
               do  iy=1,nr2
-                 nn=(iz-1)*nrx1*nrx2+(iy-1)*nrx1+ix
+                 nn=(iz-1)*nr1x*nr2x+(iy-1)*nr1x+ix
                  tmpexp(nn)=ee
               enddo
             enddo
@@ -250,7 +250,7 @@ subroutine matrix_wannier_gamma_big( matsincos, ispin, n_set, itask )
          do iy=1,nr2
             do ix=1,nr1
 
-               nn=(iz-1)*nrx1*nrx2+(iy-1)*nrx1+ix
+               nn=(iz-1)*nr1x*nr2x+(iy-1)*nr1x+ix
                if(mdir==1) then
                   tmpexp(nn)= exp(cmplx(0.d0,1.d0)*tpi*real(ix-1)/real(nr1))
                elseif(mdir==2) then

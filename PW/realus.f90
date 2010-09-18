@@ -769,7 +769,7 @@ MODULE realus
 #if defined (__PARA)
       !
       !DO i = 1, me_pool
-      !   index0 = index0 + nrx1s*nrx2s*dffts%npp(i)
+      !   index0 = index0 + nr1sx*nr2sx*dffts%npp(i)
       !END DO
       !
       index0 = dffts%nr1x*dffts%nr2x * sum ( dffts%npp(1:me_pool) )
@@ -1010,10 +1010,10 @@ MODULE realus
 !                ! ... three dimensional indexes
 !                !
 !               index = ir - 1
-!               k     = index / (nrx1s*nrx2s)
-!               index = index - (nrx1s*nrx2s)*k
-!               j     = index / nrx1s
-!               index = index - nrx1s*j
+!               k     = index / (nr1sx*nr2sx)
+!               index = index - (nr1sx*nr2sx)*k
+!               j     = index / nr1sx
+!               index = index - nr1sx*j
 !               i     = index
 !               !
 !

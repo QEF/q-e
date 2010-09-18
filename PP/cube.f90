@@ -9,7 +9,7 @@
 ! Adapted by Axel Kohlmeyer from xsf.f90.
 ! updated by Axel Kohlmeyer on Sep 27, 2004.
 ! updated by PG on Sep. 15, 2005 to account for the case in which
-! nrx1,nrx2,nrx3 (the physical dimensions of array rho) differ from
+! nr1x,nr2x,nr3x (the physical dimensions of array rho) differ from
 !  nr1, nr2, nr3 (the true dimensions)
 !
 
@@ -20,14 +20,14 @@
 ! orthorhombic box (needed for most .cube aware programs :-/).
 ! -------------------------------------------------------------------
 SUBROUTINE write_cubefile ( alat, at, bg, nat, tau, atm, ityp, rho, &
-     nr1, nr2, nr3, nrx1, nrx2, nrx3, ounit )
+     nr1, nr2, nr3, nr1x, nr2x, nr3x, ounit )
 
   USE kinds,  ONLY : DP
 
   IMPLICIT NONE
-  INTEGER          :: nat, ityp(nat), ounit,nr1, nr2, nr3, nrx1, nrx2, nrx3
+  INTEGER          :: nat, ityp(nat), ounit,nr1, nr2, nr3, nr1x, nr2x, nr3x
   CHARACTER(len=3) :: atm(*)
-  real(DP)    :: alat, tau(3,nat), at(3,3), bg(3,3), rho(nrx1,nrx2,nrx3)
+  real(DP)    :: alat, tau(3,nat), at(3,3), bg(3,3), rho(nr1x,nr2x,nr3x)
 
   ! --
   INTEGER          :: i, nt, i1, i2, i3, at_num

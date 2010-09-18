@@ -82,7 +82,7 @@ SUBROUTINE d3_init
      CALL psymd0rho (npertg0(irr), irr, drhoscf)
 #else
      CALL symd0rho (npertx, npertg0(irr), irr, drhoscf, s, ftau, nsymg0, &
-          irgq, tg0, nat, nr1, nr2, nr3, nrx1, nrx2, nrx3)
+          irgq, tg0, nat, nr1, nr2, nr3, nr1x, nr2x, nr3x)
 #endif
      DO ipert = 1, npertg0 (irr)
         CALL davcio_drho2 (drhoscf(1,ipert), lrdrho, iud0rho, &

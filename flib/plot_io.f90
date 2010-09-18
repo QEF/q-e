@@ -7,7 +7,7 @@
 !
 !
 !-----------------------------------------------------------------------
-subroutine plot_io (filplot, title, nrx1, nrx2, nrx3, nr1, nr2, &
+subroutine plot_io (filplot, title, nr1x, nr2x, nr3x, nr1, nr2, &
      nr3, nat, ntyp, ibrav, celldm, at, gcutm, dual, ecut, plot_num, atm, &
      ityp, zv, tau, plot, iflag)
   !-----------------------------------------------------------------------
@@ -22,13 +22,13 @@ subroutine plot_io (filplot, title, nrx1, nrx2, nrx3, nr1, nr2, &
   implicit none
   character (len=*) :: filplot
   character (len=75) :: title
-!   integer :: nrx1, nrx2, nrx3, nr1, nr2, nr3, nat, ntyp, ibrav, &
+!   integer :: nr1x, nr2x, nr3x, nr1, nr2, nr3, nat, ntyp, ibrav, &
 !        plot_num, ityp (nat), iflag, i
-  integer :: nrx1, nrx2, nrx3, nr1, nr2, nr3, nat, ntyp, ibrav, &
+  integer :: nr1x, nr2x, nr3x, nr1, nr2, nr3, nat, ntyp, ibrav, &
        plot_num, ityp (*), iflag, i
   character (len=3) :: atm(*)
 !   real(DP) :: celldm (6), gcutm, dual, ecut, zv (ntyp), tau (3, nat) &
-!        , plot (nrx1 * nrx2 * nrx3), at(3,3)
+!        , plot (nr1x * nr2x * nr3x), at(3,3)
   real(DP) :: celldm (6), gcutm, dual, ecut, zv (*), tau (3, *) &
        , plot (*), at(3,3)
   !
@@ -54,7 +54,7 @@ subroutine plot_io (filplot, title, nrx1, nrx2, nrx3, nr1, nr2, &
   rewind (iunplot)
   if (iflag > 0) then
      write (iunplot, '(a)') title
-     write (iunplot, '(8i8)') nrx1, nrx2, nrx3, nr1, nr2, nr3, nat, ntyp
+     write (iunplot, '(8i8)') nr1x, nr2x, nr3x, nr1, nr2, nr3, nat, ntyp
      write (iunplot, '(i6,2x,6f16.8)') ibrav, celldm
      if (ibrav == 0) then
         do i = 1,3
@@ -66,10 +66,10 @@ subroutine plot_io (filplot, title, nrx1, nrx2, nrx3, nr1, nr2, &
           (nt, atm (nt), zv (nt), nt=1, ntyp)
      write (iunplot, '(i4,3x,3f15.9,3x,i2)') (na, &
           (tau (ipol, na), ipol = 1, 3), ityp (na), na = 1, nat)
-     write (iunplot, '(5(1pe17.9))') (plot (ir) , ir = 1, nrx1 * nrx2 * nr3)
+     write (iunplot, '(5(1pe17.9))') (plot (ir) , ir = 1, nr1x * nr2x * nr3)
   else
      read (iunplot, '(a)') title
-     read (iunplot, * ) nrx1, nrx2, nrx3, nr1, nr2, nr3, nat, ntyp
+     read (iunplot, * ) nr1x, nr2x, nr3x, nr1, nr2, nr3, nat, ntyp
      read (iunplot, * ) ibrav, celldm
      if (ibrav == 0) then
         do i = 1,3
@@ -81,7 +81,7 @@ subroutine plot_io (filplot, title, nrx1, nrx2, nrx3, nr1, nr2, &
              (ndum, atm(nt), zv(nt), nt=1, ntyp)
      read (iunplot, *) (ndum,  (tau (ipol, na), ipol = 1, 3), &
              ityp(na), na = 1, nat)
-     read (iunplot, * ) (plot (ir), ir = 1, nrx1 * nrx2 * nr3)
+     read (iunplot, * ) (plot (ir), ir = 1, nr1x * nr2x * nr3)
   endif
 
   close (unit = iunplot)
@@ -89,7 +89,7 @@ subroutine plot_io (filplot, title, nrx1, nrx2, nrx3, nr1, nr2, &
   return
 end subroutine plot_io
 !-----------------------------------------------------------------------
-subroutine read_io_header(filplot, title, nrx1, nrx2, nrx3, nr1, nr2, nr3, &
+subroutine read_io_header(filplot, title, nr1x, nr2x, nr3x, nr1, nr2, nr3, &
                   nat, ntyp, ibrav, celldm, at, gcutm, dual, ecut, plot_num)
      
   !-----------------------------------------------------------------------
@@ -101,7 +101,7 @@ subroutine read_io_header(filplot, title, nrx1, nrx2, nrx3, nr1, nr2, nr3, &
   implicit none
   character (len=*) :: filplot
   character (len=75) :: title
-  integer :: nrx1, nrx2, nrx3, nr1, nr2, nr3, nat, ntyp, ibrav, plot_num, i
+  integer :: nr1x, nr2x, nr3x, nr1, nr2, nr3, nat, ntyp, ibrav, plot_num, i
   real(DP) :: celldm (6), gcutm, dual, ecut, at(3,3)
   !
   integer :: iunplot, ios, ipol
@@ -116,7 +116,7 @@ subroutine read_io_header(filplot, title, nrx1, nrx2, nrx3, nr1, nr2, nr3, &
 
   rewind (iunplot)
   read (iunplot, '(a)') title
-  read (iunplot, * ) nrx1, nrx2, nrx3, nr1, nr2, nr3, nat, ntyp
+  read (iunplot, * ) nr1x, nr2x, nr3x, nr1, nr2, nr3, nat, ntyp
   read (iunplot, * ) ibrav, celldm
   if (ibrav == 0) then
      do i = 1,3

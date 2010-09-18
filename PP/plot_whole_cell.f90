@@ -6,13 +6,13 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 SUBROUTINE plot_whole_cell (alat, at, nat, tau, atm, ityp, &
-     nr1, nr2, nr3, nrx1, nrx2, nrx3, rho, output_format, ounit)
+     nr1, nr2, nr3, nr1x, nr2x, nr3x, rho, output_format, ounit)
   USE kinds, ONLY : DP
   IMPLICIT NONE
   INTEGER          :: nat, ityp (nat), output_format, ounit
-  INTEGER          :: nrx1, nrx2, nrx3, nr1, nr2, nr3
+  INTEGER          :: nr1x, nr2x, nr3x, nr1, nr2, nr3
   CHARACTER(len=3) :: atm(*)
-  real(DP)    :: alat, tau (3, nat), at (3, 3), rho(2, nrx1,nrx2,nrx3)
+  real(DP)    :: alat, tau (3, nat), at (3, 3), rho(2, nr1x,nr2x,nr3x)
 
   IF ( output_format == 3 ) THEN
      !
@@ -20,7 +20,7 @@ SUBROUTINE plot_whole_cell (alat, at, nat, tau, atm, ityp, &
      !
      CALL xsf_struct (alat, at, nat, tau, atm, ityp, ounit)
      CALL xsf_fast_datagrid_3d &
-          (rho, nr1, nr2, nr3, nrx1, nrx2, nrx3, at, alat, ounit)
+          (rho, nr1, nr2, nr3, nr1x, nr2x, nr3x, at, alat, ounit)
 
   ELSEIF ( output_format == 4 ) THEN
      !

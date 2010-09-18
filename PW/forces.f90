@@ -27,7 +27,7 @@ SUBROUTINE forces()
   USE io_global,     ONLY : stdout
   USE cell_base,     ONLY : at, bg, alat, omega  
   USE ions_base,     ONLY : nat, ntyp => nsp, ityp, tau, zv, amass, extfor, compute_eextfor
-  USE gvect,         ONLY : ngm, gstart, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
+  USE gvect,         ONLY : ngm, gstart, nr1, nr2, nr3, nr1x, nr2x, nr3x, &
                             nrxx, ngl, nl, igtongl, g, gg, gcutm
   USE lsda_mod,      ONLY : nspin
   USE symme,         ONLY : symvector
@@ -130,7 +130,7 @@ SUBROUTINE forces()
       ALLOCATE( force_vcorr(3, nat  ) )
       force_vcorr(:,:)=0
       CALL add_dccdil_forces(vcomp, force_vcorr, &
-                             nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx )
+                             nr1, nr2, nr3, nr1x, nr2x, nr3x, nrxx )
 
   END IF
 

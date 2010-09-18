@@ -27,7 +27,7 @@ SUBROUTINE PAW_make_ae_charge_ ( rho, flag, nx, r, rhopaw )
    USE fft_base,          ONLY : dfftp
    USE mp_global,         ONLY : me_pool
    USE splinelib,         ONLY : spline, splint
-   USE gvect,             ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx
+   USE gvect,             ONLY : nr1, nr2, nr3, nr1x, nr2x, nr3x, nrxx
    USE cell_base,         ONLY : at, bg, alat
    !
    TYPE(scf_type), INTENT(in) :: rho           ! only rho%bec is actually needed
@@ -176,7 +176,7 @@ PROGRAM PAWplot
   USE environment,ONLY : environment_start
   USE lsda_mod,   ONLY : nspin, current_spin
   USE cell_base,  ONLY : bg
-  USE gvect,      ONLY : ngm, nr1,nr2,nr3, nrx1,nrx2,nrx3, nrxx, nl
+  USE gvect,      ONLY : ngm, nr1,nr2,nr3, nr1x,nr2x,nr3x, nrxx, nl
   USE scf,        ONLY : rho
   USE io_files,   ONLY : tmp_dir, prefix, trimcheck
   USE noncollin_module, ONLY : noncolin

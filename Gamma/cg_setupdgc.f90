@@ -50,7 +50,7 @@ SUBROUTINE cg_setupdgc
      ENDDO
   ENDIF
   DO is=1,nspin
-     CALL gradrho (nrx1,nrx2,nrx3,nr1,nr2,nr3,nrxx,rho%of_g(1,is),   &
+     CALL gradrho (nr1x,nr2x,nr3x,nr1,nr2,nr3,nrxx,rho%of_g(1,is),   &
           ngm,g,nl,grho(1,1,is))
   ENDDO
   !

@@ -25,8 +25,8 @@ SUBROUTINE electrons()
   USE ions_base,            ONLY : zv, nat, nsp, ityp, tau, compute_eextfor
   USE basis,                ONLY : starting_pot
   USE bp,                   ONLY : lelfield
-  USE gvect,                ONLY : ngm, gstart, nr1, nr2, nr3, nrx1, nrx2, &
-                                   nrx3, nrxx, nl, nlm, g, gg, ecutwfc, gcutm
+  USE gvect,                ONLY : ngm, gstart, nr1, nr2, nr3, nr1x, nr2x, &
+                                   nr3x, nrxx, nl, nlm, g, gg, ecutwfc, gcutm
   USE gsmooth,              ONLY : doublegrid, ngms
   USE klist,                ONLY : xk, wk, nelec, ngk, nks, nkstot, lgauss
   USE lsda_mod,             ONLY : lsda, nspin, magtot, absmag, isk
@@ -554,7 +554,7 @@ SUBROUTINE electrons()
      ! DCC
      !
      IF ( do_comp )  THEN
-        CALL calc_ecomp( rho%of_r, nr1,nr2,nr3,nrx1,nrx2,nrx3,nrxx,nspin )
+        CALL calc_ecomp( rho%of_r, nr1,nr2,nr3,nr1x,nr2x,nr3x,nrxx,nspin )
         etot = etot + ecomp
      END IF
 
@@ -620,7 +620,7 @@ SUBROUTINE electrons()
           vltot = vlocinit
           CALL flush_unit( stdout )
           CALL add_ele_corr( vltot, rho%of_r, nelec,                &
-                             nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, &
+                             nr1, nr2, nr3, nr1x, nr2x, nr3x, nrxx, &
                              nl, nlm, g, gg, ngm, gstart, nspin     )
           CALL set_vrs( vrs, vltot, v%of_r, kedtau, v%kin_r, nrxx, nspin, doublegrid )
           !

@@ -21,7 +21,7 @@ SUBROUTINE write_tensor_field(name, ispin, field)
   !--------------------------------------------------------------------
   character*(*) name
   integer :: ispin
-  real(dp) :: field(nrx1,nrx2,nrx3,3)
+  real(dp) :: field(nr1x,nr2x,nr3x,3)
   !--------------------------------------------------------------------
   integer, parameter :: ounit = 48
   character*80 :: fname
@@ -47,7 +47,7 @@ SUBROUTINE write_tensor_field(name, ispin, field)
 
     call xsf_struct (alat, at, nat, tau, atm, ityp, nr1*nr2*nr3, ounit)
     call xsf_vector_3d(field(1,1,1,ipol), &
-                       nr1, nr2, nr3, nrx1, nrx2, nrx3, at, bg, alat, ounit)
+                       nr1, nr2, nr3, nr1x, nr2x, nr3x, at, bg, alat, ounit)
     close(unit=48)
   enddo
 end subroutine write_tensor_field
@@ -105,13 +105,13 @@ end subroutine xsf_struct
 ! -------------------------------------------------------------------
 !   this routine writes a 3D vector field
 ! -------------------------------------------------------------------
-subroutine xsf_vector_3d(v, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
+subroutine xsf_vector_3d(v, nr1, nr2, nr3, nr1x, nr2x, nr3x, &
                          at, bg, alat, ounit)
   USE kinds, only : DP
   USE constants, only : BOHR_RADIUS_ANGS
   implicit none
-  integer  :: nrx1, nrx2, nrx3, nr1, nr2, nr3, ounit
-  real(DP) :: at(3,3), bg(3,3), x(3), alat, v(nrx1,nrx2,nrx3,3)
+  integer  :: nr1x, nr2x, nr3x, nr1, nr2, nr3, ounit
+  real(DP) :: at(3,3), bg(3,3), x(3), alat, v(nr1x,nr2x,nr3x,3)
   integer  :: i1, i2, i3
 
   do i1 = 1, nr1

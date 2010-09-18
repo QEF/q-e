@@ -70,7 +70,7 @@ SUBROUTINE chdens (filplot,plot_num)
 
   real(DP) :: celldms (6), gcutmsa, duals, ecuts, zvs(ntypx), ats(3,3)
   real(DP), ALLOCATABLE :: taus (:,:), rhor(:), rhos(:)
-  INTEGER :: ibravs, nrx1sa, nrx2sa, nrx3sa, nr1sa, nr2sa, nr3sa, &
+  INTEGER :: ibravs, nr1sxa, nr2sxa, nr3sxa, nr1sa, nr2sa, nr3sa, &
        ntyps, nats
   INTEGER, ALLOCATABLE :: ityps (:)
   CHARACTER (len=3) :: atms(ntypx)
@@ -196,13 +196,13 @@ SUBROUTINE chdens (filplot,plot_num)
   !
   IF (plot_num==-1) THEN
      IF (ionode) &
-        CALL read_io_header(filepp (1), title, nrx1, nrx2, nrx3, nr1, nr2, &
+        CALL read_io_header(filepp (1), title, nr1x, nr2x, nr3x, nr1, nr2, &
                 nr3, nat, ntyp, ibrav, celldm, at, gcutm, dual, ecutwfc, &
                 idum )
      CALL mp_bcast( title, ionode_id )
-     CALL mp_bcast( nrx1, ionode_id )
-     CALL mp_bcast( nrx2, ionode_id )
-     CALL mp_bcast( nrx3, ionode_id )
+     CALL mp_bcast( nr1x, ionode_id )
+     CALL mp_bcast( nr2x, ionode_id )
+     CALL mp_bcast( nr3x, ionode_id )
      CALL mp_bcast( nr1, ionode_id )
      CALL mp_bcast( nr2, ionode_id )
      CALL mp_bcast( nr3, ionode_id )
@@ -241,8 +241,8 @@ SUBROUTINE chdens (filplot,plot_num)
      CALL set_fft_dim
   ENDIF
 
-  ALLOCATE  (rhor(nrx1*nrx2*nrx3))
-  ALLOCATE  (rhos(nrx1*nrx2*nrx3))
+  ALLOCATE  (rhor(nr1x*nr2x*nr3x))
+  ALLOCATE  (rhos(nr1x*nr2x*nr3x))
   ALLOCATE  (taus( 3 , nat))
   ALLOCATE  (ityps( nat))
   !
@@ -253,7 +253,7 @@ SUBROUTINE chdens (filplot,plot_num)
   !
   DO ifile = 1, nfile
      !
-     CALL plot_io (filepp (ifile), title, nrx1sa, nrx2sa, nrx3sa, &
+     CALL plot_io (filepp (ifile), title, nr1sxa, nr2sxa, nr3sxa, &
           nr1sa, nr2sa, nr3sa, nats, ntyps, ibravs, celldms, ats, gcutmsa, &
           duals, ecuts, idum, atms, ityps, zvs, taus, rhos, - 1)
 
@@ -265,8 +265,8 @@ SUBROUTINE chdens (filplot,plot_num)
      ENDIF
      !
      IF (nats>nat) CALL errore ('chdens', 'wrong file order? ', 1)
-     IF (nrx1/=nrx1sa.or.nrx2/=nrx2sa) CALL &
-          errore ('chdens', 'incompatible nrx1 or nrx2', 1)
+     IF (nr1x/=nr1sxa.or.nr2x/=nr2sxa) CALL &
+          errore ('chdens', 'incompatible nr1x or nr2x', 1)
      IF (nr1/=nr1sa.or.nr2/=nr2sa.or.nr3/=nr3sa) CALL &
           errore ('chdens', 'incompatible nr1 or nr2 or nr3', 1)
      IF (ibravs/=ibrav) CALL errore ('chdens', 'incompatible ibrav', 1)
@@ -425,14 +425,14 @@ SUBROUTINE chdens (filplot,plot_num)
         !
         CALL xsf_struct (alat, at, nat, tau, atm, ityp, ounit)
         CALL xsf_fast_datagrid_3d &
-             (rhor, nr1, nr2, nr3, nrx1, nrx2, nrx3, at, alat, ounit)
+             (rhor, nr1, nr2, nr3, nr1x, nr2x, nr3x, at, alat, ounit)
 
      ELSEIF (output_format == 6.and.ionode ) THEN
         !
         ! GAUSSIAN CUBE FORMAT
         !
         CALL write_cubefile (alat, at, bg, nat, tau, atm, ityp, rhor, &
-             nr1, nr2, nr3, nrx1, nrx2, nrx3, ounit)
+             nr1, nr2, nr3, nr1x, nr2x, nr3x, ounit)
 
      ELSE
         !
@@ -443,7 +443,7 @@ SUBROUTINE chdens (filplot,plot_num)
            IF (fast3d) THEN
 
               CALL plot_fast (celldm (1), at, nat, tau, atm, ityp, &
-                  nrx1, nrx2, nrx3, nr1, nr2, nr3, rhor, &
+                  nr1x, nr2x, nr3x, nr1, nr2, nr3, rhor, &
                   bg, m1, m2, m3, x0, e1, e2, e3, output_format, ounit, &
                   rhotot)
            ELSE
@@ -982,18 +982,18 @@ END SUBROUTINE plot_3d
 !
 !-----------------------------------------------------------------------
 SUBROUTINE plot_fast (alat, at, nat, tau, atm, ityp,&
-     nrx1, nrx2, nrx3, nr1, nr2, nr3, rho, bg, m1, m2, m3, &
+     nr1x, nr2x, nr3x, nr1, nr2, nr3, rho, bg, m1, m2, m3, &
      x0, e1, e2, e3, output_format, ounit, rhotot)
   !-----------------------------------------------------------------------
   !
   USE io_global,  ONLY : stdout
   USE kinds, ONLY : DP
   IMPLICIT NONE
-  INTEGER :: nat, ityp(nat), nrx1, nrx2, nrx3, nr1, nr2, nr3, &
+  INTEGER :: nat, ityp(nat), nr1x, nr2x, nr3x, nr1, nr2, nr3, &
        output_format, ounit
   CHARACTER(len=3) :: atm(*)
 
-  real(DP) :: alat, tau (3, nat), at (3, 3), rho(nrx1,nrx2,nrx3), &
+  real(DP) :: alat, tau (3, nat), at (3, 3), rho(nr1x,nr2x,nr3x), &
        bg (3, 3), e1(3), e2(3), e3(3), x0 (3), m1, m2, m3
 
   INTEGER :: nx, ny, nz, nx0, ny0, nz0, nx1, ny1, nz1, i, j, k, i1, j1, k1

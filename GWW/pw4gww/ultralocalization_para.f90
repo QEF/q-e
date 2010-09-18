@@ -23,9 +23,9 @@ SUBROUTINE ultralocalization_para(nbndv,nbnd_max,ultra_thr,isubspace,max_array2,
   USE io_files,             ONLY : find_free_unit, diropn
   USE io_global,            ONLY : stdout, ionode_id
   USE gsmooth,              ONLY : nls, nlsm, nr1s, nr2s, nr3s, &
-                                   nrx1s, nrx2s, nrx3s, nrxxs, doublegrid
-  USE gvect,                ONLY : nr1, nr2, nr3, nrx1, nrx2, &
-                                   nrx3, nrxx
+                                   nr1sx, nr2sx, nr3sx, nrxxs, doublegrid
+  USE gvect,                ONLY : nr1, nr2, nr3, nr1x, nr2x, &
+                                   nr3x, nrxx
   use mp_global,            ONLY : nproc_pool, me_pool
   USE wvfct,                ONLY : igk, g2kin, npwx, npw, nbnd, nbndx
   USE basis
@@ -193,7 +193,7 @@ SUBROUTINE ultralocalization_para(nbndv,nbnd_max,ultra_thr,isubspace,max_array2,
   do ix=1,nr1s
      do iy=1,nr2s
         do iz=1,dffts%npp(me_pool+1)
-           nn=(iz-1)*nrx1s*nrx2s+(iy-1)*nrx1s+ix
+           nn=(iz-1)*nr1sx*nr2sx+(iy-1)*nr1sx+ix
            exp_x(nn)=exp((0.d0,1.d0)*tpi*dble(ix-1)/dble(nr1s))
            exp_y(nn)=exp((0.d0,1.d0)*tpi*dble(iy-1)/dble(nr2s))
            exp_z(nn)=exp((0.d0,1.d0)*tpi*dble(iz+nr3s_start-1-1)/dble(nr3s))
@@ -251,7 +251,7 @@ SUBROUTINE ultralocalization_para(nbndv,nbnd_max,ultra_thr,isubspace,max_array2,
      do ix=1,nr1s
         do iy=1,nr2s
            do iz=1,dffts%npp(me_pool+1)
-              nn=(iz-1)*nrx1s*nrx2s+(iy-1)*nrx1s+ix
+              nn=(iz-1)*nr1sx*nr2sx+(iy-1)*nr1sx+ix
               exp_x(nn)=exp((0.d0,1.d0)*tpi*dble(ix-1)/dble(nr1s))
               exp_y(nn)=exp((0.d0,1.d0)*tpi*dble(iy-1)/dble(nr2s))
               exp_z(nn)=exp((0.d0,1.d0)*tpi*dble(iz+nr3s_start-1-1)/dble(nr3s))
@@ -301,7 +301,7 @@ SUBROUTINE ultralocalization_para(nbndv,nbnd_max,ultra_thr,isubspace,max_array2,
         do ix=1,nr1
            do iy=1,nr2
               do iz=1,dfftp%npp(me_pool+1)
-                 nn=(iz-1)*nrx1*nrx2+(iy-1)*nrx1+ix
+                 nn=(iz-1)*nr1x*nr2x+(iy-1)*nr1x+ix
                  exp_x(nn)=exp((0.d0,1.d0)*tpi*dble(ix-1)/dble(nr1))
                  exp_y(nn)=exp((0.d0,1.d0)*tpi*dble(iy-1)/dble(nr2))
                  exp_z(nn)=exp((0.d0,1.d0)*tpi*dble(iz+nr3_start-1-1)/dble(nr3))
@@ -438,9 +438,9 @@ SUBROUTINE ultralocalization_para(nbndv,nbnd_max,ultra_thr,isubspace,max_array2,
                  do iy=1,nr2s
                     do iz=1,dffts%npp(me_pool+1)
                        sca=0.d0
-                       nn=(iz-1)*nrx1s*nrx2s+(iy-1)*nrx1s
+                       nn=(iz-1)*nr1sx*nr2sx+(iy-1)*nr1sx
                        do ix=1,nr1s
-                          !nn=(iz-1)*nrx1s*nrx2s+(iy-1)*nrx1s+ix
+                          !nn=(iz-1)*nr1sx*nr2sx+(iy-1)*nr1sx+ix
                           nn=nn+1
                           sca=sca+tmp_s(nn)
                           sums(ix,iy,iz)=sca
@@ -549,10 +549,10 @@ SUBROUTINE ultralocalization_para(nbndv,nbnd_max,ultra_thr,isubspace,max_array2,
               do iy=1,nr2
                  do iz=1,dfftp%npp(me_pool+1)
                     sca=0.d0
-                    nn=(iz-1)*nrx1*nrx2+(iy-1)*nrx1
+                    nn=(iz-1)*nr1x*nr2x+(iy-1)*nr1x
                     do ix=1,nr1
                        nn=nn+1
-                       !nn=(iz-1)*nrx1*nrx2+(iy-1)*nrx1+ix
+                       !nn=(iz-1)*nr1x*nr2x+(iy-1)*nr1x+ix
                        sca=sca+tmp_r(nn)
                        sums(ix,iy,iz)=sca
                     enddo
@@ -802,7 +802,7 @@ SUBROUTINE ultralocalization_para(nbndv,nbnd_max,ultra_thr,isubspace,max_array2,
                   if(n3>nr3) n3=n3-nr3
 
                   if(n3 >= nr3_start .and. n3 <= nr3_end) then
-                     nn=(n3-nr3_start)*nrx1*nrx2+(n2-1)*nrx1+n1
+                     nn=(n3-nr3_start)*nr1x*nr2x+(n2-1)*nr1x+n1
                      norm=norm+tmp_r(nn)
                   endif
                enddo

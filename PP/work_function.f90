@@ -30,9 +30,9 @@ SUBROUTINE work_function (wf)
   REAL(DP), ALLOCATABLE :: vxc(:,:)
   ! auxiliary vectors for charge and potential
 
-  ALLOCATE (raux1( nrx1 * nrx2 * nrx3))
-  ALLOCATE (vaux1( nrx1 * nrx2 * nrx3))
-  ALLOCATE (vaux2( nrx1 * nrx2 * nrx3))
+  ALLOCATE (raux1( nr1x * nr2x * nr3x))
+  ALLOCATE (vaux1( nr1x * nr2x * nr3x))
+  ALLOCATE (vaux2( nr1x * nr2x * nr3x))
 
   nspin0=nspin
   IF (nspin==4) nspin0=1
@@ -92,7 +92,7 @@ SUBROUTINE work_function (wf)
            wxm = 0.d0
            DO n2 = 1, nr2
               DO n1 = 1, nr1
-                 ni = n1 + (n2 - 1) * nrx1 + (nmean - 1) * nrx1 * nrx2
+                 ni = n1 + (n2 - 1) * nr1x + (nmean - 1) * nr1x * nr2x
                  meancharge = meancharge+raux1 (ni)
                  wxm = wxm + raux1 (ni) **2
                  wmean1 = wmean1 + vaux1 (ni)

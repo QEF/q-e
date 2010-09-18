@@ -26,7 +26,7 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
   USE extfield,         ONLY : tefield, dipfield
   USE fft_base,         ONLY : dfftp
   USE fft_interfaces,   ONLY : fwfft, invfft
-  USE gvect,            ONLY : nrxx, gcutm, dual, ecutwfc, nr1,nr2,nr3,nrx1,nrx2,nrx3
+  USE gvect,            ONLY : nrxx, gcutm, dual, ecutwfc, nr1,nr2,nr3,nr1x,nr2x,nr3x
   USE klist,            ONLY : nks, nkstot, xk
   USE lsda_mod,         ONLY : nspin, current_spin
   USE ener,             ONLY : ehart
@@ -56,7 +56,7 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
 
   IF (filplot == ' ') RETURN
 #ifdef __PARA
-  ALLOCATE (raux1( nrx1 * nrx2 * nrx3))
+  ALLOCATE (raux1( nr1x * nr2x * nr3x))
 #endif
 
   WRITE( stdout, '(/5x,"Calling punch_plot, plot_num = ",i3)') plot_num
@@ -254,13 +254,13 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
 #ifdef __PARA
   IF (.not. (plot_num == 5 ) ) CALL grid_gather (raux, raux1)
   IF ( ionode ) &
-     CALL plot_io (filplot, title, nrx1, &
-         nrx2, nrx3, nr1, nr2, nr3, nat, ntyp, ibrav, celldm, at, gcutm, &
+     CALL plot_io (filplot, title, nr1x, &
+         nr2x, nr3x, nr1, nr2, nr3, nat, ntyp, ibrav, celldm, at, gcutm, &
          dual, ecutwfc, plot_num, atm, ityp, zv, tau, raux1, + 1)
   DEALLOCATE (raux1)
 #else
 
-  CALL plot_io (filplot, title, nrx1, nrx2, nrx3, nr1, nr2, nr3, &
+  CALL plot_io (filplot, title, nr1x, nr2x, nr3x, nr1, nr2, nr3, &
        nat, ntyp, ibrav, celldm, at, gcutm, dual, ecutwfc, plot_num, &
        atm, ityp, zv, tau, raux, + 1)
 

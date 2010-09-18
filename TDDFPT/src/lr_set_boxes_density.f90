@@ -9,7 +9,7 @@ SUBROUTINE lr_set_boxes_density()
   ! Modified by Osman Baris Malcioglu (2009)
 #include "f_defs.h"
   !
-  use gvect,                only : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx
+  use gvect,                only : nr1, nr2, nr3, nr1x, nr2x, nr3x, nrxx
   use io_global,            only : stdout
   use kinds,                only : dp
   use lr_variables,         only : cube_save 
@@ -36,7 +36,7 @@ SUBROUTINE lr_set_boxes_density()
 #if defined (__PARA)
   !
   DO i = 1, me_pool
-     index0 = index0 + nrx1*nrx2*dfftp%npp(i)
+     index0 = index0 + nr1x*nr2x*dfftp%npp(i)
   END DO
   !
 #endif
@@ -46,10 +46,10 @@ SUBROUTINE lr_set_boxes_density()
      ! ... three dimensional indexes
      !
      index = index0 + ir - 1
-     k     = index / (nrx1*nrx2)
-     index = index - (nrx1*nrx2)*k
-     j     = index / nrx1
-     index = index - nrx1*j
+     k     = index / (nr1x*nr2x)
+     index = index - (nr1x*nr2x)*k
+     j     = index / nr1x
+     index = index - nr1x*j
      i     = index
      !
      IF ( i.GE.nr1 .OR. j.GE.nr2 .OR. k.GE.nr3 ) CYCLE

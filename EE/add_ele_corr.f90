@@ -11,7 +11,7 @@
 !
 !--------------------------------------------------------------------
       SUBROUTINE add_ele_corr( vltot, rho, nelec,                     &
-                               nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, &
+                               nr1, nr2, nr3, nr1x, nr2x, nr3x, nrxx, &
                                nl, nlm, g, gg, ngm, gstart, nspin     )
 !--------------------------------------------------------------------
       !
@@ -31,7 +31,7 @@
       !
       ! ... Declares variables
       !
-      INTEGER, INTENT(IN)     :: nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, nspin, &
+      INTEGER, INTENT(IN)     :: nr1, nr2, nr3, nr1x, nr2x, nr3x, nrxx, nspin, &
                                  ngm, gstart, nl( ngm ), nlm( ngm)
       REAL( DP ), INTENT(IN)  :: rho ( nrxx, nspin ), g( ngm ), gg( ngm ), nelec
       REAL( DP )              :: vltot( nrxx )
@@ -46,8 +46,8 @@
 
       CALL start_clock( 'correction' ) 
       !
-      ALLOCATE( rhotot( nrx1 * nrx2 * nrx3 ), v_dcc( nrx1 * nrx2 *nrx3), &
-                vcorr( nrx1 * nrx2 * nrx3))
+      ALLOCATE( rhotot( nr1x * nr2x * nr3x ), v_dcc( nr1x * nr2x *nr3x), &
+                vcorr( nr1x * nr2x * nr3x))
 #ifdef __PARA
       ALLOCATE( aux( nrxx ) )
       aux(1:nrxx) = rho(1:nrxx, 1)
@@ -63,7 +63,7 @@
       v_dcc(:) = 0.d0
       CALL grid_gather( vltot, v_dcc)
       CALL mp_sum( v_dcc, intra_pool_comm )
-      do i=1, nrx1*nrx2*nrx3
+      do i=1, nr1x*nr2x*nr3x
           write(40+me_pool,*) v_dcc(i),0,0
       end do
       write(40+me_pool,*) "END "
@@ -81,7 +81,7 @@
       vcorr (:) = vcomp(:)
       !
 #ifdef DEBUG
-      do i=1, nrx1*nrx2*nrx3
+      do i=1, nr1x*nr2x*nr3x
           write(50+me_pool,*) v_dcc(i), vcorr(i), rhotot(i)
       end do
       write(50+me_pool,*) "END "
@@ -93,7 +93,7 @@
       CASE( 'dcc' )                           
         !
         CALL add_dcc_field( v_dcc, vcorr, rhotot, nelec,           &
-                            nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, &
+                            nr1, nr2, nr3, nr1x, nr2x, nr3x, nrxx, &
                                nl, nlm, g, gg, ngm, gstart, nspin )
         !
 !#define SOLVATION
@@ -101,7 +101,7 @@
       CASE( 'solvation' )
         !
         CALL add_solvation_field( v_dcc, vcorr, rhotot, nelec,     &
-                            nr1, nr2, nr3, nrx1, nrx2, nrx3,nrxx,  &
+                            nr1, nr2, nr3, nr1x, nr2x, nr3x,nrxx,  &
                              nl, nlm, g, gg, ngm, gstart )
 #endif
         !

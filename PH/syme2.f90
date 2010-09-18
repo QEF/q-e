@@ -17,12 +17,12 @@ subroutine syme2 (dvsym)
   ! the symmetric 3x3 tensor are given by the common variables: jab; a1j; a2j
   !
   use kinds,  only : DP
-  USE gvect,  ONLY: nrx1,nrx2,nrx3, nr1,nr2,nr3
+  USE gvect,  ONLY: nr1x,nr2x,nr3x, nr1,nr2,nr3
   USE symm_base,  ONLY: nsym, s, ftau
   USE ramanm, ONLY: jab
   implicit none
 
-  complex(DP) :: dvsym (nrx1, nrx2, nrx3, 6)
+  complex(DP) :: dvsym (nr1x, nr2x, nr3x, 6)
   complex(DP), allocatable :: aux (:,:,:,:)
   ! the function to symmetrize
   ! auxiliary space
@@ -34,10 +34,10 @@ subroutine syme2 (dvsym)
   ! counter on polarizations
 
   if (nsym.eq.1) return
-  allocate (aux(nrx1 , nrx2 , nrx3 , 6))
+  allocate (aux(nr1x , nr2x , nr3x , 6))
 
   do ip = 1, 6
-     call zcopy (nrx1 * nrx2 * nrx3, dvsym (1, 1, 1, ip), &
+     call zcopy (nr1x * nr2x * nr3x, dvsym (1, 1, 1, ip), &
                  1, aux (1, 1, 1, ip), 1)
   enddo
   dvsym (:,:,:,:) = (0.d0, 0.d0)
@@ -72,7 +72,7 @@ subroutine syme2 (dvsym)
   enddo
 
   do ip = 1, 6
-     call dscal (2 * nrx1 * nrx2 * nrx3, 1.d0 / DBLE (nsym), &
+     call dscal (2 * nr1x * nr2x * nr3x, 1.d0 / DBLE (nsym), &
                  dvsym (1, 1, 1, ip), 1)
   enddo
 

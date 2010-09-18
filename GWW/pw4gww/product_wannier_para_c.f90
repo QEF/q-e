@@ -29,7 +29,7 @@
   USE io_files,             ONLY : tmp_dir, iunwfc, iunigk, diropn
   USE io_global,            ONLY : stdout, ionode
   USE gsmooth,              ONLY : nls, nlsm, nr1s, nr2s, nr3s, &
-                                   nrx1s, nrx2s, nrx3s, nrxxs, doublegrid
+                                   nr1sx, nr2sx, nr3sx, nrxxs, doublegrid
   use mp_global,            ONLY : nproc_pool, me_pool
   USE kinds,                ONLY : DP
   USE us
@@ -267,7 +267,7 @@
                     if(n3>nr3) n3=n3-nr3
 
                     if(n3 >= nr3_start .and. n3 <= nr3_end) then
-                       nn=(n3-nr3_start)*nrx1*nrx2+(n2-1)*nrx1+n1
+                       nn=(n3-nr3_start)*nr1x*nr2x+(n2-1)*nr1x+n1
                        if(nn<1 .or. nn > nrxx)  then
                           CALL errore( 'rsca', 'rsca', nn )
                        endif

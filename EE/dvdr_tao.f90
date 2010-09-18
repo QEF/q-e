@@ -10,7 +10,7 @@
 ! contributions by E. Lamas and S. de Gironcoli (SISSA/DEMOCRITOS)
 !
 !============================================================================
-      SUBROUTINE dvdr_tao(dv_dtao, vcomp, nr1, nr2, nr3, nrx1, nrx2, nrx3 )
+      SUBROUTINE dvdr_tao(dv_dtao, vcomp, nr1, nr2, nr3, nr1x, nr2x, nr3x )
 ! Estimates the derivative of the corrective potential
 ! at the ionic positions
       
@@ -23,9 +23,9 @@
       IMPLICIT NONE
       !
       INTEGER, INTENT(IN)    :: nr1, nr2, nr3
-      INTEGER, INTENT(IN)    :: nrx1, nrx2, nrx3
+      INTEGER, INTENT(IN)    :: nr1x, nr2x, nr3x
       REAL(DP)               :: dv_dtao(3, nat)
-      REAL(DP)               :: vcomp(nrx1*nrx2*nrx3)
+      REAL(DP)               :: vcomp(nr1x*nr2x*nr3x)
       !
       INTEGER                :: ir, ir1, ir2, ir3,                     &
                                 na,                                    &
@@ -95,7 +95,7 @@
          DO b = 0, 1
           DO c = 0, 1
            !
-           f = vcomp( COMPINDEX( ir1+a,ir2+b,ir3+c,nrx1,nrx2,nrx3 ) )
+           f = vcomp( COMPINDEX( ir1+a,ir2+b,ir3+c,nr1x,nr2x,nr3x ) )
            g1 = f * DPINTERP( t1, a, bound1 )  &
                   *  PINTERP( t2, b, bound2 )  &
                   *  PINTERP( t3, c, bound3 )
@@ -107,16 +107,16 @@
                   * DPINTERP( t3, c, bound3 )
 
            df1 = 0.5D0 * (                                             &
-             vcomp( COMPINDEX( ir1+a+1,ir2+b,ir3+c,nrx1,nrx2,nrx3 ) )     &
-           - vcomp( COMPINDEX( ir1+a-1,ir2+b,ir3+c,nrx1,nrx2,nrx3 ) ) )   
+             vcomp( COMPINDEX( ir1+a+1,ir2+b,ir3+c,nr1x,nr2x,nr3x ) )     &
+           - vcomp( COMPINDEX( ir1+a-1,ir2+b,ir3+c,nr1x,nr2x,nr3x ) ) )   
                 
            df2 = 0.5D0 * (                                             &
-             vcomp( COMPINDEX( ir1+a,ir2+b+1,ir3+c,nrx1,nrx2,nrx3 ) )     &
-           - vcomp( COMPINDEX( ir1+a,ir2+b-1,ir3+c,nrx1,nrx2,nrx3 ) ) )   
+             vcomp( COMPINDEX( ir1+a,ir2+b+1,ir3+c,nr1x,nr2x,nr3x ) )     &
+           - vcomp( COMPINDEX( ir1+a,ir2+b-1,ir3+c,nr1x,nr2x,nr3x ) ) )   
                 
            df3 = 0.5D0 * (                                             &
-             vcomp( COMPINDEX( ir1+a,ir2+b,ir3+c+1,nrx1,nrx2,nrx3 ) )     &
-           - vcomp( COMPINDEX( ir1+a,ir2+b,ir3+c-1,nrx1,nrx2,nrx3 ) ) )   
+             vcomp( COMPINDEX( ir1+a,ir2+b,ir3+c+1,nr1x,nr2x,nr3x ) )     &
+           - vcomp( COMPINDEX( ir1+a,ir2+b,ir3+c-1,nr1x,nr2x,nr3x ) ) )   
                 
            dv_dtao(1, na) =  dv_dtao(1, na) + g1 +                     &
                        df1  * DQINTERP( t1, a, bound1 )                &
