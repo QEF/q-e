@@ -154,6 +154,31 @@
             nelec = nelup + neldw 
          END IF
          !
+         ! consistency check
+         !
+         IF( nspin == 1 ) THEN
+           IF( f_inp( 1, 1 ) <= 0.0_DP )  &
+               CALL errore(' electrons_base_initval ',' Zero or negative occupation are not allowed ', 1 )
+         ELSE
+           IF( f_inp( 1, 1 ) < 0.0_DP )  &
+               CALL errore(' electrons_base_initval ',' Zero or negative occupation are not allowed ', 1 )
+           IF( f_inp( 1, 2 ) < 0.0_DP )  &
+               CALL errore(' electrons_base_initval ',' Zero or negative occupation are not allowed ', 1 )
+           IF( ( f_inp( 1, 1 ) + f_inp( 1, 2 ) ) == 0.0_DP )  &
+               CALL errore(' electrons_base_initval ',' Zero or negative occupation are not allowed ', 1 )
+         END IF
+         DO i = 2, nbnd
+           IF( nspin == 1 ) THEN
+             IF( f_inp( i, 1 ) > 0.0_DP .AND. f_inp( i-1, 1 ) <= 0.0_DP )  &
+               CALL errore(' electrons_base_initval ',' Zero or negative occupation are not allowed ', 1 )
+           ELSE
+             IF( f_inp( i, 1 ) > 0.0_DP .AND. f_inp( i-1, 1 ) <= 0.0_DP ) &
+               CALL errore(' electrons_base_initval ',' Zero or negative occupation are not allowed ', 1 )
+             IF( f_inp( i, 2 ) > 0.0_DP .AND. f_inp( i-1, 2 ) <= 0.0_DP ) &
+               CALL errore(' electrons_base_initval ',' Zero or negative occupation are not allowed ', 1 )
+           END IF
+         END DO
+         !
          ! count bands
          !
          nupdwn (1) = 0
