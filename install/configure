@@ -7896,7 +7896,10 @@ fi
 
 if test "$mass_libs" != ""; then
    try_dflags="$try_dflags -D__MASS"
-   ldflags="$ldflags -Wl,--allow-multiple-definition"
+   if test "$arch" = "ppc64-bg"; then
+   # BlueGene wants this when mass libs are loaded, SP6 doesn't want this!
+     ldflags="$ldflags -Wl,--allow-multiple-definition"
+   fi
 fi
 
 echo setting MASS_LIBS... $mass_libs
