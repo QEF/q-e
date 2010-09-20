@@ -90,8 +90,8 @@ TODO LIST - August 2010
          free; might be used for image parallelization as well.
   4.0.2 Better-structured relaxation and molecular dynamics (including the
         variable-cell case), with more extenisive integration of PW and CP
-  4.0.3 Image parallelization on k-points of EXX should be removed and
-        replaced by pool parallelization.
+  4.0.3 Image parallelization on k-points of EXX should be replaced by 
+        pool parallelization.
 
 4.1  New developments to be added (sooner or later):
   4.1.1 Moka structure builder + new xml input/output (RS)
