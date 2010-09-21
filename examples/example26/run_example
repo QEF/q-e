@@ -13,8 +13,8 @@ if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
 $ECHO
 $ECHO "$EXAMPLE_DIR : starting"
 $ECHO
-$ECHO "This example shows how to use cp.x to calculate Wannier functions and"
-$ECHO "to perform dynamics with an external electric field."
+$ECHO "This is a second example of how to use cp.x to calculate Wannier functions,"
+$ECHO "using Jacobi Rotation as localization algorithm (courtesy of IRRMA Lausanne)."
 
 # set the needed environment variables
 . ../environment_variables
