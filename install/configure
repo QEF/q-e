@@ -3555,9 +3555,6 @@ case "$arch" in
                    else
                         MKL_FLAGS="-i-static"
                    fi
-                   if test "$use_openmp" -eq 1; then
-                        MKL_FLAGS="$MKL_FLAGS -openmp"
-                   fi
                 else
                 # flags for MKL - ifort 8 and earlier, obsolescent
                    MKL_LIBS="-lguide -lpthread"
@@ -4750,16 +4747,16 @@ echo using F90... $f90
 
 case "$arch:$f90_version" in
 ia32:ifort* | ia64:ifort* | x86_64:ifort* | mac686:ifort*  )
+        try_fflags="-O2 -assume byterecl -g -traceback -par-report0 -vec-report0"
         if test "$use_debug" -eq 1; then
-            try_fflags="-O2 -assume byterecl -g -traceback -par-report0 -vec-report0 -fpe0 -CB"
-        else
-            try_fflags="-O2 -assume byterecl -g -traceback -par-report0 -vec-report0"
+            try_fflags="$try_fflags -fpe0 -CB"
         fi
         try_fflags_openmp="-openmp"
         try_f90flags="\$(FFLAGS) -nomodule"
         try_fflags_noopt="-O0 -assume byterecl -g -traceback"
         try_ldflags=""
         try_ldflags_static="-static"
+        try_ldflags_openmp="-openmp"
         try_dflags="$try_dflags -D__INTEL"
         pre_fdflags="-fpp "
         ;;
@@ -4955,7 +4952,7 @@ if test "$use_shared" -eq 0 ; then
 
 if test "$use_openmp" -eq 1 ; then
   try_fflags="$try_fflags $try_fflags_openmp"
-  try_ldlags="$try_ldlags $try_ldlags_openmp"
+  try_ldlags="$try_ldlags $try_ldflags_openmp"
 fi
 
 if test "$fflags" = ""   ; then fflags=$try_fflags     ; fi
