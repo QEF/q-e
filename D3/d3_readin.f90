@@ -10,10 +10,7 @@
 SUBROUTINE d3_readin()
   !-----------------------------------------------------------------------
   !
-  !    This routine reads the control variables for the program phononq. T
-  !    input is read from unit 5. A namelist is used on the machine which
-  !    allows it. A second routine readfile reads the variables saved
-  !    on the data file by the self-consistent program.
+  !    This routine reads the control variables for the program d3
   !
   USE ions_base,     ONLY : nat, ntyp => nsp, amass
   USE uspp,          ONLY : okvan
@@ -24,7 +21,8 @@ SUBROUTINE d3_readin()
   USE d3com
   USE noncollin_module, ONLY : noncolin
   USE io_files,      ONLY : tmp_dir, prefix, trimcheck
-  USE io_global,     ONLY : ionode
+  USE io_global,     ONLY : ionode, ionode_id
+  USE mp,            ONLY : mp_bcast
   !
   IMPLICIT NONE
   !
@@ -51,10 +49,18 @@ SUBROUTINE d3_readin()
 
   IF ( ionode ) THEN
      !
+     CALL input_from_file ( )
+     !
      !    Read the first line of the input file
      !
-     READ (5, '(a)', err = 100, iostat = ios) title
-100  CALL errore ('d3_readin', 'reading title ', ABS (ios) )
+     READ (5, '(a)', iostat = ios) title
+     !
+  END IF
+  !
+  CALL mp_bcast(ios, ionode_id )
+  IF (ios/=0) CALL errore ('d3_readin', 'reading title ', ABS (ios) )
+  !
+  IF ( ionode ) THEN
      !
      !   set default values for variables in namelist
      !
@@ -78,33 +84,37 @@ SUBROUTINE d3_readin()
      !
      !     reading the namelist inputph
      !
-     !   Note: for AIX machine (xlf compiler version 3.0 or higher):
-     !   The variable XLFRTEOPTS must be set to "namelist=old"
-     !   in order to have "&end" to end the namelist
+     READ (5, inputph, iostat = ios)
      !
-     READ (5, inputph, err = 200, iostat = ios)
-
-200  CALL errore ('d3_readin', 'reading inputph namelist', ABS (ios) )
-     !
-     !     Check all namelist variables
-     !
-     IF (ethr_ph.LE.0.d0) CALL errore (' d3_readin', ' Wrong ethr_ph ', 1)
-     IF (iverbosity.NE.0.AND.iverbosity.NE.1) &
-          CALL errore ('d3_readin', ' Wrong iverbosity ', 1)
-     IF (fildrho.EQ.' ') CALL errore ('d3_readin', ' Wrong fildrho ', 1)
-     IF (fild0rho.EQ.' ') CALL errore ('d3_readin', ' Wrong fild0rho ', 1)
+  END IF
+  !
+  CALL mp_bcast(ios, ionode_id )
+  IF (ios/=0) CALL errore ('d3_readin', 'reading inputph namelist', ABS (ios) )
+  !
+  IF ( ionode ) THEN
      !
      !    reads the q point
      !
-     READ (5, *, err = 300, iostat = ios) (xq (ipol), ipol = 1, 3)
-300  CALL errore ('d3_readin', 'reading xq', ABS (ios) )
-
+     READ (5, *,  iostat = ios) (xq (ipol), ipol = 1, 3)
+     !
      lgamma = xq (1) .EQ.0.d0.AND.xq (2) .EQ.0.d0.AND.xq (3) .EQ.0.d0
      tmp_dir = trimcheck (outdir)
      !
   END IF
   !
+  CALL mp_bcast(ios, ionode_id )
+  IF (ios/=0) CALL errore ('d3_readin', 'reading xq', ABS (ios) )
+  !
   CALL bcast_d3_input()
+  !
+  !     Check all namelist variables
+  !
+  IF (ethr_ph.LE.0.d0) CALL errore (' d3_readin', ' Wrong ethr_ph ', 1)
+  IF (iverbosity.NE.0.AND.iverbosity.NE.1) &
+       CALL errore ('d3_readin', ' Wrong iverbosity ', 1)
+  IF (fildrho.EQ.' ') CALL errore ('d3_readin', ' Wrong fildrho ', 1)
+  IF (fild0rho.EQ.' ') CALL errore ('d3_readin', ' Wrong fild0rho ', 1)
+  !
   ! FIXME: workaround for filename mess - needed to find the correct
   !        location of files
   if ( .not. lgamma) tmp_dir = TRIM(tmp_dir)//'_ph0'
@@ -112,7 +122,7 @@ SUBROUTINE d3_readin()
   !   Here we finished the reading of the input file.
   !   Now allocate space for pwscf variables, read and check them.
   !
-  CALL read_file
+  CALL read_file ( )
   !
   IF (lgamma) THEN
      nksq = nks
