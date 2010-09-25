@@ -1276,10 +1276,6 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 	    info {
 		Specify the type of ionic dynamics.
 
-		For constrained dynamics or constrained optimisations add the
-		CONSTRAINTS card (when the card is present the SHAKE algorithm is
-				  automatically used).
-
 		For different type of calculation different possibilities are
 		allowed and different default values apply:
 
@@ -1289,10 +1285,13 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                                            for structural relaxation 
 		    'damp' :               use damped (quick-min Verlet)
                                            dynamics for structural relaxation
+		                           Can be used for constrained 
+                                           optimisation: see CONSTRAINTS card
 
 		CASE ( calculation = 'md' )
                     'verlet' : (default)   use Verlet algorithm to integrate
-		                           Newton's equation
+		                           Newton's equation. For constrained 
+                                           dynamics, see CONSTRAINTS card
                     'langevin'             ion dynamics is over-damped Langevin
 
 		CASE ( calculation = 'vc-relax' )
@@ -2187,7 +2186,8 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 
     card CONSTRAINTS {
 	label {
-	    Optional card, used for constrained dynamics or constrained optimisations ! 	    
+	    Optional card, used for constrained dynamics or constrained optimisations
+            (only if ion_dynamics='damp' or 'verlet', variable-cell excepted)
 	}
 	message {
 	    When this card is present the SHAKE algorithm is automatically used.

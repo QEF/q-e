@@ -1430,7 +1430,6 @@ SUBROUTINE iosys()
      !
   ENDIF
   !
-  !
   ! ... allocate arrays for dispersion correction
   !
   IF ( llondon) CALL init_london ( )
@@ -1439,7 +1438,11 @@ SUBROUTINE iosys()
   !
   lconstrain = ( ncolvar_inp + nconstr_inp > 0 )
   !
-  IF ( lconstrain ) CALL init_constraint( nat, tau, ityp, alat )
+  IF ( lconstrain ) THEN
+     IF ( .NOT. ldamped .OR. lmovecell ) CALL errore( 'iosys', &
+              'constraints only with damped dynamics and fixed cell', 1 )
+     CALL init_constraint( nat, tau, ityp, alat )
+  END IF
   !
   ! ... read atomic positions and unit cell from data file
   ! ... must be done before "verify_tmpdir" because the latter
