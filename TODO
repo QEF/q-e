@@ -1,4 +1,4 @@
-TODO LIST - August 2010
+TODO LIST - September 2010
 
 
 0) Suspected bugs/problems:
@@ -6,15 +6,16 @@ TODO LIST - August 2010
   0.2  "image" parallelization in CP
   0.3  projwfc in CP doesn't work for spin polarized case
   0.4  FFT grid dimensions not the same in PW and in CP for same data
-  0.5  Small energy differences between PW and CP - maybe PP-related, but
-       might also be a problem of Ewald calculation in CP ("raggio"?)
+       (requires merge of all FFT-related variables between CP and PW)
+  0.5  Small energy differences between PW and CP - maybe PP-related, 
+       but might also be a problem of Ewald calculation in CP ("raggio"?)
   0.6  Numerical instabilities with BLYP and TPSS
-  0.7  Very often the first step of structural relaxation is too big.
-       A better estimate of hessian would be the ultimate solution.
 
 1) Organization
 
 1.1 www.quantum-espresso.org:
+  1.1.0 Better download page that allows selection of packages
+        (see 1.3.0)
   1.1.1 update home page picture and sample applications
   1.1.2 pseudopotential upload facility:
         there is a problem with link to *.info files
@@ -23,8 +24,11 @@ TODO LIST - August 2010
         The list of papers should be replaced by a query to some
         database for cited papers.
 1.3 CVS/packaging:
-  1.3.0 move to subversion
-  1.3.1 no pseudopotentials in CVS any longer
+  1.3.0 Rethink a directory structure that better reflects the structure
+        of QE as packages (see 1.1.0, 2.0). Lots of files to be moved
+        around: a good reason to move to subversion?
+  1.3.1 no pseudopotentials in CVS any longer. Examples should download
+        needed PPs from the web site (with a wget)
   1.3.2 run source-normalizer script dev-tools/src-normal
   1.3.3 The partition of code among directories should be reconsidered.
         There are circular dependencies that make the installation mechanism
@@ -33,8 +37,8 @@ TODO LIST - August 2010
         turn call files in flib/; Modules/mm_dispersions.f90 calls PW/rgen.f90;
         neb modules in Modules/ calling compute_scf in PW and CP...
   1.3.4 Everything that is not in the " QE core" or that is used only for 
-        special purposes should be extracted and moved into external libs,
-        plugins, whatever is appropriate.
+        special purposes (e.g.: EE/+Multigrid/) should be extracted and 
+        moved into external libs or plugins or whatever is appropriate
 1.4 mailing lists:
   1.4.1 add somewhere instructions on netiquette and how to post 
         Send monthly reminder?
@@ -49,18 +53,20 @@ TODO LIST - August 2010
 
 2) Documentation
 
-2.1 Better (and shorter) FAQ list. Notably missing:
-    - hardware for QE
-2.2 QE-Tutorial: should be moved to the cvs or svn of qe-forge.
-2.3 We should decide a strategy on where to put the documentation.
+2.0 We should decide a strategy on where to put the documentation.
     Now it is in Doc/ for everything, except for atomic/ and GWW/.
     We should decide which packages should have the documentation
-    in other places. The same applies to examples.
-2.4 Documentation on how to generate PP for GIPAW calculation is missing
-2.5 Documentation and examples for EE/ stuff are absent
+    in other places. The same applies to examples. See 1.3.0
+2.1 Better (and shorter) FAQ list. Notably missing:
+    - hardware for QE
+    - segmentation fault (present but not visible enough)
+2.2 QE-Tutorial: should be moved to the cvs or svn of qe-forge.
+2.3 Documentation on how to generate PP for GIPAW calculation is missing
+2.4 Documentation and examples for EE/ stuff are absent
 
 3) Pseudopotentials 
 
+3.0 Set up standard tests for all PPs
 3.1 Add Coulomb PPs to PP library - requires extending the name
     convention to cover this case and updating the scripts that
     generate the PP table
@@ -100,13 +106,13 @@ TODO LIST - August 2010
   4.1.4 new GWW
   4.1.5 EPW (electron-phonon with Wannier stuff)
   4.1.6 G-space symmetrization also for phonons. In the meantime:
-        rimove check on nonsymmeorphic symmetries in pw.x, leave it only
+        rimove check on nonsymmorphic symmetries in pw.x, leave it only
         in the phonon code
   4.1.7 bio-oriented stuff :
         - MS2 plugin for QM-MM
         - Solvent Models
         - PCM
-  4.1.8 Wannier-based exact-exchange in CP (version available)
+  4.1.8 Wannier-based exact-exchange in CP (available)
   4.1.9 Wannier-based exact-exchange in PW (to be done)
 
 4.2 Small new developments, desirable or to be added:
@@ -116,9 +122,8 @@ TODO LIST - August 2010
         - ifort+mkl+scalapack troubles
         - add search for -lfftw3xf_intel 
         - remove obsolete stuff: next is macppc
-  4.2.2 constraints should be implemented in all cases, or else, the
-        documentation should be more explicit on what works and what doesn't
-        Also: add check if constraints break the symmetry
+  4.2.2 constraints should be implemented in all cases;
+        a check should be added if constraints break the symmetry
   4.2.3 inversion symmetry should allow real hamiltonian and wavefunctions
   4.2.4 nscf calculations are slow. There must be a way to make a better
         usage of the available information from the scf calculation:
@@ -199,8 +204,6 @@ TODO LIST - August 2010
   4.3.5 D3: verify status of parallelization, clean it up if needed
 
 4.4 Cleanup
-  4.4.0 Complete the removal of old metadynamics stuff (or leave it for
-        good if actually useful)
   4.4.1 Increase modularization by 
         - collecting variables and routines acting on those variables
           into modules
@@ -319,7 +322,7 @@ TODO LIST - August 2010
      overwriting files of running processes. Should be done with
      care, or else every time a code crashes will make the following
      one crash as well! 
- 5.8 Add rotation of restart files, similar to what is done in CPMD:
+ 5.7 Add rotation of restart files, similar to what is done in CPMD:
     "The number of distinct RESTART files generated during CPMD runs
      is read from the next line. The restart files are written in turn.
      Default is 1. If you specify e.g. 3, then the files RESTART.1,
