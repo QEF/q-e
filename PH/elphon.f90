@@ -215,14 +215,9 @@ SUBROUTINE elphel (npe, imode0, dvscfins)
      !  ikq= index of k-point with vector k+q
      !       k and k+q are alternated if q!=0, are the same if q=0
      !
-     IF (lgamma) THEN
-        ikk = ik
-        ikq = ik
-        npwq = npw
-     ELSE
-        ikk = 2 * ik - 1
-        ikq = ikk + 1
-     ENDIF
+     IF (lgamma) npwq = npw
+     ikk = ikks(ik)
+     ikq = ikqs(ik)
      IF (lsda) current_spin = isk (ikk)
      IF (.NOT.lgamma.AND.nksq.GT.1) THEN
         READ (iunigk, err = 200, iostat = ios) npwq, igkq
@@ -316,7 +311,7 @@ SUBROUTINE elphsum ( )
   USE wvfct, ONLY: nbnd, et
   USE parameters, ONLY : npk
   USE el_phon, ONLY : el_ph_mat
-  USE qpoint, ONLY : xq, nksq, ikks, ikqs
+  USE qpoint, ONLY : xq, nksq
   USE modes,  ONLY : u, minus_q, nsymq, rtau
   USE dynmat, ONLY : dyn, w2
   USE io_global, ONLY : stdout, ionode, ionode_id
