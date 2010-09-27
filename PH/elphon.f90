@@ -18,8 +18,11 @@ SUBROUTINE elphon()
   USE gvect, ONLY: nrxx
   USE gsmooth, ONLY: nrxxs, doublegrid
   USE lsda_mod, ONLY: nspin
-  USE phcom
-  USE el_phon
+  USE dynmat, ONLY : dyn, w2
+  USE qpoint, ONLY : xq
+  USE modes,  ONLY : npert, nirr
+  USE control_ph, ONLY : trans, current_iq
+  USE units_ph, ONLY : iudyn, lrdrho, iudvscf
   !
   IMPLICIT NONE
   !
@@ -169,15 +172,19 @@ SUBROUTINE elphel (npe, imode0, dvscfins)
   !      Original routine written by Francesco Mauri
   !
   USE kinds, ONLY : DP
-  USE gsmooth, ONLY: nrxxs, nls
+  USE gsmooth, ONLY: nrxxs
   USE wavefunctions_module,  ONLY: evc
   USE io_files, ONLY: iunigk
   USE klist, ONLY: xk
   USE lsda_mod, ONLY: nspin, lsda, current_spin, isk
   USE wvfct, ONLY: nbnd, npw, igk
   USE uspp, ONLY : vkb
-  USE phcom
-  USE el_phon
+  USE el_phon, ONLY : el_ph_mat
+  USE modes, ONLY : u
+  USE units_ph, ONLY : iubar, lrbar, lrwfc, iuwfc
+  USE eqv,      ONLY : dvpsi, evq
+  USE qpoint,   ONLY : igkq, npwq, nksq, ikks, ikqs
+  USE control_ph, ONLY : trans, lgamma
   USE mp_global, ONLY: intra_pool_comm
   USE mp,        ONLY: mp_sum
 
@@ -307,13 +314,16 @@ SUBROUTINE elphsum ( )
   USE ktetra, ONLY: nk1, nk2, nk3
   USE symm_base, ONLY: s, irt, nsym, time_reversal, invs
   USE wvfct, ONLY: nbnd, et
-  USE phcom
-  USE el_phon
+  USE parameters, ONLY : npk
+  USE el_phon, ONLY : el_ph_mat
+  USE qpoint, ONLY : xq, nksq, ikks, ikqs
+  USE modes,  ONLY : u, minus_q, nsymq, rtau
+  USE dynmat, ONLY : dyn, w2
   USE io_global, ONLY : stdout, ionode, ionode_id
   USE mp_global, ONLY : npool, intra_image_comm
   USE mp, ONLY : mp_bcast
   USE control_flags, ONLY : modenum
-  USE control_ph, ONLY : lgamma
+  USE control_ph, ONLY : lgamma, tmp_dir_ph
   USE save_ph,    ONLY : tmp_dir_save
   USE io_files,  ONLY : prefix, tmp_dir
   !
@@ -691,8 +701,7 @@ subroutine lint ( nsym, s, minus_q, at, bg, npk, k1,k2,k3, &
   real(kind=DP) :: xkr(3), deltap(3), deltam(3)
   real(kind=DP), parameter:: eps=1.0d-5
   real(kind=DP), allocatable :: xkg(:,:), xp(:,:)
-  integer ::  i,j,k, ns, n, nk, ip1,jp1,kp1, &
-       n1,n2,n3,n4,n5,n6,n7,n8
+  integer ::  i,j,k, ns, n, nk
   integer :: nkh
   !
   ! Re-generate a uniform grid of k-points xkg
