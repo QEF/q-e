@@ -46,6 +46,8 @@ mp.o \
 mp_base.o \
 mp_global.o \
 mp_wave.o \
+open_close_input_file_interf.o \
+open_close_input_file.o \
 path_base_pre.o \
 path_formats_pre.o \
 path_io_routines_pre.o  \
