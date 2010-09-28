@@ -11,22 +11,27 @@ PROGRAM pwscf
   !
   ! ... Plane Wave Self-Consistent Field code 
   !
-  USE io_global,        ONLY : stdout, ionode
+  USE io_global,        ONLY : stdout, ionode, ionode_id
   USE parameters,       ONLY : ntypx, npk, lmaxx
   USE control_flags,    ONLY : conv_elec, lpath, gamma_only, lscf
   USE control_flags,    ONLY : conv_ions, istep, nstep, restart, lmd, lbfgs
   USE force_mod,        ONLY : lforce, lstres
   USE environment,      ONLY : environment_start
   USE check_stop,       ONLY : check_stop_init
-  USE mp_global,        ONLY : mp_startup
+  USE mp_global,        ONLY : mp_startup, mp_bcast
 #if defined(__MS2)
   USE ms2,              ONLY : MS2_enabled,                 &
                                ms2_initialization,    &
                                set_positions, return_forces
 #endif
   !
+  USE iotk_module,           ONLY : iotk_attlenx
+  USE open_close_input_file_interf, ONLY : open_input_file, close_input_file
+  !
   IMPLICIT NONE
   !
+  LOGICAL :: xmlinput = .false.
+  CHARACTER (len=iotk_attlenx) :: attr
   !
 #ifdef __PARA
   CALL mp_startup ( )
@@ -44,7 +49,30 @@ PROGRAM pwscf
      !
   END IF   
   !
-  CALL iosys()
+  ! INPUT RELATED
+  !
+  ! ... open input file 
+  !
+  IF( ionode ) CALL open_input_file(xmlinput,attr)
+  !
+  ! bcast of xmlinput and attr needs to be done 
+  ! because is only the open statement inside
+  ! read_cards and read_namelist (in Modules) that has
+  ! if(ionode) !!! in future call read_cards_pw, call read_namelis
+  ! call read_xml should be done only by ionode. bcast is already done
+  ! inside read_cards and read_namelist.
+  ! 
+  call mp_bcast(xmlinput,ionode_id)
+  call mp_bcast(attr,ionode_id)
+  !
+  ! ... read input and convert to internal variables
+  CALL iosys(xmlinput,attr)
+  !
+  ! ... close_input_file(xmlinput)
+  !
+  IF( ionode ) CALL close_input_file(xmlinput)
+  !
+  ! END INPUT RELATED
   !
   IF ( gamma_only ) WRITE( UNIT = stdout, &
      & FMT = '(/,5X,"gamma-point specific algorithms are used")' )

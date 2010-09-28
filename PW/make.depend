@@ -199,9 +199,6 @@ cegterg.o : ../Modules/kind.o
 cegterg.o : ../Modules/mp.o
 cegterg.o : ../Modules/mp_global.o
 cegterg.o : ../Modules/ptoolkit.o
-cegterg_x.o : ../Modules/kind.o
-cegterg_x.o : ../Modules/mp.o
-cegterg_x.o : ../Modules/mp_global.o
 clean_pw.o : ../Modules/atom.o
 clean_pw.o : ../Modules/control_flags.o
 clean_pw.o : ../Modules/fft_base.o
@@ -848,14 +845,6 @@ move_ions.o : pwcom.o
 move_ions.o : symm_base.o
 ms2.o : ../Modules/mp.o
 ms2.o : ../Modules/mp_global.o
-mt.o : ../Modules/cell_base.o
-mt.o : ../Modules/constants.o
-mt.o : ../Modules/control_flags.o
-mt.o : ../Modules/fft_base.o
-mt.o : ../Modules/ions_base.o
-mt.o : ../Modules/kind.o
-mt.o : ../Modules/ws_base.o
-mt.o : pwcom.o
 n_plane_waves.o : ../Modules/kind.o
 n_plane_waves.o : ../Modules/mp.o
 n_plane_waves.o : ../Modules/mp_global.o
@@ -1055,7 +1044,9 @@ pwscf.o : ../Modules/control_flags.o
 pwscf.o : ../Modules/environment.o
 pwscf.o : ../Modules/io_global.o
 pwscf.o : ../Modules/mp_global.o
+pwscf.o : ../Modules/open_close_input_file_interf.o
 pwscf.o : ../Modules/parameters.o
+pwscf.o : ../iotk/src/iotk_module.o
 pwscf.o : ms2.o
 pwscf.o : pwcom.o
 qvan2.o : ../Modules/kind.o

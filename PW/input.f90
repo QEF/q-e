@@ -7,7 +7,7 @@
 !
 !
 !----------------------------------------------------------------------------
-SUBROUTINE iosys()
+SUBROUTINE iosys(xmlinput,attr)
   !-----------------------------------------------------------------------------
   !
   ! ...  this subroutine reads input data from standard input ( unit 5 )
@@ -298,51 +298,19 @@ SUBROUTINE iosys()
   !
   IMPLICIT NONE
   !
+  CHARACTER (len=iotk_attlenx), intent(in) :: attr
+  LOGICAL, intent(in) :: xmlinput
+  !
   INTEGER  :: ia, image, nt
   REAL(DP) :: theta, phi
   INTEGER  :: iiarg, nargs, iargc, ierr
-  CHARACTER (len=iotk_attlenx) :: attr
   CHARACTER (len=50) :: arg
-  LOGICAL :: xmlinput
   !
   !
 #if defined(__ABSOFT)
 #   define getarg getarg_
 #   define iargc  iargc_
 #endif
-  !
-  !
-  IF ( ionode ) THEN
-     !
-     ! ... check if use xml input or not
-     !
-     xmlinput = .false.
-     nargs = iargc()
-     !
-     DO iiarg = 1, ( nargs - 1 )
-        !
-        CALL getarg( iiarg, arg )
-        !
-        IF ( trim( arg ) == '-xmlinput') THEN
-           CALL getarg( ( iiarg + 1 ) , arg )
-           xmlinput = .true.
-           WRITE(stdout, '(5x,a)') "Waiting for xml input..."
-           CALL iotk_open_read( xmlinputunit, arg, attr = attr, qe_syntax = .true., ierr = ierr)
-           IF (ierr /= 0) CALL errore('iosys','error opening xml file', 1)
-           EXIT
-        ENDIF
-        !
-     ENDDO
-     !
-     IF (.not.xmlinput) THEN
-        CALL input_from_file()
-        WRITE(stdout, '(5x,a)') "Waiting for input..."
-     ENDIF
-     !
-  ENDIF
-  !
-  CALL mp_bcast( xmlinput , ionode_id )
-  CALL mp_bcast( attr , ionode_id )
   !
   ! ... all namelists are read
   !
