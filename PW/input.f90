@@ -77,8 +77,7 @@ SUBROUTINE iosys(xmlinput,attr)
   USE io_files,      ONLY : input_drho, output_drho, trimcheck, &
                             psfile, tmp_dir, wfc_dir, &
                             prefix_     => prefix, &
-                            pseudo_dir_ => pseudo_dir, &
-                            xmlinputunit
+                            pseudo_dir_ => pseudo_dir
   !
   USE force_mod,     ONLY : lforce, lstres, force
   !
@@ -294,7 +293,7 @@ SUBROUTINE iosys(xmlinput,attr)
   USE us, ONLY : spline_ps_ => spline_ps
   !
   USE read_xml_module,       ONLY : read_xml
-  USE iotk_module,           ONLY : iotk_open_read, iotk_close_read,iotk_attlenx
+  USE iotk_module,           ONLY : iotk_attlenx
   !
   IMPLICIT NONE
   !
@@ -303,33 +302,19 @@ SUBROUTINE iosys(xmlinput,attr)
   !
   INTEGER  :: ia, image, nt
   REAL(DP) :: theta, phi
-  INTEGER  :: iiarg, nargs, iargc, ierr
-  CHARACTER (len=50) :: arg
   !
-  !
-#if defined(__ABSOFT)
-#   define getarg getarg_
-#   define iargc  iargc_
-#endif
   !
   ! ... all namelists are read
   !
   IF ( xmlinput ) THEN
-     CALL read_xml ('PW', 1 , attr = attr )
+     CALL read_xml ('PW', attr = attr )
   ELSE
      CALL read_namelists( 'PW' )
   ENDIF
   !
   ! ... various initializations of control variables
   !
-  lscf      = .false.
-  lmd       = .false.
-  lmovecell = .false.
-  lbands    = .false.
-  lbfgs     = .false.
-  ldamped   = .false.
   lforce    = tprnfor
-  calc      = ' '
   !
   SELECT CASE( trim( calculation ) )
   CASE( 'scf' )
@@ -483,8 +468,9 @@ SUBROUTINE iosys(xmlinput,attr)
      !
   CASE DEFAULT
      !
-     CALL errore( 'iosys', 'calculation ' // &
-                & trim( calculation ) // ' not implemented', 1 )
+write(0,*) "check calculation"
+!     CALL errore( 'iosys', 'calculation ' // &
+!                & trim( calculation ) // ' not implemented', 1 )
      !
   END SELECT
   !
@@ -1472,7 +1458,6 @@ SUBROUTINE read_cards_pw ( psfile, tau_format, xmlinput )
   USE ions_base,          ONLY : amass
   USE control_flags,      ONLY : lfixatom, gamma_only, textfor
   USE read_cards_module,  ONLY : read_cards
-  USE read_xml_module,    ONLY : read_xml
   !
   IMPLICIT NONE
   !
@@ -1488,9 +1473,7 @@ SUBROUTINE read_cards_pw ( psfile, tau_format, xmlinput )
   !
   amass = 0
   !
-  IF ( xmlinput ) THEN
-        CALL read_xml ( 'PW', 2 )
-  ELSE
+  IF ( .not. xmlinput ) THEN
      CALL read_cards ( 'PW' )
   ENDIF
   !

@@ -1257,6 +1257,8 @@ scf_mod.o : paw_onecenter.o
 scf_mod.o : pwcom.o
 seqopn.o : ../Modules/io_files.o
 seqopn.o : ../Modules/kind.o
+set_defaults.o : ../Modules/control_flags.o
+set_defaults.o : pwcom.o
 set_fft_dim.o : ../Modules/cell_base.o
 set_fft_dim.o : ../Modules/fft_scalar.o
 set_fft_dim.o : ../Modules/io_global.o
