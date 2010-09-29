@@ -521,13 +521,17 @@ input.o : ../Modules/io_global.o
 input.o : ../Modules/ions_base.o
 input.o : ../Modules/ions_nose.o
 input.o : ../Modules/kind.o
+input.o : ../Modules/mp.o
+input.o : ../Modules/open_close_input_file_interf.o
 input.o : ../Modules/printout_base.o
 input.o : ../Modules/read_cards.o
 input.o : ../Modules/read_namelists.o
+input.o : ../Modules/read_xml.o
 input.o : ../Modules/sic.o
 input.o : ../Modules/timestep.o
 input.o : ../Modules/wave_base.o
 input.o : ../Modules/xml_input.o
+input.o : ../iotk/src/iotk_module.o
 input.o : cg.o
 input.o : cp_emass.o
 input.o : efield.o

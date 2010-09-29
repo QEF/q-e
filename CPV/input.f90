@@ -35,29 +35,50 @@ MODULE input
      USE input_parameters,      ONLY : calculation, title
      USE control_flags,         ONLY : lneb, lpath, lwf
      USE printout_base,         ONLY : title_ => title
-     USE io_global,             ONLY : meta_ionode, stdout
+     USE io_global,             ONLY : meta_ionode, meta_ionode_id, stdout
      USE xml_input,             ONLY : xml_input_dump
+     USE read_xml_module,       ONLY : read_xml
+     USE mp,                    ONLY : mp_bcast
+     USE iotk_module,           ONLY : iotk_attlenx
+     USE open_close_input_file_interf, ONLY : open_input_file, close_input_file
      !
      IMPLICIT NONE
      !
      CHARACTER(LEN=2) :: prog
+     CHARACTER(LEN=iotk_attlenx) :: attr
+     LOGICAL :: xmlinput
      !
      !
      prog = 'CP'
      !
+     !
      IF ( meta_ionode ) THEN
+        !
         CALL xml_input_dump()
-        CALL input_from_file()
+        !
+        CALL open_input_file( xmlinput, attr) 
+        !
      END IF
      !
-     ! ... Read NAMELISTS 
+     CALL mp_bcast( xmlinput, meta_ionode_id )
      !
-     CALL read_namelists( prog )
-     !
-     ! ... Read CARDS 
-     !
-     CALL read_cards ( prog )
-     !
+     IF ( xmlinput ) THEN
+        !
+        CALL read_xml ( 'CP', attr )
+        !
+     ELSE
+        !
+        ! ... Read NAMELISTS 
+        !
+        CALL read_namelists( prog )
+        !
+        ! ... Read CARDS 
+        !
+        CALL read_cards ( prog )
+        !
+     END IF
+     IF ( meta_ionode) CALL close_input_file( xmlinput )
+
      lneb = ( TRIM( calculation ) == 'neb' )
      !
      lpath = lneb
@@ -500,6 +521,7 @@ MODULE input
        CASE ('atomic')
          tatomicwfc_ = .TRUE.
        CASE DEFAULT
+          PRINT*,"startingwfc",startingwfc
          CALL errore(' control_flags ',' unknown startingwfc '//TRIM(startingwfc), 1 )
      END SELECT
      IF( ampre_ == 0 ) trane_ = .FALSE.
