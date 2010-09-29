@@ -18,19 +18,17 @@ SUBROUTINE open_input_file_x(xmlinput,attr,unit)
   !
   USE kinds,         ONLY : DP
   !
-  USE io_global,     ONLY : stdout
+  USE io_global,     ONLY : stdout, xmlinputunit
   !
-  USE read_xml_module,       ONLY : read_xml
-  USE iotk_module,           ONLY : iotk_open_read, iotk_close_read,iotk_attlenx
+  USE iotk_module,   ONLY : iotk_open_read, iotk_close_read,iotk_attlenx
   !
   IMPLICIT NONE
   !
   LOGICAL, intent(inout), optional :: xmlinput
-  CHARACTER (len=iotk_attlenx), intent(inout), optional :: attr
+  CHARACTER (len=*), intent(inout), optional :: attr
   INTEGER, intent(in), optional :: unit
   !
-  LOGICAL :: xmlinput_loc
-  CHARACTER (len=iotk_attlenx) :: attr_loc
+  LOGICAL :: xmlinput_loc,checkxml
   INTEGER :: unit_loc
   !
   INTEGER  :: iiarg, nargs, iargc, ierr
@@ -43,22 +41,30 @@ SUBROUTINE open_input_file_x(xmlinput,attr,unit)
 #endif
   !
   xmlinput_loc = .false.
-  attr_loc = " "
   unit_loc = 5
+  checkxml = .false.
   !
-  IF(PRESENT(attr).and.(.not.PRESENT(xmlinput))) then
-    CALL errore('open_input_file', 'xmlinput not present in routine call')
-  ELSEIF(PRESENT(xmlinput).and.(.not.PRESENT(attr))) then
-    CALL errore('open_input_file', 'attr not present in routine call')
+  IF(present(attr).and.(.not.present(xmlinput))) THEN
+     !
+     CALL errore('open_input_file', 'xmlinput not present in routine call')
+     !
+  ELSEIF(present(xmlinput).and.(.not.present(attr))) THEN
+     !
+     CALL errore('open_input_file', 'attr not present in routine call')
+     !
   ENDIF
   !
+  IF (present(attr).and.(present(xmlinput))) checkxml = .true.
+  !
   IF(PRESENT(unit)) unit_loc = unit
-     !
-     ! ... check if use xml input or not
-     !
-     xmlinput_loc = .false.
-     nargs = iargc()
-     !
+  xmlinputunit = unit_loc
+  !
+  ! ... check if use xml input or not
+  !
+  xmlinput_loc = .false.
+  nargs = iargc()
+  !
+  IF (checkxml) THEN
      DO iiarg = 1, ( nargs - 1 )
         !
         CALL getarg( iiarg, arg )
@@ -67,8 +73,8 @@ SUBROUTINE open_input_file_x(xmlinput,attr,unit)
            CALL getarg( ( iiarg + 1 ) , arg )
            xmlinput_loc = .true.
            WRITE(stdout, '(5x,a)') "Waiting for xml input..."
-           CALL iotk_open_read( unit_loc, arg, attr = attr_loc, qe_syntax = .true., ierr = ierr)
-           IF (ierr /= 0) CALL errore('iosys','error opening xml file', 1)
+           CALL iotk_open_read( unit_loc, arg, attr = attr, qe_syntax = .true., ierr = ierr)
+           IF (ierr /= 0) CALL errore('open_input_file','error opening xml file', abs(ierr))
            EXIT
         ENDIF
         !
@@ -76,13 +82,15 @@ SUBROUTINE open_input_file_x(xmlinput,attr,unit)
      !
      xmlinput = xmlinput_loc
      !
-     IF (.not.xmlinput) THEN
-        CALL input_from_file(unit_loc)
-        WRITE(stdout, '(5x,a)') "Waiting for input..."
-     ENDIF
-     !
+  ENDIF
+  !
+  IF (.not.xmlinput_loc) THEN
+     CALL input_from_file(unit_loc)
+     WRITE(stdout, '(5x,a)') "Waiting for input..."
+  ENDIF
   !
   RETURN
+  !
 END SUBROUTINE open_input_file_x
 
 SUBROUTINE close_input_file_x(xmlinput,unit)
@@ -103,21 +111,27 @@ SUBROUTINE close_input_file_x(xmlinput,unit)
   INTEGER, intent(in), optional :: unit
   !
   LOGICAL :: xmlinput_loc
-  INTEGER :: unit_loc
+  LOGICAL :: opened
+  INTEGER :: unit_loc, ierr
   !
   !
   unit_loc = 5
   xmlinput_loc = .false.
   !
-  IF(PRESENT(xmlinput)) xmlinput_loc = xmlinput
-  IF(PRESENT(unit)) unit_loc = unit
+  IF (present(xmlinput)) xmlinput_loc = xmlinput
+  IF(present(unit)) unit_loc = unit
   !
-  if(xmlinput_loc) then
-    call iotk_close_read(unit=unit_loc)
-  else
-   close(unit_loc)
-  endif 
+  IF (xmlinput_loc) THEN
+     !
+     CALL iotk_close_read(unit=unit_loc, ierr = ierr)
+     IF (ierr /= 0) CALL errore('close_input_file','error closing xml file', abs(ierr) )
+     !
+  ELSE
+     inquire( unit_loc, opened = opened )
+     IF (opened) THEN
+        close(unit_loc)
+     ENDIF
+  ENDIF 
   !
   !
 END SUBROUTINE close_input_file_x
-

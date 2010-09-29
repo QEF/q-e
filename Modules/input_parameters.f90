@@ -980,6 +980,43 @@ MODULE input_parameters
         INTEGER :: nraise = 1
 
         !
+        ! ... variables added for new BFGS algorithm
+        !
+
+        INTEGER ::  bfgs_ndim = 1
+
+        REAL(DP)  :: trust_radius_max = 0.8_DP
+        REAL(DP)  :: trust_radius_min = 1.E-3_DP
+        REAL(DP)  :: trust_radius_ini = 0.5_DP
+
+        REAL(DP)  :: w_1 = 0.5E-1_DP
+        REAL(DP)  :: w_2 = 0.5_DP
+
+        REAL(DP)  :: sic_rloc = 0.0_DP
+
+        !
+        ! ... variable for meta-dynamics
+        !
+        INTEGER, PARAMETER :: max_nconstr = 100
+        INTEGER  :: fe_nstep = 100
+        INTEGER  :: sw_nstep = 10
+        INTEGER  :: eq_nstep = 0
+        REAL(DP) :: g_amplitude = 0.005_DP
+        !
+        REAL(DP) :: fe_step( max_nconstr ) = 0.4_DP
+        !
+        NAMELIST / ions / phase_space, ion_dynamics, ion_radius, ion_damping,  &
+                          ion_positions, ion_velocities, ion_temperature,      &
+                          tempw, fnosep, nhgrp, fnhscl, nhpcl, nhptyp, ndega, tranp,   &
+                          amprp, greasp, tolp, ion_nstepe, ion_maxstep,        &
+                          refold_pos, upscale, delta_t, pot_extrapolation,     &
+                          wfc_extrapolation, nraise, remove_rigid_rot,         &
+                          trust_radius_max, trust_radius_min,                  &
+                          trust_radius_ini, w_1, w_2, bfgs_ndim, sic_rloc,     &
+                          fe_step, fe_nstep, sw_nstep, eq_nstep, g_amplitude
+
+
+        !
         ! ... variables added for "path" calculations
         !
 
@@ -1030,45 +1067,13 @@ MODULE input_parameters
         REAL (DP)  :: k_max = 0.1_DP, k_min = 0.1_DP
         !
         REAL (DP)  :: path_thr = 0.05_DP
-
         !
-        ! ... variables added for new BFGS algorithm
         !
-
-        INTEGER ::  bfgs_ndim = 1
-
-        REAL(DP)  :: trust_radius_max = 0.8_DP
-        REAL(DP)  :: trust_radius_min = 1.E-3_DP
-        REAL(DP)  :: trust_radius_ini = 0.5_DP
-
-        REAL(DP)  :: w_1 = 0.5E-1_DP
-        REAL(DP)  :: w_2 = 0.5_DP
-
-        REAL(DP)  :: sic_rloc = 0.0_DP
-
-        !
-        ! ... variable for meta-dynamics
-        !
-        INTEGER, PARAMETER :: max_nconstr = 100
-        INTEGER  :: fe_nstep = 100
-        INTEGER  :: sw_nstep = 10
-        INTEGER  :: eq_nstep = 0
-        REAL(DP) :: g_amplitude = 0.005_DP
-        !
-        REAL(DP) :: fe_step( max_nconstr ) = 0.4_DP
-        !
-        NAMELIST / ions / phase_space, ion_dynamics, ion_radius, ion_damping,  &
-                          ion_positions, ion_velocities, ion_temperature,      &
-                          tempw, fnosep, nhgrp, fnhscl, nhpcl, nhptyp, ndega, tranp,   &
-                          amprp, greasp, tolp, ion_nstepe, ion_maxstep,        &
-                          refold_pos, upscale, delta_t, pot_extrapolation,     &
-                          wfc_extrapolation, nraise, remove_rigid_rot,         &
+        NAMELIST / PATH / &
                           num_of_images, CI_scheme, opt_scheme, use_masses,    &
                           first_last_opt, ds, k_max, k_min, temp_req,          &
-                          path_thr, fixed_tan, use_freezing,                   &
-                          trust_radius_max, trust_radius_min,                  &
-                          trust_radius_ini, w_1, w_2, bfgs_ndim, sic_rloc,     &
-                          fe_step, fe_nstep, sw_nstep, eq_nstep, g_amplitude
+                          path_thr, fixed_tan, use_freezing
+
 
 !=----------------------------------------------------------------------------=!
 !  CELL Namelist Input Parameters

@@ -34,7 +34,8 @@ MODULE read_namelists_module
        system_bcast, ee_bcast, electrons_bcast, ions_bcast, cell_bcast, &
        press_ai_bcast, wannier_bcast, wannier_ac_bcast, control_checkin, &
        system_checkin, electrons_checkin, ions_checkin, cell_checkin, &
-       wannier_checkin, wannier_ac_checkin, fixval
+       wannier_checkin, wannier_ac_checkin, fixval, &
+       path_read_namelist, path_defaults, path_checkin, path_bcast
   !
   !  ... end of module-scope declarations
   !
@@ -483,18 +484,18 @@ MODULE read_namelists_module
        !
        ! ... defaults for "path" optimisations variables
        !
-       num_of_images  = 0
-       first_last_opt = .FALSE.
-       use_masses     = .FALSE.
-       use_freezing   = .FALSE.
-       opt_scheme     = 'quick-min'
-       temp_req       = 0.0_DP
-       ds             = 1.0_DP
-       path_thr       = 0.05_DP
-       CI_scheme      = 'no-CI'
-       k_max          = 0.1_DP
-       k_min          = 0.1_DP
-       fixed_tan      = .FALSE.
+!       num_of_images  = 0
+!       first_last_opt = .FALSE.
+!       use_masses     = .FALSE.
+!       use_freezing   = .FALSE.
+!       opt_scheme     = 'quick-min'
+!       temp_req       = 0.0_DP
+!       ds             = 1.0_DP
+!       path_thr       = 0.05_DP
+!       CI_scheme      = 'no-CI'
+!       k_max          = 0.1_DP
+!       k_min          = 0.1_DP
+!       fixed_tan      = .FALSE.
        !
        ! ... BFGS defaults
        !
@@ -514,6 +515,42 @@ MODULE read_namelists_module
        sw_nstep    = 10
        eq_nstep    = 0
        g_amplitude = 0.005_DP
+       !
+       RETURN
+       !
+     END SUBROUTINE
+     !
+     !=----------------------------------------------------------------------=!
+     !
+     !  Variables initialization for Namelist PATH
+     !
+     !=----------------------------------------------------------------------=!
+     !
+     !-----------------------------------------------------------------------
+     SUBROUTINE path_defaults( )
+       !-----------------------------------------------------------------------
+       !
+       IMPLICIT NONE
+       !
+       !
+       ! ... ( 'full' | 'coarse-grained' )
+       !
+       ! ... defaults for "path" optimisations variables
+       !
+         num_of_images  = 0
+         first_last_opt = .FALSE.
+         use_masses     = .FALSE.
+         use_freezing   = .FALSE.
+         opt_scheme     = 'quick-min'
+         temp_req       = 0.0_DP
+         ds             = 1.0_DP
+         path_thr       = 0.05_DP
+         CI_scheme      = 'no-CI'
+         k_max          = 0.1_DP
+         k_min          = 0.1_DP
+         fixed_tan      = .FALSE.
+!         nstep_path    = 1
+         restart_mode = 'from_scratch'
        !
        RETURN
        !
@@ -1003,18 +1040,18 @@ MODULE read_namelists_module
        !
        ! ... "path" variables broadcast
        !
-       CALL mp_bcast( num_of_images,      ionode_id )
-       CALL mp_bcast( first_last_opt,     ionode_id )
-       CALL mp_bcast( use_masses,         ionode_id )
-       CALL mp_bcast( use_freezing,       ionode_id )
-       CALL mp_bcast( fixed_tan,          ionode_id )
-       CALL mp_bcast( CI_scheme,          ionode_id )
-       CALL mp_bcast( opt_scheme,         ionode_id )
-       CALL mp_bcast( temp_req,           ionode_id )
-       CALL mp_bcast( ds,                 ionode_id )
-       CALL mp_bcast( k_max,              ionode_id )
-       CALL mp_bcast( k_min,              ionode_id )
-       CALL mp_bcast( path_thr,           ionode_id )
+!       CALL mp_bcast( num_of_images,      ionode_id )
+!       CALL mp_bcast( first_last_opt,     ionode_id )
+!       CALL mp_bcast( use_masses,         ionode_id )
+!       CALL mp_bcast( use_freezing,       ionode_id )
+!       CALL mp_bcast( fixed_tan,          ionode_id )
+!       CALL mp_bcast( CI_scheme,          ionode_id )
+!       CALL mp_bcast( opt_scheme,         ionode_id )
+!       CALL mp_bcast( temp_req,           ionode_id )
+!       CALL mp_bcast( ds,                 ionode_id )
+!       CALL mp_bcast( k_max,              ionode_id )
+!       CALL mp_bcast( k_min,              ionode_id )
+!       CALL mp_bcast( path_thr,           ionode_id )
        !
        ! ... BFGS
        !
@@ -1032,6 +1069,42 @@ MODULE read_namelists_module
        CALL mp_bcast( sw_nstep,    ionode_id )
        CALL mp_bcast( eq_nstep,    ionode_id )
        CALL mp_bcast( g_amplitude, ionode_id )
+       !
+       RETURN
+       !
+     END SUBROUTINE
+     !
+     !=----------------------------------------------------------------------=!
+     !
+     !  Broadcast variables values for Namelist NEB
+     !
+     !=----------------------------------------------------------------------=!
+     !
+     !-----------------------------------------------------------------------
+     SUBROUTINE path_bcast()
+       !-----------------------------------------------------------------------
+       !
+       USE io_global, ONLY: ionode_id
+       USE mp,        ONLY: mp_bcast
+       !
+       IMPLICIT NONE
+       !
+       ! ... "path" variables broadcast
+       !
+       CALL mp_bcast( num_of_images,      ionode_id )
+       CALL mp_bcast( first_last_opt,     ionode_id )
+       CALL mp_bcast( use_masses,         ionode_id )
+       CALL mp_bcast( use_freezing,       ionode_id )
+       CALL mp_bcast( fixed_tan,          ionode_id )
+       CALL mp_bcast( CI_scheme,          ionode_id )
+       CALL mp_bcast( opt_scheme,         ionode_id )
+       CALL mp_bcast( temp_req,           ionode_id )
+       CALL mp_bcast( ds,                 ionode_id )
+       CALL mp_bcast( k_max,              ionode_id )
+       CALL mp_bcast( k_min,              ionode_id )
+       CALL mp_bcast( path_thr,           ionode_id )
+!       CALL mp_bcast( nstep_path,         ionode_id )
+       CALL mp_bcast( restart_mode,       ionode_id )
        !
        RETURN
        !
@@ -1486,19 +1559,19 @@ MODULE read_namelists_module
        !
        ! ... general "path" variables checkin
        !
-       IF ( ds < 0.0_DP ) &
-          CALL errore( sub_name,' ds out of range ',1)
-       IF ( temp_req < 0.0_DP ) &
-          CALL errore( sub_name,' temp_req out of range ',1)
+!       IF ( ds < 0.0_DP ) &
+!          CALL errore( sub_name,' ds out of range ',1)
+!       IF ( temp_req < 0.0_DP ) &
+!          CALL errore( sub_name,' temp_req out of range ',1)
        !
-       allowed = .FALSE.
-       DO i = 1, SIZE( opt_scheme_allowed )
-          IF ( TRIM( opt_scheme ) == &
-               opt_scheme_allowed(i) ) allowed = .TRUE.
-       END DO
-       IF ( .NOT. allowed ) &
-          CALL errore( sub_name, ' opt_scheme '''// &
-                     & TRIM( opt_scheme )//''' not allowed ', 1 )
+!       allowed = .FALSE.
+!       DO i = 1, SIZE( opt_scheme_allowed )
+!          IF ( TRIM( opt_scheme ) == &
+!               opt_scheme_allowed(i) ) allowed = .TRUE.
+!       END DO
+!       IF ( .NOT. allowed ) &
+!          CALL errore( sub_name, ' opt_scheme '''// &
+!                     & TRIM( opt_scheme )//''' not allowed ', 1 )
        !
        IF ( calculation == 'neb' .OR. calculation == 'smd' ) THEN
           !
@@ -1523,18 +1596,18 @@ MODULE read_namelists_module
        !
        ! ... NEB specific checkin
        !
-       IF ( k_max < 0.0_DP )  CALL errore( sub_name, 'k_max out of range', 1 )
-       IF ( k_min < 0.0_DP )  CALL errore( sub_name, 'k_min out of range', 1 )
-       IF ( k_max < k_min ) CALL errore( sub_name, 'k_max < k_min', 1 )
+!       IF ( k_max < 0.0_DP )  CALL errore( sub_name, 'k_max out of range', 1 )
+!       IF ( k_min < 0.0_DP )  CALL errore( sub_name, 'k_min out of range', 1 )
+!       IF ( k_max < k_min ) CALL errore( sub_name, 'k_max < k_min', 1 )
        !
-       allowed = .FALSE.
-       DO i = 1, SIZE( CI_scheme_allowed )
-          IF ( TRIM( CI_scheme ) == CI_scheme_allowed(i) ) allowed = .TRUE.
-       END DO
+!       allowed = .FALSE.
+!       DO i = 1, SIZE( CI_scheme_allowed )
+!          IF ( TRIM( CI_scheme ) == CI_scheme_allowed(i) ) allowed = .TRUE.
+!       END DO
        !
-       IF ( .NOT. allowed ) &
-          CALL errore( sub_name, ' CI_scheme ''' // &
-                      & TRIM( CI_scheme ) //''' not allowed ', 1 )
+!       IF ( .NOT. allowed ) &
+!          CALL errore( sub_name, ' CI_scheme ''' // &
+!                      & TRIM( CI_scheme ) //''' not allowed ', 1 )
        !
        IF (sic /= 'none' .and. sic_rloc == 0.0_DP) &
           CALL errore( sub_name, ' invalid sic_rloc with sic activated ', 1 )
@@ -1546,6 +1619,56 @@ MODULE read_namelists_module
      !=----------------------------------------------------------------------=!
      !
      !  Check input values for Namelist CELL
+     !
+     !=----------------------------------------------------------------------=!
+     !
+     !-----------------------------------------------------------------------
+     SUBROUTINE path_checkin( )
+       !-----------------------------------------------------------------------
+       !
+       IMPLICIT NONE
+       !
+       CHARACTER(LEN=20) :: sub_name = ' path_checkin '
+       INTEGER           :: i
+       LOGICAL           :: allowed = .FALSE.
+       !
+       !
+       ! ... general "path" variables checkin
+              IF ( ds < 0.0_DP ) &
+          CALL errore( sub_name,' ds out of range ',1)
+       IF ( temp_req < 0.0_DP ) &
+          CALL errore( sub_name,' temp_req out of range ',1)
+       !
+       allowed = .FALSE.
+       DO i = 1, SIZE( opt_scheme_allowed )
+          IF ( TRIM( opt_scheme ) == &
+               opt_scheme_allowed(i) ) allowed = .TRUE.
+       END DO
+       IF ( .NOT. allowed ) &
+          CALL errore( sub_name, ' opt_scheme '''// &
+                     & TRIM( opt_scheme )//''' not allowed ', 1 )
+       !
+       !
+       ! ... NEB(SM) specific checkin
+       !
+       IF ( k_max < 0.0_DP )  CALL errore( sub_name, 'k_max out of range', 1 )
+       IF ( k_min < 0.0_DP )  CALL errore( sub_name, 'k_min out of range', 1 )
+       IF ( k_max < k_min ) CALL errore( sub_name, 'k_max < k_min', 1 )
+       !
+!       IF ( nstep_path < 1 ) CALL errore ( sub_name, 'step_path out of range', 1 )
+       !
+       allowed = .FALSE.
+       DO i = 1, SIZE( CI_scheme_allowed )
+          IF ( TRIM( CI_scheme ) == CI_scheme_allowed(i) ) allowed = .TRUE.
+       END DO
+       !
+       IF ( .NOT. allowed ) &
+          CALL errore( sub_name, ' CI_scheme ''' // &
+                      & TRIM( CI_scheme ) //''' not allowed ', 1 )
+       !
+       RETURN
+       !
+     END SUBROUTINE
      !
      !=----------------------------------------------------------------------=!
      !
@@ -1797,22 +1920,28 @@ MODULE read_namelists_module
        !  ----------------------------------------------
        !
        !
-       IF( prog /= 'PW' .AND. prog /= 'CP' ) &
+       IF( prog /= 'PW' .AND. prog /= 'CP' .AND. prog /= 'SM' ) &
           CALL errore( ' read_namelists ', ' unknown calling program ', 1 )
        !
        ! ... default settings for all namelists
        !
-       CALL control_defaults( prog )
-       CALL system_defaults( prog )
-       CALL electrons_defaults( prog )
-       CALL ions_defaults( prog )
-       CALL cell_defaults( prog )
-       CALL ee_defaults( prog )
+       IF( prog == 'PW' .OR. prog == 'CP') THEN
+         CALL control_defaults( prog )
+         CALL system_defaults( prog )
+         CALL electrons_defaults( prog )
+         CALL ions_defaults( prog )
+         CALL cell_defaults( prog )
+         CALL ee_defaults( prog )
+       ENDIF
+       IF( prog == 'SM') THEN
+         CALL path_defaults()
+       ENDIF
        !
        ! ... Here start reading standard input file
        !
        ! ... CONTROL namelist
        !
+       IF(prog == 'PW' .OR. prog == 'CP' ) THEN
        ios = 0
        IF( ionode ) THEN
           READ( 5, control, iostat = ios )
@@ -1970,8 +2099,74 @@ MODULE read_namelists_module
        CALL wannier_ac_bcast()
        CALL wannier_ac_checkin( prog )
        !
+       ENDIF
+       !
+       IF (prog == 'SM') THEN
+         CALL path_read_namelist(5)
+       ENDIF
+       !
        RETURN
        !
      END SUBROUTINE read_namelists
+     !
+     !
+     !-----------------------------------------------------------------------
+     SUBROUTINE path_read_namelist(unit)
+       !-----------------------------------------------------------------------
+       !
+       !  this routine reads data from standard input and puts them into
+       !  module-scope variables (accessible from other routines by including
+       !  this module, or the one that contains them)
+       !  ----------------------------------------------
+       !
+       ! ... declare modules
+       !
+       USE io_global, ONLY : ionode, ionode_id
+       USE mp,        ONLY : mp_bcast
+       !
+       IMPLICIT NONE
+       !
+       ! ... declare variables
+       !
+       INTEGER, intent(in) :: unit
+       !
+       !
+       ! ... declare other variables
+       !
+       INTEGER :: ios
+       !
+       ! ... end of declarations
+       !
+       !  ----------------------------------------------
+       !
+       !
+       ! ... default settings for all namelists
+       !
+       CALL path_defaults( )
+       !
+       ! ... Here start reading standard input file
+       !
+       ! ... PATH namelist
+       !
+       ios = 0
+       IF ( ionode ) THEN
+          !
+          READ( unit, path, iostat = ios )
+          !
+       END IF
+       CALL mp_bcast( ios, ionode_id )
+       IF( ios /= 0 ) THEN
+          CALL errore( ' path_read_namelists ', &
+                     & ' reading namelist path ', ABS(ios) )
+       END IF
+       !
+write(0,*) "ds: ", ds
+write(0,*) "opt_Scheme: ", trim(opt_scheme)
+       CALL path_bcast( )
+       CALL path_checkin( )
+       !
+       RETURN
+       !
+     END SUBROUTINE path_read_namelist
      !
 END MODULE read_namelists_module

@@ -16,6 +16,7 @@ MODULE io_global
   !
   PUBLIC :: io_global_start, io_global_getionode, io_global_getmeta
   PUBLIC :: stdout, ionode, ionode_id, meta_ionode, meta_ionode_id
+  PUBLIC :: xmlinputunit, xmloutputunit, xmltmpunit
   !
   INTEGER :: stdout = 6            ! unit connected to standard output
   INTEGER :: ionode_id = 0         ! index of the i/o node
@@ -23,6 +24,9 @@ MODULE io_global
   INTEGER :: meta_ionode_id = 0    ! index of the i/o node for meta-codes
   LOGICAL :: meta_ionode = .TRUE.  ! identifies the i/o node for meta-codes
   LOGICAL :: first = .TRUE.
+  INTEGER :: xmlinputunit          ! unit connected to the xml input
+  INTEGER :: xmloutputunit = 51    ! unit connected to the xml output
+  INTEGER :: xmltmpunit    = 52    ! unit connected to the temp xml output
   !    
   CONTAINS
      !

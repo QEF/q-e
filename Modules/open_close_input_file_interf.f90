@@ -33,9 +33,9 @@ MODULE open_close_input_file_interf
   !
   USE kinds,         ONLY : DP
   !
-  USE io_global,     ONLY : stdout
+  USE io_global,     ONLY : stdout, xmlinputunit
   !
-  USE iotk_module,           ONLY : iotk_open_read, iotk_attlenx
+  USE iotk_module,           ONLY : iotk_open_read, iotk_close_read, iotk_attlenx
   !
   IMPLICIT NONE
   !
