@@ -23,7 +23,8 @@ path_formats.o \
 path_io_routines.o \
 path_opt_routines.o \
 path_reparametrisation.o \
-path_variables.o
+path_variables.o \
+set_defaults.o 
 
 QEMODS=../Modules/libqemod.a
 PWOBJS= ../PW/libpw.a
