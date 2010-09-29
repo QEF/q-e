@@ -83,90 +83,92 @@ $ECHO " done"
 
 # self-consistent calculation
 cat > si.scf.xml << EOF
- <?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8"?>
 
 
-<INPUT calculation="scf" prefix="si">
+<input calculation="scf" prefix="si">
 
-	<CELL type="qecell">
-		<QECELL ibrav="2" alat="10.20">
-			<REAL rank="1" n1="5">
+	<cell type="qecell">
+		<qecell ibrav="2" alat="10.20">
+			<real rank="1" n1="5">
 				0.0 0.0 0.0 0.0 0.0
-			</REAL>
-		</QECELL>
-	</CELL>
+			</real>
+		</qecell>
+	</cell>
 
-	<ATOMIC_SPECIES ntyp="1">
-		<SPECIE name="Si" mass="28.086">
-			<STRING>Si.pz-vbc.UPF</STRING>
-		</SPECIE>
-	</ATOMIC_SPECIES>
+	<atomic_species ntyp="1">
+		<specie name="Si" mass="28.086">
+			<property name="pseudofile">
+				<string>Si.pz-vbc.UPF</string>
+			</property>
+		</specie>
+	</atomic_species>
 
-	<ATOMIC_LIST units="alat" nat="2" >
-		<ATOM name="Si">
-			<POSITION>
-				<REAL rank="1" n1="3">
+	<atomic_list units="alat" nat="2" >
+		<atom name="Si">
+			<position>
+				<real rank="1" n1="3">
 					0.00 0.00 0.00
-				</REAL>
-			</POSITION>
-		</ATOM>	
-		<ATOM name="Si">
-			<POSITION>
-				<REAL rank="1" n1="3">
+				</real>
+			</position>
+		</atom>	
+		<atom name="Si">
+			<position>
+				<real rank="1" n1="3">
 					0.25 0.25 0.25
-				</REAL>
-			</POSITION>
-		</ATOM>	
-	</ATOMIC_LIST>		
+				</real>
+			</position>
+		</atom>	
+	</atomic_list>		
 	
 	
-	<FIELD name="InputOutput">
+	<field name="InputOutput">
 
-		<PARAMETER name="restart_mode">
-			<STRING>
+		<parameter name="restart_mode">
+			<string>
 				from_scratch
-			</STRING>
-		</PARAMETER>
+			</string>
+		</parameter>
 
-		<PARAMETER name="pseudo_dir">
-			<STRING>
+		<parameter name="pseudo_dir">
+			<string>
 				$PSEUDO_DIR/
-			</STRING>
-		</PARAMETER>
+			</string>
+		</parameter>
 		
-		<PARAMETER name="outdir">
-			<STRING>
+		<parameter name="outdir">
+			<string>
 				$TMP_DIR/
-			</STRING>
-		</PARAMETER>
+			</string>
+		</parameter>
 		
-	</FIELD>
+	</field>
 	
-	<FIELD name="Numerics">
+	<field name="Numerics">
 
-		<PARAMETER name="ecutwfc">
-			<REAL>
+		<parameter name="ecutwfc">
+			<real>
 				18.0
-			</REAL>
-		</PARAMETER>
+			</real>
+		</parameter>
 		
-		<PARAMETER name="conv_thr">
-			<REAL>
+		<parameter name="conv_thr">
+			<real>
 				1.0d-8
-			</REAL>
-		</PARAMETER>
+			</real>
+		</parameter>
 		
-		<PARAMETER name="mixing_beta">
-			<REAL>
+		<parameter name="mixing_beta">
+			<real>
 				0.7
-			</REAL>
-		</PARAMETER>
+			</real>
+		</parameter>
 	
-	</FIELD>
+	</field>
 	
-	<K_POINTS type="tpiba">
-		<MESH npoints="10">
-			<REAL rank="2" n1="4" n2="10">
+	<k_points type="tpiba">
+		<mesh npoints="10">
+			<real rank="2" n1="4" n2="10">
 				   0.1250000  0.1250000  0.1250000   1.00
 				   0.1250000  0.1250000  0.3750000   3.00
 				   0.1250000  0.1250000  0.6250000   3.00
@@ -177,10 +179,10 @@ cat > si.scf.xml << EOF
 				   0.1250000  0.6250000  0.6250000   3.00
 				   0.3750000  0.3750000  0.3750000   1.00
 				   0.3750000  0.3750000  0.6250000   3.00
-			</REAL>
-		</MESH>
-	</K_POINTS>
-</INPUT>
+			</real>
+		</mesh>
+	</k_points>
+</input>
 EOF
 $ECHO "  running the scf calculation for Si...\c"
 $PW_COMMAND -xmlinput si.scf.xml > si.scf.out
@@ -226,87 +228,89 @@ cat > si.scf.xml << EOF
 <?xml version="1.0" encoding="UTF-8"?>
 
 
-<INPUT calculation="scf" prefix="si">
+<input calculation="scf" prefix="si">
 
-	<CELL type="qecell">
-		<QECELL ibrav="2" alat="10.20">
-			<REAL rank="1" n1="5">
+	<cell type="qecell">
+		<qecell ibrav="2" alat="10.20">
+			<real rank="1" n1="5">
 				0.0 0.0 0.0 0.0 0.0
-			</REAL>
-		</QECELL>
-	</CELL>
+			</real>
+		</qecell>
+	</cell>
 
-	<ATOMIC_SPECIES ntyp="1">
-		<SPECIE name="Si" mass="28.086">
-			<STRING>Si.pz-vbc.UPF</STRING>
-		</SPECIE>
-	</ATOMIC_SPECIES>
+	<atomic_species ntyp="1">
+		<specie name="Si" mass="28.086">
+			<property name="pseudofile">
+				<string>Si.pz-vbc.UPF</string>
+			</property>
+		</specie>
+	</atomic_species>
 
-	<ATOMIC_LIST units="alat" nat="2" >
-		<ATOM name="Si">
-			<POSITION>
-				<REAL rank="1" n1="3">
+	<atomic_list units="alat" nat="2" >
+		<atom name="Si">
+			<position>
+				<real rank="1" n1="3">
 					0.00 0.00 0.00
-				</REAL>
-			</POSITION>
-		</ATOM>	
-		<ATOM name="Si">
-			<POSITION>
-				<REAL rank="1" n1="3">
+				</real>
+			</position>
+		</atom>	
+		<atom name="Si">
+			<position>
+				<real rank="1" n1="3">
 					0.25 0.25 0.25
-				</REAL>
-			</POSITION>
-		</ATOM>	
-	</ATOMIC_LIST>			
+				</real>
+			</position>
+		</atom>	
+	</atomic_list>			
 	
 	
-	<FIELD name="InputOutput">
+	<field name="InputOutput">
 
-		<PARAMETER name="restart_mode">
-			<STRING>
+		<parameter name="restart_mode">
+			<string>
 				from_scratch
-			</STRING>
-		</PARAMETER>
+			</string>
+		</parameter>
 
-		<PARAMETER name="pseudo_dir">
-			<STRING>
+		<parameter name="pseudo_dir">
+			<string>
 				$PSEUDO_DIR/
-			</STRING>
-		</PARAMETER>
+			</string>
+		</parameter>
 		
-		<PARAMETER name="outdir">
-			<STRING>
+		<parameter name="outdir">
+			<string>
 				$TMP_DIR/
-			</STRING>
-		</PARAMETER>
+			</string>
+		</parameter>
 		
-	</FIELD>
+	</field>
 	
-	<FIELD name="Numerics">
+	<field name="Numerics">
 
-		<PARAMETER name="ecutwfc">
-			<REAL>
+		<parameter name="ecutwfc">
+			<real>
 				18.0
-			</REAL>
-		</PARAMETER>
+			</real>
+		</parameter>
 		
-		<PARAMETER name="conv_thr">
-			<REAL>
+		<parameter name="conv_thr">
+			<real>
 				1.0d-8
-			</REAL>
-		</PARAMETER>
+			</real>
+		</parameter>
 		
-		<PARAMETER name="mixing_beta">
-			<REAL>
+		<parameter name="mixing_beta">
+			<real>
 				0.7
-			</REAL>
-		</PARAMETER>
+			</real>
+		</parameter>
 	
-	</FIELD>
+	</field>
 	
-	<K_POINTS type="tpiba">
-		<MESH npoints="10">
-			<REAL rank="2" n1="4" n2="10">
+	<k_points type="tpiba">
+		<mesh npoints="10">
+			<real rank="2" n1="4" n2="10">
 				   0.1250000  0.1250000  0.1250000   1.00
 				   0.1250000  0.1250000  0.3750000   3.00
 				   0.1250000  0.1250000  0.6250000   3.00
@@ -317,10 +321,10 @@ cat > si.scf.xml << EOF
 				   0.1250000  0.6250000  0.6250000   3.00
 				   0.3750000  0.3750000  0.3750000   1.00
 				   0.3750000  0.3750000  0.6250000   3.00
-			</REAL>
-		</MESH>
-	</K_POINTS>
-</INPUT>
+			</real>
+		</mesh>
+	</k_points>
+</input>
 EOF
 $ECHO "  running the scf calculation for Si again...\c"
 $PW_COMMAND -xmlinput si.scf.xml > si.scf.out
@@ -350,119 +354,121 @@ $ECHO " done"
 
 # self-consistent calculation for C with US-PP
 cat > c.scf.xml << EOF
-?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8"?>
 
 
-<INPUT calculation="scf" prefix="C">
+<input calculation="scf" prefix="C">
 
-	<CELL type="qecell">
-		<QECELL ibrav="2" alat="6.74">
-			<REAL rank="1" n1="5">
+	<cell type="qecell">
+		<qecell ibrav="2" alat="6.74">
+			<real rank="1" n1="5">
 				0.0 0.0 0.0 0.0 0.0
-			</REAL>
-		</QECELL>
-	</CELL>
+			</real>
+		</qecell>
+	</cell>
 
-	<ATOMIC_SPECIES ntyp="1">
-		<SPECIE name="C" mass="12.0107">
-			<STRING>C.pz-rrkjus.UPF</STRING>
-		</SPECIE>
-	</ATOMIC_SPECIES>
+	<atomic_species ntyp="1">
+		<specie name="C" mass="12.0107">
+			<property name="pseudofile">
+				<string>C.pz-rrkjus.UPF</string>
+			</property>
+		</specie>
+	</atomic_species>
 
-	<ATOMIC_LIST units="alat" nat="2" >
-		<ATOM name="C">
-			<POSITION>
-				<REAL rank="1" n1="3">
+	<atomic_list units="alat" nat="2" >
+		<atom name="C">
+			<position>
+				<real rank="1" n1="3">
 					0.00 0.00 0.00
-				</REAL>
-			</POSITION>
-		</ATOM>	
-		<ATOM name="C">
-			<POSITION>
-				<REAL rank="1" n1="3">
+				</real>
+			</position>
+		</atom>	
+		<atom name="C">
+			<position>
+				<real rank="1" n1="3">
 					0.25 0.25 0.25
-				</REAL>
-			</POSITION>
-		</ATOM>		
-	</ATOMIC_LIST>		
+				</real>
+			</position>
+		</atom>		
+	</atomic_list>		
 	
 	
-	<FIELD name="InputOutput">
+	<field name="InputOutput">
 
-		<PARAMETER name="restart_mode">
-			<STRING>
+		<parameter name="restart_mode">
+			<string>
 				from_scratch
-			</STRING>
-		</PARAMETER>
+			</string>
+		</parameter>
 
-		<PARAMETER name="pseudo_dir">
-			<STRING>
+		<parameter name="pseudo_dir">
+			<string>
 				$PSEUDO_DIR/
-			</STRING>
-		</PARAMETER>
+			</string>
+		</parameter>
 		
-		<PARAMETER name="outdir">
-			<STRING>
+		<parameter name="outdir">
+			<string>
 				$TMP_DIR/
-			</STRING>
-		</PARAMETER>
+			</string>
+		</parameter>
 		
-	</FIELD>
+	</field>
 	
-	<FIELD name="Numerics">
+	<field name="Numerics">
 
-		<PARAMETER name="ecutwfc">
-			<REAL>
+		<parameter name="ecutwfc">
+			<real>
 				27.0
-			</REAL>
-		</PARAMETER>
+			</real>
+		</parameter>
 		
-		<PARAMETER name="ecutrho">
-			<REAL>
+		<parameter name="ecutrho">
+			<real>
 				300.0
-			</REAL>
-		</PARAMETER>
+			</real>
+		</parameter>
 		
-		<PARAMETER name="conv_thr">
-			<REAL>
+		<parameter name="conv_thr">
+			<real>
 				1.0d-9
-			</REAL>
-		</PARAMETER>
+			</real>
+		</parameter>
 		
-		<PARAMETER name="nr1">
-			<INTEGER>
+		<parameter name="nr1">
+			<integer>
 				32
-			</INTEGER>
-		</PARAMETER>
+			</integer>
+		</parameter>
 		
-		<PARAMETER name="nr2">
-			<INTEGER>
+		<parameter name="nr2">
+			<integer>
 				32
-			</INTEGER>
-		</PARAMETER>
+			</integer>
+		</parameter>
 		
-		<PARAMETER name="nr3">
-			<INTEGER>
+		<parameter name="nr3">
+			<integer>
 				32
-			</INTEGER>
-		</PARAMETER>
+			</integer>
+		</parameter>
 		
-		<PARAMETER name="mixing_beta">
-			<REAL>
+		<parameter name="mixing_beta">
+			<real>
 				0.7
-			</REAL>
-		</PARAMETER>
+			</real>
+		</parameter>
 	
-	</FIELD>
+	</field>
 	
-	<K_POINTS type="automatic">
-		<MESH>
-			<INTEGER rank="1" n1="6">
+	<k_points type="automatic">
+		<mesh>
+			<integer rank="1" n1="6">
 				4 4 4 1 1 1
-			</INTEGER>
-		</MESH>
-	</K_POINTS>
-</INPUT>
+			</integer>
+		</mesh>
+	</k_points>
+</input>
 EOF
 $ECHO "  running the scf calculation for C...\c"
 $PW_COMMAND -xmlinput c.scf.xml > c.scf.out
@@ -493,135 +499,136 @@ cat > ni.scf.xml << EOF
 <?xml version="1.0" encoding="UTF-8"?>
 
 
-<INPUT calculation="scf" prefix="ni">
+<input calculation="scf" prefix="ni">
 
-	<CELL type="qecell">
-		<QECELL ibrav="2" alat="6.65">
-			<REAL rank="1" n1="5">
+	<cell type="qecell">
+		<qecell ibrav="2" alat="6.65">
+			<real rank="1" n1="5">
 				0.0 0.0 0.0 0.0 0.0
-			</REAL>
-		</QECELL>
-	</CELL>
+			</real>
+		</qecell>
+	</cell>
 
-	<ATOMIC_SPECIES ntyp="1">
-		<SPECIE name="Ni" mass="58.6934">
-			<STRING>Ni.pbe-nd-rrkjus.UPF</STRING>
-		</SPECIE>
-	</ATOMIC_SPECIES>
+	<atomic_species ntyp="1">
+		<specie name="Ni" mass="58.6934">
+			<property name="pseudofile">
+				<string>Ni.pbe-nd-rrkjus.UPF</string>
+			</property>
+			<property name="starting_magnetization">
+				<real>
+					0.5
+				</real>
+			</property>
+		</specie>
+	</atomic_species>
 
-	<ATOMIC_LIST units="alat" nat="1" >
-		<ATOM name="Ni">
-			<POSITION>
-				<REAL rank="1" n1="3">
+	<atomic_list units="alat" nat="1" >
+		<atom name="Ni">
+			<position>
+				<real rank="1" n1="3">
 					0.00 0.00 0.00
-				</REAL>
-			</POSITION>
-		</ATOM>	
-	</ATOMIC_LIST>		
+				</real>
+			</position>
+		</atom>	
+	</atomic_list>		
 	
 	
-	<FIELD name="InputOutput">
+	<field name="InputOutput">
 
-		<PARAMETER name="restart_mode">
-			<STRING>
+		<parameter name="restart_mode">
+			<string>
 				from_scratch
-			</STRING>
-		</PARAMETER>
+			</string>
+		</parameter>
 
-		<PARAMETER name="pseudo_dir">
-			<STRING>
+		<parameter name="pseudo_dir">
+			<string>
 				$PSEUDO_DIR/
-			</STRING>
-		</PARAMETER>
+			</string>
+		</parameter>
 		
-		<PARAMETER name="outdir">
-			<STRING>
+		<parameter name="outdir">
+			<string>
 				$TMP_DIR/
-			</STRING>
-		</PARAMETER>
+			</string>
+		</parameter>
 		
-		<PARAMETER name="tprnfor">
-			<LOGICAL>
+		<parameter name="tprnfor">
+			<logical>
 				true
-			</LOGICAL>
-		</PARAMETER>
+			</logical>
+		</parameter>
 		
-	</FIELD>
+	</field>
 	
-	<FIELD name="Numerics">
+	<field name="Numerics">
 
-		<PARAMETER name="ecutwfc">
-			<REAL>
+		<parameter name="ecutwfc">
+			<real>
 				27.0
-			</REAL>
-		</PARAMETER>
+			</real>
+		</parameter>
 		
-		<PARAMETER name="ecutrho">
-			<REAL>
+		<parameter name="ecutrho">
+			<real>
 				300.0
-			</REAL>
-		</PARAMETER>
+			</real>
+		</parameter>
 		
-		<PARAMETER name="conv_thr">
-			<REAL>
+		<parameter name="conv_thr">
+			<real>
 				1.0d-8
-			</REAL>
-		</PARAMETER>
+			</real>
+		</parameter>
 		
-		<PARAMETER name="mixing_beta">
-			<REAL>
+		<parameter name="mixing_beta">
+			<real>
 				0.7
-			</REAL>
-		</PARAMETER>
+			</real>
+		</parameter>
 	
-	</FIELD>
+	</field>
 	
-	<FIELD name="Options">
+	<field name="Options">
 
-		<PARAMETER name="occupations">
-			<STRING>
+		<parameter name="occupations">
+			<string>
 				smearing
-			</STRING>
-		</PARAMETER>
+			</string>
+		</parameter>
 		
-		<PARAMETER name="smearing">
-			<STRING>
+		<parameter name="smearing">
+			<string>
 				mp
-			</STRING>
-		</PARAMETER>
+			</string>
+		</parameter>
 		
-		<PARAMETER name="degauss">
-			<REAL>
+		<parameter name="degauss">
+			<real>
 				0.02
-			</REAL>
-		</PARAMETER>		
+			</real>
+		</parameter>		
 	
-	</FIELD>
+	</field>
 	
-	<FIELD name="Fields">
+	<field name="Fields">
 
-		<PARAMETER name="starting_magnetization">
-			<REAL rank="1" n1="1">
-				0.5
-			</REAL>
-		</PARAMETER>
-		
-		<PARAMETER name="nspin">
-			<INTEGER>
+		<parameter name="nspin">
+			<integer>
 				2
-			</INTEGER>
-		</PARAMETER>
+			</integer>
+		</parameter>
 		
-	</FIELD>			
+	</field>			
 	
-	<K_POINTS type="automatic">
-		<MESH>
-			<INTEGER rank="1" n1="6">
+	<k_points type="automatic">
+		<mesh>
+			<integer rank="1" n1="6">
 				4 4 4 1 1 1
-			</INTEGER>
-		</MESH>
-	</K_POINTS>
-</INPUT>
+			</integer>
+		</mesh>
+	</k_points>
+</input>
 EOF
 $ECHO "  running the scf calculation for Ni...\c"
 $PW_COMMAND -xmlinput ni.scf.xml > ni.scf.out
