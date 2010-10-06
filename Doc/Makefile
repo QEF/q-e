@@ -26,7 +26,7 @@ developer_man: developer_man.pdf
                 -t "Developer's Manual for Quantum-ESPRESSO" \
                 -html_version 3.2,math \
                 -toc_depth 3 -split 3 -toc_stars -show_section_numbers \
-                -local_icons -image_type gif \
+                -local_icons -image_type png \
                 developer_man.tex
 	cd developer_man; \
         for file in *.html; do \
@@ -46,7 +46,7 @@ user_guide: user_guide.pdf
                 -t "User's Guide for Quantum-ESPRESSO" \
                 -html_version 3.2,math \
                 -toc_depth 5 -split 5 -toc_stars -show_section_numbers \
-                -local_icons -image_type gif \
+                -local_icons -image_type png \
                 user_guide.tex
 	cd user_guide; \
         for file in *.html; do \
