@@ -2581,6 +2581,7 @@ MODULE pw_restart
          !
          CALL mp_bcast( ngauss,  ionode_id, intra_image_comm )
          CALL mp_bcast( degauss, ionode_id, intra_image_comm )
+         CALL mp_bcast( smearing, ionode_id, intra_image_comm )
          !
       END IF
       !
