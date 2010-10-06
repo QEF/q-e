@@ -72,6 +72,7 @@ dynmatcc.o \
 dynmatrix.o \
 ef_shift.o \
 elph.o \
+el_ph_collect.o \
 elphon.o \
 find_equiv_sites.o \
 find_mode_sym.o \
@@ -159,6 +160,7 @@ write_dyn_on_file.o \
 write_epsilon_and_zeu.o \
 write_matrix.o \
 write_rec.o \
+xk_wk_collect.o \
 zstar_eu.o \
 zstar_eu_us.o
 

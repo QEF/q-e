@@ -127,7 +127,7 @@ subroutine allocate_phq
   END DO
   CALL allocate_bec_type ( nkb, nbnd, becp )
 
-  if (elph) allocate (el_ph_mat( nbnd, nbnd, nks, 3*nat))
+  if (elph) allocate (el_ph_mat( nbnd, nbnd, nksq, 3*nat))
   if (lraman) allocate ( ramtns (3, 3, 3, nat) )
   return
 end subroutine allocate_phq

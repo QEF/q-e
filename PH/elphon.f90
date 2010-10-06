@@ -17,7 +17,7 @@ SUBROUTINE elphon()
   USE ions_base, ONLY : nat, ntyp => nsp, ityp, tau, pmass
   USE gvect, ONLY: nrxx
   USE gsmooth, ONLY: nrxxs, doublegrid
-  USE lsda_mod, ONLY: nspin
+  USE noncollin_module, ONLY : nspin_mag
   USE dynmat, ONLY : dyn, w2
   USE qpoint, ONLY : xq
   USE modes,  ONLY : npert, nirr
@@ -40,14 +40,14 @@ SUBROUTINE elphon()
   !
   imode0 = 0
   DO irr = 1, nirr
-     ALLOCATE (dvscfin ( nrxx , nspin , npert(irr)) )
+     ALLOCATE (dvscfin ( nrxx , nspin_mag , npert(irr)) )
      DO ipert = 1, npert (irr)
         CALL davcio_drho ( dvscfin(1,1,ipert),  lrdrho, iudvscf, &
                            imode0 + ipert + (current_iq-1)*3*nat, -1 )
      END DO
      IF (doublegrid) THEN
-        ALLOCATE (dvscfins ( nrxxs , nspin , npert(irr)) )
-        DO is = 1, nspin
+        ALLOCATE (dvscfins ( nrxxs , nspin_mag , npert(irr)) )
+        DO is = 1, nspin_mag
            DO ipert = 1, npert(irr)
               CALL cinterpolate (dvscfin(1,is,ipert),dvscfins(1,is,ipert),-1)
            ENDDO
@@ -176,7 +176,8 @@ SUBROUTINE elphel (npe, imode0, dvscfins)
   USE wavefunctions_module,  ONLY: evc
   USE io_files, ONLY: iunigk
   USE klist, ONLY: xk
-  USE lsda_mod, ONLY: nspin, lsda, current_spin, isk
+  USE lsda_mod, ONLY: lsda, current_spin, isk
+  USE noncollin_module, ONLY : nspin_mag
   USE wvfct, ONLY: nbnd, npw, igk
   USE uspp, ONLY : vkb
   USE el_phon, ONLY : el_ph_mat
@@ -191,7 +192,7 @@ SUBROUTINE elphel (npe, imode0, dvscfins)
   IMPLICIT NONE
   !
   INTEGER :: npe, imode0
-  COMPLEX(DP) :: dvscfins (nrxxs, nspin, npe)
+  COMPLEX(DP) :: dvscfins (nrxxs, nspin_mag, npe)
   ! LOCAL variables
   INTEGER :: nrec, ik, ikk, ikq, ipert, mode, ibnd, jbnd, ir, ig, &
        ios
@@ -305,7 +306,7 @@ SUBROUTINE elphsum ( )
   USE ions_base,     ONLY : nat, ityp, tau
   USE cell_base,     ONLY : at, bg, ibrav, symm_type
   USE lsda_mod, ONLY: isk
-  USE klist, ONLY: nks, xk, wk, nelec
+  USE klist, ONLY: nks, nkstot, xk, wk, nelec
   USE ktetra, ONLY: nk1, nk2, nk3
   USE symm_base, ONLY: s, irt, nsym, time_reversal, invs
   USE wvfct, ONLY: nbnd, et
@@ -315,7 +316,7 @@ SUBROUTINE elphsum ( )
   USE modes,  ONLY : u, minus_q, nsymq, rtau
   USE dynmat, ONLY : dyn, w2
   USE io_global, ONLY : stdout, ionode, ionode_id
-  USE mp_global, ONLY : npool, intra_image_comm
+  USE mp_global, ONLY : my_pool_id, npool, kunit, intra_image_comm
   USE mp, ONLY : mp_bcast
   USE control_flags, ONLY : modenum
   USE control_ph, ONLY : lgamma, tmp_dir_ph
@@ -363,13 +364,42 @@ SUBROUTINE elphsum ( )
   LOGICAL  :: exst
   !
   COMPLEX(DP) :: el_ph_sum (3*nat,3*nat)
+
+  COMPLEX(DP), POINTER :: el_ph_mat_collect(:,:,:,:)
+  REAL(DP), ALLOCATABLE :: xk_collect(:,:), wk_collect(:), wkfit_dist(:), &
+                 etfit_dist(:,:)
+  INTEGER :: nksfit_dist, rest, kunit_save
+  INTEGER :: nks_real, ispin, nksqtot
   !
   !
   WRITE (6, '(5x,"electron-phonon interaction  ..."/)')
   ngauss1 = 0
   nsig = 10
-  !
-  IF (npool > 1) CALL errore ('elphsum', 'pools and a2F not implemented', 1)
+
+  ALLOCATE(xk_collect(3,nkstot))
+  ALLOCATE(wk_collect(nkstot))
+  IF (npool==1) THEN
+!
+!  no pool, just copy old variable on the new ones
+!
+     nksqtot=nksq
+     xk_collect(:,1:nks) = xk(:,1:nks)
+     wk_collect(1:nks) = wk(1:nks)
+     el_ph_mat_collect => el_ph_mat
+  ELSE  
+!
+!  pools, allocate new variables and collect the results. All the rest
+!  remain unchanged.
+!
+     IF (lgamma) THEN
+        nksqtot=nkstot
+     ELSE
+        nksqtot=nkstot/2
+     ENDIF
+     ALLOCATE(el_ph_mat_collect(nbnd,nbnd,nksqtot,3*nat))
+     CALL xk_wk_collect(xk_collect,wk_collect,xk,wk,nkstot,nks)
+     CALL el_ph_collect(el_ph_mat,el_ph_mat_collect,nksqtot,nksq)
+  ENDIF
   !
   ! read eigenvalues for the dense grid
   ! FIXME: this might be done from the xml file, not from a specialized file
@@ -406,6 +436,21 @@ SUBROUTINE elphsum ( )
   !
   nkfit=nk1fit*nk2fit*nk3fit
   !
+  ! efermig and dos_ef require scattered points and eigenvalues
+  ! isk is neither read nor used. phonon with two Fermi energies is
+  ! not yet implemented.
+  !
+  nksfit_dist  = ( nksfit / npool )
+  rest = ( nksfit - nksfit_dist * npool ) 
+  IF ( ( my_pool_id + 1 ) <= rest ) nksfit_dist = nksfit_dist + 1
+  kunit_save=kunit
+  kunit=1
+
+  ALLOCATE(etfit_dist(nbnd,nksfit_dist))
+  ALLOCATE(wkfit_dist(nksfit_dist))
+  CALL poolscatter( 1, nksfit, wkfit, nksfit_dist, wkfit_dist )
+  CALL poolscatter( nbnd, nksfit, etfit, nksfit_dist, etfit_dist )
+  !
   do isig=1,nsig
      !
      ! recalculate Ef = effit and DOS at Ef N(Ef) = dosfit using dense grid
@@ -414,10 +459,14 @@ SUBROUTINE elphsum ( )
      deg(isig) = isig * 0.005d0
      !
      effit(isig) = efermig &
-          ( etfit, nbnd, nksfit, nelec, wkfit, deg(isig), ngauss1, 0, isk)
-     dosfit(isig) = dos_ef ( ngauss1, deg(isig), effit(isig), etfit, &
-          wkfit, nksfit, nbnd) / 2.0d0
+          ( etfit_dist, nbnd, nksfit_dist, nelec, wkfit_dist, &
+              deg(isig), ngauss1, 0, isk)
+     dosfit(isig) = dos_ef ( ngauss1, deg(isig), effit(isig), etfit_dist, &
+          wkfit_dist, nksfit_dist, nbnd) / 2.0d0
   enddo
+  DEALLOCATE(etfit_dist)
+  DEALLOCATE(wkfit_dist)
+  kunit=kunit_save
   allocate (eqkfit(nkfit), eqqfit(nkfit), sfit(nkfit))
   !
   ! map k-points in the IBZ to k-points in the complete uniform grid
@@ -473,10 +522,10 @@ SUBROUTINE elphsum ( )
   !
   IF ( lgamma ) THEN
      call lint ( nsymq, s, minus_q, at, bg, npk, 0,0,0, &
-          nk1,nk2,nk3, nks, xk, 1, nkBZ, eqBZ, sBZ)
+          nk1,nk2,nk3, nkstot, xk_collect, 1, nkBZ, eqBZ, sBZ)
   ELSE
      call lint ( nsymq, s, minus_q, at, bg, npk, 0,0,0, &
-          nk1,nk2,nk3, nks, xk, 2, nkBZ, eqBZ, sBZ)
+          nk1,nk2,nk3, nkstot, xk_collect, 2, nkBZ, eqBZ, sBZ)
   END IF
   !
   allocate (gf(3*nat,3*nat,nsig))
@@ -487,12 +536,12 @@ SUBROUTINE elphsum ( )
   do ibnd = 1, nbnd
      do jbnd = 1, nbnd
         allocate (g2(nkBZ,3*nat,3*nat))
-        allocate (g1(nksq,3*nat,3*nat))
-        do ik = 1, nksq
+        allocate (g1(nksqtot,3*nat,3*nat))
+        do ik = 1, nksqtot
            do ii = 1, 3*nat
               do jj = 1, 3*nat
-                 g1(ik,ii,jj)=conjg(el_ph_mat(jbnd,ibnd,ik,ii))* &
-                      el_ph_mat(jbnd,ibnd,ik,jj)
+                 g1(ik,ii,jj)=conjg(el_ph_mat_collect(jbnd,ibnd,ik,ii))* &
+                      el_ph_mat_collect(jbnd,ibnd,ik,jj)
               enddo    ! ipert
            enddo    !jpert
         enddo   ! ik
@@ -637,6 +686,10 @@ SUBROUTINE elphsum ( )
      if (ionode) CLOSE( UNIT = iuelph, STATUS = 'KEEP' )
   enddo
   deallocate (gf)
+  DEALLOCATE(xk_collect)
+  DEALLOCATE(wk_collect)
+  IF (npool /= 1) DEALLOCATE(el_ph_mat_collect)
+
   !
 9000 FORMAT(5x,'Gaussian Broadening: ',f7.3,' Ry, ngauss=',i4)
 9005 FORMAT(5x,'DOS =',f10.6,' states/spin/Ry/Unit Cell at Ef=', &
