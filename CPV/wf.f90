@@ -1082,6 +1082,11 @@ SUBROUTINE wfunc_init( clwf, b1, b2, b3, ibrav )
   IF(me.EQ.1) THEN
      ALLOCATE(bigg(3,ntot))
      ALLOCATE(bign(3,ntot))
+  ELSE
+     ! NOTE: collected array should be allocated anyway 
+     ! with the right first dimensions, otherwise mp_gather will fail
+     ALLOCATE(bigg(3,1))
+     ALLOCATE(bign(3,1))
   END IF
 
 #else
@@ -1126,6 +1131,7 @@ SUBROUTINE wfunc_init( clwf, b1, b2, b3, ibrav )
   WRITE( stdout, * ) "ibrav selected:", ibrav
   !
   IF(nvb.GT.0) CALL small_box_wf(i_1, j_1, k_1, nw1)
+
 #ifdef __PARA
   !
   CALL mp_barrier( intra_image_comm )
@@ -1354,12 +1360,11 @@ SUBROUTINE wfunc_init( clwf, b1, b2, b3, ibrav )
   CALL mp_bcast( tag,        root_image, intra_image_comm )
   CALL mp_bcast( tagp,       root_image, intra_image_comm )
 
-  IF (me.EQ.1) THEN
 #endif
-     DEALLOCATE(bigg)
-     DEALLOCATE(bign)
+  DEALLOCATE(bigg)
+  DEALLOCATE(bign)
 #ifdef __PARA
-  END IF
+
 #endif
   DEALLOCATE(i_1,j_1,k_1)
 
