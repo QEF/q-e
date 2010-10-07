@@ -1,10 +1,7 @@
-TODO LIST - September 2010
+TODO LIST - October 2010
 
 
 0) Suspected bugs/problems:
-  0.1  electric field in hexagonal lattice
-  0.2  "image" parallelization in CP
-  0.3  projwfc in CP doesn't work for spin polarized case
   0.4  FFT grid dimensions not the same in PW and in CP for same data
        (requires merge of all FFT-related variables between CP and PW)
   0.5  Small energy differences between PW and CP - maybe PP-related, 
@@ -17,8 +14,6 @@ TODO LIST - September 2010
   1.1.0 Better download page that allows selection of packages
         (see 1.3.0)
   1.1.1 update home page picture and sample applications
-  1.1.2 pseudopotential upload facility:
-        there is a problem with link to *.info files
 1.2 Wiki:
   1.2.1 what is left now: list of papers, bibliography, misc stuff.
         The list of papers should be replaced by a query to some
