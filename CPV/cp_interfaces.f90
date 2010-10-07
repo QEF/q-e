@@ -86,7 +86,6 @@
    PUBLIC :: set_eitot
    PUBLIC :: set_evtot
    !
-   PUBLIC :: print_projwfc
    PUBLIC :: print_lambda
    !
    PUBLIC :: move_electrons

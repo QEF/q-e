@@ -20,7 +20,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
                                        tortho, tnosee, tnosep, trane, tranp,   &
                                        tsdp, tcp, tcap, ampre, amprp, tnoseh,  &
                                        tolp, ortho_eps, ortho_max, printwfc,   &
-                                       tprojwfc, textfor
+                                       textfor
   USE core,                     ONLY : nlcc_any, rhoc
   USE uspp_param,               ONLY : nhm, nh
   USE cvan,                     ONLY : nvb, ish
@@ -114,7 +114,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
   USE wannier_subroutines,      ONLY : wannier_startup, wf_closing_options, &
                                        ef_enthalpy
   USE cp_interfaces,            ONLY : writefile, eigs, strucf, phfacs
-  USE cp_interfaces,            ONLY : ortho, elec_fakekine, print_projwfc
+  USE cp_interfaces,            ONLY : ortho, elec_fakekine
   USE constraints_module,       ONLY : check_constraint, remove_constr_force
 !  USE metadyn_base,             ONLY : set_target, mean_force
   USE cp_autopilot,             ONLY : pilot
@@ -897,8 +897,6 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
                   vels, velsm, acc, lambda, lambdam, xnhe0, xnhem, vnhe,    &
                   xnhp0, xnhpm, vnhp, nhpcl,nhpdim,ekincm, xnhh0, xnhhm,    &
                   vnhh, velh, fion, tps, z0t, f, rhor )
-  !
-  IF( tprojwfc ) CALL print_projwfc( c0, lambda, eigr, vkb )
   !
   IF( iprsta > 2 ) CALL print_lambda( lambda, nbsp, nbsp, 1.D0 )
   !

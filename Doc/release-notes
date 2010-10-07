@@ -8,8 +8,9 @@ New in CVS version:
 
 Incompatible changes in CVS version:
 
-  * pw.x no longer performs NEB calculations. iNEB is now computed
+  * pw.x no longer performs NEB calculations. NEB is now computed
     by a separate code, NEB/neb.x
+  * NEB for cp.x no longer available
   * iq1,iq2,iq3 removed from input in ph.x; use start_q, last_q instead
 
 Fixed in CVS version:

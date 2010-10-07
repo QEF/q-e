@@ -416,47 +416,6 @@
       RETURN
     END SUBROUTINE open_and_append_x
 
-
-
-
-!=----------------------------------------------------------------------------=!
-   SUBROUTINE print_projwfc_x ( c0, lambda, eigr, vkb )
-!=----------------------------------------------------------------------------=!
-      USE kinds,            ONLY: DP
-      USE electrons_base,   ONLY: nspin, nbnd, nbsp, iupdwn, nupdwn
-      USE electrons_module, ONLY: ei
-      USE cp_interfaces,    ONLY: set_evtot, set_eitot
-      !
-      IMPLICIT NONE
-      !
-      COMPLEX(DP), INTENT(IN)  :: c0(:,:), eigr(:,:), vkb(:,:)
-      REAL(DP),    INTENT(IN)  :: lambda(:,:,:)
-      !
-      INTEGER  :: nupdwn_tot( 2 ), iupdwn_tot( 2 )
-      COMPLEX(DP), ALLOCATABLE :: ctmp(:,:)
-      REAL(DP),    ALLOCATABLE :: eitot(:,:)
-      !
-      nupdwn_tot = nupdwn
-      iupdwn_tot(1) = iupdwn(1)
-      iupdwn_tot(2) = nupdwn(1) + 1
-      !
-      ALLOCATE( eitot( nupdwn_tot(1), nspin ) )
-      !
-      CALL set_eitot( eitot )
-      !
-      ALLOCATE( ctmp( SIZE( c0, 1 ), nupdwn_tot(1) * nspin ) )
-      ! 
-      CALL set_evtot( c0, ctmp, lambda, iupdwn_tot, nupdwn_tot )
-      !
-      CALL projwfc( ctmp, SIZE(ctmp,2), eigr, vkb, nupdwn_tot(1), eitot(1,1)  )
-      !
-      DEALLOCATE( eitot )
-      DEALLOCATE( ctmp )
-
-      RETURN
-   END SUBROUTINE
-
-
 !=----------------------------------------------------------------------------=!
    SUBROUTINE update_accomulators &
       ( ekinc, ekin, epot, etot, tempp, enthal, econs, press, volume )
