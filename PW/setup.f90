@@ -199,12 +199,6 @@ SUBROUTINE setup()
          'spin orbit requires a non collinear calculation', 1 )
      npol = 1
      !
-     IF ( i_cons == 5 ) THEN
-        !
-        nelup = ( nelec + mcons(3,1) ) * 0.5D0
-        neldw = ( nelec - mcons(3,1) ) * 0.5D0
-        !
-     ENDIF
      !
      IF ( i_cons == 1) then
         do na=1,nat
@@ -291,9 +285,16 @@ SUBROUTINE setup()
             .AND. .NOT. tfixed_occ .AND. .NOT. two_fermi_energies ) &
       CALL errore( 'setup', 'spin-polarized system, specify occupations', 1 )
   !
-  ! ... setting nelup/neldw if not set in the input
+  ! ... setting nelup/neldw 
   !
-  call set_nelup_neldw ( tot_magnetization, nelec, nelup, neldw )
+  IF ( i_cons == 5 ) THEN
+     !
+     nelup = ( nelec + mcons(3,1) ) * 0.5D0
+     neldw = ( nelec - mcons(3,1) ) * 0.5D0
+     !
+  ELSE
+     call set_nelup_neldw ( tot_magnetization, nelec, nelup, neldw )
+  ENDIF
   !
   ! ... Set the number of occupied bands if not given in input
   !
