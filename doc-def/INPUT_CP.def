@@ -118,10 +118,7 @@ input_description -distribution {Quantum Espresso} -package CP -program cp.x {
 	
 	var verbosity -type CHARACTER {
 	    info {
-		'high' | 'default' | 'low' | 'minimal' | 'default+projwfc'
-               
-                'default+projwfc': the codes prints the dafault output quantities
-                                   and the projections of the wave functions on atomic wfc
+		'high' | 'default' | 'low' | 'minimal'
 	    }
 	}
 
