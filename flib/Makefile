@@ -14,6 +14,7 @@ cryst_to_car.o \
 dost.o \
 erf.o \
 expint.o \
+flush_unit.o \
 functionals.o \
 lsda_functionals.o \
 more_functionals.o \
@@ -46,7 +47,6 @@ w1gauss.o \
 deviatoric.o
 
 POBJS = \
-flush_unit.o \
 distools.o 
 
 all: flib.a ptools.a 
