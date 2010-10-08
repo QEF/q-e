@@ -674,8 +674,8 @@ subroutine read_gamma (nqs, nat, ifn, xq, gaminp)
      do na=1,nat
         do nb=1,nat
            read(ifn,*) i,j
-           if (i.ne.na) call errore('read_f','wrong na read',na)
-           if (j.ne.nb) call errore('read_f','wrong nb read',nb)
+           if (i.ne.na) call errore('read_gamma','wrong na read',na)
+           if (j.ne.nb) call errore('read_gamma','wrong nb read',nb)
            do i=1,3
               read (ifn,*) (phir(j),phii(j),j=1,3)
               do j = 1,3
