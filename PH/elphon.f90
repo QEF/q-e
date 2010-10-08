@@ -319,7 +319,7 @@ SUBROUTINE elphsum ( )
   USE mp_global, ONLY : my_pool_id, npool, kunit, intra_image_comm
   USE mp, ONLY : mp_bcast
   USE control_flags, ONLY : modenum
-  USE control_ph, ONLY : lgamma, tmp_dir_ph
+  USE control_ph, ONLY : lgamma, tmp_dir_ph, xmldyn
   USE save_ph,    ONLY : tmp_dir_save
   USE io_files,  ONLY : prefix, tmp_dir
   !
@@ -361,7 +361,7 @@ SUBROUTINE elphsum ( )
   REAL(DP) :: deg(10), effit(10), dosfit(10), etk, etq
   REAL(DP), EXTERNAL :: dos_ef, efermig, w0gauss
   character(len=80) :: name
-  LOGICAL  :: exst
+  LOGICAL  :: exst, xmldyn_save
   !
   COMPLEX(DP) :: el_ph_sum (3*nat,3*nat)
 
@@ -681,8 +681,11 @@ SUBROUTINE elphsum ( )
      dyn22(:,:) = gf(:,:,isig)
      write(iuelph,*) deg(isig), effit(isig), dosfit(isig)
      write(iuelph,*) nq
+     xmldyn_save=xmldyn
+     xmldyn=.FALSE.
      call q2qstar_ph (dyn22, at, bg, nat, nsym, s, invs, &
           irt, rtau, nq, sxq, isq, imq, iuelph)
+     xmldyn=xmldyn_save
      if (ionode) CLOSE( UNIT = iuelph, STATUS = 'KEEP' )
   enddo
   deallocate (gf)
