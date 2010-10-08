@@ -32,7 +32,7 @@ TODO LIST - October 2010
         turn call files in flib/; Modules/mm_dispersions.f90 calls PW/rgen.f90;
         neb modules in Modules/ calling compute_scf in PW and CP...
   1.3.4 Everything that is not in the " QE core" or that is used only for 
-        special purposes (e.g.: EE/+Multigrid/) should be extracted and 
+        special purposes (e.g.: DCC=EE/+Multigrid/) should be extracted and 
         moved into external libs or plugins or whatever is appropriate
 1.4 mailing lists:
   1.4.1 add somewhere instructions on netiquette and how to post 
@@ -98,20 +98,19 @@ TODO LIST - October 2010
   4.1.1 Moka structure builder + new xml input/output (RS)
   4.1.2 XMCD in XSpectra
   4.1.3 vdW with nonlocal xc functional
-  4.1.4 new GWW
-  4.1.5 EPW (electron-phonon with Wannier stuff)
+  4.1.4 new GWW (GWL)
+  4.1.5 EPW (electron-phonon with Wannier stuff): released, 
+        has to be aligned with CVS version
   4.1.6 G-space symmetrization also for phonons. In the meantime:
-        rimove check on nonsymmorphic symmetries in pw.x, leave it only
-        in the phonon code
-  4.1.7 bio-oriented stuff :
-        - MS2 plugin for QM-MM
-        - Solvent Models
-        - PCM
-  4.1.8 Wannier-based exact-exchange in CP (available)
-  4.1.9 Wannier-based exact-exchange in PW (to be done)
+        remove check on nonsymmorphic symmetries in pw.x, leave it
+        only in the phonon code
+  4.1.7 QM-MM with MS2 plugin
+  4.1.8 Solvent Models
+  4.1.9 Wannier-based exact-exchange in CP (available)
+  4.1.0 Wannier-based exact-exchange in PW (to be done)
 
 4.2 Small new developments, desirable or to be added:
-  4.2.0 fractional charge (nelec/nelup/neldw)? is it working?
+  4.2.0 single-q calculation of electron-phonon coefficients
   4.2.1 configure issues:
         - ifort+acml
         - ifort+mkl+scalapack troubles
