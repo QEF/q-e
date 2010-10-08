@@ -177,8 +177,8 @@ SUBROUTINE elphel (npe, imode0, dvscfins)
   USE io_files, ONLY: iunigk
   USE klist, ONLY: xk
   USE lsda_mod, ONLY: lsda, current_spin, isk
-  USE noncollin_module, ONLY : nspin_mag
-  USE wvfct, ONLY: nbnd, npw, igk
+  USE noncollin_module, ONLY : noncolin, npol, nspin_mag
+  USE wvfct, ONLY: nbnd, npw, npwx, igk
   USE uspp, ONLY : vkb
   USE el_phon, ONLY : el_ph_mat
   USE modes, ONLY : u
@@ -196,10 +196,10 @@ SUBROUTINE elphel (npe, imode0, dvscfins)
   ! LOCAL variables
   INTEGER :: nrec, ik, ikk, ikq, ipert, mode, ibnd, jbnd, ir, ig, &
        ios
-  COMPLEX(DP) , ALLOCATABLE :: aux1 (:), elphmat (:,:,:)
-  COMPLEX(DP) :: zdotc
+  COMPLEX(DP) , ALLOCATABLE :: aux1 (:,:), elphmat (:,:,:)
+  COMPLEX(DP), EXTERNAL :: zdotc
   !
-  ALLOCATE (aux1    ( nrxxs))
+  ALLOCATE (aux1    ( nrxxs, npol))
   ALLOCATE (elphmat ( nbnd , nbnd , npe))
   !
   !  Start the loops over the k-points
@@ -255,9 +255,7 @@ SUBROUTINE elphel (npe, imode0, dvscfins)
         !
         DO ibnd = 1, nbnd
            CALL cft_wave (evc(1, ibnd), aux1, +1)
-           DO ir = 1, nrxxs
-              aux1 (ir) = aux1 (ir) * dvscfins (ir, current_spin, ipert)
-           ENDDO
+           CALL apply_dpot(aux1, dvscfins(1,1,ipert), current_spin)
            CALL cft_wave (dvpsi(1, ibnd), aux1, -1)
         END DO
         CALL adddvscf (ipert, ik)
@@ -269,8 +267,10 @@ SUBROUTINE elphel (npe, imode0, dvscfins)
            DO jbnd = 1, nbnd
               elphmat (jbnd, ibnd, ipert) = zdotc (npwq, evq (1, jbnd), 1, &
                    dvpsi (1, ibnd), 1)
+              IF (noncolin) &
+                 elphmat (jbnd, ibnd, ipert) = elphmat (jbnd, ibnd, ipert)+ &
+                   zdotc (npwq, evq(npwx+1,jbnd),1,dvpsi(npwx+1,ibnd), 1)
            ENDDO
-           !
         ENDDO
      ENDDO
      !
@@ -302,13 +302,14 @@ SUBROUTINE elphsum ( )
   !      New version by  Malgorzata Wierzbowska
   !
   USE kinds,     ONLY : DP
-  USE constants, ONLY : pi, rytoev
+  USE constants, ONLY : pi, rytoev, degspin
   USE ions_base,     ONLY : nat, ityp, tau
-  USE cell_base,     ONLY : at, bg, ibrav, symm_type
+  USE cell_base,     ONLY : at, bg
   USE lsda_mod, ONLY: isk
   USE klist, ONLY: nks, nkstot, xk, wk, nelec
   USE ktetra, ONLY: nk1, nk2, nk3
-  USE symm_base, ONLY: s, irt, nsym, time_reversal, invs
+  USE symm_base, ONLY: s, irt, nsym, invs
+  USE noncollin_module, ONLY: nspin_lsda, nspin_mag
   USE wvfct, ONLY: nbnd, et
   USE parameters, ONLY : npk
   USE el_phon, ONLY : el_ph_mat
@@ -318,7 +319,6 @@ SUBROUTINE elphsum ( )
   USE io_global, ONLY : stdout, ionode, ionode_id
   USE mp_global, ONLY : my_pool_id, npool, kunit, intra_image_comm
   USE mp, ONLY : mp_bcast
-  USE control_flags, ONLY : modenum
   USE control_ph, ONLY : lgamma, tmp_dir_ph, xmldyn
   USE save_ph,    ONLY : tmp_dir_save
   USE io_files,  ONLY : prefix, tmp_dir
@@ -335,7 +335,7 @@ SUBROUTINE elphsum ( )
   ! Quantities ending with "fit" are relative to the "dense" grid
   !
   REAL(DP), allocatable :: etfit(:,:), xkfit(:,:), wkfit(:)
-  INTEGER :: nksfit, nk1fit, nk2fit, nk3fit, nkfit
+  INTEGER :: nksfit, nk1fit, nk2fit, nk3fit, nkfit, nksfit_real
   INTEGER, allocatable :: eqkfit(:), eqqfit(:), sfit(:)
   !
   integer :: nq, isq (48), imq
@@ -471,8 +471,9 @@ SUBROUTINE elphsum ( )
   !
   ! map k-points in the IBZ to k-points in the complete uniform grid
   !
+  nksfit_real=nksfit/nspin_lsda
   call lint ( nsym, s, .true., at, bg, npk, 0,0,0, &
-       nk1fit,nk2fit,nk3fit, nksfit, xkfit, 1, nkfit, eqkfit, sfit)
+       nk1fit,nk2fit,nk3fit, nksfit_real, xkfit, 1, nkfit, eqkfit, sfit)
   deallocate (sfit, xkfit, wkfit)
   !
   ! find epsilon(k+q) in the dense grid
@@ -520,27 +521,29 @@ SUBROUTINE elphsum ( )
   nkBZ  = nk1*nk2*nk3
   allocate (eqBZ(nkBZ), sBZ(nkBZ))
   !
+  nks_real=nkstot/nspin_lsda
   IF ( lgamma ) THEN
      call lint ( nsymq, s, minus_q, at, bg, npk, 0,0,0, &
-          nk1,nk2,nk3, nkstot, xk_collect, 1, nkBZ, eqBZ, sBZ)
+          nk1,nk2,nk3, nks_real, xk_collect, 1, nkBZ, eqBZ, sBZ)
   ELSE
      call lint ( nsymq, s, minus_q, at, bg, npk, 0,0,0, &
-          nk1,nk2,nk3, nkstot, xk_collect, 2, nkBZ, eqBZ, sBZ)
+          nk1,nk2,nk3, nks_real, xk_collect, 2, nkBZ, eqBZ, sBZ)
   END IF
   !
   allocate (gf(3*nat,3*nat,nsig))
   gf = (0.0d0,0.0d0)
   !
-  wqa  = 2.0d0/nkfit
+  wqa  = 1.0d0/nkfit
+  IF (nspin_mag==1) wqa=degspin*wqa
   !
   do ibnd = 1, nbnd
      do jbnd = 1, nbnd
-        allocate (g2(nkBZ,3*nat,3*nat))
+        allocate (g2(nkBZ*nspin_lsda,3*nat,3*nat))
         allocate (g1(nksqtot,3*nat,3*nat))
         do ik = 1, nksqtot
            do ii = 1, 3*nat
               do jj = 1, 3*nat
-                 g1(ik,ii,jj)=conjg(el_ph_mat_collect(jbnd,ibnd,ik,ii))* &
+                 g1(ik,ii,jj)=CONJG(el_ph_mat_collect(jbnd,ibnd,ik,ii))* &
                       el_ph_mat_collect(jbnd,ibnd,ik,jj)
               enddo    ! ipert
            enddo    !jpert
@@ -550,13 +553,17 @@ SUBROUTINE elphsum ( )
         do i=1,nk1
            do j=1,nk2
               do k=1,nk3
-                 nn = k-1 + (j-1)*nk3 + (i-1)*nk2*nk3 + 1
-                 itemp1 = eqBZ(nn)
-                 g0(:,:) = g1(itemp1,:,:)
-                 itemp2 = sBZ(nn)
-                 call symm ( g0, u, xq, s, itemp2, rtau, irt, &
-                     at, bg, nat)
-                 g2(nn,:,:) = g0(:,:)
+                 do ispin=1,nspin_lsda
+                    nn = k-1 + (j-1)*nk3 + (i-1)*nk2*nk3 + 1
+                    itemp1 = eqBZ(nn)
+                    if (ispin==2) itemp1=itemp1+nksqtot/2
+                    g0(:,:) = g1(itemp1,:,:)
+                    itemp2 = sBZ(nn)
+                    call symm ( g0, u, xq, s, itemp2, rtau, irt, &
+                         at, bg, nat)
+                    if (ispin==2) nn=nn+nkBZ 
+                    g2(nn,:,:) = g0(:,:)
+                 enddo
               enddo ! k
            enddo !j
         enddo !i
@@ -566,16 +573,18 @@ SUBROUTINE elphsum ( )
         allocate ( point(nkBZ), noint(nkfit), ctemp(nkfit) )
         do jpert = 1, 3 * nat
            do ipert = 1, 3 * nat
+              do ispin=1,nspin_lsda
               !
-              point(:) = g2(:,ipert,jpert)
+              point(1:nkBZ) = &
+                  g2(1+nkBZ*(ispin-1):nkBZ+nkBZ*(ispin-1),ipert,jpert)
               !
               CALL clinear(nk1,nk2,nk3,nti,ntj,ntk,point,noint)
               !
               do isig = 1, nsig
                  degauss1 = deg(isig)
                  do ik=1,nkfit
-                    etk = etfit(ibnd,eqkfit(ik))
-                    etq = etfit(jbnd,eqqfit(ik))
+                    etk = etfit(ibnd,eqkfit(ik)+nksfit*(ispin-1)/2)
+                    etq = etfit(jbnd,eqqfit(ik)+nksfit*(ispin-1)/2)
                     w0g1 = w0gauss( (effit(isig)-etk) &
                                    / degauss1,ngauss1) / degauss1
                     w0g2 = w0gauss( (effit(isig)-etq) &
@@ -585,6 +594,7 @@ SUBROUTINE elphsum ( )
                  gf(ipert,jpert,isig) = gf(ipert,jpert,isig) + &
                       SUM (ctemp)
               enddo ! isig
+              enddo ! ispin
            enddo    ! ipert
         enddo    !jpert
         deallocate (point, noint, ctemp)

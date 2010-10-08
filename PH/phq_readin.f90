@@ -352,8 +352,8 @@ SUBROUTINE phq_readin()
   IF (okvan.and.(lraman.or.elop)) CALL errore('phq_readin',&
      'The phonon code with US-PP and raman or elop not yet available',1)
 
-  IF (noncolin.and.(lraman.or.elop.or.elph)) CALL errore('phq_readin', &
-      'lraman, elop, or e-ph and noncolin not programed',1)
+  IF (noncolin.and.(lraman.or.elop)) CALL errore('phq_readin', &
+      'lraman, elop, and noncolin not programed',1)
 
   IF (lmovecell) CALL errore('phq_readin', &
       'The phonon code is not working after vc-relax',1)
@@ -429,8 +429,6 @@ SUBROUTINE phq_readin()
   !
   IF (elph.AND..NOT.lgauss) CALL errore ('phq_readin', 'Electron-&
        &phonon only for metals', 1)
-  IF (elph.AND.lsda) CALL errore ('phq_readin', 'El-ph and spin not &
-       &implemented', 1)
   IF (elph.AND.fildvscf.EQ.' ') CALL errore ('phq_readin', 'El-ph needs &
        &a DeltaVscf file', 1)
   !
