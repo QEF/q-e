@@ -323,6 +323,7 @@ subroutine phq_setup
         CALL set_irr_sym (nat, at, bg, xq, s, rtau, irt, irgq, nsymq,  &
                           minus_q, irotmq, t, tmq, u, npert, nirr, npertx )
      else
+        search_sym=.FALSE.
         npertx=1
         CALL allocate_pert()
         call set_irr_nosym (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
