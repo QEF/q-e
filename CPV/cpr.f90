@@ -523,7 +523,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
               i1 = (iss-1)*nlax+1
               i2 = iss*nlax
               CALL updatc( ccc, nbsp, lambda(:,:,iss), SIZE(lambda,1), phi, SIZE(phi,1), &
-                        bephi(:,i1:i2), SIZE(bephi,1), becp_dist(:,i1:12), bec, cm, nupdwn(iss), iupdwn(iss), &
+                        bephi(:,i1:i2), SIZE(bephi,1), becp_dist(:,i1:i2), bec, cm, nupdwn(iss), iupdwn(iss), &
                         descla(:,iss) )
            END DO
         END IF
