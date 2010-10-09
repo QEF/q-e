@@ -1142,6 +1142,9 @@ MODULE xml_io_base
       !
       IF (two_fermi_energies) THEN
          !
+         CALL iotk_write_attr ( attr, "UNITS", "Hartree", FIRST = .TRUE. )
+         CALL iotk_write_empty( iunpun, "UNITS_FOR_ENERGIES", ATTR = attr )
+         !
          CALL iotk_write_dat( iunpun, "FIXED_MAGNETIZATION", mcons(3,1) )
          CALL iotk_write_dat( iunpun, "ELECTRONS_UP", nelup )
          CALL iotk_write_dat( iunpun, "ELECTRONS_DOWN", neldw )

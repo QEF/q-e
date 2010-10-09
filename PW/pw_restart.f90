@@ -369,7 +369,7 @@ MODULE pw_restart
          !
          CALL write_magnetization(starting_magnetization, angle1, angle2, nsp, &
                                   two_fermi_energies, i_cons, mcons, bfield, &
-                                  ef_up, ef_dw, nelup, neldw, lambda)
+                                  ef_up/e2, ef_dw/e2, nelup, neldw, lambda)
          !
 !-------------------------------------------------------------------------------
 ! ... EXCHANGE_CORRELATION
@@ -470,7 +470,22 @@ MODULE pw_restart
          CALL iotk_write_attr ( attr, "UNITS", "Hartree", FIRST = .TRUE. )
          CALL iotk_write_empty( iunpun, "UNITS_FOR_ENERGIES", ATTR = attr )
          !
-         CALL iotk_write_dat  ( iunpun, "FERMI_ENERGY", ef / e2)
+         CALL iotk_write_dat(iunpun,"TWO_FERMI_ENERGIES",two_fermi_energies)
+         !
+         IF (two_fermi_energies) THEN
+             !
+             ! all the energy units in Hartree
+             !
+             CALL iotk_write_dat( iunpun, "ELECTRONS_UP", nelup )
+             CALL iotk_write_dat( iunpun, "ELECTRONS_DOWN", neldw )
+             CALL iotk_write_dat( iunpun, "FERMI_ENERGY_UP", ef_up / e2 )
+             CALL iotk_write_dat( iunpun, "FERMI_ENERGY_DOWN", ef_dw / e2 )
+             !
+         ELSE
+             !
+             CALL iotk_write_dat( iunpun, "FERMI_ENERGY", ef / e2)
+             !
+         ENDIF
          !
          CALL iotk_write_end  ( iunpun, "BAND_STRUCTURE_INFO" )
          !
@@ -2164,13 +2179,16 @@ MODULE pw_restart
             CALL iotk_scan_dat(iunpun,"TWO_FERMI_ENERGIES",two_fermi_energies)
             !
             IF (two_fermi_energies) THEN
-               !
-               CALL iotk_scan_dat( iunpun, "FIXED_MAGNETIZATION", mcons(3,1) )
-               CALL iotk_scan_dat( iunpun, "ELECTRONS_UP", nelup )
-               CALL iotk_scan_dat( iunpun, "ELECTRONS_DOWN", neldw )
-               CALL iotk_scan_dat( iunpun, "FERMI_ENERGY_UP", ef_up )
-               CALL iotk_scan_dat( iunpun, "FERMI_ENERGY_DOWN", ef_dw )
-               !
+                !
+                CALL iotk_scan_dat( iunpun, "FIXED_MAGNETIZATION", mcons(3,1) )
+                CALL iotk_scan_dat( iunpun, "ELECTRONS_UP", nelup )
+                CALL iotk_scan_dat( iunpun, "ELECTRONS_DOWN", neldw )
+                CALL iotk_scan_dat( iunpun, "FERMI_ENERGY_UP", ef_up )
+                CALL iotk_scan_dat( iunpun, "FERMI_ENERGY_DOWN", ef_dw )
+                !
+                ef_up = ef_up * e2 
+                ef_dw = ef_dw * e2 
+                !
             ENDIF
             !
             IF (i_cons>0) CALL iotk_scan_dat(iunpun,"LAMBDA",lambda)
@@ -2629,7 +2647,7 @@ MODULE pw_restart
       USE lsda_mod, ONLY : lsda, isk
       USE klist,    ONLY : nkstot, wk, nelec
       USE wvfct,    ONLY : et, wg, nbnd
-      USE ener,     ONLY : ef
+      USE ener,     ONLY : ef, ef_up, ef_dw
       !
       IMPLICIT NONE
       !
@@ -2637,7 +2655,7 @@ MODULE pw_restart
       INTEGER,          INTENT(OUT) :: ierr
       !
       INTEGER :: ik, ik_eff, num_k_points, iunout
-      LOGICAL :: found
+      LOGICAL :: found, two_fermi_energies_
       !
       ierr = 0
       IF ( lbs_read ) RETURN
@@ -2686,6 +2704,18 @@ MODULE pw_restart
          ELSE
             ef = 0.d0
          END IF
+         !
+         CALL iotk_scan_dat( iunpun, "TWO_FERMI_ENERGIES", two_fermi_energies_ )
+         !
+         IF ( two_fermi_energies_ ) THEN
+             !
+             CALL iotk_scan_dat( iunpun, "FERMI_ENERGY_UP", ef_up )
+             CALL iotk_scan_dat( iunpun, "FERMI_ENERGY_DOWN", ef_dw )
+             !
+             ef_up = ef_up * e2
+             ef_dw = ef_dw * e2
+             !
+         ENDIF
          !
          CALL iotk_scan_end( iunpun, "BAND_STRUCTURE_INFO" )
          !
