@@ -507,9 +507,7 @@ SUBROUTINE electrons()
         IF ( first ) THEN
            !
            fock0 = exxenergy2()
-! XXX
-!WRITE(stdout,*) fock0
-! XXX
+           !
            CALL v_of_rho( rho, rho_core,rhog_core, &
                           ehart, etxc, vtxc, eth, etotefield, charge, v)
            IF (okpaw) CALL PAW_potential(rho%bec, ddd_PAW, epaw)
