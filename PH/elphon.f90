@@ -305,7 +305,7 @@ SUBROUTINE elphsum ( )
   USE constants, ONLY : pi, rytoev, degspin
   USE ions_base,     ONLY : nat, ityp, tau
   USE cell_base,     ONLY : at, bg
-  USE lsda_mod, ONLY: isk
+  USE lsda_mod, ONLY: isk, nspin
   USE klist, ONLY: nks, nkstot, xk, wk, nelec
   USE ktetra, ONLY: nk1, nk2, nk3
   USE symm_base, ONLY: s, irt, nsym, invs
@@ -534,7 +534,7 @@ SUBROUTINE elphsum ( )
   gf = (0.0d0,0.0d0)
   !
   wqa  = 1.0d0/nkfit
-  IF (nspin_mag==1) wqa=degspin*wqa
+  IF (nspin==1) wqa=degspin*wqa
   !
   do ibnd = 1, nbnd
      do jbnd = 1, nbnd
