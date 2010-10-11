@@ -8,7 +8,7 @@ subroutine lr_write_restart()
   ! Modified by Osman Baris Malcioglu (2009)
 #include "f_defs.h"
   !
-  use io_files,             only : tmp_dir, prefix, diropn
+  use io_files,             only : tmp_dir, prefix, diropn, wfc_dir
   use lr_variables,         only : beta_store, gamma_store, zeta_store, norm0, &
                                    LR_polarization, LR_iteration, n_ipol,F,project,&
                                    evc1,evc1_new,iunrestart, nwordrestart, rho_1_tot, rho_1_tot_im, &
@@ -30,7 +30,7 @@ subroutine lr_write_restart()
   ! local variables
   !
   integer :: i, j, pol_index,ibnd_occ,ibnd_virt
-  character(len=256) :: tempfile, filename
+  character(len=256) :: tempfile, filename,tmp_dir_saved
   logical :: exst
   !
   If (lr_verbosity > 5) THEN
@@ -39,6 +39,7 @@ subroutine lr_write_restart()
   
   !
   !ionode only operations:
+  ! Note: ionode only operations are carried out in tmp_dir not wfc_dir
   !
   pol_index=1 !if there is only one polarization dir, storage is one rank less
   if ( n_ipol /= 1 ) pol_index=LR_polarization
@@ -100,7 +101,14 @@ subroutine lr_write_restart()
 #ifdef __PARA
   end if
 #endif
-  
+    !
+    ! Parallel writing operations
+    !
+    ! Note: All the parallel files are written in wfc_dir
+    !
+    tmp_dir_saved = tmp_dir
+    IF ( wfc_dir /= 'undefined' ) tmp_dir = wfc_dir
+
     !
     ! Writing wavefuncion files for restart
     !
@@ -130,7 +138,10 @@ subroutine lr_write_restart()
         endif
        endif
        !
-
+    !
+    ! Restore tmp_dir
+    !
+    tmp_dir = tmp_dir_saved
   return
 end subroutine lr_write_restart
 !-----------------------------------------------------------------------

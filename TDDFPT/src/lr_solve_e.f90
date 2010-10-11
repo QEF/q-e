@@ -25,7 +25,7 @@ subroutine lr_solve_e
   use kinds,                only : dp
   use gvect,                only : gstart
   use io_global,            only : stdout
-  use io_files,             only : diropn
+  use io_files,             only : diropn, tmp_dir, wfc_dir
   use klist,                only : nks, xk, degauss
   use lr_variables,         only : nwordd0psi, iund0psi,LR_polarization, test_case_no
   use lr_variables,         only : n_ipol, evc0, d0psi, evc1, lr_verbosity
@@ -55,6 +55,7 @@ subroutine lr_solve_e
   character(len=6), external :: int_to_char
   logical :: exst
   real (kind=dp) :: anorm
+  character(len=256) :: tmp_dir_saved
   !
   If (lr_verbosity > 5) WRITE(stdout,'("<lr_solve_e>")')
   !if ( lsda ) call errore ( 'lr_solve_e' , ' LSDA not implemented' , 1)
@@ -173,6 +174,11 @@ endif
   !
   nwordd0psi = 2 * nbnd * npwx * nks
   !
+  !   Reading of files: 
+  !   This is a parallel read, done in wfc_dir
+  tmp_dir_saved = tmp_dir
+  IF ( wfc_dir /= 'undefined' ) tmp_dir = wfc_dir
+
   do ip = 1, n_ipol
      !
      if (n_ipol==1) call diropn ( iund0psi, 'd0psi.'//trim(int_to_char(LR_polarization)), nwordd0psi, exst)
@@ -183,6 +189,8 @@ endif
      CLOSE( UNIT = iund0psi)
      !
   end do
+  ! End of file i/o
+  tmp_dir = tmp_dir_saved
   !
   ! end writing
   !

@@ -12,7 +12,7 @@ subroutine lr_restart(iter_restart,rflag)
   use klist,                only : nks, xk 
   use cell_base,            only : tpiba2
   use gvect,                only : g
-  use io_files,             only : tmp_dir, prefix, diropn
+  use io_files,             only : tmp_dir, prefix, diropn, wfc_dir
   use lr_variables,         only : itermax,evc1, evc1_new, sevc1_new, rho_1_tot , rho_1_tot_im,&
                                    restart, nwordrestart, iunrestart,project,nbnd_total,F
   use charg_resp,           only : resonance_condition
@@ -46,7 +46,7 @@ subroutine lr_restart(iter_restart,rflag)
   integer :: i,ibnd,ibnd_occ,ibnd_virt,temp
   integer :: ik, ig, ip
   logical :: exst
-  character(len=256) :: tempfile, filename
+  character(len=256) :: tempfile, filename,tmp_dir_saved
   integer :: pol_index
   !
   !
@@ -95,6 +95,8 @@ subroutine lr_restart(iter_restart,rflag)
   !
   !
   !Ionode only reads
+  !
+  ! Note Ionode file io is done in tmp_dir
   !
 #ifdef __PARA
   if (ionode) then
@@ -169,6 +171,13 @@ subroutine lr_restart(iter_restart,rflag)
   !
   iter_restart = iter_restart + 1
   !
+  ! Parallel reads:
+  !
+  ! Note: Parallel file I/O is done in wfc_dir
+  !
+  tmp_dir_saved = tmp_dir
+  IF ( wfc_dir /= 'undefined' ) tmp_dir = wfc_dir
+  !
   ! Reading Lanczos vectors
   !
   nwordrestart = 2 * nbnd * npwx * nks
@@ -192,8 +201,10 @@ subroutine lr_restart(iter_restart,rflag)
          close( unit = iunrestart)
        endif
      endif
-
-
+  tmp_dir = tmp_dir_saved
+  !
+  ! End of all file i/o for restart
+  !
   !
   ! Reinitializing sevc1_new vector
   !

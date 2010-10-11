@@ -355,28 +355,6 @@ contains
           enddo
     endif
     !
-    ! Writing files for restart
-    !
-    !if ( mod(LR_iteration,restart_step)==0 .or. LR_iteration==itermax ) then
-    !   !
-    !   nwordrestart = 2 * nbnd * npwx * nks
-    !   !
-    !   call diropn ( iunrestart, 'restart_lanczos.'//trim(int_to_char(LR_polarization)), nwordrestart, exst)
-       !
-    !   call davcio(evc1(:,:,:,1),nwordrestart,iunrestart,1,1)
-    !   call davcio(evc1(:,:,:,2),nwordrestart,iunrestart,2,1)
-    !   call davcio(evc1_new(:,:,:,1),nwordrestart,iunrestart,3,1)
-    !   call davcio(evc1_new(:,:,:,2),nwordrestart,iunrestart,4,1)
-    !   !
-    !   close( unit = iunrestart)
-    !   if (charge_response == 2 ) then 
-    !    call diropn ( iunrestart, 'restart_lanczos-rho_tot.'//trim(int_to_char(LR_polarization)), 2*nrxx, exst)
-    !     call davcio(rho_1_tot(:,:),2*nrxx*nspin_mag,iunrestart,1,1)
-    !     close( unit = iunrestart)
-    !   endif
-       !
-    !end if
-    !
     call stop_clock('one_step')
     !
     return

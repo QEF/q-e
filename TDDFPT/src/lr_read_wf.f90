@@ -12,7 +12,7 @@ subroutine lr_read_wf()
   use klist,                only : nks, xk
   use cell_base,            only : tpiba2
   use gvect,                only : ngm, g, ecutwfc
-  use io_files,             only : nwordwfc, iunwfc, prefix, diropn
+  use io_files,             only : nwordwfc, iunwfc, prefix, diropn, tmp_dir, wfc_dir 
   use lr_variables,         only : evc0, sevc0 ,revc0, evc0_virt, sevc0_virt, nbnd_total, &
                                    becp1_virt,becp1_c_virt
   use realus,               only : igk_k,npw_k
@@ -45,7 +45,7 @@ subroutine lr_read_wf()
   ! local variables
   integer :: ik, ibnd, ig, itmp1,itmp2,itmp3
   logical :: exst
-  character(len=256) :: filename
+  character(len=256) :: filename, tmp_dir_saved
   !OBM debug
   real(kind=dp) :: obm_debug
   complex(kind=dp),external :: lr_dot
@@ -80,6 +80,10 @@ USE lr_variables, ONLY: check_all_bands_gamma, check_density_gamma,&
   nwordwfc = 2 * nbnd * npwx
   size_evc=npwx*nbnd*nks
   !
+  !   Read in the ground state wavefunctions
+  !   This is a parallel read, done in wfc_dir
+  tmp_dir_saved = tmp_dir
+  IF ( wfc_dir /= 'undefined' ) tmp_dir = wfc_dir
   call diropn ( iunwfc, 'wfc', nwordwfc, exst)
   !
   if (.not.exst) call errore('lr_read_wfc', TRIM( prefix )//'.wfc'//' not found',1)
@@ -101,14 +105,14 @@ USE lr_variables, ONLY: check_all_bands_gamma, check_density_gamma,&
        igk_k(:,ik) = igk(:)
      endif
      !
-     !   Read in the ground state wavefunctions
-     !
      call davcio(evc0(:,:,ik),nwordwfc,iunwfc,ik,-1)
      !
   enddo
   !
   !
   CLOSE( UNIT = iunwfc)
+  ! End of file reading
+  tmp_dir = tmp_dir_saved
   !print * , "evc0 ",evc0(1:3,1,1)
   !
   !
@@ -345,6 +349,10 @@ USE lr_variables, ONLY: check_all_bands_gamma, check_density_gamma,&
   nwordwfc = 2 * nbnd * npwx
   size_evc=npwx*nbnd_occ(1)*nks
   !
+  !   Read in the ground state wavefunctions
+  !   This is a parallel read, done in wfc_dir
+  tmp_dir_saved = tmp_dir
+  IF ( wfc_dir /= 'undefined' ) tmp_dir = wfc_dir
   call diropn ( iunwfc, 'wfc', nwordwfc, exst)
   !
   if (.not.exst) call errore('lr_read_wfc', TRIM( prefix )//'.wfc'//' not found',1)
@@ -367,13 +375,15 @@ USE lr_variables, ONLY: check_all_bands_gamma, check_density_gamma,&
      endif
      !
      !   Read in the ground state wavefunctions
-     !
+     !   This is a parallel read, done in wfc_dir
      call davcio(evc_all(:,:,ik),nwordwfc,iunwfc,ik,-1)
      !
   enddo
   !
   !
   CLOSE( UNIT = iunwfc)
+  ! End of file reading
+  tmp_dir = tmp_dir_saved
   !print * , "evc_all ",evc_all(1:3,1,1)
   !
   !

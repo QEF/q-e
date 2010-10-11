@@ -18,7 +18,7 @@ subroutine lr_readin
 
   use lr_variables
   USE kinds,               only : DP
-  use io_files,            only : tmp_dir, prefix,trimcheck
+  use io_files,            only : tmp_dir, prefix,trimcheck,wfc_dir
   use lsda_mod,            only : current_spin, nspin
   use control_flags,       only : twfcollect
   USE scf,                 ONLY : vltot, v, vrs
@@ -46,11 +46,11 @@ subroutine lr_readin
   USE DFUNCT,         ONLY : newd
   implicit none
   !
-  character(len=256) :: outdir, beta_gamma_z_prefix
+  character(len=256) :: outdir, beta_gamma_z_prefix, wfcdir
   integer :: ios, iunout,ierr,ipol
   logical :: auto_rs
   !
-  namelist / lr_input / restart, restart_step ,lr_verbosity, prefix, outdir, test_case_no
+  namelist / lr_input / restart, restart_step ,lr_verbosity, prefix, outdir, test_case_no, wfcdir
   namelist / lr_control / itermax, ipol, ltammd, real_space, real_space_debug, charge_response, tqr, auto_rs, no_hxc,n_ipol,project
   namelist / lr_post / omeg, beta_gamma_z_prefix, w_T_npol, plot_type, epsil,itermax_int
   !
@@ -112,12 +112,21 @@ subroutine lr_readin
   endif
   !
   ! The status of the real space flags should be read manually
+  ! 
+  ! Do not mess with already present wfc structure
   twfcollect = .FALSE.
   !
   outdir = trimcheck(outdir)
-  !print *, "before send outdir=", outdir
   tmp_dir = outdir
-  !print *, "before send tmpdir=", tmp_dir
+  !
+  !
+  IF ( .not. trim( wfcdir ) == 'undefined' ) THEN
+     !
+     wfc_dir = trimcheck ( wfcdir )
+     !
+     !CALL verify_tmpdir( wfc_dir ) ! do not call, since this may erase files
+     !
+  ENDIF
   !
   !Charge response mode 2 is the "do Lanczos chains twice, conserve memory" scheme
   !

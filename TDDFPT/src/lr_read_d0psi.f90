@@ -9,7 +9,7 @@ subroutine lr_read_d0psi()
 #include "f_defs.h"
   !
   use klist,                only : nks,degauss
-  use io_files,             only : prefix, diropn
+  use io_files,             only : prefix, diropn, tmp_dir, wfc_dir
   use lr_variables,         only : d0psi, n_ipol,LR_polarization
   use lr_variables,         only : nwordd0psi, iund0psi
   use wvfct,                only : nbnd, npwx,et
@@ -22,12 +22,16 @@ subroutine lr_read_d0psi()
   integer :: ip
   character(len=6), external :: int_to_char
   logical :: exst
+  character(len=256) :: tmp_dir_saved
   !
   If (lr_verbosity > 5) THEN
     WRITE(stdout,'("<lr_read_d0psi>")')
   endif
   nwordd0psi = 2 * nbnd * npwx * nks
   !
+  ! This is a parallel read, done in wfc_dir
+  tmp_dir_saved = tmp_dir
+  IF ( wfc_dir /= 'undefined' ) tmp_dir = wfc_dir
   do ip=1,n_ipol
      !
      if (n_ipol==1) call diropn ( iund0psi, 'd0psi.'//trim(int_to_char(LR_polarization)), nwordd0psi, exst)
@@ -42,6 +46,8 @@ subroutine lr_read_d0psi()
      CLOSE( UNIT = iund0psi)
      !
   end do
+  ! End of file i/o
+  tmp_dir = tmp_dir_saved
   !
 end subroutine lr_read_d0psi
 !-----------------------------------------------------------------------

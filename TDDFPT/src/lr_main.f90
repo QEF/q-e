@@ -337,12 +337,12 @@ CONTAINS
 !This tests whether the restart flag is applicable
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
  use lr_variables,     only : n_ipol,LR_polarization,restart
- use io_files,         only: prefix, tmp_dir, nd_nmbr
+ use io_files,         only: prefix, tmp_dir, nd_nmbr, wfc_dir
  USE mp,               ONLY : mp_bcast, mp_barrier,mp_sum
  USE io_global,        ONLY : ionode, ionode_id
 
  IMPLICIT NONE
-  character(len=256) :: tempfile, filename
+  character(len=256) :: tempfile, filename, tmp_dir_saved
   logical :: exst
   character(len=6), external :: int_to_char
   integer :: i, temp_restart
@@ -355,6 +355,11 @@ CONTAINS
   return  
  endif
  test_restart=.true.
+ !
+ !Check for parallel i/o files that are in wfc_dir
+ tmp_dir_saved = tmp_dir
+ IF ( wfc_dir /= 'undefined' ) tmp_dir = wfc_dir
+ !
  if ( n_ipol == 1 ) then
   filename = trim(prefix)//'.d0psi.'//trim(int_to_char(1))
   tempfile = trim(tmp_dir) // trim(filename) //nd_nmbr 
@@ -387,7 +392,10 @@ CONTAINS
  if (.not. exst) then
     temp_restart=1
  endif
-
+ !
+ !End of parallel file i/o
+ !
+ tmp_dir = tmp_dir_saved
 
  if ( n_ipol == 1 ) then
   filename = trim(prefix) // ".beta_gamma_z." // trim(int_to_char(1))

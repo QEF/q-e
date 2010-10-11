@@ -19,7 +19,7 @@ subroutine bcast_lr_input
   use lr_variables
   use realus,              only: real_space, real_space_debug
   use mp,                  only: mp_bcast, mp_barrier
-  use io_files,            only: tmp_dir, prefix
+  use io_files,            only: tmp_dir, prefix, wfc_dir
   USE control_flags,       ONLY: tqr
   USE charg_resp,          ONLY: omeg, w_T_prefix, w_T_npol,epsil
   USE io_global,           ONLY: ionode, ionode_id
@@ -39,6 +39,7 @@ subroutine bcast_lr_input
   call mp_bcast (lr_verbosity, ionode_id )
   call mp_bcast (prefix, ionode_id )
   call mp_bcast (tmp_dir, ionode_id )
+  call mp_bcast (wfc_dir, ionode_id )
   call mp_bcast (LR_polarization, ionode_id )
   call mp_bcast (ltammd, ionode_id )
   !call mp_bcast (broadening, ionode_id )
