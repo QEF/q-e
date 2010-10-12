@@ -67,13 +67,16 @@ PROGRAM q2r
   !  The name and order of files is not important as long as q=0 is the first
   !
   USE kinds,      ONLY : DP
-  USE mp,         ONLY : mp_start, mp_env, mp_end, mp_barrier
-  USE mp_global,  ONLY : nproc, mpime, mp_global_start
+  USE mp,         ONLY : mp_bcast
+  USE mp_global,  ONLY : nproc, mpime, mp_global_start, mp_startup, &
+                         mp_global_end
   USE dynamicalq, ONLY : phiq, tau, ityp, zeu
   USE fft_scalar, ONLY : cfft3d
+  USE io_global, ONLY : ionode_id, ionode, stdout
   USE io_dyn_mat, ONLY : read_dyn_mat_param, read_dyn_mat_header, &
                          read_dyn_mat, read_dyn_mat_tail, &
                          write_dyn_mat_header, write_ifc
+  USE environment, ONLY : environment_start, environment_end
   !
   IMPLICIT NONE
   !
@@ -94,7 +97,7 @@ PROGRAM q2r
   INTEGER :: nat, nq, ntyp, iq, icar, nfile, ifile, nqs, nq_log
   INTEGER :: na, nt
   !
-  INTEGER :: gid, ibrav, ierr, nspin_mag
+  INTEGER :: gid, ibrav, ierr, nspin_mag, ios
   !
   INTEGER, ALLOCATABLE ::  nc(:,:,:)
   COMPLEX(DP), ALLOCATABLE :: phid(:,:,:,:,:)
@@ -109,44 +112,57 @@ PROGRAM q2r
   !
   NAMELIST / input / fildyn, flfrc, zasr, la2F
   !
-  CALL mp_start()
+  CALL mp_startup()
+  CALL environment_start('Q2R')
   !
-  CALL mp_env( nproc, mpime, gid )
-  !
-  IF ( mpime == 0 ) THEN
+  IF (ionode) CALL input_from_file ( )
      !
-     ! ... all calculations are done by the first cpu
+  fildyn = ' '
+  flfrc = ' '
+  zasr = 'no'
      !
-     fildyn = ' '
-     flfrc = ' '
-     zasr = 'no'
+  la2F=.false.
      !
-     la2F=.false.
      !
-     CALL input_from_file ( )
-     !
-     READ ( 5, input )
+  IF (ionode)  READ ( 5, input, IOSTAT =ios )
+ 
+  CALL mp_bcast(ios, ionode_id)
+  CALL errore('q2r','error reading input namelist', abs(ios))
+
+  CALL mp_bcast(fildyn, ionode_id)
+  CALL mp_bcast(flfrc, ionode_id)
+  CALL mp_bcast(zasr, ionode_id)
+  CALL mp_bcast(la2f, ionode_id)
      !
      ! check input
      !
-     IF (flfrc == ' ')  CALL errore ('q2r',' bad flfrc',1)
+  IF (flfrc == ' ')  CALL errore ('q2r',' bad flfrc',1)
      !
-     xmldyn=has_xml(fildyn)
+  xmldyn=has_xml(fildyn)
 
+  IF (ionode) THEN
      OPEN (unit=1, file=TRIM(fildyn)//'0', status='old', form='formatted', &
           iostat=ierr)
      lnogridinfo = ( ierr /= 0 )
      IF (lnogridinfo) THEN
-        WRITE (6,*) ' file ',TRIM(fildyn)//'0', ' not found'
-        WRITE (6,*) ' reading grid info from input'
+        WRITE (stdout,*)
+        WRITE (stdout,*) ' file ',TRIM(fildyn)//'0', ' not found'
+        WRITE (stdout,*) ' reading grid info from input'
         READ (5, *) nr1, nr2, nr3
         READ (5, *) nfile
      ELSE
-        WRITE (6,*) ' reading grid info from file ',TRIM(fildyn)//'0'
+        WRITE (stdout,'(/,4x," reading grid info from file ",a)') &
+                                                          TRIM(fildyn)//'0'
         READ (1, *) nr1, nr2, nr3
         READ (1, *) nfile
         CLOSE (unit=1, status='keep')
      END IF
+  ENDIF
+  CALL mp_bcast(nr1, ionode_id)
+  CALL mp_bcast(nr2, ionode_id)
+  CALL mp_bcast(nr3, ionode_id)
+  CALL mp_bcast(nfile, ionode_id)
+  CALL mp_bcast(lnogridinfo, ionode_id)
      !
      IF (nr1 < 1 .OR. nr1 > 1024) CALL errore ('q2r',' nr1 wrong or missing',1)
      IF (nr2 < 1 .OR. nr2 > 1024) CALL errore ('q2r',' nr2 wrong or missing',1)
@@ -171,11 +187,13 @@ PROGRAM q2r
      !
      DO ifile=1,nfile
         IF (lnogridinfo) THEN
-           READ(5,'(a)') filin
+           IF (ionode) READ(5,'(a)') filin
+           call mp_bcast(filin, ionode_id)
         ELSE
            filin = TRIM(fildyn) // TRIM( int_to_char( ifile ) )
         END IF
-        WRITE (6,*) ' reading force constants from file ',TRIM(filin)
+        WRITE (stdout,*) ' reading force constants from file ',TRIM(filin)
+
         IF (xmldyn) THEN
            CALL read_dyn_mat_param(filin,ntyp,nat)
            IF (ifile==1) THEN
@@ -199,10 +217,13 @@ PROGRAM q2r
            ENDDO
            CALL read_dyn_mat_tail(nat)
         ELSE
+           IF (ionode) &
            OPEN (unit=1, file=filin,status='old',form='formatted',iostat=ierr)
+           CALL mp_bcast(ierr, ionode_id)
            IF (ierr /= 0) CALL errore('q2r','file '//TRIM(filin)//' missing!',1)
            CALL read_file (nqs, q, epsil, lrigid,  &
                 ntyp, nat, ibrav, symm_type, celldm, at, atm, amass)
+           IF (ionode) CLOSE(unit=1)
         ENDIF
         IF (ifile == 1) THEN
            ! it must be allocated here because nat is read from file
@@ -222,10 +243,9 @@ PROGRAM q2r
         IF (lrigid.AND..NOT.lrigid1) CALL errore('q2r', &
            & 'file with dyn.mat. at q=0 should be first of the list',ifile)
         !
-        WRITE (6,*) ' nqs= ',nqs
-        CLOSE(unit=1)
+        WRITE (stdout,*) ' nqs= ',nqs
         DO nq = 1,nqs
-           WRITE(6,'(a,3f12.8)') ' q= ',(q(i,nq),i=1,3)
+           WRITE(stdout,'(a,3f12.8)') ' q= ',(q(i,nq),i=1,3)
            lq = .TRUE.
            DO ipol=1,3
               xq = 0.0d0
@@ -248,7 +268,7 @@ PROGRAM q2r
               END IF
               CALL trasl ( phid, phiq, nq, nr1,nr2,nr3, nat, m(1),m(2),m(3))
            ELSE
-              WRITE (*,'(3i4)') (m(i),i=1,3)
+              WRITE (stdout,'(3i4)') (m(i),i=1,3)
               CALL errore('init',' nc already filled: wrong q grid or wrong nr',1)
            END IF
         END DO
@@ -259,7 +279,7 @@ PROGRAM q2r
      !
      nq_log = SUM (nc)
      IF (nq_log == nr1*nr2*nr3) THEN
-        WRITE (6,'(/5x,a,i4)') ' q-space grid ok, #points = ',nq_log
+        WRITE (stdout,'(/5x,a,i4)') ' q-space grid ok, #points = ',nq_log
      ELSE
         CALL errore('init',' missing q-point(s)!',1)
      END IF
@@ -292,7 +312,7 @@ PROGRAM q2r
                 m_loc, nqs)
         ENDIF
         CALL write_ifc(nr1,nr2,nr3,nat,phid)
-     ELSE
+     ELSE IF (ionode) THEN
      OPEN(unit=2,file=flfrc,status='unknown',form='formatted')
      WRITE(2,'(i3,i5,i3,6f11.7)') ntyp,nat,ibrav,celldm
      if (ibrav==0) then
@@ -337,9 +357,9 @@ PROGRAM q2r
      ENDIF
      resi = SUM ( ABS (AIMAG ( phid ) ) )
      IF (resi > eps12) THEN
-        WRITE (6,"(/5x,' fft-check warning: sum of imaginary terms = ',e12.7)") resi
+        WRITE (stdout,"(/5x,' fft-check warning: sum of imaginary terms = ',e12.7)") resi
      ELSE
-        WRITE (6,"(/5x,' fft-check success (sum of imaginary terms < 10^-12)')")
+        WRITE (stdout,"(/5x,' fft-check success (sum of imaginary terms < 10^-12)')")
      END IF
      !
      DEALLOCATE(phid, zeu, nc)
@@ -349,11 +369,10 @@ PROGRAM q2r
      !
      DEALLOCATE (tau, ityp)
      !
-  END IF
   !
-  CALL mp_barrier()
-  !
-  CALL mp_end()
+  CALL environment_end('Q2R')
+
+  CALL mp_global_end()
   !
 END PROGRAM q2r
 !
@@ -363,6 +382,8 @@ SUBROUTINE gammaq2r( nqtot, nat, nr1, nr2, nr3, at )
   !
   USE kinds, ONLY : DP
   USE fft_scalar, ONLY : cfft3d
+  USE io_global, ONLY : ionode, ionode_id, stdout
+  USE mp,        ONLY : mp_bcast
   !
   IMPLICIT NONE
   INTEGER, INTENT(IN) :: nqtot, nat, nr1, nr2, nr3
@@ -382,9 +403,9 @@ SUBROUTINE gammaq2r( nqtot, nat, nr1, nr2, nr3, at )
   !
   ALLOCATE (gaminp(3,3,nat,nat,48), gamout(nr1*nr2*nr3,3,3,nat,nat) )
   ALLOCATE ( nc (nr1,nr2,nr3) )
-  write (6,*)
-  write (6,*) '  Preparing gamma for a2F '
-  write (6,*)
+  write (stdout,*)
+  write (stdout,*) '  Preparing gamma for a2F '
+  write (stdout,*)
   !
   nr(1) = nr1
   nr(2) = nr2
@@ -393,15 +414,21 @@ SUBROUTINE gammaq2r( nqtot, nat, nr1, nr2, nr3, at )
   DO isig=1, nsig
      filea2F = 50 + isig
      write(name,"(A7,I2)") 'a2Fq2r.',filea2F
-     open(filea2F, file=name, STATUS = 'old', FORM = 'formatted')
+     IF (ionode) open(filea2F, file=name, STATUS = 'old', FORM = 'formatted')
      nc = 0
      !
      ! to pass to matdyn, for each isig, we read: degauss, Fermi energy and DOS
      !
      DO count_q=1,nqtot
         !
-        READ(filea2F,*) deg, ef, dosscf
-        READ(filea2F,*) nstar
+        IF (ionode) THEN
+           READ(filea2F,*) deg, ef, dosscf
+           READ(filea2F,*) nstar
+        ENDIF
+        CALL mp_bcast(deg, ionode_id)
+        CALL mp_bcast(ef, ionode_id)
+        CALL mp_bcast(dosscf, ionode_id)
+        CALL mp_bcast(nstar, ionode_id)
         !
         CALL read_gamma ( nstar, nat, filea2F, q, gaminp )
         !
@@ -431,9 +458,9 @@ SUBROUTINE gammaq2r( nqtot, nat, nr1, nr2, nr3, at )
      !
      nq_log = SUM (nc)
      if (nq_log == nr1*nr2*nr3) then
-        write (6,*)
-        write (6,'(" Broadening = ",F10.3)') deg
-        write (6,'(5x,a,i4)') ' q-space grid ok, #points = ',nq_log
+        write (stdout,*)
+        write (stdout,'(" Broadening = ",F10.3)') deg
+        write (stdout,'(5x,a,i4)') ' q-space grid ok, #points = ',nq_log
      else
         call errore('init',' missing q-point(s)!',1)
      end if
@@ -449,10 +476,11 @@ SUBROUTINE gammaq2r( nqtot, nat, nr1, nr2, nr3, at )
      end do
      gamout = gamout / DBLE (nr1*nr2*nr3)
      !
-     close(filea2F)
+     IF (ionode) close(filea2F)
      !
      filea2F = 60 + isig
      write(name,"(A10,I2)") 'a2Fmatdyn.',filea2F
+     IF (ionode) THEN
      open(filea2F, file=name, STATUS = 'unknown')
      !
      WRITE(filea2F,*) deg, ef, dosscf
@@ -478,13 +506,14 @@ SUBROUTINE gammaq2r( nqtot, nat, nr1, nr2, nr3, at )
         end do   !  j2
      end do   ! j1
      close(filea2F)
+     ENDIF  ! ionode
 
      resi = SUM ( ABS ( AIMAG( gamout ) ) )
 
      IF (resi > eps12) THEN
-        WRITE (6,"(/5x,' fft-check warning: sum of imaginary terms = ',e12.7)") resi
+        WRITE (stdout,"(/5x,' fft-check warning: sum of imaginary terms = ',e12.7)") resi
      ELSE
-        WRITE (6,"(/5x,' fft-check success (sum of imaginary terms < 10^-12)')")
+        WRITE (stdout,"(/5x,' fft-check success (sum of imaginary terms < 10^-12)')")
      END IF
 
   ENDDO
@@ -500,6 +529,8 @@ SUBROUTINE read_file( nqs, xq, epsil, lrigid, &
   !
   USE kinds, ONLY : DP
   USE dynamicalq, ONLY: phiq, tau, ityp, zeu
+  USE io_global, ONLY : ionode, ionode_id, stdout
+  USE mp,        ONLY : mp_bcast
   !
   IMPLICIT NONE
   !
@@ -521,28 +552,46 @@ SUBROUTINE read_file( nqs, xq, epsil, lrigid, &
   CHARACTER(LEN=9) symm_type1
   LOGICAL, SAVE :: first =.TRUE.
   !
-  READ(1,*)
-  READ(1,*)
+  IF (ionode) THEN
+     READ(1,*)
+     READ(1,*)
+  ENDIF
   IF (first) THEN
      !
      ! read cell information from file
      !
-     READ(1,*) ntyp,nat,ibrav,(celldm(i),i=1,6)
-     if (ibrav==0) then
-        read (1,'(a)') symm_type
-        read (1,*) ((at(i,j),i=1,3),j=1,3)
-     end if
+     IF (ionode) THEN
+        READ(1,*) ntyp,nat,ibrav,(celldm(i),i=1,6)
+        if (ibrav==0) then
+           read (1,'(a)') symm_type
+           read (1,*) ((at(i,j),i=1,3),j=1,3)
+        end if
+     END IF
+     CALL mp_bcast(ntyp, ionode_id)
+     CALL mp_bcast(nat, ionode_id)
+     CALL mp_bcast(ibrav, ionode_id)
+     CALL mp_bcast(celldm, ionode_id)
+     IF (ibrav==0) THEN
+        CALL mp_bcast(symm_type, ionode_id)
+        CALL mp_bcast(at, ionode_id)
+     ENDIF
 
      IF (ntyp.GT.nat) CALL errore('read_file','ntyp.gt.nat!!',ntyp)
      DO nt = 1,ntyp
-        READ(1,*) i,atm(nt),amass(nt)
+        IF (ionode) READ(1,*) i,atm(nt),amass(nt)
+        CALL mp_bcast(i, ionode_id)
         IF (i.NE.nt) CALL errore('read_file','wrong data read',nt)
      END DO
+     CALL mp_bcast(atm, ionode_id)
+     CALL mp_bcast(amass, ionode_id)
      ALLOCATE ( ityp(nat), tau(3,nat) )
      DO na=1,nat
-        READ(1,*) i,ityp(na),(tau(j,na),j=1,3)
+        IF (ionode) READ(1,*) i,ityp(na),(tau(j,na),j=1,3)
+        CALL mp_bcast(i, ionode_id)
         IF (i.NE.na) CALL errore('read_file','wrong data read',na)
      END DO
+     CALL mp_bcast(ityp, ionode_id)
+     CALL mp_bcast(tau, ionode_id)
      !
      ALLOCATE ( phiq (3,3,nat,nat,48), zeu (3,3,nat) )
      !
@@ -553,7 +602,11 @@ SUBROUTINE read_file( nqs, xq, epsil, lrigid, &
      !
      ! check cell information with previous one
      !
-     READ(1,*) ntyp1,nat1,ibrav1,(celldm1(i),i=1,6)
+     IF (ionode) READ(1,*) ntyp1,nat1,ibrav1,(celldm1(i),i=1,6)
+     CALL mp_bcast(ntyp1, ionode_id)
+     CALL mp_bcast(nat1, ionode_id)
+     CALL mp_bcast(ibrav1, ionode_id)
+     CALL mp_bcast(celldm1, ionode_id)
      IF (ntyp1.NE.ntyp) CALL errore('read_file','wrong ntyp',1)
      IF (nat1.NE.nat) CALL errore('read_file','wrong nat',1)
      IF (ibrav1.NE.ibrav) CALL errore('read_file','wrong ibrav',1)
@@ -562,10 +615,12 @@ SUBROUTINE read_file( nqs, xq, epsil, lrigid, &
              CALL errore('read_file','wrong celldm',i)
      END DO
      if (ibrav==0) then
-         read (1,*) symm_type1
+         IF (ionode) read (1,*) symm_type1
+         CALL mp_bcast(symm_type1, ionode_id)
          if (symm_type1 /= symm_type) &
             CALL errore('read_file','wrong symm_type for ibrav=0',1)
-         read (1,*) ((at1(i,j),i=1,3),j=1,3)
+         IF (ionode) read (1,*) ((at1(i,j),i=1,3),j=1,3)
+         CALL mp_bcast(at1, ionode_id)
          do i=1,3
             do j=1,3
                if( abs (at1(i,j)-at(i,j)) > eps8) &
@@ -574,14 +629,20 @@ SUBROUTINE read_file( nqs, xq, epsil, lrigid, &
          end do
      end if
      DO nt = 1,ntyp
-        READ(1,*) i,atm1,amass1
+        IF (ionode) READ(1,*) i,atm1,amass1
+        CALL mp_bcast(i, ionode_id)
+        CALL mp_bcast(atm1, ionode_id)
+        CALL mp_bcast(amass1, ionode_id)
         IF (i.NE.nt) CALL errore('read_file','wrong data read',nt)
         IF (atm1.NE.atm(nt)) CALL errore('read_file','wrong atm',nt)
         IF (abs(amass1-amass(nt)) > eps8 ) &
              CALL errore('read_file','wrong amass',nt)
      END DO
      DO na=1,nat
-        READ(1,*) i,ityp1,(tau1(j),j=1,3)
+        IF (ionode) READ(1,*) i,ityp1,(tau1(j),j=1,3)
+        CALL mp_bcast(i, ionode_id)
+        CALL mp_bcast(ityp1, ionode_id)
+        CALL mp_bcast(tau1, ionode_id)
         IF (i.NE.na) CALL errore('read_file','wrong data read',na)
         IF (ityp1.NE.ityp(na)) CALL errore('read_file','wrong ityp',na)
         IF ( abs (tau1(1)-tau(1,na)) > eps8 .OR. &
@@ -594,47 +655,64 @@ SUBROUTINE read_file( nqs, xq, epsil, lrigid, &
   !
   nqs = 0
 100 CONTINUE
-  READ(1,*)
-  READ(1,'(a)') line
+  IF (ionode) THEN
+     READ(1,*)
+     READ(1,'(a)') line
+  ENDIF
+  CALL mp_bcast(line, ionode_id)
   IF (line(6:14).NE.'Dynamical') THEN
      IF (nqs.EQ.0) CALL errore('read_file',' stop with nqs=0 !!',1)
      q2 = xq(1,nqs)**2 + xq(2,nqs)**2 + xq(3,nqs)**2
      IF (q2.NE.0.d0) RETURN
      DO WHILE (line(6:15).NE.'Dielectric')
-        READ(1,'(a)',err=200, END=200) line
+        IF (ionode) READ(1,'(a)',err=200, END=200) line
+        CALL mp_bcast(line,ionode_id)
      END DO
      lrigid=.TRUE.
-     READ(1,*) ((epsil(i,j),j=1,3),i=1,3)
-     READ(1,*)
-     READ(1,*)
-     READ(1,*)
-     WRITE (*,*) 'macroscopic fields =',lrigid
-     WRITE (*,'(3f10.5)') ((epsil(i,j),j=1,3),i=1,3)
-     DO na=1,nat
+     IF (ionode) THEN
+        READ(1,*) ((epsil(i,j),j=1,3),i=1,3)
         READ(1,*)
-        READ(1,*) ((zeu(i,j,na),j=1,3),i=1,3)
-        WRITE (*,*) ' na= ', na
-        WRITE (*,'(3f10.5)') ((zeu(i,j,na),j=1,3),i=1,3)
-     END DO
+        READ(1,*)
+        READ(1,*)
+     ENDIF
+     CALL mp_bcast(epsil,ionode_id)
+     WRITE (stdout,*) 'macroscopic fields =',lrigid
+     WRITE (stdout,'(3f10.5)') ((epsil(i,j),j=1,3),i=1,3)
+     IF (ionode) THEN
+        DO na=1,nat
+           READ(1,*)
+           READ(1,*) ((zeu(i,j,na),j=1,3),i=1,3)
+           WRITE (stdout,*) ' na= ', na
+           WRITE (stdout,'(3f10.5)') ((zeu(i,j,na),j=1,3),i=1,3)
+        END DO
+     END IF
+     CALL mp_bcast(zeu,ionode_id)
      RETURN
-200  WRITE (*,*) ' Dielectric Tensor not found'
+200  WRITE (stdout,*) ' Dielectric Tensor not found'
      lrigid=.FALSE.
      RETURN
   END IF
   !
   nqs = nqs + 1
-  READ(1,*)
-  READ(1,'(a)') line
-  READ(line(11:75),*) (xq(i,nqs),i=1,3)
-  READ(1,*)
+  IF (ionode) THEN
+     READ(1,*)
+     READ(1,'(a)') line
+     READ(line(11:75),*) (xq(i,nqs),i=1,3)
+     READ(1,*)
+  ENDIF
+  CALL mp_bcast(xq, ionode_id)
   !
   DO na=1,nat
      DO nb=1,nat
-        READ(1,*) i,j
+        IF (ionode) READ(1,*) i,j
+        CALL mp_bcast(i, ionode_id)
+        CALL mp_bcast(j, ionode_id)
         IF (i.NE.na) CALL errore('read_file','wrong na read',na)
         IF (j.NE.nb) CALL errore('read_file','wrong nb read',nb)
         DO i=1,3
-           READ (1,*) (phir(j),phii(j),j=1,3)
+           IF (ionode) READ (1,*) (phir(j),phii(j),j=1,3)
+           CALL mp_bcast(phir, ionode_id)
+           CALL mp_bcast(phii, ionode_id)
            DO j = 1,3
               phiq (i,j,na,nb,nqs) = CMPLX(phir(j),phii(j),kind=DP)
            END DO
@@ -651,6 +729,8 @@ subroutine read_gamma (nqs, nat, ifn, xq, gaminp)
   !-----------------------------------------------------------------------
   !
   USE kinds, ONLY : DP
+  USE io_global, ONLY : ionode, ionode_id, stdout
+  USE mp,        ONLY : mp_bcast
   implicit none
   !
   ! I/O variables
@@ -665,19 +745,26 @@ subroutine read_gamma (nqs, nat, ifn, xq, gaminp)
   !
   !
   Do iq=1,nqs
-     READ(ifn,*)
-     READ(ifn,*)
-     READ(ifn,*)
-     READ(ifn,'(11X,3F14.9)')  (xq(i,iq),i=1,3)
+     IF (ionode) THEN
+        READ(ifn,*)
+        READ(ifn,*)
+        READ(ifn,*)
+        READ(ifn,'(11X,3F14.9)')  (xq(i,iq),i=1,3)
      !     write(*,*) 'xq    ',iq,(xq(i,iq),i=1,3)
-     READ(ifn,*)
+        READ(ifn,*)
+     END IF
+     CALL mp_bcast(xq, ionode_id)
      do na=1,nat
         do nb=1,nat
-           read(ifn,*) i,j
+           IF (ionode) read(ifn,*) i,j
+           CALL mp_bcast(i, ionode_id)
+           CALL mp_bcast(j, ionode_id)
            if (i.ne.na) call errore('read_gamma','wrong na read',na)
            if (j.ne.nb) call errore('read_gamma','wrong nb read',nb)
            do i=1,3
-              read (ifn,*) (phir(j),phii(j),j=1,3)
+              IF (ionode) read (ifn,*) (phir(j),phii(j),j=1,3)
+              CALL mp_bcast(phir, ionode_id)
+              CALL mp_bcast(phii, ionode_id)
               do j = 1,3
                  gaminp(i,j,na,nb,iq) = CMPLX(phir(j),phii(j),kind=DP)
               end do
@@ -686,7 +773,7 @@ subroutine read_gamma (nqs, nat, ifn, xq, gaminp)
         end do
      end do
      !
-  Enddo
+  ENDDO
   !
 end subroutine read_gamma
 !
@@ -724,6 +811,7 @@ subroutine set_zasr ( zasr, nr1,nr2,nr3, nat, ibrav, tau, zeu)
   ! Impose ASR - refined version by Nicolas Mounet
   !
   USE kinds, ONLY : DP
+  USE io_global, ONLY : stdout
   implicit none
   character(len=10) :: zasr
   integer ibrav,nr1,nr2,nr3,nr,m,p,k,l,q,r
@@ -739,7 +827,7 @@ subroutine set_zasr ( zasr, nr1,nr2,nr3, nat, ibrav, tau, zeu)
   ! indices of vectors zeu_u that are not independent to the preceding ones,
   ! nzeu_less = number of such vectors, izeu_less = temporary parameter
   !
-  real(8) zeu_w(3,3,nat), zeu_x(3,3,nat),scal,norm2
+  real(DP) zeu_w(3,3,nat), zeu_x(3,3,nat),scal,norm2
   ! temporary vectors and parameters
 
   ! Initialization.
@@ -769,9 +857,9 @@ subroutine set_zasr ( zasr, nr1,nr2,nr3, nat, ibrav, tau, zeu)
      endif
      if ((ibrav.ne.1).and.(ibrav.ne.6).and.(ibrav.ne.8).and. &
           ((ibrav.ne.4).or.(axis.ne.3)) ) then
-        write(6,*) 'zasr: rotational axis may be wrong'
+        write(stdout,*) 'zasr: rotational axis may be wrong'
      endif
-     write(6,'("zasr rotation axis in 1D system= ",I4)') axis
+     write(stdout,'("zasr rotation axis in 1D system= ",I4)') axis
      n=4
   endif
   if(zasr.eq.'zero-dim') n=6
@@ -888,7 +976,7 @@ subroutine set_zasr ( zasr, nr1,nr2,nr3, nat, ibrav, tau, zeu)
       !
       zeu_new(:,:,:)=zeu_new(:,:,:) - zeu_w(:,:,:)
       call sp_zeu(zeu_w,zeu_w,nat,norm2)
-      write(6,'("Norm of the difference between old and new effective ", &
+      write(stdout,'("Norm of the difference between old and new effective ", &
            &  "charges: " , F25.20)') SQRT(norm2)
       !
       ! Check projection

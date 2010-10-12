@@ -101,8 +101,11 @@ PROGRAM matdyn
   !  if you want to have q = 0 results for two different directions
   !
   USE kinds,      ONLY : DP
-  USE mp,         ONLY : mp_start, mp_env, mp_end, mp_barrier
-  USE mp_global,  ONLY : nproc, mpime, mp_global_start
+  USE mp,         ONLY : mp_bcast
+  USE mp_global,  ONLY : nproc, mpime, mp_global_start, mp_startup, &
+                         mp_global_end
+  USE environment, ONLY : environment_start, environment_end
+  USE io_global,  ONLY : ionode, ionode_id, stdout
   USE io_dyn_mat, ONLY : read_dyn_mat_param, read_dyn_mat_header, &
                          read_ifc_param, read_ifc
   USE cell_base,  ONLY : at, bg
@@ -145,7 +148,7 @@ PROGRAM matdyn
              nrws,                         &! number of nearest neighbor
              code_group_old
 
-  INTEGER :: nspin_mag, nqs
+  INTEGER :: nspin_mag, nqs, ios
   !
   LOGICAL :: readtau, la2F, xmlifc, lo_to_split
   !
@@ -166,11 +169,10 @@ PROGRAM matdyn
                    la2F, ndos, DeltaE, q_in_band_form
   !
   !
-  CALL mp_start()
+  CALL mp_startup()
+  CALL environment_start('MATDYN')
   !
-  CALL mp_env( nproc, mpime, gid )
-  !
-  IF ( mpime == 0 ) THEN
+  IF (ionode) CALL input_from_file ( )
      !
      ! ... all calculations are done by the first cpu
      !
@@ -199,9 +201,32 @@ PROGRAM matdyn
      la2F=.false.
      q_in_band_form=.FALSE.
      !
-     CALL input_from_file ( )
      !
-     READ (5,input)
+     IF (ionode) READ (5,input,IOSTAT=ios)
+     CALL mp_bcast(ios, ionode_id) 
+     CALL errore('matdyn', 'reading input namelist', ABS(ios))
+     CALL mp_bcast(dos,ionode_id)
+     CALL mp_bcast(deltae,ionode_id)
+     CALL mp_bcast(ndos,ionode_id)
+     CALL mp_bcast(nk1,ionode_id)
+     CALL mp_bcast(nk2,ionode_id)
+     CALL mp_bcast(nk3,ionode_id)
+     CALL mp_bcast(asr,ionode_id)
+     CALL mp_bcast(readtau,ionode_id)
+     CALL mp_bcast(flfrc,ionode_id)
+     CALL mp_bcast(fldos,ionode_id)
+     CALL mp_bcast(flfrq,ionode_id)
+     CALL mp_bcast(flvec,ionode_id)
+     CALL mp_bcast(fltau,ionode_id)
+     CALL mp_bcast(amass,ionode_id)
+     CALL mp_bcast(amass_blk,ionode_id)
+     CALL mp_bcast(at,ionode_id)
+     CALL mp_bcast(ntyp,ionode_id)
+     CALL mp_bcast(l1,ionode_id)
+     CALL mp_bcast(l2,ionode_id)
+     CALL mp_bcast(l3,ionode_id)
+     CALL mp_bcast(la2f,ionode_id)
+     CALL mp_bcast(q_in_band_form,ionode_id)
      !
      ! convert masses to atomic units
      !
@@ -250,7 +275,7 @@ PROGRAM matdyn
            CALL errore ('matdyn','wrong mass in the namelist',it)
         ELSE IF (amass(it) == 0.d0) THEN
            IF (it.LE.ntyp_blk) THEN
-              WRITE (*,'(a,i3,a,a)') ' mass for atomic type ',it,      &
+              WRITE (stdout,'(a,i3,a,a)') ' mass for atomic type ',it,      &
                    &                     ' not given; uses mass from file ',flfrc
               amass(it) = amass_blk(it)
            ELSE
@@ -322,19 +347,23 @@ PROGRAM matdyn
         !
         ! read q-point list
         !
-        READ (5,*) nq
+        IF (ionode) READ (5,*) nq
+        CALL mp_bcast(nq, ionode_id)
         ALLOCATE ( q(3,nq) )
         ALLOCATE( tetra(1,1) )
         IF (.NOT.q_in_band_form) THEN
            DO n = 1,nq
-              READ (5,*) (q(i,n),i=1,3)
+              IF (ionode) READ (5,*) (q(i,n),i=1,3)
            END DO
+           CALL mp_bcast(q, ionode_id)
         ELSE
            ALLOCATE(nqb(nq))
            ALLOCATE(xqaux(3,nq))
            DO n = 1,nq
-              READ (5,*) (q(i,n),i=1,3), nqb(n)
+              IF (ionode) READ (5,*) (q(i,n),i=1,3), nqb(n)
            END DO
+           CALL mp_bcast(q, ionode_id)
+           CALL mp_bcast(nqb, ionode_id)
            nqtot=SUM(nqb(1:nq-1))+1
            xqaux(:,1:nq)=q(:,1:nq)
            DEALLOCATE(q)
@@ -364,13 +393,13 @@ PROGRAM matdyn
         iout=6
      ELSE
         iout=4
-        OPEN (unit=iout,file=flvec,status='unknown',form='formatted')
+        IF (ionode) OPEN (unit=iout,file=flvec,status='unknown',form='formatted')
      END IF
 
      ALLOCATE ( dyn(3,3,nat,nat), dyn_blk(3,3,nat_blk,nat_blk) )
      ALLOCATE ( z(3*nat,3*nat), w2(3*nat,nq) )
 
-     if(la2F) open(300,file='dyna2F',status='unknown')
+     if(la2F.and.ionode) open(300,file='dyna2F',status='unknown')
      IF (xmlifc) CALL set_sym(ibrav, nat, tau, ityp, nspin_mag, m_loc, &
                       6, 6, 6, .FALSE., symm_type )
 
@@ -442,7 +471,7 @@ PROGRAM matdyn
             DEALLOCATE(name_rap_mode)
          ENDIF
 
-        if(la2F) then
+        if(la2F.and.ionode) then
            write(300,*) n
            do na=1,3*nat
               write(300,*) (z(na,nb),nb=1,3*nat)
@@ -452,9 +481,9 @@ PROGRAM matdyn
         CALL writemodes(nax,nat,q(1,n),w2(1,n),z,iout)
         !
      END DO  !nq
-     if(la2F) close(300)
+     if(la2F.and.ionode) close(300)
      !
-     IF(iout .NE. 6) CLOSE(unit=iout)
+     IF(iout .NE. stdout.and.ionode) CLOSE(unit=iout)
      !
      ALLOCATE (freq(3*nat, nq))
      DO n=1,nq
@@ -465,7 +494,7 @@ PROGRAM matdyn
         END DO
      END DO
      !
-     IF(flfrq.NE.' ') THEN
+     IF(flfrq.NE.' '.and.ionode) THEN
         OPEN (unit=2,file=flfrq ,status='unknown',form='formatted')
         WRITE(2, '(" &plot nbnd=",i4,", nks=",i4," /")') 3*nat, nq
         DO n=1, nq
@@ -478,7 +507,7 @@ PROGRAM matdyn
      !  If the force constants are in the xml format we write also
      !  the file with the representations of each mode
      !
-     IF (flfrq.NE.' '.AND.xmlifc) THEN
+     IF (flfrq.NE.' '.AND.xmlifc.AND.ionode) THEN
         filename=TRIM(flfrq)//'.rap'
         OPEN (unit=2,file=filename ,status='unknown',form='formatted')
         WRITE(2, '(" &plot_rap nbnd_rap=",i4,", nks_rap=",i4," /")') 3*nat, nq
@@ -504,7 +533,7 @@ PROGRAM matdyn
         else
            ndos = NINT ( (Emax - Emin) / DeltaE + 1.51d0 )
         end if
-        OPEN (unit=2,file=fldos,status='unknown',form='formatted')
+        IF (ionode) OPEN (unit=2,file=fldos,status='unknown',form='formatted')
         DO n= 1, ndos
            E = Emin + (n - 1) * DeltaE
            CALL dos_t(freq, 1, 3*nat, nq, ntetra, tetra, E, DOSofE)
@@ -514,9 +543,9 @@ PROGRAM matdyn
            !
            !WRITE (2, '(F15.10,F15.2,F15.6,F20.5)') &
            !     E, E*RY_TO_CMM1, E*RY_TO_THZ, 0.5d0*DOSofE(1)
-           WRITE (2, '(E12.4,E12.4)') E, 0.5d0*DOSofE(1)
+           IF (ionode) WRITE (2, '(E12.4,E12.4)') E, 0.5d0*DOSofE(1)
         END DO
-        CLOSE(unit=2)
+        IF (ionode) CLOSE(unit=2)
      END IF  !dos
      DEALLOCATE (z, w2, dyn, dyn_blk)
      !
@@ -538,13 +567,11 @@ PROGRAM matdyn
      DEALLOCATE ( freq)
      DEALLOCATE(num_rap_mode)
      DEALLOCATE(high_sym)
-     !
-  END IF
   !
 
-  CALL mp_barrier()
+  CALL environment_end('MATDYN')
   !
-  CALL mp_end()
+  CALL mp_global_end()
   !
   STOP
   !
@@ -557,6 +584,8 @@ SUBROUTINE readfc ( flfrc, nr1, nr2, nr3, epsil, nat,    &
   !
   USE kinds,      ONLY : DP
   USE ifconstants,ONLY : tau => tau_blk, ityp => ityp_blk, frc, zeu
+  USE io_global,  ONLY : ionode, ionode_id, stdout
+  USE mp,         ONLY : mp_bcast 
   !
   IMPLICIT NONE
   ! I/O variable
@@ -573,15 +602,25 @@ SUBROUTINE readfc ( flfrc, nr1, nr2, nr3, epsil, nat,    &
   CHARACTER(LEN=9) symm_type
   !
   !
-  OPEN (unit=1,file=flfrc,status='old',form='formatted')
+  IF (ionode) OPEN (unit=1,file=flfrc,status='old',form='formatted')
   !
   !  read cell data
   !
-  READ(1,*) ntyp,nat,ibrav,(celldm(i),i=1,6)
-  if (ibrav==0) then
-     read(1,'(a)') symm_type
-     read(1,*) ((at(i,j),i=1,3),j=1,3)
-  end if
+  IF (ionode)THEN
+     READ(1,*) ntyp,nat,ibrav,(celldm(i),i=1,6)
+     if (ibrav==0) then
+        read(1,'(a)') symm_type
+        read(1,*) ((at(i,j),i=1,3),j=1,3)
+     end if
+  ENDIF
+  CALL mp_bcast(ntyp, ionode_id)
+  CALL mp_bcast(nat, ionode_id)
+  CALL mp_bcast(ibrav, ionode_id)
+  CALL mp_bcast(celldm, ionode_id)
+  IF (ibrav==0) THEN
+     CALL mp_bcast(symm_type, ionode_id)
+     CALL mp_bcast(at, ionode_id)
+  ENDIF
   !
   CALL latgen(ibrav,celldm,at(1,1),at(1,2),at(1,3),omega)
   alat = celldm(1)
@@ -591,37 +630,51 @@ SUBROUTINE readfc ( flfrc, nr1, nr2, nr3, epsil, nat,    &
   !  read atomic types, positions and masses
   !
   DO nt = 1,ntyp
-     READ(1,*) i,atm,amass_from_file
+     IF (ionode) READ(1,*) i,atm,amass_from_file
+     CALL mp_bcast(i,ionode_id)
+     CALL mp_bcast(atm,ionode_id)
+     CALL mp_bcast(amass_from_file,ionode_id)
      IF (i.NE.nt) CALL errore ('readfc','wrong data read',nt)
      IF (amass(nt).EQ.0.d0) THEN
         amass(nt) = amass_from_file
      ELSE
-        WRITE(*,*) 'for atomic type',nt,' mass from file not used'
+        WRITE(stdout,*) 'for atomic type',nt,' mass from file not used'
      END IF
   END DO
   !
   ALLOCATE (tau(3,nat), ityp(nat), zeu(3,3,nat))
   !
   DO na=1,nat
-     READ(1,*) i,ityp(na),(tau(j,na),j=1,3)
+     IF (ionode) READ(1,*) i,ityp(na),(tau(j,na),j=1,3)
+     CALL mp_bcast(i,ionode_id)
      IF (i.NE.na) CALL errore ('readfc','wrong data read',na)
   END DO
+  CALL mp_bcast(ityp,ionode_id)
+  CALL mp_bcast(tau,ionode_id)
   !
   !  read macroscopic variable
   !
-  READ (1,*) has_zstar
+  IF (ionode) READ (1,*) has_zstar
+  CALL mp_bcast(has_zstar,ionode_id)
   IF (has_zstar) THEN
-     READ(1,*) ((epsil(i,j),j=1,3),i=1,3)
-     DO na=1,nat
-        READ(1,*)
-        READ(1,*) ((zeu(i,j,na),j=1,3),i=1,3)
-     END DO
+     IF (ionode) READ(1,*) ((epsil(i,j),j=1,3),i=1,3)
+     CALL mp_bcast(epsil,ionode_id)
+     IF (ionode) THEN
+        DO na=1,nat
+           READ(1,*)
+           READ(1,*) ((zeu(i,j,na),j=1,3),i=1,3)
+        END DO
+     ENDIF
+     CALL mp_bcast(zeu,ionode_id)
   ELSE
      zeu  (:,:,:) = 0.d0
      epsil(:,:) = 0.d0
   END IF
   !
-  READ (1,*) nr1,nr2,nr3
+  IF (ionode) READ (1,*) nr1,nr2,nr3
+  CALL mp_bcast(nr1,ionode_id)
+  CALL mp_bcast(nr2,ionode_id)
+  CALL mp_bcast(nr3,ionode_id)
   !
   !  read real-space interatomic force constants
   !
@@ -631,19 +684,25 @@ SUBROUTINE readfc ( flfrc, nr1, nr2, nr3, epsil, nat,    &
      DO j=1,3
         DO na=1,nat
            DO nb=1,nat
-              READ (1,*) ibid, jbid, nabid, nbbid
+              IF (ionode) READ (1,*) ibid, jbid, nabid, nbbid
+              CALL mp_bcast(ibid,ionode_id)
+              CALL mp_bcast(jbid,ionode_id)
+              CALL mp_bcast(nabid,ionode_id)
+              CALL mp_bcast(nbbid,ionode_id)
               IF(i .NE.ibid  .OR. j .NE.jbid .OR.                   &
                  na.NE.nabid .OR. nb.NE.nbbid)                      &
                  CALL errore  ('readfc','error in reading',1)
-              READ (1,*) (((m1bid, m2bid, m3bid,                    &
+              IF (ionode) READ (1,*) (((m1bid, m2bid, m3bid,        &
                           frc(m1,m2,m3,i,j,na,nb),                  &
                            m1=1,nr1),m2=1,nr2),m3=1,nr3)
+               
+              CALL mp_bcast(frc(:,:,:,i,j,na,nb),ionode_id)
            END DO
         END DO
      END DO
   END DO
   !
-  CLOSE(unit=1)
+  IF (ionode) CLOSE(unit=1)
   !
   RETURN
 END SUBROUTINE readfc
@@ -656,6 +715,7 @@ SUBROUTINE frc_blk(dyn,q,tau,nat,nr1,nr2,nr3,frc,at,bg,rws,nrws)
   !
   USE kinds,      ONLY : DP
   USE constants,  ONLY : tpi
+  USE io_global,  ONLY : stdout
   !
   IMPLICIT NONE
   INTEGER nr1, nr2, nr3, nat, n1, n2, n3, &
@@ -708,7 +768,7 @@ SUBROUTINE frc_blk(dyn,q,tau,nat,nr1,nr2,nr3,frc,at,bg,rws,nrws)
            END DO
         END DO
         IF (ABS(total_weight-nr1*nr2*nr3).GT.1.0d-8) THEN
-           WRITE(*,*) total_weight
+           WRITE(stdout,*) total_weight
            CALL errore ('frc_blk','wrong total_weight',1)
         END IF
      END DO
@@ -803,6 +863,7 @@ SUBROUTINE set_asr (asr, nr1, nr2, nr3, frc, zeu, nat, ibrav, tau)
   !-----------------------------------------------------------------------
   !
   USE kinds,      ONLY : DP
+  USE io_global,  ONLY : stdout
   !
   IMPLICIT NONE
   CHARACTER (LEN=10), intent(in) :: asr
@@ -912,9 +973,9 @@ SUBROUTINE set_asr (asr, nr1, nr2, nr3, frc, zeu, nat, ibrav, tau)
      endif
      if ((ibrav.ne.1).and.(ibrav.ne.6).and.(ibrav.ne.8).and. &
           ((ibrav.ne.4).or.(axis.ne.3)) ) then
-        write(6,*) 'asr: rotational axis may be wrong'
+        write(stdout,*) 'asr: rotational axis may be wrong'
      endif
-     write(6,'("asr rotation axis in 1D system= ",I4)') axis
+     write(stdout,'("asr rotation axis in 1D system= ",I4)') axis
      n=4
   endif
   if(asr.eq.'zero-dim') n=6
@@ -1018,7 +1079,7 @@ SUBROUTINE set_asr (asr, nr1, nr2, nr3, frc, zeu, nat, ibrav, tau)
   !
   zeu_new(:,:,:)=zeu_new(:,:,:) - zeu_w(:,:,:)
   call sp_zeu(zeu_w,zeu_w,nat,norm2)
-  write(6,'("Norm of the difference between old and new effective ", &
+  write(stdout,'("Norm of the difference between old and new effective ", &
        & "charges: ",F25.20)') SQRT(norm2)
   !
   ! Check projection
@@ -1257,7 +1318,7 @@ SUBROUTINE set_asr (asr, nr1, nr2, nr3, frc, zeu, nat, ibrav, tau)
   !
   frc_new(:,:,:,:,:,:,:)=frc_new(:,:,:,:,:,:,:) - w(:,:,:,:,:,:,:)
   call sp1(w,w,nr1,nr2,nr3,nat,norm2)
-  write(6,'("Norm of the difference between old and new force-constants:",&
+  write(stdout,'("Norm of the difference between old and new force-constants:",&
        &     F25.20)') SQRT(norm2)
   !
   ! Check projection
@@ -1514,6 +1575,7 @@ SUBROUTINE check_at(at,bg_blk,alat,omega)
   !-----------------------------------------------------------------------
   !
   USE kinds,      ONLY : DP
+  USE io_global,  ONLY : stdout
   !
   IMPLICIT NONE
   !
@@ -1528,7 +1590,7 @@ SUBROUTINE check_at(at,bg_blk,alat,omega)
   DO j=1,3
      DO i =1,3
         IF ( ABS(work(i,j)-NINT(work(i,j))) > small) THEN
-           WRITE (*,'(3f9.4)') work(:,:)
+           WRITE (stdout,'(3f9.4)') work(:,:)
            CALL errore ('check_at','at not multiple of at_blk',1)
         END IF
      END DO
@@ -1602,6 +1664,8 @@ SUBROUTINE read_tau &
   !---------------------------------------------------------------------
   !
   USE kinds,      ONLY : DP
+  USE io_global,  ONLY : ionode_id, ionode
+  USE mp,         ONLY : mp_bcast
   !
   IMPLICIT NONE
   !
@@ -1615,7 +1679,9 @@ SUBROUTINE read_tau &
   PARAMETER ( small = 1.d-6 )
   !
   DO na=1,nat
-     READ(*,*) (tau(i,na),i=1,3), ityp(na)
+     IF (ionode) READ(5,*) (tau(i,na),i=1,3), ityp(na)
+     CALL mp_bcast(tau(:,na),ionode_id)
+     CALL mp_bcast(ityp(na),ionode_id)
      IF (ityp(na).LE.0 .OR. ityp(na) .GT. ntyp) &
           CALL errore('read_tau',' wrong atomic type', na)
      DO na_blk=1,nat_blk
@@ -1642,6 +1708,7 @@ SUBROUTINE write_tau(fltau,nat,tau,ityp)
   !-----------------------------------------------------------------------
   !
   USE kinds,      ONLY : DP
+  USE io_global,   ONLY : ionode
   !
   IMPLICIT NONE
   !
@@ -1651,6 +1718,7 @@ SUBROUTINE write_tau(fltau,nat,tau,ityp)
   !
   INTEGER i,na
   !
+  IF (.NOT.ionode) RETURN
   OPEN (unit=4,file=fltau, status='new')
   DO na=1,nat
      WRITE(4,'(3(f12.6),i3)') (tau(i,na),i=1,3), ityp(na)
@@ -1715,6 +1783,8 @@ SUBROUTINE a2Fdos &
   !-----------------------------------------------------------------------
   !
   USE kinds,      ONLY : DP
+  USE io_global,   ONLY : ionode, ionode_id
+  USE mp,          ONLY : mp_bcast
   USE ifconstants
   USE constants,  ONLY : pi, RY_TO_THZ
   !
@@ -1743,13 +1813,19 @@ SUBROUTINE a2Fdos &
   !
   !
   nmodes = 3*nat
+  IF (ionode) THEN
   do isig=1,10
      filea2F = 60 + isig
      write(name,"(A10,I2)") 'a2Fmatdyn.',filea2F
      open(filea2F, file=name, STATUS = 'unknown')
      READ(filea2F,*) deg(isig), fermi(isig), dos_ee(isig)
   enddo
+  ENDIF 
+  call mp_bcast(deg, ionode_id)
+  call mp_bcast(fermi, ionode_id)
+  call mp_bcast(dos_ee, ionode_id)
   !
+  IF (ionode) THEN
   IF(dos) then
      open(400,file='lambda',status='unknown')
      write(400,*)
@@ -1763,6 +1839,7 @@ SUBROUTINE a2Fdos &
      write(6,*)
      write(6,*) ' Gamma lines for all modes [Rydberg] '
      write(6,*)
+  ENDIF
   ENDIF
   !
   ALLOCATE ( frcg(nr1,nr2,nr3,3,3,nat,nat) )
@@ -1778,14 +1855,18 @@ SUBROUTINE a2Fdos &
         CALL set_asr (asr, nr1, nr2, nr3, frcg, zeu, nat_blk, ibrav, tau_blk)
      endif
      !
-     open(300,file='dyna2F',status='old')
+     IF (ionode) open(300,file='dyna2F',status='old')
      !
      do n = 1 ,nq
         gam(:,:,:,:) = (0.d0, 0.d0)
-        read(300,*)
-        do na=1,nmodes
-           read(300,*) (z(na,m),m=1,nmodes)
-        end do ! na
+        IF (ionode) THEN
+           read(300,*)
+           do na=1,nmodes
+              read(300,*) (z(na,m),m=1,nmodes)
+           end do ! na
+        ENDIF
+        CALL mp_bcast(z, ionode_id)
+        
         !
         CALL setgam (q(1,n), gam, nat, at, bg, tau, itau_blk, nsc, alat, &
              gam_blk, nat_blk, at_blk,bg_blk,tau_blk, omega_blk, &
@@ -1816,11 +1897,11 @@ SUBROUTINE a2Fdos &
         !
         !
      EndDo !nq    all points in BZ
-     close(300)   ! file with dyn vectors
+     IF (ionode) close(300)   ! file with dyn vectors
      !
      ! after we know gamma(q) and lambda(q) calculate  DOS(omega) for spectrum a2F
      !
-     if(dos) then
+     if(dos.and.ionode) then
         !
         if(isig.le.9) then
            write(name,'(A8,I1.1)') 'a2F.dos.',isig
@@ -1870,7 +1951,7 @@ SUBROUTINE a2Fdos &
      !
      !  OUTPUT
      !
-     if(.not.dos) then
+     if(.not.dos.and.ionode) then
         write(20,'(" Broadening ",F8.4)')  deg(isig)
         write(6,'(" Broadening ",F8.4)')  deg(isig)
         do n=1, nq
@@ -1883,8 +1964,10 @@ SUBROUTINE a2Fdos &
   !
   DEALLOCATE (z, frcg, gamma, gam, gam_blk )
   !
-  close(400)   !lambda
-  close(20)
+  IF (ionode) THEN
+     close(400)   !lambda
+     close(20)
+  ENDIF
   !
 1030 FORMAT( 3x,I5,'  ',9F8.4 )
 1040 FORMAT( 3x,I5,'  ',6F12.9 )
@@ -2094,6 +2177,8 @@ subroutine readfg ( ifn, nr1, nr2, nr3, nat, frcg )
   !-----------------------------------------------------------------------
   !
   USE kinds,       ONLY : DP
+  USE io_global,   ONLY : ionode, ionode_id, stdout
+  USE mp,          ONLY : mp_bcast
   implicit none
   ! I/O variable
   integer, intent(in) ::  nr1,nr2,nr3, nat
@@ -2103,28 +2188,37 @@ subroutine readfg ( ifn, nr1, nr2, nr3, nat, frcg )
   integer ibid, jbid, nabid, nbbid, m1bid,m2bid,m3bid
   !
   !
-  READ (ifn,*) m1, m2, m3
+  IF (ionode) READ (ifn,*) m1, m2, m3
+  CALL mp_bcast(m1, ionode_id)
+  CALL mp_bcast(m2, ionode_id)
+  CALL mp_bcast(m3, ionode_id)
   if ( m1 /= nr1 .or. m2 /= nr2 .or. m3 /= nr3) &
-       call errore('readfG','inconsistent nr1, nr2, nr3 read',1)
+       call errore('readfg','inconsistent nr1, nr2, nr3 read',1)
   do i=1,3
      do j=1,3
         do na=1,nat
            do nb=1,nat
-              read (ifn,*) ibid, jbid, nabid, nbbid
+              IF (ionode) read (ifn,*) ibid, jbid, nabid, nbbid
+              CALL mp_bcast(ibid, ionode_id)
+              CALL mp_bcast(jbid, ionode_id)
+              CALL mp_bcast(nabid, ionode_id)
+              CALL mp_bcast(nbbid, ionode_id)
+              
               if(i.ne.ibid.or.j.ne.jbid.or.na.ne.nabid.or.nb.ne.nbbid)  then
-                  write(*,*) i,j,na,nb,'  <>  ', ibid, jbid, nabid, nbbid
+                  write(stdout,*) i,j,na,nb,'  <>  ', ibid, jbid, nabid, nbbid
                   call errore  ('readfG','error in reading',1)
               else
-                  read (ifn,*) (((m1bid, m2bid, m3bid,     &
+                  IF (ionode) read (ifn,*) (((m1bid, m2bid, m3bid,     &
                                  frcg(m1,m2,m3,i,j,na,nb), &
                                  m1=1,nr1),m2=1,nr2),m3=1,nr3)
               endif
+              CALL mp_bcast(frcg(:,:,:,i,j,na,nb), ionode_id)
            end do
         end do
      end do
   end do
   !
-  close(ifn)
+  IF (ionode) close(ifn)
   !
   return
 end subroutine readfg
