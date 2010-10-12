@@ -15,11 +15,12 @@ SUBROUTINE close_phq( flag )
   !
   USE io_files,      ONLY : iunigk
   USE control_flags, ONLY : twfcollect
+  USE paw_variables, ONLY : okpaw
   USE mp_global,     ONLY : me_pool
   USE io_global,     ONLY : ionode, stdout
   USE uspp,          ONLY : okvan
   USE units_ph,      ONLY : iuwfc, iudwf, iubar, iudrhous, iuebar, iudrho, &
-                            iudvscf, iucom, iudvkb3
+                            iudvscf, iucom, iudvkb3, iuint3paw
   USE control_ph,    ONLY : zue, epsil
   USE recover_mod,   ONLY : clean_recover
   USE output,        ONLY : fildrho, fildvscf
@@ -70,7 +71,10 @@ SUBROUTINE close_phq( flag )
   !
   IF ( flag ) CALL clean_recover()
   !
-  IF ( fildvscf /= ' ' ) CLOSE( UNIT = iudvscf, STATUS = 'KEEP' )
+  IF ( fildvscf /= ' ' ) THEN
+     CLOSE( UNIT = iudvscf, STATUS = 'KEEP' )
+     IF (okpaw) CLOSE( UNIT = iuint3paw, STATUS = 'KEEP' )
+  ENDIF
   !
   IF (lraman .OR.elop) THEN
      CLOSE ( UNIT=iuchf, STATUS = 'keep' )

@@ -17,19 +17,22 @@ SUBROUTINE openfilq()
   USE units_ph,       ONLY : iuwfc, iudwf, iubar, iucom, iudvkb3, &
                              iudrhous, iuebar, iudrho, iudyn, iudvscf, &
                              lrwfc, lrdwf, lrbar, lrcom, lrdvkb3, &
-                             lrdrhous, lrebar, lrdrho
+                             lrdrhous, lrebar, lrdrho, lint3paw, iuint3paw
   USE io_files,       ONLY : tmp_dir, diropn
   USE control_ph,     ONLY : epsil, zue, ext_recover, trans, elph, lgamma, &
                              tmp_dir_ph, start_irr, last_irr, xmldyn
   USE save_ph,        ONLY : tmp_dir_save
+  USE ions_base,      ONLY : nat
   USE qpoint,         ONLY : nksq
   USE output,         ONLY : fildyn, fildvscf
   USE wvfct,          ONLY : nbnd, npwx
   USE gvect,          ONLY : nr1x, nr2x, nr3x, nrxx
   USE lsda_mod,       ONLY : nspin
   USE uspp,           ONLY : nkb, okvan
+  USE uspp_param,     ONLY : nhm
   USE io_files,       ONLY : prefix, iunigk
   USE noncollin_module, ONLY : npol, nspin_mag
+  USE paw_variables,  ONLY : okpaw
   USE control_flags,  ONLY : twfcollect
   USE mp_global,      ONLY : me_pool
   USE io_global,      ONLY : ionode
@@ -135,6 +138,12 @@ SUBROUTINE openfilq()
      iudvscf = 27
      IF ( me_pool == 0 ) THEN
         CALL diropn (iudvscf, fildvscf, lrdrho, exst)
+        IF (okpaw) THEN
+           filint=TRIM(fildvscf)//'_paw'
+           lint3paw = 2 * nhm * nhm * 3 * nat * nspin_mag
+           iuint3paw=34
+           CALL diropn (iuint3paw, filint, lint3paw, exst)
+        ENDIF
      END IF
   END IF
   !
