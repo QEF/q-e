@@ -57,8 +57,6 @@ SUBROUTINE el_ph_collect( el_ph_mat, el_ph_mat_collect, nksqtot, nksq )
   ! copy the original points in the correct position of the list
   !
   el_ph_mat_collect(:,:,nbase+1:nbase+nksq,:) = el_ph_mat(:,:,1:nksq,:)
-
-  WRITE(6,*) 'BEFORE COLLECTING', SUM(ABS(el_ph_mat_collect))
   !
   CALL mp_sum( el_ph_mat_collect, inter_pool_comm )
   !
