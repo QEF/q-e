@@ -138,12 +138,14 @@ SUBROUTINE phq_readin()
   !
   CALL mp_bcast(ios, ionode_id )
   CALL errore( 'phq_readin', 'reading title ', ABS( ios ) )
+  CALL mp_bcast(title, ionode_id )
   !
   ! Rewind the input if the title is actually the beginning of inputph namelist
   IF( imatches("&inputph", title)) THEN
     WRITE(*, '(6x,a)') "Title line not specified: using 'default'."
     title='default'
-    REWIND(5, iostat=ios)
+    IF (ionode) REWIND(5, iostat=ios)
+    CALL mp_bcast(ios, ionode_id )
     CALL errore('phq_readin', 'Title line missing from input.', abs(ios))
   ENDIF
   !
