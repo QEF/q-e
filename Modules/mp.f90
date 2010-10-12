@@ -30,7 +30,8 @@
           mp_bcast_z, mp_bcast_zv, &
           mp_bcast_iv, mp_bcast_rv, mp_bcast_cv, mp_bcast_l, mp_bcast_rm, &
           mp_bcast_cm, mp_bcast_im, mp_bcast_it, mp_bcast_rt, mp_bcast_lv, &
-          mp_bcast_lm, mp_bcast_r4d, mp_bcast_r5d, mp_bcast_ct,  mp_bcast_c4d
+          mp_bcast_lm, mp_bcast_r4d, mp_bcast_r5d, mp_bcast_ct,  mp_bcast_c4d,&
+          mp_bcast_c5d
       END INTERFACE
 
       INTERFACE mp_sum
@@ -601,6 +602,23 @@
         mp_call_sizex( 15 ) = MAX( mp_call_sizex( 15 ), msglen )
 #endif
       END SUBROUTINE mp_bcast_c4d
+
+      SUBROUTINE mp_bcast_c5d(msg,source,gid)
+        IMPLICIT NONE
+        COMPLEX (DP) :: msg(:,:,:,:,:)
+        INTEGER :: source
+        INTEGER, OPTIONAL, INTENT(IN) :: gid
+        INTEGER :: group
+        INTEGER :: msglen
+#if defined(__MPI)
+        msglen = size(msg)
+        group = mpi_comm_world
+        IF( PRESENT( gid ) ) group = gid
+        CALL bcast_real( msg, 2 * msglen, source, group )
+        mp_call_count( 15 ) = mp_call_count( 15 ) + 1
+        mp_call_sizex( 15 ) = MAX( mp_call_sizex( 15 ), msglen )
+#endif
+      END SUBROUTINE mp_bcast_c5d
 
 !
 !------------------------------------------------------------------------------!
