@@ -106,7 +106,7 @@ PROGRAM matdyn
   USE io_dyn_mat, ONLY : read_dyn_mat_param, read_dyn_mat_header, &
                          read_ifc_param, read_ifc
   USE cell_base,  ONLY : at, bg
-  USE constants,  ONLY : RY_TO_THZ, RY_TO_CMM1
+  USE constants,  ONLY : RY_TO_THZ, RY_TO_CMM1, amconv
   USE symm_base,  ONLY : set_sym
   USE rap_point_group,  ONLY : code_group
 
@@ -121,8 +121,7 @@ PROGRAM matdyn
   !
   INTEGER:: nax, nax_blk
   INTEGER, PARAMETER:: ntypx=10, nrwsx=200
-  REAL(DP), PARAMETER :: eps=1.0d-6,   &
-       amconv = 1.66042d-24/9.1095d-28*0.5d0
+  REAL(DP), PARAMETER :: eps=1.0d-6
   INTEGER :: nr1, nr2, nr3, nsc, nk1, nk2, nk3, ntetra, ibrav
   CHARACTER(LEN=256) :: flfrc, flfrq, flvec, fltau, fldos, filename
   CHARACTER(LEN=10)  :: asr
