@@ -851,7 +851,7 @@ SUBROUTINE set_asr (asr, nr1, nr2, nr3, frc, zeu, nat, ibrav, tau)
   !
   if((asr.ne.'simple').and.(asr.ne.'crystal').and.(asr.ne.'one-dim') &
                       .and.(asr.ne.'zero-dim')) then
-     call errore('matdyn','invalid Acoustic Sum Rule:' // asr, 1)
+     call errore('set_asr','invalid Acoustic Sum Rule:' // asr, 1)
   endif
   !
   if(asr.eq.'simple') then
@@ -907,7 +907,7 @@ SUBROUTINE set_asr (asr, nr1, nr2, nr3, frc, zeu, nat, ibrav, tau)
      if ((nr3.ne.1).and.(nr1*nr2.eq.1)) axis=3
      if (((nr1.ne.1).and.(nr2.ne.1)).or.((nr2.ne.1).and. &
           (nr3.ne.1)).or.((nr1.ne.1).and.(nr3.ne.1))) then
-        call errore('matdyn','too many directions of &
+        call errore('set_asr','too many directions of &
              & periodicity in 1D system',axis)
      endif
      if ((ibrav.ne.1).and.(ibrav.ne.6).and.(ibrav.ne.8).and. &

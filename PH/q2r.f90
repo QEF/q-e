@@ -533,15 +533,15 @@ SUBROUTINE read_file( nqs, xq, epsil, lrigid, &
         read (1,*) ((at(i,j),i=1,3),j=1,3)
      end if
 
-     IF (ntyp.GT.nat) CALL errore('read_f','ntyp.gt.nat!!',ntyp)
+     IF (ntyp.GT.nat) CALL errore('read_file','ntyp.gt.nat!!',ntyp)
      DO nt = 1,ntyp
         READ(1,*) i,atm(nt),amass(nt)
-        IF (i.NE.nt) CALL errore('read_f','wrong data read',nt)
+        IF (i.NE.nt) CALL errore('read_file','wrong data read',nt)
      END DO
      ALLOCATE ( ityp(nat), tau(3,nat) )
      DO na=1,nat
         READ(1,*) i,ityp(na),(tau(j,na),j=1,3)
-        IF (i.NE.na) CALL errore('read_f','wrong data read',na)
+        IF (i.NE.na) CALL errore('read_file','wrong data read',na)
      END DO
      !
      ALLOCATE ( phiq (3,3,nat,nat,48), zeu (3,3,nat) )
@@ -554,40 +554,40 @@ SUBROUTINE read_file( nqs, xq, epsil, lrigid, &
      ! check cell information with previous one
      !
      READ(1,*) ntyp1,nat1,ibrav1,(celldm1(i),i=1,6)
-     IF (ntyp1.NE.ntyp) CALL errore('read_f','wrong ntyp',1)
-     IF (nat1.NE.nat) CALL errore('read_f','wrong nat',1)
-     IF (ibrav1.NE.ibrav) CALL errore('read_f','wrong ibrav',1)
+     IF (ntyp1.NE.ntyp) CALL errore('read_file','wrong ntyp',1)
+     IF (nat1.NE.nat) CALL errore('read_file','wrong nat',1)
+     IF (ibrav1.NE.ibrav) CALL errore('read_file','wrong ibrav',1)
      DO i=1,6
         IF( abs (celldm1(i)-celldm(i)) > eps8 ) &
-             CALL errore('read_f','wrong celldm',i)
+             CALL errore('read_file','wrong celldm',i)
      END DO
      if (ibrav==0) then
          read (1,*) symm_type1
          if (symm_type1 /= symm_type) &
-            CALL errore('read_f','wrong symm_type for ibrav=0',1)
+            CALL errore('read_file','wrong symm_type for ibrav=0',1)
          read (1,*) ((at1(i,j),i=1,3),j=1,3)
          do i=1,3
             do j=1,3
                if( abs (at1(i,j)-at(i,j)) > eps8) &
-                 CALL errore('read_f','wrong at(i,j)',i+3*(j-1))
+                 CALL errore('read_file','wrong at(i,j)',i+3*(j-1))
             end do
          end do
      end if
      DO nt = 1,ntyp
         READ(1,*) i,atm1,amass1
-        IF (i.NE.nt) CALL errore('read_f','wrong data read',nt)
-        IF (atm1.NE.atm(nt)) CALL errore('read_f','wrong atm',nt)
+        IF (i.NE.nt) CALL errore('read_file','wrong data read',nt)
+        IF (atm1.NE.atm(nt)) CALL errore('read_file','wrong atm',nt)
         IF (abs(amass1-amass(nt)) > eps8 ) &
-             CALL errore('read_f','wrong amass',nt)
+             CALL errore('read_file','wrong amass',nt)
      END DO
      DO na=1,nat
         READ(1,*) i,ityp1,(tau1(j),j=1,3)
-        IF (i.NE.na) CALL errore('read_f','wrong data read',na)
-        IF (ityp1.NE.ityp(na)) CALL errore('read_f','wrong ityp',na)
+        IF (i.NE.na) CALL errore('read_file','wrong data read',na)
+        IF (ityp1.NE.ityp(na)) CALL errore('read_file','wrong ityp',na)
         IF ( abs (tau1(1)-tau(1,na)) > eps8 .OR. &
              abs (tau1(2)-tau(2,na)) > eps8 .OR. &
              abs (tau1(3)-tau(3,na)) > eps8 ) &
-             CALL errore('read_f','wrong tau',na)
+             CALL errore('read_file','wrong tau',na)
      END DO
   END IF
   !
@@ -597,7 +597,7 @@ SUBROUTINE read_file( nqs, xq, epsil, lrigid, &
   READ(1,*)
   READ(1,'(a)') line
   IF (line(6:14).NE.'Dynamical') THEN
-     IF (nqs.EQ.0) CALL errore('read',' stop with nqs=0 !!',1)
+     IF (nqs.EQ.0) CALL errore('read_file',' stop with nqs=0 !!',1)
      q2 = xq(1,nqs)**2 + xq(2,nqs)**2 + xq(3,nqs)**2
      IF (q2.NE.0.d0) RETURN
      DO WHILE (line(6:15).NE.'Dielectric')
@@ -631,8 +631,8 @@ SUBROUTINE read_file( nqs, xq, epsil, lrigid, &
   DO na=1,nat
      DO nb=1,nat
         READ(1,*) i,j
-        IF (i.NE.na) CALL errore('read_f','wrong na read',na)
-        IF (j.NE.nb) CALL errore('read_f','wrong nb read',nb)
+        IF (i.NE.na) CALL errore('read_file','wrong na read',na)
+        IF (j.NE.nb) CALL errore('read_file','wrong nb read',nb)
         DO i=1,3
            READ (1,*) (phir(j),phii(j),j=1,3)
            DO j = 1,3
@@ -723,15 +723,16 @@ subroutine set_zasr ( zasr, nr1,nr2,nr3, nat, ibrav, tau, zeu)
   !
   ! Impose ASR - refined version by Nicolas Mounet
   !
+  USE kinds, ONLY : DP
   implicit none
   character(len=10) :: zasr
   integer ibrav,nr1,nr2,nr3,nr,m,p,k,l,q,r
   integer n,i,j,n1,n2,n3,na,nb,nat,axis,i1,j1,na1
   !
-  real(8) sum, zeu(3,3,nat)
-  real(8) tau(3,nat), zeu_new(3,3,nat)
+  real(DP) sum, zeu(3,3,nat)
+  real(DP) tau(3,nat), zeu_new(3,3,nat)
   !
-  real(8) zeu_u(6*3,3,3,nat)
+  real(DP) zeu_u(6*3,3,3,nat)
   ! These are the "vectors" associated with the sum rules on effective charges
   !
   integer zeu_less(6*3),nzeu_less,izeu_less
@@ -919,11 +920,12 @@ subroutine sp_zeu(zeu_u,zeu_v,nat,scal)
   ! does the scalar product of two effective charges matrices zeu_u and zeu_v
   ! (considered as vectors in the R^(3*3*nat) space, and coded in the usual way)
   !
+  USE kinds, ONLY : DP
   implicit none
   integer i,j,na,nat
-  real(8) zeu_u(3,3,nat)
-  real(8) zeu_v(3,3,nat)
-  real(8) scal
+  real(DP) zeu_u(3,3,nat)
+  real(DP) zeu_v(3,3,nat)
+  real(DP) scal
   !
   !
   scal=0.0d0
