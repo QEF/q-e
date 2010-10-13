@@ -82,6 +82,10 @@ PROGRAM matdyn
   !               (used to specify different masses)
   !     fltau     write atomic positions of the supercell to file "fltau"
   !               (default: fltau=' ', do not write)
+  !     la2F      if .true. interpolates also the el-ph coefficients.
+  !     q_in_band_form if .true. the q points are given in band form:
+  !               Only the first and last point of one or more lines 
+  !               are given. See below. (default: .false.).
   !
   !  if (readtau) atom types and positions in the supercell follow:
   !     (tau(i,na),i=1,3), ityp(na)
@@ -1810,6 +1814,7 @@ SUBROUTINE a2Fdos &
                               i,j,k, ngauss, jsig, p1, p2, p3, filea2F
   character(len=14)        :: name
   real(DP), external       :: dos_gam
+  CHARACTER(LEN=6)         :: int_to_char
   !
   !
   nmodes = 3*nat
@@ -1903,17 +1908,13 @@ SUBROUTINE a2Fdos &
      !
      if(dos.and.ionode) then
         !
-        if(isig.le.9) then
-           write(name,'(A8,I1.1)') 'a2F.dos.',isig
-        else
-           write(name,'(A8,I2.2)') 'a2F.dos.',isig
-        endif
+        name='a2F.dos'//int_to_char(isig)
         ifn = 200 + isig
-        open (ifn,file=name,status='unknown',form='formatted')
+        open (ifn,file=TRIM(name),status='unknown',form='formatted')
         write(ifn,*)
-        write(ifn,*) ' Eliashberg function a2F (per both spin)'
-        write(ifn,*) '  frequencies in Rydberg  '
-        write(ifn,*) ' DOS normalized to E in Rydberg: a2F_total, a2F(mode) '
+        write(ifn,*) '# Eliashberg function a2F (per both spin)'
+        write(ifn,*) '#  frequencies in Rydberg  '
+        write(ifn,*) '# DOS normalized to E in Rydberg: a2F_total, a2F(mode) '
         write(ifn,*)
         !
         !      correction for small frequencies
