@@ -1,13 +1,20 @@
 
        SUBROUTINE clinear(nk1,nk2,nk3,nti,ntj,ntk,point,noint)
+       USE kinds, ONLY : DP
        implicit none
-       integer ll,iold,jold,kold,jnew,knew,istep,jstep,kstep
-       integer ik1,ik2,ij1,ij2,ii1,ii2,nk1,nk2,nk3,ntk,ntj,nti
-       integer npr,nkr
-       integer np1, np2, np3
-       complex(kind((1.d0,1.d0))) point(*), noint(*)
+       integer :: ll,iold,jold,kold,jnew,knew,istep,jstep,kstep
+       integer :: ik1,ik2,ij1,ij2,ii1,ii2,nk1,nk2,nk3,ntk,ntj,nti
+       integer :: npr,nkr
+       integer :: np1, np2, np3
+       complex(DP) :: point(*), noint(*)
 !      nk1=nk2=nk3=32  -->  32768
 !      np1=np2=np3=96  --> 884736
+
+       nkr = nk1*nk2*nk3
+       IF (nti==1.AND.ntj==1.AND.ntk==1) THEN
+          noint(1:nkr)=point(1:nkr)
+          RETURN
+       ENDIF
 
        np1=nk1*nti
        np2=nk2*ntj
@@ -156,5 +163,3 @@
 
        RETURN
        END SUBROUTINE clinear
-
-
