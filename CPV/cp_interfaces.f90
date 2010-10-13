@@ -254,11 +254,11 @@
       SUBROUTINE fillgrad_x( nspin, rhog, gradr )
          USE kinds,           ONLY: DP         
          USE gvecp,           ONLY: ngm
-         USE grid_dimensions, ONLY: nnrx
+         USE grid_dimensions, ONLY: nrxx
          IMPLICIT NONE
          INTEGER, INTENT(IN) :: nspin
          complex(DP) :: rhog( ngm, nspin )
-         real(DP)    :: gradr( nnrx, 3, nspin )
+         real(DP)    :: gradr( nrxx, 3, nspin )
       END SUBROUTINE fillgrad_x
    END INTERFACE
 
@@ -266,7 +266,7 @@
    INTERFACE checkrho
       SUBROUTINE checkrho_x(nnr,nspin,rhor,rmin,rmax,rsum,rnegsum)
          USE kinds,           ONLY: DP         
-         USE grid_dimensions, ONLY: nnrx
+         USE grid_dimensions, ONLY: nrxx
          IMPLICIT NONE
          INTEGER, INTENT(IN) :: nnr, nspin
          REAL(DP) :: rhor(nnr,nspin), rmin, rmax, rsum, rnegsum

@@ -364,7 +364,7 @@ subroutine nlinit
       use betax,           ONLY : qradx, dqradx, refg, betagx, mmx, dbetagx
       use cp_interfaces,   ONLY : pseudopotential_indexes, compute_dvan, &
                                   compute_betagx, compute_qradx
-      USE grid_dimensions, ONLY : nnrx
+      USE grid_dimensions, ONLY : nrxx
 
 !
       implicit none
@@ -395,7 +395,7 @@ subroutine nlinit
       !
       call aainit( lmaxkb + 1 )
       !
-      CALL allocate_core( nnrx, ngm, ngb, nsp )
+      CALL allocate_core( nrxx, ngm, ngb, nsp )
       !
       !
       allocate( beta( ngw, nhm, nsp ) )

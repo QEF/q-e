@@ -109,9 +109,9 @@
       USE uspp,               ONLY: nkb
       USE uspp_param,         ONLY: nh, nhm
       USE grid_dimensions,    ONLY: nr1, nr2, nr3, &
-                                    nr1x, nr2x, nr3x, nnrx
+                                    nr1x, nr2x, nr3x, nrxx
       USE cell_base,          ONLY: omega
-      USE smooth_grid_dimensions, ONLY: nnrsx
+      USE smooth_grid_dimensions, ONLY: nrxxs
       USE electrons_base,     ONLY: nx => nbspx, n => nbsp, f, ispin, nspin
       USE constants,          ONLY: pi, fpi
       USE mp,                 ONLY: mp_sum
@@ -213,11 +213,11 @@
          !
          CALL read_rho( nspin, rhor )
 
-         ALLOCATE( psi( nnrx ) )
+         ALLOCATE( psi( nrxx ) )
 !
          IF(nspin.EQ.1)THEN
             iss=1
-            DO ir=1,nnrx
+            DO ir=1,nrxx
                psi(ir)=CMPLX(rhor(ir,iss),0.d0,kind=DP)
             END DO
             CALL fwfft('Dense', psi, dfftp )
@@ -227,7 +227,7 @@
          ELSE
             isup=1
             isdw=2
-            DO ir=1,nnrx
+            DO ir=1,nrxx
                psi(ir)=CMPLX(rhor(ir,isup),rhor(ir,isdw),kind=DP)
             END DO
             CALL fwfft('Dense', psi, dfftp )
@@ -274,7 +274,7 @@
             !
             iss1=1
             sa1=f(i)/omega
-            DO ir=1,nnrsx
+            DO ir=1,nrxxs
                rhos(ir,iss1)=rhos(ir,iss1) + sa1*( DBLE(psis(ir)))**2
             END DO
             !
@@ -284,11 +284,11 @@
             !
          ELSE
             !
-            ALLOCATE( psis( nnrsx ) ) 
+            ALLOCATE( psis( nrxxs ) ) 
             !
             DO i = 1, n, 2
                !
-               CALL c2psi( psis, nnrsx, c( 1, i ), c( 1, i+1 ), ngw, 2 )
+               CALL c2psi( psis, nrxxs, c( 1, i ), c( 1, i+1 ), ngw, 2 )
 
                CALL invfft('Wave',psis, dffts )
                !
@@ -302,7 +302,7 @@
                   sa2  = 0.0d0
                END IF
                !
-               DO ir = 1, nnrsx
+               DO ir = 1, nrxxs
                   rhos(ir,iss1) = rhos(ir,iss1) + sa1 * ( DBLE(psis(ir)))**2
                   rhos(ir,iss2) = rhos(ir,iss2) + sa2 * (AIMAG(psis(ir)))**2
                END DO
@@ -315,11 +315,11 @@
          !
          !     smooth charge in g-space is put into rhog(ig)
          !
-         ALLOCATE( psis( nnrsx ) ) 
+         ALLOCATE( psis( nrxxs ) ) 
          !
          IF(nspin.EQ.1)THEN
             iss=1
-            DO ir=1,nnrsx
+            DO ir=1,nrxxs
                psis(ir)=CMPLX(rhos(ir,iss),0.d0,kind=DP)
             END DO
             CALL fwfft('Smooth', psis, dffts )
@@ -329,7 +329,7 @@
          ELSE
             isup=1
             isdw=2
-             DO ir=1,nnrsx
+             DO ir=1,nrxxs
                psis(ir)=CMPLX(rhos(ir,isup),rhos(ir,isdw),kind=DP)
             END DO
             CALL fwfft('Smooth',psis, dffts )
@@ -341,7 +341,7 @@
             END DO
          ENDIF
          !
-         ALLOCATE( psi( nnrx ) )
+         ALLOCATE( psi( nrxx ) )
          !
          IF( nspin .EQ. 1 ) THEN
             ! 
@@ -354,7 +354,7 @@
                psi(np(ig))=      rhog(ig,iss)
             END DO
             CALL invfft('Dense',psi, dfftp )
-            DO ir=1,nnrx
+            DO ir=1,nrxx
                rhor(ir,iss)=DBLE(psi(ir))
             END DO
             !
@@ -370,7 +370,7 @@
                psi(np(ig))=rhog(ig,isup)+ci*rhog(ig,isdw)
             END DO
             CALL invfft('Dense',psi, dfftp )
-            DO ir=1,nnrx
+            DO ir=1,nrxx
                rhor(ir,isup)= DBLE(psi(ir))
                rhor(ir,isdw)=AIMAG(psi(ir))
             END DO
@@ -403,7 +403,7 @@
           ( MOD(nfi, iprint_stdout) == 0 ) .AND. ( .NOT. tcg ) ) THEN
 
          IF( iprsta > 2 ) THEN
-            CALL checkrho( nnrx, nspin, rhor, rmin, rmax, rsum, rnegsum )
+            CALL checkrho( nrxx, nspin, rhor, rmin, rmax, rsum, rnegsum )
             rnegsum = rnegsum * omega / DBLE(nr1*nr2*nr3)
             rsum    = rsum    * omega / DBLE(nr1*nr2*nr3)
             WRITE( stdout,'(a,4(1x,f12.6))')                                     &
@@ -586,7 +586,7 @@
             !
 
             !This loop goes through all components of charge density that is local
-            !to each processor. In the original code this is nnrsx. In the task-groups
+            !to each processor. In the original code this is nrxxs. In the task-groups
             !code this should be equal to the total number of planes
             !
 
@@ -646,7 +646,7 @@
       use recvecs_indexes,    only: np, nm
       use gvecp,              only: ngm
       use grid_dimensions,    only: nr1, nr2, nr3, &
-                                    nr1x, nr2x, nr3x, nnrx
+                                    nr1x, nr2x, nr3x, nrxx
       use cell_base,          only: tpiba
       USE fft_interfaces,     ONLY: invfft
       USE fft_base,           ONLY: dfftp
@@ -656,20 +656,20 @@
       integer, intent(in) :: nspin
       complex(DP) :: rhog( ngm, nspin )
 ! output
-      real(DP) ::    gradr( nnrx, 3, nspin )
+      real(DP) ::    gradr( nrxx, 3, nspin )
 ! local
       complex(DP), allocatable :: v(:)
       complex(DP) :: ci
       integer     :: iss, ig, ir
 !
 !
-      allocate( v( nnrx ) ) 
+      allocate( v( nrxx ) ) 
       !
       ci = ( 0.0d0, 1.0d0 )
       do iss = 1, nspin
 !$omp parallel default(shared), private(ig)
 !$omp do
-         do ig = 1, nnrx
+         do ig = 1, nrxx
             v( ig ) = ( 0.0d0, 0.0d0 )
          end do
 !$omp do
@@ -683,11 +683,11 @@
          !
 !$omp parallel default(shared), private(ig,ir)
 !$omp do
-         do ir=1,nnrx
+         do ir=1,nrxx
             gradr(ir,1,iss)=DBLE(v(ir))
          end do
 !$omp do
-         do ig=1,nnrx
+         do ig=1,nrxx
             v(ig)=(0.0d0,0.0d0)
          end do
 !$omp do
@@ -702,7 +702,7 @@
          call invfft( 'Dense', v, dfftp )
          !
 !$omp parallel do default(shared)
-         do ir=1,nnrx
+         do ir=1,nrxx
             gradr(ir,2,iss)= DBLE(v(ir))
             gradr(ir,3,iss)=AIMAG(v(ir))
          end do
@@ -768,7 +768,7 @@ SUBROUTINE drhov(irb,eigrb,rhovan,drhovan,rhog,rhor,drhog,drhor)
       USE ions_base,                ONLY: na, nsp, nat
       USE cvan,                     ONLY: nvb
       USE uspp_param,               ONLY: nhm, nh
-      USE grid_dimensions,          ONLY: nr1, nr2, nr3, nr1x, nr2x, nr3x, nnr => nnrx
+      USE grid_dimensions,          ONLY: nr1, nr2, nr3, nr1x, nr2x, nr3x, nnr => nrxx
       USE electrons_base,           ONLY: nspin
       USE gvecb,                    ONLY: ngb, npb, nmb
       USE gvecp,                    ONLY: ng => ngm
@@ -1059,7 +1059,7 @@ SUBROUTINE rhov(irb,eigrb,rhovan,rhog,rhor)
       USE cvan,                     ONLY: nvb
       USE uspp_param,               ONLY: nh, nhm
       USE uspp,                     ONLY: deeq
-      USE grid_dimensions,          ONLY: nr1, nr2, nr3, nr1x, nr2x, nr3x, nnr => nnrx
+      USE grid_dimensions,          ONLY: nr1, nr2, nr3, nr1x, nr2x, nr3x, nnr => nrxx
       USE electrons_base,           ONLY: nspin
       USE gvecb,                    ONLY: npb, nmb, ngb
       USE gvecp,                    ONLY: ng => ngm
@@ -1401,7 +1401,7 @@ END SUBROUTINE rhov
       !
       use kinds,           ONLY: DP
       USE fft_base,        ONLY: dfftp
-      use grid_dimensions, ONLY: nr1, nr2, nr3, nr1x, nr2x, nnrx
+      use grid_dimensions, ONLY: nr1, nr2, nr3, nr1x, nr2x, nrxx
       use xml_io_base,     ONLY: read_rho_xml, restart_dir
       use control_flags,   ONLY: ndr
       USE io_files,        ONLY: tmp_dir
@@ -1409,7 +1409,7 @@ END SUBROUTINE rhov
       implicit none
       !
       integer  :: nspin
-      real(DP) :: rhor( nnrx, nspin )
+      real(DP) :: rhor( nrxx, nspin )
       !
       integer            :: is
       CHARACTER(LEN=256) :: filename, dirname
@@ -1440,11 +1440,11 @@ END SUBROUTINE rhov
       subroutine old_write_rho( rhounit, nspin, rhor, a1, a2, a3 )
 !----------------------------------------------------------------------
 !
-! collect rhor(nnrx,nspin) on first node and write to file
+! collect rhor(nrxx,nspin) on first node and write to file
 !
       use kinds,           ONLY: DP
       use parallel_include
-      use grid_dimensions, only : nr1x, nr2x, nr3x, nnrx
+      use grid_dimensions, only : nr1x, nr2x, nr3x, nrxx
       use gvecw ,          only : ngw
       USE mp_global,       ONLY : nproc_image, intra_image_comm
       USE io_global,       ONLY : ionode, ionode_id
@@ -1455,7 +1455,7 @@ END SUBROUTINE rhov
       implicit none
       !
       integer,       INTENT(IN) :: rhounit, nspin
-      real(kind=DP), INTENT(IN) :: rhor( nnrx, nspin )
+      real(kind=DP), INTENT(IN) :: rhor( nrxx, nspin )
       real(kind=DP), INTENT(IN) :: a1(3), a2(3), a3(3)
       !
       integer :: ir, is
@@ -1514,7 +1514,7 @@ END SUBROUTINE rhov
       ELSE
 
          IF ( ionode ) THEN
-            WRITE( rhounit, '(F12.7)' ) ( ( rhor(ir,is), ir = 1, nnrx ), is = 1, nspin )
+            WRITE( rhounit, '(F12.7)' ) ( ( rhor(ir,is), ir = 1, nrxx ), is = 1, nspin )
          END IF
 
       END IF COLLECT_CHARGE

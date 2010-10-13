@@ -27,12 +27,12 @@ SUBROUTINE init_run()
   USE gvecs,                    ONLY : ngs
   USE gvecp,                    ONLY : ngm
   USE reciprocal_vectors,       ONLY : gzero
-  USE grid_dimensions,          ONLY : nnrx, nr1, nr2, nr3
+  USE grid_dimensions,          ONLY : nrxx, nr1, nr2, nr3
   USE fft_base,                 ONLY : dfftp
   USE electrons_base,           ONLY : nspin, nbsp, nbspx, nupdwn, f
   USE uspp,                     ONLY : nkb, vkb, deeq, becsum,nkbus
   USE core,                     ONLY : rhoc
-  USE smooth_grid_dimensions,   ONLY : nnrsx
+  USE smooth_grid_dimensions,   ONLY : nrxxs
   USE wavefunctions_module,     ONLY : c0, cm, cp
   USE cdvan,                    ONLY : dbec, drhovan
   USE ensemble_dft,             ONLY : tens, z0t
@@ -124,7 +124,7 @@ SUBROUTINE init_run()
   !=======================================================================
   !
   CALL allocate_mainvar( ngw, ngwt, ngb, ngs, ngm, nr1, nr2, nr3, dfftp%nr1x, &
-                         dfftp%nr2x, dfftp%npl, nnrx, nnrsx, nat, nax, nsp,   &
+                         dfftp%nr2x, dfftp%npl, nrxx, nrxxs, nat, nax, nsp,   &
                          nspin, nbsp, nbspx, nupdwn, nkb, gzero, nudx, &
                          tpre )
   !
@@ -173,16 +173,16 @@ SUBROUTINE init_run()
   !
   IF ( dft_is_meta() .AND. tpre ) THEN
      !
-     ALLOCATE( crosstaus( nnrsx, 6, nspin ) )
-     ALLOCATE( dkedtaus(  nnrsx, 3, 3, nspin ) )
-     ALLOCATE( gradwfc(   nnrsx, 3 ) )
+     ALLOCATE( crosstaus( nrxxs, 6, nspin ) )
+     ALLOCATE( dkedtaus(  nrxxs, 3, 3, nspin ) )
+     ALLOCATE( gradwfc(   nrxxs, 3 ) )
      !
   END IF
   !
-  IF ( lwf ) CALL allocate_wannier( nbsp, nnrsx, nspin, ngm )
+  IF ( lwf ) CALL allocate_wannier( nbsp, nrxxs, nspin, ngm )
   !
   IF ( tens .OR. tcg ) &
-     CALL allocate_ensemble_dft( nkb, nbsp, ngw, nudx, nspin, nbspx, nnrsx, nat, nlax, nrlx )
+     CALL allocate_ensemble_dft( nkb, nbsp, ngw, nudx, nspin, nbspx, nrxxs, nat, nlax, nrlx )
   !
   IF ( tcg ) CALL allocate_cg( ngw, nbspx,nkbus )
   !

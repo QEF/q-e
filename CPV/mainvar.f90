@@ -113,7 +113,7 @@ MODULE cp_main_variables
     !
     !------------------------------------------------------------------------
     SUBROUTINE allocate_mainvar( ngw, ngwt, ngb, ngs, ng, nr1, nr2, nr3, &
-                                 nr1x, nr2x, npl, nnr, nnrsx, nat, nax,  &
+                                 nr1x, nr2x, npl, nnr, nrxxs, nat, nax,  &
                                  nsp, nspin, n, nx, nupdwn, nhsa, &
                                  gzero, nudx, tpre )
       !------------------------------------------------------------------------
@@ -124,7 +124,7 @@ MODULE cp_main_variables
       USE descriptors, ONLY: descla_siz_ , descla_init , nlax_ , la_nrlx_ , lambda_node_
       !
       INTEGER,           INTENT(IN) :: ngw, ngwt, ngb, ngs, ng, nr1, nr2, nr3, &
-                                       nnr, nnrsx, nat, nax, nsp, nspin, &
+                                       nnr, nrxxs, nat, nax, nsp, nspin, &
                                        n, nx, nhsa, nr1x, nr2x, npl
       INTEGER,           INTENT(IN) :: nupdwn(:)
       LOGICAL,           INTENT(IN) :: gzero
@@ -148,7 +148,7 @@ MODULE cp_main_variables
          ! ... METAGGA
          !
          ALLOCATE( kedtaur( nnr,   nspin ) )
-         ALLOCATE( kedtaus( nnrsx, nspin ) )
+         ALLOCATE( kedtaus( nrxxs, nspin ) )
          ALLOCATE( kedtaug( ng,    nspin ) )
          !
       ELSE
@@ -166,7 +166,7 @@ MODULE cp_main_variables
       !
       ALLOCATE( rhor( nnr, nspin ) )
       ALLOCATE( vpot( nnr, nspin ) )
-      ALLOCATE( rhos( nnrsx, nspin ) )
+      ALLOCATE( rhos( nrxxs, nspin ) )
       ALLOCATE( rhog( ng,    nspin ) )
       IF ( tpre ) THEN
             ALLOCATE( drhog( ng,  nspin, 3, 3 ) )

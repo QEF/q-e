@@ -989,7 +989,7 @@ END FUNCTION
       USE cvan,                     ONLY: nvb
       USE ions_base,                ONLY: nat, nsp, na
       USE constants,                ONLY: pi, fpi
-      USE grid_dimensions,          ONLY: nr3, nnr => nnrx
+      USE grid_dimensions,          ONLY: nr3, nnr => nrxx
       USE gvecb,                    ONLY: ngb, npb, nmb, gxb
       USE small_box,                ONLY: omegab, tpibab
       USE smallbox_grid_dimensions, ONLY: nr1b, nr2b, nr3b, &
@@ -1636,7 +1636,7 @@ END FUNCTION
       USE gvecw, ONLY: ngw
       USE reciprocal_vectors, ONLY: gstart
       USE grid_dimensions, ONLY: nr1, nr2, nr3, &
-            nnr => nnrx
+            nnr => nrxx
       USE cell_base, ONLY: omega
       USE cvan, ONLY: nvb, ish
       USE uspp, ONLY: nhsa => nkb, nhsavb=>nkbus, qq
@@ -1779,8 +1779,8 @@ END FUNCTION
       USE cell_base,          ONLY: a1, a2, a3, tpiba2, h, ainv
       USE reciprocal_vectors, ONLY: gstart, g, gx
       USE recvecs_indexes,    ONLY: np, nm
-      USE grid_dimensions,    ONLY: nr1, nr2, nr3, nnr => nnrx
-      USE smooth_grid_dimensions, ONLY: nnrsx
+      USE grid_dimensions,    ONLY: nr1, nr2, nr3, nnr => nrxx
+      USE smooth_grid_dimensions, ONLY: nrxxs
       USE electrons_base,   ONLY: nspin
       USE constants,        ONLY: pi, fpi, au_gpa
       USE energies,         ONLY: etot, eself, enl, ekin, epseu, esr, eht, exc, eextfor 
@@ -1808,7 +1808,7 @@ END FUNCTION
 !
       LOGICAL :: tlast, tfirst
       INTEGER :: nfi
-      REAL(DP)  rhor(nnr,nspin), rhos(nnrsx,nspin), fion(3,nat)
+      REAL(DP)  rhor(nnr,nspin), rhos(nrxxs,nspin), fion(3,nat)
       REAL(DP)  rhoc(nnr), tau0(3,nat)
       COMPLEX(DP) ei1(-nr1:nr1,nat), ei2(-nr2:nr2,nat),     &
      &                ei3(-nr3:nr3,nat), eigrb(ngb,nat),        &
@@ -1858,7 +1858,7 @@ END FUNCTION
       ht = TRANSPOSE( h )
       !
       ALLOCATE( v( nnr ) )
-      ALLOCATE( vs( nnrsx ) )
+      ALLOCATE( vs( nrxxs ) )
       ALLOCATE( vtemp( ng ) )
       ALLOCATE( rhotmp( ng ) )
       !
@@ -2205,7 +2205,7 @@ END FUNCTION
          CALL invfft('Smooth',vs, dffts )
          !
 !$omp parallel do
-         DO ir=1,nnrsx
+         DO ir=1,nrxxs
             rhos(ir,iss)=DBLE(vs(ir))
          END DO
          !
@@ -2222,7 +2222,7 @@ END FUNCTION
          CALL invfft('Smooth',vs, dffts )
          !
 !$omp parallel do
-         DO ir=1,nnrsx
+         DO ir=1,nrxxs
             rhos(ir,isup)= DBLE(vs(ir))
             rhos(ir,isdw)=AIMAG(vs(ir))
          END DO

@@ -134,7 +134,7 @@
       USE gvecp,           ONLY: ngm
       USE constants,       ONLY: gsmall, pi
       USE cell_base,       ONLY: tpiba2, s_to_r, alat
-      use grid_dimensions, only: nr1, nr2, nr3, nr1l, nr2l, nr3l, nnrx
+      use grid_dimensions, only: nr1, nr2, nr3, nr1l, nr2l, nr3l, nrxx
 
       IMPLICIT NONE
       
@@ -159,7 +159,7 @@
         ir3 = ir3 + dfftp%npp( k )
       END DO
 
-      ALLOCATE( grr( nnrx ) )
+      ALLOCATE( grr( nrxx ) )
       ALLOCATE( grg( SIZE( screen_coul ) ) )
 
       grr = 0.0d0
@@ -525,8 +525,7 @@
 
       REAL(DP), EXTERNAL :: qe_erfc
 
-      INTEGER :: ldim_block, gind_block
-      EXTERNAL ldim_block, gind_block
+      INTEGER, EXTERNAL :: ldim_block, gind_block
 
       
 ! ... LOCALS 
@@ -838,7 +837,7 @@
       USE reciprocal_vectors, ONLY: gstart, g
       USE gvecp, ONLY: ngm
       USE gvecw, ONLY: ngw
-      use grid_dimensions, only: nr1, nr2, nr3, nr1l, nr2l, nr3l, nnrx
+      use grid_dimensions, only: nr1, nr2, nr3, nr1l, nr2l, nr3l, nrxx
       USE fft_interfaces, ONLY: fwfft, invfft
 
       IMPLICIT NONE
@@ -874,8 +873,8 @@
 
       omega = ht%deth
 
-      ALLOCATE( density( nnrx ) )
-      ALLOCATE( psi( nnrx ) )
+      ALLOCATE( density( nrxx ) )
+      ALLOCATE( psi( nrxx ) )
       ALLOCATE( k_density( ngm ) )
 
       CALL c2psi(  psi, dffts%nnr, wfc, wfc, ngw, 1 )

@@ -16,7 +16,7 @@
       use reciprocal_vectors
       use gvecs
       use gvecw,                  only : ngw
-      use smooth_grid_dimensions, only : nnrs => nnrsx
+      use smooth_grid_dimensions, only : nnrs => nrxxs
       use cell_base,              only : tpiba2
       USE metagga,                ONLY : kedtaus
       USE fft_interfaces,         ONLY : fwfft, invfft
@@ -73,9 +73,9 @@
       use reciprocal_vectors, only: gx
       use recvecs_indexes, only: np, nm
       use grid_dimensions, only: nr1, nr2, nr3, &
-            nr1x, nr2x, nr3x, nnr => nnrx
+            nr1x, nr2x, nr3x, nnr => nrxx
       use cell_base
-      use smooth_grid_dimensions, only: nnrsx
+      use smooth_grid_dimensions, only: nrxxs
       use electrons_base, only: nx => nbspx, n => nbsp, f, ispin, nspin
       use constants, only: pi, fpi
 !
@@ -136,12 +136,12 @@
                   ! gradient of wfc in real space
             call invfft('Wave',psis, dffts )
             !           on smooth grids--> grids for charge density
-            do ir=1, nnrsx
+            do ir=1, nrxxs
                kedtaus(ir,iss1)=kedtaus(ir,iss1)+0.5d0*sa1*DBLE(psis(ir))**2
                kedtaus(ir,iss2)=kedtaus(ir,iss2)+0.5d0*sa2*AIMAG(psis(ir))**2
             end do
             if(tpre) then
-               do ir=1, nnrsx
+               do ir=1, nrxxs
                   gradwfc(ir,ipol)=psis(ir)
                end do
             end if
@@ -152,7 +152,7 @@
                do iy=1,ix
                   ipol2xy(ix,iy)=ipol
                   ipol2xy(iy,ix)=ipol
-                  do ir=1,nnrsx
+                  do ir=1,nrxxs
                      crosstaus(ir,ipol,iss1) = crosstaus(ir,ipol,iss1) +&
                           sa1*DBLE(gradwfc(ir,ix))*DBLE(gradwfc(ir,iy))
                      crosstaus(ir,ipol,iss2) = crosstaus(ir,ipol,iss2) +&
@@ -168,7 +168,7 @@
             do iss=1,nspin
                do ix=1,3
                   do iy=1,3
-                     do ir=1,nnrsx
+                     do ir=1,nrxxs
                         dkedtaus(ir,ix,iy,iss)=-kedtaus(ir,iss)*ainv(iy,ix)&
                              -crosstaus(ir,ipol2xy(1,ix),iss)*ainv(iy,1)&
                              -crosstaus(ir,ipol2xy(2,ix),iss)*ainv(iy,2)&
@@ -184,7 +184,7 @@
       if(nspin.eq.1)then
          iss=1
 
-         psis(1:nnrsx)=CMPLX(kedtaus(1:nnrsx,iss),0.d0,kind=DP)
+         psis(1:nrxxs)=CMPLX(kedtaus(1:nrxxs,iss),0.d0,kind=DP)
          call fwfft('Smooth',psis, dffts )
          kedtaug(1:ngs,iss)=psis(nps(1:ngs))
 
@@ -192,7 +192,7 @@
          isup=1
          isdw=2
 
-         psis(1:nnrsx)=CMPLX(kedtaus(1:nnrsx,isup),kedtaus(1:nnrsx,isdw),kind=DP)
+         psis(1:nrxxs)=CMPLX(kedtaus(1:nrxxs,isup),kedtaus(1:nrxxs,isdw),kind=DP)
          call fwfft('Smooth',psis, dffts )
          do ig=1,ngs
             fp= psis(nps(ig)) + psis(nms(ig))
@@ -264,8 +264,8 @@
       use reciprocal_vectors, only: gstart, g
       use recvecs_indexes, only: np, nm
       use grid_dimensions, only: nr1, nr2, nr3, &
-            nr1x, nr2x, nr3x, nnr => nnrx
-      use smooth_grid_dimensions, only: nr1s, nr2s, nr3s, nnrs => nnrsx
+            nr1x, nr2x, nr3x, nnr => nrxx
+      use smooth_grid_dimensions, only: nr1s, nr2s, nr3s, nnrs => nrxxs
       use electrons_base, only: nspin
       use constants, only: pi, fpi
       use energies, only: etot, eself, enl, ekin, epseu, esr, eht, exc

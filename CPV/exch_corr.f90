@@ -17,7 +17,7 @@
       use funct,           only : dft_is_gradient, dft_is_meta
       use gvecp,           only : ng => ngm
       use gvecs,           only : ngs
-      use grid_dimensions, only : nr1, nr2, nr3, nnr => nnrx
+      use grid_dimensions, only : nr1, nr2, nr3, nnr => nrxx
       use cell_base,       only : ainv, omega, h
       use ions_base,       only : nsp
       use control_flags,   only : tpre, iprsta
@@ -270,7 +270,7 @@
       use reciprocal_vectors, only: gx
       use recvecs_indexes, only: np, nm
       use gvecp, only: ng => ngm
-      use grid_dimensions, only: nr1, nr2, nr3, nnr => nnrx, nr1x, nr2x, nr3x
+      use grid_dimensions, only: nr1, nr2, nr3, nnr => nrxx, nr1x, nr2x, nr3x
       use cell_base, only: ainv, tpiba, omega
       use cp_main_variables, only: drhog
       USE fft_interfaces, ONLY: fwfft, invfft

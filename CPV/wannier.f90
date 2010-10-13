@@ -137,15 +137,15 @@ MODULE wannier_module
   CONTAINS
   !
   !------------------------------------------------------------------------
-  SUBROUTINE allocate_wannier( nbsp, nnrsx, nspin, ng )
+  SUBROUTINE allocate_wannier( nbsp, nrxxs, nspin, ng )
     !------------------------------------------------------------------------
     !
-    INTEGER, INTENT(in) :: nbsp, nnrsx, nspin, ng
+    INTEGER, INTENT(in) :: nbsp, nrxxs, nspin, ng
     !
     ALLOCATE( utwf( nbsp, nbsp ) )
     ALLOCATE( wfc( 3, nbsp ) )
-    ALLOCATE( rhos1( nnrsx, nspin) )
-    ALLOCATE( rhos2( nnrsx, nspin) )
+    ALLOCATE( rhos1( nrxxs, nspin) )
+    ALLOCATE( rhos2( nrxxs, nspin) )
     ALLOCATE( rhogdum( ng, nspin ) )
     !
     RETURN
@@ -475,7 +475,7 @@ MODULE wannier_subroutines
                                        ydist, zdist
     USE electric_field_module,  ONLY : field_tune, e_tuned, par, rel1, rel2
     USE wannier_module,         ONLY : rhos1, rhos2, wfc
-    USE smooth_grid_dimensions, ONLY : nnrsx
+    USE smooth_grid_dimensions, ONLY : nrxxs
     USE electrons_base,         ONLY : nbsp, nspin, nupdwn, f, ispin
     USE cell_base,              ONLY : ainv, a1, a2, a3
     USE reciprocal_vectors,     ONLY : gstart
@@ -543,7 +543,7 @@ MODULE wannier_subroutines
        IF(wf_efield) THEN
           rhos1=0.d0
           rhos2=0.d0
-          DO ir=1,nnrsx
+          DO ir=1,nrxxs
              rel1(1)=xdist(ir)*a1(1)+ydist(ir)*a2(1)+zdist(ir)*a3(1)-wfc(1,i)
              rel1(2)=xdist(ir)*a1(2)+ydist(ir)*a2(2)+zdist(ir)*a3(2)-wfc(2,i)
              rel1(3)=xdist(ir)*a1(3)+ydist(ir)*a2(3)+zdist(ir)*a3(3)-wfc(3,i)
@@ -577,9 +577,9 @@ MODULE wannier_subroutines
                 rhos2(ir,:)=rhos1(ir,:)
              END IF
           END DO
-          CALL dforce(i,bec,betae,c0,c2,c3,rhos1,nnrsx,ispin,f,nbsp,nspin,rhos2)
+          CALL dforce(i,bec,betae,c0,c2,c3,rhos1,nrxxs,ispin,f,nbsp,nspin,rhos2)
        ELSE
-          CALL dforce(i,bec,betae,c0,c2,c3,rhos,nnrsx,ispin,f,nbsp,nspin)
+          CALL dforce(i,bec,betae,c0,c2,c3,rhos,nrxxs,ispin,f,nbsp,nspin)
        END IF
        IF(tsde) THEN
           CALL wave_steepest( cm(:, i  ), c0(:, i  ), emadt2, c2 )

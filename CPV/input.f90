@@ -872,12 +872,12 @@ MODULE input
            nr2b_ => nr2b, &
            nr3b_ => nr3b
      USE grid_dimensions,          ONLY: &
-           nnrx, &  !  variable is used to workaround internal compiler error (IBM xlf)
+           nrxx, &  !  variable is used to workaround internal compiler error (IBM xlf)
            nr1_ => nr1, &
            nr2_ => nr2, &
            nr3_ => nr3
      USE smooth_grid_dimensions,   ONLY: &
-           nnrsx, &  !  variable is used to workaround internal compiler error (IBM xlf)
+           nrxxs, &  !  variable is used to workaround internal compiler error (IBM xlf)
            nr1s_ => nr1s, &
            nr2s_ => nr2s, &
            nr3s_ => nr3s

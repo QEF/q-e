@@ -30,7 +30,7 @@ SUBROUTINE vol_clu(rho_real,rho_g,s_fac,flag)
       use fft_base, ONLY : dfftP
       USE fft_interfaces,    ONLY: invfft
       use grid_dimensions, only: nr1, nr2, nr3,                         &
-     &                   nr1x, nr2x, nr3x, nnr => nnrx
+     &                   nr1x, nr2x, nr3x, nnr => nrxx
       use pres_ai_mod, only: rho_thr, n_cntr, cntr, step_rad, fill_vac, &
      &                       delta_eps, delta_sigma, axis,              &
      &                       abisur, dthr, Surf_t, rho_gaus, v_vol,     &

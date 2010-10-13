@@ -30,7 +30,7 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
   USE gvecb,                    ONLY : npb, nmb, ngb
   USE gvecw,                    ONLY : ngw
   USE reciprocal_vectors,       ONLY : gstart
-  USE smooth_grid_dimensions,   ONLY : nnrsx
+  USE smooth_grid_dimensions,   ONLY : nrxxs
   USE control_flags,            ONLY : iprsta
   USE qgb_mod,                  ONLY : qgb
   USE wannier_base,             ONLY : wfg, nw, weight, indexplus, indexplusz, &
@@ -1377,7 +1377,7 @@ SUBROUTINE grid_map()
   !
   USE kinds,                  ONLY : DP
   USE efcalc,                 ONLY : xdist, ydist, zdist
-  USE smooth_grid_dimensions, ONLY : nnrsx
+  USE smooth_grid_dimensions, ONLY : nrxxs
   USE fft_base,               ONLY : dffts
   USE mp_global,              ONLY : me_image
   USE parallel_include
@@ -1388,9 +1388,9 @@ SUBROUTINE grid_map()
   !
   me = me_image + 1
   !
-  ALLOCATE(xdist(nnrsx))
-  ALLOCATE(ydist(nnrsx))
-  ALLOCATE(zdist(nnrsx))
+  ALLOCATE(xdist(nrxxs))
+  ALLOCATE(ydist(nrxxs))
+  ALLOCATE(zdist(nrxxs))
   !
   nr1s = dffts%nr1
   nr2s = dffts%nr2
@@ -1973,7 +1973,7 @@ SUBROUTINE small_box_wf( i_1, j_1, k_1, nw1 )
   USE io_global,              ONLY : stdout
   USE constants,              ONLY : fpi
   USE wannier_base,           ONLY : expo
-  USE grid_dimensions,        ONLY : nr1, nr2, nr3, nr1x, nr2x, nr3x, nnrx
+  USE grid_dimensions,        ONLY : nr1, nr2, nr3, nr1x, nr2x, nr3x, nrxx
   USE fft_base,               ONLY : dfftp
   USE mp_global,              ONLY : me_image
   USE parallel_include
@@ -1987,7 +1987,7 @@ SUBROUTINE small_box_wf( i_1, j_1, k_1, nw1 )
 
   me = me_image + 1
 
-  ALLOCATE(expo(nnrx,nw1))
+  ALLOCATE(expo(nrxx,nw1))
 
   DO inw=1,nw1
 
@@ -2028,7 +2028,7 @@ FUNCTION boxdotgridcplx(irb,qv,vr)
   !      use ion_parameters
   !
   USE kinds,                    ONLY : DP
-  USE grid_dimensions,          ONLY : nnrx, nr1, nr2, nr3, nr1x, nr2x, nr3x
+  USE grid_dimensions,          ONLY : nrxx, nr1, nr2, nr3, nr1x, nr2x, nr3x
   USE smallbox_grid_dimensions, ONLY : nnrbx, nr1b, nr2b, nr3b, &
                                        nr1bx, nr2bx, nr3bx
   USE fft_base,                 ONLY : dfftp
@@ -2037,7 +2037,7 @@ FUNCTION boxdotgridcplx(irb,qv,vr)
   IMPLICIT NONE
   !
   INTEGER,           INTENT(IN):: irb(3)
-  COMPLEX(DP), INTENT(IN):: qv(nnrbx), vr(nnrx)
+  COMPLEX(DP), INTENT(IN):: qv(nnrbx), vr(nrxx)
   COMPLEX(DP)            :: boxdotgridcplx
   !
   INTEGER :: ir1, ir2, ir3, ir, ibig1, ibig2, ibig3, ibig, me

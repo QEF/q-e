@@ -31,7 +31,7 @@
       USE cvan,                   ONLY: ish
       USE uspp,                   ONLY: nhsa=>nkb, dvan, deeq
       USE uspp_param,             ONLY: nhm, nh
-      USE smooth_grid_dimensions, ONLY: nnrsx
+      USE smooth_grid_dimensions, ONLY: nrxxs
       USE constants,              ONLY: pi, fpi
       USE ions_base,              ONLY: nsp, na, nat
       USE gvecw,                  ONLY: ngw, ggp
@@ -75,7 +75,7 @@
          ALLOCATE( psi( dffts%nnrx * nogrp ) )
       ELSE
          nogrp_ = 1
-         ALLOCATE( psi( nnrsx ) )
+         ALLOCATE( psi( nrxxs ) )
       END IF
       !
       ci = ( 0.0d0, 1.0d0 )
@@ -134,14 +134,14 @@
          !
          IF( PRESENT( v1 ) ) THEN
 !$omp parallel do 
-            DO ir=1,nnrsx
+            DO ir=1,nrxxs
                psi(ir)=CMPLX ( v(ir,iss1)* DBLE(psi(ir)), &
                               v1(ir,iss2)*AIMAG(psi(ir)) ,kind=DP)
             END DO
 !$omp end parallel do 
          ELSE
 !$omp parallel do 
-            DO ir=1,nnrsx
+            DO ir=1,nrxxs
                psi(ir)=CMPLX( v(ir,iss1)* DBLE(psi(ir)), &
                               v(ir,iss2)*AIMAG(psi(ir)) ,kind=DP)
             END DO

@@ -22,13 +22,13 @@
       USE kinds,                    ONLY: dp
       use io_global,                only: stdout, ionode
       use control_flags,            only: gamma_only
-      use grid_dimensions,          only: nr1, nr2, nr3, nr1x, nr2x, nr3x, nnr => nnrx
+      use grid_dimensions,          only: nr1, nr2, nr3, nr1x, nr2x, nr3x, nnr => nrxx
       use cell_base,                only: ainv, a1, a2, a3
       use cell_base,                only: omega, alat
       use small_box,                only: a1b, a2b, a3b, omegab, ainvb, tpibab, small_box_set
       use small_box,                only: alatb, b1b, b2b, b3b
       use smallbox_grid_dimensions, only: nr1b, nr2b, nr3b, nr1bx, nr2bx, nr3bx, nnrb => nnrbx
-      use smooth_grid_dimensions,   only: nr1s, nr2s, nr3s, nr1sx, nr2sx, nr3sx, nnrsx
+      use smooth_grid_dimensions,   only: nr1s, nr2s, nr3s, nr1sx, nr2sx, nr3sx, nrxxs
       USE grid_subroutines,         ONLY: realspace_grids_init, realspace_grids_para
       USE reciprocal_vectors,       ONLY: mill_g, g2_g, bi1, bi2, bi3
       USE recvecs_subroutines,      ONLY: recvecs_init

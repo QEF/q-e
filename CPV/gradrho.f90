@@ -22,9 +22,9 @@ SUBROUTINE gradrho(nspin,rhog,drho,d2rho,dxdyrho,dxdzrho,dydzrho)
       USE fft_interfaces, ONLY: invfft
       USE fft_base,       ONLY: dfftp
       use grid_dimensions, only : nr1, nr2, nr3, nr1x, nr2x, nr3x,      &
-     &                            nnr=> nnrx
+     &                            nnr=> nrxx
 !      use grid_dimensions, only: nr1, nr2, nr3, &
-!            nr1x, nr2x, nr3x, nnr => nnrx
+!            nr1x, nr2x, nr3x, nnr => nrxx
 !
       implicit none
 ! input

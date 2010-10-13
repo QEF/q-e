@@ -45,12 +45,12 @@
       USE cvan,           ONLY: nvb, ish
       USE ions_base,      ONLY: na, nat, pmass, nax, nsp, rcmax
       USE grid_dimensions, &
-                          ONLY: nnr => nnrx, nr1, nr2, nr3
+                          ONLY: nnr => nrxx, nr1, nr2, nr3
       USE cell_base,      ONLY: ainv, a1, a2, a3
       USE cell_base,      ONLY: omega, alat
       USE cell_base,      ONLY: h, hold, deth, wmass, tpiba2
       USE smooth_grid_dimensions, &
-                          ONLY: nnrsx, nr1s, nr2s, nr3s
+                          ONLY: nrxxs, nr1s, nr2s, nr3s
       USE smallbox_grid_dimensions, &
                           ONLY: nnrb => nnrbx, nr1b, nr2b, nr3b
       USE local_pseudo,   ONLY: vps, rhops
@@ -94,7 +94,7 @@
       REAL(kind=DP)               :: rhor( nnr, nspin )
       REAL(kind=DP)               :: vpot( nnr, nspin )
       COMPLEX(kind=DP)            :: rhog( ngm, nspin )
-      REAL(kind=DP)               :: rhos( nnrsx, nspin )
+      REAL(kind=DP)               :: rhos( nrxxs, nspin )
       REAL(kind=DP)               :: rhoc( nnr )
       COMPLEX(kind=DP)            :: ei1( nr1:nr1, nat )
       COMPLEX(kind=DP)            :: ei2( nr2:nr2, nat )
@@ -169,7 +169,7 @@
          ! operates the Hamiltonian on the wavefunction c0
          h0c0( :, : )= 0.D0
          DO i= 1, n, 2                      
-            CALL dforce( i, bec, betae, c0, h0c0(:,i), h0c0(:,i+1), rhos, nnrsx, ispin, f, n, nspin )
+            CALL dforce( i, bec, betae, c0, h0c0(:,i), h0c0(:,i+1), rhos, nrxxs, ispin, f, n, nspin )
          END DO
 
     
@@ -359,12 +359,12 @@
       USE cvan,           ONLY: nvb, ish
       USE ions_base,      ONLY: na, nat, pmass, nax, nsp, rcmax
       USE grid_dimensions, &
-                          ONLY: nnr => nnrx, nr1, nr2, nr3
+                          ONLY: nnr => nrxx, nr1, nr2, nr3
       USE cell_base,      ONLY: ainv, a1, a2, a3
       USE cell_base,      ONLY: omega, alat
       USE cell_base,      ONLY: h, hold, deth, wmass, tpiba2
       USE smooth_grid_dimensions, &
-                          ONLY: nnrsx, nr1s, nr2s, nr3s
+                          ONLY: nrxxs, nr1s, nr2s, nr3s
       USE smallbox_grid_dimensions, &
                           ONLY: nnrb => nnrbx, nr1b, nr2b, nr3b
       USE local_pseudo,   ONLY: vps, rhops
@@ -401,7 +401,7 @@
       REAL(kind=DP)               :: rhor( nnr, nspin )
       REAL(kind=DP)               :: vpot( nnr, nspin )
       COMPLEX(kind=DP)            :: rhog( ngm, nspin )
-      REAL(kind=DP)               :: rhos( nnrsx, nspin )
+      REAL(kind=DP)               :: rhos( nrxxs, nspin )
       REAL(kind=DP)               :: rhoc( nnr )
       COMPLEX(kind=DP)            :: ei1( nr1:nr1, nat )
       COMPLEX(kind=DP)            :: ei2( nr2:nr2, nat )
@@ -557,12 +557,12 @@
       USE cvan,           ONLY: nvb, ish
       USE ions_base,      ONLY: na, nat, pmass, nax, nsp, rcmax
       USE grid_dimensions, &
-                          ONLY: nnr => nnrx, nr1, nr2, nr3
+                          ONLY: nnr => nrxx, nr1, nr2, nr3
       USE cell_base,      ONLY: ainv, a1, a2, a3
       USE cell_base,      ONLY: omega, alat
       USE cell_base,      ONLY: h, hold, deth, wmass, tpiba2
       USE smooth_grid_dimensions, &
-                          ONLY: nnrsx, nr1s, nr2s, nr3s
+                          ONLY: nrxxs, nr1s, nr2s, nr3s
       USE smallbox_grid_dimensions, &
                           ONLY: nnrb => nnrbx, nr1b, nr2b, nr3b
       USE local_pseudo,   ONLY: vps, rhops

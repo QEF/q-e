@@ -255,11 +255,11 @@ MODULE core
    !
 CONTAINS
    !
-   SUBROUTINE allocate_core( nnrx, ngm, ngb, nsp ) 
-     INTEGER, INTENT(IN) :: nnrx, ngm, ngb, nsp
+   SUBROUTINE allocate_core( nrxx, ngm, ngb, nsp ) 
+     INTEGER, INTENT(IN) :: nrxx, ngm, ngb, nsp
      IF ( nlcc_any ) THEN    
         !
-        ALLOCATE( rhoc( nnrx ) )
+        ALLOCATE( rhoc( nrxx ) )
         ALLOCATE( rhocb( ngb, nsp ) )
         ALLOCATE( rhocg( ngm, nsp ) )
         ALLOCATE( drhocg( ngm, nsp ) )

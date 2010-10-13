@@ -255,7 +255,7 @@
 !
       USE kinds, ONLY: dp
       USE grid_dimensions, ONLY: nr1, nr2, nr3, &
-            nr1x, nr2x, nnr => nnrx
+            nr1x, nr2x, nnr => nrxx
       USE smallbox_grid_dimensions, ONLY: nr1b, nr2b, nr3b, &
             nr1bx, nr2bx, nnrb => nnrbx
       USE fft_base, ONLY: dfftp
@@ -313,7 +313,7 @@
 !
       USE kinds, ONLY: dp
       USE grid_dimensions, ONLY: nr1, nr2, nr3, &
-            nr1x, nr2x, nnr => nnrx
+            nr1x, nr2x, nnr => nrxx
       USE smallbox_grid_dimensions, ONLY: nr1b, nr2b, nr3b, &
             nr1bx, nr2bx, nnrb => nnrbx
       USE fft_base, ONLY: dfftp
@@ -371,7 +371,7 @@
 !
       USE kinds, ONLY: dp
       USE grid_dimensions, ONLY: nr1, nr2, nr3, &
-            nr1x, nr2x, nnr => nnrx
+            nr1x, nr2x, nnr => nrxx
       USE smallbox_grid_dimensions, ONLY: nr1b, nr2b, nr3b, &
             nr1bx, nr2bx, nnrb => nnrbx
       USE fft_base, ONLY: dfftp

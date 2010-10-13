@@ -23,7 +23,7 @@ SUBROUTINE makov_payne(etot)
   USE electrons_base,    ONLY : nspin
   USE cell_base,         ONLY : at, bg, omega, alat, ibrav
   USE parallel_include
-  USE grid_dimensions,   ONLY : nr1x, nr2x, nr3x, nnrx
+  USE grid_dimensions,   ONLY : nr1x, nr2x, nr3x, nrxx
   USE gvecw ,            ONLY : ngw
   USE fft_base,          ONLY : dfftp
 #if defined __PARA

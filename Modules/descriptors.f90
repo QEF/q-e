@@ -12,10 +12,8 @@
       SAVE
 
       INTEGER  ldim_block, ldim_cyclic, ldim_block_cyclic, ldim_block_sca
-      INTEGER  lind_block, lind_cyclic, lind_block_cyclic, lind_block_sca
       INTEGER  gind_block, gind_cyclic, gind_block_cyclic, gind_block_sca
       EXTERNAL ldim_block, ldim_cyclic, ldim_block_cyclic, ldim_block_sca
-      EXTERNAL lind_block, lind_cyclic, lind_block_cyclic, lind_block_sca
       EXTERNAL gind_block, gind_cyclic, gind_block_cyclic, gind_block_sca
 
       !  Descriptor for Cannon's algorithm

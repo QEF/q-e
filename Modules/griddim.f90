@@ -25,12 +25,12 @@
      INTEGER :: nr1l = 0   ! local first dimension 
      INTEGER :: nr2l = 0   ! 
      INTEGER :: nr3l = 0   !
-     INTEGER :: nnrx  = 0  ! size of the (local) array allocated for the FFT
+     INTEGER :: nrxx  = 0  ! size of the (local) array allocated for the FFT
                            ! in general could be different than the size of
                            ! the FFT grid
 
      ! ATTENTION:  
-     ! "nnrx" is not to be confused with "nr1 * nr2 * nr3" 
+     ! "nrxx" is not to be confused with "nr1 * nr2 * nr3" 
 
 !=----------------------------------------------------------------------------=!
    END MODULE grid_dimensions
@@ -57,7 +57,7 @@
      INTEGER :: nr1sl = 0
      INTEGER :: nr2sl = 0
      INTEGER :: nr3sl = 0
-     INTEGER :: nnrsx  = 0
+     INTEGER :: nrxxs  = 0
 
 !=----------------------------------------------------------------------------=!
    END MODULE smooth_grid_dimensions
@@ -203,9 +203,9 @@
       USE mp_global, ONLY: nproc_image
       USE fft_types, ONLY: fft_dlay_descriptor
       USE grid_dimensions, ONLY: nr1,  nr2,  nr3, nr1x, nr2x, nr3x
-      USE grid_dimensions, ONLY: nr1l, nr2l, nr3l, nnrx
+      USE grid_dimensions, ONLY: nr1l, nr2l, nr3l, nrxx
       USE smooth_grid_dimensions, ONLY: nr1s,  nr2s,  nr3s, nr1sx, nr2sx, nr3sx
-      USE smooth_grid_dimensions, ONLY: nr1sl, nr2sl, nr3sl, nnrsx
+      USE smooth_grid_dimensions, ONLY: nr1sl, nr2sl, nr3sl, nrxxs
       USE smallbox_grid_dimensions, ONLY: nr1b, nr2b, nr3b, nr1bx, nr2bx, nr3bx, nnrbx
       USE smallbox_grid_dimensions, ONLY: nr1bl, nr2bl, nr3bl
 
@@ -230,8 +230,8 @@
       !   set the dimensions of the array allocated for the FFT
       !   this could in principle be different than the FFT dimensions
 
-      nnrx  = dfftp % nnr
-      nnrsx = dffts % nnr
+      nrxx  = dfftp % nnr
+      nrxxs = dffts % nnr
 
       IF ( nr1s > nr1 .or. nr2s > nr2 .or. nr3s > nr3)                    &
      &   CALL errore(' pmeshset ', ' smooth grid larger than dense grid? ', 1 )
@@ -246,7 +246,7 @@
         WRITE( stdout,*) '  ---------'
         WRITE( stdout,1000) nr1, nr2, nr3, nr1l, nr2l, nr3l, 1, 1, nproc_image
         WRITE( stdout,1010) nr1x, nr2x, nr3x
-        WRITE( stdout,1020) nnrx
+        WRITE( stdout,1020) nrxx
         WRITE( stdout,*) '  Number of x-y planes for each processors: '
         WRITE( stdout, fmt = '( 3X, "nr3l = ", 10I5 )' ) ( dfftp%npp( i ), i = 1, nproc_image )
 
@@ -255,7 +255,7 @@
         WRITE( stdout,*) '  ----------------'
         WRITE( stdout,1000) nr1s, nr2s, nr3s, nr1sl, nr2sl, nr3sl, 1, 1, nproc_image
         WRITE( stdout,1010) nr1sx, nr2sx, nr3sx
-        WRITE( stdout,1020) nnrsx
+        WRITE( stdout,1020) nrxxs
         WRITE( stdout,*) '  Number of x-y planes for each processors: '
         WRITE( stdout, fmt = '( 3X, "nr3sl = ", 10I5 )' ) ( dffts%npp( i ), i = 1, nproc_image )
 
@@ -276,7 +276,7 @@
          '.X.   .Y.   .Z.     .X.   .Y.   .Z.     .X.   .Y.   .Z.',/, &
          3(1X,I5),2X,3(1X,I5),2X,3(1X,I5) )
 1010  FORMAT(3X, 'Array leading dimensions ( nr1x, nr2x, nr3x )   = ', 3(1X,I5) )
-1020  FORMAT(3X, 'Local number of cell to store the grid ( nnrx ) = ', 1X, I9 )
+1020  FORMAT(3X, 'Local number of cell to store the grid ( nrxx ) = ', 1X, I9 )
 
       RETURN
       END SUBROUTINE realspace_grids_para

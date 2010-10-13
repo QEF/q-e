@@ -54,8 +54,8 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
                                        greash, tpiba2, omega, alat, ibrav,  &
                                        celldm, h, hold, hnew, velh, deth,   &
                                        wmass, press, iforceh, cell_force
-  USE grid_dimensions,          ONLY : nnrx, nr1, nr2, nr3
-  USE smooth_grid_dimensions,   ONLY : nnrsx, nr1s, nr2s, nr3s
+  USE grid_dimensions,          ONLY : nrxx, nr1, nr2, nr3
+  USE smooth_grid_dimensions,   ONLY : nrxxs, nr1s, nr2s, nr3s
   USE smallbox_grid_dimensions, ONLY : nr1b, nr2b, nr3b
   USE local_pseudo,             ONLY : allocate_local_pseudo
   USE io_global,                ONLY : io_global_start, &

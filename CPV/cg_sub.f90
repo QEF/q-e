@@ -35,11 +35,11 @@
       use reciprocal_vectors, only: ng0 => gstart
       use cvan, only: nvb, ish
       use ions_base, only: na, nat, pmass, nax, nsp, rcmax
-      use grid_dimensions, only: nnr => nnrx, nr1, nr2, nr3
+      use grid_dimensions, only: nnr => nrxx, nr1, nr2, nr3
       use cell_base, only: ainv, a1, a2, a3
       use cell_base, only: omega, alat
       use cell_base, only: h, hold, deth, wmass, tpiba2
-      use smooth_grid_dimensions, only: nnrsx
+      use smooth_grid_dimensions, only: nrxxs
       use smallbox_grid_dimensions, only: nnrb => nnrbx, nr1b, nr2b, nr3b
       use local_pseudo, only: vps, rhops
       use io_global,                ONLY : io_global_start, stdout, ionode, ionode_id
@@ -83,7 +83,7 @@
       real(dp) :: rhor(nnr,nspin)
       real(dp) :: vpot(nnr,nspin)
       complex(dp) :: rhog(ngm,nspin)
-      real(dp) :: rhos(nnrsx,nspin)
+      real(dp) :: rhos(nrxxs,nspin)
       real(dp) :: rhoc(nnr)
       complex(dp) :: ei1(-nr1:nr1,nat)
       complex(dp) :: ei2(-nr2:nr2,nat)
@@ -301,7 +301,7 @@
         call prefor(eigr,betae)!ATTENZIONE
 
         do i=1,n,2
-          call dforce( i, bec, betae, c0,c2,c3,rhos, nnrsx, ispin,f,n,nspin)
+          call dforce( i, bec, betae, c0,c2,c3,rhos, nrxxs, ispin,f,n,nspin)
           if(tefield .and. (evalue.ne.0.d0)) then
             call dforceb(c0, i, betae, ipolp, bec ,ctabin(1,1,ipolp), gqq, gqqm, qmat, deeq, df)
             c2(1:ngw)=c2(1:ngw)+evalue*df(1:ngw)
@@ -843,7 +843,7 @@
   
         call prefor(eigr,betae)
         do i=1,n,2
-          call dforce(i,bec,betae,c0,c2,c3,rhos,nnrsx,ispin,f,n,nspin)
+          call dforce(i,bec,betae,c0,c2,c3,rhos,nrxxs,ispin,f,n,nspin)
           if(tefield.and.(evalue .ne. 0.d0)) then
             call dforceb &
                (c0, i, betae, ipolp, bec ,ctabin(1,1,ipolp), gqq, gqqm, qmat, deeq, df)
