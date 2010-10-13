@@ -30,7 +30,7 @@ subroutine lr_readin
   USE io_global,           ONLY : ionode, ionode_id
   use klist,               only : nks, wk, nelec
   use fixed_occ,           only : tfixed_occ
-  use input_parameters,    only : degauss, nosym
+  use input_parameters,    only : degauss, nosym,wfcdir,outdir
   use ktetra,              only : ltetra
   USE realus,              ONLY : real_space, real_space_debug, &
                                    init_realspace_vars, qpointlist, &
@@ -46,7 +46,7 @@ subroutine lr_readin
   USE DFUNCT,         ONLY : newd
   implicit none
   !
-  character(len=256) :: outdir, beta_gamma_z_prefix, wfcdir
+  character(len=256) :: beta_gamma_z_prefix
   integer :: ios, iunout,ierr,ipol
   logical :: auto_rs
   !
@@ -69,7 +69,6 @@ subroutine lr_readin
   restart_step = itermax+1
   lr_verbosity = 1
   prefix = 'pwscf'
-  outdir = './'
   ltammd = .false.
   ipol = 1
   n_ipol=1
