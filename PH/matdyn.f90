@@ -478,7 +478,7 @@ PROGRAM matdyn
            end do ! na
         endif
         !
-        CALL writemodes(nax,nat,q(1,n),w2(1,n),z,iout)
+        IF (ionode) CALL writemodes(nax,nat,q(1,n),w2(1,n),z,iout)
         !
      END DO  !nq
      if(la2F.and.ionode) close(300)

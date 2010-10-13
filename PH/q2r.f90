@@ -544,7 +544,7 @@ SUBROUTINE read_file( nqs, xq, epsil, lrigid, &
   CHARACTER(LEN=9) symm_type
   ! local variables
   INTEGER :: ntyp1,nat1,ibrav1,ityp1
-  INTEGER :: i, j, na, nb, nt
+  INTEGER :: i, j, na, nb, nt, ios
   REAL(DP) :: tau1(3), amass1, at1(3,3), celldm1(6), q2
   REAL(DP) :: phir(3),phii(3)
   CHARACTER(LEN=75) :: line
@@ -665,7 +665,9 @@ SUBROUTINE read_file( nqs, xq, epsil, lrigid, &
      q2 = xq(1,nqs)**2 + xq(2,nqs)**2 + xq(3,nqs)**2
      IF (q2.NE.0.d0) RETURN
      DO WHILE (line(6:15).NE.'Dielectric')
-        IF (ionode) READ(1,'(a)',err=200, END=200) line
+        IF (ionode) READ(1,'(a)',iostat=ios) line
+        CALL mp_bcast(ios, ionode_id)
+        IF (ios /=0) GOTO 200
         CALL mp_bcast(line,ionode_id)
      END DO
      lrigid=.TRUE.
@@ -700,7 +702,7 @@ SUBROUTINE read_file( nqs, xq, epsil, lrigid, &
      READ(line(11:75),*) (xq(i,nqs),i=1,3)
      READ(1,*)
   ENDIF
-  CALL mp_bcast(xq, ionode_id)
+  CALL mp_bcast(xq(:,nqs), ionode_id)
   !
   DO na=1,nat
      DO nb=1,nat
@@ -753,7 +755,7 @@ subroutine read_gamma (nqs, nat, ifn, xq, gaminp)
      !     write(*,*) 'xq    ',iq,(xq(i,iq),i=1,3)
         READ(ifn,*)
      END IF
-     CALL mp_bcast(xq, ionode_id)
+     CALL mp_bcast(xq(:,iq), ionode_id)
      do na=1,nat
         do nb=1,nat
            IF (ionode) read(ifn,*) i,j
@@ -774,6 +776,7 @@ subroutine read_gamma (nqs, nat, ifn, xq, gaminp)
      end do
      !
   ENDDO
+  RETURN
   !
 end subroutine read_gamma
 !
