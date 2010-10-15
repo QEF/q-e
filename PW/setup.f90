@@ -403,7 +403,7 @@ SUBROUTINE setup()
   doublegrid = ( dual > 4.D0 )
 #if defined (EXX)
   IF ( doublegrid .and.  dft_is_hybrid() ) &
-     CALL errore('setup','ecutrho>4*ecutwfc and exact exchange not allowed')
+     CALL errore('setup','ecutrho>4*ecutwfc and exact exchange not allowed',1)
 #endif
   IF ( doublegrid .AND. (.NOT.okvan .AND. .not.okpaw) ) &
      CALL infomsg ( 'setup', 'no reason to have ecutrho>4*ecutwfc' )
