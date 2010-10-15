@@ -244,7 +244,7 @@ cat > c.inp << EOF
                 restart_mode = 'from_scratch' ,
                       outdir = '$TMP_DIR/' ,
                   pseudo_dir = '$PSEUDO_DIR/',
-                      prefix = 'o2',
+                      prefix = 'c',
                      disk_io = 'minimal' ,
                       iprint = 1
                      tprnfor = .true.
@@ -286,7 +286,7 @@ cat > n.inp << EOF
                 restart_mode = 'from_scratch' ,
                       outdir = '$TMP_DIR/' ,
                   pseudo_dir = '$PSEUDO_DIR/',
-                      prefix = 'o2',
+                      prefix = 'n',
                      disk_io = 'minimal' ,
                       iprint = 1
                      tprnfor = .true.
@@ -329,7 +329,7 @@ cat > n2.inp << EOF
                 restart_mode = 'from_scratch' ,
                       outdir = '$TMP_DIR/' ,
                   pseudo_dir = '$PSEUDO_DIR/',
-                      prefix = 'o2',
+                      prefix = 'n2',
                      disk_io = 'minimal' ,
                       iprint = 1
                      tprnfor = .true.
@@ -373,7 +373,7 @@ cat > co.inp << EOF
                 restart_mode = 'from_scratch' ,
                       outdir = '$TMP_DIR/' ,
                   pseudo_dir = '$PSEUDO_DIR/',
-                      prefix = 'o2',
+                      prefix = 'co',
                      disk_io = 'minimal' ,
                       iprint = 1
                      tprnfor = .true.
