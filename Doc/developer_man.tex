@@ -15,6 +15,9 @@
 
 % \def\htmladdnormallink#1#2{#1}
 
+\def\configure{\texttt{configure}}
+\def\configurac{\texttt{configure.ac}}
+\def\autoconf{\texttt{autocon}}
 
 \def\qeImage{quantum_espresso.pdf}
 \def\democritosImage{democritos.pdf}
@@ -43,25 +46,24 @@
 
 The intended audience of this guide is everybody who wants to:
 \begin{itemize}
-\item know how Quantum ESPRESSO works, including its internals
-\item modify/customize/add/extend/improve/clean up Quantum ESPRESSO
-\item know how to read data produced by Quantum ESPRESSO
+\item know how \qe\ works, including its internals;
+\item modify/customize/add/extend/improve/clean up \qe;
+\item know how to read data produced by \qe.
 \end{itemize}
-The same category of people should also ''write'' this guide, of course.
+The same category of people should also {\em write} this guide, of course.
 
 \subsection{Who may read this guide but will not necessarily profit from it}
 
-People who want to know about the capabilities of Quantum ESPRESSO,
-or who want just to use Quantum ESPRESSO, should read the 
-User Guide.
+People who want to know about the capabilities of \qe,
+or who want just to use it, should read the User Guide.
 
 People who want to know about the methods or the physics
-behind Quantum ESPRESSO should read first the relevant  
-literature.
+behind \qe\ should read first the relevant  
+literature (some pointers in the User Guide).
 
-\subsection{How to Contribute to Quantum ESPRESSO}
+\subsection{How to contribute to \qe}
 
-You can contribute to a better Quantum ESPRESSO by
+You can contribute to a better \qe\ by
 
 \begin{itemize}
 \item answering other people's questions on the mailing list (correct
@@ -78,27 +80,35 @@ You can contribute to a better Quantum ESPRESSO by
   used. 
 \item pointing out bugs in the software and in the documentation
   (reports of real bugs are strongly preferred to reports of
-  nonexistent bugs). A bug report should include enough information to
-  be reproduced: typically, version number, hardware/software
-  combination(s) for which the problem arises, whether it is
-  reproducible or erratic, whether it happens in serial or parallel
+  nonexistent bugs). Bug reports should preferrablly be filed using
+  the bug tracking facility of \texttt{qe-forge.org}. Bug reports
+  should include enough information to be reproduced: typically, 
+  version number, hardware/software combination(s) for which the
+  problem arises, whether it is reproducible or erratic, whether
+  it happens in serial or parallel
   execution or both, and, most important, an input and output
   exhibiting such behavior (fast to execute if possible). The error
   message alone is usually not a sufficient piece of information. 
 \item adding new features to the code. If you like to have something
-  added to Quantum ESPRESSO, contact the developers. Unless there are
-  technical reasons not to include your changes, we will try to make
-  you happy (no warranty that we will actually succeed). 
+  added to \qe, contact the developers via the
+ \texttt{q-e-developers} mailing list, hosted on \texttt{qe-forge.org}.
+ Unless there are technical reasons not to include your changes, we 
+ will try to make you happy (no warranty that we will actually succeed).
 \end{itemize}
-
-For extensive changes, the ideal procedure is as follows:
-
+If you want to get involved as a developer and contribute serious
+or nontrivial stuff, you should register for the \qe\ project on 
+\texttt{qe-forge.org}. You may also consider the idea of opening
+your own project on \texttt{qe-forge.org}. There is a developers' 
+mailing list, \texttt{q-e-developers}, to which you should subscribe,
+and a mailing list receiving commit message, \texttt{q-e-commits}.
+The ideal procedure to add extensive changes is as follows:
 \begin{itemize}
 \item download the current CVS version (see Using CVS) and work on that version
 \item when you are happy with your modified version, make a copy of
   it, then update your copy with \texttt{cvs update} 
 \item if you get no conflicts and everything is still working, you
-  have won. Send the modified files to the developers. 
+  have won. Send the modified files to the developers, or save
+  your changes if you are one.
 \item if you get conflicts, or if the updated code doesn't work any
   longer, you haven't yet won. Look into the conflicting section: in
   most cases conflicts are trivial (format changes, white spaces) or
@@ -106,15 +116,16 @@ For extensive changes, the ideal procedure is as follows:
   moved to another place, for instance). Sometimes, somebody else has
   done changes that are incompatible with yours during the same
   period. Look into the ChangeLog (use the script \texttt{cvs2cl.pl}
-  to get an updated ChangeLog) to understand what may have happened.   
-Use \texttt{cvs update -D 2006-oct-12} to update to the CVS version 
-of 12 oct 2006: this may be useful if you suspect that the incompatibile 
-change happened after that date. CVS versions can be {\em tagged}; 
-tags are visible with \texttt{cvs status -v}. Use \texttt{cvs update -r TAG}
-to update to the CVS version with tag TAG. In all cases, use 
-\texttt{cvs update -A} to revert to the last version.
+  to get an updated ChangeLog) to understand what may have happened,
+  or use the web-cvs interface
+  (\texttt{http://qe-forge.org/cgi-bin/cvstrac/q-e/index}).
+  Use \texttt{cvs update -D 2006-oct-12} to update to the CVS version 
+  of 12 oct 2006: this may be useful if you suspect that the incompatibile 
+  change happened after that date. CVS versions can be {\em tagged}; 
+  tags are visible with \texttt{cvs status -v}. Use \texttt{cvs update -r TAG}
+  to update to the CVS version with tag TAG. In all cases, use 
+  \texttt{cvs update -A} to revert to the last version.
 \end{itemize}
-Developers can be contacted via the \texttt{pw\_forum} mailing list.
 
 \section{ Structure of the distribution}
 \subsection{Contents of the various directories}
@@ -123,25 +134,28 @@ Developers can be contacted via the \texttt{pw\_forum} mailing list.
 \subsubsection{ Utilities}
 \subsubsection{ Libraries}
 
-Subdirectory flib/ contains libraries written in fortran77 (*.f) and in 
-fortran-90 (*.f90).
-The latter should not depend on any module, except for "kind" and "constants".
+Subdirectory \texttt{flib/} contains libraries written in fortran77 
+(\texttt{*.f}) and in fortran-90 (\texttt{*.f90}).
+The latter should not depend on any module, except for modules
+\texttt{kinds} and \texttt{constants}.
 
-Subdirectory clib/ contains libraries written in C (*.c). 
-Functions that are called by fortran
+Subdirectory \texttt{clib/} contains libraries written in C 
+(\texttt{*.c}). Functions that are called by fortran
 should be preprocessed using the macros:
 \begin{enumerate}
-\item F77\_FUNC (func,FUNC) for function "func", not containing underscore(s) in name 
-\item F77\_FUNC\_(f\_nc,F\_NC) for function "f\_nc", containing underscore(s) in name
+\item \texttt{F77\_FUNC (func,FUNC)} for function \texttt{func}, not containing underscore(s) in name 
+\item \texttt{F77\_FUNC\_(f\_nc,F\_NC)} for function \texttt{f\_nc}, containing underscore(s) in name
 \end{enumerate}
-These macros are defined in file include/c\_defs.h. This file must be included
-by all *.c files. The macros are automagically generated by "configure" and 
+These macros are defined in file \texttt{include/c\_defs.h}. This file must be included
+by all \texttt{*.c} files. The macros are automagically generated by 
+\configure\ and 
 choose the correct case 
 (lowercase or uppercase) and the correct number of final underscores. 
-See file include/defs.h.README for more info.
+See file \texttt{include/defs.h.README} for more info.
 
 \subsection{Installation mechanism}
 
+\label{subsec:inst}
 The code contains C-style preprocessing directives. There are two ways to do preprocessing of fortran files:
 \begin{itemize}
 \item directly with the fortran compiler, if supported;
@@ -150,48 +164,48 @@ The code contains C-style preprocessing directives. There are two ways to do pre
 
 In the first case, one needs to specify in the \texttt{make.sys} file the fortran compiler option that tells the compiler to pre-process first. In the second case, one needs to
 specify the C precompiler and options (if needed) in \texttt{make.sys}.
-Normally, "configure" should take care of this.
+Normally, \configure\ should take care of this.
 
 
-\subsubsection{ How to edit the configure script}
+\subsubsection{ How to edit the \configure\ script}
 
-The "configure" script is generated from its source file
-"configure.ac" by the GNU Autoconf utility
-(http://www.gnu.org/software/autoconf/).  Don't edit "configure"
+The \configure\ script is generated from its source file
+\configurac\ by the GNU \autoconf\ utility
+(\texttt{http://www.gnu.org/software/autoconf/}).  Don't edit \configure\
 directly: whenever it gets regenerated, your changes will be lost.
-Instead, go to the "install/" directory, edit "configure.ac", 
-then run "autoconf" to regenerate "configure". If you want 
-to keep the old "configure", make a copy
+Instead, go to the \texttt{install/} directory, edit \configurac, 
+then run \autoconf\ to regenerate \configure. If you want 
+to keep the old \configure, make a copy
 first.
 
-GNU Autoconf is installed by default on most Unix/Linux systems.  If
+GNU \autoconf\ is installed by default on most Unix/Linux systems.  If
 you don't have it on your system, you'll have to install it. You will
-need a recent version (e.g. v.2.65) of autoconf, because our "configure.ac"
+need a recent version (e.g. v.2.65) of \autoconf, because our \configurac
 file uses recent syntax.
 
-"configure.ac" is a regular Bourne shell script (i.e., "sh" -- not csh!), 
+\configurac\ is a regular Bourne shell script (i.e., "sh" -- not csh!), 
 except that:
 \begin{itemize}
-\item[--] capitalized names starting with "AC\_" are Autoconf macros.  Normally you shouldn't have to touch them.
+\item[--] capitalized names starting with "AC\_" are \autoconf\ macros.  Normally you shouldn't have to touch them.
 \item[--] square brackets are normally removed by the macro processor.  If you need a square bracket (that should be very rare), you'll have to write two.
 \end{itemize}
 
-You may refer to the GNU Autoconf Manual for more info.
+You may refer to the GNU \autoconf\ Manual for more info.
 
-"make.sys.in" is the source file for "make.sys", that "configure"
+\texttt{make.sys.in} is the source file for \texttt{make.sys}, that \configure
 generates: you might want to edit that file as well.  The generation
-procedure is as follows: if "configure.ac" contains the macro
+procedure is as follows: if \configurac\ contains the macro
 "AC\_SUBST(name)", then every occurrence of "@name@" in the source
 file will be substituted with the value of the shell variable "name"
 at the point where AC\_SUBST was called.
 
-Similarly, "configure.msg" is generated from "configure.msg.in": this
-file is only used by "configure" to print its final report, and isn't
+Similarly, \configure\texttt{msg} is generated from \configure\texttt{.msg.in}: this
+file is only used by \configure\ to print its final report, and isn't
 needed for the compilation.  We did it this way so that our
-"configure" may also be used by other projects, just by replacing the
-Quantum ESPRESSO-specific "configure.msg.in" by your own.
+\configure\ may also be used by other projects, just by replacing the
+\qe-specific \configure\texttt{.msg.in} by your own.
 
-"configure" writes a detailed log of its operation to "config.log".
+\configure\ writes a detailed log of its operation to "config.log".
 When any configuration step fails, you may look there for the relevant
 error messages.  Note that it is normal for some checks to fail.
 
@@ -200,13 +214,13 @@ error messages.  Note that it is normal for some checks to fail.
 In order to support a previously unsupported architecture, first you
 have to figure out which compilers, compilation flags, libraries
 etc. should be used on that architecture.
-In other words, you have to write a "make.sys" that works: you may use
-the manual configuration procedure for that (see the Quantum ESPRESSO
-User Guide).  Then, you have to modify "configure" so that it can
-generate that "make.sys" automatically.
+In other words, you have to write a \texttt{make.sys} that works: you may use
+the manual configuration procedure for that (see the 
+User Guide).  Then, you have to modify \configure\ so that it can
+generate that \texttt{make.sys} automatically.
 
 To do that, you have to add the case for your architecture in several
-places throughout "configure.ac":
+places throughout \configurac:
 \begin{enumerate}
 \item Detect architecture
 
@@ -221,7 +235,7 @@ Look for these lines:
                   etc.
 \end{verbatim}
 Here you must add an entry corresponding to your architecture and
-operating system.  Run "config.guess" to obtain the string identifying
+operating system.  Run \texttt{config.guess} to obtain the string identifying
 your system.
 For instance on a PC it may be "i686-pc-linux-gnu", while on IBM SP4
 "powerpc-ibm-aix5.1.0.0".  It is convenient to put some asterisks to
@@ -258,17 +272,13 @@ them in "try\_mpif90".
 be always fine, unless some special flag is required (e.g., -X64
 With sp4).  
 
-- you should define "try\_dflags" if the Quantum ESPRESSO codes contain any
+- you should define "try\_dflags" if there is
+any
 "\#ifdef" specific to your machine: for instance, on IBM machines,
 "try\_dflags=-D\_\_AIX" . A list of such flags can be found in file 
-include/defs.h.README
+\texttt{include/defs.h.README}.
 
-You shouldn't need to define the following two:
-
-- "try\_arflags\_dynamics" should be set to the same as "try\_arflags"
-except in special cases in which dynamically libraries are to be
-built (presently only on PowerPC Mac with OS-X and xlf compiler)
-
+You shouldn't need to define the following:
 - "try\_iflags" should be set to the appropriate "-I" option(s)
 needed by the preprocessor or by the compiler to locate *.h files
 to be included; try\_iflags="-I../include" should be good for most cases
@@ -303,7 +313,7 @@ because different versions need different flags.
 
 At the end of the test,
  
-- \$mpif90 is the parallel compiler, if any; if no parallel compiler is found or if --disable-parallel was specified, \$mpif90 is the serial compiler
+- \$mpif90 is the parallel compiler, if any; if no parallel compiler is found or if \texttt{--disable-parallel} was specified, \$mpif90 is the serial compiler
 
 - \$f90 is the serial compiler
 
@@ -425,26 +435,24 @@ and set "try\_cppflags" as appropriate.
 
 \item Search for libraries
 
-To instruct "configure" to search for libraries, you must tell it two
+To instruct \configure\ to search for libraries, you must tell it two
 things: the names of libraries it should search for, and where it
 should search.
 
 The following libraries are searched for:
 
 - BLAS or equivalent. 
-Some vendor replacements for BLAS that are supported by Quantum ESPRESSO are:
+Some vendor replacements for BLAS that are supported by \qe\ are:
 \begin{quote}
     MKL on Linux, 32- and 64-bit Intel CPUs\\
     ACML on Linux, 64-bit AMD CPUs\\
     essl on AIX\\
-    complib.sgimath on sgi origin\\
     SCSL on sgi altix\\
-    SUNperf on sparc\\
-    cxml on alpha
+    SUNperf on sparc
 \end{quote}
 Moreover, ATLAS is used over BLAS if available.
 
-- LAPACK or equivalent. Some vendor replacements for LAPACK that are supported by Quantum ESPRESSO are:
+- LAPACK or equivalent. Some vendor replacements for LAPACK that are supported by \qe\ are:
 \begin{quote}
     mkl on linux
     SUNperf on sparc
@@ -596,7 +604,7 @@ The size of these arrays is independent on the number of processors.
 \section{ File Formats}
 \subsection{Data file(s)}
 
-Quantum ESPRESSO restart file specifications:
+\qe\ restart file specifications:
 Paolo Giannozzi scripsit AD 2005-11-11,
 Last modified by Andrea Ferretti 2006-10-29
 
@@ -986,7 +994,7 @@ These are meant to be used only by iotk (actually they aren't)
 
 \subsection{Restart files}
 
-\section{ Modifying/adding/extending Quantum ESPRESSO}
+\section{ Modifying/adding/extending \qe}
 \subsection{Hints, Caveats, Do's and Dont's}
 
 \begin{itemize}

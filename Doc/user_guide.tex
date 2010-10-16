@@ -142,27 +142,28 @@ Further documentation, beyond what is provided in this guide, can be found in:
 \item the \texttt{pw\_forum} mailing list (\texttt{pw\_forum@pwscf.org}).
    You can subscribe to this list, browse and search its archives
    (links in \texttt{http://www.quantum-espresso.org/contacts.php}).
-   Only subscribed users can post. Please search the archives 
-   before posting: your question may have already been answered.
+   See section \ref{SubSec:Contacts}, ``Contacts'', for more info.
   \item the \texttt{Doc/} directory of the \qe\ distribution,
    containing a detailed description of input data for most codes
    in files \texttt{INPUT\_*.txt} and \texttt{INPUT\_*.html},
-   plus and a few additional pdf documents; people who want to contribute
-   to \qe\ should read the Developer Manual, \texttt{developer\_man.pdf}.
+   plus and a few additional pdf documents
+  \item the \qe\ web site:\\
+   \texttt{http://www.quantum-espresso.org};
   \item the \qe\ Wiki:\\
    \texttt{http://www.quantum-espresso.org/wiki/index.php/Main\_Page}.
 \end{itemize}
+People who want to contribute to \qe\ should read the 
+Developer Manual: \texttt{Doc/developer\_man.pdf}.
 
-This guide does not explain solid state physics and its computational methods.
-If you want to learn that, you should read a good textbook, such as e.g.
-the book by Richard Martin:
+This guide does not explain the basic Unix concepts (shell, execution 
+path, directories etc.) and utilities needed to run \qe; it does not 
+explain either solid state physics and its computational methods.
+If you want to learn the latter, you should read a good textbook, 
+such as e.g. the book by Richard Martin:
 {\em Electronic Structure: Basic Theory and Practical Methods},
-Cambridge University Press (2004). See also the Reference Paper 
+Cambridge University Press (2004). See also the ``Learn'' section in
+the \qe\ web site; the ``Reference Papers'' 
 section in the Wiki.
-
-This guide assume that you know the basic Unix concepts (shell, 
-execution path, directories etc.) and utilities. If you don't, 
-you will have a hard time running \qe.
 
 All trademarks mentioned in this guide belong to their respective owners.
 
@@ -362,6 +363,7 @@ This guide was mostly written by Paolo Giannozzi.
 Gerardo Ballabio and Carlo Cavazzoni wrote the section on \CP.
 
 \subsection{Contacts}
+\ref{SubSec:Contacts}
 
 The web site for \qe\ is \texttt{http://www.quantum-espresso.org/}.
 Releases and patches can be downloaded from this
@@ -373,14 +375,11 @@ The recommended place where to ask questions about installation
 and usage of \qe, and to report bugs, is the \texttt{pw\_forum} 
 mailing list: \texttt{pw\_forum@pwscf.org}. Here you can receive
 news about \qe\ and obtain help from the developers and from 
-knowledgeable users.  
-You have to be subscribed in order to post to the list.
-Please browse or search the archive -- links are available
-in the "Contacts" page  of the \qe\ web site,
- \texttt{http://www.quantum-espresso.org/contacts.php} -- before 
-posting: many questions are asked over and over again.
+knowledgeable users. Please read the guidelines for posting,
+section \ref{SubSec:Guidelines}!
 
-NOTA BENE: only messages that appear to come from the 
+You have to be subscribed in order to post to the  \texttt{pw\_forum}
+list. NOTA BENE: only messages that appear to come from the 
 registered user's e-mail address, in its {\em exact form}, will be
 accepted. Messages "waiting for moderator approval" are
 automatically deleted with no further processing (sorry, too 
@@ -392,12 +391,43 @@ low-traffic mailing list,\\
 \texttt{pw\_users@pwscf.org}, is provided for
 those interested only in \qe-related news, such as e.g. announcements 
 of new versions, tutorials, etc.. You can subscribe (but not post) to 
-this list from the \qe\ web site.
+this list from the \qe\ web site (``Contacts'' section).
 
 If you need to contact the developers for {\em specific} questions 
 about coding, proposals, offers of help, etc., send a message to the
 developers' mailing list: user \texttt{q-e-developers}, address
 \texttt{qe-forge.org}.
+
+\subsubsection{Guidelines for posting to the mailing list}
+\label{SubSec:Guidelines}
+Life for subscribers of \texttt{pw\_forum} will be easier if everybody 
+complies with the following guidelines:
+\begin{itemize}
+\item Before posting, {\em please}: browse or search the archives -- 
+  links are available in the "Contacts" page  of the \qe\ web site,
+  \texttt{http://www.quantum-espresso.org/contacts.php}. Most questions 
+  are asked over and over again. Also: make an attempt to search the
+  available documentation, notably the FAQs and the User Guide.
+  The answer to most questions is already there.
+\item Sign your post with your name and affiliation.
+\item Choose a meaningful subject. Do not use "reply" to start a new
+  thread:
+  it will confuse the ordering of messages into threads that most mailers
+  can do. In particular, do not use "reply" to a Digest!!!
+\item Be short: no need to send 128 copies of the same error message just
+  because you this is what came out of your 128-processor run. No need to
+  send the entire compilation log for a single error appearing at the end.
+\item Avoid excessive or irrelevant quoting of previous messages. Your
+  message must be immediately visible and easily readable, not hidden
+  into a sea of quoted text.
+\item Remember that even experts cannot guess where a problem lies in
+  the absence of sufficient information.
+\item Remember that the mailing list is a voluntary endeavour: nobody is 
+  entitled to an answer, even less to an immediate answer.
+\item Finally, please note that the mailing list is not a replacement
+  for your own work, nor is it a replacement for an incompetent or absent
+  thesis director.
+\end{itemize}
  
 \subsection{Terms of use}
 
