@@ -63,7 +63,8 @@ literature (some pointers in the User Guide).
 
 \subsection{How to contribute to \qe}
 
-You can contribute to a better \qe\ by
+You can contribute to a better \qe, even if you are
+not a full-fledged developer, by
 
 \begin{itemize}
 \item answering other people's questions on the mailing list (correct
@@ -73,28 +74,20 @@ You can contribute to a better \qe\ by
   implementation or by a promise of future implementation (fulfilled
   promises are strongly preferred to forgotten ones). 
 \item porting to new/unsupported architectures or configurations: see
-  the Installation mechanism section. You shouldn't need new
-  preprocessing flags: those already existing should be sufficient. If
-  you really need a new one, look into file
-  \texttt{include/defs.h.README} to learn what is there and how it is
-  used. 
+  section \ref{SubSec:Inst}, "Installation mechanism". You should
+  not need to add new preprocessing flags, but if you do, 
+  see section \ref{SubSec:CPP}, "Preprocessing".
 \item pointing out bugs in the software and in the documentation
   (reports of real bugs are strongly preferred to reports of
-  nonexistent bugs). Bug reports should preferrablly be filed using
-  the bug tracking facility of \texttt{qe-forge.org}. Bug reports
-  should include enough information to be reproduced: typically, 
-  version number, hardware/software combination(s) for which the
-  problem arises, whether it is reproducible or erratic, whether
-  it happens in serial or parallel
-  execution or both, and, most important, an input and output
-  exhibiting such behavior (fast to execute if possible). The error
-  message alone is usually not a sufficient piece of information. 
+  nonexistent bugs). See section \ref{SubSec:Bugs}, "Guidelines for reporting bugs".
 \item adding new features to the code. If you like to have something
   added to \qe, contact the developers via the
  \texttt{q-e-developers} mailing list, hosted on \texttt{qe-forge.org}.
  Unless there are technical reasons not to include your changes, we 
  will try to make you happy (no warranty that we will actually succeed).
 \end{itemize}
+
+\subsection{How to make major contributions to \qe}
 If you want to get involved as a developer and contribute serious
 or nontrivial stuff, you should register for the \qe\ project on 
 \texttt{qe-forge.org}. You may also consider the idea of opening
@@ -103,35 +96,71 @@ mailing list, \texttt{q-e-developers}, to which you should subscribe,
 and a mailing list receiving commit message, \texttt{q-e-commits}.
 The ideal procedure to add extensive changes is as follows:
 \begin{itemize}
-\item download the current CVS version (see Using CVS) and work on that version
+\item download the current CVS version (see 
+section \ref{Sec:CVS}, "Using CVS", and work on that version
 \item when you are happy with your modified version, make a copy of
   it, then update your copy with \texttt{cvs update} 
 \item if you get no conflicts and everything is still working, you
   have won. Send the modified files to the developers, or save
   your changes if you are one.
 \item if you get conflicts, or if the updated code doesn't work any
-  longer, you haven't yet won. Look into the conflicting section: in
-  most cases conflicts are trivial (format changes, white spaces) or
-  easily solved (the part of the code you were modifying has been
-  moved to another place, for instance). Sometimes, somebody else has
-  done changes that are incompatible with yours during the same
-  period. Look into the ChangeLog (use the script \texttt{cvs2cl.pl}
-  to get an updated ChangeLog) to understand what may have happened,
-  or use the web-cvs interface
-  (\texttt{http://qe-forge.org/cgi-bin/cvstrac/q-e/index}).
-  Use \texttt{cvs update -D 2006-oct-12} to update to the CVS version 
-  of 12 oct 2006: this may be useful if you suspect that the incompatibile 
-  change happened after that date. CVS versions can be {\em tagged}; 
-  tags are visible with \texttt{cvs status -v}. Use \texttt{cvs update -r TAG}
-  to update to the CVS version with tag TAG. In all cases, use 
-  \texttt{cvs update -A} to revert to the last version.
+  longer, you haven't yet won. See section
+  \ref{SubSec:Conflicts} for hints on how to 
+  remove conflicts and on how to figure out
+   what went wrong.
 \end{itemize}
 
+\subsection{Hints, Caveats, Do's and Dont's for developers}
+
+\begin{itemize}
+\item Before doing anything, inquire whether it is already there, or under development.
+\item Before starting writing code, inquire whether you can reuse code that is already available in the distribution. Avoid redundancy: the only bug-free software line is the one that doesn't exist.
+\item When you make some change:
+\begin{itemize}
+\item Check that are not spoiling other people's work. In particular, search the distribution for codes using the routine or module you are modifying and change its usage or its calling sequence everywhere.
+\item Do not forget that your change must work on many different combinations of hardware and software, in both serial and parallel execution.
+\end{itemize}
+\item Document your changes:
+\begin{itemize}
+\item If you modify what a code can do, or introduce
+incompatibilities with previous versions (e.g. old data file 
+no longer readable, old input no longer valid), report it in 
+file \texttt{Doc/release-notes}.
+\item If you add/modify/remove input variables, document
+it in the appropriate file \\
+\texttt{doc-def/INPUT\_*.def}; if
+you remove an input variable, update tests and examples
+accordingly.
+\item All newly introduced features or variables must be 
+accompanied by an example or a test or both (either a 
+new one or a modified existing test or example).
+\end{itemize}
+\item Please do not include files (any kind, including
+pseudopotential files) with DOS \^{}M characters or 
+tabulators \^{}I. 
+\end{itemize}
+When you modify the program sources, run the
+\texttt{install/makedeps.sh}  script  or type \texttt{make depend} 
+to update files \texttt{make.depend} in the various 
+subdirectories.
+
+\subsection{Guidelines for reporting bugs}
+\label{SubSec:Bugs}
+Bug reports should preferrably be filed using
+  the bug tracking facility of \texttt{qe-forge.org}. Bug reports
+  should include enough information to be reproduced: typically, 
+  version number, hardware/software combination(s) for which the
+  problem arises, whether it is reproducible or erratic, whether
+  it happens in serial or parallel
+  execution or both, and, most important, an input and output
+  exhibiting such behavior (fast to execute if possible). The error
+  message alone is usually not a sufficient piece of information. 
+
 \section{ Structure of the distribution}
-\subsection{Contents of the various directories}
-\subsubsection{ Modules}
-\subsubsection{ Sources}
-\subsubsection{ Utilities}
+% \subsection{Contents of the various directories}
+% \subsubsection{ Modules}
+% \subsubsection{ Sources}
+% \subsubsection{ Utilities}
 \subsubsection{ Libraries}
 
 Subdirectory \texttt{flib/} contains libraries written in fortran77 
@@ -155,7 +184,7 @@ See file \texttt{include/defs.h.README} for more info.
 
 \subsection{Installation mechanism}
 
-\label{subsec:inst}
+\label{SubSec:Inst}
 The code contains C-style preprocessing directives. There are two ways to do preprocessing of fortran files:
 \begin{itemize}
 \item directly with the fortran compiler, if supported;
@@ -165,7 +194,6 @@ The code contains C-style preprocessing directives. There are two ways to do pre
 In the first case, one needs to specify in the \texttt{make.sys} file the fortran compiler option that tells the compiler to pre-process first. In the second case, one needs to
 specify the C precompiler and options (if needed) in \texttt{make.sys}.
 Normally, \configure\ should take care of this.
-
 
 \subsubsection{ How to edit the \configure\ script}
 
@@ -482,13 +510,13 @@ directory, and because a given library may require other libraries as
 prerequisites (for example, Lapack requires BLAS).
 \end{enumerate}
 
-\subsection{Adding new directories or routines}
+% \subsection{Adding new directories or routines}
 
 \section{ Algorithms}
-\subsection{Diagonalization}
-\subsection{Self-consistency}
-\subsection{Structural optimization}
-\subsection{Symmetrization}
+% \subsection{Diagonalization}
+% \subsection{Self-consistency}
+% \subsection{Structural optimization}
+% \subsection{Symmetrization}
 \subsection{Gamma tricks}
 
 In calculations using only the $\Gamma$ point (k=0),
@@ -517,11 +545,11 @@ with $G_{n'_1,n'_2,n'_3}$ and $G_{-n'_1,-n'_2,n'_3}$
 must be assigned to the same processor.
 
 \section{ Structure of the code}
-\subsection{Modules and global variables}
-\subsection{Meaning of the most important variables}
-\subsection{Conventions for indices}
+% \subsection{Modules and global variables}
+% \subsection{Meaning of the most important variables}
+% \subsection{Conventions for indices}
 \subsection{Preprocessing}
-
+\label{SubSec:CPP}
 The code contains C-style preprocessing directives. Most fortran compilers directly support them; some don't, and preprocessing is ''hand-made'' by the makefile using the C preprocessor \texttt{cpp}. The C preprocessor may:
 \begin{itemize}
 \item assign a value to a given expression. For instance, command \texttt{\#define THIS that}, or the option in the command line: \texttt{-DTHIS=that}, will replace all occurrence of \texttt{THIS} with \texttt{that}.
@@ -544,8 +572,8 @@ then  \texttt{...code A...} is sent to output; otherwise
 The file \texttt{include/defs.h.README} contains a list of definitions that are used in the code. In order to make  preprocessing options easy to see, preprocessing variables should start with 
 two underscores, as \texttt{\_\_expression} in the above example. Traditionally ''preprocessed'' variables are also written in uppercase.
 
-\subsection{Performance issues}
-\subsection{Portability issues}
+% \subsection{Performance issues}
+% \subsection{Portability issues}
 
 \section{ Parallelization}
 
@@ -599,7 +627,7 @@ instance:
 The size of these arrays is independent on the number of processors.
 \end{itemize}
 
-\subsubsection{ Parallel fft}
+% \subsubsection{ Parallel fft}
 
 \section{ File Formats}
 \subsection{Data file(s)}
@@ -995,24 +1023,6 @@ These are meant to be used only by iotk (actually they aren't)
 \subsection{Restart files}
 
 \section{ Modifying/adding/extending \qe}
-\subsection{Hints, Caveats, Do's and Dont's}
-
-\begin{itemize}
-\item Before doing anything, inquire whether it is already there, or under development.
-\item Before starting writing code, inquire whether you can reuse code that is already available in the distribution. Avoid redundancy: the only bug-free software line is the one that doesn't exist.
-\item When you make some change:
-\begin{itemize}
-\item Check that are not spoiling other people's work. In particular, search the distribution for codes using the routine or module you are modifying and change its usage or its calling sequence everywhere.
-\item Do not forget to add/update documentation and examples as well.
-\item Do not forget that your change must work on many different combinations of hardware and software, in both serial and parallel execution.
-\end{itemize}
-\item Please do not include files with DOS \^M characters or 
-tabulators \^I.
-\end{itemize}
-Important: when you modify the program sources, run the
-\texttt{install/makedeps.sh}  script  or type \texttt{make depend} 
-to update files \texttt{make.depend} in the various 
-subdirectories.
 
 \subsection{Programming style (or lack of it)}
 
@@ -1086,7 +1096,7 @@ read\_namelists.f90 )
 \end{enumerate}
  
 \section{ Using CVS}
-
+\label{Sec:CVS}
 The package is available read-only using anonymous CVS. Developers may
 have read-write access if needed. Note that the latest (development)
 version may not work properly, and sometimes not even compile
@@ -1184,7 +1194,8 @@ like
    something else
 <<<<<<<<<<<<<
 \end{verbatim}
-If this happen, you must edit the file manually to remove conflicts.
+If this happen, you must edit the file manually to remove conflicts. See section \ref{SubSec:Conflicts}
+below.
 
 You can compare your local copy with any version of the repository
 using
@@ -1219,8 +1230,26 @@ the permission to do so:
 \item ''cvs commit'' will save the new directory
 \end{itemize}
 
-\subsection{CVS hints}
+\subsection{Removing CVS conflicts}
+\label{SubSec:Conflicts}
+  Look into the conflicting section: in
+  most cases conflicts are trivial (format changes, white spaces) or
+  easily solved (the part of the code you were modifying has been
+  moved to another place, for instance). Sometimes, somebody else has
+  done changes that are incompatible with yours during the same
+  period. Look into the ChangeLog (use the script \texttt{cvs2cl.pl}
+  to get an updated ChangeLog) to understand what may have happened,
+  or use the web-cvs interface
+  (\texttt{http://qe-forge.org/cgi-bin/cvstrac/q-e/index}).
+  Use \texttt{cvs update -D 2006-oct-12} to update to the CVS version 
+  of 12 oct 2006: this may be useful if you suspect that the incompatibile 
+  change happened after that date. CVS versions can be {\em tagged}; 
+  tags are visible with \texttt{cvs status -v}. Use \texttt{cvs update -r TAG}
+  to update to the CVS version with tag TAG. In all cases, use 
+  \texttt{cvs update -A} to revert to the last version.
 
+\subsection{CVS hints}
+\label{SubSec:CVShints}
 It is convenient to create a \texttt{.cvsrc} file in your
 home directory containing the following lines:
 \begin{verbatim}
