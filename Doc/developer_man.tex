@@ -69,17 +69,20 @@ not a full-fledged developer, by
 \begin{itemize}
 \item answering other people's questions on the mailing list (correct
   answers are strongly preferred to wrong ones). 
-\item  suggesting changes: note however that suggestions requiring a
-  significant amount of work are welcome only if accompanied by
-  implementation or by a promise of future implementation (fulfilled
-  promises are strongly preferred to forgotten ones). 
 \item porting to new/unsupported architectures or configurations: see
   section \ref{SubSec:Inst}, "Installation mechanism". You should
   not need to add new preprocessing flags, but if you do, 
   see section \ref{SubSec:CPP}, "Preprocessing".
 \item pointing out bugs in the software and in the documentation
   (reports of real bugs are strongly preferred to reports of
-  nonexistent bugs). See section \ref{SubSec:Bugs}, "Guidelines for reporting bugs".
+  nonexistent bugs). See section \ref{SubSec:Bugs}, "Guidelines 
+  for reporting bugs".
+\item improving the documentation (generic complaints or suggestions
+  that "there should be..." do not qualify as improvements). 
+\item  suggesting changes: note however that suggestions requiring a
+  significant amount of work are welcome only if accompanied by
+  implementation or by a promise of future implementation (fulfilled
+  promises are strongly preferred to forgotten ones). 
 \item adding new features to the code. If you like to have something
   added to \qe, contact the developers via the
  \texttt{q-e-developers} mailing list, hosted on \texttt{qe-forge.org}.
@@ -146,16 +149,23 @@ subdirectories.
 
 \subsection{Guidelines for reporting bugs}
 \label{SubSec:Bugs}
-Bug reports should preferrably be filed using
-  the bug tracking facility of \texttt{qe-forge.org}. Bug reports
-  should include enough information to be reproduced: typically, 
-  version number, hardware/software combination(s) for which the
-  problem arises, whether it is reproducible or erratic, whether
-  it happens in serial or parallel
-  execution or both, and, most important, an input and output
-  exhibiting such behavior (fast to execute if possible). The error
-  message alone is usually not a sufficient piece of information. 
-
+\begin{itemize}
+\item Before deciding that a problem is due to a bug in the codes, 
+verify if it is reproducible on different machines/architectures/phases 
+of the moon: erratic or irreproducible problems, especially in parallel
+execution, are often an indication of buggy compilers or libraries
+\item Bug reports should preferably be filed using the bug tracking 
+facility at qe-forge.org:\\
+\texttt{http://qe-forge.org/tracker/?group\_id=10}
+\item Bug reports should include enough information to be reproduced: 
+typically, version number, hardware/software combination(s) for which 
+the problem arises, whether it happens in serial or parallel
+execution or both, and, most important, an input and output
+exhibiting such behavior (fast to execute if possible). The error
+message alone is usually not a sufficient piece of information. 
+\item If a bug is found in a stable (released) version of \qe, it must
+be reported in the \texttt{Doc/release-notes} file.
+\end{itemize}
 \section{ Structure of the distribution}
 % \subsection{Contents of the various directories}
 % \subsubsection{ Modules}
