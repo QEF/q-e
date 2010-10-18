@@ -65,7 +65,7 @@ if [ $cell == 0 ]; then
 
  elif [ $cell == 8 ]; then
 
-    b2a=`head -1 $FC_name.fc | cut -c 22-33 `
+    b2a=`head -1 $FC_name.fc | cut -c 23-33 `
     c2a=`head -1 $FC_name.fc | cut -c 34-44 `
     b2a1=`echo "scale=8; 1./$b2a" | bc -l `
     c2a1=`echo "scale=8; 1./$c2a" | bc -l `
