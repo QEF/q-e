@@ -70,6 +70,7 @@ MODULE ph_restart
       CHARACTER(LEN=256)  :: dirname, filename
       INTEGER :: ierr
       CHARACTER(LEN=6), EXTERNAL :: int_to_char
+      LOGICAL :: exst
       !
       IF ( ionode ) THEN
          !
@@ -86,9 +87,14 @@ MODULE ph_restart
       !
       dirname = TRIM( tmp_dir_ph ) // TRIM( prefix ) // '.phsave'
       !
-      ! ... create the main restart directory
+      ! ... create the main restart directory if it is not there
       !
-      CALL create_directory( dirname )
+      IF (ionode) inquire (file =TRIM(dirname)//'/data-file.xml', &
+                           exist = exst)
+      !
+      CALL mp_bcast( exst, ionode_id, intra_image_comm )
+      !
+      IF (.NOT. exst) CALL create_directory( dirname )
       !
       ! ... open the ph_recover file
       !
