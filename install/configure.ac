@@ -1,5 +1,8 @@
 AC_INIT(ESPRESSO, 4.2CVS, , espresso)
-
+# ----------------------------
+# Non-standart precious variables
+# ----------------------------
+AC_ARG_VAR(EXTLIB_FLAGS, This variable controls the flags passed to internal BLAS and LAPACK libraries)
 # -----------------------------
 # options
 # -----------------------------
@@ -148,7 +151,7 @@ scalapack_dir=$SCALAPACK_LIB  # Where to look for libscalapack.a
 blacs_dir=$BLACS_LIB          # Where to look for libblacs.a
 ar=$AR                   # ar (shouldn't be needed)
 arflags=$ARFLAGS         # Flags for ar (as above)
-
+extlib_flags=$EXTLIB_FLAGS # Flags for internal copies of lapack and blas
 # configure for current directory by default
 if test "$topdir" = "" ; then topdir="`pwd`" ; fi
 
@@ -1800,6 +1803,17 @@ if test "$use_openmp" -eq 1 ; then try_dflags="$try_dflags -D__OPENMP" ; fi
 # preprocessing flag for signal trapping (experimental)
 if test "$use_signals" -eq 1 ; then try_dflags="$try_dflags -D__TRAP_SIGUSR1" ; fi
 
+#OBM - This is yet another variable for internal copy of BLAS/LAPACK
+if test "$extlib_flags" = "" ; then 
+       case "$arch" in
+        ppc64 )
+		extlib_flags="-q64 -qthreaded"
+		echo setting extlib_flags ... $extlib_flags
+        ;;
+       esac
+fi
+##
+
 
 if test "$dflags" = "" ; then dflags="$try_dflags" ; fi
 echo setting DFLAGS... $dflags
@@ -1904,6 +1918,7 @@ AC_SUBST(mpi_line)
 AC_SUBST(mass_line)
 AC_SUBST(parallel_report)
 AC_SUBST(topdir)
+AC_SUBST(extlib_flags)
 
 AC_CONFIG_HEADERS([include/c_defs.h:include/c_defs.h.in])
 AC_CONFIG_FILES(make.sys)

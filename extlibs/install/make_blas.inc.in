@@ -16,11 +16,11 @@ PLAT =
 #  desired load options for your machine.
 #
 FORTRAN  = @f77@ 
-OPTS     = -O2 #qua non so come fare
+OPTS     = -O2 @extlib_flags@
 DRVOPTS  = $(OPTS)
-NOOPT    =
+NOOPT    = @extlib_flags@
 LOADER   = @f77@
-LOADOPTS =
+LOADOPTS = @extlib_flags@
 #
 #  The archiver and the flag(s) to use when building archive (library)
 #  If you system has no ranlib, set RANLIB = echo.
