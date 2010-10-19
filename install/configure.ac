@@ -256,7 +256,7 @@ necsx )
         try_dflags_fft_para='-D__USE_3D_FFT'
         ;;
 ppc64 )
-        try_mpif90="mpxlf90_r mpf90_r"
+        try_mpif90="mpxlf90_r mpf90_r mpif90"
         try_f90="xlf90_r $try_f90"
         try_dflags="-D__XLF"
         try_arflags="ruv"
@@ -686,11 +686,11 @@ ppc64:*xlf* )
     if test "$use_debug" -eq 1; then
         try_fflags="-g -C -qsuffix=cpp=f90 -qdpc -qalias=nointptr -Q"
     else
-        try_fflags="-O4 -qsuffix=cpp=f90 -qdpc -qalias=nointptr -Q"
+        try_fflags="-q64 -qthreaded -O4 -qsuffix=cpp=f90 -qdpc -qalias=nointptr -Q"
     fi
         try_f90flags="\$(FFLAGS) -qfree=f90"
-        try_fflags_noopt="-O0"
-        try_ldflags=""
+        try_fflags_noopt="-q64 -qthreaded -O0"
+        try_ldflags="-q64 -qthreaded"
         pre_fdflags="-WF,"
         xlf_flags=1
         ;;
@@ -791,6 +791,10 @@ ppc64-mn:* )
 ppc64-bg:* )
         try_cflags="-O3 -q32"
         ;;
+ppc64:*xlf*)
+        try_cflags="-O3 -q64 -qthreaded"
+        ;;
+
 esac
 if test "$cflags" = "" ; then cflags=$try_cflags ; fi
 echo setting CFLAGS... $cflags
@@ -1138,7 +1142,16 @@ then
                     have_essl=1
                     try_dflags="$try_dflags -D__LINUX_ESSL"
                 fi
+                # OBM:Yet another work-around if the above search 
+                # returns "none required" 
+                if test "$ac_cv_search_dgemm" == "none required"
+                then
+                    echo "There is no need for -lessl in this machine"
+                    have_essl=1
+                    try_dflags="$try_dflags -D__LINUX_ESSL"
+                fi
                 ;;
+
         ppc64-*:* )
                 # assume essl
                 unset ac_cv_search_dgemm # clear cached value
@@ -1331,6 +1344,19 @@ if test "$use_internal_lapack" -eq 0
                 # essl may not have been found in previous test on blas
                 if test "$have_lapack" -eq 1; then have_essl=1; fi
                 ;;
+        ppc64:* )
+                # check for essl
+                unset ac_cv_search_dspev # clear cached value
+                FFLAGS="$test_fflags"
+                LDFLAGS="$test_ldflags"
+                LIBS="$blas_libs"
+                AC_SEARCH_LIBS(dspev, essl, have_lapack=1
+                                lapack_libs="$try_loption $LIBS"
+                                try_dflags="$try_dflags -D__LINUX_ESSL")
+                # essl may not have been found in previous test on blas
+                if test "$have_lapack" -eq 1; then have_essl=1; fi
+                ;;
+
         necsx:* )
                 #sx5-nec or sx6-nec or sx8-nec: check in (/SX)/usr/lib
                 #sx8-nec-idris: check in /SX/opt/mathkeisan/inst/lib0
