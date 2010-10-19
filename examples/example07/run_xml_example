@@ -48,11 +48,6 @@ for DIR in "$TMP_DIR" "$EXAMPLE_DIR/results" ; do
         mkdir $DIR
     fi
 done
-for DIR in "$TMP_DIR" "$EXAMPLE_DIR/results" ; do
-    if test ! -d $DIR ; then
-        mkdir $DIR
-    fi
-done
 cd $EXAMPLE_DIR/results
 
 # check for executables
