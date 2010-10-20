@@ -15,9 +15,10 @@ TODO LIST - October 2010
         (see 1.3.0)
   1.1.1 update home page picture and sample applications
 1.2 Wiki:
-  1.2.1 what is left now: list of papers, bibliography, misc stuff.
-        The list of papers should be replaced by a query to some
-        database for cited papers.
+  1.2.1 Still the starting point for documentation, but it should contain
+        only links to html, pdf, and a few selected wiki pages
+        The list of papers should be replaced by, or integrated with,
+        a query to some database for cited papers.
 1.3 CVS/packaging:
   1.3.0 Rethink a directory structure that better reflects the structure
         of QE as packages (see 1.1.0, 2.0). Lots of files to be moved
@@ -25,26 +26,22 @@ TODO LIST - October 2010
   1.3.1 no pseudopotentials in CVS any longer. Examples should download
         needed PPs from the web site (with a wget)
   1.3.2 run source-normalizer script dev-tools/src-normal
-  1.3.3 The partition of code among directories should be reconsidered.
-        There are circular dependencies that make the installation mechanism
-        a mess, cause trouble with linkers unable to resolve cross-references:
-        files in flib/ use modules in Modules/, while files in Modules in 
-        turn call files in flib/; Modules/mm_dispersions.f90 calls PW/rgen.f90;
-        neb modules in Modules/ calling compute_scf in PW and CP...
+  1.3.3 Files in flib/ use modules in Modules/, while files in Modules/
+        in turn call files in flib/. This kind of circular dependency
+        should be avoided.
   1.3.4 Everything that is not in the " QE core" or that is used only for 
         special purposes (e.g.: DCC=EE/+Multigrid/) should be extracted and 
         moved into external libs or plugins or whatever is appropriate
 1.4 mailing lists:
-  1.4.1 add somewhere instructions on netiquette and how to post 
-        Send monthly reminder?
+  1.4.1 Send monthly reminder? possibly with netiquette
   1.4.2 move to qe-forge, changing names
 1.5 Interoperability:
-  1.5.1 we should maintain somewhere (user guide? wiki? web page?)
+  1.5.1 we should maintain somewhere (in the user guide and the wiki)
         a list of external "QE-interoperable codes", that either
         provide input data for QE or read output/data files from QE
 1.6 qe-forge:
-  1.6.1 there should be somewhere a short introduction to qe-forge and
-        its usage
+  1.6.1 there should be somewhere (developer manual and wiki) a short 
+        introduction to qe-forge and its usage
 
 2) Documentation
 

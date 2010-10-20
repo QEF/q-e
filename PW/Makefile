@@ -154,7 +154,6 @@ reset_k_points.o \
 restart_from_file.o \
 restart_in_electrons.o \
 restart_in_ions.o \
-rgen.o \
 rho2zeta.o \
 rotate_wfc.o \
 rotate_wfc_k.o \

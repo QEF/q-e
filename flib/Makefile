@@ -30,6 +30,7 @@ metagga.o \
 matches.o \
 plot_io.o \
 radial_gradients.o \
+rgen.o \
 recips.o \
 remove_tot_torque.o \
 simpsn.o \
