@@ -794,8 +794,9 @@ ppc64-mn:* )
 ppc64-bg:* )
         try_cflags="-O3 -q32"
         ;;
-ppc64:*xlf*)
+ppc64:xlc*)
         try_cflags="-O3 -q64 -qthreaded"
+        c_ldflags="-q64"
         ;;
 
 esac
