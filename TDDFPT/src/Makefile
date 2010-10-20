@@ -58,7 +58,7 @@ all :  tldeps tddfpt.x
 #	$(PWOBJS) $(EEOBJS) $(PHOBJS) $(LROBJS) $(MODULES) $(EEMODS) $(LIBOBJS) $(LIBS) 
 #	- ( cd ../../bin; ln -fs ../../TDDFPT/tddfpt.x . )
 #
-tddfpt.x : $(LROBJS) $(PWOBJS) $(QEMODS) $(PHOBJS) $(PWOBJS) $(EEOBJS) $(LIBOBJS)
+tddfpt.x : $(LROBJS) $(PWOBJS) $(QEMODS) $(PWOBJS) $(PHOBJS) $(PWOBJS) $(EEOBJS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ \
 		$(LROBJS) $(PHOBJS) $(PWOBJS) $(EEOBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
 	- ( cd ../../bin ; ln -fs ../TDDFPT/src/$@ . )
