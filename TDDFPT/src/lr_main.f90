@@ -380,6 +380,8 @@ CONTAINS
   END DO
  endif
  !print *,"a"
+ !Restart files are always written in outdir
+ tmp_dir = tmp_dir_saved
  if ( n_ipol == 1 ) then
   filename = trim(prefix)//'.restart_lanczos.'//trim(int_to_char(1))
   tempfile = trim(tmp_dir) // trim(filename) //nd_nmbr
@@ -395,7 +397,6 @@ CONTAINS
  !
  !End of parallel file i/o
  !
- tmp_dir = tmp_dir_saved
 
  if ( n_ipol == 1 ) then
   filename = trim(prefix) // ".beta_gamma_z." // trim(int_to_char(1))
@@ -419,7 +420,7 @@ CONTAINS
   if (temp_restart > 0 ) then 
    !print *,"restart falsified",nd_nmbr
    !WRITE(stdout,'(5X,A,3X,"is missing, unable to restart.")') offender
-   WRITE(stdout,'(5X,"Some files are missing, unable to restart current loop")')
+   WRITE(stdout,'(5X,"There are missing files, trying to recompansate")')
    test_restart=.false.
   endif
   

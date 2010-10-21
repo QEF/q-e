@@ -86,8 +86,15 @@ USE lr_variables, ONLY: check_all_bands_gamma, check_density_gamma,&
   IF ( wfc_dir /= 'undefined' ) tmp_dir = wfc_dir
   call diropn ( iunwfc, 'wfc', nwordwfc, exst)
   !
-  if (.not.exst) call errore('lr_read_wfc', TRIM( prefix )//'.wfc'//' not found',1)
+  if (.not.exst .and. wfc_dir == 'undefined') call errore('lr_read_wfc', TRIM( prefix )//'.wfc'//' not found',1)
   !
+  if (.not.exst .and. wfc_dir /= 'undefined') then
+    WRITE( stdout, '(/5x,"Attempting to read from outdir instead of wfcdir")' )
+    CLOSE( UNIT = iunwfc)
+    tmp_dir = tmp_dir_saved
+    call diropn ( iunwfc, 'wfc', nwordwfc, exst)
+    if (.not.exst) call errore('lr_read_wfc', TRIM( prefix )//'.wfc'//' not found',1)
+  endif
   if (gamma_only) then
    WRITE( stdout, '(/5x,"Gamma point algorithm")' )
   else
@@ -355,7 +362,15 @@ USE lr_variables, ONLY: check_all_bands_gamma, check_density_gamma,&
   IF ( wfc_dir /= 'undefined' ) tmp_dir = wfc_dir
   call diropn ( iunwfc, 'wfc', nwordwfc, exst)
   !
-  if (.not.exst) call errore('lr_read_wfc', TRIM( prefix )//'.wfc'//' not found',1)
+  if (.not.exst .and. wfc_dir == 'undefined') call errore('lr_read_wfc', TRIM( prefix )//'.wfc'//' not found',1)
+  !
+  if (.not.exst .and. wfc_dir /= 'undefined') then
+    WRITE( stdout, '(/5x,"Attempting to read from outdir instead of wfcdir")' )
+    CLOSE( UNIT = iunwfc)
+    tmp_dir = tmp_dir_saved
+    call diropn ( iunwfc, 'wfc', nwordwfc, exst)
+    if (.not.exst) call errore('lr_read_wfc', TRIM( prefix )//'.wfc'//' not found',1)
+  endif
   !
   if (gamma_only) then
    WRITE( stdout, '(/5x,"Gamma point algorithm")' )

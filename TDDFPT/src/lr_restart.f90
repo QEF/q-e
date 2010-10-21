@@ -173,10 +173,8 @@ subroutine lr_restart(iter_restart,rflag)
   !
   ! Parallel reads:
   !
-  ! Note: Parallel file I/O is done in wfc_dir
+  ! Note: Restart files are always in outdir
   !
-  tmp_dir_saved = tmp_dir
-  IF ( wfc_dir /= 'undefined' ) tmp_dir = wfc_dir
   !
   ! Reading Lanczos vectors
   !
@@ -201,7 +199,6 @@ subroutine lr_restart(iter_restart,rflag)
          close( unit = iunrestart)
        endif
      endif
-  tmp_dir = tmp_dir_saved
   !
   ! End of all file i/o for restart
   !
