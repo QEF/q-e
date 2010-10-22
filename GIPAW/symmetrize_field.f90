@@ -20,7 +20,7 @@ SUBROUTINE symmetrize_field(field, iflag)
   USE cell_base,                       ONLY : at, bg
   USE symm_base,                       ONLY : s, nsym
   USE symme,                           ONLY : crys_to_cart,cart_to_crys
-  USE pwcom
+  USE smooth_grid_dimensions,          ONLY : nr1sx, nr2sx, nr3sx
   USE gipaw_module
 
   !-- parameters ------------------------------------------------------
@@ -69,7 +69,7 @@ SUBROUTINE psymmetrize_field(field, iflag)
   USE fft_base,                        ONLY : dfftp, grid_gather, grid_scatter
   USE mp_global,                       ONLY : me_pool
   USE symm_base,                       ONLY : s, nsym
-  USE pwcom
+  USE smooth_grid_dimensions,          ONLY : nr1sx, nr2sx, nr3sx
   USE gipaw_module
 
   !-- parameters ------------------------------------------------------
