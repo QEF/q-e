@@ -1493,7 +1493,7 @@ SUBROUTINE write_plot
    USE wavefunctions_module, ONLY : evc, psic
    USE io_files, ONLY : find_free_unit, nwordwfc, iunwfc
    USE wannier
-   USE gsmooth,         ONLY : nls, nlsm, nrxxs, nr1s, nr2s, nr3s, nr1sx, nr2sx, nr3sx
+   USE gsmooth,         ONLY : nls, nlsm, nrxxs
    USE klist,           ONLY : nkstot, xk
    USE gvect,           ONLY : g, ngm, ecutwfc
    USE cell_base,       ONLY : tpiba2
@@ -1513,7 +1513,7 @@ SUBROUTINE write_plot
 #ifdef __PARA
    INTEGER nxxs
    COMPLEX(DP),ALLOCATABLE :: psic_all(:)
-   nxxs = nr1sx * nr2sx * nr3sx
+   nxxs = dffts%nr1x * dffts%nr2x * dffts%nr3x
    ALLOCATE(psic_all(nxxs) )
 #endif
 
@@ -1521,8 +1521,10 @@ SUBROUTINE write_plot
        'write_unk not implemented with ncls',1)
 
    IF (reduce_unk) THEN
-      WRITE(stdout,'(3(a,i5))') 'nr1s =',nr1s,'nr2s=',nr2s,'nr3s=',nr3s
-      n1by2=(nr1s+1)/2;n2by2=(nr2s+1)/2;n3by2=(nr3s+1)/2
+      WRITE(stdout,'(3(a,i5))') 'nr1s =',dffts%nr1,'nr2s=',dffts%nr2,'nr3s=',dffts%nr3
+      n1by2=(dffts%nr1+1)/2
+      n2by2=(dffts%nr2+1)/2
+      n3by2=(dffts%nr3+1)/2
       WRITE(stdout,'(3(a,i5))') 'n1by2=',n1by2,'n2by2=',n2by2,'n3by2=',n3by2
       ALLOCATE(psic_small(n1by2*n2by2*n3by2))
    ENDIF
@@ -1544,14 +1546,14 @@ SUBROUTINE write_plot
          IF (reduce_unk) THEN
             WRITE(iun_plot,*)  n1by2,n2by2,n3by2, ikevc, nbnd-nexband
          ELSE
-            WRITE(iun_plot,*)  nr1s,nr2s,nr3s, ikevc, nbnd-nexband
+            WRITE(iun_plot,*)  dffts%nr1,dffts%nr2,dffts%nr3,ikevc,nbnd-nexband
          ENDIF
       ELSE
          OPEN (unit=iun_plot, file=wfnname,form='unformatted')
          IF (reduce_unk) THEN
             WRITE(iun_plot)  n1by2,n2by2,n3by2, ikevc, nbnd-nexband
          ELSE
-            WRITE(iun_plot)  nr1s,nr2s,nr3s, ikevc, nbnd-nexband
+            WRITE(iun_plot)  dffts%nr1,dffts%nr2,dffts%nr3,ikevc,nbnd-nexband
          ENDIF
       ENDIF
    ENDIF
@@ -1571,10 +1573,10 @@ SUBROUTINE write_plot
 #ifdef __PARA
          CALL cgather_smooth(psic,psic_all)
          IF (reduce_unk) THEN
-            DO k=1,nr3s,2
-               DO j=1,nr2s,2
-                  DO i=1,nr1s,2
-                     idx = (k-1)*nr2s*nr1s + (j-1)*nr1s + i
+            DO k=1,dffts%nr3,2
+               DO j=1,dffts%nr2,2
+                  DO i=1,dffts%nr1,2
+                     idx = (k-1)*dffts%nr2*dffts%nr1 + (j-1)*dffts%nr1 + i
                      pos=pos+1
                      psic_small(pos) = psic_all(idx)
                   ENDDO
@@ -1586,22 +1588,22 @@ SUBROUTINE write_plot
             IF (reduce_unk) THEN
                WRITE (iun_plot,'(2ES20.10)') (psic_small(j),j=1,n1by2*n2by2*n3by2)
             ELSE
-               WRITE (iun_plot,*) (psic_all(j),j=1,nr1s*nr2s*nr3s)
+               WRITE (iun_plot,*) (psic_all(j),j=1,dffts%nr1*dffts%nr2*dffts%nr3)
             ENDIF
          ELSE
             IF (reduce_unk) THEN
                WRITE (iun_plot) (psic_small(j),j=1,n1by2*n2by2*n3by2)
             ELSE
-               WRITE (iun_plot) (psic_all(j),j=1,nr1s*nr2s*nr3s)
+               WRITE (iun_plot) (psic_all(j),j=1,dffts%nr1*dffts%nr2*dffts%nr3)
             ENDIF
          ENDIF
       ENDIF
 #else
          IF (reduce_unk) THEN
-            DO k=1,nr3s,2
-               DO j=1,nr2s,2
-                  DO i=1,nr1s,2
-                     idx = (k-1)*nr2s*nr1s + (j-1)*nr1s + i
+            DO k=1,dffts%nr3,2
+               DO j=1,dffts%nr2,2
+                  DO i=1,dffts%nr1,2
+                     idx = (k-1)*dffts%nr2*dffts%nr1 + (j-1)*dffts%nr1 + i
                      pos=pos+1
                      psic_small(pos) = psic(idx)
                   ENDDO
@@ -1612,13 +1614,13 @@ SUBROUTINE write_plot
             IF (reduce_unk) THEN
                WRITE (iun_plot,'(2ES20.10)') (psic_small(j),j=1,n1by2*n2by2*n3by2)
             ELSE
-               WRITE (iun_plot,*) (psic(j),j=1,nr1s*nr2s*nr3s)
+               WRITE (iun_plot,*) (psic(j),j=1,dffts%nr1*dffts%nr2*dffts%nr3)
             ENDIF
          ELSE
             IF (reduce_unk) THEN
                WRITE (iun_plot) (psic_small(j),j=1,n1by2*n2by2*n3by2)
             ELSE
-               WRITE (iun_plot) (psic(j),j=1,nr1s*nr2s*nr3s)
+               WRITE (iun_plot) (psic(j),j=1,dffts%nr1*dffts%nr2*dffts%nr3)
             ENDIF
          ENDIF
 #endif

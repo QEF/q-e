@@ -94,13 +94,7 @@ MODULE gsmooth
                      !  (sum over all processors)
        ngms_l,      &! the local number of smooth G vectors
                      !  (only present processor)
-       nr1s,        &!
-       nr2s,        &! the dimension of the smooth grid
-       nr3s,        &!
-       nr1sx,       &! maximum dimension of the smooth grid
-       nr2sx,       &! maximum dimension of the smooth grid
-       nr3sx,       &! maximum dimension of the smooth grid
-       nrxxs         ! the total dimension of the smooth grid
+       nrxxs         ! physical dimension of the smooth grid in R space
   INTEGER, POINTER :: &
        nls(:),      &! the correspondence  G <-> smooth mesh
        nlsm(:)       ! the same for gamma point calculation

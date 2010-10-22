@@ -233,7 +233,6 @@ SUBROUTINE scat_states_comp(nchan, nrzp, norb, nocros, taunew, vec, &
  USE scf,       ONLY : rho
  USE uspp_param,ONLY : upf, nhm, nh
  USE uspp,      ONLY : nkb, vkb, becsum
- USE gsmooth,   ONLY : nr3s
  USE gvect,     ONLY : nr1, nr2, nr3, nr1x, nr2x, nr3x, nrxx
  USE ions_base, ONLY : ityp, zv, nat, ntyp => nsp, tau, atm
  USE fft_scalar,ONLY : cft_2xy
@@ -268,11 +267,11 @@ SUBROUTINE scat_states_comp(nchan, nrzp, norb, nocros, taunew, vec, &
  ALLOCATE( vec1(norb*npol) )
  ALLOCATE( ipiv(norb*npol) )
  ALLOCATE( spin_mag(nr1x*nr2x*nr3x,nspin) )
- ALLOCATE( xdata(nr3s+1) )
- ALLOCATE( ydata(nr3s+1) )
+ ALLOCATE( xdata(dffts%nr3+1) )
+ ALLOCATE( ydata(dffts%nr3+1) )
  ALLOCATE( xdatax(nr3) )
  ALLOCATE( ydatax(nr3) )
- ALLOCATE( y2d(nr3s+1) )
+ ALLOCATE( y2d(dffts%nr3+1) )
  IF (noncolin) ALLOCATE(becsum_nc(nhm*(nhm+1)/2,nat,npol,npol))
  ALLOCATE( becsum_orig(nhm*(nhm+1)/2,nat,nspin) )
 
@@ -526,8 +525,8 @@ SUBROUTINE scat_states_comp(nchan, nrzp, norb, nocros, taunew, vec, &
 !-------
 ! collecting the density and magnetizations on fine mesh
 
-  r_aux1 = 1.d0/nr3s
-  do ig = 1, nr3s+1
+  r_aux1 = 1.d0/dffts%nr3
+  do ig = 1, dffts%nr3+1
    xdata(ig) = r_aux1*(ig-1)
   enddo
   r_aux2 = 1.d0/nr3
@@ -552,9 +551,9 @@ SUBROUTINE scat_states_comp(nchan, nrzp, norb, nocros, taunew, vec, &
      enddo
      CALL mp_sum(ydata, intra_pool_comm )
      if(ikind.eq.0) then
-       ydata(nr3s+1) = ydata(1)
+       ydata(dffts%nr3+1) = ydata(1)
      else
-       ydata(nr3s+1) = 2.d0*ydata(nr3s)-ydata(nr3s-1)
+       ydata(dffts%nr3+1) = 2.d0*ydata(dffts%nr3)-ydata(dffts%nr3-1)
      endif
      r_aux3 = 0.d0
      CALL spline( xdata, ydata, 0.d0, r_aux3, y2d )

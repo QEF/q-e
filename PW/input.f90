@@ -90,7 +90,7 @@ SUBROUTINE iosys(xmlinput,attr)
                             qcutz_   => qcutz, &
                             q2sigma_ => q2sigma
   !
-  USE gsmooth,       ONLY : nr1s_ => nr1s, &
+  USE smooth_grid_dimensions, ONLY : nr1s_ => nr1s, &
                             nr2s_ => nr2s, &
                             nr3s_ => nr3s
   !

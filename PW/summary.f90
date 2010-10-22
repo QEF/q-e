@@ -26,7 +26,8 @@ SUBROUTINE summary()
   USE ions_base,       ONLY : amass
   USE gvect,           ONLY : nr1, nr2, nr3, dual, ecutwfc, ecfixed, q2sigma, &
                               ngm, gcutm, qcutz
-  USE gsmooth,         ONLY : nr1s, nr2s, nr3s, doublegrid, ngms, gcutms
+  USE gsmooth,         ONLY : doublegrid, ngms, gcutms
+  USE smooth_grid_dimensions,  ONLY : nr1s, nr2s, nr3s
   USE lsda_mod,        ONLY : lsda, starting_magnetization
   USE ldaU,            ONLY : lda_plus_U, Hubbard_u, Hubbard_alpha, &
                               Hubbard_l, Hubbard_lmax

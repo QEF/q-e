@@ -498,8 +498,7 @@ CONTAINS
     USE io_global,            ONLY : stdout
     USE buffers,              ONLY : get_buffer
     USE gvect,                ONLY : nrxx
-    USE gsmooth,              ONLY : nls, nlsm, nr1s, nr2s, nr3s, &
-                                     nr1sx, nr2sx, nr3sx, nrxxs, doublegrid
+    USE gsmooth,              ONLY : nls, nlsm, nrxxs, doublegrid
     USE wvfct,                ONLY : nbnd, npwx, npw, igk, wg, et
     USE control_flags,        ONLY : gamma_only
     USE klist,                ONLY : wk, ngk, nks
@@ -515,8 +514,8 @@ CONTAINS
     integer :: ik,ibnd, i, j, k, ir, ri, rj, rk, isym, ikq
     integer :: h_ibnd, half_nbnd
     COMPLEX(DP),allocatable :: temppsic(:), psic(:), tempevc(:,:)
-#ifdef __PARA
     integer nxxs
+#ifdef __PARA
     COMPLEX(DP),allocatable :: temppsic_all(:), psic_all(:)
 #endif
     logical, allocatable :: present(:)
@@ -525,11 +524,12 @@ CONTAINS
 
     call start_clock ('exxinit')
 
+    ! Beware: not the same as nrxxs in parallel case
+    nxxs = dffts%nr1x * dffts%nr2x * dffts%nr3x
 #ifdef __PARA
-    nxxs = nr1sx * nr2sx * nr3sx
     allocate(psic_all(nxxs), temppsic_all(nxxs) )
 #endif
-    allocate(present(nsym),rir(nr1sx*nr2sx*nr3sx,nsym))
+    allocate(present(nsym),rir(nxxs,nsym))
     allocate(temppsic(nrxxs), psic(nrxxs),tempevc( npwx, nbnd ))
 
     if( .not. allocated( exxbuff ) ) allocate( exxbuff( nrxxs, nkqs, nbnd ) )
@@ -555,24 +555,24 @@ CONTAINS
        isym = abs(index_sym(ikq))
        if (.not. present(isym) ) then
           present(isym) = .true.
-          if ( mod (s (2, 1, isym) * nr1s, nr2s) .ne.0 .or. &
-               mod (s (3, 1, isym) * nr1s, nr3s) .ne.0 .or. &
-               mod (s (1, 2, isym) * nr2s, nr1s) .ne.0 .or. &
-               mod (s (3, 2, isym) * nr2s, nr3s) .ne.0 .or. &
-               mod (s (1, 3, isym) * nr3s, nr1s) .ne.0 .or. &
-               mod (s (2, 3, isym) * nr3s, nr2s) .ne.0 ) then
+          if ( mod (s (2, 1, isym) * dffts%nr1, dffts%nr2) .ne.0 .or. &
+               mod (s (3, 1, isym) * dffts%nr1, dffts%nr3) .ne.0 .or. &
+               mod (s (1, 2, isym) * dffts%nr2, dffts%nr1) .ne.0 .or. &
+               mod (s (3, 2, isym) * dffts%nr2, dffts%nr3) .ne.0 .or. &
+               mod (s (1, 3, isym) * dffts%nr3, dffts%nr1) .ne.0 .or. &
+               mod (s (2, 3, isym) * dffts%nr3, dffts%nr2) .ne.0 ) then
              call errore ('exxinit',' EXX + smooth grid is not working',isym)
           end if
-          do ir=1, nr1sx * nr2sx * nr3sx
+          do ir=1, nxxs
              rir(ir,isym) = ir
           end do
-          do k = 1, nr3s
-             do j = 1, nr2s
-                do i = 1, nr1s
+          do k = 1, dffts%nr3
+             do j = 1, dffts%nr2
+                do i = 1, dffts%nr1
                    call ruotaijk (s(1,1,isym), ftau(1,isym), i, j, k, &
-                                  nr1s, nr2s, nr3s, ri, rj , rk )
-                   ir =   i + ( j-1)*nr1sx + ( k-1)*nr1sx*nr2sx
-                   rir(ir,isym) = ri + (rj-1)*nr1sx + (rk-1)*nr1sx*nr2sx
+                                  dffts%nr1,dffts%nr2,dffts%nr3, ri, rj , rk )
+                   ir =   i + ( j-1)*dffts%nr1x + ( k-1)*dffts%nr1x*dffts%nr2x
+                   rir(ir,isym) = ri + (rj-1)*dffts%nr1x + (rk-1)*dffts%nr1x*dffts%nr2x
                 end do
              end do
           end do

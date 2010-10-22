@@ -658,7 +658,7 @@ MODULE realus
       USE constants,  ONLY : pi, eps8, eps16
       USE ions_base,  ONLY : nat, nsp, ityp, tau
       USE cell_base,  ONLY : at, bg, omega, alat
-      USE gsmooth,    ONLY : nr1s, nr2s, nr3s, nrxxs
+      USE gsmooth,    ONLY : nrxxs
       USE uspp,       ONLY : okvan, indv, nhtol, nhtolm, ap
       USE uspp_param, ONLY : upf, lmaxq, nh, nhm
       USE atom,       ONLY : rgrid
@@ -762,24 +762,16 @@ MODULE realus
       !
       ! ... now we find the points
       !
-      !index0 = 0
-      !
-
       ! The beta functions are treated on smooth grid
 #if defined (__PARA)
-      !
-      !DO i = 1, me_pool
-      !   index0 = index0 + nr1sx*nr2sx*dffts%npp(i)
-      !END DO
-      !
       index0 = dffts%nr1x*dffts%nr2x * sum ( dffts%npp(1:me_pool) )
 #else
       index0 = 0
 #endif
       !
-      inv_nr1s = 1.D0 / dble( nr1s )
-      inv_nr2s = 1.D0 / dble( nr2s )
-      inv_nr3s = 1.D0 / dble( nr3s )
+      inv_nr1s = 1.D0 / dble( dffts%nr1 )
+      inv_nr2s = 1.D0 / dble( dffts%nr2 )
+      inv_nr3s = 1.D0 / dble( dffts%nr3 )
       !
       DO ia = 1, nat
          !
@@ -996,48 +988,6 @@ MODULE realus
       !
       CALL stop_clock( 'realus:qsave' )
       CALL stop_clock( 'betapointlist' )
-! Delete Delete Delete Delete
-!          print *,"Dumping Betasave v1"
-!          DO ia = 1, nat
-!           nt = ityp(ia)
-!           print *, "atom ",ia," has ", nh (nt), " beta functions"
-!           DO ih = 1, nh (nt)
-!           write(tmp,fmt='("at",i1,"beta",i1)'),ia,ih
-!           filename="rsv1-" // trim(tmp) // ".dump"
-!           OPEN(UNIT=47,FILE=filename,STATUS='NEW',ACCESS = 'SEQUENTIAL')
-!             DO ir = 1, nrxxs
-!                !
-!                ! ... three dimensional indexes
-!                !
-!               index = ir - 1
-!               k     = index / (nr1sx*nr2sx)
-!               index = index - (nr1sx*nr2sx)*k
-!               j     = index / nr1sx
-!               index = index - nr1sx*j
-!               i     = index
-!               !
-!
-!               DO ipol = 1, 3
-!                 posi(ipol) = DBLE( i )*inv_nr1s*at(ipol,1) + &
-!                 DBLE( j )*inv_nr2s*at(ipol,2) + &
-!                 DBLE( k )*inv_nr3s*at(ipol,3)
-!               END DO
-!               posi(:) = posi(:)*alat*0.52917
-!               !if (posi(3) /= 0 ) cycle
-!               DO jh = 1, mbia
-!                  IF(box_beta(jh,ia) .eq. ir) then
-!                    write(unit=47,FMT='(3(F8.4,"  "),E14.5)'),posi(1),posi(2),posi(3),betasave(ia,ih,jh)
-!                  endif
-!               ENDDO
-!             ENDDO
-!           close(47)
-!          ENDDO
-!         ENDDO
-!
-!
-!
-!
-! Delete Delete Delete Delete
       !
     END SUBROUTINE betapointlist
     !------------------------------------------------------------------------
@@ -1611,7 +1561,7 @@ MODULE realus
     USE cell_base,             ONLY : omega
     USE wavefunctions_module,  ONLY : psic
     USE ions_base,             ONLY : nat, ntyp => nsp, ityp
-    USE gsmooth,               ONLY : nr1s, nr2s, nr3s
+    USE smooth_grid_dimensions,ONLY : nr1s,  nr2s,  nr3s
     USE uspp_param,            ONLY : nh, nhm
     USE task_groups,           ONLY : tg_gather
     USE mp_global,             ONLY : nogrp, ogrp_comm, me_pool, nolist, &
@@ -1720,7 +1670,7 @@ MODULE realus
     USE cell_base,             ONLY : omega
     USE wavefunctions_module,  ONLY : psic
     USE ions_base,             ONLY : nat, ntyp => nsp, ityp
-    USE gsmooth,               ONLY : nr1s, nr2s, nr3s
+    USE smooth_grid_dimensions,ONLY : nr1s,  nr2s,  nr3s
     USE uspp_param,            ONLY : nh, nhm
     USE becmod,                ONLY : bec_type, becp
     USE task_groups,           ONLY : tg_gather

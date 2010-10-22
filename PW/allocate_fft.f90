@@ -16,7 +16,8 @@ SUBROUTINE allocate_fft
   USE io_global, ONLY : stdout
   USE gvect,     ONLY : nr1, nr2, nr3, nrxx, ngm, g, gg, nl, nlm, &
        ig1, ig2, ig3, eigts1, eigts2, eigts3, igtongl, ecutwfc
-  USE gsmooth,   ONLY : nr1s,nr2s,nr3s,nrxxs,ngms, nls, nlsm, doublegrid
+  USE gsmooth,   ONLY : nrxxs, ngms, nls, nlsm, doublegrid
+  USE smooth_grid_dimensions, ONLY : nr1s,nr2s,nr3s
 ! DCC
   USE gcoarse,   ONLY : nr1c,nr2c,nr3c,nrxxc,ngmc, nlc, nlcm
   USE ee_mod,    ONLY : do_coarse

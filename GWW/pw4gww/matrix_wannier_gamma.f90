@@ -17,8 +17,7 @@ subroutine matrix_wannier_gamma_big( matsincos, ispin, n_set, itask )
   USE uspp,                 ONLY : okvan, nkb
   USE io_files,             ONLY : find_free_unit, diropn
   USE io_global,            ONLY : stdout
-  USE gsmooth,              ONLY : nr1s, nr2s, nr3s, &
-                                   nr1sx, nr2sx, nr3sx, nrxxs, doublegrid
+  USE gsmooth,              ONLY : nrxxs, doublegrid
   USE realus,               ONLY : qsave, box,maxbox
   USE gvect,                ONLY : nr1, nr2, nr3, nr1x, nr2x, &
                                    nr3x, nrxx
@@ -83,24 +82,24 @@ subroutine matrix_wannier_gamma_big( matsincos, ispin, n_set, itask )
 
 #ifndef __PARA
   iqq=0
-  do ix=1,nr1s
-     do iy=1,nr2s
-        do iz=1,nr3s
-           iqq=(iz-1)*(nr1sx*nr2sx)+(iy-1)*nr1sx+ix
-           tmpexp2(iqq,1) = exp(cmplx(0.d0,1.d0)*tpi*real(ix-1)/real(nr1s))
-           tmpexp2(iqq,2) = exp(cmplx(0.d0,1.d0)*tpi*real(iy-1)/real(nr2s))
-           tmpexp2(iqq,3) = exp(cmplx(0.d0,1.d0)*tpi*real(iz-1)/real(nr3s))
-           tmpexp2(iqq,4) = exp(cmplx(0.d0,-1.d0)*tpi*real(ix-1)/real(nr1s))
-           tmpexp2(iqq,5) = exp(cmplx(0.d0,-1.d0)*tpi*real(iy-1)/real(nr2s))
-           tmpexp2(iqq,6) = exp(cmplx(0.d0,-1.d0)*tpi*real(iz-1)/real(nr3s))
+  do ix=1,dffts%nr1
+     do iy=1,dffts%nr2
+        do iz=1,dffts%nr3
+           iqq=(iz-1)*(dffts%nr1x*dffts%nr2x)+(iy-1)*dffts%nr1x+ix
+           tmpexp2(iqq,1)= exp(cmplx(0.d0, 1.d0)*tpi*real(ix-1)/real(dffts%nr1))
+           tmpexp2(iqq,2)= exp(cmplx(0.d0, 1.d0)*tpi*real(iy-1)/real(dffts%nr2))
+           tmpexp2(iqq,3)= exp(cmplx(0.d0, 1.d0)*tpi*real(iz-1)/real(dffts%nr3))
+           tmpexp2(iqq,4)= exp(cmplx(0.d0,-1.d0)*tpi*real(ix-1)/real(dffts%nr1))
+           tmpexp2(iqq,5)= exp(cmplx(0.d0,-1.d0)*tpi*real(iy-1)/real(dffts%nr2))
+           tmpexp2(iqq,6)= exp(cmplx(0.d0,-1.d0)*tpi*real(iz-1)/real(dffts%nr3))
         enddo
      enddo
   enddo
 
 
 #else
-  write(stdout,*) 'NRS', nr1s,nr2s,nr3s
-  write(stdout,*) 'NRXS', nr1sx,nr2sx,nr3sx
+  write(stdout,*) 'NRS' , dffts%nr1 ,dffts%nr2 ,dffts%nr3
+  write(stdout,*) 'NRXS', dffts%nr1x,dffts%nr2x,dffts%nr3x
   nr3s_start=0
   nr3s_end =0
   do ii=1,me_pool + 1
@@ -109,15 +108,15 @@ subroutine matrix_wannier_gamma_big( matsincos, ispin, n_set, itask )
   end do
   tmpexp2(:,:)=(0.d0,0.d0)
   do iz=1,dffts%npp(me_pool+1)
-     do iy=1,nr2s
-        do ix=1,nr1s
-           iqq=(iz-1)*(nr1sx*nr2sx)+(iy-1)*nr1sx+ix
-           tmpexp2(iqq,1) = exp(cmplx(0.d0,1.d0)*tpi*real(ix-1)/real(nr1s))
-           tmpexp2(iqq,2) = exp(cmplx(0.d0,1.d0)*tpi*real(iy-1)/real(nr2s))
-           tmpexp2(iqq,3) = exp(cmplx(0.d0,1.d0)*tpi*real(iz+nr3s_start-1-1)/real(nr3s))
-           tmpexp2(iqq,4) = exp(cmplx(0.d0,-1.d0)*tpi*real(ix-1)/real(nr1s))
-           tmpexp2(iqq,5) = exp(cmplx(0.d0,-1.d0)*tpi*real(iy-1)/real(nr2s))
-           tmpexp2(iqq,6) = exp(cmplx(0.d0,-1.d0)*tpi*real(iz+nr3s_start-1-1)/real(nr3s))
+     do iy=1,dffts%nr2
+        do ix=1,dffts%nr1
+           iqq=(iz-1)*(dffts%nr1x*dffts%nr2x)+(iy-1)*dffts%nr1x+ix
+           tmpexp2(iqq,1) = exp(cmplx(0.d0,1.d0)*tpi*real(ix-1)/real(dffts%nr1))
+           tmpexp2(iqq,2) = exp(cmplx(0.d0,1.d0)*tpi*real(iy-1)/real(dffts%nr2))
+           tmpexp2(iqq,3) = exp(cmplx(0.d0,1.d0)*tpi*real(iz+nr3s_start-1-1)/real(dffts%nr3))
+           tmpexp2(iqq,4) = exp(cmplx(0.d0,-1.d0)*tpi*real(ix-1)/real(dffts%nr1))
+           tmpexp2(iqq,5) = exp(cmplx(0.d0,-1.d0)*tpi*real(iy-1)/real(dffts%nr2))
+           tmpexp2(iqq,6) = exp(cmplx(0.d0,-1.d0)*tpi*real(iz+nr3s_start-1-1)/real(dffts%nr3))
         enddo
      enddo
   enddo
@@ -176,7 +175,7 @@ subroutine matrix_wannier_gamma_big( matsincos, ispin, n_set, itask )
                  do ir=1,nrxxs
                     sca=sca+tmpreal(ir)*tmpexp2(ir,mdir)
                  enddo
-                 sca=sca/dble(nr1s*nr2s*nr3s)
+                 sca=sca/dble(dffts%nr1*dffts%nr2*dffts%nr3)
                  call mp_barrier
                  call mp_sum(sca)
                  matsincos(iw,jw,mdir)=dble(sca)

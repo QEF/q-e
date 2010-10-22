@@ -23,7 +23,8 @@ subroutine phq_summary
   USE cell_base,     ONLY : at, bg, ibrav, alat, omega, celldm
   USE klist,         ONLY : lgauss, smearing, degauss, ngauss, nkstot, xk, wk
   USE gvect,         ONLY : ecutwfc, dual, nr1, nr2, nr3, gcutm, ngm
-  USE gsmooth,       ONLY : doublegrid, nr1s, nr2s, nr3s, gcutms, ngms
+  USE gsmooth,       ONLY : doublegrid, gcutms, ngms
+  USE smooth_grid_dimensions, ONLY : nr1s, nr2s, nr3s
   USE symm_base,     ONLY : s, sr, ftau, sname, t_rev
   USE constants,     ONLY : amconv
   USE noncollin_module, ONLY : noncolin

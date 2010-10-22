@@ -22,8 +22,7 @@ SUBROUTINE product_wannier(nbndv)
   USE io_files,             ONLY : prefix
   USE io_files,             ONLY : tmp_dir, iunwfc, iunigk, diropn
   USE io_global,            ONLY : stdout
-  USE gsmooth,              ONLY : nls, nlsm, nr1s, nr2s, nr3s, &
-                                   nr1sx, nr2sx, nr3sx, nrxxs, doublegrid
+  USE gsmooth,              ONLY : nls, nlsm, nrxxs, doublegrid
   use mp_global,            ONLY : nproc_pool, me_pool
   USE kinds,                ONLY : DP
   USE us

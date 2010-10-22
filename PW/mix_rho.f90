@@ -432,7 +432,7 @@ SUBROUTINE approx_screening2( drho, rhobest )
   USE kinds,                ONLY : DP
   USE constants,            ONLY : e2, pi, tpi, fpi, eps8, eps32
   USE cell_base,            ONLY : omega, tpiba2
-  USE gsmooth,              ONLY : nr1s, nr2s, nr3s, nrxxs, nls, nlsm
+  USE gsmooth,              ONLY : nrxxs, nls, nlsm
   USE gvect,                ONLY : gg, ngm, nl, nlm
   USE wavefunctions_module, ONLY : psic
   USE klist,                ONLY : nelec
@@ -546,7 +546,7 @@ SUBROUTINE approx_screening2( drho, rhobest )
   !
   alpha = 3.D0 * ( tpi / 3.D0 )**( 5.D0 / 3.D0 ) * alpha
   !
-  avg_rsm1 = ( nr1s*nr2s*nr3s ) / avg_rsm1
+  avg_rsm1 = ( dffts%nr1*dffts%nr2*dffts%nr3 ) / avg_rsm1
   rs       = ( 3.D0 * omega / fpi / nelec )**one_third
   agg0     = ( 12.D0 / pi )**( 2.D0 / 3.D0 ) / tpiba2 / avg_rsm1
   !

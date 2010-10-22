@@ -47,7 +47,8 @@ PROGRAM average
                                    tpiba2, at, bg
   USE gvect,                ONLY : nr1, nr2, nr3, nr1x, nr2x, nr3x, nrxx, &
                                    gcutm, ecutwfc, dual
-  USE gsmooth,              ONLY : nr1s, nr2s, nr3s, doublegrid, gcutms
+  USE gsmooth,              ONLY : doublegrid, gcutms
+  USE smooth_grid_dimensions, ONLY : nr1s, nr2s, nr3s
   USE ions_base,            ONLY : zv, tau, nat, ntyp => nsp, ityp, atm
   USE lsda_mod,             ONLY : nspin
   USE wavefunctions_module, ONLY : psic

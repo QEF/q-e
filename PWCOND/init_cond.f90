@@ -16,15 +16,15 @@ subroutine init_cond (nregion, flag)
 !    flag     -  'l'/'s'/'r'/'t' if the unit cell containes
 !                the left lead/scat. reg./right lead/all of them
 !
-  USE io_global, ONLY : stdout
-  USE noncollin_module, ONLY : noncolin, npol
+  USE io_global,  ONLY : stdout
   USE uspp_param, ONLY : upf, nbetam
-  USE atom, ONLY: rgrid
+  USE atom,       ONLY: rgrid
   USE ions_base,  ONLY : atm, nat, ityp, ntyp => nsp, tau
   USE cell_base,  ONLY : at, bg, omega, alat
   USE ener,       ONLY : ef
   USE gvect,      ONLY : nr1x, nr2x, nr3x, nr1, nr2, nr3, ecutwfc
-  USE gsmooth,    ONLY : nr1sx, nr2sx, nr3sx, nr1s, nr2s, nr3s
+  USE smooth_grid_dimensions, ONLY : nr1sx, nr2sx, nr3sx, nr1s, nr2s, nr3s
+  USE noncollin_module,       ONLY : noncolin, npol
   USE cond
 
   implicit none

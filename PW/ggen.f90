@@ -21,8 +21,7 @@ SUBROUTINE ggen()
    USE gvect,              ONLY : g, gg, ngm, ngm_g, ngm_l, nr1, nr2, nr3, &
                                     gcutm, nr1x, nr2x, nr3x, ig1, ig2, ig3,  &
                                     nl, gstart, gl, ngl, igtongl
-   USE gsmooth,            ONLY : ngms, gcutms, ngms_g, nr1s, nr2s, nr3s, &
-                                    nr1sx, nr3sx, nls
+   USE gsmooth,            ONLY : ngms, gcutms, ngms_g, nls
    USE control_flags,      ONLY : gamma_only
    USE cellmd,             ONLY : lmovecell
    USE constants,          ONLY : eps8
@@ -167,19 +166,19 @@ SUBROUTINE ggen()
       ig1 (ng) = n1 - 1
       n1s = n1
       IF (n1<1) n1 = n1 + nr1
-      IF (n1s<1) n1s = n1s + nr1s
+      IF (n1s<1) n1s = n1s + dffts%nr1
 
       n2 = nint (sum(g (:, ng) * at (:, 2))) + 1
       ig2 (ng) = n2 - 1
       n2s = n2
       IF (n2<1) n2 = n2 + nr2
-      IF (n2s<1) n2s = n2s + nr2s
+      IF (n2s<1) n2s = n2s + dffts%nr2
 
       n3 = nint (sum(g (:, ng) * at (:, 3))) + 1
       ig3 (ng) = n3 - 1
       n3s = n3
       IF (n3<1) n3 = n3 + nr3
-      IF (n3s<1) n3s = n3s + nr3s
+      IF (n3s<1) n3s = n3s + dffts%nr3
 
       IF (n1>nr1 .or. n2>nr2 .or. n3>nr3) &
          CALL errore('ggen','Mesh too small?',ng)
@@ -187,11 +186,11 @@ SUBROUTINE ggen()
 #if defined (__PARA) && !defined (__USE_3D_FFT)
       nl (ng) = n3 + ( dfftp%isind (n1 + (n2 - 1) * nr1x) - 1) * nr3x
       IF (ng <= ngms) &
-         nls (ng) = n3s + ( dffts%isind (n1s + (n2s - 1) * nr1sx) - 1) * nr3sx
+         nls (ng) = n3s + ( dffts%isind (n1s+(n2s-1)*dffts%nr1x) - 1 ) * dffts%nr3x
 #else
       nl (ng) = n1 + (n2 - 1) * nr1x + (n3 - 1) * nr1x * nr2x
       IF (ng <= ngms) &
-         nls (ng) = n1s + (n2s - 1) * nr1sx + (n3s - 1) * nr1sx * nr2s
+         nls (ng) = n1s + (n2s - 1) * dffts%nr1x + (n3s - 1) * dffts%nr1x * dffts%nr2x
 #endif
    ENDDO
    !
@@ -249,7 +248,7 @@ SUBROUTINE index_minusg()
    !
    USE gvect,   ONLY : ngm, nr1, nr2, nr3, &
                         nr1x, nr2x, nr3x, nlM, ig1, ig2, ig3
-   USE gsmooth, ONLY : nr1s, nr2s, nr3s, nr1sx, nr3sx, nlsm, ngms
+   USE gsmooth, ONLY : nlsm, ngms
    USE fft_base,  ONLY : dfftp, dffts
    IMPLICIT NONE
    !
@@ -259,18 +258,23 @@ SUBROUTINE index_minusg()
    DO ng = 1, ngm
       n1 = -ig1 (ng) + 1
       n1s = n1
-      IF (n1 < 1) n1 = n1 + nr1
-      IF (n1s < 1) n1s = n1s + nr1s
+      IF (n1 < 1) THEN
+         n1 = n1 + nr1
+         n1s = n1s + dffts%nr1
+      END IF
 
       n2 = -ig2 (ng) + 1
       n2s = n2
-      IF (n2 < 1) n2 = n2 + nr2
-      IF (n2s < 1) n2s = n2s + nr2s
-
+      IF (n2 < 1) THEN
+         n2 = n2 + nr2
+         n2s = n2s + dffts%nr2
+      END IF
       n3 = -ig3 (ng) + 1
       n3s = n3
-      IF (n3 < 1) n3 = n3 + nr3
-      IF (n3s < 1) n3s = n3s + nr3s
+      IF (n3 < 1) THEN
+         n3 = n3 + nr3
+         n3s = n3s + dffts%nr3
+      END IF
 
       IF (n1>nr1 .or. n2>nr2 .or. n3>nr3) THEN
          CALL errore('index_minusg','Mesh too small?',ng)
@@ -279,11 +283,11 @@ SUBROUTINE index_minusg()
 #if defined (__PARA) && !defined (__USE_3D_FFT)
       nlm(ng) = n3 + (dfftp%isind (n1 + (n2 - 1) * nr1x) - 1) * nr3x
       IF (ng<=ngms) &
-         nlsm(ng) = n3s + (dffts%isind (n1s + (n2s - 1) * nr1sx) - 1) * nr3sx
+         nlsm(ng) = n3s + (dffts%isind (n1s+(n2s-1) * dffts%nr1x) - 1) * dffts%nr3x
 #else
       nlm(ng) = n1 + (n2 - 1) * nr1x + (n3 - 1) * nr1x * nr2x
       IF (ng<=ngms) &
-         nlsm(ng) = n1s + (n2s - 1) * nr1sx + (n3s - 1) * nr1sx * nr2s
+         nlsm(ng) = n1s + (n2s - 1) * dffts%nr1x + (n3s-1) * dffts%nr1x * dffts%nr2x
 #endif
    ENDDO
 

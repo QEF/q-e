@@ -84,7 +84,8 @@ MODULE pw_restart
       USE gvect,                ONLY : nr1, nr2, nr3, ngm, ngm_g, &
                                        g, ig1, ig2, ig3, ecutwfc, dual
       USE basis,                ONLY : natomwfc
-      USE gsmooth,              ONLY : nr1s, nr2s, nr3s, ngms_g
+      USE gsmooth,              ONLY : ngms_g
+      USE smooth_grid_dimensions,ONLY: nr1s, nr2s, nr3s
       USE ktetra,               ONLY : nk1, nk2, nk3, k1, k2, k3, &
                                        ntetra, tetra, ltetra
       USE wvfct,                ONLY : npw, npwx, g2kin, et, wg, &
@@ -102,7 +103,6 @@ MODULE pw_restart
       USE ions_base,            ONLY : amass
       USE funct,                ONLY : get_dft_name
       USE scf,                  ONLY : rho
-      USE fft_base,             ONLY : dfftp
       USE extfield,             ONLY : tefield, dipfield, edir, &
                                        emaxpos, eopreg, eamp
       USE io_rho_xml,           ONLY : write_rho
@@ -1236,7 +1236,8 @@ MODULE pw_restart
       USE ions_base,        ONLY : nat, nsp
       USE symm_base,        ONLY : nsym
       USE gvect,            ONLY : nr1, nr2, nr3, ngm_g, ecutwfc, dual
-      USE gsmooth,          ONLY : nr1s, nr2s, nr3s, ngms_g
+      USE gsmooth,          ONLY : ngms_g
+      USE smooth_grid_dimensions,ONLY: nr1s, nr2s, nr3s
       USE lsda_mod,         ONLY : lsda
       USE noncollin_module, ONLY : noncolin
       USE ktetra,           ONLY : ntetra
@@ -1932,7 +1933,8 @@ MODULE pw_restart
       !------------------------------------------------------------------------
       !
       USE gvect,   ONLY : nr1, nr2, nr3, ngm_g, ecutwfc, dual
-      USE gsmooth, ONLY : nr1s, nr2s, nr3s, ngms_g
+      USE gsmooth, ONLY : ngms_g
+      USE smooth_grid_dimensions,ONLY: nr1s, nr2s, nr3s
       USE wvfct,   ONLY : npwx, g2kin
       USE control_flags, ONLY : gamma_only
       !
