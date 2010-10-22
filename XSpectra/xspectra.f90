@@ -10,8 +10,8 @@ PROGRAM X_Spectra
   USE kinds, ONLY : DP
   USE constants,       ONLY : rytoev,pi,fpi
   USE io_global,       ONLY : stdout,ionode,ionode_id   ! Modules/io_global.f90
-  USE io_files,        ONLY : prefix, tmp_dir
-  USE parser,          ONLY :  read_line
+  USE io_files,        ONLY : prefix, iunwfc, nwordwfc, tmp_dir, diropn
+  USE parser,          ONLY : read_line
   USE cell_base,       ONLY : bg, at, celldm
   USE parameters,      ONLY : ntypx,lmaxx,lqmax
   USE ions_base,       ONLY : nat, ntyp => nsp, ityp, tau
@@ -44,7 +44,7 @@ PROGRAM X_Spectra
   USE lsda_mod,    ONLY : nspin,lsda,isk,current_spin
   USE noncollin_module,     ONLY : noncolin
   USE mp,         ONLY : mp_bcast, mp_sum             !parallelization
-  USE mp_global,  ONLY : intra_pool_comm, nproc, npool, mp_startup
+  USE mp_global,  ONLY : intra_pool_comm, nproc, npool, mp_startup, mp_global_end
   USE control_flags, ONLY : gamma_only
   USE environment,   ONLY : environment_start
 
@@ -82,7 +82,7 @@ PROGRAM X_Spectra
   REAL(dp), ALLOCATABLE:: a(:,:,:),b(:,:,:),xnorm(:,:)      !lanczos vectors
   REAL (DP), EXTERNAL :: efermig,efermit
   REAL(DP) :: rc(ntypx,0:lmaxx),r_paw(0:lmaxx)
-  LOGICAL :: vloc_set
+  LOGICAL :: exst, loc_set
 
   CHARACTER (LEN=256)  :: input_file, filerecon(ntypx),filecore
   CHARACTER(LEN=256) :: outdir 
@@ -464,7 +464,17 @@ PROGRAM X_Spectra
      !  Reads potentials and so on from post processing
      ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$  
 
-     IF(.NOT.twfcollect) CALL openfil_pp
+     IF(.NOT.twfcollect) THEN
+        !
+        ! ... nwordwfc is the record length for the direct-access file
+        ! ... containing wavefunctions
+        !
+        nwordwfc = 2 * nbnd * npwx ! * npol not implemented
+        CALL diropn( iunwfc, 'wfc', nwordwfc, exst )
+        IF ( .not. exst ) CALL errore ('xspectra', &
+             'file '//trim( prefix )//'.wfc'//' not found',1)
+        !
+     END iF
 
      ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
      !  Assign paw radii to species (this will become soon obsolete)
@@ -628,12 +638,11 @@ PROGRAM X_Spectra
         WRITE( stdout,*)
         WRITE (stdout,*) &
              '============================================================'
-        CALL stop_pp
+
+        call stop_xspectra () 
+
      ENDIF
      !        CALL mp_bcast( ef, ionode_id )  !Why should I need this ?
-
-
-
 
 
      ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
@@ -778,7 +787,7 @@ PROGRAM X_Spectra
         CALL read_save_file(a,b,xnorm,ncalcv,x_save_file,core_energy)
      ENDIF
 
-     IF (TRIM(save_file_kind).eq.'unfinished') CALL stop_pp      
+     IF (TRIM(save_file_kind).eq.'unfinished') CALL stop_xspectra ()       
 
      IF(xang_mom.EQ.1) THEN
         CALL plot_xanes_dipole(a,b,xnorm,ncalcv,terminator,core_energy)
@@ -813,16 +822,42 @@ PROGRAM X_Spectra
     CALL stop_clock( calculation  )
     CALL print_clock( calculation )
 
-  CALL stop_pp
+  CALL stop_xspectra () 
 
 END program X_Spectra
 
+!--------------------------------------------------------------------
+SUBROUTINE stop_xspectra
+  !--------------------------------------------------------------------
+  !
+  ! Synchronize processes before stopping. This is a copy of stop_pp.
+  !
+  USE control_flags, ONLY: twfcollect
+  USE io_files, ONLY: iunwfc
+  USE mp_global, ONLY: mp_global_end
+  USE parallel_include
+  !
+#ifdef __PARA
 
+  INTEGER :: info
+  LOGICAL :: op
 
+  INQUIRE ( iunwfc, opened = op )
 
+  IF ( op ) THEN
+     IF (twfcollect) THEN
+        CLOSE (unit = iunwfc, status = 'delete')
+     ELSE
+        CLOSE (unit = iunwfc, status = 'keep')
+     ENDIF
+  ENDIF
 
+  CALL mp_global_end()
 
+#endif
 
+  STOP
+END SUBROUTINE stop_xspectra
 
 
 ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$

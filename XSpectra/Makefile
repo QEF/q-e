@@ -15,10 +15,6 @@ XOBJS = \
 ./init_xspectra_ldau.o \
 ./lr_sm1_psi.o
 
-PPOBJS = \
-../PP/openfil_pp.o\
-../PP/stop_pp.o
-
 GIPAWOBJS=../GIPAW/paw_gipaw.o \
 ../GIPAW/init_gipaw_1.o \
 ../GIPAW/init_gipaw_2.o
@@ -30,7 +26,7 @@ EEOBJS = ../EE/libee.a
 all : xspectra.x 
 
 xspectra.x :   xspectra.o $(XOBJS) $(GIPAWOBJS) $(QEMODS) $(PWOBJS)
-	$(MPIF90) -o $@  xspectra.o $(XOBJS) $(PPOBJS) $(GIPAWOBJS) \
+	$(MPIF90) -o $@  xspectra.o $(XOBJS) $(GIPAWOBJS) \
 		$(PWOBJS) $(EEOBJS) $(QEMODS) $(LDFLAGS) $(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../XSpectra/$@ . )
 

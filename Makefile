@@ -8,7 +8,7 @@ default :
 	@echo '  pw           basic code for scf, structure optimization, MD'
 	@echo '  cp           CP code: CP MD with ultrasoft pseudopotentials'
 	@echo '  ph           phonon code'
-	@echo '  neb          neb code'
+	@echo '  neb          code for Nudged Elastic Band method'
 	@echo '  tddfpt       time dependent dft code'
 	@echo '  pp           postprocessing programs'
 	@echo '  gamma        Gamma-only version of phonon code'
@@ -52,7 +52,7 @@ ph : bindir mods libs pw
 	( cd PH ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= all ; \
 	else $(MAKE) $(MFLAGS) TLDEPS= all ; fi ) ; fi
 
-neb : bindir mods liblapack libblas libs libiotk pw eelib
+neb : bindir mods libs pw
 	if test -d NEB ; then \
 	( cd NEB ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= all ; \
 	else $(MAKE) $(MFLAGS) TLDEPS= all ; fi ) ; fi
@@ -122,7 +122,7 @@ pw_export : libiotk bindir mods libs pw
 	( cd PP ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= pw_export.x ; \
 	else $(MAKE) $(MFLAGS) TLDEPS= pw_export.x ; fi ) ; fi
 
-xspectra : bindir mods libs pw pp gipaw
+xspectra : bindir mods libs pw gipaw
 	if test -d XSpectra ; then \
 	( cd XSpectra ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= all ; \
 	else $(MAKE) $(MFLAGS) TLDEPS= all ; fi ) ; fi

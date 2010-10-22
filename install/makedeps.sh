@@ -13,7 +13,7 @@ if test $# = 0
 then
     dirs=" Modules clib PW CPV flib pwtools upftools PP PWCOND \
            Gamma PH D3 atomic GIPAW VdW EE XSpectra \
-	   GWW//gww GWW//pw4gww GWW//head ACFDT NEB" 
+	   GWW/gww GWW/pw4gww GWW/head ACFDT NEB" 
           
 else
     dirs=$*
@@ -27,28 +27,26 @@ do
     # in directory DIR should be listed in DEPENDS
     DEPENDS="../include ../iotk/src"
     case $DIR in 
-        EE | flib | upftools | atomic )
+        EE | flib | upftools | atomic | CPV )
                   DEPENDS="$DEPENDS ../Modules "            ;;
 	PW )
-		  DEPENDS="$DEPENDS ../Modules ../EE ../NEB "       ;;
-	CPV )
 		  DEPENDS="$DEPENDS ../Modules ../EE "       ;;
 	PP | PWCOND | Gamma | PH | GIPAW | pwtools )
-		  DEPENDS="$DEPENDS ../Modules ../EE ../PW ../NEB" ;;
+		  DEPENDS="$DEPENDS ../Modules ../PW" ;;
 	D3 | VdW | ACFDT ) 
-                  DEPENDS="$DEPENDS ../Modules ../EE ../PW ../PH" ;;
+                  DEPENDS="$DEPENDS ../Modules ../PW ../PH" ;;
 	XSpectra  )
-		  DEPENDS="$DEPENDS ../Modules ../PW ../PP ../GIPAW"  ;;
+		  DEPENDS="$DEPENDS ../Modules ../PW ../GIPAW"  ;;
         GWW/pw4gww )
                   DEPENDS="../../include ../../iotk/src ../../Modules \
-		  ../../PW ../../EE " ;;
+		  ../../PW " ;;
 	GWW/gww )
                   DEPENDS="../../include ../../iotk/src ../../Modules " ;;
 	GWW/head )
                   DEPENDS="../../include ../../iotk/src ../../Modules \
-		  ../../PW ../../EE ../../PH ../pw4gww " ;;
+		  ../../PW ../../PH ../pw4gww " ;;
 	NEB )
-		  DEPENDS="$DEPENDS ../Modules ../PW ../EE" ;;
+		  DEPENDS="$DEPENDS ../Modules ../PW" ;;
 
     esac
 
