@@ -16,13 +16,14 @@ subroutine d3_summary
   !
   !    if iverbosity = 0 only a partial summary is done.
   !
+  USE kinds, only : DP
   USE ions_base,  ONLY : nat, ityp, ntyp => nsp, atm, tau, amass
   USE printout_base, ONLY : title
   USE io_global,  ONLY : stdout
-  USE kinds, only : DP
-  use pwcom
   USE symm_base,   ONLY : s, sr, sname, ftau
   USE control_flags, ONLY : iverbosity
+  USE smooth_grid_dimensions, ONLY : nr1s, nr2s, nr3s
+  use pwcom
   use phcom
   use d3com
 !
