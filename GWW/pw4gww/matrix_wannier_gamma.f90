@@ -18,6 +18,7 @@ subroutine matrix_wannier_gamma_big( matsincos, ispin, n_set, itask )
   USE io_files,             ONLY : find_free_unit, diropn
   USE io_global,            ONLY : stdout
   USE gsmooth,              ONLY : nrxxs, doublegrid
+  USE smooth_grid_dimensions,ONLY: nr3s
   USE realus,               ONLY : qsave, box,maxbox
   USE gvect,                ONLY : nr1, nr2, nr3, nr1x, nr2x, &
                                    nr3x, nrxx
@@ -63,13 +64,11 @@ subroutine matrix_wannier_gamma_big( matsincos, ispin, n_set, itask )
   allocate(tmprealis(nrxxs,n_set),tmprealjs(nrxxs,n_set), tmpreal(nrxxs))
   allocate(tmpexp2(nrxxs,6))
 
-!set npp for not parallel case
-
+! set npp for not parallel case
+! I don't think this is necessary - PG
 #ifndef __PARA
   dfftp%npp(1)=nr3
   dffts%npp(1)=nr3s
-!  npp(1) = nr3
-!  npps(1) = nr3s
 #endif
 
 
