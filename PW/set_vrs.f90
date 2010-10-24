@@ -14,7 +14,7 @@ subroutine set_vrs (vrs, vltot, vr, kedtau, kedtaur,nrxx, nspin, doublegrid)
   !
   USE kinds
   USE funct, only : dft_is_meta
-  USE gsmooth, only : nrxxs
+  USE smooth_grid_dimensions, only : nrxxs
   implicit none
 
   integer :: nspin, nrxx

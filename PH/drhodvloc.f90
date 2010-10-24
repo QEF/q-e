@@ -16,8 +16,7 @@ subroutine drhodvloc (nu_i0, npe, drhoscf, wdyn)
   USE kinds,     ONLY : DP
   USE ions_base, ONLY : nat
   USE gvect,     ONLY : nrxx
-  USE gsmooth,   ONLY : nrxxs
-  USE smooth_grid_dimensions, ONLY : nr1s, nr2s, nr3s
+  USE smooth_grid_dimensions, ONLY : nrxxs, nr1s, nr2s, nr3s
   USE cell_base, ONLY : omega
   USE lsda_mod,  ONLY : nspin
   USE noncollin_module, ONLY : nspin_lsda, nspin_mag

@@ -22,7 +22,7 @@ SUBROUTINE product_wannier(nbndv)
   USE io_files,             ONLY : prefix
   USE io_files,             ONLY : tmp_dir, iunwfc, iunigk, diropn
   USE io_global,            ONLY : stdout
-  USE gsmooth,              ONLY : nls, nlsm, nrxxs, doublegrid
+  USE gsmooth,              ONLY : nls, nlsm, doublegrid
   use mp_global,            ONLY : nproc_pool, me_pool
   USE kinds,                ONLY : DP
   USE us
@@ -84,7 +84,7 @@ SUBROUTINE product_wannier(nbndv)
    if(okvan .and. lsmallgrid) write(stdout,*) 'ATTENTION: USPP AND SMALLGRID'
 
    allocate(tmpspacei(nrxx),tmpspacej(nrxx),tmpreal(nrxx),tmpreal2(nrxx))
-   allocate(tmpspacejs(nrxxs),tmpspacec(nrxx))
+   allocate(tmpspacejs(dffts%nnr),tmpspacec(nrxx))
 
    numw_prod=0
 

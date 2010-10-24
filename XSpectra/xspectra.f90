@@ -891,7 +891,7 @@ SUBROUTINE xanes_dipole(a,b,ncalcv,xnorm,core_wfn,paw_iltonhb,terminator,verbosi
        paw_lmaxkb,paw_recon
   USE becmod,          ONLY : becp, allocate_bec_type, deallocate_bec_type !CG
   USE scf,             ONLY : vltot, vrs, v, kedtau
-  USE gsmooth,         ONLY : doublegrid, nrxxs ! CG
+  USE gsmooth,         ONLY : doublegrid
   USE mp_global,       ONLY : intra_pool_comm, root_pool, world_comm
   USE mp,              ONLY : mp_sum, mp_bcast, mp_barrier !CG
   USE io_global,       ONLY : ionode
@@ -3387,7 +3387,7 @@ SUBROUTINE verify_hpsi
        paw_lmaxkb,paw_recon
   USE becmod,     ONLY : becp, calbec, allocate_bec_type, deallocate_bec_type !CG
   USE scf,        ONLY : vltot, vrs, v, kedtau !CG
-  USE gsmooth,    ONLY : doublegrid, nrxxs !CG
+  USE gsmooth,    ONLY : doublegrid
   USE mp_global,  ONLY : intra_pool_comm, mpime,my_pool_id, npool
   USE mp,         ONLY : mp_sum
   USE xspectra,      ONLY : xiabs, xanes_dip, xang_mom, xniter, xnitermax, xepsilon

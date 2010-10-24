@@ -14,7 +14,7 @@ subroutine ultra_external( nbnd_start, nbnd_end, radius, itask)
 
   USE io_files,             ONLY : find_free_unit,nwordwfc, iunwfc, prefix, diropn
   USE io_global,            ONLY : stdout, ionode_id
-  USE gsmooth,              ONLY : nls, nlsm, nrxxs, doublegrid
+  USE gsmooth,              ONLY : nls, nlsm, doublegrid
   USE gvect,                ONLY : nr1, nr2, nr3, nr1x, nr2x, &
                                    nr3x, nrxx, gstart
   use mp_global,            ONLY : nproc_pool, me_pool
@@ -119,7 +119,7 @@ subroutine ultra_external( nbnd_start, nbnd_end, radius, itask)
   endif
 
 
-  allocate(op(nrxxs), op_wfc(npwx))
+  allocate(op(dffts%nnr), op_wfc(npwx))
 !loop on wavefunctions
   do ii=nbnd_start,nbnd_end
 
@@ -243,7 +243,7 @@ subroutine ultra_external( nbnd_start, nbnd_end, radius, itask)
   deallocate(wfc_mlwf,ultra_trans)
 !rotate wavefunctions
 !    ALLOCATE( evc( npwx, nbnd ) )
-    allocate(tmpreal(nrxx),tmpreals(nrxxs))
+    allocate(tmpreal(nrxx),tmpreals(dffts%nnr))
 !    CALL davcio(evc,nwordwfc,iunwfc,1,-1)
 
     allocate(u_trans_old(nbnd_normal,nbnd_normal))

@@ -34,7 +34,6 @@ SUBROUTINE PAW_make_ae_charge(rho)
    REAL(DP),ALLOCATABLE    :: rho_lm(:,:,:), rho_lm_ae(:,:,:), rho_lm_ps(:,:,:)
    REAL(DP)                :: posi(3), first, second
    REAL(DP)                :: inv_nr1, inv_nr2, inv_nr3, distsq
-   INTEGER, EXTERNAL :: ldim_block, gind_block
 
    ! Some initialization
    !

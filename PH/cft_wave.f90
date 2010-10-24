@@ -7,31 +7,31 @@
 !
 !-----------------------------------------------------------------------
 subroutine cft_wave (evc_g, evc_r, isw)
-!-----------------------------------------------------------------------
-!
-! Fourier-transformation of a wavefunction
-! evc_g(npwx):  the wavefunction in G space
-! evc_r(nrxxs): the wavefunction in R space ("smooth" grid)
-! isw =+1: input:  evc_g
-!          output: evc_f = Fourier(evc_g)
-!          evc_g is transformed according to igk-indexes
-!          evc_r is set to zero at the beginning
-! isw =-1: input:  evc_r
-!          output: evc_g = evc_g + Fourier-1(evc_r)
-!          evc_r is transformed according to igkq indexes
-!
+  !-----------------------------------------------------------------------
+  !
+  ! Fourier-transformation of a wavefunction
+  ! evc_g(npwx):  the wavefunction in G space
+  ! evc_r(nrxxs): the wavefunction in R space ("smooth" grid)
+  ! isw =+1: input:  evc_g
+  !          output: evc_f = Fourier(evc_g)
+  !          evc_g is transformed according to igk-indexes
+  !          evc_r is set to zero at the beginning
+  ! isw =-1: input:  evc_r
+  !          output: evc_g = evc_g + Fourier-1(evc_r)
+  !          evc_r is transformed according to igkq indexes
+  !
 
   USE kinds, ONLY : DP
   USE wvfct, ONLY : npwx, npw, igk
   USE fft_base,   ONLY: dffts
   USE fft_interfaces, ONLY: fwfft, invfft
-  USE gsmooth, ONLY : nrxxs, nls
+  USE gsmooth, ONLY : nls
   use noncollin_module, ONLY : noncolin, npol
   use qpoint, ONLY : npwq, igkq
   implicit none
 
   integer :: isw
-  complex(DP) :: evc_g (npwx*npol), evc_r (nrxxs,npol)
+  complex(DP) :: evc_g (npwx*npol), evc_r (dffts%nnr,npol)
 
   integer :: ig
 

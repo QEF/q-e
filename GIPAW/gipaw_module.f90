@@ -205,9 +205,11 @@ CONTAINS
   !-----------------------------------------------------------------------
   SUBROUTINE gipaw_allocate
     USE lsda_mod,      ONLY : nspin, lsda
-    USE pwcom
+    USE gvect,         ONLY : ngm
+    USE wvfct,         ONLY : nbnd, npwx
     USE ions_base,     ONLY : ntyp => nsp
     USE paw_gipaw,     ONLY : paw_recon
+    USE smooth_grid_dimensions, ONLY : nrxxs
 
     IMPLICIT NONE
 
@@ -1161,7 +1163,7 @@ CONTAINS
   !-----------------------------------------------------------------------
   SUBROUTINE test_symmetries ( s, nsym )
 
-    USE pwcom, ONLY : at, bg
+    USE cell_base, ONLY : at, bg
 
     IMPLICIT NONE
 

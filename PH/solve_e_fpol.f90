@@ -31,7 +31,7 @@ subroutine solve_e_fpol ( iw )
   USE fft_base,              ONLY : dffts
   USE fft_interfaces,        ONLY : fwfft, invfft
   USE gvect,                 ONLY : nrxx, g
-  USE gsmooth,               ONLY : nrxxs, doublegrid, nls
+  USE gsmooth,               ONLY : doublegrid, nls
   USE becmod,                ONLY : becp, calbec
   USE wvfct,                 ONLY : npw, npwx, nbnd, igk, g2kin, et
   USE uspp,                  ONLY : okvan, vkb
@@ -89,14 +89,14 @@ subroutine solve_e_fpol ( iw )
   call start_clock ('solve_e')
   allocate (dvscfin( nrxx, nspin, 3))
   if (doublegrid) then
-     allocate (dvscfins(  nrxxs, nspin, 3))
+     allocate (dvscfins( dffts%nnr, nspin, 3))
   else
      dvscfins => dvscfin
   endif
   allocate (dvscfout( nrxx , nspin, 3))
   allocate (dbecsum( nhm*(nhm+1)/2, nat, nspin, 3))
   allocate (auxg(npwx))
-  allocate (aux1(nrxxs))
+  allocate (aux1(dffts%nnr))
   allocate (ps  (nbnd,nbnd))
   ps (:,:) = (0.d0, 0.d0)
   allocate (h_diag(npwx, nbnd))
@@ -189,7 +189,7 @@ subroutine solve_e_fpol ( iw )
                     aux1 (nls(igk(ig)))=evc(ig,ibnd)
                  enddo
                  CALL invfft ('Wave', aux1, dffts)
-                 do ir = 1, nrxxs
+                 do ir = 1, dffts%nnr
                     aux1(ir)=aux1(ir)*dvscfins(ir,current_spin,ipol)
                  enddo
                  CALL fwfft ('Wave', aux1, dffts)

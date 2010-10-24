@@ -22,7 +22,7 @@ subroutine compute_drhous_nc (drhous, dbecsum, wgg, becq, alpq)
   USE fft_base,   ONLY : dffts
   USE fft_interfaces, ONLY: invfft
   USE gvect,      ONLY : nrxx
-  USE gsmooth,    ONLY : nrxxs, nls
+  USE gsmooth,    ONLY : nls
   USE wvfct,      ONLY : npw, npwx, nbnd, igk
   USE noncollin_module, ONLY : noncolin, npol, nspin_mag
   USE wavefunctions_module,  ONLY: evc
@@ -75,7 +75,7 @@ subroutine compute_drhous_nc (drhous, dbecsum, wgg, becq, alpq)
 
   call start_clock ('com_drhous')
 
-  allocate (evcr( nrxxs, npol, nbnd))
+  allocate (evcr( dffts%nnr, npol, nbnd))
   !
   drhous(:,:,:) = (0.d0, 0.d0)
   dbecsum  = (0.d0, 0.d0)

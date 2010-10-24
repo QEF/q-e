@@ -19,7 +19,7 @@ SUBROUTINE local_dos1d (ik, kband, plan)
   USE fft_base,  ONLY: dffts, dfftp
   USE fft_interfaces, ONLY : fwfft, invfft
   USE gvect,     ONLY : nrxx, nr3
-  USE gsmooth,   ONLY : nrxxs, nls, doublegrid
+  USE gsmooth,   ONLY : nls, doublegrid
   USE lsda_mod, ONLY: current_spin
   USE uspp, ONLY: becsum, indv, nhtol, nhtoj
   USE uspp_param, ONLY: upf, nh, nhm
@@ -96,20 +96,20 @@ SUBROUTINE local_dos1d (ik, kband, plan)
 
      w1 = wg (kband, ik) / omega
      DO ipol=1,npol
-        DO ir = 1, nrxxs
+        DO ir = 1, dffts%nnr
            aux(ir) = aux(ir) + w1 * ( dble(psic_nc(ir,ipol))**2 + &
                                      aimag(psic_nc(ir,ipol))**2 )
         ENDDO
      ENDDO
   ELSE
-     psic(1:nrxxs) = (0.d0,0.d0)
+     psic(1:dffts%nnr) = (0.d0,0.d0)
      DO ig = 1, npw
         psic (nls (igk (ig) ) ) = evc (ig, kband)
      ENDDO
      CALL invfft ('Wave', psic, dffts)
 
      w1 = wg (kband, ik) / omega
-     DO ir = 1, nrxxs
+     DO ir = 1, dffts%nnr
         aux(ir) = aux(ir) + w1 * (dble(psic(ir))**2 + aimag(psic(ir))**2)
      ENDDO
   ENDIF

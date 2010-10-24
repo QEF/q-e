@@ -458,7 +458,7 @@ CONTAINS
     !This subroutine is called when restarting an exx calculation
     use funct,                ONLY : get_exx_fraction, start_exx, exx_is_active, &
                                      get_screening_parameter
-    USE gsmooth,              ONLY : nrxxs
+    USE smooth_grid_dimensions,ONLY: nrxxs
     USE io_files,             ONLY : find_free_unit
     USE io_global,            ONLY : stdout
 
@@ -498,7 +498,7 @@ CONTAINS
     USE io_global,            ONLY : stdout
     USE buffers,              ONLY : get_buffer
     USE gvect,                ONLY : nrxx
-    USE gsmooth,              ONLY : nls, nlsm, nrxxs, doublegrid
+    USE gsmooth,              ONLY : nls, nlsm, doublegrid
     USE wvfct,                ONLY : nbnd, npwx, npw, igk, wg, et
     USE control_flags,        ONLY : gamma_only
     USE klist,                ONLY : wk, ngk, nks
@@ -514,7 +514,7 @@ CONTAINS
     integer :: ik,ibnd, i, j, k, ir, ri, rj, rk, isym, ikq
     integer :: h_ibnd, half_nbnd
     COMPLEX(DP),allocatable :: temppsic(:), psic(:), tempevc(:,:)
-    integer nxxs
+    integer :: nxxs, nrxxs
 #ifdef __PARA
     COMPLEX(DP),allocatable :: temppsic_all(:), psic_all(:)
 #endif
@@ -526,6 +526,7 @@ CONTAINS
 
     ! Beware: not the same as nrxxs in parallel case
     nxxs = dffts%nr1x * dffts%nr2x * dffts%nr3x
+    nrxxs= dffts%nnr
 #ifdef __PARA
     allocate(psic_all(nxxs), temppsic_all(nxxs) )
 #endif
@@ -697,7 +698,7 @@ CONTAINS
     USE cell_base, ONLY : alat, omega, bg, at, tpiba
     USE symm_base, ONLY : nsym, s
     USE gvect,     ONLY : nrxx, ngm
-    USE gsmooth,   ONLY : nls, nlsm, nrxxs, doublegrid
+    USE gsmooth,   ONLY : nls, nlsm, doublegrid
     USE wvfct,     ONLY : nbnd, npwx, npw, igk, current_k
     USE control_flags, ONLY : gamma_only
     USE klist,     ONLY : xk
@@ -721,14 +722,14 @@ CONTAINS
     COMPLEX(DP), allocatable :: rhoc(:), vc(:)
     real (DP),   allocatable :: fac(:)
     integer          :: ibnd, ik, im , ig, ikq, iq, isym, iqi
-    integer          :: h_ibnd, half_nbnd, ierr
+    integer          :: h_ibnd, half_nbnd, ierr, nrxxs
     real(DP) :: x1, x2
     real(DP) :: qq, xk_cryst(3), sxk(3), xkq(3), x, q(3)
     ! <LMS> temp array for vcut_spheric
     real(DP) :: atws(3,3)
 
     call start_clock ('vexx')
-
+    nrxxs = dffts%nnr
     allocate (tempphic(nrxxs), temppsic(nrxxs), result(nrxxs), &
               rhoc(nrxxs), vc(nrxxs), fac(ngm) )
 
@@ -977,7 +978,7 @@ call flush_unit(stdout)
     USE cell_base, ONLY : alat, omega, bg, at, tpiba
     USE symm_base,ONLY : nsym, s
     USE gvect,     ONLY : nrxx, ngm
-    USE gsmooth,   ONLY : nls, nlsm, nrxxs, doublegrid
+    USE gsmooth,   ONLY : nls, nlsm, doublegrid
     USE wvfct,     ONLY : nbnd, npwx, npw, igk, wg, current_k
     USE control_flags, ONLY : gamma_only
     USE wavefunctions_module, ONLY : evc
@@ -998,7 +999,7 @@ call flush_unit(stdout)
     COMPLEX(DP), allocatable :: rhoc(:)
     real (DP),   allocatable :: fac(:)
     integer          :: jbnd, ibnd, ik, ikk, ig, ikq, iq, isym
-    integer          :: half_nbnd, h_ibnd, nqi, iqi
+    integer          :: half_nbnd, h_ibnd, nqi, iqi, nrxxs
     real(DP)    :: x1, x2
     real(DP) :: qq, xk_cryst(3), sxk(3), xkq(3), vc, x, q(3)
     ! temp array for vcut_spheric
@@ -1006,7 +1007,7 @@ call flush_unit(stdout)
 
     call start_clock ('exxen2')
 
-
+    nrxxs = dffts%nnr
     energy=0.d0
 
     ALLOCATE (tempphic(nrxxs), temppsic(nrxxs), rhoc(nrxxs), fac(ngm) )
@@ -1321,7 +1322,7 @@ call flush_unit(stdout)
   USE cell_base, ONLY : alat, omega, bg, at, tpiba
   USE symm_base,ONLY : nsym, s
   USE gvect,     ONLY : nrxx, ngm
-  USE gsmooth,   ONLY : nls, nlsm, nrxxs, doublegrid
+  USE gsmooth,   ONLY : nls, nlsm, doublegrid
   USE wvfct,     ONLY : nbnd, npwx, npw, igk, wg, current_k
   USE control_flags, ONLY : gamma_only
   USE wavefunctions_module, ONLY : evc
@@ -1340,14 +1341,16 @@ call flush_unit(stdout)
   complex(dp), allocatable :: rhoc(:)
   real(dp), allocatable :: fac(:), fac_tens(:,:,:), fac_stress(:)
   integer :: jbnd, ibnd, ik, ikk, ig, ikq, iq, isym
-  integer :: half_nbnd, h_ibnd, nqi, iqi, beta
+  integer :: half_nbnd, h_ibnd, nqi, iqi, beta, nrxxs
   real(dp) :: x1, x2
   real(dp) :: qq, xk_cryst(3), sxk(3), xkq(3), vc(3,3), x, q(3)
   ! temp array for vcut_spheric
   real(dp) :: atws(3,3) 
   real(dp) :: delta(3,3)
+ 
   call start_clock ('exx_stress')
 
+  nrxxs = dffts%nnr
   delta = reshape( (/1.d0,0.d0,0.d0, 0.d0,1.d0,0.d0, 0.d0,0.d0,1.d0/), (/3,3/))
   exx_stress_ = 0.d0
   allocate( tempphic(nrxxs), temppsic(nrxxs), rhoc(nrxxs), fac(ngm) )

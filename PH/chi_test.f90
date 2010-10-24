@@ -16,7 +16,7 @@ subroutine chi_test (dvscfs, chif, ik, depsi, auxr, auxg)
 
   USE kinds, ONLY : DP
   USE wvfct, ONLY : npwx, nbnd
-  USE gsmooth, ONLY : nrxxs
+  USE smooth_grid_dimensions, ONLY : nrxxs
   use ramanm,  ONLY : lrd2w, iud2w, jab
   USE units_ph, ONLY : iuwfc, lrdwf, iudwf
   USE qpoint, ONLY : npwq, nksq

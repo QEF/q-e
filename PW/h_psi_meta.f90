@@ -17,7 +17,7 @@ subroutine h_psi_meta (ldap, np, mp, psip, hpsi)
   USE cell_base, ONLY : tpiba
   USE lsda_mod,  ONLY : nspin, current_spin
   USE wvfct,     ONLY : igk, current_k
-  USE gsmooth,   ONLY : nls, nlsm, nrxxs
+  USE gsmooth,   ONLY : nls, nlsm
   USE gvect,     ONLY : g
   USE scf,       ONLY : kedtau
   USE klist,     ONLY : xk
@@ -34,9 +34,10 @@ subroutine h_psi_meta (ldap, np, mp, psip, hpsi)
   real (DP), allocatable :: kplusg (:)
 !  complex (DP), allocatable :: psi(:)
   !
-  integer :: im, j
+  integer :: im, j, nrxxs
   !
   CALL start_clock( 'h_psi_meta' )
+  nrxxs = dffts%nnr
   allocate (kplusg(np))
   if (gamma_only) then
      !

@@ -20,7 +20,7 @@ SUBROUTINE local_dos_mag(spin_component, kpoint, kband, raux)
   USE fft_base,             ONLY : dffts
   USE fft_interfaces,       ONLY : invfft
   USE gvect,                ONLY : nrxx, ngm, g, ecutwfc
-  USE gsmooth,              ONLY : nls, nrxxs, doublegrid
+  USE gsmooth,              ONLY : nls, doublegrid
   USE klist,                ONLY : nks, xk
   USE scf,                  ONLY : rho
   USE io_files,             ONLY : iunwfc, nwordwfc
@@ -87,21 +87,21 @@ SUBROUTINE local_dos_mag(spin_component, kpoint, kband, raux)
                  CALL invfft ('Wave', psic_nc(:,ipol), dffts)
               ENDDO
               IF (spin_component==1) THEN
-                 DO ir = 1,nrxxs
+                 DO ir = 1,dffts%nnr
                     rho%of_r(ir,2) = rho%of_r(ir,2) + 2.D0*w1* &
                          (dble(psic_nc(ir,1))* dble(psic_nc(ir,2)) + &
                          aimag(psic_nc(ir,1))*aimag(psic_nc(ir,2)))
                  ENDDO
               ENDIF
               IF (spin_component==2) THEN
-                 DO ir = 1,nrxxs
+                 DO ir = 1,dffts%nnr
                     rho%of_r(ir,3) = rho%of_r(ir,3) + 2.D0*w1* &
                          (dble(psic_nc(ir,1))*aimag(psic_nc(ir,2)) - &
                           dble(psic_nc(ir,2))*aimag(psic_nc(ir,1)))
                  ENDDO
               ENDIF
               IF (spin_component==3) THEN
-                 DO ir = 1,nrxxs
+                 DO ir = 1,dffts%nnr
                     rho%of_r(ir,4) = rho%of_r(ir,4) + w1* &
                         (dble(psic_nc(ir,1))**2+aimag(psic_nc(ir,1))**2 &
                         -dble(psic_nc(ir,2))**2-aimag(psic_nc(ir,2))**2)

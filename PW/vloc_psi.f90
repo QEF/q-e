@@ -14,7 +14,7 @@ SUBROUTINE vloc_psi_gamma(lda, n, m, psi, v, hpsi)
   !
   USE parallel_include
   USE kinds,   ONLY : DP
-  USE gsmooth, ONLY : nls, nlsm, nrxxs
+  USE gsmooth, ONLY : nls, nlsm
   USE wvfct,   ONLY : igk
   USE mp_global,     ONLY : nogrp, ogrp_comm, me_pool, nolist, use_task_groups
   USE fft_base,      ONLY : dffts
@@ -27,7 +27,7 @@ SUBROUTINE vloc_psi_gamma(lda, n, m, psi, v, hpsi)
   INTEGER, INTENT(in) :: lda, n, m
   COMPLEX(DP), INTENT(in)   :: psi (lda, m)
   COMPLEX(DP), INTENT(inout):: hpsi (lda, m)
-  REAL(DP), INTENT(in) :: v(nrxxs)
+  REAL(DP), INTENT(in) :: v(dffts%nnr)
   !
   INTEGER :: ibnd, j, incr
   COMPLEX(DP) :: fp, fm
@@ -124,7 +124,7 @@ SUBROUTINE vloc_psi_gamma(lda, n, m, psi, v, hpsi)
         !
         CALL invfft ('Wave', psic, dffts)
         !
-        DO j = 1, nrxxs
+        DO j = 1, dffts%nnr
            psic (j) = psic (j) * v(j)
         ENDDO
         !
@@ -201,7 +201,7 @@ SUBROUTINE vloc_psi_k(lda, n, m, psi, v, hpsi)
   !
   USE parallel_include
   USE kinds,   ONLY : DP
-  USE gsmooth, ONLY : nls, nlsm, nrxxs
+  USE gsmooth, ONLY : nls, nlsm
   USE wvfct,   ONLY : igk
   USE mp_global,     ONLY : nogrp, ogrp_comm, me_pool, nolist, use_task_groups
   USE fft_base,      ONLY : dffts
@@ -214,7 +214,7 @@ SUBROUTINE vloc_psi_k(lda, n, m, psi, v, hpsi)
   INTEGER, INTENT(in) :: lda, n, m
   COMPLEX(DP), INTENT(in)   :: psi (lda, m)
   COMPLEX(DP), INTENT(inout):: hpsi (lda, m)
-  REAL(DP), INTENT(in) :: v(nrxxs)
+  REAL(DP), INTENT(in) :: v(dffts%nnr)
   !
   INTEGER :: ibnd, j, incr
   !
@@ -296,7 +296,7 @@ SUBROUTINE vloc_psi_k(lda, n, m, psi, v, hpsi)
      ELSE
         !
 !$omp parallel do
-        DO j = 1, nrxxs
+        DO j = 1, dffts%nnr
            psic (j) = psic (j) * v(j)
         ENDDO
 !$omp end parallel do
@@ -354,7 +354,7 @@ SUBROUTINE vloc_psi_nc (lda, n, m, psi, v, hpsi)
   !
   USE parallel_include
   USE kinds,   ONLY : DP
-  USE gsmooth, ONLY : nls, nlsm, nrxxs
+  USE gsmooth, ONLY : nls, nlsm
   USE gvect,   ONLY : nrxx
   USE wvfct,   ONLY : igk
   USE mp_global,     ONLY : nogrp, ogrp_comm, me_pool, nolist, use_task_groups
@@ -450,7 +450,7 @@ SUBROUTINE vloc_psi_nc (lda, n, m, psi, v, hpsi)
            tg_psic(j,2)=sdwn
         ENDDO
      ELSE
-        DO j=1, nrxxs
+        DO j=1, dffts%nnr
            sup = psic_nc(j,1) * (v(j,1)+v(j,4)) + &
                  psic_nc(j,2) * (v(j,2)-(0.d0,1.d0)*v(j,3))
            sdwn = psic_nc(j,2) * (v(j,1)-v(j,4)) + &

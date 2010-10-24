@@ -18,7 +18,7 @@ subroutine h_psiq (lda, n, m, psi, hpsi, spsi)
   !
   USE fft_base,              ONLY : dffts
   USE fft_interfaces,        ONLY : fwfft, invfft
-  USE gsmooth,               ONLY : nls, nrxxs
+  USE gsmooth,               ONLY : nls
   USE lsda_mod,              ONLY : current_spin
   USE wvfct,                 ONLY : igk, g2kin
   USE uspp,                  ONLY : vkb
@@ -77,10 +77,10 @@ subroutine h_psiq (lda, n, m, psi, hpsi, spsi)
      !
      !   and then the product with the potential vrs = (vltot+vr) on the smoo
      !
-     !do j = 1, nrxxs
+     !do j = 1, dffts%nnr
      !   psic (j) = psic (j) * vrs (j, current_spin)
      !enddo
-     psic (1:nrxxs) = psic (1:nrxxs) * vrs (1:nrxxs, current_spin)
+     psic (1:dffts%nnr) = psic (1:dffts%nnr) * vrs (1:dffts%nnr, current_spin)
      !
      !   back to reciprocal space
      !

@@ -15,7 +15,8 @@
 
   use kinds, only : DP
   USE gvect,   ONLY : nrxx
-  USE gsmooth, ONLY : nrxxs, doublegrid
+  USE gsmooth, ONLY : doublegrid
+  USE smooth_grid_dimensions, ONLY : nrxxs
   USE lsda_mod,ONLY : nspin
   USE units_ph, ONLY : iudrho, lrdrho
   USE output,   ONLY : fildrho

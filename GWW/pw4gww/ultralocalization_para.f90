@@ -22,7 +22,7 @@ SUBROUTINE ultralocalization_para(nbndv,nbnd_max,ultra_thr,isubspace,max_array2,
 
   USE io_files,             ONLY : find_free_unit, diropn
   USE io_global,            ONLY : stdout, ionode_id
-  USE gsmooth,              ONLY : nls, nlsm, nrxxs, doublegrid
+  USE gsmooth,              ONLY : nls, nlsm, doublegrid
   USE gvect,                ONLY : nr1, nr2, nr3, nr1x, nr2x, &
                                    nr3x, nrxx
   use mp_global,            ONLY : nproc_pool, me_pool
@@ -137,7 +137,7 @@ SUBROUTINE ultralocalization_para(nbndv,nbnd_max,ultra_thr,isubspace,max_array2,
   allocate(eigx(nbnd_normal,nbnd_normal),eigy(nbnd_normal,nbnd_normal),eigz(nbnd_normal,nbnd_normal))
   allocate(exp_x(nrxx),exp_y(nrxx),exp_z(nrxx))
   allocate(sums(nr1,nr2,dfftp%npp(me_pool+1)))
-  allocate(tmp_s(nrxxs),tmp_r(nrxx))
+  allocate(tmp_s(dffts%nnr),tmp_r(nrxx))
   if(okvan) allocate(becp_gw2(nkb,nbnd))
 
   if(isubspace==0) then
@@ -180,8 +180,8 @@ SUBROUTINE ultralocalization_para(nbndv,nbnd_max,ultra_thr,isubspace,max_array2,
 
 
 
-  allocate(tmpreali(nrxxs,numnbndset))
-  allocate(tmprealj(nrxxs))
+  allocate(tmpreali(dffts%nnr,numnbndset))
+  allocate(tmprealj(dffts%nnr))
   allocate(min_1(nr2,dfftp%npp(me_pool+1),numnbndset),min_2(nr2,dfftp%npp(me_pool+1),numnbndset))
   allocate(max_1(nr2,dfftp%npp(me_pool+1),numnbndset),max_2(nr2,dfftp%npp(me_pool+1),numnbndset))
   allocate(eigenvector(nbnd_normal,numnbndset))
@@ -224,7 +224,7 @@ SUBROUTINE ultralocalization_para(nbndv,nbnd_max,ultra_thr,isubspace,max_array2,
 !open outpu file
 
      iunrealwan = find_free_unit()
-     CALL diropn( iunrealwan, 'real_whole', nrxxs, exst )
+     CALL diropn( iunrealwan, 'real_whole', dffts%nnr, exst )
      iunrealwan2 =  find_free_unit()
 
      if(itask/=1) then
@@ -235,7 +235,7 @@ SUBROUTINE ultralocalization_para(nbndv,nbnd_max,ultra_thr,isubspace,max_array2,
 
 !read in wave-functions
      do iw=nbnd_start,nbnd_end
-        CALL davcio( tmpreali(:,iw-nbnd_start+1),nrxxs,iunrealwan,iw,-1)
+        CALL davcio( tmpreali(:,iw-nbnd_start+1),dffts%nnr,iunrealwan,iw,-1)
      enddo
      CLOSE(iunrealwan)
 !first valence subspace
@@ -272,7 +272,7 @@ SUBROUTINE ultralocalization_para(nbndv,nbnd_max,ultra_thr,isubspace,max_array2,
            eigz(iw,jw)=(0.d0,0.d0)
            tmp_s(:)=tmpreali(:,iww)*tmpreali(:,jww)
 
-           do ir=1,nrxxs
+           do ir=1,dffts%nnr
               eigx(iw,jw)=eigx(iw,jw)+exp_x(ir)*tmp_s(ir)
               eigy(iw,jw)=eigy(iw,jw)+exp_y(ir)*tmp_s(ir)
               eigz(iw,jw)=eigz(iw,jw)+exp_z(ir)*tmp_s(ir)

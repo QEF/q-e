@@ -12,7 +12,7 @@ SUBROUTINE g_tensor_crystal
   ! ... Compute the g-tensor: PRL 88, 086403 (2002)
   !
   USE kinds,                       ONLY : DP
-  USE gsmooth,                     ONLY : nrxxs
+  USE smooth_grid_dimensions,      ONLY : nrxxs
   USE parameters,                  ONLY : lmaxx
   USE constants,                   ONLY : pi
   USE uspp,                        ONLY : vkb, ap

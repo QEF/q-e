@@ -33,7 +33,7 @@ SUBROUTINE do_elf (elf)
   USE fft_base,  ONLY: dffts, dfftp
   USE fft_interfaces, ONLY : fwfft, invfft
   USE gvect, ONLY: nrxx, gcutm, ecutwfc, dual, g, ngm, nl, nlm
-  USE gsmooth, ONLY : nls, nlsm, ngms, nrxxs, doublegrid
+  USE gsmooth, ONLY : nls, nlsm, ngms, doublegrid
   USE io_files, ONLY: iunwfc, nwordwfc
   USE klist, ONLY: nks, xk
   USE lsda_mod, ONLY: nspin
@@ -59,8 +59,8 @@ SUBROUTINE do_elf (elf)
   !
   CALL infomsg ('do_elf', 'elf + US not fully implemented')
   !
-  ALLOCATE (kkin( nrxx))
-  ALLOCATE (aux ( nrxxs))
+  ALLOCATE (kkin(nrxx))
+  ALLOCATE (aux (dffts%nnr))
   aux(:) = (0.d0,0.d0)
   kkin(:) = 0.d0
   !
@@ -89,7 +89,7 @@ SUBROUTINE do_elf (elf)
               ENDIF
            ENDDO
            CALL invfft ('Wave', aux, dffts)
-           DO i = 1, nrxxs
+           DO i = 1, dffts%nnr
               kkin(i) = kkin(i) + w1 * (dble(aux(i))**2 + aimag(aux(i))**2)
            ENDDO
            ! j

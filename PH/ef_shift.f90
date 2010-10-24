@@ -18,7 +18,7 @@ subroutine ef_shift (drhoscf, ldos, ldoss, dos_ef, irr, npe, flag)
   USE fft_base,             ONLY : dfftp
   USE fft_interfaces,       ONLY : fwfft, invfft
   USE gvect,                ONLY : nrxx, gg, nl
-  USE gsmooth,              ONLY : nrxxs
+  USE smooth_grid_dimensions,ONLY: nrxxs
   USE lsda_mod,             ONLY : nspin
   USE wvfct,                ONLY : npw, npwx, et
   USE klist,                ONLY : degauss, ngauss, ngk
@@ -165,7 +165,7 @@ subroutine ef_shift_paw (drhoscf, dbecsum, ldos, ldoss, becsum1, &
   USE fft_base,             ONLY : dfftp
   USE fft_interfaces,       ONLY : fwfft, invfft
   USE gvect,                ONLY : nrxx, gg, nl
-  USE gsmooth,              ONLY : nrxxs
+  USE smooth_grid_dimensions,ONLY: nrxxs
   USE lsda_mod,             ONLY : nspin
   USE uspp_param,           ONLY : nhm
   USE wvfct,                ONLY : npw, npwx, et

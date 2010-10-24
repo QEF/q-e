@@ -109,14 +109,14 @@ SUBROUTINE solve_e_vdw ( iu )
   !
   ALLOCATE (dvscfin( nrxx, nspin, 3))
   IF (doublegrid) THEN
-     ALLOCATE (dvscfins(  nrxxs, nspin, 3))
+     ALLOCATE (dvscfins(  dffts%nnr, nspin, 3))
   ELSE
      dvscfins => dvscfin
   ENDIF
   ALLOCATE (dvscfout( nrxx , nspin, 3))
   ALLOCATE (dbecsum( nhm*(nhm+1)/2, nat, nspin, 3))
   ALLOCATE (auxg(npwx,1))
-  ALLOCATE (aux1(nrxxs))
+  ALLOCATE (aux1(dffts%nnr))
   ALLOCATE (spsi(npwx))
   ALLOCATE (ps  (nbnd))
   ALLOCATE (h_diag(npwx, nbnd))
@@ -231,7 +231,7 @@ SUBROUTINE solve_e_vdw ( iu )
                     aux1 (nls(igk(ig)))=evc(ig,ibnd)
                  ENDDO
                  CALL invfft ('Wave', aux1, dffts)
-                 DO ir = 1, nrxxs
+                 DO ir = 1, dffts%nnr
                     aux1(ir)=aux1(ir)*dvscfins(ir,current_spin,ipol)
                  ENDDO
                  CALL fwfft ('Wave', aux1, dffts)

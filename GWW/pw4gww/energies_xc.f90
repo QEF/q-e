@@ -30,7 +30,7 @@ SUBROUTINE energies_xc( lda, n, m, e_xc, e_h )
   USE wvfct,            ONLY : igk, g2kin
   USE fft_base,         ONLY : dffts
   USE fft_interfaces,   ONLY : fwfft, invfft
-  USE gsmooth,          ONLY : nls, nrxxs,doublegrid
+  USE gsmooth,          ONLY : nls, doublegrid
   USE gvect,            ONLY : ngm, gstart, nr1, nr2, nr3,  &
                                nrxx, nl, nlm, g, gg, ecutwfc, gcutm
   USE cell_base,        ONLY :  alat, omega
@@ -125,7 +125,7 @@ SUBROUTINE energies_xc( lda, n, m, e_xc, e_h )
           !
           CALL start_clock( 'firstfft' )
           !
-          psic(1:nrxxs) = ( 0.D0, 0.D0 )
+          psic(1:dffts%nnr) = ( 0.D0, 0.D0 )
           !
           psic(nls(igk(1:n))) = evc(1:n,ibnd)
           !
@@ -135,7 +135,7 @@ SUBROUTINE energies_xc( lda, n, m, e_xc, e_h )
           !
           ! ... product with the potential vrs = (vltot+vr) on the smooth grid
           !
-          psic(1:nrxxs) = psic(1:nrxxs) * vrs(1:nrxxs,current_spin)
+          psic(1:dffts%nnr) = psic(1:dffts%nnr) * vrs(1:dffts%nnr,current_spin)
           !
           ! ... back to reciprocal space
           !
@@ -241,10 +241,10 @@ SUBROUTINE energies_xc( lda, n, m, e_xc, e_h )
          deallocate(hpsi,psi,becp%r)
        endif
        !
-       allocate(psi_r(nrxx),psi_rs(nrxxs))
+       allocate(psi_r(nrxx),psi_rs(dffts%nnr))
        !
        iunwfcreal=find_free_unit()
-       CALL diropn( iunwfcreal, 'real_whole', nrxxs, exst )
+       CALL diropn( iunwfcreal, 'real_whole', dffts%nnr, exst )
        !
 !calculate xc potential on fine grid
        !
@@ -268,7 +268,7 @@ SUBROUTINE energies_xc( lda, n, m, e_xc, e_h )
        do ibnd=1,m!loop on states
          !read from disk wfc on coarse grid
          !
-         CALL davcio( psi_rs, nrxxs, iunwfcreal, ibnd, -1)
+         CALL davcio( psi_rs, dffts%nnr, iunwfcreal, ibnd, -1)
          !
          !
          if(doublegrid) then
@@ -326,7 +326,7 @@ SUBROUTINE energies_xc( lda, n, m, e_xc, e_h )
        !
        do ibnd=1,m!loop on states
            !read from disk wfc on coarse grid
-           CALL davcio( psi_rs,nrxxs,iunwfcreal,ibnd,-1)
+           CALL davcio( psi_rs,dffts%nnr,iunwfcreal,ibnd,-1)
            if(doublegrid) then
               call interpolate(psi_r,psi_rs,1)
            else

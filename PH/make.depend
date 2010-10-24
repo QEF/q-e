@@ -188,6 +188,7 @@ check_initial_status.o : ph_restart.o
 check_initial_status.o : phcom.o
 check_initial_status.o : save_ph_input.o
 check_q_points_sym.o : ../Modules/kind.o
+chi_test.o : ../Modules/griddim.o
 chi_test.o : ../Modules/kind.o
 chi_test.o : ../Modules/wavefunctions.o
 chi_test.o : ../PW/pwcom.o
@@ -197,10 +198,12 @@ clean_pw_ph.o : ../Modules/control_flags.o
 clean_pw_ph.o : ../Modules/kind.o
 clean_pw_ph.o : phcom.o
 clean_pw_ph.o : save_ph_input.o
+clinear.o : ../Modules/kind.o
 close_phq.o : ../Modules/control_flags.o
 close_phq.o : ../Modules/io_files.o
 close_phq.o : ../Modules/io_global.o
 close_phq.o : ../Modules/mp_global.o
+close_phq.o : ../Modules/paw_variables.o
 close_phq.o : ../Modules/uspp.o
 close_phq.o : phcom.o
 close_phq.o : ramanm.o
@@ -286,8 +289,10 @@ davcio_drho.o : ../Modules/io_global.o
 davcio_drho.o : ../Modules/kind.o
 davcio_drho.o : ../Modules/mp.o
 davcio_drho.o : ../Modules/mp_global.o
+davcio_drho.o : ../Modules/paw_variables.o
 davcio_drho.o : ../PW/noncol.o
 davcio_drho.o : ../PW/pwcom.o
+davcio_drho.o : phcom.o
 deallocate_part.o : phcom.o
 deallocate_phq.o : ../Modules/wavefunctions.o
 deallocate_phq.o : ../PW/becmod.o
@@ -304,6 +309,7 @@ dgradcorr.o : ../PW/noncol.o
 dgradcorr.o : ../PW/pwcom.o
 dgradcorr.o : phcom.o
 dhdrhopsi.o : ../Modules/cell_base.o
+dhdrhopsi.o : ../Modules/griddim.o
 dhdrhopsi.o : ../Modules/io_files.o
 dhdrhopsi.o : ../Modules/kind.o
 dhdrhopsi.o : ../Modules/mp.o
@@ -337,6 +343,7 @@ dielec_test.o : ../PW/symme.o
 dielec_test.o : phcom.o
 dielec_test.o : ramanm.o
 drho.o : ../Modules/cell_base.o
+drho.o : ../Modules/griddim.o
 drho.o : ../Modules/ions_base.o
 drho.o : ../Modules/kind.o
 drho.o : ../Modules/mp.o
@@ -360,6 +367,7 @@ drhodv.o : ../PW/noncol.o
 drhodv.o : ../PW/pwcom.o
 drhodv.o : phcom.o
 drhodvloc.o : ../Modules/cell_base.o
+drhodvloc.o : ../Modules/griddim.o
 drhodvloc.o : ../Modules/ions_base.o
 drhodvloc.o : ../Modules/kind.o
 drhodvloc.o : ../Modules/mp.o
@@ -427,6 +435,7 @@ dvpsi_e.o : ../PW/pwcom.o
 dvpsi_e.o : phcom.o
 dvpsi_e.o : ramanm.o
 dvpsi_e2.o : ../Modules/cell_base.o
+dvpsi_e2.o : ../Modules/griddim.o
 dvpsi_e2.o : ../Modules/io_files.o
 dvpsi_e2.o : ../Modules/kind.o
 dvpsi_e2.o : ../Modules/mp.o
@@ -516,6 +525,7 @@ dynmatrix.o : ramanm.o
 ef_shift.o : ../Modules/cell_base.o
 ef_shift.o : ../Modules/fft_base.o
 ef_shift.o : ../Modules/fft_interfaces.o
+ef_shift.o : ../Modules/griddim.o
 ef_shift.o : ../Modules/io_global.o
 ef_shift.o : ../Modules/ions_base.o
 ef_shift.o : ../Modules/kind.o
@@ -538,18 +548,26 @@ el_opt.o : ../PW/scf_mod.o
 el_opt.o : ../PW/symme.o
 el_opt.o : phcom.o
 el_opt.o : ramanm.o
+el_ph_collect.o : ../Modules/io_global.o
+el_ph_collect.o : ../Modules/ions_base.o
+el_ph_collect.o : ../Modules/kind.o
+el_ph_collect.o : ../Modules/mp.o
+el_ph_collect.o : ../Modules/mp_global.o
+el_ph_collect.o : ../PW/pwcom.o
 elph.o : ../Modules/kind.o
 elphon.o : ../Modules/cell_base.o
 elphon.o : ../Modules/constants.o
-elphon.o : ../Modules/control_flags.o
+elphon.o : ../Modules/griddim.o
 elphon.o : ../Modules/io_files.o
 elphon.o : ../Modules/io_global.o
 elphon.o : ../Modules/ions_base.o
 elphon.o : ../Modules/kind.o
 elphon.o : ../Modules/mp.o
 elphon.o : ../Modules/mp_global.o
+elphon.o : ../Modules/parameters.o
 elphon.o : ../Modules/uspp.o
 elphon.o : ../Modules/wavefunctions.o
+elphon.o : ../PW/noncol.o
 elphon.o : ../PW/pwcom.o
 elphon.o : ../PW/symm_base.o
 elphon.o : elph.o
@@ -666,6 +684,8 @@ localdos.o : ../PW/pwcom.o
 localdos.o : phcom.o
 matdyn.o : ../Modules/cell_base.o
 matdyn.o : ../Modules/constants.o
+matdyn.o : ../Modules/environment.o
+matdyn.o : ../Modules/io_global.o
 matdyn.o : ../Modules/kind.o
 matdyn.o : ../Modules/mp.o
 matdyn.o : ../Modules/mp_global.o
@@ -690,8 +710,10 @@ newdq.o : phcom.o
 openfilq.o : ../Modules/control_flags.o
 openfilq.o : ../Modules/io_files.o
 openfilq.o : ../Modules/io_global.o
+openfilq.o : ../Modules/ions_base.o
 openfilq.o : ../Modules/kind.o
 openfilq.o : ../Modules/mp_global.o
+openfilq.o : ../Modules/paw_variables.o
 openfilq.o : ../Modules/uspp.o
 openfilq.o : ../PW/noncol.o
 openfilq.o : ../PW/pwcom.o
@@ -805,6 +827,7 @@ phq_summary.o : ../Modules/cell_base.o
 phq_summary.o : ../Modules/constants.o
 phq_summary.o : ../Modules/control_flags.o
 phq_summary.o : ../Modules/funct.o
+phq_summary.o : ../Modules/griddim.o
 phq_summary.o : ../Modules/io_global.o
 phq_summary.o : ../Modules/ions_base.o
 phq_summary.o : ../Modules/kind.o
@@ -900,7 +923,9 @@ punch_plot_ph.o : phcom.o
 q2qstar_ph.o : ../Modules/kind.o
 q2qstar_ph.o : io_dyn_mat.o
 q2qstar_ph.o : phcom.o
+q2r.o : ../Modules/environment.o
 q2r.o : ../Modules/fft_scalar.o
+q2r.o : ../Modules/io_global.o
 q2r.o : ../Modules/kind.o
 q2r.o : ../Modules/mp.o
 q2r.o : ../Modules/mp_global.o
@@ -975,6 +1000,7 @@ set_drhoc.o : ../Modules/kind.o
 set_drhoc.o : ../Modules/uspp.o
 set_drhoc.o : ../PW/pwcom.o
 set_drhoc.o : phcom.o
+set_dvscf.o : ../Modules/griddim.o
 set_dvscf.o : ../Modules/kind.o
 set_dvscf.o : ../PW/pwcom.o
 set_dvscf.o : phcom.o
@@ -1017,6 +1043,7 @@ sgam_ph.o : ../Modules/kind.o
 smallgq.o : ../Modules/kind.o
 solve_e.o : ../Modules/cell_base.o
 solve_e.o : ../Modules/check_stop.o
+solve_e.o : ../Modules/griddim.o
 solve_e.o : ../Modules/io_files.o
 solve_e.o : ../Modules/io_global.o
 solve_e.o : ../Modules/ions_base.o
@@ -1034,6 +1061,7 @@ solve_e.o : phcom.o
 solve_e.o : write_rec.o
 solve_e2.o : ../Modules/cell_base.o
 solve_e2.o : ../Modules/check_stop.o
+solve_e2.o : ../Modules/griddim.o
 solve_e2.o : ../Modules/io_files.o
 solve_e2.o : ../Modules/io_global.o
 solve_e2.o : ../Modules/ions_base.o
@@ -1071,6 +1099,7 @@ solve_e_nscf.o : phcom.o
 solve_linter.o : ../Modules/cell_base.o
 solve_linter.o : ../Modules/check_stop.o
 solve_linter.o : ../Modules/constants.o
+solve_linter.o : ../Modules/griddim.o
 solve_linter.o : ../Modules/io_files.o
 solve_linter.o : ../Modules/io_global.o
 solve_linter.o : ../Modules/ions_base.o
@@ -1187,6 +1216,7 @@ write_ramtns.o : ../Modules/constants.o
 write_ramtns.o : ../Modules/ions_base.o
 write_ramtns.o : ../Modules/kind.o
 write_ramtns.o : phcom.o
+write_rec.o : ../Modules/griddim.o
 write_rec.o : ../Modules/ions_base.o
 write_rec.o : ../Modules/kind.o
 write_rec.o : ../Modules/uspp.o
@@ -1194,6 +1224,10 @@ write_rec.o : ../PW/noncol.o
 write_rec.o : ../PW/pwcom.o
 write_rec.o : ph_restart.o
 write_rec.o : phcom.o
+xk_wk_collect.o : ../Modules/io_global.o
+xk_wk_collect.o : ../Modules/kind.o
+xk_wk_collect.o : ../Modules/mp.o
+xk_wk_collect.o : ../Modules/mp_global.o
 zstar_eu.o : ../Modules/cell_base.o
 zstar_eu.o : ../Modules/io_files.o
 zstar_eu.o : ../Modules/io_global.o
@@ -1208,6 +1242,7 @@ zstar_eu.o : ../PW/pwcom.o
 zstar_eu.o : ../PW/symme.o
 zstar_eu.o : phcom.o
 zstar_eu_us.o : ../Modules/cell_base.o
+zstar_eu_us.o : ../Modules/griddim.o
 zstar_eu_us.o : ../Modules/io_files.o
 zstar_eu_us.o : ../Modules/ions_base.o
 zstar_eu_us.o : ../Modules/kind.o

@@ -30,7 +30,7 @@ SUBROUTINE local_dos (iflag, lsign, kpoint, kband, spin_component, &
   USE fft_base,             ONLY : dffts, dfftp
   USE fft_interfaces,       ONLY : fwfft, invfft
   USE gvect,                ONLY : nrxx, nl, ngm, g, ecutwfc
-  USE gsmooth,              ONLY : nls, nlsm, nrxxs, doublegrid
+  USE gsmooth,              ONLY : nls, nlsm, doublegrid
   USE klist,                ONLY : lgauss, degauss, ngauss, nks, wk, xk, nkstot
   USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
   USE scf,                  ONLY : rho
@@ -178,7 +178,7 @@ SUBROUTINE local_dos (iflag, lsign, kpoint, kband, spin_component, &
                     CALL invfft ('Wave', psic_nc(:,ipol), dffts)
                  ENDDO
               ELSE
-                 psic(1:nrxxs) = (0.d0,0.d0)
+                 psic(1:dffts%nnr) = (0.d0,0.d0)
                  DO ig = 1, npw
                     psic (nls (igk (ig) ) ) = evc (ig, ibnd)
                  ENDDO
@@ -196,12 +196,12 @@ SUBROUTINE local_dos (iflag, lsign, kpoint, kband, spin_component, &
               IF (lsign) THEN
                  IF (gamma_only) THEN
                     !  psi(r) is real by construction
-                    segno(1:nrxxs) = dble(psic(1:nrxxs))
+                    segno(1:dffts%nnr) = dble(psic(1:dffts%nnr))
                  ELSE
                     !  determine the phase factor that makes psi(r) real.
                     ALLOCATE(maxmod(nproc_pool))
                     maxmod(me_pool+1)=0.0_DP
-                    DO ir = 1, nrxxs
+                    DO ir = 1, dffts%nnr
                        modulus=abs(psic(ir))
                        IF (modulus > maxmod(me_pool+1)) THEN
                           irm=ir
@@ -224,7 +224,7 @@ SUBROUTINE local_dos (iflag, lsign, kpoint, kband, spin_component, &
 #ifdef __PARA
                     CALL mp_bcast(phase,who_calculate-1,intra_pool_comm)
 #endif
-                    segno(1:nrxxs) = dble( psic(1:nrxxs)*conjg(phase) )
+                    segno(1:dffts%nnr) = dble( psic(1:dffts%nnr)*conjg(phase) )
                  ENDIF
                  IF (doublegrid) CALL interpolate (segno, segno, 1)
                  segno(:) = sign( 1.d0, segno(:) )
@@ -232,14 +232,14 @@ SUBROUTINE local_dos (iflag, lsign, kpoint, kband, spin_component, &
               !
               IF (noncolin) THEN
                  DO ipol=1,npol
-                    DO ir=1,nrxxs
+                    DO ir=1,dffts%nnr
                        rho%of_r(ir,current_spin)=rho%of_r(ir,current_spin)+&
                           w1*(dble(psic_nc(ir,ipol))**2+ &
                              aimag(psic_nc(ir,ipol))**2)
                     ENDDO
                  ENDDO
               ELSE
-                 DO ir=1,nrxxs
+                 DO ir=1,dffts%nnr
                     rho%of_r(ir,current_spin)=rho%of_r(ir,current_spin) + &
                       w1 * (dble( psic (ir) ) **2 + aimag (psic (ir) ) **2)
                  ENDDO

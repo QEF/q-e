@@ -41,7 +41,7 @@ subroutine dhdrhopsi
   USE io_files,  ONLY : iunigk
   USE cell_base, ONLY : tpiba, at
   USE klist,     ONLY : xk, nkstot
-  USE gsmooth,   ONLY : nrxxs
+  USE smooth_grid_dimensions, ONLY : nrxxs
   USE wvfct,     ONLY : npw, npwx, nbnd, et, igk
   USE uspp,      ONLY : nkb, vkb
   USE wavefunctions_module,  ONLY: evc

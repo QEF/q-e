@@ -19,7 +19,7 @@ subroutine incdrhoscf (drhoscf, weight, ik, dbecsum, dpsi)
   USE ions_base, ONLY : nat
   USE fft_base,  ONLY: dffts
   USE fft_interfaces, ONLY: invfft
-  USE gsmooth,   ONLY : nrxxs, nls
+  USE gsmooth,   ONLY : nls
   USE wvfct,     ONLY : npw, igk, npwx, nbnd
   USE uspp_param,ONLY: nhm
   USE wavefunctions_module,  ONLY: evc
@@ -34,7 +34,7 @@ subroutine incdrhoscf (drhoscf, weight, ik, dbecsum, dpsi)
   ! input: the weight of the k point
   complex(DP), INTENT (IN) :: dpsi (npwx,nbnd)
   ! input: the perturbed wfc for the given k point
-  complex(DP), INTENT (INOUT) :: drhoscf (nrxxs), dbecsum (nhm*(nhm+1)/2,nat)
+  complex(DP), INTENT (INOUT) :: drhoscf (dffts%nnr), dbecsum (nhm*(nhm+1)/2,nat)
   ! input/output: the accumulated change to the charge density and dbecsum
   !
   !
@@ -51,8 +51,8 @@ subroutine incdrhoscf (drhoscf, weight, ik, dbecsum, dpsi)
   ! counters
 
   call start_clock ('incdrhoscf')
-  allocate (dpsic(  nrxxs))
-  allocate (psi  (  nrxxs))
+  allocate (dpsic(  dffts%nnr))
+  allocate (psi  (  dffts%nnr))
   wgt = 2.d0 * weight / omega
   ikk = ikks(ik)
   !
@@ -73,7 +73,7 @@ subroutine incdrhoscf (drhoscf, weight, ik, dbecsum, dpsi)
      enddo
 
      CALL invfft ('Wave', dpsic, dffts)
-     do ir = 1, nrxxs
+     do ir = 1, dffts%nnr
         drhoscf (ir) = drhoscf (ir) + wgt * CONJG(psi (ir) ) * dpsic (ir)
      enddo
   enddo

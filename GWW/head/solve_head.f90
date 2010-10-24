@@ -98,7 +98,7 @@ subroutine solve_head
   allocate(x(2*n_gauss+1),w(2*n_gauss+1), freqs(n_gauss+1))
   allocate(head(n_gauss+1),head_tmp(n_gauss+1))
   head(:)=0.d0
-  allocate(psi_v(nrxxs, nbnd), prod(nrxx))
+  allocate(psi_v(dffts%nnr, nbnd), prod(nrxx))
   allocate (becpd (nkb, nbnd), tmp_g(ngm))
   allocate( pola_charge(nrxx,nspin,3))
   allocate(dpsi_ipol(npwx,nbnd,3),epsilon_g(3,3,n_gauss+1))
@@ -129,7 +129,7 @@ subroutine solve_head
   call start_clock ('solve_head')
 
   allocate (auxg(npwx))
-  allocate (aux1(nrxxs))
+  allocate (aux1(dffts%nnr))
   allocate (ps  (nbnd,nbnd))
   ps (:,:) = (0.d0, 0.d0)
   allocate (h_diag(npwx, nbnd))
@@ -303,7 +303,7 @@ subroutine solve_head
               !
               CALL invfft ('Wave', prod, dffts)
               !      product dpsi * psi_v
-              prod(1:nrxxs)=conjg(prod(1:nrxxs))*psi_v(1:nrxxs,ibnd)
+              prod(1:dffts%nnr)=conjg(prod(1:dffts%nnr))*psi_v(1:dffts%nnr,ibnd)
               if(doublegrid) then
                  call cinterpolate(prod,prod,1)
               endif

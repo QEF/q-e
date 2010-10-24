@@ -31,7 +31,7 @@ subroutine incdrhoscf2 (drhoscf, weight, ik, dbecsum, mode, flag)
 
   real (DP) :: weight
   ! input: the weight of the k point
-  complex (DP) :: drhoscf (nrxxs), dbecsum (nhm * (nhm + 1) / 2, nat)
+  complex (DP) :: drhoscf (dffts%nnr), dbecsum (nhm * (nhm + 1) / 2, nat)
   ! output: the change of the charge densit
   ! inp/out: the accumulated dbec
   integer :: mode, flag
@@ -52,8 +52,8 @@ subroutine incdrhoscf2 (drhoscf, weight, ik, dbecsum, mode, flag)
   ! counters
 
   call start_clock ('incdrhoscf')
-  allocate  (dpsic( nrxxs))
-  allocate  (psi  ( nrxxs))
+  allocate  (dpsic( dffts%nnr))
+  allocate  (psi  ( dffts%nnr))
   wgt = 2.d0 * weight / omega
   if (lgamma) then
      ikk = ik
@@ -96,7 +96,7 @@ subroutine incdrhoscf2 (drhoscf, weight, ik, dbecsum, mode, flag)
      enddo
 
      CALL invfft ('Wave', dpsic, dffts)
-     do ir = 1, nrxxs
+     do ir = 1, dffts%nnr
         drhoscf (ir) = drhoscf (ir) + wgt * CONJG(psi (ir) ) * dpsic (ir)
         !            if (ir.lt.20) WRITE( stdout,*)   drhoscf(ir)
      enddo

@@ -24,7 +24,7 @@ subroutine h_psiq (lda, n, m, psi, hpsi, spsi)
   USE lsda_mod, ONLY : current_spin
   USE fft_base, ONLY : dffts
   USE fft_interfaces, ONLY: fwfft, invfft
-  USE gsmooth,  ONLY : nls, nrxxs
+  USE gsmooth, ONLY: nls
   USE spin_orb, ONLY : domag
   USE scf,    ONLY : vrs
   USE uspp,   ONLY : vkb
@@ -99,7 +99,7 @@ subroutine h_psiq (lda, n, m, psi, hpsi, spsi)
      !
      if (noncolin) then
         if (domag) then
-           do j=1, nrxxs
+           do j=1, dffts%nnr
               sup = psic_nc(j,1) * (vrs(j,1)+vrs(j,4)) + &
                     psic_nc(j,2) * (vrs(j,2)-(0.d0,1.d0)*vrs(j,3))
               sdwn = psic_nc(j,2) * (vrs(j,1)-vrs(j,4)) + &
@@ -108,13 +108,13 @@ subroutine h_psiq (lda, n, m, psi, hpsi, spsi)
               psic_nc(j,2)=sdwn
            end do
         else
-           do j=1, nrxxs
+           do j=1, dffts%nnr
               psic_nc(j,1)=psic_nc(j,1) * vrs(j,1)
               psic_nc(j,2)=psic_nc(j,2) * vrs(j,1)
            enddo
         endif
      else
-        do j = 1, nrxxs
+        do j = 1, dffts%nnr
            psic (j) = psic (j) * vrs (j, current_spin)
         enddo
      endif

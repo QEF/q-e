@@ -16,7 +16,8 @@ SUBROUTINE elphon()
   USE cell_base, ONLY : celldm, omega, ibrav
   USE ions_base, ONLY : nat, ntyp => nsp, ityp, tau, pmass
   USE gvect, ONLY: nrxx
-  USE gsmooth, ONLY: nrxxs, doublegrid
+  USE gsmooth, ONLY: doublegrid
+  USE smooth_grid_dimensions, ONLY: nrxxs
   USE noncollin_module, ONLY : nspin_mag
   USE dynmat, ONLY : dyn, w2
   USE qpoint, ONLY : xq
@@ -172,7 +173,7 @@ SUBROUTINE elphel (npe, imode0, dvscfins)
   !      Original routine written by Francesco Mauri
   !
   USE kinds, ONLY : DP
-  USE gsmooth, ONLY: nrxxs
+  USE smooth_grid_dimensions, ONLY: nrxxs
   USE wavefunctions_module,  ONLY: evc
   USE io_files, ONLY: iunigk
   USE klist, ONLY: xk
@@ -255,7 +256,7 @@ SUBROUTINE elphel (npe, imode0, dvscfins)
         !
         DO ibnd = 1, nbnd
            CALL cft_wave (evc(1, ibnd), aux1, +1)
-           CALL apply_dpot(aux1, dvscfins(1,1,ipert), current_spin)
+           CALL apply_dpot(nrxxs, aux1, dvscfins(1,1,ipert), current_spin)
            CALL cft_wave (dvpsi(1, ibnd), aux1, -1)
         END DO
         CALL adddvscf (ipert, ik)

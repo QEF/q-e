@@ -20,7 +20,8 @@ subroutine zstar_eu_us
   USE ions_base, ONLY : nat, ntyp => nsp, ityp
   USE klist,     ONLY : xk, wk
   USE gvect,     ONLY : nrxx, nr1,nr2,nr3
-  USE gsmooth,   ONLY : nrxxs, doublegrid
+  USE gsmooth,   ONLY : doublegrid
+  USE smooth_grid_dimensions, ONLY : nrxxs
   USE lsda_mod,  ONLY : nspin, current_spin, isk, lsda
   USE io_files,  ONLY : iunigk
   USE uspp,      ONLY : okvan, nkb, vkb

@@ -24,7 +24,7 @@ SUBROUTINE wfc_gamma_real(itask)
   USE fft_base,             ONLY : dffts
   USE fft_interfaces,       ONLY : invfft
   USE gvect,                ONLY : nrxx, gstart
-  USE gsmooth,              ONLY : nls, nlsm, nrxxs, doublegrid
+  USE gsmooth,              ONLY : nls, nlsm, doublegrid
   USE io_files,             ONLY : iunwfc, nwordwfc, iunigk
   USE io_files,             ONLY : find_free_unit, diropn
   USE wvfct,                ONLY : nbnd, npwx, npw, igk, wg, et
@@ -55,7 +55,7 @@ SUBROUTINE wfc_gamma_real(itask)
   write(stdout,*) 'FUNCTION WFC_REAL' !ATTENZIONE
     call flush_unit(stdout)
 
-    allocate(tmpreal(nrxxs))
+    allocate(tmpreal(dffts%nnr))
   !!! modified
   IF(.not.gamma_only) THEN
        write(stdout,*) ' wfc_gamma_real only for GAMMA'
@@ -69,7 +69,7 @@ SUBROUTINE wfc_gamma_real(itask)
   ENDIF
 
   iunwfcreal=find_free_unit()
-  CALL diropn( iunwfcreal, 'real_whole', nrxxs, exst )
+  CALL diropn( iunwfcreal, 'real_whole', dffts%nnr, exst )
 
        !
   IF ( nks > 1 ) REWIND( iunigk )
@@ -158,10 +158,10 @@ SUBROUTINE wfc_gamma_real(itask)
         call flush_unit(stdout)
 
         tmpreal(:)= DBLE(psic(:))
-        CALL davcio( tmpreal,nrxxs,iunwfcreal,ibnd,1)
+        CALL davcio( tmpreal,dffts%nnr,iunwfcreal,ibnd,1)
         if(ibnd+1 <= nbnd) then
            tmpreal(:)=dimag(psic(:))
-           CALL davcio( tmpreal,nrxxs,iunwfcreal,ibnd+1,1)
+           CALL davcio( tmpreal,dffts%nnr,iunwfcreal,ibnd+1,1)
         endif
 
              !
@@ -189,7 +189,7 @@ SUBROUTINE wfc_gamma_real_after_rot(itask)
   USE fft_base,             ONLY : dffts
   USE fft_interfaces,       ONLY : invfft
   USE gvect,                ONLY : nrxx, gstart
-  USE gsmooth,              ONLY : nls, nlsm, nrxxs, doublegrid
+  USE gsmooth,              ONLY : nls, nlsm,  doublegrid
   USE io_files,             ONLY : iunwfc, nwordwfc, iunigk
   USE io_files,             ONLY : find_free_unit, diropn
   USE wvfct,                ONLY : nbnd, npwx, npw, igk, wg, et
@@ -221,7 +221,7 @@ SUBROUTINE wfc_gamma_real_after_rot(itask)
   write(stdout,*) 'FUNCTION WFC_REAL' !ATTENZIONE
   call flush_unit(stdout)
   !
-  allocate(tmpreal(nrxxs))
+  allocate(tmpreal(dffts%nnr))
   !
   IF(.not.gamma_only) THEN
        write(stdout,*) ' wfc_gamma_real only for GAMMA'
@@ -229,7 +229,7 @@ SUBROUTINE wfc_gamma_real_after_rot(itask)
   ENDIF
   !
   iunwfcreal=find_free_unit()
-  CALL diropn( iunwfcreal, 'real_whole', nrxxs, exst )
+  CALL diropn( iunwfcreal, 'real_whole', dffts%nnr, exst )
   !
   allocate(evc1(npw,nbnd_normal))
   iun_wannier = find_free_unit()
@@ -289,10 +289,10 @@ SUBROUTINE wfc_gamma_real_after_rot(itask)
         call flush_unit(stdout)
 
         tmpreal(:)= DBLE(psic(:))
-        CALL davcio( tmpreal,nrxxs,iunwfcreal,ibnd,1)
+        CALL davcio( tmpreal,dffts%nnr,iunwfcreal,ibnd,1)
         if(ibnd+1 <= nbnd) then
            tmpreal(:)=dimag(psic(:))
-           CALL davcio( tmpreal,nrxxs,iunwfcreal,ibnd+1,1)
+           CALL davcio( tmpreal,dffts%nnr,iunwfcreal,ibnd+1,1)
         endif
         !
      END DO ! over the bands

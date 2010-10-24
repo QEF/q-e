@@ -22,7 +22,7 @@ SUBROUTINE sum_band()
   USE fft_base,             ONLY : dfftp, dffts
   USE fft_interfaces,       ONLY : fwfft, invfft
   USE gvect,                ONLY : nrxx, ngm, g, nl, nlm
-  USE gsmooth,              ONLY : nls, nlsm, nrxxs, doublegrid
+  USE gsmooth,              ONLY : nls, nlsm, doublegrid
   USE klist,                ONLY : nks, nkstot, wk, xk, ngk
   USE fixed_occ,            ONLY : one_atom_occupations
   USE ldaU,                 ONLY : lda_plus_U
@@ -395,7 +395,7 @@ SUBROUTINE sum_band()
                    !
                 END IF
                 !
-                CALL get_rho_gamma(rho%of_r(:,current_spin), nrxxs, w1, w2, psic)
+                CALL get_rho_gamma(rho%of_r(:,current_spin), dffts%nnr, w1, w2, psic)
                 !
              END IF
              !
@@ -424,7 +424,7 @@ SUBROUTINE sum_band()
                    !
                    ! ... increment the kinetic energy density ...
                    !
-                   DO ir = 1, nrxxs
+                   DO ir = 1, dffts%nnr
                       rho%kin_r(ir,current_spin) = &
                                            rho%kin_r(ir,current_spin) + &
                                            w1 *  DBLE( psic(ir) )**2 + &
@@ -451,7 +451,7 @@ SUBROUTINE sum_band()
              !
              ! copy the charge back to the processor location
              !
-             DO ir = 1, nrxxs
+             DO ir = 1, dffts%nnr
                 rho%of_r(ir,current_spin) = rho%of_r(ir,current_spin) + tg_rho(ir+ioff)
              END DO
 
@@ -651,14 +651,14 @@ SUBROUTINE sum_band()
                 ! increment the charge density ...
                 !
                 DO ipol=1,npol
-                   CALL get_rho(rho%of_r(:,1), nrxxs, w1, psic_nc(:,ipol))
+                   CALL get_rho(rho%of_r(:,1), dffts%nnr, w1, psic_nc(:,ipol))
                 END DO
                 !
                 ! In this case, calculate also the three
                 ! components of the magnetization (stored in rho%of_r(ir,2-4))
                 !
                 IF (domag) THEN
-                   CALL get_rho_domag(rho%of_r(:,:), nrxxs, w1, psic_nc(:,:))
+                   CALL get_rho_domag(rho%of_r(:,:), dffts%nnr, w1, psic_nc(:,:))
                 ELSE
                    rho%of_r(:,2:4)=0.0_DP
                 END IF
@@ -728,7 +728,7 @@ SUBROUTINE sum_band()
                    !
                    ! ... increment the charge density ...
                    !
-                   CALL get_rho(rho%of_r(:,current_spin), nrxxs, w1, psic)
+                   CALL get_rho(rho%of_r(:,current_spin), dffts%nnr, w1, psic)
 
                 END IF
                 !
@@ -744,7 +744,7 @@ SUBROUTINE sum_band()
                       !
                       ! ... increment the kinetic energy density ...
                       !
-                      CALL get_rho(rho%kin_r(:,current_spin), nrxxs, w1, psic)
+                      CALL get_rho(rho%kin_r(:,current_spin), dffts%nnr, w1, psic)
                    END DO
                 END IF
                 !
@@ -767,7 +767,7 @@ SUBROUTINE sum_band()
              ! copy the charge back to the proper processor location
              !
 !$omp parallel do
-             DO ir = 1, nrxxs
+             DO ir = 1, dffts%nnr
                 rho%of_r(ir,current_spin) = rho%of_r(ir,current_spin) + tg_rho(ir+ioff)
              END DO
 !$omp end parallel do

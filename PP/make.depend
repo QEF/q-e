@@ -47,6 +47,7 @@ atomic_wfc_nc_proj.o : ../PW/pwcom.o
 average.o : ../Modules/cell_base.o
 average.o : ../Modules/constants.o
 average.o : ../Modules/environment.o
+average.o : ../Modules/griddim.o
 average.o : ../Modules/io_files.o
 average.o : ../Modules/io_global.o
 average.o : ../Modules/ions_base.o

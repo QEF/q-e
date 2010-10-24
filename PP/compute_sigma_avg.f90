@@ -20,7 +20,7 @@ SUBROUTINE compute_sigma_avg(sigma_avg,becp_nc,ik,lsigma)
   USE wavefunctions_module, ONLY : evc, psic_nc
   USE klist,                ONLY : nks, xk
   USE gvect,                ONLY : g,gg,nr1,nr2,nr3,nrxx
-  USE gsmooth,              ONLY : nls, nlsm, nrxxs, doublegrid
+  USE gsmooth,              ONLY : nls, nlsm, doublegrid
   USE scf,                  ONLY : rho
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
   USE mp_global,            ONLY : me_pool, intra_pool_comm
@@ -51,7 +51,7 @@ SUBROUTINE compute_sigma_avg(sigma_avg,becp_nc,ik,lsigma)
   IF (.not.(lsigma(1).or.lsigma(2).or.lsigma(3).or.lsigma(4))) RETURN
 
   ALLOCATE(be1(nhm,2))
-  ALLOCATE(dfx(nrxxs), dfy(nrxxs))
+  ALLOCATE(dfx(dffts%nnr), dfy(dffts%nnr))
   ALLOCATE(qq_lz(nhm,nhm,ntyp))
 
   sigma_avg=0.d0
@@ -121,7 +121,7 @@ SUBROUTINE compute_sigma_avg(sigma_avg,becp_nc,ik,lsigma)
      ! (stored in rho%of_r(ir,2-4) )
      !
      IF (lsigma(1)) THEN
-        DO ir = 1,nrxxs
+        DO ir = 1,dffts%nnr
            rho%of_r(ir,2) = rho%of_r(ir,2) + 2.D0* &
                 (REAL(psic_nc(ir,1))*REAL(psic_nc(ir,2)) + &
                 aimag(psic_nc(ir,1))*aimag(psic_nc(ir,2)))
@@ -129,7 +129,7 @@ SUBROUTINE compute_sigma_avg(sigma_avg,becp_nc,ik,lsigma)
         IF (doublegrid) CALL interpolate( rho%of_r(1,2), rho%of_r(1,2), 1 )
      ENDIF
      IF (lsigma(2)) THEN
-        DO ir = 1,nrxxs
+        DO ir = 1,dffts%nnr
            rho%of_r(ir,3) = rho%of_r(ir,3) + 2.D0* &
                 (REAL(psic_nc(ir,1))*aimag(psic_nc(ir,2)) - &
                 REAL(psic_nc(ir,2))*aimag(psic_nc(ir,1)))
@@ -137,7 +137,7 @@ SUBROUTINE compute_sigma_avg(sigma_avg,becp_nc,ik,lsigma)
         IF (doublegrid) CALL interpolate( rho%of_r(1,3), rho%of_r(1,3), 1 )
      ENDIF
      IF (lsigma(3)) THEN
-        DO ir = 1,nrxxs
+        DO ir = 1,dffts%nnr
            rho%of_r(ir,4) = rho%of_r(ir,4) + &
                 (REAL(psic_nc(ir,1))**2+aimag(psic_nc(ir,1))**2 &
                 -REAL(psic_nc(ir,2))**2-aimag(psic_nc(ir,2))**2)
@@ -176,7 +176,7 @@ SUBROUTINE compute_sigma_avg(sigma_avg,becp_nc,ik,lsigma)
                  ENDIF
               ENDDO
            ENDDO
-           c_aux = zdotc(nrxxs, psic_nc(1,ipol), 1, dfx, 1)
+           c_aux = zdotc(dffts%nnr, psic_nc(1,ipol), 1, dfx, 1)
            magtot1(4) = magtot1(4) + aimag(c_aux)
         ENDDO
         CALL mp_sum( magtot1(4), intra_pool_comm )

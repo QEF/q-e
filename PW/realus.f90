@@ -658,7 +658,6 @@ MODULE realus
       USE constants,  ONLY : pi, eps8, eps16
       USE ions_base,  ONLY : nat, nsp, ityp, tau
       USE cell_base,  ONLY : at, bg, omega, alat
-      USE gsmooth,    ONLY : nrxxs
       USE uspp,       ONLY : okvan, indv, nhtol, nhtolm, ap
       USE uspp_param, ONLY : upf, lmaxq, nh, nhm
       USE atom,       ONLY : rgrid
@@ -783,7 +782,7 @@ MODULE realus
          tau_ia(2) = tau(2,ia)
          tau_ia(3) = tau(3,ia)
          !
-         DO ir = 1, nrxxs
+         DO ir = 1, dffts%nnr
             !
             ! ... three dimensional indexes
             !
@@ -2160,7 +2159,7 @@ MODULE realus
   ! ibnd: band index
   ! nbnd: total number of bands
     USE wavefunctions_module,     ONLY : psic
-    USE gsmooth,                  ONLY : nrxxs,nls,nlsm,doublegrid
+    USE gsmooth,                  ONLY : nls,nlsm,doublegrid
     USE kinds,         ONLY : DP
     USE fft_base,      ONLY : dffts
     USE fft_interfaces,ONLY : invfft
@@ -2326,7 +2325,7 @@ MODULE realus
   ! ibnd: band index
   ! nbnd: total number of bands
     USE wavefunctions_module,     ONLY : psic
-    USE gsmooth,                  ONLY : nrxxs,nls,nlsm,doublegrid
+    USE gsmooth,                  ONLY : nls,nlsm,doublegrid
     USE kinds,         ONLY : DP
     USE fft_base,      ONLY : dffts
     USE fft_interfaces,ONLY : fwfft
@@ -2465,7 +2464,7 @@ MODULE realus
   ! ibnd: band index
   ! nbnd: total number of bands
     USE wavefunctions_module,     ONLY : psic
-    USE gsmooth,                  ONLY : nrxxs,nls,nlsm,doublegrid
+    USE gsmooth,                  ONLY : nls,nlsm,doublegrid
     USE kinds,         ONLY : DP
     USE fft_base,      ONLY : dffts
     USE fft_interfaces,ONLY : invfft
@@ -2516,7 +2515,7 @@ MODULE realus
        !
     ELSE  !non task_groups version
        !
-       psic(1:nrxxs) = ( 0.D0, 0.D0 )
+       psic(1:dffts%nnr) = ( 0.D0, 0.D0 )
        !
        psic(nls(igk(:))) = orbital(:,ibnd)
        !
@@ -2543,7 +2542,7 @@ MODULE realus
     ! ibnd: band index
     ! nbnd: total number of bands
     USE wavefunctions_module,     ONLY : psic
-    USE gsmooth,                  ONLY : nrxxs,nls,nlsm,doublegrid
+    USE gsmooth,                  ONLY : nls,nlsm,doublegrid
     USE kinds,         ONLY : DP
     USE fft_base,      ONLY : dffts
     USE fft_interfaces,ONLY : fwfft
@@ -2611,7 +2610,7 @@ MODULE realus
     ! OBM 241008
     !
     USE wavefunctions_module,     ONLY : psic
-    USE gsmooth,       ONLY : nrxxs,nls,nlsm,doublegrid
+    USE gsmooth,       ONLY : nls,nlsm,doublegrid
     USE kinds,         ONLY : DP
     USE fft_base,      ONLY : dffts
     USE task_groups,   ONLY : tg_gather
@@ -2650,7 +2649,7 @@ MODULE realus
      ELSE
         !   product with the potential v on the smooth grid
         !
-        DO j = 1, nrxxs
+        DO j = 1, dffts%nnr
            psic (j) = psic (j) + psic_temp (j) * vrs(j,current_spin)
         ENDDO
      ENDIF

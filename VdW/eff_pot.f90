@@ -18,7 +18,7 @@ SUBROUTINE eff_pot (rho, nspin, alat, omega, charge, vstart, thresh_veff)
                                    igk, npw
   USE uspp,                 ONLY : nkb
   USE scf,                  ONLY : v, vltot, vrs, rho_core
-  USE gsmooth,              ONLY : nls, nlsm, nrxxs, doublegrid
+  USE gsmooth,              ONLY : nls, nlsm, doublegrid
   USE eff_v,                ONLY : rho_fft, veff
   USE mp_global,            ONLY : intra_pool_comm
   USE mp,                   ONLY : mp_sum

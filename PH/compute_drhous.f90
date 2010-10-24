@@ -25,7 +25,7 @@ subroutine compute_drhous (drhous, dbecsum, wgg, becq, alpq)
   USE fft_base,   ONLY: dffts
   USE fft_interfaces, ONLY: invfft
   USE gvect,      ONLY : nrxx
-  USE gsmooth,    ONLY : nrxxs, nls
+  USE gsmooth,    ONLY : nls
   USE wvfct,      ONLY : npw, nbnd, igk
 
   USE qpoint,     ONLY : nksq, igkq, npwq, ikks, ikqs
@@ -72,7 +72,7 @@ subroutine compute_drhous (drhous, dbecsum, wgg, becq, alpq)
   if (.not.okvan) return
 
   call start_clock ('com_drhous')
-  allocate (evcr( nrxxs , nbnd))
+  allocate (evcr( dffts%nnr, nbnd))
   !
   drhous(:,:,:) = (0.d0, 0.d0)
   dbecsum (:,:,:,:) = (0.d0, 0.d0)

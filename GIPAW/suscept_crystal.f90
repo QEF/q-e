@@ -27,7 +27,7 @@ SUBROUTINE suscept_crystal
   USE parameters,                  ONLY : lmaxx
   USE constants,                   ONLY : pi
   USE gvect,                       ONLY : ngm, g, ecutwfc
-  USE gsmooth,                     ONLY : nrxxs
+  USE smooth_grid_dimensions,      ONLY : nrxxs
   USE uspp,                        ONLY : vkb, ap
   USE lsda_mod,                    ONLY : nspin
   USE gipaw_module,                ONLY : j_bare, b_ind, b_ind_r, tens_fmt, &

@@ -26,7 +26,8 @@ subroutine solve_e
   USE cell_base,             ONLY : tpiba2
   USE klist,                 ONLY : lgauss, xk, wk
   USE gvect,                 ONLY : nrxx, g
-  USE gsmooth,               ONLY : doublegrid, nrxxs
+  USE gsmooth,               ONLY : doublegrid
+  USE smooth_grid_dimensions, ONLY: nrxxs
   USE lsda_mod,              ONLY : lsda, nspin, current_spin, isk
   USE spin_orb,              ONLY : domag
   USE wvfct,                 ONLY : nbnd, npw, npwx, igk, g2kin,  et
@@ -203,7 +204,7 @@ subroutine solve_e
               !
               do ibnd = 1, nbnd_occ (ik)
                  call cft_wave (evc (1, ibnd), aux1, +1)
-                 call apply_dpot(aux1, dvscfins(1,1,ipol), current_spin)
+                 call apply_dpot(nrxxs, aux1, dvscfins(1,1,ipol), current_spin)
                  call cft_wave (dvpsi (1, ibnd), aux1, -1)
               enddo
               !

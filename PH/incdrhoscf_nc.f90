@@ -20,7 +20,7 @@ subroutine incdrhoscf_nc (drhoscf, weight, ik, dbecsum, dpsi)
   USE gvect,     ONLY : nrxx
   USE fft_base,  ONLY : dffts
   USE fft_interfaces, ONLY: invfft
-  USE gsmooth,   ONLY : nrxxs, nls
+  USE gsmooth,   ONLY : nls
   USE lsda_mod,  ONLY : nspin
   USE spin_orb,  ONLY : domag
   USE noncollin_module, ONLY : npol, nspin_mag
@@ -57,8 +57,8 @@ subroutine incdrhoscf_nc (drhoscf, weight, ik, dbecsum, dpsi)
   ! counters
 
   call start_clock ('incdrhoscf')
-  allocate (dpsic(  nrxxs, npol))
-  allocate (psi  (  nrxxs, npol))
+  allocate (dpsic(dffts%nnr, npol))
+  allocate (psi  (dffts%nnr, npol))
   wgt = 2.d0 * weight / omega
   ikk = ikks(ik)
   !
@@ -82,13 +82,13 @@ subroutine incdrhoscf_nc (drhoscf, weight, ik, dbecsum, dpsi)
 
      CALL invfft ('Wave', dpsic(:,1), dffts)
      CALL invfft ('Wave', dpsic(:,2), dffts)
-     do ir = 1, nrxxs
+     do ir = 1, dffts%nnr
         drhoscf(ir,1)=drhoscf(ir,1)+wgt*(CONJG(psi(ir,1))*dpsic(ir,1)  +  &
                                      CONJG(psi(ir,2))*dpsic(ir,2) )
 
      enddo
      IF (domag) THEN
-        do ir = 1, nrxxs
+        do ir = 1, dffts%nnr
            drhoscf(ir,2)=drhoscf (ir,2) + wgt *(CONJG(psi(ir,1))*dpsic(ir,2)+ &
                                              CONJG(psi(ir,2))*dpsic(ir,1) )
            drhoscf(ir,3)=drhoscf (ir,3) + wgt *(CONJG(psi(ir,1))*dpsic(ir,2)- &

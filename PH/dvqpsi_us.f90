@@ -26,7 +26,7 @@ subroutine dvqpsi_us (ik, uact, addnlcc)
   USE fft_interfaces, ONLY: fwfft, invfft
   USE gvect,     ONLY : nrxx, eigts1, eigts2, eigts3, ig1,ig2,ig3, g, nl, &
                         ngm
-  USE gsmooth,   ONLY : nrxxs, ngms, doublegrid, nls
+  USE gsmooth,   ONLY : ngms, doublegrid, nls
   USE lsda_mod,  ONLY : lsda, isk
   USE noncollin_module, ONLY : npol
   use uspp_param,ONLY : upf
@@ -69,13 +69,13 @@ subroutine dvqpsi_us (ik, uact, addnlcc)
   if (nlcc_any.and.addnlcc) then
      allocate (aux( nrxx))
      if (doublegrid) then
-        allocate (auxs( nrxxs))
+        allocate (auxs(dffts%nnr))
      else
         auxs => aux
      endif
   endif
-  allocate (aux1( nrxxs))
-  allocate (aux2( nrxxs))
+  allocate (aux1(dffts%nnr))
+  allocate (aux2(dffts%nnr))
   !
   !    We start by computing the contribution of the local potential.
   !    The computation of the derivative of the local potential is done in
@@ -171,7 +171,7 @@ subroutine dvqpsi_us (ik, uact, addnlcc)
         !  This wavefunction is computed in real space
         !
         CALL invfft ('Wave', aux2, dffts)
-        do ir = 1, nrxxs
+        do ir = 1, dffts%nnr
            aux2 (ir) = aux2 (ir) * aux1 (ir)
         enddo
         !

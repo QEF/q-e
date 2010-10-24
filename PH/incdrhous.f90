@@ -19,7 +19,7 @@ subroutine incdrhous (drhoscf, weight, ik, dbecsum, evcr, wgg, becq, &
   USE cell_base, ONLY : omega
   USE fft_base,  ONLY : dffts
   USE fft_interfaces, ONLY: invfft
-  USE gsmooth,   ONLY : nrxxs, nls
+  USE gsmooth,   ONLY : nls
   USE noncollin_module, ONLY : npol
   USE uspp,      ONLY : nkb, qq
   USE uspp_param,ONLY : nhm, nh
@@ -43,7 +43,7 @@ subroutine incdrhous (drhoscf, weight, ik, dbecsum, evcr, wgg, becq, &
   ! input: the weight of the k point
   ! input: the weights
 
-  complex(DP) :: evcr (nrxxs, nbnd), drhoscf (nrxxs), &
+  complex(DP) :: evcr (dffts%nnr, nbnd), drhoscf (dffts%nnr), &
        dbecsum(nhm * (nhm + 1) / 2, nat)
   ! input: the wavefunctions at k in real
   ! output: the change of the charge densi
@@ -67,7 +67,7 @@ subroutine incdrhous (drhoscf, weight, ik, dbecsum, evcr, wgg, becq, &
   ! counters
 
   call start_clock ('incdrhous')
-  allocate (dpsir( nrxxs))
+  allocate (dpsir( dffts%nnr))
   allocate (ps1  ( nbnd , nbnd))
 
   call divide (nbnd, startb, lastb)
@@ -119,7 +119,7 @@ subroutine incdrhous (drhoscf, weight, ik, dbecsum, evcr, wgg, becq, &
         dpsir(nls(igkq(ig))) = dpsi (ig, ibnd)
      enddo
      CALL invfft ('Wave', dpsir, dffts)
-     do ir = 1, nrxxs
+     do ir = 1, dffts%nnr
         drhoscf(ir) = drhoscf(ir) + wgt * dpsir(ir) * CONJG(evcr(ir,ibnd))
      enddo
   enddo

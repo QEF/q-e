@@ -20,7 +20,7 @@ subroutine compute_dvloc (mode, dvlocin)
   USE fft_base,  ONLY : dffts
   USE fft_interfaces, ONLY: invfft
   USE gvect,     ONLY : eigts1, eigts2, eigts3, ig1,ig2,ig3, g
-  USE gsmooth,   ONLY : nrxxs, ngms, nls
+  USE gsmooth,   ONLY : ngms, nls
   USE cell_base, ONLY : tpiba
   USE ions_base, ONLY : nat, ityp
   USE modes,     ONLY : u
@@ -34,7 +34,7 @@ subroutine compute_dvloc (mode, dvlocin)
   integer :: mode
   ! input: the actual perturbation
 
-  complex(DP) :: dvlocin (nrxxs)
+  complex(DP) :: dvlocin (dffts%nnr)
   ! output: the change of the local potential
   !
   !   And the local variables

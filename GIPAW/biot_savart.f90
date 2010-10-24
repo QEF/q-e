@@ -35,13 +35,13 @@ SUBROUTINE biot_savart(jpol)
   call start_clock('biot_savart')
 
   ! allocate memory
-  allocate(aux(nrxxs), j_of_g(1:ngm,3))
+  allocate(aux(dffts%nnr), j_of_g(1:ngm,3))
 
   ! transform current to reciprocal space
   j_of_g(:,:) = 0.0_dp
   do ispin = 1, nspin
     do ipol = 1, 3
-      aux(1:nrxxs) = j_bare(1:nrxxs,ipol,jpol,ispin)
+      aux(1:dffts%nnr) = j_bare(1:dffts%nnr,ipol,jpol,ispin)
       CALL fwfft ('Smooth', aux, dffts)
       j_of_g(1:ngm,ipol) = j_of_g(1:ngm,ipol) + aux(nl(1:ngm))
     enddo
@@ -60,7 +60,7 @@ SUBROUTINE biot_savart(jpol)
     aux = (0.0_dp,0.0_dp)
     aux(nl(1:ngm)) = b_ind(1:ngm,ipol,jpol)
     CALL invfft ('Smooth', aux, dffts)
-    b_ind_r(1:nrxxs,ipol,jpol) = real(aux(1:nrxxs))
+    b_ind_r(1:dffts%nnr,ipol,jpol) = real(aux(1:dffts%nnr))
   enddo
 
   deallocate(aux, j_of_g)
@@ -75,18 +75,17 @@ SUBROUTINE field_to_reciprocal_space
   USE fft_base,             ONLY : dffts
   USE fft_interfaces,       ONLY : fwfft
   USE gvect,                ONLY : ngm, gstart, nrxx, nl, nlm, g, gg
-  USE gsmooth,              ONLY : nrxxs
   USE gipaw_module
 
   IMPLICIT NONE
   complex(dp), allocatable :: aux(:)
   integer :: ipol, jpol
 
-  allocate(aux(nrxxs))
+  allocate(aux(dffts%nnr))
   b_ind(:,:,:) = 0.0_dp
   do ipol = 1, 3
     do jpol = 1, 3
-      aux(1:nrxxs) = b_ind_r(1:nrxxs,ipol,jpol)
+      aux(1:dffts%nnr) = b_ind_r(1:dffts%nnr,ipol,jpol)
       CALL fwfft ('Smooth', aux, dffts)
       b_ind(1:ngm,ipol,jpol) = aux(nl(1:ngm))
     enddo

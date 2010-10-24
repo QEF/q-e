@@ -20,7 +20,7 @@ subroutine dft_exchange_k(nbnd_v,nbnd_s, ecutoff)
   USE fft_base,             ONLY : dffts, dfftp
   USE fft_interfaces,       ONLY : fwfft, invfft
   USE gvect
-  USE gsmooth,              ONLY : nls, nlsm, nrxxs, doublegrid
+  USE gsmooth,              ONLY : nls, nlsm, doublegrid
   USE uspp
   USE wavefunctions_module, ONLY : psic, evc
   USE cell_base,            ONLY : at, bg, omega
@@ -60,11 +60,11 @@ subroutine dft_exchange_k(nbnd_v,nbnd_s, ecutoff)
    REAL(kind=DP) :: q(3),q1(3)
 
 
-   allocate(wfcs_s(nrxxs,nbnd_s), wfcs_vc(nrxxs,nbnd))
+   allocate(wfcs_s(dffts%nnr,nbnd_s), wfcs_vc(dffts%nnr,nbnd))
    ALLOCATE( bec_vc( nkb, nbnd ) )
    ALLOCATE( bec_s( nkb, nbnd ) )
    allocate(fac(ngm))
-   allocate(prods(nrxxs),prod(nrxx))
+   allocate(prods(dffts%nnr),prod(nrxx))
    allocate(ex(nbnd_s,2*n_gauss+2))!the last elements contains t=0 and conduction states
    allocate(f_gauss(nks))
 
@@ -319,8 +319,8 @@ subroutine dft_exchange_k(nbnd_v,nbnd_s, ecutoff)
             call start_clock('k prod')
 
             prods(:)=conjg(wfcs_s(:,ii))*wfcs_vc(:,jj)
-            !write(stdout,*) 'nrxxs=', nrxxs
-            !write(stdout,*) 'prods(1)=', prods(1), 'prodsnrxxs)=', prods(nrxxs)
+            !write(stdout,*) 'nrxxs=', dffts%nnr
+            !write(stdout,*) 'prods(1)=', prods(1), 'prodsnrxxs)=', prods(dffts%nnr)
             !call flush_unit(stdout)
 
             call stop_clock('k prod')
@@ -524,7 +524,7 @@ subroutine dft_exchange(nbnd_v,nbnd_s,n_set)
   USE fft_base,             ONLY : dffts, dfftp
   USE fft_interfaces,       ONLY : fwfft, invfft
   USE gvect
-  USE gsmooth,              ONLY : nls, nlsm, nrxxs, doublegrid
+  USE gsmooth,              ONLY : nls, nlsm, doublegrid
   USE uspp
   USE wavefunctions_module, ONLY : psic, evc
   USE realus,               ONLY : adduspos_gamma_r
@@ -609,7 +609,7 @@ subroutine dft_exchange(nbnd_v,nbnd_s,n_set)
    endif
 
 
-   allocate(tmpreal1(nrxxs))
+   allocate(tmpreal1(dffts%nnr))
    allocate(tmpreal_v(nrxx,n_set))
    allocate(tmpreal_s(nrxx,n_set))
    allocate(prod_g(ngm))
@@ -633,14 +633,14 @@ subroutine dft_exchange(nbnd_v,nbnd_s,n_set)
          END IF
 
          CALL invfft ('Wave', psic, dffts)
-         tmpreal1(1:nrxxs)=dble(psic(1:nrxxs))
+         tmpreal1(1:dffts%nnr)=dble(psic(1:dffts%nnr))
          if(doublegrid) then
             call interpolate(tmpreal_v(:,hw-(iiv-1)*n_set),tmpreal1,1)
          else
           tmpreal_v(:,hw-(iiv-1)*n_set)=tmpreal1(:)
        endif
        if ( hw < min(iiv*n_set,nbnd_v)) then
-          tmpreal1(1:nrxxs)=aimag(psic(1:nrxxs))
+          tmpreal1(1:dffts%nnr)=aimag(psic(1:dffts%nnr))
           if(doublegrid) then
              call interpolate(tmpreal_v(:,hw-(iiv-1)*n_set+1),tmpreal1,1)
           else
@@ -667,14 +667,14 @@ subroutine dft_exchange(nbnd_v,nbnd_s,n_set)
          END IF
 
          CALL invfft ('Wave', psic, dffts)
-         tmpreal1(1:nrxxs)=dble(psic(1:nrxxs))
+         tmpreal1(1:dffts%nnr)=dble(psic(1:dffts%nnr))
          if(doublegrid) then
             call interpolate(tmpreal_s(:,hw-(jjs-1)*n_set),tmpreal1,1)
          else
           tmpreal_s(:,hw-(jjs-1)*n_set)=tmpreal1(:)
        endif
        if ( hw < min(jjs*n_set,nbnd_s)) then
-          tmpreal1(1:nrxxs)=aimag(psic(1:nrxxs))
+          tmpreal1(1:dffts%nnr)=aimag(psic(1:dffts%nnr))
           if(doublegrid) then
              call interpolate(tmpreal_s(:,hw-(jjs-1)*n_set+1),tmpreal1,1)
           else

@@ -24,7 +24,7 @@ subroutine localdos (ldos, ldoss, dos_ef)
   USE fft_base,  ONLY: dffts
   USE fft_interfaces, ONLY: invfft
   USE gvect,     ONLY : nrxx
-  USE gsmooth,   ONLY : doublegrid, nrxxs, nls
+  USE gsmooth,   ONLY : doublegrid, nls
   USE klist,     ONLY : xk, wk, degauss, ngauss
   USE lsda_mod,  ONLY : nspin, lsda, current_spin, isk
   USE noncollin_module, ONLY : noncolin, npol, nspin_mag
@@ -43,7 +43,7 @@ subroutine localdos (ldos, ldoss, dos_ef)
 
   implicit none
 
-  complex(DP) :: ldos (nrxx, nspin_mag), ldoss (nrxxs, nspin_mag)
+  complex(DP) :: ldos (nrxx, nspin_mag), ldoss (dffts%nnr, nspin_mag)
   ! output: the local density of states at Ef
   ! output: the local density of states at Ef without augmentation
   real(DP) :: dos_ef
@@ -114,7 +114,7 @@ subroutine localdos (ldos, ldoss, dos_ef)
            enddo
            CALL invfft ('Smooth', psic_nc(:,1), dffts)
            CALL invfft ('Smooth', psic_nc(:,2), dffts)
-           do j = 1, nrxxs
+           do j = 1, dffts%nnr
               ldoss (j, current_spin) = ldoss (j, current_spin) + &
                     w1 * ( DBLE(psic_nc(j,1))**2+AIMAG(psic_nc(j,1))**2 + &
                            DBLE(psic_nc(j,2))**2+AIMAG(psic_nc(j,2))**2)
@@ -125,7 +125,7 @@ subroutine localdos (ldos, ldoss, dos_ef)
               psic (nls (igk (ig) ) ) = evc (ig, ibnd)
            enddo
            CALL invfft ('Smooth', psic, dffts)
-           do j = 1, nrxxs
+           do j = 1, dffts%nnr
               ldoss (j, current_spin) = ldoss (j, current_spin) + &
                     w1 * ( DBLE ( psic (j) ) **2 + AIMAG (psic (j) ) **2)
            enddo
@@ -258,7 +258,7 @@ subroutine localdos_paw (ldos, ldoss, becsum1, dos_ef)
   USE fft_base,  ONLY : dffts
   USE fft_interfaces, ONLY: invfft
   USE gvect,     ONLY : nrxx
-  USE gsmooth,   ONLY : doublegrid, nrxxs, nls
+  USE gsmooth,   ONLY : doublegrid, nls
   USE klist,     ONLY : xk, wk, degauss, ngauss
   USE lsda_mod,  ONLY : nspin, lsda, current_spin, isk
   USE noncollin_module, ONLY : noncolin, npol, nspin_mag
@@ -277,7 +277,7 @@ subroutine localdos_paw (ldos, ldoss, becsum1, dos_ef)
 
   implicit none
 
-  complex(DP) :: ldos (nrxx, nspin_mag), ldoss (nrxxs, nspin_mag)
+  complex(DP) :: ldos (nrxx, nspin_mag), ldoss (dffts%nnr, nspin_mag)
   ! output: the local density of states at Ef
   ! output: the local density of states at Ef without augmentation
   REAL(DP) :: becsum1 ((nhm * (nhm + 1))/2, nat, nspin_mag)
@@ -349,7 +349,7 @@ subroutine localdos_paw (ldos, ldoss, becsum1, dos_ef)
            enddo
            CALL invfft ('Smooth', psic_nc(:,1), dffts)
            CALL invfft ('Smooth', psic_nc(:,2), dffts)
-           do j = 1, nrxxs
+           do j = 1, dffts%nnr
               ldoss (j, current_spin) = ldoss (j, current_spin) + &
                     w1 * ( DBLE(psic_nc(j,1))**2+AIMAG(psic_nc(j,1))**2 + &
                            DBLE(psic_nc(j,2))**2+AIMAG(psic_nc(j,2))**2)
@@ -360,7 +360,7 @@ subroutine localdos_paw (ldos, ldoss, becsum1, dos_ef)
               psic (nls (igk (ig) ) ) = evc (ig, ibnd)
            enddo
            CALL invfft ('Smooth', psic, dffts)
-           do j = 1, nrxxs
+           do j = 1, dffts%nnr
               ldoss (j, current_spin) = ldoss (j, current_spin) + &
                     w1 * ( DBLE ( psic (j) ) **2 + AIMAG (psic (j) ) **2)
            enddo

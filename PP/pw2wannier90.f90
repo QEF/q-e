@@ -826,7 +826,7 @@ SUBROUTINE compute_mmn
    USE wavefunctions_module, ONLY : evc, psic, psic_nc
    USE fft_base,        ONLY : dffts
    USE fft_interfaces,  ONLY : fwfft, invfft
-   USE gsmooth,         ONLY : nls, nlsm, nrxxs
+   USE gsmooth,         ONLY : nls, nlsm
    USE klist,           ONLY : nkstot, xk
    USE io_files,        ONLY : nwordwfc, iunwfc
    USE io_files,        ONLY : find_free_unit
@@ -870,7 +870,7 @@ SUBROUTINE compute_mmn
    IF(any_uspp .and. noncolin) CALL errore('pw2wannier90',&
        'NCLS calculation not implimented with USP',1)
 
-   ALLOCATE( phase(nrxxs), igkq(npwx) )
+   ALLOCATE( phase(dffts%nnr), igkq(npwx) )
    ALLOCATE( evcq(npol*npwx,nbnd) )
 
    IF(noncolin) THEN
@@ -1111,7 +1111,8 @@ SUBROUTINE compute_mmn
                   iend=istart+npw-1
                   psic_nc(nls (igk (1:npw) ),ipol ) = evc(istart:iend, m)
                   CALL invfft ('Wave', psic_nc(:,ipol), dffts)
-                  psic_nc(1:nrxxs,ipol) = psic_nc(1:nrxxs,ipol) * phase(1:nrxxs)
+                  psic_nc(1:dffts%nnr,ipol) = psic_nc(1:dffts%nnr,ipol) * &
+                                                 phase(1:dffts%nnr)
                   CALL fwfft ('Wave', psic_nc(:,ipol), dffts)
                   aux_nc(1:npwq,ipol) = psic_nc(nls (igkq(1:npwq) ),ipol )
                ENDDO
@@ -1120,7 +1121,7 @@ SUBROUTINE compute_mmn
                psic(nls (igk (1:npw) ) ) = evc (1:npw, m)
                IF(gamma_only) psic(nlsm(igk (1:npw) ) ) = conjg(evc (1:npw, m))
                CALL invfft ('Wave', psic, dffts)
-               psic(1:nrxxs) = psic(1:nrxxs) * phase(1:nrxxs)
+               psic(1:dffts%nnr) = psic(1:dffts%nnr) * phase(1:dffts%nnr)
                CALL fwfft ('Wave', psic, dffts)
                aux(1:npwq)  = psic(nls (igkq(1:npwq) ) )
             ENDIF
@@ -1493,7 +1494,7 @@ SUBROUTINE write_plot
    USE wavefunctions_module, ONLY : evc, psic
    USE io_files, ONLY : find_free_unit, nwordwfc, iunwfc
    USE wannier
-   USE gsmooth,         ONLY : nls, nlsm, nrxxs
+   USE gsmooth,         ONLY : nls, nlsm
    USE klist,           ONLY : nkstot, xk
    USE gvect,           ONLY : g, ngm, ecutwfc
    USE cell_base,       ONLY : tpiba2
@@ -2034,20 +2035,20 @@ SUBROUTINE wan2sic
   USE io_files, ONLY : iunwfc, iunatsicwfc, nwordwfc, nwordwann
   USE cell_base, ONLY : omega, tpiba2
   USE gvect, ONLY : g, ngm, ecutwfc
-  USE gsmooth, ONLY: nls, nrxxs
+  USE gsmooth, ONLY: nls
   USE wavefunctions_module, ONLY : evc, psic
   USE wvfct, ONLY : nbnd, npwx, npw, igk, g2kin
   USE klist, ONLY : nkstot, xk, wk
   USE wannier
 
   INTEGER :: i, j, nn, ik, ibnd, iw, ikevc
-  COMPLEX(DP), ALLOCATABLE :: orbital(:,:), orb(:,:), u_matrix(:,:,:)
+  COMPLEX(DP), ALLOCATABLE :: orbital(:,:), u_matrix(:,:,:)
 
   OPEN (20, file = trim(seedname)//".dat" , form = 'formatted', status = 'unknown')
   WRITE(stdout,*) ' wannier plot '
 
   ALLOCATE ( u_matrix( n_wannier, n_wannier, nkstot) )
-  ALLOCATE ( orbital( npwx, n_wannier), orb( nrxxs, n_wannier))
+  ALLOCATE ( orbital( npwx, n_wannier) )
 
   !
   DO i = 1, n_wannier
@@ -2062,7 +2063,6 @@ SUBROUTINE wan2sic
      ENDDO !j
   ENDDO !i
   !
-  orb(:,:) = (0.0d0,0.0d0)
   DO ik=1,iknum
      ikevc = ik + ikstart - 1
      CALL davcio (evc, nwordwfc, iunwfc, ikevc, -1)
@@ -2085,8 +2085,6 @@ SUBROUTINE wan2sic
   WRITE(stdout,*) ' dealloc u '
   DEALLOCATE (  orbital)
   WRITE(stdout,*) ' dealloc orbital '
-  DEALLOCATE ( orb )
-  WRITE(stdout,*) ' dealloc orb '
   !
 END SUBROUTINE wan2sic
 

@@ -18,7 +18,7 @@ subroutine dvdpsi (nu_i, xq_, dvloc, vkb_, vkbq_, psi_, dvpsi_)
   USE fft_base,   ONLY : dffts
   USE fft_interfaces,  ONLY : fwfft, invfft
   USE gvect,      ONLY : nrxx, g
-  USE gsmooth,    ONLY : nrxxs, nls
+  USE gsmooth,    ONLY : nls
   USE wvfct,      ONLY : nbnd, npwx, npw, igk
   use phcom
   use d3com
@@ -66,7 +66,7 @@ subroutine dvdpsi (nu_i, xq_, dvloc, vkb_, vkbq_, psi_, dvpsi_)
         aux (nls (igk (ig) ) ) = psi_ (ig, ibnd)
      enddo
      CALL invfft ('Wave', aux, dffts)
-     do ir = 1, nrxxs
+     do ir = 1, dffts%nnr
         aux (ir) = aux (ir) * dvloc (ir)
      enddo
      CALL fwfft ('Wave', aux, dffts)

@@ -16,7 +16,7 @@ subroutine lr_calc_dens( evc1, response_calc )
   use ions_base,                    only : ityp,nat,ntyp=>nsp
   use cell_base,                    only : omega
   use ener,                     only : ef
-  use gsmooth,                  only : nrxxs,nls,nlsm,doublegrid
+  use gsmooth,                  only : nls,nlsm,doublegrid
   use gvect,                    only : nrxx,gstart,nr1,nr2,nr3
   use fft_base,                 only : dffts
   use fft_interfaces,           only : invfft
@@ -308,7 +308,7 @@ contains
        ! charge density can be calculated. This is in no way the final
        ! response charge density.
        ! the loop is over real space points.
-       do ir=1,nrxxs
+       do ir=1,dffts%nnr
           rho_1(ir,1)=rho_1(ir,1) &
                +2.0d0*(w1*real(revc0(ir,ibnd,1),dp)*real(psic(ir),dp)&
                +w2*aimag(revc0(ir,ibnd,1))*aimag(psic(ir)))
@@ -434,7 +434,7 @@ contains
           w1=wg(ibnd,ik)/omega
           !
           ! loop over real space points
-          do ir=1,nrxxs
+          do ir=1,dffts%nnr
              rho_1(ir,:)=rho_1(ir,:) &
                   +2.0d0*w1*real(conjg(revc0(ir,ibnd,ik))*psic(ir),dp)
           enddo

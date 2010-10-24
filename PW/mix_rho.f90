@@ -432,7 +432,7 @@ SUBROUTINE approx_screening2( drho, rhobest )
   USE kinds,                ONLY : DP
   USE constants,            ONLY : e2, pi, tpi, fpi, eps8, eps32
   USE cell_base,            ONLY : omega, tpiba2
-  USE gsmooth,              ONLY : nrxxs, nls, nlsm
+  USE gsmooth,              ONLY : nls, nlsm
   USE gvect,                ONLY : gg, ngm, nl, nlm
   USE wavefunctions_module, ONLY : psic
   USE klist,                ONLY : nelec
@@ -464,7 +464,7 @@ SUBROUTINE approx_screening2( drho, rhobest )
     vbest(:),   &! vbest(ngm0)
     wbest(:)     ! wbest(ngm0)
   REAL(DP), ALLOCATABLE :: &
-    alpha(:)     ! alpha(nrxxs)
+    alpha(:)     ! alpha(dffts%nnr)
   !
   COMPLEX(DP)         :: rrho, rmag
   INTEGER             :: ir, ig
@@ -489,7 +489,7 @@ SUBROUTINE approx_screening2( drho, rhobest )
   !
   IF ( gg(1) < eps8 ) drho%of_g(1,1) = ZERO
   !
-  ALLOCATE( alpha( nrxxs ) )
+  ALLOCATE( alpha( dffts%nnr ) )
   ALLOCATE( v( ngm0, mmx ), &
             w( ngm0, mmx ), dv( ngm0 ), vbest( ngm0 ), wbest( ngm0 ) )
   !
@@ -517,13 +517,13 @@ SUBROUTINE approx_screening2( drho, rhobest )
   !
   CALL invfft ('Smooth', psic, dffts)
   !
-  alpha(:) = REAL( psic(1:nrxxs) )
+  alpha(:) = REAL( psic(1:dffts%nnr) )
   !
   min_rs   = ( 3.D0 * omega / fpi / nelec )**one_third
   max_rs   = min_rs
   avg_rsm1 = 0.D0
   !
-  DO ir = 1, nrxxs
+  DO ir = 1, dffts%nnr
      !
      alpha(ir) = ABS( alpha(ir) )
      !
@@ -560,7 +560,7 @@ SUBROUTINE approx_screening2( drho, rhobest )
   !
   CALL invfft ('Smooth', psic, dffts)
   !
-  psic(:nrxxs) = psic(:nrxxs) * alpha(:)
+  psic(:dffts%nnr) = psic(:dffts%nnr) * alpha(:)
   !
   CALL fwfft ('Smooth', psic, dffts)
   !
@@ -585,7 +585,7 @@ SUBROUTINE approx_screening2( drho, rhobest )
      !
      CALL invfft ('Smooth', psic, dffts)
      !
-     psic(:nrxxs) = psic(:nrxxs) * alpha(:)
+     psic(:dffts%nnr) = psic(:dffts%nnr) * alpha(:)
      !
      CALL fwfft ('Smooth', psic, dffts)
      !

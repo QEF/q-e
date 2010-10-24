@@ -17,13 +17,13 @@ subroutine interpolate (v, vs, iflag)
   !
   USE kinds, ONLY: DP
   USE gvect,  ONLY: nrxx, nl, nlm
-  USE gsmooth,ONLY: nrxxs,ngms, nls, nlsm, doublegrid
+  USE gsmooth,ONLY: ngms, nls, nlsm, doublegrid
   USE control_flags, ONLY: gamma_only
   USE fft_base,      ONLY : dfftp, dffts
   USE fft_interfaces,ONLY : fwfft, invfft
   !
   implicit none
-  real(DP) :: v (nrxx), vs (nrxxs)
+  real(DP) :: v (nrxx), vs (dffts%nnr)
   ! function on thick mesh
   ! function on smooth mesh
 
@@ -43,7 +43,7 @@ subroutine interpolate (v, vs, iflag)
      !
      if (doublegrid) then
         allocate (aux( nrxx))    
-        allocate (auxs(nrxxs))    
+        allocate (auxs(dffts%nnr))    
         aux (:) = v (:)
         CALL fwfft ('Dense', aux, dfftp)
         auxs (:) = (0.d0, 0.d0)
@@ -70,7 +70,7 @@ subroutine interpolate (v, vs, iflag)
      !
      if (doublegrid) then
         allocate (aux( nrxx))    
-        allocate (auxs(nrxxs))    
+        allocate (auxs(dffts%nnr))    
         auxs (:) = vs (:)
         CALL fwfft ('Smooth', auxs, dffts)
         aux (:) = (0.d0, 0.d0)
@@ -107,13 +107,13 @@ subroutine cinterpolate (v, vs, iflag)
   !
   USE kinds, ONLY: DP
   USE gvect,  ONLY: nrxx, nl, nlm
-  USE gsmooth,ONLY: nrxxs, ngms, nls, nlsm, doublegrid
+  USE gsmooth,ONLY: ngms, nls, nlsm, doublegrid
   USE control_flags, ONLY: gamma_only
   USE fft_base,      ONLY : dfftp, dffts
   USE fft_interfaces,ONLY : fwfft, invfft
   !
   IMPLICIT NONE
-  complex(DP) :: v (nrxx), vs (nrxxs)
+  complex(DP) :: v (nrxx), vs (dffts%nnr)
   ! function on thick mesh
   ! function on smooth mesh
 
@@ -150,7 +150,7 @@ subroutine cinterpolate (v, vs, iflag)
      !   from smooth to thick
      !
      if (doublegrid) then
-        allocate (auxs ( nrxxs))    
+        allocate (auxs (dffts%nnr))    
         auxs (:) = vs(:)
         CALL fwfft ('Smooth', auxs, dffts)
         v (:) = (0.d0, 0.d0)

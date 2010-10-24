@@ -70,7 +70,7 @@ SUBROUTINE h_psiq_vdw (lda, n, m, psi, hpsi, spsi)
      !
      !   and then the product with the potential vrs = (vltot+vr) on the smoo
      !
-     DO j = 1, nrxxs
+     DO j = 1, dffts%nnr
         psic (j) = psic (j) * vrs (j, current_spin)
      ENDDO
      !

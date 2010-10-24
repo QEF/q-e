@@ -33,7 +33,7 @@ SUBROUTINE check_v_eff ( veff, charge )
                                    nrxx, nr1, nr2, nr3, ngm, ecutwfc, nl
   USE wvfct,                ONLY : g2kin, wg, nbndx, et, nbnd, npwx, igk, &
                                    npw
-  USE gsmooth,              ONLY : nls, nlsm, nrxxs, doublegrid
+  USE gsmooth,              ONLY : nls, nlsm, doublegrid
   USE control_flags,        ONLY : diis_ndim, ethr, lscf, max_cg_iter, isolve
   USE ldaU,                 ONLY : lda_plus_u, swfcatom
   USE scf,                  ONLY : vltot, vrs, v_of_0
@@ -280,7 +280,7 @@ SUBROUTINE check_v_eff ( veff, charge )
           !
           ! ... increment the charge density ...
           !
-          DO ir = 1, nrxxs
+          DO ir = 1, dffts%nnr
              !
              rho_veff(ir,current_spin) = rho_veff(ir,current_spin) + &
                                           w1 * ( REAL( psic(ir) )**2 + &

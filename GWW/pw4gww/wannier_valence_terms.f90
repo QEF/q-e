@@ -23,7 +23,7 @@
    USE fft_base,             ONLY : dffts, dfftp
    USE fft_interfaces,       ONLY : fwfft, invfft
    USE gvect
-   USE gsmooth,              ONLY : nls, nlsm, nrxxs, doublegrid
+   USE gsmooth,              ONLY : nls, nlsm, doublegrid
    USE uspp
    USE wavefunctions_module, ONLY : psic, evc
    USE realus,               ONLY : adduspos_gamma_r
@@ -71,8 +71,8 @@
 
 
    allocate(wpwp_psi(numw_prod,numw_prod,nbnd_v))
-   allocate(tmpreal1(nrxx),tmpreals1(nrxxs))
-   allocate(tmpreal2(nrxx),tmpreals2(nrxxs))
+   allocate(tmpreal1(nrxx),tmpreals1(dffts%nnr))
+   allocate(tmpreal2(nrxx),tmpreals2(dffts%nnr))
    allocate(tmpspacec(nrxx))
    if(okvan) allocate(becpr(nkb,nbnd_v))
 
@@ -212,9 +212,9 @@
 
                CALL invfft ('Wave', psic, dffts)
 
-               tmpreals1(1:nrxxs)=dble(psic(1:nrxxs))*dble(psic(1:nrxxs))
+               tmpreals1(1:dffts%nnr)=dble(psic(1:dffts%nnr))*dble(psic(1:dffts%nnr))
                 if(  hw < min(hhw*n_setv,nbnd_v) ) then
-                   tmpreals2(1:nrxxs)=dimag(psic(1:nrxxs))*dimag(psic(1:nrxxs))
+                   tmpreals2(1:dffts%nnr)=dimag(psic(1:dffts%nnr))*dimag(psic(1:dffts%nnr))
                 endif
 
 
@@ -272,14 +272,14 @@
                       tmpspacec(:)=(0.d0,0.d0)
                       tmpspacec(nls(igk0(1:npw0)))=tmpspacei(1:npw0,iw-(iiw-1)*n_set)
                       CALL invfft ('Wave', tmpspacec, dffts)
-                      tmpspacec(1:nrxxs)=dble(tmpspacec(1:nrxxs)*tmpreal1(1:nrxxs))
+                      tmpspacec(1:dffts%nnr)=dble(tmpspacec(1:dffts%nnr)*tmpreal1(1:dffts%nnr))
                       CALL fwfft ('Wave', tmpspacec, dffts)
                       tmpspacei1(1:npw0)=tmpspacec(nls(igk0(1:npw0)))
                       if(  hw < min(hhw*n_setv,nbnd_v) ) then
                           tmpspacec(:)=(0.d0,0.d0)
                           tmpspacec(nls(igk0(1:npw0)))=tmpspacei(1:npw0,iw-(iiw-1)*n_set)
                           CALL invfft ('Wave', tmpspacec, dffts)
-                          tmpspacec(1:nrxxs)=dble(tmpspacec(1:nrxxs)*tmpreal2(1:nrxxs))
+                          tmpspacec(1:dffts%nnr)=dble(tmpspacec(1:dffts%nnr)*tmpreal2(1:dffts%nnr))
                           CALL fwfft ('Wave', tmpspacec, dffts)
                           tmpspacei2(1:npw0)=tmpspacec(nls(igk0(1:npw0)))
                        endif
@@ -387,7 +387,7 @@
    USE fft_base,             ONLY : dffts, dfftp
    USE fft_interfaces,       ONLY : fwfft, invfft
    USE gvect
-   USE gsmooth,              ONLY : nls, nlsm, nrxxs, doublegrid
+   USE gsmooth,              ONLY : nls, nlsm, doublegrid
    USE uspp
    USE wavefunctions_module, ONLY : psic, evc
    USE realus,               ONLY : adduspos_gamma_r
@@ -439,8 +439,8 @@
 
    allocate(ok_table(n_set, n_set))
 
-   allocate(tmpreal1(nrxx),tmpreals1(nrxxs))
-   allocate(tmpreal2(nrxx),tmpreals2(nrxxs))
+   allocate(tmpreal1(nrxx),tmpreals1(dffts%nnr))
+   allocate(tmpreal2(nrxx),tmpreals2(dffts%nnr))
    allocate(tmpspaced(nrxx,n_set))
    allocate(tmpspacec(nrxx))
 
@@ -645,9 +645,9 @@
 
                CALL invfft ('Wave', psic, dffts)
 
-               tmpreals1(1:nrxxs)=dble(psic(1:nrxxs))*dble(psic(1:nrxxs))
+               tmpreals1(1:dffts%nnr)=dble(psic(1:dffts%nnr))*dble(psic(1:dffts%nnr))
                 if(  hw < min(hhw*n_setv,nbnd_v) ) then
-                   tmpreals2(1:nrxxs)=dimag(psic(1:nrxxs))*dimag(psic(1:nrxxs))
+                   tmpreals2(1:dffts%nnr)=dimag(psic(1:dffts%nnr))*dimag(psic(1:dffts%nnr))
                 endif
 
 
@@ -705,14 +705,14 @@
                       tmpspacec(:)=(0.d0,0.d0)
                       tmpspacec(nls(igk0(1:npw0)))=tmpspacei(1:npw0,iw-(iiw-1)*n_set)
                       CALL invfft ('Wave', tmpspacec, dffts)
-                      tmpspacec(1:nrxxs)=dble(tmpspacec(1:nrxxs)*tmpreal1(1:nrxxs))
+                      tmpspacec(1:dffts%nnr)=dble(tmpspacec(1:dffts%nnr)*tmpreal1(1:dffts%nnr))
                       CALL fwfft ('Wave', tmpspacec, dffts)
                       tmpspacei1(1:npw0)=tmpspacec(nls(igk0(1:npw0)))
                       if(  hw < min(hhw*n_setv,nbnd_v) ) then
                           tmpspacec(:)=(0.d0,0.d0)
                           tmpspacec(nls(igk0(1:npw0)))=tmpspacei(1:npw0,iw-(iiw-1)*n_set)
                           CALL invfft ('Wave', tmpspacec, dffts)
-                          tmpspacec(1:nrxxs)=dble(tmpspacec(1:nrxxs)*tmpreal2(1:nrxxs))
+                          tmpspacec(1:dffts%nnr)=dble(tmpspacec(1:dffts%nnr)*tmpreal2(1:dffts%nnr))
                           CALL fwfft ('Wave', tmpspacec, dffts)
                           tmpspacei2(1:npw0)=tmpspacec(nls(igk0(1:npw0)))
                        endif
@@ -837,7 +837,7 @@
    USE fft_base,             ONLY : dffts, dfftp
    USE fft_interfaces,       ONLY : fwfft, invfft
    USE gvect
-   USE gsmooth,              ONLY : nls, nlsm, nrxxs, doublegrid
+   USE gsmooth,              ONLY : nls, nlsm, doublegrid
    USE uspp
    USE wavefunctions_module, ONLY : psic, evc
    USE realus,               ONLY : adduspos_gamma_r
@@ -886,8 +886,8 @@
 
    allocate(ok_table(n_set, n_set))
 
-   allocate(tmpreal1(nrxx),tmpreals1(nrxxs))
-   allocate(tmpreal2(nrxx),tmpreals2(nrxxs))
+   allocate(tmpreal1(nrxx),tmpreals1(dffts%nnr))
+   allocate(tmpreal2(nrxx),tmpreals2(dffts%nnr))
    allocate(tmpspaced(nrxx,n_set))
    allocate(tmpspacec(nrxx))
 
@@ -1086,9 +1086,9 @@
 
                CALL invfft ('Wave', psic, dffts)
 
-               tmpreals1(1:nrxxs)=dble(psic(1:nrxxs))*dble(psic(1:nrxxs))
+               tmpreals1(1:dffts%nnr)=dble(psic(1:dffts%nnr))*dble(psic(1:dffts%nnr))
                 if(  hw < min(hhw*n_setv,nbnd_v) ) then
-                   tmpreals2(1:nrxxs)=dimag(psic(1:nrxxs))*dimag(psic(1:nrxxs))
+                   tmpreals2(1:dffts%nnr)=dimag(psic(1:dffts%nnr))*dimag(psic(1:dffts%nnr))
                 endif
 
 
@@ -1146,14 +1146,14 @@
                       tmpspacec(:)=(0.d0,0.d0)
                       tmpspacec(nls(igk0(1:npw0)))=tmpspacei(1:npw0,iw-(iiw-1)*n_set)
                       CALL invfft ('Wave', tmpspacec, dffts)
-                      tmpspacec(1:nrxxs)=dble(tmpspacec(1:nrxxs)*tmpreal1(1:nrxxs))
+                      tmpspacec(1:dffts%nnr)=dble(tmpspacec(1:dffts%nnr)*tmpreal1(1:dffts%nnr))
                       CALL fwfft ('Wave', tmpspacec, dffts)
                       tmpspacei1(1:npw0)=tmpspacec(nls(igk0(1:npw0)))
                       if(  hw < min(hhw*n_setv,nbnd_v) ) then
                           tmpspacec(:)=(0.d0,0.d0)
                           tmpspacec(nls(igk0(1:npw0)))=tmpspacei(1:npw0,iw-(iiw-1)*n_set)
                           CALL invfft ('Wave', tmpspacec, dffts)
-                          tmpspacec(1:nrxxs)=dble(tmpspacec(1:nrxxs)*tmpreal2(1:nrxxs))
+                          tmpspacec(1:dffts%nnr)=dble(tmpspacec(1:dffts%nnr)*tmpreal2(1:dffts%nnr))
                           CALL fwfft ('Wave', tmpspacec, dffts)
                           tmpspacei2(1:npw0)=tmpspacec(nls(igk0(1:npw0)))
                        endif

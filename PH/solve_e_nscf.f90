@@ -21,7 +21,7 @@ subroutine solve_e_nscf( avg_iter, thresh, ik, ipol, dvscfs, auxr )
   USE fft_base,              ONLY : dffts
   USE fft_interfaces,        ONLY : fwfft, invfft
   USE gvect,                 ONLY : g
-  USE gsmooth,               ONLY : nrxxs, nls
+  USE gsmooth,               ONLY : nls
   USE wvfct,                 ONLY : npw, igk, g2kin,  et
   USE wavefunctions_module,  ONLY : evc
   USE eqv,                   ONLY : dpsi, dvpsi
@@ -41,7 +41,7 @@ subroutine solve_e_nscf( avg_iter, thresh, ik, ipol, dvscfs, auxr )
   ! input: convergence threshold
   ! in/out: # of diagonalization iterations
 
-  complex(DP) :: dvscfs (nrxxs, 3), auxr(nrxxs)
+  complex(DP) :: dvscfs (dffts%nnr, 3), auxr(dffts%nnr)
   ! input: potential on the smooth grid
   ! auxiliary work space
 
@@ -75,7 +75,7 @@ subroutine solve_e_nscf( avg_iter, thresh, ik, ipol, dvscfs, auxr )
         auxr (nls (igk (ig))) = evc (ig, ibnd)
      end do
      CALL invfft ('Wave', auxr, dffts)
-     do ir = 1, nrxxs
+     do ir = 1, dffts%nnr
         auxr (ir) = auxr(ir) * dvscfs(ir, ipol)
      end do
      CALL fwfft ('Wave', auxr, dffts)

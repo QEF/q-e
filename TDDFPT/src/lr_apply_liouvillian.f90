@@ -17,7 +17,7 @@ subroutine lr_apply_liouvillian( evc1, evc1_new, sevc1_new, interaction )
   use cell_base,            only : tpiba2
   use fft_base,             only : dffts
   use fft_interfaces,       only : fwfft
-  use gsmooth,              only : nrxxs, nls, nlsm
+  use gsmooth,              only : nls, nlsm
   use gvect,                only : nrxx, nl, ngm, gstart, g, gg
   use io_global,            only : stdout
   use kinds,                only : dp
@@ -68,7 +68,7 @@ subroutine lr_apply_liouvillian( evc1, evc1_new, sevc1_new, interaction )
   if (.not.interaction) call start_clock('lr_apply_no')
   !
   allocate( dvrs(nrxx, nspin) )
-  allocate( dvrss(nrxxs) )
+  allocate( dvrss(dffts%nnr) )
   dvrs(:,:)=0.0d0
   dvrss(:)=0.0d0
   allocate( d_deeq(nhm, nhm, nat, nspin) )
@@ -266,7 +266,7 @@ contains
           !
           !   Product with the potential vrs = (vltot+vr)
           ! revc0 is on smooth grid. psic is used upto smooth grid
-          do ir=1,nrxxs
+          do ir=1,dffts%nnr
              !
              psic(ir)=revc0(ir,ibnd,1)*cmplx(dvrss(ir),0.0d0,dp)
              !
@@ -414,7 +414,7 @@ contains
              !
              !   Product with the potential vrs = (vltot+vr)
              !
-             do ir=1,nrxxs
+             do ir=1,dffts%nnr
                 !
                 psic(ir)=revc0(ir,ibnd,ik)*cmplx(dvrss(ir),0.0d0,dp)
                 !

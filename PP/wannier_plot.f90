@@ -118,7 +118,7 @@ SUBROUTINE plot_wannier(nc,n0)
   ENDIF
 
   ALLOCATE(wan_func(npwx,nwan))
-  ALLOCATE(psic(nrxxs))
+  ALLOCATE(psic(dffts%nnr))
   ALLOCATE(psic3(dffts%nr1x,dffts%nr2x,dffts%nr3x))
   ALLOCATE(psic3_0(dffts%nr1x,dffts%nr2x,dffts%nr3x))
   ALLOCATE(psic_sum(nc(1)*dffts%nr1x,nc(2)*dffts%nr2x,nc(3)*dffts%nr3x,nspin))
@@ -143,7 +143,7 @@ SUBROUTINE plot_wannier(nc,n0)
      wan_func = ZERO
      CALL get_buffer( wan_func, nwordwf, iunwf, ik)
 
-     psic(1:nrxxs) = ZERO
+     psic(1:dffts%nnr) = ZERO
      rho = ZERO
      DO j = 1, npw
         psic (nls (igk (j) ) ) = wan_func (j, plot_wan_num)

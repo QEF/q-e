@@ -20,7 +20,7 @@
    USE wavefunctions_module, ONLY : evc, psic
    USE fft_base,             ONLY : dffts, dfftp
    USE fft_interfaces,       ONLY : fwfft, invfft
-   USE gsmooth,              ONLY : nls, nlsm, nrxxs, doublegrid
+   USE gsmooth,              ONLY : nls, nlsm, doublegrid
    USE uspp,                 ONLY : nkb, vkb, okvan
    USE realus,               ONLY : adduspos_gamma_r
    USE mp,                   ONLY : mp_sum
@@ -72,7 +72,7 @@
   mem_used=mem_used+ngm_max*8
   mem_used=mem_used+nrxx*8
   mem_used=mem_used+numw_prod*nbnd_normal*8
-  mem_used=mem_used+nrxxs*(cprim_last-cprim_first+1)*8
+  mem_used=mem_used+dffts%nnr*(cprim_last-cprim_first+1)*8
   mem_used=mem_used+nrxx*8
   mem_used=mem_used+ngm*16
 
@@ -129,7 +129,7 @@
 
 
   allocate( smat(numw_prod,nbnd_normal))
-  allocate(tmp_reals(nrxxs, cprim_last-cprim_first+1),tmp_reals_jj(nrxx))
+  allocate(tmp_reals(dffts%nnr, cprim_last-cprim_first+1),tmp_reals_jj(nrxx))
   allocate(tmp_g(ngm))
 
   write(stdout,*) 'ATTENZIONE3'
@@ -255,7 +255,7 @@
            CALL invfft ('Wave', psic, dffts)
            tmp_reals_jj(:)= DBLE(psic(:))
 
-           tmp_prod(1:nrxxs)=tmp_reals(:,ii-cprim_first+1)*tmp_reals_jj(:)
+           tmp_prod(1:dffts%nnr)=tmp_reals(:,ii-cprim_first+1)*tmp_reals_jj(:)
            if(doublegrid) then
               call interpolate(tmp_prod,tmp_prod,1)
            endif
@@ -315,7 +315,7 @@ subroutine create_vcw_overlap(n_set, orthonorm,ecutoff)
    USE wavefunctions_module, ONLY : evc, psic
    USE fft_base,             ONLY : dffts, dfftp
    USE fft_interfaces,       ONLY : fwfft, invfft
-   USE gsmooth,              ONLY : nls, nlsm,nrxxs, doublegrid
+   USE gsmooth,              ONLY : nls, nlsm, doublegrid
    USE uspp,                 ONLY : nkb, vkb, okvan
    USE realus,               ONLY : adduspos_gamma_r
    USE mp,                   ONLY : mp_sum
@@ -362,8 +362,8 @@ subroutine create_vcw_overlap(n_set, orthonorm,ecutoff)
   mem_used=0
   mem_used=mem_used+nrxx*8
   mem_used=mem_used+numw_prod*(nbnd_normal-num_nbndv)*8
-  mem_used=mem_used+nrxxs*(cprim_last_eff-cprim_first+1)*8
-  mem_used=mem_used+nrxxs*8
+  mem_used=mem_used+dffts%nnr*(cprim_last_eff-cprim_first+1)*8
+  mem_used=mem_used+dffts%nnr*8
   mem_used=mem_used+ngm*16
 
 !calculate becs
@@ -382,7 +382,7 @@ subroutine create_vcw_overlap(n_set, orthonorm,ecutoff)
   allocate(tmp_prod(nrxx))
 
   allocate( smat(numw_prod,nbnd_normal-num_nbndv))
-  allocate(tmp_reals(nrxxs, cprim_last_eff-cprim_first+1),tmp_reals_jj(nrxxs))
+  allocate(tmp_reals(dffts%nnr, cprim_last_eff-cprim_first+1),tmp_reals_jj(dffts%nnr))
   allocate(tmp_g(ngm))
   ! allocate(sca_vec(n_set_new))
   write(stdout,*) 'ATTENZIONE3'
@@ -490,7 +490,7 @@ subroutine create_vcw_overlap(n_set, orthonorm,ecutoff)
            CALL invfft ('Wave', psic, dffts)
            tmp_reals_jj(:)= DBLE(psic(:))
 
-           tmp_prod(1:nrxxs)=tmp_reals(:,ii-cprim_first+1)*tmp_reals_jj(:)
+           tmp_prod(1:dffts%nnr)=tmp_reals(:,ii-cprim_first+1)*tmp_reals_jj(:)
            if(doublegrid) then
               call interpolate(tmp_prod,tmp_prod,1)
            endif
@@ -552,7 +552,7 @@ subroutine create_upper_states(n_set, lzero, orthonorm,ecutoff)
    USE wavefunctions_module, ONLY : evc, psic
    USE fft_base,             ONLY : dffts, dfftp
    USE fft_interfaces,       ONLY : fwfft, invfft
-   USE gsmooth,              ONLY : nls, nlsm, nrxxs, doublegrid
+   USE gsmooth,              ONLY : nls, nlsm, doublegrid
    USE uspp,                 ONLY : nkb, vkb, okvan
    USE realus,               ONLY : adduspos_gamma_r
    USE mp,                   ONLY : mp_sum, mp_bcast
@@ -639,7 +639,7 @@ subroutine create_upper_states(n_set, lzero, orthonorm,ecutoff)
   fac(:)=fac(:)/omega
   if(lzero .and. gstart == 2) fac(1)=0.d0
 
-  allocate(tmp_reals(nrxxs, cprim_last-cprim_first+1))
+  allocate(tmp_reals(dffts%nnr, cprim_last-cprim_first+1))
 
 !put states on reals grid
   do ii = cprim_first, cprim_last, 2
@@ -694,7 +694,7 @@ subroutine create_upper_states(n_set, lzero, orthonorm,ecutoff)
 !loop on delta
   ndelta=(nbnd-nbnd_normal)/num_nbnd_delta
   if(ndelta*num_nbnd_delta < (nbnd-nbnd_normal)) ndelta=ndelta+1
-  allocate(tmp_reals_up(nrxxs, num_nbnd_delta))
+  allocate(tmp_reals_up(dffts%nnr, num_nbnd_delta))
   allocate( tmp_g(ngm_max, num_nbnd_delta))
   allocate(tmp_prod(nrxx))
   n_upper_tot=(ndelta-1)*num_nbnd_upper+min(nbnd-nbnd_normal-(ndelta-1)*num_nbnd_delta,num_nbnd_upper)
@@ -740,7 +740,7 @@ subroutine create_upper_states(n_set, lzero, orthonorm,ecutoff)
 
        !form products
         do jj=1,id_states
-           tmp_prod(1:nrxxs)=tmp_reals(:,ii-cprim_first+1)*tmp_reals_up(:,jj)
+           tmp_prod(1:dffts%nnr)=tmp_reals(:,ii-cprim_first+1)*tmp_reals_up(:,jj)
            if(doublegrid) then
               call interpolate(tmp_prod,tmp_prod,1)
            endif

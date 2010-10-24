@@ -17,11 +17,9 @@ subroutine matrix_wannier_gamma_big( matsincos, ispin, n_set, itask )
   USE uspp,                 ONLY : okvan, nkb
   USE io_files,             ONLY : find_free_unit, diropn
   USE io_global,            ONLY : stdout
-  USE gsmooth,              ONLY : nrxxs, doublegrid
-  USE smooth_grid_dimensions,ONLY: nr3s
+  USE smooth_grid_dimensions,ONLY: nrxxs
   USE realus,               ONLY : qsave, box,maxbox
-  USE gvect,                ONLY : nr1, nr2, nr3, nr1x, nr2x, &
-                                   nr3x, nrxx
+  USE gvect,                ONLY : nr1, nr2, nr3, nr1x, nr2x, nr3x, nrxx
   USE wannier_gw,           ONLY : becp_gw, expgsave, becp_gw_c, maxiter2,num_nbnd_first,num_nbndv,nbnd_normal
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
   USE uspp_param,           ONLY : upf, lmaxq, nh, nhm
@@ -63,17 +61,6 @@ subroutine matrix_wannier_gamma_big( matsincos, ispin, n_set, itask )
 
   allocate(tmprealis(nrxxs,n_set),tmprealjs(nrxxs,n_set), tmpreal(nrxxs))
   allocate(tmpexp2(nrxxs,6))
-
-! set npp for not parallel case
-! I don't think this is necessary - PG
-#ifndef __PARA
-  dfftp%npp(1)=nr3
-  dffts%npp(1)=nr3s
-#endif
-
-
-
-
 
 !set up exponential grid
 
