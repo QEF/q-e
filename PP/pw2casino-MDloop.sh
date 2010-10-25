@@ -70,10 +70,10 @@ index ec24bc6..29dbceb 100644
  
  pw2wannier90.x : pw2wannier90.o $(PPOBJS) $(MODULES) $(LIBOBJS)
 diff --git a/PW/Makefile b/PW/Makefile
-index a611bec..baddd6a 100644
+index b7658b7..6eac35a 100644
 --- a/PW/Makefile
 +++ b/PW/Makefile
-@@ -145,6 +145,7 @@ print_ks_energies.o \
+@@ -140,6 +140,7 @@ print_ks_energies.o \
  punch.o \
  pw_restart.o \
  pwcom.o \
@@ -81,7 +81,7 @@ index a611bec..baddd6a 100644
  qvan2.o \
  rcgdiagg.o \
  rdiagh.o \
-@@ -229,7 +230,8 @@ wannier_init.o \
+@@ -219,7 +220,8 @@ wannier_init.o \
  wannier_check.o \
  wannier_clean.o \
  wannier_occ.o \
@@ -92,34 +92,33 @@ index a611bec..baddd6a 100644
  EEOBJS=../EE/libee.a
  QEMODS=../Modules/libqemod.a
 diff --git a/PW/pwscf.f90 b/PW/pwscf.f90
-index 7fbd607..f72582e 100644
+index 8108107..503fc72 100644
 --- a/PW/pwscf.f90
 +++ b/PW/pwscf.f90
 @@ -29,6 +29,8 @@ PROGRAM pwscf
- #endif
+   USE open_close_input_file_interf, ONLY : open_input_file, close_input_file
    !
    IMPLICIT NONE
 +  CHARACTER(4) postfix
 +  INTEGER itercount
    !
+   LOGICAL :: xmlinput = .false.
+   CHARACTER (len=iotk_attlenx) :: attr
+@@ -91,13 +93,26 @@ PROGRAM pwscf
    !
- #ifdef __PARA
-@@ -84,8 +86,11 @@ PROGRAM pwscf
-      !
-      CALL init_run()
-      !
+   CALL init_run()
+   !
 +     itercount=0
 +     !
-      main_loop: DO
-         !
+   main_loop: DO
+      !
 +        itercount=itercount+1
-         !
-         ! ... electronic self-consistentcy
-         !
-@@ -93,6 +98,16 @@ PROGRAM pwscf
-         !
-         IF ( .NOT. conv_elec ) CALL stop_run( conv_elec )
-         !
+      ! ... electronic self-consistentcy
+      !
+      CALL electrons()
+      !
+      IF ( .NOT. conv_elec ) CALL stop_run( conv_elec )
++        !
 +        write(postfix,'(i4.4)')itercount
 +        CALL write_casino_wfn( &
 +            .false., & ! gather
@@ -129,10 +128,9 @@ index 7fbd607..f72582e 100644
 +            .true.,  & ! single_precision_blips
 +            0,       & ! n_points_for_test
 +            '.'//postfix)   ! postfix
-+        !
-         ! ... if requested ions are moved
-         !
-         CALL ions()
+      !
+      ! ... if requested ions are moved
+      !
 EOF
 
 patch -p 1 --dry-run -f -p 1 < $PATCHFILE
