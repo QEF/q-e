@@ -425,6 +425,7 @@ SUBROUTINE phq_readin()
         nksq = nks / 2
      ENDIF
   ENDIF
+  IF (lgamma_gamma.AND.ldiag) CALL errore('phq_readin','incompatible flags',1)
   !
   IF (tfixed_occ) &
      CALL errore('phq_readin','phonon with arbitrary occupations not tested',1)
