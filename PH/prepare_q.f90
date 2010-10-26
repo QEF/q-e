@@ -29,7 +29,8 @@ SUBROUTINE prepare_q(auxdyn, do_band, do_iq, setup_pw, iq)
   USE disp,            ONLY : x_q, done_iq, rep_iq, done_rep_iq, comp_iq
   USE control_ph,      ONLY : ldisp, lgamma, epsil, trans, zue, zeu, &
                               start_irr, last_irr, current_iq, &
-                              done_bands
+                              done_bands, tmp_dir_ph, tmp_dir_phq, lqdir
+  USE io_files,        ONLY : prefix
   USE ramanm,          ONLY : lraman, elop
   USE freq_ph,         ONLY : fpol
   USE output,          ONLY : fildyn
@@ -66,6 +67,8 @@ SUBROUTINE prepare_q(auxdyn, do_band, do_iq, setup_pw, iq)
   !
   current_iq = iq
   !
+  tmp_dir_phq=tmp_dir_ph
+  !
   IF ( ldisp ) THEN
      !
      ! ... set the name for the output file
@@ -79,6 +82,12 @@ SUBROUTINE prepare_q(auxdyn, do_band, do_iq, setup_pw, iq)
      !  Check if it is lgamma
      !
      lgamma = ( xq(1) == 0.D0 .AND. xq(2) == 0.D0 .AND. xq(3) == 0.D0 )
+     !
+     ! ... each q /= gamma is saved on a different directory
+     !
+     IF (.NOT.lgamma.AND.lqdir) &
+         tmp_dir_phq= TRIM (tmp_dir_ph) // TRIM(prefix) // '_q' &
+                       & // TRIM(int_to_char(iq))//'/'
      !
      IF ( lgamma ) THEN
         !

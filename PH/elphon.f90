@@ -22,7 +22,7 @@ SUBROUTINE elphon()
   USE dynmat, ONLY : dyn, w2
   USE qpoint, ONLY : xq
   USE modes,  ONLY : npert, nirr
-  USE control_ph, ONLY : trans, current_iq
+  USE control_ph, ONLY : trans
   USE units_ph, ONLY : iudyn, lrdrho, iudvscf
   !
   IMPLICIT NONE
@@ -44,7 +44,7 @@ SUBROUTINE elphon()
      ALLOCATE (dvscfin ( nrxx , nspin_mag , npert(irr)) )
      DO ipert = 1, npert (irr)
         CALL davcio_drho ( dvscfin(1,1,ipert),  lrdrho, iudvscf, &
-                           imode0 + ipert + (current_iq-1)*3*nat, -1 )
+                           imode0 + ipert,  -1 )
      END DO
      IF (doublegrid) THEN
         ALLOCATE (dvscfins ( nrxxs , nspin_mag , npert(irr)) )
@@ -320,7 +320,7 @@ SUBROUTINE elphsum ( )
   USE io_global, ONLY : stdout, ionode, ionode_id
   USE mp_global, ONLY : my_pool_id, npool, kunit, intra_image_comm
   USE mp, ONLY : mp_bcast
-  USE control_ph, ONLY : lgamma, tmp_dir_ph, xmldyn
+  USE control_ph, ONLY : lgamma, tmp_dir_phq, xmldyn
   USE save_ph,    ONLY : tmp_dir_save
   USE io_files,  ONLY : prefix, tmp_dir
   !
@@ -409,7 +409,7 @@ SUBROUTINE elphsum ( )
   IF ( ionode ) THEN
      tmp_dir=tmp_dir_save
      CALL seqopn( iuna2Fsave, 'a2Fsave', 'FORMATTED', exst )
-     tmp_dir=tmp_dir_ph
+     tmp_dir=tmp_dir_phq
      READ(iuna2Fsave,*) ibnd, nksfit
   END IF
   !

@@ -20,7 +20,7 @@ SUBROUTINE openfilq()
                              lrdrhous, lrebar, lrdrho, lint3paw, iuint3paw
   USE io_files,       ONLY : tmp_dir, diropn
   USE control_ph,     ONLY : epsil, zue, ext_recover, trans, elph, lgamma, &
-                             tmp_dir_ph, start_irr, last_irr, xmldyn
+                             tmp_dir_phq, start_irr, last_irr, xmldyn
   USE save_ph,        ONLY : tmp_dir_save
   USE ions_base,      ONLY : nat
   USE qpoint,         ONLY : nksq
@@ -58,7 +58,7 @@ SUBROUTINE openfilq()
   !     The file with the wavefunctions. In the lgamma case reads those
   !     written by pw.x. In the other cases those calculated by ph.x
   !
-  tmp_dir=tmp_dir_ph
+  tmp_dir=tmp_dir_phq
   IF (lgamma.AND.modenum==0) tmp_dir=tmp_dir_save
   iuwfc = 20
   lrwfc = 2 * nbnd * npwx * npol
@@ -69,7 +69,7 @@ SUBROUTINE openfilq()
   !
   ! From now on all files are written with the _ph prefix
   !
-  tmp_dir=tmp_dir_ph
+  tmp_dir=tmp_dir_phq
   !
   !    The file with deltaV_{bare} * psi
   !

@@ -36,16 +36,23 @@ SUBROUTINE check_initial_status(auxdyn)
   USE output,          ONLY : fildyn
   USE control_ph,      ONLY : ldisp, recover, done_bands,  &
                               start_q, last_q, current_iq, tmp_dir_ph, lgamma, &
-                              ext_recover, ext_restart
+                              ext_recover, ext_restart, tmp_dir_phq, lqdir
+  USE save_ph,         ONLY : tmp_dir_save
   USE ph_restart,      ONLY : ph_readfile, check_status_run, init_status_run
   USE start_k,         ONLY : nks_start
   USE save_ph,         ONLY : save_ph_input_variables
   USE io_rho_xml,      ONLY : write_rho
-  USE mp_global,       ONLY : nimage, my_image_id
+  USE mp_global,       ONLY : nimage, my_image_id, intra_image_comm
+  USE io_global,       ONLY : ionode, ionode_id
+  USE io_files,        ONLY : prefix
+  USE mp,              ONLY : mp_bcast
+  USE xml_io_base,     ONLY : create_directory
   !
   IMPLICIT NONE
   !
-  CHARACTER (LEN=256) :: auxdyn
+  CHARACTER (LEN=256) :: auxdyn, filename
+  CHARACTER (LEN=6), EXTERNAL :: int_to_char
+  LOGICAL :: exst
   INTEGER :: iq, iq_start, ierr
   INTEGER :: iu
   !
@@ -97,7 +104,8 @@ SUBROUTINE check_initial_status(auxdyn)
   !  Create a new directory where the ph variables are saved and copy
   !  the charge density there.
   !
-  IF (ldisp.OR..NOT.lgamma.OR.modenum/=0) CALL write_rho( rho, nspin )
+  IF ((ldisp.OR..NOT.lgamma.OR.modenum/=0).AND.(.NOT.lqdir)) &
+                                           CALL write_rho( rho, nspin )
   CALL save_ph_input_variables()
   !
   IF (.NOT.recover) THEN
@@ -142,6 +150,31 @@ SUBROUTINE check_initial_status(auxdyn)
   ELSE
      CALL image_q_irr(iq_start)
   ENDIF
+  !
+  DO iq=1,nqs
+     IF (comp_iq(iq).ne.1) CYCLE
+     lgamma = ( x_q(1,iq) == 0.D0 .AND. x_q(2,iq) == 0.D0 .AND. &
+                x_q(3,iq) == 0.D0 )
+     !
+     ! ... each q /= gamma works on a different directory. We create them
+     ! here and copy the charge density inside
+     !
+     IF (.NOT.lgamma.AND.lqdir) THEN
+        tmp_dir_phq= TRIM (tmp_dir_ph) //TRIM(prefix)//&
+                          & '_q' // TRIM(int_to_char(iq))//'/'
+        filename=TRIM(tmp_dir_phq)//TRIM(prefix)//'.save/charge-density.dat'
+        IF (ionode) inquire (file =TRIM(filename), exist = exst)
+        !
+        CALL mp_bcast( exst, ionode_id, intra_image_comm )
+        !
+        IF (.NOT. exst) THEN
+           CALL create_directory( tmp_dir_phq )
+           tmp_dir=tmp_dir_phq
+           CALL write_rho( rho, nspin )
+           tmp_dir=tmp_dir_save
+        ENDIF
+     ENDIF
+  ENDDO
   !
   auxdyn = fildyn
   !

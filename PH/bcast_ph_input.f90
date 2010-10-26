@@ -20,7 +20,7 @@ subroutine bcast_ph_input ( )
   USE control_ph, ONLY : start_irr, last_irr, start_q, last_q, nmix_ph, &
                          niter_ph, lnoloc, alpha_mix, tr2_ph, lrpa, recover, &
                          ldisp, elph, reduce_io, zue, zeu, epsil, trans, &
-                         lgamma, ldiag, search_sym
+                         lgamma, ldiag, lqdir, search_sym
   USE gamma_gamma, ONLY : asr
   USE disp, ONLY : nq1, nq2, nq3
   USE partial, ONLY : nat_todo, nrapp
@@ -54,6 +54,7 @@ subroutine bcast_ph_input ( )
   call mp_bcast (lrpa, ionode_id )
   call mp_bcast (lnoloc, ionode_id )
   call mp_bcast (ldiag, ionode_id )
+  call mp_bcast (lqdir, ionode_id )
   call mp_bcast (search_sym, ionode_id)
   !
   ! integers

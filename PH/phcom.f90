@@ -313,7 +313,7 @@ MODULE control_ph
   ! CPU time up to now
   ! the alpha value for shifting the bands
   CHARACTER(LEN=10)  :: where_rec='no_recover'! where the ph run recovered
-  CHARACTER(LEN=256) :: flmixdpot, tmp_dir_ph
+  CHARACTER(LEN=256) :: flmixdpot, tmp_dir_ph, tmp_dir_phq
   INTEGER :: rec_code, &   ! code for recover
              rec_code_read=-1000 ! code for recover. Not changed during the run
   LOGICAL :: lgamma,      &! if .TRUE. this is a q=0 computation
@@ -344,6 +344,7 @@ MODULE control_ph
              u_from_file=.FALSE.,  & ! if true the u are on file
              recover_read=.FALSE., & ! if true the recover data have been read
              ldiag=.FALSE.,        & ! if true force the diagonalization
+             lqdir=.FALSE.,        & ! if true each q writes in its directory
              xmldyn=.FALSE.,   & ! if true the dynamical matrix is in xml form
              all_done      ! if .TRUE. all representations have been done
   !

@@ -20,7 +20,7 @@ SUBROUTINE run_pwscf(do_band)
   USE input_parameters,ONLY : pseudo_dir
   USE control_flags,   ONLY : restart
   USE qpoint,          ONLY : xq
-  USE control_ph,      ONLY : done_bands, reduce_io, recover, tmp_dir_ph, &
+  USE control_ph,      ONLY : done_bands, reduce_io, recover, tmp_dir_phq, &
                               ext_restart, bands_computed
   USE save_ph,         ONLY : tmp_dir_save
   !
@@ -40,7 +40,7 @@ SUBROUTINE run_pwscf(do_band)
   !
   ! From now on, work only on the _ph virtual directory
   !
-  tmp_dir=tmp_dir_ph
+  tmp_dir=tmp_dir_phq
   !
   ! ... Setting the values for the nscf run
   !
