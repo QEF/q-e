@@ -61,7 +61,10 @@ CONTAINS
     CASE ('PW')
        !
        CALL read_xml_common( attr, 'PW' )
+       !
+       !
        CALL read_xml_pw()
+       !
        !
 !    CASE ('NEB')
 !       !
@@ -243,11 +246,14 @@ CONTAINS
        ENDIF
     ENDIF
     !
+    CALL mp_bcast( found_al, ionode_id)
+    !
     IF (found_al) THEN
        CALL card_bcast( 'ATOMIC_LIST' )
     ELSE
        CALL card_bcast( 'CHAIN' )
     ENDIF
+    !
     !
     !
     ! ... reading all the FIELDS
@@ -447,7 +453,7 @@ CONTAINS
 10  CALL errore('read_xml_pw', 'error reading end tag of '//card//' card', ABS( ierr ) )
     !
     !
-  END SUBROUTINE READ_XML_PW
+  END SUBROUTINE read_xml_pw
   !
   !
   !
@@ -478,11 +484,11 @@ CONTAINS
     !
     IF ( ionode ) THEN
        !
-!       IF ( ( trim( calculation ) == 'neb' ) .or. ( trim( calculation ) == 'smd' ) ) THEN
-!          CALL card_xml_chain ( )
-!       ELSE
-       CALL card_xml_atomic_list ( )
-!       END IF
+       IF ( ( trim( calculation ) == 'neb' ) .or. ( trim( calculation ) == 'smd' ) ) THEN
+          CALL card_xml_chain ( )
+       ELSE
+          CALL card_xml_atomic_list ( )
+       END IF
        !
     END IF
     !
