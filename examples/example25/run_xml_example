@@ -104,7 +104,10 @@ FeO Wustite in LDA -->
 	</cell>
 
 	<atomic_species ntyp="3">
-		<specie name="O1" mass="1.0">			
+		<specie name="O1">
+			<property name="mass">
+				<real>1.0</real>
+			</property>
 			<property name="pseudofile">
 				<string>O.pz-rrkjus.UPF</string>
 			</property>
@@ -115,7 +118,10 @@ FeO Wustite in LDA -->
 				<real>0.0</real>
 			</property>		
 		</specie>
-		<specie name="Fe1" mass="1.0">			
+		<specie name="Fe1">
+			<property name="mass">
+				<real>1.0</real>
+			</property>
 			<property name="pseudofile">
 				<string>Fe.pz-nd-rrkjus.UPF</string>
 			</property>
@@ -126,7 +132,10 @@ FeO Wustite in LDA -->
 				<real>1.d-8</real>
 			</property>
 		</specie>
-		<specie name="Fe2" mass="1.0">
+		<specie name="Fe2">
+			<property name="mass">
+				<real>1.0</real>
+			</property>
 			<property name="pseudofile">
 				<string>Fe.pz-nd-rrkjus.UPF</string>
 			</property>
@@ -333,7 +342,10 @@ FeO Wustite whithin LDA+U using standard initial ns matrices -->
 	</cell>
 
 	<atomic_species ntyp="3">
-		<specie name="O1" mass="1.0">			
+		<specie name="O1">
+			<property name="mass">
+				<real>1.0</real>
+			</property>
 			<property name="pseudofile">
 				<string>O.pz-rrkjus.UPF</string>
 			</property>
@@ -341,7 +353,10 @@ FeO Wustite whithin LDA+U using standard initial ns matrices -->
 				<real>0.0</real>
 			</property>		
 		</specie>
-		<specie name="Fe1" mass="1.0">			
+		<specie name="Fe1">
+			<property name="mass">
+				<real>1.0</real>
+			</property>
 			<property name="pseudofile">
 				<string>Fe.pz-nd-rrkjus.UPF</string>
 			</property>
@@ -352,7 +367,10 @@ FeO Wustite whithin LDA+U using standard initial ns matrices -->
 				<real>4.3</real>
 			</property>
 		</specie>
-		<specie name="Fe2" mass="1.0">			
+		<specie name="Fe2">
+			<property name="mass">
+				<real>1.0</real>
+			</property>
 			<property name="pseudofile">
 				<string>Fe.pz-nd-rrkjus.UPF</string>
 			</property>
@@ -558,7 +576,10 @@ FeO Wustite whithin LDA+U with user-defined ns initial matrices -->
 	</cell>
 
 	<atomic_species ntyp="3">
-		<specie name="O1" mass="1.0">			
+		<specie name="O1">
+			<property name="mass">
+				<real>1.0</real>
+			</property>
 			<property name="pseudofile">
 				<string>O.pz-rrkjus.UPF</string>
 			</property>
@@ -566,7 +587,10 @@ FeO Wustite whithin LDA+U with user-defined ns initial matrices -->
 				<real>0.0</real>
 			</property>			
 		</specie>
-		<specie name="Fe1" mass="1.0">			
+		<specie name="Fe1">
+			<property name="mass">
+				<real>1.0</real>
+			</property>
 			<property name="pseudofile">
 				<string>Fe.pz-nd-rrkjus.UPF</string>
 			</property>
@@ -580,7 +604,10 @@ FeO Wustite whithin LDA+U with user-defined ns initial matrices -->
 				<real>1.d0</real>
 			</property>
 		</specie>
-		<specie name="Fe2" mass="1.0">			
+		<specie name="Fe2">
+			<property name="mass">
+				<real>1.0</real>
+			</property>
 			<property name="pseudofile">
 				<string>Fe.pz-nd-rrkjus.UPF</string>
 			</property>
@@ -802,7 +829,10 @@ FeO Wustite whithin LDA+U with user defined ns + Wannier -->
 	</cell>
 
 	<atomic_species ntyp="3">
-		<specie name="O1" mass="1.0">			
+		<specie name="O1">
+			<property name="mass">
+				<real>1.0</real>
+			</property>
 			<property name="pseudofile">
 				<string>O.pz-rrkjus.UPF</string>
 			</property>
@@ -810,7 +840,10 @@ FeO Wustite whithin LDA+U with user defined ns + Wannier -->
 				<real>0.0</real>
 			</property>				
 		</specie>
-		<specie name="Fe1" mass="1.0">			
+		<specie name="Fe1">
+			<property name="mass">
+				<real>1.0</real>
+			</property>
 			<property name="pseudofile">
 				<string>Fe.pz-nd-rrkjus.UPF</string>
 			</property>
@@ -824,7 +857,10 @@ FeO Wustite whithin LDA+U with user defined ns + Wannier -->
 				<real>1.d0</real>
 			</property>	
 		</specie>
-		<specie name="Fe2" mass="1.0">			
+		<specie name="Fe2">
+			<property name="mass">
+				<real>1.0</real>
+			</property>
 			<property name="pseudofile">
 				<string>Fe.pz-nd-rrkjus.UPF</string>
 			</property>

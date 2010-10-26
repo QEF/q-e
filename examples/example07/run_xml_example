@@ -108,7 +108,10 @@ cat > al.scf.fit.xml << EOF
 	</cell>
 
 	<atomic_species ntyp="1">
-		<specie name="Al" mass="26.98">
+		<specie name="Al">
+			<property name="mass">
+				<real>26.98</real>
+			</property>
 			<property name="pseudofile">
 				<string>Al.pz-vbc.UPF</string>
 			</property>
@@ -229,7 +232,10 @@ cat > al.scf.xml << EOF
 	</cell>
 
 	<atomic_species ntyp="1">
-		<specie name="Al" mass="26.98">
+		<specie name="Al">
+			<property name="mass">
+				<real>26.98</real>
+			</property>
 			<property name="pseudofile">
 				<string>Al.pz-vbc.UPF</string>
 			</property>

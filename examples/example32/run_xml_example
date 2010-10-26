@@ -1,5 +1,11 @@
 #!/bin/sh
 
+###############################################################################
+##
+##  HIGH VERBOSITY EXAMPLE
+##
+###############################################################################
+
 # run from directory where this script is
 cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
 EXAMPLE_DIR=`pwd`
@@ -13,15 +19,17 @@ if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
 $ECHO
 $ECHO "$EXAMPLE_DIR : starting"
 $ECHO
-$ECHO "This example shows how to use pw.x to perform molecular dynamics for"
-$ECHO "2- and 8-atom cells of Si starting with compressed bonds along (111)."
+$ECHO "This example tests ph.x with PAW"
+$ECHO "It calculates the phonon modes of C at the gamma and X points"
+$ECHO "and the vibrational modes of a molecule (CH4) at Gamma."
+$ECHO
 
 # set the needed environment variables
 . ../environment_variables
 
 # required executables and pseudopotentials
-BIN_LIST="pw.x"
-PSEUDO_LIST="Si.pz-vbc.UPF"
+BIN_LIST="pw.x ph.x"
+PSEUDO_LIST="H.lda-paw_kj.UPF C.lda-paw_kj.UPF"
 
 $ECHO
 $ECHO "  executables directory: $BIN_DIR"
@@ -68,8 +76,10 @@ $ECHO " done"
 
 # how to run executables
 PW_COMMAND="$PARA_PREFIX $BIN_DIR/pw.x $PARA_POSTFIX"
+PH_COMMAND="$PARA_PREFIX $BIN_DIR/ph.x $PARA_POSTFIX"
 $ECHO
-$ECHO "  running pw.x as: $PW_COMMAND"
+$ECHO "  running pw.x     as: $PW_COMMAND"
+$ECHO "  running ph.x     as: $PH_COMMAND"
 $ECHO
 
 # clean TMP_DIR
@@ -77,14 +87,15 @@ $ECHO "  cleaning $TMP_DIR...\c"
 rm -rf $TMP_DIR/*
 $ECHO " done"
 
-# MD in a 2-atom cell
-cat > si.md2.xml << EOF
+# self-consistent calculation for C with PAW-PP
+cat > c.scf.xml << EOF
 <?xml version="1.0" encoding="UTF-8"?>
 
-<input calculation="md">
+
+<input calculation="scf" prefix="C">
 
 	<cell type="qecell">
-		<qecell ibrav="2" alat="10.18">
+		<qecell ibrav="2" alat="6.68">
 			<real rank="1" n1="5">
 				0.0 0.0 0.0 0.0 0.0
 			</real>
@@ -92,217 +103,31 @@ cat > si.md2.xml << EOF
 	</cell>
 
 	<atomic_species ntyp="1">
-		<specie name="Si">
+		<specie name="C">
 			<property name="mass">
-				<real>28.086</real>
+				<real>0.0</real>
 			</property>
 			<property name="pseudofile">
-				<string>Si.pz-vbc.UPF</string>
+				<string>C.lda-paw_kj.UPF</string>
 			</property>
 		</specie>
 	</atomic_species>
 
 	<atomic_list units="alat" nat="2" >
-		<atom name="Si">
+		<atom name="C">
 			<position>
 				<real rank="1" n1="3">
-					-0.123 -0.123 -0.123
+					0.00 0.00 0.00
 				</real>
 			</position>
 		</atom>	
-		<atom name="Si">
+		<atom name="C">
 			<position>
 				<real rank="1" n1="3">
-					0.123  0.123  0.123
+					0.25 0.25 0.25
 				</real>
 			</position>
-		</atom>						
-	</atomic_list>
-	
-	
-	<field name="InputOutput">
-
-		<parameter name="restart_mode">
-			<string>
-				from_scratch
-			</string>
-		</parameter>
-		
-		<parameter name="pseudo_dir">
-			<string>
-				$PSEUDO_DIR/
-			</string>
-		</parameter>
-		
-		<parameter name="outdir">
-			<string>
-				$TMP_DIR/
-			</string>
-		</parameter>
-		<parameter name="disk_io">
-			<string>
-				high
-			</string>
-		</parameter>
-				
-	</field>
-	
-	<field name="Numerics">
-
-		<parameter name="ecutwfc">
-			<real>
-				8.0
-			</real>
-		</parameter>
-		
-		<parameter name="nosym">
-			<logical>
-				true
-			</logical>
-		</parameter>
-		
-		<parameter name="mixing_beta">
-			<real>
-				0.7
-			</real>
-		</parameter>
-		
-		<parameter name="conv_thr">
-			<real>
-				1.0d-8
-			</real>
-		</parameter>
-		
-	</field>	
-	
-	<field name="MD">
-
-		<parameter name="dt">
-			<real>
-				20.0
-			</real>
-		</parameter>
-		<parameter name="nstep">
-			<integer>
-				100				
-			</integer>
-		</parameter>
-		<parameter name="pot_extrapolation">
-			<string>
-				second-order
-			</string>
-		</parameter>			
-		<parameter name="wfc_extrapolation">
-			<string>
-				second-order
-			</string>
-		</parameter>		
-	
-	</field>
-	
-	<k_points type="automatic">
-		<mesh>
-			<integer rank="1" n1="6">
-				1 1 1 0 0 0
-			</integer>
-		</mesh> 
-	</k_points>
-</input>
-EOF
-$ECHO "  running the MD calculation for Si in a 2 atom cell. G-point...\c"
-$PW_COMMAND -xmlinput si.md2.xml > si.md2.out
-check_failure $?
-$ECHO " done"
-
-awk '/Ekin/{ek=$3;et=$11; print it,time,ek,u,et}/Dynamics/{it=$5;time=$8}/^\!/{u=$5}' si.md2.out > MD2
-
-# clean TMP_DIR
-$ECHO "  cleaning $TMP_DIR...\c"
-rm -rf $TMP_DIR/*
-$ECHO " done"
-
-# MD in a 8-atom cell
-cat > si.md8.xml << EOF
-<?xml version="1.0" encoding="UTF-8"?>
-
-<input calculation="md">
-
-	<cell type="qecell">
-		<qecell ibrav="1" alat="10.18">
-			<real rank="1" n1="5">
-				0.0 0.0 0.0 0.0 0.0
-			</real>
-		</qecell>
-	</cell>
-
-	<atomic_species ntyp="1">
-		<specie name="Si">
-			<property name="mass">
-				<real>28.086</real>
-			</property>
-			<property name="pseudofile">
-				<string>Si.pz-vbc.UPF</string>
-			</property>
-		</specie>
-	</atomic_species>
-
-	<atomic_list units="alat" nat="8" >
-		<atom name="Si">
-			<position>
-				<real rank="1" n1="3">
-					-0.123 -0.123 -0.123
-				</real>
-			</position>
-		</atom>	
-		<atom name="Si">
-			<position>
-				<real rank="1" n1="3">
-					0.377  0.377 -0.123
-				</real>
-			</position>
-		</atom>	
-		<atom name="Si">
-			<position>
-				<real rank="1" n1="3">
-					0.377 -0.123  0.377
-				</real>
-			</position>
-		</atom>	
-		<atom name="Si">
-			<position>
-				<real rank="1" n1="3">
-					-0.123  0.377  0.377
-				</real>
-			</position>
-		</atom>	
-		<atom name="Si">
-			<position>
-				<real rank="1" n1="3">
-					0.123  0.123  0.123
-				</real>
-			</position>
-		</atom>	
-		<atom name="Si">
-			<position>
-				<real rank="1" n1="3">
-					0.623  0.623  0.123
-				</real>
-			</position>
-		</atom>	
-		<atom name="Si">
-			<position>
-				<real rank="1" n1="3">
-					0.623  0.123  0.623
-				</real>
-			</position>
-		</atom>	
-		<atom name="Si">
-			<position>
-				<real rank="1" n1="3">
-					0.123  0.623  0.623
-				</real>
-			</position>
-		</atom>						
+		</atom>		
 	</atomic_list>		
 	
 	
@@ -313,7 +138,7 @@ cat > si.md8.xml << EOF
 				from_scratch
 			</string>
 		</parameter>
-		
+
 		<parameter name="pseudo_dir">
 			<string>
 				$PSEUDO_DIR/
@@ -325,26 +150,45 @@ cat > si.md8.xml << EOF
 				$TMP_DIR/
 			</string>
 		</parameter>
-		<parameter name="disk_io">
-			<string>
-				high
-			</string>
-		</parameter>
-				
+		
 	</field>
 	
 	<field name="Numerics">
 
 		<parameter name="ecutwfc">
 			<real>
-				8.0
+				27.0
 			</real>
 		</parameter>
 		
-		<parameter name="nosym">
-			<logical>
-				true
-			</logical>
+		<parameter name="ecutrho">
+			<real>
+				300.0
+			</real>
+		</parameter>
+		
+		<parameter name="conv_thr">
+			<real>
+				1.0d-9
+			</real>
+		</parameter>
+		
+		<parameter name="nr1">
+			<integer>
+				32
+			</integer>
+		</parameter>
+		
+		<parameter name="nr2">
+			<integer>
+				32
+			</integer>
+		</parameter>
+		
+		<parameter name="nr3">
+			<integer>
+				32
+			</integer>
 		</parameter>
 		
 		<parameter name="mixing_beta">
@@ -352,69 +196,66 @@ cat > si.md8.xml << EOF
 				0.7
 			</real>
 		</parameter>
-		
-		<parameter name="conv_thr">
-			<real>
-				1.0d-8
-			</real>
-		</parameter>
-		
-	</field>	
-	
-	<field name="MD">
-
-		<parameter name="dt">
-			<real>
-				20.0
-			</real>
-		</parameter>
-		<parameter name="nstep">
-			<integer>
-				100				
-			</integer>
-		</parameter>
-		<parameter name="pot_extrapolation">
-			<string>
-				second-order
-			</string>
-		</parameter>			
-		<parameter name="wfc_extrapolation">
-			<string>
-				second-order
-			</string>
-		</parameter>		
 	
 	</field>
 	
 	<k_points type="automatic">
 		<mesh>
 			<integer rank="1" n1="6">
-				1 1 1 0 0 0
+				4 4 4 1 1 1
 			</integer>
-		</mesh> 
+		</mesh>
 	</k_points>
 </input>
 EOF
-$ECHO "  running the MD calculation for Si in a 8 atom cell. G-point...\c"
-$PW_COMMAND -xmlinput si.md8.xml > si.md8.out
+$ECHO "  running the scf calculation for C...\c"
+$PW_COMMAND -xmlinput c.scf.xml > c.scf.out
 check_failure $?
 $ECHO " done"
 
-awk '/Ekin/{ek=$3;et=$11; print it,time,ek,u,et}/Dynamics/{it=$5;time=$8}/^\!/{u=$5}' si.md8.out > MD8
-
-# clean TMP_DIR
-$ECHO "  cleaning $TMP_DIR...\c"
-rm -rf $TMP_DIR/*
+# phonon calculation at G
+cat > c.phG.in << EOF
+phonons of C at Gamma
+ &inputph
+  tr2_ph=1.0d-14,
+  epsil=.true.,
+  zue=.true.
+  prefix='C',
+  fildyn='Cg.dyn',
+  outdir='$TMP_DIR/'
+ /
+0.0 0.0 0.0
+EOF
+$ECHO "  running the phonon calculation for C at Gamma...\c"
+$PH_COMMAND < c.phG.in > c.phG.out
+check_failure $?
 $ECHO " done"
 
-# MD in a 2-atom cell. Gamma+3X
-cat > si.md2_G3X.xml << EOF
+# phonon calculation at X
+cat > c.phX.in << EOF
+phonons of C at X
+ &inputph
+  tr2_ph=1.0d-14,
+  prefix='C',
+  fildyn='CX.dyn',
+  outdir='$TMP_DIR/'
+ /
+1.0 0.0 0.0
+EOF
+$ECHO "  running the phonon calculation for C at X...\c"
+$PH_COMMAND < c.phX.in > c.phX.out
+check_failure $?
+$ECHO " done"
+
+# self-consistent calculation for Cu PBE with PAW-PP
+cat > Cu.scf_pbe.xml << EOF
 <?xml version="1.0" encoding="UTF-8"?>
 
-<input calculation="md">
+
+<input calculation="scf" prefix="Cu">
 
 	<cell type="qecell">
-		<qecell ibrav="2" alat="10.18">
+		<qecell ibrav="2" alat="6.90">
 			<real rank="1" n1="5">
 				0.0 0.0 0.0 0.0 0.0
 			</real>
@@ -422,32 +263,204 @@ cat > si.md2_G3X.xml << EOF
 	</cell>
 
 	<atomic_species ntyp="1">
-		<specie name="Si">
+		<specie name="Cu">
 			<property name="mass">
-				<real>28.086</real>
+				<real>0.0</real>
 			</property>
 			<property name="pseudofile">
-				<string>Si.pz-vbc.UPF</string>
+				<string>Cu.pbe-paw_kj.UPF</string>
 			</property>
 		</specie>
 	</atomic_species>
 
-	<atomic_list units="alat" nat="2" >
-		<atom name="Si">
+	<atomic_list units="alat" nat="1" >
+		<atom name="Cu">
 			<position>
 				<real rank="1" n1="3">
-					-0.123 -0.123 -0.123
+					0.00 0.00 0.00
+				</real>
+			</position>
+		</atom>		
+	</atomic_list>		
+	
+	
+	<field name="InputOutput">
+
+		<parameter name="restart_mode">
+			<string>
+				from_scratch
+			</string>
+		</parameter>
+
+		<parameter name="pseudo_dir">
+			<string>
+				$PSEUDO_DIR/
+			</string>
+		</parameter>
+		
+		<parameter name="outdir">
+			<string>
+				$TMP_DIR/
+			</string>
+		</parameter>
+		
+	</field>
+	
+	<field name="Numerics">
+
+		<parameter name="ecutwfc">
+			<real>
+				30.0
+			</real>
+		</parameter>
+		
+		<parameter name="ecutrho">
+			<real>
+				700.0
+			</real>
+		</parameter>
+		
+		<parameter name="conv_thr">
+			<real>
+				1.0d-9
+			</real>
+		</parameter>
+		
+		<parameter name="mixing_beta">
+			<real>
+				0.7
+			</real>
+		</parameter>
+	
+	</field>
+	
+	<field name="Options">
+
+		<parameter name="occupations">
+			<string>
+				smearing
+			</string>
+		</parameter>
+		
+		<parameter name="smearing">
+			<string>
+				mp
+			</string>
+		</parameter>
+		
+		<parameter name="degauss">
+			<real>
+				0.01
+			</real>
+		</parameter>		
+	
+	</field>		
+
+	
+	<k_points type="automatic">
+		<mesh>
+			<integer rank="1" n1="6">
+				 4 4 4 1 1 1
+			</integer>
+		</mesh>
+	</k_points>
+</input>
+EOF
+$ECHO "  running the scf calculation for Cu with GGA-PBE...\c"
+$PW_COMMAND -xmlinput Cu.scf_pbe.xml > Cu.scf_pbe.out
+check_failure $?
+$ECHO " done"
+
+# phonon calculation at G
+cat > Cu.phG_pbe.in << EOF
+phonons of Cu at Gamma
+ &inputph
+  tr2_ph=1.0d-14,
+  prefix='Cu',
+  fildyn='Cug.dyn',
+  outdir='$TMP_DIR/'
+ /
+0.0 0.0 0.0
+EOF
+$ECHO "  running the phonon calculation for Cu at Gamma with GGA-PBE...\c"
+$PH_COMMAND < Cu.phG_pbe.in > Cu.phG_pbe.out
+check_failure $?
+$ECHO " done"
+
+
+# Self consistent calculation for CH4
+cat > ch4.scf.xml << EOF
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- ch4
+ch4 molecule in a cubic box -->
+
+<input calculation="scf" prefix="ch4">
+
+	<cell type="qecell">
+		<qecell ibrav="1" alat="15.0">
+			<real rank="1" n1="5">
+				0.0 0.0 0.0 0.0 0.0
+			</real>
+		</qecell>
+	</cell>
+
+	<atomic_species ntyp="2">
+		<specie name="H">
+			<property name="mass">
+				<real>1.0</real>
+			</property>
+			<property name="pseudofile">
+				<string>H.lda-paw_kj.UPF</string>
+			</property>
+		</specie>
+		<specie name="C">
+			<property name="mass">
+				<real>12.0</real>
+			</property>
+			<property name="pseudofile">
+				<string>C.lda-paw_kj.UPF</string>
+			</property>
+		</specie>
+	</atomic_species>
+
+	<atomic_list units="alat" nat="5" >
+		<atom name="H">
+			<position>
+				<real rank="1" n1="3">
+					0.080728893   0.080728893   0.080728893
 				</real>
 			</position>
 		</atom>	
-		<atom name="Si">
+		<atom name="H">
 			<position>
 				<real rank="1" n1="3">
-					0.123  0.123  0.123
+					-0.080728893  -0.080728893   0.080728893
+				</real>
+			</position>
+		</atom>	
+		<atom name="H">
+			<position>
+				<real rank="1" n1="3">
+					0.080728893  -0.080728893  -0.080728893
+				</real>
+			</position>
+		</atom>	
+		<atom name="H">
+			<position>
+				<real rank="1" n1="3">
+					-0.080728893   0.080728893  -0.080728893
+				</real>
+			</position>
+		</atom>	
+		<atom name="C">
+			<position>
+				<real rank="1" n1="3">
+					0.000000000   0.000000000   0.0000000000
 				</real>
 			</position>
 		</atom>						
-	</atomic_list>				
+	</atomic_list>	
 	
 	
 	<field name="InputOutput">
@@ -469,86 +482,78 @@ cat > si.md2_G3X.xml << EOF
 				$TMP_DIR/
 			</string>
 		</parameter>
-		<parameter name="disk_io">
-			<string>
-				high
-			</string>
-		</parameter>
-				
+		
+		<parameter name="tprnfor">
+			<logical>
+				true
+			</logical>
+		</parameter>			
+					
 	</field>
 	
 	<field name="Numerics">
 
 		<parameter name="ecutwfc">
 			<real>
-				8.0
+				25.0
 			</real>
 		</parameter>
 		
-		<parameter name="nosym">
-			<logical>
-				true
-			</logical>
+		<parameter name="ecutrho">
+			<real>
+				300.0
+			</real>
 		</parameter>
 		
 		<parameter name="mixing_beta">
 			<real>
-				0.7
+				0.5
 			</real>
 		</parameter>
 		
 		<parameter name="conv_thr">
 			<real>
-				1.0d-8
+				1.0d-10
 			</real>
 		</parameter>
 		
-	</field>	
-	
-	<field name="MD">
-
-		<parameter name="dt">
-			<real>
-				20.0
-			</real>
-		</parameter>
-		<parameter name="nstep">
-			<integer>
-				100				
-			</integer>
-		</parameter>
-		<parameter name="pot_extrapolation">
-			<string>
-				second-order
-			</string>
-		</parameter>			
-		<parameter name="wfc_extrapolation">
-			<string>
-				second-order
-			</string>
-		</parameter>		
-	
 	</field>
 	
 	<k_points type="tpiba">
-		<mesh npoints="4">
-			<real rank="2" n1="4" n2="4">
-				   	 0.0 0.0 0.0 1.0
-					 1.0 0.0 0.0 1.0
-					 0.0 1.0 0.0 1.0
-					 0.0 0.0 1.0 1.0
+		<mesh npoints="1">
+			<real rank="2" n1="4" n2="1">
+				  	0.0 0.0 0.0 1.0
 			</real>
 		</mesh>
 	</k_points>
 </input>
 EOF
-$ECHO "  running the MD calculation for Si in a 2 atom cell. G3X-points...\c"
-$PW_COMMAND -xmlinput si.md2_G3X.xml > si.md2_G3X.out
+$ECHO "  running the scf calculation for CH4...\c"
+$PW_COMMAND -xmlinput ch4.scf.xml > ch4.scf.out
 check_failure $?
 $ECHO " done"
 
-awk '/Ekin/{ek=$3;et=$11; print it,time,ek,u,et} \
-     /Dynamics/{it=$5;time=$8}/^\!/{u=$5}' si.md2_G3X.out > MD2_G3X
+# normal mode calculation for CH4
+cat > ch4.nm.in << EOF
+vibrations of ch4
+ &inputph
+  tr2_ph=4.0d-17,
+  prefix='ch4',
+  outdir='$TMP_DIR',
+  amass(1)=1.d0,
+  amass(2)=12.d0,
+  asr=.true.,
+  zue=.true.,
+  epsil=.true.,
+  trans=.true.,
+  fildyn='ch4.dyn',
+ /
+0.0 0.0 0.0
+EOF
+$ECHO "  running normal mode calculation for CH4...\c"
+$PH_COMMAND < ch4.nm.in > ch4.nm.out
+check_failure $?
+$ECHO " done"
 
 $ECHO
 $ECHO "$EXAMPLE_DIR: done"

@@ -93,7 +93,10 @@ cat >  sio2.cp.start.xml << EOF
 	</cell>
 
 	<atomic_species ntyp="2">
-		<specie name="O" mass="16.00">
+		<specie name="O">
+			<property name="mass">
+				<real>16.00</real>
+			</property>
 			<property name="pseudofile">
 				<string>O.pz-rrkjus.UPF</string>
 			</property>
@@ -101,7 +104,10 @@ cat >  sio2.cp.start.xml << EOF
 				<real>1.0</real>
 			</property>
 		</specie>
-		<specie name="Si" mass="28.00">
+		<specie name="Si">
+			<property name="mass">
+				<real>28.00</real>
+			</property>
 			<property name="pseudofile">
 				<string>Si.pz-vbc.UPF</string>
 			</property>
@@ -442,7 +448,10 @@ cat > sio2.cp.restart.xml << EOF
 	</cell>
 
 	<atomic_species ntyp="2">
-		<specie name="O" mass="16.00">
+		<specie name="O">
+			<property name="mass">
+				<real>16.00</real>
+			</property>
 			<property name="pseudofile">
 				<string>O.pz-rrkjus.UPF</string>
 			</property>
@@ -450,7 +459,10 @@ cat > sio2.cp.restart.xml << EOF
 				<real>1.0</real>
 			</property>
 		</specie>
-		<specie name="Si" mass="28.00">
+		<specie name="Si">
+			<property name="mass">
+				<real>28.00</real>
+			</property>
 			<property name="pseudofile">
 				<string>Si.pz-vbc.UPF</string>
 			</property>
@@ -779,7 +791,10 @@ cat > sio2.vc-cp.xml << EOF
 	</cell>
 
 	<atomic_species ntyp="2">
-		<specie name="O" mass="16.00">
+		<specie name="O">
+			<property name="mass">
+				<real>16.00</real>
+			</property>
 			<property name="pseudofile">
 				<string>O.pz-rrkjus.UPF</string>
 			</property>
@@ -787,7 +802,10 @@ cat > sio2.vc-cp.xml << EOF
 				<real>1.0</real>
 			</property>
 		</specie>
-		<specie name="Si" mass="28.00">
+		<specie name="Si">
+			<property name="mass">
+				<real>28.00</real>
+			</property>
 			<property name="pseudofile">
 				<string>Si.pz-vbc.UPF</string>
 			</property>
@@ -1173,7 +1191,10 @@ cat > sio2.vc-cp.restart.xml << EOF
 	</cell>
 
 	<atomic_species ntyp="2">
-		<specie name="O" mass="16.00">
+		<specie name="O">
+			<property name="mass">
+				<real>16.00</real>
+			</property>
 			<property name="pseudofile">
 				<string>O.pz-rrkjus.UPF</string>
 			</property>
@@ -1181,7 +1202,10 @@ cat > sio2.vc-cp.restart.xml << EOF
 				<real>1.0</real>
 			</property>
 		</specie>
-		<specie name="Si" mass="28.00">
+		<specie name="Si">
+			<property name="mass">
+				<real>28.00</real>
+			</property>
 			<property name="pseudofile">
 				<string>Si.pz-vbc.UPF</string>
 			</property>

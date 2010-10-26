@@ -97,7 +97,10 @@ cat > si2.ensemble-dyn.xml << EOF
 	</cell>
 
 	<atomic_species ntyp="1">
-		<specie name="Si" mass="28.086">
+		<specie name="Si">
+			<property name="mass">
+				<real>28.086</real>
+			</property>
 			<property name="pseudofile">
 				<string>Si.pbe-rrkj.UPF</string>
 			</property>

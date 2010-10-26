@@ -99,12 +99,18 @@ cat > alas.scf.xml << EOF
 	</cell>
 
 	<atomic_species ntyp="2">
-		<specie name="Al" mass="26.98">
+		<specie name="Al">
+			<property name="mass">
+				<real>26.98</real>
+			</property>
 			<property name="pseudofile">
 				<string>Al.pz-vbc.UPF</string>
 			</property>
 		</specie>
-		<specie name="As" mass="74.92">
+		<specie name="As">
+			<property name="mass">
+				<real>74.92</real>
+			</property>
 			<property name="pseudofile">
 				<string>As.pz-bhs.UPF</string>
 			</property>

@@ -97,7 +97,10 @@ Iron -->
 	</cell>
 
 	<atomic_species ntyp="1">
-		<specie name="Fe" mass="55.847">
+		<specie name="Fe">
+			<property name="mass">
+				<real>55.847</real>
+			</property>
 			<property name="pseudofile">
 				<string>Fe.pz-nd-rrkjus.UPF</string>
 			</property>
@@ -251,7 +254,10 @@ Iron -->
 	</cell>
 
 	<atomic_species ntyp="1">
-		<specie name="Fe" mass="55.847">			
+		<specie name="Fe">
+			<property name="mass">
+				<real>55.847</real>
+			</property>
 			<property name="pseudofile">
 				<string>Fe.pz-nd-rrkjus.UPF</string>
 			</property>
@@ -406,7 +412,10 @@ cat > fe.pen.xml << EOF
 	</cell>
 
 	<atomic_species ntyp="1">
-		<specie name="Fe" mass="55.847">			
+		<specie name="Fe">
+			<property name="mass">
+				<real>55.847</real>
+			</property>
 			<property name="pseudofile">
 				<string>Fe.pz-nd-rrkjus.UPF</string>
 			</property>
@@ -572,7 +581,10 @@ cat > fe.angl.xml << EOF
 	</cell>
 
 	<atomic_species ntyp="1">
-		<specie name="Fe" mass="55.847">			
+		<specie name="Fe">
+			<property name="mass">
+				<real>55.847</real>
+			</property>
 			<property name="pseudofile">
 				<string>Fe.pz-nd-rrkjus.UPF</string>
 			</property>
@@ -743,7 +755,10 @@ cat > fe.total.xml << EOF
 	</cell>
 
 	<atomic_species ntyp="1">
-		<specie name="Fe" mass="55.847">
+		<specie name="Fe">
+			<property name="mass">
+				<real>55.847</real>
+			</property>
 			<property name="pseudofile">
 				<string>Fe.pz-nd-rrkjus.UPF</string>
 			</property>
@@ -911,7 +926,10 @@ cat > cu.scf.xml << EOF
 	</cell>
 
 	<atomic_species ntyp="1">
-		<specie name="Cu" mass="63.55">			
+		<specie name="Cu">
+			<property name="mass">
+				<real>63.55</real>
+			</property>
 			<property name="pseudofile">
 				<string>Cu.pz-d-rrkjus.UPF</string>
 			</property>
@@ -1046,7 +1064,10 @@ cat > cu.band.xml << EOF
 	</cell>
 
 	<atomic_species ntyp="1">
-		<specie name="Cu" mass="63.55">
+		<specie name="Cu">
+			<property name="mass">
+				<real>63.55</real>
+			</property>
 			<property name="pseudofile">
 				<string>Cu.pz-d-rrkjus.UPF</string>
 			</property>
@@ -1183,7 +1204,10 @@ cat > cu.cg.xml << EOF
 	</cell>
 
 	<atomic_species ntyp="1">
-		<specie name="Cu" mass="63.55">			
+		<specie name="Cu">
+			<property name="mass">
+				<real>63.55</real>
+			</property>
 			<property name="pseudofile">
 				<string>Cu.pz-d-rrkjus.UPF</string>
 			</property>
@@ -1329,7 +1353,10 @@ cat > cu.diis.xml << EOF
 	</cell>
 
 	<atomic_species ntyp="1">
-		<specie name="Cu" mass="63.55">
+		<specie name="Cu">
+			<property name="mass">
+				<real>63.55</real>
+			</property>
 			<property name="pseudofile">
 				<string>Cu.pz-d-rrkjus.UPF</string>
 			</property>
@@ -1474,7 +1501,10 @@ cat > ni.scf.xml << EOF
 	</cell>
 
 	<atomic_species ntyp="1">
-		<specie name="Ni" mass="58.69">
+		<specie name="Ni">
+			<property name="mass">
+				<real>58.69</real>
+			</property>
 			<property name="pseudofile">
 				<string>Ni.pbe-nd-rrkjus.UPF</string>
 			</property>
@@ -1667,7 +1697,10 @@ cat > ni.band.xml << EOF
 	</cell>
 
 	<atomic_species ntyp="1">
-		<specie name="Ni" mass="58.69">			
+		<specie name="Ni">
+			<property name="mass">
+				<real>58.69</real>
+			</property>
 			<property name="pseudofile">
 				<string>Ni.pbe-nd-rrkjus.UPF</string>
 			</property>
@@ -1804,7 +1837,10 @@ cat > o2.relax.xml << EOF
 	</cell>
 
 	<atomic_species ntyp="2">
-		<specie name="O1" mass="16.0">			
+		<specie name="O1">
+			<property name="mass">
+				<real>16.0</real>
+			</property>
 			<property name="pseudofile">
 				<string>O.pbe-rrkjus.UPF</string>
 			</property>
@@ -1818,7 +1854,10 @@ cat > o2.relax.xml << EOF
 				<real>0.0</real>
 			</property>
 		</specie>
-		<specie name="O2" mass="16.0">
+		<specie name="O2">
+			<property name="mass">
+				<real>16.0</real>
+			</property>
 			<property name="pseudofile">
 				<string>O.pbe-rrkjus.UPF</string>
 			</property>

@@ -97,7 +97,10 @@ for diago in david cg ; do
 	</cell>
 
 	<atomic_species ntyp="1">
-		<specie name="Si" mass="28.086">
+		<specie name="Si">
+			<property name="mass">
+				<real>28.086</real>
+			</property>
 			<property name="pseudofile">
 				<string>Si.pz-vbc.UPF</string>
 			</property>
@@ -229,7 +232,10 @@ EOF
 	</cell>
 
 	<atomic_species ntyp="1">
-		<specie name="Si" mass="28.086">
+		<specie name="Si">
+			<property name="mass">
+				<real>28.086</real>
+			</property>
 			<property name="pseudofile">
 				<string>Si.pz-vbc.UPF</string>
 			</property>
@@ -374,7 +380,10 @@ EOF
 	</cell>
 
 	<atomic_species ntyp="1">
-		<specie name="Al" mass="26.98">
+		<specie name="Al">
+			<property name="mass">
+				<real>26.98</real>
+			</property>
 			<property name="pseudofile">
 				<string>Al.pz-vbc.UPF</string>
 			</property>
@@ -559,7 +568,10 @@ EOF
 	</cell>
 
 	<atomic_species ntyp="1">
-		<specie name="Al" mass="26.98">
+		<specie name="Al">
+			<property name="mass">
+				<real>26.98</real>
+			</property>
 			<property name="pseudofile">
 				<string>Al.pz-vbc.UPF</string>
 			</property>
@@ -683,7 +695,10 @@ EOF
 	</cell>
 
 	<atomic_species ntyp="1">
-		<specie name="Cu" mass="63.55">
+		<specie name="Cu">
+			<property name="mass">
+				<real>63.55</real>
+			</property>
 			<property name="pseudofile">
 				<string>Cu.pz-d-rrkjus.UPF</string>
 			</property>
@@ -822,7 +837,10 @@ EOF
 	</cell>
 
 	<atomic_species ntyp="1">
-		<specie name="Cu" mass="63.55">
+		<specie name="Cu">
+			<property name="mass">
+				<real>63.55</real>
+			</property>
 			<property name="pseudofile">
 				<string>Cu.pz-d-rrkjus.UPF</string>
 			</property>
@@ -968,7 +986,10 @@ EOF
 	</cell>
 
 	<atomic_species ntyp="1">
-		<specie name="Ni" mass="58.69">
+		<specie name="Ni">
+			<property name="mass">
+				<real>58.69</real>
+			</property>
 			<property name="pseudofile">
 				<string>Ni.pz-nd-rrkjus.UPF</string>
 			</property>
@@ -1180,7 +1201,10 @@ EOF
 	</cell>
 
 	<atomic_species ntyp="1">		
-		<specie name="Ni" mass="58.69">
+		<specie name="Ni">
+			<property name="mass">
+				<real>58.69</real>
+			</property>
 			<property name="pseudofile">
 				<string>Ni.pz-nd-rrkjus.UPF</string>
 			</property>

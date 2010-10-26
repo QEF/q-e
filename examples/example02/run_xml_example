@@ -97,7 +97,10 @@ cat > si.scf.xml << EOF
 	</cell>
 
 	<atomic_species ntyp="1">
-		<specie name="Si" mass="28.086">
+		<specie name="Si">
+			<property name="mass">
+				<real>28.086</real>
+			</property>
 			<property name="pseudofile">
 				<string>Si.pz-vbc.UPF</string>
 			</property>
@@ -239,7 +242,10 @@ cat > si.scf.xml << EOF
 	</cell>
 
 	<atomic_species ntyp="1">
-		<specie name="Si" mass="28.086">
+		<specie name="Si">
+			<property name="mass">
+				<real>28.086</real>
+			</property>
 			<property name="pseudofile">
 				<string>Si.pz-vbc.UPF</string>
 			</property>
@@ -368,7 +374,10 @@ cat > c.scf.xml << EOF
 	</cell>
 
 	<atomic_species ntyp="1">
-		<specie name="C" mass="12.0107">
+		<specie name="C">
+			<property name="mass">
+				<real>12.0107</real>
+			</property>
 			<property name="pseudofile">
 				<string>C.pz-rrkjus.UPF</string>
 			</property>
@@ -510,7 +519,10 @@ cat > ni.scf.xml << EOF
 	</cell>
 
 	<atomic_species ntyp="1">
-		<specie name="Ni" mass="58.6934">
+		<specie name="Ni">
+			<property name="mass">
+				<real>58.6934</real>
+			</property>
 			<property name="pseudofile">
 				<string>Ni.pbe-nd-rrkjus.UPF</string>
 			</property>

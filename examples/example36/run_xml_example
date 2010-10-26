@@ -1,5 +1,11 @@
 #!/bin/sh
 
+###############################################################################
+##
+##  HIGH VERBOSITY EXAMPLE
+##
+###############################################################################
+
 # run from directory where this script is
 cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
 EXAMPLE_DIR=`pwd`
@@ -13,25 +19,22 @@ if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
 $ECHO
 $ECHO "$EXAMPLE_DIR : starting"
 $ECHO
-$ECHO "This example tests pw.x and ph.x in several cases that require "
-$ECHO "the noncollinear or the spin-orbit part of the code together "
-$ECHO "with the gga."
-$ECHO "ph.x is used to calculate the phonons at X and Gamma of fcc-Pt with gga,"
-$ECHO "and to calculate the phonons at X and Gamma of fcc-Ni to test" 
-$ECHO "the magnetic case with gga with or without spin-orbit "
+$ECHO "This example tests pw.x with PAW in the noncollinear, spin-orbit case."
+$ECHO "It calculates the band structure of ferromagnetic bcc-Fe,"
+$ECHO "and the phonon modes of relativistic Au at the gamma and X points" 
+$ECHO
 
 # set the needed environment variables
 . ../environment_variables
 
 # required executables and pseudopotentials
 BIN_LIST="pw.x ph.x"
-PSEUDO_LIST="Pt.rel-pbe-n-rrkjus.UPF Ni.rel-pbe-nd-rrkjus.UPF Ni.pbe-nd-rrkjus.UPF"
+PSEUDO_LIST="Fe.rel-pbe-paw_kj.UPF Au.rel-pz-paw_kj.UPF"
 
 $ECHO
 $ECHO "  executables directory: $BIN_DIR"
 $ECHO "  pseudo directory:      $PSEUDO_DIR"
 $ECHO "  temporary directory:   $TMP_DIR"
-$ECHO
 $ECHO "  checking that needed directories and files exist...\c"
 
 # check for directories
@@ -73,10 +76,12 @@ $ECHO " done"
 
 # how to run executables
 PW_COMMAND="$PARA_PREFIX $BIN_DIR/pw.x $PARA_POSTFIX"
+BAND_COMMAND="$PARA_PREFIX $BIN_DIR/bands.x $PARA_POSTFIX"
+PLOTBAND_COMMAND="$BIN_DIR/plotband.x"
 PH_COMMAND="$PARA_PREFIX $BIN_DIR/ph.x $PARA_POSTFIX"
 $ECHO
-$ECHO "  running pw.x as: $PW_COMMAND"
-$ECHO "  running ph.x as: $PH_COMMAND"
+$ECHO "  running pw.x     as: $PW_COMMAND"
+$ECHO "  running ph.x     as: $PH_COMMAND"
 $ECHO
 
 # clean TMP_DIR
@@ -84,17 +89,14 @@ $ECHO "  cleaning $TMP_DIR...\c"
 rm -rf $TMP_DIR/*
 $ECHO " done"
 
-
-# self-consistent calculation. This example demonstrates the use of spin-orbit
-# together with gga-pbe in the nonmagnetic case
-cat > pt.scf.xml << EOF
+# self-consistent calculation for Au with PAW-PP
+cat > Au.scf_pz.xml << EOF
 <?xml version="1.0" encoding="UTF-8"?>
 
-
-<input calculation="scf" prefix="Pt_pbe">
+<input calculation="scf" prefix="Au">
 
 	<cell type="qecell">
-		<qecell ibrav="2" alat="7.55">
+		<qecell ibrav="2" alat="7.666">
 			<real rank="1" n1="5">
 				0.0 0.0 0.0 0.0 0.0
 			</real>
@@ -102,21 +104,315 @@ cat > pt.scf.xml << EOF
 	</cell>
 
 	<atomic_species ntyp="1">
-		<specie name="Pt">
+		<specie name="Au">
 			<property name="mass">
 				<real>0.0</real>
 			</property>
 			<property name="pseudofile">
-				<string>Pt.rel-pbe-n-rrkjus.UPF</string>
-			</property>
-			<property name="starting_magnetization">
-				<real>0.0</real>
+				<string>Au.rel-pz-paw_kj.UPF</string>
 			</property>
 		</specie>
 	</atomic_species>
 
 	<atomic_list units="alat" nat="1" >
-		<atom name="Pt">
+		<atom name="Au">
+			<position>
+				<real rank="1" n1="3">
+					0.00 0.00 0.00
+				</real>
+			</position>
+		</atom>				
+	</atomic_list>		
+	
+	
+	<field name="InputOutput">
+
+		<parameter name="restart_mode">
+			<string>
+				from_scratch
+			</string>
+		</parameter>
+		
+		<parameter name="pseudo_dir">
+			<string>
+				$PSEUDO_DIR/
+			</string>
+		</parameter>
+		
+		<parameter name="outdir">
+			<string>
+				$TMP_DIR
+			</string>
+		</parameter>
+		
+	</field>
+	
+	<field name="Numerics">
+
+		<parameter name="ecutwfc">
+			<real>
+				35.0
+			</real>
+		</parameter>
+		
+		<parameter name="ecutrho">
+			<real>
+				300.0
+			</real>
+		</parameter>
+		
+		<parameter name="mixing_beta">
+			<real>
+				0.7
+			</real>
+		</parameter>
+		
+		<parameter name="conv_thr">
+			<real>
+				1.0d-9
+			</real>
+		</parameter>
+		
+	</field>
+	
+	<field name="Options">
+
+		<parameter name="occupations">
+			<string>
+				smearing
+			</string>
+		</parameter>
+		
+		<parameter name="smearing">
+			<string>
+				mp
+			</string>
+		</parameter>
+		
+		<parameter name="degauss">
+			<real>
+				0.04
+			</real>
+		</parameter>			
+		
+		<parameter name="noncolin">
+			<logical>
+				true
+			</logical>
+		</parameter>
+		
+		<parameter name="lspinorb">
+			<logical>
+				true
+			</logical>
+		</parameter>
+		
+	</field>	
+	
+	<k_points type="automatic">
+		<mesh>
+			<integer rank="1" n1="6">
+				4 4 4 1 1 1
+			</integer>
+		</mesh> 
+	</k_points>
+</input>
+EOF
+$ECHO "  running the scf calculation for Au with PAW and spin-orbit...\c"
+$PW_COMMAND -xmlinput Au.scf_pz.xml > Au.scf_pz.out
+check_failure $?
+$ECHO " done"
+
+# phonon calculation at G
+cat > Au.phG_pz.in << EOF
+phonons of Au at Gamma
+ &inputph
+  tr2_ph=1.0d-14,
+  prefix='Au',
+  fildyn='Aug.dyn',
+  outdir='$TMP_DIR/'
+ /
+0.0 0.0 0.0
+EOF
+$ECHO "  running ph.x for Au at Gamma with PAW and spin-orbit...\c"
+$PH_COMMAND < Au.phG_pz.in > Au.phG_pz.out
+check_failure $?
+$ECHO " done"
+
+# phonon calculation at X
+cat > Au.phX_pz.in << EOF
+phonons of Au at X
+ &inputph
+  tr2_ph=1.0d-14,
+  prefix='Au',
+  fildyn='AuX.dyn',
+  outdir='$TMP_DIR/'
+ /
+1.0 0.0 0.0
+EOF
+$ECHO "  running ph.x for Au at X with PAW and spin-orbit...\c"
+$PH_COMMAND < Au.phX_pz.in > Au.phX_pz.out
+check_failure $?
+$ECHO " done"
+
+# self-consistent calculation for bcc-Fe with fully relativistic PAW-PP
+cat > Fe.scf_pbe.xml << EOF
+<?xml version="1.0" encoding="UTF-8"?>
+
+
+<input calculation="scf" prefix="Fe">
+
+	<cell type="qecell">
+		<qecell ibrav="3" alat="5.42">
+			<real rank="1" n1="5">
+				0.0 0.0 0.0 0.0 0.0
+			</real>
+		</qecell>
+	</cell>
+
+	<atomic_species ntyp="1">
+		<specie name="Fe">
+			<property name="mass">
+				<real>0.0</real>
+			</property>
+			<property name="pseudofile">
+				<string>Fe.rel-pbe-paw_kj.UPF</string>
+			</property>
+			<property name="starting_magnetization">
+				<real>0.5</real>
+			</property>			
+		</specie>
+	</atomic_species>
+
+	<atomic_list units="alat" nat="1" >
+		<atom name="Fe">
+			<position>
+				<real rank="1" n1="3">
+					0.0000000   0.00000000   0.0  
+				</real>
+			</position>
+		</atom>						
+	</atomic_list>		
+	
+	
+	<field name="InputOutput">
+
+		<parameter name="pseudo_dir">
+			<string>
+			 $PSEUDO_DIR/
+			</string>
+		</parameter>
+		
+		<parameter name="outdir">
+			<string>
+			  $TMP_DIR/
+			</string>
+		</parameter>
+	
+	</field>
+	
+	<field name="Numerics">
+
+		<parameter name="ecutwfc">
+			<real>
+				45.0
+			</real>
+		</parameter>
+		
+		<parameter name="ecutrho">
+			<real>
+				300.0
+			</real>
+		</parameter>
+		
+		<parameter name="conv_thr">
+			<real>
+				1.0d-10
+			</real>
+		</parameter>
+		
+	</field>
+	
+	<field name="Options">
+
+		<parameter name="occupations">
+			<string>
+				smearing
+			</string>
+		</parameter>
+		
+		<parameter name="smearing">
+			<string>
+				mp
+			</string>
+		</parameter>
+		
+		<parameter name="degauss">
+			<real>
+				0.04
+			</real>
+		</parameter>			
+		
+		<parameter name="noncolin">
+			<logical>
+				true
+			</logical>
+		</parameter>
+		
+		<parameter name="lspinorb">
+			<logical>
+				true
+			</logical>
+		</parameter>
+		
+	</field>	
+	
+	<k_points type="automatic">
+		<mesh>
+			<integer rank="1" n1="6">
+				8 8 8 1 1 1 
+			</integer>
+		</mesh> 
+	</k_points>
+	
+</input>
+EOF
+$ECHO "  running the scf calculation for Fe with PAW spin-orbit...\c"
+$PW_COMMAND -xmlinput Fe.scf_pbe.xml > Fe.scf_pbe.out
+check_failure $?
+$ECHO " done"
+
+# self-consistent calculation for bcc-Fe with fully relativistic PAW-PP
+cat > Fe.band_pbe.xml << EOF
+<?xml version="1.0" encoding="UTF-8"?>
+
+
+<input calculation="bands" prefix="Fe">
+
+	<cell type="qecell">
+		<qecell ibrav="3" alat="5.42">
+			<real rank="1" n1="5">
+				0.0 0.0 0.0 0.0 0.0
+			</real>
+		</qecell>
+	</cell>
+
+	<atomic_species ntyp="1">
+		<specie name="Fe">
+			<property name="mass">
+				<real>0.0</real>
+			</property>
+			<property name="pseudofile">
+				<string>Fe.rel-pbe-paw_kj.UPF</string>
+			</property>
+			<property name="starting_magnetization">
+				<real>0.5</real>
+			</property>			
+		</specie>
+	</atomic_species>
+
+	<atomic_list units="alat" nat="1" >
+		<atom name="Fe">
 			<position>
 				<real rank="1" n1="3">
 					0.0000000   0.00000000   0.0
@@ -128,37 +424,25 @@ cat > pt.scf.xml << EOF
 	
 	<field name="InputOutput">
 
-		<parameter name="restart_mode">
-			<string>
-				from_scratch
-			</string>
-		</parameter>
-
 		<parameter name="pseudo_dir">
 			<string>
-				$PSEUDO_DIR/
+			 $PSEUDO_DIR/
 			</string>
 		</parameter>
 		
 		<parameter name="outdir">
 			<string>
-				$TMP_DIR/
+			  $TMP_DIR/
 			</string>
 		</parameter>
-		
-		<parameter name="tprnfor">
-			<logical>
-				true
-			</logical>
-		</parameter>
-		
+	
 	</field>
 	
 	<field name="Numerics">
 
 		<parameter name="ecutwfc">
 			<real>
-				30.0
+				45.0
 			</real>
 		</parameter>
 		
@@ -168,15 +452,9 @@ cat > pt.scf.xml << EOF
 			</real>
 		</parameter>
 		
-		<parameter name="mixing_beta">
-			<real>
-				0.7
-			</real>
-		</parameter>
-		
 		<parameter name="conv_thr">
 			<real>
-				1.0d-12
+				1.0d-10
 			</real>
 		</parameter>
 		
@@ -198,9 +476,9 @@ cat > pt.scf.xml << EOF
 		
 		<parameter name="degauss">
 			<real>
-				0.02
+				0.04
 			</real>
-		</parameter>
+		</parameter>			
 		
 		<parameter name="noncolin">
 			<logical>
@@ -216,421 +494,81 @@ cat > pt.scf.xml << EOF
 		
 	</field>	
 	
-	<k_points type="automatic">
-		<mesh>
-			<integer rank="1" n1="6">
-				2 2 2 1 1 1
-			</integer>
+	<k_points type="tpiba_b">
+		<mesh npoints="3">
+			<real rank="2" n1="4" n2="3">
+				    1.0 0.0 0.0 40.0
+				    0.0 0.0 0.0 40.0
+				    0.0 0.0 1.0 1.0
+			</real>
 		</mesh> 
 	</k_points>
-
 </input>
 EOF
-
-$ECHO "  running scf pw.x for Pt with gga-pbe and spin-orbit coupling...\c"
-$PW_COMMAND -xmlinput pt.scf.xml > pt.scf.out
+$ECHO "  running the band calculation for Fe with PAW and spin-orbit...\c"
+$PW_COMMAND -xmlinput Fe.band_pbe.xml > Fe.band_pbe.out
 check_failure $?
 $ECHO " done"
 
-# Phonon at gamma. This example demonstrates the use of spin-orbit
-# together with gga-pbe. Phonon at gamma.
-
-cat > pt.phG.in << EOF
-phonons of Pt at Gamma
- &inputph
-  prefix='Pt_pbe',
-  outdir='$TMP_DIR'
-  fildyn='ptdyn',
-  tr2_ph=1.0d-16,
+# self-consistent calculation for bcc-Fe with fully relativistic PAW-PP
+cat > Fe.bands.in << EOF
+ &inputpp
+    prefix='Fe',
+    outdir='$TMP_DIR/'
+    filband='fe.band'
+    lsym=.true.,
  /
-0.0 0.0 0.0
 EOF
-$ECHO "  running ph.x at Gamma for Pt with gga-pbe and spin-orbit coupling...\c"
-$PH_COMMAND < pt.phG.in > pt.phG.out
+$ECHO "  checking band symmetry of bcc-Fe with PAW and spin-orbit...\c"
+$BAND_COMMAND < Fe.bands.in > Fe.bands.out
 check_failure $?
 $ECHO " done"
 
-# Phonon at X. This example demonstrates the use of spin-orbit
-# together with gga-pbe. 
-
-cat > pt.phX.in << EOF
-phonons of Pt at X
- &inputph
-  prefix='Pt_pbe',
-  outdir='$TMP_DIR'
-  fildyn='ptdyn',
-  tr2_ph=1.0d-16,
- /
-1.0 0.0 0.0
+cat > plotband.in << EOF
+fe.band
+0 50
+ciao
 EOF
-$ECHO "  running ph.x at X for Pt with gga-pbe and spin-orbit coupling...\c"
-$PH_COMMAND < pt.phX.in > pt.phX.out
+$ECHO "  Plotting the bands...\c"
+$PLOTBAND_COMMAND < plotband.in > plotband.out
 check_failure $?
 $ECHO " done"
+
+cat > plot.gnu << EOF
+set encoding iso_8859_15
+set terminal postscript enhanced color "Helvetica" 24
+set output "gnuplot.ps"
 #
-# self-consistent calculation. This example demonstrates the use of the 
-# noncollinear calculation together with gga-pbe in the spin-polarized case. 
-#
-cat > ni.scf.xml << EOF
-<?xml version="1.0" encoding="UTF-8"?>
+set key off
 
-<input calculation="scf" prefix="ni">
-
-	<cell type="qecell">
-		<qecell ibrav="2" alat="6.65">
-			<real rank="1" n1="5">
-				0.0 0.0 0.0 0.0 0.0
-			</real>
-		</qecell>
-	</cell>
-
-	<atomic_species ntyp="1">
-		<specie name="Ni">
-			<property name="mass">
-				<real>0.0</real>
-			</property>
-			<property name="pseudofile">
-				<string>Ni.pbe-nd-rrkjus.UPF</string>
-			</property>
-			<property name="starting_magnetization">
-				<real>0.5</real>
-			</property>			
-			<property name="angle1">
-				<real>90.0</real>
-			</property>
-			<property name="angle2">
-				<real>90.0</real>
-			</property>
-		</specie>
-	</atomic_species>
-
-	<atomic_list units="alat" nat="1" >
-		<atom name="Ni">
-			<position>
-				<real rank="1" n1="3">
-					0.00 0.00 0.00
-				</real>
-			</position>
-		</atom>					
-	</atomic_list>		
-	
-	
-	<field name="InputOutput">
-
-		<parameter name="restart_mode">
-			<string>
-				from_scratch
-			</string>
-		</parameter>
-
-		<parameter name="pseudo_dir">
-			<string>
-				$PSEUDO_DIR/
-			</string>
-		</parameter>
-		
-		<parameter name="outdir">
-			<string>
-				$TMP_DIR/
-			</string>
-		</parameter>
-		
-		<parameter name="tprnfor">
-			<logical>
-				true
-			</logical>
-		</parameter>
-		
-	</field>
-	
-	<field name="Numerics">
-
-		<parameter name="ecutwfc">
-			<real>
-				27.0
-			</real>
-		</parameter>
-		
-		<parameter name="ecutrho">
-			<real>
-				300.0
-			</real>
-		</parameter>
-		
-		<parameter name="mixing_beta">
-			<real>
-				0.7
-			</real>
-		</parameter>
-		
-		<parameter name="conv_thr">
-			<real>
-				1.0d-12
-			</real>
-		</parameter>
-		
-	</field>
-	
-	<field name="Options">
-
-		<parameter name="occupations">
-			<string>
-				smearing
-			</string>
-		</parameter>
-		
-		<parameter name="smearing">
-			<string>
-				mp
-			</string>
-		</parameter>
-		
-		<parameter name="degauss">
-			<real>
-				0.02
-			</real>
-		</parameter>
-		
-		<parameter name="noncolin">
-			<logical>
-				true
-			</logical>
-		</parameter>
-		
-	</field>	
-	
-	<k_points type="automatic">
-		<mesh>
-			<integer rank="1" n1="6">
-				4 4 4 1 1 1
-			</integer>
-		</mesh> 
-	</k_points>
-</input>
-EOF
-$ECHO "  running scf pw.x for noncollinear Ni with gga-pbe...\c"
-$PW_COMMAND -xmlinput ni.scf.xml > ni.scf.out
-check_failure $?
-$ECHO " done"
-
-# The phonon at gamma 
-
-cat > ni.phG.in << EOF
-phonons of Ni at Gamma
- &inputph
-  tr2_ph=1.0d-16,
-  prefix='ni',
-  fildyn='niG.dyn',
-  outdir='$TMP_DIR'
- /
-0.0 0.0 0.0
-EOF
-$ECHO "  running ph.x at Gamma for noncollinear Ni with gga-pbe...\c"
-$PH_COMMAND < ni.phG.in > ni.phG.out
-check_failure $?
-$ECHO " done"
-
-# Phonon at X 
-
-cat > ni.phX.in << EOF
-phonons of Ni at X
- &inputph
-  tr2_ph=1.0d-16,
-  prefix='ni',
-  fildyn='nix.dyn',
-  outdir='$TMP_DIR/'
- /
-0.0 0.0 1.0
+set xrange [0:2]
+set yrange [-.5:0.5]
+set arrow from 1,-0.5 to 1,0.5 nohead lw 2 lt -1 front
+set xzeroaxis lw 2 lt -1
+set border lw 2
+unset xtics
+set size 0.85,1.0
+set ylabel "Energy (eV)"
+set label "{/Symbol G}" at -.02,-0.535
+set label "{/Symbol G}" at 1.97,-0.535
+set label "(1,0,0) H (0,0,1)" at 1.0,-0.535 center
+set label " M//(0,0,1) " at 1.47,0.43
+set label " D_{4h} [C_{4h}] " at -0.12,0.535 font ",16"
+set label " D_{4h} [C_{4h}] " at  0.90,0.535 font ",16"
+set label " D_{4h} [C_{4h}] " at  1.82,0.535 font ",16"
+set label " C_{2v} [C_{s}] " at  0.4,0.535 font ",16"
+set label " D_{4} [C_{4}] " at  1.4,0.535 font ",16"
+set label " {/Symbol G}_4 " at 0.55,-0.45 font ",16" tc rgb "blue"
+set label " {/Symbol G}_3 " at 0.24,-0.45 font ",16" tc rgb "red"
+set label " {/Symbol G}_6 " at 1.08,-0.45 font ",16" tc rgb "black"
+set label " {/Symbol G}_7 " at 1.32,-0.45 font ",16" tc rgb "green"
+set label " {/Symbol G}_8 " at 1.2,-0.45 font ",16" tc rgb "blue"
+set label " {/Symbol G}_5 " at 1.62,-0.45 font ",16" tc rgb "red"
+ef=12.5628
+plot 'ciao.1.1' u (1.-\$1):(\$2-ef) w l lw 3   lt 1 lc rgb "red", 'ciao.1.2' u (1.-\$1):(\$2-ef) w l lw 3 lt 5 lc rgb "blue", 'ciao.2.1' u (3.-\$1):(\$2-ef) w l lw 3 lt 1 lc rgb "red", 'ciao.2.2' u (3.-\$1):(\$2-ef) w l lw 3 lt 4 lc rgb "black", 'ciao.2.3' u (3.-\$1):(\$2-ef) w l lw 3 lt 1 lc rgb "green", 'ciao.2.4' u (3.-\$1):(\$2-ef) w l lw 3 lt 5 lc rgb "blue"
 EOF
 
-$ECHO "  running ph.x at X for noncollinear Ni with gga-pbe...\c"
-$PH_COMMAND < ni.phX.in > ni.phX.out
-check_failure $?
-$ECHO " done"
-
-# self-consistent calculation. This example demonstrates the use of the 
-# noncollinear calculations together with gga-pbe and spin-orbit
-# in the spin-polarized case. 
-
-cat > ni_so.scf.xml << EOF
-<?xml version="1.0" encoding="UTF-8"?>
-
-<input calculation="scf" prefix="ni_so">
-
-	<cell type="qecell">
-		<qecell ibrav="2" alat="6.65">
-			<real rank="1" n1="5">
-				0.0 0.0 0.0 0.0 0.0
-			</real>
-		</qecell>
-	</cell>
-
-	<atomic_species ntyp="1">
-		<specie name="Ni">
-			<property name="mass">
-				<real>0.0</real>
-			</property>
-			<property name="pseudofile">
-				<string>Ni.rel-pbe-nd-rrkjus.UPF</string>
-			</property>
-			<property name="starting_magnetization">
-				<real>0.5</real>
-			</property>			
-			<property name="angle1">
-				<real>90.0</real>
-			</property>
-		</specie>
-	</atomic_species>
-
-	<atomic_list units="alat" nat="1" >
-		<atom name="Ni">
-			<position>
-				<real rank="1" n1="3">
-					0.00 0.00 0.00
-				</real>
-			</position>
-		</atom>					
-	</atomic_list>		
-	
-	
-	<field name="InputOutput">
-
-		<parameter name="restart_mode">
-			<string>
-				from_scratch
-			</string>
-		</parameter>
-
-		<parameter name="pseudo_dir">
-			<string>
-				$PSEUDO_DIR/
-			</string>
-		</parameter>
-		
-		<parameter name="outdir">
-			<string>
-				$TMP_DIR/
-			</string>
-		</parameter>
-		
-		<parameter name="tprnfor">
-			<logical>
-				true
-			</logical>
-		</parameter>
-		
-	</field>
-	
-	<field name="Numerics">
-
-		<parameter name="ecutwfc">
-			<real>
-				27.0
-			</real>
-		</parameter>
-		
-		<parameter name="ecutrho">
-			<real>
-				300.0
-			</real>
-		</parameter>
-		
-		<parameter name="mixing_beta">
-			<real>
-				0.7
-			</real>
-		</parameter>
-		
-		<parameter name="conv_thr">
-			<real>
-				1.0d-12
-			</real>
-		</parameter>
-		
-	</field>
-	
-	<field name="Options">
-
-		<parameter name="occupations">
-			<string>
-				smearing
-			</string>
-		</parameter>
-		
-		<parameter name="smearing">
-			<string>
-				mp
-			</string>
-		</parameter>
-		
-		<parameter name="degauss">
-			<real>
-				0.02
-			</real>
-		</parameter>
-		
-		<parameter name="noncolin">
-			<logical>
-				true
-			</logical>
-		</parameter>
-		
-		<parameter name="lspinorb">
-			<logical>
-				true
-			</logical>
-		</parameter>
-		
-	</field>	
-	
-	<k_points type="automatic">
-		<mesh>
-			<integer rank="1" n1="6">
-				4 4 4 1 1 1
-			</integer>
-		</mesh> 
-	</k_points>
-</input>
-EOF
-$ECHO "  running scf pw.x for Ni with gga-pbe and spin-orbit...\c"
-$PW_COMMAND -xmlinput ni_so.scf.xml > ni_so.scf.out
-check_failure $?
-$ECHO " done"
-
-# The phonon at gamma 
-
-cat > ni_so.phG.in << EOF
-phonons of Ni at Gamma
- &inputph
-  tr2_ph=1.0d-16,
-  prefix='ni_so',
-  fildyn='niG.dyn',
-  outdir='$TMP_DIR'
- /
-0.0 0.0 0.0
-EOF
-$ECHO "  running ph.x at Gamma for Ni with gga-pbe and spin_orbit...\c"
-$PH_COMMAND < ni_so.phG.in > ni_so.phG.out
-check_failure $?
-$ECHO " done"
-
-# The phonon at X 
-
-cat > ni_so.phX.in << EOF
-phonons of Ni at X
- &inputph
-  tr2_ph=1.0d-14,
-  prefix='ni_so',
-  fildyn='nix.dyn',
-  outdir='$TMP_DIR/'
- /
-0.0 0.0 1.0
-EOF
-
-$ECHO "  running ph.x at X for Ni with gga-pbe with spin-orbit...\c"
-$PH_COMMAND < ni_so.phX.in > ni_so.phX.out
-check_failure $?
-$ECHO " done"
+gnuplot plot.gnu
 
 $ECHO
 $ECHO "$EXAMPLE_DIR: done"

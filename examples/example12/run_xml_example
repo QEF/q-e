@@ -103,7 +103,10 @@ cat > al.scf.xml << EOF
 	</cell>
 
 	<atomic_species ntyp="1">
-		<specie name="Al" mass="26.98">
+		<specie name="Al">
+			<property name="mass">
+				<real>26.98</real>
+			</property>
 			<property name="pseudofile">
 				<string>Al.pz-vbc.UPF</string>
 			</property>
@@ -249,7 +252,10 @@ cat > alwire.scf.xml << EOF
 	</cell>
 
 	<atomic_species ntyp="1">
-		<specie name="Al" mass="26.98">
+		<specie name="Al">
+			<property name="mass">
+				<real>26.98</real>
+			</property>
 			<property name="pseudofile">
 				<string>Al.pz-vbc.UPF</string>
 			</property>
@@ -396,7 +402,10 @@ cat > ni.scf.xml << EOF
 	</cell>
 
 	<atomic_species ntyp="1">
-		<specie name="Ni" mass="58.69">
+		<specie name="Ni">
+			<property name="mass">
+				<real>58.69</real>
+			</property>
 			<property name="pseudofile">
 				<string>Ni.pz-nd-rrkjus.UPF</string>
 			</property>
@@ -561,7 +570,10 @@ cat > alwire1.scf.xml << EOF
 	</cell>
 
 	<atomic_species ntyp="1">
-		<specie name="Al" mass="26.98">
+		<specie name="Al">
+			<property name="mass">
+				<real>26.98</real>
+			</property>
 			<property name="pseudofile">
 				<string>Al.pz-vbc.UPF</string>
 			</property>
@@ -692,12 +704,18 @@ cat > AlwireH.scf.xml << EOF
 	</cell>
 
 	<atomic_species ntyp="2">
-		<specie name="Al" mass="26.98">
+		<specie name="Al">
+			<property name="mass">
+				<real>26.98</real>
+			</property>
 			<property name="pseudofile">
 				<string>Al.pz-vbc.UPF</string>
 			</property>
 		</specie>
-		<specie name="H" mass="1.0">
+		<specie name="H">
+			<property name="mass">
+				<real>1.0</real>
+			</property>
 			<property name="pseudofile">
 				<string>H.pz-vbc.UPF</string>
 			</property>

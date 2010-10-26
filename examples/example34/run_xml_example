@@ -1,16 +1,10 @@
 #!/bin/sh
 
-###############################################################################
-##
-##  HIGH VERBOSITY EXAMPLE
-##
-###############################################################################
-
 # run from directory where this script is
 cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
 EXAMPLE_DIR=`pwd`
 
-# check whether echo has the -e option
+# check whether ECHO has the -e option
 if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
 
 # function to test the exit status of a job
@@ -19,20 +13,23 @@ if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
 $ECHO
 $ECHO "$EXAMPLE_DIR : starting"
 $ECHO
-$ECHO "This example shows how to use pw.x and ph.x to calculate"
-$ECHO "the Raman tensor for AlAs."
+$ECHO "This example shows how to use vdw.x to calculate dynamic"
+$ECHO "polarizability of methane molecule in simplified version
+       of the one in ph.x (see example33) by using Thomas-Fermi
+       and von Weizsaecker approximation"
 
 # set the needed environment variables
 . ../environment_variables
 
 # required executables and pseudopotentials
-BIN_LIST="pw.x ph.x"
-PSEUDO_LIST="Al.pz-vbc.UPF As.pz-bhs.UPF"
+BIN_LIST="pw.x vdw.x"
+PSEUDO_LIST="C.pz-vbc.UPF H.pz-vbc.UPF"
 
 $ECHO
 $ECHO "  executables directory: $BIN_DIR"
 $ECHO "  pseudo directory:      $PSEUDO_DIR"
 $ECHO "  temporary directory:   $TMP_DIR"
+$ECHO
 $ECHO "  checking that needed directories and files exist...\c"
 
 # check for directories
@@ -74,11 +71,10 @@ $ECHO " done"
 
 # how to run executables
 PW_COMMAND="$PARA_PREFIX $BIN_DIR/pw.x $PARA_POSTFIX"
-PH_COMMAND="$PARA_PREFIX $BIN_DIR/ph.x $PARA_POSTFIX"
-
+PH_COMMAND="$PARA_PREFIX $BIN_DIR/vdw.x $PARA_POSTFIX"
 $ECHO
-$ECHO "  running pw.x as:  $PW_COMMAND"
-$ECHO "  running ph.x as:  $PH_COMMAND"
+$ECHO "  running pw.x as: $PW_COMMAND"
+$ECHO "  running vdw.x as: $PH_COMMAND"
 $ECHO
 
 # clean TMP_DIR
@@ -86,17 +82,23 @@ $ECHO "  cleaning $TMP_DIR...\c"
 rm -rf $TMP_DIR/*
 $ECHO " done"
 
-#
+
 # self-consistent calculation
+chbl=1.10           #C-H bond length in CH4
+bohr=0.529177
+n=5
+lc=$(echo "scale=5; $n * $chbl / $bohr" | bc)  # latt. const. in a.u.
+pos=$(echo "scale=5; 1.0/$n/sqrt(3)" | bc )
+ecut=40.0
 #
-cat > alas.scf.xml << EOF
+cat > ch4.scf.xml << EOF
 <?xml version="1.0" encoding="UTF-8"?>
 
 
-<input calculation="scf" prefix="alas">
+<input calculation="relax" prefix="ch4">
 
 	<cell type="qecell">
-		<qecell ibrav="2" alat="10.575">
+		<qecell ibrav="1" alat="$lc">
 			<real rank="1" n1="5">
 				0.0 0.0 0.0 0.0 0.0
 			</real>
@@ -104,40 +106,61 @@ cat > alas.scf.xml << EOF
 	</cell>
 
 	<atomic_species ntyp="2">
-		<specie name="Al">
+		<specie name="C">
 			<property name="mass">
-				<real>26.98</real>
+				<real>12.0107</real>
 			</property>
 			<property name="pseudofile">
-				<string>Al.pz-vbc.UPF</string>
+				<string>C.pz-vbc.UPF</string>
 			</property>
 		</specie>
-		<specie name="As">
+		<specie name="H">
 			<property name="mass">
-				<real>74.92</real>
+				<real>1.00794</real>
 			</property>
 			<property name="pseudofile">
-				<string>As.pz-bhs.UPF</string>
+				<string>H.pz-vbc.UPF</string>
 			</property>
 		</specie>
 	</atomic_species>
 
-	<atomic_list units="alat" nat="2" >
-		<atom name="Al">
+	<atomic_list units="alat" nat="5" >
+		<atom name="C">
 			<position>
 				<real rank="1" n1="3">
-					0.00 0.00 0.00
+					0.00  0.00  0.00
 				</real>
 			</position>
 		</atom>	
-		<atom name="As">
+		<atom name="H">
 			<position>
 				<real rank="1" n1="3">
-					0.25 0.25 0.25
+					$pos   $pos   $pos
 				</real>
 			</position>
-		</atom>			
-	</atomic_list>		
+		</atom>	
+		<atom name="H">
+			<position>
+				<real rank="1" n1="3">
+					$pos  -$pos  -$pos
+				</real>
+			</position>
+		</atom>	
+		<atom name="H">
+			<position>
+				<real rank="1" n1="3">
+					-$pos  -$pos   $pos
+				</real>
+			</position>
+		</atom>	
+		<atom name="H">
+			<position>
+				<real rank="1" n1="3">
+					-$pos   $pos  -$pos
+				</real>
+			</position>
+		</atom>						
+	</atomic_list>	
 	
 	
 	<field name="InputOutput">
@@ -147,7 +170,7 @@ cat > alas.scf.xml << EOF
 				from_scratch
 			</string>
 		</parameter>
-
+		
 		<parameter name="pseudo_dir">
 			<string>
 				$PSEUDO_DIR/
@@ -160,87 +183,54 @@ cat > alas.scf.xml << EOF
 			</string>
 		</parameter>
 		
-		<parameter name="tstress">
-			<logical>
-				true
-			</logical>
-		</parameter>	
-		
-		<parameter name="tprnfor">
-			<logical>
-				true
-			</logical>
-		</parameter>
-					
 	</field>
 	
 	<field name="Numerics">
 
 		<parameter name="ecutwfc">
 			<real>
-				10.0
+				$ecut
 			</real>
 		</parameter>
 		
-		<parameter name="mixing_beta">
-			<real>
-				0.7
-			</real>
-		</parameter>
-		
-		<parameter name="conv_thr">
-			<real>
-				1.0d-8
-			</real>
-		</parameter>
-		
-		<parameter name="nosym">
-			<logical>
-				false
-			</logical>
-		</parameter>
-	
 	</field>
 	
-	<k_points type="automatic">
-		<mesh>
-			<integer rank="1" n1="6">
-				4 4 4 1 1 1
-			</integer>
-		</mesh> 
+	<k_points type="tpiba">
+		<mesh npoints="1">
+			<real rank="2" n1="4" n2="1">
+				  	0.00 0.00 0.00 1.0
+			</real>
+		</mesh>
 	</k_points>
 </input>
 EOF
-
+#
 $ECHO "  running the scf calculation...\c"
-$PW_COMMAND -xmlinput alas.scf.xml > alas.scf.out
+$PW_COMMAND -xmlinput ch4.scf.xml > ch4.scf.out
 check_failure $?
 $ECHO " done"
+#
+# dynamic polarizability calculation
+#
+cat > ch4.vdw.in << EOF
 
-# response calculation
-
-cat > alas.ph.in << EOF
-phonons of AlAs at Gamma
- &inputph
-  tr2_ph=1.0d-12,
-  prefix='alas',
-  epsil=.true.,
-  trans=.true.,
-  lraman=.true.,
-  elop=.true.,
-  amass(1)=26.98,
-  amass(2)=74.92,
+&inputvdw
+  tr2_vdw=1.0d-14,
+  prefix='ch4',
   outdir='$TMP_DIR/',
-  fildyn='alas.dynG',
-  fildrho='alas.drho',
+  thresh_veff = 9.6d-3
  /
-0.0 0.0 0.0
-EOF
 
-$ECHO "  running the response calculation...\c"
-$PH_COMMAND < alas.ph.in > alas.ph.out
+FREQUENCIES
+ 2
+ 0.0d0
+ 1.5d0
+EOF
+#
+$ECHO "  running the dynamic polarizability calculation ...\c"
+$PH_COMMAND < ch4.vdw.in > ch4.vdw.out
 check_failure $?
 $ECHO " done"
 
 $ECHO
-$ECHO "$EXAMPLE_DIR: done"
+$ECHO "$EXAMPLE_DIR : done"

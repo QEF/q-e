@@ -108,12 +108,18 @@ cat > sih4.scf.xml << EOF
 	</cell>
 
 	<atomic_species ntyp="2">
-		<specie name="Si" mass="28.086">
+		<specie name="Si">
+			<property name="mass">
+				<real>28.086</real>
+			</property>
 			<property name="pseudofile">
 				<string>Si.pz-vbc.UPF</string>
 			</property>
 		</specie>
-		<specie name="H" mass="1.008">
+		<specie name="H">
+			<property name="mass">
+				<real>1.008</real>
+			</property>
 			<property name="pseudofile">
 				<string>H.pz-vbc.UPF</string>
 			</property>
@@ -273,12 +279,18 @@ ch4 molecule in a cubic box -->
 	</cell>
 
 	<atomic_species ntyp="2">
-		<specie name="H" mass="1.0">
+		<specie name="H">
+			<property name="mass">
+				<real>1.0</real>
+			</property>
 			<property name="pseudofile">
 				<string>H.pz-vbc.UPF</string>
 			</property>
 		</specie>
-		<specie name="C" mass="12.0">
+		<specie name="C">
+			<property name="mass">
+				<real>12.0</real>
+			</property>
 			<property name="pseudofile">
 				<string>C.pz-rrkjus.UPF</string>
 			</property>

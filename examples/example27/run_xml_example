@@ -95,12 +95,18 @@ cat > c4h6.cp.metaGGA.xml << EOF
 	</cell>
 
 	<atomic_species ntyp="2">
-		<specie name="H" mass="1.007825035">
+		<specie name="H">
+			<property name="mass">
+				<real>1.007825035</real>
+			</property>
 			<property name="pseudofile">
 				<string>H.tpss-mt.UPF</string>
 			</property>
 		</specie>
-		<specie name="C" mass="12.00">
+		<specie name="C">
+			<property name="mass">
+				<real>12.00</real>
+			</property>
 			<property name="pseudofile">
 				<string>C.tpss-mt.UPF</string>
 			</property>
@@ -329,12 +335,18 @@ cat > c4h6.pw.metaGGA.xml << EOF
 	</cell>
 
 	<atomic_species ntyp="2">
-		<specie name="H" mass="1.007825035">
+		<specie name="H">
+			<property name="mass">
+				<real>1.007825035</real>
+			</property>
 			<property name="pseudofile">
 				<string>H.tpss-mt.UPF</string>
 			</property>
 		</specie>
-		<specie name="C" mass="12.00">
+		<specie name="C">
+			<property name="mass">
+				<real>12.00</real>
+			</property>
 			<property name="pseudofile">
 				<string>C.tpss-mt.UPF</string>
 			</property>

@@ -99,12 +99,18 @@ cat > co.rx.xml << EOF
 	</cell>
 
 	<atomic_species ntyp="2">
-		<specie name="O" mass="1.00">
+		<specie name="O">
+			<property name="mass">
+				<real>1.00</real>
+			</property>
 			<property name="pseudofile">
 				<string>O.pz-rrkjus.UPF</string>
 			</property>
 		</specie>
-		<specie name="C" mass="1.00">
+		<specie name="C">
+			<property name="mass">
+				<real>1.00</real>
+			</property>
 			<property name="pseudofile">
 				<string>C.pz-rrkjus.UPF</string>
 			</property>
@@ -190,7 +196,10 @@ cat > al001.rx.xml << EOF
 	</cell>
 
 	<atomic_species ntyp="1">
-		<specie name="Al" mass="1.0">
+		<specie name="Al">
+			<property name="mass">
+				<real>1.0</real>
+			</property>
 			<property name="pseudofile">
 				<string>Al.pz-vbc.UPF</string>
 			</property>
@@ -341,7 +350,10 @@ cat > al001.mm.xml << EOF
 	</cell>
 
 	<atomic_species ntyp="1">
-		<specie name="Al" mass="1.D0">
+		<specie name="Al">
+			<property name="mass">
+				<real>1.D0</real>
+			</property>
 			<property name="pseudofile">
 				<string>Al.pz-vbc.UPF</string>
 			</property>

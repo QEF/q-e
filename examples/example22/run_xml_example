@@ -104,7 +104,10 @@ cat > pt.scf.xml << EOF
 	</cell>
 
 	<atomic_species ntyp="1">
-		<specie name="Pt" mass="0.0">
+		<specie name="Pt">
+			<property name="mass">
+				<real>0.0</real>
+			</property>
 			<property name="pseudofile">
 				<string>Pt.rel-pz-n-rrkjus.UPF</string>
 			</property>
@@ -252,7 +255,10 @@ cat > pt.nscf.xml << EOF
 	</cell>
 
 	<atomic_species ntyp="1">
-		<specie name="Pt" mass="0.0">			
+		<specie name="Pt">
+			<property name="mass">
+				<real>0.0</real>
+			</property>
 			<property name="pseudofile">
 				<string>Pt.rel-pz-n-rrkjus.UPF</string>
 			</property>
@@ -416,7 +422,10 @@ Pt -->
 	</cell>
 
 	<atomic_species ntyp="1">
-		<specie name="Pt" mass="0.0">
+		<specie name="Pt">
+			<property name="mass">
+				<real>0.0</real>
+			</property>
 			<property name="pseudofile">
 				<string>Pt.rel-pz-n-rrkjus.UPF</string>
 			</property>
@@ -598,7 +607,10 @@ cat > pt.tet.xml << EOF
 	</cell>
 
 	<atomic_species ntyp="1">
-		<specie name="Pt" mass="0.0">
+		<specie name="Pt">
+			<property name="mass">
+				<real>0.0</real>
+			</property>
 			<property name="pseudofile">
 				<string>Pt.rel-pz-n-rrkjus.UPF</string>
 			</property>
@@ -767,7 +779,10 @@ cat > pt4.xml << EOF
 	</cell>
 
 	<atomic_species ntyp="1">
-		<specie name="Pt" mass="0.0">
+		<specie name="Pt">
+			<property name="mass">
+				<real>0.0</real>
+			</property>
 			<property name="pseudofile">
 				<string>Pt.rel-pz-n-rrkjus.UPF</string>
 			</property>			

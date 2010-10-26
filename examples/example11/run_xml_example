@@ -94,7 +94,10 @@ cat > al.xml << EOF
 	</cell>
 
 	<atomic_species ntyp="1">
-		<specie name="Al" mass="26.98154">
+		<specie name="Al">
+			<property name="mass">
+				<real>26.98154</real>
+			</property>
 			<property name="pseudofile">
 				<string>Al.pz-vbc.UPF</string>
 			</property>
@@ -214,7 +217,10 @@ cat > O.xml << EOF
 	</cell>
 
 	<atomic_species ntyp="1">
-		<specie name="O" mass="15.99994">			
+		<specie name="O">
+			<property name="mass">
+				<real>15.99994</real>
+			</property>
 			<property name="pseudofile">
 				<string>O.pbe-rrkjus.UPF</string>
 			</property>
@@ -353,7 +359,10 @@ cat > O_gamma.xml << EOF
 	</cell>
 
 	<atomic_species ntyp="1">
-		<specie name="O" mass="15.99994">
+		<specie name="O">
+			<property name="mass">
+				<real>15.99994</real>
+			</property>
 			<property name="pseudofile">
 				<string>O.pbe-rrkjus.UPF</string>
 			</property>

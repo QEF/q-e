@@ -101,12 +101,18 @@ cat > rh011bulk.scf.xml << EOF
 	</cell>
 
 	<atomic_species ntyp="2">
-		<specie name="Rh" mass="1.0">			
+		<specie name="Rh">
+			<property name="mass">
+				<real>1.0</real>
+			</property>
 			<property name="pseudofile">
 				<string>Rh.pbe-rrkjus_lb.UPF</string>
 			</property>		
 		</specie>
-		<specie name="Rhs" mass="1.0">			
+		<specie name="Rhs">
+			<property name="mass">
+				<real>1.0</real>
+			</property>
 			<property name="pseudofile">
 				<string>Rhs.pbe-rrkjus_lb.UPF</string>
 			</property>		
@@ -251,12 +257,18 @@ cat > rh011surf.scf.xml << EOF
 	</cell>
 
 	<atomic_species ntyp="2">
-		<specie name="Rh" mass="1.0">			
+		<specie name="Rh">
+			<property name="mass">
+				<real>1.0</real>
+			</property>
 			<property name="pseudofile">
 				<string>Rh.pbe-rrkjus_lb.UPF</string>
 			</property>		
 		</specie>
-		<specie name="Rhs" mass="1.0">			
+		<specie name="Rhs">
+			<property name="mass">
+				<real>1.0</real>
+			</property>
 			<property name="pseudofile">
 				<string>Rhs.pbe-rrkjus_lb.UPF</string>
 			</property>		
@@ -401,12 +413,18 @@ cat > rh011layer1.scf.xml << EOF
 	</cell>
 
 	<atomic_species ntyp="2">
-		<specie name="Rh" mass="1.0">			
+		<specie name="Rh">
+			<property name="mass">
+				<real>1.0</real>
+			</property>
 			<property name="pseudofile">
 				<string>Rh.pbe-rrkjus_lb.UPF</string>
 			</property>		
 		</specie>
-		<specie name="Rhs" mass="1.0">			
+		<specie name="Rhs">
+			<property name="mass">
+				<real>1.0</real>
+			</property>
 			<property name="pseudofile">
 				<string>Rhs.pbe-rrkjus_lb.UPF</string>
 			</property>		

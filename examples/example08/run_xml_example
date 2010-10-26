@@ -108,7 +108,10 @@ cat > ni.scf.xml << EOF
 	</cell>
 
 	<atomic_species ntyp="1">
-		<specie name="Ni" mass="58.69">
+		<specie name="Ni">
+			<property name="mass">
+				<real>58.69</real>
+			</property>
                     <property name="pseudofile">
 			<string>Ni.pz-nd-rrkjus.UPF</string>
                     </property>
@@ -299,7 +302,10 @@ cat > ni.band.xml << EOF
 	</cell>
 
 	<atomic_species ntyp="1">
-		<specie name="Ni" mass="58.69">
+		<specie name="Ni">
+			<property name="mass">
+				<real>58.69</real>
+			</property>
                     <property name="pseudofile">
 			<string>Ni.pz-nd-rrkjus.UPF</string>
                     </property>
@@ -613,7 +619,10 @@ cat > ni.dos.xml << EOF
 	</cell>
 
 	<atomic_species ntyp="1">
-		<specie name="Ni" mass="58.69">
+		<specie name="Ni">
+			<property name="mass">
+				<real>58.69</real>
+			</property>
                     <property name="pseudofile">
 			<string>Ni.pz-nd-rrkjus.UPF</string>
                     </property>
@@ -761,7 +770,10 @@ cat > ni.scf_SP.xml << EOF
 	</cell>
 
 	<atomic_species ntyp="1">
-		<specie name="Ni" mass="58.69">
+		<specie name="Ni">
+			<property name="mass">
+				<real>58.69</real>
+			</property>
                     <property name="pseudofile">
 			<string>Ni.pz-nd-rrkjus.UPF</string>
                     </property>
@@ -920,7 +932,10 @@ cat > ni.fs_SP.xml << EOF
 	</cell>
 
 	<atomic_species ntyp="1">
-		<specie name="Ni" mass="58.69">
+		<specie name="Ni">
+			<property name="mass">
+				<real>58.69</real>
+			</property>
                     <property name="pseudofile">
 			<string>Ni.pz-nd-rrkjus.UPF</string>
                     </property>
@@ -1068,7 +1083,10 @@ cat > ni.scf_NSP.xml << EOF
 	</cell>
 
 	<atomic_species ntyp="1">
-		<specie name="Ni" mass="58.69">
+		<specie name="Ni">
+			<property name="mass">
+				<real>58.69</real>
+			</property>
                     <property name="pseudofile">
 			<string>Ni.pz-nd-rrkjus.UPF</string>
                     </property>
@@ -1212,7 +1230,10 @@ cat > ni.fs_NSP.xml << EOF
 	</cell>
 
 	<atomic_species ntyp="1">
-		<specie name="Ni" mass="58.69">
+		<specie name="Ni">
+			<property name="mass">
+				<real>58.69</real>
+			</property>
                     <property name="pseudofile">
 			<string>Ni.pz-nd-rrkjus.UPF</string>
                     </property>

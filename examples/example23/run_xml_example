@@ -93,12 +93,18 @@ cat > h2o.wannier.xml << EOF
 	</cell>
 
 	<atomic_species ntyp="2">
-		<specie name="O" mass="16.D0">
+		<specie name="O">
+			<property name="mass">
+				<real>16.D0</real>
+			</property>
 			<property name="pseudofile">
 				<string>O_US.van</string>
 			</property>
 		</specie>
-		<specie name="H" mass="2.D0">
+		<specie name="H">
+			<property name="mass">
+				<real>2.D0</real>
+			</property>
 			<property name="pseudofile">
 				<string>H_US.van</string>
 			</property>
@@ -304,12 +310,18 @@ cat > h2o.efield.xml << EOF
 	</cell>
 
 	<atomic_species ntyp="2">
-		<specie name="O" mass="16.D0">
+		<specie name="O">
+			<property name="mass">
+				<real>16.D0</real>
+			</property>
 			<property name="pseudofile">
 				<string>O_US.van</string>
 			</property>
 		</specie>
-		<specie name="H" mass="2.D0">
+		<specie name="H">
+			<property name="mass">
+				<real>2.D0</real>
+			</property>
 			<property name="pseudofile">
 				<string>H_US.van</string>
 			</property>

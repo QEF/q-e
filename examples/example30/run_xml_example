@@ -102,7 +102,10 @@ cat > mgo.cp.cg.xml << EOF
 	</cell>
 
 	<atomic_species ntyp="2">
-		<specie name="O" mass="12.01">
+		<specie name="O">
+			<property name="mass">
+				<real>12.01</real>
+			</property>
 			<property name="pseudofile">
 				<string>O.pz-rrkjus.UPF</string>
 			</property>
@@ -110,7 +113,10 @@ cat > mgo.cp.cg.xml << EOF
 				<real>0.8d0</real>
 			</property>
 		</specie>
-		<specie name="Mg" mass="24.30">
+		<specie name="Mg">
+			<property name="mass">
+				<real>24.30</real>
+			</property>
 			<property name="pseudofile">
 				<string>Mg.pz-n-vbc.UPF</string>
 			</property>
@@ -815,7 +821,10 @@ cat > mgo.cp.cg.efield.xml << EOF
 	</cell>
 
 	<atomic_species ntyp="2">
-		<specie name="O" mass="12.01">
+		<specie name="O">
+			<property name="mass">
+				<real>12.01</real>
+			</property>
 			<property name="pseudofile">
 				<string>O.pz-rrkjus.UPF</string>
 			</property>
@@ -823,7 +832,10 @@ cat > mgo.cp.cg.efield.xml << EOF
 				<real>0.8d0</real>
 			</property>
 		</specie>
-		<specie name="Mg" mass="24.30">
+		<specie name="Mg">
+			<property name="mass">
+				<real>24.30</real>
+			</property>
 			<property name="pseudofile">
 				<string>Mg.pz-n-vbc.UPF</string>
 			</property>
@@ -1528,12 +1540,18 @@ cat > mgo.cp.damp.efield.xml << EOF
 	</cell>
 
 	<atomic_species ntyp="2">
-		<specie name="O" mass="1.0">
+		<specie name="O">
+			<property name="mass">
+				<real>1.0</real>
+			</property>
 			<property name="pseudofile">
 				<string>O.pz-rrkjus.UPF</string>
 			</property>
 		</specie>
-		<specie name="Mg" mass="1.0">
+		<specie name="Mg">
+			<property name="mass">
+				<real>1.0</real>
+			</property>
 			<property name="pseudofile">
 				<string>Mg.pz-n-vbc.UPF</string>
 			</property>

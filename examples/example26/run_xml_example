@@ -93,12 +93,18 @@ cat > h2o.scf.xml << EOF
 	</cell>
 
 	<atomic_species ntyp="2">
-		<specie name="O" mass="8.0">
+		<specie name="O">
+			<property name="mass">
+				<real>8.0</real>
+			</property>
 			<property name="pseudofile">
 				<string>O.blyp-mt.UPF</string>
 			</property>
 		</specie>
-		<specie name="H" mass="1.0">
+		<specie name="H">
+			<property name="mass">
+				<real>1.0</real>
+			</property>
 			<property name="pseudofile">
 				<string>H.blyp-vbc.UPF</string>
 			</property>
@@ -310,12 +316,18 @@ cat > h2o.wannier.xml << EOF
 	</cell>
 
 	<atomic_species ntyp="2">
-		<specie name="O" mass="8.0">
+		<specie name="O">
+			<property name="mass">
+				<real>8.0</real>
+			</property>
 			<property name="pseudofile">
 				<string>O.blyp-mt.UPF</string>
 			</property>
 		</specie>
-		<specie name="H" mass="1.0">
+		<specie name="H">
+			<property name="mass">
+				<real>1.0</real>
+			</property>
 			<property name="pseudofile">
 				<string>H.blyp-vbc.UPF</string>
 			</property>
