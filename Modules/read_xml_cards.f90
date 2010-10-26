@@ -345,7 +345,7 @@ CONTAINS
   !                                                                         !
   !  3) type is matrix, inside there will be:                               !
   !                                                                         !
-  !      <matrix unit="unit" alat="alat">                                   !
+  !      <matrix units="units" alat="alat">                                   !
   !        <real rank="2" n1="3" n2="3">                                    !
   !          HT(1,1) HT(1,2) HT(1,3)                                        !
   !          HT(2,1) HT(2,2) HT(2,3)                                        !
@@ -358,7 +358,7 @@ CONTAINS
   !      HT(i,j) (real)  cell dimensions ( in a.u. ),                       !
   !                      note the relation with lattice vectors:            !
   !                      HT(1,:) = A1, HT(2,:) = A2, HT(3,:) = A3           !
-  !      unit            can be bohr (default) or alat (in this case you    !
+  !      units            can be bohr (default) or alat (in this case you   !
   !                      have to specify alat)                              !
   !                                                                         !
   !_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_!
@@ -526,7 +526,13 @@ CONTAINS
   !                                                                         !
   !    <atomic_species ntyp="ntyp">                                         !
   !                                                                         !
-  !       <specie name="label(i)" mass="mass(i)">                           !
+  !       <specie name="label(i)">                                          !
+  !                                                                         !
+  !           <property name="mass">                                        !
+  !              <real>                                                     !
+  !                 mass(i)                                                 !
+  !              </real>                                                    !
+  !           </property>                                                   !
   !                                                                         !
   !           <property name="pseudofile">                                  !
   !              <string>                                                   !
@@ -653,10 +659,6 @@ CONTAINS
           IF ( ierr /= 0 ) CALL errore( 'card_xml_atomic_species',  'error &
                &reading name attribute of specie node', abs( ierr ) )
           !
-          CALL iotk_scan_attr( attr2, 'mass', atom_mass( is ), ierr = ierr)
-          IF ( ierr /= 0 ) CALL errore( 'card_xml_atomic_species',  'error &
-               &reading name attribute of specie node', abs( ierr ) )
-          !
           psfile_found = .false.
           !
           DO
@@ -735,6 +737,9 @@ CONTAINS
            &attribute of property node', ABS( is ) )
 
       SELECT CASE ( trim(prop_name) )
+         !
+      CASE ( 'mass' )
+         CALL iotk_scan_dat_inside( xmlinputunit, atom_mass(is) , ierr = ierr)
          !
       CASE ( 'pseudofile' )
          CALL iotk_scan_dat_inside( xmlinputunit, psfile, ierr = ierr)
