@@ -17,7 +17,7 @@ SUBROUTINE write_casino_wfn(gather,blip,multiplicity,binwrite,single_precision_b
    USE fft_base,  ONLY: dfftp
    USE fft_interfaces, ONLY : fwfft
    USE gvect, ONLY: ngm, gstart, &
-                    nrxx, g, gg, ecutwfc, gcutm, nl, nlm, igtongl
+                    g, gg, ecutwfc, gcutm, nl, nlm, igtongl
    USE klist , ONLY: nks, nelec, xk, wk, degauss, ngauss
    USE lsda_mod, ONLY: lsda, nspin
    USE scf, ONLY: rho, rho_core, rhog_core, v
@@ -328,7 +328,7 @@ CONTAINS
 
       REAL(DP) :: charge, etotefield, elocg
 
-      ALLOCATE (aux(nrxx))
+      ALLOCATE (aux(dfftp%nnr))
       CALL allocate_bec_type ( nkb, nbnd, becp )
 
       ek  = 0.d0

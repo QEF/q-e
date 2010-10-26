@@ -29,7 +29,7 @@ SUBROUTINE local_dos (iflag, lsign, kpoint, kband, spin_component, &
   USE ener,                 ONLY : ef
   USE fft_base,             ONLY : dffts, dfftp
   USE fft_interfaces,       ONLY : fwfft, invfft
-  USE gvect,                ONLY : nrxx, nl, ngm, g, ecutwfc
+  USE gvect,                ONLY : nl, ngm, g, ecutwfc
   USE gsmooth,              ONLY : nls, nlsm, doublegrid
   USE klist,                ONLY : lgauss, degauss, ngauss, nks, wk, xk, nkstot
   USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
@@ -55,7 +55,7 @@ SUBROUTINE local_dos (iflag, lsign, kpoint, kband, spin_component, &
   LOGICAL, INTENT(in) :: lsign
   real(DP), INTENT(in) :: emin, emax
   !
-  real(DP), INTENT(out) :: dos (nrxx)
+  real(DP), INTENT(out) :: dos (dfftp%nnr)
   !
   !    local variables
   !
@@ -104,7 +104,7 @@ SUBROUTINE local_dos (iflag, lsign, kpoint, kband, spin_component, &
   rho%of_r(:,:) = 0.d0
   dos(:) = 0.d0
   becsum(:,:,:) = 0.d0
-  IF (lsign) ALLOCATE(segno(nrxx))
+  IF (lsign) ALLOCATE(segno(dfftp%nnr))
   !
   !   calculate the correct weights
   !

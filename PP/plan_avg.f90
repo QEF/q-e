@@ -15,7 +15,8 @@ PROGRAM plan_avg
   USE kinds,     ONLY : DP
   USE printout_base, ONLY: title
   USE cell_base, ONLY : ibrav, celldm, at
-  USE gvect,     ONLY : nr1x, nr2x, nr3x, nr1, nr2, nr3, gcutm, dual, ecutwfc
+  USE grid_dimensions, ONLY : nr1x, nr2x, nr3x, nr1, nr2, nr3
+  USE gvect,     ONLY : gcutm, dual, ecutwfc
   USE klist,     ONLY : nkstot, xk
   USE ions_base, ONLY : nat, ntyp=>nsp, ityp, tau, atm, zv
   USE io_files,  ONLY : tmp_dir, prefix, trimcheck

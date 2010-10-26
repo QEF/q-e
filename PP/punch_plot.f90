@@ -26,7 +26,7 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
   USE extfield,         ONLY : tefield, dipfield
   USE fft_base,         ONLY : dfftp
   USE fft_interfaces,   ONLY : fwfft, invfft
-  USE gvect,            ONLY : nrxx, gcutm, dual, ecutwfc, nr1,nr2,nr3,nr1x,nr2x,nr3x
+  USE gvect,            ONLY : gcutm, dual, ecutwfc
   USE klist,            ONLY : nks, nkstot, xk
   USE lsda_mod,         ONLY : nspin, current_spin
   USE ener,             ONLY : ehart
@@ -56,7 +56,7 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
 
   IF (filplot == ' ') RETURN
 #ifdef __PARA
-  ALLOCATE (raux1( nr1x * nr2x * nr3x))
+  ALLOCATE (raux1(  dfftp%nr1x *  dfftp%nr2x *  dfftp%nr3x))
 #endif
 
   WRITE( stdout, '(/5x,"Calling punch_plot, plot_num = ",i3)') plot_num
@@ -67,7 +67,7 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
      WRITE( stdout, '(/5x,"Plotting spin magnetization ipol = ",i3)') &
                                                           spin_component
   !
-  ALLOCATE (raux( nrxx))
+  ALLOCATE (raux(dfftp%nnr))
   !
   !     Here we decide which quantity to plot
   !
@@ -76,17 +76,17 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
      !      plot of the charge density
      !
      IF (noncolin) THEN
-        CALL dcopy (nrxx, rho%of_r, 1, raux, 1)
+        CALL dcopy (dfftp%nnr, rho%of_r, 1, raux, 1)
      ELSE
         IF (spin_component == 0) THEN
-           CALL dcopy (nrxx, rho%of_r (1, 1), 1, raux, 1)
+           CALL dcopy (dfftp%nnr, rho%of_r (1, 1), 1, raux, 1)
            DO is = 2, nspin
-              CALL daxpy (nrxx, 1.d0, rho%of_r (1, is), 1, raux, 1)
+              CALL daxpy (dfftp%nnr, 1.d0, rho%of_r (1, is), 1, raux, 1)
            ENDDO
         ELSE
            IF (nspin == 2) current_spin = spin_component
-           CALL dcopy (nrxx, rho%of_r (1, current_spin), 1, raux, 1)
-           CALL dscal (nrxx, 0.5d0 * nspin, raux, 1)
+           CALL dcopy (dfftp%nnr, rho%of_r (1, current_spin), 1, raux, 1)
+           CALL dscal (dfftp%nnr, 0.5d0 * nspin, raux, 1)
         ENDIF
      ENDIF
 
@@ -95,26 +95,26 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
      !       The total self-consistent potential V_H+V_xc on output
      !
      IF (noncolin) THEN
-        CALL dcopy (nrxx, v%of_r, 1, raux, 1)
+        CALL dcopy (dfftp%nnr, v%of_r, 1, raux, 1)
      ELSE
         IF (spin_component == 0) THEN
-           CALL dcopy (nrxx, v%of_r, 1, raux, 1)
+           CALL dcopy (dfftp%nnr, v%of_r, 1, raux, 1)
            DO is = 2, nspin
-              CALL daxpy (nrxx, 1.0d0, v%of_r (1, is), 1, raux, 1)
+              CALL daxpy (dfftp%nnr, 1.0d0, v%of_r (1, is), 1, raux, 1)
            ENDDO
-           CALL dscal (nrxx, 1.d0 / nspin, raux, 1)
+           CALL dscal (dfftp%nnr, 1.d0 / nspin, raux, 1)
         ELSE
            IF (nspin == 2) current_spin = spin_component
-           CALL dcopy (nrxx, v%of_r (1, current_spin), 1, raux, 1)
+           CALL dcopy (dfftp%nnr, v%of_r (1, current_spin), 1, raux, 1)
         ENDIF
      ENDIF
-     CALL daxpy (nrxx, 1.0d0, vltot, 1, raux, 1)
+     CALL daxpy (dfftp%nnr, 1.0d0, vltot, 1, raux, 1)
 
   ELSEIF (plot_num == 2) THEN
      !
      !       The local pseudopotential on output
      !
-     CALL dcopy (nrxx, vltot, 1, raux, 1)
+     CALL dcopy (dfftp%nnr, vltot, 1, raux, 1)
 
   ELSEIF (plot_num == 3) THEN
      !
@@ -147,8 +147,8 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
      !      plot of the spin polarisation
      !
      IF (nspin == 2) THEN
-        CALL dcopy (nrxx, rho%of_r (1, 1), 1, raux, 1)
-        CALL daxpy (nrxx, - 1.d0, rho%of_r (1, 2), 1, raux, 1)
+        CALL dcopy (dfftp%nnr, rho%of_r (1, 1), 1, raux, 1)
+        CALL daxpy (dfftp%nnr, - 1.d0, rho%of_r (1, 2), 1, raux, 1)
      ELSE
         raux(:) = 0.d0
      ENDIF
@@ -223,14 +223,14 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
      CALL PAW_make_ae_charge(rho)
      !
      IF (spin_component == 0) THEN
-         CALL dcopy (nrxx, rho%of_r (1, 1), 1, raux, 1)
+         CALL dcopy (dfftp%nnr, rho%of_r (1, 1), 1, raux, 1)
          DO is = 2, nspin
-            CALL daxpy (nrxx, 1.d0, rho%of_r (1, is), 1, raux, 1)
+            CALL daxpy (dfftp%nnr, 1.d0, rho%of_r (1, is), 1, raux, 1)
          ENDDO
       ELSE
          IF (nspin == 2) current_spin = spin_component
-         CALL dcopy (nrxx, rho%of_r (1, current_spin), 1, raux, 1)
-         CALL dscal (nrxx, 0.5d0 * nspin, raux, 1)
+         CALL dcopy (dfftp%nnr, rho%of_r (1, current_spin), 1, raux, 1)
+         CALL dscal (dfftp%nnr, 0.5d0 * nspin, raux, 1)
       ENDIF
   ELSEIF (plot_num == 18) THEN
 
@@ -254,15 +254,15 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
 #ifdef __PARA
   IF (.not. (plot_num == 5 ) ) CALL grid_gather (raux, raux1)
   IF ( ionode ) &
-     CALL plot_io (filplot, title, nr1x, &
-         nr2x, nr3x, nr1, nr2, nr3, nat, ntyp, ibrav, celldm, at, gcutm, &
-         dual, ecutwfc, plot_num, atm, ityp, zv, tau, raux1, + 1)
+     CALL plot_io (filplot, title,  dfftp%nr1x,  dfftp%nr2x,  dfftp%nr3x, &
+         dfftp%nr1,  dfftp%nr2,  dfftp%nr3, nat, ntyp, ibrav, celldm, at, &
+         gcutm, dual, ecutwfc, plot_num, atm, ityp, zv, tau, raux1, + 1)
   DEALLOCATE (raux1)
 #else
 
-  CALL plot_io (filplot, title, nr1x, nr2x, nr3x, nr1, nr2, nr3, &
-       nat, ntyp, ibrav, celldm, at, gcutm, dual, ecutwfc, plot_num, &
-       atm, ityp, zv, tau, raux, + 1)
+  CALL plot_io (filplot, title,  dfftp%nr1x,  dfftp%nr2x,  dfftp%nr3x,  &
+        dfftp%nr1,  dfftp%nr2,  dfftp%nr3, nat, ntyp, ibrav, celldm, at,&
+        gcutm, dual, ecutwfc, plot_num, atm, ityp, zv, tau, raux, + 1)
 
 #endif
 
@@ -276,15 +276,15 @@ SUBROUTINE polarization ( spin_component, ipol, epsilon, raux )
   USE constants, ONLY : fpi
   USE fft_base,  ONLY: dfftp
   USE fft_interfaces, ONLY : fwfft, invfft
-  USE gvect, ONLY: nl, nlm, ngm, nrxx, gstart, g, gg
   USE lsda_mod,  ONLY : nspin
+  USE gvect,     ONLY : gstart, ngm, nl, nlm, g, gg
   USE scf, ONLY: rho
   USE control_flags,    ONLY : gamma_only
   USE wavefunctions_module,  ONLY: psic
   !
   IMPLICIT NONE
   INTEGER :: spin_component, ipol, ig
-  REAL(DP) :: epsilon, raux (nrxx)
+  REAL(DP) :: epsilon, raux ( dfftp%nnr)
   !
   IF (ipol < 1 .or. ipol > 3) CALL errore('polarization', &
        'wrong component',1)

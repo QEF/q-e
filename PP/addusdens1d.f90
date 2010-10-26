@@ -18,7 +18,8 @@ SUBROUTINE addusdens1d (plan, prho)
   USE kinds, ONLY: DP
   USE cell_base, ONLY: alat, omega, celldm
   USE ions_base, ONLY: nat, ntyp => nsp, ityp
-  USE gvect, ONLY: nr3, nr3x, nrxx, nl, eigts1, eigts2, eigts3, ig1,ig2,ig3
+  USE grid_dimensions, ONLY: nr3, nr3x, nrxx
+  USE gvect, ONLY: nl, eigts1, eigts2, eigts3, ig1,ig2,ig3
   USE lsda_mod, ONLY: current_spin
   USE uspp, ONLY: becsum
   USE uspp_param, ONLY: upf, lmaxq, nh

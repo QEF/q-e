@@ -103,7 +103,7 @@ SUBROUTINE compute_gw( use_gmaps )
   USE symm_base, ONLY : s, nsym
   USE wvfct,     ONLY : npw, npwx, nbnd, igk, g2kin, wg, et
   USE control_flags, ONLY : gamma_only
-  USE gvect,         ONLY : ngm, g, gg, ig_l2g, ecutwfc, nl, nr1, nr2, nr3, nrxx
+  USE gvect,         ONLY : ngm, g, gg, ig_l2g, ecutwfc, nl
   USE fft_base,  ONLY: dfftp
   USE fft_interfaces, ONLY : fwfft, invfft
   USE klist ,        ONLY : nks, xk, wk
@@ -739,7 +739,7 @@ SUBROUTINE compute_gw( use_gmaps )
 
    OPEN (UNIT=313,FILE="vxcdiag.dat",STATUS="UNKNOWN")
    WRITE(313,*) "#         K            BND          <Vxc>"
-   ALLOCATE ( vxc(nrxx,nspin) )
+   ALLOCATE ( vxc(dfftp%nnr,nspin) )
    CALL v_xc (rho, rho_core, rhog_core, etxc, vtxc, vxc)
    DO ik=1,nkpt
       CALL gk_sort (xk (1, ik), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin)
@@ -753,12 +753,13 @@ SUBROUTINE compute_gw( use_gmaps )
          CALL invfft ('Dense', psic, dfftp)
          vxcdiag = 0.0d0
          !norma = 0.0d0
-         DO ir = 1, nrxx
+         DO ir = 1, dfftp%nnr
             vxcdiag = vxcdiag + vxc(ir,nspin) * &
                       ( dble(psic (ir) ) **2 + aimag(psic (ir) ) **2)
          !   norma = norma + ( DBLE(psic (ir) ) **2 + AIMAG(psic (ir) ) **2) / (nr1*nr2*nr3)
          ENDDO
-         vxcdiag = vxcdiag * rytoev / (nr1*nr2*nr3) ! PG: this is the correct integral - 27/8/2010
+ ! PG: this is the correct integral - 27/8/2010
+         vxcdiag = vxcdiag * rytoev / (dfftp%nr1*dfftp%nr2*dfftp%nr3)
          CALL mp_sum( vxcdiag ) !, intra_pool_comm )
          ! ONLY FOR DEBUG!
          !IF (norma /= 1.0) THEN

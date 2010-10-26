@@ -25,8 +25,7 @@ SUBROUTINE stm (wf, sample_bias, z, dz, stmdos)
   USE cell_base, ONLY: tpiba2, tpiba, omega, at, alat
   USE fft_base,  ONLY: dfftp
   USE fft_interfaces, ONLY : fwfft, invfft
-  USE gvect, ONLY: nr1x, nr2x, nr3x, ngm, g, ecutwfc, &
-       nl, nlm, nrxx
+  USE gvect, ONLY: ngm, g, ecutwfc, nl, nlm
   USE klist, ONLY: xk, lgauss, degauss, ngauss, wk, nks, nelec
   USE ener, ONLY: ef
   USE symme, ONLY : sym_rho, sym_rho_init
@@ -41,7 +40,7 @@ SUBROUTINE stm (wf, sample_bias, z, dz, stmdos)
   USE fft_base,  ONLY : grid_gather
 !
   IMPLICIT NONE
-  real(DP) :: sample_bias, z, dz, stmdos (nr1x * nr2x * nr3x)
+  real(DP) :: sample_bias, z, dz, stmdos (dfftp%nr1x*dfftp%nr2x*dfftp%nr3x)
   ! the stm density of states
   !
   !    And here the local variables
@@ -76,7 +75,7 @@ SUBROUTINE stm (wf, sample_bias, z, dz, stmdos)
   t0 = scnds ()
   ALLOCATE (gs( 2, npwx))
   ALLOCATE (a ( npwx))
-  ALLOCATE (psi(nr1x, nr2x))
+  ALLOCATE (psi(dfftp%nr1x, dfftp%nr2x))
   !
   stmdos(:) = 0.d0
   rho%of_r(:,:) = 0.d0
@@ -192,7 +191,7 @@ SUBROUTINE stm (wf, sample_bias, z, dz, stmdos)
            ENDIF
 
            CALL invfft ('Dense', psic, dfftp)
-           DO ir = 1, nrxx
+           DO ir = 1, dfftp%nnr
               rho%of_r (ir, 1) = rho%of_r (ir, 1) + w1* dble( psic(ir) )**2 + &
                                                     w2*aimag( psic(ir) )**2
            ENDDO
@@ -214,7 +213,7 @@ SUBROUTINE stm (wf, sample_bias, z, dz, stmdos)
            ENDDO
 
            CALL invfft ('Dense', psic, dfftp)
-           DO ir = 1, nrxx
+           DO ir = 1, dfftp%nnr
               rho%of_r (ir, 1) = rho%of_r (ir, 1) + w1 * &
                                 ( dble(psic (ir) ) **2 + aimag(psic (ir) ) **2)
            ENDDO

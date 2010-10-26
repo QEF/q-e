@@ -24,8 +24,8 @@ SUBROUTINE do_initial_state (excite)
   USE io_global,  ONLY : stdout
   USE cell_base,  ONLY : at, bg, alat, omega
   USE ions_base,  ONLY : nat, ntyp => nsp, ityp, tau, zv
-  USE gvect,      ONLY : ngm, gstart, nr1, nr2, nr3, nr1x, nr2x, nr3x, nrxx, &
-                         ngl, nl, igtongl, g, gg, gcutm, eigts1, eigts2, eigts3
+  USE gvect,      ONLY : ngm, gstart, ngl, nl, igtongl, g, gg, gcutm, eigts1, eigts2, eigts3
+  USE grid_dimensions, ONLY : nrxx
   USE lsda_mod,   ONLY : nspin
   USE symme,      ONLY : symscalar
   USE vlocal,     ONLY : strf, vloc

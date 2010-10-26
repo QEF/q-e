@@ -332,6 +332,7 @@ SUBROUTINE projwave( filproj, lsym, lgww )
   USE cell_base
   USE constants, ONLY: rytoev, eps4
   USE gvect
+  USE grid_dimensions, ONLY : nr1, nr2, nr3, nr1x, nr2x, nr3x
   USE klist, ONLY: xk, nks, nkstot, nelec
   USE ldaU
   USE lsda_mod, ONLY: nspin, isk, current_spin
@@ -659,8 +660,8 @@ SUBROUTINE projwave( filproj, lsym, lgww )
            ENDIF
            iunproj=33
            CALL write_io_header(filename, iunproj, title, nr1x, nr2x, nr3x, &
-                nr1, nr2, nr3, nat, ntyp, ibrav, celldm, at, gcutm, dual, &
-                ecutwfc, nkstot/nspin,nbnd,natomwfc)
+                nr1, nr2, nr3, nat, ntyp, ibrav, celldm, at, gcutm, dual,   &
+                ecutwfc, nkstot/nspin, nbnd, natomwfc)
            DO nwfc = 1, natomwfc
               WRITE(iunproj,'(2i5,a3,3i5)') &
                   nwfc, nlmchi(nwfc)%na, atm(ityp(nlmchi(nwfc)%na)), &
@@ -814,6 +815,7 @@ SUBROUTINE projwave_nc(filproj, lsym )
   USE cell_base
   USE constants, ONLY: rytoev, eps4
   USE gvect
+  USE grid_dimensions, ONLY : nr1, nr2, nr3, nr1x, nr2x, nr3x
   USE klist, ONLY: xk, nks, nkstot, nelec
   USE ldaU
   USE lsda_mod, ONLY: nspin
@@ -2108,6 +2110,7 @@ SUBROUTINE pprojwave( filproj, lsym )
   USE cell_base
   USE constants, ONLY: rytoev, eps4
   USE gvect
+  USE grid_dimensions, ONLY : nr1, nr2, nr3, nr1x, nr2x, nr3x
   USE klist, ONLY: xk, nks, nkstot, nelec
   USE ldaU
   USE lsda_mod, ONLY: nspin, isk, current_spin
@@ -3011,18 +3014,18 @@ SUBROUTINE projwave_boxes( filpdos, filproj, n_proj_boxes, irmin, irmax, plotbox
   ! ... Define functions with values 1.0
   ! ... on the specified boxes and 0.0 elsewhere.
   !
-  ALLOCATE( thetabox (nr1x*nr2x*nr3x) )
+  ALLOCATE( thetabox (dfftp%nr1x*dfftp%nr2x*dfftp%nr3x) )
   !
-  ALLOCATE( thetathisproc(nrxx,1:n_proj_boxes) )
+  ALLOCATE( thetathisproc(dfftp%nnr,1:n_proj_boxes) )
   !
-  ALLOCATE ( isInside ( max(nr1,nr2,nr3), 3 ) )
+  ALLOCATE ( isInside ( max(dfftp%nr1,dfftp%nr2,dfftp%nr3), 3 ) )
   !
   DO ibox = 1, n_proj_boxes
      !
      ! A. Do the three directions independently:
-     nri(1)=nr1
-     nri(2)=nr2
-     nri(3)=nr3
+     nri(1)=dfftp%nr1
+     nri(2)=dfftp%nr2
+     nri(3)=dfftp%nr3
      DO i = 1, 3
         ! boxes include the points in [irmin,irmax] if irmin<=irmax
         ! and the points in [1,irmax] and [irmin,nr] if irmin > irmax
@@ -3041,9 +3044,9 @@ SUBROUTINE projwave_boxes( filpdos, filproj, n_proj_boxes, irmin, irmax, plotbox
      !
      ! B. Combine the conditions for the three directions to form a box
      ir=0
-     DO ir3 = 1, nr3
-        DO ir2 = 1, nr2
-           DO ir1 = 1, nr1
+     DO ir3 = 1, dfftp%nr3
+        DO ir2 = 1, dfftp%nr2
+           DO ir1 = 1, dfftp%nr1
               ir=ir+1
               IF ( isInside(ir1,1) .and. &
                    isInside(ir2,2) .and. &
@@ -3080,8 +3083,9 @@ SUBROUTINE projwave_boxes( filpdos, filproj, n_proj_boxes, irmin, irmax, plotbox
         fileout = trim(filpdos)//trim(filextension)//'.xsf'
         OPEN (4,file=fileout,form='formatted', status='unknown')
         CALL xsf_struct (alat, at, nat, tau, atm, ityp, 4)
-        CALL xsf_fast_datagrid_3d &
-             (thetabox(1:nr1x*nr2x*nr3x), nr1, nr2, nr3, nr1x, nr2x, nr3x, at, alat, 4)
+        CALL xsf_fast_datagrid_3d(thetabox(1:dfftp%nr1x*dfftp%nr2x*dfftp%nr3x),&
+                 dfftp%nr1, dfftp%nr2, dfftp%nr3, &
+                 dfftp%nr1x, dfftp%nr2x, dfftp%nr3x, at, alat, 4)
         CLOSE (4)
         !
      ENDIF
@@ -3098,28 +3102,30 @@ SUBROUTINE projwave_boxes( filpdos, filproj, n_proj_boxes, irmin, irmax, plotbox
   !
   ALLOCATE ( boxvolume (1:n_proj_boxes) )
   ALLOCATE ( boxcharge (1:n_proj_boxes) )
-  ALLOCATE ( raux (nrxx) )
+  ALLOCATE ( raux (dfftp%nnr) )
   !
   ! A. Integrate the volume
   DO ibox = 1, n_proj_boxes
-     boxvolume(ibox) = sum(thetathisproc(1:nrxx,ibox))
+     boxvolume(ibox) = sum(thetathisproc(1:dfftp%nnr,ibox))
      CALL mp_sum ( boxvolume(ibox) , intra_pool_comm )
   ENDDO
   !
   ! B1. Copy the total charge density to raux
   IF (noncolin) THEN
-     CALL DCOPY (nrxx, rho%of_r, 1, raux, 1)
+     CALL DCOPY (dfftp%nnr, rho%of_r, 1, raux, 1)
   ELSE
-     CALL DCOPY (nrxx, rho%of_r (1, 1), 1, raux, 1)
+     CALL DCOPY (dfftp%nnr, rho%of_r (1, 1), 1, raux, 1)
      DO is = 2, nspin
-        CALL DAXPY (nrxx, 1.d0, rho%of_r (1, is), 1, raux, 1)
+        CALL DAXPY (dfftp%nnr, 1.d0, rho%of_r (1, is), 1, raux, 1)
      ENDDO
   ENDIF
   !
   ! B2. Integrate the charge
+  !     the correct integral has dv = omega/(nr1*nr2*nr3)
+  !     not  omega/(nr1x*nr2x*nr3x) . PG 24 Oct 2010
   DO ibox = 1, n_proj_boxes
-     boxcharge(ibox) = DDOT(nrxx,raux(:),1,thetathisproc(:,ibox),1) &
-          &   * omega / (nr1x*nr2x*nr3x)
+     boxcharge(ibox) = DDOT(dfftp%nnr,raux(:),1,thetathisproc(:,ibox),1) &
+          &   * omega / (dfftp%nr1*dfftp%nr2*dfftp%nr3)
      CALL mp_sum ( boxcharge(ibox) , intra_pool_comm )
   ENDDO
   !
@@ -3129,7 +3135,8 @@ SUBROUTINE projwave_boxes( filpdos, filproj, n_proj_boxes, irmin, irmax, plotbox
      DO ibox = 1, n_proj_boxes
         WRITE (stdout, &
              '(5x,"Box #",i3," : vol ",f10.6," % = ",f14.6," (a.u.)^3; ",e13.6," elec")') &
-             ibox, 100* boxvolume(ibox) /(nr1x*nr2x*nr3x), omega* boxvolume(ibox) /(nr1x*nr2x*nr3x), boxcharge(ibox)
+             ibox, 100* boxvolume(ibox) /(dfftp%nr1*dfftp%nr2*dfftp%nr3), &
+             omega* boxvolume(ibox)/(dfftp%nr1*dfftp%nr2*dfftp%nr3), boxcharge(ibox)
      ENDDO
   ENDIF
   !
@@ -3141,7 +3148,7 @@ SUBROUTINE projwave_boxes( filpdos, filproj, n_proj_boxes, irmin, irmax, plotbox
   ALLOCATE( proj(1:n_proj_boxes,nbnd,nkstot) )
   proj(:,:,:)=0._DP
   !
-  ALLOCATE( caux(nrxx) )
+  ALLOCATE( caux(dfftp%nnr) )
   !
   k_loop: DO ik = 1, nks
      !
@@ -3167,7 +3174,7 @@ SUBROUTINE projwave_boxes( filpdos, filproj, n_proj_boxes, irmin, irmax, plotbox
            !
         ELSE
            !
-           caux(1:nrxx) = (0._DP,0._DP)
+           caux(1:dfftp%nnr) = (0._DP,0._DP)
            DO ig = 1, npw
               caux (nl (igk (ig) ) ) = evc (ig, ibnd)
            ENDDO
@@ -3187,8 +3194,8 @@ SUBROUTINE projwave_boxes( filpdos, filproj, n_proj_boxes, irmin, irmax, plotbox
         ! squared wfc on a function =1 in the volume itself:
         !
         DO ibox = 1, n_proj_boxes
-           proj(ibox,ibnd,ik) = DDOT(nrxx,raux(:),1,thetathisproc(:,ibox),1) &
-                &               / (nr1x*nr2x*nr3x)
+           proj(ibox,ibnd,ik) = DDOT(dfftp%nnr,raux(:),1,thetathisproc(:,ibox),1) &
+                &               / (dfftp%nr1*dfftp%nr2*dfftp%nr3)
         ENDDO
         !
      ENDDO bnd_loop
@@ -3210,9 +3217,9 @@ SUBROUTINE projwave_boxes( filpdos, filproj, n_proj_boxes, irmin, irmax, plotbox
   IF ( ionode ) THEN
      IF (filproj/=' ') THEN
         iunproj=33
-        CALL write_io_header(filproj, iunproj, title, nr1x, nr2x, nr3x, &
-           nr1, nr2, nr3, nat, ntyp, ibrav, celldm, at, gcutm, dual, ecutwfc, &
-           nkstot,nbnd,natomwfc)
+        CALL write_io_header(filproj, iunproj, title, dfftp%nr1x, dfftp%nr2x, &
+           dfftp%nr3x, dfftp%nr1, dfftp%nr2, dfftp%nr3, nat, ntyp, ibrav, &
+           celldm, at, gcutm, dual, ecutwfc, nkstot,nbnd,natomwfc)
         DO ibox = 1, n_proj_boxes
            WRITE (iunproj,'(3i6)') ibox, n_proj_boxes
            WRITE (iunproj,'(i6,i6,f9.4,e13.6)') &

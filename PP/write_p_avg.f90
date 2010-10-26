@@ -14,8 +14,7 @@ SUBROUTINE write_p_avg(filp, spin_component, firstk, lastk)
   USE ions_base,            ONLY : nat, ityp, ntyp => nsp
   USE cell_base,            ONLY : tpiba2, at, bg, ibrav
   USE constants,            ONLY : rytoev
-  USE gvect,                ONLY : nr1x, nr2x, nr3x, nrxx, nr1, nr2, &
-                                   nr3, ngm, nl, g, ecutwfc
+  USE gvect,                ONLY : ngm, nl, g, ecutwfc
   USE lsda_mod,             ONLY : nspin
   USE ener,                 ONLY : ef
   USE wvfct,                ONLY : et, nbnd, npwx, npw, igk, g2kin

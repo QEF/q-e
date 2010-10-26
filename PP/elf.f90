@@ -32,7 +32,7 @@ SUBROUTINE do_elf (elf)
   USE cell_base, ONLY: omega, tpiba, tpiba2
   USE fft_base,  ONLY: dffts, dfftp
   USE fft_interfaces, ONLY : fwfft, invfft
-  USE gvect, ONLY: nrxx, gcutm, ecutwfc, dual, g, ngm, nl, nlm
+  USE gvect, ONLY: gcutm, ecutwfc, dual, g, ngm, nl, nlm
   USE gsmooth, ONLY : nls, nlsm, ngms, doublegrid
   USE io_files, ONLY: iunwfc, nwordwfc
   USE klist, ONLY: nks, xk
@@ -48,7 +48,7 @@ SUBROUTINE do_elf (elf)
   ! I/O variables
   !
   IMPLICIT NONE
-  real(DP) :: elf (nrxx)
+  real(DP) :: elf (dfftp%nnr)
   !
   ! local variables
   !
@@ -59,7 +59,7 @@ SUBROUTINE do_elf (elf)
   !
   CALL infomsg ('do_elf', 'elf + US not fully implemented')
   !
-  ALLOCATE (kkin(nrxx))
+  ALLOCATE (kkin(dfftp%nnr))
   ALLOCATE (aux (dffts%nnr))
   aux(:) = (0.d0,0.d0)
   kkin(:) = 0.d0
@@ -111,7 +111,7 @@ SUBROUTINE do_elf (elf)
   !
   IF (doublegrid) THEN
      DEALLOCATE (aux)
-     ALLOCATE(aux(nrxx))
+     ALLOCATE(aux(dfftp%nnr))
      CALL interpolate (kkin, kkin, 1)
   ENDIF
   !
@@ -142,7 +142,7 @@ SUBROUTINE do_elf (elf)
   !          aux --> charge density in Fourier space
   !         aux2 --> iG * rho(G)
   !
-  ALLOCATE ( tbos(nrxx), aux2(nrxx) )
+  ALLOCATE ( tbos(dfftp%nnr), aux2(dfftp%nnr) )
   tbos(:) = 0.d0
   !
   ! put the total (up+down) charge density in rho%of_r(*,1)
@@ -166,7 +166,7 @@ SUBROUTINE do_elf (elf)
      ENDIF
 
      CALL invfft ('Dense', aux2, dffts)
-     DO i = 1, nrxx
+     DO i = 1, dfftp%nnr
         tbos (i) = tbos (i) + dble(aux2(i))**2
      ENDDO
   ENDDO
@@ -175,7 +175,7 @@ SUBROUTINE do_elf (elf)
   !
   fac = 5.d0 / (3.d0 * (3.d0 * pi**2) ** (2.d0 / 3.d0) )
   elf(:) = 0.d0
-  DO i = 1, nrxx
+  DO i = 1, dfftp%nnr
      IF (rho%of_r (i,1) > 1.d-30) THEN
         d = fac / rho%of_r(i,1)**(5d0/3d0) * (kkin(i)-0.25d0*tbos(i)/rho%of_r(i,1))
         elf (i) = 1.0d0 / (1.0d0 + d**2)

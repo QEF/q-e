@@ -85,20 +85,21 @@ END PROGRAM wannier_plot
 
 SUBROUTINE plot_wannier(nc,n0)
 
-  USE io_global, ONLY: stdout, ionode, ionode_id
+  USE io_global,     ONLY : stdout, ionode, ionode_id
   USE io_files
-  USE kinds, ONLY: DP
-  USE wannier_new, ONLY: nwan,plot_wan_num,plot_wan_spin
-  USE klist, ONLY: nks, xk, wk
-  USE lsda_mod, ONLY: isk, current_spin, lsda, nspin
-  USE wvfct, ONLY: nbnd, npwx, igk, npw, g2kin
-  USE constants,  ONLY : rytoev , tpi
+  USE kinds,         ONLY : DP
+  USE wannier_new,   ONLY : nwan,plot_wan_num,plot_wan_spin
+  USE klist,         ONLY : nks, xk, wk
+  USE lsda_mod,      ONLY : isk, current_spin, lsda, nspin
+  USE wvfct,         ONLY : nbnd, npwx, igk, npw, g2kin
+  USE constants,     ONLY : rytoev , tpi
   USE buffers
-  USE symm_base,  ONLY : nsym
-  USE ldaU,       ONLY : swfcatom
-  USE fft_base,    ONLY: dffts
-  USE fft_interfaces, ONLY : invfft
+  USE symm_base,     ONLY : nsym
+  USE ldaU,          ONLY : swfcatom
+  USE fft_base,      ONLY : dffts
+  USE fft_interfaces,ONLY : invfft
   USE gvect
+  USE grid_dimensions,ONLY: nr1, nr2, nr3 
   USE gsmooth
   USE cell_base
   USE ions_base, ONLY : nat, ntyp=>nsp, ityp, tau, atm, zv

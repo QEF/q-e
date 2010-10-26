@@ -18,7 +18,6 @@ SUBROUTINE local_dos1d (ik, kband, plan)
   USE ions_base, ONLY: nat, ntyp=>nsp, ityp
   USE fft_base,  ONLY: dffts, dfftp
   USE fft_interfaces, ONLY : fwfft, invfft
-  USE gvect,     ONLY : nrxx, nr3
   USE gsmooth,   ONLY : nls, doublegrid
   USE lsda_mod, ONLY: current_spin
   USE uspp, ONLY: becsum, indv, nhtol, nhtoj
@@ -36,7 +35,7 @@ SUBROUTINE local_dos1d (ik, kband, plan)
   ! input: the k point
   ! input: the band
 
-  real(DP) :: plan (nr3)
+  real(DP) :: plan (dfftp%nr3)
   ! output: the planar average of this state
   !
   !    Additional local variables for Ultrasoft PP's
@@ -68,8 +67,8 @@ SUBROUTINE local_dos1d (ik, kband, plan)
   COMPLEX(DP), ALLOCATABLE :: prho (:), be1(:,:), be2(:,:)
   ! complex charge for fft
 
-  ALLOCATE (prho(nrxx))
-  ALLOCATE (aux(nrxx))
+  ALLOCATE (prho(dfftp%nnr))
+  ALLOCATE (aux(dfftp%nnr))
   IF (lspinorb) THEN
      ALLOCATE(be1(nhm,2))
      ALLOCATE(be2(nhm,2))
@@ -212,7 +211,7 @@ SUBROUTINE local_dos1d (ik, kband, plan)
   IF (doublegrid) THEN
      CALL interpolate (aux, aux, 1)
   ENDIF
-  DO ir = 1, nrxx
+  DO ir = 1, dfftp%nnr
      prho (ir) = cmplx(aux (ir), 0.d0,kind=DP)
   ENDDO
   CALL fwfft ('Dense', prho, dfftp)

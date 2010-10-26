@@ -26,6 +26,7 @@ SUBROUTINE chdens (filplot,plot_num)
   USE fft_base,   ONLY: grid_scatter, dfftp
   USE fft_interfaces, ONLY : fwfft
   USE gvect
+  USE grid_dimensions, ONLY: nr1,nr2,nr3, nr1x,nr2x,nr3x, nrxx
   USE gsmooth
   USE wavefunctions_module,  ONLY: psic
   USE io_files, ONLY: nd_nmbr

@@ -14,8 +14,8 @@ SUBROUTINE sym_band(filband, spin_component, firstk, lastk)
   USE ions_base,            ONLY : nat, ityp, ntyp => nsp
   USE cell_base,            ONLY : tpiba2, at, bg, ibrav
   USE constants,            ONLY : rytoev
-  USE gvect,                ONLY : nr1x, nr2x, nr3x, nrxx, nr1, nr2, &
-       nr3, ngm, nl, g, ecutwfc
+  USE grid_dimensions,      ONLY : nr1x, nr2x, nr3x, nrxx, nr1, nr2, nr3
+  USE gvect,                ONLY : ngm, nl, g, ecutwfc
   USE lsda_mod,             ONLY : nspin
   USE wvfct,                ONLY : et, nbnd, npwx, npw, igk, g2kin
   USE klist,                ONLY : xk, nks, nkstot

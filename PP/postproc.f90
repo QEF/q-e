@@ -61,6 +61,7 @@ SUBROUTINE extract (filplot,plot_num)
   USE ener,      ONLY : ef
   USE ions_base, ONLY : nat, ntyp=>nsp, ityp, tau
   USE gvect
+  USE grid_dimensions, ONLY : nr1, nr2, nr3
   USE klist,     ONLY : two_fermi_energies
   USE vlocal,    ONLY : strf
   USE io_files,  ONLY : tmp_dir, prefix, trimcheck

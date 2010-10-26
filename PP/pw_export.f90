@@ -268,6 +268,7 @@ PROGRAM pw_export
 
   USE wrappers,  ONLY : f_mkdir
   USE pwcom
+  USE grid_dimensions, ONLY : nr1, nr2, nr3
   USE io_global, ONLY : stdout, ionode, ionode_id
   USE io_files,  ONLY : psfile, pseudo_dir, trimcheck
   USE io_files,  ONLY : prefix, tmp_dir, outdir

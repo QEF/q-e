@@ -17,6 +17,7 @@ SUBROUTINE work_function (wf)
   USE lsda_mod,  ONLY : nspin, current_spin
   USE scf,       ONLY : rho, vltot, v, rho_core, rhog_core
   USE gvect
+  USE grid_dimensions, ONLY : nrxx, nr1x, nr2x, nr3x, nr1, nr2, nr3
   USE cell_base, ONLY : omega, alat
   USE fft_base,  ONLY : grid_gather
   USE mp,        ONLY : mp_bcast

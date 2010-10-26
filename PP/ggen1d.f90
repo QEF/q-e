@@ -14,7 +14,8 @@ SUBROUTINE ggen1d (ngm1d, g1d, gg1d, ig1dto3d, nl1d, igtongl1d)
   !
   USE kinds, ONLY: DP
   USE cell_base, ONLY : at
-  USE gvect, ONLY: nr3, ngm, g, gg, igtongl
+  USE gvect, ONLY: ngm, g, gg, igtongl
+  USE grid_dimensions, ONLY: nr3
   IMPLICIT NONE
   INTEGER :: ngm1d, ig1dto3d (nr3), igtongl1d (nr3), nl1d (nr3)
   ! output: the number of 1D G vectors on this processor

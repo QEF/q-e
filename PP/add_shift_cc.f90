@@ -18,7 +18,7 @@ SUBROUTINE add_shift_cc (shift_cc)
   USE cell_base, ONLY: alat, omega, tpiba, tpiba2
   USE fft_base,  ONLY: dfftp
   USE fft_interfaces, ONLY : fwfft
-  USE gvect, ONLY: ngm, gstart, nrxx, nl, g, gg, ngl, gl, igtongl
+  USE gvect, ONLY: ngm, gstart, nl, g, gg, ngl, gl, igtongl
   USE ener, ONLY: etxc, vtxc
   USE lsda_mod, ONLY: nspin
   USE scf, ONLY: rho, rho_core, rhog_core
@@ -60,17 +60,17 @@ SUBROUTINE add_shift_cc (shift_cc)
   !
   ! recalculate the exchange-correlation potential
   !
-  ALLOCATE ( vxc(nrxx,nspin), shift_(nat) )
+  ALLOCATE ( vxc(dfftp%nnr,nspin), shift_(nat) )
   shift_(:) = 0.d0
   !
   CALL v_xc (rho, rho_core, rhog_core, etxc, vtxc, vxc)
   !
   IF (nspin==1) THEN
-     DO ir = 1, nrxx
+     DO ir = 1, dfftp%nnr
         psic (ir) = vxc (ir, 1)
      ENDDO
   ELSE
-     DO ir = 1, nrxx
+     DO ir = 1, dfftp%nnr
         psic (ir) = 0.5d0 * (vxc (ir, 1) + vxc (ir, 2) )
      ENDDO
   ENDIF

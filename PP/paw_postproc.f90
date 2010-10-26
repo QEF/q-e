@@ -19,7 +19,6 @@ SUBROUTINE PAW_make_ae_charge(rho)
    USE fft_base,          ONLY : dfftp
    USE mp_global,         ONLY : me_pool
    USE splinelib,         ONLY : spline, splint
-   USE gvect,             ONLY : nr1, nr2, nr3, nr1x, nr2x, nr3x, nrxx
    USE cell_base,         ONLY : at, bg, alat
 
    TYPE(scf_type), INTENT(inout) :: rho
@@ -37,9 +36,9 @@ SUBROUTINE PAW_make_ae_charge(rho)
 
    ! Some initialization
    !
-   inv_nr1 = 1.D0 / dble( nr1 )
-   inv_nr2 = 1.D0 / dble( nr2 )
-   inv_nr3 = 1.D0 / dble( nr3 )
+   inv_nr1 = 1.D0 / dble(  dfftp%nr1 )
+   inv_nr2 = 1.D0 / dble(  dfftp%nr2 )
+   inv_nr3 = 1.D0 / dble(  dfftp%nr3 )
    !
    ! I cannot parallelize on atoms, because it is already parallelized
    ! on charge slabs
@@ -103,22 +102,22 @@ SUBROUTINE PAW_make_ae_charge(rho)
          DEALLOCATE(d1y, d2y)
          !
 #if defined (__PARA)
-         idx0 = nr1x*nr2x * sum ( dfftp%npp(1:me_pool) )
+         idx0 =  dfftp%nr1x* dfftp%nr2x * sum ( dfftp%npp(1:me_pool) )
 #else
          idx0 = 0
 #endif
-         rsp_point : DO ir = 1, nrxx
+         rsp_point : DO ir = 1,  dfftp%nnr
             !
             ! three dimensional indices (i,j,k)
             idx   = idx0 + ir - 1
-            k     = idx / (nr1x*nr2x)
-            idx   = idx - (nr1x*nr2x)*k
-            j     = idx / nr1x
-            idx   = idx - nr1x*j
+            k     = idx / ( dfftp%nr1x* dfftp%nr2x)
+            idx   = idx - ( dfftp%nr1x* dfftp%nr2x)*k
+            j     = idx /  dfftp%nr1x
+            idx   = idx -  dfftp%nr1x*j
             l     = idx
             !
             ! ... do not include points outside the physical range!
-            IF ( l >= nr1 .or. j >= nr2 .or. k >= nr3 ) CYCLE rsp_point
+            IF ( l >=  dfftp%nr1 .or. j >=  dfftp%nr2 .or. k >=  dfftp%nr3 ) CYCLE rsp_point
             !
             DO ipol = 1, 3
                posi(ipol) = dble( l )*inv_nr1*at(ipol,1) + &
