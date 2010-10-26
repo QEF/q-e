@@ -268,6 +268,17 @@ input_description -distribution {Quantum Espresso} -package PWscf -program ph.x 
 	    }
 	}
 
+	var lqdir  -type LOGICAL { 
+	    default { .false. }
+	    info {
+		If .true. ph.x creates inside outdir a separate subdirectory 
+                for each q vector. The flag is set to .true. when ldisp=
+                .true. and fildvscf /= ' ' or when elph is true. The induced
+                potential is saved separately for each q inside the 
+                subdirectories.
+	    }
+	}
+
 	var search_sym  -type LOGICAL { 
 	    default { .true. }
 	    info {
