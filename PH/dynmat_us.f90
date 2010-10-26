@@ -21,7 +21,7 @@ SUBROUTINE dynmat_us()
   USE scf,                  ONLY : rho
   USE fft_base,             ONLY : dfftp
   USE fft_interfaces,       ONLY : fwfft
-  USE gvect,                ONLY : nrxx, g, ngm, nl, igtongl
+  USE gvect,                ONLY : g, ngm, nl, igtongl
   USE wvfct,                ONLY : npw, npwx, nbnd, igk, wg, et
   USE lsda_mod,             ONLY : lsda, current_spin, isk, nspin
   USE vlocal,               ONLY : vloc
@@ -68,7 +68,7 @@ SUBROUTINE dynmat_us()
   ! work space
 
   CALL start_clock ('dynmat_us')
-  ALLOCATE (rhog  ( nrxx))
+  ALLOCATE (rhog  ( dfftp%nnr))
   ALLOCATE (work1 ( npwx))
   ALLOCATE (work2 ( npwx))
   ALLOCATE (aux1  ( npwx*npol , nbnd))

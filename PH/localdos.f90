@@ -23,7 +23,7 @@ subroutine localdos (ldos, ldoss, dos_ef)
   USE ener,      ONLY : ef
   USE fft_base,  ONLY: dffts
   USE fft_interfaces, ONLY: invfft
-  USE gvect,     ONLY : nrxx
+  USE grid_dimensions,ONLY : nrxx
   USE gsmooth,   ONLY : doublegrid, nls
   USE klist,     ONLY : xk, wk, degauss, ngauss
   USE lsda_mod,  ONLY : nspin, lsda, current_spin, isk
@@ -257,7 +257,7 @@ subroutine localdos_paw (ldos, ldoss, becsum1, dos_ef)
   USE ener,      ONLY : ef
   USE fft_base,  ONLY : dffts
   USE fft_interfaces, ONLY: invfft
-  USE gvect,     ONLY : nrxx
+  USE grid_dimensions,ONLY : nrxx
   USE gsmooth,   ONLY : doublegrid, nls
   USE klist,     ONLY : xk, wk, degauss, ngauss
   USE lsda_mod,  ONLY : nspin, lsda, current_spin, isk

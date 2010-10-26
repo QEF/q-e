@@ -15,7 +15,7 @@ SUBROUTINE elphon()
   USE kinds, ONLY : DP
   USE cell_base, ONLY : celldm, omega, ibrav
   USE ions_base, ONLY : nat, ntyp => nsp, ityp, tau, pmass
-  USE gvect, ONLY: nrxx
+  USE grid_dimensions, ONLY: nrxx
   USE gsmooth, ONLY: doublegrid
   USE smooth_grid_dimensions, ONLY: nrxxs
   USE noncollin_module, ONLY : nspin_mag

@@ -18,8 +18,8 @@ subroutine dvpsi_e2
   USE kinds,           ONLY : DP
   USE cell_base,       ONLY : omega
   USE klist,           ONLY : wk
-  USE gvect,           ONLY : nrxx
   USE gsmooth,         ONLY : doublegrid
+  USE grid_dimensions,        ONLY : nrxx
   USE smooth_grid_dimensions, ONLY : nrxxs
   USE wvfct,           ONLY : npw, npwx, nbnd, igk
   USE wavefunctions_module, ONLY: evc

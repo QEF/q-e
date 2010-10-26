@@ -18,7 +18,8 @@ subroutine lr_apply_liouvillian( evc1, evc1_new, sevc1_new, interaction )
   use fft_base,             only : dffts
   use fft_interfaces,       only : fwfft
   use gsmooth,              only : nls, nlsm
-  use gvect,                only : nrxx, nl, ngm, gstart, g, gg
+  use gvect,                only : nl, ngm, gstart, g, gg
+  use grid_dimensions,      only : nrxx
   use io_global,            only : stdout
   use kinds,                only : dp
   use klist,                only : nks, xk

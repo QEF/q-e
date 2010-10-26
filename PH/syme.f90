@@ -17,7 +17,7 @@ subroutine syme (dvsym)
   !
   !
 
-  USE gvect,     only : nr1,nr2,nr3, nr1x,nr2x,nr3x
+  USE grid_dimensions, only : nr1,nr2,nr3, nr1x,nr2x,nr3x
   USE symm_base, only : nsym, s, ftau
   USE noncollin_module, only : nspin_lsda, nspin_mag
   USE kinds, only : DP

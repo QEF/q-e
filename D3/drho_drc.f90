@@ -40,8 +40,8 @@ SUBROUTINE drho_drc (iudrho_x, u_x, xq_x, drc_x, scalef)
   COMPLEX (DP), ALLOCATABLE :: drhoc (:), drhov (:), uact (:)
 
 
-  ALLOCATE  (drhoc( nrxx))
-  ALLOCATE  (drhov( nrxx))
+  ALLOCATE  (drhoc( dfftp%nnr))
+  ALLOCATE  (drhov( dfftp%nnr))
   ALLOCATE  (uact( 3 * nat))
 
   DO ipert = 1, 3 * nat

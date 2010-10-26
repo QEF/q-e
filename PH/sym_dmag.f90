@@ -14,7 +14,7 @@ subroutine sym_dmag (nper, irr, dmagtosym)
   !
   USE kinds, only : DP
   USE constants, ONLY: tpi
-  USE gvect, ONLY: nr1, nr2, nr3, nr1x, nr2x, nr3x
+  USE grid_dimensions, ONLY: nr1, nr2, nr3, nr1x, nr2x, nr3x
   USE cell_base, ONLY : at, bg
   USE symm_base, ONLY : s, ftau, t_rev, sname, invs
   USE noncollin_module, ONLY: nspin_mag

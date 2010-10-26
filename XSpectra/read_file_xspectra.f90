@@ -28,8 +28,9 @@ SUBROUTINE read_file_xspectra(xread_wf)
   USE cellmd,               ONLY : cell_factor, lmovecell
   USE fft_base,             ONLY : dfftp
   USE fft_interfaces,       ONLY : fwfft
-  USE gvect,                ONLY : gg, ecutwfc, ngm, g, nr1, nr2, nr3, nrxx,&
+  USE gvect,                ONLY : gg, ecutwfc, ngm, g, &
                                    eigts1, eigts2, eigts3, nl, gstart
+  USE grid_dimensions,      ONLY : nr1, nr2, nr3, nrxx
   USE gsmooth,              ONLY : ngms, nls
   USE spin_orb,             ONLY : lspinorb, domag
   USE scf,                  ONLY : rho, rho_core, rhog_core, v

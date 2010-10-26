@@ -21,7 +21,7 @@ subroutine drhodvus (irr, imode0, dvscfin, npe)
   !
   USE kinds,     ONLY : DP
   USE ions_base, ONLY : nat, ntyp=>nsp, ityp
-  USE gvect,     ONLY : nrxx, nr1, nr2, nr3
+  USE grid_dimensions, ONLY : nrxx, nr1, nr2, nr3
   USE cell_base, ONLY : omega
   USE ions_base, ONLY : nat
   USE uspp,      ONLY : okvan

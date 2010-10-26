@@ -14,7 +14,7 @@ SUBROUTINE allocate_vdw
   ! local potential for each kind of atom, structure factor
   !
   USE lsda_mod,  ONLY : nspin
-  USE gvect,     ONLY : nrxx
+  USE grid_dimensions, ONLY : nrxx
   USE wvfct,     ONLY : npwx, nbnd
   USE qpoint,    ONLY : nksq
   USE eff_v

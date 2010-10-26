@@ -16,7 +16,8 @@ subroutine addnlcc (imode0, drhoscf, npe)
   use funct, only : dft_is_gradient
   USE cell_base, ONLY : omega, alat
   use scf, only : rho, rho_core
-  USE gvect, ONLY : nrxx, g, ngm, nl, nr1x, nr2x, nr3x, nr1, nr2, nr3
+  USE gvect, ONLY : g, ngm, nl
+  USE grid_dimensions, ONLY :  nrxx, nr1, nr2, nr3
   USE noncollin_module, ONLY : nspin_lsda, nspin_gga, nspin_mag
   USE dynmat, ONLY : dyn, dyn_rec
   USE modes,  ONLY : nirr, npert

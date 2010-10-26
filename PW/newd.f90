@@ -22,7 +22,7 @@ SUBROUTINE newq(vr,deeq,skip_vltot)
   USE fft_base,             ONLY : dfftp
   USE fft_interfaces,       ONLY : fwfft
   USE gvect,                ONLY : g, gg, ngm, gstart, ig1, ig2, ig3, &
-                                   eigts1, eigts2, eigts3, nl, nrxx
+                                   eigts1, eigts2, eigts3, nl
   USE lsda_mod,             ONLY : nspin
   USE scf,                  ONLY : vltot
   USE uspp,                 ONLY : okvan, indv
@@ -38,7 +38,7 @@ SUBROUTINE newq(vr,deeq,skip_vltot)
   !
   !
   ! Input: potential , output: contribution to integral
-  REAL(kind=dp), intent(in)  :: vr(nrxx,nspin)
+  REAL(kind=dp), intent(in)  :: vr(dfftp%nnr,nspin)
   REAL(kind=dp), intent(out) :: deeq( nhm, nhm, nat, nspin )
   LOGICAL, intent(in) :: skip_vltot !If .false. vltot is added to vr when necessary
   ! INTERNAL

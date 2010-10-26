@@ -16,6 +16,7 @@ SUBROUTINE write_tensor_field(name, ispin, field)
   USE mp_global,                   ONLY : me_pool
   USE cell_base,                   ONLY : at, bg, alat
   USE ions_base,                   ONLY : nat, tau, atm, ityp
+  USE grid_dimensions,             ONLY : nr1x, nr2x, nr3x, nr1, nr2, nr3
   USE pwcom
   USE gipaw_module
   !--------------------------------------------------------------------

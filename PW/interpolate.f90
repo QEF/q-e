@@ -16,14 +16,14 @@ subroutine interpolate (v, vs, iflag)
   !     V and Vs are real and in real space . V and Vs may coincide
   !
   USE kinds, ONLY: DP
-  USE gvect,  ONLY: nrxx, nl, nlm
+  USE gvect,  ONLY: nl, nlm
   USE gsmooth,ONLY: ngms, nls, nlsm, doublegrid
   USE control_flags, ONLY: gamma_only
   USE fft_base,      ONLY : dfftp, dffts
   USE fft_interfaces,ONLY : fwfft, invfft
   !
   implicit none
-  real(DP) :: v (nrxx), vs (dffts%nnr)
+  real(DP) :: v (dfftp%nnr), vs (dffts%nnr)
   ! function on thick mesh
   ! function on smooth mesh
 
@@ -42,7 +42,7 @@ subroutine interpolate (v, vs, iflag)
      !    from thick to smooth
      !
      if (doublegrid) then
-        allocate (aux( nrxx))    
+        allocate (aux( dfftp%nnr))    
         allocate (auxs(dffts%nnr))    
         aux (:) = v (:)
         CALL fwfft ('Dense', aux, dfftp)
@@ -60,7 +60,7 @@ subroutine interpolate (v, vs, iflag)
         deallocate (auxs)
         deallocate (aux)
      else
-        do ir = 1, nrxx
+        do ir = 1, dfftp%nnr
            vs (ir) = v (ir)
         enddo
      endif
@@ -69,7 +69,7 @@ subroutine interpolate (v, vs, iflag)
      !   from smooth to thick
      !
      if (doublegrid) then
-        allocate (aux( nrxx))    
+        allocate (aux( dfftp%nnr))    
         allocate (auxs(dffts%nnr))    
         auxs (:) = vs (:)
         CALL fwfft ('Smooth', auxs, dffts)
@@ -87,7 +87,7 @@ subroutine interpolate (v, vs, iflag)
         deallocate (auxs)
         deallocate (aux)
      else
-        do ir = 1, nrxx
+        do ir = 1, dfftp%nnr
            v (ir) = vs (ir)
         enddo
      endif
@@ -106,14 +106,14 @@ subroutine cinterpolate (v, vs, iflag)
   !     V and Vs are complex and in real space . V and Vs may coincide
   !
   USE kinds, ONLY: DP
-  USE gvect,  ONLY: nrxx, nl, nlm
+  USE gvect,  ONLY: nl, nlm
   USE gsmooth,ONLY: ngms, nls, nlsm, doublegrid
   USE control_flags, ONLY: gamma_only
   USE fft_base,      ONLY : dfftp, dffts
   USE fft_interfaces,ONLY : fwfft, invfft
   !
   IMPLICIT NONE
-  complex(DP) :: v (nrxx), vs (dffts%nnr)
+  complex(DP) :: v (dfftp%nnr), vs (dffts%nnr)
   ! function on thick mesh
   ! function on smooth mesh
 
@@ -133,7 +133,7 @@ subroutine cinterpolate (v, vs, iflag)
      !    from thick to smooth
      !
      if (doublegrid) then
-        allocate (aux ( nrxx))    
+        allocate (aux ( dfftp%nnr))    
         aux (:) = v(:) 
         CALL fwfft ('Dense', aux, dfftp)
         vs (:) = (0.d0, 0.d0)
@@ -143,7 +143,7 @@ subroutine cinterpolate (v, vs, iflag)
         CALL invfft ('Smooth', vs, dffts)
         deallocate (aux)
      else
-        call zcopy (nrxx, v, 1, vs, 1)
+        call zcopy (dfftp%nnr, v, 1, vs, 1)
      endif
   else
      !
@@ -160,7 +160,7 @@ subroutine cinterpolate (v, vs, iflag)
         CALL invfft ('Dense', v, dfftp)
         deallocate (auxs)
      else
-        call zcopy (nrxx, vs, 1, v, 1)
+        call zcopy (dfftp%nnr, vs, 1, v, 1)
      endif
   endif
   call stop_clock ('cinterpolate')

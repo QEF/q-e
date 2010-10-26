@@ -15,11 +15,12 @@ subroutine set_fft_dim
   !     given as input parameters. Input values are kept otherwise.
   !
   USE io_global,  ONLY : stdout
-  USE cell_base, ONLY: at
-  USE gvect, ONLY: gcutm, nr1, nr2, nr3
-  USE gsmooth, ONLY: doublegrid, gcutms
+  USE cell_base,  ONLY: at
+  use fft_scalar, ONLY: allowed
+  USE gvect,      ONLY: gcutm
+  USE gsmooth,    ONLY: doublegrid, gcutms
+  USE grid_dimensions,        ONLY: nr1, nr2, nr3
   USE smooth_grid_dimensions, ONLY : nr1s, nr2s, nr3s
-  use fft_scalar, only: allowed
   implicit none
 
   integer, parameter :: nmax = 5000

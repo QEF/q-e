@@ -27,7 +27,8 @@ SUBROUTINE solve_e_vdw ( iu )
   USE fft_base,              ONLY : dffts
   USE fft_interfaces,        ONLY : fwfft, invfft
   USE pwcom
-  USE scf, ONLY : vrs
+  USE grid_dimensions,       ONLY :nrxx
+  USE scf,                   ONLY : vrs
   USE check_stop,            ONLY : check_stop_now
 !  USE wavefunctions_module,  ONLY : evc
   USE kinds,                 ONLY : DP

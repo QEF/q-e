@@ -21,7 +21,7 @@ SUBROUTINE dvpsi_kb(kpoint,nu)
   USE uspp,       ONLY: dvan, nkb, vkb
   USE fft_base,   ONLY: dfftp
   USE fft_interfaces, ONLY : invfft
-  USE gvect,      ONLY : gstart, nl, nlm, nrxx, ngl, ngm, g, gg, gl, igtongl
+  USE gvect,      ONLY : gstart, nl, nlm, ngl, ngm, g, gg, gl, igtongl
   USE vlocal,     ONLY: vloc
   USE wvfct,      ONLY: nbnd, npwx, npw, g2kin, igk
   USE wavefunctions_module,  ONLY: evc, psic
@@ -73,7 +73,7 @@ SUBROUTINE dvpsi_kb(kpoint,nu)
   !   dVloc/dtau in real space
   !
   CALL invfft ('Dense', dvloc, dfftp)
-  DO ir = 1,nrxx
+  DO ir = 1,dfftp%nnr
      dv(ir) =  dble(dvloc(ir))
   ENDDO
   IF (has_nlcc) THEN
@@ -81,7 +81,7 @@ SUBROUTINE dvpsi_kb(kpoint,nu)
         dvb_cc (nlm(ng))=conjg(dvb_cc(nl(ng)))
      ENDDO
      CALL invfft ('Dense', dvb_cc, dfftp)
-     DO ir = 1,nrxx
+     DO ir = 1,dfftp%nnr
         dv(ir) = dv(ir) +  dble(dvb_cc(ir)) * dmuxc(ir)
      ENDDO
   ENDIF

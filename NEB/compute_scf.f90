@@ -26,7 +26,8 @@ SUBROUTINE compute_scf( fii, lii, stat  )
   USE check_stop,       ONLY : check_stop_now
   USE vlocal,           ONLY : strf
   USE cell_base,        ONLY : bg, alat
-  USE gvect,            ONLY : ngm, g, nr1, nr2, nr3, eigts1, eigts2, eigts3
+  USE gvect,            ONLY : ngm, g, eigts1, eigts2, eigts3
+  USE grid_dimensions,  ONLY : nr1, nr2, nr3
   USE ions_base,        ONLY : tau, nat, nsp, ityp
   USE ener,             ONLY : etot
   USE force_mod,        ONLY : force

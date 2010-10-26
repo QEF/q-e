@@ -17,7 +17,7 @@ subroutine syme2 (dvsym)
   ! the symmetric 3x3 tensor are given by the common variables: jab; a1j; a2j
   !
   use kinds,  only : DP
-  USE gvect,  ONLY: nr1x,nr2x,nr3x, nr1,nr2,nr3
+  USE grid_dimensions, ONLY: nr1x,nr2x,nr3x, nr1,nr2,nr3
   USE symm_base,  ONLY: nsym, s, ftau
   USE ramanm, ONLY: jab
   implicit none

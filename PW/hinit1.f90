@@ -13,7 +13,8 @@ SUBROUTINE hinit1()
   !
   USE ions_base,     ONLY : nat, nsp, ityp, tau
   USE cell_base,     ONLY : at, bg, omega, tpiba2
-  USE gvect,         ONLY : nr1, nr2, nr3, nrxx, ngm, g
+  USE grid_dimensions,ONLY: nrxx
+  USE gvect,         ONLY : ngm, g
   USE gsmooth,       ONLY : doublegrid
   USE ldaU,          ONLY : lda_plus_u
   USE lsda_mod,      ONLY : nspin

@@ -29,8 +29,7 @@ subroutine addusddens (drhoscf, dbecsum, mode0, npe, iflag)
   USE kinds, only : DP
   use fft_base,  only: dfftp
   use fft_interfaces, only: invfft
-  USE gvect,  ONLY : gg, ngm, nrxx, &
-                     nl, g, eigts1, eigts2, eigts3, ig1, ig2, ig3
+  USE gvect,  ONLY : gg, ngm, nl, g, eigts1, eigts2, eigts3, ig1, ig2, ig3
   USE uspp,     ONLY : okvan, becsum
   USE cell_base, ONLY : tpiba
   USE ions_base, ONLY : nat, ityp, ntyp => nsp
@@ -53,7 +52,7 @@ subroutine addusddens (drhoscf, dbecsum, mode0, npe, iflag)
   ! input: if zero does not compute drho
   ! input: the number of perturbations
 
-  complex(DP) :: drhoscf (nrxx, nspin_mag, npe), &
+  complex(DP) :: drhoscf (dfftp%nnr, nspin_mag, npe), &
                       dbecsum (nhm*(nhm+1)/2, nat, nspin_mag, npe)
   ! inp/out: change of the charge density
   !input: sum over kv of bec
@@ -190,7 +189,7 @@ subroutine addusddens (drhoscf, dbecsum, mode0, npe, iflag)
            psic (nl (ig) ) = aux (ig, is, ipert)
         enddo
         CALL invfft ('Dense', psic, dfftp)
-        call daxpy (2*nrxx, 1.0_DP, psic, 1, drhoscf(1,is,ipert), 1)
+        call daxpy (2*dfftp%nnr, 1.0_DP, psic, 1, drhoscf(1,is,ipert), 1)
      enddo
   enddo
   if (.not.lgamma) deallocate (qpg)
@@ -201,11 +200,11 @@ subroutine addusddens (drhoscf, dbecsum, mode0, npe, iflag)
   deallocate (aux)
 
   if (iflag == 0) then
-     allocate (drhous( nrxx, nspin_mag))
+     allocate (drhous( dfftp%nnr, nspin_mag))
      do ipert = 1, npe
         mu = mode0 + ipert
         call davcio (drhous, lrdrhous, iudrhous, mu, -1)
-        call daxpy (2*nrxx*nspin_mag, 1.d0, drhous, 1, drhoscf(1,1,ipert), 1)
+        call daxpy (2*dfftp%nnr*nspin_mag, 1.d0, drhous, 1, drhoscf(1,1,ipert), 1)
      end do
      deallocate (drhous)
   end if

@@ -18,7 +18,8 @@ subroutine allocate_phq
   USE ions_base, ONLY : nat, ntyp => nsp
   USE klist, only : nks
   USE wvfct, ONLY : nbnd, igk, npwx
-  USE gvect, ONLY : nrxx, ngm
+  USE grid_dimensions, ONLY : nrxx
+  USE gvect, ONLY : ngm
   USE lsda_mod, ONLY : nspin
   USE noncollin_module, ONLY : noncolin, npol, nspin_mag
   USE wavefunctions_module,  ONLY: evc

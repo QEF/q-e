@@ -395,6 +395,7 @@ SUBROUTINE cg_neweps
   USE io_global, ONLY : stdout
   USE ions_base, ONLY : nat, tau
   USE pwcom
+  USE grid_dimensions, ONLY : nrxx
   USE scf, ONLY : rho, rho_core
   USE cgcom
   USE funct, ONLY: dmxc

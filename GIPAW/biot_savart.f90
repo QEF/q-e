@@ -17,7 +17,7 @@ SUBROUTINE biot_savart(jpol)
   USE constants,            ONLY : fpi
   USE klist,                ONLY : xk
   USE wvfct,                ONLY : nbnd, npwx, npw, igk
-  USE gvect,                ONLY : ngm, gstart, nrxx, nl, nlm, g, gg
+  USE gvect,                ONLY : ngm, gstart, nl, nlm, g, gg
   USE fft_base,             ONLY : dffts
   USE fft_interfaces,       ONLY : fwfft, invfft
   USE pwcom
@@ -74,7 +74,7 @@ SUBROUTINE field_to_reciprocal_space
   USE kinds,                ONLY : DP
   USE fft_base,             ONLY : dffts
   USE fft_interfaces,       ONLY : fwfft
-  USE gvect,                ONLY : ngm, gstart, nrxx, nl, nlm, g, gg
+  USE gvect,                ONLY : ngm, gstart, nl, nlm, g, gg
   USE gipaw_module
 
   IMPLICIT NONE

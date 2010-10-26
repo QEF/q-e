@@ -23,7 +23,7 @@ MODULE scf
   USE funct,        ONLY : dft_is_meta
   USE fft_base,     ONLY : dfftp
   USE fft_interfaces,ONLY : invfft
-  USE gvect,        ONLY : nrxx, ngm
+  USE gvect,        ONLY : ngm
   USE gsmooth,      ONLY : ngms
   USE paw_variables,ONLY : okpaw
   USE uspp_param,   ONLY : nhm
@@ -104,13 +104,13 @@ CONTAINS
    TYPE (scf_type) :: rho
    LOGICAL,INTENT(IN),OPTIONAL :: do_not_allocate_becsum ! PAW hack
    LOGICAL                     :: allocate_becsum        ! PAW hack
-   allocate ( rho%of_r( nrxx, nspin) )
+   allocate ( rho%of_r( dfftp%nnr, nspin) )
    allocate ( rho%of_g( ngm, nspin ) )
 #ifdef __STD_F95
  nullify (rho%kin_r, rho%kin_g, rho%ns, rho%bec)
 #endif
    if (dft_is_meta()) then
-      allocate ( rho%kin_r( nrxx, nspin) )
+      allocate ( rho%kin_r( dfftp%nnr, nspin) )
       allocate ( rho%kin_g( ngm, nspin ) )
    else
       allocate ( rho%kin_r(1,1) )

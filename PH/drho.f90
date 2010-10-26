@@ -18,8 +18,8 @@ subroutine drho
   !
   !
   USE kinds,      ONLY : DP
-  USE gvect,      ONLY : nrxx
-  USE gsmooth,    ONLY : doublegrid
+  USE grid_dimensions, ONLY : nrxx
+  USE gsmooth,         ONLY : doublegrid
   USE smooth_grid_dimensions, ONLY : nr1s,nr2s,nr3s, nrxxs
   USE lsda_mod,   ONLY : nspin
   USE cell_base,  ONLY : omega

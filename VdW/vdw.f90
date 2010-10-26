@@ -125,6 +125,7 @@ SUBROUTINE vdw_init ( )
   USE ener,      ONLY : ef
   USE ions_base, ONLY : nat, ntyp=>nsp, ityp, tau
   USE gvect
+  USE grid_dimensions
   USE vlocal,    ONLY : strf
   USE io_files,  ONLY : tmp_dir, prefix, trimcheck
   USE io_global, ONLY : ionode, ionode_id, stdout

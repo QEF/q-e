@@ -23,8 +23,8 @@ SUBROUTINE punch_plot_e()
   USE io_global,  ONLY : stdout, ionode
   USE fft_base,   ONLY : grid_gather
   USE printout_base, ONLY : title
-  USE gvect,      ONLY : nrxx, nr1,nr2,nr3, nr1x,nr2x,nr3x, gcutm, dual, &
-                         ecutwfc
+  USE grid_dimensions,ONLY : nrxx, nr1,nr2,nr3, nr1x,nr2x,nr3x
+  USE gvect,      ONLY : gcutm, dual, ecutwfc
   USE cell_base,  ONLY : bg, ibrav, celldm
   USE lsda_mod,   ONLY : lsda
   USE noncollin_module, ONLY : nspin_mag

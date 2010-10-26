@@ -272,7 +272,7 @@ SUBROUTINE check_density_gamma (rx,nbnd)
    use mp,                   only : mp_sum
    use realus,               only : npw_k
    use wvfct,                only : wg
-   use gvect,                only : nrxx
+   use grid_dimensions,      only : nrxx
    use io_global,            only : stdout
    use cell_base,                    only : omega
 

@@ -29,7 +29,7 @@ SUBROUTINE read_file()
   USE cellmd,               ONLY : cell_factor, lmovecell
   USE fft_base,             ONLY : dfftp
   USE fft_interfaces,       ONLY : fwfft
-  USE gvect,                ONLY : gg, ecutwfc, ngm, g, nr1, nr2, nr3, nrxx,&
+  USE gvect,                ONLY : gg, ecutwfc, ngm, g, &
                                    eigts1, eigts2, eigts3, nl, gstart
   USE gsmooth,              ONLY : ngms, nls 
   USE spin_orb,             ONLY : lspinorb, domag
@@ -155,7 +155,7 @@ SUBROUTINE read_file()
   !
   ! ... check on symmetry
   !
-  IF (nat > 0) CALL checkallsym( nat, tau, ityp, nr1, nr2, nr3 )
+  IF (nat > 0) CALL checkallsym( nat, tau, ityp, dfftp%nr1, dfftp%nr2, dfftp%nr3 )
   !
   !  Set the different spin indices
   !
@@ -217,7 +217,7 @@ SUBROUTINE read_file()
   CALL init_vloc()
   !
   CALL struc_fact( nat, tau, nsp, ityp, ngm, g, bg, &
-                   nr1, nr2, nr3, strf, eigts1, eigts2, eigts3 )
+                   dfftp%nr1, dfftp%nr2, dfftp%nr3, strf, eigts1, eigts2, eigts3 )
   !
   CALL setlocal()
   !

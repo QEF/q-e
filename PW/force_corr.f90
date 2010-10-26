@@ -25,8 +25,7 @@ subroutine force_corr (forcescc)
   USE cell_base,            ONLY : tpiba
   USE fft_base,             ONLY : dfftp
   USE fft_interfaces,       ONLY : fwfft
-  USE gvect,                ONLY : ngm, gstart, &
-                                   nrxx, nl, g, ngl, gl, igtongl
+  USE gvect,                ONLY : ngm, gstart, nl, g, ngl, gl, igtongl
   USE lsda_mod,             ONLY : nspin
   USE scf,                  ONLY : vnew
   USE control_flags,        ONLY : gamma_only

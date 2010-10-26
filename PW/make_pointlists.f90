@@ -25,7 +25,6 @@ SUBROUTINE make_pointlists
   USE io_global,  ONLY : stdout
   USE ions_base,  ONLY : nat, tau, ntyp => nsp, ityp
   USE cell_base,  ONLY : at, bg
-  USE gvect,      ONLY : nr1, nr2, nr3, nr1x, nr2x, nrxx
   USE mp_global,  ONLY : me_pool
   USE fft_base,   ONLY : dfftp
 
@@ -51,7 +50,7 @@ SUBROUTINE make_pointlists
   idx0 = 0
 #ifdef __PARA
   DO indproc=1,me_pool
-     idx0 = idx0 + nr1x*nr2x*dfftp%npp(indproc)
+     idx0 = idx0 + dfftp%nr1x*dfftp%nr2x*dfftp%npp(indproc)
   ENDDO
 
 #endif
@@ -124,23 +123,23 @@ SUBROUTINE make_pointlists
 
   DO iat = 1,nat
      nt=ityp(iat)
-     DO ir=1,nrxx
+     DO ir=1,dfftp%nnr
         idx = idx0 + ir - 1
 
-        k0  = idx/(nr1x*nr2x)
-        idx = idx - (nr1x*nr2x) * k0
-        j0  = idx / nr1x
-        idx = idx - nr1x*j0
+        k0  = idx/(dfftp%nr1x*dfftp%nr2x)
+        idx = idx - (dfftp%nr1x*dfftp%nr2x) * k0
+        j0  = idx / dfftp%nr1x
+        idx = idx - dfftp%nr1x*j0
         i0  = idx
 
-        DO i = i0-nr1,i0+nr1, nr1
-           DO j = j0-nr2, j0+nr2, nr2
-              DO k = k0-nr3, k0+nr3, nr3
+        DO i = i0-dfftp%nr1,i0+dfftp%nr1, dfftp%nr1
+           DO j = j0-dfftp%nr2, j0+dfftp%nr2, dfftp%nr2
+              DO k = k0-dfftp%nr3, k0+dfftp%nr3, dfftp%nr3
 
                  DO ipol=1,3
-                    posi(ipol) =  DBLE(i)/DBLE(nr1) * at(ipol,1) &
-                                + DBLE(j)/DBLE(nr2) * at(ipol,2) &
-                                + DBLE(k)/DBLE(nr3) * at(ipol,3)
+                    posi(ipol) =  DBLE(i)/DBLE(dfftp%nr1) * at(ipol,1) &
+                                + DBLE(j)/DBLE(dfftp%nr2) * at(ipol,2) &
+                                + DBLE(k)/DBLE(dfftp%nr3) * at(ipol,3)
 
                     posi(ipol) = posi(ipol) - tau0(ipol,iat)
                  ENDDO

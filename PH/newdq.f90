@@ -21,7 +21,7 @@ subroutine newdq (dvscf, npe)
   USE cell_base,            ONLY : omega
   USE fft_base,             ONLY : dfftp
   USE fft_interfaces,       ONLY : fwfft
-  USE gvect,                ONLY : nrxx, g, gg, ngm, ig1, ig2, ig3, &
+  USE gvect,                ONLY : g, gg, ngm, ig1, ig2, ig3, &
                                    eigts1, eigts2, eigts3, nl
   USE uspp,                 ONLY: okvan
   USE uspp_param,           ONLY : upf, lmaxq, nh, nhm
@@ -41,7 +41,7 @@ subroutine newdq (dvscf, npe)
   integer :: npe
   ! input: the number of perturbations
 
-  complex(DP) :: dvscf (nrxx, nspin_mag, npe)
+  complex(DP) :: dvscf (dfftp%nnr, nspin_mag, npe)
   ! input: the change of the self
   ! consistent pot.
   !
@@ -67,7 +67,7 @@ subroutine newdq (dvscf, npe)
   int3 (:,:,:,:,:) = (0.d0, 0.0d0)
   allocate (aux1 (ngm))
   allocate (aux2 (ngm , nspin_mag))
-  allocate (veff (nrxx))
+  allocate (veff (dfftp%nnr))
   allocate (ylmk0(ngm , lmaxq * lmaxq))
   allocate (qgm  (ngm))
   allocate (qmod (ngm))
@@ -96,7 +96,7 @@ subroutine newdq (dvscf, npe)
   do ipert = 1, npe
 
      do is = 1, nspin_mag
-        do ir = 1, nrxx
+        do ir = 1, dfftp%nnr
            veff (ir) = dvscf (ir, is, ipert)
         enddo
         CALL fwfft ('Dense', veff, dfftp)

@@ -19,7 +19,7 @@ subroutine efg
   USE scf,          ONLY : rho
   USE fft_base,     ONLY : dfftp
   USE fft_interfaces,ONLY: fwfft
-  USE gvect,        ONLY : nrxx, g, gg, nl, gstart, ngm
+  USE gvect,        ONLY : g, gg, nl, gstart, ngm
   USE cell_base,    ONLY : at,bg         !parameters of the cell
   USE ions_base,    ONLY : nat, atm, tau, ityp, zv
   USE symme,        ONLY : symtensor
@@ -40,8 +40,8 @@ subroutine efg
   real(DP):: efg_eig(3), v(3)
   complex(DP) :: workc(3,3), efg_vect(3,3)
 
-  allocate(aux(nrxx))
-  allocate(efgg_el(nrxx,3,3))
+  allocate(aux(dfftp%nnr))
+  allocate(efgg_el(dfftp%nnr,3,3))
   allocate(efgr_el(nat,3,3))
   allocate(efg_io(nat,3,3))
   allocate(zion(nat))
@@ -202,7 +202,7 @@ subroutine hyperfine
   USE scf,          ONLY : rho
   USE fft_base,     ONLY : dfftp
   USE fft_interfaces,ONLY: fwfft
-  USE gvect,        ONLY : nrxx, g, gg, nl, gstart, ngm
+  USE gvect,        ONLY : g, gg, nl, gstart, ngm
   USE cell_base,    ONLY : at,bg         ! parameters of the cell
   USE ions_base,    ONLY : nat, atm, tau, ityp, zv
   USE symme,        ONLY : symtensor
@@ -258,8 +258,8 @@ subroutine hyperfine
      CALL errore ( "hyperfine", "unknown units for output", 1 )
   END SELECT
 
-  allocate(aux(nrxx))
-  allocate(efgg_el(nrxx,3,3))
+  allocate(aux(dfftp%nnr))
+  allocate(efgg_el(dfftp%nnr,3,3))
   allocate(efgr_el(nat,3,3))
   allocate(efg_io(nat,3,3))
   allocate(efgr_fc_bare(nat))

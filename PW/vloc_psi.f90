@@ -355,10 +355,9 @@ SUBROUTINE vloc_psi_nc (lda, n, m, psi, v, hpsi)
   USE parallel_include
   USE kinds,   ONLY : DP
   USE gsmooth, ONLY : nls, nlsm
-  USE gvect,   ONLY : nrxx
   USE wvfct,   ONLY : igk
   USE mp_global,     ONLY : nogrp, ogrp_comm, me_pool, nolist, use_task_groups
-  USE fft_base,      ONLY : dffts
+  USE fft_base,      ONLY : dffts, dfftp
   USE fft_interfaces,ONLY : fwfft, invfft
   USE task_groups,   ONLY : tg_gather
   USE noncollin_module,     ONLY: npol
@@ -367,7 +366,7 @@ SUBROUTINE vloc_psi_nc (lda, n, m, psi, v, hpsi)
   IMPLICIT NONE
   !
   INTEGER, INTENT(in) :: lda, n, m
-  REAL(DP), INTENT(in) :: v(nrxx,4)
+  REAL(DP), INTENT(in) :: v(dfftp%nnr,4) ! beware dimensions!
   COMPLEX(DP), INTENT(in)   :: psi (lda*npol, m)
   COMPLEX(DP), INTENT(inout):: hpsi (lda,npol,m)
   !

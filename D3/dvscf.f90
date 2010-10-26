@@ -28,7 +28,7 @@ subroutine dvscf (nu_i, dvloc, xq_x)
   ! input: mode under consideration
   real (DP) :: xq_x (3)
   ! input: coordinates of the q point
-  complex (DP) :: dvloc (nrxx)
+  complex (DP) :: dvloc (dfftp%nnr)
   ! output: local part of the variation
   !         of the K_S potential
   !
@@ -55,8 +55,8 @@ subroutine dvscf (nu_i, dvloc, xq_x)
   logical :: q_eq_zero
   ! true if xq equal zero
 
-  allocate  (aux1( nrxx))
-  allocate  (aux2( nrxx))
+  allocate  (aux1( dfftp%nnr))
+  allocate  (aux2( dfftp%nnr))
 
   q_eq_zero = xq_x(1) == 0.d0 .and. xq_x(2) == 0.d0 .and. xq_x(3) == 0.d0
   if (q_eq_zero) then

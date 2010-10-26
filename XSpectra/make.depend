@@ -35,6 +35,7 @@ read_file_xspectra.o : ../Modules/cell_base.o
 read_file_xspectra.o : ../Modules/constants.o
 read_file_xspectra.o : ../Modules/fft_base.o
 read_file_xspectra.o : ../Modules/fft_interfaces.o
+read_file_xspectra.o : ../Modules/griddim.o
 read_file_xspectra.o : ../Modules/io_files.o
 read_file_xspectra.o : ../Modules/io_global.o
 read_file_xspectra.o : ../Modules/ions_base.o
@@ -62,6 +63,7 @@ xspectra.o : ../Modules/cell_base.o
 xspectra.o : ../Modules/constants.o
 xspectra.o : ../Modules/control_flags.o
 xspectra.o : ../Modules/environment.o
+xspectra.o : ../Modules/griddim.o
 xspectra.o : ../Modules/io_files.o
 xspectra.o : ../Modules/io_global.o
 xspectra.o : ../Modules/ions_base.o

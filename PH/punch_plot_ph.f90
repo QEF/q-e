@@ -18,8 +18,8 @@ SUBROUTINE punch_plot_ph()
   !     a file with the name in the variable fildrho# given in input.
   !
   USE kinds,      ONLY : DP
-  USE gvect,      ONLY : nrxx, nr1,nr2,nr3, nr1x,nr2x,nr3x, gcutm, dual, &
-                         ecutwfc
+  USE grid_dimensions, ONLY : nrxx, nr1,nr2,nr3, nr1x,nr2x,nr3x
+  USE gvect,      ONLY : gcutm, dual, ecutwfc
   USE cell_base,  ONLY : ibrav, celldm
   USE lsda_mod,   ONLY : nspin, lsda
   USE ions_base,  ONLY : nat, ityp, ntyp => nsp, atm, zv, tau

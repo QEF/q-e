@@ -19,6 +19,7 @@
   USE mp,                   ONLY : mp_bcast, mp_sum
   USE kinds,                ONLY : DP
   USE gvect
+  USE grid_dimensions,      ONLY : nr1, nr2, nr3
   USE basis
   USE klist
   USE constants,            ONLY : e2, pi, tpi, fpi

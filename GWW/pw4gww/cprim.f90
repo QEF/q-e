@@ -70,10 +70,10 @@
 
   mem_used=0
   mem_used=mem_used+ngm_max*8
-  mem_used=mem_used+nrxx*8
+  mem_used=mem_used+dfftp%nnr*8
   mem_used=mem_used+numw_prod*nbnd_normal*8
   mem_used=mem_used+dffts%nnr*(cprim_last-cprim_first+1)*8
-  mem_used=mem_used+nrxx*8
+  mem_used=mem_used+dfftp%nnr*8
   mem_used=mem_used+ngm*16
 
 !calculate becs
@@ -95,7 +95,7 @@
 
   !calculate V(G)
   allocate(fac(ngm_max))
-  allocate(tmp_prod(nrxx))
+  allocate(tmp_prod(dfftp%nnr))
   !allocate(sca_vec(n_set_new))
 
 
@@ -129,7 +129,7 @@
 
 
   allocate( smat(numw_prod,nbnd_normal))
-  allocate(tmp_reals(dffts%nnr, cprim_last-cprim_first+1),tmp_reals_jj(nrxx))
+  allocate(tmp_reals(dffts%nnr, cprim_last-cprim_first+1),tmp_reals_jj(dfftp%nnr))
   allocate(tmp_g(ngm))
 
   write(stdout,*) 'ATTENZIONE3'
@@ -261,7 +261,7 @@
            endif
            if(okvan) call adduspos_gamma_r(ii,jj,tmp_prod,1,becp_gw_c(:,ii),becp_gw_c(:,jj))
 !trasform to g-space
-           psic(1:nrxx)=cmplx(tmp_prod(1:nrxx),0.d0)
+           psic(1:dfftp%nnr)=cmplx(tmp_prod(1:dfftp%nnr),0.d0)
            CALL fwfft ('Dense', psic, dfftp)
            do ig=1,ngm_max
               tmp_g(ig)=psic(nl(ig))*fac(ig)
@@ -360,7 +360,7 @@ subroutine create_vcw_overlap(n_set, orthonorm,ecutoff)
   write(stdout,*) 'NGM MAX:', ngm_max, ngm
 
   mem_used=0
-  mem_used=mem_used+nrxx*8
+  mem_used=mem_used+dfftp%nnr*8
   mem_used=mem_used+numw_prod*(nbnd_normal-num_nbndv)*8
   mem_used=mem_used+dffts%nnr*(cprim_last_eff-cprim_first+1)*8
   mem_used=mem_used+dffts%nnr*8
@@ -379,7 +379,7 @@ subroutine create_vcw_overlap(n_set, orthonorm,ecutoff)
   call flush_unit(stdout)
 
   !calculate V(G)
-  allocate(tmp_prod(nrxx))
+  allocate(tmp_prod(dfftp%nnr))
 
   allocate( smat(numw_prod,nbnd_normal-num_nbndv))
   allocate(tmp_reals(dffts%nnr, cprim_last_eff-cprim_first+1),tmp_reals_jj(dffts%nnr))
@@ -496,7 +496,7 @@ subroutine create_vcw_overlap(n_set, orthonorm,ecutoff)
            endif
            if(okvan) call adduspos_gamma_r(ii,jj,tmp_prod,1,becp_gw_c(:,ii),becp_gw_c(:,jj))
 !trasform to g-space
-           psic(1:nrxx)=cmplx(tmp_prod(1:nrxx),0.d0)
+           psic(1:dfftp%nnr)=cmplx(tmp_prod(1:dfftp%nnr),0.d0)
            CALL fwfft ('Dense', psic, dfftp)
            do ig=1,max_ngm
                tmp_g(ig)=psic(nl(ig))
@@ -696,7 +696,7 @@ subroutine create_upper_states(n_set, lzero, orthonorm,ecutoff)
   if(ndelta*num_nbnd_delta < (nbnd-nbnd_normal)) ndelta=ndelta+1
   allocate(tmp_reals_up(dffts%nnr, num_nbnd_delta))
   allocate( tmp_g(ngm_max, num_nbnd_delta))
-  allocate(tmp_prod(nrxx))
+  allocate(tmp_prod(dfftp%nnr))
   n_upper_tot=(ndelta-1)*num_nbnd_upper+min(nbnd-nbnd_normal-(ndelta-1)*num_nbnd_delta,num_nbnd_upper)
   allocate(ene_reduced(n_upper_tot))
   do id=1,ndelta
@@ -746,7 +746,7 @@ subroutine create_upper_states(n_set, lzero, orthonorm,ecutoff)
            endif
            if(okvan) call adduspos_gamma_r &
                 &(ii,jj,tmp_prod,1,becp_gw_c(:,ii),becp_gw_c(:,jj+id_first-1))
-           psic(1:nrxx)=cmplx(tmp_prod(1:nrxx),0.d0)
+           psic(1:dfftp%nnr)=cmplx(tmp_prod(1:dfftp%nnr),0.d0)
            CALL fwfft ('Dense', psic, dfftp)
            do ig=1,ngm_max
               tmp_g(ig,jj)=psic(nl(ig))

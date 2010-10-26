@@ -16,6 +16,7 @@ SUBROUTINE openfild3
   USE pwcom
   USE phcom
   USE d3com
+  USE grid_dimensions, ONLY : nr1x, nr2x, nr3x
   USE control_flags,   ONLY : twfcollect
   USE io_files,        ONLY : iunigk, prefix, tmp_dir, diropn
   USE io_global,       ONLY : ionode

@@ -18,6 +18,7 @@ SUBROUTINE d3_exc
   USE kinds,      ONLY : DP
   USE pwcom
   USE scf, only : rho, rho_core
+  USE grid_dimensions, only : nrxx, nr1, nr2, nr3
   USE phcom
   USE d3com
   USE io_global, ONLY : ionode_id

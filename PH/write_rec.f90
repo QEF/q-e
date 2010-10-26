@@ -34,7 +34,7 @@ CONTAINS
     USE noncollin_module, ONLY : nspin_mag
     USE nlcc_ph, ONLY : nlcc_any
     USE qpoint, ONLY : nksq
-    USE gvect, ONLY : nrxx
+    USE grid_dimensions, ONLY : nrxx
     USE uspp, ONLY : okvan
     USE phus, ONLY : int1, int2, int3
     USE eqv,  ONLY : drhoscfs
@@ -88,8 +88,8 @@ CONTAINS
     USE kinds, ONLY : DP
     USE ions_base, ONLY : nat
     USE uspp_param, ONLY : nhm
-    USE gvect,  ONLY : nrxx
     USE gsmooth, ONLY : doublegrid
+    USE grid_dimensions, ONLY : nrxx
     USE smooth_grid_dimensions, ONLY : nrxxs
     USE uspp,  ONLY : okvan
     USE lsda_mod, ONLY : nspin

@@ -32,7 +32,7 @@ SUBROUTINE dqrhod2v (ipert, drhoscf)
   !
   INTEGER :: ipert
   ! index of the perturbation associated with drho
-  COMPLEX (DP) :: drhoscf (nrxx)
+  COMPLEX (DP) :: drhoscf (dfftp%nnr)
   ! the variation of the charge density
   !
   ! local variables
@@ -51,7 +51,7 @@ SUBROUTINE dqrhod2v (ipert, drhoscf)
   ! work space
 
   ALLOCATE  (d3dywrk( 3 * nat, 3 * nat))
-  ALLOCATE  (work0( nrxx))
+  ALLOCATE  (work0( dfftp%nnr))
   ALLOCATE  (work1( npwx))
   ALLOCATE  (work2( npwx))
   ALLOCATE  (work3( npwx))

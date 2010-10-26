@@ -25,7 +25,7 @@ subroutine set_efsh (drhoscf, imode0, irr, npe)
   ! input: the number of perturbation
   ! input: the position of the current mode
   ! input: index of the current irr. rep.
-  complex (DP) :: drhoscf (nrxx, npe)
+  complex (DP) :: drhoscf (dfftp%nnr, npe)
   ! input: variation of the charge density
 
   integer :: ipert, ik, ikk, ibnd

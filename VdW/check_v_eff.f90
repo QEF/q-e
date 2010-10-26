@@ -30,11 +30,12 @@ SUBROUTINE check_v_eff ( veff, charge )
   USE fft_base,             ONLY : dffts
   USE fft_interfaces,       ONLY : fwfft, invfft
   USE gvect,                ONLY : g, gg, gstart, ecfixed, qcutz, q2sigma, &
-                                   nrxx, nr1, nr2, nr3, ngm, ecutwfc, nl
+                                   ngm, ecutwfc, nl
+  USE grid_dimensions,      ONLY : nrxx, nr1, nr2, nr3
   USE wvfct,                ONLY : g2kin, wg, nbndx, et, nbnd, npwx, igk, &
                                    npw
   USE gsmooth,              ONLY : nls, nlsm, doublegrid
-  USE control_flags,        ONLY : diis_ndim, ethr, lscf, max_cg_iter, isolve
+  USE control_flags,        ONLY : ethr, lscf, isolve
   USE ldaU,                 ONLY : lda_plus_u, swfcatom
   USE scf,                  ONLY : vltot, vrs, v_of_0
   USE lsda_mod,             ONLY : nspin, current_spin, lsda, isk

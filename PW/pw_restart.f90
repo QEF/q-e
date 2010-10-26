@@ -81,8 +81,8 @@ MODULE pw_restart
       USE klist,                ONLY : nks, nkstot, xk, ngk, wk, qnorm, &
                                        lgauss, ngauss, degauss, nelec, &
                                        two_fermi_energies, nelup, neldw
-      USE gvect,                ONLY : nr1, nr2, nr3, ngm, ngm_g, &
-                                       g, ig1, ig2, ig3, ecutwfc, dual
+      USE gvect,                ONLY : ngm, ngm_g, g, ig1, ig2, ig3, ecutwfc, dual
+      USE grid_dimensions,      ONLY : nr1, nr2, nr3
       USE basis,                ONLY : natomwfc
       USE gsmooth,              ONLY : ngms_g
       USE smooth_grid_dimensions,ONLY: nr1s, nr2s, nr3s
@@ -1235,7 +1235,8 @@ MODULE pw_restart
       !
       USE ions_base,        ONLY : nat, nsp
       USE symm_base,        ONLY : nsym
-      USE gvect,            ONLY : nr1, nr2, nr3, ngm_g, ecutwfc, dual
+      USE gvect,            ONLY :  ngm_g, ecutwfc, dual
+      USE grid_dimensions,  ONLY : nr1, nr2, nr3
       USE gsmooth,          ONLY : ngms_g
       USE smooth_grid_dimensions,ONLY: nr1s, nr2s, nr3s
       USE lsda_mod,         ONLY : lsda
@@ -1724,11 +1725,11 @@ MODULE pw_restart
     SUBROUTINE read_symmetry( dirname, ierr )
       !------------------------------------------------------------------------
       !
-      USE symm_base, ONLY : nrot, nsym, invsym, s, ftau, irt, t_rev, sname, &
-                            sr, invs, inverse_s, s_axis_to_cart,  &
-                            time_reversal, no_t_rev
-      USE control_flags, ONLY : noinv
-      USE gvect, ONLY : nr1, nr2, nr3
+      USE symm_base,       ONLY : nrot, nsym, invsym, s, ftau, irt, t_rev, &
+                                  sname, sr, invs, inverse_s, s_axis_to_cart, &
+                                  time_reversal, no_t_rev
+      USE control_flags,   ONLY : noinv
+      USE grid_dimensions, ONLY : nr1, nr2, nr3
       !
       IMPLICIT NONE
       !
@@ -1932,9 +1933,10 @@ MODULE pw_restart
     SUBROUTINE read_planewaves( dirname, ierr )
       !------------------------------------------------------------------------
       !
-      USE gvect,   ONLY : nr1, nr2, nr3, ngm_g, ecutwfc, dual
+      USE gvect,   ONLY : ngm_g, ecutwfc, dual
       USE gsmooth, ONLY : ngms_g
-      USE smooth_grid_dimensions,ONLY: nr1s, nr2s, nr3s
+      USE grid_dimensions,        ONLY : nr1, nr2, nr3
+      USE smooth_grid_dimensions, ONLY : nr1s, nr2s, nr3s
       USE wvfct,   ONLY : npwx, g2kin
       USE control_flags, ONLY : gamma_only
       !

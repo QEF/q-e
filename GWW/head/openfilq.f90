@@ -28,7 +28,7 @@ SUBROUTINE openfilq()
   USE qpoint,         ONLY : nksq
   USE output,         ONLY : fildyn, fildvscf
   USE wvfct,          ONLY : nbnd, npwx
-  USE gvect,          ONLY : nr1x, nr2x, nr3x, nrxx
+  USE grid_dimensions,ONLY : nr1x, nr2x, nr3x, nrxx
   USE lsda_mod,       ONLY : nspin
   USE uspp,           ONLY : nkb, okvan
   USE io_files,       ONLY : prefix, iunigk

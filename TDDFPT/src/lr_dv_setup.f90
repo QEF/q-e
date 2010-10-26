@@ -21,7 +21,8 @@ subroutine lr_dv_setup
   USE ions_base,     ONLY : ntyp => nsp
   USE lsda_mod,      ONLY : nspin, lsda
   USE scf,           ONLY : rho, rho_core
-  USE gvect,         ONLY : nrxx, ngm
+  USE gvect,         ONLY : ngm
+  USE grid_dimensions,ONLY: nrxx
   ! USE atom,          ONLY : nlcc
   USE uspp_param,    ONLY : upf
   !USE lr_variables,  ONLY : dmuxc, nlcc_any

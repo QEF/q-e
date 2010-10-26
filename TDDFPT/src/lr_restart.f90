@@ -27,7 +27,7 @@ subroutine lr_restart(iter_restart,rflag)
                                     bfft_orbital_gamma, calbec_rs_gamma, add_vuspsir_gamma, &
                                     v_loc_psir, s_psir_gamma,igk_k,npw_k, &
                                     real_space_debug 
-  use gvect,                only : nrxx
+  use grid_dimensions,      only : nrxx
   USE lr_variables,         ONLY : lr_verbosity, charge_response, LR_polarization, n_ipol
   USE noncollin_module,     ONLY : nspin_mag
 

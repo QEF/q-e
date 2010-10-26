@@ -110,6 +110,7 @@ subroutine syme2 (dvsym, iflag)
   use kinds, only : DP
   USE symm_base, ONLY : s, nsym, ftau
   USE symme, ONLY : crys_to_cart
+  use grid_dimensions, ONLY : nr1, nr2, nr3, nr1x, nr2x, nr3x
   use pwcom
   implicit none
 

@@ -80,7 +80,6 @@ SUBROUTINE compute_el_dip(emaxpos, eopreg, edir, charge, e_dipole)
   USE constants, ONLY : fpi
   USE kinds,      ONLY : DP
   USE cell_base,  ONLY : at, bg, omega, alat, saw
-  USE gvect,      ONLY : nr1, nr2, nr3, nr1x, nr2x, nr3x, nrxx
   USE fft_base,   ONLY : dfftp
   USE mp_global,  ONLY : me_pool, intra_pool_comm
   USE mp,         ONLY : mp_sum
@@ -88,7 +87,7 @@ SUBROUTINE compute_el_dip(emaxpos, eopreg, edir, charge, e_dipole)
   IMPLICIT NONE
   !
   REAL(DP), INTENT(IN)  :: emaxpos, eopreg
-  REAL(DP), INTENT(IN), DIMENSION(nrxx,nspin) :: charge
+  REAL(DP), INTENT(IN), DIMENSION(dfftp%nnr,nspin) :: charge
   INTEGER, INTENT(IN)  :: edir
   REAL(DP), INTENT(OUT) ::  e_dipole
   !
@@ -126,7 +125,7 @@ SUBROUTINE compute_el_dip(emaxpos, eopreg, edir, charge, e_dipole)
 #if defined (__PARA)
   !
   DO i = 1, me_pool
-     index0 = index0 + nr1x*nr2x*dfftp%npp(i)
+     index0 = index0 + dfftp%nr1x*dfftp%nr2x*dfftp%npp(i)
   END DO
   !
 #endif
@@ -134,30 +133,30 @@ SUBROUTINE compute_el_dip(emaxpos, eopreg, edir, charge, e_dipole)
   !
   ! Loop in the charge array
   !
-  DO ir = 1, nrxx
+  DO ir = 1, dfftp%nnr
      !
      ! ... three dimensional indexes
      !
      index = index0 + ir - 1
-     k     = index / (nr1x*nr2x)
-     index = index - (nr1x*nr2x)*k
-     j     = index / nr1x
-     index = index - nr1x*j
+     k     = index / (dfftp%nr1x*dfftp%nr2x)
+     index = index - (dfftp%nr1x*dfftp%nr2x)*k
+     j     = index / dfftp%nr1x
+     index = index - dfftp%nr1x*j
      i     = index
      
      !
      ! Define the argument for the saw function     
      !
-     if (edir.eq.1) sawarg = (i*1.0_dp)/(nr1*1.0_dp)
-     if (edir.eq.2) sawarg = (j*1.0_dp)/(nr2*1.0_dp)
-     if (edir.eq.3) sawarg = (k*1.0_dp)/(nr3*1.0_dp)
+     if (edir.eq.1) sawarg = DBLE(i)/DBLE(dfftp%nr1)
+     if (edir.eq.2) sawarg = DBLE(j)/DBLE(dfftp%nr2)
+     if (edir.eq.3) sawarg = DBLE(k)/DBLE(dfftp%nr3)
      
      rhoir = charge(ir,1)
      !
      IF ( nspin == 2 ) rhoir = rhoir + charge(ir,2)
           
      e_dipole = e_dipole + rhoir * saw(emaxpos,eopreg, sawarg) &
-                                   * (alat/bmod) * (fpi/(nr1*nr2*nr3))
+                      * (alat/bmod) * (fpi/(dfftp%nr1*dfftp%nr2*dfftp%nr3))
 
   END DO
 

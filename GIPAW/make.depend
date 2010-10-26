@@ -36,6 +36,7 @@ compute_sigma.o : gipaw_module.o
 compute_u_kq.o : ../Modules/cell_base.o
 compute_u_kq.o : ../Modules/constants.o
 compute_u_kq.o : ../Modules/control_flags.o
+compute_u_kq.o : ../Modules/griddim.o
 compute_u_kq.o : ../Modules/io_files.o
 compute_u_kq.o : ../Modules/io_global.o
 compute_u_kq.o : ../Modules/kind.o
@@ -226,6 +227,7 @@ test_sum_rule.o : ../PW/symme.o
 test_sum_rule.o : gipaw_module.o
 write_tensor_field.o : ../Modules/cell_base.o
 write_tensor_field.o : ../Modules/constants.o
+write_tensor_field.o : ../Modules/griddim.o
 write_tensor_field.o : ../Modules/io_global.o
 write_tensor_field.o : ../Modules/ions_base.o
 write_tensor_field.o : ../Modules/kind.o

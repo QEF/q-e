@@ -24,7 +24,7 @@ subroutine dvqpsi_us (ik, uact, addnlcc)
   USE cell_base, ONLY : tpiba
   USE fft_base,   ONLY: dfftp, dffts
   USE fft_interfaces, ONLY: fwfft, invfft
-  USE gvect,     ONLY : nrxx, eigts1, eigts2, eigts3, ig1,ig2,ig3, g, nl, &
+  USE gvect,     ONLY : eigts1, eigts2, eigts3, ig1,ig2,ig3, g, nl, &
                         ngm
   USE gsmooth,   ONLY : ngms, doublegrid, nls
   USE lsda_mod,  ONLY : lsda, isk
@@ -67,7 +67,7 @@ subroutine dvqpsi_us (ik, uact, addnlcc)
 
   call start_clock ('dvqpsi_us')
   if (nlcc_any.and.addnlcc) then
-     allocate (aux( nrxx))
+     allocate (aux( dfftp%nnr))
      if (doublegrid) then
         allocate (auxs(dffts%nnr))
      else
@@ -132,12 +132,12 @@ subroutine dvqpsi_us (ik, uact, addnlcc)
       enddo
       CALL invfft ('Dense', aux, dfftp)
       if (.not.lsda) then
-         do ir=1,nrxx
+         do ir=1,dfftp%nnr
             aux(ir) = aux(ir) * dmuxc(ir,1,1)
          end do
       else
          is=isk(ikk)
-         do ir=1,nrxx
+         do ir=1,dfftp%nnr
             aux(ir) = aux(ir) * 0.5d0 *  &
                  (dmuxc(ir,is,1)+dmuxc(ir,is,2))
          enddo

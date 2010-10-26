@@ -23,6 +23,7 @@ subroutine d3_summary
   USE symm_base,   ONLY : s, sr, sname, ftau
   USE control_flags, ONLY : iverbosity
   USE smooth_grid_dimensions, ONLY : nr1s, nr2s, nr3s
+  USE grid_dimensions,        ONLY : nr1, nr2, nr3
   use pwcom
   use phcom
   use d3com

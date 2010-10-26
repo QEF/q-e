@@ -1,3 +1,4 @@
+allocate_cond.o : ../Modules/griddim.o
 allocate_cond.o : ../PW/noncol.o
 allocate_cond.o : ../PW/pwcom.o
 allocate_cond.o : condcom.o
@@ -59,6 +60,7 @@ gramsh.o : ../Modules/kind.o
 hev_ab.o : ../Modules/kind.o
 init_cond.o : ../Modules/atom.o
 init_cond.o : ../Modules/cell_base.o
+init_cond.o : ../Modules/griddim.o
 init_cond.o : ../Modules/io_global.o
 init_cond.o : ../Modules/ions_base.o
 init_cond.o : ../Modules/kind.o
@@ -67,9 +69,9 @@ init_cond.o : ../PW/noncol.o
 init_cond.o : ../PW/pwcom.o
 init_cond.o : condcom.o
 init_gper.o : ../Modules/cell_base.o
+init_gper.o : ../Modules/griddim.o
 init_gper.o : ../Modules/io_global.o
 init_gper.o : ../PW/noncol.o
-init_gper.o : ../PW/pwcom.o
 init_gper.o : condcom.o
 init_orbitals.o : ../Modules/atom.o
 init_orbitals.o : ../Modules/ions_base.o
@@ -107,10 +109,10 @@ poten.o : ../Modules/cell_base.o
 poten.o : ../Modules/constants.o
 poten.o : ../Modules/fft_base.o
 poten.o : ../Modules/fft_scalar.o
+poten.o : ../Modules/griddim.o
 poten.o : ../Modules/io_global.o
 poten.o : ../Modules/mp.o
 poten.o : ../PW/noncol.o
-poten.o : ../PW/pwcom.o
 poten.o : ../PW/scf_mod.o
 poten.o : condcom.o
 print_clock_pwcond.o : ../Modules/io_global.o
@@ -119,6 +121,7 @@ print_clock_pwcond.o : condcom.o
 realus_scatt.o : ../Modules/cell_base.o
 realus_scatt.o : ../Modules/constants.o
 realus_scatt.o : ../Modules/fft_base.o
+realus_scatt.o : ../Modules/griddim.o
 realus_scatt.o : ../Modules/ions_base.o
 realus_scatt.o : ../Modules/mp_global.o
 realus_scatt.o : ../Modules/uspp.o
@@ -143,6 +146,7 @@ scat_states_plot.o : ../Modules/cell_base.o
 scat_states_plot.o : ../Modules/constants.o
 scat_states_plot.o : ../Modules/fft_base.o
 scat_states_plot.o : ../Modules/fft_scalar.o
+scat_states_plot.o : ../Modules/griddim.o
 scat_states_plot.o : ../Modules/io_global.o
 scat_states_plot.o : ../Modules/ions_base.o
 scat_states_plot.o : ../Modules/kind.o

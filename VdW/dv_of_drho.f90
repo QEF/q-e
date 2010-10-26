@@ -26,7 +26,7 @@ SUBROUTINE dv_of_drho_vdw (mode, dvscf, flag)
   INTEGER :: mode
   ! input: the mode to do
 
-  COMPLEX(kind=DP) :: dvscf (nrxx, nspin)
+  COMPLEX(kind=DP) :: dvscf (dfftp%nnr, nspin)
   ! input: the change of the charge,
   ! output: change of the potential
 
@@ -52,8 +52,8 @@ SUBROUTINE dv_of_drho_vdw (mode, dvscf, flag)
   real(kind=dp) :: rhotot
   !
   CALL start_clock ('dv_of_drho')
-  ALLOCATE (dvaux( nrxx,  nspin), dv_tfvw( nrxx, nspin))
-  ALLOCATE (drhoc( nrxx))
+  ALLOCATE (dvaux( dfftp%nnr,  nspin), dv_tfvw( dfftp%nnr, nspin))
+  ALLOCATE (drhoc( dfftp%nnr))
   !
   dv_tfvw = dvscf
   !
@@ -69,16 +69,16 @@ SUBROUTINE dv_of_drho_vdw (mode, dvscf, flag)
         dvscf(:, is) = dvscf(:, is) + fac * drhoc (:)
      ENDDO
   ENDIF
-!  allocate ( dmuxc(nrxx, nspin, nspin) )
+!  allocate ( dmuxc(dfftp%nnr, nspin, nspin) )
   dmuxc(:,:,:) = 0.d0
-  DO ir = 1, nrxx
+  DO ir = 1, dfftp%nnr
      rhotot = rho%of_r (ir, nspin) + rho_core (ir)
      IF (rhotot>1.d-30) dmuxc (ir, 1, 1) = dmxc (rhotot)
      IF (rhotot< - 1.d-30) dmuxc (ir, 1, 1) = - dmxc ( - rhotot)
   ENDDO
   DO is = 1, nspin
      DO is1 = 1, nspin
-        DO ir = 1, nrxx
+        DO ir = 1, dfftp%nnr
            dvaux(ir,is) = dvaux(ir,is) + dmuxc(ir,is,is1) * dvscf(ir,is1)
         ENDDO
      ENDDO

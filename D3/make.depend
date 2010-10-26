@@ -42,6 +42,7 @@ d0rhod2v.o : ../PW/pwcom.o
 d0rhod2v.o : d3com.o
 d2mxc.o : ../Modules/constants.o
 d2mxc.o : ../Modules/kind.o
+d3_exc.o : ../Modules/griddim.o
 d3_exc.o : ../Modules/io_global.o
 d3_exc.o : ../Modules/ions_base.o
 d3_exc.o : ../Modules/kind.o
@@ -52,6 +53,7 @@ d3_exc.o : ../PW/pwcom.o
 d3_exc.o : ../PW/scf_mod.o
 d3_exc.o : d3com.o
 d3_init.o : ../Modules/atom.o
+d3_init.o : ../Modules/griddim.o
 d3_init.o : ../Modules/ions_base.o
 d3_init.o : ../Modules/mp.o
 d3_init.o : ../Modules/uspp.o
@@ -78,6 +80,7 @@ d3_recover.o : d3com.o
 d3_setup.o : ../Modules/constants.o
 d3_setup.o : ../Modules/control_flags.o
 d3_setup.o : ../Modules/funct.o
+d3_setup.o : ../Modules/griddim.o
 d3_setup.o : ../Modules/io_files.o
 d3_setup.o : ../Modules/io_global.o
 d3_setup.o : ../Modules/ions_base.o
@@ -179,6 +182,7 @@ dpsidpsidv.o : ../Modules/mp_global.o
 dpsidpsidv.o : ../PH/phcom.o
 dpsidpsidv.o : ../PW/pwcom.o
 dpsidpsidv.o : d3com.o
+dpsidvdpsi.o : ../Modules/griddim.o
 dpsidvdpsi.o : ../Modules/io_files.o
 dpsidvdpsi.o : ../Modules/ions_base.o
 dpsidvdpsi.o : ../Modules/kind.o
@@ -213,6 +217,7 @@ drho_drc.o : ../Modules/uspp.o
 drho_drc.o : ../PH/phcom.o
 drho_drc.o : ../PW/pwcom.o
 drho_drc.o : d3com.o
+drhod2v.o : ../Modules/griddim.o
 drhod2v.o : ../Modules/ions_base.o
 drhod2v.o : ../Modules/kind.o
 drhod2v.o : ../PH/phcom.o
@@ -221,6 +226,7 @@ drhod2v.o : d3com.o
 dvdpsi.o : ../Modules/cell_base.o
 dvdpsi.o : ../Modules/fft_base.o
 dvdpsi.o : ../Modules/fft_interfaces.o
+dvdpsi.o : ../Modules/griddim.o
 dvdpsi.o : ../Modules/ions_base.o
 dvdpsi.o : ../Modules/mp.o
 dvdpsi.o : ../Modules/mp_global.o
@@ -236,6 +242,7 @@ dvscf.o : ../Modules/uspp.o
 dvscf.o : ../PH/phcom.o
 dvscf.o : ../PW/pwcom.o
 dvscf.o : d3com.o
+gen_dpdvp.o : ../Modules/griddim.o
 gen_dpdvp.o : ../Modules/io_files.o
 gen_dpdvp.o : ../Modules/ions_base.o
 gen_dpdvp.o : ../Modules/kind.o
@@ -259,6 +266,7 @@ incdrhoscf2.o : ../Modules/wavefunctions.o
 incdrhoscf2.o : ../PH/phcom.o
 incdrhoscf2.o : ../PW/pwcom.o
 openfild3.o : ../Modules/control_flags.o
+openfild3.o : ../Modules/griddim.o
 openfild3.o : ../Modules/io_files.o
 openfild3.o : ../Modules/io_global.o
 openfild3.o : ../Modules/mp_global.o
@@ -303,6 +311,7 @@ set_sym_irr.o : ../Modules/kind.o
 set_sym_irr.o : ../Modules/mp.o
 set_sym_irr.o : ../Modules/mp_global.o
 solve_linter_d3.o : ../Modules/cell_base.o
+solve_linter_d3.o : ../Modules/griddim.o
 solve_linter_d3.o : ../Modules/io_files.o
 solve_linter_d3.o : ../Modules/io_global.o
 solve_linter_d3.o : ../Modules/ions_base.o

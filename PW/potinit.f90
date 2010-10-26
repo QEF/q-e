@@ -32,7 +32,7 @@ SUBROUTINE potinit()
   USE lsda_mod,             ONLY : lsda, nspin
   USE fft_base,             ONLY : dfftp
   USE fft_interfaces,       ONLY : fwfft
-  USE gvect,                ONLY : nr1, nr2, nr3, nrxx, ngm, gstart, nl, g, gg
+  USE gvect,                ONLY : ngm, gstart, nl, g, gg
   USE gsmooth,              ONLY : doublegrid
   USE control_flags,        ONLY : lscf
   USE scf,                  ONLY : rho, rho_core, rhog_core, &
@@ -149,11 +149,11 @@ SUBROUTINE potinit()
   !
   IF ( nspin == 2 ) THEN
      !
-     charge = SUM ( rho%of_r(:,1:nspin) )*omega / ( nr1*nr2*nr3 )
+     charge = SUM ( rho%of_r(:,1:nspin) )*omega / ( dfftp%nr1*dfftp%nr2*dfftp%nr3 )
      !
   ELSE
      !
-     charge = SUM ( rho%of_r(:,1) )*omega / ( nr1*nr2*nr3 )
+     charge = SUM ( rho%of_r(:,1) )*omega / ( dfftp%nr1*dfftp%nr2*dfftp%nr3 )
      !
   END IF
   !
@@ -209,7 +209,7 @@ SUBROUTINE potinit()
   !
   ! ... define the total local potential (external+scf)
   !
-  CALL set_vrs( vrs, vltot, v%of_r, kedtau, v%kin_r, nrxx, nspin, doublegrid )
+  CALL set_vrs( vrs, vltot, v%of_r, kedtau, v%kin_r, dfftp%nnr, nspin, doublegrid )
   !
   ! ... write on output the parameters used in the lda+U calculation
   !

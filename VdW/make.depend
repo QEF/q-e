@@ -1,3 +1,4 @@
+allocate_vdw.o : ../Modules/griddim.o
 allocate_vdw.o : ../PH/phcom.o
 allocate_vdw.o : ../PW/pwcom.o
 allocate_vdw.o : vdwcom.o
@@ -16,6 +17,7 @@ check_v_eff.o : ../Modules/constants.o
 check_v_eff.o : ../Modules/control_flags.o
 check_v_eff.o : ../Modules/fft_base.o
 check_v_eff.o : ../Modules/fft_interfaces.o
+check_v_eff.o : ../Modules/griddim.o
 check_v_eff.o : ../Modules/io_files.o
 check_v_eff.o : ../Modules/io_global.o
 check_v_eff.o : ../Modules/kind.o
@@ -93,6 +95,7 @@ solve_e.o : ../Modules/cell_base.o
 solve_e.o : ../Modules/check_stop.o
 solve_e.o : ../Modules/fft_base.o
 solve_e.o : ../Modules/fft_interfaces.o
+solve_e.o : ../Modules/griddim.o
 solve_e.o : ../Modules/io_files.o
 solve_e.o : ../Modules/io_global.o
 solve_e.o : ../Modules/ions_base.o
@@ -112,6 +115,7 @@ stop_vdw.o : ../Modules/parallel_include.o
 vdw.o : ../Modules/cell_base.o
 vdw.o : ../Modules/check_stop.o
 vdw.o : ../Modules/environment.o
+vdw.o : ../Modules/griddim.o
 vdw.o : ../Modules/io_files.o
 vdw.o : ../Modules/io_global.o
 vdw.o : ../Modules/ions_base.o

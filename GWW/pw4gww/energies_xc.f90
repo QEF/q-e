@@ -31,9 +31,9 @@ SUBROUTINE energies_xc( lda, n, m, e_xc, e_h )
   USE fft_base,         ONLY : dffts
   USE fft_interfaces,   ONLY : fwfft, invfft
   USE gsmooth,          ONLY : nls, doublegrid
-  USE gvect,            ONLY : ngm, gstart, nr1, nr2, nr3,  &
-                               nrxx, nl, nlm, g, gg, ecutwfc, gcutm
-  USE cell_base,        ONLY :  alat, omega
+  USE gvect,            ONLY : ngm, gstart, nl, nlm, g, gg, ecutwfc, gcutm
+  USE grid_dimensions,  ONLY : nr1, nr2, nr3, nrxx
+  USE cell_base,        ONLY : alat, omega
   USE lsda_mod,         ONLY : nspin
   USE ldaU,             ONLY : lda_plus_u
   USE lsda_mod,         ONLY : current_spin

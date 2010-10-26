@@ -30,7 +30,8 @@ subroutine solve_e_fpol ( iw )
   USE lsda_mod,              ONLY : lsda, nspin, current_spin, isk
   USE fft_base,              ONLY : dffts
   USE fft_interfaces,        ONLY : fwfft, invfft
-  USE gvect,                 ONLY : nrxx, g
+  USE gvect,                 ONLY : g
+  USE grid_dimensions,       ONLY : nrxx
   USE gsmooth,               ONLY : doublegrid, nls
   USE becmod,                ONLY : becp, calbec
   USE wvfct,                 ONLY : npw, npwx, nbnd, igk, g2kin, et

@@ -22,7 +22,7 @@ subroutine setlocal
   USE vlocal,    ONLY : strf, vloc
   USE fft_base,  ONLY : dfftp
   USE fft_interfaces,ONLY : invfft
-  USE gvect,     ONLY : nrxx, nl, nlm, ngm
+  USE gvect,     ONLY : nl, nlm, ngm
   USE control_flags, ONLY : gamma_only
   USE mp_global, ONLY : intra_pool_comm
   USE mp,        ONLY : mp_sum
@@ -36,7 +36,7 @@ subroutine setlocal
   ! counter on atom types
   ! counter on g vectors
   !
-  allocate (aux( nrxx))    
+  allocate (aux( dfftp%nnr))    
   aux(:)=(0.d0,0.d0)
   !
   if (do_comp_mt) then

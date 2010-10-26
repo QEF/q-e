@@ -335,7 +335,8 @@ CONTAINS
     USE wvfct,         ONLY : nbnd, et, wg, npwx
     USE lsda_mod,      ONLY : nspin, lsda
     USE scf,           ONLY : v, vrs, vltot, rho, rho_core, kedtau
-    USE gvect,         ONLY : nrxx, ngm
+    USE gvect,         ONLY : ngm
+    USE grid_dimensions,ONLY: nrxx
     USE gsmooth,       ONLY : doublegrid
     USE klist,         ONLY : xk, degauss, ngauss, nks, nelec
     USE constants,     ONLY : degspin, pi

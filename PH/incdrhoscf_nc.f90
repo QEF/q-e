@@ -17,7 +17,7 @@ subroutine incdrhoscf_nc (drhoscf, weight, ik, dbecsum, dpsi)
   USE kinds, only : DP
   USE ions_base, ONLY : nat
   USE cell_base, ONLY : omega
-  USE gvect,     ONLY : nrxx
+  USE grid_dimensions, ONLY : nrxx
   USE fft_base,  ONLY : dffts
   USE fft_interfaces, ONLY: invfft
   USE gsmooth,   ONLY : nls

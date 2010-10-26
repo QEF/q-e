@@ -59,8 +59,8 @@ SUBROUTINE forces_us_efield(forces_bp, pdir, e_field)
    USE ions_base,            ONLY : nat, ntyp => nsp, ityp, tau, zv, atm
    USE cell_base,            ONLY : at, alat, tpiba, omega, tpiba2
    USE constants,            ONLY : pi, tpi
-   USE gvect,                ONLY : ngm, nr1, nr2, nr3, nr1x, nr2x, nr3x, &
-                                    ecutwfc, g, gcutm, ngm_g
+   USE grid_dimensions,      ONLY : nr1, nr2, nr3, nr1x, nr2x, nr3x
+   USE gvect,                ONLY : ngm, ecutwfc, g, gcutm, ngm_g
    USE uspp,                 ONLY : nkb, vkb, okvan
    USE uspp_param,           ONLY : upf, lmaxq, nbetam, nh, nhm
    USE lsda_mod,             ONLY : nspin

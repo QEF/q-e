@@ -16,7 +16,7 @@ subroutine stres_har (sigmahar)
   USE ener,      ONLY: ehart
   USE fft_base,  ONLY : dfftp
   USE fft_interfaces,ONLY : fwfft
-  USE gvect,     ONLY: ngm, gstart, nrxx , nl, g, gg
+  USE gvect,     ONLY: ngm, gstart, nl, g, gg
   USE lsda_mod,  ONLY: nspin
   USE scf,       ONLY: rho
   USE control_flags,        ONLY: gamma_only
@@ -35,7 +35,7 @@ subroutine stres_har (sigmahar)
   nspin0=nspin
   if (nspin==4) nspin0=1
   do is = 1, nspin0
-     call daxpy (nrxx, 1.d0, rho%of_r (1, is), 1, psic, 2)
+     call daxpy (dfftp%nnr, 1.d0, rho%of_r (1, is), 1, psic, 2)
   enddo
 
   CALL fwfft ('Dense', psic, dfftp)

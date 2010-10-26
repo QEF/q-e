@@ -113,7 +113,6 @@ MODULE realus
      USE klist,                ONLY : nks,xk
      USE gvect,                ONLY : ngm, g, ecutwfc
      USE cell_base,            ONLY : tpiba2
-     USE gvect,                ONLY : nrxx
      USE control_flags,        ONLY : tqr
      USE fft_base,             ONLY : dffts
      USE mp_global,            ONLY : nogrp, use_task_groups
@@ -210,7 +209,6 @@ MODULE realus
       USE constants,  ONLY : pi, fpi, eps8, eps16
       USE ions_base,  ONLY : nat, nsp, ityp, tau
       USE cell_base,  ONLY : at, bg, omega, alat
-      USE gvect,      ONLY : nr1, nr2, nr3, nrxx
       USE uspp,       ONLY : okvan, indv, nhtol, nhtolm, ap, nhtoj, lpx, lpl
       USE uspp_param, ONLY : upf, lmaxq, nh, nhm
       USE atom,       ONLY : rgrid
@@ -318,9 +316,9 @@ MODULE realus
       idx0 = 0
 #endif
       !
-      inv_nr1 = 1.D0 / dble( nr1 )
-      inv_nr2 = 1.D0 / dble( nr2 )
-      inv_nr3 = 1.D0 / dble( nr3 )
+      inv_nr1 = 1.D0 / dble( dfftp%nr1 )
+      inv_nr2 = 1.D0 / dble( dfftp%nr2 )
+      inv_nr3 = 1.D0 / dble( dfftp%nr3 )
       !
       DO ia = 1, nat
          !
@@ -334,7 +332,7 @@ MODULE realus
          tau_ia(2) = tau(2,ia)
          tau_ia(3) = tau(3,ia)
          !
-         DO ir = 1, nrxx
+         DO ir = 1, dfftp%nnr
             !
             ! ... three dimensional indices (i,j,k)
             !
@@ -347,7 +345,7 @@ MODULE realus
             !
             ! ... do not include points outside the physical range!
             !
-            IF ( i >= nr1 .or. j >= nr2 .or. k >= nr3 ) CYCLE
+            IF ( i >= dfftp%nr1 .or. j >= dfftp%nr2 .or. k >= dfftp%nr3 ) CYCLE
             !
             DO ipol = 1, 3
                posi(ipol) = dble( i )*inv_nr1*at(ipol,1) + &
@@ -996,7 +994,7 @@ MODULE realus
     !   the Q function in real space
     !
       USE cell_base,        ONLY : omega
-      USE gvect,            ONLY : nr1, nr2, nr3, nrxx
+      USE grid_dimensions,  ONLY : nr1, nr2, nr3, nrxx
       USE lsda_mod,         ONLY : nspin
       USE ions_base,        ONLY : nat, ityp
       USE uspp_param,       ONLY : upf, nh, nhm
@@ -1073,10 +1071,7 @@ MODULE realus
       !
       ! ... this subroutine is the version of newd in real space
       !
-      !USE constants,        ONLY : pi, fpi
       USE ions_base,        ONLY : nat, ityp
-      !USE cell_base,        ONLY : omega
-      !USE gvect,            ONLY : nr1, nr2, nr3, nrxx
       USE lsda_mod,         ONLY : nspin
       USE scf,              ONLY : v
       USE uspp,             ONLY : okvan, deeq, deeq_nc, dvan, dvan_so
@@ -1439,14 +1434,13 @@ MODULE realus
       USE lsda_mod,         ONLY : nspin
       !USE scf,              ONLY : rho
       USE klist,            ONLY : nelec
-      USE gvect,            ONLY : nr1, nr2, nr3
+      USE grid_dimensions,  ONLY : nr1, nr2, nr3, nrxx
       USE uspp,             ONLY : okvan, becsum
       USE uspp_param,       ONLY : upf, nh
       USE noncollin_module, ONLY : noncolin, nspin_mag, nspin_lsda
       USE spin_orb,         ONLY : domag
       USE mp_global,        ONLY : intra_pool_comm, inter_pool_comm
       USE mp,               ONLY : mp_sum
-      USE gvect,                ONLY : nrxx
 
       !
       IMPLICIT NONE
@@ -2676,8 +2670,8 @@ MODULE realus
   !
   USE kinds,                ONLY : DP
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
-  USE gvect,                ONLY : nr1, nr2, nr3, nrxx, &
-                                   ngm, nl, nlm, gg, g, eigts1, eigts2, &
+  USE grid_dimensions,      ONLY : nrxx
+  USE gvect,                ONLY : ngm, nl, nlm, gg, g, eigts1, eigts2, &
                                    eigts3, ig1, ig2, ig3
   USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
   USE uspp,                 ONLY : okvan, becsum, nkb
@@ -2784,8 +2778,8 @@ MODULE realus
 
   USE kinds,                ONLY : DP
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
-  USE gvect,                ONLY : nr1, nr2, nr3, nrxx, &
-                                   ngm, nl, nlm, gg, g, eigts1, eigts2, &
+  USE grid_dimensions,      ONLY : nrxx
+  USE gvect,                ONLY : ngm, nl, nlm, gg, g, eigts1, eigts2, &
                                    eigts3, ig1, ig2, ig3
   USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
   USE uspp,                 ONLY : okvan, becsum, nkb
@@ -2878,8 +2872,7 @@ MODULE realus
 
   USE kinds,                ONLY : DP
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
-  USE gvect,                ONLY : nr1, nr2, nr3, nrxx, &
-                                   ngm, nl, nlm, gg, g, eigts1, eigts2, &
+  USE gvect,                ONLY : ngm, nl, nlm, gg, g, eigts1, eigts2, &
                                    eigts3, ig1, ig2, ig3
   USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
   USE uspp,                 ONLY : okvan, becsum, nkb, qq
@@ -2968,8 +2961,8 @@ MODULE realus
   !
   USE kinds,                ONLY : DP
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
-  USE gvect,                ONLY : nr1, nr2, nr3, nrxx, &
-                                   ngm, nl, nlm, gg, g, eigts1, eigts2, &
+  USE grid_dimensions,      ONLY : nr1, nr2, nr3, nrxx
+  USE gvect,                ONLY : ngm, nl, nlm, gg, g, eigts1, eigts2, &
                                    eigts3, ig1, ig2, ig3
   USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
   USE uspp,                 ONLY : okvan, becsum, nkb, qq

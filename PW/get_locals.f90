@@ -18,10 +18,10 @@
       USE kinds,      ONLY : DP
       USE ions_base,  ONLY : nat
       USE cell_base,  ONLY : omega
-      USE gvect,      ONLY : nr1, nr2, nr3, nrxx
       USE lsda_mod,   ONLY : nspin
       USE mp_global,  ONLY : intra_pool_comm
       USE mp,         ONLY : mp_sum
+      USE grid_dimensions,  ONLY : nr1, nr2, nr3, nrxx
       USE noncollin_module, ONLY : pointlist, factlist, noncolin
 
       implicit none

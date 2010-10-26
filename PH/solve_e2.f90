@@ -18,8 +18,9 @@ subroutine solve_e2
   USE cell_base,             ONLY : tpiba2
   USE klist,                 ONLY : lgauss, wk, xk
   USE lsda_mod,              ONLY : lsda, nspin
-  USE gvect,                 ONLY : nrxx, g
+  USE gvect,                 ONLY : g
   USE gsmooth,               ONLY : doublegrid
+  USE grid_dimensions,       ONLY : nrxx
   USE smooth_grid_dimensions,ONLY : nrxxs
   USE wvfct,                 ONLY : npw, npwx, nbnd, igk, g2kin, et
   USE io_files,  ONLY: prefix, iunigk

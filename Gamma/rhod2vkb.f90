@@ -17,7 +17,7 @@ SUBROUTINE rhod2vkb(dyn0)
   USE ions_base, ONLY : nat, tau, ityp, ntyp => nsp
   USE cell_base, ONLY : tpiba2, tpiba, omega
   USE lsda_mod,  ONLY : current_spin
-  USE gvect,  ONLY : nrxx, ecutwfc, ngm, g, igtongl, nl
+  USE gvect,  ONLY : ecutwfc, ngm, g, igtongl, nl
   USE wvfct,  ONLY: nbnd, npwx, npw, g2kin, igk
   USE klist,  ONLY : xk, nks, wk
   USE scf,    ONLY : rho
@@ -48,7 +48,7 @@ SUBROUTINE rhod2vkb(dyn0)
   !
   ALLOCATE  ( dynloc( 3*nat, nmodes))
   dynloc (:,:) = 0.d0
-  DO ir = 1,nrxx
+  DO ir = 1,dfftp%nnr
      psic(ir) = rho%of_r(ir,current_spin)
   ENDDO
   CALL fwfft ('Dense', psic, dfftp)

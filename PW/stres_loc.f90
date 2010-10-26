@@ -1,4 +1,4 @@
-!
+
 ! Copyright (C) 2001-2007 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
@@ -16,7 +16,7 @@ subroutine stres_loc (sigmaloc)
   USE cell_base,            ONLY : omega, tpiba2
   USE fft_base,             ONLY : dfftp
   USE fft_interfaces,       ONLY : fwfft
-  USE gvect,                ONLY : ngm, gstart, nrxx, nl, g, ngl, gl, igtongl
+  USE gvect,                ONLY : ngm, gstart, nl, g, ngl, gl, igtongl
   USE lsda_mod,             ONLY : nspin
   USE scf,                  ONLY : rho
   USE vlocal,               ONLY : strf, vloc
@@ -42,7 +42,7 @@ subroutine stres_loc (sigmaloc)
   sigmaloc(:,:) = 0.d0
   psic(:)=(0.d0,0.d0)
   do is = 1, nspin_lsda
-     call daxpy (nrxx, 1.d0, rho%of_r (1, is), 1, psic, 2)
+     call daxpy (dfftp%nnr, 1.d0, rho%of_r (1, is), 1, psic, 2)
   enddo
 
   CALL fwfft ('Dense', psic, dfftp)

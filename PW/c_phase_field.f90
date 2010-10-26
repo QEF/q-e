@@ -30,8 +30,8 @@ SUBROUTINE c_phase_field(el_pola,ion_pola, fact_pola, pdir)
    USE ions_base,            ONLY : nat, ntyp => nsp, ityp, tau, zv, atm
    USE cell_base,            ONLY : at, alat, tpiba, omega, tpiba2
    USE constants,            ONLY : pi, tpi
-   USE gvect,                ONLY : ngm, nr1, nr2, nr3, &
-                                    ecutwfc, g, gcutm, ngm_g
+   USE grid_dimensions,      ONLY : nr1, nr2, nr3
+   USE gvect,                ONLY : ngm, ecutwfc, g, gcutm, ngm_g
    USE uspp,                 ONLY : nkb, vkb, okvan
    USE uspp_param,           ONLY : upf, lmaxq, nbetam, nh, nhm
    USE lsda_mod,             ONLY : nspin

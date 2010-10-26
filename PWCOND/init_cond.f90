@@ -22,7 +22,8 @@ subroutine init_cond (nregion, flag)
   USE ions_base,  ONLY : atm, nat, ityp, ntyp => nsp, tau
   USE cell_base,  ONLY : at, bg, omega, alat
   USE ener,       ONLY : ef
-  USE gvect,      ONLY : nr1x, nr2x, nr3x, nr1, nr2, nr3, ecutwfc
+  USE gvect,      ONLY : ecutwfc
+  USE grid_dimensions,        ONLY : nr1x, nr2x, nr3x, nr1, nr2, nr3
   USE smooth_grid_dimensions, ONLY : nr1sx, nr2sx, nr3sx, nr1s, nr2s, nr3s
   USE noncollin_module,       ONLY : noncolin, npol
   USE cond

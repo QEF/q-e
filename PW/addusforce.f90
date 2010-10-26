@@ -18,7 +18,7 @@ subroutine addusforce (forcenl)
   USE ions_base,  ONLY : nat, ntyp => nsp, ityp
   USE cell_base,  ONLY : omega, tpiba
   USE fft_base,   ONLY : dfftp
-  USE gvect,      ONLY : nrxx, ngm, &
+  USE gvect,      ONLY : ngm, &
                          nl, nlm, gg, g, eigts1, eigts2, eigts3, ig1, ig2, ig3
   USE lsda_mod,   ONLY : nspin
   USE scf,        ONLY : v, vltot
@@ -52,7 +52,7 @@ subroutine addusforce (forcenl)
   !
   ! fourier transform of the total effective potential
   !
-  allocate (vg(nrxx))    
+  allocate (vg(dfftp%nnr))    
   do is = 1, nspin
      if (nspin.eq.4.and.is.ne.1) then
         vg (:) = v%of_r(:,is)

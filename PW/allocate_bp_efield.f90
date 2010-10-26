@@ -44,7 +44,8 @@
     USE io_global,            ONLY : stdout
     USE mp,                   ONLY : mp_sum
     USE bp
-    USE gvect,                ONLY : ngm_g, nr1, nr2, nr3, g, ngm
+    USE gvect,                ONLY : ngm_g, g, ngm
+    USE grid_dimensions,      ONLY : nr1, nr2, nr3
     USE cell_base,            ONLY : at
     USE reciprocal_vectors,   ONLY : ig_l2g
 

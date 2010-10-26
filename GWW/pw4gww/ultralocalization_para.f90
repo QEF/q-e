@@ -23,8 +23,6 @@ SUBROUTINE ultralocalization_para(nbndv,nbnd_max,ultra_thr,isubspace,max_array2,
   USE io_files,             ONLY : find_free_unit, diropn
   USE io_global,            ONLY : stdout, ionode_id
   USE gsmooth,              ONLY : nls, nlsm, doublegrid
-  USE gvect,                ONLY : nr1, nr2, nr3, nr1x, nr2x, &
-                                   nr3x, nrxx
   use mp_global,            ONLY : nproc_pool, me_pool
   USE wvfct,                ONLY : igk, g2kin, npwx, npw, nbnd, nbndx
   USE basis
@@ -106,12 +104,12 @@ SUBROUTINE ultralocalization_para(nbndv,nbnd_max,ultra_thr,isubspace,max_array2,
 
   max_array=max_array2
 #ifndef __PARA
-  dfftp%npp(1)= nr3
-  dffts%npp(1)= dffts%nr3
+  !dfftp%npp(1)= nr3 ! not needed - PG
+  !dffts%npp(1)= dffts%nr3 ! not needed - PG
   nr3s_start=1
   nr3s_end=dffts%nr3
   nr3_start=1
-  nr3_end=nr3
+  nr3_end=dfftp%nr3
 #else
   nr3s_start=0
   nr3s_end =0
@@ -131,13 +129,13 @@ SUBROUTINE ultralocalization_para(nbndv,nbnd_max,ultra_thr,isubspace,max_array2,
   allocate(eigvector_set(nbnd_normal,nmaxeig),eigvector_tmp(nbnd_normal))
 
 
-  allocate(tmpreal(nrxx))
+  allocate(tmpreal(dfftp%nnr))
   allocate(eigenvector2(nbnd_normal),eigenvector_old(nbnd_normal,max_array))
   allocate(iwork(5*nbnd_normal),ifail(nbnd_normal))
   allocate(eigx(nbnd_normal,nbnd_normal),eigy(nbnd_normal,nbnd_normal),eigz(nbnd_normal,nbnd_normal))
-  allocate(exp_x(nrxx),exp_y(nrxx),exp_z(nrxx))
-  allocate(sums(nr1,nr2,dfftp%npp(me_pool+1)))
-  allocate(tmp_s(dffts%nnr),tmp_r(nrxx))
+  allocate(exp_x(dfftp%nnr),exp_y(dfftp%nnr),exp_z(dfftp%nnr))
+  allocate(sums(dfftp%nr1,dfftp%nr2,dfftp%npp(me_pool+1)))
+  allocate(tmp_s(dffts%nnr),tmp_r(dfftp%nnr))
   if(okvan) allocate(becp_gw2(nkb,nbnd))
 
   if(isubspace==0) then
@@ -182,8 +180,8 @@ SUBROUTINE ultralocalization_para(nbndv,nbnd_max,ultra_thr,isubspace,max_array2,
 
   allocate(tmpreali(dffts%nnr,numnbndset))
   allocate(tmprealj(dffts%nnr))
-  allocate(min_1(nr2,dfftp%npp(me_pool+1),numnbndset),min_2(nr2,dfftp%npp(me_pool+1),numnbndset))
-  allocate(max_1(nr2,dfftp%npp(me_pool+1),numnbndset),max_2(nr2,dfftp%npp(me_pool+1),numnbndset))
+  allocate(min_1(dfftp%nr2,dfftp%npp(me_pool+1),numnbndset),min_2(dfftp%nr2,dfftp%npp(me_pool+1),numnbndset))
+  allocate(max_1(dfftp%nr2,dfftp%npp(me_pool+1),numnbndset),max_2(dfftp%nr2,dfftp%npp(me_pool+1),numnbndset))
   allocate(eigenvector(nbnd_normal,numnbndset))
 
   exp_x(:)=(0.d0,0.d0)
@@ -211,8 +209,8 @@ SUBROUTINE ultralocalization_para(nbndv,nbnd_max,ultra_thr,isubspace,max_array2,
 
      radmax=no_radius/alat
 
-     nrsmin=min(nr1,nr2)
-     nrsmin=min(nr3,nrsmin)
+     nrsmin=min(dfftp%nr1,dfftp%nr2)
+     nrsmin=min(dfftp%nr3,nrsmin)
  !if nrsmin is even set to nrsmin -1,
      if(is_even(nrsmin)) then
         nrsmin=nrsmin-1
@@ -228,9 +226,9 @@ SUBROUTINE ultralocalization_para(nbndv,nbnd_max,ultra_thr,isubspace,max_array2,
      iunrealwan2 =  find_free_unit()
 
      if(itask/=1) then
-        CALL diropn( iunrealwan2, 'realwan', nrxx, exst )
+        CALL diropn( iunrealwan2, 'realwan', dfftp%nnr, exst )
      else
-        CALL diropn( iunrealwan2, 'realwan_prim', nrxx, exst )
+        CALL diropn( iunrealwan2, 'realwan_prim', dfftp%nnr, exst )
      endif
 
 !read in wave-functions
@@ -297,13 +295,13 @@ SUBROUTINE ultralocalization_para(nbndv,nbnd_max,ultra_thr,isubspace,max_array2,
         exp_x(:)=(0.d0,0.d0)
         exp_y(:)=(0.d0,0.d0)
         exp_z(:)=(0.d0,0.d0)
-        do ix=1,nr1
-           do iy=1,nr2
+        do ix=1,dfftp%nr1
+           do iy=1,dfftp%nr2
               do iz=1,dfftp%npp(me_pool+1)
-                 nn=(iz-1)*nr1x*nr2x+(iy-1)*nr1x+ix
-                 exp_x(nn)=exp((0.d0,1.d0)*tpi*dble(ix-1)/dble(nr1))
-                 exp_y(nn)=exp((0.d0,1.d0)*tpi*dble(iy-1)/dble(nr2))
-                 exp_z(nn)=exp((0.d0,1.d0)*tpi*dble(iz+nr3_start-1-1)/dble(nr3))
+                 nn=(iz-1)*dfftp%nr1x*dfftp%nr2x+(iy-1)*dfftp%nr1x+ix
+                 exp_x(nn)=exp((0.d0,1.d0)*tpi*dble(ix-1)/dble(dfftp%nr1))
+                 exp_y(nn)=exp((0.d0,1.d0)*tpi*dble(iy-1)/dble(dfftp%nr2))
+                 exp_z(nn)=exp((0.d0,1.d0)*tpi*dble(iz+nr3_start-1-1)/dble(dfftp%nr3))
               enddo
            enddo
         enddo
@@ -327,7 +325,7 @@ SUBROUTINE ultralocalization_para(nbndv,nbnd_max,ultra_thr,isubspace,max_array2,
               scac1=(0.d0,0.d0)
               scac2=(0.d0,0.d0)
               scac3=(0.d0,0.d0)
-              do ir=1,nrxx
+              do ir=1,dfftp%nnr
                  scac1=scac1+exp_x(ir)*tmp_r(ir)
                  scac2=scac2+exp_y(ir)*tmp_r(ir)
                  scac3=scac3+exp_z(ir)*tmp_r(ir)
@@ -337,9 +335,9 @@ SUBROUTINE ultralocalization_para(nbndv,nbnd_max,ultra_thr,isubspace,max_array2,
               call mp_sum(scac2)
               call mp_sum(scac3)
 
-              eigx(iw,jw)=eigx(iw,jw)+scac1/real(nr1*nr2*nr3)
-              eigy(iw,jw)=eigy(iw,jw)+scac2/real(nr1*nr2*nr3)
-              eigz(iw,jw)=eigz(iw,jw)+scac3/real(nr1*nr2*nr3)
+              eigx(iw,jw)=eigx(iw,jw)+scac1/real(dfftp%nr1*dfftp%nr2*dfftp%nr3)
+              eigy(iw,jw)=eigy(iw,jw)+scac2/real(dfftp%nr1*dfftp%nr2*dfftp%nr3)
+              eigz(iw,jw)=eigz(iw,jw)+scac3/real(dfftp%nr1*dfftp%nr2*dfftp%nr3)
               eigx(jw,iw)=eigx(iw,jw)
               eigy(jw,iw)=eigy(iw,jw)
               eigz(jw,iw)=eigz(iw,jw)
@@ -485,16 +483,16 @@ SUBROUTINE ultralocalization_para(nbndv,nbnd_max,ultra_thr,isubspace,max_array2,
                  iqq=iqq+1
                  if(.not.converged(iqq)) then
 
-                    do iy=1,nr2
+                    do iy=1,dfftp%nr2
                        do iz=1,dfftp%npp(me_pool+1)
                           min_1(iy,iz,iqq)=0
                           max_1(iy,iz,iqq)=0
                           min_2(iy,iz,iqq)=0
                           max_2(iy,iz,iqq)=0
-                          do ix=1,nr1
-                             rx=rdistance(real(ix-1)*at(1,1)/real(nr1),center(1,iqq),at(1,1))
-                             ry=rdistance(real(iy-1)*at(2,2)/real(nr2),center(2,iqq),at(2,2))
-                             rz=rdistance(real(iz+nr3_start-1-1)*at(3,3)/real(nr3),center(3,iqq),at(3,3))
+                          do ix=1,dfftp%nr1
+                             rx=rdistance(real(ix-1)*at(1,1)/real(dfftp%nr1),center(1,iqq),at(1,1))
+                             ry=rdistance(real(iy-1)*at(2,2)/real(dfftp%nr2),center(2,iqq),at(2,2))
+                             rz=rdistance(real(iz+nr3_start-1-1)*at(3,3)/real(dfftp%nr3),center(3,iqq),at(3,3))
                              if(sqrt(rx**2.d0+ry**2.d0+rz**2.d0) <= radmax) then
                                 if(min_1(iy,iz,iqq)==0) min_1(iy,iz,iqq)=ix
                              else
@@ -504,12 +502,12 @@ SUBROUTINE ultralocalization_para(nbndv,nbnd_max,ultra_thr,isubspace,max_array2,
                                 endif
                              endif
                           enddo
-                          if(min_1(iy,iz,iqq)/=0 .and. max_1(iy,iz,iqq)==0)  max_1(iy,iz,iqq)=nr1+1
-                          if(min_1(iy,iz,iqq)==1 .and. max_1(iy,iz,iqq)/=(nr1+1)) then
-                             do ix=nr1,1,-1
-                                rx=rdistance(real(ix-1)*at(1,1)/real(nr1),center(1,iqq),at(1,1))
-                                ry=rdistance(real(iy-1)*at(2,2)/real(nr2),center(2,iqq),at(2,2))
-                                rz=rdistance(real(iz+nr3_start-1-1)*at(3,3)/real(nr3),center(3,iqq),at(3,3))
+                          if(min_1(iy,iz,iqq)/=0 .and. max_1(iy,iz,iqq)==0)  max_1(iy,iz,iqq)=dfftp%nr1+1
+                          if(min_1(iy,iz,iqq)==1 .and. max_1(iy,iz,iqq)/=(dfftp%nr1+1)) then
+                             do ix=dfftp%nr1,1,-1
+                                rx=rdistance(real(ix-1)*at(1,1)/real(dfftp%nr1),center(1,iqq),at(1,1))
+                                ry=rdistance(real(iy-1)*at(2,2)/real(dfftp%nr2),center(2,iqq),at(2,2))
+                                rz=rdistance(real(iz+nr3_start-1-1)*at(3,3)/real(dfftp%nr3),center(3,iqq),at(3,3))
                                 if(sqrt(rx**2.d0+ry**2.d0+rz**2.d0) <= radmax) then
                                    if(max_2(iy,iz,iqq)==0) max_2(iy,iz,iqq)=ix
                                 else
@@ -545,26 +543,26 @@ SUBROUTINE ultralocalization_para(nbndv,nbnd_max,ultra_thr,isubspace,max_array2,
               else
                  call adduspos_gamma_r(jw,kw,tmp_r,1,becp_gw_c(:,jw),becp_gw_c(:,kw))
               endif
-              do iy=1,nr2
+              do iy=1,dfftp%nr2
                  do iz=1,dfftp%npp(me_pool+1)
                     sca=0.d0
-                    nn=(iz-1)*nr1x*nr2x+(iy-1)*nr1x
-                    do ix=1,nr1
+                    nn=(iz-1)*dfftp%nr1x*dfftp%nr2x+(iy-1)*dfftp%nr1x
+                    do ix=1,dfftp%nr1
                        nn=nn+1
-                       !nn=(iz-1)*nr1x*nr2x+(iy-1)*nr1x+ix
+                       !nn=(iz-1)*dfftp%nr1x*dfftp%nr2x+(iy-1)*dfftp%nr1x+ix
                        sca=sca+tmp_r(nn)
                        sums(ix,iy,iz)=sca
                     enddo
                  enddo
               enddo
-              sums(:,:,:)=sums(:,:,:)/dble(nr1*nr2*nr3)
+              sums(:,:,:)=sums(:,:,:)/dble(dfftp%nr1*dfftp%nr2*dfftp%nr3)
               iqq=0
               do iw=ifirst,ilast
                  iqq=iqq+1
                  if(.not.converged(iqq))then
                     loc_tmp=0.d0
                        do iz=1,dfftp%npp(me_pool+1)
-                          do iy=1,nr2
+                          do iy=1,dfftp%nr2
                           if(max_1(iy,iz,iqq)/=0) then
                              if(min_1(iy,iz,iqq)/=1) then
                                 loc_tmp=loc_tmp+sums(max_1(iy,iz,iqq)-1,iy,iz)-sums(min_1(iy,iz,iqq)-1,iy,iz)
@@ -760,22 +758,22 @@ SUBROUTINE ultralocalization_para(nbndv,nbnd_max,ultra_thr,isubspace,max_array2,
 
 !determines integer coordinates of center of wannier wfcs
 
-      nc1=nint(center(1,iqq)/(at(1,1))*dble(nr1))
-      nc2=nint(center(2,iqq)/(at(2,2))*dble(nr2))
-      nc3=nint(center(3,iqq)/(at(3,3))*dble(nr3))
+      nc1=nint(center(1,iqq)/(at(1,1))*dble(dfftp%nr1))
+      nc2=nint(center(2,iqq)/(at(2,2))*dble(dfftp%nr2))
+      nc3=nint(center(3,iqq)/(at(3,3))*dble(dfftp%nr3))
 
       nc1=nc1+1
       nc2=nc2+1
       nc3=nc3+1
 
-      if(nc1<1) nc1=nr1+nc1
-      if(nc1>nr1) nc1=nc1-nr1
+      if(nc1<1) nc1=dfftp%nr1+nc1
+      if(nc1>dfftp%nr1) nc1=nc1-dfftp%nr1
 
-      if(nc2<1) nc2=nr2+nc2
-      if(nc2>nr2) nc2=nc2-nr2
+      if(nc2<1) nc2=dfftp%nr2+nc2
+      if(nc2>dfftp%nr2) nc2=nc2-dfftp%nr2
 
-      if(nc3<1) nc3=nr3+nc3
-      if(nc3>nr3) nc3=nc3-nr3
+      if(nc3<1) nc3=dfftp%nr3+nc3
+      if(nc3>dfftp%nr3) nc3=nc3-dfftp%nr3
 
 
       write(stdout,*)'Wannier :', iw, 'Center :', nc1,nc2,nc3
@@ -789,26 +787,26 @@ SUBROUTINE ultralocalization_para(nbndv,nbnd_max,ultra_thr,isubspace,max_array2,
                do iz=-nll,nll
 
                   n1=nc1+ix
-                  if(n1<1) n1=nr1+n1
-                  if(n1>nr1) n1=n1-nr1
+                  if(n1<1) n1=dfftp%nr1+n1
+                  if(n1>dfftp%nr1) n1=n1-dfftp%nr1
 
                   n2=nc2+iy
-                  if(n2<1) n2=nr2+n2
-                  if(n2>nr2) n2=n2-nr2
+                  if(n2<1) n2=dfftp%nr2+n2
+                  if(n2>dfftp%nr2) n2=n2-dfftp%nr2
 
                   n3=nc3+iz
-                  if(n3<1) n3=nr3+n3
-                  if(n3>nr3) n3=n3-nr3
+                  if(n3<1) n3=dfftp%nr3+n3
+                  if(n3>dfftp%nr3) n3=n3-dfftp%nr3
 
                   if(n3 >= nr3_start .and. n3 <= nr3_end) then
-                     nn=(n3-nr3_start)*nr1x*nr2x+(n2-1)*nr1x+n1
+                     nn=(n3-nr3_start)*dfftp%nr1x*dfftp%nr2x+(n2-1)*dfftp%nr1x+n1
                      norm=norm+tmp_r(nn)
                   endif
                enddo
             enddo
          enddo
 
-         norm=norm/real(nr1*nr2*nr3)
+         norm=norm/real(dfftp%nr1*dfftp%nr2*dfftp%nr3)
          call mp_sum(norm)
          if(norm >= cutoff) then
             exit
@@ -820,16 +818,16 @@ SUBROUTINE ultralocalization_para(nbndv,nbnd_max,ultra_thr,isubspace,max_array2,
 !determines integer origin
 
       no1=nc1-nll
-      if(no1<1) no1=nr1+no1
-      if(no1>nr1) no1=no1-nr1
+      if(no1<1) no1=dfftp%nr1+no1
+      if(no1>dfftp%nr1) no1=no1-dfftp%nr1
 
       no2=nc2-nll
-      if(no2<1) no2=nr2+no2
-      if(no2>nr2) no2=no2-nr2
+      if(no2<1) no2=dfftp%nr2+no2
+      if(no2>dfftp%nr2) no2=no2-dfftp%nr2
 
       no3=nc3-nll
-      if(no3<1) no3=nr3+no3
-      if(no3>nr3) no3=no3-nr3
+      if(no3<1) no3=dfftp%nr3+no3
+      if(no3>dfftp%nr3) no3=no3-dfftp%nr3
 
 !put on array
       if(doublegrid) then
@@ -840,9 +838,9 @@ SUBROUTINE ultralocalization_para(nbndv,nbnd_max,ultra_thr,isubspace,max_array2,
 !writes on file
 !if itask==1 writes {c'} from position 1
       if(itask /= 1) then
-         call  davcio( tmp_r,nrxx,iunrealwan2,iw,1)
+         call  davcio( tmp_r,dfftp%nnr,iunrealwan2,iw,1)
       else
-         call  davcio( tmp_r,nrxx,iunrealwan2,iw-n_first+1,1)
+         call  davcio( tmp_r,dfftp%nnr,iunrealwan2,iw-n_first+1,1)
       endif
 
 !put on arrays center and radius

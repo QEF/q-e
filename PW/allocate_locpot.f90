@@ -15,7 +15,8 @@ subroutine allocate_locpot
   !
   USE ions_base, ONLY : nat, ntyp => nsp
   USE vlocal,    ONLY : vloc, strf
-  USE gvect,     ONLY : eigts1, eigts2, eigts3, nr1, nr2, nr3, ngm, ngl
+  USE gvect,     ONLY : eigts1, eigts2, eigts3, ngm, ngl
+  USE grid_dimensions, ONLY : nr1, nr2, nr3
   !
   implicit none
   !

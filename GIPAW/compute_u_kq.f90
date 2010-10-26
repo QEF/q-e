@@ -27,8 +27,8 @@ SUBROUTINE compute_u_kq(ik, q)
   USE lsda_mod,             ONLY : current_spin, lsda, isk
   USE noncollin_module,     ONLY : noncolin, npol
   USE wavefunctions_module, ONLY : evc
-  USE gvect,                ONLY : g, ngm, ecutwfc, ngl, nrxx, &
-                                   nr1, nr2, nr3, nr1x, nr2x, nr3x
+  USE gvect,                ONLY : g, ngm, ecutwfc, ngl
+  USE grid_dimensions,      ONLY : nrxx, nr1, nr2, nr3, nr1x, nr2x, nr3x
   USE cell_base,            ONLY : at, bg, omega, tpiba, tpiba2
   USE bp,                   ONLY : lelfield
   USE control_flags,        ONLY : iverbosity

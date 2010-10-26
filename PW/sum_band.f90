@@ -21,7 +21,7 @@ SUBROUTINE sum_band()
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
   USE fft_base,             ONLY : dfftp, dffts
   USE fft_interfaces,       ONLY : fwfft, invfft
-  USE gvect,                ONLY : nrxx, ngm, g, nl, nlm
+  USE gvect,                ONLY : ngm, g, nl, nlm
   USE gsmooth,              ONLY : nls, nlsm, doublegrid
   USE klist,                ONLY : nks, nkstot, wk, xk, ngk
   USE fixed_occ,            ONLY : one_atom_occupations

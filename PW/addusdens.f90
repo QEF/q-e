@@ -13,7 +13,7 @@ SUBROUTINE addusdens(rho)
   USE realus,               ONLY : addusdens_r
   USE control_flags,        ONLY : tqr
   USE noncollin_module,     ONLY : nspin_mag
-  USE gvect,                ONLY : nrxx
+  USE grid_dimensions,      ONLY : nrxx
   USE kinds,                ONLY : DP
   !
   IMPLICIT NONE
@@ -42,7 +42,7 @@ subroutine addusdens_g(rho)
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
   USE fft_base,             ONLY : dfftp
   USE fft_interfaces,       ONLY : invfft
-  USE gvect,                ONLY : nrxx, ngm, nl, nlm, gg, g, &
+  USE gvect,                ONLY : ngm, nl, nlm, gg, g, &
                                    eigts1, eigts2, eigts3, ig1, ig2, ig3
   USE noncollin_module,     ONLY : noncolin, nspin_mag
   USE uspp,                 ONLY : becsum, okvan
@@ -52,7 +52,7 @@ subroutine addusdens_g(rho)
   !
   implicit none
   !
-  REAL(kind=dp), intent(inout) :: rho(nrxx,nspin_mag)
+  REAL(kind=dp), intent(inout) :: rho(dfftp%nnr,nspin_mag)
   !
   !     here the local variables
   !

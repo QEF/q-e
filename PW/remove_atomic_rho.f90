@@ -11,7 +11,7 @@ subroutine remove_atomic_rho
   USE io_global, ONLY: stdout
   USE io_files, ONLY: output_drho
   USE kinds, ONLY: DP
-  USE gvect, ONLY: nrxx
+  USE grid_dimensions, ONLY: nrxx
   USE lsda_mod, ONLY: nspin
   USE scf, ONLY: rho
   USE io_rho_xml, ONLY : write_rho

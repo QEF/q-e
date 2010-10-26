@@ -27,8 +27,7 @@ subroutine dvanqq
   USE ions_base, ONLY : nat, ityp, ntyp => nsp
   USE fft_base,   ONLY: dfftp
   USE fft_interfaces, ONLY: fwfft
-  use gvect, only : ngm, gg, nrxx, &
-                    nl, g, ig1, ig2, ig3, eigts1, eigts2, eigts3
+  use gvect, only : ngm, gg, nl, g, ig1, ig2, ig3, eigts1, eigts2, eigts3
   use spin_orb, only : lspinorb
   use scf, only : v, vltot
   use noncollin_module, ONLY : noncolin, nspin_mag
@@ -111,14 +110,14 @@ subroutine dvanqq
   !
   !   we start by computing the FT of the effective potential
   !
-  allocate (veff ( nrxx , nspin_mag))
+  allocate (veff ( dfftp%nnr , nspin_mag))
   do is = 1, nspin_mag
      if (nspin_mag.ne.4.or.is==1) then
-        do ir = 1, nrxx
+        do ir = 1, dfftp%nnr
            veff (ir, is) = CMPLX(vltot (ir) + v%of_r (ir, is), 0.d0,kind=DP)
         enddo
      else
-        do ir = 1, nrxx
+        do ir = 1, dfftp%nnr
            veff (ir, is) = CMPLX(v%of_r (ir, is), 0.d0,kind=DP)
         enddo
      endif

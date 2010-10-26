@@ -17,7 +17,7 @@ subroutine lr_calc_dens( evc1, response_calc )
   use cell_base,                    only : omega
   use ener,                     only : ef
   use gsmooth,                  only : nls,nlsm,doublegrid
-  use gvect,                    only : nrxx,gstart,nr1,nr2,nr3
+  use grid_dimensions,          only : nrxx,nr1,nr2,nr3
   use fft_base,                 only : dffts
   use fft_interfaces,           only : invfft
   use io_global,                only : stdout

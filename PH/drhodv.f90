@@ -21,7 +21,8 @@ subroutine drhodv (nu_i0, nper, drhoscf)
   USE kinds,     ONLY : DP
   USE ions_base, ONLY : nat
   USE klist,     ONLY : xk
-  USE gvect,     ONLY : g, nrxx
+  USE gvect,     ONLY : g
+  USE grid_dimensions, ONLY : nrxx
   USE cell_base, ONLY : tpiba
   USE lsda_mod,  ONLY : current_spin, lsda, isk, nspin
   USE wvfct,     ONLY : npw, npwx, nbnd, igk

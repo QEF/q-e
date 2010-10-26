@@ -18,7 +18,7 @@ subroutine setup_dgc
   USE constants,ONLY : e2
   USE fft_base, ONLY : dfftp
   USE fft_interfaces, ONLY: fwfft
-  USE gvect,    ONLY : ngm, nrxx, g, nl
+  USE gvect,    ONLY : ngm, g, nl
   USE spin_orb, ONLY : domag
   USE scf,      ONLY : rho, rho_core, rhog_core
   USE noncollin_module, ONLY : noncolin, ux, nspin_gga, nspin_mag
@@ -32,7 +32,7 @@ subroutine setup_dgc
 
 
   implicit none
-  integer :: k, is, ipol, jpol, ir
+  integer :: k, is, ipol, jpol, ir, nrxx
   real(DP) :: grho2 (2), rh, zeta, grh2, fac, sx, sc, &
        v1x, v2x, v1c, v2c, vrrx, vsrx, vssx, vrrc, vsrc, vssc, v1xup, &
        v1xdw, v2xup, v2xdw, v1cup, v1cdw, vrrxup, vrrxdw, vrsxup, vrsxdw, &
@@ -43,7 +43,7 @@ subroutine setup_dgc
   real (DP), parameter :: epsr = 1.0d-6, epsg = 1.0d-10
 
   if ( .not. dft_is_gradient() ) return
-
+  nrxx = dfftp%nnr
   IF (noncolin.AND.domag) THEN
      allocate (segni (nrxx))
      allocate (vsgga (nrxx))

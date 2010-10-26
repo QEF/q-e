@@ -30,8 +30,7 @@ subroutine atomic_rho (rhoa, nspina)
   USE atom,                 ONLY : rgrid, msh
   USE ions_base,            ONLY : ntyp => nsp
   USE cell_base,            ONLY : tpiba, omega
-  USE gvect,                ONLY : ngm, ngl, nrxx, nr1, nr2, nr3, &
-                                   gstart, nl, nlm, gl, igtongl
+  USE gvect,                ONLY : ngm, ngl, gstart, nl, nlm, gl, igtongl
   USE lsda_mod,             ONLY : starting_magnetization, lsda
   USE vlocal,               ONLY : strf
   USE control_flags,        ONLY : gamma_only
@@ -48,7 +47,7 @@ subroutine atomic_rho (rhoa, nspina)
   !
   integer :: nspina
   ! the number of spin polarizations
-  real(DP) :: rhoa (nrxx, nspina)
+  real(DP) :: rhoa (dfftp%nnr, nspina)
   ! the output atomic charge
   !
   ! local variables
@@ -154,12 +153,12 @@ subroutine atomic_rho (rhoa, nspina)
      !
      rhoneg = 0.d0
      rhoima = 0.d0
-     do ir = 1, nrxx
+     do ir = 1, dfftp%nnr
         rhoneg = rhoneg + MIN (0.d0,  DBLE (psic (ir)) )
         rhoima = rhoima + abs (AIMAG (psic (ir) ) )
      enddo
-     rhoneg = omega * rhoneg / (nr1 * nr2 * nr3)
-     rhoima = omega * rhoima / (nr1 * nr2 * nr3)
+     rhoneg = omega * rhoneg / (dfftp%nr1 * dfftp%nr2 * dfftp%nr3)
+     rhoima = omega * rhoima / (dfftp%nr1 * dfftp%nr2 * dfftp%nr3)
 #ifdef __PARA
      call mp_sum(  rhoneg, intra_pool_comm )
      call mp_sum(  rhoima, intra_pool_comm )
@@ -185,7 +184,7 @@ subroutine atomic_rho (rhoa, nspina)
      ! because it is basically useless to do it in real space: negative
      ! charge will re-appear when Fourier-transformed back and forth
      !
-     DO ir = 1, nrxx
+     DO ir = 1, dfftp%nnr
         rhoa (ir, is) =  DBLE (psic (ir))
      END DO
      !

@@ -82,14 +82,14 @@ SUBROUTINE iosys(xmlinput,attr)
   USE force_mod,     ONLY : lforce, lstres, force
   !
   USE gvect,         ONLY : dual, &
-                            nr1_     => nr1, &
-                            nr2_     => nr2, &
-                            nr3_     => nr3,  &
                             ecutwfc_ => ecutwfc, &
                             ecfixed_ => ecfixed, &
                             qcutz_   => qcutz, &
                             q2sigma_ => q2sigma
   !
+  USE grid_dimensions, ONLY : nr1_ => nr1, &
+                            nr2_     => nr2, &
+                            nr3_     => nr3
   USE smooth_grid_dimensions, ONLY : nr1s_ => nr1s, &
                             nr2s_ => nr2s, &
                             nr3s_ => nr3s

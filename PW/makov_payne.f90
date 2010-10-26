@@ -61,7 +61,6 @@ SUBROUTINE compute_e_dipole( x0, e_dipole, e_quadrupole )
   USE kinds,      ONLY : DP
   USE ions_base,  ONLY : nat, tau
   USE cell_base,  ONLY : at, bg, omega, alat
-  USE gvect,      ONLY : nr1, nr2, nr3, nr1x, nr2x, nr3x, nrxx
   USE scf,        ONLY : rho
   USE lsda_mod,   ONLY : nspin
   USE fft_base,   ONLY : dfftp
@@ -78,9 +77,9 @@ SUBROUTINE compute_e_dipole( x0, e_dipole, e_quadrupole )
   REAL(DP) :: inv_nr1, inv_nr2, inv_nr3
   !
   !
-  inv_nr1 = 1.D0 / DBLE( nr1 )
-  inv_nr2 = 1.D0 / DBLE( nr2 )
-  inv_nr3 = 1.D0 / DBLE( nr3 )
+  inv_nr1 = 1.D0 / DBLE( dfftp%nr1 )
+  inv_nr2 = 1.D0 / DBLE( dfftp%nr2 )
+  inv_nr3 = 1.D0 / DBLE( dfftp%nr3 )
   !
   e_dipole(:)  = 0.D0
   e_quadrupole = 0.D0
@@ -90,20 +89,20 @@ SUBROUTINE compute_e_dipole( x0, e_dipole, e_quadrupole )
 #if defined (__PARA)
   !
   DO i = 1, me_pool
-     index0 = index0 + nr1x*nr2x*dfftp%npp(i)
+     index0 = index0 + dfftp%nr1x*dfftp%nr2x*dfftp%npp(i)
   END DO
   !
 #endif
   !
-  DO ir = 1, nrxx
+  DO ir = 1, dfftp%nnr
      !
      ! ... three dimensional indexes
      !
      index = index0 + ir - 1
-     k     = index / (nr1x*nr2x)
-     index = index - (nr1x*nr2x)*k
-     j     = index / nr1x
-     index = index - nr1x*j
+     k     = index / (dfftp%nr1x*dfftp%nr2x)
+     index = index - (dfftp%nr1x*dfftp%nr2x)*k
+     j     = index / dfftp%nr1x
+     index = index - dfftp%nr1x*j
      i     = index
      !
      DO ip = 1, 3
@@ -142,13 +141,13 @@ SUBROUTINE compute_e_dipole( x0, e_dipole, e_quadrupole )
   CALL mp_sum(  e_dipole(0:3) , intra_pool_comm )
   CALL mp_sum(  e_quadrupole  , intra_pool_comm )
   !
-  e_dipole(0) = e_dipole(0)*omega / DBLE( nr1*nr2*nr3 )
+  e_dipole(0) = e_dipole(0)*omega / DBLE( dfftp%nr1*dfftp%nr2*dfftp%nr3 )
   !
   DO ip = 1, 3
-     e_dipole(ip) = e_dipole(ip)*omega / DBLE( nr1*nr2*nr3 ) * alat
+     e_dipole(ip) = e_dipole(ip)*omega / DBLE( dfftp%nr1*dfftp%nr2*dfftp%nr3 ) * alat
   END DO
   !
-  e_quadrupole = e_quadrupole*omega / DBLE( nr1*nr2*nr3 ) * alat**2
+  e_quadrupole = e_quadrupole*omega / DBLE( dfftp%nr1*dfftp%nr2*dfftp%nr3 ) * alat**2
   !
   RETURN
   !

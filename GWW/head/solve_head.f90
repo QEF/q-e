@@ -98,9 +98,9 @@ subroutine solve_head
   allocate(x(2*n_gauss+1),w(2*n_gauss+1), freqs(n_gauss+1))
   allocate(head(n_gauss+1),head_tmp(n_gauss+1))
   head(:)=0.d0
-  allocate(psi_v(dffts%nnr, nbnd), prod(nrxx))
+  allocate(psi_v(dffts%nnr, nbnd), prod(dfftp%nnr))
   allocate (becpd (nkb, nbnd), tmp_g(ngm))
-  allocate( pola_charge(nrxx,nspin,3))
+  allocate( pola_charge(dfftp%nnr,nspin,3))
   allocate(dpsi_ipol(npwx,nbnd,3),epsilon_g(3,3,n_gauss+1))
   epsilon_g(:,:,:)=0.d0
   e_head_pol(:,:,:)=0.d0
@@ -341,7 +341,7 @@ subroutine solve_head
      !      extract terms
 #ifdef __PARA
      call mp_sum ( pola_charge, inter_pool_comm )
-     !!!call poolreduce (2 * 3 * nrxx *nspin, pola_charge)
+     !!!call poolreduce (2 * 3 * dfftp%nnr *nspin, pola_charge)
      call psyme (pola_charge)
 #else
      call syme (pola_charge)

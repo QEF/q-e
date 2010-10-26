@@ -326,7 +326,7 @@ subroutine virt_read()
 !The modifications to read also the virtual orbitals
 !
 USE control_ph,            ONLY : nbnd_occ
-use gvect,             only : nrxx
+use grid_dimensions,       only : nrxx
 USE lr_variables, ONLY: check_all_bands_gamma, check_density_gamma,&
                         check_vector_gamma
   IMPLICIT NONE

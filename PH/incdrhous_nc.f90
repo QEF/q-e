@@ -18,7 +18,7 @@ subroutine incdrhous_nc (drhoscf, weight, ik, dbecsum, evcr, wgg, becq, &
   USE kinds,     ONLY : DP
   USE cell_base, ONLY : omega
   USE ions_base, ONLY : ntyp => nsp, nat, ityp
-  USE gvect,     ONLY : nrxx
+  USE grid_dimensions, ONLY : nrxx
   USE fft_base,  ONLY : dffts
   USE fft_interfaces, ONLY: invfft
   USE gsmooth,   ONLY : nls

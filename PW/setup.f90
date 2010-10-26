@@ -42,7 +42,8 @@ SUBROUTINE setup()
                                  symm_type, omega
   USE ions_base,          ONLY : nat, tau, ntyp => nsp, ityp, zv
   USE basis,              ONLY : starting_pot, natomwfc
-  USE gvect,              ONLY : gcutm, ecutwfc, dual, nr1, nr2, nr3
+  USE gvect,              ONLY : gcutm, ecutwfc, dual
+  USE grid_dimensions,    ONLY : nr1, nr2, nr3
   USE gsmooth,            ONLY : doublegrid, gcutms
   USE klist,              ONLY : xk, wk, nks, nelec, degauss, lgauss, &
                                  lxkcry, nkstot, &

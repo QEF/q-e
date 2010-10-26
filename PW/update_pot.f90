@@ -222,8 +222,7 @@ SUBROUTINE extrapolate_charge( rho_extr )
   USE ions_base,            ONLY : nat, tau, nsp, ityp
   USE fft_base,             ONLY : dfftp, dffts
   USE fft_interfaces,       ONLY : fwfft, invfft
-  USE gvect,                ONLY : nrxx, ngm, g, gg, gstart, nr1, nr2, nr3, &
-                                   nl, eigts1, eigts2, eigts3
+  USE gvect,                ONLY : ngm, g, gg, gstart, nl, eigts1, eigts2, eigts3
   USE lsda_mod,             ONLY : lsda, nspin
   USE scf,                  ONLY : rho, rho_core, rhog_core, v
   USE ldaU,                 ONLY : eth
@@ -257,7 +256,7 @@ SUBROUTINE extrapolate_charge( rho_extr )
      IF ( lmovecell ) CALL scale_h()
      !
      CALL struc_fact( nat, tau, nsp, ityp, ngm, g, bg, &
-                      nr1, nr2, nr3, strf, eigts1, eigts2, eigts3 )
+                      dfftp%nr1, dfftp%nr2, dfftp%nr3, strf, eigts1, eigts2, eigts3 )
      !
      ! ... new charge density from extrapolated wfcs
      !
@@ -278,7 +277,7 @@ SUBROUTINE extrapolate_charge( rho_extr )
      !
   ELSE
      ! 
-     ALLOCATE( work( nrxx, 1 ) )
+     ALLOCATE( work( dfftp%nnr, 1 ) )
      !
      work = 0.D0
      !
@@ -287,7 +286,7 @@ SUBROUTINE extrapolate_charge( rho_extr )
      ! ... zeta is set here and put in rho%of_r(:,2) while rho%of_r(:,1) 
      ! ... will contain the total valence charge
      !
-     IF ( lsda ) CALL rho2zeta( rho%of_r, rho_core, nrxx, nspin, 1 )
+     IF ( lsda ) CALL rho2zeta( rho%of_r, rho_core, dfftp%nnr, nspin, 1 )
      !
      IF ( noncolin ) THEN
         !
@@ -353,7 +352,7 @@ SUBROUTINE extrapolate_charge( rho_extr )
         WRITE( UNIT = stdout, &
                FMT = '(5X,"second order charge density extrapolation")' )
         !
-        ALLOCATE( work1( nrxx, 1 ) )
+        ALLOCATE( work1( dfftp%nnr, 1 ) )
         !
         work1 = 0.D0
         !
@@ -383,7 +382,7 @@ SUBROUTINE extrapolate_charge( rho_extr )
      IF ( lmovecell ) CALL scale_h()
      !
      CALL struc_fact( nat, tau, nsp, ityp, ngm, g, bg, &
-                      nr1, nr2, nr3, strf, eigts1, eigts2, eigts3 )
+                      dfftp%nr1, dfftp%nr2, dfftp%nr3, strf, eigts1, eigts2, eigts3 )
      !
      CALL set_rhoc()
      !
@@ -395,7 +394,7 @@ SUBROUTINE extrapolate_charge( rho_extr )
      !
      ! ... reset up and down charge densities in the LSDA case
      !
-     IF ( lsda ) CALL rho2zeta( rho%of_r, rho_core, nrxx, nspin, -1 )
+     IF ( lsda ) CALL rho2zeta( rho%of_r, rho_core, dfftp%nnr, nspin, -1 )
      !
      IF ( noncolin ) THEN
         !

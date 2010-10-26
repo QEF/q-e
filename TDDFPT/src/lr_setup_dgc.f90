@@ -16,7 +16,8 @@ subroutine lr_setup_dgc
   ! Modified by Osman Baris Malcioglu (2009)
 #include "f_defs.h"
 
-  use pwcom,          only : nrxx, nspin, ngm, g, nl, e2
+  use pwcom,          only : nspin, ngm, g, nl, e2
+  use grid_dimensions,only : nrxx
   USE kinds,          only : DP
   use lr_variables,   only : lr_verbosity
   use funct,          only : dft_is_gradient, gcxc, gcx_spin, gcc_spin, &

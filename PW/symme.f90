@@ -721,7 +721,7 @@ gloop:    DO j=ig,ngm_
     !
     USE kinds
     USE constants,            ONLY : tpi
-    USE gvect,                ONLY : nr1,nr2,nr3
+    USE grid_dimensions,      ONLY : nr1,nr2,nr3
     !
     IMPLICIT NONE
     !

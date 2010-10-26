@@ -21,7 +21,8 @@ SUBROUTINE cg_setup
   USE io_files, ONLY: prefix, iunpun, iunres, diropn
   USE cgcom
   USE funct, ONLY : dft_is_gradient, dmxc
-  USE dfunct,                 ONLY : newd
+  USE dfunct,          ONLY : newd
+  USE grid_dimensions, ONLY : nr1, nr2, nr3, nrxx
   !
   IMPLICIT NONE
   !

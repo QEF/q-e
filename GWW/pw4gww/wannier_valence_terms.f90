@@ -71,9 +71,9 @@
 
 
    allocate(wpwp_psi(numw_prod,numw_prod,nbnd_v))
-   allocate(tmpreal1(nrxx),tmpreals1(dffts%nnr))
-   allocate(tmpreal2(nrxx),tmpreals2(dffts%nnr))
-   allocate(tmpspacec(nrxx))
+   allocate(tmpreal1(dfftp%nnr),tmpreals1(dffts%nnr))
+   allocate(tmpreal2(dfftp%nnr),tmpreals2(dffts%nnr))
+   allocate(tmpspacec(dfftp%nnr))
    if(okvan) allocate(becpr(nkb,nbnd_v))
 
 ! reads wfcs from iunwfc
@@ -439,10 +439,10 @@
 
    allocate(ok_table(n_set, n_set))
 
-   allocate(tmpreal1(nrxx),tmpreals1(dffts%nnr))
-   allocate(tmpreal2(nrxx),tmpreals2(dffts%nnr))
-   allocate(tmpspaced(nrxx,n_set))
-   allocate(tmpspacec(nrxx))
+   allocate(tmpreal1(dfftp%nnr),tmpreals1(dffts%nnr))
+   allocate(tmpreal2(dfftp%nnr),tmpreals2(dffts%nnr))
+   allocate(tmpspaced(dfftp%nnr,n_set))
+   allocate(tmpspacec(dfftp%nnr))
 
 
    numw_prodprod=0
@@ -609,7 +609,7 @@
                do iw=iw_begin,min(iiw*n_set,numw_prod)
 
                   sca=0.d0
-                  do ir=1,nrxx
+                  do ir=1,dfftp%nnr
                      sca=sca+(tmpspacec(ir)*tmpspaced(ir, iw-(iiw-1)*n_set))**2.d0
                   enddo
                   call mp_sum(sca)
@@ -886,10 +886,10 @@
 
    allocate(ok_table(n_set, n_set))
 
-   allocate(tmpreal1(nrxx),tmpreals1(dffts%nnr))
-   allocate(tmpreal2(nrxx),tmpreals2(dffts%nnr))
-   allocate(tmpspaced(nrxx,n_set))
-   allocate(tmpspacec(nrxx))
+   allocate(tmpreal1(dfftp%nnr),tmpreals1(dffts%nnr))
+   allocate(tmpreal2(dfftp%nnr),tmpreals2(dffts%nnr))
+   allocate(tmpspaced(dfftp%nnr,n_set))
+   allocate(tmpspacec(dfftp%nnr))
 
 
    numw_prodprod=0

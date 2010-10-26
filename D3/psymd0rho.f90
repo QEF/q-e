@@ -28,7 +28,7 @@ subroutine psymd0rho (nper, irr, dvtosym)
   ! the number of perturbations
   ! the representation under consideration
 
-  complex (DP) :: dvtosym (nrxx, nper)
+  complex (DP) :: dvtosym (dfftp%nnr, nper)
   ! the potential to symmetrize
 
   ! local variables
@@ -41,7 +41,7 @@ subroutine psymd0rho (nper, irr, dvtosym)
 
   call start_clock ('psymd0rho')
 
-  allocate ( ddvtosym( nr1x * nr2x * nr3x, nper))
+  allocate ( ddvtosym(dfftp%nr1x*dfftp%nr2x*dfftp%nr3x, nper))
   npp0 = 0
   do i = 1, me_pool
      npp0 = npp0 + dfftp%npp (i)
@@ -53,7 +53,7 @@ subroutine psymd0rho (nper, irr, dvtosym)
   enddo
 
   call symd0rho (npertx, nper, irr, ddvtosym, s, ftau, nsymg0, irgq, tg0, &
-       nat, nr1, nr2, nr3, nr1x, nr2x, nr3x)
+       nat, dfftp%nr1, dfftp%nr2, dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%nr3x)
   do iper = 1, nper
      call zcopy (dfftp%npp (me_pool+1) * dfftp%nnp, ddvtosym (npp0, iper), 1, dvtosym &
           (1, iper), 1)

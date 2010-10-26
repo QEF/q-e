@@ -9,7 +9,6 @@ SUBROUTINE lr_set_boxes_density()
   ! Modified by Osman Baris Malcioglu (2009)
 #include "f_defs.h"
   !
-  use gvect,                only : nr1, nr2, nr3, nr1x, nr2x, nr3x, nrxx
   use io_global,            only : stdout
   use kinds,                only : dp
   use lr_variables,         only : cube_save 
@@ -28,7 +27,7 @@ SUBROUTINE lr_set_boxes_density()
   endif
   CALL start_clock( 'lr_set_boxes' )
   !
-  ALLOCATE( cube_save( nrxx, 3 ) )
+  ALLOCATE( cube_save( dfftp%nnr, 3 ) )
   cube_save = 0
   !
   index0 = 0
@@ -36,23 +35,23 @@ SUBROUTINE lr_set_boxes_density()
 #if defined (__PARA)
   !
   DO i = 1, me_pool
-     index0 = index0 + nr1x*nr2x*dfftp%npp(i)
+     index0 = index0 + dfftp%nr1x*dfftp%nr2x*dfftp%npp(i)
   END DO
   !
 #endif
   !
-  DO ir = 1, nrxx
+  DO ir = 1, dfftp%nnr
      !
      ! ... three dimensional indexes
      !
      index = index0 + ir - 1
-     k     = index / (nr1x*nr2x)
-     index = index - (nr1x*nr2x)*k
-     j     = index / nr1x
-     index = index - nr1x*j
+     k     = index / (dfftp%nr1x*dfftp%nr2x)
+     index = index - (dfftp%nr1x*dfftp%nr2x)*k
+     j     = index / dfftp%nr1x
+     index = index - dfftp%nr1x*j
      i     = index
      !
-     IF ( i.GE.nr1 .OR. j.GE.nr2 .OR. k.GE.nr3 ) CYCLE
+     IF ( i.GE.dfftp%nr1 .OR. j.GE.dfftp%nr2 .OR. k.GE.dfftp%nr3 ) CYCLE
      !
      cube_save(ir,1) = i
      cube_save(ir,2) = j

@@ -24,9 +24,10 @@ SUBROUTINE summary()
   USE ions_base,       ONLY : nat, atm, zv, tau, ntyp => nsp, ityp
   USE cellmd,          ONLY : calc, cmass
   USE ions_base,       ONLY : amass
-  USE gvect,           ONLY : nr1, nr2, nr3, dual, ecutwfc, ecfixed, q2sigma, &
+  USE gvect,           ONLY : dual, ecutwfc, ecfixed, q2sigma, &
                               ngm, gcutm, qcutz
   USE gsmooth,         ONLY : doublegrid, ngms, gcutms
+  USE grid_dimensions, ONLY : nr1, nr2, nr3
   USE smooth_grid_dimensions,  ONLY : nr1s, nr2s, nr3s
   USE lsda_mod,        ONLY : lsda, starting_magnetization
   USE ldaU,            ONLY : lda_plus_U, Hubbard_u, Hubbard_alpha, &
@@ -413,7 +414,7 @@ SUBROUTINE print_symmetries ( iverbosity, noncolin, domag )
   USE rap_point_group_is, ONLY : nsym_is, sr_is, ftau_is, d_spin_is, &
        gname_is, sname_is, code_group_is
   USE cell_base,       ONLY : at
-  USE gvect,           ONLY : nr1, nr2, nr3
+  USE grid_dimensions, ONLY : nr1, nr2, nr3
   !
   IMPLICIT NONE
   !

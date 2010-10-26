@@ -118,7 +118,7 @@ subroutine lr_calc_w_T()
   use lr_variables,         only : itermax,beta_store,gamma_store, &
                                    LR_polarization,charge_response, n_ipol, &
                                    itermax_int,project,rho_1_tot_im,rho_1_tot
-  use gvect,                only : nrxx,nr1,nr2,nr3
+  use grid_dimensions,      only : nrxx,nr1,nr2,nr3
   USE noncollin_module,     ONLY : nspin_mag
 
   !
@@ -339,8 +339,8 @@ subroutine lr_dump_rho_tot_compat1()
   !-----------------------------------------------------------------------
   USE io_files,              ONLY : prefix
   USE lr_variables,          ONLY : rho_1_tot, LR_polarization, LR_iteration, cube_save
-  use gvect,                    only : nrxx,gstart,nr1,nr2,nr3
-  use mp_global,                ONLY : inter_pool_comm, intra_pool_comm
+  use grid_dimensions,       only : nrxx,nr1,nr2,nr3
+  use mp_global,             ONLY : inter_pool_comm, intra_pool_comm
  
   IMPLICIT NONE
   character(len=6), external :: int_to_char
@@ -425,7 +425,7 @@ subroutine lr_dump_rho_tot_cube(rho,identifier)
   !-----------------------------------------------------------------------
   USE io_files,              ONLY : prefix
   USE lr_variables,          ONLY : LR_polarization, LR_iteration, cube_save
-  use gvect,                    only : nrxx,gstart,nr1,nr2,nr3,nr1x,nr2x,nr3x
+  use grid_dimensions,       only : nrxx,nr1,nr2,nr3,nr1x,nr2x,nr3x
   use cell_base
   USE ions_base,                ONLY : nat, ityp, atm, ntyp => nsp, tau
   use mp,                   only : mp_barrier, mp_sum, mp_bcast, mp_get
@@ -675,7 +675,7 @@ subroutine lr_dump_rho_tot_xyzd(rho,identifier)
   !-----------------------------------------------------------------------
   USE io_files,             ONLY : prefix
   USE lr_variables,         ONLY : LR_polarization, LR_iteration, cube_save
-  use gvect,                only : nrxx,gstart,nr1,nr2,nr3,nr1x,nr2x,nr3x
+  use grid_dimensions,      only : nrxx,nr1,nr2,nr3,nr1x,nr2x,nr3x
   use cell_base
   USE ions_base,            ONLY : nat, ityp, atm, ntyp => nsp, tau
   use mp,                   only : mp_barrier, mp_sum, mp_bcast, mp_get
@@ -862,7 +862,7 @@ subroutine lr_dump_rho_tot_xcrys(rho, identifier)
   USE constants,             ONLY : BOHR_RADIUS_ANGS
   USE io_files,              ONLY : prefix
   USE lr_variables,          ONLY : LR_polarization, LR_iteration, cube_save
-  use gvect,                 only : nrxx,gstart,nr1,nr2,nr3,nr1x,nr2x,nr3x
+  use grid_dimensions,       only : nrxx,nr1,nr2,nr3,nr1x,nr2x,nr3x
   use cell_base
   USE ions_base,             ONLY : nat, ityp, atm, ntyp => nsp, tau
   use mp,                   only : mp_barrier, mp_sum, mp_bcast, mp_get
@@ -1116,11 +1116,11 @@ subroutine lr_dump_rho_tot_pxyd(rho,identifier)
   !-----------------------------------------------------------------------
   USE io_files,              ONLY : prefix
   USE lr_variables,          ONLY : LR_polarization, LR_iteration, cube_save
-  use gvect,                    only : nrxx,gstart,nr1,nr2,nr3
+  use grid_dimensions,       only : nrxx,nr1,nr2,nr3
   use cell_base
-  USE ions_base,                ONLY : nat, ityp, atm, ntyp => nsp, tau
-  use mp,                       only : mp_barrier, mp_sum
-  use mp_global,                only : intra_pool_comm
+  USE ions_base,             ONLY : nat, ityp, atm, ntyp => nsp, tau
+  use mp,                    only : mp_barrier, mp_sum
+  use mp_global,             only : intra_pool_comm
   USE constants,             ONLY : BOHR_RADIUS_ANGS
   !
   IMPLICIT NONE

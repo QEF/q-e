@@ -24,7 +24,7 @@ subroutine compute_drhous (drhous, dbecsum, wgg, becq, alpq)
   USE klist,      ONLY : xk, wk
   USE fft_base,   ONLY: dffts
   USE fft_interfaces, ONLY: invfft
-  USE gvect,      ONLY : nrxx
+  USE grid_dimensions,ONLY : nrxx
   USE gsmooth,    ONLY : nls
   USE wvfct,      ONLY : npw, nbnd, igk
 

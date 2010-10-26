@@ -29,8 +29,7 @@ SUBROUTINE g_tensor_crystal
   USE scf,                         ONLY : v, vltot, rho
   USE fft_base,                    ONLY : dfftp
   USE fft_interfaces,              ONLY : fwfft
-  USE gvect,                       ONLY : ngm, nr1, nr2, nr3,  &
-                                          nrxx, nlm, g, ecutwfc, nl
+  USE gvect,                       ONLY : ngm, nlm, g, ecutwfc, nl
   USE gipaw_module,                ONLY : j_bare, b_ind, b_ind_r, q_gipaw, &
                                           evq, alpha, nbnd_occ, iverbosity, &
                                           isolve, conv_threshold
@@ -335,19 +334,19 @@ SUBROUTINE g_tensor_crystal
     call biot_savart( ipol )
   enddo
 
-  d_omega = omega / REAL ( nr1 * nr2 * nr3, DP )
+  d_omega = omega / REAL ( dfftp%nr1 * dfftp%nr2 * dfftp%nr3, DP )
 
   !
   ! ***************** spin-orbit-bare *******************
   !
 
   ! <apsi> TMPTMPTMP PLEASE CHECK FOR VANDERBILT/HARD GRIDS
-  allocate ( grad_vr ( 3, nrxx ), v_local ( nrxx, nspin ) )
+  allocate ( grad_vr ( 3, dfftp%nnr ), v_local ( dfftp%nnr, nspin ) )
   do ispin = 1, nspin
      v_local(:,ispin) = vltot(:) + v%of_r(:,ispin)
   end do
   ! <ceres> which spin channel? </ceres>
-  call gradient ( nrxx, v_local, ngm, g, nl, grad_vr )
+  call gradient ( dfftp%nnr, v_local, ngm, g, nl, grad_vr )
   grad_vr = grad_vr * units_Ry2Ha
   deallocate ( v_local )
   ! </apsi>
@@ -380,7 +379,7 @@ SUBROUTINE g_tensor_crystal
 
   ! calculate the spin-other-orbit term a'la paratec:
   !   int_r j_up(r) x v_h[n_unpaired] d^3r
-  allocate(grad_vh(3,nrxx), vh(nrxx,nspin), aux1(nrxx))
+  allocate(grad_vh(3,dfftp%nnr), vh(dfftp%nnr,nspin), aux1(dfftp%nnr))
   ! transform rho to G-space
   aux1(:) = rho%of_r(:,s_maj)-rho%of_r(:,s_min)
   CALL fwfft ('Dense', aux1, dfftp)
@@ -389,7 +388,7 @@ SUBROUTINE g_tensor_crystal
   vh = 0.d0
   call v_h(rho%of_g, e_hartree, charge, vh)
   ! <ceres> which spin channel? </ceres>
-  call gradient ( nrxx, vh, ngm, g, nl, grad_vh )
+  call gradient ( dfftp%nnr, vh, ngm, g, nl, grad_vh )
   grad_vh = grad_vh * units_Ry2Ha
   deallocate(vh, aux1)
 

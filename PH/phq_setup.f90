@@ -59,7 +59,8 @@ subroutine phq_setup
   USE ktetra,        ONLY : ltetra, tetra
   USE lsda_mod,      ONLY : nspin, lsda, starting_magnetization
   USE scf,           ONLY : v, vrs, vltot, rho, rho_core, kedtau
-  USE gvect,         ONLY : nrxx, ngm
+  USE grid_dimensions,ONLY: nrxx
+  USE gvect,         ONLY : ngm
   USE gsmooth,       ONLY : doublegrid
   USE symm_base,     ONLY : nrot, nsym, s, ftau, irt, t_rev, time_reversal, &
                             sname, sr, invs, inverse_s, copy_sym

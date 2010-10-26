@@ -16,6 +16,7 @@ SUBROUTINE cg_setupdgc
   USE scf, ONLY : rho, rho_core, rhog_core
   USE cgcom
   USE funct, ONLY: gcxc, gcx_spin, gcc_spin, dgcxc, dgcxc_spin, dft_is_gradient
+  USE grid_dimensions, ONLY: nr1, nr2, nr3, nr1x, nr2x, nr3x, nrxx
   !
   IMPLICIT NONE
   INTEGER k, is

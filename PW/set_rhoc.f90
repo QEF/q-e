@@ -22,8 +22,7 @@ subroutine set_rhoc
   USE ener,      ONLY : etxcc
   USE fft_base,  ONLY : dfftp
   USE fft_interfaces,ONLY : invfft
-  USE gvect,     ONLY : ngm, nr1, nr2, nr3, &
-                        nrxx, nl, nlm, ngl, gl, igtongl
+  USE gvect,     ONLY : ngm, nl, nlm, ngl, gl, igtongl
   USE scf,       ONLY : rho_core, rhog_core
   USE lsda_mod,  ONLY : nspin
   USE vlocal,    ONLY : strf
@@ -63,7 +62,7 @@ subroutine set_rhoc
   return
 
 10 continue
-  allocate (aux( nrxx))    
+  allocate (aux( dfftp%nnr))    
   allocate (rhocg( ngl))    
   aux (:) = (0.0_DP, 0.0_DP)
   !
@@ -100,7 +99,7 @@ subroutine set_rhoc
   !
   rhoneg = 0.d0
   rhoima = 0.d0
-  do ir = 1, nrxx
+  do ir = 1, dfftp%nnr
      rhoneg = rhoneg + min (0.d0,  DBLE (aux (ir) ) )
      rhoima = rhoima + abs (AIMAG (aux (ir) ) )
      rho_core(ir) =  DBLE (aux(ir))
@@ -120,8 +119,8 @@ subroutine set_rhoc
      !         rho_core(ir) = rhorea
      !
   enddo
-  rhoneg = rhoneg / (nr1 * nr2 * nr3)
-  rhoima = rhoima / (nr1 * nr2 * nr3)
+  rhoneg = rhoneg / (dfftp%nr1 * dfftp%nr2 * dfftp%nr3)
+  rhoima = rhoima / (dfftp%nr1 * dfftp%nr2 * dfftp%nr3)
 #ifdef __PARA
   call mp_sum(  rhoneg, intra_pool_comm )
   call mp_sum(  rhoima, intra_pool_comm )

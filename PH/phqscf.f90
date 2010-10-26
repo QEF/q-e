@@ -17,7 +17,7 @@ SUBROUTINE phqscf
   !
   USE kinds, ONLY : DP
   USE ions_base, ONLY : nat
-  USE gvect, ONLY : nrxx
+  USE grid_dimensions, ONLY : nrxx
   USE lsda_mod, ONLY : nspin
   USE io_global,  ONLY : stdout, ionode
   USE uspp,  ONLY: okvan

@@ -18,7 +18,7 @@ subroutine scat_states_plot(ik,ien,norb,nocros,nchan,vec,veceig,left_to_right)
   use noncollin_module, ONLY : noncolin, npol
   USE spin_orb,         ONLY : domag
   use lsda_mod,         ONLY : nspin
-  USE gvect,            ONLY : nr1, nr2, nr3
+  USE grid_dimensions,  ONLY : nr1, nr2, nr3
   USE cell_base,        ONLY : alat, at
   USE cond,             ONLY : ikind, n2d, nrzpl, nrzps, taunewl, taunews,  &
                                lorb3d, funz0, lcharge, denergy, rho_scatt,  &
@@ -233,7 +233,7 @@ SUBROUTINE scat_states_comp(nchan, nrzp, norb, nocros, taunew, vec, &
  USE scf,       ONLY : rho
  USE uspp_param,ONLY : upf, nhm, nh
  USE uspp,      ONLY : nkb, vkb, becsum
- USE gvect,     ONLY : nr1, nr2, nr3, nr1x, nr2x, nr3x, nrxx
+ USE grid_dimensions,ONLY: nr1, nr2, nr3, nr1x, nr2x, nr3x, nrxx
  USE ions_base, ONLY : ityp, zv, nat, ntyp => nsp, tau, atm
  USE fft_scalar,ONLY : cft_2xy
  USE splinelib, ONLY : spline, splint

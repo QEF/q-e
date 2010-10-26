@@ -17,7 +17,7 @@ subroutine ef_shift (drhoscf, ldos, ldoss, dos_ef, irr, npe, flag)
   USE cell_base,            ONLY : omega
   USE fft_base,             ONLY : dfftp
   USE fft_interfaces,       ONLY : fwfft, invfft
-  USE gvect,                ONLY : nrxx, gg, nl
+  USE gvect,                ONLY : gg, nl
   USE smooth_grid_dimensions,ONLY: nrxxs
   USE lsda_mod,             ONLY : nspin
   USE wvfct,                ONLY : npw, npwx, et
@@ -41,8 +41,8 @@ subroutine ef_shift (drhoscf, ldos, ldoss, dos_ef, irr, npe, flag)
   integer :: npe
   ! input: the number of perturbation
 
-  complex(DP) :: drhoscf(nrxx,nspin_mag,npe), &
-       ldos(nrxx,nspin_mag), ldoss(nrxxs,nspin_mag)
+  complex(DP) :: drhoscf(dfftp%nnr,nspin_mag,npe), &
+       ldos(dfftp%nnr,nspin_mag), ldoss(nrxxs,nspin_mag)
   ! inp/out:the change of the charge
   ! inp: local DOS at Ef
   ! inp: local DOS at Ef without augme
@@ -102,7 +102,7 @@ subroutine ef_shift (drhoscf, ldos, ldoss, dos_ef, irr, npe, flag)
      ! corrects the density response accordingly...
      !
      do ipert = 1, npert (irr)
-        call zaxpy (nrxx*nspin_mag, def(ipert), ldos, 1, drhoscf(1,1,ipert), 1)
+        call zaxpy (dfftp%nnr*nspin_mag, def(ipert), ldos, 1, drhoscf(1,1,ipert), 1)
      enddo
   else
      !
@@ -164,7 +164,7 @@ subroutine ef_shift_paw (drhoscf, dbecsum, ldos, ldoss, becsum1, &
   USE cell_base,            ONLY : omega
   USE fft_base,             ONLY : dfftp
   USE fft_interfaces,       ONLY : fwfft, invfft
-  USE gvect,                ONLY : nrxx, gg, nl
+  USE gvect,                ONLY : gg, nl
   USE smooth_grid_dimensions,ONLY: nrxxs
   USE lsda_mod,             ONLY : nspin
   USE uspp_param,           ONLY : nhm
@@ -188,8 +188,8 @@ subroutine ef_shift_paw (drhoscf, dbecsum, ldos, ldoss, becsum1, &
   integer :: npe
   ! input: the number of perturbation
 
-  complex(DP) :: drhoscf(nrxx,nspin_mag,npe), &
-       ldos(nrxx,nspin_mag), ldoss(nrxxs,nspin_mag), &
+  complex(DP) :: drhoscf(dfftp%nnr,nspin_mag,npe), &
+       ldos(dfftp%nnr,nspin_mag), ldoss(nrxxs,nspin_mag), &
        dbecsum ( (nhm * (nhm + 1))/2 , nat , nspin_mag, npe)
   ! inp/out:the change of the charge
   ! inp: local DOS at Ef

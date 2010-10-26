@@ -17,7 +17,8 @@ subroutine stress
   USE constants,     ONLY : uakbar
   USE ener,          ONLY : etxc, vtxc
   USE force_mod,     ONLY : sigma
-  USE gvect,         ONLY : ngm, gstart, nr1, nr2, nr3, nrxx, nl, g, gg, gcutm
+  USE gvect,         ONLY : ngm, gstart, nl, g, gg, gcutm
+  USE grid_dimensions,ONLY: nr1, nr2, nr3, nrxx
   USE ldaU,          ONLY : lda_plus_u
   USE lsda_mod,      ONLY : nspin
   USE scf,           ONLY : rho, rho_core, rhog_core

@@ -11,7 +11,6 @@ subroutine lr_dealloc()
   use uspp,           only : nkb
   use control_flags,  only : gamma_only
   use realus,         only : igk_k,npw_k
-  USE lr_variables,   ONLY : lr_verbosity
   USE io_global,      ONLY : stdout
   use charg_resp,     ONLY : w_T_beta_store, w_T_gamma_store, w_T, w_T_zeta_store,chi
   use eqv,            ONLY : dmuxc

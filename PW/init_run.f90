@@ -20,8 +20,9 @@ SUBROUTINE init_run()
   USE paw_init,           ONLY : paw_post_init
 #endif
   USE bp,                 ONLY : lberry, lelfield
-  USE gvect,              ONLY : nrxx, nr1x, nr2x, nr3x, nr1, nr2, nr3, ecutwfc
 ! DCC
+  USE grid_dimensions,    ONLY : nr1x, nr2x, nr3x, nr1, nr2, nr3
+  USE gvect,              ONLY : ecutwfc
   USE ee_mod,             ONLY : do_comp, do_coarse
 ! Wannier_ac
   USE wannier_new,        ONLY : use_wannier    

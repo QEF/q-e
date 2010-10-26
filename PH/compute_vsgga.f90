@@ -12,8 +12,8 @@ SUBROUTINE compute_vsgga( rhoout, grho, vsgga )
   !
   USE constants,            ONLY : e2
   USE kinds,                ONLY : DP
-  USE gvect,                ONLY : nr1, nr2, nr3, nr1x, nr2x, nr3x, nrxx, &
-                                   nl, ngm, g
+  USE gvect,                ONLY : nl, ngm, g
+  USE grid_dimensions,      ONLY : nrxx
   USE cell_base,            ONLY : alat
   USE noncollin_module,     ONLY : noncolin, nspin_gga
   USE funct,                ONLY : gcxc, gcx_spin, gcc_spin, &

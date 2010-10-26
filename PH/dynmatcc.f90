@@ -18,7 +18,7 @@ subroutine dynmatcc
   USE ions_base, ONLY : nat, ityp, tau
   USE fft_base,  ONLY : dfftp
   USE fft_interfaces, ONLY : fwfft
-  USE gvect,     ONLY : nrxx, nl, ngm, g
+  USE gvect,     ONLY : nl, ngm, g
   USE lsda_mod,  ONLY : nspin
   use scf,       ONLY : rho, rho_core, rhog_core
   USE modes,     ONLY : u
@@ -46,20 +46,20 @@ subroutine dynmatcc
   !
   ! allocate workspace
   !
-  allocate (vxc( nrxx))
-  allocate (v  ( nrxx , nspin))
+  allocate (vxc( dfftp%nnr))
+  allocate (v  ( dfftp%nnr , nspin))
   !
   call v_xc (rho, rho_core, rhog_core, etxcd, vtxcd, v)
   !
   if (nspin == 1 .OR. nspin==4) then
      is=1
-     do ir = 1, nrxx
+     do ir = 1, dfftp%nnr
         vxc(ir) = v(ir,is)
      end do
   else
      isup=1
      isdw=2
-     do ir = 1, nrxx
+     do ir = 1, dfftp%nnr
         vxc (ir) = (v(ir,isup) + v(ir,isdw))*0.5d0
      end do
   end if
@@ -75,7 +75,7 @@ subroutine dynmatcc
   ! set_drhoc produces drc=Drho_core(G)/DG , without struct.fact.
   !
   dynwrk (:,:) = (0.d0, 0.d0)
-  allocate (work (nrxx))
+  allocate (work (dfftp%nnr))
   do na = 1, nat
      nta = ityp (na)
      work (:) = (0.d0, 0.d0)

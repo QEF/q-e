@@ -22,7 +22,7 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
   USE buffers,              ONLY : get_buffer, save_buffer
   USE klist,                ONLY : nkstot, nks, xk, ngk
   USE uspp,                 ONLY : vkb, nkb
-  USE gvect,                ONLY : g, nrxx, nr1, nr2, nr3
+  USE gvect,                ONLY : g
   USE wvfct,                ONLY : et, nbnd, npwx, igk, npw, current_k
   USE control_flags,        ONLY : ethr, isolve, io_level
   USE ldaU,                 ONLY : lda_plus_u, swfcatom
@@ -574,7 +574,7 @@ SUBROUTINE c_bands_nscf( ik_ )
   USE basis,                ONLY : starting_wfc
   USE klist,                ONLY : nkstot, nks, xk, ngk
   USE uspp,                 ONLY : vkb, nkb
-  USE gvect,                ONLY : g, nrxx, nr1, nr2, nr3
+  USE gvect,                ONLY : g
   USE wvfct,                ONLY : et, nbnd, npwx, igk, npw, current_k
   USE control_flags,        ONLY : ethr, lbands, isolve, io_level, iverbosity
   USE ldaU,                 ONLY : lda_plus_u, swfcatom

@@ -12,8 +12,7 @@ SUBROUTINE eff_pot (rho, nspin, alat, omega, charge, vstart, thresh_veff)
   USE fft_base,             ONLY : dfftp
   USE fft_interfaces,       ONLY : fwfft, invfft
   USE gvect,                ONLY : nlm, g, qcutz, ecfixed, q2sigma, &
-                                   nr1, nr2, nr3, nrxx, nl, ngm, gg,&
-                                   ecutwfc, gstart
+                                   nl, ngm, gg, ecutwfc, gstart
   USE wvfct,                ONLY : g2kin, wg, nbndx, et, nbnd, npwx, &
                                    igk, npw
   USE uspp,                 ONLY : nkb
@@ -31,7 +30,7 @@ SUBROUTINE eff_pot (rho, nspin, alat, omega, charge, vstart, thresh_veff)
   !    input
   !
   INTEGER :: nspin 
-  real(kind=DP) :: rho(nrxx, nspin), alat, omega, charge, charge_old
+  real(kind=DP) :: rho(dfftp%nnr, nspin), alat, omega, charge, charge_old
   !
   !    output
   !
@@ -53,9 +52,9 @@ SUBROUTINE eff_pot (rho, nspin, alat, omega, charge, vstart, thresh_veff)
   !
   CALL start_clock('eff_pot')
   !
-  ALLOCATE ( aux(nrxx), aux1(ngm), psi(nrxx), psi_smooth(nrxx), S(nrxx) )
-  ALLOCATE ( vv(nrxx, nspin) )
-  ALLOCATE ( rho_in(nrxx, nspin) )
+  ALLOCATE ( aux(dfftp%nnr), aux1(ngm), psi(dfftp%nnr), psi_smooth(dfftp%nnr), S(dfftp%nnr) )
+  ALLOCATE ( vv(dfftp%nnr, nspin) )
+  ALLOCATE ( rho_in(dfftp%nnr, nspin) )
   !
   tpiba2 = (fpi / 2.d0 / alat) **2
   !
@@ -89,12 +88,12 @@ SUBROUTINE eff_pot (rho, nspin, alat, omega, charge, vstart, thresh_veff)
   !
   charge = 0.d0
   DO is = 1, nspin
-     DO ir = 1, nrxx
+     DO ir = 1, dfftp%nnr
         !  NB: the following will work only if nspin = 1 !
         charge = charge + abs( rho_in(ir,is)-psi_smooth(ir)**2 )
      END DO
   ENDDO
-  charge = charge * omega / (nr1*nr2*nr3) / nelec
+  charge = charge * omega / (dfftp%nr1*dfftp%nr2*dfftp%nr3) / nelec
 #ifdef __PARA
   CALL mp_sum( charge, intra_pool_comm )
 #endif
@@ -103,7 +102,7 @@ SUBROUTINE eff_pot (rho, nspin, alat, omega, charge, vstart, thresh_veff)
   ! compute charge density using smooth wfc
   !
   DO is = 1, nspin
-     DO ir = 1, nrxx
+     DO ir = 1, dfftp%nnr
         rho_fft(ir,1) = psi_smooth(ir)**2
      ENDDO
   ENDDO
@@ -142,11 +141,11 @@ SUBROUTINE eff_pot (rho, nspin, alat, omega, charge, vstart, thresh_veff)
   eps = 0.04d0
   is = 1
   IF (.false.) THEN
-     DO ir = 1, nrxx
+     DO ir = 1, dfftp%nnr
         vv(ir,is) = -DBLE(aux(ir))
      ENDDO
   ELSE
-     DO ir = 1, nrxx
+     DO ir = 1, dfftp%nnr
         IF (abs(psi_smooth(ir)) > eps ) THEN
            vv(ir,is) = -DBLE(aux(ir)) / psi_smooth(ir)
         ELSE
@@ -161,7 +160,7 @@ SUBROUTINE eff_pot (rho, nspin, alat, omega, charge, vstart, thresh_veff)
      CALL mp_sum(nnn, intra_pool_comm)
 #endif
      IF (nnn > 0 ) THEN
-        DO ir = 1, nrxx
+        DO ir = 1, dfftp%nnr
            IF (abs(psi_smooth(ir)) <= eps ) THEN
               vv(ir,is) = avg1 / avg2
            ENDIF
@@ -172,7 +171,7 @@ SUBROUTINE eff_pot (rho, nspin, alat, omega, charge, vstart, thresh_veff)
   ! uncomment the following loop will set local pot. as initial pot.
   !
 vstart=20000
-  DO ir = 1, nrxx
+  DO ir = 1, dfftp%nnr
      vrs(ir,1) = v%of_r(ir,1) + vltot(ir)
      vv(ir,is) = qe_erf( abs(psi_smooth(ir)*dble(vstart)))*vv(ir,is) + &
            (1.d0-qe_erf( abs(psi_smooth(ir)*dble(vstart))))*vrs(ir,is)
@@ -246,7 +245,7 @@ vstart=20000
 !write (stdout,*) ' enter ite_veff_nhpsi'
 !CALL flush_unit( stdout )
      s2 = 0.d0
-     DO ir = 1, nrxx
+     DO ir = 1, dfftp%nnr
         S(ir) = psi_smooth(ir) * DBLE (aux(ir)) + vv(ir,1)*psi_smooth(ir)
         s2 = s2 + S(ir)**2
      ENDDO
@@ -265,7 +264,7 @@ vstart=20000
         sr   = 0.d0
         r2   = 0.d0
         !
-        DO ir = 1, nrxx
+        DO ir = 1, dfftp%nnr
            r2   = r2   + psi_smooth(ir)**4
            s2r2 = s2r2 + ( S(ir) * psi_smooth(ir)**2 )**2
            sr2  = sr2  +   S(ir) * psi_smooth(ir)**4
@@ -305,14 +304,14 @@ vstart=20000
         !
         ! Update V-eff
         !
-        DO ir = 1, nrxx
+        DO ir = 1, dfftp%nnr
            vv(ir,1)= vv(ir,1) + alp*S(ir) + beta
            S(ir)   = S(ir) * (1.d0 + alp*psi_smooth(ir)**2) + &
                      beta*psi_smooth(ir)**2
         ENDDO
         !
         s2 = 0.d0
-        DO ir = 1, nrxx
+        DO ir = 1, dfftp%nnr
            s2 = s2 + S(ir)**2
         ENDDO
 #ifdef __PARA

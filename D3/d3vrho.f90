@@ -18,7 +18,7 @@ subroutine d3vrho()
   USE ions_base,            ONLY : nat, ityp, ntyp => nsp, tau
   USE uspp,                 ONLY : dvan
   USE scf,                  ONLY : rho
-  USE gvect,                ONLY : nrxx, g, ngm, nl, igtongl
+  USE gvect,                ONLY : g, ngm, nl, igtongl
   USE wvfct,                ONLY : npw, npwx, nbnd, igk, wg
   USE vlocal,               ONLY : vloc
   USE klist,                ONLY : xk
@@ -47,7 +47,7 @@ subroutine d3vrho()
   complex (DP), allocatable :: d3dynwrk (:,:,:), d3dynwrk2 (:,:,:), &
        rhog (:), work1 (:,:), work2 (:,:), work3 (:)
 
-  allocate  (rhog( nrxx))
+  allocate  (rhog( dfftp%nnr))
   allocate  (d3dynwrk( 3 * nat, 3 * nat, 3 * nat))
   allocate  (d3dynwrk2(3 * nat, 3 * nat, 3 * nat))
   allocate  (work1(  npwx, 3))
@@ -55,7 +55,7 @@ subroutine d3vrho()
   allocate  (work3(  npwx))
 
   d3dynwrk (:,:,:) = (0.d0, 0.d0)
-  do ir = 1, nrxx
+  do ir = 1, dfftp%nnr
      rhog (ir) = CMPLX(rho%of_r (ir, 1), 0.d0,kind=DP)
   enddo
   CALL fwfft ('Dense', rhog, dfftp)

@@ -16,7 +16,7 @@ subroutine addusstres (sigmanlc)
   USE ions_base,  ONLY : nat, ntyp => nsp, ityp
   USE cell_base,  ONLY : omega, tpiba
   USE fft_base,   ONLY : dfftp
-  USE gvect,      ONLY : nrxx, ngm, &
+  USE gvect,      ONLY : ngm, &
                          nl, nlm, gg, g, eigts1, eigts2, eigts3, ig1, ig2, ig3
   USE lsda_mod,   ONLY : nspin
   USE scf,        ONLY : v, vltot
@@ -58,7 +58,7 @@ subroutine addusstres (sigmanlc)
   !  of V_eff and dQ
   ! function which compute the scal.
 
-  allocate ( aux(ngm,nspin), aux1(ngm), vg(nrxx), qgm(ngm), qmod(ngm) )
+  allocate ( aux(ngm,nspin), aux1(ngm), vg(dfftp%nnr), qgm(ngm), qmod(ngm) )
   allocate ( ylmk0(ngm,lmaxq*lmaxq), dylmk0(ngm,lmaxq*lmaxq) )
 
   !

@@ -21,7 +21,6 @@ subroutine dynmatrix
   USE io_global,     ONLY : stdout
   USE control_flags, ONLY : modenum
   USE cell_base,     ONLY : at, bg, celldm, ibrav, omega, symm_type
-  USE gvect,         ONLY : nr1, nr2, nr3
   USE symm_base,     ONLY : s, sr, irt, nsym, time_reversal, invs
   USE printout_base, ONLY : title
   USE dynmat,        ONLY : dyn, w2

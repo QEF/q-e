@@ -101,9 +101,9 @@ SUBROUTINE product_wannier_para(nbndv, lcomplete, ene_loc, lambda)
    INTEGER :: nbnd_max
 
 #ifndef __PARA
-  dfftp%npp(1) = nr3
+  !dfftp%npp(1) = nr3  ! not needed - PG
   nr3_start=1
-  nr3_end=nr3
+  nr3_end=dfftp%nr3
 #else
 
   nr3_start=0
@@ -120,16 +120,16 @@ SUBROUTINE product_wannier_para(nbndv, lcomplete, ene_loc, lambda)
 
   if(okvan .and. lsmallgrid) write(stdout,*) 'ATTENTION: USPP AND SMALLGRID'
 
-  allocate(tmpspacei(nrxx,nbndv),tmpspacej(nrxx),tmpreal(nrxx),tmpreal2(nrxx))
-  allocate(tmpspacejs(dffts%nnr),tmpspacec(nrxx))
+  allocate(tmpspacei(dfftp%nnr,nbndv),tmpspacej(dfftp%nnr),tmpreal(dfftp%nnr),tmpreal2(dfftp%nnr))
+  allocate(tmpspacejs(dffts%nnr),tmpspacec(dfftp%nnr))
 
    numw_prod=0
 
 
 
-   rspacel(1)=nr1
-   rspacel(2)=nr2
-   rspacel(3)=nr3
+   rspacel(1)=dfftp%nr1
+   rspacel(2)=dfftp%nr2
+   rspacel(3)=dfftp%nr3
 
    !reads wfcs from iunwfc
 
@@ -153,7 +153,7 @@ SUBROUTINE product_wannier_para(nbndv, lcomplete, ene_loc, lambda)
       CALL diropn( iungprod, 'wiwjwfc', npw0*2, exst )
    endif
    iunrealwan =  find_free_unit()
-   CALL diropn( iunrealwan, 'realwan', nrxx, exst )
+   CALL diropn( iunrealwan, 'realwan', dfftp%nnr, exst )
    if(ionode) then
       iunprod = find_free_unit()
       open( unit= iunprod, file=trim(prefix)//'.wiwjprod', status='unknown',form='unformatted')
@@ -168,7 +168,7 @@ SUBROUTINE product_wannier_para(nbndv, lcomplete, ene_loc, lambda)
 
    do iw=1,nbndv
 !read real wfcs iw
-      call davcio( tmpspacei(:,iw),nrxx,iunrealwan,iw,-1)
+      call davcio( tmpspacei(:,iw),dfftp%nnr,iunrealwan,iw,-1)
    enddo
 
    if(cutoff_wpr_vc2 >= 900d0) then
@@ -245,7 +245,7 @@ SUBROUTINE product_wannier_para(nbndv, lcomplete, ene_loc, lambda)
 
 !read wannier function jw
 
-         call davcio( tmpspacej,nrxx,iunrealwan,jw,-1)
+         call davcio( tmpspacej,dfftp%nnr,iunrealwan,jw,-1)
 
 
          ! calculates product in R space
@@ -272,20 +272,20 @@ SUBROUTINE product_wannier_para(nbndv, lcomplete, ene_loc, lambda)
               do iy=0,2*wiwj%radius(2)
                  do iz=0,2*wiwj%radius(3)
                     n1=nop(1)+ix
-                    if(n1<1) n1=nr1+n1
-                    if(n1>nr1) n1=n1-nr1
+                    if(n1<1) n1=dfftp%nr1+n1
+                    if(n1>dfftp%nr1) n1=n1-dfftp%nr1
 
                     n2=nop(2)+iy
-                    if(n2<1) n2=nr2+n2
-                    if(n2>nr2) n2=n2-nr2
+                    if(n2<1) n2=dfftp%nr2+n2
+                    if(n2>dfftp%nr2) n2=n2-dfftp%nr2
 
                     n3=nop(3)+iz
-                    if(n3<1) n3=nr3+n3
-                    if(n3>nr3) n3=n3-nr3
+                    if(n3<1) n3=dfftp%nr3+n3
+                    if(n3>dfftp%nr3) n3=n3-dfftp%nr3
 
                     if(n3 >= nr3_start .and. n3 <= nr3_end) then
-                       nn=(n3-nr3_start)*nr1x*nr2x+(n2-1)*nr1x+n1
-                       if(nn<1 .or. nn > nrxx)  then
+                       nn=(n3-nr3_start)*dfftp%nr1x*dfftp%nr2x+(n2-1)*dfftp%nr1x+n1
+                       if(nn<1 .or. nn > dfftp%nnr)  then
                           CALL errore( 'rsca', 'rsca', nn )
                        endif
                        rsca=rsca+(tmpspacei(nn,iw)*tmpspacej(nn)+tmpreal2(nn))**2.d0
@@ -296,7 +296,7 @@ SUBROUTINE product_wannier_para(nbndv, lcomplete, ene_loc, lambda)
               enddo
            enddo
         else
-           do nn=1,nrxx
+           do nn=1,dfftp%nnr
                rsca=rsca+(tmpspacei(nn,iw)*tmpspacej(nn)+tmpreal2(nn))**2.d0
                tmpreal(nn)=&
                     &tmpspacei(nn,iw)*tmpspacej(nn)+tmpreal2(nn)
@@ -335,11 +335,11 @@ SUBROUTINE product_wannier_para(nbndv, lcomplete, ene_loc, lambda)
             tmpspacec(:)=dcmplx(tmpreal(:),0.d0)
             !ATTENZIONE
             rsca=0.d0
-            do nn=1,nrxx
+            do nn=1,dfftp%nnr
               rsca=rsca+conjg( tmpspacec(nn))*tmpspacec(nn)
             enddo
             call mp_sum(rsca)
-            write(stdout,*) 'RSCA', rsca/(nr1*nr2*nr3)!ATTENZIONE
+            write(stdout,*) 'RSCA', rsca/(dfftp%nr1*dfftp%nr2*dfftp%nr3)!ATTENZIONE
             CALL fwfft ('Dense', tmpspacec, dfftp)
              rsca=0.d0
             do nn=1,ngm

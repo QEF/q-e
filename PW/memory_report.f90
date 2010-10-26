@@ -13,7 +13,8 @@ SUBROUTINE memory_report()
   USE io_global, ONLY : stdout
   USE wvfct,     ONLY : npwx, nbnd, nbndx
   USE basis,     ONLY : natomwfc
-  USE gvect,     ONLY : ngl, nr1, nr2, nr3, nrxx, ngm
+  USE grid_dimensions,  ONLY : nr1, nr2, nr3, nrxx
+  USE gvect,     ONLY : ngl, ngm
   USE uspp,      ONLY : nkb
   USE ldaU,      ONLY : lda_plus_u
   USE lsda_mod,  ONLY : nspin

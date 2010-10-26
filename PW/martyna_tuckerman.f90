@@ -128,8 +128,7 @@ CONTAINS
   USE fft_base,      ONLY : dfftp
   USE fft_interfaces,ONLY : fwfft, invfft
   USE control_flags, ONLY : gamma_only_ => gamma_only
-  USE gvect,         ONLY : nr1, nr2, nr3, nr1x, nr2x, nr3x, nrxx, &
-                            ngm, gg, gstart_ => gstart, nl, nlm, ecutwfc, dual
+  USE gvect,         ONLY : ngm, gg, gstart_ => gstart, nl, nlm, ecutwfc, dual
   USE cell_base,     ONLY : at, alat, tpiba2, omega
 
   INTEGER :: index0, index, ir, i,j,k, ig, nt
@@ -169,24 +168,24 @@ CONTAINS
   index0 = 0
 #if defined (__PARA)
   DO i = 1, me_pool
-     index0 = index0 + nr1x*nr2x*dfftp%npp(i)
+     index0 = index0 + dfftp%nr1x*dfftp%nr2x*dfftp%npp(i)
   END DO
 #endif
   !
-  ALLOCATE (aux(nrxx))
+  ALLOCATE (aux(dfftp%nnr))
   aux = CMPLX(0._dp,0._dp)
-  DO ir = 1, nrxx
+  DO ir = 1, dfftp%nnr
      !
      ! ... three dimensional indexes
      !
      index = index0 + ir - 1
-     k     = index / (nr1x*nr2x)
-     index = index - (nr1x*nr2x)*k
-     j     = index / nr1x
-     index = index - nr1x*j
+     k     = index / (dfftp%nr1x*dfftp%nr2x)
+     index = index - (dfftp%nr1x*dfftp%nr2x)*k
+     j     = index / dfftp%nr1x
+     index = index - dfftp%nr1x*j
      i     = index
 
-     r(:) = ( at(:,1)/nr1 * i + at(:,2)/nr2 * j + at(:,3)/nr3 * k )
+     r(:) = ( at(:,1)/dfftp%nr1*i + at(:,2)/dfftp%nr2*j + at(:,3)/dfftp%nr3*k )
 
      rws = ws_dist(r,ws)
 #ifdef TESTING
@@ -215,7 +214,7 @@ CONTAINS
  
 #ifdef TESTING
   if (first) then
-     ALLOCATE(plot(nrxx))
+     ALLOCATE(plot(dfftp%nnr))
 
      filplot = 'wg_corr_r'
      CALL invfft ('Dense', aux, dfftp)
@@ -258,10 +257,10 @@ CONTAINS
 !----------------------------------------------------------------------------
   SUBROUTINE write_wg_on_file(filplot, plot)
 !----------------------------------------------------------------------------
-  USE gvect,         ONLY : nr1, nr2, nr3, nr1x, nr2x, nr3x, nrxx, &
-                            ecutwfc, dual, gcutm
-  USE cell_base,     ONLY : at, alat, tpiba2, omega, ibrav, celldm
-  USE ions_base,     ONLY : zv, ntyp => nsp, nat, ityp, atm, tau
+  USE grid_dimensions, ONLY : nr1, nr2, nr3, nr1x, nr2x, nr3x, nrxx
+  USE gvect,           ONLY : ecutwfc, dual, gcutm
+  USE cell_base,       ONLY : at, alat, tpiba2, omega, ibrav, celldm
+  USE ions_base,       ONLY : zv, ntyp => nsp, nat, ityp, atm, tau
   CHARACTER (LEN=25), INTENT(IN) :: filplot
   REAL(DP) :: plot(nrxx)
   CHARACTER (LEN=25) :: title

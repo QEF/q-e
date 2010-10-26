@@ -51,7 +51,6 @@ SUBROUTINE add_efield(vpoten,etotefield,rho,iflag)
   USE extfield,      ONLY : tefield, dipfield, edir, eamp, emaxpos, &
                             eopreg, forcefield
   USE force_mod,     ONLY : lforce
-  USE gvect,         ONLY : nr1, nr2, nr3, nr1x, nr2x, nr3x, nrxx
   USE io_global,     ONLY : stdout,ionode
   USE control_flags, ONLY : mixing_beta
   USE lsda_mod,      ONLY : nspin
@@ -64,9 +63,9 @@ SUBROUTINE add_efield(vpoten,etotefield,rho,iflag)
   !
   ! I/O variables
   !
-  REAL(DP),INTENT(INOUT) :: vpoten(nrxx)    ! the ef is added to this potential
-  REAL(DP),INTENT(INOUT) :: etotefield      ! the contribution to etot due to ef
-  REAL(DP),INTENT(IN)    :: rho(nrxx,nspin) ! the density whose dipole is computed
+  REAL(DP),INTENT(INOUT) :: vpoten(dfftp%nnr)! ef is added to this potential
+  REAL(DP),INTENT(INOUT) :: etotefield       ! contribution to etot due to ef
+  REAL(DP),INTENT(IN)    :: rho(dfftp%nnr,nspin) ! the density whose dipole is computed
   LOGICAL,INTENT(IN)     :: iflag ! set to true to force recalculation of field
   !
   ! local variables
@@ -231,7 +230,7 @@ SUBROUTINE add_efield(vpoten,etotefield,rho,iflag)
 #if defined (__PARA)
   !
   DO i = 1, me_pool
-     index0 = index0 + nr1x*nr2x*dfftp%npp(i)
+     index0 = index0 + dfftp%nr1x*dfftp%nr2x*dfftp%npp(i)
   END DO
   !
 #endif
@@ -239,20 +238,20 @@ SUBROUTINE add_efield(vpoten,etotefield,rho,iflag)
   ! Loop in the charge array
   !
 
-  DO ir = 1, nrxx
+  DO ir = 1, dfftp%nnr
      !
      ! ... three dimensional indexes
      !
      index = index0 + ir - 1
-     k     = index / (nr1x*nr2x)
-     index = index - (nr1x*nr2x)*k
-     j     = index / nr1x
-     index = index - nr1x*j
+     k     = index / (dfftp%nr1x*dfftp%nr2x)
+     index = index - (dfftp%nr1x*dfftp%nr2x)*k
+     j     = index / dfftp%nr1x
+     index = index - dfftp%nr1x*j
      i     = index
      
-     if (edir.eq.1) sawarg = (i*1._dp)/(nr1*1._dp)
-     if (edir.eq.2) sawarg = (j*1._dp)/(nr2*1._dp)
-     if (edir.eq.3) sawarg = (k*1._dp)/(nr3*1._dp)
+     if (edir.eq.1) sawarg = DBLE(i)/DBLE(dfftp%nr1)
+     if (edir.eq.2) sawarg = DBLE(j)/DBLE(dfftp%nr2)
+     if (edir.eq.3) sawarg = DBLE(k)/DBLE(dfftp%nr3)
      
      value = e2*(eamp - tot_dipole)*saw(emaxpos,eopreg,sawarg) * (alat/bmod)
 

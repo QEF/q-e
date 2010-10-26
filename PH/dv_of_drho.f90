@@ -17,7 +17,7 @@ subroutine dv_of_drho (mode, dvscf, flag)
   USE constants, ONLY : e2, fpi
   USE fft_base,  ONLY: dfftp
   USE fft_interfaces, ONLY: fwfft, invfft
-  USE gvect,     ONLY : nrxx, nl, ngm, g,nlm
+  USE gvect,     ONLY : nl, ngm, g,nlm
   USE cell_base, ONLY : alat, tpiba2
   USE noncollin_module, ONLY : nspin_lsda, nspin_mag, nspin_gga
   USE funct,     ONLY : dft_is_gradient
@@ -35,7 +35,7 @@ subroutine dv_of_drho (mode, dvscf, flag)
   integer :: mode
   ! input: the mode to do
 
-  complex(DP), intent(inout):: dvscf (nrxx, nspin_mag)
+  complex(DP), intent(inout):: dvscf (dfftp%nnr, nspin_mag)
   ! input: the change of the charge,
   ! output: change of the potential
 
@@ -56,9 +56,9 @@ subroutine dv_of_drho (mode, dvscf, flag)
   complex(DP), allocatable :: dvhart (:,:) !required in gamma_only
 
   call start_clock ('dv_of_drho')
-  allocate (dvaux( nrxx,  nspin_mag))
+  allocate (dvaux( dfftp%nnr,  nspin_mag))
   dvaux (:,:) = (0.d0, 0.d0)
-  if (flag) allocate (drhoc( nrxx))
+  if (flag) allocate (drhoc( dfftp%nnr))
   !
   ! the exchange-correlation contribution is computed in real space
   !
@@ -73,7 +73,7 @@ subroutine dv_of_drho (mode, dvscf, flag)
   endif
   do is = 1, nspin_mag
      do is1 = 1, nspin_mag
-        do ir = 1, nrxx
+        do ir = 1, dfftp%nnr
            dvaux(ir,is) = dvaux(ir,is) + dmuxc(ir,is,is1) * dvscf(ir,is1)
         enddo
      enddo
@@ -86,7 +86,7 @@ subroutine dv_of_drho (mode, dvscf, flag)
   !
   if ( dft_is_gradient() ) call dgradcorr &
        (rho%of_r, grho, dvxc_rr, dvxc_sr, dvxc_ss, dvxc_s, xq, &
-       dvscf, nrxx, nspin_mag, nspin_gga, nl, ngm, g, alat, dvaux)
+       dvscf, dfftp%nnr, nspin_mag, nspin_gga, nl, ngm, g, alat, dvaux)
   if (nlcc_any.and.flag) then
      do is = 1, nspin_lsda
         rho%of_r(:, is) = rho%of_r(:, is) - fac * rho_core (:)
@@ -108,7 +108,7 @@ subroutine dv_of_drho (mode, dvscf, flag)
   ! hartree contribution is computed in reciprocal space
   !
   if (gamma_only) then
-    allocate(dvhart(nrxx,nspin_mag))
+    allocate(dvhart(dfftp%nnr,nspin_mag))
     dvhart(:,:) = (0.d0,0.d0)
     do is = 1, nspin_lsda
       do ig = 1, ngm

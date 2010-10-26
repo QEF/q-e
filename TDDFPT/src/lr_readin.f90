@@ -22,7 +22,7 @@ subroutine lr_readin
   use lsda_mod,            only : current_spin, nspin
   use control_flags,       only : twfcollect
   USE scf,                 ONLY : vltot, v, vrs
-  USE gvect,               ONLY : nrxx
+  USE grid_dimensions,     ONLY : nrxx
   USE gsmooth,             ONLY : doublegrid
   use wvfct,               only : nbnd, et, wg
   use lsda_mod,            only : isk

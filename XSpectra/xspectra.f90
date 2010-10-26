@@ -882,7 +882,8 @@ SUBROUTINE xanes_dipole(a,b,ncalcv,xnorm,core_wfn,paw_iltonhb,terminator,verbosi
        nks,               & ! number of k-points per pool
        xk,                & ! k-points coordinates
        wk                   ! k-points weight
-  USE gvect,            ONLY: g,ngm,ecutwfc,ngl,nrxx
+  USE gvect,            ONLY: g,ngm,ecutwfc,ngl
+  USE grid_dimensions,  ONLY: nrxx
   !,ig_l2g(ngm),ngm_l,ngm_g
   USE paw_gipaw,       ONLY : &
        paw_vkb,             & ! |p> projectors
@@ -1263,7 +1264,8 @@ SUBROUTINE xanes_quadrupole(a,b,ncalcv,xnorm,core_wfn,paw_iltonhb,terminator,ver
        nks,               & ! number of k-points per pool
        xk,                & ! k-points coordinates
        wk                   ! k-points weight
-  USE gvect, ONLY: g,ngm,ecutwfc,ngl,nrxx
+  USE gvect, ONLY: g,ngm,ecutwfc,ngl
+  USE grid_dimensions,  ONLY: nrxx
   !,ig_l2g(ngm),ngm_l,ngm_g
   USE paw_gipaw,     ONLY : &
        paw_vkb,             & ! |p> projectors
@@ -3379,7 +3381,8 @@ SUBROUTINE verify_hpsi
        nks,               & ! number of k-points per pool
        xk,                & ! k-points coordinates
        wk                   ! k-points weight
-  USE gvect,            ONLY: g,ngm,ecutwfc,ngl,nrxx
+  USE gvect,            ONLY: g,ngm,ecutwfc,ngl
+  USE grid_dimensions,  ONLY : nrxx
   USE paw_gipaw,        ONLY : &
        paw_vkb,             & ! |p> projectors
        paw_becp,            & ! product of projectors and wf.

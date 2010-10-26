@@ -25,8 +25,9 @@ subroutine solve_e
   USE io_files,              ONLY : prefix, iunigk, diropn
   USE cell_base,             ONLY : tpiba2
   USE klist,                 ONLY : lgauss, xk, wk
-  USE gvect,                 ONLY : nrxx, g
+  USE gvect,                 ONLY : g
   USE gsmooth,               ONLY : doublegrid
+  USE grid_dimensions,       ONLY : nrxx
   USE smooth_grid_dimensions, ONLY: nrxxs
   USE lsda_mod,              ONLY : lsda, nspin, current_spin, isk
   USE spin_orb,              ONLY : domag

@@ -11,7 +11,7 @@ subroutine allocate_cond
 !
 ! This subroutine allocates some needed variables
 !
-  USE gvect,            ONLY : nr3
+  USE grid_dimensions,  ONLY : nr3
   use lsda_mod,         ONLY : nspin
   USE noncollin_module, ONLY : npol
   use cond

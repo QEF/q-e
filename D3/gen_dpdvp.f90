@@ -20,6 +20,7 @@ subroutine gen_dpdvp
   USE ions_base,  ONLY : nat
   USE kinds, only : DP
   use pwcom
+  USE grid_dimensions, ONLY : nrxx
   USE uspp, ONLY: vkb
   USE wavefunctions_module,  ONLY: evc
   USE io_files,      ONLY : iunigk

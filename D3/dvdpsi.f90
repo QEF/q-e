@@ -17,7 +17,8 @@ subroutine dvdpsi (nu_i, xq_, dvloc, vkb_, vkbq_, psi_, dvpsi_)
   USE cell_base,  ONLY : tpiba
   USE fft_base,   ONLY : dffts
   USE fft_interfaces,  ONLY : fwfft, invfft
-  USE gvect,      ONLY : nrxx, g
+  USE gvect,      ONLY : g
+  USE grid_dimensions, ONLY : nrxx
   USE gsmooth,    ONLY : nls
   USE wvfct,      ONLY : nbnd, npwx, npw, igk
   use phcom

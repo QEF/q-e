@@ -46,7 +46,7 @@ subroutine d3dyn_cc
        d3dyn1 (:,:,:), d3dyn2 (:,:,:), d3dyn3 (:,:,:), d3dyn4 (:,:,:)
 
   if (.not.nlcc_any) return
-  allocate  (aux ( nrxx))
+  allocate  (aux ( dfftp%nnr))
   allocate  (drc_exp ( ngm, nat))
   allocate  (d3dyn0 ( 3 * nat, 3 * nat, 3 * nat))
   allocate  (d3dyn1 ( 3 * nat, 3 * nat, 3 * nat))
@@ -70,7 +70,7 @@ subroutine d3dyn_cc
      enddo
   enddo
   aux(:) = (0.d0, 0.d0)
-  do ir = 1, nrxx
+  do ir = 1, dfftp%nnr
      rhox = rho%of_r (ir, 1) + rho_core (ir)
      arhox = abs (rhox)
      if (arhox > 1.0d-30) then
@@ -109,7 +109,7 @@ subroutine d3dyn_cc
 #endif
   do nu_i = npert_i, npert_f
      call davcio_drho (aux, lrdrho, iud0rho, nu_i, - 1)
-     do ir = 1, nrxx
+     do ir = 1, dfftp%nnr
         aux (ir) = aux (ir) * dmuxc (ir, 1, 1)
      enddo
 
@@ -157,7 +157,7 @@ subroutine d3dyn_cc
 #endif
   do nu_i = npert_i, npert_f
      call davcio_drho (aux, lrdrho, iudrho, nu_i, - 1)
-     do ir = 1, nrxx
+     do ir = 1, dfftp%nnr
         aux (ir) = aux (ir) * dmuxc (ir, 1, 1)
      enddo
 

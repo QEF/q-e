@@ -64,7 +64,7 @@ subroutine dft_exchange_k(nbnd_v,nbnd_s, ecutoff)
    ALLOCATE( bec_vc( nkb, nbnd ) )
    ALLOCATE( bec_s( nkb, nbnd ) )
    allocate(fac(ngm))
-   allocate(prods(dffts%nnr),prod(nrxx))
+   allocate(prods(dffts%nnr),prod(dfftp%nnr))
    allocate(ex(nbnd_s,2*n_gauss+2))!the last elements contains t=0 and conduction states
    allocate(f_gauss(nks))
 
@@ -610,11 +610,11 @@ subroutine dft_exchange(nbnd_v,nbnd_s,n_set)
 
 
    allocate(tmpreal1(dffts%nnr))
-   allocate(tmpreal_v(nrxx,n_set))
-   allocate(tmpreal_s(nrxx,n_set))
+   allocate(tmpreal_v(dfftp%nnr,n_set))
+   allocate(tmpreal_s(dfftp%nnr,n_set))
    allocate(prod_g(ngm))
-   allocate(prod_c(nrxx))
-   allocate(prod_r(nrxx))
+   allocate(prod_c(dfftp%nnr))
+   allocate(prod_r(dfftp%nnr))
 
 !external loop on valence state
    do iiv=1,ceiling(real(nbnd_v)/real(n_set))
@@ -763,7 +763,7 @@ subroutine addus_charge(r_ij,becp_iw,becp_jw)
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
   USE fft_base,             ONLY : dfftp
   USE fft_interfaces,       ONLY : fwfft, invfft
-  USE gvect,                ONLY : nrxx, ngm, nl, nlm, gg, g, &
+  USE gvect,                ONLY : ngm, nl, nlm, gg, g, &
                                    eigts1, eigts2, eigts3, ig1, ig2, ig3
   USE lsda_mod,             ONLY : nspin
   USE scf,                  ONLY : rho
@@ -774,7 +774,7 @@ subroutine addus_charge(r_ij,becp_iw,becp_jw)
   !
   implicit none
 
-  COMPLEX(kind=DP), INTENT(inout) :: r_ij(nrxx)!where to add the us term
+  COMPLEX(kind=DP), INTENT(inout) :: r_ij(dfftp%nnr)!where to add the us term
   COMPLEX(kind=DP), INTENT(in) ::  becp_iw( nkb)!overlap of wfcs with us  projectors
   COMPLEX(kind=DP), INTENT(in) ::  becp_jw( nkb)!overlap of wfcs with us  projectors
 

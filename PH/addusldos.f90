@@ -18,14 +18,13 @@ subroutine addusldos (ldos, becsum1)
   USE ions_base, ONLY : nat, ityp, ntyp => nsp
   use fft_base,  only: dfftp
   use fft_interfaces, only: invfft
-  USE gvect, ONLY : nrxx, nl, &
-                    eigts1, eigts2, eigts3, ig1, ig2, ig3, gg, g, ngm
+  USE gvect, ONLY : nl, eigts1, eigts2, eigts3, ig1, ig2, ig3, gg, g, ngm
   USE wavefunctions_module,  ONLY: psic
   USE uspp, ONLY: okvan
   USE uspp_param, ONLY: upf, lmaxq, nh, nhm
   USE noncollin_module, ONLY : nspin_mag
   implicit none
-  complex(DP) :: ldos (nrxx, nspin_mag)
+  complex(DP) :: ldos (dfftp%nnr, nspin_mag)
   ! local density of states
 
   real(DP) :: becsum1 ( (nhm * (nhm + 1) ) / 2, nat, nspin_mag)
@@ -91,7 +90,7 @@ subroutine addusldos (ldos, becsum1)
            psic (nl (ig) ) = aux (ig, is)
         enddo
         CALL invfft ('Dense', psic, dfftp)
-        call daxpy (nrxx, 1.d0, psic, 2, ldos(1,is), 2 )
+        call daxpy (dfftp%nnr, 1.d0, psic, 2, ldos(1,is), 2 )
      enddo
   endif
   deallocate (qmod)

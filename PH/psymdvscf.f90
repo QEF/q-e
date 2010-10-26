@@ -13,7 +13,7 @@ SUBROUTINE psymdvscf (nper, irr, dvtosym)
   ! ...  p-symmetrize the charge density.
   !
   USE kinds,     ONLY : DP
-  USE gvect,      ONLY : nrxx, nr1x,nr2x,nr3x
+  USE grid_dimensions,  ONLY : nrxx, nr1x,nr2x,nr3x
   USE noncollin_module, ONLY : nspin_mag
   USE modes,     ONLY : nsymq, minus_q
   USE mp_global, ONLY : me_pool

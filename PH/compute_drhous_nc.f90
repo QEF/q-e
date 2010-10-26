@@ -20,8 +20,8 @@ subroutine compute_drhous_nc (drhous, dbecsum, wgg, becq, alpq)
   USE lsda_mod,   ONLY : lsda, nspin, current_spin, isk
   USE klist,      ONLY : xk, wk
   USE fft_base,   ONLY : dffts
-  USE fft_interfaces, ONLY: invfft
-  USE gvect,      ONLY : nrxx
+  USE fft_interfaces, ONLY : invfft
+  USE grid_dimensions,ONLY : nrxx
   USE gsmooth,    ONLY : nls
   USE wvfct,      ONLY : npw, npwx, nbnd, igk
   USE noncollin_module, ONLY : noncolin, npol, nspin_mag

@@ -10,10 +10,10 @@ subroutine init_gper(ik)
 ! - To compute the number of 2D G vectors with |G+k|^2<ecut2d (ngper),
 ! - the number of shells (ngpsh) for them,
 !
-  USE io_global,  ONLY :  stdout
+  USE io_global,        ONLY :  stdout
   USE noncollin_module, ONLY : npol
-  USE cell_base,   ONLY : bg, tpiba, tpiba2
-  USE gvect,       ONLY : nr1, nr2
+  USE cell_base,        ONLY : bg, tpiba, tpiba2
+  USE grid_dimensions,  ONLY : nr1, nr2
   USE cond
   implicit none
   integer :: ipol, igper, icount, ik, k, ig, i, il, j, jl, iw

@@ -31,7 +31,7 @@ SUBROUTINE d0rhod2v (ipert, drhoscf)
   IMPLICIT NONE
   !
   INTEGER :: ipert              ! index of the perturbation associated with drho
-  COMPLEX (DP) :: drhoscf (nrxx) ! the variation of the charge density
+  COMPLEX (DP) :: drhoscf (dfftp%nnr)! the variation of the charge density
   !
   INTEGER :: icart,           & ! counter on polarizations
              jcart,           & ! counter on polarizations
@@ -60,7 +60,7 @@ SUBROUTINE d0rhod2v (ipert, drhoscf)
                                       work6 (:)
   ! auxiliary space
 
-  ALLOCATE (work0(nrxx))
+  ALLOCATE (work0(dfftp%nnr))
   ALLOCATE (work1(npwx))
   ALLOCATE (work2(npwx))
   ALLOCATE (work3(npwx))

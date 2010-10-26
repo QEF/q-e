@@ -37,13 +37,6 @@ MODULE gvect
        ngm_g,         &! global number of g vectors (sum over all processors)
        ngm_l,         &! another name for ngm_l
        gstart,        &! first nonzero g vector
-       nr1,           &! fft dimension along x
-       nr2,           &! fft dimension along y
-       nr3,           &! fft dimension along z
-       nr1x,          &! maximum fft dimension along x
-       nr2x,          &! maximum fft dimension along y
-       nr3x,          &! maximum fft dimension along z
-       nrxx,          &! maximum total fft
        ngl             ! number of |g| shells
   !INTEGER, ALLOCATABLE :: &
   !     ig_l2g(:)      !"l2g" means local to global, this array convert a local

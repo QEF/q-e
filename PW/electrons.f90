@@ -25,8 +25,8 @@ SUBROUTINE electrons()
   USE ions_base,            ONLY : zv, nat, nsp, ityp, tau, compute_eextfor
   USE basis,                ONLY : starting_pot
   USE bp,                   ONLY : lelfield
-  USE gvect,                ONLY : ngm, gstart, nr1, nr2, nr3, nr1x, nr2x, &
-                                   nr3x, nrxx, nl, nlm, g, gg, ecutwfc, gcutm
+  USE grid_dimensions,      ONLY : nr1, nr2, nr3, nr1x, nr2x, nr3x, nrxx
+  USE gvect,                ONLY : ngm, gstart, nl, nlm, g, gg, ecutwfc, gcutm
   USE gsmooth,              ONLY : doublegrid, ngms
   USE klist,                ONLY : xk, wk, nelec, ngk, nks, nkstot, lgauss
   USE lsda_mod,             ONLY : lsda, nspin, magtot, absmag, isk

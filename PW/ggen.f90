@@ -18,9 +18,8 @@ SUBROUTINE ggen()
    USE kinds,              ONLY : DP
    USE cell_base,          ONLY : at, bg
    USE reciprocal_vectors, ONLY : ig_l2g
-   USE gvect,              ONLY : g, gg, ngm, ngm_g, ngm_l, nr1, nr2, nr3, &
-                                    gcutm, nr1x, nr2x, nr3x, ig1, ig2, ig3,  &
-                                    nl, gstart, gl, ngl, igtongl
+   USE gvect,              ONLY : g, gg, ngm, ngm_g, ngm_l, gcutm, &
+                                  ig1, ig2, ig3,  nl, gstart, gl, ngl, igtongl
    USE gsmooth,            ONLY : ngms, gcutms, ngms_g, nls
    USE control_flags,      ONLY : gamma_only
    USE cellmd,             ONLY : lmovecell
@@ -72,17 +71,17 @@ SUBROUTINE ggen()
    !
    ngm = 0
    ngms = 0
-   iloop: DO i = -nr1-1, nr1+1
+   iloop: DO i = -dfftp%nr1-1, dfftp%nr1+1
       !
       ! gamma-only: exclude space with x < 0
       !
       IF ( gamma_only .and. i < 0) CYCLE iloop
-      jloop: DO j = -nr2-1, nr2+1
+      jloop: DO j = -dfftp%nr2-1, dfftp%nr2+1
          !
          ! gamma-only: exclude plane with x = 0, y < 0
          !
          IF ( gamma_only .and. i == 0 .and. j < 0) CYCLE jloop
-         kloop: DO k = -nr3-1, nr3+1
+         kloop: DO k = -dfftp%nr3-1, dfftp%nr3+1
             !
             ! gamma-only: exclude line with x = 0, y = 0, z < 0
             !
@@ -124,11 +123,11 @@ SUBROUTINE ggen()
       k = mill_g(3, ng)
 
 #ifdef __PARA
-      m1 = mod (i, nr1) + 1
-      IF (m1 < 1) m1 = m1 + nr1
-      m2 = mod (j, nr2) + 1
-      IF (m2 < 1) m2 = m2 + nr2
-      mc = m1 + (m2 - 1) * nr1x
+      m1 = mod (i, dfftp%nr1) + 1
+      IF (m1 < 1) m1 = m1 + dfftp%nr1
+      m2 = mod (j, dfftp%nr2) + 1
+      IF (m2 < 1) m2 = m2 + dfftp%nr2
+      mc = m1 + (m2 - 1) * dfftp%nr1x
       IF ( dfftp%isind ( mc ) == 0) CYCLE ngloop
 #endif
 
@@ -165,30 +164,30 @@ SUBROUTINE ggen()
       n1 = nint (sum(g (:, ng) * at (:, 1))) + 1
       ig1 (ng) = n1 - 1
       n1s = n1
-      IF (n1<1) n1 = n1 + nr1
+      IF (n1<1) n1 = n1 + dfftp%nr1
       IF (n1s<1) n1s = n1s + dffts%nr1
 
       n2 = nint (sum(g (:, ng) * at (:, 2))) + 1
       ig2 (ng) = n2 - 1
       n2s = n2
-      IF (n2<1) n2 = n2 + nr2
+      IF (n2<1) n2 = n2 + dfftp%nr2
       IF (n2s<1) n2s = n2s + dffts%nr2
 
       n3 = nint (sum(g (:, ng) * at (:, 3))) + 1
       ig3 (ng) = n3 - 1
       n3s = n3
-      IF (n3<1) n3 = n3 + nr3
+      IF (n3<1) n3 = n3 + dfftp%nr3
       IF (n3s<1) n3s = n3s + dffts%nr3
 
-      IF (n1>nr1 .or. n2>nr2 .or. n3>nr3) &
+      IF (n1>dfftp%nr1 .or. n2>dfftp%nr2 .or. n3>dfftp%nr3) &
          CALL errore('ggen','Mesh too small?',ng)
 
 #if defined (__PARA) && !defined (__USE_3D_FFT)
-      nl (ng) = n3 + ( dfftp%isind (n1 + (n2 - 1) * nr1x) - 1) * nr3x
+      nl (ng) = n3 + ( dfftp%isind (n1 + (n2 - 1) * dfftp%nr1x) - 1) * dfftp%nr3x
       IF (ng <= ngms) &
          nls (ng) = n3s + ( dffts%isind (n1s+(n2s-1)*dffts%nr1x) - 1 ) * dffts%nr3x
 #else
-      nl (ng) = n1 + (n2 - 1) * nr1x + (n3 - 1) * nr1x * nr2x
+      nl (ng) = n1 + (n2 - 1) * dfftp%nr1x + (n3 - 1) * dfftp%nr1x * dfftp%nr2x
       IF (ng <= ngms) &
          nls (ng) = n1s + (n2s - 1) * dffts%nr1x + (n3s - 1) * dffts%nr1x * dffts%nr2x
 #endif
@@ -246,8 +245,7 @@ SUBROUTINE index_minusg()
    !     compute indices nlm and nlms giving the correspondence
    !     between the fft mesh points and -G (for gamma-only calculations)
    !
-   USE gvect,   ONLY : ngm, nr1, nr2, nr3, &
-                        nr1x, nr2x, nr3x, nlM, ig1, ig2, ig3
+   USE gvect,   ONLY : ngm, nlm, ig1, ig2, ig3
    USE gsmooth, ONLY : nlsm, ngms
    USE fft_base,  ONLY : dfftp, dffts
    IMPLICIT NONE
@@ -259,33 +257,33 @@ SUBROUTINE index_minusg()
       n1 = -ig1 (ng) + 1
       n1s = n1
       IF (n1 < 1) THEN
-         n1 = n1 + nr1
+         n1 = n1 + dfftp%nr1
          n1s = n1s + dffts%nr1
       END IF
 
       n2 = -ig2 (ng) + 1
       n2s = n2
       IF (n2 < 1) THEN
-         n2 = n2 + nr2
+         n2 = n2 + dfftp%nr2
          n2s = n2s + dffts%nr2
       END IF
       n3 = -ig3 (ng) + 1
       n3s = n3
       IF (n3 < 1) THEN
-         n3 = n3 + nr3
+         n3 = n3 + dfftp%nr3
          n3s = n3s + dffts%nr3
       END IF
 
-      IF (n1>nr1 .or. n2>nr2 .or. n3>nr3) THEN
+      IF (n1>dfftp%nr1 .or. n2>dfftp%nr2 .or. n3>dfftp%nr3) THEN
          CALL errore('index_minusg','Mesh too small?',ng)
       ENDIF
 
 #if defined (__PARA) && !defined (__USE_3D_FFT)
-      nlm(ng) = n3 + (dfftp%isind (n1 + (n2 - 1) * nr1x) - 1) * nr3x
+      nlm(ng) = n3 + (dfftp%isind (n1 + (n2 - 1) * dfftp%nr1x) - 1) * dfftp%nr3x
       IF (ng<=ngms) &
          nlsm(ng) = n3s + (dffts%isind (n1s+(n2s-1) * dffts%nr1x) - 1) * dffts%nr3x
 #else
-      nlm(ng) = n1 + (n2 - 1) * nr1x + (n3 - 1) * nr1x * nr2x
+      nlm(ng) = n1 + (n2 - 1) * dfftp%nr1x + (n3 - 1) * dfftp%nr1x * dfftp%nr2x
       IF (ng<=ngms) &
          nlsm(ng) = n1s + (n2s - 1) * dffts%nr1x + (n3s-1) * dffts%nr1x * dffts%nr2x
 #endif

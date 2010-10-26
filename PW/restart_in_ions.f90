@@ -16,7 +16,7 @@ subroutine restart_in_ions (iter, ik_, dr2)
   USE ener,       ONLY: etot, ehart, etxc, vtxc, epaw
   USE fft_base,   ONLY : dfftp
   USE fft_interfaces,ONLY : fwfft
-  USE gvect,      ONLY: gstart, g, gg, nl, ngm, nrxx
+  USE gvect,      ONLY: gstart, g, gg, nl, ngm
   USE klist,      ONLY: nks
   USE lsda_mod,   ONLY: nspin
   USE scf,        ONLY : rho, rho_core, rhog_core, v, vnew

@@ -13,7 +13,7 @@ SUBROUTINE psym_dmage (dvtosym)
   ! ...  p-symmetrize the magnetization change due to an electric field.
   !
   USE kinds,     ONLY : DP
-  USE gvect,      ONLY : nrxx, nr1x,nr2x,nr3x
+  USE grid_dimensions, ONLY : nrxx, nr1x,nr2x,nr3x
   USE lsda_mod,   ONLY : nspin
   USE mp_global, ONLY : me_pool
   USE fft_base,  ONLY : dfftp, cgather_sym

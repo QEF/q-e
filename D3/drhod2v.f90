@@ -21,6 +21,7 @@ subroutine drhod2v
   !
   USE ions_base,  ONLY : nat
   USE kinds, only : DP
+  USE grid_dimensions, ONLY : nrxx
   use pwcom
   use phcom
   use d3com

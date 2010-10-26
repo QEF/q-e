@@ -15,7 +15,7 @@ subroutine lr_write_restart()
                                    nbnd_total, charge_response,lr_verbosity
   use charg_resp,           only : resonance_condition
   use wvfct,                only : nbnd, npwx, npw
-  use gvect,                only : nrxx
+  use grid_dimensions,      only : nrxx
   USE io_global,            ONLY : ionode
   use klist,                only : nks
   USE noncollin_module,     ONLY : nspin_mag

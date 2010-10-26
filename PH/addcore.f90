@@ -18,7 +18,7 @@ subroutine addcore (mode, drhoc)
   use cell_base, only: tpiba
   use fft_base,  only: dfftp
   use fft_interfaces, only: invfft
-  use gvect, only: ngm, nrxx, nl, ig1, ig2, ig3, eigts1, eigts2, eigts3, g
+  use gvect, only: ngm, nl, ig1, ig2, ig3, eigts1, eigts2, eigts3, g
   use modes, only: u
   use qpoint, only: eigqts, xq
   use nlcc_ph, only: nlcc_any, drc
@@ -29,7 +29,7 @@ subroutine addcore (mode, drhoc)
   !
   integer, intent (IN) :: mode
   !  input: the mode
-  complex(DP), intent(OUT) :: drhoc (nrxx)
+  complex(DP), intent(OUT) :: drhoc (dfftp%nnr)
   ! output: the change of the core charge
   !
   !   Local variables

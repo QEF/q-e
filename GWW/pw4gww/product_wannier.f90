@@ -83,16 +83,16 @@ SUBROUTINE product_wannier(nbndv)
 
    if(okvan .and. lsmallgrid) write(stdout,*) 'ATTENTION: USPP AND SMALLGRID'
 
-   allocate(tmpspacei(nrxx),tmpspacej(nrxx),tmpreal(nrxx),tmpreal2(nrxx))
-   allocate(tmpspacejs(dffts%nnr),tmpspacec(nrxx))
+   allocate(tmpspacei(dfftp%nnr),tmpspacej(dfftp%nnr),tmpreal(dfftp%nnr),tmpreal2(dfftp%nnr))
+   allocate(tmpspacejs(dffts%nnr),tmpspacec(dfftp%nnr))
 
    numw_prod=0
 
 
 
-   rspacel(1)=nr1
-   rspacel(2)=nr2
-   rspacel(3)=nr3
+   rspacel(1)=dfftp%nr1
+   rspacel(2)=dfftp%nr2
+   rspacel(3)=dfftp%nr3
 
    !reads wfcs from iunwfc
 
@@ -145,17 +145,17 @@ SUBROUTINE product_wannier(nbndv)
          do iy=0,2*nll
             do iz=0,2*nll
                n1=no1+ix
-               if(n1<1) n1=nr1+n1
-               if(n1>nr1) n1=n1-nr1
+               if(n1<1) n1=dfftp%nr1+n1
+               if(n1>dfftp%nr1) n1=n1-dfftp%nr1
 
                n2=no2+iy
-               if(n2<1) n2=nr2+n2
-               if(n2>nr2) n2=n2-nr2
+               if(n2<1) n2=dfftp%nr2+n2
+               if(n2>dfftp%nr2) n2=n2-dfftp%nr2
 
                n3=no3+iz
-               if(n3<1) n3=nr3+n3
-               if(n3>nr3) n3=n3-nr3
-               nn=(n3-1)*nr1x*nr2x+(n2-1)*nr1x+n1
+               if(n3<1) n3=dfftp%nr3+n3
+               if(n3>dfftp%nr3) n3=n3-dfftp%nr3
+               nn=(n3-1)*dfftp%nr1x*dfftp%nr2x+(n2-1)*dfftp%nr1x+n1
                tmpspacei(nn)=tmpreal(iz*(2*nll+1)*(2*nll+1)+iy*(2*nll+1)+ix+1)
 
              enddo
@@ -212,17 +212,17 @@ SUBROUTINE product_wannier(nbndv)
            do iy=0,2*nll
               do iz=0,2*nll
                  n1=no1+ix
-                 if(n1<1) n1=nr1+n1
-                 if(n1>nr1) n1=n1-nr1
+                 if(n1<1) n1=dfftp%nr1+n1
+                 if(n1>dfftp%nr1) n1=n1-dfftp%nr1
 
                  n2=no2+iy
-                 if(n2<1) n2=nr2+n2
-                 if(n2>nr2) n2=n2-nr2
+                 if(n2<1) n2=dfftp%nr2+n2
+                 if(n2>dfftp%nr2) n2=n2-dfftp%nr2
 
                  n3=no3+iz
-                 if(n3<1) n3=nr3+n3
-                 if(n3>nr3) n3=n3-nr3
-                 nn=(n3-1)*nr1x*nr2x+(n2-1)*nr1x+n1
+                 if(n3<1) n3=dfftp%nr3+n3
+                 if(n3>dfftp%nr3) n3=n3-dfftp%nr3
+                 nn=(n3-1)*dfftp%nr1x*dfftp%nr2x+(n2-1)*dfftp%nr1x+n1
                  tmpspacej(nn)=tmpreal(iz*(2*nll+1)*(2*nll+1)+iy*(2*nll+1)+ix+1)
 
                enddo
@@ -250,18 +250,18 @@ SUBROUTINE product_wannier(nbndv)
            do iy=0,2*wiwj%radius(2)
               do iz=0,2*wiwj%radius(3)
                  n1=nop(1)+ix
-                 if(n1<1) n1=nr1+n1
-                 if(n1>nr1) n1=n1-nr1
+                 if(n1<1) n1=dfftp%nr1+n1
+                 if(n1>dfftp%nr1) n1=n1-dfftp%nr1
 
                  n2=nop(2)+iy
-                 if(n2<1) n2=nr2+n2
-                 if(n2>nr2) n2=n2-nr2
+                 if(n2<1) n2=dfftp%nr2+n2
+                 if(n2>dfftp%nr2) n2=n2-dfftp%nr2
 
                  n3=nop(3)+iz
-                 if(n3<1) n3=nr3+n3
-                 if(n3>nr3) n3=n3-nr3
+                 if(n3<1) n3=dfftp%nr3+n3
+                 if(n3>dfftp%nr3) n3=n3-dfftp%nr3
 
-                 nn=(n3-1)*nr1x*nr2x+(n2-1)*nr1x+n1
+                 nn=(n3-1)*dfftp%nr1x*dfftp%nr2x+(n2-1)*dfftp%nr1x+n1
                  rsca=rsca+(tmpspacei(nn)*tmpspacej(nn)+tmpreal2(nn))**2.d0
                  tmpreal(iz*(2*wiwj%radius(2)+1)*(2*wiwj%radius(1)+1)+iy*(2*wiwj%radius(1)+1)+ix+1)=&
                  &tmpspacei(nn)*tmpspacej(nn)+tmpreal2(nn)
@@ -297,18 +297,18 @@ SUBROUTINE product_wannier(nbndv)
              do iy=0,2*wiwj%radius(2)
                 do iz=0,2*wiwj%radius(3)
                    n1=nop(1)+ix
-                   if(n1<1) n1=nr1+n1
-                   if(n1>nr1) n1=n1-nr1
+                   if(n1<1) n1=dfftp%nr1+n1
+                   if(n1>dfftp%nr1) n1=n1-dfftp%nr1
 
                    n2=nop(2)+iy
-                   if(n2<1) n2=nr2+n2
-                   if(n2>nr2) n2=n2-nr2
+                   if(n2<1) n2=dfftp%nr2+n2
+                   if(n2>dfftp%nr2) n2=n2-dfftp%nr2
 
                    n3=nop(3)+iz
-                   if(n3<1) n3=nr3+n3
-                   if(n3>nr3) n3=n3-nr3
+                   if(n3<1) n3=dfftp%nr3+n3
+                   if(n3>dfftp%nr3) n3=n3-dfftp%nr3
 
-                   nn=(n3-1)*nr1x*nr2x+(n2-1)*nr1x+n1
+                   nn=(n3-1)*dfftp%nr1x*dfftp%nr2x+(n2-1)*dfftp%nr1x+n1
                    tmpspacej(nn)=tmpreal(iz*(2*wiwj%radius(2)+1)*(2*wiwj%radius(1)+1)+iy*(2*wiwj%radius(1)+1)+ix+1)
                  enddo
               enddo
@@ -321,10 +321,10 @@ SUBROUTINE product_wannier(nbndv)
             tmpspacec(:)=dcmplx(tmpspacej(:),0.d0)
             !ATTENZIONE
             rsca=0.d0
-            do nn=1,nrxx
+            do nn=1,dfftp%nnr
               rsca=rsca+conjg( tmpspacec(nn))*tmpspacec(nn)
             enddo
-            write(*,*) 'RSCA', rsca/(nr1*nr2*nr3)!ATTENZIONE
+            write(*,*) 'RSCA', rsca/(dfftp%nr1*dfftp%nr2*dfftp%nr3)!ATTENZIONE
             !CALL cft3s( tmpspacec,nr1, nr2, nr3, nr1x, nr2x, nr3x, -1 )
              CALL fwfft ('Dense', tmpspacec, dfftp)
              rsca=0.d0

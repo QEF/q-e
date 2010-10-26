@@ -6,7 +6,7 @@ subroutine lr_alloc_init()
   ! Modified by Osman Baris Malcioglu in 2009 
 #include "f_defs.h"
   !
-  use gvect,             only : nrxx
+  use grid_dimensions,   only : nrxx
   use klist,             only : nks
   use lr_variables
   use uspp,              only : nkb

@@ -15,8 +15,7 @@ subroutine ultra_external( nbnd_start, nbnd_end, radius, itask)
   USE io_files,             ONLY : find_free_unit,nwordwfc, iunwfc, prefix, diropn
   USE io_global,            ONLY : stdout, ionode_id
   USE gsmooth,              ONLY : nls, nlsm, doublegrid
-  USE gvect,                ONLY : nr1, nr2, nr3, nr1x, nr2x, &
-                                   nr3x, nrxx, gstart
+  USE gvect,                ONLY : gstart
   use mp_global,            ONLY : nproc_pool, me_pool
   USE wvfct,                ONLY : igk, g2kin, npwx, npw, nbnd, nbndx
   USE basis
@@ -151,15 +150,15 @@ subroutine ultra_external( nbnd_start, nbnd_end, radius, itask)
         enddo
      enddo
      if(okvan) then
-        allocate(op_real(nrxx))
+        allocate(op_real(dfftp%nnr))
 !calculate operator O
-        do ix=1,nr1
-           do iy=1,nr2
+        do ix=1,dfftp%nr1
+           do iy=1,dfftp%nr2
               do iz=1,dfftp%npp(me_pool+1)
-                 nn=(iz-1)*nr1x*nr2x+(iy-1)*nr1x+ix
-                 r(1)=(dble(ix-1)/dble(nr1))*at(1,1)*alat
-                 r(2)=(dble(iy-1)/dble(nr2))*at(2,2)*alat
-                 r(3)=(dble(iz+nr3_start-1-1)/dble(nr3))*at(3,3)*alat
+                 nn=(iz-1)*dfftp%nr1x*dfftp%nr2x+(iy-1)*dfftp%nr1x+ix
+                 r(1)=(dble(ix-1)/dble(dfftp%nr1))*at(1,1)*alat
+                 r(2)=(dble(iy-1)/dble(dfftp%nr2))*at(2,2)*alat
+                 r(3)=(dble(iz+nr3_start-1-1)/dble(dfftp%nr3))*at(3,3)*alat
                  rd(:)=r(:)-wannier_centers(:,ii)*alat
                  do  i=1,3
                     if(rd(i) > at(i,i)*alat/2.d0) then
@@ -236,14 +235,14 @@ subroutine ultra_external( nbnd_start, nbnd_end, radius, itask)
 
   iunrealwan2 =  find_free_unit()
   if(itask/=1) then
-     CALL diropn( iunrealwan2, 'realwan', nrxx, exst )
+     CALL diropn( iunrealwan2, 'realwan', dfftp%nnr, exst )
   else
-     CALL diropn( iunrealwan2, 'realwan_prim', nrxx, exst )
+     CALL diropn( iunrealwan2, 'realwan_prim', dfftp%nnr, exst )
   endif
   deallocate(wfc_mlwf,ultra_trans)
 !rotate wavefunctions
 !    ALLOCATE( evc( npwx, nbnd ) )
-    allocate(tmpreal(nrxx),tmpreals(dffts%nnr))
+    allocate(tmpreal(dfftp%nnr),tmpreals(dffts%nnr))
 !    CALL davcio(evc,nwordwfc,iunwfc,1,-1)
 
     allocate(u_trans_old(nbnd_normal,nbnd_normal))
@@ -302,9 +301,9 @@ subroutine ultra_external( nbnd_start, nbnd_end, radius, itask)
 !if itask==1 writes {c'} from position 1
 
        if(itask /= 1) then
-          call  davcio( tmpreal,nrxx,iunrealwan2,ii,1)
+          call  davcio( tmpreal,dfftp%nnr,iunrealwan2,ii,1)
        else
-          call  davcio( tmpreal,nrxx,iunrealwan2,ii-nbnd_start+1,1)
+          call  davcio( tmpreal,dfftp%nnr,iunrealwan2,ii-nbnd_start+1,1)
        endif
        if ( ii < nbnd_end ) then
 !put on array
@@ -318,9 +317,9 @@ subroutine ultra_external( nbnd_start, nbnd_end, radius, itask)
 !writes on file
 !if itask==1 writes {c'} from position 1
           if(itask /= 1) then
-             call  davcio( tmpreal,nrxx,iunrealwan2,ii+1,1)
+             call  davcio( tmpreal,dfftp%nnr,iunrealwan2,ii+1,1)
           else
-             call  davcio( tmpreal,nrxx,iunrealwan2,ii-nbnd_start+1+1,1)
+             call  davcio( tmpreal,dfftp%nnr,iunrealwan2,ii-nbnd_start+1+1,1)
           endif
        endif
     enddo

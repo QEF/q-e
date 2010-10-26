@@ -26,7 +26,7 @@ SUBROUTINE davcio_drho2 (drho, lrec, iunit, nrec, isw)
   IMPLICIT NONE
   !
   INTEGER :: iunit, lrec, nrec, isw
-  COMPLEX(DP) :: drho (nrxx)
+  COMPLEX(DP) :: drho (dfftp%nnr)
 #ifdef __PARA
   !
   ! local variables
@@ -34,7 +34,7 @@ SUBROUTINE davcio_drho2 (drho, lrec, iunit, nrec, isw)
   INTEGER :: root, errcode, itmp, proc
   COMPLEX(DP), ALLOCATABLE :: ddrho (:)
 
-  ALLOCATE (ddrho( nr1x * nr2x * nr3x ))
+  ALLOCATE (ddrho( dfftp%nr1x*dfftp%nr2x*dfftp%nr3x))
 
   IF (isw == 1) THEN
      !

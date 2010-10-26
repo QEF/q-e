@@ -162,13 +162,12 @@ MODULE io_rho_xml
       !
       USE io_files, ONLY : tmp_dir, prefix
       USE fft_base, ONLY : dfftp
-      USE gvect,    ONLY : nr1, nr2, nr3, nr1x, nr2x, nrxx
       USE spin_orb, ONLY : domag
       !
       IMPLICIT NONE
       !
       INTEGER,          INTENT(IN)           :: nspin
-      REAL(DP),         INTENT(IN)           :: rho(nrxx,nspin)
+      REAL(DP),         INTENT(IN)           :: rho(dfftp%nnr,nspin)
       CHARACTER(LEN=*), INTENT(IN), OPTIONAL :: extension
       !
       CHARACTER(LEN=256)    :: dirname, file_base
@@ -188,47 +187,47 @@ MODULE io_rho_xml
       !
       IF ( nspin == 1 ) THEN
          !
-         CALL write_rho_xml( file_base, rho(:,1), &
-                             nr1, nr2, nr3, nr1x, nr2x, dfftp%ipp, dfftp%npp )
+         CALL write_rho_xml( file_base, rho(:,1), dfftp%nr1, dfftp%nr2, &
+                  dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%ipp, dfftp%npp )
          !
       ELSE IF ( nspin == 2 ) THEN
          !
-         ALLOCATE( rhoaux( nrxx ) )
+         ALLOCATE( rhoaux( dfftp%nnr ) )
          !
          rhoaux(:) = rho(:,1) + rho(:,2)
          !
-         CALL write_rho_xml( file_base, rhoaux, &
-                             nr1, nr2, nr3, nr1x, nr2x, dfftp%ipp, dfftp%npp )
+         CALL write_rho_xml( file_base, rhoaux, dfftp%nr1, dfftp%nr2, &
+                  dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%ipp, dfftp%npp )
          !
          file_base = TRIM( dirname ) // '/spin-polarization' // TRIM( ext )
          !
          rhoaux(:) = rho(:,1) - rho(:,2)
          !
-         CALL write_rho_xml( file_base, rhoaux, &
-                             nr1, nr2, nr3, nr1x, nr2x, dfftp%ipp, dfftp%npp )
+         CALL write_rho_xml( file_base, rhoaux,  dfftp%nr1, dfftp%nr2, &
+                  dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%ipp, dfftp%npp )
          !
          DEALLOCATE( rhoaux )
          !
       ELSE IF ( nspin == 4 ) THEN
          !
-         CALL write_rho_xml( file_base, rho(:,1), &
-                             nr1, nr2, nr3, nr1x, nr2x, dfftp%ipp, dfftp%npp )
+         CALL write_rho_xml( file_base, rho(:,1), dfftp%nr1, dfftp%nr2, &
+                  dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%ipp, dfftp%npp )
          !
          IF (domag) THEN
             file_base = TRIM( dirname ) // '/magnetization.x' // TRIM( ext )
             !
-            CALL write_rho_xml( file_base, rho(:,2), &
-                             nr1, nr2, nr3, nr1x, nr2x, dfftp%ipp, dfftp%npp )
+            CALL write_rho_xml( file_base, rho(:,2), dfftp%nr1, dfftp%nr2, &
+                  dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%ipp, dfftp%npp )
             !
             file_base = TRIM( dirname ) // '/magnetization.y' // TRIM( ext )
             !
-            CALL write_rho_xml( file_base, rho(:,3), &
-                              nr1, nr2, nr3, nr1x, nr2x, dfftp%ipp, dfftp%npp )
+            CALL write_rho_xml( file_base, rho(:,3), dfftp%nr1, dfftp%nr2, &
+                  dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%ipp, dfftp%npp )
             !
             file_base = TRIM( dirname ) // '/magnetization.z' // TRIM( ext )
             !
-            CALL write_rho_xml( file_base, rho(:,4), &
-                             nr1, nr2, nr3, nr1x, nr2x, dfftp%ipp, dfftp%npp )
+            CALL write_rho_xml( file_base, rho(:,4), dfftp%nr1, dfftp%nr2, &
+                  dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%ipp, dfftp%npp )
          END IF
       END IF
       !
@@ -245,13 +244,12 @@ MODULE io_rho_xml
       !
       USE io_files, ONLY : tmp_dir, prefix
       USE fft_base, ONLY : dfftp
-      USE gvect,    ONLY : nr1, nr2, nr3, nr1x, nr2x, nrxx
       USE spin_orb, ONLY : domag
       !
       IMPLICIT NONE
       !
       INTEGER,          INTENT(IN)           :: nspin
-      REAL(DP),         INTENT(OUT)          :: rho(nrxx,nspin)
+      REAL(DP),         INTENT(OUT)          :: rho(dfftp%nnr,nspin)
       CHARACTER(LEN=*), INTENT(IN), OPTIONAL :: extension
       !
       CHARACTER(LEN=256)    :: dirname, file_base
@@ -269,23 +267,23 @@ MODULE io_rho_xml
       !
       IF ( nspin == 1 ) THEN
          !
-         CALL read_rho_xml( file_base, rho(:,1), &
-                            nr1, nr2, nr3, nr1x, nr2x, dfftp%ipp, dfftp%npp )
+         CALL read_rho_xml( file_base, rho(:,1), dfftp%nr1, dfftp%nr2, &
+                  dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%ipp, dfftp%npp )
          !
       ELSE IF ( nspin == 2 ) THEN
          !
-         ALLOCATE( rhoaux( nrxx ) )
+         ALLOCATE( rhoaux( dfftp%nnr ) )
          !
-         CALL read_rho_xml( file_base, rhoaux, &
-                            nr1, nr2, nr3, nr1x, nr2x, dfftp%ipp, dfftp%npp )
+         CALL read_rho_xml( file_base, rhoaux, dfftp%nr1, dfftp%nr2, &
+                  dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%ipp, dfftp%npp )
          !
          rho(:,1) = rhoaux(:)
          rho(:,2) = rhoaux(:)
          !
          file_base = TRIM( dirname ) // '/spin-polarization' // TRIM( ext )
          !
-         CALL read_rho_xml( file_base, rhoaux, &
-                             nr1, nr2, nr3, nr1x, nr2x, dfftp%ipp, dfftp%npp )
+         CALL read_rho_xml( file_base, rhoaux, dfftp%nr1, dfftp%nr2, &
+                  dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%ipp, dfftp%npp )
          !
          rho(:,1) = 0.5D0*( rho(:,1) + rhoaux(:) )
          rho(:,2) = 0.5D0*( rho(:,2) - rhoaux(:) )
@@ -294,25 +292,25 @@ MODULE io_rho_xml
          !
       ELSE IF ( nspin == 4 ) THEN
          !
-         CALL read_rho_xml( file_base, rho(:,1), &
-                            nr1, nr2, nr3, nr1x, nr2x, dfftp%ipp, dfftp%npp )
+         CALL read_rho_xml( file_base, rho(:,1), dfftp%nr1, dfftp%nr2, &
+                  dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%ipp, dfftp%npp )
          !
          IF ( domag ) THEN
             !
             file_base = TRIM( dirname ) // '/magnetization.x' // TRIM( ext )
             !
-            CALL read_rho_xml( file_base, rho(:,2), &
-                            nr1, nr2, nr3, nr1x, nr2x, dfftp%ipp, dfftp%npp )
+            CALL read_rho_xml( file_base, rho(:,2), dfftp%nr1, dfftp%nr2, &
+                  dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%ipp, dfftp%npp )
             !
             file_base = TRIM( dirname ) // '/magnetization.y' // TRIM( ext )
             !
-            CALL read_rho_xml( file_base, rho(:,3), &
-                            nr1, nr2, nr3, nr1x, nr2x, dfftp%ipp, dfftp%npp )
+            CALL read_rho_xml( file_base, rho(:,3), dfftp%nr1, dfftp%nr2, &
+                  dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%ipp, dfftp%npp )
             !
             file_base = TRIM( dirname ) // '/magnetization.z' // TRIM( ext )
             !
-            CALL read_rho_xml( file_base, rho(:,4), &
-                            nr1, nr2, nr3, nr1x, nr2x, dfftp%ipp, dfftp%npp )
+            CALL read_rho_xml( file_base, rho(:,4), dfftp%nr1, dfftp%nr2, &
+                  dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%ipp, dfftp%npp )
             !
          ELSE
             !

@@ -19,7 +19,7 @@ subroutine matrix_wannier_gamma_big( matsincos, ispin, n_set, itask )
   USE io_global,            ONLY : stdout
   USE smooth_grid_dimensions,ONLY: nrxxs
   USE realus,               ONLY : qsave, box,maxbox
-  USE gvect,                ONLY : nr1, nr2, nr3, nr1x, nr2x, nr3x, nrxx
+  USE grid_dimensions,      ONLY : nr1, nr2, nr3, nr1x, nr2x, nr3x, nrxx
   USE wannier_gw,           ONLY : becp_gw, expgsave, becp_gw_c, maxiter2,num_nbnd_first,num_nbndv,nbnd_normal
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
   USE uspp_param,           ONLY : upf, lmaxq, nh, nhm

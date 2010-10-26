@@ -31,7 +31,8 @@ subroutine solve_linter_d3 (irr, imode0, npe, isw_sl)
   USE cell_base,  ONLY : tpiba2
   USE io_global,  ONLY : stdout
   USE io_files,   ONLY : iunigk
-  USE gvect,      ONLY : nrxx, g
+  USE gvect,      ONLY : g
+  USE grid_dimensions, ONLY : nrxx 
   USE ener,       ONLY : ef
   USE klist,      ONLY : xk, wk, degauss, ngauss
   USE wvfct,      ONLY : nbnd, npwx, npw, igk, g2kin, et

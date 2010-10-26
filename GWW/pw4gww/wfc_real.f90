@@ -23,7 +23,6 @@ SUBROUTINE wfc_gamma_real(itask)
   USE control_flags,        ONLY : gamma_only
   USE fft_base,             ONLY : dffts
   USE fft_interfaces,       ONLY : invfft
-  USE gvect,                ONLY : nrxx, gstart
   USE gsmooth,              ONLY : nls, nlsm, doublegrid
   USE io_files,             ONLY : iunwfc, nwordwfc, iunigk
   USE io_files,             ONLY : find_free_unit, diropn
@@ -188,7 +187,6 @@ SUBROUTINE wfc_gamma_real_after_rot(itask)
   USE control_flags,        ONLY : gamma_only
   USE fft_base,             ONLY : dffts
   USE fft_interfaces,       ONLY : invfft
-  USE gvect,                ONLY : nrxx, gstart
   USE gsmooth,              ONLY : nls, nlsm,  doublegrid
   USE io_files,             ONLY : iunwfc, nwordwfc, iunigk
   USE io_files,             ONLY : find_free_unit, diropn

@@ -23,7 +23,7 @@ MODULE realus_scatt
    USE ions_base,        ONLY : nat, tau, ityp
    USE cell_base,        ONLY : at, bg
    USE realus
-   USE gvect,            ONLY : nr1, nr2, nr3, nr1x, nr2x, nr3x, nrxx
+   USE grid_dimensions,  ONLY : nr1, nr2, nr3, nr1x, nr2x, nr3x, nrxx
    USE uspp,             ONLY : okvan
    USE uspp_param,       ONLY : upf
    USE mp_global,        ONLY : me_pool

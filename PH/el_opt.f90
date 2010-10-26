@@ -14,7 +14,7 @@ subroutine el_opt
   use kinds, only : DP
   USE cell_base,  ONLY : omega, at, bg
   USE constants,  ONLY : e2, fpi
-  USE gvect,      ONLY : nr1, nr2, nr3, nrxx
+  USE grid_dimensions, ONLY : nr1, nr2, nr3, nrxx
   USE klist,      ONLY : wk, ngk
   USE ions_base,  ONLY : nat
   USE scf,        ONLY : rho, rho_core

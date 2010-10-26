@@ -14,7 +14,7 @@ subroutine symdvscf (nper, irr, dvtosym)
   !
   USE kinds, only : DP
   USE constants, ONLY: tpi
-  USE gvect, ONLY: nr1, nr2, nr3, nr1x, nr2x, nr3x
+  USE grid_dimensions, ONLY: nr1, nr2, nr3, nr1x, nr2x, nr3x
   USE cell_base, ONLY : at
   USE symm_base, ONLY : s, ftau
   USE noncollin_module, ONLY : nspin_lsda, nspin_mag

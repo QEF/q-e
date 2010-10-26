@@ -13,6 +13,7 @@ SUBROUTINE d3_init
   USE pwcom
   USE uspp_param, ONLY : upf
   USE atom,       ONLY : msh, rgrid
+  USE grid_dimensions, ONLY : nrxx, nr1, nr2, nr3, nr1x, nr2x, nr3x
   USE phcom
   USE d3com
   USE mp,         ONLY : mp_barrier

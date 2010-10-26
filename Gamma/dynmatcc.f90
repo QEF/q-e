@@ -19,7 +19,7 @@ SUBROUTINE dynmatcc(dyncc)
   USE uspp_param, ONLY : upf
   USE fft_base,   ONLY : dfftp
   USE fft_interfaces, ONLY : fwfft
-  USE gvect,      ONLY : nl, nrxx, ngm, igtongl, ngl, g, gg, gl
+  USE gvect,      ONLY : nl, ngm, igtongl, ngl, g, gg, gl
   USE scf,        ONLY : rho, rho_core, rhog_core
   USE wavefunctions_module,  ONLY: psic
   USE wvfct,      ONLY: nbnd, npwx, npw, g2kin, igk
@@ -47,7 +47,7 @@ SUBROUTINE dynmatcc(dyncc)
   work1 => psic
   vxc   => aux2
   ALLOCATE  ( dyncc1( 3,nat,3,nat))
-  ALLOCATE  ( gc    ( nrxx, 3))
+  ALLOCATE  ( gc    ( dfftp%nnr, 3))
   ALLOCATE  ( rhocg( ngl))
   !
   CALL v_xc  (rho, rho_core, rhog_core, etxc, vtxc, vxc)
@@ -81,7 +81,7 @@ SUBROUTINE dynmatcc(dyncc)
            ENDDO
         ENDDO
         DO i=1,3
-           CALL dvb_cc  (nlcc, nt, ngm, nrxx, &
+           CALL dvb_cc  (nlcc, nt, ngm, dfftp%nnr, &
                 nl,igtongl,rhocg,dmuxc,gc(1,i),aux3,gc(1,i))
         ENDDO
         DO nb=1,nat

@@ -12,7 +12,7 @@ subroutine distance_wannier
   USE io_files,             ONLY : find_free_unit, prefix
   USE wannier_gw
   USE io_global,            ONLY : ionode, stdout
-  USE gvect
+  USE grid_dimensions,      ONLY : nr1, nr2, nr3
   USE cell_base, ONLY: at, alat
 
   implicit none

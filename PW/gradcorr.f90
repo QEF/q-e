@@ -12,7 +12,7 @@ SUBROUTINE gradcorr( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
   !
   USE constants,            ONLY : e2
   USE kinds,                ONLY : DP
-  USE gvect,                ONLY : nr1, nr2, nr3, nrxx, nl, ngm, g
+  USE gvect,                ONLY : nl, ngm, g
   USE lsda_mod,             ONLY : nspin
   USE cell_base,            ONLY : omega, alat
   USE funct,                ONLY : gcxc, gcx_spin, gcc_spin, &
@@ -26,9 +26,9 @@ SUBROUTINE gradcorr( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
   !
   IMPLICIT NONE
   !
-  REAL(DP),    INTENT(IN)    :: rho(nrxx,nspin), rho_core(nrxx)
+  REAL(DP),    INTENT(IN)    :: rho(dfftp%nnr,nspin), rho_core(dfftp%nnr)
   COMPLEX(DP), INTENT(IN)    :: rhog(ngm,nspin), rhog_core(ngm)
-  REAL(DP),    INTENT(INOUT) :: v(nrxx,nspin)
+  REAL(DP),    INTENT(INOUT) :: v(dfftp%nnr,nspin)
   REAL(DP),    INTENT(INOUT) :: vtxc, etxc
   !
   INTEGER :: k, ipol, is, nspin0, ir, jpol
@@ -61,13 +61,13 @@ SUBROUTINE gradcorr( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
   if (nspin==4.and.domag) nspin0=2
   fac = 1.D0 / DBLE( nspin0 )
   !
-  ALLOCATE(    h( 3, nrxx, nspin0) )
-  ALLOCATE( grho( 3, nrxx, nspin0) )
-  ALLOCATE( rhoout( nrxx, nspin0) )
+  ALLOCATE(    h( 3, dfftp%nnr, nspin0) )
+  ALLOCATE( grho( 3, dfftp%nnr, nspin0) )
+  ALLOCATE( rhoout( dfftp%nnr, nspin0) )
   IF (nspin==4.AND.domag) THEN
-     ALLOCATE( vgg( nrxx, nspin0 ) )
-     ALLOCATE( vsave( nrxx, nspin ) )
-     ALLOCATE( segni( nrxx ) )
+     ALLOCATE( vgg( dfftp%nnr, nspin0 ) )
+     ALLOCATE( vsave( dfftp%nnr, nspin ) )
+     ALLOCATE( segni( dfftp%nnr ) )
      vsave=v
      v=0.d0
   ENDIF
@@ -78,7 +78,7 @@ SUBROUTINE gradcorr( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
   !
   IF ( nspin == 4 .AND. domag ) THEN
      !
-     CALL compute_rho(rho,rhoout,segni,nrxx)
+     CALL compute_rho(rho,rhoout,segni,dfftp%nnr)
      !
      ! ... bring starting rhoout to G-space
      !
@@ -102,7 +102,7 @@ SUBROUTINE gradcorr( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
      rhoout(:,is)  = fac * rho_core(:)  + rhoout(:,is)
      rhogsum(:,is) = fac * rhog_core(:) + rhogsum(:,is)
      !
-     CALL gradrho( nrxx, rhogsum(1,is), ngm, g, nl, grho(1,1,is) )
+     CALL gradrho( dfftp%nnr, rhogsum(1,is), ngm, g, nl, grho(1,1,is) )
      !
   END DO
   !
@@ -112,7 +112,7 @@ SUBROUTINE gradcorr( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
      !
      ! ... This is the spin-unpolarised case
      !
-     DO k = 1, nrxx
+     DO k = 1, dfftp%nnr
         !
         arho = ABS( rhoout(k,1) )
         !
@@ -159,7 +159,7 @@ SUBROUTINE gradcorr( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
 !$omp             grhoup, grhodw, grhoud, sc, v1cup, v1cdw, v2cup, v2cdw, v2cud, &
 !$omp             zeta, grh2, v2c, grup, grdw  ), &
 !$omp             reduction(+:etxcgc,vtxcgc)
-     DO k = 1, nrxx
+     DO k = 1, dfftp%nnr
         !
         rh = rhoout(k,1) + rhoout(k,2)
         !
@@ -249,14 +249,14 @@ SUBROUTINE gradcorr( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
   !
   DEALLOCATE( grho )
   !
-  ALLOCATE( dh( nrxx ) )    
+  ALLOCATE( dh( dfftp%nnr ) )    
   !
   ! ... second term of the gradient correction :
   ! ... \sum_alpha (D / D r_alpha) ( D(rho*Exc)/D(grad_alpha rho) )
   !
   DO is = 1, nspin0
      !
-     CALL grad_dot( nrxx, h(1,1,is), ngm, g, nl, alat, dh )
+     CALL grad_dot( dfftp%nnr, h(1,1,is), ngm, g, nl, alat, dh )
      !
      v(:,is) = v(:,is) - dh(:)
      !
@@ -264,15 +264,15 @@ SUBROUTINE gradcorr( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
      !
   END DO
   !
-  vtxc = vtxc + omega * vtxcgc / ( nr1 * nr2 * nr3 )
-  etxc = etxc + omega * etxcgc / ( nr1 * nr2 * nr3 )
+  vtxc = vtxc + omega * vtxcgc / ( dfftp%nr1 * dfftp%nr2 * dfftp%nr3 )
+  etxc = etxc + omega * etxcgc / ( dfftp%nr1 * dfftp%nr2 * dfftp%nr3 )
 
   IF (nspin==4.AND.domag) THEN
      DO is=1,nspin0
         vgg(:,is)=v(:,is)
      ENDDO
      v=vsave
-     DO k=1,nrxx
+     DO k=1,dfftp%nnr
         v(k,1)=v(k,1)+0.5d0*(vgg(k,1)+vgg(k,2))
         amag=sqrt(rho(k,2)**2+rho(k,3)**2+rho(k,4)**2)
         IF (amag.GT.1.d-12) THEN

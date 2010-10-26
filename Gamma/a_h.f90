@@ -18,7 +18,7 @@ SUBROUTINE A_h(e,h,ah)
   USE scf,      ONLY : vrs, rho
   USE fft_base, ONLY : dffts, dfftp
   USE fft_interfaces, ONLY : fwfft, invfft
-  USE gvect,    ONLY : gstart, nl, nlm, nrxx, ngm, g, gg
+  USE gvect,    ONLY : gstart, nl, nlm, ngm, g, gg
   USE constants,  ONLY: degspin, e2, fpi
   USE becmod, ONLY: bec_type, becp, calbec
   USE cgcom
@@ -72,7 +72,7 @@ SUBROUTINE A_h(e,h,ah)
      ENDIF
      CALL invfft ('Wave', psic, dffts)
      CALL invfft ('Wave',dpsic, dffts)
-     DO j = 1,nrxx
+     DO j = 1,dfftp%nnr
         drho(j) = drho(j) - 2.0d0*degspin/omega *   &
               dble(psic(j)*conjg(dpsic(j)))
         dpsic(j) = dpsic(j) * vrs(j,current_spin)
@@ -98,7 +98,7 @@ SUBROUTINE A_h(e,h,ah)
   CALL calbec ( npw, vkb, h, becp)
   IF (nkb > 0) CALL add_vuspsi (npwx, npw, nbnd, ah)
   !
-  DO j = 1,nrxx
+  DO j = 1,dfftp%nnr
      drhoc(j) = cmplx(drho(j),0.d0,kind=DP)
   ENDDO
   CALL fwfft ('Dense', drhoc, dfftp)
@@ -108,7 +108,7 @@ SUBROUTINE A_h(e,h,ah)
   !  mu'(n(r)) psi(r) delta psi(r)
   !
   dvxc  => aux2
-  DO j = 1,nrxx
+  DO j = 1,dfftp%nnr
      dvxc(j) = drho(j)*dmuxc(j)
   ENDDO
   !
@@ -117,7 +117,7 @@ SUBROUTINE A_h(e,h,ah)
   CALL start_clock('dgradcorr')
   IF (dft_is_gradient() ) CALL dgradcor1  &
        (rho%of_r, grho, dvxc_rr, dvxc_sr, dvxc_ss, dvxc_s,            &
-        drho, drhoc, nrxx, nspin, nl, nlm, ngm, g, alat, omega, dvxc)
+        drho, drhoc, dfftp%nnr, nspin, nl, nlm, ngm, g, alat, omega, dvxc)
   CALL stop_clock('dgradcorr')
   NULLIFY (drho)
   !
@@ -136,7 +136,7 @@ SUBROUTINE A_h(e,h,ah)
   ! drhoc now contains deltaV_hartree
   !
   dv => auxr
-  DO j = 1,nrxx
+  DO j = 1,dfftp%nnr
      dv(j) = -  dble(dvxc(j)) - dble(drhoc(j))
   ENDDO
   !

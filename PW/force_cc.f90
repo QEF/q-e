@@ -18,8 +18,7 @@ subroutine force_cc (forcecc)
   USE cell_base,            ONLY : alat, omega, tpiba, tpiba2
   USE fft_base,             ONLY : dfftp
   USE fft_interfaces,       ONLY : fwfft
-  USE gvect,                ONLY : ngm, gstart,&
-                                   nrxx, nl, g, gg, ngl, gl, igtongl
+  USE gvect,                ONLY : ngm, gstart, nl, g, gg, ngl, gl, igtongl
   USE ener,                 ONLY : etxc, vtxc
   USE lsda_mod,             ONLY : nspin
   USE scf,                  ONLY : rho, rho_core, rhog_core
@@ -63,17 +62,17 @@ subroutine force_cc (forcecc)
   !
   ! recalculate the exchange-correlation potential
   !
-  allocate ( vxc(nrxx,nspin) )
+  allocate ( vxc(dfftp%nnr,nspin) )
   !
   call v_xc (rho, rho_core, rhog_core, etxc, vtxc, vxc)
   !
   psic=(0.0_DP,0.0_DP)
   if (nspin == 1 .or. nspin == 4) then
-     do ir = 1, nrxx
+     do ir = 1, dfftp%nnr
         psic (ir) = vxc (ir, 1)
      enddo
   else
-     do ir = 1, nrxx
+     do ir = 1, dfftp%nnr
         psic (ir) = 0.5d0 * (vxc (ir, 1) + vxc (ir, 2) )
      enddo
   endif

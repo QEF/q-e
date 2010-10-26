@@ -47,6 +47,7 @@ SUBROUTINE d3_setup()
   USE io_files,      ONLY : tmp_dir
   USE kinds,         ONLY : DP
   USE pwcom
+  USE grid_dimensions,ONLY: nrxx, nr1, nr2, nr3
   USE scf, only : rho, rho_core, v, vltot, vrs, kedtau
   USE symm_base,     ONLY : nrot, nsym, s, ftau, irt, invs, inverse_s, &
                             s_axis_to_cart, find_sym, copy_sym, s_axis_to_cart

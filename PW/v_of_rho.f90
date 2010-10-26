@@ -16,7 +16,8 @@ SUBROUTINE v_of_rho( rho, rho_core, rhog_core, &
   ! ... Hartree potential is computed in reciprocal space.
   !
   USE kinds,            ONLY : DP
-  USE gvect,            ONLY : nrxx, ngm
+  USE grid_dimensions,  ONLY : nrxx
+  USE gvect,            ONLY : ngm
   USE lsda_mod,         ONLY : nspin
   USE noncollin_module, ONLY : noncolin
   USE ions_base,        ONLY : nat
@@ -87,7 +88,8 @@ SUBROUTINE v_xc_meta( rho, rho_core, rhog_core, etxc, vtxc, v, kedtaur )
   USE kinds,            ONLY : DP
   USE constants,        ONLY : e2, eps8
   USE io_global,        ONLY : stdout
-  USE gvect,            ONLY : nrxx, ngm
+  USE gvect,            ONLY : ngm
+  USE grid_dimensions,  ONLY : nrxx
   USE lsda_mod,         ONLY : nspin
   USE cell_base,        ONLY : omega
   USE spin_orb,         ONLY : domag
@@ -130,7 +132,8 @@ SUBROUTINE v_xc_tpss( rho, rho_core, rhog_core, etxc, vtxc, v, kedtaur )
   !--------------------------------------------------------------------
 !  use gvecp, only: ng => ngm
   USE kinds,            ONLY : DP
-  USE gvect,            ONLY : nr1, nr2, nr3, nrxx, g,nl,ngm
+  USE gvect,            ONLY : g,nl,ngm
+  USE grid_dimensions,  ONLY : nr1, nr2, nr3, nrxx
   USE scf,              ONLY : scf_type
   USE lsda_mod,         ONLY : nspin
   USE cell_base,        ONLY : omega, alat
@@ -296,7 +299,8 @@ SUBROUTINE v_xc( rho, rho_core, rhog_core, etxc, vtxc, v )
   USE kinds,            ONLY : DP
   USE constants,        ONLY : e2, eps8
   USE io_global,        ONLY : stdout
-  USE gvect,            ONLY : nr1, nr2, nr3, nrxx, ngm
+  USE grid_dimensions,  ONLY : nr1, nr2, nr3, nrxx
+  USE gvect,            ONLY : ngm
   USE lsda_mod,         ONLY : nspin
   USE cell_base,        ONLY : omega
   USE spin_orb,         ONLY : domag
@@ -494,7 +498,7 @@ SUBROUTINE v_h( rhog, ehart, charge, v )
   USE kinds,     ONLY : DP
   USE fft_base,  ONLY : dfftp
   USE fft_interfaces,ONLY : invfft
-  USE gvect,     ONLY : nrxx, nl, nlm, ngm, gg, gstart
+  USE gvect,     ONLY : nl, nlm, ngm, gg, gstart
   USE lsda_mod,  ONLY : nspin
   USE cell_base, ONLY : omega, tpiba2
   USE control_flags, ONLY : gamma_only
@@ -506,7 +510,7 @@ SUBROUTINE v_h( rhog, ehart, charge, v )
   IMPLICIT NONE
   !
   COMPLEX(DP), INTENT(IN)  :: rhog(ngm,nspin)
-  REAL(DP),  INTENT(INOUT) :: v(nrxx,nspin)
+  REAL(DP),  INTENT(INOUT) :: v(dfftp%nnr,nspin)
   REAL(DP),    INTENT(OUT) :: ehart, charge
   !
   REAL(DP)              :: fac
@@ -518,7 +522,7 @@ SUBROUTINE v_h( rhog, ehart, charge, v )
   !
   CALL start_clock( 'v_h' )
   !
-  ALLOCATE( aux( nrxx ), aux1( 2, ngm ) )
+  ALLOCATE( aux( dfftp%nnr ), aux1( 2, ngm ) )
   charge = 0.D0
   !
   IF ( gstart == 2 ) THEN

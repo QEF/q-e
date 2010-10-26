@@ -50,7 +50,8 @@ program pp_punch
 
   USE kinds,     ONLY : i4b
   use pwcom
-  USE constants,            ONLY : rytoev
+  use grid_dimensions, ONLY : nrxx
+  USE constants,       ONLY : rytoev
   use io_global, ONLY : stdout, ionode, ionode_id
   use io_files,  ONLY : psfile, pseudo_dir, trimcheck
   use io_files,  ONLY : prefix, tmp_dir, outdir

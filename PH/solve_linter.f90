@@ -31,7 +31,8 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
   USE cell_base,            ONLY : tpiba2
   USE ener,                 ONLY : ef
   USE klist,                ONLY : lgauss, degauss, ngauss, xk, wk
-  USE gvect,                ONLY : nrxx, g
+  USE grid_dimensions,      ONLY : nrxx
+  USE gvect,                ONLY : g
   USE gsmooth,              ONLY : doublegrid
   USE smooth_grid_dimensions,ONLY: nrxxs
   USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk

@@ -23,8 +23,7 @@ subroutine addusddense (drhoscf, dbecsum)
   USE ions_base, ONLY : nat, ityp, ntyp => nsp
   use fft_base,  only: dfftp
   use fft_interfaces, only: invfft
-  USE gvect, ONLY : nrxx, nl, g, gg, &
-                    ngm, eigts1, eigts2, eigts3, ig1, ig2, ig3
+  USE gvect, ONLY : nl, g, gg, ngm, eigts1, eigts2, eigts3, ig1, ig2, ig3
   USE uspp, ONLY: okvan
   USE uspp_param, ONLY: upf, lmaxq, nh, nhm
   USE noncollin_module, ONLY : nspin_mag
@@ -38,7 +37,7 @@ subroutine addusddense (drhoscf, dbecsum)
   ! input: if zero does not compute drho
   ! input: the number of perturbations
 
-  complex(DP) :: drhoscf(nrxx,nspin_mag,3), &
+  complex(DP) :: drhoscf(dfftp%nnr,nspin_mag,3), &
                  dbecsum(nhm*(nhm+1)/2,nat,nspin_mag,3)
 
   ! inp/out: change of the charge density
@@ -64,7 +63,7 @@ subroutine addusddense (drhoscf, dbecsum)
   call start_clock ('addusddense')
   allocate (aux(  ngm, nspin_mag, 3))
   allocate (sk (  ngm))
-  allocate (qg (  nrxx))
+  allocate (qg (  dfftp%nnr))
   allocate (ylmk0(ngm , lmaxq * lmaxq))
   allocate (qgm  (ngm))
   allocate (qmod (ngm))
