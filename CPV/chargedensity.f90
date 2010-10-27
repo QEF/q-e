@@ -477,7 +477,7 @@
          INTEGER :: from, ii, eig_index, eig_offset
          REAL(DP), ALLOCATABLE :: tmp_rhos(:,:)
 
-         ALLOCATE( psis( dffts%nnrx * nogrp ) ) 
+         ALLOCATE( psis( dffts%tg_nnr * nogrp ) ) 
          !
          ALLOCATE( tmp_rhos ( dffts%nr1x*dffts%nr2x*dffts%tg_npp( me_image + 1 ), nspin ) )
          !
@@ -524,8 +524,8 @@
 
 !$omp do
                   do ig=1,ngw
-                     psis(nms(ig)+eig_offset*dffts%nnrx)=conjg(c(ig,i+eig_index-1))+ci*conjg(c(ig,i+eig_index))
-                     psis(nps(ig)+eig_offset*dffts%nnrx)=c(ig,i+eig_index-1)+ci*c(ig,i+eig_index)
+                     psis(nms(ig)+eig_offset*dffts%tg_nnr)=conjg(c(ig,i+eig_index-1))+ci*conjg(c(ig,i+eig_index))
+                     psis(nps(ig)+eig_offset*dffts%tg_nnr)=c(ig,i+eig_index-1)+ci*c(ig,i+eig_index)
                   end do
                   !
                   eig_offset = eig_offset + 1

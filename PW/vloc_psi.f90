@@ -49,7 +49,7 @@ SUBROUTINE vloc_psi_gamma(lda, n, m, psi, v, hpsi)
   !
   IF( use_task_groups ) THEN
      !
-     v_siz =  dffts%nnrx * nogrp
+     v_siz =  dffts%tg_nnr * nogrp
      !
      ALLOCATE( tg_v   ( v_siz ) )
      ALLOCATE( tg_psic( v_siz ) )
@@ -84,7 +84,7 @@ SUBROUTINE vloc_psi_gamma(lda, n, m, psi, v, hpsi)
               ENDDO
            ENDIF
 
-           ioff = ioff + dffts%nnrx
+           ioff = ioff + dffts%tg_nnr
 
         ENDDO
         !
@@ -235,7 +235,7 @@ SUBROUTINE vloc_psi_k(lda, n, m, psi, v, hpsi)
   !
   IF( use_task_groups ) THEN
      !
-     v_siz =  dffts%nnrx * nogrp
+     v_siz =  dffts%tg_nnr * nogrp
      !
      ALLOCATE( tg_v   ( v_siz ) )
      ALLOCATE( tg_psic( v_siz ) )
@@ -264,7 +264,7 @@ SUBROUTINE vloc_psi_k(lda, n, m, psi, v, hpsi)
 !$omp end parallel do
            ENDIF
 
-           ioff = ioff + dffts%nnrx
+           ioff = ioff + dffts%tg_nnr
 
         ENDDO
         !
@@ -389,7 +389,7 @@ SUBROUTINE vloc_psi_nc (lda, n, m, psi, v, hpsi)
   use_task_groups  = use_task_groups .and. ( m >= nogrp )
   !
   IF( use_task_groups ) THEN
-     v_siz = dffts%nnrx * nogrp
+     v_siz = dffts%tg_nnr * nogrp
      ALLOCATE( tg_v( v_siz, 4 ) )
      CALL tg_gather( dffts, v(:,1), tg_v(:,1) )
      CALL tg_gather( dffts, v(:,2), tg_v(:,2) )
@@ -418,7 +418,7 @@ SUBROUTINE vloc_psi_nc (lda, n, m, psi, v, hpsi)
                  ENDDO
               ENDIF
 
-              ioff = ioff + dffts%nnrx
+              ioff = ioff + dffts%tg_nnr
 
            ENDDO
            !

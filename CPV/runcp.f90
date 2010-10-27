@@ -75,7 +75,7 @@
      END IF
 
      IF( use_task_groups ) THEN
-        tg_rhos_siz = nogrp * dffts%nnrx
+        tg_rhos_siz = nogrp * dffts%tg_nnr
         c2_siz      = nogrp * ngwx
      ELSE
         tg_rhos_siz = 1

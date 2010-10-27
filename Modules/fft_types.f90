@@ -30,7 +30,6 @@ MODULE fft_types
     INTEGER :: npl      ! number of "Z" planes for this processor = npp( mpime + 1 )
     INTEGER :: nnp      ! number of 0 and non 0 sticks in a plane ( ~nr1*nr2/nproc )
     INTEGER :: nnr      ! local number of FFT grid elements  ( ~nr1*nr2*nr3/proc )
-    INTEGER :: ngt      ! total number of non zero elemets (number of G-vec)
     INTEGER, POINTER :: ngl(:)   ! per proc. no. of non zero charge density/potential components
     INTEGER, POINTER :: nwl(:)   ! per proc. no. of non zero wave function plane components
     INTEGER, POINTER :: npp(:)   ! number of "Z" planes per processor
@@ -56,7 +55,7 @@ MODULE fft_types
     !  task groups
     !
     LOGICAL :: have_task_groups
-    INTEGER :: nnrx               ! maximum among nnr
+    INTEGER :: tg_nnr             ! maximum among nnr
     INTEGER, POINTER :: tg_nsw(:) ! number of sticks per task group ( wave func )
     INTEGER, POINTER :: tg_npp(:) ! number of "Z" planes per task group
     INTEGER, POINTER :: tg_snd(:) ! number of element to be sent in group redist
@@ -278,16 +277,16 @@ CONTAINS
 
     IF ( nproc == 1 ) THEN
       desc%nnr  = nr1x * nr2x * nr3x
-      desc%nnrx = desc%nnr
+      desc%tg_nnr = desc%nnr
     ELSE
       desc%nnr  = max( nr3x * ncp(me), nr1x * nr2x * npp(me) )
       desc%nnr  = max( 1, desc%nnr ) ! ensure that desc%nrr > 0 ( for extreme parallelism )
-      desc%nnrx = desc%nnr
+      desc%tg_nnr = desc%nnr
       DO i = 1, nproc
-         desc%nnrx = max( desc%nnrx, nr3x * ncp( i ) )
-         desc%nnrx = max( desc%nnrx, nr1x * nr2x * npp( i ) )
+         desc%tg_nnr = max( desc%tg_nnr, nr3x * ncp( i ) )
+         desc%tg_nnr = max( desc%tg_nnr, nr1x * nr2x * npp( i ) )
       ENDDO
-      desc%nnrx = max( 1, desc%nnrx ) ! ensure that desc%nrr > 0 ( for extreme parallelism )
+      desc%tg_nnr = max( 1, desc%tg_nnr ) ! ensure that desc%nrr > 0 ( for extreme parallelism )
     ENDIF
 
 
@@ -541,7 +540,7 @@ CONTAINS
     desc%npp  = nr3
     desc%ipp  = 0
     desc%have_task_groups = .false.
-    desc%nnrx = desc%nnr
+    desc%tg_nnr = desc%nnr
 
     RETURN
   END SUBROUTINE fft_dlay_scalar

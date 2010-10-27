@@ -288,10 +288,6 @@ MODULE control_flags
                               !  maximum "radius" for plotting
   CHARACTER(LEN=1), PUBLIC :: vhasse = 'Z'
                               !  averaging axis
-
-  LOGICAL,          PUBLIC :: tprojwfc = .FALSE.
-                              !  in CP controls the printing of wave function projections
-                              !  on atomic states
   LOGICAL,          PUBLIC :: tqr=.FALSE. ! if true the Q are in real space
 
   !LOGICAL,          PUBLIC :: real_space=.false. ! if true, the beta functions are treated in real space

@@ -568,6 +568,7 @@ mainvar.o : ../Modules/cell_base.o
 mainvar.o : ../Modules/descriptors.o
 mainvar.o : ../Modules/energies.o
 mainvar.o : ../Modules/funct.o
+mainvar.o : ../Modules/io_global.o
 mainvar.o : ../Modules/kind.o
 mainvar.o : ../Modules/mp.o
 mainvar.o : ../Modules/mp_global.o
@@ -725,7 +726,6 @@ pres_ai_mod.o : ../Modules/parameters.o
 print_out.o : ../Modules/cell_base.o
 print_out.o : ../Modules/constants.o
 print_out.o : ../Modules/control_flags.o
-print_out.o : ../Modules/electrons_base.o
 print_out.o : ../Modules/energies.o
 print_out.o : ../Modules/io_files.o
 print_out.o : ../Modules/io_global.o
@@ -735,7 +735,6 @@ print_out.o : ../Modules/printout_base.o
 print_out.o : ../Modules/sic.o
 print_out.o : ../Modules/xml_io_base.o
 print_out.o : cg.o
-print_out.o : cp_interfaces.o
 print_out.o : efield.o
 print_out.o : electrons.o
 print_out.o : mainvar.o

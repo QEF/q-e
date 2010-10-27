@@ -259,7 +259,7 @@ SUBROUTINE sum_band()
           IF( dft_is_meta() ) &
              CALL errore( ' sum_band ', ' task groups with meta dft, not yet implemented ', 1 )
           !
-          v_siz = dffts%nnrx * nogrp
+          v_siz = dffts%tg_nnr * nogrp
           !
           ALLOCATE( tg_psi( v_siz ) )
           ALLOCATE( tg_rho( v_siz ) )
@@ -320,7 +320,7 @@ SUBROUTINE sum_band()
                       END DO
                    END IF
 
-                   ioff = ioff + dffts%nnrx
+                   ioff = ioff + dffts%tg_nnr
 
                 END DO
                 !
@@ -596,7 +596,7 @@ SUBROUTINE sum_band()
        !
        IF( use_task_groups ) THEN
           !
-          v_siz = dffts%nnrx * nogrp
+          v_siz = dffts%tg_nnr * nogrp
           !
           ALLOCATE( tg_psi( v_siz ) )
           ALLOCATE( tg_rho( v_siz ) )
@@ -688,7 +688,7 @@ SUBROUTINE sum_band()
 !$omp end do
                       END IF
 
-                      ioff = ioff + dffts%nnrx
+                      ioff = ioff + dffts%tg_nnr
 
                    END DO
 !$omp end parallel

@@ -77,7 +77,7 @@ SUBROUTINE task_groups_init( dffts )
    strd = dffts%nnr
 #endif
 
-   IF( strd /= dffts%nnrx ) CALL errore( ' task_groups_init ', ' inconsistent nnrx ', 1 )
+   IF( strd /= dffts%tg_nnr ) CALL errore( ' task_groups_init ', ' inconsistent nnr ', 1 )
 
    !-------------------------------------------------------------------------------------
    !C. Bekas...TASK GROUP RELATED. FFT DATA STRUCTURES ARE ALREADY DEFINED ABOVE
@@ -114,8 +114,8 @@ SUBROUTINE task_groups_init( dffts )
    ALLOCATE( dffts%tg_rdsp( nogrp ) )
 
    dffts%tg_snd(1)   = dffts%nr3x * dffts%nsw( me_pool + 1 )
-   IF( dffts%nr3x * dffts%nsw( me_pool + 1 ) > dffts%nnrx ) THEN
-      CALL errore( ' task_groups_init ', ' inconsistent dffts%nnrx ', 1 )
+   IF( dffts%nr3x * dffts%nsw( me_pool + 1 ) > dffts%tg_nnr ) THEN
+      CALL errore( ' task_groups_init ', ' inconsistent dffts%tg_nnr ', 1 )
    ENDIF
    dffts%tg_psdsp(1) = 0
    dffts%tg_usdsp(1) = 0
@@ -123,7 +123,7 @@ SUBROUTINE task_groups_init( dffts )
    dffts%tg_rdsp(1) = 0
    DO i = 2, nogrp
       dffts%tg_snd(i)  = dffts%nr3x * dffts%nsw( me_pool + 1 )
-      dffts%tg_psdsp(i) = dffts%tg_psdsp(i-1) + dffts%nnrx
+      dffts%tg_psdsp(i) = dffts%tg_psdsp(i-1) + dffts%tg_nnr
       dffts%tg_usdsp(i) = dffts%tg_usdsp(i-1) + dffts%tg_snd(i-1)
       dffts%tg_rcv(i)  = dffts%nr3x * dffts%nsw( nolist(i) + 1 )
       dffts%tg_rdsp(i) = dffts%tg_rdsp(i-1) + dffts%tg_rcv(i-1)
@@ -178,7 +178,7 @@ SUBROUTINE tg_gather( dffts, v, tg_v )
    INTEGER :: nsiz, i, ierr, nsiz_tg
    INTEGER :: recv_cnt( nogrp ), recv_displ( nogrp )
 
-   nsiz_tg = dffts%nnrx * nogrp
+   nsiz_tg = dffts%tg_nnr * nogrp
 
    IF( size( tg_v ) < nsiz_tg ) &
       CALL errore( ' tg_gather ', ' tg_v too small ', ( nsiz_tg - size( tg_v ) ) )

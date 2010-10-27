@@ -137,9 +137,9 @@ MODULE realus
         !
         IF (allocated( tg_psic ) ) DEALLOCATE( tg_psic )
         !
-        ALLOCATE( tg_psic( dffts%nnrx * nogrp ) )
-        !ALLOCATE( tg_psic_temp( dffts%nnrx * nogrp ) )
-        ALLOCATE( tg_vrs( dffts%nnrx * nogrp ) )
+        ALLOCATE( tg_psic( dffts%tg_nnr * nogrp ) )
+        !ALLOCATE( tg_psic_temp( dffts%tg_nnr * nogrp ) )
+        ALLOCATE( tg_vrs( dffts%tg_nnr * nogrp ) )
 
         !
      ENDIF
@@ -2216,7 +2216,7 @@ MODULE realus
               ENDDO
            ENDIF
 
-           ioff = ioff + dffts%nnrx
+           ioff = ioff + dffts%tg_nnr
 
         ENDDO
         !
@@ -2226,7 +2226,7 @@ MODULE realus
         !
         IF (present(conserved)) THEN
          IF (conserved .eqv. .true.) THEN
-          IF (.not. allocated(tg_psic_temp)) ALLOCATE( tg_psic_temp( dffts%nnrx * nogrp ) )
+          IF (.not. allocated(tg_psic_temp)) ALLOCATE( tg_psic_temp( dffts%tg_nnr * nogrp ) )
           tg_psic_temp=tg_psic
          ENDIF
         ENDIF
@@ -2495,14 +2495,14 @@ MODULE realus
              !END DO
           ENDIF
           
-          ioff = ioff + dffts%nnrx
+          ioff = ioff + dffts%tg_nnr
           
        ENDDO
        !
        CALL invfft ('Wave', tg_psic, dffts)
        IF (present(conserved)) THEN
           IF (conserved .eqv. .true.) THEN
-             IF (.not. allocated(tg_psic_temp)) ALLOCATE( tg_psic_temp( dffts%nnrx * nogrp ) )
+             IF (.not. allocated(tg_psic_temp)) ALLOCATE( tg_psic_temp( dffts%tg_nnr * nogrp ) )
              tg_psic_temp=tg_psic
           ENDIF
        ENDIF

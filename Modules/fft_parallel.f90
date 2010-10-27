@@ -99,10 +99,10 @@ SUBROUTINE tg_cft3s( f, dfft, isgn, use_task_groups )
   nx3 = dfft%nr3x
   !
   IF( use_tg ) THEN
-     ALLOCATE( aux( nogrp * dfft%nnrx ) )
-     ALLOCATE( YF ( nogrp * dfft%nnrx ) )
+     ALLOCATE( aux( nogrp * dfft%tg_nnr ) )
+     ALLOCATE( YF ( nogrp * dfft%tg_nnr ) )
   ELSE
-     ALLOCATE( aux( dfft%nnrx ) )
+     ALLOCATE( aux( dfft%tg_nnr ) )
   ENDIF
   !
   me_p = me_pool + 1
@@ -288,7 +288,7 @@ CONTAINS
            npp  = dfft%tg_npp( me_p )
            nnp  = nx1*nx2
            !
-           CALL fft_scatter( aux, nx3, nogrp*dfft%nnrx, f, dfft%tg_nsw, dfft%tg_npp, iopt, use_tg )
+           CALL fft_scatter( aux, nx3, nogrp*dfft%tg_nnr, f, dfft%tg_nsw, dfft%tg_npp, iopt, use_tg )
            !
         ELSE
            !
@@ -407,7 +407,7 @@ CONTAINS
         !
         IF( use_tg ) THEN
            !
-           CALL fft_scatter( aux, nx3, nogrp*dfft%nnrx, f, dfft%tg_nsw, dfft%tg_npp, iopt, use_tg )
+           CALL fft_scatter( aux, nx3, nogrp*dfft%tg_nnr, f, dfft%tg_nsw, dfft%tg_npp, iopt, use_tg )
            !
         ELSE
            !
