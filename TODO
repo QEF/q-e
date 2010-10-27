@@ -2,6 +2,7 @@ TODO LIST - October 2010
 
 
 0) Suspected bugs/problems:
+  0.3  ELF
   0.4  FFT grid dimensions not the same in PW and in CP for same data
        (requires merge of all FFT-related variables between CP and PW)
   0.5  Small energy differences between PW and CP - maybe PP-related, 
@@ -42,6 +43,15 @@ TODO LIST - October 2010
 1.6 qe-forge:
   1.6.1 there should be somewhere (developer manual and wiki) a short 
         introduction to qe-forge and its usage
+1.7 Testing
+  1.7.1 The automated tests should be moved to a machine that can
+        send e-mail to q-e-commits
+  1.7.2 The automated tests should be performed only when something has
+        actually changed, for executables that have actually changed.
+        The current mechanism is way too rough.
+  1.7.3 Many functionalities are still untested and there is not even 
+        an example. PP/ is a notable offender: there are a lot of possible
+        calculations, most of which are never tested.
 
 2) Documentation
 
@@ -87,7 +97,7 @@ TODO LIST - October 2010
          home-made scheduler that executes tasks as soon as resources are
          free; might be used for image parallelization as well.
   4.0.2 Better-structured relaxation and molecular dynamics (including the
-        variable-cell case), with more extenisive integration of PW and CP
+        variable-cell case), with more extensive integration of PW and CP
   4.0.3 Image parallelization on k-points of EXX should be replaced by 
         pool parallelization.
 
