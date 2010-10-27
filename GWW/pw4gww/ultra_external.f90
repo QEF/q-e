@@ -84,8 +84,6 @@ subroutine ultra_external( nbnd_start, nbnd_end, radius, itask)
   endif
 
 #ifndef __PARA
-  dfftp%npp(1)= nr3
-  dffts%npp(1)= dffts%nr3
   nr3s_start=1
   nr3s_end=dffts%nr3
   nr3_start=1
