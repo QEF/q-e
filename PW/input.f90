@@ -545,8 +545,11 @@ write(0,*) "check calculation"
      !
   CASE( 'tetrahedra' )
      !
-     IF( calculation /= 'nscf' ) CALL errore( 'iosys', &
-         'tetrahedra should be used only for calculation of DOS', 1 )
+     ! replace "errore" with "infomsg" in the next line if you really want
+     ! to perform a calculation with forces using tetrahedra
+     !
+     IF( lforce ) CALL errore( 'iosys', &
+        'force calculation with tetrahedra not recommanded: use smearing',1)
      ngauss = 0
      ltetra = .true.
      !
