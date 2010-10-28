@@ -286,6 +286,11 @@ SUBROUTINE setup()
             .AND. .NOT. tfixed_occ .AND. .NOT. two_fermi_energies ) &
       CALL errore( 'setup', 'spin-polarized system, specify occupations', 1 )
   !
+  ! ... Check: modern theory of polarization (lefield) does not apply to metals
+  !
+  IF(lgauss .and. lelfield) &
+          CALL errore("setup", "lelfield cannot be used with smearing", 1)
+  !
   ! ... setting nelup/neldw 
   !
   IF ( i_cons == 5 ) THEN
