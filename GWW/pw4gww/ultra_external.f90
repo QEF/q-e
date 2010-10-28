@@ -87,7 +87,7 @@ subroutine ultra_external( nbnd_start, nbnd_end, radius, itask)
   nr3s_start=1
   nr3s_end=dffts%nr3
   nr3_start=1
-  nr3_end=nr3
+  nr3_end=dfftp%nr3
 #else
   nr3s_start=0
   nr3s_end =0
