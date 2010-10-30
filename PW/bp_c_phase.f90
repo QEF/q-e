@@ -234,6 +234,7 @@ SUBROUTINE c_phase
    REAL(DP), ALLOCATABLE :: loc_k(:)
    REAL(DP), ALLOCATABLE :: pdl_elec(:)
    REAL(DP), ALLOCATABLE :: phik(:)
+   REAL(DP) :: phik_ave
    REAL(DP) :: qrad_dk(nbetam,nbetam,lmaxq,ntyp)
    REAL(DP) :: weight
    REAL(DP) :: upol(3)
@@ -256,8 +257,6 @@ SUBROUTINE c_phase
    COMPLEX(DP) :: cdet(2)
    COMPLEX(DP) :: cdwork(nbnd)
    COMPLEX(DP) :: cave
-   COMPLEX(DP) :: cave_dw
-   COMPLEX(DP) :: cave_up
    COMPLEX(DP) , ALLOCATABLE :: cphik(:)
    COMPLEX(DP) :: det
    COMPLEX(DP) :: dtheta
@@ -592,15 +591,12 @@ SUBROUTINE c_phase
 !                    electronic polarization: phase average                    !
 !  -------------------------------------------------------------------------   !
 
-!  --- Initializations ---
-   cave_up=(0.0_dp,0.0_dp)
-   cave_dw=(0.0_dp,0.0_dp)
-
 !  --- Start loop over spins ---
    DO is=1,nspin
 
 !  --- Initialize average of phases as complex numbers ---
       cave=(0.0_dp,0.0_dp)
+      phik_ave=(0.0_dp,0.0_dp)
 
 !     --- Start loop over strings with same spin ---
       DO kort=1,nkort
@@ -616,23 +612,26 @@ SUBROUTINE c_phase
 
 !     --- Get the angle corresponding to the complex numbers average ---
       theta0=atan2(AIMAG(cave), DBLE(cave))
+!     --- Put the phases in an around theta0 ---
+      DO kort=1,nkort
+        istring=kort+(is-1)*nkort
+        cphik(istring)=cphik(istring)/cave
+        dtheta=atan2(AIMAG(cphik(istring)), DBLE(cphik(istring)))
+        phik(istring)=theta0+dtheta
+        phik_ave=phik_ave+wstring(istring)*phik(istring)
+      END DO
 
 !     --- Assign this angle to the corresponding spin phase average ---
       IF (nspin == 1) THEN
-         phiup=theta0
-         phidw=theta0
+         phiup=phik_ave !theta0+dtheta
+         phidw=phik_ave !theta0+dtheta
       ELSE IF (nspin == 2) THEN
          IF (is == 1) THEN
-            phiup=theta0
+            phiup=phik_ave !theta0+dtheta
          ELSE IF (is == 2) THEN
-            phidw=theta0
+            phidw=phik_ave !theta0+dtheta
          END IF
       END IF
-
-!     --- Put the phases in an around theta0 ---
-      cphik(istring)=cphik(istring)/cave
-      dtheta=atan2(AIMAG(cphik(istring)), DBLE(cphik(istring)))
-      phik(istring)=theta0+dtheta
 
 !  --- End loop over spins
    END DO
