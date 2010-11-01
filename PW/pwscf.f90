@@ -16,9 +16,9 @@ PROGRAM pwscf
   USE control_flags,    ONLY : conv_elec, lpath, gamma_only, lscf
   USE control_flags,    ONLY : conv_ions, istep, nstep, restart, lmd, lbfgs
   USE force_mod,        ONLY : lforce, lstres
-  USE environment,      ONLY : environment_start
+  USE environment,      ONLY : environment_start, environment_end
   USE check_stop,       ONLY : check_stop_init
-  USE mp_global,        ONLY : mp_startup, mp_bcast
+  USE mp_global,        ONLY : mp_startup, mp_bcast, mp_global_end
 #if defined(__MS2)
   USE ms2,              ONLY : MS2_enabled,                 &
                                ms2_initialization,    &
@@ -97,7 +97,12 @@ PROGRAM pwscf
      !
      CALL electrons()
      !
-     IF ( .NOT. conv_elec ) CALL stop_run( conv_elec )
+     IF ( .NOT. conv_elec ) THEN
+       CALL punch( 'all' )
+       CALL stop_run( conv_elec )
+       CALL environment_end( 'PWSCF' )
+       CALL mp_global_end()
+     ENDIF
      !
      ! ... if requested ions are moved
      !
@@ -153,7 +158,10 @@ PROGRAM pwscf
      !
   END DO main_loop
   !
+  CALL punch('all')
   CALL stop_run( conv_ions )
+  CALL environment_end( 'PWSCF' )
+  CALL mp_global_end()
   !
   !  END IF      
   !

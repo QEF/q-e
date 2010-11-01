@@ -701,10 +701,10 @@ SUBROUTINE c_bands_nscf( ik_ )
         nkdum  = kunit * ( nkstot / kunit / npool )
         !
         IF (ik .le. nkdum) THEN
-           IF (check_stop_now())  call stop_run(.FALSE.)
+           IF (check_stop_now())  RETURN
         ENDIF
 #else
-        IF ( check_stop_now() )  call stop_run(.FALSE.)
+        IF ( check_stop_now() )  RETURN
 #endif
      ENDIF
      !

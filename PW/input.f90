@@ -468,9 +468,8 @@ SUBROUTINE iosys(xmlinput,attr)
      !
   CASE DEFAULT
      !
-write(0,*) "check calculation"
-!     CALL errore( 'iosys', 'calculation ' // &
-!                & trim( calculation ) // ' not implemented', 1 )
+     CALL errore( 'iosys', 'calculation ' // &
+                & trim( calculation ) // ' not implemented', 1 )
      !
   END SELECT
   !

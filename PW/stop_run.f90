@@ -16,18 +16,14 @@ SUBROUTINE stop_run( flag )
   USE io_global,          ONLY : ionode
   USE mp_global,          ONLY : nimage, mp_global_end
   USE environment,        ONLY : environment_end
-!  USE control_flags,      ONLY : lpath, twfcollect, lconstrain, &
-!                                 lcoarsegrained, io_level, llondon
   USE control_flags,      ONLY : lpath, twfcollect, lconstrain, &
                                  io_level, llondon
   USE io_files,           ONLY : iunwfc, iunigk, iunefield, iunefieldm,&
                                  iunefieldp, iuntmp
   USE buffers,            ONLY : close_buffer
-!  USE path_variables,     ONLY : path_deallocation
   USE image_io_routines,   ONLY : io_image_stop
   USE london_module,      ONLY : dealloca_london
   USE constraints_module, ONLY : deallocate_constraint
-!  USE metadyn_vars,       ONLY : deallocate_metadyn_vars
   USE input_parameters,   ONLY : deallocate_input_parameters
   USE bp,                 ONLY : lelfield
   !
@@ -42,17 +38,17 @@ SUBROUTINE stop_run( flag )
 #else
   flag2 = lpath
 #endif
-  IF ( flag2 ) THEN
+!  IF ( flag2 ) THEN
      !
-     CALL io_image_stop()
+!     CALL io_image_stop()
      !
-  ELSE
+!  ELSE
      !
      ! ... here we write all the data required to restart
      !
-     CALL punch( 'all' )
+!     CALL punch( 'all' )
      !
-  END IF
+!  END IF
   !
   ! ... iunwfc contains wavefunctions and is kept open during
   ! ... the execution - close the file and save it (or delete it 
@@ -108,9 +104,9 @@ SUBROUTINE stop_run( flag )
   !
   CALL print_clock_pw()
   !
-  CALL environment_end( 'PWSCF' )
+!  CALL environment_end( 'PWSCF' )
   !
-  CALL mp_global_end ()
+!  CALL mp_global_end ()
   !
   CALL clean_pw( .TRUE. )
   !
@@ -121,10 +117,6 @@ SUBROUTINE stop_run( flag )
   IF ( llondon ) CALL dealloca_london()
   !
   IF ( lconstrain ) CALL deallocate_constraint()
-  !
-!  IF ( lcoarsegrained ) CALL deallocate_metadyn_vars()
-  !
-!  IF ( lpath ) CALL path_deallocation()
   !
   IF ( flag ) THEN
      !
