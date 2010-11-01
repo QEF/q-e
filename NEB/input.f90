@@ -48,9 +48,10 @@ SUBROUTINE ioneb(xmlinput,attr)
                             lsmd,                    &
                             restart
   !
-  USE path_variables, ONLY : nstep_path, lsteep_des, lquick_min, &
+  USE path_variables, ONLY : lsteep_des, lquick_min, &
                              lbroyden, lbroyden2, &
                              llangevin, &
+                             nstep_path_      => nstep_path, &    
                              ds_              => ds, &
                              use_masses_      => use_masses, &
                              CI_scheme_       => CI_scheme, &
@@ -70,7 +71,7 @@ SUBROUTINE ioneb(xmlinput,attr)
                                wfcdir, prefix, etot_conv_thr, forc_conv_thr, &
                                wf_collect
                                
-  USE input_parameters, ONLY : &
+  USE input_parameters, ONLY : nstep_path, string_method, &
                                num_of_images, path_thr, CI_scheme, opt_scheme, &
                                use_masses, first_last_opt, temp_req, k_max,    &
                                k_min, ds, use_freezing, fixed_tan
@@ -96,22 +97,7 @@ SUBROUTINE ioneb(xmlinput,attr)
   CHARACTER (len=50) :: arg
   !
   !
- !
-  ! ... all namelists are read
-  !
-!  IF ( xmlinput ) THEN
-!     CALL read_xml ('PW', 1 , attr = attr )
-!  ELSE
-write(0,*) "before read_namelist"
-!     CALL read_namelists( 'SM' )
-write(0,*) "after read_namelist"
-!  ENDIF
-  !
-  !
-!-----------------------------
-! devono andare dopo il call a iosys
-!---------------------------
-SELECT CASE(trim( calculation ))
+  SELECT CASE(trim( string_method ))
      !
   CASE( 'neb' )
      !
@@ -123,12 +109,11 @@ SELECT CASE(trim( calculation ))
      !
   CASE DEFAULT
      !
-!     CALL errore( 'iosys', 'calculation ' // &
-!                & trim( calculation ) // ' not implemented', 1 )
+     CALL errore( 'ioneb', 'string_method ' // &
+                & trim( string_method ) // ' not implemented', 1 )
      !
   END SELECT
   !
- !
   SELECT CASE( trim( restart_mode ) )
   CASE( 'from_scratch' )
      !
@@ -140,34 +125,32 @@ SELECT CASE(trim( calculation ))
         !
         ! ... "path" specific
         !
-        restart = .false.
+        restart = .true.
         !
      ENDIF
      !
   CASE DEFAULT
      !
-     CALL errore( 'iosys', &
+     CALL errore( 'ioneb', &
                 & 'unknown restart_mode ' // trim( restart_mode ), 1 )
      !
   END SELECT
   !
   IF ( lpath ) THEN
      !
-write(0,*) "if lpath"
-     IF( io_level < 0) CALL errore ( 'iosys', &
+     IF( io_level < 0) CALL errore ( 'ioneb', &
                        'NEB, SMD do not work with "disk_io" set to "none"', 1)
      !
-     nstep_path = nstep
      !
      IF ( num_of_images < 2 ) &
-        CALL errore( 'iosys', 'calculation=' // trim( calculation ) // &
+        CALL errore( 'ioneb', 'calculation=' // trim( calculation ) // &
                    & ': num_of_images must be at least 2', 1 )
      !
      IF ( ( CI_scheme /= "no-CI"  ) .and. &
           ( CI_scheme /= "auto"   ) .and. &
           ( CI_scheme /= "manual" ) ) THEN
         !
-        CALL errore( 'iosys', 'calculation=' // trim( calculation ) // &
+        CALL errore( 'ioneb', 'calculation=' // trim( calculation ) // &
                    & ': unknown CI_scheme', 1 )
         !
      ENDIF
@@ -182,26 +165,21 @@ write(0,*) "if lpath"
      SELECT CASE( opt_scheme )
      CASE( "sd" )
         !
-write(0,*) "case sd"
         lsteep_des = .true.
         !
      CASE( "quick-min" )
-write(0,*) "case quick-min"
         !
         lquick_min = .true.
         !
      CASE( "broyden" )
         !
-write(0,*) "case broyden"
         lbroyden     = .true.
         !
      CASE( "broyden2" )
-write(0,*) "case broyden2"
         !
         lbroyden2    = .true.
         !
      CASE( "langevin" )
-write(0,*) "case langevin"
         !
         llangevin = .true.
         !
@@ -232,6 +210,7 @@ write(0,*) "case langevin"
   !
   ! ... "path"-optimization variables
   !
+  nstep_path_     = nstep_path
   ds_             = ds
   num_of_images_  = num_of_images
   first_last_opt_ = first_last_opt
@@ -247,51 +226,25 @@ write(0,*) "case langevin"
   !
   ! ... read following cards
   !
-!  ALLOCATE( ityp( nat_ ) )
-!  ALLOCATE( tau(    3, nat_ ) )
-!  ALLOCATE( force(  3, nat_ ) )
-!  ALLOCATE( if_pos( 3, nat_ ) )
-!  ALLOCATE( extfor( 3, nat_ ) )
-!  IF ( tfixed_occ ) THEN
-!     IF ( nspin_ == 4 ) THEN
-!        ALLOCATE( f_inp( nbnd_, 1 ) )
-!     ELSE
-!        ALLOCATE( f_inp( nbnd_, nspin_ ) )
-!     ENDIF
-!  ENDIF
   !
-!  IF ( tefield ) ALLOCATE( forcefield( 3, nat_ ) )
+  ! ... "path" optimizations specific
   !
-!write(0,*) "before read cards pw"
-!  CALL read_cards_pw ( psfile, tau_format, xmlinput )
-!write(0,*) "after read cards pw"
-  !
-  ! ... set up atomic positions and crystal lattice
-  !
-  !
+  DO image = 1, num_of_images_
      !
-     ! ... "path" optimizations specific
+     tau = reshape( pos(1:3*nat_,image), (/ 3 , nat_ /) )
      !
-     DO image = 1, num_of_images_
-        !
-        tau = reshape( pos(1:3*nat_,image), (/ 3 , nat_ /) )
-        !
-        CALL convert_tau ( tau_format, nat_, tau)
-        !
-        ! ... note that this positions array is in Bohr
-        !
-        pos(1:3*nat_,image) = reshape( tau, (/ 3 * nat_ /) ) * alat
-        !
-     ENDDO
+     CALL convert_tau ( tau_format, nat_, tau)
+     !
+     ! ... note that this positions array is in Bohr
+     !
+     pos(1:3*nat_,image) = reshape( tau, (/ 3 * nat_ /) ) * alat
+     !
+  ENDDO
      !
   !
-!  CALL verify_tmpdir( tmp_dir )
-write(0,*) "before verify neb dir"
   CALL verify_neb_tmpdir( tmp_dir )
-write(0,*) "after verify neb dir"
   !
-! uuuu questo bisogna vedere
-     !
+  !
   RETURN
   !
 END SUBROUTINE ioneb
@@ -346,7 +299,6 @@ SUBROUTINE verify_neb_tmpdir( tmp_dir )
      ENDIF
      !
   ELSE
-write(0,*) "verify neb dir ok"
      !
      ! ... if starting from scratch all temporary files are removed
      ! ... from tmp_dir ( only by the master node )

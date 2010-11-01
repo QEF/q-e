@@ -107,7 +107,7 @@ SUBROUTINE compute_fes_grads( fii, lii, stat )
      !
      ! ... calculation of the mean-force
      !
-     tcpu = get_clock( 'PWSCF' )
+     tcpu = get_clock( 'sm' )
      !
      IF ( nimage > 1 ) THEN
         !

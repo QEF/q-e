@@ -14,13 +14,13 @@ PROGRAM sm
   USE io_global,        ONLY : stdout, ionode, ionode_id
   USE parameters,       ONLY : ntypx, npk, lmaxx
   USE control_flags,    ONLY : conv_elec, conv_ions, lpath, gamma_only
-  USE environment,      ONLY : environment_start
+  USE environment,      ONLY : environment_start, environment_end
   USE path_variables,   ONLY : conv_path
   USE check_stop,       ONLY : check_stop_init
   USE path_base,        ONLY : initialize_path, search_mep
   USE path_io_routines, ONLY : path_summary
   USE image_io_routines, ONLY : io_image_start
-  USE mp_global,        ONLY : mp_startup, mp_bcast
+  USE mp_global,        ONLY : mp_startup, mp_bcast, mp_global_end
   USE read_namelists_module, ONLY : read_namelists
   !
   USE iotk_module,           ONLY : iotk_attlenx
@@ -66,32 +66,24 @@ PROGRAM sm
   call mp_bcast(xmlinput,ionode_id)
   call mp_bcast(attr,ionode_id)
   !
-write(0,*) "xmlinput: ", xmlinput
   IF( xmlinput ) THEN
     CALL read_xml( 'PW', attr )
-write(0,*) "check 2"
   ELSE 
     CALL read_namelists('SM')
-write(0,*) "check 2"
   ENDIF
   !
   CALL set_defaults()
-write(0,*) "check 3"
   !
   CALL iosys(xmlinput,attr)
-write(0,*) "check 4"
   !
   !
   CALL ioneb(xmlinput,attr)
-write(0,*) "check 5"
-
   ! ... close_input_file(xmlinput)
   !
   IF( ionode ) CALL close_input_file(xmlinput)
   !
   ! END INPUT RELATED
   !
-write(0,*) "after ioneb"
   !
   CALL check_stop_init()
   !
@@ -103,7 +95,11 @@ write(0,*) "after ioneb"
   !
   CALL search_mep()
   !
-  CALL stop_run( conv_path )
+  CALL stop_run_path( conv_path )
+  !
+  CALL environment_end( 'SM' )
+  !
+  CALL mp_global_end()
   !
   STOP
   !

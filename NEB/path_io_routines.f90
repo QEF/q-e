@@ -37,7 +37,7 @@ MODULE path_io_routines
      SUBROUTINE path_summary()
        !-----------------------------------------------------------------------
        !
-       USE input_parameters, ONLY : restart_mode, calculation, opt_scheme
+       USE input_parameters, ONLY : restart_mode, string_method, opt_scheme
        USE control_flags,    ONLY : lneb, lsmd
        USE path_variables,   ONLY : climbing, nstep_path, num_of_images, &
                                     path_length, path_thr, ds, use_masses, &
@@ -65,11 +65,11 @@ MODULE path_io_routines
        nim_char        = int_to_char( num_of_images )
        !
        WRITE( iunpath, * )
-       WRITE( iunpath, summary_fmt ) "calculation",   TRIM( calculation )
+       WRITE( iunpath, summary_fmt ) "string_method",   TRIM( string_method )
        WRITE( iunpath, summary_fmt ) "restart_mode",  TRIM( restart_mode )
        WRITE( iunpath, summary_fmt ) "opt_scheme",    TRIM( opt_scheme )
        WRITE( iunpath, summary_fmt ) "num_of_images", TRIM( nim_char )
-       WRITE( iunpath, summary_fmt ) "nstep",         TRIM( nstep_path_char )
+       WRITE( iunpath, summary_fmt ) "nstep_path",         TRIM( nstep_path_char )
        WRITE( iunpath, summary_fmt ) "CI_scheme",     TRIM( CI_scheme )
        !
        WRITE( UNIT = iunpath, &

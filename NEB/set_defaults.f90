@@ -14,11 +14,13 @@ SUBROUTINE set_defaults()
   !
   USE control_flags, ONLY : &
                             lscf, &
-                            lpath
+                            lpath, &
+                            lmd
                             
 
   lscf      = .true.
   lpath       = .true.
+!  lmd       = .true.
   full_phs_path_flag = .true.
   !
 END SUBROUTINE set_defaults
