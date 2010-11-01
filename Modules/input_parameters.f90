@@ -1028,6 +1028,14 @@ MODULE input_parameters
         LOGICAL :: full_phs_path_flag = .false.
         LOGICAL :: cg_phs_path_flag   = .false.
         !
+        INTEGER :: nstep_path
+        !
+        CHARACTER(len=80) :: string_method = 'neb' 
+        ! 'neb' traditional neb as described by Jonsson
+        ! 'sm' something else
+        CHARACTER(len=80) :: string_method_scheme_allowed(2)
+        DATA string_method_scheme_allowed / 'neb', 'sm' /
+        !
         INTEGER :: input_images = 0
         !
         INTEGER :: num_of_images = 0
@@ -1070,7 +1078,8 @@ MODULE input_parameters
         !
         !
         NAMELIST / PATH / &
-                          num_of_images, CI_scheme, opt_scheme, use_masses,    &
+                          string_method, nstep_path, num_of_images, & 
+                          CI_scheme, opt_scheme, use_masses,    &
                           first_last_opt, ds, k_max, k_min, temp_req,          &
                           path_thr, fixed_tan, use_freezing
 

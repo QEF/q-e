@@ -65,6 +65,7 @@ MODULE read_namelists_module
           title = 'MD Simulation'
           calculation = 'cp'
        END IF
+
        verbosity = 'default'
        IF( prog == 'PW' ) restart_mode = 'from_scratch'
        IF( prog == 'CP' ) restart_mode = 'restart'
@@ -537,6 +538,7 @@ MODULE read_namelists_module
        !
        ! ... defaults for "path" optimisations variables
        !
+         string_method  = 'neb'
          num_of_images  = 0
          first_last_opt = .FALSE.
          use_masses     = .FALSE.
@@ -549,8 +551,10 @@ MODULE read_namelists_module
          k_max          = 0.1_DP
          k_min          = 0.1_DP
          fixed_tan      = .FALSE.
-!         nstep_path    = 1
+         nstep_path    = 1
          restart_mode = 'from_scratch'
+       !
+       ! for reading ions namelist we need to set calculation=relax
        !
        RETURN
        !
@@ -1091,6 +1095,7 @@ MODULE read_namelists_module
        !
        ! ... "path" variables broadcast
        !
+       CALL mp_bcast ( string_method,     ionode_id ) 
        CALL mp_bcast( num_of_images,      ionode_id )
        CALL mp_bcast( first_last_opt,     ionode_id )
        CALL mp_bcast( use_masses,         ionode_id )
@@ -1103,7 +1108,7 @@ MODULE read_namelists_module
        CALL mp_bcast( k_max,              ionode_id )
        CALL mp_bcast( k_min,              ionode_id )
        CALL mp_bcast( path_thr,           ionode_id )
-!       CALL mp_bcast( nstep_path,         ionode_id )
+       CALL mp_bcast( nstep_path,         ionode_id )
        CALL mp_bcast( restart_mode,       ionode_id )
        !
        RETURN
@@ -1559,55 +1564,10 @@ MODULE read_namelists_module
        !
        ! ... general "path" variables checkin
        !
-!       IF ( ds < 0.0_DP ) &
-!          CALL errore( sub_name,' ds out of range ',1)
-!       IF ( temp_req < 0.0_DP ) &
-!          CALL errore( sub_name,' temp_req out of range ',1)
        !
-!       allowed = .FALSE.
-!       DO i = 1, SIZE( opt_scheme_allowed )
-!          IF ( TRIM( opt_scheme ) == &
-!               opt_scheme_allowed(i) ) allowed = .TRUE.
-!       END DO
-!       IF ( .NOT. allowed ) &
-!          CALL errore( sub_name, ' opt_scheme '''// &
-!                     & TRIM( opt_scheme )//''' not allowed ', 1 )
+!       full_phs_path_flag = .FALSE.
+!       cg_phs_path_flag   = .FALSE.
        !
-       IF ( calculation == 'neb' .OR. calculation == 'smd' ) THEN
-          !
-!          IF ( phase_space == 'coarse-grained' ) THEN
-             !
-!             full_phs_path_flag = .FALSE.
-!             cg_phs_path_flag   = .TRUE.
-             !
-!             IF ( calculation /= 'neb' .AND. calculation /= 'smd' ) &
-!                CALL errore( sub_name, &
-!                           & ' coarse-grained phase-space is presently' // &
-!                           & ' allowed only for neb or smd ', 1 )
-             !
-!          ELSE
-             !
-             full_phs_path_flag = .TRUE.
-             cg_phs_path_flag   = .FALSE.
-             !
-!          END IF
-          !
-       END IF
-       !
-       ! ... NEB specific checkin
-       !
-!       IF ( k_max < 0.0_DP )  CALL errore( sub_name, 'k_max out of range', 1 )
-!       IF ( k_min < 0.0_DP )  CALL errore( sub_name, 'k_min out of range', 1 )
-!       IF ( k_max < k_min ) CALL errore( sub_name, 'k_max < k_min', 1 )
-       !
-!       allowed = .FALSE.
-!       DO i = 1, SIZE( CI_scheme_allowed )
-!          IF ( TRIM( CI_scheme ) == CI_scheme_allowed(i) ) allowed = .TRUE.
-!       END DO
-       !
-!       IF ( .NOT. allowed ) &
-!          CALL errore( sub_name, ' CI_scheme ''' // &
-!                      & TRIM( CI_scheme ) //''' not allowed ', 1 )
        !
        IF (sic /= 'none' .and. sic_rloc == 0.0_DP) &
           CALL errore( sub_name, ' invalid sic_rloc with sic activated ', 1 )
@@ -2005,9 +1965,8 @@ MODULE read_namelists_module
                TRIM( calculation ) == 'cp'       .OR. &
                TRIM( calculation ) == 'vc-cp'    .OR. &
                TRIM( calculation ) == 'smd'      .OR. &
-               TRIM( calculation ) == 'cp-wf'    .OR. &
-               TRIM( calculation ) == 'neb' ) READ( 5, ions, iostat = ios )
-          !
+               TRIM( calculation ) == 'cp-wf') READ( 5, ions, iostat = ios )
+  
        END IF
        CALL mp_bcast( ios, ionode_id )
        IF( ios /= 0 ) THEN
@@ -2160,8 +2119,6 @@ MODULE read_namelists_module
                      & ' reading namelist path ', ABS(ios) )
        END IF
        !
-write(0,*) "ds: ", ds
-write(0,*) "opt_Scheme: ", trim(opt_scheme)
        CALL path_bcast( )
        CALL path_checkin( )
        !
