@@ -286,7 +286,7 @@ CELL_PARAMETERS { cubic }
    0.00000  0.00000  5.00000
 EOF
 $ECHO "  running Born-Oppenheimer NEB calculation for asymmetric H2+H => H+H2...\c"
-#$NEB_COMMAND < asymmetric_H2+H.in > asymmetric_H2+H.out
+$NEB_COMMAND < asymmetric_H2+H.in > asymmetric_H2+H.out
 check_failure $?
 $ECHO " done"
 
