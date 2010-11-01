@@ -90,7 +90,7 @@ $ECHO " done"
 cat > H2+H.in << EOF
 &PATH
   string_method     = 'neb',
-  nstep_path        = 3, 
+  nstep_path        = 15, 
   ds                = 2.D0,
   opt_scheme        = "broyden",
   num_of_images     = 7,
