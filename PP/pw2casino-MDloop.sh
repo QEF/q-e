@@ -44,7 +44,7 @@ PATCHFILE=pw2casino-MDloop.diff
 cat > $PATCHFILE <<'EOF'
 patch files to call pw2casino from MD loop
 
-From: Norbert Nemec <Norbert@Nemec-online.de>
+From: Mike Towler <mdt26@cam.ac.uk>
 
 
 ---
@@ -54,7 +54,7 @@ From: Norbert Nemec <Norbert@Nemec-online.de>
  3 files changed, 20 insertions(+), 3 deletions(-)
 
 diff --git a/PP/Makefile b/PP/Makefile
-index ec24bc6..29dbceb 100644
+index ec24bc6..d3df6fe 100644
 --- a/PP/Makefile
 +++ b/PP/Makefile
 @@ -123,9 +123,9 @@ projwfc.x : projwfc.o $(PPOBJS) $(MODULES) $(LIBOBJS)
@@ -62,10 +62,10 @@ index ec24bc6..29dbceb 100644
  	- ( cd ../bin ; ln -fs ../PP/$@ . )
  
 -pw2casino.x : pw2casino.o pw2casino_write.o pw2blip.o $(PPOBJS) $(MODULES) $(LIBOBJS)
-+pw2casino.x : pw2casino.o $(PPOBJS) $(PWOBJS) $(MODULES) $(EEMODS) $(LIBOBJS)
++pw2casino.x : pw2casino.o $(PPOBJS) $(MODULES) $(LIBOBJS)
  	$(LD) $(LDFLAGS) -o $@ \
 -		pw2casino.o pw2casino_write.o pw2blip.o $(PPOBJS) $(MODULES) $(LIBOBJS) $(LIBS)
-+		pw2casino.o $(PPOBJS) $(MODULES) $(EEMODS) $(PWOBJS) $(LIBOBJS) $(LIBS)
++		pw2casino.o $(PPOBJS) $(MODULES) $(LIBOBJS) $(LIBS)
  	- ( cd ../bin ; ln -fs ../PP/$@ . )
  
  pw2wannier90.x : pw2wannier90.o $(PPOBJS) $(MODULES) $(LIBOBJS)
@@ -92,7 +92,7 @@ index b7658b7..6eac35a 100644
  EEOBJS=../EE/libee.a
  QEMODS=../Modules/libqemod.a
 diff --git a/PW/pwscf.f90 b/PW/pwscf.f90
-index 8108107..503fc72 100644
+index 28e2470..248e4e4 100644
 --- a/PW/pwscf.f90
 +++ b/PW/pwscf.f90
 @@ -29,6 +29,8 @@ PROGRAM pwscf
@@ -104,20 +104,22 @@ index 8108107..503fc72 100644
    !
    LOGICAL :: xmlinput = .false.
    CHARACTER (len=iotk_attlenx) :: attr
-@@ -91,13 +93,26 @@ PROGRAM pwscf
+@@ -91,8 +93,11 @@ PROGRAM pwscf
    !
    CALL init_run()
    !
-+     itercount=0
-+     !
++  itercount=0
++  !
    main_loop: DO
       !
-+        itercount=itercount+1
++     itercount=itercount+1
       ! ... electronic self-consistentcy
       !
       CALL electrons()
-      !
-      IF ( .NOT. conv_elec ) CALL stop_run( conv_elec )
+@@ -103,6 +108,16 @@ PROGRAM pwscf
+        CALL environment_end( 'PWSCF' )
+        CALL mp_global_end()
+      ENDIF
 +        !
 +        write(postfix,'(i4.4)')itercount
 +        CALL write_casino_wfn( &
@@ -140,7 +142,7 @@ if [ "$?" != "0" ] ; then
     echo "ERROR: Patch did not apply cleanly."
     echo "--> Very likely, the distribution has been changed without updating the script PP/$SCRIPTNAME"
     echo "--> Either apply the patch $PATCHFILE manually (it is fairly simple) or contact the author for help:"
-    echo "-->     <Norbert@Nemec-online.de>"
+    echo "-->     <mdt26@cam.ac.uk>"
     exit 1
 fi
 
