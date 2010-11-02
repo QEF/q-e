@@ -16,6 +16,7 @@ XOBJS = \
 ./lr_sm1_psi.o
 
 GIPAWOBJS=../GIPAW/paw_gipaw.o \
+../GIPAW/gipaw_module.o \
 ../GIPAW/init_gipaw_1.o \
 ../GIPAW/init_gipaw_2.o
 
