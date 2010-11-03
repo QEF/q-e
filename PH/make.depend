@@ -871,6 +871,7 @@ polariz.o : ../PW/pwcom.o
 polariz.o : ../PW/symme.o
 polariz.o : phcom.o
 prepare_q.o : ../Modules/control_flags.o
+prepare_q.o : ../Modules/io_files.o
 prepare_q.o : ../Modules/io_global.o
 prepare_q.o : ../PW/pwcom.o
 prepare_q.o : ph_restart.o

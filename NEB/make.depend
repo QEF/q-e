@@ -118,6 +118,7 @@ stop_run_path.o : ../Modules/mm_dispersion.o
 stop_run_path.o : ../Modules/mp_global.o
 stop_run_path.o : ../PW/buffers.o
 stop_run_path.o : ../PW/pwcom.o
+stop_run_path.o : path_variables.o
 string_methods.o : ../Modules/check_stop.o
 string_methods.o : ../Modules/control_flags.o
 string_methods.o : ../Modules/environment.o

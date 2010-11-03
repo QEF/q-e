@@ -30,7 +30,7 @@ do
         EE | flib | upftools | atomic | CPV )
                   DEPENDS="$DEPENDS ../Modules "            ;;
 	PW )
-		  DEPENDS="$DEPENDS ../Modules ../EE "       ;;
+		  DEPENDS="$DEPENDS ../Modules ../EE ../NEB"       ;;
 	PP | PWCOND | Gamma | PH | GIPAW | pwtools )
 		  DEPENDS="$DEPENDS ../Modules ../PW" ;;
 	D3 | VdW | ACFDT ) 
