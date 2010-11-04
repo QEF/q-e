@@ -391,9 +391,9 @@ pw2casino_write.o : ../Modules/printout_base.o
 pw2casino_write.o : ../Modules/uspp.o
 pw2casino_write.o : ../Modules/wavefunctions.o
 pw2casino_write.o : ../PW/becmod.o
-pw2casino_write.o : ../PW/pw2blip.o
 pw2casino_write.o : ../PW/pwcom.o
 pw2casino_write.o : ../PW/scf_mod.o
+pw2casino_write.o : pw2blip.o
 pw2gw.o : ../Modules/cell_base.o
 pw2gw.o : ../Modules/constants.o
 pw2gw.o : ../Modules/control_flags.o
