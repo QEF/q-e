@@ -75,12 +75,6 @@ SUBROUTINE openfil()
         !
         CALL pw_readfile( 'wave', ierr )
         !
-     ELSE IF ( io_level < 1 ) THEN
-        !
-        ! ... wavefunctions are read into memory from internal format
-        !
-        CALL init_buffer ( iunwfc, ierr ) 
-        !
      END IF
 
      IF ( ierr > 0 ) THEN

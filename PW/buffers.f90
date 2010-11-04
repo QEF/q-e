@@ -41,22 +41,22 @@ MODULE buffers
   !
   CHARACTER(LEN=*), INTENT(IN) :: extension
   INTEGER, INTENT(IN) :: unit, nword, maxrec
-  !
   LOGICAL, INTENT(OUT) :: exst
   !
+  INTEGER :: ierr
   !
   IF ( unit == -1 ) THEN
      !
      IF ( ALLOCATED ( buffer1 ) ) THEN
         !
-        exst = .TRUE.
-        CALL infomsg ('open_buffer', 'buffer already allocated')
+        CALL errore ('open_buffer', 'buffer already allocated',1)
         !
      ELSE
         !
         nword_ = nword
         extension_ = extension
         ALLOCATE ( buffer1 ( nword, maxrec ) )
+        call init_buffer (unit, exst, ierr)
         !
      END IF
      !
@@ -217,11 +217,12 @@ SUBROUTINE close_buffer ( unit, status )
   !
 END SUBROUTINE close_buffer
 !
-SUBROUTINE init_buffer ( unit, ierr )
+SUBROUTINE init_buffer ( unit, exst, ierr )
   !
   !     unit > 6 : ignored
   !     unit =-1 : read into buffer the array previously saved to file
   !                when the buffer was closed (used in NEB calculations)
+  !     exst     : T if the file where to read from is present
   !     ierr     : 0 if everything ok, 1 otherwise
   !
   USE io_files,       ONLY : find_free_unit, diropn
@@ -230,9 +231,9 @@ SUBROUTINE init_buffer ( unit, ierr )
   !
   INTEGER, INTENT(IN) :: unit
   INTEGER, INTENT(OUT) :: ierr
+  LOGICAL, INTENT(OUT) :: exst
   !
   INTEGER :: unit_, i
-  LOGICAL :: exst
   !
   ierr = 1 
   !
@@ -246,7 +247,7 @@ SUBROUTINE init_buffer ( unit, ierr )
      unit_ = find_free_unit () 
      CALL diropn (unit_, extension_, 2*nword_, exst)
      IF ( .NOT. exst ) THEN
-        CALL infomsg ('init_buffer', 'file not found')
+        CLOSE (UNIT = unit_ , STATUS = 'delete')
         RETURN
      END IF
      !
