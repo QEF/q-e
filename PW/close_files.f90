@@ -14,11 +14,13 @@ SUBROUTINE close_files()
   USE ldaU,          ONLY : lda_plus_u
   USE control_flags, ONLY : twfcollect, io_level
   USE fixed_occ,     ONLY : one_atom_occupations
-  USE io_files,      ONLY : prefix, iunwfc, iunigk, iunat, iunsat
+  USE io_files,      ONLY : prefix, iunwfc, iunigk, iunat, iunsat, &
+                            iunefield, iunefieldm, iunefieldp
   USE buffers,       ONLY : close_buffer
   USE mp_global,     ONLY : intra_image_comm
   USE mp,            ONLY : mp_barrier
   USE wannier_new,     ONLY : use_wannier
+  USE bp,                 ONLY : lelfield
   !
   IMPLICIT NONE
   !
@@ -46,6 +48,21 @@ SUBROUTINE close_files()
      IF ( opnd ) CLOSE( UNIT = iunat, STATUS = 'KEEP' )
      INQUIRE( UNIT = iunsat, OPENED = opnd )  
      IF ( opnd ) CLOSE( UNIT = iunsat, STATUS = 'KEEP' )
+     !
+  END IF
+  !
+  ! ... close unit for electric field if needed
+  !
+  IF ( lelfield ) THEN
+     !
+     INQUIRE( UNIT = iunefield, OPENED = opnd )
+     IF ( opnd ) CLOSE( UNIT = iunefield, STATUS = 'KEEP' )
+     !
+     INQUIRE( UNIT = iunefieldm, OPENED = opnd )
+     IF ( opnd ) CLOSE( UNIT = iunefieldm, STATUS = 'KEEP' )
+     !
+     INQUIRE( UNIT = iunefieldp, OPENED = opnd )
+     IF ( opnd ) CLOSE( UNIT = iunefieldp, STATUS = 'KEEP' )
      !
   END IF
   !

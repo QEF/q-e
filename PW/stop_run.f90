@@ -81,21 +81,6 @@ SUBROUTINE stop_run( flag )
      !
   END IF
   !
-  ! ... close unit for electric field if needed
-  !
-  IF ( lelfield ) THEN
-     !
-     INQUIRE( UNIT = iunefield, OPENED = opnd )
-     IF ( opnd ) CLOSE( UNIT = iunefield, STATUS = 'KEEP' )
-     !
-     INQUIRE( UNIT = iunefieldm, OPENED = opnd )
-     IF ( opnd ) CLOSE( UNIT = iunefieldm, STATUS = 'KEEP' )
-     !
-     INQUIRE( UNIT = iunefieldp, OPENED = opnd )
-     IF ( opnd ) CLOSE( UNIT = iunefieldp, STATUS = 'KEEP' )
-     !
-  END IF
-  !
   ! ... iunigk is kept open during the execution - close and remove
   !
   INQUIRE( UNIT = iunigk, OPENED = opnd )
