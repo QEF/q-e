@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !----------------------------------------------------------------------------
-SUBROUTINE stop_run( flag )
+SUBROUTINE stop_run( lflag )
   !----------------------------------------------------------------------------
   !
   ! ... Close all files and synchronize processes before stopping.
@@ -29,16 +29,16 @@ SUBROUTINE stop_run( flag )
   !
   IMPLICIT NONE
   !
-  LOGICAL, INTENT(IN) :: flag
-  LOGICAL             :: exst, opnd, flag2
+  LOGICAL, INTENT(IN) :: lflag
+  LOGICAL             :: exst, opnd, lflag2
   !
   !
 #if defined (EXX)
-  flag2 = lpath .or. nimage > 1
+  lflag2 = lpath .or. nimage > 1
 #else
-  flag2 = lpath
+  lflag2 = lpath
 #endif
-!  IF ( flag2 ) THEN
+!  IF ( lflag2 ) THEN
      !
 !     CALL io_image_stop()
      !
@@ -54,12 +54,12 @@ SUBROUTINE stop_run( flag )
   ! ... the execution - close the file and save it (or delete it 
   ! ... if the wavefunctions are already stored in the .save file)
   !
-  IF (flag .and. .not. flag2 ) THEN
+  IF (lflag .and. .not. lflag2 ) THEN
      CALL seqopn( iuntmp, 'restart', 'UNFORMATTED', exst )
      CLOSE( UNIT = iuntmp, STATUS = 'DELETE' )
   ENDIF
 
-  IF ( flag .AND. ionode ) THEN
+  IF ( lflag .AND. ionode ) THEN
      !
      ! ... all other files must be reopened and removed
      !
@@ -71,25 +71,19 @@ SUBROUTINE stop_run( flag )
      !
   END IF
   !
-  CALL close_files(flag)
+  CALL close_files(lflag)
   !
   CALL print_clock_pw()
   !
-!  CALL environment_end( 'PWSCF' )
+  CALL environment_end( 'PWSCF' )
   !
-!  CALL mp_global_end ()
+  CALL mp_global_end ()
   !
   CALL clean_pw( .TRUE. )
   !
-  CALL deallocate_bp_efield()
-  !
   CALL deallocate_input_parameters () 
   !
-  IF ( llondon ) CALL dealloca_london()
-  !
-  IF ( lconstrain ) CALL deallocate_constraint()
-  !
-  IF ( flag ) THEN
+  IF ( lflag ) THEN
      !
      STOP
      !

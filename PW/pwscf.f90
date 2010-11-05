@@ -100,8 +100,6 @@ PROGRAM pwscf
      IF ( .NOT. conv_elec ) THEN
        CALL punch( 'all' )
        CALL stop_run( conv_elec )
-       CALL environment_end( 'PWSCF' )
-       CALL mp_global_end()
      ENDIF
      !
      ! ... if requested ions are moved
@@ -160,8 +158,6 @@ PROGRAM pwscf
   !
   CALL punch('all')
   CALL stop_run( conv_ions )
-  CALL environment_end( 'PWSCF' )
-  CALL mp_global_end()
   !
   !  END IF      
   !

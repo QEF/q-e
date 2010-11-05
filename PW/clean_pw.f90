@@ -44,10 +44,15 @@ SUBROUTINE clean_pw( lflag )
   USE radial_grids,         ONLY : deallocate_radial_grid
   USE wannier_new,           ONLY : use_wannier
   !
+  USE london_module,      ONLY : dealloca_london
+  USE constraints_module, ONLY : deallocate_constraint
+  !
   IMPLICIT NONE
   !
   LOGICAL, INTENT(IN) :: lflag
     ! if .TRUE. ion-related variables are also deallocated
+    ! as well as arrays allocated in iosys.
+    ! --> .TRUE. means the real end!!!
     ! .FALSE. in  neb, smd, phonon calculations
   !
   ! ... arrays allocated in input.f90, read_file.f90 or setup.f90
@@ -59,6 +64,10 @@ SUBROUTINE clean_pw( lflag )
      IF ( ALLOCATED( force ) )      DEALLOCATE( force )
      IF ( ALLOCATED( forcefield ) ) DEALLOCATE( forcefield )
      IF ( ALLOCATED (irt) )         DEALLOCATE (irt)
+     !
+     CALL deallocate_bp_efield()
+     CALL dealloca_london()
+     CALL deallocate_constraint()
      !
   END IF
   !

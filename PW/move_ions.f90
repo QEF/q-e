@@ -277,7 +277,7 @@ SUBROUTINE move_ions()
         WRITE( UNIT = stdout, FMT = 9120 )
         !
         CALL clean_pw( .FALSE. )
-        CALL close_files()
+        CALL close_files(.TRUE.)
         lmovecell=.FALSE.
         lcheck_cell=.FALSE.
         final_cell_calculation=.FALSE.
