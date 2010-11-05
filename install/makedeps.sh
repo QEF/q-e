@@ -28,9 +28,9 @@ do
     DEPENDS="../include ../iotk/src"
     case $DIR in 
         EE | flib | upftools | atomic | CPV )
-                  DEPENDS="$DEPENDS ../Modules "            ;;
+                  DEPENDS="$DEPENDS ../Modules "      ;;
 	PW )
-		  DEPENDS="$DEPENDS ../Modules ../EE ../NEB"       ;;
+		  DEPENDS="$DEPENDS ../Modules ../EE  ;;
 	PP | PWCOND | Gamma | PH | GIPAW | pwtools )
 		  DEPENDS="$DEPENDS ../Modules ../PW" ;;
 	D3 | VdW | ACFDT ) 
