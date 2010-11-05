@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !----------------------------------------------------------------------------
-SUBROUTINE close_files()
+SUBROUTINE close_files(flag)
   !----------------------------------------------------------------------------
   !
   ! ... Close all files and synchronize processes for a new scf calculation.
@@ -24,11 +24,13 @@ SUBROUTINE close_files()
   !
   IMPLICIT NONE
   !
+  LOGICAL, intent(in) :: flag
+  !
   LOGICAL :: opnd
   !  ... close buffer/file containing wavefunctions: discard if
   !  ... wavefunctions are written in xml format, save otherwise
   !
-  IF ( twfcollect .OR. io_level < 0 ) THEN
+  IF ( flag .AND. (twfcollect .OR. io_level < 0 )) THEN
      CALL close_buffer ( iunwfc, 'DELETE' )
   ELSE
      CALL close_buffer ( iunwfc, 'KEEP' )

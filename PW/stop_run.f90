@@ -54,16 +54,6 @@ SUBROUTINE stop_run( flag )
   ! ... the execution - close the file and save it (or delete it 
   ! ... if the wavefunctions are already stored in the .save file)
   !
-  IF ( flag .AND. ( io_level < 0 .OR. twfcollect ) ) THEN
-     !
-     call close_buffer ( iunwfc, 'DELETE' )
-     !
-  ELSE
-     !
-     call close_buffer ( iunwfc, 'KEEP' )
-     !
-  END IF
-  !      
   IF (flag .and. .not. flag2 ) THEN
      CALL seqopn( iuntmp, 'restart', 'UNFORMATTED', exst )
      CLOSE( UNIT = iuntmp, STATUS = 'DELETE' )
@@ -81,11 +71,7 @@ SUBROUTINE stop_run( flag )
      !
   END IF
   !
-  ! ... iunigk is kept open during the execution - close and remove
-  !
-  INQUIRE( UNIT = iunigk, OPENED = opnd )
-  !
-  IF ( opnd ) CLOSE( UNIT = iunigk, STATUS = 'DELETE' )
+  CALL close_files(flag)
   !
   CALL print_clock_pw()
   !
