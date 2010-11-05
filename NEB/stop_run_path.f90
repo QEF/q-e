@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !----------------------------------------------------------------------------
-SUBROUTINE stop_run_path( flag )
+SUBROUTINE stop_run_path( lflag )
   !----------------------------------------------------------------------------
   !
   ! ... Close all files and synchronize processes before stopping.
@@ -30,7 +30,7 @@ SUBROUTINE stop_run_path( flag )
   !
   IMPLICIT NONE
   !
-  LOGICAL, INTENT(IN) :: flag
+  LOGICAL, INTENT(IN) :: lflag
   LOGICAL             :: exst, opnd, flag2
   !
   !
@@ -40,11 +40,19 @@ SUBROUTINE stop_run_path( flag )
   !
 ! call pwscf stop run routine, close files and deallocate arrays
   !
-  CALL stop_run( flag )
+  CALL close_files(lflag)
+  !
+  CALL environment_end( 'SM' )
+  !
+  CALL mp_global_end()
+  !
+  CALL clean_pw( .TRUE. )
   !
   CALL path_deallocation()
   !
-  IF ( .not. flag ) THEN
+  CALL deallocate_input_parameters()
+  !
+  IF ( .not. lflag ) THEN
      !
      STOP 1
      !

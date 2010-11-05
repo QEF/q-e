@@ -97,9 +97,9 @@ PROGRAM sm
   !
   CALL stop_run_path( conv_path )
   !
-  CALL environment_end( 'SM' )
+!  CALL environment_end( 'SM' )
   !
-  CALL mp_global_end()
+!  CALL mp_global_end()
   !
   STOP
   !
