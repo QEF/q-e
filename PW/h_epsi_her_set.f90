@@ -1244,7 +1244,16 @@ subroutine h_epsi_her_set(pdir, e_field)
 
    !calculate a(dir:)*v(:)
  fact=v(1)*a(1,dir)+v(2)*a(2,dir)+v(3)*a(3,dir)
+!!!!!!!!!!!!!!
+ fact=dsqrt(a(1,dir)**2.d0+a(2,dir)**2.d0+a(3,dir)**2.d0)
+
+
+
+
+
  fact=abs(fact)
+
+
 
    return
  END SUBROUTINE factor_a

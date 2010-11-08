@@ -339,6 +339,7 @@ subroutine kpoint_grid_efield (at, bg, npk, &
   integer :: nppstr_max
   real(DP) :: fact, sca
   real(DP) :: cry_to_cart(3,3)
+  real(DP) :: bg_n(3,3)
   !
   
   !
@@ -395,31 +396,54 @@ subroutine kpoint_grid_efield (at, bg, npk, &
   endif
   l3dstring=.true.
 !setup transfromation matrix
+!  do i=1,3
+!     cry_to_cart(:,i)=bg(:,i)
+!     sca=sqrt(cry_to_cart(1,i)**2.d0+cry_to_cart(2,i)**2.d0+cry_to_cart(3,i)**2.d0)
+!     cry_to_cart(:,i)=cry_to_cart(:,i)/sca
+! enddo
+! call  invmat (3, cry_to_cart, transform_el, sca)
+
+ 
   do i=1,3
-     cry_to_cart(:,i)=bg(:,i)
-     sca=sqrt(cry_to_cart(1,i)**2.d0+cry_to_cart(2,i)**2.d0+cry_to_cart(3,i)**2.d0)
-     cry_to_cart(:,i)=cry_to_cart(:,i)/sca
+     sca=at(1,i)**2.d0+at(2,i)**2.d0+at(3,i)**2.d0
+     sca=dsqrt(sca)
+     bg_n(1:3,i)=(1.d0/sca)*at(1:3,i)
+  enddo
+
+
+  do i=1,3
+     do j=1,3
+        cry_to_cart(j,i)=bg_n(1,j)*bg_n(1,i)+bg_n(2,j)*bg_n(2,i)+bg_n(3,j)*bg_n(3,i)
+     enddo
  enddo
  call  invmat (3, cry_to_cart, transform_el, sca)
-
-
 
 !set up electric field
 
 !calculate EFFECTIVE electric field on crystal axis
   efield_cry(:)=0.d0
+
+!  do i=1,3
+!     do j=1,3
+!        efield_cry(i)=efield_cry(i)+transform_el(i,j)*efield_cart(j)
+!     enddo
+!  enddo
+
   do i=1,3
-     do j=1,3
-        efield_cry(i)=efield_cry(i)+transform_el(i,j)*efield_cart(j)
-     enddo
+    ! do j=1,3
+        !efield_cry(i)=efield_cry(i)+transform_el(i,j)*(efield_cart(1)*bg_n(1,j)+efield_cart(2)*bg_n(2,j)+efield_cart(3)*bg_n(3,j))
+        efield_cry(i)=efield_cry(i)+efield_cart(1)*bg_n(1,i)+efield_cart(2)*bg_n(2,i)+efield_cart(3)*bg_n(3,i)
+  !enddo
   enddo
-!  efield_cry(:)=0.d0
-!  efield_cry(1)=0.000d0
-!  efield_cry(2)=0.00d0
-!  efield_cry(3)=0.001d0
-
-
-!  write(*,*) 'nx_el1', nx_el(1:nks,1)
+  !efield_cry(:)=0.001d0
+  !efield_cry(3)=0.001d0	
+  write(*,*) 'EFIELD CART', efield_cart(1),efield_cart(2), efield_cart(3)
+  write(*,*) 'EFIELD CRY', efield_cry(1),efield_cry(2), efield_cry(3)
+ 
+  write(*,*) 'BG1', bg(1,1),bg(2,1),bg(3,1)
+  write(*,*) 'BG1', at(1,1),at(2,1),at(3,1)
+!
+  write(*,*) 'nx_el1', nx_el(1:nks,1)
 !  write(*,*) 'nx_el2', nx_el(1:nks,2)
 !  write(*,*) 'nx_el3', nx_el(1:nks,3)
    return

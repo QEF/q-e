@@ -26,12 +26,13 @@ SUBROUTINE forces_ion_efield (forces_bp, pdir, e_field)
   REAL(DP) :: a(3),sca
 
   e=dsqrt(2.d0)
-  a(:)=at(:,pdir)
-  sca=dsqrt(a(1)**2.d0 + a(2)**2.d0 + a(3)**2.d0)
-  a(:)=a(:)/sca
+!  a(:)=at(:,pdir)
+!  sca=dsqrt(a(1)**2.d0 + a(2)**2.d0 + a(3)**2.d0)
+!  a(:)=a(:)/sca
 
   do i=1,nat
-     forces_bp(:,i)=forces_bp(:,i)+ e*e_field*zv(ityp(i))*a(:)
+!     forces_bp(:,i)=forces_bp(:,i)+ e*e_field*zv(ityp(i))*a(:) !ATTENZIONE
+      forces_bp(pdir,i)=forces_bp(pdir,i)+ e*e_field*zv(ityp(i))
   enddo
   
 
@@ -59,8 +60,8 @@ SUBROUTINE forces_us_efield(forces_bp, pdir, e_field)
    USE ions_base,            ONLY : nat, ntyp => nsp, ityp, tau, zv, atm
    USE cell_base,            ONLY : at, alat, tpiba, omega, tpiba2
    USE constants,            ONLY : pi, tpi
-   USE grid_dimensions,      ONLY : nr1, nr2, nr3, nr1x, nr2x, nr3x
    USE gvect,                ONLY : ngm, ecutwfc, g, gcutm, ngm_g
+   USE grid_dimensions,      ONLY : nr1, nr2, nr3, nr1x, nr2x, nr3x
    USE uspp,                 ONLY : nkb, vkb, okvan
    USE uspp_param,           ONLY : upf, lmaxq, nbetam, nh, nhm
    USE lsda_mod,             ONLY : nspin

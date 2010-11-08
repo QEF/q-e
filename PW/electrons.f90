@@ -953,7 +953,8 @@ SUBROUTINE electrons()
           el_pol_cart(:)=0.d0
           do i=1,3
              do j=1,3
-                el_pol_cart(i)=el_pol_cart(i)+transform_el(j,i)*el_pol(j)
+                !el_pol_cart(i)=el_pol_cart(i)+transform_el(j,i)*el_pol(j)
+                el_pol_cart(i)=el_pol_cart(i)+at(i,j)*el_pol(j)/(dsqrt(at(1,j)**2.d0+at(2,j)**2.d0+at(3,j)**2.d0))
              enddo
           enddo
 

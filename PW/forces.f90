@@ -27,7 +27,6 @@ SUBROUTINE forces()
   USE io_global,     ONLY : stdout
   USE cell_base,     ONLY : at, bg, alat, omega  
   USE ions_base,     ONLY : nat, ntyp => nsp, ityp, tau, zv, amass, extfor, compute_eextfor
-  USE lsda_mod,      ONLY : nspin
   USE grid_dimensions,ONLY: nr1, nr2, nr3, nr1x, nr2x, nr3x, nrxx
   USE gvect,         ONLY : ngm, gstart, ngl, nl, igtongl, g, gg, gcutm
   USE lsda_mod,      ONLY : nspin
