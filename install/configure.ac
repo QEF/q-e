@@ -312,8 +312,18 @@ then
 else
         # clear cached values (not sure when and why this is needed)
         unset FC ac_cv_prog_ac_ct_FC ac_cv_fc_compiler_gnu ac_cv_prog_fc_g
-        if test "$mpif90" = "" ; then mpif90="$try_mpif90 $f90" ; fi
-        AC_PROG_FC($mpif90)
+        if test "$mpif90" = "" ; then 
+	   mpif90="$try_mpif90 $f90"
+           AC_PROG_FC($mpif90)
+        else
+           AC_PROG_FC($mpif90)
+# this avoids that an empty MPIF90 field is produced if the corresponding
+# environment variable MPIF90 does not contain an acceptable compiler
+           if test "$FC" = "" ; then 
+		AC_MSG_WARN([MPIF90 not found: using MPIF90 anyway])
+	  	FC=$MPIF90
+	   fi
+        fi
         mpif90=$FC
 fi
 
