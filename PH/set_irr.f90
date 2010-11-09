@@ -259,7 +259,6 @@ subroutine set_irr (nat, at, bg, xq, s, sr, tau, ntyp, ityp, ftau, invs, nsym, &
         if (abs (eigen (imode) - eigen (imode-1) ) / (abs (eigen (imode) ) &
           + abs (eigen (imode-1) ) ) .lt.1.d-4) then
            npert (nirr) = npert (nirr) + 1
-           if (npert (nirr) .gt. 6) call errore('set_irr', 'npert > 6 ', nirr)
         else
            nirr = nirr + 1
            npert (nirr) = 1
