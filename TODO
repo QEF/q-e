@@ -1,4 +1,4 @@
-TODO LIST - October 2010
+TODO LIST - November 2010
 
 
 0) Suspected bugs/problems:
@@ -105,6 +105,16 @@ TODO LIST - October 2010
   4.1.1 Moka structure builder + new xml input/output (RS)
   4.1.2 XMCD in XSpectra
   4.1.3 vdW with nonlocal xc functional
+        [ will require a better way to label XC functionales.
+          The current one dates back to the times when people were 
+          experimenting and mix-and-matching different functionals
+          for X, Cor, gradient corrections to X and Cor. This is
+          clumsy, but not easy to extend to newer functionals, and 
+          nobody really uses it, since there are well-defined labels:
+          PW91, PBE, B3LYP etc, taht do the job. We should convert 
+          this mess, with the associated 4-index code, into a simpler 
+          system, without losing compatibility with existing PPs ]
+          
   4.1.4 new GWW (GWL)
   4.1.5 EPW (electron-phonon with Wannier stuff): released, 
         has to be aligned with CVS version
