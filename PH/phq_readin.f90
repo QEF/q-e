@@ -57,6 +57,7 @@ SUBROUTINE phq_readin()
   USE ramanm,        ONLY : eth_rps, eth_ns, lraman, elop, dek
   USE freq_ph,       ONLY : fpol, fiu, nfs, nfsmax
   USE ph_restart,    ONLY : ph_readfile
+  USE xml_io_base, ONLY : create_directory
   !
   IMPLICIT NONE
   !
@@ -312,10 +313,11 @@ SUBROUTINE phq_readin()
   amass_input(:)= amass(:)
   !
   tmp_dir_save=tmp_dir
-  tmp_dir_ph= TRIM (tmp_dir) // '_ph' // int_to_char(my_image_id)
+  tmp_dir_ph= TRIM (tmp_dir) // '_ph' // TRIM(int_to_char(my_image_id)) //'/'
+  CALL create_directory(tmp_dir_ph)
+
   ext_restart=.FALSE.
   ext_recover=.FALSE.
-
   IF (recover) THEN
      CALL ph_readfile('init',ierr)
      IF (ierr /= 0 ) THEN

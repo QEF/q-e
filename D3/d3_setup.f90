@@ -211,7 +211,7 @@ SUBROUTINE d3_setup()
   ! FIXME: workaround for filename mess - needed to find where
   !        the patterns are
   tmp_dir_save=tmp_dir
-  if ( lgamma ) tmp_dir=TRIM(tmp_dir)//'_ph0'
+  if ( lgamma ) tmp_dir=TRIM(tmp_dir)//'_ph0/'
   ! FIXME END
   IF (modenum .ne. 0) THEN
      npertx=1

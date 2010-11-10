@@ -117,7 +117,7 @@ SUBROUTINE d3_readin()
   !
   ! FIXME: workaround for filename mess - needed to find the correct
   !        location of files
-  if ( .not. lgamma) tmp_dir = TRIM(tmp_dir)//'_ph0'
+  if ( .not. lgamma) tmp_dir = TRIM(tmp_dir)//'_ph0/'
   !
   !   Here we finished the reading of the input file.
   !   Now allocate space for pwscf variables, read and check them.
