@@ -255,20 +255,14 @@ MODULE partial
   SAVE
   !
   INTEGER, ALLOCATABLE :: &
-       comp_irr(:),           &! 3 * nat ),
-       done_irr(:),           &! 3 * nat), &
-       list(:),               &! 3 * nat),
-       atomo(:)                ! nat)
-  ! if 1 this representation has to be computed
-  ! if 1 this representation has been done
-  ! a list of representations (optionally read in input)
-  ! list of the atoms that moves
-  INTEGER :: nat_todo, nrapp, nat_todo_input
-  ! number of atoms to compute
-  ! The representation to do
-  ! nat_todo given in input
-  LOGICAL :: all_comp
-  ! if .TRUE. all representation have been computed
+       comp_irr(:),    &! (3*nat) : 1 if this irr.rep. has to be computed
+       done_irr(:),    &! (3*nat) : 1 if this irr.rep. has been done
+       list(:),        &! (3*nat) : list of irreps (optionally read in input)
+       atomo(:)         ! (nat) : list of the atoms that moves
+  INTEGER :: nat_todo,    & ! number of atoms to compute
+             nrapp,       & ! the representation to do
+             nat_todo_input ! nat_todo given in input
+  LOGICAL :: all_comp       ! if .TRUE. all representation have been computed
   !
 END MODULE partial
 !
@@ -294,27 +288,21 @@ MODULE control_ph
   !
   SAVE
   !
-  INTEGER, PARAMETER :: maxter = 100
-  ! maximum number of iterations
-  INTEGER :: niter_ph, nmix_ph, nbnd_occ(npk), &
-             start_irr, last_irr, current_iq, start_q, last_q
-  ! maximum number of iterations (read from input)
-  ! mixing type
-  ! occupated bands in metals
-  ! starting representation
-  ! initial representation
-  ! last representation of this run
-  ! current q point
-  ! initial q in the list, last_q in the list
-  real(DP) :: tr2_ph
-  ! threshold for phonon calculation
-  REAL (DP) :: alpha_mix(maxter), time_now, alpha_pv
-  ! the mixing parameter
-  ! CPU time up to now
-  ! the alpha value for shifting the bands
+  INTEGER, PARAMETER :: maxter = 100 ! maximum number of iterations
+  INTEGER :: niter_ph,      & ! maximum number of iterations (read from input)
+             nmix_ph,       & ! mixing type
+             nbnd_occ(npk), & ! occupated bands in metals
+             start_irr,     & ! initial representation
+             last_irr,      & ! last representation of this run
+             current_iq,    & ! current q point
+             start_q, last_q  ! initial q in the list, last_q in the list
+  REAL(DP) :: tr2_ph  ! threshold for phonon calculation
+  REAL(DP) :: alpha_mix(maxter), & ! the mixing parameter
+              time_now,          & ! CPU time up to now
+              alpha_pv             ! the alpha value for shifting the bands
   CHARACTER(LEN=10)  :: where_rec='no_recover'! where the ph run recovered
   CHARACTER(LEN=256) :: flmixdpot, tmp_dir_ph, tmp_dir_phq
-  INTEGER :: rec_code, &   ! code for recover
+  INTEGER :: rec_code,    &! code for recover
              rec_code_read=-1000 ! code for recover. Not changed during the run
   LOGICAL :: lgamma,      &! if .TRUE. this is a q=0 computation
              lgamma_gamma,&! if .TRUE. this is a q=0 computation with k=0 only
@@ -376,29 +364,31 @@ MODULE units_ph
   SAVE
   !
   INTEGER :: &
-       iuwfc, lrwfc, iuvkb, iubar, lrbar, iuebar, lrebar, iudwf, iupsir, &
-       lrdwf, iudrhous, lrdrhous, iudyn, iupdyn, iunrec, iudvscf, iudrho, &
-       lrdrho, iucom, lrcom, iudvkb3, lrdvkb3, iuint3paw, lint3paw
-  ! iunit with the wavefunctions
-  ! the length of wavefunction record
-  ! unit with vkb
-  ! unit with the part DV_{bare}
-  ! length of the DV_{bare}
-  ! unit with D psi
-  ! unit with evc in real space
-  ! length of D psi record
+       iuwfc,     & ! iunit with the wavefunctions
+       lrwfc,     & ! the length of wavefunction record
+       iuvkb,     & ! unit with vkb
+       iubar,     & ! unit with the part DV_{bare}
+       lrbar,     & ! length of the DV_{bare}
+       iuebar,    & ! unit with the part DV_{bare} for the electric field
+       lrebar,    & ! length of the DV_{bare} fro the electric field
+       iudwf,     & ! unit with D psi
+       iupsir,    & ! unit with evc in real space
+       lrdwf,     & ! length of D psi record
+       iudrhous, lrdrhous, &
+       iudyn,     & ! the unit for the dynamical matrix
+       iupdyn,    & ! the unit for the partial dynamical matrix
+       iunrec,    & ! the unit with the recover data
+       iudvscf,   & ! the unit where the delta Vscf is written
+       iudrho,    & ! the unit where the delta rho is written
+       lrdrho,    & ! the length of the deltarho files
+       iucom,     & ! the unit of the bare commutator in US case
+       lrcom,     & ! the length  of the bare commutator in US case
+       iudvkb3, lrdvkb3, &
+       iuint3paw, & ! the unit of the int3_paw coefficients
+       lint3paw     ! the lenght of the int3_paw coefficients
   ! the unit with the products
   ! the length of the products
-  ! the unit for the dynamical matrix
-  ! the unit for the partial dynamical matrix
-  ! the unit with the recover data
-  ! the unit where the delta Vscf is written
-  ! the unit where the delta rho is written
-  ! the length of the deltarho files
-  ! the unit of the bare commutator in US case
-  ! the length  of the bare commutator in US case
-  ! the unit of the int3_paw coefficients
-  ! the lenght of the int3_paw coefficients
+
   logical, ALLOCATABLE :: this_dvkb3_is_on_file(:), &
                           this_pcxpsi_is_on_file(:,:)
   !
@@ -427,26 +417,17 @@ MODULE disp
   !
   INTEGER, PARAMETER :: nqmax = 1000
   !
-  INTEGER :: nq1, nq2, nq3
-    ! number of q-points in each direction
-  INTEGER :: nqs
-    ! number of q points to be calculated
-  REAL (DP), ALLOCATABLE :: x_q(:,:)
-    ! coordinates of the q points
-  INTEGER, ALLOCATABLE :: done_iq(:)
-    ! if 1 this q point has been already calculated
-  INTEGER, ALLOCATABLE :: comp_iq(:)
-    ! if 1 this q point has to be calculated
-  INTEGER, ALLOCATABLE :: rep_iq(:)
-    ! number of irreducible representation per q point
-  INTEGER, ALLOCATABLE :: done_rep_iq(:,:)
-    ! which representation have been already done in each q
-  INTEGER, ALLOCATABLE :: nsymq_iq(:)
-    ! dimension of the small group of q
-  INTEGER, ALLOCATABLE :: comp_irr_iq(:,:)
-    ! for each q, comp_irr. Used for image parallelization
-  INTEGER, ALLOCATABLE :: npert_iq(:,:)
-    ! for each q, the number of perturbation of each irr
+  INTEGER :: nq1, nq2, nq3  ! number of q-points in each direction
+  INTEGER :: nqs            ! number of q points to be calculated
+  REAL(DP), ALLOCATABLE :: x_q(:,:) ! coordinates of the q points
+  INTEGER, ALLOCATABLE :: &
+       done_iq(:),      &! if 1 this q point has been already calculated
+       comp_iq(:),      &! if 1 this q point has to be calculated
+       rep_iq(:),       &! number of irreducible representation per q point
+       done_rep_iq(:,:),&! which representation have been already done in each q
+       nsymq_iq(:),     &! dimension of the small group of q
+       comp_irr_iq(:,:),&! for each q, comp_irr. Used for image parallelization
+       npert_iq(:,:)     ! for each q, the number of perturbation of each irr
   !
 END MODULE disp
 !
