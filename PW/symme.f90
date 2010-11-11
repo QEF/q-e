@@ -555,14 +555,17 @@ CONTAINS
     !
     !  Initialize G-vector shells needed for symmetrization
     ! 
+    USE constants, ONLY : eps8
+    USE mp_global, ONLY : nproc_pool
     IMPLICIT NONE
     !
     INTEGER, INTENT(IN) :: ngm_
     REAL(DP), INTENT(IN) :: g_(3,ngm_)
     !
     LOGICAL, ALLOCATABLE :: done(:)
-    INTEGER, ALLOCATABLE :: n(:,:)
-    INTEGER :: i,j,is,ig, ng, sn(3), gshell(3,48)
+    INTEGER, ALLOCATABLE :: n(:,:), igsort(:)
+    REAL(DP), ALLOCATABLE :: g2sort_g(:)
+    INTEGER :: i,j,is,ig, iig, jg, ng, sn(3), gshell(3,48)
     LOGICAL :: found
     !
     ngs = 0
@@ -570,6 +573,7 @@ CONTAINS
     ! since this is unknown, we use the number of all G-vectors
     ALLOCATE ( shell(ngm_) )
     ALLOCATE ( done(ngm_), n(3,ngm_) )
+    ALLOCATE ( igsort (ngm_))
     DO ig=1,ngm_
        !
        done(ig) = .false.
@@ -580,9 +584,26 @@ CONTAINS
        NULLIFY(shell(ig)%vect)
        !
     END DO
+!
+!   The following algorithm can become very slow if ngm_ is large and
+!   g vectors are not ordered in increasing order. This happens 
+!   in the parallel case.
+!
+    IF (nproc_pool > 1 .AND. ngm_ > 20000) THEN
+       ALLOCATE ( g2sort_g(ngm_))
+       g2sort_g(:)=g_(1,:)*g_(1,:)+g_(2,:)*g_(2,:)+g_(3,:)*g_(3,:)
+       igsort(1) = 0
+       CALL hpsort_eps( ngm_, g2sort_g, igsort, eps8 )
+       DEALLOCATE( g2sort_g)
+    ELSE
+       DO ig=1,ngm_
+          igsort(ig)=ig
+       ENDDO
+    ENDIF
     !
-    DO ig=1,ngm_
+    DO iig=1,ngm_
        !
+       ig=igsort(iig)
        IF ( done(ig) ) CYCLE
        !
        ! we start a new shell of symmetry-equivalent G-vectors
@@ -612,7 +633,8 @@ shelloop: DO i=1,ng
        ! now we have to locate them in the list of G-vectors
        ALLOCATE ( shell(ngs)%vect(ng))
        DO i=1,ng
-gloop:    DO j=ig,ngm_
+gloop:    DO jg=iig,ngm_
+             j=igsort(jg)
              IF (done(j)) CYCLE gloop
                 found = ( gshell(1,i)==n(1,j) .and. &
                           gshell(2,i)==n(2,j) .and. &
@@ -628,6 +650,7 @@ gloop:    DO j=ig,ngm_
        !
     END DO
     DEALLOCATE ( n, done ) 
+    DEALLOCATE( igsort)
 
   END SUBROUTINE sym_rho_init_shells
   !
