@@ -1244,7 +1244,7 @@ SUBROUTINE iosys(xmlinput,attr)
       do_mltgrid     = .false.
       do_makov_payne = .false.
       !
-    CASE DEFAULT
+    CASE( 'none' )
       !
       do_makov_payne = .false.
       do_comp        = .false.
@@ -1252,6 +1252,9 @@ SUBROUTINE iosys(xmlinput,attr)
       do_coarse      = .false.
       do_mltgrid     = .false.
       !
+    CASE DEFAULT
+      !
+      call errore ('iosys','unrecongnized value for assume_isolated',1)
   END SELECT
   !
   ! ... read following cards
