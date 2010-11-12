@@ -24,7 +24,7 @@ subroutine stress
   USE scf,           ONLY : rho, rho_core, rhog_core
   USE control_flags, ONLY : iverbosity, gamma_only, llondon
   USE noncollin_module, ONLY : noncolin
-  USE funct,         ONLY : dft_is_meta, dft_is_gradient
+  USE funct,         ONLY : dft_is_meta, dft_is_gradient, dft_is_vdW
   USE symme,         ONLY : symmatrix
   USE bp,            ONLY : lelfield
   USE uspp,          ONLY : okvan
@@ -39,7 +39,7 @@ subroutine stress
   real(DP) :: sigmakin (3, 3), sigmaloc (3, 3), sigmahar (3, 3), &
        sigmaxc (3, 3), sigmaxcc (3, 3), sigmaewa (3, 3), sigmanlc (3, 3), &
        sigmabare (3, 3), sigmah (3, 3), sigmael( 3, 3), sigmaion(3, 3), &
-       sigmalon ( 3 , 3 )
+       sigmalon ( 3 , 3 ), sigma_nonloc_dft (3 ,3)
 #ifdef EXX
   real(DP) :: sigmaexx(3,3)
 #endif
@@ -121,11 +121,21 @@ subroutine stress
 !  call stress_bp_efield (sigmael )
 !  call stress_ion_efield (sigmaion )
 
+
+   !
+   !   DFT-non_local contribution
+   !
+   sigma_nonloc_dft (:,:) = 0.d0
+ 
+   call stres_nonloc_dft(rho%of_r, rho_core, nspin, sigma_nonloc_dft)
+
+  !
+  ! SUM
   !
   sigma(:,:) = sigmakin(:,:) + sigmaloc(:,:) + sigmahar(:,:) + &
                sigmaxc(:,:) + sigmaxcc(:,:) + sigmaewa(:,:) + &
                sigmanlc(:,:) + sigmah(:,:) + sigmael(:,:) +  &
-               sigmaion(:,:) + sigmalon(:,:)
+               sigmaion(:,:) + sigmalon(:,:) + sigma_nonloc_dft(:,:)
 #ifdef EXX
   if (dft_is_hybrid()) then
     sigmaexx = exx_stress()
@@ -162,7 +172,9 @@ subroutine stress
      (sigmaxcc(l,1)*uakbar,sigmaxcc(l,2)*uakbar,sigmaxcc(l,3)*uakbar, l=1,3),&
      (sigmaewa(l,1)*uakbar,sigmaewa(l,2)*uakbar,sigmaewa(l,3)*uakbar, l=1,3),&
      (sigmah  (l,1)*uakbar,sigmah  (l,2)*uakbar,sigmah  (l,3)*uakbar, l=1,3),&
-     (sigmalon(l,1)*uakbar,sigmalon(l,2)*uakbar,sigmalon(l,3)*uakbar, l=1,3)
+     (sigmalon(l,1)*uakbar,sigmalon(l,2)*uakbar,sigmalon(l,3)*uakbar, l=1,3), &
+     (sigma_nonloc_dft(l,1)*uakbar,sigma_nonloc_dft(l,2)*uakbar,sigma_nonloc_dft(l,3)*uakbar, l=1,3)
+
 #ifdef EXX
   if (iverbosity.ge.1) WRITE( stdout, 9006) &
      (sigmaexx(l,1)*uakbar,sigmaexx(l,2)*uakbar,sigmaexx(l,3)*uakbar, l=1,3)
@@ -191,6 +203,7 @@ subroutine stress
          &   5x,'corecor stress (kbar)',3f10.2/2(26x,3f10.2/)/ &
          &   5x,'ewald   stress (kbar)',3f10.2/2(26x,3f10.2/)/ &
          &   5x,'hubbard stress (kbar)',3f10.2/2(26x,3f10.2/)/ &
-         &   5x,'london  stress (kbar)',3f10.2/2(26x,3f10.2/)/ )
+         &   5x,'london  stress (kbar)',3f10.2/2(26x,3f10.2/)/ &
+         &   5x,'dft-nl  stress (kbar)',3f10.2/2(26x,3f10.2/)/ )
 end subroutine stress
 

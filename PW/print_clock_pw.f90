@@ -59,6 +59,11 @@ SUBROUTINE print_clock_pw()
       CALL print_clock( 'newd:int2' )
    END IF
    CALL print_clock( 'mix_rho' )
+
+   CALL print_clock( 'vdW_energy' )
+   CALL print_clock( 'vdW_ffts' )
+   CALL print_clock( 'vdW_v' )
+   
    !
    WRITE( stdout, '(/5x,"Called by c_bands:")' )
    CALL print_clock( 'init_us_2' )

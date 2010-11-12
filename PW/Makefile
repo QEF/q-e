@@ -49,6 +49,8 @@ compute_rho.o \
 compute_qdipol.o \
 compute_qdipol_so.o \
 compute_ux.o \
+kernel_table.o \
+xc_vdW_DF.o \
 coset.o \
 d_matrix.o \
 data_structure.o \
@@ -187,6 +189,7 @@ stres_hub.o \
 stres_knl.o \
 stres_loc.o \
 stres_us.o \
+stres_nonloc_dft.o \
 stress.o \
 struct_fact.o \
 sum_band.o \
@@ -209,6 +212,8 @@ vcsubs.o \
 vhpsi.o \
 vloc_of_g.o \
 vloc_psi.o \
+kernel_table.o \
+xc_vdW_DF.o \
 wfcinit.o \
 write_ns.o \
 wsweight.o \
@@ -219,14 +224,14 @@ wannier_init.o \
 wannier_check.o \
 wannier_clean.o \
 wannier_occ.o \
-wannier_enrg.o 
+wannier_enrg.o \
 
 EEOBJS=../EE/libee.a
 QEMODS=../Modules/libqemod.a
 
 TLDEPS=bindir mods libs liblapack libblas eelib
 
-all : tldeps pw.x
+all : tldeps pw.x generate_vdW_kernel_table.x
 
 pw.x : $(PWOBJS) libpw.a $(LIBOBJS) 
 	$(LD) $(LDFLAGS) -o $@ \
@@ -242,6 +247,11 @@ tldeps:
 
 clean :
 	- /bin/rm -f pw.x *.o *.a *~ *.F90 *.d *.mod *.i *.L
+
+generate_vdW_kernel_table.x : generate_vdW_kernel_table.o
+	$(LD) $(LDFLAGS) -o $@ \
+		generate_vdW_kernel_table.o $(QEMODS) ${EEMODS} libpw.a $(LIBOBJS) $(LIBS)
+	- ( cd ../bin; ln -fs ../PW/$@ . )
 
 include make.depend
 

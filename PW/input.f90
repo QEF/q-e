@@ -151,6 +151,8 @@ SUBROUTINE iosys(xmlinput,attr)
                             starting_magnetization_ => starting_magnetization, &
                             lsda
   !
+  USE kernel_table,  ONLY : vdw_table_name_ => vdw_table_name
+  !
   USE relax,         ONLY : epse, epsf, epsp, starting_scf_threshold
   !
   USE control_flags, ONLY : isolve, max_cg_iter, david, tr2, imix, &
@@ -210,12 +212,14 @@ SUBROUTINE iosys(xmlinput,attr)
   !
   ! ... CONTROL namelist
   !
-  USE input_parameters, ONLY : title, calculation, verbosity, restart_mode, &
-                               nstep, iprint, tstress, tprnfor, dt, outdir, &
-                               wfcdir, prefix, etot_conv_thr, forc_conv_thr, &
+  USE input_parameters, ONLY : title, calculation, verbosity, restart_mode,    &
+                               nstep, iprint, tstress, tprnfor, dt, outdir,    &
+                               wfcdir, prefix, etot_conv_thr, forc_conv_thr,   &
                                pseudo_dir, disk_io, tefield, dipfield, lberry, &
-                               gdir, nppstr, wf_collect,lelfield, efield, &
-                               nberrycyc, lkpoint_dir, efield_cart, lecrpa
+                               gdir, nppstr, wf_collect,lelfield, efield,      &
+                               nberrycyc, lkpoint_dir, efield_cart, lecrpa,    & 
+                               vdw_table_name
+
 #if defined __MS2
   USE input_parameters, ONLY : MS2_enabled, MS2_handler
 #endif
@@ -1153,6 +1157,8 @@ SUBROUTINE iosys(xmlinput,attr)
   ecutvcut_ = ecutvcut
   !
 #endif
+  !
+  vdw_table_name_  = vdw_table_name
   !
   diago_full_acc_ = diago_full_acc
   starting_wfc    = startingwfc

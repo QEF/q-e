@@ -46,7 +46,8 @@ module funct
   PUBLIC  :: set_dft_from_indices, set_dft_from_name
   PUBLIC  :: enforce_input_dft, write_dft_name, dft_name
   PUBLIC  :: get_dft_name, get_iexch, get_icorr, get_igcx, get_igcc
-  PUBLIC  :: dft_is_gradient, dft_is_meta, dft_is_hybrid
+  PUBLIC  :: dft_is_gradient, dft_is_meta, dft_is_hybrid, dft_is_vdW
+
   ! additional subroutines/functions for hybrid functionals
   PUBLIC  :: start_exx, stop_exx, get_exx_fraction, exx_is_active
   PUBLIC  :: set_exx_fraction
@@ -125,8 +126,13 @@ module funct
   !              "meta"   TPSS meta-gga                  igcc =6
   !              "b3lp"   B3LYP (Lee-Yang-Parr*0.81)     igcc =7
   !              "psc"    PBEsol corr                    igcc =8
+  !              "vdw"    vdW-DF                        igcc =9
+
   !
   ! Special cases (dft_shortname):
+
+
+  !              "vdw-df"= "sla+pw+rpb+vdw"    = vdW-DF
   !              "bp"    = "b88+p86"           = Becke-Perdew grad.corr.
   !              "pw91"  = "pw +ggx+ggc"       = PW91 (aka GGA)
   !              "blyp"  = "sla+b88+lyp+blyp"  = BLYP
@@ -142,6 +148,8 @@ module funct
   !              "b3lyp" = "b3lp+vwn+b3lp+b3lp"= B3LYP
   !
   ! References:
+  !              vdW-DF  M. Dion et al., PRL 92, 246401 (2004)
+  !                      T. Thonhauser et al., PRB 76, 125112 (2007)
   !              pz      J.P.Perdew and A.Zunger, PRB 23, 5048 (1981) 
   !              vwn     S.H.Vosko, L.Wilk, M.Nusair, Can.J.Phys. 58,1200(1980)
   !              wig     E.P.Wigner, Trans. Faraday Soc. 34, 67 (1938) 
@@ -184,6 +192,8 @@ module funct
   logical :: has_finite_size_correction = .false.
   logical :: finite_size_cell_volume_set = .false.
   real(DP):: finite_size_cell_volume = notset
+  
+  logical :: isvdW       = .false.
 
   logical :: discard_input_dft = .false.
   !
@@ -201,7 +211,10 @@ module funct
   !
   ! data
   integer :: nxc, ncc, ngcx, ngcc
-  parameter (nxc = 8, ncc =11, ngcx =12, ngcc = 8)
+
+  !!    parameter (nxc = 8, ncc =11, ngcx =12, ngcc = 8)
+  parameter (nxc = 8, ncc =11, ngcx =12, ngcc = 9)
+
   character (len=4) :: exc, corr
   character (len=4) :: gradx, gradc
   dimension exc (0:nxc), corr (0:ncc), gradx (0:ngcx), gradc (0: ngcc)
@@ -211,8 +224,9 @@ module funct
               'OBW', 'GL' , 'B3LP', 'KZK' /
   data gradx / 'NOGX', 'B88', 'GGX', 'PBX',  'RPB', 'HCTH', 'OPTX',&
                'META', 'PB0X', 'B3LP','PSX', 'WCX', 'HSE'  /
+
   data gradc / 'NOGC', 'P86', 'GGC', 'BLYP', 'PBC', 'HCTH', 'META',&
-                'B3LP', 'PSC' /
+                'B3LP', 'PSC' , 'VDW' /
 
 CONTAINS
   !-----------------------------------------------------------------------
@@ -303,6 +317,14 @@ CONTAINS
        call set_dft_value (icorr,4)
        call set_dft_value (igcx,10)
        call set_dft_value (igcc, 8)
+
+   else if (matches('VDW-DF',dftout) ) then
+    ! Special case vdW-DF
+       call set_dft_value (iexch, 1)
+       call set_dft_value (icorr, 4)
+       call set_dft_value (igcx, 4)
+       call set_dft_value (igcc, 9)
+
     else if (matches ('PBE', dftout) ) then
     ! special case : PBE
        call set_dft_value (icorr,4)
@@ -419,7 +441,13 @@ CONTAINS
     !
     logical, external :: matches
 
-    isgradient =  (igcx > 0) .or. (igcc > 0) 
+
+  !! Redefinition of "isgradient" to be 0 if we are doing vdW with no
+  !! exchange gradient correction
+    isgradient =  (igcx > 0) .or. ( (igcc > 0) .and. (igcc /= 9) )    !<< New definition
+
+    isvdW = (igcc == 9)                                               !<< Set isvdW switch
+
     ismeta     =  (igcx == 7)
 
     ! PBE0
@@ -542,6 +570,14 @@ CONTAINS
      get_igcc = igcc
      return
   end function get_igcc
+ !-----------------------------------------------------------------------
+
+  function dft_is_vdW ()
+    logical :: dft_is_vdW
+    dft_is_vdW = isvdW
+    return
+  end function dft_is_vdW
+
   !-----------------------------------------------------------------------
   function get_exx_fraction ()
      real(DP):: get_exx_fraction

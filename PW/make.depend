@@ -206,6 +206,9 @@ cegterg.o : ../Modules/kind.o
 cegterg.o : ../Modules/mp.o
 cegterg.o : ../Modules/mp_global.o
 cegterg.o : ../Modules/ptoolkit.o
+cegterg_x.o : ../Modules/kind.o
+cegterg_x.o : ../Modules/mp.o
+cegterg_x.o : ../Modules/mp_global.o
 clean_pw.o : ../Modules/atom.o
 clean_pw.o : ../Modules/constraints_module.o
 clean_pw.o : ../Modules/control_flags.o

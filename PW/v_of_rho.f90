@@ -88,8 +88,8 @@ SUBROUTINE v_xc_meta( rho, rho_core, rhog_core, etxc, vtxc, v, kedtaur )
   USE kinds,            ONLY : DP
   USE constants,        ONLY : e2, eps8
   USE io_global,        ONLY : stdout
-  USE gvect,            ONLY : ngm
   USE grid_dimensions,  ONLY : nrxx
+  USE gvect,            ONLY : ngm
   USE lsda_mod,         ONLY : nspin
   USE cell_base,        ONLY : omega
   USE spin_orb,         ONLY : domag
@@ -304,7 +304,8 @@ SUBROUTINE v_xc( rho, rho_core, rhog_core, etxc, vtxc, v )
   USE lsda_mod,         ONLY : nspin
   USE cell_base,        ONLY : omega
   USE spin_orb,         ONLY : domag
-  USE funct,            ONLY : xc, xc_spin
+  USE funct,            ONLY : xc, xc_spin, dft_is_vdW
+  USE vdW_DF,           ONLY : xc_vdW_DF
   USE scf,              ONLY : scf_type
   USE mp_global,        ONLY : intra_pool_comm
   USE mp,               ONLY : mp_sum
@@ -478,6 +479,13 @@ SUBROUTINE v_xc( rho, rho_core, rhog_core, etxc, vtxc, v )
   ! ... add gradient corrections (if any)
   !
   CALL gradcorr( rho%of_r, rho%of_g, rho_core, rhog_core, etxc, vtxc, v )
+
+  if (dft_is_vdW()) then
+
+     CALL xc_vdW_DF(rho%of_r, rho_core, etxc, vtxc, v)
+
+  end if
+
   !
   CALL mp_sum(  vtxc , intra_pool_comm )
   CALL mp_sum(  etxc , intra_pool_comm )
@@ -498,6 +506,7 @@ SUBROUTINE v_h( rhog, ehart, charge, v )
   USE kinds,     ONLY : DP
   USE fft_base,  ONLY : dfftp
   USE fft_interfaces,ONLY : invfft
+  USE grid_dimensions,  ONLY : nrxx
   USE gvect,     ONLY : nl, nlm, ngm, gg, gstart
   USE lsda_mod,  ONLY : nspin
   USE cell_base, ONLY : omega, tpiba2
