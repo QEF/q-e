@@ -1,3 +1,10 @@
+!
+! Copyright (C) 2009-2010 Quantum ESPRESSO group
+! This file is distributed under the terms of the
+! GNU General Public License. See the file `License'
+! in the root directory of the present distribution,
+! or http://www.gnu.org/copyleft/gpl.txt .
+!
 !----------------------------------------------------------------------------
 SUBROUTINE ipoolscatter( nsize, nkstot, f_in, nks, f_out )
   !----------------------------------------------------------------------------
