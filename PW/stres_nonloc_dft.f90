@@ -27,14 +27,12 @@ subroutine stres_nonloc_dft( rho, rho_core, nspin, sigma_nonloc_dft )
 
   integer :: l, m
 
-  if (nspin>1) call errore('stres_vdW_DF', &
-                    'vdW+DF non implemented in spin polirized calculations',1)
- 
 
   sigma_nonloc_dft(:,:) = 0.d0
   
   if (dft_is_vdW()) then
-
+     if (nspin>1) call errore('stres_vdW_DF', &
+                  'vdW+DF non implemented in spin polarized calculations',1)
      CALL stress_vdW_DF(rho, rho_core, sigma_nonloc_dft)
 
   end if

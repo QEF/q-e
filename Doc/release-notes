@@ -1,5 +1,6 @@
 New in CVS version:
 
+  * Dispersion interactions (van der Waals) with nonlocal functional
   * Additions to projwfc: k-resolved DOS, LDOS integrated in selected
     real-space regions
   * Constant-volume variable-cell optimization
