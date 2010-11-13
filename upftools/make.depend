@@ -11,6 +11,9 @@ fpmd2upf.o : ../Modules/parameters.o
 fpmd2upf.o : ../Modules/parser.o
 fpmd2upf.o : ../Modules/radial_grids.o
 fpmd2upf.o : write_upf.o
+interpolate.o : ../Modules/funct.o
+interpolate.o : ../Modules/splinelib.o
+interpolate.o : write_upf.o
 ncpp2upf.o : ../Modules/funct.o
 ncpp2upf.o : write_upf.o
 oldcp2upf.o : write_upf.o
