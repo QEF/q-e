@@ -242,11 +242,8 @@ SUBROUTINE write_dipole( etot, x0, dipole_el, quadrupole_el, qq )
       quadrupole
   !
   IF ( ibrav < 1 .OR. ibrav > 3 ) THEN
-     !
-     WRITE( UNIT = stdout, &
-            FMT = '(/,5X,"Makov-Payne correction only for cubic lattices",/)' )
-     !
-     RETURN
+     call errore(' write_dipole', &
+                  'Makov-Payne correction defined only for cubic lattices', 1)
      !
   END IF
   !
