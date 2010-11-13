@@ -168,7 +168,7 @@ END SUBROUTINE write_upf
          dft, shortname," Exchange-Correlation functional"
     WRITE (ounps, '(f17.11,t24,a)') zp , "Z valence"
     WRITE (ounps, '(f17.11,t24,a)') etotps, "Total energy"
-    WRITE (ounps, '(2f11.7,t24,a)') ecutrho, ecutwfc, &
+    WRITE (ounps, '(2f11.5,t24,a)') ecutwfc, ecutrho, &
          "Suggested cutoff for wfc and rho"
 
     WRITE (ounps, '(i5,t24,a)') lmax, "Max angular momentum component"
