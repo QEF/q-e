@@ -32,7 +32,7 @@
       use gvecs, only: ngs
       use gvecb, only: ngb
       use gvecw, only: ngw
-      use reciprocal_vectors, only: ng0 => gstart
+      use reciprocal_vectors, only: gstart
       use cvan, only: nvb, ish
       use ions_base, only: na, nat, pmass, nax, nsp, rcmax
       use grid_dimensions, only: nnr => nrxx, nr1, nr2, nr3
@@ -319,7 +319,7 @@
           if(i+1 <= n) then
             hpsi(1:ngw,i+1)=c3(1:ngw)
           endif
-          if (ng0.eq.2) then
+          if (gstart==2) then
             hpsi(1,  i)=CMPLX(DBLE(hpsi(1,  i)), 0.d0,kind=DP)
             if(i+1 <= n) then
               hpsi(1,i+1)=CMPLX(DBLE(hpsi(1,i+1)), 0.d0,kind=DP)
@@ -367,7 +367,7 @@
               do ig=1,ngw
                  gamma=gamma+2.d0*DBLE(CONJG(gi(ig,i))*hpsi(ig,i))
               enddo
-              if (ng0.eq.2) then
+              if (gstart==2) then
                  gamma=gamma-DBLE(CONJG(gi(1,i))*hpsi(1,i))
               endif
            enddo
@@ -410,7 +410,7 @@
                        do ig=1,ngw
                           gamma=gamma+2.d0*DBLE(CONJG(gi(ig,i+istart-1))*hpsi(ig,jj+istart-1))*fmat_(j,i)
                        enddo
-                       if (ng0.eq.2) then
+                       if (gstart==2) then
                           gamma=gamma-DBLE(CONJG(gi(1,i+istart-1))*hpsi(1,jj+istart-1))*fmat_(j,i)
                        endif
                        jj = jj + np_rot
@@ -502,7 +502,7 @@
             do ig=1,ngw
               dene0=dene0-4.d0*DBLE(CONJG(hi(ig,i))*hpsi0(ig,i))
             enddo
-            if (ng0.eq.2) then
+            if (gstart==2) then
               dene0=dene0+2.d0*DBLE(CONJG(hi(1,i))*hpsi0(1,i))
             endif
           end do
@@ -529,7 +529,7 @@
                         dene0=dene0-2.d0*DBLE(CONJG(hi(ig,i+istart-1))*hpsi0(ig,jj+istart-1))*fmat_(j,i)
                         dene0=dene0-2.d0*DBLE(CONJG(hpsi0(ig,i+istart-1))*hi(ig,jj+istart-1))*fmat_(j,i)
                      enddo
-                     if (ng0.eq.2) then
+                     if (gstart==2) then
                         dene0=dene0+DBLE(CONJG(hi(1,i+istart-1))*hpsi0(1,jj+istart-1))*fmat_(j,i)
                         dene0=dene0+DBLE(CONJG(hpsi0(1,i+istart-1))*hi(1,jj+istart-1))*fmat_(j,i)
                      end if
@@ -616,7 +616,7 @@
         !calculates wave-functions at minimum
 
         cm(1:ngw,1:n)=c0(1:ngw,1:n)+spasso*passo*hi(1:ngw,1:n)
-        if(ng0.eq.2) then
+        if(gstart==2) then
           cm(1,:)=0.5d0*(cm(1,:)+CONJG(cm(1,:)))
         endif
 
@@ -875,7 +875,7 @@
               gi(ig,i+1)=c3(ig)
             endif
           end do
-          if (ng0.eq.2) then
+          if (gstart==2) then
             gi(1,  i)=CMPLX(DBLE(gi(1,  i)),0.d0,kind=DP)
             if(i+1 <= n) then
               gi(1,i+1)=CMPLX(DBLE(gi(1,i+1)),0.d0,kind=DP)
@@ -900,7 +900,7 @@
                     lambda_repl( i, j ) = lambda_repl( i, j ) - &
                        2.d0 * DBLE( CONJG( c0( ig, ii ) ) * gi( ig, jj) )
                  enddo
-                 if( ng0 == 2 ) then
+                 if( gstart == 2 ) then
                     lambda_repl( i, j ) = lambda_repl( i, j ) + &
                        DBLE( CONJG( c0( 1, ii ) ) * gi( 1, jj ) )
                  endif

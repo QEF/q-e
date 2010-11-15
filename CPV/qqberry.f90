@@ -26,7 +26,7 @@ subroutine qqberry2( gqq,gqqm, ipol)
   use ions_base
   use ions_base,          only: nas => nax
   use cell_base,          only: a1, a2, a3
-  use reciprocal_vectors, only: ng0 => gstart, gx, g
+  use reciprocal_vectors, only: gx, g
   use mp,                 only: mp_sum
   use mp_global,          only: intra_image_comm
   use cp_interfaces,      only: fill_qrl

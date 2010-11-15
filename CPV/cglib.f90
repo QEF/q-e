@@ -245,7 +245,7 @@ subroutine pc2(a,beca,b,becb)
       use gvecw, only: ngw
       use constants, only: pi, fpi
       use control_flags, only: iprint, iprsta
-      use reciprocal_vectors, only: ng0 => gstart
+      use reciprocal_vectors, only: gstart
       use mp, only: mp_sum
       use electrons_base, only: n => nbsp, ispin,  nupdwn, iupdwn, nspin
       use uspp_param, only: nh
@@ -285,7 +285,7 @@ subroutine pc2(a,beca,b,becb)
          do j=1,nss
             do i=1,nss
                bectmp(i,j)=2.d0*dble(zbectmp(i,j))
-               if(ng0.eq.2) bectmp(i,j)=bectmp(i,j)-DBLE(a(1,j))*DBLE(b(1,i))
+               if(gstart==2) bectmp(i,j)=bectmp(i,j)-DBLE(a(1,j))*DBLE(b(1,i))
                
             enddo
          enddo
@@ -355,7 +355,7 @@ subroutine pc2(a,beca,b,becb)
       use gvecw, only: ngw
       use constants, only: pi, fpi
       use control_flags, only: iprint, iprsta
-      use reciprocal_vectors, only: ng0 => gstart
+      use reciprocal_vectors, only: gstart
       use mp, only: mp_sum
       use electrons_base, only: n => nbsp, ispin
       use uspp_param, only: nh
@@ -376,12 +376,12 @@ subroutine pc2(a,beca,b,becb)
          do i=1,n
             sca=0.0d0
             if(ispin(i) == ispin(j)) then
-               if (ng0.eq.2) b(1,i) = CMPLX(dble(b(1,i)),0.0d0,kind=dp)
+               if (gstart==2) b(1,i) = CMPLX(dble(b(1,i)),0.0d0,kind=dp)
                do  ig=1,ngw           !loop on g vectors
                   sca=sca+DBLE(CONJG(a(ig,j))*b(ig,i))
                enddo
                sca = sca*2.0d0  !2. for real weavefunctions
-               if (ng0.eq.2) sca = sca - dble(a(1,j))*dble(b(1,i))
+               if (gstart==2) sca = sca - dble(a(1,j))*dble(b(1,i))
             endif
             scar(i) = sca
          enddo
@@ -397,7 +397,7 @@ subroutine pc2(a,beca,b,becb)
                   b(ig,i)=b(ig,i)-sca*as(ig,j)
                enddo
                ! this to prevent numerical errors
-               if (ng0.eq.2) b(1,i) = CMPLX(dble(b(1,i)),0.0d0,kind=dp)
+               if (gstart==2) b(1,i) = CMPLX(dble(b(1,i)),0.0d0,kind=dp)
             endif
          enddo
       enddo
@@ -419,7 +419,7 @@ subroutine pc2(a,beca,b,becb)
       use gvecw, only: ngw
       use constants, only: pi, fpi
       use control_flags, only: iprint, iprsta
-      use reciprocal_vectors, only: ng0 => gstart
+      use reciprocal_vectors, only: gstart
       use mp, only: mp_sum, mp_bcast
       use electrons_base, only: n => nbsp, ispin
       use uspp_param, only: nh
@@ -482,14 +482,14 @@ subroutine pc2(a,beca,b,becb)
                            sca=sca+ema0bg(ig)*DBLE(CONJG(betae(ig,inl))*betae(ig,jnl))
                         enddo
                         sca = sca*2.0d0  !2. for real weavefunctions
-                        if (ng0.eq.2) sca = sca - ema0bg(1)*DBLE(CONJG(betae(1,inl))*betae(1,jnl))
+                        if (gstart==2) sca = sca - ema0bg(1)*DBLE(CONJG(betae(1,inl))*betae(1,jnl))
                         else
                            ! s_minus case
                         do  ig=1,ngw           !loop on g vectors
                            sca=sca+DBLE(CONJG(betae(ig,inl))*betae(ig,jnl))
                         enddo
                         sca = sca*2.0d0  !2. for real weavefunctions
-                        if (ng0.eq.2) sca = sca - DBLE(CONJG(betae(1,inl))*betae(1,jnl))
+                        if (gstart==2) sca = sca - DBLE(CONJG(betae(1,inl))*betae(1,jnl))
                         endif
                         m_minus1(inl,jnl)=sca
                      enddo
@@ -548,7 +548,7 @@ subroutine pc2(a,beca,b,becb)
       use constants, only: pi, fpi
       use control_flags, only: iprint, iprsta
       use mp, only: mp_sum
-      use reciprocal_vectors, only: ng0 => gstart
+      use reciprocal_vectors, only: gstart
 !
       implicit none
       complex(dp) c0(ngw,n), betae(ngw,nhsa)
@@ -580,7 +580,7 @@ subroutine pc2(a,beca,b,becb)
                            becktmp=becktmp+ema0bg(ig)*DBLE(CONJG(betae(ig,inl))*c0(ig,i))
                         enddo
                         becktmp = becktmp*2.0d0
-                        if (ng0.eq.2) becktmp = becktmp-ema0bg(1)*DBLE(CONJG(betae(1,inl))*c0(1,i)) 
+                        if (gstart==2) becktmp = becktmp-ema0bg(1)*DBLE(CONJG(betae(1,inl))*c0(1,i)) 
                         beck(inl,i) = beck(inl,i) + becktmp
                      enddo
                   enddo
@@ -724,7 +724,7 @@ subroutine pc2(a,beca,b,becb)
       use constants, only: pi, fpi
       use control_flags, only: iprint, iprsta
       use mp, only: mp_sum
-      use reciprocal_vectors, only: ng0 => gstart
+      use reciprocal_vectors, only: gstart
       USE gvecw,              ONLY: ggp
       USE cell_base,          ONLY: tpiba2
 
@@ -760,7 +760,7 @@ subroutine pc2(a,beca,b,becb)
                            becktmp=becktmp+ema0bg(ig)*DBLE(CONJG(betae(ig,inl))*c0(ig,i))
                         enddo
                         becktmp = becktmp*2.0d0
-                        if (ng0.eq.2) becktmp = becktmp-ema0bg(1)*DBLE(CONJG(betae(1,inl))*c0(1,i))
+                        if (gstart==2) becktmp = becktmp-ema0bg(1)*DBLE(CONJG(betae(1,inl))*c0(1,i))
                         beck(inl,i) = beck(inl,i) + becktmp
                      enddo
                   enddo

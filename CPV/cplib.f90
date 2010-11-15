@@ -14,7 +14,7 @@
 !
       USE kinds,              ONLY: DP
       USE gvecw,              ONLY: ngw
-      USE reciprocal_vectors, ONLY: gstart, g, gx
+      USE reciprocal_vectors, ONLY: g, gx
       USE ions_base,          ONLY: nsp, na, nat
       USE cell_base,          ONLY: tpiba
       USE atom,               ONLY: rgrid
@@ -2453,7 +2453,7 @@ end function set_Hubbard_l
       use kinds,              ONLY: DP        
       use ions_base,          only: na, nat, nsp
       use gvecw,              only: ngw
-      use reciprocal_vectors, only: ng0 => gstart
+      use reciprocal_vectors, only: gstart
       USE uspp,               ONLY: nhsa=>nkb
       USE uspp_param,         ONLY: upf
       use electrons_base,     only: nspin, n => nbsp, nx => nbspx, ispin, f
@@ -2841,7 +2841,7 @@ end function set_Hubbard_l
 !
       use ions_base,          only: na, nsp
       use gvecw,              only: ngw
-      use reciprocal_vectors, only: g, gx, ng0 => gstart
+      use reciprocal_vectors, only: g, gx, gstart
       use cell_base,          only: omega, tpiba
       use constants,          only: fpi
       USE atom,               ONLY: rgrid
@@ -2866,8 +2866,8 @@ end function set_Hubbard_l
       do ig=1,ngw
          q(ig) = sqrt(g(ig))*tpiba
       end do
-      if (ng0.eq.2) gxn(1,:)=0.0d0
-      do ig=ng0,ngw
+      if (gstart == 2) gxn(1,:)=0.0d0
+      do ig=gstart,ngw
          gxn(:,ig) = gx(:,ig)/sqrt(g(ig)) !ik<=>ig
       end do
 !
@@ -3023,7 +3023,7 @@ end function set_Hubbard_l
 !
       use ions_base, only: na, nat
       use gvecw, only: ngw
-      use reciprocal_vectors, only: g, gx, ng0 => gstart
+      use reciprocal_vectors, only: g, gx, gstart
       use electrons_base, only: n => nbsp, nx => nbspx
 !      use gvec
 !      use constants
@@ -3095,7 +3095,7 @@ end function set_Hubbard_l
             do m1=1,ldim
                temp(:)=real(conjg(dwfc(:,m1))*spsi(:,ibnd))
                dproj(ibnd,offset+m1)=2.d0*SUM(temp) 
-               if (ng0.eq.2) dproj(ibnd,offset+m1)=dproj(ibnd,offset+m1)-temp(1)
+               if (gstart==2) dproj(ibnd,offset+m1)=dproj(ibnd,offset+m1)-temp(1)
             end do
          end do
          call mp_sum( dproj, intra_image_comm )
