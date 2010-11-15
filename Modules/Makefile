@@ -38,9 +38,6 @@ io_global.o  \
 ions_base.o \
 ions_nose.o \
 kind.o \
-metadyn_base.o \
-metadyn_io.o \
-metadyn_vars.o \
 mm_dispersion.o \
 mp.o \
 mp_base.o \
