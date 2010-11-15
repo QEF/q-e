@@ -52,7 +52,6 @@ nl_base.o \
 nlcc.o \
 ortho_base.o \
 ortho.o \
-path_routines.o \
 phasefactor.o \
 polarization.o \
 potentials.o \
@@ -90,8 +89,8 @@ TLDEPS= bindir mods libs libiotk
 all : cp
 cp : tldeps libcp.a cp.x cppp.x
 
-cp.x : cprstart.o compute_fes_grads.o compute_scf.o libcp.a $(QEMODS) $(LIBOBJS)
-	$(LD) $(LDFLAGS) -o cp.x cprstart.o compute_fes_grads.o compute_scf.o \
+cp.x : cprstart.o libcp.a $(QEMODS) $(LIBOBJS)
+	$(LD) $(LDFLAGS) -o cp.x cprstart.o \
 		libcp.a $(QEMODS) $(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../CPV/cp.x . )
 

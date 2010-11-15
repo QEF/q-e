@@ -60,7 +60,8 @@ PROGRAM main
   !
   IF ( lneb ) THEN
      !
-     CALL neb_loop( )
+     !!!CALL neb_loop( )
+     CALL errore ( 'cpr_main', 'NEB no longer implemented', 1)
      !
   ELSE IF ( lsmd ) THEN
      !

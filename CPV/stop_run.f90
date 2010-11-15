@@ -13,12 +13,11 @@ SUBROUTINE stop_run( flag )
   ! ... Close all files and synchronize processes before stopping.
   !
   USE io_global,          ONLY : stdout, ionode
-!  USE control_flags,      ONLY : lpath, lconstrain, lcoarsegrained, &
-  USE control_flags,      ONLY : lpath, lconstrain, &
-                                 program_name
+  USE control_flags,      ONLY : lpath, lconstrain, program_name
+!  USE control_flags,      ONLY : lcoarsegrained
   USE io_files,           ONLY : prefix
   USE environment,        ONLY : environment_end
-  USE path_variables_pre,     ONLY : path_deallocation
+!  USE path_variables_pre,     ONLY : path_deallocation
   USE image_io_routines,   ONLY : io_image_stop
   USE constraints_module, ONLY : deallocate_constraint
 !  USE metadyn_vars,       ONLY : deallocate_metadyn_vars
@@ -40,8 +39,7 @@ SUBROUTINE stop_run( flag )
   IF ( lconstrain ) CALL deallocate_constraint()
   !
 !  IF ( lcoarsegrained ) CALL deallocate_metadyn_vars()
-  !
-  IF ( lpath ) CALL path_deallocation()
+!  IF ( lpath ) CALL path_deallocation()
   !
   if( allocated( mill_g ) ) deallocate( mill_g )
 

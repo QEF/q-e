@@ -12,33 +12,6 @@
 ! ... to force cprmain to compute forces for +your_position+ configuration
 !
 !----------------------------------------------------------------------------
-SUBROUTINE neb_loop( )
-  !----------------------------------------------------------------------------
-  !
-  USE path_base_pre,        ONLY : initialize_path, search_mep
-  USE path_routines,    ONLY : iosys_path
-  USE path_io_routines_pre, ONLY : path_summary
-  USE image_io_routines, ONLY : io_image_start, io_image_stop
-  !
-  IMPLICIT NONE
-  !
-  CALL iosys_path()
-  !
-  CALL io_image_start()
-  !
-  CALL initialize_path()
-  !
-  CALL path_summary()
-  !
-  CALL search_mep()
-  !
-  CALL io_image_stop()
-  !
-  RETURN
-  !
-END SUBROUTINE neb_loop
-!
-!----------------------------------------------------------------------------
 SUBROUTINE cpr_loop( nloop )
   !----------------------------------------------------------------------------
   !

@@ -170,7 +170,7 @@ SUBROUTINE add_efield(vpoten,etotefield,rho,iflag)
   end if
 
   !
-  !  Calcualte potential and print values 
+  !  Calculate potential and print values 
   !   
   
   length=(1._dp-eopreg)*(alat*SQRT(at(1,edir)**2+at(2,edir)**2+at(3,edir)**2))
