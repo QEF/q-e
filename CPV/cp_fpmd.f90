@@ -334,7 +334,7 @@ end subroutine ggenb
       USE kinds,              ONLY: DP
       use reciprocal_vectors, only: g, gx, igl, mill_g, g2_g, gl
       use reciprocal_vectors, only: mill_l, ig_l2g
-      use reciprocal_vectors, only: gzero, gstart, sortedig_l2g
+      use reciprocal_vectors, only: gstart, sortedig_l2g
       use recvecs_indexes,    only: nm, np
       use gvecs,              only: ngs, nms, ngsl, nps
       use gvecw,              only: ngw, ngwl, ngwt, ggp
@@ -494,10 +494,8 @@ end subroutine ggenb
 !
       if ( g(1) < 1.d-6 ) then
          gstart = 2
-         gzero  = .TRUE.
       else
          gstart = 1
-         gzero  = .FALSE.
       end if
 
       ichk = gstart

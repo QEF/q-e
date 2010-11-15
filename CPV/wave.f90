@@ -32,7 +32,7 @@
        USE mp_global,          ONLY: me_image, intra_image_comm
        USE mp,                 ONLY: mp_sum
        USE wave_base,          ONLY: hpsi
-       USE reciprocal_vectors, ONLY: gzero
+       USE reciprocal_vectors, ONLY: gstart
        IMPLICIT NONE
        INTEGER, INTENT(IN) :: n, noff
        REAL(DP)            :: lambda(:,:)
@@ -42,7 +42,9 @@
        !
        REAL(DP), ALLOCATABLE :: prod(:)
        INTEGER :: ibl
+       LOGICAL :: gzero
        !
+       gzero = (gstart == 2) 
        ALLOCATE( prod( n ) )
        prod = hpsi( gzero, c0, SIZE( c0, 1 ), c2, n, noff )
        CALL mp_sum( prod, intra_image_comm )
@@ -303,7 +305,7 @@
         USE kinds,              ONLY: DP
         USE mp_global,          ONLY: nproc_image, me_image, intra_image_comm
         USE wave_base,          ONLY: dotp
-        USE reciprocal_vectors, ONLY: gzero
+        USE reciprocal_vectors, ONLY: gstart
 
         IMPLICIT NONE
 
@@ -316,6 +318,7 @@
         REAL(DP), ALLOCATABLE :: ee(:)
         INTEGER :: i, j, jl
         COMPLEX(DP) :: alp
+        LOGICAL :: gzero
 
 ! ... end of declarations
 !  ----------------------------------------------
@@ -323,8 +326,9 @@
         IF( n < 1 ) THEN
           RETURN
         END IF
-
+        gzero = (gstart == 2) 
         ALLOCATE( ee( n ) )
+        
         DO i = 1, n
           DO j = 1, n
             ee(j) = -dotp( gzero, ngw, b(:,j+noff-1), a(:,i+noff-1) )
@@ -360,7 +364,7 @@
       USE mp,                 ONLY: mp_sum
       USE mp_wave,            ONLY: splitwf
       USE mp_global,          ONLY: me_image, nproc_image, root_image, intra_image_comm
-      USE reciprocal_vectors, ONLY: ig_l2g, ngw, ngwt, gzero
+      USE reciprocal_vectors, ONLY: ig_l2g, ngw, ngwt, gstart
       USE io_global,          ONLY: stdout
       USE random_numbers,     ONLY: randy
       
@@ -409,7 +413,7 @@
           cm( ig, ib ) = pwt( ig_l2g( ig ) )
         END DO
       END DO
-      IF ( gzero ) THEN
+      IF ( gstart == 2 ) THEN
         cm( 1, noff : noff + n - 1 ) = (0.0d0, 0.0d0)
       END IF
 

@@ -173,11 +173,9 @@
 
      ! ...   declare module-scope variables
 
-     LOGICAL :: gzero  = .TRUE.   ! .TRUE. if the first G vectors on this processor is
-                                  ! the null G vector ( i.e. |G| == 0 )
-     INTEGER :: gstart = 2        ! index of the first G vectors whose module is greather
-                                  ! than 0 . 
-                                  ! gstart = 2 when gzero == .TRUE., gstart = 1 otherwise 
+     INTEGER :: gstart = 2 ! index of the first G vector whose module is > 0
+                           ! Needed in parallel execution: gstart=2 for the
+                           ! proc that holds G=0, gstart=1 for all others
 
      !     G^2 in increasing order (in units of tpiba2=(2pi/a)^2)
      !

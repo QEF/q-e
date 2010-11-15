@@ -115,7 +115,7 @@ MODULE cp_main_variables
     SUBROUTINE allocate_mainvar( ngw, ngwt, ngb, ngs, ng, nr1, nr2, nr3, &
                                  nr1x, nr2x, npl, nnr, nrxxs, nat, nax,  &
                                  nsp, nspin, n, nx, nupdwn, nhsa, &
-                                 gzero, nudx, tpre )
+                                 gstart, nudx, tpre )
       !------------------------------------------------------------------------
       !
       USE mp_global,   ONLY: np_ortho, me_ortho, intra_image_comm, ortho_comm, &
@@ -127,11 +127,11 @@ MODULE cp_main_variables
                                        nnr, nrxxs, nat, nax, nsp, nspin, &
                                        n, nx, nhsa, nr1x, nr2x, npl
       INTEGER,           INTENT(IN) :: nupdwn(:)
-      LOGICAL,           INTENT(IN) :: gzero
-      INTEGER,           INTENT(IN) :: nudx
+      INTEGER,           INTENT(IN) :: gstart, nudx
       LOGICAL,           INTENT(IN) :: tpre
       !
       INTEGER  :: iss
+      LOGICAL  :: gzero
       !
       ! ... allocation of all arrays not already allocated in init and nlinit
       !
@@ -218,6 +218,7 @@ MODULE cp_main_variables
       ALLOCATE( bephi( nhsa, nspin*nlax ) )
       ALLOCATE( becp_dist( nhsa, nlax*nspin ) )  
       !
+      gzero =  (gstart == 2)
       !
       CALL wave_descriptor_init( wfill, ngw, ngwt, nupdwn,  nupdwn, &
             1, 1, nspin, 'gamma', gzero )

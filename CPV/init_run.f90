@@ -26,7 +26,7 @@ SUBROUTINE init_run()
   USE gvecb,                    ONLY : ngb
   USE gvecs,                    ONLY : ngs
   USE gvecp,                    ONLY : ngm
-  USE reciprocal_vectors,       ONLY : gzero
+  USE reciprocal_vectors,       ONLY : gstart
   USE grid_dimensions,          ONLY : nrxx, nr1, nr2, nr3
   USE fft_base,                 ONLY : dfftp
   USE electrons_base,           ONLY : nspin, nbsp, nbspx, nupdwn, f
@@ -125,7 +125,7 @@ SUBROUTINE init_run()
   !
   CALL allocate_mainvar( ngw, ngwt, ngb, ngs, ngm, nr1, nr2, nr3, dfftp%nr1x, &
                          dfftp%nr2x, dfftp%npl, nrxx, nrxxs, nat, nax, nsp,   &
-                         nspin, nbsp, nbspx, nupdwn, nkb, gzero, nudx, &
+                         nspin, nbsp, nbspx, nupdwn, nkb, gstart, nudx, &
                          tpre )
   !
   CALL allocate_local_pseudo( ngs, nsp )

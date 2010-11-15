@@ -21,7 +21,7 @@
        !
 
        USE kinds,              ONLY: DP
-       USE reciprocal_vectors, ONLY: gzero
+       USE reciprocal_vectors, ONLY: gstart
 
        IMPLICIT NONE
 
@@ -39,7 +39,7 @@
 
         rsum = 0.0d0
 
-        IF( gzero ) THEN
+        IF( gstart == 2 ) THEN
 
           DO ib = 1, n
             wdot = zdotc( ( ngw - 1 ), c(2,ib), 1, c(2,ib), 1 )
