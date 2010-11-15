@@ -18,6 +18,7 @@ SUBROUTINE deallocate_modules_var()
   !
   USE core,                 ONLY : deallocate_core
   USE cvan,                 ONLY : deallocate_cvan
+  USE gvecb,                ONLY : deallocate_gvecb
   USE uspp,                 ONLY : deallocate_uspp
   USE electrons_base,       ONLY : deallocate_elct
   USE efield_module,        ONLY : deallocate_efield
@@ -70,6 +71,7 @@ SUBROUTINE deallocate_modules_var()
   CALL deallocate_uspp()
   CALL deallocate_recvecs()
   CALL deallocate_recvecs_indexes()
+  CALL deallocate_gvecb ( )
   CALL deallocate_local_pseudo()
   CALL deallocate_qgb_mod()
   CALL deallocate_dqgb_mod()

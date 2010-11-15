@@ -38,6 +38,7 @@ cg_sub.o : cp_emass.o
 cg_sub.o : cp_interfaces.o
 cg_sub.o : efield.o
 cg_sub.o : ensemble_dft.o
+cg_sub.o : gvecb.o
 cg_sub.o : ions_positions.o
 cg_sub.o : mainvar.o
 cg_sub.o : modules.o
@@ -80,6 +81,7 @@ chargedensity.o : ../Modules/uspp.o
 chargedensity.o : ../Modules/xml_io_base.o
 chargedensity.o : cg.o
 chargedensity.o : cp_interfaces.o
+chargedensity.o : gvecb.o
 chargedensity.o : mainvar.o
 chargedensity.o : modules.o
 chargedensity.o : wannier_base.o
@@ -115,6 +117,7 @@ cp_fpmd.o : ../Modules/recvec.o
 cp_fpmd.o : ../Modules/smallbox.o
 cp_fpmd.o : ../Modules/uspp.o
 cp_fpmd.o : cpr_mod.o
+cp_fpmd.o : gvecb.o
 cp_fpmd.o : pseudopot.o
 cp_interfaces.o : ../Modules/cell_base.o
 cp_interfaces.o : ../Modules/descriptors.o
@@ -171,6 +174,7 @@ cplib.o : ../Modules/sic.o
 cplib.o : ../Modules/smallbox.o
 cplib.o : ../Modules/uspp.o
 cplib.o : cp_interfaces.o
+cplib.o : gvecb.o
 cplib.o : mainvar.o
 cplib.o : modules.o
 cplib.o : pres_ai_mod.o
@@ -188,6 +192,7 @@ cplib_meta.o : ../Modules/kind.o
 cplib_meta.o : ../Modules/mp.o
 cplib_meta.o : ../Modules/mp_global.o
 cplib_meta.o : ../Modules/recvec.o
+cplib_meta.o : gvecb.o
 cplib_meta.o : modules.o
 cpr.o : ../Modules/autopilot.o
 cpr.o : ../Modules/cell_base.o
@@ -218,6 +223,7 @@ cpr.o : cp_emass.o
 cpr.o : cp_interfaces.o
 cpr.o : efield.o
 cpr.o : ensemble_dft.o
+cpr.o : gvecb.o
 cpr.o : ions_positions.o
 cpr.o : mainvar.o
 cpr.o : modules.o
@@ -246,6 +252,7 @@ cprsub.o : ../Modules/recvec.o
 cprsub.o : ../Modules/uspp.o
 cprsub.o : cp_interfaces.o
 cprsub.o : cpr_mod.o
+cprsub.o : gvecb.o
 cprsub.o : mainvar.o
 cprsub.o : modules.o
 cprsub.o : pseudo_base.o
@@ -401,6 +408,7 @@ gtable.o : ../Modules/mp_global.o
 gtable.o : ../Modules/parallel_include.o
 gtable.o : ../Modules/recvec.o
 gtable.o : efield.o
+gvecb.o : ../Modules/kind.o
 init.o : ../Modules/berry_phase.o
 init.o : ../Modules/cell_base.o
 init.o : ../Modules/control_flags.o
@@ -421,6 +429,7 @@ init.o : ../Modules/uspp.o
 init.o : atoms_type.o
 init.o : cp_restart.o
 init.o : electrons.o
+init.o : gvecb.o
 init.o : ions_positions.o
 init.o : mainvar.o
 init.o : modules.o
@@ -448,6 +457,7 @@ init_run.o : cp_emass.o
 init_run.o : cp_interfaces.o
 init_run.o : efield.o
 init_run.o : ensemble_dft.o
+init_run.o : gvecb.o
 init_run.o : ions_positions.o
 init_run.o : mainvar.o
 init_run.o : modules.o
@@ -471,6 +481,7 @@ inner_loop_cold.o : ../Modules/uspp.o
 inner_loop_cold.o : cg.o
 inner_loop_cold.o : cp_interfaces.o
 inner_loop_cold.o : ensemble_dft.o
+inner_loop_cold.o : gvecb.o
 inner_loop_cold.o : ions_positions.o
 inner_loop_cold.o : mainvar.o
 inner_loop_cold.o : modules.o
@@ -524,10 +535,8 @@ ksstates.o : ../Modules/mp.o
 ksstates.o : ../Modules/mp_global.o
 ksstates.o : ../Modules/recvec.o
 ksstates.o : ../Modules/xml_io_base.o
-main_loops.o : ../Modules/image_io_routines.o
 main_loops.o : ../Modules/ions_base.o
 main_loops.o : ../Modules/kind.o
-main_loops.o : path_routines.o
 mainvar.o : ../Modules/cell_base.o
 mainvar.o : ../Modules/descriptors.o
 mainvar.o : ../Modules/energies.o
@@ -607,6 +616,7 @@ nlcc.o : ../Modules/recvec.o
 nlcc.o : ../Modules/smallbox.o
 nlcc.o : ../Modules/uspp.o
 nlcc.o : cp_interfaces.o
+nlcc.o : gvecb.o
 nlcc.o : modules.o
 nlcc.o : pseudo_base.o
 nlcc.o : pseudopot.o
@@ -638,17 +648,6 @@ ortho_base.o : ../Modules/ptoolkit.o
 ortho_base.o : ../Modules/recvec.o
 ortho_base.o : ../Modules/uspp.o
 ortho_base.o : modules.o
-path_routines.o : ../Modules/cell_base.o
-path_routines.o : ../Modules/constants.o
-path_routines.o : ../Modules/control_flags.o
-path_routines.o : ../Modules/input_parameters.o
-path_routines.o : ../Modules/io_files.o
-path_routines.o : ../Modules/io_global.o
-path_routines.o : ../Modules/ions_base.o
-path_routines.o : ../Modules/kind.o
-path_routines.o : ../Modules/mp.o
-path_routines.o : ../Modules/mp_global.o
-path_routines.o : ../Modules/wrappers.o
 phasefactor.o : ../Modules/cell_base.o
 phasefactor.o : ../Modules/constants.o
 phasefactor.o : ../Modules/control_flags.o
@@ -658,6 +657,7 @@ phasefactor.o : ../Modules/ions_base.o
 phasefactor.o : ../Modules/kind.o
 phasefactor.o : ../Modules/recvec.o
 phasefactor.o : cp_interfaces.o
+phasefactor.o : gvecb.o
 polarization.o : ../Modules/berry_phase.o
 polarization.o : ../Modules/cell_base.o
 polarization.o : ../Modules/constants.o
@@ -710,6 +710,7 @@ problem_size.o : ../Modules/ions_base.o
 problem_size.o : ../Modules/kind.o
 problem_size.o : ../Modules/recvec.o
 problem_size.o : ../Modules/uspp.o
+problem_size.o : gvecb.o
 pseudo_base.o : ../Modules/cell_base.o
 pseudo_base.o : ../Modules/constants.o
 pseudo_base.o : ../Modules/control_flags.o
@@ -734,6 +735,7 @@ pseudopot_sub.o : ../Modules/smallbox.o
 pseudopot_sub.o : ../Modules/uspp.o
 pseudopot_sub.o : cp_interfaces.o
 pseudopot_sub.o : cpr_mod.o
+pseudopot_sub.o : gvecb.o
 pseudopot_sub.o : modules.o
 pseudopot_sub.o : pseudo_base.o
 pseudopot_sub.o : pseudopot.o
@@ -913,6 +915,7 @@ wf.o : ../Modules/parallel_include.o
 wf.o : ../Modules/printout_base.o
 wf.o : ../Modules/recvec.o
 wf.o : ../Modules/uspp.o
+wf.o : gvecb.o
 wf.o : modules.o
 wf.o : wannier.o
 wf.o : wannier_base.o

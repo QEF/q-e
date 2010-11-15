@@ -36,6 +36,7 @@ forces.o \
 fromscra.o \
 gradrho.o \
 gtable.o \
+gvecb.o\
 init.o \
 init_run.o \
 inner_loop_cold.o \
