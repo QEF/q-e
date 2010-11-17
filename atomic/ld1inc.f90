@@ -309,6 +309,7 @@ MODULE ld1inc
        file_pseudo,          & ! input file containing the pseudopotential
        file_pseudopw           ! output file where the pseudopot is written
   CHARACTER(len=256) ::      & ! output filenames read from input, containing:
+       file_charge,          & ! all-electron total charge only
        file_chi,             & ! chi functions
        file_beta,            & ! beta functions
        file_qvan,            & ! qvan functions

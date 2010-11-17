@@ -266,6 +266,14 @@ input_description -distribution {Quantum Espresso} -program ld1.x {
 	    }
 	}
 
+	var file_charge  -type CHARACTER {
+	    default { ' ' }
+	    info {
+	        Name of the file where the code writes the all-electron 
+		total charge. No charge is written if file_charge=' '.
+	    }
+	}
+
 	var config  -type CHARACTER {
 	    default { ' ' }
 	    info { 

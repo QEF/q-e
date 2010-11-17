@@ -19,7 +19,8 @@ subroutine write_results
                         nwf, nn, ll, jj, el, isw, oc, enl, file_wavefunctions, &
                         dhrsic, dxcsic, eps0, iter, psi, rytoev_fact, lsmall, &
                         core_state, ekinc, ekinv, ae_fc_energy, cau_fact, &
-                        relpert, evel, edar, eso, noscf, iswitch
+                        relpert, evel, edar, eso, noscf, iswitch, rho, &
+                        file_charge
 
   use funct, only :  get_iexch, get_dft_name
   implicit none
@@ -429,6 +430,26 @@ subroutine write_results
         call write_wfcfile(nomefile,psiaux,elaux,counter-1)
      enddo
   endif
+
+  if (file_charge.ne.' ') then
+     if (ionode) &
+        open(unit=20,file=file_charge, status='unknown', iostat=ios, err=100 )
+100  call mp_bcast(ios, ionode_id)
+     call errore('write_results','opening file'//file_charge,abs(ios))
+     if (ionode) then
+        IF (lsd<1) THEN
+           do n=1,grid%mesh
+              write(20,'(2e20.9)') grid%r(n), rho(n,1)
+           enddo
+        ELSE
+           do n=1,grid%mesh
+              write(20,'(3e20.9)') grid%r(n), rho(n,1), rho(n,2)
+           enddo
+        ENDIF
+        close(20)
+     endif
+  endif
+
   write(stdout,'(/,5x,24(''-''), '' End of All-electron run '',24(''-''),/)')
 
   return

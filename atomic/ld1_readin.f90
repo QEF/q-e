@@ -31,7 +31,7 @@ subroutine ld1_readin
                          upf_v1_format, file_pseudo, file_pseudopw, &
                          file_potscf, file_screen, file_qvan, file_recon, &
                          file_wfcaegen, file_wfcncgen, file_wfcusgen, &
-                         file_core, file_beta, file_chi, author, &
+                         file_core, file_beta, file_chi, file_charge, author, &
                          nld, rpwe, rlderiv, eminld, emaxld, deld, &
                          ecutmin, ecutmax, decut, rytoev_fact, verbosity, &
                          frozen_core, lsdts, new_core_ps, cau_fact, &
@@ -91,6 +91,7 @@ subroutine ld1_readin
        cau_fact, & ! speed of light in a.u.
        vdw,      & ! if .true. vdW coefficient in TF+vW will be calculated
        noscf,    & ! if .true. the charge density is not computed
+       file_charge, & ! file with the all-electron charge
        write_coulomb, & ! if .true. write a fake pseudopotential file with the
                      ! Coulomb potential for usage in all-electron calculations
        relpert       ! compute relativistic perturbative corrections
@@ -152,6 +153,7 @@ subroutine ld1_readin
   file_recon   = ' '
   file_screen  = ' '
   file_core    = ' '
+  file_charge  = ' '
   file_chi     = ' '
   file_beta    = ' '
   file_qvan    = ' '
@@ -648,7 +650,7 @@ subroutine bcast_input()
   USE mp,         ONLY : mp_bcast
   USE ld1inc,   ONLY : zed, beta, tr2, iswitch, nlc, rlderiv, eminld, emaxld, &
                      deld, lsd, rel, lsmall, isic, latt, title, prefix, vdw, &
-                     nld, noscf, relpert
+                     nld, noscf, relpert, file_charge
 
 
 implicit none
@@ -672,6 +674,7 @@ implicit none
    call mp_bcast( noscf, ionode_id )
    call mp_bcast( relpert, ionode_id )
    call mp_bcast( vdw, ionode_id )
+   call mp_bcast( file_charge, ionode_id )
 #endif
 return
 end subroutine bcast_input
