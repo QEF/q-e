@@ -110,7 +110,7 @@ CONTAINS
                                           !! on in place to get the u_alpha(r) 
                                           !! of equation 14 in SOLER. They are 
                                           !! formatted as follows:
-                                          !! thetas(grid_point, theta_i)
+                                          !! thetas(G_i, theta_i)
     real(dp) :: Ec_nl                     !! The non-local vdW contribution to the energy
     integer, parameter :: Nneighbors = 4  !! How many neighbors on each side
                                           !! to include in numerical derivatives
@@ -326,26 +326,18 @@ CONTAINS
     !! (taken from the q_mesh) and q0 is the saturated version of q.  
     !! q is defined in equations 11 and 12 of DION and the saturation proceedure
     !! is defined in equation 7 of SOLER. This is the biggest memory consumer in
-    !! the method since the thetas array is (total # of FFT points)*Nqs complex
-    !! numbers. In a parallel run, each processor will hold the values of all 
-    !! the theta functions on just the points assigned to it.
+    !! the method since the thetas array contains (# G vectors) * Nqs complex
+    !! numbers. It is scalable: in a parallel run, each processor will hold the
+    !! values of all the theta functions on the G vectors assigned to it.
     !! -------------------------------------------------------------------------
 
-    allocate( thetas(nrxx, Nqs) )
-    CALL get_thetas_on_grid(total_rho, q0, thetas)
-    
+    allocate( thetas(ngm, Nqs) )
+
     !! -------------------------------------------------------------------------
-    !! Fourier transform the theta_i(r) to get theta_i(k) used for the 
-    !! convolution (equation 11 of SOLER). The ffts used here are timed.
+    !! Get thetas in reciprocal space.
     !! -------------------------------------------------------------------------
-    
-    call start_clock( 'vdW_ffts')
-    
-    do theta_i = 1, Nqs
-       CALL fwfft ('Dense', thetas(:,theta_i), dfftp) ! from R -> G
-    end do
-    
-    call stop_clock( 'vdW_ffts')
+
+    CALL get_thetas_of_g(total_rho, q0, thetas)
     
     !! -------------------------------------------------------------------------
     !! Carry out the integration in equation 7 of SOLER.  This also turns the 
@@ -380,25 +372,12 @@ CONTAINS
     end if
 
     !! -------------------------------------------------------------------------
-    !! Inverse Fourier transform the u_i(k) to get the u_i(r) of equation 14 of
-    !! SOLER. These FFTs are also timed and added to the timing of the forward 
-    !! FFTs done earlier.
-    !!--------------------------------------------------------------------------
-
-    call start_clock( 'vdW_ffts')
-    
-    do theta_i = 1, Nqs
-       CALL invfft('Dense', thetas(:,theta_i), dfftp)  ! From G -> R
-    end do
-
-    call stop_clock( 'vdW_ffts')
-
-    !! -------------------------------------------------------------------------
     !! Here we allocate the array to hold the potential. This is calculated via
     !! equation 13 of SOLER, using the u_i(r) calculated from quations 14 and 15
-    !! of SOLER. Each processor allocates the array to be the size of the full 
-    !! grid because, as can be seen in SOLER equation 13, processors need to 
-    !! access grid points outside their allocated regions.
+    !! of SOLER. This memory does not (yet) scales properly in a parallel run as
+    !! each processor allocates the array to be the size of the full grid 
+    !! because, as can be seen in SOLER equation 13, processors need to access
+    !! grid points outside their allocated regions.
     !! This process is timed. The timer is stopped below after the v output 
     !! variable has been updated with the non-local corelation potential. 
     !! That is, the timer includes the communication time necessary in a 
@@ -436,6 +415,7 @@ CONTAINS
     
     v(:,1) = v(:,1) + e2*potential(procs_start(me_pool):procs_end(me_pool))
     
+
     call stop_clock( 'vdW_v' )
 
     !! -------------------------------------------------------------------------
@@ -452,8 +432,8 @@ CONTAINS
     !! -------------------------------------------------------------------------
     
     !! Deallocate all arrays.
-    deallocate(q0, gradient_rho, dq0_drho, dq0_dgradrho, potential, &
-               total_rho, thetas)  
+    deallocate( potential )
+    deallocate(q0, gradient_rho, dq0_drho, dq0_dgradrho, total_rho, thetas)  
     
     !! And we're done.  Return control to PWSCF.
     
@@ -465,8 +445,9 @@ CONTAINS
 !!                             |_________________|
   SUBROUTINE stress_vdW_DF(rho_valence, rho_core, sigma)
 
-    USE control_flags,         ONLY : gamma_only
-    USE grid_dimensions,       ONLY : nr1, nr2, nr3, nr1x, nr2x, nr3x, nrxx
+    USE control_flags,   ONLY : gamma_only
+    USE grid_dimensions, ONLY : nr1, nr2, nr3, nr1x, nr2x, nr3x, nrxx
+    USE gvect,           ONLY : ngm
 
     implicit none
 
@@ -552,7 +533,7 @@ CONTAINS
     allocate( total_rho(nrxx) )
     allocate( q0(nrxx) )
     allocate( dq0_drho(nrxx), dq0_dgradrho(nrxx) )
-    allocate( thetas(nrxx, Nqs) )
+    allocate( thetas(ngm, Nqs) )
  
     !! -------------------------------------------------------------------------
     !! Charge
@@ -599,15 +580,7 @@ CONTAINS
     !! Get thetas in reciprocal space.
     !! -------------------------------------------------------------------------
 
-    CALL get_thetas_on_grid(total_rho, q0, thetas)
-
-    call start_clock( 'vdW_ffts')
-
-    do theta_i = 1, Nqs
-       CALL fwfft ('Dense', thetas(:,theta_i), dfftp) ! From R -> G
-    end do
-
-    call stop_clock( 'vdW_ffts')
+    CALL get_thetas_of_g(total_rho, q0, thetas)
 
     !! -------------------------------------------------------------------------
     !! Stress
@@ -669,8 +642,8 @@ CONTAINS
     integer, intent(IN)  :: procs_start(:)            !
     integer, intent(IN)  :: my_start_z, my_end_z      ! 
     complex(dp), intent(IN) :: thetas(:,:)            !
-    complex(dp), allocatable :: u_vdW(:,:)            !
 
+    complex(dp), allocatable :: u_vdW(:)              !
     real(dp), allocatable    :: d2y_dx2(:,:)          !
     real(dp) :: y(Nqs), dP_dq0, P, a, b, c, d, e, f   ! Interpolation
     real(dp) :: dq                                    !
@@ -682,44 +655,25 @@ CONTAINS
 
     integer  :: i_proc, theta_i, i_grid, q_i, &        !
                 ix, iy, iz                             ! Iterators
+
+    integer, allocatable :: q_low_i(:)
       
     character(LEN=1) :: intvar
 
     !real(dp)       :: at_inverse(3,3)
 
     allocate( d2y_dx2(Nqs, Nqs) ) 
-    allocate( u_vdW(nrxx, Nqs) )
+    allocate( u_vdW(nrxx), q_low_i(nrxx) )
 
     sigma(:,:) = 0.0_DP
     prefactor = 0.0_DP
       
-    !! -------------------------------------------------------------------------
-    !! Get u in k-space.
-    !! -------------------------------------------------------------------------
-
-    call thetas_to_uk(thetas, u_vdW)
-
-    !! -------------------------------------------------------------------------
-    !! Get u in real space.
-    !! -------------------------------------------------------------------------
-
-    call start_clock( 'vdW_ffts')
-
-    do theta_i = 1, Nqs
-       CALL invfft('Dense', u_vdW(:,theta_i), dfftp)  ! From G -> R
-    end do
-
-    call stop_clock( 'vdW_ffts')
-
     !! -------------------------------------------------------------------------
     !! Get the second derivatives for interpolating the P_i
     !! -------------------------------------------------------------------------
 
     call initialize_spline_interpolation(q_mesh, d2y_dx2(:,:))
 
-    !! -------------------------------------------------------------------------
-
-    i_grid = 0
 
     !! -------------------------------------------------------------------------
     !! Do the real space integration to obtain the stress component
@@ -741,19 +695,41 @@ CONTAINS
        end do
 
        if (q_hi == q_low) call errore('stress_vdW_gradient','qhi == qlow',1)
+       if (q_hi /= q_low+1) call errore('stress_vdW_gradient','qhi /= qlow+1',1)
 
-       ! +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+       q_low_i (i_grid) = q_low
+    end do
 
-       dq = q_mesh(q_hi) - q_mesh(q_low)
+    do q_i = 1, Nqs
+       !! ----------------------------------------------------------------------
+       !! Get u in k-space.
+       !! ----------------------------------------------------------------------
 
-       a = (q_mesh(q_hi) - q0(i_grid))/dq
-       b = (q0(i_grid) - q_mesh(q_low))/dq
-       c = (a**3 - a)*dq**2/6.0D0
-       d = (b**3 - b)*dq**2/6.0D0
-       e = (3.0D0*a**2 - 1.0D0)*dq/6.0D0
-       f = (3.0D0*b**2 - 1.0D0)*dq/6.0D0
-                 
-       do q_i = 1, Nqs
+       call thetas_to_uk(thetas, u_vdW, q_i)
+
+       !! ----------------------------------------------------------------------
+       !! Get u in real space.
+       !! ----------------------------------------------------------------------
+
+       call start_clock( 'vdW_ffts')
+   
+       CALL invfft('Dense', u_vdW, dfftp)  ! From G -> R
+
+       call stop_clock( 'vdW_ffts')
+
+       !!
+       do i_grid = 1, nrxx
+          ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+          q_low = q_low_i (i_grid)
+          dq = q_mesh(q_low+1) - q_mesh(q_low)
+
+          a = (q_mesh(q_low+1) - q0(i_grid))/dq
+          b = (q0(i_grid) - q_mesh(q_low))/dq
+          c = (a**3 - a)*dq**2/6.0D0
+          d = (b**3 - b)*dq**2/6.0D0
+          e = (3.0D0*a**2 - 1.0D0)*dq/6.0D0
+          f = (3.0D0*b**2 - 1.0D0)*dq/6.0D0
 
           y(:) = 0.0D0
           y(q_i) = 1.0D0
@@ -763,11 +739,11 @@ CONTAINS
 
           ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-          prefactor = u_vdW(i_grid,q_i) * dP_dq0 * dq0_dgradrho(i_grid)
+          prefactor = u_vdW(i_grid) * dP_dq0 * dq0_dgradrho(i_grid)
 
-          gradmod = sqrt(gradient_rho(i_grid,1)*gradient_rho(i_grid,1) + &
-                         gradient_rho(i_grid,2)*gradient_rho(i_grid,2) + &
-                         gradient_rho(i_grid,3)*gradient_rho(i_grid,3))
+          gradmod = sqrt( gradient_rho(i_grid,1)*gradient_rho(i_grid,1) + &
+                          gradient_rho(i_grid,2)*gradient_rho(i_grid,2) + &
+                          gradient_rho(i_grid,3)*gradient_rho(i_grid,3) )
           do l = 1, 3
              do m = 1, l
                 sigma (l, m) = sigma (l, m) - e2 * prefactor * &
@@ -784,6 +760,8 @@ CONTAINS
 #endif
 
     call dscal (9, 1.d0 / (nr1x * nr2x * nr3x), sigma, 1)
+
+    deallocate( d2y_dx2, u_vdW, q_low_i )
 
   END SUBROUTINE stress_vdW_DF_gradient
 
@@ -833,7 +811,6 @@ CONTAINS
     !! -------------------------------------------------------------------------
 
     last_g = -1
-
     do g_i = gstart, ngm
 
        g2 = gg (g_i) * tpiba2
@@ -851,9 +828,8 @@ CONTAINS
              do l = 1, 3
                 do m = 1, l
                    sigma (l, m) = sigma (l, m) - 0.5 * e2 *     &
-                                  thetas(nl(g_i),q1_i) *        &
+                                  thetas(g_i,q1_i) * conjg(thetas(g_i,q2_i)) * &
                                   dkernel_of_dk(q1_i,q2_i) *    &
-                                  conjg(thetas(nl(g_i),q2_i)) * &
                                   g (l, g_i) * g (m, g_i) * tpiba2 / g_kernel 
                 end do
              end do 
@@ -1001,34 +977,56 @@ CONTAINS
 
   !! ###########################################################################
   !!                            |                      |
-  !!                            |  GET_THETAS_ON_GRID  |
+  !!                            |   GET_THETAS_OF_G    |
   !!                            |______________________|
-  SUBROUTINE get_thetas_on_grid (total_rho, q0_on_grid, thetas)
+  SUBROUTINE get_thetas_of_g (total_rho, q0_on_grid, thetas)
 
-    real(dp), intent(in) :: total_rho(:), q0_on_grid(:) !! Input arrays
-    complex(dp), intent(inout):: thetas(:,:) !! value of thetas for the grid 
-                                             !! points assigned to this 
-                                             !! processor. The format is 
-                                             !! thetas(grid_point, theta_i)
-    integer :: i_grid, Ngrid_points          !! An index for the point on the 
-                                             !! grid and the total number of 
-                                             !! grid points
+    USE gvect,           ONLY : ngm, nl
+    USE grid_dimensions, ONLY : nrxx
+
+    IMPLICIT NONE
+
+    REAL(DP), INTENT(IN) :: total_rho(:), q0_on_grid(:) !! Input arrays
+    COMPLEX(DP), INTENT(INOUT):: thetas(:,:) !! value of thetas (in G space)
+                                 !! for the g vectors assigned to this processor
+                                 !! The format is thetas(G_i, theta_i)
+    INTEGER :: Ngrid_points, theta_i !! the total number of grid points, 
+                                     !! and an index for thetas
+    COMPLEX(DP), ALLOCATABLE :: aux(:)
+
     Ngrid_points = size(q0_on_grid)
-  
-    !! Interpolate the P_i polynomials defined in equation 3 in SOLER for the 
-    !! particular q0 values we have.
-    CALL spline_interpolation(q_mesh, q0_on_grid, thetas)
-  
-    !! Form the thetas where theta is defined as rho*p_i(q0)
-    !! -------------------------------------------------------------------------
+    if (Ngrid_points /= nrxx) call errore('get_thetas_of_g','something wrong',1)
+    Ngrid_points = size(total_rho)
+    if (Ngrid_points /= nrxx) call errore('get_thetas_of_g','something wrong',2)
 
-    do i_grid = 1, Ngrid_points
-       thetas(i_grid,:) = thetas(i_grid,:) * total_rho(i_grid)
+    allocate (aux(nrxx))
+    !! -------------------------------------------------------------------------
+    do theta_i = 1, Nqs
+
+       !! Interpolate the P_i polynomials defined in equation 3 in SOLER for the
+       !! particular q0 values we have.
+
+       aux (:) = (0.d0,0.d0)
+       CALL spline_interpolation(q_mesh, q0_on_grid, theta_i, aux)
+  
+       !! Form the theta(ir) defined as rho*p_i(q0)
+
+       aux(:) = aux(:) * total_rho(:)
+
+       !! Fourier transform the theta_i(r) to get theta_i(k) used for the 
+       !! convolution (equation 11 of SOLER). The ffts used here are timed.
+       
+       call start_clock( 'vdW_ffts')
+       CALL fwfft ('Dense', aux, dfftp) ! from R -> G
+       call stop_clock( 'vdW_ffts')
+
+       thetas(1:ngm,theta_i) = aux(nl(1:ngm))
+
     end do
-
     !! -------------------------------------------------------------------------
+    deallocate (aux)
   
-  END SUBROUTINE get_thetas_on_grid
+  END SUBROUTINE get_thetas_of_g
 
   !! ###########################################################################
 
@@ -1043,21 +1041,22 @@ CONTAINS
   !! x value is in and then loops over all the P_i functions so we only have to
   !! find the bin once.
 
-  SUBROUTINE spline_interpolation (x, evaluation_points, values)
+  SUBROUTINE spline_interpolation (x, evaluation_points, P_i, values)
   
     real(dp), intent(in) :: x(:), evaluation_points(:) !! Input variables.  
                          !! The x values used to form the interpolation
                          !! (q_mesh in this case) and the values of q0 for 
                          !! which we are interpolating the function 
-    complex(dp), intent(inout) :: values(:,:)          !! An output array 
+    complex(dp), intent(inout) :: values(:)          !! An output array 
                          !! (allocated outside this routine) that stores the
                          !! interpolated values of the P_i (SOLER equation 3) 
                          !! polynomials.  The format is values(grid_point, P_i) 
+    integer, intent(in) :: P_i
     integer :: Ngrid_points, Nx                        !! Total number of 
                          !! grid points to evaluate and input x points
     real(dp), allocatable, save :: d2y_dx2(:,:)        !! The second derivatives
                          !! required to do the interpolation
-    integer :: i_grid, lower_bound, upper_bound, index, P_i !! Some indices
+    integer :: i_grid, lower_bound, upper_bound, index !! Some indices
   
     real(dp), allocatable :: y(:) !! Temporary variables for the interpolation
     real(dp) :: a, b, c, d, dx    !!
@@ -1107,15 +1106,15 @@ CONTAINS
        c = ((a**3-a)*dx**2)/6.0D0
        d = ((b**3-b)*dx**2)/6.0D0
      
-       do P_i = 1, Nx
+!!       do P_i = 1, Nx
         
           y = 0
           y(P_i) = 1
         
-          values(i_grid, P_i) = a*y(lower_bound) + b*y(upper_bound) &
+          values(i_grid) = a*y(lower_bound) + b*y(upper_bound) &
                + (c*d2y_dx2(P_i,lower_bound) + d*d2y_dx2(P_i, upper_bound))
         
-       end do
+!!       end do
      
     end do
 
@@ -1465,7 +1464,7 @@ CONTAINS
   !!                                     | thetas_to_uk |
   !!                                     |______________|
 
-  SUBROUTINE thetas_to_uk(thetas, u_vdW)
+  SUBROUTINE thetas_to_uk(thetas, u_vdW, alpha)
   
     USE gvect,           ONLY : nl, gg, ngm, igtongl, gl, ngl
     USE grid_dimensions, ONLY : nrxx
@@ -1474,70 +1473,43 @@ CONTAINS
 
     complex(dp), intent(in):: thetas(:,:) !! On input this variable holds the 
                            !! theta functions (equation 11, SOLER)
-                           !! in the format thetas(grid_point, theta_i).  
-    complex(dp), intent(out):: u_vdW(:,:) !! On output this array holds the
+                           !! in the format thetas(G_i, theta_i).  
+    complex(dp), intent(out):: u_vdW(:) !! On output this array holds the
                            !! u_alpha(k) = Sum_j[theta_beta(k)phi_alpha_beta(k)]
+                           !! NB: u_vdW is on the FFT grid 
+    integer, intent (in)    :: alpha  !! the index of the desired u_alpha
+    !
     real(dp), allocatable :: kernel_of_k(:,:) !! This array will hold the 
                            !! interpolated kernel values for each pair of 
                            !! q values in the q_mesh.
     real(dp) :: g
-    integer :: last_g, g_i, q1_i, q2_i, count, i_grid !! Index variables
-    complex(dp) :: theta(Nqs) !! Temporary storage vector used since we are 
-                              !! overwriting the thetas array here.
+    integer :: last_g, g_i, q1_i, q2_i !! Index variables
 
-    logical, allocatable :: outside_cutoff(:) !! Array to determine which of 
-                              !! this processor's assigned points are outside
-                              !! the g-vector cutoff radius. Initialized to 
-                              !! true and set to false for each point we find 
-                              !! within the cutoff radius. Points outside have 
-                              !! their corresponding elements of u(k) set to 0.
     allocate( kernel_of_k(Nqs, Nqs) )
-    allocate( outside_cutoff(nrxx) )
-    outside_cutoff = .true.
   
-    last_g = -1 
   
     !! -------------------------------------------------------------------------
   
-    u_vdW(:,:) = thetas(:,:)
+    u_vdW(:) = (0.d0,0.d0)
   
+    last_g = -1 
     do g_i = 1, ngm
 
-       outside_cutoff(nl(g_i)) = .false.
        if ( igtongl(g_i) .ne. last_g) then
           g = sqrt(gl(igtongl(g_i))) * tpiba
           call interpolate_kernel(g, kernel_of_k)
           last_g = igtongl(g_i)
        end if
      
-       !theta = thetas(nl(g_i),:)
-       !thetas(nl(g_i),:) = 0.0D0
-       theta = u_vdW(nl(g_i),:)
-       u_vdW(nl(g_i),:) = 0.0D0
-     
-       do q2_i = 1, Nqs
-          do q1_i = 1, Nqs
-             !thetas(nl(g_i),q2_i) = thetas(nl(g_i),q2_i) + &
-             !                       theta(q1_i)*kernel_of_k(q1_i,q2_i)
-             u_vdW(nl(g_i),q2_i) = u_vdW(nl(g_i),q2_i) + &
-                                   conjg(theta(q1_i))*kernel_of_k(q1_i,q2_i)
-          end do
+       q2_i = alpha
+       do q1_i = 1, Nqs
+          u_vdW(nl(g_i)) = u_vdW(nl(g_i)) + &
+                           conjg(thetas(g_i,q1_i))*kernel_of_k(q1_i,q2_i)
        end do
      
     end do
   
-    !! -------------------------------------------------------------------------
-    !! Loop over the outside_cutoff array and set points outside the cutoff 
-    !! radius to 0 in the u(k) array.
-    !! -------------------------------------------------------------------------
-  
-    do i_grid = 1, nrxx
-       if (outside_cutoff(i_grid)) then
-          u_vdW(i_grid,:) = 0.0D0
-       end if
-    end do
-
-    deallocate( kernel_of_k, outside_cutoff )
+    deallocate( kernel_of_k )
      
     !! -------------------------------------------------------------------------
   
@@ -1576,20 +1548,11 @@ CONTAINS
 
     complex(dp) :: theta(Nqs) !! Temporary storage vector used since we are 
                            !! overwriting the thetas array here.
-    logical, allocatable :: outside_cutoff(:) !! Array to determine which of 
-                           !! this processor's assigned points are outside
-                           !! the g-vector cutoff radius. Initialized to true 
-                           !! and set to false for each point we find within 
-                           !! the cutoff radius. Points outside have their 
-                           !! corresponding elements of u(k) set to 0.
   
     vdW_xc_energy = 0.0D0
   
     allocate( kernel_of_k(Nqs, Nqs) )
-    allocate( outside_cutoff(nrxx) )
-    outside_cutoff = .true.
   
-    last_g = -1.0D0 
   
     !! Loop over PWSCF's array of magnitude-sorted g-vector shells. For each 
     !! shell, interpolate the kernel at this magnitude of g, then find all 
@@ -1603,27 +1566,27 @@ CONTAINS
     !! equation 14. These are kept in thetas array.
     !! -------------------------------------------------------------------------
   
+    last_g = -1.0D0 
     do g_i = 1, ngm
      
-       outside_cutoff(nl(g_i)) = .false.
        if ( igtongl(g_i) .ne. last_g) then
           g = sqrt(gl(igtongl(g_i))) * tpiba
           call interpolate_kernel(g, kernel_of_k)
           last_g = igtongl(g_i)
        end if
 
-       theta = thetas(nl(g_i),:)
-       thetas(nl(g_i),:) = 0.0D0
+       theta = thetas(g_i,:)
+       thetas(g_i,:) = 0.0D0
 
        do q2_i = 1, Nqs
           do q1_i = 1, Nqs
-             thetas(nl(g_i),q2_i) = thetas(nl(g_i),q2_i) + &
-                                    theta(q1_i)*kernel_of_k(q1_i,q2_i)
+             thetas(g_i,q2_i) = thetas(g_i,q2_i) + &
+                                theta(q1_i)*kernel_of_k(q1_i,q2_i)
           end do
        end do
      
        do q1_i = 1, Nqs
-          vdW_xc_energy = vdW_xc_energy+thetas(nl(g_i),q1_i)*conjg(theta(q1_i))
+          vdW_xc_energy = vdW_xc_energy+thetas(g_i,q1_i)*conjg(theta(q1_i))
        end do
      
     end do
@@ -1641,18 +1604,7 @@ CONTAINS
   
     vdW_xc_energy = 0.5D0 * e2 * vdW_xc_energy * omega
   
-    !! -------------------------------------------------------------------------
-    !! Loop over the outside_cutoff array and set points outside the cutoff 
-    !! radius to 0 in the u(k) array.
-    !! -------------------------------------------------------------------------
-  
-    do i_grid = 1, nrxx
-       if (outside_cutoff(i_grid)) then
-          thetas(i_grid,:) = 0.0D0
-       end if
-    end do
-
-    deallocate( kernel_of_k, outside_cutoff )
+    deallocate( kernel_of_k )
      
     !! -------------------------------------------------------------------------
   
@@ -1677,7 +1629,10 @@ CONTAINS
                            potential, my_start_z, my_end_z)
     USE grid_dimensions,     ONLY : nrxx, nr1x, nr2x, nr3x
     USE cell_base,           ONLY : alat, at
+    USE gvect,               ONLY : ngm, nl
   
+    IMPLICIT NONE
+
     real(dp), intent(in) ::  q0(:), gradient_rho(:,:)  !! Input arrays holding 
                              !! the value of q0 for all points assigned to this
                              !! processor and the gradient of the charge density
@@ -1692,9 +1647,11 @@ CONTAINS
     integer, intent(in) :: N, my_start_z, my_end_z   !! The number of neighbors
                              !! used in the numerical gradient formula and the 
                              !! starting and ending z planes for this processor
-    complex(dp), intent(in) :: u_vdW(:,:)  !! The functions u_alpha(r) obtained
+    complex(dp), intent(in)  :: u_vdW(:,:)  !! The functions u_alpha(G)
+    complex(dp), allocatable :: u_vdW_of_r(:) !! an auxilary u_alpha(r) obtained
                              !! by inverse transforming the functions u_alph(k).
                              !! See equations 14 and 15 in SOLER
+    integer, allocatable :: q_low_i(:)
     real(dp), allocatable, save :: d2y_dx2(:,:) !! Second derivatives of P_alpha
                              !! polynomials for interpolation 
     integer :: i_grid, ix1, ix2, ix3, P_i, nx  !! Index variables
@@ -1759,18 +1716,16 @@ CONTAINS
        call initialize_spline_interpolation(q_mesh, d2y_dx2(:,:))
     end if
   
+    allocate ( q_low_i(nrxx), u_vdW_of_r(nrxx) )
     !! -------------------------------------------------------------------------
-  
-    i_grid = 0
-  
     !! Loop over all the points assigned to this processor. For each point and 
     !! each q value in the q_mesh, interpolate P_i and dP_dq0.  
     !! -------------------------------------------------------------------------
 
+    i_grid = 0
     do ix3 = my_start_z, my_end_z
        do ix2 = 1, nr2x
           do ix1 = 1, nr1x
-           
              i_grid = i_grid + 1
            
              q_low = 1
@@ -1794,19 +1749,47 @@ CONTAINS
              if (q_hi == q_low) call errore('get_potential','qhi == qlow',1)
              if (q_hi /= q_low+1) call errore('get_potential','qhi /= qlow+1',1)
            
-             ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+             ! +++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+             q_low_i (i_grid) = q_low
 
-             dq = q_mesh(q_low+1) - q_mesh(q_low)
+          end do
+       end do
+    end do
+    ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+    do P_i = 1, Nqs
+
+      !! -----------------------------------------------------------------------
+      !! Inverse Fourier transform u_i(k) to get u_i(r) of equation 14 of
+      !! SOLER. These FFTs are also timed and added to the timing of the forward
+      !! FFTs done earlier.
+      !!------------------------------------------------------------------------
+
+       call start_clock( 'vdW_ffts')
+
+       u_vdW_of_r(:) = (0.d0,0.d0)
+       u_vdW_of_r(nl(1:ngm)) = u_vdW(1:ngm,P_i)
+       CALL invfft('Dense', u_vdW_of_r, dfftp)  ! From G -> R
+
+       call stop_clock( 'vdW_ffts')
+
+       i_grid = 0
+       do ix3 = my_start_z, my_end_z
+          do ix2 = 1, nr2x
+             do ix1 = 1, nr1x
+                i_grid = i_grid + 1
+       
+                q_low = q_low_i(i_grid)
+ 
+                dq = q_mesh(q_low+1) - q_mesh(q_low)
            
-             a = (q_mesh(q_low+1) - q0(i_grid))/dq
-             b = (q0(i_grid) - q_mesh(q_low))/dq
-             c = (a**3 - a)*dq**2/6.0D0
-             d = (b**3 - b)*dq**2/6.0D0
-             e = (3.0D0*a**2 - 1.0D0)*dq/6.0D0
-             f = (3.0D0*b**2 - 1.0D0)*dq/6.0D0
+                a = (q_mesh(q_low+1) - q0(i_grid))/dq
+                b = (q0(i_grid) - q_mesh(q_low))/dq
+                c = (a**3 - a)*dq**2/6.0D0
+                d = (b**3 - b)*dq**2/6.0D0
+                e = (3.0D0*a**2 - 1.0D0)*dq/6.0D0
+                f = (3.0D0*b**2 - 1.0D0)*dq/6.0D0
            
-             do P_i = 1, Nqs
-              
                 y = 0.0D0
                 y(P_i) = 1.0D0
               
@@ -1820,7 +1803,7 @@ CONTAINS
 
                 potential(indices3d(ix1,ix2,ix3)) = &
                           potential(indices3d(ix1,ix2,ix3)) + &
-                          u_vdW(i_grid,P_i)* (P + dP_dq0 * dq0_drho(i_grid))
+                          u_vdW_of_r(i_grid)* (P + dP_dq0 * dq0_drho(i_grid))
 
                 ! Now, loop over all relevant neighbors and calculate the 
                 ! second term in equation 13 of SOLER.  Note, that we are using
@@ -1833,7 +1816,7 @@ CONTAINS
 
                 if (q0(i_grid) .ne. q_mesh(Nqs)) then
 
-                   prefactor = u_vdW(i_grid,P_i) * dP_dq0 * dq0_dgradrho(i_grid)
+                   prefactor = u_vdW_of_r(i_grid) * dP_dq0*dq0_dgradrho(i_grid)
                  
                    do nx = -N,N
                     
@@ -1861,11 +1844,12 @@ CONTAINS
                 !! +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
              end do
-           
           end do
        end do
+           
     end do
 
+    deallocate (q_low_i,u_vdW_of_r)
     !! -------------------------------------------------------------------------
 
   END SUBROUTINE get_potential
