@@ -332,7 +332,7 @@ end subroutine ggenb
 !   the g's are in units of 2pi/a.
 !
       USE kinds,              ONLY: DP
-      use reciprocal_vectors, only: g, gx, igl, mill_g, g2_g, gl
+      use reciprocal_vectors, only: gg, gx, igl, mill_g, g2_g, gl
       use reciprocal_vectors, only: mill_l, ig_l2g
       use reciprocal_vectors, only: gstart, sortedig_l2g
       use recvecs_indexes,    only: nm, np
@@ -387,7 +387,7 @@ end subroutine ggenb
       !     ng is the number of Gs local to this processor
       !
       allocate( gx ( 3, ng ) )
-      allocate( g  ( ng ) )
+      allocate( gg ( ng ) )
       allocate( ggp( ngw ) )
       allocate( np ( ng ) )
       allocate( nm ( ng ) )
@@ -401,7 +401,7 @@ end subroutine ggenb
       !     fourth step : find the vectors with g2 < gcut
       !     local to each processor
       !
-      CALL glocal( ng, g, ig_l2g, mill_l, ng_g, g2_g, mill_g, nr1, nr2, nr3, dfftp%isind, dfftp%nr1x  )
+      CALL glocal( ng, gg, ig_l2g, mill_l, ng_g, g2_g, mill_g, nr1, nr2, nr3, dfftp%isind, dfftp%nr1x  )
 
       IF( iprsta > 3 ) THEN
         WRITE( stdout,*)
@@ -475,7 +475,7 @@ end subroutine ggenb
 ! shells of G - first calculate their number and position
 !
 
-      CALL gshcount( ngl, ngsl, ngwl, igl, ng, g, gcuts, gcutw )
+      CALL gshcount( ngl, ngsl, ngwl, igl, ng, gg, gcuts, gcutw )
 
 !
 ! then allocate the array gl
@@ -484,15 +484,15 @@ end subroutine ggenb
 !
 ! and finally fill gl with the values of the shells
 !
-      gl(igl(1))=g(1)
+      gl(igl(1))=gg(1)
       do ig=2,ng
-         if(igl(ig).ne.igl(ig-1)) gl(igl(ig))=g(ig)
+         if(igl(ig).ne.igl(ig-1)) gl(igl(ig))=gg(ig)
       end do
 !
 ! gstart is the index of the first nonzero G-vector
 ! needed in the parallel case (G=0 is found on one node only!)
 !
-      if ( g(1) < 1.d-6 ) then
+      if ( gg(1) < 1.d-6 ) then
          gstart = 2
       else
          gstart = 1
@@ -693,7 +693,7 @@ END SUBROUTINE gglobal
 
 
 !-------------------------------------------------------------------------
-SUBROUTINE glocal( ng, g, ig_l2g, mill_l, ng_g, g2_g, mill_g, nr1, nr2, nr3, isind, ldis )
+SUBROUTINE glocal( ng, gg, ig_l2g, mill_l, ng_g, g2_g, mill_g, nr1, nr2, nr3, isind, ldis )
 !-------------------------------------------------------------------------
 
   USE kinds,     ONLY: DP
@@ -703,7 +703,7 @@ SUBROUTINE glocal( ng, g, ig_l2g, mill_l, ng_g, g2_g, mill_g, nr1, nr2, nr3, isi
 
   INTEGER :: ng_g, ng
   INTEGER :: mill_g(3,*), ig_l2g(*), mill_l(3,*)
-  REAL(DP) :: g2_g(*), g(*)
+  REAL(DP) :: g2_g(*), gg(*)
   integer :: nr1, nr2, nr3, isind(*), ldis
 
   INTEGER :: i, j, k, ig, n1p, n2p, ng_l
@@ -726,7 +726,7 @@ SUBROUTINE glocal( ng, g, ig_l2g, mill_l, ng_g, g2_g, mill_g, nr1, nr2, nr3, isi
 #endif
 
         ng_l=ng_l+1
-        g(ng_l)=g2_g(ig)
+        gg(ng_l)=g2_g(ig)
         ig_l2g(ng_l) = ig
         mill_l(1:3,ng_l) = mill_g(1:3,ig)
       end do loop_allg
@@ -885,7 +885,7 @@ END SUBROUTINE gfftindex
 
 
 !-------------------------------------------------------------------------
-SUBROUTINE gshcount( ngl, ngsl, ngwl, igl, ng, g, gcuts, gcutw )
+SUBROUTINE gshcount( ngl, ngsl, ngwl, igl, ng, gg, gcuts, gcutw )
 !-------------------------------------------------------------------------
 
   USE kinds,     ONLY: DP
@@ -895,17 +895,17 @@ SUBROUTINE gshcount( ngl, ngsl, ngwl, igl, ng, g, gcuts, gcutw )
   INTEGER :: ngl, ngsl, ngwl
   INTEGER :: igl(*)
   INTEGER :: ng
-  REAL(DP) :: g(*), gcuts, gcutw
+  REAL(DP) :: gg(*), gcuts, gcutw
 
   INTEGER :: ig
 
       ngl=1
       igl(1)=ngl
       do ig=2,ng
-         if(abs(g(ig)-g(ig-1)).gt.1.e-6)then
+         if(abs(gg(ig)-gg(ig-1)).gt.1.e-6)then
             ngl=ngl+1
-            if (g(ig).lt.gcuts) ngsl=ngl
-            if (g(ig).lt.gcutw) ngwl=ngl
+            if (gg(ig).lt.gcuts) ngsl=ngl
+            if (gg(ig).lt.gcutw) ngwl=ngl
          endif
          igl(ig)=ngl
       end do
@@ -932,7 +932,7 @@ END SUBROUTINE gshcount
       USE kinds,     ONLY: DP
       use constants, only: tpi
       use control_flags, only: iprint
-      use reciprocal_vectors, only: g, gx, mill_l
+      use reciprocal_vectors, only: gg, gx, mill_l
       use gvecp, only: ngm
       use gvecw, only: ngw
       use gvecw, only: ggp, ecutz, ecsig, ecfix
@@ -958,8 +958,8 @@ END SUBROUTINE gshcount
          gx(1,ig)=i1*b1(1)+i2*b2(1)+i3*b3(1)
          gx(2,ig)=i1*b1(2)+i2*b2(2)+i3*b3(2)
          gx(3,ig)=i1*b1(3)+i2*b2(3)+i3*b3(3)
-         g(ig)=gx(1,ig)**2 + gx(2,ig)**2 + gx(3,ig)**2
-         if(g(ig).gt.gmax) gmax=g(ig)
+         gg(ig)=gx(1,ig)**2 + gx(2,ig)**2 + gx(3,ig)**2
+         if(gg(ig).gt.gmax) gmax=gg(ig)
       enddo
  
       tpiba2 = ( tpi / alat ) ** 2
@@ -967,11 +967,11 @@ END SUBROUTINE gshcount
 !
       IF( gcutz > 0.0d0 ) THEN
         do ig=1,ngw
-           ggp(ig) = g(ig) + gcutz * &
-                     ( 1.0d0 + qe_erf( ( tpiba2 * g(ig) - ecfix ) / ecsig ) )
+           ggp(ig) = gg(ig) + gcutz * &
+                     ( 1.0d0 + qe_erf( ( tpiba2 *gg(ig) - ecfix ) / ecsig ) )
         enddo
       ELSE
-        ggp( 1 : ngw ) = g( 1 : ngw )
+        ggp( 1 : ngw ) = gg( 1 : ngw )
       END IF
 !
       return

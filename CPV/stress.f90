@@ -45,7 +45,6 @@
       !
       USE kinds,              ONLY: DP
       USE ions_base,          ONLY: nsp
-      USE reciprocal_vectors, ONLY: gstart
       USE gvecs,              ONLY: ngs
       USE electrons_base,     ONLY: nspin
       USE stress_param,       ONLY: dalbe
@@ -160,7 +159,7 @@
       USE kinds,              ONLY: DP
       USE gvecw,              ONLY: ecsig, ecfix, ecutz, ngw
       USE constants,          ONLY: pi
-      USE reciprocal_vectors, ONLY: gstart, g, gx
+      USE reciprocal_vectors, ONLY: gstart, gg, gx
       USE cell_base,          ONLY: tpiba2
       USE electrons_base,     ONLY: nspin, iupdwn, nupdwn
       USE stress_param,       ONLY: alpha, beta
@@ -186,7 +185,7 @@
       efac = 2.0d0 * ecutz / ecsig / SQRT(pi)
       IF( efac > 0.0d0 ) THEN
         DO ig = gstart, ngw
-          arg(ig) = 1.0d0 + efac * exp( -( ( tpiba2 * g(ig) - ecfix ) / ecsig )**2 )
+          arg(ig) = 1.0d0 + efac * exp( -( ( tpiba2 *gg(ig) - ecfix ) / ecsig )**2 )
         END DO
       ELSE
         arg = 1.0d0
@@ -270,7 +269,7 @@
       use mp_global,          ONLY: me_image, root_image
       USE constants,          ONLY: fpi
       USE cell_base,          ONLY: tpiba2
-      USE reciprocal_vectors, ONLY: gstart, g
+      USE reciprocal_vectors, ONLY: gstart
       USE gvecs,              ONLY: ngs
       USE gvecp,              ONLY: ngm
       USE local_pseudo,       ONLY: rhops
@@ -355,7 +354,7 @@
       use mp_global,          ONLY: me_image, root_image
       USE constants,          ONLY: fpi
       USE cell_base,          ONLY: tpiba2
-      USE reciprocal_vectors, ONLY: gstart, g
+      USE reciprocal_vectors, ONLY: gstart, gg
       USE gvecs,              ONLY: ngs
       USE gvecp,              ONLY: ngm
       USE local_pseudo,       ONLY: rhops
@@ -386,7 +385,7 @@
 
       hgm1( 1 ) = 0.0d0
       DO ig = gstart, ngm
-         hgm1( ig ) = 1.D0 / g(ig) / tpiba2
+         hgm1( ig ) = 1.D0 / gg(ig) / tpiba2
       END DO
 
       ! Add term  rho_t * CONJG( rho_t ) / G^2 * G_alpha * G_beta / G^2

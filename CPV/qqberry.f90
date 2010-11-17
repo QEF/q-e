@@ -26,7 +26,7 @@ subroutine qqberry2( gqq,gqqm, ipol)
   use ions_base
   use ions_base,          only: nas => nax
   use cell_base,          only: a1, a2, a3
-  use reciprocal_vectors, only: gx, g
+  use reciprocal_vectors, only: gx, gg
   use mp,                 only: mp_sum
   use mp_global,          only: intra_image_comm
   use cp_interfaces,      only: fill_qrl
@@ -58,7 +58,7 @@ subroutine qqberry2( gqq,gqqm, ipol)
   allocate( qradb2(nbetam,nbetam,lmaxq,nsp))
   allocate( ylm(ngw, lmaxq*lmaxq))
 
-  CALL ylmr2( lmaxq*lmaxq, ngw, gx, g, ylm )
+  CALL ylmr2( lmaxq*lmaxq, ngw, gx, gg, ylm )
 
   qradb2 = 0.0d0
      

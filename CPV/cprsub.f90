@@ -31,7 +31,7 @@ subroutine formf( tfirst, eself )
   use pseudopotential, ONLY : tpstab, vps_sp, dvps_sp
   use cp_interfaces,   ONLY : build_pstab
   use splines,         ONLY : spline
-  use reciprocal_vectors, ONLY : gstart, g
+  use reciprocal_vectors, ONLY : gstart, gg
   use constants,       ONLY : autoev
   !
   implicit none
@@ -79,7 +79,7 @@ subroutine formf( tfirst, eself )
         END IF
         !
         DO ig = gstart, ngs
-           xg = SQRT( g(ig) ) * tpiba
+           xg = SQRT( gg(ig) ) * tpiba
            vps (ig,is) = spline(  vps_sp(is), xg ) * cost1
            dvps(ig,is) = spline( dvps_sp(is), xg ) * cost1
         END DO
@@ -87,7 +87,7 @@ subroutine formf( tfirst, eself )
      ELSE
 
         call formfn( rgrid(is)%r, rgrid(is)%rab, &
-                     upf(is)%vloc(1:rgrid(is)%mesh), zv(is), rcmax(is), g, &
+                     upf(is)%vloc(1:rgrid(is)%mesh), zv(is), rcmax(is), gg, &
                      omega, tpiba2, rgrid(is)%mesh, ngs, oldvan(is), tpre, &
                      vps(:,is), vps0(is), dvps(:,is) )
 
@@ -100,7 +100,7 @@ subroutine formf( tfirst, eself )
      !
      !     fourier transform of local pp and gaussian nuclear charge
      !
-     call compute_rhops( rhops(:,is), drhops(:,is), zv(is), rcmax(is), g,   &
+     call compute_rhops( rhops(:,is), drhops(:,is), zv(is), rcmax(is), gg, &
                          omega, tpiba2, ngs, tpre )
 
      if( tfirst .or. ( iprsta >= 4 ) )then

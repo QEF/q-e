@@ -131,7 +131,7 @@
 
      !     G^2 in increasing order (in units of tpiba2=(2pi/a)^2)
      !
-     REAL(DP), ALLOCATABLE, TARGET :: g(:) 
+     REAL(DP), ALLOCATABLE, TARGET :: gg(:) 
 
      !     shells of G^2
      !
@@ -177,7 +177,7 @@
    CONTAINS
 
      SUBROUTINE deallocate_recvecs
-       IF( ALLOCATED( g ) ) DEALLOCATE( g )
+       IF( ALLOCATED( gg ) ) DEALLOCATE( gg )
        IF( ALLOCATED( gl ) ) DEALLOCATE( gl )
        IF( ALLOCATED( gx ) ) DEALLOCATE( gx )
        IF( ALLOCATED( g2_g ) ) DEALLOCATE( g2_g )

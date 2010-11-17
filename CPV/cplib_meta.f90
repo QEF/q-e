@@ -261,7 +261,6 @@
       use gvecp, only: ng => ngm
       use cell_base, only: omega
       use cell_base, only: a1, a2, a3, tpiba2
-      use reciprocal_vectors, only: gstart, g
       use recvecs_indexes, only: np, nm
       use grid_dimensions, only: nr1, nr2, nr3, &
             nr1x, nr2x, nr3x, nnr => nrxx

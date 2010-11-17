@@ -40,7 +40,7 @@
         USE io_global,          ONLY: ionode
         USE io_files,           ONLY: opt_unit
         USE gvecp,              ONLY: ngm
-        USE reciprocal_vectors, ONLY: gstart, gx, g
+        USE reciprocal_vectors, ONLY: gstart, gx, gg
 
         IMPLICIT NONE
 
@@ -95,7 +95,7 @@
             END DO
             IF((gx(ipiano1,IG).EQ.0.d0).AND. &
                (gx(ipiano2,IG).EQ.0.d0))THEN
-              vcg       = fpi_tpiba2 * (rhoeg(ig) + rp) / g(ig)
+              vcg       = fpi_tpiba2 * (rhoeg(ig) + rp) / gg(ig)
               gxt       = gx(iasse, ig) * tpiba
               vrmean(ir) = vrmean(ir) + DBLE(vcg)  * COS(gxt*r) 
               vrmean(ir) = vrmean(ir) - AIMAG(vcg) * SIN(gxt*r)
@@ -227,7 +227,7 @@
       USE io_global,          ONLY: stdout
       USE ions_base,          ONLY: nsp
       USE gvecp,              ONLY: ngm
-      USE reciprocal_vectors, ONLY: gstart, gx, g
+      USE reciprocal_vectors, ONLY: gstart
       USE mp_global,          ONLY: intra_image_comm
       USE mp,                 ONLY: mp_sum
 
@@ -305,7 +305,7 @@
       USE constants,          ONLY: fpi
       USE cell_base,          ONLY: tpiba2, tpiba
       USE io_global,          ONLY: stdout
-      USE reciprocal_vectors, ONLY: gstart, g
+      USE reciprocal_vectors, ONLY: gstart, gg
       USE ions_base,          ONLY: nsp
       USE gvecp,              ONLY: ngm
       USE mp_global,          ONLY: intra_image_comm
@@ -349,9 +349,9 @@
         rhog  = rhet + rp
 
         IF( tscreen ) THEN
-          fpibg     = fpi / ( g(ig) * tpiba2 ) + screen_coul(ig)
+          fpibg     = fpi / ( gg(ig) * tpiba2 ) + screen_coul(ig)
         ELSE
-          fpibg     = fpi / ( g(ig) * tpiba2 )
+          fpibg     = fpi / ( gg(ig) * tpiba2 )
         END IF
 
         vloc(ig) = vloc(ig)  +  fpibg *        rhog 
@@ -417,7 +417,7 @@
       USE cell_base,          ONLY: tpiba2, tpiba
       USE io_global,          ONLY: stdout
       USE grid_dimensions,    ONLY: nr1, nr2, nr3
-      USE reciprocal_vectors, ONLY: mill_l, gstart, gx, g
+      USE reciprocal_vectors, ONLY: mill_l, gstart, gx, gg
       USE ions_base,          ONLY: nat, nsp, na
       USE gvecp,              ONLY: ngm
       USE gvecs,              ONLY: ngs
@@ -462,9 +462,9 @@
         RHOG  = RHET + RP
 
         IF( tscreen ) THEN
-          FPIBG     = fpi / ( g(ig) * tpiba2 ) + screen_coul(ig)
+          FPIBG     = fpi / ( gg(ig) * tpiba2 ) + screen_coul(ig)
         ELSE
-          FPIBG     = fpi / ( g(ig) * tpiba2 )
+          FPIBG     = fpi / ( gg(ig) * tpiba2 )
         END IF
 
         ig1  = mill_l(1,IG)
@@ -737,7 +737,7 @@
       USE control_flags,      ONLY: gamma_only
       USE cell_base,          ONLY: tpiba2, boxdimensions
       USE gvecp,              ONLY: ngm
-      USE reciprocal_vectors, ONLY: gstart, g
+      USE reciprocal_vectors, ONLY: gstart, gg
       USE sic_module,         ONLY: sic_epsilon, sic_alpha
       USE mp_global,          ONLY: intra_image_comm
       USE mp,                 ONLY: mp_sum
@@ -765,7 +765,7 @@
 
       IF( tscreen ) THEN
         ALLOCATE( screen_coul( ngm ) )
-        CALL cluster_bc( screen_coul, g, omega, hmat )
+        CALL cluster_bc( screen_coul, gg, omega, hmat )
       END IF
 
       !==  HARTREE ==
@@ -777,9 +777,9 @@
         rhog  = rhoeg(ig,1) - rhoeg(ig,2)
 
         IF( tscreen ) THEN
-          FPIBG     = fpi / ( g(ig) * tpiba2 ) + screen_coul(ig)
+          FPIBG     = fpi / ( gg(ig) * tpiba2 ) + screen_coul(ig)
         ELSE
-          FPIBG     = fpi / ( g(ig) * tpiba2 )
+          FPIBG     = fpi / ( gg(ig) * tpiba2 )
         END IF
 
         vloc(ig) = fpibg * rhog
@@ -834,7 +834,7 @@
       USE ions_base, ONLY: ind_srt
       USE fft_base, ONLY: dfftp, dffts
       USE cell_base, ONLY: tpiba2, boxdimensions, s_to_r
-      USE reciprocal_vectors, ONLY: gstart, g
+      USE reciprocal_vectors, ONLY: gstart, gg
       USE gvecp, ONLY: ngm
       USE gvecw, ONLY: ngw
       use grid_dimensions, only: nr1, nr2, nr3, nr1l, nr2l, nr3l, nrxx
@@ -867,7 +867,7 @@
 
       IF( .FALSE. ) THEN
         ALLOCATE( screen_coul( ngm ) )
-        CALL cluster_bc( screen_coul, g, ht%deth, ht%hmat )
+        CALL cluster_bc( screen_coul, gg, ht%deth, ht%hmat )
       END IF
 
 
@@ -953,9 +953,9 @@
 
               rhog  = k_density(ig)
               IF( .FALSE. ) THEN
-                FPIBG     = fpi / ( g(ig) * tpiba2 ) + screen_coul(ig)
+                FPIBG     = fpi / ( gg(ig) * tpiba2 ) + screen_coul(ig)
               ELSE
-                FPIBG     = fpi / ( g(ig) * tpiba2 )
+                FPIBG     = fpi / ( gg(ig) * tpiba2 )
               END IF
 
               ehte       = ehte   +  fpibg *   DBLE(rhog * CONJG(rhog))

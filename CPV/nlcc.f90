@@ -25,7 +25,7 @@
      use pseudopotential,    ONLY : tpstab, rhoc1_sp, rhocp_sp
      use cell_base,          ONLY : omega, tpiba2, tpiba
      USE splines,            ONLY : spline
-     use reciprocal_vectors, ONLY : ngm, g, gstart
+     use reciprocal_vectors, ONLY : ngm, gg, gstart
      USE core,               ONLY : rhocb, rhocg, drhocg, nlcc_any
      !
      IMPLICIT NONE
@@ -68,7 +68,7 @@
                     drhocg(1,is) = 0.0d0
                  END IF
                  DO ig = gstart, SIZE( rhocg, 1 )
-                    xg = SQRT( g(ig) ) * tpiba
+                    xg = SQRT( gg(ig) ) * tpiba
                     rhocg (ig,is) = spline( rhoc1_sp(is), xg ) * cost1
                     drhocg(ig,is) = spline( rhocp_sp(is), xg ) * cost1
                  END DO
@@ -76,7 +76,7 @@
               ELSE
 
                  CALL compute_rhocg( rhocg(:,is), drhocg(:,is), rgrid(is)%r, &
-                                     rgrid(is)%rab, upf(is)%rho_atc(:), g, &
+                                     rgrid(is)%rab, upf(is)%rho_atc(:), gg, &
                                      omega, tpiba2, rgrid(is)%mesh, ngm, 1 )
 
               END IF

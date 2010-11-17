@@ -177,7 +177,7 @@
       USE cell_base,          ONLY : tpiba, tpiba2
       USE mp,                 ONLY : mp_max
       USE mp_global,          ONLY : intra_image_comm
-      USE reciprocal_vectors, ONLY : g
+      USE reciprocal_vectors, ONLY : gg
       USE pseudopotential,    ONLY : xgtab
       USE betax,              ONLY : mmx
       !
@@ -192,7 +192,7 @@
       nval = mmx
       !
       xgmin = 0.0d0
-      xgmax = tpiba * SQRT( MAXVAL( g ) )
+      xgmax = tpiba * SQRT( MAXVAL( gg ) )
       CALL mp_max(xgmax, intra_image_comm)
       xgmax = xgmax + (xgmax-xgmin)
       dxg   = (xgmax - xgmin) / DBLE(nval-1)
@@ -221,7 +221,7 @@
       USE pseudo_base,        ONLY : formfn, formfa
       USE uspp_param,         only : upf, oldvan
       USE control_flags,      only : tpre
-      use reciprocal_vectors, ONLY : g, gstart
+      use reciprocal_vectors, ONLY : gg, gstart
       USE cp_interfaces,      ONLY : compute_xgtab, chkpstab
       USE pseudopotential,    ONLY : vps_sp, dvps_sp, xgtab
       USE local_pseudo,       ONLY : vps0
@@ -239,7 +239,7 @@
       IF( .NOT. ALLOCATED( upf ) ) &
          CALL errore( ' build_pstab_x ', ' upf not allocated ', 1 )
       !
-      compute_tab = chkpstab( g, xgtabmax ) 
+      compute_tab = chkpstab( gg, xgtabmax ) 
       !
       IF( ALLOCATED( vps_sp ) ) THEN
          !
@@ -300,7 +300,7 @@
       USE cell_base,          ONLY : tpiba, tpiba2
       USE splines,            ONLY : init_spline, allocate_spline, kill_spline, nullify_spline
       USE pseudo_base,        ONLY : compute_rhocg
-      USE reciprocal_vectors, ONLY : g, gstart
+      USE reciprocal_vectors, ONLY : gg, gstart
       USE cp_interfaces,      ONLY : compute_xgtab, chkpstab
       USE pseudopotential,    ONLY : rhoc1_sp, rhocp_sp, xgtab
       USE betax,              ONLY : mmx
@@ -317,7 +317,7 @@
       IF( .NOT. ALLOCATED( upf ) ) &
          CALL errore( ' build_cctab_x ', ' upf not allocated ', 1 )
       !
-      compute_tab = chkpstab( g, xgtabmax )
+      compute_tab = chkpstab( gg, xgtabmax )
       !
       IF( ALLOCATED( rhoc1_sp ) ) THEN
          !
@@ -632,7 +632,7 @@
       INTEGER :: is, iv, l, il, ir, jv, ijv, ierr
       INTEGER :: ig, i,j, jj, nr
       REAL(DP), ALLOCATABLE :: dfint(:), djl(:), fint(:), jl(:), qrl(:,:,:)
-      REAL(DP) :: xg, c, betagl, dbetagl, gg
+      REAL(DP) :: xg, c, betagl, dbetagl
       REAL(DP), ALLOCATABLE :: dqradb(:,:,:,:)
       REAL(DP), ALLOCATABLE :: dqrad( :, :, :, :, :, : )
       REAL(DP), ALLOCATABLE :: qradb(:,:,:,:)
@@ -887,24 +887,24 @@
       USE cell_base,          ONLY : tpiba2
       USE small_box,          ONLY : tpibab
       USE gvecb,              ONLY : gb, ngb
-      USE reciprocal_vectors, ONLY : g
+      USE reciprocal_vectors, ONLY : gg
       !
       IMPLICIT NONE
       !
-      REAL(DP) :: gg, ggb, gmax
+      REAL(DP) :: g2, g2b, gmax
       !
-      gg  = MAXVAL( g( 1:ngw ) )
-      gg  = gg * tpiba2 / refg
+      g2  = MAXVAL( gg( 1:ngw ) )
+      g2  = g2 * tpiba2 / refg
       !
       IF( ALLOCATED( gb ) ) THEN
          !
-         ggb = MAXVAL( gb( 1:ngb ) )
-         ggb = ggb * tpibab * tpibab / refg
-         gmax = MAX( gg, ggb )
+         g2b = MAXVAL( gb( 1:ngb ) )
+         g2b = g2b * tpibab * tpibab / refg
+         gmax = MAX( g2, g2b )
          !
       ELSE
          !
-         gmax = gg
+         gmax = g2
          !
       END IF
       !
@@ -931,7 +931,7 @@
       USE io_global, only: stdout
       USE gvecw, only: ngw
       USE ions_base, only: nsp
-      USE reciprocal_vectors, only: g, gx, gstart
+      USE reciprocal_vectors, only: gg, gx, gstart
       USE uspp_param, only: upf, lmaxq, lmaxkb, nh
       USE uspp, only: qq, nhtolm, beta
       USE cell_base, only: ainv, omega, tpiba2, tpiba
@@ -943,11 +943,11 @@
       LOGICAL, INTENT(IN) :: tpre
  
       REAL(DP), ALLOCATABLE ::  ylm(:,:), dylm(:,:,:,:)
-      REAL(DP) :: c, gg, betagl, dbetagl
+      REAL(DP) :: c, g2, betagl, dbetagl
       INTEGER   :: is, iv, lp, ig, jj, i, j
 
       ALLOCATE( ylm( ngw, (lmaxkb+1)**2 ) )
-      CALL ylmr2 ( (lmaxkb+1)**2, ngw, gx, g, ylm)
+      CALL ylmr2 ( (lmaxkb+1)**2, ngw, gx, gg, ylm)
       !
       !
       do is = 1, nsp
@@ -959,9 +959,9 @@
          do iv = 1, nh(is)
             lp = nhtolm( iv, is )
             do ig = gstart, ngw
-               gg = g( ig ) * tpiba * tpiba / refg
-               jj = int( gg ) + 1
-               betagl = betagx( jj+1, iv, is ) * ( gg - DBLE(jj-1) ) + betagx( jj, iv, is ) * ( DBLE(jj) - gg )
+               g2 = gg( ig ) * tpiba * tpiba / refg
+               jj = int( g2 ) + 1
+               betagl = betagx( jj+1, iv, is ) * ( g2 - DBLE(jj-1) ) + betagx( jj, iv, is ) * ( DBLE(jj) - g2 )
                beta( ig, iv, is ) = c * ylm( ig, lp ) * betagl
             end do
             if( gstart == 2 ) then
@@ -976,7 +976,7 @@
          !
          allocate( dylm( ngw, (lmaxkb+1)**2, 3, 3 ) )
          !
-         call dylmr2_( (lmaxkb+1)**2, ngw, gx, g, ainv, dylm )
+         call dylmr2_( (lmaxkb+1)**2, ngw, gx, gg, ainv, dylm )
          !
          do is = 1, nsp
             if( iprsta .ge. 4 ) WRITE( stdout,*)  '  dbeta  '
@@ -993,18 +993,18 @@
                   enddo
                end if
                do ig = gstart, ngw
-                  gg = g(ig) * tpiba * tpiba / refg
-                  jj=int(gg)+1
-                  betagl = betagx(  jj+1, iv, is ) * ( gg - DBLE(jj-1) ) +         &
-     &                     betagx(  jj  , iv, is ) * ( DBLE(jj) - gg )
-                  dbetagl= dbetagx( jj+1, iv, is ) * ( gg - DBLE(jj-1) ) +        &
-     &                     dbetagx( jj  , iv, is ) * ( DBLE(jj) - gg )
+                  g2 = gg(ig) * tpiba * tpiba / refg
+                  jj=int(g2)+1
+                  betagl = betagx(  jj+1, iv, is ) * ( g2 - DBLE(jj-1) ) +         &
+     &                     betagx(  jj  , iv, is ) * ( DBLE(jj) - g2 )
+                  dbetagl= dbetagx( jj+1, iv, is ) * ( g2 - DBLE(jj-1) ) +        &
+     &                     dbetagx( jj  , iv, is ) * ( DBLE(jj) - g2 )
                   do i=1,3
                      do j=1,3
                         dbeta( ig, iv, is, i, j ) =                            &
      &                    - 0.5d0 * beta( ig, iv, is ) * ainv( j, i )          &
      &                    - c * dylm( ig, lp, i, j ) * betagl                  &  ! SEGNO
-     &                    - c * ylm ( ig, lp )       * dbetagl * gx( i, ig ) / g( ig )         &
+     &                    - c * ylm ( ig, lp )       *dbetagl * gx(i,ig)/gg(ig)&
      &                    * ( gx( 1, ig ) * ainv( j, 1 ) + gx( 2, ig ) * ainv( j, 2 ) + gx( 3, ig ) * ainv( j, 3 ) )
                      end do
                   end do
@@ -1056,7 +1056,7 @@
       REAL(DP), ALLOCATABLE :: dqrad( :, :, :, :, :, : )
       REAL(DP), ALLOCATABLE :: qradb( :, :, :, : )
       complex(dp), allocatable:: dqgbs(:,:,:)
-      real(dp) xg, c, betagl, dbetagl, gg
+      real(dp) xg, c, betagl, dbetagl, g2
 !
       !
       if( nvb < 1 ) &
@@ -1091,15 +1091,15 @@
                   qradb(1,ijv,l,is) = c * qradx(1,ijv,l,is)
                end do
                do ig=2,ngb
-                  gg=gb(ig)*tpibab*tpibab/refg
-                  jj=int(gg)+1
+                  g2=gb(ig)*tpibab*tpibab/refg
+                  jj=int(g2)+1
                   do l=1,upf(is)%nqlc
                      if(jj.ge.mmx) then
                         qradb(ig,ijv,l,is)=0.d0
                      else
                         qradb(ig,ijv,l,is)=                           &
-     &                       c*qradx(jj+1,ijv,l,is)*(gg-DBLE(jj-1))+  &
-     &                       c*qradx(jj,ijv,l,is)*(DBLE(jj)-gg)
+     &                       c*qradx(jj+1,ijv,l,is)*(g2-DBLE(jj-1))+  &
+     &                       c*qradx(jj,ijv,l,is)*(DBLE(jj)-g2)
                      endif
                   enddo
                enddo
@@ -1145,14 +1145,14 @@
                   do l=1,upf(is)%nqlc
                      dqradb(1,ijv,l,is) =  dqradx(1,ijv,l,is)
                      do ig=2,ngb
-                        gg=gb(ig)*tpibab*tpibab/refg
-                        jj=int(gg)+1
+                        g2=gb(ig)*tpibab*tpibab/refg
+                        jj=int(g2)+1
                         if(jj.ge.mmx) then
                            dqradb(ig,ijv,l,is) = 0.d0
                         else
                            dqradb(ig,ijv,l,is) =  &
-                                dqradx(jj+1,ijv,l,is)*(gg-DBLE(jj-1)) +  &
-                                dqradx(jj,ijv,l,is)*(DBLE(jj)-gg)
+                                dqradx(jj+1,ijv,l,is)*(g2-DBLE(jj-1)) +  &
+                                dqradx(jj,ijv,l,is)*(DBLE(jj)-g2)
                         endif
                      enddo
                      do i=1,3
@@ -1221,14 +1221,14 @@
       USE cell_base,     only : ainv, omega, tpiba2, tpiba
       USE cdvan,         ONLY : dbeta
       USE atom,          ONLY : rgrid
-      USE reciprocal_vectors, only : g, gx, gstart
+      USE reciprocal_vectors, only : gg, gx, gstart
 
       IMPLICIT NONE
 
       LOGICAL, INTENT(IN) :: tpre
  
       REAL(DP), ALLOCATABLE ::  ylm(:,:), dylm(:,:,:,:)
-      REAL(DP) :: c, gg, betagl, dbetagl
+      REAL(DP) :: c, g2, betagl, dbetagl
       INTEGER :: is, iv, lp, ig, jj, i, j, nr
       INTEGER :: l, il, ir
       REAL(DP), ALLOCATABLE :: dfint(:), djl(:), fint(:), jl(:)
@@ -1244,7 +1244,7 @@
       ALLOCATE( betagx ( ngw, nhm, nsp ) )
       IF (tpre) ALLOCATE( dbetagx( ngw, nhm, nsp ) )
 
-      CALL ylmr2 ( (lmaxkb+1)**2, ngw, gx, g, ylm)
+      CALL ylmr2 ( (lmaxkb+1)**2, ngw, gx, gg, ylm)
 
       !
       do is = 1, nsp
@@ -1265,7 +1265,7 @@
             !
             do il = 1, ngw
                !
-               xg = sqrt( g( il ) * tpiba * tpiba )
+               xg = sqrt( gg( il ) * tpiba * tpiba )
                call sph_bes (nr, rgrid(is)%r, xg, l, jl )
                !
                if( tpre )then
@@ -1332,7 +1332,7 @@
          !
          allocate( dylm( ngw, (lmaxkb+1)**2, 3, 3 ) )
          !
-         call dylmr2_( (lmaxkb+1)**2, ngw, gx, g, ainv, dylm )
+         call dylmr2_( (lmaxkb+1)**2, ngw, gx, gg, ainv, dylm )
          !
          do is = 1, nsp
             if( iprsta .ge. 4 ) WRITE( stdout,*)  '  dbeta  '
@@ -1352,9 +1352,9 @@
                   do i=1,3
                      do j=1,3
                         dbeta(ig,iv,is,i,j)=                            &
-     &                    -0.5d0*beta(ig,iv,is)*ainv(j,i)                 &
+     &                    -0.5d0*beta(ig,iv,is)*ainv(j,i)               &
      &                    -c*dylm(ig,lp,i,j)*betagl                     &  ! SEGNO
-     &                    -c*ylm (ig,lp)*dbetagl*gx(i,ig)/g(ig)         &
+     &                    -c*ylm (ig,lp)*dbetagl*gx(i,ig)/gg(ig)        &
      &                    *(gx(1,ig)*ainv(j,1)+                         &
      &                      gx(2,ig)*ainv(j,2)+                         &
      &                      gx(3,ig)*ainv(j,3))

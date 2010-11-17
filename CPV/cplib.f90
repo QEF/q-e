@@ -14,7 +14,7 @@
 !
       USE kinds,              ONLY: DP
       USE gvecw,              ONLY: ngw
-      USE reciprocal_vectors, ONLY: g, gx
+      USE reciprocal_vectors, ONLY: gg, gx
       USE ions_base,          ONLY: nsp, na, nat
       USE cell_base,          ONLY: tpiba
       USE atom,               ONLY: rgrid
@@ -40,14 +40,14 @@
       !
       ALLOCATE(ylm(ngw,(lmax_wfc+1)**2))
       !
-      CALL ylmr2 ((lmax_wfc+1)**2, ngw, gx, g, ylm)
+      CALL ylmr2 ((lmax_wfc+1)**2, ngw, gx, gg, ylm)
       ndm = MAXVAL(rgrid(1:nsp)%mesh)
       !
       ALLOCATE(jl(ndm), vchi(ndm))
       ALLOCATE(q(ngw), chiq(ngw))
 !
       DO i=1,ngw
-         q(i) = SQRT(g(i))*tpiba
+         q(i) = SQRT(gg(i))*tpiba
       END DO
 !
       natwfc=0
@@ -197,7 +197,7 @@ END FUNCTION
 !
       USE kinds,              ONLY: DP
       USE ions_base,          ONLY: nsp
-      USE reciprocal_vectors, ONLY: gstart, gx, ngs, g, ngm
+      USE reciprocal_vectors, ONLY: gstart, gx, ngs, gg, ngm
       USE recvecs_indexes,    ONLY: np
       USE cell_base,          ONLY: omega, ainv, tpiba2
       USE mp,                 ONLY: mp_sum
@@ -245,7 +245,7 @@ END FUNCTION
                DO is = 1, nsp
                  IF( upf(is)%nlcc ) srhoc = srhoc + sfac( ig, is ) * drhocg( ig, is )
                ENDDO
-               vxcc = DBLE( CONJG( vxc( np( ig ) ) ) * srhoc ) / SQRT( g( ig ) * tpiba2 )
+               vxcc = DBLE( CONJG( vxc( np( ig ) ) ) * srhoc ) / SQRT( gg(ig) * tpiba2 )
                dcc(i,j) = dcc(i,j) + vxcc * &
      &                      2.d0 * tpiba2 * gx(i,ig) *                  &
      &                    (gx(1,ig)*ainv(j,1) +                         &
@@ -452,115 +452,7 @@ END FUNCTION
 !
       RETURN
    END FUNCTION enkin
-!
-!
-!-----------------------------------------------------------------------
-      SUBROUTINE gausin(eigr,cm)
-!-----------------------------------------------------------------------
-!
-! initialize wavefunctions with gaussians - edit to fit your system
-!
-      USE kinds,              ONLY: DP
-      USE ions_base,          ONLY: na, nsp, nat
-      USE electrons_base,     ONLY: n => nbsp
-      USE gvecw,              ONLY: ngw
-      USE reciprocal_vectors, ONLY: gx, g
-!
-      IMPLICIT NONE
-!
-      COMPLEX(DP) eigr(ngw,nat), cm(ngw,n)
-      REAL(DP)    sigma, auxf
-      INTEGER nband, is, ia, ig, isa
-!
-      sigma=12.0d0
-      nband=0
-!!!      do is=1,nsp
-      isa = 0
-      is=1
-         DO ia=1,na(is)
-! s-like gaussians
-            nband=nband+1
-            DO ig=1,ngw
-               auxf=EXP(-g(ig)/sigma**2)
-               cm(ig,nband)=auxf*eigr(ig,ia+isa)
-            END DO
-! px-like gaussians
-            nband=nband+1
-            DO ig=1,ngw
-               auxf=EXP(-g(ig)/sigma**2)
-               cm(ig,nband)=auxf*eigr(ig,ia+isa)*gx(1,ig)
-            END DO
-! py-like gaussians
-            nband=nband+1
-            DO ig=1,ngw
-               auxf=EXP(-g(ig)/sigma**2)
-               cm(ig,nband)=auxf*eigr(ig,ia+isa)*gx(2,ig)
-            END DO
-! pz-like gaussians
-            nband=nband+1
-            DO ig=1,ngw
-               auxf=EXP(-g(ig)/sigma**2)
-               cm(ig,nband)=auxf*eigr(ig,ia+isa)*gx(3,ig)
-            END DO
-         END DO
-      isa = isa + na(is)
-      is=2
-         DO ia=1,na(is)
-! s-like gaussians
-!            nband=nband+1
-!            do ig=1,ngw
-!               auxf=exp(-g(ig)/sigma**2)
-!               cm(ig,nband)=auxf*eigr(ig,ia+isa)
-!            end do
-! px-like gaussians
-!            nband=nband+1
-!            do ig=1,ngw
-!               auxf=exp(-g(ig)/sigma**2)
-!               cm(ig,nband)=auxf*eigr(ig,ia+isa)*gx(1,ig)
-!            end do
-! py-like gaussians
-!            nband=nband+1
-!            do ig=1,ngw
-!               auxf=exp(-g(ig)/sigma**2)
-!               cm(ig,nband)=auxf*eigr(ig,ia+isa)*gx(2,ig)
-!            end do
-! pz-like gaussians
-!            nband=nband+1
-!            do ig=1,ngw
-!               auxf=exp(-g(ig)/sigma**2)
-!               cm(ig,nband)=auxf*eigr(ig,ia+isa)*gx(3,ig)
-!            end do
-! dxy-like gaussians
-!            nband=nband+1
-!            do ig=1,ngw
-!               auxf=exp(-g(ig)/sigma**2)
-!               cm(ig,nband)=auxf*eigr(ig,ia+isa)*gx(1,ig)*gx(2,ig)
-!            end do
-! dxz-like gaussians
-!            nband=nband+1
-!            do ig=1,ngw
-!               auxf=exp(-g(ig)/sigma**2)
-!               cm(ig,nband)=auxf*eigr(ig,ia+isa)*gx(1,ig)*gx(3,ig)
-!            end do
-! dxy-like gaussians
-!            nband=nband+1
-!            do ig=1,ngw
-!               auxf=exp(-g(ig)/sigma**2)
-!               cm(ig,nband)=auxf*eigr(ig,ia+isa)*gx(2,ig)*gx(3,ig)
-!            end do
-! dx2-y2-like gaussians
-!            nband=nband+1
-!            do ig=1,ngw
-!               auxf=exp(-g(ig)/sigma**2)
-!               cm(ig,nband)=auxf*eigr(ig,ia+isa)*                        &
-!     &              (gx(1,ig)**2-gx(2,ig)**2)
-!            end do
-         END DO
-!!!      end do
-      RETURN
-      END SUBROUTINE gausin
 !            
-
 !-------------------------------------------------------------------------
       SUBROUTINE gracsc( bec, nkbx, betae, cp, ngwx, i, csc, n )
 !-----------------------------------------------------------------------
@@ -1777,7 +1669,7 @@ END FUNCTION
       USE gvecp,              ONLY: ng => ngm
       USE cell_base,          ONLY: omega, r_to_s
       USE cell_base,          ONLY: a1, a2, a3, tpiba2, h, ainv
-      USE reciprocal_vectors, ONLY: gstart, g, gx
+      USE reciprocal_vectors, ONLY: gstart, gg, gx
       USE recvecs_indexes,    ONLY: np, nm
       USE grid_dimensions,    ONLY: nr1, nr2, nr3, nnr => nrxx
       USE smooth_grid_dimensions, ONLY: nrxxs
@@ -1980,7 +1872,7 @@ END FUNCTION
       !
 !$omp do
       DO ig = gstart, ng
-         vtemp(ig) = CONJG( rhotmp( ig ) ) * rhotmp( ig ) / g( ig )
+         vtemp(ig) = CONJG( rhotmp( ig ) ) * rhotmp( ig ) / gg( ig )
       END DO
 
 !$omp do reduction(+:zh)
@@ -2036,7 +1928,7 @@ END FUNCTION
 !$omp parallel default(shared), private(ig,is)
 !$omp do
       DO ig=gstart,ng
-         vtemp(ig)=rhotmp(ig)*fpi/(tpiba2*g(ig))
+         vtemp(ig)=rhotmp(ig)*fpi/(tpiba2*gg(ig))
       END DO
 !
       DO is=1,nsp
@@ -2841,7 +2733,7 @@ end function set_Hubbard_l
 !
       use ions_base,          only: na, nsp
       use gvecw,              only: ngw
-      use reciprocal_vectors, only: g, gx, gstart
+      use reciprocal_vectors, only: gg, gx, gstart
       use cell_base,          only: omega, tpiba
       use constants,          only: fpi
       USE atom,               ONLY: rgrid
@@ -2864,11 +2756,11 @@ end function set_Hubbard_l
       allocate(chiq(ngw))
 !
       do ig=1,ngw
-         q(ig) = sqrt(g(ig))*tpiba
+         q(ig) = sqrt(gg(ig))*tpiba
       end do
       if (gstart == 2) gxn(1,:)=0.0d0
       do ig=gstart,ngw
-         gxn(:,ig) = gx(:,ig)/sqrt(g(ig)) !ik<=>ig
+         gxn(:,ig) = gx(:,ig)/sqrt(gg(ig)) !ik<=>ig
       end do
 !
       natwfc=0
@@ -2883,7 +2775,7 @@ end function set_Hubbard_l
       !
       ALLOCATE(ylm(ngw,(lmax_wfc+1)**2))
       !
-      CALL ylmr2 ((lmax_wfc+1)**2, ngw, gx, g, ylm)
+      CALL ylmr2 ((lmax_wfc+1)**2, ngw, gx, gg, ylm)
 !#@@@@
 
       do is = 1, nsp
@@ -3023,7 +2915,7 @@ end function set_Hubbard_l
 !
       use ions_base, only: na, nat
       use gvecw, only: ngw
-      use reciprocal_vectors, only: g, gx, gstart
+      use reciprocal_vectors, only: gx, gstart
       use electrons_base, only: n => nbsp, nx => nbspx
 !      use gvec
 !      use constants
@@ -3238,7 +3130,7 @@ end function set_Hubbard_l
 !
       USE kinds,              ONLY: DP
       USE gvecw,              ONLY: ngw
-      USE reciprocal_vectors, ONLY: gstart, g, gx
+      USE reciprocal_vectors, ONLY: gstart, gg, gx
       USE ions_base,          ONLY: nsp, na, nat
       USE cell_base,          ONLY: tpiba, omega !#@@@
       USE atom,               ONLY: rgrid
@@ -3267,14 +3159,14 @@ end function set_Hubbard_l
       !
       ALLOCATE(ylm(ngw,(lmax_wfc+1)**2))
       !
-      CALL ylmr2 ((lmax_wfc+1)**2, ngw, gx, g, ylm)
+      CALL ylmr2 ((lmax_wfc+1)**2, ngw, gx, gg, ylm)
       ndm = MAXVAL(rgrid(1:nsp)%mesh)
       !
       ALLOCATE(jl(ndm), vchi(ndm))
       ALLOCATE(q(ngw), chiq(ngw))
 !
       DO i=1,ngw
-         q(i) = SQRT(g(i))*tpiba
+         q(i) = SQRT(gg(i))*tpiba
       END DO
 !
       natwfc=0
