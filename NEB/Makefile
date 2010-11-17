@@ -13,8 +13,7 @@ LIBOBJS= ../iotk/src/libiotk.a ../flib/flib.a \
 
 NEBOBJS = \
 string_methods.o \
-compute_scf.o \
-compute_fes_grads.o 
+compute_scf.o
 
 NEBLIBS = \
 input.o \

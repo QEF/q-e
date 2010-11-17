@@ -15,15 +15,12 @@ MODULE path_base
   !
   ! ... Other relevant files are:
   !
-  ! ... Modules/path_variables.f90
-  ! ... Modules/path_io_routines.f90
-  ! ... Modules/path_opt_routines.f90
-  ! ... Modules/path_reparametrisation.f90
-  ! ... Modules/path_formats.f90
-  ! ... PW/compute_scf.f90
-  ! ... PW/compute_fes_grads.f90
-  ! ... CPV/compute_scf.f90
-  ! ... CPV/compute_fes_grads.f90
+  ! ... path_variables.f90
+  ! ... path_io_routines.f90
+  ! ... path_opt_routines.f90
+  ! ... path_reparametrisation.f90
+  ! ... path_formats.f90
+  ! ... compute_scf.f90
   !
   ! ... The code is based on the NEB algorithm described in :
   !
@@ -785,40 +782,6 @@ MODULE path_base
       RETURN
       !
     END SUBROUTINE born_oppenheimer_pes
-    !
-    !------------------------------------------------------------------------
-    SUBROUTINE born_oppenheimer_fes( stat )
-      !------------------------------------------------------------------------
-      !
-      USE path_variables, ONLY : num_of_images, pending_image, &
-                                 istep_path, first_last_opt
-      !
-      IMPLICIT NONE
-      !
-      LOGICAL, INTENT(OUT) :: stat
-      !
-      INTEGER :: fii, lii
-      !
-      !
-      IF ( istep_path == 0 .OR. first_last_opt ) THEN
-         !
-         fii = 1
-         lii = num_of_images
-         !
-      ELSE
-         !
-         fii = 2
-         lii = num_of_images - 1
-         !
-      END IF
-      !
-      IF ( pending_image /= 0 ) fii = pending_image
-      !
-      CALL compute_fes_grads( fii, lii, stat )
-      !
-      RETURN
-      !
-    END SUBROUTINE born_oppenheimer_fes
     !
     !------------------------------------------------------------------------
     SUBROUTINE fe_profile()
