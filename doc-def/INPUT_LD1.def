@@ -889,6 +889,13 @@ input_description -distribution {Quantum Espresso} -program ld1.x {
 	subsection -title {Recipes to reproduce old all-electron atomic results with the ld1 program} {
 
 	    text {	    
+                * The Hartree results in Phys. Rev. 59, 299 (1940) or in
+                  Phys. Rev. 59, 306 (1940) can be reproduced with
+        
+		    rel=0,
+		    isic=1,
+		    dft='NOX-NOC'
+
 		* The Herman-Skillman tables can be reproduced with:
 
 		    rel=0,
