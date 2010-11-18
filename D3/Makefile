@@ -4,7 +4,7 @@ include ../make.sys
 
 # location of needed modules
 MODFLAGS= $(MOD_FLAG)../iotk/src $(MOD_FLAG)../Modules \
-          $(MOD_FLAG)../EE $(MOD_FLAG)../PW $(MOD_FLAG)../PH $(MOD_FLAG).
+          $(MOD_FLAG)../PW $(MOD_FLAG)../PH $(MOD_FLAG).
 
 D3OBJS = \
 allocate_d3.o \
@@ -63,7 +63,6 @@ write_igk.o \
 writed3dyn_5.o
 
 PHOBJS = ../PH/libph.a
-EEOBJS=../EE/libee.a
 PWOBJS = ../PW/libpw.a
 QEMODS = ../Modules/libqemod.a
 
@@ -71,9 +70,9 @@ TLDEPS= bindir mods libs pw ph
 
 all : tldeps d3.x
 
-d3.x : $(D3OBJS) $(PHOBJS) $(PWOBJS) $(QEMODS) $(EEOBJS) $(LIBOBJS)
+d3.x : $(D3OBJS) $(PHOBJS) $(PWOBJS) $(QEMODS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o d3.x $(D3OBJS) \
-		$(PHOBJS) $(PWOBJS) $(EEOBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
+		$(PHOBJS) $(PWOBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../D3/d3.x . )
 tldeps:
 	test -n "$(TLDEPS)" && ( cd .. ; $(MAKE) $(MFLAGS) $(TLDEPS) || exit 1) || :

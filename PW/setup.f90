@@ -84,7 +84,7 @@ SUBROUTINE setup()
   USE paw_variables,      ONLY : okpaw
   USE start_k,            ONLY : nks_start, xk_start, wk_start
 ! DCC
-  USE ee_mod,             ONLY : do_coarse, do_mltgrid
+!  USE ee_mod,             ONLY : do_coarse, do_mltgrid
 
   !
   IMPLICIT NONE
@@ -433,9 +433,8 @@ SUBROUTINE setup()
   !
   CALL set_fft_dim()
 ! DCC
-  IF( do_coarse ) CALL set_fft_dim_coarse()
-  !
-  IF( do_mltgrid ) CALL set_mltgrid_dim()
+!  IF( do_coarse ) CALL set_fft_dim_coarse()
+!  IF( do_mltgrid ) CALL set_mltgrid_dim()
   !
   !  ... generate transformation matrices for the crystal point group
   !  ... First we generate all the symmetry matrices of the Bravais lattice

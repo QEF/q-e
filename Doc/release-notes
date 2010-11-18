@@ -1,6 +1,7 @@
 New in CVS version:
 
   * Dispersion interactions (van der Waals) with nonlocal functional
+  * New xml-based input - still experimental
   * Additions to projwfc: k-resolved DOS, LDOS integrated in selected
     real-space regions
   * Constant-volume variable-cell optimization
@@ -21,7 +22,8 @@ Fixed in CVS version:
     should be given in KBar as stated in the documentation!
   * CP: incorrect stress calculated in the spin-polarized case 
   * PW: corrected an old bug for Berry's phase finite electric field 
-        calculations with non-orthorombic simulation cells.
+        calculations with non-orthorombic simulation cells. Also fixed 
+        an old but minor bug on averaging of Berry phases between strings
 
 Fixed in version 4.2.1:
 

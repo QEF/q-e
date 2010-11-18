@@ -4,7 +4,7 @@ include ../make.sys
 
 # location of needed modules
 MODFLAGS= $(MOD_FLAG)../iotk/src $(MOD_FLAG)../Modules \
-          $(MOD_FLAG)../EE $(MOD_FLAG)../PW $(MOD_FLAG)../GIPAW $(MOD_FLAG).
+          $(MOD_FLAG)../PW $(MOD_FLAG)../GIPAW $(MOD_FLAG).
 
 XOBJS = \
 ./xspectra_mod.o \
@@ -22,13 +22,12 @@ GIPAWOBJS=../GIPAW/paw_gipaw.o \
 
 QEMODS = ../Modules/libqemod.a
 PWOBJS = ../PW/libpw.a 
-EEOBJS = ../EE/libee.a
 
 all : xspectra.x 
 
 xspectra.x :   xspectra.o $(XOBJS) $(GIPAWOBJS) $(QEMODS) $(PWOBJS)
 	$(MPIF90) -o $@  xspectra.o $(XOBJS) $(GIPAWOBJS) \
-		$(PWOBJS) $(EEOBJS) $(QEMODS) $(LDFLAGS) $(LIBOBJS) $(LIBS)
+		$(PWOBJS) $(QEMODS) $(LDFLAGS) $(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../XSpectra/$@ . )
 
 clean :

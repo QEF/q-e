@@ -39,7 +39,7 @@ SUBROUTINE forces()
   USE extfield,      ONLY : tefield, forcefield
   USE control_flags, ONLY : gamma_only, remove_rigid_rot, lbfgs, textfor, llondon
 ! DCC
-  USE ee_mod,        ONLY : vcomp, do_comp, ecomp, which_compensation
+!  USE ee_mod,        ONLY : vcomp, do_comp, ecomp, which_compensation
   USE bp,            ONLY : lelfield, forces_bp_efield, gdir, &
                             l3dstring,efield_cart,efield_cry,efield
   USE uspp,          ONLY : okvan
@@ -60,7 +60,7 @@ SUBROUTINE forces()
                            forceh(:,:)
     ! nonlocal, local, core-correction, ewald, scf correction terms, and hubbard
 ! DCC
-  REAL( DP ), ALLOCATABLE :: force_vcorr(:,:)
+!  REAL( DP ), ALLOCATABLE :: force_vcorr(:,:)
 
   REAL(DP) :: sumfor, sumscf, sum_mm
   REAL(DP),PARAMETER :: eps = 1.e-12_dp
@@ -126,13 +126,13 @@ SUBROUTINE forces()
 
   END IF
 ! DCC
-  IF( do_comp ) THEN
-      ALLOCATE( force_vcorr(3, nat  ) )
-      force_vcorr(:,:)=0
-      CALL add_dccdil_forces(vcomp, force_vcorr, &
-                             nr1, nr2, nr3, nr1x, nr2x, nr3x, nrxx )
-
-  END IF
+!  IF( do_comp ) THEN
+!      ALLOCATE( force_vcorr(3, nat  ) )
+!      force_vcorr(:,:)=0
+!      CALL add_dccdil_forces(vcomp, force_vcorr, &
+!                             nr1, nr2, nr3, nr1x, nr2x, nr3x, nrxx )
+!
+!  END IF
 
   !
   ! Berry's phase electric field terms
@@ -175,7 +175,7 @@ SUBROUTINE forces()
         IF (lelfield)  force(ipol,na) = force(ipol,na) + forces_bp_efield(ipol,na)
         IF (do_comp_mt)force(ipol,na) = force(ipol,na) + force_mt(ipol,na) 
 ! DCC
-        IF (do_comp) force(ipol,na) = force(ipol,na) + force_vcorr(ipol,na)
+!        IF (do_comp) force(ipol,na) = force(ipol,na) + force_vcorr(ipol,na)
 
         sumfor = sumfor + force(ipol,na)
         !
@@ -313,7 +313,7 @@ SUBROUTINE forces()
   !
   IF(ALLOCATED(force_mt))   DEALLOCATE( force_mt )
 ! DCC
-  IF(ALLOCATED(force_vcorr))   DEALLOCATE( force_vcorr )
+!  IF(ALLOCATED(force_vcorr))   DEALLOCATE( force_vcorr )
 
 
   RETURN

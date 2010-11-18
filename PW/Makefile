@@ -3,8 +3,7 @@
 include ../make.sys
 
 # location of needed modules
-MODFLAGS= $(MOD_FLAG)../iotk/src $(MOD_FLAG)../Modules \
-          $(MOD_FLAG)../EE $(MOD_FLAG).
+MODFLAGS= $(MOD_FLAG)../iotk/src $(MOD_FLAG)../Modules $(MOD_FLAG).
 
 PWOBJS = \
 pwscf.o 
@@ -226,7 +225,6 @@ wannier_clean.o \
 wannier_occ.o \
 wannier_enrg.o \
 
-EEOBJS=../EE/libee.a
 QEMODS=../Modules/libqemod.a
 
 TLDEPS=bindir mods libs liblapack libblas eelib
@@ -235,7 +233,7 @@ all : tldeps pw.x generate_vdW_kernel_table.x
 
 pw.x : $(PWOBJS) libpw.a $(LIBOBJS) 
 	$(LD) $(LDFLAGS) -o $@ \
-	   $(PWOBJS) libpw.a $(EEOBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
+	   $(PWOBJS) libpw.a $(QEMODS) $(LIBOBJS) $(LIBS)
 	- ( cd ../bin; ln -fs ../PW/$@ . )
 
 libpw.a : $(PWLIBS) 
@@ -250,7 +248,7 @@ clean :
 
 generate_vdW_kernel_table.x : generate_vdW_kernel_table.o
 	$(LD) $(LDFLAGS) -o $@ \
-		generate_vdW_kernel_table.o $(QEMODS) ${EEMODS} libpw.a $(LIBOBJS) $(LIBS)
+		generate_vdW_kernel_table.o $(QEMODS) libpw.a $(LIBOBJS) $(LIBS)
 	- ( cd ../bin; ln -fs ../PW/$@ . )
 
 include make.depend

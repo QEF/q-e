@@ -37,7 +37,7 @@ default :
 ###########################################################
 # Main targets
 ###########################################################
-pw : bindir mods liblapack libblas libs libiotk eelib
+pw : bindir mods liblapack libblas libs libiotk
 	if test -d PW ; then \
 	( cd PW ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= all ; \
 	else $(MAKE) $(MFLAGS) TLDEPS= all ; fi ) ; fi
@@ -137,7 +137,7 @@ all   : pwall cp ld1 upf gww tddfpt
 mods : libiotk
 	( cd Modules ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= all ; \
 	else $(MAKE) $(MFLAGS) TLDEPS= all ; fi )
-libs : mods mglib
+libs : mods
 	( cd clib ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= all ; \
 	else $(MAKE) $(MFLAGS) TLDEPS= all ; fi )
 	( cd flib ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= $(FLIB_TARGETS) ; \

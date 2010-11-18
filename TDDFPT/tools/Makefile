@@ -2,7 +2,7 @@
 
 include ../../make.sys
 IFLAGS         = -I../../include
-LIBOBJS        = ../../flib/ptools.a ../../flib/flib.a ../../clib/clib.a ../../iotk/src/libiotk.a ../../Multigrid/mglib.a
+LIBOBJS        = ../../flib/ptools.a ../../flib/flib.a ../../clib/clib.a ../../iotk/src/libiotk.a 
 
 
 # location of needed modules
@@ -10,7 +10,6 @@ MODFLAGS= $(MOD_FLAG)../../iotk/src $(MOD_FLAG)../../Modules $(MOD_FLAG).
 
 QEMODS = ../../Modules/libqemod.a
 PWOBJS = ../../PW/libpw.a
-EEOBJS = ../../EE/libee.a
 
 TLDEPS=bindir libs pw
 

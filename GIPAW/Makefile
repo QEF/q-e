@@ -4,7 +4,7 @@ include ../make.sys
 
 # location of needed modules
 MODFLAGS= $(MOD_FLAG)../iotk/src $(MOD_FLAG)../Modules \
-          $(MOD_FLAG)../EE $(MOD_FLAG)../PW $(MOD_FLAG).
+          $(MOD_FLAG)../PW $(MOD_FLAG).
 
 GIPAWOBJS = \
 gipaw_module.o \
@@ -33,7 +33,6 @@ write_tensor_field.o \
 efg.o
 
 QEMODS = ../Modules/libqemod.a
-EEOBJS=../EE/libee.a
 PWOBJS = ../PW/libpw.a
 
 TLDEPS=bindir pw mods libs libiotk
@@ -42,7 +41,7 @@ all : tldeps gipaw.x
 
 gipaw.x : $(GIPAWOBJS) $(PWOBJS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ $(GIPAWOBJS) \
-		$(PWOBJS) $(EEOBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
+		$(PWOBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
 	- ( cd ../bin; ln -fs ../GIPAW/$@ . )
 
 tldeps:

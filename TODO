@@ -304,7 +304,7 @@ TODO LIST - November 2010
   4.5.9 Spin-polarized cases: clumsy, error-prone input (e.g.:
         occupations='fixed' vs 'from_input', input card)
  4.5.10 k-points in crystal IBZ should be correctly calculated also
-        if input k-points are not in the IBZ of the lattice. Is is
+        if input k-points are not in the IBZ of the lattice. It is
         sufficient to use brute forces instead of group theory:
         expand to full BZ, remove symmetry-equivalent k 
 

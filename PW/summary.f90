@@ -49,8 +49,8 @@ SUBROUTINE summary()
   USE mp_global,       ONLY : intra_pool_comm
   USE mp,              ONLY : mp_sum
 ! DCC
-  USE ee_mod,          ONLY : do_comp, do_coarse, do_mltgrid, mr1, mr2, mr3
-  USE gcoarse,         ONLY : ngmc, gcutmc
+!  USE ee_mod,          ONLY : do_comp, do_coarse, do_mltgrid, mr1, mr2, mr3
+!  USE gcoarse,         ONLY : ngmc, gcutmc
   !
   IMPLICIT NONE
   !
@@ -141,7 +141,7 @@ SUBROUTINE summary()
   END IF
  
 ! DCC
-  IF ( do_comp )  CALL write_ee_summary()
+!  IF ( do_comp )  CALL write_ee_summary()
 
   IF ( lelfield ) THEN !here informations for berry's phase el. fields calculations
      WRITE(stdout, *)
@@ -306,11 +306,11 @@ SUBROUTINE summary()
   ENDIF
 
 ! DCC
-  IF (do_coarse .OR. do_mltgrid ) THEN
-    WRITE( stdout, '(5x,"G cutoff =",f10.4,"  (", &
-          &    i7," G-vectors)","  coarse grid: (",i3, &
-          &    ",",i3,",",i3,")")') gcutmc, ngmc, mr1, mr2, mr3
-  END IF
+!  IF (do_coarse .OR. do_mltgrid ) THEN
+!    WRITE( stdout, '(5x,"G cutoff =",f10.4,"  (", &
+!          &    i7," G-vectors)","  coarse grid: (",i3, &
+!          &    ",",i3,",",i3,")")') gcutmc, ngmc, mr1, mr2, mr3
+!  END IF
 
   IF (tfixed_occ) THEN
      WRITE( stdout, '(/,5X,"Occupations read from input ")' ) 

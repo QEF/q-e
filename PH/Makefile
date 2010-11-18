@@ -4,7 +4,7 @@ include ../make.sys
 
 # location of needed modules
 MODFLAGS= $(MOD_FLAG)../iotk/src $(MOD_FLAG)../Modules \
-          $(MOD_FLAG)../EE $(MOD_FLAG)../PW $(MOD_FLAG).
+          $(MOD_FLAG)../PW $(MOD_FLAG).
 
 PHOBJS = \
 add_dkmds.o \
@@ -185,7 +185,6 @@ dhdrhopsi.o\
 set_dvscf.o
 
 PWOBJS = ../PW/libpw.a
-EEOBJS=../EE/libee.a
 QEMODS = ../Modules/libqemod.a
 
 
@@ -195,22 +194,22 @@ all : tldeps libph.a ph.x dynmat.x matdyn.x q2r.x lambda.x fqha.x
 
 ph.x : phonon.o libph.a $(PWOBJS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o ph.x phonon.o libph.a \
-		 $(PWOBJS) $(EEOBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
+		 $(PWOBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../PH/ph.x . )
 
-dynmat.x : dynmat.o rigid.o libph.a $(PWOBJS)  $(MODULES) $(EEMODS) $(LIBOBJS)
+dynmat.x : dynmat.o rigid.o libph.a $(PWOBJS)  $(MODULES) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ dynmat.o rigid.o libph.a \
-		 $(PWOBJS) $(EEOBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
+		 $(PWOBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../PH/$@ . )
 
-matdyn.x : matdyn.o rigid.o libph.a $(PWOBJS)  $(MODULES) $(EEMODS) $(LIBOBJS)
+matdyn.x : matdyn.o rigid.o libph.a $(PWOBJS)  $(MODULES) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ matdyn.o rigid.o libph.a \
-		 $(PWOBJS) $(EEOBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
+		 $(PWOBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../PH/$@ . )
 
-q2r.x : q2r.o rigid.o libph.a $(PWOBJS)  $(MODULES) $(EEMODS) $(LIBOBJS)
+q2r.x : q2r.o rigid.o libph.a $(PWOBJS)  $(MODULES) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ q2r.o rigid.o libph.a \
-		 $(PWOBJS) $(EEOBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
+		 $(PWOBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../PH/$@ . )
 
 lambda.x : lambda.o $(PWOBJS) $(QEMODS) $(LIBOBJS)

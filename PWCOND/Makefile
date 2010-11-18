@@ -4,7 +4,7 @@ include ../make.sys
 
 # location of needed modules
 MODFLAGS= $(MOD_FLAG)../iotk/src $(MOD_FLAG)../Modules \
-          $(MOD_FLAG)../EE $(MOD_FLAG)../PW $(MOD_FLAG).
+          $(MOD_FLAG)../PW $(MOD_FLAG).
 
 PPOBJS = \
 ../PP/stop_pp.o \
@@ -49,16 +49,15 @@ sunitary.o \
 transmit.o 
 
 PWOBJS = ../PW/libpw.a
-EEOBJS=../EE/libee.a
 QEMODS = ..//Modules/libqemod.a
 
 TLDEPS= bindir mods libs pw pp
 
 all : tldeps pwcond.x
 
-pwcond.x : $(PWCONDOBJS) $(PWOBJS) $(PPOBJS) $(QEMODS) $(EEOBJS) $(LIBOBJS)
+pwcond.x : $(PWCONDOBJS) $(PWOBJS) $(PPOBJS) $(QEMODS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o pwcond.x $(PWCONDOBJS) $(PPOBJS) \
-		$(PWOBJS) $(EEOBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
+		$(PWOBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../PWCOND/pwcond.x . )
 
 tldeps:

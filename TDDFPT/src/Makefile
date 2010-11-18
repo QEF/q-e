@@ -3,18 +3,17 @@
 
 include ../../make.sys
 IFLAGS         = -I../../include
-LIBOBJS        = ../../flib/ptools.a ../../flib/flib.a ../../clib/clib.a ../../iotk/src/libiotk.a ../../Multigrid/mglib.a
+LIBOBJS        = ../../flib/ptools.a ../../flib/flib.a ../../clib/clib.a ../../iotk/src/libiotk.a 
 
 
 
 # location of needed modules
 MODFLAGS= $(MOD_FLAG)../../iotk/src $(MOD_FLAG)../../Modules \
-          $(MOD_FLAG)../../EE $(MOD_FLAG) . $(MOD_FLAG)../../PW \
+          $(MOD_FLAG) . $(MOD_FLAG)../../PW \
           $(MOD_FLAG)../../PH
 
 QEMODS = ../../Modules/libqemod.a
 PWOBJS = ../../PW/libpw.a
-EEOBJS = ../../EE/libee.a
 PHOBJS=../../PH/libph.a
 
 LROBJS= \
@@ -53,14 +52,9 @@ TLDEPS=bindir libs pw ph
  
 all :  tldeps tddfpt.x
 
-#tddfpt.x : $(PWOBJS) $(EEOBJS) $(PHOBJS) $(LROBJS) 
-#	$(MPIF90) $(LDFLAGS) -o tddfpt.x \
-#	$(PWOBJS) $(EEOBJS) $(PHOBJS) $(LROBJS) $(MODULES) $(EEMODS) $(LIBOBJS) $(LIBS) 
-#	- ( cd ../../bin; ln -fs ../../TDDFPT/tddfpt.x . )
-#
-tddfpt.x : $(LROBJS) $(PWOBJS) $(QEMODS) $(PWOBJS) $(PHOBJS) $(PWOBJS) $(EEOBJS) $(LIBOBJS)
+tddfpt.x : $(LROBJS) $(PWOBJS) $(QEMODS) $(PWOBJS) $(PHOBJS) $(PWOBJS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ \
-		$(LROBJS) $(PHOBJS) $(PWOBJS) $(EEOBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
+		$(LROBJS) $(PHOBJS) $(PWOBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
 	- ( cd ../../bin ; ln -fs ../TDDFPT/src/$@ . )
 	- if [ -d ../bin ] ; then  ( cd ../bin ; ln -fs ../src/$@ . ); fi
 

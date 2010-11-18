@@ -8,12 +8,11 @@ IFLAGS=-I../../include
 
 # location of needed modules
 MODFLAGS= $(MOD_FLAG)../../iotk/src $(MOD_FLAG)../../Modules \
-          $(MOD_FLAG)../../EE $(MOD_FLAG)../pw4gww $(MOD_FLAG).
+          $(MOD_FLAG)../pw4gww $(MOD_FLAG).
 
 #location of needed libraries
 LIBOBJS= ../../iotk/src/libiotk.a ../../flib/flib.a \
-         ../../clib/clib.a ../../flib/ptools.a \
-         ../../Multigrid/mglib.a
+         ../../clib/clib.a ../../flib/ptools.a 
 
 GWWOBJS = \
 basic_structures.o \
@@ -44,22 +43,20 @@ times_gw.o \
 vcprim.o
 
 QEMODS = ../../Modules/libqemod.a
-EEOBJS=../../EE/libee.a
-
 LIBMIN= ../minpack/minpacklib.a
 
 TLDEPS=bindir mods libs libiotk pack
 
 all : tldeps gww.x gww_fit.x
 
-gww.x : gww.o $(GWWOBJS) $(LIBOBJS) $(QEMODS) $(EEMODS) $(LIBMIN)
+gww.x : gww.o $(GWWOBJS) $(LIBOBJS) $(QEMODS) $(LIBMIN)
 	$(MPIF90) $(LDFLAGS) -o $@ \
-		gww.o $(GWWOBJS) $(EEMODS) $(QEMODS) $(LIBOBJS) $(LIBS) $(LIBMIN)
+		gww.o $(GWWOBJS) $(QEMODS) $(LIBOBJS) $(LIBS) $(LIBMIN)
 	- ( cd ../../bin; ln -fs ../GWW/gww/$@ . )
 
-gww_fit.x : gww_fit.o $(GWWOBJS) $(LIBOBJS) $(EEMODS) $(QEMODS) $(LIBMIN)
+gww_fit.x : gww_fit.o $(GWWOBJS) $(LIBOBJS) $(QEMODS) $(LIBMIN)
 	$(MPIF90) $(LDFLAGS) -o $@ \
-	gww_fit.o $(GWWOBJS) $(EEMODS) $(QEMODS) $(LIBOBJS) $(LIBS) $(LIBMIN)
+	gww_fit.o $(GWWOBJS) $(QEMODS) $(LIBOBJS) $(LIBS) $(LIBMIN)
 	- ( cd ../../bin; ln -fs ../GWW/gww/$@ . )
 
 

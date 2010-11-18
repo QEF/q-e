@@ -4,7 +4,7 @@ include ../make.sys
 
 # location of needed modules
 MODFLAGS= $(MOD_FLAG)../iotk/src $(MOD_FLAG)../Modules \
-          $(MOD_FLAG)../EE $(MOD_FLAG)../PW $(MOD_FLAG).
+          $(MOD_FLAG)../PW $(MOD_FLAG).
 
 CGOBJS = \
 a_h.o \
@@ -37,16 +37,15 @@ writedyn.o \
 zvscal.o
 
 PWOBJS = ../PW/libpw.a
-EEOBJS=../EE/libee.a
 QEMODS = ../Modules/libqemod.a
 
 TLDEPS= bindir mods libs pw
 
 all : tldeps phcg.x
 
-phcg.x : $(PWOBJS) $(CGOBJS) $(QEMODS) $(EEOBJS) $(LIBOBJS)
+phcg.x : $(PWOBJS) $(CGOBJS) $(QEMODS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o phcg.x \
-		$(CGOBJS) $(PWOBJS) $(EEOBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
+		$(CGOBJS) $(PWOBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../Gamma/phcg.x . )
 tldeps:
 	test -n "$(TLDEPS)" && ( cd .. ; $(MAKE) $(MFLAGS) $(TLDEPS) || exit 1) || :

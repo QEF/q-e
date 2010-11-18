@@ -4,7 +4,7 @@ include ../make.sys
 
 # location of needed modules
 MODFLAGS= $(MOD_FLAG)../iotk/src $(MOD_FLAG)../Modules \
-          $(MOD_FLAG)../EE $(MOD_FLAG)../PW $(MOD_FLAG)../PH $(MOD_FLAG).
+          $(MOD_FLAG)../PW $(MOD_FLAG)../PH $(MOD_FLAG).
 
 VdWOBJS = \
 allocate_vdw.o \
@@ -27,7 +27,6 @@ PPOBJS = \
 ../PP/openfil_pp.o
 
 QEMODS = ../Modules/libqemod.a
-EEOBJS=../EE/libee.a
 PWOBJS = ../PW/libpw.a
 PHOBJS = ../PH/libph.a
 
@@ -35,9 +34,9 @@ TLDEPS= bindir mods libs pw ph pp
 
 all : tldeps vdw.x
  
-vdw.x : vdw.o $(VdWOBJS) $(PPOBJS) $(PWOBJS) $(PHOBJS) $(QEMODS) $(EEOBJS) $(LIBOBJS)
+vdw.x : vdw.o $(VdWOBJS) $(PPOBJS) $(PWOBJS) $(PHOBJS) $(QEMODS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ vdw.o \
-		$(VdWOBJS) $(PPOBJS) $(PHOBJS) $(PWOBJS) $(EEOBJS) $(QEMODS) \
+		$(VdWOBJS) $(PPOBJS) $(PHOBJS) $(PWOBJS) $(QEMODS) \
 		$(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../VdW/$@ . )
 

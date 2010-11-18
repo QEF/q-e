@@ -20,8 +20,8 @@ SUBROUTINE allocate_fft
   USE grid_dimensions,        ONLY : nr1, nr2, nr3, nrxx
   USE smooth_grid_dimensions, ONLY : nr1s, nr2s, nr3s, nrxxs
 ! DCC
-  USE gcoarse,   ONLY : nr1c,nr2c,nr3c,nrxxc,ngmc, nlc, nlcm
-  USE ee_mod,    ONLY : do_coarse
+!  USE gcoarse,   ONLY : nr1c,nr2c,nr3c,nrxxc,ngmc, nlc, nlcm
+!  USE ee_mod,    ONLY : do_coarse
   USE ions_base, ONLY : nat
   USE lsda_mod,  ONLY : nspin
   USE spin_orb,  ONLY : domag
@@ -39,7 +39,7 @@ SUBROUTINE allocate_fft
   CALL data_structure( gamma_only )
   !
 ! DCC
-  IF( do_coarse ) CALL data_structure_coarse( gamma_only, nr1,nr2,nr3, ecutwfc )
+!  IF( do_coarse ) CALL data_structure_coarse( gamma_only, nr1,nr2,nr3, ecutwfc )
   !
 
   IF (nrxx.lt.ngm) THEN
@@ -93,10 +93,10 @@ SUBROUTINE allocate_fft
   ENDIF
 
 ! DCC
-  IF( do_coarse ) THEN
-     ALLOCATE (nlc( ngmc))
-     IF (gamma_only) ALLOCATE (nlcm(ngmc))
-  ENDIF
+!  IF( do_coarse ) THEN
+!     ALLOCATE (nlc( ngmc))
+!     IF (gamma_only) ALLOCATE (nlcm(ngmc))
+!  ENDIF
 
   IF (noncolin) ALLOCATE (psic_nc( nrxx, npol))
 

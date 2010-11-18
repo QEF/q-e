@@ -71,13 +71,13 @@ SUBROUTINE electrons()
   USE paw_onecenter,        ONLY : PAW_potential, PAW_symmetrize
   USE uspp_param,           ONLY : nh, nhm ! used for PAW
 !DCC
-  USE ee_mod,               ONLY : n_cycle,                            &
-                                   n_self_interaction,                 &
-                                   which_compensation,                 &
-                                   do_comp, ecomp,                     &
-                                   n_charge_compensation,              &
-                                   vloc_of_g_zero, mr1, mr2, mr3,      &
-                                   vcomp, comp_thr, icomp
+!  USE ee_mod,               ONLY : n_cycle,                            &
+!                                   n_self_interaction,                 &
+!                                   which_compensation,                 &
+!                                   do_comp, ecomp,                     &
+!                                   n_charge_compensation,              &
+!                                   vloc_of_g_zero, mr1, mr2, mr3,      &
+!                                   vcomp, comp_thr, icomp
   USE dfunct,                 only : newd
   !
   !
@@ -113,7 +113,7 @@ SUBROUTINE electrons()
   REAL(DP), EXTERNAL :: ewald, get_clock
   !
 ! DCC
-  REAL (DP), ALLOCATABLE :: vlocinit(:)
+!  REAL (DP), ALLOCATABLE :: vlocinit(:)
 
   iter = 0
   ik_  = 0
@@ -169,17 +169,16 @@ SUBROUTINE electrons()
    end if
 #endif
 
-! DCC
   CALL flush_unit( stdout )
-  IF( do_comp ) THEN
-    icomp = 0
-    CALL flush_unit( stdout )
-    CALL setlocalcoul()
-    CALL flush_unit( stdout )
-    ALLOCATE( vlocinit( nrxx ) )
-    vlocinit = vltot
-    vloc_of_g_zero = SUM( vltot( : ) ) / DBLE( nr1 * nr2 * nr3 )
-  END IF
+! DCC
+!  IF( do_comp ) THEN
+!    icomp = 0
+!    CALL setlocalcoul()
+!    CALL flush_unit( stdout )
+!    ALLOCATE( vlocinit( nrxx ) )
+!    vlocinit = vltot
+!    vloc_of_g_zero = SUM( vltot( : ) ) / DBLE( nr1 * nr2 * nr3 )
+!  END IF
 
   !
   ! ... calculates the ewald contribution to total energy
@@ -198,7 +197,7 @@ SUBROUTINE electrons()
   END IF
   !
 ! DCC
-  call create_scf_type ( rhoin )
+!  call create_scf_type ( rhoin )
 
 #if defined (EXX)
 10 CONTINUE
@@ -551,10 +550,10 @@ SUBROUTINE electrons()
      !
      ! DCC
      !
-     IF ( do_comp )  THEN
-        CALL calc_ecomp( rho%of_r, nr1,nr2,nr3,nr1x,nr2x,nr3x,nrxx,nspin )
-        etot = etot + ecomp
-     END IF
+!     IF ( do_comp )  THEN
+!        CALL calc_ecomp( rho%of_r, nr1,nr2,nr3,nr1x,nr2x,nr3x,nrxx,nspin )
+!        etot = etot + ecomp
+!     END IF
 
      IF ( ( conv_elec .OR. MOD( iter, iprint ) == 0 ) .AND. .NOT. lmd ) THEN
         !
@@ -606,36 +605,36 @@ SUBROUTINE electrons()
      !
      ! DCC
      !
-     IF ( .not. conv_elec .and. do_comp ) THEN
-        !
-        WRITE( stdout, 9268 ) ecomp
-        IF ( icomp == 0 .AND. dr2 < comp_thr ) THEN
+!     IF ( .not. conv_elec .and. do_comp ) THEN
+!        !
+!        WRITE( stdout, 9268 ) ecomp
+!        IF ( icomp == 0 .AND. dr2 < comp_thr ) THEN
           !
           ! ... Add the electrostatic correction to the local potential
           !
-          write (stdout, &
-               '(/5x,"Add the electrostatic correction to the local potential")')
-          vltot = vlocinit
-          CALL flush_unit( stdout )
-          CALL add_ele_corr( vltot, rho%of_r, nelec,                &
-                             nr1, nr2, nr3, nr1x, nr2x, nr3x, nrxx, &
-                             nl, nlm, g, gg, ngm, gstart, nspin     )
-          CALL set_vrs( vrs, vltot, v%of_r, kedtau, v%kin_r, nrxx, nspin, doublegrid )
+!          write (stdout, &
+!               '(/5x,"Add the electrostatic correction to the local potential")')
+!          vltot = vlocinit
+!          CALL flush_unit( stdout )
+!          CALL add_ele_corr( vltot, rho%of_r, nelec,                &
+!                             nr1, nr2, nr3, nr1x, nr2x, nr3x, nrxx, &
+!                             nl, nlm, g, gg, ngm, gstart, nspin     )
+!          CALL set_vrs( vrs, vltot, v%of_r, kedtau, v%kin_r, nrxx, nspin, doublegrid )
           !
-        END IF
+!        END IF
         !
-        IF( dr2 < comp_thr ) THEN
+!        IF( dr2 < comp_thr ) THEN
           !
           ! ... Update counter for the electrostatic correction
           !
-          write (stdout,&
-               '(/5x,"Update the counter for the electrostatic correction")')
-          icomp = icomp + 1
-          icomp = MOD( icomp, n_charge_compensation )
+!          write (stdout,&
+!               '(/5x,"Update the counter for the electrostatic correction")')
+!          icomp = icomp + 1
+!          icomp = MOD( icomp, n_charge_compensation )
           !
-        END IF
+ !       END IF
         !
-     END IF
+!     END IF
      !
      IF ( lsda ) WRITE( stdout, 9017 ) magtot, absmag
      !
@@ -749,7 +748,7 @@ SUBROUTINE electrons()
 9110 FORMAT(/'     convergence has been achieved in ',i3,' iterations' )
 9120 FORMAT(/'     convergence NOT achieved after ',i3,' iterations: stopping' )
 ! DCC
-9268 FORMAT( '     electrostatic correction  =',F17.8,' Ry' ) 
+!9268 FORMAT( '     electrostatic correction  =',F17.8,' Ry' ) 
   !
   CONTAINS
      !

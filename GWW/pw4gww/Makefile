@@ -8,12 +8,11 @@ IFLAGS=-I../../include
 
 # location of needed modules
 MODFLAGS= $(MOD_FLAG)../../iotk/src $(MOD_FLAG)../../Modules \
-          $(MOD_FLAG)../../EE $(MOD_FLAG)../../PW $(MOD_FLAG).
+          $(MOD_FLAG)../../PW $(MOD_FLAG).
 
 #location of needed libraries
 LIBOBJS= ../../iotk/src/libiotk.a ../../flib/flib.a \
-         ../../clib/clib.a ../../flib/ptools.a \
-         ../../Multigrid/mglib.a
+         ../../clib/clib.a ../../flib/ptools.a
 
 PW4GWWOBJS = \
 allocate_wannier.o \
@@ -55,7 +54,6 @@ write_wannier_matrix_c.o \
 write_wannier_products.o 
 
 QEMODS = ../../Modules/libqemod.a
-EEOBJS=../../EE/libee.a
 PWOBJS = ../../PW/libpw.a
 
 LIBMIN= ../minpack/minpacklib.a
@@ -64,9 +62,9 @@ TLDEPS= bindir libs pw
 
 all : tldeps pw4gww.x
 
-pw4gww.x : pw4gww.o libpw4gww.a $(PW4GWWOBJS) $(PWOBJS) $(QEMODS) $(EEOBJS) $(LIBMIN) 
+pw4gww.x : pw4gww.o libpw4gww.a $(PW4GWWOBJS) $(PWOBJS) $(QEMODS) $(LIBMIN) 
 	$(LD) $(LDFLAGS) -o $@ \
-		pw4gww.o libpw4gww.a $(PWOBJS) $(EEOBJS) $(QEMODS) $(LIBOBJS) $(LIBS) $(LIBMIN)
+		pw4gww.o libpw4gww.a $(PWOBJS) $(QEMODS) $(LIBOBJS) $(LIBS) $(LIBMIN)
 	- ( cd ../../bin ; ln -fs ../GWW/pw4gww/$@ . )
  
 tldeps:

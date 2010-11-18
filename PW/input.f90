@@ -109,32 +109,32 @@ SUBROUTINE iosys(xmlinput,attr)
   !
   USE martyna_tuckerman, ONLY: do_comp_mt
 ! DCC
-  USE ee_mod,        ONLY : do_comp, do_coarse, do_mltgrid, &
-                            n_self_interaction_ => n_self_interaction, &
-                            mixing_charge_compensation_ => mixing_charge_compensation, &
-                            mr1_ => mr1, &
-                            mr2_ => mr2, &
-                            mr3_ => mr3, &
-                            ecutcoarse_ => ecutcoarse, &
-                            whichbc_ => whichbc, &
-                            errtol_ => errtol, &
-                            itmax_ => itmax, &
-                            which_compensation_ => which_compensation, &
-                            n_charge_compensation_ => n_charge_compensation, &
-                            ncompx_ => ncompx, &
-                            ncompy_ => ncompy, &
-                            ncompz_ => ncompz, &
-                            rhocut_ => rhocut, &
-                            rhocution_ => rhocution, &
-                            cellmin_ => cellmin, &
-                            cellmax_ => cellmax, &
-                            n_smoothing_ => n_smoothing, &
-                            comp_thr_ => comp_thr, &
-                            smoothspr_ => smoothspr, &
-                            nlev_ =>  nlev, &
-                            deltapot_ => deltapot, &
-                            rhoionmax_ => rhoionmax, &
-                            which_smoothing_ => which_smoothing
+!  USE ee_mod,        ONLY : do_comp, do_coarse, do_mltgrid, &
+!                            n_self_interaction_ => n_self_interaction, &
+!                            mixing_charge_compensation_ => mixing_charge_compensation, &
+!                            mr1_ => mr1, &
+!                            mr2_ => mr2, &
+!                            mr3_ => mr3, &
+!                            ecutcoarse_ => ecutcoarse, &
+!                            whichbc_ => whichbc, &
+!                            errtol_ => errtol, &
+!                            itmax_ => itmax, &
+!                            which_compensation_ => which_compensation, &
+!                            n_charge_compensation_ => n_charge_compensation, &
+!                            ncompx_ => ncompx, &
+!                            ncompy_ => ncompy, &
+!                            ncompz_ => ncompz, &
+!                            rhocut_ => rhocut, &
+!                            rhocution_ => rhocution, &
+!                            cellmin_ => cellmin, &
+!                            cellmax_ => cellmax, &
+!                            n_smoothing_ => n_smoothing, &
+!                            comp_thr_ => comp_thr, &
+!                            smoothspr_ => smoothspr, &
+!                            nlev_ =>  nlev, &
+!                            deltapot_ => deltapot, &
+!                            rhoionmax_ => rhoionmax, &
+!                            which_smoothing_ => which_smoothing
   !
   USE a2F,           ONLY : la2F_ => la2F
   !
@@ -1191,23 +1191,23 @@ SUBROUTINE iosys(xmlinput,attr)
   !
   ! ...  Charge Compensation
   !
-  ecutcoarse_ = ecutcoarse
-  mixing_charge_compensation_ = mixing_charge_compensation
-  n_charge_compensation_ = n_charge_compensation
-  comp_thr_ = comp_thr
-  nlev_ = nlev
-  ! more DCC variables
-  mr1_ = mr1
-  mr2_ = mr2
-  mr3_ = mr3
-  whichbc_ = whichbc
-  errtol_ = errtol
-  itmax_ = itmax
-  ncompx_ = ncompx
-  ncompy_ = ncompy
-  ncompz_ = ncompz
-  cellmin_ = cellmin
-  cellmax_ = cellmax
+!  ecutcoarse_ = ecutcoarse
+!  mixing_charge_compensation_ = mixing_charge_compensation
+!  n_charge_compensation_ = n_charge_compensation
+!  comp_thr_ = comp_thr
+!  nlev_ = nlev
+!  ! more DCC variables
+!  mr1_ = mr1
+!  mr2_ = mr2
+!  mr3_ = mr3
+!  whichbc_ = whichbc
+!  errtol_ = errtol
+!  itmax_ = itmax
+!  ncompx_ = ncompx
+!  ncompy_ = ncompy
+!  ncompz_ = ncompz
+!  cellmin_ = cellmin
+!  cellmax_ = cellmax
   !
   IF (trim(occupations) /= 'from_input') one_atom_occupations=.false.
   !
@@ -1228,35 +1228,35 @@ SUBROUTINE iosys(xmlinput,attr)
     CASE( 'makov-payne', 'm-p', 'mp' )
       !
       do_makov_payne = .true.
-      do_comp        = .false.
-      do_coarse      = .false.
-      do_mltgrid     = .false.
+!      do_comp        = .false.
+!      do_coarse      = .false.
+!      do_mltgrid     = .false.
       do_comp_mt     = .false.
       !
     CASE( 'dcc' )
       !
       CALL errore('iosys','density countercharge correction currently disabled',1)
-      do_comp        = .true.
-      do_coarse      = .false.
-      do_mltgrid     = .true.
+!      do_comp        = .true.
+!      do_coarse      = .false.
+!      do_mltgrid     = .true.
       do_makov_payne = .false.
       do_comp_mt     = .false.
       !
     CASE( 'martyna-tuckerman', 'm-t', 'mt' )
       !
       do_comp_mt     = .true.
-      do_comp        = .false.
-      do_coarse      = .false.
-      do_mltgrid     = .false.
+!      do_comp        = .false.
+!      do_coarse      = .false.
+!      do_mltgrid     = .false.
       do_makov_payne = .false.
       !
     CASE( 'none' )
       !
       do_makov_payne = .false.
-      do_comp        = .false.
-      do_comp_mt     = .false.
-      do_coarse      = .false.
-      do_mltgrid     = .false.
+!      do_comp        = .false.
+!      do_comp_mt     = .false.
+!      do_coarse      = .false.
+!      do_mltgrid     = .false.
       !
     CASE DEFAULT
       !

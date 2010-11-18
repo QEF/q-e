@@ -74,8 +74,6 @@ allocate_bp_efield.o : ../Modules/kind.o
 allocate_bp_efield.o : ../Modules/mp.o
 allocate_bp_efield.o : ../Modules/recvec.o
 allocate_bp_efield.o : pwcom.o
-allocate_fft.o : ../EE/ee_mod.o
-allocate_fft.o : ../EE/gcoarse_mod.o
 allocate_fft.o : ../Modules/control_flags.o
 allocate_fft.o : ../Modules/funct.o
 allocate_fft.o : ../Modules/griddim.o
@@ -347,7 +345,6 @@ efermig.o : ../Modules/mp_global.o
 efermit.o : ../Modules/constants.o
 efermit.o : ../Modules/io_global.o
 efermit.o : ../Modules/kind.o
-electrons.o : ../EE/ee_mod.o
 electrons.o : ../Modules/cell_base.o
 electrons.o : ../Modules/check_stop.o
 electrons.o : ../Modules/constants.o
@@ -471,7 +468,6 @@ force_us.o : buffers.o
 force_us.o : noncol.o
 force_us.o : pwcom.o
 force_us.o : symme.o
-forces.o : ../EE/ee_mod.o
 forces.o : ../Modules/cell_base.o
 forces.o : ../Modules/control_flags.o
 forces.o : ../Modules/griddim.o
@@ -664,7 +660,6 @@ init_ns.o : ../Modules/kind.o
 init_ns.o : ../Modules/uspp.o
 init_ns.o : pwcom.o
 init_ns.o : scf_mod.o
-init_run.o : ../EE/ee_mod.o
 init_run.o : ../Modules/control_flags.o
 init_run.o : ../Modules/griddim.o
 init_run.o : ../Modules/ions_base.o
@@ -701,7 +696,6 @@ init_vloc.o : ../Modules/ions_base.o
 init_vloc.o : ../Modules/kind.o
 init_vloc.o : ../Modules/uspp.o
 init_vloc.o : pwcom.o
-input.o : ../EE/ee_mod.o
 input.o : ../Modules/bfgs_module.o
 input.o : ../Modules/cell_base.o
 input.o : ../Modules/constants.o
@@ -1295,7 +1289,6 @@ setlocal.o : martyna_tuckerman.o
 setlocal.o : pwcom.o
 setlocal.o : scf_mod.o
 setqf.o : ../Modules/kind.o
-setup.o : ../EE/ee_mod.o
 setup.o : ../Modules/cell_base.o
 setup.o : ../Modules/constants.o
 setup.o : ../Modules/control_flags.o
@@ -1461,8 +1454,6 @@ sumkg.o : ../Modules/kind.o
 sumkg.o : ../Modules/mp.o
 sumkg.o : ../Modules/mp_global.o
 sumkt.o : ../Modules/kind.o
-summary.o : ../EE/ee_mod.o
-summary.o : ../EE/gcoarse_mod.o
 summary.o : ../Modules/atom.o
 summary.o : ../Modules/cell_base.o
 summary.o : ../Modules/constants.o
