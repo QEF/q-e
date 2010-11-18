@@ -196,9 +196,8 @@ SUBROUTINE electrons()
                                          bg , tau )
   END IF
   !
-! DCC
-!  call create_scf_type ( rhoin )
-
+  call create_scf_type ( rhoin )
+  !
 #if defined (EXX)
 10 CONTINUE
 #endif
