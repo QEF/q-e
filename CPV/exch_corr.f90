@@ -267,7 +267,7 @@
 !           
       USE kinds,              ONLY: DP
       use control_flags, only: iprint, tpre
-      use reciprocal_vectors, only: gx
+      use reciprocal_vectors, only: g
       use recvecs_indexes, only: np, nm
       use gvecp, only: ng => ngm
       use grid_dimensions, only: nr1, nr2, nr3, nnr => nrxx, nr1x, nr2x, nr3x
@@ -304,7 +304,7 @@
          end do
          call fwfft('Dense',v, dfftp )
          do ig=1,ng
-            x(ig)=ci*tpiba*gx(1,ig)*v(np(ig))
+            x(ig)=ci*tpiba*g(1,ig)*v(np(ig))
          end do
 !
          if(tpre) then
@@ -312,8 +312,8 @@
                do j=1,3
                   do ig=1,ng
                      vtemp(ig) = omega*ci*CONJG(v(np(ig)))*             &
-     &                    tpiba*(-rhog(ig,iss)*gx(i,ig)*ainv(j,1)+      &
-     &                    gx(1,ig)*drhog(ig,iss,i,j))
+     &                    tpiba*(-rhog(ig,iss)*g(i,ig)*ainv(j,1)+      &
+     &                    g(1,ig)*drhog(ig,iss,i,j))
                   end do
                   dexc(i,j) = dexc(i,j) + DBLE(SUM(vtemp))*2.0d0
                end do
@@ -329,9 +329,9 @@
             fp=v(np(ig))+v(nm(ig))
             fm=v(np(ig))-v(nm(ig))
             x(ig) = x(ig) +                                             &
-     &           ci*tpiba*gx(2,ig)*0.5d0*CMPLX( DBLE(fp),AIMAG(fm),kind=DP)
+     &           ci*tpiba*g(2,ig)*0.5d0*CMPLX( DBLE(fp),AIMAG(fm),kind=DP)
             x(ig) = x(ig) +                                             &
-     &           ci*tpiba*gx(3,ig)*0.5d0*CMPLX(AIMAG(fp),-DBLE(fm),kind=DP)
+     &           ci*tpiba*g(3,ig)*0.5d0*CMPLX(AIMAG(fp),-DBLE(fm),kind=DP)
          end do
 !
          if(tpre) then
@@ -342,11 +342,11 @@
                      fm=v(np(ig))-v(nm(ig))
                      vtemp(ig) = omega*ci*                              &
      &                    (0.5d0*CMPLX(DBLE(fp),-AIMAG(fm),kind=DP)*              &
-     &                    tpiba*(-rhog(ig,iss)*gx(i,ig)*ainv(j,2)+      &
-     &                    gx(2,ig)*drhog(ig,iss,i,j))+                  &
+     &                    tpiba*(-rhog(ig,iss)*g(i,ig)*ainv(j,2)+      &
+     &                    g(2,ig)*drhog(ig,iss,i,j))+                  &
      &                    0.5d0*CMPLX(AIMAG(fp),DBLE(fm),kind=DP)*tpiba*          &
-     &                    (-rhog(ig,iss)*gx(i,ig)*ainv(j,3)+            &
-     &                    gx(3,ig)*drhog(ig,iss,i,j)))
+     &                    (-rhog(ig,iss)*g(i,ig)*ainv(j,3)+            &
+     &                    g(3,ig)*drhog(ig,iss,i,j)))
                   end do
                   dexc(i,j) = dexc(i,j) + 2.0d0*DBLE(SUM(vtemp))
                end do

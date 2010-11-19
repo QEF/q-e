@@ -40,7 +40,7 @@
         USE io_global,          ONLY: ionode
         USE io_files,           ONLY: opt_unit
         USE gvecp,              ONLY: ngm
-        USE reciprocal_vectors, ONLY: gstart, gx, gg
+        USE reciprocal_vectors, ONLY: gstart, g, gg
 
         IMPLICIT NONE
 
@@ -93,10 +93,10 @@
             DO is = 1, SIZE( sfac, 2 )
               rp = rp + sfac( ig, is ) * rhops( ig, is )
             END DO
-            IF((gx(ipiano1,IG).EQ.0.d0).AND. &
-               (gx(ipiano2,IG).EQ.0.d0))THEN
+            IF((g(ipiano1,IG).EQ.0.d0).AND. &
+               (g(ipiano2,IG).EQ.0.d0))THEN
               vcg       = fpi_tpiba2 * (rhoeg(ig) + rp) / gg(ig)
-              gxt       = gx(iasse, ig) * tpiba
+              gxt       = g(iasse, ig) * tpiba
               vrmean(ir) = vrmean(ir) + DBLE(vcg)  * COS(gxt*r) 
               vrmean(ir) = vrmean(ir) - AIMAG(vcg) * SIN(gxt*r)
             END IF
@@ -417,7 +417,7 @@
       USE cell_base,          ONLY: tpiba2, tpiba
       USE io_global,          ONLY: stdout
       USE grid_dimensions,    ONLY: nr1, nr2, nr3
-      USE reciprocal_vectors, ONLY: mill_l, gstart, gx, gg
+      USE reciprocal_vectors, ONLY: mill_l, gstart, g, gg
       USE ions_base,          ONLY: nat, nsp, na
       USE gvecp,              ONLY: ngm
       USE gvecs,              ONLY: ngs
@@ -470,9 +470,9 @@
         ig1  = mill_l(1,IG)
         ig2  = mill_l(2,IG)
         ig3  = mill_l(3,IG)
-        GXC  = CMPLX(0.D0,gx(1,IG),kind=DP)
-        GYC  = CMPLX(0.D0,gx(2,IG),kind=DP)
-        GZC  = CMPLX(0.D0,gx(3,IG),kind=DP)
+        GXC  = CMPLX(0.D0,g(1,IG),kind=DP)
+        GYC  = CMPLX(0.D0,g(2,IG),kind=DP)
+        GZC  = CMPLX(0.D0,g(3,IG),kind=DP)
         isa = 1
         DO IS = 1, nsp
            CNVG  = RHOPS(IG,is) * FPIBG * CONJG(rhog)

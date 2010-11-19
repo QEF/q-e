@@ -642,7 +642,7 @@
       !     in: charge density on G-space    out: gradient in R-space
       !
       USE kinds,              ONLY: DP
-      use reciprocal_vectors, only: gx
+      use reciprocal_vectors, only: g
       use recvecs_indexes,    only: np, nm
       use gvecp,              only: ngm
       use grid_dimensions,    only: nr1, nr2, nr3, &
@@ -674,8 +674,8 @@
          end do
 !$omp do
          do ig=1,ngm
-            v(np(ig))=      ci*tpiba*gx(1,ig)*rhog(ig,iss)
-            v(nm(ig))=CONJG(ci*tpiba*gx(1,ig)*rhog(ig,iss))
+            v(np(ig))=      ci*tpiba*g(1,ig)*rhog(ig,iss)
+            v(nm(ig))=CONJG(ci*tpiba*g(1,ig)*rhog(ig,iss))
          end do
 !$omp end parallel
          !
@@ -692,10 +692,10 @@
          end do
 !$omp do
          do ig=1,ngm
-            v(np(ig))= tpiba*(      ci*gx(2,ig)*rhog(ig,iss)-           &
-     &                                 gx(3,ig)*rhog(ig,iss) )
-            v(nm(ig))= tpiba*(CONJG(ci*gx(2,ig)*rhog(ig,iss)+           &
-     &                                 gx(3,ig)*rhog(ig,iss)))
+            v(np(ig))= tpiba*(      ci*g(2,ig)*rhog(ig,iss)-           &
+     &                                 g(3,ig)*rhog(ig,iss) )
+            v(nm(ig))= tpiba*(CONJG(ci*g(2,ig)*rhog(ig,iss)+           &
+     &                                 g(3,ig)*rhog(ig,iss)))
          end do
 !$omp end parallel
          !

@@ -1018,7 +1018,7 @@ SUBROUTINE wfunc_init( clwf, b1, b2, b3, ibrav )
   !
   USE io_global,          ONLY : stdout
   USE kinds,              ONLY : DP
-  USE reciprocal_vectors, ONLY : gx, mill_l, gstart
+  USE reciprocal_vectors, ONLY : g, mill_l, gstart
   USE gvecw,              ONLY : ngw
   USE electrons_base,     ONLY : nbsp
   USE wannier_base,       ONLY : gnx, gnn, indexplus, indexminus, &
@@ -1062,9 +1062,9 @@ SUBROUTINE wfunc_init( clwf, b1, b2, b3, ibrav )
   vt=1.0d-4
   j=0
   DO i=1,ngw
-     gnx(1,i)=gx(1,i)
-     gnx(2,i)=gx(2,i)
-     gnx(3,i)=gx(3,i)
+     gnx(1,i)=g(1,i)
+     gnx(2,i)=g(2,i)
+     gnx(3,i)=g(3,i)
      gnn(1,i)=mill_l(1,i)
      gnn(2,i)=mill_l(2,i)
      gnn(3,i)=mill_l(3,i)
@@ -1152,7 +1152,7 @@ SUBROUTINE wfunc_init( clwf, b1, b2, b3, ibrav )
         END DO
 #else
         DO ii=1,ngw
-           WRITE(21,*) gx(1,ii), gx(2,ii), gx(3,ii)
+           WRITE(21,*) g(1,ii), g(2,ii), g(3,ii)
         END DO
 #endif
         CLOSE(21)
@@ -2080,7 +2080,7 @@ SUBROUTINE write_rho_g( rhog )
   USE kinds,              ONLY : DP
   USE io_global,          ONLY : stdout
   USE gvecp,              ONLY : ngm
-  USE reciprocal_vectors, ONLY : gx, mill_l
+  USE reciprocal_vectors, ONLY : g, mill_l
   USE electrons_base,     ONLY : nspin
   USE fft_base,           ONLY : dfftp
   USE mp_global,          ONLY : nproc_image, me_image, root_image, intra_image_comm
@@ -2105,9 +2105,9 @@ SUBROUTINE write_rho_g( rhog )
   ALLOCATE(gnx(3,ngm))
 
   DO i=1,ngm
-     gnx(1,i)=gx(1,i)
-     gnx(2,i)=gx(2,i)
-     gnx(3,i)=gx(3,i)
+     gnx(1,i)=g(1,i)
+     gnx(2,i)=g(2,i)
+     gnx(3,i)=g(3,i)
   END DO
 
 #ifdef __PARA
@@ -2206,7 +2206,7 @@ SUBROUTINE macroscopic_average( rhog, tau0, e_tuned )
   !----------------------------------------------------------------------------
   !
   USE kinds,              ONLY : DP
-  USE reciprocal_vectors, ONLY : gx
+  USE reciprocal_vectors, ONLY : g
   USE gvecp,              ONLY : ngm
   USE electrons_base,     ONLY : nspin
   USE tune,               ONLY : npts, xdir, ydir, zdir, B, &
@@ -2243,9 +2243,9 @@ SUBROUTINE macroscopic_average( rhog, tau0, e_tuned )
   ALLOCATE(gnx(3,ngm))
 
   DO i=1,ngm
-     gnx(1,i)=gx(1,i)
-     gnx(2,i)=gx(2,i)
-     gnx(3,i)=gx(3,i)
+     gnx(1,i)=g(1,i)
+     gnx(2,i)=g(2,i)
+     gnx(3,i)=g(3,i)
   END DO
 
 #ifdef __PARA

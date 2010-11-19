@@ -17,7 +17,7 @@
 !     G-vector quantities for the thick grid - see also doc in ggen 
 !     g       = G^2 in increasing order (in units of tpiba2=(2pi/a)^2)
 !     gl      = shells of G^2           ( "   "   "    "      "      )
-!     gx      = G-vectors               ( "   "   "  tpiba =(2pi/a)  )
+!     g       = G-vectors               ( "   "   "  tpiba =(2pi/a)  )
 !
 !     g2_g    = all G^2 in increasing order, replicated on all procs
 !     mill_g  = miller index of G vecs (increasing order), replicated on all procs

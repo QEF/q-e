@@ -222,7 +222,7 @@ SUBROUTINE vol_clu(rho_real,rho_g,s_fac,flag)
                      do ig = 1,ngm
                         prod = 0.d0
                         do k = 1,3
-                           prod = prod + gx(k,ig)*tau00(k)
+                           prod = prod + g(k,ig)*tau00(k)
                         end do
                         prod = prod*tpiba
                         fact = CMPLX(cos(prod),-1.d0*sin(prod),kind=DP)

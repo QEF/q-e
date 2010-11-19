@@ -159,7 +159,7 @@
       USE kinds,              ONLY: DP
       USE gvecw,              ONLY: ecsig, ecfix, ecutz, ngw
       USE constants,          ONLY: pi
-      USE reciprocal_vectors, ONLY: gstart, gg, gx
+      USE reciprocal_vectors, ONLY: gstart, gg, g
       USE cell_base,          ONLY: tpiba2
       USE electrons_base,     ONLY: nspin, iupdwn, nupdwn
       USE stress_param,       ONLY: alpha, beta
@@ -199,12 +199,12 @@
           iwfc = ib + iupdwn( ispin ) - 1
           DO ig = gstart, ngw
             scg = arg(ig) * CONJG( c0( ig, iwfc ) ) * c0( ig, iwfc )
-            sk(1)  = sk(1) + scg * gx( alpha( 1 ), ig ) * gx( beta( 1 ), ig )
-            sk(2)  = sk(2) + scg * gx( alpha( 2 ), ig ) * gx( beta( 2 ), ig )
-            sk(3)  = sk(3) + scg * gx( alpha( 3 ), ig ) * gx( beta( 3 ), ig )
-            sk(4)  = sk(4) + scg * gx( alpha( 4 ), ig ) * gx( beta( 4 ), ig )
-            sk(5)  = sk(5) + scg * gx( alpha( 5 ), ig ) * gx( beta( 5 ), ig )
-            sk(6)  = sk(6) + scg * gx( alpha( 6 ), ig ) * gx( beta( 6 ), ig )
+            sk(1)  = sk(1) + scg * g( alpha( 1 ), ig ) * g( beta( 1 ), ig )
+            sk(2)  = sk(2) + scg * g( alpha( 2 ), ig ) * g( beta( 2 ), ig )
+            sk(3)  = sk(3) + scg * g( alpha( 3 ), ig ) * g( beta( 3 ), ig )
+            sk(4)  = sk(4) + scg * g( alpha( 4 ), ig ) * g( beta( 4 ), ig )
+            sk(5)  = sk(5) + scg * g( alpha( 5 ), ig ) * g( beta( 5 ), ig )
+            sk(6)  = sk(6) + scg * g( alpha( 6 ), ig ) * g( beta( 6 ), ig )
           END DO
           dekin = dekin  + occ( iwfc ) * sk * tpiba2
         END DO
@@ -521,7 +521,7 @@
 
 
 !------------------------------------------------------------------------------!
-      SUBROUTINE compute_gagb_x( gagb, gx, ngm, tpiba2 )
+      SUBROUTINE compute_gagb_x( gagb, g, ngm, tpiba2 )
 !------------------------------------------------------------------------------!
 
          ! ... compute G_alpha * G_beta  
@@ -532,7 +532,7 @@
          IMPLICIT NONE
 
          INTEGER,  INTENT(IN)  :: ngm
-         REAL(DP), INTENT(IN)  :: gx(:,:)
+         REAL(DP), INTENT(IN)  :: g(:,:)
          REAL(DP), INTENT(OUT) :: gagb(:,:)
          REAL(DP), INTENT(IN)  :: tpiba2
 
@@ -541,7 +541,7 @@
 !$omp parallel do default(shared), private(k)
          DO ig = 1, ngm          
             DO k = 1, 6
-               gagb( k, ig ) = gx( alpha( k ), ig ) * gx( beta( k ), ig ) * tpiba2
+               gagb( k, ig ) = g( alpha( k ), ig ) * g( beta( k ), ig ) * tpiba2
             END DO
          END DO
 

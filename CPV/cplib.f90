@@ -14,7 +14,7 @@
 !
       USE kinds,              ONLY: DP
       USE gvecw,              ONLY: ngw
-      USE reciprocal_vectors, ONLY: gg, gx
+      USE reciprocal_vectors, ONLY: gg, g
       USE ions_base,          ONLY: nsp, na, nat
       USE cell_base,          ONLY: tpiba
       USE atom,               ONLY: rgrid
@@ -40,7 +40,7 @@
       !
       ALLOCATE(ylm(ngw,(lmax_wfc+1)**2))
       !
-      CALL ylmr2 ((lmax_wfc+1)**2, ngw, gx, gg, ylm)
+      CALL ylmr2 ((lmax_wfc+1)**2, ngw, g, gg, ylm)
       ndm = MAXVAL(rgrid(1:nsp)%mesh)
       !
       ALLOCATE(jl(ndm), vchi(ndm))
@@ -197,7 +197,7 @@ END FUNCTION
 !
       USE kinds,              ONLY: DP
       USE ions_base,          ONLY: nsp
-      USE reciprocal_vectors, ONLY: gstart, gx, ngs, gg, ngm
+      USE reciprocal_vectors, ONLY: gstart, g, ngs, gg, ngm
       USE recvecs_indexes,    ONLY: np
       USE cell_base,          ONLY: omega, ainv, tpiba2
       USE mp,                 ONLY: mp_sum
@@ -247,10 +247,10 @@ END FUNCTION
                ENDDO
                vxcc = DBLE( CONJG( vxc( np( ig ) ) ) * srhoc ) / SQRT( gg(ig) * tpiba2 )
                dcc(i,j) = dcc(i,j) + vxcc * &
-     &                      2.d0 * tpiba2 * gx(i,ig) *                  &
-     &                    (gx(1,ig)*ainv(j,1) +                         &
-     &                     gx(2,ig)*ainv(j,2) +                         &
-     &                     gx(3,ig)*ainv(j,3) )
+     &                      2.d0 * tpiba2 * g(i,ig) *                  &
+     &                    (g(1,ig)*ainv(j,1) +                         &
+     &                     g(2,ig)*ainv(j,2) +                         &
+     &                     g(3,ig)*ainv(j,3) )
             ENDDO
          ENDDO
       ENDDO
@@ -1669,7 +1669,7 @@ END FUNCTION
       USE gvecp,              ONLY: ng => ngm
       USE cell_base,          ONLY: omega, r_to_s
       USE cell_base,          ONLY: a1, a2, a3, tpiba2, h, ainv
-      USE reciprocal_vectors, ONLY: gstart, gg, gx
+      USE reciprocal_vectors, ONLY: gstart, gg, g
       USE recvecs_indexes,    ONLY: np, nm
       USE grid_dimensions,    ONLY: nr1, nr2, nr3, nnr => nrxx
       USE smooth_grid_dimensions, ONLY: nrxxs
@@ -1757,7 +1757,7 @@ END FUNCTION
       IF ( tpre ) THEN
          ALLOCATE( drhot( ng, 6 ) )
          ALLOCATE( gagb( 6, ng ) )
-         CALL compute_gagb( gagb, gx, ng, tpiba2 )
+         CALL compute_gagb( gagb, g, ng, tpiba2 )
       END IF
 !
 !     ab-initio pressure and surface tension contributions to the potential
@@ -2733,7 +2733,7 @@ end function set_Hubbard_l
 !
       use ions_base,          only: na, nsp
       use gvecw,              only: ngw
-      use reciprocal_vectors, only: gg, gx, gstart
+      use reciprocal_vectors, only: gg, g, gstart
       use cell_base,          only: omega, tpiba
       use constants,          only: fpi
       USE atom,               ONLY: rgrid
@@ -2760,7 +2760,7 @@ end function set_Hubbard_l
       end do
       if (gstart == 2) gxn(1,:)=0.0d0
       do ig=gstart,ngw
-         gxn(:,ig) = gx(:,ig)/sqrt(gg(ig)) !ik<=>ig
+         gxn(:,ig) = g(:,ig)/sqrt(gg(ig)) !ik<=>ig
       end do
 !
       natwfc=0
@@ -2775,7 +2775,7 @@ end function set_Hubbard_l
       !
       ALLOCATE(ylm(ngw,(lmax_wfc+1)**2))
       !
-      CALL ylmr2 ((lmax_wfc+1)**2, ngw, gx, gg, ylm)
+      CALL ylmr2 ((lmax_wfc+1)**2, ngw, g, gg, ylm)
 !#@@@@
 
       do is = 1, nsp
@@ -2915,7 +2915,7 @@ end function set_Hubbard_l
 !
       use ions_base, only: na, nat
       use gvecw, only: ngw
-      use reciprocal_vectors, only: gx, gstart
+      use reciprocal_vectors, only: g, gstart
       use electrons_base, only: n => nbsp, nx => nbspx
 !      use gvec
 !      use constants
@@ -2975,7 +2975,7 @@ end function set_Hubbard_l
       if (Hubbard_U(alpha_s).ne.0.d0) then
 !
          do ig=1,ngw
-            gk(ig)=gx(ipol,ig)*tpiba 
+            gk(ig)=g(ipol,ig)*tpiba 
 !
             do m1=1,ldim
                   dwfc(ig,m1) = CMPLX (gk(ig)*wfc(2,ig,offset+m1),      &
@@ -3130,7 +3130,7 @@ end function set_Hubbard_l
 !
       USE kinds,              ONLY: DP
       USE gvecw,              ONLY: ngw
-      USE reciprocal_vectors, ONLY: gstart, gg, gx
+      USE reciprocal_vectors, ONLY: gstart, gg, g
       USE ions_base,          ONLY: nsp, na, nat
       USE cell_base,          ONLY: tpiba, omega !#@@@
       USE atom,               ONLY: rgrid
@@ -3159,7 +3159,7 @@ end function set_Hubbard_l
       !
       ALLOCATE(ylm(ngw,(lmax_wfc+1)**2))
       !
-      CALL ylmr2 ((lmax_wfc+1)**2, ngw, gx, gg, ylm)
+      CALL ylmr2 ((lmax_wfc+1)**2, ngw, g, gg, ylm)
       ndm = MAXVAL(rgrid(1:nsp)%mesh)
       !
       ALLOCATE(jl(ndm), vchi(ndm))

@@ -332,7 +332,7 @@ end subroutine ggenb
 !   the g's are in units of 2pi/a.
 !
       USE kinds,              ONLY: DP
-      use reciprocal_vectors, only: gg, gx, igl, mill_g, g2_g, gl
+      use reciprocal_vectors, only: gg, g, igl, mill_g, g2_g, gl
       use reciprocal_vectors, only: mill_l, ig_l2g
       use reciprocal_vectors, only: gstart, sortedig_l2g
       use recvecs_indexes,    only: nm, np
@@ -386,7 +386,7 @@ end subroutine ggenb
       !     third step: allocate space
       !     ng is the number of Gs local to this processor
       !
-      allocate( gx ( 3, ng ) )
+      allocate( g ( 3, ng ) )
       allocate( gg ( ng ) )
       allocate( ggp( ngw ) )
       allocate( np ( ng ) )
@@ -515,9 +515,9 @@ end subroutine ggenb
          i=mill_l(1,ig)
          j=mill_l(2,ig)
          k=mill_l(3,ig)
-         gx(1,ig)=i*b1(1)+j*b2(1)+k*b3(1)
-         gx(2,ig)=i*b1(2)+j*b2(2)+k*b3(2)
-         gx(3,ig)=i*b1(3)+j*b2(3)+k*b3(3)
+         g(1,ig)=i*b1(1)+j*b2(1)+k*b3(1)
+         g(2,ig)=i*b1(2)+j*b2(2)+k*b3(2)
+         g(3,ig)=i*b1(3)+j*b2(3)+k*b3(3)
       end do
 
       return
@@ -932,7 +932,7 @@ END SUBROUTINE gshcount
       USE kinds,     ONLY: DP
       use constants, only: tpi
       use control_flags, only: iprint
-      use reciprocal_vectors, only: gg, gx, mill_l
+      use reciprocal_vectors, only: gg, g, mill_l
       use gvecp, only: ngm
       use gvecw, only: ngw
       use gvecw, only: ggp, ecutz, ecsig, ecfix
@@ -948,17 +948,17 @@ END SUBROUTINE gshcount
       b2 = b2_ * alat
       b3 = b3_ * alat
 !
-!     calculation of gx(3,ng)
+!     calculation of g(3,ng)
 !
       gmax=0.d0
       do ig=1,ngm
          i1=mill_l(1,ig)
          i2=mill_l(2,ig)
          i3=mill_l(3,ig)
-         gx(1,ig)=i1*b1(1)+i2*b2(1)+i3*b3(1)
-         gx(2,ig)=i1*b1(2)+i2*b2(2)+i3*b3(2)
-         gx(3,ig)=i1*b1(3)+i2*b2(3)+i3*b3(3)
-         gg(ig)=gx(1,ig)**2 + gx(2,ig)**2 + gx(3,ig)**2
+         g(1,ig)=i1*b1(1)+i2*b2(1)+i3*b3(1)
+         g(2,ig)=i1*b1(2)+i2*b2(2)+i3*b3(2)
+         g(3,ig)=i1*b1(3)+i2*b2(3)+i3*b3(3)
+         gg(ig)=g(1,ig)**2 + g(2,ig)**2 + g(3,ig)**2
          if(gg(ig).gt.gmax) gmax=gg(ig)
       enddo
  

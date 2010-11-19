@@ -35,7 +35,7 @@ SUBROUTINE from_scratch( )
     USE gvecw,                ONLY : ngw
     USE gvecs,                ONLY : ngs
     USE gvecp,                ONLY : ngm
-    USE reciprocal_vectors,   ONLY : gstart, mill_l, gx
+    USE reciprocal_vectors,   ONLY : gstart, mill_l
     USE cvan,                 ONLY : nvb
     USE cp_electronic_mass,   ONLY : emass
     USE efield_module,        ONLY : tefield, efield_berry_setup, berry_energy, &

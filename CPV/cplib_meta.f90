@@ -37,8 +37,8 @@
          do ipol = 1, 3
             psi(:)=(0.d0,0.d0)
             do ig=1,ngw
-               psi(nps(ig))=gx(ipol,ig)* (ci*c(ig) - ca(ig))
-               psi(nms(ig))=gx(ipol,ig)* (CONJG(ci*c(ig) + ca(ig)))
+               psi(nps(ig))=g(ipol,ig)* (ci*c(ig) - ca(ig))
+               psi(nms(ig))=g(ipol,ig)* (CONJG(ci*c(ig) + ca(ig)))
             end do
             call invfft('Wave',psi,dffts )
 !           on smooth grids--> grids for charge density
@@ -50,9 +50,9 @@
             do ig=1,ngw
                fp= (psi(nps(ig)) + psi(nms(ig)))
                fm= (psi(nps(ig)) - psi(nms(ig)))
-               df(ig)= df(ig) - ci*fi*tpiba2*gx(ipol,ig) * &
+               df(ig)= df(ig) - ci*fi*tpiba2*g(ipol,ig) * &
                        CMPLX(DBLE(fp), AIMAG(fm),kind=DP)
-               da(ig)= da(ig) - ci*fip*tpiba2*gx(ipol,ig)* &
+               da(ig)= da(ig) - ci*fip*tpiba2*g(ipol,ig)* &
                        CMPLX(AIMAG(fp),-DBLE(fm),kind=DP)
             end do
          end do
@@ -70,7 +70,7 @@
       use control_flags, only: tpre
       use gvecs
       use gvecw, only: ngw
-      use reciprocal_vectors, only: gx
+      use reciprocal_vectors, only: g
       use recvecs_indexes, only: np, nm
       use grid_dimensions, only: nr1, nr2, nr3, &
             nr1x, nr2x, nr3x, nnr => nrxx
@@ -130,8 +130,8 @@
          do ipol = 1, 3
             psis( : ) = (0.d0,0.d0)
             do ig=1,ngw
-               psis(nps(ig))=tpiba*gx(ipol,ig)* (ci*c(ig,i) - c(ig,i+1))
-               psis(nms(ig))=tpiba*gx(ipol,ig)*CONJG(ci*c(ig,i)+c(ig,i+1))
+               psis(nps(ig))=tpiba*g(ipol,ig)* (ci*c(ig,i) - c(ig,i+1))
+               psis(nms(ig))=tpiba*g(ipol,ig)*CONJG(ci*c(ig,i)+c(ig,i+1))
             end do
                   ! gradient of wfc in real space
             call invfft('Wave',psis, dffts )

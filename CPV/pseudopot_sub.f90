@@ -931,7 +931,7 @@
       USE io_global, only: stdout
       USE gvecw, only: ngw
       USE ions_base, only: nsp
-      USE reciprocal_vectors, only: gg, gx, gstart
+      USE reciprocal_vectors, only: gg, g, gstart
       USE uspp_param, only: upf, lmaxq, lmaxkb, nh
       USE uspp, only: qq, nhtolm, beta
       USE cell_base, only: ainv, omega, tpiba2, tpiba
@@ -947,7 +947,7 @@
       INTEGER   :: is, iv, lp, ig, jj, i, j
 
       ALLOCATE( ylm( ngw, (lmaxkb+1)**2 ) )
-      CALL ylmr2 ( (lmaxkb+1)**2, ngw, gx, gg, ylm)
+      CALL ylmr2 ( (lmaxkb+1)**2, ngw, g, gg, ylm)
       !
       !
       do is = 1, nsp
@@ -976,7 +976,7 @@
          !
          allocate( dylm( ngw, (lmaxkb+1)**2, 3, 3 ) )
          !
-         call dylmr2_( (lmaxkb+1)**2, ngw, gx, gg, ainv, dylm )
+         call dylmr2_( (lmaxkb+1)**2, ngw, g, gg, ainv, dylm )
          !
          do is = 1, nsp
             if( iprsta .ge. 4 ) WRITE( stdout,*)  '  dbeta  '
@@ -1004,8 +1004,8 @@
                         dbeta( ig, iv, is, i, j ) =                            &
      &                    - 0.5d0 * beta( ig, iv, is ) * ainv( j, i )          &
      &                    - c * dylm( ig, lp, i, j ) * betagl                  &  ! SEGNO
-     &                    - c * ylm ( ig, lp )       *dbetagl * gx(i,ig)/gg(ig)&
-     &                    * ( gx( 1, ig ) * ainv( j, 1 ) + gx( 2, ig ) * ainv( j, 2 ) + gx( 3, ig ) * ainv( j, 3 ) )
+     &                    - c * ylm ( ig, lp )       *dbetagl * g(i,ig)/gg(ig)&
+     &                    * ( g( 1, ig ) * ainv( j, 1 ) + g( 2, ig ) * ainv( j, 2 ) + g( 3, ig ) * ainv( j, 3 ) )
                      end do
                   end do
                end do
@@ -1221,7 +1221,7 @@
       USE cell_base,     only : ainv, omega, tpiba2, tpiba
       USE cdvan,         ONLY : dbeta
       USE atom,          ONLY : rgrid
-      USE reciprocal_vectors, only : gg, gx, gstart
+      USE reciprocal_vectors, only : gg, g, gstart
 
       IMPLICIT NONE
 
@@ -1244,7 +1244,7 @@
       ALLOCATE( betagx ( ngw, nhm, nsp ) )
       IF (tpre) ALLOCATE( dbetagx( ngw, nhm, nsp ) )
 
-      CALL ylmr2 ( (lmaxkb+1)**2, ngw, gx, gg, ylm)
+      CALL ylmr2 ( (lmaxkb+1)**2, ngw, g, gg, ylm)
 
       !
       do is = 1, nsp
@@ -1332,7 +1332,7 @@
          !
          allocate( dylm( ngw, (lmaxkb+1)**2, 3, 3 ) )
          !
-         call dylmr2_( (lmaxkb+1)**2, ngw, gx, gg, ainv, dylm )
+         call dylmr2_( (lmaxkb+1)**2, ngw, g, gg, ainv, dylm )
          !
          do is = 1, nsp
             if( iprsta .ge. 4 ) WRITE( stdout,*)  '  dbeta  '
@@ -1354,10 +1354,10 @@
                         dbeta(ig,iv,is,i,j)=                            &
      &                    -0.5d0*beta(ig,iv,is)*ainv(j,i)               &
      &                    -c*dylm(ig,lp,i,j)*betagl                     &  ! SEGNO
-     &                    -c*ylm (ig,lp)*dbetagl*gx(i,ig)/gg(ig)        &
-     &                    *(gx(1,ig)*ainv(j,1)+                         &
-     &                      gx(2,ig)*ainv(j,2)+                         &
-     &                      gx(3,ig)*ainv(j,3))
+     &                    -c*ylm (ig,lp)*dbetagl*g(i,ig)/gg(ig)        &
+     &                    *(g(1,ig)*ainv(j,1)+                         &
+     &                      g(2,ig)*ainv(j,2)+                         &
+     &                      g(3,ig)*ainv(j,3))
                      end do
                   end do
                end do

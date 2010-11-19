@@ -139,7 +139,7 @@
 
      !     G-vectors cartesian components ( units tpiba =(2pi/a)  )
      !
-     REAL(DP), ALLOCATABLE, TARGET :: gx(:,:) 
+     REAL(DP), ALLOCATABLE, TARGET :: g(:,:) 
 
      !     g2_g    = all G^2 in increasing order, replicated on all procs
      !
@@ -179,7 +179,7 @@
      SUBROUTINE deallocate_recvecs
        IF( ALLOCATED( gg ) ) DEALLOCATE( gg )
        IF( ALLOCATED( gl ) ) DEALLOCATE( gl )
-       IF( ALLOCATED( gx ) ) DEALLOCATE( gx )
+       IF( ALLOCATED( g ) )  DEALLOCATE( g )
        IF( ALLOCATED( g2_g ) ) DEALLOCATE( g2_g )
        IF( ALLOCATED( mill_g ) ) DEALLOCATE( mill_g )
        IF( ALLOCATED( mill_l ) ) DEALLOCATE( mill_l )

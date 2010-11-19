@@ -349,7 +349,7 @@
       use mp,         only : mp_sum
       use mp_global,  only : nproc_image, intra_image_comm
       use cp_main_variables,  only : nlax, descla, distribute_bec
-      use reciprocal_vectors, only : gx, gstart
+      use reciprocal_vectors, only : g, gstart
 !
       implicit none
     
@@ -376,7 +376,7 @@
          becdr_repl = 0.d0
 
          do ig=1,ngw
-            gk(ig)=gx(k,ig)*tpiba
+            gk(ig)=g(k,ig)*tpiba
          end do
 !
          isa = 0
@@ -475,7 +475,7 @@
       use cell_base,  only : tpiba
       use mp,         only : mp_sum
       use mp_global,  only : nproc_image, intra_image_comm
-      use reciprocal_vectors, only : gx, gstart
+      use reciprocal_vectors, only : g, gstart
 !
       implicit none
     
@@ -498,7 +498,7 @@
       do k = 1, 3
 
          do ig=1,ngw
-            gk(ig)=gx(k,ig)*tpiba
+            gk(ig)=g(k,ig)*tpiba
          end do
 !
          isa = 0
