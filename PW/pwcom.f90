@@ -35,7 +35,6 @@ MODULE gvect
   INTEGER :: &
        ngm,           &! the local number of g vectors (only present processor)
        ngm_g,         &! global number of g vectors (sum over all processors)
-       ngm_l,         &! another name for ngm_l
        gstart,        &! first nonzero g vector
        ngl             ! number of |g| shells
   !INTEGER, ALLOCATABLE :: &
@@ -83,10 +82,8 @@ MODULE gsmooth
   !
   INTEGER :: &
        ngms,        &! the number of smooth G vectors
-       ngms_g,      &! the global number of smooth G vectors
+       ngms_g        ! the global number of smooth G vectors
                      !  (sum over all processors)
-       ngms_l        ! the local number of smooth G vectors
-                     !  (only present processor)
   INTEGER, POINTER :: &
        nls(:),      &! the correspondence  G <-> smooth mesh
        nlsm(:)       ! the same for gamma point calculation

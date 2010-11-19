@@ -18,11 +18,11 @@ SUBROUTINE data_structure( lgamma )
   USE kinds,      ONLY : DP
   USE cell_base,  ONLY : bg, tpiba, tpiba2
   USE klist,      ONLY : xk, nks
-  USE gvect,      ONLY : ngm, ngm_l, ngm_g, gcutm, ecutwfc
+  USE gvect,      ONLY : ngm, ngm_g, gcutm, ecutwfc
   USE grid_dimensions, ONLY : nr1, nr2, nr3, nr1x, nr2x, nr3x, nrxx
   USE smooth_grid_dimensions, &
                   ONLY : nr1s, nr2s, nr3s, nr1sx, nr2sx, nr3sx, nrxxs
-  USE gsmooth,    ONLY : ngms, ngms_l, ngms_g, gcutms
+  USE gsmooth,    ONLY : ngms, ngms_g, gcutms
   USE mp,         ONLY : mp_sum, mp_max
   USE mp_global,  ONLY : intra_pool_comm, nproc_pool, me_pool, my_image_id, &
                          nogrp, nproc, inter_pool_comm,  use_task_groups
@@ -367,8 +367,6 @@ SUBROUTINE data_structure( lgamma )
   !     compute the global number of g, i.e. the sum over all processors
   !     within a pool
   !
-  ngm_l  = ngm
-  ngms_l = ngms
   ngm_g  = ngm  ; CALL mp_sum( ngm_g , intra_pool_comm )
   ngms_g = ngms ; CALL mp_sum( ngms_g, intra_pool_comm )
 

@@ -18,7 +18,7 @@ SUBROUTINE ggen()
    USE kinds,              ONLY : DP
    USE cell_base,          ONLY : at, bg
    USE reciprocal_vectors, ONLY : ig_l2g
-   USE gvect,              ONLY : g, gg, ngm, ngm_g, ngm_l, gcutm, &
+   USE gvect,              ONLY : g, gg, ngm, ngm_g, gcutm, &
                                   ig1, ig2, ig3,  nl, gstart, gl, ngl, igtongl
    USE gsmooth,            ONLY : ngms, gcutms, ngms_g, nls
    USE control_flags,      ONLY : gamma_only
@@ -59,7 +59,7 @@ SUBROUTINE ggen()
    !
    !    and computes all the g vectors inside a sphere
    !
-   ALLOCATE( ig_l2g( ngm_l ) )
+   ALLOCATE( ig_l2g( ngm ) )
    ALLOCATE( mill_g( 3, ngm_g ),mill_unsorted( 3, ngm_g ) )
    ALLOCATE( igsrt( ngm_g ) )
    ALLOCATE( g2sort_g( ngm_g ) )
