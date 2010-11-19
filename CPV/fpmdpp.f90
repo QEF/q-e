@@ -170,7 +170,6 @@ PROGRAM fpmd_postproc
   CALL iotk_open_read( dunit, file = TRIM( filepp ), BINARY = .FALSE., &
      ROOT = attr, IERR = ierr )
   IF( ierr /= 0 ) CALL errore( ' cppp ', ' Cannot open file '//TRIM(filepp), 1 )
-     CALL iotk_scan_begin( dunit, "IONS", FOUND = found )
 
      CALL iotk_scan_begin( dunit, "IONS", FOUND = found )
 
