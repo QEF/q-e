@@ -122,7 +122,7 @@
       USE kinds,          ONLY : DP
       USE io_files,       ONLY : tmp_dir
       USE electrons_base, ONLY : nbnd, nbsp, nspin, nupdwn, iupdwn, keep_occ
-      USE gvecw,          ONLY : ngw, ngwt
+      USE gvecw,          ONLY : ngw
       USE ions_base,      ONLY : nsp, na, cdmi, taui
       USE cp_restart,     ONLY : cp_readfile, cp_read_cell, cp_read_wfc
       USE ensemble_dft,   ONLY : tens

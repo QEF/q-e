@@ -338,7 +338,7 @@ end subroutine ggenb
       use recvecs_indexes,    only: nm, np
       use gvecs,              only: ngs, nms, ngsl, nps
       use gvecw,              only: ngw, ngwl, ngwt, ggp
-      use gvecp,              only: ng => ngm, ngl => ngml, ng_g => ngmt
+      use gvecp,              only: ng => ngm, ngl, ng_g => ngmt
       use io_global,          only: stdout
       USE fft_base,           ONLY: dfftp, dffts, fft_dlay_descriptor
       use mp,                 ONLY: mp_sum, mp_max

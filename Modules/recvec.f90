@@ -66,8 +66,8 @@
      ! ...   G vectors less than the potential cut-off ( ecutrho )
      INTEGER :: ngm  = 0  ! local number of G vectors
      INTEGER :: ngmt = 0  ! in parallel execution global number of G vectors,
-                       ! in serial execution this is equal to ngm
-     INTEGER :: ngml = 0  ! number of G-vector shells up to ngw
+                          ! in serial execution this is equal to ngm
+     INTEGER :: ngl = 0   ! number of G-vector shells up to ngw
      INTEGER :: ngmx = 0  ! maximum local number of G vectors
 
      REAL(DP) :: ecutp = 0.0_DP
