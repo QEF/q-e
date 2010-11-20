@@ -3896,14 +3896,16 @@ be able to recognize your system, though.
 Because you haven't one (really!); or maybe you have one, but it is not
 in your execution path; or maybe it has been given an unusual name by your 
 system manager. Install a compiler if you have none; if you have one, fix 
-your execution path, or define an alias if it has a strange name.
+your execution path, or define an alias if it has a strange name. 
+Do not pass an executable with the path as an argument to \configure, 
+as in e.g. \texttt{./configure F90=/some/strange/f95}: it doesn't work.
 
 \paragraph{Why is \configure\ saying that my fortran compiler doesn't work?}
 
 Because it doesn't work (really!); more exactly, \configure\ has tried 
 to compile a small test program and didn't succeed. Your compiler may not be 
 properly installed. For Intel compiler on PC's: you may have forgotten to run 
-the required initialization script for the compiler.
+the required initialization script for the compiler. See also above.
 
 \paragraph{\configure\ doesn't recognize my system, what should I do?}
 
@@ -4102,6 +4104,18 @@ directory with the same file names.
 
 In most cases: you are treating a metallic system
 as if it were insulating.
+
+\paragraph{The code stops with a mysterious error in IOTK}
+
+IOTK is a toolkit that reads/writes XML files. There are frequent
+reports of mysterious errors with IOTK not finding some variable
+in the XML data file. If this error has no obvious explanation 
+(e.g. the file is properly written and read, the searched variable
+is present, etc) and if it appears to be erratic or irreproducible
+(e.g. it occurs only with version X of compiler Y), it is almost
+certainly due to a compiler bug. Try to reduce optimization level,
+or  use a different compiler. If you paid real money for your 
+compiler, complain with the vendor.
 
 \subsection{Self Consistency}
 
