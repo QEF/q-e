@@ -167,6 +167,9 @@ mglib:
 libiotk:
 	if test -e extlibs/archive/iotk-1.1.beta.tar.gz ; then \
 	( cd extlibs ; $(MAKE) $(MFLAGS) $@) ; fi
+# In case of trouble with iotk and compilers, replace with the following
+#	if test -e extlibs/archive/iotk-1.1.beta.tar.gz ; then \
+#	( cd extlibs ; $(MAKE) $(MFLAGS) FFLAGS="$(FFLAGS_NOOPT)" $@) ; fi
 
 #########################################################
 # plugins
