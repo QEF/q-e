@@ -1,5 +1,5 @@
 \documentclass[12pt,a4paper]{article}
-\def\version{post4.2}
+\def\version{4.3}
 \def\qe{{\sc Quantum ESPRESSO}}
 
 \usepackage{html}
@@ -75,6 +75,8 @@ and pseudopotentials (PP):
 \end{itemize}
 It also includes the following more specialized packages:
 \begin{itemize}
+  \item \texttt{PWneb}:
+        energy barriers and reaction pathways.
   \item \PHonon:
         phonons with Density-Functional Perturbation Theory.
   \item \PostProc: various utilities for data postprocessing.
@@ -174,20 +176,24 @@ All trademarks mentioned in this guide belong to their respective owners.
   \item ground-state energy and one-electron (Kohn-Sham) orbitals;
   \item atomic forces, stresses, and structural optimization;
   \item molecular dynamics on the ground-state Born-Oppenheimer surface,  also with variable cell;
-  \item Nudged Elastic Band (NEB) and Fourier String Method Dynamics (SMD)
-  for energy barriers and reaction paths;
   \item macroscopic polarization and finite electric fields via 
   the modern theory of polarization (Berry Phases).
 \end{itemize}
 All of the above works for both insulators and metals, 
 in any crystal structure, for many exchange-correlation (XC) functionals
-(including spin polarization, DFT+U, hybrid functionals), for
+(including spin polarization, DFT+U, nonlocal VdW functionas,
+hybrid functionals), for
 norm-conserving (Hamann-Schluter-Chiang) PPs (NCPPs) in 
 separable form or Ultrasoft (Vanderbilt) PPs (USPPs)
 or Projector Augmented Waves (PAW) method.
 Non-collinear magnetism and spin-orbit interactions 
 are also implemented.  An implementation of finite electric 
 fields with a sawtooth potential in a supercell is also available.
+
+Note that the calculation of reaction pathways and energy barriers 
+using the Nudged Elastci Band (NEB) and Fourier String Method Dynamics 
+(SMD) methods, is no longer performed by \PWscf. It is now performed
+by a different executable, contained in the subpackage \texttt{PWneb}.
 
 \PHonon\ can perform the following types of calculations:
 \begin{itemize}
@@ -200,7 +206,7 @@ fields with a sawtooth potential in a supercell is also available.
   \item Infrared and Raman (nonresonant) cross section.
 \end{itemize}
 \PHonon\ can be used whenever \PWscf\ can be 
-used, with the exceptions of DFT+U and hybrid functionals. 
+used, with the exceptions of DFT+U, nonlocal VdW and hybrid functionals. 
 PAW is not implemented for higher-order response calculations.
 Calculations, in the Quasi-Harmonic approximations, of the vibrational 
 free energy can be performed using the \texttt{QHA}  package.
@@ -283,7 +289,6 @@ Gerardo Ballabio (CINECA), Sandro Scandolo (ICTP),
 Guido Chiarotti (SISSA), Paolo Focher, and others.
 We quote in particular:
 \begin{itemize}
-  \item Carlo Sbraccia (Princeton) for NEB;
   \item Manu Sharma (Princeton) and Yudong Wu (Princeton) for
    maximally localized Wannier functions and dynamics with 
    Wannier functions;
@@ -363,7 +368,7 @@ This guide was mostly written by Paolo Giannozzi.
 Gerardo Ballabio and Carlo Cavazzoni wrote the section on \CP.
 
 \subsection{Contacts}
-\ref{SubSec:Contacts}
+\label{SubSec:Contacts}
 
 The web site for \qe\ is \texttt{http://www.quantum-espresso.org/}.
 Releases and patches can be downloaded from this
@@ -404,7 +409,7 @@ Life for subscribers of \texttt{pw\_forum} will be easier if everybody
 complies with the following guidelines:
 \begin{itemize}
 \item Before posting, {\em please}: browse or search the archives -- 
-  links are available in the "Contacts" page  of the \qe\ web site,
+  links are available in the "Contacts" page  of the \qe\ web site:\\
   \texttt{http://www.quantum-espresso.org/contacts.php}. Most questions 
   are asked over and over again. Also: make an attempt to search the
   available documentation, notably the FAQs and the User Guide.
@@ -521,6 +526,7 @@ while others are specific to a single package:
 \texttt{PW/}      &\PWscf: source files for scf calculations (\pw.x)\\
 \texttt{pwtools/} &\PWscf: source files for miscellaneous analysis programs\\
 \texttt{tests/}   &\PWscf:  automated tests\\
+\texttt{NEB/}     &\texttt{PWneb}: source files for NEB calculations (\texttt{neb.x})\\
 \texttt{PP/}      &\PostProc: source files for post-processing of \pw.x\
                    data file\\
 \texttt{PH/}      &\PHonon: source files for phonon calculations (\ph.x)
@@ -594,6 +600,7 @@ subdirectory. Note that both C and Fortran compilers must be in your execution
 path, as specified in the PATH environment variable.
 
 Additional instructions for special machines:
+
 \begin{tabular}{ll}
     \texttt{./configure ARCH=crayxt4r}& for CRAY XT machines \\
     \texttt{./configure ARCH=necsx}   & for NEC SX machines \\
@@ -831,7 +838,16 @@ At your option, you may compile the complete \qe\ suite of programs
 Here is a list:
 \begin{itemize}
 \item \texttt{make pw} produces \texttt{PW/pw.x} \\
-\pw.x\ calculates electronic structure, structural optimization, molecular dynamics, barriers with NEB.
+\pw.x\ calculates electronic structure, structural optimization, molecular dynamics.
+\item \texttt{make neb} produces the following codes in \texttt{NEB/}
+for NEB calculations:
+\begin{itemize}
+\item \texttt{neb.x}: calculates reaction barriers and pathways using NEB.
+\item \texttt{path\_int.x}: used by utility \texttt{path\_int.sh}
+  that generates, starting from a path (a set of images), a new one with a 
+  different number of images. The initial and final points of the new
+ path can differ from those in the original one. 
+\end{itemize}
 \item \texttt{make ph} produces the following codes in \texttt{PH/}
 for phonon calculations:
 \begin{itemize}
@@ -859,7 +875,7 @@ for phonon calculations:
   second-order. Only the $\Gamma$ (${\bf k} = 0$) point is used for Brillouin zone
   integration. It is faster and takes less memory than \ph.x, but does
   not support USPP and PAW.
-  tem  \texttt{make pp} produces several codes for data postprocessing, in 
+\item  \texttt{make pp} produces several codes for data postprocessing, in 
   \texttt{PP/}  (see list below). 
 \item \texttt{make tools} produces several utility programs in \texttt{pwtools/} (see
   list below).  
@@ -937,10 +953,6 @@ data files!). Usage:
 The files so produced are suitable for use with  \texttt{xbs}, a very simple
 X-windows utility to display molecules, available at:\\
  \texttt{http://www.ccl.net/cca/software/X-WINDOW/xbsa/README.shtml}
-\item  \texttt{path\_int.sh}/ \texttt{path\_int.x}: utility to generate, starting from a
-  path (a set of images), a new one with a different number of
-  images. The initial and final points of the new path can differ from
-  those in the original one. Useful for NEB calculations. 
 \item  \texttt{kvecs\_FS.x},  \texttt{bands\_FS.x}: utilities for Fermi Surface plotting
   using XCrySDen
 \end{itemize}
@@ -1537,7 +1549,7 @@ such as \texttt{poe}, \texttt{mpirun}, \texttt{mpiexec},
 \item other \qe-specific parallelization options, to be
   read and interpreted by the running code: 
 \begin{itemize}
-\item the number of ``images'' used by NEB calculations;
+\item the number of ``images'' used by NEB or phonon calculations;
 \item the number of ``pools'' into which processors are to be grouped
   (\pw.x only);
 \item the number of ``task groups'' into which processors are to be
@@ -1604,8 +1616,9 @@ The groups hierarchy is as follow:
 
 {\bf images}: Processors can then be divided into different "images",
 corresponding to a point in configuration space (i.e. to
-a different set of atomic positions). Such partitioning 
-is used when performing Nudged Elastic band (NEB) calculations.
+a different set of atomic positions) for NEB calculations;
+to one (or more than one) "irrep" or wave-vector in phonon
+calculations.
 
 {\bf pools}: When k-point sampling is used, each image group can be 
 subpartitioned into "pools", and k-points can distributed to pools.
@@ -2219,7 +2232,13 @@ Silva: the new damping algorithm is the default since v. 3.1).
 
 See also \texttt{examples/VCSexample}.
 
-\subsection{Nudged Elastic Band calculation}
+\section{NEB calculations}
+
+Reminder: NEB calculations are no longer performed by \pw.x.
+In order to perform a NEB calculation, you should compile
+\texttt{NEB/neb.x} (command \texttt{make neb}). {\bf the
+rest of the section is obsolete}.
+
 Specify \texttt{calculation='neb'} and add namelist \&IONS.
 
 All options for a single SCF calculation apply, plus a few others. In the
