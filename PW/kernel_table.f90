@@ -48,23 +48,23 @@ MODULE kernel_table
   public :: initialize_kernel_table
   public :: vdw_table_name
 
-  integer, save :: Nqs, Nr_points                      !! The number of q points and radial points
+  integer :: Nqs, Nr_points                      !! The number of q points and radial points
   !                                                    !! used in generating the kernel phi(q1*r, q2*r)
   !                                                    !! (see DION 14-16 and SOLER 3)
 
-  real(dp), save :: r_max, q_cut, q_min, dk            !! The maximum value of r, the maximum and minimum
+  real(dp) :: r_max, q_cut, q_min, dk            !! The maximum value of r, the maximum and minimum
   !                                                    !! values of q and the k-space spacing of grid points.
   !                                                    !! Note that, during a vdW run, values of q0 found
   !                                                    !! larger than q_cut will be saturated (SOLER 6-7) to
   !                                                    !! q_cut
 
-  real(dp), allocatable, save :: q_mesh(:)             !! The values of all the q points used
+  real(dp), allocatable :: q_mesh(:)             !! The values of all the q points used
 
-  real(dp), allocatable, save :: kernel(:,:,:)         !! A matrix holding the Fourier transformed kernel function
+  real(dp), allocatable :: kernel(:,:,:)         !! A matrix holding the Fourier transformed kernel function
   !                                                    !! for each pair of q values.  The ordering is
   !                                                    !! kernel(k_point, q1_value, q2_value)
 
-  real(dp), allocatable, save ::  d2phi_dk2(:,:,:)     !! A matrix holding the second derivatives of the above
+  real(dp), allocatable ::  d2phi_dk2(:,:,:)     !! A matrix holding the second derivatives of the above
   !                                                    !! kernel matrix at each of the q points.  Stored as  
   !                                                    !! d2phi_dk2(k_point, q1_value, q2_value)
   !
