@@ -65,7 +65,7 @@
 
      ! ...   G vectors less than the potential cut-off ( ecutrho )
      INTEGER :: ngm  = 0  ! local number of G vectors
-     INTEGER :: ngmt = 0  ! in parallel execution global number of G vectors,
+     INTEGER :: ngm_g= 0  ! in parallel execution global number of G vectors,
                           ! in serial execution this is equal to ngm
      INTEGER :: ngl = 0   ! number of G-vector shells up to ngw
      INTEGER :: ngmx = 0  ! maximum local number of G vectors
@@ -237,7 +237,7 @@
        USE mp_global, ONLY: intra_image_comm
        USE mp, ONLY: mp_max, mp_sum
        USE gvecw, ONLY: ngw, ngwx, ngwt
-       USE gvecp, ONLY: ngm, ngmx, ngmt
+       USE gvecp, ONLY: ngm, ngmx, ngm_g
        USE gvecs, ONLY: ngs, ngsx, ngst
 
        IMPLICIT NONE
@@ -260,10 +260,10 @@
        !  calculate SUM over all processors
        !
        ngwt = ngw
-       ngmt = ngm
+       ngm_g= ngm
        ngst = ngs
        CALL mp_sum( ngwt, intra_image_comm )
-       CALL mp_sum( ngmt, intra_image_comm )
+       CALL mp_sum( ngm_g, intra_image_comm )
        CALL mp_sum( ngst, intra_image_comm )
 
        RETURN 

@@ -57,7 +57,7 @@ MODULE cp_restart
       USE grid_dimensions,          ONLY : nr1, nr2, nr3, nr1x, nr2x, nr3l
       USE smooth_grid_dimensions,   ONLY : nr1s, nr2s, nr3s
       USE smallbox_grid_dimensions, ONLY : nr1b, nr2b, nr3b
-      USE gvecp,                    ONLY : ngm, ngmt, ecutp, gcutp
+      USE gvecp,                    ONLY : ngm, ngm_g, ecutp, gcutp
       USE gvecs,                    ONLY : ngs, ngst, ecuts, gcuts, dual
       USE gvecw,                    ONLY : ngw, ngwt, ecutw, gcutw
       USE reciprocal_vectors,       ONLY : ig_l2g, mill_l
@@ -255,7 +255,7 @@ MODULE cp_restart
       !   
       ! ... Collect G vectors
       !   
-      ALLOCATE( mill( 3, ngmt ) )
+      ALLOCATE( mill( 3, ngm_g ) )
       !
       mill = 0
       !
@@ -359,7 +359,7 @@ MODULE cp_restart
 !-------------------------------------------------------------------------------
          !
          CALL write_planewaves( ecutw, dual, ngwt, gamma_only, nr1, nr2, &
-                                nr3, ngmt, nr1s, nr2s, nr3s, ngst, nr1b, &
+                                nr3, ngm_g, nr1s, nr2s, nr3s, ngst, nr1b, &
                                 nr2b, nr3b, mill, .FALSE. )
          !
 !-------------------------------------------------------------------------------
@@ -926,7 +926,7 @@ MODULE cp_restart
       USE grid_dimensions,          ONLY : nr1, nr2, nr3
       USE smooth_grid_dimensions,   ONLY : nr1s, nr2s, nr3s
       USE smallbox_grid_dimensions, ONLY : nr1b, nr2b, nr3b
-      USE gvecp,                    ONLY : ngm, ngmt, ecutp
+      USE gvecp,                    ONLY : ngm, ecutp
       USE gvecs,                    ONLY : ngs, ngst
       USE gvecw,                    ONLY : ngw, ngwt, ecutw
       USE electrons_base,           ONLY : nspin, nbnd, nelt, nel, &

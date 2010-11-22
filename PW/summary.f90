@@ -25,7 +25,7 @@ SUBROUTINE summary()
   USE cellmd,          ONLY : calc, cmass
   USE ions_base,       ONLY : amass
   USE gvect,           ONLY : dual, ecutwfc, ecfixed, q2sigma, &
-                              ngm, gcutm, qcutz
+                              ngm, ngm_g, gcutm, qcutz
   USE gsmooth,         ONLY : doublegrid, ngms, gcutms
   USE grid_dimensions, ONLY : nr1, nr2, nr3
   USE smooth_grid_dimensions,  ONLY : nr1s, nr2s, nr3s
@@ -56,7 +56,7 @@ SUBROUTINE summary()
   !
   ! ... declaration of the local variables
   !
-  INTEGER :: i, ipol, apol, na, isym, ik, nt, ngmtot, ibnd
+  INTEGER :: i, ipol, apol, na, isym, ik, nt, ibnd, ngmtot
     ! counter on the celldm elements
     ! counter on polarizations
     ! counter on direct or reciprocal lattice vect
@@ -65,7 +65,7 @@ SUBROUTINE summary()
     ! counter on k points
     ! counter on beta functions
     ! counter on types
-    ! counter on angular momenta
+    ! counter on bands
     ! total number of G-vectors (parallel execution)
     !
   REAL(DP), ALLOCATABLE :: xau(:,:)
@@ -290,11 +290,9 @@ SUBROUTINE summary()
              ik, (xkg (ipol) , ipol = 1, 3) , wk (ik)
      ENDDO
   ENDIF
-  ngmtot = ngm
-  CALL mp_sum (ngmtot, intra_pool_comm)
   WRITE( stdout, '(/5x,"G cutoff =",f10.4,"  (", &
        &       i7," G-vectors)","     FFT grid: (",i3, &
-       &       ",",i3,",",i3,")")') gcutm, ngmtot, nr1, nr2, nr3
+       &       ",",i3,",",i3,")")') gcutm, ngm_g, nr1, nr2, nr3
   IF (doublegrid) THEN
      !
      ngmtot = ngms

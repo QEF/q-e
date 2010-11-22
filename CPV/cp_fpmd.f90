@@ -338,7 +338,7 @@ end subroutine ggenb
       use recvecs_indexes,    only: nm, np
       use gvecs,              only: ngs, nms, ngsl, nps
       use gvecw,              only: ngw, ngwl, ngwt, ggp
-      use gvecp,              only: ng => ngm, ngl, ng_g => ngmt
+      use gvecp,              only: ng => ngm, ngl, ngm_g
       use io_global,          only: stdout
       USE fft_base,           ONLY: dfftp, dffts, fft_dlay_descriptor
       use mp,                 ONLY: mp_sum, mp_max
@@ -365,22 +365,22 @@ end subroutine ggenb
                    dfftp%isind, SIZE( dfftp%isind), dfftp%nr1x, lgam )
       !
       !     Second step. Compute and sort all G vectors, and build non
-      !     distributed reciprocal space vectors arrays (ng_g = global
-      !     number og Gs )
+      !     distributed reciprocal space vectors arrays (ngm_g = global
+      !     number of Gs )
       !
-      ng_g = ng
+      ngm_g= ng
       ngwt = ngw
 
-      CALL mp_sum( ng_g, intra_image_comm )
+      CALL mp_sum( ngm_g, intra_image_comm )
       CALL mp_sum( ngwt, intra_image_comm )
 
       !
       !     Temporary global and replicated arrays, used for sorting
       !
-      allocate( g2_g( ng_g ) )
-      allocate( mill_g( 3, ng_g ) )
+      allocate( g2_g( ngm_g ) )
+      allocate( mill_g( 3, ngm_g ) )
 
-      CALL gglobal( ng_g, g2_g, mill_g, b1, b2, b3, nr1, nr2, nr3, gcut, lgam )
+      CALL gglobal( ngm_g, g2_g, mill_g, b1, b2, b3, nr1, nr2, nr3, gcut, lgam )
 
       !
       !     third step: allocate space
@@ -401,7 +401,7 @@ end subroutine ggenb
       !     fourth step : find the vectors with g2 < gcut
       !     local to each processor
       !
-      CALL glocal( ng, gg, ig_l2g, mill_l, ng_g, g2_g, mill_g, nr1, nr2, nr3, dfftp%isind, dfftp%nr1x  )
+      CALL glocal( ng, gg, ig_l2g, mill_l, ngm_g, g2_g, mill_g, nr1, nr2, nr3, dfftp%isind, dfftp%nr1x  )
 
       IF( iprsta > 3 ) THEN
         WRITE( stdout,*)
@@ -620,7 +620,7 @@ END SUBROUTINE gcount
 
 
 !-------------------------------------------------------------------------
-SUBROUTINE gglobal( ng_g, g2_g, mill_g, b1, b2, b3, nr1, nr2, nr3, gcut, lgam )
+SUBROUTINE gglobal( ngm_g, g2_g, mill_g, b1, b2, b3, nr1, nr2, nr3, gcut, lgam )
 !-------------------------------------------------------------------------
 
   USE kinds,     ONLY: DP
@@ -628,7 +628,7 @@ SUBROUTINE gglobal( ng_g, g2_g, mill_g, b1, b2, b3, nr1, nr2, nr3, gcut, lgam )
 
   IMPLICIT NONE
 
-  INTEGER :: ng_g
+  INTEGER :: ngm_g
   INTEGER :: mill_g(3,*)
   REAL(DP) :: g2_g(*)
   integer :: nr1, nr2, nr3
@@ -664,7 +664,7 @@ SUBROUTINE gglobal( ng_g, g2_g, mill_g, b1, b2, b3, nr1, nr2, nr3, gcut, lgam )
                end do
                if(g2 <= gcut) then
                  ng=ng+1
-                 if( ng > ng_g ) call errore( ' gglobal ', ' too many G vectors ', ng )
+                 if( ng > ngm_g ) call errore( ' gglobal ', ' too many G vectors ', ng )
                  g2_g(ng)=g2
                  mill_g(1,ng)=i
                  mill_g(2,ng)=j
@@ -674,13 +674,13 @@ SUBROUTINE gglobal( ng_g, g2_g, mill_g, b1, b2, b3, nr1, nr2, nr3, gcut, lgam )
          end do loopy
       end do loopx
 
-      if( ng /= ng_g ) call errore( ' gglobal ', ' inconsistent number of G vectors ', ng )
+      if( ng /= ngm_g ) call errore( ' gglobal ', ' inconsistent number of G vectors ', ng )
 
       CALL sort_gvec( ng, g2_g, mill_g )
 
 ! ... Uncomment to make tests and comparisons with other codes
 !      IF ( ionode ) THEN
-!        DO ig=1,ng_g
+!        DO ig=1,ngm_g
 !          WRITE( 201, fmt="( I6, 3I4, 1D25.16 )" ) &
 !            ig, mill_g(1,ig), mill_g(2,ig), mill_g(3,ig), g2_g( ig )
 !        END DO
@@ -693,7 +693,7 @@ END SUBROUTINE gglobal
 
 
 !-------------------------------------------------------------------------
-SUBROUTINE glocal( ng, gg, ig_l2g, mill_l, ng_g, g2_g, mill_g, nr1, nr2, nr3, isind, ldis )
+SUBROUTINE glocal( ng, gg, ig_l2g, mill_l, ngm_g, g2_g, mill_g, nr1, nr2, nr3, isind, ldis )
 !-------------------------------------------------------------------------
 
   USE kinds,     ONLY: DP
@@ -701,7 +701,7 @@ SUBROUTINE glocal( ng, gg, ig_l2g, mill_l, ng_g, g2_g, mill_g, nr1, nr2, nr3, is
 
   IMPLICIT NONE
 
-  INTEGER :: ng_g, ng
+  INTEGER :: ngm_g, ng
   INTEGER :: mill_g(3,*), ig_l2g(*), mill_l(3,*)
   REAL(DP) :: g2_g(*), gg(*)
   integer :: nr1, nr2, nr3, isind(*), ldis
@@ -712,7 +712,7 @@ SUBROUTINE glocal( ng, gg, ig_l2g, mill_l, ng_g, g2_g, mill_g, nr1, nr2, nr3, is
   integer, allocatable:: idx(:)
 
       ng_l=0
-      loop_allg: do ig = 1, ng_g
+      loop_allg: do ig = 1, ngm_g
         i = mill_g(1,ig)
         j = mill_g(2,ig)
         k = mill_g(3,ig)
@@ -1657,12 +1657,10 @@ SUBROUTINE gmeshinfo( )
    USE io_global, ONLY: ionode, ionode_id, stdout
    USE mp,        ONLY: mp_max, mp_gather
    use gvecb,     only: ngb
-   USE reciprocal_vectors, only: ngst, ngs, ngsx,  &
+   USE reciprocal_vectors, only: ngst, ngs, ngsx, ngm, ngm_g, &
               ngw_g  => ngwt,   &
               ngw_l  => ngw ,   &
               ngw_lx => ngwx,   &
-              ng_g   => ngmt,   &
-              ng_l   => ngm ,   &
               ng_lx  => ngmx
 
    IMPLICIT NONE
@@ -1677,8 +1675,8 @@ SUBROUTINE gmeshinfo( )
       WRITE( stdout,*) '  ---------------------'
    END IF
 
-   ng_snd(1) = ng_g
-   ng_snd(2) = ng_l
+   ng_snd(1) = ngm_g
+   ng_snd(2) = ngm
    ng_snd(3) = ng_lx
    CALL mp_gather(ng_snd, ng_rcv, ionode_id, intra_image_comm)
    !
