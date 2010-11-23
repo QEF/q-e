@@ -176,15 +176,16 @@ libiotk:
 #########################################################
 
 w90: bindir libblas liblapack
-	cd plugins ; $(MAKE) $(MFLAGS) w90
+	cd install ; $(MAKE) $(MFLAGS) --file=plugins_makefile $@
 
-want:
-	if test -e plugins/archive/want-2.3.0.tar.gz ; then \
-	( cd plugins ; $(MAKE) $(MFLAGS) $@) ; fi
+want : touch-dummy
+	cd install ; $(MAKE) $(MFLAGS) --file=plugins_makefile $@
 
-yambo:
-	if test -e plugins/archive/yambo-3.2.1-r.448.tar.gz ; then \
-	( cd plugins ; $(MAKE) $(MFLAGS) $@) ; fi
+yambo: touch-dummy
+	cd install ; $(MAKE) $(MFLAGS) --file=plugins_makefile $@
+
+touch-dummy :
+	$(dummy-variable)
 
 #########################################################
 # Links and copies. "make links" is likely obsolete.
@@ -219,7 +220,7 @@ clean :
 	for dir in \
 		CPV D3 Gamma Modules PH PP PW PWCOND VdW ACFDT EE \
 		atomic clib flib pwtools upftools iotk GIPAW XSpectra \
-		dev-tools GWW extlibs plugins TDDFPT \
+		dev-tools GWW extlibs TDDFPT \
 	; do \
 	    if test -d $$dir ; then \
 		( cd $$dir ; \
@@ -227,12 +228,12 @@ clean :
 		else $(MAKE) $(MFLAGS) TLDEPS= clean ; fi ) \
 	    fi \
 	done
+	- cd install ; $(MAKE) $(MFLAGS) --file=plugins_makefile clean
 	- /bin/rm -rf bin/*.x tmp
 	- cd tests; /bin/rm -rf CRASH *.out *.out2 
 
 # remove configuration files too
 distclean veryclean : clean
-	- test -d plugins && ( cd plugins ; $(MAKE) veryclean)
 	- test -d extlibs && ( cd extlibs ; $(MAKE) veryclean)
 	- rm -rf make.sys
 	- cd install ; rm -f config.log configure.msg config.status autom4te.cache \
