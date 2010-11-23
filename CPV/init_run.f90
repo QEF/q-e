@@ -54,7 +54,6 @@ SUBROUTINE init_run()
   USE time_step,                ONLY : dt2, delt, tps
   USE electrons_nose,           ONLY : xnhe0, xnhem, vnhe
   USE cell_nose,                ONLY : xnhh0, xnhhm, vnhh
-  USE gvecp,                    ONLY : ecutp
   USE funct,                    ONLY : dft_is_meta
   USE metagga,                  ONLY : crosstaus, dkedtaus, gradwfc
   !

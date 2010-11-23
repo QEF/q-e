@@ -70,8 +70,8 @@
      INTEGER :: ngl = 0   ! number of G-vector shells up to ngw
      INTEGER :: ngmx = 0  ! maximum local number of G vectors
 
-     REAL(DP) :: ecutp = 0.0_DP
-     REAL(DP) :: gcutp = 0.0_DP
+     REAL(DP) :: ecutrho = 0.0_DP
+     REAL(DP) :: gcutm = 0.0_DP
 
 !=----------------------------------------------------------------------------=!
    END MODULE gvecp

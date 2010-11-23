@@ -1084,14 +1084,14 @@ end subroutine sort_gvec
 !
 !------------------------------------------------------------------------------!
 
-        SUBROUTINE ecutoffs_setup( ecutwfc, ecutrho, ecfixed, qcutz, q2sigma,  &
+        SUBROUTINE ecutoffs_setup( ecutwfc, ecutrho_,ecfixed, qcutz, q2sigma,  &
                                    refg_ )
  
           USE kinds,           ONLY: DP
           USE constants,       ONLY: eps8
           USE gvecw,           ONLY: ecutw
           USE gvecw,           ONLY: ecfix, ecutz, ecsig
-          USE gvecp,           ONLY: ecutp
+          USE gvecp,           ONLY: ecutrho
           USE gvecs,           ONLY: ecuts, dual, doublegrid
           use betax,           only: mmx, refg
           USE pseudopotential, only: tpstab
@@ -1100,18 +1100,18 @@ end subroutine sort_gvec
           USE uspp,            only: okvan
 
           IMPLICIT NONE
-          REAL(DP), INTENT(IN) ::  ecutwfc, ecutrho, ecfixed, qcutz, q2sigma
+          REAL(DP), INTENT(IN) ::  ecutwfc, ecutrho_, ecfixed, qcutz, q2sigma
           REAL(DP), INTENT(IN) ::  refg_
 
           ecutw = ecutwfc
 
-          IF ( ecutrho <= 0.D0 ) THEN
+          IF ( ecutrho_ <= 0.D0 ) THEN
              !
              dual = 4.D0
              !
           ELSE
              !
-             dual = ecutrho / ecutwfc
+             dual = ecutrho_ / ecutwfc
              !
              IF ( dual <= 1.D0 ) &
                 CALL errore( ' ecutoffs_setup ', ' invalid dual? ', 1 )
@@ -1121,7 +1121,7 @@ end subroutine sort_gvec
           doublegrid = ( dual > 4.D0 )
           IF ( doublegrid .AND. .NOT. okvan ) &
              CALL errore( 'setup', 'No USPP: set ecutrho=4*ecutwfc', 1 )
-          ecutp = dual * ecutwfc
+          ecutrho = dual * ecutwfc
           !
           IF ( doublegrid ) THEN
              !
@@ -1129,7 +1129,7 @@ end subroutine sort_gvec
              !
           ELSE
              !
-             ecuts = ecutp
+             ecuts = ecutrho
              !
           END IF
 
@@ -1148,12 +1148,12 @@ end subroutine sort_gvec
           IF( thdyn ) THEN
              !  ... a larger table is used when cell is moving to allow 
              !  ... large volume fluctuation
-             mmx  = NINT( 2.0d0 * ecutp / refg )
+             mmx  = NINT( 2.0d0 * ecutrho / refg )
           ELSE
-             mmx  = NINT( 1.2d0 * ecutp / refg )
+             mmx  = NINT( 1.2d0 * ecutrho / refg )
           END IF
 
-             mmx  = NINT( 2.0d0 * ecutp / refg ) ! debug
+             mmx  = NINT( 2.0d0 * ecutrho / refg ) ! debug
 
           RETURN
         END SUBROUTINE ecutoffs_setup
@@ -1166,7 +1166,7 @@ end subroutine sort_gvec
 
           USE kinds, ONLY: DP
           USE gvecw, ONLY: ecutwfc => ecutw,  gcutw
-          USE gvecp, ONLY: ecutrho => ecutp,  gcutp
+          USE gvecp, ONLY: ecutrho,  gcutm
           USE gvecs, ONLY: ecuts, gcuts
           USE gvecb, ONLY: ecutb, gcutb
           USE gvecw, ONLY: ecfix, ecutz, ecsig
@@ -1201,7 +1201,7 @@ end subroutine sort_gvec
           ! ...  Constant cutoff simulation parameters
 
           gcutw = ecutwfc / tpiba**2  ! wave function cut-off
-          gcutp = ecutrho / tpiba**2  ! potential cut-off
+          gcutm = ecutrho / tpiba**2  ! potential cut-off
           gcuts = ecuts   / tpiba**2  ! smooth mesh cut-off
 
           kcut = 0.0_DP
@@ -1228,7 +1228,7 @@ end subroutine sort_gvec
         !  Print out informations about different cut-offs
 
         USE gvecw, ONLY: ecutwfc => ecutw,  gcutw
-        USE gvecp, ONLY: ecutrho => ecutp,  gcutp
+        USE gvecp, ONLY: ecutrho,  gcutm
         USE gvecw, ONLY: ecfix, ecutz, ecsig
         USE gvecw, ONLY: ekcut, gkcut
         USE gvecs, ONLY: ecuts, gcuts
@@ -1236,7 +1236,7 @@ end subroutine sort_gvec
         use betax, only: mmx, refg
         USE io_global, ONLY: stdout
 
-        WRITE( stdout, 100 ) ecutwfc, ecutrho, ecuts, sqrt(gcutw), sqrt(gcutp), sqrt(gcuts)
+        WRITE( stdout, 100 ) ecutwfc, ecutrho, ecuts, sqrt(gcutw), sqrt(gcutm), sqrt(gcuts)
         IF( ecutz > 0.0d0 ) THEN
           WRITE( stdout, 150 ) ecutz, ecsig, ecfix
         END IF
@@ -1657,11 +1657,10 @@ SUBROUTINE gmeshinfo( )
    USE io_global, ONLY: ionode, ionode_id, stdout
    USE mp,        ONLY: mp_max, mp_gather
    use gvecb,     only: ngb
-   USE reciprocal_vectors, only: ngst, ngs, ngsx, ngm, ngm_g, &
+   USE reciprocal_vectors, only: ngst, ngs, ngsx, ngm, ngm_g, ngmx,&
               ngw_g  => ngwt,   &
               ngw_l  => ngw ,   &
-              ngw_lx => ngwx,   &
-              ng_lx  => ngmx
+              ngw_lx => ngwx
 
    IMPLICIT NONE
 
@@ -1677,7 +1676,7 @@ SUBROUTINE gmeshinfo( )
 
    ng_snd(1) = ngm_g
    ng_snd(2) = ngm
-   ng_snd(3) = ng_lx
+   ng_snd(3) = ngmx
    CALL mp_gather(ng_snd, ng_rcv, ionode_id, intra_image_comm)
    !
    IF(ionode) THEN

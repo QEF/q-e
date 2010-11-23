@@ -33,7 +33,7 @@
       USE reciprocal_vectors,       ONLY: mill_g, g2_g, bi1, bi2, bi3
       USE recvecs_subroutines,      ONLY: recvecs_init
       use gvecw,                    only: gcutw, gkcut
-      use gvecp,                    only: ecut => ecutp, gcut => gcutp
+      use gvecp,                    only: ecutrho, gcutm
       use gvecs,                    only: gcuts
       use gvecb,                    only: gcutb
       USE fft_base,                 ONLY: dfftp, dffts
@@ -71,7 +71,7 @@
       ! ... Initialize (global) real and compute global reciprocal dimensions
       !
 
-      CALL realspace_grids_init( alat, a1, a2, a3, gcut, gcuts, ng_ , ngs_ )
+      CALL realspace_grids_init( alat, a1, a2, a3, gcutm, gcuts, ng_ , ngs_ )
 
       !
       ! ... cell dimensions and lattice vectors
@@ -131,11 +131,11 @@ if( ionode ) then
 !write(6,*) a1
 !write(6,*) a2
 !write(6,*) a3
-!write(6,*) gcut, gkcut, gcut
+!write(6,*)gcut, gkcut, gcut
 !write(6,*) nr1, nr2, nr3, nr1x, nr2x, nr3x, nr1s, nr2s, nr3s, nr1sx, nr2sx, nr3sx, ngw_ , ngm_ , ngs_
 end if
 
-      CALL pstickset( dfftp, dffts, alat, a1, a2, a3, gcut, gkcut, gcuts, &
+      CALL pstickset( dfftp, dffts, alat, a1, a2, a3, gcutm, gkcut, gcuts, &
         nr1, nr2, nr3, nr1x, nr2x, nr3x, nr1s, nr2s, nr3s, nr1sx, nr2sx,   &
         nr3sx, ngw_ , ngm_ , ngs_ )
       !
@@ -154,7 +154,7 @@ end if
       !
       ! ... generate g-space
       !
-      call ggencp( b1, b2, b3, nr1, nr2, nr3, nr1s, nr2s, nr3s, gcut, gcuts, gkcut, gamma_only )
+      call ggencp( b1, b2, b3, nr1, nr2, nr3, nr1s, nr2s, nr3s, gcutm, gcuts, gkcut, gamma_only )
 
       ! 
       !  Allocate index required to compute polarizability
@@ -182,7 +182,7 @@ end if
 
          !  now set gcutb
 
-         gcutb = ecut / tpibab / tpibab
+         gcutb = ecutrho / tpibab / tpibab
          !
          CALL ggenb ( b1b, b2b, b3b, nr1b, nr2b, nr3b, nr1bx, nr2bx, nr3bx, gcutb )
 
