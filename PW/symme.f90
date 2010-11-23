@@ -200,10 +200,10 @@ CONTAINS
         segno=1.0_DP
         IF (sname(isym)(1:3)=='inv') segno=-1.0_DP
         IF (t_rev(isym)==1) segno=-1.0_DP*segno
-        work (:) = work (:) + segno * &
+        work (:) = work (:) + segno * ( &
                        s (:, 1, isym) * vect (1) + &
                        s (:, 2, isym) * vect (2) + &
-                       s (:, 3, isym) * vect (3)
+                       s (:, 3, isym) * vect (3) )
      enddo
      work=work/nsym
    !
