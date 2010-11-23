@@ -1167,7 +1167,7 @@ end subroutine sort_gvec
           USE kinds, ONLY: DP
           USE gvecw, ONLY: ecutwfc => ecutw,  gcutw
           USE gvecp, ONLY: ecutrho,  gcutm
-          USE gvecs, ONLY: ecuts, gcuts
+          USE gvecs, ONLY: ecuts, gcutms
           USE gvecb, ONLY: ecutb, gcutb
           USE gvecw, ONLY: ecfix, ecutz, ecsig
           USE gvecw, ONLY: ekcut, gkcut
@@ -1202,7 +1202,7 @@ end subroutine sort_gvec
 
           gcutw = ecutwfc / tpiba**2  ! wave function cut-off
           gcutm = ecutrho / tpiba**2  ! potential cut-off
-          gcuts = ecuts   / tpiba**2  ! smooth mesh cut-off
+          gcutms= ecuts   / tpiba**2  ! smooth mesh cut-off
 
           kcut = 0.0_DP
           IF ( tk_inp ) THEN
@@ -1231,12 +1231,13 @@ end subroutine sort_gvec
         USE gvecp, ONLY: ecutrho,  gcutm
         USE gvecw, ONLY: ecfix, ecutz, ecsig
         USE gvecw, ONLY: ekcut, gkcut
-        USE gvecs, ONLY: ecuts, gcuts
+        USE gvecs, ONLY: ecuts, gcutms
         USE gvecb, ONLY: ecutb, gcutb
         use betax, only: mmx, refg
         USE io_global, ONLY: stdout
 
-        WRITE( stdout, 100 ) ecutwfc, ecutrho, ecuts, sqrt(gcutw), sqrt(gcutm), sqrt(gcuts)
+        WRITE( stdout, 100 ) ecutwfc, ecutrho, ecuts, sqrt(gcutw), &
+                             sqrt(gcutm), sqrt(gcutms)
         IF( ecutz > 0.0d0 ) THEN
           WRITE( stdout, 150 ) ecutz, ecsig, ecfix
         END IF

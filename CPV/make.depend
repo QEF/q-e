@@ -273,6 +273,7 @@ dealloc.o : cpr_mod.o
 dealloc.o : efield.o
 dealloc.o : electrons.o
 dealloc.o : ensemble_dft.o
+dealloc.o : gvecb.o
 dealloc.o : ions_positions.o
 dealloc.o : ksstates.o
 dealloc.o : mainvar.o

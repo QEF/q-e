@@ -95,7 +95,7 @@
      INTEGER, ALLOCATABLE :: nps(:), nms(:)
 
      REAL(DP) :: ecuts = 0.0_DP
-     REAL(DP) :: gcuts = 0.0_DP
+     REAL(DP) :: gcutms= 0.0_DP
 
      REAL(DP) :: dual = 0.0_DP
      LOGICAL   :: doublegrid = .FALSE.

@@ -58,7 +58,7 @@ MODULE cp_restart
       USE smooth_grid_dimensions,   ONLY : nr1s, nr2s, nr3s
       USE smallbox_grid_dimensions, ONLY : nr1b, nr2b, nr3b
       USE gvecp,                    ONLY : ngm, ngm_g
-      USE gvecs,                    ONLY : ngs, ngst, ecuts, gcuts, dual
+      USE gvecs,                    ONLY : ngs, ngst, ecuts, dual
       USE gvecw,                    ONLY : ngw, ngwt, ecutw, gcutw
       USE reciprocal_vectors,       ONLY : ig_l2g, mill_l
       USE electrons_base,           ONLY : nspin, nelt, nel, nudx
