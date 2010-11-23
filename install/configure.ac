@@ -1935,7 +1935,7 @@ AC_CONFIG_HEADERS([include/c_defs.h:include/c_defs.h.in])
 AC_CONFIG_FILES(make.sys)
 AC_CONFIG_FILES(configure.msg)
 
-AC_CONFIG_FILES(plugins/install/make_wannier90.sys)
+AC_CONFIG_FILES(install/make_wannier90.sys)
 
 AC_CONFIG_FILES(extlibs/install/make_blas.inc)
 AC_CONFIG_FILES(extlibs/install/make_lapack.inc)
