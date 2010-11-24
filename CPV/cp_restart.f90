@@ -59,7 +59,7 @@ MODULE cp_restart
       USE smallbox_grid_dimensions, ONLY : nr1b, nr2b, nr3b
       USE gvecp,                    ONLY : ngm, ngm_g
       USE gvecs,                    ONLY : ngs, ngst, ecuts, dual
-      USE gvecw,                    ONLY : ngw, ngwt, ecutw, gcutw
+      USE gvecw,                    ONLY : ngw, ngwt, ecutwfc
       USE reciprocal_vectors,       ONLY : ig_l2g, mill_l
       USE electrons_base,           ONLY : nspin, nelt, nel, nudx
       USE cell_base,                ONLY : ibrav, alat, celldm, &
@@ -358,7 +358,7 @@ MODULE cp_restart
 ! ... PLANE_WAVES
 !-------------------------------------------------------------------------------
          !
-         CALL write_planewaves( ecutw, dual, ngwt, gamma_only, nr1, nr2, &
+         CALL write_planewaves( ecutwfc, dual, ngwt, gamma_only, nr1, nr2, &
                                 nr3, ngm_g, nr1s, nr2s, nr3s, ngst, nr1b, &
                                 nr2b, nr3b, mill, .FALSE. )
          !
@@ -928,7 +928,7 @@ MODULE cp_restart
       USE smallbox_grid_dimensions, ONLY : nr1b, nr2b, nr3b
       USE gvecp,                    ONLY : ngm
       USE gvecs,                    ONLY : ngs, ngst
-      USE gvecw,                    ONLY : ngw, ngwt, ecutw
+      USE gvecw,                    ONLY : ngw, ngwt
       USE electrons_base,           ONLY : nspin, nbnd, nelt, nel, &
                                            nupdwn, iupdwn, nudx
       USE cell_base,                ONLY : ibrav, alat, celldm, symm_type, &

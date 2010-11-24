@@ -99,7 +99,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
                                        cell_nose_nrg, cell_nose_shiftvar
   USE cell_base,                ONLY : cell_kinene, cell_gamma, &
                                        cell_move, cell_hmove
-  USE gvecw,                    ONLY : ecutw
+  USE gvecw,                    ONLY : ecutwfc
   USE gvecp,                    ONLY : ecutrho
   USE time_step,                ONLY : delt, tps, dt2,  twodelt
   USE cp_interfaces,            ONLY : cp_print_rho, nlfh, print_lambda
@@ -857,7 +857,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
                                  velsm, acc, lambda, lambdam, xnhe0, xnhem,  &
                                  vnhe, xnhp0, xnhpm, vnhp, nhpcl, nhpdim,    &
                                  ekincm, xnhh0, xnhhm, vnhh, velh, ecutrho,  &
-                                 ecutw, delt, celldm, fion, tps, z0t, f, rhor )
+                                 ecutwfc,delt,celldm, fion, tps, z0t, f, rhor )
      !
      IF ( tstop ) EXIT main_loop
      !

@@ -23,7 +23,7 @@
      INTEGER :: ng0  = 0  ! first G-vector with nonzero modulus
                        ! needed in the parallel case (G=0 is on one node only!)
 
-     REAL(DP) :: ecutw = 0.0_DP
+     REAL(DP) :: ecutwfc = 0.0_DP
      REAL(DP) :: gcutw = 0.0_DP
 
      !   values for costant cut-off computations

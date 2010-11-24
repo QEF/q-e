@@ -22,7 +22,7 @@ SUBROUTINE init_run()
   USE ions_positions,           ONLY : tau0, taum, taup, taus, tausm, tausp, &
                                        vels, velsm, velsp, fion, fionm,      &
                                        atoms0, atomsm, atomsp
-  USE gvecw,                    ONLY : ngw, ecutw, ngwt, ggp
+  USE gvecw,                    ONLY : ngw, ngwt, ggp
   USE gvecb,                    ONLY : ngb
   USE gvecs,                    ONLY : ngs
   USE gvecp,                    ONLY : ngm

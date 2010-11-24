@@ -1084,12 +1084,12 @@ end subroutine sort_gvec
 !
 !------------------------------------------------------------------------------!
 
-        SUBROUTINE ecutoffs_setup( ecutwfc, ecutrho_,ecfixed, qcutz, q2sigma,  &
+        SUBROUTINE ecutoffs_setup( ecutwfc_, ecutrho_,ecfixed, qcutz, q2sigma,&
                                    refg_ )
  
           USE kinds,           ONLY: DP
           USE constants,       ONLY: eps8
-          USE gvecw,           ONLY: ecutw
+          USE gvecw,           ONLY: ecutwfc
           USE gvecw,           ONLY: ecfix, ecutz, ecsig
           USE gvecp,           ONLY: ecutrho
           USE gvecs,           ONLY: ecuts, dual, doublegrid
@@ -1100,10 +1100,10 @@ end subroutine sort_gvec
           USE uspp,            only: okvan
 
           IMPLICIT NONE
-          REAL(DP), INTENT(IN) ::  ecutwfc, ecutrho_, ecfixed, qcutz, q2sigma
+          REAL(DP), INTENT(IN) ::  ecutwfc_, ecutrho_, ecfixed, qcutz, q2sigma
           REAL(DP), INTENT(IN) ::  refg_
 
-          ecutw = ecutwfc
+          ecutwfc = ecutwfc_
 
           IF ( ecutrho_ <= 0.D0 ) THEN
              !
@@ -1165,7 +1165,7 @@ end subroutine sort_gvec
 !  ----------------------------------------------
 
           USE kinds, ONLY: DP
-          USE gvecw, ONLY: ecutwfc => ecutw,  gcutw
+          USE gvecw, ONLY: ecutwfc,  gcutw
           USE gvecp, ONLY: ecutrho,  gcutm
           USE gvecs, ONLY: ecuts, gcutms
           USE gvecb, ONLY: ecutb, gcutb
@@ -1227,7 +1227,7 @@ end subroutine sort_gvec
 
         !  Print out informations about different cut-offs
 
-        USE gvecw, ONLY: ecutwfc => ecutw,  gcutw
+        USE gvecw, ONLY: ecutwfc,  gcutw
         USE gvecp, ONLY: ecutrho,  gcutm
         USE gvecw, ONLY: ecfix, ecutz, ecsig
         USE gvecw, ONLY: ekcut, gkcut
