@@ -220,7 +220,7 @@ MODULE ph_restart
             !
             CALL iotk_write_dat(iunpun,"QPOINT_GROUP_RANK",nsymq)
             !
-            IF (trans.or.zeu) THEN
+            IF (trans.OR.zeu.OR.elph) THEN
               !
                CALL iotk_write_dat(iunpun,"NUMBER_IRR_REP",nirr)
               !
@@ -807,7 +807,7 @@ MODULE ph_restart
               'problems with current_iq', 1 )
 
     IF (ionode) THEN
-       IF (trans.or.zeu) THEN
+       IF (trans.OR.zeu.OR.elph) THEN
           CALL iotk_scan_dat(iunpun,"NUMBER_IRR_REP",nirr)
           imode0=0
           DO irr=0,nirr
@@ -865,7 +865,7 @@ MODULE ph_restart
        IF (done_elop) CALL mp_bcast( eloptns,  ionode_id, intra_image_comm )
     ENDIF
 
-    IF (trans.or.zeu) THEN
+    IF (trans.OR.zeu.OR.elph) THEN
        CALL mp_bcast( nirr,  ionode_id, intra_image_comm )
        CALL mp_bcast( npert,  ionode_id, intra_image_comm )
        CALL mp_bcast( u,  ionode_id, intra_image_comm )
