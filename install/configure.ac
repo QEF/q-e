@@ -1107,6 +1107,12 @@ then
                     have_essl=1
                     try_dflags="$try_dflags -D__ESSL"
                 fi
+		# we need esslsmp for hybrid (MPI+OpenMP) build
+		if test "$have_essl"="1"; then
+		    if test "$use_openmp" -ne 0 ; then
+		         blas_libs="-lesslsmp"
+		    fi
+		fi
                 ;;
 
         sparc:* | solaris:* )
@@ -1164,6 +1170,12 @@ then
                     have_essl=1
                     try_dflags="$try_dflags -D__LINUX_ESSL"
                 fi
+		# we need esslsmp for hybrid (MPI+OpenMP) build
+		if test "$have_essl"="1"; then
+		    if test "$use_openmp" -ne 0 ; then
+		         blas_libs="-lesslsmp"
+		    fi
+		fi
                 ;;
 
         ppc64-*:* )
