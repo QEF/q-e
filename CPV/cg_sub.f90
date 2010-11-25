@@ -29,7 +29,7 @@
                       becdiag, fmat0, e0,  id_matrix_init
 !---
       use gvecp, only: ngm
-      use gvecs, only: ngs
+      use gvecs, only: ngms
       use gvecb, only: ngb
       use gvecw, only: ngw
       use reciprocal_vectors, only: gstart
@@ -88,7 +88,7 @@
       complex(dp) :: ei1(-nr1:nr1,nat)
       complex(dp) :: ei2(-nr2:nr2,nat)
       complex(dp) :: ei3(-nr3:nr3,nat)
-      complex(dp) :: sfac( ngs, nsp )
+      complex(dp) :: sfac( ngms, nsp )
       real(dp) :: fion(3,nat)
       real(dp) :: ema0bg(ngw)
       real(dp) :: lambdap(nlam,nlam,nspin)

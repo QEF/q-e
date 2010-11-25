@@ -40,7 +40,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
   USE ensemble_dft,             ONLY : tens, z0t, gibbsfe
   USE cg_module,                ONLY : tcg,  cg_update, c0old
   USE gvecp,                    ONLY : ngm
-  USE gvecs,                    ONLY : ngs
+  USE gvecs,                    ONLY : ngms
   USE gvecb,                    ONLY : ngb
   USE gvecw,                    ONLY : ngw
   USE reciprocal_vectors,       ONLY : gstart, mill_l
@@ -271,7 +271,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
         !
         ! ... strucf calculates the structure factor sfac
         !
-        CALL strucf( sfac, ei1, ei2, ei3, mill_l, ngs )
+        CALL strucf( sfac, ei1, ei2, ei3, mill_l, ngms )
         !
      END IF
      !
@@ -751,7 +751,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
            END IF
            CALL r_to_s( tau0, taus, na, nsp, ainv )
            CALL phfacs( ei1, ei2, ei3, eigr, mill_l, taus, nr1, nr2, nr3, nat )
-           CALL strucf( sfac, ei1, ei2, ei3, mill_l, ngs )
+           CALL strucf( sfac, ei1, ei2, ei3, mill_l, ngms )
            !
            IF ( thdyn )    CALL formf( tfirst, eself )
            IF ( tefield )  CALL efield_update( eigr )

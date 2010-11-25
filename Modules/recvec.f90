@@ -86,7 +86,7 @@
      SAVE
 
      ! ...   G vectors less than the smooth grid cut-off ( ? )
-     INTEGER :: ngs  = 0  ! local number of G vectors
+     INTEGER :: ngms = 0  ! local number of G vectors
      INTEGER :: ngst = 0  ! in parallel execution global number of G vectors,
                        ! in serial execution this is equal to ngw
      INTEGER :: ngsl = 0  ! number of G-vector shells up to ngw
@@ -204,19 +204,15 @@
 
      !     np      = fft index for G>
      !     nm      = fft index for G<
-     !     in1p,in2p,in3p = G components in crystal axis
 
 
-     INTEGER, ALLOCATABLE :: np(:), nm(:), in1p(:), in2p(:), in3p(:)
+     INTEGER, ALLOCATABLE :: np(:), nm(:)
 
    CONTAINS
 
      SUBROUTINE deallocate_recvecs_indexes
        IF( ALLOCATED( np ) ) DEALLOCATE( np )
        IF( ALLOCATED( nm ) ) DEALLOCATE( nm )
-       IF( ALLOCATED( in1p ) ) DEALLOCATE( in1p )
-       IF( ALLOCATED( in2p ) ) DEALLOCATE( in2p )
-       IF( ALLOCATED( in3p ) ) DEALLOCATE( in3p )
       END SUBROUTINE deallocate_recvecs_indexes
 
 !=----------------------------------------------------------------------------=!
@@ -238,21 +234,21 @@
        USE mp, ONLY: mp_max, mp_sum
        USE gvecw, ONLY: ngw, ngwx, ngwt
        USE gvecp, ONLY: ngm, ngmx, ngm_g
-       USE gvecs, ONLY: ngs, ngsx, ngst
+       USE gvecs, ONLY: ngms, ngsx, ngst
 
        IMPLICIT NONE
        INTEGER, INTENT(IN) :: ngm_ , ngw_ , ngs_
 
        ngm = ngm_
        ngw = ngw_
-       ngs = ngs_
+       ngms= ngs_
 
        !
        !  calculate maxima over all processors
        !
        ngwx = ngw
        ngmx = ngm
-       ngsx = ngs
+       ngsx = ngms
        CALL mp_max( ngwx, intra_image_comm )
        CALL mp_max( ngmx, intra_image_comm )
        CALL mp_max( ngsx, intra_image_comm )
@@ -261,7 +257,7 @@
        !
        ngwt = ngw
        ngm_g= ngm
-       ngst = ngs
+       ngst = ngms
        CALL mp_sum( ngwt, intra_image_comm )
        CALL mp_sum( ngm_g, intra_image_comm )
        CALL mp_sum( ngst, intra_image_comm )

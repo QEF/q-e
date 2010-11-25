@@ -197,7 +197,7 @@ END FUNCTION
 !
       USE kinds,              ONLY: DP
       USE ions_base,          ONLY: nsp
-      USE reciprocal_vectors, ONLY: gstart, g, ngs, gg, ngm
+      USE reciprocal_vectors, ONLY: gstart, g, ngms, gg, ngm
       USE recvecs_indexes,    ONLY: np
       USE cell_base,          ONLY: omega, ainv, tpiba2
       USE mp,                 ONLY: mp_sum
@@ -213,7 +213,7 @@ END FUNCTION
 
       INTEGER, INTENT(IN)   :: nnr, nspin
       REAL(DP)              :: vxcr( nnr, nspin )
-      COMPLEX(DP)           :: sfac( ngs, nsp )
+      COMPLEX(DP)           :: sfac( ngms, nsp )
       REAL(DP)              :: drhocg( ngm, nsp )
 
       ! output
@@ -240,7 +240,7 @@ END FUNCTION
       !
       DO i=1,3
          DO j=1,3
-            DO ig = gstart, ngs
+            DO ig = gstart, ngms
                srhoc = 0.0d0
                DO is = 1, nsp
                  IF( upf(is)%nlcc ) srhoc = srhoc + sfac( ig, is ) * drhocg( ig, is )
@@ -1666,7 +1666,7 @@ END FUNCTION
       USE io_global,          ONLY: stdout
       USE ions_base,          ONLY: nsp, na, nat, rcmax, compute_eextfor
       USE gvecs
-      USE gvecp,              ONLY: ng => ngm
+      USE gvecp,              ONLY: ngm
       USE cell_base,          ONLY: omega, r_to_s
       USE cell_base,          ONLY: a1, a2, a3, tpiba2, h, ainv
       USE reciprocal_vectors, ONLY: gstart, gg, g
@@ -1704,7 +1704,7 @@ END FUNCTION
       REAL(DP)  rhoc(nnr), tau0(3,nat)
       COMPLEX(DP) ei1(-nr1:nr1,nat), ei2(-nr2:nr2,nat),     &
      &                ei3(-nr3:nr3,nat), eigrb(ngb,nat),        &
-     &                rhog(ng,nspin), sfac(ngs,nsp)
+     &                rhog(ngm,nspin), sfac(ngms,nsp)
       !
       INTEGER irb(3,nat)
       !
@@ -1751,13 +1751,13 @@ END FUNCTION
       !
       ALLOCATE( v( nnr ) )
       ALLOCATE( vs( nrxxs ) )
-      ALLOCATE( vtemp( ng ) )
-      ALLOCATE( rhotmp( ng ) )
+      ALLOCATE( vtemp( ngm ) )
+      ALLOCATE( rhotmp( ngm ) )
       !
       IF ( tpre ) THEN
-         ALLOCATE( drhot( ng, 6 ) )
-         ALLOCATE( gagb( 6, ng ) )
-         CALL compute_gagb( gagb, g, ng, tpiba2 )
+         ALLOCATE( drhot( ngm, 6 ) )
+         ALLOCATE( gagb( 6, ngm ) )
+         CALL compute_gagb( gagb, g, ngm, tpiba2 )
       END IF
 !
 !     ab-initio pressure and surface tension contributions to the potential
@@ -1766,7 +1766,7 @@ END FUNCTION
       !
       ttsic = ( ABS( self_interaction ) /= 0 )
       !
-      IF( ttsic ) ALLOCATE( self_vloc( ng ) )
+      IF( ttsic ) ALLOCATE( self_vloc( ngm ) )
       !
       !     first routine in which fion is calculated: annihilation
       !
@@ -1788,7 +1788,7 @@ END FUNCTION
          !
       END IF
 !
-      rhotmp( 1:ng ) = rhog( 1:ng, 1 )
+      rhotmp( 1:ngm ) = rhog( 1:ngm, 1 )
       !
 
       IF( tpre ) THEN
@@ -1803,7 +1803,7 @@ END FUNCTION
       END IF
       !
       IF( nspin == 2 ) THEN
-         rhotmp( 1:ng ) = rhotmp( 1:ng ) + rhog( 1:ng, 2 )
+         rhotmp( 1:ngm ) = rhotmp( 1:ngm ) + rhog( 1:ngm, 2 )
          IF(tpre)THEN
             DO ij = 1, 6
                i = alpha( ij )
@@ -1826,12 +1826,12 @@ END FUNCTION
       END DO
       DO is=1,nsp
 !$omp do
-         DO ig=1,ngs
+         DO ig=1,ngms
             vtemp(ig)=vtemp(ig)+CONJG(rhotmp(ig))*sfac(ig,is)*vps(ig,is)
          END DO
       END DO
 !$omp do reduction(+:zpseu)
-      DO ig=1,ngs
+      DO ig=1,ngms
          zpseu = zpseu + vtemp(ig)
       END DO
 !$omp end parallel
@@ -1865,18 +1865,18 @@ END FUNCTION
 
       DO is=1,nsp
 !$omp do
-         DO ig=1,ngs
+         DO ig=1,ngms
             rhotmp(ig)=rhotmp(ig)+sfac(ig,is)*rhops(ig,is)
          END DO
       END DO
       !
 !$omp do
-      DO ig = gstart, ng
+      DO ig = gstart, ngm
          vtemp(ig) = CONJG( rhotmp( ig ) ) * rhotmp( ig ) / gg( ig )
       END DO
 
 !$omp do reduction(+:zh)
-      DO ig = gstart, ng
+      DO ig = gstart, ngm
          zh = zh + vtemp(ig)
       END DO
 
@@ -1913,9 +1913,9 @@ END FUNCTION
       fion1 = 0.d0
       !
       IF( tprnfor .OR. tfor .OR. tpre) THEN
-          vtemp( 1:ng ) = rhog( 1:ng, 1 )
+          vtemp( 1:ngm ) = rhog( 1:ngm, 1 )
           IF( nspin == 2 ) THEN
-             vtemp( 1:ng ) = vtemp(1:ng) + rhog( 1:ng, 2 )
+             vtemp( 1:ngm ) = vtemp(1:ngm) + rhog( 1:ngm, 2 )
           END IF
           CALL force_loc( .false., vtemp, fion1, rhops, vps, ei1, ei2, ei3, sfac, omega, screen_coul )
       END IF
@@ -1927,13 +1927,13 @@ END FUNCTION
 
 !$omp parallel default(shared), private(ig,is)
 !$omp do
-      DO ig=gstart,ng
+      DO ig=gstart,ngm
          vtemp(ig)=rhotmp(ig)*fpi/(tpiba2*gg(ig))
       END DO
 !
       DO is=1,nsp
 !$omp do
-         DO ig=1,ngs
+         DO ig=1,ngms
             vtemp(ig)=vtemp(ig)+sfac(ig,is)*vps(ig,is)
          END DO
       END DO
@@ -1975,7 +1975,7 @@ END FUNCTION
          CALL fwfft( 'Dense', v, dfftp )
 !
 !$omp parallel do
-         DO ig = 1, ng
+         DO ig = 1, ngm
             rhog( ig, iss ) = vtemp(ig) + v( np( ig ) )
          END DO
          !
@@ -1999,7 +1999,7 @@ END FUNCTION
          end if
          CALL fwfft('Dense',v, dfftp )
 !$omp parallel do private(fp,fm)
-         DO ig=1,ng
+         DO ig=1,ngm
             fp=v(np(ig))+v(nm(ig))
             fm=v(np(ig))-v(nm(ig))
             IF( ttsic ) THEN
@@ -2040,7 +2040,7 @@ END FUNCTION
       IF(nspin.EQ.1) THEN
          iss=1
 !$omp parallel do
-         DO ig=1,ng
+         DO ig=1,ngm
             v(np(ig))=rhog(ig,iss)
             v(nm(ig))=CONJG(rhog(ig,iss))
          END DO
@@ -2061,7 +2061,7 @@ END FUNCTION
          isup=1
          isdw=2
 !$omp parallel do
-         DO ig=1,ng
+         DO ig=1,ngm
             v(np(ig))=rhog(ig,isup)+ci*rhog(ig,isdw)
             v(nm(ig))=CONJG(rhog(ig,isup)) +ci*CONJG(rhog(ig,isdw))
          END DO
@@ -2089,7 +2089,7 @@ END FUNCTION
          !
          iss=1
 !$omp parallel do
-         DO ig=1,ngs
+         DO ig=1,ngms
             vs(nms(ig))=CONJG(rhog(ig,iss))
             vs(nps(ig))=rhog(ig,iss)
          END DO
@@ -2106,7 +2106,7 @@ END FUNCTION
          isup=1
          isdw=2
 !$omp parallel do
-         DO ig=1,ngs
+         DO ig=1,ngms
             vs(nps(ig))=rhog(ig,isup)+ci*rhog(ig,isdw)
             vs(nms(ig))=CONJG(rhog(ig,isup)) +ci*CONJG(rhog(ig,isdw))
          END DO 

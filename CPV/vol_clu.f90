@@ -14,23 +14,22 @@ SUBROUTINE vol_clu(rho_real,rho_g,s_fac,flag)
 ! from the measure of the region of space occupied by the electronic density
 ! above a given threshold
 
-      use cell_base
-      use electrons_base
-      use ions_base
+      use kinds,          only: dp
+      use constants,      only: pi
+      use parameters,     only: nsx
+      use cell_base,      only: a1, a2, a3, h, omega, tpiba, tpiba2
+      use electrons_base, only: nspin
+      use ions_base,      only: na, nsp, pmass
       use ions_positions, only: tau0
-      use constants, only: pi
-      use parameters
-      use reciprocal_vectors
-      use gvecs
-      use gvecp, only: ngm
-      use recvecs_indexes
+      use reciprocal_vectors, only: g, gg
+      use gvecs,          only: ngms
+      use gvecp,          only: ngm
+      use recvecs_indexes,only: np, nm
       use cp_main_variables, only: drhor
-      use control_flags, only: tpre
-      use local_pseudo
-      use fft_base, ONLY : dfftP
-      USE fft_interfaces,    ONLY: invfft
-      use grid_dimensions, only: nr1, nr2, nr3,                         &
-     &                   nr1x, nr2x, nr3x, nnr => nrxx
+      use control_flags,  only: tpre
+      use fft_base,       ONLY : dfftp
+      USE fft_interfaces, ONLY: invfft
+      use grid_dimensions,only: nr1, nr2, nr3, nr1x, nr2x, nr3x, nnr => nrxx
       use pres_ai_mod, only: rho_thr, n_cntr, cntr, step_rad, fill_vac, &
      &                       delta_eps, delta_sigma, axis,              &
      &                       abisur, dthr, Surf_t, rho_gaus, v_vol,     &
@@ -68,7 +67,7 @@ SUBROUTINE vol_clu(rho_real,rho_g,s_fac,flag)
       real(kind=8), allocatable:: dydzrho(:)
       real(kind=8), allocatable:: tauv(:,:,:)
 
-      complex(kind=8) s_fac(ngs,nsp), ci
+      complex(kind=8) s_fac(ngms,nsp), ci
       complex(kind=8) sum_sf, aux, auxx, fact, rho_g(ngm,nspin) 
       complex(kind=8), allocatable :: psi(:), rhofill(:), rhotmp(:,:)
 

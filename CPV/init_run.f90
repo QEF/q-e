@@ -24,7 +24,7 @@ SUBROUTINE init_run()
                                        atoms0, atomsm, atomsp
   USE gvecw,                    ONLY : ngw, ngwt, ggp
   USE gvecb,                    ONLY : ngb
-  USE gvecs,                    ONLY : ngs
+  USE gvecs,                    ONLY : ngms
   USE gvecp,                    ONLY : ngm
   USE reciprocal_vectors,       ONLY : gstart
   USE grid_dimensions,          ONLY : nrxx, nr1, nr2, nr3
@@ -122,12 +122,12 @@ SUBROUTINE init_run()
   !     allocation of all arrays not already allocated in init and nlinit
   !=======================================================================
   !
-  CALL allocate_mainvar( ngw, ngwt, ngb, ngs, ngm, nr1, nr2, nr3, dfftp%nr1x, &
+  CALL allocate_mainvar( ngw, ngwt, ngb, ngms, ngm, nr1, nr2, nr3, dfftp%nr1x,&
                          dfftp%nr2x, dfftp%npl, nrxx, nrxxs, nat, nax, nsp,   &
                          nspin, nbsp, nbspx, nupdwn, nkb, gstart, nudx, &
                          tpre )
   !
-  CALL allocate_local_pseudo( ngs, nsp )
+  CALL allocate_local_pseudo( ngms, nsp )
   !
   !  initialize wave functions descriptors and allocate wf
   !

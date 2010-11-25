@@ -13,8 +13,8 @@
 !
 !          contribution from metaGGA
       use kinds, only: dp
-      use reciprocal_vectors
-      use gvecs
+      use reciprocal_vectors,     only : g
+      use gvecs,                  only : ngms, nms, nps
       use gvecw,                  only : ngw
       use smooth_grid_dimensions, only : nnrs => nrxxs
       use cell_base,              only : tpiba2
@@ -186,7 +186,7 @@
 
          psis(1:nrxxs)=CMPLX(kedtaus(1:nrxxs,iss),0.d0,kind=DP)
          call fwfft('Smooth',psis, dffts )
-         kedtaug(1:ngs,iss)=psis(nps(1:ngs))
+         kedtaug(1:ngms,iss)=psis(nps(1:ngms))
 
       else
          isup=1
@@ -194,7 +194,7 @@
 
          psis(1:nrxxs)=CMPLX(kedtaus(1:nrxxs,isup),kedtaus(1:nrxxs,isdw),kind=DP)
          call fwfft('Smooth',psis, dffts )
-         do ig=1,ngs
+         do ig=1,ngms
             fp= psis(nps(ig)) + psis(nms(ig))
             fm= psis(nps(ig)) - psis(nms(ig))
             kedtaug(ig,isup)=0.5d0*CMPLX( DBLE(fp),AIMAG(fm),kind=DP)
@@ -210,8 +210,8 @@
          iss=1
 
          psi( : ) = (0.d0,0.d0)
-         psi(nm(1:ngs))=CONJG(kedtaug(1:ngs,iss))
-         psi(np(1:ngs))=      kedtaug(1:ngs,iss)
+         psi(nm(1:ngms))=CONJG(kedtaug(1:ngms,iss))
+         psi(np(1:ngms))=      kedtaug(1:ngms,iss)
          call invfft('Dense',psi, dfftp )
          kedtaur(1:nnr,iss)=DBLE(psi(1:nnr))
 
@@ -224,7 +224,7 @@
 
          psi( : ) = (0.d0,0.d0)
 
-         do ig=1,ngs
+         do ig=1,ngms
             psi(nm(ig))=CONJG(kedtaug(ig,isup))+ci*conjg(kedtaug(ig,isdw))
             psi(np(ig))=kedtaug(ig,isup)+ci*kedtaug(ig,isdw)
          end do
@@ -258,7 +258,7 @@
       use io_global, only: stdout
       use ions_base, only: nas => nax, nsp, na, nat
       use gvecs
-      use gvecp, only: ng => ngm
+      use gvecp, only: ngm
       use cell_base, only: omega
       use cell_base, only: a1, a2, a3, tpiba2
       use recvecs_indexes, only: np, nm
@@ -314,7 +314,7 @@
          end do
          call fwfft('Dense',v, dfftp )
          !
-         do ig=1,ng
+         do ig=1,ngm
             kedtaug(ig,iss)=v(np(ig))
          end do
       else
@@ -323,7 +323,7 @@
 
          v(1:nnr)=CMPLX(kedtaur(1:nnr,isup),kedtaur(1:nnr,isdw),kind=DP)
          call fwfft('Dense',v, dfftp )
-         do ig=1,ng
+         do ig=1,ngm
             fp=v(np(ig))+v(nm(ig))
             fm=v(np(ig))-v(nm(ig))
             kedtaug(ig,isup)=0.5d0*CMPLX( DBLE(fp),AIMAG(fm),kind=DP)
@@ -335,7 +335,7 @@
       vs(:) = (0.d0,0.d0)
       if(nspin.eq.1)then
          iss=1
-         do ig=1,ngs
+         do ig=1,ngms
             vs(nms(ig))=CONJG(kedtaug(ig,iss))
             vs(nps(ig))=kedtaug(ig,iss)
          end do
@@ -346,7 +346,7 @@
       else
          isup=1
          isdw=2
-         do ig=1,ngs
+         do ig=1,ngms
             vs(nps(ig))=kedtaug(ig,isup)+ci*kedtaug(ig,isdw)
             vs(nms(ig))=CONJG(kedtaug(ig,isup)) +ci*conjg(kedtaug(ig,isdw))
          end do

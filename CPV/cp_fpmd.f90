@@ -336,9 +336,9 @@ end subroutine ggenb
       use reciprocal_vectors, only: mill_l, ig_l2g
       use reciprocal_vectors, only: gstart, sortedig_l2g
       use recvecs_indexes,    only: nm, np
-      use gvecs,              only: ngs, nms, ngsl, nps
+      use gvecs,              only: ngms, nms, ngsl, nps
       use gvecw,              only: ngw, ngwl, ngwt, ggp
-      use gvecp,              only: ng => ngm, ngl, ngm_g
+      use gvecp,              only: ngm, ngl, ngm_g
       use io_global,          only: stdout
       USE fft_base,           ONLY: dfftp, dffts, fft_dlay_descriptor
       use mp,                 ONLY: mp_sum, mp_max
@@ -361,14 +361,14 @@ end subroutine ggenb
       !
       !  First of all count the number of G vectors according with the FFT mesh 
       ! 
-      CALL gcount( ng, ngs, ngw, b1, b2, b3, nr1, nr2, nr3, gcut, gcuts, gcutw,&
-                   dfftp%isind, SIZE( dfftp%isind), dfftp%nr1x, lgam )
+      CALL gcount( ngm, ngms, ngw, b1, b2, b3, nr1, nr2, nr3, gcut, gcuts, &
+                   gcutw, dfftp%isind, SIZE( dfftp%isind), dfftp%nr1x, lgam )
       !
       !     Second step. Compute and sort all G vectors, and build non
       !     distributed reciprocal space vectors arrays (ngm_g = global
       !     number of Gs )
       !
-      ngm_g= ng
+      ngm_g= ngm
       ngwt = ngw
 
       CALL mp_sum( ngm_g, intra_image_comm )
@@ -386,28 +386,29 @@ end subroutine ggenb
       !     third step: allocate space
       !     ng is the number of Gs local to this processor
       !
-      allocate( g ( 3, ng ) )
-      allocate( gg ( ng ) )
+      allocate( g ( 3, ngm ) )
+      allocate( gg ( ngm ) )
       allocate( ggp( ngw ) )
-      allocate( np ( ng ) )
-      allocate( nm ( ng ) )
-      allocate( igl( ng ) )
+      allocate( np ( ngm ) )
+      allocate( nm ( ngm ) )
+      allocate( igl( ngm ) )
 
-      allocate( ig_l2g( ng ) )
-      allocate( mill_l( 3, ng ) )
-      allocate( sortedig_l2g( ng ) )
+      allocate( ig_l2g( ngm ) )
+      allocate( mill_l( 3, ngm ) )
+      allocate( sortedig_l2g( ngm ) )
 
       !
       !     fourth step : find the vectors with g2 < gcut
       !     local to each processor
       !
-      CALL glocal( ng, gg, ig_l2g, mill_l, ngm_g, g2_g, mill_g, nr1, nr2, nr3, dfftp%isind, dfftp%nr1x  )
+      CALL glocal( ngm, gg, ig_l2g, mill_l, ngm_g, g2_g, mill_g, &
+                   nr1, nr2, nr3, dfftp%isind, dfftp%nr1x  )
 
       IF( iprsta > 3 ) THEN
         WRITE( stdout,*)
-        WRITE( stdout,150) ng
+        WRITE( stdout,150) ngm
  150    format(' ggen:  # of g vectors < gcut   ng= ',i6)
-        WRITE( stdout,160) ngs
+        WRITE( stdout,160) ngms
  160    format(' ggen:  # of g vectors < gcuts ngs= ',i6)
         WRITE( stdout,170) ngw
  170    format(' ggen:  # of g vectors < gcutw ngw= ',i6)
@@ -417,17 +418,17 @@ end subroutine ggenb
       !     check for the presence of refolded G-vectors (dense grid)
       !
 
-      CALL gchkrefold( ng, mill_l, nr1, nr2, nr3 )
+      CALL gchkrefold( ngm, mill_l, nr1, nr2, nr3 )
 
       !
       !     costruct fft indexes (n1,n2,n3) for the dense grid
       !
-      CALL gfftindex( np, nm, ng, mill_l, nr1, nr2, nr3, &
+      CALL gfftindex( np, nm, ngm, mill_l, nr1, nr2, nr3, &
                       dfftp%isind, dfftp%nr1x, dfftp%nr2x, dfftp%nr3x )
 
 ! ... Uncomment to make tests and comparisons with other codes
 !      IF ( ionode ) THEN
-!        DO ig=1,ng
+!        DO ig=1,ngm
 !          WRITE( 201, fmt="( 3I6 )" ) ig, &
 !             ( np( ig ) - 1 ) / dfftp%nr3x + 1, &
 !             MOD( ( np( ig ) - 1 ), dfftp%nr3x ) + 1
@@ -439,21 +440,21 @@ end subroutine ggenb
       !
       ! check for the presence of refolded G-vectors (smooth  grid)
       !
-      CALL gchkrefold( ngs, mill_l, nr1s, nr2s, nr3s )
+      CALL gchkrefold( ngms, mill_l, nr1s, nr2s, nr3s )
 
       !
       ! costruct fft indexes (n1s,n2s,n3s) for the smooth grid
       !
-      allocate(nps(ngs))
-      allocate(nms(ngs))
+      allocate(nps(ngms))
+      allocate(nms(ngms))
 !
-      CALL gfftindex( nps, nms, ngs, mill_l, nr1s, nr2s, nr3s, &
+      CALL gfftindex( nps, nms, ngms, mill_l, nr1s, nr2s, nr3s, &
                       dffts%isind, dffts%nr1x, dffts%nr2x, dffts%nr3x )
 
 
 ! ... Uncomment to make tests and comparisons with other codes
 !      IF ( ionode ) THEN
-!        DO ig=1,ngs
+!        DO ig=1,ngms
 !          WRITE( 202, fmt="( I6, 2I6, 3I4 )" ) ig, nps(ig), nms(ig), mill_l(1,ig), mill_l(2,ig), mill_l(3,ig)
 !        END DO
 !        CLOSE( 202 )
@@ -462,20 +463,20 @@ end subroutine ggenb
       !  ... here igl is used as temporary storage area
       !  ... sortedig_l2g is used to find out local G index given the global G index
       !
-      DO ig = 1, ng
+      DO ig = 1, ngm
         sortedig_l2g( ig ) = ig
       END DO
-      DO ig = 1, ng
+      DO ig = 1, ngm
         igl( ig ) = ig_l2g( ig )
       END DO
-      CALL  ihpsort( ng, igl, sortedig_l2g )
+      CALL  ihpsort( ngm, igl, sortedig_l2g )
       igl = 0
 
 !
 ! shells of G - first calculate their number and position
 !
 
-      CALL gshcount( ngl, ngsl, ngwl, igl, ng, gg, gcuts, gcutw )
+      CALL gshcount( ngl, ngsl, ngwl, igl, ngm, gg, gcuts, gcutw )
 
 !
 ! then allocate the array gl
@@ -485,7 +486,7 @@ end subroutine ggenb
 ! and finally fill gl with the values of the shells
 !
       gl(igl(1))=gg(1)
-      do ig=2,ng
+      do ig=2,ngm
          if(igl(ig).ne.igl(ig-1)) gl(igl(ig))=gg(ig)
       end do
 !
@@ -511,7 +512,7 @@ end subroutine ggenb
 !
 ! calculation of G-vectors
 !
-      do ig=1,ng
+      do ig=1,ngm
          i=mill_l(1,ig)
          j=mill_l(2,ig)
          k=mill_l(3,ig)
@@ -1658,7 +1659,7 @@ SUBROUTINE gmeshinfo( )
    USE io_global, ONLY: ionode, ionode_id, stdout
    USE mp,        ONLY: mp_max, mp_gather
    use gvecb,     only: ngb
-   USE reciprocal_vectors, only: ngst, ngs, ngsx, ngm, ngm_g, ngmx,&
+   USE reciprocal_vectors, only: ngst, ngms, ngsx, ngm, ngm_g, ngmx,&
               ngw_g  => ngwt,   &
               ngw_l  => ngw ,   &
               ngw_lx => ngwx
@@ -1689,7 +1690,7 @@ SUBROUTINE gmeshinfo( )
    END IF
    !
    ng_snd(1) = ngst
-   ng_snd(2) = ngs
+   ng_snd(2) = ngms
    ng_snd(3) = ngsx
    CALL mp_gather(ng_snd, ng_rcv, ionode_id, intra_image_comm)
    !

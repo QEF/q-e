@@ -10,7 +10,6 @@ SUBROUTINE tpssmeta(nnr, nspin,grho,rho,kedtau,etxc)
   !     ===================
   !--------------------------------------------------------------------
   use kinds, only: dp
-  use gvecp, only: ng => ngm
   IMPLICIT NONE
   !
   ! input

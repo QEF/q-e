@@ -45,7 +45,7 @@
       !
       USE kinds,              ONLY: DP
       USE ions_base,          ONLY: nsp
-      USE gvecs,              ONLY: ngs
+      USE gvecs,              ONLY: ngms
       USE electrons_base,     ONLY: nspin
       USE stress_param,       ONLY: dalbe
       USE cp_interfaces,      ONLY: stress_local
@@ -65,13 +65,13 @@
       COMPLEX(DP), ALLOCATABLE :: rhoe( : )
       COMPLEX(DP), ALLOCATABLE :: drhoe( :, : )
       !
-      ALLOCATE( drhoe( ngs, 6 ), rhoe( ngs ) )
+      ALLOCATE( drhoe( ngms, 6 ), rhoe( ngms ) )
 
-      rhoe( 1:ngs ) = rhoeg( 1:ngs, 1 )
-      IF( nspin > 1 ) rhoe( 1:ngs ) = rhoe( 1:ngs ) + rhoeg( 1:ngs, 2 )
+      rhoe( 1:ngms ) = rhoeg( 1:ngms, 1 )
+      IF( nspin > 1 ) rhoe( 1:ngms ) = rhoe( 1:ngms ) + rhoeg( 1:ngms, 2 )
 
       DO k = 1, 6
-         drhoe( 1:ngs, k ) = - rhoe( 1:ngs ) * dalbe( k )
+         drhoe( 1:ngms, k ) = - rhoe( 1:ngms ) * dalbe( k )
       END DO
 
       CALL stress_local( deps, epseu, gagb, sfac, rhoe, drhoe, omega )
@@ -90,7 +90,7 @@
       USE kinds,              ONLY: DP
       USE ions_base,          ONLY: nsp
       USE reciprocal_vectors, ONLY: gstart
-      USE gvecs,              ONLY: ngs
+      USE gvecs,              ONLY: ngms
       USE electrons_base,     ONLY: nspin
       USE local_pseudo,       ONLY: vps, dvps
 
@@ -112,7 +112,7 @@
 
       wz = 2.0d0
 
-      DO ig = gstart, ngs
+      DO ig = gstart, ngms
          svp = 0.0d0
          DO is = 1, nsp
             svp = svp + sfac( ig, is ) * vps( ig, is )
@@ -127,7 +127,7 @@
          depst = depst + CONJG( drhoe( 1, : ) ) * svp
       END IF
 
-      DO ig = gstart, ngs
+      DO ig = gstart, ngms
          dsvp = 0.0d0
          DO is = 1, nsp
             dsvp = dsvp + sfac( ig, is ) * dvps( ig, is )
@@ -222,7 +222,7 @@
 !------------------------------------------------------------------------------!
       !
       USE kinds,        ONLY: DP
-      USE gvecs,        ONLY: ngs
+      USE gvecs,        ONLY: ngms
       USE ions_base,    ONLY: nsp, rcmax
       USE local_pseudo, ONLY: rhops
       USE stress_param, ONLY: dalbe
@@ -239,13 +239,13 @@
       DO ij = 1, 6
          IF( dalbe( ij ) > 0.0d0 ) THEN
             DO is = 1, nsp
-               DO ig = 1, ngs
+               DO ig = 1, ngms
                   drhot(ig,ij) = drhot(ig,ij) - sfac(ig,is)*rhops(ig,is)
                ENDDO
             END DO
          END IF
       END DO
-      DO ig = 1, ngs
+      DO ig = 1, ngms
          drhop = 0.0d0
          DO is = 1, nsp
            drhop = drhop - sfac( ig, is ) * rhops(ig,is) * rcmax(is)**2 * 0.5D0
@@ -270,7 +270,7 @@
       USE constants,          ONLY: fpi
       USE cell_base,          ONLY: tpiba2
       USE reciprocal_vectors, ONLY: gstart
-      USE gvecs,              ONLY: ngs
+      USE gvecs,              ONLY: ngms
       USE gvecp,              ONLY: ngm
       USE local_pseudo,       ONLY: rhops
       USE electrons_base,     ONLY: nspin
@@ -307,7 +307,7 @@
       ! add Ionic pseudo charges  rho_I
       !
       DO is = 1, nsp
-         DO ig = gstart, ngs
+         DO ig = gstart, ngms
             rhot( ig ) = rhot( ig ) + sfac( ig, is ) * rhops( ig, is )
          END DO
       END DO
@@ -355,7 +355,7 @@
       USE constants,          ONLY: fpi
       USE cell_base,          ONLY: tpiba2
       USE reciprocal_vectors, ONLY: gstart, gg
-      USE gvecs,              ONLY: ngs
+      USE gvecs,              ONLY: ngms
       USE gvecp,              ONLY: ngm
       USE local_pseudo,       ONLY: rhops
       USE electrons_base,     ONLY: nspin

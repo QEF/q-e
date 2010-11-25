@@ -37,7 +37,7 @@
                                 compute_entropy_der, compute_entropy, &
                                 niter_cold_restart, lambda_cold
       USE gvecp,          ONLY: ngm
-      USE gvecs,          ONLY: ngs
+      USE gvecs,          ONLY: ngms
       USE gvecb,          ONLY: ngb
       USE gvecw,          ONLY: ngw
       USE reciprocal_vectors, &
@@ -99,7 +99,7 @@
       COMPLEX(kind=DP)            :: ei1( nr1:nr1, nat )
       COMPLEX(kind=DP)            :: ei2( nr2:nr2, nat )
       COMPLEX(kind=DP)            :: ei3( nr3:nr3, nat )
-      COMPLEX(kind=DP)            :: sfac( ngs, nsp )
+      COMPLEX(kind=DP)            :: sfac( ngms, nsp )
   
 
 !local variables
@@ -351,7 +351,7 @@
       USE ensemble_dft,   ONLY: tens,  ninner, ismear, etemp, &
                                  c0diag, becdiag
       USE gvecp,          ONLY: ngm
-      USE gvecs,          ONLY: ngs
+      USE gvecs,          ONLY: ngms
       USE gvecb,          ONLY: ngb
       USE gvecw,          ONLY: ngw
       USE reciprocal_vectors, &
@@ -406,7 +406,7 @@
       COMPLEX(kind=DP)            :: ei1( nr1:nr1, nat )
       COMPLEX(kind=DP)            :: ei2( nr2:nr2, nat )
       COMPLEX(kind=DP)            :: ei3( nr3:nr3, nat )
-      COMPLEX(kind=DP)            :: sfac( ngs, nsp )
+      COMPLEX(kind=DP)            :: sfac( ngms, nsp )
   
       REAL(kind=DP), INTENT(in)   :: c0hc0(nlax,nlax,nspin)
       REAL(kind=DP), INTENT(in)   :: c1hc1(nlax,nlax,nspin)
@@ -549,7 +549,7 @@
                                 compute_entropy_der, compute_entropy, &
                                 niter_cold_restart, lambda_cold
       USE gvecp,          ONLY: ngm
-      USE gvecs,          ONLY: ngs
+      USE gvecs,          ONLY: ngms
       USE gvecb,          ONLY: ngb
       USE gvecw,          ONLY: ngw
       USE reciprocal_vectors, &

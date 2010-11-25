@@ -101,7 +101,7 @@
       USE control_flags,      ONLY: iprint, iprsta, thdyn, tpre, trhor
       USE ions_base,          ONLY: nat
       USE gvecp,              ONLY: ngm
-      USE gvecs,              ONLY: ngs, nps, nms
+      USE gvecs,              ONLY: ngms, nps, nms
       USE gvecb,              ONLY: ngb
       USE gvecw,              ONLY: ngw
       USE recvecs_indexes,    ONLY: np, nm
@@ -323,7 +323,7 @@
                psis(ir)=CMPLX(rhos(ir,iss),0.d0,kind=DP)
             END DO
             CALL fwfft('Smooth', psis, dffts )
-            DO ig=1,ngs
+            DO ig=1,ngms
                rhog(ig,iss)=psis(nps(ig))
             END DO
          ELSE
@@ -333,7 +333,7 @@
                psis(ir)=CMPLX(rhos(ir,isup),rhos(ir,isdw),kind=DP)
             END DO
             CALL fwfft('Smooth',psis, dffts )
-            DO ig=1,ngs
+            DO ig=1,ngms
                fp= psis(nps(ig)) + psis(nms(ig))
                fm= psis(nps(ig)) - psis(nms(ig))
                rhog(ig,isup)=0.5d0*CMPLX( DBLE(fp),AIMAG(fm),kind=DP)
@@ -349,7 +349,7 @@
             ! 
             iss=1
             psi (:) = (0.d0, 0.d0)
-            DO ig=1,ngs
+            DO ig=1,ngms
                psi(nm(ig))=CONJG(rhog(ig,iss))
                psi(np(ig))=      rhog(ig,iss)
             END DO
@@ -365,7 +365,7 @@
             isup=1
             isdw=2
             psi (:) = (0.d0, 0.d0)
-            DO ig=1,ngs
+            DO ig=1,ngms
                psi(nm(ig))=CONJG(rhog(ig,isup))+ci*CONJG(rhog(ig,isdw))
                psi(np(ig))=rhog(ig,isup)+ci*rhog(ig,isdw)
             END DO
@@ -771,7 +771,7 @@ SUBROUTINE drhov(irb,eigrb,rhovan,drhovan,rhog,rhor,drhog,drhor)
       USE grid_dimensions,          ONLY: nr1, nr2, nr3, nr1x, nr2x, nr3x, nnr => nrxx
       USE electrons_base,           ONLY: nspin
       USE gvecb,                    ONLY: ngb, npb, nmb
-      USE gvecp,                    ONLY: ng => ngm
+      USE gvecp,                    ONLY: ngm
       USE smallbox_grid_dimensions, ONLY: nr1b, nr2b, nr3b, nr1bx, nr2bx, nr3bx, nnrb => nnrbx
       USE cell_base,                ONLY: ainv
       USE qgb_mod,                  ONLY: qgb
@@ -786,10 +786,10 @@ SUBROUTINE drhov(irb,eigrb,rhovan,drhovan,rhog,rhor,drhog,drhor)
       REAL(DP),    INTENT(IN) ::  rhor(nnr,nspin)
       REAL(DP),    INTENT(IN) ::  rhovan(nhm*(nhm+1)/2,nat,nspin)
       REAL(DP),    INTENT(IN) ::  drhovan(nhm*(nhm+1)/2,nat,nspin,3,3)
-      COMPLEX(DP), INTENT(IN) ::  eigrb(ngb,nat), rhog(ng,nspin)
+      COMPLEX(DP), INTENT(IN) ::  eigrb(ngb,nat), rhog(ngm,nspin)
 ! output
       REAL(DP),    INTENT(OUT) :: drhor(nnr,nspin,3,3)
-      COMPLEX(DP), INTENT(OUT) :: drhog(ng,nspin,3,3)
+      COMPLEX(DP), INTENT(OUT) :: drhog(ngm,nspin,3,3)
 ! local
       INTEGER i, j, isup, isdw, nfft, ifft, iv, jv, ig, ijv, is, iss,   &
      &     isa, ia, ir
@@ -811,7 +811,7 @@ SUBROUTINE drhov(irb,eigrb,rhovan,drhovan,rhog,rhor,drhog,drhor)
                DO ir=1,nnr
                   drhor(ir,iss,i,j)=-rhor(ir,iss)*ainv(j,i)
                END DO
-               DO ig=1,ng
+               DO ig=1,ngm
                   drhog(ig,iss,i,j)=-rhog(ig,iss)*ainv(j,i)
                END DO
             END DO
@@ -943,7 +943,7 @@ SUBROUTINE drhov(irb,eigrb,rhovan,drhovan,rhog,rhor,drhog,drhor)
 !
                CALL fwfft( 'Dense', v, dfftp )
 !
-               DO ig=1,ng
+               DO ig=1,ngm
                   drhog(ig,iss,i,j) = drhog(ig,iss,i,j) + v(np(ig))
                END DO
 !
@@ -1022,7 +1022,7 @@ SUBROUTINE drhov(irb,eigrb,rhovan,drhovan,rhog,rhor,drhog,drhor)
 !
                CALL fwfft('Dense', v, dfftp )
 
-               DO ig=1,ng
+               DO ig=1,ngm
                   fp=v(np(ig))+v(nm(ig))
                   fm=v(np(ig))-v(nm(ig))
                   drhog(ig,isup,i,j) = drhog(ig,isup,i,j) +             &
@@ -1062,7 +1062,7 @@ SUBROUTINE rhov(irb,eigrb,rhovan,rhog,rhor)
       USE grid_dimensions,          ONLY: nr1, nr2, nr3, nr1x, nr2x, nr3x, nnr => nrxx
       USE electrons_base,           ONLY: nspin
       USE gvecb,                    ONLY: npb, nmb, ngb
-      USE gvecp,                    ONLY: ng => ngm
+      USE gvecp,                    ONLY: ngm
       USE cell_base,                ONLY: omega, ainv
       USE small_box,                ONLY: omegab
       USE smallbox_grid_dimensions, ONLY: nr1b, nr2b, nr3b, nr1bx, nr2bx, nr3bx, nnrb => nnrbx
@@ -1079,7 +1079,7 @@ SUBROUTINE rhov(irb,eigrb,rhovan,rhog,rhor)
       COMPLEX(DP), INTENT(in):: eigrb(ngb,nat)
       ! 
       REAL(DP),     INTENT(inout):: rhor(nnr,nspin)
-      COMPLEX(DP),  INTENT(inout):: rhog(ng,nspin)
+      COMPLEX(DP),  INTENT(inout):: rhog(ngm,nspin)
 !
       INTEGER     :: isup, isdw, nfft, ifft, iv, jv, ig, ijv, is, iss, isa, ia, ir, i, j
       REAL(DP)    :: sumrho
@@ -1267,7 +1267,7 @@ SUBROUTINE rhov(irb,eigrb,rhovan,rhog,rhor)
          !
          !  rhog(g) = total (smooth + US) charge density in G-space
          !
-         DO ig = 1, ng
+         DO ig = 1, ngm
             rhog(ig,iss)=rhog(ig,iss)+v(np(ig))
          END DO
 
@@ -1366,7 +1366,7 @@ SUBROUTINE rhov(irb,eigrb,rhovan,rhog,rhor)
      &           omega*(rhog(1,isdw)+AIMAG(v(1)))
          ENDIF
 !
-         DO ig=1,ng
+         DO ig=1,ngm
             fp=  v(np(ig)) + v(nm(ig))
             fm=  v(np(ig)) - v(nm(ig))
             rhog(ig,isup)=rhog(ig,isup) + 0.5d0*CMPLX(DBLE(fp),AIMAG(fm),kind=DP)

@@ -25,7 +25,7 @@ SUBROUTINE from_restart( )
    USE grid_dimensions,       ONLY : nr1, nr2, nr3
    USE reciprocal_vectors,    ONLY : mill_l
    USE printout_base,         ONLY : printout_pos
-   USE gvecs,                 ONLY : ngs
+   USE gvecs,                 ONLY : ngms
    USE gvecw,                 ONLY : ngw
    USE cp_interfaces,         ONLY : phfacs, strucf
    USE energies,              ONLY : eself, dft_energy_type
@@ -123,7 +123,7 @@ SUBROUTINE from_restart( )
    !
    CALL phfacs( ei1, ei2, ei3, eigr, mill_l, taus, nr1, nr2, nr3, nat )
    !
-   CALL strucf( sfac, ei1, ei2, ei3, mill_l, ngs )
+   CALL strucf( sfac, ei1, ei2, ei3, mill_l, ngms )
    !
    CALL prefor( eigr, vkb )
    !

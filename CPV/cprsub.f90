@@ -21,7 +21,7 @@ subroutine formf( tfirst, eself )
   use control_flags,   ONLY : iprint, tpre, iprsta
   use io_global,       ONLY : stdout
   use mp_global,       ONLY : intra_image_comm
-  use gvecs,           ONLY : ngs
+  use gvecs,           ONLY : ngms
   use cell_base,       ONLY : omega, tpiba2, tpiba
   use ions_base,       ONLY : rcmax, zv, nsp, na
   use local_pseudo,    ONLY : vps, vps0, rhops, dvps, drhops
@@ -78,7 +78,7 @@ subroutine formf( tfirst, eself )
            dvps(1,is) = dvps_sp(is)%y(1) * cost1
         END IF
         !
-        DO ig = gstart, ngs
+        DO ig = gstart, ngms
            xg = SQRT( gg(ig) ) * tpiba
            vps (ig,is) = spline(  vps_sp(is), xg ) * cost1
            dvps(ig,is) = spline( dvps_sp(is), xg ) * cost1
@@ -88,24 +88,24 @@ subroutine formf( tfirst, eself )
 
         call formfn( rgrid(is)%r, rgrid(is)%rab, &
                      upf(is)%vloc(1:rgrid(is)%mesh), zv(is), rcmax(is), gg, &
-                     omega, tpiba2, rgrid(is)%mesh, ngs, oldvan(is), tpre, &
+                     omega, tpiba2, rgrid(is)%mesh, ngms, oldvan(is), tpre, &
                      vps(:,is), vps0(is), dvps(:,is) )
 
 ! obsolete BHS form
 ! call formfa( vps(:,is), dvps(:,is), rc1(is), rc2(is), wrc1(is), wrc2(is), &
 !              rcl(:,is,lloc(is)), al(:,is,lloc(is)), bl(:,is,lloc(is)),    &
-!              zv(is), rcmax(is), g, omega, tpiba2, ngs, gstart, tpre )
+!              zv(is), rcmax(is), g, omega, tpiba2, ngms, gstart, tpre )
 
      END IF
      !
      !     fourier transform of local pp and gaussian nuclear charge
      !
      call compute_rhops( rhops(:,is), drhops(:,is), zv(is), rcmax(is), gg, &
-                         omega, tpiba2, ngs, tpre )
+                         omega, tpiba2, ngms, tpre )
 
      if( tfirst .or. ( iprsta >= 4 ) )then
-        vpsum = SUM( vps( 1:ngs, is ) )
-        rhopsum = SUM( rhops( 1:ngs, is ) )
+        vpsum = SUM( vps( 1:ngms, is ) )
+        rhopsum = SUM( rhops( 1:ngms, is ) )
         call mp_sum( vpsum, intra_image_comm )
         call mp_sum( rhopsum, intra_image_comm )
         WRITE( stdout,1250) vps(1,is),rhops(1,is)

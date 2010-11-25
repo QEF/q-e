@@ -420,7 +420,7 @@
       USE reciprocal_vectors, ONLY: mill_l, gstart, g, gg
       USE ions_base,          ONLY: nat, nsp, na
       USE gvecp,              ONLY: ngm
-      USE gvecs,              ONLY: ngs
+      USE gvecs,              ONLY: ngms
 
       IMPLICIT NONE
 
@@ -451,7 +451,7 @@
       
       ftmp = 0.0d0
 
-      DO ig = gstart, ngs 
+      DO ig = gstart, ngms 
 
         RP   = (0.D0,0.D0)
         DO IS = 1, nsp

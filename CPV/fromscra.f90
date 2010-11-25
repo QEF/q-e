@@ -33,7 +33,7 @@ SUBROUTINE from_scratch( )
     USE io_global,            ONLY : stdout, ionode
     USE core,                 ONLY : nlcc_any, rhoc
     USE gvecw,                ONLY : ngw
-    USE gvecs,                ONLY : ngs
+    USE gvecs,                ONLY : ngms
     USE gvecp,                ONLY : ngm
     USE reciprocal_vectors,   ONLY : gstart, mill_l
     USE cvan,                 ONLY : nvb
@@ -111,7 +111,7 @@ SUBROUTINE from_scratch( )
     !
     CALL phfacs( ei1, ei2, ei3, eigr, mill_l, atoms0%taus, nr1, nr2, nr3, atoms0%nat )
     !
-    CALL strucf( sfac, ei1, ei2, ei3, mill_l, ngs )
+    CALL strucf( sfac, ei1, ei2, ei3, mill_l, ngms )
     !     
     IF ( okvan .OR. nlcc_any ) THEN
        CALL initbox ( tau0, taub, irb, ainv, a1, a2, a3 )

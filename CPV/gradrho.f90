@@ -16,7 +16,7 @@ SUBROUTINE gradrho(nspin,rhog,drho,d2rho,dxdyrho,dxdzrho,dydzrho)
 !     in: charge density on G-space    out: gradient in R-space
 !
       use cell_base
-      use gvecp, only: ng => ngm
+      use gvecp, only: ngm
       use reciprocal_vectors
       use recvecs_indexes
       USE fft_interfaces, ONLY: invfft
@@ -29,7 +29,7 @@ SUBROUTINE gradrho(nspin,rhog,drho,d2rho,dxdyrho,dxdzrho,dydzrho)
       implicit none
 ! input
       integer nspin
-      complex(kind=8) rhog(ng,nspin)
+      complex(kind=8) rhog(ngm,nspin)
 ! output
       real(kind=8)    drho(3,nnr), d2rho(3,nnr),     &
      &                dxdyrho(nnr), dxdzrho(nnr),    &
@@ -58,7 +58,7 @@ SUBROUTINE gradrho(nspin,rhog,drho,d2rho,dxdyrho,dxdzrho,dydzrho)
             v(ig)=(0.0d0,0.0d0)
             w(ig)=(0.0d0,0.0d0)
          end do
-         do ig=1,ng
+         do ig=1,ngm
             v(np(ig))=      ci*tpiba*g(1,ig)*rhog(ig,iss)
             v(nm(ig))=conjg(ci*tpiba*g(1,ig)*rhog(ig,iss))
             w(np(ig))=      -1.d0*tpiba**2*g(1,ig)**2*rhog(ig,iss)
@@ -75,7 +75,7 @@ SUBROUTINE gradrho(nspin,rhog,drho,d2rho,dxdyrho,dxdzrho,dydzrho)
             v(ig)=(0.0d0,0.0d0)
             w(ig)=(0.0d0,0.0d0)
          end do
-         do ig=1,ng
+         do ig=1,ngm
             v(np(ig))= tpiba*(      ci*g(2,ig)*rhog(ig,iss)-           &
      &                                 g(3,ig)*rhog(ig,iss) )
             v(nm(ig))= tpiba*(conjg(ci*g(2,ig)*rhog(ig,iss))+          &
@@ -97,7 +97,7 @@ SUBROUTINE gradrho(nspin,rhog,drho,d2rho,dxdyrho,dxdzrho,dydzrho)
          do ig=1,nnr
             v(ig)=(0.0d0,0.0d0)
          end do
-         do ig=1,ng
+         do ig=1,ngm
             v(np(ig))= -1.d0*tpiba**2*g(1,ig)*g(2,ig)*rhog(ig,iss)
             v(nm(ig))=conjg(v(np(ig)))
          end do
@@ -109,7 +109,7 @@ SUBROUTINE gradrho(nspin,rhog,drho,d2rho,dxdyrho,dxdzrho,dydzrho)
          do ig=1,nnr
             v(ig)=(0.0d0,0.0d0)
          end do
-         do ig=1,ng
+         do ig=1,ngm
             v(np(ig))= -1.d0*tpiba**2*(g(1,ig)*g(3,ig)*rhog(ig,iss) + &
      &                              ci*g(2,ig)*g(3,ig)*rhog(ig,iss) )
             v(nm(ig))= -1.d0*tpiba**2*                                  &
