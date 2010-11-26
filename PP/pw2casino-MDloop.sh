@@ -49,15 +49,15 @@ From: Mike Towler <mdt26@cam.ac.uk>
 
 ---
  PP/Makefile  |    4 ++--
- PW/Makefile  |    4 +++-
+ PW/Makefile  |    2 ++
  PW/pwscf.f90 |   15 +++++++++++++++
- 3 files changed, 20 insertions(+), 3 deletions(-)
+ 3 files changed, 19 insertions(+), 2 deletions(-)
 
 diff --git a/PP/Makefile b/PP/Makefile
-index ec24bc6..d3df6fe 100644
+index 895b70e..0456149 100644
 --- a/PP/Makefile
 +++ b/PP/Makefile
-@@ -123,9 +123,9 @@ projwfc.x : projwfc.o $(PPOBJS) $(MODULES) $(LIBOBJS)
+@@ -120,9 +120,9 @@ projwfc.x : projwfc.o $(PPOBJS) $(MODULES) $(LIBOBJS)
  		projwfc.o $(PPOBJS) $(MODULES) $(LIBOBJS) $(LIBS)
  	- ( cd ../bin ; ln -fs ../PP/$@ . )
  
@@ -70,10 +70,10 @@ index ec24bc6..d3df6fe 100644
  
  pw2wannier90.x : pw2wannier90.o $(PPOBJS) $(MODULES) $(LIBOBJS)
 diff --git a/PW/Makefile b/PW/Makefile
-index b7658b7..6eac35a 100644
+index bc7d671..4a4ee64 100644
 --- a/PW/Makefile
 +++ b/PW/Makefile
-@@ -140,6 +140,7 @@ print_ks_energies.o \
+@@ -141,6 +141,7 @@ print_ks_energies.o \
  punch.o \
  pw_restart.o \
  pwcom.o \
@@ -81,18 +81,16 @@ index b7658b7..6eac35a 100644
  qvan2.o \
  rcgdiagg.o \
  rdiagh.o \
-@@ -219,7 +220,8 @@ wannier_init.o \
- wannier_check.o \
+@@ -224,6 +225,7 @@ wannier_check.o \
  wannier_clean.o \
  wannier_occ.o \
--wannier_enrg.o 
-+wannier_enrg.o \
-+write_casino_wfn.o
+ wannier_enrg.o \
++write_casino_wfn.o 
  
- EEOBJS=../EE/libee.a
  QEMODS=../Modules/libqemod.a
+ 
 diff --git a/PW/pwscf.f90 b/PW/pwscf.f90
-index 28e2470..248e4e4 100644
+index bb923bd..7418e21 100644
 --- a/PW/pwscf.f90
 +++ b/PW/pwscf.f90
 @@ -29,6 +29,8 @@ PROGRAM pwscf
@@ -116,23 +114,23 @@ index 28e2470..248e4e4 100644
       ! ... electronic self-consistentcy
       !
       CALL electrons()
-@@ -103,6 +108,16 @@ PROGRAM pwscf
-        CALL environment_end( 'PWSCF' )
-        CALL mp_global_end()
+@@ -102,6 +107,16 @@ PROGRAM pwscf
+        CALL stop_run( conv_elec )
       ENDIF
-+        !
-+        write(postfix,'(i4.4)')itercount
-+        CALL write_casino_wfn( &
-+            .false., & ! gather
-+            .true.,  & ! blip
-+            1.0d0,   & ! multiplicity
-+            .true.,  & ! binwrite
-+            .true.,  & ! single_precision_blips
-+            0,       & ! n_points_for_test
-+            '.'//postfix)   ! postfix
       !
++     write(postfix,'(i4.4)')itercount
++     CALL write_casino_wfn( &
++     .false., & ! gather
++     .true.,  & ! blip
++     1.0d0,   & ! multiplicity
++     .true.,  & ! binwrite
++     .true.,  & ! single_precision_blips
++     0,       & ! n_points_for_test
++     '.'//postfix)   ! postfix
++     !
       ! ... if requested ions are moved
       !
+ !  CALL ions()
 EOF
 
 patch -p 1 --dry-run -f -p 1 < $PATCHFILE
