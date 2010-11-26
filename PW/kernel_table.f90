@@ -1,6 +1,6 @@
 !
-! Copyright (C) 2009- Brian Kolb, Timo Thonhauser - Wake Forest University
-! Copyright (C) 2010- Quantum ESPRESSO group
+! Copyright (C) 2001-2009 Quantum ESPRESSO group
+! Copyright (C) 2009 Brian Kolb, Timo Thonhauser - Wake Forest University
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -33,7 +33,7 @@ MODULE kernel_table
   USE kinds,                  ONLY : dp
   USE io_files,               ONLY : find_free_unit, pseudo_dir
   USE constants,              ONLY : pi
-
+  use wrappers,               ONLY : md5_from_file
   implicit none
 
   private
@@ -47,28 +47,30 @@ MODULE kernel_table
   public :: kernel, d2phi_dk2
   public :: initialize_kernel_table
   public :: vdw_table_name
-
-  integer :: Nqs, Nr_points                      !! The number of q points and radial points
+  public :: vdw_kernel_md5_cksum
+  integer, save :: Nqs, Nr_points                      !! The number of q points and radial points
   !                                                    !! used in generating the kernel phi(q1*r, q2*r)
   !                                                    !! (see DION 14-16 and SOLER 3)
 
-  real(dp) :: r_max, q_cut, q_min, dk            !! The maximum value of r, the maximum and minimum
+  real(dp), save :: r_max, q_cut, q_min, dk            !! The maximum value of r, the maximum and minimum
   !                                                    !! values of q and the k-space spacing of grid points.
   !                                                    !! Note that, during a vdW run, values of q0 found
   !                                                    !! larger than q_cut will be saturated (SOLER 6-7) to
   !                                                    !! q_cut
 
-  real(dp), allocatable :: q_mesh(:)             !! The values of all the q points used
+  real(dp), allocatable, save :: q_mesh(:)             !! The values of all the q points used
 
-  real(dp), allocatable :: kernel(:,:,:)         !! A matrix holding the Fourier transformed kernel function
+  real(dp), allocatable, save :: kernel(:,:,:)         !! A matrix holding the Fourier transformed kernel function
   !                                                    !! for each pair of q values.  The ordering is
   !                                                    !! kernel(k_point, q1_value, q2_value)
 
-  real(dp), allocatable ::  d2phi_dk2(:,:,:)     !! A matrix holding the second derivatives of the above
+  real(dp), allocatable, save ::  d2phi_dk2(:,:,:)     !! A matrix holding the second derivatives of the above
   !                                                    !! kernel matrix at each of the q points.  Stored as  
   !                                                    !! d2phi_dk2(k_point, q1_value, q2_value)
   !
   character(len=256) :: vdw_table_name                 !! If present from input use this name
+  CHARACTER(LEN=30)  :: double_format = "(1p4e23.14)"
+  CHARACTER(len=32)  :: vdw_kernel_md5_cksum = 'NOT SET'
   !
   ! --------------------------------------------------------------------------
 
@@ -123,45 +125,29 @@ CONTAINS
     !! in the PW directory of the PWSCF source is tried.  If none of those
     !! exist the code crashes.
 
-    inquire(file=vdw_table_name, exist=file_exists)
+    kernel_file_name=vdw_table_name
+    inquire(file=kernel_file_name, exist=file_exists)
 
     !! If the file is found in the current directory we use that one
     !! ------------------------------------------------------------------------------------------
 
-    if (file_exists) then
+    if (.not. file_exists) then
 
-       open(unit=kernel_file, file=vdw_table_name, status='old', form='unformatted', action='read')
-
-    !! ------------------------------------------------------------------------------------------
-    
-    else
-       
        !! No "vdW_kernel_table" file in the current directory.  Try the pseudopotential directory
        !! -----------------------------------------------------------------------------------------
 
        kernel_file_name = trim(pseudo_dir)//'/'//vdw_table_name
        inquire(file=kernel_file_name, exist=file_exists)
 
-       if (file_exists) then
+       if (.not. file_exists) then
 
-          open(unit=kernel_file, file=kernel_file_name, status='old', form='unformatted', action='read')
-       ! -----------------------------------------------------------------------------------------
-      
-       else
-        
           !! Finally, try the default pw_dir/PW/vdW_kernel_table file
           !! --------------------------------------------------------------------------------------
   
           kernel_file_name = 'DEFAULT_KERNEL_TABLE_FILE'
           inquire(file=kernel_file_name, exist=file_exists)
           
-          if (file_exists) then
-
-             open(unit=kernel_file, file=kernel_file_name, status='old', form='unformatted', action='read')
-
-          !! --------------------------------------------------------------------------------------
-
-          else
+          if (.not. file_exists) then
 
              !! No "vdW_kernel_table" file could be found.  Time to die.
              call errore('read_kernel_table', 'No \"vdW_kernel_table\" file could be found',1)
@@ -172,15 +158,22 @@ CONTAINS
 
     end if
 
+    !! Generates the md5 file
+    CALL md5_from_file(kernel_file_name, vdw_kernel_md5_cksum)
+
+    !! Open the file to read
+    open(unit=kernel_file, file=kernel_file_name, status='old', form='formatted', action='read') 
+
     !! Read in the number of q points used for this kernel file, the
     !! number of r points, and the maximum value of the r point
-    read(kernel_file) Nqs, Nr_points, r_max
+    read(kernel_file, '(2i5)') Nqs, Nr_points
+    read(kernel_file, double_format) r_max
 
     allocate( q_mesh(Nqs) )
     allocate( kernel(0:Nr_points,Nqs,Nqs), d2phi_dk2(0:Nr_points,Nqs,Nqs) )
     
     !! Read in the values of the q points used to generate this kernel
-    read(kernel_file) q_mesh
+    read(kernel_file, double_format) q_mesh
 
 
     !! For each pair of q values, read in the function phi_q1_q2(k).
@@ -191,7 +184,7 @@ CONTAINS
     do q1_i = 1, Nqs
        do q2_i = 1, q1_i
 
-          read(kernel_file) kernel(0:Nr_points, q1_i, q2_i)
+          read(kernel_file, double_format) kernel(0:Nr_points, q1_i, q2_i)
           kernel(0:Nr_points, q2_i, q1_i) = kernel(0:Nr_points, q1_i, q2_i)
 
        end do
@@ -210,7 +203,7 @@ CONTAINS
     do q1_i = 1, Nqs
        do q2_i = 1, q1_i
 
-          read(kernel_file) d2phi_dk2(0:Nr_points, q1_i, q2_i)
+          read(kernel_file, double_format) d2phi_dk2(0:Nr_points, q1_i, q2_i)
           d2phi_dk2(0:Nr_points, q2_i, q1_i) = d2phi_dk2(0:Nr_points, q1_i, q2_i)
 
        end do

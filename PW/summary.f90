@@ -181,6 +181,10 @@ SUBROUTINE summary()
   !
   CALL print_ps_info ( )
   !
+  !
+  ! ... print the vdw table informations if needed
+  CALL print_vdw_info ()
+  !
   WRITE( stdout, '(/5x, "atomic species   valence    mass     pseudopotential")')
   xp = 1.d0
   DO nt = 1, ntyp
@@ -397,6 +401,23 @@ SUBROUTINE print_ps_info
 
   ENDDO
 END SUBROUTINE print_ps_info
+!
+!-----------------------------------------------------------------------
+SUBROUTINE print_vdw_info
+  !-----------------------------------------------------------------------
+  !
+  USE io_global,       ONLY : stdout
+  USE io_files,        ONLY : psfile
+  USE funct,           ONLY : dft_is_vdW
+  USE kernel_table,    ONLY : vdw_table_name, vdw_kernel_md5_cksum
+
+  if (dft_is_vdW()) then
+      WRITE( stdout, '(/5x,"vdW kernel table read from file ",a)')&
+             TRIM (vdw_table_name)
+     WRITE( stdout, '(5x,"MD5 check sum: ", a )') vdw_kernel_md5_cksum
+  endif 
+
+END SUBROUTINE print_vdw_info
 !
 SUBROUTINE print_symmetries ( iverbosity, noncolin, domag )
   !-----------------------------------------------------------------------

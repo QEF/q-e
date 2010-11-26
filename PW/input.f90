@@ -21,7 +21,8 @@ SUBROUTINE iosys(xmlinput,attr)
   !
   !
   USE kinds,         ONLY : DP
-  USE funct,         ONLY : enforce_input_dft, dft_has_finite_size_correction, set_finite_size_volume
+  USE funct,         ONLY : enforce_input_dft, dft_has_finite_size_correction, &
+                            set_finite_size_volume, dft_is_vdW
 #if defined(EXX)
   USE funct,         ONLY: set_exx_fraction, set_screening_parameter
 #endif
@@ -30,6 +31,8 @@ SUBROUTINE iosys(xmlinput,attr)
   USE mp_global,     ONLY : npool, nproc_pool
   !
   USE io_global,     ONLY : stdout, ionode, ionode_id
+  !
+  USE kernel_table,  ONLY : initialize_kernel_table
   !
   USE mp,            ONLY : mp_bcast
   !
@@ -1368,6 +1371,12 @@ SUBROUTINE iosys(xmlinput,attr)
   ! ... read pseudopotentials
   !
   CALL readpp()
+  !
+  ! ... read the vdw kernel table if needed
+  !
+  if (dft_is_vdW()) then
+      call initialize_kernel_table()
+  endif
   !
   ! ... if DFT finite size corrections are needed, define the appropriate volume
   !

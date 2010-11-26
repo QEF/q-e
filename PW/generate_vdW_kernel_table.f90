@@ -1,6 +1,6 @@
 !
-! Copyright (C) 2009- Brian Kolb, Timo Thonhauser - Wake Forest University
-! Copyright (C) 2010- Quantum ESPRESSO group
+! Copyright (C) 2001-2009 Quantum ESPRESSO group
+! Copyright (C) 2009 Brian Kolb, Timo Thonhauser - Wake Forest University
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -124,7 +124,7 @@ program generate_kernel
 
   !!-------------------------------------------------------------------------------------------------
 
-
+  CHARACTER(LEN=30) :: double_format = "(1p4e23.14)"
 
 
   !! The next 2 parameters define the q mesh to be used in the vdW_DF code.  These are perhaps the most important to have
@@ -778,14 +778,15 @@ CONTAINS
     if (ionode) then
        
        !! Open the file for writing.  The file is written in binary to save space.
-       open(UNIT=21, FILE='vdW_kernel_table', status='replace', form='unformatted', action='write')
-       
+       !open(UNIT=21, FILE='vdW_kernel_table', status='replace', form='unformatted', action='write')
+       open(UNIT=21, FILE='vdW_kernel_table', status='replace', form='formatted', action='write') 
        !! Write the relevant header information that will be read in by the kernel_table module
        !! ---------------------------------------------------------------------------------------
+       !write(*) "Writing headers..."
 
-       write(21) Nqs, Nr_points, r_max
-       write(21) q_mesh
-
+       write(21, '(2i5,f13.8)') Nqs, Nr_points
+       write(21, double_format) r_max
+       write(21, double_format) q_mesh
        !! ---------------------------------------------------------------------------------------
 
 
@@ -793,10 +794,10 @@ CONTAINS
        !! Processor 0 writes its kernel functions first.  The subroutine "write_data" is defined
        !! below.
        !! ---------------------------------------------------------------------------------------
-
+       !write(*) "Writing phi proc ", 0
        data => phi(:,:)
        call write_data(21, data)
-
+ 
        !! ---------------------------------------------------------------------------------------
        
     end if
@@ -815,8 +816,8 @@ CONTAINS
           
           proc_Nqs = proc_indices(proc_i+1, 2) - proc_indices(proc_i+1,1) + 1
           
+          !write(*) "Writing phi proc ", proc_i
           data => phi(:,1:proc_Nqs)
-          
           call write_data(21, data)
           
        end if
@@ -831,7 +832,8 @@ CONTAINS
     !! -------------------------------------------------------------------------------------------
     
     if (ionode) then
-
+       
+       !write(*) "Writing d2phi_dk2 proc ", 0
        data => d2phi_dk2(:,:)
        call write_data(21, data)
 
@@ -846,8 +848,8 @@ CONTAINS
           
           proc_Nqs = proc_indices(proc_i+1,2) - proc_indices(proc_i+1,1) + 1
           
+          !write(*) "Writing d2phi_dk2 proc ", proc_i 
           data => d2phi_dk2(:, 1:proc_Nqs)
-          
           call write_data(21, data)
           
        end if
@@ -887,15 +889,18 @@ CONTAINS
 
     integer, intent(in) :: file                    !! Unit number of file to write to
 
-    integer :: index                               !! Indexing variable
+    integer :: index, ios                              !! Indexing variable
     
 
     do index = 1, size(array,2)
        
-       write(file) array(:,index)
-       
-    end do
+       ! write(file) array(:,index)
+       write (file, double_format, err=100, iostat=ios) array(:,index)    
     
+    end do
+
+  100 call errore ('generate_vdW_kernel_table', 'Writing table file', abs (ios) )
+  
   end subroutine write_data
   
 
