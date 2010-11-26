@@ -35,12 +35,11 @@
       use reciprocal_vectors, only: gstart
       use cvan, only: nvb, ish
       use ions_base, only: na, nat, pmass, nax, nsp, rcmax
-      use grid_dimensions, only: nnr => nrxx, nr1, nr2, nr3
+      use grid_dimensions, only: nrxx, nr1, nr2, nr3
       use cell_base, only: ainv, a1, a2, a3
       use cell_base, only: omega, alat
       use cell_base, only: h, hold, deth, wmass, tpiba2
       use smooth_grid_dimensions, only: nrxxs
-      use smallbox_grid_dimensions, only: nnrb => nnrbx, nr1b, nr2b, nr3b
       use local_pseudo, only: vps, rhops
       use io_global,                ONLY : io_global_start, stdout, ionode, ionode_id
       use mp_global,                ONLY : intra_image_comm, np_ortho, me_ortho, ortho_comm, me_image
@@ -80,11 +79,11 @@
       real(dp) :: becdr(nhsa,nspin*nlax,3)
       integer irb(3,nat)
       complex(dp) :: eigrb(ngb,nat)
-      real(dp) :: rhor(nnr,nspin)
-      real(dp) :: vpot(nnr,nspin)
+      real(dp) :: rhor(nrxx,nspin)
+      real(dp) :: vpot(nrxx,nspin)
       complex(dp) :: rhog(ngm,nspin)
       real(dp) :: rhos(nrxxs,nspin)
-      real(dp) :: rhoc(nnr)
+      real(dp) :: rhoc(nrxx)
       complex(dp) :: ei1(-nr1:nr1,nat)
       complex(dp) :: ei2(-nr2:nr2,nat)
       complex(dp) :: ei3(-nr3:nr3,nat)

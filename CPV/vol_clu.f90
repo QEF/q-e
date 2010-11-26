@@ -29,7 +29,7 @@ SUBROUTINE vol_clu(rho_real,rho_g,s_fac,flag)
       use control_flags,  only: tpre
       use fft_base,       ONLY : dfftp
       USE fft_interfaces, ONLY: invfft
-      use grid_dimensions,only: nr1, nr2, nr3, nr1x, nr2x, nr3x, nnr => nrxx
+      use grid_dimensions,only: nr1, nr2, nr3, nr1x, nr2x, nr3x, nrxx
       use pres_ai_mod, only: rho_thr, n_cntr, cntr, step_rad, fill_vac, &
      &                       delta_eps, delta_sigma, axis,              &
      &                       abisur, dthr, Surf_t, rho_gaus, v_vol,     &
@@ -52,7 +52,7 @@ SUBROUTINE vol_clu(rho_real,rho_g,s_fac,flag)
       real(kind=8) dx, dxx, xcc(4500)
       real(kind=8) weight0, wpiu, wmeno, maxr, minr
       real(kind=8) tau00(3), dist
-      real(kind=8) rho_real(nnr,nspin), rhoc
+      real(kind=8) rho_real(nrxx,nspin), rhoc
       real(kind=8) alfa(nsx), alfa0, sigma, hgt 
       real(kind=8) pos_cry(3), pos_car(3), pos_aux(3)
       real(kind=8) pos_cry0(3), dpvdh(3,3)
@@ -79,12 +79,12 @@ SUBROUTINE vol_clu(rho_real,rho_g,s_fac,flag)
       integer shift(nproc), incr(nproc),  ppp(nproc) 
       integer displs(nproc), ip, me
 #endif
-      if (abisur) allocate(drho(3,nnr))
-      if (abisur) allocate(d2rho(3,nnr))
-      if (abisur) allocate(dxdyrho(nnr))
-      if (abisur) allocate(dxdzrho(nnr))
-      if (abisur) allocate(dydzrho(nnr))
-      allocate(psi(nnr))
+      if (abisur) allocate(drho(3,nrxx))
+      if (abisur) allocate(d2rho(3,nrxx))
+      if (abisur) allocate(dxdyrho(nrxx))
+      if (abisur) allocate(dxdzrho(nrxx))
+      if (abisur) allocate(dydzrho(nrxx))
+      allocate(psi(nrxx))
 
       call start_clock( 'vol_clu' )
 
@@ -259,7 +259,7 @@ SUBROUTINE vol_clu(rho_real,rho_g,s_fac,flag)
             psi(nm(ig)) = conjg(rhotmp(ig,1))
          end do
          call invfft('Dense',psi, dfftp )
-         do ir = 1,nnr
+         do ir = 1,nrxx
             rho_gaus(ir) = real(psi(ir))
          end do
       else            
@@ -268,7 +268,7 @@ SUBROUTINE vol_clu(rho_real,rho_g,s_fac,flag)
             psi(nm(ig)) = conjg(rhotmp(ig,1)) + ci*conjg(rhotmp(ig,2))
          end do
          call invfft('Dense',psi, dfftp )
-         do ir = 1,nnr
+         do ir = 1,nrxx
             rho_gaus(ir) = real(psi(ir))+aimag(psi(ir))
          end do
       end if
@@ -277,7 +277,7 @@ SUBROUTINE vol_clu(rho_real,rho_g,s_fac,flag)
 
       e_j = 0.d0
 
-      do ir = 1,nnr
+      do ir = 1,nrxx
    
          v_vol(ir) = 0.d0
 

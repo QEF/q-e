@@ -16,7 +16,7 @@
       use reciprocal_vectors,     only : g
       use gvecs,                  only : ngms, nms, nps
       use gvecw,                  only : ngw
-      use smooth_grid_dimensions, only : nnrs => nrxxs
+      use smooth_grid_dimensions, only : nrxxs
       use cell_base,              only : tpiba2
       USE metagga,                ONLY : kedtaus
       USE fft_interfaces,         ONLY : fwfft, invfft
@@ -24,7 +24,7 @@
 !
       implicit none
 !
-      complex(dp) c(ngw), ca(ngw), df(ngw), da(ngw),psi(nnrs)
+      complex(dp) c(ngw), ca(ngw), df(ngw), da(ngw),psi(nrxxs)
       integer iss1, iss2
       real(dp) fi, fip
 ! local variables
@@ -42,7 +42,7 @@
             end do
             call invfft('Wave',psi,dffts )
 !           on smooth grids--> grids for charge density
-            do ir=1, nnrs
+            do ir=1, nrxxs
                psi(ir) = CMPLX (kedtaus(ir,iss1)*DBLE(psi(ir)), &
                                 kedtaus(ir,iss2)*AIMAG(psi(ir)),kind=DP)
             end do
@@ -72,8 +72,7 @@
       use gvecw, only: ngw
       use reciprocal_vectors, only: g
       use recvecs_indexes, only: np, nm
-      use grid_dimensions, only: nr1, nr2, nr3, &
-            nr1x, nr2x, nr3x, nnr => nrxx
+      use grid_dimensions, only: nr1, nr2, nr3, nr1x, nr2x, nr3x, nrxx
       use cell_base
       use smooth_grid_dimensions, only: nrxxs
       use electrons_base, only: nx => nbspx, n => nbsp, f, ispin, nspin
@@ -213,7 +212,7 @@
          psi(nm(1:ngms))=CONJG(kedtaug(1:ngms,iss))
          psi(np(1:ngms))=      kedtaug(1:ngms,iss)
          call invfft('Dense',psi, dfftp )
-         kedtaur(1:nnr,iss)=DBLE(psi(1:nnr))
+         kedtaur(1:nrxx,iss)=DBLE(psi(1:nrxx))
 
       else 
 !     ==================================================================
@@ -229,8 +228,8 @@
             psi(np(ig))=kedtaug(ig,isup)+ci*kedtaug(ig,isdw)
          end do
          call invfft('Dense',psi, dfftp )
-         kedtaur(1:nnr,isup)= DBLE(psi(1:nnr))
-         kedtaur(1:nnr,isdw)=AIMAG(psi(1:nnr))
+         kedtaur(1:nrxx,isup)= DBLE(psi(1:nrxx))
+         kedtaur(1:nrxx,isdw)=AIMAG(psi(1:nrxx))
 
       endif
 
@@ -262,9 +261,8 @@
       use cell_base, only: omega
       use cell_base, only: a1, a2, a3, tpiba2
       use recvecs_indexes, only: np, nm
-      use grid_dimensions, only: nr1, nr2, nr3, &
-            nr1x, nr2x, nr3x, nnr => nrxx
-      use smooth_grid_dimensions, only: nr1s, nr2s, nr3s, nnrs => nrxxs
+      use grid_dimensions, only: nr1, nr2, nr3, nr1x, nr2x, nr3x, nrxx
+      use smooth_grid_dimensions, only: nr1s, nr2s, nr3s, nrxxs
       use electrons_base, only: nspin
       use constants, only: pi, fpi
       use energies, only: etot, eself, enl, ekin, epseu, esr, eht, exc
@@ -284,7 +282,7 @@
       integer iss, isup, isdw, ig, ir,i,j,k,is, ia
       real(dp) dkedxc(3,3) !metagga
       complex(dp)  fp, fm, ci
-      complex(dp)  v(nnr), vs(nnrs)
+      complex(dp)  v(nrxx), vs(nrxxs)
 !
       ci=(0.d0,1.d0)
 
@@ -309,7 +307,7 @@
 !
       if(nspin.eq.1) then
          iss=1
-         do ir=1,nnr
+         do ir=1,nrxx
             v(ir)=CMPLX(kedtaur(ir,iss),0.0d0,kind=DP)
          end do
          call fwfft('Dense',v, dfftp )
@@ -321,7 +319,7 @@
          isup=1
          isdw=2
 
-         v(1:nnr)=CMPLX(kedtaur(1:nnr,isup),kedtaur(1:nnr,isdw),kind=DP)
+         v(1:nrxx)=CMPLX(kedtaur(1:nrxx,isup),kedtaur(1:nrxx,isdw),kind=DP)
          call fwfft('Dense',v, dfftp )
          do ig=1,ngm
             fp=v(np(ig))+v(nm(ig))
@@ -342,7 +340,7 @@
 !
          call invfft('Smooth',vs, dffts )
 !
-         kedtaus(1:nnrs,iss)=DBLE(vs(1:nnrs))
+         kedtaus(1:nrxxs,iss)=DBLE(vs(1:nrxxs))
       else
          isup=1
          isdw=2
@@ -351,8 +349,8 @@
             vs(nms(ig))=CONJG(kedtaug(ig,isup)) +ci*conjg(kedtaug(ig,isdw))
          end do
          call invfft('Smooth',vs, dffts )
-         kedtaus(1:nnrs,isup)= DBLE(vs(1:nnrs))
-         kedtaus(1:nnrs,isdw)=AIMAG(vs(1:nnrs))
+         kedtaus(1:nrxxs,isup)= DBLE(vs(1:nrxxs))
+         kedtaus(1:nrxxs,isdw)=AIMAG(vs(1:nrxxs))
       endif
       !calculate dkedxc in real space on smooth grids  !metagga
       if(tpre) then
@@ -360,7 +358,7 @@
             do j=1,3
                do i=1,3
                   dkedxc(i,j)=0.d0
-                  do ir=1,nnrs
+                  do ir=1,nrxxs
                      !2.d0 : because kedtau = 0.5d0 d_Exc/d_kedtau
                       dkedxc(i,j)= dkedxc(i,j)+kedtaus(ir,iss)*2.d0*&
                            dkedtaus(ir,i,j,iss)

@@ -23,7 +23,7 @@
 !---------------------------------
       subroutine VdW(evdw, taus, nat, na, nsp, fion, box) 
 
-      USE constants, ONLY: au => BOHR_RADIUS_ANGS
+      USE constants, ONLY: bohr_radius_angs
       USE cell_base, ONLY: s_to_r, boxdimensions
       USE mp_global, ONLY: me_image, root_image
 
@@ -130,13 +130,13 @@
 
                     ff = alp * (rcc - dist) 
                     dist6 = dist**6
-                    fun = - CSP1 / dist6 * cutofun_vdw(ff) / (au)**6
+                    fun = - CSP1 / dist6 * cutofun_vdw(ff) / bohr_radius_angs**6
 
                     if(dist.lt.rcut) then
                       fact = 0.d0 
                     else
                       fact = (6.d0 * CSP1/dist**7 * cutofun_vdw(ff) + &
-                      alp * dcutofun_vdw(ff) * CSP1/dist6) / (au)**6
+                      alp * dcutofun_vdw(ff) * CSP1/dist6) / bohr_radius_angs**6
                     endif
 
                     evdw = evdw + fun

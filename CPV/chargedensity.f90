@@ -768,11 +768,11 @@ SUBROUTINE drhov(irb,eigrb,rhovan,drhovan,rhog,rhor,drhog,drhor)
       USE ions_base,                ONLY: na, nsp, nat
       USE cvan,                     ONLY: nvb
       USE uspp_param,               ONLY: nhm, nh
-      USE grid_dimensions,          ONLY: nr1, nr2, nr3, nr1x, nr2x, nr3x, nnr => nrxx
+      USE grid_dimensions,          ONLY: nr1, nr2, nr3, nr1x, nr2x, nr3x, nrxx
       USE electrons_base,           ONLY: nspin
       USE gvecb,                    ONLY: ngb, npb, nmb
       USE gvecp,                    ONLY: ngm
-      USE smallbox_grid_dimensions, ONLY: nr1b, nr2b, nr3b, nr1bx, nr2bx, nr3bx, nnrb => nnrbx
+      USE smallbox_grid_dimensions, ONLY: nr1b, nr2b, nr3b, nr1bx, nr2bx, nr3bx, nnrbx
       USE cell_base,                ONLY: ainv
       USE qgb_mod,                  ONLY: qgb
       USE dqgb_mod,                 ONLY: dqgb
@@ -783,12 +783,12 @@ SUBROUTINE drhov(irb,eigrb,rhovan,drhovan,rhog,rhor,drhog,drhor)
       IMPLICIT NONE
 ! input
       INTEGER,     INTENT(IN) ::  irb(3,nat)
-      REAL(DP),    INTENT(IN) ::  rhor(nnr,nspin)
+      REAL(DP),    INTENT(IN) ::  rhor(nrxx,nspin)
       REAL(DP),    INTENT(IN) ::  rhovan(nhm*(nhm+1)/2,nat,nspin)
       REAL(DP),    INTENT(IN) ::  drhovan(nhm*(nhm+1)/2,nat,nspin,3,3)
       COMPLEX(DP), INTENT(IN) ::  eigrb(ngb,nat), rhog(ngm,nspin)
 ! output
-      REAL(DP),    INTENT(OUT) :: drhor(nnr,nspin,3,3)
+      REAL(DP),    INTENT(OUT) :: drhor(nrxx,nspin,3,3)
       COMPLEX(DP), INTENT(OUT) :: drhog(ngm,nspin,3,3)
 ! local
       INTEGER i, j, isup, isdw, nfft, ifft, iv, jv, ig, ijv, is, iss,   &
@@ -808,7 +808,7 @@ SUBROUTINE drhov(irb,eigrb,rhovan,drhovan,rhog,rhor,drhog,drhor)
       DO j=1,3
          DO i=1,3
             DO iss=1,nspin
-               DO ir=1,nnr
+               DO ir=1,nrxx
                   drhor(ir,iss,i,j)=-rhor(ir,iss)*ainv(j,i)
                END DO
                DO ig=1,ngm
@@ -820,7 +820,7 @@ SUBROUTINE drhov(irb,eigrb,rhovan,drhovan,rhog,rhor,drhog,drhor)
 
       IF ( nvb < 0 ) RETURN
 
-      ALLOCATE( v( nnr ) )
+      ALLOCATE( v( nrxx ) )
 
       ci =( 0.0d0, 1.0d0 )
 
@@ -834,12 +834,12 @@ SUBROUTINE drhov(irb,eigrb,rhovan,drhovan,rhog,rhor,drhog,drhor)
                v(:) = (0.d0, 0.d0)
 
 !$omp parallel default(none) &
-!$omp          shared(nvb, na, nnrb, ngb, nh, eigrb, dfftb, irb, v, &
+!$omp          shared(nvb, na, nnrbx, ngb, nh, eigrb, dfftb, irb, v, &
 !$omp                 nmb, ci, npb, i, j, dqgb, qgb, nhm, rhovan, drhovan ) &
 !$omp          private(mytid, ntids, is, ia, nfft, ifft, iv, jv, ijv, ig, iss, isa, &
 !$omp                  qv, itid, dqgbt, dsumt, asumt )
 
-               ALLOCATE( qv( nnrb ) )
+               ALLOCATE( qv( nnrbx ) )
                ALLOCATE( dqgbt( ngb, 2 ) )
 
 #ifdef __OPENMP
@@ -937,7 +937,7 @@ SUBROUTINE drhov(irb,eigrb,rhovan,drhovan,rhog,rhor,drhog,drhor)
 
                iss = 1
 
-               DO ir=1,nnr
+               DO ir=1,nrxx
                   drhor(ir,iss,i,j) = drhor(ir,iss,i,j) + DBLE(v(ir))
                END DO
 !
@@ -959,7 +959,7 @@ SUBROUTINE drhov(irb,eigrb,rhovan,drhovan,rhog,rhor,drhog,drhor)
          DO i=1,3
             DO j=1,3
                v(:) = (0.d0, 0.d0)
-               ALLOCATE( qv( nnrb ) )
+               ALLOCATE( qv( nnrbx ) )
                ALLOCATE( dqgbt( ngb, 2 ) )
                isa=1
                DO is=1,nvb
@@ -1014,7 +1014,7 @@ SUBROUTINE drhov(irb,eigrb,rhovan,drhovan,rhog,rhor,drhog,drhor)
                DEALLOCATE( dqgbt )
                DEALLOCATE( qv )
 !
-               DO ir=1,nnr
+               DO ir=1,nrxx
                   drhor(ir,isup,i,j) = drhor(ir,isup,i,j) + DBLE(v(ir))
                   drhor(ir,isdw,i,j) = drhor(ir,isdw,i,j) +AIMAG(v(ir))
                ENDDO
@@ -1059,13 +1059,13 @@ SUBROUTINE rhov(irb,eigrb,rhovan,rhog,rhor)
       USE cvan,                     ONLY: nvb
       USE uspp_param,               ONLY: nh, nhm
       USE uspp,                     ONLY: deeq
-      USE grid_dimensions,          ONLY: nr1, nr2, nr3, nr1x, nr2x, nr3x, nnr => nrxx
+      USE grid_dimensions,          ONLY: nr1, nr2, nr3, nr1x, nr2x, nr3x, nrxx
       USE electrons_base,           ONLY: nspin
       USE gvecb,                    ONLY: npb, nmb, ngb
       USE gvecp,                    ONLY: ngm
       USE cell_base,                ONLY: omega, ainv
       USE small_box,                ONLY: omegab
-      USE smallbox_grid_dimensions, ONLY: nr1b, nr2b, nr3b, nr1bx, nr2bx, nr3bx, nnrb => nnrbx
+      USE smallbox_grid_dimensions, ONLY: nr1b, nr2b, nr3b, nr1bx, nr2bx, nr3bx, nnrbx
       USE control_flags,            ONLY: iprint, iprsta, tpre
       USE qgb_mod,                  ONLY: qgb
       USE recvecs_indexes,          ONLY: np, nm
@@ -1078,7 +1078,7 @@ SUBROUTINE rhov(irb,eigrb,rhovan,rhog,rhor)
       INTEGER,     INTENT(in) :: irb(3,nat)
       COMPLEX(DP), INTENT(in):: eigrb(ngb,nat)
       ! 
-      REAL(DP),     INTENT(inout):: rhor(nnr,nspin)
+      REAL(DP),     INTENT(inout):: rhor(nrxx,nspin)
       COMPLEX(DP),  INTENT(inout):: rhog(ngm,nspin)
 !
       INTEGER     :: isup, isdw, nfft, ifft, iv, jv, ig, ijv, is, iss, isa, ia, ir, i, j
@@ -1102,7 +1102,7 @@ SUBROUTINE rhov(irb,eigrb,rhovan,rhog,rhor)
       ci=(0.d0,1.d0)
 !
 !
-      ALLOCATE( v( nnr ) )
+      ALLOCATE( v( nrxx ) )
 
       ! private variable need to be initialized, otherwise
       ! outside the parallel region they have an undetermined value
@@ -1121,10 +1121,10 @@ SUBROUTINE rhov(irb,eigrb,rhovan,rhog,rhor)
          !
 
 !$omp parallel default(none) &
-!$omp          shared(nvb, na, nnrb, ngb, nh, rhovan, qgb, eigrb, dfftb, iprsta, omegab, irb, v, nr1b, &
+!$omp          shared(nvb, na, nnrbx, ngb, nh, rhovan, qgb, eigrb, dfftb, iprsta, omegab, irb, v, nr1b, &
 !$omp                 nr2b, nr3b, nmb, stdout, ci, npb, rhor ) &
 !$omp          private(mytid, ntids, is, ia, nfft, ifft, iv, jv, ijv, sumrho, qgbt, ig, iss, isa, ca, &
-!$omp                  qv, itid, ir, nnr )
+!$omp                  qv, itid, ir, nrxx )
 
          iss=1
          isa=1
@@ -1140,7 +1140,7 @@ SUBROUTINE rhov(irb,eigrb,rhovan,rhog,rhor)
 #endif
 
          ALLOCATE( qgbt( ngb, 2 ) )
-         ALLOCATE( qv( nnrb ) )
+         ALLOCATE( qv( nnrbx ) )
 
 
          DO is = 1, nvb
@@ -1243,7 +1243,7 @@ SUBROUTINE rhov(irb,eigrb,rhovan,rhog,rhor)
 
          iss = 1
 
-         DO ir=1,nnr
+         DO ir=1,nrxx
             rhor(ir,iss)=rhor(ir,iss)+DBLE(v(ir))        
          END DO
 
@@ -1285,7 +1285,7 @@ SUBROUTINE rhov(irb,eigrb,rhovan,rhog,rhor)
          v (:) = (0.d0, 0.d0)
 
          ALLOCATE( qgbt( ngb, 2 ) )
-         ALLOCATE( qv( nnrb ) )
+         ALLOCATE( qv( nnrbx ) )
 
          isa=1
          DO is=1,nvb
@@ -1342,7 +1342,7 @@ SUBROUTINE rhov(irb,eigrb,rhovan,rhog,rhor)
             END DO
          END DO
 !
-         DO ir=1,nnr
+         DO ir=1,nrxx
             rhor(ir,isup)=rhor(ir,isup)+DBLE(v(ir)) 
             rhor(ir,isdw)=rhor(ir,isdw)+AIMAG(v(ir)) 
          END DO

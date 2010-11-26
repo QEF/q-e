@@ -881,11 +881,11 @@ END FUNCTION
       USE cvan,                     ONLY: nvb
       USE ions_base,                ONLY: nat, nsp, na
       USE constants,                ONLY: pi, fpi
-      USE grid_dimensions,          ONLY: nr3, nnr => nrxx
+      USE grid_dimensions,          ONLY: nr3, nrxx
       USE gvecb,                    ONLY: ngb, npb, nmb, gxb
       USE small_box,                ONLY: omegab, tpibab
       USE smallbox_grid_dimensions, ONLY: nr1b, nr2b, nr3b, &
-                                          nr1bx, nr2bx, nr3bx, nnrb => nnrbx
+                                          nr1bx, nr2bx, nr3bx, nnrbx
       USE qgb_mod,                  ONLY: qgb
       USE electrons_base,           ONLY: nspin
       USE control_flags,            ONLY: iprint, thdyn, tfor, tprnfor
@@ -899,7 +899,7 @@ END FUNCTION
       INTEGER irb(3,nat)
       REAL(DP) rhovan(nhm*(nhm+1)/2,nat,nspin)
       COMPLEX(DP) eigrb(ngb,nat)
-      REAL(DP)  vr(nnr,nspin)
+      REAL(DP)  vr(nrxx,nspin)
 ! output
       REAL(DP)  fion(3,nat)
 ! local
@@ -924,7 +924,7 @@ END FUNCTION
 
 
 !$omp parallel default(none) &
-!$omp          shared(nvb, na, nnrb, ngb, nh, qgb, eigrb, dfftb, irb, vr, nmb, npb, ci, deeq, &
+!$omp          shared(nvb, na, nnrbx, ngb, nh, qgb, eigrb, dfftb, irb, vr, nmb, npb, ci, deeq, &
 !$omp                 fac, nspin ) &
 !$omp          private(mytid, ntids, is, ia, nfft, iv, jv, ijv, ig, isa, qv, itid, res, iss )
 
@@ -937,7 +937,7 @@ END FUNCTION
 #endif
 
 
-      ALLOCATE( qv( nnrb ) )
+      ALLOCATE( qv( nnrbx ) )
 !
 ! calculation of deeq_i,lm = \int V_eff(r) q_i,lm(r) dr
 !
@@ -1029,13 +1029,13 @@ END FUNCTION
          !     -----------------------------------------------------------------
 
 !$omp parallel default(none) &
-!$omp          shared(nvb, na, nnrb, ngb, nh, qgb, eigrb, dfftb, irb, vr, nmb, npb, ci, deeq, &
+!$omp          shared(nvb, na, nnrbx, ngb, nh, qgb, eigrb, dfftb, irb, vr, nmb, npb, ci, deeq, &
 !$omp                 fac, nspin, rhovan, tpibab, gxb, fvan ) &
 !$omp          private(mytid, ntids, is, ia, ik, nfft, iv, jv, ijv, ig, isa, qv, itid, res, iss, &
 !$omp                  fac1, fac2, facg1, facg2 )
 
 
-         ALLOCATE( qv( nnrb ) )
+         ALLOCATE( qv( nnrbx ) )
 
          iss=1
          isa=1
@@ -1134,7 +1134,7 @@ END FUNCTION
          !     case nspin=2: up and down spin fft's combined into a single fft
          !     -----------------------------------------------------------------
 
-         ALLOCATE( qv( nnrb ) )
+         ALLOCATE( qv( nnrbx ) )
          isup=1
          isdw=2
          isa=1
@@ -1527,8 +1527,7 @@ END FUNCTION
       USE mp, ONLY: mp_sum
       USE gvecw, ONLY: ngw
       USE reciprocal_vectors, ONLY: gstart
-      USE grid_dimensions, ONLY: nr1, nr2, nr3, &
-            nnr => nrxx
+      USE grid_dimensions, ONLY: nr1, nr2, nr3, nrxx
       USE cell_base, ONLY: omega
       USE cvan, ONLY: nvb, ish
       USE uspp, ONLY: nhsa => nkb, nhsavb=>nkbus, qq
@@ -1537,7 +1536,7 @@ END FUNCTION
 !
       IMPLICIT NONE
 ! input
-      REAL(dp) bec(nhsa,n), rhor(nnr,nspin)
+      REAL(dp) bec(nhsa,n), rhor(nrxx,nspin)
       COMPLEX(dp) c(ngw,nx)
 ! local variables
       INTEGER nup, ndw, ir, i, j, jj, ig, ia, is, iv, jv, inl, jnl
@@ -1576,7 +1575,7 @@ END FUNCTION
 !     Becke's formula for spin polarization
 !
       spin1 = 0.0d0
-      DO ir=1,nnr
+      DO ir=1,nrxx
          spin1 = spin1 - MIN(rhor(ir,1),rhor(ir,2))
       END DO
       CALL mp_sum( spin1, intra_image_comm )
@@ -1671,7 +1670,7 @@ END FUNCTION
       USE cell_base,          ONLY: a1, a2, a3, tpiba2, h, ainv
       USE reciprocal_vectors, ONLY: gstart, gg, g
       USE recvecs_indexes,    ONLY: np, nm
-      USE grid_dimensions,    ONLY: nr1, nr2, nr3, nnr => nrxx
+      USE grid_dimensions,    ONLY: nr1, nr2, nr3, nrxx
       USE smooth_grid_dimensions, ONLY: nrxxs
       USE electrons_base,   ONLY: nspin
       USE constants,        ONLY: pi, fpi, au_gpa
@@ -1700,8 +1699,8 @@ END FUNCTION
 !
       LOGICAL :: tlast, tfirst
       INTEGER :: nfi
-      REAL(DP)  rhor(nnr,nspin), rhos(nrxxs,nspin), fion(3,nat)
-      REAL(DP)  rhoc(nnr), tau0(3,nat)
+      REAL(DP)  rhor(nrxx,nspin), rhos(nrxxs,nspin), fion(3,nat)
+      REAL(DP)  rhoc(nrxx), tau0(3,nat)
       COMPLEX(DP) ei1(-nr1:nr1,nat), ei2(-nr2:nr2,nat),     &
      &                ei3(-nr3:nr3,nat), eigrb(ngb,nat),        &
      &                rhog(ngm,nspin), sfac(ngms,nsp)
@@ -1749,7 +1748,7 @@ END FUNCTION
       !
       ht = TRANSPOSE( h )
       !
-      ALLOCATE( v( nnr ) )
+      ALLOCATE( v( nrxx ) )
       ALLOCATE( vs( nrxxs ) )
       ALLOCATE( vtemp( ngm ) )
       ALLOCATE( rhotmp( ngm ) )
@@ -1960,12 +1959,12 @@ END FUNCTION
          iss = 1
          if (abivol.or.abisur) then
 !$omp parallel do
-            do ir=1,nnr
+            do ir=1,nrxx
                v(ir)=CMPLX( rhor( ir, iss ) + v_vol( ir ), 0.d0 ,kind=DP)
             end do           
          else
 !$omp parallel do
-            do ir=1,nnr
+            do ir=1,nrxx
                v(ir)=CMPLX( rhor( ir, iss ), 0.d0 ,kind=DP)
             end do
          end if
@@ -1987,13 +1986,13 @@ END FUNCTION
          isdw=2
          if (abivol.or.abisur) then
 !$omp parallel do
-            do ir=1,nnr
+            do ir=1,nrxx
                v(ir)=CMPLX ( rhor(ir,isup)+v_vol(ir), &
                              rhor(ir,isdw)+v_vol(ir),kind=DP)
             end do
          else
 !$omp parallel do
-            do ir=1,nnr
+            do ir=1,nrxx
                v(ir)=CMPLX (rhor(ir,isup),rhor(ir,isdw),kind=DP)
             end do
          end if
@@ -2050,7 +2049,7 @@ END FUNCTION
          CALL invfft('Dense',v, dfftp )
 !
 !$omp parallel do
-         DO ir=1,nnr
+         DO ir=1,nrxx
             rhor(ir,iss)=DBLE(v(ir))
          END DO
 !
@@ -2068,7 +2067,7 @@ END FUNCTION
 !
          CALL invfft('Dense',v, dfftp )
 !$omp parallel do
-         DO ir=1,nnr
+         DO ir=1,nrxx
             rhor(ir,isup)= DBLE(v(ir))
             rhor(ir,isdw)=AIMAG(v(ir))
          END DO

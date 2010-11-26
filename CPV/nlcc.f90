@@ -185,7 +185,7 @@
       USE kinds,           ONLY: DP
       use electrons_base,  only: nspin
       use gvecb,           only: gxb, ngb, npb, nmb
-      use grid_dimensions, only: nr1, nr2, nr3, nnr => nrxx
+      use grid_dimensions, only: nr1, nr2, nr3, nrxx
       use cell_base,       only: omega
       use ions_base,       only: nsp, na, nat
       use small_box,       only: tpibab
@@ -195,14 +195,14 @@
       use fft_base,        only: dfftb
       use reciprocal_vectors, only: gstart
       use smallbox_grid_dimensions, only: nr1b, nr2b, nr3b, &
-            nr1bx, nr2bx, nr3bx, nnrb => nnrbx
+            nr1bx, nr2bx, nr3bx, nnrbx
 
       implicit none
 
 ! input
       integer, intent(in)        :: irb(3,nat)
       complex(dp), intent(in):: eigrb(ngb,nat)
-      real(dp), intent(in)   :: vxc(nnr,nspin)
+      real(dp), intent(in)   :: vxc(nrxx,nspin)
 ! output
       real(dp), intent(inout):: fion1(3,nat)
 ! local
@@ -224,13 +224,13 @@
       fac = omega/DBLE(nr1*nr2*nr3*nspin)
 
 !$omp parallel default(none) &      
-!$omp          shared(nsp, na, nnrb, ngb, eigrb, dfftb, irb, nmb, npb, ci, rhocb, &
+!$omp          shared(nsp, na, nnrbx,ngb, eigrb, dfftb, irb, nmb, npb, ci, rhocb, &
 !$omp                 gxb, nat, fac, upf, vxc, nspin, tpibab, fion1 ) &
 !$omp          private(mytid, ntids, is, ia, nfft, ig, isa, qv, itid, res, ix, fcc, facg, iss )
 
 
       allocate( fcc( 3, nat ) )
-      allocate( qv( nnrb ) )
+      allocate( qv( nnrbx ) )
 
       fcc(:,:) = 0.d0
 
@@ -338,21 +338,21 @@
       use kinds, only: dp
       use ions_base,       only: nsp, na, nat
       use uspp_param,      only: upf
-      use grid_dimensions, only: nr3, nnr => nrxx
+      use grid_dimensions, only: nr3, nrxx
       use gvecb,           only: ngb, npb, nmb
       use control_flags,   only: iprint
       use core,            only: rhocb
       use fft_interfaces,  only: invfft
       use fft_base,        only: dfftb
       use smallbox_grid_dimensions, only: nr1b, nr2b, nr3b, &
-            nr1bx, nr2bx, nr3bx, nnrb => nnrbx
+            nr1bx, nr2bx, nr3bx, nnrbx
 
       implicit none
 ! input
       integer, intent(in)        :: irb(3,nat)
       complex(dp), intent(in):: eigrb(ngb,nat)
 ! output
-      real(dp), intent(out)  :: rhoc(nnr)
+      real(dp), intent(out)  :: rhoc(nrxx)
 ! local
       integer nfft, ig, is, ia, isa
       complex(dp) ci
@@ -367,15 +367,15 @@
       call start_clock( 'set_cc' )
       ci=(0.d0,1.d0)
 
-      allocate( wrk1 ( nnr ) )
+      allocate( wrk1 ( nrxx ) )
       wrk1 (:) = (0.d0, 0.d0)
 !
 !$omp parallel default(none) &      
-!$omp          shared(nsp, na, nnrb, ngb, eigrb, dfftb, irb, nmb, npb, ci, rhocb, &
+!$omp          shared(nsp, na, nnrbx, ngb, eigrb, dfftb, irb, nmb, npb, ci, rhocb, &
 !$omp                 nat, upf, wrk1 ) &
 !$omp          private(mytid, ntids, is, ia, nfft, ig, isa, qv, itid )
 
-      allocate( qv ( nnrb ) )
+      allocate( qv ( nnrbx ) )
 !
       isa = 0
 
@@ -442,7 +442,7 @@
 
 !$omp end parallel
 
-      call dcopy( nnr, wrk1, 2, rhoc, 1 )
+      call dcopy( nrxx, wrk1, 2, rhoc, 1 )
 
       deallocate( wrk1 )
 !

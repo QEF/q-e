@@ -21,29 +21,26 @@ SUBROUTINE gradrho(nspin,rhog,drho,d2rho,dxdyrho,dxdzrho,dydzrho)
       use recvecs_indexes
       USE fft_interfaces, ONLY: invfft
       USE fft_base,       ONLY: dfftp
-      use grid_dimensions, only : nr1, nr2, nr3, nr1x, nr2x, nr3x,      &
-     &                            nnr=> nrxx
-!      use grid_dimensions, only: nr1, nr2, nr3, &
-!            nr1x, nr2x, nr3x, nnr => nrxx
+      use grid_dimensions, only : nr1, nr2, nr3, nr1x, nr2x, nr3x, nrxx
 !
       implicit none
 ! input
       integer nspin
       complex(kind=8) rhog(ngm,nspin)
 ! output
-      real(kind=8)    drho(3,nnr), d2rho(3,nnr),     &
-     &                dxdyrho(nnr), dxdzrho(nnr),    &
-     &                dydzrho(nnr)
+      real(kind=8)    drho(3,nrxx), d2rho(3,nrxx),     &
+     &                dxdyrho(nrxx), dxdzrho(nrxx),    &
+     &                dydzrho(nrxx)
 ! local
       complex(kind=8), allocatable:: v(:), w(:)
       complex(kind=8) ci
       integer iss, ig, ir, j
 !
 !
-      allocate(v(nnr))
-      allocate(w(nnr))
+      allocate(v(nrxx))
+      allocate(w(nrxx))
       ci=(0.0d0,1.0d0)
-      do ir = 1,nnr
+      do ir = 1,nrxx
          do j = 1,3
             drho(j,ir) = 0.d0
             d2rho(j,ir) = 0.d0
@@ -54,7 +51,7 @@ SUBROUTINE gradrho(nspin,rhog,drho,d2rho,dxdyrho,dxdzrho,dydzrho)
       end do
       do iss=1,nspin
 
-         do ig=1,nnr
+         do ig=1,nrxx
             v(ig)=(0.0d0,0.0d0)
             w(ig)=(0.0d0,0.0d0)
          end do
@@ -66,12 +63,12 @@ SUBROUTINE gradrho(nspin,rhog,drho,d2rho,dxdyrho,dxdzrho,dydzrho)
          end do
          call invfft('Dense',v, dfftp )
          call invfft('Dense',w, dfftp )
-         do ir=1,nnr
+         do ir=1,nrxx
             drho(1,ir)=drho(1,ir)+real(v(ir))
             d2rho(1,ir)=d2rho(1,ir)+real(w(ir))
          end do
 !
-         do ig=1,nnr
+         do ig=1,nrxx
             v(ig)=(0.0d0,0.0d0)
             w(ig)=(0.0d0,0.0d0)
          end do
@@ -87,14 +84,14 @@ SUBROUTINE gradrho(nspin,rhog,drho,d2rho,dxdyrho,dxdzrho,dydzrho)
          end do
          call invfft('Dense',v, dfftp )
          call invfft('Dense',w, dfftp )
-         do ir=1,nnr
+         do ir=1,nrxx
             drho(2,ir)=drho(2,ir)+real(v(ir))
             drho(3,ir)=drho(3,ir)+aimag(v(ir))
             d2rho(2,ir)=d2rho(2,ir)+real(w(ir))
             d2rho(3,ir)=d2rho(3,ir)+aimag(w(ir))
          end do
 
-         do ig=1,nnr
+         do ig=1,nrxx
             v(ig)=(0.0d0,0.0d0)
          end do
          do ig=1,ngm
@@ -102,11 +99,11 @@ SUBROUTINE gradrho(nspin,rhog,drho,d2rho,dxdyrho,dxdzrho,dydzrho)
             v(nm(ig))=conjg(v(np(ig)))
          end do
          call invfft('Dense',v, dfftp )
-         do ir=1,nnr
+         do ir=1,nrxx
             dxdyrho(ir)=dxdyrho(ir)+real(v(ir))
          end do
 !
-         do ig=1,nnr
+         do ig=1,nrxx
             v(ig)=(0.0d0,0.0d0)
          end do
          do ig=1,ngm
@@ -117,7 +114,7 @@ SUBROUTINE gradrho(nspin,rhog,drho,d2rho,dxdyrho,dxdzrho,dydzrho)
      &                        ci*conjg(g(2,ig)*g(3,ig)*rhog(ig,iss)))
          end do
          call invfft('Dense',v, dfftp )
-         do ir=1,nnr
+         do ir=1,nrxx
             dxdzrho(ir)=dxdzrho(ir)+real(v(ir))
             dydzrho(ir)=dydzrho(ir)+aimag(v(ir))
          end do

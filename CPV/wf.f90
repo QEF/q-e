@@ -764,7 +764,7 @@ SUBROUTINE ddyn( m, Omat, Umat, b1, b2, b3 )
   USE wannier_base,     ONLY : wf_friction, nsteps, tolw, adapt, wf_q, &
                                weight, nw, wfdt
   USE cell_base,        ONLY : alat
-  USE constants,        ONLY : tpi, autoaf => BOHR_RADIUS_ANGS
+  USE constants,        ONLY : tpi, bohr_radius_angs
   USE electrons_base,   ONLY : nbsp
   USE control_flags,    ONLY : iprsta
   USE mp_global,        ONLY : me_image
@@ -977,7 +977,7 @@ SUBROUTINE ddyn( m, Omat, Umat, b1, b2, b3 )
   DO i=1, m
      !
      mt=1.D0-DBLE(Oc(:,i,i)*CONJG(Oc(:,i,i)))
-     sp = (alat*autoaf/tpi)**2*SUM(mt*weight)
+     sp = (alat*bohr_radius_angs/tpi)**2*SUM(mt*weight)
      !
      IF(me.EQ.1) THEN
         WRITE(iunit, '(f10.7)') sp
@@ -2492,7 +2492,7 @@ SUBROUTINE wfsteep( m, Omat, Umat, b1, b2, b3 )
   USE wannier_base,           ONLY : nw, weight, nit, tolw, wfdt, maxwfdt, nsd
   USE control_flags,          ONLY : iprsta
   USE cell_base,              ONLY : alat
-  USE constants,              ONLY : tpi, autoaf => BOHR_RADIUS_ANGS
+  USE constants,              ONLY : tpi, bohr_radius_angs
   USE mp_global,              ONLY : me_image
   USE printout_base,          ONLY : printout_base_open, printout_base_unit, &
                                      printout_base_close
@@ -2815,7 +2815,7 @@ SUBROUTINE wfsteep( m, Omat, Umat, b1, b2, b3 )
   DO i=1, m
      !
      mt=1.D0-DBLE(Oc(:,i,i)*CONJG(Oc(:,i,i)))
-     sp = (alat*autoaf/tpi)**2*SUM(mt*weight)
+     sp = (alat*bohr_radius_angs/tpi)**2*SUM(mt*weight)
      !
      IF(me.EQ.1) THEN
         WRITE(iunit, '(f10.7)') sp
@@ -2942,7 +2942,6 @@ SUBROUTINE jacobi_rotation( m, Omat, Umat, b1, b2, b3 )
   !    in the Chair of Atomic Scale Simulation in Lausanne (Switzerland)
   !    under the direction of Prof. Alfredo Pasquarello.
   !
-  REAL(DP), PARAMETER :: autoaf=0.529177d0
   INTEGER, intent(in) :: m
   COMPLEX(DP), DIMENSION(nw, m, m), intent(inout) :: Omat
   REAL(DP), DIMENSION(m, m), intent(inout) :: Umat

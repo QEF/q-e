@@ -45,14 +45,12 @@
       USE cvan,           ONLY: nvb, ish
       USE ions_base,      ONLY: na, nat, pmass, nax, nsp, rcmax
       USE grid_dimensions, &
-                          ONLY: nnr => nrxx, nr1, nr2, nr3
+                          ONLY: nrxx, nr1, nr2, nr3
       USE cell_base,      ONLY: ainv, a1, a2, a3
       USE cell_base,      ONLY: omega, alat
       USE cell_base,      ONLY: h, hold, deth, wmass, tpiba2
       USE smooth_grid_dimensions, &
                           ONLY: nrxxs, nr1s, nr2s, nr3s
-      USE smallbox_grid_dimensions, &
-                          ONLY: nnrb => nnrbx, nr1b, nr2b, nr3b
       USE local_pseudo,   ONLY: vps, rhops
       USE io_global,      ONLY: io_global_start, stdout, ionode, &
                                 ionode_id
@@ -91,11 +89,11 @@
 
       INTEGER                :: irb( 3, nat )
       COMPLEX (kind=DP)           :: eigrb( ngb, nat )
-      REAL(kind=DP)               :: rhor( nnr, nspin )
-      REAL(kind=DP)               :: vpot( nnr, nspin )
+      REAL(kind=DP)               :: rhor( nrxx, nspin )
+      REAL(kind=DP)               :: vpot( nrxx, nspin )
       COMPLEX(kind=DP)            :: rhog( ngm, nspin )
       REAL(kind=DP)               :: rhos( nrxxs, nspin )
-      REAL(kind=DP)               :: rhoc( nnr )
+      REAL(kind=DP)               :: rhoc( nrxx )
       COMPLEX(kind=DP)            :: ei1( nr1:nr1, nat )
       COMPLEX(kind=DP)            :: ei2( nr2:nr2, nat )
       COMPLEX(kind=DP)            :: ei3( nr3:nr3, nat )
@@ -359,14 +357,12 @@
       USE cvan,           ONLY: nvb, ish
       USE ions_base,      ONLY: na, nat, pmass, nax, nsp, rcmax
       USE grid_dimensions, &
-                          ONLY: nnr => nrxx, nr1, nr2, nr3
+                          ONLY: nrxx, nr1, nr2, nr3
       USE cell_base,      ONLY: ainv, a1, a2, a3
       USE cell_base,      ONLY: omega, alat
       USE cell_base,      ONLY: h, hold, deth, wmass, tpiba2
       USE smooth_grid_dimensions, &
                           ONLY: nrxxs, nr1s, nr2s, nr3s
-      USE smallbox_grid_dimensions, &
-                          ONLY: nnrb => nnrbx, nr1b, nr2b, nr3b
       USE local_pseudo,   ONLY: vps, rhops
       USE io_global,      ONLY: io_global_start, stdout, ionode, &
                                 ionode_id
@@ -398,11 +394,11 @@
 
       INTEGER                :: irb( 3, nat )
       COMPLEX (kind=DP)           :: eigrb( ngb, nat )
-      REAL(kind=DP)               :: rhor( nnr, nspin )
-      REAL(kind=DP)               :: vpot( nnr, nspin )
+      REAL(kind=DP)               :: rhor( nrxx, nspin )
+      REAL(kind=DP)               :: vpot( nrxx, nspin )
       COMPLEX(kind=DP)            :: rhog( ngm, nspin )
       REAL(kind=DP)               :: rhos( nrxxs, nspin )
-      REAL(kind=DP)               :: rhoc( nnr )
+      REAL(kind=DP)               :: rhoc( nrxx )
       COMPLEX(kind=DP)            :: ei1( nr1:nr1, nat )
       COMPLEX(kind=DP)            :: ei2( nr2:nr2, nat )
       COMPLEX(kind=DP)            :: ei3( nr3:nr3, nat )
@@ -557,14 +553,12 @@
       USE cvan,           ONLY: nvb, ish
       USE ions_base,      ONLY: na, nat, pmass, nax, nsp, rcmax
       USE grid_dimensions, &
-                          ONLY: nnr => nrxx, nr1, nr2, nr3
+                          ONLY: nrxx, nr1, nr2, nr3
       USE cell_base,      ONLY: ainv, a1, a2, a3
       USE cell_base,      ONLY: omega, alat
       USE cell_base,      ONLY: h, hold, deth, wmass, tpiba2
       USE smooth_grid_dimensions, &
                           ONLY: nrxxs, nr1s, nr2s, nr3s
-      USE smallbox_grid_dimensions, &
-                          ONLY: nnrb => nnrbx, nr1b, nr2b, nr3b
       USE local_pseudo,   ONLY: vps, rhops
       USE io_global,      ONLY: io_global_start, stdout, ionode, &
                                 ionode_id

@@ -254,17 +254,16 @@
 ! nfft=2  add imaginary part of qv(r) to real part of array vr(r)
 !
       USE kinds, ONLY: dp
-      USE grid_dimensions, ONLY: nr1, nr2, nr3, &
-            nr1x, nr2x, nnr => nrxx
+      USE grid_dimensions, ONLY: nr1, nr2, nr3, nr1x, nr2x, nrxx
       USE smallbox_grid_dimensions, ONLY: nr1b, nr2b, nr3b, &
-            nr1bx, nr2bx, nnrb => nnrbx
+            nr1bx, nr2bx, nnrbx
       USE fft_base, ONLY: dfftp
       USE mp_global, ONLY: me_image
 
       IMPLICIT NONE
       INTEGER, INTENT(in):: nfft, irb(3)
-      REAL(dp), INTENT(in):: qv(2,nnrb)
-      COMPLEX(dp), INTENT(inout):: vr(nnr)
+      REAL(dp), INTENT(in):: qv(2,nnrbx)
+      COMPLEX(dp), INTENT(inout):: vr(nrxx)
 !
       INTEGER ir1, ir2, ir3, ir, ibig1, ibig2, ibig3, ibig
       INTEGER me
@@ -312,18 +311,17 @@
 ! irb   : position of the box in the dense grid
 !
       USE kinds, ONLY: dp
-      USE grid_dimensions, ONLY: nr1, nr2, nr3, &
-            nr1x, nr2x, nnr => nrxx
+      USE grid_dimensions, ONLY: nr1, nr2, nr3, nr1x, nr2x, nrxx
       USE smallbox_grid_dimensions, ONLY: nr1b, nr2b, nr3b, &
-            nr1bx, nr2bx, nnrb => nnrbx
+            nr1bx, nr2bx, nnrbx
       USE fft_base, ONLY: dfftp
       USE mp_global, ONLY: me_image
       !
       IMPLICIT NONE
       !
       INTEGER, INTENT(in):: irb(3)
-      COMPLEX(dp), INTENT(in):: qv(nnrb)
-      COMPLEX(dp), INTENT(inout):: v(nnr)
+      COMPLEX(dp), INTENT(in):: qv(nnrbx)
+      COMPLEX(dp), INTENT(inout):: v(nrxx)
 !
       INTEGER ir1, ir2, ir3, ir, ibig1, ibig2, ibig3, ibig
       INTEGER me
@@ -370,15 +368,14 @@
 ! Parallel execution: remember to sum the contributions from other nodes
 !
       USE kinds, ONLY: dp
-      USE grid_dimensions, ONLY: nr1, nr2, nr3, &
-            nr1x, nr2x, nnr => nrxx
+      USE grid_dimensions, ONLY: nr1, nr2, nr3, nr1x, nr2x, nrxx
       USE smallbox_grid_dimensions, ONLY: nr1b, nr2b, nr3b, &
-            nr1bx, nr2bx, nnrb => nnrbx
+            nr1bx, nr2bx, nnrbx
       USE fft_base, ONLY: dfftp
       USE mp_global, ONLY: me_image
       IMPLICIT NONE
       INTEGER, INTENT(in):: nfft, irb(3)
-      REAL(dp), INTENT(in):: qv(2,nnrb), vr(nnr)
+      REAL(dp), INTENT(in):: qv(2,nnrbx), vr(nrxx)
 !
       INTEGER ir1, ir2, ir3, ir, ibig1, ibig2, ibig3, ibig
       INTEGER me
