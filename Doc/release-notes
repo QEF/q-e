@@ -26,6 +26,7 @@ Fixed in CVS version:
         calculations with non-orthorombic simulation cells. Also fixed 
         an old but minor bug on averaging of Berry phases between strings
   * PW: problem with symmetrization in the noncollinear case
+  * PH: elph=.true. and trans=.false. was not working any longer. 
 
 Fixed in version 4.2.1:
 
