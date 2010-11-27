@@ -36,8 +36,6 @@ SUBROUTINE el_ph_collect( el_ph_mat, el_ph_mat_collect, nksqtot, nksq )
   !
   el_ph_mat_collect=(0.0_DP, 0.0_DP)
   !
-  write(6,*) nksqtot
-
   nks1    = ( nksqtot / npool )
   !
   rest = ( nksqtot - nks1 * npool ) 
