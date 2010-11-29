@@ -957,6 +957,14 @@ paw_onecenter.o : ../Modules/uspp.o
 paw_onecenter.o : noncol.o
 paw_onecenter.o : pwcom.o
 paw_onecenter.o : symm_base.o
+plugin_forces.o : ../Modules/io_files.o
+plugin_forces.o : ../Modules/io_global.o
+plugin_forces.o : ../Modules/kind.o
+plugin_forces.o : ../Modules/plugin_flags.o
+plugin_initialization.o : ../Modules/io_files.o
+plugin_initialization.o : ../Modules/io_global.o
+plugin_initialization.o : ../Modules/kind.o
+plugin_initialization.o : ../Modules/plugin_flags.o
 potinit.o : ../Modules/cell_base.o
 potinit.o : ../Modules/constants.o
 potinit.o : ../Modules/control_flags.o
@@ -1249,8 +1257,6 @@ scf_mod.o : paw_onecenter.o
 scf_mod.o : pwcom.o
 seqopn.o : ../Modules/io_files.o
 seqopn.o : ../Modules/kind.o
-set_defaults.o : ../Modules/control_flags.o
-set_defaults.o : pwcom.o
 set_fft_dim.o : ../Modules/cell_base.o
 set_fft_dim.o : ../Modules/fft_scalar.o
 set_fft_dim.o : ../Modules/griddim.o

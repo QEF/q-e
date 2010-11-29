@@ -200,6 +200,11 @@ SUBROUTINE forces()
   !
   IF( textfor ) force(:,:) = force(:,:) + extfor(:,:)
   !
+  !
+  ! ... call void routine for user define/ plugin patches on forces
+  !
+  CALL plugin_forces()
+  !
   ! ... write on output the forces
   !
   DO na = 1, nat
