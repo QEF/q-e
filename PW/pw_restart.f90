@@ -81,7 +81,7 @@ MODULE pw_restart
       USE klist,                ONLY : nks, nkstot, xk, ngk, wk, qnorm, &
                                        lgauss, ngauss, degauss, nelec, &
                                        two_fermi_energies, nelup, neldw
-      USE gvect,                ONLY : ngm, ngm_g, g, ig1, ig2, ig3, ecutwfc, dual
+      USE gvect,                ONLY : ngm, ngm_g, g, ig1,ig2,ig3, ecutwfc, dual
       USE grid_dimensions,      ONLY : nr1, nr2, nr3
       USE basis,                ONLY : natomwfc
       USE gsmooth,              ONLY : ngms_g
@@ -2842,7 +2842,7 @@ MODULE pw_restart
       USE reciprocal_vectors,   ONLY : ig_l2g
       USE io_files,             ONLY : nwordwfc, iunwfc
       USE buffers,              ONLY : save_buffer
-      USE gvect,                ONLY : ngm, ngm_g, ig1, ig2, ig3, g, ecutwfc
+      USE gvect,                ONLY : ngm, ngm_g, g, ecutwfc
       USE noncollin_module,     ONLY : noncolin, npol
       USE mp_global,            ONLY : kunit, nproc, nproc_pool, me_pool
       !

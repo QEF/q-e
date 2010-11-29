@@ -11,9 +11,25 @@ New in CVS version:
 Incompatible changes in CVS version:
 
   * pw.x no longer performs NEB calculations. NEB is now computed
-    by a separate code, NEB/neb.x
+    by a separate code, NEB/neb.x . NEB-specific variables are no longer
+    read by pw.x; they are read by neb.x after all pw.x variables
   * NEB for cp.x no longer available
   * iq1,iq2,iq3 removed from input in ph.x; use start_q, last_q instead
+  * Several global variables having the same meaning and different names
+    in CP and in all the other codes (PW) have been given a common name.
+    Calls to fft also harmonized to the CP interface fwfft/invfft:
+	Old (CP)	New (PW)	Old (PW)	New (CP)
+	nnr/nnrx	nrxx		nrx[123]	nr[123]x
+	nnrs/nnrsx	nrxxs		nrx[123]s	nr[123]sx
+	ngml		ngl		call cft3 and	call fwfft or
+	ngmt		ngm_g		     cft3s	     invfft
+	ngs 		ngms
+	g  		gg
+	gx		g
+	gcuts 		gcutms
+	ecutp 		ecutrho
+	ecutw 		ecutwfc
+	gzero/ng0	gstart
 
 Fixed in CVS version:
 

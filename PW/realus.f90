@@ -2671,8 +2671,7 @@ MODULE realus
   USE kinds,                ONLY : DP
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
   USE grid_dimensions,      ONLY : nrxx
-  USE gvect,                ONLY : ngm, nl, nlm, gg, g, eigts1, eigts2, &
-                                   eigts3, ig1, ig2, ig3
+  USE gvect,                ONLY : ngm, nl, nlm, gg, g
   USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
   USE uspp,                 ONLY : okvan, becsum, nkb
   USE uspp_param,           ONLY : upf, lmaxq, nh
@@ -2779,8 +2778,7 @@ MODULE realus
   USE kinds,                ONLY : DP
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
   USE grid_dimensions,      ONLY : nrxx
-  USE gvect,                ONLY : ngm, nl, nlm, gg, g, eigts1, eigts2, &
-                                   eigts3, ig1, ig2, ig3
+  USE gvect,                ONLY : ngm, nl, nlm, gg, g
   USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
   USE uspp,                 ONLY : okvan, becsum, nkb
   USE uspp_param,           ONLY : upf, lmaxq, nh
@@ -2872,8 +2870,7 @@ MODULE realus
 
   USE kinds,                ONLY : DP
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
-  USE gvect,                ONLY : ngm, nl, nlm, gg, g, eigts1, eigts2, &
-                                   eigts3, ig1, ig2, ig3
+  USE gvect,                ONLY : ngm, nl, nlm, gg, g
   USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
   USE uspp,                 ONLY : okvan, becsum, nkb, qq
   USE uspp_param,           ONLY : upf, lmaxq, nh, nhm
@@ -2962,8 +2959,7 @@ MODULE realus
   USE kinds,                ONLY : DP
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
   USE grid_dimensions,      ONLY : nr1, nr2, nr3, nrxx
-  USE gvect,                ONLY : ngm, nl, nlm, gg, g, eigts1, eigts2, &
-                                   eigts3, ig1, ig2, ig3
+  USE gvect,                ONLY : ngm, nl, nlm, gg, g
   USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
   USE uspp,                 ONLY : okvan, becsum, nkb, qq
   USE uspp_param,           ONLY : upf, lmaxq, nh, nhm

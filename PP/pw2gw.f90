@@ -103,7 +103,7 @@ SUBROUTINE compute_gw( use_gmaps )
   USE symm_base, ONLY : s, nsym
   USE wvfct,     ONLY : npw, npwx, nbnd, igk, g2kin, wg, et
   USE control_flags, ONLY : gamma_only
-  USE gvect,         ONLY : ngm, g, gg, ig_l2g, ecutwfc, nl
+  USE gvect,         ONLY : gm, g, gg, ig_l2g, ecutwfc, nl
   USE fft_base,  ONLY: dfftp
   USE fft_interfaces, ONLY : fwfft, invfft
   USE klist ,        ONLY : nks, xk, wk
@@ -844,7 +844,7 @@ SUBROUTINE write_gmaps ( kunit)
   USE io_global, ONLY : stdout
   USE cell_base, ONLY : at, bg, tpiba2, alat
   USE ions_base, ONLY : atm, nat
-  USE gvect,     ONLY : ngm, ngm_g, ig_l2g, ig1, ig2, ig3, ecutwfc, g
+  USE gvect,     ONLY : ngm, ngm_g, ig_l2g, ecutwfc, g
   USE lsda_mod,  ONLY : nspin, isk
   USE ions_base, ONLY : ntyp => nsp, tau, ityp
   USE wvfct,     ONLY : nbnd, npw, npwx, et, g2kin

@@ -1381,7 +1381,7 @@ SUBROUTINE generate_guiding_functions(ik)
    USE constants, ONLY : pi, tpi, fpi, eps8
    USE wvfct, ONLY : npw, g2kin, igk
    USE control_flags, ONLY : gamma_only
-   USE gvect, ONLY : ig1, ig2, ig3, g, gstart
+   USE gvect, ONLY : g, gstart
    USE cell_base,  ONLY : tpiba2, omega, tpiba
    USE wannier
    USE klist,      ONLY : xk
