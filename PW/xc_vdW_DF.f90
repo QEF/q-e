@@ -165,7 +165,7 @@ CONTAINS
 
     call errore('xc_vdW_DF','vdW functional not implemented for spin polarized runs', size(rho_valence,2)-1)
     call errore('xc_vdW_DF','vdW functional not implemented for gamma point calculations. Use kpoints &
-         automatic and specify the gamma point explicitly', gamma_only)
+&         automatic and specify the gamma point explicitly', gamma_only)
 
     !! --------------------------------------------------------------------------------------------------------
     
@@ -542,7 +542,7 @@ CONTAINS
 
       call errore('xc_vdW_DF','vdW functional not implemented for spin polarized runs', size(rho_valence,2)-1)
       call errore('xc_vdW_DF','vdW functional not implemented for gamma point calculations. Use kpoints &
-                           automatic and specify the gamma point explicitly', gamma_only)
+&                           automatic and specify the gamma point explicitly', gamma_only)
       sigma(:,:) = 0.0_DP
       sigma_grad(:,:) = 0.0_DP
       sigma_ker(:,:) = 0.0_DP
@@ -2180,7 +2180,7 @@ function get_3d_indices(N)
      if (.not. present(N)) then
         
         call errore('get_3d_rho','Number of neighbors for numerical derivatives &
-             must be specified',2)
+&             must be specified',2)
         
      end if
 
