@@ -39,6 +39,7 @@ MODULE paw_onecenter
     !                                             components expanded on Y_lm
     REAL(DP), ALLOCATABLE :: g_lm(:,:,:)  ! potential density as lm components
     !
+    LOGICAL :: with_small_so = .FALSE.
     !
     ! the following macro controls the use of several fine-grained clocks
     ! set it to 'if(.false.) CALL' (without quotes) in order to disable them,
@@ -112,6 +113,7 @@ SUBROUTINE PAW_potential(becsum, d, energy, e_cmp)
    !
    me_paw    = mp_rank( paw_comm )
    nproc_paw = mp_size( paw_comm )
+
    !
    atoms: DO ia = ia_s, ia_e
       !
@@ -132,6 +134,7 @@ SUBROUTINE PAW_potential(becsum, d, energy, e_cmp)
          ALLOCATE(savedv_lm(i%m,l2,nspin))
          ALLOCATE(rho_lm(i%m,l2,nspin))
          !
+         !
          whattodo: DO i_what = AE, PS
             ! STEP: 1 [ build rho_lm (PAW_rho_lm) ]
             i%ae=i_what
@@ -139,7 +142,8 @@ SUBROUTINE PAW_potential(becsum, d, energy, e_cmp)
             IF (i_what == AE) THEN
                ! Compute rho spherical harmonics expansion from becsum and pfunc
                CALL PAW_rho_lm(i, becsum, upf(i%t)%paw%pfunc, rho_lm)
-               IF (nspin_mag==4.and.upf(i%t)%has_so) THEN
+               with_small_so=upf(i%t)%has_so.AND.nspin_mag==4
+               IF (with_small_so) THEN
                   ALLOCATE(msmall_lm(i%m,l2,nspin))
                   ALLOCATE(g_lm(i%m,l2,nspin))
                   CALL PAW_rho_lm(i, becsum, upf(i%t)%paw%pfunc_rel, msmall_lm)
@@ -153,6 +157,7 @@ SUBROUTINE PAW_potential(becsum, d, energy, e_cmp)
                !          optional argument for pseudo part (aug. charge) --> ^^^
                rho_core => upf(i%t)%rho_atc ! as before
                sgn = -1._dp                 ! as before
+               with_small_so=.FALSE.
             ENDIF
             ! cleanup auxiliary potentials
             savedv_lm(:,:,:) = 0._dp
@@ -189,7 +194,7 @@ SUBROUTINE PAW_potential(becsum, d, energy, e_cmp)
                      becfake(nmb,ia,is) = 1._dp
                      IF (i_what == AE) THEN
                         CALL PAW_rho_lm(i, becfake, upf(i%t)%paw%pfunc, rho_lm)
-                        IF (nspin_mag==4.and.upf(i%t)%has_so) &
+                        IF (with_small_so) &
                         CALL PAW_rho_lm(i, becfake, upf(i%t)%paw%pfunc_rel, &
                                            msmall_lm)
                      ELSE
@@ -207,8 +212,7 @@ SUBROUTINE PAW_potential(becsum, d, energy, e_cmp)
                         CALL simpson(kkbeta,rho_lm(1,lm,is),g(i%t)%rab(1),&
                                                              integral)
                         d(nmb,i%a,is) = d(nmb,i%a,is) + sgn * integral
-                        IF (is>1.and.nspin_mag==4.AND.upf(i%t)%has_so.AND.&
-                                             i_what== AE ) THEN
+                        IF (is>1.and.with_small_so.AND.i_what== AE ) THEN
                            DO j=1, imesh
                               msmall_lm(j,lm,is)=msmall_lm(j,lm,is)*&
                                                  g_lm(j,lm,is)
@@ -223,7 +227,7 @@ SUBROUTINE PAW_potential(becsum, d, energy, e_cmp)
                   ENDDO ! mb
                ENDDO ! nb
             ENDDO spins
-            IF (nspin_mag==4.AND.upf(i%t)%has_so.AND.i_what== AE ) THEN
+            IF (with_small_so) THEN
                DEALLOCATE ( msmall_lm )
                DEALLOCATE ( g_lm )
             END IF
@@ -425,7 +429,7 @@ SUBROUTINE PAW_xc_potential(i, rho_lm, rho_core, v_lm, energy)
     rho_loc = 0._dp
     !
     ALLOCATE( rho_rad(i%m,nspin_mag) ) 
-    IF (upf(i%t)%has_so.and.nspin_mag==4.and.i%ae==1) &
+    IF (with_small_so.and.i%ae==1) &
          ALLOCATE( msmall_rad(i%m,nspin_mag) ) 
     !
     IF (present(energy)) THEN
@@ -453,23 +457,9 @@ SUBROUTINE PAW_xc_potential(i, rho_lm, rho_core, v_lm, energy)
         ! compute the potential along ix
         !
         IF ( nspin_mag ==4 ) THEN
-           IF (upf(i%t)%has_so.and.i%ae==1) THEN
-              CALL PAW_lm2rad(i, ix, msmall_lm, msmall_rad, nspin_mag)
-              hatr(1)=rad(i%t)%sin_th(ix)*rad(i%t)%cos_phi(ix)
-              hatr(2)=rad(i%t)%sin_th(ix)*rad(i%t)%sin_phi(ix)
-              hatr(3)=rad(i%t)%cos_th(ix)
-           ENDIF
+           IF (with_small_so.AND.i%ae==1) CALL add_small_mag(i,ix,rho_rad)
            DO k=1,i%m
               rho_loc(k,1:nspin) = rho_rad(k,1:nspin)*g(i%t)%rm2(k)
-              IF (upf(i%t)%has_so.and.i%ae==1) THEN
-                 DO ipol=1,3
-                    DO kpol=1,3
-                       rho_loc(k,ipol+1) = rho_loc(k,ipol+1) - &
-                       msmall_rad(k,kpol+1) * g(i%t)%rm2(k) *  &
-                       hatr(ipol) * hatr(kpol) * 2.0_DP
-                    ENDDO
-                 ENDDO
-              ENDIF
               arho = rho_loc(k,1)+rho_core(k)
               amag = SQRT(rho_loc(k,2)**2+rho_loc(k,3)**2+rho_loc(k,4)**2)
               arho = ABS( arho )
@@ -483,17 +473,6 @@ SUBROUTINE PAW_xc_potential(i, rho_lm, rho_core, v_lm, energy)
                  v_rad(k,ix,1) = e2*(0.5D0*( vx(1) + vc(1) + vx(2) + vc(2)))
                  IF ( amag > eps12 ) THEN
                     v_rad(k,ix,2:4) =  vs * rho_loc(k,2:4) / amag
-                    IF (upf(i%t)%has_so.and.i%ae==1) THEN
-                       DO ipol=1,3
-                          DO kpol=1,3
-!
-!    v_rad contains -B_{xc} with the notation of the papers
-!
-                             g_rad(k,ix,ipol+1)=g_rad(k,ix,ipol+1)- &
-                             v_rad(k,ix,kpol+1)*hatr(kpol)*hatr(ipol)*2.0_DP
-                          ENDDO
-                       ENDDO
-                    ENDIF
                  ELSE
                     v_rad(k,ix,2:4)=0.0_DP
                  ENDIF
@@ -502,6 +481,7 @@ SUBROUTINE PAW_xc_potential(i, rho_lm, rho_core, v_lm, energy)
                  IF (present(energy)) e_rad(k)=0.0_DP
               END IF
            END DO
+           IF (with_small_so) CALL compute_g(i,ix,v_rad,g_rad)
         ELSEIF (nspin==2) THEN
            DO k = 1,i%m
               rho_loc(k,1) = rho_rad(k,1)*g(i%t)%rm2(k)
@@ -542,8 +522,7 @@ SUBROUTINE PAW_xc_potential(i, rho_lm, rho_core, v_lm, energy)
 !$omp end parallel
 
     CALL mp_sum( v_rad, paw_comm )
-    IF (upf(i%t)%has_so.and.nspin_mag==4.and.i%ae==1) &
-                CALL mp_sum( g_rad, paw_comm )
+    IF (with_small_so) CALL mp_sum( g_rad, paw_comm )
 
 
     IF(present(energy)) THEN
@@ -554,7 +533,7 @@ SUBROUTINE PAW_xc_potential(i, rho_lm, rho_core, v_lm, energy)
 
     ! Recompose the sph. harm. expansion
     CALL PAW_rad2lm(i, v_rad, v_lm, i%l, nspin_mag)
-    IF (upf(i%t)%has_so.and.nspin_mag==4.and.i%ae==1) THEN
+    IF (with_small_so) THEN
        CALL PAW_rad2lm(i, g_rad, g_lm, i%l, nspin_mag)
        DEALLOCATE( msmall_rad )
     END IF
@@ -1906,23 +1885,9 @@ IF (nspin /= 4) CALL errore('compute_rho_spin_lm','called in the wrong case',1)
 
 DO ix = 1, rad(i%t)%nx
    CALL PAW_lm2rad(i, ix, rho_lm, rho_rad, nspin)
-   IF (upf(i%t)%has_so.and.i%ae==1) THEN
-      CALL PAW_lm2rad(i, ix, msmall_lm, msmall_rad, nspin_mag)
-      hatr(1)=rad(i%t)%sin_th(ix)*rad(i%t)%cos_phi(ix)
-      hatr(2)=rad(i%t)%sin_th(ix)*rad(i%t)%sin_phi(ix)
-      hatr(3)=rad(i%t)%cos_th(ix)
-   ENDIF
+   IF (with_small_so) CALL add_small_mag(i,ix,rho_rad)
    DO k=1, i%m
       rho_rad(k, 1:nspin) = rho_rad(k, 1:nspin)*g(i%t)%rm2(k)
-      IF (upf(i%t)%has_so.and.i%ae==1) THEN
-         DO ipol=1,3
-            DO kpol=1,3
-               rho_rad(k,ipol+1) = rho_rad(k,ipol+1) -     &
-                   msmall_rad(k,kpol+1) * g(i%t)%rm2(k) *  &
-                   hatr(ipol) * hatr(kpol) * 2.0_DP
-            ENDDO
-         ENDDO
-      ENDIF
       mag = sqrt( rho_rad(k,2)**2 + rho_rad(k,3)**2 + rho_rad(k,4)**2 )
 !
 ! Choose rhoup and rhodw depending on the projection of the magnetization
@@ -2000,23 +1965,9 @@ IF (upf(i%t)%has_so.and.i%ae==1) g_rad=0.0_DP
 DO ix = 1, rad(i%t)%nx
    CALL PAW_lm2rad(i, ix, vout_lm, vout_rad, nspin_gga)
    CALL PAW_lm2rad(i, ix, rho_lm, rho_rad, nspin_mag)
-   IF (upf(i%t)%has_so.and.i%ae==1) THEN
-      CALL PAW_lm2rad(i, ix, msmall_lm, msmall_rad, nspin_mag)
-      hatr(1)=rad(i%t)%sin_th(ix)*rad(i%t)%cos_phi(ix)
-      hatr(2)=rad(i%t)%sin_th(ix)*rad(i%t)%sin_phi(ix)
-      hatr(3)=rad(i%t)%cos_th(ix)
-   END IF
+   IF (with_small_so) CALL add_small_mag(i,ix,rho_rad)
    DO k=1, i%m
       rho_rad(k, 1:nspin) = rho_rad(k, 1:nspin) * g(i%t)%rm2(k)
-      IF (upf(i%t)%has_so.and.i%ae==1) THEN
-         DO ipol=1,3
-            DO kpol=1,3
-               rho_rad(k,ipol+1) = rho_rad(k,ipol+1) - &
-                   msmall_rad(k,kpol+1) * g(i%t)%rm2(k) *  &
-                   hatr(ipol) * hatr(kpol) * 2.0_DP
-            ENDDO
-         ENDDO
-      ENDIF
       mag = sqrt( rho_rad(k,2)**2 + rho_rad(k,3)**2 + rho_rad(k,4)**2 )
       v_rad(k, ix, 1) = 0.5_DP * ( vout_rad(k,1) + vout_rad(k,2) )
       vs_rad(k,ix,i%a) = 0.5_DP * ( vout_rad(k,1) - vout_rad(k,2) )
@@ -2029,23 +1980,16 @@ DO ix = 1, rad(i%t)%nx
             v_rad(k, ix, ipol) = vs_rad(k,ix,i%a) * segni_rad(k,ix) * & 
                                                     rho_rad(k,ipol) / mag
          ENDDO
-         IF (upf(i%t)%has_so.and.i%ae==1) THEN
-            DO ipol=1,3
-               DO kpol=1,3
-                  g_rad(k,ix,ipol+1) = g_rad(k,ix,ipol+1) - &
-                        v_rad(k,ix,kpol+1) * hatr(kpol) * hatr(ipol) * 2.0_DP
-               ENDDO
-            ENDDO
-         ENDIF 
       ENDIF
    ENDDO
+   IF (with_small_so) CALL compute_g(i,ix,v_rad,g_rad)
 ENDDO   
 
 CALL PAW_rad2lm(i, v_rad, vsave_lm, i%l, nspin)
 
 v_lm=v_lm+vsave_lm
 
-IF (upf(i%t)%has_so.and.i%ae==1) THEN
+IF (with_small_so) THEN
    CALL PAW_rad2lm(i, g_rad, gsave_lm, i%l, nspin)
    g_lm=g_lm+gsave_lm
 ENDIF
@@ -2219,5 +2163,80 @@ v_lm=v_lm+vsave_lm
 
 RETURN
 END SUBROUTINE compute_dpot_nonc
+!
+SUBROUTINE add_small_mag(i, ix, rho_rad)
 
+USE noncollin_module, ONLY : nspin_mag
+!
+!  This subroutine computes the contribution of the small component to the
+!  magnetization in the noncollinear case and adds its to rho_rad.
+!  The calculation is done along the radial line ix.
+!
+!  NB: Both the input and the output magnetizations are multiplied by
+!      r^2.
+!
+TYPE(paw_info), INTENT(IN) :: i   ! atom's minimal info
+INTEGER, INTENT(IN) :: ix ! the line
+REAL(DP), INTENT(INOUT)  :: rho_rad(i%m,nspin_mag)  ! the magnetization 
+
+REAL(DP) :: msmall_rad(i%m, nspin_mag) ! auxiliary: the mag of the small 
+                                          ! components along a line
+REAL(DP) :: hatr(3)
+INTEGER  :: k, ipol, kpol
+ 
+CALL PAW_lm2rad(i, ix, msmall_lm, msmall_rad, nspin_mag)
+hatr(1)=rad(i%t)%sin_th(ix)*rad(i%t)%cos_phi(ix)
+hatr(2)=rad(i%t)%sin_th(ix)*rad(i%t)%sin_phi(ix)
+hatr(3)=rad(i%t)%cos_th(ix)
+
+DO k=1,i%m
+   DO ipol=1,3
+      DO kpol=1,3
+         rho_rad(k,ipol+1) = rho_rad(k,ipol+1) - &
+                 msmall_rad(k,kpol+1) * hatr(ipol) * hatr(kpol) * 2.0_DP
+      ENDDO
+   ENDDO
+ENDDO
+
+RETURN
+END SUBROUTINE add_small_mag
+!
+SUBROUTINE compute_g(i, ix, v_rad, g_rad)
+!
+!   This routine receives as input B_{xc} and calculates the function G
+!   described in Phys. Rev. B 82, 075116 (2010). The same routine can 
+!   be used when v_rad contains the induced B_{xc}. In this case the 
+!   output is the change of G.
+!
+   USE noncollin_module, ONLY : nspin_mag
+
+   TYPE(paw_info), INTENT(IN) :: i   ! atom's minimal info
+   INTEGER, INTENT(IN) :: ix         ! the line
+   REAL(DP), INTENT(IN)    :: v_rad(i%m,rad(i%t)%nx,nspin_mag) ! radial pot 
+   REAL(DP), INTENT(INOUT) :: g_rad(i%m,rad(i%t)%nx,nspin_mag) 
+                                                ! radial potential (small comp)
+
+   REAL(DP) :: hatr(3)
+
+   INTEGER :: k, ipol, kpol
+
+   hatr(1)=rad(i%t)%sin_th(ix)*rad(i%t)%cos_phi(ix)
+   hatr(2)=rad(i%t)%sin_th(ix)*rad(i%t)%sin_phi(ix)
+   hatr(3)=rad(i%t)%cos_th(ix)
+
+   DO k=1, i%m
+      DO ipol=1,3
+         DO kpol=1,3
+!
+!    v_rad contains -B_{xc} with the notation of the papers
+!
+            g_rad(k,ix,ipol+1)=g_rad(k,ix,ipol+1) - &
+                               v_rad(k,ix,kpol+1)*hatr(kpol)*hatr(ipol)*2.0_DP
+         ENDDO
+      ENDDO
+   ENDDO
+
+   RETURN
+END SUBROUTINE compute_g
+!
 END MODULE paw_onecenter
