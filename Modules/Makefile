@@ -49,6 +49,8 @@ parallel_include.o \
 parameters.o \
 parser.o \
 paw_variables.o \
+plugin_flags.o \
+plugin_arguments.o \
 pseudo_types.o \
 printout_base.o \
 ptoolkit.o \

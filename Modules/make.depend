@@ -133,6 +133,13 @@ parser.o : kind.o
 parser.o : mp.o
 parser.o : mp_global.o
 paw_variables.o : kind.o
+plugin_arguments.o : io_global.o
+plugin_arguments.o : kind.o
+plugin_arguments.o : mp.o
+plugin_arguments.o : mp_global.o
+plugin_arguments.o : plugin_flags.o
+plugin_flags.o : kind.o
+plugin_flags.o : parameters.o
 printout_base.o : io_global.o
 printout_base.o : kind.o
 printout_base.o : mp.o
