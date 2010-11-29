@@ -20,6 +20,7 @@ PROGRAM main
   !
   USE input,         ONLY : read_input_file, iosys_pseudo, iosys
   USE mp_global,     ONLY : mp_startup
+  USE io_global,     ONLY : ionode
   USE control_flags, ONLY : lneb, lsmd, program_name
   USE environment,   ONLY : environment_start
   USE check_stop,    ONLY : check_stop_init
@@ -43,6 +44,9 @@ PROGRAM main
   ! KNK_nimage
   ! if (nimage.gt.1) CALL io_global_start( me_image, root_image )
   !
+  ! reading plugin arguments
+  IF(ionode) CALL plugin_arguments()
+  !
   ! ... readin the input file
   !
   CALL read_input_file()
@@ -55,6 +59,11 @@ PROGRAM main
   ! ... copy-in input parameters from input_parameter module
   !
   CALL iosys()
+  !
+  ! call to void routine for user define / plugin patches initializations
+  !
+  CALL plugin_initialization()
+  !
   !
   CALL check_stop_init()
   !

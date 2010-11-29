@@ -564,7 +564,6 @@ makov_payne.o : ../Modules/recvec.o
 makov_payne.o : ions_positions.o
 makov_payne.o : mainvar.o
 metaxc.o : ../Modules/kind.o
-metaxc.o : ../Modules/recvec.o
 modules.o : ../Modules/kind.o
 modules.o : ../Modules/parameters.o
 move_electrons.o : ../Modules/cell_base.o
@@ -866,13 +865,13 @@ vol_clu.o : ../Modules/fft_interfaces.o
 vol_clu.o : ../Modules/griddim.o
 vol_clu.o : ../Modules/io_global.o
 vol_clu.o : ../Modules/ions_base.o
+vol_clu.o : ../Modules/kind.o
 vol_clu.o : ../Modules/mp.o
 vol_clu.o : ../Modules/mp_global.o
 vol_clu.o : ../Modules/parameters.o
 vol_clu.o : ../Modules/recvec.o
 vol_clu.o : ions_positions.o
 vol_clu.o : mainvar.o
-vol_clu.o : modules.o
 vol_clu.o : pres_ai_mod.o
 wannier.o : ../Modules/cell_base.o
 wannier.o : ../Modules/control_flags.o

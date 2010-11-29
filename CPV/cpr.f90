@@ -417,6 +417,12 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
            !
         END IF
         !
+        !
+        ! ... call void routine for user define/ plugin patches on forces
+        !
+        CALL plugin_forces()
+        !
+        !
         CALL ions_move( tausp, taus, tausm, iforce, pmass, fion, ainv, &
                         delt, na, nsp, fricp, hgamma, vels, tsdp, tnosep, &
                         fionm, vnhp, velsp, velsm, nhpcl, nhpdim, atm2nhp )
