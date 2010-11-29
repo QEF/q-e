@@ -40,7 +40,7 @@ SUBROUTINE sum_band()
   USE mp_global,            ONLY : inter_pool_comm
   USE mp,                   ONLY : mp_bcast, mp_sum
   USE funct,                ONLY : dft_is_meta
-  USE paw_onecenter,        ONLY : PAW_symmetrize
+  USE paw_symmetry,         ONLY : PAW_symmetrize
   USE paw_variables,        ONLY : okpaw
   USE becmod,               ONLY : allocate_bec_type, deallocate_bec_type, &
                                    bec_type, becp

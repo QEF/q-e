@@ -938,6 +938,7 @@ paw_init.o : ../Modules/radial_grids.o
 paw_init.o : ../Modules/random_numbers.o
 paw_init.o : ../Modules/uspp.o
 paw_init.o : noncol.o
+paw_init.o : paw_symmetry.o
 paw_init.o : paw_onecenter.o
 paw_init.o : pwcom.o
 paw_init.o : scf_mod.o

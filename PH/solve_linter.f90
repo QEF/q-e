@@ -43,8 +43,8 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
   USE uspp_param,           ONLY : upf, nhm, nh
   USE noncollin_module,     ONLY : noncolin, npol, nspin_mag
   USE paw_variables,        ONLY : okpaw
-  USE paw_onecenter,        ONLY : paw_dpotential, paw_dusymmetrize, &
-                                   paw_dumqsymmetrize
+  USE paw_onecenter,        ONLY : paw_dpotential
+  USE paw_symmetry,         ONLY : paw_dusymmetrize, paw_dumqsymmetrize
   USE control_ph,           ONLY : rec_code, niter_ph, nmix_ph, elph, tr2_ph, &
                                    alpha_pv, lgamma, lgamma_gamma, convt, &
                                    nbnd_occ, alpha_mix, ldisp, rec_code_read, &

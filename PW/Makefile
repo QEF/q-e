@@ -135,6 +135,7 @@ output_tau.o \
 para.o \
 paw_init.o \
 paw_onecenter.o \
+paw_symmetry.o \
 potinit.o \
 print_clock_pw.o \
 print_ks_energies.o \

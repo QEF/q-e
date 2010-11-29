@@ -27,7 +27,7 @@ SUBROUTINE compute_becsum(iflag)
   USE wavefunctions_module, ONLY : evc, psic, psic_nc
   USE noncollin_module,     ONLY : noncolin, npol
   USE wvfct,                ONLY : nbnd, npwx, npw, igk, wg, g2kin
-  USE paw_onecenter,        ONLY : PAW_symmetrize
+  USE paw_symmetry,         ONLY : PAW_symmetrize
   USE paw_variables,        ONLY : okpaw
   USE becmod,               ONLY : calbec
   USE mp_global,            ONLY : inter_pool_comm

@@ -68,7 +68,8 @@ SUBROUTINE electrons()
   USE london_module,        ONLY : energy_london
   !
   USE paw_variables,        ONLY : okpaw, ddd_paw, total_core_energy, only_paw
-  USE paw_onecenter,        ONLY : PAW_potential, PAW_symmetrize
+  USE paw_onecenter,        ONLY : PAW_potential
+  USE paw_symmetry,         ONLY : PAW_symmetrize
   USE uspp_param,           ONLY : nh, nhm ! used for PAW
 !DCC
 !  USE ee_mod,               ONLY : n_cycle,                            &

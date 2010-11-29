@@ -139,7 +139,7 @@ SUBROUTINE PAW_atomic_becsum()
     USE ions_base,          ONLY : nat, ityp
     USE lsda_mod,           ONLY : nspin, starting_magnetization
     USE paw_variables,      ONLY : okpaw
-    USE paw_onecenter,      ONLY : PAW_symmetrize
+    USE paw_symmetry,       ONLY : PAW_symmetrize
     USE random_numbers,     ONLY : randy
     USE basis,              ONLY : starting_wfc
     USE noncollin_module,   ONLY : nspin_mag, angle1, angle2

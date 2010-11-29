@@ -39,7 +39,8 @@ subroutine solve_e
   USE noncollin_module,      ONLY : noncolin, npol, nspin_mag
   USE scf,                   ONLY : rho
   USE paw_variables,         ONLY : okpaw
-  USE paw_onecenter,         ONLY : paw_dpotential, paw_desymmetrize
+  USE paw_onecenter,         ONLY : paw_dpotential
+  USE paw_symmetry,          ONLY : paw_desymmetrize
 
   USE eqv,                   ONLY : dpsi, dvpsi, eprec
   USE units_ph,              ONLY : lrdwf, iudwf, lrwfc, iuwfc, lrdrho, &
