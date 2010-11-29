@@ -66,7 +66,7 @@ SUBROUTINE update_pot()
   USE io_global,     ONLY : ionode, ionode_id
   USE cell_base,     ONLY : bg
   USE ions_base,     ONLY : nat, tau, nsp, ityp
-  USE gvect,         ONLY : ngm, g, eigts1, eigts2, eigts3
+  USE gvect,         ONLY : ngm, g
   USE vlocal,        ONLY : strf
   USE mp,            ONLY : mp_bcast
   USE mp_global,     ONLY : intra_image_comm
