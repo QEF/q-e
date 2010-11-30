@@ -819,7 +819,11 @@ CONTAINS
     case ( 'vdw_table_name' )
       CALL iotk_scan_dat_inside( xmlinputunit, tmpstr, ierr = ierr )
       vdw_table_name = clean_str(tmpstr)
-   
+       !
+    case ( 'input_dft' )
+      CALL iotk_scan_dat_inside( xmlinputunit, tmpstr, ierr = ierr )
+      input_dft = clean_str(tmpstr)
+ 
     CASE default
        !
        CALL errore( 'read_parameter', 'no parameter with name '//trim( name ), 1 )
