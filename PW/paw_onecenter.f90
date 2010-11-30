@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2007-2009 Quantum ESPRESSO group
+! Copyright (C) 2007-2010 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -32,6 +32,8 @@ MODULE paw_onecenter
                              ! (all-electron and pseudo) on radial grid
     !
     INTEGER, SAVE :: paw_comm, me_paw, nproc_paw
+    !
+    INTEGER, SAVE :: nx_loc, ix_s, ix_e  ! parallelization on the directions
     !
     PRIVATE
 
@@ -127,6 +129,13 @@ SUBROUTINE PAW_potential(becsum, d, energy, e_cmp)
       imesh  = i%m
       !
       ifpaw: IF (upf(i%t)%tpawp) THEN
+         !
+         !  parallelization over the direction. Here each processor chooses
+         !  its directions        
+         !
+         nx_loc = ldim_block( rad(i%t)%nx, nproc_paw, me_paw )
+         ix_s   = gind_block( 1, rad(i%t)%nx, nproc_paw, me_paw )
+         ix_e   = ix_s + nx_loc - 1
          !
          ! Arrays are allocated inside the cycle to allow reduced
          ! memory usage as different atoms have different meshes
@@ -378,7 +387,7 @@ SUBROUTINE PAW_xc_potential(i, rho_lm, rho_core, v_lm, energy)
     !
     REAL(DP), ALLOCATABLE :: rho_loc(:,:)         ! local density (workspace), up and down
     REAL(DP)              :: v_rad(i%m,rad(i%t)%nx,nspin) ! radial potential (to be integrated)
-    REAL(DP)              :: g_rad(i%m,rad(i%t)%nx,nspin) ! radial potential
+    REAL(DP), ALLOCATABLE :: g_rad(:,:,:)       ! radial potential
 
     REAL(DP), ALLOCATABLE :: rho_rad(:,:)       ! workspace (only one radial slice of rho)
     !
@@ -398,7 +407,6 @@ SUBROUTINE PAW_xc_potential(i, rho_lm, rho_core, v_lm, energy)
     !
     INTEGER               :: ipol, kpol
 
-    INTEGER               :: nx_loc, ix_s, ix_e
     INTEGER               :: mytid, ntids
 
 #ifdef __OPENMP
@@ -410,10 +418,6 @@ SUBROUTINE PAW_xc_potential(i, rho_lm, rho_core, v_lm, energy)
     ! true if using spin
     lsd = 0
     IF (nspin==2) lsd=1
-    !
-    nx_loc = ldim_block( rad(i%t)%nx, nproc_paw, me_paw )
-    ix_s   = gind_block( 1, rad(i%t)%nx, nproc_paw, me_paw )
-    ix_e   = ix_s + nx_loc - 1
     !
 !$omp parallel default(private), &
 !$omp shared(i,rad,v_lm,rho_lm,rho_core,v_rad,ix_s,ix_e,energy,e_of_tid,nspin,g,lsd)
@@ -429,8 +433,10 @@ SUBROUTINE PAW_xc_potential(i, rho_lm, rho_core, v_lm, energy)
     rho_loc = 0._dp
     !
     ALLOCATE( rho_rad(i%m,nspin_mag) ) 
-    IF (with_small_so.and.i%ae==1) &
-         ALLOCATE( msmall_rad(i%m,nspin_mag) ) 
+    IF (with_small_so) THEN
+       ALLOCATE(g_rad(i%m,rad(i%t)%nx,nspin))
+       g_rad = 0.0_DP
+    ENDIF
     !
     IF (present(energy)) THEN
 !$omp single
@@ -521,10 +527,6 @@ SUBROUTINE PAW_xc_potential(i, rho_lm, rho_core, v_lm, energy)
 
 !$omp end parallel
 
-    CALL mp_sum( v_rad, paw_comm )
-    IF (with_small_so) CALL mp_sum( g_rad, paw_comm )
-
-
     IF(present(energy)) THEN
        energy = sum(e_of_tid)
        DEALLOCATE(e_of_tid)
@@ -535,7 +537,7 @@ SUBROUTINE PAW_xc_potential(i, rho_lm, rho_core, v_lm, energy)
     CALL PAW_rad2lm(i, v_rad, v_lm, i%l, nspin_mag)
     IF (with_small_so) THEN
        CALL PAW_rad2lm(i, g_rad, g_lm, i%l, nspin_mag)
-       DEALLOCATE( msmall_rad )
+       DEALLOCATE( g_rad )
     END IF
 
     ! Add gradient correction, if necessary
@@ -599,7 +601,6 @@ SUBROUTINE PAW_gcxc_potential(i, rho_lm,rho_core, v_lm, energy)
     REAL(DP), ALLOCATABLE :: v2xup_vec(:), v2xdw_vec(:)
 
     
-    INTEGER :: nx_loc, ix_s, ix_e
     INTEGER :: mytid, ntids
 #ifdef __OPENMP
     INTEGER, EXTERNAL :: omp_get_thread_num, omp_get_num_threads
@@ -610,9 +611,6 @@ SUBROUTINE PAW_gcxc_potential(i, rho_lm,rho_core, v_lm, energy)
     if(TIMING) CALL start_clock ('PAW_gcxc_v')
 
 
-    nx_loc = ldim_block( rad(i%t)%nx, nproc_paw, me_paw )
-    ix_s   = gind_block( 1, rad(i%t)%nx, nproc_paw, me_paw )
-    ix_e   = ix_s + nx_loc - 1
     e_gcxc = 0._dp
 
     ALLOCATE( gc_rad(i%m,rad(i%t)%nx,nspin_gga) )! GC correction to V (radial samples)
@@ -784,8 +782,6 @@ SUBROUTINE PAW_gcxc_potential(i, rho_lm,rho_core, v_lm, energy)
     DEALLOCATE( grad2 )
 !$omp end parallel
 !
-    CALL mp_sum( gc_rad, paw_comm )
-    CALL mp_sum( h_rad, paw_comm )
     !
     IF (present(energy)) THEN
        e_gcxc = sum(egcxc_of_tid)
@@ -809,7 +805,7 @@ SUBROUTINE PAW_gcxc_potential(i, rho_lm,rho_core, v_lm, energy)
     !
     ! ADC 30/04/2009.
     ! 
-    DO ix = 1,rad(i%t)%nx
+    DO ix = ix_s, ix_e
        h_rad(1:i%m,3,ix,1:nspin_gga) = h_rad(1:i%m,3,ix,1:nspin_gga)/&
                                        rad(i%t)%sin_th(ix)
     ENDDO
@@ -885,8 +881,11 @@ SUBROUTINE PAW_divergence(i, F_lm, div_F_lm, lmaxq_in, lmaxq_out)
 !                 ' to provide the number you have requested (in output)', lmaxq_out-lmaxq_in+2)
 
     ! phi component
+
+    div_F_rad=0.0_DP
+
     DO is = 1,nspin_gga
-    DO ix = 1,rad(i%t)%nx
+    DO ix = ix_s,ix_e
     aux(:) = 0._dp
         ! this derivative has no spherical component, so lm starts from 2
         DO lm = 2,lmaxq_in**2
@@ -900,7 +899,7 @@ SUBROUTINE PAW_divergence(i, F_lm, div_F_lm, lmaxq_in, lmaxq_out)
 
     ! theta component
     DO is = 1,nspin_gga
-    DO ix = 1,rad(i%t)%nx
+    DO ix = ix_s,ix_e
     aux(:) = 0._dp
         ! this derivative has a spherical component too!
         DO lm = 1,lmaxq_in**2
@@ -1209,7 +1208,7 @@ SUBROUTINE PAW_rad2lm(i, F_rad, F_lm, lmax_loc, nspin)
 !$omp do
     DO lm = 1,lmax_loc**2
     F_lm(:,lm,ispin) = 0._dp
-    DO ix = 1, rad(i%t)%nx
+    DO ix = ix_s, ix_e
     DO j  = 1, i%m
         F_lm(j, lm, ispin) = F_lm(j, lm, ispin) + F_rad(j,ix,ispin)* rad(i%t)%wwylm(ix,lm)
     ENDDO
@@ -1218,6 +1217,11 @@ SUBROUTINE PAW_rad2lm(i, F_rad, F_lm, lmax_loc, nspin)
 !$omp end do
     ENDDO
 !$omp end parallel
+
+!
+!   This routine recollects the result within the paw communicator
+!
+    CALL mp_sum( F_lm, paw_comm )
 
     if(TIMING) CALL stop_clock ('PAW_rad2lm')
 
@@ -1247,21 +1251,21 @@ SUBROUTINE PAW_rad2lm3(i, F_rad, F_lm, lmax_loc, nspin)
     DO ispin = 1,nspin
     DO lm = 1,lmax_loc**2
       aux(:) = 0._dp
-      DO ix = 1, rad(i%t)%nx
+      DO ix = ix_s, ix_e
             aux(1:i%m) = aux(1:i%m) + F_rad(1:i%m,1,ix,ispin) * rad(i%t)%wwylm(ix,lm)
             !CALL MM_PREFETCH( F_rad(1:i%m,1,MIN(ix+1,rad(i%t)%nx),ispin), 1 )
       ENDDO
       F_lm(1:i%m, 1, lm, ispin) = aux(1:i%m)
       !
       aux(:) = 0._dp
-      DO ix = 1, rad(i%t)%nx
+      DO ix = ix_s, ix_e
             aux(1:i%m) = aux(1:i%m) + F_rad(1:i%m,2,ix,ispin) * rad(i%t)%wwylm(ix,lm)
             !CALL MM_PREFETCH( F_rad(1:i%m,2,MIN(ix+1,rad(i%t)%nx),ispin), 1 )
       ENDDO
       F_lm(1:i%m, 2, lm, ispin) = aux(1:i%m)
       !
       aux(:) = 0._dp
-      DO ix = 1, rad(i%t)%nx
+      DO ix = ix_s, ix_e
             aux(1:i%m) = aux(1:i%m) + F_rad(1:i%m,3,ix,ispin) * rad(i%t)%wwylm(ix,lm)
             !CALL MM_PREFETCH( F_rad(1:i%m,3,MIN(ix+1,rad(i%t)%nx),ispin), 1 )
       ENDDO
@@ -1269,6 +1273,10 @@ SUBROUTINE PAW_rad2lm3(i, F_rad, F_lm, lmax_loc, nspin)
 
     ENDDO
     ENDDO
+!
+!   NB: this routine collects the result among the paw communicator
+!
+    CALL mp_sum( F_lm, paw_comm )
 
     if(TIMING) CALL stop_clock ('PAW_rad2lm3')
 
@@ -1282,6 +1290,7 @@ END SUBROUTINE PAW_rad2lm3
 SUBROUTINE PAW_dpotential(dbecsum, becsum, int3, npe)
    USE atom,              ONLY : g => rgrid
    USE ions_base,         ONLY : nat, ityp
+   USE mp,                ONLY : mp_comm_split, mp_comm_free, mp_size, mp_rank
    USE noncollin_module,  ONLY : nspin_lsda, nspin_mag
    USE lsda_mod,          ONLY : nspin
    USE uspp_param,        ONLY : nh, nhm, upf
@@ -1329,7 +1338,14 @@ SUBROUTINE PAW_dpotential(dbecsum, becsum, int3, npe)
    ! Parallel: divide tasks among all the processor for this image
    ! (i.e. all the processors except for NEB and similar)
    CALL block_distribute( nat, me_image, nproc_image, ia_s, ia_e, mykey )
+   ! build the group of all the procs associated with the same atom
    !
+   CALL mp_comm_split( intra_image_comm, ia_s - 1, me_image, paw_comm )
+   !
+   me_paw    = mp_rank( paw_comm )
+   nproc_paw = mp_size( paw_comm )
+   !
+
    atoms: DO ia = ia_s, ia_e
       !
       i%a = ia                      ! atom's index
@@ -1339,6 +1355,12 @@ SUBROUTINE PAW_dpotential(dbecsum, becsum, int3, npe)
       i%l = upf(i%t)%lmax_rho+1 ! max ang.mom. in augmentation for ia
       !
       ifpaw: IF (upf(i%t)%tpawp) THEN
+!
+!    Initialize parallelization over the directions
+!
+         nx_loc = ldim_block( rad(i%t)%nx, nproc_paw, me_paw )
+         ix_s   = gind_block( 1, rad(i%t)%nx, nproc_paw, me_paw )
+         ix_e   = ix_s + nx_loc - 1
          !
          ! Arrays are allocated inside the cycle to allow reduced
          ! memory usage as differnt atoms have different meshes
@@ -1468,6 +1490,9 @@ SUBROUTINE PAW_dpotential(dbecsum, becsum, int3, npe)
     IF( mykey /= 0 ) int3 = 0.0_dp
     CALL mp_sum(int3, intra_image_comm)
 #endif
+
+   CALL mp_comm_free( paw_comm )
+
    CALL stop_clock('PAW_dpot')
 
 END SUBROUTINE PAW_dpotential
@@ -1512,7 +1537,7 @@ SUBROUTINE PAW_dxc_potential(i, drho_lm, rho_lm, rho_core, v_lm)
     ALLOCATE(v_rad(i%m,rad(i%t)%nx,nspin_mag))
     ALLOCATE(rho_rad(i%m,nspin_mag))
     !
-    DO ix = 1, rad(i%t)%nx
+    DO ix = ix_s, ix_e
 !
 ! *** LDA (and LSDA) part (no gradient correction) ***
 ! convert _lm density to real density along ix
@@ -1650,7 +1675,7 @@ SUBROUTINE PAW_dgcxc_potential(i,rho_lm,rho_core, drho_lm, v_lm)
        !
        !     GGA case - no spin polarization
        !
-       DO ix = 1,rad(i%t)%nx
+       DO ix = ix_s, ix_e
        !
           CALL PAW_lm2rad(i, ix, rho_lm, rho_rad, nspin_mag)
           CALL PAW_gradient(i, ix, rho_lm, rho_rad, rho_core, grad2, grad)
@@ -1695,7 +1720,7 @@ SUBROUTINE PAW_dgcxc_potential(i,rho_lm,rho_core, drho_lm, v_lm)
           drhoout_lm=drho_lm
        ENDIF
 
-       DO ix = 1,rad(i%t)%nx
+       DO ix = ix_s, ix_e
        !
           CALL PAW_lm2rad(i, ix, rhoout_lm, rho_rad, nspin_gga)
           CALL PAW_gradient(i, ix, rhoout_lm, rho_rad, rho_core, &
@@ -1816,7 +1841,7 @@ SUBROUTINE PAW_dgcxc_potential(i,rho_lm,rho_core, drho_lm, v_lm)
     !
     ! We need the divergence of h to calculate the last part of the exchange
     ! and correlation potential. First we have to convert H to its Y_lm expansion
-    DO ix = 1,rad(i%t)%nx
+    DO ix = ix_s, ix_e
        h_rad(1:i%m,3,ix,1:nspin_gga)=h_rad(1:i%m,3,ix,1:nspin_gga)&
                                                      /rad(i%t)%sin_th(ix)
     ENDDO
@@ -1883,7 +1908,9 @@ INTEGER :: ix, k, ipol, kpol      ! counter on mesh points
 
 IF (nspin /= 4) CALL errore('compute_rho_spin_lm','called in the wrong case',1)
 
-DO ix = 1, rad(i%t)%nx
+segni_rad=0.0_DP
+
+DO ix = ix_s, ix_e
    CALL PAW_lm2rad(i, ix, rho_lm, rho_rad, nspin)
    IF (with_small_so) CALL add_small_mag(i,ix,rho_rad)
    DO k=1, i%m
@@ -1911,6 +1938,10 @@ DO ix = 1, rad(i%t)%nx
    ENDDO
 ENDDO   
 CALL PAW_rad2lm(i, rhoout_rad, rhoout_lm, i%l, nspin_gga)
+
+#ifdef __PARA
+CALL mp_sum( segni_rad, paw_comm )
+#endif
 
 RETURN
 END SUBROUTINE compute_rho_spin_lm
@@ -1962,7 +1993,7 @@ IF (nspin /= 4) CALL errore('compute_pot_nonc','called in the wrong case',1)
 v_rad=0.0_DP
 IF (upf(i%t)%has_so.and.i%ae==1) g_rad=0.0_DP
 
-DO ix = 1, rad(i%t)%nx
+DO ix = ix_s, ix_e
    CALL PAW_lm2rad(i, ix, vout_lm, vout_rad, nspin_gga)
    CALL PAW_lm2rad(i, ix, rho_lm, rho_rad, nspin_mag)
    IF (with_small_so) CALL add_small_mag(i,ix,rho_rad)
@@ -2037,7 +2068,7 @@ integer :: ix, k, ipol      ! counter on mesh points
 
 IF (nspin /= 4) CALL errore('compute_drho_spin_lm','called in the wrong case',1)
 
-DO ix = 1, rad(i%t)%nx
+DO ix = ix_s, ix_e
    CALL PAW_lm2rad(i, ix, rho_lm, rho_rad, nspin)
    CALL PAW_lm2rad(i, ix, drho_lm, drho_rad, nspin)
 !
@@ -2123,7 +2154,7 @@ integer :: ix, k, ipol     ! counter on mesh points
 
 v_rad=0.0_DP
 
-DO ix = 1, rad(i%t)%nx
+DO ix = ix_s, ix_e
    CALL PAW_lm2rad(i, ix, vout_lm, vout_rad, nspin_gga)
    CALL PAW_lm2rad(i, ix, rho_lm, rho_rad, nspin)
    CALL PAW_lm2rad(i, ix, drho_lm, drho_rad, nspin)
