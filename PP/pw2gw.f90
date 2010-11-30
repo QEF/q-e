@@ -103,7 +103,7 @@ SUBROUTINE compute_gw( use_gmaps )
   USE symm_base, ONLY : s, nsym
   USE wvfct,     ONLY : npw, npwx, nbnd, igk, g2kin, wg, et
   USE control_flags, ONLY : gamma_only
-  USE gvect,         ONLY : gm, g, gg, ig_l2g, ecutwfc, nl
+  USE gvect,         ONLY : ngm, g, gg, ig_l2g, ecutwfc, nl
   USE fft_base,  ONLY: dfftp
   USE fft_interfaces, ONLY : fwfft, invfft
   USE klist ,        ONLY : nks, xk, wk
