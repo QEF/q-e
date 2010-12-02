@@ -10,11 +10,10 @@ include ../make.sys
 W90=wannier90-latest
 WANT=want-latest
 YAMBO=yambo-latest
+PLUMED=PLUMED-latest
 #
 # MAIN target
 #
-
-all: w90 want
 
 EXTLIBS=liblapack libblas libiotk
 
@@ -116,6 +115,30 @@ configure-yambo: touch-dummy
 	touch ./configure-yambo
 touch-dummy:
 	$(dummy-variable)
+###########################################################
+# plumed
+###########################################################
+
+plumed: test-plumed uncompress-plumed patch-plumed
+	if test -d ../PLUMED; then \
+	cd ../; $(MAKE) pw; $(MAKE) cp; fi
+	touch make-plumed
+test-plumed: touch-dummy
+	if test ! -e ../archive/$(PLUMED).tar.gz && test ! -d ../PLUMED; then \
+	echo "The release contains no PLUMED package"; fi 
+	touch ./test-plumed
+uncompress-plumed: touch-dummy
+	if (test -e archive/$(PLUMED).tar.gz) || (test ! -d ../PLUMED); then \
+	( gzip -dc ../archive/$(PLUMED).tar.gz | (cd ../; tar -xvf -)) ; \
+	( mv ../PLUMED-latest ../PLUMED) ; fi
+	touch ./uncompress-plumed
+patch-plumed: touch-dummy
+	if test -d ../PLUMED; then \
+	(cd ../PLUMED ; export plumedir="`pwd`" ; \
+	cp  patches/plumedpatch_qespresso.sh ../ ; \
+	cd ../ ; ./plumedpatch_qespresso.sh -patch) ; fi	
+	touch ./patch-plumed
+
 ##################################
 # extlibs
 ###################################
@@ -150,9 +173,18 @@ yambo_clean:
 yambo_veryclean:
 	if test -d ../YAMBO; then (rm -R -f ../YAMBO); fi
 	- rm -rf ./make-yambo ./configure-yambo ./uncompress-yambo
+plumed_clean:
+	if test -d ../PLUMED; then (cd ../PLUMED; \
+	export plumedir="`pwd`" ; \
+	cd ../ ; ./plumedpatch_qespresso.sh -revert); fi
+	cd ../PW ; $(MAKE) clean; cd ../CPV ; $(MAKE) clean
+	rm -rf ./make-plumed ./patch-plumed
+plumed_veryclean: plumed_clean
+	if test -d ../PLUMED; then (rm -R -f ../PLUMED); fi
+	rm -rf ./uncompress-plumed
 
 ##########################################################
 # general cleaning
 ##########################################################
-clean: w90_clean want_clean yambo_clean
-veryclean: w90_veryclean want_veryclean yambo_veryclean
+clean: w90_clean want_clean yambo_clean plumed_clean
+veryclean: w90_veryclean want_veryclean yambo_veryclean plumed_veryclean
