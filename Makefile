@@ -18,6 +18,7 @@ default :
 	@echo '  gipaw        magnetic response (NMR, EPR, ...)'
 	@echo '  w90          Maximally localised Wannier Functions'
 	@echo '  want         Quantum Transport with Wannier functions'
+	@echo '  plumed       Patch for calculating free-energy paths with pw or cp'
 	@echo '  gww          GW with Wannier Functions'
 	@echo '  yambo        electronic excitations with plane waves'
 	@echo '  tools        misc tools for data analysis'
@@ -184,6 +185,9 @@ want : touch-dummy
 yambo: touch-dummy
 	cd install ; $(MAKE) $(MFLAGS) --file=plugins_makefile $@
 
+plumed: touch-dummy
+	cd install ; $(MAKE) $(MFLAGS) --file=plugins_makefile $@
+
 touch-dummy :
 	$(dummy-variable)
 
@@ -236,6 +240,7 @@ clean :
 distclean veryclean : clean
 	- test -d extlibs && ( cd extlibs ; $(MAKE) veryclean)
 	- rm -rf make.sys
+	- rm -rf install/patch-plumed
 	- cd install ; rm -f config.log configure.msg config.status autom4te.cache \
 	CPV/version.h ChangeLog* intel.pcl */intel.pcl
 	- rm -f espresso.tar.gz
