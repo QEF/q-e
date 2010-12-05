@@ -64,9 +64,7 @@ MODULE gvect
        eigts2(:,:),   &! the phases e^{-iG*tau_s}
        eigts3(:,:)     !
   INTEGER, ALLOCATABLE  :: &
-       ig1(:),        &!
-       ig2(:),        &! the indices of G components
-       ig3(:)          !
+       mill(:,:)       ! the indices of G components
   !
 END MODULE gvect
 !

@@ -81,7 +81,7 @@ MODULE pw_restart
       USE klist,                ONLY : nks, nkstot, xk, ngk, wk, qnorm, &
                                        lgauss, ngauss, degauss, nelec, &
                                        two_fermi_energies, nelup, neldw
-      USE gvect,                ONLY : ngm, ngm_g, g, ig1,ig2,ig3, ecutwfc, dual
+      USE gvect,                ONLY : ngm, ngm_g, g, mill, ecutwfc, dual
       USE grid_dimensions,      ONLY : nr1, nr2, nr3
       USE basis,                ONLY : natomwfc
       USE gsmooth,              ONLY : ngms_g
@@ -228,9 +228,9 @@ MODULE pw_restart
       !
       DO ig = 1, ngm
          !
-         itmp(1,ig_l2g(ig)) = ig1(ig)
-         itmp(2,ig_l2g(ig)) = ig2(ig)
-         itmp(3,ig_l2g(ig)) = ig3(ig)
+         itmp(1,ig_l2g(ig)) = mill(1,ig)
+         itmp(2,ig_l2g(ig)) = mill(2,ig)
+         itmp(3,ig_l2g(ig)) = mill(3,ig)
          !
       END DO
       !

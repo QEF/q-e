@@ -582,9 +582,9 @@ subroutine read_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
 
   itmp_g = 0
   do  ig = 1, ngm
-    itmp_g( 1, ig_l2g( ig ) ) = ig1( ig )
-    itmp_g( 2, ig_l2g( ig ) ) = ig2( ig )
-    itmp_g( 3, ig_l2g( ig ) ) = ig3( ig )
+    itmp_g( 1, ig_l2g( ig ) ) = mill(1,ig )
+    itmp_g( 2, ig_l2g( ig ) ) = mill(2,ig )
+    itmp_g( 3, ig_l2g( ig ) ) = mill(3,ig )
   end do
   call mp_sum( itmp_g , intra_pool_comm )
   !

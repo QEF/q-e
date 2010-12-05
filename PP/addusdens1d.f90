@@ -19,7 +19,7 @@ SUBROUTINE addusdens1d (plan, prho)
   USE cell_base, ONLY: alat, omega, celldm
   USE ions_base, ONLY: nat, ntyp => nsp, ityp
   USE grid_dimensions, ONLY: nr3, nr3x, nrxx
-  USE gvect, ONLY: nl, eigts1, eigts2, eigts3, ig1,ig2,ig3
+  USE gvect, ONLY: nl, eigts1, eigts2, eigts3, mill
   USE lsda_mod, ONLY: current_spin
   USE uspp, ONLY: becsum
   USE uspp_param, ONLY: upf, lmaxq, nh
@@ -86,9 +86,9 @@ SUBROUTINE addusdens1d (plan, prho)
                        !
                        DO ig = 1, ngm1d
 
-                          skk = eigts1 (ig1 (ig1dto3d (ig) ), na) * &
-                                eigts2 (ig2 (ig1dto3d (ig) ), na) * &
-                                eigts3 (ig3 (ig1dto3d (ig) ), na)
+                          skk = eigts1 (mill(1,ig1dto3d (ig) ), na) * &
+                                eigts2 (mill(2,ig1dto3d (ig) ), na) * &
+                                eigts3 (mill(3,ig1dto3d (ig) ), na)
                           aux (ig) = aux (ig) + qgm (ig) * skk * &
                                becsum (ijh, na, current_spin)
                        ENDDO

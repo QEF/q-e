@@ -12,7 +12,7 @@ SUBROUTINE clean_pw( lflag )
   ! ... This routine deallocates most dynamically allocated arrays
   !
   USE ions_base,            ONLY : deallocate_ions_base
-  USE gvect,                ONLY : g, gg, gl, nl, nlm, igtongl, ig1, ig2, ig3, &
+  USE gvect,                ONLY : g, gg, gl, nl, nlm, igtongl, mill, &
                                    eigts1, eigts2, eigts3
   USE gsmooth,              ONLY : nls, nlsm, doublegrid
   USE fixed_occ,            ONLY : f_inp
@@ -92,9 +92,7 @@ SUBROUTINE clean_pw( lflag )
      IF ( ALLOCATED( nlm ) )     DEALLOCATE( nlm )
   END IF
   IF ( ALLOCATED( igtongl ) )    DEALLOCATE( igtongl )  
-  IF ( ALLOCATED( ig1 ) )        DEALLOCATE( ig1 )
-  IF ( ALLOCATED( ig2 ) )        DEALLOCATE( ig2 )
-  IF ( ALLOCATED( ig3 ) )        DEALLOCATE( ig3 )
+  IF ( ALLOCATED( mill ) )       DEALLOCATE( mill )
   call destroy_scf_type(rho)
   call destroy_scf_type(v)
   call destroy_scf_type(vnew)

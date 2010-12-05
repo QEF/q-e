@@ -43,7 +43,7 @@ subroutine addusdens_g(rho)
   USE fft_base,             ONLY : dfftp
   USE fft_interfaces,       ONLY : invfft
   USE gvect,                ONLY : ngm, nl, nlm, gg, g, &
-                                   eigts1, eigts2, eigts3, ig1, ig2, ig3
+                                   eigts1, eigts2, eigts3, mill
   USE noncollin_module,     ONLY : noncolin, nspin_mag
   USE uspp,                 ONLY : becsum, okvan
   USE uspp_param,           ONLY : upf, lmaxq, nh
@@ -106,9 +106,9 @@ subroutine addusdens_g(rho)
 #endif
                     do is = 1, nspin_mag
                        do ig = 1, ngm
-                          skk = eigts1 (ig1 (ig), na) * &
-                                eigts2 (ig2 (ig), na) * &
-                                eigts3 (ig3 (ig), na)
+                          skk = eigts1 (mill (1,ig), na) * &
+                                eigts2 (mill (2,ig), na) * &
+                                eigts3 (mill (3,ig), na)
                           aux(ig,is)=aux(ig,is) + qgm(ig)*skk*becsum(ijh,na,is)
                        enddo
                     enddo

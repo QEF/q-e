@@ -12,7 +12,7 @@ subroutine calculate_wing(n_set, orthonorm)
  USE kinds,                ONLY : DP
  USE wannier_gw
  USE mp,                   ONLY : mp_bcast, mp_sum
- USE gvect,                ONLY : ig1, ig2,ig3, ngm, gstart,g
+ USE gvect,                ONLY : mill, ngm, gstart,g
  USE cell_base,            ONLY : tpiba
 
  implicit none
@@ -114,20 +114,14 @@ subroutine calculate_wing(n_set, orthonorm)
      call mp_sum(e_head_g0(:))
      do ig=gstart,ngm
         do igg=1,ngm_k
-           if(ig1(ig)==mill_k(1,igg) .and. ig2(ig)==mill_k(2,igg) .and. ig3(ig)==mill_k(3,igg)) then
+           if ( mill(1,ig)==mill_k(1,igg) .and. &
+                mill(2,ig)==mill_k(2,igg) .and. &
+                mill(3,ig)==mill_k(3,igg) ) then
               e_head(ig, ii) = e_head_g0(igg)
            endif
         enddo
      enddo
   enddo
-
-!   do ig=gstart,ngm
-!      do igg=1,ngm_k
-!         if(ig1(ig)==mill_k(1,igg) .and. ig2(ig)==mill_k(2,igg) .and. ig3(ig)==mill_k(3,igg)) then
-!            e_head(ig, 1:n_g+1) = e_head_g(1:n_g+1, igg)
-!         endif
-!      enddo
-!   enddo
 
   deallocate(e_head_g0)
 !loop on n_set groups

@@ -19,7 +19,7 @@ subroutine compute_dvloc (mode, dvlocin)
   USE kinds,     ONLY : DP
   USE fft_base,  ONLY : dffts
   USE fft_interfaces, ONLY: invfft
-  USE gvect,     ONLY : eigts1, eigts2, eigts3, ig1,ig2,ig3, g
+  USE gvect,     ONLY : eigts1, eigts2, eigts3, mill, g
   USE gsmooth,   ONLY : ngms, nls
   USE cell_base, ONLY : tpiba
   USE ions_base, ONLY : nat, ityp
@@ -57,8 +57,8 @@ subroutine compute_dvloc (mode, dvlocin)
         u3 = u (mu + 3, mode)
         gu0 = xq (1) * u1 + xq (2) * u2 + xq (3) * u3
         do ig = 1, ngms
-           gtau = eigts1 (ig1 (ig), na) * eigts2 (ig2 (ig), na) * eigts3 ( &
-                ig3 (ig), na)
+           gtau = eigts1 (mill(1,ig), na) * eigts2 (mill(2,ig), na) * &
+                  eigts3 (mill(3,ig), na)
            gu = gu0 + g (1, ig) * u1 + g (2, ig) * u2 + g (3, ig) * u3
            dvlocin (nls (ig) ) = dvlocin (nls (ig) ) + vlocq (ig, nt) &
                 * gu * fact * gtau

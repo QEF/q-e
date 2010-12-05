@@ -18,7 +18,7 @@ subroutine gen_us_dj (ik, dvkb)
   USE ions_base,  ONLY : nat, ntyp => nsp, ityp, tau
   USE cell_base,  ONLY : tpiba
   USE klist,      ONLY : xk
-  USE gvect,      ONLY : ig1, ig2, ig3, eigts1, eigts2, eigts3, g
+  USE gvect,      ONLY : mill, eigts1, eigts2, eigts3, g
   USE wvfct,      ONLY : npw, npwx, igk
   USE uspp,       ONLY : nkb, indv, nhtol, nhtolm
   USE us,         ONLY : nqx, tab, tab_d2y, dq, spline_ps
@@ -127,9 +127,9 @@ subroutine gen_us_dj (ik, dvkb)
            phase = CMPLX(cos (arg), - sin (arg) ,kind=DP)
            do ig = 1, npw
               iig = igk (ig)
-              sk (ig) = eigts1 (ig1 (iig), na) * &
-                        eigts2 (ig2 (iig), na) * &
-                        eigts3 (ig3 (iig), na) * phase
+              sk (ig) = eigts1 (mill (1,iig), na) * &
+                        eigts2 (mill (2,iig), na) * &
+                        eigts3 (mill (3,iig), na) * phase
            enddo
            do ih = 1, nh (nt)
               nb = indv (ih, nt)

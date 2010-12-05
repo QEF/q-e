@@ -18,8 +18,7 @@ subroutine addusforce (forcenl)
   USE ions_base,  ONLY : nat, ntyp => nsp, ityp
   USE cell_base,  ONLY : omega, tpiba
   USE fft_base,   ONLY : dfftp
-  USE gvect,      ONLY : ngm, &
-                         nl, nlm, gg, g, eigts1, eigts2, eigts3, ig1, ig2, ig3
+  USE gvect,      ONLY : ngm, nl, nlm, gg, g, eigts1, eigts2, eigts3, mill
   USE lsda_mod,   ONLY : nspin
   USE scf,        ONLY : v, vltot
   USE uspp,       ONLY : becsum, okvan
@@ -92,9 +91,9 @@ subroutine addusforce (forcenl)
                     !
                     do is = 1, nspin
                        do ig = 1, ngm
-                          cfac = aux (ig, is) * CONJG(eigts1 (ig1 (ig), na) *&
-                                                       eigts2 (ig2 (ig), na) *&
-                                                       eigts3 (ig3 (ig), na) )
+                          cfac = aux (ig, is) * CONJG(eigts1 (mill(1,ig), na) *&
+                                                      eigts2 (mill(2,ig), na) *&
+                                                      eigts3 (mill(3,ig), na) )
                           aux1 (ig, 1) = g (1, ig) * cfac
                           aux1 (ig, 2) = g (2, ig) * cfac
                           aux1 (ig, 3) = g (3, ig) * cfac

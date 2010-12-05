@@ -29,7 +29,7 @@ subroutine addusddens (drhoscf, dbecsum, mode0, npe, iflag)
   USE kinds, only : DP
   use fft_base,  only: dfftp
   use fft_interfaces, only: invfft
-  USE gvect,  ONLY : gg, ngm, nl, g, eigts1, eigts2, eigts3, ig1, ig2, ig3
+  USE gvect,  ONLY : gg, ngm, nl, g, eigts1, eigts2, eigts3, mill
   USE uspp,     ONLY : okvan, becsum
   USE cell_base, ONLY : tpiba
   USE ions_base, ONLY : nat, ityp, ntyp => nsp
@@ -128,9 +128,9 @@ subroutine addusddens (drhoscf, dbecsum, mode0, npe, iflag)
                     ! calculate the structure factor
                     !
                     do ig = 1, ngm
-                       sk (ig) = eigts1 (ig1 (ig), na) * &
-                                 eigts2 (ig2 (ig), na) * &
-                                 eigts3 (ig3 (ig), na) * &
+                       sk (ig) = eigts1 (mill(1,ig), na) * &
+                                 eigts2 (mill(2,ig), na) * &
+                                 eigts3 (mill(3,ig), na) * &
                                  eigqts (na) * qgm (ig)
                     enddo
                     !

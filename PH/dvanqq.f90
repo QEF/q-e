@@ -27,7 +27,7 @@ subroutine dvanqq
   USE ions_base, ONLY : nat, ityp, ntyp => nsp
   USE fft_base,   ONLY: dfftp
   USE fft_interfaces, ONLY: fwfft
-  use gvect, only : ngm, gg, nl, g, ig1, ig2, ig3, eigts1, eigts2, eigts3
+  use gvect, only : ngm, gg, nl, g, mill, eigts1, eigts2, eigts3
   use spin_orb, only : lspinorb
   use scf, only : v, vltot
   use noncollin_module, ONLY : noncolin, nspin_mag
@@ -147,9 +147,9 @@ subroutine dvanqq
               do nb = 1, nat
                  if (ityp (nb) == ntb) then
                     do ig = 1, ngm
-                       aux1 (ig) = qgmq (ig) * eigts1 (ig1 (ig), nb) &
-                                             * eigts2 (ig2 (ig), nb) &
-                                             * eigts3 (ig3 (ig), nb)
+                       aux1 (ig) = qgmq (ig) * eigts1 (mill(1,ig), nb) &
+                                             * eigts2 (mill(2,ig), nb) &
+                                             * eigts3 (mill(3,ig), nb)
                     enddo
                     do na = 1, nat
                        fact = eigqts (na) * CONJG(eigqts (nb) )
@@ -158,9 +158,9 @@ subroutine dvanqq
                        !
                        nta = ityp (na)
                        do ig=1, ngm
-                          sk(ig)=vlocq(ig,nta) * eigts1(ig1 (ig), na) &
-                                               * eigts2(ig2 (ig), na) &
-                                               * eigts3(ig3 (ig), na)
+                          sk(ig)=vlocq(ig,nta) * eigts1(mill(1,ig), na) &
+                                               * eigts2(mill(2,ig), na) &
+                                               * eigts3(mill(3,ig), na)
                        enddo
                        do ipol = 1, 3
                           do ig=1, ngm
@@ -186,9 +186,9 @@ subroutine dvanqq
                     enddo
                     if (.not.lgamma) then
                        do ig = 1, ngm
-                          aux1 (ig) = qgm (ig) * eigts1 (ig1 (ig), nb) &
-                                               * eigts2 (ig2 (ig), nb) &
-                                               * eigts3 (ig3 (ig), nb)
+                          aux1 (ig) = qgm (ig) * eigts1 (mill(1,ig), nb) &
+                                               * eigts2 (mill(2,ig), nb) &
+                                               * eigts3 (mill(3,ig), nb)
                        enddo
                     endif
                     do is = 1, nspin_mag

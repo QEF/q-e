@@ -24,7 +24,7 @@ subroutine dvqpsi_us (ik, uact, addnlcc)
   USE cell_base, ONLY : tpiba
   USE fft_base,   ONLY: dfftp, dffts
   USE fft_interfaces, ONLY: fwfft, invfft
-  USE gvect,     ONLY : eigts1, eigts2, eigts3, ig1,ig2,ig3, g, nl, &
+  USE gvect,     ONLY : eigts1, eigts2, eigts3, mill, g, nl, &
                         ngm
   USE gsmooth,   ONLY : ngms, doublegrid, nls
   USE lsda_mod,  ONLY : lsda, isk
@@ -96,8 +96,8 @@ subroutine dvqpsi_us (ik, uact, addnlcc)
         u3 = uact (mu + 3)
         gu0 = xq (1) * u1 + xq (2) * u2 + xq (3) * u3
         do ig = 1, ngms
-           gtau = eigts1 (ig1 (ig), na) * eigts2 (ig2 (ig), na) * eigts3 ( &
-                ig3 (ig), na)
+           gtau = eigts1 (mill(1,ig), na) * eigts2 (mill(2,ig), na) * &
+                  eigts3 (mill(3,ig), na)
            gu = gu0 + g (1, ig) * u1 + g (2, ig) * u2 + g (3, ig) * u3
            aux1 (nls (ig) ) = aux1 (nls (ig) ) + vlocq (ig, nt) * gu * &
                 fact * gtau
@@ -121,9 +121,9 @@ subroutine dvqpsi_us (ik, uact, addnlcc)
             gu0 = xq(1)*u1 +xq(2)*u2+xq(3)*u3
             if (upf(nt)%nlcc) then
                do ig = 1,ngm
-                  gtau = eigts1(ig1(ig),na)*   &
-                         eigts2(ig2(ig),na)*   &
-                         eigts3(ig3(ig),na)
+                  gtau = eigts1(mill(1,ig),na)*   &
+                         eigts2(mill(2,ig),na)*   &
+                         eigts3(mill(3,ig),na)
                   gu = gu0+g(1,ig)*u1+g(2,ig)*u2+g(3,ig)*u3
                   aux(nl(ig))=aux(nl(ig))+drc(ig,nt)*gu*fact*gtau
                enddo

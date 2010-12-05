@@ -19,7 +19,7 @@ SUBROUTINE ggen()
    USE cell_base,          ONLY : at, bg
    USE reciprocal_vectors, ONLY : ig_l2g
    USE gvect,              ONLY : g, gg, ngm, ngm_g, gcutm, &
-                                  ig1, ig2, ig3,  nl, gstart, gl, ngl, igtongl
+                                  mill,  nl, gstart, gl, ngl, igtongl
    USE gsmooth,            ONLY : ngms, gcutms, ngms_g, nls
    USE control_flags,      ONLY : gamma_only
    USE cellmd,             ONLY : lmovecell
@@ -162,19 +162,19 @@ SUBROUTINE ggen()
    !
    DO ng = 1, ngm
       n1 = nint (sum(g (:, ng) * at (:, 1))) + 1
-      ig1 (ng) = n1 - 1
+      mill (1,ng) = n1 - 1
       n1s = n1
       IF (n1<1) n1 = n1 + dfftp%nr1
       IF (n1s<1) n1s = n1s + dffts%nr1
 
       n2 = nint (sum(g (:, ng) * at (:, 2))) + 1
-      ig2 (ng) = n2 - 1
+      mill (2,ng) = n2 - 1
       n2s = n2
       IF (n2<1) n2 = n2 + dfftp%nr2
       IF (n2s<1) n2s = n2s + dffts%nr2
 
       n3 = nint (sum(g (:, ng) * at (:, 3))) + 1
-      ig3 (ng) = n3 - 1
+      mill (3,ng) = n3 - 1
       n3s = n3
       IF (n3<1) n3 = n3 + dfftp%nr3
       IF (n3s<1) n3s = n3s + dffts%nr3
@@ -245,7 +245,7 @@ SUBROUTINE index_minusg()
    !     compute indices nlm and nlms giving the correspondence
    !     between the fft mesh points and -G (for gamma-only calculations)
    !
-   USE gvect,   ONLY : ngm, nlm, ig1, ig2, ig3
+   USE gvect,   ONLY : ngm, nlm, mill
    USE gsmooth, ONLY : nlsm, ngms
    USE fft_base,  ONLY : dfftp, dffts
    IMPLICIT NONE
@@ -254,20 +254,20 @@ SUBROUTINE index_minusg()
    !
    !
    DO ng = 1, ngm
-      n1 = -ig1 (ng) + 1
+      n1 = -mill (1,ng) + 1
       n1s = n1
       IF (n1 < 1) THEN
          n1 = n1 + dfftp%nr1
          n1s = n1s + dffts%nr1
       END IF
 
-      n2 = -ig2 (ng) + 1
+      n2 = -mill (2,ng) + 1
       n2s = n2
       IF (n2 < 1) THEN
          n2 = n2 + dfftp%nr2
          n2s = n2s + dffts%nr2
       END IF
-      n3 = -ig3 (ng) + 1
+      n3 = -mill (3,ng) + 1
       n3s = n3
       IF (n3 < 1) THEN
          n3 = n3 + dfftp%nr3

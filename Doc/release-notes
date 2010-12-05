@@ -21,10 +21,10 @@ Incompatible changes in CVS version:
 	Old (CP)	New (PW)	Old (PW)	New (CP)
 	nnr/nnrx	nrxx		nrx[123]	nr[123]x
 	nnrs/nnrsx	nrxxs		nrx[123]s	nr[123]sx
-	ngml		ngl		call cft3 and	call fwfft or
-	ngmt		ngm_g		     cft3s	     invfft
-	ngs 		ngms
-	g  		gg
+	ngml		ngl		ig[123]		mill
+	ngmt		ngm_g
+	ngs 		ngms		call cft3 and	call fwfft or
+	g  		gg		     cft3s	     invfft
 	gx		g
 	gcuts 		gcutms
 	ecutp 		ecutrho
@@ -51,7 +51,7 @@ Fixed in version 4.2.1:
   * XC potential in CP was not initialized when condition (rho > 10^(-30)) 
     was not satisfied; this is usually harmless but potentially dangerous
   * CP could not read data written from PW in spin-polarized cases
-  * In at least some cases, the cpmd2upf was yielding incorrect PPs
+  * In at least some cases, cpmd2upf.x was yielding incorrect PPs
   * support for MKL incomplete (only in packaged version, not in cvs)
   * glitch in pw2wannier if / missing at the end of outdir
   * linking error when compiling qexml

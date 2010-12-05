@@ -21,7 +21,7 @@ subroutine gen_at_dy ( ik, natw, lmax_wfc, u, dwfcat )
    USE ions_base,  ONLY : nat, ntyp => nsp, ityp, tau
    USE cell_base,  ONLY : omega, at, bg, tpiba
    USE klist,      ONLY : xk
-   USE gvect,      ONLY : ig1, ig2, ig3, eigts1, eigts2, eigts3, g
+   USE gvect,      ONLY : mill, eigts1, eigts2, eigts3, g
    USE wvfct,      ONLY : npw, npwx, igk
    USE us,         ONLY : tab_at, dq
    USE uspp_param, ONLY : upf
@@ -101,9 +101,9 @@ subroutine gen_at_dy ( ik, natw, lmax_wfc, u, dwfcat )
       phase=CMPLX(cos(arg),-sin(arg),kind=DP)
       do ig =1,npw
          iig = igk(ig)
-         sk(ig) = eigts1(ig1(iig),na) * &
-                  eigts2(ig2(iig),na) * &
-                  eigts3(ig3(iig),na) * phase
+         sk(ig) = eigts1(mill(1,iig),na) * &
+                  eigts2(mill(2,iig),na) * &
+                  eigts3(mill(3,iig),na) * phase
       end do
       do nb = 1,upf(nt)%nwfc
          if (upf(nt)%oc(nb) >= 0.d0) then

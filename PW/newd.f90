@@ -21,7 +21,7 @@ SUBROUTINE newq(vr,deeq,skip_vltot)
   USE cell_base,            ONLY : omega
   USE fft_base,             ONLY : dfftp
   USE fft_interfaces,       ONLY : fwfft
-  USE gvect,                ONLY : g, gg, ngm, gstart, ig1, ig2, ig3, &
+  USE gvect,                ONLY : g, gg, ngm, gstart, mill, &
                                    eigts1, eigts2, eigts3, nl
   USE lsda_mod,             ONLY : nspin
   USE scf,                  ONLY : vltot
@@ -130,9 +130,9 @@ SUBROUTINE newq(vr,deeq,skip_vltot)
                     !
                     ! ... The Q(r) for this specific atom
                     !
-                    qgm_na(1:ngm) = qgm(1:ngm) * eigts1(ig1(1:ngm),na) &
-                                               * eigts2(ig2(1:ngm),na) &
-                                               * eigts3(ig3(1:ngm),na)
+                    qgm_na(1:ngm) = qgm(1:ngm) * eigts1(mill(1,1:ngm),na) &
+                                               * eigts2(mill(2,1:ngm),na) &
+                                               * eigts3(mill(3,1:ngm),na)
                     !
                     ! ... and the product with the Q functions
                     !

@@ -21,7 +21,7 @@ SUBROUTINE atomic_wfc_nc_proj (ik, wfcatom)
   USE cell_base,  ONLY : omega, tpiba
   USE ions_base,  ONLY : nat, ntyp => nsp, ityp, tau
   USE basis,      ONLY : natomwfc
-  USE gvect,      ONLY : ig1, ig2, ig3, eigts1, eigts2, eigts3, g
+  USE gvect,      ONLY : mill, eigts1, eigts2, eigts3, g
   USE klist,      ONLY : xk
   USE wvfct,      ONLY : npwx, npw, nbnd, igk
   USE us,         ONLY : tab_at, dq
@@ -108,8 +108,9 @@ SUBROUTINE atomic_wfc_nc_proj (ik, wfcatom)
      !
      DO ig = 1, npw
         iig = igk (ig)
-        sk (ig) = kphase * eigts1 (ig1 (iig), na) * eigts2 (ig2 (iig), na) * &
-                           eigts3 (ig3 (iig), na)
+        sk (ig) = kphase * eigts1 (mill(1,iig), na) * &
+                           eigts2 (mill(2,iig), na) * &
+                           eigts3 (mill(3,iig), na)
      ENDDO
      !
      nt = ityp (na)

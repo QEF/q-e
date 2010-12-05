@@ -21,8 +21,7 @@ subroutine newdq (dvscf, npe)
   USE cell_base,            ONLY : omega
   USE fft_base,             ONLY : dfftp
   USE fft_interfaces,       ONLY : fwfft
-  USE gvect,                ONLY : g, gg, ngm, ig1, ig2, ig3, &
-                                   eigts1, eigts2, eigts3, nl
+  USE gvect,                ONLY : g, gg, ngm, mill, eigts1, eigts2, eigts3, nl
   USE uspp,                 ONLY: okvan
   USE uspp_param,           ONLY : upf, lmaxq, nh, nhm
   USE paw_variables,        ONLY : okpaw
@@ -113,9 +112,9 @@ subroutine newdq (dvscf, npe)
                  do na = 1, nat
                     if (ityp (na) == nt) then
                        do ig = 1, ngm
-                          aux1(ig) = qgm(ig) * eigts1(ig1(ig),na) * &
-                                               eigts2(ig2(ig),na) * &
-                                               eigts3(ig3(ig),na) * &
+                          aux1(ig) = qgm(ig) * eigts1(mill(1,ig),na) * &
+                                               eigts2(mill(2,ig),na) * &
+                                               eigts3(mill(3,ig),na) * &
                                                eigqts(na)
                        enddo
                        do is = 1, nspin_mag

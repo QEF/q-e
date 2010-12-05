@@ -18,7 +18,7 @@ subroutine addusldos (ldos, becsum1)
   USE ions_base, ONLY : nat, ityp, ntyp => nsp
   use fft_base,  only: dfftp
   use fft_interfaces, only: invfft
-  USE gvect, ONLY : nl, eigts1, eigts2, eigts3, ig1, ig2, ig3, gg, g, ngm
+  USE gvect, ONLY : nl, eigts1, eigts2, eigts3, mill, gg, g, ngm
   USE wavefunctions_module,  ONLY: psic
   USE uspp, ONLY: okvan
   USE uspp_param, ONLY: upf, lmaxq, nh, nhm
@@ -69,9 +69,9 @@ subroutine addusldos (ldos, becsum1)
                        do ig = 1, ngm
                           aux (ig, is) = aux (ig, is) + &
                                          qgm (ig) * becsum1 (ijh, na, is) * &
-                                       ( eigts1 (ig1 (ig), na) * &
-                                         eigts2 (ig2 (ig), na) * &
-                                         eigts3 (ig3 (ig), na) )
+                                       ( eigts1 (mill(1,ig), na) * &
+                                         eigts2 (mill(2,ig), na) * &
+                                         eigts3 (mill(3,ig), na) )
                        enddo
                     enddo
                  endif

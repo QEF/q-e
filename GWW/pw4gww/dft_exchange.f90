@@ -764,7 +764,7 @@ subroutine addus_charge(r_ij,becp_iw,becp_jw)
   USE fft_base,             ONLY : dfftp
   USE fft_interfaces,       ONLY : fwfft, invfft
   USE gvect,                ONLY : ngm, nl, nlm, gg, g, &
-                                   eigts1, eigts2, eigts3, ig1, ig2, ig3
+                                   eigts1, eigts2, eigts3, mill
   USE lsda_mod,             ONLY : nspin
   USE scf,                  ONLY : rho
   USE uspp,                 ONLY : okvan, nkb
@@ -855,9 +855,9 @@ subroutine addus_charge(r_ij,becp_iw,becp_jw)
                     !
                     do is = 1, nspin
                        do ig = 1, ngm
-                          skk = eigts1 (ig1 (ig), na) * &
-                                eigts2 (ig2 (ig), na) * &
-                                eigts3 (ig3 (ig), na)
+                          skk = eigts1 (mill (1,ig), na) * &
+                                eigts2 (mill (2,ig), na) * &
+                                eigts3 (mill (3,ig), na)
                           aux(ig,is)=aux(ig,is) + qgm(ig)*skk*&
                                   &conjg(becp_iw(ind_cor(nt,na,ih)))*becp_jw(ind_cor(nt,na,jh))
                        enddo

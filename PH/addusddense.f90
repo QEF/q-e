@@ -23,7 +23,7 @@ subroutine addusddense (drhoscf, dbecsum)
   USE ions_base, ONLY : nat, ityp, ntyp => nsp
   use fft_base,  only: dfftp
   use fft_interfaces, only: invfft
-  USE gvect, ONLY : nl, g, gg, ngm, eigts1, eigts2, eigts3, ig1, ig2, ig3
+  USE gvect, ONLY : nl, g, gg, ngm, eigts1, eigts2, eigts3, mill
   USE uspp, ONLY: okvan
   USE uspp_param, ONLY: upf, lmaxq, nh, nhm
   USE noncollin_module, ONLY : nspin_mag
@@ -90,8 +90,8 @@ subroutine addusddense (drhoscf, dbecsum)
                     ! calculate the structure factor
                     !
                     do ig = 1, ngm
-                       sk(ig)=eigts1(ig1(ig),na)*eigts2(ig2(ig),na) &
-                             *eigts3(ig3(ig),na)*eigqts(na)*qgm(ig)
+                       sk(ig)=eigts1(mill(1,ig),na)*eigts2(mill(2,ig),na) &
+                             *eigts3(mill(3,ig),na)*eigqts(na)*qgm(ig)
                     enddo
                     !
                     !  And qgmq and becp and dbecq

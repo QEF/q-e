@@ -14,8 +14,7 @@ SUBROUTINE allocate_fft
   !     these dimensions
   !
   USE io_global, ONLY : stdout
-  USE gvect,     ONLY : ngm, g, gg, nl, nlm, &
-       ig1, ig2, ig3, igtongl, ecutwfc
+  USE gvect,     ONLY : ngm, g, gg, nl, nlm, mill, igtongl, ecutwfc
   USE gsmooth,   ONLY : ngms, nls, nlsm, doublegrid
   USE grid_dimensions,        ONLY : nr1, nr2, nr3, nrxx
   USE smooth_grid_dimensions, ONLY : nr1s, nr2s, nr3s, nrxxs
@@ -64,12 +63,10 @@ SUBROUTINE allocate_fft
   !
   ALLOCATE (g( 3, ngm))
   ALLOCATE (gg( ngm))
-  ALLOCATE (nl(  ngm))
+  ALLOCATE (nl( ngm))
   IF (gamma_only) ALLOCATE (nlm(ngm))
-  ALLOCATE (igtongl(  ngm))
-  ALLOCATE (ig1(  ngm))
-  ALLOCATE (ig2(  ngm))
-  ALLOCATE (ig3(  ngm))
+  ALLOCATE (igtongl( ngm))
+  ALLOCATE (mill(3, ngm))
 
   CALL create_scf_type(rho)
   CALL create_scf_type(v,    do_not_allocate_becsum = .true.)
