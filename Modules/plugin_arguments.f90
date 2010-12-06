@@ -1,18 +1,18 @@
 !
-! Copyright (C) 2002-2009 Quantum ESPRESSO group
+! Copyright (C) 2010 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-!
 !----------------------------------------------------------------------------
 SUBROUTINE plugin_arguments()
   !-----------------------------------------------------------------------------
   !
-  ! the name of each new plugin has to be set here. Its use or not
-  ! is controlled by its presence as argument
-  !
+  ! check for presence of command-line option "-plugin_name" or "--plugin_name"
+  ! where "plugin_name" has to be set here. If such option is found, variable
+  ! "use_plugin_name" is set and usage of "plugin_name" is thus enabled.
+  ! Currently implemented: "plumed" (case insensitive)
   !
   USE kinds,         ONLY : DP
   !
@@ -25,9 +25,9 @@ SUBROUTINE plugin_arguments()
   !
   IMPLICIT NONE
   !
-  INTEGER  :: iiarg, nargs, iargc, ierr
-  CHARACTER (len=50) :: arg
-  CHARACTER (len=256) :: np
+  INTEGER  :: iiarg, nargs, iargc, ierra, l
+  CHARACTER (len=1), EXTERNAL ::  lowercase
+  CHARACTER (len=256) :: arg
   !
   !
 #if defined(__ABSOFT)
@@ -36,16 +36,26 @@ SUBROUTINE plugin_arguments()
 #endif
   !
   nargs = iargc()
+  ! add here more plugins
+  use_plumed = .false.
   !
-  !
-  DO iiarg = 1, ( nargs )
+  DO iiarg = 1, nargs 
     CALL getarg( iiarg, plugin_name)
-    IF((TRIM(plugin_name)=='-plumed').or.(TRIM(plugin_name)=='-PLUMED')) THEN
-      use_plumed = .true.
-      CALL mp_bcast( use_plumed, intra_image_comm )
+    IF ( plugin_name(1:1) == '-') THEN
+       arg = ' '
+       DO l=2, LEN_TRIM (plugin_name)
+          arg(l-1:l-1) = lowercase (plugin_name(l:l))
+       END DO
+       write(0,*) "plugin_name: ", trim(arg)
+       ! add here more plugins
+       IF ( TRIM(arg)=='plumed' .OR. TRIM(arg)=='-plumed' ) THEN
+          use_plumed = .true.
+       END IF
     ENDIF
   ENDDO
-  !
+  ! add here more plugins
+  CALL mp_bcast( use_plumed, intra_image_comm )
+  write(0,*) "use_plumed= ", use_plumed
   !
   RETURN
   !
