@@ -788,8 +788,8 @@ SUBROUTINE gchkrefold( ng, mill_l, nr1, nr2, nr3 )
      &        mill_l(3,ig).lt.-nr3m1.or.mill_l(3,ig).gt.nr3m1      )            &
      &        nrefold=nrefold+1
       end do
-      if (nrefold.ne.0) WRITE( stdout, '('' WARNING: '',i6,                   &
-     &     '' G-vectors refolded into FFT grid (ng,nrefold)'')') ng, nrefold
+      if (nrefold.ne.0) WRITE( stdout, '(" WARNING: ",i6,                   &
+     &     " G-vectors refolded into FFT grid (ng,nrefold)")') ng, nrefold
 
   RETURN
 END SUBROUTINE gchkrefold

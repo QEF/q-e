@@ -1394,7 +1394,7 @@ MODULE realus
     SUBROUTINE setqfcorrptsecond( qfcoef, rho, r, nqf, ltot )
       !------------------------------------------------------------------------
       !
-      ! ... On output it contains  Q''
+      ! ... On output it contains  Q
       !
       IMPLICIT NONE
       !

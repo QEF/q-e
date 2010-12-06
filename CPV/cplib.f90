@@ -1581,8 +1581,8 @@ END FUNCTION
       CALL mp_sum( spin1, intra_image_comm )
       spin1 = spin0 + omega/(nr1*nr2*nr3)*spin1
       IF (frac) THEN
-         WRITE( stdout,'(/'' Spin contamination: s(s+1)='',f5.2,'' (Becke) '',&
-     &                             f5.2,'' (expected)'')')              &
+         WRITE( stdout,'(/" Spin contamination: s(s+1)=",f5.2," (Becke) ",&
+     &                             f5.2," (expected)")')              &
      &          spin1, ABS(fup-fdw)/2.d0*(ABS(fup-fdw)/2.d0+1.d0)
          RETURN
       END IF

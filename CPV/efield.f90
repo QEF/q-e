@@ -96,7 +96,7 @@ CONTAINS
     IMPLICIT NONE
     COMPLEX(DP), INTENT(IN)  :: eigr(:,:)
     REAL(DP), INTENT(IN)  :: tau0(:,:)
-    if(ionode) write(stdout,'(''Initialize Berry phase electric field'')')
+    if(ionode) write(stdout,'("Initialize Berry phase electric field")')
     ipolp = epol
     evalue = efield 
 !set up for parallel calculations
@@ -235,7 +235,7 @@ CONTAINS
     IMPLICIT NONE
     COMPLEX(DP), INTENT(IN)  :: eigr(:,:)
     REAL(DP), INTENT(IN)  :: tau0(:,:)
-    if(ionode) write(stdout,'(''Initialize Berry phase electric field'')')
+    if(ionode) write(stdout,'("Initialize Berry phase electric field")')
     ipolp2 = epol2
     evalue2 = efield2 
     call gtable(ipolp2,ctable2(1,1,ipolp2))

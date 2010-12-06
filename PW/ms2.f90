@@ -16,7 +16,7 @@ MODULE ms2
 
   LOGICAL :: MS2_enabled = .FALSE.       ! Enable MS2
 
-  CHARACTER(LEN=256) :: MS2_handler = '' ! Arguments to be passed to the MS2 transport
+  CHARACTER(LEN=256) :: MS2_handler = ' ' ! Arguments to be passed to the MS2 transport
 
 
 CONTAINS 

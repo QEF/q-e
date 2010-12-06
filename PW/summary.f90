@@ -145,22 +145,22 @@ SUBROUTINE summary()
 
   IF ( lelfield ) THEN !here informations for berry's phase el. fields calculations
      WRITE(stdout, *)
-     WRITE(stdout, '(''     Using Berry phase electric field'')')
+     WRITE(stdout, '("     Using Berry phase electric field")')
      if(.not.l3dstring) then
-        WRITE(stdout, '(''     Direction :'', i4)') gdir
-        WRITE(stdout, '(''     Intensity (Ry a.u.) :'', f13.10)') efield
-        WRITE(stdout, '(''     Strings composed by:'', i5,'' k-points'')') nppstr_3d(gdir)
+        WRITE(stdout, '("     Direction :", i4)') gdir
+        WRITE(stdout, '("     Intensity (Ry a.u.) :", f13.10)') efield
+        WRITE(stdout, '("     Strings composed by:", i5," k-points")') nppstr_3d(gdir)
      else
-        write(stdout,'(''     In a.u.(Ry)  cartesian system of reference'' )')
+        write(stdout,'("     In a.u.(Ry)  cartesian system of reference" )')
         do i=1,3
            write(stdout,'(7x,f13.10)') efield_cart(i)
         enddo
-        write(stdout,'(''     In a.u.(Ry)  crystal system of reference'' )')
+        write(stdout,'("     In a.u.(Ry)  crystal system of reference" )')
         do i=1,3
            write(stdout,'(7x,f13.10)') efield_cry(i)
         enddo
      endif
-     WRITE(stdout, '(''     Number of iterative cycles:'', i4)') nberrycyc
+     WRITE(stdout, '("     Number of iterative cycles:", i4)') nberrycyc
      WRITE(stdout, *)
   ENDIF
   !

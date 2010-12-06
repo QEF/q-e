@@ -19,7 +19,7 @@
 !   spline_int:    return value of integral on given interval of spline
 !   kill_spline:   destructor ( spl%x,y und/oder spl%y2)
 
-! NB: splines are always ``natural splines'', i.e. values of first
+! NB: splines are always "natural splines", i.e. values of first
 !     derivative at the end-points cannot be specified
 !-----------------------------------------------------------------------------!
       USE kinds, ONLY : DP

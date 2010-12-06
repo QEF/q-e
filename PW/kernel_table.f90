@@ -113,7 +113,7 @@ CONTAINS
     !!
     !!
 
-    if (TRIM(vdw_table_name)=='') then
+    if (TRIM(vdw_table_name)==' ') then
        
         vdw_table_name='vdW_kernel_table'
     
