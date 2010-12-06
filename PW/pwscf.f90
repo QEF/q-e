@@ -18,7 +18,7 @@ PROGRAM pwscf
   USE force_mod,        ONLY : lforce, lstres
   USE environment,      ONLY : environment_start, environment_end
   USE check_stop,       ONLY : check_stop_init
-  USE mp_global,        ONLY : mp_startup, mp_bcast, mp_global_end
+  USE mp_global,        ONLY : mp_startup, mp_bcast, mp_global_end, intra_image_comm
 #if defined(__MS2)
   USE ms2,              ONLY : MS2_enabled,                 &
                                ms2_initialization,    &
@@ -63,8 +63,8 @@ PROGRAM pwscf
   ! call read_xml should be done only by ionode. bcast is already done
   ! inside read_cards and read_namelist.
   ! 
-  call mp_bcast(xmlinput,ionode_id)
-  call mp_bcast(attr,ionode_id)
+  call mp_bcast(xmlinput,ionode_id, intra_image_comm)
+  call mp_bcast(attr,ionode_id, intra_image_comm)
   !
   ! ... read input and convert to internal variables
   CALL iosys(xmlinput,attr)

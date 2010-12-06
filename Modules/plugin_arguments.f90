@@ -46,7 +46,7 @@ SUBROUTINE plugin_arguments()
        DO l=2, LEN_TRIM (plugin_name)
           arg(l-1:l-1) = lowercase (plugin_name(l:l))
        END DO
-       write(0,*) "plugin_name: ", trim(arg)
+!       write(0,*) "plugin_name: ", trim(arg)
        ! add here more plugins
        IF ( TRIM(arg)=='plumed' .OR. TRIM(arg)=='-plumed' ) THEN
           use_plumed = .true.
@@ -54,7 +54,7 @@ SUBROUTINE plugin_arguments()
     ENDIF
   ENDDO
   ! add here more plugins
-  CALL mp_bcast( use_plumed, intra_image_comm )
+  CALL mp_bcast( use_plumed, ionode_id, intra_image_comm )
   write(0,*) "use_plumed= ", use_plumed
   !
   RETURN
