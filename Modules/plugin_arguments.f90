@@ -27,6 +27,7 @@ SUBROUTINE plugin_arguments()
   !
   INTEGER  :: iiarg, nargs, iargc, ierr
   CHARACTER (len=50) :: arg
+  CHARACTER (len=256) :: np
   !
   !
 #if defined(__ABSOFT)
@@ -37,13 +38,11 @@ SUBROUTINE plugin_arguments()
   nargs = iargc()
   !
   !
-  DO iiarg = 1, ( nargs -1 )
+  DO iiarg = 1, ( nargs )
     CALL getarg( iiarg, plugin_name)
-write(0,*) "plugin_name: ", trim(plugin_name)
     IF((TRIM(plugin_name)=='-plumed').or.(TRIM(plugin_name)=='-PLUMED')) THEN
       use_plumed = .true.
       CALL mp_bcast( use_plumed, intra_image_comm )
-write(0,*) "use_plumed= ", use_plumed
     ENDIF
   ENDDO
   !
