@@ -53,7 +53,7 @@ PROGRAM pwscf
   !
   ! ... open input file 
   !
-!  IF(ionode) CALL plugin_arguments()
+  IF(ionode) CALL plugin_arguments()
   IF( ionode ) CALL open_input_file(xmlinput,attr)
   !
   ! bcast of xmlinput and attr needs to be done 
@@ -79,7 +79,7 @@ PROGRAM pwscf
      & FMT = '(/,5X,"gamma-point specific algorithms are used")' )
   !
   !
-  ! call to void routine for user define / plugin patches initializations
+  ! call to void routine for user defined / plugin patches initializations
   !
   CALL plugin_initialization()
   !
