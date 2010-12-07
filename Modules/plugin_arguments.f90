@@ -16,12 +16,10 @@ SUBROUTINE plugin_arguments()
   !
   USE kinds,         ONLY : DP
   !
-  USE io_global,     ONLY : stdout, ionode, ionode_id
-  USE mp_global,     ONLY : intra_image_comm
+  USE io_global,     ONLY : stdout
   !
   USE plugin_flags
   !
-  USE mp,            ONLY : mp_bcast
   !
   IMPLICIT NONE
   !
@@ -54,9 +52,29 @@ SUBROUTINE plugin_arguments()
     ENDIF
   ENDDO
   ! add here more plugins
-  CALL mp_bcast( use_plumed, ionode_id, intra_image_comm )
-  write(0,*) "use_plumed= ", use_plumed
   !
   RETURN
   !
 END SUBROUTINE plugin_arguments
+!
+!
+SUBROUTINE plugin_arguments_bcast(root,comm)
+!
+! bcast plugin arguments
+!
+USE mp_global, ONLY : mp_bcast
+USE plugin_flags
+!
+IMPLICIT NONE
+!
+integer :: root
+integer :: comm
+!
+CALL mp_bcast(use_plumed,root,comm)
+!
+write(0,*) "use_plumed: ", use_plumed
+!
+RETURN
+!
+END SUBROUTINE plugin_arguments_bcast
+
