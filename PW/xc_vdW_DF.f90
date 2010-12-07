@@ -831,6 +831,8 @@ CONTAINS
 
       call dscal (9, 1.d0 / (nr1x * nr2x * nr3x), sigma, 1)
 
+      deallocate( d2y_dx2, u_vdW )
+
    END SUBROUTINE stress_vdW_DF_gradient
 
 
