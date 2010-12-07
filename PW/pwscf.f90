@@ -54,6 +54,7 @@ PROGRAM pwscf
   ! ... open input file 
   !
   IF(ionode) CALL plugin_arguments()
+  CALL plugin_arguments_bcast(ionode_id,intra_image_comm)
   IF( ionode ) CALL open_input_file(xmlinput,attr)
   !
   ! bcast of xmlinput and attr needs to be done 
