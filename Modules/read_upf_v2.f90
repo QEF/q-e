@@ -135,10 +135,10 @@ SUBROUTINE read_upf_v2(u, upf, grid, ierr)             !
       !
       ! Read HEADER section with some initialization data
       CALL iotk_scan_empty(u, 'PP_HEADER', attr=attr)
-         CALL iotk_scan_attr(attr, 'generated',      upf%generated, default='')
+         CALL iotk_scan_attr(attr, 'generated',      upf%generated, default=' ')
          CALL iotk_scan_attr(attr, 'author',         upf%author,    default='anonymous')
-         CALL iotk_scan_attr(attr, 'date',           upf%date,      default='')
-         CALL iotk_scan_attr(attr, 'comment',        upf%comment,   default='')
+         CALL iotk_scan_attr(attr, 'date',           upf%date,      default=' ')
+         CALL iotk_scan_attr(attr, 'comment',        upf%comment,   default=' ')
          !
          CALL iotk_scan_attr(attr, 'element',        upf%psd)
          CALL iotk_scan_attr(attr, 'pseudo_type',    upf%typ)

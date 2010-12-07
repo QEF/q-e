@@ -50,7 +50,7 @@ SUBROUTINE test_f_sum_rule
   f_sum(:,:) = 0.d0
   q(:) = 0.d0
 
-  write(stdout, '(5X,''Computing the f-sum rule'')')
+  write(stdout, '(5X,"Computing the f-sum rule")')
 
   !====================================================================
   ! loop over k-points
@@ -93,7 +93,7 @@ SUBROUTINE test_f_sum_rule
       enddo   ! ipol
     enddo   ! jpol
 
-    write(stdout, '(5X,''f-sum rule (ik='',I5,''):'')') ik
+    write(stdout, '(5X,"f-sum rule (ik=",I5,"):")') ik
     write(stdout, '(3(5X,3(F12.6,2X)/))') f_sum_k
 
     f_sum(:,:) = f_sum(:,:) + f_sum_k(:,:)
@@ -102,11 +102,11 @@ SUBROUTINE test_f_sum_rule
   call mp_sum( f_sum, intra_pool_comm )
   call mp_sum( f_sum, inter_pool_comm )
 #endif
-  write(stdout, '(5X,''f-sum rule:'')')
+  write(stdout, '(5X,"f-sum rule:")')
   write(stdout, '(3(5X,3(F12.6,2X)/))') f_sum(:,:)
 
   call symmatrix(f_sum)
-  write(stdout, '(5X,''f-sum rule (symmetrized):'')')
+  write(stdout, '(5X,"f-sum rule (symmetrized):")')
   write(stdout, '(3(5X,3(F12.6,2X)/))') f_sum
 
   deallocate(p_evc, vel_evc, g_vel_evc)

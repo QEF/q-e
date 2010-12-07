@@ -125,8 +125,8 @@ SUBROUTINE compute_u_kq(ik, q)
   !!write(stdout,'(8F9.4)') et(1:nbnd,ik)*RytoeV
   do i = 1, nbnd
     if (abs(et(i,ik) - et_old(i,ik))*RytoeV > 0.2d0) then
-      write(stdout,'(5X,''ATTENTION: ik='',I4,''  ibnd='',I3,$)') ik, i
-      write(stdout,'(2X,''eigenvalues differ too much!'')')
+      write(stdout,'(5X,"ATTENTION: ik=",I4,"  ibnd=",I3,$)') ik, i
+      write(stdout,'(2X,"eigenvalues differ too much!")')
       write(stdout,'(5X,2(F10.4,2X))') et_old(i,ik)*RytoeV, et(i,ik)*RytoeV
     endif
   enddo

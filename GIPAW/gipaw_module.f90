@@ -132,15 +132,15 @@ CONTAINS
 
     CALL input_from_file()
 
-    job = ''
+    job = ' '
     prefix = 'pwscf'
     CALL get_env( 'ESPRESSO_TMPDIR', tmp_dir )
     IF ( TRIM( tmp_dir ) == ' ' ) tmp_dir = './scratch/'
     conv_threshold = 1e-14_dp
     q_gipaw = 0.01_dp
     iverbosity = 0
-    filcurr = ''
-    filfield = ''
+    filcurr = ' '
+    filfield = ' '
     read_recon_in_paratec_fmt = .FALSE.
     file_reconstruction ( : ) = " "
     use_nmr_macroscopic_shape = .TRUE.

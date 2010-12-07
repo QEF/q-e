@@ -34,7 +34,7 @@ SUBROUTINE compute_sigma_bare(chi_bare, sigma_bare)
   real(dp) :: arg, tr_sigma
   complex(dp) :: tmp_sigma(3,3)
 
-  write(stdout,'(5X,''NMR chemical bare shifts in ppm:'')')
+  write(stdout,'(5X,"NMR chemical bare shifts in ppm:")')
   write(stdout,*)
 
   do na = 1, nat
@@ -99,7 +99,7 @@ SUBROUTINE compute_sigma_diamagnetic( sigma_diamagnetic )
   real(dp) :: tr_sigma
 
 
-  write(stdout,'(5X,''NMR chemical diamagnetic shifts in ppm:'')')
+  write(stdout,'(5X,"NMR chemical diamagnetic shifts in ppm:")')
   write(stdout,*)
 
   ! symmetrize tensors
@@ -139,7 +139,7 @@ SUBROUTINE compute_sigma_paramagnetic( sigma_paramagnetic )
   integer :: na
   real(dp) :: tr_sigma
 
-  write(stdout,'(5X,''NMR chemical paramagnetic shifts in ppm:'')')
+  write(stdout,'(5X,"NMR chemical paramagnetic shifts in ppm:")')
   write(stdout,*)
 
   ! symmetrize tensors
@@ -180,7 +180,7 @@ SUBROUTINE print_sigma_total(sigma_bare, sigma_paramagnetic, sigma_diamagnetic)
 
   IF ( iverbosity > 5 ) THEN
      write(stdout,*)
-     write(stdout,'(5X,''Summed isotropic NMR chemical shifts in ppm:'')')
+     write(stdout,'(5X,"Summed isotropic NMR chemical shifts in ppm:")')
      write(stdout,*)
      do na = 1, nat
         tmp(:,:) = sigma_bare(:,:,na) &
@@ -196,7 +196,7 @@ SUBROUTINE print_sigma_total(sigma_bare, sigma_paramagnetic, sigma_diamagnetic)
   END IF
 
   write(stdout,*)
-  write(stdout,'(5X,''Total NMR chemical shifts in ppm:'')')
+  write(stdout,'(5X,"Total NMR chemical shifts in ppm:")')
   write(stdout,*)
 
   do na = 1, nat

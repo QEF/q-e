@@ -125,7 +125,7 @@
 
        END IF !!select
 
-  591 FORMAT(   3X,'')
+  591 FORMAT(   3X,' ')
   592 FORMAT(   3X,'Introducing a Mauri Avezac Calandra Self_Interaction Correction: ', I3)
   593 FORMAT(   3X,'----------------------------------------')
 

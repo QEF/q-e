@@ -83,18 +83,18 @@ SUBROUTINE suscept_crystal
   sigma_diamagnetic = 0.0_dp
   sigma_paramagnetic = 0.0_dp
 
-  write(stdout, '(5X,''Computing the magnetic susceptibility'',$)')
-  write(stdout, '(5X,''isolve='',I1,4X,''ethr='',E10.4)') isolve, conv_threshold
+  write(stdout, '(5X,"Computing the magnetic susceptibility",$)')
+  write(stdout, '(5X,"isolve=",I1,4X,"ethr=",E10.4)') isolve, conv_threshold
   !====================================================================
   ! loop over k-points
   !====================================================================
   do ik = 1, nks
 #ifdef __PARA
     if (me_pool == root_pool) &
-    write(*, '(5X,''k-point #'',I5,'' of '',I5,6X,''pool #'',I3)') &
+    write(*, '(5X,"k-point #",I5," of ",I5,6X,"pool #",I3)') &
       ik, nks, my_pool_id+1
 #else
-    write(stdout, '(5X,''k-point #'',I5,'' of '',I5)') ik, nks
+    write(stdout, '(5X,"k-point #",I5," of ",I5)') ik, nks
 #endif
     current_k = ik
     current_spin = isk(ik)
@@ -109,7 +109,7 @@ SUBROUTINE suscept_crystal
 
     ! this is the case q = 0 (like the case of the f-sum rule)
     q(:) = 0.0_dp
-    !!!write(*,'(''q='',3(F12.4))') q
+    !!!write(*,'("q=",3(F12.4))') q
     call compute_u_kq(ik, q)
 
     !<apsi>
@@ -155,7 +155,7 @@ SUBROUTINE suscept_crystal
         ! set the q vector
         q(:) = 0.0_dp
         q(i) = dble(isign) * q_gipaw
-        !!!write(*,'(''q='',3(F12.4))') q
+        !!!write(*,'("q=",3(F12.4))') q
 
         ! compute the wfcs at k+q
         call compute_u_kq(ik, q)
@@ -200,16 +200,16 @@ SUBROUTINE suscept_crystal
   !====================================================================
   ! print out results
   !====================================================================
-  write(stdout,'(5X,''End of magnetic susceptibility calculation'')')
+  write(stdout,'(5X,"End of magnetic susceptibility calculation")')
   write(stdout,*)
 
   ! f-sum rule
   if (iverbosity > 0) then
-    write(stdout, '(5X,''f-sum rule:'')')
+    write(stdout, '(5X,"f-sum rule:")')
     write(stdout, tens_fmt) f_sum
   endif
   call symmatrix (f_sum)
-  write(stdout, '(5X,''f-sum rule (symmetrized):'')')
+  write(stdout, '(5X,"f-sum rule (symmetrized):")')
   write(stdout, tens_fmt) f_sum
 
   ! F_{ij} = (2 - \delta_{ij}) Q_{ij}
@@ -228,7 +228,7 @@ SUBROUTINE suscept_crystal
   chi_bare_pGv(:,:) = -0.5_dp * chi_bare_pGv(:,:) * alpha ** 2 &
        / ( q_gipaw * tpiba)**2
   if (iverbosity > 0) then
-    write(stdout, '(5X,''chi_bare pGv (HH) in paratec units:'')')
+    write(stdout, '(5X,"chi_bare pGv (HH) in paratec units:")')
     write(stdout, '(3(5X,3(F12.6,2X)/))') chi_bare_pGv(:,:) / alpha ** 2
   endif
   call symmatrix (chi_bare_pGv)
@@ -240,7 +240,7 @@ SUBROUTINE suscept_crystal
   chi_bare_vGv(:,:) = -0.5_dp * chi_bare_vGv(:,:) * alpha ** 2 &
        / ( q_gipaw * tpiba)**2
   if (iverbosity > 0) then
-    write(stdout, '(5X,''chi_bare vGv (VV) in paratec units:'')')
+    write(stdout, '(5X,"chi_bare vGv (VV) in paratec units:")')
     write(stdout, '(3(5X,3(F12.6,2X)/))') chi_bare_vGv(:,:) / alpha ** 2
   endif
   call symmatrix(chi_bare_vGv)
@@ -250,11 +250,11 @@ SUBROUTINE suscept_crystal
 
   ! convert from atomic units to 10^{-6} cm^3 / mol
   tmp(:,:) = chi_bare_pGv(:,:) * 1e6_dp * a0_to_cm**3.0_dp * avogadro
-  write(stdout, '(5X,''chi_bare pGv (HH) in 10^{-6} cm^3/mol:'')')
+  write(stdout, '(5X,"chi_bare pGv (HH) in 10^{-6} cm^3/mol:")')
   write(stdout, tens_fmt) tmp(:,:)
 
   tmp(:,:) = chi_bare_vGv(:,:) * 1e6_dp * a0_to_cm**3.0_dp * avogadro
-  write(stdout, '(5X,''chi_bare vGv (VV) in 10^{-6} cm^3/mol:'')')
+  write(stdout, '(5X,"chi_bare vGv (VV) in 10^{-6} cm^3/mol:")')
   write(stdout, tens_fmt) tmp(:,:)
 
   !--------------------------------------------------------------------
@@ -280,10 +280,10 @@ SUBROUTINE suscept_crystal
   enddo
 
   do i = 1, nspin
-    if (trim(filcurr) /= '') &
+    if (trim(filcurr) /= ") &
       call write_tensor_field(filcurr, i, j_bare(1,1,1,i))
   enddo
-  if (trim(filfield) /= '') &
+  if (trim(filfield) /= ") &
     call write_tensor_field(filfield, 0, b_ind_r)
 
   ! ... or you symmetrize the induced field

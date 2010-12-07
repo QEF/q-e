@@ -23,7 +23,7 @@ SUBROUTINE plugin_arguments()
   !
   IMPLICIT NONE
   !
-  INTEGER  :: iiarg, nargs, iargc, ierra, l
+  INTEGER  :: iiarg, nargs, iargc, i
   CHARACTER (len=1), EXTERNAL ::  lowercase
   CHARACTER (len=256) :: arg
   !
@@ -41,8 +41,8 @@ SUBROUTINE plugin_arguments()
     CALL getarg( iiarg, plugin_name)
     IF ( plugin_name(1:1) == '-') THEN
        arg = ' '
-       DO l=2, LEN_TRIM (plugin_name)
-          arg(l-1:l-1) = lowercase (plugin_name(l:l))
+       DO i=2, LEN_TRIM (plugin_name)
+          arg(i-i:i-1) = lowercase (plugin_name(i:i))
        END DO
 !       write(0,*) "plugin_name: ", trim(arg)
        ! add here more plugins
@@ -51,30 +51,30 @@ SUBROUTINE plugin_arguments()
        END IF
     ENDIF
   ENDDO
-  ! add here more plugins
   !
   RETURN
   !
 END SUBROUTINE plugin_arguments
 !
-!
-SUBROUTINE plugin_arguments_bcast(root,comm)
-!
-! bcast plugin arguments
-!
-USE mp_global, ONLY : mp_bcast
-USE plugin_flags
-!
-IMPLICIT NONE
-!
-integer :: root
-integer :: comm
-!
-CALL mp_bcast(use_plumed,root,comm)
-!
-write(0,*) "use_plumed: ", use_plumed
-!
-RETURN
-!
+!----------------------------------------------------------------------------
+  SUBROUTINE plugin_arguments_bcast(root,comm)
+  !----------------------------------------------------------------------------
+  !
+  ! broadcast plugin arguments
+  !
+  USE mp_global, ONLY : mp_bcast
+  USE plugin_flags
+  !
+  IMPLICIT NONE
+  !
+  integer :: root
+  integer :: comm
+  !
+  CALL mp_bcast(use_plumed,root,comm)
+  !
+!  write(0,*) "use_plumed: ", use_plumed
+  !
+  RETURN
+  !
 END SUBROUTINE plugin_arguments_bcast
 

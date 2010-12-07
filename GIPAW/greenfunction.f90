@@ -134,7 +134,7 @@ SUBROUTINE greenfunction(ik, psi, g_psi, q)
        nbnd_occ(ik) )
 
   !! debug
-  !!write(stdout, '(5X,''cgsolve_all converged in '',I3,'' iterations'')') &
+  !!write(stdout, '(5X,"cgsolve_all converged in ",I3," iterations")') &
   !!      lter
 
   if (.not.conv_root) WRITE( stdout, '(5x,"ik",i4," ibnd",i4, &

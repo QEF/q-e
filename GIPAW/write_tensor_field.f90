@@ -39,7 +39,7 @@ SUBROUTINE write_tensor_field(name, ispin, field)
     if (ipol == 1) fname = trim(fname)//'X.xsf'
     if (ipol == 2) fname = trim(fname)//'Y.xsf'
     if (ipol == 3) fname = trim(fname)//'Z.xsf'
-    write(stdout, '(5X,''write_tensor_field: '',A40)') fname
+    write(stdout, '(5X,"write_tensor_field: ",A40)') fname
 
     open(unit=ounit, file=fname, iostat=ios, form='formatted', &
          status='unknown')
@@ -125,7 +125,7 @@ subroutine xsf_vector_3d(v, nr1, nr2, nr3, nr1x, nr2x, nr3x, &
         ! crystal to cartesian
         call cryst_to_cart (1, x, bg, 1)
         x = x * alat * BOHR_RADIUS_ANGS
-        write(ounit,'(''X  '',3x,3f15.9,2x,3e12.4)') x, v(i1,i2,i3,1:3)
+        write(ounit,'("X  ",3x,3f15.9,2x,3e12.4)') x, v(i1,i2,i3,1:3)
       enddo
     enddo
   enddo

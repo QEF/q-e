@@ -246,11 +246,11 @@ MODULE input_parameters
           ! if true symmetry in scf run is neglected for RPA Ec calculation
           ! 
 
-        CHARACTER(len=256) :: vdw_table_name = ''
+        CHARACTER(len=256) :: vdw_table_name = ' '
 
 #if defined (__MS2)
         LOGICAL :: MS2_enabled = .false.       ! Enable the shared memory exchange in MS2
-        CHARACTER(len=256) :: MS2_handler = '' ! Name for the shared memory handler in MS2
+        CHARACTER(len=256) :: MS2_handler = ' '! Name for the shared memory handler in MS2
 #endif
 
         NAMELIST / control / title, calculation, verbosity, restart_mode, &

@@ -43,13 +43,13 @@
 
 
         TYPE pseudo_upf
-          CHARACTER(LEN=80):: generated='' ! generator software
-          CHARACTER(LEN=80):: author=''    ! pseudopotential's author
-          CHARACTER(LEN=80):: date=''      ! generation date
-          CHARACTER(LEN=80):: comment=''   ! author's comment
-          CHARACTER(LEN=2) :: psd=''       ! Element label
-          CHARACTER(LEN=20) :: typ=''      ! Pseudo type ( NC or US or PAW)
-          CHARACTER(len=6) :: rel=''       ! relativistic: {no|scalar|full}
+          CHARACTER(LEN=80):: generated=' '! generator software
+          CHARACTER(LEN=80):: author=' '   ! pseudopotential's author
+          CHARACTER(LEN=80):: date=' '     ! generation date
+          CHARACTER(LEN=80):: comment=' '  ! author's comment
+          CHARACTER(LEN=2) :: psd=' '      ! Element label
+          CHARACTER(LEN=20) :: typ=' '     ! Pseudo type ( NC or US or PAW)
+          CHARACTER(len=6) :: rel=' '      ! relativistic: {no|scalar|full}
           LOGICAL :: tvanp              ! .true. if Ultrasoft
           LOGICAL :: tcoulombp          ! .true. if Coulomb 1/r potential
           LOGICAL :: nlcc               ! Non linear core corrections
