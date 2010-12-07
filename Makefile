@@ -177,16 +177,16 @@ libiotk:
 #########################################################
 
 w90: bindir libblas liblapack
-	cd install ; $(MAKE) $(MFLAGS) --file=plugins_makefile $@
+	cd install ; $(MAKE) $(MFLAGS) -f plugins_makefile $@
 
 want : touch-dummy
-	cd install ; $(MAKE) $(MFLAGS) --file=plugins_makefile $@
+	cd install ; $(MAKE) $(MFLAGS) -f plugins_makefile $@
 
 yambo: touch-dummy
-	cd install ; $(MAKE) $(MFLAGS) --file=plugins_makefile $@
+	cd install ; $(MAKE) $(MFLAGS) -f plugins_makefile $@
 
 plumed: touch-dummy
-	cd install ; $(MAKE) $(MFLAGS) --file=plugins_makefile $@
+	cd install ; $(MAKE) $(MFLAGS) -f plugins_makefile $@
 
 touch-dummy :
 	$(dummy-variable)
