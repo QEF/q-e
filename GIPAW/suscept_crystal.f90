@@ -280,10 +280,10 @@ SUBROUTINE suscept_crystal
   enddo
 
   do i = 1, nspin
-    if (trim(filcurr) /= ") &
+    if (trim(filcurr) /= ' ') &
       call write_tensor_field(filcurr, i, j_bare(1,1,1,i))
   enddo
-  if (trim(filfield) /= ") &
+  if (trim(filfield) /= ' ') &
     call write_tensor_field(filfield, 0, b_ind_r)
 
   ! ... or you symmetrize the induced field
