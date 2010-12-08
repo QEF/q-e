@@ -27,11 +27,6 @@ lr_calc_dens.o : ../../PW/pwcom.o
 lr_calc_dens.o : ../../PW/realus.o
 lr_calc_dens.o : lr_variables.o
 lr_calc_dens.o : lr_charg_resp.o
-lr_calculate_spectrum.o : ../../Modules/cell_base.o
-lr_calculate_spectrum.o : ../../Modules/constants.o
-lr_calculate_spectrum.o : ../../Modules/io_global.o
-lr_calculate_spectrum.o : ../../Modules/kind.o
-lr_calculate_spectrum.o : lr_variables.o
 lr_charg_resp.f90 : ../../Modules/io_global.o
 lr_charg_resp.f90 : ../../Modules/kind.o
 lr_charg_resp.f90 : lr_variables.o

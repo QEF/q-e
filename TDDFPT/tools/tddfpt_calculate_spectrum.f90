@@ -49,6 +49,7 @@ program lr_calculate_spectrum
   complex(kind=dp), allocatable :: a(:), b(:), c(:), r(:,:)
   logical :: skip, exst
   real(kind=dp) :: omeg, z1,z2
+  real(DP) :: degspin 
   ! 
   !
   !For perceived color analysis
@@ -70,6 +71,10 @@ program lr_calculate_spectrum
   !DEBUGGING
   real(kind=dp)  :: test
   !
+  !Initialization of system variables
+  !
+  !for the time being, degspin is set by hand
+  degspin=2.d0
   !
   !User controlled variable initialisation
   !
@@ -144,7 +149,7 @@ if (ionode) then !No need for parallelization in this code
      !
   end if
   !
-  !Chek the unit system used
+  !Check the unit system used
   !
   if (units < 0 .or. units >2) then 
    call errore("tddfpt_pp","Unsupported unit system",1)
@@ -199,18 +204,20 @@ if (ionode) then !No need for parallelization in this code
   write (stdout,'(/5x,"Broadening = ",f15.8," Ry")') epsil
   filename = trim(prefix) // ".plot"
   write (stdout,'(/5x,"Output file name: ",A20)') filename
+  write(stdout,'(/,5x,"chi_i_j: dipole susceptibility tensor in units of e^2*a_0^2/energy")')
   if (n_ipol == 3) then
-   write (stdout,'(5x,"alpha:absorption coefficient")') 
+     write(stdout,'(/,5x,"S: oscillator strength in units of 1/energy")')
+     write(stdout,'(/,5x,"S(\hbar \omega) = 2m/( 3 \pi e^2 \hbar) \omega sum_j chi_j_j")')
+     write(stdout,'(/,5x,"S(\hbar \omega) satisfies the f-sum rule: \int_0^\infty dE S(E) = N_el ")')
   else
    write (stdout,'(5x,"Insufficent info for absorption coefficient")')
   endif
-  write (stdout,'(5x,"CHI:susceptibility tensor")')
   if (units == 0) then
-   write (stdout,'(5x,"Functions are reported as a function of hbar.omega (Ry)")')
+   write (stdout,'(5x,"Functions are reported in hbar.omega Energy unit is (Ry)")')
   else if (units == 1) then
-   write (stdout,'(5x,"Functions are reported as a function of hbar.omega (eV)")')
+   write (stdout,'(5x,"Functions are reported in hbar.omega Energy unit is (eV)")')
   else if (units == 2) then
-   write (stdout,'(5x,"Functions are reported as a function of wavelength (nm)")')
+   write (stdout,'(5x,"Functions are reported in (nm), Energy unit is (eV) ")')
   endif
   !
   ! The static polarizability
@@ -268,6 +275,20 @@ if (ionode) then !No need for parallelization in this code
     do_perceived=.false.
    endif
   endif
+ !
+ ! Header of the output plot file
+ !
+  if (units == 0) then
+   write (17,'("#Chi is reported as CHI_(i)_(j) \hbar \omega (Ry) Re(chi) (e^2*a_0^2/Ry) Im(chi) (e^2*a_0^2/Ry) ")')
+  else if (units == 1) then
+   write (17,'("#Chi is reported as CHI_(i)_(j) \hbar \omega (eV) Re(chi) (e^2*a_0^2/eV) Im(chi) (e^2*a_0^2/eV) ")')
+  else if (units == 2) then
+   write (17,'("#Chi is reported as CHI_(i)_(j) wavelength (nm) Re(chi) (e^2*a_0^2/eV) Im(chi) (e^2*a_0^2/eV) ")')
+  endif
+  if (n_ipol == 3) then
+    write(17,'("# S(E) satisfies the sum rule ")' )
+  endif
+
   !
   !   Start the omega loop
   !
@@ -286,7 +307,11 @@ if (ionode) then !No need for parallelization in this code
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!FIRST STEP!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   if (verbosity > 0 .and. n_ipol == 3) then ! In order to gain speed, I perform first term seperately
     ! 
-    call calc_chi(omega(3),epsil,green(:,:)) 
+    call calc_chi(omega(3),epsil,green(:,:))
+    if (units == 1 .or. units == 2) then
+     green(:,:)=green(:,:)/ry
+    endif
+
     do ip=1,n_ipol
         !
         do ip2=1,n_ipol
@@ -302,9 +327,12 @@ if (ionode) then !No need for parallelization in this code
           !
       end do
 
-    alpha_temp(3)= omega(3)*aimag(green(1,1)+green(2,2)+green(3,3))/3.d0 
+    alpha_temp(3)= omega(3)*aimag(green(1,1)+green(2,2)+green(3,3))/(pi*3.d0) 
+    if (units == 1 .or. units == 2) then
+     alpha_temp(3)=alpha_temp(3)*ry
+    endif
     !alpha is ready
-    write(17,'(5x,"alpha",2x,3(e21.15,2x))') &
+    write(17,'(5x,"S(E)=",2x,2(e21.15,2x))') &
             start, alpha_temp(3)
     f_sum=0.3333333333333333d0*increment*alpha_temp(3)
     start=start+increment
@@ -323,6 +351,9 @@ if (ionode) then !No need for parallelization in this code
     endif
      !
      call calc_chi(omega(3),epsil,green(:,:))
+    if (units == 1 .or. units == 2) then
+     green(:,:)=green(:,:)/ry
+    endif
      !
      do ip=1,n_ipol
         !
@@ -344,9 +375,12 @@ if (ionode) then !No need for parallelization in this code
         !
         alpha_temp(1)=alpha_temp(2)
         alpha_temp(2)=alpha_temp(3)
-        alpha_temp(3)= omega(3)*aimag(green(1,1)+green(2,2)+green(3,3))/3.d0 
-        ! 
-        write(17,'(5x,"alpha",2x,3(e21.15,2x))') &
+        alpha_temp(3)= omega(3)*aimag(green(1,1)+green(2,2)+green(3,3))/(pi*3.d0) 
+        if (units == 1 .or. units == 2) then
+         alpha_temp(3)=alpha_temp(3)*ry
+        endif
+        !alpha is ready
+        write(17,'(5x,"S(E)=",2x,2(e21.15,2x))') &
             start, alpha_temp(3)
         !
         if (verbosity > 0 ) then
@@ -378,6 +412,9 @@ if (ionode) then !No need for parallelization in this code
     endif
 
     call calc_chi(omega(3),epsil,green(:,:)) 
+    if (units == 1 .or. units == 2) then
+     green(:,:)=green(:,:)/ry
+    endif
     do ip=1,n_ipol
         !
         do ip2=1,n_ipol
@@ -392,11 +429,14 @@ if (ionode) then !No need for parallelization in this code
            end do
           !
       end do
-
-    alpha_temp(3)= omega(3)*aimag(green(1,1)+green(2,2)+green(3,3))/3.d0 
+    alpha_temp(3)= omega(3)*aimag(green(1,1)+green(2,2)+green(3,3))/(pi*3.d0) 
+    if (units == 1 .or. units == 2) then
+     alpha_temp(3)=alpha_temp(3)*ry
+    endif
     !alpha is ready
-    write(17,'(5x,"alpha",2x,3(e21.15,2x))') &
+    write(17,'(5x,"S(E)=",2x,2(e21.15,2x))') &
             start, alpha_temp(3)
+
     f_sum=f_sum+0.3333333333333333d0*increment*alpha_temp(3)
   endif
 
@@ -852,8 +892,13 @@ complex(kind=dp), intent(out) :: chi(:,:)
         !chi = - <zeta|w_t>
         ! Notice that brodening has a positive sign, thus the abs. coefficient is Im(tr(chi)) not -Im(Tr(chi)) as usual
         do ip2=1,n_ipol
-              chi(ip,ip2)=-ZDOTC(itermax,zeta_store(ip,ip2,:),1,r(ip,:),1)
-              chi(ip,ip2)=chi(ip,ip2)*cmplx(norm0(ip),0.0d0,dp)
+              chi(ip,ip2)=ZDOTC(itermax,zeta_store(ip,ip2,:),1,r(ip,:),1)
+              chi(ip,ip2)=chi(ip,ip2)*cmplx(norm0(ip),0.0d0,dp) 
+              ! The response charge density is defined as 2.*evc0*q, see Eq. (43) in JCP 128, 154105 (2008). The dipole is therefore 
+              ! given by 2.*degspin* zeta^T * (w-T^itermax)^-1 * e_1. See also Eq. (15) in that paper.
+              ! the minus sign accounts for the negative electron charge (perturbation is -e E x, rather than E x)
+              chi(ip,ip2)=chi(ip,ip2)*cmplx(-2.d0*degspin, 0.d0, dp)
+ 
         enddo
     enddo
 end subroutine calc_chi
