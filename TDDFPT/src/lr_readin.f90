@@ -105,7 +105,7 @@ subroutine lr_readin
   !
   !   Reading the namelist lr_post
   !
-  if (charge_response == 2) then
+  if (charge_response == 1) then
    read (5, lr_post, err = 202, iostat = ios)
    202 call errore ('lr_readin', 'reading lr_post namelist', abs (ios) )
   endif
@@ -129,9 +129,9 @@ subroutine lr_readin
   !
   !Charge response mode 2 is the "do Lanczos chains twice, conserve memory" scheme
   !
-  if (charge_response == 2 .and. omeg == 0.D0) &
+  if (charge_response == 1 .and. omeg == 0.D0) &
    call errore ('lr_readin', 'omeg must be defined for charge response mode 2', 1 )
-  if ( project .and. charge_response /= 2) &
+  if ( project .and. charge_response /= 1) &
    call errore ('lr_readin', 'projection is possible only in charge response mode 2', 1 )
 
   w_T_prefix = TRIM( tmp_dir ) // TRIM( beta_gamma_z_prefix ) // ".beta_gamma_z."
@@ -214,7 +214,7 @@ subroutine lr_readin
   call iweights( nks, wk, nbnd, nelec, et, ef, wg, 0, isk)
   !
   !
-  if ( charge_response == 1 ) call lr_set_boxes_density()
+  if ( charge_response == 2 ) call lr_set_boxes_density()
   !
   !   Checking 
   !

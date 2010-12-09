@@ -35,7 +35,7 @@ subroutine lr_apply_liouvillian( evc1, evc1_new, sevc1_new, interaction )
                                    bfft_orbital_gamma, calbec_rs_gamma, add_vuspsir_gamma, &
                                    v_loc_psir, s_psir_gamma, real_space_debug, &
                                    betasave, box_beta, maxbox_beta,newq_r
-  USE lr_variables,   ONLY : lr_verbosity, charge_response
+  USE lr_variables,   ONLY : lr_verbosity
   USE io_global,      ONLY : stdout
   USE dfunct,         ONLY : newq
   USE control_flags,  ONLY : tqr

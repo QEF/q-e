@@ -160,7 +160,7 @@ subroutine lr_calc_w_T()
         !
         a(:) = cmplx(omeg,epsil,dp)
         !
-        if (charge_response == 1) then
+        if (charge_response == 2) then
         do i=1,itermax-1
            !
            !Memory mapping in case of selected polarization direction
@@ -172,7 +172,7 @@ subroutine lr_calc_w_T()
            !
         end do
         endif
-        if (charge_response == 2) then
+        if (charge_response == 1) then
         !Read the actual iterations
         do i=1,itermax
            !

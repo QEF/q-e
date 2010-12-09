@@ -153,7 +153,7 @@ if (lr_verbosity > 0) then
   enddo
   !
 endif
-   IF (charge_response == 1 .and. LR_iteration /=0) then
+   IF (charge_response == 2 .and. LR_iteration /=0) then
      !
      ALLOCATE( rho_sum_resp_x( nr1 ) )
      ALLOCATE( rho_sum_resp_y( nr2 ) )
@@ -225,7 +225,7 @@ endif
      DEALLOCATE( rho_sum_resp_z )
      !
   END IF
-  IF (charge_response == 2 .and. response_calc) then
+  IF (charge_response == 1 .and. response_calc) then
     if (LR_iteration < itermax) WRITE(stdout,'(5x,"Calculating total response charge density")')
     ! the charge response, it is actually equivalent to an element of
     ! V^T . phi_v where V^T is the is the transpose of the Krylov subspace generated

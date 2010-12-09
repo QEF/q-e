@@ -188,7 +188,7 @@ subroutine lr_restart(iter_restart,rflag)
   call davcio(evc1_new(:,:,:,2),nwordrestart,iunrestart,4,-1)
   !
   close( unit = iunrestart)
-  if (charge_response == 2 ) then 
+  if (charge_response == 1 ) then 
      if (resonance_condition) then
          call diropn ( iunrestart, 'restart_lanczos-rho_tot.'//trim(int_to_char(LR_polarization)), 2*nrxx, exst)
          call davcio(rho_1_tot_im(:,:),2*nrxx*nspin_mag,iunrestart,1,-1)

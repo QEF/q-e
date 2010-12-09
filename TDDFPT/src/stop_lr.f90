@@ -18,7 +18,7 @@ SUBROUTINE stop_lr( )
   USE parallel_include
   use lr_variables,         only : n_ipol, LR_polarization, beta_store
   use lr_variables,         only :  gamma_store, zeta_store, norm0, rho_1_tot
-  use lr_variables,         only : charge_response, lr_verbosity, itermax
+  use lr_variables,         only : lr_verbosity, itermax
   USE io_global,            ONLY : ionode
   use io_files,             only : tmp_dir, prefix
   USE io_global,      ONLY : stdout

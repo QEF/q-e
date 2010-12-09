@@ -64,7 +64,7 @@ subroutine lr_alloc_init()
   allocate(rho_1(nrxx,nspin_mag))
   rho_1(:,:)=0.0d0
   !allocate(rho_tot(nrxx))
-  if (charge_response == 2 ) then 
+  if (charge_response == 1 ) then 
    !allocate(rho_1_tot(nrxx,nspin_mag)) !Due to broadening this is now done in lr_charg_resp
    !rho_1_tot(:,:)=0.0d0
    !print *,"allocating beta w_t"

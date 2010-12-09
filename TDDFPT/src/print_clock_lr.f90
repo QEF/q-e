@@ -19,7 +19,6 @@ SUBROUTINE print_clock_lr()
    USE io_global,        ONLY : stdout
    USE mp_global,        ONLY : mpime, root
    USE realus,           ONLY : real_space,real_space_debug
-   USE lr_variables,     ONLY : charge_response
    !
    IMPLICIT NONE
    !

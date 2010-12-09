@@ -38,7 +38,7 @@ contains
     USE realus,               ONLY : real_space, fft_orbital_gamma, initialisation_level, &
                                     bfft_orbital_gamma, calbec_rs_gamma, add_vuspsir_gamma, &
                                     v_loc_psir, s_psir_gamma, igk_k,npw_k, real_space_debug
-    USE lr_variables,   ONLY : lr_verbosity, charge_response
+    USE lr_variables,   ONLY : lr_verbosity
     use charg_resp,               only : w_T_beta_store,w_T,lr_calc_F
     !Debugging
     USE lr_variables, ONLY: check_all_bands_gamma, check_density_gamma,check_vector_gamma
@@ -89,7 +89,7 @@ contains
        end do
        !evc1(:,:,:,1) contains the q of x for even steps, lets calculate the response related observables
        !
-       if (charge_response == 2) then
+       if (charge_response == 1) then
         call lr_calc_dens(evc1(:,:,:,1), .true.)
         call lr_calc_F(evc1(:,:,:,1))
        endif
@@ -259,7 +259,7 @@ contains
     !
     ! 
     if (ionode) then
-     if ( charge_response == 2 .and. lr_verbosity > 0) then
+     if ( charge_response == 1 .and. lr_verbosity > 0) then
        !print *, "beta=",beta,"w_T_beta_store", w_T_beta_store(LR_iteration)
         write (stdout,'(5x,"(calc=",e21.15," read=",e21.15,")")') beta, w_T_beta_store(LR_iteration)
         write (stdout,'(5x,"Weight for this step=",2(e11.5,1x))')  w_T(LR_iteration)
