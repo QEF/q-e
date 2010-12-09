@@ -246,9 +246,9 @@ PROGRAM lr_main
         IF ( mod(LR_iteration,restart_step)==0 .OR. LR_iteration==itermax .OR. LR_iteration==1 ) CALL lr_write_restart()
      END DO lancz_loop1
      ! 
-    if (charge_response == 1 .and. lr_verbosity > 3) then
-         call lr_calc_w_T()
-    endif
+    !if (charge_response == 1 .and. lr_verbosity > 3) then
+    !     call lr_calc_w_T()
+    !endif
     if (charge_response == 2 ) then 
       if (resonance_condition) then 
        !response charge density, absorbtive

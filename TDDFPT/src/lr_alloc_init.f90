@@ -71,14 +71,15 @@ subroutine lr_alloc_init()
    allocate(w_T_beta_store(itermax_int))
    allocate(w_T_gamma_store(itermax_int))
    allocate(w_T_zeta_store(w_T_npol,itermax_int))
+   allocate(w_T(itermax_int))
    w_T_gamma_store(:)=0.0d0
    w_T_beta_store(:)=0.0d0
    w_T_zeta_store(:,:)=cmplx(0.0d0,0.0d0,dp)
 
   endif
-  if (charge_response /=0) then
-   allocate(w_T(itermax_int))
-  endif
+  !if (charge_response /=0) then
+  ! allocate(w_T(itermax_int))
+  !endif
 
   allocate(dmuxc ( nrxx , nspin , nspin))
   !print *, "dmuxc ALLOCATED",allocated(dmuxc)," SIZE=",size(dmuxc)

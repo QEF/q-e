@@ -105,7 +105,7 @@ subroutine lr_readin
   !
   !   Reading the namelist lr_post
   !
-  if (charge_response /= 0) then
+  if (charge_response == 2) then
    read (5, lr_post, err = 202, iostat = ios)
    202 call errore ('lr_readin', 'reading lr_post namelist', abs (ios) )
   endif

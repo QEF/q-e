@@ -204,26 +204,26 @@ if (ionode) then !No need for parallelization in this code
   write (stdout,'(/5x,"Broadening = ",f15.8," Ry")') epsil
   filename = trim(prefix) // ".plot"
   write (stdout,'(/5x,"Output file name: ",A20)') filename
-  write(stdout,'(/,5x,"chi_i_j: dipole susceptibility tensor in units of e^2*a_0^2/energy")')
+  write(stdout,'(/,5x,"chi_i_j: dipole polarizability tensor in units of e^2*a_0^2/energy")')
   if (n_ipol == 3) then
      write(stdout,'(/,5x,"S: oscillator strength in units of 1/energy")')
      write(stdout,'(/,5x,"S(\hbar \omega) = 2m/( 3 \pi e^2 \hbar) \omega sum_j chi_j_j")')
      write(stdout,'(/,5x,"S(\hbar \omega) satisfies the f-sum rule: \int_0^\infty dE S(E) = N_el ")')
   else
-   write (stdout,'(5x,"Insufficent info for absorption coefficient")')
+   write (stdout,'(/,5x,"Insufficent info for S")')
   endif
   if (units == 0) then
-   write (stdout,'(5x,"Functions are reported in hbar.omega Energy unit is (Ry)")')
+   write (stdout,'(/,5x,"Functions are reported in \hbar.\omega Energy unit is (Ry)")')
   else if (units == 1) then
-   write (stdout,'(5x,"Functions are reported in hbar.omega Energy unit is (eV)")')
+   write (stdout,'(/,5x,"Functions are reported in \hbar.\omega Energy unit is (eV)")')
   else if (units == 2) then
-   write (stdout,'(5x,"Functions are reported in (nm), Energy unit is (eV) ")')
+   write (stdout,'(/,5x,"Functions are reported in (nm), Energy unit is (eV) ")')
   endif
   !
   ! The static polarizability
   !
   if (verbosity>0) then
-  write (stdout,'(5x,"Static Polarizability Tensor:")')
+  write (stdout,'(/,5x,"Static dipole polarizability Tensor:")')
   call calc_chi(0.0d0,epsil,green(:,:)) 
     do ip=1,n_ipol
         !
@@ -251,7 +251,7 @@ if (ionode) then !No need for parallelization in this code
 
   if (verbosity > 2) then
    if (units == 0 .and. start<vis_start .and. end>vis_end .and. n_ipol == 3) then
-    write (stdout,'(5x,"Will attempt to calculate perceived color")')
+    write (stdout,'(/,5x,"Will attempt to calculate perceived color")')
     do_perceived=.true.
     perceived_iter=1
     perceived_itermax=int((vis_end-vis_start)/increment)
@@ -261,7 +261,7 @@ if (ionode) then !No need for parallelization in this code
     perceived_evaluated(:)=-1.0d0
     perceived_renorm=-9999999.0d0
    elseif (units == 2 .and. start<vis_end_wl .and. end>vis_start_wl .and. n_ipol == 3) then
-    write (stdout,'(5x,"Will attempt to calculate perceived color")')
+    write (stdout,'(/,5x,"Will attempt to calculate perceived color")')
     do_perceived=.true.
     perceived_iter=1
     perceived_itermax=int((vis_start_wl-vis_end_wl)/increment)
@@ -271,7 +271,7 @@ if (ionode) then !No need for parallelization in this code
     perceived_evaluated(:)=-1.0d0
     perceived_renorm=-9999999.0d0
    elseif (verbosity>2) then
-    write (stdout,'(5x,"Will not calculate perceived color")')
+    write (stdout,'(/,5x,"Will not calculate perceived color")')
     do_perceived=.false.
    endif
   endif
