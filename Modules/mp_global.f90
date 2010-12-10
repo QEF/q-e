@@ -178,7 +178,7 @@ CONTAINS
     CALL mp_bcast( nproc_ortho_in, meta_ionode_id )
     CALL mp_bcast( user_nproc_ortho, meta_ionode_id )
     !
-    use_task_groups = ( ntask_groups > 0 )
+    use_task_groups = ( ntask_groups > 1 )
     !
     ! ... all pools are initialized here
     !
@@ -378,7 +378,7 @@ CONTAINS
     !
     CALL init_ortho_group( nproc_ortho_try, intra_pool_comm )
     !  
-    IF( ntask_groups_ > 0 ) THEN
+    IF( ntask_groups_ > 1 ) THEN
        nogrp = ntask_groups_
        CALL init_task_groups( )
     END IF
