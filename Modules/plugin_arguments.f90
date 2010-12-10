@@ -23,7 +23,7 @@ SUBROUTINE plugin_arguments()
   !
   IMPLICIT NONE
   !
-  INTEGER  :: iiarg, nargs, iargc, i
+  INTEGER  :: iiarg, nargs, iargc, i, i0
   CHARACTER (len=1), EXTERNAL ::  lowercase
   CHARACTER (len=256) :: arg
   !
@@ -40,13 +40,15 @@ SUBROUTINE plugin_arguments()
   DO iiarg = 1, nargs 
     CALL getarg( iiarg, plugin_name)
     IF ( plugin_name(1:1) == '-') THEN
+       i0 = 1
+       IF ( plugin_name(2:2) == '-') i0 = 2
        arg = ' '
-       DO i=2, LEN_TRIM (plugin_name)
-          arg(i-i:i-1) = lowercase (plugin_name(i:i))
+       DO i=i0+1, LEN_TRIM (plugin_name)
+          arg(i-i0:i-i0) = lowercase (plugin_name(i:i))
        END DO
 !       write(0,*) "plugin_name: ", trim(arg)
        ! add here more plugins
-       IF ( TRIM(arg)=='plumed' .OR. TRIM(arg)=='-plumed' ) THEN
+       IF ( TRIM(arg)=='plumed' ) THEN
           use_plumed = .true.
        END IF
     ENDIF

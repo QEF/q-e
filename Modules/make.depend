@@ -135,7 +135,6 @@ parser.o : mp_global.o
 paw_variables.o : kind.o
 plugin_arguments.o : io_global.o
 plugin_arguments.o : kind.o
-plugin_arguments.o : mp.o
 plugin_arguments.o : mp_global.o
 plugin_arguments.o : plugin_flags.o
 plugin_flags.o : kind.o
