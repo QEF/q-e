@@ -155,9 +155,11 @@ CONTAINS
       !
       vel(:,:)     = 0.D0
       vel_defined  = .true. ! by default use vel==0 as starting point
-      tau_old(:,:) = vel(1,1)/vel(2,1) ! improvise a NaN...
-      tau_new(:,:) = vel(1,1)/vel(2,1) ! improvise a NaN...
-      acc(:,:)     = vel(1,1)/vel(2,1) ! improvise a NaN...
+      ! not sure why the next 3 arrays were set to 0/0 ... maybe it
+      ! was just a check. The following should do the job.
+      tau_old(:,:) = 1.0D30
+      tau_new(:,:) = 1.0D30
+      acc(:,:)     = 1.0D30
       temp_av      = 0.D0
       !
       CALL seqopn( 4, 'md', 'FORMATTED', file_exists )
