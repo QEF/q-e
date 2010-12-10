@@ -253,7 +253,7 @@ compute_becsum.o : ../Modules/wavefunctions.o
 compute_becsum.o : becmod.o
 compute_becsum.o : buffers.o
 compute_becsum.o : noncol.o
-compute_becsum.o : paw_onecenter.o
+compute_becsum.o : paw_symmetry.o
 compute_becsum.o : pwcom.o
 compute_becsum.o : scf_mod.o
 compute_deff.o : ../Modules/ions_base.o
@@ -367,6 +367,7 @@ electrons.o : io_rho_xml.o
 electrons.o : newd.o
 electrons.o : noncol.o
 electrons.o : paw_onecenter.o
+electrons.o : paw_symmetry.o
 electrons.o : pwcom.o
 electrons.o : scf_mod.o
 eqvect.o : ../Modules/kind.o
@@ -753,6 +754,7 @@ iweights.o : noncol.o
 kernel_table.o : ../Modules/constants.o
 kernel_table.o : ../Modules/io_files.o
 kernel_table.o : ../Modules/kind.o
+kernel_table.o : ../Modules/wrappers.o
 kpoint_grid.o : ../Modules/input_parameters.o
 kpoint_grid.o : ../Modules/io_global.o
 kpoint_grid.o : ../Modules/kind.o
@@ -939,11 +941,9 @@ paw_init.o : ../Modules/random_numbers.o
 paw_init.o : ../Modules/uspp.o
 paw_init.o : noncol.o
 paw_init.o : paw_symmetry.o
-paw_init.o : paw_onecenter.o
 paw_init.o : pwcom.o
 paw_init.o : scf_mod.o
 paw_onecenter.o : ../Modules/atom.o
-paw_onecenter.o : ../Modules/cell_base.o
 paw_onecenter.o : ../Modules/constants.o
 paw_onecenter.o : ../Modules/funct.o
 paw_onecenter.o : ../Modules/io_global.o
@@ -956,10 +956,22 @@ paw_onecenter.o : ../Modules/radial_grids.o
 paw_onecenter.o : ../Modules/uspp.o
 paw_onecenter.o : noncol.o
 paw_onecenter.o : pwcom.o
-paw_onecenter.o : symm_base.o
+paw_symmetry.o : ../Modules/cell_base.o
+paw_symmetry.o : ../Modules/constants.o
+paw_symmetry.o : ../Modules/io_global.o
+paw_symmetry.o : ../Modules/ions_base.o
+paw_symmetry.o : ../Modules/kind.o
+paw_symmetry.o : ../Modules/mp.o
+paw_symmetry.o : ../Modules/mp_global.o
+paw_symmetry.o : ../Modules/uspp.o
+paw_symmetry.o : noncol.o
+paw_symmetry.o : pwcom.o
+paw_symmetry.o : symm_base.o
 plugin_forces.o : ../Modules/io_files.o
 plugin_forces.o : ../Modules/io_global.o
 plugin_forces.o : ../Modules/kind.o
+plugin_forces.o : ../Modules/mp.o
+plugin_forces.o : ../Modules/mp_global.o
 plugin_forces.o : ../Modules/plugin_flags.o
 plugin_initialization.o : ../Modules/io_files.o
 plugin_initialization.o : ../Modules/io_global.o
@@ -1453,7 +1465,7 @@ sum_band.o : ../Modules/wavefunctions.o
 sum_band.o : becmod.o
 sum_band.o : buffers.o
 sum_band.o : noncol.o
-sum_band.o : paw_onecenter.o
+sum_band.o : paw_symmetry.o
 sum_band.o : pwcom.o
 sum_band.o : realus.o
 sum_band.o : scf_mod.o
@@ -1476,6 +1488,7 @@ summary.o : ../Modules/mp.o
 summary.o : ../Modules/mp_global.o
 summary.o : ../Modules/printout_base.o
 summary.o : ../Modules/uspp.o
+summary.o : kernel_table.o
 summary.o : noncol.o
 summary.o : pwcom.o
 summary.o : symm_base.o
