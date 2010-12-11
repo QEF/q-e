@@ -234,6 +234,7 @@ cpr_mod.o : ../Modules/kind.o
 cprstart.o : ../Modules/check_stop.o
 cprstart.o : ../Modules/control_flags.o
 cprstart.o : ../Modules/environment.o
+cprstart.o : ../Modules/io_global.o
 cprstart.o : ../Modules/mp_global.o
 cprstart.o : input.o
 cprsub.o : ../Modules/atom.o
@@ -658,6 +659,16 @@ phasefactor.o : ../Modules/kind.o
 phasefactor.o : ../Modules/recvec.o
 phasefactor.o : cp_interfaces.o
 phasefactor.o : gvecb.o
+plugin_forces.o : ../Modules/io_files.o
+plugin_forces.o : ../Modules/io_global.o
+plugin_forces.o : ../Modules/kind.o
+plugin_forces.o : ../Modules/mp.o
+plugin_forces.o : ../Modules/mp_global.o
+plugin_forces.o : ../Modules/plugin_flags.o
+plugin_initialization.o : ../Modules/io_files.o
+plugin_initialization.o : ../Modules/io_global.o
+plugin_initialization.o : ../Modules/kind.o
+plugin_initialization.o : ../Modules/plugin_flags.o
 polarization.o : ../Modules/berry_phase.o
 polarization.o : ../Modules/cell_base.o
 polarization.o : ../Modules/constants.o
