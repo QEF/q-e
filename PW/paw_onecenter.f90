@@ -175,7 +175,6 @@ SUBROUTINE PAW_potential(becsum, d, energy, e_cmp)
             CALL PAW_h_potential(i, rho_lm, v_lm(:,:,1), energy)
                !
                !    
-
       ! NOTE: optional variables works recursively: e.g. if energy is not present here
             ! it will not be present in PAW_h_potential too!
             !IF (present(energy)) write(*,*) 'H',i%a,i_what,sgn*energy
@@ -184,6 +183,7 @@ SUBROUTINE PAW_potential(becsum, d, energy, e_cmp)
             DO is = 1,nspin_lsda ! ... v_H has to be copied to all spin components
                savedv_lm(:,:,is) = v_lm(:,:,1)
             ENDDO
+
 
             ! Then the XC one:
             CALL PAW_xc_potential(i, rho_lm, rho_core, v_lm, energy)
@@ -248,7 +248,6 @@ SUBROUTINE PAW_potential(becsum, d, energy, e_cmp)
          !
       ENDIF ifpaw
    ENDDO atoms
-
 #ifdef __PARA
    ! recollect D coeffs and total one-center energy
    IF( mykey /= 0 ) energy_tot = 0.0d0
@@ -446,12 +445,10 @@ SUBROUTINE PAW_xc_potential(i, rho_lm, rho_core, v_lm, energy)
         ALLOCATE(e_rad(i%m))
         e_of_tid(mytid) = 0._dp
     ENDIF
-
 !$omp workshare
     v_rad = 0.0_dp
-    g_rad = 0.0_DP
+    IF (with_small_so) g_rad = 0.0_DP
 !$omp end workshare
-
 !$omp do
     DO ix = ix_s, ix_e
         !
@@ -543,7 +540,6 @@ SUBROUTINE PAW_xc_potential(i, rho_lm, rho_core, v_lm, energy)
     ! Add gradient correction, if necessary
     IF( dft_is_gradient() ) &
         CALL PAW_gcxc_potential( i, rho_lm, rho_core, v_lm, energy )
-
 
     if(TIMING) CALL stop_clock ('PAW_xc_pot')
     RETURN
