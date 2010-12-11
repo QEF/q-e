@@ -45,6 +45,9 @@ Fixed in CVS version:
         an old but minor bug on averaging of Berry phases between strings
   * PW: problem with symmetrization in the noncollinear case
   * PH: elph=.true. and trans=.false. was not working any longer. 
+  * PH: electron-phonon data file for q2r.x was not properly written in
+        some cases (-q not in the star of q). Also: questionable syntax
+        for formats in lambda.f90 was not accepted by gfortran
 
 Fixed in version 4.2.1:
 

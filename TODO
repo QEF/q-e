@@ -1,8 +1,9 @@
-TODO LIST - November 2010
+TODO LIST - December 2010
 
 
 0) Suspected bugs/problems:
-  0.3  ELF
+  0.2  nstep ignored in vc-relax and other cases
+  0.3  incorrect values for ELF?
   0.4  FFT grid dimensions not the same in PW and in CP for same data
        (requires merge of all FFT-related variables between CP and PW)
   0.5  Small energy differences between PW and CP - maybe PP-related, 
