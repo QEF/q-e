@@ -691,7 +691,11 @@ SUBROUTINE elphsum ( )
      end if
      dyn22(:,:) = gf(:,:,isig)
      write(iuelph,*) deg(isig), effit(isig), dosfit(isig)
-     write(iuelph,*) nq
+     IF ( imq == 0 ) THEN
+        write(iuelph,*) 2*nq
+     ELSE
+        write(iuelph,*) nq
+     ENDIF
      xmldyn_save=xmldyn
      xmldyn=.FALSE.
      call q2qstar_ph (dyn22, at, bg, nat, nsym, s, invs, &

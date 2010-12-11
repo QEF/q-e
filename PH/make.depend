@@ -1072,6 +1072,7 @@ solve_e.o : ../Modules/uspp.o
 solve_e.o : ../Modules/wavefunctions.o
 solve_e.o : ../PW/noncol.o
 solve_e.o : ../PW/paw_onecenter.o
+solve_e.o : ../PW/paw_symmetry.o
 solve_e.o : ../PW/pwcom.o
 solve_e.o : ../PW/scf_mod.o
 solve_e.o : phcom.o
@@ -1129,6 +1130,7 @@ solve_linter.o : ../Modules/uspp.o
 solve_linter.o : ../Modules/wavefunctions.o
 solve_linter.o : ../PW/noncol.o
 solve_linter.o : ../PW/paw_onecenter.o
+solve_linter.o : ../PW/paw_symmetry.o
 solve_linter.o : ../PW/pwcom.o
 solve_linter.o : ../PW/scf_mod.o
 solve_linter.o : phcom.o
