@@ -18,7 +18,6 @@
      INTEGER :: ngw  = 0  ! local number of G vectors
      INTEGER :: ngwt = 0  ! in parallel execution global number of G vectors,
                        ! in serial execution this is equal to ngw
-     INTEGER :: ngwl = 0  ! number of G-vector shells up to ngw
      INTEGER :: ngwx = 0  ! maximum local number of G vectors
      INTEGER :: ng0  = 0  ! first G-vector with nonzero modulus
                        ! needed in the parallel case (G=0 is on one node only!)
@@ -87,9 +86,8 @@
 
      ! ...   G vectors less than the smooth grid cut-off ( ? )
      INTEGER :: ngms = 0  ! local number of G vectors
-     INTEGER :: ngst = 0  ! in parallel execution global number of G vectors,
+     INTEGER :: ngms_g=0  ! in parallel execution global number of G vectors,
                        ! in serial execution this is equal to ngw
-     INTEGER :: ngsl = 0  ! number of G-vector shells up to ngw
      INTEGER :: ngsx = 0  ! maximum local number of G vectors
 
      INTEGER, ALLOCATABLE :: nps(:), nms(:)
@@ -234,7 +232,7 @@
        USE mp, ONLY: mp_max, mp_sum
        USE gvecw, ONLY: ngw, ngwx, ngwt
        USE gvecp, ONLY: ngm, ngmx, ngm_g
-       USE gvecs, ONLY: ngms, ngsx, ngst
+       USE gvecs, ONLY: ngms, ngsx, ngms_g
 
        IMPLICIT NONE
        INTEGER, INTENT(IN) :: ngm_ , ngw_ , ngs_
@@ -257,10 +255,10 @@
        !
        ngwt = ngw
        ngm_g= ngm
-       ngst = ngms
+       ngms_g=ngms
        CALL mp_sum( ngwt, intra_image_comm )
        CALL mp_sum( ngm_g, intra_image_comm )
-       CALL mp_sum( ngst, intra_image_comm )
+       CALL mp_sum( ngms_g,intra_image_comm )
 
        RETURN 
      END SUBROUTINE recvecs_init

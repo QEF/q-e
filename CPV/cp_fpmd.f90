@@ -25,7 +25,7 @@ subroutine ggenb (b1b, b2b, b3b, nr1b ,nr2b, nr3b, nr1bx ,nr2bx, nr3bx, gcutb )
 !
    integer, allocatable:: idx(:)
    integer n1pb, n2pb, n3pb, n1mb, n2mb, n3mb
-   integer it, icurr, nr1m1, nr2m1, nr3m1, ir, ig, i,j,k, itv(3), idum, ip
+   integer it, icurr, nr1m1, nr2m1, nr3m1, ir, ig, i,j,k, itv(3), ip
    REAL(DP) t(3), g2
 !
       nr1m1=nr1b-1
@@ -183,7 +183,7 @@ subroutine ggenb (b1b, b2b, b3b, nr1b ,nr2b, nr3b, nr1bx ,nr2bx, nr3bx, gcutb )
 ! shells of G - first calculate their number and position
 !
 
-      CALL gshcount( ngbl, idum, idum, iglb, ngb, gb, -1.0d0, -1.0d0 )
+      CALL gshcount( ngbl, iglb, ngb, gb, -1.0d0, -1.0d0 )
 
       IF( iprsta > 3 ) THEN
         WRITE( stdout,180) ngbl
@@ -336,8 +336,8 @@ end subroutine ggenb
       use reciprocal_vectors, only: mill, ig_l2g
       use reciprocal_vectors, only: gstart, sortedig_l2g
       use recvecs_indexes,    only: nm, np
-      use gvecs,              only: ngms, nms, ngsl, nps
-      use gvecw,              only: ngw, ngwl, ngwt, ggp
+      use gvecs,              only: ngms, nms, nps
+      use gvecw,              only: ngw, ngwt, ggp
       use gvecp,              only: ngm, ngl, ngm_g
       use io_global,          only: stdout
       USE fft_base,           ONLY: dfftp, dffts, fft_dlay_descriptor
@@ -475,7 +475,7 @@ end subroutine ggenb
 ! shells of G - first calculate their number and position
 !
 
-      CALL gshcount( ngl, ngsl, ngwl, igl, ngm, gg, gcuts, gcutw )
+      CALL gshcount( ngl, igl, ngm, gg, gcuts, gcutw )
 
 !
 ! then allocate the array gl
@@ -884,14 +884,14 @@ END SUBROUTINE gfftindex
 
 
 !-------------------------------------------------------------------------
-SUBROUTINE gshcount( ngl, ngsl, ngwl, igl, ng, gg, gcuts, gcutw )
+SUBROUTINE gshcount( ngl, igl, ng, gg, gcuts, gcutw )
 !-------------------------------------------------------------------------
 
   USE kinds,     ONLY: DP
 
   IMPLICIT NONE
 
-  INTEGER :: ngl, ngsl, ngwl
+  INTEGER :: ngl
   INTEGER :: igl(*)
   INTEGER :: ng
   REAL(DP) :: gg(*), gcuts, gcutw
@@ -903,8 +903,8 @@ SUBROUTINE gshcount( ngl, ngsl, ngwl, igl, ng, gg, gcuts, gcutw )
       do ig=2,ng
          if(abs(gg(ig)-gg(ig-1)).gt.1.e-6)then
             ngl=ngl+1
-            if (gg(ig).lt.gcuts) ngsl=ngl
-            if (gg(ig).lt.gcutw) ngwl=ngl
+            !!! if (gg(ig).lt.gcuts) ngsl=ngl
+            !!! if (gg(ig).lt.gcutw) ngwl=ngl
          endif
          igl(ig)=ngl
       end do
@@ -1657,7 +1657,7 @@ SUBROUTINE gmeshinfo( )
    USE io_global, ONLY: ionode, ionode_id, stdout
    USE mp,        ONLY: mp_max, mp_gather
    use gvecb,     only: ngb
-   USE reciprocal_vectors, only: ngst, ngms, ngsx, ngm, ngm_g, ngmx,&
+   USE reciprocal_vectors, only: ngms_g, ngms, ngsx, ngm, ngm_g, ngmx,&
               ngw_g  => ngwt,   &
               ngw_l  => ngw ,   &
               ngw_lx => ngwx
@@ -1687,7 +1687,7 @@ SUBROUTINE gmeshinfo( )
       WRITE( stdout,1011) ng_snd(1), min_val, max_val, avg_val
    END IF
    !
-   ng_snd(1) = ngst
+   ng_snd(1) = ngms_g
    ng_snd(2) = ngms
    ng_snd(3) = ngsx
    CALL mp_gather(ng_snd, ng_rcv, ionode_id, intra_image_comm)
@@ -1735,7 +1735,7 @@ SUBROUTINE gmeshinfo( )
    1000    FORMAT(3X,'Large Mesh',/, &
            '     Global(ngmt)     MinLocal       MaxLocal      Average') 
    1001    FORMAT(3X,'Smooth Mesh',/, &
-           '     Global(ngst)     MinLocal       MaxLocal      Average') 
+           '     Global(ngms_g)     MinLocal       MaxLocal      Average') 
    1002    FORMAT(3X,'Wave function Mesh',/, &
            '     Global(ngwt)     MinLocal       MaxLocal      Average') 
    1011    FORMAT(  3I15, F15.2 )

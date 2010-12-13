@@ -23,8 +23,9 @@ Incompatible changes in CVS version:
 	nnrs/nnrsx	nrxxs		nrx[123]s	nr[123]sx
 	ngml		ngl		ig[123]		mill (replaces mill_l)
 	ngmt		ngm_g
-	ngs 		ngms		call cft3 and	call fwfft or
-	g  		gg		     cft3s	     invfft
+	ngs 		ngms		cft3/cft3s	fwfft/invfft
+	ngst 		ngms_g
+	g  		gg
 	gx		g
 	gcuts 		gcutms
 	ecutp 		ecutrho
