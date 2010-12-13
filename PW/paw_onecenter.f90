@@ -447,7 +447,7 @@ SUBROUTINE PAW_xc_potential(i, rho_lm, rho_core, v_lm, energy)
     ENDIF
 !$omp workshare
     v_rad = 0.0_dp
-    IF (with_small_so) g_rad = 0.0_DP
+!!!not really needed    IF (with_small_so) g_rad = 0.0_DP
 !$omp end workshare
 !$omp do
     DO ix = ix_s, ix_e
