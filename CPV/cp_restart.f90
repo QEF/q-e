@@ -60,7 +60,7 @@ MODULE cp_restart
       USE gvecp,                    ONLY : ngm, ngm_g
       USE gvecs,                    ONLY : ngst, ecuts, dual
       USE gvecw,                    ONLY : ngw, ngwt, ecutwfc
-      USE reciprocal_vectors,       ONLY : ig_l2g, mill_l
+      USE reciprocal_vectors,       ONLY : ig_l2g, mill
       USE electrons_base,           ONLY : nspin, nelt, nel, nudx
       USE cell_base,                ONLY : ibrav, alat, celldm, &
                                            symm_type, s_to_r
@@ -134,7 +134,7 @@ MODULE cp_restart
       INTEGER               :: nk1, nk2, nk3
       INTEGER               :: j, i, iss, ig, nspin_wfc, iss_wfc
       INTEGER               :: is, ia, isa, ik, ierr
-      INTEGER,  ALLOCATABLE :: mill(:,:)
+      INTEGER,  ALLOCATABLE :: mill_g(:,:)
       INTEGER,  ALLOCATABLE :: ftmp(:,:)
       INTEGER,  ALLOCATABLE :: ityp(:)
       REAL(DP), ALLOCATABLE :: tau(:,:)
@@ -255,13 +255,13 @@ MODULE cp_restart
       !   
       ! ... Collect G vectors
       !   
-      ALLOCATE( mill( 3, ngm_g ) )
+      ALLOCATE( mill_g( 3, ngm_g ) )
       !
-      mill = 0
+      mill_g = 0
       !
-      mill(:,ig_l2g(1:ngm)) = mill_l(:,1:ngm)
+      mill_g(:,ig_l2g(1:ngm)) = mill(:,1:ngm)
       !
-      CALL mp_sum( mill, intra_image_comm )
+      CALL mp_sum( mill_g, intra_image_comm )
       !
       lsda = ( nspin == 2 )
       !
@@ -360,7 +360,7 @@ MODULE cp_restart
          !
          CALL write_planewaves( ecutwfc, dual, ngwt, gamma_only, nr1, nr2, &
                                 nr3, ngm_g, nr1s, nr2s, nr3s, ngst, nr1b, &
-                                nr2b, nr3b, mill, .FALSE. )
+                                nr2b, nr3b, mill_g, .FALSE. )
          !
 !-------------------------------------------------------------------------------
 ! ... SPIN
@@ -676,7 +676,7 @@ MODULE cp_restart
             !
          END IF
          !
-         CALL write_gk( iunout, ik, mill, filename )
+         CALL write_gk( iunout, ik, mill_g, filename )
          !
          DO iss = 1, nspin
             ! 
@@ -893,7 +893,7 @@ MODULE cp_restart
       DEALLOCATE( ftmp )
       DEALLOCATE( tau  )
       DEALLOCATE( ityp )
-      DEALLOCATE( mill )
+      DEALLOCATE( mill_g )
       !
       CALL save_history( dirname, nfi )
       !
@@ -935,7 +935,7 @@ MODULE cp_restart
                                            s_to_r, r_to_s
       USE ions_base,                ONLY : nsp, nat, na, atm, zv, pmass, &
                                            sort_tau, ityp, ions_cofmass
-      USE reciprocal_vectors,       ONLY : ig_l2g, mill_l
+      USE reciprocal_vectors,       ONLY : ig_l2g, mill
       USE cp_main_variables,        ONLY : nprint_nfi, distribute_lambda, descla, distribute_zmat
       USE mp,                       ONLY : mp_sum
       USE mp_global,                ONLY : intra_image_comm
@@ -996,7 +996,7 @@ MODULE cp_restart
       INTEGER              :: i, j, iss, ig, nspin_wfc, ierr, ik
       REAL(DP)             :: omega, htm1(3,3), hinv(3,3), scalef
       LOGICAL              :: found
-      INTEGER, ALLOCATABLE :: mill(:,:)
+      INTEGER, ALLOCATABLE :: mill_g(:,:)
       !
       ! ... variables read for testing pourposes
       !
@@ -2180,11 +2180,11 @@ MODULE cp_restart
     !
     !
     !
-    SUBROUTINE write_gk( iun, ik, mill, filename )
+    SUBROUTINE write_gk( iun, ik, mill_g, filename )
        !
        USE gvecw,                    ONLY : ngw, ngwt
        USE control_flags,            ONLY : gamma_only
-       USE reciprocal_vectors,       ONLY : ig_l2g, mill_l
+       USE reciprocal_vectors,       ONLY : ig_l2g, mill
        USE mp,                       ONLY : mp_sum
        USE mp_global,                ONLY : intra_image_comm
        USE io_global,                ONLY : ionode
@@ -2192,7 +2192,7 @@ MODULE cp_restart
        IMPLICIT NONE
        !
        INTEGER,            INTENT(IN) :: iun, ik
-       INTEGER,            INTENT(IN) :: mill(:,:)
+       INTEGER,            INTENT(IN) :: mill_g(:,:)
        CHARACTER(LEN=256), INTENT(IN) :: filename
        !
        INTEGER, ALLOCATABLE :: igwk(:)
@@ -2250,7 +2250,7 @@ MODULE cp_restart
           CALL iotk_write_dat( iun, "K-POINT_COORDS", xk(:), ATTR = attr )
           !
           CALL iotk_write_dat( iun, "INDEX", igwk( 1:npw_g ) )
-          CALL iotk_write_dat( iun, "GRID", mill( 1:3, igwk( 1:npw_g ) ), COLUMNS = 3 )
+          CALL iotk_write_dat( iun, "GRID", mill_g(1:3, igwk(1:npw_g)), COLUMNS = 3 )
           !
           CALL iotk_close_write( iun )
           !

@@ -127,7 +127,7 @@ MODULE pw_restart
       INTEGER               :: npool, nkbl, nkl, nkr, npwx_g
       INTEGER               :: ike, iks, npw_g, ispin
       INTEGER,  ALLOCATABLE :: ngk_g(:)
-      INTEGER,  ALLOCATABLE :: igk_l2g(:,:), igk_l2g_kdip(:,:), itmp(:,:)
+      INTEGER,  ALLOCATABLE :: igk_l2g(:,:), igk_l2g_kdip(:,:), mill_g(:,:)
       LOGICAL               :: lwfc
       REAL(DP), ALLOCATABLE :: raux(:)
       !
@@ -222,19 +222,19 @@ MODULE pw_restart
       !
       ! ... collect all G-vectors across processors within the pools
       !
-      ALLOCATE( itmp( 3, ngm_g ) )
+      ALLOCATE( mill_g( 3, ngm_g ) )
       !
-      itmp = 0
+      mill_g = 0
       !
       DO ig = 1, ngm
          !
-         itmp(1,ig_l2g(ig)) = mill(1,ig)
-         itmp(2,ig_l2g(ig)) = mill(2,ig)
-         itmp(3,ig_l2g(ig)) = mill(3,ig)
+         mill_g(1,ig_l2g(ig)) = mill(1,ig)
+         mill_g(2,ig_l2g(ig)) = mill(2,ig)
+         mill_g(3,ig_l2g(ig)) = mill(3,ig)
          !
       END DO
       !
-      CALL mp_sum( itmp, intra_pool_comm )
+      CALL mp_sum( mill_g, intra_pool_comm )
       !
       ! ... build the igk_l2g array, yielding the correspondence between
       ! ... the local k+G index and the global G index - see also ig_l2g
@@ -359,7 +359,7 @@ MODULE pw_restart
          !
          CALL write_planewaves( ecutwfc, dual, npwx_g, gamma_only, nr1, nr2, &
                                 nr3, ngm_g, nr1s, nr2s, nr3s, ngms_g, nr1, &
-                                nr2, nr3, itmp, lwfc )
+                                nr2, nr3, mill_g, lwfc )
          !
 !-------------------------------------------------------------------------------
 ! ... SPIN
@@ -722,7 +722,7 @@ MODULE pw_restart
 ! ... END RESTART SECTIONS
 !-------------------------------------------------------------------------------
       !
-      DEALLOCATE( itmp )
+      DEALLOCATE( mill_g )
       DEALLOCATE( ngk_g )
       !
       CALL save_history( dirname, istep )
@@ -741,34 +741,34 @@ MODULE pw_restart
           CHARACTER(LEN=256), INTENT(IN) :: filename
           !
           INTEGER, ALLOCATABLE :: igwk(:,:)
-          INTEGER, ALLOCATABLE :: itmp1(:)
+          INTEGER, ALLOCATABLE :: itmp(:)
           !
           !
           ALLOCATE( igwk( npwx_g, nkstot ) )
           !
           igwk(:,ik) = 0
           !
-          ALLOCATE( itmp1( npw_g ) )
+          ALLOCATE( itmp( npw_g ) )
           !
-          itmp1 = 0
+          itmp = 0
           !
           IF ( ik >= iks .AND. ik <= ike ) THEN
              !
              DO ig = 1, ngk(ik-iks+1)
                 !
-                itmp1(igk_l2g(ig,ik-iks+1)) = igk_l2g(ig,ik-iks+1)
+                itmp(igk_l2g(ig,ik-iks+1)) = igk_l2g(ig,ik-iks+1)
                 !
              END DO
              !
           END IF
           !
-          CALL mp_sum( itmp1, intra_image_comm )
+          CALL mp_sum( itmp, intra_image_comm )
           !
           ngg = 0
           !
           DO ig = 1, npw_g
              !
-             if ( itmp1(ig) == ig ) THEN
+             if ( itmp(ig) == ig ) THEN
                 !
                 ngg = ngg + 1
                 !
@@ -778,7 +778,7 @@ MODULE pw_restart
              !
           END DO
           !
-          DEALLOCATE( itmp1 )
+          DEALLOCATE( itmp )
           !
           IF ( ionode ) THEN
              !
@@ -793,7 +793,7 @@ MODULE pw_restart
              CALL iotk_write_dat( iun, "K-POINT_COORDS", xk(:,ik), ATTR = attr )
              !
              CALL iotk_write_dat( iun, "INDEX", igwk(1:ngk_g(ik),ik) )
-             CALL iotk_write_dat( iun, "GRID", itmp(1:3,igwk(1:ngk_g(ik),ik)), &
+             CALL iotk_write_dat( iun, "GRID", mill_g(1:3,igwk(1:ngk_g(ik),ik)), &
                                   COLUMNS = 3 )
              !
              CALL iotk_close_write( iun )

@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2005 FPMD-CPV groups
+! Copyright (C) 2002-2010 Quantum ESPRESSO groups
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -21,7 +21,7 @@ subroutine gtable( ipol, ctable)
   !            a orthorombic primitive cell is supposed
   use kinds, only: dp
   use gvecw, only: ngw  
-  use reciprocal_vectors, only: mill_l
+  use reciprocal_vectors, only: mill
   use mp, only: mp_sum
   use io_global, only: ionode, stdout
   use mp_global, only: intra_image_comm 
@@ -36,9 +36,9 @@ subroutine gtable( ipol, ctable)
   test=0.d0
   do ig=1,ngw!loop on g vectors
      ! first +g
-     i = mill_l(1,ig)
-     j = mill_l(2,ig)
-     k = mill_l(3,ig)
+     i = mill(1,ig)
+     j = mill(2,ig)
+     k = mill(3,ig)
      if(ipol.eq.1) i=i+1
      if(ipol.eq.2) j=j+1
      if(ipol.eq.3) k=k+1
@@ -46,7 +46,7 @@ subroutine gtable( ipol, ctable)
      found = .false.
      
      do jg=1,ngw
-        if(mill_l(1,jg).eq.i .and. mill_l(2,jg).eq.j .and. mill_l(3,jg).eq.k) then
+        if(mill(1,jg).eq.i .and. mill(2,jg).eq.j .and. mill(3,jg).eq.k) then
            found=.true.
            ctable(ig,1)=jg
         endif
@@ -54,7 +54,7 @@ subroutine gtable( ipol, ctable)
 
      if(.not. found) then        
         do jg=1,ngw
-           if(-mill_l(1,jg).eq.i .and. -mill_l(2,jg).eq.j .and. -mill_l(3,jg).eq.k) then
+           if(-mill(1,jg).eq.i .and. -mill(2,jg).eq.j .and. -mill(3,jg).eq.k) then
               found=.true.
               ctable(ig,1)=-jg
            endif
@@ -66,9 +66,9 @@ subroutine gtable( ipol, ctable)
      endif
 
      ! now -g
-     i = -mill_l(1,ig)
-     j = -mill_l(2,ig)
-     k = -mill_l(3,ig)
+     i = -mill(1,ig)
+     j = -mill(2,ig)
+     k = -mill(3,ig)
      if(ipol.eq.1) i=i+1
      if(ipol.eq.2) j=j+1
      if(ipol.eq.3) k=k+1
@@ -76,7 +76,7 @@ subroutine gtable( ipol, ctable)
      found = .false.
 
      do jg=1,ngw
-        if (-mill_l(1,jg).eq.i .and. -mill_l(2,jg).eq.j .and. -mill_l(3,jg).eq.k)then
+        if (-mill(1,jg).eq.i .and. -mill(2,jg).eq.j .and. -mill(3,jg).eq.k)then
            found=.true.
            ctable(ig,2)=-jg
         endif
@@ -84,7 +84,7 @@ subroutine gtable( ipol, ctable)
      
      if(.not.found) then
         do jg=1,ngw
-           if(mill_l(1,jg).eq.i .and. mill_l(2,jg).eq.j .and. mill_l(3,jg).eq.k)then
+           if(mill(1,jg).eq.i .and. mill(2,jg).eq.j .and. mill(3,jg).eq.k)then
               found=.true.
               ctable(ig,2)=jg
            endif
@@ -115,7 +115,7 @@ subroutine gtablein( ipol, ctabin)
 
   use kinds, only: dp
   use gvecw, only: ngw  
-  use reciprocal_vectors, only: mill_l
+  use reciprocal_vectors, only: mill
   use mp, only: mp_sum
   use io_global, only: ionode, stdout
   use mp_global, only: intra_image_comm
@@ -132,19 +132,19 @@ subroutine gtablein( ipol, ctabin)
   test=0.d0
   
   do ig=1,ngw!loop on g vectors
-     i = mill_l(1,ig)
-     j = mill_l(2,ig)
-     k = mill_l(3,ig)
+     i = mill(1,ig)
+     j = mill(2,ig)
+     k = mill(3,ig)
      if(ipol.eq.1) i=i+1
      if(ipol.eq.2) j=j+1
      if(ipol.eq.3) k=k+1
      found = .false.
 
      do jg=1,ngw
-        if(i.eq.mill_l(1,jg).and. j.eq.mill_l(2,jg) .and. k.eq.mill_l(3,jg))then
+        if(i.eq.mill(1,jg).and. j.eq.mill(2,jg) .and. k.eq.mill(3,jg))then
            found = .true.
            ctabin(ig,1)=jg
-        else if(i.eq.-mill_l(1,jg).and. j.eq.-mill_l(2,jg) .and. k.eq.-mill_l(3,jg))then
+        else if(i.eq.-mill(1,jg).and. j.eq.-mill(2,jg) .and. k.eq.-mill(3,jg))then
            found=.true.
            ctabin(ig,1)=-jg
         endif
@@ -156,19 +156,19 @@ subroutine gtablein( ipol, ctabin)
   enddo
   
   do ig=1,ngw!loop on g vectors
-     i = mill_l(1,ig)
-     j = mill_l(2,ig)
-     k = mill_l(3,ig)
+     i = mill(1,ig)
+     j = mill(2,ig)
+     k = mill(3,ig)
      if(ipol.eq.1) i=i-1
      if(ipol.eq.2) j=j-1
      if(ipol.eq.3) k=k-1
      found = .false.
 
      do jg=1,ngw
-        if(i.eq.mill_l(1,jg).and. j.eq.mill_l(2,jg) .and. k.eq.mill_l(3,jg))then
+        if(i.eq.mill(1,jg).and. j.eq.mill(2,jg) .and. k.eq.mill(3,jg))then
            found = .true.
            ctabin(ig,2)=jg
-        else if(i.eq.-mill_l(1,jg).and. j.eq.-mill_l(2,jg) .and. k.eq.-mill_l(3,jg))then
+        else if(i.eq.-mill(1,jg).and. j.eq.-mill(2,jg) .and. k.eq.-mill(3,jg))then
            found=.true.
            ctabin(ig,2)=-jg
         endif
@@ -192,7 +192,7 @@ subroutine find_whose_is_g
 !this subroutine set the correspondence G-->Proc
 
   USE gvecw,              ONLY : ngw, ngwt
-  USE reciprocal_vectors, ONLY : ig_l2g, mill_g, mill_l
+  USE reciprocal_vectors, ONLY : ig_l2g, mill_g, mill
   USE mp,                 ONLY : mp_sum
   USE io_global,          ONLY : stdout
   USE mp_global,          ONLY : me_image, nproc_image, intra_image_comm
@@ -220,7 +220,7 @@ subroutine find_whose_is_g
 
   allocate ( mill_g(3,ngwt) )
   do ig=1,ngw
-     mill_g(:,ig_l2g(ig)) = mill_l(:,ig)
+     mill_g(:,ig_l2g(ig)) = mill(:,ig)
   end do
   call mp_sum(mill_g,intra_image_comm)
 
@@ -233,7 +233,7 @@ subroutine gtable_missing
   USE efield_module, ONLY : ctable_missing_1,ctable_missing_2, whose_is_g,n_g_missing_p,&
                           &      ctable_missing_rev_1,ctable_missing_rev_2 
   USE gvecw,              ONLY : ngw, ngwt
-  USE reciprocal_vectors, ONLY : ig_l2g, mill_g, mill_l, gstart
+  USE reciprocal_vectors, ONLY : ig_l2g, mill_g, mill, gstart
   USE mp,                 ONLY : mp_sum, mp_max, mp_alltoall
   USE io_global,          ONLY : stdout
   USE mp_global,          ONLY : me_image, nproc_image, intra_image_comm, world_comm
@@ -260,9 +260,9 @@ subroutine gtable_missing
 
      do ig=1,ngw!loop on g vectors
         ! first +g
-        i = mill_l(1,ig)
-        j = mill_l(2,ig)
-        k = mill_l(3,ig)
+        i = mill(1,ig)
+        j = mill(2,ig)
+        k = mill(3,ig)
         if(ipol.eq.1) i=i+1
         if(ipol.eq.2) j=j+1
         if(ipol.eq.3) k=k+1
@@ -289,9 +289,9 @@ subroutine gtable_missing
   
      do ig=gstart,ngw!loop on g vectors
         ! first +g
-        i = -mill_l(1,ig)
-        j = -mill_l(2,ig)
-        k = -mill_l(3,ig)
+        i = -mill(1,ig)
+        j = -mill(2,ig)
+        k = -mill(3,ig)
         if(ipol.eq.1) i=i+1
         if(ipol.eq.2) j=j+1
         if(ipol.eq.3) k=k+1
@@ -451,7 +451,7 @@ subroutine gtable_missing_inv
   USE efield_module, ONLY : ctabin_missing_1,ctabin_missing_2, whose_is_g,n_g_missing_m,&
                           &      ctabin_missing_rev_1,ctabin_missing_rev_2 
   USE gvecw,              ONLY : ngw, ngwt
-  USE reciprocal_vectors, ONLY : ig_l2g, mill_g, mill_l, gstart
+  USE reciprocal_vectors, ONLY : ig_l2g, mill_g, mill, gstart
   USE mp,                 ONLY : mp_sum, mp_max, mp_alltoall
   USE io_global,          ONLY : stdout
   USE mp_global,          ONLY : me_image, nproc_image, intra_image_comm, world_comm
@@ -480,9 +480,9 @@ subroutine gtable_missing_inv
 
      do ig=1,ngw!loop on g vectors
         ! first +g
-        i = mill_l(1,ig)
-        j = mill_l(2,ig)
-        k = mill_l(3,ig)
+        i = mill(1,ig)
+        j = mill(2,ig)
+        k = mill(3,ig)
         if(ipol.eq.1) i=i+1
         if(ipol.eq.2) j=j+1
         if(ipol.eq.3) k=k+1
@@ -509,9 +509,9 @@ subroutine gtable_missing_inv
   
      do ig=1,ngw!loop on g vectors
         ! first +g
-        i = mill_l(1,ig)
-        j = mill_l(2,ig)
-        k = mill_l(3,ig)
+        i = mill(1,ig)
+        j = mill(2,ig)
+        k = mill(3,ig)
         if(ipol.eq.1) i=i-1
         if(ipol.eq.2) j=j-1
         if(ipol.eq.3) k=k-1

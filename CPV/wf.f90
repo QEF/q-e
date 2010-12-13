@@ -1018,7 +1018,7 @@ SUBROUTINE wfunc_init( clwf, b1, b2, b3, ibrav )
   !
   USE io_global,          ONLY : stdout
   USE kinds,              ONLY : DP
-  USE reciprocal_vectors, ONLY : g, mill_l, gstart
+  USE reciprocal_vectors, ONLY : g, mill, gstart
   USE gvecw,              ONLY : ngw
   USE electrons_base,     ONLY : nbsp
   USE wannier_base,       ONLY : gnx, gnn, indexplus, indexminus, &
@@ -1065,9 +1065,9 @@ SUBROUTINE wfunc_init( clwf, b1, b2, b3, ibrav )
      gnx(1,i)=g(1,i)
      gnx(2,i)=g(2,i)
      gnx(3,i)=g(3,i)
-     gnn(1,i)=mill_l(1,i)
-     gnn(2,i)=mill_l(2,i)
-     gnn(3,i)=mill_l(3,i)
+     gnn(1,i)=mill(1,i)
+     gnn(2,i)=mill(2,i)
+     gnn(3,i)=mill(3,i)
   END DO
 
 #ifdef __PARA
@@ -2080,7 +2080,7 @@ SUBROUTINE write_rho_g( rhog )
   USE kinds,              ONLY : DP
   USE io_global,          ONLY : stdout
   USE gvecp,              ONLY : ngm
-  USE reciprocal_vectors, ONLY : g, mill_l
+  USE reciprocal_vectors, ONLY : g
   USE electrons_base,     ONLY : nspin
   USE fft_base,           ONLY : dfftp
   USE mp_global,          ONLY : nproc_image, me_image, root_image, intra_image_comm

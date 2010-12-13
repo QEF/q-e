@@ -199,7 +199,7 @@
       !     ei1(n1,ia,is) = exp(-i*n1*b1*tau(ia,is)) -nr1<n1<nr1
       !  and similar definitions for ei2 and ei3 ; and :
       !     eigr(n,ia,is) = ei1*ei2*ei3 = exp(-i g*tau(ia,is))
-      !  The value of n1,n2,n3 for a vector g is supplied by arrays mill_l
+      !  The value of n1,n2,n3 for a vector g is supplied by array mill
       !  calculated in ggen .
       !
       use kinds,              only: DP
@@ -208,7 +208,7 @@
       use ions_base,          only: nsp, na, nat
       use cell_base,          only: ainv, r_to_s
       use grid_dimensions,    only: nr1, nr2, nr3
-      use reciprocal_vectors, only: mill_l
+      use reciprocal_vectors, only: mill
       use gvecw,              only: ngw
       use cp_interfaces,      only: phfacs
 !
@@ -228,7 +228,7 @@
          WRITE( stdout,*) ( ( tau0(i,isa), i=1, 3 ), isa=1, nat )
       endif
       CALL r_to_s( tau0, taus, na, nsp, ainv )
-      CALL phfacs( ei1, ei2, ei3, eigr, mill_l, taus, nr1, nr2, nr3, nat )
+      CALL phfacs( ei1, ei2, ei3, eigr, mill, taus, nr1, nr2, nr3, nat )
 
       deallocate( taus )
 !

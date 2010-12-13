@@ -23,7 +23,7 @@ SUBROUTINE from_restart( )
    USE ions_positions,        ONLY : taus, tau0, tausm, taum, vels, fion, fionm, set_velocities
    USE ions_nose,             ONLY : xnhp0, xnhpm
    USE grid_dimensions,       ONLY : nr1, nr2, nr3
-   USE reciprocal_vectors,    ONLY : mill_l
+   USE reciprocal_vectors,    ONLY : mill
    USE printout_base,         ONLY : printout_pos
    USE gvecs,                 ONLY : ngms
    USE gvecw,                 ONLY : ngw
@@ -121,9 +121,9 @@ SUBROUTINE from_restart( )
       CALL phbox( taub, eigrb, ainvb )
    END IF
    !
-   CALL phfacs( ei1, ei2, ei3, eigr, mill_l, taus, nr1, nr2, nr3, nat )
+   CALL phfacs( ei1, ei2, ei3, eigr, mill, taus, nr1, nr2, nr3, nat )
    !
-   CALL strucf( sfac, ei1, ei2, ei3, mill_l, ngms )
+   CALL strucf( sfac, ei1, ei2, ei3, mill, ngms )
    !
    CALL prefor( eigr, vkb )
    !

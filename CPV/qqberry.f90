@@ -20,7 +20,7 @@ subroutine qqberry2( gqq,gqqm, ipol)
   use atom,               only: rgrid
   use core
   use gvecw,              only: ngw
-  use reciprocal_vectors, only: mill_l
+  use reciprocal_vectors, only: mill
   use constants
   use cvan,               only: nvb
   use ions_base
@@ -125,13 +125,13 @@ subroutine qqberry2( gqq,gqqm, ipol)
   igi=-1
   do ig=1,ngw
      if(ipol.eq.1 ) then
-        if(mill_l(1,ig).eq.1 .and. mill_l(2,ig).eq.0  .and. mill_l(3,ig).eq. 0) igi=ig
+        if(mill(1,ig).eq.1 .and. mill(2,ig).eq.0  .and. mill(3,ig).eq. 0) igi=ig
      endif
      if(ipol.eq.2 ) then
-        if(mill_l(1,ig).eq.0 .and. mill_l(2,ig).eq.1  .and. mill_l(3,ig).eq. 0) igi=ig
+        if(mill(1,ig).eq.0 .and. mill(2,ig).eq.1  .and. mill(3,ig).eq. 0) igi=ig
      endif
      if(ipol.eq.3 ) then
-        if(mill_l(1,ig).eq.0 .and. mill_l(2,ig).eq.0   .and. mill_l(3,ig).eq. 1) igi=ig
+        if(mill(1,ig).eq.0 .and. mill(2,ig).eq.0   .and. mill(3,ig).eq. 1) igi=ig
      endif
   enddo
   if( igi.ne.-1) then
@@ -218,7 +218,7 @@ subroutine qqupdate(eigr, gqqm0, gqq, gqqm, ipol)
   use cvan
   use gvecw, only: ngw
   use ions_base, only : nas => nax, nat, na, nsp
-  use reciprocal_vectors, only: mill_l
+  use reciprocal_vectors, only: mill
   use uspp_param, only: nh, nhm
   use mp, only: mp_sum
   use mp_global, only: intra_image_comm
@@ -250,13 +250,13 @@ subroutine qqupdate(eigr, gqqm0, gqq, gqqm, ipol)
   igi=-1
   do ig=1,ngw
      if(ipol.eq.1 ) then
-        if(mill_l(1,ig).eq.1 .and. mill_l(2,ig).eq.0  .and. mill_l(3,ig).eq. 0) igi=ig
+        if(mill(1,ig).eq.1 .and. mill(2,ig).eq.0  .and. mill(3,ig).eq. 0) igi=ig
      endif
      if(ipol.eq.2 ) then
-        if(mill_l(1,ig).eq.0 .and. mill_l(2,ig).eq.1  .and. mill_l(3,ig).eq. 0) igi=ig
+        if(mill(1,ig).eq.0 .and. mill(2,ig).eq.1  .and. mill(3,ig).eq. 0) igi=ig
      endif
      if(ipol.eq.3 ) then
-        if(mill_l(1,ig).eq.0 .and. mill_l(2,ig).eq.0  .and. mill_l(3,ig).eq. 1) igi=ig
+        if(mill(1,ig).eq.0 .and. mill(2,ig).eq.0  .and. mill(3,ig).eq. 1) igi=ig
      endif
   enddo
   if( igi.ne.-1) then

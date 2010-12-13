@@ -149,9 +149,9 @@
      !
      INTEGER, ALLOCATABLE, TARGET :: mill_g(:,:)
 
-     !     mill_l  = miller index of G vecs local to the processors
+     !     mill    = miller index of G vectors (local to each processor)
      !
-     INTEGER, ALLOCATABLE, TARGET :: mill_l(:,:)
+     INTEGER, ALLOCATABLE, TARGET :: mill(:,:)
 
      !     ig_l2g  = "l2g" means local to global, this array convert a local
      !               G-vector index into the global index, in other words
@@ -182,7 +182,7 @@
        IF( ALLOCATED( g ) )  DEALLOCATE( g )
        IF( ALLOCATED( g2_g ) ) DEALLOCATE( g2_g )
        IF( ALLOCATED( mill_g ) ) DEALLOCATE( mill_g )
-       IF( ALLOCATED( mill_l ) ) DEALLOCATE( mill_l )
+       IF( ALLOCATED( mill ) ) DEALLOCATE( mill )
        IF( ALLOCATED( ig_l2g ) ) DEALLOCATE( ig_l2g )
        IF( ALLOCATED( sortedig_l2g ) ) DEALLOCATE( sortedig_l2g )
        IF( ALLOCATED( igl ) ) DEALLOCATE( igl )

@@ -43,7 +43,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
   USE gvecs,                    ONLY : ngms
   USE gvecb,                    ONLY : ngb
   USE gvecw,                    ONLY : ngw
-  USE reciprocal_vectors,       ONLY : gstart, mill_l
+  USE reciprocal_vectors,       ONLY : gstart, mill
   USE ions_base,                ONLY : na, nat, pmass, nax, nsp, rcmax
   USE ions_base,                ONLY : ind_srt, ions_cofmass, ions_kinene, &
                                        ions_temp, ions_thermal_stress, if_pos, extfor
@@ -267,11 +267,11 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
      !
      IF ( tfor .OR. thdyn ) THEN
         !
-        CALL phfacs( ei1, ei2, ei3, eigr, mill_l, taus, nr1, nr2, nr3, nat )
+        CALL phfacs( ei1, ei2, ei3, eigr, mill, taus, nr1, nr2, nr3, nat )
         !
         ! ... strucf calculates the structure factor sfac
         !
-        CALL strucf( sfac, ei1, ei2, ei3, mill_l, ngms )
+        CALL strucf( sfac, ei1, ei2, ei3, mill, ngms )
         !
      END IF
      !
@@ -493,7 +493,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
         !
         ! ... phfac calculates eigr
         !
-        CALL phfacs( ei1, ei2, ei3, eigr, mill_l, tausp, nr1, nr2, nr3, nat ) 
+        CALL phfacs( ei1, ei2, ei3, eigr, mill, tausp, nr1, nr2, nr3, nat ) 
         !
         ! ... prefor calculates vkb
         !
@@ -756,8 +756,8 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
               CALL phbox( taub, eigrb, ainvb )
            END IF
            CALL r_to_s( tau0, taus, na, nsp, ainv )
-           CALL phfacs( ei1, ei2, ei3, eigr, mill_l, taus, nr1, nr2, nr3, nat )
-           CALL strucf( sfac, ei1, ei2, ei3, mill_l, ngms )
+           CALL phfacs( ei1, ei2, ei3, eigr, mill, taus, nr1, nr2, nr3, nat )
+           CALL strucf( sfac, ei1, ei2, ei3, mill, ngms )
            !
            IF ( thdyn )    CALL formf( tfirst, eself )
            IF ( tefield )  CALL efield_update( eigr )

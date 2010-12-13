@@ -417,7 +417,7 @@
       USE cell_base,          ONLY: tpiba2, tpiba
       USE io_global,          ONLY: stdout
       USE grid_dimensions,    ONLY: nr1, nr2, nr3
-      USE reciprocal_vectors, ONLY: mill_l, gstart, g, gg
+      USE reciprocal_vectors, ONLY: mill, gstart, g, gg
       USE ions_base,          ONLY: nat, nsp, na
       USE gvecp,              ONLY: ngm
       USE gvecs,              ONLY: ngms
@@ -467,9 +467,9 @@
           FPIBG     = fpi / ( gg(ig) * tpiba2 )
         END IF
 
-        ig1  = mill_l(1,IG)
-        ig2  = mill_l(2,IG)
-        ig3  = mill_l(3,IG)
+        ig1  = mill(1,IG)
+        ig2  = mill(2,IG)
+        ig3  = mill(3,IG)
         GXC  = CMPLX(0.D0,g(1,IG),kind=DP)
         GYC  = CMPLX(0.D0,g(2,IG),kind=DP)
         GZC  = CMPLX(0.D0,g(3,IG),kind=DP)

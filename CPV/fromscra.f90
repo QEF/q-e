@@ -35,7 +35,7 @@ SUBROUTINE from_scratch( )
     USE gvecw,                ONLY : ngw
     USE gvecs,                ONLY : ngms
     USE gvecp,                ONLY : ngm
-    USE reciprocal_vectors,   ONLY : gstart, mill_l
+    USE reciprocal_vectors,   ONLY : gstart, mill
     USE cvan,                 ONLY : nvb
     USE cp_electronic_mass,   ONLY : emass
     USE efield_module,        ONLY : tefield, efield_berry_setup, berry_energy, &
@@ -109,9 +109,9 @@ SUBROUTINE from_scratch( )
        !
     END IF
     !
-    CALL phfacs( ei1, ei2, ei3, eigr, mill_l, atoms0%taus, nr1, nr2, nr3, atoms0%nat )
+    CALL phfacs( ei1, ei2, ei3, eigr, mill, atoms0%taus, nr1, nr2, nr3, atoms0%nat )
     !
-    CALL strucf( sfac, ei1, ei2, ei3, mill_l, ngms )
+    CALL strucf( sfac, ei1, ei2, ei3, mill, ngms )
     !     
     IF ( okvan .OR. nlcc_any ) THEN
        CALL initbox ( tau0, taub, irb, ainv, a1, a2, a3 )

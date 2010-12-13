@@ -15,13 +15,13 @@
 !     ngl     = number of shells of G
 
 !     G-vector quantities for the thick grid - see also doc in ggen 
-!     g       = G^2 in increasing order (in units of tpiba2=(2pi/a)^2)
+!     g2      = G^2 in increasing order (in units of tpiba2=(2pi/a)^2)
 !     gl      = shells of G^2           ( "   "   "    "      "      )
 !     g       = G-vectors               ( "   "   "  tpiba =(2pi/a)  )
-!
 !     g2_g    = all G^2 in increasing order, replicated on all procs
+!
+!     mill    = miller index of G vecs (local to the processors)
 !     mill_g  = miller index of G vecs (increasing order), replicated on all procs
-!     mill_l  = miller index of G vecs local to the processors
 !     ig_l2g  = "l2g" means local to global, this array convert a local
 !               G-vector index into the global index, in other words
 !               the index of the G-v. in the overall array of G-vectors
@@ -29,7 +29,6 @@
 !
 !     np      = fft index for G>
 !     nm      = fft index for G<
-!     mill_l  = G components in crystal axis
 !
 
 

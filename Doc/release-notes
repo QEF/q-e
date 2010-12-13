@@ -21,7 +21,7 @@ Incompatible changes in CVS version:
 	Old (CP)	New (PW)	Old (PW)	New (CP)
 	nnr/nnrx	nrxx		nrx[123]	nr[123]x
 	nnrs/nnrsx	nrxxs		nrx[123]s	nr[123]sx
-	ngml		ngl		ig[123]		mill
+	ngml		ngl		ig[123]		mill (replaces mill_l)
 	ngmt		ngm_g
 	ngs 		ngms		call cft3 and	call fwfft or
 	g  		gg		     cft3s	     invfft

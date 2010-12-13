@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2005 FPMD-CPV groups
+! Copyright (C) 2002-2010 Quantum ESPRESSO groups
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -314,7 +314,7 @@ end subroutine ggenb
 !     if (n1.eq.n/2+1) i=n1-1 or i=n1-n-1, depending on how
 !     the G vectors are refolded
 !
-!   The indices mill_l and mill_g  are the i,j,k values.
+!   The indices mill and mill_g  are the i,j,k values.
 !   They are used to quickly calculate the structure factors
 !      eigt=exp(-i*g*tau)        (i=imaginary unit!)
 !   by decomposing eigt into products of exponentials:
@@ -333,7 +333,7 @@ end subroutine ggenb
 !
       USE kinds,              ONLY: DP
       use reciprocal_vectors, only: gg, g, igl, mill_g, g2_g, gl
-      use reciprocal_vectors, only: mill_l, ig_l2g
+      use reciprocal_vectors, only: mill, ig_l2g
       use reciprocal_vectors, only: gstart, sortedig_l2g
       use recvecs_indexes,    only: nm, np
       use gvecs,              only: ngms, nms, ngsl, nps
@@ -357,7 +357,6 @@ end subroutine ggenb
       integer      :: n1ps, n2ps, n3ps, n1ms, n2ms, n3ms
       integer      :: it, icurr, nr1m1, nr2m1, nr3m1, nrefold, ir, ig, i,j,k
       integer      :: ichk
-      integer      :: mill(3)
       !
       !  First of all count the number of G vectors according with the FFT mesh 
       ! 
@@ -394,14 +393,14 @@ end subroutine ggenb
       allocate( igl( ngm ) )
 
       allocate( ig_l2g( ngm ) )
-      allocate( mill_l( 3, ngm ) )
+      allocate( mill( 3, ngm ) )
       allocate( sortedig_l2g( ngm ) )
 
       !
       !     fourth step : find the vectors with g2 < gcut
       !     local to each processor
       !
-      CALL glocal( ngm, gg, ig_l2g, mill_l, ngm_g, g2_g, mill_g, &
+      CALL glocal( ngm, gg, ig_l2g, mill, ngm_g, g2_g, mill_g, &
                    nr1, nr2, nr3, dfftp%isind, dfftp%nr1x  )
 
       IF( iprsta > 3 ) THEN
@@ -418,12 +417,12 @@ end subroutine ggenb
       !     check for the presence of refolded G-vectors (dense grid)
       !
 
-      CALL gchkrefold( ngm, mill_l, nr1, nr2, nr3 )
+      CALL gchkrefold( ngm, mill, nr1, nr2, nr3 )
 
       !
       !     costruct fft indexes (n1,n2,n3) for the dense grid
       !
-      CALL gfftindex( np, nm, ngm, mill_l, nr1, nr2, nr3, &
+      CALL gfftindex( np, nm, ngm, mill, nr1, nr2, nr3, &
                       dfftp%isind, dfftp%nr1x, dfftp%nr2x, dfftp%nr3x )
 
 ! ... Uncomment to make tests and comparisons with other codes
@@ -440,7 +439,7 @@ end subroutine ggenb
       !
       ! check for the presence of refolded G-vectors (smooth  grid)
       !
-      CALL gchkrefold( ngms, mill_l, nr1s, nr2s, nr3s )
+      CALL gchkrefold( ngms, mill, nr1s, nr2s, nr3s )
 
       !
       ! costruct fft indexes (n1s,n2s,n3s) for the smooth grid
@@ -448,14 +447,14 @@ end subroutine ggenb
       allocate(nps(ngms))
       allocate(nms(ngms))
 !
-      CALL gfftindex( nps, nms, ngms, mill_l, nr1s, nr2s, nr3s, &
+      CALL gfftindex( nps, nms, ngms, mill, nr1s, nr2s, nr3s, &
                       dffts%isind, dffts%nr1x, dffts%nr2x, dffts%nr3x )
 
 
 ! ... Uncomment to make tests and comparisons with other codes
 !      IF ( ionode ) THEN
 !        DO ig=1,ngms
-!          WRITE( 202, fmt="( I6, 2I6, 3I4 )" ) ig, nps(ig), nms(ig), mill_l(1,ig), mill_l(2,ig), mill_l(3,ig)
+!          WRITE( 202, fmt="( I6, 2I6, 3I4 )" ) ig, nps(ig), nms(ig), mill(1,ig), mill(2,ig), mill(3,ig)
 !        END DO
 !        CLOSE( 202 )
 !      END IF
@@ -513,9 +512,9 @@ end subroutine ggenb
 ! calculation of G-vectors
 !
       do ig=1,ngm
-         i=mill_l(1,ig)
-         j=mill_l(2,ig)
-         k=mill_l(3,ig)
+         i=mill(1,ig)
+         j=mill(2,ig)
+         k=mill(3,ig)
          g(1,ig)=i*b1(1)+j*b2(1)+k*b3(1)
          g(2,ig)=i*b1(2)+j*b2(2)+k*b3(2)
          g(3,ig)=i*b1(3)+j*b2(3)+k*b3(3)
@@ -694,7 +693,7 @@ END SUBROUTINE gglobal
 
 
 !-------------------------------------------------------------------------
-SUBROUTINE glocal( ng, gg, ig_l2g, mill_l, ngm_g, g2_g, mill_g, nr1, nr2, nr3, isind, ldis )
+SUBROUTINE glocal( ng, gg, ig_l2g, mill, ngm_g, g2_g, mill_g, nr1, nr2, nr3, isind, ldis )
 !-------------------------------------------------------------------------
 
   USE kinds,     ONLY: DP
@@ -703,13 +702,12 @@ SUBROUTINE glocal( ng, gg, ig_l2g, mill_l, ngm_g, g2_g, mill_g, nr1, nr2, nr3, i
   IMPLICIT NONE
 
   INTEGER :: ngm_g, ng
-  INTEGER :: mill_g(3,*), ig_l2g(*), mill_l(3,*)
+  INTEGER :: mill_g(3,*), ig_l2g(*), mill(3,*)
   REAL(DP) :: g2_g(*), gg(*)
   integer :: nr1, nr2, nr3, isind(*), ldis
 
   INTEGER :: i, j, k, ig, n1p, n2p, ng_l
   INTEGER :: icurr, it
-  INTEGER :: mill(3)
   integer, allocatable:: idx(:)
 
       ng_l=0
@@ -729,7 +727,7 @@ SUBROUTINE glocal( ng, gg, ig_l2g, mill_l, ngm_g, g2_g, mill_g, nr1, nr2, nr3, i
         ng_l=ng_l+1
         gg(ng_l)=g2_g(ig)
         ig_l2g(ng_l) = ig
-        mill_l(1:3,ng_l) = mill_g(1:3,ig)
+        mill(1:3,ng_l) = mill_g(1:3,ig)
       end do loop_allg
 
       if( ng /= ng_l ) call errore( ' glocal ', ' inconsistent number of G vectors ', ng_l )
@@ -738,7 +736,7 @@ SUBROUTINE glocal( ng, gg, ig_l2g, mill_l, ngm_g, g2_g, mill_g, nr1, nr2, nr3, i
 !      IF ( ionode ) THEN
 !        DO ig=1,ng
 !          WRITE( 201, fmt="( I6, 3I4 )" ) &
-!            ig, mill_l(1,ig), mill_l(2,ig), mill_l(3,ig)
+!            ig, mill(1,ig), mill(2,ig), mill(3,ig)
 !        END DO
 !        CLOSE( 201 )
 !      END IF
@@ -752,7 +750,7 @@ END SUBROUTINE glocal
 
 
 !-------------------------------------------------------------------------
-SUBROUTINE gchkrefold( ng, mill_l, nr1, nr2, nr3 )
+SUBROUTINE gchkrefold( ng, mill, nr1, nr2, nr3 )
 !-------------------------------------------------------------------------
 
   use io_global, only: stdout
@@ -760,7 +758,7 @@ SUBROUTINE gchkrefold( ng, mill_l, nr1, nr2, nr3 )
   IMPLICIT NONE
 
   INTEGER :: ng
-  INTEGER :: mill_l(3,*)
+  INTEGER :: mill(3,*)
   integer :: nr1, nr2, nr3
 
   INTEGER :: nr1m1, nr2m1, nr3m1
@@ -783,9 +781,9 @@ SUBROUTINE gchkrefold( ng, mill_l, nr1, nr2, nr3 )
          nr3m1=(nr3-1)/2
       end if
       do ig=1,ng
-         if ( mill_l(1,ig).lt.-nr1m1.or.mill_l(1,ig).gt.nr1m1 .or.  &
-     &        mill_l(2,ig).lt.-nr2m1.or.mill_l(2,ig).gt.nr2m1 .or.  &
-     &        mill_l(3,ig).lt.-nr3m1.or.mill_l(3,ig).gt.nr3m1      )            &
+         if ( mill(1,ig).lt.-nr1m1.or.mill(1,ig).gt.nr1m1 .or.  &
+     &        mill(2,ig).lt.-nr2m1.or.mill(2,ig).gt.nr2m1 .or.  &
+     &        mill(3,ig).lt.-nr3m1.or.mill(3,ig).gt.nr3m1      )            &
      &        nrefold=nrefold+1
       end do
       if (nrefold.ne.0) WRITE( stdout, '(" WARNING: ",i6,                   &
@@ -797,13 +795,13 @@ END SUBROUTINE gchkrefold
 
 !-------------------------------------------------------------------------
 
-SUBROUTINE gfftindex( np, nm, ng, mill_l, nr1, nr2, nr3, isind, nr1x, nr2x, nr3x )
+SUBROUTINE gfftindex( np, nm, ng, mill, nr1, nr2, nr3, isind, nr1x, nr2x, nr3x )
   !
   IMPLICIT NONE
 
   INTEGER :: ng
   INTEGER :: isind(*), nr1x, nr2x, nr3x
-  INTEGER :: mill_l(3,*), np(*), nm(*)
+  INTEGER :: mill(3,*), np(*), nm(*)
   integer :: nr1, nr2, nr3
 
   INTEGER :: n1p, n2p, n3p
@@ -813,9 +811,9 @@ SUBROUTINE gfftindex( np, nm, ng, mill_l, nr1, nr2, nr3, isind, nr1x, nr2x, nr3x
 
       do ig = 1, ng
 
-         i = mill_l(1,ig)
-         j = mill_l(2,ig)
-         k = mill_l(3,ig)
+         i = mill(1,ig)
+         j = mill(2,ig)
+         k = mill(3,ig)
 
          !
          ! n1p,n2p,n3p: indexes of G
@@ -933,7 +931,7 @@ END SUBROUTINE gshcount
       USE kinds,     ONLY: DP
       use constants, only: tpi
       use control_flags, only: iprint
-      use reciprocal_vectors, only: gg, g, mill_l
+      use reciprocal_vectors, only: gg, g, mill
       use gvecp, only: ngm
       use gvecw, only: ngw
       use gvecw, only: ggp, ecutz, ecsig, ecfix
@@ -953,9 +951,9 @@ END SUBROUTINE gshcount
 !
       gmax=0.d0
       do ig=1,ngm
-         i1=mill_l(1,ig)
-         i2=mill_l(2,ig)
-         i3=mill_l(3,ig)
+         i1=mill(1,ig)
+         i2=mill(2,ig)
+         i3=mill(3,ig)
          g(1,ig)=i1*b1(1)+i2*b2(1)+i3*b3(1)
          g(2,ig)=i1*b1(2)+i2*b2(2)+i3*b3(2)
          g(3,ig)=i1*b1(3)+i2*b2(3)+i3*b3(3)
