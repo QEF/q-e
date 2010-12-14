@@ -259,8 +259,8 @@ do
   # run the code in the scratch directory
   #
   cd $ESPRESSO_TMPDIR
-  $PARA_PREFIX $ESPRESSO_ROOT/bin/pw.x $PARA_POSTFIX < $TESTDIR/$name.in \
-                                                     > $TESTDIR/$name.out
+  $PARA_PREFIX $ESPRESSO_ROOT/bin/pw.x $PARA_POSTFIX \
+        -inp $TESTDIR/$name.in > $TESTDIR/$name.out
   if test $? != 0; then
      $ECHO "FAILED with error condition!"
      $ECHO "Input: $name.in, Output: $name.out, Reference: $name.ref"
@@ -309,8 +309,8 @@ do
      # run the code in the scratch directory
      #
      cd $ESPRESSO_TMPDIR
-     $PARA_PREFIX $ESPRESSO_ROOT/bin/pw.x $PARA_POSTFIX < $TESTDIR/$name.in$n \
-                                                        > $TESTDIR/$name.out$n
+     $PARA_PREFIX $ESPRESSO_ROOT/bin/pw.x $PARA_POSTFIX \
+             -inp $TESTDIR/$name.in$n > $TESTDIR/$name.out$n
      if test $? != 0; then
         $ECHO "FAILED with error condition!"
         $ECHO "Input: $name.in$n, Output: $name.out$n, Reference: $name.ref$n"
