@@ -47,6 +47,8 @@ SUBROUTINE local_dos (iflag, lsign, kpoint, kband, spin_component, &
   USE mp,                   ONLY : mp_bcast, mp_sum
   USE mp_global,            ONLY : inter_pool_comm, intra_pool_comm
   USE becmod,               ONLY : calbec
+  USE control_flags,        ONLY : tqr
+  USE realus,               ONLY : addusdens_r
   IMPLICIT NONE
   !
   ! input variables
@@ -377,7 +379,13 @@ SUBROUTINE local_dos (iflag, lsign, kpoint, kband, spin_component, &
   !
   !    Here we add the US contribution to the charge
   !
+  if ( tqr ) then
+   CALL addusdens_r(rho%of_r(:,:),.false.)
+  else
+  !
   CALL addusdens(rho%of_r(:,:))
+  !
+  endif 
   !
   IF (nspin == 1 .or. nspin==4) THEN
      is = 1
