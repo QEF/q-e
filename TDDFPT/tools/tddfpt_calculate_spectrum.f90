@@ -70,17 +70,20 @@ program lr_calculate_spectrum
   !
   !DEBUGGING
   real(kind=dp)  :: test
-  !
-  !Initialization of system variables
-  !
-  !for the time being, degspin is set by hand
-  degspin=2.d0
+
   !
   !User controlled variable initialisation
   !
   namelist / lr_input / itermax, itermax0, itermax_actual, terminator,&
                       & end, increment, start, ipol, outdir, prefix,&
                       & epsil, sym_op, verbosity, units,omeg,omegmax,delta_omeg
+
+
+  !
+  !Initialization of system variables
+  !
+  !for the time being, degspin is set by hand
+  degspin=2.d0
   !
   prefix = 'pwscf'
   outdir = './'
