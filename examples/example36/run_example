@@ -28,7 +28,7 @@ $ECHO
 . ../environment_variables
 
 # required executables and pseudopotentials
-BIN_LIST="pw.x ph.x"
+BIN_LIST="pw.x ph.x bands.x plotband.x"
 PSEUDO_LIST="Fe.rel-pbe-paw_kj.UPF Au.rel-pz-paw_kj.UPF"
 
 $ECHO
@@ -82,6 +82,8 @@ PH_COMMAND="$PARA_PREFIX $BIN_DIR/ph.x $PARA_POSTFIX"
 $ECHO
 $ECHO "  running pw.x     as: $PW_COMMAND"
 $ECHO "  running ph.x     as: $PH_COMMAND"
+$ECHO "  running bands.x  as: $BAND_COMMAND"
+$ECHO "  running plotband.x  as: $PLOTBAND_COMMAND"
 $ECHO
 
 # clean TMP_DIR
