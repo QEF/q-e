@@ -80,7 +80,7 @@ subroutine lr_readin
   test_case_no = 0
   tqr = .false.
   auto_rs = .true.
-  beta_gamma_z_prefix = prefix
+  beta_gamma_z_prefix = 'undefined'
   omeg=0.0
   epsil=0.0
   w_T_npol=1
@@ -108,6 +108,13 @@ subroutine lr_readin
   if (charge_response == 1) then
    read (5, lr_post, err = 202, iostat = ios)
    202 call errore ('lr_readin', 'reading lr_post namelist', abs (ios) )
+   bgz_suffix = TRIM ( "-stage2.beta_gamma_z." )
+   write(stdout,'(/5x,"Prefix of current run is appended by -stage2")')
+   IF ( beta_gamma_z_prefix  == 'undefined' ) then
+    beta_gamma_z_prefix=trim(prefix)
+   endif
+  else
+   bgz_suffix = TRIM ( ".beta_gamma_z." )
   endif
   !
   ! The status of the real space flags should be read manually
@@ -127,12 +134,12 @@ subroutine lr_readin
      !
   ENDIF
   !
-  !Charge response mode 2 is the "do Lanczos chains twice, conserve memory" scheme
+  !Charge response mode 1 is the "do Lanczos chains twice, conserve memory" scheme
   !
   if (charge_response == 1 .and. omeg == 0.D0) &
-   call errore ('lr_readin', 'omeg must be defined for charge response mode 2', 1 )
+   call errore ('lr_readin', 'omeg must be defined for charge response mode 1', 1 )
   if ( project .and. charge_response /= 1) &
-   call errore ('lr_readin', 'projection is possible only in charge response mode 2', 1 )
+   call errore ('lr_readin', 'projection is possible only in charge response mode 1', 1 )
 
   w_T_prefix = TRIM( tmp_dir ) // TRIM( beta_gamma_z_prefix ) // ".beta_gamma_z."
   !

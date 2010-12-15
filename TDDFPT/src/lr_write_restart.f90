@@ -12,7 +12,8 @@ subroutine lr_write_restart()
   use lr_variables,         only : beta_store, gamma_store, zeta_store, norm0, &
                                    LR_polarization, LR_iteration, n_ipol,F,project,&
                                    evc1,evc1_new,iunrestart, nwordrestart, rho_1_tot, rho_1_tot_im, &
-                                   nbnd_total, charge_response,lr_verbosity
+                                   nbnd_total, charge_response,lr_verbosity,&
+                                   bgz_suffix
   use charg_resp,           only : resonance_condition
   use wvfct,                only : nbnd, npwx, npw
   use grid_dimensions,      only : nrxx
@@ -51,7 +52,7 @@ subroutine lr_write_restart()
   !Writing beta gamma and zeta
   !
   !
-  filename = trim(prefix) // ".beta_gamma_z." // trim(int_to_char(LR_polarization))
+  filename = trim(prefix) // trim(bgz_suffix) // trim(int_to_char(LR_polarization))
   tempfile = trim(tmp_dir) // trim(filename)
   !
   !

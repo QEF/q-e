@@ -32,6 +32,8 @@ module lr_variables
   !
   integer :: size_evc
   !
+  CHARACTER (len=24) :: bgz_suffix 
+  !
   !LOGICAL :: nlcc_any  ! .T. if any atom-type has nlcc
   !
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!

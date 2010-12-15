@@ -18,7 +18,7 @@ SUBROUTINE stop_lr( )
   USE parallel_include
   use lr_variables,         only : n_ipol, LR_polarization, beta_store
   use lr_variables,         only :  gamma_store, zeta_store, norm0, rho_1_tot
-  use lr_variables,         only : lr_verbosity, itermax
+  use lr_variables,         only : lr_verbosity, itermax, bgz_suffix
   USE io_global,            ONLY : ionode
   use io_files,             only : tmp_dir, prefix
   USE io_global,      ONLY : stdout
@@ -46,8 +46,8 @@ SUBROUTINE stop_lr( )
 #endif
   !
   do ip=1,n_ipol
-   if (n_ipol==3) filename = trim(prefix) // ".beta_gamma_z." // trim(int_to_char(ip))
-   if (n_ipol==1) filename = trim(prefix) // ".beta_gamma_z." // trim(int_to_char(LR_polarization))
+   if (n_ipol==3) filename = trim(prefix) // trim(bgz_suffix) // trim(int_to_char(ip))
+   if (n_ipol==1) filename = trim(prefix) // trim(bgz_suffix) // trim(int_to_char(LR_polarization))
    filename = trim(tmp_dir) // trim(filename)
   !
   !

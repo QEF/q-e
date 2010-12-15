@@ -333,7 +333,7 @@ CONTAINS
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !This tests whether the restart flag is applicable
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
- use lr_variables,     only : n_ipol,LR_polarization,restart
+ use lr_variables,     only : n_ipol,LR_polarization,restart,bgz_suffix
  use io_files,         only: prefix, tmp_dir, nd_nmbr, wfc_dir
  USE mp,               ONLY : mp_bcast, mp_barrier,mp_sum
  USE io_global,        ONLY : ionode, ionode_id
@@ -396,10 +396,10 @@ CONTAINS
  !
 
  if ( n_ipol == 1 ) then
-  filename = trim(prefix) // ".beta_gamma_z." // trim(int_to_char(1))
+  filename = trim(prefix) // trim(bgz_suffix) // trim(int_to_char(1))
   tempfile = trim(tmp_dir) // trim(filename)
  else 
-  filename = trim(prefix) // ".beta_gamma_z." // trim(int_to_char(LR_polarization))
+  filename = trim(prefix) // trim(bgz_suffix) // trim(int_to_char(LR_polarization))
   tempfile = trim(tmp_dir) // trim(filename)
  endif
 

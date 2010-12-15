@@ -52,16 +52,17 @@ subroutine read_wT_beta_gamma_z()
          !if (.not. allocated(w_T_beta_store)) print *, "aaaaaaaaaaaaaa"
          filename = trim(w_T_prefix) // trim(int_to_char(LR_polarization))
          !
+         WRITE(stdout,'(/,/5x,"Reading Pre-calculated lanczos coefficents from ",A50)') filename
+         !
          inquire (file = filename, exist = exst)
          !
-         if (.not.exst) call errore(' lr_main ','Lanczos coefficents not found ',1)
+         if (.not.exst) call errore(' read_beta_gamma_z ','Stage 1 Lanczos coefficents not found ',1)
          !
          !
          open (158, file = filename, form = 'formatted', status = 'old')
          inquire (file = filename, opened = exst)
-         if (.not.exst) call errore(' lr_main ','Lanczos coefficents can not be opened ',1)
+         if (.not.exst) call errore(' read_beta_gamma_z ','Stage 1 Lanczos coefficents can not be opened ',1)
          !
-         WRITE(stdout,'(/,/5x,"Reading Pre-calculated lanczos coefficents from ",A50)') filename
          !
          read(158,*,end=301,err=302) iter_restart
          !print *,iter_restart

@@ -14,7 +14,8 @@ subroutine lr_restart(iter_restart,rflag)
   use gvect,                only : g
   use io_files,             only : tmp_dir, prefix, diropn, wfc_dir
   use lr_variables,         only : itermax,evc1, evc1_new, sevc1_new, rho_1_tot , rho_1_tot_im,&
-                                   restart, nwordrestart, iunrestart,project,nbnd_total,F
+                                   restart, nwordrestart, iunrestart,project,nbnd_total,F,&
+                                   bgz_suffix
   use charg_resp,           only : resonance_condition
   use wvfct,                only : npw, igk, nbnd, g2kin, npwx
   use lr_variables,         only : beta_store, gamma_store, zeta_store, norm0!,real_space
@@ -80,7 +81,7 @@ subroutine lr_restart(iter_restart,rflag)
   ! Reading Lanczos coefficients
   !
   !
-  filename = trim(prefix) // ".beta_gamma_z." // trim(int_to_char(LR_polarization))
+  filename = trim(prefix) // trim(bgz_suffix) // trim(int_to_char(LR_polarization))
   tempfile = trim(tmp_dir) // trim(filename)
   !
   inquire (file = tempfile, exist = exst)
