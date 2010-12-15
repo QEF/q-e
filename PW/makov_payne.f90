@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2007 Quantum ESPRESSO group
+! Copyright (C) 2007-2010 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -159,7 +159,7 @@ SUBROUTINE write_dipole( etot, x0, dipole_el, quadrupole_el, qq )
   !
   USE kinds,      ONLY : DP
   USE io_global,  ONLY : stdout
-  USE constants,  ONLY : pi, rytoev
+  USE constants,  ONLY : e2, pi, rytoev
   USE ions_base,  ONLY : nat, ityp, tau, zv
   USE cell_base,  ONLY : at, bg, omega, alat, ibrav
   USE io_global,  ONLY : ionode
@@ -249,13 +249,15 @@ SUBROUTINE write_dipole( etot, x0, dipole_el, quadrupole_el, qq )
   !
   ! ... Makov-Payne correction, PRB 51, 4014 (1995)
   ! ... Note that Eq. 15 has the wrong sign for the quadrupole term
+  ! ... The prefactor of the quadrupole term is half the one in Eq. 15
+  ! ... according to the results derived by Dabo et al., PRB 77, 115139 (2008)
   !
-  corr1 = - madelung(ibrav) / alat * qq**2
+  corr1 = - madelung(ibrav) / alat * qq**2 / 2.0D0 * e2
   !
   aa = quadrupole
   bb = dipole(1)**2 + dipole(2)**2 + dipole(3)**2
   !
-  corr2 = ( 4.D0 / 3.D0 * pi )*( qq*aa - bb ) / alat**3
+  corr2 = ( 1.D0 / 3.D0 * pi )*( qq*aa - bb ) / alat**3 * e2
   !
   ! ... print the Makov-Payne correction
   !

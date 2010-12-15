@@ -241,6 +241,8 @@ IF ( ionode ) THEN
    !
    ! ... Makov-Payne correction, PRB 51, 43014 (1995)
    ! ... Note that Eq. 15 has the wrong sign for the quadrupole term
+   ! ... The prefactor of the quadrupole term is half the one in Eq. 15
+   ! ... according to the results derived by Dabo et al., PRB 77, 115139 (2008)
    !
    ! 1 / 2 Ry -> a.u.
    corr1 = - 2.8373D0 / alat * charge**2 / 2.0D0
@@ -248,8 +250,8 @@ IF ( ionode ) THEN
    aa = quadrupole
    bb = dipole(1)**2 + dipole(2)**2 + dipole(3)**2
    !
-   ! 4 / 3 -> 2 / 3 Ry -> a.u.
-   corr2 = ( 2.D0 / 3.D0 * pi )*( charge*aa - bb ) / alat**3
+   ! 2/ 3 -> 1 / 3 Ry -> a.u.
+   corr2 = ( 1.D0 / 3.D0 * pi )*( charge*aa - bb ) / alat**3
    !
    ! ... print the Makov-Payne correction
    !
