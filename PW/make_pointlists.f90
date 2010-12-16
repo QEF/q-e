@@ -24,7 +24,7 @@ SUBROUTINE make_pointlists
   USE kinds,      ONLY : dp
   USE io_global,  ONLY : stdout
   USE ions_base,  ONLY : nat, tau, ntyp => nsp, ityp
-  USE cell_base,  ONLY : at, bg
+  USE cell_base,  ONLY : at, bg, alat
   USE mp_global,  ONLY : me_pool
   USE fft_base,   ONLY : dfftp
 
@@ -108,7 +108,9 @@ SUBROUTINE make_pointlists
      ! distance divided by 2*1.2 (so no point in space can belong to more
      ! than one atom)
         r_m(nt) = 0.5d0*distmin(nt)/1.2d0 * 0.99d0
-        WRITE( stdout,'(5x,"new r_m : ",f8.4," for type",i5)') r_m(nt), nt
+        WRITE( stdout,'(5x,"new r_m : ",f8.4," (a_0 units)", f8.4, &
+                          &" a.u. for type",i5)') &
+                                        r_m(nt), r_m(nt) * alat, nt
      ENDIF
   ENDDO
 
