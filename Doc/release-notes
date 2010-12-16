@@ -32,6 +32,7 @@ Incompatible changes in CVS version:
 	ecutw 		ecutwfc
 	gzero/ng0	gstart
  	np, nm		nl, nlm
+ 	nps, nms	nls, nlsm
 
 Fixed in CVS version:
 

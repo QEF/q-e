@@ -14,7 +14,7 @@
 
     SUBROUTINE c2psi( psi, nnr, c, ca, ng, iflg )
        !
-       use gvecs, only: nms, nps
+       use gvecs, only: nlsm, nls
        use kinds, only: DP
 
        implicit none
@@ -44,21 +44,21 @@
            CASE ( 0 )
              !
              do ig = 1, ng
-               psi( nps( ig ) ) = c( ig )
+               psi( nls( ig ) ) = c( ig )
              end do
              !
            CASE ( 1 )
              !
              do ig = 1, ng
-               psi( nms( ig ) ) = CONJG( c( ig ) )
-               psi( nps( ig ) ) = c( ig )
+               psi( nlsm( ig ) ) = CONJG( c( ig ) )
+               psi( nls( ig ) ) = c( ig )
              end do
              !
            CASE ( 2 )
              !
              do ig = 1, ng
-               psi( nms( ig ) ) = CONJG( c( ig ) ) + ci * conjg( ca( ig ) )
-               psi( nps( ig ) ) = c( ig ) + ci * ca( ig )
+               psi( nlsm( ig ) ) = CONJG( c( ig ) ) + ci * conjg( ca( ig ) )
+               psi( nls( ig ) ) = c( ig ) + ci * ca( ig )
              end do
 
            CASE DEFAULT
@@ -77,7 +77,7 @@
      SUBROUTINE rho2psi( grid_type, psi, nnr, rho, ng )
        !
        use recvecs_indexes, only: nlm, nl
-       use gvecs, only: nms, nps
+       use gvecs, only: nlsm, nls
        use kinds, only: DP
 
        implicit none
@@ -98,12 +98,12 @@
              !
              ! without gamma sym
              ! do ig = 1, ng
-             !   psi( nps( ig ) ) = rho( ig )
+             !   psi( nls( ig ) ) = rho( ig )
              ! end do
              !
              do ig = 1, ng
-               psi( nms( ig ) ) = CONJG( rho( ig ) )
-               psi( nps( ig ) ) = rho( ig )
+               psi( nlsm( ig ) ) = CONJG( rho( ig ) )
+               psi( nls( ig ) ) = rho( ig )
              end do
              !
            CASE ( 'Dense' )
@@ -131,7 +131,7 @@
      SUBROUTINE psi2c( psi, nnr, c, ca, ng, iflg )
 
        use recvecs_indexes, only: nlm, nl
-       use gvecs, only: nms, nps
+       use gvecs, only: nlsm, nls
        use kinds, only: DP
 
        implicit none
@@ -160,7 +160,7 @@
            CASE ( 0 )
              !
              do ig = 1, ng
-               c( ig ) = psi( nps( ig ) )
+               c( ig ) = psi( nls( ig ) )
              end do
              !
            CASE ( 1 )
@@ -170,8 +170,8 @@
            CASE ( 2 )
              !
              DO ig = 1, ng
-               ca(ig) = psi( nms( ig ) )
-               c (ig) = psi( nps( ig ) )
+               ca(ig) = psi( nlsm( ig ) )
+               c (ig) = psi( nls( ig ) )
              END DO
 
            !
@@ -208,7 +208,7 @@
      SUBROUTINE psi2rho( grid_type, psi, nnr, rho, ng )
 
        use recvecs_indexes, only: nlm, nl
-       use gvecs, only: nms, nps
+       use gvecs, only: nlsm, nls
        use kinds, only: DP
 
        implicit none
@@ -224,7 +224,7 @@
           CASE ( 'Smooth' )
              !
              do ig = 1, ng
-                rho( ig ) = psi( nps( ig ) )
+                rho( ig ) = psi( nls( ig ) )
              end do
              !
           CASE ( 'Dense' )

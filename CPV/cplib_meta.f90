@@ -14,7 +14,7 @@
 !          contribution from metaGGA
       use kinds, only: dp
       use reciprocal_vectors,     only : g
-      use gvecs,                  only : ngms, nms, nps
+      use gvecs,                  only : ngms, nlsm, nls
       use gvecw,                  only : ngw
       use smooth_grid_dimensions, only : nrxxs
       use cell_base,              only : tpiba2
@@ -37,8 +37,8 @@
          do ipol = 1, 3
             psi(:)=(0.d0,0.d0)
             do ig=1,ngw
-               psi(nps(ig))=g(ipol,ig)* (ci*c(ig) - ca(ig))
-               psi(nms(ig))=g(ipol,ig)* (CONJG(ci*c(ig) + ca(ig)))
+               psi(nls(ig))=g(ipol,ig)* (ci*c(ig) - ca(ig))
+               psi(nlsm(ig))=g(ipol,ig)* (CONJG(ci*c(ig) + ca(ig)))
             end do
             call invfft('Wave',psi,dffts )
 !           on smooth grids--> grids for charge density
@@ -48,8 +48,8 @@
             end do
             call fwfft('Wave',psi, dffts )
             do ig=1,ngw
-               fp= (psi(nps(ig)) + psi(nms(ig)))
-               fm= (psi(nps(ig)) - psi(nms(ig)))
+               fp= (psi(nls(ig)) + psi(nlsm(ig)))
+               fm= (psi(nls(ig)) - psi(nlsm(ig)))
                df(ig)= df(ig) - ci*fi*tpiba2*g(ipol,ig) * &
                        CMPLX(DBLE(fp), AIMAG(fm),kind=DP)
                da(ig)= da(ig) - ci*fip*tpiba2*g(ipol,ig)* &
@@ -63,7 +63,7 @@
 !-----------------------------------------------------------------------
 !
 !-----------------------------------------------------------------------
-      subroutine kedtauofr_meta (c, psi, npsi, psis, npsis )
+      subroutine kedtauofr_meta (c, psi, nlsi, psis, nlsis )
 !-----------------------------------------------------------------------
 !
       use kinds, only: dp
@@ -87,9 +87,9 @@
       
       implicit none
 
-      integer, intent(in) :: npsi, npsis
+      integer, intent(in) :: nlsi, nlsis
       complex(dp) :: c(ngw,nx)
-      complex(dp) :: psi( npsi ), psis( npsis )
+      complex(dp) :: psi( nlsi ), psis( nlsis )
 
 ! local variables
       integer iss, isup, isdw, iss1, iss2, ios, i, ir, ig
@@ -129,8 +129,8 @@
          do ipol = 1, 3
             psis( : ) = (0.d0,0.d0)
             do ig=1,ngw
-               psis(nps(ig))=tpiba*g(ipol,ig)* (ci*c(ig,i) - c(ig,i+1))
-               psis(nms(ig))=tpiba*g(ipol,ig)*CONJG(ci*c(ig,i)+c(ig,i+1))
+               psis(nls(ig))=tpiba*g(ipol,ig)* (ci*c(ig,i) - c(ig,i+1))
+               psis(nlsm(ig))=tpiba*g(ipol,ig)*CONJG(ci*c(ig,i)+c(ig,i+1))
             end do
                   ! gradient of wfc in real space
             call invfft('Wave',psis, dffts )
@@ -185,7 +185,7 @@
 
          psis(1:nrxxs)=CMPLX(kedtaus(1:nrxxs,iss),0.d0,kind=DP)
          call fwfft('Smooth',psis, dffts )
-         kedtaug(1:ngms,iss)=psis(nps(1:ngms))
+         kedtaug(1:ngms,iss)=psis(nls(1:ngms))
 
       else
          isup=1
@@ -194,8 +194,8 @@
          psis(1:nrxxs)=CMPLX(kedtaus(1:nrxxs,isup),kedtaus(1:nrxxs,isdw),kind=DP)
          call fwfft('Smooth',psis, dffts )
          do ig=1,ngms
-            fp= psis(nps(ig)) + psis(nms(ig))
-            fm= psis(nps(ig)) - psis(nms(ig))
+            fp= psis(nls(ig)) + psis(nlsm(ig))
+            fm= psis(nls(ig)) - psis(nlsm(ig))
             kedtaug(ig,isup)=0.5d0*CMPLX( DBLE(fp),AIMAG(fm),kind=DP)
             kedtaug(ig,isdw)=0.5d0*CMPLX(AIMAG(fp),-DBLE(fm),kind=DP)
          end do
@@ -334,8 +334,8 @@
       if(nspin.eq.1)then
          iss=1
          do ig=1,ngms
-            vs(nms(ig))=CONJG(kedtaug(ig,iss))
-            vs(nps(ig))=kedtaug(ig,iss)
+            vs(nlsm(ig))=CONJG(kedtaug(ig,iss))
+            vs(nls(ig))=kedtaug(ig,iss)
          end do
 !
          call invfft('Smooth',vs, dffts )
@@ -345,8 +345,8 @@
          isup=1
          isdw=2
          do ig=1,ngms
-            vs(nps(ig))=kedtaug(ig,isup)+ci*kedtaug(ig,isdw)
-            vs(nms(ig))=CONJG(kedtaug(ig,isup)) +ci*conjg(kedtaug(ig,isdw))
+            vs(nls(ig))=kedtaug(ig,isup)+ci*kedtaug(ig,isdw)
+            vs(nlsm(ig))=CONJG(kedtaug(ig,isup)) +ci*conjg(kedtaug(ig,isdw))
          end do
          call invfft('Smooth',vs, dffts )
          kedtaus(1:nrxxs,isup)= DBLE(vs(1:nrxxs))

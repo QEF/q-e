@@ -2089,8 +2089,8 @@ END FUNCTION
          iss=1
 !$omp parallel do
          DO ig=1,ngms
-            vs(nms(ig))=CONJG(rhog(ig,iss))
-            vs(nps(ig))=rhog(ig,iss)
+            vs(nlsm(ig))=CONJG(rhog(ig,iss))
+            vs(nls(ig))=rhog(ig,iss)
          END DO
          !
          CALL invfft('Smooth',vs, dffts )
@@ -2106,8 +2106,8 @@ END FUNCTION
          isdw=2
 !$omp parallel do
          DO ig=1,ngms
-            vs(nps(ig))=rhog(ig,isup)+ci*rhog(ig,isdw)
-            vs(nms(ig))=CONJG(rhog(ig,isup)) +ci*CONJG(rhog(ig,isdw))
+            vs(nls(ig))=rhog(ig,isup)+ci*rhog(ig,isdw)
+            vs(nlsm(ig))=CONJG(rhog(ig,isup)) +ci*CONJG(rhog(ig,isdw))
          END DO 
          !
          CALL invfft('Smooth',vs, dffts )

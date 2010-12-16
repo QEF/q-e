@@ -101,7 +101,7 @@
       USE control_flags,      ONLY: iprint, iprsta, thdyn, tpre, trhor
       USE ions_base,          ONLY: nat
       USE gvecp,              ONLY: ngm
-      USE gvecs,              ONLY: ngms, nps, nms
+      USE gvecs,              ONLY: ngms, nls, nlsm
       USE gvecb,              ONLY: ngb
       USE gvecw,              ONLY: ngw
       USE recvecs_indexes,    ONLY: nl, nlm
@@ -266,8 +266,8 @@
             !
             psis = 0.D0
             DO ig=1,ngw
-               psis(nms(ig))=CONJG(c(ig,i))
-               psis(nps(ig))=c(ig,i)
+               psis(nlsm(ig))=CONJG(c(ig,i))
+               psis(nls(ig))=c(ig,i)
             END DO
             !
             CALL invfft('Wave',psis, dffts )
@@ -324,7 +324,7 @@
             END DO
             CALL fwfft('Smooth', psis, dffts )
             DO ig=1,ngms
-               rhog(ig,iss)=psis(nps(ig))
+               rhog(ig,iss)=psis(nls(ig))
             END DO
          ELSE
             isup=1
@@ -334,8 +334,8 @@
             END DO
             CALL fwfft('Smooth',psis, dffts )
             DO ig=1,ngms
-               fp= psis(nps(ig)) + psis(nms(ig))
-               fm= psis(nps(ig)) - psis(nms(ig))
+               fp= psis(nls(ig)) + psis(nlsm(ig))
+               fm= psis(nls(ig)) - psis(nlsm(ig))
                rhog(ig,isup)=0.5d0*CMPLX( DBLE(fp),AIMAG(fm),kind=DP)
                rhog(ig,isdw)=0.5d0*CMPLX(AIMAG(fp),-DBLE(fm),kind=DP)
             END DO
@@ -499,7 +499,7 @@
             !  Loop for all local g-vectors (ngw)
             !  c: stores the Fourier expansion coefficients
             !     the i-th column of c corresponds to the i-th state
-            !  nms and nps matrices: hold conversion indices form 3D to
+            !  nlsm and nls matrices: hold conversion indices form 3D to
             !     1-D vectors. Columns along the z-direction are stored contigiously
             !
             !  The outer loop goes through i : i + 2*NOGRP to cover
@@ -524,8 +524,8 @@
 
 !$omp do
                   do ig=1,ngw
-                     psis(nms(ig)+eig_offset*dffts%tg_nnr)=conjg(c(ig,i+eig_index-1))+ci*conjg(c(ig,i+eig_index))
-                     psis(nps(ig)+eig_offset*dffts%tg_nnr)=c(ig,i+eig_index-1)+ci*c(ig,i+eig_index)
+                     psis(nlsm(ig)+eig_offset*dffts%tg_nnr)=conjg(c(ig,i+eig_index-1))+ci*conjg(c(ig,i+eig_index))
+                     psis(nls(ig)+eig_offset*dffts%tg_nnr)=c(ig,i+eig_index-1)+ci*c(ig,i+eig_index)
                   end do
                   !
                   eig_offset = eig_offset + 1

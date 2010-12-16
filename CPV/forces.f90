@@ -27,7 +27,7 @@
       USE parallel_include
       USE kinds,                  ONLY: dp
       USE control_flags,          ONLY: iprint
-      USE gvecs,                  ONLY: nms, nps
+      USE gvecs,                  ONLY: nlsm, nls
       USE cvan,                   ONLY: ish
       USE uspp,                   ONLY: nhsa=>nkb, dvan, deeq
       USE uspp_param,             ONLY: nhm, nh
@@ -100,8 +100,8 @@
 
          IF( idx + i - 1 <= n ) THEN
             DO ig=1,ngw
-               psi(nms(ig)+igoff) = conjg( c(ig,idx+i-1) - ci * c(ig,idx+i) )
-               psi(nps(ig)+igoff) =        c(ig,idx+i-1) + ci * c(ig,idx+i)
+               psi(nlsm(ig)+igoff) = conjg( c(ig,idx+i-1) - ci * c(ig,idx+i) )
+               psi(nls(ig)+igoff) =        c(ig,idx+i-1) + ci * c(ig,idx+i)
             END DO
          END IF
 
@@ -175,8 +175,8 @@
             IF( use_task_groups ) THEN
 !$omp parallel do private( fp, fm )
                DO ig=1,ngw
-                  fp= psi(nps(ig)+eig_offset) +  psi(nms(ig)+eig_offset)
-                  fm= psi(nps(ig)+eig_offset) -  psi(nms(ig)+eig_offset)
+                  fp= psi(nls(ig)+eig_offset) +  psi(nlsm(ig)+eig_offset)
+                  fm= psi(nls(ig)+eig_offset) -  psi(nlsm(ig)+eig_offset)
                   df(ig+igno-1)= fi *(tpiba2 * ggp(ig) * c(ig,idx+i-1) + &
                                  CMPLX(real (fp), aimag(fm), kind=dp ))
                   da(ig+igno-1)= fip*(tpiba2 * ggp(ig) * c(ig,idx+i  ) + &
@@ -187,8 +187,8 @@
             ELSE
 !$omp parallel do private( fp, fm )
                DO ig=1,ngw
-                  fp= psi(nps(ig)) + psi(nms(ig))
-                  fm= psi(nps(ig)) - psi(nms(ig))
+                  fp= psi(nls(ig)) + psi(nlsm(ig))
+                  fm= psi(nls(ig)) - psi(nlsm(ig))
                   df(ig)= fi*(tpiba2*ggp(ig)* c(ig,idx+i-1)+CMPLX(DBLE(fp), AIMAG(fm),kind=DP))
                   da(ig)=fip*(tpiba2*ggp(ig)* c(ig,idx+i  )+CMPLX(AIMAG(fp),-DBLE(fm),kind=DP))
                END DO

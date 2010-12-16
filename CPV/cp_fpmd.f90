@@ -336,7 +336,7 @@ end subroutine ggenb
       use reciprocal_vectors, only: mill, ig_l2g
       use reciprocal_vectors, only: gstart, sortedig_l2g
       use recvecs_indexes,    only: nlm, nl
-      use gvecs,              only: ngms, nms, nps
+      use gvecs,              only: ngms, nlsm, nls
       use gvecw,              only: ngw, ngwt, ggp
       use gvecp,              only: ngm, ngl, ngm_g
       use io_global,          only: stdout
@@ -445,17 +445,17 @@ end subroutine ggenb
       !
       ! costruct fft indexes (n1s,n2s,n3s) for the smooth grid
       !
-      allocate(nps(ngms))
-      allocate(nms(ngms))
+      allocate(nls(ngms))
+      allocate(nlsm(ngms))
 !
-      CALL gfftindex( nps, nms, ngms, mill, nr1s, nr2s, nr3s, &
+      CALL gfftindex( nls, nlsm, ngms, mill, nr1s, nr2s, nr3s, &
                       dffts%isind, dffts%nr1x, dffts%nr2x, dffts%nr3x )
 
 
 ! ... Uncomment to make tests and comparisons with other codes
 !      IF ( ionode ) THEN
 !        DO ig=1,ngms
-!          WRITE( 202, fmt="( I6, 2I6, 3I4 )" ) ig, nps(ig), nms(ig), mill(1,ig), mill(2,ig), mill(3,ig)
+!          WRITE( 202, fmt="( I6, 2I6, 3I4 )" ) ig, nls(ig), nlsm(ig), mill(1,ig), mill(2,ig), mill(3,ig)
 !        END DO
 !        CLOSE( 202 )
 !      END IF

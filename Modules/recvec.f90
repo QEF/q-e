@@ -90,7 +90,7 @@
                        ! in serial execution this is equal to ngw
      INTEGER :: ngsx = 0  ! maximum local number of G vectors
 
-     INTEGER, ALLOCATABLE :: nps(:), nms(:)
+     INTEGER, ALLOCATABLE :: nls(:), nlsm(:)
 
      REAL(DP) :: ecuts = 0.0_DP
      REAL(DP) :: gcutms= 0.0_DP
@@ -101,8 +101,8 @@
    CONTAINS
 
      SUBROUTINE deallocate_gvecs()
-       IF( ALLOCATED( nps ) ) DEALLOCATE( nps )
-       IF( ALLOCATED( nms ) ) DEALLOCATE( nms )
+       IF( ALLOCATED( nls ) ) DEALLOCATE( nls )
+       IF( ALLOCATED( nlsm ) ) DEALLOCATE( nlsm )
      END SUBROUTINE deallocate_gvecs
 
 !=----------------------------------------------------------------------------=!
