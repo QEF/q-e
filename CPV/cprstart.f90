@@ -20,10 +20,11 @@ PROGRAM main
   !
   USE input,         ONLY : read_input_file, iosys_pseudo, iosys
   USE mp_global,     ONLY : mp_startup
-  USE io_global,     ONLY : ionode
+  USE io_global,     ONLY : ionode, ionode_id
   USE control_flags, ONLY : lneb, lsmd, program_name
   USE environment,   ONLY : environment_start
   USE check_stop,    ONLY : check_stop_init
+  USE mp_global,     ONLY : mp_bcast, intra_image_comm
   !
   IMPLICIT NONE
   !
@@ -46,6 +47,7 @@ PROGRAM main
   !
   ! reading plugin arguments
   IF(ionode) CALL plugin_arguments()
+  CALL plugin_arguments_bcast(ionode_id,intra_image_comm)
   !
   ! ... readin the input file
   !
