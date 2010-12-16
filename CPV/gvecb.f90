@@ -21,7 +21,7 @@
      INTEGER :: ngbx = 0  ! maximum local number of G vectors
 
      REAL(DP), ALLOCATABLE :: gb(:), gxb(:,:), glb(:)
-     INTEGER, ALLOCATABLE :: npb(:), nmb(:), iglb(:)
+     INTEGER, ALLOCATABLE :: npb(:), nmb(:)
      INTEGER, ALLOCATABLE :: mill_b(:,:)
 
      REAL(DP) :: ecutb = 0.0_DP
@@ -43,7 +43,6 @@
        IF( ALLOCATED( glb ) ) DEALLOCATE( glb )
        IF( ALLOCATED( npb ) ) DEALLOCATE( npb )
        IF( ALLOCATED( nmb ) ) DEALLOCATE( nmb )
-       IF( ALLOCATED( iglb ) ) DEALLOCATE( iglb )
        IF( ALLOCATED( mill_b ) ) DEALLOCATE( mill_b )
      END SUBROUTINE deallocate_gvecb
 

@@ -162,10 +162,6 @@
      !
      INTEGER, ALLOCATABLE, TARGET :: sortedig_l2g(:)
 
-     !     igl = index of the g-vector shells
-     !
-     INTEGER, ALLOCATABLE, TARGET :: igl(:)
-
      !     bi  = base vector used to generate the reciprocal space
      !
      REAL(DP) :: bi1(3) = (/ 0.0_DP, 0.0_DP, 0.0_DP /)
@@ -183,7 +179,6 @@
        IF( ALLOCATED( mill ) ) DEALLOCATE( mill )
        IF( ALLOCATED( ig_l2g ) ) DEALLOCATE( ig_l2g )
        IF( ALLOCATED( sortedig_l2g ) ) DEALLOCATE( sortedig_l2g )
-       IF( ALLOCATED( igl ) ) DEALLOCATE( igl )
        CALL deallocate_gvecw( )
        CALL deallocate_gvecs( )
      END SUBROUTINE deallocate_recvecs

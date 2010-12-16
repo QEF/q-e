@@ -13,8 +13,7 @@ subroutine ggenb (b1b, b2b, b3b, nr1b ,nr2b, nr3b, nr1bx ,nr2bx, nr3bx, gcutb )
    ! The documentation for ggen applies
    !
    USE kinds, ONLY: DP
-   use gvecb, only: ngb, ngbt, ngbl, ngbx, gb, gxb, glb, npb, nmb
-   use gvecb, only: iglb, mill_b
+   use gvecb, only: ngb, ngbt, ngbl, ngbx, gb, gxb, glb, npb, nmb, mill_b
    use io_global, only: stdout, ionode
    use control_flags, only: iprsta
 !
@@ -23,7 +22,7 @@ subroutine ggenb (b1b, b2b, b3b, nr1b ,nr2b, nr3b, nr1bx ,nr2bx, nr3bx, gcutb )
    integer nr1b, nr2b, nr3b, nr1bx, nr2bx, nr3bx
    REAL(DP) b1b(3), b2b(3), b3b(3), gcutb
 !
-   integer, allocatable:: idx(:)
+   integer, allocatable:: idx(:), iglb(:)
    integer n1pb, n2pb, n3pb, n1mb, n2mb, n3mb
    integer it, icurr, nr1m1, nr2m1, nr3m1, ir, ig, i,j,k, itv(3), ip
    REAL(DP) t(3), g2
@@ -212,6 +211,7 @@ subroutine ggenb (b1b, b2b, b3b, nr1b ,nr2b, nr3b, nr1bx ,nr2bx, nr3bx, gcutb )
          gxb(3,ig)=i*b1b(3)+j*b2b(3)+k*b3b(3)
       end do
 !
+      DEALLOCATE (iglb)
       return
 end subroutine ggenb
 
@@ -332,7 +332,7 @@ end subroutine ggenb
 !   the g's are in units of 2pi/a.
 !
       USE kinds,              ONLY: DP
-      use reciprocal_vectors, only: gg, g, igl, mill_g, g2_g, gl
+      use reciprocal_vectors, only: gg, g, mill_g, g2_g, gl
       use reciprocal_vectors, only: mill, ig_l2g
       use reciprocal_vectors, only: gstart, sortedig_l2g
       use recvecs_indexes,    only: nm, np
@@ -357,6 +357,7 @@ end subroutine ggenb
       integer      :: n1ps, n2ps, n3ps, n1ms, n2ms, n3ms
       integer      :: it, icurr, nr1m1, nr2m1, nr3m1, nrefold, ir, ig, i,j,k
       integer      :: ichk
+      integer, allocatable :: igl(:)
       !
       !  First of all count the number of G vectors according with the FFT mesh 
       ! 
@@ -488,6 +489,7 @@ end subroutine ggenb
       do ig=2,ngm
          if(igl(ig).ne.igl(ig-1)) gl(igl(ig))=gg(ig)
       end do
+      deallocate (igl)
 !
 ! gstart is the index of the first nonzero G-vector
 ! needed in the parallel case (G=0 is found on one node only!)
