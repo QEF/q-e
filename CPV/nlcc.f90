@@ -104,7 +104,7 @@
       use io_global,          only: stdout
       use mp_global,          only: intra_image_comm
       use cell_base,          only: omega
-      use recvecs_indexes,    only: np
+      use recvecs_indexes,    only: nl
       USE mp,                 ONLY: mp_sum
 
       ! this isn't really needed, but if I remove it, ifc 7.1
@@ -158,12 +158,12 @@
       !
       if (nspin.eq.1) then
          do ig=1,ngm
-            rhog(ig,iss)=rhog(ig,iss)+wrk1(np(ig))
+            rhog(ig,iss)=rhog(ig,iss)+wrk1(nl(ig))
          end do
       else
          do ig=1,ngm
-            rhog(ig,isup)=rhog(ig,isup)+0.5d0*wrk1(np(ig))
-            rhog(ig,isdw)=rhog(ig,isdw)+0.5d0*wrk1(np(ig))
+            rhog(ig,isup)=rhog(ig,isup)+0.5d0*wrk1(nl(ig))
+            rhog(ig,isdw)=rhog(ig,isdw)+0.5d0*wrk1(nl(ig))
          end do
       end if
 

@@ -195,17 +195,17 @@
      IMPLICIT NONE
      SAVE
 
-     !     np      = fft index for G>
-     !     nm      = fft index for G<
+     !     nl      = fft index for G>
+     !     nlm     = fft index for G<
 
 
-     INTEGER, ALLOCATABLE :: np(:), nm(:)
+     INTEGER, ALLOCATABLE :: nl(:), nlm(:)
 
    CONTAINS
 
      SUBROUTINE deallocate_recvecs_indexes
-       IF( ALLOCATED( np ) ) DEALLOCATE( np )
-       IF( ALLOCATED( nm ) ) DEALLOCATE( nm )
+       IF( ALLOCATED( nl ) ) DEALLOCATE( nl )
+       IF( ALLOCATED( nlm) ) DEALLOCATE( nlm)
       END SUBROUTINE deallocate_recvecs_indexes
 
 !=----------------------------------------------------------------------------=!

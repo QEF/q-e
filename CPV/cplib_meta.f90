@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2005 FPMD-CPV groups
+! Copyright (C) 2005-2010 Quantum ESPRESSO groups
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -71,7 +71,7 @@
       use gvecs
       use gvecw, only: ngw
       use reciprocal_vectors, only: g
-      use recvecs_indexes, only: np, nm
+      use recvecs_indexes, only: nl, nlm
       use grid_dimensions, only: nr1, nr2, nr3, nr1x, nr2x, nr3x, nrxx
       use cell_base
       use smooth_grid_dimensions, only: nrxxs
@@ -209,8 +209,8 @@
          iss=1
 
          psi( : ) = (0.d0,0.d0)
-         psi(nm(1:ngms))=CONJG(kedtaug(1:ngms,iss))
-         psi(np(1:ngms))=      kedtaug(1:ngms,iss)
+         psi(nlm(1:ngms))=CONJG(kedtaug(1:ngms,iss))
+         psi(nl(1:ngms)) =      kedtaug(1:ngms,iss)
          call invfft('Dense',psi, dfftp )
          kedtaur(1:nrxx,iss)=DBLE(psi(1:nrxx))
 
@@ -224,8 +224,8 @@
          psi( : ) = (0.d0,0.d0)
 
          do ig=1,ngms
-            psi(nm(ig))=CONJG(kedtaug(ig,isup))+ci*conjg(kedtaug(ig,isdw))
-            psi(np(ig))=kedtaug(ig,isup)+ci*kedtaug(ig,isdw)
+            psi(nlm(ig))=CONJG(kedtaug(ig,isup))+ci*conjg(kedtaug(ig,isdw))
+            psi(nl(ig)) =kedtaug(ig,isup)+ci*kedtaug(ig,isdw)
          end do
          call invfft('Dense',psi, dfftp )
          kedtaur(1:nrxx,isup)= DBLE(psi(1:nrxx))
@@ -260,7 +260,7 @@
       use gvecp, only: ngm
       use cell_base, only: omega
       use cell_base, only: a1, a2, a3, tpiba2
-      use recvecs_indexes, only: np, nm
+      use recvecs_indexes, only: nl, nlm
       use grid_dimensions, only: nr1, nr2, nr3, nr1x, nr2x, nr3x, nrxx
       use smooth_grid_dimensions, only: nr1s, nr2s, nr3s, nrxxs
       use electrons_base, only: nspin
@@ -313,7 +313,7 @@
          call fwfft('Dense',v, dfftp )
          !
          do ig=1,ngm
-            kedtaug(ig,iss)=v(np(ig))
+            kedtaug(ig,iss)=v(nl(ig))
          end do
       else
          isup=1
@@ -322,8 +322,8 @@
          v(1:nrxx)=CMPLX(kedtaur(1:nrxx,isup),kedtaur(1:nrxx,isdw),kind=DP)
          call fwfft('Dense',v, dfftp )
          do ig=1,ngm
-            fp=v(np(ig))+v(nm(ig))
-            fm=v(np(ig))-v(nm(ig))
+            fp=v(nl(ig))+v(nlm(ig))
+            fm=v(nl(ig))-v(nlm(ig))
             kedtaug(ig,isup)=0.5d0*CMPLX( DBLE(fp),AIMAG(fm),kind=DP)
             kedtaug(ig,isdw)=0.5d0*CMPLX(AIMAG(fp),-DBLE(fm),kind=DP)
          end do

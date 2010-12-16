@@ -268,7 +268,7 @@
       USE kinds,              ONLY: DP
       use control_flags, only: iprint, tpre
       use reciprocal_vectors, only: g
-      use recvecs_indexes, only: np, nm
+      use recvecs_indexes, only: nl, nlm
       use gvecp, only: ngm
       use grid_dimensions, only: nr1, nr2, nr3, nrxx, nr1x, nr2x, nr3x
       use cell_base, only: ainv, tpiba, omega
@@ -304,14 +304,14 @@
          end do
          call fwfft('Dense',v, dfftp )
          do ig=1,ngm
-            x(ig)=ci*tpiba*g(1,ig)*v(np(ig))
+            x(ig)=ci*tpiba*g(1,ig)*v(nl(ig))
          end do
 !
          if(tpre) then
             do i=1,3
                do j=1,3
                   do ig=1,ngm
-                     vtemp(ig) = omega*ci*CONJG(v(np(ig)))*             &
+                     vtemp(ig) = omega*ci*CONJG(v(nl(ig)))*             &
      &                    tpiba*(-rhog(ig,iss)*g(i,ig)*ainv(j,1)+      &
      &                    g(1,ig)*drhog(ig,iss,i,j))
                   end do
@@ -326,8 +326,8 @@
          call fwfft('Dense',v, dfftp )
 !
          do ig=1,ngm
-            fp=v(np(ig))+v(nm(ig))
-            fm=v(np(ig))-v(nm(ig))
+            fp=v(nl(ig))+v(nlm(ig))
+            fm=v(nl(ig))-v(nlm(ig))
             x(ig) = x(ig) +                                             &
      &           ci*tpiba*g(2,ig)*0.5d0*CMPLX( DBLE(fp),AIMAG(fm),kind=DP)
             x(ig) = x(ig) +                                             &
@@ -338,8 +338,8 @@
             do i=1,3
                do j=1,3
                   do ig=1,ngm
-                     fp=v(np(ig))+v(nm(ig))
-                     fm=v(np(ig))-v(nm(ig))
+                     fp=v(nl(ig))+v(nlm(ig))
+                     fm=v(nl(ig))-v(nlm(ig))
                      vtemp(ig) = omega*ci*                              &
      &                    (0.5d0*CMPLX(DBLE(fp),-AIMAG(fm),kind=DP)*              &
      &                    tpiba*(-rhog(ig,iss)*g(i,ig)*ainv(j,2)+      &
@@ -359,8 +359,8 @@
             v(ig)=(0.0d0,0.0d0)
          end do
          do ig=1,ngm
-            v(np(ig))=x(ig)
-            v(nm(ig))=CONJG(x(ig))
+            v(nl(ig))=x(ig)
+            v(nlm(ig))=CONJG(x(ig))
          end do
          call invfft('Dense',v, dfftp )
          do ir=1,nrxx

@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2005 FPMD-CPV groups
+! Copyright (C) 2002-2020 Quantum ESPRESSO grouo
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -56,10 +56,10 @@ SUBROUTINE gradrho(nspin,rhog,drho,d2rho,dxdyrho,dxdzrho,dydzrho)
             w(ig)=(0.0d0,0.0d0)
          end do
          do ig=1,ngm
-            v(np(ig))=      ci*tpiba*g(1,ig)*rhog(ig,iss)
-            v(nm(ig))=conjg(ci*tpiba*g(1,ig)*rhog(ig,iss))
-            w(np(ig))=      -1.d0*tpiba**2*g(1,ig)**2*rhog(ig,iss)
-            w(nm(ig))=conjg(-1.d0*tpiba**2*g(1,ig)**2*rhog(ig,iss))
+            v(nl(ig)) =      ci*tpiba*g(1,ig)*rhog(ig,iss)
+            v(nlm(ig))=conjg(ci*tpiba*g(1,ig)*rhog(ig,iss))
+            w(nl(ig)) =      -1.d0*tpiba**2*g(1,ig)**2*rhog(ig,iss)
+            w(nlm(ig))=conjg(-1.d0*tpiba**2*g(1,ig)**2*rhog(ig,iss))
          end do
          call invfft('Dense',v, dfftp )
          call invfft('Dense',w, dfftp )
@@ -73,13 +73,13 @@ SUBROUTINE gradrho(nspin,rhog,drho,d2rho,dxdyrho,dxdzrho,dydzrho)
             w(ig)=(0.0d0,0.0d0)
          end do
          do ig=1,ngm
-            v(np(ig))= tpiba*(      ci*g(2,ig)*rhog(ig,iss)-           &
+            v(nl(ig))= tpiba*(      ci*g(2,ig)*rhog(ig,iss)-           &
      &                                 g(3,ig)*rhog(ig,iss) )
-            v(nm(ig))= tpiba*(conjg(ci*g(2,ig)*rhog(ig,iss))+          &
+            v(nlm(ig))=tpiba*(conjg(ci*g(2,ig)*rhog(ig,iss))+          &
      &                              ci*conjg(ci*g(3,ig)*rhog(ig,iss)))
-            w(np(ig))= -1.d0*tpiba**2*(      g(2,ig)**2*rhog(ig,iss) + &
+            w(nl(ig))= -1.d0*tpiba**2*(      g(2,ig)**2*rhog(ig,iss) + &
      &                                 ci*g(3,ig)**2*rhog(ig,iss) )
-            w(nm(ig))= -1.d0*tpiba**2*(conjg(g(2,ig)**2*rhog(ig,iss))+ &
+            w(nlm(ig))=-1.d0*tpiba**2*(conjg(g(2,ig)**2*rhog(ig,iss))+ &
      &                           ci*conjg(g(3,ig)**2*rhog(ig,iss)))
          end do
          call invfft('Dense',v, dfftp )
@@ -95,8 +95,8 @@ SUBROUTINE gradrho(nspin,rhog,drho,d2rho,dxdyrho,dxdzrho,dydzrho)
             v(ig)=(0.0d0,0.0d0)
          end do
          do ig=1,ngm
-            v(np(ig))= -1.d0*tpiba**2*g(1,ig)*g(2,ig)*rhog(ig,iss)
-            v(nm(ig))=conjg(v(np(ig)))
+            v(nl(ig)) = -1.d0*tpiba**2*g(1,ig)*g(2,ig)*rhog(ig,iss)
+            v(nlm(ig))=conjg(v(nl(ig)))
          end do
          call invfft('Dense',v, dfftp )
          do ir=1,nrxx
@@ -107,9 +107,9 @@ SUBROUTINE gradrho(nspin,rhog,drho,d2rho,dxdyrho,dxdzrho,dydzrho)
             v(ig)=(0.0d0,0.0d0)
          end do
          do ig=1,ngm
-            v(np(ig))= -1.d0*tpiba**2*(g(1,ig)*g(3,ig)*rhog(ig,iss) + &
+            v(nl(ig))= -1.d0*tpiba**2*(g(1,ig)*g(3,ig)*rhog(ig,iss) + &
      &                              ci*g(2,ig)*g(3,ig)*rhog(ig,iss) )
-            v(nm(ig))= -1.d0*tpiba**2*                                  &
+            v(nlm(ig))=-1.d0*tpiba**2*                                  &
      &                          (conjg(g(1,ig)*g(3,ig)*rhog(ig,iss))+ &
      &                        ci*conjg(g(2,ig)*g(3,ig)*rhog(ig,iss)))
          end do

@@ -76,7 +76,7 @@
 
      SUBROUTINE rho2psi( grid_type, psi, nnr, rho, ng )
        !
-       use recvecs_indexes, only: nm, np
+       use recvecs_indexes, only: nlm, nl
        use gvecs, only: nms, nps
        use kinds, only: DP
 
@@ -113,8 +113,8 @@
              ! end do
              !
              do ig = 1, ng
-               psi( nm( ig ) ) = CONJG( rho( ig ) )
-               psi( np( ig ) ) = rho( ig )
+               psi( nlm( ig ) ) = CONJG( rho( ig ) )
+               psi( nl( ig ) ) = rho( ig )
              end do
              !
            CASE DEFAULT
@@ -130,7 +130,7 @@
 
      SUBROUTINE psi2c( psi, nnr, c, ca, ng, iflg )
 
-       use recvecs_indexes, only: nm, np
+       use recvecs_indexes, only: nlm, nl
        use gvecs, only: nms, nps
        use kinds, only: DP
 
@@ -180,7 +180,7 @@
            CASE ( 10 )
              !
              do ig = 1, ng
-               c( ig ) = psi( np( ig ) )
+               c( ig ) = psi( nl( ig ) )
              end do
              !
            CASE ( 11 )
@@ -190,8 +190,8 @@
            CASE ( 12 )
              !
              DO ig = 1, ng
-               ca(ig) = psi( nm( ig ) )
-               c (ig) = psi( np( ig ) )
+               ca(ig) = psi( nlm( ig ) )
+               c (ig) = psi( nl( ig ) )
              END DO
 
            CASE DEFAULT
@@ -207,7 +207,7 @@
 
      SUBROUTINE psi2rho( grid_type, psi, nnr, rho, ng )
 
-       use recvecs_indexes, only: nm, np
+       use recvecs_indexes, only: nlm, nl
        use gvecs, only: nms, nps
        use kinds, only: DP
 
@@ -230,7 +230,7 @@
           CASE ( 'Dense' )
              !
              do ig = 1, ng
-               rho( ig ) = psi( np( ig ) )
+               rho( ig ) = psi( nl( ig ) )
              end do
              !
           CASE DEFAULT

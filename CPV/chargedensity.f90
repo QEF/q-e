@@ -104,7 +104,7 @@
       USE gvecs,              ONLY: ngms, nps, nms
       USE gvecb,              ONLY: ngb
       USE gvecw,              ONLY: ngw
-      USE recvecs_indexes,    ONLY: np, nm
+      USE recvecs_indexes,    ONLY: nl, nlm
       USE reciprocal_vectors, ONLY: gstart
       USE uspp,               ONLY: nkb
       USE uspp_param,         ONLY: nh, nhm
@@ -222,7 +222,7 @@
             END DO
             CALL fwfft('Dense', psi, dfftp )
             DO ig=1,ngm
-               rhog(ig,iss)=psi(np(ig))
+               rhog(ig,iss)=psi(nl(ig))
             END DO
          ELSE
             isup=1
@@ -232,8 +232,8 @@
             END DO
             CALL fwfft('Dense', psi, dfftp )
             DO ig=1,ngm
-               fp=psi(np(ig))+psi(nm(ig))
-               fm=psi(np(ig))-psi(nm(ig))
+               fp=psi(nl(ig))+psi(nlm(ig))
+               fm=psi(nl(ig))-psi(nlm(ig))
                rhog(ig,isup)=0.5d0*CMPLX( DBLE(fp),AIMAG(fm),kind=DP)
                rhog(ig,isdw)=0.5d0*CMPLX(AIMAG(fp),-DBLE(fm),kind=DP)
             END DO
@@ -350,8 +350,8 @@
             iss=1
             psi (:) = (0.d0, 0.d0)
             DO ig=1,ngms
-               psi(nm(ig))=CONJG(rhog(ig,iss))
-               psi(np(ig))=      rhog(ig,iss)
+               psi(nlm(ig))=CONJG(rhog(ig,iss))
+               psi(nl (ig))=      rhog(ig,iss)
             END DO
             CALL invfft('Dense',psi, dfftp )
             DO ir=1,nrxx
@@ -366,8 +366,8 @@
             isdw=2
             psi (:) = (0.d0, 0.d0)
             DO ig=1,ngms
-               psi(nm(ig))=CONJG(rhog(ig,isup))+ci*CONJG(rhog(ig,isdw))
-               psi(np(ig))=rhog(ig,isup)+ci*rhog(ig,isdw)
+               psi(nlm(ig))=CONJG(rhog(ig,isup))+ci*CONJG(rhog(ig,isdw))
+               psi(nl(ig))=rhog(ig,isup)+ci*rhog(ig,isdw)
             END DO
             CALL invfft('Dense',psi, dfftp )
             DO ir=1,nrxx
@@ -643,7 +643,7 @@
       !
       USE kinds,              ONLY: DP
       use reciprocal_vectors, only: g
-      use recvecs_indexes,    only: np, nm
+      use recvecs_indexes,    only: nl, nlm
       use gvecp,              only: ngm
       use grid_dimensions,    only: nr1, nr2, nr3, &
                                     nr1x, nr2x, nr3x, nrxx
@@ -674,8 +674,8 @@
          end do
 !$omp do
          do ig=1,ngm
-            v(np(ig))=      ci*tpiba*g(1,ig)*rhog(ig,iss)
-            v(nm(ig))=CONJG(ci*tpiba*g(1,ig)*rhog(ig,iss))
+            v(nl (ig))=      ci*tpiba*g(1,ig)*rhog(ig,iss)
+            v(nlm(ig))=CONJG(ci*tpiba*g(1,ig)*rhog(ig,iss))
          end do
 !$omp end parallel
          !
@@ -692,9 +692,9 @@
          end do
 !$omp do
          do ig=1,ngm
-            v(np(ig))= tpiba*(      ci*g(2,ig)*rhog(ig,iss)-           &
+            v(nl(ig))= tpiba*(      ci*g(2,ig)*rhog(ig,iss)-           &
      &                                 g(3,ig)*rhog(ig,iss) )
-            v(nm(ig))= tpiba*(CONJG(ci*g(2,ig)*rhog(ig,iss)+           &
+            v(nlm(ig))=tpiba*(CONJG(ci*g(2,ig)*rhog(ig,iss)+           &
      &                                 g(3,ig)*rhog(ig,iss)))
          end do
 !$omp end parallel
@@ -776,7 +776,7 @@ SUBROUTINE drhov(irb,eigrb,rhovan,drhovan,rhog,rhor,drhog,drhor)
       USE cell_base,                ONLY: ainv
       USE qgb_mod,                  ONLY: qgb
       USE dqgb_mod,                 ONLY: dqgb
-      USE recvecs_indexes,          ONLY: nm, np
+      USE recvecs_indexes,          ONLY: nlm, nl
       USE fft_interfaces,           ONLY: fwfft, invfft
       USE fft_base,                 ONLY: dfftb, dfftp
 
@@ -944,7 +944,7 @@ SUBROUTINE drhov(irb,eigrb,rhovan,drhovan,rhog,rhor,drhog,drhor)
                CALL fwfft( 'Dense', v, dfftp )
 !
                DO ig=1,ngm
-                  drhog(ig,iss,i,j) = drhog(ig,iss,i,j) + v(np(ig))
+                  drhog(ig,iss,i,j) = drhog(ig,iss,i,j) + v(nl(ig))
                END DO
 !
             ENDDO
@@ -1023,8 +1023,8 @@ SUBROUTINE drhov(irb,eigrb,rhovan,drhovan,rhog,rhor,drhog,drhor)
                CALL fwfft('Dense', v, dfftp )
 
                DO ig=1,ngm
-                  fp=v(np(ig))+v(nm(ig))
-                  fm=v(np(ig))-v(nm(ig))
+                  fp=v(nl(ig))+v(nlm(ig))
+                  fm=v(nl(ig))-v(nlm(ig))
                   drhog(ig,isup,i,j) = drhog(ig,isup,i,j) +             &
      &                 0.5d0*CMPLX( DBLE(fp),AIMAG(fm),kind=DP)
                   drhog(ig,isdw,i,j) = drhog(ig,isdw,i,j) +             &
@@ -1068,7 +1068,7 @@ SUBROUTINE rhov(irb,eigrb,rhovan,rhog,rhor)
       USE smallbox_grid_dimensions, ONLY: nr1b, nr2b, nr3b, nr1bx, nr2bx, nr3bx, nnrbx
       USE control_flags,            ONLY: iprint, iprsta, tpre
       USE qgb_mod,                  ONLY: qgb
-      USE recvecs_indexes,          ONLY: np, nm
+      USE recvecs_indexes,          ONLY: nl, nlm
       USE fft_interfaces,           ONLY: fwfft, invfft
       USE fft_base,                 ONLY: dfftb, dfftp
 !
@@ -1268,7 +1268,7 @@ SUBROUTINE rhov(irb,eigrb,rhovan,rhog,rhor)
          !  rhog(g) = total (smooth + US) charge density in G-space
          !
          DO ig = 1, ngm
-            rhog(ig,iss)=rhog(ig,iss)+v(np(ig))
+            rhog(ig,iss)=rhog(ig,iss)+v(nl(ig))
          END DO
 
 !
@@ -1367,8 +1367,8 @@ SUBROUTINE rhov(irb,eigrb,rhovan,rhog,rhor)
          ENDIF
 !
          DO ig=1,ngm
-            fp=  v(np(ig)) + v(nm(ig))
-            fm=  v(np(ig)) - v(nm(ig))
+            fp=  v(nl(ig)) + v(nlm(ig))
+            fm=  v(nl(ig)) - v(nlm(ig))
             rhog(ig,isup)=rhog(ig,isup) + 0.5d0*CMPLX(DBLE(fp),AIMAG(fm),kind=DP)
             rhog(ig,isdw)=rhog(ig,isdw) + 0.5d0*CMPLX(AIMAG(fp),-DBLE(fm),kind=DP)
          END DO

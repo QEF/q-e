@@ -335,7 +335,7 @@ end subroutine ggenb
       use reciprocal_vectors, only: gg, g, mill_g, g2_g, gl
       use reciprocal_vectors, only: mill, ig_l2g
       use reciprocal_vectors, only: gstart, sortedig_l2g
-      use recvecs_indexes,    only: nm, np
+      use recvecs_indexes,    only: nlm, nl
       use gvecs,              only: ngms, nms, nps
       use gvecw,              only: ngw, ngwt, ggp
       use gvecp,              only: ngm, ngl, ngm_g
@@ -389,8 +389,8 @@ end subroutine ggenb
       allocate( g ( 3, ngm ) )
       allocate( gg ( ngm ) )
       allocate( ggp( ngw ) )
-      allocate( np ( ngm ) )
-      allocate( nm ( ngm ) )
+      allocate( nl ( ngm ) )
+      allocate( nlm( ngm ) )
       allocate( igl( ngm ) )
 
       allocate( ig_l2g( ngm ) )
@@ -423,15 +423,15 @@ end subroutine ggenb
       !
       !     costruct fft indexes (n1,n2,n3) for the dense grid
       !
-      CALL gfftindex( np, nm, ngm, mill, nr1, nr2, nr3, &
+      CALL gfftindex( nl, nlm, ngm, mill, nr1, nr2, nr3, &
                       dfftp%isind, dfftp%nr1x, dfftp%nr2x, dfftp%nr3x )
 
 ! ... Uncomment to make tests and comparisons with other codes
 !      IF ( ionode ) THEN
 !        DO ig=1,ngm
 !          WRITE( 201, fmt="( 3I6 )" ) ig, &
-!             ( np( ig ) - 1 ) / dfftp%nr3x + 1, &
-!             MOD( ( np( ig ) - 1 ), dfftp%nr3x ) + 1
+!             ( nl( ig ) - 1 ) / dfftp%nr3x + 1, &
+!             MOD( ( nl( ig ) - 1 ), dfftp%nr3x ) + 1
 !        END DO
 !        CLOSE( 201 )
 !      END IF

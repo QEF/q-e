@@ -24,7 +24,7 @@ SUBROUTINE vol_clu(rho_real,rho_g,s_fac,flag)
       use reciprocal_vectors, only: g, gg
       use gvecs,          only: ngms
       use gvecp,          only: ngm
-      use recvecs_indexes,only: np, nm
+      use recvecs_indexes,only: nl, nlm
       use cp_main_variables, only: drhor
       use control_flags,  only: tpre
       use fft_base,       ONLY : dfftp
@@ -255,8 +255,8 @@ SUBROUTINE vol_clu(rho_real,rho_g,s_fac,flag)
       psi = (0.d0,0.d0)
       if (nspin.eq.1) then
          do ig = 1,ngm
-            psi(np(ig)) = rhotmp(ig,1)
-            psi(nm(ig)) = conjg(rhotmp(ig,1))
+            psi(nl(ig)) = rhotmp(ig,1)
+            psi(nlm(ig))= conjg(rhotmp(ig,1))
          end do
          call invfft('Dense',psi, dfftp )
          do ir = 1,nrxx
@@ -264,8 +264,8 @@ SUBROUTINE vol_clu(rho_real,rho_g,s_fac,flag)
          end do
       else            
         do ig = 1,ngm
-            psi(np(ig)) = rhotmp(ig,1) + ci*rhotmp(ig,2)
-            psi(nm(ig)) = conjg(rhotmp(ig,1)) + ci*conjg(rhotmp(ig,2))
+            psi(nl(ig)) = rhotmp(ig,1) + ci*rhotmp(ig,2)
+            psi(nlm(ig))= conjg(rhotmp(ig,1)) + ci*conjg(rhotmp(ig,2))
          end do
          call invfft('Dense',psi, dfftp )
          do ir = 1,nrxx

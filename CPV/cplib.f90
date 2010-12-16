@@ -198,7 +198,7 @@ END FUNCTION
       USE kinds,              ONLY: DP
       USE ions_base,          ONLY: nsp
       USE reciprocal_vectors, ONLY: gstart, g, ngms, gg, ngm
-      USE recvecs_indexes,    ONLY: np
+      USE recvecs_indexes,    ONLY: nl
       USE cell_base,          ONLY: omega, ainv, tpiba2
       USE mp,                 ONLY: mp_sum
       USE mp_global,          ONLY: intra_image_comm
@@ -245,7 +245,7 @@ END FUNCTION
                DO is = 1, nsp
                  IF( upf(is)%nlcc ) srhoc = srhoc + sfac( ig, is ) * drhocg( ig, is )
                ENDDO
-               vxcc = DBLE( CONJG( vxc( np( ig ) ) ) * srhoc ) / SQRT( gg(ig) * tpiba2 )
+               vxcc = DBLE( CONJG( vxc( nl( ig ) ) ) * srhoc ) / SQRT( gg(ig) * tpiba2 )
                dcc(i,j) = dcc(i,j) + vxcc * &
      &                      2.d0 * tpiba2 * g(i,ig) *                  &
      &                    (g(1,ig)*ainv(j,1) +                         &
@@ -1669,7 +1669,7 @@ END FUNCTION
       USE cell_base,          ONLY: omega, r_to_s
       USE cell_base,          ONLY: a1, a2, a3, tpiba2, h, ainv
       USE reciprocal_vectors, ONLY: gstart, gg, g
-      USE recvecs_indexes,    ONLY: np, nm
+      USE recvecs_indexes,    ONLY: nl, nlm
       USE grid_dimensions,    ONLY: nr1, nr2, nr3, nrxx
       USE smooth_grid_dimensions, ONLY: nrxxs
       USE electrons_base,   ONLY: nspin
@@ -1975,7 +1975,7 @@ END FUNCTION
 !
 !$omp parallel do
          DO ig = 1, ngm
-            rhog( ig, iss ) = vtemp(ig) + v( np( ig ) )
+            rhog( ig, iss ) = vtemp(ig) + v( nl( ig ) )
          END DO
          !
          !     v_tot(g) = (v_tot(g) - v_xc(g)) +v_xc(g)
@@ -1999,8 +1999,8 @@ END FUNCTION
          CALL fwfft('Dense',v, dfftp )
 !$omp parallel do private(fp,fm)
          DO ig=1,ngm
-            fp=v(np(ig))+v(nm(ig))
-            fm=v(np(ig))-v(nm(ig))
+            fp=v(nl(ig))+v(nlm(ig))
+            fm=v(nl(ig))-v(nlm(ig))
             IF( ttsic ) THEN
              rhog(ig,isup)=vtemp(ig)-self_vloc(ig) + &
                            0.5d0*CMPLX( DBLE(fp),AIMAG(fm),kind=DP)
@@ -2040,8 +2040,8 @@ END FUNCTION
          iss=1
 !$omp parallel do
          DO ig=1,ngm
-            v(np(ig))=rhog(ig,iss)
-            v(nm(ig))=CONJG(rhog(ig,iss))
+            v(nl (ig))=rhog(ig,iss)
+            v(nlm(ig))=CONJG(rhog(ig,iss))
          END DO
 !
 !     v(g) --> v(r)
@@ -2061,8 +2061,8 @@ END FUNCTION
          isdw=2
 !$omp parallel do
          DO ig=1,ngm
-            v(np(ig))=rhog(ig,isup)+ci*rhog(ig,isdw)
-            v(nm(ig))=CONJG(rhog(ig,isup)) +ci*CONJG(rhog(ig,isdw))
+            v(nl (ig))=rhog(ig,isup)+ci*rhog(ig,isdw)
+            v(nlm(ig))=CONJG(rhog(ig,isup)) +ci*CONJG(rhog(ig,isdw))
          END DO
 !
          CALL invfft('Dense',v, dfftp )
