@@ -166,7 +166,7 @@ mglib:
 	( cd extlibs ; $(MAKE) $(MFLAGS) $@) ; fi
 
 libiotk:
-	if test -e extlibs/archive/iotk-1.1.beta.tar.gz ; then \
+	if test -e extlibs/archive/iotk-1.2.beta.tar.gz ; then \
 	( cd extlibs ; $(MAKE) $(MFLAGS) $@) ; fi
 # In case of trouble with iotk and compilers, replace with the following
 #	if test -e extlibs/archive/iotk-1.1.beta.tar.gz ; then \
@@ -222,7 +222,7 @@ links : bindir
 clean :
 	touch make.sys 
 	for dir in \
-		CPV D3 Gamma Modules PH PP PW PWCOND VdW ACFDT EE \
+		CPV D3 Gamma Modules PH PP PW PWCOND NEB VdW ACFDT EE \
 		atomic clib flib pwtools upftools iotk GIPAW XSpectra \
 		dev-tools GWW extlibs TDDFPT \
 	; do \
