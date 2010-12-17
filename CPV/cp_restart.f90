@@ -1808,7 +1808,8 @@ MODULE cp_restart
       !------------------------------------------------------------------------
       !
       USE electrons_base,     ONLY : iupdwn, nupdwn
-      USE reciprocal_vectors, ONLY : ngw, ig_l2g
+      USE gvecw,              ONLY : ngw
+      USE reciprocal_vectors, ONLY : ig_l2g
       !
       IMPLICIT NONE
       !

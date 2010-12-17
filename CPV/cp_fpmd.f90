@@ -1658,8 +1658,9 @@ SUBROUTINE gmeshinfo( )
    USE io_global, ONLY: ionode, ionode_id, stdout
    USE mp,        ONLY: mp_max, mp_gather
    use gvecb,     only: ngb
-   USE reciprocal_vectors, only: ngms_g, ngms, ngsx, ngm, ngm_g, ngmx,&
-              ngw_g, ngw, ngwx
+   USE gvecw,     only: ngw_g, ngw, ngwx
+   USE gvecs,     only: ngms_g, ngms, ngsx
+   USE gvecp,     only: ngm, ngm_g, ngmx
 
    IMPLICIT NONE
 

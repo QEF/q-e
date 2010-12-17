@@ -197,8 +197,9 @@ END FUNCTION
 !
       USE kinds,              ONLY: DP
       USE ions_base,          ONLY: nsp
-      USE reciprocal_vectors, ONLY: gstart, g, ngms, gg, ngm
-      USE gvecp,              ONLY: nl
+      USE reciprocal_vectors, ONLY: gstart, g, gg
+      USE gvecs,              ONLY: ngms
+      USE gvecp,              ONLY: ngm, nl
       USE cell_base,          ONLY: omega, ainv, tpiba2
       USE mp,                 ONLY: mp_sum
       USE mp_global,          ONLY: intra_image_comm

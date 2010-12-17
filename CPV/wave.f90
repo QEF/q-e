@@ -364,7 +364,8 @@
       USE mp,                 ONLY: mp_sum
       USE mp_wave,            ONLY: splitwf
       USE mp_global,          ONLY: me_image, nproc_image, root_image, intra_image_comm
-      USE reciprocal_vectors, ONLY: ig_l2g, ngw, ngw_g, gstart
+      USE reciprocal_vectors, ONLY: ig_l2g, gstart
+      USE gvecw,              ONLY: ngw, ngw_g
       USE io_global,          ONLY: stdout
       USE random_numbers,     ONLY: randy
       

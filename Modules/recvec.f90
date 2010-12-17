@@ -126,9 +126,6 @@
 !=----------------------------------------------------------------------------=!
 
      USE kinds, ONLY: DP
-     USE gvecp
-     USE gvecs
-     USE gvecw
 
      IMPLICIT NONE
      SAVE
@@ -185,8 +182,6 @@
        IF( ALLOCATED( mill ) ) DEALLOCATE( mill )
        IF( ALLOCATED( ig_l2g ) ) DEALLOCATE( ig_l2g )
        IF( ALLOCATED( sortedig_l2g ) ) DEALLOCATE( sortedig_l2g )
-       CALL deallocate_gvecw( )
-       CALL deallocate_gvecs( )
      END SUBROUTINE deallocate_recvecs
 
 !=----------------------------------------------------------------------------=!

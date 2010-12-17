@@ -19,7 +19,8 @@
       USE kinds
       use ions_base,          only: nat, nsp
       use electrons_base,     only: nx => nbnd, nspin
-      use reciprocal_vectors, only: ngwx, ngmx
+      use gvecw,              only: ngwx
+      use gvecp,              only: ngmx
       use gvecb,              only: ngb
       use uspp_param,         only: nhm
       use uspp,               only: nkb

@@ -25,7 +25,8 @@
      use pseudopotential,    ONLY : tpstab, rhoc1_sp, rhocp_sp
      use cell_base,          ONLY : omega, tpiba2, tpiba
      USE splines,            ONLY : spline
-     use reciprocal_vectors, ONLY : ngm, gg, gstart
+     use gvecp,              ONLY : ngm
+     use reciprocal_vectors, ONLY : gg, gstart
      USE core,               ONLY : rhocb, rhocg, drhocg, nlcc_any
      !
      IMPLICIT NONE
