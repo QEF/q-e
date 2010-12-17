@@ -23,8 +23,7 @@ SUBROUTINE vol_clu(rho_real,rho_g,s_fac,flag)
       use ions_positions, only: tau0
       use reciprocal_vectors, only: g, gg
       use gvecs,          only: ngms
-      use gvecp,          only: ngm
-      use recvecs_indexes,only: nl, nlm
+      use gvecp,          only: ngm, nl, nlm
       use cp_main_variables, only: drhor
       use control_flags,  only: tpre
       use fft_base,       ONLY : dfftp

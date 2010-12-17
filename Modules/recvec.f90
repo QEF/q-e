@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002 FPMD group
+! Copyright (C) 2002-2010 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -71,6 +71,18 @@
 
      REAL(DP) :: ecutrho = 0.0_DP
      REAL(DP) :: gcutm = 0.0_DP
+
+     !     nl      = fft index for G>
+     !     nlm     = fft index for G<
+
+     INTEGER, ALLOCATABLE :: nl(:), nlm(:)
+
+   CONTAINS
+
+     SUBROUTINE deallocate_gvecp()
+       IF( ALLOCATED( nl ) ) DEALLOCATE( nl )
+       IF( ALLOCATED( nlm ) ) DEALLOCATE( nlm )
+     END SUBROUTINE deallocate_gvecp
 
 !=----------------------------------------------------------------------------=!
    END MODULE gvecp
@@ -186,32 +198,6 @@
 !=----------------------------------------------------------------------------=!
    END MODULE reciprocal_vectors
 !=----------------------------------------------------------------------------=!
-
-
-!=----------------------------------------------------------------------------=!
-   MODULE recvecs_indexes
-!=----------------------------------------------------------------------------=!
-
-     IMPLICIT NONE
-     SAVE
-
-     !     nl      = fft index for G>
-     !     nlm     = fft index for G<
-
-
-     INTEGER, ALLOCATABLE :: nl(:), nlm(:)
-
-   CONTAINS
-
-     SUBROUTINE deallocate_recvecs_indexes
-       IF( ALLOCATED( nl ) ) DEALLOCATE( nl )
-       IF( ALLOCATED( nlm) ) DEALLOCATE( nlm)
-      END SUBROUTINE deallocate_recvecs_indexes
-
-!=----------------------------------------------------------------------------=!
-   END MODULE recvecs_indexes
-!=----------------------------------------------------------------------------=!
-
 
 !=----------------------------------------------------------------------------=!
    MODULE recvecs_subroutines

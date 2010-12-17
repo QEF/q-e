@@ -268,8 +268,7 @@
       USE kinds,              ONLY: DP
       use control_flags, only: iprint, tpre
       use reciprocal_vectors, only: g
-      use recvecs_indexes, only: nl, nlm
-      use gvecp, only: ngm
+      use gvecp, only: ngm, nl, nlm
       use grid_dimensions, only: nr1, nr2, nr3, nrxx, nr1x, nr2x, nr3x
       use cell_base, only: ainv, tpiba, omega
       use cp_main_variables, only: drhog

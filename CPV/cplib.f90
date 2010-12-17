@@ -198,7 +198,7 @@ END FUNCTION
       USE kinds,              ONLY: DP
       USE ions_base,          ONLY: nsp
       USE reciprocal_vectors, ONLY: gstart, g, ngms, gg, ngm
-      USE recvecs_indexes,    ONLY: nl
+      USE gvecp,              ONLY: nl
       USE cell_base,          ONLY: omega, ainv, tpiba2
       USE mp,                 ONLY: mp_sum
       USE mp_global,          ONLY: intra_image_comm
@@ -1665,11 +1665,10 @@ END FUNCTION
       USE io_global,          ONLY: stdout
       USE ions_base,          ONLY: nsp, na, nat, rcmax, compute_eextfor
       USE gvecs
-      USE gvecp,              ONLY: ngm
+      USE gvecp,              ONLY: ngm, nl, nlm
       USE cell_base,          ONLY: omega, r_to_s
       USE cell_base,          ONLY: a1, a2, a3, tpiba2, h, ainv
       USE reciprocal_vectors, ONLY: gstart, gg, g
-      USE recvecs_indexes,    ONLY: nl, nlm
       USE grid_dimensions,    ONLY: nr1, nr2, nr3, nrxx
       USE smooth_grid_dimensions, ONLY: nrxxs
       USE electrons_base,   ONLY: nspin

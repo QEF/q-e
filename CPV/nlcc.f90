@@ -104,13 +104,12 @@
       use io_global,          only: stdout
       use mp_global,          only: intra_image_comm
       use cell_base,          only: omega
-      use recvecs_indexes,    only: nl
       USE mp,                 ONLY: mp_sum
 
       ! this isn't really needed, but if I remove it, ifc 7.1
       ! gives an "internal compiler error"
       use reciprocal_vectors, only: gstart
-      use gvecp,              only: ngm
+      use gvecp,              only: ngm, nl
       use grid_dimensions,    only: nr1, nr2, nr3, &
                                     nr1x, nr2x, nr3x, nrxx
       USE fft_interfaces,     ONLY: fwfft

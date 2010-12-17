@@ -25,7 +25,8 @@ SUBROUTINE deallocate_modules_var()
   USE ensemble_dft,         ONLY : deallocate_ensemble_dft
   USE cg_module,            ONLY : deallocate_cg
   USE reciprocal_vectors,   ONLY : deallocate_recvecs
-  USE recvecs_indexes,      ONLY : deallocate_recvecs_indexes
+  USE gvecp,                ONLY : deallocate_gvecp
+  USE gvecs,                ONLY : deallocate_gvecs
   USE local_pseudo,         ONLY : deallocate_local_pseudo
   USE qgb_mod,              ONLY : deallocate_qgb_mod
   USE dqgb_mod,             ONLY : deallocate_dqgb_mod
@@ -70,7 +71,8 @@ SUBROUTINE deallocate_modules_var()
   CALL deallocate_core()
   CALL deallocate_uspp()
   CALL deallocate_recvecs()
-  CALL deallocate_recvecs_indexes()
+  CALL deallocate_gvecp()
+  CALL deallocate_gvecs()
   CALL deallocate_gvecb ( )
   CALL deallocate_local_pseudo()
   CALL deallocate_qgb_mod()

@@ -335,10 +335,9 @@ end subroutine ggenb
       use reciprocal_vectors, only: gg, g, mill_g, g2_g, gl
       use reciprocal_vectors, only: mill, ig_l2g
       use reciprocal_vectors, only: gstart, sortedig_l2g
-      use recvecs_indexes,    only: nlm, nl
       use gvecs,              only: ngms, nlsm, nls
       use gvecw,              only: ngw, ngwt, ggp
-      use gvecp,              only: ngm, ngl, ngm_g
+      use gvecp,              only: ngm, ngl, ngm_g, nlm, nl
       use io_global,          only: stdout
       USE fft_base,           ONLY: dfftp, dffts, fft_dlay_descriptor
       use mp,                 ONLY: mp_sum, mp_max

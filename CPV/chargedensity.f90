@@ -100,11 +100,10 @@
       USE kinds,              ONLY: DP
       USE control_flags,      ONLY: iprint, iprsta, thdyn, tpre, trhor
       USE ions_base,          ONLY: nat
-      USE gvecp,              ONLY: ngm
+      USE gvecp,              ONLY: ngm,  nl, nlm
       USE gvecs,              ONLY: ngms, nls, nlsm
       USE gvecb,              ONLY: ngb
       USE gvecw,              ONLY: ngw
-      USE recvecs_indexes,    ONLY: nl, nlm
       USE reciprocal_vectors, ONLY: gstart
       USE uspp,               ONLY: nkb
       USE uspp_param,         ONLY: nh, nhm
@@ -643,8 +642,7 @@
       !
       USE kinds,              ONLY: DP
       use reciprocal_vectors, only: g
-      use recvecs_indexes,    only: nl, nlm
-      use gvecp,              only: ngm
+      use gvecp,              only: ngm, nl, nlm
       use grid_dimensions,    only: nr1, nr2, nr3, &
                                     nr1x, nr2x, nr3x, nrxx
       use cell_base,          only: tpiba
@@ -771,12 +769,11 @@ SUBROUTINE drhov(irb,eigrb,rhovan,drhovan,rhog,rhor,drhog,drhor)
       USE grid_dimensions,          ONLY: nr1, nr2, nr3, nr1x, nr2x, nr3x, nrxx
       USE electrons_base,           ONLY: nspin
       USE gvecb,                    ONLY: ngb, npb, nmb
-      USE gvecp,                    ONLY: ngm
+      USE gvecp,                    ONLY: ngm, nlm, nl
       USE smallbox_grid_dimensions, ONLY: nr1b, nr2b, nr3b, nr1bx, nr2bx, nr3bx, nnrbx
       USE cell_base,                ONLY: ainv
       USE qgb_mod,                  ONLY: qgb
       USE dqgb_mod,                 ONLY: dqgb
-      USE recvecs_indexes,          ONLY: nlm, nl
       USE fft_interfaces,           ONLY: fwfft, invfft
       USE fft_base,                 ONLY: dfftb, dfftp
 
@@ -1062,13 +1059,12 @@ SUBROUTINE rhov(irb,eigrb,rhovan,rhog,rhor)
       USE grid_dimensions,          ONLY: nr1, nr2, nr3, nr1x, nr2x, nr3x, nrxx
       USE electrons_base,           ONLY: nspin
       USE gvecb,                    ONLY: npb, nmb, ngb
-      USE gvecp,                    ONLY: ngm
+      USE gvecp,                    ONLY: ngm, nl, nlm
       USE cell_base,                ONLY: omega, ainv
       USE small_box,                ONLY: omegab
       USE smallbox_grid_dimensions, ONLY: nr1b, nr2b, nr3b, nr1bx, nr2bx, nr3bx, nnrbx
       USE control_flags,            ONLY: iprint, iprsta, tpre
       USE qgb_mod,                  ONLY: qgb
-      USE recvecs_indexes,          ONLY: nl, nlm
       USE fft_interfaces,           ONLY: fwfft, invfft
       USE fft_base,                 ONLY: dfftb, dfftp
 !
