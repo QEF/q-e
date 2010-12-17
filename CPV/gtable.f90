@@ -191,7 +191,7 @@ end subroutine gtablein
 subroutine find_whose_is_g
 !this subroutine set the correspondence G-->Proc
 
-  USE gvecw,              ONLY : ngw, ngwt
+  USE gvecw,              ONLY : ngw, ngw_g
   USE reciprocal_vectors, ONLY : ig_l2g, mill_g, mill
   USE mp,                 ONLY : mp_sum
   USE io_global,          ONLY : stdout
@@ -206,7 +206,7 @@ subroutine find_whose_is_g
 
 
   do ig=1,ngw
-     if(ig_l2g(ig) > ngwt) then
+     if(ig_l2g(ig) > ngw_g) then
         write(stdout,*) 'find_whose_is_g: too large'
         stop
      endif
@@ -218,7 +218,7 @@ subroutine find_whose_is_g
   ! mill_g is used in gtable_missing and re-initialized here
   ! workaround by PG to avoid a large array like mill_g allocated all the time
 
-  allocate ( mill_g(3,ngwt) )
+  allocate ( mill_g(3,ngw_g) )
   do ig=1,ngw
      mill_g(:,ig_l2g(ig)) = mill(:,ig)
   end do
@@ -232,7 +232,7 @@ subroutine gtable_missing
 
   USE efield_module, ONLY : ctable_missing_1,ctable_missing_2, whose_is_g,n_g_missing_p,&
                           &      ctable_missing_rev_1,ctable_missing_rev_2 
-  USE gvecw,              ONLY : ngw, ngwt
+  USE gvecw,              ONLY : ngw, ngw_g
   USE reciprocal_vectors, ONLY : ig_l2g, mill_g, mill, gstart
   USE mp,                 ONLY : mp_sum, mp_max, mp_alltoall
   USE io_global,          ONLY : stdout
@@ -251,7 +251,7 @@ subroutine gtable_missing
 
 
 
-  allocate(igg_found(ngwt,2, nproc_image),ig_send(ngwt,2,nproc_image))
+  allocate( igg_found(ngw_g,2,nproc_image), ig_send(ngw_g,2,nproc_image) )
   do ipol=1,2
     
      nfound_max=0
@@ -266,7 +266,7 @@ subroutine gtable_missing
         if(ipol.eq.1) i=i+1
         if(ipol.eq.2) j=j+1
         if(ipol.eq.3) k=k+1
-        do igg=1,ngwt
+        do igg=1,ngw_g
            if( i==mill_g(1,igg) .and. j==mill_g(2,igg) .and. k==mill_g(3,igg)) then
               if(whose_is_g(igg) /= -1 .and. whose_is_g(igg) /= me_image) then
                  nfound_max=nfound_max+1
@@ -295,7 +295,7 @@ subroutine gtable_missing
         if(ipol.eq.1) i=i+1
         if(ipol.eq.2) j=j+1
         if(ipol.eq.3) k=k+1
-        do igg=1,ngwt
+        do igg=1,ngw_g
            if( i==mill_g(1,igg) .and. j==mill_g(2,igg) .and. k==mill_g(3,igg)) then
               if(whose_is_g(igg) /= -1 .and. whose_is_g(igg) /= me_image) then
                  nfound_max=nfound_max+1
@@ -450,7 +450,7 @@ subroutine gtable_missing_inv
 
   USE efield_module, ONLY : ctabin_missing_1,ctabin_missing_2, whose_is_g,n_g_missing_m,&
                           &      ctabin_missing_rev_1,ctabin_missing_rev_2 
-  USE gvecw,              ONLY : ngw, ngwt
+  USE gvecw,              ONLY : ngw, ngw_g
   USE reciprocal_vectors, ONLY : ig_l2g, mill_g, mill, gstart
   USE mp,                 ONLY : mp_sum, mp_max, mp_alltoall
   USE io_global,          ONLY : stdout
@@ -469,7 +469,7 @@ subroutine gtable_missing_inv
 
 
 
-  allocate(igg_found(ngwt,2, nproc_image),ig_send(ngwt,2,nproc_image))
+  allocate( igg_found(ngw_g,2,nproc_image), ig_send(ngw_g,2,nproc_image))
   do ipol=1,2
 
 
@@ -486,7 +486,7 @@ subroutine gtable_missing_inv
         if(ipol.eq.1) i=i+1
         if(ipol.eq.2) j=j+1
         if(ipol.eq.3) k=k+1
-        do igg=1,ngwt
+        do igg=1,ngw_g
            if( i==mill_g(1,igg) .and. j==mill_g(2,igg) .and. k==mill_g(3,igg)) then
               if(whose_is_g(igg) /= -1 .and. whose_is_g(igg) /= me_image) then
                  nfound_max=nfound_max+1
@@ -515,7 +515,7 @@ subroutine gtable_missing_inv
         if(ipol.eq.1) i=i-1
         if(ipol.eq.2) j=j-1
         if(ipol.eq.3) k=k-1
-        do igg=1,ngwt
+        do igg=1,ngw_g
            if( i==mill_g(1,igg) .and. j==mill_g(2,igg) .and. k==mill_g(3,igg)) then
               if(whose_is_g(igg) /= -1 .and. whose_is_g(igg) /= me_image) then
                  nfound_max=nfound_max+1

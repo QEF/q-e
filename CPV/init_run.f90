@@ -22,7 +22,7 @@ SUBROUTINE init_run()
   USE ions_positions,           ONLY : tau0, taum, taup, taus, tausm, tausp, &
                                        vels, velsm, velsp, fion, fionm,      &
                                        atoms0, atomsm, atomsp
-  USE gvecw,                    ONLY : ngw, ngwt, ggp
+  USE gvecw,                    ONLY : ngw, ngw_g, ggp
   USE gvecb,                    ONLY : ngb
   USE gvecs,                    ONLY : ngms
   USE gvecp,                    ONLY : ngm
@@ -122,7 +122,7 @@ SUBROUTINE init_run()
   !     allocation of all arrays not already allocated in init and nlinit
   !=======================================================================
   !
-  CALL allocate_mainvar( ngw, ngwt, ngb, ngms, ngm, nr1, nr2, nr3, dfftp%nr1x,&
+  CALL allocate_mainvar( ngw, ngw_g, ngb, ngms, ngm, nr1,nr2,nr3, dfftp%nr1x, &
                          dfftp%nr2x, dfftp%npl, nrxx, nrxxs, nat, nax, nsp,   &
                          nspin, nbsp, nbspx, nupdwn, nkb, gstart, nudx, &
                          tpre )
@@ -185,7 +185,7 @@ SUBROUTINE init_run()
   !
   IF ( tcg ) CALL allocate_cg( ngw, nbspx,nkbus )
   !
-  IF ( tefield ) CALL allocate_efield( ngw, ngwt, nbspx, nhm, nax, nsp )
+  IF ( tefield ) CALL allocate_efield( ngw, ngw_g, nbspx, nhm, nax, nsp )
   IF ( tefield2 ) CALL allocate_efield2( ngw, nbspx, nhm, nax, nsp )
   !
   IF ( ALLOCATED( deeq ) ) deeq(:,:,:,:) = 0.D0

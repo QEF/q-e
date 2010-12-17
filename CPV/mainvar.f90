@@ -112,7 +112,7 @@ MODULE cp_main_variables
   CONTAINS
     !
     !------------------------------------------------------------------------
-    SUBROUTINE allocate_mainvar( ngw, ngwt, ngb, ngs, ng, nr1, nr2, nr3, &
+    SUBROUTINE allocate_mainvar( ngw, ngw_g, ngb, ngs, ng, nr1, nr2, nr3, &
                                  nr1x, nr2x, npl, nnr, nrxxs, nat, nax,  &
                                  nsp, nspin, n, nx, nupdwn, nhsa, &
                                  gstart, nudx, tpre )
@@ -123,7 +123,7 @@ MODULE cp_main_variables
       USE mp,          ONLY: mp_max, mp_min
       USE descriptors, ONLY: descla_siz_ , descla_init , nlax_ , la_nrlx_ , lambda_node_
       !
-      INTEGER,           INTENT(IN) :: ngw, ngwt, ngb, ngs, ng, nr1, nr2, nr3, &
+      INTEGER,           INTENT(IN) :: ngw, ngw_g, ngb, ngs, ng, nr1,nr2,nr3, &
                                        nnr, nrxxs, nat, nax, nsp, nspin, &
                                        n, nx, nhsa, nr1x, nr2x, npl
       INTEGER,           INTENT(IN) :: nupdwn(:)
@@ -220,7 +220,7 @@ MODULE cp_main_variables
       !
       gzero =  (gstart == 2)
       !
-      CALL wave_descriptor_init( wfill, ngw, ngwt, nupdwn,  nupdwn, &
+      CALL wave_descriptor_init( wfill, ngw, ngw_g, nupdwn,  nupdwn, &
             1, 1, nspin, 'gamma', gzero )
       !
       RETURN

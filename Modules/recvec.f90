@@ -16,7 +16,7 @@
 
      ! ...   G vectors less than the wave function cut-off ( ecutwfc )
      INTEGER :: ngw  = 0  ! local number of G vectors
-     INTEGER :: ngwt = 0  ! in parallel execution global number of G vectors,
+     INTEGER :: ngw_g= 0  ! in parallel execution global number of G vectors,
                        ! in serial execution this is equal to ngw
      INTEGER :: ngwx = 0  ! maximum local number of G vectors
      INTEGER :: ng0  = 0  ! first G-vector with nonzero modulus
@@ -174,12 +174,6 @@
      !
      INTEGER, ALLOCATABLE, TARGET :: sortedig_l2g(:)
 
-     !     bi  = base vector used to generate the reciprocal space
-     !
-     REAL(DP) :: bi1(3) = (/ 0.0_DP, 0.0_DP, 0.0_DP /)
-     REAL(DP) :: bi2(3) = (/ 0.0_DP, 0.0_DP, 0.0_DP /)
-     REAL(DP) :: bi3(3) = (/ 0.0_DP, 0.0_DP, 0.0_DP /)
-
    CONTAINS
 
      SUBROUTINE deallocate_recvecs
@@ -211,7 +205,7 @@
      SUBROUTINE recvecs_init( ngm_ , ngw_ , ngs_ )
        USE mp_global, ONLY: intra_image_comm
        USE mp, ONLY: mp_max, mp_sum
-       USE gvecw, ONLY: ngw, ngwx, ngwt
+       USE gvecw, ONLY: ngw, ngwx, ngw_g
        USE gvecp, ONLY: ngm, ngmx, ngm_g
        USE gvecs, ONLY: ngms, ngsx, ngms_g
 
@@ -234,10 +228,10 @@
        !
        !  calculate SUM over all processors
        !
-       ngwt = ngw
+       ngw_g = ngw
        ngm_g= ngm
        ngms_g=ngms
-       CALL mp_sum( ngwt, intra_image_comm )
+       CALL mp_sum( ngw_g, intra_image_comm )
        CALL mp_sum( ngm_g, intra_image_comm )
        CALL mp_sum( ngms_g,intra_image_comm )
 

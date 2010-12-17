@@ -128,9 +128,9 @@ CONTAINS
   END SUBROUTINE efield_update
 
 
-  SUBROUTINE allocate_efield( ngw, ngwt,nx, nhx, nas, nsp )
+  SUBROUTINE allocate_efield( ngw, ngw_g, nx, nhx, nas, nsp )
     IMPLICIT NONE
-    INTEGER, INTENT(IN) :: ngw, ngwt, nx, nhx, nas, nsp
+    INTEGER, INTENT(IN) :: ngw, ngw_g, nx, nhx, nas, nsp
       allocate( ctable(ngw,2,3))
       allocate( ctabin(ngw,2,3))
       allocate( qmat(nx,nx))
@@ -139,7 +139,7 @@ CONTAINS
       allocate( df(ngw))
       allocate( gqq0(nhx,nhx,nas,nsp))
       allocate( gqqm0(nhx,nhx,nas,nsp))
-      allocate( whose_is_g(ngwt))
+      allocate( whose_is_g(ngw_g))
    
     RETURN
   END SUBROUTINE allocate_efield

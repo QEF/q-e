@@ -59,7 +59,7 @@ MODULE cp_restart
       USE smallbox_grid_dimensions, ONLY : nr1b, nr2b, nr3b
       USE gvecp,                    ONLY : ngm, ngm_g
       USE gvecs,                    ONLY : ngms_g, ecuts, dual
-      USE gvecw,                    ONLY : ngw, ngwt, ecutwfc
+      USE gvecw,                    ONLY : ngw, ngw_g, ecutwfc
       USE reciprocal_vectors,       ONLY : ig_l2g, mill
       USE electrons_base,           ONLY : nspin, nelt, nel, nudx
       USE cell_base,                ONLY : ibrav, alat, celldm, &
@@ -358,7 +358,7 @@ MODULE cp_restart
 ! ... PLANE_WAVES
 !-------------------------------------------------------------------------------
          !
-         CALL write_planewaves( ecutwfc, dual, ngwt, gamma_only, nr1, nr2, &
+         CALL write_planewaves( ecutwfc, dual, ngw_g, gamma_only, nr1, nr2, &
                                 nr3, ngm_g, nr1s, nr2s, nr3s, ngms_g, nr1b, &
                                 nr2b, nr3b, mill_g, .FALSE. )
          !
@@ -649,7 +649,7 @@ MODULE cp_restart
          !
          CALL iotk_write_begin( iunpun, "EIGENVECTORS" )
          !
-         CALL iotk_write_dat  ( iunpun, "MAX_NUMBER_OF_GK-VECTORS", ngwt )
+         CALL iotk_write_dat  ( iunpun, "MAX_NUMBER_OF_GK-VECTORS", ngw_g )
          !
       END IF
       !
@@ -665,7 +665,7 @@ MODULE cp_restart
             !
             ! ... G+K vectors
             !
-            CALL iotk_write_dat( iunpun, "NUMBER_OF_GK-VECTORS", ngwt )
+            CALL iotk_write_dat( iunpun, "NUMBER_OF_GK-VECTORS", ngw_g )
             !
             !
             filename = TRIM( wfc_filename( ".", 'gkvectors', ik ) )
@@ -724,7 +724,7 @@ MODULE cp_restart
                ib = iupdwn_tot( iss_wfc )
                !
                CALL write_wfc( iunout, ik_eff, nk*nspin, kunit, iss, nspin,        &
-                               ctot( :, ib : ib + nbnd_tot - 1 ), ngwt, gamma_only,&
+                               ctot( :, ib : ib + nbnd_tot - 1 ), ngw_g, gamma_only,&
                                nbnd_tot, ig_l2g, ngw, filename, scalef )
                !
             END IF
@@ -763,7 +763,7 @@ MODULE cp_restart
                ib = iupdwn(iss_wfc)
                !
                CALL write_wfc( iunout, ik_eff, nk*nspin, kunit, iss, nspin,     &
-                               c02( :, ib : ib + nbnd_ - 1 ), ngwt, gamma_only, &
+                               c02( :, ib : ib + nbnd_ - 1 ), ngw_g, gamma_only, &
                                nbnd_, ig_l2g, ngw, filename, scalef )
                !
                !  Save wave function at time t - dt
@@ -798,7 +798,7 @@ MODULE cp_restart
                ib = iupdwn(iss_wfc)
                !
                CALL write_wfc( iunout, ik_eff, nk*nspin, kunit, iss, nspin,     &
-                               cm2( :, ib : ib + nbnd_ - 1 ), ngwt, gamma_only, &
+                               cm2( :, ib : ib + nbnd_ - 1 ), ngw_g, gamma_only, &
                                nbnd_, ig_l2g, ngw, filename, scalef )
                !
             END IF
@@ -927,7 +927,7 @@ MODULE cp_restart
       USE smooth_grid_dimensions,   ONLY : nr1s, nr2s, nr3s
       USE smallbox_grid_dimensions, ONLY : nr1b, nr2b, nr3b
       USE gvecp,                    ONLY : ngm
-      USE gvecw,                    ONLY : ngw, ngwt
+      USE gvecw,                    ONLY : ngw, ngw_g
       USE electrons_base,           ONLY : nspin, nbnd, nelt, nel, &
                                            nupdwn, iupdwn, nudx
       USE cell_base,                ONLY : ibrav, alat, celldm, symm_type, &
@@ -1808,7 +1808,7 @@ MODULE cp_restart
       !------------------------------------------------------------------------
       !
       USE electrons_base,     ONLY : iupdwn, nupdwn
-      USE reciprocal_vectors, ONLY : ngwt, ngw, ig_l2g
+      USE reciprocal_vectors, ONLY : ngw, ig_l2g
       !
       IMPLICIT NONE
       !
@@ -2181,7 +2181,7 @@ MODULE cp_restart
     !
     SUBROUTINE write_gk( iun, ik, mill_g, filename )
        !
-       USE gvecw,                    ONLY : ngw, ngwt
+       USE gvecw,                    ONLY : ngw, ngw_g
        USE control_flags,            ONLY : gamma_only
        USE reciprocal_vectors,       ONLY : ig_l2g, mill
        USE mp,                       ONLY : mp_sum
@@ -2200,8 +2200,8 @@ MODULE cp_restart
        REAL(DP) :: xk(3)
 
        xk     = 0.0d0
-       npwx_g = ngwt
-       npw_g  = ngwt
+       npwx_g = ngw_g
+       npw_g  = ngw_g
 
        ALLOCATE( igwk( npwx_g ) )
        ! 

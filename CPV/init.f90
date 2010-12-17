@@ -30,7 +30,7 @@
       use smallbox_grid_dimensions, only: nr1b, nr2b, nr3b, nr1bx, nr2bx, nr3bx
       use smooth_grid_dimensions,   only: nr1s, nr2s, nr3s, nr1sx, nr2sx, nr3sx, nrxxs
       USE grid_subroutines,         ONLY: realspace_grids_init, realspace_grids_para
-      USE reciprocal_vectors,       ONLY: mill_g, g2_g, bi1, bi2, bi3
+      USE reciprocal_vectors,       ONLY: mill_g, g2_g
       USE recvecs_subroutines,      ONLY: recvecs_init
       use gvecw,                    only: gcutw, gkcut
       use gvecp,                    only: ecutrho, gcutm
@@ -78,12 +78,6 @@
       !
 
       call recips( a1, a2, a3, b1, b2, b3 )
-
-      !     Store the base vectors used to generate the reciprocal space
-
-      bi1 = b1
-      bi2 = b2
-      bi3 = b3
 
       !     Change units:  b1, b2, b3  are the 3 basis vectors generating 
       !     the reciprocal lattice in 2pi/alat units

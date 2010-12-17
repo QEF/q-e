@@ -336,7 +336,7 @@ end subroutine ggenb
       use reciprocal_vectors, only: mill, ig_l2g
       use reciprocal_vectors, only: gstart, sortedig_l2g
       use gvecs,              only: ngms, nlsm, nls
-      use gvecw,              only: ngw, ngwt, ggp
+      use gvecw,              only: ngw, ngw_g, ggp
       use gvecp,              only: ngm, ngl, ngm_g, nlm, nl
       use io_global,          only: stdout
       USE fft_base,           ONLY: dfftp, dffts, fft_dlay_descriptor
@@ -368,10 +368,10 @@ end subroutine ggenb
       !     number of Gs )
       !
       ngm_g= ngm
-      ngwt = ngw
+      ngw_g= ngw
 
       CALL mp_sum( ngm_g, intra_image_comm )
-      CALL mp_sum( ngwt, intra_image_comm )
+      CALL mp_sum( ngw_g, intra_image_comm )
 
       !
       !     Temporary global and replicated arrays, used for sorting
@@ -1659,9 +1659,7 @@ SUBROUTINE gmeshinfo( )
    USE mp,        ONLY: mp_max, mp_gather
    use gvecb,     only: ngb
    USE reciprocal_vectors, only: ngms_g, ngms, ngsx, ngm, ngm_g, ngmx,&
-              ngw_g  => ngwt,   &
-              ngw_l  => ngw ,   &
-              ngw_lx => ngwx
+              ngw_g, ngw, ngwx
 
    IMPLICIT NONE
 
@@ -1710,8 +1708,8 @@ SUBROUTINE gmeshinfo( )
       CALL errore( " gmeshinfo ", " Wow! some processors have no G-vectors ", ierr )
    !
    ng_snd(1) = ngw_g
-   ng_snd(2) = ngw_l
-   ng_snd(3) = ngw_lx
+   ng_snd(2) = ngw
+   ng_snd(3) = ngwx
    CALL mp_gather(ng_snd, ng_rcv, ionode_id, intra_image_comm)
    !
    IF(ionode) THEN
@@ -1734,11 +1732,11 @@ SUBROUTINE gmeshinfo( )
    END IF
 
    1000    FORMAT(3X,'Large Mesh',/, &
-           '     Global(ngmt)     MinLocal       MaxLocal      Average') 
+           '     Global(ngm_g)    MinLocal       MaxLocal      Average') 
    1001    FORMAT(3X,'Smooth Mesh',/, &
            '     Global(ngms_g)     MinLocal       MaxLocal      Average') 
    1002    FORMAT(3X,'Wave function Mesh',/, &
-           '     Global(ngwt)     MinLocal       MaxLocal      Average') 
+           '     Global(ngw_g)    MinLocal       MaxLocal      Average') 
    1011    FORMAT(  3I15, F15.2 )
    1050    FORMAT(/,3X,'Small box Mesh')
    1060    FORMAT( 3X, 'ngb = ', I12, ' not distributed to processors' )
