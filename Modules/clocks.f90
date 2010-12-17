@@ -5,6 +5,31 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+! ... Time-printing utilities - Contains the following subroutines:
+!     init_clocks( go )    initialization - must be called first
+!                          go = .TRUE. : up to "maxclock" clocks can be started
+!                          go = .FALSE.: only clock #1 can be started
+!     start_clock( label )   starts clock "label" (max 12 characters)
+!                            if "label" has never been started, initializes it
+!                            issues warning if "label" already started
+!     stop_clock( label )    stops  clock "label"
+!                            issues warning if "label" is either not running
+!                            or has never been started
+!     print_clock( label )   print cpu and wall time measured by clock "label"
+!                            clock "label" may be running or stopped 
+!                            and remains in the same state
+!                            issues warning if "label" has never been started
+! ... and the following function (real(kind=dp):
+!     get_clock( label )     return wall time measured by clock "label"
+!                            issues warning if "label" has never been started
+!                            (due to the presence of such warning, do not use
+!                            it as argument of a "write" command)
+! ... All output and warnings are written to stdout
+! ... Clocks should be started, read, stopped either on all processors, or 
+! ... only on one, but not half and half! For parallel debugging, uncomment:
+!#define __TRACE
+! ... See also comments in subroutine print_this_clock about parallel case
+!
 !----------------------------------------------------------------------------
 MODULE mytime
   !----------------------------------------------------------------------------
@@ -29,13 +54,12 @@ MODULE mytime
   !
 END MODULE mytime
 !
-!#define __TRACE
 !----------------------------------------------------------------------------
 SUBROUTINE init_clocks( go )
   !----------------------------------------------------------------------------
   !
-  ! ... flag = .TRUE.  : clocks will run
-  ! ... flag = .FALSE. : only clock #1 will run
+  ! ... go = .TRUE.  : clocks will run
+  ! ... go = .FALSE. : only clock #1 will run
   !
   USE kinds,  ONLY : DP
   USE mytime, ONLY : called, t0cpu, cputime, no, notrunning, maxclock, &
@@ -70,7 +94,9 @@ SUBROUTINE start_clock( label )
   !
   USE kinds,     ONLY : DP
   USE io_global, ONLY : stdout
+#if defined (__TRACE)
   USE mp_global, ONLY : mpime
+#endif
   USE mytime,    ONLY : nclock, clock_label, notrunning, no, maxclock, &
                         t0cpu, t0wall, trace_depth
   !
@@ -139,7 +165,9 @@ SUBROUTINE stop_clock( label )
   !
   USE kinds,     ONLY : DP
   USE io_global, ONLY : stdout
+#if defined (__TRACE)
   USE mp_global, ONLY : mpime
+#endif
   USE mytime,    ONLY : no, nclock, clock_label, cputime, walltime, &
                         notrunning, called, t0cpu, t0wall, trace_depth
   !
@@ -171,8 +199,8 @@ SUBROUTINE stop_clock( label )
         !
         IF ( t0cpu(n) == notrunning ) THEN
            !
-!            WRITE( stdout, '("stop_clock: clock # ",I2," for ",A12, &
-!                           & " not running")' ) n, label
+           WRITE( stdout, '("stop_clock: clock # ",I2," for ",A12, &
+                          & " not running")' ) n, label
            !
         ELSE
            !
@@ -255,8 +283,11 @@ SUBROUTINE print_this_clock( n )
   USE io_global, ONLY : stdout
   USE mytime,    ONLY : no, nclock, clock_label, cputime, walltime, &
                         notrunning, called, t0cpu, t0wall
-  USE mp,        ONLY : mp_max
-  USE mp_global, ONLY : intra_image_comm, my_image_id
+!
+! ... See comments below about parallel case
+!
+!  USE mp,        ONLY : mp_max
+!  USE mp_global, ONLY : intra_image_comm, my_image_id
   !
   IMPLICIT NONE
   !
@@ -387,8 +418,11 @@ FUNCTION get_clock( label )
   USE io_global, ONLY : stdout
   USE mytime,    ONLY : no, nclock, clock_label, walltime, &
                         notrunning, called, t0wall, t0cpu
-  USE mp,        ONLY : mp_max
-  USE mp_global, ONLY : intra_image_comm
+!
+! ... See comments in subroutine print_this_clock about parallel case
+!
+!  USE mp,        ONLY : mp_max
+!  USE mp_global, ONLY : intra_image_comm
   !
   IMPLICIT NONE
   !
@@ -403,7 +437,6 @@ FUNCTION get_clock( label )
      !
      IF ( label == clock_label(1) ) THEN
         !
-        ! walltime by default at this level...
         get_clock = cclock()
         !
      ELSE
@@ -422,17 +455,15 @@ FUNCTION get_clock( label )
         !
         IF ( t0cpu(n) == notrunning ) THEN
            !
-           ! walltime by default at this level...
            get_clock = walltime(n)
            !
         ELSE
            !
-           ! walltime by default at this level...
            get_clock = walltime(n) + cclock() - t0wall(n)
            !
         ENDIF
         !
-        ! ... See comments in subroutine print_this_clock
+        ! ... See comments in subroutine print_this_clock about parallel case
         !
         ! CALL mp_max( get_clock, intra_image_comm )
         !
