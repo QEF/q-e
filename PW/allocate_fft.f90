@@ -15,7 +15,7 @@ SUBROUTINE allocate_fft
   !
   USE io_global, ONLY : stdout
   USE gvect,     ONLY : ngm, g, gg, nl, nlm, mill, igtongl, ecutwfc
-  USE gsmooth,   ONLY : ngms, nls, nlsm, doublegrid
+  USE gsmooth,   ONLY : ngms, nls, nlsm
   USE grid_dimensions,        ONLY : nr1, nr2, nr3, nrxx
   USE smooth_grid_dimensions, ONLY : nr1s, nr2s, nr3s, nrxxs
 ! DCC
@@ -81,13 +81,8 @@ SUBROUTINE allocate_fft
   ALLOCATE( rhog_core( ngm ) )
   ALLOCATE (psic( nrxx))
   ALLOCATE (vrs( nrxx, nspin))
-  IF (doublegrid) THEN
-     ALLOCATE (nls( ngms))
-     IF (gamma_only) ALLOCATE (nlsm(ngm))
-  ELSE
-     nls => nl
-     IF (gamma_only) nlsm=> nlm
-  ENDIF
+  ALLOCATE (nls( ngms))
+  IF (gamma_only) ALLOCATE (nlsm(ngm))
 
 ! DCC
 !  IF( do_coarse ) THEN

@@ -14,14 +14,13 @@ SUBROUTINE clean_pw( lflag )
   USE ions_base,            ONLY : deallocate_ions_base
   USE gvect,                ONLY : g, gg, gl, nl, nlm, igtongl, mill, &
                                    eigts1, eigts2, eigts3
-  USE gsmooth,              ONLY : nls, nlsm, doublegrid
+  USE gsmooth,              ONLY : nls, nlsm
   USE fixed_occ,            ONLY : f_inp
   USE ktetra,               ONLY : tetra
   USE klist,                ONLY : ngk
   USE reciprocal_vectors,   ONLY : ig_l2g
   USE vlocal,               ONLY : strf, vloc
   USE wvfct,                ONLY : igk, g2kin, et, wg, btype
-  USE control_flags,        ONLY : gamma_only
   USE force_mod,            ONLY : force
   USE scf,                  ONLY : rho, v, vltot, rho_core, rhog_core, &
                                    vrs, kedtau, destroy_scf_type, vnew
@@ -39,7 +38,6 @@ SUBROUTINE clean_pw( lflag )
   USE noncollin_module,     ONLY : deallocate_noncol
   USE dynamics_module,      ONLY : deallocate_dyn_vars
   USE paw_init,             ONLY : deallocate_paw_internals
-  USE cellmd,               ONLY : lmovecell
   USE atom,                 ONLY : rgrid
   USE radial_grids,         ONLY : deallocate_radial_grid
   USE wannier_new,           ONLY : use_wannier
@@ -77,9 +75,7 @@ SUBROUTINE clean_pw( lflag )
   ! ... arrays allocated in ggen.f90
   !
   IF ( ALLOCATED( ig_l2g ) )     DEALLOCATE( ig_l2g )
-  IF ( .NOT. lmovecell ) THEN
-     IF ( ASSOCIATED( gl ) )     DEALLOCATE ( gl )
-  END IF
+  IF ( ALLOCATED( gl ) )     DEALLOCATE ( gl )
   !
   CALL sym_rho_deallocate ( )
   !
@@ -88,9 +84,7 @@ SUBROUTINE clean_pw( lflag )
   IF ( ALLOCATED( g ) )          DEALLOCATE( g )
   IF ( ALLOCATED( gg ) )         DEALLOCATE( gg )
   IF ( ALLOCATED( nl ) )         DEALLOCATE( nl )  
-  IF ( gamma_only ) THEN
-     IF ( ALLOCATED( nlm ) )     DEALLOCATE( nlm )
-  END IF
+  IF ( ALLOCATED( nlm ) )        DEALLOCATE( nlm )
   IF ( ALLOCATED( igtongl ) )    DEALLOCATE( igtongl )  
   IF ( ALLOCATED( mill ) )       DEALLOCATE( mill )
   call destroy_scf_type(rho)
@@ -106,12 +100,8 @@ SUBROUTINE clean_pw( lflag )
   if (spline_ps) then
     IF ( ALLOCATED( tab_d2y) )     DEALLOCATE( tab_d2y )
   endif
-  IF ( doublegrid ) THEN
-    IF ( ASSOCIATED( nls ) )     DEALLOCATE( nls )
-  END IF
-  IF ( doublegrid .AND. gamma_only ) THEN
-     IF ( ASSOCIATED( nlsm ) )   DEALLOCATE( nlsm )
-  END IF
+  IF ( ALLOCATED( nls ) )     DEALLOCATE( nls )
+  IF ( ALLOCATED( nlsm ) )   DEALLOCATE( nlsm )
   !
   ! ... arrays allocated in allocate_locpot.f90 ( and never deallocated )
   !
