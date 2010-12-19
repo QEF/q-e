@@ -5,8 +5,8 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-! ... original code written by Giovanni Cantele and Paolo Cazzato; adapted to
-! ... work in the parallel case by Carlo Sbraccia
+! ... original code written by Giovanni Cantele and Paolo Cazzato
+! ... adapted to work in the parallel case by Carlo Sbraccia
 ! ... code for the calculation of the vacuum level written by Carlo Sbraccia
 !
 !#define _PRINT_ON_FILE
@@ -249,15 +249,13 @@ SUBROUTINE write_dipole( etot, x0, dipole_el, quadrupole_el, qq )
   !
   ! ... Makov-Payne correction, PRB 51, 4014 (1995)
   ! ... Note that Eq. 15 has the wrong sign for the quadrupole term
-  ! ... The prefactor of the quadrupole term is half the one in Eq. 15
-  ! ... according to the results derived by Dabo et al., PRB 77, 115139 (2008)
   !
   corr1 = - madelung(ibrav) / alat * qq**2 / 2.0D0 * e2
   !
   aa = quadrupole
   bb = dipole(1)**2 + dipole(2)**2 + dipole(3)**2
   !
-  corr2 = ( 1.D0 / 3.D0 * pi )*( qq*aa - bb ) / alat**3 * e2
+  corr2 = ( 2.D0 / 3.D0 * pi )*( qq*aa - bb ) / alat**3 * e2
   !
   ! ... print the Makov-Payne correction
   !

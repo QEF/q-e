@@ -5,8 +5,8 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-! ... original code written by Giovanni Cantele and Paolo Cazzato; adapted to
-! ... work in the parallel case by Carlo Sbraccia
+! ... original code written by Giovanni Cantele and Paolo Cazzato
+! ... adapted to work in the parallel case by Carlo Sbraccia
 ! ... code for the calculation of the vacuum level written by Carlo Sbraccia
 ! ... code ported from PW to CP by Federico Zipoli
 !
@@ -16,8 +16,7 @@ SUBROUTINE makov_payne(etot)
   USE kinds,             ONLY : DP
   USE ions_base,         ONLY : nat, zv
   USE ions_positions,    ONLY : tau0, ityp
-  USE io_global,         ONLY : io_global_start, &
-                                stdout, ionode, ionode_id
+  USE io_global,         ONLY : io_global_start, stdout, ionode, ionode_id
   USE constants,         ONLY : pi,AUTOEV
   USE cp_main_variables, ONLY : rhor
   USE electrons_base,    ONLY : nspin
@@ -241,8 +240,6 @@ IF ( ionode ) THEN
    !
    ! ... Makov-Payne correction, PRB 51, 43014 (1995)
    ! ... Note that Eq. 15 has the wrong sign for the quadrupole term
-   ! ... The prefactor of the quadrupole term is half the one in Eq. 15
-   ! ... according to the results derived by Dabo et al., PRB 77, 115139 (2008)
    !
    ! 1 / 2 Ry -> a.u.
    corr1 = - 2.8373D0 / alat * charge**2 / 2.0D0
@@ -250,8 +247,7 @@ IF ( ionode ) THEN
    aa = quadrupole
    bb = dipole(1)**2 + dipole(2)**2 + dipole(3)**2
    !
-   ! 2/ 3 -> 1 / 3 Ry -> a.u.
-   corr2 = ( 1.D0 / 3.D0 * pi )*( charge*aa - bb ) / alat**3
+   corr2 = ( 2.D0 / 3.D0 * pi )*( charge*aa - bb ) / alat**3
    !
    ! ... print the Makov-Payne correction
    !
