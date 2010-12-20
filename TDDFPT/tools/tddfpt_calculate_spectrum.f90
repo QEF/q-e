@@ -8,7 +8,8 @@ program lr_calculate_spectrum
   use io_files,            only : tmp_dir, prefix,trimcheck,nd_nmbr
   USE global_version,      ONLY : version_number
   USE io_global,           ONLY : stdout,ionode
-  USE environment,           ONLY: environment_start
+  USE environment,           ONLY: environment_start,environment_end
+  USE mp_global,        ONLY : mp_startup,mp_global_end,mp_barrier
   
   implicit none
   !
@@ -110,7 +111,14 @@ program lr_calculate_spectrum
   !DEBUG
   test=0.0d0
   !
-  
+
+#ifdef __PARA
+  CALL mp_startup ( )
+if (ionode) then 
+   write(*,*) "Warning: Only a single cpu will be used!"
+endif
+#endif
+
   CALL environment_start ( 'TDDFPT_PP' )
 
 ! The code starts here
@@ -543,7 +551,14 @@ close(17)
   deallocate(c)
   deallocate(r)
   !
+  CALL environment_end( 'TDDFPT_PP' )
+  !
 endif
+#ifdef __PARA
+  CALL mp_barrier ()
+  CALL mp_global_end ()
+#endif
+
 contains
  LOGICAL FUNCTION is_peak(omeg,alpha)
  !
