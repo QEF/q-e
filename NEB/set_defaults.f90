@@ -1,5 +1,5 @@
 
-! Copyright (C) 2002-2009 Quantum ESPRESSO group
+! Copyright (C) 2010 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -7,20 +7,25 @@
 !
 !
 !----------------------------------------------------------------------------
-SUBROUTINE set_defaults()
+SUBROUTINE set_engine_input_defaults()
   !-----------------------------------------------------------------------------
   !
-  USE input_parameters, ONLY : full_phs_path_flag
+  USE input_parameters, ONLY : tapos
   !
-  USE control_flags, ONLY : &
-                            lscf, &
-                            lpath, &
-                            lmd
-                            
-
-  lscf      = .true.
-  lpath       = .true.
-!  lmd       = .true.
-  full_phs_path_flag = .true.
+  tapos = .true.
   !
-END SUBROUTINE set_defaults
+END SUBROUTINE set_engine_input_defaults
+!
+!----------------------------------------------------------------------------
+SUBROUTINE set_engine_io_units()
+  !-----------------------------------------------------------------------------
+  !
+  USE io_global, ONLY : stdout
+  USE io_files,  ONLY : find_free_unit
+  !
+  stdout = find_free_unit()
+  write(0,*) "engine output set to unit: ", stdout 
+  !
+  !
+END SUBROUTINE set_engine_io_units
+!

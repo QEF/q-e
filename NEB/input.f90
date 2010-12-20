@@ -43,8 +43,7 @@ SUBROUTINE ioneb(xmlinput,attr)
   USE control_flags, ONLY : &
                             io_level, &
                             lscf, &
-                            nstep, &
-                            lpath, lneb,   &
+                            lneb,   &
                             lsmd,                    &
                             restart
   !
@@ -71,7 +70,7 @@ SUBROUTINE ioneb(xmlinput,attr)
                                wfcdir, prefix, etot_conv_thr, forc_conv_thr, &
                                wf_collect
                                
-  USE input_parameters, ONLY : nstep_path, string_method, &
+  USE path_input_parameters_module, ONLY : nstep_path, string_method, &
                                num_of_images, path_thr, CI_scheme, opt_scheme, &
                                use_masses, first_last_opt, temp_req, k_max,    &
                                k_min, ds, use_freezing, fixed_tan
@@ -79,9 +78,8 @@ SUBROUTINE ioneb(xmlinput,attr)
   !
   ! ... "path" specific
   !
-  USE input_parameters, ONLY : pos, full_phs_path_flag
+  USE path_input_parameters_module, ONLY : pos
   !
-  USE read_namelists_module, ONLY : read_namelists, sm_not_set
   !
   USE read_xml_module,       ONLY : read_xml
   USE iotk_module,           ONLY : iotk_open_read, iotk_close_read,iotk_attlenx
@@ -136,7 +134,6 @@ SUBROUTINE ioneb(xmlinput,attr)
      !
   END SELECT
   !
-  IF ( lpath ) THEN
      !
      IF( io_level < 0) CALL errore ( 'ioneb', &
                        'NEB, SMD do not work with "disk_io" set to "none"', 1)
@@ -206,7 +203,6 @@ SUBROUTINE ioneb(xmlinput,attr)
         !
      END SELECT
      !
-  ENDIF
   !
   ! ... "path"-optimization variables
   !

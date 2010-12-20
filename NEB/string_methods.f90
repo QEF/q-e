@@ -11,7 +11,7 @@ PROGRAM sm
   !
   ! ... Plane Wave Self-Consistent Field code 
   !
-  USE io_global,        ONLY : stdout, ionode, ionode_id
+  USE io_global,        ONLY : ionode, ionode_id
   USE parameters,       ONLY : ntypx, npk, lmaxx
   USE control_flags,    ONLY : conv_elec, conv_ions, lpath, gamma_only
   USE environment,      ONLY : environment_start, environment_end
@@ -21,11 +21,16 @@ PROGRAM sm
   USE path_io_routines, ONLY : path_summary
   USE image_io_routines, ONLY : io_image_start
   USE mp_global,        ONLY : mp_startup, mp_bcast, mp_global_end
-  USE read_namelists_module, ONLY : read_namelists
   !
   USE iotk_module,           ONLY : iotk_attlenx
   USE open_close_input_file_interf, ONLY : open_input_file, close_input_file
   USE read_xml_module,       ONLY : read_xml
+  USE read_cards_module,     ONLY : read_cards
+  USE read_namelists_module, ONLY : read_namelists
+  USE path_read_namelists_module, ONLY : path_read_namelist
+  USE path_read_cards_module, ONLY : path_read_cards
+  !
+  USE path_io_units_module, ONLY : stdinpath, set_input_unit
   !
   IMPLICIT NONE
   !
@@ -39,16 +44,6 @@ PROGRAM sm
 #endif
   CALL environment_start ( 'SM' )
   !
-  IF ( ionode ) THEN
-     !
-#if defined (EXX)
-     WRITE( UNIT = stdout, &
-         & FMT = '(/,5X,"EXPERIMENTAL VERSION WITH EXACT EXCHANGE")' )
-#endif
-     WRITE( unit = stdout, FMT = 9010 ) &
-         ntypx, npk, lmaxx
-     !
-  END IF   
   !
   ! INPUT RELATED
   !
@@ -66,13 +61,32 @@ PROGRAM sm
   call mp_bcast(xmlinput,ionode_id)
   call mp_bcast(attr,ionode_id)
   !
+  !
+  call set_input_unit()
+  !
+  open(unit=stdinpath,file="neb.dat",status="old")
   IF( xmlinput ) THEN
     CALL read_xml( 'PW', attr )
   ELSE 
-    CALL read_namelists('SM')
+    CALL path_read_namelist(stdinpath)
   ENDIF
   !
-  CALL set_defaults()
+  IF ( xmlinput ) THEN
+     CALL read_xml ('PW', attr = attr )
+  ELSE
+     CALL read_namelists( 'PW' )
+
+     CALL set_engine_input_defaults()
+
+     CALL read_cards( 'PW' )
+  ENDIF
+  !
+  CALL path_read_cards(stdinpath)
+  !
+  !
+  close(stdinpath)
+  !
+  CALL set_engine_io_units()
   !
   CALL iosys(xmlinput,attr)
   !
@@ -97,9 +111,6 @@ PROGRAM sm
   !
   CALL stop_run_path( conv_path )
   !
-!  CALL environment_end( 'SM' )
-  !
-!  CALL mp_global_end()
   !
   STOP
   !

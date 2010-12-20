@@ -18,7 +18,6 @@ SUBROUTINE compute_scf( fii, lii, stat  )
   !
   ! ... Written by Carlo Sbraccia (2003-2006)
   !
-  USE input_parameters, ONLY : startingwfc, startingpot
   USE basis,            ONLY : starting_wfc, starting_pot
   USE kinds,            ONLY : DP
   USE constants,        ONLY : e2
@@ -31,8 +30,9 @@ SUBROUTINE compute_scf( fii, lii, stat  )
   USE ions_base,        ONLY : tau, nat, nsp, ityp
   USE ener,             ONLY : etot
   USE force_mod,        ONLY : force
-  USE io_files,         ONLY : prefix, tmp_dir, iunpath, iunupdate, &
+  USE io_files,         ONLY : prefix, tmp_dir, iunupdate, &
                                exit_file, iunexit, delete_if_present
+  USE path_io_units_module, ONLY : iunpath
   USE path_formats,     ONLY : scf_fmt, scf_fmt_para
   USE path_variables,   ONLY : pos, pes, grad_pes, dim1, pending_image, &
                                istep_path, frozen, num_of_images, &
@@ -162,10 +162,8 @@ SUBROUTINE compute_scf( fii, lii, stat  )
   ! ... after the first call to compute_scf the input values of startingpot
   ! ... and startingwfc are both set to 'file'
   !
-  startingpot = 'file'
-  startingwfc = 'file'
-  starting_pot = startingpot
-  starting_wfc = startingwfc
+!  starting_pot = 'file'
+!  starting_wfc = 'file'
   !
   ! ... finalization of the job (this point is also reached in case of error
   ! ... condition)
@@ -288,6 +286,7 @@ SUBROUTINE compute_scf( fii, lii, stat  )
       !
       ! ... initialization of the scf calculation
       !
+      CALL start_clock('PWSCF')
       CALL setup ()
       CALL init_run()
       !
@@ -400,8 +399,8 @@ SUBROUTINE compute_scf( fii, lii, stat  )
       ! ... input values are restored at the end of each iteration ( they are
       ! ... modified by init_run )
       !
-      starting_pot = startingpot
-      starting_wfc = startingwfc
+!      starting_pot = 'file'
+!      starting_wfc = 'file'
       !
       ethr = diago_thr_init
       !

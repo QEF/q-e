@@ -16,7 +16,7 @@ MODULE path_reparametrisation
   ! ... Written by Carlo Sbraccia ( 2003-2006 )
   !
   USE kinds,     ONLY : DP
-  USE io_files,  ONLY : iunpath
+  USE path_io_units_module,  ONLY : iunpath
   USE io_global, ONLY : meta_ionode, meta_ionode_id
   USE mp,        ONLY : mp_bcast
   !

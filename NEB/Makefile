@@ -17,11 +17,16 @@ compute_scf.o
 
 NEBLIBS = \
 input.o \
+io_tools.o \
 path_base.o \
 path_formats.o \
+path_input_parameters_module.o \
 path_io_routines.o \
+path_io_units_module.o \
 path_opt_routines.o \
 path_reparametrisation.o \
+path_read_cards_module.o \
+path_read_namelists_module.o \
 path_variables.o \
 set_defaults.o \
 stop_run_path.o

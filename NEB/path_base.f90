@@ -36,7 +36,7 @@ MODULE path_base
   !
   USE kinds,     ONLY : DP
   USE constants, ONLY : eps32, pi, autoev, bohr_radius_angs, eV_to_kelvin
-  USE io_files,  ONLY : iunpath
+  USE path_io_units_module,  ONLY : iunpath
   USE io_global, ONLY : meta_ionode, meta_ionode_id
   USE mp,        ONLY : mp_bcast
   !
@@ -55,12 +55,14 @@ MODULE path_base
     SUBROUTINE initialize_path()
       !-----------------------------------------------------------------------
       !
-      USE input_parameters, ONLY : pos_      => pos, &
+      USE path_input_parameters_module, ONLY : pos_      => pos, &
                                    climbing_ => climbing, &
-                                   restart_mode, nstep, input_images
+                                   input_images, nstep_path_ => nstep_path
+      USE input_parameters, ONLY : restart_mode
       USE control_flags,    ONLY : conv_elec
       USE ions_base,        ONLY : nat, amass, ityp, if_pos
-      USE io_files,         ONLY : prefix, tmp_dir, path_file, dat_file, crd_file, &
+      USE io_files,         ONLY : prefix, tmp_dir
+      USE path_io_units_module, ONLY : path_file, dat_file, crd_file, &
                                    int_file, xyz_file, axsf_file, broy_file
       USE path_variables,   ONLY : climbing, pos, istep_path, nstep_path,    &
                                    dim1, num_of_images, pes, grad_pes, mass, &
@@ -209,14 +211,14 @@ MODULE path_base
          ! ... consistency between the input value of nstep and the value
          ! ... of nstep_path read from the restart_file is checked
          !
-         IF ( nstep == 0 ) THEN
+         IF ( nstep_path_ == 0 ) THEN
             !
             istep_path = 0
-            nstep_path = nstep
+            nstep_path = nstep_path_
             !
          END IF
          !
-         IF ( nstep > nstep_path ) nstep_path = nstep
+         IF ( nstep_path_ > nstep_path ) nstep_path = nstep_path_
          !
          ! ... in case first_last_opt has been set to true, reset the frozen
          ! ... array to false (all the images have to be optimized, at least
@@ -264,10 +266,10 @@ MODULE path_base
       !
       ! ... linear interpolation
       !
-      USE input_parameters, ONLY : input_images
+      USE path_input_parameters_module, ONLY : input_images
       USE path_variables,   ONLY : pos, dim1, num_of_images, path_length
 !      USE path_formats,     ONLY : summary_fmt
-      USE io_files,         ONLY : iunpath
+      USE path_io_units_module,         ONLY : iunpath
       !
       IMPLICIT NONE
       !
@@ -970,7 +972,7 @@ MODULE path_base
     FUNCTION check_exit( err_max )
       !------------------------------------------------------------------------
       !
-      USE input_parameters, ONLY : num_of_images_inp => num_of_images
+      USE path_input_parameters_module, ONLY : num_of_images_inp => num_of_images
       USE control_flags,    ONLY : lneb, lsmd
       USE path_variables,   ONLY : path_thr, istep_path, nstep_path, &
                                    conv_path, pending_image, &

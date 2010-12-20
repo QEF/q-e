@@ -37,7 +37,8 @@ MODULE path_io_routines
      SUBROUTINE path_summary()
        !-----------------------------------------------------------------------
        !
-       USE input_parameters, ONLY : restart_mode, string_method, opt_scheme
+       USE path_input_parameters_module, ONLY : string_method, opt_scheme
+       USE input_parameters, ONLY : restart_mode
        USE control_flags,    ONLY : lneb, lsmd
        USE path_variables,   ONLY : climbing, nstep_path, num_of_images, &
                                     path_length, path_thr, ds, use_masses, &
@@ -45,7 +46,7 @@ MODULE path_io_routines
                                     k_min, k_max, CI_scheme, fixed_tan, &
                                     llangevin
        USE path_formats,     ONLY : summary_fmt
-       USE io_files,         ONLY : iunpath
+       USE path_io_units_module,         ONLY : iunpath
        !
        IMPLICIT NONE
        !
@@ -140,7 +141,8 @@ MODULE path_io_routines
        !-----------------------------------------------------------------------
        !
        USE control_flags,          ONLY : lsmd
-       USE io_files,               ONLY : iunpath, iunrestart, path_file
+       USE path_io_units_module,   ONLY : iunpath
+       USE path_io_units_module,              ONLY : iunrestart, path_file
        USE input_parameters,       ONLY : if_pos
        USE path_variables,         ONLY : nim => num_of_images
        USE path_variables,         ONLY : istep_path, nstep_path, frozen, dim1,&
@@ -361,7 +363,8 @@ MODULE path_io_routines
        !-----------------------------------------------------------------------
        !
        USE input_parameters, ONLY : if_pos
-       USE io_files,         ONLY : iunrestart, path_file, tmp_dir
+       USE path_io_units_module, ONLY : iunrestart, path_file
+       USE io_files, ONLY : tmp_dir
        USE control_flags,    ONLY : conv_elec
        USE path_variables,   ONLY : istep_path, nstep_path, pending_image, &
                                     dim1, num_of_images, pos, pes, grad_pes, &
@@ -533,8 +536,9 @@ MODULE path_io_routines
        USE path_formats,     ONLY : dat_fmt, int_fmt, xyz_fmt, axsf_fmt
        USE path_variables,   ONLY : pos, grad_pes, pes, num_of_images, &
                                     tangent, dim1, error
-       USE io_files,         ONLY : iundat, iunint, iunxyz, iuncrd, iunaxsf, &
-                                    dat_file, int_file, xyz_file, axsf_file, crd_file
+       USE path_io_units_module, ONLY : iundat, iunint, iunxyz, iuncrd, iunaxsf, &
+                                  dat_file, int_file, xyz_file, axsf_file, &
+                                  crd_file
        !
        IMPLICIT NONE
        !
@@ -759,7 +763,7 @@ MODULE path_io_routines
      SUBROUTINE write_output()
        !-----------------------------------------------------------------------
        !
-       USE io_files,       ONLY : iunpath
+       USE path_io_units_module,  ONLY : iunpath
        USE path_variables, ONLY : num_of_images, error, path_length, &
                                   activation_energy, pes, pos, frozen, &
                                   CI_scheme, Emax_index
@@ -819,7 +823,8 @@ MODULE path_io_routines
        ! ... this subroutine initializes the file needed for the
        ! ... parallelization among images
        !
-       USE io_files,       ONLY : iunnewimage, prefix
+       USE path_io_units_module, ONLY : iunnewimage
+       USE io_files, ONLY : prefix
        USE path_variables, ONLY : tune_load_balance
        USE mp_global,      ONLY : nimage
        !

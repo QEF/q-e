@@ -142,7 +142,7 @@ MODULE path_opt_routines
        !-----------------------------------------------------------------------
        !
        USE control_flags,  ONLY : lsmd
-       USE io_files,       ONLY : broy_file, iunbroy, iunpath
+       USE path_io_units_module,  ONLY : broy_file, iunbroy, iunpath
        USE path_variables, ONLY : dim1, frozen, tangent, nim => num_of_images
        !
        IMPLICIT NONE
@@ -312,7 +312,7 @@ MODULE path_opt_routines
 #define DEBUG
        !
        USE control_flags,  ONLY : lsmd
-       USE io_files,       ONLY : broy_file, iunbroy, iunpath
+       USE path_io_units_module, ONLY : broy_file, iunbroy, iunpath
        USE path_variables, ONLY : dim1, frozen, tangent, nim => num_of_images
        !
        IMPLICIT NONE

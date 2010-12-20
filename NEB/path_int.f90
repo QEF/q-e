@@ -31,7 +31,6 @@ END MODULE int_global_variables
 PROGRAM images_interpolator
   !
   USE kinds,                  ONLY : DP
-  USE io_files,               ONLY : iunrestart
   USE constants,              ONLY : eps16
   USE path_formats
   USE basic_algebra_routines, ONLY : norm
@@ -49,7 +48,10 @@ PROGRAM images_interpolator
   LOGICAL, EXTERNAL   :: matches 
   CHARACTER (LEN=20)  :: cell_parameters
   CHARACTER (LEN=256) :: input_line
-
+  !
+  INTEGER :: iunrestart
+  !
+  iunrestart = 28
   !
   !
   ! ... the input file is read
