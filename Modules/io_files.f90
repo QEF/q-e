@@ -32,14 +32,6 @@ MODULE io_files
   CHARACTER(LEN=256) :: output_drho = ' '         ! name of the file with the output drho
   !
   CHARACTER(LEN=5 ), PARAMETER :: crash_file    = 'CRASH'
-  CHARACTER (LEN=256) :: &
-    dat_file      = 'os.dat',    &! file containing the enegy profile
-    int_file      = 'os.int',    &! file containing the interpolated energy profile
-    crd_file      = 'os.crd',    &! file containing path coordinates in pw.x input format
-    path_file     = 'os.path',   &! file containing informations needed to restart a path simulation
-    xyz_file      = 'os.xyz',    &! file containing coordinates of all images in xyz format
-    axsf_file     = 'os.axsf',   &! file containing coordinates of all images in axsf format
-    broy_file     = 'os.broyden'  ! file containing broyden's history
   CHARACTER (LEN=261) :: &
     exit_file = "os.EXIT"    ! file required for a soft exit  
   !
@@ -81,15 +73,6 @@ MODULE io_files
   INTEGER :: nwordwann   =  2 ! length of record in sic wfc file
   !
   ! ... "path" specific
-  !
-  INTEGER :: iunpath     =  6 ! unit for string output ( stdout or what else )
-  INTEGER :: iunrestart  = 2021 ! unit for saving the restart file ( neb_file )
-  INTEGER :: iundat      = 2022 ! unit for saving the enegy profile
-  INTEGER :: iunint      = 2023 ! unit for saving the interpolated energy profile
-  INTEGER :: iunxyz      = 2024 ! unit for saving coordinates ( xyz format )
-  INTEGER :: iunaxsf     = 2025 ! unit for saving coordinates ( axsf format )
-  INTEGER :: iunbroy     = 2026 ! unit for saving broyden's history
-  INTEGER :: iuncrd      = 2027 ! unit for saving coordinates in pw.x input format
   !
   !... finite electric field (Umari)
   !

@@ -1019,74 +1019,6 @@ MODULE input_parameters
                           fe_step, fe_nstep, sw_nstep, eq_nstep, g_amplitude
 
 
-        !
-        ! ... variables added for "path" calculations
-        !
-
-        !
-        ! ... these are two auxiliary variables used in read_cards to
-        ! ... distinguish among neb and smd done in the full phase-space
-        ! ... or in the coarse-grained phase-space
-        !
-        LOGICAL :: full_phs_path_flag = .false.
-        LOGICAL :: cg_phs_path_flag   = .false.
-        !
-        INTEGER :: nstep_path
-        !
-        CHARACTER(len=80) :: string_method = 'neb' 
-        ! 'neb' traditional neb as described by Jonsson
-        ! 'sm' something else
-        CHARACTER(len=80) :: string_method_scheme_allowed(2)
-        DATA string_method_scheme_allowed / 'neb', 'sm' /
-        !
-        INTEGER :: input_images = 0
-        !
-        INTEGER :: num_of_images = 0
-        !
-        CHARACTER(len=80) :: CI_scheme = 'no-CI'
-          ! CI_scheme = 'no-CI' | 'auto' | 'manual'
-          ! set the Climbing Image scheme
-          ! 'no-CI'       Climbing Image is not used
-          ! 'auto'        Standard Climbing Image
-          ! 'manual'      the image is selected by hand
-        !
-        CHARACTER(len=80) :: CI_scheme_allowed(3)
-        DATA CI_scheme_allowed / 'no-CI', 'auto', 'manual' /
-        !
-        LOGICAL :: first_last_opt = .false.
-        LOGICAL :: use_masses     = .false.
-        LOGICAL :: use_freezing   = .false.
-        LOGICAL :: fixed_tan      = .false.
-        !
-        CHARACTER(len=80) :: opt_scheme = 'quick-min'
-          ! minimization_scheme = 'quick-min' | 'damped-dyn' |
-          !                       'mol-dyn'   | 'sd'
-          ! set the minimization algorithm
-          ! 'quick-min'   projected molecular dynamics
-          ! 'sd'          steepest descent
-          ! 'broyden'     broyden acceleration
-          ! 'broyden2'    broyden acceleration - better ?
-          ! 'langevin'    langevin dynamics
-        !
-        CHARACTER(len=80) :: opt_scheme_allowed(5)
-        DATA opt_scheme_allowed / 'quick-min', 'broyden', 'broyden2', 'sd', 'langevin' /
-        !
-        REAL (DP)  :: temp_req = 0.0_DP
-          ! meaningful only when minimization_scheme = 'sim-annealing'
-        REAL (DP)  :: ds = 1.0_DP
-        !
-        REAL (DP)  :: k_max = 0.1_DP, k_min = 0.1_DP
-        !
-        REAL (DP)  :: path_thr = 0.05_DP
-        !
-        !
-        NAMELIST / PATH / &
-                          string_method, nstep_path, num_of_images, & 
-                          CI_scheme, opt_scheme, use_masses,    &
-                          first_last_opt, ds, k_max, k_min, temp_req,          &
-                          path_thr, fixed_tan, use_freezing
-
-
 !=----------------------------------------------------------------------------=!
 !  CELL Namelist Input Parameters
 !=----------------------------------------------------------------------------=!
@@ -1306,7 +1238,6 @@ MODULE input_parameters
         !
         ! ... variable added for NEB  ( C.S. 17/10/2003 )
         !
-        REAL(DP), ALLOCATABLE :: pos(:,:)
         !
 !
 !    ION_VELOCITIES
@@ -1548,8 +1479,6 @@ CONTAINS
     IF ( allocated( sp_vel ) ) DEALLOCATE( sp_vel )
     IF ( allocated( rd_for ) ) DEALLOCATE( rd_for )
     !
-    IF ( allocated( pos )    )   DEALLOCATE( pos )
-    IF ( allocated( climbing ) ) DEALLOCATE( climbing )
     !
     IF ( allocated( constr_type_inp ) )   DEALLOCATE( constr_type_inp )
     IF ( allocated( constr_inp ) )        DEALLOCATE( constr_inp )

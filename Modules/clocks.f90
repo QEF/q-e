@@ -477,7 +477,7 @@ FUNCTION get_clock( label )
   !
   get_clock = notrunning
   !
-  WRITE( stdout, '("get_clock: no clock for ",A12," found !")') label
+  WRITE( 0, '("get_clock: no clock for ",A12," found !")') label
   !
   RETURN
   !

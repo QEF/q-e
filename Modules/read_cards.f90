@@ -176,9 +176,9 @@ CONTAINS
          !
          CALL card_constraints( input_line )
          !
-      ELSEIF ( trim(card) == 'COLLECTIVE_VARS' ) THEN
+!      ELSEIF ( trim(card) == 'COLLECTIVE_VARS' ) THEN
          !
-         CALL card_collective_vars( input_line )
+!         CALL card_collective_vars( input_line )
          !
       ELSEIF ( trim(card) == 'VHMEAN' ) THEN
          !
@@ -227,9 +227,9 @@ CONTAINS
          IF ( ( prog == 'PW' ) .and. ionode ) &
             WRITE( stdout,'(a)') 'Warning: card '//trim(input_line)//' ignored'
          !
-      ELSEIF ( trim(card) == 'CLIMBING_IMAGES' ) THEN
+!      ELSEIF ( trim(card) == 'CLIMBING_IMAGES' ) THEN
          !
-         CALL card_climbing_images( input_line )
+!         CALL card_climbing_images( input_line )
 
       ELSEIF ( trim(card) == 'PLOT_WANNIER' ) THEN
          !
@@ -399,6 +399,7 @@ CONTAINS
       CHARACTER(len=256) :: field_str, error_msg
       !
       !
+      IF(tapos) return
       IF ( tread ) THEN
          CALL errore( 'card_atomic_positions', 'two occurrences', 2 )
       ENDIF
@@ -412,6 +413,11 @@ CONTAINS
       IF ( nat < 1 ) THEN
          CALL errore( 'card_atomic_positions', 'nat out of range', nat )
       ENDIF
+      !
+      !
+!new
+      CALL allocate_input_ions(ntyp,nat)
+      !
       !
       if_pos = 1
       !
@@ -439,75 +445,6 @@ CONTAINS
       ENDIF
       !
 
-      IF ( full_phs_path_flag ) THEN
-         !
-         IF ( allocated( pos ) ) DEALLOCATE( pos )
-         ALLOCATE( pos( 3*nat, num_of_images ) )
-         pos(:,:) = 0.0_DP
-         !
-         IF ( calculation == 'smd' .and. prog == 'CP' ) THEN
-            !
-            CALL errore( 'read_cards', &
-                        'smd no longer implemented in CP', 1 )
-            !
-         ELSE
-            !
-            CALL read_line( input_line, end_of_file = tend )
-            IF ( tend ) &
-               CALL errore( 'read_cards', &
-                           'end of file reading atomic positions (path)', 1 )
-            !
-            IF ( matches( "first_image", input_line ) ) THEN
-               !
-               input_images = 1
-               CALL path_read_images( input_images )
-               !
-            ELSE
-               !
-               CALL errore( 'read_cards', &
-                           'first_image missing in ATOMIC_POSITION', 1 )
-               !
-            ENDIF
-            !
-            read_conf_loop: DO
-               !
-               CALL read_line( input_line, end_of_file = tend )
-               !
-               IF ( tend ) &
-                  CALL errore( 'read_cards', 'end of file reading ' // &
-                              & 'atomic positions (path)', input_images + 1 )
-               !
-               input_images = input_images + 1
-               IF ( input_images > num_of_images ) &
-                  CALL errore( 'read_cards', &
-                              & 'too many images in ATOMIC_POSITION', 1 )
-               !
-               IF ( matches( "intermediate_image", input_line )  ) THEN
-                  !
-                  CALL path_read_images( input_images )
-                  !
-               ELSE
-                  !
-                  exit read_conf_loop
-                  !
-               ENDIF
-               !
-            ENDDO read_conf_loop
-            !
-            IF ( matches( "last_image", input_line ) ) THEN
-               !
-               CALL path_read_images( input_images )
-               !
-            ELSE
-               !
-               CALL errore( 'read_cards ', &
-                           'last_image missing in ATOMIC_POSITION', 1 )
-               !
-            ENDIF
-            !
-         ENDIF
-         !
-      ELSE
          !
 
          reader_loop : DO ia = 1,nat,1
@@ -588,7 +525,6 @@ CONTAINS
 
          ENDDO reader_loop
          !
-      ENDIF
       !
 !       DO is = 1, ntyp
 !          IF( na_inp( is ) < 1 ) THEN
@@ -603,95 +539,6 @@ CONTAINS
 
       RETURN
       !
-      CONTAINS
-         !
-         !-------------------------------------------------------------------
-         SUBROUTINE path_read_images( image )
-         !-------------------------------------------------------------------
-         !
-         IMPLICIT NONE
-         !
-         INTEGER, INTENT(in) :: image
-         !
-         !
-         DO ia = 1, nat
-            !
-            idx = 3 * ( ia - 1 )
-            !
-            CALL read_line( input_line, end_of_file = tend )
-            !
-            IF ( tend ) &
-               CALL errore( 'read_cards', &
-                              'end of file reading atomic positions', ia )
-            !
-            CALL field_count( nfield, input_line )
-            !
-            IF ( nfield == 4 ) THEN
-               !
-               READ( input_line, * ) lb_pos, pos((idx+1),image), &
-                                             pos((idx+2),image), &
-                                             pos((idx+3),image)
-               !
-            ELSEIF ( nfield == 7 ) THEN
-               !
-               IF ( image /= 1 ) THEN
-                  !
-                  CALL errore( 'read_cards', &
-                              & 'wrong number of columns in ' // &
-                              & 'ATOMIC_POSITIONS', sp_pos(ia) )
-                  !
-               ENDIF
-               !
-               READ( input_line, * ) lb_pos, pos((idx+1),image), &
-                                             pos((idx+2),image), &
-                                             pos((idx+3),image), &
-                                             if_pos(1,ia), &
-                                             if_pos(2,ia), &
-                                             if_pos(3,ia)
-               !
-            ELSE
-               !
-               CALL errore( 'read_cards', &
-                           & 'wrong number of columns in ' // &
-                           & 'ATOMIC_POSITIONS', sp_pos(ia) )
-               !
-            ENDIF
-            !
-            IF ( image == 1 ) THEN
-               !
-               lb_pos = adjustl( lb_pos )
-               !
-               match_label_path: DO is = 1, ntyp
-                  !
-                  IF ( trim( lb_pos ) == trim( atom_label(is) ) ) THEN
-                     !
-                     sp_pos(ia) = is
-                     !
-                     exit match_label_path
-                     !
-                  ENDIF
-                  !
-               ENDDO match_label_path
-               !
-               IF ( ( sp_pos(ia) < 1 ) .or. ( sp_pos(ia) > ntyp ) ) THEN
-                  !
-                  CALL errore( 'read_cards', &
-                                 'wrong index in ATOMIC_POSITIONS', ia )
-                  !
-               ENDIF
-               !
-               is = sp_pos(ia)
-               !
-               na_inp( is ) = na_inp( is ) + 1
-               !
-            ENDIF
-            !
-         ENDDO
-         !
-         RETURN
-         !
-         END SUBROUTINE path_read_images
-         !
    END SUBROUTINE card_atomic_positions
    !
    !------------------------------------------------------------------------
@@ -1660,255 +1507,6 @@ CONTAINS
       !
    END SUBROUTINE card_constraints
    !
-   SUBROUTINE card_collective_vars( input_line )
-      !
-      IMPLICIT NONE
-      !
-      CHARACTER(len=256) :: input_line
-      INTEGER            :: i, nfield
-      LOGICAL            :: ltest
-      LOGICAL, SAVE      :: tread = .false.
-      !
-      !
-      IF ( tread ) CALL errore( 'card_collective_vars', 'two occurrences', 2 )
-      !
-      CALL read_line( input_line )
-      !
-      CALL field_count( nfield, input_line )
-      !
-      IF ( nfield == 1 ) THEN
-         !
-         READ( input_line, * ) ncolvar_inp
-         !
-      ELSEIF ( nfield == 2 ) THEN
-         !
-         READ( input_line, * ) ncolvar_inp, colvar_tol_inp
-         !
-      ELSE
-         !
-         CALL errore( 'card_collective_vars', 'too many fields', nfield )
-         !
-      ENDIF
-      !
-      CALL allocate_input_colvar()
-      !
-      IF ( cg_phs_path_flag ) THEN
-         !
-         input_images = 2
-         !
-         IF( allocated( pos ) ) DEALLOCATE( pos )
-         !
-         ALLOCATE( pos( ncolvar_inp, input_images ) )
-         !
-         pos(:,:) = 0.0_DP
-         !
-      ENDIF
-      !
-      DO i = 1, ncolvar_inp
-         !
-         CALL read_line( input_line )
-         !
-         READ( input_line, * ) colvar_type_inp(i)
-         !
-         CALL field_count( nfield, input_line )
-         !
-         ltest = ( ( nfield <= nc_fields + 2 ) .or. &
-                  ( cg_phs_path_flag .and. ( nfield <= nc_fields + 4 ) ) )
-         !
-         IF ( .not. ltest ) &
-            CALL errore( 'card_collective_vars', 'too many fields for ' // &
-                        & 'this constraint: ' // trim( constr_type_inp(i) ), i )
-         !
-         SELECT CASE( colvar_type_inp(i) )
-         CASE( 'type_coord', 'atom_coord' )
-            !
-            IF ( cg_phs_path_flag ) THEN
-               !
-               READ( input_line, * ) colvar_type_inp(i), &
-                                    colvar_inp(1,i),    &
-                                    colvar_inp(2,i),    &
-                                    colvar_inp(3,i),    &
-                                    colvar_inp(4,i),    &
-                                    pos(i,1),           &
-                                    pos(i,2)
-               !
-            ELSEIF ( nfield == 5 ) THEN
-               !
-               READ( input_line, * ) colvar_type_inp(i), &
-                                    colvar_inp(1,i), &
-                                    colvar_inp(2,i), &
-                                    colvar_inp(3,i), &
-                                    colvar_inp(4,i)
-               !
-            ELSE
-               !
-               CALL errore( 'card_collective_vars', 'type_coord, ' // &
-                           & 'atom_coord: wrong number of fields', nfield )
-               !
-            ENDIF
-            !
-         CASE( 'distance' )
-            !
-            IF ( cg_phs_path_flag ) THEN
-               !
-               READ( input_line, * ) colvar_type_inp(i), &
-                                    colvar_inp(1,i),    &
-                                    colvar_inp(2,i),    &
-                                    pos(i,1),           &
-                                    pos(i,2)
-               !
-            ELSEIF ( nfield == 3 ) THEN
-               !
-               READ( input_line, * ) colvar_type_inp(i), &
-                                    colvar_inp(1,i), &
-                                    colvar_inp(2,i)
-               !
-            ELSE
-               !
-               CALL errore( 'card_collective_vars', &
-                           & 'distance: wrong number of fields', nfield )
-               !
-            ENDIF
-            !
-         CASE( 'planar_angle' )
-            !
-            IF ( cg_phs_path_flag ) THEN
-               !
-               READ( input_line, * ) colvar_type_inp(i), &
-                                    colvar_inp(1,i),    &
-                                    colvar_inp(2,i),    &
-                                    colvar_inp(3,i),    &
-                                    pos(i,1),           &
-                                    pos(i,2)
-               !
-            ELSEIF ( nfield == 4 ) THEN
-               !
-               READ( input_line, * ) colvar_type_inp(i), &
-                                    colvar_inp(1,i), &
-                                    colvar_inp(2,i), &
-                                    colvar_inp(3,i)
-               !
-            ELSE
-               !
-               CALL errore( 'card_collective_vars', &
-                           & 'planar_angle: wrong number of fields', nfield )
-               !
-            ENDIF
-            !
-         CASE( 'torsional_angle' )
-            !
-            IF ( cg_phs_path_flag ) THEN
-               !
-               READ( input_line, * ) colvar_type_inp(i), &
-                                    colvar_inp(1,i),    &
-                                    colvar_inp(2,i),    &
-                                    colvar_inp(3,i),    &
-                                    colvar_inp(4,i),    &
-                                    pos(i,1),           &
-                                    pos(i,2)
-               !
-            ELSEIF ( nfield == 5 ) THEN
-               !
-               READ( input_line, * ) colvar_type_inp(i), &
-                                    colvar_inp(1,i), &
-                                    colvar_inp(2,i), &
-                                    colvar_inp(3,i), &
-                                    colvar_inp(4,i)
-               !
-            ELSE
-               !
-               CALL errore( 'card_collective_vars', &
-                           & 'torsional_angle: wrong number of fields', nfield )
-               !
-            ENDIF
-            !
-         CASE( 'struct_fac' )
-            !
-            IF ( cg_phs_path_flag ) THEN
-               !
-               READ( input_line, * ) colvar_type_inp(i), &
-                                    colvar_inp(1,i), &
-                                    colvar_inp(2,i), &
-                                    colvar_inp(3,i), &
-                                    pos(i,1),        &
-                                    pos(i,2)
-               !
-            ELSEIF ( nfield == 4 ) THEN
-               !
-               READ( input_line, * ) colvar_type_inp(i), &
-                                    colvar_inp(1,i), &
-                                    colvar_inp(2,i), &
-                                    colvar_inp(3,i)
-               !
-            ELSE
-               !
-               CALL errore( 'card_collective_vars', &
-                           & 'struct_fac: wrong number of fields', nfield )
-               !
-            ENDIF
-            !
-         CASE( 'sph_struct_fac' )
-            !
-            IF ( cg_phs_path_flag ) THEN
-               !
-               READ( input_line, * ) colvar_type_inp(i), &
-                                    colvar_inp(1,i), &
-                                    pos(i,1),        &
-                                    pos(i,2)
-               !
-            ELSEIF ( nfield == 2 ) THEN
-               !
-               READ( input_line, * ) colvar_type_inp(i), &
-                                    colvar_inp(1,i)
-               !
-            ELSE
-               !
-               CALL errore( 'card_collective_vars',  &
-                           & 'sph_struct_fac: wrong number of fields', nfield )
-               !
-            ENDIF
-            !
-         CASE( 'bennett_proj' )
-            !
-            IF ( cg_phs_path_flag ) THEN
-               !
-               READ( input_line, * ) constr_type_inp(i), &
-                                    constr_inp(1,i), &
-                                    constr_inp(2,i), &
-                                    constr_inp(3,i), &
-                                    constr_inp(4,i), &
-                                    pos(i,1),        &
-                                    pos(i,2)
-               !
-            ELSEIF ( nfield == 5 ) THEN
-               !
-               READ( input_line, * ) constr_type_inp(i), &
-                                    constr_inp(1,i), &
-                                    constr_inp(2,i), &
-                                    constr_inp(3,i), &
-                                    constr_inp(4,i)
-               !
-            ELSE
-               !
-               CALL errore( 'card_collective_vars', &
-                           & 'bennett_proj: wrong number of fields', nfield )
-               !
-            ENDIF
-            !
-         CASE DEFAULT
-            !
-            CALL errore( 'card_collective_vars', 'unknown collective ' // &
-                        & 'variable: ' // trim( colvar_type_inp(i) ), 1 )
-            !
-         END SELECT
-         !
-      ENDDO
-      !
-      tread = .true.
-      !
-      RETURN
-      !
-   END SUBROUTINE card_collective_vars
    !
    !------------------------------------------------------------------------
    !    BEGIN manual
@@ -2017,71 +1615,6 @@ CONTAINS
    !
    !
    !
-   !------------------------------------------------------------------------
-   !    BEGIN manual
-   !----------------------------------------------------------------------
-   !
-   ! CLIMBING_IMAGES
-   !
-   !   Needed to explicitly specify which images have to climb
-   !
-   ! Syntax:
-   !
-   !   CLIMBING_IMAGES
-   !     index1, ..., indexN
-   !
-   ! Where:
-   !
-   !   index1, ..., indexN are indices of the images that have to climb
-   !
-   !----------------------------------------------------------------------
-   !    END manual
-   !------------------------------------------------------------------------
-   !
-   SUBROUTINE card_climbing_images( input_line )
-      !
-      IMPLICIT NONE
-      !
-      CHARACTER(len=256) :: input_line
-      LOGICAL, SAVE      :: tread = .false.
-      LOGICAL, EXTERNAL  :: matches
-      !
-      INTEGER          :: i
-      CHARACTER(len=5) :: i_char
-      !
-      CHARACTER(len=6), EXTERNAL :: int_to_char
-      !
-      !
-      IF ( tread ) &
-         CALL errore( ' card_climbing_images ', ' two occurrences', 2 )
-      !
-      IF ( CI_scheme == 'manual' ) THEN
-         !
-         IF ( allocated( climbing ) ) DEALLOCATE( climbing )
-         !
-         ALLOCATE( climbing( num_of_images ) )
-         !
-         climbing(:) = .false.
-         !
-         CALL read_line( input_line )
-         !
-         DO i = 1, num_of_images
-            !
-            i_char = int_to_char( i )
-            !
-            IF ( matches( ' ' // trim( i_char ) // ',' , &
-                           ' ' // trim( input_line ) // ',' ) ) &
-               climbing(i) = .true.
-            !
-         ENDDO
-         !
-      ENDIF
-      !
-      tread = .true.
-      !
-      RETURN
-      !
-   END SUBROUTINE card_climbing_images
    !
    !------------------------------------------------------------------------
    !    BEGIN manual
