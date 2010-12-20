@@ -27,7 +27,7 @@ $ECHO "  H2+H <==> H+H2."
 . ../environment_variables
 
 # required executables and pseudopotentials
-BIN_LIST="neb.x cp.x"
+BIN_LIST="neb.x"
 PSEUDO_LIST="HUSPBE.RRKJ3"
 
 $ECHO
@@ -87,7 +87,7 @@ rm -rf $TMP_DIR/*
 $ECHO " done"
 
 # NEB calculation. Automatic choice of the climbing image.
-cat > H2+H.in << EOF
+cat > neb.dat << EOF
 &PATH
   string_method     = 'neb',
   nstep_path        = 15, 
@@ -99,6 +99,17 @@ cat > H2+H.in << EOF
   CI_scheme         = "auto",
   path_thr          = 0.1D0,
 /
+PATH_ATOMIC_POSITIONS { bohr }
+first_image
+H   -4.56670009      0.00000000      0.00000000  1  0  0
+H    0.00000000      0.00000000      0.00000000  0  0  0
+H    1.55776676      0.00000000      0.00000000  1  0  0
+last_image
+H   -1.55776676      0.00000000      0.00000000
+H    0.00000000      0.00000000      0.00000000
+H    4.56670009      0.00000000      0.00000000
+EOF
+cat > H2+H.in << EOF
 &CONTROL
   calculation    = "relax",
   restart_mode   = "from_scratch",
@@ -133,15 +144,6 @@ CELL_PARAMETERS { cubic }
   12.00000  0.00000  0.00000
    0.00000  5.00000  0.00000
    0.00000  0.00000  5.00000
-ATOMIC_POSITIONS { bohr }
-first_image
-H   -4.56670009      0.00000000      0.00000000  1  0  0
-H    0.00000000      0.00000000      0.00000000  0  0  0
-H    1.55776676      0.00000000      0.00000000  1  0  0
-last_image
-H   -1.55776676      0.00000000      0.00000000
-H    0.00000000      0.00000000      0.00000000
-H    4.56670009      0.00000000      0.00000000
 EOF
 $ECHO "  running Born-Oppenheimer NEB calculation for H2+H => H+H2...\c"
 $NEB_COMMAND < H2+H.in > H2+H.out
@@ -154,7 +156,7 @@ rm -rf $TMP_DIR/*
 $ECHO " done"
 
 # NEB calculation. Climbing image is not used
-cat > symmetric_H2+H.in << EOF
+cat > neb.dat << EOF
 &PATH
   string_method     = 'neb',
   nstep_path        = 15,
@@ -165,7 +167,17 @@ cat > symmetric_H2+H.in << EOF
   k_min             = 0.2D0,
   path_thr          = 0.2D0,
 /
-
+PATH_ATOMIC_POSITIONS { bohr }
+first_image
+H   -4.56670009      0.00000000      0.00000000  1  0  0
+H    0.00000000      0.00000000      0.00000000  0  0  0
+H    1.55776676      0.00000000      0.00000000  1  0  0
+last_image
+H   -1.55776676      0.00000000      0.00000000
+H    0.00000000      0.00000000      0.00000000
+H    4.56670009      0.00000000      0.00000000
+EOF
+cat > symmetric_H2+H.in << EOF
 &CONTROL
   calculation    = "relax",
   restart_mode   = "from_scratch",
@@ -195,15 +207,6 @@ cat > symmetric_H2+H.in << EOF
 /
 ATOMIC_SPECIES
 H  1.00794  HUSPBE.RRKJ3
-ATOMIC_POSITIONS { bohr }
-first_image
-H   -4.56670009      0.00000000      0.00000000  1  0  0
-H    0.00000000      0.00000000      0.00000000  0  0  0
-H    1.55776676      0.00000000      0.00000000  1  0  0
-last_image
-H   -1.55776676      0.00000000      0.00000000
-H    0.00000000      0.00000000      0.00000000
-H    4.56670009      0.00000000      0.00000000
 K_POINTS { gamma }
 CELL_PARAMETERS { cubic }
   12.00000  0.00000  0.00000
@@ -228,7 +231,7 @@ cat symmetric_H2+H.path | \
     awk '{if(NR==2){printf"   0\n"}; if(NR!=2){print}}' > asymmetric_H2+H.path
 
 # NEB calculation. The image that has to climb is manually chosen
-cat > asymmetric_H2+H.in << EOF
+cat > neb.dat << EOF
 &PATH
   string_method     = 'neb',
   ds                = 2.D0,
@@ -239,6 +242,19 @@ cat > asymmetric_H2+H.in << EOF
   CI_scheme         = "manual",
   path_thr          = 0.05D0,
 /
+CLIMBING_IMAGES
+ 5
+PATH_ATOMIC_POSITIONS { bohr }
+first_image
+H   -4.56670009      0.00000000      0.00000000  1  0  0
+H    0.00000000      0.00000000      0.00000000  0  0  0
+H    1.55776676      0.00000000      0.00000000  1  0  0
+last_image
+H   -1.55776676      0.00000000      0.00000000
+H    0.00000000      0.00000000      0.00000000
+H    4.56670009      0.00000000      0.00000000
+EOF
+cat > asymmetric_H2+H.in << EOF
 &CONTROL
   calculation    = "relax",
   restart_mode   = "restart",
@@ -266,19 +282,8 @@ cat > asymmetric_H2+H.in << EOF
   pot_extrapolation = "second_order",
   wfc_extrapolation = "second_order",
 /
-CLIMBING_IMAGES
- 5
 ATOMIC_SPECIES
 H  1.00794  HUSPBE.RRKJ3
-ATOMIC_POSITIONS { bohr }
-first_image
-H   -4.56670009      0.00000000      0.00000000  1  0  0
-H    0.00000000      0.00000000      0.00000000  0  0  0
-H    1.55776676      0.00000000      0.00000000  1  0  0
-last_image
-H   -1.55776676      0.00000000      0.00000000
-H    0.00000000      0.00000000      0.00000000
-H    4.56670009      0.00000000      0.00000000
 K_POINTS { gamma }
 CELL_PARAMETERS { cubic }
   12.00000  0.00000  0.00000
@@ -336,7 +341,7 @@ cat > H2+H-cp.in << EOF
 /
 ATOMIC_SPECIES
 H  1.00794  HUSPBE.RRKJ3
-ATOMIC_POSITIONS { bohr }
+PATH_ATOMIC_POSITIONS { bohr }
 first_image
 H   -4.56670009      0.00000000      0.00000000  1  0  0
 H    0.00000000      0.00000000      0.00000000  0  0  0
