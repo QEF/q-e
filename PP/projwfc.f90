@@ -2179,7 +2179,7 @@ SUBROUTINE pprojwave( filproj, lsym )
   !
   iunaux = find_free_unit()
   WRITE( auxname, fmt='(I6.1)' ) mpime
-  auxname = TRIM( tmp_dir ) // 'AUX' // TRIM( ADJUSTL( auxname ) )
+  auxname = TRIM(tmp_dir) // TRIM(ADJUSTL(prefix)) // '.AUX' // TRIM(ADJUSTL(auxname))
   OPEN( unit=iunaux, file=trim(auxname), status='unknown', form='unformatted')
   !
   !
