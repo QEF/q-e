@@ -13,9 +13,9 @@ PWOBJS = ../../PW/libpw.a
 
 TLDEPS=bindir libs pw
 
-all : tldeps tddfpt_pp.x
+all : tldeps turbo_spectrum.x
 	
-tddfpt_pp.x : tddfpt_calculate_spectrum.o $(QEMODS)
+turbo_spectrum.x : tddfpt_calculate_spectrum.o $(QEMODS)
 	$(LD) $(LDFLAGS) -o $@ \
 	tddfpt_calculate_spectrum.o $(QEMODS) $(PWOBJS) $(LIBOBJS) $(LIBS)
 	- ( cd ../../bin ; ln -fs ../TDDFPT/tools/$@ . )
@@ -25,5 +25,5 @@ tldeps:
 	test -n "$(TLDEPS)" && ( cd ../.. ; $(MAKE) $(MFLAGS) $(TLDEPS) || exit 1) || :
 
 clean :
-	rm -f ../bin/tddfpt_pp.x *.x *.o *.mod
+	rm -f ../bin/turbo_spectrum.x *.x *.o *.mod
 

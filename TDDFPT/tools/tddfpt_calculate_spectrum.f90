@@ -29,7 +29,7 @@ program lr_calculate_spectrum
   integer :: verbosity
   real(kind=dp) :: start,end,increment
   real(kind=dp) :: omegmax,delta_omeg
-  character(len=60) :: terminator
+  character(len=60) :: extrapolation
   character(len=256) :: outdir, filename
   integer :: units
   !
@@ -74,7 +74,7 @@ program lr_calculate_spectrum
   !
   !User controlled variable initialisation
   !
-  namelist / lr_input / itermax, itermax0, itermax_actual, terminator,&
+  namelist / lr_input / itermax, itermax0, itermax_actual, extrapolation,&
                       & end, increment, start, ipol, outdir, prefix,&
                       & epsil, sym_op, verbosity, units,omeg,omegmax,delta_omeg
 
@@ -90,7 +90,7 @@ program lr_calculate_spectrum
   itermax=1000
   itermax0=1000
   !itermax_actual=1000
-  terminator="no"
+  extrapolation="no"
   end=2.50d0
   increment=0.001d0
   start=0.0d0
@@ -120,9 +120,9 @@ if (ionode) then !No need for parallelization in this code
   call input_from_file()
   read (5, lr_input, iostat = ios)
   
-  if (itermax0 < 151 .and. trim(terminator).ne."no") then
-   write(*,*) "Itermax0 is less than 150, no terminator scheme can be used!"
-   terminator="no"
+  if (itermax0 < 151 .and. trim(extrapolation).ne."no") then
+   write(*,*) "Itermax0 is less than 150, no extrapolation scheme can be used!"
+   extrapolation="no"
   endif
   
   outdir = trimcheck(outdir)
@@ -146,7 +146,7 @@ if (ionode) then !No need for parallelization in this code
    endif
   endif
   ! Terminator Scheme
-  if (trim(terminator)=="no") then
+  if (trim(extrapolation)=="no") then
      !
      itermax0=itermax
      !
@@ -747,7 +747,7 @@ end subroutine read_b_g_z_file
 !------------------------------------------------
 subroutine extrapolate()
 !
-!This subroutine applies the "terminator" scheme for extrapolating the reduced matrix
+!This subroutine applies the "extrapolation" scheme for extrapolating the reduced matrix
 !
 IMPLICIT NONE
   !
@@ -756,7 +756,7 @@ IMPLICIT NONE
   !
   !
 skip=.false.
-if (trim(terminator).ne."no") then
+if (trim(extrapolation).ne."no") then
   !
   average=0.d0
   av_amplitude=0.d0
@@ -817,7 +817,7 @@ if (trim(terminator).ne."no") then
      write(stdout,'(5x,"Average oscillation amplitude =",F15.8)') av_amplitude(ip)
   end do
   !
-  if (trim(terminator)=="constant") av_amplitude=0 
+  if (trim(extrapolation)=="constant") av_amplitude=0 
   !
   !
   do ip=1,n_ipol

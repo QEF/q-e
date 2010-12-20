@@ -6,7 +6,7 @@ default: all
 
 all:	
 	for dir in \
-		CH4 SiH4 Benzene\
+		CH4 SiH4 CH4-PR Benzene\
 	; do \
 	    if test -d $$dir ; then \
 		( cd $$dir ; \
@@ -28,7 +28,7 @@ small_test:
 
 clean :
 	@for dir in \
-		CH4 SiH4 Benzene\
+		CH4 SiH4 CH4-PR Benzene\
 	; do \
 	    if test -d $$dir ; then \
 		( cd $$dir ; \

@@ -50,9 +50,9 @@ lr_init_nfo.o
 
 TLDEPS=bindir libs pw ph
  
-all :  tldeps tddfpt.x
+all :  tldeps turbo_lanczos.x
 
-tddfpt.x : $(LROBJS) $(PWOBJS) $(QEMODS) $(PWOBJS) $(PHOBJS) $(PWOBJS) $(LIBOBJS)
+turbo_lanczos.x : $(LROBJS) $(PWOBJS) $(QEMODS) $(PWOBJS) $(PHOBJS) $(PWOBJS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ \
 		$(LROBJS) $(PHOBJS) $(PWOBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
 	- ( cd ../../bin ; ln -fs ../TDDFPT/src/$@ . )
@@ -67,7 +67,7 @@ tldeps:
 
 
 clean :
-	- /bin/rm -f ../bin/tddfpt.x *.x *.o *~ *.d *.mod *.i work.pc
+	- /bin/rm -f ../bin/turbo_lanczos.x *.x *.o *~ *.d *.mod *.i work.pc
 
 include make.depend
 

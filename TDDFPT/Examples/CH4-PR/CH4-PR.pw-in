@@ -6,6 +6,8 @@
     outdir='./out',
     prefix='ch4-pr'
     etot_conv_thr=1d-6
+    wf_collect=.true.
+    disk_io='low'
  /
  &system
     ibrav = 1,

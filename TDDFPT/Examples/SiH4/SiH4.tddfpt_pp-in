@@ -3,10 +3,10 @@
   outdir='./out',
   itermax=10000
   itermax0=450
-  terminator="osc"
+  extrapolation="osc"
   epsil=0.01
-  omegmax=3.50d0
-  delta_omeg=0.001d0
-  omeg=0.0d0
+  end=3.50d0
+  increment=0.001d0
+  start=0.0d0
   ipol=4
 /
