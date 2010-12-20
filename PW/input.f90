@@ -301,6 +301,7 @@ SUBROUTINE iosys(xmlinput,attr)
   !
   USE read_xml_module,       ONLY : read_xml
   USE iotk_module,           ONLY : iotk_attlenx
+  USE read_cards_module,     ONLY : read_cards
   !
   IMPLICIT NONE
   !
@@ -313,11 +314,12 @@ SUBROUTINE iosys(xmlinput,attr)
   !
   ! ... all namelists are read
   !
-  IF ( xmlinput ) THEN
-     CALL read_xml ('PW', attr = attr )
-  ELSE
-     CALL read_namelists( 'PW' )
-  ENDIF
+!  IF ( xmlinput ) THEN
+!     CALL read_xml ('PW', attr = attr )
+!  ELSE
+!     CALL read_namelists( 'PW' )
+!     CALL read_cards( 'PW' )
+!  ENDIF
   !
   ! ... various initializations of control variables
   !
@@ -1493,9 +1495,9 @@ SUBROUTINE read_cards_pw ( psfile, tau_format, xmlinput )
   !
   amass = 0
   !
-  IF ( .not. xmlinput ) THEN
-     CALL read_cards ( 'PW' )
-  ENDIF
+!  IF ( .not. xmlinput ) THEN
+!     CALL read_cards ( 'PW' )
+!  ENDIF
   !
   IF ( .not. taspc ) &
      CALL errore( 'read_cards_pw', 'atomic species info missing', 1 )

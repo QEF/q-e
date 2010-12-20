@@ -1056,6 +1056,9 @@ pwscf.o : ../Modules/io_global.o
 pwscf.o : ../Modules/mp_global.o
 pwscf.o : ../Modules/open_close_input_file_interf.o
 pwscf.o : ../Modules/parameters.o
+pwscf.o : ../Modules/read_cards.o
+pwscf.o : ../Modules/read_namelists.o
+pwscf.o : ../Modules/read_xml.o
 pwscf.o : ../iotk/src/iotk_module.o
 pwscf.o : ms2.o
 pwscf.o : pwcom.o

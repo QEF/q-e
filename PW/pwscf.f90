@@ -27,6 +27,9 @@ PROGRAM pwscf
   !
   USE iotk_module,           ONLY : iotk_attlenx
   USE open_close_input_file_interf, ONLY : open_input_file, close_input_file
+  USE read_xml_module,       ONLY : read_xml
+  USE read_cards_module,     ONLY : read_cards
+  USE read_namelists_module, ONLY : read_namelists
   !
   IMPLICIT NONE
   !
@@ -55,8 +58,11 @@ PROGRAM pwscf
   !
   IF(ionode) CALL plugin_arguments()
   CALL plugin_arguments_bcast(ionode_id,intra_image_comm)
+  !
+write(0,*) "xmlinput: ", xmlinput
   IF( ionode ) CALL open_input_file(xmlinput,attr)
   !
+write(0,*) "xmlinput 2: ", xmlinput
   ! bcast of xmlinput and attr needs to be done 
   ! because is only the open statement inside
   ! read_cards and read_namelist (in Modules) that has
@@ -67,8 +73,23 @@ PROGRAM pwscf
   call mp_bcast(xmlinput,ionode_id, intra_image_comm)
   call mp_bcast(attr,ionode_id, intra_image_comm)
   !
-  ! ... read input and convert to internal variables
+  ! ... read input
+  !
+  IF ( xmlinput ) THEN
+write(0,*) "reading xml"
+     CALL read_xml ('PW', attr = attr )
+  ELSE
+write(0,*) "before read input"
+     CALL read_namelists( 'PW' )
+     CALL read_cards( 'PW' )
+write(0,*) "after read input"
+  ENDIF
+  !
+  ! ... convert to internal variables
+  !
+write(0,*) "before iosys"
   CALL iosys(xmlinput,attr)
+write(0,*) "after iosys"
   !
   ! ... close_input_file(xmlinput)
   !
@@ -82,6 +103,7 @@ PROGRAM pwscf
   !
   ! call to void routine for user defined / plugin patches initializations
   !
+write(0,*) "before plugin init"
   CALL plugin_initialization()
   !
   CALL check_stop_init()

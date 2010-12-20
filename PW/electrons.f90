@@ -825,7 +825,6 @@ SUBROUTINE electrons()
        !
        USE control_flags, ONLY : lpath
        USE check_stop,    ONLY : global_check_stop_now => check_stop_now
-       USE io_files,      ONLY : iunpath
        !
        IMPLICIT NONE
        !
@@ -833,8 +832,6 @@ SUBROUTINE electrons()
        INTEGER :: unit
        !
        unit = stdout
-       !
-       IF ( lpath ) unit = iunpath
        !
        check_stop_now = global_check_stop_now( unit )
        !
