@@ -14,4 +14,4 @@ stage2: $(NAME).tddfpt-out-s2
 	$(check_tddfpt) $(NAME).tddfpt-out-s2 $(NAME).tddfpt-ref-s2
 
 clean :
-	- /bin/rm -rf $(NAME).pw-out $(NAME).tddfpt-out $(NAME).tddfpt_pp-out $(NAME).tddfpt-st-out *.plot out/* $(NAME).tddfpt-out-s2 *.cube $(NAME).tddfpt-in-s2
+	- /bin/rm -rf $(NAME).pw-out $(NAME).tddfpt-out $(NAME).tddfpt_pp-out $(NAME).tddfpt-st-out *.plot out/* $(NAME).tddfpt-out-s2 *.cube 
