@@ -59,10 +59,8 @@ PROGRAM pwscf
   IF(ionode) CALL plugin_arguments()
   CALL plugin_arguments_bcast(ionode_id,intra_image_comm)
   !
-write(0,*) "xmlinput: ", xmlinput
   IF( ionode ) CALL open_input_file(xmlinput,attr)
   !
-write(0,*) "xmlinput 2: ", xmlinput
   ! bcast of xmlinput and attr needs to be done 
   ! because is only the open statement inside
   ! read_cards and read_namelist (in Modules) that has
@@ -76,20 +74,15 @@ write(0,*) "xmlinput 2: ", xmlinput
   ! ... read input
   !
   IF ( xmlinput ) THEN
-write(0,*) "reading xml"
      CALL read_xml ('PW', attr = attr )
   ELSE
-write(0,*) "before read input"
      CALL read_namelists( 'PW' )
      CALL read_cards( 'PW' )
-write(0,*) "after read input"
   ENDIF
   !
   ! ... convert to internal variables
   !
-write(0,*) "before iosys"
   CALL iosys(xmlinput,attr)
-write(0,*) "after iosys"
   !
   ! ... close_input_file(xmlinput)
   !
@@ -103,7 +96,6 @@ write(0,*) "after iosys"
   !
   ! call to void routine for user defined / plugin patches initializations
   !
-write(0,*) "before plugin init"
   CALL plugin_initialization()
   !
   CALL check_stop_init()
