@@ -26,7 +26,8 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
   USE extfield,         ONLY : tefield, dipfield
   USE fft_base,         ONLY : dfftp
   USE fft_interfaces,   ONLY : fwfft, invfft
-  USE gvect,            ONLY : gcutm, dual, ecutwfc
+  USE gvect,            ONLY : gcutm, ecutwfc
+  USE gsmooth,          ONLY : dual
   USE klist,            ONLY : nks, nkstot, xk
   USE lsda_mod,         ONLY : nspin, current_spin
   USE ener,             ONLY : ehart

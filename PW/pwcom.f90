@@ -28,7 +28,7 @@ MODULE gvect
   ! ...The variables describing the reciprocal lattice vectors
   !
   USE kinds,              ONLY : DP
-  USE gvecp,              ONLY : ngm, ngm_g, ngl, nl, nlm, gcutm
+  USE gvecp,              ONLY : ngm, ngm_g, ngl, nl, nlm, gcutm, ecutrho
   USE reciprocal_vectors, ONLY : ig_l2g, gstart, g, gg, mill
   !
   SAVE
@@ -55,11 +55,11 @@ MODULE gvect
   REAL(DP), POINTER :: &
        gl(:)           ! the modulus of g in each shell
   !REAL (DP) :: &
+  !     dual,          &! link between G of wavefunctions and charge
   !     gcutm          ! cut-off for G vectors
   REAL(DP) :: &
        ecutwfc         ! energy cut-off
   REAL (DP) :: &
-       dual,          &! link between G of wavefunctions and charge
        ecfixed,       &!
        qcutz = 0.0_DP,&! For the modified Ekin functional
        q2sigma         !
@@ -78,7 +78,7 @@ MODULE gsmooth
   !
   USE kinds, ONLY : DP
   USE gvecs,              ONLY : ngms, ngms_g, nls, nlsm, doublegrid, &
-                                 gcutms
+                                 gcutms, dual
   !
   SAVE
   !

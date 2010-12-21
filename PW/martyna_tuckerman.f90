@@ -128,7 +128,7 @@ CONTAINS
   USE fft_base,      ONLY : dfftp
   USE fft_interfaces,ONLY : fwfft, invfft
   USE control_flags, ONLY : gamma_only_ => gamma_only
-  USE gvect,         ONLY : ngm, gg, gstart_ => gstart, nl, nlm, ecutwfc, dual
+  USE gvect,         ONLY : ngm, gg, gstart_ => gstart, nl, nlm, ecutrho
   USE cell_base,     ONLY : at, alat, tpiba2, omega
 
   INTEGER :: index0, index, ir, i,j,k, ig, nt
@@ -153,7 +153,7 @@ CONTAINS
      alpha = alpha - 0.1_dp  
      if (alpha<=0._dp) call errore('init_wg_corr','optimal alpha not found',1)
      upperbound = e2 * sqrt (2.d0 * alpha / tpi) * &
-                       qe_erfc ( sqrt ( ecutwfc * dual / 4.d0 / alpha) )
+                       qe_erfc ( sqrt ( ecutrho / 4.d0 / alpha) )
   END DO
   beta = 0.5_dp/alpha ! 1._dp/alpha
   write (*,*) " alpha, beta MT = ", alpha, beta
@@ -258,7 +258,8 @@ CONTAINS
   SUBROUTINE write_wg_on_file(filplot, plot)
 !----------------------------------------------------------------------------
   USE grid_dimensions, ONLY : nr1, nr2, nr3, nr1x, nr2x, nr3x, nrxx
-  USE gvect,           ONLY : ecutwfc, dual, gcutm
+  USE gvect,           ONLY : ecutwfc, gcutm
+  USE gsmooth,         ONLY : dual
   USE cell_base,       ONLY : at, alat, tpiba2, omega, ibrav, celldm
   USE ions_base,       ONLY : zv, ntyp => nsp, nat, ityp, atm, tau
   CHARACTER (LEN=25), INTENT(IN) :: filplot

@@ -45,8 +45,8 @@ PROGRAM average
   USE io_global,            ONLY : stdout
   USE cell_base,            ONLY : ibrav, alat, omega, celldm, tpiba, &
                                    tpiba2, at, bg
-  USE gvect,                ONLY : gcutm, ecutwfc, dual
-  USE gsmooth,              ONLY : doublegrid, gcutms
+  USE gvect,                ONLY : gcutm, ecutwfc
+  USE gsmooth,              ONLY : doublegrid, gcutms, dual
   USE grid_dimensions,      ONLY : nr1, nr2, nr3, nr1x, nr2x, nr3x, nrxx
   USE smooth_grid_dimensions,ONLY: nr1s, nr2s, nr3s
   USE ions_base,            ONLY : zv, tau, nat, ntyp => nsp, ityp, atm

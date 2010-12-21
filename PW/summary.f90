@@ -24,7 +24,7 @@ SUBROUTINE summary()
   USE ions_base,       ONLY : nat, atm, zv, tau, ntyp => nsp, ityp
   USE cellmd,          ONLY : calc, cmass
   USE ions_base,       ONLY : amass
-  USE gvect,           ONLY : dual, ecutwfc, ecfixed, q2sigma, &
+  USE gvect,           ONLY : ecutrho, ecutwfc, ecfixed, q2sigma, &
                               ngm, ngm_g, gcutm, qcutz
   USE gsmooth,         ONLY : doublegrid, ngms, gcutms
   USE grid_dimensions, ONLY : nr1, nr2, nr3
@@ -90,7 +90,7 @@ SUBROUTINE summary()
   ELSE
      WRITE( stdout, 102) nelec
   END IF
-  WRITE( stdout, 103) nbnd, ecutwfc, dual*ecutwfc
+  WRITE( stdout, 103) nbnd, ecutwfc, ecutrho
   IF ( lscf) WRITE( stdout, 104) tr2, mixing_beta, nmix, mixing_style
   !
 100 FORMAT( /,/,5X, &

@@ -84,7 +84,8 @@ SUBROUTINE iosys(xmlinput,attr)
   !
   USE force_mod,     ONLY : lforce, lstres, force
   !
-  USE gvect,         ONLY : dual, &
+  USE gsmooth,       ONLY : dual
+  USE gvect,         ONLY : ecutrho_ => ecutrho, &
                             ecutwfc_ => ecutwfc, &
                             ecfixed_ => ecfixed, &
                             qcutz_   => qcutz, &
@@ -1111,6 +1112,7 @@ SUBROUTINE iosys(xmlinput,attr)
   nr1_     = nr1
   nr2_     = nr2
   nr3_     = nr3
+  ecutrho_ = ecutrho
   ecutwfc_ = ecutwfc
   ecfixed_ = ecfixed
   qcutz_   = qcutz

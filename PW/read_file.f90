@@ -279,8 +279,8 @@ SUBROUTINE read_file()
       !
       USE constants, ONLY : pi
       USE cell_base, ONLY : alat, tpiba, tpiba2
-      USE gvect,     ONLY : ecutwfc, dual, gcutm
-      USE gsmooth,   ONLY : gcutms, doublegrid
+      USE gvect,     ONLY : ecutwfc, ecutrho, gcutm
+      USE gsmooth,   ONLY : gcutms, dual, doublegrid
       !
       !
       ! ... Set the units in real and reciprocal space
@@ -291,6 +291,7 @@ SUBROUTINE read_file()
       ! ... Compute the cut-off of the G vectors
       !
       gcutm = dual * ecutwfc / tpiba2
+      ecutrho=dual * ecutwfc
       !
       doublegrid = ( dual > 4.D0 )
       !

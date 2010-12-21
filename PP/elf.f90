@@ -32,8 +32,8 @@ SUBROUTINE do_elf (elf)
   USE cell_base, ONLY: omega, tpiba, tpiba2
   USE fft_base,  ONLY: dffts, dfftp
   USE fft_interfaces, ONLY : fwfft, invfft
-  USE gvect, ONLY: gcutm, ecutwfc, dual, g, ngm, nl, nlm
-  USE gsmooth, ONLY : nls, nlsm, ngms, doublegrid
+  USE gvect, ONLY: gcutm, ecutwfc, g, ngm, nl, nlm
+  USE gsmooth, ONLY : nls, nlsm, ngms, doublegrid, dual
   USE io_files, ONLY: iunwfc, nwordwfc
   USE klist, ONLY: nks, xk
   USE lsda_mod, ONLY: nspin

@@ -81,10 +81,10 @@ MODULE pw_restart
       USE klist,                ONLY : nks, nkstot, xk, ngk, wk, qnorm, &
                                        lgauss, ngauss, degauss, nelec, &
                                        two_fermi_energies, nelup, neldw
-      USE gvect,                ONLY : ngm, ngm_g, g, mill, ecutwfc, dual
+      USE gvect,                ONLY : ngm, ngm_g, g, mill, ecutwfc
       USE grid_dimensions,      ONLY : nr1, nr2, nr3
       USE basis,                ONLY : natomwfc
-      USE gsmooth,              ONLY : ngms_g
+      USE gsmooth,              ONLY : ngms_g, dual
       USE smooth_grid_dimensions,ONLY: nr1s, nr2s, nr3s
       USE ktetra,               ONLY : nk1, nk2, nk3, k1, k2, k3, &
                                        ntetra, tetra, ltetra
@@ -1235,9 +1235,9 @@ MODULE pw_restart
       !
       USE ions_base,        ONLY : nat, nsp
       USE symm_base,        ONLY : nsym
-      USE gvect,            ONLY :  ngm_g, ecutwfc, dual
+      USE gvect,            ONLY :  ngm_g, ecutrho, ecutwfc
       USE grid_dimensions,  ONLY : nr1, nr2, nr3
-      USE gsmooth,          ONLY : ngms_g
+      USE gsmooth,          ONLY : ngms_g, dual
       USE smooth_grid_dimensions,ONLY: nr1s, nr2s, nr3s
       USE lsda_mod,         ONLY : lsda
       USE noncollin_module, ONLY : noncolin
@@ -1254,7 +1254,6 @@ MODULE pw_restart
       INTEGER,          INTENT(OUT) :: ierr
       !
       INTEGER  :: npwx_
-      REAL(DP) :: ecutrho
       LOGICAL  :: found, found2
       !
       !
@@ -1933,8 +1932,8 @@ MODULE pw_restart
     SUBROUTINE read_planewaves( dirname, ierr )
       !------------------------------------------------------------------------
       !
-      USE gvect,   ONLY : ngm_g, ecutwfc, dual
-      USE gsmooth, ONLY : ngms_g
+      USE gvect,   ONLY : ngm_g, ecutrho, ecutwfc
+      USE gsmooth, ONLY : ngms_g, dual
       USE grid_dimensions,        ONLY : nr1, nr2, nr3
       USE smooth_grid_dimensions, ONLY : nr1s, nr2s, nr3s
       USE wvfct,   ONLY : npwx, g2kin
@@ -1945,7 +1944,6 @@ MODULE pw_restart
       CHARACTER(LEN=*), INTENT(IN)  :: dirname
       INTEGER,          INTENT(OUT) :: ierr
       !
-      REAL(DP) :: ecutrho
       INTEGER  :: npwx_
       !
       ierr = 0
