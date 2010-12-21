@@ -5,7 +5,6 @@ TODO LIST - December 2010
   0.2  nstep ignored in vc-relax and other cases
   0.3  incorrect values for ELF?
   0.4  FFT grid dimensions not the same in PW and in CP for same data
-       (requires merge of all FFT-related variables between CP and PW)
   0.5  Small energy differences between PW and CP - maybe PP-related, 
        but might also be a problem of Ewald calculation in CP ("raggio"?)
   0.6  Numerical instabilities with BLYP and TPSS
@@ -320,7 +319,7 @@ TODO LIST - December 2010
      in the input data, between directories to be read (and left
      unchanged), directories to be (over-)written, temporary files
      or directories
- 5.4 Many inconsistencies between PW and CP in the xml file format
+ 5.4 Some inconsistencies between PW and CP in the xml file format
      (and inconsistencies with the documentation). Also: CP should
      behave like PW and create a directory if not existent
  5.5 Use qexml for xml file processing so that a single, easily
