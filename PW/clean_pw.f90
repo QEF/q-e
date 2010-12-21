@@ -11,6 +11,7 @@ SUBROUTINE clean_pw( lflag )
   !    
   ! ... This routine deallocates most dynamically allocated arrays
   !
+  USE cellmd,               ONLY : lmovecell
   USE ions_base,            ONLY : deallocate_ions_base
   USE gvect,                ONLY : g, gg, gl, nl, nlm, igtongl, mill, &
                                    eigts1, eigts2, eigts3
@@ -75,7 +76,9 @@ SUBROUTINE clean_pw( lflag )
   ! ... arrays allocated in ggen.f90
   !
   IF ( ALLOCATED( ig_l2g ) )     DEALLOCATE( ig_l2g )
-  IF ( ALLOCATED( gl ) )     DEALLOCATE ( gl )
+  IF ( .NOT. lmovecell ) THEN
+     IF ( ASSOCIATED( gl ) )     DEALLOCATE ( gl )
+  END IF
   !
   CALL sym_rho_deallocate ( )
   !

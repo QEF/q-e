@@ -29,7 +29,7 @@ MODULE gvect
   !
   USE kinds,              ONLY : DP
   USE gvecp,              ONLY : ngm, ngm_g, ngl, nl, nlm, gcutm
-  USE reciprocal_vectors, ONLY : ig_l2g, gstart, g, gg, gl, mill
+  USE reciprocal_vectors, ONLY : ig_l2g, gstart, g, gg, mill
   !
   SAVE
   !
@@ -52,8 +52,8 @@ MODULE gvect
   !     g(:,:),        &! coordinates of G vectors
   !     gg(:)           ! modulus G^2 of G vectors
   !                     ! G vectors are in order of increasing |G|
-  !REAL(DP), POINTER :: &
-  !     gl(:)           ! the modulus of g in each shell
+  REAL(DP), POINTER :: &
+       gl(:)           ! the modulus of g in each shell
   !REAL (DP) :: &
   !     gcutm          ! cut-off for G vectors
   REAL(DP) :: &

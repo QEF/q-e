@@ -22,6 +22,7 @@ SUBROUTINE ggen()
                                   mill,  nl, gstart, gl, ngl, igtongl
    USE gsmooth,            ONLY : ngms, gcutms, ngms_g, nls
    USE control_flags,      ONLY : gamma_only
+   USE cellmd,             ONLY : lmovecell
    USE constants,          ONLY : eps8
    USE fft_base,           ONLY : dfftp, dffts
 
@@ -196,28 +197,41 @@ SUBROUTINE ggen()
    !
    ! calculate number of G shells: ngl
    !
-   ! G vectors are grouped in shells with the same norm
-   !
-   ngl = 1
-   igtongl (1) = 1
-   DO ng = 2, ngm
-      IF (gg (ng) > gg (ng - 1) + eps8) THEN
-         ngl = ngl + 1
-      ENDIF
-      igtongl (ng) = ngl
-   ENDDO
+   IF (lmovecell) THEN
+      !
+      ! in case of a variable cell run each G vector has its shell
+      !
+      ngl = ngm
+      gl => gg
+      DO ng = 1, ngm
+         igtongl (ng) = ng
+      ENDDO
+   ELSE
+      !
+      ! G vectors are grouped in shells with the same norm
+      !
+      ngl = 1
+      igtongl (1) = 1
+      DO ng = 2, ngm
+         IF (gg (ng) > gg (ng - 1) + eps8) THEN
+            ngl = ngl + 1
+         ENDIF
+         igtongl (ng) = ngl
+      ENDDO
 
-   ALLOCATE (gl( ngl))
-   gl (1) = gg (1)
-   igl = 1
-   DO ng = 2, ngm
-      IF (gg (ng) > gg (ng - 1) + eps8) THEN
-         igl = igl + 1
-         gl (igl) = gg (ng)
-      ENDIF
-   ENDDO
+      ALLOCATE (gl( ngl))
+      gl (1) = gg (1)
+      igl = 1
+      DO ng = 2, ngm
+         IF (gg (ng) > gg (ng - 1) + eps8) THEN
+            igl = igl + 1
+            gl (igl) = gg (ng)
+         ENDIF
+      ENDDO
 
-   IF (igl /= ngl) CALL errore ('setup', 'igl <> ngl', ngl)
+      IF (igl /= ngl) CALL errore ('setup', 'igl <> ngl', ngl)
+
+   ENDIF
 
    IF ( gamma_only) CALL index_minusg()
 
@@ -228,7 +242,7 @@ END SUBROUTINE ggen
 SUBROUTINE index_minusg()
    !----------------------------------------------------------------------
    !
-   !     compute indices nlm and nlsm giving the correspondence
+   !     compute indices nlm and nlms giving the correspondence
    !     between the fft mesh points and -G (for gamma-only calculations)
    !
    USE gvect,   ONLY : ngm, nlm, mill
