@@ -459,7 +459,7 @@ CONTAINS
          !
          IF((x01.dot.x01)<eps32 .or. (x12.dot.x12)<eps32)THEN
             write(stdout,*)'torsional angle constraint #',ia,' contains collinear atoms'
-            CALL errore('set_torsional_angle','collinear atoms in torsional angle constraint')
+            CALL errore('set_torsional_angle','collinear atoms in torsional angle constraint', 1)
          ENDIF
          !
          phi = atan2(sqrt(d1.dot.d1)*d0.dot.x12 , x01.dot.x12)
