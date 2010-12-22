@@ -15,9 +15,9 @@ SUBROUTINE sym_band(filband, spin_component, firstk, lastk)
   USE cell_base,            ONLY : tpiba2, at, bg, ibrav
   USE constants,            ONLY : rytoev
   USE grid_dimensions,      ONLY : nr1x, nr2x, nr3x, nrxx, nr1, nr2, nr3
-  USE gvect,                ONLY : ngm, nl, g, ecutwfc
+  USE gvect,                ONLY : ngm, nl, g
   USE lsda_mod,             ONLY : nspin
-  USE wvfct,                ONLY : et, nbnd, npwx, npw, igk, g2kin
+  USE wvfct,                ONLY : et, nbnd, npwx, npw, igk, g2kin, ecutwfc
   USE klist,                ONLY : xk, nks, nkstot
   USE io_files,             ONLY : nwordwfc, iunwfc
   USE symm_base,            ONLY : s, ftau, nsym, t_rev, sname

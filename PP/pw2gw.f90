@@ -101,9 +101,9 @@ SUBROUTINE compute_gw( use_gmaps )
   USE constants, ONLY : eps8, pi, AUTOEV, rytoev
   USE cell_base, ONLY : alat, tpiba2, at, bg, omega
   USE symm_base, ONLY : s, nsym
-  USE wvfct,     ONLY : npw, npwx, nbnd, igk, g2kin, wg, et
+  USE wvfct,     ONLY : npw, npwx, nbnd, igk, g2kin, wg, et, ecutwfc
   USE control_flags, ONLY : gamma_only
-  USE gvect,         ONLY : ngm, g, gg, ig_l2g, ecutwfc, nl
+  USE gvect,         ONLY : ngm, g, gg, ig_l2g, nl
   USE fft_base,  ONLY: dfftp
   USE fft_interfaces, ONLY : fwfft, invfft
   USE klist ,        ONLY : nks, xk, wk
@@ -844,10 +844,10 @@ SUBROUTINE write_gmaps ( kunit)
   USE io_global, ONLY : stdout
   USE cell_base, ONLY : at, bg, tpiba2, alat
   USE ions_base, ONLY : atm, nat
-  USE gvect,     ONLY : ngm, ngm_g, ig_l2g, ecutwfc, g
+  USE gvect,     ONLY : ngm, ngm_g, ig_l2g, g
   USE lsda_mod,  ONLY : nspin, isk
   USE ions_base, ONLY : ntyp => nsp, tau, ityp
-  USE wvfct,     ONLY : nbnd, npw, npwx, et, g2kin
+  USE wvfct,     ONLY : nbnd, npw, npwx, et, g2kin, ecutwfc
   USE klist,     ONLY : nkstot, ngk, nks, xk
   USE wavefunctions_module,  ONLY : evc
   USE io_files,  ONLY : nd_nmbr, tmp_dir, prefix, iunwfc, nwordwfc

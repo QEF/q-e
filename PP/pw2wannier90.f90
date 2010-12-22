@@ -21,8 +21,8 @@ PROGRAM pw2wannier90
   USE io_files,   ONLY : prefix, tmp_dir, trimcheck
   USE noncollin_module, ONLY : noncolin
   USE control_flags,    ONLY : gamma_only
-  USE environment,   ONLY : environment_start
-
+  USE environment,ONLY : environment_start
+  USE wvfct,      ONLY : ecutwfc
   USE wannier
   !
   IMPLICIT NONE
@@ -830,7 +830,7 @@ SUBROUTINE compute_mmn
    USE klist,           ONLY : nkstot, xk
    USE io_files,        ONLY : nwordwfc, iunwfc
    USE io_files,        ONLY : find_free_unit
-   USE gvect,           ONLY : g, ngm, ecutwfc, gstart
+   USE gvect,           ONLY : g, ngm, gstart
    USE cell_base,       ONLY : tpiba2, omega, alat, tpiba, at, bg
    USE ions_base,       ONLY : nat, ntyp => nsp, ityp, tau
    USE constants,       ONLY : tpi
@@ -841,6 +841,7 @@ SUBROUTINE compute_mmn
    USE mp_global,       ONLY : intra_pool_comm
    USE mp,              ONLY : mp_sum
    USE noncollin_module,ONLY : noncolin, npol
+   USE wvfct,           ONLY : ecutwfc
    USE wannier
 
    IMPLICIT NONE
@@ -1226,7 +1227,7 @@ SUBROUTINE compute_amn
    USE wavefunctions_module, ONLY : evc
    USE io_files,        ONLY : nwordwfc, iunwfc
    USE io_files,        ONLY : find_free_unit
-   USE gvect,           ONLY : g, ngm, ecutwfc, gstart
+   USE gvect,           ONLY : g, ngm, gstart
    USE cell_base,       ONLY : tpiba2
    USE uspp,            ONLY : nkb, vkb
    USE becmod,          ONLY : bec_type, becp, calbec, &
@@ -1237,6 +1238,7 @@ SUBROUTINE compute_amn
    USE mp_global,       ONLY : intra_pool_comm
    USE mp,              ONLY : mp_sum
    USE noncollin_module,ONLY : noncolin, npol
+   USE wvfct,           ONLY : ecutwfc
 
    IMPLICIT NONE
 
@@ -1489,14 +1491,14 @@ END SUBROUTINE write_band
 
 SUBROUTINE write_plot
    USE io_global,  ONLY : stdout, ionode
-   USE wvfct, ONLY : nbnd, npw, igk, g2kin
+   USE wvfct, ONLY : nbnd, npw, igk, g2kin, ecutwfc
    USE control_flags, ONLY : gamma_only
    USE wavefunctions_module, ONLY : evc, psic
    USE io_files, ONLY : find_free_unit, nwordwfc, iunwfc
    USE wannier
    USE gsmooth,         ONLY : nls, nlsm
    USE klist,           ONLY : nkstot, xk
-   USE gvect,           ONLY : g, ngm, ecutwfc
+   USE gvect,           ONLY : g, ngm
    USE cell_base,       ONLY : tpiba2
    USE fft_base,        ONLY : cgather_smooth, dffts
    USE fft_interfaces,  ONLY : invfft
@@ -1644,13 +1646,13 @@ SUBROUTINE write_parity
    USE mp_global,            ONLY : mpime,nproc,intra_pool_comm
    USE mp,                   ONLY : mp_sum
    USE io_global,            ONLY : stdout, ionode
-   USE wvfct,                ONLY : nbnd, npw, igk, g2kin
+   USE wvfct,                ONLY : nbnd, npw, igk, g2kin, ecutwfc
    USE control_flags,        ONLY : gamma_only
    USE wavefunctions_module, ONLY : evc
    USE io_files,             ONLY : find_free_unit, nwordwfc, iunwfc
    USE wannier
    USE klist,                ONLY : nkstot, xk
-   USE gvect,                ONLY : g, ngm, ecutwfc
+   USE gvect,                ONLY : g, ngm
    USE cell_base,            ONLY : tpiba2, at
    USE constants,            ONLY : eps6
 
@@ -2034,10 +2036,10 @@ SUBROUTINE wan2sic
   USE kinds, ONLY : DP
   USE io_files, ONLY : iunwfc, iunatsicwfc, nwordwfc, nwordwann
   USE cell_base, ONLY : omega, tpiba2
-  USE gvect, ONLY : g, ngm, ecutwfc
+  USE gvect, ONLY : g, ngm
   USE gsmooth, ONLY: nls
   USE wavefunctions_module, ONLY : evc, psic
-  USE wvfct, ONLY : nbnd, npwx, npw, igk, g2kin
+  USE wvfct, ONLY : nbnd, npwx, npw, igk, g2kin, ecutwfc
   USE klist, ONLY : nkstot, xk, wk
   USE wannier
 

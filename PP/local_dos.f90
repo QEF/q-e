@@ -29,7 +29,7 @@ SUBROUTINE local_dos (iflag, lsign, kpoint, kband, spin_component, &
   USE ener,                 ONLY : ef
   USE fft_base,             ONLY : dffts, dfftp
   USE fft_interfaces,       ONLY : fwfft, invfft
-  USE gvect,                ONLY : nl, ngm, g, ecutwfc
+  USE gvect,                ONLY : nl, ngm, g
   USE gsmooth,              ONLY : nls, nlsm, doublegrid
   USE klist,                ONLY : lgauss, degauss, ngauss, nks, wk, xk, nkstot
   USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
@@ -38,7 +38,7 @@ SUBROUTINE local_dos (iflag, lsign, kpoint, kband, spin_component, &
   USE uspp,                 ONLY : nkb, vkb, becsum, nhtol, nhtoj, indv
   USE uspp_param,           ONLY : upf, nh, nhm
   USE wavefunctions_module, ONLY : evc, psic, psic_nc
-  USE wvfct,                ONLY : nbnd, npwx, npw, igk, wg, et, g2kin
+  USE wvfct,                ONLY : nbnd, npwx, npw, igk, wg, et, g2kin, ecutwfc
   USE control_flags,        ONLY : gamma_only
   USE noncollin_module,     ONLY : noncolin, npol
   USE spin_orb,             ONLY : lspinorb, fcoef

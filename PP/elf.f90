@@ -32,14 +32,14 @@ SUBROUTINE do_elf (elf)
   USE cell_base, ONLY: omega, tpiba, tpiba2
   USE fft_base,  ONLY: dffts, dfftp
   USE fft_interfaces, ONLY : fwfft, invfft
-  USE gvect, ONLY: gcutm, ecutwfc, g, ngm, nl, nlm
+  USE gvect, ONLY: gcutm, g, ngm, nl, nlm
   USE gsmooth, ONLY : nls, nlsm, ngms, doublegrid, dual
   USE io_files, ONLY: iunwfc, nwordwfc
   USE klist, ONLY: nks, xk
   USE lsda_mod, ONLY: nspin
   USE scf, ONLY: rho
   USE symme, ONLY: sym_rho, sym_rho_init
-  USE wvfct, ONLY: npw, igk, g2kin, nbnd, wg
+  USE wvfct, ONLY: npw, igk, g2kin, nbnd, wg, ecutwfc
   USE control_flags, ONLY: gamma_only
   USE wavefunctions_module,  ONLY: evc
   USE mp_global,            ONLY: inter_pool_comm, intra_pool_comm

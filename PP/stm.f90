@@ -25,12 +25,12 @@ SUBROUTINE stm (wf, sample_bias, z, dz, stmdos)
   USE cell_base, ONLY: tpiba2, tpiba, omega, at, alat
   USE fft_base,  ONLY: dfftp
   USE fft_interfaces, ONLY : fwfft, invfft
-  USE gvect, ONLY: ngm, g, ecutwfc, nl, nlm
+  USE gvect, ONLY: ngm, g, nl, nlm
   USE klist, ONLY: xk, lgauss, degauss, ngauss, wk, nks, nelec
   USE ener, ONLY: ef
   USE symme, ONLY : sym_rho, sym_rho_init
   USE scf, ONLY: rho
-  USE wvfct, ONLY: npwx, npw, nbnd, wg, et, g2kin, igk
+  USE wvfct, ONLY: npwx, npw, nbnd, wg, et, g2kin, igk, ecutwfc
   USE control_flags, ONLY : gamma_only
   USE wavefunctions_module,  ONLY : evc, psic
   USE io_files, ONLY: iunwfc, nwordwfc

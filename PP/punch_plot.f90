@@ -26,14 +26,14 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
   USE extfield,         ONLY : tefield, dipfield
   USE fft_base,         ONLY : dfftp
   USE fft_interfaces,   ONLY : fwfft, invfft
-  USE gvect,            ONLY : gcutm, ecutwfc
+  USE gvect,            ONLY : gcutm
   USE gsmooth,          ONLY : dual
   USE klist,            ONLY : nks, nkstot, xk
   USE lsda_mod,         ONLY : nspin, current_spin
   USE ener,             ONLY : ehart
   USE io_global,        ONLY : stdout, ionode
   USE scf,              ONLY : rho, vltot, v
-  USE wvfct,            ONLY : npw, nbnd, wg, igk
+  USE wvfct,            ONLY : npw, nbnd, wg, igk, ecutwfc
   USE noncollin_module, ONLY : noncolin
   USE fft_base,         ONLY : grid_gather
   USE paw_postproc,     ONLY : PAW_make_ae_charge

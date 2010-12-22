@@ -16,13 +16,13 @@ PROGRAM plan_avg
   USE printout_base, ONLY: title
   USE cell_base, ONLY : ibrav, celldm, at
   USE grid_dimensions, ONLY : nr1x, nr2x, nr3x, nr1, nr2, nr3
-  USE gvect,     ONLY : gcutm, ecutwfc
+  USE gvect,     ONLY : gcutm
   USE gsmooth,   ONLY : dual
   USE klist,     ONLY : nkstot, xk
   USE ions_base, ONLY : nat, ntyp=>nsp, ityp, tau, atm, zv
   USE io_files,  ONLY : tmp_dir, prefix, trimcheck
   USE io_global, ONLY : ionode, ionode_id
-  USE wvfct,     ONLY : nbnd
+  USE wvfct,     ONLY : nbnd, ecutwfc
   USE mp,        ONLY : mp_bcast
   USE mp_global, ONLY : mp_startup
   USE control_flags, ONLY : gamma_only

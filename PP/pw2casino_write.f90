@@ -16,14 +16,13 @@ SUBROUTINE write_casino_wfn(gather,blip,multiplicity,binwrite,single_precision_b
    USE ener, ONLY: ewld, ehart, etxc, vtxc, etot, etxcc, demet, ef
    USE fft_base,  ONLY: dfftp
    USE fft_interfaces, ONLY : fwfft
-   USE gvect, ONLY: ngm, gstart, &
-                    g, gg, ecutwfc, gcutm, nl, nlm, igtongl
+   USE gvect, ONLY: ngm, gstart, g, gg, gcutm, nl, nlm, igtongl
    USE klist , ONLY: nks, nelec, xk, wk, degauss, ngauss
    USE lsda_mod, ONLY: lsda, nspin
    USE scf, ONLY: rho, rho_core, rhog_core, v
    USE ldaU, ONLY : eth
    USE vlocal, ONLY: vloc, strf
-   USE wvfct, ONLY: npw, npwx, nbnd, igk, g2kin, wg, et
+   USE wvfct, ONLY: npw, npwx, nbnd, igk, g2kin, wg, et, ecutwfc
    USE control_flags, ONLY : gamma_only
    USE uspp, ONLY: nkb, vkb, dvan
    USE uspp_param, ONLY: nh

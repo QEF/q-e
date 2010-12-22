@@ -28,6 +28,7 @@ SUBROUTINE chdens (filplot,plot_num)
   USE gvect
   USE grid_dimensions, ONLY: nr1,nr2,nr3, nr1x,nr2x,nr3x, nrxx
   USE gsmooth
+  USE wvfct,  ONLY: ecutwfc
   USE wavefunctions_module,  ONLY: psic
   USE io_files, ONLY: nd_nmbr
   USE printout_base, ONLY: title

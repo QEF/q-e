@@ -19,7 +19,7 @@ SUBROUTINE local_dos_mag(spin_component, kpoint, kband, raux)
   USE cell_base,            ONLY : omega,tpiba2
   USE fft_base,             ONLY : dffts
   USE fft_interfaces,       ONLY : invfft
-  USE gvect,                ONLY : ngm, g, ecutwfc
+  USE gvect,                ONLY : ngm, g
   USE grid_dimensions,      ONLY : nrxx
   USE gsmooth,              ONLY : nls, doublegrid
   USE klist,                ONLY : nks, xk
@@ -30,7 +30,7 @@ SUBROUTINE local_dos_mag(spin_component, kpoint, kband, raux)
   USE wavefunctions_module, ONLY : evc, psic_nc
   USE noncollin_module,     ONLY : noncolin, npol
   USE spin_orb,             ONLY : lspinorb, fcoef
-  USE wvfct,                ONLY : nbnd, npwx, npw, igk, g2kin
+  USE wvfct,                ONLY : nbnd, npwx, npw, igk, g2kin, ecutwfc
   USE becmod,               ONLY : calbec
   !
   IMPLICIT NONE

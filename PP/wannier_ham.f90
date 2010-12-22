@@ -90,7 +90,7 @@ SUBROUTINE new_hamiltonian(plot_bands)
   USE wannier_new, ONLY: nwan, pp, wannier_occ, wannier_energy,wan_in
   USE klist, ONLY: nks, xk, wk
   USE lsda_mod, ONLY: isk, current_spin, lsda, nspin
-  USE wvfct, ONLY: nbnd, npwx, igk, npw, g2kin, et
+  USE wvfct, ONLY: nbnd, npwx, igk, npw, g2kin, et,  ecutwfc
   USE gvect
   USE cell_base, ONLY: tpiba2
   USE constants,  ONLY : rytoev , tpi

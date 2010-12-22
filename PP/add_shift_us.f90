@@ -14,12 +14,12 @@ SUBROUTINE add_shift_us( shift_nl )
   ! ... wrapper
   !
   USE kinds,                ONLY : DP
-  USE wvfct,                ONLY : g2kin
+  USE wvfct,                ONLY : g2kin, ecutwfc
   USE control_flags,        ONLY : gamma_only
   USE cell_base,            ONLY : at, bg, tpiba, tpiba2
   USE ions_base,            ONLY : nat, ntyp => nsp , ityp
   USE klist,                ONLY : nks, xk
-  USE gvect,                ONLY : g, ngm, ecutwfc
+  USE gvect,                ONLY : g, ngm
   USE uspp,                 ONLY : nkb, vkb, qq, deeq
   USE uspp_param,           ONLY : upf, nh, newpseudo
   USE wvfct,                ONLY : nbnd, npw, npwx, igk, wg, et

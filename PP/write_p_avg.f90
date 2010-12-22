@@ -14,10 +14,10 @@ SUBROUTINE write_p_avg(filp, spin_component, firstk, lastk)
   USE ions_base,            ONLY : nat, ityp, ntyp => nsp
   USE cell_base,            ONLY : tpiba2, at, bg, ibrav
   USE constants,            ONLY : rytoev
-  USE gvect,                ONLY : ngm, nl, g, ecutwfc
+  USE gvect,                ONLY : ngm, nl, g
   USE lsda_mod,             ONLY : nspin
   USE ener,                 ONLY : ef
-  USE wvfct,                ONLY : et, nbnd, npwx, npw, igk, g2kin
+  USE wvfct,                ONLY : et, nbnd, npwx, npw, igk, g2kin, ecutwfc
   USE klist,                ONLY : xk, nks, nkstot
   USE io_files,             ONLY : nwordwfc, iunwfc
   USE uspp,                 ONLY : nkb, vkb, okvan
