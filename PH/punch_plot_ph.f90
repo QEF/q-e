@@ -19,7 +19,7 @@ SUBROUTINE punch_plot_ph()
   !
   USE kinds,      ONLY : DP
   USE grid_dimensions, ONLY : nrxx, nr1,nr2,nr3, nr1x,nr2x,nr3x
-  USE gvect,      ONLY : gcutm, ecutwfc
+  USE gvect,      ONLY : gcutm
   USE gsmooth,    ONLY : dual
   USE cell_base,  ONLY : ibrav, celldm
   USE lsda_mod,   ONLY : nspin, lsda
@@ -30,7 +30,7 @@ SUBROUTINE punch_plot_ph()
   USE units_ph,   ONLY : iudrho, lrdrho
   USE modes,      ONLY : ubar, u, npert, npertx, nirr
   USE partial,    ONLY : comp_irr
-
+  USE wvfct,      ONLY : ecutwfc
   USE printout_base, ONLY : title
 
   IMPLICIT NONE

@@ -23,7 +23,7 @@ subroutine phq_summary
   USE cell_base,     ONLY : at, bg, ibrav, alat, omega, celldm
   USE klist,         ONLY : lgauss, smearing, degauss, ngauss, nkstot, xk, wk
   USE grid_dimensions,ONLY: nr1, nr2, nr3
-  USE gvect,         ONLY : ecutwfc, gcutm, ngm
+  USE gvect,         ONLY : gcutm, ngm
   USE gsmooth,       ONLY : doublegrid, dual, gcutms, ngms
   USE smooth_grid_dimensions, ONLY : nr1s, nr2s, nr3s
   USE symm_base,     ONLY : s, sr, ftau, sname, t_rev
@@ -42,6 +42,7 @@ subroutine phq_summary
   USE qpoint,        ONLY : xq
   USE ramanm,        ONLY : lraman, elop
   USE control_flags, ONLY : iverbosity
+  USE wvfct,         ONLY : ecutwfc
 
   implicit none
 

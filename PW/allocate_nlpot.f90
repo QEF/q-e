@@ -24,13 +24,13 @@ subroutine allocate_nlpot
   USE ions_base,        ONLY : nat, nsp, ityp
   USE cell_base,        ONLY : tpiba2
   USE cellmd,           ONLY : cell_factor
-  USE gvect,            ONLY : ngm, gcutm, ecutwfc, g
+  USE gvect,            ONLY : ngm, gcutm, g
   USE klist,            ONLY : xk, wk, ngk, nks, qnorm
   USE lsda_mod,         ONLY : nspin
   USE ldaU,             ONLY : Hubbard_lmax
   USE scf,              ONLY : rho
   USE noncollin_module, ONLY : noncolin
-  USE wvfct,            ONLY : npwx, npw, igk, g2kin
+  USE wvfct,            ONLY : npwx, npw, igk, g2kin, ecutwfc
   USE us,               ONLY : qrad, tab, tab_d2y, tab_at, dq, nqx, &
                                nqxq, spline_ps
   USE uspp,             ONLY : indv, nhtol, nhtolm, ijtoh, qq, dvan, deeq, vkb, &

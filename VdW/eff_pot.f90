@@ -12,9 +12,9 @@ SUBROUTINE eff_pot (rho, nspin, alat, omega, charge, vstart, thresh_veff)
   USE fft_base,             ONLY : dfftp
   USE fft_interfaces,       ONLY : fwfft, invfft
   USE gvect,                ONLY : nlm, g, qcutz, ecfixed, q2sigma, &
-                                   nl, ngm, gg, ecutwfc, gstart
+                                   nl, ngm, gg, gstart
   USE wvfct,                ONLY : g2kin, wg, nbndx, et, nbnd, npwx, &
-                                   igk, npw
+                                   ecutwfc, igk, npw
   USE uspp,                 ONLY : nkb
   USE scf,                  ONLY : v, vltot, vrs, rho_core
   USE gsmooth,              ONLY : nls, nlsm, doublegrid

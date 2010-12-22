@@ -1,7 +1,9 @@
 .SUFFIXES : .pw-in .tddfpt-in .tddfpt_pp-in .pw-out .tddfpt-out .tddfpt_pp-out .tddfpt-st-in .tddfpt-st-out .tddfpt-in-s2 .tddfpt-out-s2
 
-RUNNER = ~/Prog/environment/openmpi-1.4.3/bin/mpirun -np 8 
-PWSCF = "../../../bin/pw.x" -ndiag 4
+#RUNNER = ~/Prog/environment/openmpi-1.4.3/bin/mpirun -np 8 
+#PWSCF = "../../../bin/pw.x" -ndiag 4
+RUNNER = D~/Prog/environment/openmpi-1.4.3/bin/mpirun -np 8 
+x#PWSCF = "../../../bin/pw.x" 
 TDDFPT = "../../../bin/turbo_lanczos.x"
 TDDFPT_PP = "../../../bin/turbo_spectrum.x"
 

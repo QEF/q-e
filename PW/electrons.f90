@@ -26,12 +26,12 @@ SUBROUTINE electrons()
   USE basis,                ONLY : starting_pot
   USE bp,                   ONLY : lelfield
   USE grid_dimensions,      ONLY : nr1, nr2, nr3, nr1x, nr2x, nr3x, nrxx
-  USE gvect,                ONLY : ngm, gstart, nl, nlm, g, gg, ecutwfc, gcutm
+  USE gvect,                ONLY : ngm, gstart, nl, nlm, g, gg, gcutm
   USE gsmooth,              ONLY : doublegrid, ngms
   USE klist,                ONLY : xk, wk, nelec, ngk, nks, nkstot, lgauss
   USE lsda_mod,             ONLY : lsda, nspin, magtot, absmag, isk
   USE vlocal,               ONLY : strf
-  USE wvfct,                ONLY : nbnd, et, npwx
+  USE wvfct,                ONLY : nbnd, et, npwx, ecutwfc
   USE ener,                 ONLY : etot, hwf_energy, eband, deband, ehart, &
                                    vtxc, etxc, etxcc, ewld, demet, epaw, &
                                    elondon

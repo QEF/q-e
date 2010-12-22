@@ -109,9 +109,9 @@ MODULE realus
     !---------------------------------------------------------------------------
     !This subroutine should be called to allocate/reset real space related variables.
     !---------------------------------------------------------------------------
-     USE wvfct,                ONLY : npwx,npw, igk, g2kin
-     USE klist,                ONLY : nks,xk
-     USE gvect,                ONLY : ngm, g, ecutwfc
+     USE wvfct,                ONLY : npwx,npw, igk, g2kin, ecutwfc
+     USE klist,                ONLY : nks, xk
+     USE gvect,                ONLY : ngm, g
      USE cell_base,            ONLY : tpiba2
      USE control_flags,        ONLY : tqr
      USE fft_base,             ONLY : dffts

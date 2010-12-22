@@ -17,8 +17,8 @@ SUBROUTINE rhod2vkb(dyn0)
   USE ions_base, ONLY : nat, tau, ityp, ntyp => nsp
   USE cell_base, ONLY : tpiba2, tpiba, omega
   USE lsda_mod,  ONLY : current_spin
-  USE gvect,  ONLY : ecutwfc, ngm, g, igtongl, nl
-  USE wvfct,  ONLY: nbnd, npwx, npw, g2kin, igk
+  USE gvect,  ONLY : ngm, g, igtongl, nl
+  USE wvfct,  ONLY: ecutwfc, nbnd, npwx, npw, g2kin, igk
   USE klist,  ONLY : xk, nks, wk
   USE scf,    ONLY : rho
   USE vlocal, ONLY: vloc

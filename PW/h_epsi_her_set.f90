@@ -18,7 +18,7 @@ subroutine h_epsi_her_set(pdir, e_field)
 
   USE kinds,    ONLY : DP
   USE us
-  USE wvfct,    ONLY : igk, g2kin, npwx, npw, nbnd
+  USE wvfct,    ONLY : igk, g2kin, npwx, npw, nbnd, ecutwfc
   USE ldaU,     ONLY : lda_plus_u
   USE lsda_mod, ONLY : current_spin, nspin
   USE scf,      ONLY : vrs  

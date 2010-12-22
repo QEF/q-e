@@ -22,14 +22,14 @@ SUBROUTINE read_file()
   USE force_mod,            ONLY : force
   USE klist,                ONLY : nkstot, nks, xk, wk
   USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
-  USE wvfct,                ONLY : nbnd, nbndx, et, wg, npwx
+  USE wvfct,                ONLY : nbnd, nbndx, et, wg, npwx, ecutwfc
   USE symm_base,            ONLY : irt, d1, d2, d3, checkallsym
   USE ktetra,               ONLY : tetra, ntetra 
   USE extfield,             ONLY : forcefield, tefield
   USE cellmd,               ONLY : cell_factor, lmovecell
   USE fft_base,             ONLY : dfftp
   USE fft_interfaces,       ONLY : fwfft
-  USE gvect,                ONLY : gg, ecutwfc, ngm, g, &
+  USE gvect,                ONLY : gg, ngm, g, &
                                    eigts1, eigts2, eigts3, nl, gstart
   USE grid_dimensions,      ONLY : nr1, nr2, nr3
   USE gsmooth,              ONLY : ngms, nls 
@@ -279,7 +279,8 @@ SUBROUTINE read_file()
       !
       USE constants, ONLY : pi
       USE cell_base, ONLY : alat, tpiba, tpiba2
-      USE gvect,     ONLY : ecutwfc, ecutrho, gcutm
+      USE gvect,     ONLY : ecutrho, gcutm
+      USE wvfct,     ONLY : ecutwfc
       USE gsmooth,   ONLY : gcutms, dual, doublegrid
       !
       !

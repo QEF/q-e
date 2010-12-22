@@ -18,14 +18,14 @@ subroutine lr_init_nfo()
   USE noncollin_module,     ONLY : noncolin
   USE mp,                   ONLY : mp_max, mp_min
   USE mp_global,            ONLY : inter_pool_comm
-  USE gvect,                ONLY : ngm,g, ecutwfc
+  USE gvect,                ONLY : ngm, g
   USE cell_base,            ONLY : bg, tpiba, tpiba2, omega
   USE ener,                 ONLY : Ef
   USE ktetra,               ONLY : ltetra
   USE lsda_mod,             ONLY : lsda
   USE realus,               ONLY : real_space
   USE control_ph,            ONLY : alpha_pv, nbnd_occ
-  use wvfct,                only : npwx
+  use wvfct,                only : npwx, ecutwfc
   use klist,             only : nks
  !
   implicit none

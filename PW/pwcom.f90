@@ -57,8 +57,6 @@ MODULE gvect
   !REAL (DP) :: &
   !     dual,          &! link between G of wavefunctions and charge
   !     gcutm          ! cut-off for G vectors
-  REAL(DP) :: &
-       ecutwfc         ! energy cut-off
   REAL (DP) :: &
        ecfixed,       &!
        qcutz = 0.0_DP,&! For the modified Ekin functional
@@ -272,6 +270,8 @@ MODULE wvfct
        current_k          ! the index of k-point under consideration
   INTEGER, ALLOCATABLE, TARGET :: &
        igk(:)             ! index of G corresponding to a given index of k+G
+  REAL(DP) :: &
+       ecutwfc            ! energy cut-off
   REAL(DP), ALLOCATABLE :: &
        et(:,:),          &! eigenvalues of the hamiltonian
        wg(:,:),          &! the weight of each k point and band

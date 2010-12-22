@@ -16,7 +16,7 @@
    USE basis
    USE klist
    USE constants,            ONLY : e2, pi, tpi, fpi
-   USE wvfct,                ONLY : igk, g2kin, npwx, npw, nbnd, nbndx
+   USE wvfct,                ONLY : igk, g2kin, npwx, npw, nbnd, nbndx, ecutwfc
    USE control_flags,        ONLY : gamma_only
    USE cell_base,            ONLY : at, alat, tpiba, omega, tpiba2
    USE wannier_gw
@@ -380,7 +380,7 @@
    USE basis
    USE klist
    USE constants,            ONLY : e2, pi, tpi, fpi
-   USE wvfct,                ONLY : igk, g2kin, npwx, npw, nbnd, nbndx
+   USE wvfct,                ONLY : igk, g2kin, npwx, npw, nbnd, nbndx, ecutwfc
    USE control_flags,        ONLY : gamma_only
    USE cell_base,            ONLY : at, alat, tpiba, omega, tpiba2
    USE wannier_gw
@@ -830,7 +830,7 @@
    USE basis
    USE klist
    USE constants,            ONLY : e2, pi, tpi, fpi
-   USE wvfct,                ONLY : igk, g2kin, npwx, npw, nbnd, nbndx
+   USE wvfct,                ONLY : igk, g2kin, npwx, npw, nbnd, nbndx, ecutwfc
    USE control_flags,        ONLY : gamma_only
    USE cell_base,            ONLY : at, alat, tpiba, omega, tpiba2
    USE wannier_gw

@@ -17,7 +17,7 @@ SUBROUTINE wannier_uterms(n_set,l_square,lzero, orthonorm, ecutoff)
   USE basis
   USE klist
   USE constants,            ONLY : e2, pi, tpi, fpi
-  USE wvfct,                ONLY : igk, g2kin, npwx, npw, nbnd, nbndx
+  USE wvfct,                ONLY : igk, g2kin, npwx, npw, nbnd, nbndx, ecutwfc
   USE control_flags,        ONLY : gamma_only
   USE cell_base,            ONLY : at, alat, tpiba, omega, tpiba2
   USE wannier_gw
@@ -196,7 +196,7 @@ SUBROUTINE wannier_uterms_red(n_set,lzero, ecutoff,vmat,dimr,dimc,n_r,n_c,numpw,
   USE basis
   USE klist
   USE constants, ONLY : e2, pi, tpi, fpi
-  USE wvfct,    ONLY : igk, g2kin, npwx, npw, nbnd, nbndx
+  USE wvfct,    ONLY : igk, g2kin, npwx, npw, nbnd, nbndx, ecutwfc
   USE control_flags, ONLY: gamma_only
   USE cell_base, ONLY: at, alat, tpiba, omega, tpiba2
   USE wannier_gw

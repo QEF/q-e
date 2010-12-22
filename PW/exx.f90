@@ -1180,7 +1180,8 @@ call flush_unit(stdout)
 
      USE constants, ONLY : fpi, e2, pi
      USE cell_base, ONLY : bg, at, alat, omega
-     USE gvect,     ONLY : ngm, g, ecutwfc
+     USE gvect,     ONLY : ngm, g
+     USE wvfct,     ONLY : ecutwfc
      USE io_global, ONLY : stdout
      USE control_flags, ONLY : gamma_only
      USE mp_global, ONLY : intra_pool_comm

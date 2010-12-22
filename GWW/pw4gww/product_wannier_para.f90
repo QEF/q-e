@@ -32,7 +32,7 @@ SUBROUTINE product_wannier_para(nbndv, lcomplete, ene_loc, lambda)
   use mp_global,            ONLY : nproc_pool, me_pool
   USE kinds,                ONLY : DP
   USE us
-  USE wvfct,                ONLY : igk, g2kin, npwx, npw, nbndx
+  USE wvfct,                ONLY : igk, g2kin, npwx, npw, nbndx, ecutwfc
   USE control_flags,        ONLY : gamma_only
   USE gvect
   USE basis

@@ -81,7 +81,7 @@ MODULE pw_restart
       USE klist,                ONLY : nks, nkstot, xk, ngk, wk, qnorm, &
                                        lgauss, ngauss, degauss, nelec, &
                                        two_fermi_energies, nelup, neldw
-      USE gvect,                ONLY : ngm, ngm_g, g, mill, ecutwfc
+      USE gvect,                ONLY : ngm, ngm_g, g, mill
       USE grid_dimensions,      ONLY : nr1, nr2, nr3
       USE basis,                ONLY : natomwfc
       USE gsmooth,              ONLY : ngms_g, dual
@@ -89,7 +89,7 @@ MODULE pw_restart
       USE ktetra,               ONLY : nk1, nk2, nk3, k1, k2, k3, &
                                        ntetra, tetra, ltetra
       USE wvfct,                ONLY : npw, npwx, g2kin, et, wg, &
-                                       igk, nbnd
+                                       igk, nbnd, ecutwfc
       USE ener,                 ONLY : ef, ef_up, ef_dw
       USE fixed_occ,            ONLY : tfixed_occ, f_inp
       USE ldaU,                 ONLY : lda_plus_u, Hubbard_lmax, Hubbard_l, &
@@ -1235,7 +1235,7 @@ MODULE pw_restart
       !
       USE ions_base,        ONLY : nat, nsp
       USE symm_base,        ONLY : nsym
-      USE gvect,            ONLY :  ngm_g, ecutrho, ecutwfc
+      USE gvect,            ONLY : ngm_g, ecutrho
       USE grid_dimensions,  ONLY : nr1, nr2, nr3
       USE gsmooth,          ONLY : ngms_g, dual
       USE smooth_grid_dimensions,ONLY: nr1s, nr2s, nr3s
@@ -1243,7 +1243,7 @@ MODULE pw_restart
       USE noncollin_module, ONLY : noncolin
       USE ktetra,           ONLY : ntetra
       USE klist,            ONLY : nkstot, nelec
-      USE wvfct,            ONLY : nbnd, npwx
+      USE wvfct,            ONLY : nbnd, npwx, ecutwfc
       USE control_flags,    ONLY : gamma_only
       USE mp_global,        ONLY : kunit, nproc_file, nproc_pool_file, &
                                    nproc_image_file
@@ -1932,11 +1932,11 @@ MODULE pw_restart
     SUBROUTINE read_planewaves( dirname, ierr )
       !------------------------------------------------------------------------
       !
-      USE gvect,   ONLY : ngm_g, ecutrho, ecutwfc
+      USE gvect,   ONLY : ngm_g, ecutrho
       USE gsmooth, ONLY : ngms_g, dual
       USE grid_dimensions,        ONLY : nr1, nr2, nr3
       USE smooth_grid_dimensions, ONLY : nr1s, nr2s, nr3s
-      USE wvfct,   ONLY : npwx, g2kin
+      USE wvfct,   ONLY : npwx, g2kin, ecutwfc
       USE control_flags, ONLY : gamma_only
       !
       IMPLICIT NONE
@@ -2835,12 +2835,12 @@ MODULE pw_restart
       USE cell_base,            ONLY : tpiba2
       USE lsda_mod,             ONLY : nspin, isk
       USE klist,                ONLY : nkstot, wk, nelec, nks, xk, ngk
-      USE wvfct,                ONLY : npw, npwx, g2kin, et, wg, nbnd
+      USE wvfct,                ONLY : npw, npwx, g2kin, et, wg, nbnd, ecutwfc
       USE wavefunctions_module, ONLY : evc
       USE reciprocal_vectors,   ONLY : ig_l2g
       USE io_files,             ONLY : nwordwfc, iunwfc
       USE buffers,              ONLY : save_buffer
-      USE gvect,                ONLY : ngm, ngm_g, g, ecutwfc
+      USE gvect,                ONLY : ngm, ngm_g, g
       USE noncollin_module,     ONLY : noncolin, npol
       USE mp_global,            ONLY : kunit, nproc, nproc_pool, me_pool
       !

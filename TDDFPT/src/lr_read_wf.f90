@@ -11,15 +11,15 @@ subroutine lr_read_wf()
   use io_global,            only : stdout
   use klist,                only : nks, xk
   use cell_base,            only : tpiba2
-  use gvect,                only : ngm, g, ecutwfc
+  use gvect,                only : ngm, g
   use io_files,             only : nwordwfc, iunwfc, prefix, diropn, tmp_dir, wfc_dir 
   use lr_variables,         only : evc0, sevc0 ,revc0, evc0_virt, sevc0_virt, nbnd_total, &
                                    becp1_virt,becp1_c_virt
   use realus,               only : igk_k,npw_k
   use lr_variables,         only : becp1, becp1_c,test_case_no,size_evc,project
-  use wvfct,                only : npw, igk, nbnd, g2kin, npwx
+  use wvfct,                only : npw, igk, nbnd, g2kin, npwx, ecutwfc
   use control_flags,        only : gamma_only
-  !use wavefunctions_module, only : evc
+  !use wavefunctions_module,only : evc
   use gsmooth,              only : nls, nlsm
   use fft_base,             only : dffts
   use fft_interfaces,       only : invfft

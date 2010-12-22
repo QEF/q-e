@@ -42,7 +42,7 @@ SUBROUTINE setup()
                                  symm_type, omega
   USE ions_base,          ONLY : nat, tau, ntyp => nsp, ityp, zv
   USE basis,              ONLY : starting_pot, natomwfc
-  USE gvect,              ONLY : gcutm, ecutwfc
+  USE gvect,              ONLY : gcutm
   USE grid_dimensions,    ONLY : nr1, nr2, nr3
   USE gsmooth,            ONLY : doublegrid, gcutms, dual
   USE klist,              ONLY : xk, wk, nks, nelec, degauss, lgauss, &
@@ -58,7 +58,7 @@ SUBROUTINE setup()
   USE symm_base,          ONLY : s, t_rev, irt, ftau, nrot, nsym, invsym, &
                                  d1,d2,d3, time_reversal, sname, set_sym_bl, &
                                  find_sym
-  USE wvfct,              ONLY : nbnd, nbndx
+  USE wvfct,              ONLY : nbnd, nbndx, ecutwfc
   USE control_flags,      ONLY : tr2, ethr, lscf, lmd, lpath, david,  &
                                  isolve, niter, noinv, nosym, nosym_evc, &
                                  nofrac, lbands, use_para_diag, gamma_only

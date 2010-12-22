@@ -24,7 +24,7 @@
   USE klist
   USE constants,            ONLY : e2, pi, tpi, fpi
   USE cell_base,            ONLY : at, alat, tpiba, omega, tpiba2
-  USE wvfct,                ONLY : igk, g2kin, npwx, npw, nbnd, nbndx
+  USE wvfct,                ONLY : igk, g2kin, npwx, npw, nbnd, nbndx, ecutwfc
   USE wannier_gw
 
 

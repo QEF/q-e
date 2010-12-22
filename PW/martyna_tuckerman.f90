@@ -258,7 +258,8 @@ CONTAINS
   SUBROUTINE write_wg_on_file(filplot, plot)
 !----------------------------------------------------------------------------
   USE grid_dimensions, ONLY : nr1, nr2, nr3, nr1x, nr2x, nr3x, nrxx
-  USE gvect,           ONLY : ecutwfc, gcutm
+  USE gvect,           ONLY : gcutm
+  USE wvfct,           ONLY : ecutwfc
   USE gsmooth,         ONLY : dual
   USE cell_base,       ONLY : at, alat, tpiba2, omega, ibrav, celldm
   USE ions_base,       ONLY : zv, ntyp => nsp, nat, ityp, atm, tau

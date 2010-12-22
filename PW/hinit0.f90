@@ -19,9 +19,9 @@ SUBROUTINE hinit0()
   USE cellmd,       ONLY : omega_old, at_old, lmovecell
   USE klist,        ONLY : nks, xk
   USE grid_dimensions,  ONLY : nr1, nr2, nr3
-  USE gvect,        ONLY : ngm, ecutwfc, ig_l2g, g, eigts1, eigts2, eigts3
+  USE gvect,        ONLY : ngm, ig_l2g, g, eigts1, eigts2, eigts3
   USE vlocal,       ONLY : strf
-  USE wvfct,        ONLY : npw, g2kin, igk
+  USE wvfct,        ONLY : npw, g2kin, igk, ecutwfc
   USE io_files,     ONLY : iunigk
   USE realus,       ONLY : qpointlist,betapointlist,init_realspace_vars,real_space
   USE control_flags, ONLY : tqr 

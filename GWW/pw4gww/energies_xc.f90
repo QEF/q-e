@@ -27,11 +27,11 @@ SUBROUTINE energies_xc( lda, n, m, e_xc, e_h )
   USE kinds,            ONLY : DP
   USE control_flags,    ONLY : gamma_only
   USE uspp,             ONLY : vkb, nkb
-  USE wvfct,            ONLY : igk, g2kin
+  USE wvfct,            ONLY : igk, g2kin, ecutwfc
   USE fft_base,         ONLY : dffts
   USE fft_interfaces,   ONLY : fwfft, invfft
   USE gsmooth,          ONLY : nls, doublegrid
-  USE gvect,            ONLY : ngm, gstart, nl, nlm, g, gg, ecutwfc, gcutm
+  USE gvect,            ONLY : ngm, gstart, nl, nlm, g, gg, gcutm
   USE grid_dimensions,  ONLY : nr1, nr2, nr3, nrxx
   USE cell_base,        ONLY : alat, omega
   USE lsda_mod,         ONLY : nspin

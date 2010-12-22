@@ -26,7 +26,7 @@ subroutine dft_exchange_k(nbnd_v,nbnd_s, ecutoff)
   USE cell_base,            ONLY : at, bg, omega
   USE mp,                   ONLY : mp_sum, mp_bcast
   USE klist,                ONLY : nks, nkstot, wk, xk, nelec, nelup, neldw, ngk
-  USE wvfct,                ONLY : nbnd, npwx, npw, igk, wg, et, g2kin
+  USE wvfct,                ONLY : nbnd, npwx, npw, igk, wg, et, g2kin, ecutwfc
   USE exx,                  ONLY : yukawa
   USE constants,            ONLY : e2, pi, tpi, fpi, rytoev
   USE realus,               ONLY : adduspos_r
@@ -517,7 +517,7 @@ subroutine dft_exchange(nbnd_v,nbnd_s,n_set)
   USE basis
   USE klist
   USE constants,            ONLY : e2, pi, tpi, fpi, rytoev
-  USE wvfct,                ONLY : igk, g2kin, npwx, npw, nbnd, nbndx
+  USE wvfct,                ONLY : igk, g2kin, npwx, npw, nbnd, nbndx, ecutwfc
   USE control_flags,        ONLY: gamma_only
   USE cell_base,            ONLY: at, alat, tpiba, omega, tpiba2
   USE wannier_gw

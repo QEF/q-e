@@ -155,13 +155,13 @@ SUBROUTINE c_phase
    USE ions_base,            ONLY : nat, ntyp => nsp, ityp, tau, zv, atm
    USE cell_base,            ONLY : at, alat, tpiba, omega, tpiba2
    USE constants,            ONLY : pi, tpi
-   USE gvect,                ONLY : ngm, ecutwfc, g, gcutm
+   USE gvect,                ONLY : ngm, g, gcutm
    USE grid_dimensions,      ONLY : nr1, nr2, nr3
    USE uspp,                 ONLY : nkb, vkb, okvan
    USE uspp_param,           ONLY : upf, lmaxq, nbetam, nh, nhm
    USE lsda_mod,             ONLY : nspin
    USE klist,                ONLY : nelec, degauss, nks, xk, wk
-   USE wvfct,                ONLY : npwx, npw, nbnd
+   USE wvfct,                ONLY : npwx, npw, nbnd, ecutwfc
    USE wavefunctions_module, ONLY : evc
    USE bp,                   ONLY : gdir, nppstr
    USE becmod,               ONLY : calbec

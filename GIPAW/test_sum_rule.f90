@@ -23,10 +23,10 @@ SUBROUTINE test_f_sum_rule
   USE wavefunctions_module,        ONLY : evc
   USE klist,                       ONLY : nks, nkstot, wk, xk, nelec
   USE wvfct,                       ONLY : nbnd, npwx, npw, igk, wg, g2kin, &
-                                          current_k
+                                          current_k, ecutwfc
   USE lsda_mod,                    ONLY : current_spin, lsda, isk
   USE buffers,                     ONLY : get_buffer
-  USE gvect,                       ONLY : ngm, g, ecutwfc
+  USE gvect,                       ONLY : ngm, g
   USE uspp,                        ONLY : vkb
   USE gipaw_module,                ONLY : nbnd_occ
   USE mp_global,                   ONLY : inter_pool_comm, intra_pool_comm

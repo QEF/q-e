@@ -28,7 +28,7 @@ SUBROUTINE product_wannier(nbndv)
   USE us
   USE fft_base,             ONLY : dfftp, dffts
   USE fft_interfaces,       ONLY : fwfft
-  USE wvfct,                ONLY : igk, g2kin, npwx, npw, nbnd, nbndx
+  USE wvfct,                ONLY : igk, g2kin, npwx, npw, nbnd, nbndx, ecutwfc
   USE gvect
   USE basis
   USE klist

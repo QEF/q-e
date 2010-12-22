@@ -86,7 +86,6 @@ SUBROUTINE iosys(xmlinput,attr)
   !
   USE gsmooth,       ONLY : dual
   USE gvect,         ONLY : ecutrho_ => ecutrho, &
-                            ecutwfc_ => ecutwfc, &
                             ecfixed_ => ecfixed, &
                             qcutz_   => qcutz, &
                             q2sigma_ => q2sigma
@@ -180,7 +179,8 @@ SUBROUTINE iosys(xmlinput,attr)
                             use_para_diag, llondon, nofrac, do_makov_payne, &
                             lecrpa_           => lecrpa
   !
-  USE wvfct,         ONLY : nbnd_ => nbnd
+  USE wvfct,         ONLY : nbnd_ => nbnd, &
+                            ecutwfc_ => ecutwfc
   !
   USE fixed_occ,     ONLY : tfixed_occ, f_inp, &
                             one_atom_occupations_ => one_atom_occupations

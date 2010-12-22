@@ -18,7 +18,7 @@ subroutine real_wfc( u_trans, ispin, iun_wannier,nbndv)
   USE kinds,                ONLY : DP
   USE io_global,            ONLY : stdout
   USE us
-  USE wvfct,                ONLY : igk, g2kin, npwx, npw, nbnd, nbndx
+  USE wvfct,                ONLY : igk, g2kin, npwx, npw, nbnd, nbndx, ecutwfc
   USE gvect
   USE basis
   USE klist

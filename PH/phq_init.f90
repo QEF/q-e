@@ -36,7 +36,7 @@ SUBROUTINE phq_init()
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp, tau
   USE becmod,               ONLY : calbec
   USE constants,            ONLY : eps8, tpi
-  USE gvect,                ONLY : g, ngm, ecutwfc
+  USE gvect,                ONLY : g, ngm
   USE klist,                ONLY : xk
   USE lsda_mod,             ONLY : lsda, current_spin, isk
   USE io_global,            ONLY : stdout
@@ -44,7 +44,7 @@ SUBROUTINE phq_init()
   USE atom,                 ONLY : msh, rgrid
   USE vlocal,               ONLY : strf
   USE spin_orb,             ONLY : lspinorb
-  USE wvfct,                ONLY : igk, g2kin, npwx, npw, nbnd
+  USE wvfct,                ONLY : igk, g2kin, npwx, npw, nbnd, ecutwfc
   USE wavefunctions_module, ONLY : evc
   USE noncollin_module,     ONLY : noncolin, npol
   USE uspp,                 ONLY : okvan, vkb

@@ -511,11 +511,11 @@ subroutine efg_correction ( efg_corr_tens )
   USE uspp,                  ONLY : ap
   USE parameters,            ONLY : lmaxx, ntypx
   USE atom,                  ONLY : rgrid
-  USE gvect,                 ONLY : g,ngm,ecutwfc
+  USE gvect,                 ONLY : g, ngm
   USE klist,                 ONLY : nks, xk, wk
   USE cell_base,             ONLY : tpiba2
   USE ions_base,             ONLY : nat, ityp, ntyp => nsp
-  USE wvfct,                 ONLY : npwx, nbnd, npw, igk, g2kin
+  USE wvfct,                 ONLY : npwx, nbnd, npw, igk, g2kin, ecutwfc
   USE wavefunctions_module,  ONLY : evc
   USE paw_gipaw,             ONLY : paw_recon, paw_nkb, paw_vkb, paw_becp
   USE becmod,                ONLY : calbec
@@ -721,11 +721,11 @@ subroutine fermi_contact_reconstruction ( fc_recon, fc_recon_extrapolated, &
   USE uspp,                  ONLY : ap
   USE parameters,            ONLY : lmaxx, ntypx
   USE atom,                  ONLY : rgrid
-  USE gvect,                 ONLY : g,ngm,ecutwfc, gg
+  USE gvect,                 ONLY : g,ngm, gg
   USE klist,                 ONLY : nks, xk, wk
   USE cell_base,             ONLY : tpiba2
   USE ions_base,             ONLY : nat, ityp, ntyp => nsp, atm
-  USE wvfct,                 ONLY : npwx, nbnd, npw, igk, g2kin
+  USE wvfct,                 ONLY : npwx, nbnd, npw, igk, g2kin, ecutwfc
   USE wavefunctions_module,  ONLY : evc
   USE paw_gipaw,             ONLY : paw_recon, paw_nkb, paw_vkb, paw_becp
   USE becmod,                ONLY : calbec

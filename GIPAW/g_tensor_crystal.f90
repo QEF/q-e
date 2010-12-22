@@ -22,14 +22,14 @@ SUBROUTINE g_tensor_crystal
   USE wavefunctions_module,        ONLY : evc
   USE klist,                       ONLY : nks, nkstot, wk, xk, nelec
   USE wvfct,                       ONLY : nbnd, npwx, npw, igk, wg, g2kin, &
-                                          current_k
+                                          current_k, ecutwfc
   USE lsda_mod,                    ONLY : current_spin, lsda, isk, nspin
   USE becmod,                      ONLY : becp, calbec
   USE symme,                       ONLY : symmatrix
   USE scf,                         ONLY : v, vltot, rho
   USE fft_base,                    ONLY : dfftp
   USE fft_interfaces,              ONLY : fwfft
-  USE gvect,                       ONLY : ngm, nlm, g, ecutwfc, nl
+  USE gvect,                       ONLY : ngm, nlm, g, nl
   USE gipaw_module,                ONLY : j_bare, b_ind, b_ind_r, q_gipaw, &
                                           evq, alpha, nbnd_occ, iverbosity, &
                                           isolve, conv_threshold

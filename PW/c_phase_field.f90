@@ -31,12 +31,12 @@ SUBROUTINE c_phase_field(el_pola,ion_pola, fact_pola, pdir)
    USE cell_base,            ONLY : at, alat, tpiba, omega, tpiba2
    USE constants,            ONLY : pi, tpi
    USE grid_dimensions,      ONLY : nr1, nr2, nr3
-   USE gvect,                ONLY : ngm, ecutwfc, g, gcutm, ngm_g
+   USE gvect,                ONLY : ngm, g, gcutm, ngm_g
    USE uspp,                 ONLY : nkb, vkb, okvan
    USE uspp_param,           ONLY : upf, lmaxq, nbetam, nh, nhm
    USE lsda_mod,             ONLY : nspin
    USE klist,                ONLY : nelec, degauss, nks, xk, wk
-   USE wvfct,                ONLY : npwx, npw, nbnd
+   USE wvfct,                ONLY : npwx, npw, nbnd, ecutwfc
    USE wavefunctions_module, ONLY : evc
    USE bp,                   ONLY : nppstr_3d, mapgm_global, nx_el
    USE fixed_occ
