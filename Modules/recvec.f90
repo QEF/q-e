@@ -142,7 +142,7 @@
 
      !     shells of G^2
      !
-     REAL(DP), ALLOCATABLE, TARGET :: gl(:) 
+     REAL(DP), POINTER :: gl(:) 
 
      !     G-vectors cartesian components ( units tpiba =(2pi/a)  )
      !
@@ -175,7 +175,7 @@
 
      SUBROUTINE deallocate_recvecs
        IF( ALLOCATED( gg ) ) DEALLOCATE( gg )
-       IF( ALLOCATED( gl ) ) DEALLOCATE( gl )
+       IF( ASSOCIATED( gl ) ) DEALLOCATE( gl )
        IF( ALLOCATED( g ) )  DEALLOCATE( g )
        IF( ALLOCATED( g2_g ) ) DEALLOCATE( g2_g )
        IF( ALLOCATED( mill_g ) ) DEALLOCATE( mill_g )
