@@ -24,8 +24,7 @@ SUBROUTINE summary()
   USE ions_base,       ONLY : nat, atm, zv, tau, ntyp => nsp, ityp
   USE cellmd,          ONLY : calc, cmass
   USE ions_base,       ONLY : amass
-  USE gvect,           ONLY : ecutrho, ecfixed, q2sigma, &
-                              ngm, ngm_g, gcutm, qcutz
+  USE gvect,           ONLY : ecutrho, ngm, ngm_g, gcutm
   USE gsmooth,         ONLY : doublegrid, ngms, gcutms
   USE grid_dimensions, ONLY : nr1, nr2, nr3
   USE smooth_grid_dimensions,  ONLY : nr1s, nr2s, nr3s
@@ -44,7 +43,7 @@ SUBROUTINE summary()
                               efield_cart,efield_cry
   USE fixed_occ,       ONLY : f_inp, tfixed_occ
   USE uspp_param,      ONLY : upf
-  USE wvfct,           ONLY : nbnd, ecutwfc
+  USE wvfct,           ONLY : nbnd, ecutwfc, qcutz, ecfixed, q2sigma
   USE lsda_mod,        ONLY : nspin
   USE mp_global,       ONLY : intra_pool_comm
   USE mp,              ONLY : mp_sum

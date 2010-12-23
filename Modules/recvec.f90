@@ -27,9 +27,9 @@
 
      !   values for costant cut-off computations
 
-     REAL(DP) :: ecfix = 0.0_DP     ! value of the constant cut-off
-     REAL(DP) :: ecutz = 0.0_DP     ! height of the penalty function (above ecfix)
-     REAL(DP) :: ecsig = 0.0_DP     ! spread of the penalty function around ecfix
+     REAL(DP) :: ecfixed=0.0_DP     ! value of the constant cut-off
+     REAL(DP) :: qcutz = 0.0_DP     ! height of the penalty function (above ecfix)
+     REAL(DP) :: q2sigma=0.0_DP     ! spread of the penalty function around ecfix
      LOGICAL   :: tecfix = .FALSE.  ! .TRUE. if constant cut-off is in use
 
      ! augmented cut-off for k-point calculation

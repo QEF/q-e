@@ -14,7 +14,7 @@ subroutine hdiag( max_iter, avg_iter, xk_, et_ )
   !
   USE kinds,     ONLY : DP
   USE cell_base, ONLY: tpiba2
-  USE gvect,     ONLY: g, ecfixed, qcutz, q2sigma, gstart
+  USE gvect,     ONLY: g, gstart
   USE wvfct,     ONLY: g2kin, igk, nbnd, npwx, npw
   USE uspp,      ONLY: vkb, okvan
   USE noncollin_module,    ONLY: npol

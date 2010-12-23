@@ -57,10 +57,6 @@ MODULE gvect
   !REAL (DP) :: &
   !     dual,          &! link between G of wavefunctions and charge
   !     gcutm          ! cut-off for G vectors
-  REAL (DP) :: &
-       ecfixed,       &!
-       qcutz = 0.0_DP,&! For the modified Ekin functional
-       q2sigma         !
   COMPLEX(DP), ALLOCATABLE :: &
        eigts1(:,:),   &!
        eigts2(:,:),   &! the phases e^{-iG*tau_s}
@@ -271,7 +267,10 @@ MODULE wvfct
   INTEGER, ALLOCATABLE, TARGET :: &
        igk(:)             ! index of G corresponding to a given index of k+G
   REAL(DP) :: &
-       ecutwfc            ! energy cut-off
+       ecutwfc,       &! energy cut-off
+       ecfixed,       &!
+       qcutz = 0.0_DP,&! For the modified Ekin functional
+       q2sigma         !
   REAL(DP), ALLOCATABLE :: &
        et(:,:),          &! eigenvalues of the hamiltonian
        wg(:,:),          &! the weight of each k point and band

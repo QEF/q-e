@@ -29,8 +29,7 @@ SUBROUTINE check_v_eff ( veff, charge )
   USE uspp,                 ONLY : vkb, nkb
   USE fft_base,             ONLY : dffts
   USE fft_interfaces,       ONLY : fwfft, invfft
-  USE gvect,                ONLY : g, gg, gstart, ecfixed, qcutz, q2sigma, &
-                                   ngm, nl
+  USE gvect,                ONLY : g, gg, gstart, ngm, nl
   USE grid_dimensions,      ONLY : nrxx, nr1, nr2, nr3
   USE wvfct,                ONLY : g2kin, wg, nbndx, et, nbnd, npwx, igk, &
                                    ecutwfc, npw
@@ -166,23 +165,13 @@ SUBROUTINE check_v_eff ( veff, charge )
           ! ... sets the kinetic energy
           !
           xk(1:3,ik) = k_gamma(1:3)
-          g2kin(1:npw) = ( ( xk(1,ik) + g(1,igk(1:npw)) )**2 + &
-                           ( xk(2,ik) + g(2,igk(1:npw)) )**2 + &
-                           ( xk(3,ik) + g(3,igk(1:npw)) )**2 ) * tpiba2
           !
-          !
-          IF ( qcutz > 0.D0 ) THEN
-             DO ig = 1, npw
-                g2kin (ig) = g2kin(ig) + qcutz * &
-                         ( 1.D0 + qe_erf( ( g2kin(ig) - ecfixed ) / q2sigma ) )
-             ENDDO
-          ENDIF
-          !
-          btype(:) = 0
+          CALL g2_kin ( ik )
           !
           ! ... a band is considered empty when its occupation is less
           ! ... than 1.0 %
           !
+          btype(:) = 0
           WHERE( wg(:,ik) < 0.01D0 ) btype(:) = 0
           !
           IF ( isolve == 0 ) THEN

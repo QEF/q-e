@@ -16,8 +16,8 @@ SUBROUTINE g2_kin ( ik )
   USE kinds,                ONLY : DP
   USE cell_base,            ONLY : tpiba2 
   USE klist,                ONLY : xk
-  USE gvect,                ONLY : g, ecfixed, qcutz, q2sigma
-  USE wvfct,                ONLY : g2kin, igk, npw
+  USE gvect,                ONLY : g
+  USE wvfct,                ONLY : g2kin, igk, npw, ecfixed, qcutz, q2sigma
   !
   IMPLICIT NONE
   !

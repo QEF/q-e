@@ -85,10 +85,7 @@ SUBROUTINE iosys(xmlinput,attr)
   USE force_mod,     ONLY : lforce, lstres, force
   !
   USE gsmooth,       ONLY : dual
-  USE gvect,         ONLY : ecutrho_ => ecutrho, &
-                            ecfixed_ => ecfixed, &
-                            qcutz_   => qcutz, &
-                            q2sigma_ => q2sigma
+  USE gvect,         ONLY : ecutrho_ => ecutrho
   !
   USE grid_dimensions, ONLY : nr1_ => nr1, &
                             nr2_     => nr2, &
@@ -180,7 +177,10 @@ SUBROUTINE iosys(xmlinput,attr)
                             lecrpa_           => lecrpa
   !
   USE wvfct,         ONLY : nbnd_ => nbnd, &
-                            ecutwfc_ => ecutwfc
+                            ecutwfc_ => ecutwfc, &
+                            ecfixed_ => ecfixed, &
+                            qcutz_   => qcutz, &
+                            q2sigma_ => q2sigma
   !
   USE fixed_occ,     ONLY : tfixed_occ, f_inp, &
                             one_atom_occupations_ => one_atom_occupations

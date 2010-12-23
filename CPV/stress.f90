@@ -157,7 +157,7 @@
 !                       
 
       USE kinds,              ONLY: DP
-      USE gvecw,              ONLY: ecsig, ecfix, ecutz, ngw
+      USE gvecw,              ONLY: q2sigma, ecfixed, qcutz, ngw
       USE constants,          ONLY: pi
       USE reciprocal_vectors, ONLY: gstart, gg, g
       USE cell_base,          ONLY: tpiba2
@@ -182,10 +182,10 @@
       dekin = 0.0_DP
       ALLOCATE( arg( ngw ) ) 
 
-      efac = 2.0d0 * ecutz / ecsig / SQRT(pi)
+      efac = 2.0d0 * qcutz / q2sigma / SQRT(pi)
       IF( efac > 0.0d0 ) THEN
         DO ig = gstart, ngw
-          arg(ig) = 1.0d0 + efac * exp( -( ( tpiba2 *gg(ig) - ecfix ) / ecsig )**2 )
+          arg(ig) = 1.0d0 + efac * exp( -( ( tpiba2 *gg(ig) - ecfixed ) / q2sigma )**2 )
         END DO
       ELSE
         arg = 1.0d0

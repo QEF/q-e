@@ -935,7 +935,7 @@ END SUBROUTINE gshcount
       use reciprocal_vectors, only: gg, g, mill
       use gvecp, only: ngm
       use gvecw, only: ngw
-      use gvecw, only: ggp, ecutz, ecsig, ecfix
+      use gvecw, only: ggp, qcutz, q2sigma, ecfixed
       implicit none
 !
       REAL(DP) :: alat, b1_(3),b2_(3),b3_(3), gmax
@@ -963,12 +963,12 @@ END SUBROUTINE gshcount
       enddo
  
       tpiba2 = ( tpi / alat ) ** 2
-      gcutz  = ecutz / tpiba2
+      gcutz  = qcutz / tpiba2
 !
       IF( gcutz > 0.0d0 ) THEN
         do ig=1,ngw
            ggp(ig) = gg(ig) + gcutz * &
-                     ( 1.0d0 + qe_erf( ( tpiba2 *gg(ig) - ecfix ) / ecsig ) )
+                     ( 1.0d0 + qe_erf( ( tpiba2 *gg(ig) - ecfixed )/q2sigma ) )
         enddo
       ELSE
         ggp( 1 : ngw ) = gg( 1 : ngw )
@@ -1084,13 +1084,13 @@ end subroutine sort_gvec
 !
 !------------------------------------------------------------------------------!
 
-        SUBROUTINE ecutoffs_setup( ecutwfc_, ecutrho_,ecfixed, qcutz, q2sigma,&
-                                   refg_ )
+        SUBROUTINE ecutoffs_setup( ecutwfc_, ecutrho_, ecfixed_, qcutz_, &
+                                   q2sigma_, refg_ )
  
           USE kinds,           ONLY: DP
           USE constants,       ONLY: eps8
           USE gvecw,           ONLY: ecutwfc
-          USE gvecw,           ONLY: ecfix, ecutz, ecsig
+          USE gvecw,           ONLY: ecfixed, qcutz, q2sigma
           USE gvecp,           ONLY: ecutrho
           USE gvecs,           ONLY: ecuts, dual, doublegrid
           use betax,           only: mmx, refg
@@ -1100,8 +1100,8 @@ end subroutine sort_gvec
           USE uspp,            only: okvan
 
           IMPLICIT NONE
-          REAL(DP), INTENT(IN) ::  ecutwfc_, ecutrho_, ecfixed, qcutz, q2sigma
-          REAL(DP), INTENT(IN) ::  refg_
+          REAL(DP), INTENT(IN) ::  ecutwfc_, ecutrho_, ecfixed_, qcutz_, &
+                                   q2sigma_, refg_
 
           ecutwfc = ecutwfc_
 
@@ -1134,9 +1134,9 @@ end subroutine sort_gvec
           END IF
 
           !
-          ecfix = ecfixed
-          ecutz = qcutz
-          ecsig = q2sigma
+          ecfixed = ecfixed_
+          qcutz   = qcutz_
+          q2sigma = q2sigma_
 
           IF( refg_ < 0.0001d0 ) THEN
              tpstab = .FALSE.
@@ -1169,7 +1169,6 @@ end subroutine sort_gvec
           USE gvecp, ONLY: ecutrho,  gcutm
           USE gvecs, ONLY: ecuts, gcutms
           USE gvecb, ONLY: ecutb, gcutb
-          USE gvecw, ONLY: ecfix, ecutz, ecsig
           USE gvecw, ONLY: ekcut, gkcut
           USE constants, ONLY: eps8, pi
 
@@ -1229,7 +1228,7 @@ end subroutine sort_gvec
 
         USE gvecw, ONLY: ecutwfc,  gcutw
         USE gvecp, ONLY: ecutrho,  gcutm
-        USE gvecw, ONLY: ecfix, ecutz, ecsig
+        USE gvecw, ONLY: ecfixed, qcutz, q2sigma
         USE gvecw, ONLY: ekcut, gkcut
         USE gvecs, ONLY: ecuts, gcutms
         USE gvecb, ONLY: ecutb, gcutb
@@ -1239,7 +1238,7 @@ end subroutine sort_gvec
         WRITE( stdout, 100 ) ecutwfc, ecutrho, ecuts, sqrt(gcutw), &
                              sqrt(gcutm), sqrt(gcutms)
         IF( ecutz > 0.0d0 ) THEN
-          WRITE( stdout, 150 ) ecutz, ecsig, ecfix
+          WRITE( stdout, 150 ) qcutz, q2sigma, ecfixed
         END IF
 
         WRITE( stdout,200) refg, mmx
