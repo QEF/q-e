@@ -30,8 +30,9 @@
       use smallbox_grid_dimensions, only: nr1b, nr2b, nr3b, nr1bx, nr2bx, nr3bx
       use smooth_grid_dimensions,   only: nr1s, nr2s, nr3s, nr1sx, nr2sx, nr3sx, nrxxs
       USE grid_subroutines,         ONLY: realspace_grids_init, realspace_grids_para
-      USE reciprocal_vectors,       ONLY: mill_g, g2_g
+      USE reciprocal_vectors,       ONLY: mill_g, g2_g, eigts1,eigts2,eigts3
       USE recvecs_subroutines,      ONLY: recvecs_init
+      use ions_base,                only: nat
       use gvecw,                    only: gcutw, gkcut
       use gvecp,                    only: ecutrho, gcutm
       use gvecs,                    only: gcutms
@@ -140,29 +141,31 @@ end if
       !
       CALL recvecs_init( ngm_ , ngw_ , ngs_ )
       !
-      !
       ! ... Initialize (local) real space dimensions
       !
       CALL realspace_grids_para( dfftp, dffts )
-      !
       !
       ! ... generate g-space
       !
       call ggencp( b1, b2, b3, nr1, nr2, nr3, nr1s, nr2s, nr3s, gcutm, &
                    gcutms, gkcut, gamma_only )
-
       ! 
       !  Allocate index required to compute polarizability
       !
       IF( tdipole ) THEN
         CALL berry_setup( ngw_ , mill_g )
       END IF
-
       !
       !     global arrays are no more needed
       !
       if( allocated( g2_g ) )   deallocate( g2_g )
       if( allocated( mill_g ) ) deallocate( mill_g )
+      !
+      !     allocate spaces for phases e^{-iG*tau_s}
+      !
+      allocate( eigts1(-nr1:nr1,nat) )
+      allocate( eigts2(-nr2:nr2,nat) )
+      allocate( eigts3(-nr3:nr3,nat) )
       !
       !     generation of little box g-vectors
       !

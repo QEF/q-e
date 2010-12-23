@@ -168,9 +168,12 @@
 
      !     sortedig_l2g = array obtained by sorting ig_l2g
      !
-     !
      INTEGER, ALLOCATABLE, TARGET :: sortedig_l2g(:)
-
+     !
+     ! the phases e^{-iG*tau_s}
+     !
+     COMPLEX(DP), ALLOCATABLE :: eigts1(:,:), eigts2(:,:), eigts3(:,:)
+     !
    CONTAINS
 
      SUBROUTINE deallocate_recvecs
@@ -182,6 +185,9 @@
        IF( ALLOCATED( mill ) ) DEALLOCATE( mill )
        IF( ALLOCATED( ig_l2g ) ) DEALLOCATE( ig_l2g )
        IF( ALLOCATED( sortedig_l2g ) ) DEALLOCATE( sortedig_l2g )
+       IF( ALLOCATED( eigts1 ) ) DEALLOCATE( eigts1 )
+       IF( ALLOCATED( eigts2 ) ) DEALLOCATE( eigts2 )
+       IF( ALLOCATED( eigts3 ) ) DEALLOCATE( eigts3 )
      END SUBROUTINE deallocate_recvecs
 
 !=----------------------------------------------------------------------------=!

@@ -35,7 +35,7 @@ SUBROUTINE from_scratch( )
     USE gvecw,                ONLY : ngw
     USE gvecs,                ONLY : ngms
     USE gvecp,                ONLY : ngm
-    USE reciprocal_vectors,   ONLY : gstart, mill
+    USE reciprocal_vectors,   ONLY : gstart, mill, eigts1, eigts2, eigts3
     USE cvan,                 ONLY : nvb
     USE cp_electronic_mass,   ONLY : emass
     USE efield_module,        ONLY : tefield, efield_berry_setup, berry_energy, &
@@ -55,7 +55,7 @@ SUBROUTINE from_scratch( )
     USE grid_dimensions,      ONLY : nr1, nr2, nr3
     USE time_step,            ONLY : delt
     USE cp_main_variables,    ONLY : setval_lambda, descla, bephi, becp_dist, becdr, nfi, &
-                                     sfac, eigr, ei1, ei2, ei3, bec, taub, irb, eigrb, &
+                                     sfac, eigr, bec, taub, irb, eigrb, &
                                      lambda, lambdam, lambdap, ema0bg, rhog, rhor, rhos, &
                                      vpot, ht0, edft, nlax
     USE mp_global,            ONLY : np_ortho, me_ortho, ortho_comm
@@ -109,9 +109,10 @@ SUBROUTINE from_scratch( )
        !
     END IF
     !
-    CALL phfacs( ei1, ei2, ei3, eigr, mill, atoms0%taus, nr1, nr2, nr3, atoms0%nat )
+    CALL phfacs( eigts1, eigts2, eigts3, eigr, mill, atoms0%taus, &
+                 nr1, nr2, nr3, atoms0%nat )
     !
-    CALL strucf( sfac, ei1, ei2, ei3, mill, ngms )
+    CALL strucf( sfac, eigts1, eigts2, eigts3, mill, ngms )
     !     
     IF ( okvan .OR. nlcc_any ) THEN
        CALL initbox ( tau0, taub, irb, ainv, a1, a2, a3 )
@@ -194,7 +195,7 @@ SUBROUTINE from_scratch( )
          vpot = rhor
          !
          CALL vofrho( nfi, vpot, rhog, rhos, rhoc, tfirst, tlast, &
-        &  ei1, ei2, ei3, irb, eigrb, sfac, tau0, fion )
+        &  eigts1, eigts2, eigts3, irb, eigrb, sfac, tau0, fion )
 
          IF( tefield ) THEN
            CALL berry_energy( enb, enbi, bec, cm(:,:), fion ) 

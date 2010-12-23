@@ -206,7 +206,6 @@ cegterg.o : ../Modules/mp_global.o
 cegterg.o : ../Modules/ptoolkit.o
 clean_pw.o : ../Modules/atom.o
 clean_pw.o : ../Modules/constraints_module.o
-clean_pw.o : ../Modules/control_flags.o
 clean_pw.o : ../Modules/fft_base.o
 clean_pw.o : ../Modules/fft_types.o
 clean_pw.o : ../Modules/ions_base.o

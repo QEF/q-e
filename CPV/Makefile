@@ -72,7 +72,6 @@ runcp.o \
 spline.o \
 stop_run.o \
 stress.o \
-vanderwaals.o \
 vol_clu.o \
 wannier_base.o \
 wannier.o \

@@ -43,7 +43,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
   USE gvecs,                    ONLY : ngms
   USE gvecb,                    ONLY : ngb
   USE gvecw,                    ONLY : ngw
-  USE reciprocal_vectors,       ONLY : gstart, mill
+  USE reciprocal_vectors,       ONLY : gstart, mill, eigts1, eigts2, eigts3
   USE ions_base,                ONLY : na, nat, pmass, nax, nsp, rcmax
   USE ions_base,                ONLY : ind_srt, ions_cofmass, ions_kinene, &
                                        ions_temp, ions_thermal_stress, if_pos, extfor
@@ -104,9 +104,9 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
   USE time_step,                ONLY : delt, tps, dt2,  twodelt
   USE cp_interfaces,            ONLY : cp_print_rho, nlfh, print_lambda
   USE cp_main_variables,        ONLY : acc, bec, lambda, lambdam, lambdap, &
-                                       ema0bg, sfac, eigr, ei1, ei2, ei3,  &
+                                       ema0bg, sfac, eigr, iprint_stdout,  &
                                        irb, becdr, taub, eigrb, rhog, rhos, &
-                                       rhor, bephi, becp_dist, nfi, descla, iprint_stdout, &
+                                       rhor, bephi, becp_dist, nfi, descla, &
                                        drhor, drhog, nlax
   USE autopilot,                ONLY : event_step, event_index, &
                                        max_event_step, restart_p
@@ -267,11 +267,11 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
      !
      IF ( tfor .OR. thdyn ) THEN
         !
-        CALL phfacs( ei1, ei2, ei3, eigr, mill, taus, nr1, nr2, nr3, nat )
+        CALL phfacs( eigts1,eigts2,eigts3, eigr, mill, taus, nr1,nr2,nr3, nat )
         !
         ! ... strucf calculates the structure factor sfac
         !
-        CALL strucf( sfac, ei1, ei2, ei3, mill, ngms )
+        CALL strucf( sfac, eigts1, eigts2, eigts3, mill, ngms )
         !
      END IF
      !
@@ -493,8 +493,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
         !
         ! ... phfac calculates eigr
         !
-        CALL phfacs( ei1, ei2, ei3, eigr, mill, tausp, nr1, nr2, nr3, nat ) 
-        !
+        CALL phfacs( eigts1,eigts2,eigts3, eigr, mill, tausp, nr1,nr2,nr3, nat ) 
         ! ... prefor calculates vkb
         !
         CALL prefor( eigr, vkb )
@@ -756,8 +755,8 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
               CALL phbox( taub, eigrb, ainvb )
            END IF
            CALL r_to_s( tau0, taus, na, nsp, ainv )
-           CALL phfacs( ei1, ei2, ei3, eigr, mill, taus, nr1, nr2, nr3, nat )
-           CALL strucf( sfac, ei1, ei2, ei3, mill, ngms )
+           CALL phfacs( eigts1,eigts2,eigts3, eigr, mill, taus, nr1,nr2,nr3, nat )
+           CALL strucf( sfac, eigts1, eigts2, eigts3, mill, ngms )
            !
            IF ( thdyn )    CALL formf( tfirst, eself )
            IF ( tefield )  CALL efield_update( eigr )

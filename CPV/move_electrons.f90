@@ -17,7 +17,7 @@ SUBROUTINE move_electrons_x( nfi, tfirst, tlast, b1, b2, b3, fion, &
   USE control_flags,        ONLY : lwf, tfor, tprnfor, thdyn
   USE cg_module,            ONLY : tcg
   USE cp_main_variables,    ONLY : eigr, bec, irb, eigrb, rhog, rhos, rhor, &
-                                   ei1, ei2, ei3, sfac, ema0bg, becdr, &
+                                   sfac, ema0bg, becdr, &
                                    taub, lambda, lambdam, lambdap, vpot
   USE wavefunctions_module, ONLY : c0, cm, phi => cp
   USE cell_base,            ONLY : omega, ibrav, h, press
@@ -44,7 +44,7 @@ SUBROUTINE move_electrons_x( nfi, tfirst, tlast, b1, b2, b3, fion, &
   USE cp_interfaces,        ONLY : rhoofr, compute_stress
   USE electrons_base,       ONLY : nupdwn 
   USE mp_global,            ONLY : me_image 
-  !
+  USE reciprocal_vectors,   ONLY : eigts1, eigts2, eigts3 
   IMPLICIT NONE
   !
   INTEGER,  INTENT(IN)    :: nfi
@@ -64,7 +64,7 @@ SUBROUTINE move_electrons_x( nfi, tfirst, tlast, b1, b2, b3, fion, &
   electron_dynamic: IF ( tcg ) THEN
      !
      CALL runcg_uspp( nfi, tfirst, tlast, eigr, bec, irb, eigrb, &
-                      rhor, rhog, rhos, rhoc, ei1, ei2, ei3, sfac, &
+                      rhor, rhog, rhos, rhoc, eigts1, eigts2, eigts3, sfac, &
                       fion, ema0bg, becdr, lambdap, lambda, vpot  )
      !
      CALL compute_stress( stress, detot, h, omega )
@@ -91,8 +91,9 @@ SUBROUTINE move_electrons_x( nfi, tfirst, tlast, b1, b2, b3, fion, &
      !
      vpot = rhor
      !
-     CALL vofrho( nfi, vpot(1,1), rhog(1,1), rhos(1,1), rhoc(1), tfirst, tlast, &
-                     ei1, ei2, ei3, irb(1,1), eigrb(1,1), sfac(1,1), tau0(1,1), fion(1,1) )
+     CALL vofrho( nfi, vpot(1,1), rhog(1,1), rhos(1,1), rhoc(1), tfirst, tlast,&
+                     eigts1, eigts2, eigts3, irb(1,1), eigrb(1,1), sfac(1,1), &
+                     tau0(1,1), fion(1,1) )
      !
      IF ( lwf ) CALL wf_options( tfirst, nfi, cm, becsum, bec, &
                                  eigr, eigrb, taub, irb, ibrav, b1,   &

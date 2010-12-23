@@ -23,7 +23,7 @@ SUBROUTINE from_restart( )
    USE ions_positions,        ONLY : taus, tau0, tausm, taum, vels, fion, fionm, set_velocities
    USE ions_nose,             ONLY : xnhp0, xnhpm
    USE grid_dimensions,       ONLY : nr1, nr2, nr3
-   USE reciprocal_vectors,    ONLY : mill
+   USE reciprocal_vectors,    ONLY : mill, eigts1, eigts2, eigts3 
    USE printout_base,         ONLY : printout_pos
    USE gvecs,                 ONLY : ngms
    USE gvecw,                 ONLY : ngw
@@ -36,7 +36,7 @@ SUBROUTINE from_restart( )
    USE small_box,             ONLY : ainvb
    USE uspp,                  ONLY : okvan, vkb, nkb
    USE core,                  ONLY : nlcc_any
-   USE cp_main_variables,     ONLY : ht0, htm, lambdap, lambda, lambdam, ei1, ei2, ei3, eigr, &
+   USE cp_main_variables,     ONLY : ht0, htm, lambdap, lambda, lambdam, eigr, &
                                      sfac, bec, taub, irb, eigrb, edft
    USE cdvan,                 ONLY : dbec
    USE time_step,             ONLY : delt
@@ -121,9 +121,9 @@ SUBROUTINE from_restart( )
       CALL phbox( taub, eigrb, ainvb )
    END IF
    !
-   CALL phfacs( ei1, ei2, ei3, eigr, mill, taus, nr1, nr2, nr3, nat )
+   CALL phfacs( eigts1, eigts2, eigts3, eigr, mill, taus, nr1, nr2, nr3, nat )
    !
-   CALL strucf( sfac, ei1, ei2, ei3, mill, ngms )
+   CALL strucf( sfac, eigts1, eigts2, eigts3, mill, ngms )
    !
    CALL prefor( eigr, vkb )
    !

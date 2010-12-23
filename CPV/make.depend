@@ -863,10 +863,6 @@ stress.o : ../Modules/mp_global.o
 stress.o : ../Modules/recvec.o
 stress.o : cp_interfaces.o
 stress.o : modules.o
-vanderwaals.o : ../Modules/cell_base.o
-vanderwaals.o : ../Modules/constants.o
-vanderwaals.o : ../Modules/kind.o
-vanderwaals.o : ../Modules/mp_global.o
 vol_clu.o : ../Modules/cell_base.o
 vol_clu.o : ../Modules/constants.o
 vol_clu.o : ../Modules/control_flags.o

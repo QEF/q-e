@@ -44,7 +44,7 @@ SUBROUTINE init_run()
   USE cell_base,                ONLY : h, hold, hnew, velh, tpiba2, ibrav, &
                                        alat, celldm, a1, a2, a3, b1, b2, b3
   USE cp_main_variables,        ONLY : lambda, lambdam, lambdap, ema0bg, bec,  &
-                                       sfac, eigr, ei1, ei2, ei3, taub, &
+                                       sfac, eigr, taub, &
                                        irb, eigrb, rhog, rhos, rhor,     &
                                        acc, acc_this_run, wfill, &
                                        edft, nfi, vpot, ht0, htm, iprint_stdout

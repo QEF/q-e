@@ -28,9 +28,6 @@ MODULE cp_main_variables
   ! ...  R_I = ionic positions
   !
   COMPLEX(DP), ALLOCATABLE :: eigr(:,:)        ! exp (i G   dot R_I)
-  COMPLEX(DP), ALLOCATABLE :: ei1(:,:)         ! exp (i G_x dot x_I)
-  COMPLEX(DP), ALLOCATABLE :: ei2(:,:)         ! exp (i G_y dot y_I)
-  COMPLEX(DP), ALLOCATABLE :: ei3(:,:)         ! exp (i G_z dot z_I)
   !
   ! ... structure factors (summed over atoms of the same kind)
   !
@@ -137,9 +134,6 @@ MODULE cp_main_variables
       !
       ALLOCATE( eigr( ngw, nat ) )
       ALLOCATE( sfac( ngs, nsp ) )
-      ALLOCATE( ei1( -nr1:nr1, nat ) )
-      ALLOCATE( ei2( -nr2:nr2, nat ) )
-      ALLOCATE( ei3( -nr3:nr3, nat ) )
       ALLOCATE( eigrb( ngb, nat ) )
       ALLOCATE( irb( 3, nat ) )
       !
@@ -231,9 +225,6 @@ MODULE cp_main_variables
     SUBROUTINE deallocate_mainvar()
       !------------------------------------------------------------------------
       !
-      IF( ALLOCATED( ei1 ) )     DEALLOCATE( ei1 )
-      IF( ALLOCATED( ei2 ) )     DEALLOCATE( ei2 )
-      IF( ALLOCATED( ei3 ) )     DEALLOCATE( ei3 )
       IF( ALLOCATED( eigr ) )    DEALLOCATE( eigr )
       IF( ALLOCATED( sfac ) )    DEALLOCATE( sfac )
       IF( ALLOCATED( eigrb ) )   DEALLOCATE( eigrb )

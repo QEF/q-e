@@ -29,7 +29,8 @@ MODULE gvect
   !
   USE kinds,              ONLY : DP
   USE gvecp,              ONLY : ngm, ngm_g, ngl, nl, nlm, gcutm, ecutrho
-  USE reciprocal_vectors, ONLY : ig_l2g, gstart, g, gl, gg, mill
+  USE reciprocal_vectors, ONLY : ig_l2g, gstart, g, gl, gg, mill, eigts1, &
+                                 eigts2, eigts3
   !
   SAVE
   !
@@ -57,10 +58,10 @@ MODULE gvect
   !REAL (DP) :: &
   !     dual,          &! link between G of wavefunctions and charge
   !     gcutm          ! cut-off for G vectors
-  COMPLEX(DP), ALLOCATABLE :: &
-       eigts1(:,:),   &!
-       eigts2(:,:),   &! the phases e^{-iG*tau_s}
-       eigts3(:,:)     !
+  !COMPLEX(DP), ALLOCATABLE :: &
+  !     eigts1(:,:),   &!
+  !     eigts2(:,:),   &! the phases e^{-iG*tau_s}
+  !     eigts3(:,:)     !
   !
 END MODULE gvect
 !
