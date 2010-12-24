@@ -47,7 +47,7 @@
     USE gvect,                ONLY : ngm_g, g, ngm
     USE grid_dimensions,      ONLY : nr1, nr2, nr3
     USE cell_base,            ONLY : at
-    USE reciprocal_vectors,   ONLY : ig_l2g
+    USE gvect,   ONLY : ig_l2g
 
     implicit none
 

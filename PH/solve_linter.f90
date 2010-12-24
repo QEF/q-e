@@ -33,7 +33,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
   USE klist,                ONLY : lgauss, degauss, ngauss, xk, wk
   USE grid_dimensions,      ONLY : nrxx
   USE gvect,                ONLY : g
-  USE gsmooth,              ONLY : doublegrid
+  USE gvecs,              ONLY : doublegrid
   USE smooth_grid_dimensions,ONLY: nrxxs
   USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
   USE spin_orb,             ONLY : domag

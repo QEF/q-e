@@ -22,7 +22,7 @@ SUBROUTINE stop_run( flag )
   USE constraints_module, ONLY : deallocate_constraint
 !  USE metadyn_vars,       ONLY : deallocate_metadyn_vars
   USE mp_global,          ONLY : mp_global_end
-  USE reciprocal_vectors, ONLY : mill_g
+  USE gvect, ONLY : mill_g
   !
   IMPLICIT NONE
   !

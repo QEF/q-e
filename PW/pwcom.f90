@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2008 Quantum ESPRESSO group
+! Copyright (C) 2001-2010 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -21,75 +21,6 @@ MODULE basis
        startingconfig      ! 'input' or 'file'
   !
 END MODULE basis
-!
-!
-MODULE gvect
-  !
-  ! ...The variables describing the reciprocal lattice vectors
-  !
-  USE kinds,              ONLY : DP
-  USE gvecp,              ONLY : ngm, ngm_g, ngl, nl, nlm, gcutm, ecutrho
-  USE reciprocal_vectors, ONLY : ig_l2g, gstart, g, gl, gg, mill, eigts1, &
-                                 eigts2, eigts3
-  !
-  SAVE
-  !
-  !INTEGER :: &
-  !     ngm,           &! the local number of g vectors (only present processor)
-  !     ngm_g,         &! global number of g vectors (sum over all processors)
-  !     gstart,        &! first nonzero g vector
-  !     ngl             ! number of |g| shells
-  !INTEGER, ALLOCATABLE :: &
-  !     mill(:,:)      ! the indices of G components
-  !     ig_l2g(:)      !"l2g" means local to global, this array convert a local
-  !                    ! G-vector index into the global index, in other words
-  !                    ! the index of the G-v. in the overall array of G-vectors
-  !INTEGER, ALLOCATABLE, TARGET :: &
-  !     nl(:),         &! correspondence fft <-> array of G vectors
-  !     nlm(:)          ! same for gamma point calculation
-  INTEGER, ALLOCATABLE, TARGET :: &
-       igtongl(:)      ! correspondence shells of G <-> G
-  !REAL(DP), ALLOCATABLE, TARGET :: &
-  !     g(:,:),        &! coordinates of G vectors
-  !     gg(:)           ! modulus G^2 of G vectors
-  !                     ! G vectors are in order of increasing |G|
-  !REAL(DP), POINTER :: &
-  !     gl(:)           ! the modulus of g in each shell
-  !REAL (DP) :: &
-  !     dual,          &! link between G of wavefunctions and charge
-  !     gcutm          ! cut-off for G vectors
-  !COMPLEX(DP), ALLOCATABLE :: &
-  !     eigts1(:,:),   &!
-  !     eigts2(:,:),   &! the phases e^{-iG*tau_s}
-  !     eigts3(:,:)     !
-  !
-END MODULE gvect
-!
-!
-MODULE gsmooth
-  !
-  ! ... the variables for the smooth mesh of the wavefunction. It can
-  ! ... be different from the large mesh if dual > 4
-  !
-  USE kinds, ONLY : DP
-  USE gvecs,              ONLY : ngms, ngms_g, nls, nlsm, doublegrid, &
-                                 gcutms, dual
-  !
-  SAVE
-  !
-  !INTEGER :: &
-  !     ngms,        &! the number of smooth G vectors
-  !     ngms_g        ! the global number of smooth G vectors
-  !                   !  (sum over all processors)
-  !INTEGER, POINTER :: &
-  !     nls(:),      &! the correspondence  G <-> smooth mesh
-  !     nlsm(:)       ! the same for gamma point calculation
-  !LOGICAL :: &
-  !     doublegrid    ! .TRUE. if we use a double grid
-  !REAL(DP) :: &
-  !     gcutms        ! the cut-off of the smooth mesh
-  !
-END MODULE gsmooth
 !
 !
 MODULE klist
@@ -556,7 +487,7 @@ MODULE pwcom
                         ibrav, symm_type
   USE basis
   USE gvect
-  USE gsmooth
+  USE gvecs
   USE klist
   USE lsda_mod
   USE ktetra

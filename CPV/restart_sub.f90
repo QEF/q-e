@@ -23,7 +23,7 @@ SUBROUTINE from_restart( )
    USE ions_positions,        ONLY : taus, tau0, tausm, taum, vels, fion, fionm, set_velocities
    USE ions_nose,             ONLY : xnhp0, xnhpm
    USE grid_dimensions,       ONLY : nr1, nr2, nr3
-   USE reciprocal_vectors,    ONLY : mill, eigts1, eigts2, eigts3 
+   USE gvect,    ONLY : mill, eigts1, eigts2, eigts3 
    USE printout_base,         ONLY : printout_pos
    USE gvecs,                 ONLY : ngms
    USE gvecw,                 ONLY : ngw

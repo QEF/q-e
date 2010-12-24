@@ -61,7 +61,7 @@ subroutine phq_setup
   USE scf,           ONLY : v, vrs, vltot, rho, rho_core, kedtau
   USE grid_dimensions,ONLY: nrxx
   USE gvect,         ONLY : ngm
-  USE gsmooth,       ONLY : doublegrid
+  USE gvecs,       ONLY : doublegrid
   USE symm_base,     ONLY : nrot, nsym, s, ftau, irt, t_rev, time_reversal, &
                             sname, sr, invs, inverse_s, copy_sym
   USE uspp_param,    ONLY : upf

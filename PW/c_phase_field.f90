@@ -40,7 +40,7 @@ SUBROUTINE c_phase_field(el_pola,ion_pola, fact_pola, pdir)
    USE wavefunctions_module, ONLY : evc
    USE bp,                   ONLY : nppstr_3d, mapgm_global, nx_el
    USE fixed_occ
-   USE reciprocal_vectors,   ONLY : ig_l2g
+   USE gvect,   ONLY : ig_l2g
    USE mp,                   ONLY : mp_sum
    USE mp_global,            ONLY : intra_pool_comm
    USE becmod,               ONLY : calbec

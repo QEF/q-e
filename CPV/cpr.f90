@@ -39,11 +39,11 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
                                        berry_energy2, pberryel2, pberryion2
   USE ensemble_dft,             ONLY : tens, z0t, gibbsfe
   USE cg_module,                ONLY : tcg,  cg_update, c0old
-  USE gvecp,                    ONLY : ngm
+  USE gvect,                    ONLY : ngm
   USE gvecs,                    ONLY : ngms
   USE gvecb,                    ONLY : ngb
   USE gvecw,                    ONLY : ngw
-  USE reciprocal_vectors,       ONLY : gstart, mill, eigts1, eigts2, eigts3
+  USE gvect,       ONLY : gstart, mill, eigts1, eigts2, eigts3
   USE ions_base,                ONLY : na, nat, pmass, nax, nsp, rcmax
   USE ions_base,                ONLY : ind_srt, ions_cofmass, ions_kinene, &
                                        ions_temp, ions_thermal_stress, if_pos, extfor
@@ -100,7 +100,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
   USE cell_base,                ONLY : cell_kinene, cell_gamma, &
                                        cell_move, cell_hmove
   USE gvecw,                    ONLY : ecutwfc
-  USE gvecp,                    ONLY : ecutrho
+  USE gvect,                    ONLY : ecutrho
   USE time_step,                ONLY : delt, tps, dt2,  twodelt
   USE cp_interfaces,            ONLY : cp_print_rho, nlfh, print_lambda
   USE cp_main_variables,        ONLY : acc, bec, lambda, lambdam, lambdap, &

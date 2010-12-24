@@ -29,7 +29,7 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
   USE electrons_base,           ONLY : nbspx, nbsp, nupdwn, iupdwn, nspin
   USE gvecb,                    ONLY : npb, nmb, ngb
   USE gvecw,                    ONLY : ngw
-  USE reciprocal_vectors,       ONLY : gstart
+  USE gvect,       ONLY : gstart
   USE smooth_grid_dimensions,   ONLY : nrxxs
   USE control_flags,            ONLY : iprsta
   USE qgb_mod,                  ONLY : qgb
@@ -1018,7 +1018,7 @@ SUBROUTINE wfunc_init( clwf, b1, b2, b3, ibrav )
   !
   USE io_global,          ONLY : stdout
   USE kinds,              ONLY : DP
-  USE reciprocal_vectors, ONLY : g, mill, gstart
+  USE gvect, ONLY : g, mill, gstart
   USE gvecw,              ONLY : ngw
   USE electrons_base,     ONLY : nbsp
   USE wannier_base,       ONLY : gnx, gnn, indexplus, indexminus, &
@@ -2079,8 +2079,8 @@ SUBROUTINE write_rho_g( rhog )
   !
   USE kinds,              ONLY : DP
   USE io_global,          ONLY : stdout
-  USE gvecp,              ONLY : ngm
-  USE reciprocal_vectors, ONLY : g
+  USE gvect,              ONLY : ngm
+  USE gvect, ONLY : g
   USE electrons_base,     ONLY : nspin
   USE fft_base,           ONLY : dfftp
   USE mp_global,          ONLY : nproc_image, me_image, root_image, intra_image_comm
@@ -2206,8 +2206,8 @@ SUBROUTINE macroscopic_average( rhog, tau0, e_tuned )
   !----------------------------------------------------------------------------
   !
   USE kinds,              ONLY : DP
-  USE reciprocal_vectors, ONLY : g
-  USE gvecp,              ONLY : ngm
+  USE gvect, ONLY : g
+  USE gvect,              ONLY : ngm
   USE electrons_base,     ONLY : nspin
   USE tune,               ONLY : npts, xdir, ydir, zdir, B, &
                                  shift, start, av0, av1

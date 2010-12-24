@@ -14,7 +14,7 @@
 !
       USE kinds,              ONLY: DP
       USE gvecw,              ONLY: ngw
-      USE reciprocal_vectors, ONLY: gg, g
+      USE gvect, ONLY: gg, g
       USE ions_base,          ONLY: nsp, na, nat
       USE cell_base,          ONLY: tpiba
       USE atom,               ONLY: rgrid
@@ -133,7 +133,7 @@ END FUNCTION
 !
       USE ions_base,          ONLY: na
       USE gvecw,              ONLY: ngw
-      USE reciprocal_vectors, ONLY: gstart
+      USE gvect, ONLY: gstart
       USE cvan,               ONLY: ish, nvb
       USE uspp_param,         ONLY: nh
       USE uspp,               ONLY: qq
@@ -197,9 +197,9 @@ END FUNCTION
 !
       USE kinds,              ONLY: DP
       USE ions_base,          ONLY: nsp
-      USE reciprocal_vectors, ONLY: gstart, g, gg
+      USE gvect, ONLY: gstart, g, gg
       USE gvecs,              ONLY: ngms
-      USE gvecp,              ONLY: ngm, nl
+      USE gvect,              ONLY: ngm, nl
       USE cell_base,          ONLY: omega, ainv, tpiba2
       USE mp,                 ONLY: mp_sum
       USE mp_global,          ONLY: intra_image_comm
@@ -274,7 +274,7 @@ END FUNCTION
       USE kinds,              ONLY: DP
       USE ions_base,          ONLY: na, nsp, nat
       USE io_global,          ONLY: stdout
-      USE reciprocal_vectors, ONLY: gstart
+      USE gvect, ONLY: gstart
       USE cvan,               ONLY: ish, nvb
       USE uspp,               ONLY: nkb, qq
       USE uspp_param,         ONLY: nh
@@ -347,7 +347,7 @@ END FUNCTION
       USE kinds,              ONLY: DP
       USE ions_base,          ONLY: na, nsp, nat
       USE io_global,          ONLY: stdout
-      USE reciprocal_vectors, ONLY: gstart
+      USE gvect, ONLY: gstart
       USE cvan,               ONLY: ish, nvb
       USE uspp,               ONLY: nkb, qq
       USE uspp_param,         ONLY: nh
@@ -411,7 +411,7 @@ END FUNCTION
       USE kinds,              ONLY: DP
       USE constants,          ONLY: pi, fpi
       USE gvecw,              ONLY: ngw
-      USE reciprocal_vectors, ONLY: gstart
+      USE gvect, ONLY: gstart
       USE gvecw,              ONLY: ggp
       USE mp,                 ONLY: mp_sum
       USE mp_global,          ONLY: intra_image_comm
@@ -469,7 +469,7 @@ END FUNCTION
       USE mp,             ONLY: mp_sum
       USE mp_global,      ONLY: intra_image_comm
       USE kinds,          ONLY: DP
-      USE reciprocal_vectors, ONLY: gstart
+      USE gvect, ONLY: gstart
 !
       IMPLICIT NONE
 !
@@ -568,7 +568,7 @@ END FUNCTION
 
       USE gvecw,              ONLY: ngw
       USE kinds,              ONLY: DP
-      USE reciprocal_vectors, ONLY: gstart
+      USE gvect, ONLY: gstart
 !
       IMPLICIT NONE
 !
@@ -607,7 +607,7 @@ END FUNCTION
       USE uspp,           ONLY : nkb, nhsavb=>nkbus
       USE gvecw,          ONLY: ngw
       USE kinds,          ONLY: DP
-      USE reciprocal_vectors, ONLY: gstart
+      USE gvect, ONLY: gstart
 !
       IMPLICIT NONE
 !
@@ -1527,7 +1527,7 @@ END FUNCTION
       USE mp_global, ONLY: intra_image_comm
       USE mp, ONLY: mp_sum
       USE gvecw, ONLY: ngw
-      USE reciprocal_vectors, ONLY: gstart
+      USE gvect, ONLY: gstart
       USE grid_dimensions, ONLY: nr1, nr2, nr3, nrxx
       USE cell_base, ONLY: omega
       USE cvan, ONLY: nvb, ish
@@ -1666,10 +1666,10 @@ END FUNCTION
       USE io_global,          ONLY: stdout
       USE ions_base,          ONLY: nsp, na, nat, rcmax, compute_eextfor
       USE gvecs
-      USE gvecp,              ONLY: ngm, nl, nlm
+      USE gvect,              ONLY: ngm, nl, nlm
       USE cell_base,          ONLY: omega, r_to_s
       USE cell_base,          ONLY: a1, a2, a3, tpiba2, h, ainv
-      USE reciprocal_vectors, ONLY: gstart, gg, g
+      USE gvect, ONLY: gstart, gg, g
       USE grid_dimensions,    ONLY: nr1, nr2, nr3, nrxx
       USE smooth_grid_dimensions, ONLY: nrxxs
       USE electrons_base,   ONLY: nspin
@@ -2344,7 +2344,7 @@ end function set_Hubbard_l
       use kinds,              ONLY: DP        
       use ions_base,          only: na, nat, nsp
       use gvecw,              only: ngw
-      use reciprocal_vectors, only: gstart
+      use gvect, only: gstart
       USE uspp,               ONLY: nhsa=>nkb
       USE uspp_param,         ONLY: upf
       use electrons_base,     only: nspin, n => nbsp, nx => nbspx, ispin, f
@@ -2732,7 +2732,7 @@ end function set_Hubbard_l
 !
       use ions_base,          only: na, nsp
       use gvecw,              only: ngw
-      use reciprocal_vectors, only: gg, g, gstart
+      use gvect, only: gg, g, gstart
       use cell_base,          only: omega, tpiba
       use constants,          only: fpi
       USE atom,               ONLY: rgrid
@@ -2914,7 +2914,7 @@ end function set_Hubbard_l
 !
       use ions_base, only: na, nat
       use gvecw, only: ngw
-      use reciprocal_vectors, only: g, gstart
+      use gvect, only: g, gstart
       use electrons_base, only: n => nbsp, nx => nbspx
 !      use gvec
 !      use constants
@@ -3070,7 +3070,7 @@ end function set_Hubbard_l
       USE mp_global,          ONLY: intra_image_comm
       USE mp,                 ONLY: mp_sum
       USE gvecw,              ONLY: ngw
-      USE reciprocal_vectors, ONLY: gstart
+      USE gvect, ONLY: gstart
       USE ions_base,          ONLY: nsp, na, nat
       USE uspp,               ONLY: nhsa => nkb
 !
@@ -3129,7 +3129,7 @@ end function set_Hubbard_l
 !
       USE kinds,              ONLY: DP
       USE gvecw,              ONLY: ngw
-      USE reciprocal_vectors, ONLY: gstart, gg, g
+      USE gvect, ONLY: gstart, gg, g
       USE ions_base,          ONLY: nsp, na, nat
       USE cell_base,          ONLY: tpiba, omega !#@@@
       USE atom,               ONLY: rgrid

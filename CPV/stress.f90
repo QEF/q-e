@@ -89,7 +89,7 @@
       !
       USE kinds,              ONLY: DP
       USE ions_base,          ONLY: nsp
-      USE reciprocal_vectors, ONLY: gstart
+      USE gvect, ONLY: gstart
       USE gvecs,              ONLY: ngms
       USE electrons_base,     ONLY: nspin
       USE local_pseudo,       ONLY: vps, dvps
@@ -159,7 +159,7 @@
       USE kinds,              ONLY: DP
       USE gvecw,              ONLY: q2sigma, ecfixed, qcutz, ngw
       USE constants,          ONLY: pi
-      USE reciprocal_vectors, ONLY: gstart, gg, g
+      USE gvect, ONLY: gstart, gg, g
       USE cell_base,          ONLY: tpiba2
       USE electrons_base,     ONLY: nspin, iupdwn, nupdwn
       USE stress_param,       ONLY: alpha, beta
@@ -269,9 +269,9 @@
       use mp_global,          ONLY: me_image, root_image
       USE constants,          ONLY: fpi
       USE cell_base,          ONLY: tpiba2
-      USE reciprocal_vectors, ONLY: gstart
+      USE gvect, ONLY: gstart
       USE gvecs,              ONLY: ngms
-      USE gvecp,              ONLY: ngm
+      USE gvect,              ONLY: ngm
       USE local_pseudo,       ONLY: rhops
       USE electrons_base,     ONLY: nspin
       USE stress_param,       ONLY: dalbe
@@ -354,9 +354,9 @@
       use mp_global,          ONLY: me_image, root_image
       USE constants,          ONLY: fpi
       USE cell_base,          ONLY: tpiba2
-      USE reciprocal_vectors, ONLY: gstart, gg
+      USE gvect, ONLY: gstart, gg
       USE gvecs,              ONLY: ngms
-      USE gvecp,              ONLY: ngm
+      USE gvect,              ONLY: ngm
       USE local_pseudo,       ONLY: rhops
       USE electrons_base,     ONLY: nspin
       USE stress_param,       ONLY: dalbe

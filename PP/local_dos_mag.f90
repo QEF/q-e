@@ -21,7 +21,7 @@ SUBROUTINE local_dos_mag(spin_component, kpoint, kband, raux)
   USE fft_interfaces,       ONLY : invfft
   USE gvect,                ONLY : ngm, g
   USE grid_dimensions,      ONLY : nrxx
-  USE gsmooth,              ONLY : nls, doublegrid
+  USE gvecs,              ONLY : nls, doublegrid
   USE klist,                ONLY : nks, xk
   USE scf,                  ONLY : rho
   USE io_files,             ONLY : iunwfc, nwordwfc

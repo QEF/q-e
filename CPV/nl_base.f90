@@ -29,7 +29,7 @@
       USE cvan,       only : ish
       USE uspp_param, only : nh
       !
-      USE reciprocal_vectors, ONLY : gstart
+      USE gvect, ONLY : gstart
 !
       implicit none
 
@@ -180,7 +180,7 @@
       USE cvan,       only : ish
       USE uspp_param, only : nh
       !
-      USE reciprocal_vectors, ONLY : gstart
+      USE gvect, ONLY : gstart
       USE descriptors,        ONLY : descla_siz_ , lambda_node_ , nlar_ , ilar_ , la_n_
 !
       implicit none
@@ -349,7 +349,7 @@
       use mp,         only : mp_sum
       use mp_global,  only : nproc_image, intra_image_comm
       use cp_main_variables,  only : nlax, descla, distribute_bec
-      use reciprocal_vectors, only : g, gstart
+      use gvect, only : g, gstart
 !
       implicit none
     
@@ -475,7 +475,7 @@
       use cell_base,  only : tpiba
       use mp,         only : mp_sum
       use mp_global,  only : nproc_image, intra_image_comm
-      use reciprocal_vectors, only : g, gstart
+      use gvect, only : g, gstart
 !
       implicit none
     
@@ -771,7 +771,7 @@ SUBROUTINE caldbec( ngw, nkb, n, nspmn, nspmx, eigr, c, dbec )
   use cdvan,      only : dbeta
   use uspp,       only : nhtol
   use uspp_param, only : nh, nhm
-  use reciprocal_vectors, only : gstart
+  use gvect, only : gstart
   USE cp_main_variables,  ONLY : descla, la_proc, nlax, nlam
   USE descriptors,        ONLY : nlar_ , nlac_ , ilar_ , ilac_ , nlax_ , la_myr_ , la_myc_
   use electrons_base,     only : nspin, iupdwn, nupdwn
@@ -894,7 +894,7 @@ subroutine dennl( bec, dbec, drhovan, denl )
   USE cp_main_variables,  ONLY : descla, la_proc, nlax, nlam
   USE descriptors,        ONLY : nlar_ , nlac_ , ilar_ , ilac_ , nlax_ , la_myr_ , la_myc_
   use electrons_base,     only : n => nbsp, ispin, f, nspin, iupdwn, nupdwn
-  use reciprocal_vectors, only : gstart
+  use gvect, only : gstart
 
   implicit none
 

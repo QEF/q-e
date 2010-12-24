@@ -30,7 +30,7 @@ SUBROUTINE local_dos (iflag, lsign, kpoint, kband, spin_component, &
   USE fft_base,             ONLY : dffts, dfftp
   USE fft_interfaces,       ONLY : fwfft, invfft
   USE gvect,                ONLY : nl, ngm, g
-  USE gsmooth,              ONLY : nls, nlsm, doublegrid
+  USE gvecs,              ONLY : nls, nlsm, doublegrid
   USE klist,                ONLY : lgauss, degauss, ngauss, nks, wk, xk, nkstot
   USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
   USE scf,                  ONLY : rho

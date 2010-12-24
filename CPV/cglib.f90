@@ -245,7 +245,7 @@ subroutine pc2(a,beca,b,becb)
       use gvecw, only: ngw
       use constants, only: pi, fpi
       use control_flags, only: iprint, iprsta
-      use reciprocal_vectors, only: gstart
+      use gvect, only: gstart
       use mp, only: mp_sum
       use electrons_base, only: n => nbsp, ispin,  nupdwn, iupdwn, nspin
       use uspp_param, only: nh
@@ -355,7 +355,7 @@ subroutine pc2(a,beca,b,becb)
       use gvecw, only: ngw
       use constants, only: pi, fpi
       use control_flags, only: iprint, iprsta
-      use reciprocal_vectors, only: gstart
+      use gvect, only: gstart
       use mp, only: mp_sum
       use electrons_base, only: n => nbsp, ispin
       use uspp_param, only: nh
@@ -419,7 +419,7 @@ subroutine pc2(a,beca,b,becb)
       use gvecw, only: ngw
       use constants, only: pi, fpi
       use control_flags, only: iprint, iprsta
-      use reciprocal_vectors, only: gstart
+      use gvect, only: gstart
       use mp, only: mp_sum, mp_bcast
       use electrons_base, only: n => nbsp, ispin
       use uspp_param, only: nh
@@ -548,7 +548,7 @@ subroutine pc2(a,beca,b,becb)
       use constants, only: pi, fpi
       use control_flags, only: iprint, iprsta
       use mp, only: mp_sum
-      use reciprocal_vectors, only: gstart
+      use gvect, only: gstart
 !
       implicit none
       complex(dp) c0(ngw,n), betae(ngw,nhsa)
@@ -663,7 +663,7 @@ subroutine pc2(a,beca,b,becb)
       USE kinds,              ONLY: DP
       USE constants,          ONLY: pi, fpi
       USE gvecw,              ONLY: ngw
-      USE reciprocal_vectors, ONLY: gstart
+      USE gvect, ONLY: gstart
       USE gvecw,              ONLY: ggp
       USE mp,                 ONLY: mp_sum
       USE mp_global,          ONLY: intra_image_comm
@@ -724,7 +724,7 @@ subroutine pc2(a,beca,b,becb)
       use constants, only: pi, fpi
       use control_flags, only: iprint, iprsta
       use mp, only: mp_sum
-      use reciprocal_vectors, only: gstart
+      use gvect, only: gstart
       USE gvecw,              ONLY: ggp
       USE cell_base,          ONLY: tpiba2
 

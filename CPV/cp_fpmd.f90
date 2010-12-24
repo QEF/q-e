@@ -332,12 +332,12 @@ end subroutine ggenb
 !   the g's are in units of 2pi/a.
 !
       USE kinds,              ONLY: DP
-      use reciprocal_vectors, only: gg, g, mill_g, g2_g, gl
-      use reciprocal_vectors, only: mill, ig_l2g
-      use reciprocal_vectors, only: gstart, sortedig_l2g
+      use gvect, only: gg, g, mill_g, g2_g, gl
+      use gvect, only: mill, ig_l2g
+      use gvect, only: gstart, sortedig_l2g
       use gvecs,              only: ngms, nlsm, nls
       use gvecw,              only: ngw, ngw_g, ggp
-      use gvecp,              only: ngm, ngl, ngm_g, nlm, nl
+      use gvect,              only: ngm, ngl, ngm_g, nlm, nl
       use io_global,          only: stdout
       USE fft_base,           ONLY: dfftp, dffts, fft_dlay_descriptor
       use mp,                 ONLY: mp_sum, mp_max
@@ -932,8 +932,8 @@ END SUBROUTINE gshcount
       USE kinds,     ONLY: DP
       use constants, only: tpi
       use control_flags, only: iprint
-      use reciprocal_vectors, only: gg, g, mill
-      use gvecp, only: ngm
+      use gvect, only: gg, g, mill
+      use gvect, only: ngm
       use gvecw, only: ngw
       use gvecw, only: ggp, qcutz, q2sigma, ecfixed
       implicit none
@@ -1091,7 +1091,7 @@ end subroutine sort_gvec
           USE constants,       ONLY: eps8
           USE gvecw,           ONLY: ecutwfc
           USE gvecw,           ONLY: ecfixed, qcutz, q2sigma
-          USE gvecp,           ONLY: ecutrho
+          USE gvect,           ONLY: ecutrho
           USE gvecs,           ONLY: ecuts, dual, doublegrid
           use betax,           only: mmx, refg
           USE pseudopotential, only: tpstab
@@ -1166,7 +1166,7 @@ end subroutine sort_gvec
 
           USE kinds, ONLY: DP
           USE gvecw, ONLY: ecutwfc,  gcutw
-          USE gvecp, ONLY: ecutrho,  gcutm
+          USE gvect, ONLY: ecutrho,  gcutm
           USE gvecs, ONLY: ecuts, gcutms
           USE gvecb, ONLY: ecutb, gcutb
           USE gvecw, ONLY: ekcut, gkcut
@@ -1227,7 +1227,7 @@ end subroutine sort_gvec
         !  Print out informations about different cut-offs
 
         USE gvecw, ONLY: ecutwfc,  gcutw
-        USE gvecp, ONLY: ecutrho,  gcutm
+        USE gvect, ONLY: ecutrho,  gcutm
         USE gvecw, ONLY: ecfixed, qcutz, q2sigma
         USE gvecw, ONLY: ekcut, gkcut
         USE gvecs, ONLY: ecuts, gcutms
@@ -1659,7 +1659,7 @@ SUBROUTINE gmeshinfo( )
    use gvecb,     only: ngb
    USE gvecw,     only: ngw_g, ngw, ngwx
    USE gvecs,     only: ngms_g, ngms, ngsx
-   USE gvecp,     only: ngm, ngm_g, ngmx
+   USE gvect,     only: ngm, ngm_g, ngmx
 
    IMPLICIT NONE
 

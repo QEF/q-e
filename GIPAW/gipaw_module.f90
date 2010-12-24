@@ -337,7 +337,7 @@ CONTAINS
     USE scf,           ONLY : v, vrs, vltot, rho, rho_core, kedtau
     USE gvect,         ONLY : ngm
     USE grid_dimensions,ONLY: nrxx
-    USE gsmooth,       ONLY : doublegrid
+    USE gvecs,       ONLY : doublegrid
     USE klist,         ONLY : xk, degauss, ngauss, nks, nelec
     USE constants,     ONLY : degspin, pi
     USE paw_gipaw,     ONLY : paw_recon, paw_nkb, paw_vkb, paw_becp, &

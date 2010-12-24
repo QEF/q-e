@@ -23,8 +23,8 @@ SUBROUTINE deallocate_modules_var()
   USE efield_module,        ONLY : deallocate_efield
   USE ensemble_dft,         ONLY : deallocate_ensemble_dft
   USE cg_module,            ONLY : deallocate_cg
-  USE reciprocal_vectors,   ONLY : deallocate_recvecs
-  USE gvecp,                ONLY : deallocate_gvecp
+  USE gvect,                ONLY : deallocate_gvect
+  USE gvect,                ONLY : deallocate_gvect
   USE gvecs,                ONLY : deallocate_gvecs
   USE gvecw,                ONLY : deallocate_gvecw
   USE gvecb,                ONLY : deallocate_gvecb
@@ -71,8 +71,7 @@ SUBROUTINE deallocate_modules_var()
   CALL deallocate_cg( )
   CALL deallocate_core()
   CALL deallocate_uspp()
-  CALL deallocate_recvecs()
-  CALL deallocate_gvecp()
+  CALL deallocate_gvect()
   CALL deallocate_gvecs()
   CALL deallocate_gvecw()
   CALL deallocate_gvecb( )

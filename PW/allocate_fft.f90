@@ -15,7 +15,7 @@ SUBROUTINE allocate_fft
   !
   USE io_global, ONLY : stdout
   USE gvect,     ONLY : ngm, g, gg, nl, nlm, mill, igtongl
-  USE gsmooth,   ONLY : ngms, nls, nlsm
+  USE gvecs,   ONLY : ngms, nls, nlsm
   USE grid_dimensions,        ONLY : nr1, nr2, nr3, nrxx
   USE smooth_grid_dimensions, ONLY : nr1s, nr2s, nr3s, nrxxs
 ! DCC

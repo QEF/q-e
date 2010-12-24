@@ -25,8 +25,8 @@
      use pseudopotential,    ONLY : tpstab, rhoc1_sp, rhocp_sp
      use cell_base,          ONLY : omega, tpiba2, tpiba
      USE splines,            ONLY : spline
-     use gvecp,              ONLY : ngm
-     use reciprocal_vectors, ONLY : gg, gstart
+     use gvect,              ONLY : ngm
+     use gvect, ONLY : gg, gstart
      USE core,               ONLY : rhocb, rhocg, drhocg, nlcc_any
      !
      IMPLICIT NONE
@@ -109,8 +109,8 @@
 
       ! this isn't really needed, but if I remove it, ifc 7.1
       ! gives an "internal compiler error"
-      use reciprocal_vectors, only: gstart
-      use gvecp,              only: ngm, nl
+      use gvect, only: gstart
+      use gvect,              only: ngm, nl
       use grid_dimensions,    only: nr1, nr2, nr3, &
                                     nr1x, nr2x, nr3x, nrxx
       USE fft_interfaces,     ONLY: fwfft
@@ -193,7 +193,7 @@
       use core,            only: rhocb
       use fft_interfaces,  only: invfft
       use fft_base,        only: dfftb
-      use reciprocal_vectors, only: gstart
+      use gvect, only: gstart
       use smallbox_grid_dimensions, only: nr1b, nr2b, nr3b, &
             nr1bx, nr2bx, nr3bx, nnrbx
 

@@ -32,7 +32,7 @@
       use wave_base,           only : wave_steepest, wave_verlet
       use control_flags,       only : lwf, tsde
       use uspp,                only : deeq, vkb
-      use reciprocal_vectors,  only : gstart
+      use gvect,  only : gstart
       use electrons_base,      only : n=>nbsp, ispin, f, nspin, nupdwn, iupdwn
       use wannier_subroutines, only : ef_potential
       use efield_module,       only : dforce_efield, tefield, dforce_efield2, tefield2
@@ -237,7 +237,7 @@
       USE wave_base,           ONLY : wave_steepest, wave_verlet
       USE control_flags,       ONLY : lwf, tsde
       USE uspp,                ONLY : deeq, vkb
-      USE reciprocal_vectors,  ONLY : gstart
+      USE gvect,  ONLY : gstart
       USE wannier_subroutines, ONLY : ef_potential
       USE efield_module,       ONLY : dforce_efield, tefield
       USE electrons_base,      ONLY : ispin, nspin, f, n=>nbsp

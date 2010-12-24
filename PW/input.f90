@@ -84,7 +84,7 @@ SUBROUTINE iosys(xmlinput,attr)
   !
   USE force_mod,     ONLY : lforce, lstres, force
   !
-  USE gsmooth,       ONLY : dual
+  USE gvecs,       ONLY : dual
   USE gvect,         ONLY : ecutrho_ => ecutrho
   !
   USE grid_dimensions, ONLY : nr1_ => nr1, &

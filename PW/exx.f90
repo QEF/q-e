@@ -497,7 +497,7 @@ CONTAINS
                                      tmp_dir, prefix
     USE io_global,            ONLY : stdout
     USE buffers,              ONLY : get_buffer
-    USE gsmooth,              ONLY : nls, nlsm, doublegrid
+    USE gvecs,              ONLY : nls, nlsm, doublegrid
     USE wvfct,                ONLY : nbnd, npwx, npw, igk, wg, et
     USE control_flags,        ONLY : gamma_only
     USE klist,                ONLY : wk, ngk, nks
@@ -697,7 +697,7 @@ CONTAINS
     USE cell_base, ONLY : alat, omega, bg, at, tpiba
     USE symm_base, ONLY : nsym, s
     USE gvect,     ONLY : ngm
-    USE gsmooth,   ONLY : nls, nlsm, doublegrid
+    USE gvecs,   ONLY : nls, nlsm, doublegrid
     USE wvfct,     ONLY : nbnd, npwx, npw, igk, current_k
     USE control_flags, ONLY : gamma_only
     USE klist,     ONLY : xk
@@ -977,7 +977,7 @@ call flush_unit(stdout)
     USE cell_base, ONLY : alat, omega, bg, at, tpiba
     USE symm_base,ONLY : nsym, s
     USE gvect,     ONLY : ngm
-    USE gsmooth,   ONLY : nls, nlsm, doublegrid
+    USE gvecs,   ONLY : nls, nlsm, doublegrid
     USE wvfct,     ONLY : nbnd, npwx, npw, igk, wg, current_k
     USE control_flags, ONLY : gamma_only
     USE wavefunctions_module, ONLY : evc
@@ -1322,7 +1322,7 @@ call flush_unit(stdout)
   USE cell_base, ONLY : alat, omega, bg, at, tpiba
   USE symm_base,ONLY : nsym, s
   USE gvect,     ONLY : ngm
-  USE gsmooth,   ONLY : nls, nlsm, doublegrid
+  USE gvecs,   ONLY : nls, nlsm, doublegrid
   USE wvfct,     ONLY : nbnd, npwx, npw, igk, wg, current_k
   USE control_flags, ONLY : gamma_only
   USE wavefunctions_module, ONLY : evc

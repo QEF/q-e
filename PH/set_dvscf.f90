@@ -14,7 +14,7 @@
   !
 
   use kinds, only : DP
-  USE gsmooth, ONLY : doublegrid
+  USE gvecs, ONLY : doublegrid
   USE grid_dimensions,        ONLY : nrxx
   USE smooth_grid_dimensions, ONLY : nrxxs
   USE lsda_mod,ONLY : nspin

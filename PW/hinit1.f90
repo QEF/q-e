@@ -15,7 +15,7 @@ SUBROUTINE hinit1()
   USE cell_base,     ONLY : at, bg, omega, tpiba2
   USE grid_dimensions,ONLY: nrxx
   USE gvect,         ONLY : ngm, g
-  USE gsmooth,       ONLY : doublegrid
+  USE gvecs,       ONLY : doublegrid
   USE ldaU,          ONLY : lda_plus_u
   USE lsda_mod,      ONLY : nspin
   USE scf,           ONLY : vrs, vltot, v, kedtau

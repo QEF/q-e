@@ -478,7 +478,7 @@ MODULE wannier_subroutines
     USE smooth_grid_dimensions, ONLY : nrxxs
     USE electrons_base,         ONLY : nbsp, nspin, nupdwn, f, ispin
     USE cell_base,              ONLY : ainv, a1, a2, a3
-    USE reciprocal_vectors,     ONLY : gstart
+    USE gvect,     ONLY : gstart
     USE control_flags,          ONLY : tsde
     USE wave_base,              ONLY : wave_steepest, wave_verlet
     USE cp_interfaces,          ONLY : dforce

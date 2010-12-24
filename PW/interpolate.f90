@@ -17,7 +17,7 @@ subroutine interpolate (v, vs, iflag)
   !
   USE kinds, ONLY: DP
   USE gvect,  ONLY: nl, nlm
-  USE gsmooth,ONLY: ngms, nls, nlsm, doublegrid
+  USE gvecs,ONLY: ngms, nls, nlsm, doublegrid
   USE control_flags, ONLY: gamma_only
   USE fft_base,      ONLY : dfftp, dffts
   USE fft_interfaces,ONLY : fwfft, invfft
@@ -107,7 +107,7 @@ subroutine cinterpolate (v, vs, iflag)
   !
   USE kinds, ONLY: DP
   USE gvect,  ONLY: nl, nlm
-  USE gsmooth,ONLY: ngms, nls, nlsm, doublegrid
+  USE gvecs,ONLY: ngms, nls, nlsm, doublegrid
   USE control_flags, ONLY: gamma_only
   USE fft_base,      ONLY : dfftp, dffts
   USE fft_interfaces,ONLY : fwfft, invfft

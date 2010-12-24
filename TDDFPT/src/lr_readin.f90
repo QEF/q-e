@@ -23,7 +23,7 @@ subroutine lr_readin
   use control_flags,       only : twfcollect
   USE scf,                 ONLY : vltot, v, vrs
   USE grid_dimensions,     ONLY : nrxx
-  USE gsmooth,             ONLY : doublegrid
+  USE gvecs,             ONLY : doublegrid
   use wvfct,               only : nbnd, et, wg
   use lsda_mod,            only : isk
   use ener,                only : ef

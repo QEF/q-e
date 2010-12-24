@@ -14,7 +14,7 @@ SUBROUTINE vloc_psi_gamma(lda, n, m, psi, v, hpsi)
   !
   USE parallel_include
   USE kinds,   ONLY : DP
-  USE gsmooth, ONLY : nls, nlsm
+  USE gvecs, ONLY : nls, nlsm
   USE wvfct,   ONLY : igk
   USE mp_global,     ONLY : nogrp, ogrp_comm, me_pool, nolist, use_task_groups
   USE fft_base,      ONLY : dffts
@@ -201,7 +201,7 @@ SUBROUTINE vloc_psi_k(lda, n, m, psi, v, hpsi)
   !
   USE parallel_include
   USE kinds,   ONLY : DP
-  USE gsmooth, ONLY : nls, nlsm
+  USE gvecs, ONLY : nls, nlsm
   USE wvfct,   ONLY : igk
   USE mp_global,     ONLY : nogrp, ogrp_comm, me_pool, nolist, use_task_groups
   USE fft_base,      ONLY : dffts
@@ -354,7 +354,7 @@ SUBROUTINE vloc_psi_nc (lda, n, m, psi, v, hpsi)
   !
   USE parallel_include
   USE kinds,   ONLY : DP
-  USE gsmooth, ONLY : nls, nlsm
+  USE gvecs, ONLY : nls, nlsm
   USE wvfct,   ONLY : igk
   USE mp_global,     ONLY : nogrp, ogrp_comm, me_pool, nolist, use_task_groups
   USE fft_base,      ONLY : dffts, dfftp

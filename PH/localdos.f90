@@ -24,7 +24,7 @@ subroutine localdos (ldos, ldoss, dos_ef)
   USE fft_base,  ONLY: dffts
   USE fft_interfaces, ONLY: invfft
   USE grid_dimensions,ONLY : nrxx
-  USE gsmooth,   ONLY : doublegrid, nls
+  USE gvecs,   ONLY : doublegrid, nls
   USE klist,     ONLY : xk, wk, degauss, ngauss
   USE lsda_mod,  ONLY : nspin, lsda, current_spin, isk
   USE noncollin_module, ONLY : noncolin, npol, nspin_mag
@@ -258,7 +258,7 @@ subroutine localdos_paw (ldos, ldoss, becsum1, dos_ef)
   USE fft_base,  ONLY : dffts
   USE fft_interfaces, ONLY: invfft
   USE grid_dimensions,ONLY : nrxx
-  USE gsmooth,   ONLY : doublegrid, nls
+  USE gvecs,   ONLY : doublegrid, nls
   USE klist,     ONLY : xk, wk, degauss, ngauss
   USE lsda_mod,  ONLY : nspin, lsda, current_spin, isk
   USE noncollin_module, ONLY : noncolin, npol, nspin_mag

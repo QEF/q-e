@@ -100,7 +100,7 @@ SUBROUTINE plot_wannier(nc,n0)
   USE fft_interfaces,ONLY : invfft
   USE gvect
   USE grid_dimensions,ONLY: nr1, nr2, nr3 
-  USE gsmooth
+  USE gvecs
   USE cell_base
   USE ions_base, ONLY : nat, ntyp=>nsp, ityp, tau, atm, zv
   USE vlocal,    ONLY : strf

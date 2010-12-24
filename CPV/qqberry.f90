@@ -20,13 +20,13 @@ subroutine qqberry2( gqq,gqqm, ipol)
   use atom,               only: rgrid
   use core
   use gvecw,              only: ngw
-  use reciprocal_vectors, only: mill
+  use gvect, only: mill
   use constants
   use cvan,               only: nvb
   use ions_base
   use ions_base,          only: nas => nax
   use cell_base,          only: a1, a2, a3
-  use reciprocal_vectors, only: g, gg
+  use gvect, only: g, gg
   use mp,                 only: mp_sum
   use mp_global,          only: intra_image_comm
   use cp_interfaces,      only: fill_qrl
@@ -218,7 +218,7 @@ subroutine qqupdate(eigr, gqqm0, gqq, gqqm, ipol)
   use cvan
   use gvecw, only: ngw
   use ions_base, only : nas => nax, nat, na, nsp
-  use reciprocal_vectors, only: mill
+  use gvect, only: mill
   use uspp_param, only: nh, nhm
   use mp, only: mp_sum
   use mp_global, only: intra_image_comm

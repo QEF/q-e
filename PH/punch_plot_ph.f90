@@ -20,7 +20,7 @@ SUBROUTINE punch_plot_ph()
   USE kinds,      ONLY : DP
   USE grid_dimensions, ONLY : nrxx, nr1,nr2,nr3, nr1x,nr2x,nr3x
   USE gvect,      ONLY : gcutm
-  USE gsmooth,    ONLY : dual
+  USE gvecs,    ONLY : dual
   USE cell_base,  ONLY : ibrav, celldm
   USE lsda_mod,   ONLY : nspin, lsda
   USE ions_base,  ONLY : nat, ityp, ntyp => nsp, atm, zv, tau

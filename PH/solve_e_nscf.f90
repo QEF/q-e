@@ -21,7 +21,7 @@ subroutine solve_e_nscf( avg_iter, thresh, ik, ipol, dvscfs, auxr )
   USE fft_base,              ONLY : dffts
   USE fft_interfaces,        ONLY : fwfft, invfft
   USE gvect,                 ONLY : g
-  USE gsmooth,               ONLY : nls
+  USE gvecs,               ONLY : nls
   USE wvfct,                 ONLY : npw, igk, g2kin,  et
   USE wavefunctions_module,  ONLY : evc
   USE eqv,                   ONLY : dpsi, dvpsi

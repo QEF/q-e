@@ -17,10 +17,10 @@ SUBROUTINE ggen()
    !
    USE kinds,              ONLY : DP
    USE cell_base,          ONLY : at, bg
-   USE reciprocal_vectors, ONLY : ig_l2g
+   USE gvect, ONLY : ig_l2g
    USE gvect,              ONLY : g, gg, ngm, ngm_g, gcutm, &
                                   mill,  nl, gstart, gl, ngl, igtongl
-   USE gsmooth,            ONLY : ngms, gcutms, ngms_g, nls
+   USE gvecs,            ONLY : ngms, gcutms, ngms_g, nls
    USE control_flags,      ONLY : gamma_only
    USE cellmd,             ONLY : lmovecell
    USE constants,          ONLY : eps8
@@ -246,7 +246,7 @@ SUBROUTINE index_minusg()
    !     between the fft mesh points and -G (for gamma-only calculations)
    !
    USE gvect,   ONLY : ngm, nlm, mill
-   USE gsmooth, ONLY : nlsm, ngms
+   USE gvecs, ONLY : nlsm, ngms
    USE fft_base,  ONLY : dfftp, dffts
    IMPLICIT NONE
    !

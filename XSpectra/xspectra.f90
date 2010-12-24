@@ -891,7 +891,7 @@ SUBROUTINE xanes_dipole(a,b,ncalcv,xnorm,core_wfn,paw_iltonhb,terminator,verbosi
        paw_lmaxkb,paw_recon
   USE becmod,          ONLY : becp, allocate_bec_type, deallocate_bec_type !CG
   USE scf,             ONLY : vltot, vrs, v, kedtau
-  USE gsmooth,         ONLY : doublegrid
+  USE gvecs,         ONLY : doublegrid
   USE mp_global,       ONLY : intra_pool_comm, root_pool, world_comm
   USE mp,              ONLY : mp_sum, mp_bcast, mp_barrier !CG
   USE io_global,       ONLY : ionode
@@ -1273,7 +1273,7 @@ SUBROUTINE xanes_quadrupole(a,b,ncalcv,xnorm,core_wfn,paw_iltonhb,terminator,ver
        paw_recon
   USE becmod, ONLY:becp, allocate_bec_type, deallocate_bec_type ! CG
   USE scf, ONLY: vltot,v,vrs, kedtau !CG
-  USE gsmooth, ONLY : doublegrid
+  USE gvecs, ONLY : doublegrid
   USE mp_global,  ONLY : intra_pool_comm, root_pool, world_comm ! CG
   USE mp,         ONLY : mp_sum,mp_barrier, mp_bcast !CG
   USE xspectra,  ONLY:  xiabs,xanes_qua,xang_mom,xniter,xnitermax,xkvec,xepsilon,&
@@ -3388,7 +3388,7 @@ SUBROUTINE verify_hpsi
        paw_lmaxkb,paw_recon
   USE becmod,     ONLY : becp, calbec, allocate_bec_type, deallocate_bec_type !CG
   USE scf,        ONLY : vltot, vrs, v, kedtau !CG
-  USE gsmooth,    ONLY : doublegrid
+  USE gvecs,    ONLY : doublegrid
   USE mp_global,  ONLY : intra_pool_comm, mpime,my_pool_id, npool
   USE mp,         ONLY : mp_sum
   USE xspectra,      ONLY : xiabs, xanes_dip, xang_mom, xniter, xnitermax, xepsilon

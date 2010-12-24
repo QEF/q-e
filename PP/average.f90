@@ -46,7 +46,7 @@ PROGRAM average
   USE cell_base,            ONLY : ibrav, alat, omega, celldm, tpiba, &
                                    tpiba2, at, bg
   USE gvect,                ONLY : gcutm
-  USE gsmooth,              ONLY : doublegrid, gcutms, dual
+  USE gvecs,              ONLY : doublegrid, gcutms, dual
   USE wvfct,                ONLY : ecutwfc
   USE grid_dimensions,      ONLY : nr1, nr2, nr3, nr1x, nr2x, nr3x, nrxx
   USE smooth_grid_dimensions,ONLY: nr1s, nr2s, nr3s

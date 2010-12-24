@@ -28,11 +28,11 @@
       use ensemble_dft, only: tens,   ef,  z0t, c0diag,  &
                       becdiag, fmat0, e0,  id_matrix_init
 !---
-      use gvecp, only: ngm
+      use gvect, only: ngm
       use gvecs, only: ngms
       use gvecb, only: ngb
       use gvecw, only: ngw
-      use reciprocal_vectors, only: gstart
+      use gvect, only: gstart
       use cvan, only: nvb, ish
       use ions_base, only: na, nat, pmass, nax, nsp, rcmax
       use grid_dimensions, only: nrxx, nr1, nr2, nr3

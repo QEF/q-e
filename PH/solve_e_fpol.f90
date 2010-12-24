@@ -32,7 +32,7 @@ subroutine solve_e_fpol ( iw )
   USE fft_interfaces,        ONLY : fwfft, invfft
   USE gvect,                 ONLY : g
   USE grid_dimensions,       ONLY : nrxx
-  USE gsmooth,               ONLY : doublegrid, nls
+  USE gvecs,               ONLY : doublegrid, nls
   USE becmod,                ONLY : becp, calbec
   USE wvfct,                 ONLY : npw, npwx, nbnd, igk, g2kin, et
   USE uspp,                  ONLY : okvan, vkb

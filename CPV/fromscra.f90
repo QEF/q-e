@@ -34,8 +34,8 @@ SUBROUTINE from_scratch( )
     USE core,                 ONLY : nlcc_any, rhoc
     USE gvecw,                ONLY : ngw
     USE gvecs,                ONLY : ngms
-    USE gvecp,                ONLY : ngm
-    USE reciprocal_vectors,   ONLY : gstart, mill, eigts1, eigts2, eigts3
+    USE gvect,                ONLY : ngm
+    USE gvect,   ONLY : gstart, mill, eigts1, eigts2, eigts3
     USE cvan,                 ONLY : nvb
     USE cp_electronic_mass,   ONLY : emass
     USE efield_module,        ONLY : tefield, efield_berry_setup, berry_energy, &

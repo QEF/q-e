@@ -15,7 +15,7 @@
 ! of e(xc) with respect to to cell parameter h(i,j)
 !     
       use funct,           only : dft_is_gradient, dft_is_meta
-      use gvecp,           only : ngm
+      use gvect,           only : ngm
       use gvecs,           only : ngms
       use grid_dimensions, only : nr1, nr2, nr3, nrxx
       use cell_base,       only : ainv, omega, h
@@ -267,8 +267,8 @@
 !           
       USE kinds,              ONLY: DP
       use control_flags, only: iprint, tpre
-      use reciprocal_vectors, only: g
-      use gvecp, only: ngm, nl, nlm
+      use gvect, only: g
+      use gvect, only: ngm, nl, nlm
       use grid_dimensions, only: nr1, nr2, nr3, nrxx, nr1x, nr2x, nr3x
       use cell_base, only: ainv, tpiba, omega
       use cp_main_variables, only: drhog

@@ -39,8 +39,8 @@
         USE mp_global,          ONLY: nproc_image, me_image, intra_image_comm
         USE io_global,          ONLY: ionode
         USE io_files,           ONLY: opt_unit
-        USE gvecp,              ONLY: ngm
-        USE reciprocal_vectors, ONLY: gstart, g, gg
+        USE gvect,              ONLY: ngm
+        USE gvect, ONLY: gstart, g, gg
 
         IMPLICIT NONE
 
@@ -131,7 +131,7 @@
       USE mp_global,       ONLY: me_image
       USE fft_base,        ONLY: dfftp
       USE fft_interfaces,  ONLY: fwfft
-      USE gvecp,           ONLY: ngm
+      USE gvect,           ONLY: ngm
       USE constants,       ONLY: gsmall, pi
       USE cell_base,       ONLY: tpiba2, s_to_r, alat
       use grid_dimensions, only: nr1, nr2, nr3, nr1l, nr2l, nr3l, nrxx
@@ -226,8 +226,8 @@
       USE kinds,              ONLY: DP
       USE io_global,          ONLY: stdout
       USE ions_base,          ONLY: nsp
-      USE gvecp,              ONLY: ngm
-      USE reciprocal_vectors, ONLY: gstart
+      USE gvect,              ONLY: ngm
+      USE gvect, ONLY: gstart
       USE mp_global,          ONLY: intra_image_comm
       USE mp,                 ONLY: mp_sum
 
@@ -305,9 +305,9 @@
       USE constants,          ONLY: fpi
       USE cell_base,          ONLY: tpiba2, tpiba
       USE io_global,          ONLY: stdout
-      USE reciprocal_vectors, ONLY: gstart, gg
+      USE gvect, ONLY: gstart, gg
       USE ions_base,          ONLY: nsp
-      USE gvecp,              ONLY: ngm
+      USE gvect,              ONLY: ngm
       USE mp_global,          ONLY: intra_image_comm
       USE mp,                 ONLY: mp_sum
 
@@ -417,9 +417,9 @@
       USE cell_base,          ONLY: tpiba2, tpiba
       USE io_global,          ONLY: stdout
       USE grid_dimensions,    ONLY: nr1, nr2, nr3
-      USE reciprocal_vectors, ONLY: mill, gstart, g, gg
+      USE gvect, ONLY: mill, gstart, g, gg
       USE ions_base,          ONLY: nat, nsp, na
-      USE gvecp,              ONLY: ngm
+      USE gvect,              ONLY: ngm
       USE gvecs,              ONLY: ngms
 
       IMPLICIT NONE
@@ -736,8 +736,8 @@
       USE constants,          ONLY: fpi
       USE control_flags,      ONLY: gamma_only
       USE cell_base,          ONLY: tpiba2, boxdimensions
-      USE gvecp,              ONLY: ngm
-      USE reciprocal_vectors, ONLY: gstart, gg
+      USE gvect,              ONLY: ngm
+      USE gvect, ONLY: gstart, gg
       USE sic_module,         ONLY: sic_epsilon, sic_alpha
       USE mp_global,          ONLY: intra_image_comm
       USE mp,                 ONLY: mp_sum
@@ -834,8 +834,8 @@
       USE ions_base, ONLY: ind_srt
       USE fft_base, ONLY: dfftp, dffts
       USE cell_base, ONLY: tpiba2, boxdimensions, s_to_r
-      USE reciprocal_vectors, ONLY: gstart, gg
-      USE gvecp, ONLY: ngm
+      USE gvect, ONLY: gstart, gg
+      USE gvect, ONLY: ngm
       USE gvecw, ONLY: ngw
       use grid_dimensions, only: nr1, nr2, nr3, nr1l, nr2l, nr3l, nrxx
       USE fft_interfaces, ONLY: fwfft, invfft

@@ -699,7 +699,7 @@ END SUBROUTINE diagonalize_parallel
       USE uspp,               ONLY: nkbus
       USE cvan,               ONLY: nvb
       USE gvecw,              ONLY: ngw
-      USE reciprocal_vectors, ONLY: gstart
+      USE gvect, ONLY: gstart
       USE mp,                 ONLY: mp_root_sum
       USE control_flags,      ONLY: iprsta
       USE io_global,          ONLY: stdout
@@ -822,7 +822,7 @@ END SUBROUTINE diagonalize_parallel
 !     routine makes use of  c(-q)=c*(q)
 !
       USE gvecw,              ONLY: ngw
-      USE reciprocal_vectors, ONLY: gstart
+      USE gvect, ONLY: gstart
       USE uspp,               ONLY: nkbus
       USE cvan,               ONLY: nvb
       USE kinds,              ONLY: DP
@@ -951,7 +951,7 @@ END SUBROUTINE diagonalize_parallel
       USE cvan,               ONLY: nvb
       USE uspp,               ONLY: nkbus
       USE gvecw,              ONLY: ngw
-      USE reciprocal_vectors, ONLY: gstart
+      USE gvect, ONLY: gstart
       USE mp,                 ONLY: mp_root_sum
       USE control_flags,      ONLY: iprsta
       USE io_global,          ONLY: stdout

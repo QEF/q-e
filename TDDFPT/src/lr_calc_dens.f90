@@ -16,7 +16,7 @@ subroutine lr_calc_dens( evc1, response_calc )
   use ions_base,                    only : ityp,nat,ntyp=>nsp
   use cell_base,                    only : omega
   use ener,                     only : ef
-  use gsmooth,                  only : nls,nlsm,doublegrid
+  use gvecs,                  only : nls,nlsm,doublegrid
   use grid_dimensions,          only : nrxx,nr1,nr2,nr3
   use fft_base,                 only : dffts
   use fft_interfaces,           only : invfft

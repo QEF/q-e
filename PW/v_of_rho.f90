@@ -130,7 +130,6 @@ END SUBROUTINE v_xc_meta
 SUBROUTINE v_xc_tpss( rho, rho_core, rhog_core, etxc, vtxc, v, kedtaur )
   !     ===================
   !--------------------------------------------------------------------
-!  use gvecp, only: ng => ngm
   USE kinds,            ONLY : DP
   USE gvect,            ONLY : g,nl,ngm
   USE grid_dimensions,  ONLY : nr1, nr2, nr3, nrxx

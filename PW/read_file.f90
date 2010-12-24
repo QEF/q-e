@@ -32,7 +32,7 @@ SUBROUTINE read_file()
   USE gvect,                ONLY : gg, ngm, g, &
                                    eigts1, eigts2, eigts3, nl, gstart
   USE grid_dimensions,      ONLY : nr1, nr2, nr3
-  USE gsmooth,              ONLY : ngms, nls 
+  USE gvecs,              ONLY : ngms, nls 
   USE spin_orb,             ONLY : lspinorb, domag
   USE scf,                  ONLY : rho, rho_core, rhog_core, v
   USE wavefunctions_module, ONLY : psic
@@ -281,7 +281,7 @@ SUBROUTINE read_file()
       USE cell_base, ONLY : alat, tpiba, tpiba2
       USE gvect,     ONLY : ecutrho, gcutm
       USE wvfct,     ONLY : ecutwfc
-      USE gsmooth,   ONLY : gcutms, dual, doublegrid
+      USE gvecs,   ONLY : gcutms, dual, doublegrid
       !
       !
       ! ... Set the units in real and reciprocal space

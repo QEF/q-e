@@ -33,7 +33,7 @@ SUBROUTINE potinit()
   USE fft_base,             ONLY : dfftp
   USE fft_interfaces,       ONLY : fwfft
   USE gvect,                ONLY : ngm, gstart, nl, g, gg
-  USE gsmooth,              ONLY : doublegrid
+  USE gvecs,              ONLY : doublegrid
   USE control_flags,        ONLY : lscf
   USE scf,                  ONLY : rho, rho_core, rhog_core, &
                                    vltot, v, vrs, kedtau

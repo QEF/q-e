@@ -23,7 +23,7 @@ SUBROUTINE data_structure( lgamma )
   USE grid_dimensions, ONLY : nr1, nr2, nr3, nr1x, nr2x, nr3x, nrxx
   USE smooth_grid_dimensions, &
                   ONLY : nr1s, nr2s, nr3s, nr1sx, nr2sx, nr3sx, nrxxs
-  USE gsmooth,    ONLY : ngms, ngms_g, gcutms
+  USE gvecs,    ONLY : ngms, ngms_g, gcutms
   USE mp,         ONLY : mp_sum, mp_max
   USE mp_global,  ONLY : intra_pool_comm, nproc_pool, me_pool, my_image_id, &
                          nogrp, nproc, inter_pool_comm,  use_task_groups

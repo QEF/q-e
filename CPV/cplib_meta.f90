@@ -13,7 +13,7 @@
 !
 !          contribution from metaGGA
       use kinds, only: dp
-      use reciprocal_vectors,     only : g
+      use gvect,     only : g
       use gvecs,                  only : ngms, nlsm, nls
       use gvecw,                  only : ngw
       use smooth_grid_dimensions, only : nrxxs
@@ -70,8 +70,8 @@
       use control_flags, only: tpre
       use gvecs
       use gvecw, only: ngw
-      use reciprocal_vectors, only: g
-      use gvecp, only: nl, nlm
+      use gvect, only: g
+      use gvect, only: nl, nlm
       use grid_dimensions, only: nr1, nr2, nr3, nr1x, nr2x, nr3x, nrxx
       use cell_base
       use smooth_grid_dimensions, only: nrxxs
@@ -257,7 +257,7 @@
       use io_global, only: stdout
       use ions_base, only: nas => nax, nsp, na, nat
       use gvecs
-      use gvecp, only: ngm, nl, nlm
+      use gvect, only: ngm, nl, nlm
       use cell_base, only: omega
       use cell_base, only: a1, a2, a3, tpiba2
       use grid_dimensions, only: nr1, nr2, nr3, nr1x, nr2x, nr3x, nrxx

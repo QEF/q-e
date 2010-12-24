@@ -26,7 +26,7 @@ subroutine dvqpsi_us (ik, uact, addnlcc)
   USE fft_interfaces, ONLY: fwfft, invfft
   USE gvect,     ONLY : eigts1, eigts2, eigts3, mill, g, nl, &
                         ngm
-  USE gsmooth,   ONLY : ngms, doublegrid, nls
+  USE gvecs,   ONLY : ngms, doublegrid, nls
   USE lsda_mod,  ONLY : lsda, isk
   USE noncollin_module, ONLY : npol
   use uspp_param,ONLY : upf

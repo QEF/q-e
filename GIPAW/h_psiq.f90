@@ -18,7 +18,7 @@ subroutine h_psiq (lda, n, m, psi, hpsi, spsi)
   !
   USE fft_base,              ONLY : dffts
   USE fft_interfaces,        ONLY : fwfft, invfft
-  USE gsmooth,               ONLY : nls
+  USE gvecs,               ONLY : nls
   USE lsda_mod,              ONLY : current_spin
   USE wvfct,                 ONLY : igk, g2kin
   USE uspp,                  ONLY : vkb

@@ -57,10 +57,10 @@ MODULE cp_restart
       USE grid_dimensions,          ONLY : nr1, nr2, nr3, nr1x, nr2x, nr3l
       USE smooth_grid_dimensions,   ONLY : nr1s, nr2s, nr3s
       USE smallbox_grid_dimensions, ONLY : nr1b, nr2b, nr3b
-      USE gvecp,                    ONLY : ngm, ngm_g
+      USE gvect,                    ONLY : ngm, ngm_g
       USE gvecs,                    ONLY : ngms_g, ecuts, dual
       USE gvecw,                    ONLY : ngw, ngw_g, ecutwfc
-      USE reciprocal_vectors,       ONLY : ig_l2g, mill
+      USE gvect,       ONLY : ig_l2g, mill
       USE electrons_base,           ONLY : nspin, nelt, nel, nudx
       USE cell_base,                ONLY : ibrav, alat, celldm, &
                                            symm_type, s_to_r
@@ -926,7 +926,7 @@ MODULE cp_restart
       USE grid_dimensions,          ONLY : nr1, nr2, nr3
       USE smooth_grid_dimensions,   ONLY : nr1s, nr2s, nr3s
       USE smallbox_grid_dimensions, ONLY : nr1b, nr2b, nr3b
-      USE gvecp,                    ONLY : ngm
+      USE gvect,                    ONLY : ngm
       USE gvecw,                    ONLY : ngw, ngw_g
       USE electrons_base,           ONLY : nspin, nbnd, nelt, nel, &
                                            nupdwn, iupdwn, nudx
@@ -934,7 +934,7 @@ MODULE cp_restart
                                            s_to_r, r_to_s
       USE ions_base,                ONLY : nsp, nat, na, atm, zv, pmass, &
                                            sort_tau, ityp, ions_cofmass
-      USE reciprocal_vectors,       ONLY : ig_l2g, mill
+      USE gvect,       ONLY : ig_l2g, mill
       USE cp_main_variables,        ONLY : nprint_nfi, distribute_lambda, descla, distribute_zmat
       USE mp,                       ONLY : mp_sum
       USE mp_global,                ONLY : intra_image_comm
@@ -1809,7 +1809,7 @@ MODULE cp_restart
       !
       USE electrons_base,     ONLY : iupdwn, nupdwn
       USE gvecw,              ONLY : ngw
-      USE reciprocal_vectors, ONLY : ig_l2g
+      USE gvect, ONLY : ig_l2g
       !
       IMPLICIT NONE
       !
@@ -2184,7 +2184,7 @@ MODULE cp_restart
        !
        USE gvecw,                    ONLY : ngw, ngw_g
        USE control_flags,            ONLY : gamma_only
-       USE reciprocal_vectors,       ONLY : ig_l2g, mill
+       USE gvect,       ONLY : ig_l2g, mill
        USE mp,                       ONLY : mp_sum
        USE mp_global,                ONLY : intra_image_comm
        USE io_global,                ONLY : ionode

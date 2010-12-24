@@ -17,7 +17,7 @@ subroutine h_psi_meta (ldap, np, mp, psip, hpsi)
   USE cell_base, ONLY : tpiba
   USE lsda_mod,  ONLY : nspin, current_spin
   USE wvfct,     ONLY : igk, current_k
-  USE gsmooth,   ONLY : nls, nlsm
+  USE gvecs,   ONLY : nls, nlsm
   USE gvect,     ONLY : g
   USE scf,       ONLY : kedtau
   USE klist,     ONLY : xk

@@ -21,7 +21,7 @@ SUBROUTINE compute_sigma_avg(sigma_avg,becp_nc,ik,lsigma)
   USE klist,                ONLY : nks, xk
   USE gvect,                ONLY : g,gg
   USE grid_dimensions,      ONLY : nr1,nr2,nr3,nrxx
-  USE gsmooth,              ONLY : nls, nlsm, doublegrid
+  USE gvecs,              ONLY : nls, nlsm, doublegrid
   USE scf,                  ONLY : rho
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
   USE mp_global,            ONLY : me_pool, intra_pool_comm

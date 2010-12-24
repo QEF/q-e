@@ -18,7 +18,7 @@ SUBROUTINE local_dos1d (ik, kband, plan)
   USE ions_base, ONLY: nat, ntyp=>nsp, ityp
   USE fft_base,  ONLY: dffts, dfftp
   USE fft_interfaces, ONLY : fwfft, invfft
-  USE gsmooth,   ONLY : nls, doublegrid
+  USE gvecs,   ONLY : nls, doublegrid
   USE lsda_mod, ONLY: current_spin
   USE uspp, ONLY: becsum, indv, nhtol, nhtoj
   USE uspp_param, ONLY: upf, nh, nhm

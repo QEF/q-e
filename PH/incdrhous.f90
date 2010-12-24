@@ -19,7 +19,7 @@ subroutine incdrhous (drhoscf, weight, ik, dbecsum, evcr, wgg, becq, &
   USE cell_base, ONLY : omega
   USE fft_base,  ONLY : dffts
   USE fft_interfaces, ONLY: invfft
-  USE gsmooth,   ONLY : nls
+  USE gvecs,   ONLY : nls
   USE noncollin_module, ONLY : npol
   USE uspp,      ONLY : nkb, qq
   USE uspp_param,ONLY : nhm, nh

@@ -25,7 +25,7 @@ SUBROUTINE summary()
   USE cellmd,          ONLY : calc, cmass
   USE ions_base,       ONLY : amass
   USE gvect,           ONLY : ecutrho, ngm, ngm_g, gcutm
-  USE gsmooth,         ONLY : doublegrid, ngms, gcutms
+  USE gvecs,         ONLY : doublegrid, ngms, gcutms
   USE grid_dimensions, ONLY : nr1, nr2, nr3
   USE smooth_grid_dimensions,  ONLY : nr1s, nr2s, nr3s
   USE lsda_mod,        ONLY : lsda, starting_magnetization

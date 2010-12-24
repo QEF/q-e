@@ -22,7 +22,7 @@ subroutine compute_drhous_nc (drhous, dbecsum, wgg, becq, alpq)
   USE fft_base,   ONLY : dffts
   USE fft_interfaces, ONLY : invfft
   USE grid_dimensions,ONLY : nrxx
-  USE gsmooth,    ONLY : nls
+  USE gvecs,    ONLY : nls
   USE wvfct,      ONLY : npw, npwx, nbnd, igk
   USE noncollin_module, ONLY : noncolin, npol, nspin_mag
   USE wavefunctions_module,  ONLY: evc

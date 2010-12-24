@@ -21,7 +21,7 @@ subroutine gtable( ipol, ctable)
   !            a orthorombic primitive cell is supposed
   use kinds, only: dp
   use gvecw, only: ngw  
-  use reciprocal_vectors, only: mill
+  use gvect, only: mill
   use mp, only: mp_sum
   use io_global, only: ionode, stdout
   use mp_global, only: intra_image_comm 
@@ -115,7 +115,7 @@ subroutine gtablein( ipol, ctabin)
 
   use kinds, only: dp
   use gvecw, only: ngw  
-  use reciprocal_vectors, only: mill
+  use gvect, only: mill
   use mp, only: mp_sum
   use io_global, only: ionode, stdout
   use mp_global, only: intra_image_comm
@@ -192,7 +192,7 @@ subroutine find_whose_is_g
 !this subroutine set the correspondence G-->Proc
 
   USE gvecw,              ONLY : ngw, ngw_g
-  USE reciprocal_vectors, ONLY : ig_l2g, mill_g, mill
+  USE gvect, ONLY : ig_l2g, mill_g, mill
   USE mp,                 ONLY : mp_sum
   USE io_global,          ONLY : stdout
   USE mp_global,          ONLY : me_image, nproc_image, intra_image_comm
@@ -233,7 +233,7 @@ subroutine gtable_missing
   USE efield_module, ONLY : ctable_missing_1,ctable_missing_2, whose_is_g,n_g_missing_p,&
                           &      ctable_missing_rev_1,ctable_missing_rev_2 
   USE gvecw,              ONLY : ngw, ngw_g
-  USE reciprocal_vectors, ONLY : ig_l2g, mill_g, mill, gstart
+  USE gvect, ONLY : ig_l2g, mill_g, mill, gstart
   USE mp,                 ONLY : mp_sum, mp_max, mp_alltoall
   USE io_global,          ONLY : stdout
   USE mp_global,          ONLY : me_image, nproc_image, intra_image_comm, world_comm
@@ -451,7 +451,7 @@ subroutine gtable_missing_inv
   USE efield_module, ONLY : ctabin_missing_1,ctabin_missing_2, whose_is_g,n_g_missing_m,&
                           &      ctabin_missing_rev_1,ctabin_missing_rev_2 
   USE gvecw,              ONLY : ngw, ngw_g
-  USE reciprocal_vectors, ONLY : ig_l2g, mill_g, mill, gstart
+  USE gvect, ONLY : ig_l2g, mill_g, mill, gstart
   USE mp,                 ONLY : mp_sum, mp_max, mp_alltoall
   USE io_global,          ONLY : stdout
   USE mp_global,          ONLY : me_image, nproc_image, intra_image_comm, world_comm

@@ -2153,7 +2153,7 @@ MODULE realus
   ! ibnd: band index
   ! nbnd: total number of bands
     USE wavefunctions_module,     ONLY : psic
-    USE gsmooth,                  ONLY : nls,nlsm,doublegrid
+    USE gvecs,                  ONLY : nls,nlsm,doublegrid
     USE kinds,         ONLY : DP
     USE fft_base,      ONLY : dffts
     USE fft_interfaces,ONLY : invfft
@@ -2319,7 +2319,7 @@ MODULE realus
   ! ibnd: band index
   ! nbnd: total number of bands
     USE wavefunctions_module,     ONLY : psic
-    USE gsmooth,                  ONLY : nls,nlsm,doublegrid
+    USE gvecs,                  ONLY : nls,nlsm,doublegrid
     USE kinds,         ONLY : DP
     USE fft_base,      ONLY : dffts
     USE fft_interfaces,ONLY : fwfft
@@ -2458,7 +2458,7 @@ MODULE realus
   ! ibnd: band index
   ! nbnd: total number of bands
     USE wavefunctions_module,     ONLY : psic
-    USE gsmooth,                  ONLY : nls,nlsm,doublegrid
+    USE gvecs,                  ONLY : nls,nlsm,doublegrid
     USE kinds,         ONLY : DP
     USE fft_base,      ONLY : dffts
     USE fft_interfaces,ONLY : invfft
@@ -2536,7 +2536,7 @@ MODULE realus
     ! ibnd: band index
     ! nbnd: total number of bands
     USE wavefunctions_module,     ONLY : psic
-    USE gsmooth,                  ONLY : nls,nlsm,doublegrid
+    USE gvecs,                  ONLY : nls,nlsm,doublegrid
     USE kinds,         ONLY : DP
     USE fft_base,      ONLY : dffts
     USE fft_interfaces,ONLY : fwfft
@@ -2604,7 +2604,7 @@ MODULE realus
     ! OBM 241008
     !
     USE wavefunctions_module,     ONLY : psic
-    USE gsmooth,       ONLY : nls,nlsm,doublegrid
+    USE gvecs,       ONLY : nls,nlsm,doublegrid
     USE kinds,         ONLY : DP
     USE fft_base,      ONLY : dffts
     USE task_groups,   ONLY : tg_gather

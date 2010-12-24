@@ -253,7 +253,7 @@
    INTERFACE fillgrad
       SUBROUTINE fillgrad_x( nspin, rhog, gradr )
          USE kinds,           ONLY: DP         
-         USE gvecp,           ONLY: ngm
+         USE gvect,           ONLY: ngm
          USE grid_dimensions, ONLY: nrxx
          IMPLICIT NONE
          INTEGER, INTENT(IN) :: nspin

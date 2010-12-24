@@ -26,7 +26,7 @@ subroutine solve_e
   USE cell_base,             ONLY : tpiba2
   USE klist,                 ONLY : lgauss, xk, wk
   USE gvect,                 ONLY : g
-  USE gsmooth,               ONLY : doublegrid
+  USE gvecs,               ONLY : doublegrid
   USE grid_dimensions,       ONLY : nrxx
   USE smooth_grid_dimensions, ONLY: nrxxs
   USE lsda_mod,              ONLY : lsda, nspin, current_spin, isk

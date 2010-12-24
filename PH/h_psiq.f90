@@ -24,7 +24,7 @@ subroutine h_psiq (lda, n, m, psi, hpsi, spsi)
   USE lsda_mod, ONLY : current_spin
   USE fft_base, ONLY : dffts
   USE fft_interfaces, ONLY: fwfft, invfft
-  USE gsmooth, ONLY: nls
+  USE gvecs, ONLY: nls
   USE spin_orb, ONLY : domag
   USE scf,    ONLY : vrs
   USE uspp,   ONLY : vkb

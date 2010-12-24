@@ -44,7 +44,7 @@ SUBROUTINE setup()
   USE basis,              ONLY : starting_pot, natomwfc
   USE gvect,              ONLY : gcutm
   USE grid_dimensions,    ONLY : nr1, nr2, nr3
-  USE gsmooth,            ONLY : doublegrid, gcutms, dual
+  USE gvecs,            ONLY : doublegrid, gcutms, dual
   USE klist,              ONLY : xk, wk, nks, nelec, degauss, lgauss, &
                                  lxkcry, nkstot, &
                                  nelup, neldw, two_fermi_energies, &

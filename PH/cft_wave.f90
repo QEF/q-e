@@ -25,7 +25,7 @@ subroutine cft_wave (evc_g, evc_r, isw)
   USE wvfct, ONLY : npwx, npw, igk
   USE fft_base,   ONLY: dffts
   USE fft_interfaces, ONLY: fwfft, invfft
-  USE gsmooth, ONLY : nls
+  USE gvecs, ONLY : nls
   use noncollin_module, ONLY : noncolin, npol
   use qpoint, ONLY : npwq, igkq
   implicit none

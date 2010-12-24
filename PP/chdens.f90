@@ -27,7 +27,7 @@ SUBROUTINE chdens (filplot,plot_num)
   USE fft_interfaces, ONLY : fwfft
   USE gvect
   USE grid_dimensions, ONLY: nr1,nr2,nr3, nr1x,nr2x,nr3x, nrxx
-  USE gsmooth
+  USE gvecs
   USE wvfct,  ONLY: ecutwfc
   USE wavefunctions_module,  ONLY: psic
   USE io_files, ONLY: nd_nmbr
@@ -70,7 +70,7 @@ SUBROUTINE chdens (filplot,plot_num)
           '3D                  ', &
           '2D polar on a sphere'/)
 
-  real(DP) :: celldms (6), gcutmsa, duals, ecuts, zvs(ntypx), ats(3,3)
+  real(DP) :: celldms (6), gcutmsa, duals, zvs(ntypx), ats(3,3)
   real(DP), ALLOCATABLE :: taus (:,:), rhor(:), rhos(:)
   INTEGER :: ibravs, nr1sxa, nr2sxa, nr3sxa, nr1sa, nr2sa, nr3sa, &
        ntyps, nats

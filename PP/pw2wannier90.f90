@@ -826,7 +826,7 @@ SUBROUTINE compute_mmn
    USE wavefunctions_module, ONLY : evc, psic, psic_nc
    USE fft_base,        ONLY : dffts
    USE fft_interfaces,  ONLY : fwfft, invfft
-   USE gsmooth,         ONLY : nls, nlsm
+   USE gvecs,         ONLY : nls, nlsm
    USE klist,           ONLY : nkstot, xk
    USE io_files,        ONLY : nwordwfc, iunwfc
    USE io_files,        ONLY : find_free_unit
@@ -1496,7 +1496,7 @@ SUBROUTINE write_plot
    USE wavefunctions_module, ONLY : evc, psic
    USE io_files, ONLY : find_free_unit, nwordwfc, iunwfc
    USE wannier
-   USE gsmooth,         ONLY : nls, nlsm
+   USE gvecs,         ONLY : nls, nlsm
    USE klist,           ONLY : nkstot, xk
    USE gvect,           ONLY : g, ngm
    USE cell_base,       ONLY : tpiba2
@@ -2037,7 +2037,7 @@ SUBROUTINE wan2sic
   USE io_files, ONLY : iunwfc, iunatsicwfc, nwordwfc, nwordwann
   USE cell_base, ONLY : omega, tpiba2
   USE gvect, ONLY : g, ngm
-  USE gsmooth, ONLY: nls
+  USE gvecs, ONLY: nls
   USE wavefunctions_module, ONLY : evc, psic
   USE wvfct, ONLY : nbnd, npwx, npw, igk, g2kin, ecutwfc
   USE klist, ONLY : nkstot, xk, wk

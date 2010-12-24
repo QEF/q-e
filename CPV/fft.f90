@@ -76,7 +76,7 @@
 
      SUBROUTINE rho2psi( grid_type, psi, nnr, rho, ng )
        !
-       use gvecp, only: nlm, nl
+       use gvect, only: nlm, nl
        use gvecs, only: nlsm, nls
        use kinds, only: DP
 
@@ -130,7 +130,7 @@
 
      SUBROUTINE psi2c( psi, nnr, c, ca, ng, iflg )
 
-       use gvecp, only: nlm, nl
+       use gvect, only: nlm, nl
        use gvecs, only: nlsm, nls
        use kinds, only: DP
 
@@ -207,7 +207,7 @@
 
      SUBROUTINE psi2rho( grid_type, psi, nnr, rho, ng )
 
-       use gvecp, only: nlm, nl
+       use gvect, only: nlm, nl
        use gvecs, only: nlsm, nls
        use kinds, only: DP
 

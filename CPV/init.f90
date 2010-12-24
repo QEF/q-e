@@ -30,11 +30,11 @@
       use smallbox_grid_dimensions, only: nr1b, nr2b, nr3b, nr1bx, nr2bx, nr3bx
       use smooth_grid_dimensions,   only: nr1s, nr2s, nr3s, nr1sx, nr2sx, nr3sx, nrxxs
       USE grid_subroutines,         ONLY: realspace_grids_init, realspace_grids_para
-      USE reciprocal_vectors,       ONLY: mill_g, g2_g, eigts1,eigts2,eigts3
+      USE gvect,       ONLY: mill_g, g2_g, eigts1,eigts2,eigts3
       USE recvecs_subroutines,      ONLY: recvecs_init
       use ions_base,                only: nat
       use gvecw,                    only: gcutw, gkcut
-      use gvecp,                    only: ecutrho, gcutm
+      use gvect,                    only: ecutrho, gcutm
       use gvecs,                    only: gcutms
       use gvecb,                    only: gcutb
       USE fft_base,                 ONLY: dfftp, dffts

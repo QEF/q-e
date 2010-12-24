@@ -88,7 +88,7 @@ CONTAINS
     USE kinds, ONLY : DP
     USE ions_base, ONLY : nat
     USE uspp_param, ONLY : nhm
-    USE gsmooth, ONLY : doublegrid
+    USE gvecs, ONLY : doublegrid
     USE grid_dimensions, ONLY : nrxx
     USE smooth_grid_dimensions, ONLY : nrxxs
     USE uspp,  ONLY : okvan

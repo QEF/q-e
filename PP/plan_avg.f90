@@ -17,7 +17,7 @@ PROGRAM plan_avg
   USE cell_base, ONLY : ibrav, celldm, at
   USE grid_dimensions, ONLY : nr1x, nr2x, nr3x, nr1, nr2, nr3
   USE gvect,     ONLY : gcutm
-  USE gsmooth,   ONLY : dual
+  USE gvecs,   ONLY : dual
   USE klist,     ONLY : nkstot, xk
   USE ions_base, ONLY : nat, ntyp=>nsp, ityp, tau, atm, zv
   USE io_files,  ONLY : tmp_dir, prefix, trimcheck

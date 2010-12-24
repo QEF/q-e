@@ -25,7 +25,7 @@ SUBROUTINE punch_plot_e()
   USE printout_base, ONLY : title
   USE grid_dimensions,ONLY : nrxx, nr1,nr2,nr3, nr1x,nr2x,nr3x
   USE gvect,      ONLY : gcutm
-  USE gsmooth,    ONLY : dual
+  USE gvecs,    ONLY : dual
   USE cell_base,  ONLY : bg, ibrav, celldm
   USE lsda_mod,   ONLY : lsda
   USE noncollin_module, ONLY : nspin_mag

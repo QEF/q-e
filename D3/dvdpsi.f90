@@ -19,7 +19,7 @@ subroutine dvdpsi (nu_i, xq_, dvloc, vkb_, vkbq_, psi_, dvpsi_)
   USE fft_interfaces,  ONLY : fwfft, invfft
   USE gvect,      ONLY : g
   USE grid_dimensions, ONLY : nrxx
-  USE gsmooth,    ONLY : nls
+  USE gvecs,    ONLY : nls
   USE wvfct,      ONLY : nbnd, npwx, npw, igk
   use phcom
   use d3com

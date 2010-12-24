@@ -208,7 +208,7 @@
       use ions_base,          only: nsp, na, nat
       use cell_base,          only: ainv, r_to_s
       use grid_dimensions,    only: nr1, nr2, nr3
-      use reciprocal_vectors, only: mill
+      use gvect, only: mill
       use gvecw,              only: ngw
       use cp_interfaces,      only: phfacs
 !

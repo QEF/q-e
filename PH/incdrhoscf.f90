@@ -19,7 +19,7 @@ subroutine incdrhoscf (drhoscf, weight, ik, dbecsum, dpsi)
   USE ions_base, ONLY : nat
   USE fft_base,  ONLY: dffts
   USE fft_interfaces, ONLY: invfft
-  USE gsmooth,   ONLY : nls
+  USE gvecs,   ONLY : nls
   USE wvfct,     ONLY : npw, igk, npwx, nbnd
   USE uspp_param,ONLY: nhm
   USE wavefunctions_module,  ONLY: evc

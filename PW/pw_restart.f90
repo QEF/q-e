@@ -68,7 +68,7 @@ MODULE pw_restart
       USE global_version,       ONLY : version_number
       USE cell_base,            ONLY : at, bg, alat, tpiba, tpiba2, &
                                        ibrav, symm_type, celldm
-      USE reciprocal_vectors,   ONLY : ig_l2g
+      USE gvect,   ONLY : ig_l2g
       USE ions_base,            ONLY : nsp, ityp, atm, nat, tau, if_pos
       USE noncollin_module,     ONLY : noncolin, npol
       USE io_files,             ONLY : nwordwfc, iunwfc, iunigk, psfile
@@ -84,7 +84,7 @@ MODULE pw_restart
       USE gvect,                ONLY : ngm, ngm_g, g, mill
       USE grid_dimensions,      ONLY : nr1, nr2, nr3
       USE basis,                ONLY : natomwfc
-      USE gsmooth,              ONLY : ngms_g, dual
+      USE gvecs,              ONLY : ngms_g, dual
       USE smooth_grid_dimensions,ONLY: nr1s, nr2s, nr3s
       USE ktetra,               ONLY : nk1, nk2, nk3, k1, k2, k3, &
                                        ntetra, tetra, ltetra
@@ -1237,7 +1237,7 @@ MODULE pw_restart
       USE symm_base,        ONLY : nsym
       USE gvect,            ONLY : ngm_g, ecutrho
       USE grid_dimensions,  ONLY : nr1, nr2, nr3
-      USE gsmooth,          ONLY : ngms_g, dual
+      USE gvecs,          ONLY : ngms_g, dual
       USE smooth_grid_dimensions,ONLY: nr1s, nr2s, nr3s
       USE lsda_mod,         ONLY : lsda
       USE noncollin_module, ONLY : noncolin
@@ -1933,7 +1933,7 @@ MODULE pw_restart
       !------------------------------------------------------------------------
       !
       USE gvect,   ONLY : ngm_g, ecutrho
-      USE gsmooth, ONLY : ngms_g, dual
+      USE gvecs, ONLY : ngms_g, dual
       USE grid_dimensions,        ONLY : nr1, nr2, nr3
       USE smooth_grid_dimensions, ONLY : nr1s, nr2s, nr3s
       USE wvfct,   ONLY : npwx, g2kin, ecutwfc
@@ -2837,7 +2837,7 @@ MODULE pw_restart
       USE klist,                ONLY : nkstot, wk, nelec, nks, xk, ngk
       USE wvfct,                ONLY : npw, npwx, g2kin, et, wg, nbnd, ecutwfc
       USE wavefunctions_module, ONLY : evc
-      USE reciprocal_vectors,   ONLY : ig_l2g
+      USE gvect,   ONLY : ig_l2g
       USE io_files,             ONLY : nwordwfc, iunwfc
       USE buffers,              ONLY : save_buffer
       USE gvect,                ONLY : ngm, ngm_g, g

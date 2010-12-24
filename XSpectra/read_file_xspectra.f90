@@ -31,7 +31,7 @@ SUBROUTINE read_file_xspectra(xread_wf)
   USE gvect,                ONLY : gg, ecutwfc, ngm, g, &
                                    eigts1, eigts2, eigts3, nl, gstart
   USE grid_dimensions,      ONLY : nr1, nr2, nr3, nrxx
-  USE gsmooth,              ONLY : ngms, nls
+  USE gvecs,              ONLY : ngms, nls
   USE spin_orb,             ONLY : lspinorb, domag
   USE scf,                  ONLY : rho, rho_core, rhog_core, v
   USE wavefunctions_module, ONLY : psic
@@ -338,7 +338,7 @@ SUBROUTINE read_file_xspectra(xread_wf)
       USE constants, ONLY : pi
       USE cell_base, ONLY : alat, tpiba, tpiba2
       USE gvect,     ONLY : ecutwfc, dual, gcutm
-      USE gsmooth,   ONLY : gcutms, doublegrid
+      USE gvecs,   ONLY : gcutms, doublegrid
       !
       !
       ! ... Set the units in real and reciprocal space

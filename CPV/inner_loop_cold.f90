@@ -36,11 +36,11 @@
                                 e0, psihpsi, compute_entropy2, &
                                 compute_entropy_der, compute_entropy, &
                                 niter_cold_restart, lambda_cold
-      USE gvecp,          ONLY: ngm
+      USE gvect,          ONLY: ngm
       USE gvecs,          ONLY: ngms
       USE gvecb,          ONLY: ngb
       USE gvecw,          ONLY: ngw
-      USE reciprocal_vectors, &
+      USE gvect, &
                           ONLY: gstart
       USE cvan,           ONLY: nvb, ish
       USE ions_base,      ONLY: na, nat, pmass, nax, nsp, rcmax
@@ -348,11 +348,11 @@
 
       USE ensemble_dft,   ONLY: tens,  ninner, ismear, etemp, &
                                  c0diag, becdiag
-      USE gvecp,          ONLY: ngm
+      USE gvect,          ONLY: ngm
       USE gvecs,          ONLY: ngms
       USE gvecb,          ONLY: ngb
       USE gvecw,          ONLY: ngw
-      USE reciprocal_vectors, &
+      USE gvect, &
                           ONLY: gstart
       USE cvan,           ONLY: nvb, ish
       USE ions_base,      ONLY: na, nat, pmass, nax, nsp, rcmax
@@ -544,11 +544,11 @@
                                 compute_entropy2, &
                                 compute_entropy_der, compute_entropy, &
                                 niter_cold_restart, lambda_cold
-      USE gvecp,          ONLY: ngm
+      USE gvect,          ONLY: ngm
       USE gvecs,          ONLY: ngms
       USE gvecb,          ONLY: ngb
       USE gvecw,          ONLY: ngw
-      USE reciprocal_vectors, &
+      USE gvect, &
                           ONLY: gstart
       USE cvan,           ONLY: nvb, ish
       USE ions_base,      ONLY: na, nat, pmass, nax, nsp, rcmax

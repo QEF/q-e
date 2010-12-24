@@ -20,7 +20,7 @@ subroutine incdrhoscf_nc (drhoscf, weight, ik, dbecsum, dpsi)
   USE grid_dimensions, ONLY : nrxx
   USE fft_base,  ONLY : dffts
   USE fft_interfaces, ONLY: invfft
-  USE gsmooth,   ONLY : nls
+  USE gvecs,   ONLY : nls
   USE lsda_mod,  ONLY : nspin
   USE spin_orb,  ONLY : domag
   USE noncollin_module, ONLY : npol, nspin_mag

@@ -44,7 +44,7 @@ SUBROUTINE move_electrons_x( nfi, tfirst, tlast, b1, b2, b3, fion, &
   USE cp_interfaces,        ONLY : rhoofr, compute_stress
   USE electrons_base,       ONLY : nupdwn 
   USE mp_global,            ONLY : me_image 
-  USE reciprocal_vectors,   ONLY : eigts1, eigts2, eigts3 
+  USE gvect,   ONLY : eigts1, eigts2, eigts3 
   IMPLICIT NONE
   !
   INTEGER,  INTENT(IN)    :: nfi

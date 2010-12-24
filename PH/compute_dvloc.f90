@@ -20,7 +20,7 @@ subroutine compute_dvloc (mode, dvlocin)
   USE fft_base,  ONLY : dffts
   USE fft_interfaces, ONLY: invfft
   USE gvect,     ONLY : eigts1, eigts2, eigts3, mill, g
-  USE gsmooth,   ONLY : ngms, nls
+  USE gvecs,   ONLY : ngms, nls
   USE cell_base, ONLY : tpiba
   USE ions_base, ONLY : nat, ityp
   USE modes,     ONLY : u

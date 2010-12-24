@@ -332,7 +332,7 @@ SUBROUTINE projwave( filproj, lsym, lgww )
   USE cell_base
   USE constants, ONLY: rytoev, eps4
   USE gvect
-  USE gsmooth,   ONLY: dual
+  USE gvecs,   ONLY: dual
   USE grid_dimensions, ONLY : nr1, nr2, nr3, nr1x, nr2x, nr3x
   USE klist, ONLY: xk, nks, nkstot, nelec
   USE ldaU
@@ -816,7 +816,7 @@ SUBROUTINE projwave_nc(filproj, lsym )
   USE cell_base
   USE constants, ONLY: rytoev, eps4
   USE gvect
-  USE gsmooth,   ONLY: dual
+  USE gvecs,   ONLY: dual
   USE grid_dimensions, ONLY : nr1, nr2, nr3, nr1x, nr2x, nr3x
   USE klist, ONLY: xk, nks, nkstot, nelec
   USE ldaU
@@ -2112,7 +2112,7 @@ SUBROUTINE pprojwave( filproj, lsym )
   USE cell_base
   USE constants, ONLY: rytoev, eps4
   USE gvect
-  USE gsmooth,   ONLY: dual
+  USE gvecs,   ONLY: dual
   USE grid_dimensions, ONLY : nr1, nr2, nr3, nr1x, nr2x, nr3x
   USE klist, ONLY: xk, nks, nkstot, nelec
   USE ldaU
@@ -2963,7 +2963,7 @@ SUBROUTINE projwave_boxes( filpdos, filproj, n_proj_boxes, irmin, irmax, plotbox
   USE cell_base
   USE constants, ONLY: rytoev
   USE gvect
-  USE gsmooth,   ONLY: dual
+  USE gvecs,   ONLY: dual
   USE klist, ONLY: xk, nks, nkstot
   USE lsda_mod, ONLY: nspin, isk, current_spin, lsda
   USE wvfct

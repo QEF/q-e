@@ -177,7 +177,7 @@
       USE cell_base,          ONLY : tpiba, tpiba2
       USE mp,                 ONLY : mp_max
       USE mp_global,          ONLY : intra_image_comm
-      USE reciprocal_vectors, ONLY : gg
+      USE gvect, ONLY : gg
       USE pseudopotential,    ONLY : xgtab
       USE betax,              ONLY : mmx
       !
@@ -221,7 +221,7 @@
       USE pseudo_base,        ONLY : formfn, formfa
       USE uspp_param,         only : upf, oldvan
       USE control_flags,      only : tpre
-      use reciprocal_vectors, ONLY : gg, gstart
+      use gvect, ONLY : gg, gstart
       USE cp_interfaces,      ONLY : compute_xgtab, chkpstab
       USE pseudopotential,    ONLY : vps_sp, dvps_sp, xgtab
       USE local_pseudo,       ONLY : vps0
@@ -300,7 +300,7 @@
       USE cell_base,          ONLY : tpiba, tpiba2
       USE splines,            ONLY : init_spline, allocate_spline, kill_spline, nullify_spline
       USE pseudo_base,        ONLY : compute_rhocg
-      USE reciprocal_vectors, ONLY : gg, gstart
+      USE gvect, ONLY : gg, gstart
       USE cp_interfaces,      ONLY : compute_xgtab, chkpstab
       USE pseudopotential,    ONLY : rhoc1_sp, rhocp_sp, xgtab
       USE betax,              ONLY : mmx
@@ -887,7 +887,7 @@
       USE cell_base,          ONLY : tpiba2
       USE small_box,          ONLY : tpibab
       USE gvecb,              ONLY : gb, ngb
-      USE reciprocal_vectors, ONLY : gg
+      USE gvect, ONLY : gg
       !
       IMPLICIT NONE
       !
@@ -931,7 +931,7 @@
       USE io_global, only: stdout
       USE gvecw, only: ngw
       USE ions_base, only: nsp
-      USE reciprocal_vectors, only: gg, g, gstart
+      USE gvect, only: gg, g, gstart
       USE uspp_param, only: upf, lmaxq, lmaxkb, nh
       USE uspp, only: qq, nhtolm, beta
       USE cell_base, only: ainv, omega, tpiba2, tpiba
@@ -1221,7 +1221,7 @@
       USE cell_base,     only : ainv, omega, tpiba2, tpiba
       USE cdvan,         ONLY : dbeta
       USE atom,          ONLY : rgrid
-      USE reciprocal_vectors, only : gg, g, gstart
+      USE gvect, only : gg, g, gstart
 
       IMPLICIT NONE
 

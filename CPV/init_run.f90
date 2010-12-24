@@ -25,8 +25,8 @@ SUBROUTINE init_run()
   USE gvecw,                    ONLY : ngw, ngw_g, ggp
   USE gvecb,                    ONLY : ngb
   USE gvecs,                    ONLY : ngms
-  USE gvecp,                    ONLY : ngm
-  USE reciprocal_vectors,       ONLY : gstart
+  USE gvect,                    ONLY : ngm
+  USE gvect,       ONLY : gstart
   USE grid_dimensions,          ONLY : nrxx, nr1, nr2, nr3
   USE fft_base,                 ONLY : dfftp
   USE electrons_base,           ONLY : nspin, nbsp, nbspx, nupdwn, f

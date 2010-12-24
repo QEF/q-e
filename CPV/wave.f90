@@ -32,7 +32,7 @@
        USE mp_global,          ONLY: me_image, intra_image_comm
        USE mp,                 ONLY: mp_sum
        USE wave_base,          ONLY: hpsi
-       USE reciprocal_vectors, ONLY: gstart
+       USE gvect, ONLY: gstart
        IMPLICIT NONE
        INTEGER, INTENT(IN) :: n, noff
        REAL(DP)            :: lambda(:,:)
@@ -72,7 +72,7 @@
     USE kinds,              only : DP
     use mp,                 only : mp_sum
     use mp_global,          only : intra_image_comm
-    use reciprocal_vectors, only : gstart
+    use gvect, only : gstart
     use wave_base,          only : wave_speed2
     !
     IMPLICIT NONE
@@ -305,7 +305,7 @@
         USE kinds,              ONLY: DP
         USE mp_global,          ONLY: nproc_image, me_image, intra_image_comm
         USE wave_base,          ONLY: dotp
-        USE reciprocal_vectors, ONLY: gstart
+        USE gvect, ONLY: gstart
 
         IMPLICIT NONE
 
@@ -364,7 +364,7 @@
       USE mp,                 ONLY: mp_sum
       USE mp_wave,            ONLY: splitwf
       USE mp_global,          ONLY: me_image, nproc_image, root_image, intra_image_comm
-      USE reciprocal_vectors, ONLY: ig_l2g, gstart
+      USE gvect, ONLY: ig_l2g, gstart
       USE gvecw,              ONLY: ngw, ngw_g
       USE io_global,          ONLY: stdout
       USE random_numbers,     ONLY: randy

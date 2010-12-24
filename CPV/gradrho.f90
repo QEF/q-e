@@ -16,8 +16,8 @@ SUBROUTINE gradrho(nspin,rhog,drho,d2rho,dxdyrho,dxdzrho,dydzrho)
 !     in: charge density on G-space    out: gradient in R-space
 !
       use cell_base
-      use gvecp, only: ngm, nl, nlm
-      use reciprocal_vectors
+      use gvect, only: ngm, nl, nlm
+      use gvect
       USE fft_interfaces, ONLY: invfft
       USE fft_base,       ONLY: dfftp
       use grid_dimensions, only : nr1, nr2, nr3, nr1x, nr2x, nr3x, nrxx

@@ -15,11 +15,11 @@ SUBROUTINE clean_pw( lflag )
   USE ions_base,            ONLY : deallocate_ions_base
   USE gvect,                ONLY : g, gg, gl, nl, nlm, igtongl, mill, &
                                    eigts1, eigts2, eigts3
-  USE gsmooth,              ONLY : nls, nlsm
+  USE gvecs,              ONLY : nls, nlsm
   USE fixed_occ,            ONLY : f_inp
   USE ktetra,               ONLY : tetra
   USE klist,                ONLY : ngk
-  USE reciprocal_vectors,   ONLY : ig_l2g
+  USE gvect,   ONLY : ig_l2g
   USE vlocal,               ONLY : strf, vloc
   USE wvfct,                ONLY : igk, g2kin, et, wg, btype
   USE force_mod,            ONLY : force

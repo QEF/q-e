@@ -64,7 +64,7 @@
       USE mp_global, ONLY: nproc_image, me_image, intra_image_comm
       USE mp, ONLY: mp_max, mp_sum
       USE stick_base, ONLY : sticks_owner
-      USE reciprocal_vectors, ONLY: ig_l2g, sortedig_l2g
+      USE gvect, ONLY: ig_l2g, sortedig_l2g
 
       IMPLICIT NONE
       integer LN_IND

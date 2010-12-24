@@ -24,7 +24,7 @@ MODULE scf
   USE fft_base,     ONLY : dfftp
   USE fft_interfaces,ONLY : invfft
   USE gvect,        ONLY : ngm
-  USE gsmooth,      ONLY : ngms
+  USE gvecs,      ONLY : ngms
   USE paw_variables,ONLY : okpaw
   USE uspp_param,   ONLY : nhm
   USE extfield,     ONLY : dipfield, emaxpos, eopreg, edir

@@ -36,7 +36,7 @@ SUBROUTINE mix_rho( input_rhout, rhoin, alphamix, dr2, tr2_min, iter, n_iter, co
   USE kinds,          ONLY : DP
   USE ions_base,      ONLY : nat
   USE gvect,          ONLY : ngm
-  USE gsmooth,        ONLY : ngms
+  USE gvecs,        ONLY : ngms
   USE lsda_mod,       ONLY : nspin
   USE control_flags,  ONLY : imix, ngm0, tr2, io_level
   USE io_files,       ONLY : find_free_unit
@@ -432,7 +432,7 @@ SUBROUTINE approx_screening2( drho, rhobest )
   USE kinds,                ONLY : DP
   USE constants,            ONLY : e2, pi, tpi, fpi, eps8, eps32
   USE cell_base,            ONLY : omega, tpiba2
-  USE gsmooth,              ONLY : nls, nlsm
+  USE gvecs,              ONLY : nls, nlsm
   USE gvect,                ONLY : gg, ngm, nl, nlm
   USE wavefunctions_module, ONLY : psic
   USE klist,                ONLY : nelec

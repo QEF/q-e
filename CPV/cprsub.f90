@@ -31,7 +31,7 @@ subroutine formf( tfirst, eself )
   use pseudopotential, ONLY : tpstab, vps_sp, dvps_sp
   use cp_interfaces,   ONLY : build_pstab
   use splines,         ONLY : spline
-  use reciprocal_vectors, ONLY : gstart, gg
+  use gvect, ONLY : gstart, gg
   use constants,       ONLY : autoev
   !
   implicit none
@@ -358,7 +358,7 @@ subroutine nlinit
       use atom,            ONLY : rgrid
       use qgb_mod,         ONLY : qgb
       use gvecb,           ONLY : ngb
-      use gvecp,           ONLY : ngm
+      use gvect,           ONLY : ngm
       use cdvan,           ONLY : dbeta
       use dqgb_mod,        ONLY : dqgb
       use betax,           ONLY : qradx, dqradx, refg, betagx, mmx, dbetagx

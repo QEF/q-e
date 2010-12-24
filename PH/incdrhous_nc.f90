@@ -21,7 +21,7 @@ subroutine incdrhous_nc (drhoscf, weight, ik, dbecsum, evcr, wgg, becq, &
   USE grid_dimensions, ONLY : nrxx
   USE fft_base,  ONLY : dffts
   USE fft_interfaces, ONLY: invfft
-  USE gsmooth,   ONLY : nls
+  USE gvecs,   ONLY : nls
   USE lsda_mod,  ONLY : nspin
   USE spin_orb,  ONLY : lspinorb, domag
   USE noncollin_module, ONLY : npol, nspin_mag
