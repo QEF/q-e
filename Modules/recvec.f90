@@ -11,6 +11,9 @@
 
      ! ... variables describing the reciprocal lattice vectors
      ! ... G vectors with |G|^2 < ecutrho, cut-off for charge density
+     ! ... With gamma tricks, G-vectors are divided into two half-spheres,
+     ! ... G> and G<, containing G and -G (G=0 is in G>)
+     ! ... This is referred to as the "hard" or "dense" grid
 
      USE kinds, ONLY: DP
 
@@ -18,17 +21,17 @@
      SAVE
 
      INTEGER :: ngm  = 0  ! local  number of G vectors (on this processor)
-                          ! with gamma tricks, only half sphere (G>)
+                          ! with gamma tricks, only vectors in G>
      INTEGER :: ngm_g= 0  ! global number of G vectors (summed on all procs)
                           ! in serial execution, ngm_g = ngm
      INTEGER :: ngl = 0   ! number of G-vector shells
      INTEGER :: ngmx = 0  ! local number of G vectors, maximum across all procs
 
      REAL(DP) :: ecutrho = 0.0_DP ! energy cut-off for charge density 
-     REAL(DP) :: gcutm = 0.0_DP   ! ecutrho/(2 pi/a)^2, cut-off for G|^2
+     REAL(DP) :: gcutm = 0.0_DP   ! ecutrho/(2 pi/a)^2, cut-off for |G|^2
 
-     ! nl  = fft index for G-vectors (with gamma tricks, only G>)
-     ! nlm = as above, for -G (with gamma tricks)
+     ! nl  = fft index for G-vectors (with gamma tricks, only for G>)
+     ! nlm = as above, for G< (used only with gamma tricks)
 
      INTEGER, ALLOCATABLE :: nl(:), nlm(:)
 
@@ -40,17 +43,19 @@
      !
      REAL(DP), ALLOCATABLE, TARGET :: gg(:) 
 
-     !     gl(i) = i-th shell of G^2
-     !     igtongl(n) = shell index for n-th G vector
+     !     gl(i) = i-th shell of G^2 (in units of tpiba2)
+     !     igtongl(n) = shell index for n-th G-vector
      !
      REAL(DP), POINTER :: gl(:) 
      INTEGER, ALLOCATABLE, TARGET :: igtongl(:) 
      !
-     !     G-vectors cartesian components ( units tpiba =(2pi/a)  )
+     !     G-vectors cartesian components ( in units tpiba =(2pi/a)  )
      !
      REAL(DP), ALLOCATABLE, TARGET :: g(:,:) 
 
-     !     mill    = miller index of G vectors (local to each processor)
+     !     mill = miller index of G vectors (local to each processor)
+     !            G(:) = mill(1)*bg(:,1)+mill(2)*bg(:,2)+mill(3)*bg(:,3) 
+     !            where bg are the reciprocal lattice basis vectors 
      !
      INTEGER, ALLOCATABLE, TARGET :: mill(:,:)
      
@@ -58,21 +63,18 @@
      !
      REAL(DP), ALLOCATABLE, TARGET :: g2_g(:)
 
-     !     mill_g  = miller index of G vecs (increasing order), replicated on all procs
+     !     mill_g  = miller index of all G vectors (same order as in g2_g)
      !
      INTEGER, ALLOCATABLE, TARGET :: mill_g(:,:)
 
-     !     ig_l2g  = "l2g" means local to global, this array convert a local
-     !               G-vector index into the global index, in other words
-     !               the index of the G-v. in the overall array of G-vectors
-     !
-     INTEGER, ALLOCATABLE, TARGET :: ig_l2g(:)
-
+     !     ig_l2g  = converts a local G-vector index into the global index
+     !               ("l2g" means local to global): ig_l2g(i) = index of i-th
+     !               local G-vector in the global array of G-vectors
      !     sortedig_l2g = array obtained by sorting ig_l2g
      !
-     INTEGER, ALLOCATABLE, TARGET :: sortedig_l2g(:)
+     INTEGER, ALLOCATABLE, TARGET :: ig_l2g(:),  sortedig_l2g(:)
      !
-     ! the phases e^{-iG*tau_s}
+     ! the phases e^{-iG*tau_s} used to calculate structure factors
      !
      COMPLEX(DP), ALLOCATABLE :: eigts1(:,:), eigts2(:,:), eigts3(:,:)
      !
@@ -107,19 +109,25 @@
      IMPLICIT NONE
      SAVE
 
-     ! ...   G vectors less than the smooth grid cut-off ( ? )
-     INTEGER :: ngms = 0  ! local number of G vectors
-     INTEGER :: ngms_g=0  ! in parallel execution global number of G vectors,
-                       ! in serial execution this is equal to ngw
-     INTEGER :: ngsx = 0  ! maximum local number of G vectors
+     ! ... G vectors with |G|^2 < 4*ecutwfc, cut-off for wavefunctions
+     ! ... ("smooth" grid). Gamma tricks and units as for the "dense" grid
+     !
+     INTEGER :: ngms = 0  ! local  number of smooth vectors (on this processor)
+     INTEGER :: ngms_g=0  ! global number of smooth vectors (summed on procs) 
+                          ! in serial execution this is equal to ngms
+     INTEGER :: ngsx = 0  ! local number of smooth vectors, max across procs
+
+     ! nl  = fft index for smooth vectors (with gamma tricks, only for G>)
+     ! nlm = as above, for G< (used only with gamma tricks)
 
      INTEGER, ALLOCATABLE :: nls(:), nlsm(:)
 
-     REAL(DP) :: ecuts = 0.0_DP
-     REAL(DP) :: gcutms= 0.0_DP
+     REAL(DP) :: ecuts = 0.0_DP   ! energy cut-off = 4*ecutwfc
+     REAL(DP) :: gcutms= 0.0_DP   ! ecuts/(2 pi/a)^2, cut-off for |G|^2
 
-     REAL(DP) :: dual = 0.0_DP
-     LOGICAL   :: doublegrid = .FALSE.
+     REAL(DP) :: dual = 0.0_DP    ! ecutrho=dual*ecutwfc
+     LOGICAL  :: doublegrid = .FALSE. ! true if smooth and dense grid differ
+                                      ! doublegrid = (dual > 4)
 
    CONTAINS
 
