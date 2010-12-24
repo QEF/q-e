@@ -17,7 +17,7 @@ SUBROUTINE ultralocalization(nbndv,ultra_thr,isubspace,max_array)
   USE io_global,            ONLY : stdout
   USE smooth_grid_dimensions,ONLY: nr1s, nr2s, nr3s, nr1sx, nr2sx, nr3sx, &
                                    nrxxs
-  USE gsmooth,              ONLY : nls, nlsm, doublegrid
+  USE gvecs,              ONLY : nls, nlsm, doublegrid
   USE grid_dimensions,      ONLY : nr1, nr2, nr3, nr1x, nr2x, nr3x, nrxx
   use mp_global,            ONLY : nproc_pool, me_pool
   USE wvfct,                ONLY : igk, g2kin, npwx, npw, nbnd, nbndx

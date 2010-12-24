@@ -14,7 +14,7 @@ subroutine ultra_external( nbnd_start, nbnd_end, radius, itask)
 
   USE io_files,             ONLY : find_free_unit,nwordwfc, iunwfc, prefix, diropn
   USE io_global,            ONLY : stdout, ionode_id
-  USE gsmooth,              ONLY : nls, nlsm, doublegrid
+  USE gvecs,              ONLY : nls, nlsm, doublegrid
   USE gvect,                ONLY : gstart
   use mp_global,            ONLY : nproc_pool, me_pool
   USE wvfct,                ONLY : igk, g2kin, npwx, npw, nbnd, nbndx

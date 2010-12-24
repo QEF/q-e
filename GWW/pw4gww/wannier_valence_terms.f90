@@ -23,7 +23,7 @@
    USE fft_base,             ONLY : dffts, dfftp
    USE fft_interfaces,       ONLY : fwfft, invfft
    USE gvect
-   USE gsmooth,              ONLY : nls, nlsm, doublegrid
+   USE gvecs,              ONLY : nls, nlsm, doublegrid
    USE uspp
    USE wavefunctions_module, ONLY : psic, evc
    USE realus,               ONLY : adduspos_gamma_r
@@ -387,7 +387,7 @@
    USE fft_base,             ONLY : dffts, dfftp
    USE fft_interfaces,       ONLY : fwfft, invfft
    USE gvect
-   USE gsmooth,              ONLY : nls, nlsm, doublegrid
+   USE gvecs,              ONLY : nls, nlsm, doublegrid
    USE uspp
    USE wavefunctions_module, ONLY : psic, evc
    USE realus,               ONLY : adduspos_gamma_r
@@ -837,7 +837,7 @@
    USE fft_base,             ONLY : dffts, dfftp
    USE fft_interfaces,       ONLY : fwfft, invfft
    USE gvect
-   USE gsmooth,              ONLY : nls, nlsm, doublegrid
+   USE gvecs,              ONLY : nls, nlsm, doublegrid
    USE uspp
    USE wavefunctions_module, ONLY : psic, evc
    USE realus,               ONLY : adduspos_gamma_r

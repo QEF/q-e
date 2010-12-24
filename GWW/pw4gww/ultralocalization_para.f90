@@ -22,7 +22,7 @@ SUBROUTINE ultralocalization_para(nbndv,nbnd_max,ultra_thr,isubspace,max_array2,
 
   USE io_files,             ONLY : find_free_unit, diropn
   USE io_global,            ONLY : stdout, ionode_id
-  USE gsmooth,              ONLY : nls, nlsm, doublegrid
+  USE gvecs,              ONLY : nls, nlsm, doublegrid
   use mp_global,            ONLY : nproc_pool, me_pool
   USE wvfct,                ONLY : igk, g2kin, npwx, npw, nbnd, nbndx
   USE basis

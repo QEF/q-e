@@ -30,7 +30,7 @@ SUBROUTINE energies_xc( lda, n, m, e_xc, e_h )
   USE wvfct,            ONLY : igk, g2kin, ecutwfc
   USE fft_base,         ONLY : dffts
   USE fft_interfaces,   ONLY : fwfft, invfft
-  USE gsmooth,          ONLY : nls, doublegrid
+  USE gvecs,          ONLY : nls, doublegrid
   USE gvect,            ONLY : ngm, gstart, nl, nlm, g, gg, gcutm
   USE grid_dimensions,  ONLY : nr1, nr2, nr3, nrxx
   USE cell_base,        ONLY : alat, omega

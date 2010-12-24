@@ -20,7 +20,7 @@ subroutine dft_exchange_k(nbnd_v,nbnd_s, ecutoff)
   USE fft_base,             ONLY : dffts, dfftp
   USE fft_interfaces,       ONLY : fwfft, invfft
   USE gvect
-  USE gsmooth,              ONLY : nls, nlsm, doublegrid
+  USE gvecs,              ONLY : nls, nlsm, doublegrid
   USE uspp
   USE wavefunctions_module, ONLY : psic, evc
   USE cell_base,            ONLY : at, bg, omega
@@ -524,7 +524,7 @@ subroutine dft_exchange(nbnd_v,nbnd_s,n_set)
   USE fft_base,             ONLY : dffts, dfftp
   USE fft_interfaces,       ONLY : fwfft, invfft
   USE gvect
-  USE gsmooth,              ONLY : nls, nlsm, doublegrid
+  USE gvecs,              ONLY : nls, nlsm, doublegrid
   USE uspp
   USE wavefunctions_module, ONLY : psic, evc
   USE realus,               ONLY : adduspos_gamma_r

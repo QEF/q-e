@@ -32,7 +32,7 @@ subroutine solve_head
   USE wannier_gw,            ONLY : n_gauss, omega_gauss, grid_type
   USE control_ph,            ONLY : tr2_ph
   USE realus,                ONLY : adduspos_r
-  USE reciprocal_vectors,    ONLY : ig_l2g, mill_g
+  USE gvect,                 ONLY : ig_l2g, mill_g
   USE mp_global,             ONLY : inter_pool_comm, intra_pool_comm
   USE mp,                    ONLY : mp_sum, mp_barrier, mp_bcast
   USE becmod,                ONLY : calbec

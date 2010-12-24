@@ -20,7 +20,7 @@
    USE wavefunctions_module, ONLY : evc, psic
    USE fft_base,             ONLY : dffts, dfftp
    USE fft_interfaces,       ONLY : fwfft, invfft
-   USE gsmooth,              ONLY : nls, nlsm, doublegrid
+   USE gvecs,              ONLY : nls, nlsm, doublegrid
    USE uspp,                 ONLY : nkb, vkb, okvan
    USE realus,               ONLY : adduspos_gamma_r
    USE mp,                   ONLY : mp_sum
@@ -315,7 +315,7 @@ subroutine create_vcw_overlap(n_set, orthonorm,ecutoff)
    USE wavefunctions_module, ONLY : evc, psic
    USE fft_base,             ONLY : dffts, dfftp
    USE fft_interfaces,       ONLY : fwfft, invfft
-   USE gsmooth,              ONLY : nls, nlsm, doublegrid
+   USE gvecs,              ONLY : nls, nlsm, doublegrid
    USE uspp,                 ONLY : nkb, vkb, okvan
    USE realus,               ONLY : adduspos_gamma_r
    USE mp,                   ONLY : mp_sum
@@ -552,7 +552,7 @@ subroutine create_upper_states(n_set, lzero, orthonorm,ecutoff)
    USE wavefunctions_module, ONLY : evc, psic
    USE fft_base,             ONLY : dffts, dfftp
    USE fft_interfaces,       ONLY : fwfft, invfft
-   USE gsmooth,              ONLY : nls, nlsm, doublegrid
+   USE gvecs,              ONLY : nls, nlsm, doublegrid
    USE uspp,                 ONLY : nkb, vkb, okvan
    USE realus,               ONLY : adduspos_gamma_r
    USE mp,                   ONLY : mp_sum, mp_bcast

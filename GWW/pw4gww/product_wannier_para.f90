@@ -28,7 +28,7 @@ SUBROUTINE product_wannier_para(nbndv, lcomplete, ene_loc, lambda)
   USE io_files,             ONLY : prefix
   USE io_files,             ONLY : tmp_dir, iunwfc, iunigk, diropn
   USE io_global,            ONLY : stdout, ionode
-  USE gsmooth,              ONLY : nls, nlsm, doublegrid
+  USE gvecs,              ONLY : nls, nlsm, doublegrid
   use mp_global,            ONLY : nproc_pool, me_pool
   USE kinds,                ONLY : DP
   USE us
