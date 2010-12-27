@@ -116,7 +116,7 @@
       USE mp,                 ONLY: mp_sum
       USE io_global,          ONLY: stdout, ionode
       USE mp_global,          ONLY: intra_image_comm, nogrp, me_image, &
-                                    use_task_groups, ogrp_comm, nolist
+                                    use_task_groups, ogrp_comm, nolist, my_image_id, nimage, inter_image_comm
       USE funct,              ONLY: dft_is_meta
       USE cg_module,          ONLY: tcg
       USE cp_interfaces,      ONLY: stress_kin
@@ -146,6 +146,7 @@
       ! local variables
 
       INTEGER  :: iss, isup, isdw, iss1, iss2, ios, i, ir, ig, k
+      INTEGER  :: icnt
       REAL(DP) :: rsumr(2), rsumg(2), sa1, sa2, detmp(6), mtmp(3,3)
       REAL(DP) :: rnegsum, rmin, rmax, rsum
       REAL(DP), EXTERNAL :: enkin, ennl
@@ -285,28 +286,40 @@
             !
             ALLOCATE( psis( nrxxs ) ) 
             !
+            icnt = 0
+            !
             DO i = 1, n, 2
                !
-               CALL c2psi( psis, nrxxs, c( 1, i ), c( 1, i+1 ), ngw, 2 )
+               IF( icnt == my_image_id ) THEN
+                  !
+                  CALL c2psi( psis, nrxxs, c( 1, i ), c( 1, i+1 ), ngw, 2 )
+   
+                  CALL invfft('Wave',psis, dffts )
+                  !
+                  iss1 = ispin(i)
+                  sa1  = f(i) / omega
+                  IF ( i .NE. n ) THEN
+                     iss2 = ispin(i+1)
+                     sa2  = f(i+1) / omega
+                  ELSE
+                     iss2 = iss1
+                     sa2  = 0.0d0
+                  END IF
+                  !
+                  DO ir = 1, nrxxs
+                     rhos(ir,iss1) = rhos(ir,iss1) + sa1 * ( DBLE(psis(ir)))**2
+                     rhos(ir,iss2) = rhos(ir,iss2) + sa2 * (AIMAG(psis(ir)))**2
+                  END DO
 
-               CALL invfft('Wave',psis, dffts )
-               !
-               iss1 = ispin(i)
-               sa1  = f(i) / omega
-               IF ( i .NE. n ) THEN
-                  iss2 = ispin(i+1)
-                  sa2  = f(i+1) / omega
-               ELSE
-                  iss2 = iss1
-                  sa2  = 0.0d0
                END IF
                !
-               DO ir = 1, nrxxs
-                  rhos(ir,iss1) = rhos(ir,iss1) + sa1 * ( DBLE(psis(ir)))**2
-                  rhos(ir,iss2) = rhos(ir,iss2) + sa2 * (AIMAG(psis(ir)))**2
-               END DO
+               icnt = MOD( icnt + 1 , nimage )
                !
             END DO
+            !
+            IF( nimage > 1 ) THEN
+               call mp_sum( rhos, inter_image_comm )
+            END IF
             !
             DEALLOCATE( psis ) 
             !
@@ -482,7 +495,11 @@
          !
          tmp_rhos = 0_DP
 
+         icnt = 0
+
          do i = 1, n, 2*nogrp
+
+            IF( icnt == my_image_id ) THEN 
             !
             !  Initialize wave-functions in Fourier space (to be FFTed)
             !  The size of psis is nnr: which is equal to the total number
@@ -599,7 +616,15 @@
                tmp_rhos(ir,iss2) = tmp_rhos(ir,iss2) + sa2*(aimag(psis(ir)))**2
             end do
             !
+            END IF
+            !
+            icnt = MOD( icnt + 1, nimage )
+            !
          END DO
+
+         IF( nimage > 1 ) THEN
+            CALL mp_sum( tmp_rhos, inter_image_comm )
+         END IF
 
          IF ( nogrp > 1 ) THEN
             CALL mp_sum( tmp_rhos, gid = ogrp_comm )

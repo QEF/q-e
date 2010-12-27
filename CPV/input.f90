@@ -956,9 +956,6 @@ MODULE input
      nr2s_ = nr2s
      nr3s_ = nr3s
 
-     IF ( .NOT. lneb ) &
-        CALL printout_base_init( outdir, prefix )
-
      CALL efield_init( epol, efield )
 
      CALL cg_init( tcg , maxiter , conv_thr , passop ,niter_cg_restart)

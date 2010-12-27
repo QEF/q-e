@@ -27,7 +27,8 @@
       USE parallel_include
       USE kinds,               ONLY : DP
       USE mp_global,           ONLY : nogrp, ogrp_comm, me_image, nolist,&
-                                      use_task_groups
+                                      use_task_groups, my_image_id, nimage, inter_image_comm
+      USE mp,                  ONLY : mp_sum
       USE fft_base,            ONLY : dffts
       use wave_base,           only : wave_steepest, wave_verlet
       use control_flags,       only : lwf, tsde
@@ -58,7 +59,7 @@
      real(DP),    allocatable :: emaver(:)
      complex(DP), allocatable :: c2(:), c3(:)
      REAL(DP),    ALLOCATABLE :: tg_rhos(:,:)
-     integer :: i, nsiz, incr, idx, idx_in, ierr
+     integer :: i, nsiz, incr, idx, idx_in, ierr, icnt
      integer :: iwfc, nwfc, is, ii, tg_rhos_siz, c2_siz
      integer :: iflag
      logical :: ttsde
@@ -134,9 +135,11 @@
 
         END IF
 
-        
+        icnt = 0 
 
         DO i = 1, n, incr
+
+           IF( icnt == my_image_id ) THEN
 
            IF( use_task_groups ) THEN
               !
@@ -205,7 +208,24 @@
               !
            END DO
 
+           ELSE
+
+              DO idx = 1, incr, 2
+                 IF( i + idx - 1 <= n ) THEN
+                    cm( :, i+idx-1) = 0.0d0
+                    cm( :, i+idx  ) = 0.0d0
+                 END IF
+              ENDDO
+  
+           END IF
+
+           icnt = MOD( icnt + 1 , nimage )
+
         end do
+
+        IF( nimage > 1 ) THEN
+           CALL mp_sum( cm, inter_image_comm )
+        END IF
 
         DEALLOCATE( c2 )
         DEALLOCATE( c3 )

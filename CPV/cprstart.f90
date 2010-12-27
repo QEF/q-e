@@ -19,8 +19,8 @@ PROGRAM main
   !----------------------------------------------------------------------------
   !
   USE input,         ONLY : read_input_file, iosys_pseudo, iosys
-  USE mp_global,     ONLY : mp_startup
-  USE io_global,     ONLY : ionode, ionode_id
+  USE mp_global,     ONLY : mp_startup, nimage, me_image, root_image
+  USE io_global,     ONLY : ionode, ionode_id, io_global_start
   USE control_flags, ONLY : lneb, lsmd, program_name
   USE environment,   ONLY : environment_start
   USE check_stop,    ONLY : check_stop_init
@@ -42,8 +42,7 @@ PROGRAM main
   !
   ! reset IO nodes
   ! (do this to make each "image head node" an ionode)
-  ! KNK_nimage
-  ! if (nimage.gt.1) CALL io_global_start( me_image, root_image )
+  if ( nimage > 1) CALL io_global_start( me_image, root_image )
   !
   ! reading plugin arguments
   IF(ionode) CALL plugin_arguments()
@@ -71,8 +70,7 @@ PROGRAM main
   !
   IF ( lneb ) THEN
      !
-     !!!CALL neb_loop( )
-     CALL errore ( 'cpr_main', 'NEB no longer implemented', 1)
+     CALL errore ( 'cpr_main', 'NEB no longer implemented, use "neb.x" instead', 1)
      !
   ELSE IF ( lsmd ) THEN
      !
