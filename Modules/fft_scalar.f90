@@ -2263,7 +2263,7 @@ end function allowed
    INTEGER FUNCTION good_fft_order( nr, np )
 
 !
-!    This function find a "good" fft order value grather or equal to "nr"
+!    This function find a "good" fft order value greater or equal to "nr"
 !
 !    nr  (input) tentative order n of a fft
 !

@@ -27,7 +27,8 @@
       use cell_base,                only: omega, alat
       use small_box,                only: a1b, a2b, a3b, omegab, ainvb, tpibab, small_box_set
       use small_box,                only: alatb, b1b, b2b, b3b
-      use smallbox_grid_dimensions, only: nr1b, nr2b, nr3b, nr1bx, nr2bx, nr3bx
+      use smallbox_grid_dimensions, only: nr1b, nr2b, nr3b, nr1bx,nr2bx,nr3bx,&
+                                          smallbox_grid_init,smallbox_grid_info
       use smooth_grid_dimensions,   only: nr1s, nr2s, nr3s, nr1sx, nr2sx, nr3sx, nrxxs
       USE grid_subroutines,         ONLY: realspace_grids_init, realspace_grids_para
       USE gvect,       ONLY: mill_g, g2_g, eigts1,eigts2,eigts3
@@ -71,9 +72,8 @@
       !
       ! ... Initialize (global) real and compute global reciprocal dimensions
       !
-
       CALL realspace_grids_init( alat, a1, a2, a3, gcutm, gcutms, ng_ , ngs_ )
-
+      CALL smallbox_grid_init( )
       !
       ! ... cell dimensions and lattice vectors
       !
@@ -144,6 +144,7 @@ end if
       ! ... Initialize (local) real space dimensions
       !
       CALL realspace_grids_para( dfftp, dffts )
+      CALL smallbox_grid_info ( )
       !
       ! ... generate g-space
       !

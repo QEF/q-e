@@ -1237,7 +1237,7 @@ end subroutine sort_gvec
 
         WRITE( stdout, 100 ) ecutwfc, ecutrho, ecuts, sqrt(gcutw), &
                              sqrt(gcutm), sqrt(gcutms)
-        IF( ecutz > 0.0d0 ) THEN
+        IF( qcutz > 0.0d0 ) THEN
           WRITE( stdout, 150 ) qcutz, q2sigma, ecfixed
         END IF
 
@@ -1734,7 +1734,7 @@ SUBROUTINE gmeshinfo( )
    1000    FORMAT(3X,'Large Mesh',/, &
            '     Global(ngm_g)    MinLocal       MaxLocal      Average') 
    1001    FORMAT(3X,'Smooth Mesh',/, &
-           '     Global(ngms_g)     MinLocal       MaxLocal      Average') 
+           '     Global(ngms_g)   MinLocal       MaxLocal      Average') 
    1002    FORMAT(3X,'Wave function Mesh',/, &
            '     Global(ngw_g)    MinLocal       MaxLocal      Average') 
    1011    FORMAT(  3I15, F15.2 )

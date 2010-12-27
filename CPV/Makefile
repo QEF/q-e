@@ -9,6 +9,7 @@ FOBJS = \
 atoms_type.o \
 berryion.o \
 bforceion.o \
+boxgrid.o \
 cg.o \
 cg_sub.o \
 cglib.o \

@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002 FPMD group
+! Copyright (C) 2002-2010 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -11,7 +11,7 @@
 !=----------------------------------------------------------------------------=!
 
      !  This module contains the dimensions of the 3D real and reciprocal space
-     !  grid relative to the charde density and potential
+     !  FFT grid relative to the charge density and potential
 
      IMPLICIT NONE
      SAVE
@@ -64,37 +64,6 @@
 !=----------------------------------------------------------------------------=!
 
 !=----------------------------------------------------------------------------=!
-   MODULE smallbox_grid_dimensions
-!=----------------------------------------------------------------------------=!
-
-     !  This module contains the dimensions of the 3D real and reciprocal space
-     !  sub grid relative to the atomic augmentation charge density 
-     !  ( see Vanderbilt Pseudopot )
-
-     IMPLICIT NONE
-     SAVE
-
-     !  parameter description: same as above but for small box grid
-
-     INTEGER :: nr1b  = 0
-     INTEGER :: nr2b  = 0
-     INTEGER :: nr3b  = 0
-     INTEGER :: nr1bx = 0
-     INTEGER :: nr2bx = 0
-     INTEGER :: nr3bx = 0
-     INTEGER :: nr1bl = 0
-     INTEGER :: nr2bl = 0
-     INTEGER :: nr3bl = 0
-     INTEGER :: nnrbx  = 0
-
-!=----------------------------------------------------------------------------=!
-   END MODULE smallbox_grid_dimensions
-!=----------------------------------------------------------------------------=!
-
-
-
-
-!=----------------------------------------------------------------------------=!
    MODULE grid_subroutines
 !=----------------------------------------------------------------------------=!
 
@@ -113,8 +82,6 @@
        !
        USE grid_dimensions, ONLY: nr1, nr2, nr3, nr1x, nr2x, nr3x
        USE smooth_grid_dimensions, ONLY: nr1s, nr2s, nr3s, nr1sx, nr2sx, nr3sx
-       USE smallbox_grid_dimensions, ONLY: nr1b, nr2b, nr3b, nr1bx, nr2bx, nr3bx, &
-           nnrbx, nr1bl, nr2bl, nr3bl
        USE fft_scalar, only: good_fft_dimension, good_fft_order
        USE io_global, only: stdout
        !
@@ -161,33 +128,6 @@
           CALL errore(' realspace_grids_init ', ' smooth grid larger than dense grid?',1)
        END IF
 
-       ! no default values for grid box: if nr*b=0, ignore
-
-       IF( nr1b > 0 .AND. nr2b > 0 .AND. nr3b > 0 ) THEN
-
-          nr1b = good_fft_order( nr1b ) ! small box is not parallelized
-          nr2b = good_fft_order( nr2b )
-          nr3b = good_fft_order( nr3b )
-          nr1bx = good_fft_dimension( nr1b )
-
-       ELSE
- 
-          nr1bx = nr1b
-
-       END IF
-
-       nr2bx = nr2b
-       nr3bx = nr3b
-       nnrbx = nr1bx * nr2bx * nr3bx
-
-       nr1bl = nr1b
-       nr2bl = nr2b
-       nr3bl = nr3b
-
-       IF ( nr1b > nr1 .or. nr2b > nr2 .or. nr3b > nr3 ) THEN
-          CALL errore(' realspace_grids_init ', ' box grid larger than dense grid?',1)
-       END IF
-
        RETURN
 
      END SUBROUTINE realspace_grids_init
@@ -206,8 +146,6 @@
       USE grid_dimensions, ONLY: nr1l, nr2l, nr3l, nrxx
       USE smooth_grid_dimensions, ONLY: nr1s,  nr2s,  nr3s, nr1sx, nr2sx, nr3sx
       USE smooth_grid_dimensions, ONLY: nr1sl, nr2sl, nr3sl, nrxxs
-      USE smallbox_grid_dimensions, ONLY: nr1b, nr2b, nr3b, nr1bx, nr2bx, nr3bx, nnrbx
-      USE smallbox_grid_dimensions, ONLY: nr1bl, nr2bl, nr3bl
 
       IMPLICIT NONE
 
@@ -236,9 +174,6 @@
       IF ( nr1s > nr1 .or. nr2s > nr2 .or. nr3s > nr3)                    &
      &   CALL errore(' pmeshset ', ' smooth grid larger than dense grid? ', 1 )
 
-      IF ( nr1b > nr1 .or. nr2b > nr2 .or. nr3b > nr3)                    &
-     &   CALL errore(' pmeshset ', ' small box grid larger than dense grid? ', 1 )
-
       IF(ionode) THEN
 
         WRITE( stdout,*)
@@ -259,16 +194,6 @@
         WRITE( stdout,*) '  Number of x-y planes for each processors: '
         WRITE( stdout, fmt = '( 3X, "nr3sl = ", 10I5 )' ) ( dffts%npp( i ), i = 1, nproc_image )
 
-        IF ( nr1b > 0 .AND. nr2b > 0 .AND. nr3b > 0 ) THEN
-
-           WRITE( stdout,*)
-           WRITE( stdout,*) '  Small Box Real Mesh'
-           WRITE( stdout,*) '  -------------------'
-           WRITE( stdout,1000) nr1b, nr2b, nr3b, nr1bl, nr2bl, nr3bl, 1, 1, 1
-           WRITE( stdout,1010) nr1bx, nr2bx, nr3bx
-           WRITE( stdout,1020) nnrbx
-
-        END IF
       END IF
 
 1000  FORMAT(3X, &

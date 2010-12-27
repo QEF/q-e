@@ -13,6 +13,9 @@ bforceion.o : ../Modules/kind.o
 bforceion.o : ../Modules/uspp.o
 bforceion.o : mainvar.o
 bforceion.o : modules.o
+boxgrid.o : ../Modules/fft_scalar.o
+boxgrid.o : ../Modules/griddim.o
+boxgrid.o : ../Modules/io_global.o
 cg.o : ../Modules/electrons_base.o
 cg.o : ../Modules/io_global.o
 cg.o : ../Modules/kind.o
@@ -81,6 +84,7 @@ chargedensity.o : ../Modules/recvec.o
 chargedensity.o : ../Modules/smallbox.o
 chargedensity.o : ../Modules/uspp.o
 chargedensity.o : ../Modules/xml_io_base.o
+chargedensity.o : boxgrid.o
 chargedensity.o : cg.o
 chargedensity.o : cp_interfaces.o
 chargedensity.o : gvecb.o
@@ -119,6 +123,7 @@ cp_fpmd.o : ../Modules/mp_global.o
 cp_fpmd.o : ../Modules/recvec.o
 cp_fpmd.o : ../Modules/smallbox.o
 cp_fpmd.o : ../Modules/uspp.o
+cp_fpmd.o : boxgrid.o
 cp_fpmd.o : cpr_mod.o
 cp_fpmd.o : gvecb.o
 cp_fpmd.o : gvecw.o
@@ -152,6 +157,7 @@ cp_restart.o : ../Modules/recvec.o
 cp_restart.o : ../Modules/version.o
 cp_restart.o : ../Modules/xml_io_base.o
 cp_restart.o : ../iotk/src/iotk_module.o
+cp_restart.o : boxgrid.o
 cp_restart.o : cp_interfaces.o
 cp_restart.o : gvecw.o
 cp_restart.o : mainvar.o
@@ -178,6 +184,7 @@ cplib.o : ../Modules/recvec.o
 cplib.o : ../Modules/sic.o
 cplib.o : ../Modules/smallbox.o
 cplib.o : ../Modules/uspp.o
+cplib.o : boxgrid.o
 cplib.o : cp_interfaces.o
 cplib.o : gvecb.o
 cplib.o : gvecw.o
@@ -224,6 +231,7 @@ cpr.o : ../Modules/timestep.o
 cpr.o : ../Modules/uspp.o
 cpr.o : ../Modules/wave_base.o
 cpr.o : ../Modules/wavefunctions.o
+cpr.o : boxgrid.o
 cpr.o : cg.o
 cpr.o : cp_autopilot.o
 cpr.o : cp_emass.o
@@ -358,6 +366,7 @@ fft.o : ../Modules/griddim.o
 fft.o : ../Modules/kind.o
 fft.o : ../Modules/mp_global.o
 fft.o : ../Modules/recvec.o
+fft.o : boxgrid.o
 forces.o : ../Modules/cell_base.o
 forces.o : ../Modules/constants.o
 forces.o : ../Modules/control_flags.o
@@ -447,6 +456,7 @@ init.o : ../Modules/stick_base.o
 init.o : ../Modules/task_groups.o
 init.o : ../Modules/uspp.o
 init.o : atoms_type.o
+init.o : boxgrid.o
 init.o : cp_restart.o
 init.o : electrons.o
 init.o : gvecb.o
@@ -532,6 +542,7 @@ input.o : ../Modules/timestep.o
 input.o : ../Modules/wave_base.o
 input.o : ../Modules/xml_input.o
 input.o : ../iotk/src/iotk_module.o
+input.o : boxgrid.o
 input.o : cg.o
 input.o : cp_emass.o
 input.o : efield.o
@@ -639,6 +650,7 @@ nlcc.o : ../Modules/mp_global.o
 nlcc.o : ../Modules/recvec.o
 nlcc.o : ../Modules/smallbox.o
 nlcc.o : ../Modules/uspp.o
+nlcc.o : boxgrid.o
 nlcc.o : cp_interfaces.o
 nlcc.o : gvecb.o
 nlcc.o : modules.o
@@ -681,6 +693,7 @@ phasefactor.o : ../Modules/io_global.o
 phasefactor.o : ../Modules/ions_base.o
 phasefactor.o : ../Modules/kind.o
 phasefactor.o : ../Modules/recvec.o
+phasefactor.o : boxgrid.o
 phasefactor.o : cp_interfaces.o
 phasefactor.o : gvecb.o
 phasefactor.o : gvecw.o
@@ -957,6 +970,7 @@ wf.o : ../Modules/parallel_include.o
 wf.o : ../Modules/printout_base.o
 wf.o : ../Modules/recvec.o
 wf.o : ../Modules/uspp.o
+wf.o : boxgrid.o
 wf.o : gvecb.o
 wf.o : gvecw.o
 wf.o : modules.o
