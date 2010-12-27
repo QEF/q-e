@@ -68,12 +68,6 @@
       ! ... (distribute bands to processors)
       !
       CALL bmeshset( )
-
-      !
-      ! ... Initialize (global) real and compute global reciprocal dimensions
-      !
-      CALL realspace_grids_init( alat, a1, a2, a3, gcutm, gcutms, ng_ , ngs_ )
-      CALL smallbox_grid_init( )
       !
       ! ... cell dimensions and lattice vectors
       !
@@ -91,6 +85,12 @@
       b1 = b1 * alat
       b2 = b2 * alat
       b3 = b3 * alat
+
+      !
+      ! ... Initialize (global) real and compute global reciprocal dimensions
+      !
+      CALL realspace_grids_init( b1, b2, b3, gcutm, gcutms, ng_ , ngs_ )
+      CALL smallbox_grid_init( )
 
       IF( ionode ) THEN
 

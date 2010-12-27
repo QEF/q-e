@@ -10,27 +10,61 @@
    MODULE grid_dimensions
 !=----------------------------------------------------------------------------=!
 
-     !  This module contains the dimensions of the 3D real and reciprocal space
-     !  FFT grid relative to the charge density and potential
+     !  Dimensions of the 3D real and reciprocal space FFT grid
+     !  relative to the charge density and potential ("dense" grid)
 
      IMPLICIT NONE
      SAVE
 
-     INTEGER :: nr1  = 0   ! global first dimension of the 3D grid 
-     INTEGER :: nr2  = 0   ! global second  "           "
-     INTEGER :: nr3  = 0   ! global third   "           "
-     INTEGER :: nr1x = 0   ! global leading dimension
-     INTEGER :: nr2x = 0
-     INTEGER :: nr3x = 0
-     INTEGER :: nr1l = 0   ! local first dimension 
-     INTEGER :: nr2l = 0   ! 
-     INTEGER :: nr3l = 0   !
-     INTEGER :: nrxx  = 0  ! size of the (local) array allocated for the FFT
-                           ! in general could be different than the size of
-                           ! the FFT grid
+     !  dimensions of the "dense" 3D grid (global)
+     INTEGER :: nr1  = 0, nr2  = 0, nr3  = 0
 
-     ! ATTENTION:  
-     ! "nrxx" is not to be confused with "nr1 * nr2 * nr3" 
+     !  dimensions of the arrays for the "dense" 3D grid (global)
+     !  may differ from nr1 ,nr2 ,nr3 in order to boost performances
+     INTEGER :: nr1x = 0, nr2x = 0, nr3x = 0
+
+     !  dimensions of the "dense" 3D grid (local on each processor)
+     INTEGER :: nr1l = 0, nr2l = 0, nr3l = 0
+
+     ! size of the arrays allocated for the FFT, local to each processor:
+     ! in parallel execution may differ from nr1x*nr2x*nr3x
+     ! Not to be confused either with nr1*nr2*nr3 
+     INTEGER :: nrxx  = 0
+
+     PRIVATE
+     PUBLIC :: nr1, nr2,nr3, nr1x,nr2x,nr3x, nrxx
+     PUBLIC :: nr1l, nr2l,nr3l
+     !PUBLIC :: grid_init
+
+   CONTAINS
+
+     SUBROUTINE grid_init( b1, b2, b3, gcutm )
+       !
+       USE fft_scalar, only: good_fft_dimension, good_fft_order
+       USE io_global, only: stdout
+       USE kinds, ONLY: DP
+       !
+       IMPLICIT NONE
+       !
+       REAL(DP), INTENT(IN) :: b1(3), b2(3), b3(3)
+       REAL(DP), INTENT(IN) :: gcutm
+
+       IF( nr1 == 0 .OR. nr2 == 0 .OR. nr3 == 0 ) THEN
+         ! ... calculate the size of the real and reciprocal dense grids
+         !!!CALL ngnr_set( b1, b2, b3, gcutm, qk, ng, nr1, nr2, nr3 )
+       ELSE
+         WRITE( stdout, '(/,3X,"Info: using nr1, nr2, nr3 values from input")')
+       END IF
+
+       nr1 = good_fft_order( nr1 )
+       nr2 = good_fft_order( nr2 )
+       nr3 = good_fft_order( nr3 )
+
+       nr1x  = good_fft_dimension( nr1 )
+       nr2x  = nr2
+       nr3x  = good_fft_dimension( nr3 )
+
+     END SUBROUTINE grid_init
 
 !=----------------------------------------------------------------------------=!
    END MODULE grid_dimensions
@@ -41,23 +75,52 @@
 !=----------------------------------------------------------------------------=!
 
      !  This module contains the dimensions of the 3D real and reciprocal space
-     !  grid relative to the smooth charge density ( see Vanderbilt Pseudopot )
+     !  FFT grid relative to the smooth part of the charge density
+     !  (may differ from the full charge density grid for USPP )
 
      IMPLICIT NONE
      SAVE
 
      !  parameter description: same as above but for smooth grid
+     INTEGER :: nr1s = 0, nr2s = 0, nr3s = 0
+     INTEGER :: nr1sx= 0, nr2sx= 0, nr3sx= 0
+     INTEGER :: nr1sl= 0, nr2sl= 0, nr3sl= 0
+     INTEGER :: nrxxs = 0
 
-     INTEGER :: nr1s  = 0
-     INTEGER :: nr2s  = 0
-     INTEGER :: nr3s  = 0
-     INTEGER :: nr1sx = 0
-     INTEGER :: nr2sx = 0
-     INTEGER :: nr3sx = 0
-     INTEGER :: nr1sl = 0
-     INTEGER :: nr2sl = 0
-     INTEGER :: nr3sl = 0
-     INTEGER :: nrxxs  = 0
+     PRIVATE
+     PUBLIC :: nr1s, nr2s,nr3s, nr1sx,nr2sx,nr3sx, nrxxs
+     PUBLIC :: nr1sl, nr2sl,nr3sl
+     !PUBLIC :: smooth_grid_init
+
+   CONTAINS
+
+     SUBROUTINE smooth_grid_init( b1, b2, b3, gcutms )
+       !
+       USE fft_scalar, only: good_fft_dimension, good_fft_order
+       USE io_global, only: stdout
+       USE kinds, ONLY: DP
+       !
+       IMPLICIT NONE
+       !
+       REAL(DP), INTENT(IN) :: b1(3), b2(3), b3(3)
+       REAL(DP), INTENT(IN) :: gcutms
+
+       IF( nr1s == 0 .OR. nr2s == 0 .OR. nr3s == 0 ) THEN
+         ! ... calculate the size of the real and reciprocal dense grids
+         !!!CALL ngnr_set( b1, b2, b3, gcutms, qk, ng, nr1s, nr2s, nr3s )
+       ELSE
+         WRITE( stdout, '(/,3X,"Info: using nr1, nr2, nr3 values from input")')
+       END IF
+
+       nr1s = good_fft_order( nr1s )
+       nr2s = good_fft_order( nr2s )
+       nr3s = good_fft_order( nr3s )
+
+       nr1sx  = good_fft_dimension( nr1s )
+       nr2sx  = nr2s
+       nr3sx  = good_fft_dimension( nr3s )
+
+     END SUBROUTINE smooth_grid_init
 
 !=----------------------------------------------------------------------------=!
    END MODULE smooth_grid_dimensions
@@ -75,10 +138,13 @@
      IMPLICIT NONE
      SAVE
 
+     PRIVATE
+     PUBLIC :: realspace_grids_init, realspace_grids_para
+
    CONTAINS
 
 
-     SUBROUTINE realspace_grids_init( alat, a1, a2, a3, gcutd, gcuts, ng, ngs )
+     SUBROUTINE realspace_grids_init( b1, b2, b3, gcutd, gcuts, ng, ngs )
        !
        USE grid_dimensions, ONLY: nr1, nr2, nr3, nr1x, nr2x, nr3x
        USE smooth_grid_dimensions, ONLY: nr1s, nr2s, nr3s, nr1sx, nr2sx, nr3sx
@@ -87,8 +153,7 @@
        !
        IMPLICIT NONE
        !
-       REAL(DP), INTENT(IN) :: alat
-       REAL(DP), INTENT(IN) :: a1(3), a2(3), a3(3)
+       REAL(DP), INTENT(IN) :: b1(3), b2(3), b3(3)
        REAL(DP), INTENT(IN) :: gcutd, gcuts
        INTEGER, INTENT(OUT) :: ng, ngs
        !
@@ -96,7 +161,7 @@
 
        IF( nr1 == 0 .OR. nr2 == 0 .OR. nr3 == 0 ) THEN
          ! ... This subroutines calculates the size of the real and reciprocal dense grids
-         CALL ngnr_set( alat, a1, a2, a3, gcutd, qk, ng, nr1, nr2, nr3 )
+         CALL ngnr_set( b1, b2, b3, gcutd, qk, ng, nr1, nr2, nr3 )
        ELSE
          WRITE( stdout, '( /, 3X,"Info: using nr1, nr2, nr3 values from input" )' )
        END IF
@@ -111,7 +176,7 @@
 
        IF( nr1s == 0 .OR. nr2s == 0 .OR. nr3s == 0 ) THEN
          ! ... This subroutines calculates the size of the real and reciprocal smoth grids
-         CALL ngnr_set( alat, a1, a2, a3, gcuts, qk, ngs, nr1s, nr2s, nr3s )
+         CALL ngnr_set( b1, b2, b3, gcuts, qk, ngs, nr1s, nr2s, nr3s )
        ELSE
          WRITE( stdout, '( /, 3X,"Info: using nr1s, nr2s, nr3s values from input" )' )
        END IF
@@ -208,7 +273,7 @@
 
 
 
-   SUBROUTINE ngnr_set( alat, a1, a2, a3, gcut, qk, ng, nr1, nr2, nr3 )
+   SUBROUTINE ngnr_set( b1, b2, b3, gcut, qk, ng, nr1, nr2, nr3 )
 
 !  this routine calculates the storage required for G vectors arrays
 !  ----------------------------------------------
@@ -222,7 +287,7 @@
       IMPLICIT NONE
 
       INTEGER, INTENT(OUT) :: nr1, nr2, nr3, ng
-      REAL(DP), INTENT(IN) :: alat, a1(3), a2(3), a3(3), gcut, qk(3)
+      REAL(DP), INTENT(IN) :: b1(3), b2(3), b3(3), gcut, qk(3)
 
 ! ... declare other variables
       INTEGER :: i, j, k
@@ -230,7 +295,6 @@
       INTEGER :: nb(3)
       REAL(DP) :: gsq, sqgc
       REAL(DP) :: c(3), g(3)
-      REAL(DP) :: b1(3), b2(3), b3(3)
       LOGICAL :: tqk
 
 ! ... end of declarations
@@ -241,12 +305,6 @@
 ! ... evaluate cutoffs in reciprocal space and the required mesh size
       sqgc  = sqrt(gcut)
       nr     = int(sqgc) + 2      ! nr   = mesh size parameter
-
-! ... reciprocal lattice generators
-      call recips(a1, a2, a3, b1, b2, b3)
-      b1 = b1 * alat
-      b2 = b2 * alat
-      b3 = b3 * alat
 
 ! ... verify that, for G<gcut, coordinates never exceed nr
 ! ... (increase nr if needed)
