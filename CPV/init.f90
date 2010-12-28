@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2005 FPMD-CPV groups
+! Copyright (C) 2002-2010 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -54,8 +54,8 @@
 ! 
       integer  :: i
       real(dp) :: rat1, rat2, rat3
-      real(dp) :: b1(3), b2(3), b3(3)
-      integer :: ng_ , ngs_ , ngm_ , ngw_
+      real(dp) :: at(3,3), b1(3), b2(3), b3(3)
+      integer :: ng_, ngs_, ngm_ , ngw_
 
       IF( ionode ) THEN
         WRITE( stdout, 100 )
@@ -70,26 +70,19 @@
       CALL bmeshset( )
       !
       ! ... cell dimensions and lattice vectors
-      !
+      ! ... PW-CP compatibility : 
+      ! ... a1, a2 and a3 are in cartesian coordinates and in a.u. units
+      ! ... at in alat units
 
-      call recips( a1, a2, a3, b1, b2, b3 )
+      at (:,1) = a1(:)/alat; at (:,2) = a2(:)/alat; at (:,3) = a3(:)/alat
+      call recips( at(1,1), at(1,2), at(1,3), b1, b2, b3 )
 
-      !     Change units:  b1, b2, b3  are the 3 basis vectors generating 
+      !     b1, b2, b3  are the 3 basis vectors generating 
       !     the reciprocal lattice in 2pi/alat units
-      !
-      !      Normally if a1, a2 and a3 are in cartesian coordinates
-      !      and in a.u. units the corresponding bs are in cartesian
-      !      coordinate too and in unit of 2 PI / a.u.
-      !      now bring b1, b2 and b3 in units of 2 PI / alat
 
-      b1 = b1 * alat
-      b2 = b2 * alat
-      b3 = b3 * alat
-
+      ! ... Initialize FFT real-space grids and small box grid
       !
-      ! ... Initialize (global) real and compute global reciprocal dimensions
-      !
-      CALL realspace_grids_init( b1, b2, b3, gcutm, gcutms, ng_ , ngs_ )
+      CALL realspace_grids_init( at, b1, b2, b3, gcutm, gcutms)
       CALL smallbox_grid_init( )
 
       IF( ionode ) THEN

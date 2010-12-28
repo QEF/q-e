@@ -34,37 +34,6 @@
      PRIVATE
      PUBLIC :: nr1, nr2,nr3, nr1x,nr2x,nr3x, nrxx
      PUBLIC :: nr1l, nr2l,nr3l
-     !PUBLIC :: grid_init
-
-   CONTAINS
-
-     SUBROUTINE grid_init( b1, b2, b3, gcutm )
-       !
-       USE fft_scalar, only: good_fft_dimension, good_fft_order
-       USE io_global, only: stdout
-       USE kinds, ONLY: DP
-       !
-       IMPLICIT NONE
-       !
-       REAL(DP), INTENT(IN) :: b1(3), b2(3), b3(3)
-       REAL(DP), INTENT(IN) :: gcutm
-
-       IF( nr1 == 0 .OR. nr2 == 0 .OR. nr3 == 0 ) THEN
-         ! ... calculate the size of the real and reciprocal dense grids
-         !!!CALL ngnr_set( b1, b2, b3, gcutm, qk, ng, nr1, nr2, nr3 )
-       ELSE
-         WRITE( stdout, '(/,3X,"Info: using nr1, nr2, nr3 values from input")')
-       END IF
-
-       nr1 = good_fft_order( nr1 )
-       nr2 = good_fft_order( nr2 )
-       nr3 = good_fft_order( nr3 )
-
-       nr1x  = good_fft_dimension( nr1 )
-       nr2x  = nr2
-       nr3x  = good_fft_dimension( nr3 )
-
-     END SUBROUTINE grid_init
 
 !=----------------------------------------------------------------------------=!
    END MODULE grid_dimensions
@@ -90,37 +59,6 @@
      PRIVATE
      PUBLIC :: nr1s, nr2s,nr3s, nr1sx,nr2sx,nr3sx, nrxxs
      PUBLIC :: nr1sl, nr2sl,nr3sl
-     !PUBLIC :: smooth_grid_init
-
-   CONTAINS
-
-     SUBROUTINE smooth_grid_init( b1, b2, b3, gcutms )
-       !
-       USE fft_scalar, only: good_fft_dimension, good_fft_order
-       USE io_global, only: stdout
-       USE kinds, ONLY: DP
-       !
-       IMPLICIT NONE
-       !
-       REAL(DP), INTENT(IN) :: b1(3), b2(3), b3(3)
-       REAL(DP), INTENT(IN) :: gcutms
-
-       IF( nr1s == 0 .OR. nr2s == 0 .OR. nr3s == 0 ) THEN
-         ! ... calculate the size of the real and reciprocal dense grids
-         !!!CALL ngnr_set( b1, b2, b3, gcutms, qk, ng, nr1s, nr2s, nr3s )
-       ELSE
-         WRITE( stdout, '(/,3X,"Info: using nr1, nr2, nr3 values from input")')
-       END IF
-
-       nr1s = good_fft_order( nr1s )
-       nr2s = good_fft_order( nr2s )
-       nr3s = good_fft_order( nr3s )
-
-       nr1sx  = good_fft_dimension( nr1s )
-       nr2sx  = nr2s
-       nr3sx  = good_fft_dimension( nr3s )
-
-     END SUBROUTINE smooth_grid_init
 
 !=----------------------------------------------------------------------------=!
    END MODULE smooth_grid_dimensions
@@ -134,6 +72,8 @@
      ! parameters
 
      USE kinds, ONLY: DP
+     USE grid_dimensions, ONLY: nr1, nr2, nr3, nr1x, nr2x, nr3x
+     USE smooth_grid_dimensions, ONLY: nr1s, nr2s, nr3s, nr1sx, nr2sx, nr3sx
 
      IMPLICIT NONE
      SAVE
@@ -144,24 +84,32 @@
    CONTAINS
 
 
-     SUBROUTINE realspace_grids_init( b1, b2, b3, gcutd, gcuts, ng, ngs )
+     SUBROUTINE realspace_grids_init( at, b1, b2, b3, gcutm, gcuts )
        !
-       USE grid_dimensions, ONLY: nr1, nr2, nr3, nr1x, nr2x, nr3x
-       USE smooth_grid_dimensions, ONLY: nr1s, nr2s, nr3s, nr1sx, nr2sx, nr3sx
        USE fft_scalar, only: good_fft_dimension, good_fft_order
        USE io_global, only: stdout
        !
        IMPLICIT NONE
        !
-       REAL(DP), INTENT(IN) :: b1(3), b2(3), b3(3)
-       REAL(DP), INTENT(IN) :: gcutd, gcuts
-       INTEGER, INTENT(OUT) :: ng, ngs
+       REAL(DP), INTENT(IN) :: at(3,3), b1(3), b2(3), b3(3)
+       REAL(DP), INTENT(IN) :: gcutm, gcuts
        !
-       REAL(DP) :: qk(3) = 0.0_DP
-
        IF( nr1 == 0 .OR. nr2 == 0 .OR. nr3 == 0 ) THEN
-         ! ... This subroutines calculates the size of the real and reciprocal dense grids
-         CALL ngnr_set( b1, b2, b3, gcutd, qk, ng, nr1, nr2, nr3 )
+         !
+         ! ... calculate the size of the real-space dense grid for FFT
+         ! ... first, an estimate of nr1,nr2,nr3, nased on the max values
+         ! ... of n_i indices in:   G = i*b_1 + j*b_2 + k*b_3   
+         ! ... We use G*a_i = n_i => n_i .le. |Gmax||a_i|
+         !
+         nr1 = int (2 * sqrt (gcutm) * &
+               sqrt (at(1, 1)**2 + at(2, 1)**2 + at(3, 1)**2) ) + 1
+         nr2 = int (2 * sqrt (gcutm) * &
+               sqrt (at(1, 2)**2 + at(2, 2)**2 + at(3, 2)**2) ) + 1
+         nr3 = int (2 * sqrt (gcutm) * &
+               sqrt (at(1, 3)**2 + at(2, 3)**2 + at(3, 3)**2) ) + 1
+         !
+         CALL grid_set( b1, b2, b3, gcutm, nr1, nr2, nr3 )
+         !
        ELSE
          WRITE( stdout, '( /, 3X,"Info: using nr1, nr2, nr3 values from input" )' )
        END IF
@@ -174,9 +122,19 @@
        nr2x  = nr2
        nr3x  = good_fft_dimension( nr3 )
 
+       ! ... As above, for the smooth grid
+
        IF( nr1s == 0 .OR. nr2s == 0 .OR. nr3s == 0 ) THEN
-         ! ... This subroutines calculates the size of the real and reciprocal smoth grids
-         CALL ngnr_set( b1, b2, b3, gcuts, qk, ngs, nr1s, nr2s, nr3s )
+         !
+         nr1s= int (2 * sqrt (gcuts) * &
+               sqrt (at(1, 1)**2 + at(2, 1)**2 + at(3, 1)**2) ) + 1
+         nr2s= int (2 * sqrt (gcuts) * &
+               sqrt (at(1, 2)**2 + at(2, 2)**2 + at(3, 2)**2) ) + 1
+         nr3s= int (2 * sqrt (gcuts) * &
+               sqrt (at(1, 3)**2 + at(2, 3)**2 + at(3, 3)**2) ) + 1
+         !
+         CALL grid_set( b1, b2, b3, gcuts, nr1s, nr2s, nr3s )
+         !
        ELSE
          WRITE( stdout, '( /, 3X,"Info: using nr1s, nr2s, nr3s values from input" )' )
        END IF
@@ -205,9 +163,7 @@
 
       USE io_global, ONLY: ionode, stdout
       USE fft_types, ONLY: fft_dlay_descriptor
-      USE grid_dimensions, ONLY: nr1,  nr2,  nr3, nr1x, nr2x, nr3x
       USE grid_dimensions, ONLY: nr1l, nr2l, nr3l, nrxx
-      USE smooth_grid_dimensions, ONLY: nr1s,  nr2s,  nr3s, nr1sx, nr2sx, nr3sx
       USE smooth_grid_dimensions, ONLY: nr1sl, nr2sl, nr3sl, nrxxs
 
       IMPLICIT NONE
@@ -272,9 +228,10 @@
 
 
 
-   SUBROUTINE ngnr_set( b1, b2, b3, gcut, qk, ng, nr1, nr2, nr3 )
+   SUBROUTINE grid_set( b1, b2, b3, gcut, nr1, nr2, nr3 )
 
 !  this routine calculates the storage required for G vectors arrays
+!  nr1, nr2, nr3 must be set in input to reasonable grid values
 !  ----------------------------------------------
 !  END manual
 
@@ -285,74 +242,40 @@
 
       IMPLICIT NONE
 
-      INTEGER, INTENT(OUT) :: nr1, nr2, nr3, ng
-      REAL(DP), INTENT(IN) :: b1(3), b2(3), b3(3), gcut, qk(3)
+! ... declare arguments
+      INTEGER, INTENT(INOUT) :: nr1, nr2, nr3
+      REAL(DP), INTENT(IN) :: b1(3), b2(3), b3(3), gcut
 
 ! ... declare other variables
-      INTEGER :: i, j, k
-      INTEGER :: nr1tab, nr2tab, nr3tab, nr
-      INTEGER :: nb(3)
-      REAL(DP) :: gsq, sqgc
-      REAL(DP) :: c(3), g(3)
-      LOGICAL :: tqk
+      INTEGER :: i, j, k, nr, nb(3)
+      REAL(DP) :: gsq, g(3)
 
-! ... end of declarations
 !  ----------------------------------------------
 
-! ... me_image = processor number, starting from 0
-
-! ... evaluate cutoffs in reciprocal space and the required mesh size
-      sqgc  = sqrt(gcut)
-      nr     = int(sqgc) + 2      ! nr   = mesh size parameter
-
-! ... verify that, for G<gcut, coordinates never exceed nr
-! ... (increase nr if needed)
-      CALL vec_prod(c,b1,b2)
-      nr3tab=nint(2.0_DP*sqgc/abs(dot_prod(c,b3))*vec_mod(c))
-      CALL vec_prod(c,b3,b1)
-      nr2tab=nint(2.0_DP*sqgc/abs(dot_prod(c,b2))*vec_mod(c))
-      CALL vec_prod(c,b2,b3)
-      nr1tab=nint(2.0_DP*sqgc/abs(dot_prod(c,b1))*vec_mod(c))
-      nr = max(nr,nr3tab)
-      nr = max(nr,nr2tab)
-      nr = max(nr,nr1tab)
-
-! ... initialize some variables
-      ng     = 0
       nb     = 0
 
-      IF( ALL( qk == 0.0_DP ) ) THEN
-        tqk = .FALSE.
-      ELSE
-        tqk = .TRUE.
-      END IF
-
-! *** START OF LOOP ***
 ! ... calculate moduli of G vectors and the range of indexes where
-! ... |G| < gcut 
+! ... |G| < gcut (in parallel whenever possible)
 
-      DO k = -nr, nr
-        IF( MOD( k + nr, nproc_image ) == me_image ) THEN
-          DO j = -nr, nr
-            DO i = -nr, nr
+      DO k = -nr3, nr3
+        !
+        ! ... me_image = processor number, starting from 0
+        !
+        IF( MOD( k + nr3, nproc_image ) == me_image ) THEN
+          DO j = -nr2, nr2
+            DO i = -nr1, nr1
 
               g( 1 ) = DBLE(i) * b1(1) + DBLE(j) * b2(1) + DBLE(k) * b3(1)
               g( 2 ) = DBLE(i) * b1(2) + DBLE(j) * b2(2) + DBLE(k) * b3(2)
               g( 3 ) = DBLE(i) * b1(3) + DBLE(j) * b2(3) + DBLE(k) * b3(3)
 
 ! ...         calculate modulus
-              IF( tqk ) THEN
-                gsq = ( g( 1 ) + qk( 1 ) )**2 + &
-                    & ( g( 2 ) + qk( 2 ) )**2 + &
-                    & ( g( 3 ) + qk( 3 ) )**2 
-              ELSE
-                gsq =  g( 1 )**2 + g( 2 )**2 + g( 3 )**2 
-              END IF
+
+              gsq =  g( 1 )**2 + g( 2 )**2 + g( 3 )**2 
 
               IF( gsq < gcut ) THEN
-! ...           increase counters
-                ng  = ng  + 1
-! ...           calculate minimum and maximum indexes
+
+! ...           calculate minimum and maximum index
                 nb(1) = MAX( nb(1), ABS( i ) )
                 nb(2) = MAX( nb(2), ABS( j ) )
                 nb(3) = MAX( nb(3), ABS( k ) )
@@ -363,10 +286,9 @@
         END IF
       END DO
 
-      CALL mp_sum( ng , intra_image_comm )
-
 ! ... the size of the required (3-dimensional) matrix depends on the
 ! ... minimum and maximum indices
+
       CALL mp_max( nb,  intra_image_comm )
 
       nr1 = 2 * nb(1) + 1
@@ -374,63 +296,8 @@
       nr3 = 2 * nb(3) + 1
 
       RETURN
-
-   CONTAINS
-
-!  ----------------------------------------------
-!  ----------------------------------------------
-      FUNCTION dot_prod(a,b)
-
-!  this function calculates the dot product of two vectors
-!  ----------------------------------------------
-      
-      REAL(DP) :: dot_prod
-! ... declare function arguments
-      REAL(DP) :: a(3),b(3)     
-
-! ... evaluate dot product
-      dot_prod=a(1)*b(1)+a(2)*b(2)+a(3)*b(3)
-
-      RETURN
-      END FUNCTION dot_prod
-
-!  ----------------------------------------------
-!  ----------------------------------------------
-      FUNCTION vec_mod(a)
-
-!  this function calculates the norm of a vector
-!  ----------------------------------------------
-
-      REAL(DP) :: vec_mod
-! ... declare function argument
-      REAL(DP) :: a(3)
-
-! ... evaluate norm
-      vec_mod=sqrt(a(1)*a(1)+a(2)*a(2)+a(3)*a(3))
-
-      RETURN
-      END FUNCTION vec_mod
-
-!  ----------------------------------------------
-!  ----------------------------------------------
-      SUBROUTINE vec_prod(c,a,b)
    
-!  this subroutine calculates the vector (cross) product of vectors
-!  a,b and stores the result in vector c
-!  ----------------------------------------------
-
-! ... declare subroutine arguments
-      REAL(DP) :: a(3),b(3),c(3)
-
-! ... evaluate cross product
-      c(1) = a(2)*b(3)-a(3)*b(2)
-      c(2) = a(3)*b(1)-a(1)*b(3)
-      c(3) = a(1)*b(2)-a(2)*b(1)
-
-      RETURN 
-      END SUBROUTINE vec_prod
-
-   END  SUBROUTINE ngnr_set
+   END SUBROUTINE grid_set
 
 !=----------------------------------------------------------------------------=!
    END MODULE grid_subroutines
