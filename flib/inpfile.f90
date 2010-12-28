@@ -187,6 +187,38 @@ END SUBROUTINE get_arg_ntg
 !
 !----------------------------------------------------------------------------
 !
+SUBROUTINE get_arg_nbgrp( nbgrp )
+   !
+   IMPLICIT NONE
+   !
+   INTEGER :: nbgrp
+   !
+   INTEGER :: nargs, iiarg
+   CHARACTER(LEN=20) :: np
+   INTEGER :: iargc
+   !
+   nbgrp = 0
+   nargs = iargc()
+   !
+   DO iiarg = 1, ( nargs - 1 )
+      !
+      CALL getarg( iiarg, np )
+      !
+      IF ( TRIM( np ) == '-nbgrd' .OR. TRIM( np ) == '-nband_group' .OR. &
+           TRIM( np ) == '-nb' .OR. TRIM( np ) == '-nband' ) THEN
+         !
+         CALL getarg( ( iiarg + 1 ), np )
+         READ( np, * ) nbgrp
+         !
+      END IF
+      !
+   END DO
+   !
+   RETURN
+END SUBROUTINE get_arg_nbgrp
+!
+!----------------------------------------------------------------------------
+!
 SUBROUTINE get_arg_northo( nproc_ortho )
    !
    IMPLICIT NONE
@@ -216,7 +248,6 @@ SUBROUTINE get_arg_northo( nproc_ortho )
    !
    RETURN
 END SUBROUTINE get_arg_northo
-
 
 SUBROUTINE get_env ( variable_name, variable_value )
   !
