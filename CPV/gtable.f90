@@ -24,7 +24,7 @@ subroutine gtable( ipol, ctable)
   use gvect, only: mill
   use mp, only: mp_sum
   use io_global, only: ionode, stdout
-  use mp_global, only: intra_image_comm 
+  use mp_global, only: intra_bgrp_comm 
 
   implicit none
   integer :: ipol, ctable(ngw,2)
@@ -96,7 +96,7 @@ subroutine gtable( ipol, ctable)
      endif
   enddo
 
-  call mp_sum(test, intra_image_comm)
+  call mp_sum(test, intra_bgrp_comm)
   if(ionode) write(stdout,*) '#not found, gtable: ', test
 
   return
@@ -118,7 +118,7 @@ subroutine gtablein( ipol, ctabin)
   use gvect, only: mill
   use mp, only: mp_sum
   use io_global, only: ionode, stdout
-  use mp_global, only: intra_image_comm
+  use mp_global, only: intra_bgrp_comm
 
   implicit none
 
@@ -179,7 +179,7 @@ subroutine gtablein( ipol, ctabin)
      endif
   enddo
 
-  call mp_sum(test, intra_image_comm)
+  call mp_sum(test, intra_bgrp_comm)
   if(ionode) write(stdout,*) '#not found, gtabin: ', test
 
   return
@@ -195,7 +195,7 @@ subroutine find_whose_is_g
   USE gvect, ONLY : ig_l2g, mill_g, mill
   USE mp,                 ONLY : mp_sum
   USE io_global,          ONLY : stdout
-  USE mp_global,          ONLY : me_image, nproc_image, intra_image_comm
+  USE mp_global,          ONLY : me_bgrp, nproc_bgrp, intra_bgrp_comm
   USE efield_module,      ONLY : whose_is_g
 
   implicit none
@@ -210,9 +210,9 @@ subroutine find_whose_is_g
         write(stdout,*) 'find_whose_is_g: too large'
         stop
      endif
-     whose_is_g(ig_l2g(ig))=me_image+1
+     whose_is_g(ig_l2g(ig))=me_bgrp+1
   enddo
-  call mp_sum(whose_is_g,intra_image_comm)
+  call mp_sum(whose_is_g,intra_bgrp_comm)
   whose_is_g(:)=whose_is_g(:)-1
   
   ! mill_g is used in gtable_missing and re-initialized here
@@ -222,7 +222,7 @@ subroutine find_whose_is_g
   do ig=1,ngw
      mill_g(:,ig_l2g(ig)) = mill(:,ig)
   end do
-  call mp_sum(mill_g,intra_image_comm)
+  call mp_sum(mill_g,intra_bgrp_comm)
 
 return
 end subroutine find_whose_is_g
@@ -236,7 +236,7 @@ subroutine gtable_missing
   USE gvect, ONLY : ig_l2g, mill_g, mill, gstart
   USE mp,                 ONLY : mp_sum, mp_max, mp_alltoall
   USE io_global,          ONLY : stdout
-  USE mp_global,          ONLY : me_image, nproc_image, intra_image_comm, world_comm
+  USE mp_global,          ONLY : me_bgrp, nproc_bgrp, intra_bgrp_comm
   USE parallel_include
 
 
@@ -244,14 +244,14 @@ subroutine gtable_missing
 
   INTEGER :: ipol, i,j,k,ig,igg, nfound_max, ip
   LOGICAL :: found
-  INTEGER :: nfound_proc(nproc_image,2)
+  INTEGER :: nfound_proc(nproc_bgrp,2)
   INTEGER, ALLOCATABLE :: igg_found(:,:,:), ig_send(:,:,:), igg_found_snd(:,:,:)
   INTEGER, ALLOCATABLE :: igg_found_rcv(:,:,:)
   INTEGER :: ierr,sndint,rcvint
 
 
 
-  allocate( igg_found(ngw_g,2,nproc_image), ig_send(ngw_g,2,nproc_image) )
+  allocate( igg_found(ngw_g,2,nproc_bgrp), ig_send(ngw_g,2,nproc_bgrp) )
   do ipol=1,2
     
      nfound_max=0
@@ -268,7 +268,7 @@ subroutine gtable_missing
         if(ipol.eq.3) k=k+1
         do igg=1,ngw_g
            if( i==mill_g(1,igg) .and. j==mill_g(2,igg) .and. k==mill_g(3,igg)) then
-              if(whose_is_g(igg) /= -1 .and. whose_is_g(igg) /= me_image) then
+              if(whose_is_g(igg) /= -1 .and. whose_is_g(igg) /= me_bgrp) then
                  nfound_max=nfound_max+1
                  nfound_proc(whose_is_g(igg)+1,1)=nfound_proc(whose_is_g(igg)+1,1)+1
                  ig_send(nfound_proc(whose_is_g(igg)+1,1),1,whose_is_g(igg)+1)=ig
@@ -276,7 +276,7 @@ subroutine gtable_missing
               endif
               
            else if( i==-mill_g(1,igg) .and. j==-mill_g(2,igg) .and. k==-mill_g(3,igg)) then
-              if(whose_is_g(igg) /= -1 .and. whose_is_g(igg) /= me_image) then
+              if(whose_is_g(igg) /= -1 .and. whose_is_g(igg) /= me_bgrp) then
                  nfound_max=nfound_max+1
                  nfound_proc(whose_is_g(igg)+1,1)=nfound_proc(whose_is_g(igg)+1,1)+1
                  ig_send(nfound_proc(whose_is_g(igg)+1,1),1,whose_is_g(igg)+1)=ig
@@ -297,7 +297,7 @@ subroutine gtable_missing
         if(ipol.eq.3) k=k+1
         do igg=1,ngw_g
            if( i==mill_g(1,igg) .and. j==mill_g(2,igg) .and. k==mill_g(3,igg)) then
-              if(whose_is_g(igg) /= -1 .and. whose_is_g(igg) /= me_image) then
+              if(whose_is_g(igg) /= -1 .and. whose_is_g(igg) /= me_bgrp) then
                  nfound_max=nfound_max+1
                  nfound_proc(whose_is_g(igg)+1,2)=nfound_proc(whose_is_g(igg)+1,2)+1
                  ig_send(nfound_proc(whose_is_g(igg)+1,2),2,whose_is_g(igg)+1)=ig
@@ -305,7 +305,7 @@ subroutine gtable_missing
               endif
 
            else if( i==-mill_g(1,igg) .and. j==-mill_g(2,igg) .and. k==-mill_g(3,igg)) then
-              if(whose_is_g(igg) /= -1 .and. whose_is_g(igg) /= me_image) then
+              if(whose_is_g(igg) /= -1 .and. whose_is_g(igg) /= me_bgrp) then
                   nfound_max=nfound_max+1
                  nfound_proc(whose_is_g(igg)+1,2)=nfound_proc(whose_is_g(igg)+1,2)+1
                  ig_send(nfound_proc(whose_is_g(igg)+1,2),2,whose_is_g(igg)+1)=ig
@@ -320,25 +320,25 @@ subroutine gtable_missing
 !determine the largest nfound for processor and set it as dimensione for ctable_missing and ctable_missing_rev
 !copy ig_send to ctable_missing
 
-     call mp_sum(nfound_max, intra_image_comm)
+     call mp_sum(nfound_max, intra_bgrp_comm)
      write(stdout,*) 'Additional found:', nfound_max
 
      n_g_missing_p(ipol)=maxval(nfound_proc(:,:))
      
-     call mp_max(n_g_missing_p(ipol), intra_image_comm)
+     call mp_max(n_g_missing_p(ipol), intra_bgrp_comm)
          
 
     if(ipol==1) then
-        allocate(ctable_missing_1(n_g_missing_p(ipol),2,nproc_image))
+        allocate(ctable_missing_1(n_g_missing_p(ipol),2,nproc_bgrp))
         ctable_missing_1(:,:,:)=0
-        do ip=1,nproc_image
+        do ip=1,nproc_bgrp
            ctable_missing_1(1:nfound_proc(ip,1),1,ip)=ig_send(1:nfound_proc(ip,1),1,ip)
            ctable_missing_1(1:nfound_proc(ip,2),2,ip)=ig_send(1:nfound_proc(ip,2),2,ip)
         enddo
      else
-        allocate(ctable_missing_2(n_g_missing_p(ipol),2,nproc_image))
+        allocate(ctable_missing_2(n_g_missing_p(ipol),2,nproc_bgrp))
         ctable_missing_2(:,:,:)=0
-        do ip=1,nproc_image
+        do ip=1,nproc_bgrp
            ctable_missing_2(1:nfound_proc(ip,1),1,ip)=ig_send(1:nfound_proc(ip,1),1,ip)
            ctable_missing_2(1:nfound_proc(ip,2),2,ip)=ig_send(1:nfound_proc(ip,2),2,ip)
         enddo
@@ -347,22 +347,22 @@ subroutine gtable_missing
 
 !mpi all to all for igg_found
 
-     allocate(igg_found_snd(n_g_missing_p(ipol),2,nproc_image))
-     allocate(igg_found_rcv(n_g_missing_p(ipol),2,nproc_image))
+     allocate(igg_found_snd(n_g_missing_p(ipol),2,nproc_bgrp))
+     allocate(igg_found_rcv(n_g_missing_p(ipol),2,nproc_bgrp))
      igg_found_snd(:,:,:)=0
-     do ip=1,nproc_image
+     do ip=1,nproc_bgrp
         igg_found_snd(1:nfound_proc(ip,1),1,ip)=igg_found(1:nfound_proc(ip,1),1,ip)
         igg_found_snd(1:nfound_proc(ip,2),2,ip)=igg_found(1:nfound_proc(ip,2),2,ip)
      enddo
 
   
-     call mp_alltoall( igg_found_snd, igg_found_rcv, intra_image_comm )
+     call mp_alltoall( igg_found_snd, igg_found_rcv, intra_bgrp_comm )
    
      if(ipol==1) then
-        allocate(ctable_missing_rev_1(n_g_missing_p(ipol),2,nproc_image))
+        allocate(ctable_missing_rev_1(n_g_missing_p(ipol),2,nproc_bgrp))
         ctable_missing_rev_1(:,:,:)=0
      else
-        allocate(ctable_missing_rev_2(n_g_missing_p(ipol),2,nproc_image))
+        allocate(ctable_missing_rev_2(n_g_missing_p(ipol),2,nproc_bgrp))
         ctable_missing_rev_2(:,:,:)=0
      endif
 
@@ -370,7 +370,7 @@ subroutine gtable_missing
   
      nfound_max=0
 
-     do ip=1,nproc_image
+     do ip=1,nproc_bgrp
         do igg=1, n_g_missing_p(ipol)
            if(igg_found_rcv(igg,1,ip) /= 0 ) then
               found=.false.
@@ -431,7 +431,7 @@ subroutine gtable_missing
         enddo
 
      enddo
-     call mp_sum(nfound_max, intra_image_comm)
+     call mp_sum(nfound_max, intra_bgrp_comm)
      !write(stdout,*) 'Found check', nfound_max
      deallocate(igg_found_snd,igg_found_rcv)
   enddo
@@ -454,7 +454,7 @@ subroutine gtable_missing_inv
   USE gvect, ONLY : ig_l2g, mill_g, mill, gstart
   USE mp,                 ONLY : mp_sum, mp_max, mp_alltoall
   USE io_global,          ONLY : stdout
-  USE mp_global,          ONLY : me_image, nproc_image, intra_image_comm, world_comm
+  USE mp_global,          ONLY : me_bgrp, nproc_bgrp, intra_bgrp_comm
   USE parallel_include
 
 
@@ -462,14 +462,14 @@ subroutine gtable_missing_inv
 
   INTEGER :: ipol, i,j,k,ig,igg, nfound_max, ip
   LOGICAL :: found
-  INTEGER :: nfound_proc(nproc_image,2)
+  INTEGER :: nfound_proc(nproc_bgrp,2)
   INTEGER, ALLOCATABLE :: igg_found(:,:,:), ig_send(:,:,:), igg_found_snd(:,:,:)
   INTEGER, ALLOCATABLE :: igg_found_rcv(:,:,:)
   INTEGER :: ierr,sndint,rcvint
 
 
 
-  allocate( igg_found(ngw_g,2,nproc_image), ig_send(ngw_g,2,nproc_image))
+  allocate( igg_found(ngw_g,2,nproc_bgrp), ig_send(ngw_g,2,nproc_bgrp))
   do ipol=1,2
 
 
@@ -488,7 +488,7 @@ subroutine gtable_missing_inv
         if(ipol.eq.3) k=k+1
         do igg=1,ngw_g
            if( i==mill_g(1,igg) .and. j==mill_g(2,igg) .and. k==mill_g(3,igg)) then
-              if(whose_is_g(igg) /= -1 .and. whose_is_g(igg) /= me_image) then
+              if(whose_is_g(igg) /= -1 .and. whose_is_g(igg) /= me_bgrp) then
                  nfound_max=nfound_max+1
                  nfound_proc(whose_is_g(igg)+1,1)=nfound_proc(whose_is_g(igg)+1,1)+1
                  ig_send(nfound_proc(whose_is_g(igg)+1,1),1,whose_is_g(igg)+1)=ig
@@ -496,7 +496,7 @@ subroutine gtable_missing_inv
               endif
               
            else if( i==-mill_g(1,igg) .and. j==-mill_g(2,igg) .and. k==-mill_g(3,igg)) then
-              if(whose_is_g(igg) /= -1 .and. whose_is_g(igg) /= me_image) then
+              if(whose_is_g(igg) /= -1 .and. whose_is_g(igg) /= me_bgrp) then
                  nfound_max=nfound_max+1
                  nfound_proc(whose_is_g(igg)+1,1)=nfound_proc(whose_is_g(igg)+1,1)+1
                  ig_send(nfound_proc(whose_is_g(igg)+1,1),1,whose_is_g(igg)+1)=ig
@@ -517,7 +517,7 @@ subroutine gtable_missing_inv
         if(ipol.eq.3) k=k-1
         do igg=1,ngw_g
            if( i==mill_g(1,igg) .and. j==mill_g(2,igg) .and. k==mill_g(3,igg)) then
-              if(whose_is_g(igg) /= -1 .and. whose_is_g(igg) /= me_image) then
+              if(whose_is_g(igg) /= -1 .and. whose_is_g(igg) /= me_bgrp) then
                  nfound_max=nfound_max+1
                  nfound_proc(whose_is_g(igg)+1,2)=nfound_proc(whose_is_g(igg)+1,2)+1
                  ig_send(nfound_proc(whose_is_g(igg)+1,2),2,whose_is_g(igg)+1)=ig
@@ -525,7 +525,7 @@ subroutine gtable_missing_inv
               endif
 
            else if( i==-mill_g(1,igg) .and. j==-mill_g(2,igg) .and. k==-mill_g(3,igg)) then
-              if(whose_is_g(igg) /= -1 .and. whose_is_g(igg) /= me_image) then
+              if(whose_is_g(igg) /= -1 .and. whose_is_g(igg) /= me_bgrp) then
                   nfound_max=nfound_max+1
                  nfound_proc(whose_is_g(igg)+1,2)=nfound_proc(whose_is_g(igg)+1,2)+1
                  ig_send(nfound_proc(whose_is_g(igg)+1,2),2,whose_is_g(igg)+1)=ig
@@ -540,25 +540,25 @@ subroutine gtable_missing_inv
 !determine the largest nfound for processor and set it as dimensione for ctabin_missing and ctabin_missing_rev
 !copy ig_send to ctabin_missing
 
-     call mp_sum(nfound_max, intra_image_comm)
+     call mp_sum(nfound_max, intra_bgrp_comm)
      write(stdout,*) 'Additional found:', nfound_max
 
      
      n_g_missing_m(ipol)=maxval(nfound_proc(:,:))
-     call mp_max(n_g_missing_m(ipol), intra_image_comm)
+     call mp_max(n_g_missing_m(ipol), intra_bgrp_comm)
           
 
     if(ipol==1) then
-        allocate(ctabin_missing_1(n_g_missing_m(ipol),2,nproc_image))
+        allocate(ctabin_missing_1(n_g_missing_m(ipol),2,nproc_bgrp))
         ctabin_missing_1(:,:,:)=0
-        do ip=1,nproc_image
+        do ip=1,nproc_bgrp
            ctabin_missing_1(1:nfound_proc(ip,1),1,ip)=ig_send(1:nfound_proc(ip,1),1,ip)
            ctabin_missing_1(1:nfound_proc(ip,2),2,ip)=ig_send(1:nfound_proc(ip,2),2,ip)
         enddo
      else
-        allocate(ctabin_missing_2(n_g_missing_m(ipol),2,nproc_image))
+        allocate(ctabin_missing_2(n_g_missing_m(ipol),2,nproc_bgrp))
         ctabin_missing_2(:,:,:)=0
-        do ip=1,nproc_image
+        do ip=1,nproc_bgrp
            ctabin_missing_2(1:nfound_proc(ip,1),1,ip)=ig_send(1:nfound_proc(ip,1),1,ip)
            ctabin_missing_2(1:nfound_proc(ip,2),2,ip)=ig_send(1:nfound_proc(ip,2),2,ip)
         enddo
@@ -567,22 +567,22 @@ subroutine gtable_missing_inv
 
 !mpi all to all for igg_found
 
-     allocate(igg_found_snd(n_g_missing_m(ipol),2,nproc_image))
-     allocate(igg_found_rcv(n_g_missing_m(ipol),2,nproc_image))
+     allocate(igg_found_snd(n_g_missing_m(ipol),2,nproc_bgrp))
+     allocate(igg_found_rcv(n_g_missing_m(ipol),2,nproc_bgrp))
      igg_found_snd(:,:,:)=0
-     do ip=1,nproc_image
+     do ip=1,nproc_bgrp
         igg_found_snd(1:nfound_proc(ip,1),1,ip)=igg_found(1:nfound_proc(ip,1),1,ip)
         igg_found_snd(1:nfound_proc(ip,2),2,ip)=igg_found(1:nfound_proc(ip,2),2,ip)
      enddo
 
    
-     CALL mp_alltoall( igg_found_snd, igg_found_rcv, intra_image_comm )
+     CALL mp_alltoall( igg_found_snd, igg_found_rcv, intra_bgrp_comm )
 
      if(ipol==1) then
-        allocate(ctabin_missing_rev_1(n_g_missing_m(ipol),2,nproc_image))
+        allocate(ctabin_missing_rev_1(n_g_missing_m(ipol),2,nproc_bgrp))
         ctabin_missing_rev_1(:,:,:)=0
      else
-        allocate(ctabin_missing_rev_2(n_g_missing_m(ipol),2,nproc_image))
+        allocate(ctabin_missing_rev_2(n_g_missing_m(ipol),2,nproc_bgrp))
         ctabin_missing_rev_2(:,:,:)=0
      endif
 
@@ -590,7 +590,7 @@ subroutine gtable_missing_inv
    
      nfound_max=0
 
-     do ip=1,nproc_image
+     do ip=1,nproc_bgrp
         do igg=1, n_g_missing_m(ipol)
            if(igg_found_rcv(igg,1,ip) /= 0 ) then
               found=.false.
@@ -651,7 +651,7 @@ subroutine gtable_missing_inv
         enddo
 
      enddo
-     call mp_sum(nfound_max, intra_image_comm)
+     call mp_sum(nfound_max, intra_bgrp_comm)
      !write(stdout,*) 'Found check', nfound_max
      deallocate(igg_found_snd,igg_found_rcv)
   enddo

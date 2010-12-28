@@ -18,7 +18,7 @@
                                     use_parallel_diag, diagonalize_parallel
       USE descriptors,        ONLY: lambda_node_ , nlar_ , nlac_ , ilar_ , ilac_ , &
                                     nlax_ , la_comm_ , descla_siz_
-      USE mp_global,          ONLY: nproc_image, me_image, intra_image_comm
+      USE mp_global,          ONLY: nproc_bgrp, me_bgrp, intra_bgrp_comm
       USE mp,                 ONLY: mp_sum
       USE cp_main_variables,  ONLY: nlam, la_proc, nlax
 
@@ -260,7 +260,7 @@
       USE cp_interfaces,  ONLY: ortho_gamma
       USE descriptors,    ONLY: nlac_ , ilac_ , descla_siz_ , nlar_ , ilar_
       USE cp_main_variables,  ONLY: nlam, la_proc, nlax, collect_bec
-      USE mp_global,          ONLY: nproc_image, me_image, intra_image_comm  ! DEBUG
+      USE mp_global,          ONLY: nproc_bgrp, me_bgrp, intra_bgrp_comm  ! DEBUG
       !
       IMPLICIT NONE
       !

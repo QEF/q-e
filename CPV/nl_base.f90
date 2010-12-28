@@ -22,7 +22,7 @@
       !
       USE kinds,      ONLY : DP
       USE mp,         ONLY : mp_sum
-      USE mp_global,  ONLY : nproc_image, intra_image_comm
+      USE mp_global,  ONLY : nproc_bgrp, intra_bgrp_comm
       USE ions_base,  only : na, nat
       USE gvecw,      only : ngw
       USE uspp,       only : nkb, nhtol, beta
@@ -58,7 +58,7 @@
          !
          allocate( wrk2( 2, ngw, na( is ) ) )
          !
-         IF( nproc_image > 1 ) THEN
+         IF( nproc_bgrp > 1 ) THEN
             nhx = nh( is ) * na( is )
             IF( MOD( nhx, 2 ) == 0 ) nhx = nhx + 1
             ALLOCATE( becps( nhx, n ) )
@@ -115,7 +115,7 @@
             
 !$omp end parallel
             !
-            IF( nproc_image > 1 ) THEN
+            IF( nproc_bgrp > 1 ) THEN
                inl=(iv-1)*na(is)+1
                CALL dgemm( 'T', 'N', na(is), n, 2*ngw, 1.0d0, wrk2, 2*ngw, c, 2*ngw, 0.0d0, becps( inl, 1 ), nhx )
             ELSE
@@ -128,11 +128,11 @@
          deallocate( wrk2 )
 
 
-         IF( nproc_image > 1 ) THEN
+         IF( nproc_bgrp > 1 ) THEN
             !
             inl = ish(is) + 1
             !
-            CALL mp_sum( becps, intra_image_comm )
+            CALL mp_sum( becps, intra_bgrp_comm )
 
             do i = 1, n
                do iv = inl , ( inl + na(is) * nh(is) - 1 )
@@ -173,7 +173,7 @@
       !
       USE kinds,      ONLY : DP
       USE mp,         ONLY : mp_sum
-      USE mp_global,  ONLY : nproc_image, intra_image_comm
+      USE mp_global,  ONLY : nproc_bgrp, intra_bgrp_comm
       USE ions_base,  only : na, nat
       USE gvecw,      only : ngw
       USE uspp,       only : nkb, nhtol, beta
@@ -212,7 +212,7 @@
          !
          allocate( wrk2( 2, ngw, na( is ) ) )
          !
-         IF( nproc_image > 1 ) THEN
+         IF( nproc_bgrp > 1 ) THEN
             nhx = nh( is ) * na( is )
             IF( MOD( nhx, 2 ) /= 0 ) nhx = nhx + 1
             ALLOCATE( becps( nhx, n ) )
@@ -270,7 +270,7 @@
 !$omp end parallel
             
             !
-            IF( nproc_image > 1 ) THEN
+            IF( nproc_bgrp > 1 ) THEN
                inl=(iv-1)*na(is)+1
                CALL dgemm( 'T', 'N', na(is), n, 2*ngw, 1.0d0, wrk2, 2*ngw, c, 2*ngw, 0.0d0, becps( inl, 1 ), nhx )
             ELSE
@@ -283,11 +283,11 @@
          deallocate( wrk2 )
 
 
-         IF( nproc_image > 1 ) THEN
+         IF( nproc_bgrp > 1 ) THEN
             !
             inl = ish(is) + 1
             !
-            CALL mp_sum( becps, intra_image_comm )
+            CALL mp_sum( becps, intra_bgrp_comm )
 
             IF( desc( lambda_node_ , 1 ) > 0 ) THEN
                ir = desc( ilar_ , 1 )
@@ -347,7 +347,7 @@
       use uspp_param, only : nh
       use cell_base,  only : tpiba
       use mp,         only : mp_sum
-      use mp_global,  only : nproc_image, intra_image_comm
+      use mp_global,  only : nproc_bgrp, intra_bgrp_comm
       use cp_main_variables,  only : nlax, descla, distribute_bec
       use gvect, only : g, gstart
 !
@@ -439,8 +439,8 @@
 
          end do
 
-         IF( nproc_image > 1 ) THEN
-            CALL mp_sum( becdr_repl(:,:), intra_image_comm )
+         IF( nproc_bgrp > 1 ) THEN
+            CALL mp_sum( becdr_repl(:,:), intra_bgrp_comm )
          END IF
          CALL distribute_bec( becdr_repl, becdr(:,:,k), descla, nspin )
       end do
@@ -474,7 +474,7 @@
       use uspp_param, only : nh
       use cell_base,  only : tpiba
       use mp,         only : mp_sum
-      use mp_global,  only : nproc_image, intra_image_comm
+      use mp_global,  only : nproc_bgrp, intra_bgrp_comm
       use gvect, only : g, gstart
 !
       implicit none
@@ -561,8 +561,8 @@
 
          end do
 
-         IF( nproc_image > 1 ) THEN
-            CALL mp_sum( becdr(:,:,k), intra_image_comm )
+         IF( nproc_bgrp > 1 ) THEN
+            CALL mp_sum( becdr(:,:,k), intra_bgrp_comm )
          END IF
       end do
 
@@ -765,7 +765,7 @@ SUBROUTINE caldbec( ngw, nkb, n, nspmn, nspmx, eigr, c, dbec )
   !
   USE kinds,      ONLY : DP
   use mp,         only : mp_sum
-  use mp_global,  only : nproc_image, intra_image_comm
+  use mp_global,  only : nproc_bgrp, intra_bgrp_comm
   use ions_base,  only : na, nat
   use cvan,       only : ish
   use cdvan,      only : dbeta
@@ -846,8 +846,8 @@ SUBROUTINE caldbec( ngw, nkb, n, nspmn, nspmx, eigr, c, dbec )
               CALL dgemm( 'T', 'N', na(is), n, 2*ngw, 1.0d0, wrk2, 2*ngw, c, 2*ngw, 0.0d0, dwrk(inl,1), nanh )
            end do
            deallocate( wrk2 )
-           if( nproc_image > 1 ) then
-              call mp_sum( dwrk, intra_image_comm )
+           if( nproc_bgrp > 1 ) then
+              call mp_sum( dwrk, intra_bgrp_comm )
            end if
            inl=ish(is)+1
            do iss=1,nspin
@@ -890,7 +890,7 @@ subroutine dennl( bec, dbec, drhovan, denl )
   use cell_base,  only : h
   use io_global,  only : stdout
   use mp,         only : mp_sum
-  use mp_global,  only : intra_image_comm
+  use mp_global,  only : intra_bgrp_comm
   USE cp_main_variables,  ONLY : descla, la_proc, nlax, nlam
   USE descriptors,        ONLY : nlar_ , nlac_ , ilar_ , ilac_ , nlax_ , la_myr_ , la_myc_
   use electrons_base,     only : n => nbsp, ispin, f, nspin, iupdwn, nupdwn
@@ -965,10 +965,10 @@ subroutine dennl( bec, dbec, drhovan, denl )
 
   END IF
 
-  CALL mp_sum( denl,    intra_image_comm )
+  CALL mp_sum( denl,    intra_bgrp_comm )
   do k=1,3
      do j=1,3
-        CALL mp_sum( drhovan(:,:,:,j,k), intra_image_comm )
+        CALL mp_sum( drhovan(:,:,:,j,k), intra_bgrp_comm )
      end do
   end do
 
@@ -1001,7 +1001,7 @@ subroutine nlfq( c, eigr, bec, becdr, fion )
   use electrons_base, only : n => nbsp, ispin, f, nspin, iupdwn, nupdwn
   use gvecw,          only : ngw
   use constants,      only : pi, fpi
-  use mp_global,      only : me_image, intra_image_comm, nproc_image
+  use mp_global,      only : me_bgrp, intra_bgrp_comm, nproc_bgrp
   use mp,             only : mp_sum
   USE cp_main_variables, ONLY: nlax, descla, la_proc
   USE descriptors,       ONLY: nlar_ , nlac_ , ilar_ , ilac_ , lambda_node_ , &
@@ -1112,7 +1112,7 @@ subroutine nlfq( c, eigr, bec, becdr, fion )
 !$omp end parallel
   END DO
   !
-  CALL mp_sum( fion_loc, intra_image_comm )
+  CALL mp_sum( fion_loc, intra_bgrp_comm )
   !
   fion = fion + fion_loc
   !

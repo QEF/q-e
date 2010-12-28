@@ -43,7 +43,6 @@ SUBROUTINE move_electrons_x( nfi, tfirst, tlast, b1, b2, b3, fion, &
   USE control_flags,        ONLY : force_pairing
   USE cp_interfaces,        ONLY : rhoofr, compute_stress
   USE electrons_base,       ONLY : nupdwn 
-  USE mp_global,            ONLY : me_image 
   USE gvect,   ONLY : eigts1, eigts2, eigts3 
   IMPLICIT NONE
   !

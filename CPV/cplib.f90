@@ -138,7 +138,7 @@ END FUNCTION
       USE uspp_param,         ONLY: nh
       USE uspp,               ONLY: qq
       USE mp,                 ONLY: mp_sum
-      USE mp_global,          ONLY: intra_image_comm
+      USE mp_global,          ONLY: intra_bgrp_comm
       USE kinds,              ONLY: DP
 !
       IMPLICIT NONE
@@ -162,7 +162,7 @@ END FUNCTION
       rsum=2.d0*SUM(temp)
       IF (gstart == 2) rsum=rsum-temp(1)
 
-      CALL mp_sum( rsum, intra_image_comm )
+      CALL mp_sum( rsum, intra_bgrp_comm )
 
       DEALLOCATE(temp)
 !
@@ -202,7 +202,7 @@ END FUNCTION
       USE gvect,              ONLY: ngm, nl
       USE cell_base,          ONLY: omega, ainv, tpiba2
       USE mp,                 ONLY: mp_sum
-      USE mp_global,          ONLY: intra_image_comm
+      USE mp_global,          ONLY: intra_bgrp_comm
       USE uspp_param,         ONLY: upf
       USE grid_dimensions,    ONLY: nr1, nr2, nr3
       USE fft_interfaces,     ONLY: fwfft
@@ -260,7 +260,7 @@ END FUNCTION
 
       dcc = dcc * omega
 
-      CALL mp_sum( dcc( 1:3, 1:3 ), intra_image_comm )
+      CALL mp_sum( dcc( 1:3, 1:3 ), intra_bgrp_comm )
 
       RETURN
       END SUBROUTINE denlcc
@@ -279,7 +279,7 @@ END FUNCTION
       USE uspp,               ONLY: nkb, qq
       USE uspp_param,         ONLY: nh
       USE mp,                 ONLY: mp_sum
-      USE mp_global,          ONLY: intra_image_comm
+      USE mp_global,          ONLY: intra_bgrp_comm
 !
       IMPLICIT NONE
 !
@@ -310,7 +310,7 @@ END FUNCTION
             IF (gstart == 2) csc(k)=csc(k)-DBLE(temp(1))
          END DO
 
-         CALL mp_sum( csc( 1:kmax ), intra_image_comm )
+         CALL mp_sum( csc( 1:kmax ), intra_bgrp_comm )
 
          DO k=1,kmax
             rsum=0.d0
@@ -352,7 +352,7 @@ END FUNCTION
       USE uspp,               ONLY: nkb, qq
       USE uspp_param,         ONLY: nh
       USE mp,                 ONLY: mp_sum
-      USE mp_global,          ONLY: intra_image_comm
+      USE mp_global,          ONLY: intra_bgrp_comm
 !
       IMPLICIT NONE
 !
@@ -380,7 +380,7 @@ END FUNCTION
       csv = 2.0d0 * DBLE(SUM(temp))
       IF (gstart == 2) csv = csv - DBLE(temp(1))
 
-      CALL mp_sum( csv, intra_image_comm )
+      CALL mp_sum( csv, intra_bgrp_comm )
 
       DO is=1,nvb
          DO iv=1,nh(is)
@@ -414,7 +414,7 @@ END FUNCTION
       USE gvect, ONLY: gstart
       USE gvecw,              ONLY: ggp
       USE mp,                 ONLY: mp_sum
-      USE mp_global,          ONLY: intra_image_comm
+      USE mp_global,          ONLY: intra_bgrp_comm
       USE cell_base,          ONLY: tpiba2
 
       IMPLICIT NONE
@@ -439,7 +439,7 @@ END FUNCTION
          END DO
       END DO
 
-      CALL mp_sum( sk(1:n), intra_image_comm )
+      CALL mp_sum( sk(1:n), intra_bgrp_comm )
 
       enkin=0.0d0
       DO i=1,n
@@ -467,7 +467,7 @@ END FUNCTION
       USE electrons_base, ONLY: ispin
       USE gvecw,          ONLY: ngw
       USE mp,             ONLY: mp_sum
-      USE mp_global,      ONLY: intra_image_comm
+      USE mp_global,      ONLY: intra_bgrp_comm
       USE kinds,          ONLY: DP
       USE gvect, ONLY: gstart
 !
@@ -520,8 +520,8 @@ END FUNCTION
 
 !$omp end parallel
 
-      CALL mp_sum( csc( 1:kmax ), intra_image_comm )
-      CALL mp_sum( bec( 1:nhsavb, i ), intra_image_comm )
+      CALL mp_sum( csc( 1:kmax ), intra_bgrp_comm )
+      CALL mp_sum( bec( 1:nhsavb, i ), intra_bgrp_comm )
 !
 !     calculate csc(k)=<cp(i)|S|cp(k)>,  k<i
 !
@@ -746,7 +746,7 @@ END FUNCTION
       USE smallbox_grid_dimensions, ONLY: nr1b, nr2b, nr3b, nr1bx, nr2bx, nr3bx
       USE control_flags,            ONLY: iprsta
       USE io_global,                ONLY: stdout
-      USE mp_global,                ONLY: nproc_image, me_image
+      USE mp_global,                ONLY: nproc_bgrp, me_bgrp
       USE fft_base,                 ONLY: dfftb, dfftp, fft_dlay_descriptor
       USE fft_types,                ONLY: fft_box_set
       USE cvan,                     ONLY: nvb
@@ -838,7 +838,7 @@ END FUNCTION
       ! initialize FFT descriptor
 
       CALL fft_box_set( dfftb, nr1b, nr2b, nr3b, nr1bx, nr2bx, nr3bx, &
-                        nat, irb, me_image+1, nproc_image, dfftp%npp, dfftp%ipp )
+                        nat, irb, me_bgrp+1, nproc_bgrp, dfftp%npp, dfftp%ipp )
 
       IF( iprsta > 2 ) THEN
            isa = 1
@@ -891,7 +891,7 @@ END FUNCTION
       USE electrons_base,           ONLY: nspin
       USE control_flags,            ONLY: iprint, thdyn, tfor, tprnfor
       USE mp,                       ONLY: mp_sum
-      USE mp_global,                ONLY: intra_image_comm
+      USE mp_global,                ONLY: intra_bgrp_comm
       USE fft_interfaces,           ONLY: invfft
       USE fft_base,                 ONLY: dfftb
 !
@@ -1016,7 +1016,7 @@ END FUNCTION
 
 !$omp end parallel
 
-      CALL mp_sum( deeq, intra_image_comm )
+      CALL mp_sum( deeq, intra_bgrp_comm )
 
       IF (.NOT.( tfor .OR. thdyn .OR. tprnfor ) ) go to 10
 !
@@ -1184,7 +1184,7 @@ END FUNCTION
 
       END IF
 
-      CALL mp_sum( fvan, intra_image_comm )
+      CALL mp_sum( fvan, intra_bgrp_comm )
 
       isa = 0
       DO is = 1, nvb
@@ -1219,7 +1219,7 @@ END FUNCTION
       USE cp_main_variables, ONLY: nlam, nlax, descla, la_proc
       USE descriptors,       ONLY: nlar_ , nlac_ , ilar_ , ilac_ 
       USE mp,                ONLY: mp_sum
-      USE mp_global,         ONLY: intra_image_comm
+      USE mp_global,         ONLY: intra_bgrp_comm
 !
       IMPLICIT NONE
       REAL(DP) bec(nhsa,nbsp), becdr(nhsa,nspin*nlax,3), lambda(nlam,nlam,nspin)
@@ -1302,7 +1302,7 @@ END FUNCTION
       !
       DEALLOCATE( temp, tmpbec, tmpdr )
       !
-      CALL mp_sum( fion_tmp, intra_image_comm )
+      CALL mp_sum( fion_tmp, intra_bgrp_comm )
       !
       fion = fion + fion_tmp
       !
@@ -1524,7 +1524,7 @@ END FUNCTION
       USE kinds, only: dp
       USE electrons_base, ONLY: nx => nbspx, n => nbsp, iupdwn, nupdwn, f, nel, nspin
       USE io_global, ONLY: stdout
-      USE mp_global, ONLY: intra_image_comm
+      USE mp_global, ONLY: intra_bgrp_comm
       USE mp, ONLY: mp_sum
       USE gvecw, ONLY: ngw
       USE gvect, ONLY: gstart
@@ -1579,7 +1579,7 @@ END FUNCTION
       DO ir=1,nrxx
          spin1 = spin1 - MIN(rhor(ir,1),rhor(ir,2))
       END DO
-      CALL mp_sum( spin1, intra_image_comm )
+      CALL mp_sum( spin1, intra_bgrp_comm )
       spin1 = spin0 + omega/(nr1*nr2*nr3)*spin1
       IF (frac) THEN
          WRITE( stdout,'(/" Spin contamination: s(s+1)=",f5.2," (Becke) ",&
@@ -1604,7 +1604,7 @@ END FUNCTION
          END DO
       END DO
       DEALLOCATE (temp)
-      CALL mp_sum( overlap, intra_image_comm )
+      CALL mp_sum( overlap, intra_bgrp_comm )
       DO j=1,ndw
          jj=j+iupdwn(2)-1
          DO i=1,nup
@@ -1682,7 +1682,7 @@ END FUNCTION
                                   detot6, dekin6, dps6, dh6, dsr6, dxc6, denl6
       USE cp_main_variables, ONLY: drhog, drhor
       USE mp,               ONLY: mp_sum
-      USE mp_global,        ONLY: intra_image_comm
+      USE mp_global,        ONLY: intra_bgrp_comm
       USE funct,            ONLY: dft_is_meta
       USE pres_ai_mod,      ONLY: abivol, abisur, v_vol, P_ext, volclu,  &
                                   Surf_t, surfclu
@@ -1781,7 +1781,7 @@ END FUNCTION
          !
          CALL vofesr( iesr, esr, dsr6, fion, stmp, tpre, h )
          !
-         call mp_sum( fion, intra_image_comm )
+         call mp_sum( fion, intra_bgrp_comm )
          !
          DEALLOCATE( stmp )
          !
@@ -1839,7 +1839,7 @@ END FUNCTION
       !
       IF (gstart == 2) epseu = epseu - DBLE( vtemp(1) )
       !
-      CALL mp_sum( epseu, intra_image_comm )
+      CALL mp_sum( epseu, intra_bgrp_comm )
 
       epseu = epseu * omega
 
@@ -1883,7 +1883,7 @@ END FUNCTION
 
       eh = DBLE( zh ) * wz * 0.5d0 * fpi / tpiba2
 !
-      CALL mp_sum( eh, intra_image_comm )
+      CALL mp_sum( eh, intra_bgrp_comm )
       !
       IF ( ttsic ) THEN
          !
@@ -2020,7 +2020,7 @@ END FUNCTION
 
          IF ( nlcc_any ) CALL force_cc( irb, eigrb, rhor, fion1 )
 
-         CALL mp_sum( fion1, intra_image_comm )
+         CALL mp_sum( fion1, intra_bgrp_comm )
          !
          !    add g-space ionic and core correction contributions to fion
          !
@@ -2077,7 +2077,7 @@ END FUNCTION
          vave=(SUM(rhor(:,isup))+SUM(rhor(:,isdw))) / 2.0d0 / DBLE( nr1 * nr2 * nr3 )
       ENDIF
 
-      CALL mp_sum( vave, intra_image_comm )
+      CALL mp_sum( vave, intra_bgrp_comm )
 
       !
       !     fourier transform of total potential to r-space (smooth grid)
@@ -2140,7 +2140,7 @@ END FUNCTION
          !
          detot6 = dekin6 + dh6 + dps6 + dsr6
          !
-         call mp_sum( detot6, intra_image_comm )
+         call mp_sum( detot6, intra_bgrp_comm )
          !
          DO k = 1, 6
             detmp( alpha(k), beta(k) ) = detot6(k)
@@ -2924,7 +2924,7 @@ end function set_Hubbard_l
       USE ldaU_cp,           ONLY: n_atomic_wfc
       use cell_base,      ONLY: tpiba
       USE uspp_param,     only: nh !#@@@
-      use mp_global,      only: intra_image_comm
+      use mp_global,      only: intra_bgrp_comm
       use mp,             only: mp_sum
       USE kinds,          ONLY: DP
 !
@@ -2989,7 +2989,7 @@ end function set_Hubbard_l
                if (gstart==2) dproj(ibnd,offset+m1)=dproj(ibnd,offset+m1)-temp(1)
             end do
          end do
-         call mp_sum( dproj, intra_image_comm )
+         call mp_sum( dproj, intra_bgrp_comm )
       end if
       do iv=1,nh(alpha_s)
          inl=ish(alpha_s)+(iv-1)*na(alpha_s)+alpha_a
@@ -3067,7 +3067,7 @@ end function set_Hubbard_l
       USE kinds,              ONLY: DP
       USE constants,          ONLY: autoev
       USE io_global,          ONLY: stdout
-      USE mp_global,          ONLY: intra_image_comm
+      USE mp_global,          ONLY: intra_bgrp_comm
       USE mp,                 ONLY: mp_sum
       USE gvecw,              ONLY: ngw
       USE gvect, ONLY: gstart
@@ -3115,7 +3115,7 @@ end function set_Hubbard_l
          END DO
       END DO
       DEALLOCATE(temp)
-      CALL mp_sum( proj, intra_image_comm )
+      CALL mp_sum( proj, intra_bgrp_comm )
 !
       RETURN
       END SUBROUTINE projwfc_hub

@@ -54,7 +54,7 @@
       USE local_pseudo,   ONLY: vps, rhops
       USE io_global,      ONLY: io_global_start, stdout, ionode, &
                                 ionode_id
-      USE mp_global,      ONLY: intra_image_comm, leg_ortho
+      USE mp_global,      ONLY: intra_bgrp_comm, leg_ortho
       USE dener
       !USE derho
       USE cdvan
@@ -216,7 +216,7 @@
                      END DO
                   END IF
 
-                  CALL mp_root_sum( mtmp, c0hc0(1:nr,1:nc,is), root, intra_image_comm )
+                  CALL mp_root_sum( mtmp, c0hc0(1:nr,1:nc,is), root, intra_bgrp_comm )
 
 !                  IF( coor_ip(1) == descla( la_myr_ , is ) .AND. &
 !                      coor_ip(2) == descla( la_myc_ , is ) .AND. descla( lambda_node_ , is ) > 0 ) THEN
@@ -366,7 +366,7 @@
       USE local_pseudo,   ONLY: vps, rhops
       USE io_global,      ONLY: io_global_start, stdout, ionode, &
                                 ionode_id
-      USE mp_global,      ONLY: intra_image_comm
+      USE mp_global,      ONLY: intra_bgrp_comm
       USE dener
       !USE derho
       USE cdvan
@@ -562,7 +562,7 @@
       USE local_pseudo,   ONLY: vps, rhops
       USE io_global,      ONLY: io_global_start, stdout, ionode, &
                                 ionode_id
-      USE mp_global,      ONLY: intra_image_comm
+      USE mp_global,      ONLY: intra_bgrp_comm
       USE dener
       !USE derho
       USE cdvan
@@ -631,7 +631,7 @@
 
             END IF
             
-            CALL mp_sum( dval, intra_image_comm )
+            CALL mp_sum( dval, intra_bgrp_comm )
 
             DO i = 1, nss
                e0( i+istart-1 )= dval( i )

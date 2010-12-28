@@ -43,7 +43,7 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
   USE io_global,                ONLY : ionode, stdout
   USE mp,                       ONLY : mp_barrier, mp_sum
   USE mp_wave,                  ONLY : redistwf
-  USE mp_global,                ONLY : nproc_image, me_image, root_image, intra_image_comm
+  USE mp_global,                ONLY : nproc_bgrp, me_bgrp, root_bgrp, intra_bgrp_comm
   USE fft_interfaces,           ONLY : invfft
   USE fft_base,                 ONLY : dfftp, dfftb
   USE printout_base,            ONLY : printout_base_open, printout_base_unit, &
@@ -93,7 +93,7 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
   !
 #if defined (__PARA)
   !
-  INTEGER :: proc, ntot, ncol, mc, ngpwpp(nproc_image)
+  INTEGER :: proc, ntot, ncol, mc, ngpwpp(nproc_bgrp)
   INTEGER :: ncol1,nz1, nz_1 
   INTEGER :: nmin(3), nmax(3), n1,n2,nzx,nz,nz_
   INTEGER :: nmin1(3), nmax1(3)
@@ -106,7 +106,7 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
   !
   CALL start_clock('wf_1')
   !
-  me = me_image + 1
+  me = me_bgrp + 1
   !
   ALLOCATE( becwf(nkb,nbsp), temp3(nkb,nbsp), U2(nbsp,nbsp) )
   ALLOCATE( cwf(ngw,nbspx), bec2(nbsp), bec3(nbsp), bec2up(nupdwn(1)) )
@@ -137,13 +137,13 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
   !
   ! Compute the number of states to each processor
   !
-  ALLOCATE( ns( nproc_image ) )
-  ns = nbsp / nproc_image
+  ALLOCATE( ns( nproc_bgrp ) )
+  ns = nbsp / nproc_bgrp
   DO j = 1, nbsp
-     IF( (j-1) < MOD( nbsp, nproc_image ) ) ns( j ) = ns( j ) + 1 
+     IF( (j-1) < MOD( nbsp, nproc_bgrp ) ) ns( j ) = ns( j ) + 1 
   END DO
   IF(iprsta.GT.4) THEN
-     DO j=1,nproc_image
+     DO j=1,nproc_bgrp
         WRITE( stdout, * ) ns(j)
      END DO
   END IF
@@ -151,7 +151,7 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
   nstat = ns( me )
 
   total = 0   
-  DO proc=1,nproc_image
+  DO proc=1,nproc_bgrp
      ngpwpp(proc)=(dfftp%nwl(proc)+1)/2
      total=total+ngpwpp(proc)
      IF(iprsta.GT.4) THEN
@@ -179,7 +179,7 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
   !   and nstat states instead of all nbsp states
   !
   !
-  CALL redistwf( c, psitot, ngpwpp, ns, intra_image_comm, 1 )
+  CALL redistwf( c, psitot, ngpwpp, ns, intra_bgrp_comm, 1 )
   !
 #endif   
 
@@ -252,10 +252,10 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
      !       and c_m(j,i) contains the coeffiCIent for c(j,i) corresponding to -G+G'
      !
      c_p = 0.D0
-     CALL redistwf( c_p, psitot_pl, ngpwpp, ns, intra_image_comm, -1 )
+     CALL redistwf( c_p, psitot_pl, ngpwpp, ns, intra_bgrp_comm, -1 )
      !
      c_m = 0.D0
-     CALL redistwf( c_m, psitot_mi, ngpwpp, ns, intra_image_comm, -1 )
+     CALL redistwf( c_m, psitot_mi, ngpwpp, ns, intra_bgrp_comm, -1 )
      !
   END IF
     !
@@ -335,7 +335,7 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
               qvt=boxdotgridcplx(irb(1,isa),qv,expo(1,inw))
 
 #ifdef __PARA
-              CALL mp_sum( qvt, intra_image_comm )
+              CALL mp_sum( qvt, intra_bgrp_comm )
 #endif
               !
               IF (nspin.EQ.1) THEN
@@ -375,7 +375,7 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
                  qvt=0.D0
                  qvt=boxdotgridcplx(irb(1,isa),qv,expo(1,inw))
 #ifdef __PARA
-                 CALL mp_sum( qvt, intra_image_comm )
+                 CALL mp_sum( qvt, intra_bgrp_comm )
 #endif
                  !
                  IF (nspin.EQ.1) THEN
@@ -440,7 +440,7 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
         CALL zgemm('C','N',nbsp,nbsp,ngw,ONE,c,ngw,c_p,ngw,ONE,X,nbsp)
         CALL zgemm('T','N',nbsp,nbsp,ngw,ONE,c,ngw,c_m,ngw,ONE,X,nbsp)
 
-        CALL mp_sum ( X, intra_image_comm )
+        CALL mp_sum ( X, intra_bgrp_comm )
 
         O(inw,:,:)=Oa(inw,:,:)+X(:,:)
 
@@ -469,7 +469,7 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
         CALL zgemm('C','N',nbsp,nupdwn(1),ngw,ONE,c,ngw,c_psp,ngw,ONE,Xsp,nbsp)
         CALL zgemm('T','N',nbsp,nupdwn(1),ngw,ONE,c,ngw,c_msp,ngw,ONE,Xsp,nbsp)
 #ifdef __PARA
-        CALL mp_sum ( Xsp, intra_image_comm )
+        CALL mp_sum ( Xsp, intra_bgrp_comm )
 #endif
         DO i=1,nupdwn(1)
            DO j=1,nbsp
@@ -496,7 +496,7 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
         CALL zgemm('C','N',nbsp,nupdwn(2),ngw,ONE,c,ngw,c_psp,ngw,ONE,Xsp,nbsp)
         CALL zgemm('T','N',nbsp,nupdwn(2),ngw,ONE,c,ngw,c_msp,ngw,ONE,Xsp,nbsp)
 #ifdef __PARA
-        CALL mp_sum ( Xsp, intra_image_comm )
+        CALL mp_sum ( Xsp, intra_bgrp_comm )
 #endif
         DO i=iupdwn(2),nbsp
            DO j=1,nbsp
@@ -767,7 +767,7 @@ SUBROUTINE ddyn( m, Omat, Umat, b1, b2, b3 )
   USE constants,        ONLY : tpi, bohr_radius_angs
   USE electrons_base,   ONLY : nbsp
   USE control_flags,    ONLY : iprsta
-  USE mp_global,        ONLY : me_image
+  USE mp_global,        ONLY : me_bgrp
   USE printout_base,    ONLY : printout_base_open, printout_base_unit, &
                                printout_base_close
   USE parallel_include
@@ -796,7 +796,7 @@ SUBROUTINE ddyn( m, Omat, Umat, b1, b2, b3 )
   REAL(DP) :: wfc(3,nbsp), gr(nw,3)
   INTEGER  :: me, iunit
   !
-  me = me_image + 1
+  me = me_bgrp + 1
   !
   ALLOCATE(mt(nw))
   ALLOCATE(X1(m,m))
@@ -1026,7 +1026,7 @@ SUBROUTINE wfunc_init( clwf, b1, b2, b3, ibrav )
                                  wfg, weight, nw
   USE cvan,               ONLY : nvb
   USE mp,                 ONLY : mp_barrier, mp_bcast, mp_gather, mp_set_displs
-  USE mp_global,          ONLY : nproc_image, me_image, intra_image_comm, root_image
+  USE mp_global,          ONLY : nproc_bgrp, me_bgrp, intra_bgrp_comm, root_bgrp
   USE fft_base,           ONLY : dfftp
   USE parallel_include     
   !
@@ -1035,8 +1035,8 @@ SUBROUTINE wfunc_init( clwf, b1, b2, b3, ibrav )
   REAL(DP), INTENT(in) :: b1(3),b2(3),b3(3)
   INTEGER,  INTENT(in) :: clwf, ibrav
 #ifdef __PARA
-  INTEGER :: ntot, proc, ierr, i,j,inw,ngppp(nproc_image)
-  INTEGER :: ii,ig,displs(nproc_image)
+  INTEGER :: ntot, proc, ierr, i,j,inw,ngppp(nproc_bgrp)
+  INTEGER :: ii,ig,displs(nproc_bgrp)
 #else
   INTEGER :: ierr, i,j,inw, ntot
   INTEGER :: ii,ig
@@ -1051,9 +1051,9 @@ SUBROUTINE wfunc_init( clwf, b1, b2, b3, ibrav )
   INTEGER :: me
   !
 
-  me = me_image + 1
+  me = me_bgrp + 1
   !
-  IF ( nbsp < nproc_image ) &
+  IF ( nbsp < nproc_bgrp ) &
      CALL errore( 'cp-wf', &
                 & 'Number of Processors is greater than the number of states', 1 )
   !
@@ -1073,11 +1073,11 @@ SUBROUTINE wfunc_init( clwf, b1, b2, b3, ibrav )
 #ifdef __PARA
 
   ntot=0
-  DO i=1,nproc_image
+  DO i=1,nproc_bgrp
      ngppp(i)=(dfftp%nwl(i)+1)/2
   END DO
 
-  CALL mp_set_displs( ngppp, displs, ntot, nproc_image )
+  CALL mp_set_displs( ngppp, displs, ntot, nproc_bgrp )
 
   IF(me.EQ.1) THEN
      ALLOCATE(bigg(3,ntot))
@@ -1134,13 +1134,13 @@ SUBROUTINE wfunc_init( clwf, b1, b2, b3, ibrav )
 
 #ifdef __PARA
   !
-  CALL mp_barrier( intra_image_comm )
+  CALL mp_barrier( intra_bgrp_comm )
   !
-  CALL mp_gather( gnx, bigg, ngppp, displs, root_image, intra_image_comm )
+  CALL mp_gather( gnx, bigg, ngppp, displs, root_bgrp, intra_bgrp_comm )
   !
-  CALL mp_barrier( intra_image_comm )
+  CALL mp_barrier( intra_bgrp_comm )
   !
-  CALL mp_gather( gnn, bign, ngppp, displs, root_image, intra_image_comm )
+  CALL mp_gather( gnn, bign, ngppp, displs, root_bgrp, intra_bgrp_comm )
   !
 #endif
 
@@ -1353,12 +1353,12 @@ SUBROUTINE wfunc_init( clwf, b1, b2, b3, ibrav )
 
 #ifdef __PARA
 
-  CALL mp_barrier( intra_image_comm )
+  CALL mp_barrier( intra_bgrp_comm )
   !
-  CALL mp_bcast( indexplus,  root_image, intra_image_comm )
-  CALL mp_bcast( indexminus, root_image, intra_image_comm )
-  CALL mp_bcast( tag,        root_image, intra_image_comm )
-  CALL mp_bcast( tagp,       root_image, intra_image_comm )
+  CALL mp_bcast( indexplus,  root_bgrp, intra_bgrp_comm )
+  CALL mp_bcast( indexminus, root_bgrp, intra_bgrp_comm )
+  CALL mp_bcast( tag,        root_bgrp, intra_bgrp_comm )
+  CALL mp_bcast( tagp,       root_bgrp, intra_bgrp_comm )
 
 #endif
   DEALLOCATE(bigg)
@@ -1379,14 +1379,14 @@ SUBROUTINE grid_map()
   USE efcalc,                 ONLY : xdist, ydist, zdist
   USE smooth_grid_dimensions, ONLY : nrxxs
   USE fft_base,               ONLY : dffts
-  USE mp_global,              ONLY : me_image
+  USE mp_global,              ONLY : me_bgrp
   USE parallel_include
   !
   IMPLICIT NONE
   !
   INTEGER :: ir1, ir2, ir3, ibig3, me, nr1s, nr2s, nr3s, nr1sx, nr2sx, nr3sx
   !
-  me = me_image + 1
+  me = me_bgrp + 1
   !
   ALLOCATE(xdist(nrxxs))
   ALLOCATE(ydist(nrxxs))
@@ -1975,7 +1975,7 @@ SUBROUTINE small_box_wf( i_1, j_1, k_1, nw1 )
   USE wannier_base,           ONLY : expo
   USE grid_dimensions,        ONLY : nr1, nr2, nr3, nr1x, nr2x, nr3x, nrxx
   USE fft_base,               ONLY : dfftp
-  USE mp_global,              ONLY : me_image
+  USE mp_global,              ONLY : me_bgrp
   USE parallel_include
   !
   IMPLICIT NONE
@@ -1985,7 +1985,7 @@ SUBROUTINE small_box_wf( i_1, j_1, k_1, nw1 )
   INTEGER , INTENT(in) :: nw1, i_1(nw1), j_1(nw1), k_1(nw1)
   INTEGER :: me
 
-  me = me_image + 1
+  me = me_bgrp + 1
 
   ALLOCATE(expo(nrxx,nw1))
 
@@ -2032,7 +2032,7 @@ FUNCTION boxdotgridcplx(irb,qv,vr)
   USE smallbox_grid_dimensions, ONLY : nnrbx, nr1b, nr2b, nr3b, &
                                        nr1bx, nr2bx, nr3bx
   USE fft_base,                 ONLY : dfftp
-  USE mp_global,                ONLY : me_image
+  USE mp_global,                ONLY : me_bgrp
   !
   IMPLICIT NONE
   !
@@ -2042,7 +2042,7 @@ FUNCTION boxdotgridcplx(irb,qv,vr)
   !
   INTEGER :: ir1, ir2, ir3, ir, ibig1, ibig2, ibig3, ibig, me
   !
-  me = me_image + 1
+  me = me_bgrp + 1
   !
   boxdotgridcplx = ZERO
 
@@ -2083,7 +2083,7 @@ SUBROUTINE write_rho_g( rhog )
   USE gvect, ONLY : g
   USE electrons_base,     ONLY : nspin
   USE fft_base,           ONLY : dfftp
-  USE mp_global,          ONLY : nproc_image, me_image, root_image, intra_image_comm
+  USE mp_global,          ONLY : nproc_bgrp, me_bgrp, root_bgrp, intra_bgrp_comm
   USE mp,                 ONLY : mp_barrier, mp_gather, mp_set_displs
   USE parallel_include
   !
@@ -2095,12 +2095,12 @@ SUBROUTINE write_rho_g( rhog )
   COMPLEX(DP) :: rhotmp_g(ngm)
   INTEGER           :: ntot, i, j, me
 #ifdef __PARA
-  INTEGER proc, ierr, ngdens(nproc_image), displs(nproc_image)
+  INTEGER proc, ierr, ngdens(nproc_bgrp), displs(nproc_bgrp)
 #endif
   CHARACTER (LEN=6)  :: name
   CHARACTER (LEN=15) :: name2
 
-  me = me_image + 1
+  me = me_bgrp + 1
 
   ALLOCATE(gnx(3,ngm))
 
@@ -2112,19 +2112,19 @@ SUBROUTINE write_rho_g( rhog )
 
 #ifdef __PARA
 
-  DO i=1,nproc_image
+  DO i=1,nproc_bgrp
      ngdens(i)=(dfftp%ngl(i)+1)/2
   END DO
 
-  CALL mp_set_displs( ngdens, displs, ntot, nproc_image )
+  CALL mp_set_displs( ngdens, displs, ntot, nproc_bgrp )
 
   IF(me.EQ.1) THEN
      ALLOCATE(bigg(3,ntot))
   END IF
 
-  CALL mp_barrier(intra_image_comm)
+  CALL mp_barrier(intra_bgrp_comm)
  
-  CALL mp_gather( gnx, bigg, ngdens, displs,  root_image, intra_image_comm )
+  CALL mp_gather( gnx, bigg, ngdens, displs,  root_bgrp, intra_bgrp_comm )
 
   DO i=1,nspin
 
@@ -2134,9 +2134,9 @@ SUBROUTINE write_rho_g( rhog )
         ALLOCATE (bigrho(ntot))
      END IF
 
-     CALL mp_barrier(intra_image_comm)
+     CALL mp_barrier(intra_bgrp_comm)
 
-     CALL mp_gather( rhotmp_g, bigrho, ngdens, displs,  root_image, intra_image_comm )
+     CALL mp_gather( rhotmp_g, bigrho, ngdens, displs,  root_bgrp, intra_bgrp_comm )
 
      IF(me.EQ.1) THEN
         IF(i.EQ.1) name2="CH_DEN_G_PARA.1"
@@ -2216,7 +2216,7 @@ SUBROUTINE macroscopic_average( rhog, tau0, e_tuned )
   USE constants,          ONLY : pi, tpi
   USE mp,                 ONLY : mp_barrier, mp_bcast,  mp_gather, mp_set_displs
   USE fft_base,           ONLY : dfftp
-  USE mp_global,          ONLY : nproc_image, me_image, root_image, intra_image_comm
+  USE mp_global,          ONLY : nproc_bgrp, me_bgrp, root_bgrp, intra_bgrp_comm
   USE parallel_include
   !
   IMPLICIT NONE
@@ -2228,7 +2228,7 @@ SUBROUTINE macroscopic_average( rhog, tau0, e_tuned )
   INTEGER ntot, i, j, ngz, l, isa
   INTEGER ,ALLOCATABLE :: g_red(:,:)
 #ifdef __PARA
-  INTEGER proc, ierr, ngdens(nproc_image), displs( nproc_image )
+  INTEGER proc, ierr, ngdens(nproc_bgrp), displs( nproc_bgrp )
 #endif
   REAL(DP) zlen,vtot, pos(3,nax,nsp), a_direct(3,3),a_trans(3,3), e_slp, e_int
   REAL(DP), INTENT(out) :: e_tuned(3)
@@ -2238,7 +2238,7 @@ SUBROUTINE macroscopic_average( rhog, tau0, e_tuned )
   COMPLEX(DP),ALLOCATABLE :: rho_ion(:),v_1(:),vmac(:),rho_tot(:),rhogz(:), bigrhog(:)
   INTEGER :: me
 
-  me = me_image + 1
+  me = me_bgrp + 1
 
   ALLOCATE(gnx(3,ngm))
 
@@ -2250,11 +2250,11 @@ SUBROUTINE macroscopic_average( rhog, tau0, e_tuned )
 
 #ifdef __PARA
 
-  DO i=1,nproc_image
+  DO i=1,nproc_bgrp
      ngdens(i)=(dfftp%ngl(i)+1)/2
   END DO
 
-  CALL mp_set_displs( ngdens, displs, ntot, nproc_image )
+  CALL mp_set_displs( ngdens, displs, ntot, nproc_bgrp )
 
 #else
 
@@ -2267,23 +2267,23 @@ SUBROUTINE macroscopic_average( rhog, tau0, e_tuned )
   ALLOCATE (bigrhog(2*ntot-1))
 
 #ifdef __PARA
-  CALL mp_barrier( intra_image_comm )
+  CALL mp_barrier( intra_bgrp_comm )
   !
-  CALL mp_gather( gnx, bigg, ngdens, displs, root_image,intra_image_comm )
+  CALL mp_gather( gnx, bigg, ngdens, displs, root_bgrp,intra_bgrp_comm )
   !
-  CALL mp_bcast( bigg, root_image, intra_image_comm )
+  CALL mp_bcast( bigg, root_bgrp, intra_bgrp_comm )
   !
   ALLOCATE( rhotmp_g( ngm ) )
 
   rhotmp_g(1:ngm)=rhog(1:ngm,1)
 
-  CALL mp_barrier( intra_image_comm )
+  CALL mp_barrier( intra_bgrp_comm )
   !
-  CALL mp_gather( rhotmp_g, bigrho, ngdens, displs, root_image,intra_image_comm )
+  CALL mp_gather( rhotmp_g, bigrho, ngdens, displs, root_bgrp,intra_bgrp_comm )
   !
   DEALLOCATE( rhotmp_g )
   !
-  CALL mp_bcast( bigrho, root_image, intra_image_comm )
+  CALL mp_bcast( bigrho, root_bgrp, intra_bgrp_comm )
   !
 #else
   !
@@ -2493,7 +2493,7 @@ SUBROUTINE wfsteep( m, Omat, Umat, b1, b2, b3 )
   USE control_flags,          ONLY : iprsta
   USE cell_base,              ONLY : alat
   USE constants,              ONLY : tpi, bohr_radius_angs
-  USE mp_global,              ONLY : me_image
+  USE mp_global,              ONLY : me_bgrp
   USE printout_base,          ONLY : printout_base_open, printout_base_unit, &
                                      printout_base_close
   USE parallel_include
@@ -2525,7 +2525,7 @@ SUBROUTINE wfsteep( m, Omat, Umat, b1, b2, b3 )
   COMPLEX(DP) ::  Oc2(nw, m, m),wp1(m*(m+1)/2), X1(m,m), U2(m,m), U3(m,m)
   INTEGER :: me, iunit
   !
-  me = me_image + 1
+  me = me_bgrp + 1
   !
   ALLOCATE(W(m,m), wr(m))
   !
@@ -2856,28 +2856,28 @@ SUBROUTINE write_psi( c, jw )
   USE electrons_base,         ONLY : nbspx
   USE mp,                     ONLY : mp_barrier, mp_set_displs, mp_gather
   USE fft_base,               ONLY : dfftp
-  USE mp_global,              ONLY : nproc_image, me_image, root_image, intra_image_comm
+  USE mp_global,              ONLY : nproc_bgrp, me_bgrp, root_bgrp, intra_bgrp_comm
   !
   IMPLICIT NONE
   !
   INTEGER :: jw
   COMPLEX(DP) :: c(ngw,nbspx)
   !
-  INTEGER ::i, ig, proc, ntot, ngpwpp(nproc_image)
-  INTEGER ::displs(nproc_image)
+  INTEGER ::i, ig, proc, ntot, ngpwpp(nproc_bgrp)
+  INTEGER ::displs(nproc_bgrp)
   COMPLEX(DP), ALLOCATABLE:: psitot(:)
 
 #if defined (__PARA)
   !
-  DO proc=1,nproc_image
+  DO proc=1,nproc_bgrp
      ngpwpp(proc)=(dfftp%nwl(proc)+1)/2
   END DO
   !
-  CALL mp_set_displs( ngpwpp, displs, ntot, nproc_image )
+  CALL mp_set_displs( ngpwpp, displs, ntot, nproc_bgrp )
   !
   ! allocate the needed work spaces
   !
-  IF ( me_image == root_image ) THEN
+  IF ( me_bgrp == root_bgrp ) THEN
      ALLOCATE(psitot(ntot))
   ELSE
      ALLOCATE(psitot(1))
@@ -2885,13 +2885,13 @@ SUBROUTINE write_psi( c, jw )
   !
   ! ... gather all psis arrays on the first node, in psitot
   !
-  CALL mp_barrier( intra_image_comm )
+  CALL mp_barrier( intra_bgrp_comm )
   !
-  CALL mp_gather( c(:,jw), psitot, ngpwpp, displs, root_image, intra_image_comm )
+  CALL mp_gather( c(:,jw), psitot, ngpwpp, displs, root_bgrp, intra_bgrp_comm )
   !
   ! write the node-number-independent array
   !
-  IF( me_image == root_image ) THEN
+  IF( me_bgrp == root_bgrp ) THEN
      DO i=1,ntot
         WRITE(22,*) psitot(i)
      END DO
@@ -2925,7 +2925,7 @@ SUBROUTINE jacobi_rotation( m, Omat, Umat, b1, b2, b3 )
   USE control_flags,          ONLY : iprsta
   USE cell_base,              ONLY : alat
   USE constants,              ONLY : tpi
-  USE mp_global,              ONLY : me_image
+  USE mp_global,              ONLY : me_bgrp
   USE printout_base,          ONLY : printout_base_open, printout_base_unit, &
                                      printout_base_close
   USE parallel_include
@@ -2960,7 +2960,7 @@ SUBROUTINE jacobi_rotation( m, Omat, Umat, b1, b2, b3 )
   INTEGER :: me, iunit
   REAL(DP), DIMENSION(m, m) :: matriceTest
   !
-  me = me_image + 1
+  me = me_bgrp + 1
   nbMat=2*nw
   !
   WRITE(24,    *) 'Spreads before optimization'

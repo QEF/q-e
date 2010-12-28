@@ -122,8 +122,8 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
   USE orthogonalize_base,       ONLY : updatc
   USE control_flags,            ONLY : force_pairing
   USE mp,                       ONLY : mp_bcast
-  USE mp_global,                ONLY : root_image, intra_image_comm, np_ortho, me_ortho, ortho_comm, &
-                                       me_image
+  USE mp_global,                ONLY : root_bgrp, intra_bgrp_comm, np_ortho, me_ortho, ortho_comm, &
+                                       me_bgrp
   USE ldaU_cp,                  ONLY : lda_plus_u, vupsi
   USE step_penalty,             ONLY : vpsi_pen, step_pen, E_pen
   USE small_box,                ONLY : ainvb
@@ -413,7 +413,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
               !
            END IF
            !
-           CALL mp_bcast( fion, ionode_id, intra_image_comm )
+           CALL mp_bcast( fion, ionode_id, intra_bgrp_comm )
            !
         END IF
         !
@@ -451,8 +451,8 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
               !
            END IF
            !
-           CALL mp_bcast( taup, ionode_id, intra_image_comm )
-           CALL mp_bcast( fion, ionode_id, intra_image_comm )
+           CALL mp_bcast( taup, ionode_id, intra_bgrp_comm )
+           CALL mp_bcast( fion, ionode_id, intra_bgrp_comm )
            !
            CALL r_to_s( taup, tausp, na, nsp, ainv )
            !

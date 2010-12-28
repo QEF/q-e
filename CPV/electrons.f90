@@ -88,7 +88,7 @@
      !   distribution across processors of the overlap matrixes 
      !   of sizes ( nx, nx )
 
-     USE mp_global, ONLY: me_image, nproc_image
+     USE mp_global, ONLY: me_bgrp, nproc_bgrp
 
      IMPLICIT NONE
 
@@ -102,8 +102,8 @@
        !
        IF( i > nspinx ) CALL errore( ' bmeshset ',' spin too large ', i)
        !
-       nb_l( i ) = nupdwn( i ) / nproc_image
-       IF( me_image < MOD( nupdwn( i ), nproc_image ) ) nb_l( i ) = nb_l( i ) + 1
+       nb_l( i ) = nupdwn( i ) / nproc_bgrp
+       IF( me_bgrp < MOD( nupdwn( i ), nproc_bgrp ) ) nb_l( i ) = nb_l( i ) + 1
        !
      END DO
 
@@ -120,9 +120,9 @@
      ib_local =  0
      ib_owner = -1
      DO i = 1, nbndx
-       ib_local( i ) = ( i - 1 ) / nproc_image        !  local index of the i-th band 
-       ib_owner( i ) = MOD( ( i - 1 ), nproc_image )  !  owner of th i-th band
-       IF( me_image <= ib_owner( i ) ) THEN
+       ib_local( i ) = ( i - 1 ) / nproc_bgrp        !  local index of the i-th band 
+       ib_owner( i ) = MOD( ( i - 1 ), nproc_bgrp )  !  owner of th i-th band
+       IF( me_bgrp <= ib_owner( i ) ) THEN
          ib_local( i ) = ib_local( i ) + 1
        END IF
      END DO

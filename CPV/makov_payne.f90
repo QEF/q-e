@@ -26,7 +26,7 @@ SUBROUTINE makov_payne(etot)
   USE gvecw ,            ONLY : ngw
   USE fft_base,          ONLY : dfftp
 #if defined __PARA
-  USE mp_global,         ONLY : me_image, nproc_image, intra_image_comm
+  USE mp_global,         ONLY : me_bgrp, nproc_bgrp, intra_bgrp_comm
   USE mp,                ONLY : mp_barrier
 #endif
 !
@@ -77,9 +77,9 @@ REAL(KIND=DP), ALLOCATABLE:: rhodist2(:)
 ALLOCATE(rhodist1(nr1x*nr2x*nr3x))
 IF (nspin.EQ.2) ALLOCATE(rhodist2(nr1x*nr2x*nr3x))
 #if defined __PARA
-ALLOCATE( displs( nproc_image ), recvcount( nproc_image ) )
+ALLOCATE( displs( nproc_bgrp ), recvcount( nproc_bgrp ) )
 !
-      do proc=1,nproc_image
+      do proc=1,nproc_bgrp
          recvcount(proc) =  dfftp%nnp  * ( dfftp%npp(proc) )
          if (proc.eq.1) then
             displs(proc)=0
@@ -91,16 +91,16 @@ ALLOCATE( displs( nproc_image ), recvcount( nproc_image ) )
 ! gather the charge density on the first node
 !
    call mp_barrier()
-   call mpi_gatherv( rhor(1,1), recvcount(me_image+1), MPI_DOUBLE_PRECISION,&
+   call mpi_gatherv( rhor(1,1), recvcount(me_bgrp+1), MPI_DOUBLE_PRECISION,&
  &                rhodist1,recvcount, displs, MPI_DOUBLE_PRECISION,&
- &                ionode_id, intra_image_comm, ierr)
+ &                ionode_id, intra_bgrp_comm, ierr)
    call errore('mpi_gatherv','ierr<>0',ierr)
 !
 IF(nspin .eq. 2)THEN
          call mp_barrier()
-         call mpi_gatherv( rhor(1,2), recvcount(me_image+1), MPI_DOUBLE_PRECISION,        &
+         call mpi_gatherv( rhor(1,2), recvcount(me_bgrp+1), MPI_DOUBLE_PRECISION,        &
      &                  rhodist2,recvcount, displs, MPI_DOUBLE_PRECISION,    &
-     &                  ionode_id, intra_image_comm, ierr)
+     &                  ionode_id, intra_bgrp_comm, ierr)
          call errore('mpi_gatherv','ierr<>0',ierr)
 ENDIF
 #else

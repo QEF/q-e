@@ -258,7 +258,7 @@
       USE smallbox_grid_dimensions, ONLY: nr1b, nr2b, nr3b, &
             nr1bx, nr2bx, nnrbx
       USE fft_base, ONLY: dfftp
-      USE mp_global, ONLY: me_image
+      USE mp_global, ONLY: me_bgrp
 
       IMPLICIT NONE
       INTEGER, INTENT(in):: nfft, irb(3)
@@ -270,7 +270,7 @@
 
       IF(nfft.LE.0.OR.nfft.GT.2) CALL errore('box2grid','wrong data',nfft)
 
-      me = me_image + 1
+      me = me_bgrp + 1
 
       DO ir3=1,nr3b
          ibig3=irb(3)+ir3-1
@@ -315,7 +315,7 @@
       USE smallbox_grid_dimensions, ONLY: nr1b, nr2b, nr3b, &
             nr1bx, nr2bx, nnrbx
       USE fft_base, ONLY: dfftp
-      USE mp_global, ONLY: me_image
+      USE mp_global, ONLY: me_bgrp
       !
       IMPLICIT NONE
       !
@@ -326,7 +326,7 @@
       INTEGER ir1, ir2, ir3, ir, ibig1, ibig2, ibig3, ibig
       INTEGER me
 
-      me = me_image + 1
+      me = me_bgrp + 1
 
       DO ir3=1,nr3b
          ibig3=irb(3)+ir3-1
@@ -372,7 +372,7 @@
       USE smallbox_grid_dimensions, ONLY: nr1b, nr2b, nr3b, &
             nr1bx, nr2bx, nnrbx
       USE fft_base, ONLY: dfftp
-      USE mp_global, ONLY: me_image
+      USE mp_global, ONLY: me_bgrp
       IMPLICIT NONE
       INTEGER, INTENT(in):: nfft, irb(3)
       REAL(dp), INTENT(in):: qv(2,nnrbx), vr(nrxx)
@@ -383,7 +383,7 @@
 !
       IF(nfft.LE.0.OR.nfft.GT.2) CALL errore('boxdotgrid','wrong data',nfft)
 
-      me = me_image + 1
+      me = me_bgrp + 1
 
       boxdotgrid=0.d0
 
@@ -418,7 +418,7 @@
 ! find if box grid planes in the z direction have component on the dense
 ! grid on this processor, and if, which range imin3-imax3
 !
-      use mp_global, only: me_image
+      use mp_global, only: me_bgrp
       use fft_base, only: dfftp
 ! input
       integer nr3b,irb3,nr3
@@ -427,7 +427,7 @@
 ! local
       integer ir3, ibig3, me
 !
-      me = me_image + 1
+      me = me_bgrp + 1
       imin3=nr3b
       imax3=1
       do ir3=1,nr3b

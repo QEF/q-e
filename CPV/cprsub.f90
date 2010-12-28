@@ -20,7 +20,7 @@ subroutine formf( tfirst, eself )
   use mp,              ONLY : mp_sum
   use control_flags,   ONLY : iprint, tpre, iprsta
   use io_global,       ONLY : stdout
-  use mp_global,       ONLY : intra_image_comm
+  use mp_global,       ONLY : intra_bgrp_comm
   use gvecs,           ONLY : ngms
   use cell_base,       ONLY : omega, tpiba2, tpiba
   use ions_base,       ONLY : rcmax, zv, nsp, na
@@ -106,8 +106,8 @@ subroutine formf( tfirst, eself )
      if( tfirst .or. ( iprsta >= 4 ) )then
         vpsum = SUM( vps( 1:ngms, is ) )
         rhopsum = SUM( rhops( 1:ngms, is ) )
-        call mp_sum( vpsum, intra_image_comm )
-        call mp_sum( rhopsum, intra_image_comm )
+        call mp_sum( vpsum, intra_bgrp_comm )
+        call mp_sum( rhopsum, intra_bgrp_comm )
         WRITE( stdout,1250) vps(1,is),rhops(1,is)
         WRITE( stdout,1300) vpsum,rhopsum
      endif
@@ -206,7 +206,7 @@ subroutine nlfh_x( stress, bec, dbec, lambda )
   USE cp_main_variables, ONLY : descla, la_proc, nlam
   USE descriptors,       ONLY : nlar_ , nlac_ , ilar_ , ilac_ , nlax_
   USE mp,                ONLY : mp_sum
-  USE mp_global,         ONLY : intra_image_comm
+  USE mp_global,         ONLY : intra_bgrp_comm
 
 !
   implicit none
@@ -295,7 +295,7 @@ subroutine nlfh_x( stress, bec, dbec, lambda )
      !
   end do
 
-  CALL mp_sum( fpre, intra_image_comm )
+  CALL mp_sum( fpre, intra_bgrp_comm )
 
   do i=1,3
      do j=1,3

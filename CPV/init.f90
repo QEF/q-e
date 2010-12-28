@@ -45,7 +45,7 @@
       USE berry_phase,              ONLY: berry_setup
       USE electrons_module,         ONLY: bmeshset
       USE problem_size,             ONLY: cpsizes
-      USE mp_global,                ONLY: use_task_groups
+      USE mp_global,                ONLY: use_task_groups, nproc_bgrp
       USE task_groups,              ONLY: task_groups_init
       USE core,                     ONLY: nlcc_any
       USE uspp,                     ONLY: okvan
@@ -143,7 +143,7 @@ end if
       !
       ! ... Initialize (local) real space dimensions
       !
-      CALL realspace_grids_para( dfftp, dffts )
+      CALL realspace_grids_para( dfftp, dffts, nproc_bgrp )
       CALL smallbox_grid_info ( )
       !
       ! ... generate g-space
@@ -227,7 +227,7 @@ end if
       USE kinds,            ONLY: DP
       use control_flags,    only: iprint, thdyn, ndr, nbeg, tbeg
       use io_global,        only: stdout, ionode
-      use mp_global,        only: nproc_image
+      use mp_global,        only: nproc_bgrp
       USE io_files,         ONLY: tmp_dir     
       use ions_base,        only: na, nsp, nat, tau_srt, ind_srt, if_pos, atm, na, pmass
       use cell_base,        only: a1, a2, a3, r_to_s, cell_init, deth
@@ -283,7 +283,7 @@ end if
       !
       ALLOCATE( taub( 3, nat ) )
       !
-      CALL fft_box_allocate( dfftb, nproc_image, nat )
+      CALL fft_box_allocate( dfftb, nproc_bgrp, nat )
       !
       !  if tbeg = .true.  the geometry is given in the standard input even if
       !  we are restarting a previous run

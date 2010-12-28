@@ -41,7 +41,7 @@ subroutine dforceb(c0, i, betae, ipol, bec0, ctabin, gqq, gqqm, qmat, dq2, df)
   use uspp, only : nhsa=> nkb
   use efield_module, ONLY : ctabin_missing_1,ctabin_missing_2,n_g_missing_m,&
        &      ctabin_missing_rev_1,ctabin_missing_rev_2
-  use mp_global, only: intra_image_comm, nproc_image
+  use mp_global, only: intra_bgrp_comm, nproc_bgrp
   use mp, only: mp_alltoall
   use parallel_include
 
@@ -105,11 +105,11 @@ subroutine dforceb(c0, i, betae, ipol, bec0, ctabin, gqq, gqqm, qmat, dq2, df)
 
      if(ipol/=3) then
 !allocate arrays
-             allocate(sndbuf(n_g_missing_m(ipol),2,nproc_image))
+             allocate(sndbuf(n_g_missing_m(ipol),2,nproc_bgrp))
              sndbuf(:,:,:)=(0.d0,0.d0)
-             allocate(rcvbuf(n_g_missing_m(ipol),2,nproc_image))
+             allocate(rcvbuf(n_g_missing_m(ipol),2,nproc_bgrp))
 !copy arrays to snd buf
-             do ip=1,nproc_image
+             do ip=1,nproc_bgrp
                 do ig=1,n_g_missing_m(ipol)
                    if(ipol==1) then
                       if(ctabin_missing_rev_1(ig,1,ip)>0) then
@@ -143,10 +143,10 @@ subroutine dforceb(c0, i, betae, ipol, bec0, ctabin, gqq, gqqm, qmat, dq2, df)
              enddo
 
 
-             CALL mp_alltoall( sndbuf, rcvbuf, intra_image_comm )           
+             CALL mp_alltoall( sndbuf, rcvbuf, intra_bgrp_comm )           
 
 !update sca
-             do ip=1,nproc_image
+             do ip=1,nproc_bgrp
                 do ig=1,n_g_missing_m(ipol)
                    if(ipol==1) then
                       if(ctabin_missing_1(ig,1,ip)/=0) then

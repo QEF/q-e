@@ -42,7 +42,7 @@
       use smooth_grid_dimensions, only: nrxxs
       use local_pseudo, only: vps, rhops
       use io_global,                ONLY : io_global_start, stdout, ionode, ionode_id
-      use mp_global,                ONLY : intra_image_comm, np_ortho, me_ortho, ortho_comm, me_image
+      use mp_global,                ONLY : intra_bgrp_comm, np_ortho, me_ortho, ortho_comm
       use dener
       use cdvan
       use constants,                only : pi, au_gpa
@@ -64,7 +64,7 @@
       use cp_interfaces,            ONLY : rhoofr, dforce, compute_stress
       USE cp_main_variables,        ONLY : nlax, collect_lambda, distribute_lambda, descla, nrlx, nlam
       USE descriptors,              ONLY : la_npc_ , la_npr_ , la_comm_ , la_me_ , la_nrl_ , ldim_cyclic
-      USE mp_global, ONLY:  me_image,my_image_id
+      USE mp_global, ONLY:  me_image, my_image_id
 
 
 !
@@ -371,7 +371,7 @@
               endif
            enddo
            
-           call mp_sum( gamma, intra_image_comm )
+           call mp_sum( gamma, intra_bgrp_comm )
            
            if (nvb.gt.0) then
               do i=1,n
@@ -402,7 +402,7 @@
                     fmat_ = fmat0(:,:,iss)
                  end if
                  nrl = ldim_cyclic( nss, np_rot, ip - 1 )
-                 CALL mp_bcast( fmat_ , ip - 1 , intra_image_comm )
+                 CALL mp_bcast( fmat_ , ip - 1 , intra_bgrp_comm )
                  do i=1,nss
                     jj = ip
                     do j=1,nrl
@@ -430,7 +430,7 @@
                        fmat_ = fmat0(:,:,iss)
                     end if
                     nrl = ldim_cyclic( nss, np_rot, ip - 1 )
-                    CALL mp_bcast( fmat_ , ip - 1 , intra_image_comm )
+                    CALL mp_bcast( fmat_ , ip - 1 , intra_bgrp_comm )
 
                     do i=1,nss
                        jj = ip 
@@ -453,7 +453,7 @@
                  deallocate( fmat_ )
               enddo
            endif
-           call mp_sum( gamma, intra_image_comm )
+           call mp_sum( gamma, intra_bgrp_comm )
         endif
 
 
@@ -520,7 +520,7 @@
                   fmat_ = fmat0(:,:,iss)
                end if
                nrl = ldim_cyclic( nss, np_rot, ip - 1 )
-               CALL mp_bcast( fmat_ , ip - 1 , intra_image_comm )
+               CALL mp_bcast( fmat_ , ip - 1 , intra_bgrp_comm )
                do i=1,nss
                   jj = ip
                   do j=1,nrl
@@ -540,7 +540,7 @@
          enddo
       endif
 
-      call mp_sum( dene0, intra_image_comm )
+      call mp_sum( dene0, intra_bgrp_comm )
 
         !if the derivative is positive, search along opposite direction
       if(dene0.gt.0.d0) then
@@ -907,7 +907,7 @@
               enddo
            enddo
            !
-           CALL mp_sum( lambda_repl, intra_image_comm )
+           CALL mp_sum( lambda_repl, intra_bgrp_comm )
            !
            CALL distribute_lambda( lambda_repl, lambda( :, :, is ), descla( :, is ) )
            !

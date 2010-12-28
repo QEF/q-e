@@ -64,7 +64,7 @@
    CONTAINS
 
      SUBROUTINE recvecs_init( ngm_ , ngw_ , ngs_ )
-       USE mp_global, ONLY: intra_image_comm
+       USE mp_global, ONLY: intra_bgrp_comm
        USE mp, ONLY: mp_max, mp_sum
        USE gvecw, ONLY: ngw, ngwx, ngw_g
        USE gvect, ONLY: ngm, ngmx, ngm_g
@@ -83,18 +83,18 @@
        ngwx = ngw
        ngmx = ngm
        ngsx = ngms
-       CALL mp_max( ngwx, intra_image_comm )
-       CALL mp_max( ngmx, intra_image_comm )
-       CALL mp_max( ngsx, intra_image_comm )
+       CALL mp_max( ngwx, intra_bgrp_comm )
+       CALL mp_max( ngmx, intra_bgrp_comm )
+       CALL mp_max( ngsx, intra_bgrp_comm )
        !
        !  calculate SUM over all processors
        !
        ngw_g = ngw
        ngm_g= ngm
        ngms_g=ngms
-       CALL mp_sum( ngw_g, intra_image_comm )
-       CALL mp_sum( ngm_g, intra_image_comm )
-       CALL mp_sum( ngms_g,intra_image_comm )
+       CALL mp_sum( ngw_g, intra_bgrp_comm )
+       CALL mp_sum( ngm_g, intra_bgrp_comm )
+       CALL mp_sum( ngms_g,intra_bgrp_comm )
 
        RETURN 
      END SUBROUTINE recvecs_init

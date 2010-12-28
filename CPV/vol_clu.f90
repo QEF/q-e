@@ -39,7 +39,7 @@ SUBROUTINE vol_clu(rho_real,rho_g,s_fac,flag)
       use mp_global, only: nproc, mpime
       use io_global, only: ionode
       USE mp,                 ONLY: mp_bcast, mp_sum
-      USE mp_global,          ONLY: intra_image_comm
+      USE mp_global,          ONLY: intra_bgrp_comm
 #endif
 
       implicit none
@@ -392,11 +392,11 @@ SUBROUTINE vol_clu(rho_real,rho_g,s_fac,flag)
       end do
 
 #ifdef __PARA
-      call mp_sum(volclu,intra_image_comm)
-      call mp_sum(n_ele,intra_image_comm)
-      if (jellium) call mp_sum(e_j,intra_image_comm)
-      call mp_sum(surfclu,intra_image_comm)
-      call mp_sum(dpvdh,intra_image_comm)
+      call mp_sum(volclu,intra_bgrp_comm)
+      call mp_sum(n_ele,intra_bgrp_comm)
+      if (jellium) call mp_sum(e_j,intra_bgrp_comm)
+      call mp_sum(surfclu,intra_bgrp_comm)
+      call mp_sum(dpvdh,intra_bgrp_comm)
 #endif
       volclu = volclu * omega / DBLE(nr1*nr2*nr3)
       n_ele = n_ele * omega / DBLE(nr1*nr2*nr3)

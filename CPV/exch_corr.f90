@@ -25,7 +25,7 @@
       use mp,              only : mp_sum
       use metagga,         ONLY : kedtaur
       USE io_global,       ONLY : stdout
-      USE mp_global,       ONLY : intra_image_comm
+      USE mp_global,       ONLY : intra_bgrp_comm
       use kinds,           ONLY : DP
       use constants,       ONLY : au_gpa
       USE sic_module,      ONLY : self_interaction, sic_alpha
@@ -123,8 +123,8 @@
 !
       end if
 
-      call mp_sum( exc, intra_image_comm )
-      IF ( ttsic ) call mp_sum( self_exc, intra_image_comm )
+      call mp_sum( exc, intra_bgrp_comm )
+      IF ( ttsic ) call mp_sum( self_exc, intra_bgrp_comm )
 
       exc = exc * omega / DBLE( nr1 * nr2 * nr3 )
       IF ( ttsic ) self_exc = self_exc * omega/DBLE(nr1 * nr2 *nr3 )
@@ -151,7 +151,7 @@
          !
          dxc = dxc * omega / DBLE( nr1*nr2*nr3 )
          !
-         call mp_sum ( dxc, intra_image_comm )
+         call mp_sum ( dxc, intra_bgrp_comm )
          !
          do j = 1, 3
             do i = 1, 3
@@ -186,7 +186,7 @@
          !
          if (tpre) then
             !
-            call mp_sum ( dexc, intra_image_comm )
+            call mp_sum ( dexc, intra_bgrp_comm )
             !
             dxc = dxc + dexc
             !
@@ -239,7 +239,7 @@
                      end do
                   end do
                end do
-               call mp_sum ( drc, intra_image_comm )
+               call mp_sum ( drc, intra_bgrp_comm )
             END IF
             dxc = dxc - drc * ( 1.0d0 / nspin ) * omega / ( nr1*nr2*nr3 )
          end do

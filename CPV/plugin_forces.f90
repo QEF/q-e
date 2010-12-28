@@ -10,7 +10,6 @@ SUBROUTINE plugin_forces()
   !----------------------------------------------------------------------------
   !
   !
-  USE mp_global,        ONLY : intra_image_comm
   USE mp,               ONLY : mp_bcast
   USE io_global,        ONLY : stdout, ionode, ionode_id
   USE kinds,            ONLY : DP

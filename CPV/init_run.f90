@@ -76,7 +76,7 @@ SUBROUTINE init_run()
   USE step_penalty,             ONLY : step_pen
   USE ions_base,                ONLY : ions_reference_positions, cdmi, taui
   USE ldau_cp
-  USE mp_global,                ONLY : nimage, me_image, my_image_id, mpime
+  !USE mp_global,                ONLY : nbgrp, me_bgrp, my_bgrp_id
   USE mp, only : mp_barrier
   !
   IMPLICIT NONE
@@ -89,15 +89,15 @@ SUBROUTINE init_run()
   !
   ! ... initialize directories
   !
-  IF( nimage > 1 ) THEN
-     !
-     ! ... When images are used, open a directory for each one
-     !
-     WRITE( dirname, FMT = '( I5.5 )' ) my_image_id
-     tmp_dir = TRIM( tmp_dir ) // '/' // TRIM( dirname )
-     CALL create_directory( tmp_dir )
-     !
-  END IF
+  !IF( nbgrp > 1 ) THEN
+  !   !
+  !   ! ... When bgrps are used, open a directory for each one
+  !   !
+  !   WRITE( dirname, FMT = '( I5.5 )' ) my_bgrp_id
+  !   tmp_dir = TRIM( tmp_dir ) // '/' // TRIM( dirname )
+  !   CALL create_directory( tmp_dir )
+  !   !
+  !END IF
   !
   CALL printout_base_init( tmp_dir, prefix )
   !

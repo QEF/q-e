@@ -80,7 +80,7 @@
       USE constants,   ONLY: pi
       USE cell_base,   ONLY: tpiba, alat, s_to_r
       USE ions_base,   ONLY: zv, nat, nsp, na
-      USE mp_global,   ONLY: me_image, nproc_image, intra_image_comm
+      USE mp_global,   ONLY: me_bgrp, nproc_bgrp, intra_bgrp_comm
       USE mp_wave,     ONLY: pwscatter
 
       IMPLICIT NONE 
@@ -117,7 +117,7 @@
       ! ... Subroutine body
       !
 
-      me = me_image + 1
+      me = me_bgrp + 1
 
       h = TRANSPOSE( ht )
 
@@ -191,24 +191,24 @@
       dumm = 0.0d0
       DO IN2 = 1, N
         call pwscatter( C2(:,in2), PTEMP, ngw, indi_l(:,1), sour_indi(:,1), &
-          dest_indi(:,1), n_indi_rcv(1), n_indi_snd(1), icntix(1), me_image, nproc_image, intra_image_comm )
+          dest_indi(:,1), n_indi_rcv(1), n_indi_snd(1), icntix(1), me_bgrp, nproc_bgrp, intra_bgrp_comm )
         DO IN1 = IN2, N
           ztmp = zdotc( NGW, C2(1,IN1), 1, PTEMP(1), 1 )
-          call mp_sum( ztmp, intra_image_comm )
+          call mp_sum( ztmp, intra_bgrp_comm )
           DUMM(IN1,IN2)=ztmp
         ENDDO
         call pwscatter( C2(:,in2), PTEMP, ngw, indi_l(:,3), sour_indi(:,3), &
-          dest_indi(:,3), n_indi_rcv(3), n_indi_snd(3), icntix(3), me_image, nproc_image, intra_image_comm )
+          dest_indi(:,3), n_indi_rcv(3), n_indi_snd(3), icntix(3), me_bgrp, nproc_bgrp, intra_bgrp_comm )
         DO IN1=IN2,N
           ztmp = ZDOTU( NGW, C2(1,IN1), 1, PTEMP(1), 1 )
-          call mp_sum( ztmp, intra_image_comm )
+          call mp_sum( ztmp, intra_bgrp_comm )
           DUMM(IN1,IN2)=DUMM(IN1,IN2)+ztmp
         ENDDO
         call pwscatter( C2(:,in2), PTEMP, ngw, indi_l(:,2), sour_indi(:,2), &
-          dest_indi(:,2), n_indi_rcv(2), n_indi_snd(2), icntix(2), me_image, nproc_image, intra_image_comm )
+          dest_indi(:,2), n_indi_rcv(2), n_indi_snd(2), icntix(2), me_bgrp, nproc_bgrp, intra_bgrp_comm )
         DO IN1=IN2,N
           ztmp = zdotc(NGW,PTEMP(1),1,C2(1,IN1),1)
-          call mp_sum( ztmp, intra_image_comm )
+          call mp_sum( ztmp, intra_bgrp_comm )
           DUMM(IN1,IN2)=DUMM(IN1,IN2) + ztmp
         ENDDO
         DO IN1=1,IN2-1
@@ -235,25 +235,25 @@
       dumm = 0.0d0
       DO IN2=1,N
         call pwscatter( C2(:,in2), PTEMP, ngw, indi_l(:,4), sour_indi(:,4), &
-          dest_indi(:,4), n_indi_rcv(4), n_indi_snd(4), icntix(4), me_image, nproc_image, intra_image_comm )
+          dest_indi(:,4), n_indi_rcv(4), n_indi_snd(4), icntix(4), me_bgrp, nproc_bgrp, intra_bgrp_comm )
 !. contiene il termine ig=0
         DO IN1=IN2,N
           ztmp = zdotc(NGW,C2(1,IN1),1,PTEMP(1),1)
-          call mp_sum( ztmp, intra_image_comm )
+          call mp_sum( ztmp, intra_bgrp_comm )
           DUMM(IN1,IN2)=ztmp
         ENDDO
         call pwscatter( C2(:,in2), PTEMP, ngw, indi_l(:,6), sour_indi(:,6), &
-          dest_indi(:,6), n_indi_rcv(6), n_indi_snd(6), icntix(6), me_image, nproc_image, intra_image_comm )
+          dest_indi(:,6), n_indi_rcv(6), n_indi_snd(6), icntix(6), me_bgrp, nproc_bgrp, intra_bgrp_comm )
         DO IN1=IN2,N
           ztmp = ZDOTU(NGW,C2(1,IN1),1,PTEMP(1),1)
-          call mp_sum( ztmp, intra_image_comm )
+          call mp_sum( ztmp, intra_bgrp_comm )
           DUMM(IN1,IN2)=DUMM(IN1,IN2) + ztmp
         ENDDO
         call pwscatter( C2(:,in2), PTEMP, ngw, indi_l(:,5), sour_indi(:,5), &
-          dest_indi(:,5), n_indi_rcv(5), n_indi_snd(5), icntix(5), me_image, nproc_image, intra_image_comm )
+          dest_indi(:,5), n_indi_rcv(5), n_indi_snd(5), icntix(5), me_bgrp, nproc_bgrp, intra_bgrp_comm )
         DO IN1=IN2,N
           ztmp = zdotc(NGW,PTEMP(1),1,C2(1,IN1),1)
-          call mp_sum( ztmp, intra_image_comm ) 
+          call mp_sum( ztmp, intra_bgrp_comm ) 
           DUMM(IN1,IN2)=DUMM(IN1,IN2) + ztmp
         ENDDO
 ! simmetrizzo
@@ -280,18 +280,18 @@
       dumm = 0.0d0
       DO IN2=1,N
         call pwscatter( C2(:,in2), PTEMP, ngw, indi_l(:,7), sour_indi(:,7), &
-          dest_indi(:,7), n_indi_rcv(7), n_indi_snd(7), icntix(7), me_image, nproc_image, intra_image_comm )
+          dest_indi(:,7), n_indi_rcv(7), n_indi_snd(7), icntix(7), me_bgrp, nproc_bgrp, intra_bgrp_comm )
 !. contiene il termine ig=0
         DO IN1=IN2,N
           ztmp = zdotc(NGW,C2(1,IN1),1,PTEMP(1),1)
-          call mp_sum( ztmp, intra_image_comm ) 
+          call mp_sum( ztmp, intra_bgrp_comm ) 
           DUMM(IN1,IN2)=ztmp
         ENDDO
         call pwscatter( C2(:,in2), PTEMP, ngw, indi_l(:,8), sour_indi(:,8), &
-          dest_indi(:,8), n_indi_rcv(8), n_indi_snd(8), icntix(8), me_image, nproc_image, intra_image_comm )
+          dest_indi(:,8), n_indi_rcv(8), n_indi_snd(8), icntix(8), me_bgrp, nproc_bgrp, intra_bgrp_comm )
         DO IN1=IN2,N
           ztmp = zdotc(NGW,PTEMP(1),1,C2(1,IN1),1)
-          call mp_sum( ztmp, intra_image_comm )
+          call mp_sum( ztmp, intra_bgrp_comm )
           DUMM(IN1,IN2)=DUMM(IN1,IN2)+ztmp
         ENDDO
 ! simmetrizzo

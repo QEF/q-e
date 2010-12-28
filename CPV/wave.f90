@@ -29,7 +29,7 @@
 !=----------------------------------------------------------------------------=!
        USE kinds,              ONLY: DP
        USE electrons_module,   ONLY: ib_owner, ib_local
-       USE mp_global,          ONLY: me_image, intra_image_comm
+       USE mp_global,          ONLY: me_bgrp, intra_bgrp_comm
        USE mp,                 ONLY: mp_sum
        USE wave_base,          ONLY: hpsi
        USE gvect, ONLY: gstart
@@ -47,9 +47,9 @@
        gzero = (gstart == 2) 
        ALLOCATE( prod( n ) )
        prod = hpsi( gzero, c0, SIZE( c0, 1 ), c2, n, noff )
-       CALL mp_sum( prod, intra_image_comm )
+       CALL mp_sum( prod, intra_bgrp_comm )
        IF( tdist ) THEN
-          IF( me_image == ib_owner( i ) ) THEN
+          IF( me_bgrp == ib_owner( i ) ) THEN
              ibl = ib_local( i )
              lambda( ibl, : ) = prod( : )
           END IF
@@ -71,7 +71,7 @@
     
     USE kinds,              only : DP
     use mp,                 only : mp_sum
-    use mp_global,          only : intra_image_comm
+    use mp_global,          only : intra_bgrp_comm
     use gvect, only : gstart
     use wave_base,          only : wave_speed2
     !
@@ -99,7 +99,7 @@
     end do
     ekincm = ekincm * emass / ( delt * delt )
 
-    CALL mp_sum( ekincm, intra_image_comm )
+    CALL mp_sum( ekincm, intra_bgrp_comm )
     DEALLOCATE( emainv )
 
     return
@@ -125,7 +125,7 @@
       !  lambda(1+2*NPE,1:nx)   lambda(2+2*NPE,1:nx) ..  lambda(NPE+2*NPE,1:nx)
       !
       !  distributes lambda's rows across processors with a blocking factor
-      !  of 1, ( row 1 to PE 1, row 2 to PE 2, .. row nproc_image+1 to PE 1 and
+      !  of 1, ( row 1 to PE 1, row 2 to PE 2, .. row nproc_bgrp+1 to PE 1 and
       !  so on).
       !  nrl = local number of rows
       !  ----------------------------------------------
@@ -134,7 +134,7 @@
 
       USE kinds,            ONLY: DP
       USE mp,               ONLY: mp_bcast
-      USE mp_global,        ONLY: nproc_image, me_image, intra_image_comm
+      USE mp_global,        ONLY: nproc_bgrp, me_bgrp, intra_bgrp_comm
       USE dspev_module,     ONLY: pdspev_drv, dspev_drv
 
       IMPLICIT NONE
@@ -182,7 +182,7 @@
             IF( me_rot .EQ. (ip-1) ) THEN
               uu = lambda( 1:nrl_ip, 1:nss )
             END IF
-            CALL mp_bcast( uu, (ip-1), intra_image_comm)
+            CALL mp_bcast( uu, (ip-1), intra_bgrp_comm)
  
             j      = ip
             DO jl = 1, nrl_ip
@@ -227,7 +227,7 @@
 
       USE kinds,            ONLY: DP
       USE mp,               ONLY: mp_bcast
-      USE mp_global,        ONLY: nproc_image, me_image, intra_image_comm
+      USE mp_global,        ONLY: nproc_bgrp, me_bgrp, intra_bgrp_comm
       USE dspev_module,     ONLY: dspev_drv
 
       IMPLICIT NONE
@@ -298,12 +298,12 @@
         !  lambda(1+2*NPE,1:nx)   lambda(2+2*NPE,1:nx) ..  lambda(NPE+2*NPE,1:nx)
         !
         !  distribute lambda's rows across processors with a blocking factor
-        !  of 1, ( row 1 to PE 1, row 2 to PE 2, .. row nproc_image+1 to PE 1 and so on).
+        !  of 1, ( row 1 to PE 1, row 2 to PE 2, .. row nproc_bgrp+1 to PE 1 and so on).
         !  ----------------------------------------------
          
 ! ...   declare modules
         USE kinds,              ONLY: DP
-        USE mp_global,          ONLY: nproc_image, me_image, intra_image_comm
+        USE mp_global,          ONLY: nproc_bgrp, me_bgrp, intra_bgrp_comm
         USE wave_base,          ONLY: dotp
         USE gvect, ONLY: gstart
 
@@ -331,12 +331,12 @@
         
         DO i = 1, n
           DO j = 1, n
-            ee(j) = -dotp( gzero, ngw, b(:,j+noff-1), a(:,i+noff-1) )
+            ee(j) = -dotp( gzero, ngw, b(:,j+noff-1), a(:,i+noff-1), intra_bgrp_comm )
           END DO
           IF( PRESENT(lambda) ) THEN
-            IF( MOD( (i-1), nproc_image ) == me_image ) THEN
+            IF( MOD( (i-1), nproc_bgrp ) == me_bgrp ) THEN
               DO j = 1, n
-                lambda( (i-1) / nproc_image + 1, j ) = ee(j)
+                lambda( (i-1) / nproc_bgrp + 1, j ) = ee(j)
               END DO
             END IF
           END IF
@@ -363,7 +363,7 @@
       USE kinds,              ONLY: DP
       USE mp,                 ONLY: mp_sum
       USE mp_wave,            ONLY: splitwf
-      USE mp_global,          ONLY: me_image, nproc_image, root_image, intra_image_comm
+      USE mp_global,          ONLY: me_bgrp, nproc_bgrp, root_bgrp, intra_bgrp_comm
       USE gvect, ONLY: ig_l2g, gstart
       USE gvecw,              ONLY: ngw, ngw_g
       USE io_global,          ONLY: stdout

@@ -74,7 +74,7 @@ CONTAINS
       SUBROUTINE print_all_states( ctot, iupdwn_tot, nupdwn_tot )
 
         USE kinds,            ONLY : DP
-        USE mp_global,        ONLY : intra_image_comm
+        USE mp_global,        ONLY : intra_bgrp_comm
         USE io_global,        ONLY : ionode
         USE io_global,        ONLY : stdout
         USE electrons_base,   ONLY : nupdwn, iupdwn, nspin
@@ -144,7 +144,7 @@ CONTAINS
         USE fft_base, ONLY: dfftp, dffts
         USE fft_interfaces, ONLY: invfft
         USE xml_io_base, ONLY: write_rho_xml
-        USE mp_global,       ONLY: nproc_image, me_image, intra_image_comm
+        USE mp_global,       ONLY: nproc_bgrp, me_bgrp, intra_bgrp_comm
 
         IMPLICIT NONE
 
@@ -169,7 +169,7 @@ CONTAINS
         CALL write_rho_xml( file_name, rpsi2, &
                             nr1, nr2, nr3, nr1x, nr2x, dfftp%ipp, dfftp%npp )
         
-        CALL mp_sum( charge, intra_image_comm )
+        CALL mp_sum( charge, intra_bgrp_comm )
 
         IF ( ionode ) THEN
           WRITE( stdout,'(3X,A15," integrated charge : ",F14.5)')  &

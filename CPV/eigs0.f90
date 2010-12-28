@@ -22,7 +22,7 @@
                                     descla_siz_ , la_npr_ , la_npc_ , la_nrl_ , la_nrlx_ , la_comm_ , &
                                     nlax_ , la_myc_ , la_myr_
       USE mp,                only : mp_sum, mp_bcast
-      USE mp_global,         only : intra_image_comm, root_image, me_image
+      USE mp_global,         only : intra_bgrp_comm, root_bgrp, me_bgrp
 
       implicit none
 ! input
@@ -97,7 +97,7 @@
 
          END IF
 
-         call mp_bcast( wr, root_image, intra_image_comm )
+         call mp_bcast( wr, root_bgrp, intra_bgrp_comm )
 
          if( lf ) then
             do i = 1, n
@@ -128,7 +128,7 @@
                   end if
                END IF
             endif
-            call mp_sum( ei( nupdwn(1), 1 ), intra_image_comm )
+            call mp_sum( ei( nupdwn(1), 1 ), intra_bgrp_comm )
             !
          END IF
 
@@ -170,7 +170,7 @@
    SUBROUTINE rpackgam_x( gam, f, aux )
 !-----------------------------------------------------------------------
       USE kinds,            ONLY: DP
-      USE mp_global, ONLY: me_image, nproc_image, intra_image_comm
+      USE mp_global, ONLY: me_bgrp, nproc_bgrp, intra_bgrp_comm
       USE mp, ONLY: mp_sum
       IMPLICIT NONE
           REAL(DP), INTENT(INOUT)  :: gam(:,:)
@@ -181,27 +181,27 @@
           n   = SIZE(gam, 2)
           IF( PRESENT( aux ) ) THEN
             aux = 0.0d0
-            IF( me_image < n ) THEN
+            IF( me_bgrp < n ) THEN
               DO i = 1, n
-                j = me_image + 1
+                j = me_bgrp + 1
                 DO jl = 1, nrl
                   IF( j >= i ) THEN
                     !   maps (j,i) index to low-tri packed (k) index
                     k = (i-1)*n + j - i*(i-1)/2  
                     aux(k) = gam(jl,i) / f(j)
                   END IF
-                  j = j + nproc_image
+                  j = j + nproc_bgrp
                 END DO
               END DO
             END IF
-            CALL mp_sum(aux, intra_image_comm)
+            CALL mp_sum(aux, intra_bgrp_comm)
           ELSE
-            IF( me_image < n ) THEN
+            IF( me_bgrp < n ) THEN
               DO i = 1, n
-                j = me_image + 1
+                j = me_bgrp + 1
                 DO jl = 1, nrl
                   gam(jl,i) = gam(jl,i) / f(j)
-                  j = j + nproc_image
+                  j = j + nproc_bgrp
                 END DO
               END DO
             END IF

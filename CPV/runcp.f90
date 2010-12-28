@@ -26,8 +26,8 @@
       !
       USE parallel_include
       USE kinds,               ONLY : DP
-      USE mp_global,           ONLY : nogrp, ogrp_comm, me_image, nolist,&
-                                      use_task_groups, my_image_id, nimage, inter_image_comm
+      USE mp_global,           ONLY : nogrp, ogrp_comm, me_bgrp, nolist,&
+                                      use_task_groups, my_bgrp_id, nbgrp, inter_bgrp_comm
       USE mp,                  ONLY : mp_sum
       USE fft_base,            ONLY : dffts
       use wave_base,           only : wave_steepest, wave_verlet
@@ -139,7 +139,7 @@
 
         DO i = 1, n, incr
 
-           IF( icnt == my_image_id ) THEN
+           IF( icnt == my_bgrp_id ) THEN
 
            IF( use_task_groups ) THEN
               !
@@ -219,12 +219,12 @@
   
            END IF
 
-           icnt = MOD( icnt + 1 , nimage )
+           icnt = MOD( icnt + 1 , nbgrp )
 
         end do
 
-        IF( nimage > 1 ) THEN
-           CALL mp_sum( cm, inter_image_comm )
+        IF( nbgrp > 1 ) THEN
+           CALL mp_sum( cm, inter_bgrp_comm )
         END IF
 
         DEALLOCATE( c2 )
@@ -269,7 +269,7 @@
   !
       USE electrons_base,   ONLY: nx=>nbnd, nupdwn, iupdwn, nbspx, nbsp
       USE mp, ONLY: mp_sum 
-      USE mp_global, ONLY: intra_image_comm 
+      USE mp_global, ONLY: intra_bgrp_comm 
 !#@@@
       USE ldaU_cp
 !#@@@
@@ -435,7 +435,7 @@
       IF ( gstart == 2 ) THEN
         intermed  = intermed + 1.d0 * c2(1) * conjg(c0(1,n_unp))
       END IF
-      CALL mp_sum ( intermed, intra_image_comm )
+      CALL mp_sum ( intermed, intra_bgrp_comm )
       !           
       IF( iflag == 2 ) cm(:, n_unp) = c0(:, n_unp) 
       !

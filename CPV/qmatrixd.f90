@@ -31,7 +31,7 @@ subroutine qmatrixd(c0, bec0,ctable, gqq, qmat, detq, ipol)
   use uspp, only : nkb
   use electrons_base, only: nx => nbspx, n => nbsp, ispin
   use mp, only: mp_sum, mp_alltoall
-  use mp_global, only: intra_image_comm, nproc_image
+  use mp_global, only: intra_bgrp_comm, nproc_bgrp
   USE efield_module, ONLY : ctable_missing_1,ctable_missing_2, whose_is_g,n_g_missing_p,&
        &      ctable_missing_rev_1,ctable_missing_rev_2
   use io_global, only : stdout
@@ -102,11 +102,11 @@ subroutine qmatrixd(c0, bec0,ctable, gqq, qmat, detq, ipol)
 
           if(ipol /= 3) then
              !
-             allocate(sndbuf(n_g_missing_p(ipol),2,nproc_image))
+             allocate(sndbuf(n_g_missing_p(ipol),2,nproc_bgrp))
              sndbuf(:,:,:)=(0.d0,0.d0)
-             allocate(rcvbuf(n_g_missing_p(ipol),2,nproc_image))
+             allocate(rcvbuf(n_g_missing_p(ipol),2,nproc_bgrp))
 !copy arrays to snd buf
-             do ip=1,nproc_image
+             do ip=1,nproc_bgrp
                 do ig=1,n_g_missing_p(ipol)
                    if(ipol==1) then
                       if(ctable_missing_1(ig,1,ip)/=0) then
@@ -132,10 +132,10 @@ subroutine qmatrixd(c0, bec0,ctable, gqq, qmat, detq, ipol)
              enddo
 
 
-             CALL mp_alltoall( sndbuf, rcvbuf, intra_image_comm )
+             CALL mp_alltoall( sndbuf, rcvbuf, intra_bgrp_comm )
 
 !update sca
-             do ip=1,nproc_image
+             do ip=1,nproc_bgrp
                 do ig=1,n_g_missing_p(ipol)
                    if(ipol==1) then
                       if(ctable_missing_rev_1(ig,1,ip) >0) then
@@ -176,7 +176,7 @@ subroutine qmatrixd(c0, bec0,ctable, gqq, qmat, detq, ipol)
 #endif
 
         
-          call mp_sum( sca, intra_image_comm )
+          call mp_sum( sca, intra_bgrp_comm )
        endif
        qmat(ix,jx)=sca
        

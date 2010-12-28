@@ -25,7 +25,6 @@
       USE io_files,         ONLY: tmp_dir
       USE ensemble_dft,     ONLY: tens
       USE mp,               ONLY: mp_bcast
-      USE mp_global,        ONLY: root_image, intra_image_comm
       USE control_flags,    ONLY: tksw, ndw, io_level, twfcollect
       USE xml_io_base,      ONLY: restart_dir, kpoint_dir
 

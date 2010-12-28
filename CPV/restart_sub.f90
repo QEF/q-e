@@ -30,7 +30,6 @@ SUBROUTINE from_restart( )
    USE cp_interfaces,         ONLY : phfacs, strucf
    USE energies,              ONLY : eself, dft_energy_type
    USE wave_base,             ONLY : rande_base
-   USE mp_global,             ONLY : me_image, mpime
    USE efield_module,         ONLY : efield_berry_setup,  tefield, &
                                      efield_berry_setup2, tefield2
    USE small_box,             ONLY : ainvb

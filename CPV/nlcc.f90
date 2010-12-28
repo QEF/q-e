@@ -103,7 +103,7 @@
       use electrons_base,     only: nspin
       use control_flags,      only: iprsta
       use io_global,          only: stdout
-      use mp_global,          only: intra_image_comm
+      use mp_global,          only: intra_bgrp_comm
       use cell_base,          only: omega
       USE mp,                 ONLY: mp_sum
 
@@ -129,7 +129,7 @@
       !
       IF( iprsta > 2 ) THEN
          rsum = SUM( rhoc ) * omega / DBLE(nr1*nr2*nr3)
-         CALL mp_sum( rsum, intra_image_comm )
+         CALL mp_sum( rsum, intra_bgrp_comm )
          WRITE( stdout, 10 ) rsum 
 10       FORMAT( 3X, 'Core Charge = ', D14.6 )
       END IF

@@ -115,8 +115,8 @@ MODULE cp_main_variables
                                  gstart, nudx, tpre )
       !------------------------------------------------------------------------
       !
-      USE mp_global,   ONLY: np_ortho, me_ortho, intra_image_comm, ortho_comm, &
-                             me_image, ortho_comm_id
+      USE mp_global,   ONLY: np_ortho, me_ortho, intra_bgrp_comm, ortho_comm, &
+                             me_bgrp, ortho_comm_id
       USE mp,          ONLY: mp_max, mp_min
       USE descriptors, ONLY: descla_siz_ , descla_init , nlax_ , la_nrlx_ , lambda_node_
       !
@@ -332,7 +332,7 @@ MODULE cp_main_variables
     !
     !------------------------------------------------------------------------
     SUBROUTINE collect_lambda( lambda_repl, lambda_dist, desc )
-       USE mp_global,   ONLY: intra_image_comm
+       USE mp_global,   ONLY: intra_bgrp_comm
        USE mp,          ONLY: mp_sum
        USE descriptors, ONLY: lambda_node_ , ilar_ , ilac_ , nlac_ , nlar_
        REAL(DP), INTENT(OUT) :: lambda_repl(:,:)
@@ -349,14 +349,14 @@ MODULE cp_main_variables
              END DO
           END DO
        END IF
-       CALL mp_sum( lambda_repl, intra_image_comm )
+       CALL mp_sum( lambda_repl, intra_bgrp_comm )
        RETURN
     END SUBROUTINE collect_lambda
     !
     !
     !------------------------------------------------------------------------
     SUBROUTINE collect_bec( bec_repl, bec_dist, desc, nspin )
-       USE mp_global,   ONLY: intra_image_comm
+       USE mp_global,   ONLY: intra_bgrp_comm
        USE mp,          ONLY: mp_sum
        USE descriptors, ONLY: lambda_node_ , ilar_ , nlar_ , la_myc_ , nlax_ , la_n_
        USE io_global, ONLY : stdout
@@ -385,14 +385,14 @@ MODULE cp_main_variables
           END IF
        END IF
        !
-       CALL mp_sum( bec_repl, intra_image_comm )
+       CALL mp_sum( bec_repl, intra_bgrp_comm )
        !
        RETURN
     END SUBROUTINE collect_bec
     !
     !------------------------------------------------------------------------
     SUBROUTINE collect_zmat( zmat_repl, zmat_dist, desc )
-       USE mp_global,   ONLY: intra_image_comm
+       USE mp_global,   ONLY: intra_bgrp_comm
        USE mp,          ONLY: mp_sum
        USE descriptors, ONLY: lambda_node_ , la_nrl_ , la_me_ , la_npr_ , la_npc_ , la_n_
        REAL(DP), INTENT(OUT) :: zmat_repl(:,:)
@@ -412,7 +412,7 @@ MODULE cp_main_variables
              END DO
           END DO
        END IF
-       CALL mp_sum( zmat_repl, intra_image_comm )
+       CALL mp_sum( zmat_repl, intra_bgrp_comm )
        RETURN
     END SUBROUTINE collect_zmat
     !

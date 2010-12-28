@@ -28,7 +28,7 @@ subroutine qqberry2( gqq,gqqm, ipol)
   use cell_base,          only: a1, a2, a3
   use gvect, only: g, gg
   use mp,                 only: mp_sum
-  use mp_global,          only: intra_image_comm
+  use mp_global,          only: intra_bgrp_comm
   use cp_interfaces,      only: fill_qrl
   
   implicit none
@@ -190,8 +190,8 @@ subroutine qqberry2( gqq,gqqm, ipol)
      enddo
   endif
 
-  call mp_sum(gqq(:,:,:,:),intra_image_comm)
-  call mp_sum(gqqm(:,:,:,:),intra_image_comm)
+  call mp_sum(gqq(:,:,:,:),intra_bgrp_comm)
+  call mp_sum(gqqm(:,:,:,:),intra_bgrp_comm)
 
   deallocate( fint)
   deallocate( jl)
@@ -221,7 +221,7 @@ subroutine qqupdate(eigr, gqqm0, gqq, gqqm, ipol)
   use gvect, only: mill
   use uspp_param, only: nh, nhm
   use mp, only: mp_sum
-  use mp_global, only: intra_image_comm
+  use mp_global, only: intra_bgrp_comm
 
   implicit none
 
@@ -277,7 +277,7 @@ subroutine qqupdate(eigr, gqqm0, gqq, gqqm, ipol)
         enddo
      enddo
   endif
-  call mp_sum(gqq(:,:,:,:),intra_image_comm)
-  call mp_sum(gqqm(:,:,:,:),intra_image_comm)
+  call mp_sum(gqq(:,:,:,:),intra_bgrp_comm)
+  call mp_sum(gqqm(:,:,:,:),intra_bgrp_comm)
   return
 end subroutine qqupdate

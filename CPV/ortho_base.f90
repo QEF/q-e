@@ -138,7 +138,7 @@ END SUBROUTINE diagonalize_parallel
 
    SUBROUTINE mesure_diag_perf( n )
       !
-      USE mp_global,   ONLY: nproc_image, me_image, intra_image_comm, root_image
+      USE mp_global,   ONLY: nproc_bgrp, me_bgrp, intra_bgrp_comm, root_bgrp
       USE mp_global,   ONLY: nproc_ortho, np_ortho, me_ortho, ortho_comm, ortho_comm_id
       USE io_global,   ONLY: ionode, stdout
       USE mp,          ONLY: mp_sum, mp_bcast, mp_barrier
@@ -188,13 +188,13 @@ END SUBROUTINE diagonalize_parallel
       !
       CALL set_a()
       !
-      CALL mp_barrier( intra_image_comm )
+      CALL mp_barrier( intra_bgrp_comm )
       t1 = cclock()
       !
       CALL diagonalize_parallel( n, a, d, s, desc )
       !
       tpar = cclock() - t1
-      CALL mp_max( tpar, intra_image_comm )
+      CALL mp_max( tpar, intra_bgrp_comm )
 
       DEALLOCATE( s, a )
       !
@@ -225,7 +225,7 @@ END SUBROUTINE diagonalize_parallel
 
       END IF
 
-      CALL mp_max( tser, intra_image_comm )
+      CALL mp_max( tser, intra_bgrp_comm )
 
 #if defined __PARA
 
@@ -250,7 +250,7 @@ END SUBROUTINE diagonalize_parallel
 
 #endif
 
-      CALL mp_bcast( use_parallel_diag, root_image, intra_image_comm )
+      CALL mp_bcast( use_parallel_diag, root_bgrp, intra_bgrp_comm )
       
       DEALLOCATE( d )
 
@@ -283,8 +283,8 @@ END SUBROUTINE diagonalize_parallel
 
    SUBROUTINE mesure_mmul_perf( n )
       !
-      USE mp_global,   ONLY: nproc_image, me_image, intra_image_comm, &
-                             root_image, ortho_comm, nproc_ortho, np_ortho, &
+      USE mp_global,   ONLY: nproc_bgrp, me_bgrp, intra_bgrp_comm, &
+                             root_bgrp, ortho_comm, nproc_ortho, np_ortho, &
                              me_ortho, init_ortho_group, ortho_comm_id
       USE io_global,   ONLY: ionode, stdout
       USE mp,          ONLY: mp_sum, mp_bcast, mp_barrier
@@ -311,7 +311,7 @@ END SUBROUTINE diagonalize_parallel
       !
       !  Now re-define the ortho group and test the performance
       !
-      CALL init_ortho_group( np * np, intra_image_comm )
+      CALL init_ortho_group( np * np, intra_bgrp_comm )
 
       CALL descla_init( desc, n, n, np_ortho, me_ortho, ortho_comm, ortho_comm_id )
 
@@ -327,13 +327,13 @@ END SUBROUTINE diagonalize_parallel
       ! time to perform initializations, then perform a dummy call to get meaningful time
       CALL sqr_mm_cannon( 'N', 'N', n, 1.0d0, a, nr, b, nr, 0.0d0, c, nr, desc) 
 
-      CALL mp_barrier( intra_image_comm )
+      CALL mp_barrier( intra_bgrp_comm )
       t1 = cclock()
 
       CALL sqr_mm_cannon( 'N', 'N', n, 1.0d0, a, nr, b, nr, 0.0d0, c, nr, desc)
    
       tcan = cclock() - t1
-      CALL mp_max( tcan, intra_image_comm )
+      CALL mp_max( tcan, intra_bgrp_comm )
 
       DEALLOCATE( a, c, b )
 
@@ -383,7 +383,7 @@ END SUBROUTINE diagonalize_parallel
       USE kinds,             ONLY: DP
       USE io_global,         ONLY: stdout
       USE control_flags,     ONLY: ortho_eps, ortho_max
-      USE mp_global,         ONLY: intra_image_comm, me_image, nproc_image
+      USE mp_global,         ONLY: intra_bgrp_comm, me_bgrp, nproc_bgrp
       USE mp,                ONLY: mp_sum, mp_max
       USE descriptors,       ONLY: nlar_ , nlac_ , ilar_ , ilac_ , lambda_node_ , &
                                    la_myr_ , la_myc_ , la_comm_ , descla_siz_ , nlax_
@@ -516,7 +516,7 @@ END SUBROUTINE diagonalize_parallel
             
 100   CONTINUE
             
-      CALL mp_max( iter, intra_image_comm ) 
+      CALL mp_max( iter, intra_bgrp_comm ) 
 
       RETURN
    END SUBROUTINE ortho_iterate
@@ -535,7 +535,7 @@ END SUBROUTINE diagonalize_parallel
       USE kinds,             ONLY: DP
       USE io_global,         ONLY: stdout
       USE control_flags,     ONLY: ortho_eps, ortho_max
-      USE mp_global,         ONLY: intra_image_comm, me_image, nproc_image
+      USE mp_global,         ONLY: intra_bgrp_comm, me_bgrp, nproc_bgrp
       USE mp,                ONLY: mp_sum, mp_max
       USE descriptors,       ONLY: nlar_ , nlac_ , ilar_ , ilac_ , lambda_node_ , &
                                    la_myr_ , la_myc_ , la_comm_ , descla_siz_ , nlax_
@@ -680,7 +680,7 @@ END SUBROUTINE diagonalize_parallel
 
 100   CONTINUE
 
-      CALL mp_max( iter, intra_image_comm ) 
+      CALL mp_max( iter, intra_bgrp_comm ) 
 
       RETURN
    END SUBROUTINE ortho_alt_iterate
@@ -703,7 +703,7 @@ END SUBROUTINE diagonalize_parallel
       USE mp,                 ONLY: mp_root_sum
       USE control_flags,      ONLY: iprsta
       USE io_global,          ONLY: stdout
-      USE mp_global,          ONLY: intra_image_comm, leg_ortho
+      USE mp_global,          ONLY: intra_bgrp_comm, leg_ortho
       USE descriptors,        ONLY: lambda_node_ , la_npc_ , la_npr_ , descla_siz_ , &
                                     descla_init , la_comm_ , ilar_ , ilac_ , nlar_ , &
                                     nlac_ , la_myr_ , la_myc_ , la_nx_ , la_n_ , nlax_
@@ -768,7 +768,7 @@ END SUBROUTINE diagonalize_parallel
                CALL DGER( nr, nc, 1.D0, cp(1,ist+ir-1), 2*ngwx, cp(1,ist+ic-1), 2*ngwx, sigp, nx )
             END IF
             !
-            CALL mp_root_sum( sigp, sig, root, intra_image_comm )
+            CALL mp_root_sum( sigp, sig, root, intra_bgrp_comm )
             !
          END DO
          !
@@ -827,7 +827,7 @@ END SUBROUTINE diagonalize_parallel
       USE cvan,               ONLY: nvb
       USE kinds,              ONLY: DP
       USE mp,                 ONLY: mp_root_sum
-      USE mp_global,          ONLY: intra_image_comm, me_image, leg_ortho
+      USE mp_global,          ONLY: intra_bgrp_comm, me_bgrp, leg_ortho
       USE control_flags,      ONLY: iprsta
       USE io_global,          ONLY: stdout
       USE descriptors,        ONLY: lambda_node_ , la_npc_ , la_npr_ , descla_siz_ , &
@@ -899,7 +899,7 @@ END SUBROUTINE diagonalize_parallel
                CALL DGER( nr, nc, -1.D0, phi(1,ist+ir-1), 2*ngwx, cp(1,ist+ic-1), 2*ngwx, rhop, nx )
             END IF
 
-            CALL mp_root_sum( rhop, rho, root, intra_image_comm )
+            CALL mp_root_sum( rhop, rho, root, intra_bgrp_comm )
 
          END DO
       END DO
@@ -955,7 +955,7 @@ END SUBROUTINE diagonalize_parallel
       USE mp,                 ONLY: mp_root_sum
       USE control_flags,      ONLY: iprsta
       USE io_global,          ONLY: stdout
-      USE mp_global,          ONLY: intra_image_comm, leg_ortho
+      USE mp_global,          ONLY: intra_bgrp_comm, leg_ortho
       USE descriptors,        ONLY: lambda_node_ , la_npc_ , la_npr_ , descla_siz_ , &
                                     descla_init , la_comm_ , ilar_ , ilac_ , nlar_ , &
                                     nlac_ , la_myr_ , la_myc_ , la_nx_ , la_n_ , nlax_
@@ -1029,7 +1029,7 @@ END SUBROUTINE diagonalize_parallel
                CALL DGER( nr, nc, -1.D0, phi(1,ist+ir-1), 2*ngwx, phi(1,ist+ic-1), 2*ngwx, taup, nx )
             END IF
             !
-            CALL mp_root_sum( taup, tau, root, intra_image_comm )
+            CALL mp_root_sum( taup, tau, root, intra_bgrp_comm )
             !
          END DO
          !
@@ -1089,7 +1089,7 @@ END SUBROUTINE diagonalize_parallel
       USE gvecw,             ONLY: ngw
       USE control_flags,     ONLY: iprint, iprsta
       USE mp,                ONLY: mp_sum, mp_bcast
-      USE mp_global,         ONLY: intra_image_comm, leg_ortho, me_image
+      USE mp_global,         ONLY: intra_bgrp_comm, leg_ortho, me_bgrp
       USE descriptors,       ONLY: nlar_ , nlac_ , ilar_ , ilac_ , lambda_node_ , descla_siz_ , la_comm_ , &
                                    la_npc_ , la_npr_ , nlax_ , la_n_ , la_nx_ , la_myr_ , la_myc_ , &
                                    descla_init
@@ -1163,10 +1163,10 @@ END SUBROUTINE diagonalize_parallel
             !
             ! broadcast the block to all processors 
             ! 
-            IF( me_image == root ) bephi_tmp = bephi
-            CALL mp_bcast( bephi_tmp, root, intra_image_comm )
-            IF( me_image == root ) becp_tmp = becp_dist
-            CALL mp_bcast( becp_tmp, root, intra_image_comm )
+            IF( me_bgrp == root ) bephi_tmp = bephi
+            CALL mp_bcast( bephi_tmp, root, intra_bgrp_comm )
+            IF( me_bgrp == root ) becp_tmp = becp_dist
+            CALL mp_bcast( becp_tmp, root, intra_bgrp_comm )
             !
          END IF
 
@@ -1191,7 +1191,7 @@ END SUBROUTINE diagonalize_parallel
                xd = x0 * ccc
             END IF
 
-            CALL mp_bcast( xd, root, intra_image_comm )
+            CALL mp_bcast( xd, root, intra_bgrp_comm )
 
             CALL dgemm( 'N', 'N', 2*ngw, nc, nr, 1.0d0, phi(1,istart+ir-1), 2*ngwx, &
                         xd, nx, 1.0d0, cp(1,istart+ic-1), 2*ngwx )
@@ -1275,7 +1275,7 @@ END SUBROUTINE diagonalize_parallel
       USE kinds,          ONLY: DP
       USE ions_base,      ONLY: na, nsp
       USE io_global,      ONLY: stdout
-      USE mp_global,      ONLY: intra_image_comm
+      USE mp_global,      ONLY: intra_bgrp_comm
       USE cvan,           ONLY: ish, nvb
       USE uspp_param,     ONLY: nh
       USE uspp,           ONLY: nkbus, qq
@@ -1370,7 +1370,7 @@ END SUBROUTINE diagonalize_parallel
          END IF
          emtot=emtot/n
 
-         CALL mp_sum( emtot, intra_image_comm )
+         CALL mp_sum( emtot, intra_bgrp_comm )
 
          WRITE( stdout,*) 'in calphi sqrt(emtot)=',SQRT(emtot)
          WRITE( stdout,*)

@@ -40,7 +40,7 @@
       USE funct,                  ONLY: dft_is_meta
       USE fft_base,               ONLY: dffts
       USE fft_interfaces,         ONLY: fwfft, invfft
-      USE mp_global,              ONLY: nogrp, me_image, ogrp_comm, &
+      USE mp_global,              ONLY: nogrp, me_bgrp, ogrp_comm, &
                                         use_task_groups
 !
       IMPLICIT NONE
@@ -124,7 +124,7 @@
       IF( use_task_groups ) THEN
          !
 !$omp parallel do 
-         DO ir = 1, dffts%nr1x*dffts%nr2x*dffts%tg_npp( me_image + 1 )
+         DO ir = 1, dffts%nr1x*dffts%nr2x*dffts%tg_npp( me_bgrp + 1 )
             psi(ir) = CMPLX ( v(ir,iss1) * DBLE( psi(ir) ), &
                               v(ir,iss2) *AIMAG( psi(ir) ) ,kind=DP)
          END DO
@@ -196,7 +196,7 @@
             END IF
          END IF
 
-         eig_offset = eig_offset + dffts%nr3x * dffts%nsw(me_image+1)
+         eig_offset = eig_offset + dffts%nr3x * dffts%nsw(me_bgrp+1)
 
          ! We take into account the number of elements received from other members of the orbital group
 

@@ -36,7 +36,7 @@
         USE constants,          ONLY: fpi
         USE cell_base,          ONLY: tpiba2, tpiba
         USE mp,                 ONLY: mp_sum
-        USE mp_global,          ONLY: nproc_image, me_image, intra_image_comm
+        USE mp_global,          ONLY: nproc_bgrp, me_bgrp, intra_bgrp_comm
         USE io_global,          ONLY: ionode
         USE io_files,           ONLY: opt_unit
         USE gvect,              ONLY: ngm
@@ -103,7 +103,7 @@
           END DO
           vrmean(ir) = 2.0d0 * vrmean(ir)
         END DO
-        CALL mp_sum( vrmean, intra_image_comm )
+        CALL mp_sum( vrmean, intra_bgrp_comm )
 
 
         IF(ionode) THEN
@@ -128,7 +128,7 @@
   SUBROUTINE cluster_bc( screen_coul, hg, omega, hmat )
 
       USE kinds,           ONLY: DP
-      USE mp_global,       ONLY: me_image
+      USE mp_global,       ONLY: me_bgrp
       USE fft_base,        ONLY: dfftp
       USE fft_interfaces,  ONLY: fwfft
       USE gvect,           ONLY: ngm
@@ -155,7 +155,7 @@
       ir1 = 1
       ir2 = 1
       ir3 = 1
-      DO k = 1, me_image
+      DO k = 1, me_bgrp
         ir3 = ir3 + dfftp%npp( k )
       END DO
 
@@ -228,7 +228,7 @@
       USE ions_base,          ONLY: nsp
       USE gvect,              ONLY: ngm
       USE gvect, ONLY: gstart
-      USE mp_global,          ONLY: intra_image_comm
+      USE mp_global,          ONLY: intra_bgrp_comm
       USE mp,                 ONLY: mp_sum
 
       IMPLICIT NONE
@@ -276,7 +276,7 @@
       !
       eps = 2.D0 * eps  * omega
       !
-      CALL mp_sum( eps, intra_image_comm )
+      CALL mp_sum( eps, intra_bgrp_comm )
 
       RETURN
    END SUBROUTINE vofps_x
@@ -308,7 +308,7 @@
       USE gvect, ONLY: gstart, gg
       USE ions_base,          ONLY: nsp
       USE gvect,              ONLY: ngm
-      USE mp_global,          ONLY: intra_image_comm
+      USE mp_global,          ONLY: intra_bgrp_comm
       USE mp,                 ONLY: mp_sum
 
       IMPLICIT NONE
@@ -385,9 +385,9 @@
       ehte =        ehte * omega
       ehti =        ehti * omega
       ! ...
-      CALL mp_sum(eh  , intra_image_comm)
-      CALL mp_sum(ehte, intra_image_comm)
-      CALL mp_sum(ehti, intra_image_comm)
+      CALL mp_sum(eh  , intra_bgrp_comm)
+      CALL mp_sum(ehte, intra_bgrp_comm)
+      CALL mp_sum(ehti, intra_bgrp_comm)
       !
       RETURN
   END SUBROUTINE vofloc_x
@@ -507,7 +507,7 @@
       USE kinds,       ONLY : DP
       USE constants,   ONLY : sqrtpm1
       USE cell_base,   ONLY : s_to_r, pbcs
-      USE mp_global,   ONLY : nproc_image, me_image, intra_image_comm
+      USE mp_global,   ONLY : nproc_bgrp, me_bgrp, intra_bgrp_comm
       USE mp,          ONLY : mp_sum
       USE ions_base,   ONLY : rcmax, zv, nsp, na, nat
  
@@ -552,7 +552,7 @@
 
 ! ... SUBROUTINE BODY 
 
-      me = me_image + 1
+      me = me_bgrp + 1
 
       !  get the index of the first atom of each specie
 
@@ -627,8 +627,8 @@
 
       !  Distribute the atoms pairs to processors
 
-      NA_LOC = ldim_block( npt, nproc_image, me_image)
-      IA_S   = gind_block( 1, npt, nproc_image, me_image )
+      NA_LOC = ldim_block( npt, nproc_bgrp, me_bgrp)
+      IA_S   = gind_block( 1, npt, nproc_bgrp, me_bgrp )
       IA_E   = IA_S + NA_LOC - 1
 
       DO ia = ia_s, ia_e
@@ -712,7 +712,7 @@
         END DO
       END DO
 
-      CALL mp_sum(esr, intra_image_comm)
+      CALL mp_sum(esr, intra_bgrp_comm)
      
       DEALLOCATE(iatom)
       DEALLOCATE(rc)
@@ -739,7 +739,7 @@
       USE gvect,              ONLY: ngm
       USE gvect, ONLY: gstart, gg
       USE sic_module,         ONLY: sic_epsilon, sic_alpha
-      USE mp_global,          ONLY: intra_image_comm
+      USE mp_global,          ONLY: intra_bgrp_comm
       USE mp,                 ONLY: mp_sum
 
       IMPLICIT NONE
@@ -809,7 +809,7 @@
       self_ehte = DBLE(ehte) * omega * sic_epsilon
       vloc = vloc * sic_epsilon
 
-      CALL mp_sum( self_ehte, intra_image_comm )
+      CALL mp_sum( self_ehte, intra_bgrp_comm )
 
       IF( ALLOCATED( screen_coul ) ) DEALLOCATE( screen_coul )
 

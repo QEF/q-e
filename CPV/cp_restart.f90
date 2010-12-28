@@ -52,7 +52,7 @@ MODULE cp_restart
       USE control_flags,            ONLY : gamma_only, force_pairing, trhow, tksw, twfcollect
       USE io_files,                 ONLY : psfile, pseudo_dir, iunwfc, &
                                            nwordwfc, tmp_dir, diropn
-      USE mp_global,                ONLY : intra_image_comm, me_image, nproc_image
+      USE mp_global,                ONLY : intra_image_comm, me_image, nproc_image, intra_bgrp_comm
       USE printout_base,            ONLY : title
       USE grid_dimensions,          ONLY : nr1, nr2, nr3, nr1x, nr2x, nr3l
       USE smooth_grid_dimensions,   ONLY : nr1s, nr2s, nr3s
@@ -261,7 +261,7 @@ MODULE cp_restart
       !
       mill_g(:,ig_l2g(1:ngm)) = mill(:,1:ngm)
       !
-      CALL mp_sum( mill_g, intra_image_comm )
+      CALL mp_sum( mill_g, intra_bgrp_comm )
       !
       lsda = ( nspin == 2 )
       !
@@ -2186,7 +2186,7 @@ MODULE cp_restart
        USE control_flags,            ONLY : gamma_only
        USE gvect,       ONLY : ig_l2g, mill
        USE mp,                       ONLY : mp_sum
-       USE mp_global,                ONLY : intra_image_comm
+       USE mp_global,                ONLY : intra_bgrp_comm
        USE io_global,                ONLY : ionode
        !
        IMPLICIT NONE
@@ -2219,7 +2219,7 @@ MODULE cp_restart
           !
        END DO
        !
-       CALL mp_sum( itmp1, intra_image_comm )
+       CALL mp_sum( itmp1, intra_bgrp_comm )
        !
        ngg = 0
        !

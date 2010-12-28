@@ -115,8 +115,8 @@
       USE constants,          ONLY: pi, fpi
       USE mp,                 ONLY: mp_sum
       USE io_global,          ONLY: stdout, ionode
-      USE mp_global,          ONLY: intra_image_comm, nogrp, me_image, &
-                                    use_task_groups, ogrp_comm, nolist, my_image_id, nimage, inter_image_comm
+      USE mp_global,          ONLY: intra_bgrp_comm, nogrp, me_bgrp, &
+                                    use_task_groups, ogrp_comm, nolist, my_bgrp_id, nbgrp, inter_bgrp_comm
       USE funct,              ONLY: dft_is_meta
       USE cg_module,          ONLY: tcg
       USE cp_interfaces,      ONLY: stress_kin
@@ -290,7 +290,7 @@
             !
             DO i = 1, n, 2
                !
-               IF( icnt == my_image_id ) THEN
+               IF( icnt == my_bgrp_id ) THEN
                   !
                   CALL c2psi( psis, nrxxs, c( 1, i ), c( 1, i+1 ), ngw, 2 )
    
@@ -313,12 +313,12 @@
 
                END IF
                !
-               icnt = MOD( icnt + 1 , nimage )
+               icnt = MOD( icnt + 1 , nbgrp )
                !
             END DO
             !
-            IF( nimage > 1 ) THEN
-               call mp_sum( rhos, inter_image_comm )
+            IF( nbgrp > 1 ) THEN
+               call mp_sum( rhos, inter_bgrp_comm )
             END IF
             !
             DEALLOCATE( psis ) 
@@ -467,8 +467,8 @@
             END DO
          END IF
 
-         CALL mp_sum( rsumg( 1:nspin ), intra_image_comm )
-         CALL mp_sum( rsumr( 1:nspin ), intra_image_comm )
+         CALL mp_sum( rsumg( 1:nspin ), intra_bgrp_comm )
+         CALL mp_sum( rsumr( 1:nspin ), intra_bgrp_comm )
 
          RETURN
       END SUBROUTINE
@@ -491,7 +491,7 @@
 
          ALLOCATE( psis( dffts%tg_nnr * nogrp ) ) 
          !
-         ALLOCATE( tmp_rhos ( dffts%nr1x*dffts%nr2x*dffts%tg_npp( me_image + 1 ), nspin ) )
+         ALLOCATE( tmp_rhos ( dffts%nr1x*dffts%nr2x*dffts%tg_npp( me_bgrp + 1 ), nspin ) )
          !
          tmp_rhos = 0_DP
 
@@ -499,7 +499,7 @@
 
          do i = 1, n, 2*nogrp
 
-            IF( icnt == my_image_id ) THEN 
+            IF( icnt == my_bgrp_id ) THEN 
             !
             !  Initialize wave-functions in Fourier space (to be FFTed)
             !  The size of psis is nnr: which is equal to the total number
@@ -565,7 +565,7 @@
             ! Compute the proper factor for each band
             !
             DO ii = 1, nogrp
-               IF( nolist( ii ) == me_image ) EXIT
+               IF( nolist( ii ) == me_bgrp ) EXIT
             END DO
             !
             ! Remember two bands are packed in a single array :
@@ -606,24 +606,24 @@
             !code this should be equal to the total number of planes
             !
 
-            ir =  dffts%nr1x*dffts%nr2x*dffts%tg_npp( me_image + 1 ) 
+            ir =  dffts%nr1x*dffts%nr2x*dffts%tg_npp( me_bgrp + 1 ) 
             IF( ir > SIZE( psis ) ) &
                CALL errore( ' rhoofr ', ' psis size too small ', ir )
 
 !$omp parallel do default(shared)
-            do ir = 1, dffts%nr1x*dffts%nr2x*dffts%tg_npp( me_image + 1 )
+            do ir = 1, dffts%nr1x*dffts%nr2x*dffts%tg_npp( me_bgrp + 1 )
                tmp_rhos(ir,iss1) = tmp_rhos(ir,iss1) + sa1*( real(psis(ir)))**2
                tmp_rhos(ir,iss2) = tmp_rhos(ir,iss2) + sa2*(aimag(psis(ir)))**2
             end do
             !
             END IF
             !
-            icnt = MOD( icnt + 1, nimage )
+            icnt = MOD( icnt + 1, nbgrp )
             !
          END DO
 
-         IF( nimage > 1 ) THEN
-            CALL mp_sum( tmp_rhos, inter_image_comm )
+         IF( nbgrp > 1 ) THEN
+            CALL mp_sum( tmp_rhos, inter_bgrp_comm )
          END IF
 
          IF ( nogrp > 1 ) THEN
@@ -637,12 +637,12 @@
          !
          from = 1
          DO ii = 1, nogrp
-            IF ( nolist( ii ) == me_image ) EXIT !Exit the loop
+            IF ( nolist( ii ) == me_bgrp ) EXIT !Exit the loop
             from = from +  dffts%nr1x*dffts%nr2x*dffts%npp( nolist( ii ) + 1 )! From where to copy initially
          ENDDO
          !
          DO ir = 1, nspin
-            CALL dcopy( dffts%nr1x*dffts%nr2x*dffts%npp(me_image+1), tmp_rhos(from,ir), 1, rhos(1,ir), 1)
+            CALL dcopy( dffts%nr1x*dffts%nr2x*dffts%npp(me_bgrp+1), tmp_rhos(from,ir), 1, rhos(1,ir), 1)
          ENDDO
 
          DEALLOCATE( tmp_rhos )
@@ -746,7 +746,7 @@
 !
       USE kinds,     ONLY: DP
       USE mp,        ONLY: mp_sum
-      USE mp_global, ONLY: intra_image_comm
+      USE mp_global, ONLY: intra_bgrp_comm
 
       IMPLICIT NONE
 
@@ -769,8 +769,8 @@
             rmin = MIN( rmin, roe )
          END DO
       END DO
-      CALL mp_sum( rsum, intra_image_comm )
-      CALL mp_sum( rnegsum, intra_image_comm )
+      CALL mp_sum( rsum, intra_bgrp_comm )
+      CALL mp_sum( rnegsum, intra_bgrp_comm )
       RETURN
    END SUBROUTINE checkrho_x
 
@@ -1076,7 +1076,7 @@ SUBROUTINE rhov(irb,eigrb,rhovan,rhog,rhor)
       USE kinds,                    ONLY: dp
       USE ions_base,                ONLY: nat, na, nsp
       USE io_global,                ONLY: stdout
-      USE mp_global,                ONLY: intra_image_comm
+      USE mp_global,                ONLY: intra_bgrp_comm
       USE mp,                       ONLY: mp_sum
       USE cvan,                     ONLY: nvb
       USE uspp_param,               ONLY: nh, nhm
@@ -1272,7 +1272,7 @@ SUBROUTINE rhov(irb,eigrb,rhovan,rhog,rhor)
          IF(iprsta.GT.2) THEN
             ca = SUM(v)
 
-            CALL mp_sum( ca, intra_image_comm )
+            CALL mp_sum( ca, intra_bgrp_comm )
 
             WRITE( stdout,'(a,2f12.8)')                                  &
      &           ' rhov: int  n_v(r)  dr = ',omega*ca/(nr1*nr2*nr3)
@@ -1370,7 +1370,7 @@ SUBROUTINE rhov(irb,eigrb,rhovan,rhog,rhor)
 !
          IF(iprsta.GT.2) THEN
             ca = SUM(v)
-            CALL mp_sum( ca, intra_image_comm )
+            CALL mp_sum( ca, intra_bgrp_comm )
             WRITE( stdout,'(a,2f12.8)') 'rhov:in n_v  ',omega*ca/(nr1*nr2*nr3)
          ENDIF
 !
@@ -1467,7 +1467,7 @@ END SUBROUTINE rhov
       use parallel_include
       use grid_dimensions, only : nr1x, nr2x, nr3x, nrxx
       use gvecw ,          only : ngw
-      USE mp_global,       ONLY : nproc_image, intra_image_comm
+      USE mp_global,       ONLY : nproc_bgrp, intra_bgrp_comm
       USE io_global,       ONLY : ionode, ionode_id
       USE fft_base,        ONLY : dfftp
       USE mp,              ONLY : mp_barrier, mp_gather
@@ -1500,13 +1500,13 @@ END SUBROUTINE rhov
          !  
       END IF
       !
-      COLLECT_CHARGE: IF( nproc_image > 1 ) THEN
+      COLLECT_CHARGE: IF( nproc_bgrp > 1 ) THEN
          !
-         ALLOCATE( displs( nproc_image ), recvcount( nproc_image ) )
+         ALLOCATE( displs( nproc_bgrp ), recvcount( nproc_bgrp ) )
          !
          if (ionode) allocate(rhodist(nr1x*nr2x*nr3x))
          !
-         do proc=1,nproc_image
+         do proc=1,nproc_bgrp
             recvcount(proc) =  dfftp%nnp  * ( dfftp%npp(proc) )
             if (proc.eq.1) then
                displs(proc)=0
@@ -1520,7 +1520,7 @@ END SUBROUTINE rhov
             ! gather the charge density on the first node
             !
             call mp_barrier()
-            call mp_gather( rhor(:,is), rhodist, recvcount, displs, ionode_id, intra_image_comm )
+            call mp_gather( rhor(:,is), rhodist, recvcount, displs, ionode_id, intra_bgrp_comm )
             !
             ! write the charge density to unit "rhounit" from first node only
             !

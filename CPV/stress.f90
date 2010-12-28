@@ -11,7 +11,7 @@
 !------------------------------------------------------------------------------!
 
       USE kinds,         ONLY: DP
-      USE mp_global,     ONLY: intra_image_comm
+      USE mp_global,     ONLY: intra_bgrp_comm
       USE mp,            ONLY: mp_sum
       USE stress_param,  ONLY: alpha, beta
 
@@ -31,7 +31,7 @@
 
       de3x3 = MATMUL( tmp(:,:), TRANSPOSE( ainv(:,:) ) )
 
-      CALL mp_sum( de3x3, intra_image_comm )
+      CALL mp_sum( de3x3, intra_bgrp_comm )
 
 
       RETURN
@@ -266,7 +266,7 @@
 
       use kinds,              only: DP
       use ions_base,          only: nsp, rcmax
-      use mp_global,          ONLY: me_image, root_image
+      use mp_global,          ONLY: me_bgrp, root_bgrp
       USE constants,          ONLY: fpi
       USE cell_base,          ONLY: tpiba2
       USE gvect, ONLY: gstart
@@ -351,7 +351,7 @@
 
       use kinds,              only: DP
       use ions_base,          only: nsp, rcmax
-      use mp_global,          ONLY: me_image, root_image
+      use mp_global,          ONLY: me_bgrp, root_bgrp
       USE constants,          ONLY: fpi
       USE cell_base,          ONLY: tpiba2
       USE gvect, ONLY: gstart, gg
@@ -405,7 +405,7 @@
 
       ! term:  E_h * h^t
 
-      if ( me_image == root_image ) then
+      if ( me_bgrp == root_bgrp ) then
         deht = wz * fpi * omega * DBLE(dehc) + ehr * dalbe
       else
         deht = wz * fpi * omega * DBLE(dehc)
@@ -424,7 +424,7 @@
 
         USE kinds,        ONLY: DP
         USE io_global,    ONLY: stdout
-        USE mp_global,    ONLY: intra_image_comm
+        USE mp_global,    ONLY: intra_bgrp_comm
         USE mp,           ONLY: mp_sum
         USE stress_param, ONLY: alpha, beta
 
@@ -442,7 +442,7 @@
           detmp(alpha(k),beta(k)) = detot(k)
           detmp(beta(k),alpha(k)) = detmp(alpha(k),beta(k))
         END DO
-        CALL mp_sum( detmp, intra_image_comm )
+        CALL mp_sum( detmp, intra_bgrp_comm )
         detmp = MATMUL( detmp(:,:), htm1(:,:) )
         WRITE( stdout,*) "derivative of e(tot)"
         WRITE( stdout,5555) ((detmp(i,j),j=1,3),i=1,3)
@@ -451,7 +451,7 @@
           detmp(alpha(k),beta(k)) = dekin(k)
           detmp(beta(k),alpha(k)) = detmp(alpha(k),beta(k))
         END DO
-        CALL mp_sum( detmp, intra_image_comm )
+        CALL mp_sum( detmp, intra_bgrp_comm )
         detmp = MATMUL( detmp(:,:), htm1(:,:) )
         WRITE( stdout,*) "derivative of e(kin)"
         WRITE( stdout,5555) ((detmp(i,j),j=1,3),i=1,3)
@@ -460,7 +460,7 @@
           detmp(alpha(k),beta(k)) = deht(k) + desr(k)
           detmp(beta(k),alpha(k)) = detmp(alpha(k),beta(k))
         END DO
-        CALL mp_sum( detmp, intra_image_comm )
+        CALL mp_sum( detmp, intra_bgrp_comm )
         detmp = MATMUL( detmp(:,:), htm1(:,:) )
         WRITE( stdout,*) "derivative of e(electrostatic)"
         WRITE( stdout,5555) ((detmp(i,j),j=1,3),i=1,3)
@@ -469,7 +469,7 @@
           detmp(alpha(k),beta(k)) = deht(k)
           detmp(beta(k),alpha(k)) = detmp(alpha(k),beta(k))
         END DO
-        CALL mp_sum( detmp, intra_image_comm )
+        CALL mp_sum( detmp, intra_bgrp_comm )
         detmp = MATMUL( detmp(:,:), htm1(:,:) )
         WRITE( stdout,*) "derivative of e(h)"
         WRITE( stdout,5555) ((detmp(i,j),j=1,3),i=1,3)
@@ -478,7 +478,7 @@
           detmp(alpha(k),beta(k)) = desr(k)
           detmp(beta(k),alpha(k)) = detmp(alpha(k),beta(k))
         END DO
-        CALL mp_sum( detmp, intra_image_comm )
+        CALL mp_sum( detmp, intra_bgrp_comm )
         detmp = MATMUL( detmp(:,:), htm1(:,:) )
         WRITE( stdout,*) "derivative of e(sr)"
         WRITE( stdout,5555) ((detmp(i,j),j=1,3),i=1,3)
@@ -487,7 +487,7 @@
           detmp(alpha(k),beta(k)) = deps(k)
           detmp(beta(k),alpha(k)) = detmp(alpha(k),beta(k))
         END DO
-        CALL mp_sum( detmp, intra_image_comm )
+        CALL mp_sum( detmp, intra_bgrp_comm )
         detmp = MATMUL( detmp(:,:), htm1(:,:) )
         WRITE( stdout,*) "derivative of e(ps)"
         WRITE( stdout,5555) ((detmp(i,j),j=1,3),i=1,3)
@@ -496,7 +496,7 @@
           detmp(alpha(k),beta(k)) = denl(k)
           detmp(beta(k),alpha(k)) = detmp(alpha(k),beta(k))
         END DO
-        CALL mp_sum( detmp, intra_image_comm )
+        CALL mp_sum( detmp, intra_bgrp_comm )
         detmp = MATMUL( detmp(:,:), htm1(:,:) )
         WRITE( stdout,*) "derivative of e(nl)"
         WRITE( stdout,5555) ((detmp(i,j),j=1,3),i=1,3)
@@ -505,7 +505,7 @@
           detmp(alpha(k),beta(k)) = dexc(k)
           detmp(beta(k),alpha(k)) = detmp(alpha(k),beta(k))
         END DO
-        CALL mp_sum( detmp, intra_image_comm )
+        CALL mp_sum( detmp, intra_bgrp_comm )
         detmp = MATMUL( detmp(:,:), htm1(:,:) )
         WRITE( stdout,*) "derivative of e(xc)"
         WRITE( stdout,5555) ((detmp(i,j),j=1,3),i=1,3)

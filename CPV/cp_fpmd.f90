@@ -342,7 +342,7 @@ end subroutine ggenb
       USE fft_base,           ONLY: dfftp, dffts, fft_dlay_descriptor
       use mp,                 ONLY: mp_sum, mp_max
       use io_global,          only: ionode
-      use mp_global,          only: intra_image_comm
+      use mp_global,          only: intra_bgrp_comm
       use constants,          only: eps8
       use control_flags,      only: iprsta
       !
@@ -370,8 +370,8 @@ end subroutine ggenb
       ngm_g= ngm
       ngw_g= ngw
 
-      CALL mp_sum( ngm_g, intra_image_comm )
-      CALL mp_sum( ngw_g, intra_image_comm )
+      CALL mp_sum( ngm_g, intra_bgrp_comm )
+      CALL mp_sum( ngw_g, intra_bgrp_comm )
 
       !
       !     Temporary global and replicated arrays, used for sorting
@@ -500,7 +500,7 @@ end subroutine ggenb
       end if
 
       ichk = gstart
-      CALL mp_max( ichk, intra_image_comm )
+      CALL mp_max( ichk, intra_bgrp_comm )
       IF( ichk /= 2 ) &
         CALL errore( ' ggencp ', ' inconsistent value for gstart ', ichk )
 !
@@ -1653,7 +1653,7 @@ SUBROUTINE gmeshinfo( )
    !   Print out the number of g vectors for the different mesh
    !
    USE kinds,     ONLY: DP
-   USE mp_global, ONLY: nproc_image, intra_image_comm
+   USE mp_global, ONLY: nproc_bgrp, intra_bgrp_comm
    USE io_global, ONLY: ionode, ionode_id, stdout
    USE mp,        ONLY: mp_max, mp_gather
    use gvecb,     only: ngb
@@ -1663,7 +1663,7 @@ SUBROUTINE gmeshinfo( )
 
    IMPLICIT NONE
 
-   INTEGER :: ip, ng_snd(3), ng_rcv( 3, nproc_image )
+   INTEGER :: ip, ng_snd(3), ng_rcv( 3, nproc_bgrp )
    INTEGER :: ierr, min_val, max_val, i
    REAL(DP) :: avg_val
 
@@ -1676,12 +1676,12 @@ SUBROUTINE gmeshinfo( )
    ng_snd(1) = ngm_g
    ng_snd(2) = ngm
    ng_snd(3) = ngmx
-   CALL mp_gather(ng_snd, ng_rcv, ionode_id, intra_image_comm)
+   CALL mp_gather(ng_snd, ng_rcv, ionode_id, intra_bgrp_comm)
    !
    IF(ionode) THEN
       min_val = MINVAL( ng_rcv(2,:) )
       max_val = MAXVAL( ng_rcv(2,:) )
-      avg_val = REAL(SUM( ng_rcv(2,:) ))/nproc_image
+      avg_val = REAL(SUM( ng_rcv(2,:) ))/nproc_bgrp
       WRITE( stdout,1000)
       WRITE( stdout,1011) ng_snd(1), min_val, max_val, avg_val
    END IF
@@ -1689,7 +1689,7 @@ SUBROUTINE gmeshinfo( )
    ng_snd(1) = ngms_g
    ng_snd(2) = ngms
    ng_snd(3) = ngsx
-   CALL mp_gather(ng_snd, ng_rcv, ionode_id, intra_image_comm)
+   CALL mp_gather(ng_snd, ng_rcv, ionode_id, intra_bgrp_comm)
    !
    ierr = 0
    !
@@ -1697,12 +1697,12 @@ SUBROUTINE gmeshinfo( )
       WRITE( stdout,1001)
       min_val = MINVAL( ng_rcv(2,:) )
       max_val = MAXVAL( ng_rcv(2,:) )
-      avg_val = REAL(SUM( ng_rcv(2,:) ))/nproc_image
+      avg_val = REAL(SUM( ng_rcv(2,:) ))/nproc_bgrp
       WRITE( stdout,1011) ng_snd(1), min_val, max_val, avg_val
       IF( min_val < 1 ) ierr = ip
    END IF
    !
-   CALL mp_max( ierr, intra_image_comm )
+   CALL mp_max( ierr, intra_bgrp_comm )
    !
    IF( ierr > 0 ) &
       CALL errore( " gmeshinfo ", " Wow! some processors have no G-vectors ", ierr )
@@ -1710,18 +1710,18 @@ SUBROUTINE gmeshinfo( )
    ng_snd(1) = ngw_g
    ng_snd(2) = ngw
    ng_snd(3) = ngwx
-   CALL mp_gather(ng_snd, ng_rcv, ionode_id, intra_image_comm)
+   CALL mp_gather(ng_snd, ng_rcv, ionode_id, intra_bgrp_comm)
    !
    IF(ionode) THEN
       WRITE( stdout,1002)
       min_val = MINVAL( ng_rcv(2,:) )
       max_val = MAXVAL( ng_rcv(2,:) )
-      avg_val = REAL(SUM( ng_rcv(2,:) ))/nproc_image
+      avg_val = REAL(SUM( ng_rcv(2,:) ))/nproc_bgrp
       WRITE( stdout,1011) ng_snd(1), min_val, max_val, avg_val
       IF( min_val < 1 ) ierr = ip
    END IF
    !
-   CALL mp_max( ierr, intra_image_comm )
+   CALL mp_max( ierr, intra_bgrp_comm )
    !
    IF( ierr > 0 ) &
       CALL errore( " gmeshinfo ", " Wow! some processors have no G-vectors ", ierr )

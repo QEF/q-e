@@ -240,7 +240,7 @@ subroutine pc2(a,beca,b,becb)
       use kinds, only: dp 
       use ions_base, only: na, nsp
       use io_global, only: stdout
-      use mp_global, only: intra_image_comm, mpime
+      use mp_global, only: intra_bgrp_comm
       use cvan 
       use gvecw, only: ngw
       use constants, only: pi, fpi
@@ -290,7 +290,7 @@ subroutine pc2(a,beca,b,becb)
             enddo
          enddo
          deallocate(zbectmp)
-         call mp_sum( bectmp(:,:), intra_image_comm)
+         call mp_sum( bectmp(:,:), intra_bgrp_comm)
          if(nvb >= 0) then
 
             nl_max=0
@@ -316,9 +316,9 @@ subroutine pc2(a,beca,b,becb)
                call dgemm('T','N',nss,nss,nl_max,1.d0,beca(:,istart),nhsa,qqb_tmp,nl_max,1.d0,bectmp,nss)
             else
                call para_dgemm &
-& ('N','N',nl_max,nss,nl_max,1.d0,qq_tmp,nl_max,becb(:,istart),nhsa,0.d0,qqb_tmp,nl_max, intra_image_comm)
+& ('N','N',nl_max,nss,nl_max,1.d0,qq_tmp,nl_max,becb(:,istart),nhsa,0.d0,qqb_tmp,nl_max, intra_bgrp_comm)
                call para_dgemm &
-&('T','N',nss,nss,nl_max,1.d0,beca(:,istart),nhsa,qqb_tmp,nl_max,1.d0,bectmp,nss, intra_image_comm)
+&('T','N',nss,nss,nl_max,1.d0,beca(:,istart),nhsa,qqb_tmp,nl_max,1.d0,bectmp,nss, intra_bgrp_comm)
             endif
             deallocate(qq_tmp,qqb_tmp)
          endif
@@ -350,7 +350,7 @@ subroutine pc2(a,beca,b,becb)
       use kinds
       use ions_base, only: na, nsp
       use io_global, only: stdout
-      use mp_global, only: intra_image_comm
+      use mp_global, only: intra_bgrp_comm
       use cvan
       use gvecw, only: ngw
       use constants, only: pi, fpi
@@ -387,7 +387,7 @@ subroutine pc2(a,beca,b,becb)
          enddo
          
           
-         call mp_sum( scar, intra_image_comm )
+         call mp_sum( scar, intra_bgrp_comm )
 
 
          do i=1,n
@@ -414,7 +414,7 @@ subroutine pc2(a,beca,b,becb)
       use kinds, only: dp
       use ions_base, only: na, nsp
       use io_global, only: stdout
-      use mp_global, only: intra_image_comm
+      use mp_global, only: intra_bgrp_comm
       use cvan
       use gvecw, only: ngw
       use constants, only: pi, fpi
@@ -498,7 +498,7 @@ subroutine pc2(a,beca,b,becb)
             enddo
          enddo
       enddo
-      call mp_sum( m_minus1, intra_image_comm )
+      call mp_sum( m_minus1, intra_bgrp_comm )
 
 !calculate -(1+QB)**(-1) * Q
       CALL dgemm('N','N',nhsavb,nhsavb,nhsavb,1.0d0,q_matrix,nhsavb,m_minus1,nhsavb,0.0d0,c_matrix,nhsavb)
@@ -513,7 +513,7 @@ subroutine pc2(a,beca,b,becb)
         call dgetri(nhsavb,c_matrix,nhsavb,ipiv,work,lwork,info)
         if(info .ne. 0) write(stdout,*) 'set_k_minus1 Problem with dgetri :', info
       endif
-      call mp_bcast( c_matrix, ionode_id, intra_image_comm )
+      call mp_bcast( c_matrix, ionode_id, intra_bgrp_comm )
 
 
       CALL dgemm('N','N',nhsavb,nhsavb,nhsavb,-1.0d0,c_matrix,nhsavb,q_matrix,nhsavb,0.0d0,m_minus1,nhsavb)
@@ -539,7 +539,7 @@ subroutine pc2(a,beca,b,becb)
       use kinds, only: dp
       use ions_base, only: na, nsp
       use io_global, only: stdout
-      use mp_global, only: intra_image_comm
+      use mp_global, only: intra_bgrp_comm
       use cvan
       use uspp_param, only: nh
       use uspp, only :nhsa=>nkb, nhsavb=>nkbus, qq
@@ -586,7 +586,7 @@ subroutine pc2(a,beca,b,becb)
                   enddo
                enddo
             enddo
-            call mp_sum( beck, intra_image_comm )
+            call mp_sum( beck, intra_bgrp_comm )
          endif
 !
 !
@@ -599,7 +599,7 @@ subroutine pc2(a,beca,b,becb)
                     beck, nhsa, 0.0d0, qtemp,nhsavb )
       else
          call para_dgemm( 'N', 'N', nhsavb, n, nhsavb, 1.0d0, m_minus1,nhsavb ,    &
-                    beck, nhsa, 0.0d0, qtemp,nhsavb,intra_image_comm )
+                    beck, nhsa, 0.0d0, qtemp,nhsavb,intra_bgrp_comm )
       endif
 
 !NB  nhsavb is the total number of US projectors
@@ -666,7 +666,7 @@ subroutine pc2(a,beca,b,becb)
       USE gvect, ONLY: gstart
       USE gvecw,              ONLY: ggp
       USE mp,                 ONLY: mp_sum
-      USE mp_global,          ONLY: intra_image_comm
+      USE mp_global,          ONLY: intra_bgrp_comm
       USE cell_base,          ONLY: tpiba2
                                                                                                                              
       IMPLICIT NONE
@@ -691,7 +691,7 @@ subroutine pc2(a,beca,b,becb)
       END DO
 
 
-      CALL mp_sum( ene_ave(1:n), intra_image_comm )
+      CALL mp_sum( ene_ave(1:n), intra_bgrp_comm )
       ene_ave(:)=ene_ave(:)*tpiba2
                                                                                                                              
       RETURN
@@ -715,7 +715,7 @@ subroutine pc2(a,beca,b,becb)
       use kinds, only: dp
       use ions_base, only: na, nsp
       use io_global, only: stdout
-      use mp_global, only: intra_image_comm
+      use mp_global, only: intra_bgrp_comm
       use cvan
       use uspp_param, only: nh
       use uspp, only :nhsa=>nkb, nhsavb=>nkbus, qq
@@ -766,7 +766,7 @@ subroutine pc2(a,beca,b,becb)
                   enddo
                enddo
             enddo
-            call mp_sum( beck, intra_image_comm )
+            call mp_sum( beck, intra_bgrp_comm )
          endif
 !
 !

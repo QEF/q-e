@@ -143,7 +143,7 @@
       USE kinds,         ONLY: DP
       USE mp,            ONLY: mp_max
       USE io_global,     ONLY: stdout
-      USE mp_global,     ONLY: intra_image_comm
+      USE mp_global,     ONLY: intra_bgrp_comm
       USE cell_base,     ONLY: tpiba
       USE control_flags, ONLY: iprsta
       !
@@ -156,7 +156,7 @@
       chkpstab_x = .FALSE.
       !
       xgmax = tpiba * SQRT( MAXVAL( hg ) )
-      CALL mp_max( xgmax, intra_image_comm )
+      CALL mp_max( xgmax, intra_bgrp_comm )
       !
       IF( xgmax > xgtabmax ) THEN
          chkpstab_x = .TRUE.
@@ -176,7 +176,7 @@
       USE kinds,              ONLY : DP
       USE cell_base,          ONLY : tpiba, tpiba2
       USE mp,                 ONLY : mp_max
-      USE mp_global,          ONLY : intra_image_comm
+      USE mp_global,          ONLY : intra_bgrp_comm
       USE gvect, ONLY : gg
       USE pseudopotential,    ONLY : xgtab
       USE betax,              ONLY : mmx
@@ -193,7 +193,7 @@
       !
       xgmin = 0.0d0
       xgmax = tpiba * SQRT( MAXVAL( gg ) )
-      CALL mp_max(xgmax, intra_image_comm)
+      CALL mp_max(xgmax, intra_bgrp_comm)
       xgmax = xgmax + (xgmax-xgmin)
       dxg   = (xgmax - xgmin) / DBLE(nval-1)
       !
@@ -882,7 +882,7 @@
       USE kinds,              ONLY : DP
       USE betax,              ONLY : refg, mmx
       USE mp,                 ONLY : mp_max
-      USE mp_global,          ONLY : intra_image_comm
+      USE mp_global,          ONLY : intra_bgrp_comm
       USE gvecw,              ONLY : ngw
       USE cell_base,          ONLY : tpiba2
       USE small_box,          ONLY : tpibab
@@ -908,7 +908,7 @@
          !
       END IF
       !
-      CALL mp_max( gmax, intra_image_comm )
+      CALL mp_max( gmax, intra_bgrp_comm )
       !
       check_tables_x = .FALSE.
       IF( ( INT( gmax ) + 2 ) > mmx ) check_tables_x = .TRUE.
