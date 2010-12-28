@@ -84,7 +84,7 @@ SUBROUTINE iosys(xmlinput,attr)
   !
   USE force_mod,     ONLY : lforce, lstres, force
   !
-  USE gvecs,       ONLY : dual
+  USE gvecs,         ONLY : dual
   USE gvect,         ONLY : ecutrho_ => ecutrho
   !
   USE grid_dimensions, ONLY : nr1_ => nr1, &
@@ -782,11 +782,11 @@ SUBROUTINE iosys(xmlinput,attr)
   IF ( ecutrho <= 0.D0 ) THEN
      !
      dual = 4.D0
+     ecutrho = dual*ecutwfc
      !
   ELSE
      !
      dual = ecutrho / ecutwfc
-     !
      IF ( dual <= 1.D0 ) &
         CALL errore( 'iosys', 'invalid dual?', 1 )
      !
