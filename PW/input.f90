@@ -602,7 +602,7 @@ SUBROUTINE iosys(xmlinput,attr)
   END SELECT
   !
   IF ( noncolin .and. lda_plus_u ) CALL errore('iosys', &
-       'LDA+U not implemented with noncollinear magnetization')
+       'LDA+U not implemented with noncollinear magnetization', 1)
   !
   two_fermi_energies = ( tot_magnetization /= -1._DP)
   IF ( two_fermi_energies .and. tot_magnetization < 0._DP) &

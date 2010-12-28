@@ -44,7 +44,8 @@ SUBROUTINE setup()
   USE basis,              ONLY : starting_pot, natomwfc
   USE gvect,              ONLY : gcutm
   USE grid_dimensions,    ONLY : nr1, nr2, nr3
-  USE gvecs,            ONLY : doublegrid, gcutms, dual
+  USE grid_subroutines,   ONLY : realspace_grids_init
+  USE gvecs,              ONLY : doublegrid, gcutms, dual
   USE klist,              ONLY : xk, wk, nks, nelec, degauss, lgauss, &
                                  lxkcry, nkstot, &
                                  nelup, neldw, two_fermi_energies, &
@@ -431,7 +432,8 @@ SUBROUTINE setup()
   !
   ! ... calculate dimensions of the FFT grid
   !
-  CALL set_fft_dim()
+  CALL realspace_grids_init (at, bg(1,1), bg(1,2), bg(1,3), gcutm, gcutms )
+  !
 ! DCC
 !  IF( do_coarse ) CALL set_fft_dim_coarse()
 !  IF( do_mltgrid ) CALL set_mltgrid_dim()

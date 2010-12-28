@@ -171,7 +171,6 @@ save_in_ions.o \
 scale_h.o \
 scf_mod.o \
 seqopn.o \
-set_fft_dim.o \
 set_hubbard_l.o \
 set_kplusq.o \
 set_kup_and_kdw.o \
