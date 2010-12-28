@@ -232,7 +232,7 @@
 
 !  BEGIN manual
 
-      SUBROUTINE converg_base_gamma(gzero, cgrad, gemax, cnorm)
+      SUBROUTINE converg_base_gamma(gzero, cgrad, gemax, cnorm, comm)
 
 !  this routine checks for convergence, by computing the norm of the
 !  gradients of wavefunctions
@@ -241,13 +241,13 @@
 !  END manual
 
         USE mp, ONLY: mp_sum, mp_max
-        USE mp_global, ONLY: intra_image_comm
 
         IMPLICIT NONE
 
 ! ...   declare subroutine arguments
         COMPLEX(DP) :: cgrad(:,:,:)
         LOGICAL, INTENT(IN) :: gzero
+        INTEGER, INTENT(IN) :: comm
         REAL(DP), INTENT(OUT) :: gemax, cnorm
 
 ! ...   declare other variables
@@ -268,12 +268,12 @@
           IF ( gemax_l < ABS( cgrad(imx, i, 1) ) ) THEN
             gemax_l = ABS ( cgrad(imx, i, 1) )
           END IF
-          cnorm = cnorm + dotp(gzero, cgrad(:,i,1), cgrad(:,i,1))
+          cnorm = cnorm + dotp(gzero, cgrad(:,i,1), cgrad(:,i,1), comm)
         END DO
 
-        CALL mp_max(gemax_l, intra_image_comm)
-        CALL mp_sum(nb, intra_image_comm)
-        CALL mp_sum(ngw, intra_image_comm)
+        CALL mp_max(gemax_l, comm)
+        CALL mp_sum(nb, comm)
+        CALL mp_sum(ngw, comm)
 
         gemax = gemax_l
         cnorm = SQRT( cnorm / (nb * ngw) )
@@ -285,7 +285,7 @@
 !  ----------------------------------------------
 !  BEGIN manual
 
-      SUBROUTINE converg_base_kp(weight, cgrad, gemax, cnorm)
+      SUBROUTINE converg_base_kp(weight, cgrad, gemax, cnorm, comm)
 
 
 !  this routine checks for convergence, by computing the norm of the
@@ -295,7 +295,6 @@
 !  END manual
 
         USE mp, ONLY: mp_sum, mp_max
-        USE mp_global, ONLY: intra_image_comm
 
         IMPLICIT NONE
 
@@ -303,6 +302,7 @@
         COMPLEX(DP) :: cgrad(:,:,:)
         REAL(DP), INTENT(IN)  :: weight(:)
         REAL(DP), INTENT(OUT) :: gemax, cnorm
+        INTEGER, INTENT(IN) :: comm
 
 ! ...   declare other variables
         INTEGER    :: nb, ngw, nk, iabs, IZAMAX, i, ik
@@ -332,10 +332,10 @@
           cnorm = cnorm + cnormk
         END DO
 
-        CALL mp_max(gemax_l, intra_image_comm)
-        CALL mp_sum(cnorm, intra_image_comm)
-        CALL mp_sum(nb, intra_image_comm)
-        CALL mp_sum(ngw, intra_image_comm)
+        CALL mp_max(gemax_l, comm)
+        CALL mp_sum(cnorm, comm)
+        CALL mp_sum(nb, comm)
+        CALL mp_sum(ngw, comm)
 
         gemax = gemax_l
         cnorm = SQRT( cnorm / ( nb * ngw ) )
@@ -376,7 +376,7 @@
 !==----------------------------------------------==!
 !==----------------------------------------------==!
 
-          REAL(DP) FUNCTION dotp_gamma(gzero, ng, a, b)
+          REAL(DP) FUNCTION dotp_gamma(gzero, ng, a, b, comm)
 
 ! ... Compute the dot product between distributed complex vectors "a" and "b"
 ! ... representing HALF-SPACE complex wave functions, with the G-point symmetry
@@ -386,13 +386,13 @@
 ! ... dotp = < a | b >
 !
 
-            USE mp_global, ONLY: intra_image_comm
             USE mp, ONLY: mp_sum
 
             REAL(DP) :: ddot
             REAL(DP) :: dot_tmp
             INTEGER, INTENT(IN) :: ng
             LOGICAL, INTENT(IN) :: gzero
+            INTEGER, INTENT(IN) :: comm
 
             COMPLEX(DP) :: a(:), b(:)
             INTEGER :: n
@@ -414,7 +414,7 @@
               dot_tmp = 2.0_DP*dot_tmp
             END IF 
 
-            CALL mp_sum( dot_tmp, intra_image_comm )
+            CALL mp_sum( dot_tmp, comm )
             dotp_gamma = dot_tmp
 
             RETURN
@@ -423,17 +423,17 @@
 !==----------------------------------------------==!
 !==----------------------------------------------==!
 
-          REAL(DP) FUNCTION dotp_gamma_n(gzero, a, b)
+          REAL(DP) FUNCTION dotp_gamma_n(gzero, a, b, comm)
 
 ! ...  Compute the dot product between distributed complex vectors "a" and "b"
 ! ...  representing HALF-SPACE complex wave functions, with the G-point symmetry
 ! ...  a( -G ) = CONJG( a( G ) ). Only half of the values plus G=0 are really
 ! ...  stored in the array.
 
-            USE mp_global, ONLY: intra_image_comm
             USE mp, ONLY: mp_sum
 
             LOGICAL, INTENT(IN) :: gzero
+            INTEGER, INTENT(IN) :: comm
 
             COMPLEX(DP) :: a(:), b(:)
             INTEGER :: n
@@ -443,7 +443,7 @@
             IF ( n < 1 ) &
               CALL errore( ' dotp_gamma_n ', ' wrong dimension ', 1 )
 
-            dotp_gamma_n = dotp_gamma(gzero, n, a, b)
+            dotp_gamma_n = dotp_gamma(gzero, n, a, b, comm)
 
             RETURN
           END FUNCTION 
@@ -452,17 +452,17 @@
 !==----------------------------------------------==!
 !==----------------------------------------------==!
 
-          COMPLEX(DP) FUNCTION dotp_kp(ng, a, b)
+          COMPLEX(DP) FUNCTION dotp_kp(ng, a, b, comm)
 
 ! ...  Compute the dot product between distributed complex vectors "a" and "b"
 ! ...  representing FULL-SPACE complex wave functions 
 
-            USE mp_global, ONLY: intra_image_comm
             USE mp, ONLY: mp_sum
 
             COMPLEX(DP) :: zdotc
             INTEGER, INTENT(IN) :: ng
             COMPLEX(DP) :: a(:),b(:)
+            INTEGER, INTENT(IN) :: comm
 
             COMPLEX(DP) :: dot_tmp
             INTEGER      :: n
@@ -475,7 +475,7 @@
 
             dot_tmp = zdotc(ng, a(1), 1, b(1), 1)
 
-            CALL mp_sum(dot_tmp, intra_image_comm)
+            CALL mp_sum(dot_tmp, comm)
             dotp_kp = dot_tmp
 
             RETURN
@@ -484,16 +484,16 @@
 !==----------------------------------------------==!
 !==----------------------------------------------==!
 
-          COMPLEX(DP) FUNCTION dotp_kp_n(a, b)
+          COMPLEX(DP) FUNCTION dotp_kp_n(a, b, comm)
 
 ! ...  Compute the dot product between distributed complex vectors "a" and "b"
 ! ...  representing FULL-SPACE complex wave functions 
 
-            USE mp_global, ONLY: intra_image_comm
             USE mp, ONLY: mp_sum
 
             COMPLEX(DP) zdotc
             COMPLEX(DP), INTENT(IN) :: a(:),b(:)
+            INTEGER, INTENT(IN) :: comm
 
             COMPLEX(DP) :: dot_tmp
             INTEGER :: n
@@ -505,7 +505,7 @@
 
             dot_tmp = zdotc( n, a(1), 1, b(1), 1)
 
-            CALL mp_sum( dot_tmp, intra_image_comm )
+            CALL mp_sum( dot_tmp, comm )
             dotp_kp_n = dot_tmp
 
             RETURN
@@ -593,15 +593,15 @@
 !==----------------------------------------------==!
 
 
-       REAL(DP) FUNCTION scalw(gzero, RR1, RR2, metric)
+       REAL(DP) FUNCTION scalw(gzero, RR1, RR2, metric, comm)
 
-         USE mp_global, ONLY: intra_image_comm
          USE mp, ONLY: mp_sum
 
          IMPLICIT NONE
 
          COMPLEX(DP), INTENT(IN) :: rr1(:), rr2(:), metric(:)
          LOGICAL, INTENT(IN) :: gzero
+         INTEGER, INTENT(IN) :: comm
          INTEGER :: ig, gstart, ngw
          REAL(DP) :: rsc
 
@@ -615,7 +615,7 @@
            rsc = rsc + rr1( ig ) * CONJG( rr2( ig ) ) * metric( ig )
          END DO
 
-         CALL mp_sum(rsc, intra_image_comm)
+         CALL mp_sum(rsc, comm)
 
          scalw = rsc
 

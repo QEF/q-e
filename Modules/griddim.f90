@@ -199,13 +199,11 @@
 
 !=----------------------------------------------------------------------------=!
 
-    SUBROUTINE realspace_grids_para( dfftp, dffts )
+    SUBROUTINE realspace_grids_para( dfftp, dffts, nproc_ )
 
       !  This subroutines sets local dimensions for real space grids
 
       USE io_global, ONLY: ionode, stdout
-      USE mp, ONLY: mp_sum
-      USE mp_global, ONLY: nproc_image
       USE fft_types, ONLY: fft_dlay_descriptor
       USE grid_dimensions, ONLY: nr1,  nr2,  nr3, nr1x, nr2x, nr3x
       USE grid_dimensions, ONLY: nr1l, nr2l, nr3l, nrxx
@@ -215,6 +213,7 @@
       IMPLICIT NONE
 
       TYPE(fft_dlay_descriptor), INTENT(IN) :: dfftp, dffts
+      INTEGER, INTENT(IN) :: nproc_
 
       INTEGER :: i
 
@@ -244,20 +243,20 @@
         WRITE( stdout,*)
         WRITE( stdout,*) '  Real Mesh'
         WRITE( stdout,*) '  ---------'
-        WRITE( stdout,1000) nr1, nr2, nr3, nr1l, nr2l, nr3l, 1, 1, nproc_image
+        WRITE( stdout,1000) nr1, nr2, nr3, nr1l, nr2l, nr3l, 1, 1, nproc_
         WRITE( stdout,1010) nr1x, nr2x, nr3x
         WRITE( stdout,1020) nrxx
         WRITE( stdout,*) '  Number of x-y planes for each processors: '
-        WRITE( stdout, fmt = '( 3X, "nr3l = ", 10I5 )' ) ( dfftp%npp( i ), i = 1, nproc_image )
+        WRITE( stdout, fmt = '( 3X, "nr3l = ", 10I5 )' ) ( dfftp%npp( i ), i = 1, nproc_ )
 
         WRITE( stdout,*)
         WRITE( stdout,*) '  Smooth Real Mesh'
         WRITE( stdout,*) '  ----------------'
-        WRITE( stdout,1000) nr1s, nr2s, nr3s, nr1sl, nr2sl, nr3sl, 1, 1, nproc_image
+        WRITE( stdout,1000) nr1s, nr2s, nr3s, nr1sl, nr2sl, nr3sl, 1, 1, nproc_
         WRITE( stdout,1010) nr1sx, nr2sx, nr3sx
         WRITE( stdout,1020) nrxxs
         WRITE( stdout,*) '  Number of x-y planes for each processors: '
-        WRITE( stdout, fmt = '( 3X, "nr3sl = ", 10I5 )' ) ( dffts%npp( i ), i = 1, nproc_image )
+        WRITE( stdout, fmt = '( 3X, "nr3sl = ", 10I5 )' ) ( dffts%npp( i ), i = 1, nproc_ )
 
       END IF
 

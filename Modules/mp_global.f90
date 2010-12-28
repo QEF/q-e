@@ -36,16 +36,20 @@ MODULE mp_global
   !
   INTEGER :: me_pool     = 0  ! index of the processor within a pool 
   INTEGER :: me_image    = 0  ! index of the processor within an image
+  INTEGER :: me_bgrp     = 0  ! index of the processor within a band group
   INTEGER :: root_pool   = 0  ! index of the root processor within a pool
   INTEGER :: root_image  = 0  ! index of the root processor within an image
+  INTEGER :: root_bgrp   = 0  ! index of the root processor within a band group
   INTEGER :: my_pool_id  = 0  ! index of my pool
   INTEGER :: my_image_id = 0  ! index of my image
+  INTEGER :: my_bgrp_id  = 0  ! index of my band group
   INTEGER :: me_ortho(2) = 0  ! coordinates of the processors
   INTEGER :: me_ortho1   = 0  ! task id for the ortho group
   INTEGER :: me_pgrp     = 0  ! task id for plane wave task group
   !
   INTEGER :: npool       = 1  ! number of "k-points"-pools
   INTEGER :: nimage      = 1  ! number of "path-images"-pools
+  INTEGER :: nbgrp       = 1  ! number of band groups
   INTEGER :: nogrp       = 1  ! number of proc. in an orbital "task group" 
   INTEGER :: npgrp       = 1  ! number of proc. in a plane-wave "task group" 
   INTEGER :: nproc_pool  = 1  ! number of processor within a pool
@@ -53,6 +57,7 @@ MODULE mp_global
   !   written in the xml punch file
   INTEGER :: nproc_image = 1  ! number of processor within an image
   INTEGER :: nproc_image_file  = 1  ! number of processor within a image
+  INTEGER :: nproc_bgrp  = 1  ! number of processor within a band group
   INTEGER :: np_ortho(2) = 1  ! size of the processor grid used in ortho
   INTEGER :: nproc_ortho = 1  ! size of the ortho group:
   INTEGER :: leg_ortho   = 1  ! the distance in the father communicator
@@ -66,6 +71,8 @@ MODULE mp_global
   INTEGER :: intra_pool_comm  = 0  ! intra pool communicator
   INTEGER :: inter_image_comm = 0  ! inter image communicator
   INTEGER :: intra_image_comm = 0  ! intra image communicator  
+  INTEGER :: inter_bgrp_comm  = 0  ! inter band group communicator
+  INTEGER :: intra_bgrp_comm  = 0  ! intra band group communicator  
   INTEGER :: pgrp_comm        = 0  ! plane-wave group communicator (task grouping)
   INTEGER :: ogrp_comm        = 0  ! orbital group communicarot (task grouping)
   INTEGER :: ortho_comm       = 0  ! communicator used for fast and memory saving ortho
@@ -141,6 +148,14 @@ CONTAINS
        !
        nimage = MAX( nimage, 1 )
        nimage = MIN( nimage, nproc )
+       !
+       ! ... How many parallel images ?
+       !
+       CALL get_arg_nbgrp( nbgrp )
+       !
+       nbgrp = MAX( nbgrp, 1 )
+       nbgrp = MIN( nbgrp, nproc )
+       !
        ! ... How many pools ?
        !
        CALL get_arg_npool( npool )
@@ -174,6 +189,7 @@ CONTAINS
     !
     CALL mp_bcast( npool,  meta_ionode_id )
     CALL mp_bcast( nimage, meta_ionode_id )
+    CALL mp_bcast( nbgrp, meta_ionode_id )
     CALL mp_bcast( ntask_groups, meta_ionode_id )
     CALL mp_bcast( nproc_ortho_in, meta_ionode_id )
     CALL mp_bcast( user_nproc_ortho, meta_ionode_id )
@@ -202,17 +218,23 @@ CONTAINS
     nproc            = nproc_i
     nproc_pool       = nproc_i
     nproc_image      = nproc_i
+    nproc_bgrp       = nproc_i
     my_pool_id       = 0
     my_image_id      = 0
+    my_bgrp_id       = 0
     me_pool          = mpime
     me_image         = mpime
+    me_bgrp          = mpime
     me_pgrp          = me_pool
     root_pool        = root
     root_image       = root
+    root_bgrp        = root
     inter_pool_comm  = group_i
     intra_pool_comm  = group_i
     inter_image_comm = group_i
     intra_image_comm = group_i
+    inter_bgrp_comm  = group_i
+    intra_bgrp_comm  = group_i
     ortho_comm       = group_i
     ALLOCATE( nolist( nproc_i ) )
     ALLOCATE( nplist( nproc_i ) )
@@ -298,8 +320,7 @@ CONTAINS
     !
     ! ... the intra_image_comm communicator is created
     !
-    CALL MPI_COMM_SPLIT( MPI_COMM_WORLD, &
-         my_image_id, mpime, intra_image_comm, ierr )
+    CALL MPI_COMM_SPLIT( MPI_COMM_WORLD, my_image_id, mpime, intra_image_comm, ierr )
     !
     IF ( ierr /= 0 ) &
        CALL errore( 'init_pool', 'intra image communicator initialization', ABS(ierr) )
@@ -308,41 +329,69 @@ CONTAINS
     !
     ! ... the inter_image_comm communicator is created                     
     !     
-    CALL MPI_COMM_SPLIT( MPI_COMM_WORLD, &
-         me_image, mpime, inter_image_comm, ierr )  
+    CALL MPI_COMM_SPLIT( MPI_COMM_WORLD, me_image, mpime, inter_image_comm, ierr )  
     !
     IF ( ierr /= 0 ) &
        CALL errore( 'init_pool', 'inter image communicator initialization', ABS(ierr) )
     !
+    ! ... Now the band group communicator
+    !
+    nproc_bgrp = nproc_image / nbgrp
+    !
+    IF ( MOD( nproc_image, nbgrp ) /= 0 ) &
+         CALL errore( 'init_pool', 'invalid number of band group, nproc_image /= nproc_bgrp * nbgrp', 1 )  
+    !
+    ! ... my_bgrp_id  =  band group index for this processor   ( 0 : nbgrp - 1 )
+    ! ... me_bgrp     =  processor index within the band group ( 0 : nproc_bgrp - 1 )
+    !
+    my_bgrp_id = me_image / nproc_bgrp
+    me_bgrp    = MOD( me_image, nproc_bgrp )
+    !
+    CALL mp_barrier()
+    !
+    ! ... the intra_bgrp_comm communicator is created
+    !
+    CALL MPI_COMM_SPLIT( intra_image_comm, my_bgrp_id, me_image, intra_bgrp_comm, ierr )
+    !
+    IF ( ierr /= 0 ) &
+       CALL errore( 'init_pool', 'intra band group communicator initialization', ABS(ierr) )
+    !
+    CALL mp_barrier()
+    !
+    ! ... the inter_bgrp_comm communicator is created                     
+    !     
+    CALL MPI_COMM_SPLIT( intra_image_comm, me_bgrp, me_image, inter_bgrp_comm, ierr )  
+    !
+    IF ( ierr /= 0 ) &
+       CALL errore( 'init_pool', 'inter band group communicator initialization', ABS(ierr) )
+    !
     ! ... number of cpus per pool of k-points (they are created inside each image)
     !
-    nproc_pool = nproc_image / npool
+    nproc_pool = nproc_bgrp / npool
     !
-    IF ( MOD( nproc_image, npool ) /= 0 ) &
-         CALL errore( 'init_pool', 'invalid number of pools, nproc_image /= nproc_pool * npool', 1 )  
+    IF ( MOD( nproc_bgrp, npool ) /= 0 ) &
+         CALL errore( 'init_pool', 'invalid number of pools, nproc_bgrp /= nproc_pool * npool', 1 )  
     !
     ! ... my_pool_id  =  pool index for this processor    ( 0 : npool - 1 )
     ! ... me_pool     =  processor index within the pool  ( 0 : nproc_pool - 1 )
     !
-    my_pool_id = me_image / nproc_pool    
-    me_pool    = MOD( me_image, nproc_pool )
+    my_pool_id = me_bgrp / nproc_pool    
+    me_pool    = MOD( me_bgrp, nproc_pool )
     !
-    CALL mp_barrier( intra_image_comm )
+    CALL mp_barrier( intra_bgrp_comm )
     !
     ! ... the intra_pool_comm communicator is created
     !
-    CALL MPI_COMM_SPLIT( intra_image_comm, &
-         my_pool_id, me_image, intra_pool_comm, ierr )
+    CALL MPI_COMM_SPLIT( intra_bgrp_comm, my_pool_id, me_bgrp, intra_pool_comm, ierr )
     !
     IF ( ierr /= 0 ) &
        CALL errore( 'init_pool', 'intra pool communicator initialization', ABS(ierr) )
     !
-    CALL mp_barrier( intra_image_comm )
+    CALL mp_barrier( intra_bgrp_comm )
     !
     ! ... the inter_pool_comm communicator is created
     !
-    CALL MPI_COMM_SPLIT( intra_image_comm, &
-         me_pool, me_image, inter_pool_comm, ierr )
+    CALL MPI_COMM_SPLIT( intra_bgrp_comm, me_pool, me_bgrp, inter_pool_comm, ierr )
     !
     IF ( ierr /= 0 ) &
        CALL errore( 'init_pool', 'inter pool communicator initialization', ABS(ierr) )
@@ -480,8 +529,8 @@ CONTAINS
 
 #if defined __SCALAPACK
     INTEGER, ALLOCATABLE :: blacsmap(:,:)
-    INTEGER, ALLOCATABLE :: ortho_cntx_pe(:,:)
-    INTEGER :: nprow, npcol, myrow, mycol, i, j
+    INTEGER, ALLOCATABLE :: ortho_cntx_pe(:,:,:)
+    INTEGER :: nprow, npcol, myrow, mycol, i, j, k
     INTEGER, EXTERNAL :: BLACS_PNUM
 #endif
 
@@ -581,20 +630,23 @@ CONTAINS
 
 #if defined __SCALAPACK
 
-    ALLOCATE( ortho_cntx_pe( npool, nimage ) )
+    ALLOCATE( ortho_cntx_pe( npool, nbgrp, nimage ) )
     ALLOCATE( blacsmap( np_ortho(1), np_ortho(2) ) )
 
     DO j = 1, nimage
 
+     DO k = 1, nbgrp
+
        DO i = 1, npool
 
-         CALL BLACS_GET( -1, 0, ortho_cntx_pe( i, j ) ) ! take a default value 
+         CALL BLACS_GET( -1, 0, ortho_cntx_pe( i, k, j ) ) ! take a default value 
 
          blacsmap = 0
          nprow = np_ortho(1)
          npcol = np_ortho(2)
 
-         IF( ( j == ( my_image_id + 1 ) ) .and. ( i == ( my_pool_id + 1 ) ) .and. ( ortho_comm_id > 0 ) ) THEN
+         IF( ( j == ( my_image_id + 1 ) ) .and. ( k == ( my_bgrp_id + 1 ) ) .and.  &
+             ( i == ( my_pool_id  + 1 ) ) .and. ( ortho_comm_id > 0 ) ) THEN
 
            blacsmap( me_ortho(1) + 1, me_ortho(2) + 1 ) = BLACS_PNUM( world_cntx, 0, me_blacs )
 
@@ -604,11 +656,12 @@ CONTAINS
 
          CALL mp_sum( blacsmap ) 
 
-         CALL BLACS_GRIDMAP( ortho_cntx_pe(i,j), blacsmap, nprow, nprow, npcol )
+         CALL BLACS_GRIDMAP( ortho_cntx_pe(i,k,j), blacsmap, nprow, nprow, npcol )
 
-         CALL BLACS_GRIDINFO( ortho_cntx_pe(i,j), nprow, npcol, myrow, mycol )
+         CALL BLACS_GRIDINFO( ortho_cntx_pe(i,k,j), nprow, npcol, myrow, mycol )
 
-         IF( ( j == ( my_image_id + 1 ) ) .and. ( i == ( my_pool_id + 1 ) ) .and. ( ortho_comm_id > 0 ) ) THEN
+         IF( ( j == ( my_image_id + 1 ) ) .and. ( k == ( my_bgrp_id + 1 ) ) .and. &
+             ( i == ( my_pool_id  + 1 ) ) .and. ( ortho_comm_id > 0 ) ) THEN
 
             IF(  np_ortho(1) /= nprow ) &
                CALL errore( ' init_ortho_group ', ' problem with SCALAPACK, wrong no. of task rows ', 1 )
@@ -619,11 +672,13 @@ CONTAINS
             IF(  me_ortho(2) /= mycol ) &
                CALL errore( ' init_ortho_group ', ' problem with SCALAPACK, wrong task columns ID ', 1 )
 
-            ortho_cntx = ortho_cntx_pe(i,j)
+            ortho_cntx = ortho_cntx_pe(i,k,j)
 
          END IF
 
        END DO
+
+     END DO
 
     END DO 
 
