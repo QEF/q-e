@@ -30,7 +30,7 @@
       use smallbox_grid_dimensions, only: nr1b, nr2b, nr3b, nr1bx,nr2bx,nr3bx,&
                                           smallbox_grid_init,smallbox_grid_info
       use smooth_grid_dimensions,   only: nr1s, nr2s, nr3s, nr1sx, nr2sx, nr3sx, nrxxs
-      USE grid_subroutines,         ONLY: realspace_grids_init, realspace_grids_para
+      USE grid_subroutines,         ONLY: realspace_grids_init, realspace_grids_info
       USE gvect,       ONLY: mill_g, g2_g, eigts1,eigts2,eigts3
       USE recvecs_subroutines,      ONLY: recvecs_init
       use ions_base,                only: nat
@@ -41,7 +41,7 @@
       USE fft_base,                 ONLY: dfftp, dffts
       USE fft_scalar,               ONLY: cft_b_omp_init
       USE stick_base,               ONLY: pstickset
-      USE control_flags,            ONLY: tdipole
+      USE control_flags,            ONLY: tdipole, gamma_only
       USE berry_phase,              ONLY: berry_setup
       USE electrons_module,         ONLY: bmeshset
       USE problem_size,             ONLY: cpsizes
@@ -112,20 +112,11 @@
       !
 
       ! ... set the sticks mesh and distribute g vectors among processors
+      ! ... pstickset lso sets the local real-space grid dimensions
       !
-if( ionode ) then
-! debug
-!write(6,*) alat
-!write(6,*) a1
-!write(6,*) a2
-!write(6,*) a3
-!write(6,*)gcut, gkcut, gcut
-!write(6,*) nr1, nr2, nr3, nr1x, nr2x, nr3x, nr1s, nr2s, nr3s, nr1sx, nr2sx, nr3sx, ngw_ , ngm_ , ngs_
-end if
 
-      CALL pstickset( dfftp, dffts, alat, a1, a2, a3, gcutm, gkcut, gcutms,&
-        nr1, nr2, nr3, nr1x, nr2x, nr3x, nr1s, nr2s, nr3s, nr1sx, nr2sx,   &
-        nr3sx, ngw_ , ngm_ , ngs_ )
+      CALL pstickset( gamma_only, b1, b2, b3, gcutm, gkcut, gcutms, &
+        dfftp, dffts, ngw_ , ngm_ , ngs_ )
       !
       !
       ! ... Initialize reciprocal space local and global dimensions
@@ -134,9 +125,9 @@ end if
       !
       CALL recvecs_init( ngm_ , ngw_ , ngs_ )
       !
-      ! ... Initialize (local) real space dimensions
+      ! ... Print real-space grid dimensions
       !
-      CALL realspace_grids_para( dfftp, dffts, nproc_bgrp )
+      CALL realspace_grids_info ( dfftp, dffts, nproc_bgrp )
       CALL smallbox_grid_info ( )
       !
       ! ... generate g-space

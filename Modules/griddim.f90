@@ -79,7 +79,7 @@
      SAVE
 
      PRIVATE
-     PUBLIC :: realspace_grids_init, realspace_grids_para
+     PUBLIC :: realspace_grids_init, realspace_grids_info
 
    CONTAINS
 
@@ -97,15 +97,15 @@
        IF( nr1 == 0 .OR. nr2 == 0 .OR. nr3 == 0 ) THEN
          !
          ! ... calculate the size of the real-space dense grid for FFT
-         ! ... first, an estimate of nr1,nr2,nr3, nased on the max values
+         ! ... first, an estimate of nr1,nr2,nr3, based on the max values
          ! ... of n_i indices in:   G = i*b_1 + j*b_2 + k*b_3   
          ! ... We use G*a_i = n_i => n_i .le. |Gmax||a_i|
          !
-         nr1 = int (2 * sqrt (gcutm) * &
+         nr1 = int ( sqrt (gcutm) * &
                sqrt (at(1, 1)**2 + at(2, 1)**2 + at(3, 1)**2) ) + 1
-         nr2 = int (2 * sqrt (gcutm) * &
+         nr2 = int ( sqrt (gcutm) * &
                sqrt (at(1, 2)**2 + at(2, 2)**2 + at(3, 2)**2) ) + 1
-         nr3 = int (2 * sqrt (gcutm) * &
+         nr3 = int ( sqrt (gcutm) * &
                sqrt (at(1, 3)**2 + at(2, 3)**2 + at(3, 3)**2) ) + 1
          !
          CALL grid_set( b1, b2, b3, gcutm, nr1, nr2, nr3 )
@@ -125,6 +125,13 @@
        ! ... As above, for the smooth grid
 
        IF( nr1s == 0 .OR. nr2s == 0 .OR. nr3s == 0 ) THEN
+         !
+         IF ( gcuts == gcutm ) THEN
+            ! ... No double grid, the two grids are the same
+            nr1s = nr1 ; nr2s = nr2 ; nr3s = nr3
+            nr1sx= nr1x; nr2sx= nr2x; nr3sx= nr3x
+            RETURN
+         END IF
          !
          nr1s= int (2 * sqrt (gcuts) * &
                sqrt (at(1, 1)**2 + at(2, 1)**2 + at(3, 1)**2) ) + 1
@@ -157,9 +164,9 @@
 
 !=----------------------------------------------------------------------------=!
 
-    SUBROUTINE realspace_grids_para( dfftp, dffts, nproc_ )
+    SUBROUTINE realspace_grids_info ( dfftp, dffts, nproc_ )
 
-      !  This subroutines sets local dimensions for real space grids
+      !  Print info on local and global dimensions for real space grids
 
       USE io_global, ONLY: ionode, stdout
       USE fft_types, ONLY: fft_dlay_descriptor
@@ -173,27 +180,6 @@
 
       INTEGER :: i
 
-      ! ... Subroutine body
-
-      !   set the actual (local) FFT dimensions
-
-      nr1l = dfftp % nr1
-      nr2l = dfftp % nr2
-      nr3l = dfftp % npl
-
-      nr1sl = dffts % nr1
-      nr2sl = dffts % nr2
-      nr3sl = dffts % npl
-
-      !   set the dimensions of the array allocated for the FFT
-      !   this could in principle be different than the FFT dimensions
-
-      nrxx  = dfftp % nnr
-      nrxxs = dffts % nnr
-
-      IF ( nr1s > nr1 .or. nr2s > nr2 .or. nr3s > nr3)                    &
-     &   CALL errore(' pmeshset ', ' smooth grid larger than dense grid? ', 1 )
-
       IF(ionode) THEN
 
         WRITE( stdout,*)
@@ -203,7 +189,8 @@
         WRITE( stdout,1010) nr1x, nr2x, nr3x
         WRITE( stdout,1020) nrxx
         WRITE( stdout,*) '  Number of x-y planes for each processors: '
-        WRITE( stdout, fmt = '( 3X, "nr3l = ", 10I5 )' ) ( dfftp%npp( i ), i = 1, nproc_ )
+        WRITE( stdout, fmt = '( 3X, "nr3l = ", 10I5 )' ) &
+           ( dfftp%npp( i ), i = 1, nproc_ )
 
         WRITE( stdout,*)
         WRITE( stdout,*) '  Smooth Real Mesh'
@@ -212,7 +199,8 @@
         WRITE( stdout,1010) nr1sx, nr2sx, nr3sx
         WRITE( stdout,1020) nrxxs
         WRITE( stdout,*) '  Number of x-y planes for each processors: '
-        WRITE( stdout, fmt = '( 3X, "nr3sl = ", 10I5 )' ) ( dffts%npp( i ), i = 1, nproc_ )
+        WRITE( stdout, fmt = '( 3X, "nr3sl = ", 10I5 )' ) &
+           ( dffts%npp( i ), i = 1, nproc_ )
 
       END IF
 
@@ -224,16 +212,16 @@
 1020  FORMAT(3X, 'Local number of cell to store the grid ( nrxx ) = ', 1X, I9 )
 
       RETURN
-      END SUBROUTINE realspace_grids_para
-
+      END SUBROUTINE realspace_grids_info
 
 
    SUBROUTINE grid_set( b1, b2, b3, gcut, nr1, nr2, nr3 )
 
-!  this routine calculates the storage required for G vectors arrays
-!  nr1, nr2, nr3 must be set in input to reasonable grid values
+!  this routine returns in nr1, nr2, nr3 the minimal 3D real-space FFT 
+!  grid required to fit the G-vector sphere with G^2 <= gcut
+!  On input, nr1,nr2,nr3 must be set to values that match or exceed
+!  the largest i,j,k (Miller) indices in G(i,j,k) = i*b1 + j*b2 + k*b3
 !  ----------------------------------------------
-!  END manual
 
 ! ... declare modules
       USE kinds, ONLY: DP
@@ -254,8 +242,8 @@
 
       nb     = 0
 
-! ... calculate moduli of G vectors and the range of indexes where
-! ... |G| < gcut (in parallel whenever possible)
+! ... calculate moduli of G vectors and the range of indices where
+! ... |G|^2 < gcut (in parallel whenever possible)
 
       DO k = -nr3, nr3
         !
@@ -275,7 +263,7 @@
 
               IF( gsq < gcut ) THEN
 
-! ...           calculate minimum and maximum index
+! ...           calculate maximum index
                 nb(1) = MAX( nb(1), ABS( i ) )
                 nb(2) = MAX( nb(2), ABS( j ) )
                 nb(3) = MAX( nb(3), ABS( k ) )
@@ -286,10 +274,12 @@
         END IF
       END DO
 
-! ... the size of the required (3-dimensional) matrix depends on the
-! ... minimum and maximum indices
-
       CALL mp_max( nb,  intra_image_comm )
+
+! ... the size of the required (3-dimensional) matrix depends on the
+! ... maximum indices. Note that the following choice is slightly
+! ... "small": 2*nb+2 would be needed in order to guarantee that the
+! ...  sphere in G-space never overlaps its periodic image
 
       nr1 = 2 * nb(1) + 1
       nr2 = 2 * nb(2) + 1

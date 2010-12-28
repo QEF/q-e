@@ -81,7 +81,6 @@ chargedensity.o : ../Modules/mp.o
 chargedensity.o : ../Modules/mp_global.o
 chargedensity.o : ../Modules/parallel_include.o
 chargedensity.o : ../Modules/recvec.o
-chargedensity.o : ../Modules/smallbox.o
 chargedensity.o : ../Modules/uspp.o
 chargedensity.o : ../Modules/xml_io_base.o
 chargedensity.o : boxgrid.o
@@ -91,6 +90,7 @@ chargedensity.o : gvecb.o
 chargedensity.o : gvecw.o
 chargedensity.o : mainvar.o
 chargedensity.o : modules.o
+chargedensity.o : smallbox.o
 chargedensity.o : wannier_base.o
 cp_autopilot.o : ../Modules/autopilot.o
 cp_autopilot.o : ../Modules/control_flags.o
@@ -121,13 +121,13 @@ cp_fpmd.o : ../Modules/kind.o
 cp_fpmd.o : ../Modules/mp.o
 cp_fpmd.o : ../Modules/mp_global.o
 cp_fpmd.o : ../Modules/recvec.o
-cp_fpmd.o : ../Modules/smallbox.o
 cp_fpmd.o : ../Modules/uspp.o
 cp_fpmd.o : boxgrid.o
 cp_fpmd.o : cpr_mod.o
 cp_fpmd.o : gvecb.o
 cp_fpmd.o : gvecw.o
 cp_fpmd.o : pseudopot.o
+cp_fpmd.o : smallbox.o
 cp_interfaces.o : ../Modules/cell_base.o
 cp_interfaces.o : ../Modules/descriptors.o
 cp_interfaces.o : ../Modules/griddim.o
@@ -182,7 +182,6 @@ cplib.o : ../Modules/mp.o
 cplib.o : ../Modules/mp_global.o
 cplib.o : ../Modules/recvec.o
 cplib.o : ../Modules/sic.o
-cplib.o : ../Modules/smallbox.o
 cplib.o : ../Modules/uspp.o
 cplib.o : boxgrid.o
 cplib.o : cp_interfaces.o
@@ -191,6 +190,7 @@ cplib.o : gvecw.o
 cplib.o : mainvar.o
 cplib.o : modules.o
 cplib.o : pres_ai_mod.o
+cplib.o : smallbox.o
 cplib_meta.o : ../Modules/cell_base.o
 cplib_meta.o : ../Modules/constants.o
 cplib_meta.o : ../Modules/control_flags.o
@@ -226,7 +226,6 @@ cpr.o : ../Modules/mp.o
 cpr.o : ../Modules/mp_global.o
 cpr.o : ../Modules/printout_base.o
 cpr.o : ../Modules/recvec.o
-cpr.o : ../Modules/smallbox.o
 cpr.o : ../Modules/timestep.o
 cpr.o : ../Modules/uspp.o
 cpr.o : ../Modules/wave_base.o
@@ -245,6 +244,7 @@ cpr.o : mainvar.o
 cpr.o : modules.o
 cpr.o : ortho_base.o
 cpr.o : pres_ai_mod.o
+cpr.o : smallbox.o
 cpr.o : wannier.o
 cpr_mod.o : ../Modules/kind.o
 cprstart.o : ../Modules/check_stop.o
@@ -403,7 +403,6 @@ fromscra.o : ../Modules/kind.o
 fromscra.o : ../Modules/mp_global.o
 fromscra.o : ../Modules/printout_base.o
 fromscra.o : ../Modules/recvec.o
-fromscra.o : ../Modules/smallbox.o
 fromscra.o : ../Modules/timestep.o
 fromscra.o : ../Modules/uspp.o
 fromscra.o : ../Modules/wave_base.o
@@ -420,6 +419,7 @@ fromscra.o : ions_positions.o
 fromscra.o : mainvar.o
 fromscra.o : modules.o
 fromscra.o : ortho_base.o
+fromscra.o : smallbox.o
 gradrho.o : ../Modules/cell_base.o
 gradrho.o : ../Modules/fft_base.o
 gradrho.o : ../Modules/fft_interfaces.o
@@ -451,7 +451,6 @@ init.o : ../Modules/ions_base.o
 init.o : ../Modules/kind.o
 init.o : ../Modules/mp_global.o
 init.o : ../Modules/recvec.o
-init.o : ../Modules/smallbox.o
 init.o : ../Modules/stick_base.o
 init.o : ../Modules/task_groups.o
 init.o : ../Modules/uspp.o
@@ -465,6 +464,7 @@ init.o : ions_positions.o
 init.o : mainvar.o
 init.o : modules.o
 init.o : problem_size.o
+init.o : smallbox.o
 init_run.o : ../Modules/cell_base.o
 init_run.o : ../Modules/control_flags.o
 init_run.o : ../Modules/electrons_base.o
@@ -477,6 +477,7 @@ init_run.o : ../Modules/io_global.o
 init_run.o : ../Modules/ions_base.o
 init_run.o : ../Modules/ions_nose.o
 init_run.o : ../Modules/kind.o
+init_run.o : ../Modules/mp.o
 init_run.o : ../Modules/printout_base.o
 init_run.o : ../Modules/recvec.o
 init_run.o : ../Modules/timestep.o
@@ -606,7 +607,6 @@ move_electrons.o : ../Modules/energies.o
 move_electrons.o : ../Modules/griddim.o
 move_electrons.o : ../Modules/ions_base.o
 move_electrons.o : ../Modules/kind.o
-move_electrons.o : ../Modules/mp_global.o
 move_electrons.o : ../Modules/recvec.o
 move_electrons.o : ../Modules/uspp.o
 move_electrons.o : ../Modules/wavefunctions.o
@@ -648,7 +648,6 @@ nlcc.o : ../Modules/kind.o
 nlcc.o : ../Modules/mp.o
 nlcc.o : ../Modules/mp_global.o
 nlcc.o : ../Modules/recvec.o
-nlcc.o : ../Modules/smallbox.o
 nlcc.o : ../Modules/uspp.o
 nlcc.o : boxgrid.o
 nlcc.o : cp_interfaces.o
@@ -656,6 +655,7 @@ nlcc.o : gvecb.o
 nlcc.o : modules.o
 nlcc.o : pseudo_base.o
 nlcc.o : pseudopot.o
+nlcc.o : smallbox.o
 nlcc.o : spline.o
 ortho.o : ../Modules/control_flags.o
 ortho.o : ../Modules/descriptors.o
@@ -701,7 +701,6 @@ plugin_forces.o : ../Modules/io_files.o
 plugin_forces.o : ../Modules/io_global.o
 plugin_forces.o : ../Modules/kind.o
 plugin_forces.o : ../Modules/mp.o
-plugin_forces.o : ../Modules/mp_global.o
 plugin_forces.o : ../Modules/plugin_flags.o
 plugin_initialization.o : ../Modules/io_files.o
 plugin_initialization.o : ../Modules/io_global.o
@@ -782,7 +781,6 @@ pseudopot_sub.o : ../Modules/mp.o
 pseudopot_sub.o : ../Modules/mp_global.o
 pseudopot_sub.o : ../Modules/parameters.o
 pseudopot_sub.o : ../Modules/recvec.o
-pseudopot_sub.o : ../Modules/smallbox.o
 pseudopot_sub.o : ../Modules/uspp.o
 pseudopot_sub.o : cp_interfaces.o
 pseudopot_sub.o : cpr_mod.o
@@ -791,6 +789,7 @@ pseudopot_sub.o : gvecw.o
 pseudopot_sub.o : modules.o
 pseudopot_sub.o : pseudo_base.o
 pseudopot_sub.o : pseudopot.o
+pseudopot_sub.o : smallbox.o
 pseudopot_sub.o : spline.o
 qmatrixd.o : ../Modules/cell_base.o
 qmatrixd.o : ../Modules/electrons_base.o
@@ -838,7 +837,6 @@ restart.o : ../Modules/io_files.o
 restart.o : ../Modules/ions_base.o
 restart.o : ../Modules/kind.o
 restart.o : ../Modules/mp.o
-restart.o : ../Modules/mp_global.o
 restart.o : ../Modules/xml_io_base.o
 restart.o : cp_autopilot.o
 restart.o : cp_interfaces.o
@@ -856,10 +854,8 @@ restart_sub.o : ../Modules/io_global.o
 restart_sub.o : ../Modules/ions_base.o
 restart_sub.o : ../Modules/ions_nose.o
 restart_sub.o : ../Modules/kind.o
-restart_sub.o : ../Modules/mp_global.o
 restart_sub.o : ../Modules/printout_base.o
 restart_sub.o : ../Modules/recvec.o
-restart_sub.o : ../Modules/smallbox.o
 restart_sub.o : ../Modules/timestep.o
 restart_sub.o : ../Modules/uspp.o
 restart_sub.o : ../Modules/wave_base.o
@@ -872,6 +868,7 @@ restart_sub.o : gvecw.o
 restart_sub.o : ions_positions.o
 restart_sub.o : mainvar.o
 restart_sub.o : modules.o
+restart_sub.o : smallbox.o
 runcp.o : ../Modules/control_flags.o
 runcp.o : ../Modules/electrons_base.o
 runcp.o : ../Modules/fft_base.o
@@ -888,6 +885,9 @@ runcp.o : efield.o
 runcp.o : gvecw.o
 runcp.o : modules.o
 runcp.o : wannier.o
+smallbox.o : ../Modules/constants.o
+smallbox.o : ../Modules/io_global.o
+smallbox.o : ../Modules/kind.o
 spline.o : ../Modules/kind.o
 stop_run.o : ../Modules/constraints_module.o
 stop_run.o : ../Modules/control_flags.o

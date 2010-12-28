@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002 FPMD group
+! Copyright (C) 2002-2010 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -568,32 +568,25 @@
 !=----------------------------------------------------------------------=
 
 
-        SUBROUTINE pstickset( dfftp, dffts, alat, a1, a2, a3, gcut, gkcut, gcuts, &
-          nr1, nr2, nr3, nr1x, nr2x, nr3x, nr1s, nr2s, nr3s, nr1sx, nr2sx, nr3sx, &
-          ngw, ngm, ngs )
+        SUBROUTINE pstickset( gamma_only, b1, b2, b3, gcut, gkcut, gcuts, &
+          dfftp, dffts, ngw, ngm, ngs )
 
           USE kinds, ONLY: DP
           USE mp_global, ONLY: me_pool, nproc_pool, intra_pool_comm, nogrp
-          USE control_flags, ONLY: gamma_only
-          USE io_global, ONLY: ionode
-          USE io_global, ONLY: stdout
-          USE fft_types, ONLY: fft_dlay_descriptor, fft_dlay_allocate, fft_dlay_set, &
-               fft_dlay_scalar
+          USE io_global, ONLY: ionode, stdout
+          USE fft_types, ONLY: fft_dlay_descriptor, fft_dlay_allocate, &
+                               fft_dlay_set, fft_dlay_scalar
+          USE grid_dimensions
+          USE smooth_grid_dimensions
 
-
-          TYPE(fft_dlay_descriptor), INTENT(inout) :: dfftp, dffts
-          REAL(DP), INTENT(in) :: a1(3), a2(3), a3(3), alat
+          LOGICAL, INTENT(in) :: gamma_only
+! ...     b1, b2, b3 reciprocal space base vectors.
+          REAL(DP), INTENT(in) :: b1(3), b2(3), b3(3)
           REAL(DP), INTENT(in) :: gcut, gkcut, gcuts
-          INTEGER, INTENT(in) :: nr1, nr2, nr3, nr1x, nr2x, nr3x
-          INTEGER, INTENT(in) :: nr1s, nr2s, nr3s, nr1sx, nr2sx, nr3sx
+          TYPE(fft_dlay_descriptor), INTENT(inout) :: dfftp, dffts
           INTEGER, INTENT(out) :: ngw, ngm, ngs
 
           LOGICAL :: tk
-! ...     tk  logical flag, TRUE if the symulation does not have the
-! ...         GAMMA symmetry
-
-          REAL(DP) :: b1(3), b2(3), b3(3)
-! ...     b1, b2, b3 reciprocal space base vectors.
 
           INTEGER :: ub(3), lb(3)
 ! ...     ub(i), lb(i) upper and lower miller indexes
@@ -601,7 +594,6 @@
 !
 ! ...     Plane Waves
 !
-
         INTEGER, ALLOCATABLE :: stw(:,:)
 ! ...   stick map (wave functions), stw(i,j) = number of G-vector in the
 ! ...     stick whose x and y miller index are i and j
@@ -661,10 +653,7 @@
 ! ...   nsts      local number of sticks (smooth mesh)
 
 
-        INTEGER, ALLOCATABLE :: ist(:,:)    ! sticks indexes ordered
-
-
-
+        INTEGER, ALLOCATABLE :: ist(:,:)    ! sticks indices ordered
           INTEGER :: ip, ngm_ , ngs_
           INTEGER, ALLOCATABLE :: idx(:)
 
@@ -673,13 +662,6 @@
           ub(2) = ( nr2 - 1 ) / 2
           ub(3) = ( nr3 - 1 ) / 2
           lb    = - ub
-
-          ! ... reciprocal lattice generators
-
-          CALL recips( a1, a2, a3, b1, b2, b3 )
-          b1 = b1 * alat
-          b2 = b2 * alat
-          b3 = b3 * alat
 
           ! ...       Allocate maps
 
@@ -780,6 +762,16 @@
           CALL fft_dlay_scalar( dffts, ub, lb, nr1s, nr2s, nr3s, nr1sx, nr2sx, nr3sx, stw )
 
 #endif
+      !   set the actual (local) FFT dimensions
+      nr1l = dfftp % nr1
+      nr2l = dfftp % nr2
+      nr3l = dfftp % npl
+      nr1sl = dffts % nr1
+      nr2sl = dffts % nr2
+      nr3sl = dffts % npl
+      !   set the dimensions of the array allocated for the FFT
+      nrxx  = dfftp % nnr
+      nrxxs = dffts % nnr          
 
 ! ...     Maximum number of sticks (potentials)
           nstpx  = maxval( nstp )

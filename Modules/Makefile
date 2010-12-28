@@ -67,7 +67,6 @@ read_xml_fields.o \
 recvec.o \
 set_signal.o \
 sic.o \
-smallbox.o \
 splinelib.o \
 stick_base.o \
 task_groups.o \

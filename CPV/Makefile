@@ -71,6 +71,7 @@ read_pseudo.o \
 restart.o \
 restart_sub.o \
 runcp.o \
+smallbox.o \
 spline.o \
 stop_run.o \
 stress.o \
