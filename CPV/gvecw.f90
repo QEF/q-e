@@ -5,7 +5,6 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-
 !=----------------------------------------------------------------------------=!
    MODULE gvecw
 !=----------------------------------------------------------------------------=!
@@ -46,59 +45,32 @@
 
    CONTAINS
 
+     SUBROUTINE gvecw_init( ngw_ )
+       USE mp_global, ONLY: intra_bgrp_comm
+       USE mp, ONLY: mp_max, mp_sum
+       IMPLICIT NONE
+       INTEGER, INTENT(IN) :: ngw_
+       !
+       ngw = ngw_
+       !
+       !  calculate maximum over all processors
+       !
+       ngwx = ngw
+       CALL mp_max( ngwx, intra_bgrp_comm )
+       !
+       !  calculate sum over all processors
+       !
+       ngw_g = ngw
+       CALL mp_sum( ngw_g, intra_bgrp_comm )
+       !
+       RETURN 
+
+     END SUBROUTINE gvecw_init
+
      SUBROUTINE deallocate_gvecw
        IF( ALLOCATED( ggp ) ) DEALLOCATE( ggp )
      END SUBROUTINE deallocate_gvecw
 
 !=----------------------------------------------------------------------------=!
    END MODULE gvecw
-!=----------------------------------------------------------------------------=!
-
-!=----------------------------------------------------------------------------=!
-   MODULE recvecs_subroutines
-!=----------------------------------------------------------------------------=!
-
-     IMPLICIT NONE
-     SAVE
-
-   CONTAINS
-
-     SUBROUTINE recvecs_init( ngm_ , ngw_ , ngs_ )
-       USE mp_global, ONLY: intra_bgrp_comm
-       USE mp, ONLY: mp_max, mp_sum
-       USE gvecw, ONLY: ngw, ngwx, ngw_g
-       USE gvect, ONLY: ngm, ngmx, ngm_g
-       USE gvecs, ONLY: ngms, ngsx, ngms_g
-
-       IMPLICIT NONE
-       INTEGER, INTENT(IN) :: ngm_ , ngw_ , ngs_
-
-       ngm = ngm_
-       ngw = ngw_
-       ngms= ngs_
-
-       !
-       !  calculate maxima over all processors
-       !
-       ngwx = ngw
-       ngmx = ngm
-       ngsx = ngms
-       CALL mp_max( ngwx, intra_bgrp_comm )
-       CALL mp_max( ngmx, intra_bgrp_comm )
-       CALL mp_max( ngsx, intra_bgrp_comm )
-       !
-       !  calculate SUM over all processors
-       !
-       ngw_g = ngw
-       ngm_g= ngm
-       ngms_g=ngms
-       CALL mp_sum( ngw_g, intra_bgrp_comm )
-       CALL mp_sum( ngm_g, intra_bgrp_comm )
-       CALL mp_sum( ngms_g,intra_bgrp_comm )
-
-       RETURN 
-     END SUBROUTINE recvecs_init
-
-!=----------------------------------------------------------------------------=!
-   END MODULE recvecs_subroutines
 !=----------------------------------------------------------------------------=!

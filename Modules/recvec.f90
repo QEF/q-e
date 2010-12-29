@@ -80,6 +80,28 @@
      !
    CONTAINS
 
+     SUBROUTINE gvect_init( ngm_ )
+       USE mp_global, ONLY: intra_bgrp_comm
+       USE mp, ONLY: mp_max, mp_sum
+       IMPLICIT NONE
+       INTEGER, INTENT(IN) :: ngm_
+       !
+       ngm = ngm_
+       !
+       !  calculate maximum over all processors
+       !
+       ngmx = ngm
+       CALL mp_max( ngmx, intra_bgrp_comm )
+       !
+       !  calculate sum over all processors
+       !
+       ngm_g = ngm
+       CALL mp_sum( ngm_g, intra_bgrp_comm )
+       !
+       RETURN 
+       !
+     END SUBROUTINE gvect_init
+
      SUBROUTINE deallocate_gvect()
        IF( ALLOCATED( gg ) ) DEALLOCATE( gg )
        IF( ASSOCIATED( gl ) ) DEALLOCATE( gl )
@@ -131,6 +153,28 @@
 
    CONTAINS
 
+     SUBROUTINE gvecs_init( ngs_ )
+       USE mp_global, ONLY: intra_bgrp_comm
+       USE mp, ONLY: mp_max, mp_sum
+       IMPLICIT NONE
+       INTEGER, INTENT(IN) :: ngs_
+       !
+       ngms = ngs_
+       !
+       !  calculate maximum over all processors
+       !
+       ngsx = ngms
+       CALL mp_max( ngsx, intra_bgrp_comm )
+       !
+       !  calculate sum over all processors
+       !
+       ngms_g = ngms
+       CALL mp_sum( ngms_g, intra_bgrp_comm )
+       !
+       RETURN 
+
+     END SUBROUTINE gvecs_init
+
      SUBROUTINE deallocate_gvecs()
        IF( ALLOCATED( nls ) ) DEALLOCATE( nls )
        IF( ALLOCATED( nlsm ) ) DEALLOCATE( nlsm )
@@ -139,3 +183,4 @@
 !=----------------------------------------------------------------------------=!
    END MODULE gvecs
 !=----------------------------------------------------------------------------=!
+

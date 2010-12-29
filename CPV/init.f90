@@ -31,12 +31,11 @@
                                           smallbox_grid_init,smallbox_grid_info
       use smooth_grid_dimensions,   only: nr1s, nr2s, nr3s, nr1sx, nr2sx, nr3sx, nrxxs
       USE grid_subroutines,         ONLY: realspace_grids_init, realspace_grids_info
-      USE gvect,       ONLY: mill_g, g2_g, eigts1,eigts2,eigts3
-      USE recvecs_subroutines,      ONLY: recvecs_init
+      USE gvect,                    ONLY: mill_g, g2_g, eigts1,eigts2,eigts3
       use ions_base,                only: nat
-      use gvecw,                    only: gcutw, gkcut
-      use gvect,                    only: ecutrho, gcutm
-      use gvecs,                    only: gcutms
+      use gvecw,                    only: gcutw, gkcut, gvecw_init
+      use gvect,                    only: ecutrho, gcutm, gvect_init
+      use gvecs,                    only: gcutms, gvecs_init
       use gvecb,                    only: gcutb
       USE fft_base,                 ONLY: dfftp, dffts
       USE fft_scalar,               ONLY: cft_b_omp_init
@@ -124,7 +123,9 @@
       !     NOTE in a parallel run ngm_ , ngw_ , ngs_ here are the 
       !     local number of reciprocal vectors
       !
-      CALL recvecs_init( ngm_ , ngw_ , ngs_ )
+      CALL gvect_init ( ngm_ )
+      CALL gvecs_init ( ngs_ )
+      CALL gvecw_init ( ngw_ )
       !
       ! ... Print real-space grid dimensions
       !
