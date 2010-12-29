@@ -26,6 +26,14 @@
       INTEGER :: nbsp       = 0    !  total number of electronic states 
                                    !  (nupdwn(1)+nupdwn(2))
       INTEGER :: nbspx      = 0    !  array dimension nbspx >= nbsp
+      !
+      INTEGER :: nupdwn_bgrp(2)  = 0    !  number of states with spin up (1) and down (2) in this band group
+      INTEGER :: iupdwn_bgrp(2)  = 0    !  first state with spin (1) and down (2) in this band group
+      INTEGER :: nudx_bgrp       = 0    !  max (nupdw_bgrp(1),nupdw_bgrp(2)) in this band group
+      INTEGER :: nbsp_bgrp       = 0    !  total number of electronic states 
+                                        !  (nupdwn_bgrp(1)+nupdwn_bgrp(2)) in this band group
+      INTEGER :: nbspx_bgrp      = 0    !  array dimension nbspx_bgrp >= nbsp_bgrp local to the band group
+      INTEGER :: i2gupdwn_bgrp(2)= 0    !  global index of the first local band
 
       LOGICAL :: telectrons_base_initval = .FALSE.
       LOGICAL :: keep_occ = .FALSE.  ! if .true. when reading restart file keep 
@@ -34,6 +42,9 @@
       REAL(DP), ALLOCATABLE :: f(:)   ! occupation numbers ( at gamma )
       REAL(DP) :: qbac = 0.0_DP       ! background neutralizing charge
       INTEGER, ALLOCATABLE :: ispin(:) ! spin of each state
+
+      REAL(DP), ALLOCATABLE :: f_bgrp(:)     ! occupation numbers ( at gamma )
+      INTEGER, ALLOCATABLE  :: ispin_bgrp(:) ! spin of each state
 !
 !------------------------------------------------------------------------------!
   CONTAINS
@@ -316,7 +327,6 @@
       IF( nbsp < INT( nelec * nspin / 2.0_DP ) ) &
         CALL errore(' electrons_base_initval ',' too many electrons ', 1 )
 
-
       telectrons_base_initval = .TRUE.
 
       RETURN
@@ -383,10 +393,74 @@
     SUBROUTINE deallocate_elct()
       IF( ALLOCATED( f ) ) DEALLOCATE( f )
       IF( ALLOCATED( ispin ) ) DEALLOCATE( ispin )
+      IF( ALLOCATED( f_bgrp ) ) DEALLOCATE( f_bgrp )
+      IF( ALLOCATED( ispin_bgrp ) ) DEALLOCATE( ispin_bgrp )
       telectrons_base_initval = .FALSE.
       RETURN
     END SUBROUTINE deallocate_elct
 
+!----------------------------------------------------------------------------
+
+    SUBROUTINE distribute_bands( nbgrp, my_bgrp_id )
+      INTEGER, INTENT(IN) :: nbgrp, my_bgrp_id
+      INTEGER, EXTERNAL :: ldim_block, gind_block
+      INTEGER :: iss, n1, n2, m1, m2
+      !
+      IF( .NOT. telectrons_base_initval ) &
+        CALL errore( ' distribute_bands ', ' electrons_base_initval not yet called ', 1 )
+
+      nupdwn_bgrp  = nupdwn
+      iupdwn_bgrp  = iupdwn
+      nudx_bgrp    = nudx
+      nbsp_bgrp    = nbsp
+      nbspx_bgrp   = nbspx
+      i2gupdwn_bgrp= 1
+
+      DO iss = 1, nspin
+         nupdwn_bgrp( iss )  = ldim_block( nupdwn( iss ), nbgrp, my_bgrp_id )
+         i2gupdwn_bgrp( iss ) = gind_block( 1, nupdwn( iss ), nbgrp, my_bgrp_id )
+      END DO
+      !
+      iupdwn_bgrp(1) = 1
+      IF( nspin > 1 ) THEN
+         iupdwn_bgrp(2) = iupdwn_bgrp(1) + nupdwn_bgrp( 1 )
+      END IF
+      nudx_bgrp = nupdwn_bgrp( 1 )
+      nbsp_bgrp = nupdwn_bgrp( 1 ) + nupdwn_bgrp ( 2 )
+      nbspx_bgrp = nbsp_bgrp
+      IF( MOD( nbspx_bgrp, 2 ) /= 0 ) nbspx_bgrp = nbspx_bgrp + 1
+
+      ALLOCATE( f_bgrp     ( nbspx_bgrp ) )
+      ALLOCATE( ispin_bgrp ( nbspx_bgrp ) )
+      f_bgrp = 0.0
+      ispin_bgrp = 0
+      !
+      DO iss = 1, nspin
+         n1 = iupdwn_bgrp(iss)
+         n2 = n1 + nupdwn_bgrp(iss) - 1
+         m1 = iupdwn(iss)+i2gupdwn_bgrp(iss) - 1
+         m2 = m1 + nupdwn_bgrp(iss) - 1
+         f_bgrp(n1:n2) = f(m1:m2)
+         ispin_bgrp(n1:n2) = ispin(m1:m2)
+      END DO
+      
+      RETURN
+
+    END SUBROUTINE distribute_bands
+
+    SUBROUTINE distribute_c( c, c_bgrp )
+      COMPLEX(DP), INTENT(IN) :: c(:,:)
+      COMPLEX(DP), INTENT(OUT) :: c_bgrp(:,:)
+      INTEGER :: iss, n1, n2, m1, m2
+      DO iss = 1, nspin
+         n1 = iupdwn_bgrp(iss)
+         n2 = n1 + nupdwn_bgrp(iss) - 1
+         m1 = iupdwn(iss)+i2gupdwn_bgrp(iss) - 1
+         m2 = m1 + nupdwn_bgrp(iss) - 1
+         c_bgrp(:,n1:n2) = c(:,m1:m2)
+      END DO
+      RETURN
+    END SUBROUTINE distribute_c
 
 !------------------------------------------------------------------------------!
   END MODULE electrons_base

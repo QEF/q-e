@@ -13,7 +13,7 @@ MODULE environment
   USE io_files, ONLY: crash_file, crashunit, nd_nmbr
   USE io_global, ONLY: stdout, meta_ionode
   USE mp_global, ONLY: me_image, my_image_id, root_image, nimage, &
-      nproc_image, nproc, nogrp, npool, nproc_pool
+      nproc_image, nproc, nogrp, npool, nproc_pool, nbgrp
   USE global_version, ONLY: version_number
 
   IMPLICIT NONE
@@ -181,6 +181,8 @@ CONTAINS
     !
     IF ( nimage > 1 ) WRITE( stdout, &
          '(5X,"path-images division:  nimage    = ",I4)' ) nimage
+    IF ( nbgrp > 1 ) WRITE( stdout, &
+         '(5X,"band groups division:  nbgrp     = ",I4)' ) nbgrp
     IF ( npool > 1 ) WRITE( stdout, &
          '(5X,"K-points division:     npool     = ",I4)' ) npool
     IF ( nproc_pool > 1 ) WRITE( stdout, &

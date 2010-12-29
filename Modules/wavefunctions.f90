@@ -29,6 +29,12 @@
      COMPLEX(DP), ALLOCATABLE :: c0(:,:)  ! wave functions at time t
      COMPLEX(DP), ALLOCATABLE :: cm(:,:)  ! wave functions at time t-delta t
      COMPLEX(DP), ALLOCATABLE :: cp(:,:)  ! wave functions at time t+delta t
+     !
+     ! same as above, but distributed over gvector and bands
+     !
+     COMPLEX(DP), ALLOCATABLE :: c0_bgrp(:,:)  ! wave functions at time t
+     COMPLEX(DP), ALLOCATABLE :: cm_bgrp(:,:)  ! wave functions at time t-delta t
+     COMPLEX(DP), ALLOCATABLE :: cp_bgrp(:,:)  ! wave functions at time t+delta t
 
    CONTAINS
 
@@ -36,6 +42,9 @@
        IF( ALLOCATED( c0 ) ) DEALLOCATE( c0 )
        IF( ALLOCATED( cm ) ) DEALLOCATE( cm )
        IF( ALLOCATED( cp ) ) DEALLOCATE( cp )
+       IF( ALLOCATED( c0_bgrp ) ) DEALLOCATE( c0_bgrp )
+       IF( ALLOCATED( cm_bgrp ) ) DEALLOCATE( cm_bgrp )
+       IF( ALLOCATED( cp_bgrp ) ) DEALLOCATE( cp_bgrp )
        IF( ALLOCATED( psic_nc ) ) DEALLOCATE( psic_nc )
        IF( ALLOCATED( psic ) ) DEALLOCATE( psic )
        IF( ALLOCATED( evc ) ) DEALLOCATE( evc )

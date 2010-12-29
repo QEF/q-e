@@ -700,4 +700,21 @@ CONTAINS
   END SUBROUTINE init_ortho_group
   !
   !
+  SUBROUTINE distribute_over_bgrp( i2g, nl, nx )
+     !
+     IMPLICIT NONE
+     INTEGER, INTENT(OUT) :: i2g  !  global index of the first local element
+     INTEGER, INTENT(OUT) :: nl   !  local number of elements
+     INTEGER, INTENT(IN)  :: nx   !  dimension of the global array to be distributed
+     !
+     INTEGER, EXTERNAL :: ldim_block, gind_block
+     !
+     nl  = ldim_block( nx, nbgrp, my_bgrp_id )
+     i2g = gind_block( 1, nx, nbgrp, my_bgrp_id )
+     !
+     RETURN
+     !
+  END SUBROUTINE distribute_over_bgrp
+  !
+  !
 END MODULE mp_global
