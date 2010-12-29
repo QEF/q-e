@@ -16,7 +16,7 @@ subroutine cryst_to_cart (nvec, vec, trmat, iflag)
   !     Output cartesian coordinates are stored in the input ('vec') array
   !
   !
-  USE kinds
+  USE kinds, ONLY : DP
   implicit none
   !
   integer, intent(in) :: nvec, iflag

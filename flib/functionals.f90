@@ -11,7 +11,7 @@ subroutine slater (rs, ex, vx)
   !-----------------------------------------------------------------------
   !        Slater exchange with alpha=2/3
   !
-  USE kinds
+  USE kinds, ONLY : DP
   implicit none
   real(DP) :: rs, ex, vx
   real(DP), parameter  :: f= -0.687247939924714d0, alpha = 2.0d0/3.0d0
@@ -29,7 +29,7 @@ subroutine slater1(rs, ex, vx)
   !        Slater exchange with alpha=1, corresponding to -1.374/r_s Ry
   !        used to recover old results
   !
-  USE kinds
+  USE kinds, ONLY : DP
   implicit none
   real(DP) :: rs, ex, vx
   real(DP), parameter  :: f= -0.687247939924714d0, alpha = 1.0d0
@@ -45,7 +45,7 @@ subroutine slater_rxc (rs, ex, vx)
   !-----------------------------------------------------------------------
   !        Slater exchange with alpha=2/3 and Relativistic exchange
   !
-  USE kinds
+  USE kinds, ONLY : DP
   USE constants, ONLY : pi, c_au
   IMPLICIT none
   real (DP):: rs, ex, vx
@@ -88,7 +88,7 @@ END SUBROUTINE slater_rxc
   !        Slater exchange with alpha=2/3, Kwee, Zhang and Krakauer KE
   !        correction
   !
-  USE kinds
+  USE kinds, ONLY : DP
   implicit none
   real(DP) :: rs, ex, vx, dL, vol, ga, pi, a0
   real(DP), parameter  ::  a1 = -2.2037d0, &
@@ -126,7 +126,7 @@ subroutine pz (rs, iflag, ec, vc)
   !     iflag=1: J.P. Perdew and A. Zunger, PRB 23, 5048 (1981)
   !     iflag=2: G. Ortiz and P. Ballone, PRB 50, 1391 (1994)
   !
-  USE kinds
+  USE kinds, ONLY : DP
   implicit none
   real(DP) :: rs, ec, vc
   integer :: iflag
@@ -167,7 +167,7 @@ subroutine pzKZK (rs, ec, vc, vol)
   !     iflag=1: J.P. Perdew and A. Zunger, PRB 23, 5048 (1981)
   !     iflag=2: G. Ortiz and P. Ballone, PRB 50, 1391 (1994)
   !
-  USE kinds
+  USE kinds, ONLY : DP
   implicit none
   real(DP) :: rs, ec, vc, ec0 (2), vc0(2), ec0p 
   integer :: iflag, kr
@@ -256,7 +256,7 @@ subroutine vwn (rs, ec, vc)
   !-----------------------------------------------------------------------
   !     S.H. Vosko, L. Wilk, and M. Nusair, Can. J. Phys. 58, 1200 (1980)
   !
-  USE kinds
+  USE kinds, ONLY : DP
   implicit none
   real(DP) :: rs, ec, vc
   real(DP) :: a, b, c, x0
@@ -286,7 +286,7 @@ subroutine lyp (rs, ec, vc)
   !     C. Lee, W. Yang, and R.G. Parr, PRB 37, 785 (1988)
   !     LDA part only
   !
-  USE kinds
+  USE kinds, ONLY : DP
   implicit none
   real(DP) :: rs, ec, vc
   real(DP) :: a, b, c, d, pi43
@@ -310,7 +310,7 @@ subroutine pw (rs, iflag, ec, vc)
   !     iflag=1: J.P. Perdew and Y. Wang, PRB 45, 13244 (1992)
   !     iflag=2: G. Ortiz and P. Ballone, PRB 50, 1391 (1994)
   !
-  USE kinds
+  USE kinds, ONLY : DP
   implicit none
   real(DP) :: rs, ec, vc
   integer :: iflag
@@ -361,7 +361,7 @@ subroutine wigner (rs, ec, vc)
   !-----------------------------------------------------------------------
   !        Wigner correlation
   !
-  USE kinds
+  USE kinds, ONLY : DP
   implicit none
   real(DP) :: rs, ec, vc
   real(DP) :: pi34, rho13
@@ -381,7 +381,7 @@ subroutine hl (rs, ec, vc)
   !-----------------------------------------------------------------------
   !     L. Hedin and  B.I. Lundqvist,  J. Phys. C 4, 2064 (1971)
   !
-  USE kinds
+  USE kinds, ONLY : DP
   implicit none
   real(DP) :: rs, ec, vc
   real(DP) :: a, x
@@ -400,7 +400,7 @@ subroutine gl (rs, ec, vc)
   !-----------------------------------------------------------------------
   !  O. Gunnarsson and B. I. Lundqvist, PRB 13, 4274 (1976)
   !
-  USE kinds
+  USE kinds, ONLY : DP
   implicit none
   real(DP) :: rs, vc, ec
   real(DP) :: c, r, x
@@ -421,7 +421,7 @@ subroutine becke88 (rho, grho, sx, v1x, v2x)
   ! Becke exchange: A.D. Becke, PRA 38, 3098 (1988)
   ! only gradient-corrected part, no Slater term included
   !
-  USE kinds
+  USE kinds, ONLY : DP
   implicit none
   real(DP) :: rho, grho, sx, v1x, v2x
   real(DP) :: beta, third, two13
@@ -452,7 +452,7 @@ subroutine ggax (rho, grho, sx, v1x, v2x)
   ! Perdew-Wang GGA (PW91), exchange part:
   ! J.P. Perdew et al.,PRB 46, 6671 (1992)
   !
-  USE kinds
+  USE kinds, ONLY : DP
   implicit none
   real(DP) :: rho, grho, sx, v1x, v2x
   real(DP) :: f1, f2, f3, f4, f5
@@ -490,7 +490,7 @@ subroutine perdew86 (rho, grho, sc, v1c, v2c)
   !-----------------------------------------------------------------------
   ! Perdew gradient correction on correlation: PRB 33, 8822 (1986)
   !
-  USE kinds
+  USE kinds, ONLY : DP
   implicit none
   real(DP) :: rho, grho, sc, v1c, v2c
   real(DP) :: p1, p2, p3, p4, pc1, pc2, pci
@@ -531,7 +531,7 @@ subroutine glyp (rho, grho, sc, v1c, v2c)
   !-----------------------------------------------------------------------
   ! Lee Yang Parr: gradient correction part
   !
-  USE kinds
+  USE kinds, ONLY : DP
   implicit none
   real(DP) :: rho, grho, sc, v1c, v2c
   real(DP) :: a, b, c, d
@@ -561,7 +561,7 @@ subroutine ggac (rho, grho, sc, v1c, v2c)
   !-----------------------------------------------------------------------
   ! Perdew-Wang GGA (PW91) correlation part
   !
-  USE kinds
+  USE kinds, ONLY : DP
   implicit none
   real(DP) :: rho, grho, sc, v1c, v2c
   real(DP) :: al, pa, pb, pc, pd, cx, cxc0, cc0
@@ -624,7 +624,7 @@ subroutine pbex (rho, grho, iflag, sx, v1x, v2x)
   ! iflag=2  "revised' PBE: Y. Zhang et al., PRL 80, 890 (1998)
   ! iflag=3  PBEsol: J.P.Perdew et al., PRL 100, 136406 (2008)
   !
-  USE kinds
+  USE kinds, ONLY : DP
   USE constants, ONLY : pi
   implicit none
   real(DP) :: rho, grho, sx, v1x, v2x
@@ -689,7 +689,7 @@ subroutine pbex_vec (rho, grho, iflag, sx, v1x, v2x, length, small)
   ! iflag=2  "revised' PBE: Y. Zhang et al., PRL 80, 890 (1998)
   ! iflag=3  PBEsol: J.P.Perdew et al., PRL 100, 136406 (2008)
   !
-  USE kinds
+  USE kinds, ONLY : DP
   USE constants, ONLY : pi
   implicit none
   integer, intent(in)   :: length
@@ -754,7 +754,7 @@ subroutine pbec (rho, grho, iflag, sc, v1c, v2c)
   ! iflag=1: J.P.Perdew, K.Burke, M.Ernzerhof, PRL 77, 3865 (1996).
   ! iflag=2: J.P.Perdew et al., PRL 100, 136406 (2008).
   !
-  USE kinds
+  USE kinds, ONLY : DP
   implicit none
   integer, intent(in) :: iflag
   real(DP) :: rho, grho, sc, v1c, v2c
@@ -804,7 +804,7 @@ subroutine hcth(rho,grho,sx,v1x,v2x)
   !     v1x : d(sx)/drho  (eq. dfdra = dfdrb in original)
   !     v2x : 1/gr*d(sx)/d(gr) (eq. 0.5 * dfdza = 0.5 * dfdzb in original)
   !--------------------------------------------------------------------------
-  USE kinds
+  USE kinds, ONLY : DP
   USE constants, ONLY: pi
   implicit none
   real(DP) :: rho, grho, sx, v1x, v2x
@@ -910,7 +910,7 @@ subroutine hcth(rho,grho,sx,v1x,v2x)
 end subroutine hcth
 !-------------------------------------------------------------------=
 subroutine pwcorr(r,c,g,dg)
-  USE kinds
+  USE kinds, ONLY : DP
   implicit none
   real(DP) :: r, g, dg, c(6)
   real(DP) :: r12, r32, r2, rb, drb, sb
@@ -975,7 +975,7 @@ subroutine wcx (rho, grho, sx, v1x, v2x)
   ! Wu-Cohen exchange (without Slater exchange):
   ! Z. Wu and R. E. Cohen, PRB 73, 235116 (2006)
   !
-  USE kinds
+  USE kinds, ONLY : DP
   USE constants, ONLY : pi
   implicit none
   real(DP) :: rho, grho, sx, v1x, v2x
@@ -1119,7 +1119,7 @@ end function dpz
 !-----------------------------------------------------------------------
 !
 !      INCLUDE 'cnst.inc'
-      use kinds
+      use kinds, ONLY : DP
 
       IMPLICIT REAL*8 (A-H,O-Z)
 

@@ -11,7 +11,7 @@ subroutine invmat (n, a, a_inv, da)
   ! if the matrix is dimensioned 3x3, it also computes determinant "da"
   ! matrix "a" is unchanged on output - LAPACK
   !
-  USE kinds
+  USE kinds, ONLY : DP
   implicit none
   integer :: n
   real(DP), DIMENSION (n,n) :: a, a_inv

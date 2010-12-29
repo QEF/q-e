@@ -11,7 +11,7 @@ SUBROUTINE invmat_complex (n, a, a_inv, da)
   ! dimensioned (n,n). If the matrix is dimensioned 3x3, it also computes 
   ! determinant "da". Matrix "a" is unchanged on output - LAPACK
   !
-  USE kinds
+  USE kinds, ONLY : DP
   IMPLICIT NONE
   INTEGER :: n
   COMPLEX (DP), DIMENSION (n,n) :: a, a_inv

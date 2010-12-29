@@ -13,7 +13,7 @@ subroutine dylmr2 (nylm, ngy, g, gg, dylm, ipol)
   !     using simple numerical derivation (SdG)
   !     The spherical harmonics are calculated in ylmr2
   !
-  USE kinds
+  USE kinds, ONLY : DP
   implicit none
   !
   !    here the I/O variables

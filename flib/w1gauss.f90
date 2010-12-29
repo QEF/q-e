@@ -22,7 +22,7 @@ function w1gauss (x, n)
   !     to the negative of the electronic entropy.
   !
   !
-  USE kinds
+  USE kinds, ONLY : DP
   USE constants, ONLY : pi
   implicit none
   real(DP) :: w1gauss, x

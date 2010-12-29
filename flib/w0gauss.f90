@@ -19,7 +19,7 @@ function w0gauss (x, n)
   !
   ! --> (n=-99): derivative of Fermi-Dirac function: 0.5/(1.0+cosh(x))
   !
-  USE kinds
+  USE kinds, ONLY : DP
   USE constants, ONLY : sqrtpm1
   implicit none
   real(DP) :: w0gauss, x

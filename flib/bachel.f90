@@ -10,7 +10,7 @@
 subroutine bachel (alps, aps, npseu, lmax)
   !----------------------------------------------------------------------
   !
-  USE kinds
+  USE kinds, ONLY : DP
   USE constants , ONLY : pi
   implicit none
   !

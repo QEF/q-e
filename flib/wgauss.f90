@@ -20,7 +20,7 @@ function wgauss (x, n)
   !
   ! --> (n=-99): Fermi-Dirac case: 1.0/(1.0+exp(-x)).
   !
-  USE kinds
+  USE kinds, ONLY : DP
   USE constants, ONLY : pi
   implicit none
   real(DP) :: wgauss, x

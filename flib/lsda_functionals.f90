@@ -12,7 +12,7 @@ subroutine pz_polarized (rs, ec, vc)
   !     J.P. Perdew and A. Zunger, PRB 23, 5048 (1981)
   !     spin-polarized energy and potential
   !
-  USE kinds
+  USE kinds, ONLY : DP
   implicit none
   real(DP) :: rs, ec, vc
   real(DP) :: a, b, c, d, gc, b1, b2
@@ -53,7 +53,7 @@ subroutine pz_spin (rs, zeta, ec, vcup, vcdw)
   !-----------------------------------------------------------------------
   !     J.P. Perdew and Y. Wang, PRB 45, 13244 (1992)
   !
-  USE kinds
+  USE kinds, ONLY : DP
   implicit none
   real(DP) :: rs, zeta, ec, vcup, vcdw
   !
@@ -192,7 +192,7 @@ subroutine pw_spin (rs, zeta, ec, vcup, vcdw)
   !-----------------------------------------------------------------------
   !     J.P. Perdew and Y. Wang, PRB 45, 13244 (1992)
   !
-  USE kinds
+  USE kinds, ONLY : DP
   implicit none
   real(DP) :: rs, zeta, ec, vcup, vcdw
   ! xc parameters, unpolarised
@@ -289,7 +289,7 @@ subroutine pw_spin_vec (rs, zeta, evc, length)
   !-----------------------------------------------------------------------
   !     J.P. Perdew and Y. Wang, PRB 45, 13244 (1992)
   !
-  USE kinds
+  USE kinds, ONLY : DP
   implicit none
   integer :: length
   real(DP) :: rs(length), zeta(length), evc(length,3)
@@ -389,7 +389,7 @@ subroutine becke88_spin (rho, grho, sx, v1x, v2x)
   !-----------------------------------------------------------------------
   ! Becke exchange: A.D. Becke, PRA 38, 3098 (1988) - Spin polarized case
   !
-  USE kinds
+  USE kinds, ONLY : DP
   implicit none
   real(DP) :: rho, grho, sx, v1x, v2x
   ! input: charge
@@ -424,7 +424,7 @@ subroutine perdew86_spin (rho, zeta, grho, sc, v1cup, v1cdw, v2c)
   ! Perdew gradient correction on correlation: PRB 33, 8822 (1986)
   ! spin-polarized case
   !
-  USE kinds
+  USE kinds, ONLY : DP
   implicit none
   real(DP) :: rho, zeta, grho, sc, v1cup, v1cdw, v2c
   real(DP) :: p1, p2, p3, p4, pc1, pc2, pci
@@ -475,7 +475,7 @@ subroutine ggac_spin (rho, zeta, grho, sc, v1cup, v1cdw, v2c)
   !-----------------------------------------------------------------------
   ! Perdew-Wang GGA (PW91) correlation part - spin-polarized
   !
-  USE kinds
+  USE kinds, ONLY : DP
   implicit none
   real(DP) :: rho, zeta, grho, sc, v1cup, v1cdw, v2c
   real(DP) :: al, pa, pb, pc, pd, cx, cxc0, cc0
@@ -556,7 +556,7 @@ subroutine pbec_spin (rho, zeta, grho, iflag, sc, v1cup, v1cdw, v2c)
   ! iflag = 1: J.P.Perdew, K.Burke, M.Ernzerhof, PRL 77, 3865 (1996).
   ! iflag = 2: J.P.Perdew et al., PRL 100, 136406 (2008)
   !
-  USE kinds
+  USE kinds, ONLY : DP
   implicit none
   integer, intent(in) :: iflag
   real(DP) :: rho, zeta, grho, sc, v1cup, v1cdw, v2c
@@ -615,7 +615,7 @@ subroutine slater_spin (rho, zeta, ex, vxup, vxdw)
   !-----------------------------------------------------------------------
   !     Slater exchange with alpha=2/3, spin-polarized case
   !
-  USE kinds
+  USE kinds, ONLY : DP
   implicit none
   real(DP) :: rho, zeta, ex, vxup, vxdw
   real(DP) :: f, alpha, third, p43
@@ -640,7 +640,7 @@ subroutine slater_spin_vec(rho, zeta, evx, length)
   !-----------------------------------------------------------------------
   !     Slater exchange with alpha=2/3, spin-polarized case
   !
-  USE kinds
+  USE kinds, ONLY : DP
   implicit none
   integer  :: length
   real(DP) :: rho(length), zeta(length), evx(length,3)
@@ -665,7 +665,7 @@ SUBROUTINE slater_rxc_spin ( rho, Z, ex, vxup, vxdw )
   !-----------------------------------------------------------------------
   !     Slater exchange with alpha=2/3, relativistic exchange case
   !
-  USE kinds
+  USE kinds, ONLY : DP
   USE constants, ONLY : pi
   IMPLICIT none
   real (DP):: rho, ex, vxup, vxdw

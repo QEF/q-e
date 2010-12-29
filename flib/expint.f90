@@ -16,7 +16,7 @@
 ! Inspired from Numerical Recipes
 ! Courtesy of Hannu-Pekka Komsa
 ! 
-      USE kinds
+      USE kinds, ONLY : DP
       IMPLICIT NONE
       INTEGER, INTENT(IN) :: n
       REAL(DP), INTENT(IN) :: x

@@ -1,7 +1,7 @@
 ! Slightly modified version of LINPACK routines zgefa and zgedi
 
       SUBROUTINE ZGEFA(A,LDA,N,IPVT,INFO)
-      USE kinds
+      USE kinds, ONLY : DP
       INTEGER LDA,N,IPVT(*),INFO
       COMPLEX(DP) A(LDA,*)
 !
@@ -114,7 +114,7 @@
       END SUBROUTINE ZGEFA
 
       SUBROUTINE ZGEDI(A,LDA,N,IPVT,DET,WORK,JOB)
-      USE kinds
+      USE kinds, ONLY : DP
       INTEGER LDA,N,IPVT(*),JOB
       COMPLEX(DP) A(LDA,*),DET(2),WORK(*)
 !

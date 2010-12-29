@@ -15,7 +15,7 @@ subroutine ylmr2 (lmax2, ng, g, gg, ylm)
   !     Recipes but avoiding the calculation of factorials that generate 
   !     overflow for lmax > 11
   !
-  USE kinds
+  USE kinds, ONLY : DP
   USE constants, ONLY : pi, fpi
   implicit none
   !

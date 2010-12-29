@@ -13,7 +13,7 @@
 ! ...             av(i) = alpha / v(i)
 ! ...
 
-      USE kinds
+      USE kinds, ONLY : DP
       IMPLICIT NONE
       INTEGER, INTENT(IN) :: n
       INTEGER :: i

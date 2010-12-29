@@ -37,7 +37,7 @@ MODULE parser
   !----------------------------------------------------------------------------
   !
   USE io_global, ONLY : stdout
-  USE kinds
+  USE kinds, ONLY : DP
   !
   PRIVATE
   !

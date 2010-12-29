@@ -26,7 +26,7 @@ subroutine hpsort_eps (n, ra, ind, eps)
   !
   ! adapted from Numerical Recipes pg. 329 (new edition)
   !
-  use kinds
+  use kinds, only : DP
   implicit none  
   !-input/output variables
   integer, intent(in) :: n  
@@ -150,7 +150,7 @@ subroutine hpsort (n, ra, ind)
   !
   ! adapted from Numerical Recipes pg. 329 (new edition)
   !
-  use kinds
+  use kinds, only : DP
   implicit none  
   !-input/output variables
   integer :: n  
