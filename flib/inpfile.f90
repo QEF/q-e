@@ -204,7 +204,7 @@ SUBROUTINE get_arg_nbgrp( nbgrp )
       !
       CALL getarg( iiarg, np )
       !
-      IF ( TRIM( np ) == '-nbgrd' .OR. TRIM( np ) == '-nband_group' .OR. &
+      IF ( TRIM( np ) == '-nbgrp' .OR. TRIM( np ) == '-nband_group' .OR. &
            TRIM( np ) == '-nb' .OR. TRIM( np ) == '-nband' ) THEN
          !
          CALL getarg( ( iiarg + 1 ), np )
