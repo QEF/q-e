@@ -24,7 +24,7 @@ SUBROUTINE from_scratch( )
                                      a2, a3, b1, b2, b3
     USE cell_nose,            ONLY : xnhh0, xnhhm, vnhh
     USE electrons_nose,       ONLY : xnhe0, xnhem, vnhe
-    use electrons_base,       ONLY : nbsp, f, nspin, nupdwn, iupdwn
+    use electrons_base,       ONLY : nbsp, f, nspin, nupdwn, iupdwn, distribute_c
     USE electrons_module,     ONLY : occn_info
     USE energies,             ONLY : entropy, eself, enl, ekin, enthal, etot, ekincm
     USE energies,             ONLY : dft_energy_type, debug_energies
@@ -51,7 +51,7 @@ SUBROUTINE from_scratch( )
     USE orthogonalize_base,   ONLY : updatc, calphi
     USE atoms_type_module,    ONLY : atoms_type
     USE wave_base,            ONLY : wave_steepest
-    USE wavefunctions_module, ONLY : c0, cm, phi => cp
+    USE wavefunctions_module, ONLY : c0, cm, phi => cp, c0_bgrp, cm_bgrp, cp_bgrp
     USE grid_dimensions,      ONLY : nr1, nr2, nr3
     USE time_step,            ONLY : delt
     USE cp_main_variables,    ONLY : setval_lambda, descla, bephi, becp_dist, becdr, nfi, &
@@ -173,7 +173,9 @@ SUBROUTINE from_scratch( )
        !
        if ( tstress ) CALL caldbec( ngw, nkb, nbsp, 1, nsp, eigr, cm, dbec )
        !
-       CALL rhoofr ( nfi, cm(:,:), irb, eigrb, bec, becsum, rhor, rhog, rhos, enl, denl, ekin, dekin6 )
+       CALL distribute_c( cm, cm_bgrp )
+       !
+       CALL rhoofr ( nfi, cm_bgrp, irb, eigrb, bec, becsum, rhor, rhog, rhos, enl, denl, ekin, dekin6 )
        !
        edft%enl  = enl
        edft%ekin = ekin

@@ -44,8 +44,9 @@
       USE control_flags,            ONLY: tdipole, gamma_only
       USE berry_phase,              ONLY: berry_setup
       USE electrons_module,         ONLY: bmeshset
+      USE electrons_base,           ONLY: distribute_bands
       USE problem_size,             ONLY: cpsizes
-      USE mp_global,                ONLY: use_task_groups, nproc_bgrp
+      USE mp_global,                ONLY: use_task_groups, nproc_bgrp, nbgrp, my_bgrp_id
       USE task_groups,              ONLY: task_groups_init
       USE core,                     ONLY: nlcc_any
       USE uspp,                     ONLY: okvan
@@ -178,6 +179,10 @@
          CALL errore( ' init_dimensions ', ' nr1b, nr2b, nr3b must be given for ultrasoft and core corrected pp ', 1 )
 
       END IF
+
+      ! ... distribute bands
+
+      CALL distribute_bands( nbgrp, my_bgrp_id )
 
       ! ... printout g vector distribution summary
       !

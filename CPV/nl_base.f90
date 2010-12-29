@@ -1001,7 +1001,7 @@ subroutine nlfq( c, eigr, bec, becdr, fion )
   use electrons_base, only : n => nbsp, ispin, f, nspin, iupdwn, nupdwn
   use gvecw,          only : ngw
   use constants,      only : pi, fpi
-  use mp_global,      only : me_bgrp, intra_bgrp_comm, nproc_bgrp
+  use mp_global,      only : me_bgrp, intra_bgrp_comm, nbgrp, inter_bgrp_comm, my_bgrp_id
   use mp,             only : mp_sum
   USE cp_main_variables, ONLY: nlax, descla, la_proc
   USE descriptors,       ONLY: nlar_ , nlac_ , ilar_ , ilac_ , lambda_node_ , &
@@ -1015,7 +1015,11 @@ subroutine nlfq( c, eigr, bec, becdr, fion )
   real(DP),    intent(out) :: fion( 3, nat )
   !
   integer   :: k, is, ia, isa, iss, inl, iv, jv, i, ir, nr, nss, istart, ioff
+  INTEGER  :: ibgrp_start( nspin ), ibgrp_end( nspin ), nr_bgrp( nspin )
+  LOGICAL  :: compute( nspin )
+  INTEGER, EXTERNAL :: ldim_block, gind_block
   real(DP) :: temp
+  real(DP) :: sum_tmpdr
   !
   real(DP), allocatable :: tmpbec(:,:), tmpdr(:,:) 
   real(DP), allocatable :: fion_loc(:,:)
@@ -1033,8 +1037,24 @@ subroutine nlfq( c, eigr, bec, becdr, fion )
   allocate ( fion_loc( 3, nat ) )
   !
   fion_loc = 0.0d0
-
   !
+  ! distribute bands, remember here "becdr" coeff is already distributed on the ortho group
+  !
+  DO iss = 1, nspin
+     compute( iss ) = la_proc .AND. ( descla( la_myr_ , iss ) == descla( la_myc_ , iss ) )
+     IF( compute( iss ) ) THEN
+        nr = descla( nlar_ , iss )
+        IF( nbgrp > 1 ) THEN
+           nr_bgrp( iss ) = ldim_block( nr, nbgrp, my_bgrp_id)
+           ibgrp_start( iss ) = gind_block( 1, nr, nbgrp, my_bgrp_id )
+        ELSE 
+           nr_bgrp( iss ) = nr
+           ibgrp_start( iss ) = 1
+        END IF
+        ibgrp_end( iss )   = ibgrp_start( iss ) + nr_bgrp( iss ) - 1
+     END IF
+  END DO
+
   DO k = 1, 3
 
 !$omp parallel default(shared), &
@@ -1064,8 +1084,7 @@ subroutine nlfq( c, eigr, bec, becdr, fion )
               nss = nupdwn( iss )
               istart = iupdwn( iss )
 
-              IF( la_proc .AND. &
-                  ( descla( la_myr_ , iss ) == descla( la_myc_ , iss ) ) ) THEN
+              IF( compute( iss ) ) THEN
 
                  ! only processors on the diagonal of the square proc grid enter here.
                  ! This is to distribute the load among different multi-core nodes,
@@ -1083,7 +1102,8 @@ subroutine nlfq( c, eigr, bec, becdr, fion )
                     do jv=1,nh(is)
                        inl=ish(is)+(jv-1)*na(is)+ia
                        temp=dvan(iv,jv,is)+deeq(jv,iv,isa,iss)
-                       do i=1,nr
+                       ! do i=1,nr
+                       do i = ibgrp_start( iss ), ibgrp_end( iss )  
                           tmpbec(iv,i)=tmpbec(iv,i)+temp*bec(inl,i+ioff)
                        end do
                     end do
@@ -1091,18 +1111,23 @@ subroutine nlfq( c, eigr, bec, becdr, fion )
 
                  do iv=1,nh(is)
                     inl=ish(is)+(iv-1)*na(is)+ia
-                    do i=1,nr
+                    ! do i=1,nr
+                    do i = ibgrp_start( iss ), ibgrp_end( iss )  
                        tmpdr(iv,i)=f(i+ioff)*becdr( inl, i+(iss-1)*nlax, k )
                     end do
                  end do
 
-                 do i=1,nr
+                 sum_tmpdr = 0.0d0
+                 ! do i=1,nr
+                 do i = ibgrp_start( iss ), ibgrp_end( iss )  
                     do iv=1,nh(is)
-                       tmpdr(iv,i)=tmpdr(iv,i)*tmpbec(iv,i)
+                       sum_tmpdr = sum_tmpdr + tmpdr(iv,i)*tmpbec(iv,i)
+                       ! tmpdr(iv,i)=tmpdr(iv,i)*tmpbec(iv,i)
                     end do
                  end do
 
-                 fion_loc(k,isa) = fion_loc(k,isa)-2.d0*SUM(tmpdr)
+                 !fion_loc(k,isa) = fion_loc(k,isa)-2.d0*SUM(tmpdr)
+                 fion_loc(k,isa) = fion_loc(k,isa)-2.d0*sum_tmpdr
 
               END IF
            END DO
@@ -1110,9 +1135,13 @@ subroutine nlfq( c, eigr, bec, becdr, fion )
      END DO
      deallocate ( tmpbec, tmpdr )
 !$omp end parallel
+
   END DO
   !
   CALL mp_sum( fion_loc, intra_bgrp_comm )
+  IF( nbgrp > 1 ) THEN
+     CALL mp_sum( fion_loc, inter_bgrp_comm )
+  END IF
   !
   fion = fion + fion_loc
   !

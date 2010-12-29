@@ -33,7 +33,7 @@ SUBROUTINE init_run()
   USE uspp,                     ONLY : nkb, vkb, deeq, becsum,nkbus
   USE core,                     ONLY : rhoc
   USE smooth_grid_dimensions,   ONLY : nrxxs
-  USE wavefunctions_module,     ONLY : c0, cm, cp
+  USE wavefunctions_module,     ONLY : c0, cm, cp, c0_bgrp, cm_bgrp, cp_bgrp
   USE cdvan,                    ONLY : dbec, drhovan
   USE ensemble_dft,             ONLY : tens, z0t
   USE cg_module,                ONLY : tcg
@@ -53,6 +53,7 @@ SUBROUTINE init_run()
   USE dener,                    ONLY : detot
   USE time_step,                ONLY : dt2, delt, tps
   USE electrons_nose,           ONLY : xnhe0, xnhem, vnhe
+  USE electrons_base,           ONLY : nbspx_bgrp
   USE cell_nose,                ONLY : xnhh0, xnhhm, vnhh
   USE funct,                    ONLY : dft_is_meta
   USE metagga,                  ONLY : crosstaus, dkedtaus, gradwfc
@@ -75,9 +76,8 @@ SUBROUTINE init_run()
   USE orthogonalize_base,       ONLY : mesure_diag_perf, mesure_mmul_perf
   USE step_penalty,             ONLY : step_pen
   USE ions_base,                ONLY : ions_reference_positions, cdmi, taui
+  USE mp_global,                ONLY : nbgrp
   USE ldau_cp
-  !USE mp_global,                ONLY : nbgrp, me_bgrp, my_bgrp_id
-  USE mp, only : mp_barrier
   !
   IMPLICIT NONE
   !
@@ -147,6 +147,10 @@ SUBROUTINE init_run()
   ALLOCATE( cm( ngw, nbspx ) )
   ALLOCATE( cp( ngw, nbspx ) )
   !
+  ALLOCATE( c0_bgrp( ngw, nbspx_bgrp ) )
+  ALLOCATE( cm_bgrp( ngw, nbspx_bgrp ) )
+  ALLOCATE( cp_bgrp( ngw, nbspx_bgrp ) )
+  !
   IF ( iprsta > 2 ) THEN
      !
      CALL wave_descriptor_info( wfill, 'wfill', stdout )
@@ -180,7 +184,10 @@ SUBROUTINE init_run()
   ALLOCATE( vkb( ngw, nkb ) )
   !
   IF ( dft_is_meta() .AND. tens ) &
-     CALL errore( 'cprmain ', 'ensemble_dft not implimented for metaGGA', 1 )
+     CALL errore( ' init_run ', 'ensemble_dft not implimented for metaGGA', 1 )
+  !
+  IF ( dft_is_meta() .AND. nbgrp > 1 ) &
+     CALL errore( ' init_run ', 'band parallelization not implimented for metaGGA', 1 )
   !
   IF ( dft_is_meta() .AND. tpre ) THEN
      !
@@ -190,15 +197,34 @@ SUBROUTINE init_run()
      !
   END IF
   !
-  IF ( lwf ) CALL allocate_wannier( nbsp, nrxxs, nspin, ngm )
+  IF ( lwf ) THEN
+     IF( nbgrp > 1 ) &
+        CALL errore( ' init_run ', ' wannier with band paralleliztion not implemented ', 1 )
+     CALL allocate_wannier( nbsp, nrxxs, nspin, ngm )
+  END IF
   !
-  IF ( tens .OR. tcg ) &
+  IF ( tens .OR. tcg ) THEN
+     IF( nbgrp > 1 ) &
+        CALL errore( ' init_run ', ' ensemble_dft with band paralleliztion not implemented ', 1 )
      CALL allocate_ensemble_dft( nkb, nbsp, ngw, nudx, nspin, nbspx, nrxxs, nat, nlax, nrlx )
+  END IF
   !
-  IF ( tcg ) CALL allocate_cg( ngw, nbspx,nkbus )
+  IF ( tcg ) THEN 
+     IF( nbgrp > 1 ) &
+        CALL errore( ' init_run ', ' cg with band paralleliztion not implemented ', 1 )
+     CALL allocate_cg( ngw, nbspx,nkbus )
+  END IF
   !
-  IF ( tefield ) CALL allocate_efield( ngw, ngw_g, nbspx, nhm, nax, nsp )
-  IF ( tefield2 ) CALL allocate_efield2( ngw, nbspx, nhm, nax, nsp )
+  IF ( tefield ) THEN
+     IF( nbgrp > 1 ) &
+        CALL errore( ' init_run ', ' efield with band paralleliztion not implemented ', 1 )
+     CALL allocate_efield( ngw, ngw_g, nbspx, nhm, nax, nsp )
+  END IF
+  IF ( tefield2 ) THEN
+     IF( nbgrp > 1 ) &
+        CALL errore( ' init_run ', ' efield with band paralleliztion not implemented ', 1 )
+     CALL allocate_efield2( ngw, nbspx, nhm, nax, nsp )
+  END IF
   !
   IF ( ALLOCATED( deeq ) ) deeq(:,:,:,:) = 0.D0
   !

@@ -65,7 +65,7 @@
 
 !-----------------------------------------------------------------------
    SUBROUTINE rhoofr_cp &
-      ( nfi, c, irb, eigrb, bec, rhovan, rhor, rhog, rhos, enl, denl, ekin, dekin, tstress, ndwwf )
+      ( nfi, c_bgrp, irb, eigrb, bec, rhovan, rhor, rhog, rhos, enl, denl, ekin, dekin, tstress, ndwwf )
 !-----------------------------------------------------------------------
 !
 !  this routine computes:
@@ -111,7 +111,7 @@
                                     nr1x, nr2x, nr3x, nrxx
       USE cell_base,          ONLY: omega
       USE smooth_grid_dimensions, ONLY: nrxxs
-      USE electrons_base,     ONLY: nx => nbspx, n => nbsp, f, ispin, nspin
+      USE electrons_base,     ONLY: nspin, nbsp_bgrp, ispin_bgrp, f_bgrp
       USE constants,          ONLY: pi, fpi
       USE mp,                 ONLY: mp_sum
       USE io_global,          ONLY: stdout, ionode
@@ -138,7 +138,7 @@
       REAL(DP) denl(3,3), dekin(6)
       COMPLEX(DP) eigrb( :, : )
       COMPLEX(DP) rhog( :, : )
-      COMPLEX(DP) c( :, : )
+      COMPLEX(DP) c_bgrp( :, : )
       INTEGER irb( :, : )
       LOGICAL, OPTIONAL, INTENT(IN) :: tstress
       INTEGER, OPTIONAL, INTENT(IN) :: ndwwf
@@ -146,7 +146,6 @@
       ! local variables
 
       INTEGER  :: iss, isup, isdw, iss1, iss2, ios, i, ir, ig, k
-      INTEGER  :: icnt
       REAL(DP) :: rsumr(2), rsumg(2), sa1, sa2, detmp(6), mtmp(3,3)
       REAL(DP) :: rnegsum, rmin, rmax, rsum
       REAL(DP), EXTERNAL :: enkin, ennl
@@ -171,13 +170,19 @@
       !
       !  calculation of kinetic energy ekin
       !
-      ekin = enkin( c, ngw, f, n )
+      ekin = enkin( c_bgrp, ngw, f_bgrp, nbsp_bgrp )
+      !
+      IF( nbgrp > 1 ) &
+         CALL mp_sum( ekin, inter_bgrp_comm )
       !
       IF( ttstress ) THEN
          !
          ! ... compute kinetic energy contribution
          !
-         CALL stress_kin( dekin, c, f )
+         CALL stress_kin( dekin, c_bgrp, f_bgrp )
+         !
+         IF( nbgrp > 1 ) &
+            CALL mp_sum( dekin, inter_bgrp_comm )
          !
       END IF
 
@@ -249,12 +254,12 @@
          !     important: if n is odd then nx must be .ge.n+1 and c(*,n+1)=0.
          ! 
 
-         IF ( MOD( n, 2 ) /= 0 ) THEN
+         IF ( MOD( nbsp_bgrp, 2 ) /= 0 ) THEN
             !
-            IF( SIZE( c, 2 ) < n+1 ) &
-               CALL errore( ' rhoofr ', ' c second dimension too small ', SIZE( c, 2 ) )
+            IF( SIZE( c_bgrp, 2 ) < nbsp_bgrp + 1 ) &
+               CALL errore( ' rhoofr ', ' c second dimension too small ', SIZE( c_bgrp, 2 ) )
             !
-            c( :, n+1 ) = ( 0.d0, 0.d0 )
+            c_bgrp( :, nbsp_bgrp + 1 ) = ( 0.d0, 0.d0 )
             !
          ENDIF
          !
@@ -266,14 +271,14 @@
             !
             psis = 0.D0
             DO ig=1,ngw
-               psis(nlsm(ig))=CONJG(c(ig,i))
-               psis(nls(ig))=c(ig,i)
+               psis(nlsm(ig))=CONJG(c_bgrp(ig,i))
+               psis(nls(ig))=c_bgrp(ig,i)
             END DO
             !
             CALL invfft('Wave',psis, dffts )
             !
             iss1=1
-            sa1=f(i)/omega
+            sa1=f_bgrp(i)/omega
             DO ir=1,nrxxs
                rhos(ir,iss1)=rhos(ir,iss1) + sa1*( DBLE(psis(ir)))**2
             END DO
@@ -286,34 +291,26 @@
             !
             ALLOCATE( psis( nrxxs ) ) 
             !
-            icnt = 0
-            !
-            DO i = 1, n, 2
+            DO i = 1, nbsp_bgrp, 2
                !
-               IF( icnt == my_bgrp_id ) THEN
-                  !
-                  CALL c2psi( psis, nrxxs, c( 1, i ), c( 1, i+1 ), ngw, 2 )
-   
-                  CALL invfft('Wave',psis, dffts )
-                  !
-                  iss1 = ispin(i)
-                  sa1  = f(i) / omega
-                  IF ( i .NE. n ) THEN
-                     iss2 = ispin(i+1)
-                     sa2  = f(i+1) / omega
-                  ELSE
-                     iss2 = iss1
-                     sa2  = 0.0d0
-                  END IF
-                  !
-                  DO ir = 1, nrxxs
-                     rhos(ir,iss1) = rhos(ir,iss1) + sa1 * ( DBLE(psis(ir)))**2
-                     rhos(ir,iss2) = rhos(ir,iss2) + sa2 * (AIMAG(psis(ir)))**2
-                  END DO
+               CALL c2psi( psis, nrxxs, c_bgrp( 1, i ), c_bgrp( 1, i+1 ), ngw, 2 )
 
+               CALL invfft('Wave',psis, dffts )
+               !
+               iss1 = ispin_bgrp(i)
+               sa1  = f_bgrp(i) / omega
+               IF ( i .NE. nbsp_bgrp ) THEN
+                  iss2 = ispin_bgrp(i+1)
+                  sa2  = f_bgrp(i+1) / omega
+               ELSE
+                  iss2 = iss1
+                  sa2  = 0.0d0
                END IF
                !
-               icnt = MOD( icnt + 1 , nbgrp )
+               DO ir = 1, nrxxs
+                  rhos(ir,iss1) = rhos(ir,iss1) + sa1 * ( DBLE(psis(ir)))**2
+                  rhos(ir,iss2) = rhos(ir,iss2) + sa2 * (AIMAG(psis(ir)))**2
+               END DO
                !
             END DO
             !
@@ -388,7 +385,7 @@
             END DO
          ENDIF
          !
-         IF ( dft_is_meta() ) CALL kedtauofr_meta( c, psi, SIZE( psi ), psis, SIZE( psis ) ) ! METAGGA
+         IF ( dft_is_meta() ) CALL kedtauofr_meta( c_bgrp, psi, SIZE( psi ), psis, SIZE( psis ) ) ! METAGGA
          !
          DEALLOCATE( psi ) 
          DEALLOCATE( psis ) 
@@ -495,11 +492,7 @@
          !
          tmp_rhos = 0_DP
 
-         icnt = 0
-
-         do i = 1, n, 2*nogrp
-
-            IF( icnt == my_bgrp_id ) THEN 
+         do i = 1, nbsp_bgrp, 2*nogrp
             !
             !  Initialize wave-functions in Fourier space (to be FFTed)
             !  The size of psis is nnr: which is equal to the total number
@@ -527,7 +520,7 @@
                !
                !  here we pack 2*nogrp electronic states in the psis array
                !
-               IF ( ( i + eig_index - 1 ) <= n ) THEN
+               IF ( ( i + eig_index - 1 ) <= nbsp_bgrp ) THEN
                   !
                   !  Outer loop for eigenvalues
                   !  The  eig_index loop is executed only ONCE when NOGRP=1.
@@ -540,8 +533,8 @@
 
 !$omp do
                   do ig=1,ngw
-                     psis(nlsm(ig)+eig_offset*dffts%tg_nnr)=conjg(c(ig,i+eig_index-1))+ci*conjg(c(ig,i+eig_index))
-                     psis(nls(ig)+eig_offset*dffts%tg_nnr)=c(ig,i+eig_index-1)+ci*c(ig,i+eig_index)
+                     psis(nlsm(ig)+eig_offset*dffts%tg_nnr)=conjg(c_bgrp(ig,i+eig_index-1))+ci*conjg(c_bgrp(ig,i+eig_index))
+                     psis(nls(ig)+eig_offset*dffts%tg_nnr)=c_bgrp(ig,i+eig_index-1)+ci*c_bgrp(ig,i+eig_index)
                   end do
                   !
                   eig_offset = eig_offset + 1
@@ -575,18 +568,18 @@
             !
             ii = 2 * ii - 1
 
-            IF( ii + i - 1 < n ) THEN
-               iss1=ispin( ii + i - 1 )
-               sa1 =f( ii + i - 1 )/omega
-               iss2=ispin( ii + i )
-               sa2 =f( ii + i )/omega
-            ELSE IF( ii + i - 1 == n ) THEN
-               iss1=ispin( ii + i - 1 )
-               sa1 =f( ii + i - 1 )/omega
+            IF( ii + i - 1 < nbsp_bgrp ) THEN
+               iss1=ispin_bgrp( ii + i - 1 )
+               sa1 =f_bgrp( ii + i - 1 )/omega
+               iss2=ispin_bgrp( ii + i )
+               sa2 =f_bgrp( ii + i )/omega
+            ELSE IF( ii + i - 1 == nbsp_bgrp ) THEN
+               iss1=ispin_bgrp( ii + i - 1 )
+               sa1 =f_bgrp( ii + i - 1 )/omega
                iss2=iss1
                sa2=0.0d0
             ELSE
-               iss1=ispin( n )
+               iss1=ispin_bgrp( nbsp_bgrp )
                sa1 = 0.0d0
                iss2=iss1
                sa2 =0.0d0
@@ -615,10 +608,6 @@
                tmp_rhos(ir,iss1) = tmp_rhos(ir,iss1) + sa1*( real(psis(ir)))**2
                tmp_rhos(ir,iss2) = tmp_rhos(ir,iss2) + sa2*(aimag(psis(ir)))**2
             end do
-            !
-            END IF
-            !
-            icnt = MOD( icnt + 1, nbgrp )
             !
          END DO
 

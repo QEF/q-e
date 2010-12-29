@@ -146,7 +146,7 @@
 
 
 !------------------------------------------------------------------------------!
-   SUBROUTINE stress_kin_x( dekin, c0, occ ) 
+   SUBROUTINE stress_kin_x( dekin, c0_bgrp, occ_bgrp ) 
 !------------------------------------------------------------------------------!
 
 !  this routine computes the kinetic energy contribution to the stress 
@@ -161,15 +161,15 @@
       USE constants,          ONLY: pi
       USE gvect, ONLY: gstart, gg, g
       USE cell_base,          ONLY: tpiba2
-      USE electrons_base,     ONLY: nspin, iupdwn, nupdwn
+      USE electrons_base,     ONLY: nspin, iupdwn_bgrp, nupdwn_bgrp
       USE stress_param,       ONLY: alpha, beta
 
       IMPLICIT NONE
 
 ! ... declare subroutine arguments
       REAL(DP),    INTENT(OUT) :: dekin(:)
-      COMPLEX(DP), INTENT(IN)  :: c0(:,:)
-      REAL(DP),    INTENT(IN)  :: occ(:)
+      COMPLEX(DP), INTENT(IN)  :: c0_bgrp(:,:)
+      REAL(DP),    INTENT(IN)  :: occ_bgrp(:)
 
 ! ... declare other variables
       REAL(DP)  :: sk(6), scg, efac
@@ -194,11 +194,11 @@
       ! ... compute kinetic energy contribution
 
       DO ispin = 1, nspin
-        DO ib = 1, nupdwn( ispin )
+        DO ib = 1, nupdwn_bgrp( ispin )
           sk = 0.0_DP
-          iwfc = ib + iupdwn( ispin ) - 1
+          iwfc = ib + iupdwn_bgrp( ispin ) - 1
           DO ig = gstart, ngw
-            scg = arg(ig) * CONJG( c0( ig, iwfc ) ) * c0( ig, iwfc )
+            scg = arg(ig) * CONJG( c0_bgrp( ig, iwfc ) ) * c0_bgrp( ig, iwfc )
             sk(1)  = sk(1) + scg * g( alpha( 1 ), ig ) * g( beta( 1 ), ig )
             sk(2)  = sk(2) + scg * g( alpha( 2 ), ig ) * g( beta( 2 ), ig )
             sk(3)  = sk(3) + scg * g( alpha( 3 ), ig ) * g( beta( 3 ), ig )
@@ -206,7 +206,7 @@
             sk(5)  = sk(5) + scg * g( alpha( 5 ), ig ) * g( beta( 5 ), ig )
             sk(6)  = sk(6) + scg * g( alpha( 6 ), ig ) * g( beta( 6 ), ig )
           END DO
-          dekin = dekin  + occ( iwfc ) * sk * tpiba2
+          dekin = dekin  + occ_bgrp( iwfc ) * sk * tpiba2
         END DO
       END DO
       dekin = - 2.0_DP * dekin

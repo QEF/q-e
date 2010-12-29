@@ -19,12 +19,12 @@ SUBROUTINE move_electrons_x( nfi, tfirst, tlast, b1, b2, b3, fion, &
   USE cp_main_variables,    ONLY : eigr, bec, irb, eigrb, rhog, rhos, rhor, &
                                    sfac, ema0bg, becdr, &
                                    taub, lambda, lambdam, lambdap, vpot
-  USE wavefunctions_module, ONLY : c0, cm, phi => cp
+  USE wavefunctions_module, ONLY : c0, cm, phi => cp, c0_bgrp, cm_bgrp, cp_bgrp
   USE cell_base,            ONLY : omega, ibrav, h, press
   USE uspp,                 ONLY : becsum, vkb, nkb
   USE energies,             ONLY : ekin, enl, entropy, etot
   USE grid_dimensions,      ONLY : nrxx
-  USE electrons_base,       ONLY : nbsp, nspin, f, nudx
+  USE electrons_base,       ONLY : nbsp, nspin, f, nudx, distribute_c
   USE core,                 ONLY : nlcc_any, rhoc
   USE ions_positions,       ONLY : tau0
   USE ions_base,            ONLY : nat
@@ -74,7 +74,9 @@ SUBROUTINE move_electrons_x( nfi, tfirst, tlast, b1, b2, b3, fion, &
           CALL get_wannier_center( tfirst, cm, bec, eigr, &
                                    eigrb, taub, irb, ibrav, b1, b2, b3 )
      !
-     CALL rhoofr( nfi, c0, irb, eigrb, bec, &
+     CALL distribute_c( c0, c0_bgrp )
+     !
+     CALL rhoofr( nfi, c0_bgrp, irb, eigrb, bec, &
                      becsum, rhor, rhog, rhos, enl, denl, ekin, dekin6 )
      !
      ! ... put core charge (if present) in rhoc(r)

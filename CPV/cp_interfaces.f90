@@ -230,11 +230,11 @@
   
    INTERFACE rhoofr
       SUBROUTINE rhoofr_cp &
-         ( nfi, c, irb, eigrb, bec, rhovan, rhor, rhog, rhos, enl, denl, ekin, dekin, tstress, ndwwf )
+         ( nfi, c_bgrp, irb, eigrb, bec, rhovan, rhor, rhog, rhos, enl, denl, ekin, dekin, tstress, ndwwf )
          USE kinds,      ONLY: DP         
          IMPLICIT NONE
          INTEGER nfi
-         COMPLEX(DP) c( :, : )
+         COMPLEX(DP) c_bgrp( :, : )
          INTEGER irb( :, : )
          COMPLEX(DP) eigrb( :, : )
          REAL(DP) bec(:,:)
