@@ -13,7 +13,7 @@
      ! ... G vectors with |G|^2 < ecutrho, cut-off for charge density
      ! ... With gamma tricks, G-vectors are divided into two half-spheres,
      ! ... G> and G<, containing G and -G (G=0 is in G>)
-     ! ... This is referred to as the "hard" or "dense" grid
+     ! ... This is referred to as the "dense" (or "hard", or "thick") grid
 
      USE kinds, ONLY: DP
 

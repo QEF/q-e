@@ -762,14 +762,7 @@
           CALL fft_dlay_scalar( dffts, ub, lb, nr1s, nr2s, nr3s, nr1sx, nr2sx, nr3sx, stw )
 
 #endif
-      !   set the actual (local) FFT dimensions
-      nr1l = dfftp % nr1
-      nr2l = dfftp % nr2
-      nr3l = dfftp % npl
-      nr1sl = dffts % nr1
-      nr2sl = dffts % nr2
-      nr3sl = dffts % npl
-      !   set the dimensions of the array allocated for the FFT
+      !   set the dimensions of the arrays allocated for the FFT
       nrxx  = dfftp % nnr
       nrxxs = dffts % nnr          
 

@@ -54,7 +54,7 @@ MODULE cp_restart
                                            nwordwfc, tmp_dir, diropn
       USE mp_global,                ONLY : intra_image_comm, me_image, nproc_image, intra_bgrp_comm
       USE printout_base,            ONLY : title
-      USE grid_dimensions,          ONLY : nr1, nr2, nr3, nr1x, nr2x, nr3l
+      USE grid_dimensions,          ONLY : nr1, nr2, nr3, nr1x, nr2x
       USE smooth_grid_dimensions,   ONLY : nr1s, nr2s, nr3s
       USE smallbox_grid_dimensions, ONLY : nr1b, nr2b, nr3b
       USE gvect,                    ONLY : ngm, ngm_g

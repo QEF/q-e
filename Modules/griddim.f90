@@ -23,9 +23,6 @@
      !  may differ from nr1 ,nr2 ,nr3 in order to boost performances
      INTEGER :: nr1x = 0, nr2x = 0, nr3x = 0
 
-     !  dimensions of the "dense" 3D grid (local on each processor)
-     INTEGER :: nr1l = 0, nr2l = 0, nr3l = 0
-
      ! size of the arrays allocated for the FFT, local to each processor:
      ! in parallel execution may differ from nr1x*nr2x*nr3x
      ! Not to be confused either with nr1*nr2*nr3 
@@ -33,7 +30,6 @@
 
      PRIVATE
      PUBLIC :: nr1, nr2,nr3, nr1x,nr2x,nr3x, nrxx
-     PUBLIC :: nr1l, nr2l,nr3l
 
 !=----------------------------------------------------------------------------=!
    END MODULE grid_dimensions
@@ -53,12 +49,10 @@
      !  parameter description: same as above but for smooth grid
      INTEGER :: nr1s = 0, nr2s = 0, nr3s = 0
      INTEGER :: nr1sx= 0, nr2sx= 0, nr3sx= 0
-     INTEGER :: nr1sl= 0, nr2sl= 0, nr3sl= 0
      INTEGER :: nrxxs = 0
 
      PRIVATE
      PUBLIC :: nr1s, nr2s,nr3s, nr1sx,nr2sx,nr3sx, nrxxs
-     PUBLIC :: nr1sl, nr2sl,nr3sl
 
 !=----------------------------------------------------------------------------=!
    END MODULE smooth_grid_dimensions
@@ -170,8 +164,8 @@
 
       USE io_global, ONLY: ionode, stdout
       USE fft_types, ONLY: fft_dlay_descriptor
-      USE grid_dimensions, ONLY: nr1l, nr2l, nr3l, nrxx
-      USE smooth_grid_dimensions, ONLY: nr1sl, nr2sl, nr3sl, nrxxs
+      USE grid_dimensions, ONLY: nrxx
+      USE smooth_grid_dimensions, ONLY: nrxxs
 
       IMPLICIT NONE
 
@@ -185,7 +179,7 @@
         WRITE( stdout,*)
         WRITE( stdout,*) '  Real Mesh'
         WRITE( stdout,*) '  ---------'
-        WRITE( stdout,1000) nr1, nr2, nr3, nr1l, nr2l, nr3l, 1, 1, nproc_
+        WRITE( stdout,1000) nr1, nr2, nr3, nr1, nr2, dfftp%npl, 1, 1, nproc_
         WRITE( stdout,1010) nr1x, nr2x, nr3x
         WRITE( stdout,1020) nrxx
         WRITE( stdout,*) '  Number of x-y planes for each processors: '
@@ -195,7 +189,7 @@
         WRITE( stdout,*)
         WRITE( stdout,*) '  Smooth Real Mesh'
         WRITE( stdout,*) '  ----------------'
-        WRITE( stdout,1000) nr1s, nr2s, nr3s, nr1sl, nr2sl, nr3sl, 1, 1, nproc_
+        WRITE( stdout,1000) nr1s, nr2s, nr3s, nr1s, nr2s, dffts%npl,1,1, nproc_
         WRITE( stdout,1010) nr1sx, nr2sx, nr3sx
         WRITE( stdout,1020) nrxxs
         WRITE( stdout,*) '  Number of x-y planes for each processors: '

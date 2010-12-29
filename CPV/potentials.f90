@@ -134,7 +134,7 @@
       USE gvect,           ONLY: ngm
       USE constants,       ONLY: gsmall, pi
       USE cell_base,       ONLY: tpiba2, s_to_r, alat
-      use grid_dimensions, only: nr1, nr2, nr3, nr1l, nr2l, nr3l, nrxx
+      use grid_dimensions, only: nr1, nr2, nr3, nrxx
 
       IMPLICIT NONE
       
@@ -150,7 +150,7 @@
       COMPLEX(DP), ALLOCATABLE :: grg(:)
       REAL(DP) :: rc, r(3), s(3), rmod, g2, rc2, arg, fact
       INTEGER   :: ig, i, j, k, ir
-      INTEGER   :: ir1, ir2, ir3
+      INTEGER   :: ir1, ir2, ir3, nr3l
 
       ir1 = 1
       ir2 = 1
@@ -158,6 +158,7 @@
       DO k = 1, me_bgrp
         ir3 = ir3 + dfftp%npp( k )
       END DO
+      nr3l = dfftp%npl
 
       ALLOCATE( grr( nrxx ) )
       ALLOCATE( grg( SIZE( screen_coul ) ) )
@@ -173,9 +174,9 @@
 
       DO k = 1, nr3l
         s(3) = DBLE ( (k-1) + (ir3 - 1) ) / nr3 - 0.5d0
-        DO j = 1, nr2l
+        DO j = 1, nr2
           s(2) = DBLE ( (j-1) + (ir2 - 1) ) / nr2 - 0.5d0
-          DO i = 1, nr1l
+          DO i = 1, nr1
             s(1) = DBLE ( (i-1) + (ir1 - 1) ) / nr1 - 0.5d0
             CALL S_TO_R( S, R, hmat )
             rmod = SQRT( r(1)**2 + r(2)**2 + r(3)**2 )
@@ -837,7 +838,7 @@
       USE gvect, ONLY: gstart, gg
       USE gvect, ONLY: ngm
       USE gvecw, ONLY: ngw
-      use grid_dimensions, only: nr1, nr2, nr3, nr1l, nr2l, nr3l, nrxx
+      use grid_dimensions, only: nr1, nr2, nr3, nrxx
       USE fft_interfaces, ONLY: fwfft, invfft
 
       IMPLICIT NONE
@@ -861,6 +862,7 @@
       COMPLEX(DP), ALLOCATABLE :: k_density(:)
       COMPLEX(DP) :: vscreen
       COMPLEX(DP), ALLOCATABLE :: screen_coul(:)
+      INTEGER      :: nr3l
 
 ! ... Subroutine body ...
 
@@ -870,7 +872,7 @@
         CALL cluster_bc( screen_coul, gg, ht%deth, ht%hmat )
       END IF
 
-
+      nr3l = dfftp%npl
       omega = ht%deth
 
       ALLOCATE( density( nrxx ) )
@@ -906,22 +908,22 @@
             !WRITE(6,*) 'ATOM ', ind_localisation( isa_input )
             !WRITE(6,*) 'POS  ', atoms_m%taus( :, isa_sorted )
 
-            work  = nr1l
+            work  = nr1
             work2 = sic_rloc * work
             work  = work * R(1) - work2
             Xmin  = FLOOR(work)
             work  = work + 2*work2
             Xmax  = FLOOR(work)
-            IF ( Xmax > nr1l ) Xmax = nr1l
+            IF ( Xmax > nr1 ) Xmax = nr1
             IF ( Xmin < 1 ) Xmin = 1
 
-            work  = nr2l
+            work  = nr2
             work2 = sic_rloc * work
             work  = work * R(2) - work2
             Ymin  = FLOOR(work)
             work  = work + 2*work2
             Ymax  = FLOOR(work)
-            IF ( Ymax > nr2l ) Ymax = nr2l
+            IF ( Ymax > nr2 ) Ymax = nr2
             IF ( Ymin < 1 ) Ymin = 1
 
             work  = nr3l
