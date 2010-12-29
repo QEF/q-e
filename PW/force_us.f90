@@ -303,7 +303,8 @@ SUBROUTINE force_us( forcenl )
                                           CONJG(dbecp_nc(ikb,is,ibnd,ipol))* &
                                                  becp%nc(jkb,js,ibnd)+ &
                                           CONJG(becp%nc(ikb,is,ibnd))* &
-                                                dbecp_nc(jkb,js,ibnd,ipol) + &
+                                                dbecp_nc(jkb,js,ibnd,ipol))- &
+                                           deff_nc(jh,ih,na,ijs)*fac*( &
                                           CONJG(dbecp_nc(jkb,is,ibnd,ipol))* &
                                                 becp%nc(ikb,js,ibnd)+ &
                                           CONJG(becp%nc(jkb,is,ibnd))* &
