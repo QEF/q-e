@@ -19,7 +19,7 @@ subroutine addusforce (forcenl)
   USE cell_base,  ONLY : omega, tpiba
   USE fft_base,   ONLY : dfftp
   USE gvect,      ONLY : ngm, nl, nlm, gg, g, eigts1, eigts2, eigts3, mill
-  USE lsda_mod,   ONLY : nspin
+  USE noncollin_module,   ONLY : nspin_mag
   USE scf,        ONLY : v, vltot
   USE uspp,       ONLY : becsum, okvan
   USE uspp_param, ONLY : upf, lmaxq, nh, nhm
@@ -47,13 +47,13 @@ subroutine addusforce (forcenl)
   else
      fact = 1.d0
   end if
-  allocate (aux(ngm,nspin))    
+  allocate (aux(ngm,nspin_mag))    
   !
   ! fourier transform of the total effective potential
   !
   allocate (vg(dfftp%nnr))    
-  do is = 1, nspin
-     if (nspin.eq.4.and.is.ne.1) then
+  do is = 1, nspin_mag
+     if (nspin_mag.eq.4.and.is.ne.1) then
         vg (:) = v%of_r(:,is)
      else
         vg (:) = vltot (:) + v%of_r (:, is)
@@ -64,7 +64,7 @@ subroutine addusforce (forcenl)
   deallocate (vg)
   !
   allocate (aux1(ngm,3))    
-  allocate (ddeeq( 3, (nhm*(nhm+1))/2,nat,nspin))    
+  allocate (ddeeq( 3, (nhm*(nhm+1))/2,nat,nspin_mag))    
   allocate (qgm( ngm))
   allocate (qmod( ngm))    
   allocate (ylmk0(ngm,lmaxq*lmaxq))    
@@ -89,7 +89,7 @@ subroutine addusforce (forcenl)
                     !
                     ! The product of potential, structure factor and iG
                     !
-                    do is = 1, nspin
+                    do is = 1, nspin_mag
                        do ig = 1, ngm
                           cfac = aux (ig, is) * CONJG(eigts1 (mill(1,ig), na) *&
                                                       eigts2 (mill(2,ig), na) *&
@@ -126,7 +126,7 @@ subroutine addusforce (forcenl)
   !            do ih = 1, nh(nt)
   !               WRITE( stdout,'(8f9.4)') (dvan(ih,jh,nt),jh=1,nh(nt))
   !            end do
-  do is = 1, nspin
+  do is = 1, nspin_mag
      do na = 1, nat
         nt = ityp (na)
         dim = (nh (nt) * (nh (nt) + 1) ) / 2
