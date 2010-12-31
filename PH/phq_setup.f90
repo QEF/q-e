@@ -59,7 +59,7 @@ subroutine phq_setup
   USE ktetra,        ONLY : ltetra, tetra
   USE lsda_mod,      ONLY : nspin, lsda, starting_magnetization
   USE scf,           ONLY : v, vrs, vltot, rho, rho_core, kedtau
-  USE grid_dimensions,ONLY: nrxx
+  USE fft_base,      ONLY : dfftp
   USE gvect,         ONLY : ngm
   USE gvecs,       ONLY : doublegrid
   USE symm_base,     ONLY : nrot, nsym, s, ftau, irt, t_rev, time_reversal, &
@@ -137,7 +137,7 @@ subroutine phq_setup
   !
   ! 1) Computes the total local potential (external+scf) on the smooth grid
   !
-  call set_vrs (vrs, vltot, v%of_r, kedtau, v%kin_r, nrxx, nspin, doublegrid)
+  call set_vrs (vrs, vltot, v%of_r, kedtau, v%kin_r, dfftp%nnr, nspin, doublegrid)
   !
   ! 2) Set non linear core correction stuff
   !
@@ -166,7 +166,7 @@ subroutine phq_setup
   !
   dmuxc(:,:,:) = 0.d0
   if (lsda) then
-     do ir = 1, nrxx
+     do ir = 1, dfftp%nnr
         rhoup = rho%of_r (ir, 1) + 0.5d0 * rho_core (ir)
         rhodw = rho%of_r (ir, 2) + 0.5d0 * rho_core (ir)
         call dmxc_spin (rhoup, rhodw, dmuxc(ir,1,1), dmuxc(ir,2,1), &
@@ -174,7 +174,7 @@ subroutine phq_setup
      enddo
   else
      IF (noncolin.and.domag) THEN
-        do ir = 1, nrxx
+        do ir = 1, dfftp%nnr
            rhotot = rho%of_r (ir, 1) + rho_core (ir)
            call dmxc_nc (rhotot, rho%of_r(ir,2), rho%of_r(ir,3), rho%of_r(ir,4), auxdmuxc)
            DO is=1,nspin_mag
@@ -184,7 +184,7 @@ subroutine phq_setup
            END DO
         enddo
      ELSE
-        do ir = 1, nrxx
+        do ir = 1, dfftp%nnr
            rhotot = rho%of_r (ir, 1) + rho_core (ir)
            if (rhotot.gt.1.d-30) dmuxc (ir, 1, 1) = dmxc (rhotot)
            if (rhotot.lt. - 1.d-30) dmuxc (ir, 1, 1) = - dmxc ( - rhotot)

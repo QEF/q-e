@@ -14,9 +14,10 @@ subroutine el_opt
   use kinds, only : DP
   USE cell_base,  ONLY : omega, at, bg
   USE constants,  ONLY : e2, fpi
-  USE grid_dimensions, ONLY : nr1, nr2, nr3, nrxx
+  USE grid_dimensions, ONLY : nr1, nr2, nr3
   USE klist,      ONLY : wk, ngk
   USE ions_base,  ONLY : nat
+  USE fft_base,   ONLY : dfftp
   USE scf,        ONLY : rho, rho_core
   USE symme,      ONLY : symmatrix3
   USE qpoint,     ONLY : nksq
@@ -95,8 +96,8 @@ subroutine el_opt
   ! Calculates the term depending on the third derivative of the
   !                     Exchange-correlation energy
   !
-  allocate (d2muxc (nrxx))
-  allocate (aux3   (nrxx,3))
+  allocate (d2muxc (dfftp%nnr))
+  allocate (aux3   (dfftp%nnr,3))
   do ipa = 1, 3
      call davcio_drho (aux3 (1, ipa), lrdrho, iudrho, ipa, -1)
   enddo
@@ -105,7 +106,7 @@ subroutine el_opt
 #endif
 
   d2muxc (:) = 0.0_dp
-  do ir = 1, nrxx
+  do ir = 1, dfftp%nnr
      rhotot = rho%of_r(ir,1) + rho_core(ir)
      if ( rhotot.gt. 1.d-30 ) d2muxc(ir)= d2mxc( rhotot)
      if ( rhotot.lt.-1.d-30 ) d2muxc(ir)=-d2mxc(-rhotot)

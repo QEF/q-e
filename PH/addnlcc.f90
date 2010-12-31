@@ -17,7 +17,8 @@ subroutine addnlcc (imode0, drhoscf, npe)
   USE cell_base, ONLY : omega, alat
   use scf, only : rho, rho_core
   USE gvect, ONLY : g, ngm, nl
-  USE grid_dimensions, ONLY :  nrxx, nr1, nr2, nr3
+  USE fft_base, ONLY : dfftp
+  USE grid_dimensions, ONLY : nr1, nr2, nr3
   USE noncollin_module, ONLY : nspin_lsda, nspin_gga, nspin_mag
   USE dynmat, ONLY : dyn, dyn_rec
   USE modes,  ONLY : nirr, npert
@@ -36,7 +37,7 @@ subroutine addnlcc (imode0, drhoscf, npe)
   ! input: the number of perturbations
   ! input: the change of density due to perturbation
 
-  complex(DP) :: drhoscf (nrxx, nspin_mag, npe)
+  complex(DP) :: drhoscf (dfftp%nnr, nspin_mag, npe)
 
   integer :: nrtot, ipert, jpert, is, is1, irr, ir, mode, mode1
   ! the total number of points
@@ -60,8 +61,8 @@ subroutine addnlcc (imode0, drhoscf, npe)
 
   if (.not.nlcc_any) return
 
-  allocate (drhoc(  nrxx))
-  allocate (dvaux(  nrxx , nspin_mag))
+  allocate (drhoc(  dfftp%nnr))
+  allocate (dvaux(  dfftp%nnr, nspin_mag))
 
   dyn1 (:,:) = (0.d0, 0.d0)
 !
@@ -83,11 +84,11 @@ subroutine addnlcc (imode0, drhoscf, npe)
      dvaux (:,:) = (0.d0, 0.d0)
      call addcore (mode, drhoc)
      do is = 1, nspin_lsda
-        call daxpy (2 * nrxx, fac, drhoc, 1, drhoscf (1, is, ipert), 1)
+        call daxpy (2 * dfftp%nnr, fac, drhoc, 1, drhoscf (1, is, ipert), 1)
      enddo
      do is = 1, nspin_lsda
         do is1 = 1, nspin_mag
-           do ir = 1, nrxx
+           do ir = 1, dfftp%nnr
               dvaux (ir, is) = dvaux (ir, is) + dmuxc (ir, is, is1) * &
                                                 drhoscf ( ir, is1, ipert)
            enddo
@@ -99,10 +100,10 @@ subroutine addnlcc (imode0, drhoscf, npe)
      !
      if ( dft_is_gradient() ) &
        call dgradcorr (rho%of_r, grho, dvxc_rr, dvxc_sr, dvxc_ss, dvxc_s, xq, &
-          drhoscf (1, 1, ipert), nrxx, nspin_mag, nspin_gga, nl, ngm, g, alat,&
+          drhoscf (1, 1, ipert), dfftp%nnr, nspin_mag, nspin_gga, nl, ngm, g, alat,&
           dvaux)
      do is = 1, nspin_lsda
-        call daxpy (2 * nrxx, - fac, drhoc, 1, drhoscf (1, is, ipert), 1)
+        call daxpy (2 * dfftp%nnr, - fac, drhoc, 1, drhoscf (1, is, ipert), 1)
      enddo
      mode1 = 0
      do irr = 1, nirr
@@ -111,7 +112,7 @@ subroutine addnlcc (imode0, drhoscf, npe)
            call addcore (mode1, drhoc)
            do is = 1, nspin_lsda
               dyn1 (mode, mode1) = dyn1 (mode, mode1) + &
-                   zdotc (nrxx, dvaux (1, is), 1, drhoc, 1) * &
+                   zdotc (dfftp%nnr, dvaux (1, is), 1, drhoc, 1) * &
                    omega * fac / DBLE (nrtot)
            enddo
         enddo

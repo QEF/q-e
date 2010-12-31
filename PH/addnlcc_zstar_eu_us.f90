@@ -16,7 +16,8 @@ SUBROUTINE addnlcc_zstar_eu_us( drhoscf )
   USE cell_base, ONLY : omega, alat
   USE lsda_mod, ONLY : nspin
   USE gvect, ONLY : ngm, nl, g
-  USE grid_dimensions, ONLY : nrxx, nr1, nr2, nr3
+  USE fft_base, ONLY : dfftp
+  USE grid_dimensions, ONLY : nr1, nr2, nr3
   USE noncollin_module, ONLY : nspin_lsda, nspin_gga
   USE efield_mod, ONLY : zstareu0
   USE qpoint, ONLY : xq
@@ -30,7 +31,7 @@ SUBROUTINE addnlcc_zstar_eu_us( drhoscf )
 
   IMPLICIT NONE
 
-  COMPLEX(DP) :: drhoscf (nrxx,nspin,3)
+  COMPLEX(DP) :: drhoscf (dfftp%nnr,nspin,3)
 
 
   INTEGER :: nrtot, ipert, jpert, is, is1, irr, ir, mode, mode1
@@ -38,8 +39,8 @@ SUBROUTINE addnlcc_zstar_eu_us( drhoscf )
 
   REAL(DP) :: fac
 
-  COMPLEX(DP), DIMENSION(nrxx) :: drhoc
-  COMPLEX(DP), DIMENSION(nrxx,nspin) :: dvaux
+  COMPLEX(DP), DIMENSION(dfftp%nnr) :: drhoc
+  COMPLEX(DP), DIMENSION(dfftp%nnr,nspin) :: dvaux
 
   IF (.NOT.nlcc_any) RETURN
 
@@ -66,7 +67,7 @@ SUBROUTINE addnlcc_zstar_eu_us( drhoscf )
 
            DO is = 1, nspin
               DO is1 = 1, nspin
-                 DO ir = 1, nrxx
+                 DO ir = 1, dfftp%nnr
                     dvaux (ir, is) = dvaux (ir, is) +     &
                          dmuxc (ir, is, is1) *            &
                          drhoscf (ir, is1, ipol)
@@ -81,7 +82,7 @@ SUBROUTINE addnlcc_zstar_eu_us( drhoscf )
            IF ( dft_is_gradient() ) &
                 CALL dgradcorr (rho%of_r, grho, &
                     dvxc_rr, dvxc_sr, dvxc_ss, dvxc_s, xq, drhoscf (1,1,ipert),&
-                    nrxx, nspin, nspin_gga, nl, ngm, g, alat, dvaux)
+                    dfftp%nnr, nspin, nspin_gga, nl, ngm, g, alat, dvaux)
 
            DO is = 1, nspin_lsda
               rho%of_r(:,is) = rho%of_r(:,is) - fac * rho_core
@@ -90,7 +91,7 @@ SUBROUTINE addnlcc_zstar_eu_us( drhoscf )
            DO is = 1, nspin_lsda
               zstareu0(ipol,mode) = zstareu0(ipol,mode) -                  &
                    omega * fac / REAL(nrtot, DP) *         &
-                   DOT_PRODUCT(dvaux(1:nrxx,is),drhoc(1:nrxx))
+                   DOT_PRODUCT(dvaux(1:dfftp%nnr,is),drhoc(1:dfftp%nnr))
            END DO
         END DO
         imode0 = imode0 + npe

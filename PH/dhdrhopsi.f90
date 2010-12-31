@@ -41,7 +41,7 @@ subroutine dhdrhopsi
   USE io_files,  ONLY : iunigk
   USE cell_base, ONLY : tpiba, at
   USE klist,     ONLY : xk, nkstot
-  USE smooth_grid_dimensions, ONLY : nrxxs
+  USE fft_base,  ONLY : dffts
   USE wvfct,     ONLY : npw, npwx, nbnd, et, igk
   USE uspp,      ONLY : nkb, vkb
   USE wavefunctions_module,  ONLY: evc
@@ -106,9 +106,9 @@ subroutine dhdrhopsi
   allocate (chif      (npwx,nbnd,6)   )
   allocate (depsi     (npwx,nbnd,3)   )
   allocate (auxg      (npwx)          )
-  allocate (dvscfs    (nrxxs,3)       )
-  allocate (auxr      (nrxxs)         )
-  allocate (au2r      (nrxxs)         )
+  allocate (dvscfs    (dffts%nnr,3)   )
+  allocate (auxr      (dffts%nnr)     )
+  allocate (au2r      (dffts%nnr)     )
   allocate (ps0       (nbnd)          )
   allocate (ps1       (nbnd,nbnd)     )
   allocate (ps2       (nbnd,nbnd,3)   )
@@ -235,7 +235,7 @@ subroutine dhdrhopsi
         dvpsi (:,:) = (0.d0, 0.d0)
         do ibnd = 1, nbnd_occ (ik)
            call cft_wave (evc (1, ibnd), auxr, +1 )
-           do ir = 1, nrxxs
+           do ir = 1, dffts%nnr
               auxr (ir) = auxr (ir) * dvscfs (ir, ipa)
            enddo
            call cft_wave (dvpsi (1, ibnd), auxr, -1 )
@@ -255,7 +255,7 @@ subroutine dhdrhopsi
            call cft_wave (dpsi (1, ibnd), auxr, +1)
            do ipb = 1, 3
               auxg (:) = (0.d0, 0.d0)
-              do ir = 1, nrxxs
+              do ir = 1, dffts%nnr
                  au2r (ir) = auxr (ir) * dvscfs (ir, ipb)
               enddo
               call cft_wave (auxg, au2r, -1)

@@ -15,10 +15,9 @@ subroutine ef_shift (drhoscf, ldos, ldoss, dos_ef, irr, npe, flag)
   USE io_global,            ONLY : stdout
   USE wavefunctions_module, ONLY : evc
   USE cell_base,            ONLY : omega
-  USE fft_base,             ONLY : dfftp
+  USE fft_base,             ONLY : dfftp, dffts
   USE fft_interfaces,       ONLY : fwfft, invfft
   USE gvect,                ONLY : gg, nl
-  USE smooth_grid_dimensions,ONLY: nrxxs
   USE lsda_mod,             ONLY : nspin
   USE wvfct,                ONLY : npw, npwx, et
   USE klist,                ONLY : degauss, ngauss, ngk
@@ -42,7 +41,7 @@ subroutine ef_shift (drhoscf, ldos, ldoss, dos_ef, irr, npe, flag)
   ! input: the number of perturbation
 
   complex(DP) :: drhoscf(dfftp%nnr,nspin_mag,npe), &
-       ldos(dfftp%nnr,nspin_mag), ldoss(nrxxs,nspin_mag)
+       ldos(dfftp%nnr,nspin_mag), ldoss(dffts%nnr,nspin_mag)
   ! inp/out:the change of the charge
   ! inp: local DOS at Ef
   ! inp: local DOS at Ef without augme
@@ -140,7 +139,7 @@ subroutine ef_shift (drhoscf, ldos, ldoss, dos_ef, irr, npe, flag)
      enddo
      do ipert = 1, npert (irr)
         do is = 1, nspin_mag
-           call zaxpy (nrxxs, def(ipert), ldoss(1,is), 1, drhoscf(1,is,ipert), 1)
+           call zaxpy (dffts%nnr, def(ipert), ldoss(1,is), 1, drhoscf(1,is,ipert), 1)
         enddo
      enddo
   endif
@@ -162,10 +161,9 @@ subroutine ef_shift_paw (drhoscf, dbecsum, ldos, ldoss, becsum1, &
   USE ions_base,            ONLY : nat
   USE wavefunctions_module, ONLY : evc
   USE cell_base,            ONLY : omega
-  USE fft_base,             ONLY : dfftp
+  USE fft_base,             ONLY : dfftp, dffts
   USE fft_interfaces,       ONLY : fwfft, invfft
   USE gvect,                ONLY : gg, nl
-  USE smooth_grid_dimensions,ONLY: nrxxs
   USE lsda_mod,             ONLY : nspin
   USE uspp_param,           ONLY : nhm
   USE wvfct,                ONLY : npw, npwx, et
@@ -189,7 +187,7 @@ subroutine ef_shift_paw (drhoscf, dbecsum, ldos, ldoss, becsum1, &
   ! input: the number of perturbation
 
   complex(DP) :: drhoscf(dfftp%nnr,nspin_mag,npe), &
-       ldos(dfftp%nnr,nspin_mag), ldoss(nrxxs,nspin_mag), &
+       ldos(dfftp%nnr,nspin_mag), ldoss(dffts%nnr,nspin_mag), &
        dbecsum ( (nhm * (nhm + 1))/2 , nat , nspin_mag, npe)
   ! inp/out:the change of the charge
   ! inp: local DOS at Ef
@@ -291,7 +289,7 @@ subroutine ef_shift_paw (drhoscf, dbecsum, ldos, ldoss, becsum1, &
      enddo
      do ipert = 1, npert (irr)
         do is = 1, nspin_mag
-           call zaxpy (nrxxs, def(ipert), ldoss(1,is), 1, drhoscf(1,is,ipert), 1)
+           call zaxpy (dffts%nnr, def(ipert), ldoss(1,is), 1, drhoscf(1,is,ipert), 1)
         enddo
      enddo
   endif

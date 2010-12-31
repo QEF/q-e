@@ -34,7 +34,7 @@ CONTAINS
     USE noncollin_module, ONLY : nspin_mag
     USE nlcc_ph, ONLY : nlcc_any
     USE qpoint, ONLY : nksq
-    USE grid_dimensions, ONLY : nrxx
+    USE fft_base, ONLY : dfftp
     USE uspp, ONLY : okvan
     USE phus, ONLY : int1, int2, int3
     USE eqv,  ONLY : drhoscfs
@@ -47,8 +47,8 @@ CONTAINS
     INTEGER, INTENT(IN) :: irr, iter, npe
     LOGICAL, INTENT(IN) :: convt
     REAL(DP), INTENT(IN) :: dr2
-    COMPLEX(DP), INTENT(IN) :: dvscfin(nrxx,nspin_mag,npe)
-    COMPLEX(DP), INTENT(IN), OPTIONAL :: drhoscfh ( nrxx , nspin_mag, npe)
+    COMPLEX(DP), INTENT(IN) :: dvscfin(dfftp%nnr,nspin_mag,npe)
+    COMPLEX(DP), INTENT(IN), OPTIONAL :: drhoscfh (dfftp%nnr, nspin_mag, npe)
     COMPLEX(DP), INTENT(IN), OPTIONAL :: dbecsum((nhm*(nhm+1))/2,nat,nspin_mag,npe)
 
     LOGICAL :: exst
@@ -89,8 +89,7 @@ CONTAINS
     USE ions_base, ONLY : nat
     USE uspp_param, ONLY : nhm
     USE gvecs, ONLY : doublegrid
-    USE grid_dimensions, ONLY : nrxx
-    USE smooth_grid_dimensions, ONLY : nrxxs
+    USE fft_base, ONLY : dfftp, dffts
     USE uspp,  ONLY : okvan
     USE lsda_mod, ONLY : nspin
     USE noncollin_module, ONLY : noncolin, nspin_mag
@@ -105,9 +104,9 @@ CONTAINS
     INTEGER, INTENT(OUT) :: iter0
     INTEGER, INTENT(IN)  :: npe
     REAL(DP), INTENT(OUT) :: dr2
-    COMPLEX(DP), INTENT(OUT) :: dvscfin ( nrxx , nspin_mag, npe)
-    COMPLEX(DP), INTENT(OUT) :: dvscfins ( nrxxs , nspin_mag, npe)
-    COMPLEX(DP), INTENT(OUT), OPTIONAL :: drhoscfh ( nrxx , nspin_mag, npe)
+    COMPLEX(DP), INTENT(OUT) :: dvscfin (dfftp%nnr, nspin_mag, npe)
+    COMPLEX(DP), INTENT(OUT) :: dvscfins (dffts%nnr, nspin_mag, npe)
+    COMPLEX(DP), INTENT(OUT), OPTIONAL :: drhoscfh (dfftp%nnr, nspin_mag, npe)
     COMPLEX(DP), INTENT(OUT), OPTIONAL :: dbecsum((nhm*(nhm+1))/2,nat,nspin_mag,npe)
 
     INTEGER :: is, ipol

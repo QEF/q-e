@@ -26,7 +26,8 @@ SUBROUTINE openfilq()
   USE qpoint,         ONLY : nksq
   USE output,         ONLY : fildyn, fildvscf
   USE wvfct,          ONLY : nbnd, npwx
-  USE grid_dimensions,ONLY : nr1x, nr2x, nr3x, nrxx
+  USE grid_dimensions,ONLY : nr1x, nr2x, nr3x
+  USE fft_base,       ONLY : dfftp
   USE lsda_mod,       ONLY : nspin
   USE uspp,           ONLY : nkb, okvan
   USE uspp_param,     ONLY : nhm
@@ -91,7 +92,7 @@ SUBROUTINE openfilq()
   !
   IF (okvan) THEN
      iudrhous = 25
-     lrdrhous = 2 * nrxx * nspin_mag
+     lrdrhous = 2 * dfftp%nnr * nspin_mag
      CALL diropn (iudrhous, 'prd', lrdrhous, exst)
      IF (ext_recover.AND..NOT.exst) &
         CALL errore ('openfilq','file '//trim(prefix)//'.prd not found', 1)

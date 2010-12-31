@@ -17,9 +17,9 @@ SUBROUTINE phqscf
   !
   USE kinds, ONLY : DP
   USE ions_base, ONLY : nat
-  USE grid_dimensions, ONLY : nrxx
   USE lsda_mod, ONLY : nspin
   USE io_global,  ONLY : stdout, ionode
+  USE fft_base,   ONLY : dfftp
   USE uspp,  ONLY: okvan
   USE efield_mod, ONLY : zstarue0, zstarue0_rec
   USE control_ph, ONLY : zue, convt, rec_code
@@ -60,7 +60,7 @@ SUBROUTINE phqscf
   DO irr = 1, nirr
      IF ( (comp_irr (irr) == 1) .AND. (done_irr (irr) == 0) ) THEN
         npe=npert(irr)
-        ALLOCATE (drhoscfs( nrxx , nspin_mag, npe))
+        ALLOCATE (drhoscfs( dfftp%nnr , nspin_mag, npe))
         imode0 = 0
         DO irr1 = 1, irr - 1
            imode0 = imode0 + npert (irr1)

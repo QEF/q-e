@@ -17,8 +17,7 @@ subroutine incdrhoscf_nc (drhoscf, weight, ik, dbecsum, dpsi)
   USE kinds, only : DP
   USE ions_base, ONLY : nat
   USE cell_base, ONLY : omega
-  USE grid_dimensions, ONLY : nrxx
-  USE fft_base,  ONLY : dffts
+  USE fft_base,  ONLY : dffts, dfftp
   USE fft_interfaces, ONLY: invfft
   USE gvecs,   ONLY : nls
   USE lsda_mod,  ONLY : nspin
@@ -39,7 +38,7 @@ subroutine incdrhoscf_nc (drhoscf, weight, ik, dbecsum, dpsi)
   ! input: the weight of the k point
   COMPLEX(DP), INTENT(IN) :: dpsi(npwx*npol,nbnd)
   ! input: the perturbed wfcs at the given k point
-  COMPLEX(DP), INTENT(INOUT) :: drhoscf (nrxx,nspin_mag), dbecsum (nhm,nhm,nat,nspin)
+  COMPLEX(DP), INTENT(INOUT) :: drhoscf (dfftp%nnr,nspin_mag), dbecsum (nhm,nhm,nat,nspin)
   ! input/output: the accumulated change of the charge density and dbecsum
   !
   !

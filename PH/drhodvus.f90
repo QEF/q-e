@@ -21,9 +21,10 @@ subroutine drhodvus (irr, imode0, dvscfin, npe)
   !
   USE kinds,     ONLY : DP
   USE ions_base, ONLY : nat, ntyp=>nsp, ityp
-  USE grid_dimensions, ONLY : nrxx, nr1, nr2, nr3
+  USE grid_dimensions, ONLY : nr1, nr2, nr3
   USE cell_base, ONLY : omega
   USE ions_base, ONLY : nat
+  USE fft_base,  ONLY : dfftp
   USE uspp,      ONLY : okvan
   USE io_global, ONLY : stdout
   USE uspp_param, ONLY : upf, nh
@@ -44,7 +45,7 @@ subroutine drhodvus (irr, imode0, dvscfin, npe)
   ! input: starting position of this represe
   ! input: the number of perturbations
 
-  complex(DP) :: dvscfin (nrxx, nspin_mag, npe)
+  complex(DP) :: dvscfin (dfftp%nnr, nspin_mag, npe)
   ! input: the change of V_Hxc
 
   integer :: ipert, irr1, mode0, mu, is, nu_i, nu_j, nrtot, &
@@ -64,7 +65,7 @@ subroutine drhodvus (irr, imode0, dvscfin, npe)
      return
   endif
   call start_clock ('drhodvus')
-  allocate (drhous ( nrxx , nspin_mag))
+  allocate (drhous ( dfftp%nnr, nspin_mag))
   dyn1 (:,:) = (0.d0, 0.d0)
   nrtot = nr1 * nr2 * nr3
   mode0 = 0
@@ -75,7 +76,7 @@ subroutine drhodvus (irr, imode0, dvscfin, npe)
         do mu = 1, npert (irr)
            nu_i = imode0 + mu
            dyn1 (nu_i, nu_j) = dyn1 (nu_i, nu_j) + &
-                   zdotc (nrxx*nspin_mag,dvscfin(1,1,mu),1,drhous, 1) &
+                   zdotc (dfftp%nnr*nspin_mag,dvscfin(1,1,mu),1,drhous, 1) &
                    * omega / DBLE (nrtot)
         enddo
      enddo

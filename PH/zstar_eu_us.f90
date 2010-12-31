@@ -20,8 +20,8 @@ subroutine zstar_eu_us
   USE ions_base, ONLY : nat, ntyp => nsp, ityp
   USE klist,     ONLY : xk, wk
   USE gvecs,   ONLY : doublegrid
-  USE grid_dimensions,        ONLY : nrxx, nr1,nr2,nr3
-  USE smooth_grid_dimensions, ONLY : nrxxs
+  USE grid_dimensions,        ONLY : nr1,nr2,nr3
+  USE fft_base, ONLY : dfftp, dffts
   USE lsda_mod,  ONLY : nspin, current_spin, isk, lsda
   USE io_files,  ONLY : iunigk
   USE uspp,      ONLY : okvan, nkb, vkb
@@ -67,10 +67,10 @@ subroutine zstar_eu_us
 #endif
 
   !  auxiliary space for <psi|ds/du|psi>
-  allocate (dvscf( nrxx , nspin, 3))
+  allocate (dvscf( dfftp%nnr , nspin, 3))
   allocate (dbecsum( nhm*(nhm+1)/2, nat, nspin, 3))
   if (noncolin) allocate (dbecsum_nc( nhm, nhm, nat, nspin, 3))
-  allocate (aux1(  nrxxs))
+  allocate (aux1(  dffts%nnr))
   allocate (pdsp(nbnd,nbnd))
 
   !
@@ -166,7 +166,7 @@ subroutine zstar_eu_us
 ! potenial
 !
   imode0 = 0
-  allocate(drhoscfh(nrxx,nspin))
+  allocate(drhoscfh(dfftp%nnr,nspin))
   do irr = 1, nirr
      npe = npert(irr)
      do imode = 1, npe
@@ -175,7 +175,7 @@ subroutine zstar_eu_us
         do jpol = 1, 3
            do is=1,nspin_mag
               zstareu0(jpol,mode) =  zstareu0(jpol,mode) -                  &
-                 dot_product(dvscf(1:nrxx,is,jpol),drhoscfh(1:nrxx,is)) &
+                 dot_product(dvscf(1:dfftp%nnr,is,jpol),drhoscfh(1:dfftp%nnr,is)) &
                * omega / DBLE(nr1*nr2*nr3)
            end do
         end do

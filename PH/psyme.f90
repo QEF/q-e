@@ -13,14 +13,15 @@ SUBROUTINE psyme (dvtosym)
   ! ...  p-symmetrize the charge density.
   !
   USE kinds,     ONLY : DP
-  USE grid_dimensions, ONLY : nrxx, nr1x,nr2x,nr3x
+  USE grid_dimensions, ONLY : nr1x,nr2x,nr3x
+  USE fft_base, ONLY : dfftp
   USE noncollin_module, ONLY : nspin_mag
   USE mp_global, ONLY : me_pool
   USE fft_base,  ONLY : dfftp, cgather_sym
   !
   IMPLICIT NONE
   !
-  COMPLEX(DP) :: dvtosym (nrxx, nspin_mag, 3)
+  COMPLEX(DP) :: dvtosym (dfftp%nnr, nspin_mag, 3)
     ! the potential to symmetrize
     !-local variable
   !

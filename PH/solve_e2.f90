@@ -19,9 +19,8 @@ subroutine solve_e2
   USE klist,                 ONLY : lgauss, wk, xk
   USE lsda_mod,              ONLY : lsda, nspin
   USE gvect,                 ONLY : g
-  USE gvecs,               ONLY : doublegrid
-  USE grid_dimensions,       ONLY : nrxx
-  USE smooth_grid_dimensions,ONLY : nrxxs
+  USE gvecs,                 ONLY : doublegrid
+  USE fft_base,              ONLY : dfftp, dffts
   USE wvfct,                 ONLY : npw, npwx, nbnd, igk, g2kin, et
   USE io_files,  ONLY: prefix, iunigk
   USE ions_base, ONLY: nat
@@ -79,15 +78,15 @@ subroutine solve_e2
   if (okvan) call errore ('solve_e2', ' Ultrasoft PP not implemented', 1)
 
   call start_clock('solve_e2')
-  allocate (dvscfin( nrxx, nspin, 6))
+  allocate (dvscfin( dfftp%nnr, nspin, 6))
   if (doublegrid) then
-     allocate (dvscfins(  nrxxs, nspin, 6))
+     allocate (dvscfins(dffts%nnr, nspin, 6))
   else
      dvscfins => dvscfin
   endif
-  allocate (dvscfout( nrxx , nspin, 6))
+  allocate (dvscfout( dfftp%nnr , nspin, 6))
   allocate (dbecsum( nhm*(nhm+1)/2, nat))
-  allocate (aux1(  nrxxs))
+  allocate (aux1(dffts%nnr))
   convt=.FALSE.
   if (rec_code_read == -10) then
      ! restarting in Raman
@@ -153,7 +152,7 @@ subroutine solve_e2
               call davcio (dvpsi, lrba2, iuba2, nrec, -1)
               do ibnd = 1, nbnd_occ (ik)
                  call cft_wave (evc (1, ibnd), aux1, +1)
-                 do ir = 1, nrxxs
+                 do ir = 1, dffts%nnr
                     aux1 (ir) = aux1 (ir) * dvscfins (ir, 1, ipol)
                  enddo
                  call cft_wave (dvpsi (1, ibnd), aux1, -1)
@@ -204,7 +203,7 @@ subroutine solve_e2
      !
      ! Mixing with the old potential
      !
-     call mix_potential (2 * 6 * nrxx * nspin, dvscfout, dvscfin,  &
+     call mix_potential (2 * 6 * dfftp%nnr* nspin, dvscfout, dvscfin,  &
                          alpha_mix (kter), dr2, 6 * tr2_ph, iter,  &
                          nmix_ph, flmixdpot, convt)
 

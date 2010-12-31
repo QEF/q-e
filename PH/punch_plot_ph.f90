@@ -18,7 +18,8 @@ SUBROUTINE punch_plot_ph()
   !     a file with the name in the variable fildrho# given in input.
   !
   USE kinds,      ONLY : DP
-  USE grid_dimensions, ONLY : nrxx, nr1,nr2,nr3, nr1x,nr2x,nr3x
+  USE grid_dimensions, ONLY : nr1,nr2,nr3, nr1x,nr2x,nr3x
+  USE fft_base, ONLY : dfftp
   USE gvect,      ONLY : gcutm
   USE gvecs,    ONLY : dual
   USE cell_base,  ONLY : ibrav, celldm
@@ -71,9 +72,9 @@ SUBROUTINE punch_plot_ph()
   !
   !    reads drho from the file
   !
-  ALLOCATE (aux  (  nrxx,nspin,npertx))
-  ALLOCATE (aux1 (  nrxx,nspin))
-  ALLOCATE (raux (  nrxx))
+  ALLOCATE (aux  (  dfftp%nnr,nspin,npertx))
+  ALLOCATE (aux1 (  dfftp%nnr,nspin))
+  ALLOCATE (raux (  dfftp%nnr))
   !
   !
   !     reads the delta_rho on the aux variable
@@ -93,7 +94,7 @@ SUBROUTINE punch_plot_ph()
 #endif
         DO ipert = 1, npert (irr)
            ps = zdotc (3 * nat, ubar, 1, u (1, imode0 + ipert), 1)
-           CALL zaxpy (nrxx * nspin, ps, aux (1, 1, ipert), 1, aux1, 1)
+           CALL zaxpy (dfftp%nnr * nspin, ps, aux (1, 1, ipert), 1, aux1, 1)
         ENDDO
      ENDIF
      imode0 = imode0 + npert (irr)
@@ -129,9 +130,9 @@ SUBROUTINE punch_plot_ph()
   !
   !      plot of the charge density
   !
-  CALL dcopy (nrxx, aux1 (1, 1), 2, raux, 1)
+  CALL dcopy (dfftp%nnr, aux1 (1, 1), 2, raux, 1)
 
-  IF (lsda) CALL daxpy (nrxx, 1.d0, aux1 (1, 2), 2, raux, 1)
+  IF (lsda) CALL daxpy (dfftp%nnr, 1.d0, aux1 (1, 2), 2, raux, 1)
 
 #if defined (__PARA)
   ALLOCATE (raux1( nr1x * nr2x * nr3x))
@@ -139,7 +140,7 @@ SUBROUTINE punch_plot_ph()
   IF ( ionode ) WRITE (iunplot, * ) (raux1 (ir), ir = 1, nr1x * nr2x * nr3x)
   DEALLOCATE (raux1)
 #else
-  WRITE (iunplot, * ) (raux (ir), ir = 1, nrxx)
+  WRITE (iunplot, * ) (raux (ir), ir = 1, dfftp%nnr)
 #endif
 
   IF (ionode) CLOSE (unit = iunplot)

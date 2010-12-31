@@ -26,9 +26,8 @@ subroutine solve_e
   USE cell_base,             ONLY : tpiba2
   USE klist,                 ONLY : lgauss, xk, wk
   USE gvect,                 ONLY : g
-  USE gvecs,               ONLY : doublegrid
-  USE grid_dimensions,       ONLY : nrxx
-  USE smooth_grid_dimensions, ONLY: nrxxs
+  USE gvecs,                 ONLY : doublegrid
+  USE fft_base,              ONLY : dfftp, dffts
   USE lsda_mod,              ONLY : lsda, nspin, current_spin, isk
   USE spin_orb,              ONLY : domag
   USE wvfct,                 ONLY : nbnd, npw, npwx, igk, g2kin,  et
@@ -96,20 +95,20 @@ subroutine solve_e
 
 
   call start_clock ('solve_e')
-  allocate (dvscfin( nrxx, nspin_mag, 3))
+  allocate (dvscfin( dfftp%nnr, nspin_mag, 3))
   if (doublegrid) then
-     allocate (dvscfins(  nrxxs, nspin_mag, 3))
+     allocate (dvscfins(dffts%nnr, nspin_mag, 3))
   else
      dvscfins => dvscfin
   endif
-  allocate (dvscfout( nrxx , nspin_mag, 3))
+  allocate (dvscfout(dfftp%nnr, nspin_mag, 3))
   IF (okpaw) THEN
-     ALLOCATE (mixin(nrxx*nspin_mag*3+(nhm*(nhm+1)*nat*nspin_mag*3)/2) )
-     ALLOCATE (mixout(nrxx*nspin_mag*3+(nhm*(nhm+1)*nat*nspin_mag*3)/2) )
+     ALLOCATE (mixin(dfftp%nnr*nspin_mag*3+(nhm*(nhm+1)*nat*nspin_mag*3)/2) )
+     ALLOCATE (mixout(dfftp%nnr*nspin_mag*3+(nhm*(nhm+1)*nat*nspin_mag*3)/2) )
   ENDIF
   allocate (dbecsum( nhm*(nhm+1)/2, nat, nspin_mag, 3))
   IF (noncolin) allocate (dbecsum_nc (nhm, nhm, nat, nspin, 3))
-  allocate (aux1(nrxxs,npol))
+  allocate (aux1(dffts%nnr,npol))
   allocate (h_diag(npwx*npol, nbnd))
   IF (okpaw) mixin=(0.0_DP,0.0_DP)
 
@@ -117,7 +116,7 @@ subroutine solve_e
      ! restarting in Electric field calculation
      IF (okpaw) THEN
         CALL read_rec(dr2, iter0, 3, dvscfin, dvscfins, dvscfout, dbecsum)
-        CALL setmixout(3*nrxx*nspin_mag,(nhm*(nhm+1)*nat*nspin_mag*3)/2, &
+        CALL setmixout(3*dfftp%nnr*nspin_mag,(nhm*(nhm+1)*nat*nspin_mag*3)/2, &
                     mixin, dvscfin, dbecsum, ndim, -1 )
      ELSE
         CALL read_rec(dr2, iter0, 3, dvscfin, dvscfins)
@@ -206,7 +205,7 @@ subroutine solve_e
               !
               do ibnd = 1, nbnd_occ (ik)
                  call cft_wave (evc (1, ibnd), aux1, +1)
-                 call apply_dpot(nrxxs, aux1, dvscfins(1,1,ipol), current_spin)
+                 call apply_dpot(dffts%nnr, aux1, dvscfins(1,1,ipol), current_spin)
                  call cft_wave (dvpsi (1, ibnd), aux1, -1)
               enddo
               !
@@ -332,15 +331,15 @@ subroutine solve_e
      !
      !  In this case we mix also dbecsum
      !
-        call setmixout(3*nrxx*nspin_mag,(nhm*(nhm+1)*nat*nspin_mag*3)/2, &
+        call setmixout(3*dfftp%nnr*nspin_mag,(nhm*(nhm+1)*nat*nspin_mag*3)/2, &
                     mixout, dvscfout, dbecsum, ndim, -1 )
-        call mix_potential (2*3*nrxx*nspin_mag+2*ndim, mixout, mixin, &
+        call mix_potential (2*3*dfftp%nnr*nspin_mag+2*ndim, mixout, mixin, &
                          alpha_mix(kter), dr2, 3*tr2_ph/npol, iter, &
                          nmix_ph, flmixdpot, convt)
-        call setmixout(3*nrxx*nspin_mag,(nhm*(nhm+1)*nat*nspin_mag*3)/2, &
+        call setmixout(3*dfftp%nnr*nspin_mag,(nhm*(nhm+1)*nat*nspin_mag*3)/2, &
                        mixin, dvscfin, dbecsum, ndim, 1 )
      ELSE
-        call mix_potential (2*3*nrxx*nspin_mag, dvscfout, dvscfin, alpha_mix ( &
+        call mix_potential (2*3*dfftp%nnr*nspin_mag, dvscfout, dvscfin, alpha_mix ( &
           kter), dr2, 3 * tr2_ph / npol, iter, nmix_ph, flmixdpot, convt)
      ENDIF
      if (doublegrid) then

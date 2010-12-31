@@ -21,9 +21,8 @@ subroutine localdos (ldos, ldoss, dos_ef)
   USE cell_base, ONLY : omega
   USE ions_base, ONLY : nat, ityp, ntyp => nsp
   USE ener,      ONLY : ef
-  USE fft_base,  ONLY: dffts
+  USE fft_base,  ONLY: dffts, dfftp
   USE fft_interfaces, ONLY: invfft
-  USE grid_dimensions,ONLY : nrxx
   USE gvecs,   ONLY : doublegrid, nls
   USE klist,     ONLY : xk, wk, degauss, ngauss
   USE lsda_mod,  ONLY : nspin, lsda, current_spin, isk
@@ -43,7 +42,7 @@ subroutine localdos (ldos, ldoss, dos_ef)
 
   implicit none
 
-  complex(DP) :: ldos (nrxx, nspin_mag), ldoss (dffts%nnr, nspin_mag)
+  complex(DP) :: ldos (dfftp%nnr, nspin_mag), ldoss (dffts%nnr, nspin_mag)
   ! output: the local density of states at Ef
   ! output: the local density of states at Ef without augmentation
   real(DP) :: dos_ef
@@ -255,9 +254,8 @@ subroutine localdos_paw (ldos, ldoss, becsum1, dos_ef)
   USE cell_base, ONLY : omega
   USE ions_base, ONLY : nat, ityp, ntyp => nsp
   USE ener,      ONLY : ef
-  USE fft_base,  ONLY : dffts
+  USE fft_base,  ONLY : dffts, dfftp
   USE fft_interfaces, ONLY: invfft
-  USE grid_dimensions,ONLY : nrxx
   USE gvecs,   ONLY : doublegrid, nls
   USE klist,     ONLY : xk, wk, degauss, ngauss
   USE lsda_mod,  ONLY : nspin, lsda, current_spin, isk
@@ -277,7 +275,7 @@ subroutine localdos_paw (ldos, ldoss, becsum1, dos_ef)
 
   implicit none
 
-  complex(DP) :: ldos (nrxx, nspin_mag), ldoss (dffts%nnr, nspin_mag)
+  complex(DP) :: ldos (dfftp%nnr, nspin_mag), ldoss (dffts%nnr, nspin_mag)
   ! output: the local density of states at Ef
   ! output: the local density of states at Ef without augmentation
   REAL(DP) :: becsum1 ((nhm * (nhm + 1))/2, nat, nspin_mag)

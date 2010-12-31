@@ -18,9 +18,9 @@ subroutine drho
   !
   !
   USE kinds,      ONLY : DP
-  USE grid_dimensions, ONLY : nrxx
   USE gvecs,         ONLY : doublegrid
-  USE smooth_grid_dimensions, ONLY : nr1s,nr2s,nr3s, nrxxs
+  USE smooth_grid_dimensions, ONLY : nr1s,nr2s,nr3s
+  USE fft_base,   ONLY : dfftp, dffts
   USE lsda_mod,   ONLY : nspin
   USE cell_base,  ONLY : omega
   USE ions_base,  ONLY : nat, ntyp => nsp, ityp
@@ -116,7 +116,7 @@ subroutine drho
   !   now we compute the change of the charge density due to the change of
   !   the orthogonality constraint
   !
-  allocate (drhous ( nrxx , nspin_mag , 3 * nat))
+  allocate (drhous ( dfftp%nnr, nspin_mag , 3 * nat))
   allocate (dbecsum( nhm * (nhm + 1) /2, nat, nspin_mag, 3 * nat))
   dbecsum=(0.d0,0.d0)
   IF (noncolin) THEN
@@ -142,7 +142,7 @@ subroutine drho
   !  The part of C^3 (Eq. 37) which contain the local potential can be
   !  evaluated with an integral of this change of potential and drhous
   !
-  allocate (dvlocin( nrxxs))
+  allocate (dvlocin(dffts%nnr))
 
   wdyn (:,:) = (0.d0, 0.d0)
   nrstot = nr1s * nr2s * nr3s
@@ -151,7 +151,7 @@ subroutine drho
      do nu_j = 1, 3 * nat
         do is = 1, nspin_lsda
            wdyn (nu_j, nu_i) = wdyn (nu_j, nu_i) + &
-                zdotc (nrxxs, drhous(1,is,nu_j), 1, dvlocin, 1) * &
+                zdotc (dffts%nnr, drhous(1,is,nu_j), 1, dvlocin, 1) * &
                 omega / DBLE (nrstot)
         enddo
      enddo
@@ -182,7 +182,7 @@ subroutine drho
   !
   !    add the augmentation term to the charge density and save it
   !
-  allocate (drhoust( nrxx , nspin_mag , npertx))
+  allocate (drhoust(dfftp%nnr, nspin_mag , npertx))
   drhoust=(0.d0,0.d0)
 #ifdef __PARA
   !
@@ -209,10 +209,10 @@ subroutine drho
            enddo
         enddo
      else
-        call zcopy (nrxx*nspin_mag*npe, drhous(1,1,mode+1), 1, drhoust, 1)
+        call zcopy (dfftp%nnr*nspin_mag*npe, drhous(1,1,mode+1), 1, drhoust, 1)
      endif
 
-     call dscal (2*nrxx*nspin_mag*npe, 0.5d0, drhoust, 1)
+     call dscal (2*dfftp%nnr*nspin_mag*npe, 0.5d0, drhoust, 1)
 
      call addusddens (drhoust, dbecsum(1,1,1,mode+1), mode, npe, 1)
      do iper = 1, npe

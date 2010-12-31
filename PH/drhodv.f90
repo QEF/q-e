@@ -22,13 +22,13 @@ subroutine drhodv (nu_i0, nper, drhoscf)
   USE ions_base, ONLY : nat
   USE klist,     ONLY : xk
   USE gvect,     ONLY : g
-  USE grid_dimensions, ONLY : nrxx
   USE cell_base, ONLY : tpiba
   USE lsda_mod,  ONLY : current_spin, lsda, isk, nspin
   USE wvfct,     ONLY : npw, npwx, nbnd, igk
   USE uspp,      ONLY : nkb, vkb
   USE becmod,    ONLY : calbec, bec_type, becscal, allocate_bec_type, &
                         deallocate_bec_type
+  USE fft_base,  ONLY : dfftp
   USE io_global, ONLY : stdout
   USE noncollin_module, ONLY : noncolin, npol, nspin_mag
   USE io_files, ONLY: iunigk
@@ -49,7 +49,7 @@ subroutine drhodv (nu_i0, nper, drhoscf)
   ! input: number of perturbations of this represent
   ! input: the initial position of the mode
 
-  complex(DP) :: drhoscf (nrxx, nspin_mag, nper)
+  complex(DP) :: drhoscf (dfftp%nnr, nspin_mag, nper)
   ! the change of density due to perturbations
 
   integer :: mu, ik, ikq, ig, nu_i, nu_j, na_jcart, ibnd, nrec, &

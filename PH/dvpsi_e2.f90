@@ -19,10 +19,9 @@ subroutine dvpsi_e2
   USE cell_base,       ONLY : omega
   USE klist,           ONLY : wk
   USE gvecs,         ONLY : doublegrid
-  USE grid_dimensions,        ONLY : nrxx
-  USE smooth_grid_dimensions, ONLY : nrxxs
   USE wvfct,           ONLY : npw, npwx, nbnd, igk
   USE wavefunctions_module, ONLY: evc
+  USE fft_base,        ONLY : dfftp, dffts
   USE scf,             ONLY : rho
   USE io_files,        ONLY : iunigk
   USE qpoint,          ONLY : npwq, nksq
@@ -67,9 +66,9 @@ subroutine dvpsi_e2
   ! First, calculates the second derivative of the charge-density
   ! -only the part that does not depend on the self-consistent cycle-
   !
-  allocate (raux6  (nrxxs,6))
+  allocate (raux6  (dffts%nnr,6))
   allocate (depsi  (npwx,nbnd,3))
-  allocate (aux3s  (nrxxs,3))
+  allocate (aux3s  (dffts%nnr,3))
   allocate (ps     (nbnd,nbnd,3,3))
 
   raux6 (:,:) = 0.d0
@@ -92,7 +91,7 @@ subroutine dvpsi_e2
            call cft_wave (depsi (1, ibnd, ipa), aux3s (1, ipa), +1)
         enddo
         do ipa = 1, 6
-           do ir = 1, nrxxs
+           do ir = 1, dffts%nnr
               tmp = CONJG(aux3s (ir, a1j (ipa))) *    &
                            aux3s (ir, a2j (ipa))
               raux6 (ir, ipa) = raux6 (ir, ipa) + weight *  DBLE (tmp)
@@ -116,7 +115,7 @@ subroutine dvpsi_e2
         do jbnd = 1, nbnd_occ (ik)
            call cft_wave (evc (1, jbnd), aux3s (1,2), +1)
            do ipa = 1, 6
-              do ir = 1, nrxxs
+              do ir = 1, dffts%nnr
                  tmp =  aux3s (ir,1) *                           &
                         ps(ibnd, jbnd, a1j (ipa), a2j (ipa)) *   &
                         CONJG(aux3s (ir,2))
@@ -136,21 +135,21 @@ subroutine dvpsi_e2
   ! Multiplies the charge with the potential
   !
   if (doublegrid) then
-     allocate (auxs1  (nrxxs))
-     allocate (aux6   (nrxx,6))
+     allocate (auxs1  (dffts%nnr))
+     allocate (aux6   (dfftp%nnr,6))
   else
-     allocate (aux6s  (nrxxs,6))
+     allocate (aux6s  (dffts%nnr,6))
      aux6 => aux6s
   endif
 
   do ipa = 1, 6
      if (doublegrid) then
-        do ir = 1, nrxxs
+        do ir = 1, dffts%nnr
            auxs1 (ir) = CMPLX(raux6 (ir, ipa), 0.d0,kind=DP)
         enddo
         call cinterpolate (aux6 (1, ipa), auxs1, +1)
      else
-        do ir = 1, nrxxs
+        do ir = 1, dffts%nnr
            aux6 (ir, ipa) = CMPLX(raux6 (ir, ipa), 0.d0,kind=DP)
         enddo
      endif
@@ -164,8 +163,8 @@ subroutine dvpsi_e2
   ! Calculates the term depending on the third derivative of the
   !                     Exchange-correlation energy
   !
-  allocate (d2muxc (nrxx))
-  allocate (aux3   (nrxx,3))
+  allocate (d2muxc (dfftp%nnr))
+  allocate (aux3   (dfftp%nnr,3))
   do ipa = 1, 3
      call davcio_drho (aux3 (1, ipa), lrdrho, iudrho, ipa, -1)
   enddo
@@ -174,7 +173,7 @@ subroutine dvpsi_e2
   if (my_pool_id .ne. 0) goto 100
 #endif
   d2muxc (:) = 0.d0
-  do ir = 1, nrxx
+  do ir = 1, dfftp%nnr
 !     rhotot = rho%of_r(ir,1) + rho_core(ir)
      rhotot = rho%of_r(ir,1)
      if ( rhotot.gt. 1.d-30 ) d2muxc(ir)= d2mxc( rhotot)
@@ -182,7 +181,7 @@ subroutine dvpsi_e2
   enddo
 
   do ipa = 1, 6
-     do ir = 1, nrxx
+     do ir = 1, dfftp%nnr
         aux6 (ir, ipa) = aux6 (ir, ipa) + d2muxc (ir) * &
                    aux3 (ir, a1j (ipa)) * aux3 (ir, a2j (ipa))
      enddo
@@ -199,7 +198,7 @@ subroutine dvpsi_e2
 
 
   if (doublegrid) then
-     allocate (aux6s  (nrxxs,6))
+     allocate (aux6s  (dffts%nnr,6))
      do ipa = 1, 6
         call cinterpolate (aux6 (1, ipa), aux6s (1, ipa), -1)
      enddo
@@ -212,8 +211,8 @@ subroutine dvpsi_e2
   ! solve_e2
   !
   allocate (auxg   (npwx,nbnd))
-  allocate (auxs1  (nrxxs))
-  allocate (auxs2  (nrxxs))
+  allocate (auxs1  (dffts%nnr))
+  allocate (auxs2  (dffts%nnr))
 
   if (nksq.gt.1) rewind (iunigk)
   do ik = 1, nksq
@@ -227,7 +226,7 @@ subroutine dvpsi_e2
         call davcio (auxg, lrchf, iuchf, nrec, -1)
         do ibnd = 1, nbnd_occ (ik)
            call cft_wave (evc (1, ibnd), auxs1, +1)
-           do ir = 1, nrxxs
+           do ir = 1, dffts%nnr
               auxs2 (ir) = auxs1 (ir) * aux6s (ir, ipa)
            enddo
            call cft_wave (auxg (1, ibnd), auxs2, -1)

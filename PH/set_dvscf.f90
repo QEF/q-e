@@ -15,19 +15,18 @@
 
   use kinds, only : DP
   USE gvecs, ONLY : doublegrid
-  USE grid_dimensions,        ONLY : nrxx
-  USE smooth_grid_dimensions, ONLY : nrxxs
+  USE fft_base, ONLY : dfftp, dffts
   USE lsda_mod,ONLY : nspin
   USE units_ph, ONLY : iudrho, lrdrho
   USE output,   ONLY : fildrho
   implicit none
 
-  complex(DP) :: dvscfs (nrxxs,3)
+  complex(DP) :: dvscfs (dffts%nnr,3)
   complex(DP) , allocatable :: derho (:,:)
   integer :: ipl
   !  counter on the polarizations
 
-  allocate (derho ( nrxx, nspin))
+  allocate (derho ( dfftp%nnr, nspin))
 
   if ( fildrho.eq.' ') call errore ('set_dvscf','where is fildrho?',1)
   !
@@ -44,7 +43,7 @@
      if (doublegrid) then
         call cinterpolate (derho (1, 1), dvscfs (1, ipl), -1)
      else
-        call zcopy (nrxx, derho (1, 1), 1, dvscfs (1, ipl), 1)
+        call zcopy (dfftp%nnr, derho (1, 1), 1, dvscfs (1, ipl), 1)
      endif
   end do
 

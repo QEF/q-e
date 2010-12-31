@@ -13,7 +13,8 @@ SUBROUTINE psym_dmag (nper, irr, dvtosym)
   ! ...  p-symmetrize the charge density.
   !
   USE kinds,      ONLY : DP
-  USE grid_dimensions,  ONLY : nrxx, nr1x,nr2x,nr3x
+  USE grid_dimensions,  ONLY : nr1x,nr2x,nr3x
+  USE fft_base,        ONLY : dfftp
   USE noncollin_module, ONLY : nspin_mag
   USE modes,     ONLY : minus_q, nsymq
   USE mp_global, ONLY : me_pool
@@ -24,7 +25,7 @@ SUBROUTINE psym_dmag (nper, irr, dvtosym)
   INTEGER :: nper, irr
     ! the number of perturbations
     ! the representation under consideration
-  COMPLEX(DP) :: dvtosym (nrxx, nspin_mag, nper)
+  COMPLEX(DP) :: dvtosym (dfftp%nnr, nspin_mag, nper)
     ! the potential to symmetrize
     !-local variable
   !

@@ -23,7 +23,8 @@ SUBROUTINE punch_plot_e()
   USE io_global,  ONLY : stdout, ionode
   USE fft_base,   ONLY : grid_gather
   USE printout_base, ONLY : title
-  USE grid_dimensions,ONLY : nrxx, nr1,nr2,nr3, nr1x,nr2x,nr3x
+  USE grid_dimensions,ONLY : nr1,nr2,nr3, nr1x,nr2x,nr3x
+  USE fft_base,   ONLY : dfftp
   USE gvect,      ONLY : gcutm
   USE gvecs,    ONLY : dual
   USE cell_base,  ONLY : bg, ibrav, celldm
@@ -65,9 +66,9 @@ SUBROUTINE punch_plot_e()
   !
   !    reads drho from the file
   !
-  ALLOCATE (aux  (  nrxx,nspin_mag,3))
-  ALLOCATE (aux1 (  nrxx,nspin_mag,3))
-  ALLOCATE (raux (  nrxx))
+  ALLOCATE (aux  (dfftp%nnr,nspin_mag,3))
+  ALLOCATE (aux1 (dfftp%nnr,nspin_mag,3))
+  ALLOCATE (raux (dfftp%nnr))
   !
   !     reads the delta_rho on the aux variable
   !
@@ -80,7 +81,7 @@ SUBROUTINE punch_plot_e()
   aux1(:,:,:) = (0.0d0, 0.0d0)
   DO ipol = 1, 3
      DO jpol = 1, 3
-        CALL daxpy (2 * nrxx, bg (ipol, jpol), aux (1,1,jpol), 1, &
+        CALL daxpy (2 *dfftp%nnr, bg (ipol, jpol), aux (1,1,jpol), 1, &
              aux1 (1,1,ipol), 1)
      ENDDO
   ENDDO
@@ -120,7 +121,7 @@ SUBROUTINE punch_plot_e()
      !      plot of the charge density
      !
      raux (:) =  DBLE (aux1 (:,1, ipol) )
-     IF (lsda) CALL daxpy (nrxx, 1.d0, aux1 (1,2, ipol), 2, raux, 1)
+     IF (lsda) CALL daxpy (dfftp%nnr, 1.d0, aux1 (1,2, ipol), 2, raux, 1)
      !
 #if defined (__PARA)
      ALLOCATE (raux1( nr1x * nr2x * nr3x))
@@ -129,7 +130,7 @@ SUBROUTINE punch_plot_e()
           (raux1 (ir) , ir = 1, nr1x * nr2x * nr3x)
      DEALLOCATE (raux1)
 #else
-     WRITE (iunplot, '( 5( 1pe17.9 ) )') (raux (ir) , ir = 1, nrxx)
+     WRITE (iunplot, '( 5( 1pe17.9 ) )') (raux (ir) , ir = 1, dfftp%nnr)
 #endif
      CLOSE (unit = iunplot)
   ENDDO

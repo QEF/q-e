@@ -31,10 +31,9 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
   USE cell_base,            ONLY : tpiba2
   USE ener,                 ONLY : ef
   USE klist,                ONLY : lgauss, degauss, ngauss, xk, wk
-  USE grid_dimensions,      ONLY : nrxx
   USE gvect,                ONLY : g
   USE gvecs,              ONLY : doublegrid
-  USE smooth_grid_dimensions,ONLY: nrxxs
+  USE fft_base,             ONLY : dfftp, dffts
   USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
   USE spin_orb,             ONLY : domag
   USE wvfct,                ONLY : nbnd, npw, npwx, igk,g2kin,  et
@@ -72,7 +71,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
   ! input: the number of perturbation
   ! input: the position of the modes
 
-  complex(DP) :: drhoscf (nrxx, nspin_mag, npe)
+  complex(DP) :: drhoscf (dfftp%nnr, nspin_mag, npe)
   ! output: the change of the scf charge
 
   real(DP) , allocatable :: h_diag (:,:)
@@ -133,29 +132,29 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
   IF (rec_code_read > 20 ) RETURN
 
   call start_clock ('solve_linter')
-  allocate (dvscfin ( nrxx , nspin_mag , npe))
+  allocate (dvscfin ( dfftp%nnr , nspin_mag , npe))
   if (doublegrid) then
-     allocate (dvscfins ( nrxxs , nspin_mag , npe))
+     allocate (dvscfins (dffts%nnr , nspin_mag , npe))
   else
      dvscfins => dvscfin
   endif
-  allocate (drhoscfh ( nrxx , nspin_mag , npe))
-  allocate (dvscfout ( nrxx , nspin_mag , npe))
+  allocate (drhoscfh ( dfftp%nnr, nspin_mag , npe))
+  allocate (dvscfout ( dfftp%nnr, nspin_mag , npe))
   allocate (dbecsum ( (nhm * (nhm + 1))/2 , nat , nspin_mag , npe))
   IF (okpaw) THEN
-     allocate (mixin(nrxx*nspin_mag*npe+(nhm*(nhm+1)*nat*nspin_mag*npe)/2) )
-     allocate (mixout(nrxx*nspin_mag*npe+(nhm*(nhm+1)*nat*nspin_mag*npe)/2) )
+     allocate (mixin(dfftp%nnr*nspin_mag*npe+(nhm*(nhm+1)*nat*nspin_mag*npe)/2) )
+     allocate (mixout(dfftp%nnr*nspin_mag*npe+(nhm*(nhm+1)*nat*nspin_mag*npe)/2) )
      mixin=(0.0_DP,0.0_DP)
   ENDIF
   IF (noncolin) allocate (dbecsum_nc (nhm,nhm, nat , nspin , npe))
-  allocate (aux1 ( nrxxs, npol))
+  allocate (aux1 ( dffts%nnr, npol))
   allocate (h_diag ( npwx*npol, nbnd))
   !
   if (rec_code_read == 10.AND.ext_recover) then
      ! restart from Phonon calculation
      IF (okpaw) THEN
         CALL read_rec(dr2, iter0, npe, dvscfin, dvscfins, drhoscfh, dbecsum)
-        CALL setmixout(npe*nrxx*nspin_mag,(nhm*(nhm+1)*nat*nspin_mag*npe)/2, &
+        CALL setmixout(npe*dfftp%nnr*nspin_mag,(nhm*(nhm+1)*nat*nspin_mag*npe)/2, &
                     mixin, dvscfin, dbecsum, ndim, -1 )
      ELSE
         CALL read_rec(dr2, iter0, npe, dvscfin, dvscfins, drhoscfh)
@@ -181,8 +180,8 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
 
   lmetq0 = lgauss.and.lgamma
   if (lmetq0) then
-     allocate ( ldos ( nrxx  , nspin_mag) )
-     allocate ( ldoss( nrxxs , nspin_mag) )
+     allocate ( ldos ( dfftp%nnr  , nspin_mag) )
+     allocate ( ldoss( dffts%nnr , nspin_mag) )
      IF (okpaw) THEN
         allocate (becsum1 ( (nhm * (nhm + 1))/2 , nat , nspin_mag))
         call localdos_paw ( ldos , ldoss , becsum1, dos_ef )
@@ -279,7 +278,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
               call start_clock ('vpsifft')
               do ibnd = 1, nbnd_occ (ikk)
                  call cft_wave (evc (1, ibnd), aux1, +1)
-                 call apply_dpot(nrxxs, aux1, dvscfins(1,1,ipert), current_spin)
+                 call apply_dpot(dffts%nnr,aux1, dvscfins(1,1,ipert), current_spin)
                  call cft_wave (dvpsi (1, ibnd), aux1, -1)
               enddo
               call stop_clock ('vpsifft')
@@ -380,7 +379,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
            enddo
         enddo
      else
-        call zcopy (npe*nspin_mag*nrxx, drhoscf, 1, drhoscfh, 1)
+        call zcopy (npe*nspin_mag*dfftp%nnr, drhoscf, 1, drhoscfh, 1)
      endif
      !
      !  In the noncolinear, spin-orbit case rotate dbecsum
@@ -442,7 +441,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
      do ipert = 1, npe
         if (fildrho.ne.' ') call davcio_drho (drhoscfh(1,1,ipert), lrdrho, &
                                               iudrho, imode0+ipert, +1)
-        call zcopy (nrxx*nspin_mag,drhoscfh(1,1,ipert),1,dvscfout(1,1,ipert),1)
+        call zcopy (dfftp%nnr*nspin_mag,drhoscfh(1,1,ipert),1,dvscfout(1,1,ipert),1)
         call dv_of_drho (imode0+ipert, dvscfout(1,1,ipert), .true.)
      enddo
      !
@@ -452,19 +451,19 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
      !
      !  In this case we mix also dbecsum
      !
-        call setmixout(npe*nrxx*nspin_mag,(nhm*(nhm+1)*nat*nspin_mag*npe)/2, &
+        call setmixout(npe*dfftp%nnr*nspin_mag,(nhm*(nhm+1)*nat*nspin_mag*npe)/2, &
                     mixout, dvscfout, dbecsum, ndim, -1 )
-        call mix_potential (2*npe*nrxx*nspin_mag+2*ndim, &
+        call mix_potential (2*npe*dfftp%nnr*nspin_mag+2*ndim, &
                          mixout, mixin, &
                          alpha_mix(kter), dr2, npe*tr2_ph/npol, iter, &
                          nmix_ph, flmixdpot, convt)
-        call setmixout(npe*nrxx*nspin_mag,(nhm*(nhm+1)*nat*nspin_mag*npe)/2, &
+        call setmixout(npe*dfftp%nnr*nspin_mag,(nhm*(nhm+1)*nat*nspin_mag*npe)/2, &
                        mixin, dvscfin, dbecsum, ndim, 1 )
         if (lmetq0.and.convt) &
            call ef_shift_paw (drhoscf, dbecsum, ldos, ldoss, becsum1, &
                                                   dos_ef, irr, npe, .true.)
      ELSE
-        call mix_potential (2*npe*nrxx*nspin_mag, dvscfout, dvscfin, &
+        call mix_potential (2*npe*dfftp%nnr*nspin_mag, dvscfout, dvscfin, &
                          alpha_mix(kter), dr2, npe*tr2_ph/npol, iter, &
                          nmix_ph, flmixdpot, convt)
         if (lmetq0.and.convt) &

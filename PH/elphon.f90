@@ -15,9 +15,8 @@ SUBROUTINE elphon()
   USE kinds, ONLY : DP
   USE cell_base, ONLY : celldm, omega, ibrav
   USE ions_base, ONLY : nat, ntyp => nsp, ityp, tau, pmass
-  USE grid_dimensions, ONLY: nrxx
   USE gvecs, ONLY: doublegrid
-  USE smooth_grid_dimensions, ONLY: nrxxs
+  USE fft_base, ONLY : dfftp, dffts
   USE noncollin_module, ONLY : nspin_mag
   USE dynmat, ONLY : dyn, w2
   USE qpoint, ONLY : xq
@@ -41,13 +40,13 @@ SUBROUTINE elphon()
   !
   imode0 = 0
   DO irr = 1, nirr
-     ALLOCATE (dvscfin ( nrxx , nspin_mag , npert(irr)) )
+     ALLOCATE (dvscfin (dfftp%nnr, nspin_mag , npert(irr)) )
      DO ipert = 1, npert (irr)
         CALL davcio_drho ( dvscfin(1,1,ipert),  lrdrho, iudvscf, &
                            imode0 + ipert,  -1 )
      END DO
      IF (doublegrid) THEN
-        ALLOCATE (dvscfins ( nrxxs , nspin_mag , npert(irr)) )
+        ALLOCATE (dvscfins (dffts%nnr, nspin_mag , npert(irr)) )
         DO is = 1, nspin_mag
            DO ipert = 1, npert(irr)
               CALL cinterpolate (dvscfin(1,is,ipert),dvscfins(1,is,ipert),-1)
@@ -173,7 +172,7 @@ SUBROUTINE elphel (npe, imode0, dvscfins)
   !      Original routine written by Francesco Mauri
   !
   USE kinds, ONLY : DP
-  USE smooth_grid_dimensions, ONLY: nrxxs
+  USE fft_base, ONLY : dffts
   USE wavefunctions_module,  ONLY: evc
   USE io_files, ONLY: iunigk
   USE klist, ONLY: xk
@@ -193,14 +192,14 @@ SUBROUTINE elphel (npe, imode0, dvscfins)
   IMPLICIT NONE
   !
   INTEGER :: npe, imode0
-  COMPLEX(DP) :: dvscfins (nrxxs, nspin_mag, npe)
+  COMPLEX(DP) :: dvscfins (dffts%nnr, nspin_mag, npe)
   ! LOCAL variables
   INTEGER :: nrec, ik, ikk, ikq, ipert, mode, ibnd, jbnd, ir, ig, &
        ios
   COMPLEX(DP) , ALLOCATABLE :: aux1 (:,:), elphmat (:,:,:)
   COMPLEX(DP), EXTERNAL :: zdotc
   !
-  ALLOCATE (aux1    ( nrxxs, npol))
+  ALLOCATE (aux1    (dffts%nnr, npol))
   ALLOCATE (elphmat ( nbnd , nbnd , npe))
   !
   !  Start the loops over the k-points
@@ -256,7 +255,7 @@ SUBROUTINE elphel (npe, imode0, dvscfins)
         !
         DO ibnd = 1, nbnd
            CALL cft_wave (evc(1, ibnd), aux1, +1)
-           CALL apply_dpot(nrxxs, aux1, dvscfins(1,1,ipert), current_spin)
+           CALL apply_dpot(dffts%nnr, aux1, dvscfins(1,1,ipert), current_spin)
            CALL cft_wave (dvpsi(1, ibnd), aux1, -1)
         END DO
         CALL adddvscf (ipert, ik)

@@ -18,8 +18,7 @@ subroutine incdrhous_nc (drhoscf, weight, ik, dbecsum, evcr, wgg, becq, &
   USE kinds,     ONLY : DP
   USE cell_base, ONLY : omega
   USE ions_base, ONLY : ntyp => nsp, nat, ityp
-  USE grid_dimensions, ONLY : nrxx
-  USE fft_base,  ONLY : dffts
+  USE fft_base,  ONLY : dffts, dfftp
   USE fft_interfaces, ONLY: invfft
   USE gvecs,   ONLY : nls
   USE lsda_mod,  ONLY : nspin
@@ -48,7 +47,7 @@ subroutine incdrhous_nc (drhoscf, weight, ik, dbecsum, evcr, wgg, becq, &
   ! input: the weight of the k point
   ! input: the weights
 
-  complex(DP) :: evcr (dffts%nnr, npol, nbnd), drhoscf (nrxx,nspin_mag), &
+  complex(DP) :: evcr (dffts%nnr, npol, nbnd), drhoscf(dfftp%nnr,nspin_mag), &
        dbecsum(nhm, nhm, nat, nspin)
   ! input: the wavefunctions at k in real
   ! output: the change of the charge densi

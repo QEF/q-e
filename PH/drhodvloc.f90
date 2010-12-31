@@ -15,8 +15,8 @@ subroutine drhodvloc (nu_i0, npe, drhoscf, wdyn)
   !
   USE kinds,     ONLY : DP
   USE ions_base, ONLY : nat
-  USE grid_dimensions,        ONLY : nrxx
-  USE smooth_grid_dimensions, ONLY : nrxxs, nr1s, nr2s, nr3s
+  USE smooth_grid_dimensions, ONLY : nr1s, nr2s, nr3s
+  USE fft_base, ONLY : dfftp, dffts
   USE cell_base, ONLY : omega
   USE lsda_mod,  ONLY : nspin
   USE noncollin_module, ONLY : nspin_lsda, nspin_mag
@@ -29,7 +29,7 @@ subroutine drhodvloc (nu_i0, npe, drhoscf, wdyn)
   integer :: npe, nu_i0
   ! input: the number of perturbation of this representations
   ! input: the initial position of the mode
-  complex(DP) :: drhoscf (nrxx, nspin_mag, npe), wdyn (3 * nat, 3 * nat)
+  complex(DP) :: drhoscf (dfftp%nnr, nspin_mag, npe), wdyn (3 * nat, 3 * nat)
   ! the change of density due to perturbations
   ! auxiliary matrix where drhodv is stored
 
@@ -43,7 +43,7 @@ subroutine drhodvloc (nu_i0, npe, drhoscf, wdyn)
   complex(DP), allocatable :: dvloc (:)
   ! d Vloc / dtau
 
-  allocate (dvloc( nrxxs))
+  allocate (dvloc( dffts%nnr))
   dynwrk (:,:) = (0.d0, 0.d0)
   !
   ! We need a sum over all perturbations
@@ -54,7 +54,7 @@ subroutine drhodvloc (nu_i0, npe, drhoscf, wdyn)
         nu_i = nu_i0 + ipert
         do is = 1, nspin_lsda
            dynwrk (nu_i, nu_j) = dynwrk (nu_i, nu_j) + &
-                zdotc (nrxxs, drhoscf (1, is, ipert), 1, dvloc, 1) * &
+                zdotc (dffts%nnr, drhoscf (1, is, ipert), 1, dvloc, 1) * &
                   omega / (nr1s * nr2s * nr3s)
         enddo
      enddo

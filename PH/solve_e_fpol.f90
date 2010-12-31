@@ -28,10 +28,9 @@ subroutine solve_e_fpol ( iw )
   USE cell_base,             ONLY : tpiba2
   USE klist,                 ONLY : lgauss, nkstot, wk, xk
   USE lsda_mod,              ONLY : lsda, nspin, current_spin, isk
-  USE fft_base,              ONLY : dffts
+  USE fft_base,              ONLY : dffts, dfftp
   USE fft_interfaces,        ONLY : fwfft, invfft
   USE gvect,                 ONLY : g
-  USE grid_dimensions,       ONLY : nrxx
   USE gvecs,               ONLY : doublegrid, nls
   USE becmod,                ONLY : becp, calbec
   USE wvfct,                 ONLY : npw, npwx, nbnd, igk, g2kin, et
@@ -88,13 +87,13 @@ subroutine solve_e_fpol ( iw )
   if (lsda) call errore ('solve_e', ' LSDA not implemented', 1)
 
   call start_clock ('solve_e')
-  allocate (dvscfin( nrxx, nspin, 3))
+  allocate (dvscfin( dfftp%nnr, nspin, 3))
   if (doublegrid) then
      allocate (dvscfins( dffts%nnr, nspin, 3))
   else
      dvscfins => dvscfin
   endif
-  allocate (dvscfout( nrxx , nspin, 3))
+  allocate (dvscfout( dfftp%nnr, nspin, 3))
   allocate (dbecsum( nhm*(nhm+1)/2, nat, nspin, 3))
   allocate (auxg(npwx))
   allocate (aux1(dffts%nnr))
@@ -330,7 +329,7 @@ subroutine solve_e_fpol ( iw )
      !
      !   mix the new potential with the old
      !
-     call mix_potential (2 * 3 * nrxx *nspin, dvscfout, dvscfin, alpha_mix ( &
+     call mix_potential (2 * 3 * dfftp%nnr *nspin, dvscfout, dvscfin, alpha_mix ( &
           kter), dr2, 3 * tr2_ph, iter, nmix_ph, flmixdpot, convt)
      if (doublegrid) then
         do is=1,nspin
