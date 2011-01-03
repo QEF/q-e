@@ -10,8 +10,8 @@ bforceion.o : ../Modules/constants.o
 bforceion.o : ../Modules/electrons_base.o
 bforceion.o : ../Modules/ions_base.o
 bforceion.o : ../Modules/kind.o
+bforceion.o : ../Modules/mp_global.o
 bforceion.o : ../Modules/uspp.o
-bforceion.o : mainvar.o
 bforceion.o : modules.o
 boxgrid.o : ../Modules/fft_scalar.o
 boxgrid.o : ../Modules/griddim.o
@@ -35,7 +35,6 @@ cg_sub.o : ../Modules/mp.o
 cg_sub.o : ../Modules/mp_global.o
 cg_sub.o : ../Modules/recvec.o
 cg_sub.o : ../Modules/uspp.o
-cg_sub.o : ../Modules/wavefunctions.o
 cg_sub.o : cg.o
 cg_sub.o : cp_emass.o
 cg_sub.o : cp_interfaces.o
@@ -236,6 +235,7 @@ cpr.o : cp_autopilot.o
 cpr.o : cp_emass.o
 cpr.o : cp_interfaces.o
 cpr.o : efield.o
+cpr.o : electrons.o
 cpr.o : ensemble_dft.o
 cpr.o : gvecb.o
 cpr.o : gvecw.o
@@ -338,6 +338,7 @@ electrons.o : ../Modules/dspev_drv.o
 electrons.o : ../Modules/electrons_base.o
 electrons.o : ../Modules/io_global.o
 electrons.o : ../Modules/kind.o
+electrons.o : ../Modules/mp.o
 electrons.o : ../Modules/mp_global.o
 electrons.o : cp_emass.o
 ensemble_dft.o : ../Modules/descriptors.o
@@ -400,6 +401,7 @@ fromscra.o : ../Modules/io_global.o
 fromscra.o : ../Modules/ions_base.o
 fromscra.o : ../Modules/ions_nose.o
 fromscra.o : ../Modules/kind.o
+fromscra.o : ../Modules/mp.o
 fromscra.o : ../Modules/mp_global.o
 fromscra.o : ../Modules/printout_base.o
 fromscra.o : ../Modules/recvec.o
@@ -437,10 +439,10 @@ gvecb.o : ../Modules/kind.o
 gvecw.o : ../Modules/kind.o
 gvecw.o : ../Modules/mp.o
 gvecw.o : ../Modules/mp_global.o
-gvecw.o : ../Modules/recvec.o
 init.o : ../Modules/berry_phase.o
 init.o : ../Modules/cell_base.o
 init.o : ../Modules/control_flags.o
+init.o : ../Modules/electrons_base.o
 init.o : ../Modules/fft_base.o
 init.o : ../Modules/fft_scalar.o
 init.o : ../Modules/fft_types.o
@@ -477,7 +479,7 @@ init_run.o : ../Modules/io_global.o
 init_run.o : ../Modules/ions_base.o
 init_run.o : ../Modules/ions_nose.o
 init_run.o : ../Modules/kind.o
-init_run.o : ../Modules/mp.o
+init_run.o : ../Modules/mp_global.o
 init_run.o : ../Modules/printout_base.o
 init_run.o : ../Modules/recvec.o
 init_run.o : ../Modules/timestep.o
@@ -607,12 +609,13 @@ move_electrons.o : ../Modules/energies.o
 move_electrons.o : ../Modules/griddim.o
 move_electrons.o : ../Modules/ions_base.o
 move_electrons.o : ../Modules/kind.o
+move_electrons.o : ../Modules/mp_global.o
 move_electrons.o : ../Modules/recvec.o
 move_electrons.o : ../Modules/uspp.o
-move_electrons.o : ../Modules/wavefunctions.o
 move_electrons.o : cg.o
 move_electrons.o : cp_interfaces.o
 move_electrons.o : efield.o
+move_electrons.o : electrons.o
 move_electrons.o : ensemble_dft.o
 move_electrons.o : gvecw.o
 move_electrons.o : ions_positions.o
@@ -675,6 +678,7 @@ ortho_base.o : ../Modules/constants.o
 ortho_base.o : ../Modules/control_flags.o
 ortho_base.o : ../Modules/descriptors.o
 ortho_base.o : ../Modules/dspev_drv.o
+ortho_base.o : ../Modules/electrons_base.o
 ortho_base.o : ../Modules/io_global.o
 ortho_base.o : ../Modules/ions_base.o
 ortho_base.o : ../Modules/kind.o
@@ -942,6 +946,7 @@ wannier.o : modules.o
 wannier.o : wannier_base.o
 wannier_base.o : ../Modules/kind.o
 wave.o : ../Modules/dspev_drv.o
+wave.o : ../Modules/electrons_base.o
 wave.o : ../Modules/io_global.o
 wave.o : ../Modules/kind.o
 wave.o : ../Modules/mp.o
