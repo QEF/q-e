@@ -159,6 +159,11 @@
       !   Each processor will treat its own part of the eigenstate
       !   assigned to its ORBITAL group
       !
+!$omp parallel default(none) &
+!$omp          private( eig_offset, igno, fi, fip, idx, fp, fm, ig ) &
+!$omp          shared( nogrp_ , f, ngw, psi, df, da, c, tpiba2, tens, dffts, me_bgrp, &
+!$omp                  i, n, ggp, use_task_groups, nls, nlsm )
+
       eig_offset = 0
       igno = 1
 
@@ -173,7 +178,7 @@
                fip = -0.5d0*f(i+idx)
             endif
             IF( use_task_groups ) THEN
-!$omp parallel do private( fp, fm )
+!$omp do 
                DO ig=1,ngw
                   fp= psi(nls(ig)+eig_offset) +  psi(nlsm(ig)+eig_offset)
                   fm= psi(nls(ig)+eig_offset) -  psi(nlsm(ig)+eig_offset)
@@ -182,17 +187,17 @@
                   da(ig+igno-1)= fip*(tpiba2 * ggp(ig) * c(ig,idx+i  ) + &
                                  CMPLX(aimag(fp),-real (fm), kind=dp ))
                END DO
-!$omp end parallel do
+!$omp end do
                igno = igno + ngw
             ELSE
-!$omp parallel do private( fp, fm )
+!$omp do 
                DO ig=1,ngw
                   fp= psi(nls(ig)) + psi(nlsm(ig))
                   fm= psi(nls(ig)) - psi(nlsm(ig))
                   df(ig)= fi*(tpiba2*ggp(ig)* c(ig,idx+i-1)+CMPLX(DBLE(fp), AIMAG(fm),kind=DP))
                   da(ig)=fip*(tpiba2*ggp(ig)* c(ig,idx+i  )+CMPLX(AIMAG(fp),-DBLE(fm),kind=DP))
                END DO
-!$omp end parallel do
+!$omp end do
             END IF
          END IF
 
@@ -202,6 +207,7 @@
 
       ENDDO
 
+!$omp end parallel 
       !
       IF(dft_is_meta()) THEN
          CALL dforce_meta(c(1,i),c(1,i+1),df,da,psi,iss1,iss2,fi,fip) !METAGGA
@@ -217,6 +223,10 @@
          af = 0.0d0
          aa = 0.0d0
          !
+!$omp parallel default(none) &
+!$omp          private(iv,jv,ivoff,jvoff,dd,dv,inl,jnl,is,isa,ism,igrp,idx,fi,fip) &
+!$omp          shared( nogrp_ , f, ngw, deeq, bec, af, aa, i, n, nsp, na, nh, dvan, tens, ish, iss1, iss2 )
+         !
          igrp = 1
 
          DO idx = 1, 2*nogrp_ , 2
@@ -230,8 +240,6 @@
                   fi = f(i+idx-1)
                   fip= f(i+idx)
                END IF
-               !
-!$omp parallel default(shared), private(iv,jv,ivoff,jvoff,dd,dv,inl,jnl,is,isa,ism)
                !
                DO is = 1, nsp
                   DO iv = 1, nh(is)
@@ -266,13 +274,13 @@
                   END DO
                END DO
 
-!$omp end parallel
-      
             END IF
 
             igrp = igrp + 1
 
          END DO
+
+!$omp end parallel
 !
          CALL dgemm ( 'N', 'N', 2*ngw, nogrp_ , nhsa, 1.0d0, vkb, 2*ngw, af, nhsa, 1.0d0, df, 2*ngw)
 

@@ -131,11 +131,7 @@ SUBROUTINE from_scratch( )
     nspin_wfc = nspin
     IF( force_pairing ) nspin_wfc = 1
 
-    DO iss = 1, nspin_wfc
-       !
-       CALL gram_bgrp( vkb, bec_bgrp, nkb, cm_bgrp, ngw, iss )
-       !
-    END DO
+    CALL gram_bgrp( vkb, bec_bgrp, nkb, cm_bgrp, ngw )
 
     IF( force_pairing ) cm_bgrp(:,iupdwn(2):iupdwn(2)+nupdwn(2)-1) = cm_bgrp(:,1:nupdwn(2))
     !
@@ -242,9 +238,7 @@ SUBROUTINE from_scratch( )
             CALL ortho( eigr, c0_bgrp, phi_bgrp, ngw, lambda, descla, &
                         bigr, iter, ccc, bephi, becp_dist, nbsp, nspin, nupdwn, iupdwn )
          else
-            DO iss = 1, nspin
-               CALL gram_bgrp( vkb, bec_bgrp, nkb, c0_bgrp, ngw, iss )
-            END DO
+            CALL gram_bgrp( vkb, bec_bgrp, nkb, c0_bgrp, ngw )
          endif
          !
          IF ( ttforce ) THEN

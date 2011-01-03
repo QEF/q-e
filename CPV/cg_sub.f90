@@ -174,9 +174,7 @@
 
       !orthonormalize c0
 
-      DO iss = 1, nspin
-         CALL gram_bgrp( betae, bec, nhsa, c0, ngw, iss )
-      END DO
+         CALL gram_bgrp( betae, bec, nhsa, c0, ngw )
 
       !calculates phi for pcdaga
 
@@ -560,9 +558,7 @@
 
         !orthonormalize
 
-      DO iss = 1, nspin
-         CALL gram_bgrp( betae, becm, nhsa, cm, ngw, iss )
-      END DO
+         CALL gram_bgrp( betae, becm, nhsa, cm, ngw )
                
         !calculate energy
         if(.not.tens) then
@@ -623,9 +619,7 @@
           cm(1,:)=0.5d0*(cm(1,:)+CONJG(cm(1,:)))
         endif
 
-      DO iss = 1, nspin
-         CALL gram_bgrp( betae, becm, nhsa, cm, ngw, iss )
-      END DO
+         CALL gram_bgrp( betae, becm, nhsa, cm, ngw )
 
         !test on energy: check the energy has really diminished
 
@@ -694,9 +688,7 @@
           endif
           c0=c0+spasso*passov*hi
           restartcg=.true.
-      DO iss = 1, nspin
-         CALL gram_bgrp( betae, bec, nhsa, c0, ngw, iss )
-      END DO
+         CALL gram_bgrp( betae, bec, nhsa, c0, ngw )
           ene_ok=.false.
           !if  ene1 << energy <  ene0; go to  ene1
         else if( (enever.ge.ene0).and.(ene0.gt.ene1)) then
@@ -705,9 +697,7 @@
           endif  
           c0=c0+spasso*passov*hi
           restartcg=.true.!ATTENZIONE
-      DO iss = 1, nspin
-         CALL gram_bgrp( betae, bec, nhsa, c0, ngw, iss )
-      END DO
+         CALL gram_bgrp( betae, bec, nhsa, c0, ngw )
           !if ene > ene0,en1 do a steepest descent step
           ene_ok=.false.
         else if((enever.ge.ene0).and.(ene0.le.ene1)) then
@@ -722,9 +712,7 @@
             cm=c0+spasso*passov*hi
             ! chenge the searching direction
             spasso=spasso*(-1.d0)
-      DO iss = 1, nspin
-         CALL gram_bgrp( betae, bec, nhsa, cm, ngw, iss )
-      END DO
+         CALL gram_bgrp( betae, bec, nhsa, cm, ngw )
             call calbec(1,nsp,eigr,cm,becm)
             if(.not.tens) then
               call rhoofr(nfi,cm(:,:),irb,eigrb,becm,rhovan,rhor,rhog,rhos,enl,denl,ekin,dekin6)

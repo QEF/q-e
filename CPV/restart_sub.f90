@@ -138,9 +138,7 @@ SUBROUTINE from_restart( )
       !
       CALL rande_base( c0_bgrp, ampre )
       !
-      DO iss = 1, nspin
-         CALL gram_bgrp( vkb, bec_bgrp, nkb, c0_bgrp, ngw, iss )
-      END DO
+      CALL gram_bgrp( vkb, bec_bgrp, nkb, c0_bgrp, ngw )
       !
       IF( force_pairing ) c0_bgrp(:,iupdwn(2):nbsp) = c0_bgrp(:,1:nupdwn(2))
       !

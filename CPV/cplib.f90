@@ -568,7 +568,7 @@ END FUNCTION
 
 
 !-------------------------------------------------------------------------
-      SUBROUTINE gracsc_bgrp( bec_bgrp, nkbx, betae, cp_bgrp, ngwx, i, csc, iss )
+      SUBROUTINE gracsc_bgrp( bec_bgrp, nkbx, betae, cp_bgrp, ngwx, i, csc, iss, nk )
 !-----------------------------------------------------------------------
 !     requires in input the updated bec(k) for k<i
 !     on output: bec(i) is recalculated
@@ -587,6 +587,7 @@ END FUNCTION
       IMPLICIT NONE
 !
       INTEGER, INTENT(IN) :: i, nkbx, ngwx, iss
+      INTEGER, INTENT(OUT) :: nk
       COMPLEX(DP) :: betae( ngwx, nkb )
       REAL(DP)    :: bec_bgrp( nkbx, nbspx_bgrp ), cp_bgrp( 2, ngwx, nbspx_bgrp )
       REAL(DP)    :: csc( nbspx )
@@ -700,12 +701,15 @@ END FUNCTION
       csc = csc + csc2
 
       bec_tmp = 0.0d0
+      nk = 0
       DO k = iupdwn(iss), kmax
          ibgrp_k = ibgrp_g2l( k )
          IF( ibgrp_k > 0 ) THEN
+            nk = nk + 1 
             DO inl=1,nkbx
                bec_tmp(inl)=bec_tmp(inl)-csc(k)*bec_bgrp(inl,ibgrp_k)
             END DO
+            csc( nk ) = csc( k )
          END IF
       END DO
       CALL mp_sum( bec_tmp, inter_bgrp_comm )
@@ -839,27 +843,27 @@ END FUNCTION
 
 
 !-------------------------------------------------------------------------
-      SUBROUTINE gram_bgrp( betae, bec_bgrp, nkbx, cp_bgrp, ngwx, iss )
+      SUBROUTINE gram_bgrp( betae, bec_bgrp, nkbx, cp_bgrp, ngwx )
 !-----------------------------------------------------------------------
 !     gram-schmidt orthogonalization of the set of wavefunctions cp
 !
       USE uspp,           ONLY : nkb, nhsavb=> nkbus
       USE gvecw,          ONLY : ngw
-      USE electrons_base, ONLY : nbspx_bgrp, ibgrp_g2l, nupdwn, iupdwn, nbspx
+      USE electrons_base, ONLY : nbspx_bgrp, ibgrp_g2l, nupdwn, iupdwn, nbspx, iupdwn_bgrp, nspin
       USE kinds,          ONLY : DP
       USE mp_global,      ONLY : inter_bgrp_comm, mpime
       USE mp,             ONLY : mp_sum
 !
       IMPLICIT NONE
 !
-      INTEGER, INTENT(IN) :: nkbx, ngwx, iss
+      INTEGER, INTENT(IN) :: nkbx, ngwx
       REAL(DP)      :: bec_bgrp( nkbx, nbspx_bgrp )
       COMPLEX(DP)   :: cp_bgrp( ngwx, nbspx_bgrp ), betae( ngwx, nkb )
 !
       REAL(DP) :: anorm, cscnorm
       REAL(DP), ALLOCATABLE :: csc( : )
       COMPLEX(DP), ALLOCATABLE :: ctmp( : )
-      INTEGER :: i,k,j, ig, ibgrp_k, ibgrp_i
+      INTEGER :: i,k,j, ig, ibgrp_k, ibgrp_i, nbgrp_im1, iss
       EXTERNAL :: cscnorm
       REAL(DP), PARAMETER :: one  =  1.d0
       REAL(DP), PARAMETER :: mone = -1.d0
@@ -869,11 +873,12 @@ END FUNCTION
       ALLOCATE( csc( nbspx ) )
       ALLOCATE( ctmp( ngwx ) )
 !
+      DO iss = 1, nspin
       DO i = iupdwn(iss), iupdwn(iss) + nupdwn(iss) - 1 
          !
          ibgrp_i = ibgrp_g2l( i )
          !
-         CALL gracsc_bgrp( bec_bgrp, nkbx, betae, cp_bgrp, ngwx, i, csc, iss )
+         CALL gracsc_bgrp( bec_bgrp, nkbx, betae, cp_bgrp, ngwx, i, csc, iss, nbgrp_im1 )
          !
          ! calculate orthogonalized cp(i) : |cp(i)>=|cp(i)>-\sum_k<i csc(k)|cp(k)>
          !
@@ -883,19 +888,10 @@ END FUNCTION
             ctmp = 0.0d0
          END IF
          !
-         IF( i > iupdwn(iss) ) THEN
-           DO k = iupdwn(iss), i - 1
-              ibgrp_k = ibgrp_g2l( k )
-              IF( ibgrp_k > 0 ) THEN
-                 DO ig = 1, ngw
-                    ctmp( ig ) = ctmp( ig ) - cp_bgrp( ig, ibgrp_k ) * csc( k )
-                 END DO
-              END IF
-           END DO
-         END IF
+         IF( nbgrp_im1 > 0 ) &
+            CALL dgemv( 'N', 2*ngw, nbgrp_im1, mone, cp_bgrp(1,iupdwn_bgrp(iss)), 2*ngwx, csc, 1, one, ctmp, 1 )
+
          CALL mp_sum( ctmp, inter_bgrp_comm )
-         !IF( i > 1 ) &
-         !   CALL dgemv( 'N', 2*ngw, i-1, mone, cp(1,1), 2*ngwx, csc(1), 1, one, cp(1,i), 1 )
 
          IF( ibgrp_i > 0 ) THEN
             cp_bgrp( :, ibgrp_i ) = ctmp
@@ -903,6 +899,7 @@ END FUNCTION
             CALL dscal( 2*ngw, 1.0d0/anorm, cp_bgrp(1,ibgrp_i), 1 )
             CALL dscal( nkbx, 1.0d0/anorm, bec_bgrp(1,ibgrp_i), 1 )
          END IF
+      END DO
       END DO
 !
       DEALLOCATE( ctmp )

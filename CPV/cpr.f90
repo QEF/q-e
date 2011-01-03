@@ -513,9 +513,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
            !
         ELSE
            !
-           DO iss = 1, nspin
-              CALL gram_bgrp( vkb, bec_bgrp, nkb, cm_bgrp, ngw, iss )
-           END DO
+           CALL gram_bgrp( vkb, bec_bgrp, nkb, cm_bgrp, ngw )
            !
            IF ( iprsta > 4 ) CALL dotcsc( eigr, cm_bgrp, ngw, nbsp_bgrp )
            !
