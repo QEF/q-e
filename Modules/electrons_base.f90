@@ -45,6 +45,7 @@
 
       REAL(DP), ALLOCATABLE :: f_bgrp(:)     ! occupation numbers ( at gamma )
       INTEGER, ALLOCATABLE  :: ispin_bgrp(:) ! spin of each state
+      INTEGER, ALLOCATABLE :: ibgrp_g2l(:)    ! local index of the i-th global band index
 !
 !------------------------------------------------------------------------------!
   CONTAINS
@@ -395,6 +396,7 @@
       IF( ALLOCATED( ispin ) ) DEALLOCATE( ispin )
       IF( ALLOCATED( f_bgrp ) ) DEALLOCATE( f_bgrp )
       IF( ALLOCATED( ispin_bgrp ) ) DEALLOCATE( ispin_bgrp )
+      IF( ALLOCATED( ibgrp_g2l ) ) DEALLOCATE( ibgrp_g2l )
       telectrons_base_initval = .FALSE.
       RETURN
     END SUBROUTINE deallocate_elct
@@ -404,7 +406,7 @@
     SUBROUTINE distribute_bands( nbgrp, my_bgrp_id )
       INTEGER, INTENT(IN) :: nbgrp, my_bgrp_id
       INTEGER, EXTERNAL :: ldim_block, gind_block
-      INTEGER :: iss, n1, n2, m1, m2
+      INTEGER :: iss, n1, n2, m1, m2, ilocal, iglobal
       !
       IF( .NOT. telectrons_base_initval ) &
         CALL errore( ' distribute_bands ', ' electrons_base_initval not yet called ', 1 )
@@ -432,8 +434,10 @@
 
       ALLOCATE( f_bgrp     ( nbspx_bgrp ) )
       ALLOCATE( ispin_bgrp ( nbspx_bgrp ) )
+      ALLOCATE( ibgrp_g2l ( nbspx ) )
       f_bgrp = 0.0
       ispin_bgrp = 0
+      ibgrp_g2l = 0
       !
       DO iss = 1, nspin
          n1 = iupdwn_bgrp(iss)
@@ -442,25 +446,17 @@
          m2 = m1 + nupdwn_bgrp(iss) - 1
          f_bgrp(n1:n2) = f(m1:m2)
          ispin_bgrp(n1:n2) = ispin(m1:m2)
+         ilocal = n1
+         DO iglobal = m1, m2
+            ibgrp_g2l( iglobal ) = ilocal
+            ilocal = ilocal + 1
+         END DO
       END DO
       
       RETURN
 
     END SUBROUTINE distribute_bands
 
-    SUBROUTINE distribute_c( c, c_bgrp )
-      COMPLEX(DP), INTENT(IN) :: c(:,:)
-      COMPLEX(DP), INTENT(OUT) :: c_bgrp(:,:)
-      INTEGER :: iss, n1, n2, m1, m2
-      DO iss = 1, nspin
-         n1 = iupdwn_bgrp(iss)
-         n2 = n1 + nupdwn_bgrp(iss) - 1
-         m1 = iupdwn(iss)+i2gupdwn_bgrp(iss) - 1
-         m2 = m1 + nupdwn_bgrp(iss) - 1
-         c_bgrp(:,n1:n2) = c(:,m1:m2)
-      END DO
-      RETURN
-    END SUBROUTINE distribute_c
 
 !------------------------------------------------------------------------------!
   END MODULE electrons_base
