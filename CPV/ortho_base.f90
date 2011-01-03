@@ -33,12 +33,13 @@ MODULE orthogonalize_base
       PUBLIC :: rhoset
       PUBLIC :: ortho_iterate
       PUBLIC :: ortho_alt_iterate
-      PUBLIC :: updatc, calphi
+      PUBLIC :: updatc, calphi_bgrp
       PUBLIC :: mesure_diag_perf
       PUBLIC :: mesure_mmul_perf
       PUBLIC :: diagonalize_parallel
       PUBLIC :: diagonalize_serial
       PUBLIC :: use_parallel_diag
+      PUBLIC :: bec_bgrp2ortho
 
 CONTAINS
 
@@ -1069,7 +1070,7 @@ END SUBROUTINE diagonalize_parallel
 
 !
 !-------------------------------------------------------------------------
-   SUBROUTINE updatc( ccc, n, x0, nx0, phi, ngwx, bephi, nkbx, becp_dist, bec, cp, nss, istart, desc )
+   SUBROUTINE updatc( ccc, n, x0, nx0, phi, ngwx, bephi, nkbx, becp_dist, bec_bgrp, cp_bgrp, nss, istart, desc )
 !-----------------------------------------------------------------------
 !
       !     input ccc : dt**2/emass OR 1.0d0 demending on ortho
@@ -1089,7 +1090,8 @@ END SUBROUTINE diagonalize_parallel
       USE gvecw,             ONLY: ngw
       USE control_flags,     ONLY: iprint, iprsta
       USE mp,                ONLY: mp_sum, mp_bcast
-      USE mp_global,         ONLY: intra_bgrp_comm, leg_ortho, me_bgrp
+      USE mp_global,         ONLY: intra_bgrp_comm, leg_ortho, me_bgrp, inter_bgrp_comm
+      USE electrons_base,    ONLY: nbspx_bgrp, ibgrp_g2l
       USE descriptors,       ONLY: nlar_ , nlac_ , ilar_ , ilac_ , lambda_node_ , descla_siz_ , la_comm_ , &
                                    la_npc_ , la_npr_ , nlax_ , la_n_ , la_nx_ , la_myr_ , la_myc_ , &
                                    descla_init
@@ -1098,9 +1100,9 @@ END SUBROUTINE diagonalize_parallel
 !
       INTEGER, INTENT(IN) :: n, nx0, ngwx, nkbx, istart, nss
       INTEGER, INTENT(IN) :: desc( descla_siz_ )
-      COMPLEX(DP) :: cp( ngwx, n ), phi( ngwx, n )
+      COMPLEX(DP) :: cp_bgrp( ngwx, nbspx_bgrp ), phi( ngwx, n )
       REAL(DP), INTENT(IN) :: ccc
-      REAL(DP)    :: bec( nkbx, n ), x0( nx0, nx0 )
+      REAL(DP)    :: bec_bgrp( nkbx, nbspx_bgrp ), x0( nx0, nx0 )
       REAL(DP)    :: bephi( :, : )
       REAL(DP)    :: becp_dist( :, : )
 
@@ -1111,10 +1113,12 @@ END SUBROUTINE diagonalize_parallel
       REAL(DP),    ALLOCATABLE :: xd(:,:) 
       REAL(DP),    ALLOCATABLE :: bephi_tmp(:,:) 
       REAL(DP),    ALLOCATABLE :: becp_tmp(:,:) 
+      COMPLEX(DP), ALLOCATABLE :: cp_tmp(:,:) 
       REAL(DP) :: beta
       INTEGER :: ipr, ipc, nx, root
       INTEGER :: np( 2 ), coor_ip( 2 )
       INTEGER :: desc_ip( descla_siz_ )
+      INTEGER :: ibgrp_i
       !
       !     lagrange multipliers
       !
@@ -1135,15 +1139,19 @@ END SUBROUTINE diagonalize_parallel
       CALL start_clock( 'updatc' )
 
       ALLOCATE( xd( nx, nx ) )
+      ALLOCATE( cp_tmp( SIZE( cp_bgrp, 1 ), nx ) )
 
       IF( nvb > 0 )THEN
          ALLOCATE( wtemp( nx, nkb ) )
          ALLOCATE( bephi_tmp( nkbx, nx ) )
          ALLOCATE( becp_tmp( nkbx, nx ) )
          DO i = 1, nss
-            DO inl = 1, nkbus
-               bec( inl, i + istart - 1 ) = 0.0d0
-            END DO
+            ibgrp_i = ibgrp_g2l( i + istart - 1 )
+            IF( ibgrp_i > 0 ) THEN
+               DO inl = 1, nkbus
+                  bec_bgrp( inl, ibgrp_i ) = 0.0d0
+               END DO
+            END IF
          END DO
       END IF
 
@@ -1193,8 +1201,17 @@ END SUBROUTINE diagonalize_parallel
 
             CALL mp_bcast( xd, root, intra_bgrp_comm )
 
+            !CALL dgemm( 'N', 'N', 2*ngw, nc, nr, 1.0d0, phi(1,istart+ir-1), 2*ngwx, &
+            !            xd, nx, 1.0d0, cp(1,istart+ic-1), 2*ngwx )
             CALL dgemm( 'N', 'N', 2*ngw, nc, nr, 1.0d0, phi(1,istart+ir-1), 2*ngwx, &
-                        xd, nx, 1.0d0, cp(1,istart+ic-1), 2*ngwx )
+                        xd, nx, 0.0d0, cp_tmp, 2*ngwx )
+
+            DO i = 1, nc
+               ibgrp_i = ibgrp_g2l( i + istart + ic - 2 )
+               IF( ibgrp_i > 0 ) THEN
+                  cp_bgrp( : , ibgrp_i ) = cp_bgrp( : , ibgrp_i ) + cp_tmp( : , i )
+               END IF
+            END DO
 
             IF( nvb > 0 )THEN
 
@@ -1207,15 +1224,21 @@ END SUBROUTINE diagonalize_parallel
                ! here nr and ir are still valid, since they are the same for all procs in the same row
                !
                DO i = 1, nr
-                  DO inl = 1, nkbus
-                     bec( inl, i + istart + ir - 2 ) = bec( inl, i + istart + ir - 2 ) + wtemp( i, inl ) 
-                  END DO
+                  ibgrp_i = ibgrp_g2l( i + istart + ir - 2 )
+                  IF( ibgrp_i > 0 ) THEN
+                     DO inl = 1, nkbus
+                        bec_bgrp( inl, ibgrp_i ) = bec_bgrp( inl, ibgrp_i ) + wtemp( i, inl ) 
+                     END DO
+                  END IF
                END DO
                IF( ipr == ipc )THEN
                   DO i = 1, nr
-                     DO inl = 1, nkbus
-                        bec( inl, i + istart + ir - 2 ) = bec( inl, i + istart + ir - 2 ) + becp_tmp( inl, i ) 
-                     END DO
+                     ibgrp_i = ibgrp_g2l( i + istart + ir - 2 )
+                     IF( ibgrp_i > 0 ) THEN
+                        DO inl = 1, nkbus
+                           bec_bgrp( inl, ibgrp_i ) = bec_bgrp( inl, ibgrp_i ) + becp_tmp( inl, i ) 
+                        END DO
+                     END IF
                   END DO
                END IF
                !
@@ -1229,11 +1252,6 @@ END SUBROUTINE diagonalize_parallel
          DEALLOCATE( wtemp )
          DEALLOCATE( bephi_tmp )
          DEALLOCATE( becp_tmp )
-         !DO i = istart, istart + nss - 1
-         !   DO inl = 1, nkbus
-         !      bec( inl, i ) = bec( inl, i ) + becp( inl, i ) 
-         !   END DO
-         !END DO
       END IF
 !
       IF ( iprsta > 2 ) THEN
@@ -1242,18 +1260,19 @@ END SUBROUTINE diagonalize_parallel
             IF( nvb > 1 ) THEN
                WRITE( stdout,'(33x,a,i4)') ' updatc: bec (is)',is
                WRITE( stdout,'(8f9.4)')                                       &
-     &            ((bec(ish(is)+(iv-1)*na(is)+1,i+istart-1),iv=1,nh(is)),i=1,nss)
+     &            ((bec_bgrp(ish(is)+(iv-1)*na(is)+1,i+istart-1),iv=1,nh(is)),i=1,nss)
             ELSE
                DO ia=1,na(is)
                   WRITE( stdout,'(33x,a,i4)') ' updatc: bec (ia)',ia
                   WRITE( stdout,'(8f9.4)')                                    &
-     &            ((bec(ish(is)+(iv-1)*na(is)+ia,i+istart-1),iv=1,nh(is)),i=1,nss)
+     &            ((bec_bgrp(ish(is)+(iv-1)*na(is)+ia,i+istart-1),iv=1,nh(is)),i=1,nss)
                END DO
             END IF
             WRITE( stdout,*)
          END DO
       ENDIF
       !
+      DEALLOCATE( cp_tmp )
       DEALLOCATE( xd )
       !
       CALL stop_clock( 'updatc' )
@@ -1263,9 +1282,8 @@ END SUBROUTINE diagonalize_parallel
 
 
 
-
 !-------------------------------------------------------------------------
-      SUBROUTINE calphi( c0, ngwx, bec, nkbx, betae, phi, n, ema0bg )
+      SUBROUTINE calphi_bgrp( c0_bgrp, ngwx, bec_bgrp, nkbx, betae, phi_bgrp, nbspx_bgrp, ema0bg )
 !-----------------------------------------------------------------------
 !     input: c0 (orthonormal with s(r(t)), bec=<c0|beta>, betae=|beta>
 !     computes the matrix phi (with the old positions)
@@ -1275,20 +1293,21 @@ END SUBROUTINE diagonalize_parallel
       USE kinds,          ONLY: DP
       USE ions_base,      ONLY: na, nsp
       USE io_global,      ONLY: stdout
-      USE mp_global,      ONLY: intra_bgrp_comm
+      USE mp_global,      ONLY: intra_bgrp_comm, inter_bgrp_comm
       USE cvan,           ONLY: ish, nvb
       USE uspp_param,     ONLY: nh
       USE uspp,           ONLY: nkbus, qq
       USE gvecw,          ONLY: ngw
+      USE electrons_base, ONLY: nbsp_bgrp, nbsp
       USE constants,      ONLY: pi, fpi
       USE control_flags,  ONLY: iprint, iprsta
       USE mp,             ONLY: mp_sum
 !
       IMPLICIT NONE
       
-      INTEGER, INTENT(IN) :: ngwx, nkbx, n
-      COMPLEX(DP)         :: c0( ngwx, n ), phi( ngwx, n ), betae( ngwx, nkbx )
-      REAL(DP)            :: bec( nkbx, n ), emtot
+      INTEGER, INTENT(IN) :: ngwx, nkbx, nbspx_bgrp
+      COMPLEX(DP)         :: c0_bgrp( ngwx, nbspx_bgrp ), phi_bgrp( ngwx, nbspx_bgrp ), betae( ngwx, nkbx )
+      REAL(DP)            :: bec_bgrp( nkbx, nbspx_bgrp ), emtot
       REAL(DP), OPTIONAL  :: ema0bg( ngwx )
 
       ! local variables
@@ -1297,14 +1316,15 @@ END SUBROUTINE diagonalize_parallel
       REAL(DP), ALLOCATABLE :: qtemp( : , : )
       REAL(DP) :: qqf
 !
-      IF( n < 1 ) RETURN
+      IF( nbsp_bgrp < 1 ) RETURN
       !
       CALL start_clock( 'calphi' )
-
+      !
+      ! Note that phi here is computed only for my band group
       !
       IF ( nvb > 0 ) THEN
 
-         ALLOCATE( qtemp( nkbus, n ) )
+         ALLOCATE( qtemp( nkbus, nbspx_bgrp ) )
 
          qtemp (:,:) = 0.d0
          DO is=1,nvb
@@ -1314,38 +1334,38 @@ END SUBROUTINE diagonalize_parallel
                   jnl = ish(is)+(jv-1)*na(is)
                   IF(ABS(qq(iv,jv,is)) > 1.d-5) THEN
                      qqf = qq(iv,jv,is)
-                     DO i=1,n
-                        CALL daxpy( na(is), qqf, bec(jnl+1,i),1,qtemp(inl+1,i), 1 )
+                     DO i=1,nbsp_bgrp
+                        CALL daxpy( na(is), qqf, bec_bgrp(jnl+1,i),1,qtemp(inl+1,i), 1 )
                      END DO
                   ENDIF
                END DO
             END DO
          END DO
 !
-         CALL dgemm ( 'N', 'N', 2*ngw, n, nkbus, 1.0d0, betae, &
-                       2*ngwx, qtemp, nkbus, 0.0d0, phi, 2*ngwx )
+         CALL dgemm ( 'N', 'N', 2*ngw, nbsp_bgrp, nkbus, 1.0d0, betae, &
+                       2*ngwx, qtemp, nkbus, 0.0d0, phi_bgrp, 2*ngwx )
 
          DEALLOCATE( qtemp )
 
       ELSE
 
-         phi = (0.d0, 0.d0)
+         phi_bgrp = (0.d0, 0.d0)
 
       END IF
 !
       IF( PRESENT( ema0bg ) ) THEN
 !$omp parallel do default(shared), private(i)
-         DO j=1,n
+         DO j=1,nbsp_bgrp
             DO i=1,ngw
-               phi(i,j)=(phi(i,j)+c0(i,j))*ema0bg(i)
+               phi_bgrp(i,j)=(phi_bgrp(i,j)+c0_bgrp(i,j))*ema0bg(i)
             END DO
          END DO
 !$omp end parallel do
       ELSE
 !$omp parallel do default(shared), private(i)
-         DO j=1,n
+         DO j=1,nbsp_bgrp
             DO i=1,ngw
-               phi(i,j)=phi(i,j)+c0(i,j)
+               phi_bgrp(i,j)=phi_bgrp(i,j)+c0_bgrp(i,j)
             END DO
          END DO
 !$omp end parallel do
@@ -1356,21 +1376,22 @@ END SUBROUTINE diagonalize_parallel
       IF(iprsta > 2) THEN
          emtot=0.0d0
          IF( PRESENT( ema0bg ) ) THEN
-            DO j=1,n
+            DO j=1,nbsp_bgrp
                DO i=1,ngw
-                  emtot=emtot +2.0d0*DBLE(phi(i,j)*CONJG(c0(i,j)))*ema0bg(i)**(-2.0d0)
+                  emtot=emtot +2.0d0*DBLE(phi_bgrp(i,j)*CONJG(c0_bgrp(i,j)))*ema0bg(i)**(-2.0d0)
                END DO
             END DO
          ELSE
-            DO j=1,n
+            DO j=1,nbsp_bgrp
                DO i=1,ngw
-                  emtot=emtot +2.0d0*DBLE(phi(i,j)*CONJG(c0(i,j)))
+                  emtot=emtot +2.0d0*DBLE(phi_bgrp(i,j)*CONJG(c0_bgrp(i,j)))
                END DO
             END DO
          END IF
-         emtot=emtot/n
+         emtot=emtot/nbsp
 
          CALL mp_sum( emtot, intra_bgrp_comm )
+         CALL mp_sum( emtot, inter_bgrp_comm )
 
          WRITE( stdout,*) 'in calphi sqrt(emtot)=',SQRT(emtot)
          WRITE( stdout,*)
@@ -1378,12 +1399,12 @@ END SUBROUTINE diagonalize_parallel
             IF( nvb > 1 ) THEN
                WRITE( stdout,'(33x,a,i4)') ' calphi: bec (is)',is
                WRITE( stdout,'(8f9.4)')                                       &
-     &            ((bec(ish(is)+(iv-1)*na(is)+1,i),iv=1,nh(is)),i=1,n)
+     &            ((bec_bgrp(ish(is)+(iv-1)*na(is)+1,i),iv=1,nh(is)),i=1,nbsp_bgrp)
             ELSE
                DO ia=1,na(is)
                   WRITE( stdout,'(33x,a,i4)') ' calphi: bec (ia)',ia
                   WRITE( stdout,'(8f9.4)')                                    &
-     &               ((bec(ish(is)+(iv-1)*na(is)+ia,i),iv=1,nh(is)),i=1,n)
+     &               ((bec_bgrp(ish(is)+(iv-1)*na(is)+ia,i),iv=1,nh(is)),i=1,nbsp_bgrp)
                END DO
             END IF
          END DO
@@ -1393,6 +1414,58 @@ END SUBROUTINE diagonalize_parallel
       CALL stop_clock( 'calphi' )
 !
       RETURN
-      END SUBROUTINE calphi
+      END SUBROUTINE calphi_bgrp
 
-   END MODULE orthogonalize_base
+
+   SUBROUTINE bec_bgrp2ortho( bec_bgrp, bec_ortho, nlax, desc )
+      USE kinds,             ONLY: DP
+      USE uspp,              ONLY: nkb, nkbus
+      USE mp,                ONLY: mp_sum
+      USE mp_global,         ONLY: intra_bgrp_comm, leg_ortho, me_bgrp, inter_bgrp_comm
+      USE electrons_base,    ONLY: nbspx_bgrp, ibgrp_g2l, nspin
+      USE descriptors,       ONLY: nlar_ , nlac_ , ilar_ , ilac_ , lambda_node_ , descla_siz_ , la_comm_ , &
+                                   la_npc_ , la_npr_ , nlax_ , la_n_ , la_nx_ , la_myr_ , la_myc_ , &
+                                   descla_init
+      !
+      IMPLICIT NONE
+      !
+      INTEGER, INTENT(IN) :: nlax
+      INTEGER, INTENT(IN) :: desc(:,:)
+      REAL(DP), INTENT(IN)  :: bec_bgrp(:,:)
+      REAL(DP), INTENT(OUT) :: bec_ortho(:,:)
+      !
+      INTEGER :: ir, nr, i, ibgrp_i, nup
+      !
+      bec_ortho = 0.0d0
+      !
+      IF( desc( lambda_node_ , 1 ) > 0 ) THEN
+         ir = desc( ilar_ , 1 )
+         nr = desc( nlar_ , 1 )
+         do i = 1, nr
+            ibgrp_i = ibgrp_g2l( i + ir - 1 )
+            IF( ibgrp_i > 0 ) THEN
+               bec_ortho( :, i ) = bec_bgrp( :, ibgrp_i )
+            END IF
+         end do
+      END IF
+      !
+      IF( nspin == 2 ) THEN
+         IF( desc( lambda_node_ , 2 ) > 0 ) THEN
+            nup = desc( la_n_ , 1 )
+            ir = desc( ilar_ , 2 )
+            nr = desc( nlar_ , 2 )
+            do i = 1, nr
+               ibgrp_i = ibgrp_g2l( i + ir - 1 + nup )
+               IF( ibgrp_i > 0 ) THEN
+                  bec_ortho( :, i + nlax ) = bec_bgrp( :, ibgrp_i )
+               END IF
+            end do
+         END IF
+      END IF
+      !
+      CALL mp_sum( bec_ortho, inter_bgrp_comm )
+      !
+      RETURN
+   END SUBROUTINE bec_bgrp2ortho
+
+END MODULE orthogonalize_base

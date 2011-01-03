@@ -29,15 +29,15 @@ subroutine bforceion(fion,tfor,ipol,qmatinv,bec0,becdr,gqq,evalue)
   use cell_base, only: a1, a2, a3
   use uspp_param, only: nh, nhm
   use uspp, only : nhsa=> nkb
-  use electrons_base, only: n => nbsp, nx => nbspx, nspin
-  use cp_main_variables,  only : nlax, descla, collect_bec
+  use electrons_base, only: nbsp, nbspx, nspin, nbspx_bgrp
+  use mp_global, only: nbgrp
 
 
   implicit none
 
   real(dp) evalue
-  complex(dp) qmatinv(nx,nx),gqq(nhm,nhm,nas,nsp)
-  real(dp) bec0(nhsa,n),becdr(nhsa,nspin*nlax,3)
+  complex(dp) qmatinv(nbspx,nbspx),gqq(nhm,nhm,nas,nsp)
+  real(dp) bec0(nhsa,nbspx),becdr(nhsa,nbspx,3)
   real(dp) fion(3,*)
   integer ipol
   logical tfor
@@ -47,17 +47,14 @@ subroutine bforceion(fion,tfor,ipol,qmatinv,bec0,becdr,gqq,evalue)
   complex(dp) ci, temp, temp1,temp2,temp3
   real(dp) gmes
   integer iv,jv,ia,is,k,i,j,isa,ilm,jlm,inl,jnl,ism
-  real(dp), allocatable :: becdr_repl(:,:,:)
       
   if(.not. tfor) return
 
+  if( nbgrp > 1 ) &
+     call errore(' bforceion ', ' parallelization over bands not yet implemented ', 1 )
+
   ci = (0.d0,1.d0)
      
-  ALLOCATE( becdr_repl( nhsa,n,3 ) )
-  CALL collect_bec( becdr_repl(:,:,1), becdr(:,:,1), descla, nspin )
-  CALL collect_bec( becdr_repl(:,:,2), becdr(:,:,2), descla, nspin )
-  CALL collect_bec( becdr_repl(:,:,3), becdr(:,:,3), descla, nspin )
-
   if(ipol.eq.1) then
      gmes=a1(1)**2+a1(2)**2+a1(3)**2
      gmes=2*pi/SQRT(gmes)
@@ -86,20 +83,20 @@ subroutine bforceion(fion,tfor,ipol,qmatinv,bec0,becdr,gqq,evalue)
               temp1=(0.d0,0.d0)
               temp2=(0.d0,0.d0)
               temp3=(0.d0,0.d0)
-              do i=1,n
-                 do j=1,n
+              do i=1,nbsp
+                 do j=1,nbsp
 
                     temp = temp + ci*gmes*gqq(iv,jv,ia,is)* &!TAKECARE: sign + due to exp(+iGr) in gqq
                          &        bec0(inl,i)*bec0(jnl,j)*qmatinv(j,i)
 
                     temp1 = temp1 + gqq(iv,jv,ia,is)*&
-     &  (  becdr_repl(inl,i,1)*bec0(jnl,j)+bec0(inl,i)*becdr_repl(jnl,j,1))*qmatinv(j,i)
+     &  (  becdr(inl,i,1)*bec0(jnl,j)+bec0(inl,i)*becdr(jnl,j,1))*qmatinv(j,i)
 
                     temp2 = temp2 + gqq(iv,jv,ia,is)*&
-     &  (  becdr_repl(inl,i,2)*bec0(jnl,j)+bec0(inl,i)*becdr_repl(jnl,j,2))*qmatinv(j,i)
+     &  (  becdr(inl,i,2)*bec0(jnl,j)+bec0(inl,i)*becdr(jnl,j,2))*qmatinv(j,i)
 
                     temp3 = temp3 + gqq(iv,jv,ia,is)*&
-     &  (  becdr_repl(inl,i,3)*bec0(jnl,j)+bec0(inl,i)*becdr_repl(jnl,j,3))*qmatinv(j,i)
+     &  (  becdr(inl,i,3)*bec0(jnl,j)+bec0(inl,i)*becdr(jnl,j,3))*qmatinv(j,i)
 
 
                  enddo
@@ -113,8 +110,6 @@ subroutine bforceion(fion,tfor,ipol,qmatinv,bec0,becdr,gqq,evalue)
         end do
      end do
   end do
-
-  DEALLOCATE( becdr_repl )
 
   return
 end subroutine bforceion

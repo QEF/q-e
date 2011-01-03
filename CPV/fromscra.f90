@@ -24,8 +24,8 @@ SUBROUTINE from_scratch( )
                                      a2, a3, b1, b2, b3
     USE cell_nose,            ONLY : xnhh0, xnhhm, vnhh
     USE electrons_nose,       ONLY : xnhe0, xnhem, vnhe
-    use electrons_base,       ONLY : nbsp, f, nspin, nupdwn, iupdwn, distribute_c
-    USE electrons_module,     ONLY : occn_info
+    use electrons_base,       ONLY : nbsp, f, nspin, nupdwn, iupdwn, nbsp_bgrp, nbspx_bgrp, nbspx
+    USE electrons_module,     ONLY : occn_info, distribute_c, collect_c, distribute_b, collect_b
     USE energies,             ONLY : entropy, eself, enl, ekin, enthal, etot, ekincm
     USE energies,             ONLY : dft_energy_type, debug_energies
     USE dener,                ONLY : denl, denl6, dekin6, detot
@@ -48,24 +48,23 @@ SUBROUTINE from_scratch( )
     USE cp_interfaces,        ONLY : compute_stress
     USE cp_interfaces,        ONLY : print_lambda
     USE printout_base,        ONLY : printout_pos
-    USE orthogonalize_base,   ONLY : updatc, calphi
+    USE orthogonalize_base,   ONLY : updatc, calphi_bgrp
     USE atoms_type_module,    ONLY : atoms_type
     USE wave_base,            ONLY : wave_steepest
-    USE wavefunctions_module, ONLY : c0, cm, phi => cp, c0_bgrp, cm_bgrp, cp_bgrp
+    USE wavefunctions_module, ONLY : c0_bgrp, cm_bgrp, phi_bgrp
     USE grid_dimensions,      ONLY : nr1, nr2, nr3
     USE time_step,            ONLY : delt
-    USE cp_main_variables,    ONLY : setval_lambda, descla, bephi, becp_dist, becdr, nfi, &
-                                     sfac, eigr, bec, taub, irb, eigrb, &
+    USE cp_main_variables,    ONLY : setval_lambda, descla, bephi, becp_dist, nfi, &
+                                     sfac, eigr, taub, irb, eigrb, bec_bgrp, &
                                      lambda, lambdam, lambdap, ema0bg, rhog, rhor, rhos, &
-                                     vpot, ht0, edft, nlax
-    USE mp_global,            ONLY : np_ortho, me_ortho, ortho_comm
+                                     vpot, ht0, edft, nlax, becdr_bgrp, dbec
+    USE mp_global,            ONLY : np_ortho, me_ortho, ortho_comm, mpime, inter_bgrp_comm
     USE small_box,            ONLY : ainvb
-    USE cdvan,                ONLY : dbec
+    USE mp,                   ONLY : mp_sum
     !
     IMPLICIT NONE
     !
     REAL(DP),    ALLOCATABLE :: emadt2(:), emaver(:)
-    COMPLEX(DP), ALLOCATABLE :: c2(:), c3(:)
     REAL(DP)                 :: verl1, verl2
     REAL(DP)                 :: bigr, dum
     INTEGER                  :: i, j, iter, iss, ierr, nspin_wfc
@@ -109,8 +108,7 @@ SUBROUTINE from_scratch( )
        !
     END IF
     !
-    CALL phfacs( eigts1, eigts2, eigts3, eigr, mill, atoms0%taus, &
-                 nr1, nr2, nr3, atoms0%nat )
+    CALL phfacs( eigts1, eigts2, eigts3, eigr, mill, atoms0%taus, nr1, nr2, nr3, atoms0%nat )
     !
     CALL strucf( sfac, eigts1, eigts2, eigts3, mill, ngms )
     !     
@@ -121,7 +119,7 @@ SUBROUTINE from_scratch( )
     !
     !     wfc initialization with random numbers
     !     
-    CALL wave_rand_init( cm, nbsp, 1 )
+    CALL wave_rand_init( cm_bgrp )
     !
     IF ( ionode ) &
        WRITE( stdout, fmt = '(//,3X, "Wave Initialization: random initial wave-functions" )' )
@@ -135,13 +133,13 @@ SUBROUTINE from_scratch( )
 
     DO iss = 1, nspin_wfc
        !
-       CALL gram( vkb, bec, nkb, cm(1,iupdwn(iss)), ngw, nupdwn(iss) )
+       CALL gram_bgrp( vkb, bec_bgrp, nkb, cm_bgrp, ngw, iss )
        !
     END DO
 
-    IF( force_pairing ) cm(:,iupdwn(2):iupdwn(2)+nupdwn(2)-1) = cm(:,1:nupdwn(2))
+    IF( force_pairing ) cm_bgrp(:,iupdwn(2):iupdwn(2)+nupdwn(2)-1) = cm_bgrp(:,1:nupdwn(2))
     !
-    if( iprsta >= 3 ) CALL dotcsc( eigr, cm, ngw, nbsp )
+    if( iprsta >= 3 ) CALL dotcsc( eigr, cm_bgrp, ngw, nbsp )
     !
     ! ... initialize bands
     !
@@ -169,13 +167,11 @@ SUBROUTINE from_scratch( )
     !
     IF( .NOT. tcg ) THEN
        !
-       CALL calbec ( 1, nsp, eigr, cm, bec )
+       CALL calbec_bgrp ( 1, nsp, eigr, cm_bgrp, bec_bgrp )
        !
-       if ( tstress ) CALL caldbec( ngw, nkb, nbsp, 1, nsp, eigr, cm, dbec )
+       if ( tstress ) CALL caldbec_bgrp( eigr, cm_bgrp, dbec )
        !
-       CALL distribute_c( cm, cm_bgrp )
-       !
-       CALL rhoofr ( nfi, cm_bgrp, irb, eigrb, bec, becsum, rhor, rhog, rhos, enl, denl, ekin, dekin6 )
+       CALL rhoofr ( nfi, cm_bgrp, irb, eigrb, bec_bgrp, becsum, rhor, rhog, rhos, enl, denl, ekin, dekin6 )
        !
        edft%enl  = enl
        edft%ekin = ekin
@@ -200,11 +196,11 @@ SUBROUTINE from_scratch( )
         &  eigts1, eigts2, eigts3, irb, eigrb, sfac, tau0, fion )
 
          IF( tefield ) THEN
-           CALL berry_energy( enb, enbi, bec, cm(:,:), fion ) 
+           CALL berry_energy( enb, enbi, bec_bgrp, cm_bgrp, fion ) 
            etot = etot + enb + enbi
          END IF
          IF( tefield2 ) THEN
-           CALL berry_energy2( enb, enbi, bec, cm(:,:), fion )
+           CALL berry_energy2( enb, enbi, bec_bgrp, cm_bgrp, fion )
            etot = etot + enb + enbi
          END IF
 
@@ -217,67 +213,73 @@ SUBROUTINE from_scratch( )
          !
          IF( force_pairing ) THEN
             !
-            CALL runcp_uspp_force_pairing( nfi, fccc, ccc, ema0bg, dt2bye, rhos, bec, cm, &
-        &                 c0, ei_unp, fromscra = .TRUE. )
+            CALL runcp_uspp_force_pairing( nfi, fccc, ccc, ema0bg, dt2bye, rhos, bec_bgrp, cm_bgrp, &
+        &                 c0_bgrp, ei_unp, fromscra = .TRUE. )
             !
             CALL setval_lambda( lambda(:,:,2), nupdwn(1), nupdwn(1), 0.d0, descla(:,1) )
             !
          ELSE
             !
-            CALL runcp_uspp( nfi, fccc, ccc, ema0bg, dt2bye, rhos, bec, cm, c0, fromscra = .TRUE. )
+            CALL runcp_uspp( nfi, fccc, ccc, ema0bg, dt2bye, rhos, bec_bgrp, cm_bgrp, c0_bgrp, fromscra = .TRUE. )
             !
          ENDIF
          !
          !     nlfq needs deeq bec
          !
-         if( ttforce ) CALL nlfq( cm, eigr, bec, becdr, fion )
+         IF( ttforce ) THEN
+            CALL nlfq_bgrp( cm_bgrp, eigr, bec_bgrp, becdr_bgrp, fion )
+         END IF
          !
          !     calphi calculates phi
          !     the electron mass rises with g**2
          !
-         CALL calphi( cm, ngw, bec, nkb, vkb, phi, nbsp, ema0bg )
+         CALL calphi_bgrp( cm_bgrp, ngw, bec_bgrp, nkb, vkb, phi_bgrp, nbspx_bgrp, ema0bg )
          !
          IF( force_pairing ) &
-         &   phi( :, iupdwn(2):(iupdwn(2)+nupdwn(2)-1) ) =    phi( :, 1:nupdwn(2))
-
+         &   phi_bgrp( :, iupdwn(2):(iupdwn(2)+nupdwn(2)-1) ) =    phi_bgrp( :, 1:nupdwn(2))
 
          if( tortho ) then
-            CALL ortho( eigr, c0, phi, ngw, lambda, descla, &
+            CALL ortho( eigr, c0_bgrp, phi_bgrp, ngw, lambda, descla, &
                         bigr, iter, ccc, bephi, becp_dist, nbsp, nspin, nupdwn, iupdwn )
          else
-            CALL gram( vkb, bec, nkb, c0, ngw, nbsp )
+            DO iss = 1, nspin
+               CALL gram_bgrp( vkb, bec_bgrp, nkb, c0_bgrp, ngw, iss )
+            END DO
          endif
          !
-         !
-         if ( ttforce ) CALL nlfl( bec, becdr, lambda, fion )
+         IF ( ttforce ) THEN
+            CALL nlfl_bgrp( bec_bgrp, becdr_bgrp, lambda, fion )
+         END IF
 
          if ( iprsta >= 3 ) CALL print_lambda( lambda, nbsp, 9, ccc )
 
-         if ( tstress ) CALL nlfh( stress, bec, dbec, lambda )
+         !
+         if ( tstress ) CALL nlfh( stress, bec_bgrp, dbec, lambda )
          !
          IF ( tortho ) THEN
             DO iss = 1, nspin_wfc
                i1 = (iss-1)*nlax+1
                i2 = iss*nlax
-               CALL updatc( ccc, nbsp, lambda(:,:,iss), SIZE(lambda,1), phi, SIZE(phi,1), &
-                            bephi(:,i1:i2), SIZE(bephi,1), becp_dist(:,i1:i2), bec, c0, nupdwn(iss), iupdwn(iss), &
+               CALL updatc( ccc, nbsp, lambda(:,:,iss), SIZE(lambda,1), phi_bgrp, SIZE(phi_bgrp,1), &
+                            bephi(:,i1:i2), SIZE(bephi,1), becp_dist(:,i1:i2), bec_bgrp, c0_bgrp, nupdwn(iss), iupdwn(iss), &
                             descla(:,iss) )
             END DO
          END IF
          !
          IF( force_pairing ) THEN
             !
-            c0 ( :, iupdwn(2):(iupdwn(2)+nupdwn(2)-1) ) =  c0( :, 1:nupdwn(2))
-            phi( :, iupdwn(2):(iupdwn(2)+nupdwn(2)-1) ) = phi( :, 1:nupdwn(2))
+            c0_bgrp ( :, iupdwn(2):(iupdwn(2)+nupdwn(2)-1) ) = c0_bgrp( :, 1:nupdwn(2))
+            phi_bgrp( :, iupdwn(2):(iupdwn(2)+nupdwn(2)-1) ) = phi_bgrp( :, 1:nupdwn(2))
             lambda(:,:,2) = lambda(:,:,1)
             !
          ENDIF
          !
-         CALL calbec ( nvb+1, nsp, eigr, c0, bec )
+         !
+         CALL calbec_bgrp ( nvb+1, nsp, eigr, c0_bgrp, bec_bgrp )
+         !
+         if ( tstress ) CALL caldbec_bgrp( eigr, cm_bgrp, dbec )
 
-         if ( tstress ) CALL caldbec( ngw, nkb, nbsp, 1, nsp, eigr, cm, dbec )
-
-         if ( iprsta >= 3 ) CALL dotcsc( eigr, c0, ngw, nbsp )
+         if ( iprsta >= 3 ) CALL dotcsc( eigr, c0_bgrp, ngw, nbsp_bgrp )
          !
          xnhp0 = 0.0d0
          xnhpm = 0.0d0
@@ -291,7 +293,7 @@ SUBROUTINE from_scratch( )
          vnhh (:,:) = 0.0d0
          velh (:,:) = ( h(:,:) - hold(:,:) ) / delt
          !
-         CALL elec_fakekine( ekincm, ema0bg, emass, c0, cm, ngw, nbsp, 1, delt )
+         CALL elec_fakekine( ekincm, ema0bg, emass, c0_bgrp, cm_bgrp, ngw, nbsp_bgrp, 1, delt )
 
          xnhe0 = 0.0d0
          xnhem = 0.0d0
@@ -301,7 +303,7 @@ SUBROUTINE from_scratch( )
          !
        ELSE 
           !
-          c0 = cm
+          c0_bgrp = cm_bgrp
           !
        END IF
     !

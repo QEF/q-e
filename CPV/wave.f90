@@ -71,7 +71,7 @@
     
     USE kinds,              only : DP
     use mp,                 only : mp_sum
-    use mp_global,          only : intra_bgrp_comm
+    use mp_global,          only : intra_bgrp_comm, nbgrp, inter_bgrp_comm
     use gvect, only : gstart
     use wave_base,          only : wave_speed2
     !
@@ -100,6 +100,8 @@
     ekincm = ekincm * emass / ( delt * delt )
 
     CALL mp_sum( ekincm, intra_bgrp_comm )
+    IF( nbgrp > 1 ) &
+       CALL mp_sum( ekincm, inter_bgrp_comm )
     DEALLOCATE( emainv )
 
     return
@@ -354,7 +356,7 @@
 
 
 !=----------------------------------------------------------------------------=!
-   SUBROUTINE wave_rand_init_x( cm, n, noff )
+   SUBROUTINE wave_rand_init_x( cm_bgrp )
 !=----------------------------------------------------------------------------=!
 
       !  this routine sets the initial wavefunctions at random
@@ -368,27 +370,27 @@
       USE gvecw,              ONLY: ngw, ngw_g
       USE io_global,          ONLY: stdout
       USE random_numbers,     ONLY: randy
+      USE electrons_base,     ONLY: nbsp, nbsp_bgrp, i2gupdwn_bgrp, nupdwn, iupdwn_bgrp, iupdwn, nupdwn_bgrp
       
       IMPLICIT NONE
 
       ! ... declare subroutine arguments 
-      INTEGER,     INTENT(IN)  :: n, noff
-      COMPLEX(DP), INTENT(OUT) :: cm(:,:)
+      COMPLEX(DP), INTENT(OUT) :: cm_bgrp(:,:)
 
       ! ... declare other variables
-      INTEGER :: ntest, ig, ib
+      INTEGER :: ntest, ig, ib, iss, n1, n2, m1, m2
       REAL(DP) ::  rranf1, rranf2, ampre
       COMPLEX(DP), ALLOCATABLE :: pwt( : )
 
       ! ... Check array dimensions
 
-      IF( SIZE( cm, 1 ) < ngw ) THEN 
+      IF( SIZE( cm_bgrp, 1 ) < ngw ) THEN 
         CALL errore(' wave_rand_init ', ' wrong dimensions ', 3)
       END IF
 
       ! ... Reset them to zero
  
-      cm( :, noff : noff + n - 1 ) = 0.0d0
+      cm_bgrp = 0.0d0
 
       ! ... initialize the wave functions in such a way that the values
       ! ... of the components are independent on the number of processors
@@ -397,29 +399,96 @@
       ALLOCATE( pwt( ngw_g ) )
 
       ntest = ngw_g / 4
-      IF( ntest < SIZE( cm, 2 ) ) THEN
+      IF( ntest < SIZE( cm_bgrp, 2 ) ) THEN
          ntest = ngw_g
       END IF
       !
       ! ... assign random values to wave functions
       !
-      DO ib = noff, noff + n - 1
+      DO ib = 1, nbsp
         pwt( : ) = 0.0d0
         DO ig = 3, ntest
           rranf1 = 0.5d0 - randy()
           rranf2 = randy()
           pwt( ig ) = ampre * CMPLX(rranf1, rranf2,kind=DP)
         END DO
-        DO ig = 1, ngw
-          cm( ig, ib ) = pwt( ig_l2g( ig ) )
-        END DO
+        !
+        iss = 1
+        IF( ib > nupdwn( 1 ) ) iss = 2
+        n1 = iupdwn_bgrp(iss)
+        n2 = n1 + nupdwn_bgrp(iss) - 1
+        m1 = iupdwn(iss)+i2gupdwn_bgrp(iss) - 1
+        m2 = m1 + nupdwn_bgrp(iss) - 1
+        !
+        IF( ib >= m1 .AND. ib <= m2 ) THEN
+          DO ig = 1, ngw
+            cm_bgrp( ig, ib - m1 + n1 ) = pwt( ig_l2g( ig ) )
+          END DO
+        END IF
+        !
       END DO
       IF ( gstart == 2 ) THEN
-        cm( 1, noff : noff + n - 1 ) = (0.0d0, 0.0d0)
+        cm_bgrp( 1, : ) = (0.0d0, 0.0d0)
       END IF
 
       DEALLOCATE( pwt )
 
       RETURN
     END SUBROUTINE wave_rand_init_x
+
+
+    SUBROUTINE c_bgrp_expand_x( c_bgrp )
+      USE kinds,              ONLY: DP
+      USE mp,                 ONLY: mp_sum
+      USE electrons_base,     ONLY: nspin, i2gupdwn_bgrp, nupdwn, iupdwn_bgrp, iupdwn, nupdwn_bgrp
+      USE mp_global,          ONLY: nbgrp, inter_bgrp_comm
+      IMPLICIT NONE
+      COMPLEX(DP) :: c_bgrp(:,:)
+      INTEGER :: iss, n1, n2, m1, m2, i
+      IF( nbgrp < 2 ) &
+         RETURN
+      DO iss = nspin, 1, -1
+         n1 = iupdwn_bgrp(iss)
+         n2 = n1 + nupdwn_bgrp(iss) - 1
+         m1 = iupdwn(iss)+i2gupdwn_bgrp(iss) - 1
+         m2 = m1 + nupdwn_bgrp(iss) - 1
+         DO i = m2, m1, -1
+            c_bgrp(:,i) = c_bgrp(:,i-m1+n1)
+         END DO
+      END DO
+      DO iss = 1, nspin
+         m1 = iupdwn(iss)+i2gupdwn_bgrp(iss) - 1
+         m2 = m1 + nupdwn_bgrp(iss) - 1
+         DO i = 1, m1-1
+            c_bgrp(:,i) = 0.0d0
+         END DO
+         DO i = m2+1, nupdwn(iss)
+            c_bgrp(:,i) = 0.0d0
+         END DO
+      END DO
+      CALL mp_sum( c_bgrp, inter_bgrp_comm )
+      RETURN
+    END SUBROUTINE c_bgrp_expand_x
+
+
+    SUBROUTINE c_bgrp_pack_x( c_bgrp )
+      USE kinds,              ONLY: DP
+      USE electrons_base,     ONLY: nspin, i2gupdwn_bgrp, nupdwn, iupdwn_bgrp, iupdwn, nupdwn_bgrp
+      USE mp_global,          ONLY: nbgrp
+      IMPLICIT NONE
+      COMPLEX(DP) :: c_bgrp(:,:)
+      INTEGER :: iss, n1, n2, m1, m2, i
+      IF( nbgrp < 2 ) &
+         RETURN
+      DO iss = 1, nspin
+         n1 = iupdwn_bgrp(iss)
+         n2 = n1 + nupdwn_bgrp(iss) - 1
+         m1 = iupdwn(iss)+i2gupdwn_bgrp(iss) - 1
+         m2 = m1 + nupdwn_bgrp(iss) - 1
+         DO i = n1, n2
+            c_bgrp(:,i) = c_bgrp(:,i-n1+m1)
+         END DO
+      END DO
+      RETURN
+    END SUBROUTINE c_bgrp_pack_x
 

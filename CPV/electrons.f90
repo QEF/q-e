@@ -12,7 +12,9 @@
         USE dspev_module,       ONLY: pdspev_drv, dspev_drv
         USE electrons_base,     ONLY: nbnd, nbndx, nbsp, nbspx, nspin, nel, nelt, &
                                       nupdwn, iupdwn, telectrons_base_initval, f, &
-                                      nudx
+                                      nudx, nupdwn_bgrp, iupdwn_bgrp, nudx_bgrp, &
+                                      nbsp_bgrp, nbspx_bgrp, i2gupdwn_bgrp
+
         USE cp_electronic_mass, ONLY: ecutmass => emass_cutoff, emass, emass_precond
 
 
@@ -43,8 +45,8 @@
         PUBLIC :: ib_owner, ib_local, nb_l
         PUBLIC :: ei
         PUBLIC :: print_eigenvalues
- 
-
+        PUBLIC :: distribute_c, collect_c
+        PUBLIC :: distribute_b, collect_b
 !
 !  end of module-scope declarations
 !
@@ -78,6 +80,76 @@
      !
      RETURN
    END SUBROUTINE occn_info
+
+!  ----------------------------------------------
+    SUBROUTINE distribute_b( b, b_bgrp )
+      REAL(DP), INTENT(IN) :: b(:,:)
+      REAL(DP), INTENT(OUT) :: b_bgrp(:,:)
+      INTEGER :: iss, n1, n2, m1, m2
+      DO iss = 1, nspin
+         n1 = iupdwn_bgrp(iss)
+         n2 = n1 + nupdwn_bgrp(iss) - 1
+         m1 = iupdwn(iss)+i2gupdwn_bgrp(iss) - 1
+         m2 = m1 + nupdwn_bgrp(iss) - 1
+         b_bgrp(:,n1:n2) = b(:,m1:m2)
+      END DO
+      RETURN
+    END SUBROUTINE distribute_b
+!
+    SUBROUTINE collect_b( b, b_bgrp )
+      USE mp_global, ONLY : inter_bgrp_comm, mpime
+      USE mp,        ONLY : mp_sum
+      REAL(DP), INTENT(OUT) :: b(:,:)
+      REAL(DP), INTENT(IN)  :: b_bgrp(:,:)
+      INTEGER :: iss, n1, n2, m1, m2
+      b = 0.0d0
+      DO iss = 1, nspin
+         n1 = iupdwn_bgrp(iss)
+         n2 = n1 + nupdwn_bgrp(iss) - 1
+         m1 = iupdwn(iss)+i2gupdwn_bgrp(iss) - 1
+         m2 = m1 + nupdwn_bgrp(iss) - 1
+         b(:,m1:m2) = b_bgrp(:,n1:n2)
+         !write(1000+mpime,*) 'n1, n2 = ', n1, n2 ! debug
+         !write(1000+mpime,*) 'm1, m2 = ', m1, m2 ! debug
+      END DO
+      CALL mp_sum( b, inter_bgrp_comm )
+      RETURN
+    END SUBROUTINE collect_b
+
+
+    SUBROUTINE distribute_c( c, c_bgrp )
+      COMPLEX(DP), INTENT(IN) :: c(:,:)
+      COMPLEX(DP), INTENT(OUT) :: c_bgrp(:,:)
+      INTEGER :: iss, n1, n2, m1, m2
+      DO iss = 1, nspin
+         n1 = iupdwn_bgrp(iss)
+         n2 = n1 + nupdwn_bgrp(iss) - 1
+         m1 = iupdwn(iss)+i2gupdwn_bgrp(iss) - 1
+         m2 = m1 + nupdwn_bgrp(iss) - 1
+         c_bgrp(:,n1:n2) = c(:,m1:m2)
+      END DO
+      RETURN
+    END SUBROUTINE distribute_c
+!
+    SUBROUTINE collect_c( c, c_bgrp )
+      USE mp_global, ONLY : inter_bgrp_comm, mpime
+      USE mp,        ONLY : mp_sum
+      COMPLEX(DP), INTENT(OUT) :: c(:,:)
+      COMPLEX(DP), INTENT(IN)  :: c_bgrp(:,:)
+      INTEGER :: iss, n1, n2, m1, m2
+      c = 0.0d0
+      DO iss = 1, nspin
+         n1 = iupdwn_bgrp(iss)
+         n2 = n1 + nupdwn_bgrp(iss) - 1
+         m1 = iupdwn(iss)+i2gupdwn_bgrp(iss) - 1
+         m2 = m1 + nupdwn_bgrp(iss) - 1
+         c(:,m1:m2) = c_bgrp(:,n1:n2)
+         !write(1000+mpime,*) 'n1, n2 = ', n1, n2 ! debug
+         !write(1000+mpime,*) 'm1, m2 = ', m1, m2 ! debug
+      END DO
+      CALL mp_sum( c, inter_bgrp_comm )
+      RETURN
+    END SUBROUTINE collect_c
 
 !  ----------------------------------------------
 !  ----------------------------------------------

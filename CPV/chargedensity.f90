@@ -65,7 +65,7 @@
 
 !-----------------------------------------------------------------------
    SUBROUTINE rhoofr_cp &
-      ( nfi, c_bgrp, irb, eigrb, bec, rhovan, rhor, rhog, rhos, enl, denl, ekin, dekin, tstress, ndwwf )
+      ( nfi, c_bgrp, irb, eigrb, bec_bgrp, rhovan, rhor, rhog, rhos, enl, denl, ekin, dekin, tstress, ndwwf )
 !-----------------------------------------------------------------------
 !
 !  this routine computes:
@@ -123,14 +123,14 @@
       USE fft_interfaces,     ONLY: fwfft, invfft
       USE fft_base,           ONLY: dffts, dfftp
       USE cp_interfaces,      ONLY: checkrho
-      USE cdvan,              ONLY: dbec, drhovan
-      USE cp_main_variables,  ONLY: iprint_stdout, drhor, drhog
+      USE cdvan,              ONLY: drhovan
+      USE cp_main_variables,  ONLY: iprint_stdout, drhor, drhog, dbec
       USE wannier_base,       ONLY: iwf
       USE cell_base,          ONLY: a1, a2, a3
 !
       IMPLICIT NONE
       INTEGER nfi
-      REAL(DP) bec(:,:)
+      REAL(DP) bec_bgrp(:,:)
       REAL(DP) rhovan(:, :, : )
       REAL(DP) rhor(:,:)
       REAL(DP) rhos(:,:)
@@ -190,13 +190,18 @@
          !
          !     called from WF, compute only of rhovan
          !
-         CALL calrhovan( rhovan, bec, iwf )
+         CALL calrhovan( rhovan, bec_bgrp, iwf )
          !
       ELSE
          !
          !     calculation of non-local energy
          !
-         enl = ennl( rhovan, bec )
+         enl = ennl( rhovan, bec_bgrp )
+         !
+         IF( nbgrp > 1 ) THEN
+            CALL mp_sum( enl, inter_bgrp_comm )
+            CALL mp_sum( rhovan, inter_bgrp_comm )
+         END IF
          !
       END IF
       !
@@ -205,7 +210,12 @@
          IF( .NOT. ALLOCATED( drhovan ) ) &
             CALL errore( ' rhoofr ', ' drhovan not allocated ', 1 )
          !
-         CALL dennl( bec, dbec, drhovan, denl ) 
+         CALL dennl( bec_bgrp, dbec, drhovan, denl ) 
+         !
+         IF( nbgrp > 1 ) THEN
+            CALL mp_sum( denl, inter_bgrp_comm )
+            CALL mp_sum( drhovan, inter_bgrp_comm )
+         END IF
          !
       END IF
       !    
@@ -790,6 +800,8 @@ SUBROUTINE drhov(irb,eigrb,rhovan,drhovan,rhog,rhor,drhog,drhor)
       USE dqgb_mod,                 ONLY: dqgb
       USE fft_interfaces,           ONLY: fwfft, invfft
       USE fft_base,                 ONLY: dfftb, dfftp
+      USE mp_global,                ONLY: my_bgrp_id, nbgrp, inter_bgrp_comm
+      USE mp,                       ONLY: mp_sum
 
       IMPLICIT NONE
 ! input
@@ -846,7 +858,7 @@ SUBROUTINE drhov(irb,eigrb,rhovan,drhovan,rhog,rhor,drhog,drhor)
 
 !$omp parallel default(none) &
 !$omp          shared(nvb, na, nnrbx, ngb, nh, eigrb, dfftb, irb, v, &
-!$omp                 nmb, ci, npb, i, j, dqgb, qgb, nhm, rhovan, drhovan ) &
+!$omp                 nmb, ci, npb, i, j, dqgb, qgb, nhm, rhovan, drhovan, my_bgrp_id, nbgrp ) &
 !$omp          private(mytid, ntids, is, ia, nfft, ifft, iv, jv, ijv, ig, iss, isa, &
 !$omp                  qv, itid, dqgbt, dsumt, asumt )
 
@@ -866,7 +878,7 @@ SUBROUTINE drhov(irb,eigrb,rhovan,drhovan,rhog,rhor,drhog,drhor)
 #ifdef __PARA
                   DO ia=1,na(is)
                      nfft=1
-                     IF ( dfftb%np3( isa ) <= 0 ) then
+                     IF ( ( dfftb%np3( isa ) <= 0 ) .OR. ( my_bgrp_id /= MOD( ia, nbgrp ) ) ) THEN
                         isa = isa + nfft
                         CYCLE
                      END IF
@@ -945,6 +957,8 @@ SUBROUTINE drhov(irb,eigrb,rhovan,drhovan,rhog,rhor,drhog,drhor)
                DEALLOCATE( qv )
 !
 !$omp end parallel
+
+               CALL mp_sum( v, inter_bgrp_comm )
 
                iss = 1
 

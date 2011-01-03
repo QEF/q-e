@@ -12,17 +12,17 @@
 
 
    SUBROUTINE runcp_uspp_x &
-      ( nfi, fccc, ccc, ema0bg, dt2bye, rhos, bec, c0, cm, fromscra, restart )
+      ( nfi, fccc, ccc, ema0bg, dt2bye, rhos, bec_bgrp, c0_bgrp, cm_bgrp, fromscra, restart )
       !
       !  This subroutine performs a Car-Parrinello or Steepest-Descent step
       !  on the electronic variables, computing forces on electrons
       ! 
       !  on input:
-      !  c0  wave functions at time t
-      !  cm  wave functions at time t - dt 
+      !  c0_bgrp  wave functions at time t
+      !  cm_bgrp  wave functions at time t - dt 
       !
       !  on output:
-      !  cm  wave functions at time t + dt, not yet othogonalized 
+      !  cm_bgrp  wave functions at time t + dt, not yet othogonalized 
       !
       USE parallel_include
       USE kinds,               ONLY : DP
@@ -34,7 +34,7 @@
       use control_flags,       only : lwf, tsde
       use uspp,                only : deeq, vkb
       use gvect,  only : gstart
-      use electrons_base,      only : n=>nbsp, ispin, f, nspin, nupdwn, iupdwn
+      use electrons_base,      only : nbsp_bgrp, ispin_bgrp, f_bgrp, nspin, nupdwn_bgrp, iupdwn_bgrp
       use wannier_subroutines, only : ef_potential
       use efield_module,       only : dforce_efield, tefield, dforce_efield2, tefield2
       use gvecw,               only : ngw, ngwx
@@ -48,8 +48,8 @@
       REAL(DP) :: fccc, ccc
       REAL(DP) :: ema0bg(:), dt2bye
       REAL(DP) :: rhos(:,:)
-      REAL(DP) :: bec(:,:)
-      COMPLEX(DP) :: c0(:,:), cm(:,:)
+      REAL(DP) :: bec_bgrp(:,:)
+      COMPLEX(DP) :: c0_bgrp(:,:), cm_bgrp(:,:)
       LOGICAL, OPTIONAL, INTENT(IN) :: fromscra
       LOGICAL, OPTIONAL, INTENT(IN) :: restart
       !
@@ -59,7 +59,7 @@
      real(DP),    allocatable :: emaver(:)
      complex(DP), allocatable :: c2(:), c3(:)
      REAL(DP),    ALLOCATABLE :: tg_rhos(:,:)
-     integer :: i, nsiz, incr, idx, idx_in, ierr, icnt
+     integer :: i, nsiz, incr, idx, idx_in, ierr
      integer :: iwfc, nwfc, is, ii, tg_rhos_siz, c2_siz
      integer :: iflag
      logical :: ttsde
@@ -107,7 +107,7 @@
 
      IF( lwf ) THEN
 
-        call ef_potential( nfi, rhos, bec, deeq, vkb, c0, cm, emadt2, emaver, verl1, verl2 )
+        call ef_potential( nfi, rhos, bec_bgrp, deeq, vkb, c0_bgrp, cm_bgrp, emadt2, emaver, verl1, verl2 )
 
      ELSE
 
@@ -135,17 +135,14 @@
 
         END IF
 
-        icnt = 0 
 
-        DO i = 1, n, incr
-
-           IF( icnt == my_bgrp_id ) THEN
+        DO i = 1, nbsp_bgrp, incr
 
            IF( use_task_groups ) THEN
               !
               !The input coefficients to dforce cover eigenstates i:i+2*NOGRP-1
-              !Thus, in dforce the dummy arguments for c0(1,i) and
-              !c0(1,i+1) hold coefficients for eigenstates i,i+2*NOGRP-2,2
+              !Thus, in dforce the dummy arguments for c0_bgrp(1,i) and
+              !c0_bgrp(1,i+1) hold coefficients for eigenstates i,i+2*NOGRP-2,2
               !and i+1,i+2*NOGRP...for example if NOGRP is 4 then we would have
               !1-3-5-7 and 2-4-6-8
               !
@@ -157,11 +154,11 @@
                  CALL errore( ' runcp_uspp ', ' lda_plus_u with task group not implemented yet ', 1 )
               end if
 
-              CALL dforce( i, bec, vkb, c0, c2, c3, tg_rhos, tg_rhos_siz, ispin, f, n, nspin )
+              CALL dforce( i, bec_bgrp, vkb, c0_bgrp, c2, c3, tg_rhos, tg_rhos_siz, ispin_bgrp, f_bgrp, nbsp_bgrp, nspin )
 
            ELSE
 
-              CALL dforce( i, bec, vkb, c0, c2, c3, rhos, SIZE(rhos,1), ispin, f, n, nspin )
+              CALL dforce( i, bec_bgrp, vkb, c0_bgrp, c2, c3, rhos, SIZE(rhos,1), ispin_bgrp, f_bgrp, nbsp_bgrp, nspin )
 
            END IF
 
@@ -172,35 +169,35 @@
            END IF
 
            IF( tefield ) THEN
-             CALL dforce_efield ( bec, i, c0, c2, c3, rhos)
+             CALL dforce_efield ( bec_bgrp, i, c0_bgrp, c2, c3, rhos)
            END IF
 
            IF( tefield2 ) THEN
-             CALL dforce_efield2 ( bec, i, c0, c2, c3, rhos)
+             CALL dforce_efield2 ( bec_bgrp, i, c0_bgrp, c2, c3, rhos)
            END IF
 
            IF( iflag == 2 ) THEN
               DO idx = 1, incr, 2
-                 IF( i + idx - 1 <= n ) THEN
-                    cm( :, i+idx-1) = c0(:,i+idx-1)
-                    cm( :, i+idx  ) = c0(:,i+idx  )
+                 IF( i + idx - 1 <= nbsp_bgrp ) THEN
+                    cm_bgrp( :, i+idx-1) = c0_bgrp(:,i+idx-1)
+                    cm_bgrp( :, i+idx  ) = c0_bgrp(:,i+idx  )
                  END IF
               ENDDO
            END IF
 
            idx_in = 1
            DO idx = 1, incr, 2
-              IF( i + idx - 1 <= n ) THEN
+              IF( i + idx - 1 <= nbsp_bgrp ) THEN
                  IF (tsde) THEN
-                    CALL wave_steepest( cm(:, i+idx-1 ), c0(:, i+idx-1 ), emaver, c2, ngw, idx_in )
-                    CALL wave_steepest( cm(:, i+idx   ), c0(:, i+idx   ), emaver, c3, ngw, idx_in )
+                    CALL wave_steepest( cm_bgrp(:, i+idx-1 ), c0_bgrp(:, i+idx-1 ), emaver, c2, ngw, idx_in )
+                    CALL wave_steepest( cm_bgrp(:, i+idx   ), c0_bgrp(:, i+idx   ), emaver, c3, ngw, idx_in )
                  ELSE
-                    CALL wave_verlet( cm(:, i+idx-1 ), c0(:, i+idx-1 ), verl1, verl2, emaver, c2, ngw, idx_in )
-                    CALL wave_verlet( cm(:, i+idx   ), c0(:, i+idx   ), verl1, verl2, emaver, c3, ngw, idx_in )
+                    CALL wave_verlet( cm_bgrp(:, i+idx-1 ), c0_bgrp(:, i+idx-1 ), verl1, verl2, emaver, c2, ngw, idx_in )
+                    CALL wave_verlet( cm_bgrp(:, i+idx   ), c0_bgrp(:, i+idx   ), verl1, verl2, emaver, c3, ngw, idx_in )
                  ENDIF
                  IF ( gstart == 2 ) THEN
-                    cm(1,i+idx-1) = CMPLX(real(cm(1,i+idx-1)),0.0d0,kind=dp)
-                    cm(1,i+idx  ) = CMPLX(real(cm(1,i+idx  )),0.0d0,kind=dp)
+                    cm_bgrp(1,i+idx-1) = CMPLX(real(cm_bgrp(1,i+idx-1)),0.0d0,kind=dp)
+                    cm_bgrp(1,i+idx  ) = CMPLX(real(cm_bgrp(1,i+idx  )),0.0d0,kind=dp)
                  END IF
               END IF
               !
@@ -208,24 +205,7 @@
               !
            END DO
 
-           ELSE
-
-              DO idx = 1, incr, 2
-                 IF( i + idx - 1 <= n ) THEN
-                    cm( :, i+idx-1) = 0.0d0
-                    cm( :, i+idx  ) = 0.0d0
-                 END IF
-              ENDDO
-  
-           END IF
-
-           icnt = MOD( icnt + 1 , nbgrp )
-
         end do
-
-        IF( nbgrp > 1 ) THEN
-           CALL mp_sum( cm, inter_bgrp_comm )
-        END IF
 
         DEALLOCATE( c2 )
         DEALLOCATE( c3 )
@@ -237,7 +217,7 @@
      DEALLOCATE( emaver )
 !
    END SUBROUTINE runcp_uspp_x
-!
+
 !
 !=----------------------------------------------------------------------------=!
 !
@@ -454,4 +434,3 @@
       DEALLOCATE(c3, c5)
 
    END SUBROUTINE runcp_uspp_force_pairing_x
-

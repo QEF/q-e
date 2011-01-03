@@ -33,8 +33,8 @@ SUBROUTINE init_run()
   USE uspp,                     ONLY : nkb, vkb, deeq, becsum,nkbus
   USE core,                     ONLY : rhoc
   USE smooth_grid_dimensions,   ONLY : nrxxs
-  USE wavefunctions_module,     ONLY : c0, cm, cp, c0_bgrp, cm_bgrp, cp_bgrp
-  USE cdvan,                    ONLY : dbec, drhovan
+  USE wavefunctions_module,     ONLY : c0_bgrp, cm_bgrp, phi_bgrp
+  USE cdvan,                    ONLY : drhovan
   USE ensemble_dft,             ONLY : tens, z0t
   USE cg_module,                ONLY : tcg
   USE electrons_base,           ONLY : nudx, nbnd
@@ -43,7 +43,7 @@ SUBROUTINE init_run()
   USE ions_nose,                ONLY : xnhp0, xnhpm, vnhp, nhpcl, nhpdim
   USE cell_base,                ONLY : h, hold, hnew, velh, tpiba2, ibrav, &
                                        alat, celldm, a1, a2, a3, b1, b2, b3
-  USE cp_main_variables,        ONLY : lambda, lambdam, lambdap, ema0bg, bec,  &
+  USE cp_main_variables,        ONLY : lambda, lambdam, lambdap, ema0bg, &
                                        sfac, eigr, taub, &
                                        irb, eigrb, rhog, rhos, rhor,     &
                                        acc, acc_this_run, wfill, &
@@ -98,6 +98,8 @@ SUBROUTINE init_run()
   !   CALL create_directory( tmp_dir )
   !   !
   !END IF
+  IF( nbgrp > 1 .AND. force_pairing ) &
+     CALL errore( ' init_run ', ' force_pairing with parallelization over bands not implemented yet ', 1 )
   !
   CALL printout_base_init( tmp_dir, prefix )
   !
@@ -137,19 +139,15 @@ SUBROUTINE init_run()
   CALL allocate_mainvar( ngw, ngw_g, ngb, ngms, ngm, nr1,nr2,nr3, dfftp%nr1x, &
                          dfftp%nr2x, dfftp%npl, nrxx, nrxxs, nat, nax, nsp,   &
                          nspin, nbsp, nbspx, nupdwn, nkb, gstart, nudx, &
-                         tpre )
+                         tpre, nbspx_bgrp )
   !
   CALL allocate_local_pseudo( ngms, nsp )
   !
   !  initialize wave functions descriptors and allocate wf
   !
-  ALLOCATE( c0( ngw, nbspx ) )
-  ALLOCATE( cm( ngw, nbspx ) )
-  ALLOCATE( cp( ngw, nbspx ) )
-  !
-  ALLOCATE( c0_bgrp( ngw, nbspx_bgrp ) )
-  ALLOCATE( cm_bgrp( ngw, nbspx_bgrp ) )
-  ALLOCATE( cp_bgrp( ngw, nbspx_bgrp ) )
+  ALLOCATE( c0_bgrp( ngw, nbspx ) )
+  ALLOCATE( cm_bgrp( ngw, nbspx ) )
+  ALLOCATE( phi_bgrp( ngw, nbspx ) )
   !
   IF ( iprsta > 2 ) THEN
      !
@@ -177,7 +175,6 @@ SUBROUTINE init_run()
   ALLOCATE( becsum(  nhm*(nhm+1)/2, nat, nspin ) )
   ALLOCATE( deeq( nhm, nhm, nat, nspin ) )
   IF ( tpre ) THEN
-     ALLOCATE( dbec( nkb, 2*nlam, 3, 3 ) )
      ALLOCATE( drhovan( nhm*(nhm+1)/2, nat, nspin, 3, 3 ) )
   END IF
   !
@@ -241,9 +238,9 @@ SUBROUTINE init_run()
   !
   hnew = h
   !
-  cm = ( 0.D0, 0.D0 )
-  c0 = ( 0.D0, 0.D0 )
-  cp = ( 0.D0, 0.D0 )
+  cm_bgrp  = ( 0.D0, 0.D0 )
+  c0_bgrp  = ( 0.D0, 0.D0 )
+  phi_bgrp = ( 0.D0, 0.D0 )
   !
   IF ( tens ) then
      CALL id_matrix_init( descla, nspin )
@@ -279,7 +276,7 @@ SUBROUTINE init_run()
      !======================================================================
      !
      i = 1  
-     CALL readfile( i, h, hold, nfi, c0, cm, taus,   &
+     CALL readfile( i, h, hold, nfi, c0_bgrp, cm_bgrp, taus,   &
                     tausm, vels, velsm, acc, lambda, lambdam, xnhe0, xnhem, &
                     vnhe, xnhp0, xnhpm, vnhp,nhpcl,nhpdim,ekincm, xnhh0, xnhhm,&
                     vnhh, velh, fion, tps, z0t, f )

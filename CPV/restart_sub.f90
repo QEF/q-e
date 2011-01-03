@@ -12,9 +12,9 @@ SUBROUTINE from_restart( )
    USE control_flags,         ONLY : tbeg, taurdr, tfor, tsdp, tv0rd, &
                                      iprsta, tsde, tzeroe, tzerop, nbeg, tranp, amprp, thdyn, &
                                      tzeroc, force_pairing, trhor, ampre, trane, tpre, dt_old
-   USE wavefunctions_module,  ONLY : c0, cm, phi => cp
+   USE wavefunctions_module,  ONLY : c0_bgrp, cm_bgrp
    USE electrons_module,      ONLY : occn_info
-   USE electrons_base,        ONLY : nspin, iupdwn, nupdwn, f, nbsp
+   USE electrons_base,        ONLY : nspin, iupdwn, nupdwn, f, nbsp, nbsp_bgrp
    USE io_global,             ONLY : ionode, ionode_id, stdout
    USE cell_base,             ONLY : ainv, h, hold, deth, r_to_s, s_to_r, boxdimensions, &
                                      velh, a1, a2, a3
@@ -36,12 +36,13 @@ SUBROUTINE from_restart( )
    USE uspp,                  ONLY : okvan, vkb, nkb
    USE core,                  ONLY : nlcc_any
    USE cp_main_variables,     ONLY : ht0, htm, lambdap, lambda, lambdam, eigr, &
-                                     sfac, bec, taub, irb, eigrb, edft
-   USE cdvan,                 ONLY : dbec
+                                     sfac, taub, irb, eigrb, edft, bec_bgrp, dbec
    USE time_step,             ONLY : delt
    USE atoms_type_module,     ONLY : atoms_type
    !
    IMPLICIT NONE
+   
+   INTEGER :: iss
    !
    ! ... We are restarting from file recompute ainv
    !
@@ -95,8 +96,8 @@ SUBROUTINE from_restart( )
    fion = 0.D0
    !
    IF( force_pairing ) THEN
-      cm(:,iupdwn(2):nbsp) = cm(:,1:nupdwn(2))
-      c0(:,iupdwn(2):nbsp) = c0(:,1:nupdwn(2))
+      cm_bgrp(:,iupdwn(2):nbsp) = cm_bgrp(:,1:nupdwn(2))
+      c0_bgrp(:,iupdwn(2):nbsp) = c0_bgrp(:,1:nupdwn(2))
       lambdap( :, :, 2) =  lambdap( :, :, 1)
       lambda( :, :, 2) =  lambda( :, :, 1)
       lambdam( :, :, 2) = lambdam( :, :, 1)
@@ -106,7 +107,7 @@ SUBROUTINE from_restart( )
       !
       lambdam = lambda
       !
-      cm = c0
+      cm_bgrp = c0_bgrp
       !
       WRITE( stdout, '(" Electronic velocities set to zero")' )
       !
@@ -135,19 +136,21 @@ SUBROUTINE from_restart( )
 515   FORMAT(   3X,'Initial random displacement of el. coordinates',/ &
                 3X,'Amplitude = ',F10.6 )
       !
-      CALL rande_base( c0, ampre )
-
-      CALL gram( vkb, bec, nkb, c0, ngw, nbsp )
+      CALL rande_base( c0_bgrp, ampre )
       !
-      IF( force_pairing ) c0(:,iupdwn(2):nbsp) = c0(:,1:nupdwn(2))
+      DO iss = 1, nspin
+         CALL gram_bgrp( vkb, bec_bgrp, nkb, c0_bgrp, ngw, iss )
+      END DO
       !
-      cm = c0
+      IF( force_pairing ) c0_bgrp(:,iupdwn(2):nbsp) = c0_bgrp(:,1:nupdwn(2))
+      !
+      cm_bgrp = c0_bgrp
       !
    END IF
    !
-   CALL calbec( 1, nsp, eigr, c0, bec )
+   CALL calbec_bgrp( 1, nsp, eigr, c0_bgrp, bec_bgrp )
    !
-   IF ( tpre     ) CALL caldbec( ngw, nkb, nbsp, 1, nsp, eigr, c0, dbec )
+   IF ( tpre     ) CALL caldbec_bgrp( eigr, c0_bgrp, dbec )
    !
    IF ( tefield  ) CALL efield_berry_setup( eigr, tau0 )
    IF ( tefield2 ) CALL efield_berry_setup2( eigr, tau0 )
@@ -162,7 +165,6 @@ SUBROUTINE from_restart( )
          END IF
       END IF
    END IF
-   !
    !
    ! dt_old should be -1.0 here if untouched ...
    !

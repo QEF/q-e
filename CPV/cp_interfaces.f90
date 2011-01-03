@@ -93,6 +93,8 @@
    PUBLIC :: compute_stress
 
    PUBLIC :: protate
+   PUBLIC :: c_bgrp_expand
+   PUBLIC :: c_bgrp_pack
 
    ! ------------------------------------ !
 
@@ -274,7 +276,7 @@
    END INTERFACE
 
    INTERFACE readfile
-      SUBROUTINE readfile_cp                                         &
+      SUBROUTINE readfile_x                                         &
       &     ( flag, h,hold,nfi,c0,cm,taus,tausm,vels,velsm,acc,    &
       &       lambda,lambdam,xnhe0,xnhem,vnhe,xnhp0,xnhpm,vnhp,nhpcl,nhpdim,ekincm,&
       &       xnhh0,xnhhm,vnhh,velh,fion, tps, mat_z, occ_f )
@@ -294,12 +296,12 @@
          REAL(DP) :: xnhh0(3,3),xnhhm(3,3),vnhh(3,3),velh(3,3)
          REAL(DP), INTENT(OUT) :: tps
          REAL(DP), INTENT(INOUT) :: mat_z(:,:,:), occ_f(:)
-      END SUBROUTINE readfile_cp
+      END SUBROUTINE readfile_x
    END INTERFACE
 
 
    INTERFACE writefile
-      SUBROUTINE writefile_cp &
+      SUBROUTINE writefile_x &
       &     ( h,hold,nfi,c0,cm,taus,tausm,vels,velsm,acc,           &
       &       lambda,lambdam,xnhe0,xnhem,vnhe,xnhp0,xnhpm,vnhp,nhpcl,nhpdim,ekincm,&
       &       xnhh0,xnhhm,vnhh,velh, fion, tps, mat_z, occ_f, rho )
@@ -319,25 +321,26 @@
          REAL(DP), INTENT(in) :: rho(:,:)
          REAL(DP), INTENT(in) :: occ_f(:)
          REAL(DP), INTENT(in) :: mat_z(:,:,:)
-      END SUBROUTINE writefile_cp
+      END SUBROUTINE writefile_x
    END INTERFACE
  
 
    INTERFACE runcp_uspp
       SUBROUTINE runcp_uspp_x &
-         ( nfi, fccc, ccc, ema0bg, dt2bye, rhos, bec, c0, cm, fromscra, restart )
+         ( nfi, fccc, ccc, ema0bg, dt2bye, rhos, bec_bgrp, c0_bgrp, cm_bgrp, fromscra, restart )
          USE kinds,             ONLY: DP
          IMPLICIT NONE
          integer, intent(in) :: nfi
          real(DP) :: fccc, ccc
          real(DP) :: ema0bg(:), dt2bye
          real(DP) :: rhos(:,:)
-         real(DP) :: bec(:,:)
-         complex(DP) :: c0(:,:), cm(:,:)
+         real(DP) :: bec_bgrp(:,:)
+         complex(DP) :: c0_bgrp(:,:), cm_bgrp(:,:)
          logical, optional, intent(in) :: fromscra
          logical, optional, intent(in) :: restart
       END SUBROUTINE
    END INTERFACE
+
 
 
    INTERFACE runcp_uspp_force_pairing
@@ -391,7 +394,7 @@
 
    INTERFACE ortho
       SUBROUTINE ortho_cp &
-         ( eigr, cp, phi, ngwx, x0, descla, diff, iter, ccc, bephi, becp_dist, nbsp, nspin, nupdwn, iupdwn)
+         ( eigr, cp_bgrp, phi_bgrp, ngwx, x0, descla, diff, iter, ccc, bephi, becp_dist, nbsp, nspin, nupdwn, iupdwn)
          USE kinds,          ONLY: DP
          USE ions_base,      ONLY: nat
          USE uspp,           ONLY: nkb
@@ -400,7 +403,8 @@
          INTEGER,    INTENT(IN)     :: ngwx, nbsp, nspin
          INTEGER,    INTENT(IN)     :: nupdwn( nspin ), iupdwn( nspin )
          INTEGER,     INTENT(IN)    :: descla( descla_siz_ , nspin )
-         COMPLEX(DP) :: cp(ngwx,nbsp), phi(ngwx,nbsp), eigr(ngwx,nat)
+         COMPLEX(DP) :: eigr(ngwx,nat)
+         COMPLEX(DP) :: cp_bgrp(:,:), phi_bgrp(:,:)
          REAL(DP)    :: x0( :, :, : ), diff, ccc
          INTEGER     :: iter
          REAL(DP)    :: bephi(:,:)
@@ -547,10 +551,9 @@
 
 
    INTERFACE wave_rand_init
-      SUBROUTINE wave_rand_init_x( cm, n, noff )
+      SUBROUTINE wave_rand_init_x( cm )
          USE kinds,              ONLY: DP
          IMPLICIT NONE
-         INTEGER,     INTENT(IN)  :: n, noff
          COMPLEX(DP), INTENT(OUT) :: cm(:,:)
       END SUBROUTINE
    END INTERFACE
@@ -785,13 +788,14 @@
 
    INTERFACE move_electrons
       SUBROUTINE move_electrons_x( &
-         nfi, tfirst, tlast, b1, b2, b3, fion, enthal, enb, enbi, fccc, ccc, dt2bye, stress )
+         nfi, tfirst, tlast, b1, b2, b3, fion, c0_bgrp, cm_bgrp, phi_bgrp, enthal, enb, enbi, fccc, ccc, dt2bye, stress )
          USE kinds,         ONLY: DP
          IMPLICIT NONE
          INTEGER,  INTENT(IN)    :: nfi
          LOGICAL,  INTENT(IN)    :: tfirst, tlast
          REAL(DP), INTENT(IN)    :: b1(3), b2(3), b3(3)
          REAL(DP)                :: fion(:,:)
+         COMPLEX(DP)             :: c0_bgrp(:,:), cm_bgrp(:,:), phi_bgrp(:,:)
          REAL(DP), INTENT(IN)    :: dt2bye
          REAL(DP)                :: fccc, ccc
          REAL(DP)                :: enb, enbi
@@ -844,8 +848,23 @@
          REAL(DP), INTENT(IN) :: bec(:,:)
          REAL(DP), INTENT(OUT) :: becrot(:,:)
       END SUBROUTINE
-
    END INTERFACE
+
+   INTERFACE c_bgrp_expand
+    SUBROUTINE c_bgrp_expand_x( c_bgrp )
+      USE kinds,              ONLY: DP
+      IMPLICIT NONE
+      COMPLEX(DP) :: c_bgrp(:,:)
+    END SUBROUTINE c_bgrp_expand_x
+   END INTERFACE
+   INTERFACE c_bgrp_pack
+    SUBROUTINE c_bgrp_pack_x( c_bgrp )
+      USE kinds,              ONLY: DP
+      IMPLICIT NONE
+      COMPLEX(DP) :: c_bgrp(:,:)
+    END SUBROUTINE c_bgrp_pack_x
+   END INTERFACE
+
 
 !=----------------------------------------------------------------------------=!
    END MODULE

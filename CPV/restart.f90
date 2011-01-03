@@ -9,7 +9,7 @@
 
 !-----------------------------------------------------------------------
 
-   SUBROUTINE writefile_cp                                         &
+   SUBROUTINE writefile_x                                         &
      &     ( h,hold,nfi,c0,cm,taus,tausm,vels,velsm,acc,           &
      &       lambda,lambdam,xnhe0,xnhem,vnhe,xnhp0,xnhpm,vnhp,nhpcl,nhpdim,ekincm,&
      &       xnhh0,xnhhm,vnhh,velh, fion, tps, mat_z, occ_f, rho )
@@ -19,14 +19,16 @@
       USE ions_base,        ONLY: nsp, na, cdmi, taui
       USE cell_base,        ONLY: s_to_r
       USE cp_restart,       ONLY: cp_writefile
-      USE cp_interfaces,    ONLY: set_evtot, set_eitot
-      USE electrons_base,   ONLY: nspin, nbnd, nbsp, iupdwn, nupdwn
+      USE cp_interfaces,    ONLY: set_evtot, set_eitot, c_bgrp_expand, c_bgrp_pack
+      USE electrons_base,   ONLY: nspin, nbnd, nbsp, iupdwn, nupdwn, nbspx
       USE electrons_module, ONLY: ei
       USE io_files,         ONLY: tmp_dir
       USE ensemble_dft,     ONLY: tens
       USE mp,               ONLY: mp_bcast
       USE control_flags,    ONLY: tksw, ndw, io_level, twfcollect
       USE xml_io_base,      ONLY: restart_dir, kpoint_dir
+      USE electrons_module, ONLY: collect_c
+      USE gvecw,            ONLY: ngw
 
 !
       implicit none
@@ -61,6 +63,9 @@
          return
          !
       end if
+
+      CALL c_bgrp_expand( c0 )
+      CALL c_bgrp_expand( cm )
 
       ht     = TRANSPOSE( h ) 
       htm    = TRANSPOSE( hold ) 
@@ -104,12 +109,15 @@
       DEALLOCATE( eitot )
       !
       IF( tksw ) DEALLOCATE( ctot )
+      !
+      CALL c_bgrp_pack( c0 )
+      CALL c_bgrp_pack( cm )
 
       return
-      end subroutine writefile_cp
+      end subroutine writefile_x
 
 !-----------------------------------------------------------------------
-      subroutine readfile_cp                                        &
+      subroutine readfile_x                                        &
      &     ( flag, h,hold,nfi,c0,cm,taus,tausm,vels,velsm,acc,    &
      &       lambda,lambdam,xnhe0,xnhem,vnhe,xnhp0,xnhpm,vnhp,nhpcl,nhpdim,ekincm,&
      &       xnhh0,xnhhm,vnhh,velh,&
@@ -120,7 +128,7 @@
 !
       USE kinds,          ONLY : DP
       USE io_files,       ONLY : tmp_dir
-      USE electrons_base, ONLY : nbnd, nbsp, nspin, nupdwn, iupdwn, keep_occ
+      USE electrons_base, ONLY : nbnd, nbsp, nspin, nupdwn, iupdwn, keep_occ, nbspx
       USE gvecw,          ONLY : ngw
       USE ions_base,      ONLY : nsp, na, cdmi, taui
       USE cp_restart,     ONLY : cp_readfile, cp_read_cell, cp_read_wfc
@@ -128,6 +136,7 @@
       USE autopilot,      ONLY : event_step, event_index, max_event_step
       USE cp_autopilot,   ONLY : employ_rules
       USE control_flags,  ONLY : ndr
+      USE cp_interfaces,  ONLY : c_bgrp_pack
 !
       implicit none
       INTEGER, INTENT(in) :: flag
@@ -151,16 +160,20 @@
       REAL(DP), ALLOCATABLE :: occ_ ( : )
       REAL(DP) :: htm1(3,3), b1(3) , b2(3), b3(3), omega
 
+
       IF( flag == -1 ) THEN
         CALL cp_read_cell( ndr, tmp_dir, .TRUE., ht, htm, htvel, gvel, xnhh0, xnhhm, vnhh )
         h     = TRANSPOSE( ht )
         hold  = TRANSPOSE( htm )
         velh  = TRANSPOSE( htvel )
         RETURN
-      ELSE IF ( flag == 0 ) THEN
+      END IF
+ 
+      IF ( flag == 0 ) THEN
         DO ispin = 1, nspin
           CALL cp_read_wfc( ndr, tmp_dir, 1, 1, ispin, nspin, c2 = cm(:,:), tag = 'm' )
         END DO
+        CALL c_bgrp_pack( cm )
         RETURN
       END IF
 
@@ -198,10 +211,13 @@
          occ_f( : ) = occ_ ( : )
       END IF
 
+      CALL c_bgrp_pack( cm )
+      CALL c_bgrp_pack( c0 )
+      !
       DEALLOCATE( occ_ )
 
       return
-      end subroutine readfile_cp
+      end subroutine readfile_x
 
 
 !------------------------------------------------------------------------------!

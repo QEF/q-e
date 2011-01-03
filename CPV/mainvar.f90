@@ -50,9 +50,11 @@ MODULE cp_main_variables
   ! ...    rhovan= \sum_i f(i) <psi(i)|beta_l><beta_m|psi(i)>
   ! ...    deeq  = \int V_eff(r) q_lm(r) dr
   !
-  REAL(DP), ALLOCATABLE :: bec(:,:), becdr(:,:,:)
-  REAL(DP), ALLOCATABLE :: bephi(:,:)
-  REAL(DP), ALLOCATABLE :: becp_dist(:,:)  ! distributed becp
+  REAL(DP), ALLOCATABLE :: bephi(:,:)      ! distributed (orhto group)
+  REAL(DP), ALLOCATABLE :: becp_dist(:,:)  ! distributed becp (ortho group)
+  REAL(DP), ALLOCATABLE :: bec_bgrp(:,:)  ! distributed bec (band group)
+  REAL(DP), ALLOCATABLE :: becdr_bgrp(:,:,:)  ! distributed becdr (band group)
+  REAL(DP), ALLOCATABLE :: dbec(:,:,:,:)    ! derivative of bec distributed(ortho group) 
   !
   ! ... mass preconditioning
   !
@@ -112,7 +114,7 @@ MODULE cp_main_variables
     SUBROUTINE allocate_mainvar( ngw, ngw_g, ngb, ngs, ng, nr1, nr2, nr3, &
                                  nr1x, nr2x, npl, nnr, nrxxs, nat, nax,  &
                                  nsp, nspin, n, nx, nupdwn, nhsa, &
-                                 gstart, nudx, tpre )
+                                 gstart, nudx, tpre, nbspx_bgrp )
       !------------------------------------------------------------------------
       !
       USE mp_global,   ONLY: np_ortho, me_ortho, intra_bgrp_comm, ortho_comm, &
@@ -126,6 +128,7 @@ MODULE cp_main_variables
       INTEGER,           INTENT(IN) :: nupdwn(:)
       INTEGER,           INTENT(IN) :: gstart, nudx
       LOGICAL,           INTENT(IN) :: tpre
+      INTEGER,           INTENT(IN) :: nbspx_bgrp
       !
       INTEGER  :: iss
       LOGICAL  :: gzero
@@ -202,16 +205,17 @@ MODULE cp_main_variables
       !
       ! becdr, distributed over row processors of the ortho group
       !
-      ALLOCATE( becdr( nhsa, nspin*nlax, 3 ) )  
+      ALLOCATE( becdr_bgrp( nhsa, nbspx_bgrp, 3 ) )  
       !
-      ALLOCATE( bec( nhsa, n ) )
-      !ALLOCATE( bec_dist(  nhsa, 2*nlax*nspin ) )  
-      ! factor 2 in the second dim is required because each task need 
-      ! at the same time row and colum component of becp
+      ALLOCATE( bec_bgrp( nhsa, nbspx_bgrp ) )
       !
       ALLOCATE( bephi( nhsa, nspin*nlax ) )
       ALLOCATE( becp_dist( nhsa, nlax*nspin ) )  
       !
+      IF ( tpre ) THEN
+        ALLOCATE( dbec( nhsa, 2*nlax, 3, 3 ) )
+      END IF
+
       gzero =  (gstart == 2)
       !
       CALL wave_descriptor_init( wfill, ngw, ngw_g, nupdwn,  nupdwn, &
@@ -234,10 +238,11 @@ MODULE cp_main_variables
       IF( ALLOCATED( rhog ) )    DEALLOCATE( rhog )
       IF( ALLOCATED( drhog ) )   DEALLOCATE( drhog )
       IF( ALLOCATED( drhor ) )   DEALLOCATE( drhor )
-      IF( ALLOCATED( bec ) )     DEALLOCATE( bec )
-      IF( ALLOCATED( becdr ) )   DEALLOCATE( becdr )
+      IF( ALLOCATED( bec_bgrp ) )     DEALLOCATE( bec_bgrp )
+      IF( ALLOCATED( becdr_bgrp ) )   DEALLOCATE( becdr_bgrp )
       IF( ALLOCATED( bephi ) )   DEALLOCATE( bephi )
       IF( ALLOCATED( becp_dist ) )    DEALLOCATE( becp_dist )
+      IF( ALLOCATED( dbec ) )    DEALLOCATE( dbec )
       IF( ALLOCATED( ema0bg ) )  DEALLOCATE( ema0bg )
       IF( ALLOCATED( lambda ) )  DEALLOCATE( lambda )
       IF( ALLOCATED( lambdam ) ) DEALLOCATE( lambdam )

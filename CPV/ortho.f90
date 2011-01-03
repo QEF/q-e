@@ -232,7 +232,7 @@
 
 
 !=----------------------------------------------------------------------------=!
-   SUBROUTINE ortho_cp( eigr, cp, phi, ngwx, x0, descla, diff, iter, ccc, &
+   SUBROUTINE ortho_cp( eigr, cp_bgrp, phi_bgrp, ngwx, x0, descla, diff, iter, ccc, &
                         bephi, becp_dist, nbsp, nspin, nupdwn, iupdwn )
 !=----------------------------------------------------------------------------=!
       !
@@ -252,32 +252,36 @@
       USE cvan,           ONLY: ish, nvb
       USE uspp,           ONLY: nkb, qq
       USE uspp_param,     ONLY: nh
-      USE electrons_base, ONLY: f
+      USE electrons_base, ONLY: f, nbsp_bgrp, iupdwn_bgrp, nupdwn_bgrp, i2gupdwn_bgrp
       USE gvecw,          ONLY: ngw
       USE control_flags,  ONLY: iprint, iprsta, ortho_max
       USE control_flags,  ONLY: force_pairing
       USE io_global,      ONLY: stdout, ionode
-      USE cp_interfaces,  ONLY: ortho_gamma
+      USE cp_interfaces,  ONLY: ortho_gamma, c_bgrp_expand, c_bgrp_pack
       USE descriptors,    ONLY: nlac_ , ilac_ , descla_siz_ , nlar_ , ilar_
       USE cp_main_variables,  ONLY: nlam, la_proc, nlax, collect_bec
-      USE mp_global,          ONLY: nproc_bgrp, me_bgrp, intra_bgrp_comm  ! DEBUG
+      USE mp_global,          ONLY: nproc_bgrp, me_bgrp, intra_bgrp_comm, inter_bgrp_comm  ! DEBUG
+      USE orthogonalize_base, ONLY: bec_bgrp2ortho
+      USE mp,                 ONLY : mp_sum
       !
       IMPLICIT NONE
       !
       INTEGER,    INTENT(IN) :: ngwx, nbsp, nspin
       INTEGER,    INTENT(IN) :: nupdwn( nspin ), iupdwn( nspin )
       INTEGER,    INTENT(IN) :: descla(descla_siz_,nspin)
-      COMPLEX(DP) :: cp(ngwx,nbsp), phi(ngwx,nbsp), eigr(ngwx,nat)
+      COMPLEX(DP) :: eigr(ngwx,nat)
+      COMPLEX(DP) :: cp_bgrp(:,:), phi_bgrp(:,:)
       REAL(DP)    :: x0(:,:,:), diff, ccc
       INTEGER     :: iter
       REAL(DP)    :: bephi(:,:)
       REAL(DP)    :: becp_dist(:,:)
       !
-      REAL(DP), ALLOCATABLE :: xloc(:,:)
+      REAL(DP), ALLOCATABLE :: xloc(:,:), bec_bgrp(:,:)
       REAL(DP), ALLOCATABLE :: qbephi(:,:,:), qbecp(:,:,:), bec_col(:,:)
 
       INTEGER :: nkbx
       INTEGER :: istart, nss, ifail, i, j, iss, iv, jv, ia, is, inl, jnl
+      INTEGER :: n1, n2, m1, m2
       INTEGER :: nspin_sub, nx0, nc, ic, icc, nr, ir
       REAL(DP) :: qqf
       !
@@ -293,12 +297,20 @@
       !
       CALL start_clock( 'ortho' )
 
-      !CALL nlsm1( nbsp, 1, nvb, eigr,  cp,  becp )
 
-      CALL nlsm1_dist ( nbsp, 1, nvb, eigr, cp, becp_dist, nlax, nspin, descla )
-      !CALL collect_bec( becp, becp_dist, descla, nspin )
-
-      CALL nlsm1_dist ( nbsp, 1, nvb, eigr, phi, bephi, nlax, nspin, descla )
+      IF( nvb > 0 ) THEN
+         ALLOCATE( bec_bgrp( SIZE( becp_dist, 1 ), SIZE( cp_bgrp, 2 ) ) )
+         !
+         bec_bgrp = 0.0d0
+         !
+         CALL nlsm1 ( nbsp_bgrp, 1, nvb, eigr, cp_bgrp, bec_bgrp )
+         CALL bec_bgrp2ortho( bec_bgrp, becp_dist, nlax, descla )
+   
+         CALL nlsm1 ( nbsp_bgrp, 1, nvb, eigr, phi_bgrp, bec_bgrp )
+         CALL bec_bgrp2ortho( bec_bgrp, bephi, nlax, descla )
+         !
+         DEALLOCATE( bec_bgrp )
+      END IF
       !
       !     calculation of qbephi and qbecp
       !
@@ -373,6 +385,11 @@
       !
       IF( nvb > 0 ) DEALLOCATE( bec_col )
       !
+      ! Expand cp and phi to contain all electronic band
+      !
+      CALL c_bgrp_expand( cp_bgrp )
+      CALL c_bgrp_expand( phi_bgrp )
+      !
       ALLOCATE( xloc( nx0, nx0 ) )
       !
       nspin_sub = nspin 
@@ -385,7 +402,7 @@
 
          IF( la_proc ) xloc = x0(:,:,iss) * ccc
 
-         CALL ortho_gamma( 0, cp, ngwx, phi, becp_dist(:,(iss-1)*nlax+1:iss*nlax), qbecp(:,:,iss), nkbx, &
+         CALL ortho_gamma( 0, cp_bgrp, ngwx, phi_bgrp, becp_dist(:,(iss-1)*nlax+1:iss*nlax), qbecp(:,:,iss), nkbx, &
                            bephi(:,((iss-1)*nlax+1):iss*nlax), &
                            qbephi(:,:,iss), xloc, nx0, descla(:,iss), diff, iter, nbsp, nss, istart )
 
@@ -402,11 +419,15 @@
          !
       END DO
 
-      IF( force_pairing ) cp(:, iupdwn(2):iupdwn(2)+nupdwn(2)-1 ) = cp(:,1:nupdwn(2))
+      IF( force_pairing ) cp_bgrp(:, iupdwn(2):iupdwn(2)+nupdwn(2)-1 ) = cp_bgrp(:,1:nupdwn(2))
       !
       DEALLOCATE( xloc )
       DEALLOCATE( qbecp )
       DEALLOCATE( qbephi )
+      !
+      ! pack cp so that it contains only the bands in the band subgroup
+      !
+      CALL c_bgrp_pack( cp_bgrp )
       !
       CALL stop_clock( 'ortho' )
       !

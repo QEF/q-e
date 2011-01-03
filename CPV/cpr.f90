@@ -15,8 +15,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
   USE control_flags,            ONLY : iprint, isave, thdyn, tpre, iprsta,     &
                                        tfor, remove_rigid_rot, taurdr,         &
                                        tprnfor, tsdc, lconstrain, lwf, lneb,   &
-!                                       lcoarsegrained, ndr, ndw, nomore, tsde, &
-                                        ndr, ndw, nomore, tsde, &
+                                       ndr, ndw, nomore, tsde, &
                                        tortho, tnosee, tnosep, trane, tranp,   &
                                        tsdp, tcp, tcap, ampre, amprp, tnoseh,  &
                                        tolp, ortho_eps, ortho_max, printwfc,   &
@@ -28,8 +27,9 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
   USE energies,                 ONLY : eht, epseu, exc, etot, eself, enl, &
                                        ekin, atot, entropy, egrand, enthal, &
                                        ekincm, print_energies
-  USE electrons_base,           ONLY : nbspx, nbsp, ispin, f, nspin
+  USE electrons_base,           ONLY : nbspx, nbsp, ispin, f, nspin, nbsp_bgrp
   USE electrons_base,           ONLY : nel, iupdwn, nupdwn, nudx, nelt
+  USE electrons_module,         ONLY : distribute_c, collect_c
   USE efield_module,            ONLY : efield, epol, tefield, allocate_efield, &
                                        efield_update, ipolp, qmat, gqq, evalue,&
                                        berry_energy, pberryel, pberryion,      &
@@ -61,7 +61,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
   USE io_global,                ONLY : io_global_start, &
                                        stdout, ionode, ionode_id
   USE dener,                    ONLY : detot
-  USE cdvan,                    ONLY : dbec, drhovan
+  USE cdvan,                    ONLY : drhovan
   USE gvecw,                    ONLY : ggp
   USE constants,                ONLY : pi, k_boltzmann_au, au_ps
   USE io_files,                 ONLY : psfile, pseudo_dir
@@ -87,7 +87,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
                                        electrons_nosevel, electrons_noseupd
   USE pres_ai_mod,              ONLY : P_ext, P_in, P_fin, pvar, volclu, &
                                        surfclu, Surf_t, abivol, abisur
-  USE wavefunctions_module,     ONLY : c0, cm, phi => cp
+  USE wavefunctions_module,     ONLY : c0_bgrp, cm_bgrp, phi_bgrp
   USE wannier_module,           ONLY : allocate_wannier
   USE cp_interfaces,            ONLY : printout_new, move_electrons
   USE printout_base,            ONLY : printout_base_open, &
@@ -103,11 +103,11 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
   USE gvect,                    ONLY : ecutrho
   USE time_step,                ONLY : delt, tps, dt2,  twodelt
   USE cp_interfaces,            ONLY : cp_print_rho, nlfh, print_lambda
-  USE cp_main_variables,        ONLY : acc, bec, lambda, lambdam, lambdap, &
+  USE cp_main_variables,        ONLY : acc, lambda, lambdam, lambdap, &
                                        ema0bg, sfac, eigr, iprint_stdout,  &
-                                       irb, becdr, taub, eigrb, rhog, rhos, &
+                                       irb, taub, eigrb, rhog, rhos, &
                                        rhor, bephi, becp_dist, nfi, descla, &
-                                       drhor, drhog, nlax
+                                       drhor, drhog, nlax, bec_bgrp, dbec
   USE autopilot,                ONLY : event_step, event_index, &
                                        max_event_step, restart_p
   USE cell_base,                ONLY : s_to_r, r_to_s
@@ -121,9 +121,9 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
   USE ions_nose,                ONLY : ions_nose_allocate, ions_nose_shiftvar
   USE orthogonalize_base,       ONLY : updatc
   USE control_flags,            ONLY : force_pairing
-  USE mp,                       ONLY : mp_bcast
+  USE mp,                       ONLY : mp_bcast, mp_sum
   USE mp_global,                ONLY : root_bgrp, intra_bgrp_comm, np_ortho, me_ortho, ortho_comm, &
-                                       me_bgrp
+                                       me_bgrp, inter_bgrp_comm
   USE ldaU_cp,                  ONLY : lda_plus_u, vupsi
   USE step_penalty,             ONLY : vpsi_pen, step_pen, E_pen
   USE small_box,                ONLY : ainvb
@@ -195,6 +195,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
   END IF
   !
   IF ( lda_plus_u ) ALLOCATE( forceh( 3, nat ) )
+  !
   !
   !======================================================================
   !
@@ -285,7 +286,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
      !
      IF ( tefield .or. tefield2 ) THEN
         !
-        CALL calbec( 1, nsp, eigr, c0, bec ) ! ATTENZIONE  
+        CALL calbec( 1, nsp, eigr, c0_bgrp, bec_bgrp ) ! ATTENZIONE  
         !
      END IF
      !
@@ -303,7 +304,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
         vupsi=(0.0d0,0.0d0)
         ! vpsi_pen  ! potentials on electrons due to occupation constraints 
         vpsi_pen=(0.0d0,0.0d0)
-        CALL new_ns(c0,eigr,vkb,vupsi,vpsi_pen,forceh)
+        CALL new_ns(c0_bgrp,eigr,vkb,vupsi,vpsi_pen,forceh)
         vupsi = vupsi + vpsi_pen
         if ( mod(nfi,iprint).eq.0 ) call write_ns
      endif
@@ -315,9 +316,9 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
      !=======================================================================
      !
      IF( force_pairing ) THEN
-          c0(:,iupdwn(2):nbsp)       =     c0(:,1:nupdwn(2))
-          cm(:,iupdwn(2):nbsp)       =     cm(:,1:nupdwn(2))
-         phi(:,iupdwn(2):nbsp)       =    phi(:,1:nupdwn(2))
+          c0_bgrp(:,iupdwn(2):nbsp)       =     c0_bgrp(:,1:nupdwn(2))
+          cm_bgrp(:,iupdwn(2):nbsp)       =     cm_bgrp(:,1:nupdwn(2))
+         phi_bgrp(:,iupdwn(2):nbsp)       =    phi_bgrp(:,1:nupdwn(2))
       lambda(:,:, 2) = lambda(:,:, 1)
      ENDIF
      !
@@ -327,19 +328,18 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
         !
         ekincf = 0.0d0
 
-        CALL elec_fakekine( ekincf, ema0bg, emass, cm, c0, ngw, nbsp, 1, delt )
+        CALL elec_fakekine( ekincf, ema0bg, emass, cm_bgrp, c0_bgrp, ngw, nbsp_bgrp, 1, delt )
         !
      END IF
      !
-     !
-     CALL move_electrons( nfi, tfirst, tlast, b1, b2, b3, fion, &
+     CALL move_electrons( nfi, tfirst, tlast, b1, b2, b3, fion, c0_bgrp, cm_bgrp, phi_bgrp, &
                           enthal, enb, enbi, fccc, ccc, dt2bye, stress )
      !
      IF (lda_plus_u) fion = fion + forceh
      !
      IF ( tpre ) THEN
         !
-        CALL nlfh( stress, bec, dbec, lambda )
+        CALL nlfh( stress, bec_bgrp, dbec, lambda )
         !
         CALL ions_thermal_stress( stress, pmass, omega, h, vels, nsp, na )
         !
@@ -508,14 +508,16 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
         !
         IF ( tortho ) THEN
            !
-           CALL ortho( eigr, cm, phi, ngw, lambda, descla, &
+           CALL ortho( eigr, cm_bgrp, phi_bgrp, ngw, lambda, descla, &
                        bigr, iter, ccc, bephi, becp_dist, nbsp, nspin, nupdwn, iupdwn )
            !
         ELSE
            !
-           CALL gram( vkb, bec, nkb, cm, ngw, nbsp )
+           DO iss = 1, nspin
+              CALL gram_bgrp( vkb, bec_bgrp, nkb, cm_bgrp, ngw, iss )
+           END DO
            !
-           IF ( iprsta > 4 ) CALL dotcsc( eigr, cm, ngw, nbsp )
+           IF ( iprsta > 4 ) CALL dotcsc( eigr, cm_bgrp, ngw, nbsp_bgrp )
            !
         END IF
         !
@@ -527,26 +529,26 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
            DO iss = 1, nspin_sub
               i1 = (iss-1)*nlax+1
               i2 = iss*nlax
-              CALL updatc( ccc, nbsp, lambda(:,:,iss), SIZE(lambda,1), phi, SIZE(phi,1), &
-                        bephi(:,i1:i2), SIZE(bephi,1), becp_dist(:,i1:i2), bec, cm, nupdwn(iss), iupdwn(iss), &
+              CALL updatc( ccc, nbsp, lambda(:,:,iss), SIZE(lambda,1), phi_bgrp, SIZE(phi_bgrp,1), &
+                        bephi(:,i1:i2), SIZE(bephi,1), becp_dist(:,i1:i2), bec_bgrp, cm_bgrp, nupdwn(iss), iupdwn(iss), &
                         descla(:,iss) )
            END DO
         END IF
         !
         IF( force_pairing ) THEN
-              c0(:,iupdwn(2):nbsp)       =     c0(:,1:nupdwn(2))
-              cm(:,iupdwn(2):nbsp)       =     cm(:,1:nupdwn(2))
-             phi(:,iupdwn(2):nbsp)       =    phi(:,1:nupdwn(2))
+              c0_bgrp(:,iupdwn(2):nbsp)       =     c0_bgrp(:,1:nupdwn(2))
+              cm_bgrp(:,iupdwn(2):nbsp)       =     cm_bgrp(:,1:nupdwn(2))
+             phi_bgrp(:,iupdwn(2):nbsp)       =    phi_bgrp(:,1:nupdwn(2))
           lambda(:,:, 2) = lambda(:,:, 1)
         ENDIF
         !
-        CALL calbec( nvb+1, nsp, eigr, cm, bec )
+        CALL calbec_bgrp( nvb+1, nsp, eigr, cm_bgrp, bec_bgrp )
         !
         IF ( tpre ) THEN
-           CALL caldbec( ngw, nkb, nbsp, 1, nsp, eigr, cm, dbec )
+           CALL caldbec_bgrp( eigr, cm_bgrp, dbec )
         END IF
         !
-        IF ( iprsta >= 3 ) CALL dotcsc( eigr, cm, ngw, nbsp )
+        IF ( iprsta >= 3 ) CALL dotcsc( eigr, cm_bgrp, ngw, nbsp_bgrp )
         !
      END IF
      !
@@ -579,7 +581,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
      !
      IF ( .NOT. tcg ) THEN
         !
-        CALL elec_fakekine( ekinc0, ema0bg, emass, c0, cm, ngw, nbsp, 1, delt )
+        CALL elec_fakekine( ekinc0, ema0bg, emass, c0_bgrp, cm_bgrp, ngw, nbsp_bgrp, 1, delt )
         !
         ekinc0 = (ekinc0 + ekincf)*0.5d0
         !
@@ -738,11 +740,11 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
      !
      IF( .NOT. tcg ) THEN
         !
-        CALL dswap( 2*ngw*nbsp, c0, 1, cm, 1 )
+        CALL dswap( 2*SIZE( c0_bgrp ), c0_bgrp, 1, cm_bgrp, 1 )
         !
      ELSE
         !
-        CALL cg_update( tfirst, nfi, c0 )
+        CALL cg_update( tfirst, nfi, c0_bgrp )
         !
         IF ( tfor .AND. .NOT. tens .AND. &
              ( ( MOD( nfi, isave ) == 0 ) .OR. tlast ) ) THEN
@@ -765,7 +767,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
            lambdam = lambda
            !
            CALL move_electrons( nfi, tfirst, tlast, b1, b2, b3, &
-                                fion, enthal, enb, enbi, fccc, ccc, dt2bye, stress )
+                                fion, c0_bgrp, cm_bgrp, phi_bgrp, enthal, enb, enbi, fccc, ccc, dt2bye, stress )
            !
         END IF
         !
@@ -781,14 +783,14 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
         !
         IF ( tcg ) THEN
           !
-          CALL writefile( h, hold ,nfi, c0, c0old, taus, tausm,  &
+          CALL writefile( h, hold ,nfi, c0_bgrp, c0old, taus, tausm,  &
                           vels, velsm, acc, lambda, lambdam, xnhe0, xnhem,     &
                           vnhe, xnhp0, xnhpm, vnhp, nhpcl,nhpdim,ekincm, xnhh0,&
                           xnhhm, vnhh, velh, fion, tps, z0t, f, rhor )
            !
         ELSE
            !
-           CALL writefile( h, hold, nfi, c0, cm, taus,  &
+           CALL writefile( h, hold, nfi, c0_bgrp, cm_bgrp, taus,  &
                            tausm, vels, velsm, acc,  lambda, lambdam, xnhe0,   &
                            xnhem, vnhe, xnhp0, xnhpm, vnhp, nhpcl, nhpdim, ekincm,&
                            xnhh0, xnhhm, vnhh, velh, fion, tps, z0t, f, rhor )
@@ -857,7 +859,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
      END IF
      !
      IF ( lwf ) &
-        CALL wf_closing_options( nfi, c0, cm, bec, eigr, eigrb, taub, &
+        CALL wf_closing_options( nfi, c0_bgrp, cm_bgrp, bec_bgrp, eigr, eigrb, taub, &
                                  irb, ibrav, b1, b2, b3, taus, tausm, vels,  &
                                  velsm, acc, lambda, lambdam, xnhe0, xnhem,  &
                                  vnhe, xnhp0, xnhpm, vnhp, nhpcl, nhpdim,    &
@@ -896,9 +898,9 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
   !
   conv_elec = .TRUE.
   !
-  IF ( tcg ) cm = c0old
+  IF ( tcg ) cm_bgrp = c0old
   !
-  CALL writefile( h, hold, nfi, c0, cm, taus, tausm, &
+  CALL writefile( h, hold, nfi, c0_bgrp, cm_bgrp, taus, tausm, &
                   vels, velsm, acc, lambda, lambdam, xnhe0, xnhem, vnhe,    &
                   xnhp0, xnhpm, vnhp, nhpcl,nhpdim,ekincm, xnhh0, xnhhm,    &
                   vnhh, velh, fion, tps, z0t, f, rhor )

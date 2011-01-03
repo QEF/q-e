@@ -7,7 +7,7 @@
 !
 !
 !----------------------------------------------------------------------------
-SUBROUTINE move_electrons_x( nfi, tfirst, tlast, b1, b2, b3, fion, &
+SUBROUTINE move_electrons_x( nfi, tfirst, tlast, b1, b2, b3, fion, c0_bgrp, cm_bgrp, phi_bgrp, &
                            enthal, enb, enbi, fccc, ccc, dt2bye, stress )
   !----------------------------------------------------------------------------
   !
@@ -16,15 +16,14 @@ SUBROUTINE move_electrons_x( nfi, tfirst, tlast, b1, b2, b3, fion, &
   USE kinds,                ONLY : DP
   USE control_flags,        ONLY : lwf, tfor, tprnfor, thdyn
   USE cg_module,            ONLY : tcg
-  USE cp_main_variables,    ONLY : eigr, bec, irb, eigrb, rhog, rhos, rhor, &
-                                   sfac, ema0bg, becdr, &
-                                   taub, lambda, lambdam, lambdap, vpot
-  USE wavefunctions_module, ONLY : c0, cm, phi => cp, c0_bgrp, cm_bgrp, cp_bgrp
+  USE cp_main_variables,    ONLY : eigr, irb, eigrb, rhog, rhos, rhor, &
+                                   sfac, ema0bg, bec_bgrp, becdr_bgrp, &
+                                   taub, lambda, lambdam, lambdap, vpot, dbec
   USE cell_base,            ONLY : omega, ibrav, h, press
   USE uspp,                 ONLY : becsum, vkb, nkb
   USE energies,             ONLY : ekin, enl, entropy, etot
   USE grid_dimensions,      ONLY : nrxx
-  USE electrons_base,       ONLY : nbsp, nspin, f, nudx, distribute_c
+  USE electrons_base,       ONLY : nbsp, nspin, f, nudx, nupdwn, nbspx_bgrp
   USE core,                 ONLY : nlcc_any, rhoc
   USE ions_positions,       ONLY : tau0
   USE ions_base,            ONLY : nat
@@ -39,17 +38,19 @@ SUBROUTINE move_electrons_x( nfi, tfirst, tlast, b1, b2, b3, fion, &
   USE cp_interfaces,        ONLY : runcp_uspp, runcp_uspp_force_pairing, &
                                    interpolate_lambda
   USE gvecw,                ONLY : ngw
-  USE orthogonalize_base,   ONLY : calphi
+  USE orthogonalize_base,   ONLY : calphi_bgrp
   USE control_flags,        ONLY : force_pairing
   USE cp_interfaces,        ONLY : rhoofr, compute_stress
-  USE electrons_base,       ONLY : nupdwn 
+  USE electrons_module,     ONLY : distribute_c, collect_c, distribute_b
   USE gvect,   ONLY : eigts1, eigts2, eigts3 
+  USE mp_global,   ONLY : mpime
   IMPLICIT NONE
   !
   INTEGER,  INTENT(IN)    :: nfi
   LOGICAL,  INTENT(IN)    :: tfirst, tlast
   REAL(DP), INTENT(IN)    :: b1(3), b2(3), b3(3)
   REAL(DP)                :: fion(:,:)
+  COMPLEX(DP)             :: c0_bgrp(:,:), cm_bgrp(:,:), phi_bgrp(:,:)
   REAL(DP), INTENT(IN)    :: dt2bye
   REAL(DP)                :: fccc, ccc
   REAL(DP)                :: enb, enbi
@@ -59,24 +60,22 @@ SUBROUTINE move_electrons_x( nfi, tfirst, tlast, b1, b2, b3, fion, &
   !
   INTEGER :: i, j, is, n2
   !
-  !
   electron_dynamic: IF ( tcg ) THEN
      !
-     CALL runcg_uspp( nfi, tfirst, tlast, eigr, bec, irb, eigrb, &
+     CALL runcg_uspp( nfi, tfirst, tlast, eigr, bec_bgrp, irb, eigrb, &
                       rhor, rhog, rhos, rhoc, eigts1, eigts2, eigts3, sfac, &
-                      fion, ema0bg, becdr, lambdap, lambda, vpot  )
+                      fion, ema0bg, becdr_bgrp, lambdap, lambda, vpot, c0_bgrp, &
+                      cm_bgrp, phi_bgrp, dbec  )
      !
      CALL compute_stress( stress, detot, h, omega )
      !
   ELSE
      !
      IF ( lwf ) &
-          CALL get_wannier_center( tfirst, cm, bec, eigr, &
+          CALL get_wannier_center( tfirst, cm_bgrp, bec_bgrp, eigr, &
                                    eigrb, taub, irb, ibrav, b1, b2, b3 )
      !
-     CALL distribute_c( c0, c0_bgrp )
-     !
-     CALL rhoofr( nfi, c0_bgrp, irb, eigrb, bec, &
+     CALL rhoofr( nfi, c0_bgrp, irb, eigrb, bec_bgrp, &
                      becsum, rhor, rhog, rhos, enl, denl, ekin, dekin6 )
      !
      ! ... put core charge (if present) in rhoc(r)
@@ -96,7 +95,7 @@ SUBROUTINE move_electrons_x( nfi, tfirst, tlast, b1, b2, b3, fion, &
                      eigts1, eigts2, eigts3, irb(1,1), eigrb(1,1), sfac(1,1), &
                      tau0(1,1), fion(1,1) )
      !
-     IF ( lwf ) CALL wf_options( tfirst, nfi, cm, becsum, bec, &
+     IF ( lwf ) CALL wf_options( tfirst, nfi, cm_bgrp, becsum, bec_bgrp, &
                                  eigr, eigrb, taub, irb, ibrav, b1,   &
                                  b2, b3, vpot, rhog, rhos, enl, ekin  )
      !
@@ -106,14 +105,14 @@ SUBROUTINE move_electrons_x( nfi, tfirst, tlast, b1, b2, b3, fion, &
      !
      IF( tefield )  THEN
         !
-        CALL berry_energy( enb, enbi, bec, c0, fion )
+        CALL berry_energy( enb, enbi, bec_bgrp, c0_bgrp, fion )
         !
         etot = etot + enb + enbi
         !
      END IF
      IF( tefield2 )  THEN
         !
-        CALL berry_energy2( enb, enbi, bec, c0, fion )
+        CALL berry_energy2( enb, enbi, bec_bgrp, c0_bgrp, fion )
         !
         etot = etot + enb + enbi
         !
@@ -137,11 +136,11 @@ SUBROUTINE move_electrons_x( nfi, tfirst, tlast, b1, b2, b3, fion, &
      IF( force_pairing ) THEN
         !
         CALL runcp_uspp_force_pairing( nfi, fccc, ccc, ema0bg, dt2bye, &
-                      rhos, bec, c0, cm, ei_unp )
+                      rhos, bec_bgrp, c0_bgrp, cm_bgrp, ei_unp )
         !
      ELSE
         !
-        CALL runcp_uspp( nfi, fccc, ccc, ema0bg, dt2bye, rhos, bec, c0, cm )
+        CALL runcp_uspp( nfi, fccc, ccc, ema0bg, dt2bye, rhos, bec_bgrp, c0_bgrp, cm_bgrp )
         !
      ENDIF
      !
@@ -151,12 +150,14 @@ SUBROUTINE move_electrons_x( nfi, tfirst, tlast, b1, b2, b3, fion, &
      !
      ! ... nlfq needs deeq bec
      !
-     IF ( tfor .OR. tprnfor ) CALL nlfq( c0, eigr, bec, becdr, fion )
+     IF ( tfor .OR. tprnfor ) THEN
+        CALL nlfq_bgrp( c0_bgrp, eigr, bec_bgrp, becdr_bgrp, fion )
+     END IF
      !
      IF ( (tfor.or.tprnfor) .AND. tefield ) &
-        CALL bforceion( fion, .TRUE. , ipolp, qmat, bec, becdr, gqq, evalue )
+        CALL bforceion( fion, .TRUE. , ipolp, qmat, bec_bgrp, becdr_bgrp, gqq, evalue )
      IF ( (tfor.or.tprnfor) .AND. tefield2 ) &
-        CALL bforceion( fion, .TRUE. , ipolp2, qmat2, bec, becdr, gqq2, evalue2 )
+        CALL bforceion( fion, .TRUE. , ipolp2, qmat2, bec_bgrp, becdr_bgrp, gqq2, evalue2 )
      !
      IF( force_pairing ) THEN
         lambda( :, :, 2 ) =  lambda(:, :, 1 )
@@ -173,13 +174,15 @@ SUBROUTINE move_electrons_x( nfi, tfirst, tlast, b1, b2, b3, fion, &
      ! ... calphi calculates phi
      ! ... the electron mass rises with g**2
      !
-     CALL calphi( c0, ngw, bec, nkb, vkb, phi, nbsp, ema0bg )
+     CALL calphi_bgrp( c0_bgrp, ngw, bec_bgrp, nkb, vkb, phi_bgrp, nbspx_bgrp, ema0bg )
      !
      ! ... begin try and error loop (only one step!)
      !
      ! ... nlfl and nlfh need: lambda (guessed) becdr
      !
-     IF ( tfor .OR. tprnfor ) CALL nlfl( bec, becdr, lambda, fion )
+     IF ( tfor .OR. tprnfor ) THEN
+        CALL nlfl_bgrp( bec_bgrp, becdr_bgrp, lambda, fion )
+     END IF
      !
   END IF electron_dynamic
   !

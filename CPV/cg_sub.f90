@@ -10,7 +10,7 @@
 !
    subroutine runcg_uspp( nfi, tfirst, tlast, eigr, bec, irb, eigrb, &
       rhor, rhog, rhos, rhoc, ei1, ei2, ei3, sfac, fion, ema0bg, becdr, &
-      lambdap, lambda, vpot  )
+      lambdap, lambda, vpot, c0, cm, phi, dbec  )
 
       use kinds, only: dp
       use control_flags, only: iprint, thdyn, tpre, iprsta, &
@@ -23,7 +23,7 @@
       use energies, only: eht, epseu, exc, etot, eself, enl, ekin,          &
      &                    atot, entropy, egrand
       use electrons_base, only: f, nspin, nel, iupdwn, nupdwn, nudx, nelt, &
-                                nx => nbspx, n => nbsp, ispin
+                                nbspx, nbsp, ispin
 
       use ensemble_dft, only: tens,   ef,  z0t, c0diag,  &
                       becdiag, fmat0, e0,  id_matrix_init
@@ -53,18 +53,17 @@
       use cg_module,                only : ene_ok,  maxiter,niter_cg_restart, &
                                            conv_thr, passop, enever, itercg
       use ions_positions,           only : tau0
-      use wavefunctions_module,     only : c0, cm, phi => cp
       use efield_module,            only : tefield, evalue, ctable, qmat, detq, ipolp, &
                                            berry_energy, ctabin, gqq, gqqm, df, pberryel, &
                                            tefield2, evalue2, ctable2, qmat2, detq2, ipolp2, &
                                            berry_energy2, ctabin2, gqq2, gqqm2, pberryel2
       use mp,                       only : mp_sum, mp_bcast
       use cp_electronic_mass,       ONLY : emass_cutoff
-      use orthogonalize_base,       ONLY : calphi
+      use orthogonalize_base,       ONLY : calphi_bgrp
       use cp_interfaces,            ONLY : rhoofr, dforce, compute_stress
       USE cp_main_variables,        ONLY : nlax, collect_lambda, distribute_lambda, descla, nrlx, nlam
       USE descriptors,              ONLY : la_npc_ , la_npr_ , la_comm_ , la_me_ , la_nrl_ , ldim_cyclic
-      USE mp_global, ONLY:  me_image, my_image_id
+      USE mp_global, ONLY:  me_image, my_image_id, nbgrp
 
 
 !
@@ -75,8 +74,8 @@
       integer :: nfi
       logical :: tfirst , tlast
       complex(dp) :: eigr(ngw,nat)
-      real(dp) :: bec(nhsa,n)
-      real(dp) :: becdr(nhsa,nspin*nlax,3)
+      real(dp) :: bec(nhsa,nbspx)
+      real(dp) :: becdr(nhsa,nbspx,3)
       integer irb(3,nat)
       complex(dp) :: eigrb(ngb,nat)
       real(dp) :: rhor(nrxx,nspin)
@@ -92,6 +91,10 @@
       real(dp) :: ema0bg(ngw)
       real(dp) :: lambdap(nlam,nlam,nspin)
       real(dp) :: lambda(nlam,nlam,nspin)
+      complex(dp) :: c0( ngw, nbspx )
+      complex(dp) :: cm( ngw, nbspx )
+      complex(dp) :: phi( ngw, nbspx )
+      real(dp) :: dbec(nhsa,nbspx,3,3)
 !
 !
       integer :: i, j, ig, k, is, iss,ia, iv, jv, il, ii, jj, kk, ip
@@ -128,12 +131,16 @@
       real(DP)  ene0,ene1,dene0,enesti !energy terms for linear minimization along hi
    
 
-      allocate(bec0(nhsa,n),becm(nhsa,n), becdrdiag(nhsa,nspin*nlax,3))
-      allocate (ave_ene(n))
+      allocate(bec0(nhsa,nbspx),becm(nhsa,nbspx), becdrdiag(nhsa,nbspx,3))
+      allocate (ave_ene(nbspx))
       allocate(c2(ngw),c3(ngw))
 
 
       call start_clock('runcg_uspp')
+
+      if( nbgrp > 1 ) &
+         call errore(' runcg_uspp ', ' parallelization over bands not yet implemented ', 1 )
+
       newscheme=.false.
       firstiter=.true.
 
@@ -167,16 +174,13 @@
 
       !orthonormalize c0
 
-      call calbec(1,nsp,eigr,c0,bec)
-
-      call gram(betae,bec,nhsa,c0,ngw,n)
-
-      !call calbec(1,nsp,eigr,c0,bec)
+      DO iss = 1, nspin
+         CALL gram_bgrp( betae, bec, nhsa, c0, ngw, iss )
+      END DO
 
       !calculates phi for pcdaga
 
-      ! call calphiid(c0,bec,betae,phi)
-      CALL calphi( c0, SIZE(c0,1), bec, nhsa, betae, phi, n )
+      CALL calphi_bgrp( c0, SIZE(c0,1), bec, nhsa, betae, phi, nbsp )
 
       !calculates the factors for S and K inversion in US case
       if(nvb.gt.0) then
@@ -193,7 +197,7 @@
 
       numok = 0
 
-      allocate(hpsi(ngw,n),hpsi0(ngw,n),gi(ngw,n),hi(ngw,n))
+      allocate(hpsi(ngw,nbspx),hpsi0(ngw,nbspx),gi(ngw,nbspx),hi(ngw,nbspx))
       do while ( itercg .lt. maxiter .and. (.not.ltresh) )
 
 
@@ -299,8 +303,8 @@
 
         call prefor(eigr,betae)!ATTENZIONE
 
-        do i=1,n,2
-          call dforce( i, bec, betae, c0,c2,c3,rhos, nrxxs, ispin,f,n,nspin)
+        do i=1,nbsp,2
+          call dforce( i, bec, betae, c0,c2,c3,rhos, nrxxs, ispin,f,nbsp,nspin)
           if(tefield .and. (evalue.ne.0.d0)) then
             call dforceb(c0, i, betae, ipolp, bec ,ctabin(1,1,ipolp), gqq, gqqm, qmat, deeq, df)
             c2(1:ngw)=c2(1:ngw)+evalue*df(1:ngw)
@@ -315,24 +319,24 @@
           endif
 
           hpsi(1:ngw,  i)=c2(1:ngw)
-          if(i+1 <= n) then
+          if(i+1 <= nbsp) then
             hpsi(1:ngw,i+1)=c3(1:ngw)
           endif
           if (gstart==2) then
             hpsi(1,  i)=CMPLX(DBLE(hpsi(1,  i)), 0.d0,kind=DP)
-            if(i+1 <= n) then
+            if(i+1 <= nbsp) then
               hpsi(1,i+1)=CMPLX(DBLE(hpsi(1,i+1)), 0.d0,kind=DP)
             endif
           end if
         enddo
 
-        if(pre_state) call ave_kin(c0,SIZE(c0,1),n,ave_ene)
+        if(pre_state) call ave_kin(c0,SIZE(c0,1),nbsp,ave_ene)
 
                
         call pcdaga2(c0,phi,hpsi)
                
-        hpsi0(1:ngw,1:n)=hpsi(1:ngw,1:n)
-        gi(1:ngw,1:n) = hpsi(1:ngw,1:n)
+        hpsi0=hpsi
+        gi = hpsi
         
         call calbec(1,nsp,eigr,hpsi,becm)
         call xminus1(hpsi,betae,dumm,becm,s_minus1,.false.)
@@ -362,7 +366,7 @@
         gamma=0.d0
         
         if(.not.tens) then
-           do i=1,n
+           do i=1,nbsp
               do ig=1,ngw
                  gamma=gamma+2.d0*DBLE(CONJG(gi(ig,i))*hpsi(ig,i))
               enddo
@@ -374,7 +378,7 @@
            call mp_sum( gamma, intra_bgrp_comm )
            
            if (nvb.gt.0) then
-              do i=1,n
+              do i=1,nbsp
                  do is=1,nvb
                     do iv=1,nh(is)
                        do jv=1,nh(is)
@@ -465,7 +469,7 @@
 
           restartcg=.false.
           passof=passop
-          hi(1:ngw,1:n)=gi(1:ngw,1:n)!hi is the search direction
+          hi=gi!hi is the search direction
           esse=gamma
 
 
@@ -478,7 +482,7 @@
           gamma=gamma/esse
           esse=essenew
 
-          hi(1:ngw,1:n)=gi(1:ngw,1:n)+gamma*hi(1:ngw,1:n)
+          hi=gi+gamma*hi
 
         endif
 !note that hi, is saved  on gi, because we need it before projection on conduction states
@@ -497,7 +501,7 @@
 
         dene0=0.
         if(.not.tens) then
-          do i=1,n               
+          do i=1,nbsp
             do ig=1,ngw
               dene0=dene0-4.d0*DBLE(CONJG(hi(ig,i))*hpsi0(ig,i))
             enddo
@@ -551,14 +555,14 @@
 
         !calculates wave-functions on a point on direction hi
 
-      cm(1:ngw,1:n)=c0(1:ngw,1:n)+spasso*passof*hi(1:ngw,1:n)
+      cm=c0+spasso*passof*hi
 
 
         !orthonormalize
 
-      call calbec(1,nsp,eigr,cm,becm)
-      call gram(betae,becm,nhsa,cm,ngw,n)
-        !call calbec(1,nsp,eigr,cm,becm)
+      DO iss = 1, nspin
+         CALL gram_bgrp( betae, becm, nhsa, cm, ngw, iss )
+      END DO
                
         !calculate energy
         if(.not.tens) then
@@ -614,13 +618,14 @@
               
         !calculates wave-functions at minimum
 
-        cm(1:ngw,1:n)=c0(1:ngw,1:n)+spasso*passo*hi(1:ngw,1:n)
+        cm=c0+spasso*passo*hi
         if(gstart==2) then
           cm(1,:)=0.5d0*(cm(1,:)+CONJG(cm(1,:)))
         endif
 
-        call calbec(1,nsp,eigr,cm,becm)
-        call gram(betae,becm,nhsa,cm,ngw,n)
+      DO iss = 1, nspin
+         CALL gram_bgrp( betae, becm, nhsa, cm, ngw, iss )
+      END DO
 
         !test on energy: check the energy has really diminished
 
@@ -687,20 +692,22 @@
           if(ionode) then
              write(stdout,*) 'cg_sub: missed minimum, case 1, iteration',itercg
           endif
-          c0(1:ngw,1:n)=c0(1:ngw,1:n)+spasso*passov*hi(1:ngw,1:n)
+          c0=c0+spasso*passov*hi
           restartcg=.true.
-          call calbec(1,nsp,eigr,c0,bec)
-          call gram(betae,bec,nhsa,c0,ngw,n)
+      DO iss = 1, nspin
+         CALL gram_bgrp( betae, bec, nhsa, c0, ngw, iss )
+      END DO
           ene_ok=.false.
           !if  ene1 << energy <  ene0; go to  ene1
         else if( (enever.ge.ene0).and.(ene0.gt.ene1)) then
           if(ionode) then
              write(stdout,*) 'cg_sub: missed minimum, case 2, iteration',itercg
           endif  
-          c0(1:ngw,1:n)=c0(1:ngw,1:n)+spasso*passov*hi(1:ngw,1:n)
+          c0=c0+spasso*passov*hi
           restartcg=.true.!ATTENZIONE
-          call calbec(1,nsp,eigr,c0,bec)
-          call gram(betae,bec,nhsa,c0,ngw,n)
+      DO iss = 1, nspin
+         CALL gram_bgrp( betae, bec, nhsa, c0, ngw, iss )
+      END DO
           !if ene > ene0,en1 do a steepest descent step
           ene_ok=.false.
         else if((enever.ge.ene0).and.(ene0.le.ene1)) then
@@ -712,11 +719,12 @@
           do while(enever.gt.ene0 .and. iter3.lt.maxiter3)
             iter3=iter3+1
             passov=passov*0.5d0
-            cm(1:ngw,1:n)=c0(1:ngw,1:n)+spasso*passov*hi(1:ngw,1:n)
+            cm=c0+spasso*passov*hi
             ! chenge the searching direction
             spasso=spasso*(-1.d0)
-            call calbec(1,nsp,eigr,cm,becm)
-            call gram(betae,bec,nhsa,cm,ngw,n)
+      DO iss = 1, nspin
+         CALL gram_bgrp( betae, bec, nhsa, cm, ngw, iss )
+      END DO
             call calbec(1,nsp,eigr,cm,becm)
             if(.not.tens) then
               call rhoofr(nfi,cm(:,:),irb,eigrb,becm,rhovan,rhor,rhog,rhos,enl,denl,ekin,dekin6)
@@ -768,7 +776,7 @@
         if(.not. ene_ok) call calbec (1,nsp,eigr,c0,bec)
 
         !calculates phi for pc_daga
-        CALL calphi( c0, SIZE(c0,1), bec, nhsa, betae, phi, n )
+        CALL calphi_bgrp( c0, SIZE(c0,1), bec, nhsa, betae, phi, nbsp )
   
         !=======================================================================
         !
@@ -800,16 +808,15 @@
        if(tpre) then!if pressure is need the following is written because of caldbec
           call  calbec(1,nsp,eigr,c0,bec)
           if(.not.tens) then
-            call  caldbec( ngw, nhsa, n, 1, nsp, eigr, c0, dbec )
+            call caldbec_bgrp( eigr, c0, dbec )
             call rhoofr(nfi,c0(:,:),irb,eigrb,bec,rhovan,rhor,rhog,rhos,enl,denl,ekin,dekin6)
           else
 
             !     calculation of the rotated quantities
             call rotate( z0t, c0(:,:), bec, c0diag, becdiag, .false. )
             !     calculation of rho corresponding to the rotated wavefunctions
-            call  caldbec( ngw, nhsa, n, 1, nsp, eigr, c0diag, dbec )
-            call rhoofr(nfi,c0diag,irb,eigrb,becdiag                         &
-                     &                    ,rhovan,rhor,rhog,rhos,enl,denl,ekin,dekin6)
+            call caldbec_bgrp( eigr, c0diag, dbec )
+            call rhoofr(nfi,c0diag,irb,eigrb,becdiag,rhovan,rhor,rhog,rhos,enl,denl,ekin,dekin6)
           endif
 
           !calculates the potential
@@ -835,14 +842,14 @@
 
       call newd(vpot,irb,eigrb,rhovan,fion)
       if (.not.tens) then
-        if (tfor .or. tprnfor) call nlfq(c0,eigr,bec,becdr,fion)
+        if (tfor .or. tprnfor) call nlfq_bgrp( c0, eigr, bec, becdr, fion ) ! call nlfq(c0,eigr,bec,becdr,fion)
       else
-        if (tfor .or. tprnfor) call nlfq(c0diag,eigr,becdiag,becdrdiag,fion)
+        if (tfor .or. tprnfor) call nlfq_bgrp( c0diag, eigr, becdiag, becdrdiag, fion ) ! call nlfq(c0diag,eigr,becdiag,becdrdiag,fion)
       endif
   
         call prefor(eigr,betae)
-        do i=1,n,2
-          call dforce(i,bec,betae,c0,c2,c3,rhos,nrxxs,ispin,f,n,nspin)
+        do i=1,nbsp,2
+          call dforce(i,bec,betae,c0,c2,c3,rhos,nrxxs,ispin,f,nbsp,nspin)
           if(tefield.and.(evalue .ne. 0.d0)) then
             call dforceb &
                (c0, i, betae, ipolp, bec ,ctabin(1,1,ipolp), gqq, gqqm, qmat, deeq, df)
@@ -870,13 +877,13 @@
 
           do ig=1,ngw
             gi(ig,  i)=c2(ig)
-            if(i+1 <= n) then
+            if(i+1 <= nbsp) then
               gi(ig,i+1)=c3(ig)
             endif
           end do
           if (gstart==2) then
             gi(1,  i)=CMPLX(DBLE(gi(1,  i)),0.d0,kind=DP)
-            if(i+1 <= n) then
+            if(i+1 <= nbsp) then
               gi(1,i+1)=CMPLX(DBLE(gi(1,i+1)),0.d0,kind=DP)
             endif
           end if
@@ -942,13 +949,13 @@
            !
            DEALLOCATE( lambda_dist )
            !
-           call nlsm2(ngw,nhsa,n,nspin,eigr,c0(:,:),becdr)
+           call nlsm2_bgrp( ngw, nhsa, eigr, c0, becdr, nbspx, nbsp )
            !
         endif
         !
   
         !
-        call nlfl(bec,becdr,lambda,fion)
+        CALL nlfl_bgrp( bec, becdr, lambda, fion ) 
           
         ! bforceion adds the force term due to electronic berry phase
         ! only in US-case

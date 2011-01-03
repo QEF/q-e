@@ -165,13 +165,10 @@ MODULE cdvan
   IMPLICIT NONE
   SAVE
   REAL(DP), ALLOCATABLE :: dbeta(:,:,:,:,:)
-  REAL(DP), ALLOCATABLE :: dbec(:,:,:,:)     
-    ! Warning dbec is distributed over row and column processors of the ortho group
   REAL(DP), ALLOCATABLE :: drhovan(:,:,:,:,:)
 CONTAINS
   SUBROUTINE deallocate_cdvan
       IF( ALLOCATED( dbeta ) ) DEALLOCATE( dbeta )
-      IF( ALLOCATED( dbec ) ) DEALLOCATE( dbec )
       IF( ALLOCATED( drhovan ) ) DEALLOCATE( drhovan )
   END SUBROUTINE deallocate_cdvan
 END MODULE cdvan

@@ -188,7 +188,7 @@ SUBROUTINE newnlinit()
 END SUBROUTINE newnlinit
 !
 !-----------------------------------------------------------------------
-subroutine nlfh_x( stress, bec, dbec, lambda )
+subroutine nlfh_x( stress, bec_bgrp, dbec, lambda )
   !-----------------------------------------------------------------------
   !
   !     contribution to the internal stress tensor due to the constraints
@@ -198,29 +198,51 @@ subroutine nlfh_x( stress, bec, dbec, lambda )
   use uspp,              ONLY : nkb, qq
   use uspp_param,        ONLY : nh, nhm
   use ions_base,         ONLY : na
-  use electrons_base,    ONLY : nbspx, nbsp, nudx, nspin, nupdwn, iupdwn
+  use electrons_base,    ONLY : nbspx, nbsp, nudx, nspin, nupdwn, iupdwn, ibgrp_g2l
   use cell_base,         ONLY : omega, h
   use constants,         ONLY : pi, fpi, au_gpa
   use io_global,         ONLY : stdout
   use control_flags,     ONLY : iprsta
-  USE cp_main_variables, ONLY : descla, la_proc, nlam
+  USE cp_main_variables, ONLY : descla, la_proc, nlam, nlax
   USE descriptors,       ONLY : nlar_ , nlac_ , ilar_ , ilac_ , nlax_
   USE mp,                ONLY : mp_sum
-  USE mp_global,         ONLY : intra_bgrp_comm
+  USE mp_global,         ONLY : intra_bgrp_comm, inter_bgrp_comm
 
 !
   implicit none
 
   REAL(DP), INTENT(INOUT) :: stress(3,3) 
-  REAL(DP), INTENT(IN)    :: bec( :, : ), dbec( :, :, :, : )
+  REAL(DP), INTENT(IN)    :: bec_bgrp( :, : ), dbec( :, :, :, : )
   REAL(DP), INTENT(IN)    :: lambda( :, :, : )
 !
   INTEGER  :: i, j, ii, jj, inl, iv, jv, ia, is, iss, nss, istart
-  INTEGER  :: jnl, ir, ic, nr, nc, nx
+  INTEGER  :: jnl, ir, ic, nr, nc, nx, ibgrp_i
   REAL(DP) :: fpre(3,3), TT, T1, T2
   !
-  REAL(DP), ALLOCATABLE :: tmpbec(:,:), tmpdh(:,:), temp(:,:)
+  REAL(DP), ALLOCATABLE :: tmpbec(:,:), tmpdh(:,:), temp(:,:), bec(:,:,:)
   !
+  ALLOCATE( bec( nkb, nlax, nspin ) )
+  !
+  IF( la_proc ) THEN
+     DO iss = 1, nspin
+        nss = nupdwn( iss )
+        istart = iupdwn( iss )
+        ic = descla( ilac_ , iss )
+        nc = descla( nlac_ , iss )
+        DO i=1,nc
+           ibgrp_i = ibgrp_g2l( i+istart-1+ic-1 )
+           IF( ibgrp_i > 0 ) THEN
+              bec( :, i, iss ) = bec_bgrp( :, ibgrp_i )
+           ELSE
+              bec( :, i, iss ) = 0.0d0
+           END IF
+        END DO
+     END DO
+  ELSE
+     bec   = 0.0d0
+  END IF
+
+  CALL mp_sum( bec, inter_bgrp_comm )
   !
   IF( la_proc ) THEN
      nx=descla( nlax_ , 1 ) 
@@ -258,7 +280,8 @@ subroutine nlfh_x( stress, bec, dbec, lambda )
                           inl=ish(is)+(jv-1)*na(is)+ia
                           if(abs(qq(iv,jv,is)).gt.1.e-5) then
                              do i = 1, nc
-                                tmpbec(iv,i) = tmpbec(iv,i) +  qq(iv,jv,is) * bec(inl, i + istart - 1 + ic - 1 )
+                                !tmpbec(iv,i) = tmpbec(iv,i) +  qq(iv,jv,is) * bec(inl, i + istart - 1 + ic - 1 )
+                                tmpbec(iv,i) = tmpbec(iv,i) +  qq(iv,jv,is) * bec( inl, i, iss  )
                              end do
                           endif
                        end do
@@ -267,7 +290,7 @@ subroutine nlfh_x( stress, bec, dbec, lambda )
                     do iv=1,nh(is)
                        inl=ish(is)+(iv-1)*na(is)+ia
                        do i = 1, nr
-                          tmpdh(i,iv) = dbec( inl, i + (iss-1)*nlam, ii, jj )
+                          tmpdh(i,iv) = dbec( inl, i + (iss-1)*nlax, ii, jj )
                        end do
                     end do
 
@@ -307,6 +330,8 @@ subroutine nlfh_x( stress, bec, dbec, lambda )
   IF( la_proc ) THEN
      DEALLOCATE ( tmpbec, tmpdh, temp )
   END IF
+
+  DEALLOCATE( bec )
 
 
   IF( iprsta > 2 ) THEN
