@@ -9,7 +9,6 @@ MODULES = \
 atom.o \
 autopilot.o \
 basic_algebra_routines.o \
-berry_phase.o \
 bfgs_module.o \
 cell_base.o  \
 check_stop.o  \

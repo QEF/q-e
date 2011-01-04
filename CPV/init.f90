@@ -20,6 +20,7 @@
       !
 
       USE kinds,                    ONLY: dp
+      USE constants,                ONLY: tpi
       use io_global,                only: stdout, ionode
       use control_flags,            only: gamma_only
       use grid_dimensions,          only: nr1, nr2, nr3, nr1x, nr2x, nr3x
@@ -31,9 +32,9 @@
                                           smallbox_grid_init,smallbox_grid_info
       use smooth_grid_dimensions,   only: nr1s, nr2s, nr3s, nr1sx, nr2sx, nr3sx, nrxxs
       USE grid_subroutines,         ONLY: realspace_grids_init, realspace_grids_info
-      USE gvect,                    ONLY: mill_g, g2_g, eigts1,eigts2,eigts3
+      USE gvect,                    ONLY: mill_g, eigts1,eigts2,eigts3, gg
       use ions_base,                only: nat
-      use gvecw,                    only: gcutw, gkcut, gvecw_init
+      use gvecw,                    only: gkcut, gvecw_init, g2kin_init
       use gvect,                    only: ecutrho, gcutm, gvect_init
       use gvecs,                    only: gcutms, gvecs_init
       use gvecb,                    only: gcutb
@@ -54,9 +55,11 @@
 ! 
       integer  :: i
       real(dp) :: rat1, rat2, rat3
-      real(dp) :: at(3,3), b1(3), b2(3), b3(3)
+      real(dp) :: at(3,3), b1(3), b2(3), b3(3), tpiba2 
       integer :: ng_, ngs_, ngm_ , ngw_
 
+
+      tpiba2 = ( tpi / alat ) ** 2
       IF( ionode ) THEN
         WRITE( stdout, 100 )
  100    FORMAT( //, &
@@ -125,17 +128,21 @@
       !
       CALL gvect_init ( ngm_ )
       CALL gvecs_init ( ngs_ )
-      CALL gvecw_init ( ngw_ )
       !
       ! ... Print real-space grid dimensions
       !
       CALL realspace_grids_info ( dfftp, dffts, nproc_bgrp )
       CALL smallbox_grid_info ( )
       !
-      ! ... generate g-space
+      ! ... generate g-space vectors (dense and smoth grid)
       !
       call ggencp( b1, b2, b3, nr1, nr2, nr3, nr1s, nr2s, nr3s, gcutm, &
                    gcutms, gkcut, gamma_only )
+      !
+      ! ... allocate and generate (modified) kinetic energy
+      !
+      CALL gvecw_init ( ngw_ )
+      CALL g2kin_init ( gg, tpiba2 )
       ! 
       !  Allocate index required to compute polarizability
       !
@@ -145,7 +152,6 @@
       !
       !     global arrays are no more needed
       !
-      if( allocated( g2_g ) )   deallocate( g2_g )
       if( allocated( mill_g ) ) deallocate( mill_g )
       !
       !     allocate spaces for phases e^{-iG*tau_s}
@@ -339,7 +345,10 @@
       !     are recalculated according to the value of cell parameter h
       !
       USE kinds,                 ONLY : DP
+      USE constants,             ONLY: tpi
       USE cell_base,             ONLY : a1, a2, a3, omega, alat, cell_base_reinit
+      USE gvecw,                 ONLY : g2kin_init
+      USE gvect,                 ONLY : gg
       USE io_global,             ONLY : stdout, ionode
       !
       implicit none
@@ -349,7 +358,7 @@
 
       ! local
       !
-      REAL(DP) :: gmax, b1(3), b2(3), b3(3)
+      REAL(DP) :: tpiba2, gmax, b1(3), b2(3), b3(3)
       !
       !WRITE( stdout, 344 ) 
       !do i=1,3
@@ -362,7 +371,11 @@
       !
       call recips( a1, a2, a3, b1, b2, b3 )
       !
+      !  re-calculate G-vectors and kinetic energy
+      !
       call gcal( alat, b1, b2, b3, gmax )
+      tpiba2 = (tpi/ alat)**2
+      call g2kin_init ( gg, tpiba2 )
       !
       !   generation of little box g-vectors
       !

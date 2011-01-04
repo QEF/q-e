@@ -1,6 +1,11 @@
 atoms_type.o : ../Modules/cell_base.o
 atoms_type.o : ../Modules/kind.o
 atoms_type.o : ../Modules/parameters.o
+berry_phase.o : ../Modules/io_global.o
+berry_phase.o : ../Modules/mp.o
+berry_phase.o : ../Modules/mp_global.o
+berry_phase.o : ../Modules/recvec.o
+berry_phase.o : ../Modules/stick_base.o
 berryion.o : ../Modules/cell_base.o
 berryion.o : ../Modules/constants.o
 berryion.o : ../Modules/ions_base.o
@@ -439,7 +444,6 @@ gvecb.o : ../Modules/kind.o
 gvecw.o : ../Modules/kind.o
 gvecw.o : ../Modules/mp.o
 gvecw.o : ../Modules/mp_global.o
-init.o : ../Modules/berry_phase.o
 init.o : ../Modules/cell_base.o
 init.o : ../Modules/control_flags.o
 init.o : ../Modules/electrons_base.o
@@ -457,6 +461,7 @@ init.o : ../Modules/stick_base.o
 init.o : ../Modules/task_groups.o
 init.o : ../Modules/uspp.o
 init.o : atoms_type.o
+init.o : berry_phase.o
 init.o : boxgrid.o
 init.o : cp_restart.o
 init.o : electrons.o
@@ -710,7 +715,6 @@ plugin_initialization.o : ../Modules/io_files.o
 plugin_initialization.o : ../Modules/io_global.o
 plugin_initialization.o : ../Modules/kind.o
 plugin_initialization.o : ../Modules/plugin_flags.o
-polarization.o : ../Modules/berry_phase.o
 polarization.o : ../Modules/cell_base.o
 polarization.o : ../Modules/constants.o
 polarization.o : ../Modules/io_global.o
@@ -719,6 +723,7 @@ polarization.o : ../Modules/kind.o
 polarization.o : ../Modules/mp.o
 polarization.o : ../Modules/mp_global.o
 polarization.o : ../Modules/mp_wave.o
+polarization.o : berry_phase.o
 potentials.o : ../Modules/cell_base.o
 potentials.o : ../Modules/constants.o
 potentials.o : ../Modules/control_flags.o
@@ -900,7 +905,6 @@ stop_run.o : ../Modules/image_io_routines.o
 stop_run.o : ../Modules/io_files.o
 stop_run.o : ../Modules/io_global.o
 stop_run.o : ../Modules/mp_global.o
-stop_run.o : ../Modules/recvec.o
 stress.o : ../Modules/cell_base.o
 stress.o : ../Modules/constants.o
 stress.o : ../Modules/electrons_base.o

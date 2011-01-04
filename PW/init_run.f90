@@ -12,7 +12,8 @@ SUBROUTINE init_run()
   USE klist,              ONLY : nkstot
   USE symme,              ONLY : sym_rho_init
   USE wvfct,              ONLY : nbnd, et, wg, btype
-  USE control_flags,      ONLY : lmd,gamma_only
+  USE control_flags,      ONLY : lmd, gamma_only
+  USE cellmd,             ONLY : lmovecell
   USE dynamics_module,    ONLY : allocate_dyn_vars
   USE paw_variables,      ONLY : okpaw
   USE paw_init,           ONLY : paw_init_onecenter, allocate_paw_internals
@@ -43,7 +44,8 @@ SUBROUTINE init_run()
   !
   ! ... generate reciprocal-lattice vectors and fft indices
   !
-  CALL ggen()
+  CALL ggen ( gamma_only )
+  CALL gshells ( lmovecell )
   !
   ! ... variable initialization for parallel symmetrization
   !

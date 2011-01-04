@@ -51,7 +51,8 @@ SUBROUTINE read_file()
   USE ldaU,                 ONLY : lda_plus_u, eth, oatwfc
   USE realus,               ONLY : qpointlist,betapointlist,init_realspace_vars,real_space
   USE io_global,            ONLY : stdout
-  USE dfunct,                 only : newd
+  USE dfunct,               ONLY : newd
+  USE control_flags,        ONLY : gamma_only
   !
   IMPLICIT NONE
   !
@@ -190,7 +191,8 @@ SUBROUTINE read_file()
   !
   CALL pre_init()
   CALL allocate_fft()
-  CALL ggen()
+  CALL ggen ( gamma_only ) 
+  CALL gshells ( lmovecell ) 
   !
   ! ... allocate the potential and wavefunctions
   !

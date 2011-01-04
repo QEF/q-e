@@ -7,7 +7,7 @@
 !
 !
 !-----------------------------------------------------------------------
-SUBROUTINE ggen()
+SUBROUTINE ggen (gamma_only)
    !----------------------------------------------------------------------
    !
    !     This routine generates all the reciprocal lattice vectors
@@ -17,22 +17,20 @@ SUBROUTINE ggen()
    !
    USE kinds,              ONLY : DP
    USE cell_base,          ONLY : at, bg
-   USE gvect, ONLY : ig_l2g
-   USE gvect,              ONLY : g, gg, ngm, ngm_g, gcutm, &
-                                  mill,  nl, gstart, gl, ngl, igtongl
-   USE gvecs,            ONLY : ngms, gcutms, ngms_g, nls
-   USE control_flags,      ONLY : gamma_only
-   USE cellmd,             ONLY : lmovecell
+   USE gvect,              ONLY : ig_l2g, g, gg, ngm, ngm_g, gcutm, &
+                                  mill,  nl, gstart
+   USE gvecs,              ONLY : ngms, gcutms, ngms_g, nls
    USE constants,          ONLY : eps8
    USE fft_base,           ONLY : dfftp, dffts
 
    IMPLICIT NONE
    !
+   LOGICAL, INTENT(in) :: gamma_only
    !     here a few local variables
    !
    REAL(DP) ::  t (3), tt, swap
    !
-   INTEGER :: ngmx, n1, n2, n3, n1s, n2s, n3s
+   INTEGER :: ngm_, n1, n2, n3, n1s, n2s, n3s
    !
    REAL(DP), ALLOCATABLE :: g2sort_g(:)
    ! array containing all g vectors, on all processors: replicated data
@@ -43,7 +41,6 @@ SUBROUTINE ggen()
    !
 #ifdef __PARA
    INTEGER :: m1, m2, mc
-   !
 #endif
    INTEGER :: i, j, k, ipol, ng, igl, iswap, indsw
    !
@@ -59,15 +56,14 @@ SUBROUTINE ggen()
    !
    !    and computes all the g vectors inside a sphere
    !
-   ALLOCATE( ig_l2g( ngm ) )
    ALLOCATE( mill_g( 3, ngm_g ),mill_unsorted( 3, ngm_g ) )
    ALLOCATE( igsrt( ngm_g ) )
    ALLOCATE( g2sort_g( ngm_g ) )
    g2sort_g(:) = 1.0d20
    !
-   ! save present value of ngm in ngmx variable
+   ! save present value of ngm 
    !
-   ngmx = ngm
+   ngm_ = ngm
    !
    ngm = 0
    ngms = 0
@@ -140,15 +136,11 @@ SUBROUTINE ggen()
       gg (ngm) = sum(g (1:3, ngm)**2)
 
       IF (gg (ngm) <= gcutms) ngms = ngms + 1
-      IF (ngm > ngmx) CALL errore ('ggen', 'too many g-vectors', ngm)
+      IF (ngm > ngm_) CALL errore ('ggen', 'too many g-vectors', ngm)
    ENDDO ngloop
 
-   IF (ngm /= ngmx) &
-      CALL errore ('ggen', 'g-vectors missing !', abs(ngm - ngmx))
-
-   !
-   !  here to initialize berry_phase
-   !  CALL berry_setup(ngm, ngm_g, nr1, nr2, nr3, mill_g)
+   IF (ngm /= ngm_) &
+      CALL errore ('ggen', 'g-vectors missing !', abs(ngm - ngm_))
    !
    !     determine first nonzero g vector
    !
@@ -194,49 +186,10 @@ SUBROUTINE ggen()
    ENDDO
    !
    DEALLOCATE( mill_g )
-   !
-   ! calculate number of G shells: ngl
-   !
-   IF (lmovecell) THEN
-      !
-      ! in case of a variable cell run each G vector has its shell
-      !
-      ngl = ngm
-      gl => gg
-      DO ng = 1, ngm
-         igtongl (ng) = ng
-      ENDDO
-   ELSE
-      !
-      ! G vectors are grouped in shells with the same norm
-      !
-      ngl = 1
-      igtongl (1) = 1
-      DO ng = 2, ngm
-         IF (gg (ng) > gg (ng - 1) + eps8) THEN
-            ngl = ngl + 1
-         ENDIF
-         igtongl (ng) = ngl
-      ENDDO
-
-      ALLOCATE (gl( ngl))
-      gl (1) = gg (1)
-      igl = 1
-      DO ng = 2, ngm
-         IF (gg (ng) > gg (ng - 1) + eps8) THEN
-            igl = igl + 1
-            gl (igl) = gg (ng)
-         ENDIF
-      ENDDO
-
-      IF (igl /= ngl) CALL errore ('setup', 'igl <> ngl', ngl)
-
-   ENDIF
 
    IF ( gamma_only) CALL index_minusg()
 
 END SUBROUTINE ggen
-
 !
 !-----------------------------------------------------------------------
 SUBROUTINE index_minusg()
@@ -245,9 +198,9 @@ SUBROUTINE index_minusg()
    !     compute indices nlm and nlms giving the correspondence
    !     between the fft mesh points and -G (for gamma-only calculations)
    !
-   USE gvect,   ONLY : ngm, nlm, mill
-   USE gvecs, ONLY : nlsm, ngms
-   USE fft_base,  ONLY : dfftp, dffts
+   USE gvect,    ONLY : ngm, nlm, mill
+   USE gvecs,    ONLY : nlsm, ngms
+   USE fft_base, ONLY : dfftp, dffts
    IMPLICIT NONE
    !
    INTEGER :: n1, n2, n3, n1s, n2s, n3s, ng
@@ -290,3 +243,58 @@ SUBROUTINE index_minusg()
    ENDDO
 
 END SUBROUTINE index_minusg
+!
+!-----------------------------------------------------------------------
+SUBROUTINE gshells ( vc )
+   !----------------------------------------------------------------------
+   !
+   ! calculate number of G shells: ngl, and the index ng = igtongl(ig)
+   ! that gives the shell index ng for (lacal) G-vector of index ig
+   !
+   USE kinds,              ONLY : DP
+   USE gvect,              ONLY : gg, ngm, gl, ngl, igtongl
+   USE constants,          ONLY : eps8
+   !
+   IMPLICIT NONE
+   !
+   LOGICAL, INTENT(IN) :: vc
+   !
+   INTEGER :: ng, igl
+   !
+   IF ( vc ) THEN
+      !
+      ! in case of a variable cell run each G vector has its shell
+      !
+      ngl = ngm
+      gl => gg
+      DO ng = 1, ngm
+         igtongl (ng) = ng
+      ENDDO
+   ELSE
+      !
+      ! G vectors are grouped in shells with the same norm
+      !
+      ngl = 1
+      igtongl (1) = 1
+      DO ng = 2, ngm
+         IF (gg (ng) > gg (ng - 1) + eps8) THEN
+            ngl = ngl + 1
+         ENDIF
+         igtongl (ng) = ngl
+      ENDDO
+
+      ALLOCATE (gl( ngl))
+      gl (1) = gg (1)
+      igl = 1
+      DO ng = 2, ngm
+         IF (gg (ng) > gg (ng - 1) + eps8) THEN
+            igl = igl + 1
+            gl (igl) = gg (ng)
+         ENDIF
+      ENDDO
+
+      IF (igl /= ngl) CALL errore ('setup', 'igl <> ngl', ngl)
+
+   ENDIF
+
+   END SUBROUTINE gshells

@@ -22,7 +22,6 @@ SUBROUTINE stop_run( flag )
   USE constraints_module, ONLY : deallocate_constraint
 !  USE metadyn_vars,       ONLY : deallocate_metadyn_vars
   USE mp_global,          ONLY : mp_global_end
-  USE gvect, ONLY : mill_g
   !
   IMPLICIT NONE
   !
@@ -38,11 +37,6 @@ SUBROUTINE stop_run( flag )
   !
   IF ( lconstrain ) CALL deallocate_constraint()
   !
-!  IF ( lcoarsegrained ) CALL deallocate_metadyn_vars()
-!  IF ( lpath ) CALL path_deallocation()
-  !
-  if( allocated( mill_g ) ) deallocate( mill_g )
-
   CALL mp_global_end()
   !
   IF ( flag ) THEN

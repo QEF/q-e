@@ -5,11 +5,6 @@ autopilot.o : kind.o
 autopilot.o : mp.o
 autopilot.o : parser.o
 basic_algebra_routines.o : kind.o
-berry_phase.o : io_global.o
-berry_phase.o : mp.o
-berry_phase.o : mp_global.o
-berry_phase.o : recvec.o
-berry_phase.o : stick_base.o
 bfgs_module.o : basic_algebra_routines.o
 bfgs_module.o : cell_base.o
 bfgs_module.o : constants.o

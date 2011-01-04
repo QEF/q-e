@@ -215,15 +215,6 @@ subroutine find_whose_is_g
   call mp_sum(whose_is_g,intra_bgrp_comm)
   whose_is_g(:)=whose_is_g(:)-1
   
-  ! mill_g is used in gtable_missing and re-initialized here
-  ! workaround by PG to avoid a large array like mill_g allocated all the time
-
-  allocate ( mill_g(3,ngw_g) )
-  do ig=1,ngw
-     mill_g(:,ig_l2g(ig)) = mill(:,ig)
-  end do
-  call mp_sum(mill_g,intra_bgrp_comm)
-
 return
 end subroutine find_whose_is_g
 

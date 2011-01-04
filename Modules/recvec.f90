@@ -59,20 +59,19 @@
      !
      INTEGER, ALLOCATABLE, TARGET :: mill(:,:)
      
-     !     g2_g    = all G^2 in increasing order, replicated on all procs
-     !
-     REAL(DP), ALLOCATABLE, TARGET :: g2_g(:)
-
-     !     mill_g  = miller index of all G vectors (same order as in g2_g)
-     !
-     INTEGER, ALLOCATABLE, TARGET :: mill_g(:,:)
-
      !     ig_l2g  = converts a local G-vector index into the global index
      !               ("l2g" means local to global): ig_l2g(i) = index of i-th
      !               local G-vector in the global array of G-vectors
+     !
+     INTEGER, ALLOCATABLE, TARGET :: ig_l2g(:)
+     !
      !     sortedig_l2g = array obtained by sorting ig_l2g
      !
-     INTEGER, ALLOCATABLE, TARGET :: ig_l2g(:),  sortedig_l2g(:)
+     INTEGER, ALLOCATABLE, TARGET :: sortedig_l2g(:)
+     !
+     !     mill_g  = miller index of all G vectors
+     !
+     INTEGER, ALLOCATABLE, TARGET :: mill_g(:,:)
      !
      ! the phases e^{-iG*tau_s} used to calculate structure factors
      !
@@ -81,6 +80,9 @@
    CONTAINS
 
      SUBROUTINE gvect_init( ngm_ )
+       !
+       ! Set local and global dimensions, allocate arrays
+       !
        USE mp_global, ONLY: intra_bgrp_comm
        USE mp, ONLY: mp_max, mp_sum
        IMPLICIT NONE
@@ -98,6 +100,16 @@
        ngm_g = ngm
        CALL mp_sum( ngm_g, intra_bgrp_comm )
        !
+       !  allocate arrays - only those that are always kept until the end
+       !
+       ALLOCATE( gg(ngm) )
+       ALLOCATE( g(3, ngm) )
+       ALLOCATE( mill(3, ngm) )
+       ALLOCATE( nl (ngm) )
+       ALLOCATE( nlm(ngm) )
+       ALLOCATE( ig_l2g(ngm) )
+       ALLOCATE( igtongl(ngm) )
+       !
        RETURN 
        !
      END SUBROUTINE gvect_init
@@ -106,7 +118,6 @@
        IF( ALLOCATED( gg ) ) DEALLOCATE( gg )
        IF( ASSOCIATED( gl ) ) DEALLOCATE( gl )
        IF( ALLOCATED( g ) )  DEALLOCATE( g )
-       IF( ALLOCATED( g2_g ) ) DEALLOCATE( g2_g )
        IF( ALLOCATED( mill_g ) ) DEALLOCATE( mill_g )
        IF( ALLOCATED( mill ) ) DEALLOCATE( mill )
        IF( ALLOCATED( igtongl ) ) DEALLOCATE( igtongl )
@@ -171,8 +182,13 @@
        ngms_g = ngms
        CALL mp_sum( ngms_g, intra_bgrp_comm )
        !
+       !  allocate arrays 
+       !
+       ALLOCATE( nls (ngms) )
+       ALLOCATE( nlsm(ngms) )
+       !
        RETURN 
-
+       !
      END SUBROUTINE gvecs_init
 
      SUBROUTINE deallocate_gvecs()

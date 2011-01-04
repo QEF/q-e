@@ -56,7 +56,7 @@ addusforce.o : ../Modules/mp.o
 addusforce.o : ../Modules/mp_global.o
 addusforce.o : ../Modules/recvec.o
 addusforce.o : ../Modules/uspp.o
-addusforce.o : pwcom.o
+addusforce.o : noncol.o
 addusforce.o : scf_mod.o
 addusstress.o : ../Modules/cell_base.o
 addusstress.o : ../Modules/control_flags.o
@@ -303,9 +303,6 @@ d_matrix.o : ../Modules/random_numbers.o
 d_matrix.o : symm_base.o
 data_structure.o : ../Modules/cell_base.o
 data_structure.o : ../Modules/fft_base.o
-data_structure.o : ../Modules/fft_scalar.o
-data_structure.o : ../Modules/fft_types.o
-data_structure.o : ../Modules/griddim.o
 data_structure.o : ../Modules/io_global.o
 data_structure.o : ../Modules/kind.o
 data_structure.o : ../Modules/mp.o

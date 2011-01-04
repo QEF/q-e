@@ -8,6 +8,7 @@ MODFLAGS= $(MOD_FLAG)../iotk/src $(MOD_FLAG)../Modules $(MOD_FLAG).
 FOBJS = \
 atoms_type.o \
 berryion.o \
+berry_phase.o \
 bforceion.o \
 boxgrid.o \
 cg.o \

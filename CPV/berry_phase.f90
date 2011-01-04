@@ -172,6 +172,8 @@
 
       DEALLOCATE(icnt_snd)
       DEALLOCATE(icnt_rcv)
+      ! workaround: sortedig_l2g no longer needed after this routine
+      DEALLOCATE(sortedig_l2g)
 
       RETURN
       END SUBROUTINE berry_setup

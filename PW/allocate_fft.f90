@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2006 Quantum ESPRESSO group
+! Copyright (C) 2001-2010 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -61,13 +61,6 @@ SUBROUTINE allocate_fft
   !
   !     Allocate memory for all kind of stuff.
   !
-  ALLOCATE (g( 3, ngm))
-  ALLOCATE (gg( ngm))
-  ALLOCATE (nl( ngm))
-  IF (gamma_only) ALLOCATE (nlm(ngm))
-  ALLOCATE (igtongl( ngm))
-  ALLOCATE (mill(3, ngm))
-
   CALL create_scf_type(rho)
   CALL create_scf_type(v,    do_not_allocate_becsum = .true.)
   CALL create_scf_type(vnew, do_not_allocate_becsum = .true.)
@@ -81,8 +74,6 @@ SUBROUTINE allocate_fft
   ALLOCATE( rhog_core( ngm ) )
   ALLOCATE (psic( nrxx))
   ALLOCATE (vrs( nrxx, nspin))
-  ALLOCATE (nls( ngms))
-  IF (gamma_only) ALLOCATE (nlsm(ngm))
 
 ! DCC
 !  IF( do_coarse ) THEN

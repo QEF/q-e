@@ -332,11 +332,10 @@ end subroutine ggenb
 !   the g's are in units of 2pi/a.
 !
       USE kinds,              ONLY: DP
-      use gvect, only: gg, g, mill_g, g2_g, gl
-      use gvect, only: mill, ig_l2g
-      use gvect, only: gstart, sortedig_l2g
+      use gvect,              only: gg, g, gstart, gl, mill, ig_l2g
+      use gvect,              only: mill_g, sortedig_l2g
       use gvecs,              only: ngms, nlsm, nls
-      use gvecw,              only: ngw, ngw_g, ggp
+      use gvecw,              only: ngw, ngw_g
       use gvect,              only: ngm, ngl, ngm_g, nlm, nl
       use io_global,          only: stdout
       USE fft_base,           ONLY: dfftp, dffts, fft_dlay_descriptor
@@ -350,6 +349,7 @@ end subroutine ggenb
       !
       REAL(DP) :: b1(3), b2(3), b3(3), gcut, gcuts, gcutw
       REAL(DP) :: t(3), g2
+      REAL(DP), ALLOCATABLE :: g2_g(:)
       logical      :: lgam
       integer      :: nr1,nr2,nr3, nr1s,nr2s,nr3s
       integer      :: n1p, n2p, n3p, n1m, n2m, n3m
@@ -358,50 +358,20 @@ end subroutine ggenb
       integer      :: ichk
       integer, allocatable :: igl(:)
       !
-      !  First of all count the number of G vectors according with the FFT mesh 
-      ! 
-      CALL gcount( ngm, ngms, ngw, b1, b2, b3, nr1, nr2, nr3, gcut, gcuts, &
-                   gcutw, dfftp%isind, SIZE( dfftp%isind), dfftp%nr1x, lgam )
-      !
-      !     Second step. Compute and sort all G vectors, and build non
-      !     distributed reciprocal space vectors arrays (ngm_g = global
-      !     number of Gs )
-      !
-      ngm_g= ngm
-      ngw_g= ngw
-
-      CALL mp_sum( ngm_g, intra_bgrp_comm )
-      CALL mp_sum( ngw_g, intra_bgrp_comm )
-
-      !
       !     Temporary global and replicated arrays, used for sorting
+      !     mill_g is not deallocated at the end because it may be useful
+      !     for Berry phase calculations
       !
-      allocate( g2_g( ngm_g ) )
       allocate( mill_g( 3, ngm_g ) )
-
+      allocate( g2_g( ngm_g ) )
+      ! 
       CALL gglobal( ngm_g, g2_g, mill_g, b1, b2, b3, nr1, nr2, nr3, gcut, lgam )
-
       !
-      !     third step: allocate space
-      !     ng is the number of Gs local to this processor
-      !
-      allocate( g ( 3, ngm ) )
-      allocate( gg ( ngm ) )
-      allocate( ggp( ngw ) )
-      allocate( nl ( ngm ) )
-      allocate( nlm( ngm ) )
-      allocate( igl( ngm ) )
-
-      allocate( ig_l2g( ngm ) )
-      allocate( mill( 3, ngm ) )
-      allocate( sortedig_l2g( ngm ) )
-
-      !
-      !     fourth step : find the vectors with g2 < gcut
-      !     local to each processor
+      !     find the vectors with g2 < gcut local to each processor
       !
       CALL glocal( ngm, gg, ig_l2g, mill, ngm_g, g2_g, mill_g, &
                    nr1, nr2, nr3, dfftp%isind, dfftp%nr1x  )
+      deallocate (g2_g)
 
       IF( iprsta > 3 ) THEN
         WRITE( stdout,*)
@@ -416,11 +386,9 @@ end subroutine ggenb
       !
       !     check for the presence of refolded G-vectors (dense grid)
       !
-
       CALL gchkrefold( ngm, mill, nr1, nr2, nr3 )
-
       !
-      !     costruct fft indexes (n1,n2,n3) for the dense grid
+      !     costruct fft indices (n1,n2,n3) for the dense grid
       !
       CALL gfftindex( nl, nlm, ngm, mill, nr1, nr2, nr3, &
                       dfftp%isind, dfftp%nr1x, dfftp%nr2x, dfftp%nr3x )
@@ -444,12 +412,8 @@ end subroutine ggenb
       !
       ! costruct fft indexes (n1s,n2s,n3s) for the smooth grid
       !
-      allocate(nls(ngms))
-      allocate(nlsm(ngms))
-!
       CALL gfftindex( nls, nlsm, ngms, mill, nr1s, nr2s, nr3s, &
                       dffts%isind, dffts%nr1x, dffts%nr2x, dffts%nr3x )
-
 
 ! ... Uncomment to make tests and comparisons with other codes
 !      IF ( ionode ) THEN
@@ -460,8 +424,11 @@ end subroutine ggenb
 !      END IF
 
       !  ... here igl is used as temporary storage area
-      !  ... sortedig_l2g is used to find out local G index given the global G index
+      !  ... sortedig_l2g is used to find out local G index, 
+      !  ... given the global G index for Berry phase calculations
       !
+      allocate( sortedig_l2g( ngm ) )
+      allocate( igl( ngm ) )
       DO ig = 1, ngm
         sortedig_l2g( ig ) = ig
       END DO
@@ -469,25 +436,6 @@ end subroutine ggenb
         igl( ig ) = ig_l2g( ig )
       END DO
       CALL  ihpsort( ngm, igl, sortedig_l2g )
-      igl = 0
-
-!
-! shells of G - first calculate their number and position
-!
-
-      CALL gshcount( ngl, igl, ngm, gg, gcuts, gcutw )
-
-!
-! then allocate the array gl
-!
-      allocate(gl(ngl))
-!
-! and finally fill gl with the values of the shells
-!
-      gl(igl(1))=gg(1)
-      do ig=2,ngm
-         if(igl(ig).ne.igl(ig-1)) gl(igl(ig))=gg(ig)
-      end do
       deallocate (igl)
 !
 ! gstart is the index of the first nonzero G-vector
@@ -522,103 +470,8 @@ end subroutine ggenb
       end do
 
       return
+
       end subroutine ggencp
-
-
-
-!-------------------------------------------------------------------------
-SUBROUTINE gcount &
-   ( ng, ngs, ngw, b1, b2, b3, nr1, nr2, nr3, gcut, gcuts, gcutw, &
-     isind, nind, ldis, lgam )
-!-------------------------------------------------------------------------
-
-  USE kinds, ONLY: DP
-
-  IMPLICIT NONE
-
-  INTEGER  ng, ngs, ngw
-  INTEGER  nr1, nr2, nr3, nind
-  REAL(DP) b1(3), b2(3), b3(3), gcut, gcuts, gcutw
-  INTEGER :: isind( nind ), ldis
-  LOGICAL :: lgam
-
-  INTEGER :: nr1m1, nr2m1, nr3m1
-  INTEGER :: i, j, k, n1p, n2p, ir, iind
-
-  REAL(DP) :: g2, t(3)
-
-  if( gcut < gcuts ) call errore(' gcount ', ' gcut .lt. gcuts ', 1 )
-
-  ng  = 0
-  ngs = 0
-  ngw = 0
-
-!
-! NOTA BENE: these limits are larger than those actually needed
-! (-nr/2,..,+nr/2  for nr even; -(nr-1)/2,..,+(nr-1)/2  for nr odd).
-! This allows to use a slightly undersized fft grid, with some degree
-! of G-vector refolding, at your own risk
-!
-      nr1m1=nr1-1
-      nr2m1=nr2-1
-      nr3m1=nr3-1
-
-!
-!     first step : count the number of vectors with g2 < gcut
-!
-!     exclude space with x<0
-!
-      loop_x: do i= -nr1m1, nr1m1
-         !
-         if( lgam .AND. ( i < 0 ) ) cycle loop_x
-         !
-         loop_y: do j=-nr2m1,nr2m1
-            !
-            !     exclude plane with x=0, y<0
-            !
-            if( lgam .AND. ( i.eq.0.and.j.lt.0 ) ) cycle loop_y
-            !
-            !
-            !     consider only columns that belong to this node
-            !
-
-#if defined __PARA
-            n1p = i + 1
-            if ( n1p .lt. 1 ) n1p = n1p + nr1
-            n2p = j + 1
-            if ( n2p .lt. 1 ) n2p = n2p + nr2
-            iind = n1p + (n2p-1)*ldis
-            if ( iind > nind ) &
-               CALL errore( " gcount ", " wrong grid size ", iind )
-            if ( isind( iind ) .eq. 0 ) cycle loop_y
-#endif
-
-            loop_z: do k=-nr3m1,nr3m1
-               !
-               !     exclude line with x=0, y=0, z<0
-               !
-               if( lgam .AND. ( i.eq.0.and.j.eq.0.and.k.lt.0 ) ) cycle loop_z
-
-               g2=0.d0
-               do ir=1,3
-                  t(ir) = DBLE(i)*b1(ir) + DBLE(j)*b2(ir) + DBLE(k)*b3(ir)
-                  g2=g2+t(ir)*t(ir)
-               end do
-               if(g2.gt.gcut) cycle loop_z
-               ng=ng+1
-               if(g2.lt.gcutw) ngw=ngw+1
-               if(g2.lt.gcuts) ngs=ngs+1
-               !
-            end do loop_z
-            !
-         end do loop_y
-         !
-      end do loop_x
-
-  RETURN
-END SUBROUTINE gcount
-
-
 
 !-------------------------------------------------------------------------
 SUBROUTINE gglobal( ngm_g, g2_g, mill_g, b1, b2, b3, nr1, nr2, nr3, gcut, lgam )
@@ -935,12 +788,10 @@ END SUBROUTINE gshcount
       use gvect, only: gg, g, mill
       use gvect, only: ngm
       use gvecw, only: ngw
-      use gvecw, only: ggp, qcutz, q2sigma, ecfixed
       implicit none
 !
       REAL(DP) :: alat, b1_(3),b2_(3),b3_(3), gmax
-      REAL(DP), external :: qe_erf
-      REAL(DP) :: b1(3),b2(3),b3(3), tpiba2, gcutz
+      REAL(DP) :: b1(3),b2(3),b3(3)
 !
       integer i1,i2,i3,ig
 
@@ -961,18 +812,6 @@ END SUBROUTINE gshcount
          gg(ig)=g(1,ig)**2 + g(2,ig)**2 + g(3,ig)**2
          if(gg(ig).gt.gmax) gmax=gg(ig)
       enddo
- 
-      tpiba2 = ( tpi / alat ) ** 2
-      gcutz  = qcutz / tpiba2
-!
-      IF( gcutz > 0.0d0 ) THEN
-        do ig=1,ngw
-           ggp(ig) = gg(ig) + gcutz * &
-                     ( 1.0d0 + qe_erf( ( tpiba2 *gg(ig) - ecfixed )/q2sigma ) )
-        enddo
-      ELSE
-        ggp( 1 : ngw ) = gg( 1 : ngw )
-      END IF
 !
       return
       end subroutine gcal
