@@ -168,6 +168,9 @@ MODULE cp_main_variables
       IF ( tpre ) THEN
             ALLOCATE( drhog( ng,  nspin, 3, 3 ) )
             ALLOCATE( drhor( nnr, nspin, 3, 3 ) )
+      ELSE
+            ALLOCATE( drhog( 1, 1, 1, 1 ) )
+            ALLOCATE( drhor( 1, 1, 1, 1 ) )
       END IF
       !
       !  Compute local dimensions for lambda matrixes
@@ -214,6 +217,8 @@ MODULE cp_main_variables
       !
       IF ( tpre ) THEN
         ALLOCATE( dbec( nhsa, 2*nlax, 3, 3 ) )
+      ELSE
+        ALLOCATE( dbec( 1, 1, 1, 1 ) )
       END IF
 
       gzero =  (gstart == 2)

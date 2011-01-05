@@ -378,13 +378,12 @@ subroutine nlinit
       use core,            ONLY : rhocb, nlcc_any, allocate_core
       use constants,       ONLY : pi, fpi
       use ions_base,       ONLY : na, nsp
-      use uspp,            ONLY : aainit, beta, qq, dvan, nhtol, nhtolm, indv
+      use uspp,            ONLY : aainit, beta, qq, dvan, nhtol, nhtolm, indv, dbeta
       use uspp_param,      ONLY : upf, lmaxq, nbetam, lmaxkb, nhm, nh
       use atom,            ONLY : rgrid
       use qgb_mod,         ONLY : qgb
       use gvecb,           ONLY : ngb
       use gvect,           ONLY : ngm
-      use cdvan,           ONLY : dbeta
       use dqgb_mod,        ONLY : dqgb
       use betax,           ONLY : qradx, dqradx, refg, betagx, mmx, dbetagx
       use cp_interfaces,   ONLY : pseudopotential_indexes, compute_dvan, &

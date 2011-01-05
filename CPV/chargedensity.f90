@@ -65,7 +65,7 @@
 
 !-----------------------------------------------------------------------
    SUBROUTINE rhoofr_cp &
-      ( nfi, c_bgrp, irb, eigrb, bec_bgrp, rhovan, rhor, rhog, rhos, enl, denl, ekin, dekin, tstress, ndwwf )
+      ( nfi, c_bgrp, irb, eigrb, bec_bgrp, dbec, rhovan, rhor, drhor, rhog, drhog, rhos, enl, denl, ekin, dekin, tstress, ndwwf )
 !-----------------------------------------------------------------------
 !
 !  this routine computes:
@@ -104,40 +104,42 @@
       USE gvecs,              ONLY: ngms, nls, nlsm
       USE gvecb,              ONLY: ngb
       USE gvecw,              ONLY: ngw
-      USE gvect, ONLY: gstart
+      USE gvect,              ONLY: gstart
       USE uspp,               ONLY: nkb
       USE uspp_param,         ONLY: nh, nhm
-      USE grid_dimensions,    ONLY: nr1, nr2, nr3, &
-                                    nr1x, nr2x, nr3x, nrxx
+      USE grid_dimensions,    ONLY: nr1, nr2, nr3, nr1x, nr2x, nr3x, nrxx
       USE cell_base,          ONLY: omega
-      USE smooth_grid_dimensions, ONLY: nrxxs
+      USE smooth_grid_dimensions, &
+                              ONLY: nrxxs
       USE electrons_base,     ONLY: nspin, nbsp_bgrp, ispin_bgrp, f_bgrp
       USE constants,          ONLY: pi, fpi
       USE mp,                 ONLY: mp_sum
       USE io_global,          ONLY: stdout, ionode
       USE mp_global,          ONLY: intra_bgrp_comm, nogrp, me_bgrp, &
-                                    use_task_groups, ogrp_comm, nolist, my_bgrp_id, nbgrp, inter_bgrp_comm
+                                    use_task_groups, ogrp_comm, nolist, nbgrp, inter_bgrp_comm
       USE funct,              ONLY: dft_is_meta
       USE cg_module,          ONLY: tcg
       USE cp_interfaces,      ONLY: stress_kin
       USE fft_interfaces,     ONLY: fwfft, invfft
       USE fft_base,           ONLY: dffts, dfftp
       USE cp_interfaces,      ONLY: checkrho
-      USE cdvan,              ONLY: drhovan
-      USE cp_main_variables,  ONLY: iprint_stdout, drhor, drhog, dbec
+      USE cp_main_variables,  ONLY: iprint_stdout
       USE wannier_base,       ONLY: iwf
       USE cell_base,          ONLY: a1, a2, a3
 !
       IMPLICIT NONE
       INTEGER nfi
       REAL(DP) bec_bgrp(:,:)
+      REAL(DP) dbec(:,:,:,:)
       REAL(DP) rhovan(:, :, : )
       REAL(DP) rhor(:,:)
+      REAL(DP) drhor(:,:,:,:)
       REAL(DP) rhos(:,:)
       REAL(DP) enl, ekin
       REAL(DP) denl(3,3), dekin(6)
       COMPLEX(DP) eigrb( :, : )
       COMPLEX(DP) rhog( :, : )
+      COMPLEX(DP) drhog( :, :, :, : )
       COMPLEX(DP) c_bgrp( :, : )
       INTEGER irb( :, : )
       LOGICAL, OPTIONAL, INTENT(IN) :: tstress
@@ -151,6 +153,7 @@
       REAL(DP), EXTERNAL :: enkin, ennl
       COMPLEX(DP) :: ci,fp,fm
       COMPLEX(DP), ALLOCATABLE :: psi(:), psis(:)
+      REAL(DP), ALLOCATABLE :: drhovan(:,:,:,:,:)
 
       LOGICAL, SAVE :: first = .TRUE.
       LOGICAL :: ttstress
@@ -207,8 +210,7 @@
       !
       IF( ttstress ) THEN
          !
-         IF( .NOT. ALLOCATED( drhovan ) ) &
-            CALL errore( ' rhoofr ', ' drhovan not allocated ', 1 )
+         ALLOCATE( drhovan( nhm*(nhm+1)/2, nat, nspin, 3, 3 ) )
          !
          CALL dennl( bec_bgrp, dbec, drhovan, denl ) 
          !
@@ -403,8 +405,10 @@
          !     add vanderbilt contribution to the charge density
          !     drhov called before rhov because input rho must be the smooth part
          !
-         IF ( ttstress ) &
+         IF ( ttstress ) THEN
             CALL drhov( irb, eigrb, rhovan, drhovan, rhog, rhor, drhog, drhor )
+            DEALLOCATE( drhovan )
+         END IF
          !
          CALL rhov( irb, eigrb, rhovan, rhog, rhor )
 
@@ -665,11 +669,9 @@
       !     in: charge density on G-space    out: gradient in R-space
       !
       USE kinds,              ONLY: DP
-      use gvect, only: g
-      use gvect,              only: ngm, nl, nlm
-      use grid_dimensions,    only: nr1, nr2, nr3, &
-                                    nr1x, nr2x, nr3x, nrxx
-      use cell_base,          only: tpiba
+      use gvect,              ONLY: g, ngm, nl, nlm
+      use grid_dimensions,    ONLY: nr1, nr2, nr3, nr1x, nr2x, nr3x, nrxx
+      use cell_base,          ONLY: tpiba
       USE fft_interfaces,     ONLY: invfft
       USE fft_base,           ONLY: dfftp
 !

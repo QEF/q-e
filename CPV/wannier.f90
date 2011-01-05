@@ -394,9 +394,9 @@ MODULE wannier_subroutines
   END SUBROUTINE write_charge_and_exit
   !
   !--------------------------------------------------------------------------
-  SUBROUTINE wf_options( tfirst, nfi, cm, rhovan, bec, eigr, eigrb, &
-                         taub, irb, ibrav, b1, b2, b3, rhor, rhog, rhos,   &
-                         enl, ekin  )
+  SUBROUTINE wf_options( tfirst, nfi, cm, rhovan, bec, dbec, eigr, eigrb, &
+                         taub, irb, ibrav, b1, b2, b3, rhor, drhor, rhog, &
+                         drhog ,rhos, enl, ekin  )
     !--------------------------------------------------------------------------
     !
     USE efcalc,         ONLY : wf_efield
@@ -412,6 +412,7 @@ MODULE wannier_subroutines
     INTEGER             :: nfi
     COMPLEX(DP)   :: cm(:,:)
     REAL(DP)      :: bec(:,:)
+    REAL(DP)      :: dbec(:,:,:,:)
     REAL(DP)      :: rhovan(:,:,:)
     COMPLEX(DP)   :: eigrb(:,:), eigr(:,:)
     INTEGER             :: irb(:,:)
@@ -419,7 +420,8 @@ MODULE wannier_subroutines
     INTEGER             :: ibrav
     REAL(DP)      :: b1(:), b2(:), b3(:)
     COMPLEX(DP)   :: rhog(:,:)
-    REAL(DP)      :: rhor(:,:), rhos(:,:)
+    COMPLEX(DP)   :: drhog(:,:,:,:)
+    REAL(DP)      :: drhor(:,:,:,:), rhor(:,:), rhos(:,:)
     REAL(DP)      :: enl, ekin 
     !
     INTEGER :: i, j
@@ -432,7 +434,7 @@ MODULE wannier_subroutines
        DO i=1, nwf
           iwf=iplot(i)
           j=wffort+i-1
-          CALL rhoofr (nfi,cm, irb, eigrb,bec,rhovan,rhor,rhog,rhos,enl,denl,ekin,dekin6,.false.,j)
+          CALL rhoofr (nfi,cm, irb, eigrb,bec,dbec,rhovan,rhor,drhor,rhog,drhog,rhos,enl,denl,ekin,dekin6,.false.,j)
        END DO
        !
        CALL stop_run( .TRUE. )

@@ -57,7 +57,7 @@ SUBROUTINE from_scratch( )
     USE cp_main_variables,    ONLY : setval_lambda, descla, bephi, becp_dist, nfi, &
                                      sfac, eigr, taub, irb, eigrb, bec_bgrp, &
                                      lambda, lambdam, lambdap, ema0bg, rhog, rhor, rhos, &
-                                     vpot, ht0, edft, nlax, becdr_bgrp, dbec
+                                     vpot, ht0, edft, nlax, becdr_bgrp, dbec, drhor, drhog
     USE mp_global,            ONLY : np_ortho, me_ortho, ortho_comm, mpime, inter_bgrp_comm
     USE small_box,            ONLY : ainvb
     USE mp,                   ONLY : mp_sum
@@ -167,7 +167,7 @@ SUBROUTINE from_scratch( )
        !
        if ( tstress ) CALL caldbec_bgrp( eigr, cm_bgrp, dbec )
        !
-       CALL rhoofr ( nfi, cm_bgrp, irb, eigrb, bec_bgrp, becsum, rhor, rhog, rhos, enl, denl, ekin, dekin6 )
+       CALL rhoofr( nfi, cm_bgrp, irb, eigrb, bec_bgrp, dbec, becsum, rhor, drhor, rhog, drhog, rhos, enl, denl, ekin, dekin6 )
        !
        edft%enl  = enl
        edft%ekin = ekin

@@ -9,7 +9,7 @@
 !====================================================================
    SUBROUTINE inner_loop_cold( nfi, tfirst, tlast, eigr,  irb, eigrb, &
                           rhor, rhog, rhos, rhoc, ei1, ei2, ei3, &
-                          sfac, c0, bec, firstiter, vpot )
+                          sfac, c0, bec, dbec, firstiter, vpot )
 !====================================================================
       !
       ! minimizes the total free energy
@@ -56,8 +56,6 @@
                                 ionode_id
       USE mp_global,      ONLY: intra_bgrp_comm, leg_ortho
       USE dener
-      !USE derho
-      USE cdvan
       USE uspp,           ONLY: nhsa=> nkb, betae => vkb, &
                                 rhovan => becsum, deeq
       USE uspp_param,     ONLY: nh
@@ -67,7 +65,7 @@
 
       USE cp_interfaces,  ONLY: rhoofr, dforce, protate
       USE cg_module,      ONLY: itercg
-      USE cp_main_variables, ONLY: distribute_lambda, descla, nlax, collect_lambda
+      USE cp_main_variables, ONLY: distribute_lambda, descla, nlax, collect_lambda, drhor, drhog
       USE descriptors,       ONLY: lambda_node_ , la_npc_ , la_npr_ , descla_siz_ , &
                                    descla_init , la_comm_ , ilar_ , ilac_ , nlar_ , &
                                    nlac_ , la_myr_ , la_myc_ , la_nx_ , la_n_ , la_me_ , la_nrl_
@@ -84,6 +82,7 @@
       COMPLEX(kind=DP)            :: eigr( ngw, nat )
       COMPLEX(kind=DP)            :: c0( ngw, n )
       REAL(kind=DP)               :: bec( nhsa, n )
+      REAL(kind=DP)               :: dbec( nhsa, n, 3, 3 )
       LOGICAL                :: firstiter
 
 
@@ -137,8 +136,8 @@
         CALL rotate( z0t, c0, bec, c0diag, becdiag, .false. )
   
         ! calculates the electronic charge density
-        CALL rhoofr( nfi, c0diag, irb, eigrb, becdiag, rhovan, &
-                     rhor, rhog, rhos, enl, denl, ekin, dekin6 )
+        CALL rhoofr( nfi, c0diag, irb, eigrb, becdiag, dbec, rhovan, &
+                     rhor, drhor, rhog, drhog, rhos, enl, denl, ekin, dekin6 )
         IF(nlcc_any) CALL set_cc( irb, eigrb, rhoc )
   
         ! calculates the SCF potential, the total energy
@@ -234,12 +233,12 @@
 !calculates free energy at lamda=1.
             CALL inner_loop_lambda( nfi, tfirst, tlast, eigr,  irb, eigrb, &
                  rhor, rhog, rhos, rhoc, ei1, ei2, ei3, &
-                 sfac, c0, bec, firstiter,psihpsi,c0hc0,1.d0,atot1, vpot)
+                 sfac, c0, bec, dbec, firstiter,psihpsi,c0hc0,1.d0,atot1, vpot)
 !calculates free energy at lamda=lambdap
        
             CALL inner_loop_lambda( nfi, tfirst, tlast, eigr,  irb, eigrb, &
                  rhor, rhog, rhos, rhoc, ei1, ei2, ei3, &
-                 sfac, c0, bec, firstiter,psihpsi,c0hc0,lambdap,atotl, vpot)
+                 sfac, c0, bec, dbec, firstiter,psihpsi,c0hc0,lambdap,atotl, vpot)
 !find minimum point lambda
         
             CALL three_point_min(atot0,atotl,atot1,lambdap,lambda,atotmin)
@@ -274,8 +273,8 @@
         
 
         ! calculates the electronic charge density
-         CALL rhoofr( nfi, c0diag, irb, eigrb, becdiag, rhovan, &
-                     rhor, rhog, rhos, enl, denl, ekin, dekin6 )
+         CALL rhoofr( nfi, c0diag, irb, eigrb, becdiag, dbec, rhovan, &
+                     rhor, drhor, rhog, drhog, rhos, enl, denl, ekin, dekin6 )
          IF(nlcc_any) CALL set_cc( irb, eigrb, rhoc )
   
         ! calculates the SCF potential, the total energy
@@ -325,7 +324,7 @@
 
    SUBROUTINE inner_loop_lambda( nfi, tfirst, tlast, eigr,  irb, eigrb, &
                           rhor, rhog, rhos, rhoc, ei1, ei2, ei3, &
-                          sfac, c0, bec, firstiter,c0hc0,c1hc1,lambda,  &
+                          sfac, c0, bec, dbec, firstiter,c0hc0,c1hc1,lambda,  &
                           free_energy, vpot )
     
 !this subroutine for the energy matrix (1-lambda)c0hc0+labda*c1hc1
@@ -368,8 +367,6 @@
                                 ionode_id
       USE mp_global,      ONLY: intra_bgrp_comm
       USE dener
-      !USE derho
-      USE cdvan
       USE uspp,           ONLY: nhsa=> nkb, betae => vkb, &
                                 rhovan => becsum, deeq
       USE uspp_param,     ONLY: nh
@@ -377,7 +374,7 @@
       USE ions_positions, ONLY: tau0
       USE mp,             ONLY: mp_sum,mp_bcast
       use cp_interfaces,  only: rhoofr, dforce
-      USE cp_main_variables, ONLY: descla, nlax, nrlx
+      USE cp_main_variables, ONLY: descla, nlax, nrlx, drhor, drhog
 
       !
       IMPLICIT NONE
@@ -389,6 +386,7 @@
       COMPLEX(kind=DP)            :: eigr( ngw, nat )
       COMPLEX(kind=DP)            :: c0( ngw, n )
       REAL(kind=DP)               :: bec( nhsa, n )
+      REAL(kind=DP)               :: dbec( nhsa, n, 3, 3 )
       LOGICAL                :: firstiter
 
 
@@ -439,8 +437,8 @@
 
 
       ! calculates the electronic charge density
-      CALL rhoofr( nfi, c0diag, irb, eigrb, becdiag, rhovan, &
-                   rhor, rhog, rhos, enl, denl, ekin, dekin6 )
+      CALL rhoofr( nfi, c0diag, irb, eigrb, becdiag, dbec, rhovan, &
+                   rhor, drhor, rhog, drhog, rhos, enl, denl, ekin, dekin6 )
       IF(nlcc_any) CALL set_cc( irb, eigrb, rhoc )
   
       ! calculates the SCF potential, the total energy
@@ -564,8 +562,6 @@
                                 ionode_id
       USE mp_global,      ONLY: intra_bgrp_comm
       USE dener
-      !USE derho
-      USE cdvan
       USE uspp,           ONLY: nhsa=> nkb, betae => vkb, &
                                 rhovan => becsum, deeq
       USE uspp_param,     ONLY: nh

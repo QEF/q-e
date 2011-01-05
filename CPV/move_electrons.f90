@@ -16,7 +16,7 @@ SUBROUTINE move_electrons_x( nfi, tfirst, tlast, b1, b2, b3, fion, c0_bgrp, cm_b
   USE kinds,                ONLY : DP
   USE control_flags,        ONLY : lwf, tfor, tprnfor, thdyn
   USE cg_module,            ONLY : tcg
-  USE cp_main_variables,    ONLY : eigr, irb, eigrb, rhog, rhos, rhor, &
+  USE cp_main_variables,    ONLY : eigr, irb, eigrb, rhog, rhos, rhor, drhor, drhog, &
                                    sfac, ema0bg, bec_bgrp, becdr_bgrp, &
                                    taub, lambda, lambdam, lambdap, vpot, dbec
   USE cell_base,            ONLY : omega, ibrav, h, press
@@ -75,8 +75,8 @@ SUBROUTINE move_electrons_x( nfi, tfirst, tlast, b1, b2, b3, fion, c0_bgrp, cm_b
           CALL get_wannier_center( tfirst, cm_bgrp, bec_bgrp, eigr, &
                                    eigrb, taub, irb, ibrav, b1, b2, b3 )
      !
-     CALL rhoofr( nfi, c0_bgrp, irb, eigrb, bec_bgrp, &
-                     becsum, rhor, rhog, rhos, enl, denl, ekin, dekin6 )
+     CALL rhoofr( nfi, c0_bgrp, irb, eigrb, bec_bgrp, dbec, &
+                     becsum, rhor, drhor, rhog, drhog, rhos, enl, denl, ekin, dekin6 )
      !
      ! ... put core charge (if present) in rhoc(r)
      !
@@ -95,9 +95,9 @@ SUBROUTINE move_electrons_x( nfi, tfirst, tlast, b1, b2, b3, fion, c0_bgrp, cm_b
                      eigts1, eigts2, eigts3, irb(1,1), eigrb(1,1), sfac(1,1), &
                      tau0(1,1), fion(1,1) )
      !
-     IF ( lwf ) CALL wf_options( tfirst, nfi, cm_bgrp, becsum, bec_bgrp, &
+     IF ( lwf ) CALL wf_options( tfirst, nfi, cm_bgrp, becsum, bec_bgrp, dbec, &
                                  eigr, eigrb, taub, irb, ibrav, b1,   &
-                                 b2, b3, vpot, rhog, rhos, enl, ekin  )
+                                 b2, b3, vpot, drhor, rhog, drhog, rhos, enl, ekin  )
      !
      CALL compute_stress( stress, detot, h, omega )
      !

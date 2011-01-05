@@ -10,10 +10,9 @@
 SUBROUTINE deallocate_modules_var()
   !----------------------------------------------------------------------------
   !
-  USE uspp,       ONLY : beta, qq
+  USE uspp,       ONLY : beta, dbeta, qq
   USE qgb_mod,    ONLY : qgb
   USE core,       ONLY : rhocb
-  USE cdvan,      ONLY : dbeta
   USE dqgb_mod,   ONLY : dqgb
   !
   USE core,                 ONLY : deallocate_core
@@ -43,7 +42,6 @@ SUBROUTINE deallocate_modules_var()
   USE sic_module,           ONLY : deallocate_sic
   USE polarization,         ONLY : deallocate_polarization
   USE cp_main_variables,    ONLY : deallocate_mainvar
-  USE cdvan,                ONLY : deallocate_cdvan
   USE pseudopotential,      ONLY : deallocate_pseudopotential
   USE ions_nose,            ONLY : ions_nose_deallocate
   USE metagga,              ONLY : deallocate_metagga
@@ -78,7 +76,6 @@ SUBROUTINE deallocate_modules_var()
   CALL deallocate_local_pseudo()
   CALL deallocate_qgb_mod()
   CALL deallocate_dqgb_mod()
-  CALL deallocate_cdvan()
   CALL deallocate_betax()
   !
   CALL fft_dlay_deallocate( dfftp )

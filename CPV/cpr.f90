@@ -61,7 +61,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
   USE io_global,                ONLY : io_global_start, &
                                        stdout, ionode, ionode_id
   USE dener,                    ONLY : detot
-  USE cdvan,                    ONLY : drhovan
+  !USE cdvan,                    ONLY : drhovan
   USE gvecw,                    ONLY : ggp
   USE constants,                ONLY : pi, k_boltzmann_au, au_ps
   USE io_files,                 ONLY : psfile, pseudo_dir

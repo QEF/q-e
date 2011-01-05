@@ -44,7 +44,6 @@
       use io_global,                ONLY : io_global_start, stdout, ionode, ionode_id
       use mp_global,                ONLY : intra_bgrp_comm, np_ortho, me_ortho, ortho_comm
       use dener
-      use cdvan
       use constants,                only : pi, au_gpa
       use io_files,                 only : psfile, pseudo_dir
       USE io_files,                 ONLY : tmp_dir, prefix
@@ -61,7 +60,7 @@
       use cp_electronic_mass,       ONLY : emass_cutoff
       use orthogonalize_base,       ONLY : calphi_bgrp
       use cp_interfaces,            ONLY : rhoofr, dforce, compute_stress
-      USE cp_main_variables,        ONLY : nlax, collect_lambda, distribute_lambda, descla, nrlx, nlam
+      USE cp_main_variables,        ONLY : nlax, collect_lambda, distribute_lambda, descla, nrlx, nlam, drhor, drhog
       USE descriptors,              ONLY : la_npc_ , la_npr_ , la_comm_ , la_me_ , la_nrl_ , ldim_cyclic
       USE mp_global, ONLY:  me_image, my_image_id, nbgrp
 
@@ -202,20 +201,20 @@
         ENERGY_CHECK: if(.not. ene_ok ) then
           call calbec(1,nsp,eigr,c0,bec)
           if(.not.tens) then
-             call rhoofr(nfi,c0(:,:),irb,eigrb,bec,rhovan,rhor,rhog,rhos,enl,denl,ekin,dekin6)
+             call rhoofr(nfi,c0(:,:),irb,eigrb,bec,dbec,rhovan,rhor,drhor,rhog,drhog,rhos,enl,denl,ekin,dekin6)
           else
 
             if(newscheme.or.firstiter) then 
                call  inner_loop_cold( nfi, tfirst, tlast, eigr,  irb, eigrb, &
-                      rhor, rhog, rhos, rhoc, ei1, ei2, ei3, sfac,c0,bec,firstiter,vpot)
+                      rhor, rhog, rhos, rhoc, ei1, ei2, ei3, sfac,c0,bec,dbec,firstiter,vpot)
                firstiter=.false.
             endif
             !     calculation of the rotated quantities
 
             call rotate( z0t, c0(:,:), bec, c0diag, becdiag, .false. )
             !     calculation of rho corresponding to the rotated wavefunctions
-            call rhoofr(nfi,c0diag,irb,eigrb,becdiag                        &
-                     &                    ,rhovan,rhor,rhog,rhos,enl,denl,ekin,dekin6)
+            call rhoofr(nfi,c0diag,irb,eigrb,becdiag,dbec,                        &
+                     &                    rhovan,rhor,drhor,rhog,drhog,rhos,enl,denl,ekin,dekin6)
          endif
            
 !when cycle is restarted go to diagonal representation
@@ -562,17 +561,17 @@
                
         !calculate energy
         if(.not.tens) then
-          call rhoofr(nfi,cm(:,:),irb,eigrb,becm,rhovan,rhor,rhog,rhos,enl,denl,ekin,dekin6)
+          call rhoofr(nfi,cm(:,:),irb,eigrb,becm,dbec,rhovan,rhor,drhor,rhog,drhog,rhos,enl,denl,ekin,dekin6)
         else
           if(newscheme) then 
               call  inner_loop_cold( nfi, tfirst, tlast, eigr,  irb, eigrb, &
-                        rhor, rhog, rhos, rhoc, ei1, ei2, ei3, sfac,cm,becm,.false., vpot  )  
+                        rhor, rhog, rhos, rhoc, ei1, ei2, ei3, sfac,cm,becm,dbec,.false., vpot  )  
           endif
 
           !     calculation of the rotated quantities
           call rotate( z0t, cm(:,:), becm, c0diag, becdiag, .false. )
           !     calculation of rho corresponding to the rotated wavefunctions
-          call rhoofr(nfi,c0diag,irb,eigrb,becdiag,rhovan,rhor,rhog,rhos,enl,denl,ekin,dekin6)
+          call rhoofr(nfi,c0diag,irb,eigrb,becdiag,dbec,rhovan,rhor,drhor,rhog,drhog,rhos,enl,denl,ekin,dekin6)
         endif
 
         !calculate potential
@@ -625,16 +624,16 @@
 
         !call calbec(1,nsp,eigr,cm,becm)
         if(.not.tens) then
-          call rhoofr(nfi,cm(:,:),irb,eigrb,becm,rhovan,rhor,rhog,rhos,enl,denl,ekin,dekin6)
+          call rhoofr(nfi,cm(:,:),irb,eigrb,becm,dbec,rhovan,rhor,drhor,rhog,drhog,rhos,enl,denl,ekin,dekin6)
         else
           if(newscheme)  then
               call  inner_loop_cold( nfi, tfirst, tlast, eigr,  irb, eigrb, &
-                      rhor, rhog, rhos, rhoc, ei1, ei2, ei3, sfac,cm,becm,.false., vpot  )
+                      rhor, rhog, rhos, rhoc, ei1, ei2, ei3, sfac,cm,becm,dbec,.false., vpot  )
           endif
           !     calculation of the rotated quantities
           call rotate( z0t, cm(:,:), becm, c0diag, becdiag, .false. )
           !     calculation of rho corresponding to the rotated wavefunctions
-          call rhoofr(nfi,c0diag,irb,eigrb,becdiag,rhovan,rhor,rhog,rhos,enl,denl,ekin,dekin6)
+          call rhoofr(nfi,c0diag,irb,eigrb,becdiag,dbec,rhovan,rhor,drhor,rhog,drhog,rhos,enl,denl,ekin,dekin6)
         endif
 
         !calculates the potential
@@ -715,16 +714,16 @@
          CALL gram_bgrp( betae, bec, nhsa, cm, ngw )
             call calbec(1,nsp,eigr,cm,becm)
             if(.not.tens) then
-              call rhoofr(nfi,cm(:,:),irb,eigrb,becm,rhovan,rhor,rhog,rhos,enl,denl,ekin,dekin6)
+              call rhoofr(nfi,cm(:,:),irb,eigrb,becm,dbec,rhovan,rhor,drhor,rhog,drhog,rhos,enl,denl,ekin,dekin6)
             else
               if(newscheme)  then
                   call  inner_loop_cold( nfi, tfirst, tlast, eigr,  irb, eigrb, &
-                          rhor, rhog, rhos, rhoc, ei1, ei2, ei3, sfac,cm,becm,.false., vpot  )
+                          rhor, rhog, rhos, rhoc, ei1, ei2, ei3, sfac,cm,becm,dbec,.false., vpot  )
               endif
               !     calculation of the rotated quantities
               call rotate( z0t, cm(:,:), becm, c0diag, becdiag, .false. )
               !     calculation of rho corresponding to the rotated wavefunctions
-              call rhoofr(nfi,c0diag,irb,eigrb,becdiag,rhovan,rhor,rhog,rhos,enl,denl,ekin,dekin6)
+              call rhoofr(nfi,c0diag,irb,eigrb,becdiag,dbec,rhovan,rhor,drhor,rhog,drhog,rhos,enl,denl,ekin,dekin6)
             endif
   
             !calculates the potential
@@ -774,7 +773,7 @@
         !=======================================================================
         if(tens.and. .not.newscheme) then
             call  inner_loop_cold( nfi, tfirst, tlast, eigr,  irb, eigrb, &
-                    rhor, rhog, rhos, rhoc, ei1, ei2, ei3, sfac,c0,bec,firstiter, vpot  )
+                    rhor, rhog, rhos, rhoc, ei1, ei2, ei3, sfac,c0,bec,dbec,firstiter, vpot  )
 !the following sets up the new energy
            enever=etot
          endif
@@ -797,14 +796,14 @@
           call  calbec(1,nsp,eigr,c0,bec)
           if(.not.tens) then
             call caldbec_bgrp( eigr, c0, dbec )
-            call rhoofr(nfi,c0(:,:),irb,eigrb,bec,rhovan,rhor,rhog,rhos,enl,denl,ekin,dekin6)
+            call rhoofr(nfi,c0(:,:),irb,eigrb,bec,dbec,rhovan,rhor,drhor,rhog,drhog,rhos,enl,denl,ekin,dekin6)
           else
 
             !     calculation of the rotated quantities
             call rotate( z0t, c0(:,:), bec, c0diag, becdiag, .false. )
             !     calculation of rho corresponding to the rotated wavefunctions
             call caldbec_bgrp( eigr, c0diag, dbec )
-            call rhoofr(nfi,c0diag,irb,eigrb,becdiag,rhovan,rhor,rhog,rhos,enl,denl,ekin,dekin6)
+            call rhoofr(nfi,c0diag,irb,eigrb,becdiag,dbec,rhovan,rhor,drhor,rhog,drhog,rhos,enl,denl,ekin,dekin6)
           endif
 
           !calculates the potential

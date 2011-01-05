@@ -78,7 +78,6 @@
       use electrons_base, only: nx => nbspx, n => nbsp, f, ispin, nspin
       use constants, only: pi, fpi
 !
-      use cdvan
       use dener
       use metagga, ONLY : kedtaur, kedtaus, kedtaug, crosstaus, gradwfc, &
                           dkedtaus

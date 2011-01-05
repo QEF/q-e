@@ -160,19 +160,6 @@ contains
   end subroutine deallocate_dqgb_mod
 end module dqgb_mod
 
-MODULE cdvan
-  USE kinds, ONLY: DP
-  IMPLICIT NONE
-  SAVE
-  REAL(DP), ALLOCATABLE :: dbeta(:,:,:,:,:)
-  REAL(DP), ALLOCATABLE :: drhovan(:,:,:,:,:)
-CONTAINS
-  SUBROUTINE deallocate_cdvan
-      IF( ALLOCATED( dbeta ) ) DEALLOCATE( dbeta )
-      IF( ALLOCATED( drhovan ) ) DEALLOCATE( drhovan )
-  END SUBROUTINE deallocate_cdvan
-END MODULE cdvan
-
 
 
 module cvan

@@ -506,8 +506,7 @@ SUBROUTINE caldbec_bgrp( eigr, c_bgrp, dbec )
   use mp_global,  only : nproc_bgrp, intra_bgrp_comm, inter_bgrp_comm, nbgrp
   use ions_base,  only : na, nat, nsp
   use cvan,       only : ish
-  use cdvan,      only : dbeta
-  use uspp,       only : nhtol, nkb
+  use uspp,       only : nhtol, nkb, dbeta
   use uspp_param, only : nh, nhm
   use gvect,      only : gstart
   use gvecw,      only : ngw

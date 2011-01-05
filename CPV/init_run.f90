@@ -34,7 +34,7 @@ SUBROUTINE init_run()
   USE core,                     ONLY : rhoc
   USE smooth_grid_dimensions,   ONLY : nrxxs
   USE wavefunctions_module,     ONLY : c0_bgrp, cm_bgrp, phi_bgrp
-  USE cdvan,                    ONLY : drhovan
+  !USE cdvan,                    ONLY : drhovan
   USE ensemble_dft,             ONLY : tens, z0t
   USE cg_module,                ONLY : tcg
   USE electrons_base,           ONLY : nudx, nbnd
@@ -175,7 +175,7 @@ SUBROUTINE init_run()
   ALLOCATE( becsum(  nhm*(nhm+1)/2, nat, nspin ) )
   ALLOCATE( deeq( nhm, nhm, nat, nspin ) )
   IF ( tpre ) THEN
-     ALLOCATE( drhovan( nhm*(nhm+1)/2, nat, nspin, 3, 3 ) )
+     ! ALLOCATE( drhovan( nhm*(nhm+1)/2, nat, nspin, 3, 3 ) )
   END IF
   !
   ALLOCATE( vkb( ngw, nkb ) )

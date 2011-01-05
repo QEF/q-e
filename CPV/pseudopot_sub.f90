@@ -933,10 +933,9 @@
       USE ions_base, only: nsp
       USE gvect, only: gg, g, gstart
       USE uspp_param, only: upf, lmaxq, lmaxkb, nh
-      USE uspp, only: qq, nhtolm, beta
+      USE uspp, only: qq, nhtolm, beta, dbeta
       USE cell_base, only: ainv, omega, tpiba2, tpiba
       USE betax, ONLY : refg, betagx, dbetagx
-      USE cdvan, ONLY : dbeta
 
       IMPLICIT NONE
 
@@ -1217,9 +1216,8 @@
       USE gvecw,         only : ngw
       USE ions_base,     only : nsp
       USE uspp_param,    only : upf, lmaxq, lmaxkb, nh, nhm, oldvan
-      USE uspp,          only : qq, nhtolm, beta, nhtol, indv
+      USE uspp,          only : qq, nhtolm, beta, nhtol, indv, dbeta
       USE cell_base,     only : ainv, omega, tpiba2, tpiba
-      USE cdvan,         ONLY : dbeta
       USE atom,          ONLY : rgrid
       USE gvect, only : gg, g, gstart
 
