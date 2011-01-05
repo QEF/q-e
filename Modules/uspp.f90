@@ -45,6 +45,7 @@ MODULE uspp
   PUBLIC :: nlx, lpx, lpl, ap, aainit, indv, nhtol, nhtolm, nkb, nkbus, &
        vkb, dvan, deeq, qq, nhtoj, ijtoh, beta, becsum, okvan, deallocate_uspp
   PUBLIC :: qq_so, dvan_so, deeq_nc 
+  PUBLIC :: dbeta
   INTEGER, PARAMETER :: &
        nlx  = (lmaxx+1)**2, &! maximum number of combined angular momentum
        mx   = 2*lqmax-1      ! maximum magnetic angular momentum of Q
@@ -87,6 +88,8 @@ MODULE uspp
   !
   REAL(DP), ALLOCATABLE :: &
        beta(:,:,:)           ! beta functions for CP (without struct.factor)
+  REAL(DP), ALLOCATABLE :: &
+       dbeta(:,:,:,:,:)      ! derivative of beta functions w.r.t. cell for CP (without struct.factor)
   !
 CONTAINS
   !
@@ -259,6 +262,8 @@ CONTAINS
     IF( ALLOCATED( qq_so ) )   DEALLOCATE( qq_so )
     IF( ALLOCATED( dvan_so ) ) DEALLOCATE( dvan_so )
     IF( ALLOCATED( deeq_nc ) ) DEALLOCATE( deeq_nc )
+    IF( ALLOCATED( beta ) )    DEALLOCATE( beta )
+    IF( ALLOCATED( dbeta ) )   DEALLOCATE( dbeta )
     !
   END SUBROUTINE deallocate_uspp
   !
