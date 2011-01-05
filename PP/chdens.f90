@@ -16,24 +16,25 @@ SUBROUTINE chdens (filplot,plot_num)
   !      DESCRIPTION of the INPUT: see file INPUT_PP in Doc/
   !
   USE io_global,  ONLY : stdout, ionode, ionode_id
+  USE io_files,   ONLY : nd_nmbr
   USE mp_global,  ONLY : nproc_pool
   USE mp,         ONLY : mp_bcast
   USE parameters, ONLY : ntypx
   USE constants,  ONLY :  pi, fpi
   USE cell_base
   USE ions_base,  ONLY : nat, ityp, atm, ntyp => nsp, tau, zv
-  USE lsda_mod,   ONLY: nspin
-  USE fft_base,   ONLY: grid_scatter, dfftp
-  USE fft_interfaces, ONLY : fwfft
+  USE lsda_mod,   ONLY : nspin
+  USE fft_base,   ONLY : grid_scatter, dfftp
+  USE fft_interfaces,  ONLY : fwfft
+  USE grid_dimensions, ONLY : nr1,nr2,nr3, nr1x,nr2x,nr3x, nrxx
+  USE grid_subroutines,ONLY : realspace_grids_init
   USE gvect
-  USE grid_dimensions, ONLY: nr1,nr2,nr3, nr1x,nr2x,nr3x, nrxx
-  USE grid_subroutines,   ONLY : realspace_grids_init
   USE gvecs
-  USE wvfct,  ONLY: ecutwfc
-  USE wavefunctions_module,  ONLY: psic
-  USE io_files, ONLY: nd_nmbr
+  USE recvec_subs,   ONLY: ggen 
+  USE wvfct,         ONLY: ecutwfc
   USE printout_base, ONLY: title
   USE control_flags, ONLY: gamma_only
+  USE wavefunctions_module,  ONLY: psic
 
   IMPLICIT NONE
   CHARACTER (len=256), INTENT(in) :: filplot
@@ -240,7 +241,7 @@ SUBROUTINE chdens (filplot,plot_num)
 
      CALL recips (at(1,1), at(1,2), at(1,3), bg(1,1), bg(1,2), bg(1,3) )
      CALL volume (alat, at(1,1), at(1,2), at(1,3), omega)
-     CALL realspace_grids_init (at, bg(1,1), bg(1,2), bg(1,3), gcutm, gcutms )
+     CALL realspace_grids_init (at, bg, gcutm, gcutms )
   ENDIF
 
   ALLOCATE  (rhor(nr1x*nr2x*nr3x))
@@ -347,13 +348,13 @@ SUBROUTINE chdens (filplot,plot_num)
      IF (plot_num==-1) THEN
         !
         gamma_only=.false.
-!        nproc_pool=1
+!       nproc_pool=1
         !
         CALL allocate_fft()
         !
         !    and rebuild G-vectors in reciprocal space
         !
-        CALL ggen()
+        CALL ggen ( gamma_only, at, bg )
         !
         !    here we compute the fourier components of the quantity to plot
         !

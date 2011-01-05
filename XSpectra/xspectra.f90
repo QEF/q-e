@@ -873,7 +873,7 @@ SUBROUTINE xanes_dipole(a,b,ncalcv,xnorm,core_wfn,paw_iltonhb,terminator,verbosi
   USE radial_grids,    ONLY : ndmx
   USE ions_base,       ONLY : nat, ntyp => nsp, ityp
   USE wvfct,           ONLY : npwx, nbndx, nbnd, npw, igk, g2kin, et,&
-                              current_k
+                              current_k, ecutwfc
   USE lsda_mod,        ONLY : nspin,lsda,isk,current_spin
   USE cell_base,       ONLY: tpiba2, bg
   USE wavefunctions_module, ONLY: evc
@@ -882,7 +882,7 @@ SUBROUTINE xanes_dipole(a,b,ncalcv,xnorm,core_wfn,paw_iltonhb,terminator,verbosi
        nks,               & ! number of k-points per pool
        xk,                & ! k-points coordinates
        wk                   ! k-points weight
-  USE gvect,            ONLY: g,ngm,ecutwfc,ngl
+  USE gvect,            ONLY: g, ngm, ngl
   USE grid_dimensions,  ONLY: nrxx
   USE paw_gipaw,       ONLY : &
        paw_vkb,             & ! |p> projectors
@@ -1253,7 +1253,7 @@ SUBROUTINE xanes_quadrupole(a,b,ncalcv,xnorm,core_wfn,paw_iltonhb,terminator,ver
   USE radial_grids,     ONLY : ndmx
   USE ions_base,   ONLY : nat, ntyp => nsp, ityp
   USE wvfct,            ONLY : npwx,nbndx,nbnd,npw,igk,&
-       g2kin,et, current_k
+       g2kin,et, current_k, ecutwfc
   !       ,igk_l2g
   USE lsda_mod,    ONLY : nspin,lsda,isk,current_spin
   USE cell_base, ONLY: tpiba2, bg
@@ -1263,7 +1263,7 @@ SUBROUTINE xanes_quadrupole(a,b,ncalcv,xnorm,core_wfn,paw_iltonhb,terminator,ver
        nks,               & ! number of k-points per pool
        xk,                & ! k-points coordinates
        wk                   ! k-points weight
-  USE gvect, ONLY: g,ngm,ecutwfc,ngl
+  USE gvect, ONLY: g,ngm,ngl
   USE grid_dimensions,  ONLY: nrxx
   USE paw_gipaw,     ONLY : &
        paw_vkb,             & ! |p> projectors
@@ -3370,7 +3370,7 @@ SUBROUTINE verify_hpsi
   USE radial_grids,     ONLY : ndmx
   USE ions_base,        ONLY : nat, ntyp => nsp, ityp
   USE wvfct,            ONLY : npwx, nbndx, nbnd, npw, igk, g2kin, et,&
-                               current_k
+                               current_k, ecutwfc
   USE lsda_mod,         ONLY : nspin,lsda,isk,current_spin
   USE cell_base,        ONLY: tpiba2, bg
   USE wavefunctions_module, ONLY: evc
@@ -3379,7 +3379,7 @@ SUBROUTINE verify_hpsi
        nks,               & ! number of k-points per pool
        xk,                & ! k-points coordinates
        wk                   ! k-points weight
-  USE gvect,            ONLY: g,ngm,ecutwfc,ngl
+  USE gvect,            ONLY: g,ngm,ngl
   USE grid_dimensions,  ONLY : nrxx
   USE paw_gipaw,        ONLY : &
        paw_vkb,             & ! |p> projectors

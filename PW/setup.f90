@@ -432,7 +432,7 @@ SUBROUTINE setup()
   !
   ! ... calculate dimensions of the FFT grid
   !
-  CALL realspace_grids_init (at, bg(1,1), bg(1,2), bg(1,3), gcutm, gcutms )
+  CALL realspace_grids_init (at, bg, gcutm, gcutms )
   !
 ! DCC
 !  IF( do_coarse ) CALL set_fft_dim_coarse()

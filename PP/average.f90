@@ -46,10 +46,10 @@ PROGRAM average
   USE cell_base,            ONLY : ibrav, alat, omega, celldm, tpiba, &
                                    tpiba2, at, bg
   USE gvect,                ONLY : gcutm
-  USE gvecs,              ONLY : doublegrid, gcutms, dual
+  USE gvecs,                ONLY : doublegrid, gcutms, dual
   USE wvfct,                ONLY : ecutwfc
   USE grid_dimensions,      ONLY : nr1, nr2, nr3, nr1x, nr2x, nr3x, nrxx
-  USE grid_subroutines,   ONLY : realspace_grids_init
+  USE grid_subroutines,     ONLY : realspace_grids_init
   USE smooth_grid_dimensions,ONLY: nr1s, nr2s, nr3s
   USE ions_base,            ONLY : zv, tau, nat, ntyp => nsp, ityp, atm
   USE lsda_mod,             ONLY : nspin
@@ -176,7 +176,7 @@ PROGRAM average
 
      CALL volume (alat, at (1, 1), at (1, 2), at (1, 3), omega)
 
-     CALL realspace_grids_init (at, bg(1,1), bg(1,2), bg(1,3), gcutm, gcutms )
+     CALL realspace_grids_init (at, bg, gcutm, gcutms )
 
      CALL allocate_fft ( )
      !

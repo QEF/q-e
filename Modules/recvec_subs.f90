@@ -1,13 +1,38 @@
 !
-! Copyright (C) 2001-2009 Quantum ESPRESSO group
+! Copyright (C) 2011 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !
-!-----------------------------------------------------------------------
-SUBROUTINE ggen (gamma_only)
+!=----------------------------------------------------------------------=
+MODULE recvec_subs
+!=----------------------------------------------------------------------=
+
+!  ... subroutines generating G-vectors and variables nl* needed to map
+!  ... G-vector components onto the FFT grid(s) in reciprocal space
+
+!  ... Most important dependencies: next three modules
+   USE gvect,              ONLY : ig_l2g, g, gg, ngm, ngm_g, gcutm, &
+                                  mill,  nl, gstart
+   USE gvecs,              ONLY : ngms, gcutms, ngms_g, nls
+   USE fft_base,           ONLY : dfftp, dffts
+!
+   USE kinds,              ONLY : DP
+   USE constants,          ONLY : eps8
+
+   PRIVATE
+   SAVE
+
+   PUBLIC :: ggen
+
+!=----------------------------------------------------------------------=
+CONTAINS
+!=----------------------------------------------------------------------=
+!
+   !-----------------------------------------------------------------------
+   SUBROUTINE ggen ( gamma_only, at, bg )
    !----------------------------------------------------------------------
    !
    !     This routine generates all the reciprocal lattice vectors
@@ -15,21 +40,13 @@ SUBROUTINE ggen (gamma_only)
    !     computes the indices nl which give the correspondence
    !     between the fft mesh points and the array of g vectors.
    !
-   USE kinds,              ONLY : DP
-   USE cell_base,          ONLY : at, bg
-   USE gvect,              ONLY : ig_l2g, g, gg, ngm, ngm_g, gcutm, &
-                                  mill,  nl, gstart
-   USE gvecs,              ONLY : ngms, gcutms, ngms_g, nls
-   USE constants,          ONLY : eps8
-   USE fft_base,           ONLY : dfftp, dffts
-
    IMPLICIT NONE
    !
-   LOGICAL, INTENT(in) :: gamma_only
+   LOGICAL,  INTENT(in) :: gamma_only
+   REAL(DP), INTENT(IN) ::  at(3,3), bg(3,3)
    !     here a few local variables
    !
-   REAL(DP) ::  t (3), tt, swap
-   !
+   REAL(DP) ::  t (3), tt
    INTEGER :: ngm_, n1, n2, n3, n1s, n2s, n3s
    !
    REAL(DP), ALLOCATABLE :: g2sort_g(:)
@@ -42,7 +59,7 @@ SUBROUTINE ggen (gamma_only)
 #ifdef __PARA
    INTEGER :: m1, m2, mc
 #endif
-   INTEGER :: i, j, k, ipol, ng, igl, iswap, indsw
+   INTEGER :: i, j, k, ipol, ng, igl, indsw
    !
    ! counters
    !
@@ -189,10 +206,10 @@ SUBROUTINE ggen (gamma_only)
 
    IF ( gamma_only) CALL index_minusg()
 
-END SUBROUTINE ggen
-!
-!-----------------------------------------------------------------------
-SUBROUTINE index_minusg()
+   END SUBROUTINE ggen
+   !
+   !-----------------------------------------------------------------------
+   SUBROUTINE index_minusg()
    !----------------------------------------------------------------------
    !
    !     compute indices nlm and nlms giving the correspondence
@@ -242,7 +259,11 @@ SUBROUTINE index_minusg()
 #endif
    ENDDO
 
-END SUBROUTINE index_minusg
+   END SUBROUTINE index_minusg
+   !
+!=----------------------------------------------------------------------=
+   END MODULE recvec_subs
+!=----------------------------------------------------------------------=
 !
 !-----------------------------------------------------------------------
 SUBROUTINE gshells ( vc )

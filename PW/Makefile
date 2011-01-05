@@ -86,7 +86,6 @@ gen_at_dy.o \
 gen_us_dj.o \
 gen_us_dy.o \
 get_locals.o \
-ggen.o \
 gk_sort.o \
 gradcorr.o \
 gweights.o \

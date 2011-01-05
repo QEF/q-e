@@ -22,7 +22,7 @@ SUBROUTINE data_structure( gamma_only )
   USE klist,      ONLY : xk, nks
   USE gvect,      ONLY : gcutm, gvect_init
   USE gvecs,      ONLY : gcutms, gvecs_init
-  USE stick_base, ONLY : pstickset
+  USE stick_set,  ONLY : pstickset
   USE task_groups,ONLY : task_groups_init
   USE wvfct,      ONLY : ecutwfc
 
@@ -57,8 +57,8 @@ SUBROUTINE data_structure( gamma_only )
   !
   ! ... set up fft descriptors, including parallel stuff: sticks, planes, etc.
   !
-  CALL pstickset( gamma_only, bg(1,1), bg(1,2), bg(1,3), &
-        gcutm, gkcut, gcutms, dfftp, dffts, ngw_ , ngm_ , ngs_ )
+  CALL pstickset( gamma_only, bg, gcutm, gkcut, gcutms, &
+                  dfftp, dffts, ngw_ , ngm_ , ngs_ )
   !
   !     on output, ngm_ and ngs_ contain the local number of G-vectors
   !     for the two grids. Initialize local and global number of G-vectors

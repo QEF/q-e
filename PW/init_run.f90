@@ -13,6 +13,7 @@ SUBROUTINE init_run()
   USE symme,              ONLY : sym_rho_init
   USE wvfct,              ONLY : nbnd, et, wg, btype
   USE control_flags,      ONLY : lmd, gamma_only
+  USE cell_base,          ONLY : at, bg
   USE cellmd,             ONLY : lmovecell
   USE dynamics_module,    ONLY : allocate_dyn_vars
   USE paw_variables,      ONLY : okpaw
@@ -21,6 +22,7 @@ SUBROUTINE init_run()
   USE paw_init,           ONLY : paw_post_init
 #endif
   USE bp,                 ONLY : lberry, lelfield
+  USE recvec_subs,        ONLY : ggen
 ! DCC
 !  USE grid_dimensions,    ONLY : nr1x, nr2x, nr3x, nr1, nr2, nr3
 !  USE gvect,              ONLY : ecutwfc
@@ -44,7 +46,7 @@ SUBROUTINE init_run()
   !
   ! ... generate reciprocal-lattice vectors and fft indices
   !
-  CALL ggen ( gamma_only )
+  CALL ggen ( gamma_only, at, bg )
   CALL gshells ( lmovecell )
   !
   ! ... variable initialization for parallel symmetrization

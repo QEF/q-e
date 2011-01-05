@@ -15,6 +15,7 @@ SUBROUTINE read_file_xspectra(xread_wf)
   !
   USE kinds,                ONLY : DP
   USE io_global,            ONLY : stdout
+  USE control_flags,        ONLY : gamma_only
   USE ions_base,            ONLY : nat, nsp, ityp, tau, if_pos, extfor
   USE basis,                ONLY : natomwfc
   USE cell_base,            ONLY : tpiba2, alat,omega, at, bg, ibrav
@@ -28,10 +29,11 @@ SUBROUTINE read_file_xspectra(xread_wf)
   USE cellmd,               ONLY : cell_factor, lmovecell
   USE fft_base,             ONLY : dfftp
   USE fft_interfaces,       ONLY : fwfft
-  USE gvect,                ONLY : gg, ecutwfc, ngm, g, &
+  USE gvect,                ONLY : gg, ngm, g, &
                                    eigts1, eigts2, eigts3, nl, gstart
   USE grid_dimensions,      ONLY : nr1, nr2, nr3, nrxx
-  USE gvecs,              ONLY : ngms, nls
+  USE gvecs,                ONLY : ngms, nls
+  USE recvec_subs,          ONLY : ggen
   USE spin_orb,             ONLY : lspinorb, domag
   USE scf,                  ONLY : rho, rho_core, rhog_core, v
   USE wavefunctions_module, ONLY : psic
@@ -227,7 +229,7 @@ SUBROUTINE read_file_xspectra(xread_wf)
   !
   CALL pre_init()
   CALL allocate_fft()
-  CALL ggen()
+  CALL ggen ( gamma_only, at, bg )
   !
   ! ... allocate the potential and wavefunctions
   !
@@ -337,8 +339,9 @@ SUBROUTINE read_file_xspectra(xread_wf)
       !
       USE constants, ONLY : pi
       USE cell_base, ONLY : alat, tpiba, tpiba2
-      USE gvect,     ONLY : ecutwfc, dual, gcutm
-      USE gvecs,   ONLY : gcutms, doublegrid
+      USE wvfct,     ONLY : ecutwfc
+      USE gvect,     ONLY : gcutm
+      USE gvecs,   ONLY : gcutms, dual, doublegrid
       !
       !
       ! ... Set the units in real and reciprocal space

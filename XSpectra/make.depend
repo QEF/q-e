@@ -18,6 +18,7 @@ lr_sm1_psi.o : ../Modules/ions_base.o
 lr_sm1_psi.o : ../Modules/kind.o
 lr_sm1_psi.o : ../Modules/mp.o
 lr_sm1_psi.o : ../Modules/mp_global.o
+lr_sm1_psi.o : ../Modules/recvec.o
 lr_sm1_psi.o : ../Modules/uspp.o
 lr_sm1_psi.o : ../PW/becmod.o
 lr_sm1_psi.o : ../PW/pwcom.o
@@ -33,6 +34,7 @@ radin_mod.o : ../Modules/kind.o
 read_file_xspectra.o : ../GIPAW/paw_gipaw.o
 read_file_xspectra.o : ../Modules/cell_base.o
 read_file_xspectra.o : ../Modules/constants.o
+read_file_xspectra.o : ../Modules/control_flags.o
 read_file_xspectra.o : ../Modules/fft_base.o
 read_file_xspectra.o : ../Modules/fft_interfaces.o
 read_file_xspectra.o : ../Modules/griddim.o
@@ -44,6 +46,7 @@ read_file_xspectra.o : ../Modules/mp.o
 read_file_xspectra.o : ../Modules/mp_global.o
 read_file_xspectra.o : ../Modules/parser.o
 read_file_xspectra.o : ../Modules/paw_variables.o
+read_file_xspectra.o : ../Modules/recvec.o
 read_file_xspectra.o : ../Modules/uspp.o
 read_file_xspectra.o : ../Modules/wavefunctions.o
 read_file_xspectra.o : ../Modules/xml_io_base.o
@@ -74,6 +77,7 @@ xspectra.o : ../Modules/parallel_include.o
 xspectra.o : ../Modules/parameters.o
 xspectra.o : ../Modules/parser.o
 xspectra.o : ../Modules/radial_grids.o
+xspectra.o : ../Modules/recvec.o
 xspectra.o : ../Modules/uspp.o
 xspectra.o : ../Modules/wavefunctions.o
 xspectra.o : ../PW/becmod.o

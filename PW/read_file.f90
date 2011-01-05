@@ -30,6 +30,7 @@ SUBROUTINE read_file()
   USE fft_base,             ONLY : dfftp
   USE fft_interfaces,       ONLY : fwfft
   USE grid_subroutines,     ONLY : realspace_grids_init
+  USE recvec_subs,          ONLY : ggen
   USE gvect,                ONLY : gg, ngm, g, gcutm, &
                                    eigts1, eigts2, eigts3, nl, gstart
   USE grid_dimensions,      ONLY : nr1, nr2, nr3
@@ -115,7 +116,7 @@ SUBROUTINE read_file()
   !-------------------------------------------------------------------------------
   !
   CALL set_dimensions()
-  CALL realspace_grids_init (at, bg(1,1), bg(1,2), bg(1,3), gcutm, gcutms )
+  CALL realspace_grids_init (at, bg, gcutm, gcutms )
   !
   ! ... check whether LSDA
   !
@@ -191,7 +192,7 @@ SUBROUTINE read_file()
   !
   CALL pre_init()
   CALL allocate_fft()
-  CALL ggen ( gamma_only ) 
+  CALL ggen ( gamma_only, at, bg ) 
   CALL gshells ( lmovecell ) 
   !
   ! ... allocate the potential and wavefunctions

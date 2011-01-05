@@ -32,15 +32,16 @@
                                           smallbox_grid_init,smallbox_grid_info
       use smooth_grid_dimensions,   only: nr1s, nr2s, nr3s, nr1sx, nr2sx, nr3sx, nrxxs
       USE grid_subroutines,         ONLY: realspace_grids_init, realspace_grids_info
-      USE gvect,                    ONLY: mill_g, eigts1,eigts2,eigts3, gg
       use ions_base,                only: nat
-      use gvecw,                    only: gkcut, gvecw_init, g2kin_init
-      use gvect,                    only: ecutrho, gcutm, gvect_init
+      USE recvec_subs,              ONLY: ggen
+      USE gvect,                    ONLY: mill_g, eigts1,eigts2,eigts3, gg, &
+                                          ecutrho, gcutm, gvect_init
       use gvecs,                    only: gcutms, gvecs_init
+      use gvecw,                    only: gkcut, gvecw_init, g2kin_init
       use gvecb,                    only: gcutb
       USE fft_base,                 ONLY: dfftp, dffts
       USE fft_scalar,               ONLY: cft_b_omp_init
-      USE stick_base,               ONLY: pstickset
+      USE stick_set,                ONLY: pstickset
       USE control_flags,            ONLY: tdipole, gamma_only
       USE berry_phase,              ONLY: berry_setup
       USE electrons_module,         ONLY: bmeshset
@@ -55,7 +56,7 @@
 ! 
       integer  :: i
       real(dp) :: rat1, rat2, rat3
-      real(dp) :: at(3,3), b1(3), b2(3), b3(3), tpiba2 
+      real(dp) :: at(3,3), bg(3,3), tpiba2 
       integer :: ng_, ngs_, ngm_ , ngw_
 
 
@@ -78,14 +79,14 @@
       ! ... at in alat units
 
       at (:,1) = a1(:)/alat; at (:,2) = a2(:)/alat; at (:,3) = a3(:)/alat
-      call recips( at(1,1), at(1,2), at(1,3), b1, b2, b3 )
+      call recips( at(1,1), at(1,2), at(1,3), bg(1,1), bg(1,2), bg(1,3) )
 
-      !     b1, b2, b3  are the 3 basis vectors generating 
-      !     the reciprocal lattice in 2pi/alat units
+      !     bg(:,1), bg(:,2), bg(:,3) are the basis vectors, in
+      !     2pi/alat units, generating the reciprocal lattice
 
       ! ... Initialize FFT real-space grids and small box grid
       !
-      CALL realspace_grids_init( at, b1, b2, b3, gcutm, gcutms)
+      CALL realspace_grids_init( at, bg, gcutm, gcutms)
       CALL smallbox_grid_init( )
 
       IF( ionode ) THEN
@@ -93,17 +94,17 @@
         WRITE( stdout,210) 
 210     format(/,3X,'unit vectors of full simulation cell',&
               &/,3X,'in real space:',25x,'in reciprocal space (units 2pi/alat):')
-        WRITE( stdout,'(3X,I1,1X,3f10.4,10x,3f10.4)') 1,a1,b1
-        WRITE( stdout,'(3X,I1,1X,3f10.4,10x,3f10.4)') 2,a2,b2
-        WRITE( stdout,'(3X,I1,1X,3f10.4,10x,3f10.4)') 3,a3,b3
+        WRITE( stdout,'(3X,I1,1X,3f10.4,10x,3f10.4)') 1,a1,bg(:,1)
+        WRITE( stdout,'(3X,I1,1X,3f10.4,10x,3f10.4)') 2,a2,bg(:,2)
+        WRITE( stdout,'(3X,I1,1X,3f10.4,10x,3f10.4)') 3,a3,bg(:,3)
 
       END IF
 
       !
       do i=1,3
-         ainv(1,i)=b1(i)/alat
-         ainv(2,i)=b2(i)/alat
-         ainv(3,i)=b3(i)/alat
+         ainv(1,i)=bg(i,1)/alat
+         ainv(2,i)=bg(i,2)/alat
+         ainv(3,i)=bg(i,3)/alat
       end do
 
       !
@@ -118,7 +119,7 @@
       ! ... pstickset lso sets the local real-space grid dimensions
       !
 
-      CALL pstickset( gamma_only, b1, b2, b3, gcutm, gkcut, gcutms, &
+      CALL pstickset( gamma_only, bg, gcutm, gkcut, gcutms, &
         dfftp, dffts, ngw_ , ngm_ , ngs_ )
       !
       !
@@ -134,10 +135,9 @@
       CALL realspace_grids_info ( dfftp, dffts, nproc_bgrp )
       CALL smallbox_grid_info ( )
       !
-      ! ... generate g-space vectors (dense and smoth grid)
+      ! ... generate g-space vectors (dense and smooth grid)
       !
-      call ggencp( b1, b2, b3, nr1, nr2, nr3, nr1s, nr2s, nr3s, gcutm, &
-                   gcutms, gkcut, gamma_only )
+      CALL ggen( gamma_only, at, bg )
       !
       ! ... allocate and generate (modified) kinetic energy
       !
@@ -354,11 +354,9 @@
       implicit none
       !
       REAL(DP) :: h(3,3)
-      INTEGER   :: i, j
-
-      ! local
       !
-      REAL(DP) :: tpiba2, gmax, b1(3), b2(3), b3(3)
+      ! local
+      REAL(DP) :: at(3,3), bg(3,3), tpiba2
       !
       !WRITE( stdout, 344 ) 
       !do i=1,3
@@ -369,11 +367,12 @@
       !
       CALL cell_base_reinit( TRANSPOSE( h ) )
       !
-      call recips( a1, a2, a3, b1, b2, b3 )
+      at (:,1) = a1(:)/alat; at (:,2) = a2(:)/alat; at (:,3) = a3(:)/alat
+      call recips( at(1,1), at(1,2), at(1,3), bg(1,1), bg(1,2), bg(1,3) )
       !
       !  re-calculate G-vectors and kinetic energy
       !
-      call gcal( alat, b1, b2, b3, gmax )
+      call gcal( bg )
       tpiba2 = (tpi/ alat)**2
       call g2kin_init ( gg, tpiba2 )
       !

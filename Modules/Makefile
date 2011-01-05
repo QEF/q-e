@@ -64,10 +64,12 @@ read_xml.o \
 read_xml_cards.o \
 read_xml_fields.o \
 recvec.o \
+recvec_subs.o \
 set_signal.o \
 sic.o \
 splinelib.o \
 stick_base.o \
+stick_set.o \
 task_groups.o \
 timestep.o \
 version.o \

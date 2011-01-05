@@ -78,14 +78,14 @@
    CONTAINS
 
 
-     SUBROUTINE realspace_grids_init( at, b1, b2, b3, gcutm, gcuts )
+     SUBROUTINE realspace_grids_init( at, bg, gcutm, gcuts )
        !
        USE fft_scalar, only: good_fft_dimension, good_fft_order
        USE io_global, only: stdout
        !
        IMPLICIT NONE
        !
-       REAL(DP), INTENT(IN) :: at(3,3), b1(3), b2(3), b3(3)
+       REAL(DP), INTENT(IN) :: at(3,3), bg(3,3)
        REAL(DP), INTENT(IN) :: gcutm, gcuts
        !
        IF( nr1 == 0 .OR. nr2 == 0 .OR. nr3 == 0 ) THEN
@@ -102,7 +102,7 @@
          nr3 = int ( sqrt (gcutm) * &
                sqrt (at(1, 3)**2 + at(2, 3)**2 + at(3, 3)**2) ) + 1
          !
-         CALL grid_set( b1, b2, b3, gcutm, nr1, nr2, nr3 )
+         CALL grid_set( bg, gcutm, nr1, nr2, nr3 )
          !
        ELSE
          WRITE( stdout, '( /, 3X,"Info: using nr1, nr2, nr3 values from input" )' )
@@ -134,7 +134,7 @@
          nr3s= int (2 * sqrt (gcuts) * &
                sqrt (at(1, 3)**2 + at(2, 3)**2 + at(3, 3)**2) ) + 1
          !
-         CALL grid_set( b1, b2, b3, gcuts, nr1s, nr2s, nr3s )
+         CALL grid_set( bg, gcuts, nr1s, nr2s, nr3s )
          !
        ELSE
          WRITE( stdout, '( /, 3X,"Info: using nr1s, nr2s, nr3s values from input" )' )
@@ -209,7 +209,7 @@
       END SUBROUTINE realspace_grids_info
 
 
-   SUBROUTINE grid_set( b1, b2, b3, gcut, nr1, nr2, nr3 )
+   SUBROUTINE grid_set( bg, gcut, nr1, nr2, nr3 )
 
 !  this routine returns in nr1, nr2, nr3 the minimal 3D real-space FFT 
 !  grid required to fit the G-vector sphere with G^2 <= gcut
@@ -226,7 +226,7 @@
 
 ! ... declare arguments
       INTEGER, INTENT(INOUT) :: nr1, nr2, nr3
-      REAL(DP), INTENT(IN) :: b1(3), b2(3), b3(3), gcut
+      REAL(DP), INTENT(IN) :: bg(3,3), gcut
 
 ! ... declare other variables
       INTEGER :: i, j, k, nr, nb(3)
@@ -247,9 +247,9 @@
           DO j = -nr2, nr2
             DO i = -nr1, nr1
 
-              g( 1 ) = DBLE(i) * b1(1) + DBLE(j) * b2(1) + DBLE(k) * b3(1)
-              g( 2 ) = DBLE(i) * b1(2) + DBLE(j) * b2(2) + DBLE(k) * b3(2)
-              g( 3 ) = DBLE(i) * b1(3) + DBLE(j) * b2(3) + DBLE(k) * b3(3)
+              g( 1 ) = DBLE(i)*bg(1,1) + DBLE(j)*bg(1,2) + DBLE(k)*bg(1,3)
+              g( 2 ) = DBLE(i)*bg(2,1) + DBLE(j)*bg(2,2) + DBLE(k)*bg(2,3)
+              g( 3 ) = DBLE(i)*bg(3,1) + DBLE(j)*bg(3,2) + DBLE(k)*bg(3,3)
 
 ! ...         calculate modulus
 

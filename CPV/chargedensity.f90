@@ -1090,7 +1090,7 @@ SUBROUTINE rhov(irb,eigrb,rhovan,rhog,rhor)
       USE electrons_base,           ONLY: nspin
       USE gvecb,                    ONLY: npb, nmb, ngb
       USE gvect,                    ONLY: ngm, nl, nlm
-      USE cell_base,                ONLY: omega, ainv
+      USE cell_base,                ONLY: omega
       USE small_box,                ONLY: omegab
       USE smallbox_grid_dimensions, ONLY: nr1b, nr2b, nr3b, nr1bx, nr2bx, nr3bx, nnrbx
       USE control_flags,            ONLY: iprint, iprsta, tpre
