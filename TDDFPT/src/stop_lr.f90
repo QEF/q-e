@@ -32,7 +32,7 @@ SUBROUTINE stop_lr( )
   !
   character(len=256) :: filename
   !
-  integer :: ip,i
+  integer :: ip,i,j
   !
   !
   
