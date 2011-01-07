@@ -106,7 +106,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
   USE cp_main_variables,        ONLY : acc, lambda, lambdam, lambdap, &
                                        ema0bg, sfac, eigr, iprint_stdout,  &
                                        irb, taub, eigrb, rhog, rhos, &
-                                       rhor, bephi, becp_dist, nfi, descla, &
+                                       rhor, bephi, becp_bgrp, nfi, descla, &
                                        drhor, drhog, nlax, bec_bgrp, dbec
   USE autopilot,                ONLY : event_step, event_index, &
                                        max_event_step, restart_p
@@ -509,7 +509,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
         IF ( tortho ) THEN
            !
            CALL ortho( eigr, cm_bgrp, phi_bgrp, ngw, lambda, descla, &
-                       bigr, iter, ccc, bephi, becp_dist, nbsp, nspin, nupdwn, iupdwn )
+                       bigr, iter, ccc, bephi, becp_bgrp, nbsp, nspin, nupdwn, iupdwn )
            !
         ELSE
            !
@@ -528,7 +528,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
               i1 = (iss-1)*nlax+1
               i2 = iss*nlax
               CALL updatc( ccc, nbsp, lambda(:,:,iss), SIZE(lambda,1), phi_bgrp, SIZE(phi_bgrp,1), &
-                        bephi(:,i1:i2), SIZE(bephi,1), becp_dist(:,i1:i2), bec_bgrp, cm_bgrp, nupdwn(iss), iupdwn(iss), &
+                        bephi(:,i1:i2), SIZE(bephi,1), becp_bgrp, bec_bgrp, cm_bgrp, nupdwn(iss), iupdwn(iss), &
                         descla(:,iss) )
            END DO
         END IF

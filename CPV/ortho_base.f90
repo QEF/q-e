@@ -1070,7 +1070,7 @@ END SUBROUTINE diagonalize_parallel
 
 !
 !-------------------------------------------------------------------------
-   SUBROUTINE updatc( ccc, n, x0, nx0, phi, ngwx, bephi, nkbx, becp_dist, bec_bgrp, cp_bgrp, nss, istart, desc )
+   SUBROUTINE updatc( ccc, n, x0, nx0, phi, ngwx, bephi, nkbx, becp_bgrp, bec_bgrp, cp_bgrp, nss, istart, desc )
 !-----------------------------------------------------------------------
 !
       !     input ccc : dt**2/emass OR 1.0d0 demending on ortho
@@ -1104,7 +1104,7 @@ END SUBROUTINE diagonalize_parallel
       REAL(DP), INTENT(IN) :: ccc
       REAL(DP)    :: bec_bgrp( nkbx, nbspx_bgrp ), x0( nx0, nx0 )
       REAL(DP)    :: bephi( :, : )
-      REAL(DP)    :: becp_dist( :, : )
+      REAL(DP)    :: becp_bgrp( :, : )
 
       ! local variables
 
@@ -1112,13 +1112,11 @@ END SUBROUTINE diagonalize_parallel
       REAL(DP),    ALLOCATABLE :: wtemp(:,:) 
       REAL(DP),    ALLOCATABLE :: xd(:,:) 
       REAL(DP),    ALLOCATABLE :: bephi_tmp(:,:) 
-      REAL(DP),    ALLOCATABLE :: becp_tmp(:,:) 
-      COMPLEX(DP), ALLOCATABLE :: cp_tmp(:,:) 
       REAL(DP) :: beta
       INTEGER :: ipr, ipc, nx, root
       INTEGER :: np( 2 ), coor_ip( 2 )
       INTEGER :: desc_ip( descla_siz_ )
-      INTEGER :: ibgrp_i
+      INTEGER :: ibgrp_i, ibgrp_i_first, nbgrp_i, i_first
       !
       !     lagrange multipliers
       !
@@ -1139,20 +1137,18 @@ END SUBROUTINE diagonalize_parallel
       CALL start_clock( 'updatc' )
 
       ALLOCATE( xd( nx, nx ) )
-      ALLOCATE( cp_tmp( SIZE( cp_bgrp, 1 ), nx ) )
 
       IF( nvb > 0 )THEN
-         ALLOCATE( wtemp( nx, nkb ) )
-         ALLOCATE( bephi_tmp( nkbx, nx ) )
-         ALLOCATE( becp_tmp( nkbx, nx ) )
          DO i = 1, nss
             ibgrp_i = ibgrp_g2l( i + istart - 1 )
             IF( ibgrp_i > 0 ) THEN
                DO inl = 1, nkbus
-                  bec_bgrp( inl, ibgrp_i ) = 0.0d0
+                  bec_bgrp( inl, ibgrp_i ) = becp_bgrp( inl, ibgrp_i )
                END DO
             END IF
          END DO
+         ALLOCATE( wtemp( nx, nkb ) )
+         ALLOCATE( bephi_tmp( nkbx, nx ) )
       END IF
 
 
@@ -1173,8 +1169,6 @@ END SUBROUTINE diagonalize_parallel
             ! 
             IF( me_bgrp == root ) bephi_tmp = bephi
             CALL mp_bcast( bephi_tmp, root, intra_bgrp_comm )
-            IF( me_bgrp == root ) becp_tmp = becp_dist
-            CALL mp_bcast( becp_tmp, root, intra_bgrp_comm )
             !
          END IF
 
@@ -1192,6 +1186,21 @@ END SUBROUTINE diagonalize_parallel
             !
             CALL GRID2D_RANK( 'R', desc_ip( la_npr_ ), desc_ip( la_npc_ ), &
                                    desc_ip( la_myr_ ), desc_ip( la_myc_ ), root )
+            !
+            ! we need to update only states local to the current band group,
+            ! so here we compute the overlap between ortho and band group.
+            !
+            nbgrp_i = 0
+            DO i = 1, nc
+               ibgrp_i = ibgrp_g2l( i + istart + ic - 2 )
+               IF( ibgrp_i > 0 ) THEN
+                  IF( nbgrp_i == 0 ) THEN
+                     ibgrp_i_first = ibgrp_i
+                     i_first = i
+                  END IF
+                  nbgrp_i = nbgrp_i + 1
+               END IF
+            END DO
 
             root = root * leg_ortho
 
@@ -1201,17 +1210,8 @@ END SUBROUTINE diagonalize_parallel
 
             CALL mp_bcast( xd, root, intra_bgrp_comm )
 
-            !CALL dgemm( 'N', 'N', 2*ngw, nc, nr, 1.0d0, phi(1,istart+ir-1), 2*ngwx, &
-            !            xd, nx, 1.0d0, cp(1,istart+ic-1), 2*ngwx )
-            CALL dgemm( 'N', 'N', 2*ngw, nc, nr, 1.0d0, phi(1,istart+ir-1), 2*ngwx, &
-                        xd, nx, 0.0d0, cp_tmp, 2*ngwx )
-
-            DO i = 1, nc
-               ibgrp_i = ibgrp_g2l( i + istart + ic - 2 )
-               IF( ibgrp_i > 0 ) THEN
-                  cp_bgrp( : , ibgrp_i ) = cp_bgrp( : , ibgrp_i ) + cp_tmp( : , i )
-               END IF
-            END DO
+            CALL dgemm( 'N', 'N', 2*ngw, nbgrp_i, nr, 1.0d0, phi(1,istart+ir-1), 2*ngwx, &
+                        xd(1,i_first), nx, 1.0d0, cp_bgrp(1,ibgrp_i_first), 2*ngwx )
 
             IF( nvb > 0 )THEN
 
@@ -1231,16 +1231,6 @@ END SUBROUTINE diagonalize_parallel
                      END DO
                   END IF
                END DO
-               IF( ipr == ipc )THEN
-                  DO i = 1, nr
-                     ibgrp_i = ibgrp_g2l( i + istart + ir - 2 )
-                     IF( ibgrp_i > 0 ) THEN
-                        DO inl = 1, nkbus
-                           bec_bgrp( inl, ibgrp_i ) = bec_bgrp( inl, ibgrp_i ) + becp_tmp( inl, i ) 
-                        END DO
-                     END IF
-                  END DO
-               END IF
                !
             END IF
 
@@ -1251,7 +1241,6 @@ END SUBROUTINE diagonalize_parallel
       IF( nvb > 0 )THEN
          DEALLOCATE( wtemp )
          DEALLOCATE( bephi_tmp )
-         DEALLOCATE( becp_tmp )
       END IF
 !
       IF ( iprsta > 2 ) THEN
@@ -1272,7 +1261,6 @@ END SUBROUTINE diagonalize_parallel
          END DO
       ENDIF
       !
-      DEALLOCATE( cp_tmp )
       DEALLOCATE( xd )
       !
       CALL stop_clock( 'updatc' )

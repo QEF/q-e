@@ -17,13 +17,11 @@ cglib.o \
 chargedensity.o \
 cp_autopilot.o \
 cp_emass.o \
-cp_fpmd.o \
 cp_interfaces.o \
 cp_restart.o \
 cplib.o \
 cpr_mod.o \
 cpr.o \
-cprsub.o \
 dealloc.o \
 dforceb.o \
 efermi.o \
@@ -36,6 +34,7 @@ fft.o \
 forces.o \
 fromscra.o \
 gradrho.o \
+gram.o \
 gtable.o \
 gvecb.o\
 gvecw.o\
@@ -51,6 +50,7 @@ cplib_meta.o \
 metaxc.o \
 modules.o \
 move_electrons.o \
+newd.o \
 nl_base.o \
 nlcc.o \
 ortho_base.o \
@@ -77,6 +77,7 @@ spline.o \
 stop_run.o \
 stress.o \
 vol_clu.o \
+vofrho.o \
 wannier_base.o \
 wannier.o \
 wave.o \

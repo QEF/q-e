@@ -59,7 +59,7 @@
       use mp,                       only : mp_sum, mp_bcast
       use cp_electronic_mass,       ONLY : emass_cutoff
       use orthogonalize_base,       ONLY : calphi_bgrp
-      use cp_interfaces,            ONLY : rhoofr, dforce, compute_stress
+      use cp_interfaces,            ONLY : rhoofr, dforce, compute_stress, vofrho
       USE cp_main_variables,        ONLY : nlax, collect_lambda, distribute_lambda, descla, nrlx, nlam, drhor, drhog
       USE descriptors,              ONLY : la_npc_ , la_npr_ , la_comm_ , la_me_ , la_nrl_ , ldim_cyclic
       USE mp_global, ONLY:  me_image, my_image_id, nbgrp
@@ -239,7 +239,7 @@
 
           vpot = rhor
 
-          call vofrho(nfi,vpot,rhog,rhos,rhoc,tfirst,tlast,             &
+          call vofrho(nfi,vpot,drhor,rhog,drhog,rhos,rhoc,tfirst,tlast,             &
                  &        ei1,ei2,ei3,irb,eigrb,sfac,tau0,fion)
           if (.not.tens) then
             etotnew=etot
@@ -582,7 +582,7 @@
         !
         vpot = rhor
         !
-        call vofrho(nfi,vpot,rhog,rhos,rhoc,tfirst,tlast,             &
+        call vofrho(nfi,vpot,drhor,rhog,drhog,rhos,rhoc,tfirst,tlast,             &
                       &        ei1,ei2,ei3,irb,eigrb,sfac,tau0,fion)
 
         if( tefield  ) then!to be bettered
@@ -644,7 +644,7 @@
         !
         vpot = rhor
         !
-        call vofrho(nfi,vpot,rhog,rhos,rhoc,tfirst,tlast,             &
+        call vofrho(nfi,vpot,drhor,rhog,drhog,rhos,rhoc,tfirst,tlast,             &
                        &        ei1,ei2,ei3,irb,eigrb,sfac,tau0,fion)
 
         if( tefield )  then!to be bettered
@@ -734,7 +734,7 @@
             !
             vpot = rhor
             !
-            call vofrho(nfi,vpot,rhog,rhos,rhoc,tfirst,tlast,             &
+            call vofrho(nfi,vpot,drhor,rhog,drhog,rhos,rhoc,tfirst,tlast,             &
                         &        ei1,ei2,ei3,irb,eigrb,sfac,tau0,fion)
 
             if( tefield)  then !to be bettered
@@ -817,7 +817,7 @@
 
           vpot = rhor
 
-          call vofrho(nfi,vpot,rhog,rhos,rhoc,tfirst,tlast,             &
+          call vofrho(nfi,vpot,drhor,rhog,drhog,rhos,rhoc,tfirst,tlast,             &
                  &        ei1,ei2,ei3,irb,eigrb,sfac,tau0,fion)
 
    

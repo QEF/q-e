@@ -51,7 +51,7 @@ MODULE cp_main_variables
   ! ...    deeq  = \int V_eff(r) q_lm(r) dr
   !
   REAL(DP), ALLOCATABLE :: bephi(:,:)      ! distributed (orhto group)
-  REAL(DP), ALLOCATABLE :: becp_dist(:,:)  ! distributed becp (ortho group)
+  REAL(DP), ALLOCATABLE :: becp_bgrp(:,:)  ! distributed becp (band group)
   REAL(DP), ALLOCATABLE :: bec_bgrp(:,:)  ! distributed bec (band group)
   REAL(DP), ALLOCATABLE :: becdr_bgrp(:,:,:)  ! distributed becdr (band group)
   REAL(DP), ALLOCATABLE :: dbec(:,:,:,:)    ! derivative of bec distributed(ortho group) 
@@ -213,7 +213,7 @@ MODULE cp_main_variables
       ALLOCATE( bec_bgrp( nhsa, nbspx_bgrp ) )
       !
       ALLOCATE( bephi( nhsa, nspin*nlax ) )
-      ALLOCATE( becp_dist( nhsa, nlax*nspin ) )  
+      ALLOCATE( becp_bgrp( nhsa, nbspx_bgrp ) )  
       !
       IF ( tpre ) THEN
         ALLOCATE( dbec( nhsa, 2*nlax, 3, 3 ) )
@@ -246,7 +246,7 @@ MODULE cp_main_variables
       IF( ALLOCATED( bec_bgrp ) )     DEALLOCATE( bec_bgrp )
       IF( ALLOCATED( becdr_bgrp ) )   DEALLOCATE( becdr_bgrp )
       IF( ALLOCATED( bephi ) )   DEALLOCATE( bephi )
-      IF( ALLOCATED( becp_dist ) )    DEALLOCATE( becp_dist )
+      IF( ALLOCATED( becp_bgrp ) )    DEALLOCATE( becp_bgrp )
       IF( ALLOCATED( dbec ) )    DEALLOCATE( dbec )
       IF( ALLOCATED( ema0bg ) )  DEALLOCATE( ema0bg )
       IF( ALLOCATED( lambda ) )  DEALLOCATE( lambda )

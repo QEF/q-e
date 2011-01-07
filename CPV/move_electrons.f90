@@ -40,7 +40,7 @@ SUBROUTINE move_electrons_x( nfi, tfirst, tlast, b1, b2, b3, fion, c0_bgrp, cm_b
   USE gvecw,                ONLY : ngw
   USE orthogonalize_base,   ONLY : calphi_bgrp
   USE control_flags,        ONLY : force_pairing
-  USE cp_interfaces,        ONLY : rhoofr, compute_stress
+  USE cp_interfaces,        ONLY : rhoofr, compute_stress, vofrho
   USE electrons_module,     ONLY : distribute_c, collect_c, distribute_b
   USE gvect,   ONLY : eigts1, eigts2, eigts3 
   USE mp_global,   ONLY : mpime
@@ -91,9 +91,9 @@ SUBROUTINE move_electrons_x( nfi, tfirst, tlast, b1, b2, b3, fion, c0_bgrp, cm_b
      !
      vpot = rhor
      !
-     CALL vofrho( nfi, vpot(1,1), rhog(1,1), rhos(1,1), rhoc(1), tfirst, tlast,&
-                     eigts1, eigts2, eigts3, irb(1,1), eigrb(1,1), sfac(1,1), &
-                     tau0(1,1), fion(1,1) )
+     CALL vofrho( nfi, vpot, drhor, rhog, drhog, rhos, rhoc, tfirst, tlast,&
+                     eigts1, eigts2, eigts3, irb, eigrb, sfac, &
+                     tau0, fion )
      !
      IF ( lwf ) CALL wf_options( tfirst, nfi, cm_bgrp, becsum, bec_bgrp, dbec, &
                                  eigr, eigrb, taub, irb, ibrav, b1,   &

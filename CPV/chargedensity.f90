@@ -119,7 +119,7 @@
                                     use_task_groups, ogrp_comm, nolist, nbgrp, inter_bgrp_comm
       USE funct,              ONLY: dft_is_meta
       USE cg_module,          ONLY: tcg
-      USE cp_interfaces,      ONLY: stress_kin
+      USE cp_interfaces,      ONLY: stress_kin, enkin
       USE fft_interfaces,     ONLY: fwfft, invfft
       USE fft_base,           ONLY: dffts, dfftp
       USE cp_interfaces,      ONLY: checkrho
@@ -150,7 +150,7 @@
       INTEGER  :: iss, isup, isdw, iss1, iss2, ios, i, ir, ig, k
       REAL(DP) :: rsumr(2), rsumg(2), sa1, sa2, detmp(6), mtmp(3,3)
       REAL(DP) :: rnegsum, rmin, rmax, rsum
-      REAL(DP), EXTERNAL :: enkin, ennl
+      REAL(DP), EXTERNAL :: ennl
       COMPLEX(DP) :: ci,fp,fm
       COMPLEX(DP), ALLOCATABLE :: psi(:), psis(:)
       REAL(DP), ALLOCATABLE :: drhovan(:,:,:,:,:)
@@ -173,7 +173,7 @@
       !
       !  calculation of kinetic energy ekin
       !
-      ekin = enkin( c_bgrp, ngw, f_bgrp, nbsp_bgrp )
+      ekin = enkin( c_bgrp, f_bgrp, nbsp_bgrp )
       !
       IF( nbgrp > 1 ) &
          CALL mp_sum( ekin, inter_bgrp_comm )

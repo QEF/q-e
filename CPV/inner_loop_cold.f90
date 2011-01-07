@@ -63,7 +63,7 @@
       USE ions_positions, ONLY: tau0
       USE mp,             ONLY: mp_sum,mp_bcast, mp_root_sum
 
-      USE cp_interfaces,  ONLY: rhoofr, dforce, protate
+      USE cp_interfaces,  ONLY: rhoofr, dforce, protate, vofrho
       USE cg_module,      ONLY: itercg
       USE cp_main_variables, ONLY: distribute_lambda, descla, nlax, collect_lambda, drhor, drhog
       USE descriptors,       ONLY: lambda_node_ , la_npc_ , la_npr_ , descla_siz_ , &
@@ -143,7 +143,7 @@
         ! calculates the SCF potential, the total energy
         ! and the ionic forces
         vpot = rhor
-        CALL vofrho( nfi, vpot, rhog, rhos, rhoc, tfirst, &
+        CALL vofrho( nfi, vpot, drhor, rhog, drhog, rhos, rhoc, tfirst, &
                      tlast, ei1, ei2, ei3, irb, eigrb, sfac, &
                      tau0, fion2 )
        !entropy value already  been calculated
@@ -280,7 +280,7 @@
         ! calculates the SCF potential, the total energy
         ! and the ionic forces
          vpot = rhor
-         CALL vofrho( nfi, vpot, rhog, rhos, rhoc, tfirst, &
+         CALL vofrho( nfi, vpot, drhor, rhog, drhog, rhos, rhoc, tfirst, &
                      tlast, ei1, ei2, ei3, irb, eigrb, sfac, &
                      tau0, fion2 )
        !entropy value already  been calculated
@@ -373,7 +373,7 @@
       USE cg_module,      ONLY: ene_ok
       USE ions_positions, ONLY: tau0
       USE mp,             ONLY: mp_sum,mp_bcast
-      use cp_interfaces,  only: rhoofr, dforce
+      use cp_interfaces,  only: rhoofr, dforce, vofrho
       USE cp_main_variables, ONLY: descla, nlax, nrlx, drhor, drhog
 
       !
@@ -444,7 +444,7 @@
       ! calculates the SCF potential, the total energy
       ! and the ionic forces
       vpot = rhor
-      CALL vofrho( nfi, vpot, rhog, rhos, rhoc, tfirst, &
+      CALL vofrho( nfi, vpot, drhor, rhog, drhog, rhos, rhoc, tfirst, &
                    tlast, ei1, ei2, ei3, irb, eigrb, sfac, &
                    tau0, fion2 )
       !entropy value already  been calculated

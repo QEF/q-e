@@ -233,7 +233,7 @@
 
 !=----------------------------------------------------------------------------=!
    SUBROUTINE ortho_cp( eigr, cp_bgrp, phi_bgrp, ngwx, x0, descla, diff, iter, ccc, &
-                        bephi, becp_dist, nbsp, nspin, nupdwn, iupdwn )
+                        bephi, becp_bgrp, nbsp, nspin, nupdwn, iupdwn )
 !=----------------------------------------------------------------------------=!
       !
       !     input = cp (non-orthonormal), beta
@@ -274,9 +274,9 @@
       REAL(DP)    :: x0(:,:,:), diff, ccc
       INTEGER     :: iter
       REAL(DP)    :: bephi(:,:)
-      REAL(DP)    :: becp_dist(:,:)
+      REAL(DP)    :: becp_bgrp(:,:)
       !
-      REAL(DP), ALLOCATABLE :: xloc(:,:), bec_bgrp(:,:)
+      REAL(DP), ALLOCATABLE :: xloc(:,:), becp_dist(:,:)
       REAL(DP), ALLOCATABLE :: qbephi(:,:,:), qbecp(:,:,:), bec_col(:,:)
 
       INTEGER :: nkbx
@@ -297,19 +297,20 @@
       !
       CALL start_clock( 'ortho' )
 
+      ALLOCATE( becp_dist( nkbx, nlax*nspin ) )
 
       IF( nvb > 0 ) THEN
-         ALLOCATE( bec_bgrp( SIZE( becp_dist, 1 ), SIZE( cp_bgrp, 2 ) ) )
          !
-         bec_bgrp = 0.0d0
+         becp_bgrp = 0.0d0
          !
-         CALL nlsm1 ( nbsp_bgrp, 1, nvb, eigr, cp_bgrp, bec_bgrp )
-         CALL bec_bgrp2ortho( bec_bgrp, becp_dist, nlax, descla )
-   
-         CALL nlsm1 ( nbsp_bgrp, 1, nvb, eigr, phi_bgrp, bec_bgrp )
-         CALL bec_bgrp2ortho( bec_bgrp, bephi, nlax, descla )
+         CALL nlsm1 ( nbsp_bgrp, 1, nvb, eigr, phi_bgrp, becp_bgrp )
+         CALL bec_bgrp2ortho( becp_bgrp, bephi, nlax, descla )
          !
-         DEALLOCATE( bec_bgrp )
+         becp_bgrp = 0.0d0
+         !
+         CALL nlsm1 ( nbsp_bgrp, 1, nvb, eigr, cp_bgrp, becp_bgrp )
+         CALL bec_bgrp2ortho( becp_bgrp, becp_dist, nlax, descla )
+         !
       END IF
       !
       !     calculation of qbephi and qbecp
@@ -424,6 +425,7 @@
       DEALLOCATE( xloc )
       DEALLOCATE( qbecp )
       DEALLOCATE( qbephi )
+      DEALLOCATE( becp_dist )
       !
       ! pack cp so that it contains only the bands in the band subgroup
       !

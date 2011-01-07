@@ -43,7 +43,7 @@ SUBROUTINE from_scratch( )
     USE cg_module,            ONLY : tcg
     USE ensemble_dft,         ONLY : tens, compute_entropy
     USE cp_interfaces,        ONLY : runcp_uspp, runcp_uspp_force_pairing, &
-                                     strucf, phfacs, nlfh
+                                     strucf, phfacs, nlfh, vofrho
     USE cp_interfaces,        ONLY : rhoofr, ortho, wave_rand_init, elec_fakekine
     USE cp_interfaces,        ONLY : compute_stress
     USE cp_interfaces,        ONLY : print_lambda
@@ -54,7 +54,7 @@ SUBROUTINE from_scratch( )
     USE wavefunctions_module, ONLY : c0_bgrp, cm_bgrp, phi_bgrp
     USE grid_dimensions,      ONLY : nr1, nr2, nr3
     USE time_step,            ONLY : delt
-    USE cp_main_variables,    ONLY : setval_lambda, descla, bephi, becp_dist, nfi, &
+    USE cp_main_variables,    ONLY : setval_lambda, descla, bephi, becp_bgrp, nfi, &
                                      sfac, eigr, taub, irb, eigrb, bec_bgrp, &
                                      lambda, lambdam, lambdap, ema0bg, rhog, rhor, rhos, &
                                      vpot, ht0, edft, nlax, becdr_bgrp, dbec, drhor, drhog
@@ -188,7 +188,7 @@ SUBROUTINE from_scratch( )
          !
          vpot = rhor
          !
-         CALL vofrho( nfi, vpot, rhog, rhos, rhoc, tfirst, tlast, &
+         CALL vofrho( nfi, vpot, drhor, rhog, drhog, rhos, rhoc, tfirst, tlast, &
         &  eigts1, eigts2, eigts3, irb, eigrb, sfac, tau0, fion )
 
          IF( tefield ) THEN
@@ -236,7 +236,7 @@ SUBROUTINE from_scratch( )
 
          if( tortho ) then
             CALL ortho( eigr, c0_bgrp, phi_bgrp, ngw, lambda, descla, &
-                        bigr, iter, ccc, bephi, becp_dist, nbsp, nspin, nupdwn, iupdwn )
+                        bigr, iter, ccc, bephi, becp_bgrp, nbsp, nspin, nupdwn, iupdwn )
          else
             CALL gram_bgrp( vkb, bec_bgrp, nkb, c0_bgrp, ngw )
          endif
@@ -255,7 +255,7 @@ SUBROUTINE from_scratch( )
                i1 = (iss-1)*nlax+1
                i2 = iss*nlax
                CALL updatc( ccc, nbsp, lambda(:,:,iss), SIZE(lambda,1), phi_bgrp, SIZE(phi_bgrp,1), &
-                            bephi(:,i1:i2), SIZE(bephi,1), becp_dist(:,i1:i2), bec_bgrp, c0_bgrp, nupdwn(iss), iupdwn(iss), &
+                            bephi(:,i1:i2), SIZE(bephi,1), becp_bgrp, bec_bgrp, c0_bgrp, nupdwn(iss), iupdwn(iss), &
                             descla(:,iss) )
             END DO
          END IF

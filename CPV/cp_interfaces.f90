@@ -95,6 +95,8 @@
    PUBLIC :: protate
    PUBLIC :: c_bgrp_expand
    PUBLIC :: c_bgrp_pack
+   PUBLIC :: vofrho
+   PUBLIC :: enkin
 
    ! ------------------------------------ !
 
@@ -397,7 +399,7 @@
 
    INTERFACE ortho
       SUBROUTINE ortho_cp &
-         ( eigr, cp_bgrp, phi_bgrp, ngwx, x0, descla, diff, iter, ccc, bephi, becp_dist, nbsp, nspin, nupdwn, iupdwn)
+         ( eigr, cp_bgrp, phi_bgrp, ngwx, x0, descla, diff, iter, ccc, bephi, becp_bgrp, nbsp, nspin, nupdwn, iupdwn)
          USE kinds,          ONLY: DP
          USE ions_base,      ONLY: nat
          USE uspp,           ONLY: nkb
@@ -411,7 +413,7 @@
          REAL(DP)    :: x0( :, :, : ), diff, ccc
          INTEGER     :: iter
          REAL(DP)    :: bephi(:,:)
-         REAL(DP)    :: becp_dist(:,:)
+         REAL(DP)    :: becp_bgrp(:,:)
       END SUBROUTINE
    END INTERFACE
 
@@ -868,7 +870,34 @@
     END SUBROUTINE c_bgrp_pack_x
    END INTERFACE
 
+   INTERFACE vofrho
+      SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, tlast,           &
+     &     ei1, ei2, ei3, irb, eigrb, sfac, tau0, fion )
+         USE kinds, ONLY: dp
+         IMPLICIT NONE
+         LOGICAL     :: tlast, tfirst
+         INTEGER     :: nfi
+         REAL(DP)    :: rhor(:,:), drhor(:,:,:,:), rhos(:,:), fion(:,:)
+         REAL(DP)    :: rhoc(:), tau0(:,:)
+         ! COMPLEX(DP) ei1(-nr1:nr1,nat), ei2(-nr2:nr2,nat), ei3(-nr3:nr3,nat)
+         COMPLEX(DP) :: ei1(:,:), ei2(:,:), ei3(:,:)
+         COMPLEX(DP) :: eigrb(:,:)
+         COMPLEX(DP) :: rhog(:,:), drhog(:,:,:,:)
+         COMPLEX(DP) :: sfac(:,:)
+         INTEGER     :: irb(:,:)
+      END SUBROUTINE vofrho_x
+   END INTERFACE
 
+   INTERFACE enkin
+      FUNCTION enkin_x( c, f, n )
+         USE kinds, ONLY: dp
+         IMPLICIT NONE
+         INTEGER,     INTENT(IN) :: n
+         COMPLEX(DP), INTENT(IN) :: c( :, : )
+         REAL(DP),    INTENT(IN) :: f( : )
+         REAL(DP) :: enkin_x
+      END FUNCTION enkin_x
+   END INTERFACE 
 !=----------------------------------------------------------------------------=!
    END MODULE
 !=----------------------------------------------------------------------------=!
