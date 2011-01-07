@@ -61,7 +61,10 @@ SUBROUTINE stop_lr( )
      !
      write(158,*) beta_store(ip,i)
      write(158,*) gamma_store(ip,i)
-     write(158,*) zeta_store (ip,:,i)
+     !This is absolutely necessary for cross platform compatibilty
+     do j=1,n_ipol                                    
+      write(158,*) zeta_store (ip,j,i)
+     end do
      !
   end do
   !
