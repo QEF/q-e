@@ -164,8 +164,9 @@ CONTAINS
     !! --------------------------------------------------------------------------------------------------------
 
     call errore('xc_vdW_DF','vdW functional not implemented for spin polarized runs', size(rho_valence,2)-1)
-    call errore('xc_vdW_DF','vdW functional not implemented for gamma point calculations. Use kpoints &
-&         automatic and specify the gamma point explicitly', 1)
+    IF ( gamma_only) CALL errore ('xc_vdW_DF', &
+        & 'vdW functional not implemented for gamma point calculations. &
+        & Use kpoints automatic and specify the gamma point explicitly', 1)
 
     !! --------------------------------------------------------------------------------------------------------
     
@@ -541,8 +542,9 @@ CONTAINS
       !! --------------------------------------------------------------------------------------------------------
 
       call errore('xc_vdW_DF','vdW functional not implemented for spin polarized runs', size(rho_valence,2)-1)
-      call errore('xc_vdW_DF','vdW functional not implemented for gamma point calculations. Use kpoints &
-&                           automatic and specify the gamma point explicitly', 2)
+      IF ( gamma_only) CALL errore ('xc_vdW_DF', &
+        & 'vdW functional not implemented for gamma point calculations. &
+        & Use kpoints automatic and specify the gamma point explicitly', 2)
       sigma(:,:) = 0.0_DP
       sigma_grad(:,:) = 0.0_DP
       sigma_ker(:,:) = 0.0_DP
