@@ -271,7 +271,7 @@ MODULE input
                                     epol2_       => epol2,     &
                                     efield2_     => efield2
      !
-     USE cvan,               ONLY : nvb
+     USE uspp_param,         ONLY : nvb
      !
      USE input_parameters,   ONLY: &
         electron_dynamics, electron_damping, electron_temperature,   &

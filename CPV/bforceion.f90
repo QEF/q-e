@@ -23,7 +23,7 @@ subroutine bforceion(fion,tfor,ipol,qmatinv,bec0,becdr,gqq,evalue)
 ! evalue     : input, scale of electric field
  
   use ions_base, only : nas => nax, na, nsp
-  use cvan
+  use uspp_param, only: nvb, ish
   use kinds, only : dp
   use constants
   use cell_base, only: a1, a2, a3

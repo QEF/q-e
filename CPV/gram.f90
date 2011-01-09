@@ -84,8 +84,7 @@ CONTAINS
       USE ions_base,          ONLY: na
       USE gvecw,              ONLY: ngw
       USE gvect,              ONLY: gstart
-      USE cvan,               ONLY: ish, nvb
-      USE uspp_param,         ONLY: nh
+      USE uspp_param,         ONLY: nh, ish, nvb
       USE uspp,               ONLY: qq
       USE mp,                 ONLY: mp_sum
       USE mp_global,          ONLY: intra_bgrp_comm
@@ -143,9 +142,8 @@ CONTAINS
 !     on output: bec(i) is recalculated
 !
       USE ions_base,      ONLY: na
-      USE cvan,           ONLY :nvb, ish
       USE uspp,           ONLY : nkb, nhsavb=>nkbus, qq
-      USE uspp_param,     ONLY:  nh
+      USE uspp_param,     ONLY:  nh, nvb, ish
       USE electrons_base, ONLY: ispin, ispin_bgrp, nbspx_bgrp, ibgrp_g2l, iupdwn, nupdwn, nbspx
       USE gvecw,          ONLY: ngw
       USE mp,             ONLY: mp_sum

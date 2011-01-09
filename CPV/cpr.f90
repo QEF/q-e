@@ -21,8 +21,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
                                        tolp, ortho_eps, ortho_max, printwfc,   &
                                        textfor
   USE core,                     ONLY : nlcc_any, rhoc
-  USE uspp_param,               ONLY : nhm, nh
-  USE cvan,                     ONLY : nvb, ish
+  USE uspp_param,               ONLY : nhm, nh, nvb, ish
   USE uspp,                     ONLY : nkb, vkb, becsum, deeq, okvan
   USE energies,                 ONLY : eht, epseu, exc, etot, eself, enl, &
                                        ekin, atot, entropy, egrand, enthal, &
@@ -123,7 +122,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
   USE control_flags,            ONLY : force_pairing
   USE mp,                       ONLY : mp_bcast, mp_sum
   USE mp_global,                ONLY : root_bgrp, intra_bgrp_comm, np_ortho, me_ortho, ortho_comm, &
-                                       me_bgrp, inter_bgrp_comm
+                                       me_bgrp, inter_bgrp_comm, nbgrp
   USE ldaU_cp,                  ONLY : lda_plus_u, vupsi
   USE step_penalty,             ONLY : vpsi_pen, step_pen, E_pen
   USE small_box,                ONLY : ainvb
@@ -165,8 +164,6 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
   REAL(DP), ALLOCATABLE :: usrt_tau0(:,:), usrt_taup(:,:), usrt_fion(:,:)
     ! temporary array used to store unsorted positions and forces for
     ! constrained dynamics
-  REAL(DP), ALLOCATABLE :: tauw(:,:)  
-    ! temporary array used to printout positions
   CHARACTER(LEN=3) :: labelw( nat )
     ! for force_pairing
   INTEGER   :: nspin_sub , i1, i2
@@ -334,6 +331,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
      !
      CALL move_electrons( nfi, tfirst, tlast, b1, b2, b3, fion, c0_bgrp, cm_bgrp, phi_bgrp, &
                           enthal, enb, enbi, fccc, ccc, dt2bye, stress )
+
      !
      IF (lda_plus_u) fion = fion + forceh
      !
@@ -508,8 +506,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
         !
         IF ( tortho ) THEN
            !
-           CALL ortho( eigr, cm_bgrp, phi_bgrp, ngw, lambda, descla, &
-                       bigr, iter, ccc, bephi, becp_bgrp, nbsp, nspin, nupdwn, iupdwn )
+           CALL ortho( eigr, cm_bgrp, phi_bgrp, lambda, descla, bigr, iter, ccc, bephi, becp_bgrp )
            !
         ELSE
            !
@@ -524,13 +521,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
         IF ( iprsta >= 3 ) CALL print_lambda( lambda, nbsp, 9, 1.D0 )
         !
         IF ( tortho ) THEN
-           DO iss = 1, nspin_sub
-              i1 = (iss-1)*nlax+1
-              i2 = iss*nlax
-              CALL updatc( ccc, nbsp, lambda(:,:,iss), SIZE(lambda,1), phi_bgrp, SIZE(phi_bgrp,1), &
-                        bephi(:,i1:i2), SIZE(bephi,1), becp_bgrp, bec_bgrp, cm_bgrp, nupdwn(iss), iupdwn(iss), &
-                        descla(:,iss) )
-           END DO
+           CALL updatc( ccc, lambda, phi_bgrp, bephi, becp_bgrp, bec_bgrp, cm_bgrp, descla )
         END IF
         !
         IF( force_pairing ) THEN

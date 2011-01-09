@@ -55,10 +55,10 @@
       use parameters, only: lmaxx    !
       use ions_base,  only: nsp, &   !  number of specie
                             na       !  number of atoms for each specie
-      use cvan,       only: ish      !
       use uspp,       only: nkb, &   !
                             nkbus    !
-      use uspp_param, only: upf,  &!
+      use uspp_param, only: ish,    &!
+                            upf,    &!
                             lmaxkb, &!
                             nhm,    &!
                             nbetam, &!
@@ -477,11 +477,10 @@
       USE kinds,         ONLY : DP
       use io_global,     only : stdout
       USE ions_base,     ONLY : nsp
-      USE uspp_param,    ONLY : upf, nh, nhm, nbetam, lmaxq, oldvan
+      USE uspp_param,    ONLY : upf, nh, nhm, nbetam, lmaxq, oldvan, ish, nvb
       USE atom,          ONLY : rgrid
       USE uspp,          ONLY : indv
       USE betax,         only : refg, qradx, mmx, dqradx
-      USE cvan,          only : ish, nvb
       use gvecb,         only : ngb
       USE cp_interfaces, ONLY : fill_qrl
       !
@@ -609,20 +608,18 @@
       use io_global,  only: stdout
       USE ions_base,  ONLY: nsp
       USE uspp_param, ONLY: upf, nh, nhm, nbetam, lmaxq, oldvan
-      use uspp_param, only: lmaxkb
+      use uspp_param, only: lmaxkb, ish, nvb
       USE atom,       ONLY: rgrid
       USE uspp,       ONLY: indv
       use uspp,       only: qq, beta
       USE betax,      only: refg, qradx, mmx, dqradx
-      USE cvan,       only: ish, nvb
       use gvecb,      only: ngb
       use control_flags, only: iprint, iprsta
       use cell_base,  only: ainv
       use constants,  only: pi, fpi
-      use qgb_mod,    only: qgb
+      use qgb_mod,    only: qgb, dqgb
       use gvecb,      only: gb, gxb
       use small_box,  only: omegab, tpibab
-      use dqgb_mod,   only: dqgb
       USE cp_interfaces, ONLY: fill_qrl
       !
       IMPLICIT NONE
@@ -1034,15 +1031,13 @@
       use io_global, only: stdout
       use gvecw, only: ngw
       use cell_base, only: ainv
-      use cvan, only: nvb
       use uspp, only: qq, nhtolm, beta
       use constants, only: pi, fpi
       use ions_base, only: nsp
-      use uspp_param, only: upf, lmaxq, lmaxkb, nbetam, nh
-      use qgb_mod, only: qgb
+      use uspp_param, only: upf, lmaxq, lmaxkb, nbetam, nh, nvb
+      use qgb_mod, only: qgb, dqgb
       use gvecb, only: gb, gxb, ngb
       use small_box,  only: omegab, tpibab
-      use dqgb_mod, only: dqgb
       USE betax, ONLY: qradx, dqradx, refg, mmx
 !
       implicit none

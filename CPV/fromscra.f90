@@ -35,8 +35,8 @@ SUBROUTINE from_scratch( )
     USE gvecw,                ONLY : ngw
     USE gvecs,                ONLY : ngms
     USE gvect,                ONLY : ngm
-    USE gvect,   ONLY : gstart, mill, eigts1, eigts2, eigts3
-    USE cvan,                 ONLY : nvb
+    USE gvect,                ONLY : gstart, mill, eigts1, eigts2, eigts3
+    USE uspp_param,           ONLY : nvb
     USE cp_electronic_mass,   ONLY : emass
     USE efield_module,        ONLY : tefield, efield_berry_setup, berry_energy, &
                                      tefield2, efield_berry_setup2, berry_energy2
@@ -58,7 +58,7 @@ SUBROUTINE from_scratch( )
                                      sfac, eigr, taub, irb, eigrb, bec_bgrp, &
                                      lambda, lambdam, lambdap, ema0bg, rhog, rhor, rhos, &
                                      vpot, ht0, edft, nlax, becdr_bgrp, dbec, drhor, drhog
-    USE mp_global,            ONLY : np_ortho, me_ortho, ortho_comm, mpime, inter_bgrp_comm
+    USE mp_global,            ONLY : np_ortho, me_ortho, ortho_comm, mpime, inter_bgrp_comm, nbgrp
     USE small_box,            ONLY : ainvb
     USE mp,                   ONLY : mp_sum
     !
@@ -235,8 +235,7 @@ SUBROUTINE from_scratch( )
          &   phi_bgrp( :, iupdwn(2):(iupdwn(2)+nupdwn(2)-1) ) =    phi_bgrp( :, 1:nupdwn(2))
 
          if( tortho ) then
-            CALL ortho( eigr, c0_bgrp, phi_bgrp, ngw, lambda, descla, &
-                        bigr, iter, ccc, bephi, becp_bgrp, nbsp, nspin, nupdwn, iupdwn )
+            CALL ortho( eigr, c0_bgrp, phi_bgrp, lambda, descla, bigr, iter, ccc, bephi, becp_bgrp )
          else
             CALL gram_bgrp( vkb, bec_bgrp, nkb, c0_bgrp, ngw )
          endif
@@ -251,13 +250,7 @@ SUBROUTINE from_scratch( )
          if ( tstress ) CALL nlfh( stress, bec_bgrp, dbec, lambda )
          !
          IF ( tortho ) THEN
-            DO iss = 1, nspin_wfc
-               i1 = (iss-1)*nlax+1
-               i2 = iss*nlax
-               CALL updatc( ccc, nbsp, lambda(:,:,iss), SIZE(lambda,1), phi_bgrp, SIZE(phi_bgrp,1), &
-                            bephi(:,i1:i2), SIZE(bephi,1), becp_bgrp, bec_bgrp, c0_bgrp, nupdwn(iss), iupdwn(iss), &
-                            descla(:,iss) )
-            END DO
+            CALL updatc( ccc, lambda, phi_bgrp, bephi, becp_bgrp, bec_bgrp, c0_bgrp, descla )
          END IF
          !
          IF( force_pairing ) THEN

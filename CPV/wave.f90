@@ -107,6 +107,39 @@
     return
   end subroutine elec_fakekine_x
 
+!=----------------------------------------------------------------------------=!
+  subroutine bandsum( bsum, c0, ngw, tbgrp )
+!=----------------------------------------------------------------------------=!
+    !
+    !  This subroutine computes the CP(fake) wave functions kinetic energy
+    
+    USE kinds,              only : DP
+    use mp,                 only : mp_sum
+    use mp_global,          only : intra_bgrp_comm, nbgrp, inter_bgrp_comm
+    USE electrons_base,     ONLY : nbsp, nbsp_bgrp
+    !
+    IMPLICIT NONE
+    !
+    integer, intent(in)      :: ngw    !  number of plane wave coeff.
+    real(DP), intent(out)    :: bsum
+    complex(DP), intent(in)  :: c0( ngw, * )
+    logical, intent(in)      :: tbgrp
+    !
+    integer  :: i, n
+
+    n = nbsp
+    IF( tbgrp ) n = nbsp_bgrp
+
+    bsum=0.0d0
+    do i = 1, n
+      bsum = bsum + SUM( DBLE( CONJG( c0( :, i ) ) * c0( :, i ) ) )
+    end do
+    CALL mp_sum( bsum, intra_bgrp_comm )
+    IF( tbgrp ) &
+       CALL mp_sum( bsum, inter_bgrp_comm )
+
+    return
+  end subroutine bandsum
 
 
 
@@ -365,12 +398,13 @@
       USE kinds,              ONLY: DP
       USE mp,                 ONLY: mp_sum
       USE mp_wave,            ONLY: splitwf
-      USE mp_global,          ONLY: me_bgrp, nproc_bgrp, root_bgrp, intra_bgrp_comm
+      USE mp_global,          ONLY: me_bgrp, nproc_bgrp, root_bgrp, intra_bgrp_comm, mpime
       USE gvect, ONLY: ig_l2g, gstart
       USE gvecw,              ONLY: ngw, ngw_g
       USE io_global,          ONLY: stdout
       USE random_numbers,     ONLY: randy
-      USE electrons_base,     ONLY: nbsp, nbsp_bgrp, i2gupdwn_bgrp, nupdwn, iupdwn_bgrp, iupdwn, nupdwn_bgrp
+      !USE electrons_base,     ONLY: nbsp, ibgrp_g2l
+      USE electrons_base
       
       IMPLICIT NONE
 
@@ -378,9 +412,10 @@
       COMPLEX(DP), INTENT(OUT) :: cm_bgrp(:,:)
 
       ! ... declare other variables
-      INTEGER :: ntest, ig, ib, iss, n1, n2, m1, m2
+      INTEGER :: ntest, ig, ib, ibgrp
       REAL(DP) ::  rranf1, rranf2, ampre
       COMPLEX(DP), ALLOCATABLE :: pwt( : )
+      INTEGER :: iss, n1, n2, m1, m2, i
 
       ! ... Check array dimensions
 
@@ -413,16 +448,11 @@
           pwt( ig ) = ampre * CMPLX(rranf1, rranf2,kind=DP)
         END DO
         !
-        iss = 1
-        IF( ib > nupdwn( 1 ) ) iss = 2
-        n1 = iupdwn_bgrp(iss)
-        n2 = n1 + nupdwn_bgrp(iss) - 1
-        m1 = iupdwn(iss)+i2gupdwn_bgrp(iss) - 1
-        m2 = m1 + nupdwn_bgrp(iss) - 1
+        ibgrp = ibgrp_g2l( ib )
         !
-        IF( ib >= m1 .AND. ib <= m2 ) THEN
+        IF( ibgrp > 0 ) THEN
           DO ig = 1, ngw
-            cm_bgrp( ig, ib - m1 + n1 ) = pwt( ig_l2g( ig ) )
+            cm_bgrp( ig, ibgrp ) = pwt( ig_l2g( ig ) )
           END DO
         END IF
         !
@@ -432,6 +462,40 @@
       END IF
 
       DEALLOCATE( pwt )
+
+#ifdef PIPPO_DEBUG
+      write(1000+mpime,fmt='(8I5)') nbsp, nbsp_bgrp, nudx, nudx_bgrp, nbsp, nbsp_bgrp, nbspx, nbspx_bgrp
+      DO iss = 1, nspin
+         write(1000+mpime,fmt='(5I5)') nupdwn(iss), iupdwn(iss), nupdwn_bgrp(iss), iupdwn_bgrp(iss), i2gupdwn_bgrp(iss)
+      END DO
+      DO ib = 1, nbsp
+         ! write(1000+mpime,fmt='(2I5)') ib, ibgrp_g2l(ib)
+      END DO
+
+      DO iss = nspin, 1, -1
+         write(1000+mpime,*) 'copy'
+         n1 = iupdwn_bgrp(iss)
+         n2 = n1 + nupdwn_bgrp(iss) - 1
+         m1 = iupdwn(iss)+i2gupdwn_bgrp(iss) - 1
+         m2 = m1 + nupdwn_bgrp(iss) - 1
+         DO i = m2, m1, -1
+            write(1000+mpime,fmt='(2I5)') i, i-m1+n1
+         END DO
+      END DO
+      DO iss = 1, nspin
+         m1 = iupdwn(iss)+i2gupdwn_bgrp(iss) - 1
+         m2 = m1 + nupdwn_bgrp(iss) - 1
+         write(1000+mpime,*) 'zero'
+         DO i = iupdwn(iss), m1-1
+            write(1000+mpime,fmt='(1I5)') i
+         END DO
+         write(1000+mpime,*) 'zero'
+         DO i = m2+1, iupdwn(iss) + nupdwn(iss) - 1
+            write(1000+mpime,fmt='(1I5)') i
+         END DO
+      END DO
+#endif
+
 
       RETURN
     END SUBROUTINE wave_rand_init_x
@@ -459,10 +523,10 @@
       DO iss = 1, nspin
          m1 = iupdwn(iss)+i2gupdwn_bgrp(iss) - 1
          m2 = m1 + nupdwn_bgrp(iss) - 1
-         DO i = 1, m1-1
+         DO i = iupdwn(iss), m1-1
             c_bgrp(:,i) = 0.0d0
          END DO
-         DO i = m2+1, nupdwn(iss)
+         DO i = m2+1, iupdwn(iss) + nupdwn(iss) - 1
             c_bgrp(:,i) = 0.0d0
          END DO
       END DO

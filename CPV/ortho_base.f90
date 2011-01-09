@@ -698,7 +698,7 @@ END SUBROUTINE diagonalize_parallel
 !
       USE kinds,              ONLY: DP
       USE uspp,               ONLY: nkbus
-      USE cvan,               ONLY: nvb
+      USE uspp_param,         ONLY: nvb
       USE gvecw,              ONLY: ngw
       USE gvect, ONLY: gstart
       USE mp,                 ONLY: mp_root_sum
@@ -823,9 +823,9 @@ END SUBROUTINE diagonalize_parallel
 !     routine makes use of  c(-q)=c*(q)
 !
       USE gvecw,              ONLY: ngw
-      USE gvect, ONLY: gstart
+      USE gvect,              ONLY: gstart
       USE uspp,               ONLY: nkbus
-      USE cvan,               ONLY: nvb
+      USE uspp_param,         ONLY: nvb
       USE kinds,              ONLY: DP
       USE mp,                 ONLY: mp_root_sum
       USE mp_global,          ONLY: intra_bgrp_comm, me_bgrp, leg_ortho
@@ -949,10 +949,10 @@ END SUBROUTINE diagonalize_parallel
 !     routine makes use of c(-q)=c*(q)
 !
       USE kinds,              ONLY: DP
-      USE cvan,               ONLY: nvb
+      USE uspp_param,         ONLY: nvb
       USE uspp,               ONLY: nkbus
       USE gvecw,              ONLY: ngw
-      USE gvect, ONLY: gstart
+      USE gvect,              ONLY: gstart
       USE mp,                 ONLY: mp_root_sum
       USE control_flags,      ONLY: iprsta
       USE io_global,          ONLY: stdout
@@ -1070,7 +1070,7 @@ END SUBROUTINE diagonalize_parallel
 
 !
 !-------------------------------------------------------------------------
-   SUBROUTINE updatc( ccc, n, x0, nx0, phi, ngwx, bephi, nkbx, becp_bgrp, bec_bgrp, cp_bgrp, nss, istart, desc )
+   SUBROUTINE updatc( ccc, x0, phi, bephi, becp_bgrp, bec_bgrp, cp_bgrp, desc )
 !-----------------------------------------------------------------------
 !
       !     input ccc : dt**2/emass OR 1.0d0 demending on ortho
@@ -1084,184 +1084,197 @@ END SUBROUTINE diagonalize_parallel
       USE kinds,             ONLY: DP
       USE ions_base,         ONLY: nsp, na
       USE io_global,         ONLY: stdout
-      USE cvan,              ONLY: nvb, ish
       USE uspp,              ONLY: nkb, nkbus
-      USE uspp_param,        ONLY: nh
+      USE uspp_param,        ONLY: nh, nvb, ish
       USE gvecw,             ONLY: ngw
       USE control_flags,     ONLY: iprint, iprsta
       USE mp,                ONLY: mp_sum, mp_bcast
       USE mp_global,         ONLY: intra_bgrp_comm, leg_ortho, me_bgrp, inter_bgrp_comm
-      USE electrons_base,    ONLY: nbspx_bgrp, ibgrp_g2l
+      USE electrons_base,    ONLY: nbspx_bgrp, ibgrp_g2l, nbsp, nspin,  nupdwn, iupdwn, nbspx
       USE descriptors,       ONLY: nlar_ , nlac_ , ilar_ , ilac_ , lambda_node_ , descla_siz_ , la_comm_ , &
                                    la_npc_ , la_npr_ , nlax_ , la_n_ , la_nx_ , la_myr_ , la_myc_ , &
                                    descla_init
 !
       IMPLICIT NONE
 !
-      INTEGER, INTENT(IN) :: n, nx0, ngwx, nkbx, istart, nss
-      INTEGER, INTENT(IN) :: desc( descla_siz_ )
-      COMPLEX(DP) :: cp_bgrp( ngwx, nbspx_bgrp ), phi( ngwx, n )
+      INTEGER, INTENT(IN) :: desc( : , : )
+      COMPLEX(DP) :: cp_bgrp( :, : ), phi( :, : )
       REAL(DP), INTENT(IN) :: ccc
-      REAL(DP)    :: bec_bgrp( nkbx, nbspx_bgrp ), x0( nx0, nx0 )
+      REAL(DP)    :: bec_bgrp( :, : ), x0( :, :, : )
       REAL(DP)    :: bephi( :, : )
       REAL(DP)    :: becp_bgrp( :, : )
 
       ! local variables
 
-      INTEGER :: i, j, ig, is, iv, ia, inl, nr, nc, ir, ic
+      INTEGER :: i, j, ig, is, iv, ia, inl, nr, nc, ir, ic, nx0, ngwx, nkbx, iss, nlax
+      INTEGER :: ipr, ipc, root, i1, i2, nss, istart
+      INTEGER :: ibgrp_i, ibgrp_i_first, nbgrp_i, i_first
       REAL(DP),    ALLOCATABLE :: wtemp(:,:) 
       REAL(DP),    ALLOCATABLE :: xd(:,:) 
       REAL(DP),    ALLOCATABLE :: bephi_tmp(:,:) 
-      REAL(DP) :: beta
-      INTEGER :: ipr, ipc, nx, root
       INTEGER :: np( 2 ), coor_ip( 2 )
       INTEGER :: desc_ip( descla_siz_ )
-      INTEGER :: ibgrp_i, ibgrp_i_first, nbgrp_i, i_first
-      !
-      !     lagrange multipliers
-      !
-      IF( nss < 1 ) RETURN
-      !
-      IF( desc( lambda_node_ ) > 0 ) THEN
-         IF( nx0 /= desc( nlax_ ) ) &
-            CALL errore( " updatc ", " inconsistent dimension nx0 ", nx0 )
-      END IF
-      !
-      !  size of the local block
-      !
-      nx = desc( nlax_ )
-      !
-      np(1) = desc( la_npr_ )
-      np(2) = desc( la_npc_ )
-      !
-      CALL start_clock( 'updatc' )
 
-      ALLOCATE( xd( nx, nx ) )
-
-      IF( nvb > 0 )THEN
-         DO i = 1, nss
-            ibgrp_i = ibgrp_g2l( i + istart - 1 )
-            IF( ibgrp_i > 0 ) THEN
-               DO inl = 1, nkbus
-                  bec_bgrp( inl, ibgrp_i ) = becp_bgrp( inl, ibgrp_i )
-               END DO
-            END IF
-         END DO
-         ALLOCATE( wtemp( nx, nkb ) )
-         ALLOCATE( bephi_tmp( nkbx, nx ) )
-      END IF
-
-
-      DO ipc = 1, np(2)
+      DO iss = 1, nspin
          !
-         IF( nvb > 0 )THEN
-            ! 
-            ! For the inner loop we need the block of bebhi( :, ic : ic + nc - 1 )
-            ! this is the same of block bephi( :, ir : ir + nr - 1 ) on processor
-            ! with coords ipr == ipc
-            !
-            ! get the right processor owning the block of bephi
-            !
-            CALL GRID2D_RANK( 'R', np(1), np(2), ipc-1, ipc-1, root )
-            root = root * leg_ortho
-            !
-            ! broadcast the block to all processors 
-            ! 
-            IF( me_bgrp == root ) bephi_tmp = bephi
-            CALL mp_bcast( bephi_tmp, root, intra_bgrp_comm )
-            !
+         !  size of the local block
+         !
+         nlax = desc( nlax_ , iss )
+         !
+         nss = nupdwn(iss)
+         istart = iupdwn(iss)
+         i1 = (iss-1)*nlax+1
+         i2 = iss*nlax
+         nx0 = SIZE( x0, 1 )
+         ngwx = SIZE( phi, 1 )
+         nkbx = SIZE( bephi, 1 )
+         !
+         !     lagrange multipliers
+         !
+         IF( nss < 1 ) CYCLE
+         !
+         IF( desc( lambda_node_ , iss ) > 0 ) THEN
+            IF( nx0 /= desc( nlax_ , iss ) ) &
+               CALL errore( " updatc ", " inconsistent dimension nx0 ", nx0 )
          END IF
-
-         DO ipr = 1, np(1)
-            !
-            coor_ip(1) = ipr - 1
-            coor_ip(2) = ipc - 1
-
-            CALL descla_init( desc_ip, desc( la_n_ ), desc( la_nx_ ), np, coor_ip, desc( la_comm_ ), 1 )
-
-            nr = desc_ip( nlar_ )
-            nc = desc_ip( nlac_ )
-            ir = desc_ip( ilar_ )
-            ic = desc_ip( ilac_ )
-            !
-            CALL GRID2D_RANK( 'R', desc_ip( la_npr_ ), desc_ip( la_npc_ ), &
-                                   desc_ip( la_myr_ ), desc_ip( la_myc_ ), root )
-            !
-            ! we need to update only states local to the current band group,
-            ! so here we compute the overlap between ortho and band group.
-            !
-            nbgrp_i = 0
-            DO i = 1, nc
-               ibgrp_i = ibgrp_g2l( i + istart + ic - 2 )
+         !
+         np(1) = desc( la_npr_ , iss )
+         np(2) = desc( la_npc_ , iss )
+         !
+         CALL start_clock( 'updatc' )
+   
+         ALLOCATE( xd( nlax, nlax ) )
+   
+         IF( nvb > 0 )THEN
+            DO i = 1, nss
+               ibgrp_i = ibgrp_g2l( i + istart - 1 )
                IF( ibgrp_i > 0 ) THEN
-                  IF( nbgrp_i == 0 ) THEN
-                     ibgrp_i_first = ibgrp_i
-                     i_first = i
-                  END IF
-                  nbgrp_i = nbgrp_i + 1
+                  DO inl = 1, nkbus
+                     bec_bgrp( inl, ibgrp_i ) = becp_bgrp( inl, ibgrp_i )
+                  END DO
                END IF
             END DO
-
-            root = root * leg_ortho
-
-            IF( desc( la_myr_ ) == ipr - 1 .AND. desc( la_myc_ ) == ipc - 1 .AND. desc( lambda_node_ ) > 0 ) THEN
-               xd = x0 * ccc
-            END IF
-
-            CALL mp_bcast( xd, root, intra_bgrp_comm )
-
-            CALL dgemm( 'N', 'N', 2*ngw, nbgrp_i, nr, 1.0d0, phi(1,istart+ir-1), 2*ngwx, &
-                        xd(1,i_first), nx, 1.0d0, cp_bgrp(1,ibgrp_i_first), 2*ngwx )
-
+            ALLOCATE( wtemp( nlax, nkb ) )
+            ALLOCATE( bephi_tmp( nkbx, nlax ) )
+         END IF
+   
+   
+         DO ipc = 1, np(2)
+            !
             IF( nvb > 0 )THEN
-
-               !     updating of the <beta|c(n,g)>
+               ! 
+               ! For the inner loop we need the block of bebhi( :, ic : ic + nc - 1 )
+               ! this is the same of block bephi( :, ir : ir + nr - 1 ) on processor
+               ! with coords ipr == ipc
                !
-               !     bec of vanderbilt species are updated 
+               ! get the right processor owning the block of bephi
                !
-               CALL dgemm( 'N', 'T', nr, nkbus, nc, 1.0d0, xd, nx, bephi_tmp, nkbx, 0.0d0, wtemp, nx )
+               CALL GRID2D_RANK( 'R', np(1), np(2), ipc-1, ipc-1, root )
+               root = root * leg_ortho
                !
-               ! here nr and ir are still valid, since they are the same for all procs in the same row
+               ! broadcast the block to all processors 
+               ! 
+               IF( me_bgrp == root ) bephi_tmp = bephi(:,i1:i2)
+               CALL mp_bcast( bephi_tmp, root, intra_bgrp_comm )
                !
-               DO i = 1, nr
-                  ibgrp_i = ibgrp_g2l( i + istart + ir - 2 )
+            END IF
+   
+            DO ipr = 1, np(1)
+               !
+               ! Compute the descriptor of processor with coord: ( ipr-1, ipc-1 ), in the ortho group
+               !
+               coor_ip(1) = ipr - 1
+               coor_ip(2) = ipc - 1
+   
+               CALL descla_init( desc_ip, desc( la_n_ , iss ), desc( la_nx_ , iss ), np, coor_ip, desc( la_comm_ , iss ), 1 )
+   
+               nr = desc_ip( nlar_ )
+               nc = desc_ip( nlac_ )
+               ir = desc_ip( ilar_ )
+               ic = desc_ip( ilac_ )
+               !
+               CALL GRID2D_RANK( 'R', desc_ip( la_npr_ ), desc_ip( la_npc_ ), &
+                                      desc_ip( la_myr_ ), desc_ip( la_myc_ ), root )
+               !
+               ! we need to update only states local to the current band group,
+               ! so here we compute the overlap between ortho and band group.
+               !
+               nbgrp_i = 0
+               DO i = 1, nc
+                  ibgrp_i = ibgrp_g2l( i + istart + ic - 2 )
                   IF( ibgrp_i > 0 ) THEN
-                     DO inl = 1, nkbus
-                        bec_bgrp( inl, ibgrp_i ) = bec_bgrp( inl, ibgrp_i ) + wtemp( i, inl ) 
-                     END DO
+                     IF( nbgrp_i == 0 ) THEN
+                        ibgrp_i_first = ibgrp_i
+                        i_first = i
+                     END IF
+                     nbgrp_i = nbgrp_i + 1
                   END IF
                END DO
-               !
-            END IF
-
+   
+               root = root * leg_ortho
+   
+               IF( desc( la_myr_ , iss ) == ipr - 1 .AND. &
+                   desc( la_myc_ , iss ) == ipc - 1 .AND. &
+                   desc( lambda_node_ , iss ) > 0 ) THEN
+                  xd = x0(:,:,iss) * ccc
+               END IF
+   
+               CALL mp_bcast( xd, root, intra_bgrp_comm )
+   
+               CALL dgemm( 'N', 'N', 2*ngw, nbgrp_i, nr, 1.0d0, phi(1,istart+ir-1), 2*ngwx, &
+                           xd(1,i_first), nlax, 1.0d0, cp_bgrp(1,ibgrp_i_first), 2*ngwx )
+   
+               IF( nvb > 0 )THEN
+   
+                  !     updating of the <beta|c(n,g)>
+                  !
+                  !     bec of vanderbilt species are updated 
+                  !
+                  CALL dgemm( 'N', 'T', nr, nkbus, nc, 1.0d0, xd, nlax, bephi_tmp, nkbx, 0.0d0, wtemp, nlax )
+                  !
+                  ! here nr and ir are still valid, since they are the same for all procs in the same row
+                  !
+                  DO i = 1, nr
+                     ibgrp_i = ibgrp_g2l( i + istart + ir - 2 )
+                     IF( ibgrp_i > 0 ) THEN
+                        DO inl = 1, nkbus
+                           bec_bgrp( inl, ibgrp_i ) = bec_bgrp( inl, ibgrp_i ) + wtemp( i, inl ) 
+                        END DO
+                     END IF
+                  END DO
+                  !
+               END IF
+   
+            END DO
+            !    
          END DO
-         !    
-      END DO
-
-      IF( nvb > 0 )THEN
-         DEALLOCATE( wtemp )
-         DEALLOCATE( bephi_tmp )
-      END IF
-!
-      IF ( iprsta > 2 ) THEN
-         WRITE( stdout,*)
-         DO is = 1, nvb
-            IF( nvb > 1 ) THEN
-               WRITE( stdout,'(33x,a,i4)') ' updatc: bec (is)',is
-               WRITE( stdout,'(8f9.4)')                                       &
-     &            ((bec_bgrp(ish(is)+(iv-1)*na(is)+1,i+istart-1),iv=1,nh(is)),i=1,nss)
-            ELSE
-               DO ia=1,na(is)
-                  WRITE( stdout,'(33x,a,i4)') ' updatc: bec (ia)',ia
-                  WRITE( stdout,'(8f9.4)')                                    &
-     &            ((bec_bgrp(ish(is)+(iv-1)*na(is)+ia,i+istart-1),iv=1,nh(is)),i=1,nss)
-               END DO
-            END IF
+   
+         IF( nvb > 0 )THEN
+            DEALLOCATE( wtemp )
+            DEALLOCATE( bephi_tmp )
+         END IF
+         !
+         IF ( iprsta > 2 ) THEN
             WRITE( stdout,*)
-         END DO
-      ENDIF
-      !
-      DEALLOCATE( xd )
+            DO is = 1, nvb
+               IF( nvb > 1 ) THEN
+                  WRITE( stdout,'(33x,a,i4)') ' updatc: bec (is)',is
+                  WRITE( stdout,'(8f9.4)')                                       &
+        &            ((bec_bgrp(ish(is)+(iv-1)*na(is)+1,i+istart-1),iv=1,nh(is)),i=1,nss)
+               ELSE
+                  DO ia=1,na(is)
+                     WRITE( stdout,'(33x,a,i4)') ' updatc: bec (ia)',ia
+                     WRITE( stdout,'(8f9.4)')                                    &
+        &            ((bec_bgrp(ish(is)+(iv-1)*na(is)+ia,i+istart-1),iv=1,nh(is)),i=1,nss)
+                  END DO
+               END IF
+               WRITE( stdout,*)
+            END DO
+         ENDIF
+         !
+         DEALLOCATE( xd )
+         !
+      END DO
       !
       CALL stop_clock( 'updatc' )
       !
@@ -1282,8 +1295,7 @@ END SUBROUTINE diagonalize_parallel
       USE ions_base,      ONLY: na, nsp
       USE io_global,      ONLY: stdout
       USE mp_global,      ONLY: intra_bgrp_comm, inter_bgrp_comm
-      USE cvan,           ONLY: ish, nvb
-      USE uspp_param,     ONLY: nh
+      USE uspp_param,     ONLY: nh, ish, nvb
       USE uspp,           ONLY: nkbus, qq
       USE gvecw,          ONLY: ngw
       USE electrons_base, ONLY: nbsp_bgrp, nbsp

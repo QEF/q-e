@@ -26,8 +26,7 @@
       USE ions_base,  only : na, nat
       USE gvecw,      only : ngw
       USE uspp,       only : nkb, nhtol, beta
-      USE cvan,       only : ish
-      USE uspp_param, only : nh
+      USE uspp_param, only : nh, ish
       !
       USE gvect, ONLY : gstart
 !
@@ -171,8 +170,7 @@
       USE kinds,      ONLY : DP
       use ions_base,  only : nsp, na, nat
       use uspp,       only : nhtol, beta  !, nkb
-      use cvan,       only : ish
-      use uspp_param, only : nh
+      use uspp_param, only : nh, ish
       use cell_base,  only : tpiba
       use mp,         only : mp_sum
       use mp_global,  only : nproc_bgrp, intra_bgrp_comm
@@ -286,8 +284,7 @@
       ! calculation of nonlocal potential energy term and array rhovan
       !
       use kinds,          only : DP
-      use cvan,           only : ish
-      use uspp_param,     only : nhm, nh
+      use uspp_param,     only : nhm, nh, ish
       use uspp,           only : nkb, dvan
       use electrons_base, only : nbsp_bgrp, nspin, ispin_bgrp, f_bgrp, nbspx_bgrp
       use ions_base,      only : nsp, nat, na
@@ -356,8 +353,7 @@
       ! calculation of rhovan relative to state iwf
       !
       use kinds,          only : DP
-      use cvan,           only : ish
-      use uspp_param,     only : nhm, nh
+      use uspp_param,     only : nhm, nh, ish
       use uspp,           only : nkb, dvan
       use electrons_base, only : n => nbsp, nspin, ispin, f
       use ions_base,      only : nsp, nat, na
@@ -414,11 +410,10 @@
       USE kinds,          ONLY : DP
       use ions_base,      only : na, nat
       use io_global,      only : stdout
-      use cvan,           only : ish
       use electrons_base, only : n => nbsp
       use gvecw,          only : ngw
       use control_flags,  only : iprint, iprsta
-      use uspp_param,     only : nh
+      use uspp_param,     only : nh, ish
       use uspp,           only : nkb
 !
       implicit none
@@ -466,10 +461,9 @@
 
       USE kinds,          ONLY : DP
       use ions_base,      only : na, nat
-      use cvan,           only : ish
       use electrons_base, only : nbsp_bgrp, nbspx_bgrp
       use gvecw,          only : ngw
-      use uspp_param,     only : nh
+      use uspp_param,     only : nh, ish
       use uspp,           only : nkb
 !
       implicit none
@@ -505,9 +499,8 @@ SUBROUTINE caldbec_bgrp( eigr, c_bgrp, dbec )
   use mp,         only : mp_sum
   use mp_global,  only : nproc_bgrp, intra_bgrp_comm, inter_bgrp_comm, nbgrp
   use ions_base,  only : na, nat, nsp
-  use cvan,       only : ish
   use uspp,       only : nhtol, nkb, dbeta
-  use uspp_param, only : nh, nhm
+  use uspp_param, only : nh, nhm, ish
   use gvect,      only : gstart
   use gvecw,      only : ngw
   USE cp_main_variables,  ONLY : descla, la_proc, nlax, nlam
@@ -627,8 +620,7 @@ subroutine dennl( bec_bgrp, dbec, drhovan, denl )
   !  pseudopotentials to the derivative of E with respect to h
   !
   USE kinds,      ONLY : DP
-  use cvan,       only : ish
-  use uspp_param, only : nh, nhm
+  use uspp_param, only : nh, nhm, ish
   use uspp,       only : nkb, dvan, deeq
   use ions_base,  only : nsp, na, nat
   use cell_base,  only : h
@@ -739,8 +731,7 @@ subroutine nlfq_bgrp( c_bgrp, eigr, bec_bgrp, becdr_bgrp, fion )
   !
   USE kinds,          ONLY : DP
   use uspp,           only : nkb, dvan, deeq
-  use uspp_param,     only : nhm, nh
-  use cvan,           only : ish, nvb
+  use uspp_param,     only : nhm, nh, ish, nvb
   use ions_base,      only : nax, nat, nsp, na
   use electrons_base, only : nbsp_bgrp, f_bgrp, nbspx_bgrp, ispin_bgrp
   use gvecw,          only : ngw

@@ -134,8 +134,7 @@ END FUNCTION check_file_type
       USE io_global, ONLY: stdout, ionode, ionode_id
       USE uspp, ONLY : okvan
       USE core, ONLY : nlcc_any
-      USE uspp_param, ONLY : oldvan
-      USE cvan, ONLY: nvb
+      USE uspp_param, ONLY : oldvan, nvb
       use ions_base, only: zv, nsp
       use upf_module, only: read_upf
       use read_uspp_module, only: readvan, readrrkj

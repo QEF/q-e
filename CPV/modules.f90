@@ -103,11 +103,14 @@ module qgb_mod
   implicit none
   save
   complex(DP), allocatable :: qgb(:,:,:)
+  complex(DP), allocatable :: dqgb(:,:,:,:,:)
 contains
   subroutine deallocate_qgb_mod
       IF( ALLOCATED( qgb ) ) DEALLOCATE( qgb )
+      IF( ALLOCATED( dqgb ) ) DEALLOCATE( dqgb )
   end subroutine deallocate_qgb_mod
 end module qgb_mod
+
 
 MODULE metagga  !metagga
   USE kinds, ONLY: DP
@@ -149,48 +152,7 @@ MODULE dener
   REAL(DP) :: detot6(6)
 END MODULE dener
 
-module dqgb_mod
-  USE kinds, ONLY: DP
-  implicit none
-  save
-  complex(DP),allocatable:: dqgb(:,:,:,:,:)
-contains
-  subroutine deallocate_dqgb_mod
-      IF( ALLOCATED( dqgb ) ) DEALLOCATE( dqgb )
-  end subroutine deallocate_dqgb_mod
-end module dqgb_mod
 
-
-
-module cvan
-
-  ! this file contains common subroutines and modules between
-  ! CP and FPMD
-
-  !     ionic pseudo-potential variables
-  use parameters, only: nsx
-  implicit none
-  save
-  integer nvb, ish(nsx)
-  !     nvb    = number of species with Vanderbilt PPs
-  !     ish(is)= used for indexing the nonlocal projectors betae
-  !              with contiguous indices inl=ish(is)+(iv-1)*na(is)+1
-  !              where "is" is the species and iv=1,nh(is)
-  !
-  !     indlm: indlm(ind,is)=Y_lm for projector ind
-  integer, allocatable:: indlm(:,:)
-contains
-
-  subroutine allocate_cvan( nind, ns )
-    integer, intent(in) :: nind, ns
-    allocate( indlm( nind, ns ) )
-  end subroutine allocate_cvan
-
-  subroutine deallocate_cvan( )
-    if( allocated(indlm) ) deallocate( indlm )
-  end subroutine deallocate_cvan
-
-end module cvan
 
 
 MODULE stress_param

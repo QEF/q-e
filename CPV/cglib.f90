@@ -88,9 +88,8 @@
       subroutine rotate( z0, c0, bec, c0diag, becdiag, firstiter )
 !-----------------------------------------------------------------------
       use kinds, only: dp
-      use cvan
       use electrons_base, only: nudx, nspin, nupdwn, iupdwn, nx => nbspx, n => nbsp
-      use uspp_param, only: nh
+      use uspp_param, only: nh, ish, nvb
       use uspp, only :nhsa=>nkb, nhsavb=>nkbus, qq
       use gvecw, only: ngw
       use ions_base, only: nsp, na
@@ -241,14 +240,13 @@ subroutine pc2(a,beca,b,becb)
       use ions_base, only: na, nsp
       use io_global, only: stdout
       use mp_global, only: intra_bgrp_comm
-      use cvan 
       use gvecw, only: ngw
       use constants, only: pi, fpi
       use control_flags, only: iprint, iprsta
       use gvect, only: gstart
       use mp, only: mp_sum
       use electrons_base, only: n => nbsp, ispin,  nupdwn, iupdwn, nspin
-      use uspp_param, only: nh
+      use uspp_param, only: nh, nvb, ish
       use uspp, only :nhsa=>nkb
       use uspp, only :qq
       use parallel_toolkit, only : rep_matmul_drv
@@ -351,14 +349,13 @@ subroutine pc2(a,beca,b,becb)
       use ions_base, only: na, nsp
       use io_global, only: stdout
       use mp_global, only: intra_bgrp_comm
-      use cvan
       use gvecw, only: ngw
       use constants, only: pi, fpi
       use control_flags, only: iprint, iprsta
       use gvect, only: gstart
       use mp, only: mp_sum
       use electrons_base, only: n => nbsp, ispin
-      use uspp_param, only: nh
+      use uspp_param, only: nh, ish, nvb
       use uspp, only :nhsa=>nkb
 
 
@@ -415,14 +412,13 @@ subroutine pc2(a,beca,b,becb)
       use ions_base, only: na, nsp
       use io_global, only: stdout
       use mp_global, only: intra_bgrp_comm
-      use cvan
       use gvecw, only: ngw
       use constants, only: pi, fpi
       use control_flags, only: iprint, iprsta
       use gvect, only: gstart
       use mp, only: mp_sum, mp_bcast
       use electrons_base, only: n => nbsp, ispin
-      use uspp_param, only: nh
+      use uspp_param, only: nh, ish, nvb
       use uspp, only :nhsa=>nkb,qq,nhsavb=>nkbus
       use io_global, ONLY: ionode, ionode_id
 
@@ -540,8 +536,7 @@ subroutine pc2(a,beca,b,becb)
       use ions_base, only: na, nsp
       use io_global, only: stdout
       use mp_global, only: intra_bgrp_comm
-      use cvan
-      use uspp_param, only: nh
+      use uspp_param, only: nh, nvb, ish
       use uspp, only :nhsa=>nkb, nhsavb=>nkbus, qq
       use electrons_base, only: n => nbsp
       use gvecw, only: ngw
@@ -716,8 +711,7 @@ subroutine pc2(a,beca,b,becb)
       use ions_base, only: na, nsp
       use io_global, only: stdout
       use mp_global, only: intra_bgrp_comm
-      use cvan
-      use uspp_param, only: nh
+      use uspp_param, only: nh, nvb, ish
       use uspp, only :nhsa=>nkb, nhsavb=>nkbus, qq
       use electrons_base, only: n => nbsp
       use gvecw, only: ngw

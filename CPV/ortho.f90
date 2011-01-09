@@ -232,8 +232,7 @@
 
 
 !=----------------------------------------------------------------------------=!
-   SUBROUTINE ortho_cp( eigr, cp_bgrp, phi_bgrp, ngwx, x0, descla, diff, iter, ccc, &
-                        bephi, becp_bgrp, nbsp, nspin, nupdwn, iupdwn )
+   SUBROUTINE ortho_x( eigr, cp_bgrp, phi_bgrp, x0, descla, diff, iter, ccc, bephi, becp_bgrp )
 !=----------------------------------------------------------------------------=!
       !
       !     input = cp (non-orthonormal), beta
@@ -249,10 +248,9 @@
       !
       USE kinds,          ONLY: DP
       USE ions_base,      ONLY: na, nat
-      USE cvan,           ONLY: ish, nvb
       USE uspp,           ONLY: nkb, qq
-      USE uspp_param,     ONLY: nh
-      USE electrons_base, ONLY: f, nbsp_bgrp, iupdwn_bgrp, nupdwn_bgrp, i2gupdwn_bgrp
+      USE uspp_param,     ONLY: nh, ish, nvb
+      USE electrons_base, ONLY: f, nbsp_bgrp, iupdwn_bgrp, nupdwn_bgrp, i2gupdwn_bgrp, nbsp, nspin, nupdwn, iupdwn
       USE gvecw,          ONLY: ngw
       USE control_flags,  ONLY: iprint, iprsta, ortho_max
       USE control_flags,  ONLY: force_pairing
@@ -266,10 +264,8 @@
       !
       IMPLICIT NONE
       !
-      INTEGER,    INTENT(IN) :: ngwx, nbsp, nspin
-      INTEGER,    INTENT(IN) :: nupdwn( nspin ), iupdwn( nspin )
-      INTEGER,    INTENT(IN) :: descla(descla_siz_,nspin)
-      COMPLEX(DP) :: eigr(ngwx,nat)
+      INTEGER,    INTENT(IN) :: descla(:,:)
+      COMPLEX(DP) :: eigr(:,:)
       COMPLEX(DP) :: cp_bgrp(:,:), phi_bgrp(:,:)
       REAL(DP)    :: x0(:,:,:), diff, ccc
       INTEGER     :: iter
@@ -282,10 +278,11 @@
       INTEGER :: nkbx
       INTEGER :: istart, nss, ifail, i, j, iss, iv, jv, ia, is, inl, jnl
       INTEGER :: n1, n2, m1, m2
-      INTEGER :: nspin_sub, nx0, nc, ic, icc, nr, ir
-      REAL(DP) :: qqf
+      INTEGER :: nspin_sub, nx0, nc, ic, icc, nr, ir, ngwx
+      REAL(DP) :: qqf, dum
       !
       nkbx = nkb
+      ngwx = SIZE( cp_bgrp, 1 )
       !
       nx0 = SIZE( x0, 1 )
       !
@@ -437,4 +434,4 @@
       !
 100   FORMAT(3X,'diff = ',D18.10,' iter = ', I5 )
       !
-   END SUBROUTINE ortho_cp
+   END SUBROUTINE ortho_x

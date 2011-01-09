@@ -42,7 +42,7 @@
       USE gvecw,          ONLY: ngw
       USE gvect, &
                           ONLY: gstart
-      USE cvan,           ONLY: nvb, ish
+      USE uspp_param,     ONLY: nvb, ish
       USE ions_base,      ONLY: na, nat, pmass, nax, nsp, rcmax
       USE grid_dimensions, &
                           ONLY: nrxx, nr1, nr2, nr3
@@ -353,7 +353,7 @@
       USE gvecw,          ONLY: ngw
       USE gvect, &
                           ONLY: gstart
-      USE cvan,           ONLY: nvb, ish
+      USE uspp_param,     ONLY: nvb, ish
       USE ions_base,      ONLY: na, nat, pmass, nax, nsp, rcmax
       USE grid_dimensions, &
                           ONLY: nrxx, nr1, nr2, nr3
@@ -548,7 +548,7 @@
       USE gvecw,          ONLY: ngw
       USE gvect, &
                           ONLY: gstart
-      USE cvan,           ONLY: nvb, ish
+      USE uspp_param,     ONLY: nvb, ish
       USE ions_base,      ONLY: na, nat, pmass, nax, nsp, rcmax
       USE grid_dimensions, &
                           ONLY: nrxx, nr1, nr2, nr3

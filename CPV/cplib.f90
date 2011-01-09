@@ -1298,9 +1298,8 @@ subroutine nlfh_x( stress, bec_bgrp, dbec, lambda )
   !     contribution to the internal stress tensor due to the constraints
   !
   USE kinds,             ONLY : DP
-  use cvan,              ONLY : nvb, ish
   use uspp,              ONLY : nkb, qq
-  use uspp_param,        ONLY : nh, nhm
+  use uspp_param,        ONLY : nh, nhm, nvb, ish
   use ions_base,         ONLY : na
   use electrons_base,    ONLY : nbspx, nbsp, nudx, nspin, nupdwn, iupdwn, ibgrp_g2l
   use cell_base,         ONLY : omega, h
@@ -1478,17 +1477,15 @@ subroutine nlinit
       use control_flags,   ONLY : iprint, tpre
       use io_global,       ONLY : stdout, ionode
       use gvecw,           ONLY : ngw
-      use cvan,            ONLY : ish, nvb
       use core,            ONLY : rhocb, nlcc_any, allocate_core
       use constants,       ONLY : pi, fpi
       use ions_base,       ONLY : na, nsp
       use uspp,            ONLY : aainit, beta, qq, dvan, nhtol, nhtolm, indv, dbeta
-      use uspp_param,      ONLY : upf, lmaxq, nbetam, lmaxkb, nhm, nh
+      use uspp_param,      ONLY : upf, lmaxq, nbetam, lmaxkb, nhm, nh, ish, nvb
       use atom,            ONLY : rgrid
-      use qgb_mod,         ONLY : qgb
+      use qgb_mod,         ONLY : qgb, dqgb
       use gvecb,           ONLY : ngb
       use gvect,           ONLY : ngm
-      use dqgb_mod,        ONLY : dqgb
       use betax,           ONLY : qradx, dqradx, refg, betagx, mmx, dbetagx
       use cp_interfaces,   ONLY : pseudopotential_indexes, compute_dvan, &
                                   compute_betagx, compute_qradx
@@ -1965,9 +1962,8 @@ END FUNCTION
       USE ions_base,          ONLY: na, nsp, nat
       USE io_global,          ONLY: stdout
       USE gvect, ONLY: gstart
-      USE cvan,               ONLY: ish, nvb
       USE uspp,               ONLY: nkb, qq
-      USE uspp_param,         ONLY: nh
+      USE uspp_param,         ONLY: nh, ish, nvb
       USE mp,                 ONLY: mp_sum
       USE mp_global,          ONLY: intra_bgrp_comm, nbgrp
 !
@@ -2103,7 +2099,7 @@ END FUNCTION
       USE mp_global,                ONLY: nproc_bgrp, me_bgrp
       USE fft_base,                 ONLY: dfftb, dfftp, fft_dlay_descriptor
       USE fft_types,                ONLY: fft_box_set
-      USE cvan,                     ONLY: nvb
+      USE uspp_param,               ONLY: nvb
 
       IMPLICIT NONE
 ! input
@@ -2229,8 +2225,7 @@ END FUNCTION
       USE io_global,         ONLY: stdout
       USE ions_base,         ONLY: na, nsp, nat
       USE uspp,              ONLY: nhsa=>nkb, qq
-      USE uspp_param,        ONLY: nhm, nh
-      USE cvan,              ONLY: ish, nvb
+      USE uspp_param,        ONLY: nhm, nh, ish, nvb
       USE electrons_base,    ONLY: nspin, iupdwn, nupdwn, nbspx_bgrp, ibgrp_g2l, i2gupdwn_bgrp, nbspx, &
                                    iupdwn_bgrp, nupdwn_bgrp
       USE constants,         ONLY: pi, fpi
@@ -2428,9 +2423,8 @@ END FUNCTION
       USE kinds,      ONLY : DP
       USE ions_base,  ONLY : nsp, na, nat
       USE gvecw,      ONLY : ngw
-      USE cvan,       ONLY : ish
       USE uspp,       ONLY : nkb, beta, nhtol
-      USE uspp_param, ONLY : nh
+      USE uspp_param, ONLY : nh, ish
 !
       IMPLICIT NONE
       COMPLEX(DP) :: eigr( ngw, nat )
@@ -2468,9 +2462,8 @@ END FUNCTION
 !
       USE kinds, ONLY: DP
       USE ions_base, ONLY: na
-      USE cvan, ONLY: nvb, ish
       USE uspp, ONLY: nhsa => nkb, nhsavb=>nkbus, qq
-      USE uspp_param, ONLY: nh
+      USE uspp_param, ONLY: nh, nvb, ish
       USE gvecw, ONLY: ngw
       USE constants, ONLY: pi, fpi
       IMPLICIT NONE
@@ -3211,11 +3204,10 @@ end function set_Hubbard_l
 !      use gvec
 !      use constants
       USE uspp,           ONLY: nhsa=>nkb, qq
-      use cvan,           ONLY: ish
       USE ldaU_cp,           ONLY: Hubbard_U, Hubbard_l
       USE ldaU_cp,           ONLY: n_atomic_wfc
       use cell_base,      ONLY: tpiba
-      USE uspp_param,     only: nh !#@@@
+      USE uspp_param,     only: nh, ish
       use mp_global,      only: intra_bgrp_comm
       use mp,             only: mp_sum
       USE kinds,          ONLY: DP

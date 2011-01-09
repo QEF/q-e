@@ -17,9 +17,8 @@
 !         rho_lm = \sum_j f_j <psi_j|beta_l><beta_m|psi_j>
 !
       USE kinds,                    ONLY: dp
-      USE uspp_param,               ONLY: nh, nhm
+      USE uspp_param,               ONLY: nh, nhm, nvb
       USE uspp,                     ONLY: deeq
-      USE cvan,                     ONLY: nvb
       USE ions_base,                ONLY: nat, nsp, na
       USE constants,                ONLY: pi, fpi
       USE grid_dimensions,          ONLY: nr3, nrxx

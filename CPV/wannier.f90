@@ -689,7 +689,7 @@ MODULE wannier_subroutines
     USE control_flags,  ONLY : ndw
     USE cell_base,      ONLY : h, hold
     USE ions_base,      ONLY : pmass
-    USE cvan,           ONLY : nvb
+    USE uspp_param,     ONLY : nvb
     USE cp_interfaces,  ONLY : writefile
     !
     IMPLICIT NONE

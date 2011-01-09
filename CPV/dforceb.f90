@@ -34,10 +34,9 @@ subroutine dforceb(c0, i, betae, ipol, bec0, ctabin, gqq, gqqm, qmat, dq2, df)
   use  parameters
   use electrons_base, only: nx => nbspx, n => nbsp, nspin, f
   use  constants
-  use  cvan
   use ions_base, only : nat, nas => nax, na, nsp
   use cell_base, only: a1, a2, a3
-  use uspp_param, only: nh, nhm
+  use uspp_param, only: nh, nhm, nvb, ish
   use uspp, only : nhsa=> nkb
   use efield_module, ONLY : ctabin_missing_1,ctabin_missing_2,n_g_missing_m,&
        &      ctabin_missing_rev_1,ctabin_missing_rev_2

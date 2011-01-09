@@ -790,16 +790,14 @@ SUBROUTINE drhov(irb,eigrb,rhovan,drhovan,rhog,rhor,drhog,drhor)
       USE kinds,                    ONLY: DP
       USE control_flags,            ONLY: iprint
       USE ions_base,                ONLY: na, nsp, nat
-      USE cvan,                     ONLY: nvb
-      USE uspp_param,               ONLY: nhm, nh
+      USE uspp_param,               ONLY: nhm, nh, nvb
       USE grid_dimensions,          ONLY: nr1, nr2, nr3, nr1x, nr2x, nr3x, nrxx
       USE electrons_base,           ONLY: nspin
       USE gvecb,                    ONLY: ngb, npb, nmb
       USE gvect,                    ONLY: ngm, nlm, nl
       USE smallbox_grid_dimensions, ONLY: nr1b, nr2b, nr3b, nr1bx, nr2bx, nr3bx, nnrbx
       USE cell_base,                ONLY: ainv
-      USE qgb_mod,                  ONLY: qgb
-      USE dqgb_mod,                 ONLY: dqgb
+      USE qgb_mod,                  ONLY: qgb, dqgb
       USE fft_interfaces,           ONLY: fwfft, invfft
       USE fft_base,                 ONLY: dfftb, dfftp
       USE mp_global,                ONLY: my_bgrp_id, nbgrp, inter_bgrp_comm
@@ -1083,8 +1081,7 @@ SUBROUTINE rhov(irb,eigrb,rhovan,rhog,rhor)
       USE io_global,                ONLY: stdout
       USE mp_global,                ONLY: intra_bgrp_comm
       USE mp,                       ONLY: mp_sum
-      USE cvan,                     ONLY: nvb
-      USE uspp_param,               ONLY: nh, nhm
+      USE uspp_param,               ONLY: nh, nhm, nvb
       USE uspp,                     ONLY: deeq
       USE grid_dimensions,          ONLY: nr1, nr2, nr3, nr1x, nr2x, nr3x, nrxx
       USE electrons_base,           ONLY: nspin

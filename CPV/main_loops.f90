@@ -43,7 +43,7 @@ SUBROUTINE cpr_loop( nloop )
   !
   DO iloop = 1, nloop
      !
-     CALL cprmain( tau(1,1), fion(1,1), etot )
+     CALL cprmain( tau, fion, etot )
      !
   END DO
   !

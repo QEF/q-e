@@ -23,11 +23,10 @@ subroutine qmatrixd(c0, bec0,ctable, gqq, qmat, detq, ipol)
 
   use kinds, only : DP
   use gvecw, only: ngw
-  use cvan,  only: nvb, ish
   use ions_base, only : nax, nsp, na
   use cell_base, only: a1, a2, a3
   use gvect, only: gstart
-  use uspp_param, only: nh, nhm
+  use uspp_param, only: nh, nhm, nvb, ish
   use uspp, only : nkb
   use electrons_base, only: nx => nbspx, n => nbsp, ispin
   use mp, only: mp_sum, mp_alltoall

@@ -33,7 +33,6 @@
       use gvecb, only: ngb
       use gvecw, only: ngw
       use gvect, only: gstart
-      use cvan, only: nvb, ish
       use ions_base, only: na, nat, pmass, nax, nsp, rcmax
       use grid_dimensions, only: nrxx, nr1, nr2, nr3
       use cell_base, only: ainv, a1, a2, a3
@@ -48,7 +47,7 @@
       use io_files,                 only : psfile, pseudo_dir
       USE io_files,                 ONLY : tmp_dir, prefix
       use uspp,                     only : nhsa=> nkb, nhsavb=> nkbus, betae => vkb, rhovan => becsum, deeq,qq
-      use uspp_param,               only : nh
+      use uspp_param,               only : nh, nvb, ish
       use cg_module,                only : ene_ok,  maxiter,niter_cg_restart, &
                                            conv_thr, passop, enever, itercg
       use ions_positions,           only : tau0

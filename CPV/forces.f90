@@ -28,9 +28,8 @@
       USE kinds,                  ONLY: dp
       USE control_flags,          ONLY: iprint
       USE gvecs,                  ONLY: nlsm, nls
-      USE cvan,                   ONLY: ish
       USE uspp,                   ONLY: nhsa=>nkb, dvan, deeq
-      USE uspp_param,             ONLY: nhm, nh
+      USE uspp_param,             ONLY: nhm, nh, ish
       USE smooth_grid_dimensions, ONLY: nrxxs
       USE constants,              ONLY: pi, fpi
       USE ions_base,              ONLY: nsp, na, nat

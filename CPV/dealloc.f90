@@ -11,12 +11,9 @@ SUBROUTINE deallocate_modules_var()
   !----------------------------------------------------------------------------
   !
   USE uspp,       ONLY : beta, dbeta, qq
-  USE qgb_mod,    ONLY : qgb
   USE core,       ONLY : rhocb
-  USE dqgb_mod,   ONLY : dqgb
   !
   USE core,                 ONLY : deallocate_core
-  USE cvan,                 ONLY : deallocate_cvan
   USE uspp,                 ONLY : deallocate_uspp
   USE electrons_base,       ONLY : deallocate_elct
   USE efield_module,        ONLY : deallocate_efield
@@ -29,7 +26,6 @@ SUBROUTINE deallocate_modules_var()
   USE gvecb,                ONLY : deallocate_gvecb
   USE local_pseudo,         ONLY : deallocate_local_pseudo
   USE qgb_mod,              ONLY : deallocate_qgb_mod
-  USE dqgb_mod,             ONLY : deallocate_dqgb_mod
   USE betax,                ONLY : deallocate_betax
   USE wavefunctions_module, ONLY : deallocate_wavefunctions
   USE wannier_module,       ONLY : deallocate_wannier
@@ -55,15 +51,12 @@ SUBROUTINE deallocate_modules_var()
   !
   !
   IF ( ALLOCATED( beta ) )     DEALLOCATE( beta )
-  IF ( ALLOCATED( qgb ) )      DEALLOCATE( qgb )
   IF ( ALLOCATED( qq ) )       DEALLOCATE( qq )
   IF ( ALLOCATED( rhocb ) )    DEALLOCATE( rhocb )
-  IF ( ALLOCATED( dqgb ) )     DEALLOCATE( dqgb )
   IF ( ALLOCATED( dbeta ) )    DEALLOCATE( dbeta )
   !
   CALL deallocate_mainvar()
   CALL deallocate_ions_positions()
-  CALL deallocate_cvan()
   CALL deallocate_efield( )
   CALL deallocate_ensemble_dft()
   CALL deallocate_cg( )
@@ -75,7 +68,6 @@ SUBROUTINE deallocate_modules_var()
   CALL deallocate_gvecb( )
   CALL deallocate_local_pseudo()
   CALL deallocate_qgb_mod()
-  CALL deallocate_dqgb_mod()
   CALL deallocate_betax()
   !
   CALL fft_dlay_deallocate( dfftp )

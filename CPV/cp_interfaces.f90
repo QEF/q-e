@@ -398,18 +398,13 @@
 
 
    INTERFACE ortho
-      SUBROUTINE ortho_cp &
-         ( eigr, cp_bgrp, phi_bgrp, ngwx, x0, descla, diff, iter, ccc, bephi, becp_bgrp, nbsp, nspin, nupdwn, iupdwn)
+      SUBROUTINE ortho_x &
+         ( eigr, cp_bgrp, phi_bgrp, x0, descla, diff, iter, ccc, bephi, becp_bgrp )
          USE kinds,          ONLY: DP
-         USE ions_base,      ONLY: nat
-         USE uspp,           ONLY: nkb
-         USE descriptors,    ONLY: descla_siz_
          IMPLICIT NONE
-         INTEGER,    INTENT(IN)     :: ngwx, nbsp, nspin
-         INTEGER,    INTENT(IN)     :: nupdwn( nspin ), iupdwn( nspin )
-         INTEGER,     INTENT(IN)    :: descla( descla_siz_ , nspin )
-         COMPLEX(DP) :: eigr(ngwx,nat)
-         COMPLEX(DP) :: cp_bgrp(:,:), phi_bgrp(:,:)
+         INTEGER,     INTENT(IN)    :: descla( : , : )
+         COMPLEX(DP) :: eigr( :, : )
+         COMPLEX(DP) :: cp_bgrp( :, : ), phi_bgrp( :, : )
          REAL(DP)    :: x0( :, :, : ), diff, ccc
          INTEGER     :: iter
          REAL(DP)    :: bephi(:,:)

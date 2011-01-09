@@ -24,7 +24,7 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
   USE kinds,                    ONLY : DP
   USE constants,                ONLY : pi, tpi
   USE ions_base,                ONLY : nsp, na, nax, nat
-  USE cvan,                     ONLY : nvb, ish
+  USE uspp_param,               ONLY : nvb, ish
   USE cell_base,                ONLY : omega, a1, a2, a3, alat, h, ainv
   USE electrons_base,           ONLY : nbspx, nbsp, nupdwn, iupdwn, nspin
   USE gvecb,                    ONLY : npb, nmb, ngb
@@ -1024,7 +1024,7 @@ SUBROUTINE wfunc_init( clwf, b1, b2, b3, ibrav )
   USE wannier_base,       ONLY : gnx, gnn, indexplus, indexminus, &
                                  indexplusz, indexminusz, tag, tagp, &
                                  wfg, weight, nw
-  USE cvan,               ONLY : nvb
+  USE uspp_param,         ONLY : nvb
   USE mp,                 ONLY : mp_barrier, mp_bcast, mp_gather, mp_set_displs
   USE mp_global,          ONLY : nproc_bgrp, me_bgrp, intra_bgrp_comm, root_bgrp
   USE fft_base,           ONLY : dfftp

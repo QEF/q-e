@@ -15,14 +15,13 @@ subroutine qqberry2( gqq,gqqm, ipol)
 !   gqq output: as defined above
 
   use kinds,              only: dp
-  use uspp_param,         only: upf, lmaxq, nbetam, nh, nhm, oldvan
+  use uspp_param,         only: upf, lmaxq, nbetam, nh, nhm, oldvan, nvb
   use uspp,               only: indv, lpx, lpl, ap,nhtolm
   use atom,               only: rgrid
   use core
   use gvecw,              only: ngw
   use gvect, only: mill
   use constants
-  use cvan,               only: nvb
   use ions_base
   use ions_base,          only: nas => nax
   use cell_base,          only: a1, a2, a3
@@ -215,11 +214,10 @@ subroutine qqupdate(eigr, gqqm0, gqq, gqqm, ipol)
 !   gqq output: as defined above
 
   use kinds, only : dp
-  use cvan
   use gvecw, only: ngw
   use ions_base, only : nas => nax, nat, na, nsp
   use gvect, only: mill
-  use uspp_param, only: nh, nhm
+  use uspp_param, only: nh, nhm, nvb, ish
   use mp, only: mp_sum
   use mp_global, only: intra_bgrp_comm
 
