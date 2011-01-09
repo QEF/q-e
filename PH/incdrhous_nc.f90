@@ -156,8 +156,8 @@ subroutine incdrhous_nc (drhoscf, weight, ik, dbecsum, evcr, wgg, becq, &
                                 wgt*(dpsir(ir,1)*CONJG(evcr(ir,2,ibnd))+ &
                                      dpsir(ir,2)*CONJG(evcr(ir,1,ibnd)))
            drhoscf(ir,3)=drhoscf(ir,3)+ &
-                       wgt*(dpsir(ir,1)*CONJG(evcr(ir,2,ibnd)) - &
-                       dpsir(ir,2)*CONJG(evcr(ir,1,ibnd)) ) *(0.d0,-1.d0)
+                       wgt*(dpsir(ir,2)*CONJG(evcr(ir,1,ibnd)) - &
+                       dpsir(ir,1)*CONJG(evcr(ir,2,ibnd)) ) *(0.d0,-1.d0)
            drhoscf(ir,4)=drhoscf(ir,4)+wgt* &
                                     (dpsir(ir,1)*CONJG(evcr(ir,1,ibnd)) - &
                                      dpsir(ir,2)*CONJG(evcr(ir,2,ibnd)) )
