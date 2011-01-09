@@ -114,10 +114,27 @@ subroutine localdos (ldos, ldoss, dos_ef)
            CALL invfft ('Smooth', psic_nc(:,1), dffts)
            CALL invfft ('Smooth', psic_nc(:,2), dffts)
            do j = 1, dffts%nnr
-              ldoss (j, current_spin) = ldoss (j, current_spin) + &
+              ldoss (j, 1) = ldoss (j, 1) + &
                     w1 * ( DBLE(psic_nc(j,1))**2+AIMAG(psic_nc(j,1))**2 + &
                            DBLE(psic_nc(j,2))**2+AIMAG(psic_nc(j,2))**2)
            enddo
+           IF (nspin_mag==4) THEN
+              DO j = 1, dffts%nnr
+              !
+                 ldoss(j,2) = ldoss(j,2) + w1*2.0_DP* &
+                             (DBLE(psic_nc(j,1))* DBLE(psic_nc(j,2)) + &
+                             AIMAG(psic_nc(j,1))*AIMAG(psic_nc(j,2)))
+
+                 ldoss(j,3) = ldoss(j,3) + w1*2.0_DP* &
+                             (DBLE(psic_nc(j,1))*AIMAG(psic_nc(j,2)) - &
+                              DBLE(psic_nc(j,2))*AIMAG(psic_nc(j,1)))
+
+                 ldoss(j,4) = ldoss(j,4) + w1* &
+                             (DBLE(psic_nc(j,1))**2+AIMAG(psic_nc(j,1))**2 &
+                             -DBLE(psic_nc(j,2))**2-AIMAG(psic_nc(j,2))**2)
+              !
+              END DO
+           END IF
         ELSE
            psic (:) = (0.d0, 0.d0)
            do ig = 1, npw
@@ -348,10 +365,27 @@ subroutine localdos_paw (ldos, ldoss, becsum1, dos_ef)
            CALL invfft ('Smooth', psic_nc(:,1), dffts)
            CALL invfft ('Smooth', psic_nc(:,2), dffts)
            do j = 1, dffts%nnr
-              ldoss (j, current_spin) = ldoss (j, current_spin) + &
+              ldoss (j, 1) = ldoss (j, 1) + &
                     w1 * ( DBLE(psic_nc(j,1))**2+AIMAG(psic_nc(j,1))**2 + &
                            DBLE(psic_nc(j,2))**2+AIMAG(psic_nc(j,2))**2)
            enddo
+           IF (nspin_mag==4) THEN
+              DO j = 1, dffts%nnr
+              !
+                 ldoss(j,2) = ldoss(j,2) + w1*2.0_DP* &
+                             (DBLE(psic_nc(j,1))* DBLE(psic_nc(j,2)) + &
+                             AIMAG(psic_nc(j,1))*AIMAG(psic_nc(j,2)))
+
+                 ldoss(j,3) = ldoss(j,3) + w1*2.0_DP* &
+                             (DBLE(psic_nc(j,1))*AIMAG(psic_nc(j,2)) - &
+                              DBLE(psic_nc(j,2))*AIMAG(psic_nc(j,1)))
+
+                 ldoss(j,4) = ldoss(j,4) + w1* &
+                             (DBLE(psic_nc(j,1))**2+AIMAG(psic_nc(j,1))**2 &
+                             -DBLE(psic_nc(j,2))**2-AIMAG(psic_nc(j,2))**2)
+              !
+              END DO
+           END IF
         ELSE
            psic (:) = (0.d0, 0.d0)
            do ig = 1, npw
