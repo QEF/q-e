@@ -1728,7 +1728,7 @@ MODULE read_namelists_module
      !=----------------------------------------------------------------------=!
      !
      !-----------------------------------------------------------------------
-     SUBROUTINE read_namelists( prog )
+     SUBROUTINE read_namelists( prog, unit )
        !-----------------------------------------------------------------------
        !
        !  this routine reads data from standard input and puts them into
@@ -1749,14 +1749,20 @@ MODULE read_namelists_module
                                   !     prog = 'PW'  pwscf
                                   !     prog = 'CP'  cpr
        !
+       !
+       INTEGER, INTENT(IN), optional :: unit
+       !
        ! ... declare other variables
        !
        INTEGER :: ios
+       !
+       INTEGER :: unit_loc=5
        !
        ! ... end of declarations
        !
        !  ----------------------------------------------
        !
+       IF(PRESENT(unit)) unit_loc = unit
        !
        IF( prog /= 'PW' .AND. prog /= 'CP' .AND. prog /= 'SM' ) &
           CALL errore( ' read_namelists ', ' unknown calling program ', 1 )
@@ -1782,7 +1788,7 @@ MODULE read_namelists_module
        IF(prog == 'PW' .OR. prog == 'CP' ) THEN
        ios = 0
        IF( ionode ) THEN
-          READ( 5, control, iostat = ios )
+          READ( unit_loc, control, iostat = ios )
        END IF
        CALL mp_bcast( ios, ionode_id )
        IF( ios /= 0 ) THEN
@@ -1802,7 +1808,7 @@ MODULE read_namelists_module
        !
        ios = 0
        IF( ionode ) THEN
-          READ( 5, system, iostat = ios )
+          READ( unit_loc, system, iostat = ios )
        END IF
        CALL mp_bcast( ios, ionode_id )
        IF( ios /= 0 ) THEN
@@ -1820,7 +1826,7 @@ MODULE read_namelists_module
        !
        ios = 0
        IF( ionode ) THEN
-          READ( 5, electrons, iostat = ios )
+          READ( unit_loc, electrons, iostat = ios )
        END IF
        CALL mp_bcast( ios, ionode_id )
        IF( ios /= 0 ) THEN
@@ -1863,7 +1869,7 @@ MODULE read_namelists_module
               TRIM( calculation ) == 'vc-cp'    .OR. &
               TRIM( calculation ) == 'vc-md'    .OR. &
               TRIM( calculation ) == 'vc-md' ) THEN
-             READ( 5, cell, iostat = ios )
+             READ( unit_loc, cell, iostat = ios )
           END IF
        END IF
        CALL mp_bcast( ios, ionode_id )
@@ -1878,7 +1884,7 @@ MODULE read_namelists_module
        ios = 0
        IF( ionode ) THEN
           if (tabps) then
-             READ( 5, press_ai, iostat = ios )
+             READ( unit_loc, press_ai, iostat = ios )
           end if
        END IF
        CALL mp_bcast( ios, ionode_id )
@@ -1893,7 +1899,7 @@ MODULE read_namelists_module
        !
        IF ( TRIM( assume_isolated ) == 'dcc' ) THEN
           ios = 0
-          IF( ionode ) READ( 5, ee, iostat = ios )
+          IF( ionode ) READ( unit_loc, ee, iostat = ios )
           CALL mp_bcast( ios, ionode_id )
           IF( ios /= 0 ) CALL errore( ' read_namelists ', &
                                     & ' reading namelist ee ', ABS(ios) )
@@ -1906,7 +1912,7 @@ MODULE read_namelists_module
        ios = 0
        IF( ionode ) THEN
           IF( TRIM( calculation ) == 'cp-wf' ) THEN
-             READ( 5, wannier, iostat = ios )
+             READ( unit_loc, wannier, iostat = ios )
           END IF
        END IF
        CALL mp_bcast( ios, ionode_id )
@@ -1924,7 +1930,7 @@ MODULE read_namelists_module
        ios = 0
        IF( ionode ) THEN
           IF( use_wannier ) THEN
-             READ( 5, wannier_ac, iostat = ios )
+             READ( unit_loc, wannier_ac, iostat = ios )
           END IF
        END IF
        CALL mp_bcast( ios, ionode_id )

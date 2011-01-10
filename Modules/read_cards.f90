@@ -16,7 +16,8 @@ MODULE read_cards_module
    USE kinds,     ONLY : DP
    USE io_global, ONLY : stdout
    USE constants, ONLY : angstrom_au
-   USE parser,    ONLY : field_count, read_line, get_field
+   USE parser,    ONLY : field_count, read_line, get_field, &
+                         parse_unit
    USE io_global, ONLY : ionode, ionode_id
    !
    USE input_parameters
@@ -122,12 +123,14 @@ CONTAINS
    !
    !
    !----------------------------------------------------------------------
-   SUBROUTINE read_cards ( prog )
+   SUBROUTINE read_cards ( prog, unit )
       !----------------------------------------------------------------------
       !
       USE autopilot, ONLY : card_autopilot
       !
       IMPLICIT NONE
+      !
+      INTEGER, INTENT(IN), optional  :: unit
       !
       CHARACTER(len=2)           :: prog   ! calling program ( PW, CP, WA )
       CHARACTER(len=256)         :: input_line
@@ -136,6 +139,11 @@ CONTAINS
       LOGICAL                    :: tend
       INTEGER                    :: i
       !
+      INTEGER :: unit_loc=5
+      !
+      !
+      if(present(unit)) unit_loc =  unit
+      parse_unit = unit_loc
       !
       CALL card_default_values( )
       !
