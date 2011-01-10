@@ -300,6 +300,8 @@ SUBROUTINE iosys(xmlinput,attr)
   USE london_module,         ONLY : init_london, lon_rcut, scal6
   USE us, ONLY : spline_ps_ => spline_ps
   !
+  USE input_parameters,       ONLY : deallocate_input_parameters
+  !
   USE read_xml_module,       ONLY : read_xml
   USE iotk_module,           ONLY : iotk_attlenx
   USE read_cards_module,     ONLY : read_cards
@@ -1449,6 +1451,11 @@ SUBROUTINE iosys(xmlinput,attr)
    WRITE( stdout, '(5x,"Real space treatment of Beta functions, &
          &V.1 (BE SURE TO CHECK MANUAL!)",/)' )
   ENDIF
+  !
+  ! Deallocation of temp input arrays
+  !
+  CALL deallocate_input_parameters ()  
+  !
   RETURN
   !
 END SUBROUTINE iosys
