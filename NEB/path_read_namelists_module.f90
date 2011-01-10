@@ -49,6 +49,7 @@ MODULE path_read_namelists_module
        !
        ! ... defaults for "path" optimisations variables
        !
+         restart_mode  = 'from_scratch'
          string_method  = 'neb'
          num_of_images  = 0
          first_last_opt = .FALSE.
@@ -88,6 +89,7 @@ MODULE path_read_namelists_module
        !
        ! ... "path" variables broadcast
        !
+       CALL mp_bcast ( restart_mode,      ionode_id )
        CALL mp_bcast ( string_method,     ionode_id ) 
        CALL mp_bcast( num_of_images,      ionode_id )
        CALL mp_bcast( first_last_opt,     ionode_id )

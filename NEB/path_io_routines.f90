@@ -38,8 +38,8 @@ MODULE path_io_routines
        !-----------------------------------------------------------------------
        !
        USE path_input_parameters_module, ONLY : string_method, opt_scheme
-       USE input_parameters, ONLY : restart_mode
-       USE control_flags,    ONLY : lneb, lsmd
+       USE path_input_parameters_module, ONLY : restart_mode
+       USE path_variables,    ONLY : lneb, lsmd
        USE path_variables,   ONLY : climbing, nstep_path, num_of_images, &
                                     path_length, path_thr, ds, use_masses, &
                                     first_last_opt, temp_req, use_freezing, &
@@ -140,10 +140,10 @@ MODULE path_io_routines
      SUBROUTINE read_restart()
        !-----------------------------------------------------------------------
        !
-       USE control_flags,          ONLY : lsmd
+       USE path_variables,          ONLY : lsmd
        USE path_io_units_module,   ONLY : iunpath
        USE path_io_units_module,              ONLY : iunrestart, path_file
-       USE input_parameters,       ONLY : if_pos
+       USE path_variables,       ONLY : fix_atom_pos
        USE path_variables,         ONLY : nim => num_of_images
        USE path_variables,         ONLY : istep_path, nstep_path, frozen, dim1,&
                                           pending_image, pos, pes, grad_pes,   &
@@ -225,7 +225,8 @@ MODULE path_io_routines
           !
           ia = 0
           !
-          if_pos = 0
+! the default is not the same as in pw .... all atoms are fixed by default ....
+          fix_atom_pos = 0
           !
           DO j = 1, dim1, 3
              !
@@ -238,12 +239,12 @@ MODULE path_io_routines
                  grad_pes(j+0,1),               &
                  grad_pes(j+1,1),               &
                  grad_pes(j+2,1),               &
-                 if_pos(1,ia),                  &
-                 if_pos(2,ia),                  &
-                 if_pos(3,ia)
+                 fix_atom_pos(1,ia),                  &
+                 fix_atom_pos(2,ia),                  &
+                 fix_atom_pos(3,ia)
              !
              grad_pes(:,1) = grad_pes(:,1) * &
-                             DBLE( RESHAPE( if_pos, (/ dim1 /) ) )
+                             DBLE( RESHAPE( fix_atom_pos, (/ dim1 /) ) )
              !
           END DO
           !
@@ -265,7 +266,7 @@ MODULE path_io_routines
              END DO
              !
              grad_pes(:,i) = grad_pes(:,i) * &
-                             DBLE( RESHAPE( if_pos, (/ dim1 /) ) )
+                             DBLE( RESHAPE( fix_atom_pos, (/ dim1 /) ) )
              !
           END DO
           !
@@ -293,7 +294,7 @@ MODULE path_io_routines
                    END DO
                    !
                    posold(:,i) = posold(:,i) * &
-                                 DBLE( RESHAPE( if_pos, (/ dim1 /) ) )
+                                 DBLE( RESHAPE( fix_atom_pos, (/ dim1 /) ) )
                    !
                 END DO
                 !
@@ -339,7 +340,7 @@ MODULE path_io_routines
        CALL mp_bcast( pending_image, meta_ionode_id )
        !
        CALL mp_bcast( pos,      meta_ionode_id )
-       CALL mp_bcast( if_pos,   meta_ionode_id )
+       CALL mp_bcast( fix_atom_pos,   meta_ionode_id )
        CALL mp_bcast( pes,      meta_ionode_id )
        CALL mp_bcast( grad_pes, meta_ionode_id )
        !
@@ -362,7 +363,7 @@ MODULE path_io_routines
      SUBROUTINE write_restart()
        !-----------------------------------------------------------------------
        !
-       USE input_parameters, ONLY : if_pos
+       USE path_variables, ONLY : fix_atom_pos
        USE path_io_units_module, ONLY : iunrestart, path_file
        USE io_files, ONLY : tmp_dir
        USE control_flags,    ONLY : conv_elec
@@ -467,9 +468,9 @@ MODULE path_io_routines
                         grad_pes(j+0,i),                         &
                         grad_pes(j+1,i),                         &
                         grad_pes(j+2,i),                         &
-                        if_pos(1,ia),                            &
-                        if_pos(2,ia),                            &
-                        if_pos(3,ia)
+                        fix_atom_pos(1,ia),                            &
+                        fix_atom_pos(2,ia),                            &
+                        fix_atom_pos(3,ia)
                     !
                  ELSE
                     !
@@ -532,8 +533,9 @@ MODULE path_io_routines
        !
        USE constants,        ONLY : pi
        USE cell_base,        ONLY : alat, at, bg
-       USE ions_base,        ONLY : ityp, nat, if_pos, atm, tau_format
+       USE ions_base,        ONLY : ityp, nat, atm, tau_format
        USE path_formats,     ONLY : dat_fmt, int_fmt, xyz_fmt, axsf_fmt
+       USE path_variables,   ONLY : fix_atom_pos
        USE path_variables,   ONLY : pos, grad_pes, pes, num_of_images, &
                                     tangent, dim1, error
        USE path_io_units_module, ONLY : iundat, iunint, iunxyz, iuncrd, iunaxsf, &
@@ -697,10 +699,10 @@ MODULE path_io_routines
           !
           DO ia = 1, nat
              !
-             IF ( i == 1 .and. ANY(if_pos(:,ia) /= 1) ) THEN
+             IF ( i == 1 .and. ANY(fix_atom_pos(:,ia) /= 1) ) THEN
                WRITE( UNIT = iuncrd, FMT = '(1x,a4,3f18.10,3i2)' ) &
                    TRIM( atm( ityp( ia ) ) ), &
-                   tau_out(1:3,ia,i), if_pos(1:3,ia)
+                   tau_out(1:3,ia,i), fix_atom_pos(1:3,ia)
              ELSE
                WRITE( UNIT = iuncrd, FMT = '(1x,a4,3f18.10)' ) &
                    TRIM( atm( ityp( ia ) ) ), &

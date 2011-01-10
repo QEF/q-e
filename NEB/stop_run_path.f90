@@ -50,7 +50,7 @@ SUBROUTINE stop_run_path( lflag )
   !
   CALL path_deallocation()
   !
-  CALL deallocate_input_parameters()
+!  CALL deallocate_input_parameters()
   !
   IF ( .not. lflag ) THEN
      !

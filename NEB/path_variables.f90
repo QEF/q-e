@@ -21,6 +21,10 @@ MODULE path_variables
   !
   ! ... "general" variables :
   !
+  LOGICAL :: lneb, lsmd
+  !
+  LOGICAL :: restart
+  !
   LOGICAL :: &
        conv_path                  ! .TRUE. when "path" convergence has been
                                   !        achieved
@@ -69,6 +73,8 @@ MODULE path_variables
        pos(:,:),                 &! reaction path
        grad_pes(:,:),            &! gradients acting on the path
        tangent(:,:)               ! tangent to the path
+  INTEGER, ALLOCATABLE :: &
+       fix_atom_pos(:,:)                ! 0 or 1, if 0 fixed atom
   LOGICAL, ALLOCATABLE :: &
        frozen(:)                  ! .TRUE. if the image or mode has not
                                   !        to be optimized
@@ -147,6 +153,8 @@ MODULE path_variables
        IF ( ALLOCATED( climbing ) )     DEALLOCATE( climbing )
        IF ( ALLOCATED( frozen ) )       DEALLOCATE( frozen )
        IF ( ALLOCATED( lang ) )         DEALLOCATE( lang )
+       !
+       IF ( ALLOCATED( fix_atom_pos ) )     DEALLOCATE( fix_atom_pos )      
        !
      END SUBROUTINE path_deallocation
      !

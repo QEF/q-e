@@ -58,7 +58,7 @@ MODULE path_base
       USE path_input_parameters_module, ONLY : pos_      => pos, &
                                    climbing_ => climbing, &
                                    input_images, nstep_path_ => nstep_path
-      USE input_parameters, ONLY : restart_mode
+      USE path_input_parameters_module, ONLY : restart_mode
       USE control_flags,    ONLY : conv_elec
       USE ions_base,        ONLY : nat, amass, ityp, if_pos
       USE io_files,         ONLY : prefix, tmp_dir
@@ -819,7 +819,7 @@ MODULE path_base
     SUBROUTINE search_mep()
       !-----------------------------------------------------------------------
       !
-      USE control_flags,    ONLY : lneb, lsmd
+      USE path_variables,    ONLY : lneb, lsmd
       USE path_variables,   ONLY : conv_path, istep_path, nstep_path,  &
                                    pending_image, activation_energy, &
                                    err_max, pes, climbing, CI_scheme,  &
@@ -950,7 +950,7 @@ MODULE path_base
     SUBROUTINE search_mep_init()
       !------------------------------------------------------------------------
       !
-      USE control_flags,  ONLY : lsmd
+      USE path_variables,  ONLY : lsmd
       USE path_variables, ONLY : pending_image, tangent
       !
       USE path_reparametrisation
@@ -973,7 +973,7 @@ MODULE path_base
       !------------------------------------------------------------------------
       !
       USE path_input_parameters_module, ONLY : num_of_images_inp => num_of_images
-      USE control_flags,    ONLY : lneb, lsmd
+      USE path_variables,    ONLY : lneb, lsmd
       USE path_variables,   ONLY : path_thr, istep_path, nstep_path, &
                                    conv_path, pending_image, &
                                    num_of_images, llangevin

@@ -69,6 +69,11 @@ MODULE path_input_parameters_module
 ! ... distinguish among neb and smd done in the full phase-space
 ! ... or in the coarse-grained phase-space
 !
+  CHARACTER(len=80) :: restart_mode
+  ! specify how to start/restart the simulation
+  CHARACTER(len=80) :: restart_mode_allowed(3)
+  DATA restart_mode_allowed / 'from_scratch', 'restart', 'reset_counters' /
+  !
   LOGICAL :: full_phs_path_flag = .false.
   LOGICAL :: cg_phs_path_flag   = .false.
   !
@@ -122,6 +127,7 @@ MODULE path_input_parameters_module
   !
   !
   NAMELIST / PATH / &
+                    restart_mode, &
                     string_method, nstep_path, num_of_images, & 
                     CI_scheme, opt_scheme, use_masses,    &
                     first_last_opt, ds, k_max, k_min, temp_req,          &
@@ -133,6 +139,7 @@ MODULE path_input_parameters_module
         ! ... variable added for NEB  ( C.S. 17/10/2003 )
         !
         REAL(DP), ALLOCATABLE :: pos(:,:)
+!        INTEGER, ALLOCATABLE :: if_pos(:,:)
         !
 !
 !   CLIMBING_IMAGES
@@ -150,10 +157,13 @@ CONTAINS
     INTEGER, INTENT(in) :: num_of_images, nat
     !
     IF ( allocated( pos ) ) DEALLOCATE( pos )
+!    IF ( allocated (if_pos) ) DEALLOCATE( if_pos )
     !
     ALLOCATE( pos( 3*nat,num_of_images)  )
+!    ALLOCATE( if_pos( 3,nat) )
     !
     pos(:,:) = 0.0
+!    if_pos(:,:) = 0.0
     !
     RETURN
     !
@@ -162,6 +172,7 @@ CONTAINS
   SUBROUTINE deallocate_path_input_ions()
     !
     IF ( allocated( pos ) ) DEALLOCATE( pos )
+!    IF ( allocated( if_pos ) ) DEALLOCATE( if_pos )
     !
     IF ( allocated( climbing ) ) DEALLOCATE( climbing )
     !

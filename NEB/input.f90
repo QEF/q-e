@@ -30,22 +30,14 @@ SUBROUTINE ioneb(xmlinput,attr)
                             ibrav_  => ibrav, &
                             init_dofree
   !
-  USE ions_base,     ONLY : if_pos, ityp, tau, extfor, &
+  USE ions_base,     ONLY : ityp, tau, extfor, &
                             ntyp_ => nsp, &
                             nat_  => nat, &
                             amass, tau_format
   !
-  !
   USE io_files,      ONLY : tmp_dir 
   !
   USE force_mod,     ONLY : lforce, lstres, force
-  !
-  USE control_flags, ONLY : &
-                            io_level, &
-                            lscf, &
-                            lneb,   &
-                            lsmd,                    &
-                            restart
   !
   USE path_variables, ONLY : lsteep_des, lquick_min, &
                              lbroyden, lbroyden2, &
@@ -63,13 +55,15 @@ SUBROUTINE ioneb(xmlinput,attr)
                              temp_req_        => temp_req, &
                              path_thr_        => path_thr
   !
-  ! ... CONTROL namelist
+  USE input_parameters, ONLY : if_pos
+  USE path_variables, ONLY : fix_atom_pos
   !
-  USE input_parameters, ONLY : title, calculation, verbosity, restart_mode, &
-                               iprint, tstress, tprnfor, dt, outdir, &
-                               wfcdir, prefix, etot_conv_thr, forc_conv_thr, &
-                               wf_collect
-                               
+  USE path_variables, ONLY : lneb, lsmd
+  !
+  USE path_input_parameters_module, ONLY : restart_mode
+  !
+  USE path_variables, ONLY : restart
+  !                             
   USE path_input_parameters_module, ONLY : nstep_path, string_method, &
                                num_of_images, path_thr, CI_scheme, opt_scheme, &
                                use_masses, first_last_opt, temp_req, k_max,    &
@@ -79,6 +73,8 @@ SUBROUTINE ioneb(xmlinput,attr)
   ! ... "path" specific
   !
   USE path_input_parameters_module, ONLY : pos
+  !
+  USE path_input_parameters_module, ONLY : deallocate_path_input_ions
   !
   !
   USE read_xml_module,       ONLY : read_xml
@@ -135,19 +131,22 @@ SUBROUTINE ioneb(xmlinput,attr)
   END SELECT
   !
      !
-     IF( io_level < 0) CALL errore ( 'ioneb', &
-                       'NEB, SMD do not work with "disk_io" set to "none"', 1)
+!
+! check da mettere dopo iosys del pw
+!
+!     IF( io_level < 0) CALL errore ( 'ioneb', &
+!                       'NEB, SMD do not work with "disk_io" set to "none"', 1)
      !
      !
      IF ( num_of_images < 2 ) &
-        CALL errore( 'ioneb', 'calculation=' // trim( calculation ) // &
+        CALL errore( 'ioneb', 'string_method=' // trim( string_method ) // &
                    & ': num_of_images must be at least 2', 1 )
      !
      IF ( ( CI_scheme /= "no-CI"  ) .and. &
           ( CI_scheme /= "auto"   ) .and. &
           ( CI_scheme /= "manual" ) ) THEN
         !
-        CALL errore( 'ioneb', 'calculation=' // trim( calculation ) // &
+        CALL errore( 'ioneb', 'string_method=' // trim( string_method ) // &
                    & ': unknown CI_scheme', 1 )
         !
      ENDIF
@@ -181,13 +180,13 @@ SUBROUTINE ioneb(xmlinput,attr)
         llangevin = .true.
         !
         IF ( lneb ) &
-           CALL errore( 'iosys','calculation=' // trim( calculation ) // &
+           CALL errore( 'iosys','string_method=' // trim( string_method ) // &
                       & ': langevin dynamics not implemented', 1 )
         !
         temp_req = temp_req / ( eV_to_kelvin * autoev )
         !
         IF ( temp_req <= 0.D0 ) &
-           CALL errore( 'iosys','calculation=' // trim( calculation ) // &
+           CALL errore( 'iosys','string_method=' // trim( string_method ) // &
                       & ': tepm_req has not been set', 1 )
         !
         IF ( use_freezing ) &
@@ -198,7 +197,7 @@ SUBROUTINE ioneb(xmlinput,attr)
         !
      CASE DEFAULT
         !
-        CALL errore( 'iosys','calculation=' // trim( calculation ) // &
+        CALL errore( 'iosys','string_method=' // trim( string_method ) // &
                    & ': unknown opt_scheme', 1 )
         !
      END SELECT
@@ -220,8 +219,12 @@ SUBROUTINE ioneb(xmlinput,attr)
   fixed_tan_      = fixed_tan
   !
   !
-  ! ... read following cards
+  ! once with the parser this has to be done in an independent routine
+  ! allocation together with allocate_path_variables ??? 
   !
+  allocate(fix_atom_pos(3,nat_))
+  fix_atom_pos(:,:) = 1
+  fix_atom_pos(:,:) = if_pos(:,:)
   !
   ! ... "path" optimizations specific
   !
@@ -240,6 +243,9 @@ SUBROUTINE ioneb(xmlinput,attr)
   !
   CALL verify_neb_tmpdir( tmp_dir )
   !
+  ! Deallocate path input arrays
+  !
+  CALL deallocate_path_input_ions()
   !
   RETURN
   !

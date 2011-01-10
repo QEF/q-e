@@ -32,6 +32,8 @@ PROGRAM sm
   !
   USE path_io_units_module, ONLY : stdinpath, set_input_unit
   !
+  USE path_input_parameters_module, ONLY : nstep_path
+  !
   IMPLICIT NONE
   !
   !
@@ -65,20 +67,16 @@ PROGRAM sm
   call set_input_unit()
   !
   open(unit=stdinpath,file="neb.dat",status="old")
-  IF( xmlinput ) THEN
-    CALL read_xml( 'PW', attr )
-  ELSE 
-    CALL path_read_namelist(stdinpath)
-  ENDIF
+  CALL path_read_namelist(stdinpath)
   !
   IF ( xmlinput ) THEN
      CALL read_xml ('PW', attr = attr )
   ELSE
-     CALL read_namelists( 'PW' )
+     CALL read_namelists( prog='PW', unit=5 )
 
      CALL set_engine_input_defaults()
 
-     CALL read_cards( 'PW' )
+     CALL read_cards( prog='PW', unit=5 )
   ENDIF
   !
   CALL path_read_cards(stdinpath)

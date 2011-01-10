@@ -141,7 +141,7 @@ MODULE path_opt_routines
      SUBROUTINE broyden()
        !-----------------------------------------------------------------------
        !
-       USE control_flags,  ONLY : lsmd
+       USE path_variables,  ONLY : lsmd
        USE path_io_units_module,  ONLY : broy_file, iunbroy, iunpath
        USE path_variables, ONLY : dim1, frozen, tangent, nim => num_of_images
        !
@@ -311,7 +311,7 @@ MODULE path_opt_routines
        !-----------------------------------------------------------------------
 #define DEBUG
        !
-       USE control_flags,  ONLY : lsmd
+       USE path_variables,  ONLY : lsmd
        USE path_io_units_module, ONLY : broy_file, iunbroy, iunpath
        USE path_variables, ONLY : dim1, frozen, tangent, nim => num_of_images
        !
