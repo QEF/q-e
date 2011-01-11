@@ -180,6 +180,8 @@ MODULE control_flags
     lmd     =.FALSE., &! if .TRUE. the calc. is a dynamics
     llang   =.FALSE., &! if .TRUE. the calc. is Langevin dynamics
     lpath   =.FALSE., &! if .TRUE. the calc. is a path optimizations
+    lneb    =.FALSE., &! if .TRUE. the calc. is NEB dynamics
+    lsmd    =.FALSE., &! if .TRUE. the calc. is string dynamics
     lwf     =.FALSE., &! if .TRUE. the calc. is with wannier functions
     lbands  =.FALSE., &! if .TRUE. the calc. is band structure
     lconstrain=.FALSE.,&! if .TRUE. the calc. is constraint
