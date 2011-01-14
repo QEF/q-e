@@ -1,10 +1,10 @@
 #!/bin/sh
 
-# Automated checks for pw.x - PG 2007
+# Automated checks for pw.x - PG 2007-2011
 # Some specific quantities are checked against a reference output
 # Checks are implemented for the following calculations: 
-#   'scf', 'relax', 'md', 'vc-relax', 'neb', 'nscf', 'meta'
-# (see below for the three latter)
+#   'scf', 'relax', 'md', 'vc-relax', 'nscf'
+# (see below for the latter)
 #
 # Input data: *.in, reference results: *.res, output: *.out
 # ./check-pw.x.j checks all *.in files
@@ -13,13 +13,6 @@
 #    ./check-pw.x.j atom*.in lsda*
 # If you want to save a copy in file "logfile":
 #    ./check-pw.x.j atom*.in lsda* | tee logfile
-#
-# For 'meta' calculations, the quantity that is verified is
-#    the averaged configurational energies
-#
-# For 'neb' calculations, the quantities that are verified are
-#    the converged activation energy
-#    the number of neb iterations
 #
 # For 'nscf' case, the data is in file $name.in2, where $name.in is the
 # data for the scf calculation that must be executed before the nscf one.
@@ -68,25 +61,30 @@ else
 fi
 
 ########################################################################
-# function to test matadynamics - usage: check_meta "file prefix"
+# function to get pseudopotentials from the web if missing
 ########################################################################
-check_meta () {
-  # get average configurational energy (truncated to 4 significant digits)
-  e0=`grep 'Final energy' $1.ref | awk '{sum+=$4} END {printf "%8.4f\n", sum/NR}'`
-  e1=`grep 'Final energy' $1.out | awk '{sum+=$4} END {printf "%8.4f\n", sum/NR}'`
-  #
-  if test "$e1" = "$e0"
-  then
-    $ECHO  "passed"
-  fi
-  if test "$e1" != "$e0"
-  then
-    $ECHO "discrepancy in average configurational energy detected"
-    $ECHO "Reference: $e0, You got: $e1"
-  fi
+get_pp () {
+    ppfiles=`grep UPF $1.in | awk '{print $3}'`
+    for ppfile in $ppfiles
+    do
+	if ! test -f $ESPRESSO_PSEUDO/$ppfile ; then
+	    $ECHO "Downloading $ppfile to $ESPRESSO_PSEUDO...\c"
+	    wget  http://www.quantum-espresso.org/pseudo/1.3/UPF/$ppfile \
+		-O $ESPRESSO_PSEUDO/$ppfile 2> /dev/null
+	    if test $? != 0; then
+		$ECHO "failed!"
+		$ECHO "test $1 will not be executed"
+		# status=1
+	    else
+		$ECHO "success"
+		# status=0
+	    fi
+	fi 
+    done
 }
 ########################################################################
 # function to test NEB calculations - usage: check_neb "file prefix"
+# obsolete - will be moved to NEB-specific tests
 ########################################################################
 check_neb () {
   # get reference number of neb iterations
@@ -250,10 +248,13 @@ get_times () {
   totref=`echo $totref $tref | awk '{print $1+$2}'`
   totout=`echo $totout $tout | awk '{print $1+$2}'`
 }
-
+########################################################################
+# Perform here required checks
+########################################################################
 for file in $files
 do
   name=`basename $file .in`
+  get_pp $name
   $ECHO "Checking $name...\c"
   ###
   # run the code in the scratch directory
@@ -272,25 +273,20 @@ do
   ###
   if test -f $name.ref ; then
      # reference file exists
-     if grep 'neb: convergence achieved' $name.ref > /dev/null; then
+     # NEB case no longer tested here
+     #if grep 'neb: convergence achieved' $name.ref > /dev/null; then
         #
         # Specific test for NEB
         #
-	check_neb $name
+	#check_neb $name
         #
-     elif grep 'calculation of the mean force' $name.ref > /dev/null; then
-        #
-        # Specific test for metadynamics
-        #
-	check_meta $name
-        #
-     else
+     #else
         #
         # Test for scf/relax/md/vc-relax
         #
 	check_scf $name
         #
-     fi
+     #fi
      #
      # extract wall time statistics
      #
