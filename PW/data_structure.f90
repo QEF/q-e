@@ -16,7 +16,7 @@ SUBROUTINE data_structure( gamma_only )
   USE kinds,      ONLY : DP
   USE io_global,  ONLY : stdout
   USE mp,         ONLY : mp_max
-  USE mp_global,  ONLY : inter_pool_comm, use_task_groups
+  USE mp_global,  ONLY : inter_pool_comm, use_task_groups, intra_pool_comm
   USE fft_base,   ONLY : dfftp, dffts
   USE cell_base,  ONLY : bg, tpiba
   USE klist,      ONLY : xk, nks
@@ -63,8 +63,8 @@ SUBROUTINE data_structure( gamma_only )
   !     on output, ngm_ and ngs_ contain the local number of G-vectors
   !     for the two grids. Initialize local and global number of G-vectors
   !
-  call gvect_init ( ngm_ )
-  call gvecs_init ( ngs_ );
+  call gvect_init ( ngm_ , intra_pool_comm )
+  call gvecs_init ( ngs_ , intra_pool_comm );
   !
   IF( use_task_groups ) THEN
     !

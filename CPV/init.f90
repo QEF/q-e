@@ -47,7 +47,7 @@
       USE electrons_module,         ONLY: bmeshset
       USE electrons_base,           ONLY: distribute_bands
       USE problem_size,             ONLY: cpsizes
-      USE mp_global,                ONLY: use_task_groups, nproc_bgrp, nbgrp, my_bgrp_id
+      USE mp_global,                ONLY: use_task_groups, nproc_bgrp, nbgrp, my_bgrp_id, intra_bgrp_comm
       USE task_groups,              ONLY: task_groups_init
       USE core,                     ONLY: nlcc_any
       USE uspp,                     ONLY: okvan
@@ -127,8 +127,8 @@
       !     NOTE in a parallel run ngm_ , ngw_ , ngs_ here are the 
       !     local number of reciprocal vectors
       !
-      CALL gvect_init ( ngm_ )
-      CALL gvecs_init ( ngs_ )
+      CALL gvect_init ( ngm_ , intra_bgrp_comm )
+      CALL gvecs_init ( ngs_ , intra_bgrp_comm )
       !
       ! ... Print real-space grid dimensions
       !
@@ -141,7 +141,7 @@
       !
       ! ... allocate and generate (modified) kinetic energy
       !
-      CALL gvecw_init ( ngw_ )
+      CALL gvecw_init ( ngw_ , intra_bgrp_comm )
       CALL g2kin_init ( gg, tpiba2 )
       ! 
       !  Allocate index required to compute polarizability

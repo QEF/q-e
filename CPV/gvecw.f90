@@ -45,24 +45,24 @@
 
    CONTAINS
 
-     SUBROUTINE gvecw_init( ngw_ )
+     SUBROUTINE gvecw_init( ngw_ , comm )
        !
-       USE mp_global, ONLY: intra_bgrp_comm
        USE mp, ONLY: mp_max, mp_sum
        IMPLICIT NONE
        INTEGER, INTENT(IN) :: ngw_
+       INTEGER, INTENT(IN) :: comm
        !
        ngw = ngw_
        !
        !  calculate maximum over all processors
        !
        ngwx = ngw
-       CALL mp_max( ngwx, intra_bgrp_comm )
+       CALL mp_max( ngwx, comm )
        !
        !  calculate sum over all processors
        !
        ngw_g = ngw
-       CALL mp_sum( ngw_g, intra_bgrp_comm )
+       CALL mp_sum( ngw_g, comm )
        !
        !  allocate kinetic energy
        !
