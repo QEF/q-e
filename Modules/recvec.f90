@@ -79,26 +79,26 @@
      !
    CONTAINS
 
-     SUBROUTINE gvect_init( ngm_ )
+     SUBROUTINE gvect_init( ngm_ , comm )
        !
        ! Set local and global dimensions, allocate arrays
        !
-       USE mp_global, ONLY: intra_bgrp_comm
        USE mp, ONLY: mp_max, mp_sum
        IMPLICIT NONE
        INTEGER, INTENT(IN) :: ngm_
+       INTEGER, INTENT(IN) :: comm  ! communicator of the group on which g-vecs are distributed
        !
        ngm = ngm_
        !
        !  calculate maximum over all processors
        !
        ngmx = ngm
-       CALL mp_max( ngmx, intra_bgrp_comm )
+       CALL mp_max( ngmx, comm )
        !
        !  calculate sum over all processors
        !
        ngm_g = ngm
-       CALL mp_sum( ngm_g, intra_bgrp_comm )
+       CALL mp_sum( ngm_g, comm )
        !
        !  allocate arrays - only those that are always kept until the end
        !
@@ -164,23 +164,23 @@
 
    CONTAINS
 
-     SUBROUTINE gvecs_init( ngs_ )
-       USE mp_global, ONLY: intra_bgrp_comm
+     SUBROUTINE gvecs_init( ngs_ , comm )
        USE mp, ONLY: mp_max, mp_sum
        IMPLICIT NONE
        INTEGER, INTENT(IN) :: ngs_
+       INTEGER, INTENT(IN) :: comm  ! communicator of the group on which g-vecs are distributed
        !
        ngms = ngs_
        !
        !  calculate maximum over all processors
        !
        ngsx = ngms
-       CALL mp_max( ngsx, intra_bgrp_comm )
+       CALL mp_max( ngsx, comm )
        !
        !  calculate sum over all processors
        !
        ngms_g = ngms
-       CALL mp_sum( ngms_g, intra_bgrp_comm )
+       CALL mp_sum( ngms_g, comm )
        !
        !  allocate arrays 
        !
