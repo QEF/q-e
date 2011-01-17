@@ -1221,6 +1221,19 @@ MODULE input_parameters
         REAL(DP)          :: atom_mass(nsx)  = 0.0_DP ! atomic mass of the i-th atomic species
           ! in atomic mass units: 1 a.m.u. = 1822.9 a.u. = 1.6605 * 10^-27 kg
         LOGICAL   :: taspc = .false.
+        LOGICAL   :: tkpoints = .false.
+        LOGICAL   :: tforces = .false.
+        LOGICAL   :: tocc = .false.
+        LOGICAL   :: tcell = .false.
+        LOGICAL   :: tdipole = .false.
+        LOGICAL   :: tsetnfi = .false.
+        LOGICAL   :: tionvel = .false.
+        LOGICAL   :: tconstr = .false.
+        LOGICAL   :: tesr = .false.
+        LOGICAL   :: tksout = .false.
+        LOGICAL   :: ttemplate = .false.
+        LOGICAL   :: tvhmean = .false.
+        LOGICAL   :: twannier = .false.
 
 !
 !    ATOMIC_POSITIONS

@@ -308,10 +308,9 @@ CONTAINS
       INTEGER            :: is, ip, ierr
       CHARACTER(len=4)   :: lb_pos
       CHARACTER(len=256) :: psfile
-      LOGICAL, SAVE      :: tread = .false.
       !
       !
-      IF ( tread ) THEN
+      IF ( taspc ) THEN
          CALL errore( ' card_atomic_species  ', ' two occurrences', 2 )
       ENDIF
       IF ( ntyp > nsx ) THEN
@@ -339,7 +338,6 @@ CONTAINS
          !
       ENDDO
       taspc = .true.
-      tread = .true.
       !
       RETURN
       !
@@ -400,15 +398,13 @@ CONTAINS
       INTEGER            :: ia, k, is, nfield, idx, rep_i
       LOGICAL, EXTERNAL  :: matches
       LOGICAL            :: tend
-      LOGICAL, SAVE      :: tread = .false.
       !
       INTEGER            :: ifield, ierr
       REAL(DP)           :: field_value
       CHARACTER(len=256) :: field_str, error_msg
       !
       !
-      IF(tapos) return
-      IF ( tread ) THEN
+      IF ( tapos ) THEN
          CALL errore( 'card_atomic_positions', 'two occurrences', 2 )
       ENDIF
       IF ( .not. taspc ) THEN
@@ -542,7 +538,6 @@ CONTAINS
 !       END DO
       !
       tapos = .true.
-      tread = .true.
       !
 
       RETURN
@@ -586,11 +581,10 @@ CONTAINS
       CHARACTER(len=256) :: input_line
       CHARACTER(len=2)   :: prog
       INTEGER            :: ia, k, nfield
-      LOGICAL, SAVE      :: tread = .false.
       CHARACTER(len=4)   :: lb
       !
       !
-      IF( tread ) THEN
+      IF( tforces ) THEN
          CALL errore( ' card_atomic_forces ', ' two occurrences ', 2 )
       ENDIF
       !
@@ -615,7 +609,7 @@ CONTAINS
          !
       ENDDO
       !
-      tread = .true.
+      tforces = .true.
       !
       RETURN
       !
@@ -689,12 +683,11 @@ CONTAINS
       REAL(DP), ALLOCATABLE :: xkaux(:,:)
       REAL(DP) :: delta
       LOGICAL, EXTERNAL  :: matches
-      LOGICAL, SAVE      :: tread = .false.
       LOGICAL            :: tend,terr
       LOGICAL            :: kband = .false.
       !
       !
-      IF ( tread ) THEN
+      IF ( tkpoints ) THEN
          CALL errore( ' card_kpoints ', ' two occurrences', 2 )
       ENDIF
       !
@@ -783,7 +776,7 @@ CONTAINS
          !
       ENDIF
       !
-      tread  = .true.
+      tkpoints  = .true.
       tk_inp = .true.
       !
       RETURN
@@ -825,16 +818,15 @@ CONTAINS
       IMPLICIT NONE
       !
       CHARACTER(len=256) :: input_line
-      LOGICAL, SAVE      :: tread = .false.
       !
       !
-      IF ( tread ) THEN
+      IF ( tsetnfi ) THEN
          CALL errore( ' card_setnfi ', ' two occurrences', 2 )
       ENDIF
       CALL read_line( input_line )
       READ(input_line,*) newnfi_card
       tnewnfi_card = .true.
-      tread = .true.
+      tsetnfi = .true.
       !
       RETURN
       !
@@ -917,11 +909,10 @@ CONTAINS
       CHARACTER(len=256) :: input_line, field_str
       INTEGER            :: is, nx10, i, j, nspin0
       INTEGER            :: nfield, nbnd_read, nf, ierr
-      LOGICAL, SAVE      :: tread = .false.
       LOGICAL :: tef
       !
       !
-      IF ( tread ) THEN
+      IF ( tocc ) THEN
          CALL errore( ' card_occupations ', ' two occurrences', 2 )
       ENDIF
       nspin0=nspin
@@ -950,7 +941,7 @@ CONTAINS
       ENDDO
       !
       tf_inp = .true.
-      tread = .true.
+      tocc = .true.
       !
       RETURN
       !
@@ -987,10 +978,9 @@ CONTAINS
       IMPLICIT NONE
       !
       CHARACTER(len=256) :: input_line
-      LOGICAL, SAVE :: tread = .false.
       !
       !
-      IF ( tread ) THEN
+      IF ( tvhmean ) THEN
          CALL errore( ' card_vhmean ', ' two occurrences', 2 )
       ENDIF
       !
@@ -998,7 +988,7 @@ CONTAINS
       CALL read_line( input_line )
       READ(input_line,*) &
          vhiunit_inp, vhnr_inp, vhrmin_inp, vhrmax_inp, vhasse_inp
-      tread = .true.
+      tvhmean = .true.
       !
       RETURN
       !
@@ -1031,15 +1021,14 @@ CONTAINS
       IMPLICIT NONE
       !
       CHARACTER(len=256) :: input_line
-      LOGICAL, SAVE      :: tread = .false.
       !
       !
-      IF ( tread ) THEN
+      IF ( tdipole ) THEN
          CALL errore( ' card_dipole ', ' two occurrences', 2 )
       ENDIF
       !
       tdipole_card = .true.
-      tread = .true.
+      tdipole = .true.
       !
       RETURN
       !
@@ -1081,15 +1070,14 @@ CONTAINS
       IMPLICIT NONE
       !
       CHARACTER(len=256) :: input_line
-      LOGICAL, SAVE      :: tread = .false.
       !
-      IF ( tread ) THEN
+      IF ( tesr ) THEN
          CALL errore( ' card_esr ', ' two occurrences', 2 )
       ENDIF
       CALL read_line( input_line )
       READ(input_line,*) iesr_inp
       !
-      tread = .true.
+      tesr = .true.
       !
       RETURN
       !
@@ -1135,10 +1123,9 @@ CONTAINS
       CHARACTER(len=256) :: input_line
       INTEGER            :: i, j
       LOGICAL, EXTERNAL  :: matches
-      LOGICAL, SAVE      :: tread = .false.
       !
       !
-      IF ( tread ) THEN
+      IF ( tcell ) THEN
          CALL errore( ' card_cell_parameters ', ' two occurrences', 2 )
       ENDIF
       !
@@ -1162,7 +1149,7 @@ CONTAINS
       ENDDO
       !
       trd_ht = .true.
-      tread  = .true.
+      tcell  = .true.
       !
       RETURN
       !
@@ -1204,11 +1191,10 @@ CONTAINS
       !
       CHARACTER(len=256) :: input_line
       INTEGER            :: ia, k, is, nfield
-      LOGICAL, SAVE      :: tread = .false.
       CHARACTER(len=4)   :: lb_vel
       !
       !
-      IF( tread ) THEN
+      IF( tionvel ) THEN
          CALL errore( ' card_ion_velocities ', ' two occurrences', 2 )
       ENDIF
       !
@@ -1250,7 +1236,7 @@ CONTAINS
          !
       ENDIF
       !
-      tread = .true.
+      tionvel = .true.
       !
       RETURN
       !
@@ -1302,10 +1288,9 @@ CONTAINS
       !
       CHARACTER(len=256) :: input_line
       INTEGER            :: i, nfield
-      LOGICAL, SAVE      :: tread = .false.
       !
       !
-      IF ( tread ) CALL errore( 'card_constraints', 'two occurrences', 2 )
+      IF ( tconstr ) CALL errore( 'card_constraints', 'two occurrences', 2 )
       !
       CALL read_line( input_line )
       !
@@ -1509,7 +1494,7 @@ CONTAINS
          !
       ENDDO
       !
-      tread = .true.
+      tconstr = .true.
       !
       RETURN
       !
@@ -1565,14 +1550,13 @@ CONTAINS
       IMPLICIT NONE
       !
       CHARACTER(len=256) :: input_line
-      LOGICAL, SAVE      :: tread = .false.
       INTEGER            :: i, s, nksx
       TYPE occupancy_type
          INTEGER, POINTER :: occs(:)
       END TYPE occupancy_type
       TYPE(occupancy_type), ALLOCATABLE :: is(:)
       !
-      IF ( tread ) THEN
+      IF ( tksout ) THEN
          CALL errore( ' card_ksout ', ' two occurrences', 2 )
       ENDIF
       !
@@ -1615,7 +1599,7 @@ CONTAINS
       !
       DEALLOCATE( is )
       !
-      tread = .true.
+      tksout = .true.
       !
       RETURN
       !
@@ -1651,7 +1635,6 @@ CONTAINS
       IMPLICIT NONE
       !
       CHARACTER(len=256) :: input_line
-      LOGICAL, SAVE      :: tread = .false.
       LOGICAL, EXTERNAL  :: matches
       !
       INTEGER                    :: i, ib
@@ -1659,7 +1642,7 @@ CONTAINS
       CHARACTER(len=6), EXTERNAL :: int_to_char
       !
       !
-      IF ( tread ) &
+      IF ( twannier ) &
          CALL errore( 'card_plot_wannier', 'two occurrences', 2 )
       !
       IF ( nwf > 0 ) THEN
@@ -1691,7 +1674,7 @@ CONTAINS
          !
       ENDIF
       !
-      tread = .true.
+      twannier = .true.
       !
       RETURN
       !
@@ -1729,16 +1712,15 @@ CONTAINS
       IMPLICIT NONE
       !
       CHARACTER(len=256) :: input_line
-      LOGICAL, SAVE      :: tread = .false.
       !
       !
-      IF ( tread ) THEN
+      IF ( ttemplate ) THEN
          CALL errore( ' card_template ', ' two occurrences', 2 )
       ENDIF
       !
       ! ....  CODE HERE
       !
-      tread = .true.
+      ttemplate = .true.
       !
       RETURN
       !

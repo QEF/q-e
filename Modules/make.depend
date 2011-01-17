@@ -203,7 +203,6 @@ read_xml_fields.o : io_global.o
 read_xml_fields.o : kind.o
 recvec.o : kind.o
 recvec.o : mp.o
-recvec.o : mp_global.o
 recvec_subs.o : constants.o
 recvec_subs.o : fft_base.o
 recvec_subs.o : kind.o
