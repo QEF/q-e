@@ -2072,7 +2072,7 @@ try_iflags="-I../include"
 
 # candidate fortran compilers good for all cases
 try_mpif90="mpif90"
-try_f90="g95 gfortran f90"
+try_f90="gfortran g95 f90"
 
 # add all needed -D options to try_dflags
 try_dflags=""
