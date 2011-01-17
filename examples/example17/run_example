@@ -87,10 +87,13 @@ rm -rf $TMP_DIR/*
 $ECHO " done"
 
 # NEB calculation. Automatic choice of the climbing image.
-cat > neb.dat << EOF
+cat > myinput.in << EOF
+BEGIN
+BEGIN_PATH_INPUT
 &PATH
+  restart_mode      = 'from_scratch'
   string_method     = 'neb',
-  nstep_path        = 15, 
+  nstep_path        = 20, 
   ds                = 2.D0,
   opt_scheme        = "broyden",
   num_of_images     = 7,
@@ -99,20 +102,9 @@ cat > neb.dat << EOF
   CI_scheme         = "auto",
   path_thr          = 0.1D0,
 /
-PATH_ATOMIC_POSITIONS { bohr }
-first_image
-H   -4.56670009      0.00000000      0.00000000  1  0  0
-H    0.00000000      0.00000000      0.00000000  0  0  0
-H    1.55776676      0.00000000      0.00000000  1  0  0
-last_image
-H   -1.55776676      0.00000000      0.00000000
-H    0.00000000      0.00000000      0.00000000
-H    4.56670009      0.00000000      0.00000000
-EOF
-cat > H2+H.in << EOF
+END_PATH_INPUT
+BEGIN_ENGINE_INPUT
 &CONTROL
-  calculation    = "relax",
-  restart_mode   = "from_scratch",
   prefix         = "H2+H"
   outdir         = "$TMP_DIR",
   pseudo_dir     = "$PSEUDO_DIR",
@@ -144,9 +136,23 @@ CELL_PARAMETERS { cubic }
   12.00000  0.00000  0.00000
    0.00000  5.00000  0.00000
    0.00000  0.00000  5.00000
+BEGIN_POSITIONS
+FIRST_IMAGE
+ATOMIC_POSITIONS { bohr }
+H   -4.56670009      0.00000000      0.00000000  1  0  0
+H    0.00000000      0.00000000      0.00000000  0  0  0
+H    1.55776676      0.00000000      0.00000000  1  0  0
+LAST_IMAGE
+ATOMIC_POSITIONS { bohr }
+H   -1.55776676      0.00000000      0.00000000
+H    0.00000000      0.00000000      0.00000000
+H    4.56670009      0.00000000      0.00000000
+END_POSITIONS
+END_ENGINE_INPUT
+END
 EOF
 $ECHO "  running Born-Oppenheimer NEB calculation for H2+H => H+H2...\c"
-$NEB_COMMAND < H2+H.in > H2+H.out
+$NEB_COMMAND  > H2+H.out
 check_failure $?
 $ECHO " done"
 
@@ -156,10 +162,13 @@ rm -rf $TMP_DIR/*
 $ECHO " done"
 
 # NEB calculation. Climbing image is not used
-cat > neb.dat << EOF
+cat > myinput.in << EOF
+BEGIN
+BEGIN_PATH_INPUT
 &PATH
+  restart_mode      = 'from_scratch'
   string_method     = 'neb',
-  nstep_path        = 15,
+  nstep_path        = 20, 
   ds                = 2.D0,
   opt_scheme        = "broyden",
   num_of_images     = 8,
@@ -167,20 +176,9 @@ cat > neb.dat << EOF
   k_min             = 0.2D0,
   path_thr          = 0.2D0,
 /
-PATH_ATOMIC_POSITIONS { bohr }
-first_image
-H   -4.56670009      0.00000000      0.00000000  1  0  0
-H    0.00000000      0.00000000      0.00000000  0  0  0
-H    1.55776676      0.00000000      0.00000000  1  0  0
-last_image
-H   -1.55776676      0.00000000      0.00000000
-H    0.00000000      0.00000000      0.00000000
-H    4.56670009      0.00000000      0.00000000
-EOF
-cat > symmetric_H2+H.in << EOF
+END_PATH_INPUT
+BEGIN_ENGINE_INPUT
 &CONTROL
-  calculation    = "relax",
-  restart_mode   = "from_scratch",
   prefix         = "symmetric_H2+H"
   outdir         = "$TMP_DIR",
   pseudo_dir     = "$PSEUDO_DIR",
@@ -212,9 +210,23 @@ CELL_PARAMETERS { cubic }
   12.00000  0.00000  0.00000
    0.00000  5.00000  0.00000
    0.00000  0.00000  5.00000
+BEGIN_POSITIONS
+FIRST_IMAGE
+ATOMIC_POSITIONS { bohr }
+H   -4.56670009      0.00000000      0.00000000  1  0  0
+H    0.00000000      0.00000000      0.00000000  0  0  0
+H    1.55776676      0.00000000      0.00000000  1  0  0
+LAST_IMAGE
+ATOMIC_POSITIONS { bohr }
+H   -1.55776676      0.00000000      0.00000000
+H    0.00000000      0.00000000      0.00000000
+H    4.56670009      0.00000000      0.00000000
+END_POSITIONS
+END_ENGINE_INPUT
+END
 EOF
 $ECHO "  running Born-Oppenheimer NEB calculation for symmetric H2+H => H+H2...\c"
-$NEB_COMMAND < symmetric_H2+H.in > symmetric_H2+H.out
+$NEB_COMMAND  > symmetric_H2+H.out
 check_failure $?
 $ECHO " done"
 
@@ -231,33 +243,26 @@ cat symmetric_H2+H.path | \
     awk '{if(NR==2){printf"   0\n"}; if(NR!=2){print}}' > asymmetric_H2+H.path
 
 # NEB calculation. The image that has to climb is manually chosen
-cat > neb.dat << EOF
+cat > myinput.in << EOF
+BEGIN
+BEGIN_PATH_INPUT
 &PATH
+  restart_mode      = 'restart'
   string_method     = 'neb',
+  nstep_path        = 20, 
   ds                = 2.D0,
   opt_scheme        = "broyden",
   num_of_images     = 8,
   k_max             = 0.3D0,
   k_min             = 0.2D0,
-  CI_scheme         = "manual",
   path_thr          = 0.05D0,
+  CI_scheme         = "manual"
 /
 CLIMBING_IMAGES
  5
-PATH_ATOMIC_POSITIONS { bohr }
-first_image
-H   -4.56670009      0.00000000      0.00000000  1  0  0
-H    0.00000000      0.00000000      0.00000000  0  0  0
-H    1.55776676      0.00000000      0.00000000  1  0  0
-last_image
-H   -1.55776676      0.00000000      0.00000000
-H    0.00000000      0.00000000      0.00000000
-H    4.56670009      0.00000000      0.00000000
-EOF
-cat > asymmetric_H2+H.in << EOF
+END_PATH_INPUT
+BEGIN_ENGINE_INPUT
 &CONTROL
-  calculation    = "relax",
-  restart_mode   = "restart",
   prefix         = "asymmetric_H2+H"
   outdir         = "$TMP_DIR",
   pseudo_dir     = "$PSEUDO_DIR",
@@ -289,9 +294,23 @@ CELL_PARAMETERS { cubic }
   12.00000  0.00000  0.00000
    0.00000  5.00000  0.00000
    0.00000  0.00000  5.00000
+BEGIN_POSITIONS
+FIRST_IMAGE
+ATOMIC_POSITIONS { bohr }
+H   -4.56670009      0.00000000      0.00000000  1  0  0
+H    0.00000000      0.00000000      0.00000000  0  0  0
+H    1.55776676      0.00000000      0.00000000  1  0  0
+LAST_IMAGE
+ATOMIC_POSITIONS { bohr }
+H   -1.55776676      0.00000000      0.00000000
+H    0.00000000      0.00000000      0.00000000
+H    4.56670009      0.00000000      0.00000000
+END_POSITIONS
+END_ENGINE_INPUT
+END
 EOF
 $ECHO "  running Born-Oppenheimer NEB calculation for asymmetric H2+H => H+H2...\c"
-$NEB_COMMAND < asymmetric_H2+H.in > asymmetric_H2+H.out
+$NEB_COMMAND  > asymmetric_H2+H.out
 check_failure $?
 $ECHO " done"
 
