@@ -10,9 +10,25 @@
 SUBROUTINE set_engine_input_defaults()
   !-----------------------------------------------------------------------------
   !
-  USE input_parameters, ONLY : tapos
+  USE input_parameters, ONLY : &
+                                 tapos, tkpoints, taspc, twannier, &
+                                 tconstr, tforces, tocc, tsetnfi, &
+                                 tksout, tionvel, tesr, tdipole, &
+                                 tcell
   !
-  tapos = .true.
+  tapos = .false.
+  tkpoints = .false.
+  taspc = .false.
+  twannier = .false.
+  tconstr = .false.
+  tforces = .false.
+  tocc = .false.
+  tsetnfi = .false.
+  tksout = .false.
+  tionvel = .false.
+  tesr = .false.
+  tdipole = .false.
+  tcell = .false.
   !
 END SUBROUTINE set_engine_input_defaults
 !

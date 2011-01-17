@@ -25,19 +25,8 @@ SUBROUTINE ioneb(xmlinput,attr)
                             uakbar, amconv, bohr_radius_angs, eps8
   USE io_global,     ONLY : stdout, ionode
   !
-  USE cell_base,     ONLY : at, bg, alat, omega, &
-                            celldm_ => celldm, &
-                            ibrav_  => ibrav, &
-                            init_dofree
-  !
-  USE ions_base,     ONLY : ityp, tau, extfor, &
-                            ntyp_ => nsp, &
-                            nat_  => nat, &
-                            amass, tau_format
   !
   USE io_files,      ONLY : tmp_dir 
-  !
-  USE force_mod,     ONLY : lforce, lstres, force
   !
   USE path_variables, ONLY : lsteep_des, lquick_min, &
                              lbroyden, lbroyden2, &
@@ -55,8 +44,6 @@ SUBROUTINE ioneb(xmlinput,attr)
                              temp_req_        => temp_req, &
                              path_thr_        => path_thr
   !
-  USE input_parameters, ONLY : if_pos
-  USE path_variables, ONLY : fix_atom_pos
   !
   USE path_variables, ONLY : lneb, lsmd
   !
@@ -71,10 +58,6 @@ SUBROUTINE ioneb(xmlinput,attr)
   !
   !
   ! ... "path" specific
-  !
-  USE path_input_parameters_module, ONLY : pos
-  !
-  USE path_input_parameters_module, ONLY : deallocate_path_input_ions
   !
   !
   USE read_xml_module,       ONLY : read_xml
@@ -219,33 +202,9 @@ SUBROUTINE ioneb(xmlinput,attr)
   fixed_tan_      = fixed_tan
   !
   !
-  ! once with the parser this has to be done in an independent routine
-  ! allocation together with allocate_path_variables ??? 
-  !
-  allocate(fix_atom_pos(3,nat_))
-  fix_atom_pos(:,:) = 1
-  fix_atom_pos(:,:) = if_pos(:,:)
-  !
-  ! ... "path" optimizations specific
-  !
-  DO image = 1, num_of_images_
-     !
-     tau = reshape( pos(1:3*nat_,image), (/ 3 , nat_ /) )
-     !
-     CALL convert_tau ( tau_format, nat_, tau)
-     !
-     ! ... note that this positions array is in Bohr
-     !
-     pos(1:3*nat_,image) = reshape( tau, (/ 3 * nat_ /) ) * alat
-     !
-  ENDDO
-     !
   !
   CALL verify_neb_tmpdir( tmp_dir )
   !
-  ! Deallocate path input arrays
-  !
-  CALL deallocate_path_input_ions()
   !
   RETURN
   !

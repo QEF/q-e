@@ -69,6 +69,11 @@ MODULE path_input_parameters_module
 ! ... distinguish among neb and smd done in the full phase-space
 ! ... or in the coarse-grained phase-space
 !
+  !
+  INTEGER :: n_inp_images
+  INTEGER :: nat = 1
+  REAL(DP) :: alat
+  !
   CHARACTER(len=80) :: restart_mode
   ! specify how to start/restart the simulation
   CHARACTER(len=80) :: restart_mode_allowed(3)
@@ -139,7 +144,6 @@ MODULE path_input_parameters_module
         ! ... variable added for NEB  ( C.S. 17/10/2003 )
         !
         REAL(DP), ALLOCATABLE :: pos(:,:)
-!        INTEGER, ALLOCATABLE :: if_pos(:,:)
         !
 !
 !   CLIMBING_IMAGES
@@ -152,18 +156,15 @@ MODULE path_input_parameters_module
 
 CONTAINS
 
-  SUBROUTINE allocate_path_input_ions( nat, num_of_images )
+  SUBROUTINE allocate_path_input_ions( num_of_images )
     !
-    INTEGER, INTENT(in) :: num_of_images, nat
+    INTEGER, INTENT(in) :: num_of_images
     !
     IF ( allocated( pos ) ) DEALLOCATE( pos )
-!    IF ( allocated (if_pos) ) DEALLOCATE( if_pos )
     !
     ALLOCATE( pos( 3*nat,num_of_images)  )
-!    ALLOCATE( if_pos( 3,nat) )
     !
     pos(:,:) = 0.0
-!    if_pos(:,:) = 0.0
     !
     RETURN
     !
@@ -172,7 +173,6 @@ CONTAINS
   SUBROUTINE deallocate_path_input_ions()
     !
     IF ( allocated( pos ) ) DEALLOCATE( pos )
-!    IF ( allocated( if_pos ) ) DEALLOCATE( if_pos )
     !
     IF ( allocated( climbing ) ) DEALLOCATE( climbing )
     !

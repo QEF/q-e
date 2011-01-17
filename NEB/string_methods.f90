@@ -12,6 +12,7 @@ PROGRAM sm
   ! ... Plane Wave Self-Consistent Field code 
   !
   USE io_global,        ONLY : ionode, ionode_id
+  USE io_files,         ONLY : find_free_unit
   USE parameters,       ONLY : ntypx, npk, lmaxx
   USE control_flags,    ONLY : conv_elec, conv_ions, lpath, gamma_only
   USE environment,      ONLY : environment_start, environment_end
@@ -28,11 +29,15 @@ PROGRAM sm
   USE read_cards_module,     ONLY : read_cards
   USE read_namelists_module, ONLY : read_namelists
   USE path_read_namelists_module, ONLY : path_read_namelist
-  USE path_read_cards_module, ONLY : path_read_cards
+  USE path_read_cards_module,            ONLY : path_read_cards
   !
   USE path_io_units_module, ONLY : stdinpath, set_input_unit
   !
   USE path_input_parameters_module, ONLY : nstep_path
+  !
+  USE path_input_parameters_module, ONLY : input_images
+  !
+  USE path_input_parameters_module, ONLY : allocate_path_input_ions
   !
   IMPLICIT NONE
   !
@@ -40,6 +45,15 @@ PROGRAM sm
   LOGICAL :: xmlinput = .false.
   CHARACTER (len=iotk_attlenx) :: attr
   !
+  CHARACTER(len=256) :: engine_prefix
+  !
+  INTEGER :: unit_tmp
+  !
+  INTEGER :: i
+  CHARACTER(len=10) :: a_tmp
+  !
+  !
+  unit_tmp = 45
   !
 #ifdef __PARA
   CALL mp_startup ( )
@@ -51,48 +65,56 @@ PROGRAM sm
   !
   ! ... open input file
   !
-  IF( ionode ) CALL open_input_file(xmlinput,attr)
   !
-  ! bcast of xmlinput and attr needs to be done
-  ! because is only the open statement inside
-  ! read_cards and read_namelist (in Modules) that has
-  ! if(ionode) !!! in future call read_cards_pw, call read_namelis
-  ! call read_xml should be done only by ionode. bcast is already done
-  ! inside read_cards and read_namelist.
-  !
-  call mp_bcast(xmlinput,ionode_id)
-  call mp_bcast(attr,ionode_id)
-  !
+  engine_prefix = "pw_"
+  call path_gen_inputs("myinput.in",engine_prefix,input_images)
   !
   call set_input_unit()
   !
   open(unit=stdinpath,file="neb.dat",status="old")
   CALL path_read_namelist(stdinpath)
-  !
-  IF ( xmlinput ) THEN
-     CALL read_xml ('PW', attr = attr )
-  ELSE
-     CALL read_namelists( prog='PW', unit=5 )
-
-     CALL set_engine_input_defaults()
-
-     CALL read_cards( prog='PW', unit=5 )
-  ENDIF
-  !
   CALL path_read_cards(stdinpath)
-  !
-  !
   close(stdinpath)
   !
+  !
   CALL set_engine_io_units()
-  !
+
+!  unit_tmp = find_free_unit()
+  OPEN(unit_tmp, file=trim(engine_prefix)//"1.in")
+  CALL read_namelists( prog='PW', unit=unit_tmp )
+  CALL read_cards( prog='PW', unit=unit_tmp )
   CALL iosys(xmlinput,attr)
+  CALL engine_to_path_nat()
+  CALL engine_to_path_alat()
+  CALL allocate_path_input_ions(input_images)
+  CALL engine_to_path_pos(1)
+  CALL engine_to_path_fix_atom_pos()
+  CLOSE(unit_tmp)
+
+  do i=2,input_images
+    CALL set_engine_input_defaults()
+    CALL clean_pw(.true.)
+    if(i>=1.and.i<10) then
+    write(a_tmp,'(i1)') i
+    elseif(i>10.and.i<100) then
+    write(a_tmp,'(i2)') i
+    elseif(i>100.and.i<1000) then
+    write(a_tmp,'(i3)')
+    endif
+
+!    unit_tmp = find_free_unit()
+    OPEN(unit_tmp,file=trim(engine_prefix)//trim(a_tmp)//".in") 
+    CALL read_namelists( prog='PW', unit=unit_tmp )
+    CALL read_cards( prog='PW', unit=unit_tmp )
+    CALL iosys(xmlinput,attr)
+    CALL engine_to_path_pos(i)
+    CLOSE(unit_tmp)
+  enddo
   !
+  !
+  CALL path_to_engine_fix_atom_pos()
   !
   CALL ioneb(xmlinput,attr)
-  ! ... close_input_file(xmlinput)
-  !
-  IF( ionode ) CALL close_input_file(xmlinput)
   !
   ! END INPUT RELATED
   !

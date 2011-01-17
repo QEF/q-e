@@ -59,8 +59,10 @@ MODULE path_base
                                    climbing_ => climbing, &
                                    input_images, nstep_path_ => nstep_path
       USE path_input_parameters_module, ONLY : restart_mode
+      USE path_variables, ONLY : fix_atom_pos
+      USE path_input_parameters_module, ONLY : nat
       USE control_flags,    ONLY : conv_elec
-      USE ions_base,        ONLY : nat, amass, ityp, if_pos
+      USE ions_base,        ONLY : amass, ityp
       USE io_files,         ONLY : prefix, tmp_dir
       USE path_io_units_module, ONLY : path_file, dat_file, crd_file, &
                                    int_file, xyz_file, axsf_file, broy_file
@@ -250,9 +252,9 @@ MODULE path_base
       !
       DO i = 1, nat
          !
-         IF ( if_pos(1,i) == 1 ) deg_of_freedom = deg_of_freedom + 1
-         IF ( if_pos(2,i) == 1 ) deg_of_freedom = deg_of_freedom + 1
-         IF ( if_pos(3,i) == 1 ) deg_of_freedom = deg_of_freedom + 1
+         IF ( fix_atom_pos(1,i) == 1 ) deg_of_freedom = deg_of_freedom + 1
+         IF ( fix_atom_pos(2,i) == 1 ) deg_of_freedom = deg_of_freedom + 1
+         IF ( fix_atom_pos(3,i) == 1 ) deg_of_freedom = deg_of_freedom + 1
          !
       END DO
       !
