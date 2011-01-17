@@ -1504,9 +1504,6 @@ SUBROUTINE read_cards_pw ( psfile, tau_format, xmlinput )
   !
   amass = 0
   !
-!  IF ( .not. xmlinput ) THEN
-!     CALL read_cards ( 'PW' )
-!  ENDIF
   !
   IF ( .not. taspc ) &
      CALL errore( 'read_cards_pw', 'atomic species info missing', 1 )

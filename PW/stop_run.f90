@@ -81,8 +81,6 @@ SUBROUTINE stop_run( lflag )
   !
   CALL clean_pw( .TRUE. )
   !
-!  CALL deallocate_input_parameters () 
-  !
   IF ( lflag ) THEN
      !
      STOP
