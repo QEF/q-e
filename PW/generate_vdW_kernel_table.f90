@@ -84,7 +84,7 @@ program generate_kernel
   !! Use some PWSCF modules.  In particular, we need the parallelization modules.
   !! --------------------------------------------------------------------------------------------
 
-  use mp,                   ONLY : mp_get, mp_start, mp_end, mp_env, mp_barrier
+  use mp,                   ONLY : mp_get, mp_start, mp_end, mp_barrier
   use mp_global,            ONLY : mp_global_start, nproc, mpime
   use kinds,                ONLY : dp
   use io_global,            ONLY : io_global_start, ionode, ionode_id
@@ -290,10 +290,10 @@ program generate_kernel
   ! Set up the parallel run using PWSCF methods.
   ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-  call mp_start()                                          !! Start a parallel run.  This basically calls mpi_init()
+  !! Start a parallel run
 
-  call mp_env(Nprocs, my_rank, group_id)                   !! This figures out the total number of processors, the index of this particular processor,
-  !                                                        !! and a group id for mpi_comm_world
+  call mp_start(Nprocs, my_rank, group_id)                   !! This calls mpoi_init, figures out the total number of processors,
+                                                             !! the index of this particular processor, and a group id for mpi_comm_world
 
   call io_global_start(my_rank, 0)                         !! This sets processor 0 to be the input/output node.  This is assumed below during the output stage
 

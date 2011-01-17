@@ -59,7 +59,7 @@ PROGRAM ev
       USE kinds, ONLY: DP
       USE constants, ONLY: bohr_radius_angs, ry_kbar
       USE ev_xml,    ONLY : write_evdata_xml
-      USE mp,        ONLY : mp_start, mp_env
+      USE mp,        ONLY : mp_start
       USE mp_global, ONLY : mp_global_end, nproc, mpime
       IMPLICIT NONE
       INTEGER, PARAMETER:: nmaxpar=4, nmaxpt=100, nseek=10000, nmin=4
@@ -71,11 +71,8 @@ PROGRAM ev
       REAL(DP), PARAMETER :: gpa_kbar = 10.0_dp
       LOGICAL :: in_angstrom
       CHARACTER(LEN=256) :: fileout
-!
-!
-  CALL mp_start()
   !
-  CALL mp_env( nproc, mpime, gid )
+  CALL mp_start( nproc, mpime, gid )
   !
   IF ( mpime == 0 ) THEN
 

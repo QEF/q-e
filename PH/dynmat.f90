@@ -70,7 +70,7 @@ end Module dynamical
 !                    (default: filmol='dynmat.axsf')
 !
       USE kinds, ONLY: DP
-      USE mp,         ONLY : mp_start, mp_env, mp_end, mp_barrier
+      USE mp,         ONLY : mp_start, mp_end, mp_barrier
       USE mp_global,  ONLY : nproc, mpime, mp_global_start
       USE io_dyn_mat, ONLY : read_dyn_mat_param, read_dyn_mat_header, &
                              read_dyn_mat, read_dyn_mat_tail
@@ -97,9 +97,8 @@ end Module dynamical
       namelist /input/ amass, asr, axis, fildyn, filout, filmol, filxsf, q
 !
 !
-      CALL mp_start()
       !
-      CALL mp_env( nproc, mpime, gid )
+      CALL mp_start( nproc, mpime, gid )
 
       IF (mpime==0) THEN
       asr  = 'no'

@@ -10,7 +10,7 @@ CONTAINS
   !
   USE io_global,  ONLY : stdout, io_global_start, ionode
   USE mp_global,  ONLY : nproc, mpime, mp_global_start
-  USE mp,         ONLY : mp_start, mp_env, mp_barrier
+  USE mp,         ONLY : mp_start
 
   IMPLICIT NONE
   CHARACTER(5) :: name_proc
@@ -19,9 +19,7 @@ CONTAINS
 #ifdef __PARA
 
 
-  CALL mp_start()
-  CALL mp_env( nproc, mpime, gid )
-  CALL mp_barrier()
+  CALL mp_start( nproc, mpime, gid )
   CALL io_global_start( mpime, 0 )
   CALL mp_global_start( 0, mpime, gid, nproc )
 

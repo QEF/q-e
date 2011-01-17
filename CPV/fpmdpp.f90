@@ -27,7 +27,7 @@ PROGRAM fpmd_postproc
   USE io_files,   ONLY : prefix, iunpun, xmlpun, tmp_dir, outdir
   USE io_global,     ONLY : io_global_start
   USE mp_global,     ONLY : mp_global_start, mp_global_end
-  USE mp,            ONLY : mp_start, mp_env
+  USE mp,            ONLY : mp_start
 
   USE iotk_module
   USE xml_io_base
@@ -79,8 +79,7 @@ PROGRAM fpmd_postproc
   CALL remove_stack_limit ( )
 
   !  see cprstart.f90 for the meaning of the following 4 calls
-  CALL mp_start()
-  CALL mp_env( nproc, mpime, world )
+  CALL mp_start( nproc, mpime, world )
   CALL mp_global_start( root, mpime, world, nproc )
   CALL io_global_start( mpime, root )
 

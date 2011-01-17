@@ -19,7 +19,7 @@
       !
       IMPLICIT NONE
 
-      PUBLIC :: mp_start, mp_end, mp_env, &
+      PUBLIC :: mp_start, mp_end, &
         mp_bcast, mp_sum, mp_max, mp_min, mp_rank, mp_size, &
         mp_gather, mp_get, mp_put, mp_barrier, mp_report, mp_group_free, &
         mp_root_sum, mp_comm_free, mp_comm_create, mp_comm_group, &
@@ -130,31 +130,33 @@
 !
 !------------------------------------------------------------------------------!
 !..mp_start
-      SUBROUTINE mp_start
+      SUBROUTINE mp_start(numtask, taskid, groupid)
 
 ! ...
         IMPLICIT NONE
-        INTEGER :: ierr, taskid
+        INTEGER, INTENT (OUT) :: numtask, taskid, groupid
+        INTEGER :: ierr
 ! ...
         ierr = 0
+        numtask = 1
         taskid = 0
+        groupid = 0
 
 #  if defined(__MPI)
-        CALL MPI_INIT(ierr)
+        CALL mpi_init(ierr)
         IF (ierr/=0) CALL mp_stop( 8003 )
-#  endif
-
+        CALL mpi_comm_rank(mpi_comm_world,taskid,ierr)
+        IF (ierr/=0) CALL mp_stop( 8005 )
 #if defined __HPM
-
         !   initialize the IBM Harware performance monitor
-
-#  if defined(__MPI)
-        CALL mpi_comm_rank( mpi_comm_world, taskid, ierr)
-#  endif
         CALL f_hpminit( taskid, 'profiling' )
 #endif
-! ...
+        CALL mpi_comm_size(mpi_comm_world,numtask,ierr)
+        groupid = mpi_comm_world
+        IF (ierr/=0) CALL mp_stop( 8006 )
+#  endif
 
+        RETURN
       END SUBROUTINE mp_start
 !
 !------------------------------------------------------------------------------!
@@ -183,32 +185,6 @@
 #endif
         RETURN
       END SUBROUTINE mp_end
-!
-!------------------------------------------------------------------------------!
-!..mp_env
-
-      SUBROUTINE mp_env(numtask, taskid, groupid)
-        IMPLICIT NONE
-        INTEGER, INTENT (OUT) :: numtask, taskid, groupid
-        INTEGER :: ierr
-
-        ierr = 0
-        numtask = 1
-        taskid = 0
-        groupid = 0
-
-#if defined(__MPI)
-
-        CALL mpi_comm_rank(mpi_comm_world,taskid,ierr)
-        IF (ierr/=0) CALL mp_stop( 8005 )
-        CALL mpi_comm_size(mpi_comm_world,numtask,ierr)
-        groupid = mpi_comm_world
-        IF (ierr/=0) CALL mp_stop( 8006 )
-
-#endif
-
-        RETURN
-      END SUBROUTINE mp_env
 
 !------------------------------------------------------------------------------!
 !..mp_group

@@ -10,7 +10,7 @@ MODULE mp_global
   !----------------------------------------------------------------------------
   !
   USE mp, ONLY : mp_comm_free, mp_size, mp_rank, mp_sum, mp_barrier, &
-       mp_bcast, mp_start, mp_end, mp_env
+       mp_bcast, mp_start, mp_end
   USE io_global, ONLY : stdout, io_global_start, io_global_getmeta
   USE parallel_include
   !
@@ -115,15 +115,13 @@ CONTAINS
     LOGICAL :: meta_ionode
     !
     !
-    CALL mp_start()
-    !
     ! ... get the basic parameters from communications sub-system
     ! ... to handle processors
     ! ... mpime = processor number, starting from 0
     ! ... nproc = number of processors
     ! ... world = group index of all processors
     !
-    CALL mp_env( nproc, mpime, world )
+    CALL mp_start( nproc, mpime, world )
     !
     !
     ! ... now initialize processors and groups variables

@@ -17,7 +17,6 @@ bforceion.o : ../Modules/ions_base.o
 bforceion.o : ../Modules/kind.o
 bforceion.o : ../Modules/mp_global.o
 bforceion.o : ../Modules/uspp.o
-bforceion.o : modules.o
 boxgrid.o : ../Modules/fft_scalar.o
 boxgrid.o : ../Modules/griddim.o
 boxgrid.o : ../Modules/io_global.o
@@ -68,7 +67,6 @@ cglib.o : ../Modules/uspp.o
 cglib.o : cp_interfaces.o
 cglib.o : gvecw.o
 cglib.o : mainvar.o
-cglib.o : modules.o
 chargedensity.o : ../Modules/cell_base.o
 chargedensity.o : ../Modules/constants.o
 chargedensity.o : ../Modules/control_flags.o
@@ -116,7 +114,6 @@ cp_interfaces.o : ../Modules/griddim.o
 cp_interfaces.o : ../Modules/ions_base.o
 cp_interfaces.o : ../Modules/kind.o
 cp_interfaces.o : ../Modules/recvec.o
-cp_interfaces.o : ../Modules/uspp.o
 cp_interfaces.o : atoms_type.o
 cp_restart.o : ../Modules/cell_base.o
 cp_restart.o : ../Modules/constants.o
@@ -276,7 +273,6 @@ dforceb.o : ../Modules/recvec.o
 dforceb.o : ../Modules/uspp.o
 dforceb.o : efield.o
 dforceb.o : gvecw.o
-dforceb.o : modules.o
 efermi.o : ../Modules/kind.o
 efield.o : ../Modules/control_flags.o
 efield.o : ../Modules/io_global.o
@@ -346,7 +342,6 @@ forces.o : ../Modules/recvec.o
 forces.o : ../Modules/uspp.o
 forces.o : ensemble_dft.o
 forces.o : gvecw.o
-forces.o : modules.o
 fpmdpp.o : ../Modules/constants.o
 fpmdpp.o : ../Modules/io_files.o
 fpmdpp.o : ../Modules/io_global.o
@@ -398,7 +393,6 @@ gram.o : ../Modules/mp_global.o
 gram.o : ../Modules/recvec.o
 gram.o : ../Modules/uspp.o
 gram.o : gvecw.o
-gram.o : modules.o
 gtable.o : ../Modules/io_global.o
 gtable.o : ../Modules/kind.o
 gtable.o : ../Modules/mp.o
@@ -410,7 +404,6 @@ gtable.o : gvecw.o
 gvecb.o : ../Modules/kind.o
 gvecw.o : ../Modules/kind.o
 gvecw.o : ../Modules/mp.o
-gvecw.o : ../Modules/mp_global.o
 init.o : ../Modules/cell_base.o
 init.o : ../Modules/constants.o
 init.o : ../Modules/control_flags.o
@@ -516,6 +509,7 @@ input.o : ../Modules/read_namelists.o
 input.o : ../Modules/read_xml.o
 input.o : ../Modules/sic.o
 input.o : ../Modules/timestep.o
+input.o : ../Modules/uspp.o
 input.o : ../Modules/wave_base.o
 input.o : ../Modules/xml_input.o
 input.o : ../iotk/src/iotk_module.o
@@ -527,7 +521,6 @@ input.o : electrons.o
 input.o : ensemble_dft.o
 input.o : ksstates.o
 input.o : mainvar.o
-input.o : modules.o
 input.o : pres_ai_mod.o
 input.o : read_pseudo.o
 input.o : wannier_base.o
@@ -626,7 +619,6 @@ nl_base.o : ../Modules/recvec.o
 nl_base.o : ../Modules/uspp.o
 nl_base.o : gvecw.o
 nl_base.o : mainvar.o
-nl_base.o : modules.o
 nlcc.o : ../Modules/atom.o
 nlcc.o : ../Modules/cell_base.o
 nlcc.o : ../Modules/control_flags.o
@@ -661,7 +653,6 @@ ortho.o : ../Modules/uspp.o
 ortho.o : cp_interfaces.o
 ortho.o : gvecw.o
 ortho.o : mainvar.o
-ortho.o : modules.o
 ortho.o : ortho_base.o
 ortho_base.o : ../Modules/constants.o
 ortho_base.o : ../Modules/control_flags.o
@@ -677,7 +668,6 @@ ortho_base.o : ../Modules/ptoolkit.o
 ortho_base.o : ../Modules/recvec.o
 ortho_base.o : ../Modules/uspp.o
 ortho_base.o : gvecw.o
-ortho_base.o : modules.o
 phasefactor.o : ../Modules/cell_base.o
 phasefactor.o : ../Modules/constants.o
 phasefactor.o : ../Modules/control_flags.o
@@ -694,6 +684,7 @@ plugin_forces.o : ../Modules/io_files.o
 plugin_forces.o : ../Modules/io_global.o
 plugin_forces.o : ../Modules/kind.o
 plugin_forces.o : ../Modules/mp.o
+plugin_forces.o : ../Modules/mp_global.o
 plugin_forces.o : ../Modules/plugin_flags.o
 plugin_initialization.o : ../Modules/io_files.o
 plugin_initialization.o : ../Modules/io_global.o
@@ -795,7 +786,6 @@ qmatrixd.o : ../Modules/recvec.o
 qmatrixd.o : ../Modules/uspp.o
 qmatrixd.o : efield.o
 qmatrixd.o : gvecw.o
-qmatrixd.o : modules.o
 qqberry.o : ../Modules/atom.o
 qqberry.o : ../Modules/cell_base.o
 qqberry.o : ../Modules/constants.o
@@ -947,6 +937,7 @@ wannier.o : ../Modules/ions_base.o
 wannier.o : ../Modules/kind.o
 wannier.o : ../Modules/printout_base.o
 wannier.o : ../Modules/recvec.o
+wannier.o : ../Modules/uspp.o
 wannier.o : ../Modules/wave_base.o
 wannier.o : cp_interfaces.o
 wannier.o : gvecw.o
