@@ -86,10 +86,6 @@ MODULE mp_global
   LOGICAL :: &
     use_task_groups = .FALSE.  ! if TRUE task groups parallelization is used
   !
-  ! ... Module Private stuff
-  !
-  LOGICAL, PRIVATE :: user_nproc_ortho = .FALSE.
-  !
   PRIVATE :: init_pool
   !
 CONTAINS
@@ -133,7 +129,6 @@ CONTAINS
     ! ... initialize input/output, set the I/O node
     !
     CALL io_global_start( mpime, root )
-    !
     ! ... get the "meta" I/O node
     !
     CALL io_global_getmeta ( meta_ionode, meta_ionode_id )
@@ -169,13 +164,6 @@ CONTAINS
        !
        CALL get_arg_northo( nproc_ortho_in )
        !
-       IF( nproc_ortho_in < 1 ) THEN
-          !  any invalid value means use the default
-          user_nproc_ortho = .FALSE.
-       ELSE
-          user_nproc_ortho = .TRUE.
-       END IF
-       !
        nproc_ortho_in = MAX( nproc_ortho_in, 1 )
        nproc_ortho_in = MIN( nproc_ortho_in, nproc )
        !
@@ -190,7 +178,6 @@ CONTAINS
     CALL mp_bcast( nbgrp, meta_ionode_id )
     CALL mp_bcast( ntask_groups, meta_ionode_id )
     CALL mp_bcast( nproc_ortho_in, meta_ionode_id )
-    CALL mp_bcast( user_nproc_ortho, meta_ionode_id )
     !
     use_task_groups = ( ntask_groups > 1 )
     !
@@ -407,10 +394,9 @@ CONTAINS
     !
 #endif
     !
-    IF( user_nproc_ortho ) THEN
+    IF( nproc_ortho_in > 1 ) THEN
        ! use the command line value ensuring that it falls in the proper range.
        nproc_ortho_try = MIN( nproc_ortho_in , nproc_pool )
-       nproc_ortho_try = MAX( nproc_ortho_try , 1 )
     ELSE
        ! here we can play with custom architecture specific default definitions
 #if defined __SCALAPACK
