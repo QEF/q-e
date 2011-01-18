@@ -162,8 +162,8 @@ SUBROUTINE compute_scf( fii, lii, stat  )
   ! ... after the first call to compute_scf the input values of startingpot
   ! ... and startingwfc are both set to 'file'
   !
-!  starting_pot = 'file'
-!  starting_wfc = 'file'
+  starting_pot = 'file'
+  starting_wfc = 'file'
   !
   ! ... finalization of the job (this point is also reached in case of error
   ! ... condition)
@@ -399,12 +399,12 @@ SUBROUTINE compute_scf( fii, lii, stat  )
       ! ... input values are restored at the end of each iteration ( they are
       ! ... modified by init_run )
       !
-!      starting_pot = 'file'
+!      starting_pot = 'atomic'
 !      starting_wfc = 'file'
       !
       ethr = diago_thr_init
       !
-      CALL close_files()
+      CALL close_files(.FALSE.)
       CALL reset_k_points ( )
       !
       RETURN

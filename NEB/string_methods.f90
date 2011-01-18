@@ -11,7 +11,7 @@ PROGRAM sm
   !
   ! ... Plane Wave Self-Consistent Field code 
   !
-  USE io_global,        ONLY : ionode, ionode_id
+  USE io_global,        ONLY : meta_ionode_id
   USE io_files,         ONLY : find_free_unit
   USE parameters,       ONLY : ntypx, npk, lmaxx
   USE control_flags,    ONLY : conv_elec, conv_ions, lpath, gamma_only
@@ -21,7 +21,7 @@ PROGRAM sm
   USE path_base,        ONLY : initialize_path, search_mep
   USE path_io_routines, ONLY : path_summary
   USE image_io_routines, ONLY : io_image_start
-  USE mp_global,        ONLY : mp_startup, mp_bcast, mp_global_end
+  USE mp_global,        ONLY : mp_startup, mp_bcast, mp_global_end, world_comm
   !
   USE iotk_module,           ONLY : iotk_attlenx
   USE open_close_input_file_interf, ONLY : open_input_file, close_input_file
@@ -67,7 +67,7 @@ PROGRAM sm
   !
   !
   engine_prefix = "pw_"
-  call path_gen_inputs("myinput.in",engine_prefix,input_images)
+  call path_gen_inputs("myinput.in",engine_prefix,input_images,meta_ionode_id,world_comm)
   !
   call set_input_unit()
   !
@@ -83,7 +83,7 @@ PROGRAM sm
   OPEN(unit_tmp, file=trim(engine_prefix)//"1.in")
   CALL read_namelists( prog='PW', unit=unit_tmp )
   CALL read_cards( prog='PW', unit=unit_tmp )
-  CALL iosys(xmlinput,attr)
+  CALL iosys()
   CALL engine_to_path_nat()
   CALL engine_to_path_alat()
   CALL allocate_path_input_ions(input_images)
@@ -106,7 +106,7 @@ PROGRAM sm
     OPEN(unit_tmp,file=trim(engine_prefix)//trim(a_tmp)//".in") 
     CALL read_namelists( prog='PW', unit=unit_tmp )
     CALL read_cards( prog='PW', unit=unit_tmp )
-    CALL iosys(xmlinput,attr)
+    CALL iosys()
     CALL engine_to_path_pos(i)
     CLOSE(unit_tmp)
   enddo

@@ -62,6 +62,7 @@ path_base.o : path_opt_routines.o
 path_base.o : path_reparametrisation.o
 path_base.o : path_variables.o
 path_gen_inputs.o : ../Modules/io_files.o
+path_gen_inputs.o : ../Modules/mp_global.o
 path_input_parameters_module.o : ../Modules/kind.o
 path_input_parameters_module.o : ../Modules/parameters.o
 path_int.o : ../Modules/basic_algebra_routines.o
@@ -94,7 +95,6 @@ path_opt_routines.o : ../Modules/mp.o
 path_opt_routines.o : path_io_units_module.o
 path_opt_routines.o : path_variables.o
 path_read_cards_module.o : ../Modules/constants.o
-path_read_cards_module.o : ../Modules/input_parameters.o
 path_read_cards_module.o : ../Modules/io_global.o
 path_read_cards_module.o : ../Modules/kind.o
 path_read_cards_module.o : ../Modules/parser.o
