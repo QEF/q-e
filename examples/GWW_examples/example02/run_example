@@ -344,8 +344,8 @@ cp ../EXCHANGE/si.gv_time .
 # GWW calculation 
 cat > inputgww << EOF
 &inputgww
-ggwin%n=100,
-ggwin%n_fit=100,
+ggwin%n=79,
+ggwin%n_fit=79,
 ggwin%tau=10.,
 ggwin%max_i=20,
 ggwin%prefix='si'
