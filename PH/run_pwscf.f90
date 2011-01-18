@@ -23,7 +23,7 @@ SUBROUTINE run_pwscf(do_band)
   USE control_ph,      ONLY : done_bands, reduce_io, recover, tmp_dir_phq, &
                               ext_restart, bands_computed
   USE save_ph,         ONLY : tmp_dir_save
-  !
+ !
   IMPLICIT NONE
   !
   CHARACTER(LEN=256) :: dirname, file_base_in, file_base_out
@@ -36,7 +36,7 @@ SUBROUTINE run_pwscf(do_band)
   !
   CALL clean_pw( .FALSE. )
   !
-  CALL close_files()
+  CALL close_files(.true.)
   !
   ! From now on, work only on the _ph virtual directory
   !
@@ -62,13 +62,16 @@ SUBROUTINE run_pwscf(do_band)
      CALL punch( 'all' )
      done_bands=.TRUE.
   ENDIF
+ 
+
   !
   CALL seqopn( 4, 'restart', 'UNFORMATTED', exst )
   CLOSE( UNIT = 4, STATUS = 'DELETE' )
   ext_restart=.FALSE.
   !
-  CALL close_files()
+  CALL close_files(.true.)
   !
+
   bands_computed=.TRUE.
   !
   CALL stop_clock( 'PWSCF' )
