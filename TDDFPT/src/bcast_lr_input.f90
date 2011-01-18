@@ -55,6 +55,7 @@ subroutine bcast_lr_input
   call mp_bcast (n_ipol, ionode_id )
   call mp_bcast (plot_type, ionode_id )
   call mp_bcast (no_hxc, ionode_id )
+  call mp_bcast (bgz_suffix, ionode_id )
   call mp_barrier()
   !print *, "bcast lr input finished"
   !print *, "variables"
