@@ -189,7 +189,7 @@ MODULE w_divergence
 !check for consistency
 
       if(tf%n /= gt%n) then
-         write(stdout,*) 'FFT_GV: not consistent n'
+         write(stdout,*) 'FFT_GV: not consistent n', tf%n,gt%n
          stop
       endif
 

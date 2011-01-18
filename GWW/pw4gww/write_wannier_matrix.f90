@@ -33,8 +33,6 @@
   write(stdout,*) "nbnb_normal:",nbnd_normal
   write(stdout,*) "ubound e_h e_xc", ubound(e_h), ubound(e_xc)
   write(stdout,*) "ubound u_trans", ubound(u_trans,1), ubound(u_trans,2)
-  write(stdout,*) u_trans(:,1)
-  write(stdout,*) u_trans(115,:)
   call flush_unit(stdout)
 
   if(.not.lnonorthogonal) then

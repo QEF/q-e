@@ -236,6 +236,7 @@
 
 
       call initialize_polaw( pw )
+      call initialize_memory_fft_data(fftd)
 
        write(stdout,*) 'Routine go_fft_para2'!ATTENZIONE
        call flush_unit(stdout)

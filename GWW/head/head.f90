@@ -253,7 +253,7 @@ PROGRAM head
         !
         CALL clean_pw( .FALSE. )
         !
-        CALL close_files()
+        CALL close_files(.TRUE.)
         !
         ! ... Setting the values for the nscf run
         !
@@ -282,7 +282,7 @@ PROGRAM head
         CALL seqopn( 4, 'restart', 'UNFORMATTED', exst )
         CLOSE( UNIT = 4, STATUS = 'DELETE' )
         !
-        CALL close_files()
+        CALL close_files(.TRUE.)
         !
      END IF
      !

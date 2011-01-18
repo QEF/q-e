@@ -30,6 +30,16 @@
 
  CONTAINS
 
+
+   SUBROUTINE initialize_memory_fft_data(fftd)
+     implicit none
+     TYPE(fft_data) :: fftd
+     nullify(fftd%fd)
+   return
+ END SUBROUTINE initialize_memory_fft_data
+
+
+
  SUBROUTINE free_memory_fft_data(fftd)
 !this subroutine  deallocates the fft descriptor
    implicit none
@@ -332,7 +342,7 @@
 !data is put on appropiate order for FFT
 !total period=2*T+T/n
     USE polarization,        ONLY : polaw,read_polaw, free_memory_polaw,&
-                                 & read_polaw_range
+                                 & read_polaw_range, initialize_polaw
     USE io_global,           ONLY : stdout
     USE constants,           ONLY : eps8, pi
     USE times_gw,            ONLY : times_freqs
@@ -360,6 +370,7 @@
 !first dealloacate and set
 
 
+    call initialize_polaw(pw)
     write(stdout,*) 'VALUE TF', tf%l_fft_timefreq!ATTENZIONE
 
     totalperiod=2.d0*period+2.d0*period/real(n)
