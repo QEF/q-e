@@ -52,8 +52,7 @@
       USE smooth_grid_dimensions, &
                           ONLY: nrxxs, nr1s, nr2s, nr3s
       USE local_pseudo,   ONLY: vps, rhops
-      USE io_global,      ONLY: io_global_start, stdout, ionode, &
-                                ionode_id
+      USE io_global,      ONLY: stdout, ionode, ionode_id
       USE mp_global,      ONLY: intra_bgrp_comm, leg_ortho
       USE dener
       USE uspp,           ONLY: nhsa=> nkb, betae => vkb, &
@@ -363,9 +362,7 @@
       USE smooth_grid_dimensions, &
                           ONLY: nrxxs, nr1s, nr2s, nr3s
       USE local_pseudo,   ONLY: vps, rhops
-      USE io_global,      ONLY: io_global_start, stdout, ionode, &
-                                ionode_id
-      USE mp_global,      ONLY: intra_bgrp_comm
+      USE io_global,      ONLY: stdout, ionode, ionode_id
       USE dener
       USE uspp,           ONLY: nhsa=> nkb, betae => vkb, &
                                 rhovan => becsum, deeq
@@ -558,8 +555,7 @@
       USE smooth_grid_dimensions, &
                           ONLY: nrxxs, nr1s, nr2s, nr3s
       USE local_pseudo,   ONLY: vps, rhops
-      USE io_global,      ONLY: io_global_start, stdout, ionode, &
-                                ionode_id
+      USE io_global,      ONLY: stdout, ionode, ionode_id
       USE mp_global,      ONLY: intra_bgrp_comm
       USE dener
       USE uspp,           ONLY: nhsa=> nkb, betae => vkb, &

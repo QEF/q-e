@@ -40,7 +40,7 @@
       use cell_base, only: h, hold, deth, wmass, tpiba2
       use smooth_grid_dimensions, only: nrxxs
       use local_pseudo, only: vps, rhops
-      use io_global,                ONLY : io_global_start, stdout, ionode, ionode_id
+      use io_global,                ONLY : stdout, ionode, ionode_id
       use mp_global,                ONLY : intra_bgrp_comm, np_ortho, me_ortho, ortho_comm
       use dener
       use constants,                only : pi, au_gpa

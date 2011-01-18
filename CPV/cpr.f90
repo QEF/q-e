@@ -57,8 +57,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
   USE smooth_grid_dimensions,   ONLY : nrxxs, nr1s, nr2s, nr3s
   USE smallbox_grid_dimensions, ONLY : nr1b, nr2b, nr3b
   USE local_pseudo,             ONLY : allocate_local_pseudo
-  USE io_global,                ONLY : io_global_start, &
-                                       stdout, ionode, ionode_id
+  USE io_global,                ONLY : stdout, ionode, ionode_id
   USE dener,                    ONLY : detot
   !USE cdvan,                    ONLY : drhovan
   USE gvecw,                    ONLY : ggp

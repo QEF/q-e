@@ -15,76 +15,82 @@ MODULE mp_global
   USE parallel_include
   !
   IMPLICIT NONE 
-  !
   SAVE
   !
-  INTEGER :: mpime = 0  ! absolute processor index starting from 0
-  INTEGER :: root  = 0  ! index of the absolute root processor
-  INTEGER :: nproc = 1  ! absolute number of processor
-  INTEGER :: nproc_file = 1  ! absolute number of processor written in the 
-  ! xml punch file
-  INTEGER :: world_comm = 0  ! communicator of all processor
+  ! ... World group (all processors)
+  !
+  INTEGER :: mpime = 0  ! processor index (starts from 0 to nproc-1)
+  INTEGER :: root  = 0  ! index of the root processor
+  INTEGER :: nproc = 1  ! number of processors
+  INTEGER :: world_comm = 0  ! communicator
+  !
+  ! ... Image groups (processors within an image)
+  !
+  INTEGER :: nimage    = 1 ! number of images
+  INTEGER :: me_image  = 0 ! index of the processor within an image
+  INTEGER :: root_image= 0 ! index of the root processor within an image
+  INTEGER :: my_image_id=0 ! index of my image
+  INTEGER :: nproc_image=1 ! number of processors within an image
+  INTEGER :: inter_image_comm = 0  ! inter image communicator
+  INTEGER :: intra_image_comm = 0  ! intra image communicator  
+  !
+  ! ... Pool groups (processors within a pool of k-points)
+  !
+  INTEGER :: npool       = 1  ! number of "k-points"-pools
+  INTEGER :: me_pool     = 0  ! index of the processor within a pool 
+  INTEGER :: root_pool   = 0  ! index of the root processor within a pool
+  INTEGER :: my_pool_id  = 0  ! index of my pool
+  INTEGER :: nproc_pool  = 1  ! number of processors within a pool
+  INTEGER :: inter_pool_comm  = 0  ! inter pool communicator
+  INTEGER :: intra_pool_comm  = 0  ! intra pool communicator
+  !
+  ! ... Band groups (processors within a pool of bands)
+  !
+  INTEGER :: nbgrp       = 1  ! number of band groups
+  INTEGER :: me_bgrp     = 0  ! index of the processor within a band group
+  INTEGER :: root_bgrp   = 0  ! index of the root processor within a band group
+  INTEGER :: my_bgrp_id  = 0  ! index of my band group
+  INTEGER :: nproc_bgrp  = 1  ! number of processor within a band group
+  INTEGER :: inter_bgrp_comm  = 0  ! inter band group communicator
+  INTEGER :: intra_bgrp_comm  = 0  ! intra band group communicator  
+  !
+  ! ... ortho (or linear-algebra) groups
+  !
+  INTEGER :: np_ortho(2) = 1  ! size of the processor grid used in ortho
+  INTEGER :: me_ortho(2) = 0  ! coordinates of the processors
+  INTEGER :: me_ortho1   = 0  ! task id for the ortho group
+  INTEGER :: nproc_ortho = 1  ! size of the ortho group:
+  INTEGER :: leg_ortho   = 1  ! the distance in the father communicator
+                              ! of two neighbour processors in ortho_comm
+  INTEGER :: ortho_comm  = 0  ! communicator for the ortho group
+  INTEGER :: ortho_comm_id= 0 ! id of the ortho_comm
+  !
 #if defined __SCALAPACK
   INTEGER :: me_blacs   =  0  ! BLACS processor index starting from 0
   INTEGER :: np_blacs   =  1  ! BLACS number of processor
   INTEGER :: world_cntx = -1  ! BLACS context of all processor 
+  INTEGER :: ortho_cntx = -1  ! BLACS context for ortho_comm
 #endif
-
-  INTEGER :: kunit = 1  ! granularity of k-point distribution
   !
-  ! ... indeces ( all starting from 0 !!! )
+  ! ... "task" groups (for band parallelization of FFT)
   !
-  INTEGER :: me_pool     = 0  ! index of the processor within a pool 
-  INTEGER :: me_image    = 0  ! index of the processor within an image
-  INTEGER :: me_bgrp     = 0  ! index of the processor within a band group
-  INTEGER :: root_pool   = 0  ! index of the root processor within a pool
-  INTEGER :: root_image  = 0  ! index of the root processor within an image
-  INTEGER :: root_bgrp   = 0  ! index of the root processor within a band group
-  INTEGER :: my_pool_id  = 0  ! index of my pool
-  INTEGER :: my_image_id = 0  ! index of my image
-  INTEGER :: my_bgrp_id  = 0  ! index of my band group
-  INTEGER :: me_ortho(2) = 0  ! coordinates of the processors
-  INTEGER :: me_ortho1   = 0  ! task id for the ortho group
-  INTEGER :: me_pgrp     = 0  ! task id for plane wave task group
-  !
-  INTEGER :: npool       = 1  ! number of "k-points"-pools
-  INTEGER :: nimage      = 1  ! number of "path-images"-pools
-  INTEGER :: nbgrp       = 1  ! number of band groups
   INTEGER :: nogrp       = 1  ! number of proc. in an orbital "task group" 
   INTEGER :: npgrp       = 1  ! number of proc. in a plane-wave "task group" 
-  INTEGER :: nproc_pool  = 1  ! number of processor within a pool
-  INTEGER :: nproc_pool_file  = 1  ! number of processor within a pool of
-  !   written in the xml punch file
-  INTEGER :: nproc_image = 1  ! number of processor within an image
-  INTEGER :: nproc_image_file  = 1  ! number of processor within a image
-  INTEGER :: nproc_bgrp  = 1  ! number of processor within a band group
-  INTEGER :: np_ortho(2) = 1  ! size of the processor grid used in ortho
-  INTEGER :: nproc_ortho = 1  ! size of the ortho group:
-  INTEGER :: leg_ortho   = 1  ! the distance in the father communicator
-  ! of two neighbour processors in ortho_comm
-  INTEGER, ALLOCATABLE :: nolist(:) ! list of processors in my orbital task group 
-  INTEGER, ALLOCATABLE :: nplist(:) ! list of processors in my plane wave task group 
-  !
-  ! ... communicators
-  !
-  INTEGER :: inter_pool_comm  = 0  ! inter pool communicator
-  INTEGER :: intra_pool_comm  = 0  ! intra pool communicator
-  INTEGER :: inter_image_comm = 0  ! inter image communicator
-  INTEGER :: intra_image_comm = 0  ! intra image communicator  
-  INTEGER :: inter_bgrp_comm  = 0  ! inter band group communicator
-  INTEGER :: intra_bgrp_comm  = 0  ! intra band group communicator  
-  INTEGER :: pgrp_comm        = 0  ! plane-wave group communicator (task grouping)
-  INTEGER :: ogrp_comm        = 0  ! orbital group communicarot (task grouping)
-  INTEGER :: ortho_comm       = 0  ! communicator used for fast and memory saving ortho
-  INTEGER :: ortho_comm_id    = 0  ! id of the ortho_comm
-#if defined __SCALAPACK
-  INTEGER :: ortho_cntx       = -1 ! BLACS context for ortho_comm
-#endif
-  !
-  ! ... Task Groups parallelization
-  !
+  INTEGER :: me_pgrp     = 0  ! task id for plane wave task group
+  INTEGER, ALLOCATABLE :: nolist(:) ! list of procs in my orbital task group 
+  INTEGER, ALLOCATABLE :: nplist(:) ! list of procs in my plane wave task group 
+  INTEGER :: pgrp_comm   = 0  ! plane-wave group communicator
+  INTEGER :: ogrp_comm   = 0  ! orbital group communicator
   LOGICAL :: &
     use_task_groups = .FALSE.  ! if TRUE task groups parallelization is used
+  !
+  ! ... Misc parallelization info
+  ! 
+  INTEGER :: kunit = 1  ! granularity of k-point distribution
+  ! ... number of processors written in the data file for checkin purposes:
+  INTEGER :: nproc_file = 1        ! world group
+  INTEGER :: nproc_image_file = 1  ! in an image
+  INTEGER :: nproc_pool_file  = 1  ! in a pool
   !
   PRIVATE :: init_pool
   !
@@ -142,14 +148,14 @@ CONTAINS
        nimage = MAX( nimage, 1 )
        nimage = MIN( nimage, nproc )
        !
-       ! ... How many parallel images ?
+       ! ... How many band groups?
        !
        CALL get_arg_nbgrp( nbgrp )
        !
        nbgrp = MAX( nbgrp, 1 )
        nbgrp = MIN( nbgrp, nproc )
        !
-       ! ... How many pools ?
+       ! ... How many k-point pools ?
        !
        CALL get_arg_npool( npool )
        !
@@ -171,7 +177,7 @@ CONTAINS
     !
     CALL mp_barrier()
     !
-    ! ... transmit npool and nimage
+    ! ... broadcast input parallelization options to all processors
     !
     CALL mp_bcast( npool,  meta_ionode_id )
     CALL mp_bcast( nimage, meta_ionode_id )

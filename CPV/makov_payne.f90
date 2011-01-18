@@ -16,7 +16,7 @@ SUBROUTINE makov_payne(etot)
   USE kinds,             ONLY : DP
   USE ions_base,         ONLY : nat, zv
   USE ions_positions,    ONLY : tau0, ityp
-  USE io_global,         ONLY : io_global_start, stdout, ionode, ionode_id
+  USE io_global,         ONLY : stdout, ionode, ionode_id
   USE constants,         ONLY : pi,AUTOEV
   USE cp_main_variables, ONLY : rhor
   USE electrons_base,    ONLY : nspin
