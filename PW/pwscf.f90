@@ -82,7 +82,7 @@ PROGRAM pwscf
   !
   ! ... convert to internal variables
   !
-  CALL iosys(xmlinput,attr)
+  CALL iosys()
   !
   ! ... close_input_file(xmlinput)
   !

@@ -7,7 +7,7 @@
 !
 !
 !----------------------------------------------------------------------------
-SUBROUTINE iosys(xmlinput,attr)
+SUBROUTINE iosys()
   !-----------------------------------------------------------------------------
   !
   ! ...  this subroutine reads input data from standard input ( unit 5 )
@@ -308,21 +308,9 @@ SUBROUTINE iosys(xmlinput,attr)
   !
   IMPLICIT NONE
   !
-  CHARACTER (len=iotk_attlenx), intent(in) :: attr
-  LOGICAL, intent(in) :: xmlinput
-  !
   INTEGER  :: ia, image, nt
   REAL(DP) :: theta, phi
   !
-  !
-  ! ... all namelists are read
-  !
-!  IF ( xmlinput ) THEN
-!     CALL read_xml ('PW', attr = attr )
-!  ELSE
-!     CALL read_namelists( 'PW' )
-!     CALL read_cards( 'PW' )
-!  ENDIF
   !
   ! ... various initializations of control variables
   !
@@ -1289,7 +1277,7 @@ SUBROUTINE iosys(xmlinput,attr)
   !
   IF ( tefield ) ALLOCATE( forcefield( 3, nat_ ) )
   !
-  CALL read_cards_pw ( psfile, tau_format, xmlinput )
+  CALL read_cards_pw ( psfile, tau_format )
   !
   ! ... set up atomic positions and crystal lattice
   !
@@ -1461,7 +1449,7 @@ SUBROUTINE iosys(xmlinput,attr)
 END SUBROUTINE iosys
 !
 !----------------------------------------------------------------------------
-SUBROUTINE read_cards_pw ( psfile, tau_format, xmlinput )
+SUBROUTINE read_cards_pw ( psfile, tau_format )
   !----------------------------------------------------------------------------
   !
   USE kinds,              ONLY : DP
@@ -1496,7 +1484,6 @@ SUBROUTINE read_cards_pw ( psfile, tau_format, xmlinput )
   CHARACTER (len=80)  :: tau_format
   INTEGER, EXTERNAL :: atomic_number
   REAL(DP), EXTERNAL :: atom_weight
-  LOGICAL, INTENT(in) :: xmlinput
   !
   LOGICAL :: tcell = .false.
   INTEGER :: is, ia
