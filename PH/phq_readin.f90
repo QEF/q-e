@@ -378,9 +378,9 @@ SUBROUTINE phq_readin()
   IF (elph.OR.fildvscf /= ' ') lqdir=.TRUE.
   IF (.NOT.ldisp) lqdir=.FALSE.
 
-!  IF (two_fermi_energies.or.i_cons /= 0) &
-!     CALL errore('phq_readin',&
-!     'The phonon code with constrained magnetization is not yet available',1)
+  IF (two_fermi_energies.or.i_cons /= 0) &
+     CALL errore('phq_readin',&
+     'The phonon code with constrained magnetization is not yet available',1)
 
   IF (tqr) CALL errore('phq_readin',&
      'The phonon code with Q in real space not available',1)
