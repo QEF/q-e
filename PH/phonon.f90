@@ -36,9 +36,18 @@ PROGRAM phonon
   ! NC = norm conserving pseudopotentials
   ! US = ultrasoft pseudopotentials
   ! PAW = projector augmented-wave
-  ! [1] LDA, [2] [1]+GGA, [3] [2]+LSDA/sGGA, [4] [3]+Spin-orbit/nonmagnetic,
-  ! [5] [4]+Spin-orbit/magnetic
+  ! [1] LDA, 
+  ! [2] [1] + GGA, 
+  ! [3] [2] + LSDA/sGGA, 
+  ! [4] [3] + Spin-orbit/nonmagnetic,
+  ! [5] [4] + Spin-orbit/magnetic (experimental when available)
   !
+  ! Not implemented in ph.x:
+  ! [6] [5] + constraints on the magnetization
+  ! [7] [6] + Hubbard U
+  ! [8] [7] + Hybrid functionals
+  ! [9] ? + External Electric field
+
   USE io_global,       ONLY : stdout
   USE disp,            ONLY : nqs
   USE control_ph,      ONLY : epsil, trans, elph, bands_computed
