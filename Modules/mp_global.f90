@@ -92,7 +92,7 @@ MODULE mp_global
   INTEGER :: nproc_image_file = 1  ! in an image
   INTEGER :: nproc_pool_file  = 1  ! in a pool
   !
-  PRIVATE :: init_pool
+  PRIVATE :: init_images, init_pools, init_bands, init_ortho
   !
 CONTAINS
   !
@@ -132,11 +132,9 @@ CONTAINS
     !
     CALL mp_global_start( root, mpime, world, nproc )
     !
-    ! ... initialize input/output, set the I/O node
+    ! ... initialize input/output, set (and get) the I/O nodes
     !
     CALL io_global_start( mpime, root )
-    ! ... get the "meta" I/O node
-    !
     CALL io_global_getmeta ( meta_ionode, meta_ionode_id )
     !
     IF ( meta_ionode ) THEN
@@ -185,11 +183,22 @@ CONTAINS
     CALL mp_bcast( ntask_groups, meta_ionode_id )
     CALL mp_bcast( nproc_ortho_in, meta_ionode_id )
     !
+    ! ... initialize images, band, k-point, ortho groups in sequence
+    !
+    CALL init_images( )
+    !
+    CALL init_bands( )
+    !
+    CALL init_pools( )
+    !
+    CALL init_ortho( nproc_ortho_in )
+    !
     use_task_groups = ( ntask_groups > 1 )
+    IF( use_task_groups ) THEN
+       nogrp = ntask_groups
+       CALL init_task_groups( )
+    END IF
     !
-    ! ... all pools are initialized here
-    !
-    CALL init_pool( nimage, ntask_groups, nproc_ortho_in )
     !
     RETURN
     !
@@ -264,47 +273,32 @@ CONTAINS
     !
   END SUBROUTINE mp_global_group_start
   !
-  !
   !----------------------------------------------------------------------------
-  SUBROUTINE init_pool( nimage_ , ntask_groups_ , nproc_ortho_in )
-    !----------------------------------------------------------------------------
+  SUBROUTINE init_images ( )
+    !---------------------------------------------------------------------------
     !
-    ! ... This routine initialize the pool :  MPI division in pools and images
+    ! ... This routine divides all MPI processors into images
     !
     IMPLICIT NONE
-    !
-    INTEGER, INTENT(IN) :: nimage_
-    INTEGER, INTENT(IN) :: ntask_groups_
-    INTEGER, INTENT(IN) :: nproc_ortho_in
-    !
-    INTEGER :: nproc_ortho_try
     INTEGER :: ierr = 0
     !
 #if defined (__PARA)
+    !
+    IF ( nimage < 1 .OR. nimage > nproc ) &
+       CALL errore( 'init_images', 'invalid number of images, out of range', 1 )
+    IF ( MOD( nproc, nimage ) /= 0 ) &
+       CALL errore( 'init_images', 'n. of images must be divisor of nprocs', 1 )
     ! 
-    !
-    IF( nimage < 1 ) &
-       CALL errore( 'init_pool', 'invalid number of images, less than one', 1 )
-    !
-    nimage = nimage_
-    !  
-    ! ... here we set all parallel indeces (defined in mp_global): 
-    !
-    !
-    ! ... number of cpus per image
+    ! ... set number of cpus per image
     !
     nproc_image = nproc / nimage
     !
-    IF ( nproc < nimage ) &
-       CALL errore( 'init_pool', 'invalid number of images, nimage > nproc', 1 )
-    !
-    IF ( MOD( nproc, nimage ) /= 0 ) &
-       CALL errore( 'init_pool', 'invalid number of images, nproc /= nproc_image * nimage', 1 ) 
-    !
-    ! ... my_image_id  =  image index for this processor   ( 0 : nimage - 1 )
-    ! ... me_image     =  processor index within the image ( 0 : nproc_image - 1 )
+    ! ... set index of image for this processor   ( 0 : nimage - 1 )
     !
     my_image_id = mpime / nproc_image
+    !
+    ! ... set index of processor within the image ( 0 : nproc_image - 1 )
+    !
     me_image    = MOD( mpime, nproc_image )
     !
     CALL mp_barrier()
@@ -312,30 +306,48 @@ CONTAINS
     ! ... the intra_image_comm communicator is created
     !
     CALL MPI_COMM_SPLIT( MPI_COMM_WORLD, my_image_id, mpime, intra_image_comm, ierr )
-    !
-    IF ( ierr /= 0 ) &
-       CALL errore( 'init_pool', 'intra image communicator initialization', ABS(ierr) )
+    IF ( ierr /= 0 ) CALL errore &
+       ( 'init_images', 'intra image communicator initialization', ABS(ierr) )
     !
     CALL mp_barrier()
     !
     ! ... the inter_image_comm communicator is created                     
     !     
     CALL MPI_COMM_SPLIT( MPI_COMM_WORLD, me_image, mpime, inter_image_comm, ierr )  
+    IF ( ierr /= 0 ) CALL errore &
+       ( 'init_images', 'inter image communicator initialization', ABS(ierr) )
+#endif
+    RETURN
     !
-    IF ( ierr /= 0 ) &
-       CALL errore( 'init_pool', 'inter image communicator initialization', ABS(ierr) )
+  END SUBROUTINE init_images
+  !
+  !----------------------------------------------------------------------------
+  SUBROUTINE init_bands( )
+    !---------------------------------------------------------------------------
     !
-    ! ... Now the band group communicator
+    ! ... This routine divides images into band pools
+    !
+    IMPLICIT NONE
+    !
+    INTEGER :: ierr = 0
+    !
+#if defined (__PARA)
+    !
+    IF ( nbgrp < 1 .OR. nbgrp > nproc_image ) &
+       CALL errore( 'init_bands', 'invalid number of band groups, out of range', 1 )
+    IF ( MOD( nproc_image, nbgrp ) /= 0 ) &
+       CALL errore( 'init_bands', 'n. of band groups  must be divisor of nimages', 1 )
+    ! 
+    ! ... Set number of processors per band group
     !
     nproc_bgrp = nproc_image / nbgrp
     !
-    IF ( MOD( nproc_image, nbgrp ) /= 0 ) &
-         CALL errore( 'init_pool', 'invalid number of band group, nproc_image /= nproc_bgrp * nbgrp', 1 )  
-    !
-    ! ... my_bgrp_id  =  band group index for this processor   ( 0 : nbgrp - 1 )
-    ! ... me_bgrp     =  processor index within the band group ( 0 : nproc_bgrp - 1 )
+    ! ... set index of band group for this processor   ( 0 : nbgrp - 1 )
     !
     my_bgrp_id = me_image / nproc_bgrp
+    !
+    ! ... set index of processor within the image ( 0 : nproc_image - 1 )
+    !
     me_bgrp    = MOD( me_image, nproc_bgrp )
     !
     CALL mp_barrier()
@@ -345,7 +357,7 @@ CONTAINS
     CALL MPI_COMM_SPLIT( intra_image_comm, my_bgrp_id, me_image, intra_bgrp_comm, ierr )
     !
     IF ( ierr /= 0 ) &
-       CALL errore( 'init_pool', 'intra band group communicator initialization', ABS(ierr) )
+       CALL errore( 'init_bands', 'intra band group communicator initialization', ABS(ierr) )
     !
     CALL mp_barrier()
     !
@@ -354,14 +366,31 @@ CONTAINS
     CALL MPI_COMM_SPLIT( intra_image_comm, me_bgrp, me_image, inter_bgrp_comm, ierr )  
     !
     IF ( ierr /= 0 ) &
-       CALL errore( 'init_pool', 'inter band group communicator initialization', ABS(ierr) )
+       CALL errore( 'init_bands', 'inter band group communicator initialization', ABS(ierr) )
+    !
+#endif
+    RETURN
+    !
+  END SUBROUTINE init_bands
+  !
+  !----------------------------------------------------------------------------
+  SUBROUTINE init_pools( )
+    !---------------------------------------------------------------------------
+    !
+    ! ... This routine divides band groups into k-point pools
+    !
+    IMPLICIT NONE
+    !
+    INTEGER :: ierr = 0
+    !
+#if defined (__PARA)
     !
     ! ... number of cpus per pool of k-points (they are created inside each image)
     !
     nproc_pool = nproc_bgrp / npool
     !
     IF ( MOD( nproc_bgrp, npool ) /= 0 ) &
-         CALL errore( 'init_pool', 'invalid number of pools, nproc_bgrp /= nproc_pool * npool', 1 )  
+         CALL errore( 'init_pools', 'invalid number of pools, nproc_bgrp /= nproc_pool * npool', 1 )  
     !
     ! ... my_pool_id  =  pool index for this processor    ( 0 : npool - 1 )
     ! ... me_pool     =  processor index within the pool  ( 0 : nproc_pool - 1 )
@@ -376,8 +405,9 @@ CONTAINS
     CALL MPI_COMM_SPLIT( intra_bgrp_comm, my_pool_id, me_bgrp, intra_pool_comm, ierr )
     !
     IF ( ierr /= 0 ) &
-       CALL errore( 'init_pool', 'intra pool communicator initialization', ABS(ierr) )
+       CALL errore( 'init_pools', 'intra pool communicator initialization', ABS(ierr) )
     !
+    CALL mp_barrier( intra_bgrp_comm )
     CALL mp_barrier( intra_bgrp_comm )
     !
     ! ... the inter_pool_comm communicator is created
@@ -385,9 +415,25 @@ CONTAINS
     CALL MPI_COMM_SPLIT( intra_bgrp_comm, me_pool, me_bgrp, inter_pool_comm, ierr )
     !
     IF ( ierr /= 0 ) &
-       CALL errore( 'init_pool', 'inter pool communicator initialization', ABS(ierr) )
+       CALL errore( 'init_pools', 'inter pool communicator initialization', ABS(ierr) )
     !
 #endif
+    !
+    RETURN
+  END SUBROUTINE init_pools
+  !
+  !----------------------------------------------------------------------------
+  SUBROUTINE init_ortho( nproc_ortho_in )
+    !----------------------------------------------------------------------------
+    !
+    ! ... Ortho group initialization
+    !
+    IMPLICIT NONE
+    !
+    INTEGER, INTENT(IN) :: nproc_ortho_in
+    !
+    INTEGER :: nproc_ortho_try
+    INTEGER :: ierr = 0
     !
     !
 #if defined __SCALAPACK
@@ -417,14 +463,9 @@ CONTAINS
     !
     CALL init_ortho_group( nproc_ortho_try, intra_pool_comm )
     !  
-    IF( ntask_groups_ > 1 ) THEN
-       nogrp = ntask_groups_
-       CALL init_task_groups( )
-    END IF
-    !
     RETURN
     !
-  END SUBROUTINE init_pool
+  END SUBROUTINE init_ortho
   !
   !
   SUBROUTINE init_task_groups( )
