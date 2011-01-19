@@ -131,7 +131,7 @@ SUBROUTINE scf(ic)
         eps0=0.0_DP
      ENDIF
      IF (conv) THEN
-        IF (nerr /= 0) CALL infomsg ('scf','errors in KS equations')
+        IF (nerr /= 0) CALL infomsg ('scf','warning: at least one error in KS equations')
         GOTO 45
      ENDIF
   ENDDO

@@ -147,7 +147,7 @@ SUBROUTINE lschps (mode, z, eps, grid, nin, n, l, e, v, u, nstop)
               GOTO 40
            ENDIF
         ENDDO
-        PRINT '('' warning: wfc '',2i2,'' no turning point'')', n, l
+        !PRINT '('' warning: wfc '',2i2,'' no turning point'')', n, l
         e=0.0_dp
         DO i=1,mmax
            u (i)=0.0_dp
@@ -294,7 +294,7 @@ SUBROUTINE lschps (mode, z, eps, grid, nin, n, l, e, v, u, nstop)
      ENDIF
   ENDDO
 
-  PRINT '('' warning: wfc '',2i2,'' not converged'')', n, l
+  !PRINT '('' warning: wfc '',2i2,'' not converged'')', n, l
   u=0.0_dp
   nstop=1
   !
@@ -435,7 +435,7 @@ SUBROUTINE lschps_meta (mode, z, eps, grid, nin, n, l, e, v, vtau, &
               GOTO 40
            ENDIF
         ENDDO
-        PRINT '('' warning: wfc '',2i2,'' no turning point'')', n, l
+        !PRINT '('' warning: wfc '',2i2,'' no turning point'')', n, l
         e=0.0
         DO i=1,mmax
            u (i)=0.0
@@ -625,7 +625,7 @@ SUBROUTINE lschps_meta (mode, z, eps, grid, nin, n, l, e, v, vtau, &
      !
   ENDDO
   !
-  PRINT '('' warning: wfc '',2i2,'' not converged'')', n, l
+  !PRINT '('' warning: wfc '',2i2,'' not converged'')', n, l
   nstop=1
   u=0.0_dp
   nstop=1

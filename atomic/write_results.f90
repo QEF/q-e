@@ -216,8 +216,8 @@ subroutine write_results
 
   if (noscf) goto 500
 
-  write(stdout,1200) eps0,iter
-1200 format(/5x,'eps =',1pe8.1,'  iter =',i3)
+  write(stdout,1200) eps0, iter
+1200 format(/5x,'final scf error: ',1pe8.1,' reached in ',i3,' iterations')
   print_fc=(verbosity=='high'.and.iswitch>1) 
   write(stdout,*)
   if (print_fc) then
