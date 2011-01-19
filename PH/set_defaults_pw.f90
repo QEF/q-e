@@ -72,7 +72,7 @@ SUBROUTINE setup_nscf (xq)
   natomwfc = n_atom_wfc( nat, ityp )
   !
 #ifdef __PARA
-  IF ( use_para_diag )  CALL check_para_diag( nelec )
+  IF ( use_para_diag )  CALL check_para_diag( nbnd )
 #else
   use_para_diag = .FALSE.
 #endif

@@ -395,7 +395,7 @@ SUBROUTINE setup()
   IF ( isolve == 0 ) nbndx = david * nbnd
   !
 #ifdef __PARA
-  IF ( use_para_diag )  CALL check_para_diag( nelec )
+  IF ( use_para_diag )  CALL check_para_diag( nbnd )
 #else
   use_para_diag = .FALSE.
 #endif
@@ -740,9 +740,8 @@ FUNCTION n_atom_wfc( nat, ityp )
 END FUNCTION n_atom_wfc
 !
 !----------------------------------------------------------------------------
-SUBROUTINE check_para_diag( nelec )
+SUBROUTINE check_para_diag( nbnd )
   !
-  USE kinds,            ONLY : DP
   USE control_flags,    ONLY : use_para_diag, gamma_only
   USE io_global,        ONLY : stdout, ionode, ionode_id
   USE mp_global,        ONLY : nproc_pool, init_ortho_group, nproc_ortho, &
@@ -750,11 +749,11 @@ SUBROUTINE check_para_diag( nelec )
 
   IMPLICIT NONE
 
-  REAL(DP), INTENT(IN) :: nelec
+  INTEGER, INTENT(IN) :: nbnd
   LOGICAL, SAVE :: first = .TRUE.
   INTEGER :: np
 
-  !  avoid synchronization problems when more images are active
+  !  avoid synchronization problems when more images are active 
 
   IF( .NOT. first ) RETURN
 
@@ -769,52 +768,31 @@ SUBROUTINE check_para_diag( nelec )
   !
   np = MAX( INT( SQRT( DBLE( nproc_ortho ) + 0.1d0 ) ), 1 )
   !
-  !  Make ortho group compatible with the number of electronic states
+  IF( nbnd < np ) THEN
+      !
+      !  Make ortho group compatible with the number of electronic states
+      !
+      IF ( ionode ) WRITE(stdout,'(5X,"Too few bands for required ortho ", &
+                    & "group size ",i4,": reducing to ",i4)') np**2, nbnd**2
+      np = MIN( nbnd, np )
+      !
+  END IF
   !
-  np = MIN( INT( nelec )/2, np )
-
   CALL init_ortho_group( np * np, intra_pool_comm )
 
-  IF ( ionode ) THEN
-     !
-     WRITE( stdout, '(/,5X,"Subspace diagonalization in iterative solution of the eigenvalue problem:")' ) 
-     !
-  END IF
+  !  if too few resources for parallel diag. switch back to serial one
 
-
-  IF( np_ortho( 1 ) == 1 .AND. np_ortho( 2 ) == 1 ) THEN
-     !
-     !  too few resources for parallel diag. switch back to serial one
-     !
-     use_para_diag = .FALSE.
-
-     !  give some explanation
-
-     IF( nproc_pool < 4) THEN
-        !
-        !  we need at least 4 procs to use distributed algorithm
-        !
-        IF ( ionode ) WRITE( stdout, '(5X,"Too few procs for parallel ",&
-                    & "algorithm: we need at least 4 procs per pool")' )
-        !
-     ELSE IF( INT( nelec )/2 < nproc_pool ) THEN
-        !
-        !  we need to have at least 1 electronic band per block
-        !
-        IF ( ionode ) WRITE(stdout,'(5X,"Too few electrons for parallel ",&
-                    &  " algorithm: we need # of bands >= SQRT(nproc)")' )
-        !
-     END IF
-
-  END IF
-
+  IF ( np_ortho( 1 ) == 1 .AND. np_ortho( 2 ) == 1 ) use_para_diag = .FALSE.
 
   IF ( ionode ) THEN
+     !
+     WRITE( stdout, '(/,5X,"Subspace diagonalization in iterative solution ",&
+                     &     "of the eigenvalue problem:")' ) 
      !
      IF ( use_para_diag ) THEN
-        WRITE( stdout, '(5X,"a parallel distributed memory algorithm will be used,")' ) 
-        WRITE( stdout, '(5X,"eigenstates matrixes will be distributed block like on")' ) 
-        WRITE( stdout, '(5X,"ortho sub-group = ", I4, "*", I4, " procs",/)' ) np_ortho(1), np_ortho(2)
+        WRITE( stdout, '(5X,"parallel, distributed-memory algorithm", &
+              & "(size of sub-group: ", I3, "*", I3, " procs)",/)') &
+               np_ortho(1), np_ortho(2)
      ELSE
         WRITE( stdout, '(5X,"a serial algorithm will be used",/)' )
      END IF
