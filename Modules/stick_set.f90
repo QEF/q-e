@@ -133,7 +133,8 @@
 ! ...       Fill in the stick maps, for given g-space base and cut-off
 
           CALL sticks_maps( tk, ub, lb, bg(:,1), bg(:,2), bg(:,3), &
-                            gcut, gkcut, gcuts, st, stw, sts )
+                            gcut, gkcut, gcuts, st, stw, sts, me_pool, &
+                            nproc_pool, intra_pool_comm )
 
 ! ...       Now count the number of stick nst and nstw
 
@@ -170,7 +171,7 @@
 
           ALLOCATE( idx( nst ) )
 
-          CALL sticks_sort( ist(:,4), ist(:,3), ist(:,5), nst, idx )
+          CALL sticks_sort( ist(:,4), ist(:,3), ist(:,5), nst, idx, nproc_pool )
 
           ! ... Set as first stick the stick containing the G=0
           !
@@ -182,14 +183,14 @@
           !  idx( iss ) = itmp
 
           CALL sticks_dist( tk, ub, lb, idx, ist(:,1), ist(:,2), ist(:,4), ist(:,3), ist(:,5), &
-             nst, nstp, nstpw, nstps, sstp, sstpw, sstps, st, stw, sts )
+             nst, nstp, nstpw, nstps, sstp, sstpw, sstps, st, stw, sts, nproc_pool )
 
           ngw = sstpw( me_pool + 1 )
           ngm = sstp( me_pool + 1 )
           ngs = sstps( me_pool + 1 )
 
           CALL sticks_pairup( tk, ub, lb, idx, ist(:,1), ist(:,2), ist(:,4), ist(:,3), ist(:,5), &
-             nst, nstp, nstpw, nstps, sstp, sstpw, sstps, st, stw, sts )
+             nst, nstp, nstpw, nstps, sstp, sstpw, sstps, st, stw, sts, nproc_pool )
 
           ! ...   Allocate and Set fft data layout descriptors
 

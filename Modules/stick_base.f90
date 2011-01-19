@@ -29,10 +29,9 @@
    CONTAINS
 !=----------------------------------------------------------------------=
 
-      SUBROUTINE sticks_maps( tk, ub, lb, b1, b2, b3, gcut, gcutw, gcuts, st, stw, sts )
+      SUBROUTINE sticks_maps( tk, ub, lb, b1, b2, b3, gcut, gcutw, gcuts, st, stw, sts, me, nproc, comm )
 
           USE mp, ONLY: mp_sum
-          USE mp_global, ONLY: me_pool, nproc_pool, intra_pool_comm
 
           LOGICAL, INTENT(in) :: tk    !  if true use the full space grid
           INTEGER, INTENT(in) :: ub(:) !  upper bounds for i-th grid dimension
@@ -44,6 +43,9 @@
           INTEGER, INTENT(out) :: st( lb(1): ub(1), lb(2):ub(2) ) ! stick map for potential
           INTEGER, INTENT(out) :: stw(lb(1): ub(1), lb(2):ub(2) ) ! stick map for wave functions
           INTEGER, INTENT(out) :: sts(lb(1): ub(1), lb(2):ub(2) ) ! stick map for smooth mesh
+          INTEGER, INTENT(in) :: me ! my proc id (starting from 0)
+          INTEGER, INTENT(in) :: nproc ! number of proc in the g-vec group
+          INTEGER, INTENT(in) :: comm ! communicator of the g-vec group
 
           INTEGER :: i, j, k, kip
           REAL(DP) :: gsq
@@ -64,7 +66,7 @@
           IF( .not. tk ) THEN
 
             kip = 0 + abs(lb(3)) + 1
-            IF( mod( kip, nproc_pool ) == me_pool ) THEN
+            IF( mod( kip, nproc ) == me ) THEN
               st (0,0) = st (0,0) + 1
               stw(0,0) = stw(0,0) + 1
               sts(0,0) = sts(0,0) + 1
@@ -74,7 +76,7 @@
               DO j= 0, 0
                 DO k= 1, ub(3)
                   kip = k + abs(lb(3)) + 1
-                  IF( mod( kip, nproc_pool ) == me_pool ) THEN
+                  IF( mod( kip, nproc ) == me ) THEN
                     gsq=    (dble(i)*b1(1)+dble(j)*b2(1)+dble(k)*b3(1) )**2
                     gsq=gsq+(dble(i)*b1(2)+dble(j)*b2(2)+dble(k)*b3(2) )**2
                     gsq=gsq+(dble(i)*b1(3)+dble(j)*b2(3)+dble(k)*b3(3) )**2
@@ -96,7 +98,7 @@
               DO j = 1, ub(2)
                 DO k = lb(3), ub(3)
                   kip = k + abs(lb(3)) + 1
-                  IF( mod( kip, nproc_pool) == me_pool ) THEN
+                  IF( mod( kip, nproc) == me ) THEN
                     gsq=    (dble(i)*b1(1)+dble(j)*b2(1)+dble(k)*b3(1) )**2
                     gsq=gsq+(dble(i)*b1(2)+dble(j)*b2(2)+dble(k)*b3(2) )**2
                     gsq=gsq+(dble(i)*b1(3)+dble(j)*b2(3)+dble(k)*b3(3) )**2
@@ -118,7 +120,7 @@
               DO j = lb(2), ub(2)
                 DO k = lb(3), ub(3)
                   kip = k + abs(lb(3)) + 1
-                  IF( mod( kip, nproc_pool) == me_pool ) THEN
+                  IF( mod( kip, nproc) == me ) THEN
                     gsq=    (dble(i)*b1(1)+dble(j)*b2(1)+dble(k)*b3(1) )**2
                     gsq=gsq+(dble(i)*b1(2)+dble(j)*b2(2)+dble(k)*b3(2) )**2
                     gsq=gsq+(dble(i)*b1(3)+dble(j)*b2(3)+dble(k)*b3(3) )**2
@@ -142,7 +144,7 @@
               DO j= lb(2), ub(2)
                 DO k= lb(3), ub(3)
                   kip = k + abs(lb(3)) + 1
-                  IF( mod( kip, nproc_pool ) == me_pool ) THEN
+                  IF( mod( kip, nproc ) == me ) THEN
                     gsq=    (dble(i)*b1(1)+dble(j)*b2(1)+dble(k)*b3(1) )**2
                     gsq=gsq+(dble(i)*b1(2)+dble(j)*b2(2)+dble(k)*b3(2) )**2
                     gsq=gsq+(dble(i)*b1(3)+dble(j)*b2(3)+dble(k)*b3(3) )**2
@@ -162,9 +164,9 @@
 
           ENDIF
 
-          CALL mp_sum(st  ,intra_pool_comm )
-          CALL mp_sum(stw ,intra_pool_comm )
-          CALL mp_sum(sts ,intra_pool_comm )
+          CALL mp_sum(st  , comm )
+          CALL mp_sum(stw , comm )
+          CALL mp_sum(sts , comm )
 
 #if defined __STICKS_DEBUG
 ! Test sticks
@@ -254,19 +256,18 @@
 
 !=----------------------------------------------------------------------=
 
-      SUBROUTINE sticks_sort( ngc, ngcw, ngcs, nct, idx )
+      SUBROUTINE sticks_sort( ngc, ngcw, ngcs, nct, idx, nproc )
 
 ! ...     This subroutine sorts the sticks indexes, according to
 ! ...     the length and type of the sticks, wave functions sticks
 ! ...     first, then smooth mesh sticks, and finally potential
 ! ...     sticks
 
-        USE mp_global, ONLY: nproc_pool
-
         ! lengths of sticks, ngc for potential mesh, ngcw for wave functions mesh
         ! and ngcs for smooth mesh
 
         INTEGER, INTENT(in) :: ngc(:), ngcw(:), ngcs(:)
+        INTEGER, INTENT(in) :: nproc ! number of proc in the g-vec group
 
         ! nct, total number of sticks
 
@@ -283,7 +284,7 @@
         nr3x = maxval( ngc(1:nct) ) + 1
         dn3  = REAL( nr3x )
 
-        IF( nproc_pool > 1 ) THEN
+        IF( nproc > 1 ) THEN
           ALLOCATE( aux( nct ) )
           DO mc = 1, nct
             aux(mc) = ngcw(mc)
@@ -393,9 +394,7 @@
 !=----------------------------------------------------------------------=
 
     SUBROUTINE sticks_dist( tk, ub, lb, idx, in1, in2, ngc, ngcw, ngcs, nct, &
-                            ncp, ncpw, ncps, ngp, ngpw, ngps, stown, stownw, stowns )
-
-      USE mp_global, ONLY: nproc_pool
+                            ncp, ncpw, ncps, ngp, ngpw, ngps, stown, stownw, stowns, nproc )
 
       LOGICAL, INTENT(in) :: tk
 
@@ -409,6 +408,7 @@
       INTEGER, INTENT(in) :: nct
       INTEGER, INTENT(out) :: ncp(:), ncpw(:), ncps(:)
       INTEGER, INTENT(out) :: ngp(:), ngpw(:), ngps(:)
+      INTEGER, INTENT(in) :: nproc ! number of proc in the g-vec group
 
       INTEGER :: mc, i1, i2, i, j, jj
 
@@ -441,7 +441,7 @@
 ! this is an active sticks: find which processor has currently
 ! the smallest number of plane waves
 !
-            DO j = 1, nproc_pool
+            DO j = 1, nproc
                IF ( ngpw(j) < ngpw(jj) ) THEN
                  jj = j
                ELSEIF ( ( ngpw(j) == ngpw(jj) ) .and. ( ncpw(j) < ncpw(jj) ) ) THEN
@@ -454,7 +454,7 @@
 ! this is an inactive sticks: find which processor has currently
 ! the smallest number of G-vectors
 !
-            DO j = 1, nproc_pool
+            DO j = 1, nproc
                IF ( ngp(j) < ngp(jj) ) jj = j
             ENDDO
 
@@ -492,9 +492,7 @@
 !=----------------------------------------------------------------------=
 
     SUBROUTINE sticks_pairup( tk, ub, lb, idx, in1, in2, ngc, ngcw, ngcs, nct, &
-                             ncp, ncpw, ncps, ngp, ngpw, ngps, stown, stownw, stowns )
-
-      USE mp_global, ONLY: nproc_pool
+                             ncp, ncpw, ncps, ngp, ngpw, ngps, stown, stownw, stowns, nproc )
 
       LOGICAL, INTENT(in) :: tk
 
@@ -508,6 +506,7 @@
       INTEGER, INTENT(in) :: nct
       INTEGER, INTENT(out) :: ncp(:), ncpw(:), ncps(:)
       INTEGER, INTENT(out) :: ngp(:), ngpw(:), ngps(:)
+      INTEGER, INTENT(in) :: nproc ! number of proc in the g-vec group
 
       INTEGER :: mc, i1, i2, i, jj
 
