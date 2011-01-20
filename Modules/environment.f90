@@ -67,6 +67,13 @@ CONTAINS
           CLOSE( UNIT=crashunit, STATUS='DELETE' )
        END IF
 
+       ! ... open standard output file on meta_ionode if image-parallelized
+       IF( nimage > 1) THEN 
+          uname = 'out.' // trim(int_to_char( my_image_id )) // '_' // &
+               trim(int_to_char( me_image))
+          OPEN ( unit = stdout, file = TRIM(uname),status='unknown')
+       END IF
+
     ELSE
        ! ... one processor per image (other than meta_ionode)
        ! ... or, for debugging purposes, all processors,
