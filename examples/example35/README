@@ -1,6 +1,7 @@
 This example tests pw.x and ph.x for the effective charges and
 dielectric constants with the noncollinear or the spin-orbit part of the 
-code.
+code. The collinear version for insulators with fixed total magnetization is 
+also tested.
 
 The calculation proceeds as follows:
 
@@ -15,3 +16,19 @@ The calculation proceeds as follows:
 
 4) make a phonon calculation at the Gamma point (input=c.phG.in,
    output=c.phG.out).
+
+5) make a self-consistent calculation for O2 molecule treated as an insulator
+   with LSDA and the total magnetization per cell constrained to 2. 
+   (input=o2.scf.in, output=o2.scf.out)
+
+6) make a phonon calculation at the Gamma point and calculate the dielectric
+   constant, Born effective charges in two ways and the vibrational modes
+   (input=o2.phG.in, output=o2.phG.out).
+
+7) make a self-consistent calculation for the O2 molecule treated as an 
+   insulator with noncollinear magnetization. 
+   (input=o2_nc.scf.in, output=o2_nc.scf.out)
+
+8) make a self-consistent calculation for the O2 molecule treated as an 
+   insulator with noncollinear magnetization. 
+   (input=o2_nc.phG.in, output=o2_nc.phG.out)
