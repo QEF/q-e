@@ -26,8 +26,9 @@ if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
 
 ESPRESSO_ROOT=`cd .. ; pwd`
 PARA_PREFIX=
-#PARA_PREFIX="mpirun -np 2"
+#PARA_PREFIX="mpirun -np 4"
 PARA_POSTFIX=
+#PARA_POSTFIX="-nb 2"
 ESPRESSO_TMPDIR=$ESPRESSO_ROOT/tmp/
 ESPRESSO_PSEUDO=$ESPRESSO_ROOT/pseudo/
 
@@ -53,25 +54,30 @@ else
 fi
 
 ########################################################################
-# function to test matadynamics - usage: check_meta "file prefix"
+# function to get pseudopotentials from the web if missing
 ########################################################################
-check_meta () {
-  # get average configurational energy (truncated to 4 significant digits)
-  e0=`grep 'Final energy' $1.ref | awk '{sum+=$4} END {printf "%8.4f\n", sum/NR}'`
-  e1=`grep 'Final energy' $1.out | awk '{sum+=$4} END {printf "%8.4f\n", sum/NR}'`
-  #
-  if test "$e1" = "$e0"
-  then
-    $ECHO  "passed"
-  fi
-  if test "$e1" != "$e0"
-  then
-    $ECHO "discrepancy in average configurational energy detected"
-    $ECHO "Reference: $e0, You got: $e1"
-  fi
+get_pp () {
+    ppfiles=`grep UPF $1 | awk '{print $3}'`
+    for ppfile in $ppfiles
+    do
+        if ! test -f $ESPRESSO_PSEUDO/$ppfile ; then
+            $ECHO "Downloading $ppfile to $ESPRESSO_PSEUDO...\c"
+            wget  http://www.quantum-espresso.org/pseudo/1.3/UPF/$ppfile \
+                -O $ESPRESSO_PSEUDO/$ppfile 2> /dev/null
+            if test $? != 0; then
+                $ECHO "failed!"
+                $ECHO "test $1 will not be executed"
+                # status=1
+            else
+                $ECHO "success"
+                # status=0
+            fi
+        fi
+    done
 }
 ########################################################################
 # function to test NEB calculations - usage: check_neb "file prefix"
+# obsolete - will be moved to NEB-specific tests
 ########################################################################
 check_neb () {
   # get reference number of neb iterations
@@ -216,6 +222,7 @@ do
   for i in 1 2 3 4 5 6 7 8 9
   do
     if test -f $TESTDIR/$name.in$i ; then
+      get_pp $TESTDIR/$name.in$i 
       $ECHO ".$i.\c"
       steps=`echo $steps $i`
       $PARA_PREFIX $ESPRESSO_ROOT/bin/cp.x $PARA_POSTFIX < $TESTDIR/$name.in$i \
