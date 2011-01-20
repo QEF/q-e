@@ -24,7 +24,8 @@ SUBROUTINE phq_readin()
   USE mp,            ONLY : mp_bcast
   USE input_parameters, ONLY : max_seconds
   USE ions_base,     ONLY : amass, pmass, atm
-  USE klist,         ONLY : xk, nks, nkstot, lgauss, two_fermi_energies
+  USE klist,         ONLY : xk, nks, nkstot, lgauss, two_fermi_energies, lgauss
+  USE ktetra,        ONLY : ltetra
   USE control_flags, ONLY : gamma_only, tqr, restart, lkpoint_dir
   USE uspp,          ONLY : okvan
   USE fixed_occ,     ONLY : tfixed_occ
@@ -378,9 +379,13 @@ SUBROUTINE phq_readin()
   IF (elph.OR.fildvscf /= ' ') lqdir=.TRUE.
   IF (.NOT.ldisp) lqdir=.FALSE.
 
-  IF (two_fermi_energies.or.i_cons /= 0) &
+  IF (i_cons /= 0) &
      CALL errore('phq_readin',&
      'The phonon code with constrained magnetization is not yet available',1)
+
+  IF (two_fermi_energies .AND. (ltetra .OR. lgauss)) &
+     CALL errore('phq_readin',&
+     'The phonon code with two fermi energies is not available for metals',1)
 
   IF (tqr) CALL errore('phq_readin',&
      'The phonon code with Q in real space not available',1)

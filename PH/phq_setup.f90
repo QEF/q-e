@@ -54,10 +54,11 @@ subroutine phq_setup
   USE ions_base,     ONLY : tau, nat, ntyp => nsp, ityp, pmass
   USE cell_base,     ONLY : at, bg
   USE io_global,     ONLY : stdout
-  USE ener,          ONLY : Ef
-  USE klist,         ONLY : xk, lgauss, degauss, ngauss, nks, nelec
+  USE ener,          ONLY : ef, ef_up, ef_dw
+  USE klist,         ONLY : xk, lgauss, degauss, ngauss, nks, nelec, nelup, &
+                            neldw, two_fermi_energies, wk
   USE ktetra,        ONLY : ltetra, tetra
-  USE lsda_mod,      ONLY : nspin, lsda, starting_magnetization
+  USE lsda_mod,      ONLY : nspin, lsda, starting_magnetization, isk
   USE scf,           ONLY : v, vrs, vltot, rho, rho_core, kedtau
   USE fft_base,      ONLY : dfftp
   USE gvect,         ONLY : ngm
@@ -115,7 +116,7 @@ subroutine phq_setup
   ! counters
 
   real(DP) :: auxdmuxc(4,4)
-  real(DP), allocatable :: w2(:)
+  real(DP), allocatable :: w2(:), wg(:,:)
 
   logical :: sym (48), magnetic_sym
   ! the symmetry operations
@@ -235,13 +236,37 @@ subroutine phq_setup
   else if (ltetra) then
      call errore('phq_setup','phonon + tetrahedra not implemented', 1)
   else
-     if (lsda) call infomsg('phq_setup','occupation numbers probably wrong')
      if (noncolin) then
         nbnd_occ = nint (nelec)
      else
-        do ik = 1, nks
-           nbnd_occ (ik) = nint (nelec) / degspin
-        enddo
+        IF ( two_fermi_energies ) THEN
+           !
+           ALLOCATE(wg(nbnd,nks))
+           CALL iweights( nks, wk, nbnd, nelup, et, ef_up, wg, 1, isk )
+           DO ik = 1, nks/2
+              DO ibnd=1,nbnd
+                 IF (wg(ibnd,ik) > 0.0_DP) nbnd_occ (ik) = nbnd_occ(ik)+1
+              ENDDO
+           ENDDO
+           CALL iweights( nks, wk, nbnd, neldw, et, ef_dw, wg, 2, isk )
+           DO ik = nks/2+1, nks
+              DO ibnd=1,nbnd
+                 IF (wg(ibnd,ik) > 0.0_DP) nbnd_occ (ik) = nbnd_occ(ik)+1
+              ENDDO
+           ENDDO
+           !
+           ! the following line to prevent NaN in Ef
+           !
+           ef = ( ef_up + ef_dw ) / 2.0_dp
+           !
+           DEALLOCATE(wg)
+        ELSE
+          if (lsda) call infomsg('phq_setup', &
+                                 'occupation numbers probably wrong')
+           do ik = 1, nks
+              nbnd_occ (ik) = nint (nelec) / degspin
+           enddo
+        ENDIF
      endif
   endif
   !
