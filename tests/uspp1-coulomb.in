@@ -14,7 +14,7 @@
 /
 ATOMIC_SPECIES
 O  16.D0  O_US.van
-H   2.D0  H_coul.UPF
+H   2.D0  H.coulomb-ae.UPF
 ATOMIC_POSITIONS (bohr)
 O     10.0000    10.0000    10.000
 H     11.7325     9.6757    10.000
