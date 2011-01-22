@@ -1,5 +1,6 @@
 New in CVS version:
 
+  * CP only, experimental: parallelization over Kohn-Sham states
   * Dispersion interactions (van der Waals) with nonlocal functional
   * New xml-based input - still experimental
   * Additions to projwfc: k-resolved DOS, LDOS integrated in selected
@@ -44,7 +45,7 @@ Fixed in CVS version:
   * PW: LSDA + Gamma tricks + task groups = not working.
         Also: pw.x -ntg 1 was activating task groups (harmless)
   * PW: corrected an old bug for Berry's phase finite electric field 
-        calculations with non-orthorombic simulation cells. Also fixed 
+        calculations with non-orthorhombic simulation cells. Also fixed 
         an old but minor bug on averaging of Berry phases between strings
   * PW: problem with symmetrization in the noncollinear case
   * PH: elph=.true. and trans=.false. was not working any longer. 
@@ -276,7 +277,7 @@ Fixed in version 4.0.5:
   * calculation of ionic dipole, used for calculations with sawtooth 
     potential, used wrong reference point assuming the field parallel
     to z axis (while it can be parallel to any reciprocal basis vector). 
-    All relax calculation in non-orthorombic cells, and all calculations
+    All relax calculation in non-orthorhombic cells, and all calculations
     with option tefield and edir/=3, were completely wrong. Non-relax 
     calculation in the same cathegory were correct, apart from a constant, 
     but system-dependent, addictive factor in total energy.
