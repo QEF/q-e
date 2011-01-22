@@ -1,17 +1,15 @@
-TODO LIST - December 2010
-
+TODO LIST - January 2011
 
 0) Suspected bugs/problems:
   0.2  nstep ignored in vc-relax and other cases
   0.3  incorrect values for ELF?
-  0.4  FFT grid dimensions not the same in PW and in CP for same data
   0.5  Small energy differences between PW and CP - maybe PP-related, 
        but might also be a problem of Ewald calculation in CP ("raggio"?)
   0.6  Numerical instabilities with BLYP and TPSS
 
 1) Organization
 1.0 Binary packages
-  1.0.0 At least Debian/RPM for Linux ?
+  1.0.0 At least Debian/RPM for Linux
 1.1 www.quantum-espresso.org:
   1.1.0 Better download page that allows selection of packages
         (see 1.3.0)
@@ -24,10 +22,11 @@ TODO LIST - December 2010
 1.3 CVS/packaging:
   1.3.0 Rethink a directory structure that better reflects the structure
         of QE as packages (see 1.1.0, 2.0). Lots of files to be moved
-        around: a good reason to move to subversion?
-  1.3.1 no pseudopotentials in CVS any longer. Examples should download
-        needed PPs from the web site (with a wget)
-  1.3.2 run source-normalizer script dev-tools/src-normal
+        around: a good reason to move to subversion.
+  1.3.1 complete removal of pseudopotentials from CVS: only PPs in old
+        formats should eventually remain there
+  1.3.2 run (and fix: sometimes it doesn't work) source-normalizer script
+        dev-tools/src-normal
   1.3.3 Files in flib/ use modules in Modules/, while files in Modules/
         in turn call files in flib/. This kind of circular dependency
         should be avoided.
@@ -69,10 +68,7 @@ TODO LIST - December 2010
 
 3) Pseudopotentials 
 
-3.0 Set up standard tests for all PPs
-3.1 Add Coulomb PPs to PP library - requires extending the name
-    convention to cover this case and updating the scripts that
-    generate the PP table
+3.1 Set up standard tests for all PPs
 3.2 Implement Goedecker PPs
 3.3 Implement OEP PPs
 3.4 Standard recipe for generating reasonable PPs:
@@ -86,21 +82,19 @@ TODO LIST - December 2010
 3.7 The intermediate hard NCPP is useless for PAW and should not be 
     done when generating a PAW set
 3.8 Finish merge of Meta-GGA (TPSS) code into atomic code
-3.9 Pseudopotential files are read in parallel by all processors.
-    They should be read by one processor, broadcast to all others.
-    Also: when restarting, the copy of the PP in the restart file
+3.9 When restarting, the copy of the PP in the restart file
     should be read.
 
 4) Development
 
 4.0  Major highly desirable restructuring:
-  4.0.1  Add the possibility to run NEB/PH in a dynamical way, with a
-         home-made scheduler that executes tasks as soon as resources are
-         free; might be used for image parallelization as well.
+  4.0.1 Add the possibility to run NEB/PH in a dynamical way, with a
+        home-made scheduler that executes tasks as soon as resources are
+        free; might be used for image parallelization as well.
   4.0.2 Better-structured relaxation and molecular dynamics (including the
         variable-cell case), with more extensive integration of PW and CP
-  4.0.3 Image parallelization on k-points of EXX should be replaced by 
-        pool parallelization.
+  4.0.3 Image parallelization on k-points of EXX (no longer working) should
+        be replaced by pool parallelization.
 
 4.1  New developments to be added (sooner or later):
   4.1.1 Moka structure builder + new xml input/output (RS)
@@ -323,11 +317,13 @@ TODO LIST - December 2010
      (and inconsistencies with the documentation). Also: CP should
      behave like PW and create a directory if not existent
  5.5 Use qexml for xml file processing so that a single, easily
-     exportable routine, is used everywhere. Requires some though
-     on how to deal with parallelism without filling qexml with
-     parallel stuff. This is also an opportunity to update the
-     file format (and the documentation) with 1) removal of obsolete
-     variables, 2) addition of variables that should be present,
+     exportable routine, is used everywhere. By reading the xml
+     file in parallel, this should be simple (if the xml file is not
+     accessible by all processors, we can just make a local copy 
+     with a small C routine and read it).
+     This is also an opportunity to update the file format with
+     1) removal of obsolete variables,
+     2) addition of variables that should be present,
      3) possibility to reduce the number of files and directories
      (hardcoded limit, more kpoints per directory, would replace
      and extend lkpoint_dir)
