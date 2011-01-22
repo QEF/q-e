@@ -52,7 +52,19 @@ MODULE fft_types
     INTEGER, POINTER :: imax3(:)  ! the last local plane
     INTEGER, POINTER :: np3(:)    ! number of local plane for the box fft
     !
+    !  fft parallelization
+    !
+    INTEGER :: myid               ! my processor id
+    INTEGER :: comm               ! communicator of the fft gruop 
+    INTEGER :: nproc              ! number of processor in the fft group
+    !
     !  task groups
+    !
+    INTEGER :: NOGRP
+    INTEGER :: NPGRP
+    INTEGER :: ogrp_comm
+    INTEGER :: pgrp_comm
+    INTEGER, POINTER :: nolist(:) ! number of sticks per task group ( wave func )
     !
     LOGICAL :: have_task_groups
     INTEGER :: tg_nnr             ! maximum among nnr
@@ -72,9 +84,9 @@ MODULE fft_types
 
 CONTAINS
 
-  SUBROUTINE fft_dlay_allocate( desc, nproc, nx, ny )
+  SUBROUTINE fft_dlay_allocate( desc, myid, nproc, comm, nx, ny )
     TYPE (fft_dlay_descriptor) :: desc
-    INTEGER, INTENT(in) :: nproc, nx, ny
+    INTEGER, INTENT(in) :: myid, nproc, comm, nx, ny ! myid starting from 0
     ALLOCATE( desc%nsp( nproc ) )
     ALLOCATE( desc%nsw( nproc ) )
     ALLOCATE( desc%ngl( nproc ) )
@@ -101,7 +113,15 @@ CONTAINS
 
     desc%id    = 0
 
+    desc%myid  = myid
+    desc%comm  = comm
+    desc%nproc = nproc
     desc%have_task_groups = .false.
+    desc%NOGRP = 0
+    desc%NPGRP = 0
+    desc%ogrp_comm = 0
+    desc%pgrp_comm = 0
+    NULLIFY( desc%nolist )
     NULLIFY( desc%tg_nsw )
     NULLIFY( desc%tg_npp )
     NULLIFY( desc%tg_snd )
@@ -128,6 +148,7 @@ CONTAINS
     IF ( associated( desc%iplw ) )   DEALLOCATE( desc%iplw )
     desc%id = 0
     IF( desc%have_task_groups ) THEN
+       IF ( associated( desc%nolist ) )   DEALLOCATE( desc%nolist )
        IF ( associated( desc%tg_nsw ) )   DEALLOCATE( desc%tg_nsw )
        IF ( associated( desc%tg_npp ) )   DEALLOCATE( desc%tg_npp )
        IF ( associated( desc%tg_snd ) )   DEALLOCATE( desc%tg_snd )
@@ -141,9 +162,9 @@ CONTAINS
 
 !=----------------------------------------------------------------------------=!
 
-  SUBROUTINE fft_box_allocate( desc, nproc, nat )
+  SUBROUTINE fft_box_allocate( desc, myid, nproc, comm, nat )
     TYPE (fft_dlay_descriptor) :: desc
-    INTEGER, INTENT(in) :: nat, nproc
+    INTEGER, INTENT(in) :: nat, nproc, myid, comm  ! myid starting from 0
     ALLOCATE( desc%irb( 3, nat ) )
     ALLOCATE( desc%imin3( nat ) )
     ALLOCATE( desc%imax3( nat ) )
@@ -156,6 +177,9 @@ CONTAINS
     desc%npp = 0
     desc%ipp = 0
     desc%np3 = 0
+    desc%myid = myid
+    desc%nproc = nproc
+    desc%comm = comm
     desc%have_task_groups = .false.
   END SUBROUTINE fft_box_allocate
 
@@ -174,7 +198,7 @@ CONTAINS
 !=----------------------------------------------------------------------------=!
 
   SUBROUTINE fft_dlay_set( desc, tk, nst, nr1, nr2, nr3, nr1x, nr2x, nr3x, me, &
-    nproc, nogrp, ub, lb, idx, in1, in2, ncp, ncpw, ngp, ngpw, st, stw )
+    nproc, comm, nogrp, ub, lb, idx, in1, in2, ncp, ncpw, ngp, ngpw, st, stw )
 
     TYPE (fft_dlay_descriptor) :: desc
 
@@ -184,6 +208,7 @@ CONTAINS
     INTEGER, INTENT(in) :: nr1x, nr2x, nr3x ! padded size of real space grid
     INTEGER, INTENT(in) :: me               ! processor index (starting from 1)
     INTEGER, INTENT(in) :: nproc            ! number of processors
+    INTEGER, INTENT(in) :: comm             ! communicator
     INTEGER, INTENT(in) :: nogrp            ! number of processors in task-group
     INTEGER, INTENT(in) :: ub(3), lb(3)     ! upper and lower bound of real space indices
     INTEGER, INTENT(in) :: idx(:)
@@ -215,6 +240,15 @@ CONTAINS
 
     IF( ( size( ncp ) < nproc ) .or. ( size( ngp ) < nproc ) ) &
       CALL errore( ' fft_dlay_set ', ' wrong stick dimensions ', 4 )
+
+    IF( desc%nproc /= nproc ) &
+      CALL errore( ' fft_dlay_set ', ' wrong number of processor ', 4 )
+
+    IF( desc%myid /= (me - 1) ) &
+      CALL errore( ' fft_dlay_set ', ' wrong processor index ', 4 )
+
+    IF( desc%comm /= comm ) &
+      CALL errore( ' fft_dlay_set ', ' wrong communicator ', 4 )
 
     desc%have_task_groups = .false.
 
@@ -430,13 +464,13 @@ CONTAINS
 !=----------------------------------------------------------------------------=!
 
   SUBROUTINE fft_box_set( desc, nr1b, nr2b, nr3b, nr1bx, nr2bx, nr3bx, nat, &
-                          irb, me, nproc, npp, ipp )
+                          irb, me, nproc, comm, npp, ipp )
 
     IMPLICIT NONE
 
     TYPE (fft_dlay_descriptor) :: desc
 
-    INTEGER, INTENT(in) :: nat, me, nproc
+    INTEGER, INTENT(in) :: nat, me, nproc, comm
     INTEGER, INTENT(in) :: irb( :, : )
     INTEGER, INTENT(in) :: npp( : )
     INTEGER, INTENT(in) :: ipp( : )
@@ -451,6 +485,16 @@ CONTAINS
 
     IF( nproc > size( desc%npp ) ) &
        CALL errore(" fft_box_set ", " inconsistent dimensions ", 2 )
+
+    IF( desc%nproc /= nproc ) &
+      CALL errore( ' fft_dlay_set ', ' wrong number of processor ', 4 )
+
+    IF( desc%myid /= (me - 1) ) &
+      CALL errore( ' fft_dlay_set ', ' wrong processor index ', 4 )
+
+    IF( desc%comm /= comm ) &
+      CALL errore( ' fft_dlay_set ', ' wrong communicator ', 4 )
+
 
     desc%nr1 = nr1b
     desc%nr2 = nr2b

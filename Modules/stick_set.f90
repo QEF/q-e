@@ -22,7 +22,10 @@
       USE io_global, ONLY: ionode, stdout
       USE fft_types, ONLY: fft_dlay_descriptor, fft_dlay_allocate, &
                            fft_dlay_set, fft_dlay_scalar
-      USE mp_global, ONLY: me_pool, nproc_pool, intra_pool_comm, nogrp
+      USE mp_global, ONLY: me_pool, nproc_pool, intra_pool_comm, nogrp, use_task_groups
+      USE mp_global,      ONLY : me_pool, nproc_pool, intra_pool_comm
+      USE mp_global,      ONLY : NOGRP, NPGRP, ogrp_comm, pgrp_comm
+      USE mp_global,      ONLY : nolist
 
       PRIVATE
       SAVE
@@ -196,13 +199,13 @@
 
 #if defined __PARA
 
-          CALL fft_dlay_allocate( dfftp, nproc_pool, nr1x,  nr2x )
-          CALL fft_dlay_allocate( dffts, nproc_pool, nr1sx, nr2sx )
+          CALL fft_dlay_allocate( dfftp, me_pool, nproc_pool, intra_pool_comm, nr1x,  nr2x )
+          CALL fft_dlay_allocate( dffts, me_pool, nproc_pool, intra_pool_comm, nr1sx, nr2sx )
 
           CALL fft_dlay_set( dfftp, tk, nst, nr1, nr2, nr3, nr1x, nr2x, nr3x, (me_pool+1), &
-            nproc_pool, nogrp, ub, lb, idx, ist(:,1), ist(:,2), nstp, nstpw, sstp, sstpw, st, stw )
+            nproc_pool, intra_pool_comm, nogrp, ub, lb, idx, ist(:,1), ist(:,2), nstp, nstpw, sstp, sstpw, st, stw )
           CALL fft_dlay_set( dffts, tk, nsts, nr1s, nr2s, nr3s, nr1sx, nr2sx, nr3sx, (me_pool+1), &
-            nproc_pool, nogrp, ub, lb, idx, ist(:,1), ist(:,2), nstps, nstpw, sstps, sstpw, sts, stw )
+            nproc_pool, intra_pool_comm, nogrp, ub, lb, idx, ist(:,1), ist(:,2), nstps, nstpw, sstps, sstpw, sts, stw )
 
 #else
 
@@ -215,8 +218,8 @@
           IF( ngm_ /= ngm ) CALL errore( ' pstickset ', ' inconsistent ngm ', abs( ngm - ngm_ ) )
           IF( ngs_ /= ngs ) CALL errore( ' pstickset ', ' inconsistent ngs ', abs( ngs - ngs_ ) )
 
-          CALL fft_dlay_allocate( dfftp, nproc_pool, max(nr1x, nr3x),  nr2x  )
-          CALL fft_dlay_allocate( dffts, nproc_pool, max(nr1sx, nr3sx), nr2sx )
+          CALL fft_dlay_allocate( dfftp, me_pool, nproc_pool, intra_pool_comm, max(nr1x, nr3x),  nr2x  )
+          CALL fft_dlay_allocate( dffts, me_pool, nproc_pool, intra_pool_comm, max(nr1sx, nr3sx), nr2sx )
 
           CALL fft_dlay_scalar( dfftp, ub, lb, nr1, nr2, nr3, nr1x, nr2x, nr3x, stw )
           CALL fft_dlay_scalar( dffts, ub, lb, nr1s, nr2s, nr3s, nr1sx, nr2sx, nr3sx, stw )
@@ -230,6 +233,15 @@
           nstpx  = maxval( nstp )
 ! ...     Maximum number of sticks (wave func.)
           nstpwx = maxval( nstpw  )
+
+          IF( use_task_groups ) THEN
+            !
+            !  Initialize task groups.
+            !  Note that this call modify dffts adding task group data.
+            !
+            CALL task_groups_init( dffts )
+            !
+          END IF
 
           IF (ionode) WRITE( stdout,118)
  118      FORMAT(3X,'            n.st   n.stw   n.sts    n.g    n.gw   n.gs')
@@ -263,6 +275,118 @@
 
           RETURN
         END SUBROUTINE pstickset
+
+
+!-----------------------------------------
+! Task groups Contributed by C. Bekas, October 2005
+! Revised by C. Cavazzoni
+!--------------------------------------------
+
+SUBROUTINE task_groups_init( dffts )
+
+   USE parallel_include
+   !
+   USE io_global,      ONLY : stdout
+   USE fft_types,      ONLY : fft_dlay_descriptor
+
+   ! T.G.
+   ! NPGRP:      Number of processors per group
+   ! NOGRP:      Number of processors per orbital task group
+
+   IMPLICIT NONE
+
+   TYPE(fft_dlay_descriptor), INTENT(inout) :: dffts
+
+   !----------------------------------
+   !Local Variables declaration
+   !----------------------------------
+
+   INTEGER  :: I
+   INTEGER  :: IERR
+   INTEGER  :: num_planes, num_sticks
+   INTEGER  :: nnrsx_vec ( nproc_pool )
+   INTEGER  :: pgroup( nproc_pool )
+   INTEGER  :: strd
+
+   !
+   IF ( nogrp > 1 ) WRITE( stdout, 100 ) nogrp, npgrp
+
+100 FORMAT( /,3X,'Task Groups are in USE',/,3X,'groups and procs/group : ',I5,I5 )
+
+   !Find maximum chunk of local data concerning coefficients of eigenfunctions in g-space
+
+#if defined __MPI
+   CALL MPI_Allgather( dffts%nnr, 1, MPI_INTEGER, nnrsx_vec, 1, MPI_INTEGER, intra_pool_comm, IERR)
+   strd = maxval( nnrsx_vec( 1:nproc_pool ) )
+#else
+   strd = dffts%nnr
+#endif
+
+   IF( strd /= dffts%tg_nnr ) CALL errore( ' task_groups_init ', ' inconsistent nnr ', 1 )
+
+   !-------------------------------------------------------------------------------------
+   !C. Bekas...TASK GROUP RELATED. FFT DATA STRUCTURES ARE ALREADY DEFINED ABOVE
+   !-------------------------------------------------------------------------------------
+   !dfft%nsw(me) holds the number of z-sticks for the current processor per wave-function
+   !We can either send these in the group with an mpi_allgather...or put the
+   !in the PSIS vector (in special positions) and send them with them.
+   !Otherwise we can do this once at the beginning, before the loop.
+   !we choose to do the latter one.
+   !-------------------------------------------------------------------------------------
+   !
+   dffts%nogrp = nogrp
+   dffts%npgrp = npgrp
+   dffts%ogrp_comm = ogrp_comm
+   dffts%pgrp_comm = pgrp_comm
+   !
+   ALLOCATE( dffts%tg_nsw(nproc_pool))
+   ALLOCATE( dffts%tg_npp(nproc_pool))
+   ALLOCATE( dffts%nolist(nogrp))
+
+   num_sticks = 0
+   num_planes = 0
+   DO i = 1, nogrp
+      dffts%nolist( i ) = nolist( i )
+      num_sticks = num_sticks + dffts%nsw( nolist(i) + 1 )
+      num_planes = num_planes + dffts%npp( nolist(i) + 1 )
+   ENDDO
+
+#if defined __MPI
+   CALL MPI_ALLGATHER(num_sticks, 1, MPI_INTEGER, dffts%tg_nsw(1), 1, MPI_INTEGER, intra_pool_comm, IERR)
+   CALL MPI_ALLGATHER(num_planes, 1, MPI_INTEGER, dffts%tg_npp(1), 1, MPI_INTEGER, intra_pool_comm, IERR)
+#else
+   dffts%tg_nsw(1) = num_sticks
+   dffts%tg_npp(1) = num_planes
+#endif
+
+   ALLOCATE( dffts%tg_snd( nogrp ) )
+   ALLOCATE( dffts%tg_rcv( nogrp ) )
+   ALLOCATE( dffts%tg_psdsp( nogrp ) )
+   ALLOCATE( dffts%tg_usdsp( nogrp ) )
+   ALLOCATE( dffts%tg_rdsp( nogrp ) )
+
+   dffts%tg_snd(1)   = dffts%nr3x * dffts%nsw( me_pool + 1 )
+   IF( dffts%nr3x * dffts%nsw( me_pool + 1 ) > dffts%tg_nnr ) THEN
+      CALL errore( ' task_groups_init ', ' inconsistent dffts%tg_nnr ', 1 )
+   ENDIF
+   dffts%tg_psdsp(1) = 0
+   dffts%tg_usdsp(1) = 0
+   dffts%tg_rcv(1)  = dffts%nr3x * dffts%nsw( nolist(1) + 1 )
+   dffts%tg_rdsp(1) = 0
+   DO i = 2, nogrp
+      dffts%tg_snd(i)  = dffts%nr3x * dffts%nsw( me_pool + 1 )
+      dffts%tg_psdsp(i) = dffts%tg_psdsp(i-1) + dffts%tg_nnr
+      dffts%tg_usdsp(i) = dffts%tg_usdsp(i-1) + dffts%tg_snd(i-1)
+      dffts%tg_rcv(i)  = dffts%nr3x * dffts%nsw( nolist(i) + 1 )
+      dffts%tg_rdsp(i) = dffts%tg_rdsp(i-1) + dffts%tg_rcv(i-1)
+   ENDDO
+
+   dffts%have_task_groups = .true.
+
+   RETURN
+
+END SUBROUTINE task_groups_init
+
 
 !=----------------------------------------------------------------------=
    END MODULE stick_set

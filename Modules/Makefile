@@ -70,7 +70,6 @@ sic.o \
 splinelib.o \
 stick_base.o \
 stick_set.o \
-task_groups.o \
 timestep.o \
 version.o \
 upf.o \
