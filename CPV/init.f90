@@ -47,8 +47,7 @@
       USE electrons_module,         ONLY: bmeshset
       USE electrons_base,           ONLY: distribute_bands
       USE problem_size,             ONLY: cpsizes
-      USE mp_global,                ONLY: use_task_groups, nproc_bgrp, nbgrp, my_bgrp_id, intra_bgrp_comm
-      USE task_groups,              ONLY: task_groups_init
+      USE mp_global,                ONLY: nproc_bgrp, nbgrp, my_bgrp_id, intra_bgrp_comm
       USE core,                     ONLY: nlcc_any
       USE uspp,                     ONLY: okvan
 
@@ -197,15 +196,6 @@
       !
       !  CALL cpsizes( )  Maybe useful 
       !
-      IF( use_task_groups ) THEN
-        !
-        !  Initialize task groups.
-        !  Note that this call modify dffts adding task group data.
-        !
-        CALL task_groups_init( dffts )
-        !
-      END IF
-      !
       !   Flush stdout
       !
       CALL flush_unit( stdout )
@@ -223,7 +213,7 @@
       USE kinds,            ONLY: DP
       use control_flags,    only: iprint, thdyn, ndr, nbeg, tbeg
       use io_global,        only: stdout, ionode
-      use mp_global,        only: nproc_bgrp
+      use mp_global,        only: nproc_bgrp, me_bgrp, intra_bgrp_comm
       USE io_files,         ONLY: tmp_dir     
       use ions_base,        only: na, nsp, nat, tau_srt, ind_srt, if_pos, atm, na, pmass
       use cell_base,        only: a1, a2, a3, r_to_s, cell_init, deth
@@ -279,7 +269,7 @@
       !
       ALLOCATE( taub( 3, nat ) )
       !
-      CALL fft_box_allocate( dfftb, nproc_bgrp, nat )
+      CALL fft_box_allocate( dfftb, me_bgrp, nproc_bgrp, intra_bgrp_comm, nat )
       !
       !  if tbeg = .true.  the geometry is given in the standard input even if
       !  we are restarting a previous run

@@ -16,14 +16,13 @@ SUBROUTINE data_structure( gamma_only )
   USE kinds,      ONLY : DP
   USE io_global,  ONLY : stdout
   USE mp,         ONLY : mp_max
-  USE mp_global,  ONLY : inter_pool_comm, use_task_groups, intra_pool_comm
+  USE mp_global,  ONLY : inter_pool_comm, intra_pool_comm
   USE fft_base,   ONLY : dfftp, dffts
   USE cell_base,  ONLY : bg, tpiba
   USE klist,      ONLY : xk, nks
   USE gvect,      ONLY : gcutm, gvect_init
   USE gvecs,      ONLY : gcutms, gvecs_init
   USE stick_set,  ONLY : pstickset
-  USE task_groups,ONLY : task_groups_init
   USE wvfct,      ONLY : ecutwfc
 
   !
@@ -66,14 +65,5 @@ SUBROUTINE data_structure( gamma_only )
   call gvect_init ( ngm_ , intra_pool_comm )
   call gvecs_init ( ngs_ , intra_pool_comm );
   !
-  IF( use_task_groups ) THEN
-    !
-    !  Initialize task groups.
-    !  Note that this call modify dffts adding task group data.
-    !
-    CALL task_groups_init( dffts )
-    !
-  ENDIF
-
 END SUBROUTINE data_structure
 

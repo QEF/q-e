@@ -17,9 +17,8 @@ SUBROUTINE vloc_psi_gamma(lda, n, m, psi, v, hpsi)
   USE gvecs, ONLY : nls, nlsm
   USE wvfct,   ONLY : igk
   USE mp_global,     ONLY : nogrp, ogrp_comm, me_pool, nolist, use_task_groups
-  USE fft_base,      ONLY : dffts
+  USE fft_base,      ONLY : dffts, tg_gather
   USE fft_interfaces,ONLY : fwfft, invfft
-  USE task_groups,   ONLY : tg_gather
   USE wavefunctions_module,  ONLY: psic
   !
   IMPLICIT NONE
@@ -204,9 +203,8 @@ SUBROUTINE vloc_psi_k(lda, n, m, psi, v, hpsi)
   USE gvecs, ONLY : nls, nlsm
   USE wvfct,   ONLY : igk
   USE mp_global,     ONLY : nogrp, ogrp_comm, me_pool, nolist, use_task_groups
-  USE fft_base,      ONLY : dffts
+  USE fft_base,      ONLY : dffts, tg_gather
   USE fft_interfaces,ONLY : fwfft, invfft
-  USE task_groups,   ONLY : tg_gather
   USE wavefunctions_module,  ONLY: psic
   !
   IMPLICIT NONE
@@ -357,9 +355,8 @@ SUBROUTINE vloc_psi_nc (lda, n, m, psi, v, hpsi)
   USE gvecs, ONLY : nls, nlsm
   USE wvfct,   ONLY : igk
   USE mp_global,     ONLY : nogrp, ogrp_comm, me_pool, nolist, use_task_groups
-  USE fft_base,      ONLY : dffts, dfftp
+  USE fft_base,      ONLY : dffts, dfftp, tg_gather
   USE fft_interfaces,ONLY : fwfft, invfft
-  USE task_groups,   ONLY : tg_gather
   USE noncollin_module,     ONLY: npol
   USE wavefunctions_module, ONLY: psic_nc
   !

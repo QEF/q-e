@@ -1556,7 +1556,7 @@ MODULE realus
     USE ions_base,             ONLY : nat, ntyp => nsp, ityp
     USE smooth_grid_dimensions,ONLY : nr1s,  nr2s,  nr3s
     USE uspp_param,            ONLY : nh, nhm
-    USE task_groups,           ONLY : tg_gather
+    USE fft_base,              ONLY : tg_gather
     USE mp_global,             ONLY : nogrp, ogrp_comm, me_pool, nolist, &
                                       use_task_groups,intra_pool_comm
     USE mp,        ONLY : mp_sum
@@ -1666,7 +1666,7 @@ MODULE realus
     USE smooth_grid_dimensions,ONLY : nr1s,  nr2s,  nr3s
     USE uspp_param,            ONLY : nh, nhm
     USE becmod,                ONLY : bec_type, becp
-    USE task_groups,           ONLY : tg_gather
+    USE fft_base,              ONLY : tg_gather
     USE mp_global,             ONLY : nogrp, ogrp_comm, me_pool, nolist, &
                                       use_task_groups
     !
@@ -1752,7 +1752,7 @@ MODULE realus
       USE lsda_mod,               ONLY : current_spin
       USE uspp,                   ONLY : qq
       USE becmod,                 ONLY : bec_type, becp
-      USE task_groups,            ONLY : tg_gather
+      USE fft_base,               ONLY : tg_gather
       USE mp_global,              ONLY : nogrp, ogrp_comm, me_pool, nolist, &
                                          use_task_groups
       !
@@ -1853,7 +1853,7 @@ MODULE realus
       USE lsda_mod,               ONLY : current_spin
       USE uspp,                   ONLY : qq
       USE becmod,                 ONLY : bec_type, becp
-      USE task_groups,            ONLY : tg_gather
+      USE fft_base,               ONLY : tg_gather
       USE mp_global,              ONLY : nogrp, ogrp_comm, me_pool, nolist, &
                                          use_task_groups
       !
@@ -1956,7 +1956,7 @@ MODULE realus
   USE lsda_mod,               ONLY : current_spin
   USE uspp,                   ONLY : deeq
   USE becmod,                 ONLY : bec_type, becp
-  USE task_groups,            ONLY : tg_gather
+  USE fft_base,               ONLY : tg_gather
   USE mp_global,              ONLY : nogrp, ogrp_comm, me_pool, nolist, &
                                      use_task_groups
   !
@@ -2060,7 +2060,7 @@ MODULE realus
   USE lsda_mod,               ONLY : current_spin
   USE uspp,                   ONLY : deeq
   USE becmod,                 ONLY : bec_type, becp
-  USE task_groups,            ONLY : tg_gather
+  USE fft_base,               ONLY : tg_gather
   USE mp_global,              ONLY : nogrp, ogrp_comm, me_pool, nolist, &
                                      use_task_groups
   !
@@ -2155,9 +2155,8 @@ MODULE realus
     USE wavefunctions_module,     ONLY : psic
     USE gvecs,                  ONLY : nls,nlsm,doublegrid
     USE kinds,         ONLY : DP
-    USE fft_base,      ONLY : dffts
+    USE fft_base,      ONLY : dffts, tg_gather
     USE fft_interfaces,ONLY : invfft
-    USE task_groups,   ONLY : tg_gather
     USE mp_global,     ONLY : nogrp, ogrp_comm, me_pool, nolist, &
                               use_task_groups
 
@@ -2321,9 +2320,8 @@ MODULE realus
     USE wavefunctions_module,     ONLY : psic
     USE gvecs,                  ONLY : nls,nlsm,doublegrid
     USE kinds,         ONLY : DP
-    USE fft_base,      ONLY : dffts
+    USE fft_base,      ONLY : dffts, tg_gather
     USE fft_interfaces,ONLY : fwfft
-    USE task_groups,   ONLY : tg_gather
     USE mp_global,     ONLY : nogrp, ogrp_comm, me_pool, nolist, &
                               use_task_groups
 
@@ -2606,8 +2604,7 @@ MODULE realus
     USE wavefunctions_module,     ONLY : psic
     USE gvecs,       ONLY : nls,nlsm,doublegrid
     USE kinds,         ONLY : DP
-    USE fft_base,      ONLY : dffts
-    USE task_groups,   ONLY : tg_gather
+    USE fft_base,      ONLY : dffts, tg_gather
     USE mp_global,     ONLY : nogrp, ogrp_comm, me_pool, nolist, &
                               use_task_groups
     USE scf,           ONLY : vrs

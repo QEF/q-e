@@ -29,7 +29,7 @@
       USE mp_global,           ONLY : nogrp, ogrp_comm, me_bgrp, nolist,&
                                       use_task_groups, my_bgrp_id, nbgrp, inter_bgrp_comm
       USE mp,                  ONLY : mp_sum
-      USE fft_base,            ONLY : dffts
+      USE fft_base,            ONLY : dffts, tg_gather
       use wave_base,           only : wave_steepest, wave_verlet
       use control_flags,       only : lwf, tsde
       use uspp,                only : deeq, vkb
@@ -39,7 +39,6 @@
       use efield_module,       only : dforce_efield, tefield, dforce_efield2, tefield2
       use gvecw,               only : ngw, ngwx
       USE cp_interfaces,       ONLY : dforce
-      USE task_groups,         ONLY : tg_gather
       USE ldaU_cp
       !
       IMPLICIT NONE
