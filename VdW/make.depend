@@ -23,6 +23,7 @@ check_v_eff.o : ../Modules/io_global.o
 check_v_eff.o : ../Modules/kind.o
 check_v_eff.o : ../Modules/mp.o
 check_v_eff.o : ../Modules/mp_global.o
+check_v_eff.o : ../Modules/recvec.o
 check_v_eff.o : ../Modules/uspp.o
 check_v_eff.o : ../Modules/wavefunctions.o
 check_v_eff.o : ../PW/g_psi_mod.o
@@ -56,6 +57,7 @@ eff_pot.o : ../Modules/io_global.o
 eff_pot.o : ../Modules/kind.o
 eff_pot.o : ../Modules/mp.o
 eff_pot.o : ../Modules/mp_global.o
+eff_pot.o : ../Modules/recvec.o
 eff_pot.o : ../Modules/uspp.o
 eff_pot.o : ../PW/pwcom.o
 eff_pot.o : ../PW/scf_mod.o
@@ -123,6 +125,7 @@ vdw.o : ../Modules/kind.o
 vdw.o : ../Modules/mp.o
 vdw.o : ../Modules/mp_global.o
 vdw.o : ../Modules/parser.o
+vdw.o : ../Modules/recvec.o
 vdw.o : ../Modules/uspp.o
 vdw.o : ../PH/phcom.o
 vdw.o : ../PW/pwcom.o

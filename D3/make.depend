@@ -158,6 +158,7 @@ d3vrho.o : ../Modules/ions_base.o
 d3vrho.o : ../Modules/kind.o
 d3vrho.o : ../Modules/mp.o
 d3vrho.o : ../Modules/mp_global.o
+d3vrho.o : ../Modules/recvec.o
 d3vrho.o : ../Modules/uspp.o
 d3vrho.o : ../Modules/wavefunctions.o
 d3vrho.o : ../PH/phcom.o
@@ -230,6 +231,7 @@ dvdpsi.o : ../Modules/griddim.o
 dvdpsi.o : ../Modules/ions_base.o
 dvdpsi.o : ../Modules/mp.o
 dvdpsi.o : ../Modules/mp_global.o
+dvdpsi.o : ../Modules/recvec.o
 dvdpsi.o : ../Modules/uspp.o
 dvdpsi.o : ../PH/phcom.o
 dvdpsi.o : ../PW/pwcom.o
@@ -318,6 +320,7 @@ solve_linter_d3.o : ../Modules/ions_base.o
 solve_linter_d3.o : ../Modules/kind.o
 solve_linter_d3.o : ../Modules/mp.o
 solve_linter_d3.o : ../Modules/mp_global.o
+solve_linter_d3.o : ../Modules/recvec.o
 solve_linter_d3.o : ../Modules/uspp.o
 solve_linter_d3.o : ../Modules/wavefunctions.o
 solve_linter_d3.o : ../PH/phcom.o

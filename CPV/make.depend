@@ -420,7 +420,6 @@ init.o : ../Modules/mp_global.o
 init.o : ../Modules/recvec.o
 init.o : ../Modules/recvec_subs.o
 init.o : ../Modules/stick_set.o
-init.o : ../Modules/task_groups.o
 init.o : ../Modules/uspp.o
 init.o : atoms_type.o
 init.o : berry_phase.o
@@ -860,7 +859,6 @@ runcp.o : ../Modules/mp.o
 runcp.o : ../Modules/mp_global.o
 runcp.o : ../Modules/parallel_include.o
 runcp.o : ../Modules/recvec.o
-runcp.o : ../Modules/task_groups.o
 runcp.o : ../Modules/uspp.o
 runcp.o : ../Modules/wave_base.o
 runcp.o : cp_interfaces.o

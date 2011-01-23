@@ -47,6 +47,7 @@ read_file_xspectra.o : ../Modules/mp_global.o
 read_file_xspectra.o : ../Modules/parser.o
 read_file_xspectra.o : ../Modules/paw_variables.o
 read_file_xspectra.o : ../Modules/recvec.o
+read_file_xspectra.o : ../Modules/recvec_subs.o
 read_file_xspectra.o : ../Modules/uspp.o
 read_file_xspectra.o : ../Modules/wavefunctions.o
 read_file_xspectra.o : ../Modules/xml_io_base.o

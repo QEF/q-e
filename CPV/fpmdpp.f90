@@ -78,7 +78,7 @@ PROGRAM fpmd_postproc
   ! ... Stack limit is often small, thus causing SIGSEGV and crash
   CALL remove_stack_limit ( )
 
-  !  see cprstart.f90 for the meaning of the following 4 calls
+  !  initialize mpi
   CALL mp_start( nproc, mpime, world )
   CALL mp_global_start( root, mpime, world, nproc )
   CALL io_global_start( mpime, root )

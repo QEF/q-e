@@ -71,7 +71,7 @@ end Module dynamical
 !
       USE kinds, ONLY: DP
       USE mp,         ONLY : mp_start, mp_end, mp_barrier
-      USE mp_global,  ONLY : nproc, mpime, mp_global_start
+      USE mp_global,  ONLY : nproc, mpime
       USE io_dyn_mat, ONLY : read_dyn_mat_param, read_dyn_mat_header, &
                              read_dyn_mat, read_dyn_mat_tail
       use dynamical

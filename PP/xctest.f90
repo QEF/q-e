@@ -14,10 +14,12 @@ PROGRAM xctest
   INTEGER :: nspin = 2
   real(DP), ALLOCATABLE :: rhor( :, : )
   real(DP), ALLOCATABLE :: grhor( :, :, : )
-  INTEGER iexch,icorr,igcx,igcc
+  INTEGER :: iexch,icorr,igcx,igcc
+  INTEGER :: nproc, mpime, gid
 
-  CALL mp_start()
+  CALL mp_start(nproc, mpime, gid)
 
+  if ( mpime == 0 ) then
   iexch=1
   icorr=3
   igcx=1
@@ -35,6 +37,7 @@ PROGRAM xctest
   !CALL test_gcxc( nnr, nspin, rhor, grhor )
   CALL test_xc( nnr, nspin, rhor, grhor )
 
+  end if
   CALL mp_end()
 END PROGRAM xctest
 

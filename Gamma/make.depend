@@ -4,6 +4,7 @@ a_h.o : ../Modules/fft_base.o
 a_h.o : ../Modules/fft_interfaces.o
 a_h.o : ../Modules/funct.o
 a_h.o : ../Modules/kind.o
+a_h.o : ../Modules/recvec.o
 a_h.o : ../Modules/uspp.o
 a_h.o : ../Modules/wavefunctions.o
 a_h.o : ../PW/becmod.o
@@ -78,6 +79,7 @@ dvpsi_kb.o : ../Modules/fft_base.o
 dvpsi_kb.o : ../Modules/fft_interfaces.o
 dvpsi_kb.o : ../Modules/ions_base.o
 dvpsi_kb.o : ../Modules/kind.o
+dvpsi_kb.o : ../Modules/recvec.o
 dvpsi_kb.o : ../Modules/uspp.o
 dvpsi_kb.o : ../Modules/wavefunctions.o
 dvpsi_kb.o : ../PW/becmod.o
@@ -97,6 +99,7 @@ dynmatcc.o : ../Modules/ions_base.o
 dynmatcc.o : ../Modules/kind.o
 dynmatcc.o : ../Modules/mp.o
 dynmatcc.o : ../Modules/mp_global.o
+dynmatcc.o : ../Modules/recvec.o
 dynmatcc.o : ../Modules/uspp.o
 dynmatcc.o : ../Modules/wavefunctions.o
 dynmatcc.o : ../PW/pwcom.o
@@ -107,6 +110,7 @@ generate_dynamical_matrix.o : ../PW/symme.o
 generate_effective_charges.o : ../Modules/kind.o
 generate_effective_charges.o : ../PW/symme.o
 h_h.o : ../Modules/kind.o
+h_h.o : ../Modules/recvec.o
 h_h.o : ../Modules/uspp.o
 h_h.o : ../PW/becmod.o
 h_h.o : ../PW/pwcom.o
@@ -132,7 +136,7 @@ phcg.o : cgcom.o
 pw_dot.o : ../Modules/kind.o
 pw_dot.o : ../Modules/mp.o
 pw_dot.o : ../Modules/mp_global.o
-pw_dot.o : ../PW/pwcom.o
+pw_dot.o : ../Modules/recvec.o
 rhod2vkb.o : ../Modules/cell_base.o
 rhod2vkb.o : ../Modules/constants.o
 rhod2vkb.o : ../Modules/fft_base.o
@@ -141,6 +145,7 @@ rhod2vkb.o : ../Modules/ions_base.o
 rhod2vkb.o : ../Modules/kind.o
 rhod2vkb.o : ../Modules/mp.o
 rhod2vkb.o : ../Modules/mp_global.o
+rhod2vkb.o : ../Modules/recvec.o
 rhod2vkb.o : ../Modules/uspp.o
 rhod2vkb.o : ../Modules/wavefunctions.o
 rhod2vkb.o : ../PW/becmod.o

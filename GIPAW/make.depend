@@ -12,6 +12,7 @@ biot_savart.o : ../Modules/constants.o
 biot_savart.o : ../Modules/fft_base.o
 biot_savart.o : ../Modules/fft_interfaces.o
 biot_savart.o : ../Modules/kind.o
+biot_savart.o : ../Modules/recvec.o
 biot_savart.o : ../PW/pwcom.o
 biot_savart.o : gipaw_module.o
 cg_psi.o : ../Modules/kind.o
@@ -30,6 +31,7 @@ compute_sigma.o : ../Modules/ions_base.o
 compute_sigma.o : ../Modules/kind.o
 compute_sigma.o : ../Modules/mp.o
 compute_sigma.o : ../Modules/mp_global.o
+compute_sigma.o : ../Modules/recvec.o
 compute_sigma.o : ../PW/pwcom.o
 compute_sigma.o : ../PW/symme.o
 compute_sigma.o : gipaw_module.o
@@ -41,6 +43,7 @@ compute_u_kq.o : ../Modules/io_files.o
 compute_u_kq.o : ../Modules/io_global.o
 compute_u_kq.o : ../Modules/kind.o
 compute_u_kq.o : ../Modules/random_numbers.o
+compute_u_kq.o : ../Modules/recvec.o
 compute_u_kq.o : ../Modules/uspp.o
 compute_u_kq.o : ../Modules/wavefunctions.o
 compute_u_kq.o : ../PW/becmod.o
@@ -60,6 +63,7 @@ efg.o : ../Modules/kind.o
 efg.o : ../Modules/mp.o
 efg.o : ../Modules/mp_global.o
 efg.o : ../Modules/parameters.o
+efg.o : ../Modules/recvec.o
 efg.o : ../Modules/uspp.o
 efg.o : ../Modules/wavefunctions.o
 efg.o : ../PW/becmod.o
@@ -81,6 +85,7 @@ g_tensor_crystal.o : ../Modules/kind.o
 g_tensor_crystal.o : ../Modules/mp.o
 g_tensor_crystal.o : ../Modules/mp_global.o
 g_tensor_crystal.o : ../Modules/parameters.o
+g_tensor_crystal.o : ../Modules/recvec.o
 g_tensor_crystal.o : ../Modules/uspp.o
 g_tensor_crystal.o : ../Modules/wavefunctions.o
 g_tensor_crystal.o : ../PW/becmod.o
@@ -112,6 +117,7 @@ gipaw_module.o : ../Modules/kind.o
 gipaw_module.o : ../Modules/mp.o
 gipaw_module.o : ../Modules/mp_global.o
 gipaw_module.o : ../Modules/parameters.o
+gipaw_module.o : ../Modules/recvec.o
 gipaw_module.o : ../Modules/splinelib.o
 gipaw_module.o : ../Modules/uspp.o
 gipaw_module.o : ../PW/buffers.o
@@ -135,6 +141,7 @@ greenfunction.o : gipaw_module.o
 h_psiq.o : ../Modules/fft_base.o
 h_psiq.o : ../Modules/fft_interfaces.o
 h_psiq.o : ../Modules/kind.o
+h_psiq.o : ../Modules/recvec.o
 h_psiq.o : ../Modules/uspp.o
 h_psiq.o : ../Modules/wavefunctions.o
 h_psiq.o : ../PW/becmod.o
@@ -159,6 +166,7 @@ init_gipaw_2.o : ../Modules/cell_base.o
 init_gipaw_2.o : ../Modules/constants.o
 init_gipaw_2.o : ../Modules/ions_base.o
 init_gipaw_2.o : ../Modules/kind.o
+init_gipaw_2.o : ../Modules/recvec.o
 init_gipaw_2.o : ../Modules/splinelib.o
 init_gipaw_2.o : ../PW/pwcom.o
 init_gipaw_2.o : paw_gipaw.o
@@ -166,6 +174,7 @@ init_us_2_no_phase.o : ../Modules/cell_base.o
 init_us_2_no_phase.o : ../Modules/constants.o
 init_us_2_no_phase.o : ../Modules/ions_base.o
 init_us_2_no_phase.o : ../Modules/kind.o
+init_us_2_no_phase.o : ../Modules/recvec.o
 init_us_2_no_phase.o : ../Modules/splinelib.o
 init_us_2_no_phase.o : ../Modules/uspp.o
 init_us_2_no_phase.o : ../PW/pwcom.o
@@ -196,6 +205,7 @@ suscept_crystal.o : ../Modules/kind.o
 suscept_crystal.o : ../Modules/mp.o
 suscept_crystal.o : ../Modules/mp_global.o
 suscept_crystal.o : ../Modules/parameters.o
+suscept_crystal.o : ../Modules/recvec.o
 suscept_crystal.o : ../Modules/uspp.o
 suscept_crystal.o : ../Modules/wavefunctions.o
 suscept_crystal.o : ../PW/becmod.o
@@ -219,6 +229,7 @@ test_sum_rule.o : ../Modules/io_global.o
 test_sum_rule.o : ../Modules/kind.o
 test_sum_rule.o : ../Modules/mp.o
 test_sum_rule.o : ../Modules/mp_global.o
+test_sum_rule.o : ../Modules/recvec.o
 test_sum_rule.o : ../Modules/uspp.o
 test_sum_rule.o : ../Modules/wavefunctions.o
 test_sum_rule.o : ../PW/buffers.o

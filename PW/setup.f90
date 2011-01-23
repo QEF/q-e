@@ -790,8 +790,8 @@ SUBROUTINE check_para_diag( nbnd )
                      &     "of the eigenvalue problem:")' ) 
      !
      IF ( use_para_diag ) THEN
-        WRITE( stdout, '(5X,"parallel, distributed-memory algorithm", &
-              & "(size of sub-group: ", I3, "*", I3, " procs)",/)') &
+        WRITE( stdout, '(5X,"parallel, distributed-memory algorithm ", &
+              & "(size of sub-group: ", I2, "*", I3, " procs)",/)') &
                np_ortho(1), np_ortho(2)
      ELSE
         WRITE( stdout, '(5X,"a serial algorithm will be used",/)' )

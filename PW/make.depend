@@ -309,7 +309,6 @@ data_structure.o : ../Modules/mp.o
 data_structure.o : ../Modules/mp_global.o
 data_structure.o : ../Modules/recvec.o
 data_structure.o : ../Modules/stick_set.o
-data_structure.o : ../Modules/task_groups.o
 data_structure.o : pwcom.o
 deriv_drhoc.o : ../Modules/constants.o
 deriv_drhoc.o : ../Modules/kind.o
@@ -1162,7 +1161,6 @@ realus.o : ../Modules/mp.o
 realus.o : ../Modules/mp_global.o
 realus.o : ../Modules/recvec.o
 realus.o : ../Modules/splinelib.o
-realus.o : ../Modules/task_groups.o
 realus.o : ../Modules/uspp.o
 realus.o : ../Modules/wavefunctions.o
 realus.o : ../iotk/src/iotk_module.o
@@ -1633,7 +1631,6 @@ vloc_psi.o : ../Modules/kind.o
 vloc_psi.o : ../Modules/mp_global.o
 vloc_psi.o : ../Modules/parallel_include.o
 vloc_psi.o : ../Modules/recvec.o
-vloc_psi.o : ../Modules/task_groups.o
 vloc_psi.o : ../Modules/wavefunctions.o
 vloc_psi.o : noncol.o
 vloc_psi.o : pwcom.o
