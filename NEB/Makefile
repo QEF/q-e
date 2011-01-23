@@ -40,7 +40,7 @@ stop_run_path.o
 QEMODS=../Modules/libqemod.a
 PWOBJS= ../PW/libpw.a
 
-TLDEPS=bindir mods libs liblapack libblas pw eelib
+TLDEPS=bindir mods libs liblapack libblas pw
 
 all : tldeps neb.x path_int.x
 

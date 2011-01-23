@@ -144,9 +144,6 @@ libs : mods
 	( cd flib ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= $(FLIB_TARGETS) ; \
 	else $(MAKE) $(MFLAGS) TLDEPS= $(FLIB_TARGETS) ; fi )
 
-eelib : mods
-	( cd EE ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= all  ; \
-	else $(MAKE) $(MFLAGS) TLDEPS= all ; fi )
 bindir :
 	test -d bin || mkdir bin
 
