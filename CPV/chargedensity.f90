@@ -115,8 +115,7 @@
       USE constants,          ONLY: pi, fpi
       USE mp,                 ONLY: mp_sum
       USE io_global,          ONLY: stdout, ionode
-      USE mp_global,          ONLY: intra_bgrp_comm, nogrp, me_bgrp, &
-                                    use_task_groups, ogrp_comm, nolist, nbgrp, inter_bgrp_comm
+      USE mp_global,          ONLY: intra_bgrp_comm, nbgrp, inter_bgrp_comm, me_bgrp
       USE funct,              ONLY: dft_is_meta
       USE cg_module,          ONLY: tcg
       USE cp_interfaces,      ONLY: stress_kin, enkin
@@ -295,7 +294,7 @@
                rhos(ir,iss1)=rhos(ir,iss1) + sa1*( DBLE(psis(ir)))**2
             END DO
             !
-         ELSE IF( use_task_groups ) THEN
+         ELSE IF( dffts%have_task_groups ) THEN
             !
             CALL loop_over_states_tg()
             !
@@ -500,13 +499,13 @@
          INTEGER :: from, ii, eig_index, eig_offset
          REAL(DP), ALLOCATABLE :: tmp_rhos(:,:)
 
-         ALLOCATE( psis( dffts%tg_nnr * nogrp ) ) 
+         ALLOCATE( psis( dffts%tg_nnr * dffts%nogrp ) ) 
          !
          ALLOCATE( tmp_rhos ( dffts%nr1x*dffts%nr2x*dffts%tg_npp( me_bgrp + 1 ), nspin ) )
          !
          tmp_rhos = 0_DP
 
-         do i = 1, nbsp_bgrp, 2*nogrp
+         do i = 1, nbsp_bgrp, 2*dffts%nogrp
             !
             !  Initialize wave-functions in Fourier space (to be FFTed)
             !  The size of psis is nnr: which is equal to the total number
@@ -530,7 +529,7 @@
             !
             eig_offset = 0
 
-            do eig_index = 1, 2*nogrp, 2   
+            do eig_index = 1, 2*dffts%nogrp, 2   
                !
                !  here we pack 2*nogrp electronic states in the psis array
                !
@@ -571,8 +570,8 @@
             !
             ! Compute the proper factor for each band
             !
-            DO ii = 1, nogrp
-               IF( nolist( ii ) == me_bgrp ) EXIT
+            DO ii = 1, dffts%nogrp
+               IF( dffts%nolist( ii ) == me_bgrp ) EXIT
             END DO
             !
             ! Remember two bands are packed in a single array :
@@ -629,8 +628,8 @@
             CALL mp_sum( tmp_rhos, inter_bgrp_comm )
          END IF
 
-         IF ( nogrp > 1 ) THEN
-            CALL mp_sum( tmp_rhos, gid = ogrp_comm )
+         IF ( dffts%nogrp > 1 ) THEN
+            CALL mp_sum( tmp_rhos, gid = dffts%ogrp_comm )
          ENDIF
          !
          !BRING CHARGE DENSITY BACK TO ITS ORIGINAL POSITION
@@ -639,9 +638,9 @@
          !orbital group then does a local copy (reshuffling) of its data
          !
          from = 1
-         DO ii = 1, nogrp
-            IF ( nolist( ii ) == me_bgrp ) EXIT !Exit the loop
-            from = from +  dffts%nr1x*dffts%nr2x*dffts%npp( nolist( ii ) + 1 )! From where to copy initially
+         DO ii = 1, dffts%nogrp
+            IF ( dffts%nolist( ii ) == me_bgrp ) EXIT !Exit the loop
+            from = from +  dffts%nr1x*dffts%nr2x*dffts%npp( dffts%nolist( ii ) + 1 )! From where to copy initially
          ENDDO
          !
          DO ir = 1, nspin

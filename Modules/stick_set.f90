@@ -22,10 +22,6 @@
       USE io_global, ONLY: ionode, stdout
       USE fft_types, ONLY: fft_dlay_descriptor, fft_dlay_allocate, &
                            fft_dlay_set, fft_dlay_scalar
-      USE mp_global, ONLY: me_pool, nproc_pool, intra_pool_comm, nogrp, use_task_groups
-      USE mp_global,      ONLY : me_pool, nproc_pool, intra_pool_comm
-      USE mp_global,      ONLY : NOGRP, NPGRP, ogrp_comm, pgrp_comm
-      USE mp_global,      ONLY : nolist
 
       PRIVATE
       SAVE
@@ -37,7 +33,7 @@
 !=----------------------------------------------------------------------=
 
       SUBROUTINE pstickset( gamma_only, bg, gcut, gkcut, gcuts, &
-          dfftp, dffts, ngw, ngm, ngs )
+          dfftp, dffts, ngw, ngm, ngs, mype, nproc, comm, nogrp_ )
 
           LOGICAL, INTENT(in) :: gamma_only
 ! ...     bg(:,1), bg(:,2), bg(:,3) reciprocal space base vectors.
@@ -45,6 +41,10 @@
           REAL(DP), INTENT(in) :: gcut, gkcut, gcuts
           TYPE(fft_dlay_descriptor), INTENT(inout) :: dfftp, dffts
           INTEGER, INTENT(out) :: ngw, ngm, ngs
+
+          INTEGER, INTENT(IN) :: mype, nproc, comm
+          INTEGER, INTENT(IN) :: nogrp_
+
 
           LOGICAL :: tk
 
@@ -136,8 +136,8 @@
 ! ...       Fill in the stick maps, for given g-space base and cut-off
 
           CALL sticks_maps( tk, ub, lb, bg(:,1), bg(:,2), bg(:,3), &
-                            gcut, gkcut, gcuts, st, stw, sts, me_pool, &
-                            nproc_pool, intra_pool_comm )
+                            gcut, gkcut, gcuts, st, stw, sts, mype, &
+                            nproc, comm )
 
 ! ...       Now count the number of stick nst and nstw
 
@@ -156,14 +156,14 @@
 
           ALLOCATE(ist(nst,5))
 
-          ALLOCATE(nstp(nproc_pool))
-          ALLOCATE(sstp(nproc_pool))
+          ALLOCATE(nstp(nproc))
+          ALLOCATE(sstp(nproc))
 
-          ALLOCATE(nstpw(nproc_pool))
-          ALLOCATE(sstpw(nproc_pool))
+          ALLOCATE(nstpw(nproc))
+          ALLOCATE(sstpw(nproc))
 
-          ALLOCATE(nstps(nproc_pool))
-          ALLOCATE(sstps(nproc_pool))
+          ALLOCATE(nstps(nproc))
+          ALLOCATE(sstps(nproc))
 
 ! ...       initialize the sticks indexes array ist
 
@@ -174,7 +174,7 @@
 
           ALLOCATE( idx( nst ) )
 
-          CALL sticks_sort( ist(:,4), ist(:,3), ist(:,5), nst, idx, nproc_pool )
+          CALL sticks_sort( ist(:,4), ist(:,3), ist(:,5), nst, idx, nproc )
 
           ! ... Set as first stick the stick containing the G=0
           !
@@ -186,26 +186,26 @@
           !  idx( iss ) = itmp
 
           CALL sticks_dist( tk, ub, lb, idx, ist(:,1), ist(:,2), ist(:,4), ist(:,3), ist(:,5), &
-             nst, nstp, nstpw, nstps, sstp, sstpw, sstps, st, stw, sts, nproc_pool )
+             nst, nstp, nstpw, nstps, sstp, sstpw, sstps, st, stw, sts, nproc )
 
-          ngw = sstpw( me_pool + 1 )
-          ngm = sstp( me_pool + 1 )
-          ngs = sstps( me_pool + 1 )
+          ngw = sstpw( mype + 1 )
+          ngm = sstp( mype + 1 )
+          ngs = sstps( mype + 1 )
 
           CALL sticks_pairup( tk, ub, lb, idx, ist(:,1), ist(:,2), ist(:,4), ist(:,3), ist(:,5), &
-             nst, nstp, nstpw, nstps, sstp, sstpw, sstps, st, stw, sts, nproc_pool )
+             nst, nstp, nstpw, nstps, sstp, sstpw, sstps, st, stw, sts, nproc )
 
           ! ...   Allocate and Set fft data layout descriptors
 
 #if defined __PARA
 
-          CALL fft_dlay_allocate( dfftp, me_pool, nproc_pool, intra_pool_comm, nr1x,  nr2x )
-          CALL fft_dlay_allocate( dffts, me_pool, nproc_pool, intra_pool_comm, nr1sx, nr2sx )
+          CALL fft_dlay_allocate( dfftp, mype, nproc, comm, nogrp_ , nr1x,  nr2x )
+          CALL fft_dlay_allocate( dffts, mype, nproc, comm, nogrp_ , nr1sx, nr2sx )
 
-          CALL fft_dlay_set( dfftp, tk, nst, nr1, nr2, nr3, nr1x, nr2x, nr3x, (me_pool+1), &
-            nproc_pool, intra_pool_comm, nogrp, ub, lb, idx, ist(:,1), ist(:,2), nstp, nstpw, sstp, sstpw, st, stw )
-          CALL fft_dlay_set( dffts, tk, nsts, nr1s, nr2s, nr3s, nr1sx, nr2sx, nr3sx, (me_pool+1), &
-            nproc_pool, intra_pool_comm, nogrp, ub, lb, idx, ist(:,1), ist(:,2), nstps, nstpw, sstps, sstpw, sts, stw )
+          CALL fft_dlay_set( dfftp, tk, nst, nr1, nr2, nr3, nr1x, nr2x, nr3x, &
+            ub, lb, idx, ist(:,1), ist(:,2), nstp, nstpw, sstp, sstpw, st, stw )
+          CALL fft_dlay_set( dffts, tk, nsts, nr1s, nr2s, nr3s, nr1sx, nr2sx, nr3sx, &
+            ub, lb, idx, ist(:,1), ist(:,2), nstps, nstpw, sstps, sstpw, sts, stw )
 
 #else
 
@@ -218,8 +218,8 @@
           IF( ngm_ /= ngm ) CALL errore( ' pstickset ', ' inconsistent ngm ', abs( ngm - ngm_ ) )
           IF( ngs_ /= ngs ) CALL errore( ' pstickset ', ' inconsistent ngs ', abs( ngs - ngs_ ) )
 
-          CALL fft_dlay_allocate( dfftp, me_pool, nproc_pool, intra_pool_comm, max(nr1x, nr3x),  nr2x  )
-          CALL fft_dlay_allocate( dffts, me_pool, nproc_pool, intra_pool_comm, max(nr1sx, nr3sx), nr2sx )
+          CALL fft_dlay_allocate( dfftp, mype, nproc, comm, max(nr1x, nr3x),  nr2x  )
+          CALL fft_dlay_allocate( dffts, mype, nproc, comm, max(nr1sx, nr3sx), nr2sx )
 
           CALL fft_dlay_scalar( dfftp, ub, lb, nr1, nr2, nr3, nr1x, nr2x, nr3x, stw )
           CALL fft_dlay_scalar( dffts, ub, lb, nr1s, nr2s, nr3s, nr1sx, nr2sx, nr3sx, stw )
@@ -234,7 +234,7 @@
 ! ...     Maximum number of sticks (wave func.)
           nstpwx = maxval( nstpw  )
 
-          IF( use_task_groups ) THEN
+          IF( dffts%have_task_groups ) THEN
             !
             !  Initialize task groups.
             !  Note that this call modify dffts adding task group data.
@@ -247,7 +247,7 @@
  118      FORMAT(3X,'            n.st   n.stw   n.sts    n.g    n.gw   n.gs')
           WRITE( stdout,121) minval(nstp),  minval(nstpw), minval(nstps), minval(sstp), minval(sstpw), minval(sstps)
           WRITE( stdout,122) maxval(nstp),  maxval(nstpw), maxval(nstps), maxval(sstp), maxval(sstpw), maxval(sstps)
-!          DO ip = 1, nproc_pool
+!          DO ip = 1, nproc
 !            IF (ionode) THEN
 !              WRITE( stdout,120) ip, nstp(ip),  nstpw(ip), nstps(ip), sstp(ip), sstpw(ip), sstps(ip)
 !            END IF
@@ -304,20 +304,21 @@ SUBROUTINE task_groups_init( dffts )
    INTEGER  :: I
    INTEGER  :: IERR
    INTEGER  :: num_planes, num_sticks
-   INTEGER  :: nnrsx_vec ( nproc_pool )
-   INTEGER  :: pgroup( nproc_pool )
+   INTEGER  :: nnrsx_vec ( dffts%nproc )
+   INTEGER  :: pgroup( dffts%nproc )
    INTEGER  :: strd
 
+   CALL task_groups_init_first( dffts )
    !
-   IF ( nogrp > 1 ) WRITE( stdout, 100 ) nogrp, npgrp
+   IF ( dffts%nogrp > 1 ) WRITE( stdout, 100 ) dffts%nogrp, dffts%npgrp
 
 100 FORMAT( /,3X,'Task Groups are in USE',/,3X,'groups and procs/group : ',I5,I5 )
 
    !Find maximum chunk of local data concerning coefficients of eigenfunctions in g-space
 
 #if defined __MPI
-   CALL MPI_Allgather( dffts%nnr, 1, MPI_INTEGER, nnrsx_vec, 1, MPI_INTEGER, intra_pool_comm, IERR)
-   strd = maxval( nnrsx_vec( 1:nproc_pool ) )
+   CALL MPI_Allgather( dffts%nnr, 1, MPI_INTEGER, nnrsx_vec, 1, MPI_INTEGER, dffts%comm, IERR)
+   strd = maxval( nnrsx_vec( 1:dffts%nproc ) )
 #else
    strd = dffts%nnr
 #endif
@@ -334,60 +335,131 @@ SUBROUTINE task_groups_init( dffts )
    !we choose to do the latter one.
    !-------------------------------------------------------------------------------------
    !
-   dffts%nogrp = nogrp
-   dffts%npgrp = npgrp
-   dffts%ogrp_comm = ogrp_comm
-   dffts%pgrp_comm = pgrp_comm
    !
-   ALLOCATE( dffts%tg_nsw(nproc_pool))
-   ALLOCATE( dffts%tg_npp(nproc_pool))
-   ALLOCATE( dffts%nolist(nogrp))
+   ALLOCATE( dffts%tg_nsw(dffts%nproc))
+   ALLOCATE( dffts%tg_npp(dffts%nproc))
 
    num_sticks = 0
    num_planes = 0
-   DO i = 1, nogrp
-      dffts%nolist( i ) = nolist( i )
-      num_sticks = num_sticks + dffts%nsw( nolist(i) + 1 )
-      num_planes = num_planes + dffts%npp( nolist(i) + 1 )
+   DO i = 1, dffts%nogrp
+      num_sticks = num_sticks + dffts%nsw( dffts%nolist(i) + 1 )
+      num_planes = num_planes + dffts%npp( dffts%nolist(i) + 1 )
    ENDDO
 
 #if defined __MPI
-   CALL MPI_ALLGATHER(num_sticks, 1, MPI_INTEGER, dffts%tg_nsw(1), 1, MPI_INTEGER, intra_pool_comm, IERR)
-   CALL MPI_ALLGATHER(num_planes, 1, MPI_INTEGER, dffts%tg_npp(1), 1, MPI_INTEGER, intra_pool_comm, IERR)
+   CALL MPI_ALLGATHER(num_sticks, 1, MPI_INTEGER, dffts%tg_nsw(1), 1, MPI_INTEGER, dffts%comm, IERR)
+   CALL MPI_ALLGATHER(num_planes, 1, MPI_INTEGER, dffts%tg_npp(1), 1, MPI_INTEGER, dffts%comm, IERR)
 #else
    dffts%tg_nsw(1) = num_sticks
    dffts%tg_npp(1) = num_planes
 #endif
 
-   ALLOCATE( dffts%tg_snd( nogrp ) )
-   ALLOCATE( dffts%tg_rcv( nogrp ) )
-   ALLOCATE( dffts%tg_psdsp( nogrp ) )
-   ALLOCATE( dffts%tg_usdsp( nogrp ) )
-   ALLOCATE( dffts%tg_rdsp( nogrp ) )
+   ALLOCATE( dffts%tg_snd( dffts%nogrp ) )
+   ALLOCATE( dffts%tg_rcv( dffts%nogrp ) )
+   ALLOCATE( dffts%tg_psdsp( dffts%nogrp ) )
+   ALLOCATE( dffts%tg_usdsp( dffts%nogrp ) )
+   ALLOCATE( dffts%tg_rdsp( dffts%nogrp ) )
 
-   dffts%tg_snd(1)   = dffts%nr3x * dffts%nsw( me_pool + 1 )
-   IF( dffts%nr3x * dffts%nsw( me_pool + 1 ) > dffts%tg_nnr ) THEN
+   dffts%tg_snd(1)   = dffts%nr3x * dffts%nsw( dffts%mype + 1 )
+   IF( dffts%nr3x * dffts%nsw( dffts%mype + 1 ) > dffts%tg_nnr ) THEN
       CALL errore( ' task_groups_init ', ' inconsistent dffts%tg_nnr ', 1 )
    ENDIF
    dffts%tg_psdsp(1) = 0
    dffts%tg_usdsp(1) = 0
-   dffts%tg_rcv(1)  = dffts%nr3x * dffts%nsw( nolist(1) + 1 )
+   dffts%tg_rcv(1)  = dffts%nr3x * dffts%nsw( dffts%nolist(1) + 1 )
    dffts%tg_rdsp(1) = 0
-   DO i = 2, nogrp
-      dffts%tg_snd(i)  = dffts%nr3x * dffts%nsw( me_pool + 1 )
+   DO i = 2, dffts%nogrp
+      dffts%tg_snd(i)  = dffts%nr3x * dffts%nsw( dffts%mype + 1 )
       dffts%tg_psdsp(i) = dffts%tg_psdsp(i-1) + dffts%tg_nnr
       dffts%tg_usdsp(i) = dffts%tg_usdsp(i-1) + dffts%tg_snd(i-1)
-      dffts%tg_rcv(i)  = dffts%nr3x * dffts%nsw( nolist(i) + 1 )
+      dffts%tg_rcv(i)  = dffts%nr3x * dffts%nsw( dffts%nolist(i) + 1 )
       dffts%tg_rdsp(i) = dffts%tg_rdsp(i-1) + dffts%tg_rcv(i-1)
    ENDDO
-
-   dffts%have_task_groups = .true.
 
    RETURN
 
 END SUBROUTINE task_groups_init
 
 
+  !
+SUBROUTINE task_groups_init_first( dffts )
+
+   USE parallel_include
+   !
+   USE fft_types,      ONLY : fft_dlay_descriptor
+   !
+   IMPLICIT NONE
+   !
+   TYPE(fft_dlay_descriptor), INTENT(inout) :: dffts
+    !
+    INTEGER :: i, n1, ipos, color, key, ierr, itsk, ntsk
+    INTEGER :: pgroup( dffts%nproc )
+    !
+    !SUBDIVIDE THE PROCESSORS IN GROUPS
+    !
+    DO i = 1, dffts%nproc
+       pgroup( i ) = i - 1
+    ENDDO
+    !
+    !LIST OF PROCESSORS IN MY ORBITAL GROUP
+    !
+    !  processors in these group have contiguous indexes
+    !
+    n1 = ( dffts%mype / dffts%nogrp ) * dffts%nogrp - 1
+    DO i = 1, dffts%nogrp
+       dffts%nolist( i ) = pgroup( n1 + i + 1 )
+       IF( dffts%mype == dffts%nolist( i ) ) ipos = i - 1
+    ENDDO
+    !
+    !LIST OF PROCESSORS IN MY PLANE WAVE GROUP
+    !
+    DO I = 1, dffts%npgrp
+       dffts%nplist( i ) = pgroup( ipos + ( i - 1 ) * dffts%nogrp + 1 )
+    ENDDO
+    !
+    !SET UP THE GROUPS
+    !
+    !
+    !CREATE ORBITAL GROUPS
+    !
+#if defined __MPI
+    color = dffts%mype / dffts%nogrp
+    key   = MOD( dffts%mype , dffts%nogrp )
+    CALL MPI_COMM_SPLIT( dffts%comm, color, key, dffts%ogrp_comm, ierr )
+    if( ierr /= 0 ) &
+         CALL errore( ' init_task_groups ', ' creating ogrp_comm ', ABS(ierr) )
+    CALL MPI_COMM_RANK( dffts%ogrp_comm, itsk, IERR )
+    CALL MPI_COMM_SIZE( dffts%ogrp_comm, ntsk, IERR )
+    IF( dffts%nogrp /= ntsk ) CALL errore( ' init_task_groups ', ' ogrp_comm size ', ntsk )
+    DO i = 1, dffts%nogrp
+       IF( dffts%mype == dffts%nolist( i ) ) THEN
+          IF( (i-1) /= itsk ) CALL errore( ' init_task_groups ', ' ogrp_comm rank ', itsk )
+       END IF
+    END DO
+#endif
+    !
+    !CREATE PLANEWAVE GROUPS
+    !
+#if defined __MPI
+    color = MOD( dffts%mype , dffts%nogrp )
+    key   = dffts%mype / dffts%nogrp
+    CALL MPI_COMM_SPLIT( dffts%comm, color, key, dffts%pgrp_comm, ierr )
+    if( ierr /= 0 ) &
+         CALL errore( ' init_task_groups ', ' creating pgrp_comm ', ABS(ierr) )
+    CALL MPI_COMM_RANK( dffts%pgrp_comm, itsk, IERR )
+    CALL MPI_COMM_SIZE( dffts%pgrp_comm, ntsk, IERR )
+    IF( dffts%npgrp /= ntsk ) CALL errore( ' init_task_groups ', ' pgrp_comm size ', ntsk )
+    DO i = 1, dffts%npgrp
+       IF( dffts%mype == dffts%nplist( i ) ) THEN
+          IF( (i-1) /= itsk ) CALL errore( ' init_task_groups ', ' pgrp_comm rank ', itsk )
+       END IF
+    END DO
+    dffts%me_pgrp = itsk
+#endif
+
+    RETURN
+  END SUBROUTINE task_groups_init_first
+  !
 !=----------------------------------------------------------------------=
    END MODULE stick_set
 !=----------------------------------------------------------------------=

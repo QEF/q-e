@@ -16,7 +16,8 @@ SUBROUTINE data_structure( gamma_only )
   USE kinds,      ONLY : DP
   USE io_global,  ONLY : stdout
   USE mp,         ONLY : mp_max
-  USE mp_global,  ONLY : inter_pool_comm, intra_pool_comm
+  USE mp_global,  ONLY : me_pool, nproc_pool, inter_pool_comm, intra_pool_comm
+  USE mp_global,  ONLY : get_ntask_groups
   USE fft_base,   ONLY : dfftp, dffts
   USE cell_base,  ONLY : bg, tpiba
   USE klist,      ONLY : xk, nks
@@ -29,7 +30,7 @@ SUBROUTINE data_structure( gamma_only )
   IMPLICIT NONE
   LOGICAL, INTENT(in) :: gamma_only
   REAL (DP) :: gkcut
-  INTEGER :: ik, ngm_, ngs_, ngw_
+  INTEGER :: ik, ngm_, ngs_, ngw_ , nogrp
   !
   ! ... calculate gkcut = max |k+G|^2, in (2pi/a)^2 units
   !
@@ -56,8 +57,11 @@ SUBROUTINE data_structure( gamma_only )
   !
   ! ... set up fft descriptors, including parallel stuff: sticks, planes, etc.
   !
+  nogrp = get_ntask_groups()
+  !
   CALL pstickset( gamma_only, bg, gcutm, gkcut, gcutms, &
-                  dfftp, dffts, ngw_ , ngm_ , ngs_ )
+                  dfftp, dffts, ngw_ , ngm_ , ngs_ , me_pool, nproc_pool, intra_pool_comm,   &
+                  nogrp )
   !
   !     on output, ngm_ and ngs_ contain the local number of G-vectors
   !     for the two grids. Initialize local and global number of G-vectors

@@ -55,7 +55,8 @@
 !   like infiniband, ethernet, myrinet
 !
 !-----------------------------------------------------------------------
-SUBROUTINE fft_scatter ( f_in, nr3x, nxx_, f_aux, ncp_, npp_, sign, use_tg )
+SUBROUTINE fft_scatter ( f_in, nr3x, nxx_, f_aux, ncp_, npp_, sign, use_tg, &
+                         me_pgrp, npgrp, pgrp_comm, nplist )
   !-----------------------------------------------------------------------
   !
   ! transpose the fft grid across nodes
@@ -89,7 +90,7 @@ SUBROUTINE fft_scatter ( f_in, nr3x, nxx_, f_aux, ncp_, npp_, sign, use_tg )
   USE parallel_include
 #endif
   USE mp_global,   ONLY : nproc_pool, me_pool, intra_pool_comm, nproc, &
-                          my_image_id, nogrp, pgrp_comm, nplist, me_pgrp, npgrp
+                          my_image_id
   USE kinds,       ONLY : DP
 
   IMPLICIT NONE
@@ -97,6 +98,7 @@ SUBROUTINE fft_scatter ( f_in, nr3x, nxx_, f_aux, ncp_, npp_, sign, use_tg )
   INTEGER, INTENT(in)           :: nr3x, nxx_, sign, ncp_ (:), npp_ (:)
   COMPLEX (DP), INTENT(inout)   :: f_in (nxx_), f_aux (nxx_)
   LOGICAL, OPTIONAL, INTENT(in) :: use_tg
+  INTEGER, OPTIONAL, INTENT(in) :: pgrp_comm, nplist(:), npgrp, me_pgrp
 
 #ifdef __PARA
 
@@ -426,7 +428,8 @@ END SUBROUTINE fft_scatter
 !   with a defined topology, like on bluegene and cray machine
 !
 !-----------------------------------------------------------------------
-SUBROUTINE fft_scatter ( f_in, nr3x, nxx_, f_aux, ncp_, npp_, sign, use_tg )
+SUBROUTINE fft_scatter ( f_in, nr3x, nxx_, f_aux, ncp_, npp_, sign, use_tg, &
+                         me_pgrp, npgrp, pgrp_comm, nplist )
   !-----------------------------------------------------------------------
   !
   ! transpose the fft grid across nodes
@@ -459,8 +462,7 @@ SUBROUTINE fft_scatter ( f_in, nr3x, nxx_, f_aux, ncp_, npp_, sign, use_tg )
 #ifdef __PARA
   USE parallel_include
 #endif
-  USE mp_global,   ONLY : nproc_pool, me_pool, intra_pool_comm, nproc, &
-                          my_image_id, nogrp, pgrp_comm, nplist
+  USE mp_global,   ONLY : nproc_pool, me_pool, intra_pool_comm, nproc
   USE kinds,       ONLY : DP
 
   IMPLICIT NONE
@@ -468,6 +470,7 @@ SUBROUTINE fft_scatter ( f_in, nr3x, nxx_, f_aux, ncp_, npp_, sign, use_tg )
   INTEGER, INTENT(in)           :: nr3x, nxx_, sign, ncp_ (:), npp_ (:)
   COMPLEX (DP), INTENT(inout)   :: f_in (nxx_), f_aux (nxx_)
   LOGICAL, OPTIONAL, INTENT(in) :: use_tg
+  INTEGER, OPTIONAL, INTENT(in) :: pgrp_comm, nplist(:), npgrp, me_pgrp
 
 #ifdef __PARA
 
@@ -491,7 +494,7 @@ SUBROUTINE fft_scatter ( f_in, nr3x, nxx_, f_aux, ncp_, npp_, sign, use_tg )
   !
   IF( use_tg_ ) THEN
     !  This is the number of procs. in the plane-wave group
-     nprocp = nproc_pool / nogrp
+     nprocp = npgrp
   ELSE
      nprocp = nproc_pool
   ENDIF
@@ -1191,7 +1194,7 @@ SUBROUTINE tg_gather( dffts, v, tg_v )
    IF( size( tg_v ) < nsiz_tg ) &
       CALL errore( ' tg_gather ', ' tg_v too small ', ( nsiz_tg - size( tg_v ) ) )
 
-   nsiz = dffts%npp( dffts%myid+1 ) * dffts%nr1x * dffts%nr2x
+   nsiz = dffts%npp( dffts%mype+1 ) * dffts%nr1x * dffts%nr2x
 
    IF( size( v ) < nsiz ) &
       CALL errore( ' tg_gather ', ' v too small ',  ( nsiz - size( v ) ) )

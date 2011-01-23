@@ -36,7 +36,7 @@ SUBROUTINE h_psi( lda, n, m, psi, hpsi )
   USE realus,   ONLY : real_space, fft_orbital_gamma, initialisation_level, &
                        bfft_orbital_gamma, calbec_rs_gamma, &
                        add_vuspsir_gamma, v_loc_psir
-  USE mp_global,ONLY : nogrp, use_task_groups
+  USE fft_base, ONLY : dffts
 #ifdef EXX
   USE exx,      ONLY : vexx
   USE funct,    ONLY : exx_is_active
@@ -74,8 +74,8 @@ SUBROUTINE h_psi( lda, n, m, psi, hpsi )
   CALL start_clock( 'h_psi:vloc' )
   IF ( gamma_only ) THEN
      ! 
-     IF (( use_task_groups ) .AND. ( m >= nogrp )) then 
-      incr = 2 * nogrp
+     IF ( dffts%have_task_groups .AND. ( m >= dffts%nogrp )) then 
+      incr = 2 * dffts%nogrp
      else
       incr = 2
      endif

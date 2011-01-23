@@ -910,7 +910,6 @@ SUBROUTINE terminate_run()
   USE cp_main_variables, ONLY : acc
   USE cg_module,         ONLY : tcg, print_clock_tcg
   USE mp,                ONLY : mp_report
-  USE mp_global,         ONLY : use_task_groups
   !
   IMPLICIT NONE
   !
@@ -951,11 +950,7 @@ SUBROUTINE terminate_run()
   !
   IF (tcg) call print_clock_tcg()
   !
-  IF( use_task_groups ) THEN
-     !
-     CALL print_clock( 'ALLTOALL' )
-     !
-  END IF
+  CALL print_clock( 'ALLTOALL' )
   !
   CALL mp_report()
   !

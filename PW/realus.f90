@@ -115,7 +115,6 @@ MODULE realus
      USE cell_base,            ONLY : tpiba2
      USE control_flags,        ONLY : tqr
      USE fft_base,             ONLY : dffts
-     USE mp_global,            ONLY : nogrp, use_task_groups
      USE wavefunctions_module, ONLY : psic
      USE io_global,            ONLY : stdout
 
@@ -133,13 +132,13 @@ MODULE realus
      ALLOCATE(npw_k(nks))
      !allocate (psic_temp(size(psic)))
      !real space, allocation for task group fft work arrays
-     IF( use_task_groups ) THEN
+     IF( dffts%have_task_groups ) THEN
         !
         IF (allocated( tg_psic ) ) DEALLOCATE( tg_psic )
         !
-        ALLOCATE( tg_psic( dffts%tg_nnr * nogrp ) )
-        !ALLOCATE( tg_psic_temp( dffts%tg_nnr * nogrp ) )
-        ALLOCATE( tg_vrs( dffts%tg_nnr * nogrp ) )
+        ALLOCATE( tg_psic( dffts%tg_nnr * dffts%nogrp ) )
+        !ALLOCATE( tg_psic_temp( dffts%tg_nnr * dffts%nogrp ) )
+        ALLOCATE( tg_vrs( dffts%tg_nnr * dffts%nogrp ) )
 
         !
      ENDIF
@@ -1556,9 +1555,8 @@ MODULE realus
     USE ions_base,             ONLY : nat, ntyp => nsp, ityp
     USE smooth_grid_dimensions,ONLY : nr1s,  nr2s,  nr3s
     USE uspp_param,            ONLY : nh, nhm
-    USE fft_base,              ONLY : tg_gather
-    USE mp_global,             ONLY : nogrp, ogrp_comm, me_pool, nolist, &
-                                      use_task_groups,intra_pool_comm
+    USE fft_base,              ONLY : tg_gather, dffts
+    USE mp_global,             ONLY : me_pool, intra_pool_comm
     USE mp,        ONLY : mp_sum
     !
     IMPLICIT NONE
@@ -1577,7 +1575,7 @@ MODULE realus
     !
     CALL start_clock( 'calbec_rs' )
     !
-    IF( ( use_task_groups ) .and. ( m >= nogrp ) ) THEN
+    IF( ( dffts%have_task_groups ) .and. ( m >= dffts%nogrp ) ) THEN
 
      CALL errore( 'calbec_rs_gamma', 'task_groups not implemented', 1 )
 
@@ -1666,9 +1664,8 @@ MODULE realus
     USE smooth_grid_dimensions,ONLY : nr1s,  nr2s,  nr3s
     USE uspp_param,            ONLY : nh, nhm
     USE becmod,                ONLY : bec_type, becp
-    USE fft_base,              ONLY : tg_gather
-    USE mp_global,             ONLY : nogrp, ogrp_comm, me_pool, nolist, &
-                                      use_task_groups
+    USE fft_base,              ONLY : tg_gather, dffts
+    USE mp_global,             ONLY : me_pool
     !
     IMPLICIT NONE
     !
@@ -1685,7 +1682,7 @@ MODULE realus
     !
     CALL start_clock( 'calbec_rs' )
     !
-    IF( ( use_task_groups ) .and. ( m >= nogrp ) ) THEN
+    IF( ( dffts%have_task_groups ) .and. ( m >= dffts%nogrp ) ) THEN
 
      CALL errore( 'calbec_rs_k', 'task_groups not implemented', 1 )
 
@@ -1752,9 +1749,8 @@ MODULE realus
       USE lsda_mod,               ONLY : current_spin
       USE uspp,                   ONLY : qq
       USE becmod,                 ONLY : bec_type, becp
-      USE fft_base,               ONLY : tg_gather
-      USE mp_global,              ONLY : nogrp, ogrp_comm, me_pool, nolist, &
-                                         use_task_groups
+      USE fft_base,               ONLY : tg_gather, dffts
+      USE mp_global,              ONLY : me_pool
       !
       IMPLICIT NONE
       !
@@ -1770,7 +1766,7 @@ MODULE realus
 
 
       CALL start_clock( 's_psir' )
-      IF( ( use_task_groups ) .and. ( m >= nogrp ) ) THEN
+      IF( ( dffts%have_task_groups ) .and. ( m >= dffts%nogrp ) ) THEN
 
         CALL errore( 's_psir_gamma', 'task_groups not implemented', 1 )
 
@@ -1853,9 +1849,8 @@ MODULE realus
       USE lsda_mod,               ONLY : current_spin
       USE uspp,                   ONLY : qq
       USE becmod,                 ONLY : bec_type, becp
-      USE fft_base,               ONLY : tg_gather
-      USE mp_global,              ONLY : nogrp, ogrp_comm, me_pool, nolist, &
-                                         use_task_groups
+      USE fft_base,               ONLY : tg_gather, dffts
+      USE mp_global,              ONLY : me_pool
       !
       IMPLICIT NONE
       !
@@ -1872,7 +1867,7 @@ MODULE realus
 
 
       CALL start_clock( 's_psir' )
-      IF( ( use_task_groups ) .and. ( m >= nogrp ) ) THEN
+      IF( ( dffts%have_task_groups ) .and. ( m >= dffts%nogrp ) ) THEN
 
         CALL errore( 's_psir_k', 'task_groups not implemented', 1 )
 
@@ -1956,9 +1951,8 @@ MODULE realus
   USE lsda_mod,               ONLY : current_spin
   USE uspp,                   ONLY : deeq
   USE becmod,                 ONLY : bec_type, becp
-  USE fft_base,               ONLY : tg_gather
-  USE mp_global,              ONLY : nogrp, ogrp_comm, me_pool, nolist, &
-                                     use_task_groups
+  USE fft_base,               ONLY : tg_gather, dffts
+  USE mp_global,              ONLY : me_pool
   !
   IMPLICIT NONE
   !
@@ -1972,7 +1966,7 @@ MODULE realus
   !
   CALL start_clock( 'add_vuspsir' )
 
-  IF( ( use_task_groups ) .and. ( m >= nogrp ) ) THEN
+  IF( ( dffts%have_task_groups ) .and. ( m >= dffts%nogrp ) ) THEN
 
     CALL errore( 'add_vuspsir_gamma', 'task_groups not implemented', 1 )
 
@@ -2060,9 +2054,8 @@ MODULE realus
   USE lsda_mod,               ONLY : current_spin
   USE uspp,                   ONLY : deeq
   USE becmod,                 ONLY : bec_type, becp
-  USE fft_base,               ONLY : tg_gather
-  USE mp_global,              ONLY : nogrp, ogrp_comm, me_pool, nolist, &
-                                     use_task_groups
+  USE fft_base,               ONLY : tg_gather, dffts
+  USE mp_global,              ONLY : me_pool
   !
   IMPLICIT NONE
   !
@@ -2078,7 +2071,7 @@ MODULE realus
   !
   CALL start_clock( 'add_vuspsir' )
 
-  IF( ( use_task_groups ) .and. ( m >= nogrp ) ) THEN
+  IF( ( dffts%have_task_groups ) .and. ( m >= dffts%nogrp ) ) THEN
 
     CALL errore( 'add_vuspsir_k', 'task_groups not implemented', 1 )
 
@@ -2157,8 +2150,7 @@ MODULE realus
     USE kinds,         ONLY : DP
     USE fft_base,      ONLY : dffts, tg_gather
     USE fft_interfaces,ONLY : invfft
-    USE mp_global,     ONLY : nogrp, ogrp_comm, me_pool, nolist, &
-                              use_task_groups
+    USE mp_global,     ONLY : me_pool
 
     IMPLICIT NONE
 
@@ -2180,7 +2172,7 @@ MODULE realus
 
     !Task groups
     !COMPLEX(DP), ALLOCATABLE :: tg_psic(:)
-    INTEGER :: recv_cnt( nogrp ), recv_displ( nogrp )
+    INTEGER :: recv_cnt( dffts%nogrp ), recv_displ( dffts%nogrp )
     INTEGER :: v_siz
 
     !The new task group version based on vloc_psi
@@ -2190,16 +2182,16 @@ MODULE realus
     ! The following is dirty trick to prevent usage of task groups if
     ! the number of bands is smaller than the number of task groups 
     ! 
-    use_tg = use_task_groups
-    use_task_groups = ( use_task_groups ) .and. ( nbnd >= nogrp )
+    use_tg = dffts%have_task_groups
+    dffts%have_task_groups = ( dffts%have_task_groups ) .and. ( nbnd >= dffts%nogrp )
 
-    IF( use_task_groups ) THEN
+    IF( dffts%have_task_groups ) THEN
         !
 
         tg_psic = (0.d0, 0.d0)
         ioff   = 0  
         !
-        DO idx = 1, 2*nogrp, 2
+        DO idx = 1, 2*dffts%nogrp, 2
 
            IF( idx + ibnd - 1 < nbnd ) THEN
               DO j = 1, npw_k(1)
@@ -2225,7 +2217,7 @@ MODULE realus
         !
         IF (present(conserved)) THEN
          IF (conserved .eqv. .true.) THEN
-          IF (.not. allocated(tg_psic_temp)) ALLOCATE( tg_psic_temp( dffts%tg_nnr * nogrp ) )
+          IF (.not. allocated(tg_psic_temp)) ALLOCATE( tg_psic_temp( dffts%tg_nnr * dffts%nogrp ) )
           tg_psic_temp=tg_psic
          ENDIF
         ENDIF
@@ -2275,7 +2267,7 @@ MODULE realus
 
     ENDIF
 
-    use_task_groups = use_tg
+    dffts%have_task_groups = use_tg
 
     !if (.not. allocated(psic)) CALL errore( 'fft_orbital_gamma', 'psic not allocated', 2 )
     ! OLD VERSION ! Based on an algorithm found somewhere in the TDDFT codes, generalised to k points
@@ -2322,8 +2314,7 @@ MODULE realus
     USE kinds,         ONLY : DP
     USE fft_base,      ONLY : dffts, tg_gather
     USE fft_interfaces,ONLY : fwfft
-    USE mp_global,     ONLY : nogrp, ogrp_comm, me_pool, nolist, &
-                              use_task_groups
+    USE mp_global,     ONLY : me_pool
 
     IMPLICIT NONE
 
@@ -2342,20 +2333,20 @@ MODULE realus
     LOGICAL :: use_tg
 
     !Task groups
-    INTEGER :: recv_cnt( nogrp ), recv_displ( nogrp )
+    INTEGER :: recv_cnt( dffts%nogrp ), recv_displ( dffts%nogrp )
     INTEGER :: v_siz
     !print *, "->fourier space"
     CALL start_clock( 'bfft_orbital' )
     !New task_groups versions
-    use_tg = use_task_groups
-    use_task_groups = ( use_task_groups ) .and. ( nbnd >= nogrp )
-    IF( use_task_groups ) THEN
+    use_tg = dffts%have_task_groups
+    dffts%have_task_groups = ( dffts%have_task_groups ) .and. ( nbnd >= dffts%nogrp )
+    IF( dffts%have_task_groups ) THEN
        !
         CALL fwfft ('Wave', tg_psic, dffts )
         !
         ioff   = 0
         !
-        DO idx = 1, 2*nogrp, 2
+        DO idx = 1, 2*dffts%nogrp, 2
            !
            IF( idx + ibnd - 1 < nbnd ) THEN
               DO j = 1, npw_k(1)
@@ -2407,7 +2398,7 @@ MODULE realus
          ENDIF
         ENDIF
     ENDIF
-    use_task_groups = use_tg
+    dffts%have_task_groups = use_tg
     !! OLD VERSION Based on the algorithm found in lr_apply_liovillian
     !!print * ,"a"
     !CALL fwfft ('Wave', psic, dffts)
@@ -2460,8 +2451,7 @@ MODULE realus
     USE kinds,         ONLY : DP
     USE fft_base,      ONLY : dffts
     USE fft_interfaces,ONLY : invfft
-    USE mp_global,     ONLY : nogrp, ogrp_comm, me_pool, nolist, &
-                              use_task_groups
+    USE mp_global,     ONLY : me_pool
     USE wvfct,         ONLY : igk
 
     IMPLICIT NONE
@@ -2477,15 +2467,15 @@ MODULE realus
     LOGICAL :: use_tg
 
     CALL start_clock( 'fft_orbital' )
-    use_tg = use_task_groups
-    use_task_groups = ( use_task_groups ) .and. ( nbnd >= nogrp )
+    use_tg = dffts%have_task_groups
+    dffts%have_task_groups = ( dffts%have_task_groups ) .and. ( nbnd >= dffts%nogrp )
 
-    IF( use_task_groups ) THEN
+    IF( dffts%have_task_groups ) THEN
        !
        tg_psic = ( 0.D0, 0.D0 )
        ioff   = 0
        !
-       DO idx = 1, nogrp
+       DO idx = 1, dffts%nogrp
           !
           IF( idx + ibnd - 1 <= nbnd ) THEN
              !DO j = 1, size(orbital,1)
@@ -2500,7 +2490,7 @@ MODULE realus
        CALL invfft ('Wave', tg_psic, dffts)
        IF (present(conserved)) THEN
           IF (conserved .eqv. .true.) THEN
-             IF (.not. allocated(tg_psic_temp)) ALLOCATE( tg_psic_temp( dffts%tg_nnr * nogrp ) )
+             IF (.not. allocated(tg_psic_temp)) ALLOCATE( tg_psic_temp( dffts%tg_nnr * dffts%nogrp ) )
              tg_psic_temp=tg_psic
           ENDIF
        ENDIF
@@ -2520,7 +2510,7 @@ MODULE realus
        ENDIF
        !
     ENDIF
-    use_task_groups = use_tg
+    dffts%have_task_groups = use_tg
     CALL stop_clock( 'fft_orbital' )
     END SUBROUTINE fft_orbital_k
    !--------------------------------------------------------------------------
@@ -2538,8 +2528,7 @@ MODULE realus
     USE kinds,         ONLY : DP
     USE fft_base,      ONLY : dffts
     USE fft_interfaces,ONLY : fwfft
-    USE mp_global,     ONLY : nogrp, ogrp_comm, me_pool, nolist, &
-                              use_task_groups
+    USE mp_global,     ONLY : me_pool
     USE wvfct,         ONLY : igk
 
     IMPLICIT NONE
@@ -2555,16 +2544,16 @@ MODULE realus
     LOGICAL :: use_tg
 
    CALL start_clock( 'bfft_orbital' )
-   use_tg = use_task_groups
-   use_task_groups = ( use_task_groups ) .and. ( nbnd >= nogrp )
+   use_tg = dffts%have_task_groups
+   dffts%have_task_groups = ( dffts%have_task_groups ) .and. ( nbnd >= dffts%nogrp )
 
-    IF( use_task_groups ) THEN
+    IF( dffts%have_task_groups ) THEN
        !
        CALL fwfft ('Wave', tg_psic, dffts)
        !
        ioff   = 0
        !
-       DO idx = 1, nogrp
+       DO idx = 1, dffts%nogrp
           !
           IF( idx + ibnd - 1 <= nbnd ) THEN
              orbital (:, ibnd+idx-1) = tg_psic( nls(igk(:)) + ioff )
@@ -2591,7 +2580,7 @@ MODULE realus
           ENDIF
        ENDIF
     ENDIF
-    use_task_groups = use_tg
+    dffts%have_task_groups = use_tg
     CALL stop_clock( 'bfft_orbital' )
     END SUBROUTINE bfft_orbital_k
   !--------------------------------------------------------------------------
@@ -2605,8 +2594,7 @@ MODULE realus
     USE gvecs,       ONLY : nls,nlsm,doublegrid
     USE kinds,         ONLY : DP
     USE fft_base,      ONLY : dffts, tg_gather
-    USE mp_global,     ONLY : nogrp, ogrp_comm, me_pool, nolist, &
-                              use_task_groups
+    USE mp_global,     ONLY : me_pool
     USE scf,           ONLY : vrs
     USE lsda_mod,      ONLY : current_spin
 
@@ -2623,11 +2611,11 @@ MODULE realus
 
     !Task groups
     REAL(DP),    ALLOCATABLE :: tg_v(:)
-    INTEGER :: recv_cnt( nogrp ), recv_displ( nogrp )
+    INTEGER :: recv_cnt( dffts%nogrp ), recv_displ( dffts%nogrp )
     INTEGER :: v_siz
     CALL start_clock( 'v_loc_psir' )
 
-    IF( use_task_groups .and. nbnd >= nogrp  ) THEN
+    IF( dffts%have_task_groups .and. nbnd >= dffts%nogrp  ) THEN
         IF (ibnd == 1 ) THEN
           CALL tg_gather( dffts, vrs(:,current_spin), tg_v ) !if ibnd==1 this is a new calculation, and tg_v should be distributed.
         ENDIF

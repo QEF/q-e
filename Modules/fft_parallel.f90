@@ -60,8 +60,8 @@ SUBROUTINE tg_cft3s( f, dfft, isgn, use_task_groups )
   USE fft_scalar, ONLY : cft_1z, cft_2xy
   USE fft_base,   ONLY : fft_scatter
   USE kinds,      ONLY : DP
-  USE mp_global,  ONLY : me_pool, nproc_pool, ogrp_comm, npgrp, nogrp, &
-                         intra_pool_comm, nolist, nplist
+  USE mp_global,  ONLY : me_pool, nproc_pool, &
+                         intra_pool_comm
   USE fft_types,  ONLY : fft_dlay_descriptor
   USE parallel_include
 
@@ -99,8 +99,8 @@ SUBROUTINE tg_cft3s( f, dfft, isgn, use_task_groups )
   nx3 = dfft%nr3x
   !
   IF( use_tg ) THEN
-     ALLOCATE( aux( nogrp * dfft%tg_nnr ) )
-     ALLOCATE( YF ( nogrp * dfft%tg_nnr ) )
+     ALLOCATE( aux( dfft%nogrp * dfft%tg_nnr ) )
+     ALLOCATE( YF ( dfft%nogrp * dfft%tg_nnr ) )
   ELSE
      ALLOCATE( aux( dfft%tg_nnr ) )
   ENDIF
@@ -198,10 +198,10 @@ CONTAINS
      !
      IF( .not. use_tg ) RETURN
      !
-     IF( dfft%tg_rdsp(nogrp) + dfft%tg_rcv(nogrp) > size( yf ) ) THEN
+     IF( dfft%tg_rdsp(dfft%nogrp) + dfft%tg_rcv(dfft%nogrp) > size( yf ) ) THEN
         CALL errore( ' tg_cfft ', ' inconsistent size ', 1 )
      ENDIF
-     IF( dfft%tg_psdsp(nogrp) + dfft%tg_snd(nogrp) > size( f ) ) THEN
+     IF( dfft%tg_psdsp(dfft%nogrp) + dfft%tg_snd(dfft%nogrp) > size( f ) ) THEN
         CALL errore( ' tg_cfft ', ' inconsistent size ', 2 )
      ENDIF
 
@@ -213,7 +213,7 @@ CONTAINS
 #if defined __MPI
 
      CALL MPI_ALLTOALLV( f(1), dfft%tg_snd, dfft%tg_psdsp, MPI_DOUBLE_COMPLEX, yf(1), dfft%tg_rcv, &
-      &                     dfft%tg_rdsp, MPI_DOUBLE_COMPLEX, ogrp_comm, IERR)
+      &                     dfft%tg_rdsp, MPI_DOUBLE_COMPLEX, dfft%ogrp_comm, IERR)
      IF( ierr /= 0 ) THEN
         CALL errore( ' tg_cfft ', ' alltoall error 1 ', abs(ierr) )
      ENDIF
@@ -237,10 +237,10 @@ CONTAINS
      !
      IF( .not. use_tg ) RETURN
      !
-     IF( dfft%tg_usdsp(nogrp) + dfft%tg_snd(nogrp) > size( f ) ) THEN
+     IF( dfft%tg_usdsp(dfft%nogrp) + dfft%tg_snd(dfft%nogrp) > size( f ) ) THEN
         CALL errore( ' tg_cfft ', ' inconsistent size ', 3 )
      ENDIF
-     IF( dfft%tg_rdsp(nogrp) + dfft%tg_rcv(nogrp) > size( yf ) ) THEN
+     IF( dfft%tg_rdsp(dfft%nogrp) + dfft%tg_rcv(dfft%nogrp) > size( yf ) ) THEN
         CALL errore( ' tg_cfft ', ' inconsistent size ', 4 )
      ENDIF
 
@@ -249,7 +249,7 @@ CONTAINS
 #if defined __MPI
      CALL MPI_Alltoallv( yf(1), &
           dfft%tg_rcv, dfft%tg_rdsp, MPI_DOUBLE_COMPLEX, f(1), &
-          dfft%tg_snd, dfft%tg_usdsp, MPI_DOUBLE_COMPLEX, ogrp_comm, IERR)
+          dfft%tg_snd, dfft%tg_usdsp, MPI_DOUBLE_COMPLEX, dfft%ogrp_comm, IERR)
      IF( ierr /= 0 ) THEN
         CALL errore( ' tg_cfft ', ' alltoall error 2 ', abs(ierr) )
      ENDIF
@@ -288,7 +288,8 @@ CONTAINS
            npp  = dfft%tg_npp( me_p )
            nnp  = nx1*nx2
            !
-           CALL fft_scatter( aux, nx3, nogrp*dfft%tg_nnr, f, dfft%tg_nsw, dfft%tg_npp, iopt, use_tg )
+           CALL fft_scatter( aux, nx3, dfft%nogrp*dfft%tg_nnr, f, dfft%tg_nsw, dfft%tg_npp, iopt, use_tg, &
+                             dfft%me_pgrp, dfft%npgrp, dfft%pgrp_comm, dfft%nplist )
            !
         ELSE
            !
@@ -407,7 +408,8 @@ CONTAINS
         !
         IF( use_tg ) THEN
            !
-           CALL fft_scatter( aux, nx3, nogrp*dfft%tg_nnr, f, dfft%tg_nsw, dfft%tg_npp, iopt, use_tg )
+           CALL fft_scatter( aux, nx3, dfft%nogrp*dfft%tg_nnr, f, dfft%tg_nsw, dfft%tg_npp, iopt, use_tg, &
+                             dfft%me_pgrp, dfft%npgrp, dfft%pgrp_comm, dfft%nplist )
            !
         ELSE
            !

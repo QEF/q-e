@@ -83,7 +83,6 @@
       use fft_scalar,    only: cfft3d, cfft3ds, cft_b, cft_b_omp
       use fft_parallel,  only: tg_cft3s
       USE fft_types,     only: fft_dlay_descriptor
-      use mp_global,     only: use_task_groups
 
       IMPLICIT none
 
@@ -135,7 +134,7 @@
       ELSE IF( grid_type == 'Smooth' ) THEN
          call tg_cft3s( f, dffts, 1 )
       ELSE IF( grid_type == 'Wave' ) THEN
-         call tg_cft3s( f, dffts, 2, use_task_groups )
+         call tg_cft3s( f, dffts, 2, dffts%have_task_groups )
       ELSE IF( grid_type == 'Box' .AND.  dfftb%np3( ia ) > 0 ) THEN
 #if defined __OPENMP && defined __FFTW
          call cft_b_omp( f, dfftb%nr1, dfftb%nr2, dfftb%nr3, &
@@ -200,7 +199,6 @@
       use fft_scalar,    only: cfft3d, cfft3ds
       use fft_parallel,  only: tg_cft3s
       USE fft_types,     only: fft_dlay_descriptor
-      use mp_global,     only: use_task_groups
 
       implicit none
 
@@ -237,7 +235,7 @@
       ELSE IF( grid_type == 'Smooth' ) THEN
          call tg_cft3s(f,dffts,-1)
       ELSE IF( grid_type == 'Wave' ) THEN
-         call tg_cft3s(f,dffts,-2, use_task_groups )
+         call tg_cft3s(f,dffts,-2, dffts%have_task_groups )
       END IF
 
 #else 

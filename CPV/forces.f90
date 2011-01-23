@@ -39,8 +39,7 @@
       USE funct,                  ONLY: dft_is_meta
       USE fft_base,               ONLY: dffts
       USE fft_interfaces,         ONLY: fwfft, invfft
-      USE mp_global,              ONLY: nogrp, me_bgrp, ogrp_comm, &
-                                        use_task_groups
+      USE mp_global,              ONLY: me_bgrp
 !
       IMPLICIT NONE
 !
@@ -69,9 +68,9 @@
       !
       CALL start_clock( 'dforce' ) 
       !
-      IF( use_task_groups ) THEN
-         nogrp_ = nogrp
-         ALLOCATE( psi( dffts%tg_nnr * nogrp ) )
+      IF( dffts%have_task_groups ) THEN
+         nogrp_ = dffts%nogrp
+         ALLOCATE( psi( dffts%tg_nnr * dffts%nogrp ) )
       ELSE
          nogrp_ = 1
          ALLOCATE( psi( nrxxs ) )
@@ -120,7 +119,7 @@
          iss2 = iss1
       END IF
       !
-      IF( use_task_groups ) THEN
+      IF( dffts%have_task_groups ) THEN
          !
 !$omp parallel do 
          DO ir = 1, dffts%nr1x*dffts%nr2x*dffts%tg_npp( me_bgrp + 1 )
@@ -161,7 +160,7 @@
 !$omp parallel default(none) &
 !$omp          private( eig_offset, igno, fi, fip, idx, fp, fm, ig ) &
 !$omp          shared( nogrp_ , f, ngw, psi, df, da, c, tpiba2, tens, dffts, me_bgrp, &
-!$omp                  i, n, ggp, use_task_groups, nls, nlsm )
+!$omp                  i, n, ggp, nls, nlsm )
 
       eig_offset = 0
       igno = 1
@@ -176,7 +175,7 @@
                fi = -0.5d0*f(i+idx-1)
                fip = -0.5d0*f(i+idx)
             endif
-            IF( use_task_groups ) THEN
+            IF( dffts%have_task_groups ) THEN
 !$omp do 
                DO ig=1,ngw
                   fp= psi(nls(ig)+eig_offset) +  psi(nlsm(ig)+eig_offset)

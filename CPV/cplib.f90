@@ -2188,7 +2188,7 @@ END FUNCTION
       ! initialize FFT descriptor
 
       CALL fft_box_set( dfftb, nr1b, nr2b, nr3b, nr1bx, nr2bx, nr3bx, &
-                        nat, irb, me_bgrp+1, nproc_bgrp, intra_bgrp_comm, dfftp%npp, dfftp%ipp )
+                        nat, irb, dfftp%npp, dfftp%ipp )
 
       IF( iprsta > 2 ) THEN
            isa = 1

@@ -54,19 +54,22 @@ MODULE fft_types
     !
     !  fft parallelization
     !
-    INTEGER :: myid               ! my processor id
+    INTEGER :: mype               ! my processor id (starting from 0) in the fft group
     INTEGER :: comm               ! communicator of the fft gruop 
     INTEGER :: nproc              ! number of processor in the fft group
     !
     !  task groups
     !
-    INTEGER :: NOGRP
-    INTEGER :: NPGRP
-    INTEGER :: ogrp_comm
-    INTEGER :: pgrp_comm
-    INTEGER, POINTER :: nolist(:) ! number of sticks per task group ( wave func )
-    !
     LOGICAL :: have_task_groups
+    !
+    INTEGER :: me_pgrp            ! task id for plane wave task group
+    INTEGER :: nogrp              ! number of proc. in an orbital "task group"
+    INTEGER :: npgrp              ! number of proc. in a plane-wave "task group"
+    INTEGER :: ogrp_comm          ! orbital group communicator
+    INTEGER :: pgrp_comm          ! plane-wave group communicator
+    INTEGER, POINTER :: nolist(:) ! list of pes in orbital group
+    INTEGER, POINTER :: nplist(:) ! list of pes in pw group
+    !
     INTEGER :: tg_nnr             ! maximum among nnr
     INTEGER, POINTER :: tg_nsw(:) ! number of sticks per task group ( wave func )
     INTEGER, POINTER :: tg_npp(:) ! number of "Z" planes per task group
@@ -84,9 +87,10 @@ MODULE fft_types
 
 CONTAINS
 
-  SUBROUTINE fft_dlay_allocate( desc, myid, nproc, comm, nx, ny )
+  SUBROUTINE fft_dlay_allocate( desc, mype, nproc, comm, nogrp, nx, ny )
     TYPE (fft_dlay_descriptor) :: desc
-    INTEGER, INTENT(in) :: myid, nproc, comm, nx, ny ! myid starting from 0
+    INTEGER, INTENT(in) :: mype, nproc, comm, nx, ny ! mype starting from 0
+    INTEGER, INTENT(in) :: nogrp   ! number of task groups
     ALLOCATE( desc%nsp( nproc ) )
     ALLOCATE( desc%nsw( nproc ) )
     ALLOCATE( desc%ngl( nproc ) )
@@ -113,15 +117,25 @@ CONTAINS
 
     desc%id    = 0
 
-    desc%myid  = myid
+    desc%mype  = mype
     desc%comm  = comm
     desc%nproc = nproc
     desc%have_task_groups = .false.
-    desc%NOGRP = 0
-    desc%NPGRP = 0
+    IF( nogrp > 1 ) &
+       desc%have_task_groups = .true.
+    desc%me_pgrp = 0
+    !
+    IF( MOD( nproc, MAX( 1, nogrp ) ) /= 0 ) &
+       CALL errore( " fft_dlay_allocate ", "the number of task groups should be a divisor of nproc ", 1 )
+
+    desc%nogrp = MAX( 1, nogrp )
+    desc%npgrp = nproc / MAX( 1, nogrp )
     desc%ogrp_comm = 0
     desc%pgrp_comm = 0
-    NULLIFY( desc%nolist )
+    ALLOCATE( desc%nolist( desc%nogrp ) )
+    ALLOCATE( desc%nplist( desc%npgrp ) )
+    desc%nolist = 0
+    desc%nplist = 0
     NULLIFY( desc%tg_nsw )
     NULLIFY( desc%tg_npp )
     NULLIFY( desc%tg_snd )
@@ -146,9 +160,10 @@ CONTAINS
     IF ( associated( desc%ismap ) )  DEALLOCATE( desc%ismap )
     IF ( associated( desc%iplp ) )   DEALLOCATE( desc%iplp )
     IF ( associated( desc%iplw ) )   DEALLOCATE( desc%iplw )
+    IF ( associated( desc%nolist ) ) DEALLOCATE( desc%nolist )
+    IF ( associated( desc%nplist ) ) DEALLOCATE( desc%nplist )
     desc%id = 0
     IF( desc%have_task_groups ) THEN
-       IF ( associated( desc%nolist ) )   DEALLOCATE( desc%nolist )
        IF ( associated( desc%tg_nsw ) )   DEALLOCATE( desc%tg_nsw )
        IF ( associated( desc%tg_npp ) )   DEALLOCATE( desc%tg_npp )
        IF ( associated( desc%tg_snd ) )   DEALLOCATE( desc%tg_snd )
@@ -162,9 +177,9 @@ CONTAINS
 
 !=----------------------------------------------------------------------------=!
 
-  SUBROUTINE fft_box_allocate( desc, myid, nproc, comm, nat )
+  SUBROUTINE fft_box_allocate( desc, mype, nproc, comm, nat )
     TYPE (fft_dlay_descriptor) :: desc
-    INTEGER, INTENT(in) :: nat, nproc, myid, comm  ! myid starting from 0
+    INTEGER, INTENT(in) :: nat, nproc, mype, comm  ! mype starting from 0
     ALLOCATE( desc%irb( 3, nat ) )
     ALLOCATE( desc%imin3( nat ) )
     ALLOCATE( desc%imax3( nat ) )
@@ -177,7 +192,7 @@ CONTAINS
     desc%npp = 0
     desc%ipp = 0
     desc%np3 = 0
-    desc%myid = myid
+    desc%mype = mype
     desc%nproc = nproc
     desc%comm = comm
     desc%have_task_groups = .false.
@@ -197,8 +212,8 @@ CONTAINS
 
 !=----------------------------------------------------------------------------=!
 
-  SUBROUTINE fft_dlay_set( desc, tk, nst, nr1, nr2, nr3, nr1x, nr2x, nr3x, me, &
-    nproc, comm, nogrp, ub, lb, idx, in1, in2, ncp, ncpw, ngp, ngpw, st, stw )
+  SUBROUTINE fft_dlay_set( desc, tk, nst, nr1, nr2, nr3, nr1x, nr2x, nr3x, &
+    ub, lb, idx, in1, in2, ncp, ncpw, ngp, ngpw, st, stw )
 
     TYPE (fft_dlay_descriptor) :: desc
 
@@ -206,10 +221,6 @@ CONTAINS
     INTEGER, INTENT(in) :: nst
     INTEGER, INTENT(in) :: nr1, nr2, nr3    ! size of real space grid
     INTEGER, INTENT(in) :: nr1x, nr2x, nr3x ! padded size of real space grid
-    INTEGER, INTENT(in) :: me               ! processor index (starting from 1)
-    INTEGER, INTENT(in) :: nproc            ! number of processors
-    INTEGER, INTENT(in) :: comm             ! communicator
-    INTEGER, INTENT(in) :: nogrp            ! number of processors in task-group
     INTEGER, INTENT(in) :: ub(3), lb(3)     ! upper and lower bound of real space indices
     INTEGER, INTENT(in) :: idx(:)
     INTEGER, INTENT(in) :: in1(:)
@@ -221,15 +232,15 @@ CONTAINS
     INTEGER, INTENT(in) :: st( lb(1) : ub(1), lb(2) : ub(2) )
     INTEGER, INTENT(in) :: stw( lb(1) : ub(1), lb(2) : ub(2) )
 
-    INTEGER :: npp( nproc ), n3( nproc ), nsp( nproc )
+    INTEGER :: npp( desc%nproc ), n3( desc%nproc ), nsp( desc%nproc )
     INTEGER :: np, nq, i, is, iss, i1, i2, m1, m2, n1, n2, ip
 
     !  Task-grouping C. Bekas
     !
     INTEGER :: sm
 
-    IF( ( size( desc%ngl ) < nproc ) .or. ( size( desc%npp ) < nproc ) .or.  &
-        ( size( desc%ipp ) < nproc ) .or. ( size( desc%iss ) < nproc ) )     &
+    IF( ( size( desc%ngl ) < desc%nproc ) .or. ( size( desc%npp ) < desc%nproc ) .or.  &
+        ( size( desc%ipp ) < desc%nproc ) .or. ( size( desc%iss ) < desc%nproc ) )     &
       CALL errore( ' fft_dlay_set ', ' wrong descriptor dimensions ', 1 )
 
     IF( ( nr1 > nr1x ) .or. ( nr2 > nr2x ) .or. ( nr3 > nr3x ) ) &
@@ -238,37 +249,26 @@ CONTAINS
     IF( ( size( idx ) < nst ) .or. ( size( in1 ) < nst ) .or. ( size( in2 ) < nst ) ) &
       CALL errore( ' fft_dlay_set ', ' wrong number of stick dimensions ', 3 )
 
-    IF( ( size( ncp ) < nproc ) .or. ( size( ngp ) < nproc ) ) &
+    IF( ( size( ncp ) < desc%nproc ) .or. ( size( ngp ) < desc%nproc ) ) &
       CALL errore( ' fft_dlay_set ', ' wrong stick dimensions ', 4 )
-
-    IF( desc%nproc /= nproc ) &
-      CALL errore( ' fft_dlay_set ', ' wrong number of processor ', 4 )
-
-    IF( desc%myid /= (me - 1) ) &
-      CALL errore( ' fft_dlay_set ', ' wrong processor index ', 4 )
-
-    IF( desc%comm /= comm ) &
-      CALL errore( ' fft_dlay_set ', ' wrong communicator ', 4 )
-
-    desc%have_task_groups = .false.
 
     !  Set the number of "xy" planes for each processor
     !  in other word do a slab partition along the z axis
 
     sm  = 0
     npp = 0
-    IF ( nproc == 1 ) THEN
+    IF ( desc%nproc == 1 ) THEN
       npp(1) = nr3
-    ELSEIF( nproc <= nr3 ) THEN
-      np = nr3 / nproc
-      nq = nr3 - np * nproc
-      DO i = 1, nproc
+    ELSEIF( desc%nproc <= nr3 ) THEN
+      np = nr3 / desc%nproc
+      nq = nr3 - np * desc%nproc
+      DO i = 1, desc%nproc
         npp(i) = np
         IF ( i <= nq ) npp(i) = np + 1
       ENDDO
     ELSE
       DO ip = 1, nr3  !  some compiler complains for empty DO loops
-        DO i = 1, nproc, nogrp
+        DO i = 1, desc%nproc, desc%nogrp
              npp(i) = npp(i) + 1
              sm = sm + 1
              IF ( sm == nr3 ) exit
@@ -277,17 +277,17 @@ CONTAINS
       ENDDO
     ENDIF
 
-    desc%npp( 1:nproc )  = npp
-    desc%npl = npp( me )
+    desc%npp( 1:desc%nproc )  = npp
+    desc%npl = npp( desc%mype + 1 )
 
     !  Find out the index of the starting plane on each proc
 
     n3 = 0
-    DO i = 2, nproc
+    DO i = 2, desc%nproc
       n3(i) = n3(i-1) + npp(i-1)
     ENDDO
 
-    desc%ipp( 1:nproc )  = n3
+    desc%ipp( 1:desc%nproc )  = n3
 
     !  Set the proper number of sticks
 
@@ -309,14 +309,14 @@ CONTAINS
 
     !  Set fft local workspace dimension
 
-    IF ( nproc == 1 ) THEN
+    IF ( desc%nproc == 1 ) THEN
       desc%nnr  = nr1x * nr2x * nr3x
       desc%tg_nnr = desc%nnr
     ELSE
-      desc%nnr  = max( nr3x * ncp(me), nr1x * nr2x * npp(me) )
+      desc%nnr  = max( nr3x * ncp( desc%mype + 1 ), nr1x * nr2x * npp( desc%mype + 1 ) )
       desc%nnr  = max( 1, desc%nnr ) ! ensure that desc%nrr > 0 ( for extreme parallelism )
       desc%tg_nnr = desc%nnr
-      DO i = 1, nproc
+      DO i = 1, desc%nproc
          desc%tg_nnr = max( desc%tg_nnr, nr3x * ncp( i ) )
          desc%tg_nnr = max( desc%tg_nnr, nr1x * nr2x * npp( i ) )
       ENDDO
@@ -325,8 +325,8 @@ CONTAINS
 
 
 
-    desc%ngl( 1:nproc )  = ngp( 1:nproc )
-    desc%nwl( 1:nproc )  = ngpw( 1:nproc )
+    desc%ngl( 1:desc%nproc )  = ngp( 1:desc%nproc )
+    desc%nwl( 1:desc%nproc )  = ngpw( 1:desc%nproc )
 
     IF( size( desc%isind ) < ( nr1x * nr2x ) ) &
       CALL errore( ' fft_dlay_set ', ' wrong descriptor dimensions, isind ', 5 )
@@ -379,7 +379,7 @@ CONTAINS
     !  local stick ( desc%iss )
     !
 
-    DO i = 1, nproc
+    DO i = 1, desc%nproc
       IF( i == 1 ) THEN
         desc%iss( i ) = 0
       ELSE
@@ -406,7 +406,7 @@ CONTAINS
       IF( ip > 0 ) THEN
         nsp( ip ) = nsp( ip ) + 1
         desc%ismap( nsp( ip ) + desc%iss( ip ) ) = iss
-        IF( ip == me ) THEN
+        IF( ip == ( desc%mype + 1 ) ) THEN
           desc%isind( iss ) = nsp( ip )
         ELSE
           desc%isind( iss ) = 0
@@ -416,14 +416,14 @@ CONTAINS
 
     !  chack number of stick against the input value
 
-    IF( any( nsp( 1:nproc ) /= ncpw( 1:nproc ) ) ) THEN
-      DO ip = 1, nproc
+    IF( any( nsp( 1:desc%nproc ) /= ncpw( 1:desc%nproc ) ) ) THEN
+      DO ip = 1, desc%nproc
         WRITE( stdout,*)  ' * ', ip, ' * ', nsp( ip ), ' /= ', ncpw( ip )
       ENDDO
       CALL errore( ' fft_dlay_set ', ' inconsistent number of sticks ', 7 )
     ENDIF
 
-    desc%nsw( 1:nproc ) = nsp( 1:nproc )
+    desc%nsw( 1:desc%nproc ) = nsp( 1:desc%nproc )
 
     !  then add pseudopotential stick
 
@@ -432,7 +432,7 @@ CONTAINS
       IF( ip < 0 ) THEN
         nsp( -ip ) = nsp( -ip ) + 1
         desc%ismap( nsp( -ip ) + desc%iss( -ip ) ) = iss
-        IF( -ip == me ) THEN
+        IF( -ip == ( desc%mype + 1 ) ) THEN
           desc%isind( iss ) = nsp( -ip )
         ELSE
           desc%isind( iss ) = 0
@@ -442,14 +442,14 @@ CONTAINS
 
     !  chack number of stick against the input value
 
-    IF( any( nsp( 1:nproc ) /= ncp( 1:nproc ) ) ) THEN
-      DO ip = 1, nproc
+    IF( any( nsp( 1:desc%nproc ) /= ncp( 1:desc%nproc ) ) ) THEN
+      DO ip = 1, desc%nproc
         WRITE( stdout,*)  ' * ', ip, ' * ', nsp( ip ), ' /= ', ncp( ip )
       ENDDO
       CALL errore( ' fft_dlay_set ', ' inconsistent number of sticks ', 8 )
     ENDIF
 
-    desc%nsp( 1:nproc ) = nsp( 1:nproc )
+    desc%nsp( 1:desc%nproc ) = nsp( 1:desc%nproc )
 
     icount    = icount + 1
     desc%id   = icount
@@ -464,13 +464,13 @@ CONTAINS
 !=----------------------------------------------------------------------------=!
 
   SUBROUTINE fft_box_set( desc, nr1b, nr2b, nr3b, nr1bx, nr2bx, nr3bx, nat, &
-                          irb, me, nproc, comm, npp, ipp )
+                          irb, npp, ipp )
 
     IMPLICIT NONE
 
     TYPE (fft_dlay_descriptor) :: desc
 
-    INTEGER, INTENT(in) :: nat, me, nproc, comm
+    INTEGER, INTENT(in) :: nat
     INTEGER, INTENT(in) :: irb( :, : )
     INTEGER, INTENT(in) :: npp( : )
     INTEGER, INTENT(in) :: ipp( : )
@@ -483,18 +483,8 @@ CONTAINS
        CALL errore(" fft_box_set ", " inconsistent dimensions ", 1 )
     ENDIF
 
-    IF( nproc > size( desc%npp ) ) &
+    IF( desc%nproc > size( desc%npp ) ) &
        CALL errore(" fft_box_set ", " inconsistent dimensions ", 2 )
-
-    IF( desc%nproc /= nproc ) &
-      CALL errore( ' fft_dlay_set ', ' wrong number of processor ', 4 )
-
-    IF( desc%myid /= (me - 1) ) &
-      CALL errore( ' fft_dlay_set ', ' wrong processor index ', 4 )
-
-    IF( desc%comm /= comm ) &
-      CALL errore( ' fft_dlay_set ', ' wrong communicator ', 4 )
-
 
     desc%nr1 = nr1b
     desc%nr2 = nr2b
@@ -504,10 +494,10 @@ CONTAINS
     desc%nr3x = nr3bx
 
     desc%irb( 1:3, 1:nat ) = irb( 1:3, 1:nat )
-    desc%npp( 1:nproc )    = npp( 1:nproc )
-    desc%ipp( 1:nproc )    = ipp( 1:nproc )
+    desc%npp( 1:desc%nproc )    = npp( 1:desc%nproc )
+    desc%ipp( 1:desc%nproc )    = ipp( 1:desc%nproc )
 
-    nr3   = sum( npp( 1:nproc ) )
+    nr3   = sum( npp( 1:desc%nproc ) )
 
     DO isa = 1, nat
 
@@ -519,8 +509,8 @@ CONTAINS
           ibig3 = 1 + mod( irb3 + ir3 - 2, nr3 )
           IF( ibig3 < 1 .or. ibig3 > nr3 )   &
         &        CALL errore(' fft_box_set ',' ibig3 wrong ', ibig3 )
-          ibig3 = ibig3 - ipp( me )
-          IF ( ibig3 > 0 .and. ibig3 <= npp(me) ) THEN
+          ibig3 = ibig3 - ipp( desc%mype + 1 )
+          IF ( ibig3 > 0 .and. ibig3 <= npp(desc%mype + 1) ) THEN
                imin3 = min( imin3, ir3 )
                imax3 = max( imax3, ir3 )
           ENDIF
@@ -583,8 +573,9 @@ CONTAINS
     desc%nnp  = nr1x * nr2x
     desc%npp  = nr3
     desc%ipp  = 0
-    desc%have_task_groups = .false.
     desc%tg_nnr = desc%nnr
+    !
+    desc%have_task_groups = .false.
 
     RETURN
   END SUBROUTINE fft_dlay_scalar

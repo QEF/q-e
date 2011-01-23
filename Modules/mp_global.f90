@@ -74,15 +74,7 @@ MODULE mp_global
   !
   ! ... "task" groups (for band parallelization of FFT)
   !
-  INTEGER :: nogrp       = 1  ! number of proc. in an orbital "task group" 
-  INTEGER :: npgrp       = 1  ! number of proc. in a plane-wave "task group" 
-  INTEGER :: me_pgrp     = 0  ! task id for plane wave task group
-  INTEGER, ALLOCATABLE :: nolist(:) ! list of procs in my orbital task group 
-  INTEGER, ALLOCATABLE :: nplist(:) ! list of procs in my plane wave task group 
-  INTEGER :: pgrp_comm   = 0  ! plane-wave group communicator
-  INTEGER :: ogrp_comm   = 0  ! orbital group communicator
-  LOGICAL :: &
-    use_task_groups = .FALSE.  ! if TRUE task groups parallelization is used
+  INTEGER :: ntask_groups = 1  ! number of proc. in an orbital "task group" 
   !
   ! ... Misc parallelization info
   ! 
@@ -93,6 +85,7 @@ MODULE mp_global
   INTEGER :: nproc_pool_file  = 1  ! in a pool
   !
   PRIVATE :: init_images, init_pools, init_bands, init_ortho
+  PRIVATE :: ntask_groups
   !
 CONTAINS
   !
@@ -112,7 +105,7 @@ CONTAINS
     ! ... NPOOL must be a whole divisor of NPROC
     !
     IMPLICIT NONE
-    INTEGER :: world, ntask_groups, nproc_ortho_in, meta_ionode_id 
+    INTEGER :: world, nproc_ortho_in, meta_ionode_id 
     INTEGER :: root = 0
     LOGICAL :: meta_ionode
     !
@@ -193,12 +186,6 @@ CONTAINS
     !
     CALL init_ortho( nproc_ortho_in )
     !
-    use_task_groups = ( ntask_groups > 1 )
-    IF( use_task_groups ) THEN
-       nogrp = ntask_groups
-       CALL init_task_groups( )
-    END IF
-    !
     !
     RETURN
     !
@@ -225,7 +212,6 @@ CONTAINS
     me_pool          = mpime
     me_image         = mpime
     me_bgrp          = mpime
-    me_pgrp          = me_pool
     root_pool        = root
     root_image       = root
     root_bgrp        = root
@@ -236,10 +222,6 @@ CONTAINS
     inter_bgrp_comm  = group_i
     intra_bgrp_comm  = group_i
     ortho_comm       = group_i
-    ALLOCATE( nolist( nproc_i ) )
-    ALLOCATE( nplist( nproc_i ) )
-    nolist = 0
-    nplist = 0
     !
     RETURN
     !
@@ -251,8 +233,6 @@ CONTAINS
     !
     CALL mp_barrier()
     CALL mp_end ()
-    IF (ALLOCATED (nolist) ) DEALLOCATE ( nolist )
-    IF (ALLOCATED (nplist) ) DEALLOCATE ( nplist )
     !
   END SUBROUTINE mp_global_end
   !
@@ -468,87 +448,6 @@ CONTAINS
   END SUBROUTINE init_ortho
   !
   !
-  SUBROUTINE init_task_groups( )
-    !
-    INTEGER :: i, n1, ipos, color, key, ierr, itsk, ntsk
-    INTEGER :: pgroup( nproc_pool )
-    !
-    !SUBDIVIDE THE PROCESSORS IN GROUPS
-    !
-    !THE NUMBER OF GROUPS HAS TO BE A DIVISOR OF THE NUMBER
-    !OF PROCESSORS
-    !
-    IF( MOD( nproc_pool, nogrp ) /= 0 ) &
-         CALL errore( " init_task_groups ", "the number of task groups should be a divisor of nproc_pool ", 1 )
-    !
-    npgrp = nproc_pool / nogrp
-
-    DO i = 1, nproc_pool
-       pgroup( i ) = i - 1
-    ENDDO
-    !
-    !LIST OF PROCESSORS IN MY ORBITAL GROUP
-    !
-    !  processors in these group have contiguous indexes
-    !
-    N1 = ( me_pool / NOGRP ) * NOGRP - 1
-    DO i = 1, nogrp
-       nolist( I ) = pgroup( N1 + I + 1 )
-       IF( me_pool == nolist( I ) ) ipos = i - 1
-    ENDDO
-    !
-    !LIST OF PROCESSORS IN MY PLANE WAVE GROUP
-    !
-    DO I = 1, npgrp
-       nplist( I ) = pgroup( ipos + ( i - 1 ) * nogrp + 1 )
-    ENDDO
-
-    !
-    !SET UP THE GROUPS
-    !
-    !
-    !CREATE ORBITAL GROUPS
-    !
-#if defined __MPI
-    color = me_pool / nogrp
-    key   = MOD( me_pool , nogrp )
-    CALL MPI_COMM_SPLIT( intra_pool_comm, color, key, ogrp_comm, ierr )
-    if( ierr /= 0 ) &
-         CALL errore( ' init_task_groups ', ' creating ogrp_comm ', ABS(ierr) )
-    CALL MPI_COMM_RANK( ogrp_comm, itsk, IERR )
-    CALL MPI_COMM_SIZE( ogrp_comm, ntsk, IERR )
-    IF( nogrp /= ntsk ) CALL errore( ' init_task_groups ', ' ogrp_comm size ', ntsk )
-    DO i = 1, nogrp
-       IF( me_pool == nolist( i ) ) THEN
-          IF( (i-1) /= itsk ) CALL errore( ' init_task_groups ', ' ogrp_comm rank ', itsk )
-       END IF
-    END DO
-#endif
-    !
-    !CREATE PLANEWAVE GROUPS
-    !
-#if defined __MPI
-    color = MOD( me_pool , nogrp )
-    key   = me_pool / nogrp
-    CALL MPI_COMM_SPLIT( intra_pool_comm, color, key, pgrp_comm, ierr )
-    if( ierr /= 0 ) &
-         CALL errore( ' init_task_groups ', ' creating pgrp_comm ', ABS(ierr) )
-    CALL MPI_COMM_RANK( pgrp_comm, itsk, IERR )
-    CALL MPI_COMM_SIZE( pgrp_comm, ntsk, IERR )
-    IF( npgrp /= ntsk ) CALL errore( ' init_task_groups ', ' pgrp_comm size ', ntsk )
-    DO i = 1, npgrp
-       IF( me_pool == nplist( i ) ) THEN
-          IF( (i-1) /= itsk ) CALL errore( ' init_task_groups ', ' pgrp_comm rank ', itsk )
-       END IF
-    END DO
-    me_pgrp = itsk
-#endif
-
-
-    RETURN
-  END SUBROUTINE init_task_groups
-  !
-  !
   SUBROUTINE init_ortho_group( nproc_try_in, comm_all )
     !
     IMPLICIT NONE
@@ -747,5 +646,12 @@ CONTAINS
      !
   END SUBROUTINE distribute_over_bgrp
   !
+  !
+  FUNCTION get_ntask_groups()
+     IMPLICIT NONE
+     INTEGER :: get_ntask_groups
+     get_ntask_groups = ntask_groups
+     RETURN
+  END FUNCTION get_ntask_groups
   !
 END MODULE mp_global

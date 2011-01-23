@@ -13,7 +13,7 @@ MODULE environment
   USE io_files, ONLY: crash_file, crashunit, nd_nmbr
   USE io_global, ONLY: stdout, meta_ionode
   USE mp_global, ONLY: me_image, my_image_id, root_image, nimage, &
-      nproc_image, nproc, nogrp, npool, nproc_pool, nbgrp
+      nproc_image, nproc, npool, nproc_pool, nbgrp, get_ntask_groups
   USE global_version, ONLY: version_number
 
   IMPLICIT NONE
@@ -194,8 +194,8 @@ CONTAINS
          '(5X,"K-points division:     npool     = ",I4)' ) npool
     IF ( nproc_pool > 1 ) WRITE( stdout, &
          '(5X,"R & G space division:  proc/pool = ",I4)' ) nproc_pool
-    IF ( nogrp > 1 ) WRITE( stdout, &
-         '(5X,"wavefunctions fft division:  fft/group = ",I4)' ) nogrp
+    IF ( get_ntask_groups() > 1 ) WRITE( stdout, &
+         '(5X,"wavefunctions fft division:  fft/group = ",I4)' ) get_ntask_groups()
     !
   END SUBROUTINE parallel_info
   !==-----------------------------------------------------------------------==!
