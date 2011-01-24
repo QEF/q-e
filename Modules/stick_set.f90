@@ -218,8 +218,8 @@
           IF( ngm_ /= ngm ) CALL errore( ' pstickset ', ' inconsistent ngm ', abs( ngm - ngm_ ) )
           IF( ngs_ /= ngs ) CALL errore( ' pstickset ', ' inconsistent ngs ', abs( ngs - ngs_ ) )
 
-          CALL fft_dlay_allocate( dfftp, mype, nproc, comm, max(nr1x, nr3x),  nr2x  )
-          CALL fft_dlay_allocate( dffts, mype, nproc, comm, max(nr1sx, nr3sx), nr2sx )
+          CALL fft_dlay_allocate( dfftp, mype, nproc, comm, 1, max(nr1x, nr3x),  nr2x  )
+          CALL fft_dlay_allocate( dffts, mype, nproc, comm, 1, max(nr1sx, nr3sx), nr2sx )
 
           CALL fft_dlay_scalar( dfftp, ub, lb, nr1, nr2, nr3, nr1x, nr2x, nr3x, stw )
           CALL fft_dlay_scalar( dffts, ub, lb, nr1s, nr2s, nr3s, nr1sx, nr2sx, nr3sx, stw )

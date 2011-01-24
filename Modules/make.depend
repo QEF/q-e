@@ -61,7 +61,6 @@ fft_interfaces.o : fft_parallel.o
 fft_interfaces.o : fft_scalar.o
 fft_interfaces.o : fft_types.o
 fft_interfaces.o : kind.o
-fft_interfaces.o : mp_global.o
 fft_parallel.o : fft_base.o
 fft_parallel.o : fft_scalar.o
 fft_parallel.o : fft_types.o
@@ -219,7 +218,6 @@ stick_set.o : fft_types.o
 stick_set.o : griddim.o
 stick_set.o : io_global.o
 stick_set.o : kind.o
-stick_set.o : mp_global.o
 stick_set.o : parallel_include.o
 stick_set.o : stick_base.o
 timestep.o : kind.o
