@@ -37,7 +37,7 @@ PROGRAM pw2casino
   USE io_files,   ONLY : prefix, outdir, tmp_dir, trimcheck
   USE io_global,  ONLY : ionode, ionode_id
   USE mp,         ONLY : mp_bcast
-  USE mp_global,  ONLY : mp_startup, npool, nimage, nogrp, npgrp
+  USE mp_global,  ONLY : mp_startup, npool, nimage
   USE environment,ONLY : environment_start
   USE dfunct,     ONLY : newd
     !
