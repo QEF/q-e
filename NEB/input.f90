@@ -23,7 +23,7 @@ SUBROUTINE ioneb(xmlinput,attr)
   USE kinds,         ONLY : DP
   USE constants,     ONLY : autoev, eV_to_kelvin, pi, rytoev, &
                             uakbar, amconv, bohr_radius_angs, eps8
-  USE io_global,     ONLY : stdout, ionode
+  USE io_global,     ONLY : stdout
   !
   !
   USE io_files,      ONLY : tmp_dir 
@@ -220,7 +220,7 @@ SUBROUTINE verify_neb_tmpdir( tmp_dir )
                                delete_if_present
   USE path_variables,   ONLY : num_of_images
   USE mp_image_global_module,        ONLY : mpime, nproc, nimage
-  USE io_global,        ONLY : ionode
+  USE io_global,        ONLY : meta_ionode
   USE mp,               ONLY : mp_barrier
   USE xml_io_base,      ONLY : copy_file
   !
@@ -249,7 +249,7 @@ SUBROUTINE verify_neb_tmpdir( tmp_dir )
   ! ... if starting from scratch all temporary files are removed
   ! ... from tmp_dir ( only by the master node )
   !
-  IF ( ionode ) THEN
+  IF ( meta_ionode ) THEN
      !
      ! ... files needed by parallelization among images are removed
      !
