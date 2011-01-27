@@ -54,16 +54,21 @@ int F77_FUNC_(c_mkdir_int,C_MKDIR_INT)( const int * dirname , const int * length
 
    retval = mkdir( ldir , mode ) ;
 
-   if ( retval == -1  && errno != EEXIST )
+   if ( retval == -1  && errno != EEXIST ) {
      fprintf( stderr , "mkdir fail: [%d] %s\n" , errno , strerror( errno ) ) ;
+     }
+   else {
+     retval = 0 ;
+     }
+
 
    free( ldir ) ;
 
    return retval ;
 
-} /* c_mkdir */
+} /* end of c_mkdir */
 
-/* call from fortran as
+/* c_rename: call from fortran as
    ios = c_remame ( integer old-file-name(:), integer old-file-name, &
                     integer new-file-name(:), integer new-file-name )
    renames file old-file-name into new-file-name (don't try this on open files!)
