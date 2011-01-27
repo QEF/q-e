@@ -14,7 +14,8 @@ SUBROUTINE stop_run_path( lflag )
   ! ... or during execution with flag = .FALSE. (does not remove 'restart')
   !
   USE io_global,          ONLY : ionode
-  USE mp_global,          ONLY : nimage, mp_global_end
+  USE mp_global,          ONLY :  mp_global_end
+  USE mp_image_global_module, ONLY : nimage
   USE environment,        ONLY : environment_end
   USE control_flags,      ONLY : lpath, twfcollect, lconstrain, &
                                  io_level, llondon

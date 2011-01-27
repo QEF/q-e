@@ -38,7 +38,7 @@ SUBROUTINE compute_scf( fii, lii, stat  )
                                istep_path, frozen, num_of_images, &
                                first_last_opt
   USE io_global,        ONLY : stdout, ionode, ionode_id, meta_ionode
-  USE mp_global,        ONLY : inter_image_comm, intra_image_comm, &
+  USE mp_image_global_module,        ONLY : inter_image_comm, intra_image_comm, &
                                my_image_id, nimage, root_image
   USE mp,               ONLY : mp_bcast, mp_barrier, mp_sum, mp_min
   USE path_io_routines, ONLY : new_image_init, get_new_image, &

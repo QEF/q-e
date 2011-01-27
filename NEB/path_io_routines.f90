@@ -828,7 +828,7 @@ MODULE path_io_routines
        USE path_io_units_module, ONLY : iunnewimage
        USE io_files, ONLY : prefix
        USE path_variables, ONLY : tune_load_balance
-       USE mp_global,      ONLY : nimage
+       USE mp_image_global_module,      ONLY : nimage
        !
        IMPLICIT NONE
        !
@@ -860,7 +860,7 @@ MODULE path_io_routines
        USE io_files,       ONLY : iunnewimage, iunlock, prefix
        USE io_global,      ONLY : ionode
        USE path_variables, ONLY : tune_load_balance
-       USE mp_global,      ONLY : nimage
+       USE mp_image_global_module,      ONLY : nimage
        !
        IMPLICIT NONE
        !

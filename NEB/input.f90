@@ -215,13 +215,11 @@ SUBROUTINE verify_neb_tmpdir( tmp_dir )
   !-----------------------------------------------------------------------
   !
   USE wrappers,         ONLY : f_mkdir
-  USE input_parameters, ONLY : restart_mode
-  USE control_flags,    ONLY : lpath, lbands
+  USE path_input_parameters_module, ONLY : restart_mode
   USE io_files,         ONLY : prefix, xmlpun, &
-                               delete_if_present, check_writable
-  USE pw_restart,       ONLY : pw_readfile
+                               delete_if_present
   USE path_variables,   ONLY : num_of_images
-  USE mp_global,        ONLY : mpime, nproc, nimage
+  USE mp_image_global_module,        ONLY : mpime, nproc, nimage
   USE io_global,        ONLY : ionode
   USE mp,               ONLY : mp_barrier
   USE xml_io_base,      ONLY : copy_file
@@ -238,86 +236,71 @@ SUBROUTINE verify_neb_tmpdir( tmp_dir )
   !
   file_path = trim( tmp_dir ) // trim( prefix )
   !
-  ! .... check: is the directory writable?
   !
-  ios = check_writable ( tmp_dir, mpime )
-  !
-  IF ( ios /= 0 ) THEN
+  IF ( restart_mode == 'from_scratch' ) THEN
      !
-     ! ... no luck: directory non existent or non writable
+     ! ... let us try to create the scratch directory
+     !
+     CALL parallel_mkdir ( tmp_dir )
+     !
+  ENDIF
+  !
+  !
+  ! ... if starting from scratch all temporary files are removed
+  ! ... from tmp_dir ( only by the master node )
+  !
+  IF ( ionode ) THEN
+     !
+     ! ... files needed by parallelization among images are removed
+     !
+     CALL delete_if_present( trim( file_path ) // '.newimage' )
+     !
+     ! ... file containing the broyden's history
      !
      IF ( restart_mode == 'from_scratch' ) THEN
         !
-        ! ... let us try to create the scratch directory
-        !
-        CALL parallel_mkdir ( tmp_dir )
-        !
-     ELSE
-        !
-        CALL errore( 'outdir: ', trim( tmp_dir ) // &
-                             & ' non existent or non writable', 1 )
+        CALL delete_if_present( trim( file_path ) // '.broyden' )
         !
      ENDIF
      !
-  ELSE
+  ENDIF ! end if ionode
+  !
+  nofi = num_of_images
+  !
+  DO image = 1, nofi
+     !
+     file_path = trim( tmp_dir ) // trim( prefix ) //"_" // &
+                 trim( int_to_char( image ) ) // '/'
+     !
+     CALL parallel_mkdir ( file_path )
      !
      ! ... if starting from scratch all temporary files are removed
-     ! ... from tmp_dir ( only by the master node )
+     ! ... from tmp_dir ( by all the cpus in sequence )
      !
-     IF ( ionode ) THEN
+     IF ( restart_mode == 'from_scratch' ) THEN
         !
-        ! ... files needed by parallelization among images are removed
-        !
-        CALL delete_if_present( trim( file_path ) // '.newimage' )
-        !
-        ! ... file containing the broyden's history
-        !
-        IF ( restart_mode == 'from_scratch' ) THEN
+        DO proc = 0, nproc - 1
            !
-           CALL delete_if_present( trim( file_path ) // '.broyden' )
-           !
-        ENDIF
-        !
-     ENDIF ! end if ionode
-     !
-     nofi = num_of_images
-     !
-     DO image = 1, nofi
-        !
-        file_path = trim( tmp_dir ) // trim( prefix ) //"_" // &
-                    trim( int_to_char( image ) ) // '/'
-        !
-        CALL parallel_mkdir ( file_path )
-        !
-        ! ... if starting from scratch all temporary files are removed
-        ! ... from tmp_dir ( by all the cpus in sequence )
-        !
-        IF ( restart_mode == 'from_scratch' ) THEN
-           !
-           DO proc = 0, nproc - 1
+           IF ( proc == mpime ) THEN
               !
-              IF ( proc == mpime ) THEN
-                 !
-                 ! ... extrapolation file is removed
-                 !
-                 CALL delete_if_present( trim( file_path ) // &
-                                       & trim( prefix ) // '.update' )
-                 !
-                 ! ... standard output of the self-consistency is removed
-                 !
-                 CALL delete_if_present( trim( file_path ) // 'PW.out' )
-                 !
-              ENDIF
+              ! ... extrapolation file is removed
               !
-              CALL mp_barrier()
+              CALL delete_if_present( trim( file_path ) // &
+                                    & trim( prefix ) // '.update' )
               !
-           ENDDO
+              ! ... standard output of the self-consistency is removed
+              !
+              CALL delete_if_present( trim( file_path ) // 'PW.out' )
+              !
+           ENDIF
            !
-        ENDIF ! end restart_mode
+           CALL mp_barrier()
+           !
+        ENDDO
         !
-     ENDDO ! end do image
+     ENDIF ! end restart_mode
      !
-  ENDIF
+  ENDDO ! end do image
   !
   RETURN
   !

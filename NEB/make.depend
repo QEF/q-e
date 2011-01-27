@@ -9,7 +9,7 @@ compute_scf.o : ../Modules/io_global.o
 compute_scf.o : ../Modules/ions_base.o
 compute_scf.o : ../Modules/kind.o
 compute_scf.o : ../Modules/mp.o
-compute_scf.o : ../Modules/mp_global.o
+compute_scf.o : ../Modules/mp_image_global_module.o
 compute_scf.o : ../Modules/recvec.o
 compute_scf.o : ../PW/pwcom.o
 compute_scf.o : path_formats.o
@@ -30,17 +30,15 @@ engine_to_path_pos.o : ../Modules/ions_base.o
 engine_to_path_pos.o : ../Modules/kind.o
 engine_to_path_pos.o : path_input_parameters_module.o
 input.o : ../Modules/constants.o
-input.o : ../Modules/control_flags.o
 input.o : ../Modules/input_parameters.o
 input.o : ../Modules/io_files.o
 input.o : ../Modules/io_global.o
 input.o : ../Modules/kind.o
 input.o : ../Modules/mp.o
-input.o : ../Modules/mp_global.o
+input.o : ../Modules/mp_image_global_module.o
 input.o : ../Modules/read_xml.o
 input.o : ../Modules/wrappers.o
 input.o : ../Modules/xml_io_base.o
-input.o : ../PW/pw_restart.o
 input.o : ../iotk/src/iotk_module.o
 input.o : path_input_parameters_module.o
 input.o : path_variables.o
@@ -52,7 +50,7 @@ path_base.o : ../Modules/io_global.o
 path_base.o : ../Modules/ions_base.o
 path_base.o : ../Modules/kind.o
 path_base.o : ../Modules/mp.o
-path_base.o : ../Modules/mp_global.o
+path_base.o : ../Modules/mp_image_global_module.o
 path_base.o : ../Modules/random_numbers.o
 path_base.o : path_formats.o
 path_base.o : path_input_parameters_module.o
@@ -80,7 +78,7 @@ path_io_routines.o : ../Modules/io_global.o
 path_io_routines.o : ../Modules/ions_base.o
 path_io_routines.o : ../Modules/kind.o
 path_io_routines.o : ../Modules/mp.o
-path_io_routines.o : ../Modules/mp_global.o
+path_io_routines.o : ../Modules/mp_image_global_module.o
 path_io_routines.o : path_formats.o
 path_io_routines.o : path_input_parameters_module.o
 path_io_routines.o : path_io_units_module.o
@@ -114,6 +112,9 @@ path_to_engine_fix_atom_pos.o : ../Modules/ions_base.o
 path_to_engine_fix_atom_pos.o : ../Modules/kind.o
 path_to_engine_fix_atom_pos.o : path_input_parameters_module.o
 path_to_engine_fix_atom_pos.o : path_variables.o
+path_to_engine_mp.o : ../Modules/kind.o
+path_to_engine_mp.o : ../Modules/mp_global.o
+path_to_engine_mp.o : ../Modules/mp_image_global_module.o
 path_variables.o : ../Modules/kind.o
 set_defaults.o : ../Modules/input_parameters.o
 set_defaults.o : ../Modules/io_files.o
@@ -127,6 +128,7 @@ stop_run_path.o : ../Modules/io_files.o
 stop_run_path.o : ../Modules/io_global.o
 stop_run_path.o : ../Modules/mm_dispersion.o
 stop_run_path.o : ../Modules/mp_global.o
+stop_run_path.o : ../Modules/mp_image_global_module.o
 stop_run_path.o : ../PW/buffers.o
 stop_run_path.o : ../PW/pwcom.o
 stop_run_path.o : path_variables.o
@@ -137,6 +139,7 @@ string_methods.o : ../Modules/image_io_routines.o
 string_methods.o : ../Modules/io_files.o
 string_methods.o : ../Modules/io_global.o
 string_methods.o : ../Modules/mp_global.o
+string_methods.o : ../Modules/mp_image_global_module.o
 string_methods.o : ../Modules/open_close_input_file_interf.o
 string_methods.o : ../Modules/parameters.o
 string_methods.o : ../Modules/read_cards.o

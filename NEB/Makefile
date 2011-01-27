@@ -33,6 +33,7 @@ path_reparametrisation.o \
 path_read_cards_module.o \
 path_read_namelists_module.o \
 path_to_engine_fix_atom_pos.o \
+path_to_engine_mp.o \
 path_variables.o \
 set_defaults.o \
 stop_run_path.o

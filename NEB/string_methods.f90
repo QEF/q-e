@@ -21,8 +21,10 @@ PROGRAM sm
   USE path_base,        ONLY : initialize_path, search_mep
   USE path_io_routines, ONLY : path_summary
   USE image_io_routines, ONLY : io_image_start
-  USE mp_global,        ONLY : mp_startup, mp_bcast, mp_global_end, world_comm
   !
+  USE mp_image_global_module, ONLY : mp_image_startup, world_comm
+  USE mp_image_global_module, ONLY : me_image, nimage
+  USE mp_global,             ONLY : mp_start
   USE iotk_module,           ONLY : iotk_attlenx
   USE open_close_input_file_interf, ONLY : open_input_file, close_input_file
   USE read_xml_module,       ONLY : read_xml
@@ -49,14 +51,18 @@ PROGRAM sm
   !
   INTEGER :: unit_tmp
   !
-  INTEGER :: i
+  INTEGER :: i, iimage
   CHARACTER(len=10) :: a_tmp
   !
+  INTEGER :: mpime, nproc, neb_comm
+  INTEGER :: root = 0 
   !
   unit_tmp = 45
   !
 #ifdef __PARA
-  CALL mp_startup ( )
+  CALL mp_start(nproc,mpime,neb_comm)
+  CALL mp_image_startup (root,neb_comm)
+  CALL engine_mp_start()
 #endif
   CALL environment_start ( 'SM' )
   !
@@ -67,7 +73,12 @@ PROGRAM sm
   !
   !
   engine_prefix = "pw_"
-  call path_gen_inputs("myinput.in",engine_prefix,input_images,meta_ionode_id,world_comm)
+  call path_gen_inputs("myinput.in",engine_prefix,input_images,root,neb_comm)
+  !
+  !
+! mpi for engine
+!  call path_to_engine_mp()
+  !  
   !
   call set_input_unit()
   !

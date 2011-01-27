@@ -72,7 +72,7 @@ MODULE path_base
                                    deg_of_freedom, frozen, use_freezing, k,  &
                                    k_min, tune_load_balance, grad, posold,   &
                                    elastic_grad, pending_image, first_last_opt
-      USE mp_global,        ONLY : nimage
+      USE mp_image_global_module,        ONLY : nimage
       USE path_io_routines, ONLY : read_restart
       USE path_variables,   ONLY : path_allocation
       !
@@ -638,7 +638,7 @@ MODULE path_base
       USE path_variables, ONLY : pos, posold, num_of_images, grad, &
                                  use_freezing, first_last_opt, path_thr, &
                                  error, frozen, lquick_min
-      USE mp_global,      ONLY : nimage
+      USE mp_image_global_module,      ONLY : nimage
       !
       IMPLICIT NONE
       !
