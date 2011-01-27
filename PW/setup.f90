@@ -71,7 +71,7 @@ SUBROUTINE setup()
   USE bp,                 ONLY : gdir, lberry, nppstr, lelfield, nx_el, nppstr_3d,l3dstring, efield
   USE fixed_occ,          ONLY : f_inp, tfixed_occ, one_atom_occupations
   USE funct,              ONLY : set_dft_from_name
-  USE mp_global,          ONLY : nimage, kunit
+  USE mp_global,          ONLY : kunit
   USE spin_orb,           ONLY : lspinorb, domag
   USE noncollin_module,   ONLY : noncolin, npol, m_loc, i_cons, mcons, &
                                  angle1, angle2, bfield, ux, nspin_lsda, &
@@ -106,8 +106,6 @@ SUBROUTINE setup()
 #if ! defined (EXX)
   IF ( dft_is_hybrid() ) CALL errore( 'setup ', &
                          'HYBRID XC not implemented in PWscf', 1 )
-  IF ( nimage > 1 .AND. .NOT. lpath ) &
-     CALL errore( 'setup', 'images parallelization not permitted', 1 )
 #else
   IF ( dft_is_hybrid() ) THEN
      IF (.NOT. lscf) CALL errore( 'setup ', &

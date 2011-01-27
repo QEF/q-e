@@ -302,10 +302,6 @@ SUBROUTINE iosys()
   !
   USE input_parameters,       ONLY : deallocate_input_parameters
   !
-  USE read_xml_module,       ONLY : read_xml
-  USE iotk_module,           ONLY : iotk_attlenx
-  USE read_cards_module,     ONLY : read_cards
-  !
   IMPLICIT NONE
   !
   INTEGER  :: ia, image, nt
@@ -1650,67 +1646,52 @@ SUBROUTINE verify_tmpdir( tmp_dir )
   !
   file_path = trim( tmp_dir ) // trim( prefix )
   !
-  ! .... check: is the directory writable?
   !
-  ios = check_writable ( tmp_dir, mpime )
+  IF ( restart_mode == 'from_scratch' ) THEN
+     !
+     ! ... let us try to create the scratch directory
+     !
+     CALL parallel_mkdir ( tmp_dir )
+     !
+  ENDIF
   !
-  IF ( ios /= 0 ) THEN
+  !
+  ! ... if starting from scratch all temporary files are removed
+  ! ... from tmp_dir ( only by the master node )
+  !
+  IF ( restart_mode == 'from_scratch' ) THEN
      !
-     ! ... no luck: directory non existent or non writable
+     ! ... xml data file in save directory is removed
+     !     but, header is read anyway to store qexml version
      !
-     IF ( restart_mode == 'from_scratch' ) THEN
-        !
-        ! ... let us try to create the scratch directory
-        !
-        CALL parallel_mkdir ( tmp_dir )
-        !
-     ELSE
-        !
-        CALL errore( 'outdir: ', trim( tmp_dir ) // &
-                             & ' non existent or non writable', 1 )
-        !
-     ENDIF
+     CALL pw_readfile( 'header', ios )
      !
-  ELSE
-     !
-     ! ... if starting from scratch all temporary files are removed
-     ! ... from tmp_dir ( only by the master node )
-     !
-     IF ( restart_mode == 'from_scratch' ) THEN
+     IF ( ionode ) THEN
         !
-        ! ... xml data file in save directory is removed
-        !     but, header is read anyway to store qexml version
-        !
-        CALL pw_readfile( 'header', ios )
-        !
-        IF ( ionode ) THEN
-           !
-           IF ( .not. lbands ) THEN
-               !
-               ! save a bck copy of datafile.xml (AF)
-               !
-               filename = trim( file_path ) // '.save/' // trim( xmlpun )
-               INQUIRE( FILE = filename, EXIST = exst )
-               !
-               IF ( exst ) CALL copy_file( trim(filename), trim(filename) // '.bck' )
-               !
-               CALL delete_if_present( trim(filename) )
-               !
-           ENDIF
-           !
-           ! ... extrapolation file is removed
-           !
-           CALL delete_if_present( trim( file_path ) // '.update' )
-           !
-           ! ... MD restart file is removed
-           !
-           CALL delete_if_present( trim( file_path ) // '.md' )
-           !
-           ! ... BFGS restart file is removed
-           !
-           CALL delete_if_present( trim( file_path ) // '.bfgs' )
-           !
+        IF ( .not. lbands ) THEN
+            !
+            ! save a bck copy of datafile.xml (AF)
+            !
+            filename = trim( file_path ) // '.save/' // trim( xmlpun )
+            INQUIRE( FILE = filename, EXIST = exst )
+            !
+            IF ( exst ) CALL copy_file( trim(filename), trim(filename) // '.bck' )
+            !
+            CALL delete_if_present( trim(filename) )
+            !
         ENDIF
+        !
+        ! ... extrapolation file is removed
+        !
+        CALL delete_if_present( trim( file_path ) // '.update' )
+        !
+        ! ... MD restart file is removed
+        !
+        CALL delete_if_present( trim( file_path ) // '.md' )
+        !
+        ! ... BFGS restart file is removed
+        !
+        CALL delete_if_present( trim( file_path ) // '.bfgs' )
         !
      ENDIF
      !
@@ -1752,11 +1733,6 @@ SUBROUTINE parallel_mkdir ( tmp_dir )
   ! ... each job checks whether the scratch directory is writable
   ! ... note that tmp_dir should end by a "/"
   !
-  OPEN( UNIT = 4, FILE = trim(tmp_dir)//'test'//trim(int_to_char(mpime)), &
-            & STATUS = 'UNKNOWN', FORM = 'UNFORMATTED', IOSTAT = ios )
-  CLOSE( UNIT = 4, STATUS = 'DELETE' )
-  !
-  ios = check_writable ( tmp_dir, mpime )
   IF ( ios /= 0 ) CALL errore( 'parallel_mkdir', trim( tmp_dir ) // &
                              & ' non existent or non writable', 1 )
   !

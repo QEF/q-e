@@ -726,12 +726,10 @@ input.o : ../Modules/mp_global.o
 input.o : ../Modules/printout_base.o
 input.o : ../Modules/read_cards.o
 input.o : ../Modules/read_namelists.o
-input.o : ../Modules/read_xml.o
 input.o : ../Modules/recvec.o
 input.o : ../Modules/wannier_new.o
 input.o : ../Modules/wrappers.o
 input.o : ../Modules/xml_io_base.o
-input.o : ../iotk/src/iotk_module.o
 input.o : a2fmod.o
 input.o : dynamics_module.o
 input.o : exx.o
