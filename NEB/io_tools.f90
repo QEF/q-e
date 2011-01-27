@@ -7,6 +7,55 @@
 !
 !
 !----------------------------------------------------------------------------
+SUBROUTINE input_file_name_getarg(myname,lfound)
+  !-----------------------------------------------------------------------------
+  !
+  ! check for presence of command-line option "-inp myname" or "--inp myname"
+  ! where "myname" is the name of the input file. Returns the name and if it 
+  ! has been found. 
+  !
+  USE kinds,         ONLY : DP
+  !
+  USE io_global,     ONLY : stdout
+  !
+  IMPLICIT NONE
+  !
+  CHARACTER(len=256), intent(out) :: myname
+  LOGICAL, intent(out) :: lfound
+  !
+  INTEGER  :: iiarg, nargs, iargc, i, i0
+  !
+  !
+#if defined(__ABSOFT)
+#   define getarg getarg_
+#   define iargc  iargc_
+#endif
+  !
+  nargs = iargc()
+  lfound = .false.
+  !
+  DO iiarg = 1, nargs
+    CALL getarg( iiarg, myname)
+     !
+     IF ( TRIM( myname ) == '-input' .OR. &
+          TRIM( myname ) == '-inp'   .OR. &
+          TRIM( myname ) == '-in' ) THEN
+        !
+        CALL getarg( ( iiarg + 1 ) , myname )
+        !
+        lfound = .true.
+        RETURN
+        !
+     END IF
+     !
+
+  ENDDO
+  !
+  RETURN
+  !
+END SUBROUTINE input_file_name_getarg
+!
+!----------------------------------------------------------------------------
 SUBROUTINE close_io_units(myunit)
   !-----------------------------------------------------------------------------
   !

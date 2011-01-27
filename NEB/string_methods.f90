@@ -57,6 +57,9 @@ PROGRAM sm
   INTEGER :: mpime, nproc, neb_comm
   INTEGER :: root = 0 
   !
+  CHARACTER(len=256) :: parsing_file_name
+  LOGICAL :: lfound
+  !
   unit_tmp = 45
   !
 #ifdef __PARA
@@ -71,10 +74,20 @@ PROGRAM sm
   !
   ! ... open input file
   !
+  CALL input_file_name_getarg(parsing_file_name,lfound)
   !
   engine_prefix = "pw_"
-  call path_gen_inputs("myinput.in",engine_prefix,input_images,root,neb_comm)
   !
+  if(lfound) then
+  write(0,*) "parsing_file_name: ", trim(parsing_file_name)
+  call path_gen_inputs(trim(parsing_file_name),engine_prefix,input_images,root,neb_comm)
+  !
+  else
+  !
+  write(0,*) "NO input file found, assuming nothing to parse."
+  write(0,*) "Searching pre-build neb and engine input file."
+  !
+  endif
   !
 ! mpi for engine
 !  call path_to_engine_mp()
