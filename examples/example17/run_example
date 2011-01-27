@@ -1,4 +1,14 @@
 #!/bin/sh
+#
+#@job_name    = PE2
+#@account_no = IscrB_PHOTON
+#@error       = err
+#@wall_clock_limit = 00:20:00
+#@job_type = parallel
+#@total_tasks      = 4
+#@task_affinity = core(1)
+#@resources = ConsumableMemory(2000Mb)
+#@queue
 
 ###############################################################################
 ##
@@ -93,7 +103,7 @@ rm -rf $TMP_DIR/*
 $ECHO " done"
 
 # NEB calculation. Automatic choice of the climbing image.
-cat > myinput.in << EOF
+cat > H2+H.in << EOF
 BEGIN
 BEGIN_PATH_INPUT
 &PATH
@@ -158,7 +168,7 @@ END_ENGINE_INPUT
 END
 EOF
 $ECHO "  running Born-Oppenheimer NEB calculation for H2+H => H+H2...\c"
-$NEB_COMMAND  > H2+H.out
+$NEB_COMMAND -inp H2+H.in  > H2+H.out
 check_failure $?
 $ECHO " done"
 
@@ -168,7 +178,7 @@ rm -rf $TMP_DIR/*
 $ECHO " done"
 
 # NEB calculation. Climbing image is not used
-cat > myinput.in << EOF
+cat > symmetric_H2+H.in << EOF
 BEGIN
 BEGIN_PATH_INPUT
 &PATH
@@ -232,7 +242,7 @@ END_ENGINE_INPUT
 END
 EOF
 $ECHO "  running Born-Oppenheimer NEB calculation for symmetric H2+H => H+H2...\c"
-$NEB_COMMAND  > symmetric_H2+H.out
+$NEB_COMMAND -inp symmetric_H2+H.in  > symmetric_H2+H.out
 check_failure $?
 $ECHO " done"
 
@@ -249,7 +259,7 @@ cat symmetric_H2+H.path | \
     awk '{if(NR==2){printf"   0\n"}; if(NR!=2){print}}' > asymmetric_H2+H.path
 
 # NEB calculation. The image that has to climb is manually chosen
-cat > myinput.in << EOF
+cat > asymmetric_H2+H.in << EOF
 BEGIN
 BEGIN_PATH_INPUT
 &PATH
@@ -316,7 +326,7 @@ END_ENGINE_INPUT
 END
 EOF
 $ECHO "  running Born-Oppenheimer NEB calculation for asymmetric H2+H => H+H2...\c"
-$NEB_COMMAND  > asymmetric_H2+H.out
+$NEB_COMMAND -inp asymmetric_H2+H.in > asymmetric_H2+H.out
 check_failure $?
 $ECHO " done"
 
