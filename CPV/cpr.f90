@@ -49,7 +49,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
   USE ions_base,                ONLY : ions_vrescal, fricp, greasp, &
                                        iforce, ndfrz, ions_shiftvar, ityp, &
                                        atm, ind_bck, cdm, cdms, ions_cofmsub
-  USE cell_base,                ONLY : a1, a2, a3, b1, b2, b3, ainv, frich, &
+  USE cell_base,                ONLY : a1, a2, a3, bg, ainv, frich, &
                                        greash, tpiba2, omega, alat, ibrav,  &
                                        celldm, h, hold, hnew, velh, deth,   &
                                        wmass, press, iforceh, cell_force
@@ -328,7 +328,8 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
         !
      END IF
      !
-     CALL move_electrons( nfi, tfirst, tlast, b1, b2, b3, fion, c0_bgrp, cm_bgrp, phi_bgrp, &
+     CALL move_electrons( nfi, tfirst, tlast, bg(:,1), bg(:,2), bg(:,3), &
+                          fion, c0_bgrp, cm_bgrp, phi_bgrp, &
                           enthal, enb, enbi, fccc, ccc, dt2bye, stress )
 
      !
@@ -754,8 +755,9 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
            !
            lambdam = lambda
            !
-           CALL move_electrons( nfi, tfirst, tlast, b1, b2, b3, &
-                                fion, c0_bgrp, cm_bgrp, phi_bgrp, enthal, enb, enbi, fccc, ccc, dt2bye, stress )
+           CALL move_electrons( nfi, tfirst, tlast, bg(:,1), bg(:,2), bg(:,3),&
+                                fion, c0_bgrp, cm_bgrp, phi_bgrp, enthal, enb,&
+                                enbi, fccc, ccc, dt2bye, stress )
            !
         END IF
         !
@@ -847,8 +849,9 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
      END IF
      !
      IF ( lwf ) &
-        CALL wf_closing_options( nfi, c0_bgrp, cm_bgrp, bec_bgrp, eigr, eigrb, taub, &
-                                 irb, ibrav, b1, b2, b3, taus, tausm, vels,  &
+        CALL wf_closing_options( nfi, c0_bgrp, cm_bgrp, bec_bgrp, eigr, eigrb,&
+                                 taub, irb, ibrav, bg(:,1), bg(:,2), bg(:,3), &
+                                 taus, tausm, vels, &
                                  velsm, acc, lambda, lambdam, xnhe0, xnhem,  &
                                  vnhe, xnhp0, xnhpm, vnhp, nhpcl, nhpdim,    &
                                  ekincm, xnhh0, xnhhm, vnhh, velh, ecutrho,  &

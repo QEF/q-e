@@ -42,7 +42,7 @@ SUBROUTINE init_run()
   USE uspp_param,               ONLY : nhm
   USE ions_nose,                ONLY : xnhp0, xnhpm, vnhp, nhpcl, nhpdim
   USE cell_base,                ONLY : h, hold, hnew, velh, tpiba2, ibrav, &
-                                       alat, celldm, a1, a2, a3, b1, b2, b3
+                                       alat, celldm, a1, a2, a3, bg
   USE cp_main_variables,        ONLY : lambda, lambdam, lambdap, ema0bg, &
                                        sfac, eigr, taub, &
                                        irb, eigrb, rhog, rhos, rhor,     &
@@ -247,7 +247,8 @@ SUBROUTINE init_run()
      CALL h_matrix_init( descla, nspin )
   ENDIF
   !
-  IF ( lwf ) CALL wannier_startup( ibrav, alat, a1, a2, a3, b1, b2, b3 )
+  IF ( lwf ) CALL wannier_startup( ibrav, alat, a1, a2, a3, &
+                                   bg(:,1), bg(:,2), bg(:,3) )
   !
   ! ... Calculate: ema0bg = ecutmass /  MAX( 1.0d0, (2pi/alat)^2 * |G|^2 )
   !

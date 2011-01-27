@@ -49,12 +49,6 @@
         REAL(DP) :: a2(3) = (/ 0.0_DP, 0.0_DP, 0.0_DP /)
         REAL(DP) :: a3(3) = (/ 0.0_DP, 0.0_DP, 0.0_DP /)
         
-        !  b1, b2 and b3 are the simulation reciprocal lattice vectors
-
-        REAL(DP) :: b1(3) = (/ 0.0_DP, 0.0_DP, 0.0_DP /)
-        REAL(DP) :: b2(3) = (/ 0.0_DP, 0.0_DP, 0.0_DP /)
-        REAL(DP) :: b3(3) = (/ 0.0_DP, 0.0_DP, 0.0_DP /)
-
         REAL(DP) :: ainv(3,3) = 0.0_DP
 
         REAl(DP) :: omega = 0.0_DP  !  volume of the simulation cell
@@ -69,6 +63,7 @@
         !  at( :, 3 ) = a3( : ) / alat  ;  h( :, 3 ) = a3( : )
         !  ht = h^t ; ainv = h^(-1)
         !
+        !  b1, b2 and b3 are the simulation reciprocal lattice vectors
         !  bg( :, 1 ) = b1( : )
         !  bg( :, 2 ) = b2( : )
         !  bg( :, 3 ) = b3( : )
