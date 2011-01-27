@@ -11,7 +11,7 @@ MODULE mp_global
   !
   USE mp, ONLY : mp_comm_free, mp_size, mp_rank, mp_sum, mp_barrier, &
        mp_bcast, mp_start, mp_end
-  USE io_global, ONLY : stdout, io_global_start, io_global_getmeta
+  USE io_global, ONLY : stdout, io_global_start, meta_ionode_id, meta_ionode
   USE parallel_include
   !
   IMPLICIT NONE 
@@ -105,9 +105,8 @@ CONTAINS
     ! ... NPOOL must be a whole divisor of NPROC
     !
     IMPLICIT NONE
-    INTEGER :: world, nproc_ortho_in, meta_ionode_id
+    INTEGER :: world, nproc_ortho_in
     INTEGER :: root = 0
-    LOGICAL :: meta_ionode
     !
     !
     ! ... get the basic parameters from communications sub-system
@@ -128,8 +127,9 @@ CONTAINS
     ! ... initialize input/output, set (and get) the I/O nodes
     !
     CALL io_global_start( mpime, root )
-! write in meta_ionode and meta_ionode_id the value true if mpime=root and root
-    CALL io_global_getmeta ( mpime, root )
+    !
+    meta_ionode = ( mpime == root )
+    meta_ionode_id = root
     !
     IF ( meta_ionode ) THEN
        !
