@@ -42,17 +42,14 @@ MODULE io_global
        IF ( mpime == ionode_set ) THEN
           !
           ionode      = .TRUE.
-          meta_ionode = .TRUE.
           !
        ELSE
           !
           ionode      = .FALSE.
-          meta_ionode = .FALSE.
           !
        END IF
        !
        ionode_id      = ionode_set
-       meta_ionode_id = ionode_set
        !
        first = .FALSE.
        !
@@ -83,20 +80,26 @@ MODULE io_global
      !  
      !  
      !-----------------------------------------------------------------------
-     SUBROUTINE io_global_getmeta( ionode_out, ionode_id_out )
+     SUBROUTINE io_global_getmeta( myrank, root )
        !-----------------------------------------------------------------------
+       !
+       ! ... writes in module variables meta_ionode_id and meta_ionode
        !
        IMPLICIT NONE
        !
-       LOGICAL, INTENT(OUT) :: ionode_out
-       INTEGER, INTENT(OUT) :: ionode_id_out
+       INTEGER, INTENT(IN) :: myrank, root
        !
        !
-       IF ( first ) &
-          CALL errore( ' io_global_getmeta ', ' meta_ionode not yet defined ', 1 )
+       IF(myrank == root) THEN
        !
-       ionode_out    = meta_ionode
-       ionode_id_out = meta_ionode_id
+         meta_ionode   = .true.
+       !
+       ELSE
+         meta_ionode = .false.
+       !
+       ENDIF 
+       !
+       meta_ionode_id = root
        !
        RETURN
        !

@@ -41,6 +41,7 @@ mm_dispersion.o \
 mp.o \
 mp_base.o \
 mp_global.o \
+mp_image_global_module.o \
 mp_wave.o \
 open_close_input_file_interf.o \
 open_close_input_file.o \

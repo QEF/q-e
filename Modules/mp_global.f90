@@ -84,13 +84,13 @@ MODULE mp_global
   INTEGER :: nproc_image_file = 1  ! in an image
   INTEGER :: nproc_pool_file  = 1  ! in a pool
   !
-  PRIVATE :: init_images, init_pools, init_bands, init_ortho
+  PRIVATE :: init_pools, init_bands, init_ortho
   PRIVATE :: ntask_groups
   !
 CONTAINS
   !
   !-----------------------------------------------------------------------
-  SUBROUTINE mp_startup ( ) 
+  SUBROUTINE mp_startup ( )
     !-----------------------------------------------------------------------
     ! ... This subroutine initializes MPI
     ! ... Processes are organized in NIMAGE images each dealing with a subset of
@@ -105,7 +105,7 @@ CONTAINS
     ! ... NPOOL must be a whole divisor of NPROC
     !
     IMPLICIT NONE
-    INTEGER :: world, nproc_ortho_in, meta_ionode_id 
+    INTEGER :: world, nproc_ortho_in, meta_ionode_id
     INTEGER :: root = 0
     LOGICAL :: meta_ionode
     !
@@ -128,7 +128,8 @@ CONTAINS
     ! ... initialize input/output, set (and get) the I/O nodes
     !
     CALL io_global_start( mpime, root )
-    CALL io_global_getmeta ( meta_ionode, meta_ionode_id )
+! write in meta_ionode and meta_ionode_id the value true if mpime=root and root
+    CALL io_global_getmeta ( mpime, root )
     !
     IF ( meta_ionode ) THEN
        !
@@ -228,6 +229,123 @@ CONTAINS
   END SUBROUTINE mp_global_start
   !
   !-----------------------------------------------------------------------
+  SUBROUTINE mp_startup_new (root, world ) 
+    !-----------------------------------------------------------------------
+    ! ... This subroutine initializes MPI
+    ! ... Processes are organized in NIMAGE images each dealing with a subset of
+    ! ... images used to discretize the "path" (only in "path" optimizations)
+    ! ... Within each image processes are organized in NPOOL pools each dealing
+    ! ... with a subset of kpoints.
+    ! ... Within each pool R & G space distribution is performed.
+    ! ... NPROC is read from command line or can be set with the appropriate
+    ! ... environment variable ( for example use 'setenv MP_PROCS 8' on IBM SP
+    ! ... machine to run on NPROC=8 processors ); NIMAGE and NPOOL are read from
+    ! ... command line.
+    ! ... NPOOL must be a whole divisor of NPROC
+    !
+    IMPLICIT NONE
+    !
+    INTEGER, INTENT(IN) :: world, root
+    INTEGER :: nproc_ortho_in 
+    !
+    INTEGER :: myrank, npe
+    !
+    ! ... now initialize processors and groups variables
+    ! ... set global coordinate for this processor
+    ! ... root  = index of the root processor
+    !
+    myrank = mp_rank(world)
+    npe = mp_size(world)
+    !
+    CALL mp_global_start_new( root, myrank, world, npe )
+    !
+    ! ... initialize input/output, set (and get) the I/O nodes
+    !
+    CALL io_global_start( myrank, root )
+    !
+    IF ( myrank == root ) THEN
+       !
+       ! ... How many band groups?
+       !
+       CALL get_arg_nbgrp( nbgrp )
+       !
+       nbgrp = MAX( nbgrp, 1 )
+       nbgrp = MIN( nbgrp, nproc )
+       !
+       ! ... How many k-point pools ?
+       !
+       CALL get_arg_npool( npool )
+       !
+       npool = MAX( npool, 1 )
+       npool = MIN( npool, nproc )
+       !
+       ! ... How many task groups ?
+       !
+       CALL get_arg_ntg( ntask_groups )
+       !
+       ! ... How many processors involved in diagonalization of Hamiltonian ?
+       !
+       CALL get_arg_northo( nproc_ortho_in )
+       !
+       nproc_ortho_in = MAX( nproc_ortho_in, 1 )
+       nproc_ortho_in = MIN( nproc_ortho_in, nproc )
+       !
+    END IF
+    !
+    CALL mp_barrier(world)
+    !
+    ! ... broadcast input parallelization options to all processors
+    !
+    CALL mp_bcast( npool,  root, world )
+    CALL mp_bcast( nbgrp, root, world )
+    CALL mp_bcast( ntask_groups, root, world )
+    CALL mp_bcast( nproc_ortho_in, root, world )
+    !
+    ! ... initialize images, band, k-point, ortho groups in sequence
+    !
+    !
+    CALL init_bands( )
+    !
+    CALL init_pools( )
+    !
+    CALL init_ortho( nproc_ortho_in )
+    !
+    !
+    RETURN
+    !
+  END SUBROUTINE mp_startup_new
+  !
+  !-----------------------------------------------------------------------
+  SUBROUTINE mp_global_start_new( root_i, mpime_i, group_i, nproc_i )
+    !-----------------------------------------------------------------------
+    !
+    IMPLICIT NONE
+    !
+    INTEGER, INTENT(IN) :: root_i, mpime_i, group_i, nproc_i
+    !
+    root             = root_i
+    mpime            = mpime_i
+    world_comm       = group_i
+    nproc            = nproc_i
+    nproc_pool       = nproc_i
+    nproc_bgrp       = nproc_i
+    my_pool_id       = 0
+    my_bgrp_id       = 0
+    me_pool          = mpime
+    me_bgrp          = mpime
+    root_pool        = root
+    root_bgrp        = root
+    inter_pool_comm  = group_i
+    intra_pool_comm  = group_i
+    inter_bgrp_comm  = group_i
+    intra_bgrp_comm  = group_i
+    ortho_comm       = group_i
+    !
+    RETURN
+    !
+  END SUBROUTINE mp_global_start_new
+  !
+  !-----------------------------------------------------------------------
   SUBROUTINE mp_global_end ( )
     !-----------------------------------------------------------------------
     !
@@ -268,7 +386,7 @@ CONTAINS
        CALL errore( 'init_images', 'invalid number of images, out of range', 1 )
     IF ( MOD( nproc, nimage ) /= 0 ) &
        CALL errore( 'init_images', 'n. of images must be divisor of nprocs', 1 )
-    ! 
+    !
     ! ... set number of cpus per image
     !
     nproc_image = nproc / nimage
@@ -291,16 +409,16 @@ CONTAINS
     !
     CALL mp_barrier()
     !
-    ! ... the inter_image_comm communicator is created                     
-    !     
-    CALL MPI_COMM_SPLIT( MPI_COMM_WORLD, me_image, mpime, inter_image_comm, ierr )  
+    ! ... the inter_image_comm communicator is created
+    !
+    CALL MPI_COMM_SPLIT( MPI_COMM_WORLD, me_image, mpime, inter_image_comm, ierr )
     IF ( ierr /= 0 ) CALL errore &
        ( 'init_images', 'inter image communicator initialization', ABS(ierr) )
 #endif
     RETURN
     !
   END SUBROUTINE init_images
-  !
+
   !----------------------------------------------------------------------------
   SUBROUTINE init_bands( )
     !---------------------------------------------------------------------------
