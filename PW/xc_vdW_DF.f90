@@ -51,6 +51,8 @@ MODULE vdW_DF
   USE input_parameters,  ONLY : verbosity
   USE fft_base,          ONLY : dfftp
   USE fft_interfaces,    ONLY : fwfft, invfft 
+  USE control_flags,     ONLY : gamma_only
+  USE io_global,         ONLY : stdout
   IMPLICIT NONE
   
   private  
@@ -75,7 +77,6 @@ CONTAINS
     USE grid_dimensions, ONLY : nr1x, nr2x, nr3x, nrxx
     USE cell_base,       ONLY : omega, tpiba
     USE fft_scalar,      ONLY : cfft3d
-    USE control_flags,   ONLY : gamma_only 
     !! ----------------------------------------------------------------------------------
     
     
@@ -164,9 +165,9 @@ CONTAINS
     !! --------------------------------------------------------------------------------------------------------
 
     call errore('xc_vdW_DF','vdW functional not implemented for spin polarized runs', size(rho_valence,2)-1)
-    IF ( gamma_only) CALL errore ('xc_vdW_DF', &
-        & 'vdW functional not implemented for gamma point calculations. &
-        & Use kpoints automatic and specify the gamma point explicitly', 1)
+    !IF ( gamma_only) CALL errore ('xc_vdW_DF', &
+    !    & 'vdW functional not implemented for gamma point calculations. &
+    !    & Use kpoints automatic and specify the gamma point explicitly', 1)
 
     !! --------------------------------------------------------------------------------------------------------
     
@@ -394,7 +395,7 @@ CONTAINS
     
        if (ionode) write(*,'(/ / A /)') "     ----------------------------------------------------------------"
 
-       if (ionode) write(*,'(A, F15.8 /)') "     Non-local correlation energy =         ", Ec_nl
+       if (ionode) write(*,'(A, F22.15 /)') "     Non-local correlation energy =         ", Ec_nl
 
        if (ionode) write(*,'(A /)') "     ----------------------------------------------------------------"
        
@@ -476,11 +477,11 @@ CONTAINS
     !! --------------------------------------------------------------------
 
     grid_cell_volume = omega/(nr1x*nr2x*nr3x)  
-    
+ 
     do i_grid = 1, nrxx
        
        vtxc = vtxc + e2*grid_cell_volume * total_rho(i_grid)*potential(procs_start(me_pool)+i_grid-1)
-       
+    
     end do
 
     !! ----------------------------------------------------------------------
@@ -488,11 +489,6 @@ CONTAINS
     
     !! Deallocate all arrays.
     deallocate(q0, gradient_rho, dq0_drho, dq0_dgradrho, potential, total_rho, thetas)  
-    
-
-    
-    !! And we're done.  Return control to PWSCF.
-
     
   END SUBROUTINE xc_vdW_DF
   
@@ -505,7 +501,6 @@ CONTAINS
 
   SUBROUTINE stress_vdW_DF(rho_valence, rho_core, sigma)
 
-      USE control_flags,         ONLY : gamma_only
       USE grid_dimensions,       ONLY : nr1, nr2, nr3, nr1x, nr2x, nr3x, nrxx
 
       implicit none
@@ -542,9 +537,9 @@ CONTAINS
       !! --------------------------------------------------------------------------------------------------------
 
       call errore('xc_vdW_DF','vdW functional not implemented for spin polarized runs', size(rho_valence,2)-1)
-      IF ( gamma_only) CALL errore ('xc_vdW_DF', &
-        & 'vdW functional not implemented for gamma point calculations. &
-        & Use kpoints automatic and specify the gamma point explicitly', 2)
+      !IF ( gamma_only) CALL errore ('xc_vdW_DF', &
+      !  & 'vdW functional not implemented for gamma point calculations. &
+      !  & Use kpoints automatic and specify the gamma point explicitly', 2)
       sigma(:,:) = 0.0_DP
       sigma_grad(:,:) = 0.0_DP
       sigma_ker(:,:) = 0.0_DP
@@ -865,7 +860,7 @@ CONTAINS
       real(dp), allocatable :: dkernel_of_dk(:,:)               !
       
       integer               :: l, m, q1_i, q2_i , g_i           !
-      real(dp)              :: g2, ngmod2, g_kernel             ! 
+      real(dp)              :: g2, ngmod2, g_kernel, G_multiplier             ! 
       integer               :: last_g, theta_i
 
       allocate( dkernel_of_dk(Nqs, Nqs) )
@@ -888,6 +883,9 @@ CONTAINS
 
       last_g = -1
 
+      G_multiplier = 1.0D0
+      if (gamma_only) G_multiplier = 2.0D0
+
       do g_i = gstart, ngm
 
           g2 = gg (g_i) * tpiba2
@@ -905,13 +903,15 @@ CONTAINS
                  do l = 1, 3
                      do m = 1, l
 
-                     sigma (l, m) = sigma (l, m) - 0.5 * e2 *&
+                     sigma (l, m) = sigma (l, m) - G_multiplier * 0.5 * e2 *&
                                      thetas(nl(g_i),q1_i)*dkernel_of_dk(q1_i,q2_i)*conjg(thetas(nl(g_i),q2_i))* &
                                      (g (l, g_i) * g (m, g_i) * tpiba2) / g_kernel 
                      end do
                  end do 
              enddo
          end do      
+
+         if (g_i < gstart ) sigma(:,:) = sigma(:,:) / G_multiplier
          
       enddo
 
@@ -922,7 +922,6 @@ CONTAINS
       deallocate( dkernel_of_dk )
       
    END SUBROUTINE stress_vdW_DF_kernel
-
 
   !! ###############################################################################################################
   !!                                    |                  |
@@ -1623,7 +1622,7 @@ end subroutine numerical_gradient
 
 subroutine thetas_to_uk(thetas, u_vdW)
   
-  USE gvect,           ONLY : nl, gg, ngm, igtongl, gl, ngl
+  USE gvect,           ONLY : nl, nlm, gg, ngm, igtongl, gl, ngl, gstart
   USE grid_dimensions, ONLY : nrxx
   USE cell_base,       ONLY : tpiba, omega
   USE klist,           ONLY : nks
@@ -1662,7 +1661,8 @@ subroutine thetas_to_uk(thetas, u_vdW)
   do g_i = 1, ngm
      
      outside_cutoff(nl(g_i)) = .false.
-     
+     if (gamma_only) outside_cutoff(nlm(g_i)) = .false.
+    
      if ( igtongl(g_i) .ne. last_g) then
         
         g = sqrt(gl(igtongl(g_i))) * tpiba
@@ -1671,18 +1671,15 @@ subroutine thetas_to_uk(thetas, u_vdW)
         
      end if
      
-     !theta = thetas(nl(g_i),:)
-     !thetas(nl(g_i),:) = 0.0D0
      theta = u_vdW(nl(g_i),:)
      u_vdW(nl(g_i),:) = 0.0D0
      
      do q2_i = 1, Nqs
         do q1_i = 1, Nqs
            
-           !thetas(nl(g_i),q2_i) = thetas(nl(g_i),q2_i) + theta(q1_i)*kernel_of_k(q1_i,q2_i)
            u_vdW(nl(g_i),q2_i) = u_vdW(nl(g_i),q2_i) + conjg(theta(q1_i))*kernel_of_k(q1_i,q2_i)
-           
         end do
+        if (gamma_only) u_vdW(nlm(g_i),q2_i) = CONJG(u_vdW(nl(g_i),q2_i))
      end do
      
   end do
@@ -1724,7 +1721,7 @@ end subroutine thetas_to_uk
 
 subroutine vdW_energy(thetas, vdW_xc_energy)
   
-  USE gvect,           ONLY : nl, gg, ngm, igtongl, gl, ngl
+  USE gvect,           ONLY : nl, nlm, gg, ngm, igtongl, gl, ngl, gstart
   USE grid_dimensions, ONLY : nrxx
   USE cell_base,       ONLY : tpiba, omega
   USE klist,           ONLY : nks
@@ -1738,12 +1735,15 @@ subroutine vdW_energy(thetas, vdW_xc_energy)
   real(dp), allocatable :: kernel_of_k(:,:)    !! This array will hold the interpolated kernel values for each pair of q values
   !                                            !! in the q_mesh.
 
-  real(dp) :: g, last_g                        !! The magnitude of the current g vector and the magnitude of the last g vector
+  real(dp) :: g                                !! The magnitude of the current g vector 
+  integer  :: last_g                           !! The shell number of the last g vector
+
   !                                          
   
   integer :: g_i, q1_i, q2_i, count, i_grid    !! Index variables
 
-  complex(dp) :: theta(Nqs)                    !! Temporary storage vector used since we are overwriting the thetas array here.
+  complex(dp) :: theta(Nqs), thetam(Nqs), theta_g(Nqs)      !! Temporary storage vector used since we are overwriting the thetas array here.
+  real(dp)    :: G0_term, G_multiplier 
 
   logical, allocatable :: outside_cutoff(:)    !! Array to determine which of this processor's assigned points are outside
   !                                            !! the g-vector cutoff radius. Initialized to true and set to false for each
@@ -1753,15 +1753,13 @@ subroutine vdW_energy(thetas, vdW_xc_energy)
   
   
   vdW_xc_energy = 0.0D0
-  
+ 
   allocate( kernel_of_k(Nqs, Nqs) )
-  
   allocate( outside_cutoff(nrxx) )
   outside_cutoff = .true.
   
-  last_g = -1.0D0 
+  last_g = -1 
   
-
   !! Loop over PWSCF's array of magnitude-sorted g-vector shells.  For each shell, interpolate
   !! the kernel at this magnitude of g, then find all points on the shell and carry out the 
   !! integration over those points.  The PWSCF variables used here are 
@@ -1772,10 +1770,18 @@ subroutine vdW_energy(thetas, vdW_xc_energy)
   !! kept in thetas array.
   !! -------------------------------------------------------------------------------------------------
   
+
+  !!
+  !! Here we should use gstart,ngm but all the cases are handeld by conditionals inside the loop
+  !!
+  G_multiplier = 1.0D0
+  if (gamma_only) G_multiplier = 2.0D0
+
   do g_i = 1, ngm
      
-     outside_cutoff(nl(g_i)) = .false.
-     
+     outside_cutoff(nl(g_i))  = .false.
+     if (gamma_only) outside_cutoff(nlm(g_i))  = .false.
+
      if ( igtongl(g_i) .ne. last_g) then
         
         g = sqrt(gl(igtongl(g_i))) * tpiba
@@ -1786,26 +1792,31 @@ subroutine vdW_energy(thetas, vdW_xc_energy)
      
      theta = thetas(nl(g_i),:)
      thetas(nl(g_i),:) = 0.0D0
-     
+
      do q2_i = 1, Nqs
+
         do q1_i = 1, Nqs
            
-           thetas(nl(g_i),q2_i) = thetas(nl(g_i),q2_i) + theta(q1_i)*kernel_of_k(q1_i,q2_i)
+           thetas(nl(g_i),q2_i)  = thetas(nl(g_i),q2_i) + theta(q1_i)*kernel_of_k(q1_i,q2_i)
            
         end do
+
+        if (gamma_only) thetas(nlm(g_i),q2_i) = CONJG(thetas(nl(g_i),q2_i))
+
      end do
      
      do q1_i = 1, Nqs
         
-        vdW_xc_energy = vdW_xc_energy + thetas(nl(g_i),q1_i)*conjg(theta(q1_i))
-        
+        vdW_xc_energy = vdW_xc_energy + G_multiplier * (thetas(nl(g_i),q1_i)*conjg(theta(q1_i)))
+     
      end do
      
-  end do
-  
-  !! ---------------------------------------------------------------------------------------------------
-  
+     if (g_i < gstart ) vdW_xc_energy = vdW_xc_energy / G_multiplier
 
+  end do
+ 
+  !! ---------------------------------------------------------------------------------------------------
+ 
   !! Apply scaling factors.  The e2 comes from PWSCF's choice of units.  This should be 
   !! 0.5 * e2 * vdW_xc_energy * (2pi)^3/omega * (omega)^2, with the (2pi)^3/omega being
   !! the volume element for the integral (the volume of the reciprocal unit cell) and the 
@@ -1814,12 +1825,11 @@ subroutine vdW_energy(thetas, vdW_xc_energy)
   !! be a factor of 1/(2pi)^3 on the radial Fourier transform of phi that was left out to cancel
   !! with this factor.
   !! ---------------------------------------------------------------------------------------------------
-  
-  vdW_xc_energy = 0.5D0 * e2 * vdW_xc_energy * omega
-  
+ 
+  vdW_xc_energy = 0.5D0 * e2 * omega * vdW_xc_energy 
+ 
   !! ---------------------------------------------------------------------------------------------------
 
-  
   
   !! Loop over the outside_cutoff array and set points outside the cutoff radius
   !! to 0 in the u(k) array.
@@ -1841,6 +1851,8 @@ subroutine vdW_energy(thetas, vdW_xc_energy)
 
   
 end subroutine vdW_energy
+
+
 
 
 !! ###############################################################################################################
@@ -2291,7 +2303,6 @@ end subroutine invert_3x3_matrix
 
 SUBROUTINE print_sigma(sigma, title)
   
-  USE io_global,     ONLY : stdout
   USE constants,     ONLY : uakbar
 
   real(dp), intent(in) :: sigma(:,:)
