@@ -14,15 +14,11 @@ SUBROUTINE print_clock_pw()
    !
    USE io_global,          ONLY : stdout
    USE control_flags,      ONLY : isolve, iverbosity, gamma_only
-   USE mp_global,          ONLY : mpime, root
    USE paw_variables,      ONLY : okpaw
    USE realus,             ONLY : real_space
    !
    IMPLICIT NONE
    !
-   !
-!   IF ( mpime /= root ) &
-!      OPEN( UNIT = stdout, FILE = '/dev/null', STATUS = 'UNKNOWN' )
    !
    WRITE( stdout, * )
    !
