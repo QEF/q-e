@@ -423,7 +423,6 @@ END FUNCTION saw
     REAL(DP),  INTENT(IN) :: press_  ! external pressure from imput ( in KBar = 0.1 GPa )
 
 
-    REAL(DP) :: a1(3), a2(3), a3(3), b1(3), b2(3), b3(3)
     REAL(DP) :: a, b, c, units
     INTEGER   :: j
 
@@ -558,23 +557,11 @@ END FUNCTION saw
 
     END IF
     !
-    a1 =  at( :, 1 ) * alat
-    a2 =  at( :, 2 ) * alat
-    a3 =  at( :, 3 ) * alat
-    !
     CALL volume( alat, at(1,1), at(1,2), at(1,3), omega )
     !
-    CALL recips( a1, a2, a3, b1, b2, b3 )
+    CALL recips(  at(1,1), at(1,2), at(1,3),  bg(1,1), bg(1,2), bg(1,3) )
     !
-    ainv( 1, : ) = b1( : )
-    ainv( 2, : ) = b2( : )
-    ainv( 3, : ) = b3( : )
-    !
-    bg( :, 1 ) = b1( : ) * alat
-    bg( :, 2 ) = b2( : ) * alat
-    bg( :, 3 ) = b3( : ) * alat
-    !
-    ! ... The matrix "htm1" in FPMD correspond to the matrix "bg" in PW
+    ainv(:,:) = bg(:,:)/alat
     !
     CALL init_dofree ( cell_dofree ) 
     !
@@ -582,13 +569,13 @@ END FUNCTION saw
 
     WRITE( stdout, 300 ) ibrav
     WRITE( stdout, 305 ) alat
-    WRITE( stdout, 310 ) a1
-    WRITE( stdout, 320 ) a2
-    WRITE( stdout, 330 ) a3
+    WRITE( stdout, 310 ) at(:,1)*alat
+    WRITE( stdout, 320 ) at(:,2)*alat
+    WRITE( stdout, 330 ) at(:,3)*alat
     WRITE( stdout, *   )
-    WRITE( stdout, 350 ) b1
-    WRITE( stdout, 360 ) b2
-    WRITE( stdout, 370 ) b3
+    WRITE( stdout, 350 ) bg(:,1)/alat
+    WRITE( stdout, 360 ) bg(:,2)/alat
+    WRITE( stdout, 370 ) bg(:,3)/alat
     WRITE( stdout, 340 ) omega
 300 FORMAT( 3X, 'ibrav = ',I4)
 305 FORMAT( 3X, 'alat  = ',F14.8)
