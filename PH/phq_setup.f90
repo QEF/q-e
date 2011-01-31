@@ -336,7 +336,7 @@ subroutine phq_setup
           irgq, nsymq, minus_q, irotmq, t, tmq, npertx, u, npert, &
           nirr, gi, gimq, iverbosity, modenum)
   else
-     if (nsym > 1.and..not.lgamma_gamma) then
+     if (nsym > 1.and..not.lgamma_gamma.and.(trans.or.zeu.or.elph)) then
         call set_irr (nat, at, bg, xq, s, sr, tau, ntyp, ityp, ftau, invs,&
                     nsym, rtau, irt, irgq, nsymq, minus_q, irotmq, u, npert, &
                     nirr, gi, gimq, iverbosity, u_from_file, w2, search_sym, &
