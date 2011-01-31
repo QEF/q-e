@@ -24,8 +24,7 @@
       use io_global,                only: stdout, ionode
       use control_flags,            only: gamma_only
       use grid_dimensions,          only: nr1, nr2, nr3, nr1x, nr2x, nr3x
-      use cell_base,                only: ainv, a1, a2, a3
-      use cell_base,                only: omega, alat
+      use cell_base,                only: ainv, at, omega, alat
       use small_box,                only: a1b, a2b, a3b, omegab, ainvb, tpibab, small_box_set
       use small_box,                only: alatb, b1b, b2b, b3b
       use smallbox_grid_dimensions, only: nr1b, nr2b, nr3b, nr1bx,nr2bx,nr3bx,&
@@ -56,7 +55,7 @@
 ! 
       integer  :: i
       real(dp) :: rat1, rat2, rat3
-      real(dp) :: at(3,3), bg(3,3), tpiba2 
+      real(dp) :: bg(3,3), tpiba2 
       integer :: ng_, ngs_, ngm_ , ngw_ , nogrp_
 
 
@@ -74,11 +73,8 @@
       CALL bmeshset( )
       !
       ! ... cell dimensions and lattice vectors
-      ! ... PW-CP compatibility : 
-      ! ... a1, a2 and a3 are in cartesian coordinates and in a.u. units
-      ! ... at in alat units
+      ! ... note that at are in alat units
 
-      at (:,1) = a1(:)/alat; at (:,2) = a2(:)/alat; at (:,3) = a3(:)/alat
       call recips( at(1,1), at(1,2), at(1,3), bg(1,1), bg(1,2), bg(1,3) )
 
       !     bg(:,1), bg(:,2), bg(:,3) are the basis vectors, in
@@ -94,9 +90,9 @@
         WRITE( stdout,210) 
 210     format(/,3X,'unit vectors of full simulation cell',&
               &/,3X,'in real space:',25x,'in reciprocal space (units 2pi/alat):')
-        WRITE( stdout,'(3X,I1,1X,3f10.4,10x,3f10.4)') 1,a1,bg(:,1)
-        WRITE( stdout,'(3X,I1,1X,3f10.4,10x,3f10.4)') 2,a2,bg(:,2)
-        WRITE( stdout,'(3X,I1,1X,3f10.4,10x,3f10.4)') 3,a3,bg(:,3)
+        WRITE( stdout,'(3X,I1,1X,3f10.4,10x,3f10.4)') 1,at(:,1)*alat,bg(:,1)
+        WRITE( stdout,'(3X,I1,1X,3f10.4,10x,3f10.4)') 2,at(:,2)*alat,bg(:,2)
+        WRITE( stdout,'(3X,I1,1X,3f10.4,10x,3f10.4)') 3,at(:,3)*alat,bg(:,3)
 
       END IF
 
@@ -170,7 +166,7 @@
          rat1 = DBLE( nr1b ) / DBLE( nr1 )
          rat2 = DBLE( nr2b ) / DBLE( nr2 )
          rat3 = DBLE( nr3b ) / DBLE( nr3 )
-         CALL small_box_set( alat, omega, a1, a2, a3, rat1, rat2, rat3 )
+         CALL small_box_set( alat, omega, at, rat1, rat2, rat3 )
 
          !  now set gcutb
 
@@ -218,7 +214,7 @@
       use mp_global,        only: nproc_bgrp, me_bgrp, intra_bgrp_comm
       USE io_files,         ONLY: tmp_dir     
       use ions_base,        only: na, nsp, nat, tau_srt, ind_srt, if_pos, atm, na, pmass
-      use cell_base,        only: a1, a2, a3, r_to_s, cell_init, deth
+      use cell_base,        only: at, alat, r_to_s, cell_init, deth
 
       use cell_base,        only: ibrav, ainv, h, hold, tcell_base_init
       USE ions_positions,   ONLY: allocate_ions_positions, atoms_init, &
@@ -250,8 +246,8 @@
 
       ! Set ht0 and htm, cell at time t and t-dt
       !
-      CALL cell_init( ht0, a1, a2, a3 )
-      CALL cell_init( htm, a1, a2, a3 )
+      CALL cell_init( alat, at, ht0 )
+      CALL cell_init( alat, at, htm )
 
       CALL allocate_ions_positions( nsp, nat )
       ! 
@@ -302,12 +298,12 @@
 
       else
         !
-        ! geometry is set to the cell parameters read from stdin ( a1, a2, a3 )
+        ! geometry is set to the cell parameters read from stdin
         !
         do i = 1, 3
-            h(i,1) = a1(i)
-            h(i,2) = a2(i)
-            h(i,3) = a3(i)
+            h(i,1) = at(i,1)*alat
+            h(i,2) = at(i,2)*alat
+            h(i,3) = at(i,3)*alat
         enddo
 
         hold = h
@@ -333,12 +329,12 @@
       !
       !     re-initialization of lattice parameters and g-space vectors.
       !     Note that direct and reciprocal lattice primitive vectors
-      !     a1,a2,a3, ainv, and corresponding quantities for small boxes
+      !     at, ainv, and corresponding quantities for small boxes
       !     are recalculated according to the value of cell parameter h
       !
       USE kinds,                 ONLY : DP
       USE constants,             ONLY: tpi
-      USE cell_base,             ONLY : a1, a2, a3, omega, alat, cell_base_reinit
+      USE cell_base,             ONLY : at, omega, alat, cell_base_reinit
       USE gvecw,                 ONLY : g2kin_init
       USE gvect,                 ONLY : gg
       USE io_global,             ONLY : stdout, ionode
@@ -348,7 +344,7 @@
       REAL(DP) :: h(3,3)
       !
       ! local
-      REAL(DP) :: at(3,3), bg(3,3), tpiba2
+      REAL(DP) :: bg(3,3), tpiba2
       !
       !WRITE( stdout, 344 ) 
       !do i=1,3
@@ -359,7 +355,6 @@
       !
       CALL cell_base_reinit( TRANSPOSE( h ) )
       !
-      at (:,1) = a1(:)/alat; at (:,2) = a2(:)/alat; at (:,3) = a3(:)/alat
       call recips( at(1,1), at(1,2), at(1,3), bg(1,1), bg(1,2), bg(1,3) )
       !
       !  re-calculate G-vectors and kinetic energy
@@ -370,7 +365,7 @@
       !
       !   generation of little box g-vectors
       !
-      call newgb( a1, a2, a3, omega, alat )
+      call newgb( omega, alat, at )
       !
       return
  344  format(4x,'h from newinit')

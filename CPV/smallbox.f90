@@ -18,8 +18,6 @@
       IMPLICIT NONE
       SAVE
 
-        !  a1, a2 and a3 are the simulation cell base vector as calculated from celldm
-
       REAL(DP) :: a1b(3) = (/ 0.0_DP, 0.0_DP, 0.0_DP /)
       REAL(DP) :: a2b(3) = (/ 0.0_DP, 0.0_DP, 0.0_DP /)
       REAL(DP) :: a3b(3) = (/ 0.0_DP, 0.0_DP, 0.0_DP /)
@@ -41,18 +39,18 @@
 !------------------------------------------------------------------------------!
 !
 
-     SUBROUTINE small_box_set( alat, omega, a1, a2, a3, rat1, rat2, rat3 )
+     SUBROUTINE small_box_set( alat, omega, at, rat1, rat2, rat3 )
        USE constants, ONLY: pi
        USE io_global, ONLY: stdout
        IMPLICIT NONE
-       REAL(DP), INTENT(IN) :: alat, omega, a1(3), a2(3), a3(3), rat1, rat2, rat3
+       REAL(DP), INTENT(IN) :: alat, omega, at(3,3), rat1, rat2, rat3
 
        alatb  = alat * rat1
        IF( alatb <= 0.0_DP ) CALL errore(' small_box_set ', ' alatb <= 0 ', 1 )
        tpibab = 2.0_DP * pi / alatb
-       a1b = a1 * rat1
-       a2b = a2 * rat2
-       a3b = a3 * rat3
+       a1b = at(:,1)*alat * rat1
+       a2b = at(:,2)*alat * rat2
+       a3b = at(:,3)*alat * rat3
        omegab = omega * rat1 * rat2 * rat3
 !
        CALL recips( a1b, a2b, a3b, b1b, b2b, b3b )

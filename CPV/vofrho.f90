@@ -28,8 +28,8 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, tlast,  
       USE gvecs
       USE gvect,              ONLY: ngm, nl, nlm
       USE cell_base,          ONLY: omega, r_to_s
-      USE cell_base,          ONLY: a1, a2, a3, tpiba2, h, ainv
-      USE gvect, ONLY: gstart, gg, g
+      USE cell_base,          ONLY: alat, at, tpiba2, h, ainv
+      USE gvect,              ONLY: gstart, gg, g
       USE grid_dimensions,    ONLY: nr1, nr2, nr3, nrxx
       USE smooth_grid_dimensions, ONLY: nrxxs
       USE electrons_base,   ONLY: nspin
@@ -526,7 +526,7 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, tlast,  
             WRITE( stdout,*)
             WRITE( stdout,*) "From vofrho:"
             WRITE( stdout,*) "cell parameters h"
-            WRITE( stdout,5555) (a1(i),a2(i),a3(i),i=1,3)
+            WRITE( stdout,5555) (at(i,1)*alat, at(i,2)*alat, at(i,3)*alat,i=1,3)
             !
             WRITE( stdout,*)
             WRITE( stdout,*) "derivative of e(tot)"

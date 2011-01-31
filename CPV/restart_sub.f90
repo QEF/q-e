@@ -16,8 +16,8 @@ SUBROUTINE from_restart( )
    USE electrons_module,      ONLY : occn_info
    USE electrons_base,        ONLY : nspin, iupdwn, nupdwn, f, nbsp, nbsp_bgrp
    USE io_global,             ONLY : ionode, ionode_id, stdout
-   USE cell_base,             ONLY : ainv, h, hold, deth, r_to_s, s_to_r, boxdimensions, &
-                                     velh, a1, a2, a3
+   USE cell_base,             ONLY : ainv, h, hold, deth, r_to_s, s_to_r, &
+                                     boxdimensions, velh, at, alat
    USE ions_base,             ONLY : na, nsp, iforce, vel_srt, nat, randpos
    USE time_step,             ONLY : tps, delt
    USE ions_positions,        ONLY : taus, tau0, tausm, taum, vels, fion, fionm, set_velocities
@@ -117,7 +117,7 @@ SUBROUTINE from_restart( )
    ! ... to starting cell (from ndr or again standard input)
    !
    IF ( okvan .or. nlcc_any ) THEN
-      CALL initbox( tau0, taub, irb, ainv, a1, a2, a3 )
+      CALL initbox( tau0, taub, irb, ainv, at, alat )
       CALL phbox( taub, eigrb, ainvb )
    END IF
    !

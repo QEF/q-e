@@ -854,7 +854,7 @@ MODULE input
                                   axis
      !
      USE ions_base,        ONLY : tau, ityp, zv
-     USE cell_base,        ONLY : cell_base_init, a1, a2, a3, cell_alat
+     USE cell_base,        ONLY : cell_base_init, at, cell_alat
      USE cell_nose,        ONLY : cell_nose_init
      USE ions_base,        ONLY : ions_base_init, greasp_ => greasp
      USE sic_module,       ONLY : sic_initval
@@ -915,7 +915,7 @@ MODULE input
 
      CALL ions_base_init( ntyp , nat , na_inp , sp_pos , rd_pos , rd_vel,  &
                           atom_mass, atom_label, if_pos, atomic_positions, &
-                          alat_ , a1, a2, a3, ion_radius, rd_for )
+                          alat_ , at, ion_radius, rd_for )
 
      ! ...   Set Values for the cutoff
 

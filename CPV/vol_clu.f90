@@ -17,7 +17,7 @@ SUBROUTINE vol_clu(rho_real,rho_g,s_fac,flag)
       use kinds,          only: dp
       use constants,      only: pi
       use parameters,     only: nsx
-      use cell_base,      only: a1, a2, a3, h, omega, tpiba, tpiba2
+      use cell_base,      only: alat, at, h, omega, tpiba, tpiba2
       use electrons_base, only: nspin
       use ions_base,      only: na, nsp, pmass
       use ions_positions, only: tau0
@@ -134,13 +134,14 @@ SUBROUTINE vol_clu(rho_real,rho_g,s_fac,flag)
                      ir = ir1 + (ir2-1)*nr1 + (ir3-1)*nr2*nr1
                      dist = 0.d0
                      do i = 1,3
-                        posv(i,ir) = (DBLE(ir1)-1.0d0)*a1(i)/DBLE(nr1) +&
-     &                              (DBLE(ir2)-1.0d0)*a2(i)/DBLE(nr2) +&
-     &                              (DBLE(ir3)-1.0d0)*a3(i)/DBLE(nr3)
+                        posv(i,ir) = (DBLE(ir1)-1.0d0)*at(i,1)/DBLE(nr1) +&
+     &                               (DBLE(ir2)-1.0d0)*at(i,2)/DBLE(nr2) +&
+     &                               (DBLE(ir3)-1.0d0)*at(i,3)/DBLE(nr3)
                      end do
                   end do
                end do
             end do
+            posv(:,:) = posv(:,:)*alat
          end if
       end if
 
@@ -292,9 +293,9 @@ SUBROUTINE vol_clu(rho_real,rho_g,s_fac,flag)
 #endif
             dist = 0.d0
             do j = 1,3
-               dist = dist + (pos_aux(j) - 0.5d0*(a1(j)+a2(j)+a3(j)))**2
+               dist = dist + (pos_aux(j) - 0.5d0*(at(j,1)+at(j,2)+at(j,3)))**2
             end do
-            dist = dsqrt(dist)
+            dist = dsqrt(dist)*alat
             if (dist.ge.R_j) then
                v_vol(ir) = - nelect/dist
                v_vol(ir) = 0.d0

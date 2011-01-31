@@ -14,7 +14,7 @@ subroutine bforceion(fion,tfor,ipol,qmatinv,bec0,becdr,gqq,evalue)
 
 ! fion       : input, forces on ions
 ! tfor       : input, if true it computes force
-! a1,a2,a3   : input, direct lattice vectors
+! at         : input, direct lattice vectors, divided by alat
 ! ipol       : input, electric field polarization
 ! qmatinv    : input, inverse of Q matrix: Q_i,j=<Psi_i|exp(iG*r)|Psi_j>
 ! bec0       : input, factors <beta_iR|Psi_j>
@@ -26,7 +26,7 @@ subroutine bforceion(fion,tfor,ipol,qmatinv,bec0,becdr,gqq,evalue)
   use uspp_param, only: nvb, ish
   use kinds, only : dp
   use constants
-  use cell_base, only: a1, a2, a3
+  use cell_base, only: at, alat
   use uspp_param, only: nh, nhm
   use uspp, only : nhsa=> nkb
   use electrons_base, only: nbsp, nbspx, nspin, nbspx_bgrp
@@ -56,16 +56,16 @@ subroutine bforceion(fion,tfor,ipol,qmatinv,bec0,becdr,gqq,evalue)
   ci = (0.d0,1.d0)
      
   if(ipol.eq.1) then
-     gmes=a1(1)**2+a1(2)**2+a1(3)**2
-     gmes=2*pi/SQRT(gmes)
+     gmes=at(1,1)**2+at(2,1)**2+at(3,1)**2
+     gmes=2*pi/alat/SQRT(gmes)
   endif
   if(ipol.eq.2) then
-     gmes=a2(1)**2+a2(2)**2+a2(3)**2
-     gmes=2*pi/SQRT(gmes)
+     gmes=at(1,2)**2+at(2,2)**2+at(3,2)**2
+     gmes=2*pi/alat/SQRT(gmes)
   endif
   if(ipol.eq.3) then
-     gmes=a3(1)**2+a3(2)**2+a3(3)**2
-     gmes=2*pi/SQRT(gmes)
+     gmes=at(1,3)**2+at(2,3)**2+at(3,3)**2
+     gmes=2*pi/alat/SQRT(gmes)
   endif
 
 

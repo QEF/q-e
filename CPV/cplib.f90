@@ -317,7 +317,7 @@ END SUBROUTINE gshcount
 
 !=----------------------------------------------------------------------------=!
 
-        SUBROUTINE newgb( a1, a2, a3, omega, alat )
+        SUBROUTINE newgb( omega, alat, at )
 !
 !     re-generation of little box g-vectors
 !
@@ -328,7 +328,7 @@ END SUBROUTINE gshcount
           USE constants, ONLY: pi
 
           IMPLICIT NONE
-          REAL(DP), INTENT(IN) :: a1( 3 ), a2( 3 ), a3( 3 ), omega, alat
+          REAL(DP), INTENT(IN) :: at(3,3), omega, alat
 
           INTEGER :: i
           REAL(DP) :: alatb, b1b(3),b2b(3),b3b(3)
@@ -337,9 +337,9 @@ END SUBROUTINE gshcount
           alatb  = alat / nr1*nr1b
           tpibab = 2.d0*pi / alatb
           do i=1,3
-            a1b(i)=a1(i)/nr1*nr1b
-            a2b(i)=a2(i)/nr2*nr2b
-            a3b(i)=a3(i)/nr3*nr3b
+            a1b(i)=at(i,1)*alat/nr1*nr1b
+            a2b(i)=at(i,2)*alat/nr2*nr2b
+            a3b(i)=at(i,3)*alat/nr3*nr3b
           enddo
 
           omegab=omega/nr1*nr1b/nr2*nr2b/nr3*nr3b
@@ -2084,7 +2084,7 @@ END FUNCTION
 !            
 !
 !-----------------------------------------------------------------------
-      SUBROUTINE initbox ( tau0, taub, irb, ainv, a1, a2, a3 )
+      SUBROUTINE initbox ( tau0, taub, irb, ainv, at, alat )
 !-----------------------------------------------------------------------
 !
 !     sets the indexes irb and positions taub for the small boxes 
@@ -2109,9 +2109,7 @@ END FUNCTION
       REAL(DP), INTENT(out) :: taub(3,nat)
 ! input
       REAL(DP), INTENT(in)  :: ainv(3,3)
-      REAL(DP), INTENT(in)  :: a1(3)
-      REAL(DP), INTENT(in)  :: a2(3)
-      REAL(DP), INTENT(in)  :: a3(3)
+      REAL(DP), INTENT(in)  :: at(3,3), alat
 ! local
       REAL(DP) :: x(3), xmod
       INTEGER  :: nr(3), nrb(3), xint, is, ia, i, isa
@@ -2180,7 +2178,7 @@ END FUNCTION
 ! bring back taub in cartesian coordinates
 !
             DO i=1,3
-               taub(i,isa)= x(1)*a1(i) + x(2)*a2(i) + x(3)*a3(i)
+               taub(i,isa)=(x(1)*at(i,1) + x(2)*at(i,2) + x(3)*at(i,3))*alat
             END DO
          END DO
       END DO
@@ -3230,7 +3228,6 @@ end function set_Hubbard_l
 !
       integer i,ig,m1,ibnd,iwf,ia,is,iv,jv,ldim,alpha,l,m,k,inl
 !
-      real (DP)  a1, a2
       real(kind=8), allocatable :: gk(:)
 !
       complex (DP), allocatable :: dwfc(:,:)

@@ -46,9 +46,8 @@
       USE ions_base,      ONLY: na, nat, pmass, nax, nsp, rcmax
       USE grid_dimensions, &
                           ONLY: nrxx, nr1, nr2, nr3
-      USE cell_base,      ONLY: ainv, a1, a2, a3
       USE cell_base,      ONLY: omega, alat
-      USE cell_base,      ONLY: h, hold, deth, wmass, tpiba2
+      USE cell_base,      ONLY: h, hold, deth, wmass
       USE smooth_grid_dimensions, &
                           ONLY: nrxxs, nr1s, nr2s, nr3s
       USE local_pseudo,   ONLY: vps, rhops
@@ -356,9 +355,8 @@
       USE ions_base,      ONLY: na, nat, pmass, nax, nsp, rcmax
       USE grid_dimensions, &
                           ONLY: nrxx, nr1, nr2, nr3
-      USE cell_base,      ONLY: ainv, a1, a2, a3
       USE cell_base,      ONLY: omega, alat
-      USE cell_base,      ONLY: h, hold, deth, wmass, tpiba2
+      USE cell_base,      ONLY: h, hold, deth, wmass
       USE smooth_grid_dimensions, &
                           ONLY: nrxxs, nr1s, nr2s, nr3s
       USE local_pseudo,   ONLY: vps, rhops
@@ -549,9 +547,8 @@
       USE ions_base,      ONLY: na, nat, pmass, nax, nsp, rcmax
       USE grid_dimensions, &
                           ONLY: nrxx, nr1, nr2, nr3
-      USE cell_base,      ONLY: ainv, a1, a2, a3
       USE cell_base,      ONLY: omega, alat
-      USE cell_base,      ONLY: h, hold, deth, wmass, tpiba2
+      USE cell_base,      ONLY: h, hold, deth, wmass
       USE smooth_grid_dimensions, &
                           ONLY: nrxxs, nr1s, nr2s, nr3s
       USE local_pseudo,   ONLY: vps, rhops

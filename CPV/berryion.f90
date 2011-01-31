@@ -21,9 +21,9 @@ subroutine berryion( tau0,fion, tfor,ipol,evalue,enbi)
 !  enbi    : output, berry phase energy of the ions
 
   use kinds,      only : dp
-  use constants,  only : pi, fpi
+  use constants,  only : pi
   use ions_base,  ONLY : nsp, na, zv
-  use cell_base,  only : a1, a2, a3
+  use cell_base,  only : alat, at
 
   implicit none
 
@@ -43,16 +43,16 @@ subroutine berryion( tau0,fion, tfor,ipol,evalue,enbi)
   ci = (0.0_dp,1.0_dp)
 
   if(ipol.eq.1) then
-     gmes=a1(1)**2+a1(2)**2+a1(3)**2
-     gmes=2.0_dp*pi/SQRT(gmes)
+     gmes=at(1,1)**2+at(2,1)**2+at(3,1)**2
+     gmes=2.0_dp*pi/alat/SQRT(gmes)
   endif
   if(ipol.eq.2) then
-     gmes=a2(1)**2+a2(2)**2+a2(3)**2
-     gmes=2*pi/SQRT(gmes)
+     gmes=at(1,2)**2+at(2,2)**2+at(3,2)**2
+     gmes=2.0_dp*pi/alat/SQRT(gmes)
   endif
   if(ipol.eq.3) then
-     gmes=a3(1)**2+a3(2)**2+a3(3)**2
-     gmes=2.0_dp*pi/SQRT(gmes)
+     gmes=at(1,3)**2+at(2,3)**2+at(3,3)**2
+     gmes=2.0_dp*pi/alat/SQRT(gmes)
   endif
   pola=0.0_dp
   isa = 0

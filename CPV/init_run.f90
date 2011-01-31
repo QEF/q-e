@@ -42,7 +42,7 @@ SUBROUTINE init_run()
   USE uspp_param,               ONLY : nhm
   USE ions_nose,                ONLY : xnhp0, xnhpm, vnhp, nhpcl, nhpdim
   USE cell_base,                ONLY : h, hold, hnew, velh, tpiba2, ibrav, &
-                                       alat, celldm, a1, a2, a3, bg
+                                       alat, celldm, at, bg
   USE cp_main_variables,        ONLY : lambda, lambdam, lambdap, ema0bg, &
                                        sfac, eigr, taub, &
                                        irb, eigrb, rhog, rhos, rhor,     &
@@ -83,6 +83,7 @@ SUBROUTINE init_run()
   !
   INTEGER            :: i
   CHARACTER(LEN=256) :: dirname
+  REAL(DP)           :: a1(3), a2(3), a3(3)
   !
   !
   CALL start_clock( 'initialize' )
@@ -247,6 +248,7 @@ SUBROUTINE init_run()
      CALL h_matrix_init( descla, nspin )
   ENDIF
   !
+  a1(:)=at(:,1)*alat; a2(:)=at(:,2)*alat; a3(:)=at(:,3)*alat 
   IF ( lwf ) CALL wannier_startup( ibrav, alat, a1, a2, a3, &
                                    bg(:,1), bg(:,2), bg(:,3) )
   !

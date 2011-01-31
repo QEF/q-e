@@ -479,8 +479,8 @@ MODULE wannier_subroutines
     USE wannier_module,         ONLY : rhos1, rhos2, wfc
     USE smooth_grid_dimensions, ONLY : nrxxs
     USE electrons_base,         ONLY : nbsp, nspin, nupdwn, f, ispin
-    USE cell_base,              ONLY : ainv, a1, a2, a3
-    USE gvect,     ONLY : gstart
+    USE cell_base,              ONLY : ainv, alat, at
+    USE gvect,                  ONLY : gstart
     USE control_flags,          ONLY : tsde
     USE wave_base,              ONLY : wave_steepest, wave_verlet
     USE cp_interfaces,          ONLY : dforce
@@ -497,6 +497,7 @@ MODULE wannier_subroutines
     REAL(DP) :: emadt2(:)
     REAL(DP) :: emaver(:)
     REAL(DP) :: verl1, verl2
+    REAL(DP) :: a1(3), a2(3), a3(3)
     COMPLEX(DP), ALLOCATABLE :: c2( : ), c3( : )
     INTEGER :: i, ir
     !
@@ -504,6 +505,8 @@ MODULE wannier_subroutines
     !
     ALLOCATE( c2( SIZE( c0, 1 )))
     ALLOCATE( c3( SIZE( c0, 1 )))
+
+    a1(:) = at(:,1)/alat ; a2(:) = at(:,2)/alat ; a3(:) = at(:,3)/alat
 
     IF(wf_efield) THEN
        IF(field_tune) THEN
@@ -615,15 +618,17 @@ MODULE wannier_subroutines
     USE electric_field_module, ONLY : efe_elec, efe_ion, tt2, tt
     USE wannier_module,        ONLY : wfx, wfy, wfz, ionx, iony, ionz, wfc
     USE electrons_base,        ONLY : nbsp, f
-    USE cell_base,             ONLY : ainv, a1, a2, a3
+    USE cell_base,             ONLY : ainv, alat, at
     USE ions_base,             ONLY : na, nsp, zv
     USE io_global,             ONLY : ionode
     !
     IMPLICIT NONE
     !
     REAL(DP) :: enthal, tau0(:,:)
+    REAL(DP) :: a1(3), a2(3), a3(3)
     INTEGER        :: i, is, ia, isa
     !
+    a1(:) = at(:,1)/alat ; a2(:) = at(:,2)/alat ; a3(:) = at(:,3)/alat
     IF(wf_efield) THEN
        !  Electronic Contribution First
        wfx=0.d0

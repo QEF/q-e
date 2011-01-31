@@ -24,7 +24,6 @@ subroutine qmatrixd(c0, bec0,ctable, gqq, qmat, detq, ipol)
   use kinds, only : DP
   use gvecw, only: ngw
   use ions_base, only : nax, nsp, na
-  use cell_base, only: a1, a2, a3
   use gvect, only: gstart
   use uspp_param, only: nh, nhm, nvb, ish
   use uspp, only : nkb

@@ -20,12 +20,12 @@ subroutine qqberry2( gqq,gqqm, ipol)
   use atom,               only: rgrid
   use core
   use gvecw,              only: ngw
-  use gvect, only: mill
+  use gvect,              only: mill
   use constants
   use ions_base
   use ions_base,          only: nas => nax
-  use cell_base,          only: a1, a2, a3
-  use gvect, only: g, gg
+  use cell_base,          only: at, alat
+  use gvect,              only: g, gg
   use mp,                 only: mp_sum
   use mp_global,          only: intra_bgrp_comm
   use cp_interfaces,      only: fill_qrl
@@ -73,16 +73,16 @@ subroutine qqberry2( gqq,gqqm, ipol)
   enddo
   
   if(ipol.eq.1) then
-     gmes=a1(1)**2+a1(2)**2+a1(3)**2
-     gmes=2*pi/SQRT(gmes)
+     gmes=at(1,1)**2+at(2,1)**2+at(3,1)**2
+     gmes=2.0_dp*pi/alat/SQRT(gmes)
   endif
   if(ipol.eq.2) then
-     gmes=a2(1)**2+a2(2)**2+a2(3)**2
-     gmes=2*pi/SQRT(gmes)
+     gmes=at(1,2)**2+at(2,2)**2+at(3,2)**2
+     gmes=2.0_dp*pi/alat/SQRT(gmes)
   endif
   if(ipol.eq.3) then
-     gmes=a3(1)**2+a3(2)**2+a3(3)**2
-     gmes=2*pi/SQRT(gmes)
+     gmes=at(1,3)**2+at(2,3)**2+at(3,3)**2
+     gmes=2.0_dp*pi/alat/SQRT(gmes)
   endif    
   ! only for Vanderbilt species 
   do is=1,nvb

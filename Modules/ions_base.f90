@@ -182,9 +182,9 @@
     END SUBROUTINE unsort_tau
 
     !-------------------------------------------------------------------------
-    SUBROUTINE ions_base_init( nsp_, nat_, na_, ityp_, tau_, vel_, amass_, &
-                               atm_, if_pos_, tau_format_, alat_, a1_, a2_, &
-                               a3_, rcmax_ , extfor_ )
+    SUBROUTINE ions_base_init( nsp_, nat_, na_, ityp_, tau_, vel_, amass_,&
+                               atm_, if_pos_, tau_format_, alat_, at_,    & 
+                               rcmax_ , extfor_ )
       !-------------------------------------------------------------------------
       !
       USE constants, ONLY: amu_au, bohr_radius_angs
@@ -199,7 +199,7 @@
       CHARACTER(LEN=*), INTENT(IN) :: atm_(:)
       CHARACTER(LEN=*), INTENT(IN) :: tau_format_
       INTEGER,          INTENT(IN) :: if_pos_(:,:)
-      REAL(DP),         INTENT(IN) :: alat_, a1_(3), a2_(3), a3_(3)
+      REAL(DP),         INTENT(IN) :: alat_, at_(3,3)
       REAL(DP),         INTENT(IN) :: rcmax_(:)
       REAL(DP),         INTENT(IN) :: extfor_(:,:)
       !
@@ -283,13 +283,13 @@
                !
                DO i = 1, 3
                   !
-                  tau(i,ia) = a1_(i) * tau_(1,ia) + &
-                              a2_(i) * tau_(2,ia) + &
-                              a3_(i) * tau_(3,ia)
+                  tau(i,ia) = at_(i,1)*alat_ * tau_(1,ia) + &
+                              at_(i,2)*alat_ * tau_(2,ia) + &
+                              at_(i,3)*alat_ * tau_(3,ia)
                   !
-                  vel(i,ia) = a1_(i) * vel_(1,ia) + &
-                              a2_(i) * vel_(2,ia) + &
-                              a3_(i) * vel_(3,ia)
+                  vel(i,ia) = at_(i,1)*alat_ * vel_(1,ia) + &
+                              at_(i,2)*alat_ * vel_(2,ia) + &
+                              at_(i,3)*alat_ * vel_(3,ia)
                
                END DO
                !

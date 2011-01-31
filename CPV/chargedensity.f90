@@ -124,7 +124,6 @@
       USE cp_interfaces,      ONLY: checkrho
       USE cp_main_variables,  ONLY: iprint_stdout
       USE wannier_base,       ONLY: iwf
-      USE cell_base,          ONLY: a1, a2, a3
 !
       IMPLICIT NONE
       INTEGER nfi
@@ -415,7 +414,7 @@
 !
       IF( PRESENT( ndwwf ) ) THEN
          !
-         CALL old_write_rho( ndwwf, nspin, rhor, a1, a2, a3 )
+         CALL old_write_rho( ndwwf, nspin, rhor )
          !
       END IF
 !
@@ -1459,7 +1458,7 @@ END SUBROUTINE rhov
     END SUBROUTINE read_rho
 !
 !----------------------------------------------------------------------
-      subroutine old_write_rho( rhounit, nspin, rhor, a1, a2, a3 )
+      subroutine old_write_rho( rhounit, nspin, rhor )
 !----------------------------------------------------------------------
 !
 ! collect rhor(nrxx,nspin) on first node and write to file
@@ -1473,12 +1472,12 @@ END SUBROUTINE rhov
       USE fft_base,        ONLY : dfftp
       USE mp,              ONLY : mp_barrier, mp_gather
       USE constants,       ONLY : bohr_radius_angs
+      USE cell_base,       ONLY : at, alat
       !
       implicit none
       !
       integer,       INTENT(IN) :: rhounit, nspin
       real(kind=DP), INTENT(IN) :: rhor( nrxx, nspin )
-      real(kind=DP), INTENT(IN) :: a1(3), a2(3), a3(3)
       !
       integer :: ir, is
 
@@ -1495,9 +1494,9 @@ END SUBROUTINE rhov
          WRITE( rhounit, '(3(2X,I3))' ) nr1x, nr2x, nr3x
          !  
          WRITE( rhounit, '(3(2X,"0",2X,F16.10))' ) &
-             ( DBLE( nr1x - 1 ) / DBLE( nr1x ) ) * a1(1) * bohr_radius_angs, &
-             ( DBLE( nr2x - 1 ) / DBLE( nr2x ) ) * a2(2) * bohr_radius_angs, &
-             ( DBLE( nr3x - 1 ) / DBLE( nr3x ) ) * a3(3) * bohr_radius_angs
+             ( DBLE(nr1x-1) / DBLE(nr1x) ) * at(1,1)*alat * bohr_radius_angs, &
+             ( DBLE(nr2x-1) / DBLE(nr2x) ) * at(2,2)*alat * bohr_radius_angs, &
+             ( DBLE(nr3x-1) / DBLE(nr3x) ) * at(3,3)*alat * bohr_radius_angs
          !  
       END IF
       !

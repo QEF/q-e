@@ -258,7 +258,6 @@
       use gvecs
       use gvect, only: ngm, nl, nlm
       use cell_base, only: omega
-      use cell_base, only: a1, a2, a3, tpiba2
       use grid_dimensions, only: nr1, nr2, nr3, nr1x, nr2x, nr3x, nrxx
       use smooth_grid_dimensions, only: nr1s, nr2s, nr3s, nrxxs
       use electrons_base, only: nspin

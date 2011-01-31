@@ -15,7 +15,6 @@
       IMPLICIT NONE
       SAVE
 !
-
 ! ...  periodicity box
 ! ...  In the matrix "a" every row is the vector of each side of 
 ! ...  the cell in the real space
@@ -35,46 +34,29 @@
           INTEGER :: perd(3)
         END TYPE boxdimensions
 
-        REAL(DP) :: alat = 0.0_DP   !  lattice parameter, often used to scale quantities
-                                    !  or in combination to other parameters/constants
-                                    !  to define new units
-
-        !  celldm are che simulation cell parameters
-
-        REAL(DP) :: celldm(6) = (/ 0.0_DP, 0.0_DP, 0.0_DP, 0.0_DP, 0.0_DP, 0.0_DP /)
-
-        !  a1, a2 and a3 are the simulation cell base vector as calculated from celldm
-
-        REAL(DP) :: a1(3) = (/ 0.0_DP, 0.0_DP, 0.0_DP /)
-        REAL(DP) :: a2(3) = (/ 0.0_DP, 0.0_DP, 0.0_DP /)
-        REAL(DP) :: a3(3) = (/ 0.0_DP, 0.0_DP, 0.0_DP /)
-        
-        REAL(DP) :: ainv(3,3) = 0.0_DP
-
-        REAl(DP) :: omega = 0.0_DP  !  volume of the simulation cell
-
-        REAL(DP) :: tpiba  = 0.0_DP   !  = 2 PI / alat
-        REAL(DP) :: tpiba2 = 0.0_DP   !  = ( 2 PI / alat ) ** 2
-
-        !  direct lattice vectors and reciprocal lattice vectors
-        !  The folloving relations should alwais be kept valid
-        !  at( :, 1 ) = a1( : ) / alat  ;  h( :, 1 ) = a1( : )
-        !  at( :, 2 ) = a2( : ) / alat  ;  h( :, 2 ) = a2( : )
-        !  at( :, 3 ) = a3( : ) / alat  ;  h( :, 3 ) = a3( : )
-        !  ht = h^t ; ainv = h^(-1)
-        !
-        !  b1, b2 and b3 are the simulation reciprocal lattice vectors
-        !  bg( :, 1 ) = b1( : )
-        !  bg( :, 2 ) = b2( : )
-        !  bg( :, 3 ) = b3( : )
-
-        REAL(DP) :: at(3,3) = RESHAPE( (/ 0.0_DP /), (/ 3, 3 /), (/ 0.0_DP /) )
-        REAL(DP) :: bg(3,3) = RESHAPE( (/ 0.0_DP /), (/ 3, 3 /), (/ 0.0_DP /) )
-
         INTEGER          :: ibrav      ! index of the bravais lattice
         CHARACTER(len=9) :: symm_type  ! 'cubic' or 'hexagonal' when ibrav=0
+        REAL(DP) :: celldm(6) = (/ 0.0_DP,0.0_DP,0.0_DP,0.0_DP,0.0_DP,0.0_DP /)
+                                       ! parameters of the simulation cell
+        REAL(DP) :: alat = 0.0_DP
+        !  alat = lattice parameter, often used to scale quantities, or
+        !  in combination to other parameters/constants to define new units
 
+        REAl(DP) :: omega = 0.0_DP   !  volume of the simulation cell
+        REAL(DP) :: tpiba  = 0.0_DP  !  = 2 PI / alat
+        REAL(DP) :: tpiba2 = 0.0_DP  !  = ( 2 PI / alat ) ** 2
+
+        !  direct and reciprocal lattice primitive vectors
+        !  at(:,i) are the lattice vectors of the simulation cell,
+        !          in alat units: a_i(:) = at(:,i)/alat
+        !  bg(:,i) are the reciprocal lattice vectors,
+        !          in tpibai=2pi/alat units: = b_i(:) = bg(:,i)/tpiba
+        REAL(DP) :: at(3,3) = RESHAPE( (/ 0.0_DP /), (/ 3, 3 /), (/ 0.0_DP /) )
+        REAL(DP) :: bg(3,3) = RESHAPE( (/ 0.0_DP /), (/ 3, 3 /), (/ 0.0_DP /) )
+        !  The following relations should always be kept valid:
+        !     h = at*alat; ainv = h^(-1); ht=transpose(h)
         REAL(DP) :: h(3,3)    = 0.0_DP ! simulation cell at time t 
+        REAL(DP) :: ainv(3,3) = 0.0_DP
         REAL(DP) :: hold(3,3) = 0.0_DP ! simulation cell at time t-delt
         REAL(DP) :: hnew(3,3) = 0.0_DP ! simulation cell at time t+delt
         REAL(DP) :: velh(3,3) = 0.0_DP ! simulation cell velocity
@@ -148,17 +130,19 @@
           
 !------------------------------------------------------------------------------!
 
-        SUBROUTINE cell_init_a( box, a1, a2, a3 )
+        SUBROUTINE cell_init_a( alat, at, box )
           TYPE (boxdimensions) :: box
-          REAL(DP) :: a1(3), a2(3), a3(3)
+          REAL(DP), INTENT(IN) :: alat, at(3,3)
           INTEGER :: i
             DO i=1,3
-              box%a(1,I) = A1(I)     ! this is HT: the row are the lattice vectors
-              box%a(2,I) = A2(I)
-              box%a(3,I) = A3(I)
-              box%hmat(I,1) = A1(I)  ! this is H : the column are the lattice vectors
-              box%hmat(I,2) = A2(I)
-              box%hmat(I,3) = A3(I)
+             ! this is HT: the rows are the lattice vectors
+              box%a(1,i) = at(i,1)*alat
+              box%a(2,i) = at(i,2)*alat
+              box%a(3,i) = at(i,3)*alat
+              ! this is H : the column are the lattice vectors
+              box%hmat(i,1) = at(i,1)*alat
+              box%hmat(i,2) = at(i,2)*alat
+              box%hmat(i,3) = at(i,3)*alat
             END DO
             box%pail = 0.0_DP
             box%paiu = 0.0_DP
@@ -439,7 +423,7 @@ END FUNCTION saw
     REAL(DP),  INTENT(IN) :: press_  ! external pressure from imput ( in KBar = 0.1 GPa )
 
 
-    REAL(DP) :: b1(3), b2(3), b3(3)
+    REAL(DP) :: a1(3), a2(3), a3(3), b1(3), b2(3), b3(3)
     REAL(DP) :: a, b, c, units
     INTEGER   :: j
 
@@ -701,16 +685,16 @@ END FUNCTION saw
 220 format(3X,3F14.8)
 
     !
-    a1  =  at( :, 1 )
-    a2  =  at( :, 2 )
-    a3  =  at( :, 3 )
+    !a1  =  at( :, 1 )
+    !a2  =  at( :, 2 )
+    !a3  =  at( :, 3 )
 
+    CALL recips( at(1,1), at(1,2), at(1,3), b1, b2, b3 )
     at( :, : ) = at( :, : ) / alat
 
     CALL volume( alat, at(1,1), at(1,2), at(1,3), deth )
     omega = deth
 
-    CALL recips( a1, a2, a3, b1, b2, b3 )
     ainv( 1, : ) = b1( : )
     ainv( 2, : ) = b2( : )
     ainv( 3, : ) = b3( : )
@@ -723,9 +707,9 @@ END FUNCTION saw
 
     IF( iprsta > 3 ) THEN
       WRITE( stdout, 305 ) alat
-      WRITE( stdout, 310 ) a1
-      WRITE( stdout, 320 ) a2
-      WRITE( stdout, 330 ) a3
+      WRITE( stdout, 310 ) at(:,1)*alat
+      WRITE( stdout, 320 ) at(:,2)*alat
+      WRITE( stdout, 330 ) at(:,3)*alat
       WRITE( stdout, *   )
       WRITE( stdout, 350 ) b1
       WRITE( stdout, 360 ) b2

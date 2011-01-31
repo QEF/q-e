@@ -49,7 +49,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
   USE ions_base,                ONLY : ions_vrescal, fricp, greasp, &
                                        iforce, ndfrz, ions_shiftvar, ityp, &
                                        atm, ind_bck, cdm, cdms, ions_cofmsub
-  USE cell_base,                ONLY : a1, a2, a3, bg, ainv, frich, &
+  USE cell_base,                ONLY : at, bg, ainv, frich, &
                                        greash, tpiba2, omega, alat, ibrav,  &
                                        celldm, h, hold, hnew, velh, deth,   &
                                        wmass, press, iforceh, cell_force
@@ -88,10 +88,6 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
   USE wavefunctions_module,     ONLY : c0_bgrp, cm_bgrp, phi_bgrp
   USE wannier_module,           ONLY : allocate_wannier
   USE cp_interfaces,            ONLY : printout_new, move_electrons
-  USE printout_base,            ONLY : printout_base_open, &
-                                       printout_base_close, &
-                                       printout_pos, printout_cell, &
-                                       printout_stress
   USE cell_nose,                ONLY : xnhh0, xnhhm, xnhhp, vnhh, temph, &
                                        qnh, cell_nosevel, cell_noseupd,  &
                                        cell_nose_nrg, cell_nose_shiftvar
@@ -256,7 +252,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
      ! 
      IF ( (okvan .or. nlcc_any ) .AND. (tfor .OR. thdyn .OR. tfirst) ) THEN
         !
-        CALL initbox( tau0, taub, irb, ainv, a1, a2, a3 )
+        CALL initbox( tau0, taub, irb, ainv, at, alat )
         !
         CALL phbox( taub, eigrb, ainvb )
         !
@@ -742,7 +738,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
            ! ... restart with CP
            !
            IF ( okvan .or. nlcc_any ) THEN
-              CALL initbox( tau0, taub, irb, ainv, a1, a2, a3 )
+              CALL initbox( tau0, taub, irb, ainv, at, alat )
               CALL phbox( taub, eigrb, ainvb )
            END IF
            CALL r_to_s( tau0, taus, na, nsp, ainv )

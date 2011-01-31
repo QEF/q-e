@@ -20,8 +20,7 @@ SUBROUTINE from_scratch( )
     USE ions_nose,            ONLY : xnhp0, xnhpm, vnhp
     USE cell_base,            ONLY : ainv, h, s_to_r, ibrav, omega, press, &
                                      hold, r_to_s, deth, wmass, iforceh,   &
-                                     cell_force, boxdimensions, velh, a1,  &
-                                     a2, a3
+                                     cell_force, boxdimensions, velh, at, alat
     USE cell_nose,            ONLY : xnhh0, xnhhm, vnhh
     USE electrons_nose,       ONLY : xnhe0, xnhem, vnhe
     use electrons_base,       ONLY : nbsp, f, nspin, nupdwn, iupdwn, nbsp_bgrp, nbspx_bgrp, nbspx
@@ -113,7 +112,7 @@ SUBROUTINE from_scratch( )
     CALL strucf( sfac, eigts1, eigts2, eigts3, mill, ngms )
     !     
     IF ( okvan .OR. nlcc_any ) THEN
-       CALL initbox ( tau0, taub, irb, ainv, a1, a2, a3 )
+       CALL initbox ( tau0, taub, irb, ainv, at, alat )
        CALL phbox( taub, eigrb, ainvb )
     END IF
     !

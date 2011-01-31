@@ -35,7 +35,7 @@ subroutine dforceb(c0, i, betae, ipol, bec0, ctabin, gqq, gqqm, qmat, dq2, df)
   use electrons_base, only: nx => nbspx, n => nbsp, nspin, f
   use  constants
   use ions_base, only : nat, nas => nax, na, nsp
-  use cell_base, only: a1, a2, a3
+  use cell_base, only: at, alat
   use uspp_param, only: nh, nhm, nvb, ish
   use uspp, only : nhsa=> nkb
   use efield_module, ONLY : ctabin_missing_1,ctabin_missing_2,n_g_missing_m,&
@@ -179,16 +179,16 @@ subroutine dforceb(c0, i, betae, ipol, bec0, ctabin, gqq, gqqm, qmat, dq2, df)
     enddo
   
   if(ipol.eq.1) then
-     gmes=a1(1)**2+a1(2)**2+a1(3)**2
-     gmes=2*pi/SQRT(gmes)
+     gmes=at(1,1)**2+at(2,1)**2+at(3,1)**2
+     gmes=2.0_dp*pi/alat/SQRT(gmes)
   endif
   if(ipol.eq.2) then
-     gmes=a2(1)**2+a2(2)**2+a2(3)**2
-     gmes=2*pi/SQRT(gmes)
+     gmes=at(1,2)**2+at(2,2)**2+at(3,2)**2
+     gmes=2.0_dp*pi/alat/SQRT(gmes)
   endif
   if(ipol.eq.3) then
-     gmes=a3(1)**2+a3(2)**2+a3(3)**2
-     gmes=2*pi/SQRT(gmes)
+     gmes=at(1,3)**2+at(2,3)**2+at(3,3)**2
+     gmes=2.0_dp*pi/alat/SQRT(gmes)
   endif
 
   fi=f(i)*ci/(2.d0*gmes)
@@ -250,7 +250,7 @@ subroutine dforceb(c0, i, betae, ipol, bec0, ctabin, gqq, gqqm, qmat, dq2, df)
 
    use constants
    use kinds, only: dp
-   use cell_base, only: a1, a2, a3
+   use cell_base, only: alat, at
    USE electrons_base, ONLY : nspin
 
    implicit none
@@ -260,18 +260,17 @@ subroutine dforceb(c0, i, betae, ipol, bec0, ctabin, gqq, gqqm, qmat, dq2, df)
    integer ipol
    real(dp) gmes
 
-     
    if(ipol.eq.1) then
-      gmes=a1(1)**2+a1(2)**2+a1(3)**2
-      gmes=2*pi/SQRT(gmes)
+     gmes=at(1,1)**2+at(2,1)**2+at(3,1)**2
+     gmes=2.0_dp*pi/alat/SQRT(gmes)
    endif
    if(ipol.eq.2) then
-      gmes=a2(1)**2+a2(2)**2+a2(3)**2
-      gmes=2*pi/SQRT(gmes)
+     gmes=at(1,2)**2+at(2,2)**2+at(3,2)**2
+     gmes=2.0_dp*pi/alat/SQRT(gmes)
    endif
    if(ipol.eq.3) then
-      gmes=a3(1)**2+a3(2)**2+a3(3)**2
-      gmes=2*pi/SQRT(gmes)
+     gmes=at(1,3)**2+at(2,3)**2+at(3,3)**2
+     gmes=2.0_dp*pi/alat/SQRT(gmes)
    endif
 
    enb = 2.d0/REAL(nspin,DP)*AIMAG(log(detq))/gmes ! take care of sign

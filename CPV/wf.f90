@@ -25,7 +25,7 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
   USE constants,                ONLY : pi, tpi
   USE ions_base,                ONLY : nsp, na, nax, nat
   USE uspp_param,               ONLY : nvb, ish
-  USE cell_base,                ONLY : omega, a1, a2, a3, alat, h, ainv
+  USE cell_base,                ONLY : omega, at, alat, h, ainv
   USE electrons_base,           ONLY : nbspx, nbsp, nupdwn, iupdwn, nspin
   USE gvecb,                    ONLY : npb, nmb, ngb
   USE gvecw,                    ONLY : ngw
@@ -532,9 +532,9 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
         IF (nspin.EQ.2) THEN
            WRITE(38, '(i5)') nupdwn(1)
         END IF
-        WRITE(38, *) a1
-        WRITE(38, *) a2
-        WRITE(38, *) a3
+        WRITE(38, *) at(:,1)*alat
+        WRITE(38, *) at(:,2)*alat
+        WRITE(38, *) at(:,3)*alat
         WRITE(38, *) b1
         WRITE(38, *) b2
         WRITE(38, *) b3
@@ -2211,7 +2211,7 @@ SUBROUTINE macroscopic_average( rhog, tau0, e_tuned )
   USE electrons_base,     ONLY : nspin
   USE tune,               ONLY : npts, xdir, ydir, zdir, B, &
                                  shift, start, av0, av1
-  USE cell_base,          ONLY : a1, a2, a3, tpiba, omega
+  USE cell_base,          ONLY : at, alat, tpiba, omega
   USE ions_base,          ONLY : nsp, na, zv, nax
   USE constants,          ONLY : pi, tpi
   USE mp,                 ONLY : mp_barrier, mp_bcast,  mp_gather, mp_set_displs
@@ -2305,9 +2305,9 @@ SUBROUTINE macroscopic_average( rhog, tau0, e_tuned )
 
   !-- needed for non-orthogonal cells
 
-  a_direct(1,1:3)=a1(1:3)
-  a_direct(2,1:3)=a2(1:3)
-  a_direct(3,1:3)=a3(1:3)
+  a_direct(1,1:3)=at(1:3,1)*alat
+  a_direct(2,1:3)=at(1:3,2)*alat
+  a_direct(3,1:3)=at(1:3,3)*alat
 
   a_trans=TRANSPOSE(a_direct)
 
@@ -2334,10 +2334,10 @@ SUBROUTINE macroscopic_average( rhog, tau0, e_tuned )
   IF ((zdir).EQ.1) xdir=3
   IF ((zdir).EQ.2) ydir=3
 
-  IF(zdir.EQ.1) zlen=DSQRT(a1(1)**2+a1(2)**2+a1(3)**2)
-  IF(zdir.EQ.2) zlen=DSQRT(a2(1)**2+a2(2)**2+a2(3)**2)
-  IF(zdir.EQ.3) zlen=DSQRT(a3(1)**2+a3(2)**2+a3(3)**2)
-
+  IF(zdir.EQ.1) zlen=DSQRT(at(1,1)**2+at(2,1)**2+at(3,1)**2)
+  IF(zdir.EQ.2) zlen=DSQRT(at(1,2)**2+at(2,2)**2+at(3,2)**2)
+  IF(zdir.EQ.3) zlen=DSQRT(at(1,3)**2+at(2,3)**2+at(3,3)**2)
+  zlen = zlen*alat
 
   !--- We need the potentiail only along zdir, so pick the appropriate G-vectors with Gxdir=Gydir=0
 
