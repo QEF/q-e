@@ -47,10 +47,10 @@
         REAL(DP) :: tpiba2 = 0.0_DP  !  = ( 2 PI / alat ) ** 2
 
         !  direct and reciprocal lattice primitive vectors
-        !  at(:,i) are the lattice vectors of the simulation cell,
+        !  at(:,i) are the lattice vectors of the simulation cell, a_i,
         !          in alat units: a_i(:) = at(:,i)/alat
-        !  bg(:,i) are the reciprocal lattice vectors,
-        !          in tpibai=2pi/alat units: = b_i(:) = bg(:,i)/tpiba
+        !  bg(:,i) are the reciprocal lattice vectors, b_i,
+        !          in tpiba=2pi/alat units: b_i(:) = bg(:,i)/tpiba
         REAL(DP) :: at(3,3) = RESHAPE( (/ 0.0_DP /), (/ 3, 3 /), (/ 0.0_DP /) )
         REAL(DP) :: bg(3,3) = RESHAPE( (/ 0.0_DP /), (/ 3, 3 /), (/ 0.0_DP /) )
         !  The following relations should always be kept valid:
@@ -651,16 +651,11 @@ END FUNCTION saw
     IMPLICIT NONE
     REAL(DP), INTENT(IN) :: ht (3,3)
 
-    REAL(DP) :: b1(3), b2(3), b3(3)
     INTEGER   :: j
 
     alat   =  sqrt( ht(1,1)*ht(1,1) + ht(1,2)*ht(1,2) + ht(1,3)*ht(1,3) )
     tpiba  = 2.0_DP * pi / alat
     tpiba2 = tpiba * tpiba
-    !
-    !    The matrix "ht" in FPMD correspond to the transpose of matrix "at" in PW
-    !
-    at     = TRANSPOSE( ht )
     !
     IF( iprsta > 3 ) THEN
       WRITE( stdout, 210 )
@@ -671,36 +666,26 @@ END FUNCTION saw
 210 format(3X,'Simulation cell parameters with the new cell:')
 220 format(3X,3F14.8)
 
+    !    matrix "ht" used in CP is the transpose of matrix "at"
+    !    times the lattice parameter "alat"; matrix "ainv" is "bg" divided alat
     !
-    !a1  =  at( :, 1 )
-    !a2  =  at( :, 2 )
-    !a3  =  at( :, 3 )
-
-    CALL recips( at(1,1), at(1,2), at(1,3), b1, b2, b3 )
-    at( :, : ) = at( :, : ) / alat
-
+    at     = TRANSPOSE( ht ) / alat
+    !
+    CALL recips( at(1,1), at(1,2), at(1,3), bg(1,1), bg(1,2), bg(1,3) )
     CALL volume( alat, at(1,1), at(1,2), at(1,3), deth )
     omega = deth
-
-    ainv( 1, : ) = b1( : )
-    ainv( 2, : ) = b2( : )
-    ainv( 3, : ) = b3( : )
-
-    bg( :, 1 ) = b1( : ) * alat
-    bg( :, 2 ) = b2( : ) * alat
-    bg( :, 3 ) = b3( : ) * alat
-
-    ! ...     The matrix "htm1" in FPMD correspond to the matrix "bg" in PW
-
+    !
+    ainv(:,:) = bg(:,:)/alat
+    !
     IF( iprsta > 3 ) THEN
       WRITE( stdout, 305 ) alat
       WRITE( stdout, 310 ) at(:,1)*alat
       WRITE( stdout, 320 ) at(:,2)*alat
       WRITE( stdout, 330 ) at(:,3)*alat
       WRITE( stdout, *   )
-      WRITE( stdout, 350 ) b1
-      WRITE( stdout, 360 ) b2
-      WRITE( stdout, 370 ) b3
+      WRITE( stdout, 350 ) bg(:,1)/alat
+      WRITE( stdout, 360 ) bg(:,2)/alat
+      WRITE( stdout, 370 ) bg(:,3)/alat
       WRITE( stdout, 340 ) omega
     END IF
 
