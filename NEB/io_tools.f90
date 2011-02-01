@@ -55,6 +55,57 @@ SUBROUTINE input_file_name_getarg(myname,lfound)
   !
 END SUBROUTINE input_file_name_getarg
 !
+SUBROUTINE input_images_getarg(input_images,lfound)
+  !-----------------------------------------------------------------------------
+  !
+  ! check for presence of command-line option "-inp myname" or "--inp myname"
+  ! where "myname" is the name of the input file. Returns the name and if it 
+  ! has been found. 
+  !
+  USE kinds,         ONLY : DP
+  !
+  USE io_global,     ONLY : stdout
+  !
+  IMPLICIT NONE
+  !
+  INTEGER, intent(out) :: input_images
+  LOGICAL, intent(out) :: lfound
+  !
+  CHARACTER(len=256) ::  myname
+  INTEGER  :: iiarg, nargs, iargc, i, i0
+  !
+  !
+#if defined(__ABSOFT)
+#   define getarg getarg_
+#   define iargc  iargc_
+#endif
+  !
+  nargs = iargc()
+  lfound = .false.
+  input_images = 0
+  !
+  DO iiarg = 1, nargs
+    CALL getarg( iiarg, myname)
+     !
+     IF ( TRIM( myname ) == '-input_images' .OR. &
+          TRIM( myname ) == '--input_images' ) THEN
+        !
+        CALL getarg( ( iiarg + 1 ) , myname )
+        !
+        READ(myname,*) input_images
+        !
+        lfound = .true.
+        RETURN
+        !
+     END IF
+     !
+
+  ENDDO
+  !
+  RETURN
+  !
+END SUBROUTINE input_images_getarg
+
 !----------------------------------------------------------------------------
 SUBROUTINE close_io_units(myunit)
   !-----------------------------------------------------------------------------

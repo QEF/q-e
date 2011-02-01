@@ -58,7 +58,7 @@ PROGRAM sm
   INTEGER :: root = 0 
   !
   CHARACTER(len=256) :: parsing_file_name
-  LOGICAL :: lfound
+  LOGICAL :: lfound_parsing_file, lfound_input_images
   !
   unit_tmp = 45
   !
@@ -74,18 +74,22 @@ PROGRAM sm
   !
   ! ... open input file
   !
-  CALL input_file_name_getarg(parsing_file_name,lfound)
+  CALL input_file_name_getarg(parsing_file_name,lfound_parsing_file)
   !
   engine_prefix = "pw_"
   !
-  if(lfound) then
+  if(lfound_parsing_file) then
   write(0,*) "parsing_file_name: ", trim(parsing_file_name)
   call path_gen_inputs(trim(parsing_file_name),engine_prefix,input_images,root,neb_comm)
   !
   else
   !
   write(0,*) "NO input file found, assuming nothing to parse."
-  write(0,*) "Searching pre-build neb and engine input file."
+  write(0,*) "Searching argument -input_images or --input_images"
+  CALL input_images_getarg(input_images,lfound_input_images)
+  write(0,*) "Number of input images: ", input_images
+  !
+    IF(lfound_input_images==.false.) CALL errore('string_methods', 'Nor file to parse nor input images found',1)
   !
   endif
   !
