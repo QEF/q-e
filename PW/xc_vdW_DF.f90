@@ -1677,7 +1677,8 @@ subroutine thetas_to_uk(thetas, u_vdW)
      do q2_i = 1, Nqs
         do q1_i = 1, Nqs
            
-           u_vdW(nl(g_i),q2_i) = u_vdW(nl(g_i),q2_i) + conjg(theta(q1_i))*kernel_of_k(q1_i,q2_i)
+           u_vdW(nl(g_i),q2_i) = u_vdW(nl(g_i),q2_i) + theta(q1_i)*kernel_of_k(q1_i,q2_i)
+        
         end do
         if (gamma_only) u_vdW(nlm(g_i),q2_i) = CONJG(u_vdW(nl(g_i),q2_i))
      end do
