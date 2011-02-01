@@ -73,8 +73,8 @@ subroutine phq_setup
   USE nlcc_ph,       ONLY : drc, nlcc_any
   USE eqv,           ONLY : dmuxc
   USE control_ph,    ONLY : rec_code, lgamma_gamma, search_sym, start_irr, &
-                            last_irr, niter_ph, alpha_mix, all_done, &
-                            epsil, lgamma, recover, where_rec, alpha_pv, &
+                            last_irr, niter_ph, alpha_mix, all_done, elph, &
+                            trans, epsil, lgamma, recover, where_rec, alpha_pv,&
                             nbnd_occ, flmixdpot, reduce_io, rec_code_read, &
                             done_epsil, zeu, done_zeu, current_iq, u_from_file
   USE output,        ONLY : fildrho
