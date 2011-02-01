@@ -1,20 +1,4 @@
 #!/bin/sh
-#
-#@job_name    = PE2
-#@account_no = IscrB_PHOTON
-#@error       = err
-#@wall_clock_limit = 00:20:00
-#@job_type = parallel
-#@total_tasks      = 4
-#@task_affinity = core(1)
-#@resources = ConsumableMemory(2000Mb)
-#@queue
-
-###############################################################################
-##
-##  HIGH VERBOSITY EXAMPLE
-##
-###############################################################################
 
 # run from directory where this script is
 cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
