@@ -89,7 +89,7 @@ PROGRAM sm
   CALL input_images_getarg(input_images,lfound_input_images)
   write(0,*) "Number of input images: ", input_images
   !
-    IF(lfound_input_images==.false.) CALL errore('string_methods', 'Nor file to parse nor input images found',1)
+    IF(.not.lfound_input_images) CALL errore('string_methods', 'Nor file to parse nor input images found',1)
   !
   endif
   !
