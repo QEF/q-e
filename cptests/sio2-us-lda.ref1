@@ -1,5 +1,5 @@
 
-     Program CP v.4.2           starts on 30Aug2010 at 11:55:31 
+     Program CP v.> 4.2         starts on  2Feb2011 at  9:51:39 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -7,6 +7,7 @@
           URL http://www.quantum-espresso.org", 
      in publications or presentations arising from this work. More details at
      http://www.quantum-espresso.org/wiki/index.php/Citing_Quantum-ESPRESSO
+     Waiting for input...
 
    Job Title: MD Simulation
 
@@ -15,11 +16,11 @@
    ----------------------------------
 
    Reading pseudopotential for specie #  1 from file :
-   /scratch/daily_test/espresso/pseudo/O.pz-rrkjus.UPF
+   /home/giannozz/CVS/espresso2/pseudo/O.pz-rrkjus.UPF
    file type is 20: UPF
 
    Reading pseudopotential for specie #  2 from file :
-   /scratch/daily_test/espresso/pseudo/Si.pz-rrkj.UPF
+   /home/giannozz/CVS/espresso2/pseudo/Si.pz-vbc.UPF
    file type is 20: UPF
 
 
@@ -144,7 +145,7 @@
    .X.   .Y.   .Z.     .X.   .Y.   .Z.     .X.   .Y.   .Z.
     40    64    40      40    64    40       1     1     1
    Array leading dimensions ( nr1x, nr2x, nr3x )   =     40    64    40
-   Local number of cell to store the grid ( nnrx ) =     102400
+   Local number of cell to store the grid ( nrxx ) =     102400
    Number of x-y planes for each processors: 
    nr3l =    40
  
@@ -154,7 +155,7 @@
    .X.   .Y.   .Z.     .X.   .Y.   .Z.     .X.   .Y.   .Z.
     27    45    30      27    45    30       1     1     1
    Array leading dimensions ( nr1x, nr2x, nr3x )   =     27    45    30
-   Local number of cell to store the grid ( nnrx ) =      36450
+   Local number of cell to store the grid ( nrxx ) =      36450
    Number of x-y planes for each processors: 
    nr3sl =    30
  
@@ -164,7 +165,7 @@
    .X.   .Y.   .Z.     .X.   .Y.   .Z.     .X.   .Y.   .Z.
     24    24    24      24    24    24       1     1     1
    Array leading dimensions ( nr1x, nr2x, nr3x )   =     24    24    24
-   Local number of cell to store the grid ( nnrx ) =      13824
+   Local number of cell to store the grid ( nrxx ) =      13824
  
    unit vectors of box grid cell
    in real space:                         in reciprocal space:
@@ -175,13 +176,13 @@
    Reciprocal Space Mesh
    ---------------------
    Large Mesh
-     Global(ngmt)     MinLocal       MaxLocal      Average
+     Global(ngm_g)    MinLocal       MaxLocal      Average
           23643          23643          23643       23643.00
    Smooth Mesh
-     Global(ngst)     MinLocal       MaxLocal      Average
+     Global(ngms_g)   MinLocal       MaxLocal      Average
            9216           9216           9216        9216.00
    Wave function Mesh
-     Global(ngwt)     MinLocal       MaxLocal      Average
+     Global(ngw_g)    MinLocal       MaxLocal      Average
            1153           1153           1153        1153.00
 
    Small box Mesh
@@ -250,8 +251,8 @@
    4  indv=  2   ang. mom=  1
  
                         dion 
-   0.3001   0.0000
-   0.0000   0.1270
+   0.7619   0.0000
+   0.0000   1.8417
  
    Short Legend and Physical Units in the Output
    ---------------------------------------------
@@ -278,33 +279,33 @@
    formf: eself=   210.64152
    formf:     vps(g=0)=  -0.0099256     rhops(g=0)=  -0.0039295
    formf: sum_g vps(g)=  -2.2959144 sum_g rhops(g)=  -0.5407261
-   formf:     vps(g=0)=  -0.0075483     rhops(g=0)=  -0.0026197
-   formf: sum_g vps(g)=  -0.5132699 sum_g rhops(g)=  -0.3604841
-   Delta V(G=0):   0.197520Ry,    5.374779eV
+   formf:     vps(g=0)=  -0.0098400     rhops(g=0)=  -0.0026197
+   formf: sum_g vps(g)=  -2.3753533 sum_g rhops(g)=  -0.3604841
+   Delta V(G=0):   0.197519Ry,    5.374775eV
 
    from rhoofr: total integrated electronic density
    in g-space =   96.000000   in r-space =  96.000000
  
   nfi    ekinc  temph  tempp        etot      enthal       econs       econt    vnhh   xnhh0    vnhp   xnhp0
-    1  9.19692    0.0    0.0    52.58108    52.58108    52.58108    61.77800  0.0000  0.0000  0.0000  0.0000
-    2 22.75379    0.0    0.0    25.74921    25.74921    25.74921    48.50300  0.0000  0.0000  0.0000  0.0000
-    3 35.34382    0.0    0.0   -10.86446   -10.86446   -10.86446    24.47936  0.0000  0.0000  0.0000  0.0000
-    4 43.09853    0.0    0.0   -50.87737   -50.87737   -50.87737    -7.77884  0.0000  0.0000  0.0000  0.0000
-    5 44.62193    0.0    0.0   -88.14413   -88.14413   -88.14413   -43.52221  0.0000  0.0000  0.0000  0.0000
-    6 40.79485    0.0    0.0  -118.73736  -118.73736  -118.73736   -77.94251  0.0000  0.0000  0.0000  0.0000
-    7 33.90421    0.0    0.0  -141.64305  -141.64305  -141.64305  -107.73884  0.0000  0.0000  0.0000  0.0000
-    8 26.29848    0.0    0.0  -157.86551  -157.86551  -157.86551  -131.56703  0.0000  0.0000  0.0000  0.0000
-    9 19.53173    0.0    0.0  -169.14857  -169.14857  -169.14857  -149.61685  0.0000  0.0000  0.0000  0.0000
-   10 14.24474    0.0    0.0  -177.13567  -177.13567  -177.13567  -162.89093  0.0000  0.0000  0.0000  0.0000
-   11 10.44351    0.0    0.0  -183.04140  -183.04140  -183.04140  -172.59789  0.0000  0.0000  0.0000  0.0000
-   12  7.83290    0.0    0.0  -187.63420  -187.63420  -187.63420  -179.80130  0.0000  0.0000  0.0000  0.0000
-   13  6.05414    0.0    0.0  -191.34658  -191.34658  -191.34658  -185.29244  0.0000  0.0000  0.0000  0.0000
-   14  4.80650    0.0    0.0  -194.40548  -194.40548  -194.40548  -189.59898  0.0000  0.0000  0.0000  0.0000
-   15  3.88392    0.0    0.0  -196.93468  -196.93468  -196.93468  -193.05076  0.0000  0.0000  0.0000  0.0000
-   16  3.16506    0.0    0.0  -199.01710  -199.01710  -199.01710  -195.85204  0.0000  0.0000  0.0000  0.0000
-   17  2.58645    0.0    0.0  -200.72367  -200.72367  -200.72367  -198.13722  0.0000  0.0000  0.0000  0.0000
-   18  2.11645    0.0    0.0  -202.12140  -202.12140  -202.12140  -200.00495  0.0000  0.0000  0.0000  0.0000
-   19  1.73703    0.0    0.0  -203.27195  -203.27195  -203.27195  -201.53492  0.0000  0.0000  0.0000  0.0000
+    1  9.20240    0.0    0.0    52.34045    52.34045    52.34045    61.54286  0.0000  0.0000  0.0000  0.0000
+    2 22.75324    0.0    0.0    25.50659    25.50659    25.50659    48.25983  0.0000  0.0000  0.0000  0.0000
+    3 35.31178    0.0    0.0   -11.06622   -11.06622   -11.06622    24.24556  0.0000  0.0000  0.0000  0.0000
+    4 43.01835    0.0    0.0   -50.98428   -50.98428   -50.98428    -7.96593  0.0000  0.0000  0.0000  0.0000
+    5 44.50303    0.0    0.0   -88.12768   -88.12768   -88.12768   -43.62465  0.0000  0.0000  0.0000  0.0000
+    6 40.66587    0.0    0.0  -118.60787  -118.60787  -118.60787   -77.94200  0.0000  0.0000  0.0000  0.0000
+    7 33.79277    0.0    0.0  -141.43394  -141.43394  -141.43394  -107.64117  0.0000  0.0000  0.0000  0.0000
+    8 26.21847    0.0    0.0  -157.61215  -157.61215  -157.61215  -131.39367  0.0000  0.0000  0.0000  0.0000
+    9 19.48386    0.0    0.0  -168.87768  -168.87768  -168.87768  -149.39382  0.0000  0.0000  0.0000  0.0000
+   10 14.22276    0.0    0.0  -176.86405  -176.86405  -176.86405  -162.64129  0.0000  0.0000  0.0000  0.0000
+   11 10.43957    0.0    0.0  -182.77843  -182.77843  -182.77843  -172.33886  0.0000  0.0000  0.0000  0.0000
+   12  7.84017    0.0    0.0  -187.38443  -187.38443  -187.38443  -179.54426  0.0000  0.0000  0.0000  0.0000
+   13  6.06750    0.0    0.0  -191.11159  -191.11159  -191.11159  -185.04408  0.0000  0.0000  0.0000  0.0000
+   14  4.82241    0.0    0.0  -194.18502  -194.18502  -194.18502  -189.36261  0.0000  0.0000  0.0000  0.0000
+   15  3.90000    0.0    0.0  -196.72736  -196.72736  -196.72736  -192.82735  0.0000  0.0000  0.0000  0.0000
+   16  3.17983    0.0    0.0  -198.82088  -198.82088  -198.82088  -195.64105  0.0000  0.0000  0.0000  0.0000
+   17  2.59911    0.0    0.0  -200.53631  -200.53631  -200.53631  -197.93720  0.0000  0.0000  0.0000  0.0000
+   18  2.12669    0.0    0.0  -201.94074  -201.94074  -201.94074  -199.81405  0.0000  0.0000  0.0000  0.0000
+   19  1.74493    0.0    0.0  -203.09614  -203.09614  -203.09614  -201.35121  0.0000  0.0000  0.0000  0.0000
 
  * Physical Quantities at step:    20
 
@@ -312,27 +313,27 @@
    in g-space =   96.000000   in r-space =  96.000000
 
 
-                total energy =     -204.22832 Hartree a.u.
-              kinetic energy =      101.39680 Hartree a.u.
-        electrostatic energy =     -198.66298 Hartree a.u.
+                total energy =     -204.05590 Hartree a.u.
+              kinetic energy =      101.25083 Hartree a.u.
+        electrostatic energy =     -198.76234 Hartree a.u.
                          esr =        0.42693 Hartree a.u.
                        eself =      210.64152 Hartree a.u.
-      pseudopotential energy =      -96.34873 Hartree a.u.
-  n-l pseudopotential energy =       37.25038 Hartree a.u.
- exchange-correlation energy =      -47.86379 Hartree a.u.
+      pseudopotential energy =      -96.58787 Hartree a.u.
+  n-l pseudopotential energy =       37.89083 Hartree a.u.
+ exchange-correlation energy =      -47.84736 Hartree a.u.
            average potential =        0.00000 Hartree a.u.
 
 
 
    Eigenvalues (eV), kp =   1 , spin =  1
 
-  -25.22  -24.64  -24.36  -23.93  -23.86  -23.47  -23.17  -22.75  -22.33  -22.16
-  -21.88  -21.12  -12.21  -11.71  -11.32  -10.94   -9.52   -9.47   -9.00   -8.86
-   -8.71   -8.32   -8.21   -7.50   -7.07   -6.86   -6.66   -6.56   -6.19   -5.83
-   -5.51   -5.29   -5.00   -4.97   -4.84   -4.40   -4.17   -3.63   -3.24   -2.65
-   -2.13   -1.42   -0.54    2.79    4.41    7.38    9.39   10.07
+  -25.22  -24.63  -24.35  -23.92  -23.87  -23.44  -23.14  -22.74  -22.28  -22.11
+  -21.81  -21.10  -12.21  -11.73  -11.32  -10.95   -9.50   -9.43   -8.97   -8.84
+   -8.68   -8.30   -8.16   -7.44   -7.04   -6.82   -6.62   -6.53   -6.16   -5.80
+   -5.44   -5.23   -4.95   -4.91   -4.80   -4.36   -4.11   -3.57   -3.18   -2.61
+   -2.09   -1.30   -0.50    2.81    4.52    7.41    9.43   10.11
  
-   Allocated memory (kb) =     23592
+   Allocated memory (kb) =     25984
  
    CELL_PARAMETERS
     9.28990000    0.00000000    0.00000000
@@ -392,56 +393,56 @@
         2       0.00     0.0000
  
   nfi    ekinc  temph  tempp        etot      enthal       econs       econt    vnhh   xnhh0    vnhp   xnhp0
-   20  1.43420    0.0    0.0  -204.22832  -204.22832  -204.22832  -202.79412  0.0000  0.0000  0.0000  0.0000
+   20  1.44006    0.0    0.0  -204.05590  -204.05590  -204.05590  -202.61584  0.0000  0.0000  0.0000  0.0000
 
-   writing restart file: /scratch/daily_test/espresso/tmp//sio2_91.save
-   restart file written in    0.075 sec.
+   writing restart file: /home/giannozz/CVS/espresso2/tmp//sio2_91.save
+   restart file written in    0.068 sec.
 
 
 
    Averaged Physical Quantities
                       accomulated      this run
-   ekinc         :       16.69246      16.69246 (AU)
-   ekin          :      136.81538     136.81538 (AU)
-   epot          :     -308.50900    -308.50900 (AU)
-   total energy  :     -139.94053    -139.94053 (AU)
+   ekinc         :       16.66664      16.66664 (AU)
+   ekin          :      136.79444     136.79444 (AU)
+   epot          :     -309.64367    -309.64367 (AU)
+   total energy  :     -139.81818    -139.81818 (AU)
    temperature   :        0.00000       0.00000 (K )
-   enthalpy      :     -139.94053    -139.94053 (AU)
-   econs         :     -139.94053    -139.94053 (AU)
+   enthalpy      :     -139.81818    -139.81818 (AU)
+   econs         :     -139.81818    -139.81818 (AU)
    pressure      :        0.00000       0.00000 (Gpa)
    volume        :     1526.90154    1526.90154 (AU)
 
 
-     initialize   :      3.58s CPU      3.59s WALL (       1 calls)
-     total_time   :      5.03s CPU      5.07s WALL (      20 calls)
-     formf        :      0.13s CPU      0.13s WALL (       1 calls)
-     rhoofr       :      0.82s CPU      0.83s WALL (      21 calls)
-     vofrho       :      0.45s CPU      0.46s WALL (      21 calls)
-     dforce       :      0.95s CPU      0.95s WALL (     504 calls)
-     calphi       :      0.05s CPU      0.06s WALL (      21 calls)
-     ortho        :      0.25s CPU      0.25s WALL (      21 calls)
+     initialize   :      2.91s CPU      2.95s WALL (       1 calls)
+     total_time   :      5.05s CPU      5.10s WALL (      20 calls)
+     formf        :      0.10s CPU      0.10s WALL (       1 calls)
+     rhoofr       :      0.83s CPU      0.86s WALL (      21 calls)
+     vofrho       :      0.47s CPU      0.48s WALL (      21 calls)
+     dforce       :      0.98s CPU      0.99s WALL (     504 calls)
+     calphi       :      0.06s CPU      0.06s WALL (      21 calls)
+     ortho        :      0.25s CPU      0.26s WALL (      21 calls)
      ortho_iter   :      0.03s CPU      0.03s WALL (      21 calls)
      rsg          :      0.02s CPU      0.02s WALL (      21 calls)
      rhoset       :      0.02s CPU      0.03s WALL (      21 calls)
-     updatc       :      0.02s CPU      0.02s WALL (      21 calls)
+     updatc       :      0.02s CPU      0.03s WALL (      21 calls)
      gram         :      0.02s CPU      0.02s WALL (       1 calls)
-     newd         :      2.68s CPU      2.68s WALL (      21 calls)
+     newd         :      2.61s CPU      2.62s WALL (      21 calls)
      calbec       :      0.03s CPU      0.03s WALL (      22 calls)
-     prefor       :      0.01s CPU      0.01s WALL (      21 calls)
+     prefor       :      0.02s CPU      0.01s WALL (      21 calls)
      strucf       :      0.00s CPU      0.00s WALL (       1 calls)
-     rhov         :      0.26s CPU      0.27s WALL (      21 calls)
-     nlsm1        :      0.17s CPU      0.16s WALL (      64 calls)
-     fft          :      0.28s CPU      0.29s WALL (      84 calls)
-     ffts         :      0.05s CPU      0.05s WALL (      42 calls)
-     fftw         :      1.05s CPU      1.06s WALL (    1512 calls)
-     fftb         :      1.99s CPU      2.00s WALL (    4662 calls)
+     rhov         :      0.27s CPU      0.28s WALL (      21 calls)
+     nlsm1        :      0.16s CPU      0.16s WALL (      64 calls)
+     fft          :      0.30s CPU      0.30s WALL (      84 calls)
+     ffts         :      0.05s CPU      0.06s WALL (      42 calls)
+     fftw         :      1.11s CPU      1.08s WALL (    1512 calls)
+     fftb         :      1.92s CPU      1.92s WALL (    4662 calls)
  
  
  
-     CP           :     8.70s CPU         8.77s WALL
+     CP           :     8.04s CPU         8.15s WALL
 
  
-   This run was terminated on:  11:55:40  30Aug2010            
+   This run was terminated on:   9:51:47   2Feb2011            
 
 =------------------------------------------------------------------------------=
    JOB DONE.
