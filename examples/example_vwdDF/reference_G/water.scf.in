@@ -1,0 +1,43 @@
+&control
+   calculation = 'scf'
+   restart_mode='from_scratch',
+   prefix='water_vdw',
+   tstress = .true.
+   tprnfor = .true.
+   pseudo_dir = '/u/cm/degironc/QE/espresso/pseudo/',
+   outdir='/u/cm/degironc/tmp/'
+   verbosity = 'high'
+/
+
+&system
+    ibrav           = 8
+    celldm(1)       = 15 
+    celldm(2)       = 0.954545454545455
+    celldm(3)       = 1.22727272727273
+    nat             = 6
+    ntyp            = 2
+    occupations     = 'fixed'
+    ecutwfc         = 30.0
+    ecutrho         = 180.0
+    input_dft       = 'vdW-DF'
+/
+
+&electrons
+    conv_thr        = 1.0d-8
+/
+
+
+ATOMIC_SPECIES
+   O   15.9994    O.pbe-rrkjus.UPF
+   H   1.00794    H.pbe-rrkjus.UPF
+ 
+ATOMIC_POSITIONS {angstrom}
+O     -0.000000     0.013129    -0.057535
+H     -0.000000     0.779069    -0.656064
+H      0.000000     0.389646     0.845802
+O      0.000000     0.887109     2.818248
+H     -0.774530     0.521469     3.280767
+H      0.774530     0.521469     3.280767
+
+K_POINTS gamma
+

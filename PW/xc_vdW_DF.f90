@@ -8,9 +8,11 @@
 !
 !----------------------------------------------------------------------------
 
+!#define FFTGRADIENT
+#undef FFTGRADIENT
+
 MODULE vdW_DF
  
-
   !! This module calculates the non-local correlation contribution to the energy
   !! and potential. This method is based on the method of Guillermo Roman-Perez 
   !! and Jose M. Soler described in:
@@ -40,7 +42,6 @@ MODULE vdW_DF
   !! from v_of_rho.  This routine handles setting up the parallel run (if
   !! any) and carries out the calls necessary to calculate the non-local
   !! correlation contributions to the energy and potential.
-
   
   USE kinds,             ONLY : dp
   USE constants,         ONLY : pi, e2
@@ -60,26 +61,21 @@ MODULE vdW_DF
 
 CONTAINS
 
-  
-
-!! ###############################################################################################################
+!! #################################################################################################
 !!                                       |             |
 !!                                       |  XC_VDW_DF  |
 !!                                       |_____________|
 
-
   SUBROUTINE xc_vdW_DF(rho_valence, rho_core, etxc, vtxc, v)
     
     !! Modules to include
-    !! ----------------------------------------------------------------------------------
+    !! -------------------------------------------------------------------------
     
     use gvect,           ONLY : ngm, nl, g, nlm
-    USE grid_dimensions, ONLY : nr1x, nr2x, nr3x, nrxx
+    USE grid_dimensions, ONLY : nr1x, nr2x, nr3x, nr1, nr2, nr3, nrxx
     USE cell_base,       ONLY : omega, tpiba
     USE fft_scalar,      ONLY : cfft3d
-    !! ----------------------------------------------------------------------------------
-    
-    
+    !! -------------------------------------------------------------------------
     
     !! Local variables
     !! ----------------------------------------------------------------------------------
@@ -124,6 +120,10 @@ CONTAINS
                                                 
     real(dp) :: Ec_nl                           !! The non-local vdW contribution to the energy
                                                 
+    real(dp), allocatable :: total_rho(:)       !! This is the sum of the valence and core 
+    !                                           !! charge.  This just holds the piece assigned
+    !                                           !! to this processor.
+#ifndef FFTGRADIENT
     integer, parameter :: Nneighbors = 4        !! How many neighbors on each side
     !                                           !! to include in numerical derivatives.
     !                                           !! Can be from 1 to 6
@@ -133,46 +133,33 @@ CONTAINS
     !                                           !! over the entire simulation cell.  Each
     !                                           !! processor has a copy of this to do the
     !                                           !! numerical gradients.
-                                                
-                                                
-    real(dp), allocatable :: total_rho(:)       !! This is the sum of the valence and core 
-    !                                           !! charge.  This just holds the piece assigned
-    !                                           !! to this processor.
-                                                
     integer, save :: my_start_z, my_end_z       !! Starting and ending z-slabs for this processor
 
-    
+
     integer, allocatable, save :: procs_Npoints(:) !! The number of grid points assigned to each proc
     integer, allocatable, save :: procs_start(:)   !! The first assigned index into the charge-density array for each proc
     integer, allocatable, save :: procs_end(:)     !! The last assigned index into the charge density array for each proc
-    
+
+#endif                                                
+                                                
     logical, save :: first_iteration = .true.      !! Whether this is the first time this
     !                                              !! routine has been called.
-   
-  
     
     !! ---------------------------------------------------------------------------------------------
     !!   Begin calculations
   
-    !! Check to make sure we aren't trying to do a spin-polarized run or a gamma point
-    !! only calculation.  Gamma point calculations can be done but the gamma point
-    !! must be specified explicitly as in:
-    !! kpoints automatic
-    !! 1 1 1 0 0 0
-    !! because PW changes things around for runs specified with {gamma} as the k-point.
-    !! Also, verify that we aren't trying to do a cell relaxation run
-    !! or calculate the stress tensor.
+    !! Check to make sure we aren't trying to do a spin-polarized run 
+    !! Gamma point calculations can be done using the special {gamma} features
+    !! stress tensor calcultion and cell relaxation run are also possible.
     !! --------------------------------------------------------------------------------------------------------
 
     call errore('xc_vdW_DF','vdW functional not implemented for spin polarized runs', size(rho_valence,2)-1)
-    !IF ( gamma_only) CALL errore ('xc_vdW_DF', &
-    !    & 'vdW functional not implemented for gamma point calculations. &
-    !    & Use kpoints automatic and specify the gamma point explicitly', 1)
 
     !! --------------------------------------------------------------------------------------------------------
-    
 
+    if (first_iteration) then
 
+#ifndef FFTGRADIENT
     !! Here we set up the calculations on the first iteration.  If this is a parallel run, each
     !! processor figures out which element in the charge-density array it should start and stop on.
     !! PWSCF splits the cell up into slabs in the z-direction to distribute over processors.
@@ -180,13 +167,11 @@ CONTAINS
     !! for the get_3d_indices and get_potential subroutines below.
     !! --------------------------------------------------------------------------------------------------
 
-    if (first_iteration) then
        
        allocate( procs_Npoints(0:nproc_pool-1), procs_start(0:nproc_pool-1), procs_end(0:nproc_pool-1) )
        
        procs_Npoints(me_pool) = nrxx
        procs_start(0) = 1
-       
        
        ! All processors communicate how many points they have been assigned.  Each processor
        ! then calculates for itself what the starting and ending indices should be for every
@@ -208,7 +193,6 @@ CONTAINS
        end do
        
        !++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-       
 
        ! Each processor finds the starting and ending z-planes assined to them.  Since
        ! PWSCF splits the cell into slabs in the z-direction, the beginning (ending)
@@ -223,6 +207,7 @@ CONTAINS
        !write(*,'(A,3I5)') "Parall en [proc, my_start_z, my_end_z]", me_pool, my_start_z, my_end_z
        ! +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
+#endif
        first_iteration = .false.
        
        !! Here we output some of the parameters being used in the run.  This is important because
@@ -241,7 +226,13 @@ CONTAINS
           write(*,'(A)',advance='no') "q_mesh =  "
           write(*,'(F15.8)') (q_mesh(I), I=1, Nqs)
                  
+#ifdef FFTGRADIENT
+          write(*,'(/ A )') "Gradients computed in Reciprocal space"
+#else
+          write(*,'(/ A )') "Gradients computed in Real space"
+#endif
           write(*,'(/ A / /)') "---------------------------------------------------------------------------------"
+
           
        end if
        
@@ -250,9 +241,6 @@ CONTAINS
     end if
 
     !! --------------------------------------------------------------------------------------------------
-    
-    
-
     
     !! Allocate arrays.  nrxx is a PWSCF variable that holds the number of points assigned to 
     !! a given processor.  
@@ -265,19 +253,36 @@ CONTAINS
     
     !! ---------------------------------------------------------------------------------------
     
-    
     !! Add together the valence and core charge densities to get the total charge density    
     total_rho = rho_valence(:,1) + rho_core(:)
-    
-    
-    !! The full_rho array holds the charge density at every point in the simulation cell.
-    !! Each processor needs this because the numerical gradients require knowledge of the 
-    !! charge density on points outside the slab one has been given.  We don't allocate this 
-    !! in the case of using a single processor since total_rho would already hold this information.
-    !! nr1x, nr2x, and nr3x are PWSCF variables that hold the TOTAL number of divisions along
-    !! each lattice vector.  Thus, their product is the total number of points in the cell (not
-    !! just those assigned to a particular processor).
-    !! -----------------------------------------------------------------------------------------------
+
+#ifdef FFTGRADIENT
+    !! -------------------------------------------------------------------------
+    !! Here we calculate the gradient in reciprocal space using FFT
+    !! -------------------------------------------------------------------------
+    call numerical_gradient(total_rho,gradient_rho)
+
+#else
+    !! -------------------------------------------------------------------------
+    !! Here we calculate the gradient numerically in real spacee
+    !! The Nneighbors variable is set above and gives the number of points in 
+    !! each direction to consider when taking the numerical derivatives.
+    !! -------------------------------------------------------------------------
+    !! If there is only 1 processor the needed information is held by the 
+    !! total_rho array, otherwise we need to allocate the full_rho array that 
+    !! will be deallocated the call since it is no longer needed.  
+    !!
+    !! The full_rho array holds the charge density at every point in the 
+    !! simulation cell.
+    !! Each processor needs this because the numerical gradients require 
+    !! knowledge of the !! charge density on points outside the slab one has 
+    !! been given.  We don't allocate this in the case of using a single 
+    !! processor since total_rho would already hold this information.
+    !! nr1x, nr2x, and nr3x are PWSCF variables that hold the TOTAL number of 
+    !! divisions along each lattice vector. Thus, their product is the total 
+    !! number of points in the cell (not just those assigned to a particular 
+    !! processor).
+    !! ------------------------------------------------------------------------
     
     if (nproc_pool > 1) then
        
@@ -298,32 +303,20 @@ CONTAINS
        
        ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
        
-    end if
-    
-    !! -----------------------------------------------------------------------------------------------
+       ! Here we calculate the gradient numerically in real spacee
 
-
-    !! Here we calculate the gradient numerically.  If there is only 1 processor we didn't allocate the full_rho
-    !! array so we call the routine using the total_rho array.  Otherwise we call it using full_rho.  In the latter
-    !! case, the full_rho array is deallocated after the call since it is no longer needed.  The Nneighbors
-    !! variable is set above and gives the number of points in each direction to consider when taking the numerical
-    !! derivatives.
-    !! -------------------------------------------------------------------------------------------------------------
-
-    if (nproc_pool > 1) then
-       
        call numerical_gradient(full_rho, Nneighbors, gradient_rho, my_start_z, my_end_z)
        deallocate(full_rho)
        
     else 
        
+       ! Here we calculate the gradient numerically in real spacee
        call numerical_gradient(total_rho, Nneighbors, gradient_rho, my_start_z, my_end_z)
        
     end if
 
+#endif
     !! -------------------------------------------------------------------------------------------------------------
-
-
 
     !! Find the value of q0 for all assigned grid points.  q is defined in equations
     !! 11 and 12 of DION and q0 is the saturated version of q defined in equation
@@ -344,31 +337,14 @@ CONTAINS
     !! (total # of FFT points)*Nqs complex numbers.  In a parallel run, each processor will hold the 
     !! values of all the theta functions on just the points assigned to it.
     !! --------------------------------------------------------------------------------------------------
+    !! thetas are stored in reciprocal space as  theta_i(k) because this is the way they are used later
+    !! for the convolution (equation 11 of SOLER).  The ffts used here are timed.
+    !! --------------------------------------------------------------------------------------------------
 
     allocate( thetas(nrxx, Nqs) )
     CALL get_thetas_on_grid(total_rho, q0, thetas)
-    
-    !! --------------------------------------------------------------------------------------------------
+    !! ---------------------------------------------------------------------------------------------
 
-    
-    !! Fourier transform the theta_i(r) to get theta_i(k) used for the convolution (equation 11
-    !! of SOLER).  The ffts used here are timed.
-    !! ---------------------------------------------------------------------------------------------------
-    
-    call start_clock( 'vdW_ffts')
-    
-    do theta_i = 1, Nqs
-       
-       !call cft3(thetas(:,theta_i), nr1, nr2, nr3, nr1x, nr2x, nr3x, -1)
-       CALL fwfft ('Dense', thetas(:,theta_i), dfftp) 
-    end do
-    
-    call stop_clock( 'vdW_ffts')
-    
-    !! ---------------------------------------------------------------------------------------------------
-
-
-    
     !! Carry out the integration in equation 7 of SOLER.  This also turns the thetas array into the 
     !! precursor to the u_i(k) array which is inverse fourier transformed to get the u_i(r) functions
     !! of SOLER equation 14.  Add the energy we find to the output variable etxc.  This process is timed.
@@ -383,8 +359,6 @@ CONTAINS
     call stop_clock( 'vdW_energy')
 
     !! --------------------------------------------------------------------------------------------------
-
-    
 
     !! If verbosity is set to high we output the total non-local correlation energy found
     !! ---------------------------------------------------------------------------------------
@@ -403,8 +377,6 @@ CONTAINS
 
     !! ----------------------------------------------------------------------------------------
 
-    
-
     !! Inverse Fourier transform the u_i(k) to get the u_i(r) of SOLER equation 14.  These FFTs
     !! are also timed and added to the timing of the forward FFTs done earlier.
     !!---------------------------------------------------------------------------------------
@@ -419,16 +391,50 @@ CONTAINS
 
     call stop_clock( 'vdW_ffts')
 
-    !! ---------------------------------------------------------------------------------------
-    
-    
+    !! -------------------------------------------------------------------------
 
-    !! Here we allocate the array to hold the potential.  This is calculated via equation 13 of SOLER, using the u_i(r)
-    !! calculated from quations 14 and 15 of SOLER.  Each processor allocates the array to be the size of the full grid
-    !! because, as can be seen in SOLER equation 13, processors need to access grid points outside their allocated regions.
-    !! This process is timed.  The timer is stopped below after the v output variable has been updated with the non-local
-    !! corelation potential.  That is, the timer includes the communication time necessary in a parallel run.
-    !! --------------------------------------------------------------------------------------------------------------------
+    !! Here we allocate the array to hold the potential. This is calculated via 
+    !! equation 13 of SOLER, using the u_i(r) calculated from quations 14 and 
+    !! 15 of SOLER.  Each processor allocates the array to be the size of the 
+    !! full grid  because, as can be seen in SOLER equation 13, processors need
+    !! to access grid points outside their allocated regions.
+    !! This process is timed.  The timer is stopped below after the v output 
+    !! variable has been updated with the non-local corelation potential.  
+    !! That is, the timer includes the communication time necessary in a 
+    !! parallel run.
+    !! -------------------------------------------------------------------------
+
+#ifdef FFTGRADIENT
+
+    call start_clock( 'vdW_v' )
+
+    allocate( potential(nrxx) )
+    
+    call get_potential(q0, dq0_drho, dq0_dgradrho, gradient_rho, thetas, potential)
+    
+    !! -------------------------------------------------------------------------
+
+    
+    v(:,1) = v(:,1) + e2*potential(:)
+    
+    call stop_clock( 'vdW_v' )
+
+    !! -----------------------------------------------------------------------
+    
+    !! The integral of rho(r)*potential(r) for the vtxc output variable
+    !! --------------------------------------------------------------------
+
+    grid_cell_volume = omega/(nr1*nr2*nr3)  
+ 
+    do i_grid = 1, nrxx
+       
+       vtxc = vtxc + e2*grid_cell_volume * total_rho(i_grid)*potential(i_grid)
+    
+    end do
+
+    deallocate(potential)  
+
+#else
 
     call start_clock( 'vdW_v' )
 
@@ -436,7 +442,7 @@ CONTAINS
     
     call get_potential(q0, dq0_drho, dq0_dgradrho, Nneighbors, gradient_rho, thetas, potential, my_start_z, my_end_z)
     
-    !! --------------------------------------------------------------------------------------------------------------------
+    !! -------------------------------------------------------------------------
 
 
     !! Reduction process to sum all the potentials of all the processors.  
@@ -447,8 +453,6 @@ CONTAINS
 
     !! ----------------------------------------------------------------------
 
-    
-
     !! Here, the potential is rebroadcast. Since each processor has part of the output v array it is easier if
     !! each processor adds only its assigned points to the v array.  After this step, however, all
     !! processors hold the vdW potential over the entire grid.
@@ -458,8 +462,6 @@ CONTAINS
     call mp_bcast(potential, root_pool, intra_pool_comm)
 
     !! ------------------------------------------------------------------------------------------------------
-
-
     
     !! Each processor adds its piece of the potential to the output v array.    
     !! Stop the timer for the potential.
@@ -470,8 +472,6 @@ CONTAINS
     call stop_clock( 'vdW_v' )
 
     !! -----------------------------------------------------------------------
-
-    
     
     !! The integral of rho(r)*potential(r) for the vtxc output variable
     !! --------------------------------------------------------------------
@@ -484,24 +484,26 @@ CONTAINS
     
     end do
 
+    deallocate(potential)  
+
+#endif
     !! ----------------------------------------------------------------------
     
-    
     !! Deallocate all arrays.
-    deallocate(q0, gradient_rho, dq0_drho, dq0_dgradrho, potential, total_rho, thetas)  
+    deallocate(q0, gradient_rho, dq0_drho, dq0_dgradrho, total_rho, thetas)  
     
   END SUBROUTINE xc_vdW_DF
-  
 
-!! ###############################################################################################################
+!! #################################################################################################
 !!                                       |                 |
 !!                                       |  STRESS_VDW_DF  |
 !!                                       |_________________|
 
-
   SUBROUTINE stress_vdW_DF(rho_valence, rho_core, sigma)
 
-      USE grid_dimensions,       ONLY : nr1, nr2, nr3, nr1x, nr2x, nr3x, nrxx
+      USE grid_dimensions, ONLY : nr1, nr2, nr3, nr1x, nr2x, nr3x, nrxx
+      use gvect,           ONLY : ngm, nl, g, nlm
+      USE cell_base,       ONLY : tpiba
 
       implicit none
 
@@ -510,14 +512,15 @@ CONTAINS
       real(dp), intent(inout) :: sigma(3,3)              !  
 
       real(dp), allocatable :: gradient_rho(:,:)         !
-      real(dp), allocatable :: full_rho(:)               ! Rho values
-      real(dp), allocatable :: total_rho(:)              !
+      real(dp), allocatable :: total_rho(:)              ! Rho values
 
       real(dp), allocatable :: q0(:)                     !
       real(dp), allocatable :: dq0_drho(:)               ! Q-values
       real(dp), allocatable :: dq0_dgradrho(:)           !
 
       complex(dp), allocatable :: thetas(:,:)            ! Thetas
+#ifndef FFTGRADIENT
+      real(dp), allocatable :: full_rho(:)               ! additional Rho values onthe full grid
 
       integer, save :: my_start_z, my_end_z              ! 
       integer, allocatable, save :: procs_Npoints(:)     ! 
@@ -525,9 +528,9 @@ CONTAINS
       integer, allocatable, save :: procs_end(:)         !
 
       logical,  save :: first_stress_iteration = .true.  !
-
-      integer :: i_proc, theta_i, l, m
       integer  :: Nneighbors = 4
+#endif
+      integer :: i_proc, theta_i, l, m
 
       real(dp)  :: sigma_grad(3,3)
       real(dp)  :: sigma_ker(3,3)
@@ -544,10 +547,10 @@ CONTAINS
       sigma_grad(:,:) = 0.0_DP
       sigma_ker(:,:) = 0.0_DP
 
+#ifndef FFTGRADIENT
       !! ---------------------------------------------------------------------------------------------
       !!   Parallel setup
       !! ---------------------------------------------------------------------------
-
       if (first_stress_iteration) then
          
          allocate( procs_Npoints(0:nproc_pool-1), procs_start(0:nproc_pool-1), procs_end(0:nproc_pool-1) )
@@ -576,9 +579,8 @@ CONTAINS
          first_stress_iteration = .false.
 
       end if
-
-
-      !! --------------------------------------------------------------------------------------------------
+#endif
+      !! ---------------------------------------------------------------------------------------
       !! Allocations
       !! ---------------------------------------------------------------------------------------
 
@@ -594,9 +596,14 @@ CONTAINS
 
       total_rho = rho_valence(:,1) + rho_core(:)
 
-
+#ifdef FFTGRADIENT
+      !! -------------------------------------------------------------------------
+      !! Here we calculate the gradient in reciprocal space using FFT
+      !! -------------------------------------------------------------------------
+      call numerical_gradient(total_rho,gradient_rho)
+#else
       !! ---------------------------------------------------------------------------------------
-      !! Gradient
+      !! Here we calculate the gradient in Real space 
       !! ---------------------------------------------------------------------------------------
 
       if (nproc_pool > 1) then
@@ -613,6 +620,7 @@ CONTAINS
          end do
          
          call numerical_gradient(full_rho, Nneighbors, gradient_rho, my_start_z, my_end_z)
+
          deallocate(full_rho)
          
       else 
@@ -620,35 +628,24 @@ CONTAINS
          call numerical_gradient(total_rho, Nneighbors, gradient_rho, my_start_z, my_end_z)
          
       end if
-
+#endif
       !! -------------------------------------------------------------------------------------------------------------
       !! Get q0.
       !! ---------------------------------------------------------------------------------
 
       CALL get_q0_on_grid(total_rho, gradient_rho, q0, dq0_drho, dq0_dgradrho)
 
-      !! -------------------------------------------------------------------------------------------------------------
+      !! ---------------------------------------------------------------------------------
       !! Get thetas in reciprocal space.
       !! ---------------------------------------------------------------------------------
 
       CALL get_thetas_on_grid(total_rho, q0, thetas)
 
-      call start_clock( 'vdW_ffts')
-
-      do theta_i = 1, Nqs
-
-         !call cft3(thetas(:,theta_i), nr1, nr2, nr3, nr1x, nr2x, nr3x, -1)
-         CALL fwfft ('Dense', thetas(:,theta_i), dfftp)
-      end do
-
-      call stop_clock( 'vdW_ffts')
-
       !! ---------------------------------------------------------------------------------------
       !! Stress
       !! ---------------------------------------------------------------------------------------
-
-      CALL stress_vdW_DF_gradient(total_rho, gradient_rho, q0, dq0_drho, dq0_dgradrho, &
-                                  thetas, procs_start, my_start_z, my_end_z, sigma_grad)
+      CALL stress_vdW_DF_gradient(total_rho, gradient_rho, q0, dq0_drho, &
+                                  dq0_dgradrho, thetas, sigma_grad)
       CALL print_sigma(sigma_grad, "VDW GRADIENT")
 
       CALL stress_vdW_DF_kernel(total_rho, q0, thetas, sigma_ker)
@@ -674,8 +671,7 @@ CONTAINS
    !!                                       |                          |
 
    SUBROUTINE stress_vdW_DF_gradient (total_rho, gradient_rho, q0, dq0_drho, &
-                                      dq0_dgradrho, thetas, procs_start,     &
-                                      my_start_z, my_end_z, sigma) 
+                                      dq0_dgradrho, thetas, sigma)
 
       !!-----------------------------------------------------------------------------------
       !! Modules to include
@@ -686,8 +682,7 @@ CONTAINS
                                         nrxx
       USE cell_base,             ONLY : omega, tpiba, alat, at, tpiba2
       USE fft_scalar,            ONLY : cfft3d
-      USE wavefunctions_module,  ONLY : psic
-      USE scf,                   ONLY: rho
+      USE scf,                   ONLY : rho
 
       !! ----------------------------------------------------------------------------------
 
@@ -699,8 +694,6 @@ CONTAINS
       real(dp), intent(IN) :: q0(:)                      !
       real(dp), intent(IN) :: dq0_drho(:)                ! 
       real(dp), intent(IN) :: dq0_dgradrho(:)            !
-      integer, intent(IN)  :: procs_start(:)             !
-      integer, intent(IN)  :: my_start_z, my_end_z       ! 
       complex(dp), intent(IN) :: thetas(:,:)             !
 
       complex(dp), allocatable :: u_vdW(:,:)             !
@@ -712,7 +705,7 @@ CONTAINS
       integer  :: q_low, q_hi, q, q1_i, q2_i , g_i       ! Loop and q-points
 
       integer  :: l, m
-      real(dp) :: prefactor, gradmod                     ! Final summation of sigma
+      real(dp) :: prefactor                              ! Final summation of sigma
 
       integer  :: i_proc, theta_i, i_grid, q_i, &        !
                   ix, iy, iz                             ! Iterators
@@ -804,10 +797,6 @@ CONTAINS
 
                       prefactor = u_vdW(i_grid,q_i) * dP_dq0 * dq0_dgradrho(i_grid)
 
-                      gradmod = sqrt(gradient_rho(i_grid,1)*gradient_rho(i_grid,1) + &
-                                     gradient_rho(i_grid,2)*gradient_rho(i_grid,2) + &
-                                     gradient_rho(i_grid,3)*gradient_rho(i_grid,3))
-
                       do l = 1, 3
                           do m = 1, l
                                         
@@ -826,7 +815,7 @@ CONTAINS
       call mp_sum(  sigma, intra_pool_comm )
 #endif
 
-      call dscal (9, 1.d0 / (nr1x * nr2x * nr3x), sigma, 1)
+      call dscal (9, 1.d0 / (nr1 * nr2 * nr3), sigma, 1)
 
       deallocate( d2y_dx2, u_vdW )
 
@@ -846,7 +835,6 @@ CONTAINS
       use gvect,                 ONLY : ngm, nl, g, nl, gg, igtongl, gl, ngl, gstart 
       USE grid_dimensions,       ONLY : nr1, nr2, nr3, nrxx
       USE cell_base,             ONLY : omega, tpiba, tpiba2
-      USE wavefunctions_module,  ONLY : psic
       USE scf,                   ONLY : rho
       USE constants, ONLY: pi
 
@@ -866,16 +854,6 @@ CONTAINS
       allocate( dkernel_of_dk(Nqs, Nqs) )
 
       sigma(:,:) = 0.0_DP
-      psic (:) = (0.d0, 0.d0)
-
-      !! --------------------------------------------------------------------------------------------------
-      !! Calculate the charge in reciprocal space (NO SPIN)
-      !! ---------------------------------------------------------------------------------------------------
-      
-      call daxpy (nrxx, 1.d0, rho%of_r (1, 1), 1, psic, 2)
-
-      !call cft3 (psic, nr1, nr2, nr3, nr1x, nr2x, nr3x, - 1)
-      CALL fwfft ('Dense', psic, dfftp)
 
       !! --------------------------------------------------------------------------------------------------
       !! Integration in g-space
@@ -927,22 +905,26 @@ CONTAINS
   !!                                    |                  |
   !!                                    |  GET_Q0_ON_GRID  |
   !!                                    |__________________|
-  
 
   !! This routine first calculates the q value defined in (DION equations 11 and 12), then
   !! saturates it according to (SOLER equation 7).  
-
   
   SUBROUTINE get_q0_on_grid (total_rho, gradient_rho, q0, dq0_drho, dq0_dgradrho)
+  !!
+  !! more specifically it calcultates the following
+  !!
+  !!     q0(ir) = q0 as defined above
+  !!     dq0_drho(ir) = total_rho * d q0 /d rho 
+  !!     dq0_dgradrho = total_rho / |gradient_rho| * d q0 / d |gradient_rho|
+  !!
     
     USE grid_dimensions, ONLY : nrxx
     USE kernel_table,    ONLY : q_cut, q_min
     
-    real(dp),   intent(IN)     :: total_rho(:), gradient_rho(:,:)           !! Input variables needed
+    real(dp),  intent(IN)    :: total_rho(:), gradient_rho(:,:)      !! Input variables needed
     
-    real(dp),   intent(inout)   :: q0(:), dq0_drho(:), dq0_dgradrho(:)      !! Output variables that have been allocated
-  !                                                                       !! outside this routine but will be set here.
-  
+    real(dp),  intent(inout) :: q0(:), dq0_drho(:), dq0_dgradrho(:)  !! Output variables that have been allocated
+  !                                                                  !! outside this routine but will be set here.
   !                                                                        _
   real(dp),   parameter      :: LDA_A  = 0.031091D0, LDA_a1 = 0.2137D0    !
   real(dp),   parameter      :: LDA_b1 = 7.5957D0  , LDA_b2 = 3.5876D0    ! see J.P. Perdew and Yue Wang, Phys. Rev. B 45, 13244 (1992). 
@@ -982,7 +964,6 @@ CONTAINS
 
      !! ------------------------------------------------------------------------------------
      
-     
      !! Calculate some intermediate values needed to find q
      !! ------------------------------------------------------------------------------------
 
@@ -997,8 +978,6 @@ CONTAINS
      LDA_2 =  2.0D0*LDA_A * (LDA_b1*sqrt_r_s + LDA_b2*r_s + LDA_b3*r_s*sqrt_r_s + LDA_b4*r_s*r_s)
      
      !! ------------------------------------------------------------------------------------
-     
-
 
      !! This is the q value defined in equations 11 and 12 of DION
      !! ---------------------------------------------------------------
@@ -1006,10 +985,9 @@ CONTAINS
      q = kF + LDA_1 * log(1.0D0+1.0D0/LDA_2) + gradient_correction
      
      !! ---------------------------------------------------------------
-
      
-     !! Here, we saturate q according to equation 7 of SOLER.  Also, we find the derivative
-     !! dq0_dq needed for the derivatives dq0_drho and dq0_dgradrh0 discussed below.
+     !! Here, we calculate q0 by saturating q according to equation 7 of SOLER.  Also, we find 
+     !! the derivative dq0_dq needed for the derivatives dq0_drho and dq0_dgradrh0 discussed below.
      !! ---------------------------------------------------------------------------------------
 
      exponent = 0.0D0
@@ -1026,8 +1004,6 @@ CONTAINS
      dq0_dq = dq0_dq * exp(-exponent)
      
      !! ---------------------------------------------------------------------------------------
-          
-
      
      !! This is to handle a case with q0 too small.  We simply set it to the smallest q value in
      !! out q_mesh.  Hopefully this doesn't get used often (ever)
@@ -1040,7 +1016,6 @@ CONTAINS
      end if
 
      !! ---------------------------------------------------------------------------------------
-     
      
      !! Here we find derivatives.  These are actually the density times the derivative of q0 with respect
      !! to rho and gradient_rho.  The density factor comes in since we are really differentiating
@@ -1070,28 +1045,24 @@ end SUBROUTINE get_q0_on_grid
 !! ###############################################################################################################
 
 
-
-
-
-
 !! ###############################################################################################################
 !!                                      |                      |
 !!                                      |  GET_THETAS_ON_GRID  |
 !!                                      |______________________|
 
 
-
 SUBROUTINE get_thetas_on_grid (total_rho, q0_on_grid, thetas)
 
-  real(dp), intent(in) :: total_rho(:), q0_on_grid(:)           !! Input arrays
+  real(dp), intent(in) :: total_rho(:), q0_on_grid(:)  !! Input arrays
 
-  complex(dp), intent(inout):: thetas(:,:)                      !! value of thetas for the grid points
-  !                                                             !! assigned to this processor. The format
-  !                                                             !! is thetas(grid_point, theta_i)
+  complex(dp), intent(inout):: thetas(:,:)             !! value of thetas for the grid points
+  !                                                    !! assigned to this processor. The format
+  !                                                    !! is thetas(grid_point, theta_i)
+  !     NB: thetas are returned in reciprocal space
   
-  integer :: i_grid, Ngrid_points                               !! An index for the point on the grid and the total
-  !                                                             !! number of grid points
-  
+  integer :: i_grid, Ngrid_points                      !! An index for the point on the grid and the total
+  !                                                    !! number of grid points
+  integer :: theta_i                                   !! an index
   
   Ngrid_points = size(q0_on_grid)
   
@@ -1110,7 +1081,17 @@ SUBROUTINE get_thetas_on_grid (total_rho, q0_on_grid, thetas)
   end do
 
   !! ------------------------------------------------------------------------------------
+  !! Get thetas in reciprocal space.
   
+  call start_clock( 'vdW_ffts')
+
+  do theta_i = 1, Nqs
+
+     !call cft3(thetas(:,theta_i), nr1, nr2, nr3, nr1x, nr2x, nr3x, -1)
+     CALL fwfft ('Dense', thetas(:,theta_i), dfftp)
+  end do
+
+  call stop_clock( 'vdW_ffts')
   
 END SUBROUTINE get_thetas_on_grid
 
@@ -1478,13 +1459,58 @@ end subroutine interpolate_Dkernel_Dk
 
 
 
-
 !! ###############################################################################################################
 !!                                       |                       |
 !!                                       |   NUMERICAL_GRADIENT  |
 !!                                       |_______________________|
 
 
+#ifdef FFTGRADIENT
+!! Calculates the gradient of the charge density numerically on the grid.  We use
+!! the PWSCF gradient style.
+
+subroutine numerical_gradient(total_rho, gradient_rho)
+
+   use gvect,             ONLY : ngm, nl, g, nlm
+   USE cell_base,         ONLY : tpiba
+   USE grid_dimensions,   ONLY : nrxx
+   USE fft_base,          ONLY : dfftp
+   USE fft_interfaces,    ONLY : fwfft, invfft 
+   !
+   ! I/O variables
+   !
+   real(dp), intent(in) :: total_rho(:)        !! Input array holding total charge density.
+ 
+   real(dp), intent(out) :: gradient_rho(:,:) !! Output array that will holds the gradient
+   !                                          !! of the charge density.
+   ! local variables
+   !
+   integer :: icar                            !! counter on cartesian components
+   complex(dp), allocatable :: c_rho(:)       !! auxiliary complex array for rho
+   complex(dp), allocatable :: c_grho(:)      !! auxiliary complex array for grad rho
+ 
+   ! rho in G space
+   allocate ( c_rho(nrxx), c_grho(nrxx) )
+   c_rho(1:nrxx) = CMPLX(total_rho(1:nrxx),0.0_DP)
+   CALL fwfft ('Dense', c_rho, dfftp) 
+ 
+   do icar=1,3
+      ! compute gradient in G space
+      c_grho(:) =CMPLX(0.0_DP,0.0_DP)
+      c_grho(nl(:)) = CMPLX (0.0_DP,1.0_DP) * tpiba * g(icar,:) * c_rho(nl(:))
+      if (gamma_only) c_grho( nlm(:) ) = CONJG( c_grho( nl(:) ) )
+ 
+      ! back in real space
+      CALL invfft ('Dense', c_grho, dfftp) 
+      gradient_rho(:,icar) = REAL( c_grho(:) )
+   end do
+   deallocate ( c_rho, c_grho )
+
+   return
+
+end subroutine numerical_gradient
+
+#else
 !! Calculates the gradient of the charge density numerically on the grid.  We could simply
 !! use the PWSCF gradient routine but we need the derivative of the gradient at point j 
 !! with respect to the density at point i for the potential (SOLER equation 13).  This is 
@@ -1541,7 +1567,6 @@ subroutine numerical_gradient(full_rho, Nneighbors, gradient_rho, my_start_z, my
   end if
 
   !! ----------------------------------------------------------------------------------
-
 
   !! Here we need to get the transformation matrix that takes our calculated "gradient"
   !! , gradient_rho()!! to the real thing.  It is just the (normalized) inverse of the matrix of unit cell 
@@ -1613,11 +1638,12 @@ subroutine numerical_gradient(full_rho, Nneighbors, gradient_rho, my_start_z, my
 
 end subroutine numerical_gradient
 
+#endif
 
-!! ###############################################################################################################
-!!                                               |              |
-!!                                               | thetas_to_uk |
-!!                                               |______________|
+!! #################################################################################################
+!!                                          |              |
+!!                                          | thetas_to_uk |
+!!                                          |______________|
 
 
 subroutine thetas_to_uk(thetas, u_vdW)
@@ -1628,8 +1654,8 @@ subroutine thetas_to_uk(thetas, u_vdW)
   USE klist,           ONLY : nks
 
   complex(dp), intent(in) :: thetas(:,:)    !! On input this variable holds the theta functions (equation 11, SOLER)
+  !                                         !! in the format thetas(grid_point, theta_i).  
   complex(dp), intent(out) :: u_vdW(:,:)
-  !                                            !! in the format thetas(grid_point, theta_i).  
   !                                            !! On output this array holds u_alpha(k) = Sum_j[theta_beta(k)phi_alpha_beta(k)]
 
   real(dp), allocatable :: kernel_of_k(:,:)    !! This array will hold the interpolated kernel values for each pair of q values
@@ -1639,29 +1665,16 @@ subroutine thetas_to_uk(thetas, u_vdW)
   integer :: last_g, g_i, q1_i, q2_i, count, i_grid    !! Index variables
 
   complex(dp) :: theta(Nqs)                    !! Temporary storage vector used since we are overwriting the thetas array here.
-
-  logical, allocatable :: outside_cutoff(:)    !! Array to determine which of this processor's assigned points are outside
-  !                                            !! the g-vector cutoff radius. Initialized to true and set to false for each
-  !                                            !! point we find within the cutoff radius.  Points outside have their corresponding
-  !                                            !! elements of u(k) set to 0.
-  
-  
-  
-  allocate( kernel_of_k(Nqs, Nqs) )
-  
-  allocate( outside_cutoff(nrxx) )
-  outside_cutoff = .true.
-  
-  last_g = -1 
   
   !! -------------------------------------------------------------------------------------------------
   
-  u_vdW(:,:) = thetas(:,:)
+  allocate( kernel_of_k(Nqs, Nqs) )
+
+  u_vdW(:,:) = CMPLX(0.0_DP,0.0_DP)
   
+  last_g = -1 
+
   do g_i = 1, ngm
-     
-     outside_cutoff(nl(g_i)) = .false.
-     if (gamma_only) outside_cutoff(nlm(g_i)) = .false.
     
      if ( igtongl(g_i) .ne. last_g) then
         
@@ -1671,54 +1684,32 @@ subroutine thetas_to_uk(thetas, u_vdW)
         
      end if
      
-     theta = u_vdW(nl(g_i),:)
-     u_vdW(nl(g_i),:) = 0.0D0
+     theta = thetas(nl(g_i),:)
      
      do q2_i = 1, Nqs
         do q1_i = 1, Nqs
-           
-           u_vdW(nl(g_i),q2_i) = u_vdW(nl(g_i),q2_i) + theta(q1_i)*kernel_of_k(q1_i,q2_i)
-        
+           u_vdW(nl(g_i),q2_i) = u_vdW(nl(g_i),q2_i) + kernel_of_k(q2_i,q1_i)*theta(q1_i)
         end do
-        if (gamma_only) u_vdW(nlm(g_i),q2_i) = CONJG(u_vdW(nl(g_i),q2_i))
      end do
-     
-  end do
-  
-  !! ---------------------------------------------------------------------------------------------------
-  !! Loop over the outside_cutoff array and set points outside the cutoff radius
-  !! to 0 in the u(k) array.
-  !! ---------------------------------------------------------------------------------------------------
-  
-  do i_grid = 1, nrxx
-     
-     if (outside_cutoff(i_grid)) then
-        
-        u_vdW(i_grid,:) = 0.0D0
-
-     end if
 
   end do
 
-  deallocate( kernel_of_k, outside_cutoff )
+  if (gamma_only) u_vdW(nlm(:),:) = CONJG(u_vdW(nl(:),:))
+  
+  deallocate( kernel_of_k )
      
-  !! ---------------------------------------------------------------------------------------------------
-
+  !! -----------------------------------------------------------------------------------------------
   
 end subroutine thetas_to_uk
 
+!! #################################################################################################
+!!                                              |             |
+!!                                              | VDW_ENERGY  |
+!!                                              |_____________|
 
-
-
-!! ###############################################################################################################
-!!                                                   |             |
-!!                                                   | VDW_ENERGY  |
-!!                                                   |_____________|
-
-
-!! This routine carries out the integration of equation 11 of SOLER.  It returns the non-local exchange-correlation
-!! energy and the u_alpha(k) arrays used to find the u_alpha(r) arrays via equations 14 and 15 in SOLER.
-
+!! This routine carries out the integration of equation 11 of SOLER.  It returns the non-local 
+!! exchange-correlation energy and the u_alpha(k) arrays used to find the u_alpha(r) arrays via 
+!! equations 14 and 15 in SOLER.
 
 subroutine vdW_energy(thetas, vdW_xc_energy)
   
@@ -1727,18 +1718,18 @@ subroutine vdW_energy(thetas, vdW_xc_energy)
   USE cell_base,       ONLY : tpiba, omega
   USE klist,           ONLY : nks
 
-  complex(dp), intent(inout) :: thetas(:,:)    !! On input this variable holds the theta functions (equation 11, SOLER)
-  !                                            !! in the format thetas(grid_point, theta_i).  
-  !                                            !! On output this array holds u_alpha(k) = Sum_j[theta_beta(k)phi_alpha_beta(k)]
+  complex(dp), intent(inout) :: thetas(:,:)    !! On input this variable holds the theta functions 
+  !                                            !! (equation 11, SOLER) in the format thetas(grid_point, theta_i).  
+  !                                            !! On output this array holds 
+  !                                            !! u_alpha(k) = Sum_j[theta_beta(k)phi_alpha_beta(k)]
 
   real(dp), intent(out) :: vdW_xc_energy       !! The non-local correlation energy.  An output variable.
 
-  real(dp), allocatable :: kernel_of_k(:,:)    !! This array will hold the interpolated kernel values for each pair of q values
-  !                                            !! in the q_mesh.
+  real(dp), allocatable :: kernel_of_k(:,:)    !! This array will hold the interpolated kernel values 
+  !                                            !! for each pair of q values in the q_mesh.
 
   real(dp) :: g                                !! The magnitude of the current g vector 
   integer  :: last_g                           !! The shell number of the last g vector
-
   !                                          
   
   integer :: g_i, q1_i, q2_i, count, i_grid    !! Index variables
@@ -1746,20 +1737,14 @@ subroutine vdW_energy(thetas, vdW_xc_energy)
   complex(dp) :: theta(Nqs), thetam(Nqs), theta_g(Nqs)      !! Temporary storage vector used since we are overwriting the thetas array here.
   real(dp)    :: G0_term, G_multiplier 
 
-  logical, allocatable :: outside_cutoff(:)    !! Array to determine which of this processor's assigned points are outside
-  !                                            !! the g-vector cutoff radius. Initialized to true and set to false for each
-  !                                            !! point we find within the cutoff radius.  Points outside have their corresponding
-  !                                            !! elements of u(k) set to 0.
-  
-  
-  
+  complex(dp), allocatable :: u_vdw(:,:)       !! temporary array holding u_alpha(k)
+
   vdW_xc_energy = 0.0D0
  
+  allocate (u_vdW(nrxx,Nqs))
+  u_vdW(:,:) = CMPLX(0.0_DP,0.0_DP)
+
   allocate( kernel_of_k(Nqs, Nqs) )
-  allocate( outside_cutoff(nrxx) )
-  outside_cutoff = .true.
-  
-  last_g = -1 
   
   !! Loop over PWSCF's array of magnitude-sorted g-vector shells.  For each shell, interpolate
   !! the kernel at this magnitude of g, then find all points on the shell and carry out the 
@@ -1770,7 +1755,6 @@ subroutine vdW_energy(thetas, vdW_xc_energy)
   !! In essence, we are forming the reciprocal-space u(k) functions of SOLER equation 14.  These are
   !! kept in thetas array.
   !! -------------------------------------------------------------------------------------------------
-  
 
   !!
   !! Here we should use gstart,ngm but all the cases are handeld by conditionals inside the loop
@@ -1778,11 +1762,10 @@ subroutine vdW_energy(thetas, vdW_xc_energy)
   G_multiplier = 1.0D0
   if (gamma_only) G_multiplier = 2.0D0
 
+  last_g = -1 
+
   do g_i = 1, ngm
      
-     outside_cutoff(nl(g_i))  = .false.
-     if (gamma_only) outside_cutoff(nlm(g_i))  = .false.
-
      if ( igtongl(g_i) .ne. last_g) then
         
         g = sqrt(gl(igtongl(g_i))) * tpiba
@@ -1792,29 +1775,19 @@ subroutine vdW_energy(thetas, vdW_xc_energy)
      end if
      
      theta = thetas(nl(g_i),:)
-     thetas(nl(g_i),:) = 0.0D0
 
      do q2_i = 1, Nqs
-
         do q1_i = 1, Nqs
-           
-           thetas(nl(g_i),q2_i)  = thetas(nl(g_i),q2_i) + theta(q1_i)*kernel_of_k(q1_i,q2_i)
-           
+           u_vdW(nl(g_i),q2_i)  = u_vdW(nl(g_i),q2_i) + kernel_of_k(q2_i,q1_i)*theta(q1_i)
         end do
-
-        if (gamma_only) thetas(nlm(g_i),q2_i) = CONJG(thetas(nl(g_i),q2_i))
-
-     end do
-     
-     do q1_i = 1, Nqs
-        
-        vdW_xc_energy = vdW_xc_energy + G_multiplier * (thetas(nl(g_i),q1_i)*conjg(theta(q1_i)))
-     
+        vdW_xc_energy = vdW_xc_energy + G_multiplier * (u_vdW(nl(g_i),q2_i)*conjg(theta(q2_i)))
      end do
      
      if (g_i < gstart ) vdW_xc_energy = vdW_xc_energy / G_multiplier
 
   end do
+
+  if (gamma_only) u_vdW(nlm(:),:) = CONJG(u_vdW(nl(:),:))
  
   !! ---------------------------------------------------------------------------------------------------
  
@@ -1828,39 +1801,16 @@ subroutine vdW_energy(thetas, vdW_xc_energy)
   !! ---------------------------------------------------------------------------------------------------
  
   vdW_xc_energy = 0.5D0 * e2 * omega * vdW_xc_energy 
- 
-  !! ---------------------------------------------------------------------------------------------------
-
   
-  !! Loop over the outside_cutoff array and set points outside the cutoff radius
-  !! to 0 in the u(k) array.
+  deallocate( kernel_of_k )
+  thetas(:,:) = u_vdW(:,:)
+  deallocate (u_vdW)
   !! ---------------------------------------------------------------------------------------------------
-  
-  do i_grid = 1, nrxx
-     
-     if (outside_cutoff(i_grid)) then
-        
-        thetas(i_grid,:) = 0.0D0
-
-     end if
-
-  end do
-
-  deallocate( kernel_of_k, outside_cutoff )
-     
-  !! ---------------------------------------------------------------------------------------------------
-
   
 end subroutine vdW_energy
 
 
-
-
 !! ###############################################################################################################
-
-
-
-
 
 
 !! ###############################################################################################################
@@ -1874,6 +1824,128 @@ end subroutine vdW_energy
 !! calculated in the "get_q0_on_grid" routine, but the derivative of the interpolation polynomials, P_alpha(q),
 !! (SOLER equation 3) with respect to q is interpolated here, along with the polynomials themselves.
 
+#ifdef FFTGRADIENT
+
+subroutine get_potential(q0, dq0_drho, dq0_dgradrho, gradient_rho, u_vdW, potential)
+
+  use gvect,               ONLY : nl, g, nlm
+  USE grid_dimensions,     ONLY : nrxx
+  USE cell_base,           ONLY : alat, tpiba
+  
+  real(dp), intent(in) ::  q0(:), gradient_rho(:,:)   !! Input arrays holding the value of q0 for all points assigned
+  !                                                   !! to this processor and the gradient of the charge density for
+  !                                                   !! points assigned to this processor.
+
+  real(dp), intent(in) :: dq0_drho(:), dq0_dgradrho(:)!! The derivative of q0 with respect to the charge density and
+  !                                                   !! gradient of the charge density (almost).  See comments in
+  !                                                   !! the get_q0_on_grid subroutine above.
+
+  complex(dp), intent(in) :: u_vdW(:,:)               !! The functions u_alpha(r) obtained by inverse transforming the 
+  !                                                   !! functions u_alph(k).  See equations 14 and 15 in SOLER
+
+  real(dp), intent(inout) :: potential(:)             !! The non-local correlation potential for points on the grid over
+  !                                                   !! the whole cell (not just those assigned to this processor).
+
+  real(dp), allocatable, save :: d2y_dx2(:,:)         !! Second derivatives of P_alpha polynomials for interpolation
+
+  integer :: i_grid, P_i,icar                         !! Index variables
+
+  integer :: q_low, q_hi, q                           !! Variables to find the bin in the q_mesh that a particular q0
+  !                                                   !! belongs to (for interpolation).
+  real(dp) :: dq, a, b, c, d, e, f                    !! Inermediate variables used in the interpolation of the polynomials
+  
+  real(dp) :: y(Nqs), dP_dq0, P                       !! The y values for a given polynomial (all 0 exept for element i of P_i)
+  !                                                   !! The derivative of P at a given q0 and the value of P at a given q0.  Both
+  !                                                   !! of these are interpolated below
+
+  real(dp), allocatable ::h_prefactor(:)
+  complex(dp), allocatable ::h(:)
+
+  allocate (h_prefactor(nrxx),h(nrxx))
+
+  potential = 0.0D0
+  h_prefactor   = 0.0D0
+
+  !! -------------------------------------------------------------------------------------------
+  
+  !! Get the second derivatives of the P_i functions for interpolation.  We have already calculated
+  !! this once but it is very fast and it's just as easy to calculate it again.
+  !! ---------------------------------------------------------------------------------------------
+
+  if (.not. allocated( d2y_dx2) ) then
+     
+     allocate( d2y_dx2(Nqs, Nqs) )
+     
+     call initialize_spline_interpolation(q_mesh, d2y_dx2(:,:))
+     
+  end if
+  
+  !! ---------------------------------------------------------------------------------------------
+  
+
+  do i_grid = 1,nrxx
+           
+     q_low = 1
+     q_hi = Nqs 
+
+     ! Figure out which bin our value of q0 is in in the q_mesh
+     ! +++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+     do while ( (q_hi - q_low) > 1)
+              
+        q = int((q_hi + q_low)/2)
+              
+        if (q_mesh(q) > q0(i_grid)) then
+           q_hi = q
+        else 
+           q_low = q
+        end if
+              
+     end do
+           
+     if (q_hi == q_low) call errore('get_potential','qhi == qlow',1)
+           
+     ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+     dq = q_mesh(q_hi) - q_mesh(q_low)
+           
+     a = (q_mesh(q_hi) - q0(i_grid))/dq
+     b = (q0(i_grid) - q_mesh(q_low))/dq
+     c = (a**3 - a)*dq**2/6.0D0
+     d = (b**3 - b)*dq**2/6.0D0
+     e = (3.0D0*a**2 - 1.0D0)*dq/6.0D0
+     f = (3.0D0*b**2 - 1.0D0)*dq/6.0D0
+           
+     do P_i = 1, Nqs
+        y = 0.0D0
+        y(P_i) = 1.0D0
+              
+        dP_dq0 = (y(q_hi) - y(q_low))/dq - e*d2y_dx2(P_i,q_low) + f*d2y_dx2(P_i,q_hi)
+             
+        P = a*y(q_low) + b*y(q_hi) + c*d2y_dx2(P_i,q_low) + d*d2y_dx2(P_i,q_hi)
+              
+        !! The first term in equation 13 of SOLER
+        potential(i_grid) = potential(i_grid) + u_vdW(i_grid,P_i)* (P + dP_dq0 * dq0_drho(i_grid))
+        if (q0(i_grid) .ne. q_mesh(Nqs)) then
+           h_prefactor(i_grid) = h_prefactor(i_grid) +  u_vdW(i_grid,P_i)* dP_dq0 * dq0_dgradrho(i_grid)
+        end if
+     end do
+  end do
+  do icar = 1,3
+     h(:) = CMPLX(h_prefactor(:) * gradient_rho(:,icar),0.0_DP)
+     CALL fwfft ('Dense', h, dfftp) 
+     h(nl(:)) = CMPLX(0.0_DP,1.0_DP) * tpiba * g(icar,:) * h(nl(:))
+     if (gamma_only) h(nlm(:)) = CONJG(h(nl(:)))
+     CALL invfft ('Dense', h, dfftp) 
+     potential(:) = potential(:) - REAL(h(:))
+  end do
+
+  !! ------------------------------------------------------------------------------------------------------------------------
+  deallocate (h_prefactor,h)
+
+end subroutine get_potential
+
+#else
 
 subroutine get_potential(q0, dq0_drho, dq0_dgradrho, N, gradient_rho, u_vdW, potential, my_start_z, my_end_z)
 
@@ -1940,7 +2012,6 @@ subroutine get_potential(q0, dq0_drho, dq0_dgradrho, N, gradient_rho, u_vdW, pot
 
   
   potential = 0.0D0
-  
 
   !! Find the gradient coefficients and the 3d index mapping array if we don't already have it.
   !! -------------------------------------------------------------------------------------------
@@ -1968,7 +2039,6 @@ subroutine get_potential(q0, dq0_drho, dq0_dgradrho, N, gradient_rho, u_vdW, pot
   end if
   
   !! ---------------------------------------------------------------------------------------------
-
   
 i_grid = 0
   
@@ -2071,12 +2141,9 @@ i_grid = 0
   !! ------------------------------------------------------------------------------------------------------------------------
 
 end subroutine get_potential
-
+#endif
 
 !! ###############################################################################################################
-
-
-
 
 
 !! ###############################################################################################################
@@ -2147,15 +2214,10 @@ end function gradient_coefficients
 !! ###############################################################################################################
 
 
-
-
-
-
 !! ###############################################################################################################
 !!                                                 |                  |
 !!                                                 |  GET_3D_INDICES  |
 !!                                                 |__________________|
-
 
 !! This routine builds a rank 3 array that holds the indices into the FFT grid for a point with a given
 !! set of x, y, and z indices.  The array holds an extra 2N points in each dimension (N to the left and N

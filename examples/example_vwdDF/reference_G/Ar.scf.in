@@ -1,0 +1,41 @@
+&control
+   calculation = 'scf'
+   restart_mode='from_scratch',
+   prefix='Ar_vdw',
+   tstress = .true.
+   tprnfor = .true.
+   pseudo_dir = '/u/cm/degironc/QE/espresso/pseudo/',
+   outdir='/u/cm/degironc/tmp/'
+   verbosity = 'high'
+   forc_conv_thr   = 1.0d-4
+/
+
+&system
+    ibrav           = 8
+    celldm(1)       = 19
+    celldm(2)       = 1
+    celldm(3)       = 1.47368421052632
+    nat             = 2
+    ntyp            = 1
+    occupations     = 'fixed'
+    ecutwfc         = 80.0
+    input_dft  	    = 'vdW-DF'
+/
+
+&electrons
+    conv_thr        = 1.0d-11
+/
+
+&ions
+    ion_dynamics    = 'bfgs'
+/
+
+ATOMIC_SPECIES
+    Ar   36.00    Ar.pz-rrkj.UPF
+
+ATOMIC_POSITIONS {angstrom}
+Ar      0.000000     0.000000     0.000000
+Ar      0.000000     0.000000     4.500000
+
+K_POINTS gamma 
+
