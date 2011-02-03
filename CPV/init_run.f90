@@ -23,7 +23,7 @@ SUBROUTINE init_run()
                                        vels, velsm, velsp, fion, fionm,      &
                                        atoms0, atomsm, atomsp
   USE gvecw,                    ONLY : ngw, ngw_g, ggp
-  USE gvecb,                    ONLY : ngb
+  USE smallbox_gvec,                    ONLY : ngb
   USE gvecs,                    ONLY : ngms
   USE gvect,                    ONLY : ngm
   USE gvect,       ONLY : gstart

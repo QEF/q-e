@@ -56,7 +56,7 @@ MODULE cp_restart
       USE printout_base,            ONLY : title
       USE grid_dimensions,          ONLY : nr1, nr2, nr3, nr1x, nr2x
       USE smooth_grid_dimensions,   ONLY : nr1s, nr2s, nr3s
-      USE smallbox_grid_dimensions, ONLY : nr1b, nr2b, nr3b
+      USE smallbox_grid_dim,            ONLY : nr1b, nr2b, nr3b
       USE gvect,                    ONLY : ngm, ngm_g
       USE gvecs,                    ONLY : ngms_g, ecuts, dual
       USE gvecw,                    ONLY : ngw, ngw_g, ecutwfc
@@ -925,7 +925,7 @@ MODULE cp_restart
       USE printout_base,            ONLY : title
       USE grid_dimensions,          ONLY : nr1, nr2, nr3
       USE smooth_grid_dimensions,   ONLY : nr1s, nr2s, nr3s
-      USE smallbox_grid_dimensions, ONLY : nr1b, nr2b, nr3b
+      USE smallbox_grid_dim,            ONLY : nr1b, nr2b, nr3b
       USE gvect,                    ONLY : ngm
       USE gvecw,                    ONLY : ngw, ngw_g
       USE electrons_base,           ONLY : nspin, nbnd, nelt, nel, &

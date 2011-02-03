@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !=----------------------------------------------------------------------------=!
-   MODULE smallbox_grid_dimensions
+   MODULE smallbox_grid_dim
 !=----------------------------------------------------------------------------=!
 
      !  Dimensions of the 3D real and reciprocal space FFT subgrids
@@ -104,5 +104,5 @@
      END SUBROUTINE smallbox_grid_info
 
 !=----------------------------------------------------------------------------=!
-   END MODULE smallbox_grid_dimensions
+   END MODULE smallbox_grid_dim
 !=----------------------------------------------------------------------------=!

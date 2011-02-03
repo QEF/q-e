@@ -1,12 +1,12 @@
 !
-! Copyright (C) 2010 Quantum ESPRESSO group
+! Copyright (C) 20102011 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !=----------------------------------------------------------------------------=!
-   MODULE gvecb
+   MODULE smallbox_gvec
 !=----------------------------------------------------------------------------=!
      USE kinds, ONLY: DP
 
@@ -29,23 +29,23 @@
 
    CONTAINS
 
-     SUBROUTINE gvecb_set( ecut, tpibab )
+     SUBROUTINE smallbox_gvec_set( ecut, tpibab )
        IMPLICIT NONE
        REAL(DP), INTENT(IN) :: ecut, tpibab
          ecutb = ecut
          gcutb = ecut / tpibab / tpibab
        RETURN
-     END SUBROUTINE gvecb_set
+     END SUBROUTINE smallbox_gvec_set
 
-     SUBROUTINE deallocate_gvecb()
+     SUBROUTINE deallocate_smallbox_gvec()
        IF( ALLOCATED( gb ) ) DEALLOCATE( gb )
        IF( ALLOCATED( gxb ) ) DEALLOCATE( gxb )
        IF( ALLOCATED( glb ) ) DEALLOCATE( glb )
        IF( ALLOCATED( npb ) ) DEALLOCATE( npb )
        IF( ALLOCATED( nmb ) ) DEALLOCATE( nmb )
        IF( ALLOCATED( mill_b ) ) DEALLOCATE( mill_b )
-     END SUBROUTINE deallocate_gvecb
+     END SUBROUTINE deallocate_smallbox_gvec
 
 !=----------------------------------------------------------------------------=!
-   END MODULE gvecb
+   END MODULE smallbox_gvec
 !=----------------------------------------------------------------------------=!

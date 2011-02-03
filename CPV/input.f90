@@ -866,8 +866,7 @@ MODULE input
      USE cg_module,        ONLY : cg_init
      USE pres_ai_mod,      ONLY : pres_ai_init
      !
-     USE smallbox_grid_dimensions, ONLY: &
-           nnrbx, &  !  variable is used to workaround internal compiler error (IBM xlf)
+     USE smallbox_grid_dim,    ONLY:  nnrbx, &  !  variable is used to workaround internal compiler error (IBM xlf)
            nr1b_ => nr1b, &
            nr2b_ => nr2b, &
            nr3b_ => nr3b

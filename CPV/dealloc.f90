@@ -23,7 +23,7 @@ SUBROUTINE deallocate_modules_var()
   USE gvect,                ONLY : deallocate_gvect
   USE gvecs,                ONLY : deallocate_gvecs
   USE gvecw,                ONLY : deallocate_gvecw
-  USE gvecb,                ONLY : deallocate_gvecb
+  USE smallbox_gvec,        ONLY : deallocate_smallbox_gvec
   USE local_pseudo,         ONLY : deallocate_local_pseudo
   USE qgb_mod,              ONLY : deallocate_qgb_mod
   USE betax,                ONLY : deallocate_betax
@@ -65,7 +65,7 @@ SUBROUTINE deallocate_modules_var()
   CALL deallocate_gvect()
   CALL deallocate_gvecs()
   CALL deallocate_gvecw()
-  CALL deallocate_gvecb( )
+  CALL deallocate_smallbox_gvec( )
   CALL deallocate_local_pseudo()
   CALL deallocate_qgb_mod()
   CALL deallocate_betax()

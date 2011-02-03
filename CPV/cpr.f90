@@ -40,7 +40,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
   USE cg_module,                ONLY : tcg,  cg_update, c0old
   USE gvect,                    ONLY : ngm
   USE gvecs,                    ONLY : ngms
-  USE gvecb,                    ONLY : ngb
+  USE smallbox_gvec,                    ONLY : ngb
   USE gvecw,                    ONLY : ngw
   USE gvect,       ONLY : gstart, mill, eigts1, eigts2, eigts3
   USE ions_base,                ONLY : na, nat, pmass, nax, nsp, rcmax
@@ -55,7 +55,6 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
                                        wmass, press, iforceh, cell_force
   USE grid_dimensions,          ONLY : nrxx, nr1, nr2, nr3
   USE smooth_grid_dimensions,   ONLY : nrxxs, nr1s, nr2s, nr3s
-  USE smallbox_grid_dimensions, ONLY : nr1b, nr2b, nr3b
   USE local_pseudo,             ONLY : allocate_local_pseudo
   USE io_global,                ONLY : stdout, ionode, ionode_id
   USE dener,                    ONLY : detot

@@ -38,7 +38,7 @@
                                 niter_cold_restart, lambda_cold
       USE gvect,          ONLY: ngm
       USE gvecs,          ONLY: ngms
-      USE gvecb,          ONLY: ngb
+      USE smallbox_gvec,          ONLY: ngb
       USE gvecw,          ONLY: ngw
       USE gvect, &
                           ONLY: gstart
@@ -347,7 +347,7 @@
                                  c0diag, becdiag
       USE gvect,          ONLY: ngm
       USE gvecs,          ONLY: ngms
-      USE gvecb,          ONLY: ngb
+      USE smallbox_gvec,          ONLY: ngb
       USE gvecw,          ONLY: ngw
       USE gvect, &
                           ONLY: gstart
@@ -539,7 +539,7 @@
                                 niter_cold_restart, lambda_cold
       USE gvect,          ONLY: ngm
       USE gvecs,          ONLY: ngms
-      USE gvecb,          ONLY: ngb
+      USE smallbox_gvec,          ONLY: ngb
       USE gvecw,          ONLY: ngw
       USE gvect, &
                           ONLY: gstart

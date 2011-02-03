@@ -265,7 +265,7 @@
       use energies, only: etot, eself, enl, ekin, epseu, esr, eht, exc
       use local_pseudo, only: vps, rhops
       use core
-      use gvecb
+      use smallbox_gvec
       use dener
 !      use derho
       use mp,      ONLY : mp_sum

@@ -10,7 +10,6 @@ atoms_type.o \
 berryion.o \
 berry_phase.o \
 bforceion.o \
-boxgrid.o \
 cg.o \
 cg_sub.o \
 cglib.o \
@@ -36,7 +35,6 @@ fromscra.o \
 gradrho.o \
 gram.o \
 gtable.o \
-gvecb.o\
 gvecw.o\
 init.o \
 init_run.o \
@@ -73,6 +71,9 @@ restart.o \
 restart_sub.o \
 runcp.o \
 smallbox.o \
+smallbox_grid.o \
+smallbox_gvec.o \
+smallbox_subs.o \
 spline.o \
 stop_run.o \
 stress.o \

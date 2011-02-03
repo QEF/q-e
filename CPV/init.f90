@@ -19,36 +19,36 @@
       !     initialize G-vectors and related quantities
       !
 
-      USE kinds,                    ONLY: dp
-      USE constants,                ONLY: tpi
-      use io_global,                only: stdout, ionode
-      use control_flags,            only: gamma_only
-      use grid_dimensions,          only: nr1, nr2, nr3, nr1x, nr2x, nr3x
-      use cell_base,                only: ainv, at, omega, alat
-      use small_box,                only: tpibab, bgb, small_box_set
-      use smallbox_grid_dimensions, only: nr1b,nr2b,nr3b, nr1bx,nr2bx,nr3bx, &
-                                          smallbox_grid_init,smallbox_grid_info
-      use smooth_grid_dimensions,   only: nr1s, nr2s, nr3s, nr1sx, nr2sx, nr3sx, nrxxs
-      USE grid_subroutines,         ONLY: realspace_grids_init, realspace_grids_info
-      use ions_base,                only: nat
-      USE recvec_subs,              ONLY: ggen
-      USE gvect,                    ONLY: mill_g, eigts1,eigts2,eigts3, gg, &
-                                          ecutrho, gcutm, gvect_init
-      use gvecs,                    only: gcutms, gvecs_init
-      use gvecw,                    only: gkcut, gvecw_init, g2kin_init
-      use gvecb,                    only: gcutb
-      USE fft_base,                 ONLY: dfftp, dffts
-      USE fft_scalar,               ONLY: cft_b_omp_init
-      USE stick_set,                ONLY: pstickset
-      USE control_flags,            ONLY: tdipole, gamma_only
-      USE berry_phase,              ONLY: berry_setup
-      USE electrons_module,         ONLY: bmeshset
-      USE electrons_base,           ONLY: distribute_bands
-      USE problem_size,             ONLY: cpsizes
-      USE mp_global,                ONLY: me_bgrp, nproc_bgrp, nbgrp, my_bgrp_id, intra_bgrp_comm
-      USE mp_global,                ONLY: get_ntask_groups
-      USE core,                     ONLY: nlcc_any
-      USE uspp,                     ONLY: okvan
+      USE kinds,                ONLY: dp
+      USE constants,            ONLY: tpi
+      use io_global,            only: stdout, ionode
+      use control_flags,        only: gamma_only, iprsta
+      use grid_dimensions,      only: nr1, nr2, nr3
+      use cell_base,            only: ainv, at, omega, alat
+      use small_box,            only: tpibab, bgb, small_box_set
+      use smallbox_grid_dim,    only: nr1b, nr2b, nr3b, &
+                                      smallbox_grid_init,smallbox_grid_info
+      USE grid_subroutines,     ONLY: realspace_grids_init, realspace_grids_info
+      use ions_base,            only: nat
+      USE recvec_subs,          ONLY: ggen
+      USE gvect,                ONLY: mill_g, eigts1,eigts2,eigts3, gg, &
+                                      ecutrho, gcutm, gvect_init
+      use gvecs,                only: gcutms, gvecs_init
+      use gvecw,                only: gkcut, gvecw_init, g2kin_init
+      use smallbox_gvec,        only: gcutb
+      USE smallbox_subs,        ONLY: ggenb
+      USE fft_base,             ONLY: dfftp, dffts
+      USE fft_scalar,           ONLY: cft_b_omp_init
+      USE stick_set,            ONLY: pstickset
+      USE control_flags,        ONLY: tdipole, gamma_only
+      USE berry_phase,          ONLY: berry_setup
+      USE electrons_module,     ONLY: bmeshset
+      USE electrons_base,       ONLY: distribute_bands
+      USE problem_size,         ONLY: cpsizes
+      USE mp_global,            ONLY: me_bgrp, nproc_bgrp, nbgrp, my_bgrp_id, intra_bgrp_comm
+      USE mp_global,            ONLY: get_ntask_groups
+      USE core,                 ONLY: nlcc_any
+      USE uspp,                 ONLY: okvan
 
       implicit none
 ! 
@@ -171,7 +171,7 @@
 
          gcutb = ecutrho / tpibab / tpibab
          !
-         CALL ggenb ( bgb, nr1b, nr2b, nr3b, nr1bx, nr2bx, nr3bx, gcutb )
+         CALL ggenb ( bgb, gcutb, iprsta )
 
          ! initialize FFT table
 #if defined __OPENMP && defined __FFTW 
@@ -333,40 +333,54 @@
       !
       USE kinds,                 ONLY : DP
       USE constants,             ONLY : tpi
-      USE cell_base,             ONLY : at, omega, alat, cell_base_reinit
+      USE cell_base,             ONLY : at, bg, omega, alat, tpiba2, &
+                                        cell_base_reinit
       USE gvecw,                 ONLY : g2kin_init
-      USE gvect,                 ONLY : gg
+      USE gvect,                 ONLY : g, gg, ngm, mill
+      USE grid_dimensions,       ONLY : nr1, nr2, nr3
+      USE small_box,             ONLY : bgb, small_box_set
+      USE smallbox_subs,         ONLY : gcalb
       USE io_global,             ONLY : stdout, ionode
+      USE smallbox_grid_dim,     ONLY : nr1b, nr2b, nr3b
       !
       implicit none
       !
-      REAL(DP) :: h(3,3)
+      REAL(DP), INTENT(IN) :: h(3,3)
       !
-      ! local
-      REAL(DP) :: bg(3,3), tpiba2
+      REAL(DP) :: rat1, rat2, rat3
+      INTEGER :: ig, i1, i2, i3
       !
-      !WRITE( stdout, 344 ) 
+      !WRITE( stdout, "(4x,'h from newinit')" )
       !do i=1,3
-      !   WRITE( stdout, 345 ) (h(i,j),j=1,3)
+      !   WRITE( stdout, '(3(4x,f12.7)' ) (h(i,j),j=1,3)
       !enddo
       !
       !  re-initialize the cell base module with the new geometry
       !
       CALL cell_base_reinit( TRANSPOSE( h ) )
       !
-      call recips( at(1,1), at(1,2), at(1,3), bg(1,1), bg(1,2), bg(1,3) )
-      !
       !  re-calculate G-vectors and kinetic energy
       !
-      call gcal( bg )
-      tpiba2 = (tpi/ alat)**2
+      do ig=1,ngm
+         i1=mill(1,ig)
+         i2=mill(2,ig)
+         i3=mill(3,ig)
+         g(:,ig)=i1*bg(:,1)+i2*bg(:,2)+i3*bg(:,3)
+         gg(ig)=g(1,ig)**2 + g(2,ig)**2 + g(3,ig)**2
+      enddo
+      !
       call g2kin_init ( gg, tpiba2 )
+      !
+      IF ( nr1b == 0 .OR. nr2b == 0 .OR. nr3b == 0 ) RETURN
       !
       !   generation of little box g-vectors
       !
-      call newgb( omega, alat, at )
+      rat1 = DBLE( nr1b ) / DBLE( nr1 )
+      rat2 = DBLE( nr2b ) / DBLE( nr2 )
+      rat3 = DBLE( nr3b ) / DBLE( nr3 )
+      CALL small_box_set( alat, omega, at, rat1, rat2, rat3 )
+      !
+      call gcalb ( bgb )
       !
       return
- 344  format(4x,'h from newinit')
- 345  format(3(4x,f12.7))
     end subroutine newinit

@@ -102,7 +102,7 @@
       USE ions_base,          ONLY: nat
       USE gvect,              ONLY: ngm,  nl, nlm
       USE gvecs,              ONLY: ngms, nls, nlsm
-      USE gvecb,              ONLY: ngb
+      USE smallbox_gvec,              ONLY: ngb
       USE gvecw,              ONLY: ngw
       USE gvect,              ONLY: gstart
       USE uspp,               ONLY: nkb
@@ -791,9 +791,9 @@ SUBROUTINE drhov(irb,eigrb,rhovan,drhovan,rhog,rhor,drhog,drhor)
       USE uspp_param,               ONLY: nhm, nh, nvb
       USE grid_dimensions,          ONLY: nr1, nr2, nr3, nr1x, nr2x, nr3x, nrxx
       USE electrons_base,           ONLY: nspin
-      USE gvecb,                    ONLY: ngb, npb, nmb
+      USE smallbox_gvec,                    ONLY: ngb, npb, nmb
       USE gvect,                    ONLY: ngm, nlm, nl
-      USE smallbox_grid_dimensions, ONLY: nr1b, nr2b, nr3b, nr1bx, nr2bx, nr3bx, nnrbx
+      USE smallbox_grid_dim,            ONLY: nr1b, nr2b, nr3b, nr1bx, nr2bx, nr3bx, nnrbx
       USE cell_base,                ONLY: ainv
       USE qgb_mod,                  ONLY: qgb, dqgb
       USE fft_interfaces,           ONLY: fwfft, invfft
@@ -1083,11 +1083,11 @@ SUBROUTINE rhov(irb,eigrb,rhovan,rhog,rhor)
       USE uspp,                     ONLY: deeq
       USE grid_dimensions,          ONLY: nr1, nr2, nr3, nr1x, nr2x, nr3x, nrxx
       USE electrons_base,           ONLY: nspin
-      USE gvecb,                    ONLY: npb, nmb, ngb
+      USE smallbox_gvec,                    ONLY: npb, nmb, ngb
       USE gvect,                    ONLY: ngm, nl, nlm
       USE cell_base,                ONLY: omega
       USE small_box,                ONLY: omegab
-      USE smallbox_grid_dimensions, ONLY: nr1b, nr2b, nr3b, nr1bx, nr2bx, nr3bx, nnrbx
+      USE smallbox_grid_dim,            ONLY: nr1b, nr2b, nr3b, nr1bx, nr2bx, nr3bx, nnrbx
       USE control_flags,            ONLY: iprint, iprsta, tpre
       USE qgb_mod,                  ONLY: qgb
       USE fft_interfaces,           ONLY: fwfft, invfft

@@ -176,8 +176,10 @@ CONTAINS
     real(DP) :: bec(:,:)
     real(DP) :: fion(:,:)
     complex(DP) :: cm(:,:)
+    real(dp), external :: enberry
+
     call qmatrixd(cm,bec,ctable(1,1,ipolp),gqq,qmat,detq,ipolp)
-    call enberry( detq, ipolp,enb)
+    enb =  enberry( detq, ipolp )
     call berryion(tau0,fion,tfor.or.tprnfor,ipolp,evalue,enbi)
     pberryel=enb
     pberryion=enbi
@@ -293,8 +295,10 @@ CONTAINS
     real(DP) :: bec(:,:)
     real(DP) :: fion(:,:)
     complex(DP) :: cm(:,:)
+    real(dp), external :: enberry
+
     call qmatrixd(cm,bec,ctable2(1,1,ipolp2),gqq2,qmat2,detq2,ipolp2)
-    call enberry( detq2, ipolp2,enb)
+    enb =  enberry( detq2, ipolp2 )
     call berryion(tau0,fion,tfor.or.tprnfor,ipolp2,evalue2,enbi)
     pberryel2=enb
     pberryion2=enbi

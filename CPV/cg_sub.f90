@@ -30,7 +30,7 @@
 !---
       use gvect, only: ngm
       use gvecs, only: ngms
-      use gvecb, only: ngb
+      use smallbox_gvec, only: ngb
       use gvecw, only: ngw
       use gvect, only: gstart
       use ions_base, only: na, nat, pmass, nax, nsp, rcmax

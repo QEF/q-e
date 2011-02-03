@@ -177,7 +177,7 @@
       USE cell_base,          ONLY : tpiba, tpiba2
       USE mp,                 ONLY : mp_max
       USE mp_global,          ONLY : intra_bgrp_comm
-      USE gvect, ONLY : gg
+      USE gvect,              ONLY : gg
       USE pseudopotential,    ONLY : xgtab
       USE betax,              ONLY : mmx
       !
@@ -481,7 +481,7 @@
       USE atom,          ONLY : rgrid
       USE uspp,          ONLY : indv
       USE betax,         only : refg, qradx, mmx, dqradx
-      use gvecb,         only : ngb
+      use smallbox_gvec,         only : ngb
       USE cp_interfaces, ONLY : fill_qrl
       !
       IMPLICIT NONE
@@ -613,12 +613,12 @@
       USE uspp,       ONLY: indv
       use uspp,       only: qq, beta
       USE betax,      only: refg, qradx, mmx, dqradx
-      use gvecb,      only: ngb
+      use smallbox_gvec,      only: ngb
       use control_flags, only: iprint, iprsta
       use cell_base,  only: ainv
       use constants,  only: pi, fpi
       use qgb_mod,    only: qgb, dqgb
-      use gvecb,      only: gb, gxb
+      use smallbox_gvec,      only: gb, gxb
       use small_box,  only: omegab, tpibab
       USE cp_interfaces, ONLY: fill_qrl
       !
@@ -883,7 +883,7 @@
       USE gvecw,              ONLY : ngw
       USE cell_base,          ONLY : tpiba2
       USE small_box,          ONLY : tpibab
-      USE gvecb,              ONLY : gb, ngb
+      USE smallbox_gvec,              ONLY : gb, ngb
       USE gvect, ONLY : gg
       !
       IMPLICIT NONE
@@ -1036,7 +1036,7 @@
       use ions_base, only: nsp
       use uspp_param, only: upf, lmaxq, lmaxkb, nbetam, nh, nvb
       use qgb_mod, only: qgb, dqgb
-      use gvecb, only: gb, gxb, ngb
+      use smallbox_gvec, only: gb, gxb, ngb
       use small_box,  only: omegab, tpibab
       USE betax, ONLY: qradx, dqradx, refg, mmx
 !

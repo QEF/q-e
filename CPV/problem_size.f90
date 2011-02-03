@@ -21,7 +21,7 @@
       use electrons_base,     only: nx => nbnd, nspin
       use gvecw,              only: ngwx
       use gvect,              only: ngmx
-      use gvecb,              only: ngb
+      use smallbox_gvec,              only: ngb
       use uspp_param,         only: nhm
       use uspp,               only: nkb
       USE io_global,          ONLY: ionode

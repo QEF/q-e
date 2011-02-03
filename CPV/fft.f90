@@ -255,8 +255,7 @@
 !
       USE kinds, ONLY: dp
       USE grid_dimensions, ONLY: nr1, nr2, nr3, nr1x, nr2x, nrxx
-      USE smallbox_grid_dimensions, ONLY: nr1b, nr2b, nr3b, &
-            nr1bx, nr2bx, nnrbx
+      USE smallbox_grid_dim,   ONLY: nr1b, nr2b, nr3b, nr1bx, nr2bx, nnrbx
       USE fft_base, ONLY: dfftp
       USE mp_global, ONLY: me_bgrp
 
@@ -312,8 +311,7 @@
 !
       USE kinds, ONLY: dp
       USE grid_dimensions, ONLY: nr1, nr2, nr3, nr1x, nr2x, nrxx
-      USE smallbox_grid_dimensions, ONLY: nr1b, nr2b, nr3b, &
-            nr1bx, nr2bx, nnrbx
+      USE smallbox_grid_dim,   ONLY: nr1b, nr2b, nr3b, nr1bx, nr2bx, nnrbx
       USE fft_base, ONLY: dfftp
       USE mp_global, ONLY: me_bgrp
       !
@@ -369,8 +367,7 @@
 !
       USE kinds, ONLY: dp
       USE grid_dimensions, ONLY: nr1, nr2, nr3, nr1x, nr2x, nrxx
-      USE smallbox_grid_dimensions, ONLY: nr1b, nr2b, nr3b, &
-            nr1bx, nr2bx, nnrbx
+      USE smallbox_grid_dim,   ONLY: nr1b, nr2b, nr3b, nr1bx, nr2bx, nnrbx
       USE fft_base, ONLY: dfftp
       USE mp_global, ONLY: me_bgrp
       IMPLICIT NONE

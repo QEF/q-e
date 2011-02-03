@@ -33,7 +33,7 @@ SUBROUTINE from_scratch( )
     USE core,                 ONLY : nlcc_any, rhoc
     USE gvecw,                ONLY : ngw
     USE gvecs,                ONLY : ngms
-    USE gvect,                ONLY : ngm
+    USE gvect,                ONLY : ngm, gg
     USE gvect,                ONLY : gstart, mill, eigts1, eigts2, eigts3
     USE uspp_param,           ONLY : nvb
     USE cp_electronic_mass,   ONLY : emass

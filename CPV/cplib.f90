@@ -4,334 +4,11 @@
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
-!
-!-----------------------------------------------------------------------
-subroutine ggenb (bgb, nr1b ,nr2b, nr3b, nr1bx ,nr2bx, nr3bx, gcutb )
-!-----------------------------------------------------------------------
-   !
-   ! As ggen, for the box grid. A "b" is appended to box variables.
-   ! The documentation for ggen applies
-   !
-   USE kinds, ONLY: DP
-   use gvecb, only: ngb, ngbt, ngbl, ngbx, gb, gxb, glb, npb, nmb, mill_b
-   use io_global, only: stdout, ionode
-   use control_flags, only: iprsta
-!
-   implicit none
-!
-   integer nr1b, nr2b, nr3b, nr1bx, nr2bx, nr3bx
-   REAL(DP) bgb(3,3), gcutb
-!
-   integer, allocatable:: idx(:), iglb(:)
-   integer n1pb, n2pb, n3pb, n1mb, n2mb, n3mb
-   integer it, icurr, nr1m1, nr2m1, nr3m1, ir, ig, i,j,k, itv(3), ip
-   REAL(DP) t(3), g2
-!
-      nr1m1=nr1b-1
-      nr2m1=nr2b-1
-      nr3m1=nr3b-1
-      ngb=0
-!
-!     first step : count the number of vectors with g2 < gcutb
-!
-!     exclude space with x<0
-!
-      do i= 0,nr1m1
-         do j=-nr2m1,nr2m1
-!
-!     exclude plane with x=0, y<0
-!
-            if(i.eq.0.and.j.lt.0) go to 10
-!
-            do k=-nr3m1,nr3m1
-!
-!     exclude line with x=0, y=0, z<0
-!
-               if(i.eq.0.and.j.eq.0.and.k.lt.0) go to 20
-               g2=0.d0
-               do ir=1,3
-                  t(ir) = DBLE(i)*bgb(ir,1)+DBLE(j)*bgb(ir,2)+DBLE(k)*bgb(ir,3)
-                  g2=g2+t(ir)*t(ir)
-               end do
-               if(g2.gt.gcutb) go to 20
-               ngb=ngb+1
- 20            continue
-            end do
- 10         continue
-         end do
-      end do
-!
-!     second step: allocate space
-!
-      allocate(gxb(3,ngb))
-      allocate(gb(ngb))
-      allocate(npb(ngb))
-      allocate(nmb(ngb))
-      allocate(iglb(ngb))
-      allocate(mill_b(3,ngb))
-      allocate(idx(ngb))
-!
-!     third step : find the vectors with g2 < gcutb
-!
-      ngb=0
-!
-!     exclude space with x<0
-!
-      do i= 0,nr1m1
-         do j=-nr2m1,nr2m1
-!
-!     exclude plane with x=0, y<0
-!
-            if(i.eq.0.and.j.lt.0) go to 15
-!
-            do k=-nr3m1,nr3m1
-!
-!     exclude line with x=0, y=0, z<0
-!
-               if(i.eq.0.and.j.eq.0.and.k.lt.0) go to 25
-               g2=0.d0
-               do ir=1,3
-                  t(ir) = DBLE(i)*bgb(ir,1)+DBLE(j)*bgb(ir,2)+DBLE(k)*bgb(ir,3)
-                  g2=g2+t(ir)*t(ir)
-               end do
-               if(g2.gt.gcutb) go to 25
-               ngb=ngb+1
-               gb(ngb)=g2
-               mill_b(1,ngb)=i
-               mill_b(2,ngb)=j
-               mill_b(3,ngb)=k
- 25            continue
-            end do
- 15         continue
-         end do
-      end do
-
-      IF( iprsta > 3 ) THEN
-        WRITE( stdout,*)
-        WRITE( stdout,170) ngb
- 170    format(' ggenb: # of gb vectors < gcutb ngb = ',i6)
-      END IF
-
-      idx(1)=0
-      call hpsort (ngb,gb,idx)
-
-      do ig=1,ngb-1
-         icurr=ig
- 30      if(idx(icurr).ne.ig) then
-            itv=mill_b(:,icurr)
-            mill_b(:,icurr)=mill_b(:,idx(icurr))
-            mill_b(:,idx(icurr))=itv
-
-            it=icurr
-            icurr=idx(icurr)
-            idx(it)=it
-            if(idx(icurr).eq.ig) then
-               idx(icurr)=icurr
-               goto 35
-            endif
-            goto 30
-         endif
- 35      continue
-      end do
-!
-      deallocate(idx)
-!
-! costruct fft indexes (n1b,n2b,n3b) for the box grid
-!
-      do ig=1,ngb
-         i=mill_b(1,ig)
-         j=mill_b(2,ig)
-         k=mill_b(3,ig)
-         n1pb=i+1
-         n2pb=j+1
-         n3pb=k+1
-!
-! n1pb,n2pb,n3pb: indexes of G
-! negative indexes are refolded (note that by construction i.ge.0)
-!
-         if(i.lt.0) n1pb=n1pb+nr1b
-         if(j.lt.0) n2pb=n2pb+nr2b
-         if(k.lt.0) n3pb=n3pb+nr3b
-!
-! n1mb,n2mb,n3mb: indexes of -G
-!
-         if(i.eq.0) then
-            n1mb=1
-         else
-            n1mb=nr1b-n1pb+2
-         end if
-         if(j.eq.0) then
-            n2mb=1
-         else
-            n2mb=nr2b-n2pb+2
-         end if
-         if(k.eq.0) then
-            n3mb=1
-         else
-            n3mb=nr3b-n3pb+2
-         end if
-!
-! conversion from (i,j,k) index to combined 1-d ijk index:
-! ijk = 1 + (i-1)+(j-1)*ix+(k-1)*ix*jx
-! where the (i,j,k) array is assumed to be dimensioned (ix,jx,kx)
-!
-         npb(ig) = n1pb+(n2pb-1)*nr1bx+(n3pb-1)*nr1bx*nr2bx
-         nmb(ig) = n1mb+(n2mb-1)*nr1bx+(n3mb-1)*nr1bx*nr2bx
-      end do
-!
-! shells of G - first calculate their number and position
-!
-
-      CALL gshcount( ngbl, iglb, ngb, gb, -1.0d0, -1.0d0 )
-
-      IF( iprsta > 3 ) THEN
-        WRITE( stdout,180) ngbl
- 180    format(' ggenb: # of gb shells  < gcutb ngbl= ',i6)
-      END IF
-!
-! then allocate the array glb
-!
-      allocate(glb(ngbl))
-!
-! and finally fill glb with the values of the shells
-!
-      glb(iglb(1))=gb(1)
-      do ig=2,ngb
-         if(iglb(ig).ne.iglb(ig-1)) glb(iglb(ig))=gb(ig)
-      end do
-!
-! calculation of G-vectors
-!
-      do ig=1,ngb
-         i=mill_b(1,ig)
-         j=mill_b(2,ig)
-         k=mill_b(3,ig)
-         gxb(:,ig)=i*bgb(:,1)+j*bgb(:,2)+k*bgb(:,3)
-      end do
-!
-      DEALLOCATE (iglb)
-      return
-end subroutine ggenb
-
-!-------------------------------------------------------------------------
-SUBROUTINE gshcount( ngl, igl, ng, gg, gcuts, gcutw )
-!-------------------------------------------------------------------------
-
-  USE kinds,     ONLY: DP
-
-  IMPLICIT NONE
-
-  INTEGER :: ngl
-  INTEGER :: igl(*)
-  INTEGER :: ng
-  REAL(DP) :: gg(*), gcuts, gcutw
-
-  INTEGER :: ig
-
-      ngl=1
-      igl(1)=ngl
-      do ig=2,ng
-         if(abs(gg(ig)-gg(ig-1)).gt.1.e-6)then
-            ngl=ngl+1
-            !!! if (gg(ig).lt.gcuts) ngsl=ngl
-            !!! if (gg(ig).lt.gcutw) ngwl=ngl
-         endif
-         igl(ig)=ngl
-      end do
-
-  RETURN
-END SUBROUTINE gshcount
-
-!-------------------------------------------------------------------------
-      subroutine gcal( bg )
-!-----------------------------------------------------------------------
-!   calculates the values of g-vectors to be assigned to the lattice
-!   points generated in subroutine ggen. these values are derived
-!   from the actual values of lattice parameters, with fixed number
-!   of plane waves and a cut-off function to keep energy cut-off fixed.
-!
-!      g=i*b1+j*b2+k*b3,
-!
-!   where b1,b2,b3 are the vectors defining the reciprocal lattice,
-!   i go from 1 to +(nr-1) and j,k go from -(nr-1) to +(nr-1).
-!
-!   the g's are in units of 2pi/a.
-!
-      USE kinds,     ONLY: DP
-      use gvect, only: ngm, gg, g, mill
-      implicit none
-!
-      REAL(DP), INTENT (IN) :: bg(3,3)
-!
-      integer i1,i2,i3,ig
-!
-!     calculation of g(3,ng)
-!
-      do ig=1,ngm
-         i1=mill(1,ig)
-         i2=mill(2,ig)
-         i3=mill(3,ig)
-         g(:,ig)=i1*bg(:,1)+i2*bg(:,2)+i3*bg(:,3)
-         gg(ig)=g(1,ig)**2 + g(2,ig)**2 + g(3,ig)**2
-      enddo
- 
-      return
-      end subroutine gcal
 
 !=----------------------------------------------------------------------------=!
-
-        SUBROUTINE newgb( omega, alat, at )
-!
-!     re-generation of little box g-vectors
-!
-          USE kinds, ONLY: DP
-          USE grid_dimensions, only: nr1, nr2, nr3
-          USE smallbox_grid_dimensions, only: nr1b, nr2b, nr3b
-          USE small_box, only: atb, bgb, alatb, ainvb, omegab, tpibab
-          USE constants, ONLY: pi
-          USE gvecb,     ONLY: ngb, gb, gxb, mill_b
-
-          IMPLICIT NONE
-          REAL(DP), INTENT(IN) :: at(3,3), omega, alat
-
-          INTEGER :: i,ig, i1,i2,i3
-
-          IF ( nr1b == 0 .OR. nr2b == 0 .OR. nr3b == 0 ) return
-          alatb  = alat / nr1*nr1b
-          tpibab = 2.d0*pi / alatb
-          do i=1,3
-            atb(i,1)=at(i,1)*alat/nr1*nr1b/alatb
-            atb(i,2)=at(i,2)*alat/nr2*nr2b/alatb
-            atb(i,3)=at(i,3)*alat/nr3*nr3b/alatb
-          enddo
-
-          omegab=omega/nr1*nr1b/nr2*nr2b/nr3*nr3b
-!
-          call recips( atb(1,1),atb(1,2),atb(1,3), bgb(1,1),bgb(1,2),bgb(1,3) )
-          !
-          do ig=1,ngb
-             i1=mill_b(1,ig)
-             i2=mill_b(2,ig)
-             i3=mill_b(3,ig)
-             gxb(:,ig)=i1*bgb(:,1)+i2*bgb(:,2)+i3*bgb(:,3)
-             gb(ig)=gxb(1,ig)**2 + gxb(2,ig)**2 + gxb(3,ig)**2
-          enddo
-          !
-          ainvb(1,:)=bgb(:,1)/alatb
-          ainvb(2,:)=bgb(:,2)/alatb
-          ainvb(3,:)=bgb(:,3)/alatb
-
-          RETURN
-        END SUBROUTINE newgb
-
-!------------------------------------------------------------------------------!
-!
-!
-!------------------------------------------------------------------------------!
-
         SUBROUTINE ecutoffs_setup( ecutwfc_, ecutrho_, ecfixed_, qcutz_, &
                                    q2sigma_, refg_ )
- 
+!------------------------------------------------------------------------------! 
           USE kinds,           ONLY: DP
           USE constants,       ONLY: eps8
           USE gvecw,           ONLY: ecutwfc
@@ -413,7 +90,7 @@ END SUBROUTINE gshcount
           USE gvecw, ONLY: ecutwfc,  gcutw
           USE gvect, ONLY: ecutrho,  gcutm
           USE gvecs, ONLY: ecuts, gcutms
-          USE gvecb, ONLY: ecutb, gcutb
+          USE smallbox_gvec, ONLY: ecutb, gcutb
           USE gvecw, ONLY: ekcut, gkcut
           USE constants, ONLY: eps8, pi
 
@@ -476,7 +153,7 @@ END SUBROUTINE gshcount
         USE gvecw, ONLY: ecfixed, qcutz, q2sigma
         USE gvecw, ONLY: ekcut, gkcut
         USE gvecs, ONLY: ecuts, gcutms
-        USE gvecb, ONLY: ecutb, gcutb
+        USE smallbox_gvec, ONLY: ecutb, gcutb
         use betax, only: mmx, refg
         USE io_global, ONLY: stdout
 
@@ -901,7 +578,7 @@ SUBROUTINE gmeshinfo( )
    USE mp_global, ONLY: nproc_bgrp, intra_bgrp_comm
    USE io_global, ONLY: ionode, ionode_id, stdout
    USE mp,        ONLY: mp_max, mp_gather
-   use gvecb,     only: ngb
+   use smallbox_gvec,     only: ngb
    USE gvecw,     only: ngw_g, ngw, ngwx
    USE gvecs,     only: ngms_g, ngms, ngsx
    USE gvect,     only: ngm, ngm_g, ngmx
@@ -1102,7 +779,7 @@ subroutine formf( tfirst, eself )
   use pseudopotential, ONLY : tpstab, vps_sp, dvps_sp
   use cp_interfaces,   ONLY : build_pstab
   use splines,         ONLY : spline
-  use gvect, ONLY : gstart, gg
+  use gvect,           ONLY : gstart, gg
   use constants,       ONLY : autoev
   !
   implicit none
@@ -1451,7 +1128,7 @@ subroutine nlinit
       use uspp_param,      ONLY : upf, lmaxq, nbetam, lmaxkb, nhm, nh, ish, nvb
       use atom,            ONLY : rgrid
       use qgb_mod,         ONLY : qgb, dqgb
-      use gvecb,           ONLY : ngb
+      use smallbox_gvec,           ONLY : ngb
       use gvect,           ONLY : ngm
       use betax,           ONLY : qradx, dqradx, refg, betagx, mmx, dbetagx
       use cp_interfaces,   ONLY : pseudopotential_indexes, compute_dvan, &
@@ -1549,7 +1226,7 @@ subroutine qvan2b(ngy,iv,jv,is,ylm,qg,qradb)
   USE kinds,         ONLY : DP
   use control_flags, ONLY : iprint, tpre
   use uspp,          ONLY : nlx, lpx, lpl, ap, indv, nhtolm
-  use gvecb,         ONLY : ngb
+  use smallbox_gvec,         ONLY : ngb
   use uspp_param,    ONLY : lmaxq, nbetam
   use ions_base,     ONLY : nsp
 ! 
@@ -1631,7 +1308,7 @@ subroutine dqvan2b(ngy,iv,jv,is,ylm,dylm,dqg,dqrad,qradb)
   USE kinds,         ONLY : DP
   use control_flags, ONLY : iprint, tpre
   use uspp,          ONLY : nlx, lpx, lpl, ap, indv, nhtolm
-  use gvecb,         ONLY : ngb
+  use smallbox_gvec,         ONLY : ngb
   use uspp_param,    ONLY : lmaxq, nbetam
   use ions_base,     ONLY : nsp
 
@@ -2060,7 +1737,7 @@ END FUNCTION
       USE kinds,                    ONLY: DP
       USE ions_base,                ONLY: nsp, na, nat
       USE grid_dimensions,          ONLY: nr1, nr2, nr3
-      USE smallbox_grid_dimensions, ONLY: nr1b, nr2b, nr3b, nr1bx, nr2bx, nr3bx
+      USE smallbox_grid_dim,            ONLY: nr1b, nr2b, nr3b, nr1bx, nr2bx, nr3bx
       USE control_flags,            ONLY: iprsta
       USE io_global,                ONLY: stdout
       USE mp_global,                ONLY: nproc_bgrp, me_bgrp, intra_bgrp_comm

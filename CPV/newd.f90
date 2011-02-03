@@ -16,23 +16,23 @@
 !     where
 !         rho_lm = \sum_j f_j <psi_j|beta_l><beta_m|psi_j>
 !
-      USE kinds,                    ONLY: dp
-      USE uspp_param,               ONLY: nh, nhm, nvb
-      USE uspp,                     ONLY: deeq
-      USE ions_base,                ONLY: nat, nsp, na
-      USE constants,                ONLY: pi, fpi
-      USE grid_dimensions,          ONLY: nr3, nrxx
-      USE gvecb,                    ONLY: ngb, npb, nmb, gxb
-      USE small_box,                ONLY: omegab, tpibab
-      USE smallbox_grid_dimensions, ONLY: nr1b, nr2b, nr3b, &
-                                          nr1bx, nr2bx, nr3bx, nnrbx
-      USE qgb_mod,                  ONLY: qgb
-      USE electrons_base,           ONLY: nspin
-      USE control_flags,            ONLY: iprint, thdyn, tfor, tprnfor
-      USE mp,                       ONLY: mp_sum
-      USE mp_global,                ONLY: intra_bgrp_comm, inter_bgrp_comm, distribute_over_bgrp, my_bgrp_id, nbgrp 
-      USE fft_interfaces,           ONLY: invfft
-      USE fft_base,                 ONLY: dfftb
+      USE kinds,            ONLY: dp
+      USE uspp_param,       ONLY: nh, nhm, nvb
+      USE uspp,             ONLY: deeq
+      USE ions_base,        ONLY: nat, nsp, na
+      USE constants,        ONLY: pi, fpi
+      USE grid_dimensions,  ONLY: nr3, nrxx
+      USE smallbox_gvec,            ONLY: ngb, npb, nmb, gxb
+      USE small_box,        ONLY: omegab, tpibab
+      USE smallbox_grid_dim,    ONLY: nr1b, nr2b, nr3b, nr1bx, nr2bx, nr3bx, nnrbx
+      USE qgb_mod,          ONLY: qgb
+      USE electrons_base,   ONLY: nspin
+      USE control_flags,    ONLY: iprint, thdyn, tfor, tprnfor
+      USE mp,               ONLY: mp_sum
+      USE mp_global,        ONLY: intra_bgrp_comm, inter_bgrp_comm, &
+                                  distribute_over_bgrp, my_bgrp_id, nbgrp 
+      USE fft_interfaces,   ONLY: invfft
+      USE fft_base,         ONLY: dfftb
 !
       IMPLICIT NONE
 ! input

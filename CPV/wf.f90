@@ -27,7 +27,7 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
   USE uspp_param,               ONLY : nvb, ish
   USE cell_base,                ONLY : omega, at, alat, h, ainv
   USE electrons_base,           ONLY : nbspx, nbsp, nupdwn, iupdwn, nspin
-  USE gvecb,                    ONLY : npb, nmb, ngb
+  USE smallbox_gvec,                    ONLY : npb, nmb, ngb
   USE gvecw,                    ONLY : ngw
   USE gvect,       ONLY : gstart
   USE smooth_grid_dimensions,   ONLY : nrxxs
@@ -37,7 +37,7 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
                                        indexminus, indexminusz, tag, tagp,     &
                                        expo, wfsd
   USE grid_dimensions,          ONLY : nr1, nr2, nr3
-  USE smallbox_grid_dimensions, ONLY : nnrbx
+  USE smallbox_grid_dim,            ONLY : nnrbx
   USE uspp_param,               ONLY : nh, nhm
   USE uspp,                     ONLY : nkb
   USE io_global,                ONLY : ionode, stdout
@@ -2027,12 +2027,11 @@ FUNCTION boxdotgridcplx(irb,qv,vr)
   !
   !      use ion_parameters
   !
-  USE kinds,                    ONLY : DP
-  USE grid_dimensions,          ONLY : nrxx, nr1, nr2, nr3, nr1x, nr2x, nr3x
-  USE smallbox_grid_dimensions, ONLY : nnrbx, nr1b, nr2b, nr3b, &
-                                       nr1bx, nr2bx, nr3bx
-  USE fft_base,                 ONLY : dfftp
-  USE mp_global,                ONLY : me_bgrp
+  USE kinds,           ONLY : DP
+  USE grid_dimensions, ONLY : nrxx, nr1, nr2, nr3, nr1x, nr2x, nr3x
+  USE smallbox_grid_dim,   ONLY : nnrbx, nr1b, nr2b, nr3b,  nr1bx, nr2bx, nr3bx
+  USE fft_base,        ONLY : dfftp
+  USE mp_global,       ONLY : me_bgrp
   !
   IMPLICIT NONE
   !

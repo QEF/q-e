@@ -18,7 +18,7 @@
      use ions_base,          ONLY : nsp
      use atom,               ONLY : rgrid
      use uspp_param,         ONLY : upf
-     use gvecb,              ONLY : ngb, gb
+     use smallbox_gvec,      ONLY : ngb, gb
      use small_box,          ONLY : omegab, tpibab
      use pseudo_base,        ONLY : compute_rhocg
      use cp_interfaces,      ONLY : build_cctab, chkpstab
@@ -26,7 +26,7 @@
      use cell_base,          ONLY : omega, tpiba2, tpiba
      USE splines,            ONLY : spline
      use gvect,              ONLY : ngm
-     use gvect, ONLY : gg, gstart
+     use gvect,              ONLY : gg, gstart
      USE core,               ONLY : rhocb, rhocg, drhocg, nlcc_any
      !
      IMPLICIT NONE
@@ -111,8 +111,7 @@
       ! gives an "internal compiler error"
       use gvect, only: gstart
       use gvect,              only: ngm, nl
-      use grid_dimensions,    only: nr1, nr2, nr3, &
-                                    nr1x, nr2x, nr3x, nrxx
+      use grid_dimensions,    only: nr1, nr2, nr3, nr1x, nr2x, nr3x, nrxx
       USE fft_interfaces,     ONLY: fwfft
       USE fft_base,           ONLY: dfftp
 !
@@ -182,20 +181,19 @@
 !     same logic as in newd - uses box grid. For parallel execution:
 !     the sum over node contributions is done in the calling routine
 !
-      USE kinds,           ONLY: DP
-      use electrons_base,  only: nspin
-      use gvecb,           only: gxb, ngb, npb, nmb
-      use grid_dimensions, only: nr1, nr2, nr3, nrxx
-      use cell_base,       only: omega
-      use ions_base,       only: nsp, na, nat
-      use small_box,       only: tpibab
-      use uspp_param,      only: upf
-      use core,            only: rhocb
-      use fft_interfaces,  only: invfft
-      use fft_base,        only: dfftb
-      use gvect, only: gstart
-      use smallbox_grid_dimensions, only: nr1b, nr2b, nr3b, &
-            nr1bx, nr2bx, nr3bx, nnrbx
+      USE kinds,             ONLY: DP
+      use electrons_base,    only: nspin
+      use smallbox_gvec,     only: gxb, ngb, npb, nmb
+      use grid_dimensions,   only: nr1, nr2, nr3, nrxx
+      use cell_base,         only: omega
+      use ions_base,         only: nsp, na, nat
+      use small_box,         only: tpibab
+      use uspp_param,        only: upf
+      use core,              only: rhocb
+      use fft_interfaces,    only: invfft
+      use fft_base,          only: dfftb
+      use gvect,             only: gstart
+      use smallbox_grid_dim, only: nr1b, nr2b, nr3b, nr1bx, nr2bx, nr3bx, nnrbx
 
       implicit none
 
@@ -336,16 +334,15 @@
 !     Same logic as for rhov: use box grid for core charges
 ! 
       use kinds, only: dp
-      use ions_base,       only: nsp, na, nat
-      use uspp_param,      only: upf
-      use grid_dimensions, only: nr3, nrxx
-      use gvecb,           only: ngb, npb, nmb
-      use control_flags,   only: iprint
-      use core,            only: rhocb
-      use fft_interfaces,  only: invfft
-      use fft_base,        only: dfftb
-      use smallbox_grid_dimensions, only: nr1b, nr2b, nr3b, &
-            nr1bx, nr2bx, nr3bx, nnrbx
+      use ions_base,         only: nsp, na, nat
+      use uspp_param,        only: upf
+      use grid_dimensions,   only: nr3, nrxx
+      use smallbox_gvec,     only: ngb, npb, nmb
+      use control_flags,     only: iprint
+      use core,              only: rhocb
+      use fft_interfaces,    only: invfft
+      use fft_base,          only: dfftb
+      use smallbox_grid_dim, only: nr1b, nr2b, nr3b, nr1bx, nr2bx, nr3bx, nnrbx
 
       implicit none
 ! input

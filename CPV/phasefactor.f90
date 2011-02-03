@@ -247,9 +247,9 @@
       use io_global,     only: stdout
       use control_flags, only: iprsta
       use ions_base,     only: nsp, na, nat
-      use gvecb,         only: ngb, mill_b
+      use smallbox_gvec,         only: ngb, mill_b
       use cell_base,     only: r_to_s
-      use smallbox_grid_dimensions, only: nr1b, nr2b, nr3b
+      use smallbox_grid_dim, only: nr1b, nr2b, nr3b
       use cp_interfaces, only: phfacs
 !                 
       IMPLICIT NONE    
