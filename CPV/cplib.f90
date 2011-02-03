@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !-----------------------------------------------------------------------
-subroutine ggenb (b1b, b2b, b3b, nr1b ,nr2b, nr3b, nr1bx ,nr2bx, nr3bx, gcutb )
+subroutine ggenb (bgb, nr1b ,nr2b, nr3b, nr1bx ,nr2bx, nr3bx, gcutb )
 !-----------------------------------------------------------------------
    !
    ! As ggen, for the box grid. A "b" is appended to box variables.
@@ -20,7 +20,7 @@ subroutine ggenb (b1b, b2b, b3b, nr1b ,nr2b, nr3b, nr1bx ,nr2bx, nr3bx, gcutb )
    implicit none
 !
    integer nr1b, nr2b, nr3b, nr1bx, nr2bx, nr3bx
-   REAL(DP) b1b(3), b2b(3), b3b(3), gcutb
+   REAL(DP) bgb(3,3), gcutb
 !
    integer, allocatable:: idx(:), iglb(:)
    integer n1pb, n2pb, n3pb, n1mb, n2mb, n3mb
@@ -50,7 +50,7 @@ subroutine ggenb (b1b, b2b, b3b, nr1b ,nr2b, nr3b, nr1bx ,nr2bx, nr3bx, gcutb )
                if(i.eq.0.and.j.eq.0.and.k.lt.0) go to 20
                g2=0.d0
                do ir=1,3
-                  t(ir) = DBLE(i)*b1b(ir) + DBLE(j)*b2b(ir) + DBLE(k)*b3b(ir)
+                  t(ir) = DBLE(i)*bgb(ir,1)+DBLE(j)*bgb(ir,2)+DBLE(k)*bgb(ir,3)
                   g2=g2+t(ir)*t(ir)
                end do
                if(g2.gt.gcutb) go to 20
@@ -91,7 +91,7 @@ subroutine ggenb (b1b, b2b, b3b, nr1b ,nr2b, nr3b, nr1bx ,nr2bx, nr3bx, gcutb )
                if(i.eq.0.and.j.eq.0.and.k.lt.0) go to 25
                g2=0.d0
                do ir=1,3
-                  t(ir) = DBLE(i)*b1b(ir) + DBLE(j)*b2b(ir) + DBLE(k)*b3b(ir)
+                  t(ir) = DBLE(i)*bgb(ir,1)+DBLE(j)*bgb(ir,2)+DBLE(k)*bgb(ir,3)
                   g2=g2+t(ir)*t(ir)
                end do
                if(g2.gt.gcutb) go to 25
@@ -206,49 +206,12 @@ subroutine ggenb (b1b, b2b, b3b, nr1b ,nr2b, nr3b, nr1bx ,nr2bx, nr3bx, gcutb )
          i=mill_b(1,ig)
          j=mill_b(2,ig)
          k=mill_b(3,ig)
-         gxb(1,ig)=i*b1b(1)+j*b2b(1)+k*b3b(1)
-         gxb(2,ig)=i*b1b(2)+j*b2b(2)+k*b3b(2)
-         gxb(3,ig)=i*b1b(3)+j*b2b(3)+k*b3b(3)
+         gxb(:,ig)=i*bgb(:,1)+j*bgb(:,2)+k*bgb(:,3)
       end do
 !
       DEALLOCATE (iglb)
       return
 end subroutine ggenb
-
-
-
-!-----------------------------------------------------------------------
-      subroutine gcalb( alatb, b1b_ , b2b_ , b3b_  )
-!-----------------------------------------------------------------------
-!
-      USE kinds, ONLY: DP
-      use gvecb
-!
-      implicit none
-      REAL(DP), intent(in) :: alatb, b1b_ (3), b2b_ (3), b3b_ (3)
-      REAL(DP) :: b1b(3), b2b(3), b3b(3)
-!
-      integer i, i1,i2,i3,ig
-
-      b1b = b1b_ * alatb
-      b2b = b2b_ * alatb
-      b3b = b3b_ * alatb
-!
-!     calculation of gxb(3,ngbx)
-!
-      do ig=1,ngb
-         i1=mill_b(1,ig)
-         i2=mill_b(2,ig)
-         i3=mill_b(3,ig)
-         gxb(1,ig)=i1*b1b(1)+i2*b2b(1)+i3*b3b(1)
-         gxb(2,ig)=i1*b1b(2)+i2*b2b(2)+i3*b3b(2)
-         gxb(3,ig)=i1*b1b(3)+i2*b2b(3)+i3*b3b(3)
-         gb(ig)=gxb(1,ig)**2 + gxb(2,ig)**2 + gxb(3,ig)**2
-      enddo
-!
-      return
-      end subroutine gcalb
-!-------------------------------------------------------------------------
 
 !-------------------------------------------------------------------------
 SUBROUTINE gshcount( ngl, igl, ng, gg, gcuts, gcutw )
@@ -324,35 +287,39 @@ END SUBROUTINE gshcount
           USE kinds, ONLY: DP
           USE grid_dimensions, only: nr1, nr2, nr3
           USE smallbox_grid_dimensions, only: nr1b, nr2b, nr3b
-          USE small_box, only: a1b, a2b, a3b, ainvb, omegab, tpibab
+          USE small_box, only: atb, bgb, alatb, ainvb, omegab, tpibab
           USE constants, ONLY: pi
+          USE gvecb,     ONLY: ngb, gb, gxb, mill_b
 
           IMPLICIT NONE
           REAL(DP), INTENT(IN) :: at(3,3), omega, alat
 
-          INTEGER :: i
-          REAL(DP) :: alatb, b1b(3),b2b(3),b3b(3)
+          INTEGER :: i,ig, i1,i2,i3
 
           IF ( nr1b == 0 .OR. nr2b == 0 .OR. nr3b == 0 ) return
           alatb  = alat / nr1*nr1b
           tpibab = 2.d0*pi / alatb
           do i=1,3
-            a1b(i)=at(i,1)*alat/nr1*nr1b
-            a2b(i)=at(i,2)*alat/nr2*nr2b
-            a3b(i)=at(i,3)*alat/nr3*nr3b
+            atb(i,1)=at(i,1)*alat/nr1*nr1b/alatb
+            atb(i,2)=at(i,2)*alat/nr2*nr2b/alatb
+            atb(i,3)=at(i,3)*alat/nr3*nr3b/alatb
           enddo
 
           omegab=omega/nr1*nr1b/nr2*nr2b/nr3*nr3b
 !
-          call recips( a1b, a2b, a3b, b1b, b2b, b3b )
+          call recips( atb(1,1),atb(1,2),atb(1,3), bgb(1,1),bgb(1,2),bgb(1,3) )
           !
-          call gcalb( alatb, b1b, b2b, b3b )
-!
-          do i=1,3
-            ainvb(1,i)=b1b(i)
-            ainvb(2,i)=b2b(i)
-            ainvb(3,i)=b3b(i)
-          end do
+          do ig=1,ngb
+             i1=mill_b(1,ig)
+             i2=mill_b(2,ig)
+             i3=mill_b(3,ig)
+             gxb(:,ig)=i1*bgb(:,1)+i2*bgb(:,2)+i3*bgb(:,3)
+             gb(ig)=gxb(1,ig)**2 + gxb(2,ig)**2 + gxb(3,ig)**2
+          enddo
+          !
+          ainvb(1,:)=bgb(:,1)/alatb
+          ainvb(2,:)=bgb(:,2)/alatb
+          ainvb(3,:)=bgb(:,3)/alatb
 
           RETURN
         END SUBROUTINE newgb

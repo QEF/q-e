@@ -25,9 +25,8 @@
       use control_flags,            only: gamma_only
       use grid_dimensions,          only: nr1, nr2, nr3, nr1x, nr2x, nr3x
       use cell_base,                only: ainv, at, omega, alat
-      use small_box,                only: a1b, a2b, a3b, omegab, ainvb, tpibab, small_box_set
-      use small_box,                only: alatb, b1b, b2b, b3b
-      use smallbox_grid_dimensions, only: nr1b, nr2b, nr3b, nr1bx,nr2bx,nr3bx,&
+      use small_box,                only: tpibab, bgb, small_box_set
+      use smallbox_grid_dimensions, only: nr1b,nr2b,nr3b, nr1bx,nr2bx,nr3bx, &
                                           smallbox_grid_init,smallbox_grid_info
       use smooth_grid_dimensions,   only: nr1s, nr2s, nr3s, nr1sx, nr2sx, nr3sx, nrxxs
       USE grid_subroutines,         ONLY: realspace_grids_init, realspace_grids_info
@@ -172,7 +171,7 @@
 
          gcutb = ecutrho / tpibab / tpibab
          !
-         CALL ggenb ( b1b, b2b, b3b, nr1b, nr2b, nr3b, nr1bx, nr2bx, nr3bx, gcutb )
+         CALL ggenb ( bgb, nr1b, nr2b, nr3b, nr1bx, nr2bx, nr3bx, gcutb )
 
          ! initialize FFT table
 #if defined __OPENMP && defined __FFTW 
@@ -333,7 +332,7 @@
       !     are recalculated according to the value of cell parameter h
       !
       USE kinds,                 ONLY : DP
-      USE constants,             ONLY: tpi
+      USE constants,             ONLY : tpi
       USE cell_base,             ONLY : at, omega, alat, cell_base_reinit
       USE gvecw,                 ONLY : g2kin_init
       USE gvect,                 ONLY : gg
