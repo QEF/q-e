@@ -14,8 +14,8 @@ MODULE smallbox_subs
 !  ... G-vector components onto the FFT grid(s) in reciprocal space
 !  ... Small-Box grid
 
-   USE smallbox_gvec, ONLY :  ngb, ngbt, ngbl, ngbx, gb, gxb, glb, &
-                              npb, nmb, mill_b
+   USE small_box, ONLY :  bgb, tpibab
+   USE smallbox_gvec, ONLY :  ngb, ngbl, gb, gxb, glb, npb, nmb, mill_b, gcutb
    USE smallbox_grid_dim, ONLY : nr1b, nr2b, nr3b, nr1bx, nr2bx, nr3bx
 
    PRIVATE
@@ -27,7 +27,7 @@ MODULE smallbox_subs
 CONTAINS
 !=----------------------------------------------------------------------=
   !
-  SUBROUTINE ggenb ( bgb, gcutb, iprsta )
+  SUBROUTINE ggenb ( ecutrho, iprsta )
     !-----------------------------------------------------------------------
     !
     ! As ggen, for the box grid. A "b" is appended to box variables.
@@ -38,7 +38,7 @@ CONTAINS
     !
     IMPLICIT NONE
     !
-    REAL(DP), INTENT(in) :: bgb(3,3), gcutb
+    REAL(DP), INTENT(in) :: ecutrho
     INTEGER, INTENT (in) :: iprsta
     !
     INTEGER, ALLOCATABLE:: idx(:), iglb(:)
@@ -46,6 +46,10 @@ CONTAINS
     INTEGER it, icurr, nr1m1, nr2m1, nr3m1, ir, ig, i,j,k, itv(3), ip
     REAL(DP) t(3), g2
     !
+    !   gcutb is the effective cut-off for G-vectors of the small box grid
+    !
+    gcutb = ecutrho / tpibab**2
+    !    
     nr1m1=nr1b-1
     nr2m1=nr2b-1
     nr3m1=nr3b-1
@@ -261,7 +265,7 @@ CONTAINS
   END SUBROUTINE gshcount
   !
   !
-  SUBROUTINE gcalb ( bgb )
+  SUBROUTINE gcalb ( )
     !
     !     re-generation of little box g-vectors
     !
@@ -269,7 +273,6 @@ CONTAINS
     !
     IMPLICIT NONE
     !
-    REAL(DP), INTENT(in) :: bgb(3,3)
     INTEGER :: ig, i1,i2,i3
 
     IF ( nr1b == 0 .OR. nr2b == 0 .OR. nr3b == 0 ) return

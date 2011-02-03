@@ -90,7 +90,6 @@
           USE gvecw, ONLY: ecutwfc,  gcutw
           USE gvect, ONLY: ecutrho,  gcutm
           USE gvecs, ONLY: ecuts, gcutms
-          USE smallbox_gvec, ONLY: ecutb, gcutb
           USE gvecw, ONLY: ekcut, gkcut
           USE constants, ONLY: eps8, pi
 
@@ -153,7 +152,6 @@
         USE gvecw, ONLY: ecfixed, qcutz, q2sigma
         USE gvecw, ONLY: ekcut, gkcut
         USE gvecs, ONLY: ecuts, gcutms
-        USE smallbox_gvec, ONLY: ecutb, gcutb
         use betax, only: mmx, refg
         USE io_global, ONLY: stdout
 

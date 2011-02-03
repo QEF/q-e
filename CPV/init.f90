@@ -25,7 +25,7 @@
       use control_flags,        only: gamma_only, iprsta
       use grid_dimensions,      only: nr1, nr2, nr3
       use cell_base,            only: ainv, at, omega, alat
-      use small_box,            only: tpibab, bgb, small_box_set
+      use small_box,            only: small_box_set
       use smallbox_grid_dim,    only: nr1b, nr2b, nr3b, &
                                       smallbox_grid_init,smallbox_grid_info
       USE grid_subroutines,     ONLY: realspace_grids_init, realspace_grids_info
@@ -35,7 +35,6 @@
                                       ecutrho, gcutm, gvect_init
       use gvecs,                only: gcutms, gvecs_init
       use gvecw,                only: gkcut, gvecw_init, g2kin_init
-      use smallbox_gvec,        only: gcutb
       USE smallbox_subs,        ONLY: ggenb
       USE fft_base,             ONLY: dfftp, dffts
       USE fft_scalar,           ONLY: cft_b_omp_init
@@ -156,24 +155,22 @@
       allocate( eigts2(-nr2:nr2,nat) )
       allocate( eigts3(-nr3:nr3,nat) )
       !
-      !     generation of little box g-vectors
+      !     small boxes
       !
       IF ( nr1b > 0 .AND. nr2b > 0 .AND. nr3b > 0 ) THEN
 
-         !  sets the small box parameters
+         !  set the small box parameters
 
          rat1 = DBLE( nr1b ) / DBLE( nr1 )
          rat2 = DBLE( nr2b ) / DBLE( nr2 )
          rat3 = DBLE( nr3b ) / DBLE( nr3 )
-         CALL small_box_set( alat, omega, at, rat1, rat2, rat3 )
-
-         !  now set gcutb
-
-         gcutb = ecutrho / tpibab / tpibab
          !
-         CALL ggenb ( bgb, gcutb, iprsta )
-
-         ! initialize FFT table
+         CALL small_box_set( alat, omega, at, rat1, rat2, rat3 )
+         !
+         !  generate small-box G-vectors, initialize FFT tables
+         !
+         CALL ggenb ( ecutrho, iprsta )
+         !
 #if defined __OPENMP && defined __FFTW 
          CALL cft_b_omp_init( nr1b, nr2b, nr3b )
 #endif
@@ -338,7 +335,7 @@
       USE gvecw,                 ONLY : g2kin_init
       USE gvect,                 ONLY : g, gg, ngm, mill
       USE grid_dimensions,       ONLY : nr1, nr2, nr3
-      USE small_box,             ONLY : bgb, small_box_set
+      USE small_box,             ONLY : small_box_set
       USE smallbox_subs,         ONLY : gcalb
       USE io_global,             ONLY : stdout, ionode
       USE smallbox_grid_dim,     ONLY : nr1b, nr2b, nr3b
@@ -380,7 +377,7 @@
       rat3 = DBLE( nr3b ) / DBLE( nr3 )
       CALL small_box_set( alat, omega, at, rat1, rat2, rat3 )
       !
-      call gcalb ( bgb )
+      call gcalb ( )
       !
       return
     end subroutine newinit

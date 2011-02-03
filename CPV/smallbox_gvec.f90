@@ -13,29 +13,22 @@
      IMPLICIT NONE
      SAVE
 
-     ! ...   G vectors less than the box grid cut-off ( ? )
+     ! ...   Variables describing G-vectors for the small box grid 
+     ! ...   Basically the same meaning as for the corresponding 
+     ! ...   quantities for the true lattice
+     !
      INTEGER :: ngb  = 0  ! local number of G vectors
-     INTEGER :: ngbt = 0  ! in parallel execution global number of G vectors,
-                       ! in serial execution this is equal to ngw
      INTEGER :: ngbl = 0  ! number of G-vector shells up to ngw
-     INTEGER :: ngbx = 0  ! maximum local number of G vectors
 
-     REAL(DP), ALLOCATABLE :: gb(:), gxb(:,:), glb(:)
-     INTEGER, ALLOCATABLE :: npb(:), nmb(:)
-     INTEGER, ALLOCATABLE :: mill_b(:,:)
+     REAL(DP), ALLOCATABLE :: gb(:)    ! G(i)^2 in (tpi/alatb)**2 units
+     REAL(DP), ALLOCATABLE :: gxb(:,:) ! G(:,i) in  tpi/alatb     units
+     REAL(DP), ALLOCATABLE :: glb(:)   ! shells of G(i)^2
+     INTEGER, ALLOCATABLE :: npb(:), nmb(:) ! FFT indices
+     INTEGER, ALLOCATABLE :: mill_b(:,:)    ! miller indices
 
-     REAL(DP) :: ecutb = 0.0_DP
-     REAL(DP) :: gcutb = 0.0_DP
+     REAL(DP) :: gcutb = 0.0_DP  ! effective cut-off in (tpi/alatb)**2 units
 
    CONTAINS
-
-     SUBROUTINE smallbox_gvec_set( ecut, tpibab )
-       IMPLICIT NONE
-       REAL(DP), INTENT(IN) :: ecut, tpibab
-         ecutb = ecut
-         gcutb = ecut / tpibab / tpibab
-       RETURN
-     END SUBROUTINE smallbox_gvec_set
 
      SUBROUTINE deallocate_smallbox_gvec()
        IF( ALLOCATED( gb ) ) DEALLOCATE( gb )
