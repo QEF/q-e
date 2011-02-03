@@ -45,7 +45,8 @@ subroutine bforceion(fion,tfor,ipol,qmatinv,bec0,becdr,gqq,evalue)
 !local variables
 
   complex(dp) ci, temp, temp1,temp2,temp3
-  real(dp) gmes
+  real(dp) :: gmes
+  real(dp), external :: g_mes
   integer iv,jv,ia,is,k,i,j,isa,ilm,jlm,inl,jnl,ism
       
   if(.not. tfor) return
@@ -54,21 +55,7 @@ subroutine bforceion(fion,tfor,ipol,qmatinv,bec0,becdr,gqq,evalue)
      call errore(' bforceion ', ' parallelization over bands not yet implemented ', 1 )
 
   ci = (0.d0,1.d0)
-     
-  if(ipol.eq.1) then
-     gmes=at(1,1)**2+at(2,1)**2+at(3,1)**2
-     gmes=2*pi/alat/SQRT(gmes)
-  endif
-  if(ipol.eq.2) then
-     gmes=at(1,2)**2+at(2,2)**2+at(3,2)**2
-     gmes=2*pi/alat/SQRT(gmes)
-  endif
-  if(ipol.eq.3) then
-     gmes=at(1,3)**2+at(2,3)**2+at(3,3)**2
-     gmes=2*pi/alat/SQRT(gmes)
-  endif
-
-
+  gmes = g_mes (ipol, at, alat) 
 
   isa = 0
   do is=1,nvb

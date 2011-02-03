@@ -51,8 +51,8 @@ subroutine dforceb(c0, i, betae, ipol, bec0, ctabin, gqq, gqqm, qmat, dq2, df)
   complex(DP) c0(ngw, n), betae(ngw,nhsa), df(ngw),&
        &   gqq(nhm,nhm,nas,nsp),gqqm(nhm,nhm,nas,nsp),&
        &   qmat(nx,nx)
-  real(DP) bec0(nhsa,n),&
-       &   dq2(nat,nhm,nhm,nspin),  gmes
+  real(DP) bec0(nhsa,n), dq2(nat,nhm,nhm,nspin),  gmes
+  real(DP), EXTERNAL :: g_mes
 
   integer i, ipol, ctabin(ngw,2)
 
@@ -178,18 +178,7 @@ subroutine dforceb(c0, i, betae, ipol, bec0, ctabin, gqq, gqqm, qmat, dq2, df)
 #endif
     enddo
   
-  if(ipol.eq.1) then
-     gmes=at(1,1)**2+at(2,1)**2+at(3,1)**2
-     gmes=2.0_dp*pi/alat/SQRT(gmes)
-  endif
-  if(ipol.eq.2) then
-     gmes=at(1,2)**2+at(2,2)**2+at(3,2)**2
-     gmes=2.0_dp*pi/alat/SQRT(gmes)
-  endif
-  if(ipol.eq.3) then
-     gmes=at(1,3)**2+at(2,3)**2+at(3,3)**2
-     gmes=2.0_dp*pi/alat/SQRT(gmes)
-  endif
+  gmes = g_mes ( ipol, at, alat ) 
 
   fi=f(i)*ci/(2.d0*gmes)
 
@@ -246,7 +235,7 @@ subroutine dforceb(c0, i, betae, ipol, bec0, ctabin, gqq, gqqm, qmat, dq2, df)
 
 
 
- subroutine enberry( detq,  ipol, enb)
+function enberry( detq,  ipol )
 
    use constants
    use kinds, only: dp
@@ -255,28 +244,40 @@ subroutine dforceb(c0, i, betae, ipol, bec0, ctabin, gqq, gqqm, qmat, dq2, df)
 
    implicit none
 
-   complex(dp) detq
-   real(dp) enb
+   complex(dp), intent (in) :: detq
+   real(dp) :: enberry
+ 
    integer ipol
    real(dp) gmes
+   real(dp), external :: g_mes
 
-   if(ipol.eq.1) then
-     gmes=at(1,1)**2+at(2,1)**2+at(3,1)**2
-     gmes=2.0_dp*pi/alat/SQRT(gmes)
-   endif
-   if(ipol.eq.2) then
-     gmes=at(1,2)**2+at(2,2)**2+at(3,2)**2
-     gmes=2.0_dp*pi/alat/SQRT(gmes)
-   endif
-   if(ipol.eq.3) then
-     gmes=at(1,3)**2+at(2,3)**2+at(3,3)**2
-     gmes=2.0_dp*pi/alat/SQRT(gmes)
-   endif
-
-   enb = 2.d0/REAL(nspin,DP)*AIMAG(log(detq))/gmes ! take care of sign
+   gmes = g_mes ( ipol, at, alat )
+   enberry = 2.d0/REAL(nspin,DP)*AIMAG(log(detq))/gmes ! take care of sign
    
    return
- end subroutine enberry
+ end function enberry
 
 
+!
+! Copyright (C) 2011 Quantum ESPRESSO group
+! This file is distributed under the terms of the
+! GNU General Public License. See the file `License'
+! in the root directory of the present distribution,
+! or http://www.gnu.org/copyleft/gpl.txt .
+!
 
+FUNCTION g_mes ( ipol, at, alat )
+
+  USE kinds, ONLY : dp
+  USE constants, ONLY : pi
+
+  IMPLICIT NONE
+
+  INTEGER, INTENT(IN) :: ipol
+  REAL(dp), INTENT(IN) :: at(3,3), alat
+  REAL(dp) :: g_mes
+
+  IF ( ipol < 1 .OR. ipol > 3) CALL errore ( 'gmes','incorrect ipol', 1)
+  g_mes = 2.0_dp*pi/alat/SQRT(at(1,ipol)**2+at(2,ipol)**2+at(3,ipol)**2)
+  
+END FUNCTION g_mes

@@ -34,26 +34,15 @@ subroutine berryion( tau0,fion, tfor,ipol,evalue,enbi)
   logical tfor
 
 !local variables
-  real(dp) gmes
-  real(dp) pola
+  real(dp) :: gmes, pola
   integer is, ia
   complex(dp) temp, ci
+  real(dp), external:: g_mes
 
   temp = (0.0_dp,0.0_dp)
   ci = (0.0_dp,1.0_dp)
 
-  if(ipol.eq.1) then
-     gmes=at(1,1)**2+at(2,1)**2+at(3,1)**2
-     gmes=2.0_dp*pi/alat/SQRT(gmes)
-  endif
-  if(ipol.eq.2) then
-     gmes=at(1,2)**2+at(2,2)**2+at(3,2)**2
-     gmes=2.0_dp*pi/alat/SQRT(gmes)
-  endif
-  if(ipol.eq.3) then
-     gmes=at(1,3)**2+at(2,3)**2+at(3,3)**2
-     gmes=2.0_dp*pi/alat/SQRT(gmes)
-  endif
+  gmes = g_mes ( ipol, at, alat)
   pola=0.0_dp
   isa = 0
   do is=1,nsp
