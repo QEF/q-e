@@ -8,8 +8,8 @@
 !
 !----------------------------------------------------------------------------
 
-!#define FFTGRADIENT
-#undef FFTGRADIENT
+#define FFTGRADIENT
+!#undef FFTGRADIENT
 
 MODULE vdW_DF
  
@@ -56,6 +56,8 @@ MODULE vdW_DF
   USE io_global,         ONLY : stdout
   IMPLICIT NONE
   
+  REAL(DP), PARAMETER :: epsr =1.d-12  ! a small number to cut off points with negative or undefined densities 
+
   private  
   public :: xc_vdW_DF, stress_vdW_DF, interpolate_kernel, print_sigma
 
@@ -923,7 +925,7 @@ CONTAINS
     
     real(dp),  intent(IN)    :: total_rho(:), gradient_rho(:,:)      !! Input variables needed
     
-    real(dp),  intent(inout) :: q0(:), dq0_drho(:), dq0_dgradrho(:)  !! Output variables that have been allocated
+    real(dp),  intent(OUT) :: q0(:), dq0_drho(:), dq0_dgradrho(:)    !! Output variables that have been allocated
   !                                                                  !! outside this routine but will be set here.
   !                                                                        _
   real(dp),   parameter      :: LDA_A  = 0.031091D0, LDA_a1 = 0.2137D0    !
@@ -944,6 +946,11 @@ CONTAINS
   integer                    :: i_grid, index, count=0                    !! Indexing variables
   
   
+  ! initialize q0-related arrays ... 
+  q0(:) = q_cut
+  dq0_drho(:) = 0.0_DP
+  dq0_dgradrho(:) = 0.0_DP
+
   do i_grid = 1, nrxx
           
      !! This prevents numerical problems.  If the charge density is negative (an
@@ -953,14 +960,7 @@ CONTAINS
      !! to the next point.
      !! ------------------------------------------------------------------------------------
      
-     if (total_rho(i_grid) < 0.0D0) then
-        
-        q0(i_grid) = q_cut
-        dq0_drho(i_grid) = 0.0D0
-        dq0_dgradrho(i_grid) = 0.0D0
-        cycle
-        
-     end if
+     if (total_rho(i_grid) < epsr) cycle
 
      !! ------------------------------------------------------------------------------------
      
