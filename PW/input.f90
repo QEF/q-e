@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2009 Quantum ESPRESSO group
+! Copyright (C) 2002-2011 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -727,21 +727,22 @@ SUBROUTINE iosys()
   IF ( B_field(1) /= 0.D0 .or. &
        B_field(2) /= 0.D0 .or. &
        B_field(3) /= 0.D0 ) THEN
-     CALL errore( 'iosys', &
-                & 'B field currently not implemented', 1 )
      !
-     !IF ( nspin == 1 ) &
-     !   CALL errore( 'iosys', &
-     !              & 'non-zero external B_field requires nspin=2 or 4', 1 )
+     IF ( nspin == 1 ) CALL errore( 'iosys', &
+          & 'non-zero external B_field requires nspin=2 or 4', 1 )
+     IF ( TRIM( constrained_magnetization ) /= 'none' ) &
+          CALL errore( 'iosys', 'constrained_magnetization and ' // &
+                     & 'non-zero external B_field are conflicting flags', 1 )
+     IF ( nspin == 2 .AND. ( B_field(1) /= 0.D0 .OR. B_field(2) /= 0.D0 ) ) &
+        CALL errore('iosys','only B_field(3) can be specified with nspin=2', 1)
+     IF ( i_cons /= 0 ) CALL errore( 'iosys', &
+          & 'non-zero external B_field and constrained magnetization?', i_cons)
      !
-     !IF ( TRIM( constrained_magnetization ) /= 'none' ) &
-     !   CALL errore( 'iosys', 'constrained_magnetization and ' // &
-     !              & 'non-zero external B_field are conflicting flags', 1 )
+     ! the external B field is treated using the variables for constrained
+     ! magnetization - this should be done in a cleaner way
      !
-     !IF ( nspin == 2 .AND. &
-     !     ( B_field(1) /= 0.D0 .OR. B_field(2) /= 0.D0 ) ) &
-     !   CALL errore( 'iosys', &
-     !              & 'only B_field(3) can be specified with nspin=2', 1 )
+     i_cons = 4
+     mcons(:,1)=B_field(:)
      !
   ENDIF
   !
