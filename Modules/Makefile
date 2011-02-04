@@ -71,7 +71,7 @@ sic.o \
 splinelib.o \
 stick_base.o \
 stick_set.o \
-timestep.o \
+timestep.o\
 version.o \
 upf.o \
 upf_to_internal.o \

@@ -10,6 +10,7 @@ atoms_type.o \
 berryion.o \
 berry_phase.o \
 bforceion.o \
+cell_nose.o \
 cg.o \
 cg_sub.o \
 cglib.o \

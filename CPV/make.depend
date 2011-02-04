@@ -17,6 +17,10 @@ bforceion.o : ../Modules/ions_base.o
 bforceion.o : ../Modules/kind.o
 bforceion.o : ../Modules/mp_global.o
 bforceion.o : ../Modules/uspp.o
+cell_nose.o : ../Modules/constants.o
+cell_nose.o : ../Modules/control_flags.o
+cell_nose.o : ../Modules/io_global.o
+cell_nose.o : ../Modules/kind.o
 cg.o : ../Modules/electrons_base.o
 cg.o : ../Modules/io_global.o
 cg.o : ../Modules/kind.o
@@ -207,6 +211,7 @@ cpr.o : ../Modules/timestep.o
 cpr.o : ../Modules/uspp.o
 cpr.o : ../Modules/wave_base.o
 cpr.o : ../Modules/wavefunctions.o
+cpr.o : cell_nose.o
 cpr.o : cg.o
 cpr.o : cp_autopilot.o
 cpr.o : cp_emass.o
@@ -362,6 +367,7 @@ fromscra.o : ../Modules/uspp.o
 fromscra.o : ../Modules/wave_base.o
 fromscra.o : ../Modules/wavefunctions.o
 fromscra.o : atoms_type.o
+fromscra.o : cell_nose.o
 fromscra.o : cg.o
 fromscra.o : cp_emass.o
 fromscra.o : cp_interfaces.o
@@ -425,7 +431,6 @@ init.o : modules.o
 init.o : problem_size.o
 init.o : smallbox.o
 init.o : smallbox_grid.o
-init.o : smallbox_gvec.o
 init.o : smallbox_subs.o
 init_run.o : ../Modules/cell_base.o
 init_run.o : ../Modules/control_flags.o
@@ -446,6 +451,7 @@ init_run.o : ../Modules/timestep.o
 init_run.o : ../Modules/uspp.o
 init_run.o : ../Modules/wavefunctions.o
 init_run.o : ../Modules/xml_io_base.o
+init_run.o : cell_nose.o
 init_run.o : cg.o
 init_run.o : cp_emass.o
 init_run.o : cp_interfaces.o
@@ -506,6 +512,7 @@ input.o : ../Modules/uspp.o
 input.o : ../Modules/wave_base.o
 input.o : ../Modules/xml_input.o
 input.o : ../iotk/src/iotk_module.o
+input.o : cell_nose.o
 input.o : cg.o
 input.o : cp_emass.o
 input.o : efield.o
@@ -868,6 +875,7 @@ smallbox_grid.o : ../Modules/io_global.o
 smallbox_gvec.o : ../Modules/kind.o
 smallbox_subs.o : ../Modules/io_global.o
 smallbox_subs.o : ../Modules/kind.o
+smallbox_subs.o : smallbox.o
 smallbox_subs.o : smallbox_grid.o
 smallbox_subs.o : smallbox_gvec.o
 spline.o : ../Modules/kind.o
