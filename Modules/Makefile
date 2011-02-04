@@ -35,7 +35,6 @@ input_parameters.o \
 io_files.o \
 io_global.o  \
 ions_base.o \
-ions_nose.o \
 kind.o \
 mm_dispersion.o \
 mp.o \

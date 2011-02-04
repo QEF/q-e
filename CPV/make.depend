@@ -100,13 +100,13 @@ cp_autopilot.o : ../Modules/control_flags.o
 cp_autopilot.o : ../Modules/input_parameters.o
 cp_autopilot.o : ../Modules/io_global.o
 cp_autopilot.o : ../Modules/ions_base.o
-cp_autopilot.o : ../Modules/ions_nose.o
 cp_autopilot.o : ../Modules/kind.o
 cp_autopilot.o : ../Modules/mp.o
 cp_autopilot.o : ../Modules/parser.o
 cp_autopilot.o : ../Modules/timestep.o
 cp_autopilot.o : ../Modules/wave_base.o
 cp_autopilot.o : cp_emass.o
+cp_autopilot.o : ions_nose.o
 cp_emass.o : ../Modules/control_flags.o
 cp_emass.o : ../Modules/kind.o
 cp_interfaces.o : ../Modules/cell_base.o
@@ -157,7 +157,6 @@ cplib.o : ../Modules/griddim.o
 cplib.o : ../Modules/input_parameters.o
 cplib.o : ../Modules/io_global.o
 cplib.o : ../Modules/ions_base.o
-cplib.o : ../Modules/ions_nose.o
 cplib.o : ../Modules/kind.o
 cplib.o : ../Modules/mp.o
 cplib.o : ../Modules/mp_global.o
@@ -166,6 +165,7 @@ cplib.o : ../Modules/uspp.o
 cplib.o : cp_interfaces.o
 cplib.o : cpr_mod.o
 cplib.o : gvecw.o
+cplib.o : ions_nose.o
 cplib.o : mainvar.o
 cplib.o : modules.o
 cplib.o : pseudo_base.o
@@ -202,7 +202,6 @@ cpr.o : ../Modules/griddim.o
 cpr.o : ../Modules/io_files.o
 cpr.o : ../Modules/io_global.o
 cpr.o : ../Modules/ions_base.o
-cpr.o : ../Modules/ions_nose.o
 cpr.o : ../Modules/kind.o
 cpr.o : ../Modules/mp.o
 cpr.o : ../Modules/mp_global.o
@@ -218,8 +217,10 @@ cpr.o : cp_emass.o
 cpr.o : cp_interfaces.o
 cpr.o : efield.o
 cpr.o : electrons.o
+cpr.o : electrons_nose.o
 cpr.o : ensemble_dft.o
 cpr.o : gvecw.o
+cpr.o : ions_nose.o
 cpr.o : ions_positions.o
 cpr.o : mainvar.o
 cpr.o : modules.o
@@ -239,7 +240,6 @@ dealloc.o : ../Modules/electrons_base.o
 dealloc.o : ../Modules/fft_base.o
 dealloc.o : ../Modules/fft_types.o
 dealloc.o : ../Modules/ions_base.o
-dealloc.o : ../Modules/ions_nose.o
 dealloc.o : ../Modules/recvec.o
 dealloc.o : ../Modules/sic.o
 dealloc.o : ../Modules/stick_base.o
@@ -251,6 +251,7 @@ dealloc.o : efield.o
 dealloc.o : electrons.o
 dealloc.o : ensemble_dft.o
 dealloc.o : gvecw.o
+dealloc.o : ions_nose.o
 dealloc.o : ions_positions.o
 dealloc.o : ksstates.o
 dealloc.o : mainvar.o
@@ -299,6 +300,10 @@ electrons.o : ../Modules/kind.o
 electrons.o : ../Modules/mp.o
 electrons.o : ../Modules/mp_global.o
 electrons.o : cp_emass.o
+electrons_nose.o : ../Modules/constants.o
+electrons_nose.o : ../Modules/control_flags.o
+electrons_nose.o : ../Modules/io_global.o
+electrons_nose.o : ../Modules/kind.o
 ensemble_dft.o : ../Modules/descriptors.o
 ensemble_dft.o : ../Modules/io_global.o
 ensemble_dft.o : ../Modules/kind.o
@@ -356,7 +361,6 @@ fromscra.o : ../Modules/energies.o
 fromscra.o : ../Modules/griddim.o
 fromscra.o : ../Modules/io_global.o
 fromscra.o : ../Modules/ions_base.o
-fromscra.o : ../Modules/ions_nose.o
 fromscra.o : ../Modules/kind.o
 fromscra.o : ../Modules/mp.o
 fromscra.o : ../Modules/mp_global.o
@@ -373,8 +377,10 @@ fromscra.o : cp_emass.o
 fromscra.o : cp_interfaces.o
 fromscra.o : efield.o
 fromscra.o : electrons.o
+fromscra.o : electrons_nose.o
 fromscra.o : ensemble_dft.o
 fromscra.o : gvecw.o
+fromscra.o : ions_nose.o
 fromscra.o : ions_positions.o
 fromscra.o : mainvar.o
 fromscra.o : modules.o
@@ -442,7 +448,6 @@ init_run.o : ../Modules/griddim.o
 init_run.o : ../Modules/io_files.o
 init_run.o : ../Modules/io_global.o
 init_run.o : ../Modules/ions_base.o
-init_run.o : ../Modules/ions_nose.o
 init_run.o : ../Modules/kind.o
 init_run.o : ../Modules/mp_global.o
 init_run.o : ../Modules/printout_base.o
@@ -456,8 +461,10 @@ init_run.o : cg.o
 init_run.o : cp_emass.o
 init_run.o : cp_interfaces.o
 init_run.o : efield.o
+init_run.o : electrons_nose.o
 init_run.o : ensemble_dft.o
 init_run.o : gvecw.o
+init_run.o : ions_nose.o
 init_run.o : ions_positions.o
 init_run.o : mainvar.o
 init_run.o : modules.o
@@ -498,7 +505,6 @@ input.o : ../Modules/input_parameters.o
 input.o : ../Modules/io_files.o
 input.o : ../Modules/io_global.o
 input.o : ../Modules/ions_base.o
-input.o : ../Modules/ions_nose.o
 input.o : ../Modules/kind.o
 input.o : ../Modules/mp.o
 input.o : ../Modules/open_close_input_file_interf.o
@@ -517,13 +523,20 @@ input.o : cg.o
 input.o : cp_emass.o
 input.o : efield.o
 input.o : electrons.o
+input.o : electrons_nose.o
 input.o : ensemble_dft.o
+input.o : ions_nose.o
 input.o : ksstates.o
 input.o : mainvar.o
 input.o : pres_ai_mod.o
 input.o : read_pseudo.o
 input.o : smallbox_grid.o
 input.o : wannier_base.o
+ions_nose.o : ../Modules/constants.o
+ions_nose.o : ../Modules/control_flags.o
+ions_nose.o : ../Modules/io_global.o
+ions_nose.o : ../Modules/ions_base.o
+ions_nose.o : ../Modules/kind.o
 ions_positions.o : ../Modules/cell_base.o
 ions_positions.o : ../Modules/io_global.o
 ions_positions.o : ../Modules/kind.o
@@ -834,7 +847,6 @@ restart_sub.o : ../Modules/energies.o
 restart_sub.o : ../Modules/griddim.o
 restart_sub.o : ../Modules/io_global.o
 restart_sub.o : ../Modules/ions_base.o
-restart_sub.o : ../Modules/ions_nose.o
 restart_sub.o : ../Modules/kind.o
 restart_sub.o : ../Modules/printout_base.o
 restart_sub.o : ../Modules/recvec.o
@@ -847,6 +859,7 @@ restart_sub.o : cp_interfaces.o
 restart_sub.o : efield.o
 restart_sub.o : electrons.o
 restart_sub.o : gvecw.o
+restart_sub.o : ions_nose.o
 restart_sub.o : ions_positions.o
 restart_sub.o : mainvar.o
 restart_sub.o : modules.o

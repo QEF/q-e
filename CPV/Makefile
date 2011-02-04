@@ -28,6 +28,7 @@ efermi.o \
 efield.o \
 eigs0.o \
 electrons.o \
+electrons_nose.o \
 ensemble_dft.o \
 exch_corr.o \
 fft.o \
@@ -41,6 +42,7 @@ init.o \
 init_run.o \
 inner_loop_cold.o \
 input.o \
+ions_nose.o \
 ions_positions.o \
 ksstates.o \
 mainvar.o \

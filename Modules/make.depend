@@ -39,7 +39,6 @@ electrons_base.o : constants.o
 electrons_base.o : control_flags.o
 electrons_base.o : io_global.o
 electrons_base.o : kind.o
-electrons_base.o : timestep.o
 energies.o : io_global.o
 energies.o : kind.o
 environment.o : io_files.o
@@ -92,12 +91,6 @@ ions_base.o : io_global.o
 ions_base.o : kind.o
 ions_base.o : parameters.o
 ions_base.o : random_numbers.o
-ions_nose.o : constants.o
-ions_nose.o : control_flags.o
-ions_nose.o : io_global.o
-ions_nose.o : ions_base.o
-ions_nose.o : kind.o
-ions_nose.o : timestep.o
 mm_dispersion.o : cell_base.o
 mm_dispersion.o : io_global.o
 mm_dispersion.o : ions_base.o

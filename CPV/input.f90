@@ -1108,7 +1108,7 @@ MODULE input
       !
       IF( tnosee ) THEN
         WRITE( stdout,590)
-        CALL electrons_nose_info()
+        CALL electrons_nose_info(delt)
       ELSE 
         WRITE( stdout,535)
       END IF
@@ -1132,7 +1132,7 @@ MODULE input
       !
       CALL ions_print_info( )
       !
-      IF( tfor .AND. tnosep ) CALL ions_nose_info()
+      IF( tfor .AND. tnosep ) CALL ions_nose_info(delt)
       !
       CALL constraint_info( )
       !
