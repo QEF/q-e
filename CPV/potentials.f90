@@ -736,7 +736,7 @@
       USE kinds,              ONLY: DP
       USE constants,          ONLY: fpi
       USE control_flags,      ONLY: gamma_only
-      USE cell_base,          ONLY: tpiba2, boxdimensions
+      USE cell_base,          ONLY: tpiba2
       USE gvect,              ONLY: ngm
       USE gvect, ONLY: gstart, gg
       USE sic_module,         ONLY: sic_epsilon, sic_alpha

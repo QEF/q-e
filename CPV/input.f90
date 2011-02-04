@@ -1071,6 +1071,7 @@ MODULE input
     USE cell_base,            ONLY: frich
     USE efield_module,        ONLY: tefield, efield_info, tefield2, efield_info2
     USE io_global,            ONLY: meta_ionode, stdout
+    USE time_step,            ONLY: delt
     !
     !
     IMPLICIT NONE
@@ -1139,7 +1140,7 @@ MODULE input
       !
       CALL cell_print_info( )
       !
-      IF( thdyn .AND. tnoseh ) CALL cell_nose_info()
+      IF( thdyn .AND. tnoseh ) CALL cell_nose_info (delt)
       !
       !   CALL sic_info()  ! maybe useful
       !

@@ -17,7 +17,7 @@ SUBROUTINE from_restart( )
    USE electrons_base,        ONLY : nspin, iupdwn, nupdwn, f, nbsp, nbsp_bgrp
    USE io_global,             ONLY : ionode, ionode_id, stdout
    USE cell_base,             ONLY : ainv, h, hold, deth, r_to_s, s_to_r, &
-                                     boxdimensions, velh, at, alat
+                                     velh, at, alat
    USE ions_base,             ONLY : na, nsp, iforce, vel_srt, nat, randpos
    USE time_step,             ONLY : tps, delt
    USE ions_positions,        ONLY : taus, tau0, tausm, taum, vels, fion, fionm, set_velocities

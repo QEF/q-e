@@ -485,6 +485,7 @@ END SUBROUTINE diagonalize_parallel
 
          CALL mp_max( diff, desc( la_comm_ ) )
 
+
          IF( diff < ortho_eps ) EXIT ITERATIVE_LOOP
 
          !
@@ -1087,7 +1088,7 @@ END SUBROUTINE diagonalize_parallel
       USE uspp,              ONLY: nkb, nkbus
       USE uspp_param,        ONLY: nh, nvb, ish
       USE gvecw,             ONLY: ngw
-      USE control_flags,     ONLY: iprint, iprsta
+      USE control_flags,     ONLY: iprsta
       USE mp,                ONLY: mp_sum, mp_bcast
       USE mp_global,         ONLY: intra_bgrp_comm, leg_ortho, me_bgrp, inter_bgrp_comm
       USE electrons_base,    ONLY: nbspx_bgrp, ibgrp_g2l, nbsp, nspin,  nupdwn, iupdwn, nbspx
@@ -1300,7 +1301,7 @@ END SUBROUTINE diagonalize_parallel
       USE gvecw,          ONLY: ngw
       USE electrons_base, ONLY: nbsp_bgrp, nbsp
       USE constants,      ONLY: pi, fpi
-      USE control_flags,  ONLY: iprint, iprsta
+      USE control_flags,  ONLY: iprsta
       USE mp,             ONLY: mp_sum
 !
       IMPLICIT NONE

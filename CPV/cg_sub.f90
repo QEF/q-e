@@ -35,8 +35,7 @@
       use gvect, only: gstart
       use ions_base, only: na, nat, pmass, nax, nsp, rcmax
       use grid_dimensions, only: nrxx, nr1, nr2, nr3
-      use cell_base, only: omega, alat
-      use cell_base, only: h, hold, deth, wmass, tpiba2
+      use cell_base, only: omega, alat, tpiba2
       use smooth_grid_dimensions, only: nrxxs
       use local_pseudo, only: vps, rhops
       use io_global,                ONLY : stdout, ionode, ionode_id

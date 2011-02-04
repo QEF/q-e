@@ -20,7 +20,7 @@ SUBROUTINE from_scratch( )
     USE ions_nose,            ONLY : xnhp0, xnhpm, vnhp
     USE cell_base,            ONLY : ainv, h, s_to_r, ibrav, omega, press, &
                                      hold, r_to_s, deth, wmass, iforceh,   &
-                                     cell_force, boxdimensions, velh, at, alat
+                                     cell_force, velh, at, alat
     USE cell_nose,            ONLY : xnhh0, xnhhm, vnhh
     USE electrons_nose,       ONLY : xnhe0, xnhem, vnhe
     use electrons_base,       ONLY : nbsp, f, nspin, nupdwn, iupdwn, nbsp_bgrp, nbspx_bgrp, nbspx

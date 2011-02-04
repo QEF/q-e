@@ -1012,14 +1012,15 @@ CONTAINS
   end subroutine cell_nose_shiftvar
 
 
-  SUBROUTINE cell_nose_info()
+  SUBROUTINE cell_nose_info ( delt )
 
       use constants,     only: au_terahertz, pi
-      use time_step,     only: delt
       USE io_global,     ONLY: stdout
       USE control_flags, ONLY: tnoseh
 
       IMPLICIT NONE
+
+      REAL(DP), INTENT (IN) :: delt
 
       INTEGER   :: nsvar
       REAL(DP) :: wnoseh
