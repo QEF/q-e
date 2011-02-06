@@ -561,7 +561,9 @@ END FUNCTION saw
     !
     CALL recips(  at(1,1), at(1,2), at(1,3),  bg(1,1), bg(1,2), bg(1,3) )
     !
-    ainv(:,:) = bg(:,:)/alat
+    ainv(1,:) = bg(:,1)/alat
+    ainv(2,:) = bg(:,2)/alat
+    ainv(3,:) = bg(:,3)/alat
     !
     CALL init_dofree ( cell_dofree ) 
     !
@@ -675,7 +677,9 @@ END FUNCTION saw
     CALL volume( alat, at(1,1), at(1,2), at(1,3), deth )
     omega = deth
     !
-    ainv(:,:) = bg(:,:)/alat
+    ainv(1,:) = bg(:,1)/alat
+    ainv(2,:) = bg(:,2)/alat
+    ainv(3,:) = bg(:,3)/alat
     !
     IF( iprsta > 3 ) THEN
       WRITE( stdout, 305 ) alat
