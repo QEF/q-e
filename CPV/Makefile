@@ -77,6 +77,7 @@ smallbox.o \
 smallbox_grid.o \
 smallbox_gvec.o \
 smallbox_subs.o \
+smallbox_lib.o \
 spline.o \
 stop_run.o \
 stress.o \

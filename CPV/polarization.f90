@@ -21,7 +21,7 @@
         !  variables used for the dipole moment
 
         REAL(DP) :: p0( 3 ), p( 3 ), pdipole( 3 ), pdipolt( 3 ), pdipole0( 3 )
-        REAL(DP) :: cost1, cost2, cost3, fac, bgm1( 3, 3 ), bg( 3, 3 )
+        REAL(DP) :: cost1, cost2, cost3, fac
         REAL(DP) :: d1old, d2old, d3old
         LOGICAL  :: first = .TRUE.
 
@@ -105,7 +105,7 @@
       REAL(DP)    :: rb1, rb2, rb3
       REAL(DP)    :: rb1m1, rb2m1, rb3m1
       REAL(DP)    :: rdummy
-      REAL(DP)    :: bg( 3, 3 ), b1( 3 ), b2( 3 ), b3( 3 )
+      REAL(DP)    :: bg(3,3), bgm1(3,3), b1( 3 ), b2( 3 ), b3( 3 )
       COMPLEX(DP) :: dumm( n, n ), det, aux( 2*n ), ptemp( ngwx )
       COMPLEX(DP) :: detc( 2 ), ztmp
       INTEGER     :: ipiv( n ), info

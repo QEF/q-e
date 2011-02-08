@@ -19,10 +19,8 @@
       SAVE
       !  atb: lattice crystal vectors in "alatb" units (equivalent to "at")
       REAL(DP) :: atb(3,3) = RESHAPE( (/ 0.0_DP /), (/ 3, 3 /), (/ 0.0_DP /) )
-      !  bgb: reciprocal lattice vectors, in 3pi/alatb units (equiv to "bg")
+      !  bgb: reciprocal lattice vectors, in 2pi/alatb units (equiv to "bg")
       REAL(DP) :: bgb(3,3) = RESHAPE( (/ 0.0_DP /), (/ 3, 3 /), (/ 0.0_DP /) )
-      !  ainvb: as "ainv" for crystal lattice 
-      REAL(DP) :: ainvb(3,3) = 0.0_DP
       !  omegab: volume of the small boxes 
       REAl(DP) :: omegab = 0.0_DP
       !  alatb: lattice parameter of the boxes (the equivalent of "alat")
@@ -58,10 +56,6 @@
        WRITE( stdout,'(3X,3f10.4,10x,3f10.4)') atb(:,1)*alatb, bgb(:,1)
        WRITE( stdout,'(3X,3f10.4,10x,3f10.4)') atb(:,2)*alatb, bgb(:,2)
        WRITE( stdout,'(3X,3f10.4,10x,3f10.4)') atb(:,3)*alatb, bgb(:,3)
-
-       ainvb(1,:) = bgb(:,1)/alatb
-       ainvb(2,:) = bgb(:,2)/alatb
-       ainvb(3,:) = bgb(:,3)/alatb
 
        RETURN
      END SUBROUTINE small_box_set

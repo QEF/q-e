@@ -32,7 +32,6 @@ SUBROUTINE from_restart( )
    USE wave_base,             ONLY : rande_base
    USE efield_module,         ONLY : efield_berry_setup,  tefield, &
                                      efield_berry_setup2, tefield2
-   USE small_box,             ONLY : ainvb
    USE uspp,                  ONLY : okvan, vkb, nkb
    USE core,                  ONLY : nlcc_any
    USE cp_main_variables,     ONLY : ht0, htm, lambdap, lambda, lambdam, eigr, &
@@ -117,8 +116,8 @@ SUBROUTINE from_restart( )
    ! ... to starting cell (from ndr or again standard input)
    !
    IF ( okvan .or. nlcc_any ) THEN
-      CALL initbox( tau0, taub, irb, ainv, at, alat )
-      CALL phbox( taub, eigrb, ainvb )
+      CALL initbox( tau0, alat, at, ainv, taub, irb )
+      CALL phbox( taub, iprsta, eigrb )
    END IF
    !
    CALL phfacs( eigts1, eigts2, eigts3, eigr, mill, taus, nr1, nr2, nr3, nat )

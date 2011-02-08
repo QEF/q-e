@@ -50,7 +50,6 @@
       REAL(DP) :: ht(3,3), htm(3,3), htvel(3,3), gvel(3,3)
       INTEGER  :: nk = 1, ispin, i, ib
       REAL(DP) :: xk(3,1) = 0.0d0, wk(1) = 2.0d0
-      REAL(DP) :: htm1(3,3), omega
       COMPLEX(DP), ALLOCATABLE :: ctot(:,:)
       REAL(DP),    ALLOCATABLE :: eitot(:,:)
       INTEGER  :: nupdwn_tot( 2 ), iupdwn_tot( 2 )
@@ -158,7 +157,7 @@
       integer :: nk = 1, ispin, i, ib
       REAL(DP) :: xk(3,1) = 0.0d0, wk(1) = 2.0d0
       REAL(DP), ALLOCATABLE :: occ_ ( : )
-      REAL(DP) :: htm1(3,3), b1(3) , b2(3), b3(3), omega
+      REAL(DP) :: b1(3) , b2(3), b3(3)
 
 
       IF( flag == -1 ) THEN

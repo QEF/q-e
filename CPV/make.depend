@@ -151,7 +151,6 @@ cplib.o : ../Modules/dspev_drv.o
 cplib.o : ../Modules/electrons_base.o
 cplib.o : ../Modules/fft_base.o
 cplib.o : ../Modules/fft_interfaces.o
-cplib.o : ../Modules/fft_types.o
 cplib.o : ../Modules/funct.o
 cplib.o : ../Modules/griddim.o
 cplib.o : ../Modules/input_parameters.o
@@ -170,7 +169,6 @@ cplib.o : mainvar.o
 cplib.o : modules.o
 cplib.o : pseudo_base.o
 cplib.o : pseudopot.o
-cplib.o : smallbox_grid.o
 cplib.o : smallbox_gvec.o
 cplib.o : spline.o
 cplib_meta.o : ../Modules/cell_base.o
@@ -226,7 +224,6 @@ cpr.o : mainvar.o
 cpr.o : modules.o
 cpr.o : ortho_base.o
 cpr.o : pres_ai_mod.o
-cpr.o : smallbox.o
 cpr.o : smallbox_gvec.o
 cpr.o : wannier.o
 cpr_mod.o : ../Modules/kind.o
@@ -385,7 +382,6 @@ fromscra.o : ions_positions.o
 fromscra.o : mainvar.o
 fromscra.o : modules.o
 fromscra.o : ortho_base.o
-fromscra.o : smallbox.o
 gradrho.o : ../Modules/cell_base.o
 gradrho.o : ../Modules/fft_base.o
 gradrho.o : ../Modules/fft_interfaces.o
@@ -691,8 +687,6 @@ phasefactor.o : ../Modules/kind.o
 phasefactor.o : ../Modules/recvec.o
 phasefactor.o : cp_interfaces.o
 phasefactor.o : gvecw.o
-phasefactor.o : smallbox_grid.o
-phasefactor.o : smallbox_gvec.o
 plugin_forces.o : ../Modules/io_files.o
 plugin_forces.o : ../Modules/io_global.o
 plugin_forces.o : ../Modules/kind.o
@@ -863,7 +857,6 @@ restart_sub.o : ions_nose.o
 restart_sub.o : ions_positions.o
 restart_sub.o : mainvar.o
 restart_sub.o : modules.o
-restart_sub.o : smallbox.o
 runcp.o : ../Modules/control_flags.o
 runcp.o : ../Modules/electrons_base.o
 runcp.o : ../Modules/fft_base.o
@@ -886,6 +879,19 @@ smallbox_grid.o : ../Modules/fft_scalar.o
 smallbox_grid.o : ../Modules/griddim.o
 smallbox_grid.o : ../Modules/io_global.o
 smallbox_gvec.o : ../Modules/kind.o
+smallbox_lib.o : ../Modules/cell_base.o
+smallbox_lib.o : ../Modules/control_flags.o
+smallbox_lib.o : ../Modules/fft_base.o
+smallbox_lib.o : ../Modules/fft_types.o
+smallbox_lib.o : ../Modules/griddim.o
+smallbox_lib.o : ../Modules/io_global.o
+smallbox_lib.o : ../Modules/ions_base.o
+smallbox_lib.o : ../Modules/kind.o
+smallbox_lib.o : ../Modules/mp_global.o
+smallbox_lib.o : cp_interfaces.o
+smallbox_lib.o : smallbox.o
+smallbox_lib.o : smallbox_grid.o
+smallbox_lib.o : smallbox_gvec.o
 smallbox_subs.o : ../Modules/io_global.o
 smallbox_subs.o : ../Modules/kind.o
 smallbox_subs.o : smallbox.o

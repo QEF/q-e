@@ -51,7 +51,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
                                        atm, ind_bck, cdm, cdms, ions_cofmsub
   USE cell_base,                ONLY : at, bg, ainv, frich, &
                                        greash, tpiba2, omega, alat, ibrav,  &
-                                       celldm, h, hold, hnew, velh, deth,   &
+                                       celldm, h, hold, hnew, velh,         &
                                        wmass, press, iforceh, cell_force
   USE grid_dimensions,          ONLY : nrxx, nr1, nr2, nr3
   USE smooth_grid_dimensions,   ONLY : nrxxs, nr1s, nr2s, nr3s
@@ -119,7 +119,6 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
                                        me_bgrp, inter_bgrp_comm, nbgrp
   USE ldaU_cp,                  ONLY : lda_plus_u, vupsi
   USE step_penalty,             ONLY : vpsi_pen, step_pen, E_pen
-  USE small_box,                ONLY : ainvb
   !
   IMPLICIT NONE
   !
@@ -251,9 +250,9 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
      ! 
      IF ( (okvan .or. nlcc_any ) .AND. (tfor .OR. thdyn .OR. tfirst) ) THEN
         !
-        CALL initbox( tau0, taub, irb, ainv, at, alat )
+        CALL initbox( tau0, alat, at, ainv, taub, irb )
         !
-        CALL phbox( taub, eigrb, ainvb )
+        CALL phbox( taub, iprsta, eigrb )
         !
      END IF
      !
@@ -737,8 +736,8 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
            ! ... restart with CP
            !
            IF ( okvan .or. nlcc_any ) THEN
-              CALL initbox( tau0, taub, irb, ainv, at, alat )
-              CALL phbox( taub, eigrb, ainvb )
+              CALL initbox( tau0, alat, at, ainv, taub, irb )
+              CALL phbox( taub, iprsta, eigrb ) 
            END IF
            CALL r_to_s( tau0, taus, na, nsp, ainv )
            CALL phfacs( eigts1,eigts2,eigts3, eigr, mill, taus, nr1,nr2,nr3, nat )

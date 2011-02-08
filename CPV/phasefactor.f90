@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2005 FPMD-CPV groups
+! Copyright (C) 2002-2011 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -108,7 +108,7 @@
 
           ngw = SIZE( eigr, 1 )
           IF( ngw > SIZE( mill, 2 ) ) THEN
-            CALL errore(' phfacs ',' eigr inconsisten size ',ngw)
+            CALL errore(' phfacs ',' inconsistent size for eigr ',ngw)
           END IF
 
           DO ig = 1, ngw
@@ -234,75 +234,4 @@
 !
       return
    end subroutine phfac_x
-
-
-!-----------------------------------------------------------------------
-      SUBROUTINE phbox( taub, eigrb, ainvb )
-!-----------------------------------------------------------------------
-!     calculates the phase factors for the g's of the little box
-!     eigrt=exp(-i*g*tau) .
-!     Uses the same logic for fast calculation as in phfac (see below)
-!        
-      USE kinds,         only: DP
-      use io_global,     only: stdout
-      use control_flags, only: iprsta
-      use ions_base,     only: nsp, na, nat
-      use smallbox_gvec,         only: ngb, mill_b
-      use cell_base,     only: r_to_s
-      use smallbox_grid_dim, only: nr1b, nr2b, nr3b
-      use cp_interfaces, only: phfacs
-!                 
-      IMPLICIT NONE    
-      REAL(DP)    :: taub(3,nat)
-      COMPLEX(DP) :: eigrb(ngb,nat)
-      REAL(DP)    :: ainvb(3,3)
-! local           
-      integer :: i,j,k, is, ia, ig, isa
-      complex(dp), allocatable:: ei1b(:,:), ei2b(:,:), ei3b(:,:)
-      real(dp), allocatable :: taus(:,:)
-!
-      allocate(ei1b(-nr1b:nr1b,nat))
-      allocate(ei2b(-nr2b:nr2b,nat))
-      allocate(ei3b(-nr3b:nr3b,nat))
-      allocate( taus( 3, nat ) )
-!
-      if(iprsta.gt.3) then
-         WRITE( stdout,*) ' phbox: taub '
-         WRITE( stdout,*) ( (taub(i,isa), i=1, 3 ), isa=1, nat )
-      endif
-      CALL r_to_s( taub, taus, na, nsp, ainvb )
-      CALL phfacs( ei1b, ei2b, ei3b, eigrb, mill_b, taus, nr1b, nr2b, nr3b, nat )
-!
-      if(iprsta.gt.4) then
-         WRITE( stdout,*)
-         if(nsp.gt.1) then
-            isa = 0
-            do is=1,nsp
-               WRITE( stdout,'(33x,a,i4)') ' ei1b, ei2b, ei3b (is)',is
-               do ig=1,4
-                  WRITE( stdout,'(6f9.4)')                                    &
-     &                 ei1b(ig,1+isa),ei2b(ig,1+isa),ei3b(ig,1+isa)
-               end do
-               WRITE( stdout,*)
-               isa = isa + na(is)
-            end do
-         else
-            do ia=1,na(1)
-               WRITE( stdout,'(33x,a,i4)') ' ei1b, ei2b, ei3b (ia)',ia
-               do ig=1,4
-                  WRITE( stdout,'(6f9.4)')                                    &
-     &                 ei1b(ig,ia),ei2b(ig,ia),ei3b(ig,ia)
-               end do
-               WRITE( stdout,*)
-            end do
-         endif
-      endif
-!
-      deallocate(ei3b)
-      deallocate(ei2b)
-      deallocate(ei1b)
-      deallocate( taus )
-!
-      RETURN
-      END SUBROUTINE phbox
 

@@ -58,7 +58,6 @@ SUBROUTINE from_scratch( )
                                      lambda, lambdam, lambdap, ema0bg, rhog, rhor, rhos, &
                                      vpot, ht0, edft, nlax, becdr_bgrp, dbec, drhor, drhog
     USE mp_global,            ONLY : np_ortho, me_ortho, ortho_comm, mpime, inter_bgrp_comm, nbgrp
-    USE small_box,            ONLY : ainvb
     USE mp,                   ONLY : mp_sum
     !
     IMPLICIT NONE
@@ -112,8 +111,8 @@ SUBROUTINE from_scratch( )
     CALL strucf( sfac, eigts1, eigts2, eigts3, mill, ngms )
     !     
     IF ( okvan .OR. nlcc_any ) THEN
-       CALL initbox ( tau0, taub, irb, ainv, at, alat )
-       CALL phbox( taub, eigrb, ainvb )
+       CALL initbox ( tau0, alat, at, ainv, taub, irb )
+       CALL phbox( taub, iprsta, eigrb )
     END IF
     !
     !     wfc initialization with random numbers
