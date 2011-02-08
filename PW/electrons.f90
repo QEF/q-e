@@ -69,7 +69,7 @@ SUBROUTINE electrons()
   !
   USE paw_variables,        ONLY : okpaw, ddd_paw, total_core_energy, only_paw
   USE paw_onecenter,        ONLY : PAW_potential
-  USE paw_symmetry,         ONLY : PAW_symmetrize
+  USE paw_symmetry,         ONLY : PAW_symmetrize_ddd
   USE uspp_param,           ONLY : nh, nhm ! used for PAW
 !DCC
 !  USE ee_mod,               ONLY : n_cycle,                            &
@@ -361,7 +361,7 @@ SUBROUTINE electrons()
                           ehart, etxc, vtxc, eth, etotefield, charge, v)
            IF (okpaw) THEN
               CALL PAW_potential(rhoin%bec, ddd_paw, epaw)
-              CALL PAW_symmetrize(ddd_paw)
+              CALL PAW_symmetrize_ddd(ddd_paw)
            ENDIF
 
            !
@@ -394,7 +394,7 @@ SUBROUTINE electrons()
                           ehart, etxc, vtxc, eth, etotefield, charge, v)
            IF (okpaw) THEN
               CALL PAW_potential(rho%bec, ddd_paw, epaw)
-              CALL PAW_symmetrize(ddd_paw)
+              CALL PAW_symmetrize_ddd(ddd_paw)
            ENDIF
 
            !

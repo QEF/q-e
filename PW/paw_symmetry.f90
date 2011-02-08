@@ -15,6 +15,7 @@ MODULE paw_symmetry
 
     ! entry points:
     PUBLIC :: PAW_symmetrize ! symmetrize becsums
+    PUBLIC :: PAW_symmetrize_ddd ! symmetrize the D coeffiecients
     PUBLIC :: PAW_desymmetrize! symmetrize dbecsums for electric field
     PUBLIC :: PAW_dusymmetrize! symmetrize dbecsums for phonon modes
     PUBLIC :: PAW_dumqsymmetrize! symmetrize dbecsums for phonon modes
@@ -273,6 +274,235 @@ SUBROUTINE PAW_symmetrize(becsum)
     CALL stop_clock('PAW_symme')
 
 END SUBROUTINE PAW_symmetrize
+
+SUBROUTINE PAW_symmetrize_ddd(ddd)
+    USE lsda_mod,          ONLY : nspin
+    USE cell_base,         ONLY : at, bg
+    USE noncollin_module,  ONLY : nspin_mag, nspin_lsda
+    USE spin_orb,          ONLY : domag
+    USE uspp_param,        ONLY : nhm
+    USE ions_base,         ONLY : nat, ityp
+    USE symm_base,         ONLY : nsym, irt, d1, d2, d3, t_rev, sname, s, &
+                                  invs, inverse_s
+    USE uspp,              ONLY : nhtolm,nhtol,ijtoh
+    USE uspp_param,        ONLY : nh, upf
+    USE io_global,         ONLY : stdout, ionode
+
+    REAL(DP), INTENT(INOUT) :: ddd(nhm*(nhm+1)/2,nat,nspin)! cross band occupations
+
+    REAL(DP)                :: dddsym(nhm*(nhm+1)/2,nat,nspin)! symmetrized becsum
+    REAL(DP) :: usym, segno
+    REAL(DP) :: mb(3)
+
+    INTEGER :: ia,mykey,ia_s,ia_e 
+                            ! atoms counters and indexes
+    INTEGER :: is, nt       ! counters on spin, atom-type
+    INTEGER :: ma           ! atom symmetric to na
+    INTEGER :: ih,jh, ijh   ! counters for augmentation channels
+    INTEGER :: lm_i, lm_j, &! angular momentums of non-symmetrized becsum
+               l_i, l_j, m_i, m_j
+    INTEGER :: m_o, m_u     ! counters for sums on m
+    INTEGER :: oh, uh, ouh  ! auxiliary indexes corresponding to m_o and m_u
+    INTEGER :: isym         ! counter for symmetry operation
+    INTEGER :: ipol, kpol
+    INTEGER :: table(48, 48)
+
+    ! The following mess is necessary because the symmetrization operation
+    ! in LDA+U code is simpler than in PAW, so the required quantities are
+    ! represented in a simple but not general way.
+    ! I will fix this when everything works.
+    REAL(DP), TARGET :: d0(1,1,48)
+    TYPE symmetrization_tensor
+        REAL(DP),POINTER :: d(:,:,:)
+    END TYPE symmetrization_tensor
+    TYPE(symmetrization_tensor) :: D(0:3)
+
+    IF( nsym==1 ) RETURN
+    d0(1,1,:) = 1._dp
+    D(0)%d => d0 ! d0(1,1,48)
+    D(1)%d => d1 ! d1(3,3,48)
+    D(2)%d => d2 ! d2(5,5,48)
+    D(3)%d => d3 ! d3(7,7,48)
+
+! => lm = l**2 + m
+! => ih = lm + (l+proj)**2  <-- if the projector index starts from zero!
+!       = lm + proj**2 + 2*l*proj
+!       = m + l**2 + proj**2 + 2*l*proj
+!        ^^^
+! Known ih and m_i I can compute the index oh of a different m = m_o but
+! the same augmentation channel (l_i = l_o, proj_i = proj_o):
+!  oh = ih - m_i + m_o
+! this expression should be general inside pwscf.
+
+!#define __DEBUG_PAW_SYM
+
+
+    CALL start_clock('PAW_symme')
+    
+    dddsym(:,:,:) = 0._dp
+    usym = 1._dp / DBLE(nsym)
+
+    ! Parallel: divide among processors for the same image
+    CALL block_distribute( nat, me_image, nproc_image, ia_s, ia_e, mykey )
+
+    DO is = 1, nspin_lsda
+    !
+    atoms: DO ia = ia_s, ia_e
+        nt = ityp(ia)
+        ! No need to symmetrize non-PAW atoms
+        IF ( .not. upf(nt)%tpawp ) CYCLE
+        !
+        DO ih = 1, nh(nt)
+        DO jh = ih, nh(nt) ! note: jh >= ih
+            !ijh = nh(nt)*(ih-1) - ih*(ih-1)/2 + jh
+            ijh = ijtoh(ih,jh,nt)
+            !
+            lm_i  = nhtolm(ih,nt)
+            lm_j  = nhtolm(jh,nt)
+            !
+            l_i   = nhtol(ih,nt)
+            l_j   = nhtol(jh,nt)
+            !
+            m_i   = lm_i - l_i**2
+            m_j   = lm_j - l_j**2
+            !
+            DO isym = 1,nsym
+                ma = irt(isym,ia)
+                DO m_o = 1, 2*l_i +1
+                DO m_u = 1, 2*l_j +1
+                    oh = ih - m_i + m_o
+                    uh = jh - m_j + m_u
+                    ouh = ijtoh(oh,uh,nt)
+                    !
+                    dddsym(ijh, ia, is) = dddsym(ijh, ia, is) &
+                        + D(l_i)%d(m_o,m_i, isym) * D(l_j)%d(m_u,m_j, isym) &
+                          * usym * ddd(ouh, ma, is)
+                ENDDO ! m_o
+                ENDDO ! m_u
+            ENDDO ! isym
+            !
+        ENDDO ! ih
+        ENDDO ! jh
+    ENDDO atoms ! nat
+    ENDDO ! nspin
+
+    IF (nspin==4.and.domag) THEN
+       !
+       call inverse_s( )
+
+       dddsym(:,:,2:4) = 0._dp
+       DO ia = 1, nat
+          nt = ityp(ia)
+          ! No need to symmetrize non-PAW atoms
+          IF ( .not. upf(nt)%tpawp ) CYCLE
+          !
+          !  Bring the magnetization in the basis of the crystal
+          !        
+          DO ijh=1,(nh(nt)*(nh(nt)+1))/2
+             DO ipol=1,3
+                mb(ipol)=ddd(ijh,ia,ipol+1)
+             ENDDO
+             DO ipol=1,3
+                ddd(ijh,ia,ipol+1)=bg(1,ipol)*mb(1)+bg(2,ipol)*mb(2) + &
+                                   bg(3,ipol)*mb(3) 
+             END DO
+          END DO
+       END DO
+       atoms_1: DO ia = ia_s, ia_e
+          nt = ityp(ia)
+          ! No need to symmetrize non-PAW atoms
+          IF ( .not. upf(nt)%tpawp ) CYCLE
+            DO ih = 1, nh(nt)
+            DO jh = ih, nh(nt) ! note: jh >= ih
+               !ijh = nh(nt)*(ih-1) - ih*(ih-1)/2 + jh
+               ijh = ijtoh(ih,jh,nt)
+               !
+               lm_i  = nhtolm(ih,nt)
+               lm_j  = nhtolm(jh,nt)
+               !
+               l_i   = nhtol(ih,nt)
+               l_j   = nhtol(jh,nt)
+               !
+               m_i   = lm_i - l_i**2
+               m_j   = lm_j - l_j**2
+               !
+               DO isym = 1,nsym
+                  ma = irt(isym,ia)
+                  segno=1.0_DP
+                  IF (sname(invs(isym))(1:3)=='inv') segno=-segno
+                  IF (t_rev(invs(isym))==1)  segno=-segno
+                  DO m_o = 1, 2*l_i +1
+                  DO m_u = 1, 2*l_j +1
+                      oh = ih - m_i + m_o
+                      uh = jh - m_j + m_u
+                      ouh = ijtoh(oh,uh,nt)
+                      !
+                      DO is=1,3
+                      DO kpol=1,3
+                         dddsym(ijh, ia, is+1) = dddsym(ijh, ia, is+1) &
+                       + D(l_i)%d(m_o,m_i, isym) * D(l_j)%d(m_u,m_j, isym) &
+                          * usym * ddd(ouh, ma, kpol+1)*&
+                                   s(kpol,is,invs(isym))*segno
+                      ENDDO
+                      ENDDO
+                  ENDDO ! m_o
+                  ENDDO ! m_u
+               ENDDO ! isym
+            !
+        ENDDO ! ih
+        ENDDO ! jh
+      ENDDO atoms_1 ! nat
+
+      DO ia = ia_s, ia_e
+         nt = ityp(ia)
+         ! No need to symmetrize non-PAW atoms
+         IF ( .not. upf(nt)%tpawp ) CYCLE
+         !
+         !  Bring the magnetization in cartesian basis
+         !        
+         DO ijh=1,(nh(nt)*(nh(nt)+1))/2
+            DO ipol=1,3
+               mb(ipol)=dddsym(ijh,ia,ipol+1)
+            ENDDO
+            DO ipol=1,3
+               dddsym(ijh,ia,ipol+1)=at(ipol,1)*mb(1)+at(ipol,2)*mb(2) + &
+                                     at(ipol,3)*mb(3)
+            END DO
+         END DO
+      END DO
+   END IF
+
+#ifdef __PARA
+    IF( mykey /= 0 ) dddsym = 0.0_dp
+    CALL mp_sum(dddsym, intra_image_comm)
+#endif
+
+#ifdef __DEBUG_PAW_SYM
+   write(stdout,*) "------------"
+    if(ionode) then
+        ia = 1
+        nt = ityp(ia)
+        DO is = 1, nspin
+            write(*,*) is
+        DO ih = 1, nh(nt)
+        DO jh = 1, nh(nt)
+            ijh = ijtoh(ih,jh,nt)
+            write(stdout,"(1f10.3)", advance='no') dddsym(ijh,ia,is)
+        ENDDO
+            write(stdout,*)
+        ENDDO
+            write(stdout,*)
+        ENDDO
+    endif
+   write(stdout,*) "------------"
+#endif
+
+    ! Apply symmetrization:
+    ddd(:,:,:) = dddsym(:,:,:)
+
+    CALL stop_clock('PAW_symme')
+
+END SUBROUTINE PAW_symmetrize_ddd
 
 SUBROUTINE PAW_desymmetrize(dbecsum)
 !
