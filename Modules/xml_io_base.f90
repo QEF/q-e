@@ -874,6 +874,37 @@ MODULE xml_io_base
     END SUBROUTINE write_ions
     !
     !------------------------------------------------------------------------
+!   SUBROUTINE write_vdw_df(vdw_table_name, resource_dir, copy_dirname)
+!
+!      CHARACTER(LEN=*), INTENT(IN) :: vdw_table_name
+!      CHARACTER(LEN=*), INTENT(IN) :: resource_dir
+!      CHARACTER(LEN=*), INTENT(IN) :: copy_dirname
+!      !
+!      INTEGER            :: i, flen
+!      CHARACTER(LEN=256) :: file_table
+!  
+!
+!      CALL iotk_write_begin( iunpun, "VDW_KERNEL" )
+!      CALL iotk_write_dat( iunpun, "VDW_KERNEL_NAME", vdw_table_name )
+!      CALL iotk_write_end( iunpun, "VDW_KERNEL" )    
+!
+!      flen = LEN_TRIM( resource_dir )
+!      IF ( resource_dir(flen:flen) /= '/' ) THEN
+!          !
+!          file_table = resource_dir(1:flen) // '/' // vdw_table_name
+!          !
+!      ELSE
+!          !
+!          file_table = resource_dir(1:flen) // vdw_table_name
+!          !
+!      END IF
+!      !
+!      CALL copy_file( TRIM( file_table ), TRIM( copy_dirname ) // "/" // TRIM( vdw_table_name ) )
+!
+!    END SUBROUTINE write_vdw_df
+!
+    !
+    !------------------------------------------------------------------------
     SUBROUTINE write_symmetry( ibrav, symm_type, nrot, nsym, invsym, noinv, &
                                time_reversal, no_t_rev, &
                                nr1, nr2, nr3, ftau, s, sname, irt, nat, t_rev )
@@ -1163,7 +1194,8 @@ MODULE xml_io_base
     !
     !------------------------------------------------------------------------
     SUBROUTINE write_xc( dft, nsp, lda_plus_u, &
-                         Hubbard_lmax, Hubbard_l, Hubbard_U, Hubbard_alpha )
+                         Hubbard_lmax, Hubbard_l, Hubbard_U, Hubbard_alpha, &
+                         is_vdw, vdw_table_name, pseudo_dir, dirname )
       !------------------------------------------------------------------------
       !
       CHARACTER(LEN=*),   INTENT(IN) :: dft
@@ -1172,7 +1204,11 @@ MODULE xml_io_base
       INTEGER,  OPTIONAL, INTENT(IN) :: Hubbard_lmax
       INTEGER,  OPTIONAL, INTENT(IN) :: Hubbard_l(:)
       REAL(DP), OPTIONAL, INTENT(IN) :: Hubbard_U(:), Hubbard_alpha(:)
+      LOGICAL,            INTENT(IN) :: is_vdw
+      CHARACTER(LEN=*), OPTIONAL,   INTENT(IN) :: vdw_table_name, pseudo_dir, dirname
       !
+      INTEGER            :: i, flen
+      CHARACTER(LEN=256) :: file_table
       !
       CALL iotk_write_begin( iunpun, "EXCHANGE_CORRELATION" )
       !
@@ -1202,6 +1238,40 @@ MODULE xml_io_base
          CALL iotk_write_dat( iunpun, "HUBBARD_ALPHA", Hubbard_alpha(1:nsp) )
          !
       END IF
+
+      !
+      ! Vdw kernel table
+      !
+      CALL iotk_write_dat( iunpun, "VDW_DF", is_vdw )
+
+      IF ( is_vdw ) THEN
+          
+         IF ( .NOT. PRESENT( vdw_table_name ) .OR. &
+              .NOT. PRESENT( pseudo_dir ) .OR. &
+              .NOT. PRESENT( dirname )) &
+            CALL errore( 'write_exchange_correlation', &
+                         ' variable vdw_table_name not present', 1 )
+        
+         CALL iotk_write_dat( iunpun, "VDW_KERNEL_NAME", vdw_table_name )
+
+         !
+         ! Copy the file in .save directory
+         !
+         flen = LEN_TRIM( pseudo_dir )
+         IF ( pseudo_dir(flen:flen) /= '/' ) THEN
+             !
+             file_table = pseudo_dir(1:flen) // '/' // vdw_table_name
+             !
+         ELSE
+             !
+             file_table = pseudo_dir(1:flen) // vdw_table_name
+             !
+         END IF
+         !
+         CALL copy_file( TRIM( file_table ), TRIM( dirname ) // "/" // TRIM( vdw_table_name ) )
+ 
+      END IF
+
       !
       CALL iotk_write_end( iunpun, "EXCHANGE_CORRELATION" )
       !

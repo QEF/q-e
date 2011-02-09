@@ -26,6 +26,7 @@ MODULE pw_restart
   USE mp_global, ONLY : my_pool_id, intra_image_comm, intra_pool_comm
   USE mp,        ONLY : mp_bcast, mp_sum, mp_max
   USE parser,    ONLY : version_compare
+
   !
   IMPLICIT NONE
   !
@@ -101,7 +102,8 @@ MODULE pw_restart
       USE noncollin_module,     ONLY : angle1, angle2, i_cons, mcons, bfield, &
                                        lambda
       USE ions_base,            ONLY : amass
-      USE funct,                ONLY : get_dft_name
+      USE funct,                ONLY : get_dft_name, dft_is_vdW
+      USE kernel_table,         ONLY : vdw_table_name
       USE scf,                  ONLY : rho
       USE extfield,             ONLY : tefield, dipfield, edir, &
                                        emaxpos, eopreg, eamp
@@ -128,7 +130,7 @@ MODULE pw_restart
       INTEGER               :: ike, iks, npw_g, ispin
       INTEGER,  ALLOCATABLE :: ngk_g(:)
       INTEGER,  ALLOCATABLE :: igk_l2g(:,:), igk_l2g_kdip(:,:), mill_g(:,:)
-      LOGICAL               :: lwfc
+      LOGICAL               :: lwfc, is_vdw
       REAL(DP), ALLOCATABLE :: raux(:)
       !
       !
@@ -376,10 +378,13 @@ MODULE pw_restart
 !-------------------------------------------------------------------------------
          !
          dft_name = get_dft_name()
+         is_vdw = dft_is_vdW()
          !
          CALL write_xc( DFT = dft_name, NSP = nsp, LDA_PLUS_U = lda_plus_u, &
                         HUBBARD_LMAX = Hubbard_lmax, HUBBARD_L = Hubbard_l, &
-                        HUBBARD_U = Hubbard_U, HUBBARD_ALPHA = Hubbard_alpha )
+                        HUBBARD_U = Hubbard_U, HUBBARD_ALPHA = Hubbard_alpha, &
+                        IS_VDW = is_vdw, VDW_TABLE_NAME = vdw_table_name, &
+                        PSEUDO_DIR = pseudo_dir, DIRNAME = dirname)
 #ifdef EXX
          CALL write_exx( x_gamma_extrapolation, nq1, nq2, nq3, &
                          exxdiv_treatment, yukawa, ecutvcut, &
@@ -2236,6 +2241,7 @@ MODULE pw_restart
       USE funct,     ONLY : enforce_input_dft
       USE ldaU,      ONLY : lda_plus_u, Hubbard_lmax, &
                             Hubbard_l, Hubbard_U, Hubbard_alpha
+      USE kernel_table, ONLY : vdw_table_name
       !
       IMPLICIT NONE
       !
@@ -2244,7 +2250,7 @@ MODULE pw_restart
       !
       CHARACTER(LEN=20) :: dft_name
       INTEGER           :: nsp_
-      LOGICAL           :: found, nomsg = .true.
+      LOGICAL           :: found, nomsg = .true., is_vdw
       !
       ierr = 0
       IF ( lxc_read ) RETURN
@@ -2283,6 +2289,18 @@ MODULE pw_restart
             CALL iotk_scan_dat( iunpun, "HUBBARD_ALPHA", Hubbard_alpha(1:nsp_) )
             !
          END IF
+
+         !
+         ! Vdw DF 
+         !
+         CALL iotk_scan_dat( iunpun, "VDW_DF", is_vdw, FOUND = found )
+         IF ( .NOT. found ) is_vdw = .FALSE.
+         !
+         IF ( is_vdw ) THEN
+            !
+            CALL iotk_scan_dat( iunpun, "VDW_KERNEL_NAME", vdw_table_name )
+            !
+         END IF
          !
          CALL iotk_scan_end( iunpun, "EXCHANGE_CORRELATION" )
          !
@@ -2292,6 +2310,7 @@ MODULE pw_restart
       !
       CALL mp_bcast( dft_name,   ionode_id, intra_image_comm )
       CALL mp_bcast( lda_plus_u, ionode_id, intra_image_comm )
+      CALL mp_bcast( is_vdw, ionode_id, intra_image_comm )
       !
       IF ( lda_plus_u ) THEN
          !
@@ -2301,6 +2320,11 @@ MODULE pw_restart
          CALL mp_bcast( Hubbard_alpha, ionode_id, intra_image_comm )
          !
       END IF
+
+      IF ( is_vdw ) THEN
+         CALL mp_bcast( vdw_table_name,  ionode_id, intra_image_comm )
+      END IF
+
       ! discard any further attempt to set a different dft
       CALL enforce_input_dft( dft_name, nomsg )
       !

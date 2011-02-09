@@ -54,6 +54,8 @@ SUBROUTINE read_file()
   USE io_global,            ONLY : stdout
   USE dfunct,               ONLY : newd
   USE control_flags,        ONLY : gamma_only
+  USE funct,                ONLY : dft_is_vdW
+  USE kernel_table,          ONLY : initialize_kernel_table
   !
   IMPLICIT NONE
   !
@@ -182,6 +184,12 @@ SUBROUTINE read_file()
   CALL pw_readfile( 'pseudo', ierr )
   !
   CALL readpp()
+  !
+  ! ... read the vdw kernel table if needed
+  !
+  if (dft_is_vdW()) then
+      call initialize_kernel_table()
+  endif
   !
   okvan = ANY ( upf(:)%tvanp )
   okpaw = ANY ( upf(1:nsp)%tpawp )

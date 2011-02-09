@@ -373,7 +373,7 @@ MODULE cp_restart
 !-------------------------------------------------------------------------------
          !
          dft_name = get_dft_name()
-         CALL write_xc( DFT = dft_name, NSP = nsp, LDA_PLUS_U = .FALSE. )
+         CALL write_xc( DFT = dft_name, NSP = nsp, LDA_PLUS_U = .FALSE., IS_VDW = .FALSE. )
          !
 !-------------------------------------------------------------------------------
 ! ... OCCUPATIONS
