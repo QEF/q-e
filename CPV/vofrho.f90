@@ -42,7 +42,7 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, tlast,  
                                   detot6, dekin6, dps6, dh6, dsr6, dxc6, denl6
       USE mp,               ONLY: mp_sum
       USE mp_global,        ONLY: intra_bgrp_comm
-      USE funct,            ONLY: dft_is_meta
+      USE funct,            ONLY: dft_is_meta, dft_is_vdW
       USE pres_ai_mod,      ONLY: abivol, abisur, v_vol, P_ext, volclu,  &
                                   Surf_t, surfclu
       USE fft_interfaces,   ONLY: fwfft, invfft
@@ -82,7 +82,7 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, tlast,  
       COMPLEX(DP), ALLOCATABLE :: self_vloc(:)
       COMPLEX(DP)              :: self_rhoeg
       REAL(DP)                 :: self_ehtet, fpibg
-      LOGICAL                  :: ttsic
+      LOGICAL                  :: ttsic, is_vdw
       REAL(DP)                 :: detmp( 3, 3 ), desr( 6 ), deps( 6 )
       REAL(DP)                 :: detmp2( 3, 3 )
       REAL(DP)                 :: ht( 3, 3 )
@@ -97,6 +97,9 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, tlast,  
          (/ 1.0_DP, 0.0_DP, 0.0_DP, 1.0_DP, 0.0_DP, 1.0_DP /)
 
 
+      is_vdw = dft_is_vdW()
+      IF (is_vdw) CALL errore('vofrho', 'vdW-DF not implemented in CP, use PW instead or &
+                                         check PW/v_of_rho.f90 to port the implementation',1)
 
       CALL start_clock( 'vofrho' )
 
