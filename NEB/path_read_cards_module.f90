@@ -14,10 +14,9 @@ MODULE path_read_cards_module
    ! ...  by Carlo Sbraccia
    !
    USE kinds,     ONLY : DP
-   USE io_global, ONLY : stdout
    USE constants, ONLY : angstrom_au
    USE parser,    ONLY : parse_unit,field_count, read_line, get_field
-   USE io_global, ONLY : ionode, ionode_id
+   USE io_global, ONLY : meta_ionode
    !
    USE path_input_parameters_module
    !
@@ -75,8 +74,8 @@ CONTAINS
          !
       ELSE
          !
-         IF ( ionode ) &
-            WRITE( stdout,'(A)') 'Warning: card '//trim(input_line)//' ignored'
+         IF ( meta_ionode ) &
+            WRITE( 0,'(A)') 'Warning: card '//trim(input_line)//' ignored'
          !
       ENDIF
       !
