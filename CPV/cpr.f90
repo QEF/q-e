@@ -325,7 +325,6 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
      CALL move_electrons( nfi, tfirst, tlast, bg(:,1), bg(:,2), bg(:,3), &
                           fion, c0_bgrp, cm_bgrp, phi_bgrp, &
                           enthal, enb, enbi, fccc, ccc, dt2bye, stress )
-
      !
      IF (lda_plus_u) fion = fion + forceh
      !

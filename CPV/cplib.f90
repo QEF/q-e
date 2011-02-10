@@ -2138,8 +2138,8 @@ end function set_Hubbard_l
       USE uspp,               ONLY: nhsa=>nkb
       USE uspp_param,         ONLY: upf
       use electrons_base,     only: nspin, n => nbsp, nx => nbspx, ispin, f
-      USE ldaU_cp,               ONLY: lda_plus_u, Hubbard_U, Hubbard_l
-      USE ldaU_cp,               ONLY: n_atomic_wfc, ns, e_hubbard
+      USE ldaU_cp,            ONLY: Hubbard_U, Hubbard_l
+      USE ldaU_cp,            ONLY: n_atomic_wfc, ns, e_hubbard
       USE step_penalty,       ONLY: E_pen, A_pen, sigma_pen, alpha_pen
       USE step_penalty,       ONLY: step_pen
       USE dspev_module,       only: dspev_drv
@@ -2159,13 +2159,10 @@ end function set_Hubbard_l
      &                               spsi(:,:)
       real(DP), allocatable   :: becwfc(:,:), bp(:,:),              &
      &                               dbp(:,:,:), wdb(:,:,:)
-      real(DP), allocatable   :: dns(:,:,:,:)
-      real(DP), allocatable   :: e(:), z(:,:),                      &
-     &                               proj(:,:), temp(:)
-      real(DP), allocatable   :: ftemp1(:), ftemp2(:)
-      real(DP)                :: lambda(ldmx), somma, ntot, nsum,   &
+      real(DP), allocatable   :: dns(:,:,:,:), proj(:,:)
+      real(DP), allocatable   :: lambda(:), f1(:), vet(:,:)
+      real(DP)                :: somma, ntot, nsum,   &
      &                           nsuma, x_value, g_value, step_value
-      real(DP) :: f1 (ldmx*ldmx), vet (ldmx, ldmx)
       integer is, ia, iat, nb, isp, l, m, m1, m2, k, i, counter, err, ig
       integer iv, jv, inl, jnl,alpha,alpha_a,alpha_s,ipol
       integer, allocatable ::  offset (:,:)
@@ -2174,29 +2171,22 @@ end function set_Hubbard_l
       if( nbgrp > 1 ) &
          call errore(' new_ns ', ' parallelization over bands not yet implemented ', 1 )
 !
+      allocate(f1 (ldmx*ldmx), vet (ldmx,ldmx), lambda(ldmx) )
       allocate(wfc(ngw,n_atomic_wfc))
-      allocate(ftemp1(ldmx))
-      allocate(ftemp2(ldmx))
-!
-! calculate wfc = atomic states
+      allocate(becwfc(nhsa,n_atomic_wfc))
+      allocate(swfc(ngw,n_atomic_wfc))
+      allocate(proj(n,n_atomic_wfc))
+      allocate(offset(nsp,nat))
 !
 !!!      call ewfc(eigr,n_atomic_wfc,wfc)
-!
-! calculate bec = <beta|wfc>
-!
-      allocate(becwfc(nhsa,n_atomic_wfc))
 !!!      call nlsm1 (n_atomic_wfc,1,nsp,eigr,wfc,becwfc)
-!
-      allocate(swfc(ngw,n_atomic_wfc))
 !!!      call s_wfc(n_atomic_wfc,becwfc,betae,wfc,swfc)
 !
 ! calculate proj = <c|S|wfc>
 !
-      allocate(proj(n,n_atomic_wfc))
       CALL projwfc_hub( c, nx, eigr, betae, n, n_atomic_wfc,            &
      & wfc, becwfc, swfc, proj ) !#@
 !
-      allocate(offset(nsp,nat))
       counter = 0
       do is = 1, nsp
          do ia = 1, na(is)
@@ -2207,8 +2197,7 @@ end function set_Hubbard_l
             end do
          end do
       end do
-      if (counter.ne.n_atomic_wfc)                                      &
-     &                 call errore ('new_ns','nstart<>counter',1)
+      if (counter.ne.n_atomic_wfc) call errore ('new_ns','nstart<>counter',1)
       ns(:,:,:,:) = 0.d0
       iat = 0
       do is = 1,nsp
@@ -2405,8 +2394,11 @@ end function set_Hubbard_l
 
         forceh = forceh + force_pen
 !
-        deallocate ( wfc, becwfc, spsi, proj, offset, swfc, dns, bp, dbp, wdb)
+        deallocate ( spsi, dns, bp, dbp, wdb)
       end if
+      deallocate ( wfc, becwfc, proj, offset, swfc)
+      deallocate ( f1, vet, lambda )
+!
       return
       end subroutine new_ns
 !
@@ -2425,9 +2417,9 @@ end function set_Hubbard_l
       use electrons_base,   only: n => nbsp 
       use ions_base,        only: na, nat, nsp
       use gvecw,            only: ngw
-      USE ldaU_cp,             ONLY: lda_plus_u, Hubbard_U, Hubbard_l
-      USE ldaU_cp,             ONLY: n_atomic_wfc, ns, e_hubbard
-      USE ldaU_cp,             ONLY: Hubbard_lmax
+      USE ldaU_cp,          ONLY: Hubbard_U, Hubbard_l
+      USE ldaU_cp,          ONLY: n_atomic_wfc, ns, e_hubbard
+      USE ldaU_cp,          ONLY: Hubbard_lmax
       use dspev_module,     only : dspev_drv
       USE step_penalty,     ONLY: step_pen, A_pen, sigma_pen, alpha_pen
 
@@ -2440,8 +2432,8 @@ end function set_Hubbard_l
 ! counter on wavefn
 ! counters on d components
   integer, parameter :: ldmx = 7
-  real(DP), allocatable   :: ftemp1(:), ftemp2(:)
-  real(DP) :: f1 (ldmx * ldmx), vet (ldmx, ldmx)
+  real(DP), allocatable   :: ftemp1(:), ftemp2(:), f1 (:), vet (:,:)
+
   real(DP) :: lambda (ldmx), nsum, nsuma
   write (*,*) 'enter write_ns'
 
@@ -2464,8 +2456,7 @@ end function set_Hubbard_l
 !  write (6,'(6(a,i2,a,f8.4,6x))') &
 !        ('alpha(',is,') =', Hubbard_alpha(is) * autoev, is=1,nsp)
       nsum = 0.d0
-      allocate(ftemp1(ldmx))
-      allocate(ftemp2(ldmx))
+      allocate(ftemp1(ldmx), ftemp2(ldmx), f1(ldmx*ldmx), vet(ldmx,ldmx) )
       iat = 0
       write(6,*) 'nsp',nsp
       do is = 1,nsp
@@ -2514,7 +2505,7 @@ end function set_Hubbard_l
 !        end if
          end do
       end do
-      deallocate ( ftemp1, ftemp2)
+      deallocate ( ftemp1, ftemp2,f1, vet )
       return
       end subroutine write_ns
 !-----------------------------------------------------------------------
@@ -2853,7 +2844,7 @@ end function set_Hubbard_l
 !-----------------------------------------------------------------------
       !
       ! Projection on atomic wavefunctions
-      ! Atomic wavefunctions are not orthogonized
+      ! Atomic wavefunctions are not orthogonalized
       !
       USE kinds,              ONLY: DP
       USE constants,          ONLY: autoev
@@ -2871,10 +2862,9 @@ end function set_Hubbard_l
 !
       COMPLEX(DP), INTENT(OUT):: wfc(ngw,n_atomic_wfc),    &
      & swfc( ngw, n_atomic_wfc )
-      real(DP), intent(out):: becwfc(nhsa,n_atomic_wfc) !DEBUG
-      REAL(DP),    ALLOCATABLE :: overlap(:,:), e(:), z(:,:)
+      real(DP), intent(out):: becwfc(nhsa,n_atomic_wfc), proj(n,n_atomic_wfc)
       REAL(DP),    ALLOCATABLE :: temp(:)
-      REAL(DP)                 :: somma, proj(n,n_atomic_wfc)
+      REAL(DP)                 :: somma
       INTEGER :: is, ia, nb, l, m, k, i
       !
       ! calculate number of atomic states
