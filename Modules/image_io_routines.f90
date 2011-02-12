@@ -17,7 +17,6 @@ MODULE image_io_routines
   !
   USE kinds,      ONLY : DP
   USE io_global,  ONLY : meta_ionode, meta_ionode_id
-  USE mp,         ONLY : mp_bcast
   !
   IMPLICIT NONE
   !
@@ -31,7 +30,6 @@ MODULE image_io_routines
      SUBROUTINE io_image_start()
        !-----------------------------------------------------------------------
        !
-       USE io_global, ONLY : stdout
        USE io_global, ONLY : ionode, ionode_id
        USE mp_global, ONLY : me_image, root_image
        !
@@ -45,11 +43,6 @@ MODULE image_io_routines
        ionode = ( me_image == root_image )
        ionode_id = root_image
        !
-       ! ... stdout is connected to a file ( different for each image )
-       ! ... via unit 117 ( only root_image performs I/O )
-       !
-       IF ( ionode ) stdout = 117
-       !
        RETURN
        !
      END SUBROUTINE io_image_start
@@ -59,7 +52,7 @@ MODULE image_io_routines
      SUBROUTINE io_image_stop()
        !-----------------------------------------------------------------------
        !
-       USE io_global, ONLY : stdout, io_global_start
+       USE io_global, ONLY : io_global_start
        USE mp_global, ONLY : mpime, root
        !
        IMPLICIT NONE
@@ -68,10 +61,6 @@ MODULE image_io_routines
        ! ... the original I/O node is set again
        !
        CALL io_global_start( mpime, root )
-       !
-       ! ... stdout is reconnected to standard output unit
-       !
-       stdout = 6
        !
        RETURN
        !

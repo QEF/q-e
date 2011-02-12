@@ -77,7 +77,6 @@ griddim.o : mp.o
 griddim.o : mp_global.o
 image_io_routines.o : io_global.o
 image_io_routines.o : kind.o
-image_io_routines.o : mp.o
 image_io_routines.o : mp_global.o
 input_parameters.o : kind.o
 input_parameters.o : parameters.o

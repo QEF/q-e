@@ -1,15 +1,15 @@
 !
-! Copyright (C) 2001-2009 Quantum ESPRESSO group
+! Copyright (C) 2011 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !----------------------------------------------------------------------------
-PROGRAM sm
+PROGRAM neb
   !----------------------------------------------------------------------------
   !
-  ! ... Plane Wave Self-Consistent Field code 
+  ! ... Nudged Elastic Band / Strings Method algorithm
   !
   USE io_global,        ONLY : meta_ionode_id
   USE io_files,         ONLY : find_free_unit
@@ -67,7 +67,7 @@ PROGRAM sm
   CALL mp_image_startup (root,neb_comm)
   CALL engine_mp_start()
 #endif
-  CALL environment_start ( 'SM' )
+  CALL environment_start ( 'NEB' )
   !
   !
   ! INPUT RELATED
@@ -106,7 +106,7 @@ PROGRAM sm
   !
   !
   CALL set_engine_io_units()
-
+  !
 !  unit_tmp = find_free_unit()
   OPEN(unit_tmp, file=trim(engine_prefix)//"1.in")
   CALL read_namelists( prog='PW', unit=unit_tmp )
@@ -162,9 +162,4 @@ PROGRAM sm
   !
   STOP
   !
-9010 FORMAT( /,5X,'Current dimensions of program SM are:', &
-           & /,5X,'Max number of different atomic species (ntypx) = ',I2,&
-           & /,5X,'Max number of k-points (npk) = ',I6,&
-           & /,5X,'Max angular momentum in pseudopotentials (lmaxx) = ',i2)
-  !
-END PROGRAM sm
+END PROGRAM neb

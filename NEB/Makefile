@@ -12,7 +12,7 @@ LIBOBJS= ../iotk/src/libiotk.a ../flib/flib.a \
          ../clib/clib.a ../flib/ptools.a
 
 NEBOBJS = \
-string_methods.o \
+neb.o \
 compute_scf.o
 
 NEBLIBS = \
