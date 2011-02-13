@@ -51,7 +51,7 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, tlast,  
       USE cp_interfaces,    ONLY: pseudo_stress, compute_gagb, stress_hartree, &
                                   add_drhoph, stress_local, force_loc, self_vofhar
       USE fft_base,         ONLY: dfftp, dffts
-      USE ldau_cp,          ONLY: e_hubbard
+      USE ldaU_cp,          ONLY: e_hubbard
       USE step_penalty,     ONLY: e_pen
 
       IMPLICIT NONE

@@ -228,7 +228,7 @@ CONTAINS
    !
 END MODULE core
 !
-module ldau_cp
+module ldaU_cp
   use parameters, only: nsx
   USE kinds
   implicit none
@@ -254,7 +254,7 @@ contains
      !
   end subroutine
   !
-end module ldau_cp
+end module ldaU_cp
 !
 !
 ! Occupation constraint 

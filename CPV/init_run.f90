@@ -77,7 +77,7 @@ SUBROUTINE init_run()
   USE step_penalty,             ONLY : step_pen
   USE ions_base,                ONLY : ions_reference_positions, cdmi, taui
   USE mp_global,                ONLY : nbgrp
-  USE ldau_cp
+  USE ldaU_cp
   !
   IMPLICIT NONE
   !
@@ -260,7 +260,7 @@ SUBROUTINE init_run()
 
   step_pen = .FALSE.
 
-  CALL ldau_init()
+  CALL ldaU_init()
 
   IF ( nbeg < 0 ) THEN
      !

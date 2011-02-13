@@ -2623,8 +2623,8 @@ end function set_Hubbard_l
       use gvecw, only: ngw
       use electrons_base, only: nspin, n => nbsp, nx => nbspx, ispin, f
       USE uspp,           ONLY: nhsa=>nkb
-      USE ldaU_cp,           ONLY: Hubbard_U, Hubbard_l
-      USE ldaU_cp,           ONLY: n_atomic_wfc, ns
+      USE ldaU_cp,        ONLY: Hubbard_U, Hubbard_l
+      USE ldaU_cp,        ONLY: n_atomic_wfc, ns
       USE kinds,          ONLY: DP
 !
       implicit none
@@ -2703,8 +2703,8 @@ end function set_Hubbard_l
 !      use gvec
 !      use constants
       USE uspp,           ONLY: nhsa=>nkb, qq
-      USE ldaU_cp,           ONLY: Hubbard_U, Hubbard_l
-      USE ldaU_cp,           ONLY: n_atomic_wfc
+      USE ldaU_cp,        ONLY: Hubbard_U, Hubbard_l
+      USE ldaU_cp,        ONLY: n_atomic_wfc
       use cell_base,      ONLY: tpiba
       USE uspp_param,     only: nh, ish
       use mp_global,      only: intra_bgrp_comm
