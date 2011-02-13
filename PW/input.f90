@@ -185,7 +185,7 @@ SUBROUTINE iosys()
   USE fixed_occ,     ONLY : tfixed_occ, f_inp, &
                             one_atom_occupations_ => one_atom_occupations
   !
-  USE noncollin_module, ONLY : i_cons, mcons, &
+  USE noncollin_module, ONLY : i_cons, mcons, bfield, &
                                noncolin_  => noncolin, &
                                lambda_    => lambda, &
                                angle1_    => angle1, &
@@ -305,7 +305,6 @@ SUBROUTINE iosys()
   !
   INTEGER  :: ia, image, nt
   REAL(DP) :: theta, phi
-  LOGICAL  :: sm_is_not_set
   !
   !
   ! ... various initializations of control variables
@@ -596,24 +595,6 @@ SUBROUTINE iosys()
   IF ( two_fermi_energies .and. .not. lsda ) &
      CALL errore( 'iosys', 'tot_magnetization requires nspin=2', 1 )
   !
-  ! ... starting_magnetization(nt) = sm_not_set means "not set"
-  ! ... take note for subsequent checking if starting_magnetization
-  ! ... is not set for at least one atomic type
-  !
-  sm_is_not_set = ALL (starting_magnetization(1:ntyp) == sm_not_set)
-  !
-  DO nt = 1, ntyp
-     !
-     IF ( starting_magnetization(nt) == sm_not_set ) THEN
-        starting_magnetization(nt) = 0.0_dp
-     ELSEIF ( starting_magnetization(nt) > 1.0_dp ) THEN
-        starting_magnetization(nt) = 1.0_dp
-     ELSEIF ( starting_magnetization(nt) <-1.0_dp ) THEN
-        starting_magnetization(nt) =-1.0_dp
-     ENDIF
-     !
-  ENDDO
-  !
   IF ( occupations == 'fixed' .and. lsda  .and. lscf ) THEN
      !
      IF ( two_fermi_energies ) THEN
@@ -649,9 +630,28 @@ SUBROUTINE iosys()
   SELECT CASE( trim( constrained_magnetization ) )
   CASE( 'none' )
      !
-     IF ( lscf .and. lsda .and. ( .not. tfixed_occ ) .and. &
-          ( .not. two_fermi_energies )  .and. sm_is_not_set ) &
+     ! ... starting_magnetization(nt) = sm_not_set means "not set"
+     ! ... if no constraints are imposed on the magnetization, 
+     ! ... starting_magnetization must be set for at least one atomic type
+     !
+     IF ( lscf .AND. lsda .AND. ( .NOT. tfixed_occ ) .AND. &
+          ( .not. two_fermi_energies )  .AND. &
+          ALL (starting_magnetization(1:ntyp) == sm_not_set) ) &
         CALL errore('iosys','some starting_magnetization MUST be set', 1 )
+     !
+     ! ... bring starting_magnetization between -1 and 1
+     !
+     DO nt = 1, ntyp
+        !
+        IF ( starting_magnetization(nt) == sm_not_set ) THEN
+           starting_magnetization(nt) = 0.0_dp
+        ELSEIF ( starting_magnetization(nt) > 1.0_dp ) THEN
+          starting_magnetization(nt) = 1.0_dp
+        ELSEIF ( starting_magnetization(nt) <-1.0_dp ) THEN
+          starting_magnetization(nt) =-1.0_dp
+        ENDIF
+        !
+     ENDDO
      !
      i_cons = 0
      !
@@ -660,7 +660,7 @@ SUBROUTINE iosys()
      IF ( nspin == 1 ) &
         CALL errore( 'iosys','constrained atomic magnetizations ' // &
                    & 'require nspin=2 or 4 ', 1 )
-     IF ( sm_is_not_set ) &
+     IF ( ALL (starting_magnetization(1:ntyp) == sm_not_set) ) &
         CALL errore( 'iosys','constrained atomic magnetizations ' // &
                    & 'require that some starting_magnetization is set', 1 )
      !
@@ -736,7 +736,6 @@ SUBROUTINE iosys()
      !
   END SELECT
   !
-
   IF ( B_field(1) /= 0.D0 .or. &
        B_field(2) /= 0.D0 .or. &
        B_field(3) /= 0.D0 ) THEN
@@ -751,11 +750,11 @@ SUBROUTINE iosys()
      IF ( i_cons /= 0 ) CALL errore( 'iosys', &
           & 'non-zero external B_field and constrained magnetization?', i_cons)
      !
-     ! the external B field is treated using the variables for constrained
-     ! magnetization - this should be done in a cleaner way
+     ! i_cons=4 signals the presence of an external B field
+     ! this should be done in a cleaner way
      !
      i_cons = 4
-     mcons(:,1)=B_field(:)
+     bfield(:)=B_field(:)
      !
   ENDIF
   !

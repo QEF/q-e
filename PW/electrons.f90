@@ -643,8 +643,6 @@ SUBROUTINE electrons()
      !
      IF ( i_cons == 3 .OR. i_cons == 4 )  &
         WRITE( stdout, 9071 ) bfield(1), bfield(2), bfield(3)
-     IF ( i_cons == 5 ) &
-        WRITE( stdout, 9072 ) bfield(3)
      IF ( i_cons /= 0 .AND. i_cons < 4 ) &
         WRITE( stdout, 9073 ) lambda
      !

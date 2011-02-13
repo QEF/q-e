@@ -46,10 +46,8 @@ SUBROUTINE add_bfield (v,rho)
 
   etcon=0.D0
 
-  IF (nspin ==1 .or. i_cons==0 .or. i_cons==5) RETURN
+  IF (nspin ==1 .or. i_cons==0)  RETURN
   ! i_cons==0, no constraint
-  ! i_cons==5, total magnetization fixed using 2 Fermi energies (no B_ext)
-
   npol = nspin - 1  ! number of relevant magnetic components
                     ! 3 for non-collinear case; 1 for collinear case
   !
@@ -192,7 +190,6 @@ SUBROUTINE add_bfield (v,rho)
        !
      END IF
   ELSE IF (i_cons==4) THEN
-     bfield(1:npol)=mcons(1:npol,1)
      write(stdout,'(5x," External magnetic field: ", 3f13.5)') &
              (bfield(ipol),ipol=1,npol)
      IF (npol==1) THEN

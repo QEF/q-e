@@ -73,7 +73,7 @@ SUBROUTINE setup()
   USE funct,              ONLY : set_dft_from_name
   USE mp_global,          ONLY : kunit
   USE spin_orb,           ONLY : lspinorb, domag
-  USE noncollin_module,   ONLY : noncolin, npol, m_loc, i_cons, mcons, &
+  USE noncollin_module,   ONLY : noncolin, npol, m_loc, i_cons, &
                                  angle1, angle2, bfield, ux, nspin_lsda, &
                                  nspin_gga, nspin_mag
   USE pw_restart,         ONLY : pw_readfile
@@ -176,12 +176,6 @@ SUBROUTINE setup()
      ux=0.0_DP
      if (dft_is_gradient()) call compute_ux(m_loc,ux,nat)
      !
-     IF ( i_cons == 4 ) THEN
-        bfield(:) = mcons(:,1)
-     ELSE
-        bfield=0.D0
-     END IF
-     !
   ELSE
      !
      ! ... wavefunctions are scalars
@@ -281,14 +275,7 @@ SUBROUTINE setup()
   !
   ! ... setting nelup/neldw 
   !
-  IF ( i_cons == 5 ) THEN
-     !
-     nelup = ( nelec + mcons(3,1) ) * 0.5D0
-     neldw = ( nelec - mcons(3,1) ) * 0.5D0
-     !
-  ELSE
-     call set_nelup_neldw ( tot_magnetization, nelec, nelup, neldw )
-  ENDIF
+  call set_nelup_neldw ( tot_magnetization, nelec, nelup, neldw )
   !
   ! ... Set the number of occupied bands if not given in input
   !
