@@ -52,7 +52,6 @@ error_handler.o : parallel_include.o
 fft_base.o : fft_types.o
 fft_base.o : kind.o
 fft_base.o : mp.o
-fft_base.o : mp_global.o
 fft_base.o : parallel_include.o
 fft_interfaces.o : fft_base.o
 fft_interfaces.o : fft_parallel.o
@@ -63,7 +62,6 @@ fft_parallel.o : fft_base.o
 fft_parallel.o : fft_scalar.o
 fft_parallel.o : fft_types.o
 fft_parallel.o : kind.o
-fft_parallel.o : mp_global.o
 fft_parallel.o : parallel_include.o
 fft_scalar.o : kind.o
 fft_types.o : io_global.o
