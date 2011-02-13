@@ -60,8 +60,6 @@ SUBROUTINE tg_cft3s( f, dfft, isgn, use_task_groups )
   USE fft_scalar, ONLY : cft_1z, cft_2xy
   USE fft_base,   ONLY : fft_scatter
   USE kinds,      ONLY : DP
-  USE mp_global,  ONLY : me_pool, nproc_pool, &
-                         intra_pool_comm
   USE fft_types,  ONLY : fft_dlay_descriptor
   USE parallel_include
 
@@ -105,7 +103,7 @@ SUBROUTINE tg_cft3s( f, dfft, isgn, use_task_groups )
      ALLOCATE( aux( dfft%tg_nnr ) )
   ENDIF
   !
-  me_p = me_pool + 1
+  me_p = dfft%mype + 1
   !
   IF ( isgn > 0 ) THEN
      !
@@ -293,7 +291,7 @@ CONTAINS
         ELSE
            !
            nppx = dfft%npp( me_p )
-           IF( nproc_pool == 1 ) nppx = dfft%nr3x
+           IF( dfft%nproc == 1 ) nppx = dfft%nr3x
            npp  = dfft%npp( me_p )
            nnp  = dfft%nnp
            !
@@ -310,7 +308,7 @@ CONTAINS
         !
         ii = 0
         !
-        DO ip = 1, nproc_pool
+        DO ip = 1, dfft%nproc
            !
            ioff = dfft%iss( ip )
            !
@@ -334,7 +332,7 @@ CONTAINS
         !
      ELSEIF( iopt == 1 ) THEN
         !
-        IF ( nproc_pool == 1 ) THEN
+        IF ( dfft%nproc == 1 ) THEN
            nppx = dfft%nr3x
         ELSE
            nppx = dfft%npp( me_p )
@@ -383,7 +381,7 @@ CONTAINS
         ELSE
            !
            nppx = dfft%npp( me_p )
-           IF( nproc_pool == 1 ) nppx = dfft%nr3x
+           IF( dfft%nproc == 1 ) nppx = dfft%nr3x
            npp  = dfft%npp( me_p )
            nnp  = dfft%nnp
            !
@@ -392,7 +390,7 @@ CONTAINS
 
 !$omp parallel default(shared), private( mc, j, i, ii, ip, it )
         ii = 0
-        DO ip = 1, nproc_pool
+        DO ip = 1, dfft%nproc
 !$omp do
            DO i = 1, dfft%nsw( ip )
               mc = dfft%ismap( i + dfft%iss( ip ) )
@@ -417,7 +415,7 @@ CONTAINS
         !
      ELSEIF( iopt == -1 ) THEN
         !
-        IF ( nproc_pool == 1 ) THEN
+        IF ( dfft%nproc == 1 ) THEN
            nppx = dfft%nr3x
         ELSE
            nppx = dfft%npp( me_p )
