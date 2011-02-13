@@ -286,9 +286,8 @@ SUBROUTINE iosys()
   !
   ! ... WANNIER_NEW namelist
   !
-  USE input_parameters, ONLY : use_wannier, nwan, &
-                               constrain_pot, use_energy_int, print_wannier_coeff
-
+  USE input_parameters, ONLY : use_wannier, nwan, constrain_pot, &
+                               use_energy_int, print_wannier_coeff
   !
   ! ... "path" specific
   !
@@ -306,6 +305,7 @@ SUBROUTINE iosys()
   !
   INTEGER  :: ia, image, nt
   REAL(DP) :: theta, phi
+  LOGICAL  :: sm_is_not_set
   !
   !
   ! ... various initializations of control variables
@@ -597,13 +597,10 @@ SUBROUTINE iosys()
      CALL errore( 'iosys', 'tot_magnetization requires nspin=2', 1 )
   !
   ! ... starting_magnetization(nt) = sm_not_set means "not set"
-  ! ... stop if starting_magnetization is not set for at least
-  ! ... one atomic type and occupations are not set in any other way
+  ! ... take note for subsequent checking if starting_magnetization
+  ! ... is not set for at least one atomic type
   !
-  IF ( lscf .and. lsda .and. ( .not. tfixed_occ ) .and. &
-          ( .not. two_fermi_energies )  .and. &
-          all(starting_magnetization(1:ntyp) == sm_not_set) ) &
-      CALL errore('iosys','some starting_magnetization MUST be set', 1 )
+  sm_is_not_set = ALL (starting_magnetization(1:ntyp) == sm_not_set)
   !
   DO nt = 1, ntyp
      !
@@ -616,6 +613,26 @@ SUBROUTINE iosys()
      ENDIF
      !
   ENDDO
+  !
+  IF ( occupations == 'fixed' .and. lsda  .and. lscf ) THEN
+     !
+     IF ( two_fermi_energies ) THEN
+        !
+        IF ( abs( nint(tot_magnetization ) - tot_magnetization ) > eps8 ) &
+           CALL errore( 'iosys', &
+                 & 'fixed occupations requires integer tot_magnetization', 1 )
+        IF ( abs( nint(tot_charge ) - tot_charge ) > eps8 ) &
+           CALL errore( 'iosys', &
+                      & 'fixed occupations requires integer charge', 1 )
+        !
+     ELSE
+        !
+        CALL errore( 'iosys', &
+                   & 'fixed occupations and lsda need tot_magnetization', 1 )
+        !
+     ENDIF
+     !
+  ENDIF
   !
   IF (noncolin) THEN
      DO nt = 1, ntyp
@@ -631,6 +648,10 @@ SUBROUTINE iosys()
   !
   SELECT CASE( trim( constrained_magnetization ) )
   CASE( 'none' )
+     !
+     IF ( lscf .and. lsda .and. ( .not. tfixed_occ ) .and. &
+          ( .not. two_fermi_energies )  .and. sm_is_not_set ) &
+        CALL errore('iosys','some starting_magnetization MUST be set', 1 )
      !
      i_cons = 0
      !
@@ -669,6 +690,9 @@ SUBROUTINE iosys()
      IF ( nspin == 1 ) &
         CALL errore( 'iosys','constrained atomic magnetizations ' // &
                    & 'require nspin=2 or 4 ', 1 )
+     IF ( sm_is_not_set ) &
+        CALL errore( 'iosys','constrained atomic magnetizations ' // &
+                   & 'require that some starting_magnetization is set', 1 )
      !
      i_cons = 1
      !
@@ -743,26 +767,6 @@ SUBROUTINE iosys()
      !
      i_cons = 4
      mcons(:,1)=B_field(:)
-     !
-  ENDIF
-  !
-  IF ( occupations == 'fixed' .and. lsda  .and. lscf ) THEN
-     !
-     IF ( two_fermi_energies ) THEN
-        !
-        IF ( abs( nint(tot_magnetization ) - tot_magnetization ) > eps8 ) &
-           CALL errore( 'iosys', &
-                      & 'fixed occupations requires integer tot_magnetization', 1 )
-        IF ( abs( nint(tot_charge ) - tot_charge ) > eps8 ) &
-           CALL errore( 'iosys', &
-                      & 'fixed occupations requires integer charge', 1 )
-        !
-     ELSE
-        !
-        CALL errore( 'iosys', &
-                   & 'fixed occupations and lsda need tot_magnetization', 1 )
-        !
-     ENDIF
      !
   ENDIF
   !
