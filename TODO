@@ -1,6 +1,7 @@
 TODO LIST - January 2011
 
 0) Suspected bugs/problems:
+  0.1  ILDOS (plot_num=10) for USPP?
   0.2  nstep ignored in vc-relax and other cases
   0.3  incorrect values for ELF?
   0.5  Small energy differences between PW and CP - maybe PP-related, 
@@ -82,8 +83,6 @@ TODO LIST - January 2011
 3.7 The intermediate hard NCPP is useless for PAW and should not be 
     done when generating a PAW set
 3.8 Finish merge of Meta-GGA (TPSS) code into atomic code
-3.9 When restarting, the copy of the PP in the restart file
-    should be read.
 
 4) Development
 
