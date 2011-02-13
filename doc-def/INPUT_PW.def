@@ -577,20 +577,24 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 	
 	dimension starting_magnetization -start 1 -end ntyp -type REAL {
 	    info {
-		starting spin polarization (values between -1 and 1)
-		on atomic type 'i' in a spin-polarized calculation.
-		Breaks the symmetry and provides a starting point for
-		self-consistency. The default value is zero, BUT a value
-		MUST be specified for AT LEAST one atomic type in spin
-		polarized calculations. Note that if start from zero
-		initial magnetization, you will get zero final magnetization
-		in any case. If you desire to start from an antiferromagnetic
-		state, you may need to define two different atomic species
+		starting spin polarization on atomic type 'i' in a spin 
+                polarized calculation. Values range between -1 (all spins
+                down for the valence electrons of atom type 'i') to 1
+                (all spins up). Breaks the symmetry and provides a starting
+                point for self-consistency. The default value is zero, BUT a 
+                value MUST be specified for AT LEAST one atomic type in spin
+		polarized calculations, unless you constrain the magnetization
+                (see "tot_magnetization" and "constrained_magnetization").
+                Note that if you start from zero initial magnetization, you 
+                will invariably end up in a nonmagnetic (zero magnetization)
+                state. If you want to start from an antiferromagnetic state,
+                you may need to define two different atomic species
 		corresponding to sublattices of the same atomic type.
+		starting_magnetization is ignored if you are performing a 
+                non-scf calculation, if you are restarting from a previous
+                run, or restarting from an interrupted run.
 		If you fix the magnetization with "tot_magnetization",
 		you should not specify starting_magnetization.
-		If you are restarting from a previous run, or from an
-		interrupted run, starting_magnetization is ignored.
 	    }
 	}
 
