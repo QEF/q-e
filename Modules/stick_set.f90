@@ -33,7 +33,7 @@
 !=----------------------------------------------------------------------=
 
       SUBROUTINE pstickset( gamma_only, bg, gcut, gkcut, gcuts, &
-          dfftp, dffts, ngw, ngm, ngs, mype, nproc, comm, nogrp_ )
+          dfftp, dffts, ngw, ngm, ngs, mype, root, nproc, comm, nogrp_ )
 
           LOGICAL, INTENT(in) :: gamma_only
 ! ...     bg(:,1), bg(:,2), bg(:,3) reciprocal space base vectors.
@@ -42,7 +42,7 @@
           TYPE(fft_dlay_descriptor), INTENT(inout) :: dfftp, dffts
           INTEGER, INTENT(out) :: ngw, ngm, ngs
 
-          INTEGER, INTENT(IN) :: mype, nproc, comm
+          INTEGER, INTENT(IN) :: mype, root, nproc, comm
           INTEGER, INTENT(IN) :: nogrp_
 
 
@@ -199,8 +199,8 @@
 
 #if defined __PARA
 
-          CALL fft_dlay_allocate( dfftp, mype, nproc, comm, nogrp_ , nr1x,  nr2x )
-          CALL fft_dlay_allocate( dffts, mype, nproc, comm, nogrp_ , nr1sx, nr2sx )
+          CALL fft_dlay_allocate( dfftp, mype, root, nproc, comm, nogrp_ , nr1x,  nr2x )
+          CALL fft_dlay_allocate( dffts, mype, root, nproc, comm, nogrp_ , nr1sx, nr2sx )
 
           CALL fft_dlay_set( dfftp, tk, nst, nr1, nr2, nr3, nr1x, nr2x, nr3x, &
             ub, lb, idx, ist(:,1), ist(:,2), nstp, nstpw, sstp, sstpw, st, stw )
@@ -218,8 +218,8 @@
           IF( ngm_ /= ngm ) CALL errore( ' pstickset ', ' inconsistent ngm ', abs( ngm - ngm_ ) )
           IF( ngs_ /= ngs ) CALL errore( ' pstickset ', ' inconsistent ngs ', abs( ngs - ngs_ ) )
 
-          CALL fft_dlay_allocate( dfftp, mype, nproc, comm, 1, max(nr1x, nr3x),  nr2x  )
-          CALL fft_dlay_allocate( dffts, mype, nproc, comm, 1, max(nr1sx, nr3sx), nr2sx )
+          CALL fft_dlay_allocate( dfftp, mype, root, nproc, comm, 1, max(nr1x, nr3x),  nr2x  )
+          CALL fft_dlay_allocate( dffts, mype, root, nproc, comm, 1, max(nr1sx, nr3sx), nr2sx )
 
           CALL fft_dlay_scalar( dfftp, ub, lb, nr1, nr2, nr3, nr1x, nr2x, nr3x, stw )
           CALL fft_dlay_scalar( dffts, ub, lb, nr1s, nr2s, nr3s, nr1sx, nr2sx, nr3sx, stw )

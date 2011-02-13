@@ -57,6 +57,7 @@ MODULE fft_types
     INTEGER :: mype               ! my processor id (starting from 0) in the fft group
     INTEGER :: comm               ! communicator of the fft gruop 
     INTEGER :: nproc              ! number of processor in the fft group
+    INTEGER :: root               ! root processor
     !
     !  task groups
     !
@@ -87,9 +88,9 @@ MODULE fft_types
 
 CONTAINS
 
-  SUBROUTINE fft_dlay_allocate( desc, mype, nproc, comm, nogrp, nx, ny )
+  SUBROUTINE fft_dlay_allocate( desc, mype, root, nproc, comm, nogrp, nx, ny )
     TYPE (fft_dlay_descriptor) :: desc
-    INTEGER, INTENT(in) :: mype, nproc, comm, nx, ny ! mype starting from 0
+    INTEGER, INTENT(in) :: mype, root, nproc, comm, nx, ny ! mype starting from 0
     INTEGER, INTENT(in) :: nogrp   ! number of task groups
     ALLOCATE( desc%nsp( nproc ) )
     ALLOCATE( desc%nsw( nproc ) )
@@ -120,6 +121,7 @@ CONTAINS
     desc%mype  = mype
     desc%comm  = comm
     desc%nproc = nproc
+    desc%root  = root
     desc%have_task_groups = .false.
     IF( nogrp > 1 ) &
        desc%have_task_groups = .true.
@@ -177,9 +179,9 @@ CONTAINS
 
 !=----------------------------------------------------------------------------=!
 
-  SUBROUTINE fft_box_allocate( desc, mype, nproc, comm, nat )
+  SUBROUTINE fft_box_allocate( desc, mype, root, nproc, comm, nat )
     TYPE (fft_dlay_descriptor) :: desc
-    INTEGER, INTENT(in) :: nat, nproc, mype, comm  ! mype starting from 0
+    INTEGER, INTENT(in) :: nat, nproc, mype, root, comm  ! mype starting from 0
     ALLOCATE( desc%irb( 3, nat ) )
     ALLOCATE( desc%imin3( nat ) )
     ALLOCATE( desc%imax3( nat ) )
@@ -195,6 +197,7 @@ CONTAINS
     desc%mype = mype
     desc%nproc = nproc
     desc%comm = comm
+    desc%root = root
     desc%have_task_groups = .false.
   END SUBROUTINE fft_box_allocate
 

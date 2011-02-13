@@ -288,8 +288,7 @@ CONTAINS
            npp  = dfft%tg_npp( me_p )
            nnp  = nx1*nx2
            !
-           CALL fft_scatter( aux, nx3, dfft%nogrp*dfft%tg_nnr, f, dfft%tg_nsw, dfft%tg_npp, iopt, use_tg, &
-                             dfft%me_pgrp, dfft%npgrp, dfft%pgrp_comm, dfft%nplist )
+           CALL fft_scatter( dfft, aux, nx3, dfft%nogrp*dfft%tg_nnr, f, dfft%tg_nsw, dfft%tg_npp, iopt, use_tg )
            !
         ELSE
            !
@@ -298,7 +297,7 @@ CONTAINS
            npp  = dfft%npp( me_p )
            nnp  = dfft%nnp
            !
-           CALL fft_scatter( aux, nx3, dfft%nnr, f, dfft%nsw, dfft%npp, iopt )
+           CALL fft_scatter( dfft, aux, nx3, dfft%nnr, f, dfft%nsw, dfft%npp, iopt )
            !
         ENDIF
         !
@@ -341,7 +340,7 @@ CONTAINS
            nppx = dfft%npp( me_p )
         ENDIF
         !
-        CALL fft_scatter( aux, nx3, dfft%nnr, f, dfft%nsp, dfft%npp, iopt )
+        CALL fft_scatter( dfft, aux, nx3, dfft%nnr, f, dfft%nsp, dfft%npp, iopt )
         !
 !$omp parallel default(shared)
 !$omp do
@@ -408,12 +407,11 @@ CONTAINS
         !
         IF( use_tg ) THEN
            !
-           CALL fft_scatter( aux, nx3, dfft%nogrp*dfft%tg_nnr, f, dfft%tg_nsw, dfft%tg_npp, iopt, use_tg, &
-                             dfft%me_pgrp, dfft%npgrp, dfft%pgrp_comm, dfft%nplist )
+           CALL fft_scatter( dfft, aux, nx3, dfft%nogrp*dfft%tg_nnr, f, dfft%tg_nsw, dfft%tg_npp, iopt, use_tg )
            !
         ELSE
            !
-           CALL fft_scatter( aux, nx3, dfft%nnr, f, dfft%nsw, dfft%npp, iopt )
+           CALL fft_scatter( dfft, aux, nx3, dfft%nnr, f, dfft%nsw, dfft%npp, iopt )
            !
         ENDIF
         !
@@ -434,7 +432,7 @@ CONTAINS
         ENDDO
 !$omp end parallel
         !
-        CALL fft_scatter( aux, nx3, dfft%nnr, f, dfft%nsp, dfft%npp, iopt )
+        CALL fft_scatter( dfft, aux, nx3, dfft%nnr, f, dfft%nsp, dfft%npp, iopt )
         !
      ENDIF
      !

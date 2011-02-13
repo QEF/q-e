@@ -44,7 +44,7 @@
       USE electrons_module,     ONLY: bmeshset
       USE electrons_base,       ONLY: distribute_bands
       USE problem_size,         ONLY: cpsizes
-      USE mp_global,            ONLY: me_bgrp, nproc_bgrp, nbgrp, my_bgrp_id, intra_bgrp_comm
+      USE mp_global,            ONLY: me_bgrp, root_bgrp, nproc_bgrp, nbgrp, my_bgrp_id, intra_bgrp_comm
       USE mp_global,            ONLY: get_ntask_groups
       USE core,                 ONLY: nlcc_any
       USE uspp,                 ONLY: okvan
@@ -115,7 +115,7 @@
       nogrp_ = get_ntask_groups()
 
       CALL pstickset( gamma_only, bg, gcutm, gkcut, gcutms, &
-        dfftp, dffts, ngw_ , ngm_ , ngs_ , me_bgrp, nproc_bgrp, intra_bgrp_comm, nogrp_ )
+        dfftp, dffts, ngw_ , ngm_ , ngs_ , me_bgrp, root_bgrp, nproc_bgrp, intra_bgrp_comm, nogrp_ )
       !
       !
       ! ... Initialize reciprocal space local and global dimensions
@@ -207,7 +207,7 @@
       USE kinds,            ONLY: DP
       use control_flags,    only: iprint, thdyn, ndr, nbeg, tbeg
       use io_global,        only: stdout, ionode
-      use mp_global,        only: nproc_bgrp, me_bgrp, intra_bgrp_comm
+      use mp_global,        only: nproc_bgrp, me_bgrp, intra_bgrp_comm, root_bgrp
       USE io_files,         ONLY: tmp_dir     
       use ions_base,        only: na, nsp, nat, tau_srt, ind_srt, if_pos, atm, na, pmass
       use cell_base,        only: at, alat, r_to_s, cell_init, deth
@@ -263,7 +263,7 @@
       !
       ALLOCATE( taub( 3, nat ) )
       !
-      CALL fft_box_allocate( dfftb, me_bgrp, nproc_bgrp, intra_bgrp_comm, nat )
+      CALL fft_box_allocate( dfftb, me_bgrp, root_bgrp, nproc_bgrp, intra_bgrp_comm, nat )
       !
       !  if tbeg = .true.  the geometry is given in the standard input even if
       !  we are restarting a previous run

@@ -16,7 +16,7 @@ SUBROUTINE data_structure( gamma_only )
   USE kinds,      ONLY : DP
   USE io_global,  ONLY : stdout
   USE mp,         ONLY : mp_max
-  USE mp_global,  ONLY : me_pool, nproc_pool, inter_pool_comm, intra_pool_comm
+  USE mp_global,  ONLY : me_pool, nproc_pool, inter_pool_comm, intra_pool_comm, root_pool
   USE mp_global,  ONLY : get_ntask_groups
   USE fft_base,   ONLY : dfftp, dffts
   USE cell_base,  ONLY : bg, tpiba
@@ -60,7 +60,7 @@ SUBROUTINE data_structure( gamma_only )
   nogrp = get_ntask_groups()
   !
   CALL pstickset( gamma_only, bg, gcutm, gkcut, gcutms, &
-                  dfftp, dffts, ngw_ , ngm_ , ngs_ , me_pool, nproc_pool, intra_pool_comm,   &
+                  dfftp, dffts, ngw_ , ngm_ , ngs_ , me_pool, root_pool, nproc_pool, intra_pool_comm,   &
                   nogrp )
   !
   !     on output, ngm_ and ngs_ contain the local number of G-vectors
