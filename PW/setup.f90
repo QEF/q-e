@@ -176,19 +176,10 @@ SUBROUTINE setup()
      ux=0.0_DP
      if (dft_is_gradient()) call compute_ux(m_loc,ux,nat)
      !
-     bfield=0.D0
-     !
-     IF ( i_cons == 2 ) THEN
-        !
-        ! ... angle theta between the magnetic moments and the z-axis is
-        ! ... constrained. Transform theta to radiants
-        !
-        mcons(1,:) = pi * mcons(1,:) / 180.D0
-        !
-     ELSE IF ( i_cons == 4 ) THEN
-        !
+     IF ( i_cons == 4 ) THEN
         bfield(:) = mcons(:,1)
-        !
+     ELSE
+        bfield=0.D0
      END IF
      !
   ELSE
@@ -207,10 +198,8 @@ SUBROUTINE setup()
      end if
      IF ( i_cons /= 0 .AND. nspin ==1) &
         CALL errore( 'setup', 'this i_cons requires a magnetic calculation ', 1 )
-     IF ( i_cons /= 0 .AND. i_cons /= 1 .AND. i_cons /= 5) &
+     IF ( i_cons /= 0 .AND. i_cons /= 1 ) &
         CALL errore( 'setup', 'this i_cons requires a non colinear run', 1 )
-     IF ( i_cons == 5 .AND. nspin /= 2 ) &
-        CALL errore( 'setup', 'i_cons can be 5 only with nspin=2', 1 )
   END IF
   !
   !  Set the different spin indices

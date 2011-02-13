@@ -1,4 +1,4 @@
-!
+
 ! Copyright (C) 2002-2011 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
@@ -655,36 +655,6 @@ SUBROUTINE iosys()
      !
      i_cons = 0
      !
-  CASE( 'total' )
-     !
-     IF ( nspin == 4 ) THEN
-        !
-        i_cons = 3
-        !
-        mcons(1,1) = fixed_magnetization(1)
-        mcons(2,1) = fixed_magnetization(2)
-        mcons(3,1) = fixed_magnetization(3)
-        !
-     ELSEIF ( nspin == 2 ) THEN
-        !
-        i_cons = 5
-        !
-        two_fermi_energies = .true.
-        !
-        mcons(3,1) = fixed_magnetization(3)
-        !
-        IF ( fixed_magnetization(1) /= 0.D0 .or. &
-             fixed_magnetization(2) /= 0.D0 ) &
-           CALL errore( 'iosys', 'only fixed_magnetization(3)' // &
-                      & ' can be specified with nspin=2 ', 1 )
-        !
-     ELSE
-        !
-        CALL errore( 'iosys','constrained total magnetization ' // &
-                   & 'requires nspin=2 or 4 ', 1 )
-        !
-     ENDIF
-     !
   CASE( 'atomic' )
      !
      IF ( nspin == 1 ) &
@@ -717,13 +687,6 @@ SUBROUTINE iosys()
         ENDDO
      ENDIF
      !
-  CASE( 'total direction' )
-     i_cons = 6
-     mcons(3,1) = fixed_magnetization(3)
-     IF ( mcons(3,1) < 0.D0 .or. mcons(3,1) > 180.D0 ) &
-        CALL errore( 'iosys','constrained magnetization angle: ' // &
-                   & 'theta must be within [0,180] degrees', 1 )
-     !
   CASE( 'atomic direction' )
      !
      IF ( nspin == 1 ) &
@@ -734,11 +697,37 @@ SUBROUTINE iosys()
      !
      DO nt = 1, ntyp
         !
-        theta = angle1(nt)
+        ! ... angle between the magnetic moments and the z-axis is
+        ! ... constrained. Transform angle from degrees to radiants
         !
-        mcons(3,nt) = cos(theta)
+        theta = angle1(nt)
+        mcons(3,nt) = cos(theta) * pi / 180.0_dp
         !
      ENDDO
+     !
+  CASE( 'total' )
+     !
+     IF ( nspin == 4 ) THEN
+        !
+        i_cons = 3
+        !
+        mcons(1,1) = fixed_magnetization(1)
+        mcons(2,1) = fixed_magnetization(2)
+        mcons(3,1) = fixed_magnetization(3)
+        !
+     ELSE
+        !
+        CALL errore( 'iosys','constrained total magnetization ' // &
+                   & 'requires nspin= 4 ', 1 )
+        !
+     ENDIF
+     !
+  CASE( 'total direction' )
+     i_cons = 6
+     mcons(3,1) = fixed_magnetization(3)
+     IF ( mcons(3,1) < 0.D0 .or. mcons(3,1) > 180.D0 ) &
+        CALL errore( 'iosys','constrained magnetization angle: ' // &
+                   & 'theta must be within [0,180] degrees', 1 )
      !
   CASE DEFAULT
      !

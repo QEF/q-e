@@ -927,17 +927,14 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 		         no constraint
 
 		'total': 
-		         total magnetization is constrained
-                         If nspin=4 (noncolin=.True.) constraint is imposed by
+		         total magnetization is constrained by
                          adding a penalty functional to the total energy:
 		    
 		         LAMBDA * SUM_{i} ( magnetization(i) - fixed_magnetization(i) )**2
                         
 		         where the sum over i runs over the three components of
                          the magnetization. Lambda is a real number (see below).
-                         If nspin=2 constraint is imposed by defining two Fermi
-                         energies for spin up and down.
-                         Only fixed_magnetization(3) can be defined in this case.
+                         Noncolinear case only. Use "tot_magnetization" for LSDA
 		
 		'atomic': 
                          atomic magnetization are constrained to the defined
