@@ -344,7 +344,7 @@
       REAL (KIND=DP), intent(IN)  :: tot_magnetization_
       REAL (KIND=DP), intent(IN)  :: nelec_
       REAL (KIND=DP), intent(OUT) :: nelup_, neldw_
-      LOGICAL :: integer_charge
+      LOGICAL :: integer_charge, integer_magnetization
       !
       integer_charge = ( ABS (nelec_ - NINT(nelec_)) < eps8 )
       !
@@ -355,7 +355,7 @@
             neldw_ = nelec_ - nelup_
          ELSE
             nelup_ = nelec_ / 2
-            neldw_ = neldw_
+            neldw_ = nelup_
          END IF
       ELSE
          ! tot_magnetization specified in input
@@ -363,16 +363,19 @@
          if ( (tot_magnetization_ > 0) .and. (nspin==1) ) &
                  CALL errore(' set_nelup_neldw  ', &
                  'tot_magnetization is inconsistent with nspin=1 ', 2 )
-         IF ( integer_charge) THEN
+         integer_magnetization = ( ABS( tot_magnetization_ - &
+                                   NINT(tot_magnetization_) ) < eps8 )
+         IF ( integer_charge .AND. integer_magnetization) THEN
             !
             ! odd  tot_magnetization requires an odd  number of electrons
             ! even tot_magnetization requires an even number of electrons
+            !
             if ( ((MOD(NINT(tot_magnetization_),2) == 0) .and. &
                   (MOD(NINT(nelec_),2)==1))               .or. &
                  ((MOD(NINT(tot_magnetization_),2) == 1) .and. &
                   (MOD(NINT(nelec_),2)==0))      ) &
-              CALL errore(' set_nelup_neldw ',                          &
-             'tot_magnetization is inconsistent with total number of electrons ', 2 )
+              CALL infomsg(' set_nelup_neldw ',                          &
+             'BEWARE: non-integer number of up and down electrons!' )
             !
             ! ... setting nelup/neldw
             !
