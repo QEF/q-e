@@ -37,8 +37,11 @@ nimage = 0
 neb_unit = find_free_unit()
 
 open(unit=neb_unit,file='neb.dat',status="unknown")
+dummy=""
+do while (LEN_TRIM(dummy)<1)
+read(parse_unit,fmt='(A256)',END=10) dummy
+enddo
 
-read(parse_unit,*) dummy
 if(trim(dummy)=="BEGIN") then
   do while (trim(dummy)/="END")
     read(parse_unit,*) dummy
@@ -62,7 +65,7 @@ if(trim(dummy)=="BEGIN") then
     endif
   enddo
 else
-write(0,*) "key word BEGIN missing"
+  write(0,*) "key word BEGIN missing"
 endif
 close(neb_unit)
 !------------------------------------------------
@@ -94,15 +97,25 @@ open(unit=unit_tmp_i,file=trim(engine_prefix)//trim(a_tmp)//".in")
 
 REWIND(parse_unit)
 
-read(parse_unit,*) dummy
+dummy=""
+do while (LEN_TRIM(dummy)<1)
+read(parse_unit,fmt='(A256)',END=10) dummy
+enddo
+
 if(trim(dummy)=="BEGIN") then
   do while (trim(dummy)/="END")
-    read(parse_unit,*) dummy
+    dummy=""
+    do while (LEN_TRIM(dummy)<1)
+    read(parse_unit,fmt='(A256)',END=10) dummy
+    enddo
+
     if(trim(dummy)=="BEGIN_ENGINE_INPUT") then
-
-        read(parse_unit,'(A256)') dummy
-
-        do while (trim(dummy)/="BEGIN_POSITIONS")
+       dummy=""
+       do while (LEN_TRIM(dummy)<1)
+       read(parse_unit,fmt='(A256)',END=10) dummy
+       enddo
+        
+       do while (trim(dummy)/="BEGIN_POSITIONS")
           if(myrank==root) write(unit_tmp_i,*) trim(dummy)
           read(parse_unit,'(A256)') dummy
         enddo
@@ -178,5 +191,7 @@ enddo
 deallocate(unit_tmp)
 
 close(parse_unit)
+!
+10 CONTINUE
 !
 end subroutine path_gen_inputs

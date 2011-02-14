@@ -250,7 +250,7 @@ SUBROUTINE compute_scf( fii, lii, stat  )
       !
       CALL clean_pw( .FALSE. )
       !
-      tcpu = get_clock( 'SM' )
+      tcpu = get_clock( 'NEB' )
       !
       IF ( nimage > 1 ) THEN
          !

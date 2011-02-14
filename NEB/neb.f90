@@ -105,9 +105,6 @@ PROGRAM neb
   close(stdinpath)
   !
   !
-  CALL set_engine_io_units()
-  !
-!  unit_tmp = find_free_unit()
   OPEN(unit_tmp, file=trim(engine_prefix)//"1.in")
   CALL read_namelists( prog='PW', unit=unit_tmp )
   CALL read_cards( prog='PW', unit=unit_tmp )
@@ -130,7 +127,6 @@ PROGRAM neb
     write(a_tmp,'(i3)')
     endif
 
-!    unit_tmp = find_free_unit()
     OPEN(unit_tmp,file=trim(engine_prefix)//trim(a_tmp)//".in") 
     CALL read_namelists( prog='PW', unit=unit_tmp )
     CALL read_cards( prog='PW', unit=unit_tmp )
@@ -143,6 +139,9 @@ PROGRAM neb
   CALL path_to_engine_fix_atom_pos()
   !
   CALL ioneb(xmlinput,attr)
+  !
+  !
+  CALL set_engine_io_units()
   !
   ! END INPUT RELATED
   !
