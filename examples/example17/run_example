@@ -13,10 +13,13 @@ if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
 $ECHO
 $ECHO "$EXAMPLE_DIR : starting"
 $ECHO
-$ECHO "This example shows how to use both pw.x and cp.x to calculate the"
+$ECHO "This example shows how to use neb.x to calculate the"
 $ECHO "minimum energy path (MEP) of the collinear proton transfer reaction:"
-$ECHO "  H2+H <==> H+H2."
-
+$ECHO "  H2+H <==> H+H2, within the Born-Oppenheimer approximation."
+$ECHO
+$ECHO "!!!!!Atention for neb.x NO STANDARD INPUT is allowed,"
+$ECHO "run with neb.x -inp input_file_name > output_file_name."
+$ECHO
 # set the needed environment variables
 . ../environment_variables
 
@@ -75,10 +78,8 @@ $ECHO " done"
 
 # how to run executables
 NEB_COMMAND="$PARA_PREFIX $BIN_DIR/neb.x $PARA_POSTFIX"
-CP_COMMAND="$PARA_PREFIX $BIN_DIR/cp.x $PARA_POSTFIX"
 $ECHO
 $ECHO "  running Born-Oppenheimer NEB as: $PW_COMMAND"
-$ECHO "  running cp.x as: $CP_COMMAND"
 $ECHO
 
 # clean TMP_DIR
@@ -89,11 +90,11 @@ $ECHO " done"
 # NEB calculation. Automatic choice of the climbing image.
 cat > H2+H.in << EOF
 BEGIN
-BEGIN_PATH_INPUT
+EGIN_PATH_INPUT
 &PATH
   restart_mode      = 'from_scratch'
   string_method     = 'neb',
-  nstep_path        = 20, 
+  nstep_path        = 20,
   ds                = 2.D0,
   opt_scheme        = "broyden",
   num_of_images     = 7,
@@ -129,13 +130,6 @@ BEGIN_ENGINE_INPUT
   pot_extrapolation = "second_order",
   wfc_extrapolation = "second_order",
 /
-ATOMIC_SPECIES
-H  1.00794  HUSPBE.RRKJ3
-K_POINTS { gamma }
-CELL_PARAMETERS { cubic }
-  12.00000  0.00000  0.00000
-   0.00000  5.00000  0.00000
-   0.00000  0.00000  5.00000
 BEGIN_POSITIONS
 FIRST_IMAGE
 ATOMIC_POSITIONS { bohr }
@@ -148,6 +142,9 @@ H   -1.55776676      0.00000000      0.00000000
 H    0.00000000      0.00000000      0.00000000
 H    4.56670009      0.00000000      0.00000000
 END_POSITIONS
+ATOMIC_SPECIES
+H  1.00794  HUSPBE.RRKJ3
+K_POINTS { gamma }
 END_ENGINE_INPUT
 END
 EOF
@@ -318,67 +315,5 @@ $ECHO " done"
 $ECHO "  cleaning $TMP_DIR...\c"
 rm -rf $TMP_DIR/*
 $ECHO " done"
-
-# NEB calculation. Automatic choice of the climbing image.
-cat > H2+H-cp.in << EOF
-&CONTROL
-  dt             = 10.D0,
-  calculation    = "neb",
-  restart_mode   = "from_scratch",
-  prefix         = "H2+H-cp"
-  outdir         = "$TMP_DIR/",
-  pseudo_dir     = "$PSEUDO_DIR/",
-  iprint         = 50,
-/
-&SYSTEM
-  ibrav     = 0,
-  celldm(1) = 1.D0,
-  nat       = 3,
-  ntyp      = 1,
-  nspin     = 2,
-  tot_magnetization = 1.0
-  ecutwfc   = 20.D0,
-  ecutrho   = 100.D0,
-  nr1b      = 12,
-  nr2b      = 12,
-  nr3b      = 12,
-/
-&ELECTRONS
-  electron_dynamics = "damp",
-  electron_damping  = 0.2D0,
-  emass             = 250.D0,
-  ortho_max         = 250,
-/
-&IONS
-  ds                = 2.D0,
-  opt_scheme        = "broyden",
-  num_of_images     = 7,
-  k_max             = 0.3D0,
-  k_min             = 0.2D0,
-  CI_scheme         = "auto",
-  path_thr          = 0.1D0,
-/
-ATOMIC_SPECIES
-H  1.00794  HUSPBE.RRKJ3
-PATH_ATOMIC_POSITIONS { bohr }
-first_image
-H   -4.56670009      0.00000000      0.00000000  1  0  0
-H    0.00000000      0.00000000      0.00000000  0  0  0
-H    1.55776676      0.00000000      0.00000000  1  0  0
-last_image
-H   -1.55776676      0.00000000      0.00000000
-H    0.00000000      0.00000000      0.00000000
-H    4.56670009      0.00000000      0.00000000
-K_POINTS { gamma }
-CELL_PARAMETERS { cubic }
-  12.00000  0.00000  0.00000
-   0.00000  5.00000  0.00000
-   0.00000  0.00000  5.00000
-EOF
-$ECHO "  running the NEB calculation with cp.x for H2+H => H+H2...\c"
-#$CP_COMMAND < H2+H-cp.in > H2+H-cp.out
-check_failure $?
-$ECHO " done"
-
 $ECHO
 $ECHO "$EXAMPLE_DIR: done"
