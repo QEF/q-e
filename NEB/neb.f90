@@ -11,7 +11,7 @@ PROGRAM neb
   !
   ! ... Nudged Elastic Band / Strings Method algorithm
   !
-  USE io_global,        ONLY : meta_ionode_id
+  USE io_global,        ONLY : meta_ionode_id, xmlinputunit
   USE io_files,         ONLY : find_free_unit
   USE parameters,       ONLY : ntypx, npk, lmaxx
   USE control_flags,    ONLY : conv_elec, conv_ions, lpath, gamma_only
@@ -41,10 +41,11 @@ PROGRAM neb
   !
   USE path_input_parameters_module, ONLY : allocate_path_input_ions
   !
+  USE iotk_module,   ONLY : iotk_open_read, iotk_close_read,iotk_attlenx
+  !
   IMPLICIT NONE
   !
   !
-  LOGICAL :: xmlinput = .false.
   CHARACTER (len=iotk_attlenx) :: attr
   !
   CHARACTER(len=256) :: engine_prefix
@@ -60,7 +61,10 @@ PROGRAM neb
   CHARACTER(len=256) :: parsing_file_name
   LOGICAL :: lfound_parsing_file, lfound_input_images
   !
+  LOGICAL :: lxml
+  !
   unit_tmp = 45
+  xmlinputunit = 45
   !
 #ifdef __PARA
   CALL mp_start(nproc,mpime,neb_comm)
@@ -79,15 +83,15 @@ PROGRAM neb
   engine_prefix = "pw_"
   !
   if(lfound_parsing_file) then
-  write(0,*) "parsing_file_name: ", trim(parsing_file_name)
+    write(0,*) "parsing_file_name: ", trim(parsing_file_name)
   call path_gen_inputs(trim(parsing_file_name),engine_prefix,input_images,root,neb_comm)
   !
   else
   !
-  write(0,*) "NO input file found, assuming nothing to parse."
-  write(0,*) "Searching argument -input_images or --input_images"
-  CALL input_images_getarg(input_images,lfound_input_images)
-  write(0,*) "Number of input images: ", input_images
+    write(0,*) "NO input file found, assuming nothing to parse."
+    write(0,*) "Searching argument -input_images or --input_images"
+    CALL input_images_getarg(input_images,lfound_input_images)
+    write(0,*) "Number of input images: ", input_images
   !
     IF(.not.lfound_input_images) CALL errore('string_methods', 'Nor file to parse nor input images found',1)
   !
@@ -106,15 +110,25 @@ PROGRAM neb
   !
   !
   OPEN(unit_tmp, file=trim(engine_prefix)//"1.in")
-  CALL read_namelists( prog='PW', unit=unit_tmp )
-  CALL read_cards( prog='PW', unit=unit_tmp )
+  CALL test_input_xml(unit_tmp,lxml)
+  CLOSE(unit_tmp)
+  if(.not.lxml) then
+    OPEN(unit_tmp, file=trim(engine_prefix)//"1.in")
+    CALL read_namelists( prog='PW', unit=unit_tmp )
+    CALL read_cards( prog='PW', unit=unit_tmp )
+    CLOSE(unit_tmp)
+  else
+    CALL iotk_open_read( unit_tmp, trim(engine_prefix)//"1.in", &
+           attr = attr, qe_syntax = .true.)
+    CALL read_xml('PW', attr = attr )
+    CALL iotk_close_read(unit_tmp)
+  endif
   CALL iosys()
   CALL engine_to_path_nat()
   CALL engine_to_path_alat()
   CALL allocate_path_input_ions(input_images)
   CALL engine_to_path_pos(1)
   CALL engine_to_path_fix_atom_pos()
-  CLOSE(unit_tmp)
 
   do i=2,input_images
     CALL set_engine_input_defaults()
@@ -128,17 +142,27 @@ PROGRAM neb
     endif
 
     OPEN(unit_tmp,file=trim(engine_prefix)//trim(a_tmp)//".in") 
-    CALL read_namelists( prog='PW', unit=unit_tmp )
-    CALL read_cards( prog='PW', unit=unit_tmp )
+    CALL test_input_xml(unit_tmp,lxml)
+    CLOSE(unit_tmp)
+    if(.not.lxml) then
+      OPEN(unit_tmp,file=trim(engine_prefix)//trim(a_tmp)//".in")
+      CALL read_namelists( prog='PW', unit=unit_tmp )
+      CALL read_cards( prog='PW', unit=unit_tmp )
+      CLOSE(unit_tmp)
+    else
+      CALL iotk_open_read( unit_tmp, trim(engine_prefix)//trim(a_tmp)//".in", &
+           attr = attr, qe_syntax = .true. )
+      CALL read_xml('PW', attr = attr )
+      CALL iotk_close_read(unit_tmp)
+    endif
     CALL iosys()
     CALL engine_to_path_pos(i)
-    CLOSE(unit_tmp)
   enddo
   !
   !
   CALL path_to_engine_fix_atom_pos()
   !
-  CALL ioneb(xmlinput,attr)
+  CALL ioneb()
   !
   !
   CALL set_engine_io_units()

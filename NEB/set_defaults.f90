@@ -36,7 +36,7 @@ END SUBROUTINE set_engine_input_defaults
 SUBROUTINE set_engine_io_units()
   !-----------------------------------------------------------------------------
   !
-  USE io_global, ONLY : stdout
+  USE io_global, ONLY : stdout, xmlinputunit
   USE io_files,  ONLY : find_free_unit
   !
   stdout = find_free_unit()

@@ -7,7 +7,7 @@
 !
 !
 !----------------------------------------------------------------------------
-SUBROUTINE ioneb(xmlinput,attr)
+SUBROUTINE ioneb()
   !-----------------------------------------------------------------------------
   !
   ! ...  this subroutine reads input data from standard input ( unit 5 )
@@ -60,13 +60,7 @@ SUBROUTINE ioneb(xmlinput,attr)
   ! ... "path" specific
   !
   !
-  USE read_xml_module,       ONLY : read_xml
-  USE iotk_module,           ONLY : iotk_open_read, iotk_close_read,iotk_attlenx
-  !
   IMPLICIT NONE
-  !
-  CHARACTER (len=iotk_attlenx), intent(in) :: attr
-  LOGICAL, intent(in) :: xmlinput
   !
   INTEGER  :: ia, image, nt
   REAL(DP) :: theta, phi
