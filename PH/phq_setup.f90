@@ -97,6 +97,8 @@ subroutine phq_setup
 
   USE mp,            ONLY : mp_max, mp_min
   USE mp_global,     ONLY : inter_pool_comm, nimage
+  !
+  USE acfdtest,      ONLY : acfdt_is_active, acfdt_num_der
 
   implicit none
 
@@ -138,7 +140,16 @@ subroutine phq_setup
   !
   ! 1) Computes the total local potential (external+scf) on the smooth grid
   !
-  call set_vrs (vrs, vltot, v%of_r, kedtau, v%kin_r, dfftp%nnr, nspin, doublegrid)
+!!!!!!!!!!!!!!!!!!!!!!!! ACFDT TEST !!!!!!!!!!!!!!!!
+  IF (acfdt_is_active) THEN
+     ! discard set_vrs for numerical derivatives
+     if (.not.acfdt_num_der) then 
+        call set_vrs (vrs, vltot, v%of_r, kedtau, v%kin_r, dfftp%nnr, nspin, doublegrid)
+     end if
+  ELSE
+     call set_vrs (vrs, vltot, v%of_r, kedtau, v%kin_r, dfftp%nnr, nspin, doublegrid)
+  ENDIF
+!!!!!!!!!!!!!!!!!!!!!!!!END OF  ACFDT TEST !!!!!!!!!!!!!!!!
   !
   ! 2) Set non linear core correction stuff
   !

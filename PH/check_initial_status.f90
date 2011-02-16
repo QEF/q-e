@@ -48,6 +48,8 @@ SUBROUTINE check_initial_status(auxdyn)
   USE mp,              ONLY : mp_bcast
   USE xml_io_base,     ONLY : create_directory
   !
+  USE acfdtest,        ONLY : acfdt_is_active
+  !
   IMPLICIT NONE
   !
   CHARACTER (LEN=256) :: auxdyn, filename
@@ -103,9 +105,17 @@ SUBROUTINE check_initial_status(auxdyn)
   !
   !  Create a new directory where the ph variables are saved and copy
   !  the charge density there.
-  !
-  IF ((ldisp.OR..NOT.lgamma.OR.modenum/=0).AND.(.NOT.lqdir)) &
+!!!!!!!!!!!!!!!!!!!!!!!! ACFDT TEST !!!!!!!!!!!!!!!!
+  IF (acfdt_is_active) THEN
+     ! ACFDT -test always write rho on file
+     CALL write_rho( rho, nspin )
+  ELSE  
+     ! this is the standard treatment
+     IF ((ldisp.OR..NOT.lgamma.OR.modenum/=0).AND.(.NOT.lqdir)) &
                                            CALL write_rho( rho, nspin )
+  ENDIF
+!!!!!!!!!!!!!!!!!!!!!!!! END OF ACFDT TEST !!!!!!!!!!!!!!!!
+  !
   CALL save_ph_input_variables()
   !
   IF (.NOT.recover) THEN

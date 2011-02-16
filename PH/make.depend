@@ -1,3 +1,4 @@
+acfdtest.o : ../Modules/kind.o
 add_dkmds.o : ../Modules/cell_base.o
 add_dkmds.o : ../Modules/ions_base.o
 add_dkmds.o : ../Modules/kind.o
@@ -194,6 +195,7 @@ check_initial_status.o : ../PW/io_rho_xml.o
 check_initial_status.o : ../PW/pwcom.o
 check_initial_status.o : ../PW/scf_mod.o
 check_initial_status.o : ../PW/symm_base.o
+check_initial_status.o : acfdtest.o
 check_initial_status.o : ph_restart.o
 check_initial_status.o : phcom.o
 check_initial_status.o : save_ph_input.o
@@ -864,6 +866,7 @@ phq_setup.o : ../PW/noncol.o
 phq_setup.o : ../PW/pwcom.o
 phq_setup.o : ../PW/scf_mod.o
 phq_setup.o : ../PW/symm_base.o
+phq_setup.o : acfdtest.o
 phq_setup.o : ph_restart.o
 phq_setup.o : phcom.o
 phq_setup.o : ramanm.o
@@ -1025,6 +1028,8 @@ run_pwscf.o : ../Modules/control_flags.o
 run_pwscf.o : ../Modules/input_parameters.o
 run_pwscf.o : ../Modules/io_files.o
 run_pwscf.o : ../PW/pwcom.o
+run_pwscf.o : ../PW/scf_mod.o
+run_pwscf.o : acfdtest.o
 run_pwscf.o : phcom.o
 run_pwscf.o : save_ph_input.o
 save_ph_input.o : ../Modules/io_files.o

@@ -23,6 +23,10 @@ SUBROUTINE run_pwscf(do_band)
   USE control_ph,      ONLY : done_bands, reduce_io, recover, tmp_dir_phq, &
                               ext_restart, bands_computed
   USE save_ph,         ONLY : tmp_dir_save
+  !
+  USE acfdtest,      ONLY : acfdt_is_active, acfdt_num_der, ir_point, delta_vrs
+  USE scf,           ONLY : vrs
+
  !
   IMPLICIT NONE
   !
@@ -54,7 +58,13 @@ SUBROUTINE run_pwscf(do_band)
   !
   CALL setup_nscf (xq)
   CALL init_run()
-  !
+!!!!!!!!!!!!!!!!!!!!!!!! ACFDT TEST !!!!!!!!!!!!!!!!
+  IF (acfdt_is_active) THEN
+    ! ACFDT mumerical derivative test: modify the potential
+    if (acfdt_num_der) vrs(ir_point,1)=vrs(ir_point,1) + delta_vrs
+  ENDIF
+!!!!!!!!!!!!!!!!!!!!!!!!END OF ACFDT TEST !!!!!!!!!!!!!!!!
+!
   IF (do_band) CALL electrons()
   !
   IF (.NOT.reduce_io.and.do_band) THEN

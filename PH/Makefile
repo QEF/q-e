@@ -7,6 +7,7 @@ MODFLAGS= $(MOD_FLAG)../iotk/src $(MOD_FLAG)../Modules \
           $(MOD_FLAG)../PW $(MOD_FLAG).
 
 PHOBJS = \
+acfdtest.o \
 add_dkmds.o \
 add_for_charges.o \
 add_zstar_ue.o \
@@ -236,3 +237,4 @@ clean :
 	- /bin/rm -f *.x *.o *.a *~ *.F90 *.d *.mod *.i *.L
 
 include make.depend
+# DO NOT DELETE
