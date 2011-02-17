@@ -172,8 +172,8 @@ EOF
 
 mkdir $TMP_DIR/$q.$irr
 cp -r $TMP_DIR/$PREFIX.* $TMP_DIR/$q.$irr
-mkdir $TMP_DIR/$q.$irr/_ph0$PREFIX.phsave
-cp -r $TMP_DIR/_ph0$PREFIX.phsave/* $TMP_DIR/$q.$irr/_ph0$PREFIX.phsave
+mkdir -p $TMP_DIR/$q.$irr/_ph0/$PREFIX.phsave
+cp -r $TMP_DIR/_ph0/$PREFIX.phsave/* $TMP_DIR/$q.$irr/_ph0/$PREFIX.phsave
 
 $ECHO "  running the phonon calculation for q= " $q " irr=" $irr "...\c"
 $PH_COMMAND < input.$q.$irr > output.$q.$irr
@@ -188,14 +188,14 @@ done
 for q in `seq 1 8 ` ; do
 for irr in `seq 1 6` ; do
 
-\cp -f $TMP_DIR/$q.$irr/_ph0$PREFIX.phsave/data-file.$q.$irr.xml $TMP_DIR/_ph0$PREFIX.phsave >& /dev/null
+\cp -f $TMP_DIR/$q.$irr/_ph0/$PREFIX.phsave/data-file.$q.$irr.xml $TMP_DIR/_ph0/$PREFIX.phsave >& /dev/null
 
 done 
 #
 #  collect also the representation 0 (contribution to the dynamical 
 #  matrix independent from the induced charge).
 #
-\cp -f $TMP_DIR/$q.1/_ph0$PREFIX.phsave/data-file.$q.0.xml $TMP_DIR/_ph0$PREFIX.phsave >& /dev/null
+\cp -f $TMP_DIR/$q.1/_ph0/$PREFIX.phsave/data-file.$q.0.xml $TMP_DIR/_ph0/$PREFIX.phsave >& /dev/null
 
 done 
 
