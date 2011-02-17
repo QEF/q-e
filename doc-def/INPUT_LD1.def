@@ -541,7 +541,7 @@ input_description -distribution {Quantum Espresso} -program ld1.x {
                                    the two channels for that Q.
 
 		    Note: if lpaw is true and which_augfun is set to AE real all-
-		    electron charge will be used, which will produce extremly
+		    electron charge will be used, which will produce extremely
 		    hard augmentation.
 		}
 	    }

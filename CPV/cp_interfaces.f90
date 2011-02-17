@@ -81,8 +81,6 @@
    PUBLIC :: self_vofhar
    PUBLIC :: localisation
    !
-   PUBLIC :: n_atom_wfc
-   !
    PUBLIC :: set_eitot
    PUBLIC :: set_evtot
    !
@@ -747,13 +745,6 @@
          TYPE (atoms_type), INTENT(in) :: atoms_m
          TYPE (boxdimensions), INTENT(in) :: ht
       END SUBROUTINE
-   END INTERFACE
-
-
-   INTERFACE n_atom_wfc
-      FUNCTION n_atom_wfc_x()
-         INTEGER n_atom_wfc_x
-      END FUNCTION
    END INTERFACE
 
    INTERFACE set_eitot

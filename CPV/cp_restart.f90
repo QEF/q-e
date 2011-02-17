@@ -52,15 +52,16 @@ MODULE cp_restart
       USE control_flags,            ONLY : gamma_only, force_pairing, trhow, tksw, twfcollect
       USE io_files,                 ONLY : psfile, pseudo_dir, iunwfc, &
                                            nwordwfc, tmp_dir, diropn
-      USE mp_global,                ONLY : intra_image_comm, me_image, nproc_image, intra_bgrp_comm
+      USE mp_global,                ONLY : intra_image_comm, me_image, nproc, &
+                                       nproc_pool, nproc_image, intra_bgrp_comm
       USE printout_base,            ONLY : title
       USE grid_dimensions,          ONLY : nr1, nr2, nr3, nr1x, nr2x
       USE smooth_grid_dimensions,   ONLY : nr1s, nr2s, nr3s
-      USE smallbox_grid_dim,            ONLY : nr1b, nr2b, nr3b
+      USE smallbox_grid_dim,        ONLY : nr1b, nr2b, nr3b
       USE gvect,                    ONLY : ngm, ngm_g
       USE gvecs,                    ONLY : ngms_g, ecuts, dual
       USE gvecw,                    ONLY : ngw, ngw_g, ecutwfc
-      USE gvect,       ONLY : ig_l2g, mill
+      USE gvect,                    ONLY : ig_l2g, mill
       USE electrons_base,           ONLY : nspin, nelt, nel, nudx
       USE cell_base,                ONLY : ibrav, alat, celldm, &
                                            symm_type, s_to_r
@@ -73,7 +74,7 @@ MODULE cp_restart
       USE mp,                       ONLY : mp_sum
       USE fft_base,                 ONLY : dfftp
       USE constants,                ONLY : pi
-      USE cp_interfaces,            ONLY : n_atom_wfc
+      USE uspp_param,               ONLY : n_atom_wfc
       USE global_version,           ONLY : version_number
       USE cp_main_variables,        ONLY : collect_lambda, descla, collect_zmat
       !
@@ -143,7 +144,7 @@ MODULE cp_restart
       REAL(DP)              :: omega, htm1(3,3), h(3,3)
       REAL(DP)              :: a1(3), a2(3), a3(3)
       REAL(DP)              :: b1(3), b2(3), b3(3)
-      REAL(DP)              :: nelec
+      REAL(DP)              :: natomwfc, nelec
       REAL(DP)              :: scalef
       LOGICAL               :: lsda
       REAL(DP)              :: s0, s1, cclock
@@ -393,12 +394,7 @@ MODULE cp_restart
 ! ... PARALLELISM
 !-------------------------------------------------------------------------------
          !
-         CALL iotk_write_begin( iunpun, "PARALLELISM" )
-         !
-         CALL iotk_write_dat( iunpun, &
-                              "GRANULARITY_OF_K-POINTS_DISTRIBUTION", kunit )
-         !
-         CALL iotk_write_end( iunpun, "PARALLELISM" )
+         CALL write_para( kunit, nproc, nproc_pool, nproc_image )
          !
       END IF
       !
@@ -542,7 +538,8 @@ MODULE cp_restart
          ! 
          CALL iotk_write_begin( iunpun, "BAND_STRUCTURE_INFO" )
          !
-         CALL iotk_write_dat( iunpun, "NUMBER_OF_ATOMIC_WFC", n_atom_wfc() )
+         natomwfc =  n_atom_wfc ( nat, ityp ) 
+         CALL iotk_write_dat( iunpun, "NUMBER_OF_ATOMIC_WFC", natomwfc )
          !
          nelec = nelt
          !

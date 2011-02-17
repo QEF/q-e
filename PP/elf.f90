@@ -9,23 +9,19 @@
 SUBROUTINE do_elf (elf)
   !-----------------------------------------------------------------------
   !
-  !  calculatation of the electron localization function
+  !  calculation of the electron localization function;
+  !     elf = 1/(1+d**2)
+  !  where
+  !     d = ( t(r) - t_von_Weizacker(r) ) / t_Thomas-Fermi(r)
+  !  and
+  !     t (r) = (hbar**2/2m) * \sum_{k,i} |grad psi_{k,i}|**2
+  !             (kinetic energy density)
+  !     t_von_Weizaecker(r) = (hbar**2/2m) * 0.25 * |grad rho(r)|**2/rho
+  !             (non-interacting boson)
+  !     t_Thomas-Fermi (r) = (hbar**2/2m) * 3/5 * (3*pi**2)**(2/3) * rho**(5/3)
+  !             (free electron gas)
   !
-  !  elf = 1/(1+d**2)
-  !
-  !          where
-  !
-  !  d = ( t(r) - t_von_Weizacker(r) ) / t_Thomas-Fermi(r)
-  !
-  !          and
-  !
-  !  t (r) = (hbar**2/2m) * \sum_{k,i} |grad psi_{k,i}|**2
-  !
-  !  t_von_Weizaecker(r) = (hbar**2/2m) * 0.25 * |grad rho(r)|**2/rho
-  !  t_von_Weizaecker(r) == t_noninteracting-boson
-  !
-  !  t_Thomas-Fermi (r) = (hbar**2/2m) * 3/5 * (3*pi**2)**(2/3) * rho**(5/3)
-  !
+  !  see also http://en.wikipedia.org/wiki/Electron_localization_function
   !
   USE kinds, ONLY: DP
   USE constants, ONLY: pi

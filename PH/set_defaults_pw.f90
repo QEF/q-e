@@ -48,6 +48,7 @@ SUBROUTINE setup_nscf (xq)
   USE start_k,            ONLY : nks_start, xk_start, wk_start
   USE paw_variables,      ONLY : okpaw
   USE modes,              ONLY : nsymq, invsymq !, gi, gimq, irgq, irotmq, minus_q
+  USE uspp_param,         ONLY : n_atom_wfc
   !
   IMPLICIT NONE
   !
@@ -55,8 +56,6 @@ SUBROUTINE setup_nscf (xq)
   !
   REAL (DP), ALLOCATABLE :: rtau (:,:,:)
   LOGICAL  :: minus_q, magnetic_sym, sym(48)
-  !
-  INTEGER, EXTERNAL :: n_atom_wfc
   !
   IF ( .NOT. ALLOCATED( force ) ) ALLOCATE( force( 3, nat ) )
   !
@@ -69,7 +68,7 @@ SUBROUTINE setup_nscf (xq)
   isolve = 0
   david = 4
   nbndx = david*nbnd
-  natomwfc = n_atom_wfc( nat, ityp )
+  natomwfc = n_atom_wfc( nat, ityp, noncolin )
   !
 #ifdef __PARA
   IF ( use_para_diag )  CALL check_para_diag( nbnd )

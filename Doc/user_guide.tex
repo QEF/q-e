@@ -2098,8 +2098,10 @@ Namelists \&IONS and \&CELL will be ignored. See Example 01.
 First perform a SCF calculation as above;
 then do a non-SCF calculation with the desired k-point grid and 
 number \texttt{nbnd} of bands. 
-Specify \texttt{calculation='bands'} if you are interested in calculating
-only the Kohn-Sham states for the given set of k-points; specify
+Use \texttt{calculation='bands'} if you are interested in calculating
+only the Kohn-Sham states for the given set of k-points
+(e.g. along symmetry lines: see for instance
+\texttt{http://www.cryst.ehu.es/cryst/get\_kvec.html}). Specify instead
 \texttt{calculation='nscf'} if you are interested in further processing 
 of the results of non-SCF calculations (for instance, in DOS calculations).
 In the latter case, you should specio a uniform grid of points.

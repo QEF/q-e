@@ -51,7 +51,7 @@ MODULE xml_io_base
 #ifdef EXX
             write_exx,                                                   &
 #endif
-            write_occ, write_bz,     &
+            write_occ, write_bz, write_para,    &
             write_phonon, write_rho_xml, write_wfc, write_eig,           &
             read_wfc, read_rho_xml
   !
@@ -1434,6 +1434,25 @@ MODULE xml_io_base
       !
     END SUBROUTINE write_bz
     !
+    !------------------------------------------------------------------------
+    SUBROUTINE write_para( kunit, nproc, nproc_pool, nproc_image )
+      !------------------------------------------------------------------------
+      !
+      INTEGER,  INTENT(IN) :: kunit, nproc, nproc_pool, nproc_image
+      !
+      !
+      CALL iotk_write_begin( iunpun, "PARALLELISM" )
+      CALL iotk_write_dat( iunpun, &
+                              "GRANULARITY_OF_K-POINTS_DISTRIBUTION", kunit )
+      CALL iotk_write_dat( iunpun, "NUMBER_OF_PROCESSORS", nproc )
+      CALL iotk_write_dat( iunpun, &
+                              "NUMBER_OF_PROCESSORS_PER_POOL", nproc_pool )
+      CALL iotk_write_dat( iunpun, &
+                              "NUMBER_OF_PROCESSORS_PER_IMAGE", nproc_image )
+      CALL iotk_write_end( iunpun, "PARALLELISM" )
+      !
+      !
+    END SUBROUTINE write_para
     !------------------------------------------------------------------------
     SUBROUTINE write_phonon( modenum, xqq )
       !------------------------------------------------------------------------

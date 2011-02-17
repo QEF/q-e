@@ -412,21 +412,7 @@ MODULE pw_restart
 ! ... PARALLELISM
 !-------------------------------------------------------------------------------
          !
-         CALL iotk_write_begin( iunpun, "PARALLELISM" )
-         !
-         CALL iotk_write_dat( iunpun, &
-                              "GRANULARITY_OF_K-POINTS_DISTRIBUTION", kunit )
-         !
-         CALL iotk_write_dat( iunpun, &
-                              "NUMBER_OF_PROCESSORS", nproc )
-         !
-         CALL iotk_write_dat( iunpun, &
-                              "NUMBER_OF_PROCESSORS_PER_POOL", nproc_pool )
-         !
-         CALL iotk_write_dat( iunpun, &
-                              "NUMBER_OF_PROCESSORS_PER_IMAGE", nproc_image )
-         !
-         CALL iotk_write_end( iunpun, "PARALLELISM" )
+         CALL write_para( kunit, nproc, nproc_pool, nproc_image ) 
          !
 !-------------------------------------------------------------------------------
 ! ... CHARGE DENSITY

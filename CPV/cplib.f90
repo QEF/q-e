@@ -1479,41 +1479,6 @@ SUBROUTINE print_lambda_x( lambda, n, nshow, ccc, iunit )
     RETURN
 END SUBROUTINE print_lambda_x
 !-----------------------------------------------------------------------
-FUNCTION n_atom_wfc_x( )
-!----------------------------------------------------------------------------
-  !
-  ! ... Find max number of bands needed
-  !
-  USE ions_base,        ONLY : na, nsp
-  USE kinds,            ONLY : DP
-  USE uspp_param,       ONLY : upf
-  !
-  IMPLICIT NONE
-  !
-  INTEGER  :: n_atom_wfc_x
-  INTEGER  :: is, n
-  !
-  n_atom_wfc_x = 0
-  !
-  DO is = 1, nsp
-     !
-     DO n = 1, upf(is)%nwfc
-        !
-        IF ( upf(is)%oc(n) >= 0.D0 ) THEN
-           !
-           n_atom_wfc_x = n_atom_wfc_x + na(is) * ( 2*upf(is)%lchi(n) + 1 )
-           !
-        END IF
-        !
-     END DO
-     !
-  END DO
-  !
-  RETURN
-END FUNCTION
-
-!
-!
 !
 !-----------------------------------------------------------------------
       SUBROUTINE denlcc( nnr, nspin, vxcr, sfac, drhocg, dcc )

@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2004 PWSCF group
+! Copyright (C) 2004-2011 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -14,6 +14,7 @@ MODULE uspp_param
   USE pseudo_types, ONLY : pseudo_upf
   !
   SAVE
+  PUBLIC :: n_atom_wfc
   !
   TYPE (pseudo_upf),  ALLOCATABLE, TARGET :: upf(:)
 
@@ -33,9 +34,64 @@ MODULE uspp_param
        nvb,                  &! number of species with Vanderbilt PPs (CPV)
        ish(npsx)              ! for each specie the index of the first beta 
                               ! function: ish(1)=1, ish(i)=1+SUM(nh(1:i-1))
-
+CONTAINS
+  !
+  !----------------------------------------------------------------------------
+  FUNCTION n_atom_wfc( nat, ityp, noncolin )
+  !----------------------------------------------------------------------------
+  !
+  ! ... Find number of starting atomic orbitals
+  !
+  IMPLICIT NONE
+  !
+  INTEGER, INTENT(IN)  :: nat, ityp(nat)
+  LOGICAL, INTENT(IN), OPTIONAL  :: noncolin
+  INTEGER  :: n_atom_wfc
+  !
+  INTEGER  :: na, nt, n
+  LOGICAL  :: non_col
+  !
+  !
+  non_col = .FALSE.
+  IF ( PRESENT (noncolin) ) non_col=noncolin
+  n_atom_wfc = 0
+  !
+  DO na = 1, nat
+     !
+     nt = ityp(na)
+     !
+     DO n = 1, upf(nt)%nwfc
+        !
+        IF ( upf(nt)%oc(n) >= 0.D0 ) THEN
+           !
+           IF ( non_col ) THEN
+              !
+              IF ( upf(nt)%has_so ) THEN
+                 !
+                 n_atom_wfc = n_atom_wfc + 2 * upf(nt)%lchi(n)
+                 !
+                 IF ( ABS( upf(nt)%jchi(n)-upf(nt)%lchi(n) - 0.5D0 ) < 1.D-6 ) &
+                    n_atom_wfc = n_atom_wfc + 2
+                 !
+              ELSE
+                 !
+                 n_atom_wfc = n_atom_wfc + 2 * ( 2 * upf(nt)%lchi(n) + 1 )
+                 !
+              END IF
+              !
+           ELSE
+              !
+              n_atom_wfc = n_atom_wfc + 2 * upf(nt)%lchi(n) + 1
+              !
+           END IF
+        END IF
+     END DO
+  END DO
+  !
+  RETURN
+  !
+  END FUNCTION n_atom_wfc
 END MODULE uspp_param
-!
 MODULE uspp
   !
   ! Ultrasoft PPs:

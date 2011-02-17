@@ -64,7 +64,7 @@ SUBROUTINE setup()
                                  isolve, niter, noinv, nosym, nosym_evc, &
                                  nofrac, lbands, use_para_diag, gamma_only
   USE cellmd,             ONLY : calc
-  USE uspp_param,         ONLY : upf
+  USE uspp_param,         ONLY : upf, n_atom_wfc
   USE uspp,               ONLY : okvan
   USE ldaU,               ONLY : lda_plus_u, Hubbard_U, &
                                  Hubbard_l, Hubbard_alpha, Hubbard_lmax, oatwfc
@@ -94,7 +94,7 @@ SUBROUTINE setup()
   LOGICAL  :: magnetic_sym
   REAL(DP) :: iocc, ionic_charge
   !
-  INTEGER, EXTERNAL :: n_atom_wfc, set_Hubbard_l
+  INTEGER, EXTERNAL :: set_Hubbard_l
   !
   ! ... okvan/okpaw = .TRUE. : at least one pseudopotential is US/PAW
   !
@@ -361,7 +361,7 @@ SUBROUTINE setup()
   !
   ! ... set number of atomic wavefunctions
   !
-  natomwfc = n_atom_wfc( nat, ityp )
+  natomwfc = n_atom_wfc( nat, ityp, noncolin )
   !
   ! ... set the max number of bands used in iterative diagonalization
   !
@@ -656,62 +656,6 @@ SUBROUTINE setup()
   RETURN
   !
 END SUBROUTINE setup
-!
-!----------------------------------------------------------------------------
-FUNCTION n_atom_wfc( nat, ityp )
-  !----------------------------------------------------------------------------
-  !
-  ! ... Find number of starting atomic orbitals
-  !
-  USE uspp_param,       ONLY : upf
-  USE noncollin_module, ONLY : noncolin
-  !
-  IMPLICIT NONE
-  !
-  INTEGER, INTENT(IN)  :: nat, ityp(nat)
-  !
-  INTEGER  :: n_atom_wfc
-  !
-  INTEGER  :: na, nt, n
-  !
-  !
-  n_atom_wfc = 0
-  !
-  DO na = 1, nat
-     !
-     nt = ityp(na)
-     !
-     DO n = 1, upf(nt)%nwfc
-        !
-        IF ( upf(nt)%oc(n) >= 0.D0 ) THEN
-           !
-           IF ( noncolin ) THEN
-              !
-              IF ( upf(nt)%has_so ) THEN
-                 !
-                 n_atom_wfc = n_atom_wfc + 2 * upf(nt)%lchi(n)
-                 !
-                 IF ( ABS( upf(nt)%jchi(n)-upf(nt)%lchi(n) - 0.5D0 ) < 1.D-6 ) &
-                    n_atom_wfc = n_atom_wfc + 2
-                 !
-              ELSE
-                 !
-                 n_atom_wfc = n_atom_wfc + 2 * ( 2 * upf(nt)%lchi(n) + 1 )
-                 !
-              END IF
-              !
-           ELSE
-              !
-              n_atom_wfc = n_atom_wfc + 2 * upf(nt)%lchi(n) + 1
-              !
-           END IF
-        END IF
-     END DO
-  END DO
-  !
-  RETURN
-  !
-END FUNCTION n_atom_wfc
 !
 !----------------------------------------------------------------------------
 SUBROUTINE check_para_diag( nbnd )
