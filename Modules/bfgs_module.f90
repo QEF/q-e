@@ -167,7 +167,7 @@ CONTAINS
       LOGICAL  :: lwolfe
       REAL(DP) :: dE0s, den
       ! ... for scaled coordinates
-      REAL(DP) :: hinv(3,3),g(3,3),ginv(3,3),garbage
+      REAL(DP) :: hinv(3,3),g(3,3),ginv(3,3),garbage, omega
       !
       !
       n = SIZE( pos_in ) + 9
@@ -196,7 +196,7 @@ CONTAINS
       !
       ! ... the BFGS file read (pos & grad) in scaled coordinates
       !
-      call invmat(3, h, hinv, garbage)
+      call invmat(3, h, hinv, omega)
       hinv_block = 0.d0
       FORALL ( k=0:nat-1, i=1:3, j=1:3 ) hinv_block(i+3*k,j+3*k) = hinv(i,j)
       !
@@ -205,7 +205,7 @@ CONTAINS
       call invmat(3,g,ginv,garbage)
       metric = 0.d0
       FORALL ( k=0:nat-1,   i=1:3, j=1:3 ) metric(i+3*k,j+3*k) = g(i,j)
-      FORALL ( k=nat:nat+2, i=1:3, j=1:3 ) metric(i+3*k,j+3*k) = 10.0* ginv(i,j)
+      FORALL ( k=nat:nat+2, i=1:3, j=1:3 ) metric(i+3*k,j+3*k) = 0.04 * omega * ginv(i,j)
       !
       ! ... generate bfgs vectors for the degrees of freedom and their gradients
       pos = 0.0
