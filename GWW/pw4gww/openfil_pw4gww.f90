@@ -19,16 +19,15 @@ SUBROUTINE openfil_pw4gww()
   use control_flags,  ONLY:  twfcollect
   USE io_files,       ONLY : prefix, iunwfc, nwordwfc, iunat, iunsat, &
                              diropn, nwordatwfc
-  USE noncollin_module, ONLY : npol
+  USE noncollin_module, ONLY : npol, noncolin
   USE ldaU,             ONLY : lda_plus_u
   USE basis,            ONLY : natomwfc
+  USE uspp_param,       ONLY : n_atom_wfc
   USE ions_base,        ONLY : nat, ityp
   !
   IMPLICIT NONE
   !
   LOGICAL       :: exst
-  !
-  INTEGER, EXTERNAL :: n_atom_wfc
   !
   twfcollect=.false.
   !
@@ -59,7 +58,7 @@ SUBROUTINE openfil_pw4gww()
   ! ... iunocc contains the atomic occupations computed in new_ns
   ! ... it is opened and closed for each reading-writing operation
   !
-  natomwfc = n_atom_wfc( nat, ityp )
+  natomwfc = n_atom_wfc( nat, ityp, noncolin )
   nwordatwfc = 2*npwx*natomwfc*npol
   !
   IF ( lda_plus_u ) then
