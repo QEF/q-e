@@ -1,15 +1,14 @@
-New in CVS version:
+New in 4.3 version:
 
   * CP only, experimental: parallelization over Kohn-Sham states
   * Dispersion interactions (van der Waals) with nonlocal functional
-  * New xml-based input - still experimental
   * Additions to projwfc: k-resolved DOS, LDOS integrated in selected
     real-space regions
   * Constant-volume variable-cell optimization
   * Non-colinear and spin-orbit PAW
   * Penalty functional technique in DFT+U calculations (CP only)
 
-Incompatible changes in CVS version:
+Incompatible changes in 4.3 version:
 
   * pw.x no longer performs NEB calculations. NEB is now computed
     by a separate code, NEB/neb.x . NEB-specific variables are no longer
@@ -35,7 +34,7 @@ Incompatible changes in CVS version:
  	np, nm		nl, nlm
  	nps, nms	nls, nlsm
 
-Fixed in CVS version:
+Fixed in 4.3 version:
 
   * CP: Input external pressure is in KBar and not in GPa like it was
     formerly in CP. Input value for variable "press" in cell namelist

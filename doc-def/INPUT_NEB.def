@@ -183,4 +183,4 @@ input_description -distribution {Quantum Espresso} -package NEB -program neb.x {
     	    }
     	}
     }
-
+}
