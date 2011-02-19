@@ -7,10 +7,13 @@ LC_ALL=C
 export LC_ALL
 
 #
-VERSION=4.2
-#
+VERSION=4.3a
 ESPRESSO_DIR=espresso-$VERSION
 GUI=PWgui-$VERSION
+# options (yes/no)
+do_doc=no
+do_GUI=no
+do_ChangeLogs=no
 
 # BEWARE: 
 # in order to build the .html and .txt documentation in Doc, 
@@ -23,40 +26,45 @@ if test -d $ESPRESSO_DIR; then /bin/rm -rf $ESPRESSO_DIR; fi
 if test -d $ESPRESSO_DIR-Save; then /bin/rm -rf $ESPRESSO_DIR-Save; fi
 /bin/rm espresso-$VERSION.tar.gz  espresso-$VERSION.lst
 /bin/rm espresso-$VERSION-examples.tar.gz  espresso-$VERSION-examples.lst
-/bin/rm $GUI.tar.gz  $GUI.lst
+if test "$do_GUI" = "yes" ; then /bin/rm $GUI.tar.gz  $GUI.lst ; fi
 
 # produce updated ChangeLogs
 
-make log
-mv ChangeLog Doc/ChangeLog-$VERSION
-mv ChangeLog.html Doc/ChangeLog-$VERSION.html
+if test "$do_ChangeLogs" = "yes" ; then
+  make log
+  mv ChangeLog Doc/ChangeLog-$VERSION
+  mv ChangeLog.html Doc/ChangeLog-$VERSION.html
+fi
 
 # produce documentation
-
-make doc
-cd doc-def/; make clean ; cd ../
+if test "$do_doc" = "yes" ; then
+  make doc
+  cd doc-def/; make clean ; cd ../
+fi
 
 # package using Makefile
 
 make tar
-make tar-gui PWGUI_VERSION=$VERSION
+if test "$do_GUI" = "yes" ; then make tar-gui PWGUI_VERSION=$VERSION ; fi
 
 # unpackage in directory with version
 
 mkdir $ESPRESSO_DIR $ESPRESSO_DIR-Save
 cd $ESPRESSO_DIR 
 tar -xzf ../espresso.tar.gz
-tar -xzf ../$GUI.tgz
-/bin/rm ../$GUI.tgz ../espresso.tar.gz
+/bin/rm ../espresso.tar.gz
+if test "$do_GUI" = "yes" ; then
+  tar -xzf ../$GUI.tgz
+  /bin/rm ../$GUI.tgz 
+fi
 cd ..
 
-mv  $ESPRESSO_DIR/plugins/archive/*.tar.gz $ESPRESSO_DIR-Save/
-/bin/rm -r  $ESPRESSO_DIR/TDDFPT
-
-tar -cvzf $GUI.tar.gz $ESPRESSO_DIR/$GUI >  $GUI.lst
-mv  $ESPRESSO_DIR/$GUI $ESPRESSO_DIR-Save/
-echo "$GUI.tar.gz saved in directory:" `pwd`
-echo "List of files in $GUI.lst"
+if test "$do_GUI" = "yes" ; then
+  tar -cvzf $GUI.tar.gz $ESPRESSO_DIR/$GUI >  $GUI.lst
+  mv  $ESPRESSO_DIR/$GUI $ESPRESSO_DIR-Save/
+  echo "$GUI.tar.gz saved in directory:" `pwd`
+  echo "List of files in $GUI.lst"
+fi
 
 tar -cvzf espresso-$VERSION-examples.tar.gz  $ESPRESSO_DIR/examples \
     $ESPRESSO_DIR/pseudo $ESPRESSO_DIR/tests $ESPRESSO_DIR/cptests  \
