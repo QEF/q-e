@@ -198,6 +198,10 @@ done
 \cp -f $TMP_DIR/$q.1/_ph0/$PREFIX.phsave/data-file.$q.0.xml $TMP_DIR/_ph0/$PREFIX.phsave >& /dev/null
 
 done 
+#
+# cp electric field part
+#
+\cp -f $TMP_DIR/1.1/_ph0/$PREFIX.phsave/data-file.1.xml $TMP_DIR/_ph0/$PREFIX.phsave >& /dev/null
 
 cat > alas.ph.in << EOF
 phonons of AlAs
