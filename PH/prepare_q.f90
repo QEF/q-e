@@ -148,11 +148,9 @@ SUBROUTINE prepare_q(auxdyn, do_band, do_iq, setup_pw, iq)
      ENDIF
   ENDDO
 !
-!  There are two special cases. When start_irr=0 and last_irr=0 we generate only
-!  the displacement patterns, and do not calculate the bands. If this q
-!  has been already calculated we only diagonalize the dynamical matrix
+!  If this q has been already calculated we only diagonalize the dynamical 
+!  matrix
 !
-  IF ( start_irr == 0 .AND. last_irr == 0 ) do_band=.FALSE.
 
   IF ( done_iq(iq) == 1 ) do_band=.FALSE.
 

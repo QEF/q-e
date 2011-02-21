@@ -57,8 +57,6 @@ subroutine dynmatrix
   integer :: icart, jcart
   logical :: ldiag_loc
   !
-  IF (start_irr==0.and.last_irr==0) RETURN
-  !
   call start_clock('dynmatrix')
   ldiag_loc=ldiag.OR.(nat_todo_input > 0).OR.all_comp
   !

@@ -36,9 +36,11 @@ SUBROUTINE check_initial_status(auxdyn)
   USE output,          ONLY : fildyn
   USE control_ph,      ONLY : ldisp, recover, done_bands,  &
                               start_q, last_q, current_iq, tmp_dir_ph, lgamma, &
-                              ext_recover, ext_restart, tmp_dir_phq, lqdir
+                              ext_recover, ext_restart, tmp_dir_phq, lqdir, &
+                              start_irr, last_irr
   USE save_ph,         ONLY : tmp_dir_save
-  USE ph_restart,      ONLY : ph_readfile, check_status_run, init_status_run
+  USE ph_restart,      ONLY : ph_readfile, check_status_run, init_status_run, &
+                              ph_writefile
   USE start_k,         ONLY : nks_start
   USE save_ph,         ONLY : save_ph_input_variables
   USE io_rho_xml,      ONLY : write_rho
@@ -47,6 +49,7 @@ SUBROUTINE check_initial_status(auxdyn)
   USE io_files,        ONLY : prefix
   USE mp,              ONLY : mp_bcast
   USE xml_io_base,     ONLY : create_directory
+  USE mp_global,       ONLY : mp_global_end
   !
   USE acfdtest,        ONLY : acfdt_is_active
   !
@@ -146,6 +149,13 @@ SUBROUTINE check_initial_status(auxdyn)
      !
      CALL init_status_run()
      CALL init_representations()
+     IF ((start_irr==0).AND.(last_irr==0)) THEN
+        CALL ph_writefile('init',0)
+        CALL clean_pw(.FALSE.)
+        CALL close_files()
+        CALL mp_global_end()
+        STOP
+     ENDIF
      !
   END IF
   !
