@@ -36,7 +36,7 @@ SUBROUTINE export_upf(iunps)
   !CHARACTER(len=*),INTENT(IN) :: filename
   INTEGER,INTENT(IN)::iunps
   !
-  integer :: ibeta, jbeta, kbeta, l, l1, l2
+  integer :: ibeta, jbeta, kbeta, l, ind, l1, l2
   !
   !     Local variables
   !
@@ -61,7 +61,7 @@ SUBROUTINE export_upf(iunps)
   ENDIF
   upf%author=trim(author)
   upf%date=trim(day)
-  upf%nv = "2.1.0" ! format version
+  upf%nv = "2.0.1" ! format version
   !
   upf%zp   = zval
   upf%nlcc = nlcc
@@ -125,18 +125,23 @@ SUBROUTINE export_upf(iunps)
   ! when possible, write semilocal PP's in the UPF file - may be
   ! useful if one wants to use PPs in the UPF format in other codes
   !
-  if( pseudotype == 1 .and. rel < 2 ) then
-        !lam=lls(ns)
-        !if ( rel < 2 .or. lls(ns) == 0 .or. &
-        !     abs(jjs(ns)-lls(ns)+0.5_dp) < 0.001_dp) then
-        !   ind=1
-        !else if ( rel == 2 .and. lls(ns) > 0 .and. &
-        !     abs(jjs(ns)-lls(ns)-0.5_dp) < 0.001_dp) then
-        !   ind=2
-        !endif
-     allocate(upf%vnl(1:grid%mesh, 0:upf%lmax))
-     do l=0, upf%lmax
-        upf%vnl(1:grid%mesh, l) = vnl(1:grid%mesh, l, 1) + vpsloc(1:grid%mesh)
+  if( pseudotype == 1 ) then
+      if ( rel == 2 ) then
+        allocate(upf%vnl(1:grid%mesh, 0:upf%lmax,2))
+     else
+        allocate(upf%vnl(1:grid%mesh, 0:upf%lmax,1))
+     end if
+     do nb=1, nbeta
+        l=lls(nb)
+        if ( rel < 2 .or. l == 0 .or. &
+             abs(jjs(nb)-l+0.5_dp) < 0.001_dp) then
+           ind = 1
+        else if ( rel == 2 .and. l > 0 .and. &
+                  abs(jjs(nb)-l-0.5_dp) < 0.001_dp) then
+           ind = 2
+        endif
+        upf%vnl(1:grid%mesh,l,ind) = vnl(1:grid%mesh,l,ind) + &
+                                     vpsloc(1:grid%mesh)
      end do
   end if
   !

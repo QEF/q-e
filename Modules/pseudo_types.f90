@@ -62,7 +62,7 @@
           CHARACTER(len=11) :: nv       ! UPF file three-digit version i.e. 2.0.0
           INTEGER :: lmax               ! maximum l component in beta
           INTEGER :: lmax_rho           ! max l componet in charge (should be 2*lmax)
-          REAL(DP), POINTER :: vnl(:,:) ! vnl(mesh,lmax) = V(r)_l
+          REAL(DP), POINTER :: vnl(:,:,:) ! vnl(i,l,s) = V(r_i)_{ls}
                                         ! only for single-channel NC PP
           ! Wavefunctions and projectors
           INTEGER :: nwfc               ! number of atomic wavefunctions

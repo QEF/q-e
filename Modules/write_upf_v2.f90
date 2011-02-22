@@ -1,4 +1,4 @@
-!
+!j
 ! Copyright (C) 2008-2011 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
@@ -284,15 +284,21 @@ SUBROUTINE write_upf_v2(u, upf, conf) !
       INTEGER :: ierr ! /= 0 if something went wrong
 
       CHARACTER(len=iotk_attlenx) :: attr
-      INTEGER :: l
+      INTEGER :: nb, l, ind
       !
       CALL iotk_write_begin(u, 'PP_SEMILOCAL')
       !
       ! Write V_l(r)
-      DO l = 0,upf%lmax
-        CALL iotk_write_attr(attr, 'angular_momentum',l, first=.true.)
+      DO nb = 1,upf%nbeta
+        l = upf%lll(nb)
+        ind = 1
+        CALL iotk_write_attr(attr, 'L',l, first=.true.)
+        IF ( upf%has_so ) THEN
+           CALL iotk_write_attr(attr, 'J', upf%jjj(nb))
+           IF ( l > 0 .AND. ABS (upf%jjj(nb)-l-0.5_dp) < 0.001_dp) ind = 2
+        ENDIF
         CALL iotk_write_dat(u, 'PP_VNL'//iotk_index(l), &
-                             upf%vnl(:,l), attr=attr, columns=4)
+                            upf%vnl(:,l,ind), attr=attr, columns=4)
       END DO
       !
       CALL iotk_write_end(u, 'PP_SEMILOCAL')
