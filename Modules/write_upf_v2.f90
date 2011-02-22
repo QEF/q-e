@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2008 Quantum ESPRESSO group
+! Copyright (C) 2008-2011 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -65,10 +65,12 @@ SUBROUTINE write_upf_v2(u, upf, conf) !
    IF(.not. upf%tcoulombp) THEN
       CALL iotk_write_dat(u, 'PP_LOCAL', upf%vloc, columns=4)
    ELSE
-         CALL iotk_write_attr(attr, 'type', '1/r', first=.true.)
-         CALL iotk_write_attr(attr, 'comment', 'Coulomb 1/r potential')
+      CALL iotk_write_attr(attr, 'type', '1/r', first=.true.)
+      CALL iotk_write_attr(attr, 'comment', 'Coulomb 1/r potential')
       CALL iotk_write_empty(u, 'PP_NLCC', attr=attr)
    ENDIF
+   ! Write potentials in semilocal form (if existing)
+   IF ( ASSOCIATED (upf%vnl) ) CALL write_semilocal(u, upf)
    ! Write nonlocal components: projectors, augmentation, hamiltonian elements
    CALL write_nonlocal(u, upf)
    ! Write initial pseudo wavefunctions
@@ -274,6 +276,28 @@ SUBROUTINE write_upf_v2(u, upf, conf) !
       !
       RETURN
    END SUBROUTINE write_mesh
+   !
+   SUBROUTINE write_semilocal(u, upf)
+      IMPLICIT NONE
+      INTEGER,INTENT(IN)           :: u    ! i/o unit
+      TYPE(pseudo_upf),INTENT(IN)  :: upf  ! the pseudo data
+      INTEGER :: ierr ! /= 0 if something went wrong
+
+      CHARACTER(len=iotk_attlenx) :: attr
+      INTEGER :: l
+      !
+      CALL iotk_write_begin(u, 'PP_SEMILOCAL')
+      !
+      ! Write V_l(r)
+      DO l = 0,upf%lmax
+        CALL iotk_write_attr(attr, 'angular_momentum',l, first=.true.)
+        CALL iotk_write_dat(u, 'PP_VNL'//iotk_index(l), &
+                             upf%vnl(:,l), attr=attr, columns=4)
+      END DO
+      !
+      CALL iotk_write_end(u, 'PP_SEMILOCAL')
+      !
+   END SUBROUTINE write_semilocal
    !
    SUBROUTINE write_nonlocal(u, upf)
       IMPLICIT NONE

@@ -23,7 +23,7 @@ SUBROUTINE export_upf(iunps)
                      core_state, ll, el, nwf, psi, vpot, nconf, zed, &
                      jjts, vpstot, lltsc, rcuttsc, rcutustsc, eltsc, &
                      lsave_wfc, wfc_ae_recon, wfc_ps_recon, tm, enlts, &
-                     nstoaets, pseudotype, enls, rhoc, &
+                     nstoaets, pseudotype, enls, rhoc, vnl, vpsloc, &
                      lgipaw_reconstruction, use_paw_as_gipaw
   use funct, only: get_dft_name
   use iotk_module, only: iotk_newline
@@ -61,7 +61,7 @@ SUBROUTINE export_upf(iunps)
   ENDIF
   upf%author=trim(author)
   upf%date=trim(day)
-  upf%nv = "2.0.1" ! format version
+  upf%nv = "2.1.0" ! format version
   !
   upf%zp   = zval
   upf%nlcc = nlcc
@@ -122,6 +122,24 @@ SUBROUTINE export_upf(iunps)
   upf%r   => upf%grid%r
   upf%rab => upf%grid%rab
   !
+  ! when possible, write semilocal PP's in the UPF file - may be
+  ! useful if one wants to use PPs in the UPF format in other codes
+  !
+  if( pseudotype == 1 .and. rel < 2 ) then
+        !lam=lls(ns)
+        !if ( rel < 2 .or. lls(ns) == 0 .or. &
+        !     abs(jjs(ns)-lls(ns)+0.5_dp) < 0.001_dp) then
+        !   ind=1
+        !else if ( rel == 2 .and. lls(ns) > 0 .and. &
+        !     abs(jjs(ns)-lls(ns)-0.5_dp) < 0.001_dp) then
+        !   ind=2
+        !endif
+     allocate(upf%vnl(1:grid%mesh, 0:upf%lmax))
+     do l=0, upf%lmax
+        upf%vnl(1:grid%mesh, l) = vnl(1:grid%mesh, l, 1) + vpsloc(1:grid%mesh)
+     end do
+  end if
+  !
   allocate(upf%lll(nbeta))
   upf%lll(1:nbeta) = lls(1:nbeta)
   !
@@ -150,8 +168,9 @@ SUBROUTINE export_upf(iunps)
   end do
   upf%kkbeta = maxval(upf%kbeta(1:nbeta))
   !
-  ! Save GENERATION configuration, this is not needed
-  ! in the pseudopotential, but can be saved for reference
+  ! Save GENERATION configuration: not needed to use the pseudopotential, 
+  ! but must be saved for reference and for re-generating the pseudo
+  !
    at_conf%nwfs  = nwfs
    if (tm) then
       at_conf%pseud = 'troullier-martins'

@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2008 Quantum ESPRESSO group
+! Copyright (C) 2008-2011 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -73,14 +73,12 @@ SUBROUTINE read_upf_v2(u, upf, grid, ierr)             !
    IF(upf%tpawp .and. .not. present(grid)) &
       CALL errore('read_upf_v2', 'PAW requires a radial_grid_type.', 1)
    !
-   ! CHECK for bug in version 2.0.0 of UPF file, occurring for ultrasoft pseudopotentials
+   ! CHECK for bug in version 2.0.0 of UPF file
    IF ( version_compare(upf%nv, '2.0.1') == 'older' .and. upf%tvanp .and.  &
         .not. upf%tpawp ) CALL errore('read_upf_v2',&
-                   'Ultrasoft and PAW pseudopotential generated with &
-                  & code version equal or older than QE 4.0.5 can contain &
-                  & a bug compromising the quality of the calculation. &
-                  & regenerate the pseudopotential file with a newer version &
-                  & of the ld1 code!', 1)
+                   'Ultrasoft pseudopotentials in UPF format v.2.0.0 are &
+                  & affected by a bug compromising their quality. Please &
+                  & regenerate pseudopotential file for '//TRIM(upf%psd), 1)
 
    ! Read radial grid mesh
    CALL read_mesh(u, upf, grid)

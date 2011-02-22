@@ -62,6 +62,8 @@
           CHARACTER(len=11) :: nv       ! UPF file three-digit version i.e. 2.0.0
           INTEGER :: lmax               ! maximum l component in beta
           INTEGER :: lmax_rho           ! max l componet in charge (should be 2*lmax)
+          REAL(DP), POINTER :: vnl(:,:) ! vnl(mesh,lmax) = V(r)_l
+                                        ! only for single-channel NC PP
           ! Wavefunctions and projectors
           INTEGER :: nwfc               ! number of atomic wavefunctions
           INTEGER :: nbeta              ! number of projectors
@@ -204,6 +206,7 @@
           NULLIFY( upf%els_beta)
           NULLIFY( upf%rcut, upf%rcutus, upf%rcut_chi, upf%rcutus_chi )
           NULLIFY( upf%epseu)
+          NULLIFY( upf%vnl)
           NULLIFY( upf%lll, upf%jjj, upf%kbeta, upf%beta, upf%dion )
           NULLIFY( upf%aewfc, upf%pswfc )
           NULLIFY( upf%rinner, upf%qqq, upf%qfunc, upf%qfuncl, upf%qfcoef )
@@ -255,6 +258,7 @@
           IF( ASSOCIATED( upf%jjj ) )     DEALLOCATE( upf%jjj )
           IF( ASSOCIATED( upf%kbeta ) )   DEALLOCATE( upf%kbeta )
           IF( ASSOCIATED( upf%beta ) )    DEALLOCATE( upf%beta )
+          IF( ASSOCIATED( upf%vnl ) )     DEALLOCATE( upf%vnl )
           IF( ASSOCIATED( upf%aewfc ) )   DEALLOCATE( upf%aewfc )
           IF( ASSOCIATED( upf%pswfc ) )   DEALLOCATE( upf%pswfc )
           IF( ASSOCIATED( upf%dion ) )    DEALLOCATE( upf%dion )
