@@ -76,6 +76,12 @@ MODULE constants
   REAL(DP), PARAMETER :: eV_to_kelvin = ELECTRONVOLT_SI / K_BOLTZMANN_SI
   REAL(DP), PARAMETER :: ry_to_kelvin = RYDBERG_SI / K_BOLTZMANN_SI
   !
+  ! .. Unit conversion factors: Energy to wavelength
+  !
+  REAL(DP), PARAMETER :: EVTONM = 1E+9_DP * H_PLANCK_SI * C_SI / &
+                                  &ELECTRONVOLT_SI
+  REAL(DP), PARAMETER :: RYTONM = 1E+9_DP * H_PLANCK_SI * C_SI / RYDBERG_SI
+  !
   !  Speed of light in atomic units
   !
   REAL(DP), PARAMETER :: C_AU             = C_SI / BOHR_RADIUS_SI * AU_SEC

@@ -5,6 +5,8 @@ program lr_calculate_spectrum
   ! ... by solving tridiagonal problem for each value of omega
   !---------------------------------------------------------------------
   !
+  USE kinds,               ONLY : dp
+  USE constants,            ONLY : pi,rytoev,evtonm,rytonm
   use io_files,            only : tmp_dir, prefix,trimcheck,nd_nmbr
   USE global_version,      ONLY : version_number
   USE io_global,           ONLY : stdout,ionode
@@ -15,11 +17,11 @@ program lr_calculate_spectrum
   !
   !Constants
   !
-  integer, parameter :: dp=kind(0.d0)
-  real(dp), parameter :: pi=3.14159265d0
-  real(dp), parameter :: ry=13.6056981d0
-  real(dp), parameter :: ev2nm=1239.84172
-  real(dp), parameter :: ry2nm=91.1266519
+!  integer, parameter :: dp=kind(0.d0)
+!  real(dp), parameter :: pi=3.14159265d0
+!  real(dp), parameter :: ry=13.6056981d0
+!  real(dp), parameter :: ev2nm=1239.84172
+!  real(dp), parameter :: ry2nm=91.1266519
   !
   !User controlled variables
   !
@@ -309,9 +311,9 @@ if (ionode) then !No need for parallelization in this code
   if (units == 0) then
    omega(3)=start
   else if (units == 1) then
-   omega(3)=start/ry
+   omega(3)=start/rytoev
   else if (units == 2) then
-   omega(3)=ry2nm/start
+   omega(3)=rytonm/start
   endif
    
   !
@@ -320,7 +322,7 @@ if (ionode) then !No need for parallelization in this code
     ! 
     call calc_chi(omega(3),epsil,green(:,:))
     if (units == 1 .or. units == 2) then
-     green(:,:)=green(:,:)/ry
+     green(:,:)=green(:,:)/rytoev
     endif
 
     do ip=1,n_ipol
@@ -340,7 +342,7 @@ if (ionode) then !No need for parallelization in this code
 
     alpha_temp(3)= omega(3)*aimag(green(1,1)+green(2,2)+green(3,3))/(pi*3.d0) 
     if (units == 1 .or. units == 2) then
-     alpha_temp(3)=alpha_temp(3)*ry
+     alpha_temp(3)=alpha_temp(3)*rytoev
     endif
     !alpha is ready
     write(17,'(5x,"S(E)=",2x,2(e21.15,2x))') &
@@ -356,14 +358,14 @@ if (ionode) then !No need for parallelization in this code
     if (units == 0) then
       omega(3)=start
     else if (units == 1) then
-     omega(3)=start/ry
+     omega(3)=start/rytoev
     else if (units == 2) then
-     omega(3)=ry2nm/start
+     omega(3)=rytonm/start
     endif
      !
      call calc_chi(omega(3),epsil,green(:,:))
     if (units == 1 .or. units == 2) then
-     green(:,:)=green(:,:)/ry
+     green(:,:)=green(:,:)/rytoev
     endif
      !
      do ip=1,n_ipol
@@ -388,7 +390,7 @@ if (ionode) then !No need for parallelization in this code
         alpha_temp(2)=alpha_temp(3)
         alpha_temp(3)= omega(3)*aimag(green(1,1)+green(2,2)+green(3,3))/(pi*3.d0) 
         if (units == 1 .or. units == 2) then
-         alpha_temp(3)=alpha_temp(3)*ry
+         alpha_temp(3)=alpha_temp(3)*rytoev
         endif
         !alpha is ready
         write(17,'(5x,"S(E)=",2x,2(e21.15,2x))') &
@@ -417,14 +419,14 @@ if (ionode) then !No need for parallelization in this code
     if (units == 0) then
       omega(3)=start
     else if (units == 1) then
-     omega(3)=start/ry
+     omega(3)=start/rytoev
     else if (units == 2) then
-     omega(3)=ry2nm/start
+     omega(3)=rytonm/start
     endif
 
     call calc_chi(omega(3),epsil,green(:,:)) 
     if (units == 1 .or. units == 2) then
-     green(:,:)=green(:,:)/ry
+     green(:,:)=green(:,:)/rytoev
     endif
     do ip=1,n_ipol
         !
@@ -442,7 +444,7 @@ if (ionode) then !No need for parallelization in this code
       end do
     alpha_temp(3)= omega(3)*aimag(green(1,1)+green(2,2)+green(3,3))/(pi*3.d0) 
     if (units == 1 .or. units == 2) then
-     alpha_temp(3)=alpha_temp(3)*ry
+     alpha_temp(3)=alpha_temp(3)*rytoev
     endif
     !alpha is ready
     write(17,'(5x,"S(E)=",2x,2(e21.15,2x))') &
