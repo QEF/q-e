@@ -156,9 +156,14 @@
          call cfft3d( f, dffts%nr1, dffts%nr2, dffts%nr3, &
                          dffts%nr1x, dffts%nr2x, dffts%nr3x, 1)
       ELSE IF( grid_type == 'Wave' ) THEN
+#if defined __PARA && defined __USE_3D_FFT
+         call cfft3d( f, dffts%nr1, dffts%nr2, dffts%nr3, &
+                         dffts%nr1x, dffts%nr2x, dffts%nr3x, 1)
+#else
          call cfft3ds( f, dffts%nr1, dffts%nr2, dffts%nr3, &
                           dffts%nr1x, dffts%nr2x, dffts%nr3x, 1, &
                           dffts%isind, dffts%iplw )
+#endif
       ELSE IF( grid_type == 'Box' ) THEN
          call cfft3d( f, dfftb%nr1, dfftb%nr2, dfftb%nr3, &
                          dfftb%nr1x, dfftb%nr2x, dfftb%nr3x, 1)
@@ -247,9 +252,14 @@
          call cfft3d( f, dffts%nr1, dffts%nr2, dffts%nr3, &
                          dffts%nr1x, dffts%nr2x, dffts%nr3x, -1)
       ELSE IF( grid_type == 'Wave' ) THEN
+#if defined __PARA && defined __USE_3D_FFT
+         call cfft3d( f, dffts%nr1, dffts%nr2, dffts%nr3, &
+                         dffts%nr1x, dffts%nr2x, dffts%nr3x, -1)
+#else
          call cfft3ds( f, dffts%nr1, dffts%nr2, dffts%nr3, &
                           dffts%nr1x, dffts%nr2x, dffts%nr3x, -1, &
                           dffts%isind, dffts%iplw )
+#endif
       END IF
 
 #endif
