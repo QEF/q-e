@@ -1,6 +1,18 @@
 #!/bin/sh
 
 # Automated checks for pw.x - PG 2007-2011
+#
+# Missing pseudotentials are automatically downloaded by wget: 
+WGET="wget -O"
+# if wget does not exist on your machine, try curl (uncomment next line):
+#WGET="curl -o"
+# for openmp or mpi parallel execution - like in examples/
+#PARA_PREFIX="env OMP_NUM_THREADS=2"
+#PARA_PREFIX="mpirun -np 2"
+#PARA_POSTFIX="-npool 1"
+#
+# You shouldn't need to modify anything below this line.
+#
 # Some specific quantities are checked against a reference output
 # Checks are implemented for the following calculations: 
 #   'scf', 'relax', 'md', 'vc-relax', 'nscf'
@@ -32,9 +44,6 @@
 if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
 
 ESPRESSO_ROOT=`cd .. ; pwd`
-#PARA_PREFIX="env OMP_NUM_THREADS=2"
-#PARA_PREFIX="mpirun -np 2"
-#PARA_POSTFIX="-npool 1"
 ESPRESSO_TMPDIR=$ESPRESSO_ROOT/tmp/
 ESPRESSO_PSEUDO=$ESPRESSO_ROOT/pseudo/
 
@@ -68,8 +77,9 @@ get_pp () {
     do
 	if ! test -f $ESPRESSO_PSEUDO/$ppfile ; then
 	    $ECHO "Downloading $ppfile to $ESPRESSO_PSEUDO...\c"
-	    wget  http://www.quantum-espresso.org/pseudo/1.3/UPF/$ppfile \
-		-O $ESPRESSO_PSEUDO/$ppfile 2> /dev/null
+	    $WGET  $ESPRESSO_PSEUDO/$ppfile \
+                http://www.quantum-espresso.org/pseudo/1.3/UPF/$ppfile \
+		2> /dev/null
 	    if test $? != 0; then
 		$ECHO "failed!"
 		$ECHO "test $1 will not be executed"
