@@ -179,13 +179,13 @@ CONTAINS
     !
     ! ... initialize images, band, k-point, ortho groups in sequence
     !
-    CALL init_images( )
+    CALL init_images( world_comm )
     !
-    CALL init_bands( )
+    CALL init_pools( intra_image_comm )
     !
-    CALL init_pools( )
+    CALL init_bands( intra_pool_comm )
     !
-    CALL init_ortho( nproc_ortho_in )
+    CALL init_ortho( nproc_ortho_in, intra_bgrp_comm )
     !
     !
     RETURN
@@ -304,11 +304,11 @@ CONTAINS
     ! ... initialize images, band, k-point, ortho groups in sequence
     !
     !
-    CALL init_bands( )
+    CALL init_pools( intra_image_comm )
     !
-    CALL init_pools( )
+    CALL init_bands( intra_pool_comm )
     !
-    CALL init_ortho( nproc_ortho_in )
+    CALL init_ortho( nproc_ortho_in, intra_bgrp_comm )
     !
     !
     RETURN
@@ -372,46 +372,54 @@ CONTAINS
   END SUBROUTINE mp_global_group_start
   !
   !----------------------------------------------------------------------------
-  SUBROUTINE init_images ( )
+  SUBROUTINE init_images ( parent_comm )
     !---------------------------------------------------------------------------
     !
     ! ... This routine divides all MPI processors into images
     !
     IMPLICIT NONE
+    !
+    INTEGER, INTENT(IN) :: parent_comm
+    !
     INTEGER :: ierr = 0
+    INTEGER :: parent_nproc = 1
+    INTEGER :: parent_mype  = 0
     !
 #if defined (__PARA)
     !
-    IF ( nimage < 1 .OR. nimage > nproc ) &
+    parent_nproc = mp_size( parent_comm )
+    parent_mype  = mp_rank( parent_comm )
+    !
+    IF ( nimage < 1 .OR. nimage > parent_nproc ) &
        CALL errore( 'init_images', 'invalid number of images, out of range', 1 )
     IF ( MOD( nproc, nimage ) /= 0 ) &
-       CALL errore( 'init_images', 'n. of images must be divisor of nprocs', 1 )
+       CALL errore( 'init_images', 'n. of images must be divisor of parent_nproc', 1 )
     !
     ! ... set number of cpus per image
     !
-    nproc_image = nproc / nimage
+    nproc_image = parent_nproc / nimage
     !
     ! ... set index of image for this processor   ( 0 : nimage - 1 )
     !
-    my_image_id = mpime / nproc_image
+    my_image_id = parent_mype / nproc_image
     !
     ! ... set index of processor within the image ( 0 : nproc_image - 1 )
     !
-    me_image    = MOD( mpime, nproc_image )
+    me_image    = MOD( parent_mype, nproc_image )
     !
-    CALL mp_barrier()
+    CALL mp_barrier( parent_comm )
     !
     ! ... the intra_image_comm communicator is created
     !
-    CALL MPI_COMM_SPLIT( MPI_COMM_WORLD, my_image_id, mpime, intra_image_comm, ierr )
+    CALL MPI_COMM_SPLIT( parent_comm, my_image_id, parent_mype, intra_image_comm, ierr )
     IF ( ierr /= 0 ) CALL errore &
        ( 'init_images', 'intra image communicator initialization', ABS(ierr) )
     !
-    CALL mp_barrier()
+    CALL mp_barrier( parent_comm )
     !
     ! ... the inter_image_comm communicator is created
     !
-    CALL MPI_COMM_SPLIT( MPI_COMM_WORLD, me_image, mpime, inter_image_comm, ierr )
+    CALL MPI_COMM_SPLIT( parent_comm, me_image, parent_mype, inter_image_comm, ierr )
     IF ( ierr /= 0 ) CALL errore &
        ( 'init_images', 'inter image communicator initialization', ABS(ierr) )
 #endif
@@ -420,48 +428,55 @@ CONTAINS
   END SUBROUTINE init_images
 
   !----------------------------------------------------------------------------
-  SUBROUTINE init_bands( )
+  SUBROUTINE init_bands( parent_comm )
     !---------------------------------------------------------------------------
     !
-    ! ... This routine divides images into band pools
+    ! ... This routine divides parent_comm into band pools
     !
     IMPLICIT NONE
     !
+    INTEGER, INTENT(IN) :: parent_comm
+    !
     INTEGER :: ierr = 0
+    INTEGER :: parent_nproc = 1
+    INTEGER :: parent_mype  = 0
     !
 #if defined (__PARA)
     !
-    IF ( nbgrp < 1 .OR. nbgrp > nproc_image ) &
+    parent_nproc = mp_size( parent_comm )
+    parent_mype  = mp_rank( parent_comm )
+    !
+    IF ( nbgrp < 1 .OR. nbgrp > parent_nproc ) &
        CALL errore( 'init_bands', 'invalid number of band groups, out of range', 1 )
-    IF ( MOD( nproc_image, nbgrp ) /= 0 ) &
-       CALL errore( 'init_bands', 'n. of band groups  must be divisor of nimages', 1 )
+    IF ( MOD( parent_nproc, nbgrp ) /= 0 ) &
+       CALL errore( 'init_bands', 'n. of band groups  must be divisor of parent_nproc', 1 )
     ! 
     ! ... Set number of processors per band group
     !
-    nproc_bgrp = nproc_image / nbgrp
+    nproc_bgrp = parent_nproc / nbgrp
     !
     ! ... set index of band group for this processor   ( 0 : nbgrp - 1 )
     !
-    my_bgrp_id = me_image / nproc_bgrp
+    my_bgrp_id = parent_mype / nproc_bgrp
     !
     ! ... set index of processor within the image ( 0 : nproc_image - 1 )
     !
-    me_bgrp    = MOD( me_image, nproc_bgrp )
+    me_bgrp    = MOD( parent_mype, nproc_bgrp )
     !
-    CALL mp_barrier()
+    CALL mp_barrier( parent_comm )
     !
     ! ... the intra_bgrp_comm communicator is created
     !
-    CALL MPI_COMM_SPLIT( intra_image_comm, my_bgrp_id, me_image, intra_bgrp_comm, ierr )
+    CALL MPI_COMM_SPLIT( parent_comm, my_bgrp_id, parent_mype, intra_bgrp_comm, ierr )
     !
     IF ( ierr /= 0 ) &
        CALL errore( 'init_bands', 'intra band group communicator initialization', ABS(ierr) )
     !
-    CALL mp_barrier()
+    CALL mp_barrier( parent_comm )
     !
     ! ... the inter_bgrp_comm communicator is created                     
     !     
-    CALL MPI_COMM_SPLIT( intra_image_comm, me_bgrp, me_image, inter_bgrp_comm, ierr )  
+    CALL MPI_COMM_SPLIT( parent_comm, me_bgrp, parent_mype, inter_bgrp_comm, ierr )  
     !
     IF ( ierr /= 0 ) &
        CALL errore( 'init_bands', 'inter band group communicator initialization', ABS(ierr) )
@@ -472,45 +487,51 @@ CONTAINS
   END SUBROUTINE init_bands
   !
   !----------------------------------------------------------------------------
-  SUBROUTINE init_pools( )
+  SUBROUTINE init_pools( parent_comm )
     !---------------------------------------------------------------------------
     !
     ! ... This routine divides band groups into k-point pools
     !
     IMPLICIT NONE
     !
+    INTEGER, INTENT(IN) :: parent_comm
+    !
     INTEGER :: ierr = 0
+    INTEGER :: parent_nproc = 1
+    INTEGER :: parent_mype  = 0
     !
 #if defined (__PARA)
     !
+    parent_nproc = mp_size( parent_comm )
+    parent_mype  = mp_rank( parent_comm )
+    !
     ! ... number of cpus per pool of k-points (they are created inside each image)
     !
-    nproc_pool = nproc_bgrp / npool
+    nproc_pool = parent_nproc / npool
     !
-    IF ( MOD( nproc_bgrp, npool ) /= 0 ) &
-         CALL errore( 'init_pools', 'invalid number of pools, nproc_bgrp /= nproc_pool * npool', 1 )  
+    IF ( MOD( parent_nproc, npool ) /= 0 ) &
+         CALL errore( 'init_pools', 'invalid number of pools, parent_nproc /= nproc_pool * npool', 1 )  
     !
     ! ... my_pool_id  =  pool index for this processor    ( 0 : npool - 1 )
     ! ... me_pool     =  processor index within the pool  ( 0 : nproc_pool - 1 )
     !
-    my_pool_id = me_bgrp / nproc_pool    
-    me_pool    = MOD( me_bgrp, nproc_pool )
+    my_pool_id = parent_mype / nproc_pool    
+    me_pool    = MOD( parent_mype, nproc_pool )
     !
-    CALL mp_barrier( intra_bgrp_comm )
+    CALL mp_barrier( parent_comm )
     !
     ! ... the intra_pool_comm communicator is created
     !
-    CALL MPI_COMM_SPLIT( intra_bgrp_comm, my_pool_id, me_bgrp, intra_pool_comm, ierr )
+    CALL MPI_COMM_SPLIT( parent_comm, my_pool_id, parent_mype, intra_pool_comm, ierr )
     !
     IF ( ierr /= 0 ) &
        CALL errore( 'init_pools', 'intra pool communicator initialization', ABS(ierr) )
     !
-    CALL mp_barrier( intra_bgrp_comm )
-    CALL mp_barrier( intra_bgrp_comm )
+    CALL mp_barrier( parent_comm )
     !
     ! ... the inter_pool_comm communicator is created
     !
-    CALL MPI_COMM_SPLIT( intra_bgrp_comm, me_pool, me_bgrp, inter_pool_comm, ierr )
+    CALL MPI_COMM_SPLIT( parent_comm, me_pool, parent_mype, inter_pool_comm, ierr )
     !
     IF ( ierr /= 0 ) &
        CALL errore( 'init_pools', 'inter pool communicator initialization', ABS(ierr) )
@@ -521,7 +542,7 @@ CONTAINS
   END SUBROUTINE init_pools
   !
   !----------------------------------------------------------------------------
-  SUBROUTINE init_ortho( nproc_ortho_in )
+  SUBROUTINE init_ortho( nproc_ortho_in, parent_comm )
     !----------------------------------------------------------------------------
     !
     ! ... Ortho group initialization
@@ -529,10 +550,13 @@ CONTAINS
     IMPLICIT NONE
     !
     INTEGER, INTENT(IN) :: nproc_ortho_in
+    INTEGER, INTENT(IN) :: parent_comm   ! communicator of the parent group
     !
     INTEGER :: nproc_ortho_try
+    INTEGER :: parent_nproc  ! nproc of the parent group
     INTEGER :: ierr = 0
     !
+    parent_nproc = mp_size( parent_comm )
     !
 #if defined __SCALAPACK
 
@@ -546,11 +570,11 @@ CONTAINS
     !
     IF( nproc_ortho_in > 1 ) THEN
        ! use the command line value ensuring that it falls in the proper range.
-       nproc_ortho_try = MIN( nproc_ortho_in , nproc_pool )
+       nproc_ortho_try = MIN( nproc_ortho_in , parent_nproc )
     ELSE
        ! here we can play with custom architecture specific default definitions
 #if defined __SCALAPACK
-       nproc_ortho_try = MAX( nproc_pool/2, 1 )
+       nproc_ortho_try = MAX( parent_nproc/2, 1 )
 #else
        nproc_ortho_try = 1
 #endif
@@ -559,7 +583,7 @@ CONTAINS
     ! the ortho group for parallel linear algebra is a sub-group of the pool,
     ! then there are as many ortho groups as pools.
     !
-    CALL init_ortho_group( nproc_ortho_try, intra_pool_comm )
+    CALL init_ortho_group( nproc_ortho_try, parent_comm )
     !  
     RETURN
     !
