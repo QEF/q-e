@@ -327,7 +327,7 @@ CONTAINS
          CALL iotk_write_attr(attr, 'angular_momentum',       upf%lll(nb))
          CALL iotk_write_attr(attr, 'cutoff_radius_index',    upf%kbeta(nb))
          CALL iotk_write_attr(attr, 'cutoff_radius',          upf%rcut(nb))
-         CALL iotk_write_attr(attr, 'norm_conserving_radius', upf%rcutus(nb))
+         CALL iotk_write_attr(attr, 'ultrasoft_cutoff_radius',upf%rcutus(nb))
          CALL iotk_write_dat(u, 'PP_BETA'//iotk_index( nb ), &
               upf%beta(:,nb), attr=attr, columns=4)
       ENDDO
