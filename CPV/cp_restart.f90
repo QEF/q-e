@@ -52,8 +52,10 @@ MODULE cp_restart
       USE control_flags,            ONLY : gamma_only, force_pairing, trhow, tksw, twfcollect
       USE io_files,                 ONLY : psfile, pseudo_dir, iunwfc, &
                                            nwordwfc, tmp_dir, diropn
-      USE mp_global,                ONLY : intra_image_comm, me_image, nproc, &
-                                       nproc_pool, nproc_image, intra_bgrp_comm
+      USE mp_global,                ONLY : intra_image_comm, me_image, nproc_pool, nproc_image
+      USE mp_global,                ONLY : nproc, mpime, me_bgrp, nproc_bgrp, my_bgrp_id, &
+                                           intra_bgrp_comm, intra_image_comm, inter_bgrp_comm, &
+                                           root_bgrp, intra_pool_comm
       USE printout_base,            ONLY : title
       USE grid_dimensions,          ONLY : nr1, nr2, nr3, nr1x, nr2x
       USE smooth_grid_dimensions,   ONLY : nr1s, nr2s, nr3s
@@ -70,7 +72,6 @@ MODULE cp_restart
       USE funct,                    ONLY : get_dft_name
       USE energies,                 ONLY : enthal, ekin, eht, esr, eself, &
                                            epseu, enl, exc, vave
-      USE mp_global,                ONLY : nproc, mpime
       USE mp,                       ONLY : mp_sum
       USE fft_base,                 ONLY : dfftp
       USE constants,                ONLY : pi
@@ -415,7 +416,8 @@ MODULE cp_restart
          IF ( nspin == 1 ) THEN
             !
             CALL write_rho_xml( rho_file_base, rho(:,1), &
-                                nr1, nr2, nr3, nr1x, nr2x, dfftp%ipp, dfftp%npp )
+                                dfftp%nr1, dfftp%nr2, dfftp%nr3, dfftp%nr1x, dfftp%nr2x, &
+                                dfftp%ipp, dfftp%npp, ionode, intra_bgrp_comm, inter_bgrp_comm )
             !
          ELSE IF ( nspin == 2 ) THEN
             !
@@ -424,7 +426,8 @@ MODULE cp_restart
             rhoaux = rho(:,1) + rho(:,2) 
             !
             CALL write_rho_xml( rho_file_base, rhoaux, &
-                                nr1, nr2, nr3, nr1x, nr2x, dfftp%ipp, dfftp%npp )
+                                dfftp%nr1, dfftp%nr2, dfftp%nr3, dfftp%nr1x, dfftp%nr2x, &
+                                dfftp%ipp, dfftp%npp, ionode, intra_bgrp_comm, inter_bgrp_comm )
             !
             rho_file_base = 'spin-polarization'
             !
@@ -437,7 +440,8 @@ MODULE cp_restart
             rhoaux = rho(:,1) - rho(:,2) 
             !
             CALL write_rho_xml( rho_file_base, rhoaux, &
-                                nr1, nr2, nr3, nr1x, nr2x, dfftp%ipp, dfftp%npp )
+                                dfftp%nr1, dfftp%nr2, dfftp%nr3, dfftp%nr1x, dfftp%nr2x, &
+                                dfftp%ipp, dfftp%npp, ionode, intra_bgrp_comm, inter_bgrp_comm )
             !
             DEALLOCATE( rhoaux )
             !
@@ -722,7 +726,8 @@ MODULE cp_restart
                !
                CALL write_wfc( iunout, ik_eff, nk*nspin, kunit, iss, nspin,        &
                                ctot( :, ib : ib + nbnd_tot - 1 ), ngw_g, gamma_only,&
-                               nbnd_tot, ig_l2g, ngw, filename, scalef )
+                               nbnd_tot, ig_l2g, ngw, filename, scalef, &
+                               ionode, root_bgrp, intra_bgrp_comm, inter_bgrp_comm, intra_pool_comm )
                !
             END IF
             !
@@ -761,7 +766,8 @@ MODULE cp_restart
                !
                CALL write_wfc( iunout, ik_eff, nk*nspin, kunit, iss, nspin,     &
                                c02( :, ib : ib + nbnd_ - 1 ), ngw_g, gamma_only, &
-                               nbnd_, ig_l2g, ngw, filename, scalef )
+                               nbnd_, ig_l2g, ngw, filename, scalef, &
+                               ionode, root_bgrp, intra_bgrp_comm, inter_bgrp_comm, intra_pool_comm )
                !
                !  Save wave function at time t - dt
                !
@@ -796,7 +802,8 @@ MODULE cp_restart
                !
                CALL write_wfc( iunout, ik_eff, nk*nspin, kunit, iss, nspin,     &
                                cm2( :, ib : ib + nbnd_ - 1 ), ngw_g, gamma_only, &
-                               nbnd_, ig_l2g, ngw, filename, scalef )
+                               nbnd_, ig_l2g, ngw, filename, scalef, &
+                               ionode, root_bgrp, intra_bgrp_comm, inter_bgrp_comm, intra_pool_comm )
                !
             END IF
             !
@@ -933,8 +940,9 @@ MODULE cp_restart
                                            sort_tau, ityp, ions_cofmass
       USE gvect,       ONLY : ig_l2g, mill
       USE cp_main_variables,        ONLY : nprint_nfi, distribute_lambda, descla, distribute_zmat
-      USE mp,                       ONLY : mp_sum
-      USE mp_global,                ONLY : intra_image_comm
+      USE mp,                       ONLY : mp_sum, mp_bcast
+      USE mp_global,                ONLY : intra_image_comm, my_bgrp_id
+      USE mp_global,                ONLY : root_bgrp, intra_bgrp_comm, inter_bgrp_comm, intra_pool_comm
       USE parameters,               ONLY : ntypx
       USE constants,                ONLY : eps8, angstrom_au, pi
       !
@@ -1025,6 +1033,7 @@ MODULE cp_restart
       REAL(DP), ALLOCATABLE :: mrepl(:,:) 
       LOGICAL               :: exst, exist_wfc 
       CHARACTER(LEN=256)    :: tmp_dir_save
+      INTEGER               :: io_bgrp_id
       !
       ! ... look for an empty unit
       !
@@ -1606,7 +1615,9 @@ MODULE cp_restart
                   !
                   CALL read_wfc( iunpun, ik_eff , nk, kunit, iss_, nspin_, &
                                  c02( :, ib:ib+nb-1 ), ngwt_, nbnd_, ig_l2g, ngw, &
-                                 filename, scalef_, .TRUE. )
+                                 filename, scalef_, &
+                                 ionode, root_bgrp, intra_bgrp_comm, &
+                                 inter_bgrp_comm, intra_pool_comm, .TRUE. )
                   !
                END IF
                !
@@ -1634,7 +1645,9 @@ MODULE cp_restart
                      !
                      CALL read_wfc( iunpun, ik_eff, nk, kunit, iss_, nspin_, &
                                     cm2( :, ib:ib+nb-1 ), ngwt_, nbnd_, ig_l2g, ngw, &
-                                    filename, scalef_ , .TRUE. )
+                                    filename, scalef_ , &
+                                    ionode, root_bgrp, intra_bgrp_comm, &
+                                    inter_bgrp_comm, intra_pool_comm, .TRUE. )
                      !
                   END IF
                   !
@@ -1650,6 +1663,16 @@ MODULE cp_restart
             END IF
             !
          END DO
+         ! 
+         !  here the I/O group send wfc to other groups
+         !
+         io_bgrp_id = 0
+         IF( ionode ) io_bgrp_id = my_bgrp_id
+         CALL mp_sum( io_bgrp_id, inter_bgrp_comm )
+         CALL mp_sum( io_bgrp_id, intra_bgrp_comm )
+         !
+         CALL mp_bcast( cm2, io_bgrp_id, inter_bgrp_comm )
+         CALL mp_bcast( c02, io_bgrp_id, inter_bgrp_comm )
          !
          DO iss = 1, nspin
             !
@@ -1806,7 +1829,10 @@ MODULE cp_restart
       !
       USE electrons_base,     ONLY : iupdwn, nupdwn
       USE gvecw,              ONLY : ngw
-      USE gvect, ONLY : ig_l2g
+      USE io_global,          ONLY : ionode
+      USE mp_global,          ONLY : root_bgrp, intra_bgrp_comm, inter_bgrp_comm, intra_pool_comm, my_bgrp_id
+      USE mp,                 ONLY : mp_bcast, mp_sum
+      USE gvect,              ONLY : ig_l2g
       !
       IMPLICIT NONE
       !
@@ -1818,6 +1844,7 @@ MODULE cp_restart
       !
       CHARACTER(LEN=256) :: dirname, filename
       INTEGER            :: ik_eff, ib, nb, kunit, iss_, nspin_, ngwt_, nbnd_
+      INTEGER            :: io_bgrp_id
       REAL(DP)           :: scalef
       !
       kunit = 1
@@ -1857,7 +1884,17 @@ MODULE cp_restart
       !
       CALL read_wfc( iunout, ik_eff, nk, kunit, iss_, nspin_, &
                      c2(:,ib:ib+nb-1), ngwt_, nbnd_, ig_l2g, ngw,  &
-                     filename, scalef )
+                     filename, scalef, & 
+                     ionode, root_bgrp, intra_bgrp_comm, &
+                     inter_bgrp_comm, intra_pool_comm )
+      ! 
+      !  here the I/O group send wfc to other groups
+      !
+      io_bgrp_id = 0
+      IF( ionode ) io_bgrp_id = my_bgrp_id
+      CALL mp_sum( io_bgrp_id, inter_bgrp_comm )
+      CALL mp_sum( io_bgrp_id, intra_bgrp_comm )
+      CALL mp_bcast( c2, io_bgrp_id, inter_bgrp_comm )
       !
       RETURN
       !

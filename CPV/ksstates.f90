@@ -144,7 +144,7 @@ CONTAINS
         USE fft_base, ONLY: dfftp, dffts
         USE fft_interfaces, ONLY: invfft
         USE xml_io_base, ONLY: write_rho_xml
-        USE mp_global,       ONLY: nproc_bgrp, me_bgrp, intra_bgrp_comm
+        USE mp_global,       ONLY: intra_bgrp_comm, inter_bgrp_comm
 
         IMPLICIT NONE
 
@@ -167,7 +167,8 @@ CONTAINS
         charge = SUM( rpsi2 )
 
         CALL write_rho_xml( file_name, rpsi2, &
-                            nr1, nr2, nr3, nr1x, nr2x, dfftp%ipp, dfftp%npp )
+                            dfftp%nr1, dfftp%nr2, dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%ipp, dfftp%npp, &
+                            ionode, intra_bgrp_comm, inter_bgrp_comm )
         
         CALL mp_sum( charge, intra_bgrp_comm )
 

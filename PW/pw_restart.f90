@@ -109,7 +109,8 @@ MODULE pw_restart
                                        emaxpos, eopreg, eamp
       USE io_rho_xml,           ONLY : write_rho
       USE mp_global,            ONLY : kunit, nproc, nproc_pool, me_pool, &
-                                       nproc_image
+                                       nproc_image, &
+                                       root_pool, intra_pool_comm, inter_pool_comm, intra_image_comm 
       USE start_k,              ONLY : nks_start, xk_start, wk_start
 #ifdef EXX
       USE funct,                ONLY : get_exx_fraction, get_screening_parameter
@@ -833,7 +834,8 @@ MODULE pw_restart
              !
              CALL write_wfc( iunout, ik, nkstot, kunit, ispin, nspin, &
                              evc, npw_g, gamma_only, nbnd, igk_l2g_kdip(:,ik-iks+1),   &
-                             ngk(ik-iks+1), filename, 1.D0 )
+                             ngk(ik-iks+1), filename, 1.D0, &
+                             ionode, root_pool, intra_pool_comm, inter_pool_comm, intra_image_comm )
              !
              ik_eff = ik + num_k_points
              !
@@ -860,7 +862,8 @@ MODULE pw_restart
              !
              CALL write_wfc( iunout, ik_eff, nkstot, kunit, ispin, nspin, &
                              evc, npw_g, gamma_only, nbnd, igk_l2g_kdip(:,ik_eff-iks+1), &
-                             ngk(ik_eff-iks+1), filename, 1.D0 )
+                             ngk(ik_eff-iks+1), filename, 1.D0, &
+                             ionode, root_pool, intra_pool_comm, inter_pool_comm, intra_image_comm )
              !
            ELSE
              !
@@ -893,7 +896,8 @@ MODULE pw_restart
                    CALL write_wfc( iunout, ik, nkstot, kunit, ipol, npol,   &
                                    evc(nkl:nkr,:), npw_g, gamma_only, nbnd, &
                                    igk_l2g_kdip(:,ik-iks+1), ngk(ik-iks+1), &
-                                   filename, 1.D0 )
+                                   filename, 1.D0, &
+                                   ionode, root_pool, intra_pool_comm, inter_pool_comm, intra_image_comm )
                    !
                 END DO
                 !
@@ -916,7 +920,8 @@ MODULE pw_restart
                 CALL write_wfc( iunout, ik, nkstot, kunit, ispin, nspin, &
                                 evc, npw_g, gamma_only, nbnd,            &
                                 igk_l2g_kdip(:,ik-iks+1),                &
-                                ngk(ik-iks+1), filename, 1.D0 )
+                                ngk(ik-iks+1), filename, 1.D0, &
+                                ionode, root_pool, intra_pool_comm, inter_pool_comm, intra_image_comm )
                 !
              END IF
              !
@@ -2852,7 +2857,8 @@ MODULE pw_restart
       USE buffers,              ONLY : save_buffer
       USE gvect,                ONLY : ngm, ngm_g, g
       USE noncollin_module,     ONLY : noncolin, npol
-      USE mp_global,            ONLY : kunit, nproc, nproc_pool, me_pool
+      USE mp_global,            ONLY : kunit, nproc, nproc_pool, me_pool, &
+                                       root_pool, intra_pool_comm, inter_pool_comm, intra_image_comm 
       !
       IMPLICIT NONE
       !
@@ -3048,7 +3054,8 @@ MODULE pw_restart
             !
             CALL read_wfc( iunout, ik, nkstot, kunit, ispin, nspin,      &
                            evc, npw_g, nbnd, igk_l2g_kdip(:,ik-iks+1),   &
-                           ngk(ik-iks+1), filename, scalef )
+                           ngk(ik-iks+1), filename, scalef, &
+                           ionode, root_pool, intra_pool_comm, inter_pool_comm, intra_image_comm )
             !
             IF ( ( ik >= iks ) .AND. ( ik <= ike ) ) THEN
                !
@@ -3072,7 +3079,8 @@ MODULE pw_restart
             !
             CALL read_wfc( iunout, ik_eff, nkstot, kunit, ispin, nspin,      &
                            evc, npw_g, nbnd, igk_l2g_kdip(:,ik_eff-iks+1),   &
-                           ngk(ik_eff-iks+1), filename, scalef )
+                           ngk(ik_eff-iks+1), filename, scalef, &
+                           ionode, root_pool, intra_pool_comm, inter_pool_comm, intra_image_comm )
             !
             IF ( ( ik_eff >= iks ) .AND. ( ik_eff <= ike ) ) THEN
                !
@@ -3103,7 +3111,8 @@ MODULE pw_restart
                   CALL read_wfc( iunout, ik, nkstot, kunit, ispin,          &
                                  npol, evc(nkl:nkr,:), npw_g, nbnd,         &
                                  igk_l2g_kdip(:,ik-iks+1), ngk(ik-iks+1),   &
-                                 filename, scalef )
+                                 filename, scalef, & 
+                                 ionode, root_pool, intra_pool_comm, inter_pool_comm, intra_image_comm )
                   !
                END DO
                !
@@ -3118,7 +3127,8 @@ MODULE pw_restart
                !
                CALL read_wfc( iunout, ik, nkstot, kunit, ispin, nspin,         &
                               evc, npw_g, nbnd, igk_l2g_kdip(:,ik-iks+1),      &
-                              ngk(ik-iks+1), filename, scalef )
+                              ngk(ik-iks+1), filename, scalef, &
+                              ionode, root_pool, intra_pool_comm, inter_pool_comm, intra_image_comm )
                !
             END IF
             !
