@@ -702,10 +702,10 @@ END SUBROUTINE diagonalize_parallel
       USE uspp_param,         ONLY: nvb
       USE gvecw,              ONLY: ngw
       USE gvect, ONLY: gstart
-      USE mp,                 ONLY: mp_root_sum
+      USE mp,                 ONLY: mp_root_sum, mp_sum
       USE control_flags,      ONLY: iprsta
       USE io_global,          ONLY: stdout
-      USE mp_global,          ONLY: intra_bgrp_comm, leg_ortho
+      USE mp_global,          ONLY: intra_bgrp_comm, leg_ortho, inter_bgrp_comm, my_bgrp_id, nbgrp
       USE descriptors,        ONLY: lambda_node_ , la_npc_ , la_npr_ , descla_siz_ , &
                                     descla_init , la_comm_ , ilar_ , ilac_ , nlar_ , &
                                     nlac_ , la_myr_ , la_myc_ , la_nx_ , la_n_ , nlax_
@@ -743,7 +743,12 @@ END SUBROUTINE diagonalize_parallel
             CALL errore( " sigset ", " inconsistent dimension nx ", nx )
       END IF
 
+      IF( nbgrp > 1 ) THEN
+         sig = 0.0d0
+      END IF
+
       DO ipc = 1, np(2)
+
          DO ipr = 1, ipc ! np(1) use symmetry
 
             coor_ip(1) = ipr - 1
@@ -759,6 +764,8 @@ END SUBROUTINE diagonalize_parallel
             CALL GRID2D_RANK( 'R', desc_ip( la_npr_ ), desc_ip( la_npc_ ), &
                                    desc_ip( la_myr_ ), desc_ip( la_myc_ ), root )
 
+            IF( MOD( root , nbgrp ) == my_bgrp_id ) THEN
+
             root = root * leg_ortho
 
             CALL dgemm( 'T', 'N',  nr, nc, 2*ngw, -2.0d0, cp( 1, ist + ir - 1), 2*ngwx, &
@@ -772,11 +779,17 @@ END SUBROUTINE diagonalize_parallel
             !
             CALL mp_root_sum( sigp, sig, root, intra_bgrp_comm )
             !
+            ENDIF
+            !
          END DO
          !
       END DO
       !
       DEALLOCATE( sigp )
+      !
+      IF( nbgrp > 1 ) THEN
+         CALL mp_sum( sig, inter_bgrp_comm )
+      END IF
       !
       CALL dsqmsym( nss, sig, nx, desc )
       !
@@ -828,8 +841,9 @@ END SUBROUTINE diagonalize_parallel
       USE uspp,               ONLY: nkbus
       USE uspp_param,         ONLY: nvb
       USE kinds,              ONLY: DP
-      USE mp,                 ONLY: mp_root_sum
+      USE mp,                 ONLY: mp_root_sum, mp_sum
       USE mp_global,          ONLY: intra_bgrp_comm, me_bgrp, leg_ortho
+      USE mp_global,          ONLY: inter_bgrp_comm, my_bgrp_id, nbgrp
       USE control_flags,      ONLY: iprsta
       USE io_global,          ONLY: stdout
       USE descriptors,        ONLY: lambda_node_ , la_npc_ , la_npr_ , descla_siz_ , &
@@ -873,6 +887,9 @@ END SUBROUTINE diagonalize_parallel
       ALLOCATE( rhop( nx, nx ) )
      
       rhop = 0.0d0
+      IF( nbgrp > 1 ) THEN
+         rho = 0.0d0
+      END IF
 
       DO ipc = 1, np(2)
          DO ipr = 1, np(1)
@@ -890,6 +907,8 @@ END SUBROUTINE diagonalize_parallel
             CALL GRID2D_RANK( 'R', desc_ip( la_npr_ ), desc_ip( la_npc_ ), &
                                    desc_ip( la_myr_ ), desc_ip( la_myc_ ), root )
             !
+            IF( MOD( root , nbgrp ) == my_bgrp_id ) THEN
+
             root = root * leg_ortho
 
             CALL dgemm( 'T', 'N', nr, nc, 2*ngw, 2.0d0, phi( 1, ist + ir - 1 ), 2*ngwx, &
@@ -903,10 +922,16 @@ END SUBROUTINE diagonalize_parallel
 
             CALL mp_root_sum( rhop, rho, root, intra_bgrp_comm )
 
+            END IF
+
          END DO
       END DO
  
       DEALLOCATE( rhop )
+
+      IF( nbgrp > 1 ) THEN
+         CALL mp_sum( rho, inter_bgrp_comm )
+      END IF
 
       IF( desc( lambda_node_ ) > 0 ) THEN
          !
@@ -954,10 +979,11 @@ END SUBROUTINE diagonalize_parallel
       USE uspp,               ONLY: nkbus
       USE gvecw,              ONLY: ngw
       USE gvect,              ONLY: gstart
-      USE mp,                 ONLY: mp_root_sum
+      USE mp,                 ONLY: mp_root_sum, mp_sum
       USE control_flags,      ONLY: iprsta
       USE io_global,          ONLY: stdout
       USE mp_global,          ONLY: intra_bgrp_comm, leg_ortho
+      USE mp_global,          ONLY: inter_bgrp_comm, my_bgrp_id, nbgrp
       USE descriptors,        ONLY: lambda_node_ , la_npc_ , la_npr_ , descla_siz_ , &
                                     descla_init , la_comm_ , ilar_ , ilac_ , nlar_ , &
                                     nlac_ , la_myr_ , la_myc_ , la_nx_ , la_n_ , nlax_
@@ -998,6 +1024,10 @@ END SUBROUTINE diagonalize_parallel
       !
       taup = 0.0d0
       !
+      IF( nbgrp > 1 ) THEN
+         tau = 0.0d0
+      END IF
+      !
       !  loop on processors coordinates
       !
       DO ipc = 1, np(2)
@@ -1017,6 +1047,8 @@ END SUBROUTINE diagonalize_parallel
             CALL GRID2D_RANK( 'R', desc_ip( la_npr_ ), desc_ip( la_npc_ ), &
                                    desc_ip( la_myr_ ), desc_ip( la_myc_ ), root )
             !
+            IF( MOD( root , nbgrp ) == my_bgrp_id ) THEN
+
             root = root * leg_ortho
             !
             !  All processors contribute to the tau block of processor (ipr,ipc)
@@ -1033,11 +1065,17 @@ END SUBROUTINE diagonalize_parallel
             !
             CALL mp_root_sum( taup, tau, root, intra_bgrp_comm )
             !
+            END IF
+            !
          END DO
          !
       END DO
       !
       DEALLOCATE( taup )
+      !
+      IF( nbgrp > 1 ) THEN
+         CALL mp_sum( tau, inter_bgrp_comm )
+      END IF
       !
       CALL dsqmsym( nss, tau, nx, desc )
       !
