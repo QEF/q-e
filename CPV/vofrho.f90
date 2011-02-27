@@ -99,7 +99,7 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, tlast,  
 
       is_vdw = dft_is_vdW()
       IF (is_vdw) CALL errore('vofrho', 'vdW-DF not implemented in CP, use PW instead or &
-                                         check PW/v_of_rho.f90 to port the implementation',1)
+                                         &check PW/v_of_rho.f90 to port the implementation',1)
 
       CALL start_clock( 'vofrho' )
 
@@ -150,10 +150,18 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, tlast,  
          !
       END IF
 !
+!$omp parallel default(shared), private(ig,is,ij,i,j,k)
+!$omp workshare
       rhotmp( 1:ngm ) = rhog( 1:ngm, 1 )
+!$omp end workshare
+      IF( nspin == 2 ) THEN
+!$omp workshare
+         rhotmp( 1:ngm ) = rhotmp( 1:ngm ) + rhog( 1:ngm, 2 )
+!$omp end workshare
+      END IF
       !
-
       IF( tpre ) THEN
+!$omp do
          DO ij = 1, 6
             i = alpha( ij )
             j = beta( ij )
@@ -162,11 +170,9 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, tlast,  
                drhot( :, ij ) = drhot( :, ij ) +  drhog( :, 1, i, k ) * ht( k, j )
             END DO
          END DO
-      END IF
-      !
-      IF( nspin == 2 ) THEN
-         rhotmp( 1:ngm ) = rhotmp( 1:ngm ) + rhog( 1:ngm, 2 )
-         IF(tpre)THEN
+!$omp end do
+         IF( nspin == 2 ) THEN
+!$omp do
             DO ij = 1, 6
                i = alpha( ij )
                j = beta( ij )
@@ -174,14 +180,16 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, tlast,  
                   drhot( :, ij ) = drhot( :, ij ) +  drhog( :, 2, i, k ) * ht( k, j )
                END DO
             END DO
+!$omp end do
          ENDIF
       END IF
       !
       !     calculation local potential energy
       !
+!$omp master
       zpseu = 0.0d0
+!$omp end master 
       !
-!$omp parallel default(shared), private(ig,is)
 !$omp do
       DO ig = 1, SIZE(vtemp)
          vtemp(ig)=(0.d0,0.d0)
