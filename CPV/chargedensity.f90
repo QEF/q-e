@@ -1422,10 +1422,12 @@ END SUBROUTINE rhov
       !
       use kinds,           ONLY: DP
       USE fft_base,        ONLY: dfftp
-      use grid_dimensions, ONLY: nr1, nr2, nr3, nr1x, nr2x, nrxx
+      use grid_dimensions, ONLY: nrxx
       use xml_io_base,     ONLY: read_rho_xml, restart_dir
       use control_flags,   ONLY: ndr
       USE io_files,        ONLY: tmp_dir
+      USE io_global,       ONLY: ionode
+      USE mp_global,       ONLY: intra_bgrp_comm, inter_bgrp_comm
       !
       implicit none
       !
@@ -1439,13 +1441,17 @@ END SUBROUTINE rhov
       !
       filename = TRIM(dirname) // '/' // 'charge-density'
       !
-      CALL read_rho_xml( filename, rhor(:,1), nr1, nr2, nr3, nr1x, nr2x, dfftp%ipp, dfftp%npp )
+      CALL read_rho_xml( filename, rhor(:,1), dfftp%nr1, dfftp%nr2, dfftp%nr3, &
+                         dfftp%nr1x, dfftp%nr2x, dfftp%ipp, dfftp%npp, &
+                         ionode, intra_bgrp_comm, inter_bgrp_comm )
       !
       IF( nspin == 2 ) THEN
          !
          filename = TRIM(dirname) // '/' // 'spin-polarization'
          !
-         CALL read_rho_xml( filename, rhor(:,2), nr1, nr2, nr3, nr1x, nr2x, dfftp%ipp, dfftp%npp )
+         CALL read_rho_xml( filename, rhor(:,2), dfftp%nr1, dfftp%nr2, dfftp%nr3, &
+                            dfftp%nr1x, dfftp%nr2x, dfftp%ipp, dfftp%npp, &
+                            ionode, intra_bgrp_comm, inter_bgrp_comm )
          !
          !  Convert rho_tot, spin_pol back to rho_up, rho_down
          !
