@@ -257,10 +257,8 @@ MODULE partial
   INTEGER, ALLOCATABLE :: &
        comp_irr(:),    &! (3*nat) : 1 if this irr.rep. has to be computed
        done_irr(:),    &! (3*nat) : 1 if this irr.rep. has been done
-       list(:),        &! (3*nat) : list of irreps (optionally read in input)
        atomo(:)         ! (nat) : list of the atoms that moves
   INTEGER :: nat_todo,    & ! number of atoms to compute
-             nrapp,       & ! the representation to do
              nat_todo_input ! nat_todo given in input
   LOGICAL :: all_comp       ! if .TRUE. all representation have been computed
   !

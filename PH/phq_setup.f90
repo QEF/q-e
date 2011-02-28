@@ -84,7 +84,7 @@ subroutine phq_setup
   USE dynmat,        ONLY : dyn, dyn_rec, dyn00
   USE efield_mod,    ONLY : epsilon, zstareu
   USE qpoint,        ONLY : xq
-  USE partial,       ONLY : comp_irr, atomo, nat_todo, list, nrapp, all_comp, &
+  USE partial,       ONLY : comp_irr, atomo, nat_todo, all_comp, &
                             done_irr
   USE gamma_gamma,   ONLY : has_equivalent, asr, nasr, n_diff_sites, &
                             equiv_atoms, n_equiv_atoms, with_symmetry
@@ -440,7 +440,7 @@ subroutine phq_setup
   ALLOCATE(ifat(nat))
   comp_irr = 0
   comp_irr(0)=1
-  IF (nrapp==0 .AND. nat_todo==0) THEN
+  IF (nat_todo==0.AND.modenum==0) THEN
      !
      !  Case 1)  The partial computation option is not used, make all
      !           representation between start_irr and last_irr
@@ -478,17 +478,8 @@ subroutine phq_setup
         enddo
         imode0 = imode0 + npert (irr)
      enddo
-  ELSEIF (nrapp /= 0) THEN
-     !
-     !   Case 3) The representation which must be computed are given
-     !           as input
-     !
-     if (nrapp > nirr) call errore ('phq_setup', 'too many representations', 1)
-     do irr = 1, nirr
-        do mu = 1, nrapp
-           if (list (mu) == irr) comp_irr (irr) = 1
-        enddo
-     enddo
+  ELSEIF (modenum /= 0) THEN
+     comp_irr(modenum)=1
   ELSE
      call errore('phq_setup','nat_todo or nrap wrong',1)
   ENDIF

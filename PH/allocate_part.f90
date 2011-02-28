@@ -12,7 +12,7 @@ subroutine allocate_part ( nat )
   ! dynamical allocation of arrays for the control of partial computation
   ! of the dynamical matrix
   !
-  USE partial, ONLY : comp_irr, done_irr, list, atomo
+  USE partial, ONLY : comp_irr, done_irr, atomo
   IMPLICIT NONE
   INTEGER, INTENT(IN) :: nat
   !
@@ -20,9 +20,7 @@ subroutine allocate_part ( nat )
   !
   allocate (comp_irr (  0:3 * nat))
   allocate (done_irr (  0:3 * nat))
-  allocate (list     (  3 * nat))
   allocate (atomo    (  nat))
-  list(:) = 0
   atomo(:) = 0
   return
 end subroutine allocate_part

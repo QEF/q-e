@@ -25,8 +25,8 @@ MODULE save_ph
   PUBLIC :: save_ph_input_variables, restore_ph_input_variables, &
             clean_input_variables
   !
-  INTEGER, PRIVATE :: nat_todo_save, nrapp_save
-  INTEGER, ALLOCATABLE, PRIVATE :: list_save(:), atomo_save(:)
+  INTEGER, PRIVATE :: nat_todo_save
+  INTEGER, ALLOCATABLE, PRIVATE :: atomo_save(:)
   CHARACTER(LEN=256), PUBLIC :: tmp_dir_save
   !
   !
@@ -37,15 +37,12 @@ MODULE save_ph
       !------------------------------------------------------------------------
       !
       USE ions_base,  ONLY : nat
-      USE partial,    ONLY : list, atomo, nat_todo, nrapp
+      USE partial,    ONLY : atomo, nat_todo
       !
       IMPLICIT NONE
       !
-      ALLOCATE(list_save(3*nat))
       ALLOCATE(atomo_save(nat))
       nat_todo_save=nat_todo
-      nrapp_save=nrapp
-      list_save=list
       atomo_save=atomo
 
       RETURN
@@ -56,13 +53,11 @@ MODULE save_ph
       !
       USE io_files,   ONLY : tmp_dir
       USE ions_base,  ONLY : nat
-      USE partial,    ONLY : list, atomo, nat_todo, nrapp
+      USE partial,    ONLY : atomo, nat_todo
       !
       IMPLICIT NONE
       !
       nat_todo=nat_todo_save
-      nrapp=nrapp_save
-      list=list_save
       atomo=atomo_save
       tmp_dir=tmp_dir_save
 
@@ -72,7 +67,6 @@ MODULE save_ph
     SUBROUTINE clean_input_variables()
     IMPLICIT NONE
 
-    DEALLOCATE(list_save)
     DEALLOCATE(atomo_save)
 
     RETURN

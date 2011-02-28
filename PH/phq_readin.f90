@@ -43,7 +43,7 @@ SUBROUTINE phq_readin()
   USE save_ph,       ONLY : tmp_dir_save
   USE gamma_gamma,   ONLY : asr
   USE qpoint,        ONLY : nksq, xq
-  USE partial,       ONLY : atomo, list, nat_todo, nrapp, nat_todo_input
+  USE partial,       ONLY : atomo, nat_todo, nat_todo_input
   USE output,        ONLY : fildyn, fildvscf, fildrho
   USE disp,          ONLY : nq1, nq2, nq3
   USE io_files,      ONLY : tmp_dir, prefix, trimcheck
@@ -84,7 +84,7 @@ SUBROUTINE phq_readin()
   !
   NAMELIST / INPUTPH / tr2_ph, amass, alpha_mix, niter_ph, nmix_ph,  &
                        nat_todo, iverbosity, outdir, epsil,  &
-                       trans, elph, zue, zeu, nrapp, max_seconds, reduce_io, &
+                       trans, elph, zue, zeu, max_seconds, reduce_io, &
                        modenum, prefix, fildyn, fildvscf, fildrho,   &
                        ldisp, nq1, nq2, nq3, &
                        eth_rps, eth_ns, lraman, elop, dek, recover,  &
@@ -105,7 +105,6 @@ SUBROUTINE phq_readin()
   ! zeu          : if .true. calculate effective charges ( d P / du )
   ! lraman       : if true calculate raman tensor
   ! elop         : if true calculate electro-optic tensor
-  ! nrapp        : the representations to do
   ! max_seconds  : maximum cputime for this run
   ! reduce_io    : reduce I/O to the strict minimum
   ! modenum      : single mode calculation
@@ -164,7 +163,6 @@ SUBROUTINE phq_readin()
   nmix_ph      = 4
   nat_todo     = 0
   modenum      = 0
-  nrapp        = 0
   iverbosity   = 0
   trans        = .TRUE.
   lrpa         = .FALSE.
@@ -231,8 +229,6 @@ SUBROUTINE phq_readin()
   IF (fildyn.EQ.' ') CALL errore ('phq_readin', ' Wrong fildyn ', 1)
   IF (max_seconds.LT.0.1D0) CALL errore ('phq_readin', ' Wrong max_seconds', 1)
 
-  IF (nat_todo.NE.0.AND.nrapp.NE.0) CALL errore ('phq_readin', &
-       &' incompatible flags', 1)
   IF (modenum < 0) CALL errore ('phq_readin', ' Wrong modenum ', 1)
   IF (dek <= 0.d0) CALL errore ( 'phq_readin', ' Wrong dek ', 1)
   epsil = epsil .OR. lraman .OR. elop
@@ -427,8 +423,8 @@ SUBROUTINE phq_readin()
                             .AND.(ABS(xk(3,1))<1.D-12) )
      ENDIF
      IF (nogg) lgamma_gamma=.FALSE.
-     IF ((nat_todo /= 0 .or. nrapp /= 0 ) .and. lgamma_gamma) CALL errore( &
-        'phq_readin', 'gamma_gamma tricks with nat_todo or nrapp &
+     IF ((nat_todo /= 0) .and. lgamma_gamma) CALL errore( &
+        'phq_readin', 'gamma_gamma tricks with nat_todo &
        & not available. Use nogg=.true.', 1)
      !
      IF (lgamma) THEN
@@ -463,15 +459,6 @@ SUBROUTINE phq_readin()
      CALL mp_bcast(atomo, ionode_id )
   ENDIF
   nat_todo_input=nat_todo
-  IF (nrapp.LT.0.OR.nrapp.GT.3 * nat) CALL errore ('phq_readin', &
-       'nrapp is wrong', 1)
-  IF (nrapp.NE.0) THEN
-     IF (ionode) &
-     READ (5, *, iostat = ios) (list (na), na = 1, nrapp)
-     CALL mp_bcast(ios, ionode_id )
-     CALL errore ('phq_readin', 'reading list', ABS (ios) )
-     CALL mp_bcast(list, ionode_id )
-  ENDIF
 
   IF (epsil.AND.lgauss) &
         CALL errore ('phq_readin', 'no elec. field with metals', 1)
@@ -479,9 +466,7 @@ SUBROUTINE phq_readin()
      IF ( ldisp ) &
           CALL errore('phq_readin','Dispersion calculation and &
           & single mode calculation not possibile !',1)
-     nrapp = 1
      nat_todo = 0
-     list (1) = modenum
   ENDIF
 
   IF (modenum > 0 .OR. lraman ) lgamma_gamma=.FALSE.

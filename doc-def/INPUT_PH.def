@@ -15,7 +15,6 @@ input_description -distribution {Quantum Espresso} -package PWscf -program ph.x 
 	/
 
 	xq(1) xq(2) xq(3)
-	[ irrep(1) irrep(2) ... irrep(nrapp)   ]     # if "nrapp" was specified
 	[ atom(1)  atom(2)  ... atom(nat_todo) ]     # if "nat_todo" was specified
     }
 
@@ -302,19 +301,6 @@ input_description -distribution {Quantum Espresso} -package PWscf -program ph.x 
 	group {
 	    label { Specification of irreducible representation }
 
-	    var nrapp  -type INTEGER { 
-		default { 0, i.e. use all irreps  }			
-		info {       
-		    Choose the subset of irreducible representations (irreps)
-		    for which the linear response calculation is performed:
-		    "nrapp" irreps, specified in input (see below) are used.
-		
-		    IMPORTANT:  
-		       * nrapp must be <= 3*nat
-		       * do not specify "nat_todo" together with "nrapp"
-		}
-	    }
-	
 	    var start_irr  -type INTEGER { 
 		default { 1 }
 		see { last_irr }
@@ -324,7 +310,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program ph.x 
 		    
 		    IMPORTANT:
 		       * start_irr must be <= 3*nat
-		       * do not specify "nat_todo" or "nrapp" together with 
+		       * do not specify "nat_todo" together with 
 		         "start_irr", "last_irr"
 		}
 	    }
@@ -338,7 +324,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program ph.x 
 		
 		    IMPORTANT:
 		       * start_irr must be <= 3*nat
-		       * do not specify "nat_todo" or "nrapp" together with 
+		       * do not specify "nat_todo" together with 
 		         "start_irr", "last_irr"
 		}
 	    }
@@ -354,7 +340,6 @@ input_description -distribution {Quantum Espresso} -package PWscf -program ph.x 
 		    that this is an approximation and may not work.
 		    IMPORTANT:
 		       * nat_todo <= nat
-		       * do not specify "nrapp" together with "nat_todo"
                        * if linear-response is calculated for a given atom, it
                          should also be done for all symmetry-equivalent atoms,
 			 or else you will get incorrect results
@@ -388,7 +373,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program ph.x 
 		    
 		    IMPORTANT:
 		       * start_q must be <= nqs (number of q points found)
-		       * do not specify "nat_todo" or "nrapp" together with 
+		       * do not specify "nat_todo" together with 
 		         "start_q", "last_q"
 		}
 	    }
@@ -402,7 +387,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program ph.x 
 		
 		    IMPORTANT
 		       * last_q must be <= nqs (number of q points)
-		       * do not specify "nat_todo" or "nrapp" together with 
+		       * do not specify "nat_todo" together with 
 		         "start_q", "last_q"
 		}
 	    }	
@@ -422,18 +407,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program ph.x 
     }
 	
     choose {
-	when -test "nrapp was specified" {
-	    linecard {
-		list irrep_list -type INTEGER {
-		    format { irrep(1) irrep(2) ... irrep(nrapp) }
-		    info {
-			The list of indices of irreps used in the  calculation 
-			if  "nrapp" is specified.
-		    }
-		}
-	    }
-	}		    
-	elsewhen -test "nat_todo was specified" {
+	when -test "nat_todo was specified" {
 	    linecard {
 		list nat_todo_list -type INTEGER {
 		    format { atom(1)  atom(2) ... atom(nat_todo) }

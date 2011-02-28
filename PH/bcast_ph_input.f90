@@ -23,7 +23,7 @@ subroutine bcast_ph_input ( )
                          lgamma, ldiag, lqdir, search_sym
   USE gamma_gamma, ONLY : asr
   USE disp, ONLY : nq1, nq2, nq3
-  USE partial, ONLY : nat_todo, nrapp
+  USE partial, ONLY : nat_todo
   USE freq_ph, ONLY : fpol
   USE output, ONLY : fildvscf, fildyn, fildrho
   use io_files, ONLY : tmp_dir, prefix
@@ -68,7 +68,6 @@ subroutine bcast_ph_input ( )
   call mp_bcast (iverbosity, ionode_id )
   call mp_bcast (modenum, ionode_id )
   call mp_bcast (nat_todo, ionode_id )
-  call mp_bcast (nrapp, ionode_id )
   CALL mp_bcast( nq1, ionode_id )
   CALL mp_bcast( nq2, ionode_id )
   CALL mp_bcast( nq3, ionode_id )
