@@ -109,7 +109,7 @@ SUBROUTINE make_pointlists
      ! than one atom)
         r_m(nt) = 0.5d0*distmin(nt)/1.2d0 * 0.99d0
         WRITE( stdout,'(5x,"new r_m : ",f8.4," (a_0 units)", f8.4, &
-                          &" a.u. for type",i5)') &
+                          &" (a.u.) for type",i5)') &
                                         r_m(nt), r_m(nt) * alat, nt
      ENDIF
   ENDDO
