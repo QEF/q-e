@@ -182,6 +182,9 @@ cat > ni.scf.in << EOF
  /
  &system
     ibrav=2, celldm(1) =6.65, nat=  1, ntyp= 1,
+    nr1=27,
+    nr2=27,
+    nr3=27,
     noncolin=.true.,
     starting_magnetization(1)=0.5,
     degauss=0.02,
@@ -258,6 +261,9 @@ cat > ni_so.scf.in << EOF
  /
  &system
     ibrav=2, celldm(1) =6.65, nat=  1, ntyp= 1,
+    nr1=27,
+    nr2=27,
+    nr3=27,
     lspinorb=.true.,
     noncolin=.true.,
     starting_magnetization(1)=0.5,
