@@ -177,6 +177,9 @@ cat > Fe.scf_pbe.in << EOF
     celldm(1) =5.42, 
     nat=  1, 
     ntyp= 1,
+    nr1=27,
+    nr2=27,
+    nr3=27,
     noncolin=.true.
     lspinorb=.true.
     starting_magnetization(1)=0.5,
