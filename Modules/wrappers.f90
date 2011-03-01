@@ -108,7 +108,9 @@ CONTAINS
      DO i = 1,32
         md5(i:i) = char(  getter(i) )
      ENDDO
-  
+
+     DEALLOCATE( istr )
+
   END SUBROUTINE 
   !
 
