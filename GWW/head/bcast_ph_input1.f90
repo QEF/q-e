@@ -12,7 +12,7 @@ subroutine bcast_ph_input1
   !
 #ifdef __PARA
 
-  use partial, only : nat_todo, atomo, nrapp, list
+  use partial, only : nat_todo, atomo
   use mp, only: mp_bcast
   USE io_global, ONLY : ionode_id
   implicit none
@@ -20,10 +20,6 @@ subroutine bcast_ph_input1
   call mp_bcast (nat_todo, ionode_id)
   if (nat_todo.gt.0) then
      call mp_bcast (atomo, ionode_id)
-  endif
-  call mp_bcast (nrapp, ionode_id)
-  if (nrapp.gt.0) then
-     call mp_bcast (list, ionode_id)
   endif
 #endif
   return
