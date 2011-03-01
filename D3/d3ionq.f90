@@ -225,7 +225,7 @@ SUBROUTINE d3ionq (nat, ntyp, ityp, zv, tau, alat, omega, q, at, &
   !
   ALLOCATE(d3dy2( 3*nat, nmodes, 3*nat))
   d3dy2 (:,:,:) = (0.d0, 0.d0)
-  DO nu_3 = 1, 3*nat !npert_1, npert_f
+  DO nu_3 = npert_1, npert_f
     !
     IF (q0mode (nu_3) ) THEN
       !
