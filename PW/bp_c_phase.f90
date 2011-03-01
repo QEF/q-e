@@ -148,6 +148,7 @@ SUBROUTINE c_phase
 !   averaged over a 2D grid of nkort k-points ortogonal to nppstr 
 
 !  --- Make use of the module with common information ---
+   USE fixed_occ
    USE kinds,                ONLY : DP
    USE io_global,            ONLY : stdout
    USE io_files,             ONLY : iunwfc, nwordwfc
@@ -222,6 +223,7 @@ SUBROUTINE c_phase
    INTEGER :: nstring
    INTEGER :: nt
    LOGICAL :: lodd
+   LOGICAL l_cal!flag for doing mat calculation, used for spin polarized systems
    REAL(DP) :: dk(3)
    REAL(DP) :: dkmod
    REAL(DP) :: el_loc
@@ -284,7 +286,8 @@ SUBROUTINE c_phase
    WRITE( stdout,"(15X,50('-'),/)")
 
 !  --- Check that we are working with an insulator with no empty bands ---
-   IF ((degauss > 0.01d0) .OR. (nbnd /= nelec/2)) &
+   IF ((degauss > 0.01d0) .OR. ( (nbnd /= nelec/2) .AND. &
+                                 .NOT. (nspin==2 .AND. tfixed_occ) ) ) &
         CALL errore('c_phase', &
                 'Polarization only for insulators and no empty bands',1)
 
@@ -475,57 +478,71 @@ SUBROUTINE c_phase
                mat(:,:) = (0.d0, 0.d0)
                DO nb=1,nbnd
                   DO mb=1,nbnd
-                     aux(:) = (0.d0, 0.d0)
-                     aux0(:)= (0.d0, 0.d0)
-                     DO ig=1,npw0
-                        aux0(igk0(ig))=psi(ig,nb)
-                     END DO
-                     DO ig=1,npw1
-                        IF (kpar /= nppstr) THEN
-                           aux(igk1(ig))=evc(ig,mb)
-                        ELSE
-!                          --- If k'=k+G_o, the relation psi_k+G_o (G-G_o) ---
-!                          --- = psi_k(G) is used, gpar=G_o, gtr = G-G_o ---
-                           gtr(1)=g(1,igk1(ig))-gpar(1)
-                           gtr(2)=g(2,igk1(ig))-gpar(2) 
-                           gtr(3)=g(3,igk1(ig))-gpar(3) 
-!                          --- Find crystal coordinates of gtr, n1,n2,n3 ---
-!                          --- and the position ng in the ngm array ---
-                           IF (gtr(1)**2+gtr(2)**2+gtr(3)**2 <= gcutm) THEN
-                              n1=NINT(gtr(1)*at(1,1)+gtr(2)*at(2,1) &
-                                     +gtr(3)*at(3,1))
-                              n2=NINT(gtr(1)*at(1,2)+gtr(2)*at(2,2) &
-                                     +gtr(3)*at(3,2))
-                              n3=NINT(gtr(1)*at(1,3)+gtr(2)*at(2,3) &
-                                     +gtr(3)*at(3,3))
-                              ng=ln(n1,n2,n3) 
-                              IF ((ABS(g(1,ng)-gtr(1)) > eps) .OR. &
-                                  (ABS(g(2,ng)-gtr(2)) > eps) .OR. &
-                                  (ABS(g(3,ng)-gtr(3)) > eps)) THEN
-                                 WRITE( stdout,*) ' error: translated G=', &
-                                      gtr(1),gtr(2),gtr(3), &
-                                      ' with crystal coordinates',n1,n2,n3, &
-                                      ' corresponds to ng=',ng,' but G(ng)=', &
-                                      g(1,ng),g(2,ng),g(3,ng)
-                                 WRITE( stdout,*) ' probably because G_par is NOT', &
-                                            ' a reciprocal lattice vector '
-                                 WRITE( stdout,*) ' Possible choices as smallest ', &
-                                            ' G_par:'
-                                 DO i=1,50
-                                    WRITE( stdout,*) ' i=',i,'   G=', &
-                                         g(1,i),g(2,i),g(3,i)
-                                 ENDDO
+                     !added support for spin polarized case
+                     l_cal=.true.
+                     if( nspin==2 .and. tfixed_occ) then
+                        if(f_inp(nb,is)==0.d0 .or. f_inp(mb,is)==0.d0) then
+                           l_cal=.false.
+                           if(nb==mb) then
+                              mat(nb,mb)=1.d0
+                           else
+                              mat(nb,mb)=0.d0
+                           endif
+                        endif
+                     endif
+                     if(l_cal) then
+                        aux(:) = (0.d0, 0.d0)
+                        aux0(:)= (0.d0, 0.d0)
+                        DO ig=1,npw0
+                           aux0(igk0(ig))=psi(ig,nb)
+                        END DO
+                        DO ig=1,npw1
+                           IF (kpar /= nppstr) THEN
+                              aux(igk1(ig))=evc(ig,mb)
+                           ELSE
+!                             --- If k'=k+G_o, the relation psi_k+G_o (G-G_o) ---
+!                             --- = psi_k(G) is used, gpar=G_o, gtr = G-G_o ---
+                              gtr(1)=g(1,igk1(ig))-gpar(1)
+                              gtr(2)=g(2,igk1(ig))-gpar(2) 
+                              gtr(3)=g(3,igk1(ig))-gpar(3) 
+!                             --- Find crystal coordinates of gtr, n1,n2,n3 ---
+!                             --- and the position ng in the ngm array ---
+                              IF (gtr(1)**2+gtr(2)**2+gtr(3)**2 <= gcutm) THEN
+                                 n1=NINT(gtr(1)*at(1,1)+gtr(2)*at(2,1) &
+                                        +gtr(3)*at(3,1))
+                                 n2=NINT(gtr(1)*at(1,2)+gtr(2)*at(2,2) &
+                                        +gtr(3)*at(3,2))
+                                 n3=NINT(gtr(1)*at(1,3)+gtr(2)*at(2,3) &
+                                        +gtr(3)*at(3,3))
+                                 ng=ln(n1,n2,n3) 
+                                 IF ((ABS(g(1,ng)-gtr(1)) > eps) .OR. &
+                                     (ABS(g(2,ng)-gtr(2)) > eps) .OR. &
+                                     (ABS(g(3,ng)-gtr(3)) > eps)) THEN
+                                    WRITE( stdout,*) ' error: translated G=', &
+                                         gtr(1),gtr(2),gtr(3), &
+                                         ' with crystal coordinates',n1,n2,n3, &
+                                         ' corresponds to ng=',ng,' but G(ng)=', &
+                                         g(1,ng),g(2,ng),g(3,ng)
+                                    WRITE( stdout,*) ' probably because G_par is NOT', &
+                                               ' a reciprocal lattice vector '
+                                    WRITE( stdout,*) ' Possible choices as smallest ', &
+                                               ' G_par:'
+                                    DO i=1,50
+                                       WRITE( stdout,*) ' i=',i,'   G=', &
+                                            g(1,i),g(2,i),g(3,i)
+                                    ENDDO
+                                    STOP
+                                 ENDIF
+                              ELSE 
+                                 WRITE( stdout,*) ' |gtr| > gcutm  for gtr=', &
+                                      gtr(1),gtr(2),gtr(3) 
                                  STOP
-                              ENDIF
-                           ELSE 
-                              WRITE( stdout,*) ' |gtr| > gcutm  for gtr=', &
-                                   gtr(1),gtr(2),gtr(3) 
-                              STOP
-                           END IF
-                           aux(ng)=evc(ig,mb)
-                        ENDIF
-                     END DO
-                     mat(nb,mb) = zdotc (ngm,aux0,1,aux,1)
+                              END IF
+                              aux(ng)=evc(ig,mb)
+                           ENDIF
+                        END DO
+                        mat(nb,mb) = zdotc (ngm,aux0,1,aux,1)
+                     end if
                   end do
                end do
 #ifdef __PARA
@@ -537,20 +554,33 @@ SUBROUTINE c_phase
 !                    --- R=atom index: SUM_{ijR} q(ijR) <u_nk|beta_iR>   ---
 !                    --- <beta_jR|u_mk'> e^i(k-k')*R =                   ---
 !                    --- also <u_nk|beta_iR>=<psi_nk|beta_iR> = becp^*   ---
-                     if (okvan) then
-                        pref = (0.d0,0.d0)
-                        DO jkb=1,nkb
-                           nhjkb = nkbtonh(jkb)
-                           na = nkbtona(jkb)
-                           np = ityp(na)
-                           nhjkbm = nh(np)
-                           jkb1 = jkb - nhjkb
-                           DO j = 1,nhjkbm
-                              pref = pref+CONJG(becp0(jkb,nb))*becp_bp(jkb1+j,mb) &
-                                   *q_dk(nhjkb,j,np)*struc(na)
+                     l_cal=.true.
+                     if( nspin==2 .and. tfixed_occ) then
+                        if(f_inp(nb,is)==0.d0 .or. f_inp(mb,is)==0.d0) then
+                           l_cal=.false.
+                           if(nb==mb) then
+                              mat(nb,mb)=1.d0
+                           else
+                              mat(nb,mb)=0.d0
+                           endif
+                        endif
+                     endif
+                     if(l_cal) then
+                        if (okvan) then
+                           pref = (0.d0,0.d0)
+                           DO jkb=1,nkb
+                              nhjkb = nkbtonh(jkb)
+                              na = nkbtona(jkb)
+                              np = ityp(na)
+                              nhjkbm = nh(np)
+                              jkb1 = jkb - nhjkb
+                              DO j = 1,nhjkbm
+                                 pref = pref+CONJG(becp0(jkb,nb))*becp_bp(jkb1+j,mb) &
+                                      *q_dk(nhjkb,j,np)*struc(na)
+                              ENDDO
                            ENDDO
-                        ENDDO
-                        mat(nb,mb) = mat(nb,mb) + pref
+                           mat(nb,mb) = mat(nb,mb) + pref
+                        endif
                      endif
                   ENDDO
                ENDDO
