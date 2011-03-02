@@ -158,7 +158,7 @@ if (ionode) then !No need for parallelization in this code
   ! Terminator Scheme
   if (trim(extrapolation)=="no") then
      !
-     itermax0=itermax
+     itermax=itermax0
      !
   end if
   !
