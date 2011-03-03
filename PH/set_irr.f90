@@ -246,6 +246,28 @@ subroutine set_irr (nat, at, bg, xq, s, sr, tau, ntyp, ityp, ftau, invs, nsym, &
         eigen=eig
         u=phi
         num_rap_mode=num_rap_aux
+
+! Modes with accidentally degenerate eigenvalues, or with eigenvalues 
+! degenerate due to time reversal must be calculated together even if
+! they belong to different irreducible representations. 
+!
+        DO imode=1,3*nat-1
+           DO jmode = imode+1, 3*nat
+              IF ((num_rap_mode(imode) /= num_rap_mode(jmode)).AND.  &
+                  (ABS(eigen(imode) - eigen(jmode))/   &
+                  (ABS(eigen(imode)) + ABS (eigen (jmode) )) < 1.d-4) ) THEN
+                 eig(1)=eigen(jmode)
+                 phi(:,1)=u(:,jmode)
+                 num_rap_aux(1)=num_rap_mode(jmode)
+                 eigen(jmode)=eigen(imode+1)
+                 u(:,jmode)=u(:,imode+1)
+                 num_rap_mode(jmode)=num_rap_mode(imode+1)
+                 eigen(imode+1)=eig(1)
+                 u(:,imode+1)=phi(:,1)
+                 num_rap_mode(imode+1)=num_rap_aux(1)
+              ENDIF
+           ENDDO
+        ENDDO
      ENDIF
 !
 !  Here we count the irreducible representations and their dimensions
