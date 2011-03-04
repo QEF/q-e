@@ -61,9 +61,15 @@ PROGRAM lr_main
   CALL environment_start ( 'TDDFPT' )
   WRITE( stdout, '(/5x,"----------------------------------------")' )
   WRITE( stdout, '(/5x,"This is TDDFPT (Time Dependent Density Functional Perturbation Theory)")' )
-  WRITE( stdout, '(/5x,"Sub Version: BETA 1 ")' )
+  WRITE( stdout, '(/5x,"Sub Version: 0.9 ")' )
   WRITE( stdout, '(/5x,"")' )
   WRITE( stdout, '(/5x,"Please cite this project as:  ")' )
+  WRITE( stdout, '(/5x,"O.B.Malcioglu, R. Gebauer, D. Rocca, S. Baroni,")' )
+  WRITE( stdout, '(/5x,"""turboTDDFT – a code for the simulation of molecular")' )
+  WRITE( stdout, '(/5x,"spectra using the Liouville-Lanczos approach to")' ) 
+  WRITE( stdout, '(/5x,"time-dependent density-functional perturbation theory""")' )
+  WRITE( stdout, '(/5x,"CPC, (in press)")' )
+  
   WRITE( stdout, '(/5x,"----------------------------------------")' )
   !
   CALL start_clock('lr_main')
