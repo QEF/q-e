@@ -82,7 +82,7 @@ MODULE io_global
        !
        RETURN
        !
-     END SUBROUTINE io_global_start
+     END SUBROUTINE meta_io_global_start
      !
      !
      !
