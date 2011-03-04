@@ -20,11 +20,15 @@ function sumkt (et, nbnd, nks, nspin, ntetra, tetra, e, is, isk)
   integer, intent(in) :: is, isk
   ! local variables
   real(DP) :: etetra (4), e1, e2, e3, e4
-  integer :: nt, nk, ns, ibnd, i
+  integer :: nt, nk, ns, ibnd, i, nspin_lsda
 
-
+  IF ( nspin == 2 ) THEN
+     nspin_lsda = 2
+  ELSE
+     nspin_lsda = 1
+  END IF
   sumkt = 0.0d0
-  do ns = 1, nspin
+  do ns = 1, nspin_lsda
      if (is /= 0) then
         if ( ns .ne. is) cycle
      end if
@@ -75,7 +79,7 @@ function sumkt (et, nbnd, nks, nspin, ntetra, tetra, e, is, isk)
   enddo
   ! add correct spin normalization : 2 for LDA, 1 for LSDA calculations
 
-  sumkt = sumkt * 2.d0 / nspin
+  IF ( nspin == 1 ) sumkt = sumkt * 2.d0
   return
 
 end function sumkt
