@@ -14,7 +14,7 @@ MODULE io_global
   PRIVATE
   SAVE
   !
-  PUBLIC :: io_global_start, io_global_getionode, io_global_getmeta
+  PUBLIC :: io_global_start, meta_io_global_start, io_global_getionode, io_global_getmeta
   PUBLIC :: stdout, ionode, ionode_id, meta_ionode, meta_ionode_id
   PUBLIC :: xmlinputunit, xmloutputunit, xmltmpunit
   !
@@ -56,6 +56,34 @@ MODULE io_global
        RETURN
        !
      END SUBROUTINE io_global_start
+     !
+     !-----------------------------------------------------------------------
+     SUBROUTINE meta_io_global_start( mpime, ionode_set )
+       !-----------------------------------------------------------------------
+       !
+       IMPLICIT NONE
+       !
+       INTEGER, INTENT(IN) :: mpime, ionode_set
+       !
+       !
+       IF ( mpime == ionode_set ) THEN
+          !
+          meta_ionode      = .TRUE.
+          !
+       ELSE
+          !
+          meta_ionode      = .FALSE.
+          !
+       END IF
+       !
+       meta_ionode_id      = ionode_set
+       !
+       first = .FALSE.
+       !
+       RETURN
+       !
+     END SUBROUTINE io_global_start
+     !
      !
      !
      !-----------------------------------------------------------------------
