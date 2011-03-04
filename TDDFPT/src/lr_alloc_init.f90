@@ -7,6 +7,7 @@ subroutine lr_alloc_init()
 #include "f_defs.h"
   !
   use grid_dimensions,   only : nrxx
+  use smooth_grid_dimensions,   only : nrxxs
   use klist,             only : nks
   use lr_variables
   use uspp,              only : nkb
@@ -59,7 +60,7 @@ subroutine lr_alloc_init()
   allocate(sevc1_new(npwx,nbnd,nks,2))
   allocate(d0psi(npwx,nbnd,nks,n_ipol))
   !
-  allocate(revc0(nrxx,nbnd,nks))
+  allocate(revc0(nrxxs,nbnd,nks))
   !
   allocate(rho_1(nrxx,nspin_mag))
   rho_1(:,:)=0.0d0
