@@ -430,7 +430,7 @@ CONTAINS
  
     do i_grid = 1, nrxx
        
-       vtxc = vtxc + e2*grid_cell_volume * total_rho(i_grid)*potential(i_grid)
+       vtxc = vtxc + e2*grid_cell_volume*rho_valence(i_grid,1)*potential(i_grid)
     
     end do
 
