@@ -231,8 +231,20 @@ CONTAINS
       conv_bfgs = conv_bfgs .AND. ( grad_error < grad_thr )
       !
       IF( lmovecell) THEN
-          cell_error    = MAXVAL( ABS( grad(n-8:n) ) )
+          cell_error = MAXVAL( ABS( MATMUL ( TRANSPOSE ( RESHAPE( grad(n-8:n), (/ 3, 3 /) ) ),&
+                                             TRANSPOSE(h) ) ) ) / omega
           conv_bfgs = conv_bfgs .AND. ( cell_error < cell_thr ) 
+#undef DEBUG
+#ifdef DEBUG
+           write (*,'(3f15.10)') TRANSPOSE ( RESHAPE( grad(n-8:n), (/ 3, 3 /) ) )
+           write (*,*)
+           write (*,'(3f15.10)') TRANSPOSE(h)
+           write (*,*)
+           write (*,'(3f15.10)') MATMUL (TRANSPOSE( RESHAPE( grad(n-8:n), (/ 3, 3 /) ) ),&
+                                             TRANSPOSE(h) ) / omega
+           write (*,*)
+           write (*,*) cell_error/cell_thr*0.5d0
+#endif
       END IF
       !
       stop_bfgs = conv_bfgs .OR. ( scf_iter >= nstep )

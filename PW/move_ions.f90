@@ -141,7 +141,8 @@ SUBROUTINE move_ions()
            omega_old = omega
            etot = etot + press * omega
            CALL cell_force( fcell, - transpose(bg)/alat, sigma, omega, press )
-           epsp1 = omega * epsp / alat / uakbar
+           epsp1 = epsp / uakbar
+!           epsp1 = omega * epsp / alat / uakbar
         END IF
         !
         CALL bfgs( pos, h, etot, grad, fcell, fixion, tmp_dir, stdout, epse,&
@@ -177,6 +178,9 @@ SUBROUTINE move_ions()
               !  cell.
               !
               final_cell_calculation=.TRUE.
+              CALL terminate_bfgs ( etot, epse, epsf, epsp, lmovecell, &
+                                    stdout, tmp_dir )
+              !
            ELSE
               !
               CALL terminate_bfgs ( etot, epse, epsf, epsp, lmovecell, &
