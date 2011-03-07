@@ -121,7 +121,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
              is,         & ! counter on spin polarizations
              nt,         & ! counter on types
              na,         & ! counter on atoms
-             nrec, nrec1,& ! the record number for dvpsi and dpsi
+             nrec,       & ! the record number for dvpsi and dpsi
              ios,        & ! integer variable for I/O control
              mode          ! mode index
 
@@ -306,8 +306,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
               !
               ! starting value for delta_psi is read from iudwf
               !
-              nrec1 = (ipert - 1) * nksq + ik
-              call davcio ( dpsi, lrdwf, iudwf, nrec1, -1)
+              call davcio ( dpsi, lrdwf, iudwf, nrec, -1)
               !
               ! threshold for iterative solution of the linear system
               !
@@ -342,9 +341,8 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
            !
            ! writes delta_psi on iunit iudwf, k=kpoint,
            !
-           nrec1 = (ipert - 1) * nksq + ik
            !               if (nksq.gt.1 .or. npert(irr).gt.1)
-           call davcio (dpsi, lrdwf, iudwf, nrec1, + 1)
+           call davcio (dpsi, lrdwf, iudwf, nrec, + 1)
            !
            ! calculates dvscf, sum over k => dvscf_q_ipert
            !
