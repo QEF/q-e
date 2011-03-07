@@ -200,7 +200,7 @@ check_initial_status.o : ph_restart.o
 check_initial_status.o : phcom.o
 check_initial_status.o : save_ph_input.o
 check_q_points_sym.o : ../Modules/kind.o
-chi_test.o : ../Modules/fft_base.o
+chi_test.o : ../Modules/griddim.o
 chi_test.o : ../Modules/kind.o
 chi_test.o : ../Modules/wavefunctions.o
 chi_test.o : ../PW/pwcom.o
@@ -1047,6 +1047,7 @@ set_defaults_pw.o : ../Modules/kind.o
 set_defaults_pw.o : ../Modules/mp_global.o
 set_defaults_pw.o : ../Modules/parameters.o
 set_defaults_pw.o : ../Modules/paw_variables.o
+set_defaults_pw.o : ../Modules/uspp.o
 set_defaults_pw.o : ../PW/noncol.o
 set_defaults_pw.o : ../PW/pwcom.o
 set_defaults_pw.o : ../PW/symm_base.o
