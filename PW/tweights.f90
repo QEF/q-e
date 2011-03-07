@@ -1,16 +1,18 @@
 !
-! Copyright (C) 2001-2003 PWSCF group
+! Copyright (C) 2001-2011 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-!
 !--------------------------------------------------------------------
 subroutine tweights (nks, nspin, nbnd, nelec, ntetra, tetra, et, &
      ef, wg, is, isk )
   !--------------------------------------------------------------------
-  ! calculates weights with the tetrahedron method (Bloechl version)
+  !
+  ! ... calculates weights with the tetrahedron method (P.E.Bloechl)
+  ! ... Generalization to noncollinear case courtesy of Yurii Timrov
+
   USE kinds
   implicit none
   ! I/O variables
@@ -22,6 +24,7 @@ subroutine tweights (nks, nspin, nbnd, nelec, ntetra, tetra, et, &
   real(DP), external :: efermit
   real(DP) :: e1, e2, e3, e4, c1, c2, c3, c4, etetra (4), dosef
   integer :: ik, ibnd, nt, nk, ns, i, kp1, kp2, kp3, kp4, itetra (4)
+  integer :: nspin_lsda
 
   ! Calculate the Fermi energy ef
 
@@ -40,7 +43,13 @@ subroutine tweights (nks, nspin, nbnd, nelec, ntetra, tetra, et, &
      enddo
   enddo
 
-  do ns = 1, nspin
+  IF ( nspin == 2 ) THEN
+     nspin_lsda = 2
+  ELSE
+     nspin_lsda = 1
+  END IF
+
+  do ns = 1, nspin_lsda
      if (is /= 0) then
         if (ns .ne. is) cycle
      end if
@@ -143,12 +152,8 @@ subroutine tweights (nks, nspin, nbnd, nelec, ntetra, tetra, et, &
 
 
   enddo
-  ! add correct spin normalization : 2 for LDA, 1 for LSDA calculations
-  do ik = 1, nks
-     do ibnd = 1, nbnd
-        wg (ibnd, ik) = wg (ibnd, ik) * 2.d0 / nspin
-     enddo
+  ! add correct spin normalization (2 for LDA, 1 for all other cases)
+  IF ( nspin == 1 ) wg (:,1:nks) = wg (:,1:nks) * 2.d0
 
-  enddo
   return
 end subroutine tweights

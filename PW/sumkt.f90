@@ -1,14 +1,17 @@
 !
-! Copyright (C) 2001-2003 PWSCF group
+! Copyright (C) 2001-2011 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-!
 !--------------------------------------------------------------------
-function sumkt (et, nbnd, nks, nspin, ntetra, tetra, e, is, isk)
+FUNCTION sumkt (et, nbnd, nks, nspin, ntetra, tetra, e, is, isk)
   !--------------------------------------------------------------------
+  !
+  ! ... Sum over all states with tetrahedron method
+  ! ... At Fermi energy e=E_F, sumkt(e) == number of electrons
+  ! ... Generalization to noncollinear case courtesy of Yurii Timrov
   !
   USE kinds
   implicit none
@@ -74,12 +77,12 @@ function sumkt (et, nbnd, nks, nspin, ntetra, tetra, e, is, isk)
            endif
         enddo
      enddo
-
-
   enddo
-  ! add correct spin normalization : 2 for LDA, 1 for LSDA calculations
+
+  ! add correct spin normalization (2 for LDA, 1 for other cases)
 
   IF ( nspin == 1 ) sumkt = sumkt * 2.d0
+
   return
 
 end function sumkt
