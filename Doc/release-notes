@@ -54,6 +54,7 @@ Fixed in 4.3 version:
   * PH: electron-phonon data file for q2r.x was not properly written in
         some cases (-q not in the star of q). Also: questionable syntax
         for formats in lambda.f90 was not accepted by gfortran
+  * D3: k-point parallelization fixed again
 
 Fixed in version 4.2.1:
 
