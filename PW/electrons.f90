@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2006 Quantum ESPRESSO group
+! Copyright (C) 2001-2011 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -71,14 +71,6 @@ SUBROUTINE electrons()
   USE paw_onecenter,        ONLY : PAW_potential
   USE paw_symmetry,         ONLY : PAW_symmetrize_ddd
   USE uspp_param,           ONLY : nh, nhm ! used for PAW
-!DCC
-!  USE ee_mod,               ONLY : n_cycle,                            &
-!                                   n_self_interaction,                 &
-!                                   which_compensation,                 &
-!                                   do_comp, ecomp,                     &
-!                                   n_charge_compensation,              &
-!                                   vloc_of_g_zero, mr1, mr2, mr3,      &
-!                                   vcomp, comp_thr, icomp
   USE dfunct,                 only : newd
   !
   !
@@ -113,9 +105,6 @@ SUBROUTINE electrons()
   !
   REAL(DP), EXTERNAL :: ewald, get_clock
   !
-! DCC
-!  REAL (DP), ALLOCATABLE :: vlocinit(:)
-
   iter = 0
   ik_  = 0
   dr2  = 0.0_dp
@@ -171,16 +160,6 @@ SUBROUTINE electrons()
 #endif
 
   CALL flush_unit( stdout )
-! DCC
-!  IF( do_comp ) THEN
-!    icomp = 0
-!    CALL setlocalcoul()
-!    CALL flush_unit( stdout )
-!    ALLOCATE( vlocinit( nrxx ) )
-!    vlocinit = vltot
-!    vloc_of_g_zero = SUM( vltot( : ) ) / DBLE( nr1 * nr2 * nr3 )
-!  END IF
-
   !
   ! ... calculates the ewald contribution to total energy
   !
@@ -545,16 +524,6 @@ SUBROUTINE electrons()
         hwf_energy = hwf_energy + etotefield
      END IF
      !
-     !
-     ! ... Adds the charge-compensation contribution to the energy
-     !
-     ! DCC
-     !
-!     IF ( do_comp )  THEN
-!        CALL calc_ecomp( rho%of_r, nr1,nr2,nr3,nr1x,nr2x,nr3x,nrxx,nspin )
-!        etot = etot + ecomp
-!     END IF
-
      IF ( ( conv_elec .OR. MOD( iter, iprint ) == 0 ) .AND. .NOT. lmd ) THEN
         !
         IF ( dr2 > eps8 ) THEN
@@ -602,39 +571,6 @@ SUBROUTINE electrons()
            WRITE( stdout, 9082 ) etot, hwf_energy, dr2
         END IF
      END IF
-     !
-     ! DCC
-     !
-!     IF ( .not. conv_elec .and. do_comp ) THEN
-!        !
-!        WRITE( stdout, 9268 ) ecomp
-!        IF ( icomp == 0 .AND. dr2 < comp_thr ) THEN
-          !
-          ! ... Add the electrostatic correction to the local potential
-          !
-!          write (stdout, &
-!               '(/5x,"Add the electrostatic correction to the local potential")')
-!          vltot = vlocinit
-!          CALL flush_unit( stdout )
-!          CALL add_ele_corr( vltot, rho%of_r, nelec,                &
-!                             nr1, nr2, nr3, nr1x, nr2x, nr3x, nrxx, &
-!                             nl, nlm, g, gg, ngm, gstart, nspin     )
-!          CALL set_vrs( vrs, vltot, v%of_r, kedtau, v%kin_r, nrxx, nspin, doublegrid )
-          !
-!        END IF
-        !
-!        IF( dr2 < comp_thr ) THEN
-          !
-          ! ... Update counter for the electrostatic correction
-          !
-!          write (stdout,&
-!               '(/5x,"Update the counter for the electrostatic correction")')
-!          icomp = icomp + 1
-!          icomp = MOD( icomp, n_charge_compensation )
-          !
- !       END IF
-        !
-!     END IF
      !
      IF ( lsda ) WRITE( stdout, 9017 ) magtot, absmag
      !
@@ -745,8 +681,6 @@ SUBROUTINE electrons()
 9101 FORMAT(/'     End of self-consistent calculation' )
 9110 FORMAT(/'     convergence has been achieved in ',i3,' iterations' )
 9120 FORMAT(/'     convergence NOT achieved after ',i3,' iterations: stopping' )
-! DCC
-!9268 FORMAT( '     electrostatic correction  =',F17.8,' Ry' ) 
   !
   CONTAINS
      !

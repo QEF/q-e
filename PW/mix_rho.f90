@@ -386,7 +386,7 @@ SUBROUTINE approx_screening( drho )
   USE gvect,         ONLY : gg, ngm, nl, nlm
   USE klist,         ONLY : nelec
   USE lsda_mod,      ONLY : nspin
-  USE control_flags, ONLY : ngm0, gamma_only
+  USE control_flags, ONLY : ngm0
   USE scf,           ONLY : mix_type
   USE wavefunctions_module, ONLY : psic
   !
