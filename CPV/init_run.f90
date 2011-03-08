@@ -34,7 +34,6 @@ SUBROUTINE init_run()
   USE core,                     ONLY : rhoc
   USE smooth_grid_dimensions,   ONLY : nrxxs
   USE wavefunctions_module,     ONLY : c0_bgrp, cm_bgrp, phi_bgrp
-  !USE cdvan,                    ONLY : drhovan
   USE ensemble_dft,             ONLY : tens, z0t
   USE cg_module,                ONLY : tcg
   USE electrons_base,           ONLY : nudx, nbnd
@@ -76,7 +75,7 @@ SUBROUTINE init_run()
   USE orthogonalize_base,       ONLY : mesure_diag_perf, mesure_mmul_perf
   USE step_penalty,             ONLY : step_pen
   USE ions_base,                ONLY : ions_reference_positions, cdmi, taui
-  USE mp_global,                ONLY : nbgrp
+  USE mp_global,                ONLY : nimage, my_image_id, nbgrp
   USE ldaU_cp
   !
   IMPLICIT NONE
@@ -90,15 +89,15 @@ SUBROUTINE init_run()
   !
   ! ... initialize directories
   !
-  !IF( nbgrp > 1 ) THEN
-  !   !
-  !   ! ... When bgrps are used, open a directory for each one
-  !   !
-  !   WRITE( dirname, FMT = '( I5.5 )' ) my_bgrp_id
-  !   tmp_dir = TRIM( tmp_dir ) // '/' // TRIM( dirname )
-  !   CALL create_directory( tmp_dir )
-  !   !
-  !END IF
+  IF( nimage > 1 ) THEN
+     !
+     ! ... When bgrps are used, open a directory for each one
+     !
+     WRITE( dirname, FMT = '( I5.5 )' ) my_image_id
+     tmp_dir = TRIM( tmp_dir ) // '/' // TRIM( dirname )
+     CALL create_directory( tmp_dir )
+     !
+  END IF
   IF( nbgrp > 1 .AND. force_pairing ) &
      CALL errore( ' init_run ', ' force_pairing with parallelization over bands not implemented yet ', 1 )
   !
