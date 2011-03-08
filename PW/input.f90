@@ -108,33 +108,6 @@ SUBROUTINE iosys()
                             niter_with_fixed_ns, starting_ns, U_projection
   !
   USE martyna_tuckerman, ONLY: do_comp_mt
-! DCC
-!  USE ee_mod,        ONLY : do_comp, do_coarse, do_mltgrid, &
-!                            n_self_interaction_ => n_self_interaction, &
-!                            mixing_charge_compensation_ => mixing_charge_compensation, &
-!                            mr1_ => mr1, &
-!                            mr2_ => mr2, &
-!                            mr3_ => mr3, &
-!                            ecutcoarse_ => ecutcoarse, &
-!                            whichbc_ => whichbc, &
-!                            errtol_ => errtol, &
-!                            itmax_ => itmax, &
-!                            which_compensation_ => which_compensation, &
-!                            n_charge_compensation_ => n_charge_compensation, &
-!                            ncompx_ => ncompx, &
-!                            ncompy_ => ncompy, &
-!                            ncompz_ => ncompz, &
-!                            rhocut_ => rhocut, &
-!                            rhocution_ => rhocution, &
-!                            cellmin_ => cellmin, &
-!                            cellmax_ => cellmax, &
-!                            n_smoothing_ => n_smoothing, &
-!                            comp_thr_ => comp_thr, &
-!                            smoothspr_ => smoothspr, &
-!                            nlev_ =>  nlev, &
-!                            deltapot_ => deltapot, &
-!                            rhoionmax_ => rhoionmax, &
-!                            which_smoothing_ => which_smoothing
   !
   USE a2F,           ONLY : la2F_ => la2F
   !
@@ -249,16 +222,6 @@ SUBROUTINE iosys()
                                B_field, fixed_magnetization, report, lspinorb,&
                                assume_isolated, spline_ps, london, london_s6, &
                                london_rcut, one_atom_occupations, no_t_rev
-  !
-  ! ... EE namelist
-  !
-  USE input_parameters, ONLY : n_charge_compensation,                       &
-                               mixing_charge_compensation,                  &
-                               mr1, mr2, mr3, ecutcoarse,comp_thr,          &
-                               errtol,itmax,whichbc,                        &
-                               ncompx, ncompy, ncompz,                      &
-                               cellmin, cellmax,                            &
-                               nlev
   !
   ! ... ELECTRONS namelist
   !
@@ -1173,27 +1136,6 @@ SUBROUTINE iosys()
   trust_radius_ini_ = trust_radius_ini
   w_1_              = w_1
   w_2_              = w_2
-! DCC
-  !
-  ! ...  Charge Compensation
-  !
-!  ecutcoarse_ = ecutcoarse
-!  mixing_charge_compensation_ = mixing_charge_compensation
-!  n_charge_compensation_ = n_charge_compensation
-!  comp_thr_ = comp_thr
-!  nlev_ = nlev
-!  ! more DCC variables
-!  mr1_ = mr1
-!  mr2_ = mr2
-!  mr3_ = mr3
-!  whichbc_ = whichbc
-!  errtol_ = errtol
-!  itmax_ = itmax
-!  ncompx_ = ncompx
-!  ncompy_ = ncompy
-!  ncompz_ = ncompz
-!  cellmin_ = cellmin
-!  cellmax_ = cellmax
   !
   IF (trim(occupations) /= 'from_input') one_atom_occupations=.false.
   !
