@@ -15,6 +15,10 @@ MODULE acfdtest
  SAVE
  LOGICAL :: acfdt_is_active=.FALSE.
  LOGICAL :: acfdt_num_der=.FALSE.
+ LOGICAL :: acfdt_term1 = .FALSE.
+ LOGICAL :: acfdt_term2 = .FALSE.
+ LOGICAL :: acfdt_term3 = .FALSE.
+ LOGICAL :: test_oep=.FALSE. 
  INTEGER :: ir_point=0
  REAL(DP):: delta_vrs=0.0_DP
  REAL(DP):: f1=1.0_DP

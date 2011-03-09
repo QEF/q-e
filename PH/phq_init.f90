@@ -58,7 +58,7 @@ SUBROUTINE phq_init()
 
   USE mp_global,           ONLY : intra_pool_comm
   USE mp,                  ONLY : mp_sum
-
+  USE acfdtest,           ONLY : acfdt_is_active, acfdt_num_der
   !
   IMPLICIT NONE
   !
@@ -191,8 +191,21 @@ SUBROUTINE phq_init()
      END DO
      !
      !
+!!!!!!!!!!!!!!!!!!!!!!!! ACFDT TEST !!!!!!!!!!!!!!!!
+  IF (acfdt_is_active) THEN
+     ! ACFDT -test always read calculated wcf from non_scf calculation
+     IF(acfdt_num_der) then 
+       CALL davcio( evq, lrwfc, iuwfc, ikq, -1 )
+     ELSE
+       IF ( .NOT. lgamma ) &
+          CALL davcio( evq, lrwfc, iuwfc, ikq, -1 )
+     ENDIF
+  ELSE
+     ! this is the standard treatment
      IF ( .NOT. lgamma ) &
         CALL davcio( evq, lrwfc, iuwfc, ikq, -1 )
+  ENDIF
+!!!!!!!!!!!!!!!!!!!!!!!! END OF ACFDT TEST !!!!!!!!!!!!!!!!
      !
      ! diagonal elements of the unperturbed Hamiltonian,
      ! needed for preconditioning

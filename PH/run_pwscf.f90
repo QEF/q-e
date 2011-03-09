@@ -61,7 +61,7 @@ SUBROUTINE run_pwscf(do_band)
 !!!!!!!!!!!!!!!!!!!!!!!! ACFDT TEST !!!!!!!!!!!!!!!!
   IF (acfdt_is_active) THEN
     ! ACFDT mumerical derivative test: modify the potential
-    if (acfdt_num_der) vrs(ir_point,1)=vrs(ir_point,1) + delta_vrs
+    IF (acfdt_num_der) vrs(ir_point,1)=vrs(ir_point,1) + delta_vrs
   ENDIF
 !!!!!!!!!!!!!!!!!!!!!!!!END OF ACFDT TEST !!!!!!!!!!!!!!!!
 !

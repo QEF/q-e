@@ -45,6 +45,7 @@ module funct
   ! subroutines/functions managing dft name and indices
   PUBLIC  :: set_dft_from_indices, set_dft_from_name
   PUBLIC  :: enforce_input_dft, write_dft_name, dft_name
+  PUBLIC  :: init_dft_exxrpa, enforce_dft_exxrpa
   PUBLIC  :: get_dft_name, get_iexch, get_icorr, get_igcx, get_igcc
   PUBLIC  :: dft_is_gradient, dft_is_meta, dft_is_hybrid, dft_is_vdW
 
@@ -508,6 +509,42 @@ CONTAINS
 
      return
   end subroutine enforce_input_dft
+ 
+  !-----------------------------------------------------------------------
+  subroutine enforce_dft_exxrpa ( )
+    !
+    implicit none
+    !
+    !character(len=*), intent(in) :: dft_
+    !logical, intent(in), optional :: nomsg
+
+    iexch = 0; icorr = 1; igcx = 0; igcc = 0
+    exx_fraction = 1.0_DP
+    ishybrid = ( exx_fraction /= 0.0_DP )
+
+    write (stdout,'(/,5x,a)') "XC functional enforced to be EXXRPA"
+    call write_dft_name
+    write (stdout,'(5x,a)') "!!! Any further DFT definition will be discarded"
+    write (stdout,'(5x,a/)') "!!! Please, verify this is what you really want !"
+
+    return
+  end subroutine enforce_dft_exxrpa
+
+  !-----------------------------------------------------------------------
+  subroutine init_dft_exxrpa ( )
+    !
+    implicit none
+    !
+    exx_fraction = 1.0_DP
+    ishybrid = ( exx_fraction /= 0.0_DP )
+
+    write (stdout,'(/,5x,a)') "Only exx_fraction is set to 1.d0"
+    write (stdout,'(5x,a)') "XC functional still not changed"
+    call write_dft_name
+
+    return
+  end subroutine init_dft_exxrpa
+
   !-----------------------------------------------------------------------
   subroutine start_exx 
      if (.not. ishybrid) &
