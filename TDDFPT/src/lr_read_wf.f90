@@ -89,7 +89,7 @@ USE lr_variables, ONLY: check_all_bands_gamma, check_density_gamma,&
   if (.not.exst .and. wfc_dir == 'undefined') call errore('lr_read_wfc', TRIM( prefix )//'.wfc'//' not found',1)
   !
   if (.not.exst .and. wfc_dir /= 'undefined') then
-    WRITE( stdout, '(/5x,"Attempting to read from outdir instead of wfcdir")' )
+    WRITE( stdout, '(/5x,"Attempting to read wfc from outdir instead of wfcdir")' )
     CLOSE( UNIT = iunwfc)
     tmp_dir = tmp_dir_saved
     call diropn ( iunwfc, 'wfc', nwordwfc, exst)

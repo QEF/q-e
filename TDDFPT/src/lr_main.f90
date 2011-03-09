@@ -140,7 +140,7 @@ PROGRAM lr_main
   endif
   !OBM_DEBUG
   !
-  IF ( test_restart() ) then 
+  IF ( test_restart(1) ) then 
     CALL lr_read_d0psi()
   else
     CALL lr_solve_e()
@@ -198,7 +198,7 @@ PROGRAM lr_main
      endif 
      !
      !
-     IF (test_restart()) then 
+     IF (test_restart(2)) then 
       !
         !
         CALL lr_restart(iter_restart,rflag)
@@ -335,7 +335,7 @@ PROGRAM lr_main
 !Additional small-time subroutines
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 CONTAINS
- LOGICAL FUNCTION test_restart()
+ LOGICAL FUNCTION test_restart(test_this)
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !This tests whether the restart flag is applicable
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -345,12 +345,16 @@ CONTAINS
  USE io_global,        ONLY : ionode, ionode_id
 
  IMPLICIT NONE
+  integer, intent(in) :: test_this
   character(len=256) :: tempfile, filename, tmp_dir_saved
   logical :: exst
   character(len=6), external :: int_to_char
   integer :: i, temp_restart
 
  !
+ !test_this= 1 : d0psi files 
+ !test_this= 2 : lanczos restart files 
+
  temp_restart=0
  !print *, "test_restart with restart=",restart
  if (.not.restart) then 
@@ -358,6 +362,7 @@ CONTAINS
   return  
  endif
  test_restart=.true.
+ if (test_this == 1) then
  !
  !Check for parallel i/o files that are in wfc_dir
  tmp_dir_saved = tmp_dir
@@ -382,9 +387,34 @@ CONTAINS
    endif
   END DO
  endif
- !print *,"a"
- !Restart files are always written in outdir
+ 
  tmp_dir = tmp_dir_saved
+ 
+ IF ( wfc_dir /= 'undefined' ) then
+ ! check if these files can be read from outdir instead of wfcdir
+ !
+ if ( n_ipol == 1 ) then
+  filename = trim(prefix)//'.d0psi.'//trim(int_to_char(1))
+  tempfile = trim(tmp_dir) // trim(filename) //nd_nmbr 
+  inquire (file = tempfile, exist = exst)
+  if (exst) then
+    temp_restart=0
+  endif
+ else 
+  DO i=1, n_ipol
+   filename = trim(prefix)//'.d0psi.'//trim(int_to_char(i))
+   tempfile = trim(tmp_dir) // trim(filename) //nd_nmbr
+   inquire (file = tempfile, exist = exst)
+   if (exst) then
+     temp_restart=0
+   endif
+  END DO
+ endif
+ endif
+ endif !for test_this = 1
+ if (test_this == 2) then
+
+ !Restart files are always written in outdir
  if ( n_ipol == 1 ) then
   filename = trim(prefix)//'.restart_lanczos.'//trim(int_to_char(1))
   tempfile = trim(tmp_dir) // trim(filename) //nd_nmbr
@@ -400,7 +430,6 @@ CONTAINS
  !
  !End of parallel file i/o
  !
-
  if ( n_ipol == 1 ) then
   filename = trim(prefix) // trim(bgz_suffix) // trim(int_to_char(1))
   tempfile = trim(tmp_dir) // trim(filename)
@@ -408,12 +437,12 @@ CONTAINS
   filename = trim(prefix) // trim(bgz_suffix) // trim(int_to_char(LR_polarization))
   tempfile = trim(tmp_dir) // trim(filename)
  endif
-
  inquire (file = tempfile, exist = exst)
  !print *, tempfile," exst=",exst
  if (.not. exst) then
     temp_restart=1
  endif
+ endif !for test_this = 2
  
   !print *,"temp_restart",temp_restart
 #ifdef __PARA
@@ -423,7 +452,9 @@ CONTAINS
   if (temp_restart > 0 ) then 
    !print *,"restart falsified",nd_nmbr
    !WRITE(stdout,'(5X,A,3X,"is missing, unable to restart.")') offender
-   WRITE(stdout,'(5X,"There are missing files, trying to recompansate")')
+   WRITE(stdout,'(5X,"There are missing files!")')
+   if (test_this==1) WRITE(stdout,'(5X,"d0psi files can not be found,trying to recompansate")')
+   if (test_this==2) WRITE(stdout,'(5X,"lanczos restart files can not be found, starting run from scratch")')
    test_restart=.false.
   endif
   
