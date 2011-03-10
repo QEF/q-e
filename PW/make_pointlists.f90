@@ -15,8 +15,8 @@ SUBROUTINE make_pointlists
   ! This can be used to simply monitor these quantities during the scf
   ! cycles or in order to calculate constrains on these quantities.
   !
-  ! In the integration radius r_m is calculated here. The integration 
-  ! is a sum over all points in real
+  ! If the integration radius r_m is not provided in input, it is
+  ! calculated here. The integration is a sum over all points in real
   ! space with the weight 1, if they are closer than r_m to an atom
   ! and 1 - (distance-r_m)/(0.2*r_m) if r_m<distance<1.2*r_m            
   !
