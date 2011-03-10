@@ -71,7 +71,7 @@ SUBROUTINE init_run()
   USE io_global,                ONLY : ionode, stdout
   USE printout_base,            ONLY : printout_base_init
   USE wave_types,               ONLY : wave_descriptor_info
-  USE xml_io_base,              ONLY : restart_dir, create_directory
+  USE xml_io_base,              ONLY : restart_dir, create_directory, change_directory
   USE orthogonalize_base,       ONLY : mesure_diag_perf, mesure_mmul_perf
   USE step_penalty,             ONLY : step_pen
   USE ions_base,                ONLY : ions_reference_positions, cdmi, taui
@@ -96,8 +96,12 @@ SUBROUTINE init_run()
      WRITE( dirname, FMT = '( I5.5 )' ) my_image_id
      tmp_dir = TRIM( tmp_dir ) // '/' // TRIM( dirname )
      CALL create_directory( tmp_dir )
+     CALL change_directory( tmp_dir )
      !
   END IF
+
+  CALL plugin_initialization()
+
   IF( nbgrp > 1 .AND. force_pairing ) &
      CALL errore( ' init_run ', ' force_pairing with parallelization over bands not implemented yet ', 1 )
   !

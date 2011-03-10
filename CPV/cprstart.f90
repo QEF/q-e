@@ -62,8 +62,8 @@ PROGRAM main
   CALL iosys()
   !
   ! call to void routine for user define / plugin patches initializations
-  !
-  CALL plugin_initialization()
+  ! temporary moved to init_run
+!  CALL plugin_initialization()
   !
   !
   CALL check_stop_init()
