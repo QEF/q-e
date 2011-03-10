@@ -45,14 +45,32 @@ CONTAINS
      INTEGER :: i, ilen
      INTEGER, ALLOCATABLE :: istr(:)
      INTEGER, EXTERNAL :: c_mkdir_int
-     ALLOCATE( istr( LEN( dirname ) ) )
-     DO i = 1, LEN( dirname )
+     ALLOCATE( istr( LEN_TRIM( dirname ) ) )
+     DO i = 1, LEN_TRIM( dirname )
         istr(i) = ICHAR( dirname(i:i) )
         IF( istr(i) < 0 .OR. istr(i) > 127 ) &
            CALL errore( ' f_mkdir ', ' invalid character ', ABS( istr(i) ) )
      END DO 
-     ilen = LEN( dirname )
+     ilen = LEN_TRIM( dirname )
      f_mkdir = c_mkdir_int( istr, ilen )
+     DEALLOCATE( istr )
+     RETURN
+   END FUNCTION
+   !
+   FUNCTION f_chdir( dirname )
+     INTEGER :: f_chdir
+     CHARACTER(LEN=*) :: dirname
+     INTEGER :: i, ilen
+     INTEGER, ALLOCATABLE :: istr(:)
+     INTEGER, EXTERNAL :: c_chdir_int
+     ALLOCATE( istr( LEN_TRIM( dirname ) ) )
+     DO i = 1, LEN_TRIM( dirname )
+        istr(i) = ICHAR( dirname(i:i) )
+        IF( istr(i) < 0 .OR. istr(i) > 127 ) &
+           CALL errore( ' f_chdir ', ' invalid character ', ABS( istr(i) ) )
+     END DO
+     ilen = LEN_TRIM( dirname )
+     f_chdir = c_chdir_int( istr, ilen )
      DEALLOCATE( istr )
      RETURN
    END FUNCTION
