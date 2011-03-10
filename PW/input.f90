@@ -1137,7 +1137,7 @@ SUBROUTINE iosys()
   w_1_              = w_1
   w_2_              = w_2
   !
-  IF (trim(occupations) /= 'from_input') one_atom_occupations=.false.
+  IF (trim(occupations) /= 'from_input') one_atom_occupations_=.false.
   !
   llondon     = london
   lon_rcut    = london_rcut
