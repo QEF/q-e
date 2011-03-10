@@ -68,6 +68,33 @@ int F77_FUNC_(c_mkdir_int,C_MKDIR_INT)( const int * dirname , const int * length
 
 } /* end of c_mkdir */
 
+int F77_FUNC_(c_chdir_int,C_CHDIR_INT)( const int * dirname , const int * length )
+{
+
+   int i, retval = -1 ;
+
+   char * ldir = ( char * ) xcmalloc( (*length) + 1 ) ;
+
+   for( i = 0; i < * length; i++ ) ldir[ i ] = (char)dirname[ i ];
+
+   ldir[*length] = '\0' ;       /* memset() in xcmalloc() already do this */
+
+   retval = chdir( ldir ) ;
+
+   if ( retval == -1  && errno != EEXIST ) {
+     fprintf( stderr , "chdir fail: [%d] %s\n" , errno , strerror( errno ) ) ;
+     }
+   else {
+     retval = 0 ;
+     }
+
+
+   free( ldir ) ;
+
+   return retval ;
+
+} /* end of c_chdir */
+
 /* c_rename: call from fortran as
    ios = c_remame ( integer old-file-name(:), integer old-file-name, &
                     integer new-file-name(:), integer new-file-name )
