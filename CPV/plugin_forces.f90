@@ -18,35 +18,7 @@ SUBROUTINE plugin_forces()
   !
   USE plugin_flags
   !
-  USE cell_base,        ONLY : at, h, alat
-  USE cell_base,        ONLY : s_to_r, r_to_s
-  USE ions_base,        ONLY : nat, na, nsp
-  USE ions_positions,   ONLY : taus, fion
-  USE cp_main_variables, ONLY : nfi
-  !
   IMPLICIT NONE
   !
-  REAL(DP) :: at_meta(3,3)
-  REAL(DP), ALLOCATABLE :: tau_meta(:,:)
-  INTEGER :: istep
-  !
-  IF(use_plumed) then
-     IF ( ionode ) THEN
-       at_meta(:,:)=alat*at(:,:)
-
-       allocate(tau_meta(3,nat))
-       tau_meta(:,:) = 0.0D0
-
-       call s_to_r(taus,tau_meta,na,nsp,h)
-
-       istep = nfi
-
-       call meta_force_calculation(at_meta,istep,tau_meta(1,1),0,0,fion(1,1),0,0,0)
-
-       deallocate(tau_meta)
-     END IF
-
-     CALL mp_bcast( fion, ionode_id, intra_image_comm )
-  ENDIF
   !
 END SUBROUTINE plugin_forces

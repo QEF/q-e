@@ -16,30 +16,7 @@ SUBROUTINE plugin_initialization()
   !
   USE plugin_flags
   !
-  USE ions_base,        ONLY : amass, ityp, nat
-  !
-  USE time_step,  ONLY : delt
-  !
-  !
   IMPLICIT NONE
   !
-  REAL(DP), ALLOCATABLE :: mass(:),charge(:)
-  INTEGER  :: na
-  !
-  IF ( use_plumed .and. ionode ) THEN
-
-    ALLOCATE(mass(nat),charge(nat))
-
-    DO na = 1, nat
-    !
-    mass(na)   = amass( ityp(na) )
-    charge(na) = amass( ityp(na) )
-    !
-    END DO
-
-    CALL init_metadyn(nat,delt,mass,charge,1,1.0D0,trim(outdir)//"plumed.dat"//char(0));
-
-    DEALLOCATE(mass,charge)
-  ENDIF
   !
 END SUBROUTINE plugin_initialization
