@@ -41,7 +41,8 @@ MODULE xml_io_base
   PUBLIC :: rho_binary
   PUBLIC :: attr
   !
-  PUBLIC :: create_directory, kpoint_dir, wfc_filename, copy_file,       &
+  PUBLIC :: create_directory, change_directory,                          &
+            kpoint_dir, wfc_filename, copy_file,       &
             restart_dir, check_restartfile, check_file_exst,             &
             pp_check_file, save_history, save_print_counter,             &
             read_print_counter, set_kpoints_vars,                        &
@@ -93,6 +94,35 @@ MODULE xml_io_base
       RETURN
       !
     END SUBROUTINE create_directory
+    !
+    !------------------------------------------------------------------------
+    SUBROUTINE change_directory( dirname )
+      !------------------------------------------------------------------------
+      !
+      USE wrappers,  ONLY : f_chdir
+      USE mp,        ONLY : mp_barrier
+      USE mp_global, ONLY : me_image, intra_image_comm
+      !
+      CHARACTER(LEN=*), INTENT(IN) :: dirname
+      !
+      INTEGER                    :: ierr
+
+      CHARACTER(LEN=6), EXTERNAL :: int_to_char
+      !
+      ierr = f_chdir( TRIM( dirname ) )
+      CALL mp_bcast ( ierr, ionode_id, intra_image_comm )
+      !
+      CALL errore( 'change_directory', &
+                   'unable to change to directory ' // TRIM( dirname ), ierr )
+      !
+      ! ... syncronize all jobs (not sure it is really useful)
+      !
+      CALL mp_barrier( intra_image_comm )
+      !
+      !
+      RETURN
+      !
+    END SUBROUTINE change_directory
     !
     !------------------------------------------------------------------------
     FUNCTION kpoint_dir( basedir, ik )
