@@ -401,7 +401,9 @@ MODULE input_parameters
         REAL(DP) :: yukawa = 0.0_DP
         REAL(DP) :: ecutvcut = 0.0_DP
           ! auxiliary variables to define exxdiv treatment
-
+        LOGICAL  :: adaptive_thr = .FALSE.
+        REAL(DP) :: conv_thr_init = 0.001_DP
+        REAL(DP) :: conv_thr_multi = 0.1_DP
 #endif
 
         INTEGER  :: edir = 0
@@ -826,6 +828,9 @@ MODULE input_parameters
           mixing_mode, mixing_beta, mixing_ndim, mixing_fixed_ns,      &
           tqr, diago_cg_maxiter, diago_david_ndim, diagonalization ,   &
           startingpot, startingwfc , conv_thr,                         &
+#if defined (EXX)
+          adaptive_thr, conv_thr_init, conv_thr_multi,                 &
+#endif
           diago_thr_init, n_inner, fermi_energy, rotmass, occmass,     &
           rotation_damping, occupation_damping, rotation_dynamics,     &
           occupation_dynamics, tcg, maxiter, etresh, passop, epol,     &

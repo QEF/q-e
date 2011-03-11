@@ -60,6 +60,8 @@ SUBROUTINE electrons()
   USE exx,                  ONLY : exxinit, exxenergy, exxenergy2, &
                                    fock0, fock1, fock2, dexx
   USE funct,                ONLY : dft_is_hybrid, exx_is_active
+  USE control_flags,        ONLY : adapt_thr, tr2_init, &
+                                  &tr2_multi
 #endif
   USE funct,                ONLY : dft_is_meta
   USE mp_global,            ONLY : intra_pool_comm, npool
@@ -104,10 +106,20 @@ SUBROUTINE electrons()
   ! ... external functions
   !
   REAL(DP), EXTERNAL :: ewald, get_clock
+#if defined (EXX)
+  REAL(DP) :: tr2_final !final threshold for exx minimization 
+  !when using adaptive thresholds.
+#endif
   !
   iter = 0
   ik_  = 0
   dr2  = 0.0_dp
+#if defined (EXX)
+  tr2_final = tr2
+  IF (dft_is_hybrid() .AND. adapt_thr ) THEN
+     tr2= tr2_init
+  ENDIF
+#endif
   !
   IF ( restart ) THEN
      !
@@ -588,13 +600,19 @@ SUBROUTINE electrons()
         !
 #if defined (EXX)
         !
-        IF ( dft_is_hybrid() .AND. dexx > tr2 ) THEN
+        IF ( dft_is_hybrid() .AND. dexx > tr2_final ) THEN  
            !
            conv_elec = .false.
            iter = 0
+
            CALL save_in_electrons( iter, dr2 )
            !
            WRITE (stdout,*) " NOW GO BACK TO REFINE HYBRID CALCULATION"
+
+           IF ( adapt_thr ) THEN
+              tr2 = MAX(tr2_multi * dexx, tr2_final)
+              WRITE( stdout, 9121 ) tr2
+           ENDIF
            !
            GO TO 10
            !
@@ -681,6 +699,7 @@ SUBROUTINE electrons()
 9101 FORMAT(/'     End of self-consistent calculation' )
 9110 FORMAT(/'     convergence has been achieved in ',i3,' iterations' )
 9120 FORMAT(/'     convergence NOT achieved after ',i3,' iterations: stopping' )
+9121 FORMAT(/'     scf convergence threshold =',1PE17.1,' Ry' )
   !
   CONTAINS
      !

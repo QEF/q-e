@@ -25,6 +25,7 @@ SUBROUTINE iosys()
                             set_finite_size_volume, dft_is_vdW
 #if defined(EXX)
   USE funct,         ONLY: set_exx_fraction, set_screening_parameter
+  USE control_flags, ONLY: adapt_thr, tr2_init, tr2_multi
 #endif
   USE constants,     ONLY : autoev, eV_to_kelvin, pi, rytoev, &
                             uakbar, amconv, bohr_radius_angs, eps8
@@ -231,6 +232,9 @@ SUBROUTINE iosys()
                                diago_david_ndim, diagonalization,          &
                                diago_full_acc, startingwfc, startingpot,   &
                                real_space
+#if defined (EXX)
+  USE input_parameters, ONLY : adaptive_thr, conv_thr_init, conv_thr_multi
+#endif
   !
   ! ... IONS namelist
   !
@@ -824,7 +828,7 @@ SUBROUTINE iosys()
      startingwfc = 'atomic'
      !
   ENDIF
-  !
+
   ! parallel distributed diagonalization is the default
   ! (with more than 4 procs)
   !
@@ -850,6 +854,11 @@ SUBROUTINE iosys()
   !
   tr2   = conv_thr
   niter = electron_maxstep
+#if defined (EXX)
+  adapt_thr = adaptive_thr
+  tr2_init  = conv_thr_init
+  tr2_multi = conv_thr_multi
+#endif
   !
   pot_order = 1
   SELECT CASE( trim( pot_extrapolation ) )

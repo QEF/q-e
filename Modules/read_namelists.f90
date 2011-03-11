@@ -392,6 +392,11 @@ MODULE read_namelists_module
        !
        occupation_constraints = .false.
        !
+#if defined (EXX)
+       adaptive_thr   =  .false.
+       conv_thr_init  =  0.1E-2_DP
+       conv_thr_multi =  0.1_DP
+#endif
        RETURN
        !
      END SUBROUTINE
@@ -956,6 +961,11 @@ MODULE read_namelists_module
        !
        ! ... real space ...
        CALL mp_bcast( real_space, ionode_id)
+#if defined (EXX)
+       CALL mp_bcast( adaptive_thr,       ionode_id )
+       CALL mp_bcast( conv_thr_init,      ionode_id )
+       CALL mp_bcast( conv_thr_multi,     ionode_id )
+#endif
        RETURN
        !
      END SUBROUTINE

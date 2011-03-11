@@ -200,8 +200,18 @@ MODULE control_flags
   REAL(DP), PUBLIC  :: &
     mixing_beta,      &! the mixing parameter
     tr2                ! the convergence threshold for potential
+
   LOGICAL, PUBLIC :: &
     conv_elec          ! if .TRUE. electron convergence has been reached
+#if defined (EXX)
+  LOGICAL, PUBLIC :: &
+    adapt_thr       ! if .TRUE. an adaptive convergence threshold is used
+                       ! for the scf cycle in an EXX calculation.
+  REAL(DP), PUBLIC  :: &
+    tr2_init,         &! initial value of tr2 for adaptive thresholds
+    tr2_multi          ! the dexx multiplier for adaptive thresholds
+                       ! tr2 = tr2_multi * dexx after each V_exx update 
+#endif
   !
   ! ... pw diagonalization
   !
