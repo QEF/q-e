@@ -22,6 +22,10 @@ lr_input
 	lr verbosity	1
 		This integer variable controls the amount of information written
 		 in standard output.
+	disk_io		default
+		Fine control of disk usage. Currently only 'reduced' is 
+		supported where no restart files are written, apart from the 
+		'default' mode.
 lr_control
 	itermax		500
 		Number of iterations to be performed.
