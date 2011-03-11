@@ -11,7 +11,7 @@ SUBROUTINE plugin_initialization()
   !
   USE io_global,        ONLY : stdout, ionode
   USE kinds,            ONLY : DP
-  USE io_files,         ONLY : outdir
+  USE io_files,         ONLY : tmp_dir
   !
   USE plugin_flags
   !
