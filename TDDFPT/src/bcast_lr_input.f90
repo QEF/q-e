@@ -30,6 +30,7 @@ subroutine bcast_lr_input
   ! 
   !
   call mp_barrier()
+  call mp_bcast (lr_io_level, ionode_id )
   call mp_bcast (itermax, ionode_id )
   call mp_bcast (itermax_int, ionode_id )
   call mp_bcast (charge_response, ionode_id )

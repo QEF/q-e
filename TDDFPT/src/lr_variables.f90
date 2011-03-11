@@ -149,6 +149,7 @@ module lr_variables
   integer :: lr_verbosity       ! verbosity level for linear response routines
   !
   integer :: test_case_no = 0   ! OBM, this dummy variable performs various tests
+  integer :: lr_io_level = 1    ! Controls disk io
   !
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! lr_control:

@@ -21,7 +21,7 @@ PROGRAM lr_main
                                     n_ipol, d0psi, rho_1_tot, rho_1_tot_im,&
                                     LR_iteration, LR_polarization, &
                                     plot_type, no_hxc, nbnd_total, project, F,R, &
-                                    itermax_int
+                                    itermax_int, lr_io_level
   USE io_files,              ONLY : nd_nmbr
   USE global_version,        ONLY : version_number
   USE charg_resp,            ONLY : lr_calc_w_T, read_wT_beta_gamma_z, &
@@ -249,7 +249,7 @@ PROGRAM lr_main
         !
         call one_lanczos_step()
         !
-        IF ( mod(LR_iteration,restart_step)==0 .OR. LR_iteration==itermax .OR. LR_iteration==1 ) CALL lr_write_restart()
+        IF ( lr_io_level > 0 .and. (mod(LR_iteration,restart_step)==0 .OR. LR_iteration==itermax .OR. LR_iteration==1) ) CALL lr_write_restart()
      END DO lancz_loop1
      ! 
     if (charge_response == 1 ) then 

@@ -47,10 +47,13 @@ subroutine lr_readin
   implicit none
   !
   character(len=256) :: beta_gamma_z_prefix
+          ! fine control of beta_gamma_z file
+  CHARACTER(len=80) :: disk_io
+          ! Specify the amount of I/O activities
   integer :: ios, iunout,ierr,ipol
   logical :: auto_rs
   !
-  namelist / lr_input / restart, restart_step ,lr_verbosity, prefix, outdir, test_case_no, wfcdir
+  namelist / lr_input / restart, restart_step ,lr_verbosity, prefix, outdir, test_case_no, wfcdir,disk_io
   namelist / lr_control / itermax, ipol, ltammd, real_space, real_space_debug, charge_response, tqr, auto_rs, no_hxc,n_ipol,project
   namelist / lr_post / omeg, beta_gamma_z_prefix, w_T_npol, plot_type, epsil,itermax_int
   !
@@ -69,6 +72,7 @@ subroutine lr_readin
   restart_step = itermax+1
   lr_verbosity = 1
   prefix = 'pwscf'
+  disk_io = 'default'
   ltammd = .false.
   ipol = 1
   n_ipol=1
@@ -85,7 +89,7 @@ subroutine lr_readin
   epsil=0.0
   w_T_npol=1
   plot_type=1
-  project=.false.
+ project=.false.
   !terminator="no"
   !grid_coarsening = 1
   !
@@ -157,6 +161,20 @@ subroutine lr_readin
      !
   end if
   if (itermax_int < itermax) itermax_int=itermax
+!
+! Limited disk_io support: currently only one setting is supported
+! 
+SELECT CASE( trim( disk_io ) )
+  CASE ( 'reduced' )
+     !
+     lr_io_level = -1
+     restart  = .false.
+     !
+  CASE DEFAULT
+     !
+     lr_io_level = 1
+END SELECT
+
 #ifdef __PARA
   end if
   call bcast_lr_input
@@ -173,8 +191,6 @@ subroutine lr_readin
       WRITE(stdout,'(5x,"Status of real space flags: TQR=", L5 ,"  REAL_SPACE=", L5)') tqr, real_space
    endif
   !print *, "rs_status-ended"
-
-  !   Here we finished the reading of the input file.
   !   Now PWSCF XML file will be read, and various initialisations will be done
   !
  !print *, "newd" 
