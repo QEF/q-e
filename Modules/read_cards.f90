@@ -930,6 +930,7 @@ CONTAINS
             !
             DO nf = 1,nfield
                nbnd_read = nbnd_read+1
+               IF (nbnd_read > nbnd ) EXIT
                CALL get_field(nf, field_str, input_line)
                !
                f_inp(nbnd_read,is) = feval_infix(ierr, field_str )
