@@ -55,7 +55,9 @@ SUBROUTINE d3_setup()
   USE control_flags, ONLY : iverbosity, modenum
   USE constants,     ONLY : degspin
   USE phcom
-  USE d3com
+  USE d3com,         ONLY : q0mode, wrmode, nsymg0, npertg0, nirrg0, &
+                            npert_i, npert_f, q0mode_todo, allmodes, ug0, &
+                            fild0rho
   USE mp_global,     ONLY : npool, my_pool_id, inter_pool_comm
   USE mp,            ONLY : mp_max, mp_min
   USE funct,         ONLY : dmxc, dmxc_spin
@@ -199,6 +201,7 @@ SUBROUTINE d3_setup()
   ! 5.1) Finds the variables needeed for the pattern representation
   !      of the small group of q
   !
+  sym(1:nsymg0)=.true.
   CALL sgam_ph (at, bg, nsymg0, s, irt, tau, rtau, nat, sym)
   nmodes = 3 * nat
   ! if minus_q=.t. set_irr will search for
@@ -221,13 +224,13 @@ SUBROUTINE d3_setup()
           npert, nirr, gi, gimq, iverbosity, modenum)
   ELSE
      IF (nsym > 1) THEN
-        CALL io_pattern(fildrho,nirr,npert,u,-1)
+        CALL io_pattern(nat,fildrho,nirr,npert,u,-1)
         npertx = 0
         DO irr = 1, nirr
            npertx = max (npertx, npert (irr) )
         ENDDO
         IF (.not.lgamma) THEN
-           call io_pattern(fild0rho,nirrg0,npertg0,ug0,-1)
+           call io_pattern(nat,fild0rho,nirrg0,npertg0,ug0,-1)
            DO irr = 1, nirrg0
               npertx = max (npertx, npertg0 (irr) )
            ENDDO
@@ -342,7 +345,7 @@ SUBROUTINE d3_setup()
   ! the calculation can be simplyfied, in this case allmodes
   ! is set .true.
   !
-  allmodes = lgamma.AND.q0mode_todo (1) <= 0
+  allmodes = lgamma .AND. (q0mode_todo (1) <= 0)
   !
   ! Sets up variables needed to write only selected
   ! modes at q=0 --the first index of the third order matrix--
