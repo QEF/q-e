@@ -79,7 +79,7 @@ SUBROUTINE sum_band()
   !
   CALL weights ( )
   !
-  IF (one_atom_occupations) CALL new_occ()
+  IF (one_atom_occupations) CALL new_evc()
   !
   IF ( diago_full_acc ) THEN
      !

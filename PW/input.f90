@@ -166,7 +166,7 @@ SUBROUTINE iosys()
                                angle2_    => angle2, &
                                report_    => report
   !
-  USE spin_orb, ONLY : lspinorb_ => lspinorb  &
+  USE spin_orb, ONLY : lspinorb_ => lspinorb,  &
                        starting_spin_angle_ => starting_spin_angle
 
   !

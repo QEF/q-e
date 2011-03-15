@@ -21,7 +21,7 @@ SUBROUTINE print_ks_energies()
   USE lsda_mod,             ONLY : lsda, nspin, isk
   USE ktetra,               ONLY : ltetra
   USE wvfct,                ONLY : nbnd, et, wg
-  USE fixed_occ,            ONLY : f_inp, tfixed_occ
+  USE fixed_occ,            ONLY : f_inp, tfixed_occ, one_atom_occupations
   USE control_flags,        ONLY : conv_elec, lbands, iverbosity
   USE mp_global,            ONLY : root_pool, intra_pool_comm, inter_pool_comm
   USE mp,                   ONLY : mp_sum, mp_bcast
@@ -117,7 +117,7 @@ SUBROUTINE print_ks_energies()
            END IF
         END IF
         !
-        IF ( ionode .AND. nbnd > ibnd ) THEN
+        IF ( ionode .AND. nbnd > ibnd .AND. .NOT. one_atom_occupations ) THEN
            !
            IF ( nspin == 1 .OR. nspin == 4 ) THEN
               ehomo = MAXVAL( et(ibnd,  1:nkstot) )
