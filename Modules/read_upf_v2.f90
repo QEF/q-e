@@ -280,7 +280,14 @@ SUBROUTINE read_upf_v2(u, upf, grid, ierr)             !
             CALL iotk_scan_attr(attr, 'angular_momentum',       upf%lll(nb))
             CALL iotk_scan_attr(attr, 'cutoff_radius_index',    upf%kbeta(nb),    default=upf%mesh)
             CALL iotk_scan_attr(attr, 'cutoff_radius',          upf%rcut(nb),     default=0._dp)
-            CALL iotk_scan_attr(attr, 'norm_conserving_radius', upf%rcutus(nb),   default=0._dp)
+            CALL iotk_scan_attr(attr, 'ultrasoft_cutoff_radius', upf%rcutus(nb),   default=0._dp)
+!
+!    Old version of UPF PPs v.2 contained an error in the tag. 
+!    To be able to read the old PPs we need the following
+!
+            IF ( upf%rcutus(nb)==0._DP) &
+            CALL iotk_scan_attr(attr,'norm_conserving_radius',upf%rcutus(nb), &
+                                default=0._dp)
       ENDDO
       !
       ! Read the hamiltonian terms D_ij
