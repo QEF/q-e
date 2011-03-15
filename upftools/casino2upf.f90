@@ -63,23 +63,23 @@ MODULE casino
   ! trailing underscore means that a variable with the same name
   ! is used in module 'upf' containing variables to be written
   !
-
+  USE kinds, ONLY : DP
 
   CHARACTER(len=20) :: dft_
   CHARACTER(len=2)  :: psd_
-  REAL(8) :: zp_
+  REAL(DP) :: zp_
   INTEGER nlc, nnl, lmax_, lloc, nchi, rel_
   LOGICAL :: numeric, bhstype, nlcc_
-  REAL(8) :: alpc(2), cc(2), alps(3,0:3), aps(6,0:3)
-  REAL(8) :: a_nlcc, b_nlcc, alpha_nlcc
+  REAL(DP) :: alpc(2), cc(2), alps(3,0:3), aps(6,0:3)
+  REAL(DP) :: a_nlcc, b_nlcc, alpha_nlcc
 
-  REAL(8) :: zmesh, xmin, dx
-  REAL(8), ALLOCATABLE::  r_(:), rab_(:)
+  REAL(DP) :: zmesh, xmin, dx
+  REAL(DP), ALLOCATABLE::  r_(:), rab_(:)
   INTEGER :: mesh_
 
-  REAL(8), ALLOCATABLE::  vnl(:,:), rho_atc_(:), rho_at_(:)
+  REAL(DP), ALLOCATABLE::  vnl(:,:), rho_atc_(:), rho_at_(:)
   INTEGER, ALLOCATABLE:: lchi_(:), nns_(:)
-  REAL(8), ALLOCATABLE:: chi_(:,:),  oc_(:)
+  REAL(DP), ALLOCATABLE:: chi_(:,:),  oc_(:)
 
 END MODULE casino
 !
@@ -89,15 +89,15 @@ SUBROUTINE read_casino(iunps,nofiles)
   !
   USE casino
   USE upf , ONLY : els
-  USE kinds
+  USE kinds,  ONLY : DP
   IMPLICIT NONE
   TYPE :: wavfun_list
      INTEGER :: occ,eup,edwn, nquant, lquant
      CHARACTER(len=2) :: label
 #ifdef __STD_F95
-     REAL*8, POINTER :: wavefunc(:)
+     REAL(DP), POINTER :: wavefunc(:)
 #else
-     REAL*8, ALLOCATABLE :: wavefunc(:)
+     REAL(DP), ALLOCATABLE :: wavefunc(:)
 #endif
      TYPE (wavfun_list), POINTER :: p
 
@@ -111,7 +111,7 @@ SUBROUTINE read_casino(iunps,nofiles)
   !
   LOGICAL :: groundstate, found
   CHARACTER(len=2) :: label, rellab
-  REAL(DP), PARAMETER :: r_exp=20._dp/1500._dp
+  REAL(DP), PARAMETER :: r_exp=20._DP/1500._DP
   INTEGER :: l, i, ir, nb, gsorbs, j,k,m,tmp, lquant, orbs, nquant
   INTEGER, ALLOCATABLE :: gs(:,:)
 
@@ -387,13 +387,14 @@ END SUBROUTINE read_casino
   !     ----------------------------------------------------------
 SUBROUTINE convert_casino
   !     ----------------------------------------------------------
+  USE kinds, ONLY : DP
   USE casino
   USE upf
   USE funct, ONLY : set_dft_from_name, get_iexch, get_icorr, get_igcx, get_igcc
   IMPLICIT NONE
-  REAL(8), PARAMETER :: rmax = 10.0d0
-  REAL(8), ALLOCATABLE :: aux(:)
-  REAL(8) :: vll
+  REAL(DP), PARAMETER :: rmax = 10.0d0
+  REAL(DP), ALLOCATABLE :: aux(:)
+  REAL(DP) :: vll
   INTEGER :: kkbeta, l, iv, ir, i
 
   WRITE(generated, '("From a Trail & Needs tabulated PP for CASINO")')
