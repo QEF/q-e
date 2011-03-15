@@ -21,7 +21,6 @@ SUBROUTINE pw2casino()
   !
   CHARACTER(len=4) :: postfix
   !
-  write(0,*) "use_pw2casino: ", use_pw2casino
   IF ( use_pw2casino ) THEN
     write(postfix,'(i4.4)') istep
     CALL write_casino_wfn( &
