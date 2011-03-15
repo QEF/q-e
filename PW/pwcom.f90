@@ -415,6 +415,8 @@ MODULE spin_orb
 
   LOGICAL :: &
       lspinorb,  &       ! if .TRUE. this is a spin-orbit calculation
+      starting_spin_angle, & ! if .TRUE. the initial wavefunctions are 
+                             ! spin-angle functions. 
       domag              ! if .TRUE. magnetization is computed
 
 

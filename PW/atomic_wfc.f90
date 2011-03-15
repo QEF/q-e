@@ -24,7 +24,8 @@ SUBROUTINE atomic_wfc (ik, wfcatom)
   USE us,         ONLY : tab_at, dq
   USE uspp_param, ONLY : upf
   USE noncollin_module, ONLY : noncolin, npol, angle1, angle2
-  USE spin_orb,   ONLY : lspinorb, rot_ylm, fcoef, lmaxx
+  USE spin_orb,   ONLY : lspinorb, rot_ylm, fcoef, lmaxx, domag, &
+                         starting_spin_angle
   !
   implicit none
   !
@@ -125,7 +126,11 @@ SUBROUTINE atomic_wfc (ik, wfcatom)
               !
               IF ( upf(nt)%has_so ) THEN
                  !
-                 call atomic_wfc_so ( )
+                 IF (starting_spin_angle.OR..not.domag) THEN
+                    call atomic_wfc_so ( )
+                 ELSE
+                    call atomic_wfc_so_mag ( )
+                 ENDIF
                  !
               ELSE
                  !
@@ -193,6 +198,97 @@ CONTAINS
    !
    END SUBROUTINE atomic_wfc_so
    ! 
+   SUBROUTINE atomic_wfc_so_mag ( )
+   !
+   ! ... spin-orbit case, magnetization along "angle1" and "angle2"
+   ! In the magnetic case we always assume that magnetism is much larger
+   ! than spin-orbit and average the wavefunctions at l+1/2 and l-1/2
+   ! filling then the up and down spinors with the average wavefunctions,
+   ! according to the direction of the magnetization, following what is
+   ! done in the noncollinear case
+   !
+   real(DP) :: alpha, gamman, j
+   complex(DP) :: fup, fdown  
+   real(DP), ALLOCATABLE :: chiaux(:)
+   integer :: nc, ib
+   !
+   j = upf(nt)%jchi(nb)
+!
+!  This routine creates two functions only in the case j=l+1/2 or exit in the
+!  other case 
+!   
+   IF (ABS(j-l+0.5_DP)<1.d-4) RETURN
+
+   ALLOCATE(chiaux(npw))
+!
+!  Find the functions j=l-1/2
+!
+   IF (l == 0)  THEN
+      chiaux(:)=chiq(:,nb,nt)
+   ELSE
+      DO ib=1, upf(nt)%nwfc
+         IF ((upf(nt)%lchi(ib) == l).AND. &
+                      (ABS(upf(nt)%jchi(ib)-l+0.5_DP)<1.d-4)) THEN
+            nc=ib
+            EXIT
+         ENDIF
+      ENDDO
+   ENDIF
+!
+!  Average the two functions
+!
+   chiaux(:)=(chiq(:,nb,nt)*(l+1.0_DP)+chiq(:,nc,nt)*l)/(2.0_DP*l+1.0_DP)
+!
+!  and construct the starting wavefunctions as in the noncollinear case.
+!
+   alpha = angle1(nt)
+   gamman = - angle2(nt) + 0.5d0*pi
+   !
+   DO m = 1, 2 * l + 1
+      lm = l**2 + m
+      n_starting_wfc = n_starting_wfc + 1
+      if (n_starting_wfc + 2*l+1 > natomwfc) call errore &
+            ('atomic_wfc_nc', 'internal error: too many wfcs', 1)
+      DO ig=1,npw
+         aux(ig) = sk(ig)*ylm(ig,lm)*chiaux(ig)
+      END DO
+!
+! now, rotate wfc as needed
+! first : rotation with angle alpha around (OX)
+!
+      DO ig=1,npw
+         fup = cos(0.5d0*alpha)*aux(ig)
+         fdown = (0.d0,1.d0)*sin(0.5d0*alpha)*aux(ig)
+!
+! Now, build the orthogonal wfc
+! first rotation with angle (alpha+pi) around (OX)
+!
+         wfcatom(ig,1,n_starting_wfc) = (cos(0.5d0*gamman) &
+                        +(0.d0,1.d0)*sin(0.5d0*gamman))*fup
+         wfcatom(ig,2,n_starting_wfc) = (cos(0.5d0*gamman) &
+                        -(0.d0,1.d0)*sin(0.5d0*gamman))*fdown
+!
+! second: rotation with angle gamma around (OZ)
+!
+! Now, build the orthogonal wfc
+! first rotation with angle (alpha+pi) around (OX)
+!
+         fup = cos(0.5d0*(alpha+pi))*aux(ig)
+         fdown = (0.d0,1.d0)*sin(0.5d0*(alpha+pi))*aux(ig)
+!
+! second, rotation with angle gamma around (OZ)
+!
+         wfcatom(ig,1,n_starting_wfc+2*l+1) = (cos(0.5d0*gamman) &
+                  +(0.d0,1.d0)*sin(0.5d0 *gamman))*fup
+         wfcatom(ig,2,n_starting_wfc+2*l+1) = (cos(0.5d0*gamman) &
+                  -(0.d0,1.d0)*sin(0.5d0*gamman))*fdown
+      END DO
+   END DO
+   n_starting_wfc = n_starting_wfc + 2*l+1
+   DEALLOCATE(chiaux)
+   !
+   END SUBROUTINE atomic_wfc_so_mag
+   !
    SUBROUTINE atomic_wfc_nc ( )
    !
    ! ... noncolinear case, magnetization along "angle1" and "angle2"

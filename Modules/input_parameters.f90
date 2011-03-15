@@ -414,6 +414,7 @@ MODULE input_parameters
 
         LOGICAL  :: noncolin = .false.
         LOGICAL  :: lspinorb = .false.
+        LOGICAL  :: starting_spin_angle=.FALSE.
         REAL(DP) :: lambda = 1.0_DP
         REAL(DP) :: fixed_magnetization(3) = 0.0_DP
         REAL(DP) :: angle1(nsx) = 0.0_DP
@@ -464,7 +465,8 @@ MODULE input_parameters
              exxdiv_treatment, x_gamma_extrapolation, yukawa, ecutvcut,       &
              exx_fraction, screening_parameter,                               &
 #endif
-             noncolin, lspinorb, lambda, angle1, angle2, report,              &
+             noncolin, lspinorb, starting_spin_angle, lambda, angle1, angle2, &
+             report,              &
              constrained_magnetization, B_field, fixed_magnetization,         &
              sic, sic_epsilon, force_pairing, sic_alpha,                      &
              tot_charge, tot_magnetization,                                   &

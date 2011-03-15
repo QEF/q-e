@@ -166,7 +166,9 @@ SUBROUTINE iosys()
                                angle2_    => angle2, &
                                report_    => report
   !
-  USE spin_orb, ONLY : lspinorb_ => lspinorb
+  USE spin_orb, ONLY : lspinorb_ => lspinorb  &
+                       starting_spin_angle_ => starting_spin_angle
+
   !
   USE symm_base, ONLY : no_t_rev_=> no_t_rev
   !
@@ -221,6 +223,7 @@ SUBROUTINE iosys()
                                edir, emaxpos, eopreg, eamp, noncolin, lambda, &
                                angle1, angle2, constrained_magnetization,     &
                                B_field, fixed_magnetization, report, lspinorb,&
+                               starting_spin_angle,                           &
                                assume_isolated, spline_ps, london, london_s6, &
                                london_rcut, one_atom_occupations, no_t_rev
   !
@@ -1077,6 +1080,7 @@ SUBROUTINE iosys()
   tot_magnetization_ = tot_magnetization
   !
   lspinorb_ = lspinorb
+  starting_spin_angle_ = starting_spin_angle
   noncolin_ = noncolin
   angle1_   = angle1
   angle2_   = angle2
