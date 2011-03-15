@@ -36,6 +36,7 @@ SUBROUTINE plugin_arguments()
   nargs = iargc()
   ! add here more plugins
   use_plumed = .false.
+  use_pw2casino = .false.
   !
   DO iiarg = 1, nargs 
     CALL getarg( iiarg, plugin_name)
@@ -51,6 +52,9 @@ SUBROUTINE plugin_arguments()
        IF ( TRIM(arg)=='plumed' ) THEN
           use_plumed = .true.
        END IF
+       IF ( TRIM(arg)=='pw2casino' ) THEN
+          use_pw2casino = .true.
+       ENDIF
     ENDIF
   ENDDO
   !
@@ -73,6 +77,8 @@ END SUBROUTINE plugin_arguments
   integer :: comm
   !
   CALL mp_bcast(use_plumed,root,comm)
+  !
+  CALL mp_bcast(use_pw2casino,root,comm)
   !
 !  write(0,*) "use_plumed: ", use_plumed
   !
