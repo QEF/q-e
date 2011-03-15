@@ -135,6 +135,8 @@ PROGRAM pwscf
   !
   IF ( restart .AND. lscf ) CALL restart_in_ions()
   !
+  CALL pw2casino()
+  !
   IF ( lforce ) CALL forces()
   !
   IF ( lstres ) CALL stress()

@@ -141,6 +141,9 @@ print_ks_energies.o \
 punch.o \
 pw_restart.o \
 pwcom.o \
+pw2blip.o \
+pw2casino.o \
+pw2casino_write.o \
 qvan2.o \
 rcgdiagg.o \
 rdiagh.o \
