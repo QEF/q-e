@@ -5,17 +5,17 @@ include ../make.sys
 # location of needed modules
 MODFLAGS= $(MOD_FLAG)../iotk/src $(MOD_FLAG)../Modules $(MOD_FLAG).
 
-OBJS = write_upf.o 
+OBJS = write_upf.o
 QEMODS = ../Modules/libqemod.a
 
 TLDEPS = mods libs libiotk
 
 all : tldeps casino2upf.x cpmd2upf.x fhi2upf.x fpmd2upf.x \
-     ncpp2upf.x oldcp2upf.x read_upf_tofile.x rrkj2upf.x uspp2upf.x    \
-     vdb2upf.x virtual.x interpolate.x
+     ncpp2upf.x oldcp2upf.x read_upf_tofile.x rrkj2upf.x upf2casino.x \
+     uspp2upf.x vdb2upf.x virtual.x interpolate.x
 
-casino2upf.x : casino2upf.o $(OBJS) $(QEMODS) $(LIBOBJS)
-	$(LD) $(LDFLAGS) -o $@ casino2upf.o $(OBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
+casino2upf.x : casino2upf.o casino_pp.o $(OBJS) $(QEMODS) $(LIBOBJS)
+	$(LD) $(LDFLAGS) -o $@ casino2upf.o casino_pp.o $(OBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
 
 cpmd2upf.x : cpmd2upf.o $(OBJS) $(QEMODS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ cpmd2upf.o $(OBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
@@ -40,6 +40,9 @@ read_upf_tofile.x : read_upf_tofile.o $(QEMODS)
 
 rrkj2upf.x : rrkj2upf.o $(OBJS) $(QEMODS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ rrkj2upf.o $(OBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
+
+upf2casino.x : upf2casino.o casino_pp.o $(OBJS) $(QEMODS) $(LIBOBJS)
+	$(LD) $(LDFLAGS) -o $@ upf2casino.o casino_pp.o $(OBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
 
 uspp2upf.x : uspp2upf.o vanderbilt.o $(OBJS) $(QEMODS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ \
