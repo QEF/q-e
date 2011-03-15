@@ -712,7 +712,54 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 
 		'from_input' :  The occupation are read from input file.
                                 Presently works only with one k-point
-                                (LSDA allowed).
+                                (LSDA, noncolinear allowed).
+	    }
+	}
+
+	var one_atom_occupations -type LOGICAL { 
+	    default { .FALSE. }
+	    info {
+               This flag is used for isolated atoms (nat=1) together with 
+               occupations='from_input'. If it is .TRUE., the wavefunctions 
+               are ordered as the atomic starting wavefunctions, independently 
+               from their eigenvalue. The occupations indicate which atomic 
+               states are filled.
+               The order of the states is written inside the UPF 
+               pseudopotential file.
+               In the scalar relativistic case: 
+               S -> l=0, m=0 
+               P -> l=1, z, x, y
+               D -> l=2, r^2-3z^2, xz, yz, xy, x^2-y^2
+               In the noncollinear magnetic case (with or without spin-orbit), 
+               each group of states is doubled. For instance:
+               P -> l=1, z, x, y for spin up, l=1, z, x, y for spin down.
+               Up and down is relative to the direction of the starting
+               magnetization.
+               In the case with spin-orbit and time-reversal 
+               (starting_magnetization=0.0) the atomic wavefunctions are 
+               radial functions multiplied by spin-angle functions.
+               For instance:
+               P -> l=1, j=1/2, m_j=-1/2,1/2. l=1, j=3/2, 
+                    m_j=-3/2, -1/2, 1/2, 3/2.
+               In the magnetic case with spin-orbit the atomic wavefunctions
+               can be forced to be spin-angle functions by setting
+               starting_spin_angle to .TRUE..
+	    }
+	}
+
+	var starting_spin_angle -type LOGICAL { 
+	    default { .FALSE. }
+	    info {
+               In the spin-orbit case when domag=.TRUE., by default,
+               the starting wavefunctions are initialized as in scalar 
+               relativistic noncollinear case without spin-orbit.
+               By setting starting_spin_angle=.TRUE. this behaviour can
+               be changed and the initial wavefunctions are radial 
+               functions multiplied by spin-angle functions. 
+               When domag=.FALSE. the initial wavefunctions are always
+               radial functions multiplied by spin-angle functions 
+               independently from this flag.
+               When lspinorb is .FALSE. this flag is not used.
 	    }
 	}
 
