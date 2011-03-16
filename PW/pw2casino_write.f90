@@ -28,6 +28,7 @@ SUBROUTINE write_casino_wfn(gather,blip,multiplicity,binwrite,single_precision_b
    USE uspp_param, ONLY: nh
    USE io_global, ONLY: stdout, ionode, ionode_id
    USE io_files, ONLY: nd_nmbr, nwordwfc, iunwfc, prefix
+   USE io_files, ONLY : tmp_dir
    USE wavefunctions_module, ONLY : evc
    USE funct, ONLY : dft_is_meta
    USE mp_global, ONLY: inter_pool_comm, intra_pool_comm, nproc_pool, me_pool
@@ -123,15 +124,18 @@ SUBROUTINE write_casino_wfn(gather,blip,multiplicity,binwrite,single_precision_b
       IF(blip)THEN
          IF(binwrite)THEN
             WRITE (6,'(a)')'Writing file '//trim(prefix)//'.bwfn.data.b1'//trim(postfix)//' for program CASINO.'
-            OPEN( iob, file=trim(prefix)//'.bwfn.data.b1'//trim(postfix), form='unformatted', action='write', access='sequential')
+            OPEN( iob, file=trim(tmp_dir)//'/'//trim(prefix)//'.bwfn.data.b1'//trim(postfix), &
+                  form='unformatted', action='write', access='sequential')
          ELSE
             WRITE (6,'(a)')'Writing file '//trim(prefix)//'.bwfn.data'//trim(postfix)//' for program CASINO.'
-            OPEN( io, file=trim(prefix)//'.bwfn.data'//trim(postfix), form='formatted', action='write', access='sequential')
+            OPEN( io, file=trim(tmp_dir)//'/'//trim(prefix)//'.bwfn.data'//trim(postfix), &
+                  form='formatted', action='write', access='sequential')
          ENDIF
       ELSE
          IF(gather)THEN
             WRITE (6,'(a)')'Writing file '//trim(prefix)//'.pwfn.data'//trim(postfix)//' for program CASINO.'
-            OPEN( io, file=trim(prefix)//'.pwfn.data'//trim(postfix), form='formatted', action='write', access='sequential')
+            OPEN( io, file=trim(tmp_dir)//'/'//trim(prefix)//'.pwfn.data'//trim(postfix), & 
+                  form='formatted', action='write', access='sequential')
          ELSE
             WRITE (6,'(a)')'Writing one file per node '//trim(prefix)//'.pwfn.data'//trim(postfix)//'.XX for program CASINO'
             CALL seqopn( io, 'pwfn.data'//trim(postfix), 'formatted',exst)
