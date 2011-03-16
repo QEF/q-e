@@ -175,7 +175,6 @@ CONTAINS
                  upf%rcutus_chi(nb), upf%epseu(nb)
          ENDIF
       END DO
-
       IF( present(conf) ) THEN
          WRITE(u, '(4x,a)') 'Generation configuration:'
          DO nb = 1,conf%nwfs

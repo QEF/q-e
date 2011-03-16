@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2003-2009 Quantum ESPRESSO group
+! Copyright (C) 2003-2011 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -12,6 +12,6 @@ MODULE global_version
   !
   SAVE
   !
-  CHARACTER (LEN=6) :: version_number = '4.3a'
+  CHARACTER (LEN=6) :: version_number = '4.3b'
   !
 END MODULE global_version

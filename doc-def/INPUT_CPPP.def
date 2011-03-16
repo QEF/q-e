@@ -87,12 +87,12 @@ namelist follow:
 	var ldynamics  -type      LOGICAL { 
 	    default { .false. } 
 	    info {
-		This logical flag control the processing of atoms trajeactory.
+		This logical flag control the processing of atoms trajectory.
 
-		    .TRUE.  process CP trajectory files and generata a trajectory
+		    .TRUE.  process CP trajectory files and generate a trajectory
 		            file for xcrysden (.axsf)
 
-		    .FALSE. do not proces trajectory
+		    .FALSE. do not process trajectory
 	    }
 	}
 
@@ -101,8 +101,8 @@ namelist follow:
 	    info {
 		This logical flag control the generation of a pdb file.
 
-		    .TRUE.  generate a pdb file containing positon and cell of
-		            the simulated system
+		    .TRUE.  generate a pdb file containing positions and cell
+		            of the simulated system
 
 		    .FALSE. do not generate pdb file
 	    }
@@ -155,7 +155,7 @@ namelist follow:
 	var nframes  -type        INTEGER { 
 	    default { 1 } 
 	    info {
-		number of MD step to be read to buind the trajectory
+		number of MD step to be read to build the trajectory
 	    }
 	}
 	

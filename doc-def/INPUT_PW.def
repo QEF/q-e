@@ -1543,7 +1543,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 
 
 	    var upscale -type REAL { 
-		default { 10.D0 }
+		default { 100.D0 }
 		info {
 		    Max reduction factor for conv_thr during structural optimization
 		    conv_thr is automatically reduced when the relaxation

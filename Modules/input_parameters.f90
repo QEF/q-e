@@ -971,8 +971,8 @@ MODULE input_parameters
         INTEGER   :: ion_maxstep = 1000
           ! maximum number of step in ionic minimization
 
-        REAL(DP) :: upscale = 1.0_DP
-          ! This variable is NOT used in FPMD
+        REAL(DP) :: upscale = 100.0_DP
+          ! Max reduction allowed in scf threshold during optimization
 
         CHARACTER(len=80) :: pot_extrapolation = 'default', &
                              wfc_extrapolation = 'default'

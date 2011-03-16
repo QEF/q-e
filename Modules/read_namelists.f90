@@ -483,7 +483,7 @@ MODULE read_namelists_module
        refold_pos       = .FALSE.
        remove_rigid_rot = .FALSE.
        !
-       upscale           = 10.0_DP
+       upscale           = 100.0_DP
        pot_extrapolation = 'atomic'
        wfc_extrapolation = 'none'
        !
