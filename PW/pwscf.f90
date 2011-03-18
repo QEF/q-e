@@ -19,6 +19,8 @@ PROGRAM pwscf
   USE environment,      ONLY : environment_start, environment_end
   USE check_stop,       ONLY : check_stop_init
   USE mp_global,        ONLY : mp_startup, mp_bcast, mp_global_end, intra_image_comm
+  USE mp_global,        ONLY : nimage, me_image, root_image
+  USE io_global,        ONLY : io_global_start
 #if defined(__MS2)
   USE ms2,              ONLY : MS2_enabled,                 &
                                ms2_initialization,    &
@@ -31,15 +33,27 @@ PROGRAM pwscf
   USE read_cards_module,     ONLY : read_cards
   USE read_namelists_module, ONLY : read_namelists
   !
+  USE io_files,           ONLY : tmp_dir
+  USE mp_global,          ONLY : nimage, my_image_id
+  USE xml_io_base,        ONLY : create_directory, change_directory
+  !
   IMPLICIT NONE
   !
   LOGICAL :: xmlinput = .false.
   CHARACTER (len=iotk_attlenx) :: attr
   !
+  CHARACTER(len=256) :: dirname
+  !
 #ifdef __PARA
   CALL mp_startup ( )
 #endif
   CALL environment_start ( 'PWSCF' )
+  !
+  ! reset IO nodes
+  ! (do this to make each "image head node" an ionode)
+  ! Has to be used ONLY to run nimage copies of pwscf
+  ! 
+  IF ( nimage > 1 ) CALL io_global_start( me_image, root_image )
   !
   IF ( ionode ) THEN
      !
@@ -93,6 +107,17 @@ PROGRAM pwscf
   IF ( gamma_only ) WRITE( UNIT = stdout, &
      & FMT = '(/,5X,"gamma-point specific algorithms are used")' )
   !
+  IF( nimage > 1 ) THEN
+     !
+     ! ... When nimage are used, open a directory for each one
+     ! ...It has to be done here in order not to disturb NEB like calculations
+     !
+     WRITE( dirname, FMT = '( I5.5 )' ) my_image_id
+     tmp_dir = TRIM( tmp_dir )//TRIM( dirname )//'/'
+     CALL create_directory( tmp_dir )
+     CALL change_directory( tmp_dir )
+     !
+  END IF
   !
   ! call to void routine for user defined / plugin patches initializations
   !
