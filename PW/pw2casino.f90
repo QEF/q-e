@@ -37,12 +37,12 @@ SUBROUTINE pw2casino()
   INTEGER  :: n_points_for_test = 0
   !
   NAMELIST / inputpp / &
-   &casino_gather, &
-   &blip_convert, &
-   &blip_multiplicity, &
-   &blip_binary, &
-   &blip_single_prec, &
-   &n_points_for_test
+   casino_gather, &
+   blip_convert, &
+   blip_multiplicity, &
+   blip_binary, &
+   blip_single_prec, &
+   n_points_for_test
   !
   !
   IF ( use_pw2casino ) THEN
@@ -57,7 +57,6 @@ SUBROUTINE pw2casino()
     CLOSE(tmp_unit)
 
 20 CONTINUE
-
     IF ( nstep == 1 ) THEN
       write(postfix,*) ''
       CALL write_casino_wfn( &
