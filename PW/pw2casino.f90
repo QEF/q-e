@@ -29,7 +29,7 @@ SUBROUTINE pw2casino()
   INTEGER :: tmp_unit
   !
   INTEGER  :: ios
-  LOGICAL  :: casino_gather = .false.
+  LOGICAL  :: casino_gather = .true.
   LOGICAL  :: blip_convert = .true.
   LOGICAL  :: blip_binary = .true.  
   LOGICAL  :: blip_single_prec = .true.
@@ -37,7 +37,6 @@ SUBROUTINE pw2casino()
   INTEGER  :: n_points_for_test = 0
   !
   NAMELIST / inputpp / &
-   casino_gather, &
    blip_convert, &
    blip_multiplicity, &
    blip_binary, &
