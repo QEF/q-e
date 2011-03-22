@@ -199,49 +199,50 @@ SUBROUTINE new_evc()
            ENDIF
         ENDDO
 !
-!
 !  At this point we solve a linear system of size group_size x group_size
 !  and find the linear combination of degenerate wavefunctions which has 
-!  projection one on each atomic state
+!  projection one on each atomic state.
 !
-        ALLOCATE(aux(npwx*npol,nsize))
-        ALLOCATE(aux_proj(natomwfc,nsize))
-        ALLOCATE(a(nsize,nsize))
-        ALLOCATE(v(nsize,nsize))
-        v=(0.0_DP,0.0_DP)
-        DO ibnd = 1, nsize
-           DO jbnd = 1, nsize
-              a(ibnd,jbnd) = proj(ind(ibnd),start_band(igroup)+jbnd-1)
+        IF (nsize>1) THEN
+           ALLOCATE(aux(npwx*npol,nsize))
+           ALLOCATE(aux_proj(natomwfc,nsize))
+           ALLOCATE(a(nsize,nsize))
+           ALLOCATE(v(nsize,nsize))
+           v=(0.0_DP,0.0_DP)
+           DO ibnd = 1, nsize
+              DO jbnd = 1, nsize
+                 a(ibnd,jbnd) = proj(ind(ibnd),start_band(igroup)+jbnd-1)
+              ENDDO
+              v(ibnd,ibnd)=(1.0_DP,0.0_DP)
            ENDDO
-           v(ibnd,ibnd)=(1.0_DP,0.0_DP)
-        ENDDO
-        CALL ZGESV(nsize, nsize, a, nsize, ind, v, nsize, info)
+           CALL ZGESV(nsize, nsize, a, nsize, ind, v, nsize, info)
 !
 !  We cannot use the vectors v to make the linear combinations
 !  because they are not orthonormal. We orthonormalize them, so the
 !  projection will not be exactly one, but quite close.
 !
-        CALL orthogonalize_vects(nsize, v)
+           CALL orthogonalize_vects(nsize, v)
 !
 !  And now make the linear combination. Update also the projections on
 !  the atomic states.
 !
-        aux=(0.0_DP, 0.0_DP)
-        aux_proj=(0.0_DP, 0.0_DP)
-        DO ibnd=1, nsize 
-           DO jbnd=1,nsize
-              aux(:,ibnd)=aux(:,ibnd)+ v(jbnd,ibnd)* &
+           aux=(0.0_DP, 0.0_DP)
+           aux_proj=(0.0_DP, 0.0_DP)
+           DO ibnd=1, nsize 
+              DO jbnd=1,nsize
+                 aux(:,ibnd)=aux(:,ibnd)+ v(jbnd,ibnd)* &
                                      evc(:,start_band(igroup)+jbnd-1)
-              aux_proj(:,ibnd)=aux_proj(:,ibnd)+ v(jbnd,ibnd)* &
+                 aux_proj(:,ibnd)=aux_proj(:,ibnd)+ v(jbnd,ibnd)* &
                                      proj(:,start_band(igroup)+jbnd-1)
+              ENDDO
            ENDDO
-        ENDDO
-        evc(:,start_band(igroup):start_band(igroup)+nsize-1)= aux(:,:)
-        proj(:,start_band(igroup):start_band(igroup)+nsize-1)= aux_proj(:,:)
-        DEALLOCATE(aux)
-        DEALLOCATE(aux_proj)
-        DEALLOCATE(a)
-        DEALLOCATE(v)
+           evc(:,start_band(igroup):start_band(igroup)+nsize-1)= aux(:,:)
+           proj(:,start_band(igroup):start_band(igroup)+nsize-1)= aux_proj(:,:)
+           DEALLOCATE(aux)
+           DEALLOCATE(aux_proj)
+           DEALLOCATE(a)
+           DEALLOCATE(v)
+        ENDIF
      ENDDO   ! loop over the groups of bands
 !
 !  Finally, we order the new bands as the atomic states
