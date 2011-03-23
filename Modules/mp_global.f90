@@ -165,6 +165,8 @@ CONTAINS
        nproc_ortho_in = MAX( nproc_ortho_in, 1 )
        nproc_ortho_in = MIN( nproc_ortho_in, nproc )
        !
+write(0,*) "from startup, nproc: ", nproc
+write(0,*) "from startup, nproc_ortho_in: ", nproc_ortho_in
     END IF
     !
     CALL mp_barrier()
@@ -604,7 +606,14 @@ CONTAINS
     INTEGER, ALLOCATABLE :: ortho_cntx_pe(:,:,:)
     INTEGER :: nprow, npcol, myrow, mycol, i, j, k
     INTEGER, EXTERNAL :: BLACS_PNUM
+    !
+    INTEGER :: nparent=1
+    INTEGER :: total_nproc=1
+    INTEGER :: total_mype=0
+    INTEGER :: nproc_parent=1
+    INTEGER :: my_parent_id=0
 #endif
+
 
 #if defined __MPI
 
@@ -699,13 +708,23 @@ CONTAINS
        me_ortho(1) = me_ortho1
        me_ortho(2) = me_ortho1
     endif
-
 #if defined __SCALAPACK
-
-    ALLOCATE( ortho_cntx_pe( npool, nbgrp, nimage ) )
+    !
+    !  This part is used to eliminate the image dependency from ortho groups
+    !  SCALAPACK is now independent of whatever level of parallelization
+    !  is present on top of pool parallelization
+    !
+    total_nproc = mp_size(mpi_comm_world)
+    total_mype = mp_rank(mpi_comm_world)
+    nparent = total_nproc/npool/nproc_pool
+    nproc_parent = total_nproc/nparent
+    my_parent_id = total_mype/nproc_parent
+    !
+    !
+    ALLOCATE( ortho_cntx_pe( npool, nbgrp, nparent ) )
     ALLOCATE( blacsmap( np_ortho(1), np_ortho(2) ) )
 
-    DO j = 1, nimage
+    DO j = 1, nparent
 
      DO k = 1, nbgrp
 
@@ -717,7 +736,7 @@ CONTAINS
          nprow = np_ortho(1)
          npcol = np_ortho(2)
 
-         IF( ( j == ( my_image_id + 1 ) ) .and. ( k == ( my_bgrp_id + 1 ) ) .and.  &
+         IF( ( j == ( my_parent_id + 1 ) ) .and. ( k == ( my_bgrp_id + 1 ) ) .and.  &
              ( i == ( my_pool_id  + 1 ) ) .and. ( ortho_comm_id > 0 ) ) THEN
 
            blacsmap( me_ortho(1) + 1, me_ortho(2) + 1 ) = BLACS_PNUM( world_cntx, 0, me_blacs )
@@ -732,7 +751,7 @@ CONTAINS
 
          CALL BLACS_GRIDINFO( ortho_cntx_pe(i,k,j), nprow, npcol, myrow, mycol )
 
-         IF( ( j == ( my_image_id + 1 ) ) .and. ( k == ( my_bgrp_id + 1 ) ) .and. &
+         IF( ( j == ( my_parent_id + 1 ) ) .and. ( k == ( my_bgrp_id + 1 ) ) .and. &
              ( i == ( my_pool_id  + 1 ) ) .and. ( ortho_comm_id > 0 ) ) THEN
 
             IF(  np_ortho(1) /= nprow ) &
