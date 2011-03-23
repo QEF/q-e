@@ -56,6 +56,9 @@ SUBROUTINE pw2casino()
     CLOSE(tmp_unit)
 
 20 CONTINUE
+ 
+   IF ( .not. blip_convert ) blip_binary = .false.
+ 
     IF ( nstep == 1 ) THEN
       write(postfix,*) ''
       CALL write_casino_wfn( &

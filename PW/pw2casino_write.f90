@@ -623,7 +623,7 @@ CONTAINS
       INTEGER j, na, nt, at_num
       REAL(dp) :: kvec(3,nk),ksq(nk),kprod(6,nk)
 
-      IF(binwrite)THEN
+      IF(blip.and.binwrite)THEN
          WRITE(iob)&
             to_c80(title)    ,&
             to_c80("PWSCF")  ,&
