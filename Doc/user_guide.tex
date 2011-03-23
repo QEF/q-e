@@ -130,6 +130,8 @@ can be installed as {\em plug-ins}:
       quantum transport properties with Wannier functions.
 \item \texttt{YAMBO}:
       optical excitations with Many-Body Perturbation Theory.
+\item \texttt{PLUMED}:
+      calculation of free-energy surface through metadynamics.
 \end{itemize}
 This guide documents \PWscf, \CP, \PHonon, \PostProc.
 The remaining packages have separate documentation.
@@ -179,6 +181,8 @@ All trademarks mentioned in this guide belong to their respective owners.
   \item molecular dynamics on the ground-state Born-Oppenheimer surface,  also with variable cell;
   \item macroscopic polarization and finite electric fields via 
   the modern theory of polarization (Berry Phases).
+  \item the modern theory of polarization (Berry Phases).
+  \item free-energy surface calculation at fixed cell through meta-dynamics, if patched with PLUMED.
 \end{itemize}
 All of the above works for both insulators and metals, 
 in any crystal structure, for many exchange-correlation (XC) functionals
@@ -224,7 +228,8 @@ plus interfacing with a number of graphical utilities and with
 external codes.
 
 \CP\ can perform Car-Parrinello molecular dynamics, including
-variable-cell dynamics.
+variable-cell dynamics, and free-energy surface calculation at 
+fixed cell through meta-dynamics, if patched with PLUMED.
 
 \subsection{People}
 
@@ -513,7 +518,7 @@ common to all packages:
 \texttt{include/} &  files *.h included by fortran and C source files\\
 \texttt{clib/}    &  external libraries written in C\\
 \texttt{flib/}    &  external libraries written in Fortran\\
-\texttt{iotk/ }   &  Input/Output Toolkit\\
+\texttt{extlibs/ }&  archive of external libraries LAPACK, BLAS, Multigrid and iotk\\
 \texttt{install/} &  installation scripts and utilities\\
 \texttt{pseudo}/  &  pseudopotential files used by examples\\
 \texttt{upftools/}&  converters to unified pseudopotential format (UPF)\\
@@ -706,6 +711,7 @@ and the following optional packages:\\
 \texttt{--with-internal-blas}&    compile with internal BLAS (default: no)\\
 \texttt{--with-internal-lapack}&  compile with internal LAPACK (default: no)\\
 \texttt{--with-scalapack}&        use ScaLAPACK if available (default: yes)\\
+\texttt{--enable-exx}&            compile enabling the use of hybrid functionals (exact-exchange)\\
 \end{tabular}\\
 If you want to modify the \configure\ script (advanced users only!), 
 see the Developer Manual.
