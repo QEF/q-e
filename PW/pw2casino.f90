@@ -32,7 +32,7 @@ SUBROUTINE pw2casino()
   LOGICAL  :: casino_gather = .true.
   LOGICAL  :: blip_convert = .true.
   LOGICAL  :: blip_binary = .true.  
-  LOGICAL  :: blip_single_prec = .true.
+  LOGICAL  :: blip_single_prec = .false.
   REAL(dp) :: blip_multiplicity = 1.d0
   INTEGER  :: n_points_for_test = 0
   !
