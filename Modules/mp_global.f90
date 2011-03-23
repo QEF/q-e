@@ -165,8 +165,6 @@ CONTAINS
        nproc_ortho_in = MAX( nproc_ortho_in, 1 )
        nproc_ortho_in = MIN( nproc_ortho_in, nproc )
        !
-write(0,*) "from startup, nproc: ", nproc
-write(0,*) "from startup, nproc_ortho_in: ", nproc_ortho_in
     END IF
     !
     CALL mp_barrier()
