@@ -1,5 +1,3 @@
-# System-dependent definitions for SGI Altix 350/3000 machines running Linux 
-# (parallel, MPI)
 # Contributed by by Martin Hilgeman <hilgeman@sgi.com>
 # Red Hat Linux Advanced Server release 2.1AS (Derry), 
 # SGI ProPack 2.4 for Linux, Build 240rp04021313_10046-040213135,
@@ -102,4 +100,4 @@ RANLIB         = ranlib
 # all internal and external libraries - do not modify
 
 LIBOBJS        = ../flib/ptools.a ../flib/flib.a ../clib/clib.a \
-                 ../iotk/src/libiotk.a ../Multigrid/mglib.a
+                 ../iotk/src/libiotk.a

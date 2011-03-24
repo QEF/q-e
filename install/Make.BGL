@@ -49,7 +49,7 @@ LIBS           = -L$(BGLSYS)/lib -lmpich.rts -lmsglayer.rts -lrts.rts -ldevices.
 #
 LD           = $(F77)
 LIBOBJS      = ../flib/ptools.a ../flib/flib.a ../clib/clib.a \
-               ../iotk/src/libiotk.a  ../Multigrid/mglib.a
+               ../iotk/src/libiotk.a
 LDFLAGS      = ../flib/ptools.a ../flib/flib.a ../clib/clib.a  $(LIBOBJS) $(LIBS) -qarch=440d
 
 AR           = ar
