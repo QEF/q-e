@@ -11,7 +11,6 @@ include ../make.sys
 all: 
 	$(MAKE) libblas_$(BLAS_LIBS_SWITCH) 
 	$(MAKE) liblapack_$(LAPACK_LIBS_SWITCH) 
-	$(MAKE) mglib
 	$(MAKE) libiotk 
 
 # BLAS
@@ -51,14 +50,6 @@ liblapack_internal:
 	cd ../lapack-3.2; $(MAKE) lapacklib); else \
         (echo "no configuration file found for lapack"; \
         echo "run configure from main QE dir"); fi
-
-#Multigrid
-mglib:
-	if (test ! -d ../Multigrid || \
-	test ! -e ../Multigrid/Makefile); then \
-	( cat archive/multigrid.tar | (cd ../; tar -xvf -)) ; fi
-	cd ../Multigrid; $(MAKE) all; 
-#Multigrid
 libiotk:
 	if test ! -d ../S3DE; then \
 	(gzip -dc archive/iotk-1.2.beta.tar.gz | (cd ../; tar -xvf -)) ; \
@@ -83,12 +74,6 @@ lapack_clean:
 	if test -d ../lapack-3.2; then (cd ../lapack-3.2; $(MAKE) clean); fi
 lapack_veryclean:
 	if test -d ../lapack-3.2; then (rm -R -f ../lapack-3.2); fi
-multigrid_clean:
-	if (test -d ../Multigrid && \
-	test -e ../Multigrid/Makefile) ; then \
-	(cd ../Multigrid; $(MAKE) clean); fi
-multigrid_veryclean:
-	if test -d ../Multigrid; then (rm -R -f ../Multigrid); fi
 iotk_clean:
 	if test -d ../S3DE; then (cd ../S3DE; $(MAKE) clean); fi
 	if test -e ../S3DE/iotk/src/iotk.x; then \
@@ -105,5 +90,5 @@ iotk_veryclean:
 	rm -f ../iotk
 
 # general cleaning
-clean: blas_clean lapack_clean multigrid_clean iotk_clean
-veryclean: blas_veryclean lapack_veryclean multigrid_veryclean iotk_veryclean
+clean: blas_clean lapack_clean iotk_clean
+veryclean: blas_veryclean lapack_veryclean iotk_veryclean
