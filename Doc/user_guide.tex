@@ -2361,7 +2361,7 @@ the wave function, the Laplacian and the gradient at a large number of
 random points in the simulation cell and compute the overlap of the
 blip orbitals with the original plane-wave orbitals:
 $$
-\alpha = {<BW|PW> \over  \sqrt{<BW|BW><PW|PW>}
+\alpha = {<BW|PW> \over  \sqrt{<BW|BW><PW|PW>}}
 $$
 The closer $\alpha$ is to 1, the better the blip representation.  By increasing
 \texttt{blip\_multiplicity}, or by increasing the plane-wave cutoff, one ought to be 
@@ -3946,7 +3946,7 @@ If you get an error message like:
 \begin{verbatim}
 Operation between types "char**" and "int" is not allowed.
 \end{verbatim}
-change in file \texttt{clib\metadyn.h}
+change in file \texttt{clib/metadyn.h}
 \begin{verbatim}
 #define snew(ptr,nelem) (ptr)= (nelem==0 ? NULL : (typeof(ptr)) calloc(nelem, sizeof(*(ptr))))
 #define srenew(ptr,nelem) (ptr)= (typeof(ptr)) realloc(ptr,(nelem)*sizeof(*(ptr)))
@@ -3960,6 +3960,35 @@ with
 \paragraph{Calling C from fortran}
 PLUMED assumes that fortran compilers add a single \texttt{\_} at the end of C routines. You
 may get an error message as :
+\begin{verbatim}
+ERROR: Undefined symbol: .init_metadyn
+ERROR: Undefined symbol: .meta_force_calculation
+\end{verbatim}
+eliminate the \texttt{\_} from the definition of init\_metadyn and meta\_force\_calculation, i. e.
+change at line 529
+\begin{verbatim}
+void meta_force_calculation_(real *cell, int *istep, real *xxx, real *yyy, real *zzz, 
+\end{verbatim}
+with
+\begin{verbatim}
+void meta_force_calculation(real *cell, int *istep, real *xxx, real *yyy, real *zzz,    
+\end{verbatim},
+and at line 961
+\begin{verbatim}
+  void init_metadyn_(int *atoms, real *ddt, real *mass, 
+  void init_metadyn_(int *atoms, real *ddt, real *mass, 
+\end{verbatim}
+\subsection{Compilation problems with \texttt{YAMBO}}
+
+If simply typing \texttt{make yambo} produces un error such as : 
+\begin{verbatim}
+undefined reference to `MAIN__'
+\end{verbatim}
+you need to run the \texttt{YAMBO} configure by yourself specifying 
+\texttt{./configure -nofor\_main} for intel compiler of \texttt{./configure -Mnomain} 
+for PGI. If you do not manage to solve
+the problem go to \texttt{YAMBO} official web site (\texttt{http://www.yambo-code.org}) for 
+specific information.
 
 \subsection{PostProc}
 
