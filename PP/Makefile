@@ -52,7 +52,7 @@ TLDEPS= bindir mods libs pw
 all : tldeps average.x bands.x dos.x epsilon.x initial_state.x \
       plan_avg.x plotband.x plotproj.x plotrho.x pmw.x pp.x projwfc.x \
       pawplot.x sumpdos.x wfdd.x \
-      pw2casino.x pw2wannier90.x pw_export.x pw2gw.x \
+      pw2wannier90.x pw_export.x pw2gw.x \
       wannier_ham.x wannier_plot.x
 
 qexml.x: qexml.o qexml_example.o
@@ -118,11 +118,6 @@ pp.x : postproc.o chdens.o $(PPOBJS) $(MODULES) $(LIBOBJS)
 projwfc.x : projwfc.o $(PPOBJS) $(MODULES) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ \
 		projwfc.o $(PPOBJS) $(MODULES) $(LIBOBJS) $(LIBS)
-	- ( cd ../bin ; ln -fs ../PP/$@ . )
-
-pw2casino.x : pw2casino.o $(PPOBJS) $(MODULES) $(LIBOBJS)
-	$(LD) $(LDFLAGS) -o $@ \
-		pw2casino.o $(PPOBJS) $(MODULES) $(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../PP/$@ . )
 
 pw2wannier90.x : pw2wannier90.o $(PPOBJS) $(MODULES) $(LIBOBJS)
