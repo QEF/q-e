@@ -9,3 +9,21 @@ Available converters to UPF from:
   Old Norm-Conserving PWSCF format (deprecated)
   Old "RRKJ3" PWSCF format (deprecated)
   Old Norm-Conserving CP90  format (deprecated)
+
+Pseudopotentials in PWSCF and CASINO
+====================================
+
+THIS SECTION TO BE WRITTEN - AWAITING MODIFICATIONS OF THESE TOOLS BY SIMON 
+BINNIE
+
+Look in the upftools directory of the espresso distribution. Here you will 
+find: 
+
+casino2upf.f90
+  
+   A tool to convert a pseudopotential written in CASINO tabulated
+   format to unified pseudopotential format.
+
+   (This tool also exists in the utils/pseudo_converters/pwscf directory of
+    the CASINO distribution, as does another utility by John Trail which
+    appears to do the same thing..).
