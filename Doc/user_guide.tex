@@ -115,25 +115,28 @@ A copy of required external libraries are included:
 \begin{itemize}
 \item \texttt{iotk}:
       an Input-Output ToolKit.
-\item PMG:
-      Multigrid solver for Poisson equation.
 \item BLAS and LAPACK
 \end{itemize}
 Finally, several additional packages that exploit data produced by \qe\ 
-can be installed as {\em plug-ins}:
+or patch some \qe\ routines can be installed as {\em plug-ins}:
 \begin{itemize}
 \item \texttt{Wannier90}:
       maximally localized Wannier functions
       (\texttt{http://www.wannier.org/}), written by A. Mostofi, 
      J. Yates, Y.-S Lee.
 \item \texttt{WanT}:
-      quantum transport properties with Wannier functions.
+      quantum transport properties with Wannier functions \\
+      (\texttt{http://www.wannier-transport.org}), originally written by A. Ferretti, 
+      A Calzolari and M. Buongiorno Nardelli.
 \item \texttt{YAMBO}:
-      optical excitations with Many-Body Perturbation Theory.
+      electronic excitations within Many-Body Perturbation Theory: GW and Bethe-Salpeter equation 
+      (\texttt{http://www.yambo-code.org}), originally written by A. Marini.
 \item \texttt{PLUMED}:
-      calculation of free-energy surface through metadynamics.
+      calculation of free-energy surface through metadynamics \\
+      M. Bonomi {\it et al}, Comp. Phys. Comm. {\bf 180}, 1961 (2009) \\
+      (\texttt{http://merlino.mi.infm.it/\~{}plumed/PLUMED}).
 \end{itemize}
-This guide documents \PWscf, \CP, \PHonon, \PostProc.
+This guide documents \PWscf, \texttt{NEB}, \CP, \PHonon, \PostProc.
 The remaining packages have separate documentation.
 
 The \qe\ codes work on many different types of Unix machines,
@@ -195,10 +198,11 @@ Non-collinear magnetism and spin-orbit interactions
 are also implemented.  An implementation of finite electric 
 fields with a sawtooth potential in a supercell is also available.
 
-Note that the calculation of reaction pathways and energy barriers 
-using the Nudged Elastci Band (NEB) and Fourier String Method Dynamics 
-(SMD) methods, is no longer performed by \PWscf. It is now performed
-by a different executable, contained in the subpackage \texttt{NEB}.
+\texttt{NEB} calculates reaction pathways and energy barriers 
+using the Nudged Elastic Band (NEB) and Fourier String Method Dynamics 
+(SMD) methods. Note that these calculations are no longer performed
+by the \pw.x\ executable of \PWscf. Also note that NEB with Car-Parrinello
+Molecular Dynamics is currently not implemented.
 
 \PHonon\ can perform the following types of calculations:
 \begin{itemize}
@@ -266,7 +270,8 @@ We quote in particular:
   built  upon previous work by Guido Fratesi (Univ.Milano Bicocca)
   and Riccardo Mazzarello (ETHZ-USI Lugano);
  \item Ismaila Dabo (INRIA, Palaiseau) for electrostatics with
- free boundary conditions.
+ free boundary conditions;
+ \item Norbert Nemec and Mike Towler (U.Cambridge) for interface with \texttt{CASINO}.
 \end{itemize}
 For \PHonon, we mention in particular: 
 \begin{itemize}
@@ -278,8 +283,6 @@ For \PHonon, we mention in particular:
 For \PostProc, we mention:
 \begin{itemize}
 \item Andrea Benassi (SISSA) for the \texttt{epsilon} utility;
-\item Norbert Nemec (U.Cambridge) for the \texttt{pw2casino} 
-utility;
 \item Dmitry Korotin (Inst. Met. Phys. Ekaterinburg) for the
 \texttt{wannier\_ham} utility.
 \end{itemize}
@@ -371,7 +374,8 @@ Malgorzata Wierzbowska, Silviu Zilberman,
 and let us apologize to everybody we have forgotten.
  
 This guide was mostly written by Paolo Giannozzi.
-Gerardo Ballabio and Carlo Cavazzoni wrote the section on \CP.
+Gerardo Ballabio and Carlo Cavazzoni wrote the section on \CP. Mike Towler
+wrote the \texttt{PWscf} to \texttt{CASINO} subsection.
 
 \subsection{Contacts}
 \label{SubSec:Contacts}
@@ -489,9 +493,11 @@ doesn't recognize the "z" flag:
 A directory \texttt{espresso-X.Y.Z/} will be created. Given the size 
 of the complete distribution, you may need to download more packages
 and to unpack them following the same procedure (they will unpack into 
-the same directory). Plug-ins should instead be downloaded into
-subdirectory \texttt{plugin/archive} but not unpacked or uncompressed:
-command \texttt{make} will take care of this during installation.
+the same directory). 
+
+Plug-ins such as \texttt{YAMBO} or \texttt{PLUMED} should instead be downloaded into
+subdirectory \texttt{archive} but \uppercase{not unpacked or uncompressed}:
+command \texttt{make} will take care of this during installation. 
 
 Occasionally, patches for the current version, fixing some errors and bugs,
 may be distributed as a "diff" file. In order to install a patch (for 
@@ -518,12 +524,13 @@ common to all packages:
 \texttt{include/} &  files *.h included by fortran and C source files\\
 \texttt{clib/}    &  external libraries written in C\\
 \texttt{flib/}    &  external libraries written in Fortran\\
-\texttt{extlibs/ }&  archive of external libraries LAPACK, BLAS, Multigrid and iotk\\
+\texttt{extlibs/ }&  archive of external libraries LAPACK, BLAS and iotk\\
 \texttt{install/} &  installation scripts and utilities\\
 \texttt{pseudo}/  &  pseudopotential files used by examples\\
 \texttt{upftools/}&  converters to unified pseudopotential format (UPF)\\
 \texttt{examples/}&  sample input and output files\\
 \texttt{Doc/}     &  general documentation\\
+\texttt{archive/} &  contains plug-ins in .tar.gz form\\
 \end{tabular}
 \\
 while others are specific to a single package:
@@ -791,11 +798,12 @@ can use the following vendor-specific FFT libraries:
 if none is found, it will search for an external FFTW v.3 library;
 if none is found, it will fall back to the internal  copy of FFTW.
 
-If you have recent versions of MKL installed, you may try the 
-FFTW interface provided with MKL. You will have to compile them
-(only sources are distributed with the MKL library)
-and to modify file \texttt{make.sys} accordingly (MKL must be linked 
-{\em after} the FFTW-MKL interface)
+If you have recent versions (v.10 or later) of MKL installed, you 
+may use the FFTW3 interface provided with MKL. This can be directly
+linked in MKL distributed with v.12 of the Intel compiler. In earlier 
+versions, only sources are distributed: you have to compile them and 
+ta modify file \texttt{make.sys} accordingly 
+(MKL must be linked {\em after} the FFTW-MKL interface).
 
 \paragraph{MPI libraries} 
 MPI libraries are usually needed for parallel execution 
@@ -896,6 +904,14 @@ generation (see specific documentation in \texttt{atomic\_doc/}).
 \item \texttt{make cp} produces the Car-Parrinello code \texttt{CPV/cp.x}
   and the postprocessing code \texttt{CPV/cppp.x}. 
 \item \texttt{make all} produces all of the above.
+\item \texttt{make plumed} uncompress and move/rename \texttt{PLUMED} , patches \texttt{PW},
+\texttt{CPV} and \texttt{clib} routines and compiles \texttt{PW} and \texttt{CPV}.
+\item \texttt{make w90} uncompress and move/rename \texttt{wannier90}, copy an apropriates
+make.sys and produces \texttt{W90/wannier90.x}.
+\item \texttt{make want} uncompress and move/rename \texttt{want}, run \texttt{want}'s configure
+and produces all \texttt{want} executables in \texttt{WANT/bin}
+\item \texttt{make yambo} uncompress and move/rename \texttt{yambo}, run \texttt{yambo}'s configure
+and produces all \texttt{yambo} executables in \texttt{YAMBO/bin}.
 \end{itemize}
 For the setup of the GUI, refer to the \texttt{PWgui-X.Y.Z /INSTALL} file, where
 X.Y.Z stands for the version number of the GUI (should be the same as the
@@ -925,10 +941,6 @@ The codes for data postprocessing in \texttt{PP/} are:
 in Wannier functions basis
 \item  \texttt{pmw.x} generates Poor Man's Wannier functions, to be used in
   DFT+U calculations 
-\item  \texttt{pw2casino.x}: interface with CASINO code for Quantum Monte Carlo
-  calculation \\
-   (\texttt{http://www.tcm.phy.cam.ac.uk/\~{}mdt26/casino.html}).
-  See the header of  \texttt{PP/pw2casino.f90} for instructions on how to use it.
 \end{itemize}
 Note about Bader's analysis: on
 \texttt{http://theory.cm.utexas.edu/bader/} one can find a software that performs
@@ -2190,6 +2202,10 @@ in the Introduction (note the reference to the Gygi and Baldereschi paper).
 See also J. Comp. Chem. {\bf 29}, 2098 (2008);
 JACS {\bf 129}, 10402 (2007) for examples of applications.
 
+\paragraph{Dispersion interaction with non-local functional (vdwDF)}
+See example \texttt{examples/example\_vwdDF/} and references
+quoted in file \texttt{README} therein.
+
 \paragraph{Polarization via Berry Phase}
 See Example 10, file \texttt{example10/README}, and the documentation 
 in the header of \texttt{PW/bp\_c\_phase.f90}. 
@@ -2247,6 +2263,111 @@ converges in a smaller number of steps than RMW." (Info from Cesar Da
 Silva: the new damping algorithm is the default since v. 3.1).
 
 See also \texttt{examples/VCSexample}.
+
+\subsection{Direct interface with \texttt{CASINO}} \label{pw2casino_info}
+
+\texttt{PWscf} supports now the Cambridge quantum Monte Carlo program CASINO directly. For more information
+on the \texttt{CASINO} code see \texttt{http://www.tcm.phy.cam.ac.uk/\~{}mdt26/casino.html}. 
+\texttt{CASINO} may take the output of \texttt{PWSCF} and
+'improve it' giving considerably more accurate total energies and other
+quantities than DFT is capable of.
+
+
+\texttt{PWscf} users wishing to learn how to use CASINO may like to attend one
+of the annual \texttt{CASINO} summer schools in Mike Towler's "Apuan Alps Centre
+for Physics" in Tuscany, Italy. More information can be found at \texttt{http://www.vallico.net/tti/tti.html} 
+\paragraph{Practicalities}
+The interface between \texttt{PWscf} and \texttt{CASINO} is provided through a file with a
+standard format containing geometry, basis set, and orbital coefficients, which
+\texttt{PWscf} will produce on demand. For SCF calculations, the name of this file may
+be \texttt{pwfn.data}, \texttt{bwfn.data} or \texttt{bwfn.data.b1} depending on user requests (see below).
+If the files are produced from an MD run, the files have a suffix \texttt{.0001}, \texttt{.0002},
+\texttt{.0003} etc.  corresponding to the sequence of timesteps.
+
+\texttt{CASINO} support is implemented by three routines in the \texttt{PW} directory of the
+espresso distribution: 
+\begin{itemize}
+\item \texttt{pw2casino.f90} : the main routine     
+\item \texttt{pw2casino\_write.f90} : writes the \texttt{CASINO} \texttt{xwfn.data} file in various formats
+\item \texttt{pw2blip.f90} : does the plane-wave to blip conversion, if requested
+\end{itemize}
+Relevant behaviour of \texttt{PWscf} may be modified through an optional auxiliary input 
+file, named \texttt{pw2casino.dat} (see below).
+
+Note that in versions prior to 4.3, this functionality was provided through
+separate post-processing utilities available in the PP directory: these are 
+no longer supported. For QMC-MD runs, PWSCF etc previously needed to be 
+'patched' using the patch script PP/pw2casino-MDloop.sh - this is no longer 
+necessary.
+
+\paragraph{How to generate \texttt{xwfn.data} files with \texttt{PWscf}}
+Use the '-pw2casino' option when invoking \texttt{pw.x}, e.g.: 
+\begin{verbatim}
+pw.x -pw2casino < input_file > output_file
+\end{verbatim}
+The \texttt{xfwn.data} file will then be generated automatically. 
+
+\texttt{PWscf} is capable of doing the plane wave to blip conversion directly (the
+'blip' utility provided in the \texttt{CASINO} distribution is not required) and so by
+default, \texttt{PWscf} produces the 'binary blip wave function' file \texttt{bwfn.data.b1}
+
+Various options may be modified by providing a file \texttt{pw2casino.dat} in \texttt{outdir}
+with the following format: 
+\begin{verbatim}
+&inputpp
+blip_convert=.true.
+blip_binary=.true.
+blip_single_prec=.false.
+blip_multiplicity=1.d0
+n_points_for_test=0
+/
+\end{verbatim}
+Some or all of the 5 keywords may be provided, in any order. The default
+values are as given above (and these are used if the \texttt{pw2casino.dat} file is
+not present.
+
+The meanings of the keywords are as follows: 
+\begin{description}
+\item [blip\_convert]: reexpand the converged plane-wave orbitals in localized blip 
+functions prior to writing the \texttt{CASINO} wave function file. This is almost
+always done, since wave functions expanded in blips are considerably more
+efficient in quantum Monte Carlo calculations. If \texttt{blip\_convert=.false.}
+a pwfn.data file is produced (orbitals expanded in plane waves); if 
+\texttt{blip\_convert=.true.}, either a \texttt{bwfn.data file} or a \texttt{bwfn.data.b1} file is 
+produced, depending on the value of \texttt{blip\_binary} (see below).
+
+\item [blip\_binary]: if true, and if \texttt{blip\_convert} is also true, write the blip wave function
+as an unformatted binary \texttt{bwfn.data.b1} file. This is much smaller than
+the formatted \texttt{bwfn.data} file, but is not generally portable across
+all machines.
+
+\item [blip\_single\_prec]: if \texttt{.false.} the orbital coefficients in \texttt{bwfn.data(.b1)} are written out in double
+precision; if the user runs into hardware limits \texttt{blip\_single\_prec} can be
+set to \texttt{.true.} in which case the coefficients are written in single
+precision, reducing the memory and disk requirements at the cost of a small
+amount of accuracy..
+
+\item [blip\_multiplicity]: the quality of the blip expansion (i.e., the fineness of the blip grid) can be
+improved by increasing the grid multiplicity parameter given by this keyword.
+Increasing the grid multiplicity results in a greater number of blip
+coefficients and therefore larger memory requirements and file size, but the
+CPU time should be unchanged. For very accurate work, one may want to 
+experiment with grid multiplicity larger that 1.0. Note, however, that it 
+might be more efficient to keep the grid multiplicity to 1.0 and increase the 
+plane wave cutoff instead.
+
+\item [n\_points\_for\_test]: if this is set to a positive integer greater than zero, \texttt{PWscf} will sample 
+the wave function, the Laplacian and the gradient at a large number of
+random points in the simulation cell and compute the overlap of the
+blip orbitals with the original plane-wave orbitals:
+$$
+\alpha = {<BW|PW> \over  \sqrt{<BW|BW><PW|PW>}
+$$
+The closer $\alpha$ is to 1, the better the blip representation.  By increasing
+\texttt{blip\_multiplicity}, or by increasing the plane-wave cutoff, one ought to be 
+able to make $\alpha$ as close to 1 as desired. The number of random points used 
+is given by \texttt{n\_points\_for\_test}.
+\end{description}
 
 \section{NEB calculations}
 
@@ -3507,7 +3628,9 @@ Possible solutions:
 \begin{itemize}
 \item increase the amount of RAM you are authorized to use (which may
   be much smaller than the available RAM). Ask your system
-  administrator if you don't know what to do.  
+  administrator if you don't know what to do. In some cases the 
+  stack size can be a source of problems: if so, increase it with command 
+  \texttt{limits} or \texttt{ulimit}).
 \item reduce \texttt{nbnd} to the strict minimum, or reduce the cutoffs, or the
   cell size , or a combination of them
 \item  use conjugate-gradient (\texttt{diagonalization='cg'}: slow but very
@@ -3517,17 +3640,7 @@ Possible solutions:
   number of processors with less pools. Remember that parallelization
   with respect to k-points (pools) does not distribute memory:
   parallelization with respect to R- (and G-) space does. 
-\item IBM only (32-bit machines): if you need more than 256 MB you
-  must specify it at link time (option \texttt{-bmaxdata}). 
-\item buggy or weird-behaving compiler. Some versions of the Portland
-  and Intel compilers on Linux PCs or clusters have this problem. For
-  Intel ifort 8.1 and later, the problem seems to be due to the
-  allocation of large automatic arrays that exceeds the available
-  stack. Increasing the stack size (with command \texttt{limits} or \texttt{ulimit})
-  may  solve the problem. Versions $> 3.2$ try to avoid this
-  problem by removing the stack size limit at startup. See:\\
-  \texttt{http://www.democritos.it/pipermail/pw\_forum/2007-September/007176.html},\\
-  \texttt{http://www.democritos.it/pipermail/pw\_forum/2007-September/007179.html}. 
+\item buggy or weird-behaving compiler.
 \end{itemize}
 
 \paragraph{pw.x crashes with {\em error in davcio}}
@@ -3825,6 +3938,28 @@ no longer be suitable. Possible solutions:
 \item use a symmetry-conserving algorithm: the Wentzcovitch algorithm
   (\texttt{cell dynamics='damp-w'}) should not break the symmetry. 
 \end{itemize}
+
+\subsection{Compilation problems with \texttt{PLUMED}}
+
+\paragraph{xlc compiler}
+If you get an error message like:
+\begin{verbatim}
+Operation between types "char**" and "int" is not allowed.
+\end{verbatim}
+change in file \texttt{clib\metadyn.h}
+\begin{verbatim}
+#define snew(ptr,nelem) (ptr)= (nelem==0 ? NULL : (typeof(ptr)) calloc(nelem, sizeof(*(ptr))))
+#define srenew(ptr,nelem) (ptr)= (typeof(ptr)) realloc(ptr,(nelem)*sizeof(*(ptr)))
+\end{verbatim}
+with
+\begin{verbatim}
+#define snew(ptr,nelem) (ptr)= (nelem==0 ? NULL : (void*) calloc(nelem, sizeof(*(ptr))))
+#define srenew(ptr,nelem) (ptr)= (void*) realloc(ptr,(nelem)*sizeof(*(ptr)))
+\end{verbatim}
+
+\paragraph{Calling C from fortran}
+PLUMED assumes that fortran compilers add a single \texttt{\_} at the end of C routines. You
+may get an error message as :
 
 \subsection{PostProc}
 
