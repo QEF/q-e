@@ -158,10 +158,6 @@ liblapack:
 	if test -e extlibs/archive/lapack-3.2.tar.gz ; then \
 	( cd extlibs ; $(MAKE) $(MFLAGS) $@) ; fi
 
-mglib:
-	if test -e extlibs/archive/multigrid.tar ; then \
-	( cd extlibs ; $(MAKE) $(MFLAGS) $@) ; fi
-
 libiotk:
 	if test -e extlibs/archive/iotk-1.2.beta.tar.gz ; then \
 	( cd extlibs ; $(MAKE) $(MFLAGS) $@) ; fi
