@@ -13,21 +13,13 @@ SUBROUTINE stop_run_path( lflag )
   ! ... Called at the end of the run with flag = .TRUE. (removes 'restart')
   ! ... or during execution with flag = .FALSE. (does not remove 'restart')
   !
-  USE io_global,          ONLY : ionode
+  USE io_global,          ONLY : ionode, stdout
   USE mp_global,          ONLY :  mp_global_end
   USE mp_image_global_module, ONLY : nimage
   USE environment,        ONLY : environment_end
-  USE control_flags,      ONLY : lpath, twfcollect, lconstrain, &
-                                 io_level, llondon
-  USE io_files,           ONLY : iunwfc, iunigk, iunefield, iunefieldm,&
-                                 iunefieldp, iuntmp
-  USE buffers,            ONLY : close_buffer
   USE path_variables,     ONLY : path_deallocation
   USE image_io_routines,   ONLY : io_image_stop
-  USE london_module,      ONLY : dealloca_london
-  USE constraints_module, ONLY : deallocate_constraint
-  USE input_parameters,   ONLY : deallocate_input_parameters
-  USE bp,                 ONLY : lelfield
+  USE path_io_units_module,      ONLY : iunpath
   !
   IMPLICIT NONE
   !
@@ -43,15 +35,18 @@ SUBROUTINE stop_run_path( lflag )
   !
   CALL close_files(lflag)
   !
-  CALL environment_end( 'NEB' )
+  ! as environment_end writes final info on stdout
+  ! stdout has to be redirected to iunpath (neb output)
   !
-  CALL mp_global_end()
+  stdout=iunpath
+  !
+  CALL environment_end( 'NEB' )
   !
   CALL clean_pw( .TRUE. )
   !
   CALL path_deallocation()
   !
-!  CALL deallocate_input_parameters()
+  CALL mp_global_end()
   !
   IF ( .not. lflag ) THEN
      !
