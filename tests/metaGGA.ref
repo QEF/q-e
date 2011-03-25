@@ -1,5 +1,5 @@
 
-     Program PWSCF v.4.2        starts on 30Aug2010 at  7:40:55 
+     Program PWSCF v.4.3b       starts on 25Mar2011 at  7:45:25 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -15,6 +15,15 @@
      Waiting for input...
 
      gamma-point specific algorithms are used
+ 
+   Stick Mesh
+   ----------
+   nst =   305,  nstw =    73, nsts =   305
+               n.st   n.stw   n.sts    n.g    n.gw   n.gs
+   min         609     145     609   11363    1365   11363
+   max         609     145     609   11363    1365   11363
+        609     145     609   11363    1365   11363
+ 
 
 
      bravais-lattice index     =            1
@@ -83,28 +92,28 @@
                        cart. coord. in units 2pi/a_0
         k(    1) = (   0.0000000   0.0000000   0.0000000), wk =   2.0000000
 
-     G cutoff =  194.5367  (   5682 G-vectors)     FFT grid: ( 30, 30, 30)
+     G cutoff =  194.5367  (   5682 G-vectors)     FFT grid: ( 27, 27, 27)
 
      Largest allocated arrays     est. size (Mb)     dimensions
         Kohn-Sham Wavefunctions         0.11 Mb     (    683,  11)
         NL pseudopotentials             0.04 Mb     (    683,   4)
-        Each V/rho on FFT grid          0.41 Mb     (  27000)
+        Each V/rho on FFT grid          0.30 Mb     (  19683)
         Each G-vector array             0.04 Mb     (   5682)
         G-vector shells                 0.00 Mb     (    164)
      Largest temporary arrays     est. size (Mb)     dimensions
         Auxiliary wavefunctions         0.23 Mb     (    683,  44)
         Each subspace H/S matrix        0.01 Mb     (     44,  44)
         Each <psi_i|beta_j> matrix      0.00 Mb     (      4,  11)
-        Arrays for rho mixing           3.30 Mb     (  27000,   8)
+        Arrays for rho mixing           2.40 Mb     (  19683,   8)
 
      Initial potential from superposition of free atoms
 
      starting charge   21.99977, renormalised to   22.00000
      Starting wfc are   22 atomic wfcs
 
-     total cpu time spent up to now is      0.32 secs
+     total cpu time spent up to now is      0.27 secs
 
-     per-process dynamical memory:     8.6 Mb
+     per-process dynamical memory:     7.9 Mb
 
      Self-consistent Calculation
 
@@ -113,118 +122,118 @@
      ethr =  1.00E-02,  avg # of iterations =  2.0
      Warning: cannot save meta-gga kinetic terms: not implemented.
 
-     total cpu time spent up to now is      0.48 secs
+     total cpu time spent up to now is      0.41 secs
 
-     total energy              =     -51.78293803 Ry
-     Harris-Foulkes estimate   =     -51.88409720 Ry
-     estimated scf accuracy    <       3.10433795 Ry
+     total energy              =     -51.78328252 Ry
+     Harris-Foulkes estimate   =     -51.88577204 Ry
+     estimated scf accuracy    <       3.10627776 Ry
 
      iteration #  2     ecut=    30.00 Ry     beta=0.70
      Davidson diagonalization with overlap
      ethr =  1.00E-02,  avg # of iterations =  1.0
      Warning: cannot save meta-gga kinetic terms: not implemented.
 
-     total cpu time spent up to now is      0.62 secs
+     total cpu time spent up to now is      0.52 secs
 
-     total energy              =     -51.91358442 Ry
-     Harris-Foulkes estimate   =     -51.93181256 Ry
-     estimated scf accuracy    <       0.30910947 Ry
+     total energy              =     -51.91390549 Ry
+     Harris-Foulkes estimate   =     -51.93233297 Ry
+     estimated scf accuracy    <       0.30916590 Ry
 
      iteration #  3     ecut=    30.00 Ry     beta=0.70
      Davidson diagonalization with overlap
      ethr =  1.41E-03,  avg # of iterations =  2.0
      Warning: cannot save meta-gga kinetic terms: not implemented.
 
-     total cpu time spent up to now is      0.78 secs
+     total cpu time spent up to now is      0.65 secs
 
-     total energy              =     -51.94351458 Ry
-     Harris-Foulkes estimate   =     -51.95251081 Ry
-     estimated scf accuracy    <       0.03877186 Ry
+     total energy              =     -51.94383593 Ry
+     Harris-Foulkes estimate   =     -51.95289189 Ry
+     estimated scf accuracy    <       0.03880192 Ry
 
      iteration #  4     ecut=    30.00 Ry     beta=0.70
      Davidson diagonalization with overlap
      ethr =  1.76E-04,  avg # of iterations =  2.0
      Warning: cannot save meta-gga kinetic terms: not implemented.
 
-     total cpu time spent up to now is      0.94 secs
+     total cpu time spent up to now is      0.77 secs
 
-     total energy              =     -51.94877237 Ry
-     Harris-Foulkes estimate   =     -51.94892150 Ry
-     estimated scf accuracy    <       0.00074292 Ry
+     total energy              =     -51.94910159 Ry
+     Harris-Foulkes estimate   =     -51.94925040 Ry
+     estimated scf accuracy    <       0.00074316 Ry
 
      iteration #  5     ecut=    30.00 Ry     beta=0.70
      Davidson diagonalization with overlap
      ethr =  3.38E-06,  avg # of iterations =  3.0
      Warning: cannot save meta-gga kinetic terms: not implemented.
 
-     total cpu time spent up to now is      1.11 secs
+     total cpu time spent up to now is      0.91 secs
 
-     total energy              =     -51.94895420 Ry
-     Harris-Foulkes estimate   =     -51.94897149 Ry
-     estimated scf accuracy    <       0.00014188 Ry
+     total energy              =     -51.94928442 Ry
+     Harris-Foulkes estimate   =     -51.94930181 Ry
+     estimated scf accuracy    <       0.00014257 Ry
 
      iteration #  6     ecut=    30.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  6.45E-07,  avg # of iterations =  3.0
+     ethr =  6.48E-07,  avg # of iterations =  3.0
      Warning: cannot save meta-gga kinetic terms: not implemented.
 
-     total cpu time spent up to now is      1.27 secs
+     total cpu time spent up to now is      1.05 secs
 
-     total energy              =     -51.94896459 Ry
-     Harris-Foulkes estimate   =     -51.94899356 Ry
-     estimated scf accuracy    <       0.00011748 Ry
+     total energy              =     -51.94929490 Ry
+     Harris-Foulkes estimate   =     -51.94932401 Ry
+     estimated scf accuracy    <       0.00011831 Ry
 
      iteration #  7     ecut=    30.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  5.34E-07,  avg # of iterations =  3.0
+     ethr =  5.38E-07,  avg # of iterations =  3.0
      Warning: cannot save meta-gga kinetic terms: not implemented.
 
-     total cpu time spent up to now is      1.42 secs
+     total cpu time spent up to now is      1.17 secs
 
-     total energy              =     -51.94897431 Ry
-     Harris-Foulkes estimate   =     -51.94897510 Ry
-     estimated scf accuracy    <       0.00000427 Ry
+     total energy              =     -51.94930465 Ry
+     Harris-Foulkes estimate   =     -51.94930545 Ry
+     estimated scf accuracy    <       0.00000434 Ry
 
      iteration #  8     ecut=    30.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  1.94E-08,  avg # of iterations =  3.0
+     ethr =  1.97E-08,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is      1.58 secs
+     total cpu time spent up to now is      1.30 secs
 
      End of self-consistent calculation
 
           k = 0.0000 0.0000 0.0000 (   683 PWs)   bands (ev):
 
-   -16.0447 -10.0090  -9.5472  -7.9890  -4.9924  -4.1286  -3.5507  -2.6531
-    -1.4013  -1.1572   0.4485
+   -16.0440 -10.0087  -9.5472  -7.9882  -4.9922  -4.1293  -3.5491  -2.6539
+    -1.4002  -1.1571   0.4467
 
-!    total energy              =     -51.94897533 Ry
-     Harris-Foulkes estimate   =     -51.94897541 Ry
-     estimated scf accuracy    <       0.00000041 Ry
+!    total energy              =     -51.94930567 Ry
+     Harris-Foulkes estimate   =     -51.94930575 Ry
+     estimated scf accuracy    <       0.00000040 Ry
 
      The total energy is the sum of the following terms:
 
-     one-electron contribution =     -33.02744095 Ry
-     hartree contribution      =      24.10031526 Ry
-     xc contribution           =     -18.36712011 Ry
+     one-electron contribution =     -33.02831870 Ry
+     hartree contribution      =      24.10131240 Ry
+     xc contribution           =     -18.36756984 Ry
      ewald contribution        =     -24.65472953 Ry
 
      convergence has been achieved in   8 iterations
 
      Forces acting on atoms (Ry/au):
 
-     atom   1 type  1   force =     0.09757634    0.00963712   -0.03184016
-     atom   2 type  1   force =     0.00962257   -0.00778389    0.00125317
-     atom   3 type  1   force =    -0.01775239    0.01459015   -0.01889584
-     atom   4 type  1   force =    -0.06653927    0.02241435    0.00418652
-     atom   5 type  1   force =    -0.00016651    0.00780717    0.00203376
-     atom   6 type  1   force =    -0.00360629   -0.01354863   -0.01506266
-     atom   7 type  2   force =    -0.04067759   -0.08625650    0.11665125
-     atom   8 type  2   force =    -0.01252152    0.09556040    0.01173775
-     atom   9 type  2   force =     0.02552645   -0.02973626   -0.05883797
-     atom  10 type  2   force =     0.00853821   -0.01268391   -0.01122582
+     atom   1 type  1   force =     0.09773334    0.00997186   -0.03192980
+     atom   2 type  1   force =     0.00979638   -0.00720576    0.00183656
+     atom   3 type  1   force =    -0.01837650    0.01530730   -0.01865693
+     atom   4 type  1   force =    -0.06650591    0.02283688    0.00474759
+     atom   5 type  1   force =    -0.00012287    0.00810013    0.00195109
+     atom   6 type  1   force =    -0.00261948   -0.01223719   -0.01484039
+     atom   7 type  2   force =    -0.04220092   -0.08867960    0.11745568
+     atom   8 type  2   force =    -0.01092897    0.09328898    0.00994669
+     atom   9 type  2   force =     0.02733005   -0.02730325   -0.06139621
+     atom  10 type  2   force =     0.00589488   -0.01407935   -0.00911427
 
-     Total force =     0.233645     Total SCF correction =     0.000605
+     Total force =     0.234724     Total SCF correction =     0.000601
 
 
      entering subroutine stress ...
@@ -235,45 +244,45 @@
      Writing output data file pwscf.save
      Warning: cannot save meta-gga kinetic terms: not implemented.
  
-     init_run     :      0.25s CPU      0.25s WALL (       1 calls)
-     electrons    :      1.24s CPU      1.26s WALL (       1 calls)
+     init_run     :      0.23s CPU      0.23s WALL (       1 calls)
+     electrons    :      1.02s CPU      1.03s WALL (       1 calls)
      forces       :      0.01s CPU      0.01s WALL (       1 calls)
 
      Called by init_run:
-     wfcinit      :      0.05s CPU      0.05s WALL (       1 calls)
-     potinit      :      0.07s CPU      0.07s WALL (       1 calls)
+     wfcinit      :      0.04s CPU      0.04s WALL (       1 calls)
+     potinit      :      0.06s CPU      0.06s WALL (       1 calls)
 
      Called by electrons:
-     c_bands      :      0.56s CPU      0.56s WALL (       8 calls)
-     sum_band     :      0.14s CPU      0.14s WALL (       8 calls)
-     v_of_rho     :      0.55s CPU      0.56s WALL (       9 calls)
+     c_bands      :      0.49s CPU      0.49s WALL (       8 calls)
+     sum_band     :      0.11s CPU      0.12s WALL (       8 calls)
+     v_of_rho     :      0.41s CPU      0.42s WALL (       9 calls)
      mix_rho      :      0.03s CPU      0.03s WALL (       8 calls)
 
      Called by c_bands:
      init_us_2    :      0.00s CPU      0.00s WALL (      17 calls)
-     regterg      :      0.56s CPU      0.56s WALL (       8 calls)
+     regterg      :      0.49s CPU      0.49s WALL (       8 calls)
 
      Called by *egterg:
-     h_psi        :      0.58s CPU      0.58s WALL (      28 calls)
+     h_psi        :      0.50s CPU      0.50s WALL (      28 calls)
      g_psi        :      0.00s CPU      0.00s WALL (      19 calls)
      rdiaghg      :      0.01s CPU      0.01s WALL (      27 calls)
 
      Called by h_psi:
      add_vuspsi   :      0.00s CPU      0.00s WALL (      28 calls)
-     h_psi_meta   :      0.44s CPU      0.43s WALL (      28 calls)
+     h_psi_meta   :      0.37s CPU      0.38s WALL (      28 calls)
 
      General routines
      calbec       :      0.00s CPU      0.00s WALL (      32 calls)
-     fft          :      0.11s CPU      0.11s WALL (     124 calls)
-     fftw         :      0.62s CPU      0.62s WALL (    1312 calls)
+     fft          :      0.09s CPU      0.09s WALL (     124 calls)
+     fftw         :      0.54s CPU      0.54s WALL (    1312 calls)
      interpolate  :      0.00s CPU      0.00s WALL (       9 calls)
      davcio       :      0.00s CPU      0.00s WALL (       8 calls)
  
  
-     PWSCF        :     1.59s CPU         1.67s WALL
+     PWSCF        :     1.34s CPU         1.36s WALL
 
  
-   This run was terminated on:   7:40:56  30Aug2010            
+   This run was terminated on:   7:45:26  25Mar2011            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

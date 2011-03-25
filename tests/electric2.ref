@@ -1,5 +1,5 @@
 
-     Program PWSCF v.4.2        starts on 30Aug2010 at  7:36:20 
+     Program PWSCF v.4.3b       starts on 25Mar2011 at  7:40:45 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -15,6 +15,15 @@
      Waiting for input...
      Found symmetry operation: I + ( -0.5000 -0.5000  0.0000)
      This is a supercell, fractional translation are disabled
+ 
+   Stick Mesh
+   ----------
+   nst =   665,  nstw =   225, nsts =   665
+               n.st   n.stw   n.sts    n.g    n.gw   n.gs
+   min         665     225     665   12893    2553   12893
+   max         665     225     665   12893    2553   12893
+        665     225     665   12893    2553   12893
+ 
 
 
      bravais-lattice index     =            1
@@ -164,9 +173,9 @@
 
      Starting wfc from file
 
-     total cpu time spent up to now is      0.17 secs
+     total cpu time spent up to now is      0.16 secs
 
-     per-process dynamical memory:     8.2 Mb
+     per-process dynamical memory:     8.4 Mb
 
      Self-consistent Calculation
 
@@ -193,7 +202,7 @@
      Electronic Dipole per cell (Ry a.u.)  0.963342905744491     
      Ionic Dipole per cell (Ry a.u.)   115.173552519665     
 
-     total cpu time spent up to now is     49.35 secs
+     total cpu time spent up to now is     51.43 secs
 
      total energy              =     -63.06608492 Ry
      Harris-Foulkes estimate   =     -62.94997673 Ry
@@ -212,7 +221,7 @@
      Electronic Dipole per cell (Ry a.u.)  0.943631707367486     
      Ionic Dipole per cell (Ry a.u.)   115.173552519665     
 
-     total cpu time spent up to now is     72.24 secs
+     total cpu time spent up to now is     77.85 secs
 
      total energy              =     -63.06608310 Ry
      Harris-Foulkes estimate   =     -62.94996751 Ry
@@ -231,7 +240,7 @@
      Electronic Dipole per cell (Ry a.u.)  0.932258313593539     
      Ionic Dipole per cell (Ry a.u.)   115.173552519665     
 
-     total cpu time spent up to now is     97.28 secs
+     total cpu time spent up to now is    102.54 secs
 
      total energy              =     -63.06608446 Ry
      Harris-Foulkes estimate   =     -62.94997871 Ry
@@ -250,7 +259,7 @@
      Electronic Dipole per cell (Ry a.u.)  0.931262477354343     
      Ionic Dipole per cell (Ry a.u.)   115.173552519665     
 
-     total cpu time spent up to now is    119.69 secs
+     total cpu time spent up to now is    127.11 secs
 
      End of self-consistent calculation
 
@@ -585,41 +594,41 @@
      Writing output data file pwscf.save
  
      init_run     :      0.12s CPU      0.12s WALL (       1 calls)
-     electrons    :     97.30s CPU    119.52s WALL (       1 calls)
+     electrons    :     97.38s CPU    126.95s WALL (       1 calls)
 
      Called by init_run:
      wfcinit      :      0.00s CPU      0.00s WALL (       1 calls)
-     potinit      :      0.03s CPU      0.03s WALL (       1 calls)
+     potinit      :      0.02s CPU      0.03s WALL (       1 calls)
 
      Called by electrons:
-     c_bands      :     61.36s CPU     67.72s WALL (      15 calls)
-     sum_band     :      3.26s CPU      3.32s WALL (       5 calls)
+     c_bands      :     61.40s CPU     77.90s WALL (      15 calls)
+     sum_band     :      3.28s CPU      3.34s WALL (       5 calls)
      v_of_rho     :      0.12s CPU      0.12s WALL (       5 calls)
      mix_rho      :      0.01s CPU      0.01s WALL (       5 calls)
 
      Called by c_bands:
-     init_us_2    :      0.94s CPU      0.96s WALL (    1260 calls)
-     cegterg      :     58.98s CPU     59.08s WALL (     945 calls)
+     init_us_2    :      0.97s CPU      1.00s WALL (    1260 calls)
+     cegterg      :     59.00s CPU     59.36s WALL (     945 calls)
 
      Called by *egterg:
-     h_psi        :     50.72s CPU     50.80s WALL (    2075 calls)
+     h_psi        :     50.68s CPU     51.01s WALL (    2075 calls)
      g_psi        :      1.00s CPU      1.00s WALL (    1130 calls)
-     cdiaghg      :      0.94s CPU      0.96s WALL (    1697 calls)
+     cdiaghg      :      0.97s CPU      0.96s WALL (    1697 calls)
 
      Called by h_psi:
-     add_vuspsi   :      2.51s CPU      2.47s WALL (    2075 calls)
+     add_vuspsi   :      2.51s CPU      2.50s WALL (    2075 calls)
 
      General routines
-     calbec       :      2.25s CPU      2.27s WALL (    2075 calls)
+     calbec       :      2.29s CPU      2.30s WALL (    2075 calls)
      fft          :      0.05s CPU      0.05s WALL (      55 calls)
-     fftw         :     35.52s CPU     35.61s WALL (   66452 calls)
-     davcio       :      0.06s CPU     22.05s WALL (    9324 calls)
+     fftw         :     35.51s CPU     35.74s WALL (   66452 calls)
+     davcio       :      0.05s CPU     29.07s WALL (    9324 calls)
  
  
-     PWSCF        :  1m37.60s CPU     1m59.84s WALL
+     PWSCF        :  1m37.65s CPU     2m 7.24s WALL
 
  
-   This run was terminated on:   7:38:20  30Aug2010            
+   This run was terminated on:   7:42:52  25Mar2011            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

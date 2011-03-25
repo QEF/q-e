@@ -1,17 +1,78 @@
 
-     Program PWSCF     v.4.1a   starts ...
-     Today is 11Jul2009 at  9:38: 6 
+     Program PWSCF v.4.3b       starts on 25Mar2011 at  7:48:48 
 
-     For Norm-Conserving or Ultrasoft (Vanderbilt) Pseudopotentials or PAW
+     This program is part of the open-source Quantum ESPRESSO suite
+     for quantum simulation of materials; please cite
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
+          URL http://www.quantum-espresso.org", 
+     in publications or presentations arising from this work. More details at
+     http://www.quantum-espresso.org/wiki/index.php/Citing_Quantum-ESPRESSO
 
-     Current dimensions of program pwscf are:
+     Current dimensions of program PWSCF are:
      Max number of different atomic species (ntypx) = 10
      Max number of k-points (npk) =  40000
      Max angular momentum in pseudopotentials (lmaxx) =  3
      Waiting for input...
 
      Atomic positions and unit cell read from directory:
-     /home/giannozz/espresso/espresso/tmp/pwscf.save/
+     /scratch/daily_test/espresso/tmp/pwscf.save/
+ 
+     warning: symmetry operation #  5 not allowed.   fractional translation:
+       0.2500000  0.2500000  0.2500000  in crystal coordinates
+     warning: symmetry operation #  6 not allowed.   fractional translation:
+       0.2500000  0.2500000  0.2500000  in crystal coordinates
+     warning: symmetry operation #  7 not allowed.   fractional translation:
+       0.2500000  0.2500000  0.2500000  in crystal coordinates
+     warning: symmetry operation #  8 not allowed.   fractional translation:
+       0.2500000  0.2500000  0.2500000  in crystal coordinates
+     warning: symmetry operation #  9 not allowed.   fractional translation:
+       0.2500000  0.2500000  0.2500000  in crystal coordinates
+     warning: symmetry operation # 10 not allowed.   fractional translation:
+       0.2500000  0.2500000  0.2500000  in crystal coordinates
+     warning: symmetry operation # 11 not allowed.   fractional translation:
+       0.2500000  0.2500000  0.2500000  in crystal coordinates
+     warning: symmetry operation # 12 not allowed.   fractional translation:
+       0.2500000  0.2500000  0.2500000  in crystal coordinates
+     warning: symmetry operation # 13 not allowed.   fractional translation:
+       0.2500000  0.2500000  0.2500000  in crystal coordinates
+     warning: symmetry operation # 14 not allowed.   fractional translation:
+       0.2500000  0.2500000  0.2500000  in crystal coordinates
+     warning: symmetry operation # 15 not allowed.   fractional translation:
+       0.2500000  0.2500000  0.2500000  in crystal coordinates
+     warning: symmetry operation # 16 not allowed.   fractional translation:
+       0.2500000  0.2500000  0.2500000  in crystal coordinates
+     warning: symmetry operation # 25 not allowed.   fractional translation:
+       0.2500000  0.2500000  0.2500000  in crystal coordinates
+     warning: symmetry operation # 26 not allowed.   fractional translation:
+       0.2500000  0.2500000  0.2500000  in crystal coordinates
+     warning: symmetry operation # 27 not allowed.   fractional translation:
+       0.2500000  0.2500000  0.2500000  in crystal coordinates
+     warning: symmetry operation # 28 not allowed.   fractional translation:
+       0.2500000  0.2500000  0.2500000  in crystal coordinates
+     warning: symmetry operation # 41 not allowed.   fractional translation:
+       0.2500000  0.2500000  0.2500000  in crystal coordinates
+     warning: symmetry operation # 42 not allowed.   fractional translation:
+       0.2500000  0.2500000  0.2500000  in crystal coordinates
+     warning: symmetry operation # 43 not allowed.   fractional translation:
+       0.2500000  0.2500000  0.2500000  in crystal coordinates
+     warning: symmetry operation # 44 not allowed.   fractional translation:
+       0.2500000  0.2500000  0.2500000  in crystal coordinates
+     warning: symmetry operation # 45 not allowed.   fractional translation:
+       0.2500000  0.2500000  0.2500000  in crystal coordinates
+     warning: symmetry operation # 46 not allowed.   fractional translation:
+       0.2500000  0.2500000  0.2500000  in crystal coordinates
+     warning: symmetry operation # 47 not allowed.   fractional translation:
+       0.2500000  0.2500000  0.2500000  in crystal coordinates
+     warning: symmetry operation # 48 not allowed.   fractional translation:
+       0.2500000  0.2500000  0.2500000  in crystal coordinates
+ 
+   Stick Mesh
+   ----------
+   nst =   163,  nstw =    61, nsts =   163
+               n.st   n.stw   n.sts    n.g    n.gw   n.gs
+   min         163      61     163    1459     307    1459
+   max         163      61     163    1459     307    1459
+        163      61     163    1459     307    1459
  
 
 
@@ -25,14 +86,15 @@
      kinetic-energy cutoff     =      12.0000  Ry
      charge density cutoff     =      48.0000  Ry
      Exchange-correlation      =  SLA  PZ   NOGX NOGC (1100)
+     EXX-fraction              =        0.00
 
      celldm(1)=  10.200000  celldm(2)=   0.000000  celldm(3)=   0.000000
      celldm(4)=   0.000000  celldm(5)=   0.000000  celldm(6)=   0.000000
 
      crystal axes: (cart. coord. in units of a_0)
-               a(1) = ( -0.500000  0.000000  0.500000 )  
-               a(2) = (  0.000000  0.500000  0.500000 )  
-               a(3) = ( -0.500000  0.500000  0.000000 )  
+               a(1) = (  -0.500000   0.000000   0.500000 )  
+               a(2) = (   0.000000   0.500000   0.500000 )  
+               a(3) = (  -0.500000   0.500000   0.000000 )  
 
      reciprocal axes: (cart. coord. in units 2 pi/a_0)
                b(1) = ( -1.000000 -1.000000  1.000000 )  
@@ -41,6 +103,7 @@
 
 
      PseudoPot. # 1 for Si read from file Si.pz-vbc.UPF
+     MD5 check sum: 6dfa03ddd5817404712e03e4d12deb78
      Pseudo is Norm-conserving, Zval =  4.0
      Generated by new atomic code, or converted to UPF format
      Using radial grid of  431 points,  2 beta functions with: 
@@ -50,7 +113,7 @@
      atomic species   valence    mass     pseudopotential
         Si             4.00    28.08600     Si( 1.00)
 
-     48 Sym.Ops. (with inversion)
+     24 Sym.Ops. (no inversion)
 
 
    Cartesian axes
@@ -59,7 +122,7 @@
          1           Si  tau(  1) = (   0.0000000   0.0000000   0.0000000  )
          2           Si  tau(  2) = (   0.2500000   0.2500000   0.2500000  )
 
-     number of k points=   10
+     number of k points=    10
                        cart. coord. in units 2pi/a_0
         k(    1) = (   0.1250000   0.1250000   0.1250000), wk =   0.0625000
         k(    2) = (   0.1250000   0.1250000   0.3750000), wk =   0.1875000
@@ -72,12 +135,12 @@
         k(    9) = (   0.3750000   0.3750000   0.3750000), wk =   0.0625000
         k(   10) = (   0.3750000   0.3750000   0.6250000), wk =   0.1875000
 
-     G cutoff =  126.4975  (   1459 G-vectors)     FFT grid: ( 16, 16, 16)
+     G cutoff =  126.4975  (   1459 G-vectors)     FFT grid: ( 15, 15, 15)
 
      Largest allocated arrays     est. size (Mb)     dimensions
         Kohn-Sham Wavefunctions         0.02 Mb     (    192,   8)
         NL pseudopotentials             0.02 Mb     (    192,   8)
-        Each V/rho on FFT grid          0.06 Mb     (   4096)
+        Each V/rho on FFT grid          0.05 Mb     (   3375)
         Each G-vector array             0.01 Mb     (   1459)
         G-vector shells                 0.00 Mb     (     43)
      Largest temporary arrays     est. size (Mb)     dimensions
@@ -86,13 +149,13 @@
         Each <psi_i|beta_j> matrix      0.00 Mb     (      8,   8)
 
      The potential is recalculated from file :
-     /home/giannozz/espresso/espresso/tmp/pwscf.save/charge-density.dat
+     /scratch/daily_test/espresso/tmp/pwscf.save/charge-density.dat
 
      Starting wfc are    8 atomic wfcs
 
-     total cpu time spent up to now is      0.07 secs
+     total cpu time spent up to now is      0.10 secs
 
-     per-process dynamical memory:     0.9 Mb
+     per-process dynamical memory:     1.1 Mb
 
      Band Structure Calculation
      Davidson diagonalization with overlap
@@ -117,7 +180,7 @@
 
           k = 0.1250 0.1250 0.8750     band energies (ev):
 
-    -2.3492  -0.4822   2.7535   3.5416   7.1512   8.2502  14.7059  14.7522
+    -2.3492  -0.4822   2.7535   3.5416   7.1512   8.2502  14.7060  14.7522
 
           k = 0.1250 0.3750 0.3750     band energies (ev):
 
@@ -141,40 +204,47 @@
 
           k = 0.3750 0.3750 0.6250     band energies (ev):
 
-    -3.1964  -0.5070   3.9935   4.6986   8.5444   9.8720  10.4853  13.7251
+    -3.1964  -0.5070   3.9935   4.6986   8.5444   9.8721  10.4853  13.7251
 
      highest occupied, lowest unoccupied level (ev):     6.0279    7.1512
 
      Writing output data file pwscf.save
  
-     PWSCF        :     0.31s CPU time,    0.32s wall time
-
-     init_run     :     0.02s CPU
-     electrons    :     0.16s CPU
+     init_run     :      0.02s CPU      0.02s WALL (       1 calls)
+     electrons    :      0.13s CPU      0.13s WALL (       1 calls)
 
      Called by init_run:
-     wfcinit      :     0.00s CPU
-     potinit      :     0.00s CPU
+     wfcinit      :      0.00s CPU      0.00s WALL (       1 calls)
+     potinit      :      0.00s CPU      0.00s WALL (       1 calls)
 
      Called by electrons:
-     c_bands      :     0.16s CPU
-     v_of_rho     :     0.00s CPU
+     c_bands      :      0.13s CPU      0.13s WALL (       1 calls)
+     v_of_rho     :      0.00s CPU      0.00s WALL (       1 calls)
 
      Called by c_bands:
-     init_us_2    :     0.00s CPU (      10 calls,   0.000 s avg)
-     cegterg      :     0.15s CPU (      10 calls,   0.015 s avg)
+     init_us_2    :      0.00s CPU      0.00s WALL (      10 calls)
+     cegterg      :      0.12s CPU      0.12s WALL (      10 calls)
 
      Called by *egterg:
-     h_psi        :     0.10s CPU (     148 calls,   0.001 s avg)
-     g_psi        :     0.01s CPU (     128 calls,   0.000 s avg)
-     cdiaghg      :     0.03s CPU (     138 calls,   0.000 s avg)
+     h_psi        :      0.06s CPU      0.07s WALL (     148 calls)
+     g_psi        :      0.01s CPU      0.00s WALL (     128 calls)
+     cdiaghg      :      0.04s CPU      0.03s WALL (     138 calls)
 
      Called by h_psi:
-     add_vuspsi   :     0.00s CPU (     148 calls,   0.000 s avg)
+     add_vuspsi   :      0.00s CPU      0.00s WALL (     148 calls)
 
      General routines
-     calbec       :     0.00s CPU (     148 calls,   0.000 s avg)
-     cft3         :     0.00s CPU (       3 calls,   0.000 s avg)
-     cft3s        :     0.08s CPU (    1608 calls,   0.000 s avg)
-     davcio       :     0.00s CPU (      10 calls,   0.000 s avg)
+     calbec       :      0.00s CPU      0.00s WALL (     148 calls)
+     fft          :      0.00s CPU      0.00s WALL (       3 calls)
+     fftw         :      0.05s CPU      0.05s WALL (    1608 calls)
+     davcio       :      0.00s CPU      0.00s WALL (      10 calls)
  
+ 
+     PWSCF        :     0.28s CPU         0.29s WALL
+
+ 
+   This run was terminated on:   7:48:49  25Mar2011            
+
+=------------------------------------------------------------------------------=
+   JOB DONE.
+=------------------------------------------------------------------------------=

@@ -1,5 +1,5 @@
 
-     Program PWSCF v.4.2        starts on 30Aug2010 at  7:45:55 
+     Program PWSCF v.4.3b       starts on 25Mar2011 at  7:48:58 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -14,6 +14,15 @@
      Max angular momentum in pseudopotentials (lmaxx) =  3
      Waiting for input...
      file Cu.pz-d-rrkjus.UPF: wavefunction(s)  3D renormalized
+ 
+   Stick Mesh
+   ----------
+   nst =   313,  nstw =    55, nsts =   151
+               n.st   n.stw   n.sts    n.g    n.gw   n.gs
+   min         313      55     151    3695     283    1243
+   max         313      55     151    3695     283    1243
+        313      55     151    3695     283    1243
+ 
 
 
      bravais-lattice index     =            2
@@ -100,7 +109,7 @@
 
      total cpu time spent up to now is      0.42 secs
 
-     per-process dynamical memory:     5.0 Mb
+     per-process dynamical memory:     5.1 Mb
 
      Self-consistent Calculation
 
@@ -220,7 +229,7 @@
 
      Writing output data file pwscf.save
  
-     init_run     :      0.38s CPU      0.38s WALL (       1 calls)
+     init_run     :      0.37s CPU      0.38s WALL (       1 calls)
      electrons    :      0.35s CPU      0.36s WALL (       1 calls)
 
      Called by init_run:
@@ -239,27 +248,27 @@
      cegterg      :      0.18s CPU      0.18s WALL (      48 calls)
 
      Called by *egterg:
-     h_psi        :      0.12s CPU      0.12s WALL (     164 calls)
+     h_psi        :      0.11s CPU      0.12s WALL (     164 calls)
      s_psi        :      0.00s CPU      0.00s WALL (     164 calls)
      g_psi        :      0.00s CPU      0.00s WALL (     108 calls)
-     cdiaghg      :      0.04s CPU      0.04s WALL (     156 calls)
+     cdiaghg      :      0.05s CPU      0.04s WALL (     156 calls)
 
      Called by h_psi:
-     add_vuspsi   :      0.01s CPU      0.00s WALL (     164 calls)
+     add_vuspsi   :      0.00s CPU      0.00s WALL (     164 calls)
 
      General routines
      calbec       :      0.01s CPU      0.01s WALL (     212 calls)
-     fft          :      0.03s CPU      0.03s WALL (      58 calls)
+     fft          :      0.02s CPU      0.03s WALL (      58 calls)
      ffts         :      0.00s CPU      0.00s WALL (      13 calls)
      fftw         :      0.09s CPU      0.10s WALL (    2972 calls)
-     interpolate  :      0.01s CPU      0.01s WALL (      13 calls)
+     interpolate  :      0.00s CPU      0.01s WALL (      13 calls)
      davcio       :      0.00s CPU      0.00s WALL (     152 calls)
  
  
-     PWSCF        :     0.83s CPU         0.86s WALL
+     PWSCF        :     0.82s CPU         0.85s WALL
 
  
-   This run was terminated on:   7:45:56  30Aug2010            
+   This run was terminated on:   7:48:59  25Mar2011            
 
 =------------------------------------------------------------------------------=
    JOB DONE.
