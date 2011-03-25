@@ -691,6 +691,7 @@ plugin_forces.o : ../Modules/io_files.o
 plugin_forces.o : ../Modules/io_global.o
 plugin_forces.o : ../Modules/kind.o
 plugin_forces.o : ../Modules/mp.o
+plugin_forces.o : ../Modules/mp_global.o
 plugin_forces.o : ../Modules/plugin_flags.o
 plugin_initialization.o : ../Modules/io_files.o
 plugin_initialization.o : ../Modules/io_global.o

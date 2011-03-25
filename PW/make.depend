@@ -301,8 +301,6 @@ coset.o : ../Modules/kind.o
 d_matrix.o : ../Modules/kind.o
 d_matrix.o : ../Modules/random_numbers.o
 d_matrix.o : symm_base.o
-data_exchange.o : ../Modules/mp_global.o
-data_exchange.o : @data_exchange_module@
 data_structure.o : ../Modules/cell_base.o
 data_structure.o : ../Modules/fft_base.o
 data_structure.o : ../Modules/io_global.o
@@ -868,6 +866,7 @@ new_ns.o : ../Modules/wavefunctions.o
 new_ns.o : buffers.o
 new_ns.o : pwcom.o
 new_ns.o : symm_base.o
+new_occ.o : ../Modules/constants.o
 new_occ.o : ../Modules/control_flags.o
 new_occ.o : ../Modules/io_files.o
 new_occ.o : ../Modules/io_global.o
@@ -1045,6 +1044,9 @@ pw2blip.o : ../Modules/kind.o
 pw2blip.o : ../Modules/mp.o
 pw2blip.o : ../Modules/mp_global.o
 pw2casino.o : ../Modules/control_flags.o
+pw2casino.o : ../Modules/io_files.o
+pw2casino.o : ../Modules/kind.o
+pw2casino.o : ../Modules/mp_global.o
 pw2casino.o : ../Modules/plugin_flags.o
 pw2casino_write.o : ../Modules/cell_base.o
 pw2casino_write.o : ../Modules/constants.o
@@ -1103,6 +1105,8 @@ pwcom.o : ../Modules/recvec.o
 pwscf.o : ../Modules/check_stop.o
 pwscf.o : ../Modules/control_flags.o
 pwscf.o : ../Modules/environment.o
+pwscf.o : ../Modules/image_io_routines.o
+pwscf.o : ../Modules/io_files.o
 pwscf.o : ../Modules/io_global.o
 pwscf.o : ../Modules/mp_global.o
 pwscf.o : ../Modules/open_close_input_file_interf.o
@@ -1110,6 +1114,7 @@ pwscf.o : ../Modules/parameters.o
 pwscf.o : ../Modules/read_cards.o
 pwscf.o : ../Modules/read_namelists.o
 pwscf.o : ../Modules/read_xml.o
+pwscf.o : ../Modules/xml_io_base.o
 pwscf.o : ../iotk/src/iotk_module.o
 pwscf.o : ms2.o
 pwscf.o : pwcom.o
@@ -1391,17 +1396,12 @@ setup.o : pwcom.o
 setup.o : symm_base.o
 sph_ind.o : ../Modules/kind.o
 spinor.o : ../Modules/kind.o
-stop_run.o : ../Modules/constraints_module.o
 stop_run.o : ../Modules/control_flags.o
 stop_run.o : ../Modules/environment.o
 stop_run.o : ../Modules/image_io_routines.o
-stop_run.o : ../Modules/input_parameters.o
 stop_run.o : ../Modules/io_files.o
 stop_run.o : ../Modules/io_global.o
-stop_run.o : ../Modules/mm_dispersion.o
 stop_run.o : ../Modules/mp_global.o
-stop_run.o : buffers.o
-stop_run.o : pwcom.o
 stres_cc.o : ../Modules/atom.o
 stres_cc.o : ../Modules/cell_base.o
 stres_cc.o : ../Modules/control_flags.o

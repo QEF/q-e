@@ -9,7 +9,6 @@ compute_scf.o : ../Modules/io_global.o
 compute_scf.o : ../Modules/ions_base.o
 compute_scf.o : ../Modules/kind.o
 compute_scf.o : ../Modules/mp.o
-compute_scf.o : ../Modules/mp_global.o
 compute_scf.o : ../Modules/mp_image_global_module.o
 compute_scf.o : ../Modules/recvec.o
 compute_scf.o : ../PW/pwcom.o
@@ -140,16 +139,10 @@ path_variables.o : ../Modules/kind.o
 set_defaults.o : ../Modules/input_parameters.o
 set_defaults.o : ../Modules/io_files.o
 set_defaults.o : ../Modules/io_global.o
-stop_run_path.o : ../Modules/constraints_module.o
-stop_run_path.o : ../Modules/control_flags.o
 stop_run_path.o : ../Modules/environment.o
 stop_run_path.o : ../Modules/image_io_routines.o
-stop_run_path.o : ../Modules/input_parameters.o
-stop_run_path.o : ../Modules/io_files.o
 stop_run_path.o : ../Modules/io_global.o
-stop_run_path.o : ../Modules/mm_dispersion.o
 stop_run_path.o : ../Modules/mp_global.o
 stop_run_path.o : ../Modules/mp_image_global_module.o
-stop_run_path.o : ../PW/buffers.o
-stop_run_path.o : ../PW/pwcom.o
+stop_run_path.o : path_io_units_module.o
 stop_run_path.o : path_variables.o
