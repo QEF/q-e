@@ -13,7 +13,7 @@ PROGRAM pwscf
   !
   USE io_global,        ONLY : stdout, ionode, ionode_id
   USE parameters,       ONLY : ntypx, npk, lmaxx
-  USE control_flags,    ONLY : conv_elec, lpath, gamma_only, lscf
+  USE control_flags,    ONLY : conv_elec, gamma_only, lscf
   USE control_flags,    ONLY : conv_ions, istep, nstep, restart, lmd, lbfgs
   USE force_mod,        ONLY : lforce, lstres
   USE environment,      ONLY : environment_start, environment_end

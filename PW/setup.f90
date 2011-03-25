@@ -60,7 +60,7 @@ SUBROUTINE setup()
                                  d1,d2,d3, time_reversal, sname, set_sym_bl, &
                                  find_sym
   USE wvfct,              ONLY : nbnd, nbndx, ecutwfc
-  USE control_flags,      ONLY : tr2, ethr, lscf, lmd, lpath, david,  &
+  USE control_flags,      ONLY : tr2, ethr, lscf, lmd, david,  &
                                  isolve, niter, noinv, nosym, nosym_evc, &
                                  nofrac, lbands, use_para_diag, gamma_only
   USE cellmd,             ONLY : calc

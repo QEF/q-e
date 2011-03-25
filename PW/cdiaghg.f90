@@ -22,9 +22,6 @@ SUBROUTINE cdiaghg( n, m, h, s, ldh, e, v )
   USE kinds,            ONLY : DP
   USE mp,               ONLY : mp_bcast, mp_sum, mp_barrier, mp_max
   USE mp_global,        ONLY : me_pool, root_pool, intra_pool_comm
-#if defined (EXX)
-  USE mp_global,        ONLY : inter_image_comm, my_image_id
-#endif
   !
   IMPLICIT NONE
   !
@@ -58,11 +55,7 @@ SUBROUTINE cdiaghg( n, m, h, s, ldh, e, v )
   !
   ! ... only the first processor diagonalizes the matrix
   !
-#if defined (EXX)
-  IF ( me_pool == root_pool .and. my_image_id == 0 ) THEN
-#else
   IF ( me_pool == root_pool ) THEN
-#endif
      !
      ! ... save the diagonal of input S (it will be overwritten)
      !
@@ -183,11 +176,6 @@ SUBROUTINE cdiaghg( n, m, h, s, ldh, e, v )
   !
   CALL mp_bcast( e, root_pool, intra_pool_comm )
   CALL mp_bcast( v, root_pool, intra_pool_comm )
-  !
-#if defined (EXX)
-  CALL mp_bcast( e, 0, inter_image_comm )
-  CALL mp_bcast( v, 0, inter_image_comm )
-#endif
   !
   CALL stop_clock( 'cdiaghg' )
   !

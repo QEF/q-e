@@ -14,47 +14,24 @@ SUBROUTINE stop_run( lflag )
   ! ... or during execution with flag = .FALSE. (does not remove 'restart')
   !
   USE io_global,          ONLY : ionode
-  USE mp_global,          ONLY : nimage, mp_global_end
+  USE mp_global,          ONLY : mp_global_end
   USE environment,        ONLY : environment_end
-  USE control_flags,      ONLY : lpath, twfcollect, lconstrain, &
-                                 io_level, llondon
-  USE io_files,           ONLY : iunwfc, iunigk, iunefield, iunefieldm,&
-                                 iunefieldp, iuntmp
-  USE buffers,            ONLY : close_buffer
+  USE control_flags,      ONLY : twfcollect, io_level 
+  USE io_files,           ONLY : iuntmp
   USE image_io_routines,   ONLY : io_image_stop
-  USE london_module,      ONLY : dealloca_london
-  USE constraints_module, ONLY : deallocate_constraint
-  USE input_parameters,   ONLY : deallocate_input_parameters
-  USE bp,                 ONLY : lelfield
   !
   IMPLICIT NONE
   !
   LOGICAL, INTENT(IN) :: lflag
-  LOGICAL             :: exst, opnd, lflag2
+  LOGICAL             :: exst, opnd
   !
   !
-#if defined (EXX)
-  lflag2 = lpath .or. nimage > 1
-#else
-  lflag2 = lpath
-#endif
-!  IF ( lflag2 ) THEN
-     !
-!     CALL io_image_stop()
-     !
-!  ELSE
-     !
-     ! ... here we write all the data required to restart
-     !
-!     CALL punch( 'all' )
-     !
-!  END IF
   !
   ! ... iunwfc contains wavefunctions and is kept open during
   ! ... the execution - close the file and save it (or delete it 
   ! ... if the wavefunctions are already stored in the .save file)
   !
-  IF (lflag .and. .not. lflag2 ) THEN
+  IF (lflag ) THEN
      CALL seqopn( iuntmp, 'restart', 'UNFORMATTED', exst )
      CLOSE( UNIT = iuntmp, STATUS = 'DELETE' )
   ENDIF
@@ -76,6 +53,8 @@ SUBROUTINE stop_run( lflag )
   CALL print_clock_pw()
   !
   CALL environment_end( 'PWSCF' )
+  !
+  CALL io_image_stop()
   !
   CALL mp_global_end ()
   !

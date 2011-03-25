@@ -733,11 +733,11 @@ CONTAINS
               rhoc(nrxxs), vc(nrxxs), fac(ngm) )
 
     ! write (*,*) exx_nwordwfc,lda,n,m, lda*n
-
-    nqi=nqs/nimage
-    !call MPI_Comm_Rank(inter_image_comm,myrank,ierr)
-    !call MPI_Comm_Size(inter_image_comm,mysize,ierr)
-    !write(*,*) 'myrank and mysize',myrank,mysize,nimage,nproc_image
+!
+! Was used for parallelization on images
+!    nqi=nqs/nimage
+    nqi=nqs
+!
 
     do im=1,m !for each band of psi (the k cycle is outside band)
        temppsic(:) = ( 0.D0, 0.D0 )
@@ -747,12 +747,13 @@ CONTAINS
        
        result(:) = (0.d0,0.d0)
 
-!       do iq = 1, nqs
         do iqi=1,nqi
-          iq=iqi+nqi*my_image_id
-          !write(*,*) 'iq vale', iq, iqi, nqi, my_image_id, nqi
+!
+! Was used for parallelization on images
+!          iq=iqi+nqi*my_image_id
+          iq=iqi
+!
           ikq  = index_xkq(current_k,iq)
-          !write(*,*) 'asdsadsad',my_image_id,ikq
           ik   = index_xk(ikq)
           isym = abs(index_sym(ikq))
 
@@ -1010,9 +1011,11 @@ call flush_unit(stdout)
     energy=0.d0
 
     ALLOCATE (tempphic(nrxxs), temppsic(nrxxs), rhoc(nrxxs), fac(ngm) )
-    
-    nqi=nqs/nimage
-
+!
+! Was used for parallelization on images    
+!    nqi=nqs/nimage
+    nqi=nqs
+!
     IF ( nks > 1 ) REWIND( iunigk )
     do ikk=1,nks
        current_k = ikk
@@ -1030,9 +1033,12 @@ call flush_unit(stdout)
 
           CALL invfft ('Wave', temppsic, dffts)
        
-!          do iq = 1, nqs
           do iqi=1,nqi
-             iq=iqi+nqi*my_image_id
+!
+! Was used for parallelization on images
+!             iq=iqi+nqi*my_image_id
+             iq=iqi
+!
              ikq  = index_xkq(current_k,iq)
              ik   = index_xk(ikq)
              isym = abs(index_sym(ikq))
@@ -1165,8 +1171,10 @@ call flush_unit(stdout)
     end do
 
     deallocate (tempphic, temppsic, rhoc, fac )
-
-    call mp_sum( energy, inter_image_comm )
+!
+! Was used for image parallelization
+!    call mp_sum( energy, inter_image_comm )
+!
     call mp_sum( energy, intra_pool_comm )
     call mp_sum( energy, inter_pool_comm )
 
@@ -1329,7 +1337,7 @@ call flush_unit(stdout)
   USE klist,     ONLY : xk, ngk, nks
   USE lsda_mod,  ONLY : lsda, current_spin, isk
   USE gvect,     ONLY : g, nl
-  USE mp_global, ONLY : inter_pool_comm, intra_pool_comm, inter_image_comm
+  USE mp_global, ONLY : inter_pool_comm, intra_pool_comm
   USE mp_global, ONLY : my_image_id, nimage
   USE mp,        ONLY : mp_sum 
   use fft_base,  ONLY : dffts
@@ -1357,8 +1365,12 @@ call flush_unit(stdout)
   allocate( fac_tens(3,3,ngm), fac_stress(ngm) )
 
   if ( nks > 1 ) rewind( iunigk )
-  nqi = nqs/nimage
-
+!
+! Was used for image parallelization
+!
+  nqi=nqs
+!  nqi = nqs/nimage
+!
   ! loop over k-points
   do ikk = 1, nks
       current_k = ikk
@@ -1378,7 +1390,12 @@ call flush_unit(stdout)
           CALL invfft ('Wave', temppsic, dffts)       
 
           do iqi = 1, nqi
-              iq = iqi + nqi*my_image_id
+!
+! Was used for image parallelization
+!
+!              iq = iqi + nqi*my_image_id
+              iq=iqi
+!
               ikq  = index_xkq(current_k,iq)
               ik   = index_xk(ikq)
               isym = abs(index_sym(ikq))
@@ -1519,8 +1536,10 @@ call flush_unit(stdout)
   enddo ! ikk
 
   deallocate (tempphic, temppsic, rhoc, fac )
-
-  call mp_sum( exx_stress_, inter_image_comm )
+!
+! Was used for image parallelization
+!  call mp_sum( exx_stress_, inter_image_comm )
+!
   call mp_sum( exx_stress_, intra_pool_comm )
   call mp_sum( exx_stress_, inter_pool_comm )
 

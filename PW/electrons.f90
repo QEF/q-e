@@ -774,7 +774,6 @@ SUBROUTINE electrons()
      FUNCTION check_stop_now()
        !-----------------------------------------------------------------------
        !
-       USE control_flags, ONLY : lpath
        USE check_stop,    ONLY : global_check_stop_now => check_stop_now
        !
        IMPLICIT NONE
