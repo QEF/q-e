@@ -40,7 +40,6 @@ SUBROUTINE set_engine_io_units()
   USE io_files,  ONLY : find_free_unit
   !
   if(ionode) stdout = find_free_unit()
-  write(0,*) "engine output set to unit: ", stdout 
   !
   !
 END SUBROUTINE set_engine_io_units
