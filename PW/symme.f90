@@ -540,7 +540,7 @@ CONTAINS
     sdispls(:) = sdispls(:)/3
     rdispls(:) = rdispls(:)/3
     !
-    ! find shells of symetry-related G-vectors
+    ! find shells of symmetry-related G-vectors
     !
     CALL sym_rho_init_shells( ngm_, g_ )
     !
