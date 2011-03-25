@@ -10,7 +10,46 @@ input_description -distribution {Quantum Espresso} -package NEB -program neb.x {
 
         BEWARE: TABS, DOS <CR><LF> CHARACTERS ARE POTENTIAL SOURCES OF TROUBLE 
 
-	Structure of the input data:
+	General input file structure:
+	===============================================================================
+        
+        neb.x DOES NOT READ FROM STANDARD INPUT
+        There are two ways for running a calculation with neb.x:
+        1) specifying a file to parse with the ./neb.x -inp or
+         neb.x -input command line option.
+        2) or specifying the number of copies of PWscf input ./neb.x -input\_images. 
+
+        For case 1) a file containing KEYWORDS has to be written (see below).
+        These KEYWORDS tells the parser which part of the file regards neb specifics
+        and which part regards the energy/force engine (at the moment only PW).
+        After the parsing different files are generated: neb.dat, with
+        neb specific variables and a set of pw_*.in PWscf input files like
+        ,one for each input position. All options for a single SCF calculation apply.
+
+        The general structure of the file to be parsed is:
+
+        BEGIN
+        BEGIN_PATH_INPUT
+        ... neb specific namelists and cards
+        END_PATH_INPUT
+        BEGIN_ENGINE_INPUT
+        BEGIN_ENGINE_INPUT
+        ...pw specific namelists and cards
+        BEGIN_POSITIONS
+        FIRST_IMAGE
+        ...pw ATOMIC_POSITIONS card
+        INTERMEDIATE_IMAGE
+       ...pw ATOMIC_POSITIONS card
+       LAST_IMAGE
+       ...pw ATOMIC_POSITIONS card
+      END_POSITIONS
+      ... other pw specific cards
+      END_ENGINE_INPUT
+      END
+
+For case 2) neb.dat and all pw_1.in, pw_2.in ... should be already present. 
+
+	Structure of the input data (file neb.dat) :
 	===============================================================================
 
 	&PATH
