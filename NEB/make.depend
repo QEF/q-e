@@ -9,6 +9,7 @@ compute_scf.o : ../Modules/io_global.o
 compute_scf.o : ../Modules/ions_base.o
 compute_scf.o : ../Modules/kind.o
 compute_scf.o : ../Modules/mp.o
+compute_scf.o : ../Modules/mp_global.o
 compute_scf.o : ../Modules/mp_image_global_module.o
 compute_scf.o : ../Modules/recvec.o
 compute_scf.o : ../PW/pwcom.o

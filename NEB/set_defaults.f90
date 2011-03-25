@@ -36,10 +36,10 @@ END SUBROUTINE set_engine_input_defaults
 SUBROUTINE set_engine_io_units()
   !-----------------------------------------------------------------------------
   !
-  USE io_global, ONLY : stdout, xmlinputunit
+  USE io_global, ONLY : stdout, xmlinputunit, ionode
   USE io_files,  ONLY : find_free_unit
   !
-  stdout = find_free_unit()
+  if(ionode) stdout = find_free_unit()
   write(0,*) "engine output set to unit: ", stdout 
   !
   !
