@@ -43,7 +43,7 @@ SUBROUTINE stop_run_path( lflag )
   !
   CALL close_files(lflag)
   !
-  CALL environment_end( 'SM' )
+  CALL environment_end( 'NEB' )
   !
   CALL mp_global_end()
   !
