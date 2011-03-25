@@ -35,6 +35,7 @@ PROGRAM pwscf
   !
   USE io_files,           ONLY : tmp_dir
   USE mp_global,          ONLY : nimage, my_image_id
+  USE image_io_routines,  ONLY : io_image_start
   USE xml_io_base,        ONLY : create_directory, change_directory
   !
   IMPLICIT NONE
@@ -46,14 +47,13 @@ PROGRAM pwscf
   !
 #ifdef __PARA
   CALL mp_startup ( )
-#endif
-  CALL environment_start ( 'PWSCF' )
-  !
   ! reset IO nodes
   ! (do this to make each "image head node" an ionode)
   ! Has to be used ONLY to run nimage copies of pwscf
-  ! 
-  IF ( nimage > 1 ) CALL io_global_start( me_image, root_image )
+  !
+  IF ( nimage > 1 ) CALL io_image_start( )
+#endif
+  CALL environment_start ( 'PWSCF' )
   !
   IF ( ionode ) THEN
      !
