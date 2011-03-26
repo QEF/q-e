@@ -14,25 +14,32 @@ MODULE casino_pp
   REAL(DP) :: zp_
   INTEGER nlc, nnl, lmax_, lloc, nchi, rel_
   LOGICAL :: numeric, bhstype, nlcc_
-  REAL(DP) :: alpc(2), cc(2), alps(3,0:3), aps(6,0:3)
-  REAL(DP) :: a_nlcc, b_nlcc, alpha_nlcc
+  CHARACTER(len=2), ALLOCATABLE :: els_(:)
+  REAL(DP) :: zmesh
+  REAL(DP) :: xmin      = -7.0_DP
+  REAL(DP) :: dx        = 20.0_DP/1500.0_DP
+  REAL(DP) :: tn_prefac = 0.75E-6_DP
+  LOGICAL  :: tn_grid   = .true.
 
-  REAL(DP) :: zmesh, xmin, dx
-  REAL(DP), ALLOCATABLE::  r_(:), rab_(:)
+
+  REAL(DP), ALLOCATABLE::  r_(:)
   INTEGER :: mesh_
 
-  REAL(DP), ALLOCATABLE::  vnl(:,:), rho_atc_(:), rho_at_(:)
+  REAL(DP), ALLOCATABLE::  vnl(:,:)
   INTEGER, ALLOCATABLE:: lchi_(:), nns_(:)
   REAL(DP), ALLOCATABLE:: chi_(:,:),  oc_(:)
 
 CONTAINS
   !
   !     ----------------------------------------------------------
-  SUBROUTINE read_casino(iunps,nofiles)
+  SUBROUTINE read_casino(iunps,nofiles, waveunit)
     !     ----------------------------------------------------------
     !
+    !     Reads in a CASINO tabulated pp file and it's associated
+    !     awfn files. Some basic processing such as removig the r 
+    !     factors from the potentials is also performed.
+    
 
-    USE upf , ONLY : els
     USE kinds,  ONLY : DP
     IMPLICIT NONE
     TYPE :: wavfun_list
@@ -47,17 +54,34 @@ CONTAINS
 
     END TYPE wavfun_list
 
+    TYPE :: channel_list
+       INTEGER :: lquant
+#ifdef __STD_F95
+       REAL(DP), POINTER :: channel(:)
+#else
+       REAL(DP), ALLOCATABLE :: channel(:)
+#endif
+       TYPE (channel_list), POINTER :: p
+
+    END TYPE channel_list
+
+
+    TYPE (channel_list), POINTER :: phead
+    TYPE (channel_list), POINTER :: pptr
+    TYPE (channel_list), POINTER :: ptail
+
     TYPE (wavfun_list), POINTER :: mhead
     TYPE (wavfun_list), POINTER :: mptr
     TYPE (wavfun_list), POINTER :: mtail
 
-    INTEGER :: iunps, nofiles
+    INTEGER :: iunps, nofiles, ios
     !
     LOGICAL :: groundstate, found
     CHARACTER(len=2) :: label, rellab
-    REAL(DP), PARAMETER :: r_exp=20._DP/1500._DP
+
     INTEGER :: l, i, ir, nb, gsorbs, j,k,m,tmp, lquant, orbs, nquant
     INTEGER, ALLOCATABLE :: gs(:,:)
+    INTEGER, ALLOCATABLE, INTENT(IN) :: waveunit(:)
 
     NULLIFY (  mhead, mptr, mtail )
     dft_ = 'HF'   !Hardcoded at the moment should eventually be HF anyway
@@ -82,13 +106,12 @@ CONTAINS
     DO i=1,3                 !zp_ (pseudo charge)
        READ(iunps,*)
     ENDDO
-    READ(iunps,*) lmax_               !reading in lmax
+    READ(iunps,*) lloc               !reading in lloc
     IF ( zp_<=0d0 ) &
          CALL errore( 'read_casino','Wrong zp ',1 )
-    IF ( lmax_>3.or.lmax_<0 ) &
-         CALL errore( 'read_casino','Wrong lmax ',1 )
+    IF ( lloc>3.or.lloc<0 ) &
+         CALL errore( 'read_casino','Wrong lloc ',1 )
 
-    lloc=lmax_ !think lloc shoudl always = lmax for this case yes/no ??
 
     !
     !    compute the radial mesh
@@ -101,43 +124,82 @@ CONTAINS
 
 
     ALLOCATE(  r_(mesh_))
-    ALLOCATE(rab_(mesh_))
+
     READ(iunps,*)
     DO i=1,mesh_
        READ(iunps,*) r_(i)
     ENDDO
-    DO ir = 1, mesh_
-       rab_(ir) = r_exp  * r_(ir) !hardcoded at the moment
+
+
+    ! Read in the different channels of V_nl
+    ALLOCATE(phead)
+    ptail => phead
+    pptr  => phead
+    
+    ALLOCATE( pptr%channel(mesh_) )
+    READ(iunps, '("r*potential (L=",I1,") in Ry")'), l
+    pptr%lquant=l
+    READ(iunps, *)  (pptr%channel(ir),ir=1,mesh_)
+    
+    
+    DO
+       READ(iunps, '("r*potential (L=",I1,") in Ry")', IOSTAT=ios), l
+
+       IF (ios /= 0 ) THEN
+          EXIT
+       ENDIF
+
+       ALLOCATE(pptr%p)
+       pptr=> pptr%p
+       ptail=> pptr
+       ALLOCATE( pptr%channel(mesh_) )
+       pptr%lquant=l
+       READ(iunps, *)  (pptr%channel(ir),ir=1,mesh_)
+       
     ENDDO
 
+    !Compute the number of channels read in.
+    lmax_ =-1
+    pptr => phead
+    DO
+       IF ( .NOT. ASSOCIATED(pptr) )EXIT
+       lmax_=lmax_+1
+
+       pptr =>pptr%p
+    ENDDO
 
     ALLOCATE(vnl(mesh_,0:lmax_))
+    i=0
+    pptr => phead
+    DO
+       IF ( .NOT. ASSOCIATED(pptr) )EXIT
+       !         lchi_(i) = pptr%lquant
+       
+       DO ir=1,mesh_
+          vnl(ir,i) = pptr%channel(ir)
+       ENDDO
+       DEALLOCATE( pptr%channel )
+       pptr =>pptr%p
+       i=i+1
+    ENDDO
 
-    DO l = 0, lmax_
-       READ(iunps, '(a)', err=300)
-       READ(iunps, *, err=300)  (vnl(ir,l),ir=1,mesh_)
+    !Clean up the linked list (deallocate it)
+    DO
+       IF ( .NOT. ASSOCIATED(phead) )EXIT
+       pptr => phead
+       phead => phead%p
+       DEALLOCATE( pptr )
     ENDDO
 
     DO l = 0, lmax_
        DO ir = 1, mesh_
           vnl(ir,l) = vnl(ir,l)/r_(ir) !Removing the factor of r CASINO has
        ENDDO
-       vnl(1,l) = 0                   !correcting for the divide by zero
+       ! correcting for possible divide by zero
+       IF ( r_(1) == 0 ) THEN 
+          vnl(1,l) = 0  
+       ENDIF
     ENDDO
-
-    ALLOCATE(rho_atc_(mesh_))
-    IF(nlcc_) THEN
-       READ(iunps, *, err=300) ( rho_atc_(ir), ir=1,mesh_ )
-    ENDIF
-
-    !
-    ! subtract the local part
-    !
-
-    DO l = 0, lmax_
-       IF ( l/=lloc ) vnl(:,l) = vnl(:,l) - vnl(:,lloc)
-    ENDDO
-
 
     ALLOCATE(mhead)
     mtail => mhead
@@ -150,10 +212,10 @@ CONTAINS
 
        DO i=1,4
 
-          READ(j,*)
+          READ(waveunit(j),*)
        ENDDO
 
-       READ(j,*) orbs
+       READ(waveunit(j),*) orbs
 
        IF ( groundstate ) THEN
 
@@ -164,14 +226,14 @@ CONTAINS
        ENDIF
 
        DO i=1,2
-          READ(j,*)
+          READ(waveunit(j),*)
        ENDDO
 
-       READ(j,*) mtail%eup, mtail%edwn
-       READ(j,*)
+       READ(waveunit(j),*) mtail%eup, mtail%edwn
+       READ(waveunit(j),*)
 
        DO i=1,mtail%eup+mtail%edwn
-          READ(j,*) tmp, nquant, lquant
+          READ(waveunit(j),*) tmp, nquant, lquant
 
           IF ( groundstate ) THEN
              found = .true.
@@ -207,16 +269,16 @@ CONTAINS
 
        ENDDO
 
-       READ(j,*)
-       READ(j,*)
+       READ(waveunit(j),*)
+       READ(waveunit(j),*)
 
        DO i=1,mesh_
-          READ(j,*)
+          READ(waveunit(j),*)
        ENDDO
 
        DO k=1,orbs
-          READ(j,'(13x,a2)', err=300) label
-          READ(j,*) tmp, nquant, lquant
+          READ(waveunit(j),'(13x,a2)', err=300) label
+          READ(waveunit(j),*) tmp, nquant, lquant
 
           IF ( .not. groundstate ) THEN
              found = .false.
@@ -236,7 +298,7 @@ CONTAINS
              ENDDO
              IF ( found ) THEN
                 DO i=1,mesh_
-                   READ(j,*)
+                   READ(waveunit(j),*)
                 ENDDO
 
                 CYCLE
@@ -259,7 +321,7 @@ CONTAINS
              mtail%lquant = lquant
 
 
-             READ(j, *, err=300) (mtail%wavefunc(ir),ir=1,mesh_)
+             READ(waveunit(j), *, err=300) (mtail%wavefunc(ir),ir=1,mesh_)
           ENDDO
           groundstate = .false.
        ENDDO
@@ -273,7 +335,7 @@ CONTAINS
           mptr =>mptr%p
        ENDDO
 
-       ALLOCATE(lchi_(nchi), els(nchi), nns_(nchi))
+       ALLOCATE(lchi_(nchi), els_(nchi), nns_(nchi))
        ALLOCATE(oc_(nchi))
        ALLOCATE(chi_(mesh_,nchi))
        oc_ = 0
@@ -290,7 +352,7 @@ CONTAINS
           IF ( .not. associated(mptr) )exit
           nns_(i) = mptr%nquant
           lchi_(i) = mptr%lquant
-          els(i) = mptr%label
+          els_(i) = mptr%label
 
           DO ir=1,mesh_
 
@@ -310,17 +372,8 @@ CONTAINS
        ENDDO
 
 
-       !
-       !    compute the atomic charges
-       !
-       ALLOCATE(rho_at_(mesh_))
-       rho_at_(:)=0.d0
-       DO nb = 1, nchi
-          IF( oc_(nb)/=0.d0) &
-               &  rho_at_(:) = rho_at_(:) + oc_(nb)*chi_(:,nb)**2
-       ENDDO
        !     ----------------------------------------------------------
-       WRITE (6,'(a)') 'Pseudopotential successfully read'
+       WRITE (0,'(a)') 'Pseudopotential successfully read'
        !     ----------------------------------------------------------
        RETURN
 
@@ -329,116 +382,182 @@ CONTAINS
      END SUBROUTINE read_casino
 
      !     ----------------------------------------------------------
-     SUBROUTINE convert_casino
+     SUBROUTINE convert_casino(upf_out)
        !     ----------------------------------------------------------
        USE kinds, ONLY : DP
+       USE upf_module
+       USE radial_grids, ONLY: radial_grid_type, deallocate_radial_grid 
+       USE funct, ONLY : set_dft_from_name, get_iexch, get_icorr, &
+                         get_igcx, get_igcc
 
-       USE upf
-       USE funct, ONLY : set_dft_from_name, get_iexch, get_icorr, get_igcx, get_igcc
        IMPLICIT NONE
-       REAL(DP), PARAMETER :: rmax = 10.0d0
+
+       TYPE(pseudo_upf), INTENT(INOUT)       :: upf_out
+
        REAL(DP), ALLOCATABLE :: aux(:)
        REAL(DP) :: vll
-       INTEGER :: kkbeta, l, iv, ir, i
+       INTEGER :: kkbeta, l, iv, ir, i, nb
 
-       WRITE(generated, '("From a Trail & Needs tabulated PP for CASINO")')
-       WRITE(date_author,'("Author: unknown    Generation date: as well")')
-       comment = 'Info: automatically converted from CASINO Tabulated format'
+       WRITE(upf_out%generated, '("From a Trail & Needs tabulated &
+            &PP for CASINO")')
+       WRITE(upf_out%author,'("unknown")')
+       WRITE(upf_out%date,'("unknown")')
+       upf_out%comment = 'Info: automatically converted from CASINO &
+            &Tabulated format'
 
-       rel = rel_
+       IF (rel_== 0) THEN
+          upf_out%rel = 'no'
+       ELSEIF (rel_==1 ) THEN
+          upf_out%rel = 'scalar'
+       ELSE
+          upf_out%rel = 'full'
+       ENDIF
+
+       IF (xmin == 0 ) THEN
+          xmin= LOG(zmesh * r_(2) )
+       ENDIF
+
+       ! Allocate and assign the raidal grid
+
+       upf_out%mesh  = mesh_
+       upf_out%zmesh = zmesh
+       upf_out%dx    = dx
+       upf_out%xmin  = xmin
+
+       ALLOCATE(upf_out%rab(upf_out%mesh))
+       ALLOCATE(  upf_out%r(upf_out%mesh))
+       
+       upf_out%r = r_
+       DEALLOCATE( r_ )
+
+       upf_out%rmax = MAXVAL(upf_out%r)
+       
+
+       !
+       ! subtract out the local part from the different
+       ! potential channels
+       !
+
+       DO l = 0, lmax_
+          IF ( l/=lloc ) vnl(:,l) = vnl(:,l) - vnl(:,lloc)
+       ENDDO
+
+       ALLOCATE (upf_out%vloc(upf_out%mesh))
+       upf_out%vloc(:) = vnl(:,lloc)
+    
+
+       ! Compute the derivatives of the grid. The Trail and Needs
+       ! grids use r(i) = (tn_prefac / zmesh)*( exp(i*dx) - 1 ) so 
+       ! must be treated differently to standard QE grids.
+       
+       IF ( tn_grid ) THEN
+          DO ir = 1, upf_out%mesh
+             upf_out%rab(ir) = dx * ( upf_out%r(ir) + tn_prefac / zmesh )
+          ENDDO
+       ELSE
+          DO ir = 1, upf_out%mesh
+             upf_out%rab(ir) = dx  * upf_out%r(ir) 
+          ENDDO
+       ENDIF
 
 
-       rcloc = 0.0d0
-       nwfs  = nchi
-       ALLOCATE( oc(nwfs), epseu(nwfs))
-       ALLOCATE(lchi(nwfs), nns(nwfs) )
-       ALLOCATE(rcut (nwfs), rcutus (nwfs))
-       DO i=1, nwfs
-          nns (i)  = nns_(i)
-          lchi(i)  = lchi_(i)
-          rcut(i)  = 0.0d0
-          rcutus(i)= 0.0d0
-          oc (i)   = oc_(i)
-          epseu(i) = 0.0d0
+       !
+       !    compute the atomic charges
+       !
+       ALLOCATE (upf_out%rho_at(upf_out%mesh))
+       upf_out%rho_at(:) = 0.d0
+
+       DO nb = 1, nchi
+          IF( oc_(nb)/=0.d0) THEN
+             upf_out%rho_at(:) = upf_out%rho_at(:) +&
+               &  oc_(nb)*chi_(:,nb)**2
+          ENDIF
+       ENDDO
+
+       ! This section deals with the pseudo wavefunctions. 
+       ! These values are just given directly to the pseudo_upf structure
+       upf_out%nwfc  = nchi
+
+       ALLOCATE( upf_out%oc(upf_out%nwfc), upf_out%epseu(upf_out%nwfc) )
+       ALLOCATE( upf_out%lchi(upf_out%nwfc), upf_out%nchi(upf_out%nwfc) )
+       ALLOCATE( upf_out%els(upf_out%nwfc) )
+       ALLOCATE( upf_out%rcut_chi(upf_out%nwfc) )
+       ALLOCATE( upf_out%rcutus_chi (upf_out%nwfc) )
+       
+       DO i=1, upf_out%nwfc
+          upf_out%nchi(i)  = nns_(i)
+          upf_out%lchi(i)  = lchi_(i)
+          upf_out%rcut_chi(i)  = 0.0d0
+          upf_out%rcutus_chi(i)= 0.0d0
+          upf_out%oc (i)   = oc_(i)
+          upf_out%els(i) = els_(i)
+          upf_out%epseu(i) = 0.0d0
        ENDDO
        DEALLOCATE (lchi_, oc_, nns_)
 
-       psd = psd_
-       pseudotype = 'NC'
-       nlcc = nlcc_
-       zp = zp_
-       etotps = 0.0d0
-       ecutrho=0.0d0
-       ecutwfc=0.0d0
+       upf_out%psd = psd_
+       upf_out%typ = 'NC'
+       upf_out%nlcc = nlcc_
+       upf_out%zp = zp_
+       upf_out%etotps = 0.0d0
+       upf_out%ecutrho=0.0d0
+       upf_out%ecutwfc=0.0d0
+       upf_out%lloc=lloc
+
        IF ( lmax_ == lloc) THEN
-          lmax = lmax_-1
+          upf_out%lmax = lmax_-1
        ELSE
-          lmax = lmax_
+          upf_out%lmax = lmax_
        ENDIF
-       nbeta= lmax_
-       mesh = mesh_
-       ntwfc= nchi
-       ALLOCATE( elsw(ntwfc), ocw(ntwfc), lchiw(ntwfc) )
-       DO i=1, nchi
-          lchiw(i) = lchi(i)
-          ocw(i)   = oc(i)
-          elsw(i)  = els(i)
-       ENDDO
-       CALL set_dft_from_name(dft_)
-       iexch = get_iexch()
-       icorr = get_icorr()
-       igcx  = get_igcx()
-       igcc  = get_igcc()
+       upf_out%nbeta = lmax_
 
-       ALLOCATE(rab(mesh))
-       ALLOCATE(  r(mesh))
-       rab = rab_
-       r = r_
+       ALLOCATE ( upf_out%els_beta(upf_out%nbeta) )
+       ALLOCATE ( upf_out%rcut(upf_out%nbeta) )
+       ALLOCATE ( upf_out%rcutus(upf_out%nbeta) )
 
-       ALLOCATE (rho_atc(mesh))
-       rho_atc = rho_atc_
-       DEALLOCATE (rho_atc_)
+       upf_out%rcut=0.0d0
+       upf_out%rcutus=0.0d0
+       upf_out%dft =dft_
 
-       ALLOCATE (vloc0(mesh))
-       vloc0(:) = vnl(:,lloc)
 
-       IF (nbeta > 0) THEN
+       IF (upf_out%nbeta > 0) THEN
 
-          ALLOCATE(ikk2(nbeta), lll(nbeta))
-          kkbeta=mesh
-          DO ir = 1,mesh
-             IF ( r(ir) > rmax ) THEN
-                kkbeta=ir
+          ALLOCATE(upf_out%kbeta(upf_out%nbeta), upf_out%lll(upf_out%nbeta))
+          upf_out%kkbeta=upf_out%mesh
+          DO ir = 1,upf_out%mesh
+             IF ( upf_out%r(ir) > upf_out%rmax ) THEN
+                upf_out%kkbeta=ir
                 exit
              ENDIF
           ENDDO
 
           ! make sure kkbeta is odd as required for simpson
-          IF(mod(kkbeta,2) == 0) kkbeta=kkbeta-1
-          ikk2(:) = kkbeta
-          ALLOCATE(aux(kkbeta))
-          ALLOCATE(betar(mesh,nbeta))
-          ALLOCATE(qfunc(mesh,nbeta,nbeta))
-          ALLOCATE(dion(nbeta,nbeta))
-          ALLOCATE(qqq (nbeta,nbeta))
-          qfunc(:,:,:)=0.0d0
-          dion(:,:) =0.d0
-          qqq(:,:)  =0.d0
+          IF(mod(upf_out%kkbeta,2) == 0) upf_out%kkbeta=upf_out%kkbeta-1
+          upf_out%kbeta(:) = upf_out%kkbeta
+          ALLOCATE(aux(upf_out%kkbeta))
+          ALLOCATE(upf_out%beta(upf_out%mesh,upf_out%nbeta))
+          ALLOCATE(upf_out%dion(upf_out%nbeta,upf_out%nbeta))
+          
+          upf_out%dion(:,:) =0.d0
+          
           iv=0
-          DO i=1,nchi
-             l=lchi(i)
-             IF (l/=lloc) THEN
+          DO i=1,upf_out%nwfc
+             l=upf_out%lchi(i)
+             IF (l/=upf_out%lloc) THEN
                 iv=iv+1
-                lll(iv)=l
-                DO ir=1,kkbeta
-                   betar(ir,iv)=chi_(ir,i)*vnl(ir,l)
+                upf_out%els_beta(iv)=upf_out%els(i)
+                upf_out%lll(iv)=l
+                DO ir=1,upf_out%kkbeta
+                   
+                   upf_out%beta(ir,iv)=chi_(ir,i)*vnl(ir,l)
                    aux(ir) = chi_(ir,i)**2*vnl(ir,l)
 
                 ENDDO
-                CALL simpson(kkbeta,aux,rab,vll)
-                dion(iv,iv) = 1.0d0/vll
+                CALL simpson(upf_out%kkbeta,aux,upf_out%rab,vll)
+                upf_out%dion(iv,iv) = 1.0d0/vll
              ENDIF
-             IF(iv >= nbeta) exit  ! skip additional pseudo wfns
+             
+             IF(iv >= upf_out%nbeta) exit  ! skip additional pseudo wfns
           ENDDO
 
 
@@ -447,22 +566,19 @@ CONTAINS
           !
           !   redetermine ikk2
           !
-          DO iv=1,nbeta
-             ikk2(iv)=kkbeta
-             DO ir = kkbeta,1,-1
-                IF ( abs(betar(ir,iv)) > 1.d-12 ) THEN
-                   ikk2(iv)=ir
+          DO iv=1,upf_out%nbeta
+             upf_out%kbeta(iv)=upf_out%kkbeta
+             DO ir = upf_out%kkbeta,1,-1
+                IF ( abs(upf_out%beta(ir,iv)) > 1.d-12 ) THEN
+                   upf_out%kbeta(iv)=ir
                    exit
                 ENDIF
              ENDDO
           ENDDO
        ENDIF
-       ALLOCATE (rho_at(mesh))
-       rho_at = rho_at_
-       DEALLOCATE (rho_at_)
 
-       ALLOCATE (chi(mesh,ntwfc))
-       chi = chi_
+       ALLOCATE (upf_out%chi(upf_out%mesh,upf_out%nwfc))
+       upf_out%chi = chi_
        DEALLOCATE (chi_)
 
        RETURN

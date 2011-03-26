@@ -14,45 +14,66 @@ PROGRAM casino2upf
   !     format to unified pseudopotential format
 
   USE casino_pp
-
+  USE upf_module
+  USE io_files, ONLY : find_free_unit
+  
   IMPLICIT NONE
-  CHARACTER(len=256) filein, fileout
+  CHARACTER(len=256) :: pp_data = 'pp.data'
   CHARACTER(len=256), ALLOCATABLE:: wavefile(:)
-  INTEGER nofiles, i
+  INTEGER, ALLOCATABLE :: waveunit(:)
+  INTEGER nofiles, i, ios, pp_unit
+  TYPE(pseudo_upf)      :: upf_out
 
-  PRINT*, 'CASINO2UPF Converter'
-  PRINT*, 'Enter CASINO pp.data filename:'
+  WRITE(0,*) 'CASINO2UPF Converter'
 
-  CALL get_file ( filein )
+  NAMELIST / inputpp / &
+       pp_data,        &         !CASINO pp filename
+       tn_grid,        &         !.true. if Trail and Needs grid is used
+       tn_prefac,      &         
+       xmin,           &         !xmin for standard QE grid
+       dx                        !dx for Trail and Needs and standard QE
+                                 !grid
 
-  PRINT*, 'How many wavefunction *files* are you using?'
-  READ(*,*) nofiles
-  ALLOCATE(wavefile(nofiles))
-  PRINT*, 'Enter wavefunction files, starting with the ground state:'
+  READ(*,inputpp,iostat=ios)
+
+  READ(*,*,iostat=ios) nofiles
+
+  ALLOCATE(wavefile(nofiles), waveunit(nofiles))
+
+  !Now read in the awfn file names and open the files
+
   DO i=1,nofiles
-     CALL get_file ( wavefile(i) )
-     OPEN(unit=i,file=wavefile(i),status='old',form='formatted')
+     READ(*,*,iostat=ios) wavefile(:)
+     waveunit(i)=find_free_unit()
+     OPEN(unit=waveunit(i),file=trim(wavefile(i)),&
+          status='old',form='formatted', iostat=ios)
+     IF (ios /= 0 ) THEN
+        CALL errore ('casino2upf', 'cannot read file', trim(wavefile(i)))
+     ENDIF
   ENDDO
-  OPEN(unit=99,file=filein,status='old',form='formatted')
-
-  CALL read_casino(99,nofiles)
-  CLOSE (unit=99)
+  
+  pp_unit=find_free_unit()
+  OPEN(unit=pp_unit,file=TRIM(pp_data),status='old',form='formatted', iostat=ios)
+  IF (ios /= 0 ) THEN
+     CALL errore ('casino2upf', 'cannot read file', TRIM(wavefile(i)))
+  ENDIF
+  
+  CALL read_casino(pp_unit,nofiles, waveunit)
+  
+  CLOSE (unit=pp_unit)
   DO i=1,nofiles
-     CLOSE (i)
+     CLOSE (waveunit(i))
   ENDDO
+  
+  DEALLOCATE( wavefile, waveunit )
 
   ! convert variables read from CASINO format into those needed
   ! by the upf format - add missing quantities
 
-  CALL convert_casino
+  CALL convert_casino(upf_out)
 
-  fileout=trim(filein)//'.UPF'
-  PRINT '(''Output PP file in US format :  '',a)', fileout
+  CALL write_upf(upf=upf_out,unit=6) !filename=fileout)
 
-  OPEN(unit=2,file=fileout,status='unknown',form='formatted')
-  CALL write_upf(2)
-  CLOSE (unit=2)
   STOP
-20 CALL errore ('casino2upf', 'Reading pseudo file name ', 1)
 
 END PROGRAM casino2upf
