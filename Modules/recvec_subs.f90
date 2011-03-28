@@ -59,7 +59,7 @@ CONTAINS
 #ifdef __PARA
    INTEGER :: m1, m2, mc
 #endif
-   INTEGER :: i, j, k, ipol, ng, igl, indsw
+   INTEGER :: ni, nj, nk, i, j, k, ipol, ng, igl, indsw
    !
    ! counters
    !
@@ -84,17 +84,24 @@ CONTAINS
    !
    ngm = 0
    ngms = 0
-   iloop: DO i = -dfftp%nr1-1, dfftp%nr1+1
+   !
+   ! max miller indices (same convention as in module stick_set)
+   !
+   ni = (dfftp%nr1-1)/2
+   nj = (dfftp%nr2-1)/2
+   nk = (dfftp%nr3-1)/2
+   !
+   iloop: DO i = -ni, ni
       !
       ! gamma-only: exclude space with x < 0
       !
       IF ( gamma_only .and. i < 0) CYCLE iloop
-      jloop: DO j = -dfftp%nr2-1, dfftp%nr2+1
+      jloop: DO j = -nj, nj
          !
          ! gamma-only: exclude plane with x = 0, y < 0
          !
          IF ( gamma_only .and. i == 0 .and. j < 0) CYCLE jloop
-         kloop: DO k = -dfftp%nr3-1, dfftp%nr3+1
+         kloop: DO k = -nk, nk
             !
             ! gamma-only: exclude line with x = 0, y = 0, z < 0
             !
