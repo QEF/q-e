@@ -2251,6 +2251,11 @@ available. Remember: this is MD on the electronic ground state, not
 Car-Parrinello MD.
 See Example 04.
 
+\paragraph{Free-energy surface calculations}
+Once Pw is patched with \texttt{PLUMED} plug-in, it becomes possible to turn-on most of the PLUMED functionalities
+running \texttt{PWscf} as: \texttt{./pw.x -plumed} plus the other usual \texttt{PWscf} arguments. The PLUMED input file has to be located in the specified \texttt{outdir} with
+the fixed name \texttt{plumed.dat}.
+
 \paragraph{Variable-cell molecular dynamics}
 
 "A common mistake many new users make is to set the time step \texttt{dt}
@@ -3088,6 +3093,7 @@ mild overexcitation of the electrons, however, to do this one will need
 to know rather precisely what is the fictitious kinetic energy due to the
 drag.''
 
+
 \subsection{Advanced usage}
 
 \subsubsection{ Self-interaction Correction }
@@ -3278,6 +3284,12 @@ It ranges between 4 and 7.
 
 All the other parameters have the same meaning in the usual \CP\ input, 
 and they are discussed above.
+
+\subsubsection{Free-energy surface calculations}
+Once \texttt{CP} is patched with \texttt{PLUMED} plug-in, it becomes possible to turn-on most of the PLUMED functionalities
+running \texttt{CP} as: \texttt{./cp.x -plumed} plus the other usual \texttt{CP} arguments. The PLUMED input file has to be located in the specified \texttt{outdir} with
+the fixed name \texttt{plumed.dat}.
+
 
 \subsubsection{Treatment of USPPs}
 
