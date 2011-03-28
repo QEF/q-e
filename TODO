@@ -1,9 +1,10 @@
-TODO LIST - January 2011
+TODO LIST - March 2011
 
 0) Suspected bugs/problems:
-  0.1  ILDOS (plot_num=10) for USPP?
+  0.1  verbosity/iverbosity/iprsta mess
   0.2  nstep ignored in vc-relax and other cases
-  0.3  incorrect values for ELF?
+  0.3  Z*(u,E) vs Z*(E,u) spin-polarized
+  0.4  f_inp, fixed occupancies, etc.
   0.5  Small energy differences between PW and CP - maybe PP-related, 
        but might also be a problem of Ewald calculation in CP ("raggio"?)
   0.6  Numerical instabilities with BLYP and TPSS
@@ -15,6 +16,7 @@ TODO LIST - January 2011
   1.1.0 Better download page that allows selection of packages
         (see 1.3.0)
   1.1.1 update home page picture and sample applications
+  1.1.2 better access to the contents (for developers)
 1.2 Wiki:
   1.2.1 Still the starting point for documentation, but it should contain
         only links to html, pdf, and a few selected wiki pages
@@ -31,15 +33,15 @@ TODO LIST - January 2011
   1.3.3 Files in flib/ use modules in Modules/, while files in Modules/
         in turn call files in flib/. This kind of circular dependency
         should be avoided.
-  1.3.4 Everything that is not in the " QE core" or that is used only for 
-        special purposes (e.g.: DCC=EE/+Multigrid/) should be extracted and 
-        moved into external libs or plugins or whatever is appropriate
+  1.3.4 Everything that is not in the "QE core" or that is used only for 
+        special purposes should be extracted and moved into external 
+        libs or plugins or whatever is appropriate
 1.4 mailing lists:
   1.4.1 Send monthly reminder? possibly with netiquette
   1.4.2 move to qe-forge, changing names
 1.5 Interoperability:
   1.5.1 we should maintain somewhere (in the user guide and the wiki)
-        a list of external "QE-interoperable codes", that either
+        a list of external "QE-interoperable codes", i.e. that either
         provide input data for QE or read output/data files from QE
 1.6 qe-forge:
   1.6.1 there should be somewhere (developer manual and wiki) a short 
@@ -50,8 +52,8 @@ TODO LIST - January 2011
   1.7.2 The automated tests should be performed only when something has
         actually changed, for executables that have actually changed.
         The current mechanism is way too rough.
-  1.7.3 Many functionalities are still untested and there is not even 
-        an example. PP/ is a notable offender: there are a lot of possible
+  1.7.3 Many functionalities are still untested and there is not even an
+        example. PP/ is a notable offender: there are a lot of possible
         calculations, most of which are never tested.
 
 2) Documentation
@@ -65,7 +67,6 @@ TODO LIST - January 2011
     - segmentation fault (present but not visible enough)
 2.2 QE-Tutorial: should be moved to the cvs or svn of qe-forge.
 2.3 Documentation on how to generate PP for GIPAW calculation is missing
-2.4 Documentation and examples for EE/ stuff are absent
 
 3) Pseudopotentials 
 
@@ -83,6 +84,7 @@ TODO LIST - January 2011
 3.7 The intermediate hard NCPP is useless for PAW and should not be 
     done when generating a PAW set
 3.8 Finish merge of Meta-GGA (TPSS) code into atomic code
+3.9 UPF v.1 must disappear; all converters must be converted to UPF v.2
 
 4) Development
 
@@ -232,7 +234,7 @@ TODO LIST - January 2011
         allocation: see recent GIPAW workaround for an example of
         allocation confusion (qnorm, cell_factor in allocate_nlpot)
   4.4.4 More PW/CP merge:
-        - lda+U modules
+        - lda+U modules - in CP LDA+U is incredibly inefficient
         - "cell_base_init" from CP to PW
         - "cellmd" module of PW and "cell_base" of CP
         - PW "real-space" approach / CP "small boxes" 
@@ -294,12 +296,15 @@ TODO LIST - January 2011
         frequent source of trouble with electron-phonon calculations
   4.5.8 Still a few quirks with the atomic coordinate parser, if 
         DOS characters or tabulators are present (Lorenzo)
-  4.5.9 Spin-polarized cases: clumsy, error-prone input (e.g.:
-        occupations='fixed' vs 'from_input', input card)
+  4.5.9 Spin-polarized cases: input is clumsy, confusing, error-prone;
+        the case occupations='from_input' is implemented as a special
+        case, for no apparent good reason.
  4.5.10 k-points in crystal IBZ should be correctly calculated also
-        if input k-points are not in the IBZ of the lattice. It is
+        if input k-points are not in the IBZ of the lattice. It should
         sufficient to use brute forces instead of group theory:
-        expand to full BZ, remove symmetry-equivalent k 
+        be expand to full BZ, remove symmetry-equivalent k.
+        Or maybe there is a problem with grids not having the
+        symmetry of the crystal? 
 
 5) Files and I/O
 
