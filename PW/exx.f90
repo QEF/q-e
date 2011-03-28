@@ -141,11 +141,12 @@ CONTAINS
   ! parallelism over q
   !
   nqs = nq1 * nq2 * nq3
-  
-  IF( MOD(nqs,nimage) /= 0 ) THEN
-      CALl errore(sub_name, 'The total number of q points must be multiple of nimage', mod(nqs,nimage))
-  ENDIF
-
+!
+! old check for parallelization on images  
+!  IF( MOD(nqs,nimage) /= 0 ) THEN
+!      CALl errore(sub_name, 'The total number of q points must be multiple of nimage', mod(nqs,nimage))
+!  ENDIF
+!
   !
   ! all processors need to have access to all k+q points
   !
