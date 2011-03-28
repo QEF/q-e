@@ -242,7 +242,6 @@ subroutine pc2(a,beca,b,becb)
       use mp_global, only: intra_bgrp_comm
       use gvecw, only: ngw
       use constants, only: pi, fpi
-      use control_flags, only: iprint, iprsta
       use gvect, only: gstart
       use mp, only: mp_sum
       use electrons_base, only: n => nbsp, ispin,  nupdwn, iupdwn, nspin
@@ -351,7 +350,6 @@ subroutine pc2(a,beca,b,becb)
       use mp_global, only: intra_bgrp_comm
       use gvecw, only: ngw
       use constants, only: pi, fpi
-      use control_flags, only: iprint, iprsta
       use gvect, only: gstart
       use mp, only: mp_sum
       use electrons_base, only: n => nbsp, ispin
@@ -414,7 +412,6 @@ subroutine pc2(a,beca,b,becb)
       use mp_global, only: intra_bgrp_comm
       use gvecw, only: ngw
       use constants, only: pi, fpi
-      use control_flags, only: iprint, iprsta
       use gvect, only: gstart
       use mp, only: mp_sum, mp_bcast
       use electrons_base, only: n => nbsp, ispin
@@ -541,7 +538,6 @@ subroutine pc2(a,beca,b,becb)
       use electrons_base, only: n => nbsp
       use gvecw, only: ngw
       use constants, only: pi, fpi
-      use control_flags, only: iprint, iprsta
       use mp, only: mp_sum
       use gvect, only: gstart
 !
@@ -716,7 +712,6 @@ subroutine pc2(a,beca,b,becb)
       use electrons_base, only: n => nbsp
       use gvecw, only: ngw
       use constants, only: pi, fpi
-      use control_flags, only: iprint, iprsta
       use mp, only: mp_sum
       use gvect, only: gstart
       USE gvecw,              ONLY: ggp

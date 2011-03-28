@@ -402,7 +402,6 @@ MODULE wannier_subroutines
     USE efcalc,         ONLY : wf_efield
     USE wannier_base,   ONLY : nwf, calwf, jwf, wffort, iplot, iwf
     USE wannier_module, ONLY : what1, wfc, utwf
-    USE control_flags,  ONLY : iprsta
     USE cp_interfaces,  ONLY : rhoofr
     USE dener,          ONLY : denl, dekin6
     !
@@ -688,7 +687,6 @@ MODULE wannier_subroutines
     USE efcalc,         ONLY : wf_efield
     USE wannier_base,   ONLY : nwf, calwf, jwf, wffort, iplot, iwf
     USE wannier_module, ONLY : what1, wfc, utwf
-    USE control_flags,  ONLY : iprsta
     USE electrons_base, ONLY : nbsp
     USE gvecw,          ONLY : ngw
     USE control_flags,  ONLY : ndw

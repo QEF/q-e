@@ -16,7 +16,7 @@
 
       !
       USE kinds,             ONLY : DP
-      USE control_flags,     ONLY : iprint, textfor, iprsta, do_makov_payne
+      USE control_flags,     ONLY : iprint, textfor, do_makov_payne
       USE energies,          ONLY : print_energies, dft_energy_type
       USE printout_base,     ONLY : printout_base_open, printout_base_close, &
                                     printout_pos, printout_cell, printout_stress

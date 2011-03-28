@@ -19,12 +19,6 @@
 
       ! declares modules
       USE kinds,          ONLY: dp
-      USE control_flags,  ONLY: iprint, thdyn, tpre, iprsta, &
-                                tfor, taurdr, &
-                                tprnfor, ndr, ndw, nbeg, nomore, &
-                                tsde, tortho, tnosee, tnosep, trane, &
-                                tranp, tsdp, tcp, tcap, ampre, &
-                                amprp, tnoseh
       USE core,           ONLY: nlcc_any
       USE energies,       ONLY: eht, epseu, exc, etot, eself, enl, &
                                 ekin, atot, entropy, egrand
@@ -330,12 +324,6 @@
 
       ! declares modules
       USE kinds,          ONLY: dp
-      USE control_flags,  ONLY: iprint, thdyn, tpre, iprsta, &
-                                tfor, taurdr, &
-                                tprnfor, ndr, ndw, nbeg, nomore, &
-                                tsde, tortho, tnosee, tnosep, trane, &
-                                tranp, tsdp, tcp, tcap, ampre, &
-                                amprp, tnoseh
       USE core,           ONLY: nlcc_any
       USE energies,       ONLY: eht, epseu, exc, etot, eself, enl, &
                                 ekin, atot, entropy, egrand
@@ -519,12 +507,6 @@
       !
       ! declares modules
       USE kinds,          ONLY: dp
-      USE control_flags,  ONLY: iprint, thdyn, tpre, iprsta, &
-                                tfor, taurdr, &
-                                tprnfor, ndr, ndw, nbeg, nomore, &
-                                tsde, tortho, tnosee, tnosep, trane, &
-                                tranp, tsdp, tcp, tcap, ampre, &
-                                amprp, tnoseh
       USE energies,       ONLY: eht, epseu, exc, etot, eself, enl, &
                                 ekin, atot, entropy, egrand
       USE electrons_base, ONLY: f, nspin, nel, iupdwn, nupdwn, nudx, &

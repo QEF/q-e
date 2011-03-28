@@ -2921,7 +2921,6 @@ SUBROUTINE jacobi_rotation( m, Omat, Umat, b1, b2, b3 )
   USE kinds,                  ONLY : DP
   USE io_global,              ONLY : stdout
   USE wannier_base,           ONLY : nw, weight, nit, tolw, wfdt, maxwfdt, nsd
-  USE control_flags,          ONLY : iprsta
   USE cell_base,              ONLY : alat
   USE constants,              ONLY : tpi
   USE mp_global,              ONLY : me_bgrp
