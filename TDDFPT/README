@@ -1,5 +1,22 @@
 Time Dependent Density Functional Perturbation Theory (TDDFPT)
 
+-------------------------------------------------------------------------------
+TD-DFPT developers would be grateful if any scientific work done with TD-DFPT
+contained a reference to one of the following reference papers:
+
+Turbo charging time-dependent density-functional theory with Lanczos chains
+Author(s): Rocca D, Gebauer R, Saad Y, et al.
+Source: JOURNAL OF CHEMICAL PHYSICS   Volume: 128   Issue: 15 Article Number: 154105   Published: APR 21 2008
+
+Ultrasoft pseudopotentials in time-dependent density-functional theory
+Author(s): Walker B, Gebauer R
+Source: JOURNAL OF CHEMICAL PHYSICS   Volume: 127   Issue: 16 Article Number: 164106   Published: OCT 28 2007
+
+Efficient approach to time-dependent density-functional perturbation theory for optical spectroscopy
+Author(s): Walker B, Saitta AM, Gebauer R, et al.
+Source: PHYSICAL REVIEW LETTERS   Volume: 96   Issue: 11 Article Number: 113001   Published: MAR 24 2006
+-------------------------------------------------------------------------------
+
 Version BETA 1 (02/2010)
 
 This module uses subroutines from PW and PH along with the general infrasturcture provided by
