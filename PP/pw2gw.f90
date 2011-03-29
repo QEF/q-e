@@ -446,21 +446,16 @@ SUBROUTINE compute_gw( use_gmaps )
     size_tab_d2y=size(tab_d2y,1)
 
     ALLOCATE(vec_tab(1:size_tab))
-    IF(spline_ps) ALLOCATE(vec_tab_d2y(1:size_tab_d2y))
+    ALLOCATE(vec_tab_d2y(1:size_tab_d2y))
+
     DO nt = 1, ntyp
       DO nb = 1, upf(nt)%nbeta
         vkb0(:) = 0.0_dp
         vec_tab(:) = 0.0_dp
-        IF(spline_ps) vec_tab_d2y(:) = 0.0_dp
+        vec_tab_d2y(:) = 0.0_dp
         vec_tab(:) = tab(:,nb,nt)
-        IF(spline_ps) THEN
-          WRITE(0,*) "size vec_tab_d2y", size(vec_tab_d2y,1)
-          WRITE(0,*) "size tab_d2y", size(tab_d2y,1)
-          vec_tab_d2y(:) = tab_d2y(:,nb,nt)
-          CALL gen_us_vkb0(ik,npw,vkb0,size_tab,vec_tab,spline_ps,vec_tab_d2y)
-        ELSE
-          CALL gen_us_vkb0(ik,npw,vkb0,size_tab,vec_tab,spline_ps)
-        ENDIF
+        IF(spline_ps) vec_tab_d2y(:) = tab_d2y(:,nb,nt)
+        CALL gen_us_vkb0(ik,npw,vkb0,size_tab,vec_tab,spline_ps,vec_tab_d2y)
         WRITE(15,*) "---------------DEBUG-VKB0----------------------"
         WRITE(15,*) "ik= ", ik
         WRITE(15,*) "nt= ", nt
@@ -489,19 +484,15 @@ SUBROUTINE compute_gw( use_gmaps )
     size_tab_d2y=size(tab_d2y,1)
 
     ALLOCATE(vec_tab(1:size_tab))
-    IF(spline_ps) ALLOCATE(vec_tab_d2y(1:size_tab_d2y))
+    ALLOCATE(vec_tab_d2y(1:size_tab_d2y))
     DO nt = 1, ntyp
       DO nb = 1, upf(nt)%nbeta
         djl(:) = 0.0_dp
         vec_tab(:) = 0.0_dp
-        IF(spline_ps) vec_tab_d2y(:) = 0.0_dp
+        vec_tab_d2y(:) = 0.0_dp
         vec_tab(:) = tab(:,nb,nt)
-        IF(spline_ps) THEN
-          vec_tab_d2y(:) = tab_d2y(:,nb,nt)
-          CALL gen_us_djl(ik,npw,djl,size_tab,vec_tab,spline_ps,vec_tab_d2y)
-        ELSE
-          CALL gen_us_djl(ik,npw,djl,size_tab,vec_tab,spline_ps)
-        ENDIF
+        IF(spline_ps) vec_tab_d2y(:) = tab_d2y(:,nb,nt)
+        CALL gen_us_djl(ik,npw,djl,size_tab,vec_tab,spline_ps,vec_tab_d2y)
 !        WRITE(0,*) "---------------DEBUG-----------------------"
 !        WRITE(0,*) "spline: ", spline_ps
 !        WRITE(0,*) "ik= ", ik
@@ -1114,15 +1105,6 @@ SUBROUTINE diropn_gw (unit, filename, recl, exst, mpime, nd_nmbr_ )
   RETURN
 END SUBROUTINE diropn_gw
 
-
-!
-! Copyright (C) 2010 Layla Martin-Samos
-! This file is distributed under the terms of the
-! GNU General Public License. See the file `License'
-! in the root directory of the present distribution,
-! or http://www.gnu.org/copyleft/gpl.txt .
-!
-!
 !----------------------------------------------------------------------
 subroutine gen_us_djl (ik,npw,djl,size_tab,vec_tab, spline_ps, vec_tab_d2y)
   !----------------------------------------------------------------------
@@ -1147,7 +1129,7 @@ subroutine gen_us_djl (ik,npw,djl,size_tab,vec_tab, spline_ps, vec_tab_d2y)
   integer, intent(in) :: ik, npw
   integer, intent(in) :: size_tab
   real(DP), intent(in) :: vec_tab(1:size_tab)
-  real(DP), optional, intent(in) :: vec_tab_d2y(1:size_tab)
+  real(DP), intent(in) :: vec_tab_d2y(1:size_tab)
   logical :: spline_ps
   !
   integer :: i0, i1, i2, &
@@ -1210,13 +1192,6 @@ subroutine gen_us_djl (ik,npw,djl,size_tab,vec_tab, spline_ps, vec_tab_d2y)
   return
 end subroutine gen_us_djl
 !
-! Copyright (C) 2010 Layla Martin-Samos
-! This file is distributed under the terms of the
-! GNU General Public License. See the file `License'
-! in the root directory of the present distribution,
-! or http://www.gnu.org/copyleft/gpl.txt .
-!
-!
 !----------------------------------------------------------------------
 subroutine gen_us_vkb0 (ik,npw,vkb0,size_tab,vec_tab, spline_ps, vec_tab_d2y)
   !----------------------------------------------------------------------
@@ -1241,7 +1216,7 @@ subroutine gen_us_vkb0 (ik,npw,vkb0,size_tab,vec_tab, spline_ps, vec_tab_d2y)
   integer, intent(in) :: ik, npw
   integer, intent(in) :: size_tab
   real(DP), intent(in) :: vec_tab(1:size_tab)
-  real(DP), optional, intent(in) :: vec_tab_d2y(1:size_tab)
+  real(DP), intent(in) :: vec_tab_d2y(1:size_tab)
   logical :: spline_ps
   !
   integer :: na, nt, nb, ikb,i0, i1, i2, &
