@@ -183,7 +183,7 @@ subroutine commutator_Hx_psi (ik, nbnd_occ, becp1, becp2, ipol, dpsi, dvpsi)
         enddo  ! na
      end do  ! nt
   end do ! nbnd
-  if (ikb /= nkb .OR. jkb /= nkb) call errore ('dvpsi_e', 'unexpected error',1)
+  if (ikb /= nkb .OR. jkb /= nkb) call errore ('commutator_Hx_psi', 'unexpected error',1)
   IF (noncolin) THEN
      CALL zgemm( 'N', 'N', npw, nbnd_occ*npol, nkb, &
           (1.d0,0.d0), vkb(1,1), npwx, psc(1,1,1,1), nkb, (1.d0,0.d0), &
