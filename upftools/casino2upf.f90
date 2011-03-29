@@ -24,8 +24,6 @@ PROGRAM casino2upf
   INTEGER nofiles, i, ios, pp_unit
   TYPE(pseudo_upf)      :: upf_out
 
-  WRITE(0,*) 'CASINO2UPF Converter'
-
   NAMELIST / inputpp / &
        pp_data,        &         !CASINO pp filename
        tn_grid,        &         !.true. if Trail and Needs grid is used
@@ -33,6 +31,8 @@ PROGRAM casino2upf
        xmin,           &         !xmin for standard QE grid
        dx                        !dx for Trail and Needs and standard QE
                                  !grid
+
+  WRITE(0,*) 'CASINO2UPF Converter'
 
   READ(*,inputpp,iostat=ios)
 
