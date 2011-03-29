@@ -402,7 +402,7 @@ subroutine phq_setup
   END IF
 
 
-  if (fildrho.ne.' ') call io_pattern (fildrho,nirr,npert,u,+1)
+  if (fildrho.ne.' ') call io_pattern (nat,fildrho,nirr,npert,u,+1)
 
   if (start_irr < 0) call errore('phq_setup', 'wrong start_irr', 1)
   last_irr_eff=last_irr

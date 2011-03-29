@@ -224,13 +224,13 @@ SUBROUTINE d3_setup()
           npert, nirr, gi, gimq, iverbosity, modenum)
   ELSE
      IF (nsym > 1) THEN
-        CALL io_pattern(nat,fildrho,nirr,npert,u,-1)
+        CALL io_pattern(fildrho,nirr,npert,u,-1)
         npertx = 0
         DO irr = 1, nirr
            npertx = max (npertx, npert (irr) )
         ENDDO
         IF (.not.lgamma) THEN
-           call io_pattern(nat,fild0rho,nirrg0,npertg0,ug0,-1)
+           call io_pattern(fild0rho,nirrg0,npertg0,ug0,-1)
            DO irr = 1, nirrg0
               npertx = max (npertx, npertg0 (irr) )
            ENDDO
