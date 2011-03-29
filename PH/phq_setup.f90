@@ -118,7 +118,7 @@ subroutine phq_setup
   ! counters
 
   real(DP) :: auxdmuxc(4,4)
-  real(DP), allocatable :: w2(:), wg(:,:)
+  real(DP), allocatable :: w2(:), wg_up(:,:), wg_dw(:,:)
 
   logical :: sym (48), magnetic_sym
   ! the symmetry operations
@@ -252,17 +252,17 @@ subroutine phq_setup
      else
         IF ( two_fermi_energies ) THEN
            !
-           ALLOCATE(wg(nbnd,nks))
-           CALL iweights( nks, wk, nbnd, nelup, et, ef_up, wg, 1, isk )
-           DO ik = 1, nks/2
+           ALLOCATE(wg_up(nbnd,nks))
+           ALLOCATE(wg_dw(nbnd,nks))
+           CALL iweights( nks, wk, nbnd, nelup, et, ef_up, wg_up, 1, isk )
+           CALL iweights( nks, wk, nbnd, neldw, et, ef_dw, wg_dw, 2, isk )
+           DO ik = 1, nks
               DO ibnd=1,nbnd
-                 IF (wg(ibnd,ik) > 0.0_DP) nbnd_occ (ik) = nbnd_occ(ik)+1
-              ENDDO
-           ENDDO
-           CALL iweights( nks, wk, nbnd, neldw, et, ef_dw, wg, 2, isk )
-           DO ik = nks/2+1, nks
-              DO ibnd=1,nbnd
-                 IF (wg(ibnd,ik) > 0.0_DP) nbnd_occ (ik) = nbnd_occ(ik)+1
+                 IF (isk(ik)==1) THEN
+                    IF (wg_up(ibnd,ik) > 0.0_DP) nbnd_occ (ik) = nbnd_occ(ik)+1
+                 ELSE
+                    IF (wg_dw(ibnd,ik) > 0.0_DP) nbnd_occ (ik) = nbnd_occ(ik)+1
+                 ENDIF
               ENDDO
            ENDDO
            !
@@ -270,7 +270,8 @@ subroutine phq_setup
            !
            ef = ( ef_up + ef_dw ) / 2.0_dp
            !
-           DEALLOCATE(wg)
+           DEALLOCATE(wg_up)
+           DEALLOCATE(wg_dw)
         ELSE
           if (lsda) call infomsg('phq_setup', &
                                  'occupation numbers probably wrong')
