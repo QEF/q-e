@@ -2280,7 +2280,7 @@ See also \texttt{examples/VCSexample}.
 
 \subsection{Direct interface with \texttt{CASINO}} \label{pw2casino_info}
 
-\texttt{PWscf} supports now the Cambridge quantum Monte Carlo program CASINO directly. For more information
+\texttt{PWscf} now supports the Cambridge quantum Monte Carlo program CASINO directly. For more information
 on the \texttt{CASINO} code see \texttt{http://www.tcm.phy.cam.ac.uk/\~{}mdt26/casino.html}. 
 \texttt{CASINO} may take the output of \texttt{PWSCF} and
 'improve it' giving considerably more accurate total energies and other
@@ -2382,6 +2382,15 @@ The closer $\alpha$ is to 1, the better the blip representation.  By increasing
 able to make $\alpha$ as close to 1 as desired. The number of random points used 
 is given by \texttt{n\_points\_for\_test}.
 \end{description}
+
+Finally, note that DFT trial wave functions produced by \texttt{PWSCF}
+must be generated using the same pseudopotential as in the subsequent QMC 
+calculation. This requires the use of tools to switch between the different 
+file formats used by the two codes.
+
+\texttt{CASINO} uses the `\texttt{CASINO} tabulated format', \texttt{PWSCF} officially supports 
+the UPFv2 format (though it will read other `deprecated' formats).
+This can be done through the `casino2upf' and `upf2casino' tools included in the upftools directory (see the upftools/README file for instructions). An alternative converter `casinogon' is included in the \texttt{CASINO} distribution which produces the deprecated GON format but which can be useful when using non-standard grids.
 
 \section{NEB calculations}
 
