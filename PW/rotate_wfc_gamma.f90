@@ -150,7 +150,7 @@ SUBROUTINE protate_wfc_gamma( npwx, npw, nstart, gstart, nbnd, psi, overlap, evc
   USE kinds,            ONLY : DP
   USE control_flags,    ONLY : gamma_only 
   USE mp_global,        ONLY : npool, nproc_pool, me_pool, root_pool, &
-                               intra_pool_comm, me_image, &
+                               intra_pool_comm, &
                                ortho_comm, np_ortho, me_ortho, ortho_comm_id,&
                                leg_ortho
   USE descriptors,      ONLY : descla_siz_ , descla_init , lambda_node_ , &

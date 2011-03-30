@@ -23,9 +23,10 @@ SUBROUTINE weights()
   USE lsda_mod,             ONLY : nspin, current_spin, isk
   USE noncollin_module,     ONLY : bfield, nspin_lsda
   USE wvfct,                ONLY : nbnd, wg, et
-  USE mp_global,            ONLY : intra_image_comm, me_image, &
-                                   root_image, npool, my_pool_id, inter_pool_comm
+  USE mp_global,            ONLY : intra_image_comm,  &
+                                   npool, my_pool_id, inter_pool_comm
   USE mp,                   ONLY : mp_bcast, mp_sum
+  USE io_global,            ONLY : ionode, ionode_id
   !
   IMPLICIT NONE
   !
@@ -64,7 +65,7 @@ SUBROUTINE weights()
      ! ... Important notice: all eigenvalues (et) must be present on 
      ! ... the first pool (poolreduce must have been called for et)
      !
-     IF ( me_image == root_image ) THEN
+     IF ( ionode ) THEN
         !
         IF (two_fermi_energies) THEN
            !
@@ -84,7 +85,7 @@ SUBROUTINE weights()
      !
      CALL poolscatter( nbnd, nkstot, wg, nks, wg )
      !
-     CALL mp_bcast( ef, root_image, intra_image_comm )
+     CALL mp_bcast( ef, ionode_id, intra_image_comm )
      !
   ELSE IF ( lgauss ) THEN
      !
