@@ -63,6 +63,8 @@ PROGRAM neb
   !
   LOGICAL :: lxml
   !
+  CHARACTER(LEN=6), EXTERNAL :: int_to_char
+  !
   unit_tmp = 45
   xmlinputunit = 45
   !
@@ -133,13 +135,15 @@ PROGRAM neb
   do i=2,input_images
     CALL set_engine_input_defaults()
     CALL clean_pw(.true.)
-    if(i>=1.and.i<10) then
-    write(a_tmp,'(i1)') i
-    elseif(i>10.and.i<100) then
-    write(a_tmp,'(i2)') i
-    elseif(i>100.and.i<1000) then
-    write(a_tmp,'(i3)')
-    endif
+!    if(i>=1.and.i<10) then
+!    write(a_tmp,'(i1)') i
+!    elseif(i>10.and.i<100) then
+!    write(a_tmp,'(i2)') i
+!    elseif(i>100.and.i<1000) then
+!    write(a_tmp,'(i3)')
+!    endif
+
+    a_tmp=trim(int_to_char(i))
 
     OPEN(unit_tmp,file=trim(engine_prefix)//trim(a_tmp)//".in") 
     CALL test_input_xml(unit_tmp,lxml)
