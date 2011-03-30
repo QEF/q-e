@@ -1396,7 +1396,6 @@ setup.o : pwcom.o
 setup.o : symm_base.o
 sph_ind.o : ../Modules/kind.o
 spinor.o : ../Modules/kind.o
-stop_run.o : ../Modules/control_flags.o
 stop_run.o : ../Modules/environment.o
 stop_run.o : ../Modules/image_io_routines.o
 stop_run.o : ../Modules/io_files.o
@@ -1710,6 +1709,7 @@ wannier_proj.o : ../Modules/wavefunctions.o
 wannier_proj.o : buffers.o
 wannier_proj.o : noncol.o
 wannier_proj.o : pwcom.o
+weights.o : ../Modules/io_global.o
 weights.o : ../Modules/kind.o
 weights.o : ../Modules/mp.o
 weights.o : ../Modules/mp_global.o

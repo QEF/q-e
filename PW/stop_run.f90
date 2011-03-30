@@ -16,7 +16,6 @@ SUBROUTINE stop_run( lflag )
   USE io_global,          ONLY : ionode
   USE mp_global,          ONLY : mp_global_end
   USE environment,        ONLY : environment_end
-  USE control_flags,      ONLY : twfcollect, io_level 
   USE io_files,           ONLY : iuntmp
   USE image_io_routines,   ONLY : io_image_stop
   !
