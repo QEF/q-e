@@ -26,6 +26,8 @@ SUBROUTINE pw2casino()
   !
   CHARACTER(len=4) :: postfix
   !
+  CHARACTER(len=6), EXTERNAL :: int_to_char
+  !
   INTEGER :: tmp_unit
   !
   INTEGER  :: ios
@@ -71,7 +73,8 @@ SUBROUTINE pw2casino()
                postfix)   ! postfix
 
     ELSE
-      write(postfix,'(i4.4)') istep
+!      write(postfix,'(i4.4)') istep
+      postfix=trim(int_to_char(istep))
       !
       CALL write_casino_wfn( &
                casino_gather, & ! gather

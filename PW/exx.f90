@@ -895,9 +895,9 @@ call flush_unit(stdout)
              end do
           end if
        end do
-       !write(*,*) result(1:10)
-       CALL mp_sum( result(1:nrxxs), inter_image_comm )
-       !write(*,*) 'result is:  ',result(1), result(nrxxs), nrxxs, my_image_id
+!
+! Was used for parallelization on images
+!       CALL mp_sum( result(1:nrxxs), inter_image_comm )
        !brings back result in G-space
        CALL fwfft ('Wave', result, dffts)
        !adds it to hpsi

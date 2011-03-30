@@ -24,7 +24,7 @@ subroutine save_in_ions
   ! counters
   ! last completed kpoint
   ! last completed iteration
-  logical :: exst
+  logical :: exst, lexx
   real(DP) :: dr2
   !
   if ( io_level < 2 .or. .not.lscf ) return
@@ -46,8 +46,11 @@ subroutine save_in_ions
   write (iunres) iter, ik_, dr2, tr2, ethr
 
 #ifdef EXX
-  write (iunres) exx_is_active(), fock0, fock1, fock2, dexx
-  write (iunres) ( (x_occupation (ibnd, ik), ibnd = 1, nbnd), ik = 1, nks)
+  lexx=exx_is_active()
+  write (iunres) lexx, fock0, fock1, fock2, dexx
+  if(lexx) then
+    write (iunres) ( (x_occupation (ibnd, ik), ibnd = 1, nbnd), ik = 1, nks)
+  endif
 #endif
 
   close (unit = iunres, status = 'keep')
