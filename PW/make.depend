@@ -766,7 +766,7 @@ kernel_table.o : ../Modules/constants.o
 kernel_table.o : ../Modules/io_files.o
 kernel_table.o : ../Modules/kind.o
 kernel_table.o : ../Modules/wrappers.o
-kpoint_grid.o : ../Modules/input_parameters.o
+kpoint_grid.o : ../Modules/control_flags.o
 kpoint_grid.o : ../Modules/io_global.o
 kpoint_grid.o : ../Modules/kind.o
 kpoint_grid.o : pwcom.o
@@ -1379,7 +1379,6 @@ setup.o : ../Modules/control_flags.o
 setup.o : ../Modules/electrons_base.o
 setup.o : ../Modules/funct.o
 setup.o : ../Modules/griddim.o
-setup.o : ../Modules/input_parameters.o
 setup.o : ../Modules/io_files.o
 setup.o : ../Modules/io_global.o
 setup.o : ../Modules/ions_base.o

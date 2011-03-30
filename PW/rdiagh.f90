@@ -15,7 +15,7 @@ SUBROUTINE rdiagh( n, h, ldh, e, v )
   !
   USE kinds,            ONLY : DP
   USE mp_global,        ONLY : nproc, npool, nproc_pool, me_pool, &
-                               root_pool, intra_pool_comm, my_image_id
+                               root_pool, intra_pool_comm
   USE mp,               ONLY : mp_bcast
   !
   IMPLICIT NONE

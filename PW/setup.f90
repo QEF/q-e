@@ -60,7 +60,7 @@ SUBROUTINE setup()
                                  d1,d2,d3, time_reversal, sname, set_sym_bl, &
                                  find_sym
   USE wvfct,              ONLY : nbnd, nbndx, ecutwfc
-  USE control_flags,      ONLY : tr2, ethr, lscf, lmd, david,  &
+  USE control_flags,      ONLY : tr2, ethr, lscf, lmd, david, lecrpa,  &
                                  isolve, niter, noinv, nosym, nosym_evc, &
                                  nofrac, lbands, use_para_diag, gamma_only
   USE cellmd,             ONLY : calc
@@ -77,7 +77,6 @@ SUBROUTINE setup()
                                  angle1, angle2, bfield, ux, nspin_lsda, &
                                  nspin_gga, nspin_mag
   USE pw_restart,         ONLY : pw_readfile
-  USE input_parameters,   ONLY : restart_mode, lecrpa
 #if defined (EXX)
   USE exx,                ONLY : exx_grid_init, exx_div_check
 #endif
@@ -540,9 +539,6 @@ SUBROUTINE setup()
      CALL errore( 'setup ', 'problem reading ef from file ' // &
              & TRIM( tmp_dir ) // TRIM( prefix ) // '.save', ierr )
 
-!     IF ( restart_mode == 'from_scratch' ) &
-!           CALL delete_if_present( TRIM( tmp_dir ) // TRIM( prefix ) &
-!                                     //'.save/' // TRIM( xmlpun ) )
      !
   ELSE IF ( ltetra ) THEN
      !
