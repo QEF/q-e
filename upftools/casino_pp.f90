@@ -137,13 +137,13 @@ CONTAINS
     pptr  => phead
     
     ALLOCATE( pptr%channel(mesh_) )
-    READ(iunps, '("r*potential (L=",I1,") in Ry")'), l
+    READ(iunps, '("r*potential (L=",I1,") in Ry")') l
     pptr%lquant=l
     READ(iunps, *)  (pptr%channel(ir),ir=1,mesh_)
     
     
     DO
-       READ(iunps, '("r*potential (L=",I1,") in Ry")', IOSTAT=ios), l
+       READ(iunps, '("r*potential (L=",I1,") in Ry")', IOSTAT=ios) l
 
        IF (ios /= 0 ) THEN
           EXIT
