@@ -7,7 +7,7 @@ TODO LIST - March 2011
   0.4  f_inp, fixed occupancies, etc.
   0.5  Small energy differences between PW and CP - maybe PP-related, 
        but might also be a problem of Ewald calculation in CP ("raggio"?)
-  0.6  Numerical instabilities with BLYP and TPSS
+  0.6  Numerical instabilities with: BLYP; TPSS; noncollinear GGA; LDA+U
 
 1) Organization
 1.0 Binary packages
@@ -94,6 +94,7 @@ TODO LIST - March 2011
         free; might be used for image parallelization as well.
   4.0.2 Better-structured relaxation and molecular dynamics (including the
         variable-cell case), with more extensive integration of PW and CP
+        (langevin code)
   4.0.3 Image parallelization on k-points of EXX (no longer working) should
         be replaced by pool parallelization.
 
@@ -210,6 +211,7 @@ TODO LIST - March 2011
         Could be done in the same way as for NEB?
   4.3.4 PH: use charge mixing instead of potential mixing
   4.3.5 D3: verify status of parallelization, clean it up if needed
+  4.3.6 Forces with LDA+U are awfully slow, especially for CP
 
 4.4 Cleanup
   4.4.1 Increase modularization by 
