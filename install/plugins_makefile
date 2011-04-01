@@ -33,7 +33,7 @@ test-w90: touch-dummy
 uncompress-w90: touch-dummy
 	if (test -e archive/$(W90).tar.gz) || (test ! -d ../W90); then \
 	( gzip -dc ../archive/$(W90).tar.gz | (cd ../; tar -xvf -)) ; \
-	( mv ../wannier90-latest ../W90) ; fi
+	( cd ../; ln -s wannier90* W90; cd install) ; fi
 	touch ./uncompress-w90
 configure-w90: touch-dummy
 	cd ../W90 ; \
@@ -56,7 +56,7 @@ test-want: touch-dummy
 uncompress-want: touch-dummy
 	if (test -e archive/$(WANT).tar.gz) || (test ! -d ../WANT); then \
 	( gzip -dc ../archive/$(WANT).tar.gz | (cd ../; tar -xvf -)) ; \
-	( mv ../want-latest ../WANT) ; fi
+	( cd ../; ln -s want* WANT; cd install) ; fi
 	touch ./uncompress-want
 configure-want: touch-dummy
 	cd ../WANT ; \
@@ -98,7 +98,7 @@ test-yambo: touch-dummy
 uncompress-yambo: touch-dummy
 	if (test -e archive/$(YAMBO).tar.gz) || (test ! -d ../YAMBO); then \
 	( gzip -dc ../archive/$(YAMBO).tar.gz | (cd ../; tar -xvf -)) ; \
-	( mv ../$(YAMBO) ../YAMBO) ; fi
+	(cd ../; ln -s  yambo* YAMBO; cd install) ; fi
 	touch ./uncompress-yambo
 configure-yambo: touch-dummy
 	cd ../YAMBO ; \
@@ -155,6 +155,7 @@ w90_clean:
 	rm -rf ./make-w90 ./configure-w90
 w90_veryclean:
 	if test -d ../W90; then (rm -R -f ../W90); fi
+	if test -d ../wannier90*; then (rm -R -f ../wannier90*); fi
 	rm -f ../bin/wannier90.x
 	rm -rf ./make-w90 ./configure-w90 ./uncompress-w90
 want_clean:
@@ -164,6 +165,7 @@ want_clean:
 
 want_veryclean:
 	if test -d ../WANT; then (rm -R -f ../WANT); fi
+	if test -d ../want*; then (rm -R -f ../want*); fi
 	- rm -rf ./make-want ./configure-want ./uncompress-want
 yambo_clean:
 	if test -d ../YAMBO; then (cd ../YAMBO; \
@@ -172,6 +174,7 @@ yambo_clean:
 
 yambo_veryclean:
 	if test -d ../YAMBO; then (rm -R -f ../YAMBO); fi
+	if test -d ../yambo*; then (rm -R -f ../yambo*); fi
 	- rm -rf ./make-yambo ./configure-yambo ./uncompress-yambo
 plumed_clean:
 	if test -d ../PLUMED; then (cd ../PLUMED; \
