@@ -289,8 +289,10 @@ SUBROUTINE electrons()
            !
            IF ( iverbosity > 0 .OR. first ) CALL write_ns()
            !
-           IF ( first .AND. istep == 0 .AND. &
-                starting_pot == 'atomic' ) CALL ns_adj() ;  rhoin%ns = rho%ns
+           IF ( first .AND. istep == 0 .AND. starting_pot == 'atomic' ) THEN
+              CALL ns_adj()
+               rhoin%ns = rho%ns
+           END IF
            IF ( iter <= niter_with_fixed_ns ) THEN
               WRITE( stdout, '(/,5X,"RESET ns to initial values (iter <= mixing_fixed_ns)",/)')
               rho%ns = rhoin%ns
