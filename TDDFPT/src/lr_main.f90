@@ -249,7 +249,9 @@ PROGRAM lr_main
         !
         call one_lanczos_step()
         !
-        IF ( lr_io_level > 0 .and. (mod(LR_iteration,restart_step)==0 .OR. LR_iteration==itermax .OR. LR_iteration==1) ) CALL lr_write_restart()
+        IF ( lr_io_level > 0 .and. (mod(LR_iteration,restart_step)==0 .OR. &
+                              LR_iteration==itermax .OR. LR_iteration==1) )&
+           CALL lr_write_restart()
      END DO lancz_loop1
      ! 
     if (charge_response == 1 ) then 
