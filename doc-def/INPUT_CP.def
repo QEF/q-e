@@ -497,9 +497,9 @@ input_description -distribution {Quantum Espresso} -package CP -program cp.x {
 	    info {
 		total majority spin charge - minority spin charge.
                 Used to impose a specific total electronic magnetization.
-		If unspecified then tot_magnetization variable is ignored and
-                the amount of electronic magnetization is determined during
-                the self-consistent cycle.
+		If unspecified, the tot_magnetization variable is ignored 
+                and the electronic magnetization is determined by the
+                occupation numbers (see card OCCUPATIONS) read from input.
 	    }
 	}
 	
