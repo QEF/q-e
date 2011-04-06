@@ -9,7 +9,7 @@ SDX    = $(HOME)/bin/sdx
 TCLKIT = $(HOME)/bin/tclkit
 
 # see the main.tcl.sh script for meaning of ITCL_EXACT
-TK_VERSION = 8.4
+TK_VERSION = 8.5
 
 ITCL_EXACT = -exact
 
