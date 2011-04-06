@@ -173,6 +173,7 @@ help iswitch -helpfmt helpdoc -helptext {
 1    all-electron calculation
 2    PP test calculation
 3    PP generation
+4    LDA-1/2 correction, needs a previously generated PP file
          </pre></blockquote>
 </ul>      
       
@@ -508,6 +509,25 @@ help verbosity -helpfmt helpdoc -helptext {
 if 'high' with iswitch=2,3 prints separately core and
 valence contributions to the energies. Print the
 frozen-core energy.
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help file_charge -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>file_charge</b></big>
+</li>
+<br><li> <em>Type: </em>CHARACTER</li>
+<br><li> <em>Default: </em> ' '
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+Name of the file where the code writes the all-electron
+total charge. No charge is written if file_charge=' '.
          </pre></blockquote>
 </ul>      
       
@@ -980,7 +1000,7 @@ This feature is available only for US-PP:
                the two channels for that Q.
 
 Note: if lpaw is true and which_augfun is set to AE real all-
-electron charge will be used, which will produce extremly
+electron charge will be used, which will produce extremely
 hard augmentation.
             </pre></blockquote>
 </ul>      
@@ -1318,7 +1338,7 @@ help nconf -helpfmt helpdoc -helptext {
          </li>
 <br><li> <em>Description:</em>
 </li>
-<blockquote><pre> the number of configurations to be tested
+<blockquote><pre> the number of configurations to be tested. For iswitch = 4 nconf=2
          </pre></blockquote>
 </ul>      
       
@@ -1458,6 +1478,25 @@ configuration are calculated. The eigenvalues, orbitals
 and energies of the other configurations are calculated
 with the core of the first configuration.
 The first configuration must be spin-unpolarized.
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help rcutv -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>rcutv</b></big>
+</li>
+<br><li> <em>Type: </em>REAL</li>
+<br><li> <em>Default: </em> -1.0
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+Cutoff distance (CUT) for the inclusion of LDA-1/2 potential.
+                  Needed (mandatory) only if iswitch = 4
          </pre></blockquote>
 </ul>      
       

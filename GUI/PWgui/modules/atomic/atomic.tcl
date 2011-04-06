@@ -21,10 +21,13 @@ module LD1\#auto -title "PWSCF GUI: module LD1.x" -script {
 		var iswitch {
 		    -label     "Type of calculation (iswitch):"
 		    -widget    radiobox
-		    -textvalue {"All-Electron"
+		    -textvalue {
+			"All-Electron"
 			"PseudoPotential Generation"
-			"PseudoPotential Test"}
-		    -value     {1 3 2}
+			"PseudoPotential Test"
+			"LDA-1/2 correction"
+		    }
+		    -value     {1 3 2 4}
 		    -default "All-Electron" 
 		}
 		var zed {
@@ -110,6 +113,11 @@ module LD1\#auto -title "PWSCF GUI: module LD1.x" -script {
 		    -label "Verbosity of output (verbosity):"
 		    -textvalue {low high} -value {'low' 'high'}
 		    -widget radiobox
+		}
+		var file_charge {
+		    -widget   entryfileselectquote
+		    -label    "Name of the file containing the all-electron total charge (file_charge):"
+		    -fmt      %S -validate string
 		}
 		var beta  {
 		    -label    "Mixing parameter for self-consistency (beta):"
@@ -440,6 +448,10 @@ module LD1\#auto -title "PWSCF GUI: module LD1.x" -script {
 	    var decut  {
 		-label    "Step [Ry] for cutoff in ghost/convergence test (decut):"
 		-validate  fortranposreal
+	    }
+	    var rcutv {
+		-label "Cutoff distance for the inclusion of LDA-1/2 potential (rcutv):"
+		-validate  fortranreal
 	    }
 	}
 
