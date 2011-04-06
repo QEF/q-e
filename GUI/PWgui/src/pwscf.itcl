@@ -19,7 +19,7 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 #
-# $Id: pwscf.itcl,v 1.14 2010-05-05 09:32:36 kokalj Exp $ 
+# $Id: pwscf.itcl,v 1.15 2011-04-06 10:14:48 kokalj Exp $ 
 #
 
 tk_setPalette  #d9d9d9
@@ -69,6 +69,10 @@ $gui addModule module pw "PW.X" [file join $env(PWGUI) modules pw pw.tcl] {
 
 $gui addModule separator sep1
 
+$gui addModule module neb "NEB.X's neb.dat" [file join $env(PWGUI) modules neb neb.tcl] { 
+    {{NEB.X (neb.dat) Input Files} {*.dat}}
+}
+
 $gui addModule module ph "PH.X" [file join $env(PWGUI) modules ph ph.tcl] {
     {{PH.X Input Files} {*.ph.in *.ph.inp}}
 }
@@ -104,6 +108,7 @@ $gui addHelp help usersguide "User's Guide for Quantum-ESPRESSO" [file join $env
 $gui addHelp separator
 
 $gui addHelp help pw           "PW.X Input Syntax"  [file join $env(PWGUI) doc pwdocs INPUT_PW.html] none
+$gui addHelp help neb       "NEB.DAT Input Syntax"  [file join $env(PWGUI) doc pwdocs INPUT_NEB.html] none
 $gui addHelp help ph           "PH.X Input Syntax"  [file join $env(PWGUI) doc pwdocs INPUT_PH.html] none
 $gui addHelp help pp           "PP.X Input Syntax"  [file join $env(PWGUI) doc pwdocs INPUT_PP.html] none
 $gui addHelp help projwfc "ProjWFC.X Input Syntax"  [file join $env(PWGUI) doc pwdocs INPUT_PROJWFC.html] none
