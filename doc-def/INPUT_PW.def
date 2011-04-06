@@ -33,10 +33,6 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 	  ...
 	 / ]
 
-	[ &EE
-	  ...
-	 / ]
-
 	ATOMIC_SPECIES
 	 X  Mass_X  PseudoPot_X
 	 Y  Mass_Y  PseudoPot_Y
