@@ -1944,28 +1944,6 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 
 
     #
-    # CLIMBING_IMAGES
-    #
-
-    card CLIMBING_IMAGES {
-	label { 
-    	    Optional card, needed only if CI_scheme = 'manual', ignored otherwise ! 
-    	}
-
-    	syntax {
-    	    list climbing_images_list -type INTEGER {
-    		format { index1, index2, ... indexN }
-    		info {		
-    		    index1, index2, ..., indexN are indices of the images to which the 
-    		    Climbing-Image procedure apply. If more than one image is specified 
-    		    they must be separated by a comma.
-    		}
-    	    }
-    	}
-    }
-
-
-    #
     # CONSTRAINTS
     #
 
