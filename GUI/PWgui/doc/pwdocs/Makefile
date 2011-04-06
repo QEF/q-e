@@ -3,6 +3,7 @@ PW_DOC_DIR    = $(TOPDIR)/Doc
 
 INPUT_FILES_HTML = \
         INPUT_PW.html \
+	INPUT_NEB.html \
         INPUT_PH.html \
         INPUT_PP.html \
         INPUT_PROJWFC.html \
@@ -30,6 +31,7 @@ clean_links:
 
 input_html: links 
 	./htmlise.sh INPUT_PW.txt      > INPUT_PW.html
+	./htmlise.sh INPUT_NEB.txt     > INPUT_NEB.html
 	./htmlise.sh INPUT_PH.txt      > INPUT_PH.html
 	./htmlise.sh INPUT_PP.txt      > INPUT_PP.html
 	./htmlise.sh INPUT_PROJWFC.txt > INPUT_PROJWFC.html
