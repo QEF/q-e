@@ -24,6 +24,7 @@ proc Usage {} {
   Where module is one of:
   
   \tpw
+  \tneb
   \tph 
   \tpp 
   \tprojwfc
@@ -67,6 +68,7 @@ source [file join $pwguidir init.tcl]
 
 set mappings {
     pw        doc-def   INPUT_PW 
+    neb       doc-def   INPUT_NEB
     ph        doc-def   INPUT_PH
     pp        doc-def   INPUT_PP
     projwfc   doc-def   INPUT_PROJWFC
