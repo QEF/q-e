@@ -81,7 +81,8 @@ selects what to save in filplot:
    6  = spin polarization (rho(up)-rho(down))
 
    7  = contribution of a selected wavefunction to the
-        (pseudo-)charge density. Noncollinear case:
+        (pseudo-)charge density. For norm-conserving PPs,
+        |psi|^2 (psi=selected wavefunction). Noncollinear case:
         contribution of the given state to the charge or
         to the magnetization along the direction indicated
         by spin_component (0 = charge, 1 = x, 2 = y, 3 = z )
@@ -276,7 +277,7 @@ help lsign -helpfmt helpdoc -helptext {
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-if true and k point is Gamma, save |psi|^2 sign(psi)
+if true and k point is Gamma, plot |psi|^2 sign(psi)
                </pre></blockquote>
 </ul>      
       

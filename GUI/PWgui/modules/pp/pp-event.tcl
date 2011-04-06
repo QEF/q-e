@@ -7,7 +7,7 @@ tracevar plot_num w {
     switch -exact -- [vartextvalue plot_num] {
 	"charge density" -
 	"total potential (= V_bare + V_H + V_xc)" -
-	"the V_bare + V_H potential" -
+	"electrostatic potential (= V_bare + V_H)" -
 	"all-electron valence charge density (for PAW)" {
 	    widget spin_component enable
 	    widgetconfigure spin_component -textvalues {
@@ -62,7 +62,7 @@ tracevar plot_num w {
 	    groupwidget ildos enable
 	}
 
-	"the noncolinear magnetization" {
+	"noncolinear magnetization" {
 	    widget spin_component enable
 	    widgetconfigure spin_component -textvalues {
 		"absolute value"
@@ -142,7 +142,8 @@ tracevar iflag w {
 	
 	"3D plot" {
 	    switch -exact -- [vartextvalue output_format] {
-		"XCRYSDEN's XSF format (whole unit cell)" {
+		"XCRYSDEN's XSF format (whole unit cell)" -
+		"Gaussian cube-file format" {
 		    widget e1 disable
 		    widget e2 disable
 		    widget e3 disable
@@ -185,7 +186,8 @@ tracevar iflag w {
 tracevar output_format w {
     # also take output_format into account
     switch -exact -- [vartextvalue output_format] {
-	"XCRYSDEN's XSF format (whole unit cell)" {
+	"XCRYSDEN's XSF format (whole unit cell)" -
+	"Gaussian cube-file format" {
 	    widget e1 disable
 	    widget e2 disable
 	    widget e3 disable

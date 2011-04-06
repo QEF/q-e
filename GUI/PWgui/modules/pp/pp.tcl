@@ -34,7 +34,7 @@ module PP\#auto -title "PWSCF GUI: module PP.x" -script {
 		-textvalue {
 		    "charge density"
 		    "total potential (= V_bare + V_H + V_xc)"
-		    "local ionic potential"
+		    "local ionic potential (= V_bare)"
 		    "local density of states at E_fermi" 
 		    "local density of electronic entropy"
 		    "STM images"
@@ -43,9 +43,9 @@ module PP\#auto -title "PWSCF GUI: module PP.x" -script {
 		    "|psi|^2 (noncollinear case)"
 		    "electron localization function (ELF)"
 		    "integrated local density of states (ILDOS)"
-		    "the V_bare + V_H potential"
-		    "the electric field potential"
-		    "the noncolinear magnetization"
+		    "electrostatic potential (= V_bare + V_H)"
+		    "sawtooth electric field potential"
+		    "noncolinear magnetization"
 		    "all-electron valence charge density (for PAW)"
 		    "exchange-correlation magnetic field (for noncollinear)"
 		}
