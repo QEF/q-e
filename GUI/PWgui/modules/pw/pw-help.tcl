@@ -24,9 +24,7 @@ a string describing the task to be performed:
    'relax',
    'md',
    'vc-relax',
-   'vc-md',
-   'neb',
-   'smd'
+   'vc-md'
 
    (vc = variable-cell).
          </pre></blockquote>
@@ -130,7 +128,6 @@ help nstep -helpfmt helpdoc -helptext {
 <br><li> <em>Type: </em>INTEGER</li>
 <br><li> <em>Default: </em>
 1  if calculation = 'scf', 'nscf', 'bands';
-0  if calculation = 'neb', 'smd';
 50 for the other cases
          </li>
 <br><li> <em>Description:</em>
@@ -833,20 +830,24 @@ help starting_magnetization -helpfmt helpdoc -helptext {
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-starting spin polarization (values between -1 and 1)
-on atomic type 'i' in a spin-polarized calculation.
-Breaks the symmetry and provides a starting point for
-self-consistency. The default value is zero, BUT a value
-MUST be specified for AT LEAST one atomic type in spin
-polarized calculations. Note that if start from zero
-initial magnetization, you will get zero final magnetization
-in any case. If you desire to start from an antiferromagnetic
-state, you may need to define two different atomic species
+starting spin polarization on atomic type 'i' in a spin
+polarized calculation. Values range between -1 (all spins
+down for the valence electrons of atom type 'i') to 1
+(all spins up). Breaks the symmetry and provides a starting
+point for self-consistency. The default value is zero, BUT a
+value MUST be specified for AT LEAST one atomic type in spin
+polarized calculations, unless you constrain the magnetization
+(see "tot_magnetization" and "constrained_magnetization").
+Note that if you start from zero initial magnetization, you
+will invariably end up in a nonmagnetic (zero magnetization)
+state. If you want to start from an antiferromagnetic state,
+you may need to define two different atomic species
 corresponding to sublattices of the same atomic type.
+starting_magnetization is ignored if you are performing a
+non-scf calculation, if you are restarting from a previous
+run, or restarting from an interrupted run.
 If you fix the magnetization with "tot_magnetization",
 you should not specify starting_magnetization.
-If you are restarting from a previous run, or from an
-interrupted run, starting_magnetization is ignored.
          </pre></blockquote>
 </ul>      
       
@@ -1005,6 +1006,25 @@ symmetry in k-point generation
 
 
 # ------------------------------------------------------------------------
+help no_t_rev -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>no_t_rev</b></big>
+</li>
+<br><li> <em>Type: </em>LOGICAL</li>
+<br><li> <em>Default: </em> .FALSE.
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+if (.TRUE.) disable the usage of symmetry operations that
+require time reversal.
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
 help force_symmorphic -helpfmt helpdoc -helptext {
       <ul>
 <li> <em>Variable: </em><big><b>force_symmorphic</b></big>
@@ -1035,8 +1055,8 @@ help occupations -helpfmt helpdoc -helptext {
 'smearing':     gaussian smearing for metals
                 requires a value for degauss
 
-'tetrahedra' :  for calculation of DOS in metals
-                (see PRB49, 16223 (1994))
+'tetrahedra' :  especially suited for calculation of DOS
+                (see P.E. Bloechl, PRB49, 16223 (1994))
                 Requires uniform grid of k-points,
                 automatically generated (see below)
                 Not suitable (because not variational) for
@@ -1046,7 +1066,76 @@ help occupations -helpfmt helpdoc -helptext {
 
 'from_input' :  The occupation are read from input file.
                 Presently works only with one k-point
-                (LSDA allowed).
+                (LSDA, noncolinear allowed).
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help one_atom_occupations -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>one_atom_occupations</b></big>
+</li>
+<br><li> <em>Type: </em>LOGICAL</li>
+<br><li> <em>Default: </em> .FALSE.
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+This flag is used for isolated atoms (nat=1) together with
+occupations='from_input'. If it is .TRUE., the wavefunctions
+are ordered as the atomic starting wavefunctions, independently
+from their eigenvalue. The occupations indicate which atomic
+states are filled.
+The order of the states is written inside the UPF
+pseudopotential file.
+In the scalar relativistic case:
+S -&gt; l=0, m=0
+P -&gt; l=1, z, x, y
+D -&gt; l=2, r^2-3z^2, xz, yz, xy, x^2-y^2
+In the noncollinear magnetic case (with or without spin-orbit),
+each group of states is doubled. For instance:
+P -&gt; l=1, z, x, y for spin up, l=1, z, x, y for spin down.
+Up and down is relative to the direction of the starting
+magnetization.
+In the case with spin-orbit and time-reversal
+(starting_magnetization=0.0) the atomic wavefunctions are
+radial functions multiplied by spin-angle functions.
+For instance:
+P -&gt; l=1, j=1/2, m_j=-1/2,1/2. l=1, j=3/2,
+     m_j=-3/2, -1/2, 1/2, 3/2.
+In the magnetic case with spin-orbit the atomic wavefunctions
+can be forced to be spin-angle functions by setting
+starting_spin_angle to .TRUE..
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help starting_spin_angle -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>starting_spin_angle</b></big>
+</li>
+<br><li> <em>Type: </em>LOGICAL</li>
+<br><li> <em>Default: </em> .FALSE.
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+In the spin-orbit case when domag=.TRUE., by default,
+the starting wavefunctions are initialized as in scalar
+relativistic noncollinear case without spin-orbit.
+By setting starting_spin_angle=.TRUE. this behaviour can
+be changed and the initial wavefunctions are radial
+functions multiplied by spin-angle functions.
+When domag=.FALSE. the initial wavefunctions are always
+radial functions multiplied by spin-angle functions
+independently from this flag.
+When lspinorb is .FALSE. this flag is not used.
          </pre></blockquote>
 </ul>      
       
@@ -1465,17 +1554,14 @@ Currently available choices:
          no constraint
 
 'total':
-         total magnetization is constrained
-         If nspin=4 (noncolin=.True.) constraint is imposed by
+         total magnetization is constrained by
          adding a penalty functional to the total energy:
 
          LAMBDA * SUM_{i} ( magnetization(i) - fixed_magnetization(i) )**2
 
          where the sum over i runs over the three components of
          the magnetization. Lambda is a real number (see below).
-         If nspin=2 constraint is imposed by defining two Fermi
-         energies for spin up and down.
-         Only fixed_magnetization(3) can be defined in this case.
+         Noncolinear case only. Use "tot_magnetization" for LSDA
 
 'atomic':
          atomic magnetization are constrained to the defined
@@ -1854,6 +1940,26 @@ help diagonalization -helpfmt helpdoc -helptext {
 
 
 # ------------------------------------------------------------------------
+help ortho_para -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>ortho_para</b></big>
+</li>
+<br><li> <em>Type: </em>INTEGER</li>
+<br><li> <em>Default: </em> 0
+         </li>
+<br><li> <em>Status: </em> OBSOLETE: use command-line option " -ndiag XX" instead
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
 help diago_thr_init -helpfmt helpdoc -helptext {
       <ul>
 <li> <em>Variable: </em><big><b>diago_thr_init</b></big>
@@ -1987,7 +2093,7 @@ help startingpot -helpfmt helpdoc -helptext {
 </li>
 <blockquote><pre>
 'atomic': starting potential from atomic charge superposition
-          ( default for scf, *relax, *md, neb, smd )
+          ( default for scf, *relax, *md )
 
 'file'  : start from existing "charge-density.xml" file
           ( default, only possibility for nscf, bands )
@@ -2063,10 +2169,6 @@ help ion_dynamics -helpfmt helpdoc -helptext {
 <blockquote><pre>
 Specify the type of ionic dynamics.
 
-For constrained dynamics or constrained optimisations add the
-CONSTRAINTS card (when the card is present the SHAKE algorithm is
-                  automatically used).
-
 For different type of calculation different possibilities are
 allowed and different default values apply:
 
@@ -2076,10 +2178,13 @@ CASE ( calculation = 'relax' )
                            for structural relaxation
     'damp' :               use damped (quick-min Verlet)
                            dynamics for structural relaxation
+                           Can be used for constrained
+                           optimisation: see CONSTRAINTS card
 
 CASE ( calculation = 'md' )
     'verlet' : (default)   use Verlet algorithm to integrate
-                           Newton's equation
+                           Newton's equation. For constrained
+                           dynamics, see CONSTRAINTS card
     'langevin'             ion dynamics is over-damped Langevin
 
 CASE ( calculation = 'vc-relax' )
@@ -2261,6 +2366,9 @@ help ion_temperature -helpfmt helpdoc -helptext {
 'andersen'    control ionic temperature using Andersen thermostat
               see parameters "tempw" and "nraise"
 
+'initial'     initialize ion velocities to temperature "tempw"
+              and leave uncontrolled further on
+
 'not_controlled' (default) ionic temperature is not controlled
             </pre></blockquote>
 </ul>      
@@ -2397,7 +2505,7 @@ help upscale -helpfmt helpdoc -helptext {
 <li> <em>Variable: </em><big><b>upscale</b></big>
 </li>
 <br><li> <em>Type: </em>REAL</li>
-<br><li> <em>Default: </em> 10.D0
+<br><li> <em>Default: </em> 100.D0
             </li>
 <br><li> <em>Description:</em>
 </li>
@@ -2523,223 +2631,6 @@ help w_2 -helpfmt helpdoc -helptext {
 <blockquote><pre>
 Parameters used in line search based on the Wolfe conditions.
 (bfgs only)
-            </pre></blockquote>
-</ul>      
-      
-}
-
-
-# ------------------------------------------------------------------------
-help num_of_images -helpfmt helpdoc -helptext {
-      <ul>
-<li> <em>Variable: </em><big><b>num_of_images</b></big>
-</li>
-<br><li> <em>Type: </em>INTEGER</li>
-<br><li> <em>Default: </em> 0
-            </li>
-<br><li> <em>Description:</em>
-</li>
-<blockquote><pre>
-Number of points used to discretize the path
-(it must be larger than 3).
-            </pre></blockquote>
-</ul>      
-      
-}
-
-
-# ------------------------------------------------------------------------
-help opt_scheme -helpfmt helpdoc -helptext {
-      <ul>
-<li> <em>Variable: </em><big><b>opt_scheme</b></big>
-</li>
-<br><li> <em>Type: </em>CHARACTER</li>
-<br><li> <em>Default: </em> 'quick-min'
-            </li>
-<br><li> <em>Description:</em>
-</li>
-<blockquote><pre>
-Specify the type of optimization scheme:
-
-'sd'         : steepest descent
-
-'broyden'    : quasi-Newton Broyden's second method (suggested)
-
-'broyden2'   : another variant of the quasi-Newton Broyden's
-               second method to be tested and compared with the
-               previous one.
-
-'quick-min'  : an optimisation algorithm based on the
-               projected velocity Verlet scheme
-
-'langevin'   : finite temperature langevin dynamics of the
-               string (smd only). It is used to compute the
-               average path and the free-energy profile.
-            </pre></blockquote>
-</ul>      
-      
-}
-
-
-# ------------------------------------------------------------------------
-help CI_scheme -helpfmt helpdoc -helptext {
-      <ul>
-<li> <em>Variable: </em><big><b>CI_scheme</b></big>
-</li>
-<br><li> <em>Type: </em>CHARACTER</li>
-<br><li> <em>Default: </em> 'no-CI'
-            </li>
-<br><li> <em>Description:</em>
-</li>
-<blockquote><pre>
-Specify the type of Climbing Image scheme:
-
-'no-CI'      : climbing image is not used
-
-'auto'       : original CI scheme. The image highest in energy
-               does not feel the effect of springs and is
-               allowed to climb along the path
-
-'manual'     : images that have to climb are manually selected.
-               See also CLIMBING_IMAGES card
-            </pre></blockquote>
-</ul>      
-      
-}
-
-
-# ------------------------------------------------------------------------
-help first_last_opt -helpfmt helpdoc -helptext {
-      <ul>
-<li> <em>Variable: </em><big><b>first_last_opt</b></big>
-</li>
-<br><li> <em>Type: </em>LOGICAL</li>
-<br><li> <em>Default: </em> .FALSE.
-            </li>
-<br><li> <em>Description:</em>
-</li>
-<blockquote><pre>
-Also the first and the last configurations are optimized
-"on the fly" (these images do not feel the effect of the springs).
-            </pre></blockquote>
-</ul>      
-      
-}
-
-
-# ------------------------------------------------------------------------
-help temp_req -helpfmt helpdoc -helptext {
-      <ul>
-<li> <em>Variable: </em><big><b>temp_req</b></big>
-</li>
-<br><li> <em>Type: </em>REAL</li>
-<br><li> <em>Default: </em> 0.D0 Kelvin
-            </li>
-<br><li> <em>Description:</em>
-</li>
-<blockquote><pre>
-Temperature used for the langevin dynamics of the string.
-            </pre></blockquote>
-</ul>      
-      
-}
-
-
-# ------------------------------------------------------------------------
-help ds -helpfmt helpdoc -helptext {
-      <ul>
-<li> <em>Variable: </em><big><b>ds</b></big>
-</li>
-<br><li> <em>Type: </em>REAL</li>
-<br><li> <em>Default: </em> 1.D0
-            </li>
-<br><li> <em>Description:</em>
-</li>
-<blockquote><pre>
-Optimisation step length ( Hartree atomic units ).
-If opt_scheme="broyden", ds is used as a guess for the
-diagonal part of the Jacobian matrix.
-            </pre></blockquote>
-</ul>      
-      
-}
-
-
-# ------------------------------------------------------------------------
-grouphelp {k_max k_min} -helpfmt helpdoc -helptext {
-    <ul>
-<li> <em>Variables: </em><big><b>k_max, k_min</b></big>
-</li>
-<br><li> <em>Type: </em>REAL</li>
-<br><li> <em>Default: </em> 0.1D0 Hartree atomic units
-            </li>
-<br><li> <em>Description:</em>
-</li>
-<blockquote><pre>
-Set them to use a Variable Elastic Constants scheme
-elastic constants are in the range [ k_min, k_max ]
-this is useful to rise the resolution around the saddle point.
-            </pre></blockquote>
-</ul>
-    
-}
-
-
-# ------------------------------------------------------------------------
-help path_thr -helpfmt helpdoc -helptext {
-      <ul>
-<li> <em>Variable: </em><big><b>path_thr</b></big>
-</li>
-<br><li> <em>Type: </em>REAL</li>
-<br><li> <em>Default: </em> 0.05D0 eV / Angstrom
-            </li>
-<br><li> <em>Description:</em>
-</li>
-<blockquote><pre>
-The simulation stops when the error ( the norm of the force
-orthogonal to the path in eV/A ) is less than path_thr.
-            </pre></blockquote>
-</ul>      
-      
-}
-
-
-# ------------------------------------------------------------------------
-help use_masses -helpfmt helpdoc -helptext {
-      <ul>
-<li> <em>Variable: </em><big><b>use_masses</b></big>
-</li>
-<br><li> <em>Type: </em>LOGICAL</li>
-<br><li> <em>Default: </em> .FALSE.
-            </li>
-<br><li> <em>Description:</em>
-</li>
-<blockquote><pre>
-If. TRUE. the optimisation of the path is performed using
-mass-weighted coordinates. Useful together with quick-min
-optimization scheme, if some bonds are much stiffer than
-others. By assigning a larger (fictitious) mass to atoms
-with stiff bonds, one may use a longer time step "ds"
-            </pre></blockquote>
-</ul>      
-      
-}
-
-
-# ------------------------------------------------------------------------
-help use_freezing -helpfmt helpdoc -helptext {
-      <ul>
-<li> <em>Variable: </em><big><b>use_freezing</b></big>
-</li>
-<br><li> <em>Type: </em>LOGICAL</li>
-<br><li> <em>Default: </em> .FALSE.
-            </li>
-<br><li> <em>Description:</em>
-</li>
-<blockquote><pre>
-If. TRUE. the images are optimised according to their error:
-only those images with an error larger than half of the largest
-are optimised. The other images are kept frozen.
             </pre></blockquote>
 </ul>      
       
@@ -2880,103 +2771,7 @@ xy      = only the x and y axis are moved, angles are unchanged
 xz      = only the x and z axis are moved, angles are unchanged
 yz      = only the y and z axis are moved, angles are unchanged
 xyz     = x, y and z axis are moved, angles are unchanged
-xyt     = x1, x2, y2 (i.e. lower xy triangle of the 2 vectors)
-xys     = x1, y1, x2, y2 (i.e. xy square of the 2 vectors)
-xyzt    = x1, x2, y2, x3, y3, z3 (i.e. lower xyz triangle of
-          the 3 vectors)
-         </pre></blockquote>
-</ul>      
-      
-}
-
-
-# ------------------------------------------------------------------------
-help ecutcoarse -helpfmt helpdoc -helptext {
-      <ul>
-<li> <em>Variable: </em><big><b>ecutcoarse</b></big>
-</li>
-<br><li> <em>Type: </em>REAL</li>
-<br><li> <em>Default: </em> 100
-         </li>
-<br><li> <em>Description:</em>
-</li>
-<blockquote><pre>
-kinetic energy cutoff defining the grid used for
-the open boundary correction.
-         </pre></blockquote>
-</ul>      
-      
-}
-
-
-# ------------------------------------------------------------------------
-help mixing_charge_compensation -helpfmt helpdoc -helptext {
-      <ul>
-<li> <em>Variable: </em><big><b>mixing_charge_compensation</b></big>
-</li>
-<br><li> <em>Type: </em>REAL</li>
-<br><li> <em>Default: </em> 1.0
-         </li>
-<br><li> <em>Description:</em>
-</li>
-<blockquote><pre>
-scf mixing parameter for the correcting potential.
-         </pre></blockquote>
-</ul>      
-      
-}
-
-
-# ------------------------------------------------------------------------
-help n_charge_compensation -helpfmt helpdoc -helptext {
-      <ul>
-<li> <em>Variable: </em><big><b>n_charge_compensation</b></big>
-</li>
-<br><li> <em>Type: </em>INTEGER</li>
-<br><li> <em>Default: </em> 5
-         </li>
-<br><li> <em>Description:</em>
-</li>
-<blockquote><pre>
-the correcting potential is updated (mixed) every
-n_charge_compensation iteration only.
-         </pre></blockquote>
-</ul>      
-      
-}
-
-
-# ------------------------------------------------------------------------
-help comp_thr -helpfmt helpdoc -helptext {
-      <ul>
-<li> <em>Variable: </em><big><b>comp_thr</b></big>
-</li>
-<br><li> <em>Type: </em>REAL</li>
-<br><li> <em>Default: </em> 1.d-4
-         </li>
-<br><li> <em>Description:</em>
-</li>
-<blockquote><pre>
-inclusion of dcc correction begins when scf convergence
-is better than comp_thr.
-         </pre></blockquote>
-</ul>      
-      
-}
-
-
-# ------------------------------------------------------------------------
-help nlev -helpfmt helpdoc -helptext {
-      <ul>
-<li> <em>Variable: </em><big><b>nlev</b></big>
-</li>
-<br><li> <em>Type: </em>INTEGER</li>
-<br><li> <em>Default: </em> 4
-         </li>
-<br><li> <em>Description:</em>
-</li>
-<blockquote><pre>
-number of depth levels used by the multigrid solver.
+shape   = all axis and angles, keeping the volume fixed
          </pre></blockquote>
 </ul>      
       
@@ -2991,7 +2786,10 @@ help atomic_species -helpfmt helpdoc -helptext {
 <br><li> <em>Type: </em>CHARACTER</li>
 <br><li> <em>Description:</em>
 </li>
-<blockquote><pre> label of the atom
+<blockquote><pre>
+label of the atom. Acceptable syntax:
+chemical symbol X (1 or 2 characters, case-insensitive)
+or "Xn", n=0,..., 9; "X_*", "X-*" (e.g. C1, As_h)
                   </pre></blockquote>
 </ul><ul>
 <li> <em>Variable: </em><big><b>Mass_X</b></big>
@@ -3094,17 +2892,10 @@ NOTE: each atomic coordinate can also be specified as a simple algebrical expres
 <blockquote><pre>
 component i of the force for this atom is multiplied by if_pos(i),
 which must be either 0 or 1.  Used to keep selected atoms and/or
-selected components fixed in neb, smd, MD dynamics or
+selected components fixed in MD dynamics or
 structural optimization run.
                            </pre></blockquote>
 </ul>   
-    
-}
-
-
-# ------------------------------------------------------------------------
-help atomic_coordinates_last_image -helpfmt helpdoc -helptext {
-       
     
 }
 
@@ -3252,25 +3043,6 @@ Crystal lattice vectors:
 In alat units if celldm(1) was specified or in a.u. otherwise.
                   </pre></blockquote>
 </ul>   
-    
-}
-
-
-# ------------------------------------------------------------------------
-help climbing_images_list -helpfmt helpdoc -helptext {
-    <ul>
-<li> <em>Variables: </em><big><b> index1, index2, ... indexN
-            </b></big>
-</li>
-<br><li> <em>Type: </em>INTEGER</li>
-<br><li> <em>Description:</em>
-</li>
-<blockquote><pre>
-index1, index2, ..., indexN are indices of the images to which the
-Climbing-Image procedure apply. If more than one image is specified
-they must be separated by a comma.
-            </pre></blockquote>
-</ul>      
     
 }
 

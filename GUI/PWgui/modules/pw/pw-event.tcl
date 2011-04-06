@@ -101,31 +101,6 @@ tracevar calculation w {
 		"(Beeman) dynamics of the new Wentzcovitch extended lagrangian  <w>"
 	    }
 	}
-	'neb' {
-	    set enable  {ions path neb constraints_card}
-	    set disable {cell vc_md}
-
-	    widget opt_scheme enable
-	    widgetconfigure opt_scheme -textvalues {
-		"optimization algorithm based on molecular dynamics  <quick-min>"
-		"Broyden method  <broyden>"
-		"Alternate Broyden method  <broyden2>"
-		"steepest descent  <sd>"
-	    }
-	}
-	'smd' {
-	    set enable  {ions path constraints_card}
-	    set disable {cell vc_md neb}
-
-	    widget opt_scheme enable
-	    widgetconfigure opt_scheme -textvalues {
-		"optimization algorithm based on molecular dynamics  <quick-min>"
-		"Broyden method  <broyden>"
-		"Alternate Broyden method  <broyden2>"
-		"steepest descent  <sd>"
-		"finite temperature langevin dynamics  <langevin>"
-	    }
-	}
     }
 
     foreach group $enable {
@@ -140,42 +115,11 @@ tracevar calculation w {
     varset ion_dynamics       -value [varvalue ion_dynamics]
     varset ion_temperature    -value [varvalue ion_temperature]
     varset cell_dynamics      -value [varvalue cell_dynamics]
-    varset opt_scheme         -value [varvalue opt_scheme]
-    varset CI_scheme          -value [varvalue CI_scheme]
     varset constraints_enable -value [varvalue constraints_enable]
 
-    # take care of NEB || SMD coordinates
-
-    set ni [varvalue  path_inter_nimages]; if { $ni == "" } { set ni 0 }
-    
-    if { $calc == "'neb'" || $calc == "'smd'" } {    	
-    	widget path_inter_nimages  enable
-    	widgetconfigure atomic_coordinates -caption "Enter atomic coordinates for the FIRST image:"
-    	
-    	keywordconfigure first_image  enable
-    	keywordconfigure last_image   enable
-    	
-	for {set i 1} {$i <= $ni} {incr i} {
-    	    keywordconfigure intermediate_image_$i  enable
-    	    widget           atomic_coordinates_${i}_inter  create
-	    widgetconfigure  atomic_coordinates_${i}_inter -rows $nat
-    	}
-    	widget atomic_coordinates_last_image  create
-    	
-    } else {
-	widget path_inter_nimages  disable
-    	widgetconfigure atomic_coordinates -caption "Enter atomic coordinates:"
-    	
-    	keywordconfigure first_image  disable
-    	keywordconfigure last_image   disable
-		
-	for {set i 1} {$i <= $ni} {incr i} {
-	    keywordconfigure intermediate_image_$i  disable
-	    widget   atomic_coordinates_${i}_inter  forget
-	}
-	widget atomic_coordinates_last_image  forget	
-    }
+    widgetconfigure atomic_coordinates -caption "Enter atomic coordinates:"    	
 }
+
 
 
 # ------------------------------------------------------------------------
@@ -423,22 +367,6 @@ tracevar ion_dynamics w {
     #}	     
 }
 
-tracevar opt_scheme w {
-    if { [regexp smd [varvalue calculation]] && [regexp langevin [varvalue opt_scheme]] } {
-	widget temp_req enable
-    } else {
-	widget temp_req disable
-    }
-}
-
-tracevar CI_scheme w {
-    if { [varvalue calculation] == "'neb'" && [varvalue CI_scheme] == "'manual'" } {
-	groupwidget climbing_images enable
-    } else {
-	groupwidget climbing_images disable
-    }
-}
-
 tracevar n_fe_step w {
     widgetconfigure fe_step -end [varvalue n_fe_step]
 }
@@ -446,42 +374,6 @@ tracevar n_fe_step w {
 # ------------------------------------------------------------------------
 # Page: CELL_PARAMETERS, ATOMIC_SPECIES, ATOMIC_POSITIONS
 # ------------------------------------------------------------------------
-
-tracevar path_inter_nimages w {
-    # Note: this is a bit complicated ...
-    
-    set nat     [varvalue nat]
-    set ni      [varvalue path_inter_nimages] 
-    set ni_old  [varvalue old_path_inter_nimages]
-    if { $nat == ""    } { set nat 1 }
-    if { $ni == ""     } { set ni 0 }
-    if { $ni_old == "" } { set ni_old 0 }
-    
-    if { $ni_old > $ni } {
-	# delete tables ...
-
-	for {set i $ni_old} { $i > $ni } {incr i -1} {
-	    keywordconfigure intermediate_image_$i  disable
-	    widget atomic_coordinates_${i}_inter    forget
-	}
-    } elseif { $ni_old < $ni } {
-	# create tables ...
-	
-	widget atomic_coordinates_last  forget ; # this forces the right pack-order
-
-	for {set i 1} {$i <= $ni} {incr i} {
-	    keywordconfigure intermediate_image_$i  enable
-	    widget           atomic_coordinates_${i}_inter  create
-	    widgetconfigure  atomic_coordinates_${i}_inter -rows $nat
-	}
-
-    	widget atomic_coordinates_last_image  create
-    }
-	
-
-    # remember current value of path_inter_nimages
-    varset old_path_inter_nimages -value $ni
-}
 
 
 #
@@ -546,38 +438,6 @@ tracevar constraints_enable w {
 tracevar nconstr w {
     set nc [varvalue nconstr]    
     widgetconfigure constraints_table -rows $nc
-
-    #set nc_old  [varvalue old_nconstr]
-    #if { $nc_old == "" } { set nc_old 0 }
-    #if { $nc == "" } { set nc 0 }
-    #if { $nc < 0 } { set nc 0 }
-    #if { $nc_old < 0 } { set nc_old 0 }
-    #
-    #if { $nc_old > $nc } {
-    #	for {set i $nc_old} { $i > $nc } {incr i -1} {
-    #	    puts stderr "*** i= $i nc=$nc old=$nc_old forget"
-    #	    widget constraint_type.$i forget
-    #	    widget constraint.$i forget
-    #	    widget constr.${i}_1 forget
-    #	    widget constr.${i}_2 forget
-    #	    widget constr.${i}_3 forget
-    #	    widget constr.${i}_4 forget
-    #	    widget constr_target_$i forget
-    #	}
-    #} elseif { $nc_old < $nc } {
-    #	for {set i $nc} {$i > $nc_old} {incr i -1} {
-    #	    puts stderr "*** i= $i create"
-    #	    widget constraint_type.$i create
-    #	    widget constraint.$i create
-    #	    widget constr.${i}_1 create
-    #	    widget constr.${i}_2 create
-    #	    widget constr.${i}_3 create
-    #	    widget constr.${i}_4 create
-    #	    widget constr_target_$i create
-    #	}
-    #}
-    #
-    #varset old_nconstr -value $nc
 }
 
 tracevar assume_isolated w {    
@@ -595,15 +455,7 @@ tracevar assume_isolated w {
 # ------------------------------------------------------------------------
 # POST-PROCESSING: assign default values for "traced" variables, ...
 # ------------------------------------------------------------------------
-postprocess {
-    # BEWARE: it is assumed that 50 intermediate images is the
-    # largest allowed number (this is dirty)
-    varset old_path_inter_nimages -value 50
-    varset path_inter_nimages     -value 0
-
-    #varset old_nconstr -value 50
-    #varset nconstr     -value 0
-    
+postprocess {    
     varset calculation     -value 'scf'
     varset how_lattice     -value celldm
     varset ibrav           -value {}
@@ -612,7 +464,6 @@ postprocess {
     varset lda_plus_u      -value {}
     varset occupations     -value {}
     varset diagonalization -value {}
-    varset CI_scheme       -value {}
     varset ion_dynamics    -value {}
     varset K_POINTS_flags  -value automatic
     varset CELL_PARAMETERS_flags -value cubic

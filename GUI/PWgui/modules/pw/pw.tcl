@@ -32,8 +32,6 @@ module PW -title "PWSCF GUI: module PW.x" -script {
 			"Ionic relaxation with Variable-Cell  <vc-relax>"
 			"Molecular dynamics  <md>"
 			"Molecular dynamics with Variable-Cell  <vc-md>"
-			"Nudged Elastic Band  <neb>"
-                        "String Method Dynamics  <smd>"
 		    }
 		    -value {
 			'scf'
@@ -43,8 +41,6 @@ module PW -title "PWSCF GUI: module PW.x" -script {
 			'vc-relax'
 			'md'
 			'vc-md'
-			'neb'
-                        'smd'
 		    }
 		    -default "Self-Consistent-Field  <scf>"
 		}
@@ -108,7 +104,7 @@ module PW -title "PWSCF GUI: module PW.x" -script {
 			high default low minimal none
 		    }
 		    -value {
-			'high' 'default' 'low' 'minimal' 'none'
+			'high' 'default' 'low' 'none'
 		    }
 		    -widget optionmenu
 		}
@@ -358,6 +354,13 @@ module PW -title "PWSCF GUI: module PW.x" -script {
 		    -value     { .true. .false. }
 		}
 
+		var no_t_rev { 
+		    -label     "Disable the symmetry operations that require time reversal (no_t_rev):"
+		    -widget    radiobox
+		    -textvalue { Yes No }	      
+		    -value     { .true. .false. }
+		}
+
 		var force_symmorphic { 
 		    -label     "Force the symmetry group to be symmorphic (force_symmorphic):"
 		    -widget    radiobox
@@ -393,6 +396,22 @@ module PW -title "PWSCF GUI: module PW.x" -script {
 		    }
 		}
 
+		var one_atom_occupations {
+		    -text  "For isolated atoms only (nat=1)"
+		    -label "Order the wavefunctions as the atomic starting wavefunctions (one_atom_occupations):"
+		    -widget    radiobox
+		    -textvalue { Yes No }	      
+		    -value     { .true. .false. }
+		}
+
+		var starting_spin_angle {
+		    -text  "For spin-orbit case when domag=.TRUE."
+		    -label "Multiply the initial radial wavefunctions by spin-angle functions (starting_spin_angle):"
+		    -widget    radiobox
+		    -textvalue { Yes No }	      
+		    -value     { .true. .false. }
+		}
+
 		var degauss {
 		    -label    "Gaussian spreading for BZ integration \[in Ry\] (degauss):"
 		    -validate fortrannonnegreal
@@ -419,8 +438,8 @@ module PW -title "PWSCF GUI: module PW.x" -script {
 
 		var nspin {
 		    -label     "Perform spin-polarized calculation (nspin):"
-		    -textvalue {No Yes}
-		    -value     {1  2}
+		    -textvalue {No Yes "Yes noncollinear"}
+		    -value     {1  2  4}
 		    -widget    radiobox
 		}
 		
@@ -608,7 +627,7 @@ module PW -title "PWSCF GUI: module PW.x" -script {
 		    -textvalue {
 			"Makov-Payne <makov-payne>"
 			"Martyna-Tuckerman <martyna-tuckerman>"
-			"Density  CounterCharge <dcc>"
+			"Density Counter Charge <dcc>"
                         "No correction <none>"
 		    }
 		    -value {'makov-payne' 'martyna-tuckerman' 'dcc' 'none'}
@@ -737,7 +756,7 @@ module PW -title "PWSCF GUI: module PW.x" -script {
 		    }
 		    -widget optionmenu
 		}
-
+		
 		var diago_thr_init {
 		    -label "Convergence threshold for 1st iterative diagonalization (diago_thr_init):"
 		    -validate fortranreal
@@ -788,6 +807,14 @@ module PW -title "PWSCF GUI: module PW.x" -script {
 		    -widget    radiobox
 		    -textvalue { Yes No }	      
 		    -value     { .true. .false. }		
+		}
+
+		separator -label "--- Obsolete variables ---"
+
+		var ortho_para {
+		    -text     "OBSOLETE: use command-line option \" -ndiag XX\" instead"
+		    -label    "(ortho_para):"
+		    -validate integer
 		}
 	    }    
 	}
@@ -895,6 +922,7 @@ module PW -title "PWSCF GUI: module PW.x" -script {
 			    "reduce ionic temperature via delta_t&nraise  <reduce-T>"
 			    "\"soft\" Berendsen velocity rescaling via tempw&nraise  <berendsen>"
 			    "use Andersen thermostat via tempw&nraise  <andersen>"
+			    "initialize to temperature \"tempw\" and leave uncontrolled <initial>"
 			    "not controlled  <not_controlled>"
 			}
 			-value {
@@ -904,6 +932,7 @@ module PW -title "PWSCF GUI: module PW.x" -script {
 			    'reduce-T'
 			    'berendsen'
 			    'andersen'
+			    'initial'
 			    'not_controlled'
 			}
 		    }
@@ -927,13 +956,6 @@ module PW -title "PWSCF GUI: module PW.x" -script {
 			-label    "Rescaling interval (nraise):"
 			-validate integer
 		    }
-
-		    #var monitor_constr {
-		    #	-label "Only monitor (not impose) constraints (monitor_constr):"
-		    #	-widget    radiobox
-		    #	-textvalue { Yes No }	      
-		    #	-value     { .true. .false. }
-		    #}
 
 		    var refold_pos {
 			-label "Refolded ions at each step into the supercell (refold_pos):"
@@ -978,111 +1000,7 @@ module PW -title "PWSCF GUI: module PW.x" -script {
 			var w_1 -label "w_1:" -validate fortranreal			
 			var w_2 -label "w_2:" -validate fortranreal			
 		    }
-		}
-
-		separator -label "--- Nudget Elastic Band (NEB) and String Method Dynamics (SMD) ---"
-		
-		group path {
-		    var num_of_images {
-			-label   "Number of images used to discretize the path (num_of_images):"
-			-widget   spinint
-			-validate posint
-		    }
-		    
-		    var first_last_opt {
-			-label "Optimize also the first and the last configurations (first_last_opt):"
-			-textvalue { Yes No }
-			-value     { .TRUE. .FALSE. }
-			-widget    radiobox
-		    }
-		    		    
-		    var opt_scheme {
-			-label "Type of optimization scheme (opt_scheme):"
-			-value {
-			    'quick-min' 
-                            'broyden'
-                            'broyden2'
-			    'sd'
-			    'langevin'
-			}
-			-textvalue {
-			    "optimization algorithm based on molecular dynamics  <quick-min>"
-                            "Broyden method  <broyden>"
-                            "Alternate Broyden method  <broyden2>"
-			    "steepest descent  <sd>"
-			    "finite temperature langevin dynamics  <langevin>"
-			}
-			-widget optionmenu
-		    }
-
-		    #var damp {
-		    #	-label    "Damping coefficent for damped-dyn (damp):"
-		    #	-validate fortranreal
-		    #}
-		    
-		    var temp_req {
-			-label    "Temperature used for langevin dynamics of the string (temp_req):"
-			-validate fortranposreal
-		    }
-
-		    var ds {
-			-label    "Optimization step length (ds):"
-			-validate fortranposreal
-		    }
-		    
-		    var path_thr {
-			-label "Convergence threshold for path optimization (path_thr):"
-			-validate fortranposreal
-		    }
-                    
-                    var use_freezing {
-			-label "Only the images with larger errors are optimised (use_freezing):"
-			-textvalue { Yes No }
-			-value     { .TRUE. .FALSE. }
-			-widget    radiobox
-		    }
-
-                    var use_masses {
-			-label "The optimisation is done with mass-weighted coordinates (use_masses):"
-			-textvalue { Yes No }
-			-value     { .TRUE. .FALSE. }
-			-widget    radiobox
-		    }
-
-		    #var write_save {
-		    #	-label "Write a prefix.save file for each image (write_save):"
-		    #	-textvalue { Yes No }
-		    #	-value     { .TRUE. .FALSE. }
-		    #	-widget    radiobox
-		    #}
-                                        
-		}
-                
-                group neb {
-              
-		    var CI_scheme {
-			-label "Type of Climbing Image (CI) scheme (CI_scheme):"
-			-textvalue {
-			    "do not use climbing image  <no-CI>"
-			    "image highest in energy is allowed to climb  <auto>"
-			    "climbing images are manually selected  <manual>"
-			}
-			-value {
-			    'no-CI'
-			    'auto'
-			    'manual'
-			}
-			-widget optionmenu
-		    }
-              
-		    group elastic_constants -name "Elastic Constants for NEB spring:" -decor normal {
-			packwidgets left
-			var k_max -label "k_max:" -validate fortranposreal			
-			var k_min -label "k_min:" -validate fortranposreal			
-		    }
-              
-                }
-                
+		}		                
 	    }
 	}
     }
@@ -1144,7 +1062,6 @@ module PW -title "PWSCF GUI: module PW.x" -script {
 		-label "Which of the cell parameters should be moved (cell_dofree):"
 		-textvalue {
 		    "all     = all axis and angles are propagated"
-		    "volume  = the cell is simply rescaled, without changing the shape"
 		    "x       = only the x axis is moved"
 		    "y       = only the y axis is moved"
 		    "z       = only the z axis is moved"
@@ -1152,53 +1069,15 @@ module PW -title "PWSCF GUI: module PW.x" -script {
 		    "xz      = only the x and z axis are moved, angles are unchanged"
 		    "yz      = only the y and z axis are moved, angles are unchanged"
 		    "xyz     = x, y and z axis are moved, angles are unchanged"
-		    "xyt     = x1, x2, y2 (i.e. lower xy triangle of the 2 vectors)"
-		    "xys     = x1, y1, x2, y2 (i.e. xy square of the 2 vectors)"
-		    "xyzt    = x1, x2, y2, x3, y3, z3 (i.e. lower xyz triangle of the 3 vectors)"
+		    "shape   = all axis and angles, keeping the volume fixed"
 		}	    
 		-value {
-		    'all' 'volume' 'x' 'y' 'z' 'xy' 'xz' 'yz' 'xyz' 'xyt' 'xys' 'xyzt'  
+		    'all' 'x' 'y' 'z' 'xy' 'xz' 'yz' 'xyz' 'shape'  
 		}
 		-widget optionmenu
 	    }
 	}
     }
-
-    ########################################################################
-    ##                                                                    ##
-    ##                      &EE NAMELIST                              ##
-    ##                                                                    ##
-    ########################################################################
-
-    page eePage -name "EE" {
-	namelist ee -name "EE" {
-	    var ecutcoarse {
-		-validate fortranposreal 
-		-label "Kinetic energy cutoff for the open boundary (ecutcoarse):"
-	    }
-        
-
-	    var mixing_charge_compensation {
-		-validate fortranreal 
-		-label "Scf mixing parameter for the correcting potential (mixing_charge_compensation):"
-            }        
-
-	    var n_charge_compensation {
-		-validate posint
-		-label "Iteration interval for updating the correcting potential (n_charge_compensation):"
-	    }
-
-	    var comp_thr {
-		-validate fortranposreal
-		-label "Scf convergence treshold for starting the dcc correction (comp_thr):"
-	    }
-
-	    var nlev {
-		-validate posint
-		-label "Number of depth levels used by the multigrid solver (nlev):"
-            }
-        }
-    }	        
 
 
     ########################################################################
@@ -1264,17 +1143,6 @@ module PW -title "PWSCF GUI: module PW.x" -script {
 	    }
 	}
 		
-	scriptvar old_path_inter_nimages
-	auxilvar path_inter_nimages {
-	    -label    "Number of intermediate images:"
-	    -widget   spinint
-	    -validate nonnegint
-	    -default  0
-	}
-	
-	# first_image
-	
-	keyword first_image first_image\n; # only for calculation == 'neb' || 'smd'
 	table atomic_coordinates {
 	    -caption   "Enter atomic coordinates:"
 	    -head      {Atomic-label X-Coordinate Y-Coordinate Z-Coordinate if_pos(1) if_pos(2) if_pos(3)}
@@ -1291,46 +1159,7 @@ module PW -title "PWSCF GUI: module PW.x" -script {
 
 	loaddata atomic_coordinates ::pwscf::pwLoadAtomCoor \
 	    "Load atomic coordinates from file ..."    
-
-	# intermediate_image
-	    
-	# BEWARE: it is assumed that 50 intermediate images is the
-	# largest allowed number (this is dirty)
-	    	
-	for {set i 1} {$i <= 50} {incr i} {
-	    keyword intermediate_image_$i intermediate_image\n
-	    table atomic_coordinates_${i}_inter [subst {
-		-caption   "Enter atomic coordinates for INTERMEDIATE image \#.$i:"
-		-head      {Atomic-label X-Coordinate Y-Coordinate Z-Coordinate}
-		-validate  {string fortranreal fortranreal fortranreal}
-		-cols      4
-		-rows      1
-		-outfmt    {"  %3s" "  %14.9f" %14.9f %14.9f}
-		-widgets   {entry entry entry entry}
-		-onvalues  1
-		-offvalues 0
-	    }]
-	    loaddata atomic_coordinates_${i}_inter [list ::pwscf::pwLoadAtomCoorInter $i] \
-		"Load atomic coordinates from file ..."    
-	}
-	
-	# last_image
-	
-	keyword last_image last_image\n
-	table atomic_coordinates_last_image {
-	    -caption   "Enter atomic coordinates for LAST image:"
-	    -head      {Atomic-label X-Coordinate Y-Coordinate Z-Coordinate}
-	    -validate  {string fortranreal fortranreal fortranreal}
-	    -cols      4
-	    -rows      1
-	    -outfmt    {"  %3s" "  %14.9f" %14.9f %14.9f}
-	    -widgets   {entry entry entry entry}
-	    -onvalues  1
-	    -offvalues 0
-	}
-	loaddata atomic_coordinates_last_image ::pwscf::pwLoadAtomCoorLast \
-	    "Load atomic coordinates from file ..."    
-    }    
+    }
 
 
     ########################################################################
@@ -1398,22 +1227,10 @@ module PW -title "PWSCF GUI: module PW.x" -script {
 
     ########################################################################
     ##                                                                    ##
-    ##         PAGE: CLIMBING_IMAGES & CONSTRAINTS & OCCUPATIONS          ##
+    ##         PAGE: CONSTRAINTS & OCCUPATIONS          ##
     ##                                                                    ##
     ########################################################################
     page otherPage -name "Other Cards" {
-
-	# CARD: CLIMBING_IMAGES
-
-	group climbing_images -name "Card: CLIMBING_IMAGES" -decor normal {
-	    keyword climbing_images_key CLIMBING_IMAGES\n
-	    line climbing_images_line -decor none {
-		var climbing_images_list {
-		    -label "List of climbing images, separated by a comma:"
-		    -infmt %S
-		}
-	    }
-	}
 
 	# CARD: CONSTRAINTS
 	
@@ -1455,80 +1272,8 @@ module PW -title "PWSCF GUI: module PW.x" -script {
 		    -outfmt   {"  %s  " %S}
 		    -infmt    {%d %S}
 		}
-		#scriptvar old_nconstr
-		#for {set i 1} {$i <= 50} {incr i} {	    
-		#	line constraint.$i -decor none [subst { 		    
-		#	    var constraint_type.$i {
-		#		-label "Type of constraint:"
-		#		-widget optionmenu
-		#		-value {
-		#		    'type_coord'      
-		#		    'atom_coord'      
-		#		    'distance'        
-		#		    'planar_angle'    
-		#		    'torsional_angle' 
-		#		    'bennett_proj'    
-		#		}
-		#	    }
-		#	    
-		#	    packwidgets left		    
-		#	    var constr.${i}_1 -label "constr(1,$i):" -validate fortranreal
-		#	    var constr.${i}_2 -label "constr(2,$i):" -validate fortranreal
-		#	    var constr.${i}_3 -label "constr(3,$i):" -validate fortranreal
-		#	    var constr.${i}_4 -label "constr(4,$i):" -validate fortranreal
-		#	    
-		#	    packwidgets bottom		    
-		#	    var constr_target_$i {
-		#		-label "Target for the constrain:"
-		#		-validate fortranreal
-		#	    }
-		#	}]
-		#}	    
 	    }
 	}    
-	
-	# # CARD: COLLECTIVE_VARS
-        #
-	# group collective_vars_group -name "Card: COLLECTIVE_VARS" -decor normal {
-	#     
-	#     auxilvar collective_vars_enable {
-	# 	-label     "Use collective variables:"
-	# 	-value     {Yes No}
-	# 	-widget    radiobox
-	# 	-default   No
-	#     }
-	#     
-	#     group collective_vars_card -decor none {
-	# 
-	# 	keyword collective_vars COLLECTIVE_VARS\n
-	# 
-	# 	line collective_vars_line1 -decor none {
-	# 	    var ncolvar {
-	# 		-label    "Number of collective variables:"
-	# 		-validate posint
-	# 		-widget   spinint
-	# 		-default  1
-	# 		-outfmt   "  %d "
-	# 	    }
-	# 	    var colvar_tol {
-	# 		-label    "Tolerance for keeping the collective variables satisfied:"
-	# 		-validate fortranposreal
-	# 	    }
-	# 	}
-	# 	
-	# 	table collective_vars_table {
-	# 	    -caption  "Enter data for collective variables:\n    colvar-type   colvar(1,.)   colvar(2,.)   ...  \n\n(see the definition of constr in the CONSTRAINTS card.)"
-	# 	    -head     {colvar-type colvar-specifications ... ... ... ...}
-	# 	    -validate {string fortranreal}
-	# 	    -cols     6
-	# 	    -rows     1
-	# 	    -optionalcols 3
-	# 	    -widgets  {{optionmenu {'type_coord' 'atom_coord' 'distance' 'planar_angle' 'torsional_angle' 'bennett_proj'}} entry}
-	# 	    -outfmt   {"  %s  " %S}
-	# 	    -infmt    {%d %S}
-	# 	}
-	#     }
-	# }
 
 	# CARD: OCCUPATIONS
 	

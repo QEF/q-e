@@ -80,18 +80,6 @@ proc ::pwscf::pwLoadAtomCoor {moduleObj} {
 	pwLoadAtomCoor:_read $moduleObj $file atomic_coordinates
     }
 }
-proc ::pwscf::pwLoadAtomCoorInter {ith moduleObj} {
-    set file [pwLoadAtomCoor:_init $moduleObj]
-    if { $file != "" } {
-	pwLoadAtomCoor:_read $moduleObj $file atomic_coordinates_${ith}_inter
-    }
-}
-proc ::pwscf::pwLoadAtomCoorLast {moduleObj} {
-    set file [pwLoadAtomCoor:_init $moduleObj]
-    if { $file != "" } {
-	pwLoadAtomCoor:_read $moduleObj $file atomic_coordinates_last
-    }
-}
 proc ::pwscf::pwLoadAtomCoor:_init {moduleObj} {
     variable pwscf
 
