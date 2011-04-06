@@ -42,11 +42,6 @@ module PH\#auto -title "PWSCF GUI: module PH.x" -script {
 	    	-widget   entryfileselectquote
 	    	-fmt      %S -validate string
 	    }
-	    #var filelph {
-	    #	-label    "File containing the electron-phonon matrix elements (filelph):"
-	    #	-widget   entryfileselectquote
-	    #	-fmt      %S -validate string
-	    #}
 	    var fildvscf {
 	    	-label    "File containing the potential variation (fildvscf):"
 	    	-widget   entryfileselectquote
@@ -210,18 +205,13 @@ module PH\#auto -title "PWSCF GUI: module PH.x" -script {
 
 	    auxilvar reps_type {
 		-label "How to specify irreducible representations:"
-		-textvalue {"with nrapp" "with start_irr/last_irr" "with nat_todo"}
-		-value { nrapp start_last_irr nat_todo }
+		-textvalue {"with start_irr/last_irr" "with nat_todo"}
+		-value { start_last_irr nat_todo }
 		-widget radiobox
 	    }
 
 	    group irrep_spec -name "Specification of irreducible representation(s)" -decor normal {
-		var nrapp {
-		    -label    "Number of representations to do (nrapp):"
-		    -validate nonnegint
-		    -widget   spinint
-		}
-		
+
 		group start_last_irr -name "Range of irreducible representations" -decor normal {
 		    var start_irr  {
 			-validate posint 
@@ -337,12 +327,6 @@ module PH\#auto -title "PWSCF GUI: module PH.x" -script {
 	    -variable xq(3)
 	    -label    "xq(3):"
 	    -validate fortranreal
-	}
-    }
-
-    line representation_line -name "List of the representation to do:" {
-	var irrep_list {
-	    -label "Indices of representations (comma or whitespace separated):"
 	}
     }
 

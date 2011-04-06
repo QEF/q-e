@@ -597,52 +597,6 @@ in the input of pw.x.
 
 
 # ------------------------------------------------------------------------
-grouphelp {iq1 iq2 iq3} -helpfmt helpdoc -helptext {
-    <ul>
-<li> <em>Variables: </em><big><b>iq1, iq2, iq3</b></big>
-</li>
-<br><li> <em>Type: </em>INTEGER</li>
-<br><li> <em>Default: </em> 0,0,0
-         </li>
-<br><li> <em>Description:</em>
-</li>
-<blockquote><pre>
-These go together with nq1, nq2, nq3 and allow to choose
-just one point out of the Monkhorst-Pack grid with ldisp=.true.
-Note the the actual point chosen is something like
-(iq1-1)/nq1, (iq2-1)/nq2, (iq3-1)/nq3 (so, check the output
-for what you get).
-         </pre></blockquote>
-</ul>
-    
-}
-
-
-# ------------------------------------------------------------------------
-help nrapp -helpfmt helpdoc -helptext {
-      <ul>
-<li> <em>Variable: </em><big><b>nrapp</b></big>
-</li>
-<br><li> <em>Type: </em>INTEGER</li>
-<br><li> <em>Default: </em> 0, i.e. use all irreps
-            </li>
-<br><li> <em>Description:</em>
-</li>
-<blockquote><pre>
-Choose the subset of irreducible representations (irreps)
-for which the linear response calculation is performed:
-"nrapp" irreps, specified in input (see below) are used.
-
-IMPORTANT:
-   * nrapp must be &lt;= 3*nat
-   * do not specify "nat_todo" together with "nrapp"
-            </pre></blockquote>
-</ul>      
-      
-}
-
-
-# ------------------------------------------------------------------------
 help start_irr -helpfmt helpdoc -helptext {
       <ul>
 <li> <em>Variable: </em><big><b>start_irr</b></big>
@@ -660,7 +614,7 @@ irreducible representations.
 
 IMPORTANT:
    * start_irr must be &lt;= 3*nat
-   * do not specify "nat_todo" or "nrapp" together with
+   * do not specify "nat_todo" together with
      "start_irr", "last_irr"
             </pre></blockquote>
 </ul>      
@@ -686,7 +640,7 @@ irreducible representations.
 
 IMPORTANT:
    * start_irr must be &lt;= 3*nat
-   * do not specify "nat_todo" or "nrapp" together with
+   * do not specify "nat_todo" together with
      "start_irr", "last_irr"
             </pre></blockquote>
 </ul>      
@@ -707,11 +661,15 @@ help nat_todo -helpfmt helpdoc -helptext {
 <blockquote><pre>
 Choose the subset of atoms to be used in the linear response
 calculation: "nat_todo" atoms, specified in input (see below)
-are displaced.
-
+are displaced. Can be used to estimate modes for a molecule
+adsorbed over a surface without performing a full fledged
+calculation. Use with care, at your own risk,m and be aware
+that this is an approximation and may not work.
 IMPORTANT:
    * nat_todo &lt;= nat
-   * do not specify "nrapp" together with "nat_todo"
+   * if linear-response is calculated for a given atom, it
+     should also be done for all symmetry-equivalent atoms,
+     or else you will get incorrect results
             </pre></blockquote>
 </ul>      
       
@@ -733,6 +691,10 @@ For single-mode phonon calculation : modenum is the index of the
 irreducible representation (irrep) into which the reducible
 representation formed by the 3*nat atomic displacements are
 decomposed in order to perform the phonon calculation.
+Note that a single-mode calculation will not give you the
+frequency of a single phonon mode: in general, the selected
+"modenum" is not an eigenvector. What you get on output is
+a column of the dynamical matrix.
             </pre></blockquote>
 </ul>      
       
@@ -757,7 +719,7 @@ Computes only the q points from start_q to last_q.
 
 IMPORTANT:
    * start_q must be &lt;= nqs (number of q points found)
-   * do not specify "nat_todo" or "nrapp" together with
+   * do not specify "nat_todo" together with
      "start_q", "last_q"
             </pre></blockquote>
 </ul>      
@@ -783,7 +745,7 @@ Computes only the q points from start_q to last_q.
 
 IMPORTANT
    * last_q must be &lt;= nqs (number of q points)
-   * do not specify "nat_todo" or "nrapp" together with
+   * do not specify "nat_todo" together with
      "start_q", "last_q"
             </pre></blockquote>
 </ul>      
@@ -795,7 +757,7 @@ IMPORTANT
 grouphelp {xq1 xq2 xq3} -helpfmt helpdoc -helptext {
     <ul>
 <li> <em>Variables: </em><big><b> xq(1)  xq(2)  xq(3)
-            </b></big>
+         </b></big>
 </li>
 <br><li> <em>Type: </em>REAL</li>
 <br><li> <em>Description:</em>
@@ -804,26 +766,8 @@ grouphelp {xq1 xq2 xq3} -helpfmt helpdoc -helptext {
 The phonon wavevector, in units of 2pi/a0
 (a0 = lattice parameter).
 Not used if ldisp=.true.
-            </pre></blockquote>
+         </pre></blockquote>
 </ul>  
-    
-}
-
-
-# ------------------------------------------------------------------------
-help irrep_list -helpfmt helpdoc -helptext {
-    <ul>
-<li> <em>Variables: </em><big><b> irrep(1) irrep(2) ... irrep(nrapp)
-               </b></big>
-</li>
-<br><li> <em>Type: </em>INTEGER</li>
-<br><li> <em>Description:</em>
-</li>
-<blockquote><pre>
-The list of indices of irreps used in the  calculation
-if  "nrapp" is specified.
-               </pre></blockquote>
-</ul>      
     
 }
 
