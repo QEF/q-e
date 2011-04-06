@@ -2,7 +2,6 @@
   
  &CONTROL
                        title = 'band structure of Al' ,
-                 calculation = 'neb' ,
                 restart_mode = 'from_scratch' ,
                       outdir = '/home/giannozz/tmp/' ,
                   pseudo_dir = '/home/giannozz/New-sesame/pseudo/' ,
@@ -21,18 +20,10 @@
  /
  &ELECTRONS
  /
- &IONS
-                   CI_scheme = 'manual' ,
- /
 ATOMIC_SPECIES
    Al   26.98000  Al.vbc.UPF 
 ATOMIC_POSITIONS alat 
-first_image
    Al      0.000000000    0.000000000    0.000000000    
-intermediate_image
-   Al      0.050000000    0.050000000    0.050000000 
-last_image
-   Al      0.100000000    0.100000000    0.100000000 
 K_POINTS tpiba 
 28 
    0.000000000    0.000000000    0.000000000      1.000000000 
@@ -63,8 +54,6 @@ K_POINTS tpiba
    0.300000000    0.300000000    0.300000000      1.000000000 
    0.400000000    0.400000000    0.400000000      1.000000000 
    0.500000000    0.500000000    0.500000000      1.000000000 
-CLIMBING_IMAGES
- 3, 5, 7    
 OCCUPATIONS
  2 2 2 2 2 2 2 2 2 2
  2 2 1 1 0 0 0
