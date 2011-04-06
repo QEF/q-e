@@ -1,5 +1,5 @@
-TCL_VERSION      = 8.4
-ITCL_VERSION     = 3.2
+TCL_VERSION      = 8.5
+ITCL_VERSION     = 3.4
 IWIDGETS_VERSION = 4.0.1
 
 # shortcuts
