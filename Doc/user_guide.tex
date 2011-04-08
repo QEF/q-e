@@ -13,10 +13,10 @@
 \topmargin =-1 cm
 \oddsidemargin = 0 cm
 
-\def\pw.x{\texttt{pw.x}}
-\def\cp.x{\texttt{cp.x}}
-\def\ph.x{\texttt{ph.x}}
-\def\neb.x{\texttt{neb.x}}
+\def\pwx{\texttt{pw.x}}
+\def\cpx{\texttt{cp.x}}
+\def\phx{\texttt{ph.x}}
+\def\nebx{\texttt{neb.x}}
 \def\configure{\texttt{configure}}
 \def\PWscf{\texttt{PWscf}}
 \def\PHonon{\texttt{PHonon}}
@@ -206,7 +206,7 @@ fields with a sawtooth potential in a supercell is also available.
 \texttt{NEB} calculates reaction pathways and energy barriers 
 using the Nudged Elastic Band (NEB) and Fourier String Method Dynamics 
 (SMD) methods. Note that these calculations are no longer performed
-by the \pw.x\ executable of \PWscf. Also note that NEB with Car-Parrinello
+by the \pwx\ executable of \PWscf. Also note that NEB with Car-Parrinello
 Molecular Dynamics is currently not implemented.
 
 \PHonon\ can perform the following types of calculations:
@@ -548,13 +548,13 @@ common to all packages:
 while others are specific to a single package:
 
 \begin{tabular}{ll}
-\texttt{PW/}      &\PWscf: source files for scf calculations (\pw.x)\\
+\texttt{PW/}      &\PWscf: source files for scf calculations (\pwx)\\
 \texttt{pwtools/} &\PWscf: source files for miscellaneous analysis programs\\
 \texttt{tests/}   &\PWscf:  automated tests\\
-\texttt{NEB/}     &\texttt{PWneb}: source files for NEB calculations (\texttt{neb.x})\\
-\texttt{PP/}      &\PostProc: source files for post-processing of \pw.x\
+\texttt{NEB/}     &\texttt{PWneb}: source files for NEB calculations (\nebx)\\
+\texttt{PP/}      &\PostProc: source files for post-processing of \pwx\
                    data file\\
-\texttt{PH/}      &\PHonon: source files for phonon calculations (\ph.x)
+\texttt{PH/}      &\PHonon: source files for phonon calculations (\phx)
                    and analysis\\
 \texttt{Gamma/}  &\PHonon: source files for Gamma-only phonon calculation
                   (\texttt{phcg.x})\\
@@ -564,7 +564,7 @@ while others are specific to a single package:
                   (\texttt{pwcond.x})\\
 \texttt{vdW/}    &\texttt{VdW}: source files for molecular polarizability
                   calculation at finite frequency\\
-\texttt{CPV/}    &\CP: source files for Car-Parrinello code (\cp.x)\\
+\texttt{CPV/}    &\CP: source files for Car-Parrinello code (\cpx)\\
 \texttt{atomic/} &\texttt{atomic}: source files for the pseudopotential
                    generation package (\texttt{ld1.x})\\
 \texttt{atomic\_doc/} &Documentation, tests and examples for \texttt{atomic}\\
@@ -865,11 +865,11 @@ At your option, you may compile the complete \qe\ suite of programs
 Here is a list:
 \begin{itemize}
 \item \texttt{make pw} produces \texttt{PW/pw.x} \\
-\pw.x\ calculates electronic structure, structural optimization, molecular dynamics.
+\pwx\ calculates electronic structure, structural optimization, molecular dynamics.
 \item \texttt{make neb} produces the following codes in \texttt{NEB/}
 for NEB calculations:
 \begin{itemize}
-\item \texttt{neb.x}: calculates reaction barriers and pathways using NEB.
+\item \nebx: calculates reaction barriers and pathways using NEB.
 \item \texttt{path\_int.x}: used by utility \texttt{path\_int.sh}
   that generates, starting from a path (a set of images), a new one with a 
   different number of images. The initial and final points of the new
@@ -878,14 +878,14 @@ for NEB calculations:
 \item \texttt{make ph} produces the following codes in \texttt{PH/}
 for phonon calculations:
 \begin{itemize}
-  \item \ph.x\ : Calculates phonon frequencies and displacement patterns,
-    dielectric tensors, effective charges (uses data produced by \pw.x\ ). 
+  \item \phx\ : Calculates phonon frequencies and displacement patterns,
+    dielectric tensors, effective charges (uses data produced by \pwx). 
   \item \texttt{dynmat.x}: applies various kinds of Acoustic Sum Rule (ASR),
     calculates LO-TO splitting at ${\bf q} = 0$ in insulators, IR and Raman
     cross sections (if the coefficients have been properly calculated),
-    from the dynamical matrix produced by \ph.x\
+    from the dynamical matrix produced by \phx
   \item \texttt{q2r.x}: calculates Interatomic Force Constants (IFC) in real space
-    from dynamical matrices produced by \ph.x on a regular {\bf q}-grid 
+    from dynamical matrices produced by \phx\ on a regular {\bf q}-grid 
  \item \texttt{matdyn.x}: produces phonon frequencies at a generic wave vector
     using the IFC file calculated by \texttt{q2r.x}; may also calculate phonon DOS, 
     the electron-phonon coefficient $\lambda$, the function $\alpha^2F(\omega)$
@@ -894,13 +894,13 @@ for phonon calculations:
   \end{itemize}
 \item \texttt{make d3} produces \texttt{D3/d3.x}:
   calculates anharmonic phonon lifetimes (third-order derivatives
-  of the energy), using data produced by \pw.x and \ph.x (USPP 
+  of the energy), using data produced by \pwx\ and \phx\ (USPP 
   and PAW not supported). 
 \item \texttt{make gamma} produces \texttt{Gamma/phcg.x}: 
-  a version of \ph.x that calculates phonons at ${\bf q} = 0$ using
+  a version of \phx\ that calculates phonons at ${\bf q} = 0$ using
   conjugate-gradient minimization of the density functional expanded to
   second-order. Only the $\Gamma$ (${\bf k} = 0$) point is used for Brillouin zone
-  integration. It is faster and takes less memory than \ph.x, but does
+  integration. It is faster and takes less memory than \phx, but does
   not support USPP and PAW.
 \item  \texttt{make pp} produces several codes for data postprocessing, in 
   \texttt{PP/}  (see list below). 
@@ -932,11 +932,11 @@ the \texttt{GUI/README} file instead.
    
 The codes for data postprocessing in \texttt{PP/} are:
 \begin{itemize}
-\item  \texttt{pp.x} extracts the specified data from files produced by \pw.x,
+\item  \texttt{pp.x} extracts the specified data from files produced by \pwx,
   prepares data for plotting by writing them into formats that can be
   read by several plotting programs. 
 \item  \texttt{bands.x} extracts and reorders eigenvalues from files produced by
-  \pw.x for band structure plotting 
+  \pwx for band structure plotting 
 \item  \texttt{projwfc.x} calculates projections of wavefunction over atomic
   orbitals, performs L\"owdin population analysis and calculates
   projected density of states. These can be summed using auxiliary
@@ -971,13 +971,13 @@ The utility programs in  \texttt{pwtools/} are:
 \item  \texttt{ev.x} fits energy-vs-volume data to an equation of state
 \item  \texttt{kpoints.x} produces lists of k-points
 \item  \texttt{pwi2xsf.sh},  \texttt{pwo2xsf.sh} process respectively input and output
-  files (not data files!) for \pw.x and produce an XSF-formatted file
+  files (not data files!) for \pwx and produce an XSF-formatted file
   suitable for plotting with XCrySDen, a powerful crystalline and
   molecular structure visualization program
   ( \texttt{http://www.xcrysden.org/}). BEWARE: the  \texttt{pwi2xsf.sh} shell script
   requires the  \texttt{pwi2xsf.x} executables to be located somewhere in your PATH. 
 \item  \texttt{band\_plot.x}: undocumented and possibly obsolete 
-\item  \texttt{bs.awk},  \texttt{mv.awk} are scripts that process the output of \pw.x (not
+\item  \texttt{bs.awk},  \texttt{mv.awk} are scripts that process the output of \pwx\ (not
 data files!). Usage: 
 \begin{verbatim}
          awk -f bs.awk < my-pw-file > myfile.bs
@@ -1012,17 +1012,17 @@ There are two different types of examples:
 \begin{itemize}
 \item automated tests (in directories \texttt{tests/} 
 and \texttt{cptests/}). Quick and exhaustive, but not
-meant to be realistic, implemented only for \pw.x and \cp.x.
+meant to be realistic, implemented only for \pwx\ and \cpx.
 \item examples (in directory \texttt{examples/}).
 Cover many more programs and features of the \qe\ distribution,
 but they require manual inspection of the results. 
 \end{itemize}
 
-Let us first consider the tests. Automated tests for \pw.x\ are in directory 
+Let us first consider the tests. Automated tests for \pwx\ are in directory 
 \texttt{tests/}. File \texttt{tests/README} contains a list of what is tested.
 To run tests, follow the directions in the header if file 
 \texttt{check\_pw.x.j}, edit variables PARA\_PREFIX, PARA\_POSTFIX 
-if needed (see below). Same for \cp.x, this time in directory 
+if needed (see below). Same for \cpx, this time in directory 
 \texttt{cptests/}.
 
 Let us now consider examples. A list of examples and of what each example
@@ -1585,18 +1585,18 @@ such as \texttt{poe}, \texttt{mpirun}, \texttt{mpiexec},
   program to be
   executed; 
 \item the program to be executed, with the proper path if needed: for
-  instance, \pw.x, or \texttt{./pw.x}, or \texttt{\$HOME/bin/pw.x}, or
+  instance, \pwx, or \texttt{./pw.x}, or \texttt{\$HOME/bin/pw.x}, or
   whatever applies; 
 \item other \qe-specific parallelization options, to be
   read and interpreted by the running code: 
 \begin{itemize}
 \item the number of ``images'' used by NEB or phonon calculations;
 \item the number of ``pools'' into which processors are to be grouped
-  (\pw.x only);
+  (\pwx\ only);
 \item the number of ``task groups'' into which processors are to be
   grouped;
 \item the number of processors performing iterative diagonalization
-  (for \pw.x) or orthonormalization (for \cp.x).
+  (for \pwx) or orthonormalization (for \cpx).
 \end{itemize}
 \end{enumerate}
 Items 1) and 2) are machine- and installation-dependent, and may be 
@@ -1608,7 +1608,7 @@ path, etc).
 Item 4) is optional but may be important: see the following section
 for the meaning of the various options.
 
-For illustration, here is how to run \pw.x on 16 processors partitioned into
+For illustration, here is how to run \pwx\ on 16 processors partitioned into
 8 pools (2 processors each), for several typical cases. 
 
 IBM SP machines, batch:
@@ -1636,7 +1636,7 @@ IBM BlueGene using \texttt{mpirun}:
 \end{verbatim}
 If you want to run in parallel the examples distributed with \qe\
 (see Sec.\ref{SubSec:Examples}), set PARA\_PREFIX to everything
-before the executable (\pw.x in the above examples),
+before the executable (\pwx\ in the above examples),
 PARA\_POSTFIX to what follows it until the first redirection sign 
 ($<, >, |,..$), if any. For execution using OpenMP on N threads, 
 set  PARA\_PREFIX to \texttt{env OMP\_NUM\_THREADS=N}.
@@ -1683,8 +1683,8 @@ can process several wavefunctions at the same time.
 {\bf linear-algebra group}:
 A further level of parallelization, independent on
 PW or k-point parallelization, is the parallelization of
-subspace diagonalization (\pw.x) or iterative orthonormalization
-(\cp.x). Both operations required the diagonalization of 
+subspace diagonalization (\pwx) or iterative orthonormalization
+(\cpx). Both operations required the diagonalization of 
 arrays whose dimension is the number of Kohn-Sham states
 (or a small multiple). All such arrays are distributed block-like
 across the ``linear-algebra group'', a subgroup of the pool of processors,
@@ -1709,8 +1709,8 @@ needed beyond 8 processors per pool.
 {\bf Choosing parameters}:
 To control the number of processors in each group,
 command line switches: \texttt{-nimage}, \texttt{-npools},
-\texttt{-ntg}, \texttt{northo} (for \cp.x) or \texttt{-ndiag}
-(for \pw.x) are used.
+\texttt{-ntg}, \texttt{northo} (for \cpx) or \texttt{-ndiag}
+(for \pwx) are used.
 As an example consider the following command line:
 \begin{verbatim}
 mpirun -np 4096 ./pw.x -nimage 8 -npool 2 -ntg 8 -ndiag 144 -input my.input
@@ -1782,7 +1782,7 @@ which in turn are faster than ACML.
 \subsubsection{Understanding parallel I/O}
 In parallel execution, each processor has its own slice of wavefunctions, 
 to be written to temporary files during the calculation. The way wavefunctions 
-are written by \pw.x\ is governed by variable \texttt{wf\_collect}, 
+are written by \pwx\ is governed by variable \texttt{wf\_collect}, 
 in namelist \&CONTROL 
 If \texttt{wf\_collect=.true.}, the final wavefunctions are collected into a single 
 directory, written by a single processor, whose format is independent on 
@@ -1799,8 +1799,8 @@ all files are on a file system that is visible to all processors
 way to ensure that the distribution of processes on processors will
 follow the same pattern for different jobs).
 
-\cp.x\ instead always collects the final wavefunctions into a single directory.
-Files written by \pw.x\ can be read by \cp.x\ only if \texttt{wf\_collect=.true.} (and if
+\cpx\ instead always collects the final wavefunctions into a single directory.
+Files written by \pwx\ can be read by \cpx\ only if \texttt{wf\_collect=.true.} (and if
 produced for $k=0$ case). 
 The directory for data is specified in input variables
 \texttt{outdir} and \texttt{prefix} (the former can be specified
@@ -1823,7 +1823,7 @@ way across disks residing on different nodes.
 
 You can use input variable \texttt{disk\_io='minimal'}, or even 
 \texttt{'none'}, if you run
-into trouble (or into angry system managers) with excessive I/O with \pw.x. 
+into trouble (or into angry system managers) with excessive I/O with \pwx. 
 The code will store wavefunctions into RAM during the calculation.
 Note however that this will increase your memory usage and may limit 
 or prevent restarting from interrupted runs.
@@ -1944,7 +1944,7 @@ with \texttt{.in}
 
 \subsection{Input data}
 
-Input data for the basic codes of the \qe\ distribution, \pw.x\ and \c.x,
+Input data for the basic codes of the \qe\ distribution, \pwx\ and \cpx,
 is organized as several namelists, followed by other fields
 introduced by keywords. The namelists are
 
@@ -1980,8 +1980,8 @@ special case of a single k-point, for which occupation numbers can be fixed
     
 Explanations for the meaning of variables \texttt{ibrav} and \texttt{celldm},
 as well as on alternative ways to input structural data,
-are in files \texttt{Doc/INPUT\_PW.*} (for \pw.x) and \texttt{Doc/INPUT\_CP.*}
-(for \cp.x). These files are the reference for input data and describe 
+are in files \texttt{Doc/INPUT\_PW.*} (for \pwx) and \texttt{Doc/INPUT\_CP.*}
+(for \cpx). These files are the reference for input data and describe 
 a large number of other variables as well. Almopst all variables have default 
 values, which may or may not fit your needs.
     
@@ -2022,7 +2022,7 @@ The execution stops if you create a file \texttt{prefix.EXIT} in the working
 directory. NOTA BENE: this is the directory where the program 
 is executed, NOT the directory \texttt{outdir} defined in input, where files 
 are written. Note that with some versions of MPI, the working directory 
-is the directory where the \pw.x\ executable is! The advantage of this 
+is the directory where the \pwx\ executable is! The advantage of this 
 procedure is that all files are properly closed, whereas  just killing 
 the process may leave data and output files in unusable state.
 
@@ -2117,9 +2117,9 @@ can be found in the wiki.
 \section{Using \PWscf}
 
 
-Code \pw.x\ performs various kinds of electronic and ionic structure 
+Code \pwx\ performs various kinds of electronic and ionic structure 
 calculations.
-We may distinguish the following typical cases of usage for \pw.x:
+We may distinguish the following typical cases of usage for \pwx:
 2
 \subsection{Electronic structure calculations}
 \paragraph{Single-point (fixed-ion) SCF calculation} 
@@ -2226,7 +2226,7 @@ in the header of \texttt{PW/bp\_c\_phase.f90}.
 
 \paragraph{Finite electric fields}
 There are two different implementations of macroscopic electric fields
-in \pw.x: via an external sawtooth potential (input variable
+in \pwx: via an external sawtooth potential (input variable
 \texttt{tefield=.true.}) and via the modern theory of polarizability
 (\texttt{lelfield=.true.}).
 The former is useful for surfaces, especially in conjunction
@@ -2320,7 +2320,7 @@ no longer supported. For QMC-MD runs, PWSCF etc previously needed to be
 necessary.
 
 \paragraph{How to generate \texttt{xwfn.data} files with \texttt{PWscf}}
-Use the '-pw2casino' option when invoking \texttt{pw.x}, e.g.: 
+Use the '-pw2casino' option when invoking \pwx, e.g.: 
 \begin{verbatim}
 pw.x -pw2casino < input_file > output_file
 \end{verbatim}
@@ -2399,16 +2399,16 @@ This can be done through the `casino2upf' and `upf2casino' tools included in the
 
 \section{NEB calculations}
 
-Reminder: NEB calculations are no longer performed by \pw.x.
+Reminder: NEB calculations are no longer performed by \pwx.
 In order to perform a NEB calculation, you should compile
 \texttt{NEB/neb.x} (command \texttt{make neb}). \\
 
-There are two ways for running a calculation with \neb.x: \\
+There are two ways for running a calculation with \nebx: \\
 1) specifying a file to parse with the \texttt{neb.x -inp} or 
 \texttt{neb.x -input} command line option. \\
 2) or specifying the number of input positions \texttt{neb.x -input\_images}. \\
 
-{\bf \texttt{neb.x} does not read from standard input at the moment}. \\
+{\bf \nebx\ does not read from standard input at the moment}. \\
 
 For case 1) a file containing KEYWORDS has to be written (see below). 
 These KEYWORDS tells the parser which part of the file regards neb specifics
@@ -2468,7 +2468,7 @@ to visualize it, use \texttt{xcrysden -\--axsf prefix.axsf}
 atomic positions of all path images in the generic xyz format, used by
 many quantum-chemistry softwares
 \item[\texttt{prefix.crd}]
-path information in the input format used by \pw.x, suitable for a manual
+path information in the input format used by \pwx, suitable for a manual
 restart of the calculation
 \end{description}
 
@@ -2524,15 +2524,15 @@ In the following, we will indicate by $q$ the phonon wavevectors,
 while $k$ will indicate Bloch vectors used for summing over the Brillouin Zone.
 
 Since version 4.0 it is possible to safely stop execution of 
-\ph.x\ code using
-the same mechanism of the \pw.x\ code, i.e. by creating a file \texttt{prefix.EXIT} in the 
+\phx\ code using
+the same mechanism of the \pwx\ code, i.e. by creating a file \texttt{prefix.EXIT} in the 
 working directory. Execution can be resumed by setting \texttt{recover=.true.} 
 in the subsequent input data.
 
 \subsection{Single-q calculation}
 
-The phonon code \ph.x\ calculates normal modes at a given q-vector, starting
-from data files produced by \pw.x with a simple SCF calculation.
+The phonon code \phx\ calculates normal modes at a given q-vector, starting
+from data files produced by \pwx with a simple SCF calculation.
 NOTE: the alternative procedure in which a band-structure calculation 
 with \texttt{calculation='phonon} was performed as an intermediate step is no
 longer implemented since version 4.1. It is also no longer needed to
@@ -2541,30 +2541,30 @@ specify \texttt{lnscf=.true.} for $q\ne 0$.
 The output data file appear in the directory specified by variables outdir,
 with names specified by variable prefix. After the output file(s) has been
 produced (do not remove any of the files, unless you know which are used
-and which are not), you can run \ph.x.
+and which are not), you can run \phx.
     
-The first input line of \ph.x is a job identifier. At the second line the
+The first input line of \phx\ is a job identifier. At the second line the
 namelist \&INPUTPH starts. The meaning of the variables in the namelist
 (most of them having a default value) is described in file 
 \texttt{Doc/INPUT\_PH.*}. Variables \texttt{outdir} and \texttt{prefix} 
-must be the same as in the input data of \pw.x. Presently
+must be the same as in the input data of \pwx. Presently
 you must also specify \texttt{amass(i)} (a real variable): the atomic mass 
 of atomic type $i$.
 
 After the namelist you must specify the q-vector of the phonon mode.
-This must be the same q-vector given in the input of \pw.x.
+This must be the same q-vector given in the input of \pwx.
     
-Notice that the dynamical matrix calculated by \ph.x at $q=0$ does not
+Notice that the dynamical matrix calculated by \phx\ at $q=0$ does not
 contain the non-analytic term occurring in polar materials, i.e. there is no
 LO-TO splitting in insulators. Moreover no Acoustic Sum Rule (ASR) is
 applied. In order to have the complete dynamical matrix at $q=0$ including
 the non-analytic terms, you need to calculate effective charges by specifying
-option \texttt{epsil=.true.} to \ph.x. This is however not possible (because
+option \texttt{epsil=.true.} to \phx. This is however not possible (because
 not physical!) for metals (i.e. any system subject to a broadening).
 
 At $q=0$, use program \texttt{dynmat.x} to calculate the correct LO-TO 
 splitting, IR cross sections, and to impose various forms of ASR. 
-If \ph.x\ was instructed to calculate Raman coefficients, 
+If \phx\ was instructed to calculate Raman coefficients, 
 \texttt{dynmat.x} will also calculate Raman cross sections
 for a typical experimental setup.
 Input documentation in the header of \texttt{PH/dynmat.f90}.
@@ -2579,8 +2579,8 @@ crystal are needed). Although this can be done one q-vector at the time, a
 simpler procedure is to specify variable \texttt{ldisp=.true.} and to set 
 variables \texttt{nq1}, \texttt{nq2}, \texttt{nq3} to some suitable 
 Monkhorst-Pack grid, that will be automatically generated, centered at $q=0$. 
-Do not forget to specify \texttt{epsil=.true.} in the input data of \ph.x 
-if you want the correct TO-LO splitting in polar
+Do not forget to specify \texttt{epsil=.true.} in the input data of
+\phx\ if you want the correct TO-LO splitting in polar
 materials.
     
 Second, code \texttt{q2r.x} reads the dynamical matrices produced in the
@@ -2604,7 +2604,7 @@ proceeds in this way:
 \begin{enumerate}
 \item a scf calculation for the dense k-point grid (or a scf calculation 
 followed by a non-scf one on the dense k-point grid); specify 
-option \texttt{la2f=.true.} to \pw.x\ in order to save a file with 
+option \texttt{la2f=.true.} to \pwx\ in order to save a file with 
 the eigenvalues on the dense k-point grid. The latter MUST contain 
 all k and k+q grid points used in the subsequent electron-phonon 
 calculation. All grids MUST be unshifted, i.e. include $k=0$.
@@ -2641,7 +2641,7 @@ in \texttt{examples/GRID\_example}. Reference:\\
 
 There are a number of auxiliary codes performing postprocessing tasks such
 as plotting, averaging, and so on, on the various quantities calculated by
-\pw.x. Such quantities are saved by \pw.x\ into the output data file(s). 
+\pwx. Such quantities are saved by \pwx\ into the output data file(s). 
 Postprocessing codes are in the \texttt{PP/} directory. All codes for 
 which input documentation is not explicitly mentioned have documentation
 in the header of the fortran sources.
@@ -2836,7 +2836,7 @@ You can find the description of the input variables in file
 
 The first run, when starting from scratch, is always an electronic 
 minimization, with fixed ions and cell, to bring the electronic system on the ground state (GS) relative to the starting atomic configuration. This step is conceptually very similar to
-self-consistency in a \pw.x\ run.
+self-consistency in a \pwx\ run.
 
 Sometimes a single run is not enough to reach the GS. In this case,
 you need to re-run the electronic minimization stage. Use the input 
@@ -3350,13 +3350,13 @@ some numerical advantages in going to higher cut-offs." (info by Nicola Marzari)
 Since v.4.2 \qe\ prints real (wall) time instead of CPU time.
 
 The following is a rough estimate of the complexity of a plain
-scf calculation with \pw.x, for NCPP. USPP and PAW 
+scf calculation with \pwx, for NCPP. USPP and PAW 
 give raise additional terms to be calculated, that may add from a 
 few percent 
 up to 30-40\% to execution time. For phonon calculations, each of the
 $3N_{at}$ modes requires a time of the same order of magnitude of
 self-consistent calculation in the same system (possibly times a small multiple). 
-For \cp.x, each time step takes something in the order of
+For \cpx, each time step takes something in the order of
 $T_h + T_{orth} + T_{sub}$ defined below.
 
 The time required for the self-consistent solution at fixed ionic
@@ -3433,7 +3433,7 @@ somewhat larger factors $m, p, q$.
 
 \subsection{File space requirements}
 
-A typical \pw.x\ run will require an amount of temporary disk space in the
+A typical \pwx\ run will require an amount of temporary disk space in the
 order of O double precision complex numbers:
 $$O = N_k M N + q N_{r1} N_{r2}N_{r3}$$
 where $q = 2\times$ \texttt{mixing\_ndim} (number of iterations used in 
@@ -3443,7 +3443,7 @@ otherwise.
 \subsection{Parallelization issues}
 \label{SubSec:badpara}
 
-\pw.x\ and \cp.x\ can run in principle on any number of processors.
+\pwx\ and \cpx\ can run in principle on any number of processors.
 The effectiveness of parallelization is ultimately judged by the 
 ''scaling'', i.e. how the time needed to perform a job scales
  with the number of processors, and depends upon:
@@ -3508,7 +3508,7 @@ can process several wavefunctions at the same time.
 The optimal number of processors for "linear-algebra"
 parallelization, taking care of multiplication and diagonalization 
 of $M\times M$ matrices, should be determined by observing the
-performances of \texttt{cdiagh/rdiagh} (\pw.x) or \texttt{ortho} (\'cp.x)
+performances of \texttt{cdiagh/rdiagh} (\pwx) or \texttt{ortho} (\cpx)
 for different numbers of processors in the linear-algebra group
 (must be a square integer).
 
@@ -3680,7 +3680,7 @@ Possible solutions:
 
 \paragraph{pw.x crashes with {\em error in davcio}}
 \texttt{davcio} is the routine that performs most of the I/O operations (read
-from disk and write to disk) in \pw.x; {\em error in davcio} means a
+from disk and write to disk) in \pwx; {\em error in davcio} means a
 failure of an I/O operation. 
 \begin{itemize}
 \item If the error is reproducible and happens at the beginning of a
@@ -3695,7 +3695,7 @@ failure of an I/O operation.
 \item If it happens while restarting from a previous calculation: you
   might be restarting from the wrong place, or from wrong  data, or
   the files might be corrupted. 
-\item If you are running two or more instances of \texttt{pw.x} at
+\item If you are running two or more instances of \pwx\ at
   the same time, check if you are using the same file names in the 
   same temporary directory. For instance, if you submit a series of
   jobs to a batch queue, do not use the same \texttt{outdir} and
@@ -3804,7 +3804,7 @@ Note that in parallel execution, it is very convenient to have FFT grid
 dimensions along $z$ that are a multiple of the number of processors.
 
 \paragraph{pw.x does not find all the symmetries you expected} 
-\pw.x determines first the symmetry operations (rotations) of the
+\pwx\ determines first the symmetry operations (rotations) of the
 Bravais lattice; then checks which of these are symmetry operations of
 the system (including if needed fractional translations). This is done
 by rotating (and translating if needed) the atoms in the unit cell and
@@ -3827,7 +3827,7 @@ you may not find all the symmetries you expect because:
   instance: a C$_{60}$ molecule in the fcc lattice will have 24
   symmetry operations ($T_h$ group) only if the double bond is
   aligned along one of the crystal axis; if C$_{60}$ is rotated
-  in some arbitrary way, \pw.x may not find any symmetry, apart from
+  in some arbitrary way, \pwx\ may not find any symmetry, apart from
   inversion. 
 \item they contain a fractional translation that is incompatible with
   the FFT grid (see next paragraph). Note that if you change cutoff or
@@ -4045,8 +4045,8 @@ self-consistent run; all files must be visible to all processors.
 \subsection{ph.x errors}
 
 \paragraph{ph.x stops with {\em error reading file}}
-The data file produced by \pw.x
-is bad or incomplete or produced by an incompatible version of the code.
+The data file produced by \pwx\ is bad or incomplete or produced
+by an incompatible version of the code.
 In parallel execution: if you did not set \texttt{wf\_collect=.true.}, the number
 of processors and pools for the phonon run should be the same as for the
 self-consistent run; all files must be visible to all processors.
@@ -4220,7 +4220,7 @@ your compiler and compiler libraries are not correctly installed.
 
 Yes, you can (if implemented, of course: a few kinds of calculations
 are not available with USPP, a few more are not for PAW). A small
-restrictions exists in \texttt{cp.x}, expecting atoms with USPP listed before 
+restrictions exists in \cpx, expecting atoms with USPP listed before 
 those with NCPP, which in turn are expected before local PP's (if any).
 A further restriction, that can be overriden,
 is that all PP's should be generated with the same XC.
@@ -4363,7 +4363,7 @@ Possible reasons: disk is full; \texttt{outdir} is not writable for
 any reason; you changed some parameter(s) in the input (like 
 \texttt{wf\_collect}, or the number of processors/pools) without 
 doing a bit of cleanup in your temporary files; you were running 
-more than one instance of \texttt{pw.x} in the same temporary
+more than one instance of \pwx\ in the same temporary
 directory with the same file names. 
 
 \paragraph{The code stops with a {\em wrong charge} error}
@@ -4456,9 +4456,9 @@ atomic basis.
 
 It is printed in the output. If not, the information on Gaussian smearing,
 needed to calculate a sensible Fermi energy, was not provided in input.
-In this case, \pw.x prints instead the highest occupied and lowest
+In this case, \pwx\ prints instead the highest occupied and lowest
 unoccupied levels. If not, the number of bands to be calculated was not 
-provided in input and \pw.x calculates occupied bands only.
+provided in input and \pwx\ calculates occupied bands only.
 
 \paragraph{What is the reference level for Kohn-Sham energies? 
 Why do I get positive values for Kohn-Sham levels?}

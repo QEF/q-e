@@ -1,3 +1,8 @@
+Fixed in CVS version:
+
+  * TD-DFPT: lr_main.f90, line exceeding 132 characters
+  * XSpectra: read_file_xspectra.f90 had to be updated
+
 New in 4.3 version:
 
   * CP only, experimental: parallelization over Kohn-Sham states
