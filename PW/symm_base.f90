@@ -529,7 +529,7 @@ subroutine sgam_at ( nat, tau, ityp, nr1, nr2, nr3, nofrac, sym )
               fractional_translations = .false.
               WRITE( stdout, '(5x,"Found symmetry operation: I + (",&
              &   3f8.4, ")",/,5x,"This is a supercell,", &
-             &   " fractional translation are disabled")') ft
+             &   " fractional translations are disabled")') ft
            endif
         endif
      end if
