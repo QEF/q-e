@@ -29,10 +29,11 @@ SUBROUTINE read_file_xspectra(xread_wf)
   USE cellmd,               ONLY : cell_factor, lmovecell
   USE fft_base,             ONLY : dfftp
   USE fft_interfaces,       ONLY : fwfft
-  USE gvect,                ONLY : gg, ngm, g, &
+  USE gvect,                ONLY : gg, ngm, g, gcutm,&
                                    eigts1, eigts2, eigts3, nl, gstart
   USE grid_dimensions,      ONLY : nr1, nr2, nr3, nrxx
-  USE gvecs,                ONLY : ngms, nls
+  USE gvecs,                ONLY : ngms, nls, gcutms
+  USE grid_subroutines,     ONLY : realspace_grids_init
   USE recvec_subs,          ONLY : ggen
   USE spin_orb,             ONLY : lspinorb, domag
   USE scf,                  ONLY : rho, rho_core, rhog_core, v
@@ -122,6 +123,7 @@ SUBROUTINE read_file_xspectra(xread_wf)
   !-------------------------------------------------------------------------------
   !
   CALL set_dimensions()
+  CALL realspace_grids_init (at, bg, gcutm, gcutms )  
   !
   ! ... check whether LSDA
   !
@@ -145,7 +147,7 @@ SUBROUTINE read_file_xspectra(xread_wf)
   END IF
   !
   if (cell_factor == 0.d0) cell_factor = 1.D0
-  lmovecell = .FALSE.
+!  lmovecell = .FALSE.
   !
   ! ... allocate memory for eigenvalues and weights (read from file)
   !
@@ -196,6 +198,8 @@ SUBROUTINE read_file_xspectra(xread_wf)
   !
   okvan = ANY ( upf(:)%tvanp )
   okpaw = ANY ( upf(1:nsp)%tpawp )
+
+  IF ( .NOT. lspinorb ) CALL average_pp ( nsp )
   !
   ! ... check for spin-orbit pseudopotentials
   !
@@ -230,6 +234,7 @@ SUBROUTINE read_file_xspectra(xread_wf)
   CALL pre_init()
   CALL allocate_fft()
   CALL ggen ( gamma_only, at, bg )
+  CALL gshells ( lmovecell )
   !
   ! ... allocate the potential and wavefunctions
   !
