@@ -1141,8 +1141,8 @@ end function dpz
       S2    = AA*RR*RR*US*US
 
       S = SQRT(S2)
-      IF(S.GT.10.D0) THEN
-        S = 10.D0
+      IF(S.GT.8.3D0) THEN
+        S = 8.572844D0 - 18.796223D0/S2
       ENDIF
       CALL wpbe_analy_erfc_approx_grad(RHO,S,OMEGA,FX,D1X,D2X)
       sx = EX*FX        ! - EX

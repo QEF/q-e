@@ -14,15 +14,14 @@
 ! eps is the desired relative error, not smaller than the machine precision,
 ! big is a number near the largest representable floating-point number,
 ! Inspired from Numerical Recipes
-! Courtesy of Hannu-Pekka Komsa
 ! 
       USE kinds, ONLY : DP
       IMPLICIT NONE
       INTEGER, INTENT(IN) :: n
       REAL(DP), INTENT(IN) :: x
       REAL(DP) :: expint
-      INTEGER, parameter :: maxit=100
-      REAL(DP), parameter :: eps=epsilon(x), big=huge(x)*eps
+      INTEGER, parameter :: maxit=200
+      REAL(DP), parameter :: eps=1E-12_DP, big=huge(x)*eps
       REAL(DP), parameter :: euler = 0.577215664901532860606512_DP
 !     EPS=1E-9, FPMIN=1E-30
 
