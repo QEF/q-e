@@ -174,7 +174,7 @@ SUBROUTINE sum_band()
   !
   ! ... symmetrize rho(G) 
   !
-  CALL sym_rho ( nspin_mag, rho%of_g(1,1) )
+  CALL sym_rho ( nspin_mag, rho%of_g )
   !
   ! ... same for rho_kin(G)
   !
@@ -184,7 +184,7 @@ SUBROUTINE sum_band()
         CALL fwfft ('Dense', psic, dfftp)
         rho%kin_g(:,is) = psic(nl(:))
      END DO
-     IF (.NOT. gamma_only) CALL sym_rho( nspin, rho%kin_g(1,1) )
+     IF (.NOT. gamma_only) CALL sym_rho( nspin, rho%kin_g )
   END IF
   !
   ! ... synchronize rho%of_r to the calculated rho%of_g (use psic as work array)
