@@ -678,10 +678,12 @@ CONTAINS
       REAL(DP), INTENT(IN)  :: grad(:)
       INTEGER,  INTENT(IN)  :: n
       INTEGER,  INTENT(IN)  :: stdout
+      INTEGER               :: info
       !
       REAL(DP), ALLOCATABLE :: y(:), s(:)
       REAL(DP), ALLOCATABLE :: Hy(:), yH(:)
-      REAL(DP)              :: sdoty
+      REAL(DP)              :: sdoty, sBs, Theta
+      REAL(DP), ALLOCATABLE :: B(:,:)
       !
       ALLOCATE( y( n ), s( n ), Hy( n ), yH( n ) )
       !
@@ -702,6 +704,45 @@ CONTAINS
          !
          RETURN
          !
+      ELSE
+!       Conventional Curvature Trap here
+!       See section 18.2 (p538-539 ) of Nocedal and Wright "Numerical
+!       Optimization"for instance
+!       LDM Addition, April 2011
+!
+!       While with the Wolfe conditions the Hessian in most cases
+!       remains positive definite, if one is far from the minimum
+!       and/or "bonds" are being made/broken the curvature condition
+!              Hy = s ; or s = By
+!       cannot be satisfied if s.y < 0. In addition, if s.y is small
+!       compared to s.B.s too greedy a step is taken.
+!
+!       The trap below is conventional and "OK", and has been around
+!       for ~ 30 years but, unfortunately, is rarely mentioned in
+!       introductory texts and hence often neglected.
+!
+!       First, solve for inv_hess*t = s ; i.e. t = B*s
+!       Use yH as workspace here
+
+        ALLOCATE (B(n,n) )
+        B = inv_hess
+        yH= s
+        call DPOSV('U',n,1,B,n, yH, n, info)
+!       Info .ne. 0 should be trapped ...
+        if(info .ne. 0)write( stdout, '(/,5X,"WARNING: info=",i3," for Hessian")' )info
+        DEALLOCATE ( B )
+!
+!       Calculate s.B.s
+        sBs = ( s(:) .dot. yH(:) )
+!
+!       Now the trap itself
+        if ( sdoty < 0.20D0*sBs ) then
+!               Conventional damping
+                Theta = 0.8D0*sBs/(sBs-sdoty)
+                WRITE( stdout, '(/,5X,"WARNING: bfgs curvature condition ", &
+                &     "failed, Theta=",F6.3)' )theta
+                y = Theta*y + (1.D0 - Theta)*yH
+        endif
       END IF
       !
       Hy(:) = ( inv_hess .times. y(:) )
