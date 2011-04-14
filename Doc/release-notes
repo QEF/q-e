@@ -1,7 +1,8 @@
-Fixed in CVS version:
+Fixed in 4.3.1 version:
 
-  * TD-DFPT: lr_main.f90, line exceeding 132 characters
-  * XSpectra: read_file_xspectra.f90 had to be updated
+   * XSPECTRA wasn't working any longer due to missing updates to
+     read_file_xspectra.f90
+   * epsilon.f90: the term 1 must be added to diagonal components only! 
 
 New in 4.3 version:
 
