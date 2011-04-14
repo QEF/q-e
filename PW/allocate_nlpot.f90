@@ -38,6 +38,8 @@ subroutine allocate_nlpot
   USE uspp_param,       ONLY : upf, lmaxq, lmaxkb, nh, nhm, nbetam
   USE spin_orb,         ONLY : lspinorb, fcoef
   USE paw_variables,    ONLY : okpaw
+  USE control_flags,    ONLY : program_name
+  USE io_global,        ONLY : stdout
   !
   implicit none
   !
@@ -77,6 +79,12 @@ subroutine allocate_nlpot
     allocate (fcoef(nhm,nhm,2,2,nsp))
   else
     allocate (dvan( nhm, nhm, nsp))    
+  endif
+  ! GIPAW needs a slighly larger q-space interpolation for quantities calculated
+  ! at k+q_gipaw
+  if (trim(program_name) == 'GIPAW') then
+    if (cell_factor == 1.d0) cell_factor = 1.1d0
+    write(stdout,'(5X,''q-space interpolation up to '',F8.2,'' Rydberg'')') ecutwfc*cell_factor
   endif
   !
   ! This routine is called also by the phonon code, in which case it should
