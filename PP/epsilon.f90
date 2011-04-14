@@ -1252,13 +1252,17 @@ SUBROUTINE offdiag_calc ( intersmear,intrasmear, nw, wmax, wmin, nbndmin, nbndma
   ! recover over kpt parallelization (inter_pool)
   !
   CALL mp_sum( epstot, inter_pool_comm )
-
   !
   ! impose the correct normalization
   !
   const = 64.0d0 * PI / ( omega * REAL(nkstot, DP) )
+  epstot(:,:,:) = epstot(:,:,:) * const
   !
-  epstot(:,:,:) = 1.0_DP + epstot(:,:,:) * const
+  ! add diagonal term
+  !
+  epstot(1,1,:) = 1.0_DP + epstot(1,1,:)
+  epstot(2,2,:) = 1.0_DP + epstot(2,2,:)
+  epstot(3,3,:) = 1.0_DP + epstot(3,3,:)
   !
   ! write results on data files
   !
