@@ -513,7 +513,7 @@ SUBROUTINE v_h( rhog, ehart, charge, v )
   USE mp_global, ONLY: intra_pool_comm
   USE mp,        ONLY: mp_sum
   USE martyna_tuckerman, ONLY : wg_corr_h, do_comp_mt
-
+  USE esm,       ONLY: do_comp_esm, esm_hartree, esm_bc
   !
   IMPLICIT NONE
   !
@@ -545,71 +545,79 @@ SUBROUTINE v_h( rhog, ehart, charge, v )
   !
   ! ... calculate hartree potential in G-space (NB: V(G=0)=0 )
   !
-  ehart     = 0.D0
-  aux1(:,:) = 0.D0
-  !
-!$omp parallel do private( fac, rgtot_re, rgtot_im ), reduction(+:ehart)
-  DO ig = gstart, ngm
+  IF ( do_comp_esm .and. ( esm_bc .ne. 'pbc' ) ) THEN
      !
-     fac = 1.D0 / gg(ig)
+     ! ... calculate modified Hartree potential for ESM
      !
-     rgtot_re = REAL(  rhog(ig,1) )
-     rgtot_im = AIMAG( rhog(ig,1) )
-     !
-     IF ( nspin == 2 ) THEN
-        !
-        rgtot_re = rgtot_re + REAL(  rhog(ig,2) )
-        rgtot_im = rgtot_im + AIMAG( rhog(ig,2) )
-        !
-     END IF
-     !
-     ehart = ehart + ( rgtot_re**2 + rgtot_im**2 ) * fac
-     !
-     aux1(1,ig) = rgtot_re * fac
-     aux1(2,ig) = rgtot_im * fac
-     !
-  ENDDO
-!$omp end parallel do
-  !
-  fac = e2 * fpi / tpiba2
-  !
-  ehart = ehart * fac
-  !
-  aux1 = aux1 * fac
-  !
-  IF ( gamma_only ) THEN
-     !
-     ehart = ehart * omega
+     CALL esm_hartree (rhog, ehart, aux)
      !
   ELSE
      !
-     ehart = ehart * 0.5D0 * omega
+     ehart     = 0.D0
+     aux1(:,:) = 0.D0
      !
+!$omp parallel do private( fac, rgtot_re, rgtot_im ), reduction(+:ehart)
+     DO ig = gstart, ngm
+        !
+        fac = 1.D0 / gg(ig)
+        !
+        rgtot_re = REAL(  rhog(ig,1) )
+        rgtot_im = AIMAG( rhog(ig,1) )
+        !
+        IF ( nspin == 2 ) THEN
+           !
+           rgtot_re = rgtot_re + REAL(  rhog(ig,2) )
+           rgtot_im = rgtot_im + AIMAG( rhog(ig,2) )
+           !
+        END IF
+        !
+        ehart = ehart + ( rgtot_re**2 + rgtot_im**2 ) * fac
+        !
+        aux1(1,ig) = rgtot_re * fac
+        aux1(2,ig) = rgtot_im * fac
+        !
+     ENDDO
+!$omp end parallel do
+     !
+     fac = e2 * fpi / tpiba2
+     !
+     ehart = ehart * fac
+     !
+     aux1 = aux1 * fac
+     !
+     IF ( gamma_only ) THEN
+        !
+        ehart = ehart * omega
+        !
+     ELSE 
+        !
+        ehart = ehart * 0.5D0 * omega
+        !
+     END IF
+     ! 
+     if (do_comp_mt) then
+        ALLOCATE( vaux( ngm ), rgtot(ngm) )
+        rgtot(:) = rhog(:,1)
+        if (nspin==2) rgtot(:) = rgtot(:) + rhog(:,2)
+        CALL wg_corr_h (omega, ngm, rgtot, vaux, eh_corr)
+        aux1(1,1:ngm) = aux1(1,1:ngm) + REAL( vaux(1:ngm))
+        aux1(2,1:ngm) = aux1(2,1:ngm) + AIMAG(vaux(1:ngm))
+        ehart = ehart + eh_corr
+        DEALLOCATE( rgtot, vaux )
+     end if
+     !
+     CALL mp_sum(  ehart , intra_pool_comm )
+     ! 
+     aux(:) = 0.D0
+     !
+     aux(nl(1:ngm)) = CMPLX ( aux1(1,1:ngm), aux1(2,1:ngm), KIND=dp )
+     !
+     IF ( gamma_only ) THEN
+        !
+        aux(nlm(1:ngm)) = CMPLX ( aux1(1,1:ngm), -aux1(2,1:ngm), KIND=dp )
+        !
+     END IF
   END IF
-  !
-  if (do_comp_mt) then
-     ALLOCATE( vaux( ngm ), rgtot(ngm) )
-     rgtot(:) = rhog(:,1)
-     if (nspin==2) rgtot(:) = rgtot(:) + rhog(:,2)
-     CALL wg_corr_h (omega, ngm, rgtot, vaux, eh_corr)
-     aux1(1,1:ngm) = aux1(1,1:ngm) + REAL( vaux(1:ngm))
-     aux1(2,1:ngm) = aux1(2,1:ngm) + AIMAG(vaux(1:ngm))
-     ehart = ehart + eh_corr
-     DEALLOCATE( rgtot, vaux )
-  end if
-  !
-  CALL mp_sum(  ehart , intra_pool_comm )
-  ! 
-  aux(:) = 0.D0
-  !
-  aux(nl(1:ngm)) = CMPLX ( aux1(1,1:ngm), aux1(2,1:ngm), KIND=dp )
-  !
-  IF ( gamma_only ) THEN
-     !
-     aux(nlm(1:ngm)) = CMPLX ( aux1(1,1:ngm), -aux1(2,1:ngm), KIND=dp )
-     !
-  END IF
-  
   !
   ! ... transform hartree potential to real space
   !

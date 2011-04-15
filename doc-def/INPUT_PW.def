@@ -1065,8 +1065,78 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                          range interactions in ab-initio and force-field-based
                          calculation in clusters", J.Chem.Phys. 110, 2810 (1999)
 
+                'esm' :  Effective Screening Medium Method.
+                         For polarized or charged slab calculation, embeds
+                         the simulation cell within an effective semi-
+                         infinite medium in the perpendicular direction
+                         (along z). Embedding regions can be vacuum or
+                         semi-infinite metal electrodes (use 'esm_bc' to
+                         choose boundary conditions). If between two
+                         electrodes, an optional electric field
+                         ('esm_efield') may be applied. Method described in
+                         M. Otani and O. Sugino, "First-principles
+                         calculations of charged surfaces and interfaces:
+                         A plane-wave nonrepeated slab approach," PRB 73,
+                         115407 (2006).
+                         NB: Requires cell with a_3 lattice vector along z,
+                         normal to the xy plane, with the slab centered
+                         around z=0. Also requires symmetry checking to be
+                         disabled along z, either by setting 'nosym' = .TRUE.
+                         or by very slight displacement (i.e., 5e-4 a.u.)
+                         of the slab along z.
+                         See 'esm_bc', 'esm_efield', 'esm_w', 'esm_nfit'.
 	    }
 	}
+
+        var esm_bc -type CHARACTER {
+            see { assume_isolated }
+            default { 'pbc' }
+            info {
+                If assume_isolated = 'esm', determines the boundary
+                conditions used for either side of the slab.
+
+                Currently available choices:
+
+                'pbc' (default): regular periodic calculation (no ESM).
+
+                'bc1' : Vacuum-slab-vacuum (open boundary conditions)
+
+                'bc2' : Metal-slab-metal (dual electrode configuration).
+                        See also 'esm_efield'.
+
+                'bc3' : Vacuum-slab-metal
+            }
+        }
+
+        var esm_w -type REAL {
+            see { assume_isolated }
+            default { 0.d0 }
+            info {
+                If assume_isolated = 'esm', determines the position offset
+                [in a.u.] of the start of the effective screening region,
+                measured relative to the cell edge. (ESM region begins at
+                z = +/- [L_z/2 + esm_w] ).
+            }
+        }
+
+        var esm_efield -type REAL {
+            see { assume_isolated, esm_bc }
+            default { 0.d0 }
+            info {
+                If assume_isolated = 'esm' and esm_bc = 'bc2', gives the
+                magnitude of the electric field [Ryd/a.u.] to be applied
+                between semi-infinite ESM electrodes.
+            }
+        }
+
+        var esm_nfit -type INTEGER {
+            see { assume_isolated }
+            default { 4 }
+            info {
+                If assume_isolated = 'esm', gives the number of z-grid points
+                for the polynomial fit along the cell edge.
+            }
+        }
 
          var london -type LOGICAL {
            default { .FALSE. }

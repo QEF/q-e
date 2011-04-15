@@ -233,6 +233,15 @@ MODULE read_namelists_module
        london_s6   = 0.75_DP
        london_rcut = 200.00_DP
        !
+       ! ... ESM
+       !
+       esm_bc='pbc'
+       esm_efield=0.0_DP
+       esm_w=0.0_DP
+       esm_nfit=4
+       esm_debug=.FALSE.
+       esm_debug_gpmax=0
+       !
        RETURN
        !
      END SUBROUTINE
@@ -822,6 +831,15 @@ MODULE read_namelists_module
        CALL mp_bcast( london_rcut,               ionode_id )
        !
        CALL mp_bcast( no_t_rev,                  ionode_id )
+       !
+       ! ... ESM method broadcast
+       !
+       CALL mp_bcast( esm_bc,             ionode_id )
+       CALL mp_bcast( esm_efield,         ionode_id )
+       CALL mp_bcast( esm_w,              ionode_id )
+       CALL mp_bcast( esm_nfit,           ionode_id )
+       CALL mp_bcast( esm_debug,          ionode_id )
+       CALL mp_bcast( esm_debug_gpmax,    ionode_id )
 
        RETURN
        !

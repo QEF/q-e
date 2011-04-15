@@ -18,6 +18,7 @@ subroutine force_lc (nat, tau, ityp, alat, omega, ngm, ngl, &
   USE mp,        ONLY : mp_sum
   USE fft_base,  ONLY : dfftp
   USE fft_interfaces, ONLY : fwfft
+  USE esm,       ONLY : esm_force_lc, do_comp_esm, esm_bc
   implicit none
   !
   !   first the dummy variables
@@ -95,6 +96,14 @@ subroutine force_lc (nat, tau, ityp, alat, omega, ngm, ngl, &
 #ifdef __PARA
   call mp_sum(  forcelc, intra_pool_comm )
 #endif
+
+  IF ( do_comp_esm .and. ( esm_bc .ne. 'pbc' ) ) THEN
+     !
+     ! ... Perform corrections for ESM method
+     !
+     CALL esm_force_lc ( aux, forcelc )
+  ENDIF
+
   deallocate (aux)
   return
 end subroutine force_lc

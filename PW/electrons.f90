@@ -74,6 +74,7 @@ SUBROUTINE electrons()
   USE paw_symmetry,         ONLY : PAW_symmetrize_ddd
   USE uspp_param,           ONLY : nh, nhm ! used for PAW
   USE dfunct,                 only : newd
+  USE esm,                  ONLY : do_comp_esm, esm_printpot
   !
   !
   IMPLICIT NONE
@@ -624,6 +625,10 @@ SUBROUTINE electrons()
         ! ... if system is charged add a Makov-Payne correction to the energy
         !
         IF ( do_makov_payne ) CALL makov_payne( etot )
+        !
+        ! ... print out ESM potentials if desired
+        !
+        IF ( do_comp_esm ) CALL esm_printpot()
         !
         WRITE( stdout, 9110 ) iter
         !

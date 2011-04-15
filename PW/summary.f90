@@ -50,6 +50,7 @@ SUBROUTINE summary()
 ! DCC
 !  USE ee_mod,          ONLY : do_comp, do_coarse, do_mltgrid, mr1, mr2, mr3
 !  USE gcoarse,         ONLY : ngmc, gcutmc
+  USE esm,             ONLY : do_comp_esm, esm_summary
   !
   IMPLICIT NONE
   !
@@ -141,6 +142,10 @@ SUBROUTINE summary()
  
 ! DCC
 !  IF ( do_comp )  CALL write_ee_summary()
+  !
+  ! ... ESM
+  !
+  IF ( do_comp_esm )  CALL esm_summary()
 
   IF ( lelfield ) THEN !here informations for berry's phase el. fields calculations
      WRITE(stdout, *)

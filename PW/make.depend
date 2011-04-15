@@ -371,6 +371,7 @@ electrons.o : ../Modules/recvec.o
 electrons.o : ../Modules/uspp.o
 electrons.o : ../Modules/wavefunctions.o
 electrons.o : buffers.o
+electrons.o : esm.o
 electrons.o : exx.o
 electrons.o : io_rho_xml.o
 electrons.o : newd.o
@@ -380,10 +381,25 @@ electrons.o : paw_symmetry.o
 electrons.o : pwcom.o
 electrons.o : scf_mod.o
 eqvect.o : ../Modules/kind.o
+esm.o : ../Modules/cell_base.o
+esm.o : ../Modules/constants.o
+esm.o : ../Modules/control_flags.o
+esm.o : ../Modules/fft_base.o
+esm.o : ../Modules/fft_scalar.o
+esm.o : ../Modules/griddim.o
+esm.o : ../Modules/io_global.o
+esm.o : ../Modules/ions_base.o
+esm.o : ../Modules/kind.o
+esm.o : ../Modules/mp.o
+esm.o : ../Modules/mp_global.o
+esm.o : ../Modules/uspp.o
+esm.o : pwcom.o
+esm.o : scf_mod.o
 ewald.o : ../Modules/constants.o
 ewald.o : ../Modules/kind.o
 ewald.o : ../Modules/mp.o
 ewald.o : ../Modules/mp_global.o
+ewald.o : esm.o
 ewald.o : martyna_tuckerman.o
 ewald_dipole.o : ../Modules/cell_base.o
 ewald_dipole.o : ../Modules/constants.o
@@ -448,6 +464,7 @@ force_ew.o : ../Modules/constants.o
 force_ew.o : ../Modules/kind.o
 force_ew.o : ../Modules/mp.o
 force_ew.o : ../Modules/mp_global.o
+force_ew.o : esm.o
 force_hub.o : ../Modules/cell_base.o
 force_hub.o : ../Modules/control_flags.o
 force_hub.o : ../Modules/io_files.o
@@ -469,6 +486,7 @@ force_lc.o : ../Modules/fft_interfaces.o
 force_lc.o : ../Modules/kind.o
 force_lc.o : ../Modules/mp.o
 force_lc.o : ../Modules/mp_global.o
+force_lc.o : esm.o
 force_us.o : ../Modules/cell_base.o
 force_us.o : ../Modules/control_flags.o
 force_us.o : ../Modules/io_files.o
@@ -732,6 +750,7 @@ input.o : ../Modules/wrappers.o
 input.o : ../Modules/xml_io_base.o
 input.o : a2fmod.o
 input.o : dynamics_module.o
+input.o : esm.o
 input.o : exx.o
 input.o : kernel_table.o
 input.o : martyna_tuckerman.o
@@ -1369,6 +1388,7 @@ setlocal.o : ../Modules/kind.o
 setlocal.o : ../Modules/mp.o
 setlocal.o : ../Modules/mp_global.o
 setlocal.o : ../Modules/recvec.o
+setlocal.o : esm.o
 setlocal.o : martyna_tuckerman.o
 setlocal.o : pwcom.o
 setlocal.o : scf_mod.o
@@ -1554,6 +1574,7 @@ summary.o : ../Modules/mp_global.o
 summary.o : ../Modules/printout_base.o
 summary.o : ../Modules/recvec.o
 summary.o : ../Modules/uspp.o
+summary.o : esm.o
 summary.o : kernel_table.o
 summary.o : noncol.o
 summary.o : pwcom.o
@@ -1626,6 +1647,7 @@ v_of_rho.o : ../Modules/kind.o
 v_of_rho.o : ../Modules/mp.o
 v_of_rho.o : ../Modules/mp_global.o
 v_of_rho.o : ../Modules/recvec.o
+v_of_rho.o : esm.o
 v_of_rho.o : martyna_tuckerman.o
 v_of_rho.o : noncol.o
 v_of_rho.o : pwcom.o
@@ -1655,6 +1677,7 @@ vhpsi.o : pwcom.o
 vhpsi.o : scf_mod.o
 vloc_of_g.o : ../Modules/constants.o
 vloc_of_g.o : ../Modules/kind.o
+vloc_of_g.o : esm.o
 vloc_psi.o : ../Modules/fft_base.o
 vloc_psi.o : ../Modules/fft_interfaces.o
 vloc_psi.o : ../Modules/kind.o

@@ -67,6 +67,7 @@ efermig.o \
 efermit.o \
 electrons.o \
 eqvect.o \
+esm.o \
 ewald.o \
 ewald_dipole.o \
 exx.o \

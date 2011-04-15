@@ -27,6 +27,7 @@ subroutine setlocal
   USE mp_global, ONLY : intra_pool_comm
   USE mp,        ONLY : mp_sum
   USE martyna_tuckerman, ONLY : wg_corr_loc, do_comp_mt
+  USE esm,       ONLY : esm_local, esm_bc, do_comp_esm
 
   !
   implicit none
@@ -56,6 +57,13 @@ subroutine setlocal
         aux (nlm(ng)) = CONJG(aux (nl(ng)))
      enddo
   end if
+  !
+  IF ( do_comp_esm .and. ( esm_bc .ne. 'pbc' ) ) THEN
+     !
+     ! ... Perform ESM correction to local potential
+     !
+     CALL esm_local ( aux )
+  ENDIF
   !
   ! ... v_of_0 is (Vloc)(G=0)
   !

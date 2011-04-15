@@ -444,7 +444,7 @@ MODULE input_parameters
         CHARACTER(len=80) :: assume_isolated = 'none'
           ! used to define corrections for isolated systems
           ! other possibilities:
-          !  'makov-payne', 'martyna-tuckerman`, `dcc`
+          !  'makov-payne', 'martyna-tuckerman`, `dcc`, 'esm'
 !
         LOGICAL   :: london = .false.
           ! if .true. compute semi-empirical dispersion term ( C6_ij / R_ij**6 )
@@ -452,6 +452,29 @@ MODULE input_parameters
         REAL ( DP ) :: london_s6   =   0.75_DP , & ! default global scaling parameter for PBE
                        london_rcut = 200.00_DP
 !
+        CHARACTER(LEN=3) :: esm_bc = 'pbc'
+          ! 'pbc': ordinary calculation with periodic boundary conditions
+          ! 'bc1': vacuum-slab-vacuum
+          ! 'bc2': metal-slab-metal
+          ! 'bc3': vacuum-slab-metal
+
+        REAL(DP) :: esm_efield = 0.0_DP
+          ! applied electronic field [Ryd/a.u.] (used only for esm_bc='bc2')
+
+        REAL(DP) :: esm_w = 0.0_DP
+          ! position of effective screening medium from z0=L_z/2 [a.u.]
+          ! note: z1 is given by z1=z0+abs(esm_w)
+
+        INTEGER :: esm_nfit = 4
+          ! number of z-grid points for polynomial fitting at cell edge
+
+        LOGICAL :: esm_debug = .FALSE.
+          ! used to enable debug mode (output v_hartree and v_local)
+
+        INTEGER :: esm_debug_gpmax = 0
+          ! if esm_debug is .TRUE., calcualte v_hartree and v_local
+          ! for abs(gp)<=esm_debug_gpmax (gp is integer and has tpiba unit)
+
         NAMELIST / system / ibrav, celldm, a, b, c, cosab, cosac, cosbc, nat, &
              ntyp, nbnd, ecutwfc, ecutrho, nr1, nr2, nr3, nr1s, nr2s,  &
              nr3s, nr1b, nr2b, nr3b, nosym, nosym_evc, noinv,                 &
@@ -471,7 +494,8 @@ MODULE input_parameters
              sic, sic_epsilon, force_pairing, sic_alpha,                      &
              tot_charge, tot_magnetization,                                   &
              spline_ps, one_atom_occupations, london, london_s6, london_rcut, &
-             step_pen, A_pen, sigma_pen, alpha_pen, no_t_rev
+             step_pen, A_pen, sigma_pen, alpha_pen, no_t_rev,                 &
+             esm_bc, esm_efield, esm_w, esm_nfit, esm_debug, esm_debug_gpmax
 !
 !=----------------------------------------------------------------------------=!
 !  EE Namelist Input Parameters

@@ -110,6 +110,12 @@ SUBROUTINE iosys()
   !
   USE martyna_tuckerman, ONLY: do_comp_mt
   !
+  USE esm,           ONLY: do_comp_esm, &
+                           esm_bc_ => esm_bc, &
+                           esm_nfit_ => esm_nfit, &
+                           esm_efield_ => esm_efield, &
+                           esm_w_ => esm_w
+  !
   USE a2F,           ONLY : la2F_ => la2F
   !
   USE exx,           ONLY : x_gamma_extrapolation_ => x_gamma_extrapolation, &
@@ -225,7 +231,8 @@ SUBROUTINE iosys()
                                B_field, fixed_magnetization, report, lspinorb,&
                                starting_spin_angle,                           &
                                assume_isolated, spline_ps, london, london_s6, &
-                               london_rcut, one_atom_occupations, no_t_rev
+                               london_rcut, one_atom_occupations, no_t_rev,   &
+                               esm_bc, esm_efield, esm_w, esm_nfit
   !
   ! ... ELECTRONS namelist
   !
@@ -1150,6 +1157,13 @@ SUBROUTINE iosys()
   w_1_              = w_1
   w_2_              = w_2
   !
+  ! ... ESM
+  !
+  esm_bc_ = esm_bc
+  esm_efield_ = esm_efield
+  esm_w_ = esm_w
+  esm_nfit_ = esm_nfit
+  !
   IF (trim(occupations) /= 'from_input') one_atom_occupations_=.false.
   !
   llondon     = london
@@ -1173,6 +1187,7 @@ SUBROUTINE iosys()
 !      do_coarse      = .false.
 !      do_mltgrid     = .false.
       do_comp_mt     = .false.
+      do_comp_esm    = .false.
       !
     CASE( 'dcc' )
       !
@@ -1182,6 +1197,7 @@ SUBROUTINE iosys()
 !      do_mltgrid     = .true.
       do_makov_payne = .false.
       do_comp_mt     = .false.
+      do_comp_esm    = .false.
       !
     CASE( 'martyna-tuckerman', 'm-t', 'mt' )
       !
@@ -1190,14 +1206,25 @@ SUBROUTINE iosys()
 !      do_coarse      = .false.
 !      do_mltgrid     = .false.
       do_makov_payne = .false.
+      do_comp_esm    = .false.
+      !
+    CASE( 'esm' )
+      !
+      do_comp_esm    = .true.
+!     do_comp        = .false.
+!     do_coarse      = .false.
+!     do_mltgrid     = .false.
+      do_comp_mt     = .false.
+      do_makov_payne = .false.
       !
     CASE( 'none' )
       !
       do_makov_payne = .false.
 !      do_comp        = .false.
-!      do_comp_mt     = .false.
 !      do_coarse      = .false.
 !      do_mltgrid     = .false.
+      do_comp_mt     = .false.
+      do_comp_esm    = .false.
       !
     CASE DEFAULT
       !

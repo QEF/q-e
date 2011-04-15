@@ -269,6 +269,12 @@ EXX_example:
     calculation of binding energy of o2,co,n2 from calculations in a
     12 au cubic box and gamma sampling.
 
+ESM_example:
+    This example shows how to use the Effective Screening Medium Method (ESM)
+    in pw.x to calculate the total energy, charge density, force, and
+    potential of a polarized or charged medium. Calculations are for a water
+    molecule and an Al(111) electrode.
+
 GIPAW_example:
     This example shows how to use gipaw.x to calculate the magnetic susceptibility
     and NMR chemical shift of fcc Si, diamond, and of two molecules: CH4 and C2H4.

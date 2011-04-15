@@ -18,6 +18,7 @@ subroutine force_ew (alat, nat, ntyp, ityp, zv, at, bg, tau, &
   USE constants, ONLY : tpi, e2
   USE mp_global, ONLY : intra_pool_comm
   USE mp,        ONLY : mp_sum
+  USE esm,       ONLY : esm_force_ew, do_comp_esm, esm_bc
   implicit none
   !
   !   First the dummy variables
@@ -130,7 +131,20 @@ subroutine force_ew (alat, nat, ntyp, ityp, zv, at, bg, tau, &
      enddo
   enddo
   deallocate (aux)
-  if (gstart == 1) goto 100
+  IF ( do_comp_esm ) THEN
+#ifdef __PARA
+     CALL mp_sum( forceion, intra_pool_comm )
+#endif
+     IF ( esm_bc .ne. 'pbc' ) THEN
+        !
+        ! ... Perform corrections for ESM calculation
+        !
+        CALL esm_force_ew ( alpha, forceion )
+        !
+     ENDIF
+  ELSE
+     if (gstart == 1) goto 100
+  END IF
   !
   ! R-space sum here (only for the processor that contains G=0)
   !
@@ -160,8 +174,7 @@ subroutine force_ew (alat, nat, ntyp, ityp, zv, at, bg, tau, &
   enddo
 100 continue
 #ifdef __PARA
-
-  call mp_sum(  forceion, intra_pool_comm )
+  IF ( .not. do_comp_esm ) CALL mp_sum( forceion, intra_pool_comm )
 #endif
   return
 end subroutine force_ew

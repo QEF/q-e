@@ -1,0 +1,62 @@
+This example shows how to use the Effective Screening Medium Method (ESM) 
+to calculate the total energy, charge density, force, and potential of a 
+polarized or charged medium.
+
+ESM screens the electronic charge of a polarized/charged medium along one 
+perpendicular direction by introducing a classical charge model and a local 
+relative permittivity into the first-principles calculation framework. This 
+permits calculations using open boundary conditions (OBC). The method is 
+described in detail in M. Otani and O. Sugino, "First-principles calculations 
+of charged surfaces and interfaces: A plane-wave nonrepeated slab approach," 
+PRB 73, 115407 (2006).
+
+In addition to 'pbc' (ordinary periodic boundary conditions with ESM 
+disabled), the code allows three different sets of boundary conditions 
+perpendicular to the polarized medium:
+
+1) 'bc1' : Immerse the medium between two semi-infinite vacuum regions; 
+2) 'bc2' : Immerse the medium between two semi-infinite metallic electrodes, 
+with optional fixed field applied between them;
+3) 'bc3' : Immerse the medium between one semi-infinite vacuum region and one 
+semi-infinite metallic electrode.
+
+The example calculation proceeds as follows:
+
+esm_bc = 'bc1':
+
+1) make a self-consistent calculation for H2O with esm_bc = 'pbc' (ESM off)
+   (input=H2O.noesm.in, output=H2O.noesm.out). Using 'pbc' causes the
+   code to print out the density and potential (hartree + local) along z, even
+   though ESM is disabled. Note that the molecule has a z-oriented dipole.
+
+2) make a self-consistent calculation for H2O with esm_bc = 'bc1'
+   (input=H2O.bc1.in, output=H2O.bc1.out). This simulates the water molecule 
+   in an infinite vacuum along the z-direction, preventing dipole-dipole 
+   interaction between periodic images. 
+
+esm_bc = 'bc2':
+
+3) make a self-consistent calculation for Al(111) with esm_bc = 'bc2',
+   without an applied field (input=Al111.bc2.in, output=Al111.bc2.out). 
+   This simulates the slab sandwiched between two uncharged semi-infinite 
+   metal electrodes. 
+
+4) make a self-consistent calculation for Al(111) with esm_bc = 'bc2',
+   this time with an applied field (input=Al111.bc2_efield.in, 
+   output=Al111.bc2_efield.out). The slab polarizes in response.
+
+esm_bc = 'bc3':
+
+5) make a self-consistent calculation for Al(111) with esm_bc = 'bc3' to 
+   simulate a semi-infinite system in contact with vacuum 
+   (input=Al111.bc3.in, output=Al111.bc3.out).
+
+6) make a self-consistent calculation for Al(111) with esm_bc = 'bc3' to 
+   simulate a semi-infinite system in contact with vacuum with a weakly 
+   negative (-0.005e) overall charge (input=Al111.bc3_m005.in, 
+   output=Al111.bc3_m005.out). Note that the charge migrates to the surface/
+   vacuum interface.
+
+7) Repeat #6 but with a weakly positive (+0.005e) overall charge 
+   (input=Al111.bc3_p005.in, output=Al111.bc3_p005.out).
+
