@@ -169,8 +169,9 @@ CONTAINS
     read(kernel_file, '(2i5)') Nqs, Nr_points
     read(kernel_file, double_format) r_max
 
-    allocate( q_mesh(Nqs) )
-    allocate( kernel(0:Nr_points,Nqs,Nqs), d2phi_dk2(0:Nr_points,Nqs,Nqs) )
+    if(.not.allocated(q_mesh)) allocate( q_mesh(Nqs) )
+    if(.not.allocated(kernel)) allocate( kernel(0:Nr_points,Nqs,Nqs))
+    if(.not.allocated(d2phi_dk2)) allocate(d2phi_dk2(0:Nr_points,Nqs,Nqs) )
     
     !! Read in the values of the q points used to generate this kernel
     read(kernel_file, double_format) q_mesh
