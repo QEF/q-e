@@ -1,12 +1,14 @@
 Fixed in 4.3.1 version:
 
+   * Misc compilation problems: line exceeding 132 characters, 
+     syntax not accepted by recent versions of gfortran, etc.
    * PW: nasty out-of-bound bug leading to mysterious crashes or 
      incorrect results in some variable-cell calculations
-   * NEB + exact exchange wasn't working
+   * NEB + nonlocal exchange (DF-vdW) wasn't working
+   * HSE numerical problems in function expint
    * XSPECTRA wasn't working any longer due to missing updates to
      read_file_xspectra.f90
    * epsilon.f90: the term 1 must be added to diagonal components only! 
-   * TD-DFPT: a line was exceeding 132 characters
 
 New in 4.3 version:
 
