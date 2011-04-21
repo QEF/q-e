@@ -38,7 +38,7 @@ default :
 ###########################################################
 # Main targets
 ###########################################################
-pw : bindir mods liblapack libblas libs libiotk
+pw : bindir mods liblapack libblas libs libiotk libsolvent
 	if test -d PW ; then \
 	( cd PW ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= all ; \
 	else $(MAKE) $(MFLAGS) TLDEPS= all ; fi ) ; fi
@@ -143,6 +143,10 @@ libs : mods
 	else $(MAKE) $(MFLAGS) TLDEPS= all ; fi )
 	( cd flib ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= $(FLIB_TARGETS) ; \
 	else $(MAKE) $(MFLAGS) TLDEPS= $(FLIB_TARGETS) ; fi )
+
+libsolvent :  mods
+	( if test -d Solvent ; then cd Solvent ; if test "$(MAKE)" = "" ;  \
+	then make $(MFLAGS) TLDEPS= all; else $(MAKE) $(MFLAGS) TLDEPS= all ; fi ; fi )
 
 bindir :
 	test -d bin || mkdir bin

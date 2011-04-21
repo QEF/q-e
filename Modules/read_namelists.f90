@@ -233,6 +233,12 @@ MODULE read_namelists_module
        london_s6   = 0.75_DP
        london_rcut = 200.00_DP
        !
+#ifdef __SOLVENT
+       ! ... Solvent
+       !
+       do_solvent = .false. 
+       !
+#endif
        ! ... ESM
        !
        esm_bc='pbc'
@@ -245,6 +251,49 @@ MODULE read_namelists_module
        RETURN
        !
      END SUBROUTINE
+
+#ifdef __SOLVENT
+     !=----------------------------------------------------------------------=!
+     !
+     !  Variables initialization for Namelist SOLVENT
+     !
+     !=----------------------------------------------------------------------=!
+     !
+     !-----------------------------------------------------------------------
+     SUBROUTINE solvent_defaults( prog )
+       !-----------------------------------------------------------------------
+       !
+       IMPLICIT NONE
+       !
+       CHARACTER(LEN=2) :: prog   ! ... specify the calling program
+       !
+       !
+       verbose     = 0
+       solvent_thr = 1.D-1
+       !
+       stype   = 1
+       rhozero = 0.001
+       rhomin  = 0.0001
+       tbeta   = 4.8
+       !
+       epsinfty        = 78.D0
+       eps_mode        = 'electronic'
+       solvationrad(:) = 3.D0
+       atomicspread(:) = 0.5D0
+       !
+       mixrhopol = 0.5
+       tolrhopol = 1.D-10
+       !
+       gamma = 0.D0
+       delta = 0.00001D0
+       !
+       extpressure = 0.D0
+       !
+       RETURN
+       !
+     END SUBROUTINE
+     !
+#endif
 ! DCC
      !=----------------------------------------------------------------------=!
      !
@@ -831,6 +880,9 @@ MODULE read_namelists_module
        CALL mp_bcast( london_rcut,               ionode_id )
        !
        CALL mp_bcast( no_t_rev,                  ionode_id )
+#ifdef __SOLVENT
+       CALL mp_bcast( do_solvent,                ionode_id )
+#endif
        !
        ! ... ESM method broadcast
        !
@@ -844,6 +896,48 @@ MODULE read_namelists_module
        RETURN
        !
      END SUBROUTINE
+#ifdef __SOLVENT
+     !=----------------------------------------------------------------------=!
+     !
+     !  Broadcast variables values for Namelist SOLVENT
+     !
+     !=----------------------------------------------------------------------=!
+     !
+     !-----------------------------------------------------------------------
+     SUBROUTINE solvent_bcast()
+       !-----------------------------------------------------------------------
+       !
+       USE io_global, ONLY : ionode_id
+       USE mp,        ONLY : mp_bcast
+       !
+       IMPLICIT NONE
+       !
+       CALL mp_bcast( verbose,                    ionode_id )
+       CALL mp_bcast( solvent_thr,                ionode_id )
+       !
+       CALL mp_bcast( stype,                      ionode_id )
+       CALL mp_bcast( rhozero,                    ionode_id )
+       CALL mp_bcast( rhomin,                     ionode_id )
+       CALL mp_bcast( tbeta,                      ionode_id )
+       !
+       CALL mp_bcast( epsinfty,                   ionode_id )
+       CALL mp_bcast( eps_mode,                   ionode_id )
+       CALL mp_bcast( solvationrad,               ionode_id )
+       CALL mp_bcast( atomicspread,               ionode_id )
+       !
+       CALL mp_bcast( mixrhopol,                  ionode_id )
+       CALL mp_bcast( tolrhopol,                  ionode_id )
+       !
+       CALL mp_bcast( gamma,                      ionode_id )
+       CALL mp_bcast( delta,                      ionode_id )
+       !
+       CALL mp_bcast( extpressure,                ionode_id )
+       !
+      RETURN
+       !
+     END SUBROUTINE
+     !
+#endif
 ! DCC
      !=----------------------------------------------------------------------=!
      !
@@ -1805,6 +1899,9 @@ MODULE read_namelists_module
          CALL electrons_defaults( prog )
          CALL ions_defaults( prog )
          CALL cell_defaults( prog )
+#ifdef __SOLVENT
+         CALL solvent_defaults( prog )
+#endif
          CALL ee_defaults( prog )
        ENDIF
 !       IF( prog == 'SM') THEN
@@ -1924,6 +2021,19 @@ MODULE read_namelists_module
        END IF
        !
        CALL press_ai_bcast()
+#ifdef __SOLVENT
+       !
+       ! ... SOLVENT namelist
+       !
+       IF ( do_solvent ) THEN
+          ios = 0
+          IF( ionode ) READ( 5, solvent, iostat = ios )
+          CALL mp_bcast( ios, ionode_id )
+          IF( ios /= 0 ) CALL errore( ' read_namelists ', &
+                                    & ' reading namelist solvent ', ABS(ios) )
+       END IF
+       CALL solvent_bcast()
+#endif
        !
        ! ... EE namelist
        !

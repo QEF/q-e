@@ -19,6 +19,9 @@ SUBROUTINE makov_payne( etot )
   USE io_global, ONLY : stdout
   USE ions_base, ONLY : nat, tau, ityp, zv
   USE cell_base, ONLY : at, bg
+#ifdef __SOLVENT
+  USE solvent_base, ONLY : do_solvent, pol_dipole, pol_quadrupole
+#endif
   !
   IMPLICIT NONE
   !
@@ -44,6 +47,10 @@ SUBROUTINE makov_payne( etot )
   x0(:) = x0(:) / zvtot
   !
   CALL compute_e_dipole( x0, e_dipole, e_quadrupole )
+#ifdef __SOLVENT
+  !
+  IF ( do_solvent ) CALL compute_pol_dipole( x0, pol_dipole, pol_quadrupole )
+#endif  
   !
   CALL write_dipole( etot, x0, e_dipole, e_quadrupole, qq )
   !
@@ -163,6 +170,9 @@ SUBROUTINE write_dipole( etot, x0, dipole_el, quadrupole_el, qq )
   USE ions_base,  ONLY : nat, ityp, tau, zv
   USE cell_base,  ONLY : at, bg, omega, alat, ibrav
   USE io_global,  ONLY : ionode
+#ifdef __SOLVENT
+  USE solvent_base, ONLY : do_solvent, pol_dipole, pol_quadrupole
+#endif
   !
   IMPLICIT NONE
   !
@@ -213,6 +223,13 @@ SUBROUTINE write_dipole( etot, x0, dipole_el, quadrupole_el, qq )
   !
   dipole(:)  = -dipole_el(1:3) + dipole_ion(:)
   quadrupole = -quadrupole_el  + quadrupole_ion
+#ifdef __SOLVENT
+  IF ( do_solvent ) THEN 
+    qq = qq - pol_dipole(0)
+    dipole(:)  = dipole(:) - pol_dipole(1:3) 
+    quadrupole = quadrupole - pol_quadrupole  
+  ENDIF
+#endif
   !
   WRITE( stdout, '(/5X,"charge density inside the ", &
        &               "Wigner-Seitz cell:",3F14.8," el.")' ) dipole_el(0)
@@ -229,6 +246,11 @@ SUBROUTINE write_dipole( etot, x0, dipole_el, quadrupole_el, qq )
       (-dipole_el(ip), ip = 1, 3), (-dipole_el(ip)*debye, ip = 1, 3 )
   WRITE( stdout, '( 5X,"Ionic",3F9.4," au (Ry),", 3F9.4," Debye")' ) &
       ( dipole_ion(ip),ip = 1, 3), ( dipole_ion(ip)*debye,ip = 1, 3 )
+#ifdef __SOLVENT
+  IF ( do_solvent ) &
+    WRITE( stdout, '( 5X,"Diele",3F9.4," au (Ry),", 3F9.4," Debye")' ) &
+      (-pol_dipole(ip),ip = 1, 3), (-pol_dipole(ip)*debye,ip = 1, 3 )
+#endif
   WRITE( stdout, '( 5X,"Total",3F9.4," au (Ry),", 3F9.4," Debye")' ) &
       ( dipole(ip),    ip = 1, 3), ( dipole(ip)*debye,    ip = 1, 3 )
   !
@@ -238,6 +260,11 @@ SUBROUTINE write_dipole( etot, x0, dipole_el, quadrupole_el, qq )
       -quadrupole_el
   WRITE( stdout, '( 5X,"     Ions quadrupole moment",F20.8," a.u. (Ry)")' ) &
       quadrupole_ion
+#ifdef __SOLVENT
+  IF ( do_solvent ) &
+    WRITE( stdout, '( 5X,"Dielectr. quadrupole moment",F20.8," a.u. (Ry)")' )  &
+      -pol_quadrupole
+#endif
   WRITE( stdout, '( 5X,"    Total quadrupole moment",F20.8," a.u. (Ry)")' ) &
       quadrupole
   !
@@ -464,3 +491,105 @@ SUBROUTINE vacuum_level( x0, zion )
   RETURN
   !
 END SUBROUTINE vacuum_level
+
+#ifdef __SOLVENT
+!---------------------------------------------------------------------------
+SUBROUTINE compute_pol_dipole( x0, pol_dipole, pol_quadrupole )
+  !---------------------------------------------------------------------------
+  !
+  USE io_global,  ONLY : stdout
+  USE kinds,      ONLY : DP
+  USE ions_base,  ONLY : nat, tau
+  USE cell_base,  ONLY : at, bg, omega, alat
+  USE solvent_base, ONLY : epsinfty, rhopol
+  USE fft_base,   ONLY : dfftp
+  USE mp_global,  ONLY : me_pool, intra_pool_comm
+  USE mp,         ONLY : mp_sum
+  !
+  IMPLICIT NONE
+  !
+  REAL(DP), INTENT(IN)  :: x0(3)
+  REAL(DP), INTENT(OUT) :: pol_dipole(0:3), pol_quadrupole
+  !
+  REAL(DP) :: r(3), rhoir
+  INTEGER  :: i, j, k, ip, ir, index, index0
+  REAL(DP) :: inv_nr1, inv_nr2, inv_nr3
+  !
+  !
+  inv_nr1 = 1.D0 / DBLE( dfftp%nr1 )
+  inv_nr2 = 1.D0 / DBLE( dfftp%nr2 )
+  inv_nr3 = 1.D0 / DBLE( dfftp%nr3 )
+  !
+  pol_dipole(:)  = 0.D0
+  pol_quadrupole = 0.D0
+  !
+  IF ( epsinfty .LE. 1.D0 ) RETURN
+  !
+  index0 = 0
+  !
+#if defined (__PARA)
+  !
+  DO i = 1, me_pool
+     index0 = index0 + dfftp%nr1x*dfftp%nr2x*dfftp%npp(i)
+  END DO
+  !
+#endif
+  !
+  DO ir = 1, dfftp%nnr
+     !
+     ! ... three dimensional indexes
+     !
+     index = index0 + ir - 1
+     k     = index / (dfftp%nr1x*dfftp%nr2x)
+     index = index - (dfftp%nr1x*dfftp%nr2x)*k
+     j     = index / dfftp%nr1x
+     index = index - dfftp%nr1x*j
+     i     = index
+     !
+     DO ip = 1, 3
+        r(ip) = DBLE( i )*inv_nr1*at(ip,1) + &
+                DBLE( j )*inv_nr2*at(ip,2) + &
+                DBLE( k )*inv_nr3*at(ip,3)
+     END DO
+     !
+     r(:) = r(:) - x0(:)
+     !
+     ! ... minimum image convenction
+     !
+     CALL cryst_to_cart( 1, r, bg, -1 )
+     !
+     r(:) = r(:) - ANINT( r(:) )
+     !
+     CALL cryst_to_cart( 1, r, at, 1 )
+     !
+     rhoir = rhopol(ir)
+     !
+     ! ... dipole(0) = charge density
+     !
+     pol_dipole(0) = pol_dipole(0) + rhoir
+     !
+     DO ip = 1, 3
+        !
+        pol_dipole(ip) = pol_dipole(ip) + rhoir*r(ip)
+        pol_quadrupole = pol_quadrupole + rhoir*r(ip)**2
+        !
+     END DO
+     !
+  END DO
+  !
+  CALL mp_sum(  pol_dipole(0:3) , intra_pool_comm )
+  CALL mp_sum(  pol_quadrupole  , intra_pool_comm )
+  !
+  pol_dipole(0) = pol_dipole(0)*omega / DBLE( dfftp%nr1*dfftp%nr2*dfftp%nr3 )
+  !
+  DO ip = 1, 3
+     pol_dipole(ip) = pol_dipole(ip)*omega / DBLE( dfftp%nr1*dfftp%nr2*dfftp%nr3 ) * alat
+  END DO
+  !
+  pol_quadrupole = pol_quadrupole*omega / DBLE( dfftp%nr1*dfftp%nr2*dfftp%nr3 ) * alat**2
+  !
+  RETURN
+  !
+END SUBROUTINE compute_pol_dipole
+!
+#endif

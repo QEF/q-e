@@ -692,3 +692,158 @@ SUBROUTINE v_hubbard(ns, v_hub, eth)
   RETURN
 
 END SUBROUTINE v_hubbard
+#ifdef __SOLVENT
+  !----------------------------------------------------------------------------
+  SUBROUTINE v_h_of_rho_r( rho, v )
+  !----------------------------------------------------------------------------
+  !
+  ! ... Hartree potential in R space from a total (spinless) density 
+  !     in R space. 
+  !     THIS SUBROUTINE IS ONLY USED BY THE SOLVENT MODULE
+  !
+  USE kinds,           ONLY : DP
+  USE fft_base,        ONLY : dfftp
+  USE fft_interfaces,  ONLY : fwfft, invfft
+  USE control_flags,   ONLY : gamma_only
+  USE constants,       ONLY : fpi, e2
+  USE cell_base,       ONLY : tpiba2
+  USE grid_dimensions, ONLY : nrxx
+  USE gvect,           ONLY : nl, ngm, nlm, gg, gstart
+  !
+  IMPLICIT NONE
+  !
+  ! ... Declares variables
+  !
+  REAL( DP ), INTENT(IN)     :: rho( nrxx )
+  REAL( DP ), INTENT(OUT)    :: v( nrxx )
+  !
+  ! ... Local variables
+  !
+  COMPLEX( DP ), ALLOCATABLE :: rhoaux( : )
+  COMPLEX( DP ), ALLOCATABLE :: vaux( : )
+  REAL( DP )                 :: fac
+  INTEGER                    :: ig
+  !
+  ! ... Bring rho to G space
+  !
+  ALLOCATE( rhoaux( nrxx ) )
+  rhoaux( : ) = CMPLX(rho( : ),0.D0,kind=dp) 
+  !
+  CALL fwfft('Dense', rhoaux, dfftp)
+  !
+  ! ... Compute total potential in G space
+  !
+  ALLOCATE( vaux( nrxx ) )
+  vaux( : ) = CMPLX(0.D0,0.D0,kind=dp)
+  !
+  DO ig = gstart, ngm
+    !
+    fac = 1.D0 / gg(ig)
+    vaux(nl(ig)) = CMPLX(REAL(rhoaux(nl(ig))),AIMAG(rhoaux(nl(ig))),kind=dp) * fac
+    !
+  ENDDO
+  !
+  DEALLOCATE(rhoaux)
+  !
+  IF ( gamma_only ) THEN
+     !
+     vaux(nlm(1:ngm)) = CMPLX(REAL( vaux(nl(:))),-AIMAG(vaux(nl(:))),kind=DP)
+     !
+  END IF
+  !
+  fac = e2 * fpi / tpiba2
+  vaux = vaux * fac 
+  !
+  ! ... Bring V to R space
+  !
+  CALL invfft('Dense', vaux, dfftp)
+  !
+  v(:) = REAL(vaux(:))
+  !
+  DEALLOCATE( vaux )
+  !
+  RETURN
+  !
+  END SUBROUTINE v_h_of_rho_r
+#endif
+#ifdef __SOLVENT
+  !----------------------------------------------------------------------------
+  SUBROUTINE gradv_h_of_rho_r( rho, gradv )
+  !----------------------------------------------------------------------------
+  !
+  ! ... Gradient of Hartree potential in R space from a total 
+  !     (spinless) density in R space
+  !     THIS SUBROUTINE IS ONLY USED BY THE SOLVENT MODULE
+  !
+  USE kinds,           ONLY : DP
+  USE fft_base,        ONLY : dfftp
+  USE fft_interfaces,  ONLY : fwfft, invfft
+  USE constants,       ONLY : fpi, e2
+  USE control_flags,   ONLY : gamma_only
+  USE cell_base,       ONLY : tpiba
+  USE grid_dimensions, ONLY : nrxx
+  USE gvect,           ONLY : nl, ngm, nlm, gg, gstart, g
+  !
+  IMPLICIT NONE
+  !
+  ! ... Declares variables
+  !
+  REAL( DP ), INTENT(IN)     :: rho( nrxx )
+  REAL( DP ), INTENT(OUT)    :: gradv( 3, nrxx )
+  !
+  ! ... Local variables
+  !
+  COMPLEX( DP ), ALLOCATABLE :: rhoaux( : )
+  COMPLEX( DP ), ALLOCATABLE :: gaux( : )
+  REAL( DP )                 :: fac
+  INTEGER                    :: ig, ipol
+  !
+  ! ... Bring rho to G space
+  !
+  ALLOCATE( rhoaux( nrxx ) )
+  rhoaux( : ) = CMPLX( rho( : ), 0.D0 ) 
+  !
+  CALL fwfft('Dense', rhoaux, dfftp)
+  !
+  ! ... Compute total potential in G space
+  !
+  ALLOCATE( gaux( nrxx ) )
+  !
+  DO ipol = 1, 3
+    !
+    gaux(:) = CMPLX(0.d0,0.d0,kind=dp)
+    !
+    DO ig = gstart, ngm
+      !
+      fac = g(ipol,ig) / gg(ig)
+      gaux(nl(ig)) = CMPLX(-AIMAG(rhoaux(nl(ig))),REAL(rhoaux(nl(ig))),kind=dp) * fac 
+      !
+    END DO
+    !
+    IF ( gamma_only ) THEN
+      !
+      gaux(nlm(:)) = &
+        CMPLX( REAL( gaux(nl(:)) ), -AIMAG( gaux(nl(:)) ) ,kind=DP)
+       !
+    END IF
+    !
+    ! ...and add the factor e2*fpi/2\pi/a coming from the missing prefactor of 
+    !  V = e2 * fpi divided by the 2\pi/a factor missing in G  
+    !
+    fac = e2 * fpi / tpiba
+    gaux = gaux * fac 
+    !
+    ! ... bring back to R-space, (\grad_ipol a)(r) ...
+    !
+    CALL invfft ('Dense', gaux, dfftp)
+    !
+    gradv(ipol,:) = REAL( gaux(:) )
+    !
+  ENDDO
+  !
+  DEALLOCATE(gaux)
+  !
+  RETURN
+  !
+  END SUBROUTINE gradv_h_of_rho_r
+#endif

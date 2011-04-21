@@ -451,6 +451,10 @@ MODULE input_parameters
           ! other DFT-D parameters ( see PW/mm_dispersion.f90 )
         REAL ( DP ) :: london_s6   =   0.75_DP , & ! default global scaling parameter for PBE
                        london_rcut = 200.00_DP
+#ifdef __SOLVENT
+!
+        LOGICAL   :: do_solvent = .false.
+#endif
 !
         CHARACTER(LEN=3) :: esm_bc = 'pbc'
           ! 'pbc': ordinary calculation with periodic boundary conditions
@@ -488,6 +492,9 @@ MODULE input_parameters
              exxdiv_treatment, x_gamma_extrapolation, yukawa, ecutvcut,       &
              exx_fraction, screening_parameter,                               &
 #endif
+#ifdef __SOLVENT
+             do_solvent,                                                      &
+#endif
              noncolin, lspinorb, starting_spin_angle, lambda, angle1, angle2, &
              report,              &
              constrained_magnetization, B_field, fixed_magnetization,         &
@@ -496,6 +503,84 @@ MODULE input_parameters
              spline_ps, one_atom_occupations, london, london_s6, london_rcut, &
              step_pen, A_pen, sigma_pen, alpha_pen, no_t_rev,                 &
              esm_bc, esm_efield, esm_w, esm_nfit, esm_debug, esm_debug_gpmax
+#ifdef __SOLVENT
+!
+!=----------------------------------------------------------------------------=!
+!  SOLVENT Namelist Input Parameters
+!=----------------------------------------------------------------------------=!
+!
+! Global parameters
+!
+        INTEGER  :: verbose = 0
+        ! verbosity  0: only prints summary of polarization charge calculation; 
+        !    1: prints an extra file with details of iterative convergence;
+        !    2: prints 3D cube files of physical properties
+        REAL(DP) :: solvent_thr = 1.d-1
+        ! how early in scf should the corrective pot start being calculated
+!
+! Switching function parameters
+!
+        REAL(DP) :: stype = 1
+        ! type of switching functions used in the solvation models
+        !    0: original Fattebert-Gygi
+        !    1: ultrasoft dielectric function as defined in Andreussi et al.
+        REAL(DP) :: rhozero = 0.001
+        ! first parameter of the sw function, roughly corresponding 
+        ! to the density threshold of the solvation model
+        REAL(DP) :: rhomin = 0.0001
+        ! second parameter of the sw function when stype=1
+        REAL(DP) :: tbeta = 4.8
+        ! second parameter of the sw function when stype=0
+!
+! Dielectric solvent parameters
+!
+        REAL(DP) :: epsinfty = 78.D0
+        ! epsinfty dielectric permittivity of the solvation model. If set equal
+        ! to one (=vacuum) no dielectric effects
+        CHARACTER( LEN = 256 ) :: eps_mode = 'electronic'
+        !  eps_mode method for calculating the density that sets 
+        !  the dielectric constant
+        !  electronic = dielectric depends self-consist. on electronic density
+        !  ionic = dielectric defined on a fictitious ionic density, generated
+        !          as the sum of exponential functions centered on atomic 
+        !          positions of width specified in input by solvationrad(ityp)
+        !  full  = similar to electronic, but an extra density is added to 
+        !          represent the core electrons and the nuclei. This extra 
+        !          density is defined as the sum of gaussian functions centered
+        !          on atomic positions of width equal to atomicspread(ityp)
+        REAL(DP) :: solvationrad(nsx) = 3.D0
+        ! solvationrad radius of the solvation shell for each species when the
+        ! ionic dielectric function is adopted
+        REAL(DP) :: atomicspread(nsx) = 0.5D0
+        ! gaussian spreads of the atomic density of charge
+!
+! Iterative solver parameters
+!
+        REAL(DP) :: mixrhopol = 0.5D0
+        ! mixing param to be used in iter calculation of polarization charges
+        REAL(DP) :: tolrhopol = 1.D-10
+        ! convergence threshold for polarization charges in iterative procedure
+!
+! Cavitation energy parameters
+!
+        REAL(DP) :: gamma = 0.D0
+        ! solvent surface tension, if equal to zero no cavitation term 
+        REAL(DP) :: delta = 0.00001D0
+        ! finite difference parameter to compute the molecular surface
+!
+! PV energy parameters
+!
+        REAL(DP) :: extpressure = 0.D0
+        ! external pressure for PV energy, if equal to zero no pressure term 
+
+        NAMELIST / solvent /                                           &
+             verbose, solvent_thr,                                     &
+             stype, rhozero, rhomin, tbeta,                            &
+             epsinfty, eps_mode, solvationrad, atomicspread,           &
+             mixrhopol, tolrhopol,                                     &
+             gamma, delta,                                             &
+             extpressure
+#endif
 !
 !=----------------------------------------------------------------------------=!
 !  EE Namelist Input Parameters

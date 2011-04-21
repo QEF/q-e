@@ -47,6 +47,9 @@ SUBROUTINE summary()
   USE lsda_mod,        ONLY : nspin
   USE mp_global,       ONLY : intra_pool_comm
   USE mp,              ONLY : mp_sum
+#ifdef __SOLVENT
+  USE solvent_base,    ONLY : do_solvent
+#endif
 ! DCC
 !  USE ee_mod,          ONLY : do_comp, do_coarse, do_mltgrid, mr1, mr2, mr3
 !  USE gcoarse,         ONLY : ngmc, gcutmc
@@ -140,6 +143,9 @@ SUBROUTINE summary()
      !
   END IF
  
+#ifdef __SOLVENT
+  IF ( do_solvent ) CALL solvent_summary()
+#endif
 ! DCC
 !  IF ( do_comp )  CALL write_ee_summary()
   !

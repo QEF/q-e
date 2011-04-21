@@ -491,3 +491,154 @@ SUBROUTINE grad_dot( nrxx, a, ngm, g, nl, alat, da )
   RETURN
   !
 END SUBROUTINE grad_dot
+
+#ifdef __SOLVENT
+!--------------------------------------------------------------------
+SUBROUTINE ggradient( nrxx, a, ngm, g, nl, ga, gga )
+!--------------------------------------------------------------------
+  !
+  ! ... Calculates ga = \grad a in R-space 
+  ! ... and gga = \grad \grad a in R-space (a is also in R-space)
+  !
+  USE constants, ONLY : tpi
+  USE cell_base, ONLY : tpiba
+  USE kinds,     ONLY : DP
+  USE gvect,     ONLY : nlm
+  USE control_flags, ONLY : gamma_only
+  USE fft_base,      ONLY : dfftp
+  USE fft_interfaces,ONLY : fwfft, invfft
+  !
+  IMPLICIT NONE
+  !
+  INTEGER,  INTENT(IN)  :: nrxx
+  INTEGER,  INTENT(IN)  :: ngm, nl(ngm)
+  REAL(DP), INTENT(IN)  :: a(nrxx), g(3,ngm)
+  REAL(DP), INTENT(OUT) :: ga( 3, nrxx )
+  REAL(DP), INTENT(OUT) :: gga( 3, 3, nrxx )
+  !
+  INTEGER                  :: ipol, jpol
+  COMPLEX(DP), ALLOCATABLE :: aux(:), gaux(:), ggaux(:)
+  !
+  !
+  ALLOCATE(  aux( nrxx ) )
+  ALLOCATE( gaux( nrxx ) )
+  ALLOCATE( ggaux( nrxx ) )
+  !
+  aux = CMPLX( a(:), 0.D0 ,kind=DP)
+  !
+  ! ... bring a(r) to G-space, a(G) ...
+  !
+  CALL fwfft ('Dense', aux, dfftp)
+  !
+  ! ... multiply by (iG) to get (\grad_ipol a)(G) ...
+  !
+  DO ipol = 1, 3
+     !
+     gaux(:) = CMPLX(0.d0,0.d0, kind=dp)
+     !
+     gaux(nl(:)) = g(ipol,:) * &
+                   CMPLX( -AIMAG( aux(nl(:)) ), REAL( aux(nl(:)) ) ,kind=DP)
+     !
+     IF ( gamma_only ) THEN
+        !
+        gaux(nlm(:)) = CMPLX( REAL( gaux(nl(:)) ), -AIMAG( gaux(nl(:)) ) ,kind=DP)
+        !
+     END IF
+     !
+     ! ... bring back to R-space, (\grad_ipol a)(r) ...
+     !
+     CALL invfft ('Dense', gaux, dfftp)
+     !
+     ! ...and add the factor 2\pi/a  missing in the definition of G
+     !
+     ga(ipol,:) = tpiba * DBLE( gaux(:) )
+     !
+     ! ... compute the second derivatives
+     !
+     DO jpol = 1, ipol
+        !
+        ggaux(:) = CMPLX(0.d0,0.d0, kind=dp)
+        !
+        ggaux(nl(:)) = - g(ipol,:) * g(jpol,:) * &
+                       CMPLX( REAL( aux(nl(:)) ), AIMAG( aux(nl(:)) ) ,kind=DP)
+        !
+        IF ( gamma_only ) THEN
+           !
+           ggaux(nlm(:)) = CMPLX( REAL( ggaux(nl(:)) ), -AIMAG( ggaux(nl(:)) ) ,kind=DP)
+           !
+        END IF
+        !
+        ! ... bring back to R-space, (\grad_ipol a)(r) ...
+        !
+        CALL invfft ('Dense', ggaux, dfftp)
+        !
+        ! ...and add the factor 2\pi/a  missing in the definition of G
+        !
+        gga(ipol, jpol, :) = tpiba * tpiba * DBLE( ggaux(:) )
+        !
+        gga(jpol, ipol, :) = gga(ipol, jpol, :) 
+        !
+     END DO
+     !
+  END DO
+  !
+  DEALLOCATE( ggaux )
+  DEALLOCATE( gaux )
+  DEALLOCATE( aux )
+  !
+  RETURN
+  !
+END SUBROUTINE ggradient
+#endif
+
+#ifdef __SOLVENT
+!--------------------------------------------------------------------
+SUBROUTINE external_gradient( a, grada )
+!--------------------------------------------------------------------
+  ! 
+  ! Interface for computing gradients in real space, to be called by
+  ! an external module
+  !
+  USE kinds,            ONLY : DP
+  USE grid_dimensions,  ONLY : nrxx
+  USE gvect,            ONLY : ngm, nl, g
+  !
+  IMPLICIT NONE
+  !
+  REAL, INTENT(IN)         :: a( nrxx )
+  REAL( DP ), INTENT(OUT)  :: grada( 3, nrxx )
+
+! A in real space, grad(A) in real space
+  CALL gradient( nrxx, a, ngm, g, nl, grada )
+
+  RETURN
+
+END SUBROUTINE external_gradient
+#endif
+
+#ifdef __SOLVENT
+!--------------------------------------------------------------------
+SUBROUTINE external_ggradient( a, grada, ggrada )
+!--------------------------------------------------------------------
+  ! 
+  ! Interface for computing gradients in real space, to be called by
+  ! an external module
+  !
+  USE kinds,            ONLY : DP
+  USE grid_dimensions,  ONLY : nrxx
+  USE gvect,            ONLY : ngm, nl, g
+  !
+  IMPLICIT NONE
+  !
+  REAL, INTENT(IN)         :: a( nrxx )
+  REAL( DP ), INTENT(OUT)  :: grada( 3, nrxx )
+  REAL( DP ), INTENT(OUT)  :: ggrada( 3, 3, nrxx )
+
+! A in real space, grad(A) and ggrad(A) in real space
+  CALL ggradient( nrxx, a, ngm, g, nl, grada, ggrada )
+
+  RETURN
+
+END SUBROUTINE external_ggradient
+#endif
+!----------------------------------------------------------------------------

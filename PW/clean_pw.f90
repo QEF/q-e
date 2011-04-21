@@ -45,6 +45,9 @@ SUBROUTINE clean_pw( lflag )
   !
   USE london_module,      ONLY : dealloca_london
   USE constraints_module, ONLY : deallocate_constraint
+#ifdef __SOLVENT
+  USE solvent_base,       ONLY : do_solvent
+#endif
   !
   IMPLICIT NONE
   !
@@ -167,7 +170,14 @@ SUBROUTINE clean_pw( lflag )
   !
   ! for Wannier_ac
   if (use_wannier) CALL wannier_clean()
-
+  !
+#ifdef __SOLVENT
+  ! ... additional arrays for solvent medium
+  !
+  if (do_solvent) CALL solvent_clean()
+  !
+#endif
+  !
   RETURN
   !
 END SUBROUTINE clean_pw

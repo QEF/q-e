@@ -40,6 +40,9 @@ SUBROUTINE forces()
   USE control_flags, ONLY : gamma_only, remove_rigid_rot, lbfgs, textfor, llondon
 ! DCC
 !  USE ee_mod,        ONLY : vcomp, do_comp, ecomp, which_compensation
+#ifdef __SOLVENT
+  USE solvent_base,  ONLY : do_solvent, epsinfty, eps_mode, rhopol
+#endif
   USE bp,            ONLY : lelfield, forces_bp_efield, gdir, &
                             l3dstring,efield_cart,efield_cry,efield
   USE uspp,          ONLY : okvan
@@ -61,6 +64,9 @@ SUBROUTINE forces()
     ! nonlocal, local, core-correction, ewald, scf correction terms, and hubbard
 ! DCC
 !  REAL( DP ), ALLOCATABLE :: force_vcorr(:,:)
+#ifdef __SOLVENT
+  REAL(DP), ALLOCATABLE :: force_solvent(:,:)
+#endif
 
   REAL(DP) :: sumfor, sumscf, sum_mm
   REAL(DP),PARAMETER :: eps = 1.e-12_dp
@@ -134,6 +140,32 @@ SUBROUTINE forces()
 !
 !  END IF
 
+#ifdef __SOLVENT
+  IF (do_solvent) THEN
+    !
+    CALL start_clock('calc_fsolv')
+    !
+    ALLOCATE ( force_solvent ( 3 , nat ) )
+    !
+    force_solvent = 0.0_DP
+    !
+    IF ( epsinfty .GT. 1.D0 ) THEN
+      !
+      IF ( TRIM(eps_mode) .NE. 'ionic' ) THEN
+        CALL force_lc( nat, tau, ityp, alat, omega, ngm, ngl, igtongl, &
+                       nrxx, g, rhopol, nl, &
+                       1, gstart, gamma_only, vloc, force_solvent )
+      ELSE
+        CALL calc_fsolvent( nrxx, force_solvent )
+      END IF
+      !
+    END IF
+    !
+    CALL stop_clock('calc_fsolv')
+    !
+  END IF
+#endif
+
   !
   ! Berry's phase electric field terms
   !
@@ -176,6 +208,9 @@ SUBROUTINE forces()
         IF (do_comp_mt)force(ipol,na) = force(ipol,na) + force_mt(ipol,na) 
 ! DCC
 !        IF (do_comp) force(ipol,na) = force(ipol,na) + force_vcorr(ipol,na)
+#ifdef __SOLVENT
+        IF (do_solvent) force(ipol,na) = force(ipol,na) + force_solvent(ipol,na)
+#endif
 
         sumfor = sumfor + force(ipol,na)
         !
@@ -319,6 +354,9 @@ SUBROUTINE forces()
   IF(ALLOCATED(force_mt))   DEALLOCATE( force_mt )
 ! DCC
 !  IF(ALLOCATED(force_vcorr))   DEALLOCATE( force_vcorr )
+#ifdef __SOLVENT
+  IF(ALLOCATED(force_solvent)) DEALLOCATE( force_solvent )
+#endif
 
 
   RETURN

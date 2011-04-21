@@ -22,6 +22,10 @@ SUBROUTINE init_run()
   USE paw_init,           ONLY : paw_post_init
 #endif
   USE bp,                 ONLY : lberry, lelfield
+#ifdef __SOLVENT
+  USE grid_dimensions,    ONLY : nrxx
+  USE solvent_base,       ONLY : do_solvent
+#endif
   USE recvec_subs,        ONLY : ggen
 ! DCC
 !  USE grid_dimensions,    ONLY : nr1x, nr2x, nr3x, nr1, nr2, nr3
@@ -66,6 +70,9 @@ SUBROUTINE init_run()
   CALL allocate_wfc()
   CALL allocate_bp_efield()
   IF( lberry .or. lelfield) call bp_global_map()
+#ifdef __SOLVENT
+  IF ( do_solvent ) CALL solvent_initbase( nrxx )
+#endif
 ! DCC
   ! ... Initializes EE variables
   !

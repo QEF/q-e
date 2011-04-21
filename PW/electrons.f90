@@ -73,6 +73,11 @@ SUBROUTINE electrons()
   USE paw_onecenter,        ONLY : PAW_potential
   USE paw_symmetry,         ONLY : PAW_symmetrize_ddd
   USE uspp_param,           ONLY : nh, nhm ! used for PAW
+#ifdef __SOLVENT
+  USE solvent_base,         ONLY : do_solvent, solvent_thr, vltot_zero,      &
+                                   epsinfty, gamma, extpressure,             &
+                                   desolvent, esolvent, ecavity, epressure
+#endif
   USE dfunct,                 only : newd
   USE esm,                  ONLY : do_comp_esm, esm_printpot
   !
@@ -172,6 +177,13 @@ SUBROUTINE electrons()
    end if
 #endif
 
+#ifdef __SOLVENT
+  IF ( do_solvent ) THEN
+    vltot_zero = vltot
+    CALL solvent_initcell( at, bg, alat, omega, tpiba2 ) 
+    CALL solvent_initions( nat, nsp, ityp, zv, tau ) 
+  END IF
+#endif
   CALL flush_unit( stdout )
   !
   ! ... calculates the ewald contribution to total energy
@@ -386,6 +398,7 @@ SUBROUTINE electrons()
            !
            CALL v_of_rho( rho,rho_core,rhog_core, &
                           ehart, etxc, vtxc, eth, etotefield, charge, v)
+           !
            IF (okpaw) THEN
               CALL PAW_potential(rho%bec, ddd_paw, epaw)
               CALL PAW_symmetrize_ddd(ddd_paw)
@@ -422,6 +435,29 @@ SUBROUTINE electrons()
         !
      END DO scf_step
      !
+#ifdef __SOLVENT
+     ! ... Computes the solvation contribution to the energy
+     !
+     IF ( do_solvent  )  THEN
+       !
+       CALL calc_esolvent( nrxx, nspin, rhoin%of_r, vltot_zero, &
+                           desolvent, esolvent, ecavity, epressure )
+       !
+       IF ( .NOT. conv_elec .AND. dr2 < solvent_thr ) THEN
+         !
+         ! ... Add the solvation contribution to the potential
+         !
+         WRITE( stdout, 9200 )
+         !
+         vltot = vltot_zero
+         !
+         CALL calc_vsolvent( nrxx, nspin, rhoin%of_r, vltot )
+         !
+       END IF
+       !
+     END IF
+     !
+#endif
      ! ... define the total local potential (external + scf)
      !
      CALL set_vrs( vrs, vltot, v%of_r, kedtau, v%kin_r, nrxx, nspin, doublegrid )
@@ -539,6 +575,12 @@ SUBROUTINE electrons()
         hwf_energy = hwf_energy + etotefield
      END IF
      !
+#ifdef __SOLVENT
+     !
+     ! ... Adds the solvation contribution to the energy
+     !
+     IF ( do_solvent ) etot = etot + desolvent + esolvent + ecavity + epressure
+#endif
      IF ( ( conv_elec .OR. MOD( iter, iprint ) == 0 ) .AND. .NOT. lmd ) THEN
         !
         IF ( dr2 > eps8 ) THEN
@@ -587,6 +629,13 @@ SUBROUTINE electrons()
         END IF
      END IF
      !
+#ifdef __SOLVENT
+     IF ( do_solvent )  THEN
+        IF ( epsinfty .GT. 1.D0 ) WRITE( stdout, 9201 ) esolvent
+        IF ( gamma .GT. 0.D0 ) WRITE( stdout, 9202 ) ecavity
+        IF ( extpressure .NE. 0.D0 ) WRITE( stdout, 9203 ) epressure
+     ENDIF
+#endif
      IF ( lsda ) WRITE( stdout, 9017 ) magtot, absmag
      !
      IF ( noncolin .AND. domag ) &
@@ -707,6 +756,12 @@ SUBROUTINE electrons()
 9110 FORMAT(/'     convergence has been achieved in ',i3,' iterations' )
 9120 FORMAT(/'     convergence NOT achieved after ',i3,' iterations: stopping' )
 9121 FORMAT(/'     scf convergence threshold =',1PE17.1,' Ry' )
+#ifdef __SOLVENT
+9200 FORMAT(/'     add solvent contribution to local potential')
+9201 FORMAT( '     solvation energy          =',F17.8,' Ry' ) 
+9202 FORMAT( '     cavitation energy         =',F17.8,' Ry' ) 
+9203 FORMAT( '     PV energy                 =',F17.8,' Ry' ) 
+#endif
   !
   CONTAINS
      !

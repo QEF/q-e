@@ -230,7 +230,7 @@ wannier_enrg.o \
 
 QEMODS=../Modules/libqemod.a
 
-TLDEPS=bindir mods libs liblapack libblas
+TLDEPS=bindir mods libs liblapack libblas libsolvent
 
 all : tldeps pw.x generate_vdW_kernel_table.x
 

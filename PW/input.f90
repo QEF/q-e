@@ -109,6 +109,25 @@ SUBROUTINE iosys()
                             niter_with_fixed_ns, starting_ns, U_projection
   !
   USE martyna_tuckerman, ONLY: do_comp_mt
+#ifdef __SOLVENT
+  USE constants,     ONLY : rydberg_si, bohr_radius_si
+  USE solvent_base,  ONLY : do_solvent_ => do_solvent,        &
+                            verbose_ => verbose,              &
+                            solvent_thr_ => solvent_thr,      &
+                            stype_ => stype,                  &
+                            rhozero_ => rhozero,              &
+                            rhomin_ => rhomin,                &
+                            tbeta_ => tbeta,                  &
+                            epsinfty_ => epsinfty,            &
+                            eps_mode_ => eps_mode,            &
+                            solvationrad_ => solvationrad,    &
+                            atomicspread_ => atomicspread,    &
+                            mixrhopol_ => mixrhopol,          &
+                            tolrhopol_ => tolrhopol,          &
+                            gamma_ => gamma,                  &
+                            delta_ => delta,                  &
+                            extpressure_ => extpressure
+#endif
   !
   USE esm,           ONLY: do_comp_esm, &
                            esm_bc_ => esm_bc, &
@@ -226,6 +245,9 @@ SUBROUTINE iosys()
                                exxdiv_treatment, yukawa, ecutvcut,          &
                                exx_fraction, screening_parameter,           &
 #endif
+#ifdef __SOLVENT
+                               do_solvent,                                  &
+#endif
                                edir, emaxpos, eopreg, eamp, noncolin, lambda, &
                                angle1, angle2, constrained_magnetization,     &
                                B_field, fixed_magnetization, report, lspinorb,&
@@ -233,6 +255,17 @@ SUBROUTINE iosys()
                                assume_isolated, spline_ps, london, london_s6, &
                                london_rcut, one_atom_occupations, no_t_rev,   &
                                esm_bc, esm_efield, esm_w, esm_nfit
+#ifdef __SOLVENT
+  !
+  ! ... SOLVENT namelist
+  !
+  USE input_parameters, ONLY : verbose, solvent_thr,                          &
+                               stype, rhozero, rhomin, tbeta,                 &
+                               epsinfty, eps_mode, solvationrad, atomicspread,&
+                               mixrhopol, tolrhopol,                          &
+                               gamma, delta,                                  &
+                               extpressure 
+#endif
   !
   ! ... ELECTRONS namelist
   !
@@ -1156,6 +1189,38 @@ SUBROUTINE iosys()
   trust_radius_ini_ = trust_radius_ini
   w_1_              = w_1
   w_2_              = w_2
+  !
+#ifdef __SOLVENT
+  !
+  ! ...  Solvent
+  !
+  do_solvent_ = do_solvent
+  verbose_  = verbose
+  solvent_thr_  = solvent_thr
+  !
+  stype_    = stype
+  rhozero_  = rhozero
+  rhomin_   = rhomin
+  tbeta_    = tbeta
+  IF ( stype .EQ. 1 ) THEN
+    tbeta_  = LOG( rhozero / rhomin )
+  END IF
+  !
+  epsinfty_ = epsinfty
+  eps_mode_ = eps_mode
+  ALLOCATE( solvationrad_( ntyp ) )
+  solvationrad_( 1:ntyp ) = solvationrad( 1:ntyp )
+  ALLOCATE( atomicspread_( ntyp ) )
+  atomicspread_( 1:ntyp ) = atomicspread( 1:ntyp )
+  mixrhopol_ = mixrhopol
+  tolrhopol_ = tolrhopol
+  !
+  gamma_      = gamma*1.D-3*bohr_radius_si**2/rydberg_si
+  delta_      = delta
+  !
+  extpressure_ = extpressure*1.D9/rydberg_si*bohr_radius_si**3
+  !
+#endif
   !
   ! ... ESM
   !
