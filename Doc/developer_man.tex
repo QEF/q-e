@@ -100,10 +100,10 @@ mailing list, \texttt{q-e-developers}, to which you should subscribe,
 and a mailing list receiving commit message, \texttt{q-e-commits}.
 The ideal procedure to add extensive changes is as follows:
 \begin{itemize}
-\item download the current CVS version (see 
-section \ref{Sec:CVS}, "Using CVS", and work on that version
+\item download the current SVN version (see 
+section \ref{Sec:SVN}, "Using SVN", and work on that version
 \item when you are happy with your modified version, make a copy of
-  it, then update your copy with \texttt{cvs update} 
+  it, then update your copy with \texttt{svn update} 
 \item if you get no conflicts and everything is still working, you
   have won. Send the modified files to the developers, or save
   your changes if you are one.
@@ -130,7 +130,7 @@ developer in an existing project (or both).
 
 Currently \qe\ uses the following development tools:
 \begin{itemize}
-\item CVS server
+\item SVN server
 \item Bug Tracking facility
 \item Upload space (with download counter)
 \item Mailing lists \texttt{q-e-commits} and \texttt{q-e-developers}.
@@ -1149,116 +1149,56 @@ read\_namelists.f90 )
 \end{verbatim}
 \end{enumerate}
  
-\section{ Using CVS}
-\label{Sec:CVS}
-The package is available read-only using anonymous CVS. Developers may
+\section{ Using SVN}
+\label{Sec:SVN}
+The package is available read-only using anonymous SVN. Developers may
 have read-write access if needed. Note that the latest (development)
 version may not work properly, and sometimes not even compile
 properly. Use at your own risk. 
 
-CVS (Concurrent Version System) is a software that allows many
+Subversion, also known as SVN, is a software that allows many
 developers to work and maintain a single copy of a software in a
-central location (repository). It is installed by default on most Unix
-machines, or otherwise it can be very easily installed: see
-http://www.cvshome.org. For a tutorial, see: 
-http://www.loria.fr/~molli/cvs/cvs-tut/cvs\_tutorial\_toc.html .
-You will also need a working installation of ssh (secure shell) to use CVS.
+central location (repository).
+It is installed by default on many Unix machines, or otherwise 
+it can be very easily installed: see ... 
+You will also need a working installation of ssh (secure shell) 
+to use SVN.
+For the end user, SVN is rather similar to CVS:
+if no advanced features are used, the basic commands are the same.
+A tutorial can be found here ... 
 
-\subsection{Anonymous CVS}
+Follow the instructions in the qe-forge page to check out (i.e.
+download) the SVN repository in either read-write or anonymous 
+mode.
 
-You have to define the environment variables CVS\_RSH and CVSROOT.
-For csh/tcsh, use
-\begin{verbatim}
-setenv CVS_RSH ssh
-setenv CVSROOT :pserver:anonymous@scm.qe-forge.org:/cvsroot/q-e
-\end{verbatim}
-For sh/ksh/bash, use
-\begin{verbatim}
-export CVS_RSH=ssh
-export CVSROOT=:pserver:anonymous@scm.qe-forge.org:/cvsroot/q-e 
-\end{verbatim}
-Then:
-\begin{verbatim}
-cvs login
-\end{verbatim}
-Do not specify any password, just press "Enter".
-
-\subsection{Read/Write CVS}
-
-The environment variable CVS\_RSH is defined as above, but CVSROOT is
-set to a different value. For csh/tcsh, use
-\begin{verbatim}
-setenv CVS_RSH ssh
-setenv CVSROOT :ext:your-account@scm.qe-forge.org:/cvsroot/q-e 
-\end{verbatim}
-For sh/ksh/bash use
-\begin{verbatim}
-export CVS_RSH=ssh
-export CVSROOT=:ext:your-account@scm.qe-forge.org:/cvsroot/q-e 
-\end{verbatim}
-You need to have an account on http://www.qe-forge.org
-(''your-account'' above) with provileges as Quantum ESPRESSO developer.
-You will be prompted for your password at each cvs operation.
-
-\subsection{CVS operations}
+\subsection{SVN operations}
 
 For the first code download:
 \begin{verbatim}
-cvs checkoout -P espresso
+ssn ... checkout
 \end{verbatim}
-The code appears in directory ''espresso/''. To update the code to the
-current version: 
+The code appears in directory \texttt{trunk/espresso/}. 
+To update the code to the current version: 
 \begin{verbatim}
-cvs update -dP
+svn update
 \end{verbatim}
-in the directory containing the distribution. Option ''-d'' ensures
-that newly added directories are downloaded, ''-P'' that empty
-directories are removed.  It is possible to download the version at a
+in the directory containing the distribution.
+It is possible to download the version at a
 given date, or corresponding to  a given ''tag''  (set by the
 developers, usually just before extensive changes or at public
 releases). 
 
 When updating, you should get lines looking like
 \begin{verbatim}
-cvs server: Updating Modules
-P Modules/Makefile
-U Modules/control_flags.f90
+...
 \end{verbatim}
-where P means ''patched'', U means ''updated'' (a new file is added); or
-\begin{verbatim}
-M PW/Makefile
-\end{verbatim}
-where M means ''locally modified'' (i.e., wrt the CVS repository
-version); or
-\begin{verbatim}
-cvs server: FPMD/control.f90 is no longer in the repository
-\end{verbatim}
-if a file has been meanwhile deleted, or moved, or renamed; but no lines like
-\begin{verbatim}
-C Somedir/SomeFile
-cvs server: conflict while updating Somedir/SomeFile
-\end{verbatim}
-This means that somebody else has modified the same parts of the code
-that you have locally modified; conflicting files will contain lines
-like 
-\begin{verbatim}
->>>>>>>>>>>>>
-   something
-=============
-   something else
-<<<<<<<<<<<<<
-\end{verbatim}
-If this happen, you must edit the file manually to remove conflicts. See section \ref{SubSec:Conflicts}
-below.
-
-You can compare your local copy with any version of the repository
 using
 \begin{verbatim}
-cvs diff -r tag
+svn diff -r tag
 \end{verbatim}
 or with the repository at a given date using
 \begin{verbatim}
-cvs diff -D date
+svn diff -D date
 \end{verbatim}
 You can also compare two different versions/snapshots of the
 repository, by specifying two different tags or dates. Options ''-i''

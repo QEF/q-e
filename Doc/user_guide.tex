@@ -1,5 +1,5 @@
 \documentclass[12pt,a4paper]{article}
-\def\version{4.3}
+\def\version{4.3.1}
 \def\qe{{\sc Quantum ESPRESSO}}
 
 \usepackage{html}
@@ -524,9 +524,9 @@ Daily snapshots of the development version can be downloaded from the
 developers' site \texttt{qe-forge.org}: follow the link ''Quantum ESPRESSO'', 
 then ''SCM''. Beware: the development version 
 is, well, under development: use at your own risk! The bravest 
-may access the development version via anonymous CVS 
-(Concurrent Version System): see the Developer Manual
-(\texttt{Doc/developer\_man.pdf}), section ''Using CVS''.
+may access the development version via anonymous access to the
+Subversion (SVN) repository : see the Developer Manual
+(\texttt{Doc/developer\_man.pdf}), section ''Using SVN''.
 
 The \qe\ distribution contains several directories. Some of them are
 common to all packages:
@@ -927,7 +927,7 @@ and produces all \texttt{yambo} executables in \texttt{YAMBO/bin}.
 \end{itemize}
 For the setup of the GUI, refer to the \texttt{PWgui-X.Y.Z /INSTALL} file, where
 X.Y.Z stands for the version number of the GUI (should be the same as the
-general version number). If you are using the CVS sources, see
+general version number). If you are using the SVN sources, see
 the \texttt{GUI/README} file instead.
    
 The codes for data postprocessing in \texttt{PP/} are:
@@ -1840,7 +1840,7 @@ Here is one example:
 env IOBUF_PARAMS='*.wfc*:noflush:count=1:size=15M:verbose,\
 *.dat:count=2:size=50M:lazyflush:lazyclose:verbose,\
 *.UPF*.xml:count=8:size=8M:verbose' pbsyod =\
-\~{}/pwscf/pwscfcvs/bin/pw.x npool 4 in si64pw2x2x2.inp > & \
+\~{}/espresso/bin/pw.x npool 4 in si64pw2x2x2.inp > & \
 si64pw2x2x232moreiobuf.out &
 \end{verbatim}
 This will ignore all flushes on the *wfc* (scratch files) using a
@@ -1932,7 +1932,7 @@ Input files for \PWscf\ codes may be either written by hand
 or produced via the \texttt{PWgui} graphical interface by Anton Kokalj, 
 included in the \qe\ distribution. See \texttt{PWgui-x.y.z/INSTALL}
 (where x.y.z is the version number) for more info on \texttt{PWgui}, 
-or \texttt{GUI/README} if you are using CVS sources.
+or \texttt{GUI/README} if you are using SVN sources.
     
 You may take the examples distributed with \qe\ as
 templates for writing your own input files: see Sec.\ref{SubSec:Examples}.
