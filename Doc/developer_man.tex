@@ -1151,127 +1151,64 @@ read\_namelists.f90 )
  
 \section{ Using SVN}
 \label{Sec:SVN}
-The package is available read-only using anonymous SVN. Developers may
-have read-write access if needed. Note that the latest (development)
-version may not work properly, and sometimes not even compile
-properly. Use at your own risk. 
+The package is available read-only using anonymous access to the Subversion 
+(SVN) repository. Developers can have read-write access when needed. Note 
+that the latest (development) version may not work properly, and sometimes 
+not even compile properly. Use at your own risk. 
 
 Subversion, also known as SVN, is a software that allows many
 developers to work and maintain a single copy of a software in a
 central location (repository).
 It is installed by default on many Unix machines, or otherwise 
-it can be very easily installed: see ... 
-You will also need a working installation of ssh (secure shell) 
-to use SVN.
+it can be very easily installed.
 For the end user, SVN is rather similar to CVS:
 if no advanced features are used, the basic commands are the same.
-A tutorial can be found here ... 
+More information on SVN can be found here: 
+\texttt{http://subversion.apache.org/}.
 
-Follow the instructions in the qe-forge page to check out (i.e.
-download) the SVN repository in either read-write or anonymous 
-mode.
+Follow the instructions in the SCM page in \qeforge\ for the \qe\
+project: \texttt{http://qe-forge.org/scm/?group\_id=10},
+to check out (i.e.  download) the SVN repository in either 
+read-write or anonymous mode.
+The distribution will appear in directory \texttt{trunk/espresso/}.
+Branches (i.e. sub-versions) will appear as separate directories.
 
 \subsection{SVN operations}
 
-For the first code download:
-\begin{verbatim}
-ssn ... checkout
-\end{verbatim}
-The code appears in directory \texttt{trunk/espresso/}. 
 To update the code to the current version: 
 \begin{verbatim}
-svn update
+  svn update
 \end{verbatim}
 in the directory containing the distribution.
-It is possible to download the version at a
-given date, or corresponding to  a given ''tag''  (set by the
-developers, usually just before extensive changes or at public
-releases). 
-
-When updating, you should get lines looking like
+To see the difference between the current version and your modified 
+copy:
 \begin{verbatim}
-...
+  svn diff
 \end{verbatim}
-using
+To save your modified version into the repository:
+(read-write access only):
 \begin{verbatim}
-svn diff -r tag
+  svn commit
 \end{verbatim}
-or with the repository at a given date using
+If you also want to add a new file, before commiting give command
 \begin{verbatim}
-svn diff -D date
+  svn add
 \end{verbatim}
-You can also compare two different versions/snapshots of the
-repository, by specifying two different tags or dates. Options ''-i''
-(ignore case), ''-w'' (ignore all white spaces), ''-b'' (ignore
-changes in the number of white spaces) may be useful to distinguish
-true changes from esthetic ones (such as changes in indentation). 
 
-READ-WRITE ACCESS ONLY:
-
-In order to save your changes to the repository, use ''cvs
-commit''. In order to add a file, first use ''cvs add'', then ''cvs
-commit''. In order to delete a file, first use ''cvs delete'', then
-''cvs commit''. In order to rename a file, delete the file with the
-old name, add the file with the new name. 
-
-In order to add a new directory (let us say ''dir/'', and if you have
-the permission to do so: 
-\begin{itemize}
-\item create directory''dir/''; do ''cvs add dir'' (this will create
-  the CVS subdirectory in the new directory ''dir/'') 
-\item copy all files into ''dir/'', then from inside ''dir/'' add
-  files: ''cvs add *.f90 Makefile'' (for instance) 
-\item ''cvs commit'' will save the new directory
-\end{itemize}
-
-\subsection{Removing CVS conflicts}
+\subsection{Removing conflicts}
 \label{SubSec:Conflicts}
   Look into the conflicting section: in
   most cases conflicts are trivial (format changes, white spaces) or
   easily solved (the part of the code you were modifying has been
   moved to another place, for instance). Sometimes, somebody else has
   done changes that are incompatible with yours during the same
-  period. Look into the ChangeLog (use the script \texttt{cvs2cl.pl}
-  to get an updated ChangeLog) to understand what may have happened,
-  or use the web-cvs interface
-  (\texttt{http://qe-forge.org/cgi-bin/cvstrac/q-e/index}).
-  Use \texttt{cvs update -D 2006-oct-12} to update to the CVS version 
-  of 12 oct 2006: this may be useful if you suspect that the incompatibile 
-  change happened after that date. CVS versions can be {\em tagged}; 
-  tags are visible with \texttt{cvs status -v}. Use \texttt{cvs update -r TAG}
-  to update to the CVS version with tag TAG. In all cases, use 
-  \texttt{cvs update -A} to revert to the last version.
-
-\subsection{CVS hints}
-\label{SubSec:CVShints}
-It is convenient to create a \texttt{.cvsrc} file in your
-home directory containing the following lines:
+  period. Use the web-svn interface:
 \begin{verbatim}
-cvs -z3
-diff -wib
-update -dP
-checkout -P
+   http://qe-forge.org/scm/browser.php?group\_id=10
 \end{verbatim}
-These options will be automatically used.
-
-You can use the same repository read-only with anonymous cvs,
-read-write with your \qeforge\ account. Download your repository 
-using anonymous cvs as explained above; then re-define the
-\texttt{\$CVSROOT} environment variable to point to the
-appropriate value for read-write access. You will keep
-using anonymous cvs because cvs will look for the contents of
-file CVS/Root, but if you use syntax:
-\begin{verbatim}
-cvs -d$CVSROOT commit ...
-\end{verbatim}
-you can perform write operations (you will be prompted for your 
-\qeforge\ password). In this way you will need to type 
-your password only once in a while.
-
-You will find very convenient to use the Web-CVS interface:
-\texttt{http://qe-forge.org/cgi-bin/cvstrac/q-e/index}, in particular the 
-"Timeline" and "Browse" options, useful to follow what
-has been done and what is going on in the development version.
+  You can select the repository at a given date or with a given ``tag'': 
+  this may be useful if if you suspect that the incompatibile 
+  change happened after that date. 
 
 \section{bibliography}
 
