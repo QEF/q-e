@@ -147,7 +147,8 @@ fft_libs=$FFT_LIBS       # FFT libraries - may depend upon DFLAGS
 mpi_libs=$MPI_LIBS       # MPI libraries - shouldn't be needed
 mass_libs=$MASS_LIBS     # MASS libraries (IBM only)
 libdirs=$LIBDIRS         # Where to look for libraries (e.g. /my/blas/lib)
-scalapack_dir=$SCALAPACK_LIB  # Where to look for libscalapack.a
+scalapack_libs=$SCALAPACK_LIBS # scalapack libs
+scalapack_dir=$SCALAPACK_DIR  # Where to look for scalapack libs
 blacs_dir=$BLACS_LIB          # Where to look for libblacs.a
 ar=$AR                   # ar (shouldn't be needed)
 arflags=$ARFLAGS         # Flags for ar (as above)
@@ -1762,20 +1763,14 @@ do
 # look for scalapack if required
     test "$parallel" -eq 0 && break
     test "$with_scalapack" -eq 0 && break
+    if test "$scalapack_libs" = "" ; then
 # no additional libraries needed
-    scalapack_libs=""
-    AC_SEARCH_LIBS(pdgemr2d, "" , have_scalapack=1
+       AC_SEARCH_LIBS(pdgemr2d, "" , have_scalapack=1
                    try_dflags="$try_dflags -D__SCALAPACK")
-    test "$have_scalapack" -eq 1 && break
+       test "$have_scalapack" -eq 1 && break
 # Intel MKL blacs&scalapack
-#
-# Norbert Nemec 2010/08/20 this compiles and links
-# but is untested and automatic configuration does not yet work properly
 # 
 # Carlo Cavazzoni writes
-#      If you have a fast network (like IB or a custom CRAY/IBM network)
-#      it is always better to use scalapack for system with large
-#      number of bands (let say above 500-1000 bands).
 #      If you want to use the version of scalapack distributed with MKL
 #      you should be careful about:
 #      1) the size of the integer variable when calling MKL subroutine,
@@ -1790,6 +1785,8 @@ do
 #      if you are in doubt or if you have another version of MPI
 #      you can always build BLACS by yourself.
 #
+# Norbert Nemec 2010/08/20 this compiles and links
+# but is untested and automatic configuration does not yet work properly
 #
 #    if test "$have_mkl" -eq 1
 #    then
@@ -1802,22 +1799,23 @@ do
 #    fi
 #
 # sci libraries (e.g. cray xt)
-    unset ac_cv_search_pdgemr2d # clear cached value
-    scalapack_libs="-lsci"
-    LIBS="$mpi_libs $scalapack_libs"
-    AC_SEARCH_LIBS(pdgemr2d, "" , have_scalapack=1
-                   try_dflags="$try_dflags -D__SCALAPACK")
-    test "$have_scalapack" -eq 1 && break
+       unset ac_cv_search_pdgemr2d # clear cached value
+       scalapack_libs="-lsci"
+       LIBS="$mpi_libs $scalapack_libs"
+       AC_SEARCH_LIBS(pdgemr2d, "" , have_scalapack=1
+                      try_dflags="$try_dflags -D__SCALAPACK")
+       test "$have_scalapack" -eq 1 && break
 # scalapack + blacs
-    unset ac_cv_search_pdgemr2d # clear cached value
-    if test "$scalapack_dir" = ""; then scalapack_dir="/bgsys/local/scalapack/lib"; fi
-    if test "$blacs_dir" = ""; then blacs_dir="/bgsys/local/blacs/lib"; fi
-    scalapack_libs="-L$scalapack_dir -lscalapack"
-    scalapack_libs="$scalapack_libs -L$blacs_dir -lblacs -lblacsF77init -lblacs"
-    LIBS="$mpi_libs $scalapack_libs"
-    LDFLAGS=""
-    AC_SEARCH_LIBS(pdgemr2d, "" , have_scalapack=1
+       unset ac_cv_search_pdgemr2d # clear cached value
+       if test "$scalapack_dir" = ""; then scalapack_dir="/bgsys/local/scalapack/lib"; fi
+       if test "$blacs_dir" = ""; then blacs_dir="/bgsys/local/blacs/lib"; fi
+       blacs_libs="-L$blacs_dir -lblacs -lblacsF77init -lblacs"
+       scalapack_libs="-L$scalapack_dir -lscalapack $blacs_libs"
+       LIBS="$mpi_libs $scalapack_libs"
+       LDFLAGS=""
+       AC_SEARCH_LIBS(pdgemr2d, "" , have_scalapack=1
                    try_dflags="$try_dflags -D__SCALAPACK")
+    fi
 done
 
 # preprocessing flag for openmp (experimental)
