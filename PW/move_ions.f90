@@ -29,15 +29,11 @@ SUBROUTINE move_ions()
   USE symm_base,              ONLY : checkallsym
   USE ener,                   ONLY : etot
   USE force_mod,              ONLY : force, sigma
-!  USE control_flags,          ONLY : istep, nstep, upscale, lbfgs, ldamped, &
-!                                     lconstrain, lcoarsegrained, conv_ions, &
-!                                     lmd, llang, history, tr2
   USE control_flags,          ONLY : istep, nstep, upscale, lbfgs, ldamped, &
                                      lconstrain, conv_ions, &
                                      lmd, llang, history, tr2
   USE relax,                  ONLY : epse, epsf, epsp, starting_scf_threshold
   USE lsda_mod,               ONLY : lsda, absmag
-!  USE metadyn_base,           ONLY : set_target, mean_force
   USE mp_global,              ONLY : intra_image_comm
   USE io_global,              ONLY : ionode_id, ionode
   USE mp,                     ONLY : mp_bcast

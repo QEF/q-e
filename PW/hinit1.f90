@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2005 Quantum ESPRESSO group
+! Copyright (C) 2001-2011 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -15,7 +15,7 @@ SUBROUTINE hinit1()
   USE cell_base,     ONLY : at, bg, omega, tpiba2
   USE grid_dimensions,ONLY: nrxx
   USE gvect,         ONLY : ngm, g
-  USE gvecs,       ONLY : doublegrid
+  USE gvecs,         ONLY : doublegrid
   USE ldaU,          ONLY : lda_plus_u
   USE lsda_mod,      ONLY : nspin
   USE scf,           ONLY : vrs, vltot, v, kedtau
@@ -23,7 +23,7 @@ SUBROUTINE hinit1()
   USE realus,        ONLY : qpointlist
   USE wannier_new,   ONLY : use_wannier
   USE martyna_tuckerman, ONLY : tag_wg_corr_as_obsolete
-  USE dfunct,                 only : newd
+  USE dfunct,        ONLY : newd
   !
   IMPLICIT NONE
   !

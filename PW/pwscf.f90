@@ -148,54 +148,55 @@ PROGRAM pwscf
        CALL stop_run( conv_elec )
      ENDIF
      !
-     ! ... if requested ions are moved
+     ! ... ionic section starts here
      !
-!  CALL ions()
-  !
-  CALL start_clock( 'ions' )
-  !
-  conv_ions = .TRUE.
-  !
-  ! ... recover from a previous run, if appropriate
-  !
-  IF ( restart .AND. lscf ) CALL restart_in_ions()
-  !
-  CALL pw2casino()
-  !
-  IF ( lforce ) CALL forces()
-  !
-  IF ( lstres ) CALL stress()
-  !
-  IF ( lmd .OR. lbfgs ) THEN
+     CALL start_clock( 'ions' )
+     conv_ions = .TRUE.
      !
-     ! ... first we move the ions
+     ! ... recover from a previous run, if appropriate
      !
-     CALL move_ions()
+     IF ( restart .AND. lscf ) CALL restart_in_ions()
      !
-     ! ... then we save restart information for the new configuration
+     ! ... file in CASINO format written here if required
      !
-     IF ( istep < nstep .AND. .NOT. conv_ions ) THEN
+     CALL pw2casino()
+     !
+     ! ... force calculation
+     !
+     IF ( lforce ) CALL forces()
+     !
+     ! ... stress calculation
+     !
+     IF ( lstres ) CALL stress()
+     !
+     IF ( lmd .OR. lbfgs ) THEN
         !
-        CALL punch( 'config' )
+        ! ... ionic step (for molecular dynamics or optimization)
         !
-        CALL save_in_ions()
+        CALL move_ions()
+        !
+        ! ... then we save restart information for the new configuration
+        !
+        IF ( istep < nstep .AND. .NOT. conv_ions ) THEN
+           !
+           CALL punch( 'config' )
+           CALL save_in_ions()
+           !
+        END IF
         !
      END IF
      !
-  END IF
-  !
-  CALL stop_clock( 'ions' )
-  !
+     CALL stop_clock( 'ions' )
      !
 #if defined(__MS2)
      CALL return_forces()
 #endif
-     !
      ! ... exit condition (ionic convergence) is checked here
      !
      IF ( conv_ions ) EXIT main_loop
      !
-     ! ... the ionic part of the hamiltonian is reinitialized
+     ! ... terms of the hamiltonian depending upon nuclear positions
+     ! ... are reinitialized here
      !
 #if defined(__MS2)
      CALL set_positions()
@@ -203,6 +204,8 @@ PROGRAM pwscf
      CALL hinit1()
      !
   END DO main_loop
+  !
+  ! ... save final data file
   !
   CALL punch('all')
   CALL stop_run( conv_ions )
