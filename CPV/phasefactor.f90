@@ -8,6 +8,52 @@
 
 
 !=----------------------------------------------------------------------------=!
+   subroutine phfac_x( tau0, ei1, ei2, ei3, eigr)
+!=----------------------------------------------------------------------------=!
+      !
+      !  this subroutine generates the complex matrices ei1, ei2, and ei3
+      !  used to compute the structure factor and forces on atoms :
+      !     ei1(n1,ia,is) = exp(-i*n1*b1*tau(ia,is)) -nr1<n1<nr1
+      !  and similar definitions for ei2 and ei3 ; and :
+      !     eigr(n,ia,is) = ei1*ei2*ei3 = exp(-i g*tau(ia,is))
+      !  The value of n1,n2,n3 for a vector g is supplied by array mill
+      !  calculated in ggen .
+      !
+      use kinds,              only: DP
+      use control_flags,      only: iprsta
+      use io_global,          only: stdout
+      use ions_base,          only: nsp, na, nat
+      use cell_base,          only: ainv, r_to_s
+      use grid_dimensions,    only: nr1, nr2, nr3
+      use gvect, only: mill
+      use gvecw,              only: ngw
+      use cp_interfaces,      only: phfacs
+!
+      implicit none
+      real(DP) tau0(3,nat)
+!
+      complex(DP) ei1(-nr1:nr1,nat), ei2(-nr2:nr2,nat),      &
+     &                ei3(-nr3:nr3,nat), eigr(ngw,nat)
+!
+      integer :: i, isa
+      real(DP), allocatable :: taus(:,:)
+!
+      allocate( taus(3,nat) )
+!
+      if(iprsta.gt.3) then
+         WRITE( stdout,*) ' phfac: tau0 '
+         WRITE( stdout,*) ( ( tau0(i,isa), i=1, 3 ), isa=1, nat )
+      endif
+      CALL r_to_s( tau0, taus, na, nsp, ainv )
+      CALL phfacs( ei1, ei2, ei3, eigr, mill, taus, nr1, nr2, nr3, nat )
+
+      deallocate( taus )
+!
+      return
+   end subroutine phfac_x
+
+
+!=----------------------------------------------------------------------------=!
    SUBROUTINE phfacs_x( ei1, ei2, ei3, eigr, mill, taus, nr1, nr2, nr3, nat )
 !=----------------------------------------------------------------------------=!
 
@@ -187,51 +233,4 @@
       RETURN
    END SUBROUTINE strucf_x
 
-
-
-!-----------------------------------------------------------------------
-
-   subroutine phfac_x( tau0, ei1, ei2, ei3, eigr)
-
-      !-----------------------------------------------------------------------
-      !  this subroutine generates the complex matrices ei1, ei2, and ei3
-      !  used to compute the structure factor and forces on atoms :
-      !     ei1(n1,ia,is) = exp(-i*n1*b1*tau(ia,is)) -nr1<n1<nr1
-      !  and similar definitions for ei2 and ei3 ; and :
-      !     eigr(n,ia,is) = ei1*ei2*ei3 = exp(-i g*tau(ia,is))
-      !  The value of n1,n2,n3 for a vector g is supplied by array mill
-      !  calculated in ggen .
-      !
-      use kinds,              only: DP
-      use control_flags,      only: iprsta
-      use io_global,          only: stdout
-      use ions_base,          only: nsp, na, nat
-      use cell_base,          only: ainv, r_to_s
-      use grid_dimensions,    only: nr1, nr2, nr3
-      use gvect, only: mill
-      use gvecw,              only: ngw
-      use cp_interfaces,      only: phfacs
-!
-      implicit none
-      real(DP) tau0(3,nat)
-!
-      complex(DP) ei1(-nr1:nr1,nat), ei2(-nr2:nr2,nat),      &
-     &                ei3(-nr3:nr3,nat), eigr(ngw,nat)
-!
-      integer :: i, isa
-      real(DP), allocatable :: taus(:,:)
-!
-      allocate( taus(3,nat) )
-!
-      if(iprsta.gt.3) then
-         WRITE( stdout,*) ' phfac: tau0 '
-         WRITE( stdout,*) ( ( tau0(i,isa), i=1, 3 ), isa=1, nat )
-      endif
-      CALL r_to_s( tau0, taus, na, nsp, ainv )
-      CALL phfacs( ei1, ei2, ei3, eigr, mill, taus, nr1, nr2, nr3, nat )
-
-      deallocate( taus )
-!
-      return
-   end subroutine phfac_x
 
