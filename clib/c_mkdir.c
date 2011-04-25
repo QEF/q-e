@@ -129,4 +129,31 @@ int F77_FUNC_(c_rename_int,C_RENAME_INT)( const int * oldname, const int * oldle
 
 } /* c_rename */
 
+int F77_FUNC_(c_link_int,C_LINK_INT)( const int * oldname, const int * oldlength ,
+                                  const int * newname, const int * newlength )
+{
+
+   int i, retval = -1 ;
+
+   char * oldname_ = ( char * ) xcmalloc( (*oldlength) + 1 ) ;
+   char * newname_ = ( char * ) xcmalloc( (*newlength) + 1 ) ;
+
+   for( i = 0; i < * oldlength; i++ ) oldname_[ i ] = (char)oldname[ i ];
+   for( i = 0; i < * newlength; i++ ) newname_[ i ] = (char)newname[ i ];
+
+   oldname_[*oldlength] = '\0' ;
+   newname_[*newlength] = '\0' ;
+
+   retval = symlink( oldname_, newname_ ) ;
+
+   if ( retval == -1 )
+     fprintf( stderr , "ln fail: [%d] %s\n" , errno , strerror( errno ) ) ;
+
+   free( oldname_ ) ;
+   free( newname_ ) ;
+
+   return retval ;
+
+} /* c_link */
+
 /* EOF */
