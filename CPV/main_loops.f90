@@ -5,9 +5,6 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-! ... This file contains "sub-main" subroutines that drive the different
-! ... kinds of "meta"/"non-meta" dynamics
-!
 ! ... set ion_positions = 'from_input' and rd_pos = +your_positions+
 ! ... to force cprmain to compute forces for +your_position+ configuration
 !

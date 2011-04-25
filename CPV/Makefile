@@ -46,6 +46,7 @@ ions_nose.o \
 ions_positions.o \
 ksstates.o \
 ldaU.o \
+ldaUpen.o \
 mainvar.o \
 main_loops.o \
 cplib_meta.o \

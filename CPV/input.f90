@@ -186,7 +186,6 @@ MODULE input
      USE io_global,     ONLY : stdout
      USE autopilot,     ONLY : auto_check
      USE autopilot,     ONLY : restart_p
-!     USE control_flags, ONLY : lcoarsegrained, ldamped
      USE control_flags, ONLY : ldamped
      USE control_flags, ONLY : ndw_        => ndw, &
                                ndr_        => ndr, &
@@ -583,17 +582,6 @@ MODULE input
           CALL errore(' control_flags ',' unknown electron_temperature '//TRIM(electron_temperature), 1 )
       END SELECT
       
-!      SELECT CASE( TRIM( phase_space ) )
-!      CASE( 'full' )
-         !
-!         lcoarsegrained  = .FALSE.
-         !
-!      CASE ( 'coarse-grained' )
-         !
-!         lcoarsegrained  = .TRUE.
-         !
-!      END SELECT
-      !
       ! ... Ions dynamics
 
       tdampions_       = .FALSE.
@@ -852,6 +840,8 @@ MODULE input
                                   step_rad, Surf_t, dthr, R_j, h_j,   &
                                   delta_eps, delta_sigma, n_cntr,     &
                                   axis
+     USE input_parameters, ONLY : lda_plus_u, Hubbard_U
+     USE input_parameters, ONLY : step_pen, A_pen, alpha_pen, sigma_pen
      !
      USE ions_base,        ONLY : tau, ityp, zv
      USE cell_base,        ONLY : cell_base_init, at, cell_alat
@@ -865,6 +855,8 @@ MODULE input
      USE efield_module,    ONLY : efield_init
      USE cg_module,        ONLY : cg_init
      USE pres_ai_mod,      ONLY : pres_ai_init
+     USE ldaU_cp,          ONLY : ldaU_init0
+     USE step_penalty,     ONLY : ldaUpen_init
      !
      USE smallbox_grid_dim,    ONLY:  nnrbx, &  !  variable is used to workaround internal compiler error (IBM xlf)
            nr1b_ => nr1b, &
@@ -964,7 +956,6 @@ MODULE input
         CALL errore( ' module setup ', ' Stress is not yet implemented with SIC ', 1 )
      !
      CALL sic_initval( nat, id_loc, sic, sic_epsilon, sic_alpha, sic_rloc  )
-
      !
      CALL ks_states_init( nspin, nprnks, iprnks )
      !
@@ -1005,6 +996,11 @@ MODULE input
                         t_gauss, jellium, cntr, P_ext, P_in, P_fin,     &
                         rho_thr, step_rad, Surf_t, dthr, R_j, h_j,      &
                         delta_eps, delta_sigma, n_cntr, axis )
+     !
+     ! ... initialize variables for lda+U calculations
+     !
+     CALL ldaU_init0 ( ntyp, lda_plus_u, Hubbard_U )
+     CALL ldaUpen_init( SIZE(sigma_pen), step_pen, sigma_pen, alpha_pen, A_pen )
      !
      RETURN
      !

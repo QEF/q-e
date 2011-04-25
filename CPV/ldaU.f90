@@ -6,6 +6,51 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !-------------------------------------------------------------------------
+module ldaU_cp
+!-------------------------------------------------------------------------
+  use parameters, only: nsx
+  USE kinds
+  implicit none
+  save
+  complex(DP), allocatable :: atomwfc(:,:)
+  complex(DP), allocatable :: swfcatom(:,:)
+  real(DP) :: Hubbard_U(nsx), Hubbard_lambda(nsx,2), ns0(nsx,2), Hubbard_alpha(nsx)
+  real(DP) :: e_hubbard = 0.d0, e_lambda = 0.d0
+  real(DP), allocatable :: ns(:,:,:,:)
+  integer :: Hubbard_l(nsx), Hubbard_lmax=0, n_atomic_wfc
+  logical :: lda_plus_u
+  COMPLEX(DP), allocatable::  vupsi(:,:) !#@@@
+  !
+contains
+  !
+  subroutine ldaU_init0 ( nsp, lda_plus_u_, Hubbard_U_ )
+!-----------------------------------------------------------------------
+!
+      USE constants,        ONLY: autoev
+      !
+      IMPLICIT NONE
+      INTEGER, INTENT(IN) :: nsp
+      LOGICAL, INTENT(IN) :: lda_plus_u_
+      REAL(DP),INTENT(IN) :: Hubbard_U_(nsp)
+
+      lda_plus_u = lda_plus_u_
+      Hubbard_U(1:nsp) = Hubbard_U_(1:nsp) / autoev
+      !
+  END SUBROUTINE ldaU_init0
+  !
+  subroutine deallocate_lda_plus_u()
+     !
+     IF( ALLOCATED( atomwfc ) ) DEALLOCATE( atomwfc )
+     IF( ALLOCATED( swfcatom ) ) DEALLOCATE( swfcatom )
+     IF( ALLOCATED( ns ) ) DEALLOCATE( ns )
+     IF( ALLOCATED( vupsi ) ) DEALLOCATE( vupsi )
+     !
+     !
+  end subroutine
+  !
+end module ldaU_cp
+!
+!-------------------------------------------------------------------------
       SUBROUTINE s_wfc(n_atomic_wfc1,becwfc,betae,wfc,swfc) !#@@@ Changed n_atomic_wfc to n_atomic_wfc1
 !-----------------------------------------------------------------------
 !
@@ -65,39 +110,25 @@
       subroutine ldaU_init
 !-----------------------------------------------------------------------
 !
-      USE constants,        ONLY: autoev
       use ldaU_cp,          ONLY: n_atomic_wfc, atomwfc,lda_plus_u, Hubbard_U
       use ldaU_cp,          ONLY: Hubbard_lmax, Hubbard_l, ns, vupsi
-      use input_parameters, ONLY: lda_plus_u_ => lda_plus_u
-      use input_parameters, ONLY: Hubbard_U_ => Hubbard_U
       use ions_base,        only: na, nsp, nat, atm
       use gvecw,            only: ngw
       use electrons_base,   only: nspin, nx => nbspx
       USE uspp_param,       ONLY: upf
-      USE step_penalty,     ONLY: vpsi_pen, A_pen, sigma_pen, alpha_pen, step_pen
-      use input_parameters, ONLY: step_pen_ => step_pen
-      use input_parameters, ONLY: A_pen_ => A_pen
-      use input_parameters, ONLY: sigma_pen_ => sigma_pen
-      use input_parameters, ONLY: alpha_pen_ => alpha_pen
       !
       implicit none
       integer is, nb, l
       integer, external :: set_Hubbard_l
 
-! allocate vupsi
-
-      lda_plus_u = lda_plus_u_
       IF ( .NOT.lda_plus_u ) RETURN
+! allocate vupsi
       allocate(vupsi(ngw,nx))
-
       vupsi=(0.0d0,0.0d0)
-      allocate(vpsi_pen(ngw,nx)) ! step_constraint 
-      vpsi_pen=(0.0d0,0.0d0)
+
       n_atomic_wfc=0
 
       do is=1,nsp
-         !
-         Hubbard_U( is ) = Hubbard_U_( is )/autoev
          !
          do nb = 1,upf(is)%nwfc
             l = upf(is)%lchi(nb)
@@ -125,10 +156,6 @@
       end if
       l = 2 * Hubbard_lmax + 1
       allocate(ns(nat,nspin,l,l))
-      step_pen=step_pen_
-      A_pen=A_pen_
-      sigma_pen=sigma_pen_
-      alpha_pen=alpha_pen_
       return
       end subroutine ldaU_init
 !
@@ -165,7 +192,7 @@ return
 end function set_Hubbard_l
 !
 !-----------------------------------------------------------------------
-      subroutine new_ns(c,eigr,betae,hpsi,hpsi_pen,forceh)
+      subroutine new_ns(c,eigr,betae,hpsi,forceh)
 !-----------------------------------------------------------------------
 !
 ! This routine computes the on site occupation numbers of the Hubbard ions.
@@ -194,11 +221,11 @@ end function set_Hubbard_l
       integer, parameter :: ldmx = 7
       complex(DP), intent(in) :: c(ngw,nx), eigr(ngw,nat),      &
      &                               betae(ngw,nhsa)
-      complex(DP), intent(out) :: hpsi(ngw,nx), hpsi_pen(ngw,nx)
+      complex(DP), intent(out) :: hpsi(ngw,nx)
       real(DP) forceh(3,nat), force_pen(3,nat)
 !
       complex(DP), allocatable:: wfc(:,:), swfc(:,:),dphi(:,:,:),   &
-     &                               spsi(:,:)
+     &                               spsi(:,:), hpsi_pen(:,:)
       real(DP), allocatable   :: becwfc(:,:), bp(:,:),              &
      &                               dbp(:,:,:), wdb(:,:,:)
       real(DP), allocatable   :: dns(:,:,:,:), proj(:,:)
@@ -309,9 +336,10 @@ end function set_Hubbard_l
 !
 !      Calculate the potential and energy due to constraint
 !
-      hpsi_pen(:,:)=0.d0
+      IF ( step_pen ) THEN
+         allocate(hpsi_pen(ngw,nx)) 
+         hpsi_pen(:,:)=0.d0
 
-      if (step_pen) then
          iat=0
          E_pen=0
          do is = 1,nsp
@@ -349,6 +377,8 @@ end function set_Hubbard_l
               endif
             enddo
          enddo
+         hpsi(:,:) = hpsi(:,:) + hpsi_pen (:,:)
+         DEALLOCATE (hpsi_pen)
       endif
 
 !
@@ -784,7 +814,6 @@ end function set_Hubbard_l
       ! Atomic wavefunctions are not orthogonalized
       !
       USE kinds,              ONLY: DP
-      USE constants,          ONLY: autoev
       USE io_global,          ONLY: stdout
       USE mp_global,          ONLY: intra_bgrp_comm
       USE mp,                 ONLY: mp_sum
