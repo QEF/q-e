@@ -75,7 +75,9 @@ SUBROUTINE init_run()
   USE orthogonalize_base,       ONLY : mesure_diag_perf, mesure_mmul_perf
   USE step_penalty,             ONLY : step_pen
   USE ions_base,                ONLY : ions_reference_positions, cdmi, taui
-  USE mp_global,                ONLY : nimage, my_image_id, nbgrp
+  USE mp_global,                ONLY : nimage, my_image_id, nbgrp, me_image, intra_image_comm
+  USE mp,                       ONLY : mp_barrier
+  USE wrappers
   USE ldaU_cp
   !
   IMPLICIT NONE
@@ -83,6 +85,7 @@ SUBROUTINE init_run()
   INTEGER            :: i
   CHARACTER(LEN=256) :: dirname
   REAL(DP)           :: a1(3), a2(3), a3(3)
+  LOGICAL            :: ftest
   !
   !
   CALL start_clock( 'initialize' )
@@ -96,7 +99,14 @@ SUBROUTINE init_run()
      WRITE( dirname, FMT = '( I5.5 )' ) my_image_id
      tmp_dir = TRIM( tmp_dir ) // '/' // TRIM( dirname )
      CALL create_directory( tmp_dir )
-     CALL change_directory( tmp_dir )
+     !CALL change_directory( tmp_dir )
+     IF( me_image == 0 ) THEN
+        INQUIRE( FILE='plumed.dat', EXIST=ftest )
+        IF( ftest ) THEN
+          i = f_link( '../../plumed.dat', TRIM(tmp_dir)//'/'//'plumed.dat' )
+        END IF 
+     END IF
+     CALL mp_barrier( intra_image_comm )
      !
   END IF
 
