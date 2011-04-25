@@ -103,6 +103,34 @@ CONTAINS
      RETURN
    END FUNCTION
    !
+   FUNCTION f_link( oldname, newname )
+     INTEGER :: f_link
+     CHARACTER(LEN=*) :: oldname
+     CHARACTER(LEN=*) :: newname
+     INTEGER :: i, lold, lnew
+     INTEGER, ALLOCATABLE :: iold(:)
+     INTEGER, ALLOCATABLE :: inew(:)
+     INTEGER, EXTERNAL :: c_link_int
+     lold = LEN( oldname )
+     lnew = LEN( newname )
+     ALLOCATE( iold( lold ) )
+     ALLOCATE( inew( lnew ) )
+     DO i = 1, lold
+        iold(i) = ICHAR( oldname(i:i) )
+        IF( iold(i) < 0 .OR. iold(i) > 127 ) &
+           CALL errore( ' f_link ', ' invalid character ', ABS( iold(i) ) )
+     END DO
+     DO i = 1, lnew
+        inew(i) = ICHAR( newname(i:i) )
+        IF( inew(i) < 0 .OR. inew(i) > 127 ) &
+           CALL errore( ' f_link ', ' invalid character ', ABS( inew(i) ) )
+     END DO
+     f_link = c_link_int( iold, lold, inew, lnew )
+     DEALLOCATE( inew )
+     DEALLOCATE( iold )
+     RETURN
+   END FUNCTION
+   !
 
    SUBROUTINE md5_from_file (filename, md5)
      
