@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2009 Quantum ESPRESSO group
+! Copyright (C) 2002-2011 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -26,6 +26,11 @@ SUBROUTINE move_ions()
   USE cellmd,                 ONLY : omega_old, at_old, press, lmovecell, calc
   USE ions_base,              ONLY : nat, ityp, tau, if_pos
   USE grid_dimensions,        ONLY : nr1, nr2, nr3
+  USE smooth_grid_dimensions, ONLY : nr1s,nr2s,nr3s
+  USE grid_subroutines,       ONLY : realspace_grids_init
+  USE gvect,                  ONLY : gcutm
+  USE gvecs,                  ONLY : gcutms
+  USE grid_subroutines,       ONLY : realspace_grids_init
   USE symm_base,              ONLY : checkallsym
   USE ener,                   ONLY : etot
   USE force_mod,              ONLY : force, sigma
@@ -48,7 +53,6 @@ SUBROUTINE move_ions()
                            restart_with_starting_magnetiz = .FALSE., &
                            lcheck_cell= .TRUE., &
                            final_cell_calculation=.FALSE.
-    ! .TRUE. if a check on zero absolute magnetization is required
   REAL(DP), ALLOCATABLE :: tauold(:,:,:)
   REAL(DP)              :: energy_error, gradient_error, cell_error
   LOGICAL               :: step_accepted, exst
@@ -56,7 +60,6 @@ SUBROUTINE move_ions()
   REAL(DP)              :: h(3,3), fcell(3,3)=0.d0, epsp1
   INTEGER,  ALLOCATABLE :: fixion(:)
   real(dp) :: tr
-  !
   !
   ! ... only one node does the calculation in the parallel case
   !
@@ -228,8 +231,6 @@ SUBROUTINE move_ions()
            !
            ! ... dynamics algorithms
            !
-!           IF ( lcoarsegrained ) CALL set_target()
-           !
            IF ( ldamped ) THEN
               !
               CALL proj_verlet()
@@ -243,8 +244,6 @@ SUBROUTINE move_ions()
               CALL verlet()
               !
            END IF
-           !
-!           IF ( lcoarsegrained ) CALL mean_force( istep+1, etot, e2 )
            !
         ELSE IF ( calc /= ' ' ) THEN
            !
@@ -266,44 +265,55 @@ SUBROUTINE move_ions()
   CALL mp_bcast(restart_with_starting_magnetiz,ionode_id,intra_image_comm)
   CALL mp_bcast(final_cell_calculation,ionode_id,intra_image_comm)
   !
-  if (restart_with_starting_magnetiz.or.final_cell_calculation) then
-     ! ... lsda relaxation :  a final configuration with zero 
+  IF ( final_cell_calculation ) THEN
+     ! 
+     ! ... Variable-cell optimization: once convergence is achieved, 
+     ! ... make a final calculation with G-vectors and plane waves
+     ! ... calculated for the final cell (may differ from the curent
+     ! ... result, using G_vectors and PWs for the starting cell)
+     !
+     WRITE( UNIT = stdout, FMT = 9110 )
+     WRITE( UNIT = stdout, FMT = 9120 )
+     !
+     CALL clean_pw( .FALSE. )
+     CALL close_files(.TRUE.)
+     lmovecell=.FALSE.
+     lcheck_cell=.FALSE.
+     final_cell_calculation=.FALSE.
+     lbfgs=.FALSE.
+     lmd=.FALSE.
+     lcheck_mag = .FALSE.
+     restart_with_starting_magnetiz = .FALSE.
+     ! ... conv_ions is set to .FALSE. to perform a final scf cycle
+     conv_ions = .FALSE.
+     ! ... allow re-calculation of FFT grid
+     !
+     nr1=0; nr2=0; nr3=0; nr1s=0; nr2s=0; nr3s=0
+     CALL realspace_grids_init (at, bg, gcutm, gcutms )
+     CALL init_run()
+     !
+  ELSE IF (restart_with_starting_magnetiz) THEN
+     !
+     ! ... lsda optimization :  a final configuration with zero 
      ! ... absolute magnetization has been found and we check 
      ! ... if it is really the minimum energy structure by 
      ! ... performing a new scf iteration without any "electronic" history
      !
-     IF (final_cell_calculation) THEN
-        WRITE( UNIT = stdout, FMT = 9110 )
-        WRITE( UNIT = stdout, FMT = 9120 )
-        !
-        CALL clean_pw( .FALSE. )
-        CALL close_files(.TRUE.)
-        lmovecell=.FALSE.
-        lcheck_cell=.FALSE.
-        final_cell_calculation=.FALSE.
-        lbfgs=.FALSE.
-        lmd=.FALSE.
-        CALL init_run()
-     ELSE
-        WRITE( UNIT = stdout, FMT = 9010 )
-        WRITE( UNIT = stdout, FMT = 9020 )
-        !
-        ! ... the system is reinitialized
-        !
-        CALL potinit()
-        CALL newd()
-        CALL wfcinit()
-     END IF
-     !
-     ! ... this check is performed only once
+     WRITE( UNIT = stdout, FMT = 9010 )
+     WRITE( UNIT = stdout, FMT = 9020 )
      !
      lcheck_mag = .FALSE.
      restart_with_starting_magnetiz = .FALSE.
-     !
      ! ... conv_ions is set to .FALSE. to perform a final scf cycle
-     !
      conv_ions = .FALSE.
-  end if
+     !
+     ! ... re-initialize the potential and wavefunctions
+     !
+     CALL potinit()
+     CALL newd()
+     CALL wfcinit()
+     !
+  END IF
   !
   ! ... broadcast calculated quantities to all nodes
   !
@@ -334,7 +344,8 @@ SUBROUTINE move_ions()
            &     'without any "electronic" history' )               
   !
 9110 FORMAT( /5X,'A final scf calculation at the relaxed structure.' )
-9120 FORMAT( /5X,'The G-vectors are recalculated. ' )
+9120 FORMAT(  5X,'The G-vectors are recalculated for the final unit cell'/ &
+              5X,'Results may differ from those at the preceding step.' )
   !
 END SUBROUTINE move_ions
   !

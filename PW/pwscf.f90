@@ -201,7 +201,7 @@ PROGRAM pwscf
 #if defined(__MS2)
      CALL set_positions()
 #endif
-     CALL hinit1()
+     IF ( lmd .OR. lbfgs ) CALL hinit1()
      !
   END DO main_loop
   !
