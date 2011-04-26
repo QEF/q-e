@@ -128,8 +128,8 @@ or patch some \qe\ routines can be installed as {\em plug-ins}:
      J. Yates, Y.-S Lee.
 \item \texttt{WanT}:
       quantum transport properties with Wannier functions \\
-      (\texttt{http://www.wannier-transport.org}), originally written by A. Ferretti, 
-      A Calzolari and M. Buongiorno Nardelli.
+      (\texttt{http://www.wannier-transport.org}), originally written by 
+      A. Ferretti, A. Calzolari and M. Buongiorno Nardelli.
 \item \texttt{YAMBO}:
       electronic excitations within Many-Body Perturbation Theory: GW and Bethe-Salpeter equation 
       (\texttt{http://www.yambo-code.org}), originally written by A. Marini.
@@ -194,7 +194,7 @@ All trademarks mentioned in this guide belong to their respective owners.
 \end{itemize}
 All of the above works for both insulators and metals, 
 in any crystal structure, for many exchange-correlation (XC) functionals
-(including spin polarization, DFT+U, nonlocal VdW functionas,
+(including spin polarization, DFT+U, nonlocal VdW functional,
 hybrid functionals), for
 norm-conserving (Hamann-Schluter-Chiang) PPs (NCPPs) in 
 separable form or Ultrasoft (Vanderbilt) PPs (USPPs)
@@ -270,7 +270,7 @@ We quote in particular:
   \item Carlo Sbraccia (Princeton) for NEB, Strings method,
   for improvements to structural optimization
   and to many other parts;
-  \item Paolo Umari (Democritos) for finite electric fields;
+  \item Paolo Umari (Univ. Padua) for finite electric fields;
   \item Renata Wentzcovitch and collaborators (Univ. Minnesota)
   for variable-cell molecular dynamics;
   \item Lorenzo Paulatto (Univ.Paris VI) for PAW implementation, 
@@ -284,7 +284,7 @@ For \PHonon, we mention in particular:
 \begin{itemize}
   \item Michele Lazzeri (Univ.Paris VI) for the 2n+1 code and Raman 
   cross section calculation with 2nd-order response;
- \item Andrea Dal Corso for USPP, noncollinear, spin-orbit
+ \item Andrea Dal Corso for USPP, noncolinear, spin-orbit
  extensions to \PHonon.
  \end{itemize}
 For \PostProc, we mention:
@@ -308,7 +308,7 @@ We quote in particular:
   \item Manu Sharma (Princeton) and Yudong Wu (Princeton) for
    maximally localized Wannier functions and dynamics with 
    Wannier functions;
-  \item Paolo Umari (Democritos) for finite electric fields and conjugate
+  \item Paolo Umari (Univ. Padua) for finite electric fields and conjugate
    gradients;
   \item Paolo Umari and Ismaila Dabo for ensemble-DFT;
   \item Xiaofei Wang (Princeton) for META-GGA;
@@ -317,12 +317,12 @@ We quote in particular:
 Other packages in \qe:
 \begin{itemize}
 \item
-\texttt{PWcond} was written by Alexander Smogunov (SISSA) and Andrea 
+\texttt{PWcond} was written by Alexander Smogunov (CEA) and Andrea 
 Dal Corso. For an introduction, see 
 \texttt{http://people.sissa.it/\~{}smogunov/PWCOND/pwcond.html}
 \item
 \texttt{GIPAW} (\texttt{http://www.gipaw.net})
-was written by Davide Ceresoli (MIT), Ari Seitsonen (Univ.Zurich),
+was written by Davide Ceresoli (Univ. Oxford), Ari Seitsonen (Univ.Zurich),
 Uwe Gerstmann,  Francesco Mauri (Univ. Paris VI).
 \item
 \texttt{PWgui} was written by Anton Kokalj (IJS Ljubljana) and is 
@@ -339,7 +339,7 @@ and collaborators.
 \item \texttt{VdW} was contributed by Huy-Viet Nguyen (SISSA).
 \item \texttt{GWW} was written by Paolo Umari and Geoffrey Stenuit (Democritos).
 \item
-\texttt{QHA} amd \texttt{PlotPhon} were contributed by Eyvaz Isaev
+\texttt{QHA} and \texttt{PlotPhon} were contributed by Eyvaz Isaev
  (Moscow Steel and Alloy Inst. and Linkoping and Uppsala Univ.).
 \item \texttt{TD-DFPT} written by Stefano Baroni (SISSA), Ralph Gebauer (ICTP), 
 Baris Malcioglu, Dario Rocca, Brent Walker.
@@ -353,7 +353,7 @@ Other relevant contributions to \qe:
   \item Brian Kolb and Timo Thonhauser (Wake Forest University)
   implemented the vdW-DF and vdW-DF2 functionals, with support from
   Riccardo Sabatini and Stefano de Gironcoli (SISSA and DEMOCRITOS);
-  \item Andrea Ferretti (MIT) contributed the \texttt{qexml} and
+  \item Andrea Ferretti (Univ. Oxford) contributed the \texttt{qexml} and
   \texttt{sumpdos} utility,
   helped with file formats and with various problems;
   \item Hannu-Pekka Komsa (CSEA/Lausanne) contributed
@@ -370,7 +370,7 @@ Other relevant contributions to \qe:
 Simon Binnie (Univ. College London), Guido Fratesi, Axel Kohlmeyer (UPenn),
 Konstantin Kudin (Princeton), Sergey Lisenkov (Univ.Arkansas), 
 Nicolas Mounet (MIT), William Parker (Ohio State Univ), 
-Guido Roma (CEA), Gabriele Sclauzero (SISSA), Sylvie Stucki (IRRMA), 
+Guido Roma (CEA), Gabriele Sclauzero (IRRMA), Sylvie Stucki (IRRMA), 
 Pascal Thibaudeau (CEA), Vittorio Zecca, Federico Zipoli (Princeton)
 answered questions on the mailing list, found bugs, helped in 
 porting to new architectures, wrote some code.
@@ -453,7 +453,7 @@ complies with the following guidelines:
   into a sea of quoted text.
 \item Remember that even experts cannot guess where a problem lies in
   the absence of sufficient information.
-\item Remember that the mailing list is a voluntary endeavour: nobody is 
+\item Remember that the mailing list is a voluntary endeavor: nobody is 
   entitled to an answer, even less to an immediate answer.
 \item Finally, please note that the mailing list is not a replacement
   for your own work, nor is it a replacement for your thesis director's work.
@@ -818,7 +818,7 @@ If you have recent versions (v.10 or later) of MKL installed, you
 may use the FFTW3 interface provided with MKL. This can be directly
 linked in MKL distributed with v.12 of the Intel compiler. In earlier 
 versions, only sources are distributed: you have to compile them and 
-ta modify file \texttt{make.sys} accordingly 
+to modify file \texttt{make.sys} accordingly 
 (MKL must be linked {\em after} the FFTW-MKL interface).
 
 \paragraph{MPI libraries} 
@@ -922,7 +922,7 @@ generation (see specific documentation in \texttt{atomic\_doc/}).
 \item \texttt{make all} produces all of the above.
 \item \texttt{make plumed} uncompress and move/rename \texttt{PLUMED} , patches \texttt{PW},
 \texttt{CPV} and \texttt{clib} routines and compiles \texttt{PW} and \texttt{CPV}.
-\item \texttt{make w90} uncompress and move/rename \texttt{wannier90}, copy an apropriates
+\item \texttt{make w90} uncompress and move/rename \texttt{wannier90}, copy an appropriate
 make.sys and produces \texttt{W90/wannier90.x}.
 \item \texttt{make want} uncompress and move/rename \texttt{want}, run \texttt{want}'s configure
 and produces all \texttt{want} executables in \texttt{WANT/bin}
@@ -1050,7 +1050,7 @@ must be a directory where you have read and write access to, with
 enough available space to host the temporary files produced by the 
 example runs, and possibly offering high I/O performance (i.e., don't 
 use an NFS-mounted directory). NOTA BENE: do not use a
-directory containing other data, the examples wil clean it!
+directory containing other data, the examples will clean it!
 \item If you have compiled the parallel version of \qe\ (this
 is the default if parallel libraries are detected), you will usually
 have to specify a driver program (such as \texttt{mpirun} or \texttt{mpiexec}) 
@@ -1249,7 +1249,7 @@ GFORTRAN\_UNBUFFERED\_ALL=1 is set. Newer 4.4/4.5 versions
 \paragraph{Linux PCs with g95}
 
 g95 v.0.91 and later versions (\texttt{http://www.g95.org}) work. 
-The executables thet produce are however slower (let us say 20\% or so) 
+The executables that produce are however slower (let us say 20\% or so) 
 that those produced by gfortran, which in turn are slower 
 (by another 20\% or so) than those produced by ifort.
 
@@ -1740,7 +1740,7 @@ crucial to use in an effective way both the "task group" and the
 parameters, large jobs will find a stumbling block in either memory or 
 CPU requirements. In particular, the linear-algebra parallelization is
 used in the diagonalization  of matrices in the subspace of Kohn-Sham
-states (whose dimension is as a strict minumum equal to the number of
+states (whose dimension is as a strict minimum equal to the number of
 occupied states). These are stored as block-distributed matrices
 (distributed across processors) and diagonalized using custom-tailored
 diagonalization algorithms that work on block-distributed matrices.
@@ -1957,8 +1957,7 @@ introduced by keywords. The namelists are
       \&SYSTEM: &structural information on the system under investigation\\
       \&ELECTRONS: &electronic variables: self-consistency, smearing\\
       \&IONS (optional): &ionic variables: relaxation, dynamics\\
-      \&CELL (optional): &variable-cell dynamics\\
-      \&EE  (optional): &for density counter charge electrostatic corrections
+      \&CELL (optional): &variable-cell optimization or dynamics\\
 \end{tabular}    \\
 Optional namelist may be omitted if the calculation to be performed
 does not require them. This depends on the value of variable calculation
@@ -1986,7 +1985,7 @@ Explanations for the meaning of variables \texttt{ibrav} and \texttt{celldm},
 as well as on alternative ways to input structural data,
 are in files \texttt{Doc/INPUT\_PW.*} (for \pwx) and \texttt{Doc/INPUT\_CP.*}
 (for \cpx). These files are the reference for input data and describe 
-a large number of other variables as well. Almopst all variables have default 
+a large number of other variables as well. Almost all variables have default 
 values, which may or may not fit your needs.
     
 After the namelists, you have several fields (``cards'')
@@ -2089,7 +2088,7 @@ pseudopotential format (UPF) for all types of pseudopotentials,
 but still accepts a number of older formats. If you do not find 
 what you need, you may
 \begin{itemize}
-\item Convert pseudopootentials written in a different format, 
+\item Convert pseudopotentials written in a different format, 
 using the converters listed in \texttt{upftools/UPF} (compile with 
 \texttt{make upf}).
 \item Generate it, using \texttt{atomic}. See the documentation in
@@ -2140,7 +2139,7 @@ only the Kohn-Sham states for the given set of k-points
 \texttt{http://www.cryst.ehu.es/cryst/get\_kvec.html}). Specify instead
 \texttt{calculation='nscf'} if you are interested in further processing 
 of the results of non-SCF calculations (for instance, in DOS calculations).
-In the latter case, you should specio a uniform grid of points.
+In the latter case, you should specify a uniform grid of points.
 For DOS calculations you should choose \texttt{occupations='tetrahedra'}, 
 together with an automatically generated uniform k-point grid 
 (card K\_POINTS with option ``automatic'').
@@ -2154,9 +2153,9 @@ were read from input, while the scf potential was read from the data file
 of the scf calculation. Since v.4.1, both atomic positions and the scf
 potential are read from the data file so that consistency is guaranteed.
 
-\paragraph{Noncollinear magnetization, spin-orbit interactions}
+\paragraph{Noncolinear magnetization, spin-orbit interactions}
 
-The following input variables are relevant for noncollinear and
+The following input variables are relevant for noncolinear and
 spin-orbit calculations: 
 \begin{quote}
       \texttt{noncolin}\\
@@ -2261,9 +2260,30 @@ Car-Parrinello MD.
 See Example 04.
 
 \paragraph{Free-energy surface calculations}
-Once Pw is patched with \texttt{PLUMED} plug-in, it becomes possible to turn-on most of the PLUMED functionalities
-running \texttt{PWscf} as: \texttt{./pw.x -plumed} plus the other usual \texttt{PWscf} arguments. The PLUMED input file has to be located in the specified \texttt{outdir} with
-the fixed name \texttt{plumed.dat}.
+
+Once \PWscf\ is patched with the \texttt{PLUMED} plug-in, it is possible to 
+use most PLUMED functionalities by running \PWscf\ as: 
+\texttt{./pw.x -plumed} plus the other usual \PWscf\ arguments.
+The input file for \texttt{PLUMED} must be found in the specified 
+\texttt{outdir} with fixed name \texttt{plumed.dat}.
+
+\paragraph{Variable-cell optimization}
+
+Since v.4.2 the newer BFGS algorithm covers the case of variable-cell
+optimization as well. Note however that variable-cell calculations
+(both optimization and dynamics) are performed with plane waves and 
+G-vectors {\em calculated for the starting cell}. This means that if 
+you re-run a self-consistent calculation for the final cell and atomic 
+positions using the same cutoff \texttt{ecutwfc} (and/or \texttt{ecutrho} 
+if applicable), you may not find exactly the same results, unless your
+final and initial cells are very similar, or unless your cutoff(s) are very
+high. In order to provide a further check, a last step is performed in
+which a scf calculation is performed for the converged structure, with
+plane waves and G-vectors {\em calculated for the final cell}. Small 
+differences between the two last steps are thus to be expected and give
+an estimate of the reliability of the variable-cell optimization.
+If you get a large difference, you are likely quite far from convergence
+in the plane-wave basis set and you need to increase the cutoff(s).
 
 \paragraph{Variable-cell molecular dynamics}
 
@@ -2314,7 +2334,7 @@ espresso distribution:
 \item \texttt{pw2casino\_write.f90} : writes the \texttt{CASINO} \texttt{xwfn.data} file in various formats
 \item \texttt{pw2blip.f90} : does the plane-wave to blip conversion, if requested
 \end{itemize}
-Relevant behaviour of \texttt{PWscf} may be modified through an optional auxiliary input 
+Relevant behavior of \texttt{PWscf} may be modified through an optional auxiliary input 
 file, named \texttt{pw2casino.dat} (see below).
 
 Note that in versions prior to 4.3, this functionality was provided through
@@ -2465,7 +2485,7 @@ on the minimum-energy path. The files are organized as following
 (where \texttt{prefix} is specified in the input file):
 \begin{description}
 \item[\texttt{prefix.dat}]
-is a three-column file containig the position of each image on the reaction
+is a three-column file containing the position of each image on the reaction
 coordinate (arb. units), its energy in eV relative to the energy of the first image
 and the residual error for the image in eV/$a_0$.
 \item[\texttt{prefix.int}]
@@ -2743,7 +2763,7 @@ in Wannier functions basis: see \texttt{examples/WannierHam\_example/}.
 \subsection{Other tools}
 
 Code \texttt{sumpdos.x} can be used to sum selected PDOS, produced by
-\texttt{projwfc.x}, by specifiying the names of files
+\texttt{projwfc.x}, by specifying the names of files
 containing the desired PDOS. Type \texttt{sumpdos.x -h} or look into the source
 code for more details. 
 
@@ -3013,7 +3033,7 @@ be reached by the system. In fact, starting with zero ionic velocities,
 all the difference is potential energy, but in a dynamics simulation, the
 energy will be equipartitioned between kinetic and potential, then to
 estimate the temperature take the difference in energy (de), convert it
-in Kelvins, divide for the number of atoms and multiply by 2/3.
+in Kelvin, divide for the number of atoms and multiply by 2/3.
 Randomization could be useful also while we are relaxing the system,
 especially when we suspect that the ions are in a local minimum or in
 an energy plateau.
@@ -3779,7 +3799,7 @@ Possible reasons:
 \end{itemize}
 
 \paragraph{pw.x yields weird results}
-If resutls are really weird (as opposed to misinterpreted):
+If results are really weird (as opposed to misinterpreted):
 \begin{itemize}
 \item if this happens after a change in the code or in compilation or
   preprocessing options, try \texttt{make clean}, recompile. The \texttt{make}
@@ -3794,7 +3814,7 @@ Yes, they are! The code automatically chooses the smallest grid that
 is compatible with the 
 specified cutoff in the specified cell, and is an allowed value for the FFT
 library used. Most FFT libraries are implemented, or perform well, only
-with dimensions that factors into products of small numers (2, 3, 5 typically,
+with dimensions that factors into products of small numbers (2, 3, 5 typically,
 sometimes 7 and 11). Different FFT libraries follow different rules and thus
 different dimensions can result for the same system on different machines (or
 even on the same machine, with a different FFT). See function allowed in
@@ -4029,7 +4049,7 @@ and at line 961
 \end{verbatim}
 \subsection{Compilation problems with \texttt{YAMBO}}
 
-If simply typing \texttt{make yambo} produces un error such as : 
+If simply typing \texttt{make yambo} produces an error such as : 
 \begin{verbatim}
 undefined reference to `MAIN__'
 \end{verbatim}
@@ -4236,7 +4256,7 @@ Yes, you can (if implemented, of course: a few kinds of calculations
 are not available with USPP, a few more are not for PAW). A small
 restrictions exists in \cpx, expecting atoms with USPP listed before 
 those with NCPP, which in turn are expected before local PP's (if any).
-A further restriction, that can be overriden,
+A further restriction, that can be overridden,
 is that all PP's should be generated with the same XC.
 Otherwise, you can mix and match. Note that 
 it is the hardest atom that determines the cutoff.
@@ -4268,7 +4288,7 @@ A large percentage of the problems reported to the mailing list are
 caused by incorrect input data. Before reporting a problem with
 strange crashes or strange results, {\em please} have
 a look at your structure with XCrySDen. XCrySDen can directly
-visualise the structure from both \PWscf\ input data:
+visualize the structure from both \PWscf\ input data:
 \begin{verbatim}
    xcrysden --pwi "input-data-file"
 \end{verbatim}
@@ -4360,7 +4380,7 @@ to be read (usually "\&CONTROL") in parallel execution, see above.
 
 Mysterious, unpredictable, erratic errors in parallel execution are
 almost always coming from bugs in the compiler or/and in the MPI 
-libraries and sometimes even to flacky hardware. Sorry, not our fault.
+libraries and sometimes even to flaky hardware. Sorry, not our fault.
 
 \subsection{Frequent errors during execution}
 
@@ -4452,11 +4472,11 @@ See input data documentation for \texttt{projwfc.x}.
   the total charge?} 
 
 "Lowdin charges (as well as other conventional atomic charges) do not
-satisfy any sum rule. You can easily convince yourself that ths is the
+satisfy any sum rule. You can easily convince yourself that this is the
 case because the atomic orbitals that are used to calculate them are
-arbitrary to some extent. If yu like, you can think that the missing
+arbitrary to some extent. If you like, you can think that the missing
 charge is "delocalized" or "bonding" charge, but this would be another
-way of naming the conventional (to some extent) character of Lowdin
+way of naming the conventional (to some extent) character of L\"owdin
 charge." (Stefano Baroni, Sept. 2008).  
 
 See also the definition of "spilling parameter": Sanchez-Portal et
