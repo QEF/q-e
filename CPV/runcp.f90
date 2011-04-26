@@ -39,7 +39,7 @@
       use efield_module,       only : dforce_efield, tefield, dforce_efield2, tefield2
       use gvecw,               only : ngw, ngwx
       USE cp_interfaces,       ONLY : dforce
-      USE ldaU_cp
+      USE ldaU_cp,             ONLY : lda_plus_u, vupsi
       !
       IMPLICIT NONE
       !

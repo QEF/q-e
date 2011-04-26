@@ -118,7 +118,6 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
   USE mp_global,                ONLY : root_bgrp, intra_bgrp_comm, np_ortho, me_ortho, ortho_comm, &
                                        me_bgrp, inter_bgrp_comm, nbgrp
   USE ldaU_cp,                  ONLY : lda_plus_u, vupsi
-  USE step_penalty,             ONLY : step_pen, E_pen
   !
   IMPLICIT NONE
   !

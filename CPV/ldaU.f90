@@ -12,14 +12,12 @@ module ldaU_cp
   USE kinds
   implicit none
   save
-  complex(DP), allocatable :: atomwfc(:,:)
-  complex(DP), allocatable :: swfcatom(:,:)
-  real(DP) :: Hubbard_U(nsx), Hubbard_lambda(nsx,2), ns0(nsx,2), Hubbard_alpha(nsx)
-  real(DP) :: e_hubbard = 0.d0, e_lambda = 0.d0
+  real(DP) :: Hubbard_U(nsx)
+  real(DP) :: e_hubbard = 0.d0
   real(DP), allocatable :: ns(:,:,:,:)
   integer :: Hubbard_l(nsx), Hubbard_lmax=0, n_atomic_wfc
   logical :: lda_plus_u
-  COMPLEX(DP), allocatable::  vupsi(:,:) !#@@@
+  COMPLEX(DP), allocatable::  vupsi(:,:)
   !
 contains
   !
@@ -40,8 +38,6 @@ contains
   !
   subroutine deallocate_lda_plus_u()
      !
-     IF( ALLOCATED( atomwfc ) ) DEALLOCATE( atomwfc )
-     IF( ALLOCATED( swfcatom ) ) DEALLOCATE( swfcatom )
      IF( ALLOCATED( ns ) ) DEALLOCATE( ns )
      IF( ALLOCATED( vupsi ) ) DEALLOCATE( vupsi )
      !
@@ -51,7 +47,7 @@ contains
 end module ldaU_cp
 !
 !-------------------------------------------------------------------------
-      SUBROUTINE s_wfc(n_atomic_wfc1,becwfc,betae,wfc,swfc) !#@@@ Changed n_atomic_wfc to n_atomic_wfc1
+      SUBROUTINE s_wfc(n_atomic_wfc1,becwfc,betae,wfc,swfc)
 !-----------------------------------------------------------------------
 !
 !     input: wfc, becwfc=<wfc|beta>, betae=|beta>
@@ -102,15 +98,13 @@ end module ldaU_cp
 !
       END IF
 !
-!      swfc=swfc+wfc
-!
       RETURN
       END SUBROUTINE s_wfc
 !-----------------------------------------------------------------------
       subroutine ldaU_init
 !-----------------------------------------------------------------------
 !
-      use ldaU_cp,          ONLY: n_atomic_wfc, atomwfc,lda_plus_u, Hubbard_U
+      use ldaU_cp,          ONLY: n_atomic_wfc, lda_plus_u, Hubbard_U
       use ldaU_cp,          ONLY: Hubbard_lmax, Hubbard_l, ns, vupsi
       use ions_base,        only: na, nsp, nat, atm
       use gvecw,            only: ngw
@@ -137,23 +131,17 @@ end module ldaU_cp
          !
       end do
 !
-      allocate(atomwfc(ngw,n_atomic_wfc))
-
-      if (lda_plus_u) then
-         Hubbard_lmax = -1
-         do is=1,nsp
-            if (Hubbard_U(is).ne.0.d0) then 
-!                Hubbard_l(is)=2
-               Hubbard_l(is) = set_Hubbard_l( atm(is) )
-                Hubbard_lmax = max(Hubbard_lmax,Hubbard_l(is))
-               write (6,*) ' HUBBARD L FOR TYPE ',atm(is),' IS ',&
-     &                       Hubbard_l(is)
-            end if
-         end do
-         write (6,*) ' MAXIMUM HUBBARD L IS ', Hubbard_lmax
-         if (Hubbard_lmax.eq.-1) call errore                            &
+      Hubbard_lmax = -1
+      do is=1,nsp
+         if (Hubbard_U(is).ne.0.d0) then 
+            Hubbard_l(is) = set_Hubbard_l( atm(is) )
+            Hubbard_lmax = max(Hubbard_lmax,Hubbard_l(is))
+            write (6,*) ' HUBBARD L FOR TYPE ',atm(is),' IS ', Hubbard_l(is)
+         end if
+      end do
+      write (6,*) ' MAXIMUM HUBBARD L IS ', Hubbard_lmax
+      if (Hubbard_lmax.eq.-1) call errore                            &
      &        ('setup','lda_plus_u calculation but Hubbard_l not set',1)
-      end if
       l = 2 * Hubbard_lmax + 1
       allocate(ns(nat,nspin,l,l))
       return
@@ -192,18 +180,18 @@ return
 end function set_Hubbard_l
 !
 !-----------------------------------------------------------------------
-      subroutine new_ns(c,eigr,betae,hpsi,forceh)
+      subroutine new_ns( c, eigr, betae, hpsi, forceh )
 !-----------------------------------------------------------------------
 !
 ! This routine computes the on site occupation numbers of the Hubbard ions.
 ! It also calculates the contribution of the Hubbard Hamiltonian to the
 ! electronic potential and to the forces acting on ions.
 !
-      use control_flags,      ONLY: tfor, tprnfor
       use kinds,              ONLY: DP        
+      use control_flags,      ONLY: tfor, tprnfor
       use ions_base,          only: na, nat, nsp
       use gvecw,              only: ngw
-      use gvect, only: gstart
+      use gvect,              only: gstart
       USE uspp,               ONLY: nhsa=>nkb
       USE uspp_param,         ONLY: upf
       use electrons_base,     only: nspin, n => nbsp, nx => nbspx, ispin, f
@@ -212,17 +200,16 @@ end function set_Hubbard_l
       USE step_penalty,       ONLY: E_pen, A_pen, sigma_pen, alpha_pen
       USE step_penalty,       ONLY: step_pen
       USE dspev_module,       only: dspev_drv
-      USE mp_global,       only: nbgrp
+      USE mp_global,          only: nbgrp
 !
       implicit none
 #ifdef __PARA
       include 'mpif.h'
 #endif
       integer, parameter :: ldmx = 7
-      complex(DP), intent(in) :: c(ngw,nx), eigr(ngw,nat),      &
-     &                               betae(ngw,nhsa)
+      complex(DP), intent(in) :: c(ngw,nx), eigr(ngw,nat), betae(ngw,nhsa)
       complex(DP), intent(out) :: hpsi(ngw,nx)
-      real(DP) forceh(3,nat), force_pen(3,nat)
+      real(DP), INTENT(OUT) :: forceh(3,nat)
 !
       complex(DP), allocatable:: wfc(:,:), swfc(:,:),dphi(:,:,:),   &
      &                               spsi(:,:), hpsi_pen(:,:)
@@ -230,6 +217,7 @@ end function set_Hubbard_l
      &                               dbp(:,:,:), wdb(:,:,:)
       real(DP), allocatable   :: dns(:,:,:,:), proj(:,:)
       real(DP), allocatable   :: lambda(:), f1(:), vet(:,:)
+      real(DP) :: force_pen(3,nat)
       real(DP)                :: somma, ntot, nsum,   &
      &                           nsuma, x_value, g_value, step_value
       integer is, ia, iat, nb, isp, l, m, m1, m2, k, i, counter, err, ig
@@ -237,8 +225,8 @@ end function set_Hubbard_l
       integer, allocatable ::  offset (:,:)
       complex(DP) :: tempsi
 !
-      if( nbgrp > 1 ) &
-         call errore(' new_ns ', ' parallelization over bands not yet implemented ', 1 )
+      if( nbgrp > 1 ) call errore(' new_ns ', &
+         ' parallelization over bands not yet implemented ', 1 )
 !
       allocate(f1 (ldmx*ldmx), vet (ldmx,ldmx), lambda(ldmx) )
       allocate(wfc(ngw,n_atomic_wfc))
@@ -273,11 +261,9 @@ end function set_Hubbard_l
                do m1 = 1, 2*Hubbard_l(is) + 1
                   do m2 = m1, 2*Hubbard_l(is) + 1
                      do i = 1,n
-!                      write(6,*) i,ispin(i),f(i)
                       ns(iat,ispin(i),m1,m2) = ns(iat,ispin(i),m1,m2) + &
      &                               f(i) * proj(i,k+m2) * proj(i,k+m1)
                      end do
-!                     ns(iat,:,m2,m1) = ns(iat,:,m1,m2)
                      ns(iat,1,m2,m1) = ns(iat,1,m1,m2)
                      ns(iat,2,m2,m1) = ns(iat,2,m1,m2)
                   end do
@@ -308,7 +294,6 @@ end function set_Hubbard_l
          end do
        end do
        if (nspin.eq.1) e_hubbard = 2.d0*e_hubbard
-!       if (nspin.eq.1) e_lambda = 2.d0*e_lambda
 !
 !      Calculate the potential and forces on wavefunctions due to U
 !
@@ -357,7 +342,7 @@ end function set_Hubbard_l
                            f1 (k) = ns (iat, isp, m2, m1)
                         enddo
                      enddo
-                     CALL dspev_drv( 'V', 'L', 2 * Hubbard_l(is) + 1, f1, lambda, vet, ldmx  )
+                     CALL dspev_drv( 'V', 'L', 2*Hubbard_l(is)+1, f1, lambda, vet, ldmx  )
                      x_value=alpha_pen(iat)-lambda(2*Hubbard_l(is)+1)
                      call stepfn(A_pen(iat,isp),sigma_pen(iat),x_value, &
      &                           g_value,step_value)
@@ -380,7 +365,6 @@ end function set_Hubbard_l
          hpsi(:,:) = hpsi(:,:) + hpsi_pen (:,:)
          DEALLOCATE (hpsi_pen)
       endif
-
 !
 ! Calculate the contribution to forces on ions due to U and constraint
 !
@@ -388,7 +372,7 @@ end function set_Hubbard_l
 
       force_pen=0.d0
 
-      if ((tfor).or.(tprnfor)) then
+      if ( tfor .or. tprnfor ) then
         allocate (bp(nhsa,n), dbp(nhsa,n,3), wdb(nhsa,n_atomic_wfc,3))
         allocate(dns(nat,nspin,ldmx,ldmx))
         allocate (spsi(ngw,n))
@@ -519,8 +503,6 @@ end function set_Hubbard_l
 
   write (6,'(6(a,i2,a,f8.4,6x))') &
         ('U(',is,') =', Hubbard_U(is) * autoev, is=1,nsp)
-!  write (6,'(6(a,i2,a,f8.4,6x))') &
-!        ('alpha(',is,') =', Hubbard_alpha(is) * autoev, is=1,nsp)
       nsum = 0.d0
       allocate(ftemp1(ldmx), ftemp2(ldmx), f1(ldmx*ldmx), vet(ldmx,ldmx) )
       iat = 0
@@ -667,8 +649,6 @@ end function set_Hubbard_l
       use gvecw, only: ngw
       use gvect, only: g, gstart
       use electrons_base, only: n => nbsp, nx => nbspx
-!      use gvec
-!      use constants
       USE uspp,           ONLY: nhsa=>nkb, qq
       USE ldaU_cp,        ONLY: Hubbard_U, Hubbard_l
       USE ldaU_cp,        ONLY: n_atomic_wfc
@@ -829,15 +809,12 @@ end function set_Hubbard_l
       COMPLEX(DP), INTENT(OUT):: wfc(ngw,n_atomic_wfc),    &
      & swfc( ngw, n_atomic_wfc )
       real(DP), intent(out):: becwfc(nhsa,n_atomic_wfc), proj(n,n_atomic_wfc)
-      REAL(DP),    ALLOCATABLE :: temp(:)
-      REAL(DP)                 :: somma
       INTEGER :: is, ia, nb, l, m, k, i
       !
       ! calculate number of atomic states
       !
       !
       IF ( n_atomic_wfc .EQ. 0 ) RETURN
-      !
       !
       ! calculate wfc = atomic states
       !
@@ -853,15 +830,10 @@ end function set_Hubbard_l
       !
       ! calculate proj = <c|S|wfc>
       !
-      ALLOCATE(temp(ngw))
-      DO m=1,n
-         DO l=1,n_atomic_wfc
-            temp(:)=DBLE(CONJG(c(:,m))*swfc(:,l)) !#@@@
-            proj(m,l)=2.d0*SUM(temp)
-            IF (gstart == 2) proj(m,l)=proj(m,l)-temp(1)
-         END DO
-      END DO
-      DEALLOCATE(temp)
+      CALL DGEMM( 'C', 'N', n, n_atomic_wfc, 2*ngw, 2.0_DP, c, 2*ngw, swfc, &
+                    2*ngw, 0.0_DP, proj, n )
+      IF ( gstart == 2 ) &
+         CALL DGER( n, n_atomic_wfc, -1.0_DP, c, 2*ngw, swfc, 2*ngw, proj, n )
       CALL mp_sum( proj, intra_bgrp_comm )
 !
       RETURN

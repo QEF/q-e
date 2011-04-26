@@ -73,7 +73,6 @@ SUBROUTINE init_run()
   USE wave_types,               ONLY : wave_descriptor_info
   USE xml_io_base,              ONLY : restart_dir, create_directory, change_directory
   USE orthogonalize_base,       ONLY : mesure_diag_perf, mesure_mmul_perf
-  USE step_penalty,             ONLY : step_pen
   USE ions_base,                ONLY : ions_reference_positions, cdmi, taui
   USE mp_global,                ONLY : nimage, my_image_id, nbgrp, me_image, intra_image_comm
   USE mp,                       ONLY : mp_barrier
@@ -270,11 +269,9 @@ SUBROUTINE init_run()
   CALL emass_precond( ema0bg, ggp, ngw, tpiba2, emass_cutoff )
   !
   CALL print_legend( )
-
-  step_pen = .FALSE.
-
+  !
   CALL ldaU_init()
-
+  !
   IF ( nbeg < 0 ) THEN
      !
      !======================================================================
