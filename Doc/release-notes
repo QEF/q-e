@@ -1,3 +1,7 @@
+New in 4.3.1 version:
+
+   * Effective Screening Medium (Otani and Sugino PRB 73 115407 (2006).
+
 Fixed in 4.3.1 version:
 
    * Misc compilation problems: line exceeding 132 characters, 

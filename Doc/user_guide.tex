@@ -346,6 +346,10 @@ Baris Malcioglu, Dario Rocca, Brent Walker.
 \end{itemize}
 Other relevant contributions to \qe:
 \begin{itemize}
+  \item Minoru Otani (AIST), Yoshio Miura (Tohoku U.), 
+  Nicephore Bonet (MIT), Nicola Marzari (Univ. Oxford), 
+  Brandon Wood (LLNL), Tadashi Ogitsu (LLNL), contributed
+  Effective Screening Method (PRB 73, 115407 [2006])
   \item Brian Kolb and Timo Thonhauser (Wake Forest University)
   implemented the vdW-DF and vdW-DF2 functionals, with support from
   Riccardo Sabatini and Stefano de Gironcoli (SISSA and DEMOCRITOS);
@@ -2399,23 +2403,32 @@ This can be done through the `casino2upf' and `upf2casino' tools included in the
 
 \section{NEB calculations}
 
-Reminder: NEB calculations are no longer performed by \pwx.
+{\bf Reminder 1:} NEB calculations are no longer performed by \pwx.
 In order to perform a NEB calculation, you should compile
-\texttt{NEB/neb.x} (command \texttt{make neb}). \\
+\texttt{NEB/neb.x} (command \texttt{make neb}). 
 
-There are two ways for running a calculation with \nebx: \\
-1) specifying a file to parse with the \texttt{neb.x -inp} or 
-\texttt{neb.x -input} command line option. \\
-2) or specifying the number of input positions \texttt{neb.x -input\_images}. \\
+\noindent {\bf  Reminder 2:} \nebx\ does not read from standard input.
+You cannot use input redirection, as in \texttt{neb.x < neb.in ...}.
 
-{\bf \nebx\ does not read from standard input at the moment}. \\
+A NEB calculation can be run in two different ways:
+\begin{enumerate}
+\item by reading a single input file, to be specified using command-line 
+options \texttt{neb.x -inp} or \texttt{neb.x -input};
+\item by specifying the number $N$ of images (i.e. points in the 
+configuration space), using command-line option 
+\texttt{neb.x -input\_images N}, and providing input data in 
+a \texttt{neb.dat} file and in files \texttt{pw\_X.in}, $X=1,...,N$.
+\end{enumerate}
 
-For case 1) a file containing KEYWORDS has to be written (see below). 
-These KEYWORDS tells the parser which part of the file regards neb specifics
-and which part regards the energy/force engine (at the moment only PW).
-After the parsing different files are generated: \texttt{neb.dat}, with
-neb specific variables and a set of \texttt{pw\_*.in} PWscf input files like
-,one for each input position. All options for a single SCF calculation apply. \\
+For case 1) the input file contains KEYWORDS (see below for format 
+specifications). 
+These KEYWORDS enable the code to distinguish which part of the file 
+contains NEB-specific data and which parts contains input data for the
+energy and force computational engine (currently only PW).
+After the parsing, different files are generated: \texttt{neb.dat}, with
+NEB-specific input data, and a set of PWscf input files 
+\texttt{pw\_1.in},..,\texttt{pw\_N.in} PWscf input files, one for each
+set of atomic position. All options for a single SCF calculation apply.
 
 The general structure of the file to be parsed is:
 
@@ -2440,10 +2453,11 @@ END_ENGINE_INPUT
 END
 \end{verbatim}
 
-For case 2) neb.dat and all \texttt{pw\_*.in} should be already present. \\
+For case 2), the \texttt{neb.dat} file and all \texttt{pw\_X.in} 
+should be already present. 
 
-A detailed description of all neb specific input
-variables is contained in files \texttt{Doc/INPUT\_NEB.*}. See Example 17. \\
+A detailed description of all NEB-specific input variables 
+is contained in files \texttt{Doc/INPUT\_NEB.*}. See Example 17. 
 
 A NEB calculation will produce a number of files in the current directory
 (i.e. in the directory were the code is run) containing additional information
