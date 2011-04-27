@@ -24,7 +24,7 @@ subroutine stress
   USE scf,           ONLY : rho, rho_core, rhog_core
   USE control_flags, ONLY : iverbosity, gamma_only, llondon
   USE noncollin_module, ONLY : noncolin
-  USE funct,         ONLY : dft_is_meta, dft_is_gradient, dft_is_vdW
+  USE funct,         ONLY : dft_is_meta, dft_is_gradient 
   USE symme,         ONLY : symmatrix
   USE bp,            ONLY : lelfield
   USE uspp,          ONLY : okvan

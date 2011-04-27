@@ -22,7 +22,7 @@ SUBROUTINE iosys()
   !
   USE kinds,         ONLY : DP
   USE funct,         ONLY : enforce_input_dft, dft_has_finite_size_correction, &
-                            set_finite_size_volume, dft_is_vdW
+                            set_finite_size_volume, get_inlc 
 #if defined(EXX)
   USE funct,         ONLY: set_exx_fraction, set_screening_parameter
   USE control_flags, ONLY: adapt_thr, tr2_init, tr2_multi
@@ -313,7 +313,7 @@ SUBROUTINE iosys()
   !
   IMPLICIT NONE
   !
-  INTEGER  :: ia, image, nt
+  INTEGER  :: ia, image, nt, inlc
   REAL(DP) :: theta, phi
   !
   !
@@ -1404,7 +1404,8 @@ SUBROUTINE iosys()
   !
   ! ... read the vdw kernel table if needed
   !
-  if (dft_is_vdW()) then
+  inlc = get_inlc()
+  if (inlc == 1 .or. inlc == 2) then
       call initialize_kernel_table()
   endif
   !

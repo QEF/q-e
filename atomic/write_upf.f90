@@ -9,8 +9,14 @@ subroutine write_upf_atomic(ounps)
 
   use ld1inc, only: nlcc, rel, lpaw, lgipaw_reconstruction, &
                     use_paw_as_gipaw
+  use funct,  only: dft_is_nonlocc
 
   integer :: ounps
+  logical :: isnonlocc
+
+  isnonlocc = dft_is_nonlocc()
+  if (isnonlocc) &
+     CALL errore('setup','non-local functional not implemented yet', 1)
 
   call write_pseudo_comment(ounps)  
   call write_pseudo_header(ounps)  
@@ -99,16 +105,16 @@ end subroutine write_upf_atomic
     use ld1inc, only : zed, pseudotype, lpaw, zval, etots, nwfts, nbeta, &
                       ecutwfc, ecutrho, lmax, grid, elts, llts, octs, &
                       pawsetup, nlcc
-    use funct, only : get_iexch, get_icorr, get_igcx, get_igcc, dft_name
+    use funct, only : get_iexch, get_icorr, get_igcx, get_igcc,get_inlc, dft_name
     use kinds, only : DP
     implicit none
     integer :: ounps  
     !
     character (len=6) :: shortname
     character (len=2), external :: atom_name
-    character (len=20) :: dft
+    character (len=25) :: dft
     integer :: nb, ios, nv  
-    integer :: iexch, icorr, igcx, igcc
+    integer :: iexch, icorr, igcx, igcc, inlc
     !
     !
     write (ounps, '(//a11)', err = 100, iostat = ios) "<PP_HEADER>"  
@@ -142,9 +148,13 @@ end subroutine write_upf_atomic
     icorr = get_icorr()
     igcx  = get_igcx()
     igcc  = get_igcc()
-    call dft_name (iexch, icorr, igcx, igcc, dft, shortname)
+    inlc  = get_inlc()
+
+    call dft_name (iexch, icorr, igcx, igcc, inlc, dft, shortname)
+
+
     write (ounps, '(a,t24,a6,a)', err = 100, iostat = ios) &
-         dft, shortname," Exchange-Correlation functional"
+         dft(1:20), shortname," Exchange-Correlation functional"
     write (ounps, '(f17.11,t24,a)') zval , "Z valence"  
     write (ounps, '(f17.11,t24,a)') etots, "Total energy"  
     write (ounps, '(2f11.3,t24,a)') ecutwfc, ecutrho, &

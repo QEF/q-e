@@ -15,6 +15,7 @@ subroutine write_pseudo &
   !
   use kinds, only : DP
   use constants, only : fpi
+  use funct , only : dft_is_nonlocc 
   implicit none
   integer :: ndm, mesh, nwfps, lmin,lmax,lloc,nlc,nnl,nwfs,lls(nwfs)
   real(DP) :: zed, zval, xmin,dx, cc(2),alpc(2),alc(6,0:3), &
@@ -28,15 +29,23 @@ subroutine write_pseudo &
   character(len=2), external :: atom_name
   character(len=2) :: els(nwfs)
   character(len=*) dft
+  logical :: non_locc
   !
   !
   nlc=0
   nnl=0
   bhstype=.false.
+  non_locc = dft_is_nonlocc()
+
   if (dft.eq.'PW') then
      write( iunps, '(a)', err=300, iostat=ios ) 'slater-pz-ggx-ggc'
   else
-     write( iunps, '(a)', err=300, iostat=ios ) dft
+     if (non_locc) then
+        CALL errore('setup','non-local functionals not implemented yet', 1) 
+     else
+         write( iunps, '(a)', err=300, iostat=ios ) dft(1:20)
+     endif
+
   endif
 
   write ( iunps, '("''",a2,"''",f8.4,3i5,l4,i5,l4,e17.9)', &

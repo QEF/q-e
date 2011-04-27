@@ -345,6 +345,7 @@ write_paw_recon.o : ../Modules/kind.o
 write_paw_recon.o : ../Modules/mp.o
 write_paw_recon.o : ld1inc.o
 write_pseudo.o : ../Modules/constants.o
+write_pseudo.o : ../Modules/funct.o
 write_pseudo.o : ../Modules/kind.o
 write_results.o : ../Modules/constants.o
 write_results.o : ../Modules/funct.o

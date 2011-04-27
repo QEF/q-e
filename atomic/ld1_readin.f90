@@ -58,7 +58,7 @@ subroutine ld1_readin
   character(len=6)  :: zval_,zdum_
   character(len=80) :: config, configts(ncmax1)
   character(len=2)  :: atom
-  character(len=20) :: dft, rel_dist
+  character(len=25) :: dft, rel_dist
   character(len=2), external :: atom_name
   integer, external :: atomic_number
   logical, external :: matches

@@ -48,8 +48,6 @@ compute_rho.o \
 compute_qdipol.o \
 compute_qdipol_so.o \
 compute_ux.o \
-kernel_table.o \
-xc_vdW_DF.o \
 coset.o \
 d_matrix.o \
 data_structure.o \
@@ -125,6 +123,7 @@ new_ns.o \
 new_occ.o \
 ns_adj.o \
 noncol.o \
+nonloccorr.o \
 non_scf.o \
 offset_atom_wfc.o \
 openfil.o \
@@ -214,8 +213,6 @@ vcsubs.o \
 vhpsi.o \
 vloc_of_g.o \
 vloc_psi.o \
-kernel_table.o \
-xc_vdW_DF.o \
 wfcinit.o \
 write_ns.o \
 wsweight.o \
@@ -249,7 +246,7 @@ tldeps:
 clean :
 	- /bin/rm -f pw.x *.o *.a *~ *.F90 *.d *.mod *.i *.L
 
-generate_vdW_kernel_table.x : generate_vdW_kernel_table.o libpw.a
+generate_vdW_kernel_table.x : generate_vdW_kernel_table.o
 	$(LD) $(LDFLAGS) -o $@ \
 		generate_vdW_kernel_table.o $(QEMODS) libpw.a $(LIBOBJS) $(LIBS)
 	- ( cd ../bin; ln -fs ../PW/$@ . )

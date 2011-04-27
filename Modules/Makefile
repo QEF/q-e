@@ -35,6 +35,7 @@ input_parameters.o \
 io_files.o \
 io_global.o  \
 ions_base.o \
+kernel_table.o \
 kind.o \
 mm_dispersion.o \
 mp.o \
@@ -79,6 +80,7 @@ wave_base.o \
 wavefunctions.o \
 wannier.o \
 write_upf_v2.o \
+xc_vdW_DF.o \
 xml_input.o \
 xml_io_base.o \
 zhpev_drv.o \

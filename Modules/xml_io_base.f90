@@ -1237,7 +1237,7 @@ MODULE xml_io_base
     !------------------------------------------------------------------------
     SUBROUTINE write_xc( dft, nsp, lda_plus_u, &
                          Hubbard_lmax, Hubbard_l, Hubbard_U, Hubbard_alpha, &
-                         is_vdw, vdw_table_name, pseudo_dir, dirname )
+                         inlc, vdw_table_name, pseudo_dir, dirname )
       !------------------------------------------------------------------------
       !
       CHARACTER(LEN=*),   INTENT(IN) :: dft
@@ -1246,7 +1246,7 @@ MODULE xml_io_base
       INTEGER,  OPTIONAL, INTENT(IN) :: Hubbard_lmax
       INTEGER,  OPTIONAL, INTENT(IN) :: Hubbard_l(:)
       REAL(DP), OPTIONAL, INTENT(IN) :: Hubbard_U(:), Hubbard_alpha(:)
-      LOGICAL,            INTENT(IN) :: is_vdw
+      INTEGER,  OPTIONAL, INTENT(IN) :: inlc
       CHARACTER(LEN=*), OPTIONAL,   INTENT(IN) :: vdw_table_name, pseudo_dir, dirname
       !
       INTEGER            :: i, flen
@@ -1284,9 +1284,9 @@ MODULE xml_io_base
       !
       ! Vdw kernel table
       !
-      CALL iotk_write_dat( iunpun, "VDW_DF", is_vdw )
+      CALL iotk_write_dat( iunpun, "NON_LOCAL_DF", inlc )
 
-      IF ( is_vdw ) THEN
+      IF ( inlc == 1 .OR. inlc ==2 ) THEN
           
          IF ( .NOT. PRESENT( vdw_table_name ) .OR. &
               .NOT. PRESENT( pseudo_dir ) .OR. &

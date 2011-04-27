@@ -418,10 +418,14 @@ SUBROUTINE print_vdw_info
   !
   USE io_global,       ONLY : stdout
   USE io_files,        ONLY : psfile
-  USE funct,           ONLY : dft_is_vdW
+  USE funct,           ONLY : get_inlc 
   USE kernel_table,    ONLY : vdw_table_name, vdw_kernel_md5_cksum
 
-  if (dft_is_vdW()) then
+  integer :: inlc
+
+  inlc = get_inlc()
+  if (inlc==1 .or. inlc==2) then
+
       WRITE( stdout, '(/5x,"vdW kernel table read from file ",a)')&
              TRIM (vdw_table_name)
      WRITE( stdout, '(5x,"MD5 check sum: ", a )') vdw_kernel_md5_cksum

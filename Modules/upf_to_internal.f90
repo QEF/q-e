@@ -53,7 +53,7 @@ subroutine set_pseudo_upf (is, upf, grid)
   !
   if ( upf%dft(1:6)=='INDEX:') then
      read( upf%dft(7:10), '(4i1)') iexch,icorr,igcx,igcc
-     call set_dft_from_indices(iexch,icorr,igcx,igcc)
+     call set_dft_from_indices(iexch,icorr,igcx,igcc, 0) !Cannot read nonloc in this format
   else
      call set_dft_from_name( upf%dft )
   end if

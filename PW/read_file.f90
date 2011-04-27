@@ -54,12 +54,12 @@ SUBROUTINE read_file()
   USE io_global,            ONLY : stdout
   USE dfunct,               ONLY : newd
   USE control_flags,        ONLY : gamma_only
-  USE funct,                ONLY : dft_is_vdW
+  USE funct,                ONLY : get_inlc 
   USE kernel_table,          ONLY : initialize_kernel_table
   !
   IMPLICIT NONE
   !
-  INTEGER  :: i, is, ik, ibnd, nb, nt, ios, isym, ierr
+  INTEGER  :: i, is, ik, ibnd, nb, nt, ios, isym, ierr, inlc
   REAL(DP) :: rdum(1,1), ehart, etxc, vtxc, etotefield, charge
   REAL(DP) :: sr(3,3,48)
   LOGICAL  :: exst
@@ -187,7 +187,9 @@ SUBROUTINE read_file()
   !
   ! ... read the vdw kernel table if needed
   !
-  if (dft_is_vdW()) then
+  inlc = get_inlc()
+  !
+  if (inlc == 1 .or. inlc ==2 ) then
       call initialize_kernel_table()
   endif
   !

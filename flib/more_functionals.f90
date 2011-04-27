@@ -1553,7 +1553,7 @@
 !
       implicit none
       integer :: exfact
-      character(len=20) dft
+      character(len=25) dft
 !
       if (exfact == 0) then
          dft = 'PZ'

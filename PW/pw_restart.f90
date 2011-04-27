@@ -102,7 +102,7 @@ MODULE pw_restart
       USE noncollin_module,     ONLY : angle1, angle2, i_cons, mcons, bfield, &
                                        lambda
       USE ions_base,            ONLY : amass
-      USE funct,                ONLY : get_dft_name, dft_is_vdW
+      USE funct,                ONLY : get_dft_name, get_inlc
       USE kernel_table,         ONLY : vdw_table_name
       USE scf,                  ONLY : rho
       USE extfield,             ONLY : tefield, dipfield, edir, &
@@ -128,10 +128,10 @@ MODULE pw_restart
       CHARACTER(LEN=256)    :: dirname, filename
       INTEGER               :: i, ig, ik, ngg, ierr, ipol, ik_eff, num_k_points
       INTEGER               :: npool, nkbl, nkl, nkr, npwx_g
-      INTEGER               :: ike, iks, npw_g, ispin
+      INTEGER               :: ike, iks, npw_g, ispin, inlc
       INTEGER,  ALLOCATABLE :: ngk_g(:)
       INTEGER,  ALLOCATABLE :: igk_l2g(:,:), igk_l2g_kdip(:,:), mill_g(:,:)
-      LOGICAL               :: lwfc, is_vdw
+      LOGICAL               :: lwfc
       REAL(DP), ALLOCATABLE :: raux(:)
       !
       !
@@ -379,12 +379,12 @@ MODULE pw_restart
 !-------------------------------------------------------------------------------
          !
          dft_name = get_dft_name()
-         is_vdw = dft_is_vdW()
+         inlc = get_inlc()
          !
          CALL write_xc( DFT = dft_name, NSP = nsp, LDA_PLUS_U = lda_plus_u, &
                         HUBBARD_LMAX = Hubbard_lmax, HUBBARD_L = Hubbard_l, &
                         HUBBARD_U = Hubbard_U, HUBBARD_ALPHA = Hubbard_alpha, &
-                        IS_VDW = is_vdw, VDW_TABLE_NAME = vdw_table_name, &
+                        INLC = inlc, VDW_TABLE_NAME = vdw_table_name, &
                         PSEUDO_DIR = pseudo_dir, DIRNAME = dirname)
 #ifdef EXX
          CALL write_exx( x_gamma_extrapolation, nq1, nq2, nq3, &
@@ -2240,8 +2240,8 @@ MODULE pw_restart
       INTEGER,          INTENT(OUT) :: ierr
       !
       CHARACTER(LEN=20) :: dft_name
-      INTEGER           :: nsp_
-      LOGICAL           :: found, nomsg = .true., is_vdw
+      INTEGER           :: nsp_, inlc
+      LOGICAL           :: found, nomsg = .true.
       !
       ierr = 0
       IF ( lxc_read ) RETURN
@@ -2284,14 +2284,17 @@ MODULE pw_restart
          !
          ! Vdw DF 
          !
-         CALL iotk_scan_dat( iunpun, "VDW_DF", is_vdw, FOUND = found )
-         IF ( .NOT. found ) is_vdw = .FALSE.
-         !
-         IF ( is_vdw ) THEN
+         CALL iotk_scan_dat( iunpun, "NON_LOCAL_DF", inlc, FOUND = found )
+         IF ( found ) THEN 
             !
-            CALL iotk_scan_dat( iunpun, "VDW_KERNEL_NAME", vdw_table_name )
-            !
-         END IF
+            IF ( inlc == 1 .OR. inlc == 2 ) THEN
+               !
+               CALL iotk_scan_dat( iunpun, "VDW_KERNEL_NAME", vdw_table_name )
+               !
+            END IF
+         ELSE
+            inlc = 0
+         ENDIF
          !
          CALL iotk_scan_end( iunpun, "EXCHANGE_CORRELATION" )
          !
@@ -2301,7 +2304,6 @@ MODULE pw_restart
       !
       CALL mp_bcast( dft_name,   ionode_id, intra_image_comm )
       CALL mp_bcast( lda_plus_u, ionode_id, intra_image_comm )
-      CALL mp_bcast( is_vdw, ionode_id, intra_image_comm )
       !
       IF ( lda_plus_u ) THEN
          !
@@ -2312,7 +2314,7 @@ MODULE pw_restart
          !
       END IF
 
-      IF ( is_vdw ) THEN
+      IF ( inlc == 1 .OR. inlc == 2 ) THEN
          CALL mp_bcast( vdw_table_name,  ionode_id, intra_image_comm )
       END IF
 

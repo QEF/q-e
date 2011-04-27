@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2004-2009 Quantum ESPRESSO group
+! Copyright (C) 2004-2011 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -30,6 +30,7 @@ module funct
 !  logical functions:  dft_is_gradient
 !                      dft_is_meta
 !                      dft_is_hybrid
+!                      dft_is_nonlocc
 !                      exx_is_active
 !                      dft_has_finite_size_correction
 !
@@ -46,8 +47,8 @@ module funct
   PUBLIC  :: set_dft_from_indices, set_dft_from_name
   PUBLIC  :: enforce_input_dft, write_dft_name, dft_name
   PUBLIC  :: init_dft_exxrpa, enforce_dft_exxrpa
-  PUBLIC  :: get_dft_name, get_iexch, get_icorr, get_igcx, get_igcc
-  PUBLIC  :: dft_is_gradient, dft_is_meta, dft_is_hybrid, dft_is_vdW
+  PUBLIC  :: get_dft_name, get_iexch, get_icorr, get_igcx, get_igcc, get_inlc
+  PUBLIC  :: dft_is_gradient, dft_is_meta, dft_is_hybrid, dft_is_nonlocc
 
   ! additional subroutines/functions for hybrid functionals
   PUBLIC  :: start_exx, stop_exx, get_exx_fraction, exx_is_active
@@ -59,6 +60,7 @@ module funct
   PUBLIC  :: xc, xc_spin, gcxc, gcx_spin, gcc_spin, gcc_spin_more
   PUBLIC  :: dmxc, dmxc_spin, dmxc_nc
   PUBLIC  :: dgcxc, dgcxc_spin
+  PUBLIC  :: nlc
   ! general XC driver
   PUBLIC  :: vxc_t, exc_t
   ! vector XC driver
@@ -66,18 +68,34 @@ module funct
   !
   ! PRIVATE variables defining the DFT functional
   !
-  PRIVATE :: dft, dft_shortname, iexch, icorr, igcx, igcc
+  PRIVATE :: dft, dft_shortname, iexch, icorr, igcx, igcc, inlc
   PRIVATE :: discard_input_dft
   PRIVATE :: isgradient, ismeta, ishybrid
   PRIVATE :: exx_fraction, exx_started
   PRIVATE :: has_finite_size_correction, &
              finite_size_cell_volume,  finite_size_cell_volume_set 
   !
-  character (len=20) :: dft = 'not set'
+  character (len=25) :: dft = 'not set'
   character (len=6)  :: dft_shortname = ' '
   !
   ! dft is the exchange-correlation functional, described by
-  ! any nonconflicting combination of the following keywords
+  ! one of the following keywords ("dft_shortname"):
+  !              "pz"    = "sla+pz"            = Perdew-Zunger LDA
+  !              "bp"    = "b88+p86"           = Becke-Perdew grad.corr.
+  !              "pw91"  = "pw +ggx+ggc"       = PW91 (aka GGA)
+  !              "blyp"  = "sla+b88+lyp+blyp"  = BLYP
+  !              "pbe"   = "sla+pw+pbx+pbc"    = PBE
+  !              "revpbe"= "sla+pw+rpb+pbc"    = revPBE (Zhang-Yang)
+  !              "pbesol"= "sla+pw+psx+psc"    = PBEsol
+  !              "hcth"  = "nox+noc+hcth+hcth" = HCTH/120
+  !              "olyp"  = "nox+lyp+optx+blyp" = OLYP
+  !              "wc"    = "sla+pw+wcx+pbc"    = Wu-Cohen
+  !              "tpss"  = "sla+pw+tpss+tpss"  = TPSS Meta-GGA
+  !              "pbe0"  = "pb0x+pw+pb0x+pbc"  = PBE0
+  !              "hse"   = "nox+pw+hse+pbc"    = Heyd-Scuseria-Ernzerhof HSE 06
+  !              "b3lyp" = "b3lp+vwn+b3lp+b3lp"= B3LYP
+  !              "vdw-df"= "sla+pw+rpb+vdw"    = vdW-DF
+  ! or by any nonconflicting combination of the following keywords
   ! (case-insensitive):
   !
   ! Exchange:    "nox"    none                           iexch=0
@@ -111,11 +129,13 @@ module funct
   !              "rpb"    revised PBE by Zhang-Yang      igcx =4
   !              "hcth"   Cambridge exch, Handy et al    igcx =5
   !              "optx"   Handy's exchange functional    igcx =6
-  !              "meta"   TPSS meta-gga                  igcx =7
+  !              "tpss"   TPSS meta-gga                  igcx =7
   !              "pb0x"   PBE0 (PBE exchange*0.75)       igcx =8
   !              "b3lp"   B3LYP (Becke88*0.72)           igcx =9
   !              "psx"    PBEsol exchange                igcx =10
   !              "wcx"    Wu-Cohen                       igcx =11
+  !              "hse"    HSE screened exchange          igcx =12
+  !              "rpw86"  revised PW86                   igcx =13
   !
   ! Gradient Correction on Correlation:
   !              "nogc"   none                           igcc =0 (default)
@@ -124,33 +144,16 @@ module funct
   !              "blyp"   Lee-Yang-Parr                  igcc =3
   !              "pbc"    Perdew-Burke-Ernzenhof corr    igcc =4
   !              "hcth"   Cambridge corr, Handy et al    igcc =5
-  !              "meta"   TPSS meta-gga                  igcc =6
+  !              "tpss"   TPSS meta-gga                  igcc =6
   !              "b3lp"   B3LYP (Lee-Yang-Parr*0.81)     igcc =7
   !              "psc"    PBEsol corr                    igcc =8
-  !              "vdw"    vdW-DF                        igcc =9
-
   !
-  ! Special cases (dft_shortname):
-
-
-  !              "vdw-df"= "sla+pw+rpb+vdw"    = vdW-DF
-  !              "bp"    = "b88+p86"           = Becke-Perdew grad.corr.
-  !              "pw91"  = "pw +ggx+ggc"       = PW91 (aka GGA)
-  !              "blyp"  = "sla+b88+lyp+blyp"  = BLYP
-  !              "pbe"   = "sla+pw+pbx+pbc"    = PBE
-  !              "revpbe"="sla+pw+rpb+pbc"     = revPBE (Zhang-Yang)
-  !              "pbesol"="sla+pw+psx+psc"     = PBEsol
-  !              "hcth"  = "nox+noc+hcth+hcth" = HCTH/120
-  !              "olyp"  = "nox+lyp+optx+blyp" = OLYP
-  !              "tpss"  = "sla+pw+meta+meta"  = TPSS Meta-GGA
-  !              "wc"    = "sla+pw+wcx+pbc"    = Wu-Cohen
-  !              "pbe0"  = "pb0x+pw+pb0x+pbc"  = PBE0
-  !              "hse"   = "nox+pw+hse+pbc"    = Heyd-Scuseria-Ernzerhof HSE 06
-  !              "b3lyp" = "b3lp+vwn+b3lp+b3lp"= B3LYP
+  ! Van der Walls functionals
+  !	         "nonlc"   none                           inlc =0 (default)
+  !              "vdw1"    vdW-DF1                        inlc =1
+  !              "vdw2"    vdW-DF2                        inlc =2
   !
   ! References:
-  !              vdW-DF  M. Dion et al., PRL 92, 246401 (2004)
-  !                      T. Thonhauser et al., PRB 76, 125112 (2007)
   !              pz      J.P.Perdew and A.Zunger, PRB 23, 5048 (1981) 
   !              vwn     S.H.Vosko, L.Wilk, M.Nusair, Can.J.Phys. 58,1200(1980)
   !              wig     E.P.Wigner, Trans. Faraday Soc. 34, 67 (1938) 
@@ -167,7 +170,9 @@ module funct
   !              hcth    Handy et al, JCP 109, 6264 (1998)
   !              olyp    Handy et al, JCP 116, 5411 (2002)
   !              revPBE  Zhang and Yang, PRL 80, 890 (1998)
-  !              meta    J.Tao, J.P.Perdew, V.N.Staroverov, G.E. Scuseria, 
+  !              rpw86   ****************************************
+  !              wc      Z. Wu and R. E. Cohen, PRB 73, 235116 (2006)
+  !              tpss    J.Tao, J.P.Perdew, V.N.Staroverov, G.E. Scuseria, 
   !                      PRL 91, 146401 (2003)
   !              kzk     H.Kwee, S. Zhang, H. Krakauer, PRL 100, 126404 (2008)
   !              pbe0    J.P.Perdew, M. Ernzerhof, K.Burke, JCP 105, 9982 (1996)
@@ -176,7 +181,8 @@ module funct
   !              b3lyp   P.J. Stephens,F.J. Devlin,C.F. Chabalowski,M.J. Frisch
   !                      J.Phys.Chem 98, 11623 (1994)
   !              pbesol  J.P. Perdew et al., PRL 100, 136406 (2008)
-  !              wc      Z. Wu and R. E. Cohen, PRB 73, 235116 (2006)
+  !              vdW-DF  M. Dion et al., PRL 92, 246401 (2004)
+  !                      T. Thonhauser et al., PRB 76, 125112 (2007)
   !
   integer, parameter:: notset = -1
   !
@@ -184,6 +190,7 @@ module funct
   integer :: icorr = notset
   integer :: igcx  = notset
   integer :: igcc  = notset
+  integer :: inlc   = notset
   real(DP):: exx_fraction = 0.0_DP
   real(DP):: screening_parameter = 0.0_DP
   logical :: isgradient  = .false.
@@ -194,7 +201,7 @@ module funct
   logical :: finite_size_cell_volume_set = .false.
   real(DP):: finite_size_cell_volume = notset
   
-  logical :: isvdW       = .false.
+  logical :: isnonlocc       = .false.
 
   logical :: discard_input_dft = .false.
   !
@@ -203,6 +210,7 @@ module funct
   !    icorr: type of correlation
   !    igcx:  type of gradient correction on exchange
   !    igcc:  type of gradient correction on correlation
+  !    inlc:  type of non local correction on correlation
   !
   !    ismeta: .TRUE. if gradient correction is of meta-gga type
   !    ishybrid: .TRUE. if the xc functional is an HF+DFT hybrid like
@@ -211,23 +219,25 @@ module funct
   ! see comments above and routine "set_dft_from_name" below 
   !
   ! data
-  integer :: nxc, ncc, ngcx, ngcc
+  integer :: nxc, ncc, ngcx, ngcc, ncnl
 
-  !!    parameter (nxc = 8, ncc =11, ngcx =12, ngcc = 8)
-  parameter (nxc = 8, ncc =11, ngcx =12, ngcc = 9)
+  parameter (nxc = 8, ncc =11, ngcx =15, ngcc = 10, ncnl=2)
 
   character (len=4) :: exc, corr
-  character (len=4) :: gradx, gradc
-  dimension exc (0:nxc), corr (0:ncc), gradx (0:ngcx), gradc (0: ngcc)
+  character (len=4) :: gradx, gradc, nonlocc
+  dimension exc (0:nxc), corr (0:ncc), gradx (0:ngcx), gradc (0: ngcc), nonlocc (0: ncnl)
 
   data exc / 'NOX', 'SLA', 'SL1', 'RXC', 'OEP', 'HF', 'PB0X', 'B3LP', 'KZK' /
   data corr / 'NOC', 'PZ', 'VWN', 'LYP', 'PW', 'WIG', 'HL', 'OBZ', &
               'OBW', 'GL' , 'B3LP', 'KZK' /
   data gradx / 'NOGX', 'B88', 'GGX', 'PBX',  'RPB', 'HCTH', 'OPTX',&
-               'META', 'PB0X', 'B3LP','PSX', 'WCX', 'HSE'  /
+               'META', 'PB0X', 'B3LP','PSX', 'WCX', 'HSE', 'RW86', 'PBE', &
+               'TPSS'  / 
 
   data gradc / 'NOGC', 'P86', 'GGC', 'BLYP', 'PBC', 'HCTH', 'META',&
-                'B3LP', 'PSC' , 'VDW' /
+                'B3LP', 'PSC', 'PBE', 'TPSS' / 
+
+  data nonlocc / 'NONL', 'VDW', 'VDW2' / 
 
 CONTAINS
   !-----------------------------------------------------------------------
@@ -243,191 +253,300 @@ CONTAINS
     ! local
     integer :: len, l, i
     character (len=50):: dftout
+    logical :: dft_defined = .false.
     logical, external :: matches
     character (len=1), external :: capital
     !
     !
-    ! if 
+    ! Exit if discard_input_dft
     !
     if ( discard_input_dft ) return
     !
     ! convert to uppercase
+    !
     len = len_trim(dft_)
     dftout = ' '
     do l = 1, len
        dftout (l:l) = capital (dft_(l:l) )
     enddo
 
-    !  exchange
-    iexch = notset
-    do i = 0, nxc
-       if (matches (exc (i), dftout) ) call set_dft_value (iexch, i)
-    enddo
+    !
+    ! ----------------------------------------------
+    ! FIRST WE CHECK ALL THE SPECIAL NAMES
+    ! Note: comparison is now done via exact matching
+    !       not using function "matches"
+    ! ----------------------------------------------
+    !
 
-    !  correlation
-    icorr = notset
-    do i = 0, ncc
-       if (matches (corr (i), dftout) ) call set_dft_value (icorr, i)
-    enddo
-
-    !  gradient correction, exchange
-    igcx = notset
-    do i = 0, ngcx
-       if (matches (gradx (i), dftout) ) call set_dft_value (igcx, i)
-    enddo
-
-    !  gradient correction, correlation
-    igcc = notset
-    do i = 0, ngcc
-       if (matches (gradc (i), dftout) ) call set_dft_value (igcc, i)
-    enddo
-
-    ! special case : BLYP => B88 for gradient correction on exchange
-    ! warning: keyword BLYP is used for both the XC functional "BLYP"
-    !          and for Lee-Yang-Parr gradient correction to correlation
-    !          in the former case, iexch and igcx shouldn't have been set
-    if (matches('BLYP', dftout) .and. (iexch == notset .and. igcx == notset)) &
-         call set_dft_value (igcx, 1)
-    ! special case : various variants of PBE 
-    ! As routine matches returns .true. when the first string is contained 
-    ! in the second one, all tests on functionals containing PBE as substring
-    ! must preceed the test on PBE itself.
-    if (matches ('REVPBE', dftout) ) then
+    if ( 'REVPBE' .EQ. TRIM(dftout) ) then
     ! special case : revPBE
+       call set_dft_value (iexch,1) !Default
        call set_dft_value (icorr,4)
        call set_dft_value (igcx, 4)
        call set_dft_value (igcc, 4)
-    else if (matches('RPBE',dftout)) then
+       call set_dft_value (inlc, 0)
+       dft_defined = .true.
+       
+    else if ('RPBE' .EQ. TRIM(dftout)) then
     ! special case : RPBE
          call errore('set_dft_from_name', &
      &   'RPBE (Hammer-Hansen-Norskov) not implemented (revPBE is)',1)
-    else if (matches ('PBE0', dftout) ) then
+     
+    else if ('PBE0'.EQ. TRIM(dftout) ) then
     ! special case : PBE0
        call set_dft_value (iexch,6)
        call set_dft_value (icorr,4)
        call set_dft_value (igcx, 8)
        call set_dft_value (igcc, 4)
-   else if (matches ('HSE', dftout) ) then
+       call set_dft_value (inlc,0) !Default       
+       dft_defined = .true.
+       
+   else if ('HSE' .EQ. TRIM( dftout) ) then
     ! special case : HSE
-!       call set_dft_value (iexch,6)
+       call set_dft_value (iexch,1) !Default
        call set_dft_value (icorr,4)
        call set_dft_value (igcx, 12)
        call set_dft_value (igcc, 4)
-    else if (matches ('PBESOL', dftout) ) then
+       call set_dft_value (inlc,0) !Default       
+       dft_defined = .true.
+       
+    else if ('PBESOL'.EQ. TRIM(dftout) ) then
     ! special case : PBEsol
+       call set_dft_value (iexch,1) !Default    
        call set_dft_value (icorr,4)
        call set_dft_value (igcx,10)
        call set_dft_value (igcc, 8)
-
-   else if (matches('VDW-DF',dftout) ) then
+       call set_dft_value (inlc,0) !Default       
+       dft_defined = .true.
+       
+   else if ('VDW-DF2' .EQ. TRIM(dftout) ) then
+    ! Special case vdW-DF2
+       call set_dft_value (iexch, 1)
+       call set_dft_value (icorr, 4)
+       call set_dft_value (igcx, 13)
+       call set_dft_value (igcc, 0)
+       call set_dft_value (inlc, 2)
+       dft_defined = .true.
+       
+    else if ('VDW-DF' .EQ. TRIM(dftout)) then
     ! Special case vdW-DF
        call set_dft_value (iexch, 1)
        call set_dft_value (icorr, 4)
        call set_dft_value (igcx, 4)
-       call set_dft_value (igcc, 9)
-
-    else if (matches ('PBE', dftout) ) then
+       call set_dft_value (igcc, 0)
+       call set_dft_value (inlc, 1)       
+       dft_defined = .true.
+       
+    else if ('PBE' .EQ. TRIM(dftout) ) then
     ! special case : PBE
+       call set_dft_value (iexch,1) !Default    
        call set_dft_value (icorr,4)
        call set_dft_value (igcx, 3)
        call set_dft_value (igcc, 4)
-    else if (matches ('WC', dftout) ) then
+       call set_dft_value (inlc,0) !Default       
+       dft_defined = .true.
+       
+    else if ('WC' .EQ. TRIM(dftout) ) then
     ! special case : Wu-Cohen
+       call set_dft_value (iexch,1) !Default       
        call set_dft_value (icorr,4)
        call set_dft_value (igcx,11)
        call set_dft_value (igcc, 4)
-    else if (matches ('B3LYP', dftout) ) then
+       call set_dft_value (inlc,0) !Default       
+       dft_defined = .true.
+       
+    else if ('B3LYP'.EQ. TRIM(dftout) ) then
     ! special case : B3LYP hybrid
        call set_dft_value (iexch,7)
-       !!! cannot use set_dft_value due to conflict with blyp
-       icorr = 2
+       call set_dft_value (icorr,2)
        call set_dft_value (igcx, 9)
-       !!! as above
-       igcc = 7
-    endif
-
-    if (matches ('PBC', dftout) ) then
+       call set_dft_value (igcc, 7)
+       call set_dft_value (inlc,0) !Default       
+       dft_defined = .true.
+       
+    else if ('PBC'.EQ. TRIM(dftout) ) then
     ! special case : PBC  = PW + PBC 
+       call set_dft_value (iexch,1) !Default
        call set_dft_value (icorr,4)
+       call set_dft_value (igcx,0) !Default       
        call set_dft_value (igcc, 4)
-    endif
-
+       call set_dft_value (inlc,0) !Default    
+       dft_defined = .true.
+       
     ! special case : BP = B88 + P86
-    if (matches ('BP', dftout) ) then
+    else if ('BP'.EQ. TRIM(dftout) ) then
+       call set_dft_value (iexch,1) !Default
+       call set_dft_value (icorr,1) !Default
        call set_dft_value (igcx, 1)
        call set_dft_value (igcc, 1)
-    endif
-
+       call set_dft_value (inlc,0) !Default    
+       dft_defined = .true.
+                     
     ! special case : PW91 = GGX + GGC
-    if (matches ('PW91', dftout) ) then
+    else if ('PW91'.EQ. TRIM(dftout) ) then
+       call set_dft_value (iexch,1) !Default
+       call set_dft_value (icorr,1) !Default
        call set_dft_value (igcx, 2)
        call set_dft_value (igcc, 2)
-    endif
-
+       call set_dft_value (inlc,0) !Default    
+       dft_defined = .true.
+       
     ! special case : HCTH already contains LDA exchange and correlation
-
-    if (matches('HCTH',dftout)) then
+    else if ('HCTH'.EQ. TRIM(dftout)) then
        call set_dft_value(iexch,0)
        call set_dft_value(icorr,0)
-    end if
-
+       call set_dft_value (igcx, 0) !Default    
+       call set_dft_value (igcc, 0) !Default    
+       call set_dft_value (inlc,0) !Default    
+       dft_defined = .true.
+              
     ! special case : OPTX already contains LDA exchange
-     
-    if (matches('OPTX',dftout)) then
+    else if ('OPTX'.EQ. TRIM(dftout)) then
        call set_dft_value(iexch,0)
-    end if
-
+       call set_dft_value(icorr,0) !Default    
+       call set_dft_value (igcx, 0) !Default    
+       call set_dft_value (igcc, 0) !Default    
+       call set_dft_value (inlc,0) !Default    
+       dft_defined = .true.
+              
     ! special case : OLYP = OPTX + LYP
-
-    if (matches('OLYP',dftout)) then
+    else if ('OLYP'.EQ. TRIM(dftout)) then
        call set_dft_value(iexch,0)
        call set_dft_value(icorr,3)
        call set_dft_value(igcx,6)
        call set_dft_value(igcc,3)
-    end if
-
-    !
-    ! ... special case : TPSS meta-GGA Exc
-    !
-    IF ( matches( 'TPSS', dftout ) ) THEN
-       !
+       call set_dft_value (inlc,0) !Default    
+       dft_defined = .true.
+       
+    ! special case : TPSS meta-GGA Exc
+    else IF ('TPSS'.EQ. TRIM(dftout ) ) THEN
        CALL set_dft_value( iexch, 1 )
        CALL set_dft_value( icorr, 4 )
        CALL set_dft_value( igcx,  7 )
        CALL set_dft_value( igcc,  6 )
-       !
-    END IF
-    !
-    ! ... special cases : OEP and HF need not GC part (nor LDA...)
-    !                     and include no correlation by default
-    !
-    IF ( matches( 'OEP', dftout ) .OR. matches( 'HF', dftout )) THEN
-       !
+       call set_dft_value (inlc,0) !Default    
+       dft_defined = .true.
+              
+    ! special cases : OEP no GC part (nor LDA...) and no correlation by default
+    else IF ('OEP' .EQ. TRIM(dftout) ) THEN
+       call set_dft_value (iexch,1) !Default
+       call set_dft_value (icorr, 0)
        CALL set_dft_value( igcx,  0 )
-       if (icorr == notset) call set_dft_value (icorr, 0)
-       !
+       call set_dft_value (igcc, 0) !Default       
+       call set_dft_value (inlc,0) !Default    
+       dft_defined = .true.
+
+    ! special cases : HF no GC part (nor LDA...) and no correlation by default
+    else IF ('HF' .EQ. TRIM(dftout) ) THEN
+       call set_dft_value (iexch,1) !Default
+       call set_dft_value (icorr, 0)
+       CALL set_dft_value( igcx,  0 )
+       call set_dft_value (igcc, 0) !Default       
+       call set_dft_value (inlc,0) !Default    
+       dft_defined = .true.
+
+    ! special cases : BLYP (note, BLYP=>B88)
+    else IF ('BLYP' .EQ. TRIM(dftout) ) THEN
+       call set_dft_value (iexch,1) !Default
+       call set_dft_value (icorr, 1) !Default
+       CALL set_dft_value( igcx,  1 )
+       call set_dft_value (igcc, 0) !Default       
+       call set_dft_value (inlc,0) !Default    
+       dft_defined = .true.
+
+    ! special cases : PZ 
+    else IF ('PZ' .EQ. TRIM(dftout) ) THEN
+       call set_dft_value (iexch,1) 
+       call set_dft_value (icorr, 1) 
+       CALL set_dft_value( igcx,  0)
+       call set_dft_value (igcc, 0)      
+       call set_dft_value (inlc,0)    
+       dft_defined = .true.
+           
     END IF
 
+    if (dft_defined) then
+        write(*,"(A,A)") "Set by shortname ", TRIM(dftout)
+    endif
+
+    !
+    ! ----------------------------------------------------------------
+    ! If the DFT was not yet defined, check every part of the string
+    ! ----------------------------------------------------------------
+    !
+    if (.not. dft_defined) then
+    
+      write(*,"(A,A)") "Setting by parts: ", TRIM(dftout)      
+
+      !  exchange
+      iexch = notset
+      do i = 0, nxc
+         if (matches (exc (i), dftout) ) call set_dft_value (iexch, i)
+      enddo
+      if (iexch .eq. notset) call set_dft_value (iexch,0)
+
+      !  correlation
+      icorr = notset
+      do i = 0, ncc
+         if (matches (corr (i), dftout) ) call set_dft_value (icorr, i)
+      enddo
+      if (icorr .eq. notset) call set_dft_value (icorr,0)
+
+      !  gradient correction, exchange
+      igcx = notset
+      do i = 0, ngcx
+         if (matches (gradx (i), dftout) ) call set_dft_value (igcx, i)
+      enddo
+      if (igcx .eq. notset) call set_dft_value (igcx,0)
+    
+      !  gradient correction, correlation
+      igcc = notset
+      do i = 0, ngcc
+         if (matches (gradc (i), dftout) ) call set_dft_value (igcc, i)
+      enddo
+      if (igcc .eq. notset) call set_dft_value (igcc,0)
+    
+      !  non-local correlation
+      !     THE LOOP IS REVERSED TO HANDLE THE VDW2 CASE BEFORE THE VDW
+      inlc = notset
+      do i = ncnl ,0, -1
+         if (matches (nonlocc (i), dftout) ) call set_dft_value (inlc, i)
+      enddo
+      if (inlc .eq. notset) call set_dft_value (inlc,0)
+        
+    endif
+
+    ! ----------------------------------------------------------------
+    ! Last check
+    ! No more defaults, the code exit if the dft is not defined
+    ! ----------------------------------------------------------------
+   
+    ! Back compatibility - TO BE REMOVED
+ 
+    if (igcx == 14) igcx = 3 ! PBE -> PBX
+    if (igcc == 9) igcc = 4  ! PBE -> PBC
+
+    if (igcx == 15) igcx = 7 ! TPSS -> META
+    if (igcc == 10) igcc = 6 ! TPSS -> META
 
     if (igcx == 6) &
          call errore('set_dft_from_name','OPTX untested! please test',-igcx)
-    ! Default value: Slater exchange
-    if (iexch == notset) call set_dft_value (iexch, 1)
+         
+    if (iexch <=0 .and. &
+       icorr <=0 .and. &
+       igcx <= 0 .and. &
+       igcc <= 0 .and. &
+       inlc <= 0) &
+           call errore('set_dft_from_name','No dft definition was found',0)
 
-    ! Default value: Perdew-Zunger correlation
-    if (icorr == notset) call set_dft_value (icorr, 1)
-
-    ! Default value: no gradient correction on exchange
-    if (igcx == notset) call set_dft_value (igcx, 0)
-
-    ! Default value: no gradient correction on correlation
-    if (igcc == notset) call set_dft_value (igcc, 0)
-
+    !
+    ! Fill variables and exit
+    !
     dft = dftout
 
     dftout = exc (iexch) //'-'//corr (icorr) //'-'//gradx (igcx) //'-' &
-         &//gradc (igcc)
-    ! WRITE( stdout,'(a)') dftout
+         &//gradc (igcc) //'-'// nonlocc(inlc)
+
 
     call set_auxiliary_flags
 
@@ -442,12 +561,10 @@ CONTAINS
     !
     logical, external :: matches
 
+    !! Reversed as before VDW
+    isgradient =  ( (igcx > 0) .or. ( igcc > 0) )
 
-  !! Redefinition of "isgradient" to be 0 if we are doing vdW with no
-  !! exchange gradient correction
-    isgradient =  (igcx > 0) .or. ( (igcc > 0) .and. (igcc /= 9) )    !<< New definition
-
-    isvdW = (igcc == 9)                                               !<< Set isvdW switch
+    isnonlocc = (inlc > 0)
 
     ismeta     =  (igcx == 7)
 
@@ -478,8 +595,10 @@ CONTAINS
     integer :: m, i
     ! local
 
-    if ( m /= notset .and. m /= i) &
+    if ( m /= notset .and. m /= i) then
+         write(*, '(A,2I4)') "parametro", m, i
          call errore ('set_dft_value', 'two conflicting matching values', 1)
+    end if
     m = i
     return
 
@@ -607,14 +726,18 @@ CONTAINS
      get_igcc = igcc
      return
   end function get_igcc
+  !-----------------------------------------------------------------------
+  function get_inlc ()
+     integer get_inlc
+     get_inlc = inlc
+     return
+  end function get_inlc
  !-----------------------------------------------------------------------
-
-  function dft_is_vdW ()
-    logical :: dft_is_vdW
-    dft_is_vdW = isvdW
+  function dft_is_nonlocc ()
+    logical :: dft_is_nonlocc
+    dft_is_nonlocc = isnonlocc
     return
-  end function dft_is_vdW
-
+  end function dft_is_nonlocc
   !-----------------------------------------------------------------------
   function get_exx_fraction ()
      real(DP):: get_exx_fraction
@@ -623,7 +746,7 @@ CONTAINS
   end function get_exx_fraction
   !-----------------------------------------------------------------------
   function get_dft_name ()
-     character (len=20) :: get_dft_name
+     character (len=25) :: get_dft_name
      get_dft_name = dft
      return
   end function get_dft_name
@@ -666,8 +789,8 @@ CONTAINS
   !-----------------------------------------------------------------------
   
   !-----------------------------------------------------------------------
-  subroutine set_dft_from_indices(iexch_,icorr_,igcx_,igcc_)
-     integer :: iexch_, icorr_, igcx_, igcc_
+  subroutine set_dft_from_indices(iexch_,icorr_,igcx_,igcc_, inlc_)
+     integer :: iexch_, icorr_, igcx_, igcc_, inlc_
      if ( discard_input_dft ) return
      if (iexch == notset) iexch = iexch_
      if (iexch /= iexch_) then
@@ -689,22 +812,27 @@ CONTAINS
         write (stdout,*) igcc, igcc_
         call errore('set_dft',' conflicting values for igcc',1)
      end if
+     if (inlc  == notset) inlc = inlc_
+     if (inlc /= inlc_) then
+        write (stdout,*) inlc, inlc_
+        call errore('set_dft',' conflicting values for inlc',1)
+     end if
      dft = exc (iexch) //'-'//corr (icorr) //'-'//gradx (igcx) //'-' &
-           &//gradc (igcc)
+           &//gradc (igcc)//'-'//nonlocc (inlc)
      ! WRITE( stdout,'(a)') dft
      call set_auxiliary_flags
      return
   end subroutine set_dft_from_indices
   !---------------------------------------------------------------------
-  subroutine dft_name(iexch_, icorr_, igcx_, igcc_, longname_, shortname_)
+  subroutine dft_name(iexch_, icorr_, igcx_, igcc_, inlc_, longname_, shortname_)
   !---------------------------------------------------------------------
   ! convert the four indices iexch, icorr, igcx, igcc
   ! into user-readable strings
   !
   implicit none
-  integer iexch_, icorr_, igcx_, igcc_
+  integer iexch_, icorr_, igcx_, igcc_, inlc_
   character (len=6) :: shortname_
-  character (len=20):: longname_
+  character (len=25):: longname_
   !
   if (iexch_==1.and.igcx_==0.and.igcc_==0) then
      shortname_ = corr(icorr_)
@@ -733,10 +861,14 @@ CONTAINS
      shortname_ = 'B3LYP'
   else if (iexch_==0.and.icorr_==3.and.igcx_==6.and.igcc_==3) then
      shortname_ = 'OLYP'
+  else if (iexch_==1.and.icorr_==4.and.igcx_==4.and.igcc_==0.and.inlc_==1) then
+     shortname_ = 'VDW-DF'
+  else if (iexch_==1.and.icorr_==4.and.igcx_==12.and.igcc_==0.and.inlc_==2) then
+     shortname_ = 'VDW-DF2'
   else
      shortname_ = ' '
   end if
-  write(longname_,'(4a5)') exc(iexch_),corr(icorr_),gradx(igcx_),gradc(igcc_)
+  write(longname_,'(5a5)') exc(iexch_),corr(icorr_),gradx(igcx_),gradc(igcc_),nonlocc(inlc_)
   
   return
 end subroutine dft_name
@@ -744,7 +876,7 @@ end subroutine dft_name
 subroutine write_dft_name
 !-----------------------------------------------------------------------
    WRITE( stdout, '(5X,"Exchange-correlation      = ",A, &
-        &  " (",4I1,")")') TRIM( dft ), iexch, icorr, igcx, igcc
+        &  " (",5I2,")")') TRIM( dft ), iexch, icorr, igcx, igcc, inlc
    WRITE( stdout, '(5X,"EXX-fraction              =",F12.2)') &
         get_exx_fraction()
    return
@@ -1114,6 +1246,8 @@ subroutine gcxc (rho, grho, sx, sc, v1x, v2x, v1c, v2c)
        v1x = v1x - exx_fraction * v1xsr
        v2x = v2x - exx_fraction * v2xsr
      endif 
+  elseif (igcx ==13) then ! 'rPW86'
+     call rPW86 (rho, grho, sx, v1x, v2x)
   else
      sx = 0.0_DP
      v1x = 0.0_DP
@@ -1584,6 +1718,45 @@ end subroutine gcc_spin
       RETURN
       END SUBROUTINE gcc_spin_more
 !
+!
+!-----------------------------------------------------------------------
+!------- NONLOCAL CORRECTIONS DRIVERS ----------------------------------
+!-----------------------------------------------------------------------
+! 
+!-----------------------------------------------------------------------
+subroutine nlc (rho_valence, rho_core, enl, vnl, v)
+  !-----------------------------------------------------------------------
+  !     non local correction for the correlation
+  !
+  !     input:  rho_valence, rho_core
+  !     definition:  E_nl = \int E_nl(rho',grho',rho'',grho'',|r'-r''|) dr
+  !     output: enl = E_nl
+  !             vnl= D(E_x)/D(rho)
+  !             v  = Correction to the potential
+  !
+
+  USE vdW_DF, ONLY: xc_vdW_DF, vdw_type
+ 
+  implicit none
+  
+  REAL(DP), INTENT(IN) :: rho_valence(:,:), rho_core(:)
+  REAL(DP), INTENT(INOUT) :: v(:,:)
+  REAL(DP), INTENT(INOUT) :: enl, vnl
+
+  if (inlc == 1 .or. inlc == 2) then
+     
+     vdw_type = inlc
+     call xc_vdW_DF(rho_valence, rho_core, enl, vnl, v)
+  
+  else
+     enl = 0.0_DP
+     vnl = 0.0_DP
+     v = 0.0_DP
+  endif
+  !
+  return
+end subroutine nlc
+
 !-----------------------------------------------------------------------
 !------- DRIVERS FOR DERIVATIVES OF XC POTENTIAL -----------------------
 !-----------------------------------------------------------------------

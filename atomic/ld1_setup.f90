@@ -24,11 +24,11 @@ SUBROUTINE ld1_setup
                 nwfs,          lls,   jjs,   els,   isws,   ocs, &
                 nwfts,  nnts,  llts,  jjts,  elts,  iswts,  octs, nstoaets, &
                 nwftsc, nntsc, lltsc, jjtsc, eltsc, iswtsc, octsc, nstoaec, lpaw
-  USE funct, ONLY : get_iexch, dft_is_meta, start_exx
+  USE funct, ONLY : get_iexch, dft_is_meta, start_exx, dft_is_nonlocc 
   IMPLICIT NONE
 
   INTEGER :: n, n1, nc
-  LOGICAL :: hf, oep, meta
+  LOGICAL :: hf, oep, meta, non_locc
   real(DP) :: ocs_loc
   !
   !
@@ -47,6 +47,10 @@ SUBROUTINE ld1_setup
   IF (oep.and.rel>0) &
      CALL errore('setup','OEP is implemented only for non-relativistic calc.',1)
   IF (oep) CALL start_exx
+  ! 
+  non_locc = dft_is_nonlocc()
+  IF ( non_locc ) &
+     CALL errore('setup','non-local functionals not implemented yet', 1)
   !
   CALL set_sl3(sl3,lmx)
   !

@@ -675,7 +675,7 @@ CONTAINS
     ! See also upf2internals
     !
     write( upf%dft, "('INDEX:',4i1)") iexch,icorr,igcx,igcc
-    call set_dft_from_indices(iexch,icorr,igcx,igcc)
+    call set_dft_from_indices(iexch,icorr,igcx,igcc, 0) ! Cannot read nonlocal in this format
 
     read( iunps, '(2e17.11,i5)') &
          upf%zp, etotps, lmax

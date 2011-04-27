@@ -484,6 +484,50 @@ subroutine ggax (rho, grho, sx, v1x, v2x)
   !
   return
 end subroutine ggax
+
+!
+!-----------------------------------------------------------------------
+subroutine rPW86 (rho, grho, sx, v1x, v2x)
+  !-----------------------------------------------------------------------
+  ! PRB 33, 8800 (1986) and J. Chem. Theory comp. 5, 2754 (2009)
+  !
+  USE kinds
+  implicit none
+
+  real(DP), intent(in) :: rho, grho
+  real(DP), intent(out) :: sx, v1x, v2x
+  real(DP) :: s, s_2, s_3, s_4, s_5, s_6, fs, grad_rho, df_ds
+  real(DP) :: a, b, c, s_prefactor, Ax, four_thirds
+  parameter( a = 1.851d0, b = 17.33d0, c = 0.163d0, s_prefactor = 6.18733545256027d0, &
+       Ax = -0.738558766382022d0, four_thirds = 4.d0/3.d0)
+
+  grad_rho = sqrt(grho)
+
+  s = grad_rho/(s_prefactor*rho**(four_thirds))
+
+  s_2 = s**2
+  s_3 = s_2 * s
+  s_4 = s_2**2
+  s_5 = s_3 * s_2
+  s_6 = s_2 * s_4
+
+  !! Calculation of energy
+  fs = (1 + a*s_2 + b*s_4 + c*s_6)**(1.d0/15.d0)
+  sx = Ax * rho**(four_thirds) * fs
+
+
+  !! Calculation of the potential
+  df_ds = (1.d0/(15.d0*fs**(14)))*(2*a*s + 4*b*s_3 + 6*c*s_5)
+
+
+  v1x = Ax*(four_thirds)*(rho**(1.d0/3.d0)*fs &
+       -grad_rho/(s_prefactor * rho)*df_ds)
+
+  v2x = Ax * df_ds/(s_prefactor*grad_rho)
+
+
+end subroutine rPW86
+
 !
 !-----------------------------------------------------------------------
 subroutine perdew86 (rho, grho, sc, v1c, v2c)

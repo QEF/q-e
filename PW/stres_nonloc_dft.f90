@@ -13,7 +13,7 @@ subroutine stres_nonloc_dft( rho, rho_core, nspin, sigma_nonloc_dft )
   !
   USE kinds,            ONLY : DP
   use funct,            ONLY : gcxc, gcx_spin, gcc_spin, gcc_spin_more, &
-                               dft_is_gradient, get_igcc, dft_is_vdW
+                               dft_is_gradient, get_igcc, get_inlc 
   USE mp_global,        ONLY : intra_pool_comm
   USE mp,               ONLY : mp_sum
   USE grid_dimensions,  ONLY : nrxx
@@ -23,14 +23,15 @@ subroutine stres_nonloc_dft( rho, rho_core, nspin, sigma_nonloc_dft )
   !
   real(DP), intent(in)     :: rho (nrxx, nspin), rho_core (nrxx)
   real(DP), intent(inout)  :: sigma_nonloc_dft (3, 3)
-  integer ::nspin
+  integer ::nspin, inlc
 
   integer :: l, m
 
 
   sigma_nonloc_dft(:,:) = 0.d0
-  
-  if (dft_is_vdW()) then
+  inlc = get_inlc()
+
+  if (inlc==1 .or. inlc==2) then
      if (nspin>1) call errore('stres_vdW_DF', &
                   'vdW+DF non implemented in spin polarized calculations',1)
      CALL stress_vdW_DF(rho, rho_core, sigma_nonloc_dft)

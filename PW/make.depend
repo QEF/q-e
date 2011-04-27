@@ -91,6 +91,8 @@ allocate_locpot.o : ../Modules/ions_base.o
 allocate_locpot.o : ../Modules/recvec.o
 allocate_locpot.o : pwcom.o
 allocate_nlpot.o : ../Modules/cell_base.o
+allocate_nlpot.o : ../Modules/control_flags.o
+allocate_nlpot.o : ../Modules/io_global.o
 allocate_nlpot.o : ../Modules/ions_base.o
 allocate_nlpot.o : ../Modules/paw_variables.o
 allocate_nlpot.o : ../Modules/recvec.o
@@ -392,6 +394,7 @@ esm.o : ../Modules/ions_base.o
 esm.o : ../Modules/kind.o
 esm.o : ../Modules/mp.o
 esm.o : ../Modules/mp_global.o
+esm.o : ../Modules/recvec.o
 esm.o : ../Modules/uspp.o
 esm.o : pwcom.o
 esm.o : scf_mod.o
@@ -737,6 +740,7 @@ input.o : ../Modules/input_parameters.o
 input.o : ../Modules/io_files.o
 input.o : ../Modules/io_global.o
 input.o : ../Modules/ions_base.o
+input.o : ../Modules/kernel_table.o
 input.o : ../Modules/kind.o
 input.o : ../Modules/mm_dispersion.o
 input.o : ../Modules/mp.o
@@ -752,7 +756,6 @@ input.o : a2fmod.o
 input.o : dynamics_module.o
 input.o : esm.o
 input.o : exx.o
-input.o : kernel_table.o
 input.o : martyna_tuckerman.o
 input.o : ms2.o
 input.o : noncol.o
@@ -781,10 +784,6 @@ iweights.o : ../Modules/kind.o
 iweights.o : ../Modules/mp.o
 iweights.o : ../Modules/mp_global.o
 iweights.o : noncol.o
-kernel_table.o : ../Modules/constants.o
-kernel_table.o : ../Modules/io_files.o
-kernel_table.o : ../Modules/kind.o
-kernel_table.o : ../Modules/wrappers.o
 kpoint_grid.o : ../Modules/control_flags.o
 kpoint_grid.o : ../Modules/io_global.o
 kpoint_grid.o : ../Modules/kind.o
@@ -921,6 +920,16 @@ non_scf.o : buffers.o
 non_scf.o : pwcom.o
 noncol.o : ../Modules/kind.o
 noncol.o : ../Modules/parameters.o
+nonloccorr.o : ../Modules/cell_base.o
+nonloccorr.o : ../Modules/constants.o
+nonloccorr.o : ../Modules/fft_base.o
+nonloccorr.o : ../Modules/fft_interfaces.o
+nonloccorr.o : ../Modules/funct.o
+nonloccorr.o : ../Modules/kind.o
+nonloccorr.o : ../Modules/recvec.o
+nonloccorr.o : ../Modules/wavefunctions.o
+nonloccorr.o : noncol.o
+nonloccorr.o : pwcom.o
 ns_adj.o : ../Modules/io_global.o
 ns_adj.o : ../Modules/ions_base.o
 ns_adj.o : ../Modules/kind.o
@@ -1097,6 +1106,7 @@ pw_restart.o : ../Modules/input_parameters.o
 pw_restart.o : ../Modules/io_files.o
 pw_restart.o : ../Modules/io_global.o
 pw_restart.o : ../Modules/ions_base.o
+pw_restart.o : ../Modules/kernel_table.o
 pw_restart.o : ../Modules/kind.o
 pw_restart.o : ../Modules/mp.o
 pw_restart.o : ../Modules/mp_global.o
@@ -1110,7 +1120,6 @@ pw_restart.o : ../iotk/src/iotk_module.o
 pw_restart.o : buffers.o
 pw_restart.o : exx.o
 pw_restart.o : io_rho_xml.o
-pw_restart.o : kernel_table.o
 pw_restart.o : noncol.o
 pw_restart.o : pwcom.o
 pw_restart.o : realus.o
@@ -1170,6 +1179,7 @@ read_file.o : ../Modules/griddim.o
 read_file.o : ../Modules/io_files.o
 read_file.o : ../Modules/io_global.o
 read_file.o : ../Modules/ions_base.o
+read_file.o : ../Modules/kernel_table.o
 read_file.o : ../Modules/kind.o
 read_file.o : ../Modules/paw_variables.o
 read_file.o : ../Modules/recvec.o
@@ -1178,7 +1188,6 @@ read_file.o : ../Modules/uspp.o
 read_file.o : ../Modules/wavefunctions.o
 read_file.o : ../Modules/xml_io_base.o
 read_file.o : buffers.o
-read_file.o : kernel_table.o
 read_file.o : newd.o
 read_file.o : noncol.o
 read_file.o : paw_init.o
@@ -1504,7 +1513,7 @@ stres_nonloc_dft.o : ../Modules/griddim.o
 stres_nonloc_dft.o : ../Modules/kind.o
 stres_nonloc_dft.o : ../Modules/mp.o
 stres_nonloc_dft.o : ../Modules/mp_global.o
-stres_nonloc_dft.o : xc_vdW_DF.o
+stres_nonloc_dft.o : ../Modules/xc_vdW_DF.o
 stres_us.o : ../Modules/constants.o
 stres_us.o : ../Modules/control_flags.o
 stres_us.o : ../Modules/ions_base.o
@@ -1568,6 +1577,7 @@ summary.o : ../Modules/griddim.o
 summary.o : ../Modules/io_files.o
 summary.o : ../Modules/io_global.o
 summary.o : ../Modules/ions_base.o
+summary.o : ../Modules/kernel_table.o
 summary.o : ../Modules/kind.o
 summary.o : ../Modules/mp.o
 summary.o : ../Modules/mp_global.o
@@ -1575,7 +1585,6 @@ summary.o : ../Modules/printout_base.o
 summary.o : ../Modules/recvec.o
 summary.o : ../Modules/uspp.o
 summary.o : esm.o
-summary.o : kernel_table.o
 summary.o : noncol.o
 summary.o : pwcom.o
 summary.o : symm_base.o
@@ -1652,7 +1661,6 @@ v_of_rho.o : martyna_tuckerman.o
 v_of_rho.o : noncol.o
 v_of_rho.o : pwcom.o
 v_of_rho.o : scf_mod.o
-v_of_rho.o : xc_vdW_DF.o
 vcsmd.o : ../Modules/cell_base.o
 vcsmd.o : ../Modules/constants.o
 vcsmd.o : ../Modules/control_flags.o
@@ -1759,19 +1767,3 @@ write_ns.o : ../Modules/kind.o
 write_ns.o : pwcom.o
 write_ns.o : scf_mod.o
 wsweight.o : ../Modules/kind.o
-xc_vdW_DF.o : ../Modules/cell_base.o
-xc_vdW_DF.o : ../Modules/constants.o
-xc_vdW_DF.o : ../Modules/control_flags.o
-xc_vdW_DF.o : ../Modules/fft_base.o
-xc_vdW_DF.o : ../Modules/fft_interfaces.o
-xc_vdW_DF.o : ../Modules/fft_scalar.o
-xc_vdW_DF.o : ../Modules/griddim.o
-xc_vdW_DF.o : ../Modules/input_parameters.o
-xc_vdW_DF.o : ../Modules/io_global.o
-xc_vdW_DF.o : ../Modules/kind.o
-xc_vdW_DF.o : ../Modules/mp.o
-xc_vdW_DF.o : ../Modules/mp_global.o
-xc_vdW_DF.o : ../Modules/recvec.o
-xc_vdW_DF.o : kernel_table.o
-xc_vdW_DF.o : pwcom.o
-xc_vdW_DF.o : scf_mod.o
