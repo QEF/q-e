@@ -235,11 +235,23 @@ end function set_Hubbard_l
       allocate(proj(n,n_atomic_wfc))
       allocate(offset(nsp,nat))
 !
+      counter = 0
+      do is = 1, nsp
+         do ia = 1, na(is)
+            offset (is,ia) = counter
+            do i = 1, upf(is)%nwfc
+               l = upf(is)%lchi(i)
+               counter = counter + 2 * l + 1
+            end do
+         end do
+      end do
+      if (counter.ne.n_atomic_wfc) call errore ('new_ns','nstart<>counter',1)
+!
 ! calculate proj = <c|S|wfc>
 !
-      CALL projwfc_hub( c, nx, eigr, betae, n, n_atomic_wfc,            &
-     & wfc, becwfc, swfc, proj ) !#@
-!
+      CALL projwfc_hub( c, nx, eigr, betae, n, n_atomic_wfc, &
+     &                  offset, wfc, becwfc, swfc, proj )
+      !
       counter = 0
       do is = 1, nsp
          do ia = 1, na(is)
@@ -251,6 +263,7 @@ end function set_Hubbard_l
          end do
       end do
       if (counter.ne.n_atomic_wfc) call errore ('new_ns','nstart<>counter',1)
+      !
       ns(:,:,:,:) = 0.d0
       iat = 0
       do is = 1,nsp
@@ -787,7 +800,7 @@ end function set_Hubbard_l
 !
 !-----------------------------------------------------------------------
       SUBROUTINE projwfc_hub( c, nx, eigr, betae, n, n_atomic_wfc,  &
-     & wfc, becwfc, swfc, proj )
+     &                        offset, wfc, becwfc, swfc, proj )
 !-----------------------------------------------------------------------
       !
       ! Projection on atomic wavefunctions
@@ -798,12 +811,12 @@ end function set_Hubbard_l
       USE mp_global,          ONLY: intra_bgrp_comm
       USE mp,                 ONLY: mp_sum
       USE gvecw,              ONLY: ngw
-      USE gvect, ONLY: gstart
+      USE gvect,              ONLY: gstart
       USE ions_base,          ONLY: nsp, na, nat
       USE uspp,               ONLY: nhsa => nkb
 !
       IMPLICIT NONE
-      INTEGER,     INTENT(IN) :: nx, n, n_atomic_wfc
+      INTEGER,     INTENT(IN) :: nx, n, n_atomic_wfc, offset(nsp,nat)
       COMPLEX(DP), INTENT(IN) :: c( ngw, nx ), eigr(ngw,nat), betae(ngw,nhsa)
 !
       COMPLEX(DP), INTENT(OUT):: wfc(ngw,n_atomic_wfc),    &
@@ -811,14 +824,12 @@ end function set_Hubbard_l
       real(DP), intent(out):: becwfc(nhsa,n_atomic_wfc), proj(n,n_atomic_wfc)
       INTEGER :: is, ia, nb, l, m, k, i
       !
-      ! calculate number of atomic states
-      !
       !
       IF ( n_atomic_wfc .EQ. 0 ) RETURN
       !
       ! calculate wfc = atomic states
       !
-      CALL atomic_wfc_northo( eigr, n_atomic_wfc, wfc )
+      CALL atomic_wfc_hub( offset, eigr, n_atomic_wfc, wfc )
       !
       ! calculate bec = <beta|wfc>
       !
@@ -840,15 +851,14 @@ end function set_Hubbard_l
       END SUBROUTINE projwfc_hub
 !
 !-----------------------------------------------------------------------
-      SUBROUTINE atomic_wfc_northo( eigr, n_atomic_wfc, wfc )
+      SUBROUTINE atomic_wfc_hub( offset, eigr, n_atomic_wfc, wfc )
 !-----------------------------------------------------------------------
 !
-! Compute atomic wavefunctions in G-space
-! Atomic wavefunctions not orthogonalized
+! Compute atomic wavefunctions (not orthogonalized) in G-space
 !
       USE kinds,              ONLY: DP
       USE gvecw,              ONLY: ngw
-      USE gvect, ONLY: gstart, gg, g
+      USE gvect,              ONLY: gstart, gg, g
       USE ions_base,          ONLY: nsp, na, nat
       USE cell_base,          ONLY: tpiba, omega !#@@@
       USE atom,               ONLY: rgrid
@@ -858,7 +868,7 @@ end function set_Hubbard_l
 !#@@@@
 !
       IMPLICIT NONE
-      INTEGER,     INTENT(in) :: n_atomic_wfc
+      INTEGER,     INTENT(in) :: n_atomic_wfc, offset(nsp,nat)
       COMPLEX(DP), INTENT(in) :: eigr( ngw, nat )
       COMPLEX(DP), INTENT(out):: wfc( ngw, n_atomic_wfc )
 !
@@ -866,7 +876,7 @@ end function set_Hubbard_l
       REAL(DP), ALLOCATABLE ::  ylm(:,:), q(:), jl(:), vchi(:), chiq(:)
 
       IF( .NOT. ALLOCATED( rgrid ) ) &
-         CALL errore( ' atomic_wfc_northo ', ' rgrid not allocated ', 1 )
+         CALL errore( ' atomic_wfc_hub ', ' rgrid not allocated ', 1 )
 !
 ! calculate max angular momentum required in wavefunctions
 !
@@ -886,42 +896,41 @@ end function set_Hubbard_l
       DO i=1,ngw
          q(i) = SQRT(gg(i))*tpiba
       END DO
-!
-      natwfc=0
-      isa   = 0
+      !
+      isa = 0
       DO is=1,nsp
          !
          !   radial fourier transform of the chi functions
          !   NOTA BENE: chi is r times the radial part of the atomic wavefunction
          !
-         DO ia = 1 + isa, na(is) + isa
-            DO nb = 1,upf(is)%nwfc
-               l = upf(is)%lchi(nb)
-               DO i=1,ngw
-                  CALL sph_bes (rgrid(is)%mesh, rgrid(is)%r, q(i), l, jl)
-                  DO ir=1,rgrid(is)%mesh
-                     vchi(ir) = upf(is)%chi(ir,nb)*rgrid(is)%r(ir)*jl(ir)
-                  ENDDO
-                  CALL simpson_cp90(rgrid(is)%mesh,vchi,rgrid(is)%rab,chiq(i))
+         natwfc=0
+         DO nb = 1,upf(is)%nwfc
+            l = upf(is)%lchi(nb)
+            DO i=1,ngw
+               CALL sph_bes (rgrid(is)%mesh, rgrid(is)%r, q(i), l, jl)
+               DO ir=1,rgrid(is)%mesh
+                  vchi(ir) = upf(is)%chi(ir,nb)*rgrid(is)%r(ir)*jl(ir)
                ENDDO
-               !
-               !   multiply by angular part and structure factor
-               !   NOTA BENE: the factor i^l MUST be present!!!
-               !
-               DO m = 1,2*l+1
-                  lm = l**2 + m
-                  !DO ia = 1 + isa, na(is) + isa
-                  natwfc = natwfc + 1
-                  wfc(:,natwfc) = (0.d0,1.d0)**l * eigr(:,ia)* ylm(:,lm)*chiq(:)
-                  !ENDDO
+               CALL simpson_cp90(rgrid(is)%mesh,vchi,rgrid(is)%rab,chiq(i))
+            ENDDO
+            !
+            !   multiply by angular part and structure factor
+            !   NOTA BENE: the factor i^l MUST be present!!!
+            !
+            DO m = 1,2*l+1
+               lm = l**2 + m
+               natwfc = natwfc + 1
+               DO ia = 1, na(is)
+                  wfc(:,natwfc+offset(is,ia)) = (0.d0,1.d0)**l * &
+                         eigr(:,ia+isa) * ylm(:,lm)*chiq(:)
                ENDDO
             ENDDO
          ENDDO
          isa = isa + na(is)
       ENDDO
 !
-      IF (natwfc.NE.n_atomic_wfc)                                       &
-     &     CALL errore('atomic_wfc','unexpected error',natwfc)
+      IF ( natwfc+offset(nsp,na(nsp)) .NE. n_atomic_wfc) &
+         CALL errore('atomic_wfc','unexpected error',natwfc)
 !
 !#@@@@
       do i = 1,n_atomic_wfc
@@ -931,4 +940,4 @@ end function set_Hubbard_l
       DEALLOCATE(q, chiq, vchi, jl, ylm)
 !
       RETURN
-      END SUBROUTINE atomic_wfc_northo
+      END SUBROUTINE atomic_wfc_hub

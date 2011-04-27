@@ -1,6 +1,7 @@
 New in 4.3.1 version:
 
    * Effective Screening Medium (Otani and Sugino PRB 73 115407 (2006).
+   * CPV: much faster implementation of LDA+U
 
 Fixed in 4.3.1 version:
 
