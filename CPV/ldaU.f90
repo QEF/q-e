@@ -12,6 +12,7 @@ module ldaU_cp
   USE kinds
   implicit none
   save
+  integer, parameter :: ldmx = 7
   real(DP) :: Hubbard_U(nsx)
   real(DP) :: e_hubbard = 0.d0
   real(DP), allocatable :: ns(:,:,:,:)
@@ -195,7 +196,7 @@ end function set_Hubbard_l
       USE uspp,               ONLY: nhsa=>nkb
       USE uspp_param,         ONLY: upf
       use electrons_base,     only: nspin, n => nbsp, nx => nbspx, ispin, f
-      USE ldaU_cp,            ONLY: Hubbard_U, Hubbard_l
+      USE ldaU_cp,            ONLY: Hubbard_U, Hubbard_l, ldmx
       USE ldaU_cp,            ONLY: n_atomic_wfc, ns, e_hubbard
       USE step_penalty,       ONLY: E_pen, A_pen, sigma_pen, alpha_pen
       USE step_penalty,       ONLY: step_pen
@@ -206,7 +207,6 @@ end function set_Hubbard_l
 #ifdef __PARA
       include 'mpif.h'
 #endif
-      integer, parameter :: ldmx = 7
       complex(DP), intent(in) :: c(ngw,nx), eigr(ngw,nat), betae(ngw,nhsa)
       complex(DP), intent(out) :: hpsi(ngw,nx)
       real(DP), INTENT(OUT) :: forceh(3,nat)
@@ -215,15 +215,13 @@ end function set_Hubbard_l
      &                               spsi(:,:), hpsi_pen(:,:)
       real(DP), allocatable   :: becwfc(:,:), bp(:,:),              &
      &                               dbp(:,:,:), wdb(:,:,:)
-      real(DP), allocatable   :: dns(:,:,:,:), proj(:,:)
+      real(DP), allocatable   :: dns(:,:,:,:), proj(:,:), tempsi(:,:)
       real(DP), allocatable   :: lambda(:), f1(:), vet(:,:)
       real(DP) :: force_pen(3,nat)
-      real(DP)                :: somma, ntot, nsum,   &
-     &                           nsuma, x_value, g_value, step_value
-      integer is, ia, iat, nb, isp, l, m, m1, m2, k, i, counter, err, ig
+      real(DP)                :: ntot, x_value, g_value, step_value
+      integer is, ia, iat, nb, isp, l, m, m1, m2, k, i, counter, ldim, ig
       integer iv, jv, inl, jnl,alpha,alpha_a,alpha_s,ipol
       integer, allocatable ::  offset (:,:)
-      complex(DP) :: tempsi
 !
       if( nbgrp > 1 ) call errore(' new_ns ', &
          ' parallelization over bands not yet implemented ', 1 )
@@ -292,7 +290,6 @@ end function set_Hubbard_l
          do ia = 1,na(is)
             iat=iat + 1
             if (Hubbard_U(is).ne.0.d0) then
-                k = offset(is,ia)
                 do isp = 1,nspin
                    do m1 = 1, 2*Hubbard_l(is) + 1
                      e_hubbard = e_hubbard + 0.5d0 * Hubbard_U(is) *    &
@@ -311,26 +308,32 @@ end function set_Hubbard_l
 !      Calculate the potential and forces on wavefunctions due to U
 !
       hpsi(:,:)=(0.d0,0.d0)
+      ALLOCATE ( tempsi(ldmx,n) )
+      tempsi(:,:)=(0.d0,0.d0)
       iat=0
       do is = 1, nsp
          do ia=1, na(is)
             iat = iat + 1
             if (Hubbard_U(is).ne.0.d0) then
+               ldim = 2*Hubbard_l(is) + 1
                do i=1, n
-                  do m1 = 1, 2 * Hubbard_l(is) + 1
-                     tempsi = proj (i,offset(is,ia)+m1)
-                     do m2 = 1, 2 * Hubbard_l(is) + 1
-                        tempsi = tempsi - 2.d0 * ns(iat,ispin(i),m1,m2)*&
-     &                                proj (i,offset(is,ia)+m2)
+                  do m1 = 1, ldim
+                     tempsi(m1,i) = proj (i,offset(is,ia)+m1)
+                     do m2 = 1, ldim
+                        tempsi(m1,i) = tempsi(m1,i) - &
+                                       2.0_dp*ns(iat,ispin(i),m1,m2) * &
+                                               proj (i,offset(is,ia)+m2)
                      enddo
-                     tempsi = tempsi * Hubbard_U(is)/2.d0*f(i)
-                     call zaxpy (ngw,tempsi,swfc(1,offset(is,ia)+m1),1, &
-     &                           hpsi(1,i),1)
+                     tempsi(m1,i) = tempsi(m1,i) * Hubbard_U(is)/2.d0*f(i)
                   enddo
                enddo
+               CALL dgemm ( 'N','N', 2*ngw, n, ldim, 1.0_dp, &
+                             swfc(1,offset(is,ia)+1), 2*ngw, tempsi, &
+                             ldmx, 1.0_dp, hpsi, 2*ngw )
             endif
          enddo
       enddo
+      DEALLOCATE ( tempsi )
 !
 !      Calculate the potential and energy due to constraint
 !
@@ -342,7 +345,6 @@ end function set_Hubbard_l
          E_pen=0
          do is = 1,nsp
             do ia = 1, na(is)
-               nsuma = 0.d0
                iat = iat + 1
               if (Hubbard_U(is).ne.0.d0) then
                do isp = 1, nspin
@@ -480,7 +482,7 @@ end function set_Hubbard_l
       use electrons_base,   only: n => nbsp 
       use ions_base,        only: na, nat, nsp
       use gvecw,            only: ngw
-      USE ldaU_cp,          ONLY: Hubbard_U, Hubbard_l
+      USE ldaU_cp,          ONLY: Hubbard_U, Hubbard_l, ldmx
       USE ldaU_cp,          ONLY: n_atomic_wfc, ns, e_hubbard
       USE ldaU_cp,          ONLY: Hubbard_lmax
       use dspev_module,     only : dspev_drv
@@ -488,13 +490,7 @@ end function set_Hubbard_l
 
       implicit none
 
-  integer :: is, isp, ia, m1, m2, ldim, iat, err, k
-! cpunter on atoms type
-! counter on spin component
-! counter on atoms
-! counter on wavefn
-! counters on d components
-  integer, parameter :: ldmx = 7
+  integer :: is, isp, ia, m1, m2, iat, err, k
   real(DP), allocatable   :: ftemp1(:), ftemp2(:), f1 (:), vet (:,:)
 
   real(DP) :: lambda (ldmx), nsum, nsuma
@@ -585,12 +581,11 @@ end function set_Hubbard_l
       use gvecw, only: ngw
       use electrons_base, only: nspin, n => nbsp, nx => nbspx, ispin, f
       USE uspp,           ONLY: nhsa=>nkb
-      USE ldaU_cp,        ONLY: Hubbard_U, Hubbard_l
+      USE ldaU_cp,        ONLY: Hubbard_U, Hubbard_l, ldmx
       USE ldaU_cp,        ONLY: n_atomic_wfc, ns
       USE kinds,          ONLY: DP
 !
       implicit none
-      integer, parameter :: ldmx = 7
       integer ibnd,is,i,ia,counter, m1,m2, l, iat, alpha, ldim
 ! input
       integer,      intent(in) :: offset(nsp,nat)
@@ -709,7 +704,6 @@ end function set_Hubbard_l
 !
 ! At first the derivative of the atomic wfc is computed
 !
-!
       allocate(gk(ngw))
       allocate(temp(ngw))
 !
@@ -717,20 +711,17 @@ end function set_Hubbard_l
 !
          do ig=1,ngw
             gk(ig)=g(ipol,ig)*tpiba 
-!
             do m1=1,ldim
-                  dwfc(ig,m1) = CMPLX (gk(ig)*wfc(2,ig,offset+m1),      &
-     &                  -1*gk(ig)*wfc(1,ig,offset+m1), kind=dp )
+               dwfc(ig,m1) = CMPLX (gk(ig)*wfc(2,ig,offset+m1),      &
+     &                             -gk(ig)*wfc(1,ig,offset+m1), kind=dp )
             end do
          end do
-!
-         do ibnd=1,n
-            do m1=1,ldim
-               temp(:)=real(conjg(dwfc(:,m1))*spsi(:,ibnd))
-               dproj(ibnd,offset+m1)=2.d0*SUM(temp) 
-               if (gstart==2) dproj(ibnd,offset+m1)=dproj(ibnd,offset+m1)-temp(1)
-            end do
-         end do
+         !
+         CALL dgemm( 'C', 'N', n, ldim, 2*ngw, 2.0_DP, dwfc, 2*ngw, spsi, &
+                    2*ngw, 0.0_DP, dproj(1,offset+1), n )
+         IF ( gstart == 2 ) &
+            CALL dger( n, ldim, -1.0_DP, dwfc, 2*ngw, spsi, 2*ngw, &
+                       dproj(1,offset+1), n )
          call mp_sum( dproj, intra_bgrp_comm )
       end if
       do iv=1,nh(alpha_s)
@@ -841,10 +832,10 @@ end function set_Hubbard_l
       !
       ! calculate proj = <c|S|wfc>
       !
-      CALL DGEMM( 'C', 'N', n, n_atomic_wfc, 2*ngw, 2.0_DP, c, 2*ngw, swfc, &
+      CALL dgemm( 'C', 'N', n, n_atomic_wfc, 2*ngw, 2.0_DP, c, 2*ngw, swfc, &
                     2*ngw, 0.0_DP, proj, n )
       IF ( gstart == 2 ) &
-         CALL DGER( n, n_atomic_wfc, -1.0_DP, c, 2*ngw, swfc, 2*ngw, proj, n )
+         CALL dger( n, n_atomic_wfc, -1.0_DP, c, 2*ngw, swfc, 2*ngw, proj, n )
       CALL mp_sum( proj, intra_bgrp_comm )
 !
       RETURN
