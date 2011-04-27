@@ -525,7 +525,6 @@ subroutine rPW86 (rho, grho, sx, v1x, v2x)
 
   v2x = Ax * df_ds/(s_prefactor*grad_rho)
 
-
 end subroutine rPW86
 
 !

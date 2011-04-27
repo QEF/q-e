@@ -465,10 +465,6 @@ CONTAINS
            
     END IF
 
-    if (dft_defined) then
-        write(*,"(A,A)") "Set by shortname ", TRIM(dftout)
-    endif
-
     !
     ! ----------------------------------------------------------------
     ! If the DFT was not yet defined, check every part of the string
