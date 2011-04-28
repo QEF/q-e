@@ -218,7 +218,6 @@ cpr.o : gvecw.o
 cpr.o : ions_nose.o
 cpr.o : ions_positions.o
 cpr.o : ldaU.o
-cpr.o : ldaUpen.o
 cpr.o : mainvar.o
 cpr.o : modules.o
 cpr.o : ortho_base.o
@@ -446,12 +445,14 @@ init_run.o : ../Modules/io_files.o
 init_run.o : ../Modules/io_global.o
 init_run.o : ../Modules/ions_base.o
 init_run.o : ../Modules/kind.o
+init_run.o : ../Modules/mp.o
 init_run.o : ../Modules/mp_global.o
 init_run.o : ../Modules/printout_base.o
 init_run.o : ../Modules/recvec.o
 init_run.o : ../Modules/timestep.o
 init_run.o : ../Modules/uspp.o
 init_run.o : ../Modules/wavefunctions.o
+init_run.o : ../Modules/wrappers.o
 init_run.o : ../Modules/xml_io_base.o
 init_run.o : cell_nose.o
 init_run.o : cg.o
@@ -464,7 +465,6 @@ init_run.o : gvecw.o
 init_run.o : ions_nose.o
 init_run.o : ions_positions.o
 init_run.o : ldaU.o
-init_run.o : ldaUpen.o
 init_run.o : mainvar.o
 init_run.o : modules.o
 init_run.o : ortho_base.o

@@ -1,10 +1,11 @@
 any2upf.o : write_upf.o
+casino2upf.o : ../Modules/io_files.o
+casino2upf.o : ../Modules/upf.o
 casino2upf.o : casino_pp.o
 casino_pp.o : ../Modules/funct.o
 casino_pp.o : ../Modules/kind.o
 casino_pp.o : ../Modules/radial_grids.o
 casino_pp.o : ../Modules/upf.o
-casino_pp.o : write_upf.o
 cpmd2upf.o : write_upf.o
 fhi2upf.o : ../Modules/constants.o
 fhi2upf.o : ../Modules/funct.o
