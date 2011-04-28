@@ -3282,7 +3282,7 @@ case "$arch" in
         pgf_version=`$mpif90 -V 2>&1 | grep "^pgf"`
         g95_version=`$mpif90 -v 2>&1 | grep "g95"`
         eko_version=`$mpif90 -v 2>&1 | grep "EKOPath"` # obsolescent
-        pathf95_version=`$mpif90 -version 2>&1 | grep "PathScale(TM)"`
+        pathf95_version=`$mpif90 -v 2>&1 | grep "PathScale(TM)"`
         gfortran_version=`$mpif90 -v 2>&1 | grep "gcc version"`
         #
         if test "$ifort_version" != ""
