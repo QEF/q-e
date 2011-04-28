@@ -69,7 +69,7 @@ MODULE cp_restart
                                            symm_type, s_to_r
       USE ions_base,                ONLY : nsp, nat, na, atm, zv, &
                                            pmass, amass, iforce, ind_bck
-      USE funct,                    ONLY : get_dft_name
+      USE funct,                    ONLY : get_dft_name, get_inlc
       USE energies,                 ONLY : enthal, ekin, eht, esr, eself, &
                                            epseu, enl, exc, vave
       USE mp,                       ONLY : mp_sum
@@ -154,6 +154,7 @@ MODULE cp_restart
       REAL(DP), ALLOCATABLE :: mrepl(:,:)
       CHARACTER(LEN=256)    :: tmp_dir_save
       LOGICAL               :: exst
+      INTEGER               :: inlc
       !
       ! ... subroutine body
       !
@@ -375,7 +376,9 @@ MODULE cp_restart
 !-------------------------------------------------------------------------------
          !
          dft_name = get_dft_name()
-         CALL write_xc( DFT = dft_name, NSP = nsp, LDA_PLUS_U = .FALSE., IS_VDW = .FALSE. )
+         inlc = get_inlc()
+         CALL write_xc( DFT = dft_name, NSP = nsp, LDA_PLUS_U = .FALSE., INLC = inlc )
+
          !
 !-------------------------------------------------------------------------------
 ! ... OCCUPATIONS
