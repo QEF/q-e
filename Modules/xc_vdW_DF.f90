@@ -1837,7 +1837,6 @@ subroutine dv_drho_vdw(rho_valence, rho_core, drho, nspin, dv_drho)
     !! -------------------------------------------------------------------------
     !! For the potential
     !! -------------------------------------------------------------------------
-    complex(dp), allocatable :: total_rho_g
     integer :: i_grid, theta_i, i_proc, I
     real(dp) :: grid_cell_volume
     real(dp), allocatable ::  q0(:)
