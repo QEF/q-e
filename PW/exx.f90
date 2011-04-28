@@ -87,10 +87,19 @@ MODULE exx
               fock2 = 0.0_DP, & !   sum <psi|vx(psi)|psi>
               dexx  = 0.0_DP    !   fock1  - 0.5*(fock2+fock0)
 
-  
-
 CONTAINS
 
+  !------------------------------------------------------------------------
+  SUBROUTINE exx_deallocate ()
+  !------------------------------------------------------------------------
+  IF ( ALLOCATED (index_xkq) ) DEALLOCATE (index_xkq)
+  IF ( ALLOCATED (index_xk ) ) DEALLOCATE (index_xk )
+  IF ( ALLOCATED (index_sym) ) DEALLOCATE (index_sym)
+  IF ( ALLOCATED (x_occupation) ) DEALLOCATE (x_occupation)
+  IF ( ALLOCATED (xkq) ) DEALLOCATE (xkq)
+  IF ( ALLOCATED (exxbuff) ) DEALLOCATE (exxbuff)
+  !
+  END SUBROUTINE exx_deallocate
   !------------------------------------------------------------------------
   subroutine exx_grid_init()
   !------------------------------------------------------------------------
@@ -1536,7 +1545,7 @@ call flush_unit(stdout)
       enddo ! jbnd
   enddo ! ikk
 
-  deallocate (tempphic, temppsic, rhoc, fac )
+  deallocate (tempphic, temppsic, rhoc, fac, fac_tens, fac_stress )
 !
 ! Was used for image parallelization
 !  call mp_sum( exx_stress_, inter_image_comm )

@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2008 Quantum ESPRESSO group
+! Copyright (C) 2001-2011 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -15,11 +15,11 @@ SUBROUTINE clean_pw( lflag )
   USE ions_base,            ONLY : deallocate_ions_base
   USE gvect,                ONLY : g, gg, gl, nl, nlm, igtongl, mill, &
                                    eigts1, eigts2, eigts3
-  USE gvecs,              ONLY : nls, nlsm
+  USE gvecs,                ONLY : nls, nlsm
   USE fixed_occ,            ONLY : f_inp
   USE ktetra,               ONLY : tetra
   USE klist,                ONLY : ngk
-  USE gvect,   ONLY : ig_l2g
+  USE gvect,                ONLY : ig_l2g
   USE vlocal,               ONLY : strf, vloc
   USE wvfct,                ONLY : igk, g2kin, et, wg, btype
   USE force_mod,            ONLY : force
@@ -45,6 +45,9 @@ SUBROUTINE clean_pw( lflag )
   !
   USE london_module,      ONLY : dealloca_london
   USE constraints_module, ONLY : deallocate_constraint
+#ifdef EXX
+  USE exx,                ONLY : deallocate_exx
+#endif
 #ifdef __SOLVENT
   USE solvent_base,       ONLY : do_solvent
 #endif
@@ -171,6 +174,9 @@ SUBROUTINE clean_pw( lflag )
   ! for Wannier_ac
   if (use_wannier) CALL wannier_clean()
   !
+#ifdef EXX
+  CALL deallocate_exx ( ) 
+#endif
 #ifdef __SOLVENT
   ! ... additional arrays for solvent medium
   !

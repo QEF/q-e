@@ -228,6 +228,7 @@ clean_pw.o : ../Modules/uspp.o
 clean_pw.o : ../Modules/wannier_new.o
 clean_pw.o : ../Modules/wavefunctions.o
 clean_pw.o : dynamics_module.o
+clean_pw.o : exx.o
 clean_pw.o : noncol.o
 clean_pw.o : paw_init.o
 clean_pw.o : pwcom.o
@@ -923,6 +924,16 @@ non_scf.o : buffers.o
 non_scf.o : pwcom.o
 noncol.o : ../Modules/kind.o
 noncol.o : ../Modules/parameters.o
+nonloccorr.o : ../Modules/cell_base.o
+nonloccorr.o : ../Modules/constants.o
+nonloccorr.o : ../Modules/fft_base.o
+nonloccorr.o : ../Modules/fft_interfaces.o
+nonloccorr.o : ../Modules/funct.o
+nonloccorr.o : ../Modules/kind.o
+nonloccorr.o : ../Modules/recvec.o
+nonloccorr.o : ../Modules/wavefunctions.o
+nonloccorr.o : noncol.o
+nonloccorr.o : pwcom.o
 ns_adj.o : ../Modules/io_global.o
 ns_adj.o : ../Modules/ions_base.o
 ns_adj.o : ../Modules/kind.o
