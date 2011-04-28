@@ -13,7 +13,7 @@ if test $# = 0
 then
     dirs=" Modules clib PW CPV flib pwtools upftools PP PWCOND \
            Gamma PH D3 atomic GIPAW VdW XSpectra \
-	   GWW/gww GWW/pw4gww GWW/head ACFDT NEB" 
+	   GWW/gww GWW/pw4gww GWW/head ACFDT NEB Solvent" 
           
 else
     dirs=$*
@@ -27,7 +27,7 @@ do
     # in directory DIR should be listed in DEPENDS
     DEPENDS="../include ../iotk/src"
     case $DIR in 
-        EE | flib | upftools | atomic | CPV | PW )
+        EE | flib | upftools | atomic | CPV | Solvent | PW )
                   DEPENDS="$DEPENDS ../Modules "      ;;
 	PP | PWCOND | Gamma | PH | GIPAW | pwtools )
 		  DEPENDS="$DEPENDS ../Modules ../PW" ;;
@@ -60,7 +60,7 @@ do
         sed '/@\/cineca\/prod\/hpm\/include\/f_hpm.h@/d' \
             make.depend > make.depend.tmp
         sed '/@iso_c_binding@/d' make.depend.tmp > make.depend
-    
+
         if test "$DIR" = "clib"
         then
             mv make.depend make.depend.tmp
