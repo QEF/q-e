@@ -1224,9 +1224,15 @@ causes a mysterious error in compilation of iotk and should be replaced by
 The MVAPICH parallel environment with Pathscale compilers also works.
 (info by Paolo Giannozzi, July 2008)
 
+Version 3.1 of the Pathscale EKO compiler also works 
+(info by Cezary Sliwa, April 2011).
+
 \paragraph{Linux PCs with gfortran}
 
-gfortran v.4.1.2 and later are supported. Earlier gfortran versions used to produce nonfunctional phonon executables (segmentation faults and the like), but more recent versions should be fine.
+gfortran is supported. Some gfortran versions produce nonfunctional
+phonon executables (segmentation faults and the like); other versions
+miscompile iotk (the executables work but crash with a mysterious iotk
+error when reading from data files). Recent versions should be fine.
 
 If you experience problems in reading files produced by previous versions
 of \qe: ``gfortran used 64-bit record markers to allow writing of records 
@@ -1272,6 +1278,9 @@ can be freely downloaded from the AMD site.
 It is recognized by \configure\ but little tested. It sort of works 
 but it fails to pass several tests.
 (info by Paolo Giannozzi, March 2010).
+
+The Open64 AMD compiler produces a 4.3 \pwx\ binary fails with
+a "wrong charge error"  (info by Cezary Sliwa, April 2011).
 
 \paragraph{Linux PCs with Intel compiler (ifort)}
 
