@@ -1,4 +1,4 @@
-AC_INIT(ESPRESSO, 4.2CVS, , espresso)
+AC_INIT(ESPRESSO, 4.3.1, , espresso)
 # ----------------------------
 # Non-standart precious variables
 # ----------------------------
