@@ -270,6 +270,8 @@ MODULE ld1inc
   LOGICAL :: &
        lpaw,      &! if true generate or test a PAW dataset
        lnc2paw, &  ! if true the PAW dataset is generate from the NC one
+       rmatch_augfun_nc, &  ! if .true. the norm conserving radii are
+                            ! used to pseudize the q functions
        use_paw_as_gipaw ! if true, PAW data will be used for GIPAW
   TYPE(paw_t) :: &
        pawsetup    ! the PAW dataset

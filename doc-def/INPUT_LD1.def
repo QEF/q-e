@@ -528,17 +528,14 @@ input_description -distribution {Quantum Espresso} -program ld1.x {
 		    If different from 'AE' the augmentation functions are pseudized
 		    before rmatch_augfun. The pseudization options are:
 		    
-		    * 'BESSEL'     Use Bessel functions to pseudize the Q.
+		    * 'PSQ'        Use Bessel functions to pseudize Q 
+                                   from the origin to rmatch_augfun.
 		    
 		    These features are available only for PAW: 
 		    
+		    * 'BESSEL'     Use Bessel functions to pseudize the Q.
 		    * 'GAUSS'      Use 2 Gaussian functions to pseudize the Q.
 		    * 'BG'         Use original Bloechl's recipy with a single gaussian.
-		    
-		    This feature is available only for US-PP:
-		    * 'PSQ'        Use Bessel functions to pseudize Q from the origin
-		                   to min(rcut(ns),rcut(ns1)) where ns and ns1 are
-                                   the two channels for that Q.
 
 		    Note: if lpaw is true and which_augfun is set to AE real all-
 		    electron charge will be used, which will produce extremely
@@ -552,6 +549,16 @@ input_description -distribution {Quantum Espresso} -program ld1.x {
 		info {
 		    Pseudization radius for the augmentation functions. Presently
 		    it has the same value for all L.    
+		}
+	    }
+	    var rmatch_augfun_nc  -type REAL {
+		default { .false. }
+		status { Used only if which_augfun is 'PSQ'. }		
+		info {
+                  If .true. the augmetation functions are pseudized
+                  from the origin to min(rcut(ns),rcut(ns1)) where ns 
+                  and ns1 are the two channels for that Q. In this case
+                  rmatch_augfun is not used.
 		}
 	    }
 	}

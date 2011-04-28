@@ -37,6 +37,7 @@ subroutine ld1_readin
                          frozen_core, lsdts, new_core_ps, cau_fact, &
                          lnc2paw, use_paw_as_gipaw, pawsetup,  & !paw EMINE
                          rmatch_augfun, which_augfun,         & !paw
+                         rmatch_augfun_nc,                    &
                          rhos, bmat, lsmall, &              ! extra for paw2us
                          lgipaw_reconstruction, lsave_wfc, &
                          relpert, noscf, &
@@ -127,6 +128,8 @@ subroutine ld1_readin
        lnc2paw,          &  ! if true the PAW dataset is generate from the NC one
        rmatch_augfun,    & ! define the matching radius for aug.fun.
        ! output files:
+       rmatch_augfun_nc, & ! if true the norm conserving core radii are
+                           ! used to smooth the Q functions
        upf_v1_format, & ! set to true to use UPF version 1 file format (instead of version 2)
        file_pseudopw, & ! output file where the pseudopotential is written
        file_screen,   & ! output file for the screening potential
@@ -364,6 +367,7 @@ subroutine ld1_readin
      !    paw defaults:
      lnc2paw = .false.
      rmatch_augfun=-1.0_dp   ! force a crash
+     rmatch_augfun_nc =.false.
 
      if (ionode) read(5,inputp,err=500,iostat=ios)
 500  call mp_bcast(ios, ionode_id)

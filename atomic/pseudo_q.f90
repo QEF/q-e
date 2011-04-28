@@ -10,7 +10,7 @@ USE kinds, ONLY : DP
 USE io_global, ONLY : stdout
 USE ld1_parameters, ONLY : nwfsx
 USE ld1inc, ONLY : rcut, lls,  grid, ndmx, lmx2, nbeta, ikk, ecutrho, &
-            rmatch_augfun
+            rmatch_augfun, rmatch_augfun_nc
 IMPLICIT NONE
 !
 REAL(DP), INTENT(IN) :: qfunc(ndmx,nwfsx,nwfsx)
@@ -35,8 +35,11 @@ do ns=1,nbeta
       !  Find the matching point
       !
       ik=0
-!      rmatch=min(rcut(ns),rcut(ns1))
-      rmatch=rmatch_augfun
+      IF (rmatch_augfun_nc) THEN
+         rmatch=min(rcut(ns),rcut(ns1))
+      ELSE
+         rmatch=rmatch_augfun
+      ENDIF
       do n=1,mesh
          if (grid%r(n)>rmatch) then
             ik=n
