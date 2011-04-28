@@ -67,6 +67,12 @@ do
             sed 's/@fftw.c@/fftw.c/' make.depend.tmp > make.depend
         fi
 
+        if test "$DIR" = "PW"
+        then
+            mv make.depend make.depend.tmp
+            sed '/@solvent_base@/d' make.depend.tmp > make.depend
+        fi
+
         rm -f make.depend.tmp
 
         # check for missing dependencies 
