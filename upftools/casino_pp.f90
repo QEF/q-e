@@ -595,7 +595,7 @@ CONTAINS
 
        TYPE(pseudo_upf), INTENT(IN)       :: upf_in
        TYPE(radial_grid_type), INTENT(IN) :: grid
-       INTEGER :: i
+       INTEGER :: i, lp1
 
        INTEGER, EXTERNAL :: atomic_number
 
@@ -614,7 +614,8 @@ CONTAINS
        WRITE(6,*) "R(i) in atomic units"
        WRITE(6, "(T4,E22.15)") grid%r(:)
 
-       DO i=1,SIZEOF(vnl)/SIZEOF(vnl(:,1))
+       lp1 = SIZE ( vnl, 2 )
+       DO i=1,lp1
           WRITE(6, "(A,I1,A)") 'r*potential (L=',i-1,') in Ry'
           WRITE(6, "(T4,E22.15)") vnl(:,i)
        END DO
