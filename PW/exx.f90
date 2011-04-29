@@ -90,7 +90,7 @@ MODULE exx
 CONTAINS
 
   !------------------------------------------------------------------------
-  SUBROUTINE exx_deallocate ()
+  SUBROUTINE deallocate_exx ()
   !------------------------------------------------------------------------
   IF ( ALLOCATED (index_xkq) ) DEALLOCATE (index_xkq)
   IF ( ALLOCATED (index_xk ) ) DEALLOCATE (index_xk )
@@ -99,7 +99,7 @@ CONTAINS
   IF ( ALLOCATED (xkq) ) DEALLOCATE (xkq)
   IF ( ALLOCATED (exxbuff) ) DEALLOCATE (exxbuff)
   !
-  END SUBROUTINE exx_deallocate
+  END SUBROUTINE deallocate_exx
   !------------------------------------------------------------------------
   subroutine exx_grid_init()
   !------------------------------------------------------------------------
