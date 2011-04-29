@@ -49,7 +49,8 @@ MODULE cp_restart
                              iupdwn_tot, nupdwn_tot, mat_z )
       !------------------------------------------------------------------------
       !
-      USE control_flags,            ONLY : gamma_only, force_pairing, trhow, tksw, twfcollect
+      USE control_flags,            ONLY : gamma_only, force_pairing, trhow, &
+                                           tksw, twfcollect, do_makov_payne
       USE io_files,                 ONLY : psfile, pseudo_dir, iunwfc, &
                                            nwordwfc, tmp_dir, diropn
       USE mp_global,                ONLY : intra_image_comm, me_image, nproc_pool, nproc_image
@@ -347,7 +348,8 @@ MODULE cp_restart
          CALL recips( a1, a2, a3, b1, b2, b3 )
          !
          CALL write_cell( ibrav, symm_type, &
-                          celldm, alat, a1, a2, a3, b1, b2, b3 )
+                          celldm, alat, a1, a2, a3, b1, b2, b3, &
+                          do_makov_payne, .FALSE., .FALSE. )
          !
 !-------------------------------------------------------------------------------
 ! ... IONS
