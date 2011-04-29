@@ -64,7 +64,8 @@ MODULE pw_restart
       !------------------------------------------------------------------------
       !
       USE control_flags,        ONLY : istep, twfcollect, conv_ions, &
-                                       lscf, lkpoint_dir, gamma_only, tqr, noinv
+                                       lscf, lkpoint_dir, gamma_only, &
+                                       tqr, noinv, do_makov_payne 
       USE realus,               ONLY : real_space
       USE global_version,       ONLY : version_number
       USE cell_base,            ONLY : at, bg, alat, tpiba, tpiba2, &
@@ -118,7 +119,10 @@ MODULE pw_restart
                                        exxdiv_treatment, yukawa, ecutvcut
 #endif
       USE cellmd,               ONLY : lmovecell, cell_factor 
-
+      !
+      USE martyna_tuckerman, ONLY: do_comp_mt
+      USE esm,               ONLY: do_comp_esm
+      
       !
       IMPLICIT NONE
       !
@@ -331,7 +335,8 @@ MODULE pw_restart
 !-------------------------------------------------------------------------------
          !
          CALL write_cell( ibrav, symm_type, celldm, alat, &
-                          at(:,1), at(:,2), at(:,3), bg(:,1), bg(:,2), bg(:,3) )
+                          at(:,1), at(:,2), at(:,3), bg(:,1), bg(:,2), bg(:,3), &
+                          do_makov_payne, do_comp_mt, do_comp_esm )
          IF (lmovecell) CALL write_moving_cell(lmovecell, cell_factor)
          !
 !-------------------------------------------------------------------------------
@@ -1436,13 +1441,17 @@ MODULE pw_restart
       USE cell_base, ONLY : ibrav, alat, symm_type, at, bg, celldm
       USE cell_base, ONLY : tpiba, tpiba2, omega
       USE cellmd,    ONLY : lmovecell, cell_factor
+      USE control_flags, ONLY : do_makov_payne
+      USE martyna_tuckerman, ONLY: do_comp_mt
+      USE esm,           ONLY: do_comp_esm
+      
       !
       IMPLICIT NONE
       !
       CHARACTER(LEN=*), INTENT(IN)  :: dirname
       INTEGER,          INTENT(OUT) :: ierr
       !
-      CHARACTER(LEN=80) :: bravais_lattice
+      CHARACTER(LEN=80) :: bravais_lattice, es_corr
       !
       !
       ierr = 0
@@ -1459,6 +1468,27 @@ MODULE pw_restart
       IF ( ionode ) THEN
          !
          CALL iotk_scan_begin( iunpun, "CELL" )
+         !
+         CALL iotk_scan_dat( iunpun, &
+                             "NON-PERIODIC_CELL_CORRECTION", es_corr )
+         SELECT CASE ( TRIM(es_corr))
+         CASE ("Makov-Payne")
+            do_makov_payne = .true.
+            do_comp_mt     = .false.
+            do_comp_esm    = .false. 
+         CASE ("Martyna-Tuckerman")
+            do_makov_payne = .false.
+            do_comp_mt     = .true.
+            do_comp_esm    = .false.
+         CASE ("ESM")
+            do_makov_payne = .false.
+            do_comp_mt     = .false.
+            do_comp_esm    = .true.
+         CASE ("None")
+            do_makov_payne = .false.
+            do_comp_mt     = .false.
+            do_comp_esm    = .false.
+         END SELECT
          !
          CALL iotk_scan_dat( iunpun, &
                              "BRAVAIS_LATTICE", bravais_lattice )

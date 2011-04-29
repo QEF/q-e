@@ -744,7 +744,8 @@ MODULE xml_io_base
     !
     !------------------------------------------------------------------------
     SUBROUTINE write_cell( ibrav, symm_type, &
-                           celldm, alat, a1, a2, a3, b1, b2, b3 )
+                           celldm, alat, a1, a2, a3, b1, b2, b3, &
+                           do_mp, do_mt, do_esm )
       !------------------------------------------------------------------------
       !
       INTEGER,          INTENT(IN) :: ibrav
@@ -752,8 +753,9 @@ MODULE xml_io_base
       REAL(DP),         INTENT(IN) :: celldm(6), alat
       REAL(DP),         INTENT(IN) :: a1(3), a2(3), a3(3)
       REAL(DP),         INTENT(IN) :: b1(3), b2(3), b3(3)
+      LOGICAL,          INTENT(IN) :: do_mp, do_mt, do_esm
       !
-      CHARACTER(LEN=256) :: bravais_lattice
+      CHARACTER(LEN=256) :: bravais_lattice,es_corr
       !
       CALL iotk_write_begin( iunpun, "CELL" )
       !
@@ -790,6 +792,18 @@ MODULE xml_io_base
            bravais_lattice = "Triclinic P"
       END SELECT
       !
+      IF(do_mp)THEN
+        es_corr = "Makov-Payne"
+      ELSE IF(do_mt) THEN
+        es_corr = "Martyna-Tuckerman"
+      ELSE IF(do_esm) THEN
+        es_corr = "ESM"
+      ELSE
+        es_corr = "None"
+      ENDIF
+      CALL iotk_write_dat( iunpun, &
+                           "NON-PERIODIC_CELL_CORRECTION", TRIM( es_corr ) )
+         
       CALL iotk_write_dat( iunpun, &
                            "BRAVAIS_LATTICE", TRIM( bravais_lattice ) )
       !
