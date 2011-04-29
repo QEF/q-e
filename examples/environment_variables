@@ -13,12 +13,18 @@
 #     Make sure that it exists, is writable by you, and doesn't
 #     contain any valuable data (everything there will be destroyed!).
 
-# The following should be good in many cases - pay attention to TMP_DIR !
+# The following should be good in many cases 
 
 PREFIX=`cd ../.. ; pwd`
 BIN_DIR=$PREFIX/bin
 PSEUDO_DIR=$PREFIX/pseudo
+# Beware: everything in $TMP_DIR will be destroyed !
 TMP_DIR=$HOME/tmp
+
+# needed if some PP has to be downloaded from web site
+WGET="wget -O"
+# for machines that do not have wget (e.g. Mac OS-X)
+# WGET="curl -o"
 
 # To run the ESPRESSO programs on a parallel machine, you may have to
 # add the appropriate commands (poe, mpirun, mpprun...) and/or options
