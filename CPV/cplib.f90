@@ -871,8 +871,10 @@ subroutine formf( tfirst, eself )
      DeltaV0 = DeltaV0 + na(is) / omega * vps0(is)
   END DO
   !
-   write(6,'("   Delta V(G=0): ",f10.6,"Ry, ",f11.6,"eV")') &
+  IF ( tfirst .or. ( iprsta >= 4 ) ) THEN
+      write(6,'("   Delta V(G=0): ",f10.6,"Ry, ",f11.6,"eV")') &
          deltaV0, deltaV0*autoev
+  END IF
   !
   call stop_clock( 'formf' )
   !

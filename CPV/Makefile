@@ -48,7 +48,7 @@ ksstates.o \
 ldaU.o \
 ldaUpen.o \
 mainvar.o \
-main_loops.o \
+cpr_loop.o \
 cplib_meta.o \
 metaxc.o \
 modules.o \

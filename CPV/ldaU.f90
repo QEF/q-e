@@ -224,7 +224,7 @@ end function set_Hubbard_l
 !
       if( nbgrp > 1 ) call errore(' new_ns ', &
          ' parallelization over bands not yet implemented ', 1 )
-      call start_clock('new_ns:elec')
+      call start_clock('new_ns')
 !
       allocate(f1(ldmx*ldmx), vet(ldmx,ldmx), lambda(ldmx) )
       allocate(wfc(ngw,n_atomic_wfc))
@@ -388,10 +388,8 @@ end function set_Hubbard_l
       forceh=0.d0
       force_pen=0.d0
 
-      call stop_clock('new_ns:elec')
-      call start_clock('new_ns:forc')
-
       if ( tfor .or. tprnfor ) then
+        call start_clock('new_ns:forc')
         allocate (bp(nhsa,n), dbp(nhsa,n,3), wdb(nhsa,n_atomic_wfc,3))
         allocate(dns(nat,nspin,ldmx,ldmx))
         allocate (spsi(ngw,n))
@@ -468,11 +466,12 @@ end function set_Hubbard_l
         forceh = forceh + force_pen
 !
         deallocate ( spsi, dns, bp, dbp, wdb)
+        call stop_clock('new_ns:forc')
       end if
       deallocate ( wfc, becwfc, proj, offset, swfc)
       deallocate ( f1, vet, lambda )
 !
-      call stop_clock('new_ns:forc')
+      call stop_clock('new_ns')
 !
       return
       end subroutine new_ns

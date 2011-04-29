@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2005 Quantum ESPRESSO group
+! Copyright (C) 2002-2011 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -7,8 +7,8 @@
 !
 !
 !----------------------------------------------------------------------------
-SUBROUTINE move_electrons_x( nfi, tfirst, tlast, b1, b2, b3, fion, c0_bgrp, cm_bgrp, phi_bgrp, &
-                           enthal, enb, enbi, fccc, ccc, dt2bye, stress )
+SUBROUTINE move_electrons_x( nfi, tfirst, tlast, b1, b2, b3, fion, c0_bgrp, &
+            cm_bgrp, phi_bgrp, enthal, enb, enbi, fccc, ccc, dt2bye, stress )
   !----------------------------------------------------------------------------
   !
   ! ... this routine updates the electronic degrees of freedom
@@ -16,8 +16,8 @@ SUBROUTINE move_electrons_x( nfi, tfirst, tlast, b1, b2, b3, fion, c0_bgrp, cm_b
   USE kinds,                ONLY : DP
   USE control_flags,        ONLY : lwf, tfor, tprnfor, thdyn
   USE cg_module,            ONLY : tcg
-  USE cp_main_variables,    ONLY : eigr, irb, eigrb, rhog, rhos, rhor, drhor, drhog, &
-                                   sfac, ema0bg, bec_bgrp, becdr_bgrp, &
+  USE cp_main_variables,    ONLY : eigr, irb, eigrb, rhog, rhos, rhor, drhor, &
+                                   drhog, sfac, ema0bg, bec_bgrp, becdr_bgrp, &
                                    taub, lambda, lambdam, lambdap, vpot, dbec
   USE cell_base,            ONLY : omega, ibrav, h, press
   USE uspp,                 ONLY : becsum, vkb, nkb
@@ -42,8 +42,8 @@ SUBROUTINE move_electrons_x( nfi, tfirst, tlast, b1, b2, b3, fion, c0_bgrp, cm_b
   USE control_flags,        ONLY : force_pairing
   USE cp_interfaces,        ONLY : rhoofr, compute_stress, vofrho
   USE electrons_module,     ONLY : distribute_c, collect_c, distribute_b
-  USE gvect,   ONLY : eigts1, eigts2, eigts3 
-  USE mp_global,   ONLY : mpime
+  USE gvect,                ONLY : eigts1, eigts2, eigts3 
+  !
   IMPLICIT NONE
   !
   INTEGER,  INTENT(IN)    :: nfi
@@ -61,6 +61,7 @@ SUBROUTINE move_electrons_x( nfi, tfirst, tlast, b1, b2, b3, fion, c0_bgrp, cm_b
   !
   INTEGER :: i, j, is, n2
   !
+  CALL start_clock('move_electrons')
   electron_dynamic: IF ( tcg ) THEN
      !
      CALL runcg_uspp( nfi, tfirst, tlast, eigr, bec_bgrp, irb, eigrb, &
@@ -186,6 +187,7 @@ SUBROUTINE move_electrons_x( nfi, tfirst, tlast, b1, b2, b3, fion, c0_bgrp, cm_b
      END IF
      !
   END IF electron_dynamic
+  CALL stop_clock('move_electrons')
   !
   RETURN
   !

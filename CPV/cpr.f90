@@ -194,7 +194,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
   !
   main_loop: DO
      !
-     CALL start_clock( 'total_time' )
+     CALL start_clock( 'main_loop' )
      !
      dt2bye   = dt2 / emass
      nfi     = nfi + 1
@@ -756,6 +756,8 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
      !
      tfirst = .FALSE.
      !
+     CALL stop_clock( 'main_loop' )
+     !
      ! ... write on file ndw each isave
      !
      IF ( ( MOD( nfi, isave ) == 0 ) .AND. ( nfi < nomore ) ) THEN
@@ -786,8 +788,6 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
      frich = frich * greash
      !
      !======================================================================
-     !
-     CALL stop_clock( 'total_time' )
      !
      delta_etot = ABS( epre - enow )
      !
@@ -897,10 +897,10 @@ END SUBROUTINE cprmain
 SUBROUTINE terminate_run()
   !----------------------------------------------------------------------------
   !
-  USE kinds,             ONLY : DP
   USE io_global,         ONLY : stdout, ionode
-  USE cp_main_variables, ONLY : acc
+  USE control_flags,     ONLY : thdyn, tortho
   USE cg_module,         ONLY : tcg, print_clock_tcg
+  USE ldaU_cp,           ONLY : lda_plus_u
   USE mp,                ONLY : mp_report
   !
   IMPLICIT NONE
@@ -910,38 +910,55 @@ SUBROUTINE terminate_run()
   CALL printacc()
   !
   CALL print_clock( 'initialize' )
-  CALL print_clock( 'total_time' )
   CALL print_clock( 'main_loop' )
-  CALL print_clock( 'formf' )
+  !
+  WRITE( stdout, '(/5x,"Called by main_loop:")' )
+  IF (thdyn) CALL print_clock( 'formf' )
+  CALL print_clock( 'move_electrons' )
+  IF (tortho) THEN
+     CALL print_clock( 'ortho' )
+     CALL print_clock( 'updatc' )
+  ELSE
+     CALL print_clock( 'gram' )
+  END IF
+  CALL print_clock( 'new_ns' )
+  CALL print_clock( 'strucf' )
+  CALL print_clock( 'calbec' )
+
+  WRITE( stdout, '(/5x,"Called by move_electrons:")' )
   CALL print_clock( 'rhoofr' )
   CALL print_clock( 'vofrho' )
   CALL print_clock( 'dforce' )
   CALL print_clock( 'calphi' )
-  CALL print_clock( 'ortho' )
-  CALL print_clock( 'ortho_iter' )
-  CALL print_clock( 'rsg' )
-  CALL print_clock( 'rhoset' )
-  CALL print_clock( 'updatc' )
-  CALL print_clock( 'gram' )
   CALL print_clock( 'newd' )
-  CALL print_clock( 'calbec' )
-  CALL print_clock( 'prefor' )
-  CALL print_clock( 'strucf' )
   CALL print_clock( 'nlfl' )
-  CALL print_clock( 'nlfq' )
-  CALL print_clock( 'set_cc' )
-  CALL print_clock( 'rhov' )
-  CALL print_clock( 'nlsm1' )
-  CALL print_clock( 'nlsm2' )
-  CALL print_clock( 'forcecc' )
-  CALL print_clock( 'new_ns:elec' )
+
+  IF (lda_plus_u) WRITE( stdout, '(/5x,"Called by new_ns:")' )
   CALL print_clock( 'new_ns:forc' )
   CALL print_clock( 'projwfc_hub' )
   CALL print_clock( 'dndtau' )
+
+  IF (tortho) WRITE( stdout, '(/5x,"Called by ortho:")' )
+  CALL print_clock( 'ortho_iter' )
+  CALL print_clock( 'rsg' )
+  CALL print_clock( 'rhoset' )
+  CALL print_clock( 'sigset' )
+  CALL print_clock( 'tauset' )
+
+  WRITE( stdout, '(/5x,"Small boxes:")' )
+  CALL print_clock( 'rhov' )
+  CALL print_clock( 'fftb' )
+  CALL print_clock( 'set_cc' )
+  CALL print_clock( 'forcecc' )
+
+  WRITE( stdout, '(/5x,"Low-level routines:")' )
+  CALL print_clock( 'prefor' )
+  CALL print_clock( 'nlfq' )
+  CALL print_clock( 'nlsm1' )
+  CALL print_clock( 'nlsm2' )
   CALL print_clock( 'fft' )
   CALL print_clock( 'ffts' )
   CALL print_clock( 'fftw' )
-  CALL print_clock( 'fftb' )
   CALL print_clock( 'fft_scatter' )
   !
   IF (tcg) call print_clock_tcg()

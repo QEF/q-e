@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2005 FPMD-CPV groups
+! Copyright (C) 2002-2011 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -153,11 +153,15 @@
       !
       !     sig = 1-<cp|s|cp>
       !
+      CALL start_clock( 'sigset' )
       CALL sigset( cp, ngwx, becp_dist, nkbx, qbecp, n, nss, istart, sig, nlam, descla )
+      CALL stop_clock( 'sigset' )
       !
       !     tau = <s'c0|s|s'c0>
       !
+      CALL start_clock( 'tauset' )
       CALL tauset( phi, ngwx, bephi, nkbx, qbephi, n, nss, istart, tau, nlam, descla )
+      CALL stop_clock( 'tauset' )
       !
       CALL start_clock( 'ortho_iter' )
       !
