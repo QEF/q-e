@@ -752,14 +752,22 @@ CONTAINS
             wkaux(1:nkstot)=nint(wk(1:nkstot))
             nkstot=0
             DO i=1,nkaux-1
-               delta=1.0_DP/wkaux(i)
-               DO j=0,wkaux(i)-1
+               IF (wkaux(i)>0) THEN
+                  delta=1.0_DP/wkaux(i)
+                  DO j=0,wkaux(i)-1
+                     nkstot=nkstot+1
+                     IF ( nkstot > size (xk,2)  ) CALL errore &
+                           ('card_kpoints', 'too many k-points',nkstot)
+                     xk(:,nkstot)=xkaux(:,i)+delta*j*(xkaux(:,i+1)-xkaux(:,i))
+                     wk(nkstot)=1.0_DP
+                  ENDDO
+               ELSEIF (wkaux(i)==0) THEN
                   nkstot=nkstot+1
-                  IF ( nkstot > size (xk,2)  ) CALL errore &
-                        ('card_kpoints', 'too many k-points',nkstot)
-                  xk(:,nkstot)=xkaux(:,i)+delta*j*(xkaux(:,i+1)-xkaux(:,i))
+                  xk(:,nkstot)=xkaux(:,i)
                   wk(nkstot)=1.0_DP
-               ENDDO
+               ELSE
+                  CALL errore ('card_kpoints', 'wrong number of points',i)
+               ENDIF  
             ENDDO
             nkstot=nkstot+1
             xk(:,nkstot)=xkaux(:,nkaux)

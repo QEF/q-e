@@ -368,16 +368,24 @@ PROGRAM matdyn
            CALL mp_bcast(q, ionode_id)
            CALL mp_bcast(nqb, ionode_id)
            nqtot=SUM(nqb(1:nq-1))+1
+           DO i=1,nq-1
+              IF (nqb(i)==0) nqtot=nqtot+1
+           ENDDO
            xqaux(:,1:nq)=q(:,1:nq)
            DEALLOCATE(q)
            ALLOCATE(q(3,nqtot))
            nqtot=0
            DO i=1,nq-1
-              delta=1.0_DP/nqb(i)
-              DO j=0,nqb(i)-1
+              IF (nqb(i)>0) THEN
+                 delta=1.0_DP/nqb(i)
+                 DO j=0,nqb(i)-1
+                    nqtot=nqtot+1
+                    q(:,nqtot)=xqaux(:,i)+delta*j*(xqaux(:,i+1)-xqaux(:,i))
+                 ENDDO
+              ELSE
                  nqtot=nqtot+1
-                 q(:,nqtot)=xqaux(:,i)+delta*j*(xqaux(:,i+1)-xqaux(:,i))
-              ENDDO
+                 q(:,nqtot) = xqaux(:,i)
+              ENDIF
            ENDDO
            nqtot=nqtot+1
            q(:,nqtot)=xqaux(:,nq)

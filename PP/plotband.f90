@@ -80,14 +80,6 @@ PROGRAM plotband
   DO n=1,nks
      READ(1,*,end=20,err=20) ( k(i,n), i=1,3 )
      READ(1,*,end=20,err=20) (e(i,n),i=1,nbnd)
-     IF (n==1) THEN
-        kx(n) = 0.d0
-     ELSE
-        kx(n) = kx(n-1) + sqrt ( (k(1,n)-k(1,n-1))**2 + &
-                                 (k(2,n)-k(2,n-1))**2 + &
-                                 (k(3,n)-k(3,n-1))**2 )
-     ENDIF
-
      IF (exist_rap) THEN
         READ(21,*,end=20,err=20) (k_rap(i,n),i=1,3), high_symmetry(n)
         READ(21,*,end=20,err=20) (rap(i,n),i=1,nbnd)
@@ -107,6 +99,41 @@ PROGRAM plotband
   ENDDO
   CLOSE(unit=1)
   IF (exist_rap) CLOSE(unit=21)
+!
+!  Now find the high symmetry points. Note that here we neglect what has been
+!  read in the representation file
+!
+  DO n=1,nks
+     IF (n==1 .OR. n==nks) THEN
+        high_symmetry(n) = .true.
+     ELSE
+        k1(:) = k(:,n) - k(:,n-1)
+        k2(:) = k(:,n+1) - k(:,n)
+        ps = ( k1(1)*k2(1) + k1(2)*k2(2) + k1(3)*k2(3) ) / &
+         sqrt( k1(1)*k1(1) + k1(2)*k1(2) + k1(3)*k1(3) ) / &
+         sqrt( k2(1)*k2(1) + k2(2)*k2(2) + k2(3)*k2(3) )
+        high_symmetry(n) = (ABS(ps-1.d0) >1.0d-4)
+!
+!  The gamma point is a high symmetry point
+!
+        IF (k(1,n)**2+k(2,n)**2+k(3,n)**2 < 1.0d-9) high_symmetry(n)=.true.
+     ENDIF
+  ENDDO
+
+  kx(1) = 0.d0
+  DO n=2,nks
+     IF (high_symmetry(n).AND.high_symmetry(n-1)) THEN
+!
+!   Account for the case in which in a plot a point k and a point k+G
+!   are joined in a single point
+!
+        kx(n)=kx(n-1)
+     ELSE
+        kx(n) = kx(n-1) + sqrt ( (k(1,n)-k(1,n-1))**2 + &
+                                 (k(2,n)-k(2,n-1))**2 + &
+                                 (k(3,n)-k(3,n-1))**2 )
+     ENDIF
+  ENDDO
 
   DO n=1,nks
      DO i=1,nbnd
@@ -121,25 +148,7 @@ PROGRAM plotband
   DO i=1,nbnd
      is_in_range(i) = any (e(i,1:nks) >= emin .and. e(i,1:nks) <= emax)
   ENDDO
-
   DO n=1,nks
-     IF (n==1 .or. n==nks) THEN
-        high_symmetry(n) = .true.
-     ELSE
-        DO i=1,3
-           k1(i) = k(i,n)-k(i,n-1)
-           k2(i) = k(i,n+1)-k(i,n)
-        ENDDO
-        ps = ( k1(1)*k2(1) + k1(2)*k2(2) + k1(3)*k2(3) ) / &
-         sqrt( k1(1)*k1(1) + k1(2)*k1(2) + k1(3)*k1(3) ) / &
-         sqrt( k2(1)*k2(1) + k2(2)*k2(2) + k2(3)*k2(3) )
-        high_symmetry(n) = high_symmetry(n).or.(abs(ps-1.0) >1.0d-4)
-!
-!  The gamma point is a high symmetry point
-!
-        IF (k(1,n)**2+k(2,n)**2+k(3,n)**2 < 1.0d-9) high_symmetry(n)=.true.
-     ENDIF
-
      IF (high_symmetry(n)) THEN
         IF (n==1) THEN
            nlines=0
