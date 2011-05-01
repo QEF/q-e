@@ -2334,6 +2334,7 @@ MODULE pw_restart
       !
       CALL mp_bcast( dft_name,   ionode_id, intra_image_comm )
       CALL mp_bcast( lda_plus_u, ionode_id, intra_image_comm )
+      CALL mp_bcast( inlc, ionode_id, intra_image_comm )
       !
       IF ( lda_plus_u ) THEN
          !
