@@ -68,16 +68,16 @@ subroutine lr_apply_liouvillian( evc1, evc1_new, sevc1_new, interaction )
   if (interaction) call start_clock('lr_apply_int')
   if (.not.interaction) call start_clock('lr_apply_no')
   !
-  allocate( dvrs(nrxx, nspin) )
-  allocate( dvrss(dffts%nnr) )
-  dvrs(:,:)=0.0d0
-  dvrss(:)=0.0d0
   allocate( d_deeq(nhm, nhm, nat, nspin) )
   d_deeq(:,:,:,:)=0.0d0
   allocate( spsi1(npwx, nbnd) )
   spsi1(:,:)=(0.0d0,0.0d0)
   !
   if( interaction ) then !If true, the full L is calculated
+     ALLOCATE( dvrs(nrxx, nspin) )
+     ALLOCATE( dvrss(dffts%nnr) )
+     dvrs(:,:)=0.0d0
+     dvrss(:)=0.0d0 
      !
      call lr_calc_dens( evc1, .false. )
      !
@@ -90,8 +90,10 @@ subroutine lr_apply_liouvillian( evc1, evc1_new, sevc1_new, interaction )
        !
        !call lr_dv_of_drho(dvrs)
        allocate( dvrs_temp(nrxx, nspin) )
-         dvrs_temp=CMPLX(dvrs,0.0d0)         !OBM: This memory copy was hidden in lr_dv_of_drho, can it be avoided?
+       dvrs_temp=CMPLX(dvrs,0.0d0)         !OBM: This memory copy was hidden in lr_dv_of_drho, can it be avoided?
+       DEALLOCATE ( dvrs )
        call dv_of_drho(0,dvrs_temp,.false.)
+       ALLOCATE ( dvrs(nrxx, nspin) ) !SJB Worth getting rid of this memory bottle neck for the moment.
        dvrs=DBLE(dvrs_temp)
        deallocate(dvrs_temp)
        !
@@ -109,6 +111,7 @@ subroutine lr_apply_liouvillian( evc1, evc1_new, sevc1_new, interaction )
      !
   endif
   !
+  ALLOCATE ( psic (nrxx) )
   if( gamma_only ) then
      !
      call lr_apply_liouvillian_gamma()
@@ -118,6 +121,7 @@ subroutine lr_apply_liouvillian( evc1, evc1_new, sevc1_new, interaction )
      call lr_apply_liouvillian_k()
      !
   endif
+  DEALLOCATE ( psic )
   !
   if ( interaction .and. (.not.ltammd) ) then
      !
@@ -183,8 +187,8 @@ subroutine lr_apply_liouvillian( evc1, evc1_new, sevc1_new, interaction )
      !
   enddo
   !
-  deallocate(dvrs)
-  deallocate(dvrss)
+  IF (allocated(dvrs)) DEALLOCATE(dvrs)
+  if (allocated(dvrss)) deallocate(dvrss)
   deallocate(d_deeq)
   deallocate(spsi1)
   !

@@ -70,6 +70,7 @@ subroutine lr_dv_setup
         if (rhotot.lt.-1.d-30) dmuxc (ir, 1, 1) = -dmxc ( -rhotot)
      enddo
   endif
+  deallocate(rho_core) 
   !
   ! 3) Setup all gradient correction stuff
   !

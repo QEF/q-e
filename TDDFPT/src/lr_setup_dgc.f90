@@ -128,5 +128,7 @@ subroutine lr_setup_dgc
      enddo
   endif
 
+  DEALLOCATE(rhog_core) 
+
   return
 end subroutine lr_setup_dgc

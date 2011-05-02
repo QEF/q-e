@@ -81,6 +81,7 @@ subroutine lr_calc_dens( evc1, response_calc )
   !allocate(spsi(npwx,nbnd))
   !spsi(:,:)=(0.0d0,0.0d0)
   !
+  ALLOCATE( psic(nrxx) )
   psic(:)=(0.0d0,0.0d0)
   rho_1(:,:)=0.0d0
   !
@@ -109,6 +110,7 @@ subroutine lr_calc_dens( evc1, response_calc )
     CALL addusdens(rho_1)
    endif
   endif
+  DEALLOCATE ( psic )
   !call stop_clock('lrcd_usdens')
   !
   !print *, "rho_1 after addusdens",SUM(rho_1)

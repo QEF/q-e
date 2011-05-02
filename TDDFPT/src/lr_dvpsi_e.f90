@@ -83,7 +83,7 @@ subroutine lr_dvpsi_e(ik,ipol,dvpsi)
   ! true if convergence has been achieved
 
   complex(DP), allocatable :: ps2(:,:,:), dvkb (:,:), dvkb1 (:,:),  &
-       work (:,:), spsi(:,:), psc(:,:,:,:), aux(:)
+       work (:,:), spsi(:,:), psc(:,:,:,:) 
   real(kind=dp), external :: ddot
   complex(DP), external :: ZDOTC
   ! the scalar products
@@ -107,7 +107,7 @@ subroutine lr_dvpsi_e(ik,ipol,dvpsi)
   !end if
   !
   allocate (work ( npwx, MAX(nkb,1)))
-  allocate (aux ( npwx*npol ))
+
   allocate (gk ( 3, npwx))    
   allocate (h_diag( npwx*npol, nbnd))
   !OBM!!!! eprec is also calculated on the fly for each k point     
@@ -294,7 +294,7 @@ subroutine lr_dvpsi_e(ik,ipol,dvpsi)
   
   deallocate (h_diag)
   deallocate (work)
-  deallocate (aux)
+
   deallocate (eprec)
   deallocate (d0psi)
   

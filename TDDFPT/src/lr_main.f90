@@ -21,7 +21,7 @@ PROGRAM lr_main
                                     n_ipol, d0psi, rho_1_tot, rho_1_tot_im,&
                                     LR_iteration, LR_polarization, &
                                     plot_type, no_hxc, nbnd_total, project, F,R, &
-                                    itermax_int, lr_io_level
+                                    itermax_int, revc0, lr_io_level
   USE io_files,              ONLY : nd_nmbr
   USE global_version,        ONLY : version_number
   USE charg_resp,            ONLY : lr_calc_w_T, read_wT_beta_gamma_z, &
@@ -35,6 +35,7 @@ PROGRAM lr_main
   
   USE control_ph,            ONLY : nbnd_occ
   use wvfct,                 only : nbnd
+  USE wavefunctions_module,  ONLY : psic
   !Debugging
   USE lr_variables, ONLY: check_all_bands_gamma, check_density_gamma,check_vector_gamma
   !
@@ -145,6 +146,9 @@ PROGRAM lr_main
   else
     CALL lr_solve_e()
   endif
+
+  DEALLOCATE( psic ) 
+
   if(project) then
      CALL sd0psi() !after this d0psi is Sd0psi the d0psi is read afterwards again...
      call lr_calc_R()
@@ -254,6 +258,7 @@ PROGRAM lr_main
            CALL lr_write_restart()
      END DO lancz_loop1
      ! 
+
     if (charge_response == 1 ) then 
       if (resonance_condition) then 
        !response charge density, absorbtive
@@ -294,6 +299,7 @@ PROGRAM lr_main
      endif
      !
   END DO
+  DEALLOCATE( revc0 ) 
   !
   !
   WRITE(stdout,'(5x,"End of Lanczos iterations")') 

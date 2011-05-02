@@ -21,7 +21,8 @@ subroutine lr_readin
   use io_files,            only : tmp_dir, prefix,trimcheck,wfc_dir
   use lsda_mod,            only : current_spin, nspin
   use control_flags,       only : twfcollect
-  USE scf,                 ONLY : vltot, v, vrs
+  USE scf,                 ONLY : vltot, v, vrs, vnew, &
+                                   & destroy_scf_type
   USE grid_dimensions,     ONLY : nrxx
   USE gvecs,             ONLY : doublegrid
   use wvfct,               only : nbnd, et, wg
@@ -44,7 +45,8 @@ subroutine lr_readin
   USE mp_global, ONLY : my_pool_id, intra_image_comm, intra_pool_comm
   USE io_global, ONLY : ionode, ionode_id
   USE DFUNCT,         ONLY : newd
-  implicit none
+  USE vlocal,         only : strf
+  IMPLICIT NONE
   !
   character(len=256) :: beta_gamma_z_prefix
           ! fine control of beta_gamma_z file
@@ -198,6 +200,10 @@ END SELECT
   !print *, "read_file"
   !call mp_barrier()
   call read_file() 
+
+  DEALLOCATE( strf ) 
+  CALL destroy_scf_type(vnew) 
+
   !
   !
   !   Re-initialize all needed quantities from the scf run
@@ -229,7 +235,10 @@ END SELECT
   !
   !print *, "set_vrs"
   call set_vrs ( vrs, vltot, v%of_r, 0, 0, nrxx, nspin, doublegrid )
-  !
+
+  DEALLOCATE( vltot ) 
+  CALL destroy_scf_type(v) 
+
   call iweights( nks, wk, nbnd, nelec, et, ef, wg, 0, isk)
   !
   !
