@@ -101,7 +101,10 @@ subroutine lr_apply_liouvillian( evc1, evc1_new, sevc1_new, interaction )
         if ( tqr ) then
          call newq_r(dvrs,d_deeq,.true.)
         else
+         ALLOCATE( psic(nrxx) )
+         psic(:)=(0.0d0,0.0d0)
          call newq(dvrs,d_deeq,.true.)
+         DEALLOCATE( psic )
         endif
        endif
        call add_paw_to_deeq(d_deeq)
