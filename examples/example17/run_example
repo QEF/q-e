@@ -127,8 +127,6 @@ BEGIN_ENGINE_INPUT
   mixing_beta = 0.3D0,
 /
 &IONS
-  pot_extrapolation = "second_order",
-  wfc_extrapolation = "second_order",
 /
 ATOMIC_SPECIES
 H  1.00794  HUSPBE.RRKJ3
@@ -201,8 +199,6 @@ BEGIN_ENGINE_INPUT
   mixing_beta = 0.3D0,
 /
 &IONS
-  pot_extrapolation = "second_order",
-  wfc_extrapolation = "second_order",
 /
 ATOMIC_SPECIES
 H  1.00794  HUSPBE.RRKJ3
@@ -285,8 +281,6 @@ BEGIN_ENGINE_INPUT
   mixing_beta = 0.3D0,
 /
 &IONS
-  pot_extrapolation = "second_order",
-  wfc_extrapolation = "second_order",
 /
 ATOMIC_SPECIES
 H  1.00794  HUSPBE.RRKJ3
