@@ -259,17 +259,6 @@ END_POSITIONS
         </field>
         <field name="MD">
 
-                <parameter name="pot_extrapolation">
-                        <string>
-                                second-order
-                        </string>
-                </parameter>
-                <parameter name="wfc_extrapolation">
-                        <string>
-                                second-order
-                        </string>
-                </parameter>
-
         </field>
         <k_points type="gamma">
         </k_points>
@@ -453,17 +442,6 @@ END_POSITIONS
 
         </field>
         <field name="MD">
-
-                <parameter name="pot_extrapolation">
-                        <string>
-                                second-order
-                        </string>
-                </parameter>
-                <parameter name="wfc_extrapolation">
-                        <string>
-                                second-order
-                        </string>
-                </parameter>
 
         </field>
         <k_points type="gamma">
@@ -658,17 +636,6 @@ END_POSITIONS
 
         </field>
         <field name="MD">
-
-                <parameter name="pot_extrapolation">
-                        <string>
-                                second-order
-                        </string>
-                </parameter>
-                <parameter name="wfc_extrapolation">
-                        <string>
-                                second-order
-                        </string>
-                </parameter>
 
         </field>
         <k_points type="gamma">
