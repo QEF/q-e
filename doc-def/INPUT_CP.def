@@ -171,7 +171,7 @@ input_description -distribution {Quantum Espresso} -package CP -program cp.x {
 	    default { 1.D0 }
 	    info {
 		time step for molecular dynamics, in Hartree atomic units
-		(1 a.u.=4.8378 * 10^-17 s : beware, PW code use
+		(1 a.u.=2.4189 * 10^-17 s : beware, PW code use
 		 Rydberg atomic units, twice that much!!!)
 	    }
 	}

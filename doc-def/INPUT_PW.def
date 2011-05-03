@@ -172,7 +172,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 	    default { 20.D0 }
 	    info {
 		time step for molecular dynamics, in Rydberg atomic units
-		(1 a.u.=4.8378 * 10^-17 s : beware, CP and FPMD codes use
+		(1 a.u.=4.8378 * 10^-17 s : beware, the CP code use
 		 Hartree atomic units, half that much!!!)
 	    }
 	}
@@ -1042,16 +1042,13 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                          "Periodic boundary conditions in ab initio
                          calculations" , Phys.Rev.B 51, 4014 (1995)
 
-                'dcc' :  density counter charge correction.
+                'dcc' :  density counter charge correction CURRENTLY DISABLED
                          The electrostatic problem is solved in open boundary
                          conditions (OBC). This approach provides the correct
                          scf potential and energies (not just a correction to
                          energies as 'mp'). BEWARE: the molecule should be 
                          centered around the middle of the cell, not around 
                          the origin (0,0,0).
-                         The OBC problem is solved using a multi-grid algorithm
-                         that requires additional input provided in the separate
-                         namelist EE (see later).
                          Theory described in:
                          I.Dabo, B.Kozinsky, N.E.Singh-Miller and N.Marzari,
                          "Electrostatic periodic boundary conditions and
