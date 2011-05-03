@@ -64,7 +64,7 @@ SUBROUTINE print_clock_lr()
    !CALL print_clock( 'lrcd_sp' )
    !CALL print_clock( 'lrcd_usdens' )
    !
-   IF (real_space_debug>0) then
+   IF (real_space_debug>0) THEN
     WRITE( stdout, '(5X,"US routines, RS")' )
     CALL print_clock ( 'realus' )
     CALL print_clock ( 'betapointlist' )
@@ -96,7 +96,7 @@ SUBROUTINE print_clock_lr()
    !CALL print_clock( 'reduce' )
    CALL print_clock( 'fft_scatter' )
    !CALL print_clock( 'poolreduce' )
-   call print_clock ('mp_sum')
+   CALL print_clock ('mp_sum')
     WRITE( stdout, * )
 #endif
    !

@@ -8,11 +8,11 @@
 
 ! Adapted to TDDFPT by Osman Baris Malcioglu (2009)
 !-----------------------------------------------------------------------
-subroutine lr_dv_setup
+SUBROUTINE lr_dv_setup
   !-----------------------------------------------------------------------
   !
   !  This subroutine prepares some variable which is needed for derivatives
-  !  1) Set non linear core correction stuff 
+  !  1) Set non linear core correction stuff
   !  2) computes dmuxc 3) with GC if needed
   !
 #include "f_defs.h"
@@ -28,27 +28,27 @@ subroutine lr_dv_setup
   !USE lr_variables,  ONLY : dmuxc, nlcc_any
   USE nlcc_ph,       ONLY : nlcc_any
   USE eqv,           ONLY : dmuxc
-  USE funct,         ONLY : dmxc, dmxc_spin  
+  USE funct,         ONLY : dmxc, dmxc_spin
   USE lr_variables,  ONLY : lr_verbosity
   USE io_global,     ONLY : stdout
- implicit none
+ IMPLICIT NONE
   !
   real(DP) :: rhotot, rhoup, rhodw
   ! total charge
   ! total up charge
   ! total down charge
   !
-  integer :: nt, ir
+  INTEGER :: nt, ir
   ! counter on mesh points
   !
-  If (lr_verbosity > 5) THEN
+  IF (lr_verbosity > 5) THEN
     WRITE(stdout,'("<lr_dv_setup>")')
-  endif
-  call start_clock ('lr_dv_setup')
+  ENDIF
+  CALL start_clock ('lr_dv_setup')
   !
   ! 1) Set non linear core correction stuff
   !
-  nlcc_any = ANY ( upf(1:ntyp)%nlcc )
+  nlcc_any = any ( upf(1:ntyp)%nlcc )
   !do nt = 1, ntyp
   !   nlcc_any = nlcc_any.or.nlcc (nt)
   !enddo
@@ -56,28 +56,28 @@ subroutine lr_dv_setup
   ! 2) Computes the derivative of the xc potential
   !
   dmuxc(:,:,:) = 0.0D0
-  if (lsda) then
-     do ir = 1, nrxx
+  IF (lsda) THEN
+     DO ir = 1, nrxx
         rhoup = rho%of_r (ir, 1) + 0.5d0 * rho_core (ir)
         rhodw = rho%of_r (ir, 2) + 0.5d0 * rho_core (ir)
-        call dmxc_spin (rhoup, rhodw, dmuxc(ir,1,1), dmuxc(ir,2,1), &
+        CALL dmxc_spin (rhoup, rhodw, dmuxc(ir,1,1), dmuxc(ir,2,1), &
                                       dmuxc(ir,1,2), dmuxc(ir,2,2) )
-     enddo
-  else
-     do ir = 1, nrxx
+     ENDDO
+  ELSE
+     DO ir = 1, nrxx
         rhotot = rho%of_r (ir, 1) + rho_core (ir)
-        if (rhotot.gt.1.d-30) dmuxc (ir, 1, 1) = dmxc (rhotot)
-        if (rhotot.lt.-1.d-30) dmuxc (ir, 1, 1) = -dmxc ( -rhotot)
-     enddo
-  endif
-  deallocate(rho_core) 
+        IF (rhotot>1.d-30) dmuxc (ir, 1, 1) = dmxc (rhotot)
+        IF (rhotot<-1.d-30) dmuxc (ir, 1, 1) = -dmxc ( -rhotot)
+     ENDDO
+  ENDIF
+  DEALLOCATE(rho_core)
   !
   ! 3) Setup all gradient correction stuff
   !
-  call lr_setup_dgc()
+  CALL lr_setup_dgc()
   !
-  if (lr_verbosity > 5) WRITE(stdout,'("<end of lr_dv_setup>")') 
-  call stop_clock ('lr_dv_setup')
+  IF (lr_verbosity > 5) WRITE(stdout,'("<end of lr_dv_setup>")')
+  CALL stop_clock ('lr_dv_setup')
   !
-  return
-end subroutine lr_dv_setup
+  RETURN
+END SUBROUTINE lr_dv_setup

@@ -1,7 +1,7 @@
 !-----------------------------------------------------------------------
 !OBM
 ! 150608 pfft replaced by fft_base :: dfftp
-SUBROUTINE lr_set_boxes_density() 
+SUBROUTINE lr_set_boxes_density()
   !---------------------------------------------------------------------
   ! ... set boxes for the calculation of density response
   !---------------------------------------------------------------------
@@ -9,12 +9,12 @@ SUBROUTINE lr_set_boxes_density()
   ! Modified by Osman Baris Malcioglu (2009)
 #include "f_defs.h"
   !
-  use io_global,            only : stdout
-  use kinds,                only : dp
-  use lr_variables,         only : cube_save 
+  USE io_global,            ONLY : stdout
+  USE kinds,                ONLY : dp
+  USE lr_variables,         ONLY : cube_save
   !use pfft,                 only : npp
-  use fft_base,              only : dfftp
-  use mp_global,            only : me_pool
+  USE fft_base,              ONLY : dfftp
+  USE mp_global,            ONLY : me_pool
   USE lr_variables,   ONLY : lr_verbosity
   !
   IMPLICIT NONE
@@ -22,9 +22,9 @@ SUBROUTINE lr_set_boxes_density()
   INTEGER :: index0, index, ir
   INTEGER :: i, j, k, p, nr
   !
-  If (lr_verbosity > 5) THEN
+  IF (lr_verbosity > 5) THEN
     WRITE(stdout,'("<lr_set_boxes_density>")')
-  endif
+  ENDIF
   CALL start_clock( 'lr_set_boxes' )
   !
   ALLOCATE( cube_save( dfftp%nnr, 3 ) )
@@ -36,7 +36,7 @@ SUBROUTINE lr_set_boxes_density()
   !
   DO i = 1, me_pool
      index0 = index0 + dfftp%nr1x*dfftp%nr2x*dfftp%npp(i)
-  END DO
+  ENDDO
   !
 #endif
   !
@@ -51,13 +51,13 @@ SUBROUTINE lr_set_boxes_density()
      index = index - dfftp%nr1x*j
      i     = index
      !
-     IF ( i.GE.dfftp%nr1 .OR. j.GE.dfftp%nr2 .OR. k.GE.dfftp%nr3 ) CYCLE
+     IF ( i>=dfftp%nr1 .or. j>=dfftp%nr2 .or. k>=dfftp%nr3 ) CYCLE
      !
      cube_save(ir,1) = i
      cube_save(ir,2) = j
      cube_save(ir,3) = k
      !
-  END DO
+  ENDDO
   !
   CALL stop_clock( 'lr_set_boxes' )
   !

@@ -1,5 +1,5 @@
 !-----------------------------------------------------------------------
-subroutine lr_dealloc()
+SUBROUTINE lr_dealloc()
   !---------------------------------------------------------------------
   ! ... deallocates all the Lanczos variables
   !---------------------------------------------------------------------
@@ -7,100 +7,100 @@ subroutine lr_dealloc()
   ! Modified by Osman Baris Malcioglu (2009)
 #include "f_defs.h"
   !
-  use lr_variables
-  use uspp,           only : nkb
-  use control_flags,  only : gamma_only
-  use realus,         only : igk_k,npw_k
+  USE lr_variables
+  USE uspp,           ONLY : nkb
+  USE control_flags,  ONLY : gamma_only
+  USE realus,         ONLY : igk_k,npw_k
   USE io_global,      ONLY : stdout
-  use charg_resp,     ONLY : w_T_beta_store, w_T_gamma_store, w_T, w_T_zeta_store,chi
-  use eqv,            ONLY : dmuxc
+  USE charg_resp,     ONLY : w_T_beta_store, w_T_gamma_store, w_T, w_T_zeta_store,chi
+  USE eqv,            ONLY : dmuxc
 
-  implicit none
+  IMPLICIT NONE
   !
-  If (lr_verbosity > 5) THEN
+  IF (lr_verbosity > 5) THEN
    WRITE(stdout,'("<lr_dealloc>")')
-  endif
+  ENDIF
   !
-  if (allocated(evc0)) deallocate(evc0)
-  if (allocated(sevc0)) deallocate(sevc0)
-  if (allocated(evc1_old)) deallocate(evc1_old)
-  if (allocated(evc1)) deallocate(evc1)
-  if (allocated(evc1_new)) deallocate(evc1_new)
-  if (allocated(sevc1_new)) deallocate(sevc1_new)
-  if (allocated(d0psi)) deallocate(d0psi)
+  IF (allocated(evc0)) DEALLOCATE(evc0)
+  IF (allocated(sevc0)) DEALLOCATE(sevc0)
+  IF (allocated(evc1_old)) DEALLOCATE(evc1_old)
+  IF (allocated(evc1)) DEALLOCATE(evc1)
+  IF (allocated(evc1_new)) DEALLOCATE(evc1_new)
+  IF (allocated(sevc1_new)) DEALLOCATE(sevc1_new)
+  IF (allocated(d0psi)) DEALLOCATE(d0psi)
   !
-  if (project) then
-   deallocate(evc0_virt)
+  IF (project) THEN
+   DEALLOCATE(evc0_virt)
    !deallocate(sevc0_virt)
-   deallocate(F)
-   deallocate(R)
-  endif
+   DEALLOCATE(F)
+   DEALLOCATE(R)
+  ENDIF
 
 
   !
-  if (allocated(rho_1)) deallocate(rho_1)
+  IF (allocated(rho_1)) DEALLOCATE(rho_1)
   !if (allocated(rho_tot)) deallocate(rho_tot)
-  if (allocated(dmuxc)) deallocate(dmuxc)
-  if (allocated(igk_k)) deallocate(igk_k)
-  if (allocated(npw_k)) deallocate(npw_k)
+  IF (allocated(dmuxc)) DEALLOCATE(dmuxc)
+  IF (allocated(igk_k)) DEALLOCATE(igk_k)
+  IF (allocated(npw_k)) DEALLOCATE(npw_k)
   !
-  if (allocated(eval1)) deallocate(eval1)
-  if (allocated(eval2)) deallocate(eval2)
-  if (allocated(vl)) deallocate(vl)
-  if (allocated(vr)) deallocate(vr)
+  IF (allocated(eval1)) DEALLOCATE(eval1)
+  IF (allocated(eval2)) DEALLOCATE(eval2)
+  IF (allocated(vl)) DEALLOCATE(vl)
+  IF (allocated(vr)) DEALLOCATE(vr)
   !
-  if (allocated(alpha_store)) deallocate(alpha_store)
-  if (allocated(beta_store)) deallocate(beta_store) 
-  if (allocated(gamma_store)) deallocate(gamma_store)
-  if (allocated(zeta_store)) deallocate(zeta_store)
+  IF (allocated(alpha_store)) DEALLOCATE(alpha_store)
+  IF (allocated(beta_store)) DEALLOCATE(beta_store)
+  IF (allocated(gamma_store)) DEALLOCATE(gamma_store)
+  IF (allocated(zeta_store)) DEALLOCATE(zeta_store)
   !
   !Response charge density related
   !
-  if (allocated(w_T_beta_store))  deallocate(w_T_beta_store)
-  if (allocated(w_T_gamma_store)) deallocate(w_T_gamma_store)
-  if (allocated(w_T_zeta_store)) deallocate(w_T_zeta_store)
-  if (allocated(chi)) deallocate(chi)
-  if (allocated(w_T)) deallocate(w_T)
-  if (allocated(rho_1_tot)) deallocate(rho_1_tot)
-  if (allocated(rho_1_tot_im)) deallocate(rho_1_tot_im)
+  IF (allocated(w_T_beta_store))  DEALLOCATE(w_T_beta_store)
+  IF (allocated(w_T_gamma_store)) DEALLOCATE(w_T_gamma_store)
+  IF (allocated(w_T_zeta_store)) DEALLOCATE(w_T_zeta_store)
+  IF (allocated(chi)) DEALLOCATE(chi)
+  IF (allocated(w_T)) DEALLOCATE(w_T)
+  IF (allocated(rho_1_tot)) DEALLOCATE(rho_1_tot)
+  IF (allocated(rho_1_tot_im)) DEALLOCATE(rho_1_tot_im)
   !
-  if (gamma_only) then
-     call lr_dealloc_gamma()
-  else
-     call lr_dealloc_k()
-  endif
+  IF (gamma_only) THEN
+     CALL lr_dealloc_gamma()
+  ELSE
+     CALL lr_dealloc_k()
+  ENDIF
   !
-  return
+  RETURN
   !
-contains
+CONTAINS
   !
-  subroutine lr_dealloc_gamma()
+  SUBROUTINE lr_dealloc_gamma()
     !
-    use becmod,               only : bec_type, becp, deallocate_bec_type
+    USE becmod,               ONLY : bec_type, becp, deallocate_bec_type
     !
-    if (nkb > 0) then
-       call deallocate_bec_type(becp)
-       deallocate(becp1)
-       if (project) then
-        deallocate(becp1_virt)
-       endif
-     endif
+    IF (nkb > 0) THEN
+       CALL deallocate_bec_type(becp)
+       DEALLOCATE(becp1)
+       IF (project) THEN
+        DEALLOCATE(becp1_virt)
+       ENDIF
+     ENDIF
     !
-  end subroutine lr_dealloc_gamma
+  END SUBROUTINE lr_dealloc_gamma
   !
-  subroutine lr_dealloc_k()
+  SUBROUTINE lr_dealloc_k()
     !
-    use becmod,               only : bec_type, becp, deallocate_bec_type
+    USE becmod,               ONLY : bec_type, becp, deallocate_bec_type
     !
-    if (nkb > 0) then
-       call deallocate_bec_type(becp)
-       deallocate(becp1_c)
-       if (project) then
-        deallocate(becp1_c_virt)
-       endif
-    endif
+    IF (nkb > 0) THEN
+       CALL deallocate_bec_type(becp)
+       DEALLOCATE(becp1_c)
+       IF (project) THEN
+        DEALLOCATE(becp1_c_virt)
+       ENDIF
+    ENDIF
     !
-  end subroutine lr_dealloc_k
+  END SUBROUTINE lr_dealloc_k
   !
-end subroutine lr_dealloc
+END SUBROUTINE lr_dealloc
 !-----------------------------------------------------------------------

@@ -6,33 +6,33 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 
-module lr_variables
+MODULE lr_variables
   !--------------------------------------------------------------------------
   ! ... sets the dimensions of the variables required in the
   ! ... Lanczos/linear response calculation
   !--------------------------------------------------------------------------
   !
   ! Modified by Osman Baris Malcioglu (2009)
-  use kinds,                only : dp
-  use control_flags,                only : gamma_only
+  USE kinds,                ONLY : dp
+  USE control_flags,                ONLY : gamma_only
   !
-  implicit none
+  IMPLICIT NONE
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  ! Parameters 
+  ! Parameters
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   INTEGER, PARAMETER:: nbrx=14   ! max number of beta functions
   !
-  integer :: iund0psi   = 20
-  integer :: iunrestart = 20
-  integer :: nwordd0psi
-  integer :: nwordrestart
+  INTEGER :: iund0psi   = 20
+  INTEGER :: iunrestart = 20
+  INTEGER :: nwordd0psi
+  INTEGER :: nwordrestart
   !
-  integer :: n_ipol
+  INTEGER :: n_ipol
   !
   !
-  integer :: size_evc
+  INTEGER :: size_evc
   !
-  CHARACTER (len=24) :: bgz_suffix 
+  CHARACTER (len=24) :: bgz_suffix
   !
   !LOGICAL :: nlcc_any  ! .T. if any atom-type has nlcc
   !
@@ -49,48 +49,48 @@ module lr_variables
   !     dvxc_s(:,:,:)              ! nrxx, nspin, nspin)
   !
   !
-  real(kind=dp), allocatable :: becp1(:,:)
-  complex(kind=dp), allocatable :: becp1_c(:,:,:)
-  real(kind=dp), allocatable :: becp1_virt(:,:)
-  complex(kind=dp), allocatable :: becp1_c_virt(:,:,:)
+  real(kind=dp), ALLOCATABLE :: becp1(:,:)
+  COMPLEX(kind=dp), ALLOCATABLE :: becp1_c(:,:,:)
+  real(kind=dp), ALLOCATABLE :: becp1_virt(:,:)
+  COMPLEX(kind=dp), ALLOCATABLE :: becp1_c_virt(:,:,:)
 
-  ! 
-  complex(kind=dp), allocatable :: & 
+  !
+  COMPLEX(kind=dp), ALLOCATABLE :: &
        evc0(:,:,:),       &    ! the ground state wavefunctions (plane wave, band, k point)
        evc0_virt(:,:,:),  &    ! unoccupied ground state wavefunctions (plane wave, band, k point)
        sevc0(:,:,:),      &    ! S * ground state wavefunctions
        sevc0_virt(:,:,:), &    ! S * virtual ground state wavefunctions
        evc1_old(:,:,:,:), &    ! response wavefunctions in the pw basis (last
-                               ! index 1: q' using rotated SBR 2: p') 
+                               ! index 1: q' using rotated SBR 2: p')
        evc1(:,:,:,:),     &    !  "    "
        evc1_new(:,:,:,:), &    !  "    "
        sevc1_new(:,:,:,:),&    ! S * "    "
        d0psi(:,:,:,:)          ! for saving the original starting vectors
-       
+
   !
-  complex(kind=dp), allocatable :: revc0(:,:,:) !ground state wavefunctions in real space
+  COMPLEX(kind=dp), ALLOCATABLE :: revc0(:,:,:) !ground state wavefunctions in real space
   !
-  real(kind=dp), allocatable :: &
+  real(kind=dp), ALLOCATABLE :: &
        rho_1(:,:),           &         ! response charge density in real space
        !rho_tot(:),        &         ! ground state + resp. charge density in real space (obm: is it used at all?)
-       rho_1_tot(:,:)                !response charge density (mode 2) 
-  complex(kind=dp), allocatable :: &
+       rho_1_tot(:,:)                !response charge density (mode 2)
+  COMPLEX(kind=dp), ALLOCATABLE :: &
        rho_1_tot_im(:,:)             !response charge density, imaginary part used in resonance condition
   !
   !integer, allocatable :: &
-  !     igk_k(:,:),&         
+  !     igk_k(:,:),&
   !     npw_k(:)
-  ! 
-  integer :: &
+  !
+  INTEGER :: &
         nbnd_total               !Actual number of bands calculated by PWSCF (virtual+ocuppied)
   !
-  integer, allocatable :: cube_save(:,:) !used in response charge density mode 1
+  INTEGER, ALLOCATABLE :: cube_save(:,:) !used in response charge density mode 1
   !
-  complex(kind=dp), allocatable :: F(:,:,:) !the intensity of transition from valance state (first index)
-                                       ! to conduction  state (second index), for each polarization 
+  COMPLEX(kind=dp), ALLOCATABLE :: F(:,:,:) !the intensity of transition from valance state (first index)
+                                       ! to conduction  state (second index), for each polarization
                                        !direction (third index)
-  complex(kind=dp), allocatable :: R(:,:,:) !the oscillator strength from valanace state (first index)
-                                       ! to conduction  state (second index), for each polarization 
+  COMPLEX(kind=dp), ALLOCATABLE :: R(:,:,:) !the oscillator strength from valanace state (first index)
+                                       ! to conduction  state (second index), for each polarization
                                        !direction (third index)
   !
   !open shell related...
@@ -98,10 +98,10 @@ module lr_variables
   !real(kind=dp) :: lr_alpha_pv ! Spread in eigenvalues
   !integer, allocatable :: nbnd_occ(:) !number of occupied points for the given k point
   !integer, allocatable :: &
-  !     igk_k(:,:),&                   ! The g<->k correspondance for each k point 
+  !     igk_k(:,:),&                   ! The g<->k correspondance for each k point
   !     npw_k(:)                       ! number of plane waves at each k point
-                           ! They are (used many times, it is much better to hold them in memory 
- 
+                           ! They are (used many times, it is much better to hold them in memory
+
   !
   !Lanczos Matrix
   !
@@ -115,16 +115,16 @@ module lr_variables
   !
   ! Zeta is the \sum_valance (V^T_j * r_i ) where r_i is the density operator acting
   ! on ground state orbitals
-  ! 
-  ! zeta.w_T gives the polarizability (w_T is the solution of 
+  !
+  ! zeta.w_T gives the polarizability (w_T is the solution of
   ! (\omega-L)e_1 = w_T , this is handled in a post processing program)
-  ! 
+  !
 
-  real(kind=dp), allocatable :: &  ! (pol, iter)
-       alpha_store(:,:),&      
+  real(kind=dp), ALLOCATABLE :: &  ! (pol, iter)
+       alpha_store(:,:),&
        beta_store(:,:),&
        gamma_store(:,:)
-  complex(kind=dp), allocatable :: zeta_store(:,:,:)  !polarization of external field, polarization of internal field, iteration number.
+  COMPLEX(kind=dp), ALLOCATABLE :: zeta_store(:,:,:)  !polarization of external field, polarization of internal field, iteration number.
   !
   !The currently processed polarization direction and Lanczos iteration
   !
@@ -133,56 +133,56 @@ module lr_variables
   ! variables for diagonalising the coefficient matrix
   !
   real(kind=dp) :: lanc_norm
-  real(kind=dp), allocatable :: eval1(:),eval2(:)
-  real(kind=dp), allocatable :: vl(:,:),vr(:,:)
+  real(kind=dp), ALLOCATABLE :: eval1(:),eval2(:)
+  real(kind=dp), ALLOCATABLE :: vl(:,:),vr(:,:)
   !
-   REAL(kind=dp) :: norm0(3) 
+   REAL(kind=dp) :: norm0(3)
   !
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! lr_input:
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   !
   !
-  logical :: restart            ! set True if the calculation is a restart run
-  integer :: restart_step       ! the amount of steps to write a restart file
+  LOGICAL :: restart            ! set True if the calculation is a restart run
+  INTEGER :: restart_step       ! the amount of steps to write a restart file
   !
-  integer :: lr_verbosity       ! verbosity level for linear response routines
+  INTEGER :: lr_verbosity       ! verbosity level for linear response routines
   !
-  integer :: test_case_no = 0   ! OBM, this dummy variable performs various tests
-  integer :: lr_io_level = 1    ! Controls disk io
+  INTEGER :: test_case_no = 0   ! OBM, this dummy variable performs various tests
+  INTEGER :: lr_io_level = 1    ! Controls disk io
   !
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! lr_control:
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   !
-  integer :: charge_response    ! A variable for calculating response charge density
+  INTEGER :: charge_response    ! A variable for calculating response charge density
   !
-  integer :: itermax            ! number of Lanczos vectors to be calculated
-  integer :: itermax_int        ! interpolated number of lanczos steps for Ritz vectors
-  logical :: ltammd             ! Tarn-Darnkhoff approximation
-  logical :: no_hxc             ! If .true. no hartree exchange correlation corrections will be considered.
-  logical :: project            ! If .true. projections to read virtual states will be calculated
+  INTEGER :: itermax            ! number of Lanczos vectors to be calculated
+  INTEGER :: itermax_int        ! interpolated number of lanczos steps for Ritz vectors
+  LOGICAL :: ltammd             ! Tarn-Darnkhoff approximation
+  LOGICAL :: no_hxc             ! If .true. no hartree exchange correlation corrections will be considered.
+  LOGICAL :: project            ! If .true. projections to read virtual states will be calculated
   !
-  !  
+  !
   !integer :: ipol               ! sets the polarization direction to be calculated. (Used as a variable if 4)
   !                             ! 1=x 2=y 3=z 4=x,y,z
   !
   !integer :: grid_coarsening    ! Coarses the real space grid (by dividing nr1x nr2x and nr3x by this value)
   !
-  ! 
+  !
   !
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! lr_post:
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   !
-  !real(kind=dp) :: broadening                         !Broadening 
-  integer :: plot_type                                 ! Dumps rho as: 1=xyzd 2=xsf 3=cube
+  !real(kind=dp) :: broadening                         !Broadening
+  INTEGER :: plot_type                                 ! Dumps rho as: 1=xyzd 2=xsf 3=cube
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   !! Debugging subroutines
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  contains
+  CONTAINS
 !----------------------------------------------------------------------------
 SUBROUTINE check_vector_gamma (x)
 ! Checks the inner product for a given vector, and its imaginary and real
@@ -190,24 +190,24 @@ SUBROUTINE check_vector_gamma (x)
 ! input, evc
 ! output : screen output
    USE mp_global,            ONLY : inter_pool_comm, intra_pool_comm
-   use mp,                   only : mp_sum
-   use realus,               only : npw_k
-  use gvect,                only : gstart
-  use io_global,            only : stdout
+   USE mp,                   ONLY : mp_sum
+   USE realus,               ONLY : npw_k
+  USE gvect,                ONLY : gstart
+  USE io_global,            ONLY : stdout
 
 IMPLICIT NONE
   !input/output
-  complex(kind=dp),intent(in)  :: x(:)
+  COMPLEX(kind=dp),INTENT(in)  :: x(:)
   !local
   real(kind=dp) :: temp_gamma
-  real(kind=dp), external    :: DDOT
+  real(kind=dp), EXTERNAL    :: DDOT
 
       temp_gamma = 2.D0*DDOT(2*npw_k(1),x(:),1,x(:),1)
-       if (gstart==2) temp_gamma = temp_gamma - dble(x(1))*dble(x(1))
+       IF (gstart==2) temp_gamma = temp_gamma - dble(x(1))*dble(x(1))
 #ifdef __PARA
-       call mp_sum(temp_gamma, intra_pool_comm)
-#endif 
-      write(stdout,'("<x> = ",E15.8)') temp_gamma
+       CALL mp_sum(temp_gamma, intra_pool_comm)
+#endif
+      WRITE(stdout,'("<x> = ",E15.8)') temp_gamma
     END SUBROUTINE check_vector_gamma
 
 !----------------------------------------------------------------------------
@@ -217,54 +217,54 @@ SUBROUTINE check_vector_f (x)
 ! input, evc
 ! output : screen output
    USE mp_global,            ONLY : inter_pool_comm, intra_pool_comm
-   use mp,                   only : mp_sum
-   use realus,               only : npw_k
-  use gvect,                only : gstart
-  use io_global,            only : stdout
+   USE mp,                   ONLY : mp_sum
+   USE realus,               ONLY : npw_k
+  USE gvect,                ONLY : gstart
+  USE io_global,            ONLY : stdout
 
 IMPLICIT NONE
   !input/output
-  complex(kind=dp),intent(in)  :: x(:)
+  COMPLEX(kind=dp),INTENT(in)  :: x(:)
   !local
-  complex(kind=dp) :: temp_f
-  complex(kind=dp), external    :: ZDOTC
+  COMPLEX(kind=dp) :: temp_f
+  COMPLEX(kind=dp), EXTERNAL    :: ZDOTC
 
       temp_f = ZDOTC(npw_k(1),x(:),1,x(:),1)
 #ifdef __PARA
-       call mp_sum(temp_f, intra_pool_comm)
-#endif 
-      write(stdout,'("<x> = ",2E15.8,1X)') temp_f
+       CALL mp_sum(temp_f, intra_pool_comm)
+#endif
+      WRITE(stdout,'("<x> = ",2E15.8,1X)') temp_f
  END SUBROUTINE check_vector_f
 !----------------------------------------------------------------------------
 SUBROUTINE check_all_bands_gamma (x,sx,nbnd1,nbnd2)
-! Checks all bands of given KS states for orthoganilty 
+! Checks all bands of given KS states for orthoganilty
 ! input, evc and sevc
 ! output : screen output
    USE mp_global,            ONLY : inter_pool_comm, intra_pool_comm
-   use mp,                   only : mp_sum
-   use realus,               only : npw_k
-   use io_global,            only : stdout
-   use gvect,                only : gstart
+   USE mp,                   ONLY : mp_sum
+   USE realus,               ONLY : npw_k
+   USE io_global,            ONLY : stdout
+   USE gvect,                ONLY : gstart
 IMPLICIT NONE
   !input/output
-  integer,intent(in)           :: nbnd1,nbnd2 !Total number of bands for x and sx
-  complex(kind=dp),intent(in)  :: x(:,:), sx(:,:)
+  INTEGER,INTENT(in)           :: nbnd1,nbnd2 !Total number of bands for x and sx
+  COMPLEX(kind=dp),INTENT(in)  :: x(:,:), sx(:,:)
   !local
-  integer          :: ibnd, jbnd
+  INTEGER          :: ibnd, jbnd
   real(kind=dp) :: temp_gamma
-  real(kind=dp), external    :: DDOT
+  real(kind=dp), EXTERNAL    :: DDOT
 
-    do ibnd=1,nbnd1
-     do jbnd=ibnd,nbnd2      
+    DO ibnd=1,nbnd1
+     DO jbnd=ibnd,nbnd2
        !
       temp_gamma = 2.D0*DDOT(2*npw_k(1),x(:,ibnd),1,sx(:,jbnd),1)
-       if (gstart==2) temp_gamma = temp_gamma - dble(x(1,ibnd))*dble(sx(1,jbnd))
+       IF (gstart==2) temp_gamma = temp_gamma - dble(x(1,ibnd))*dble(sx(1,jbnd))
 #ifdef __PARA
-       call mp_sum(temp_gamma, intra_pool_comm)
-#endif 
-      write(stdout,'("<x,",I02,"|S|x,",I02,"> =",E15.8)') ibnd,jbnd,temp_gamma
-     enddo
-    enddo
+       CALL mp_sum(temp_gamma, intra_pool_comm)
+#endif
+      WRITE(stdout,'("<x,",I02,"|S|x,",I02,"> =",E15.8)') ibnd,jbnd,temp_gamma
+     ENDDO
+    ENDDO
     END SUBROUTINE check_all_bands_gamma
 !----------------------------------------------------------------------------
 SUBROUTINE check_density_gamma (rx,nbnd)
@@ -272,40 +272,40 @@ SUBROUTINE check_density_gamma (rx,nbnd)
 ! input, revc
 ! output : screen output
    USE mp_global,            ONLY : inter_pool_comm, intra_pool_comm
-   use mp,                   only : mp_sum
-   use realus,               only : npw_k
-   use wvfct,                only : wg
-   use grid_dimensions,      only : nrxx
-   use io_global,            only : stdout
-   use cell_base,                    only : omega
+   USE mp,                   ONLY : mp_sum
+   USE realus,               ONLY : npw_k
+   USE wvfct,                ONLY : wg
+   USE grid_dimensions,      ONLY : nrxx
+   USE io_global,            ONLY : stdout
+   USE cell_base,                    ONLY : omega
 
 IMPLICIT NONE
   !input/output
-  integer,intent(in)           :: nbnd !Total number of bands for x and sx
-  complex(kind=dp),intent(in)  :: rx(:,:)
+  INTEGER,INTENT(in)           :: nbnd !Total number of bands for x and sx
+  COMPLEX(kind=dp),INTENT(in)  :: rx(:,:)
   !local
-  integer          :: ibnd
+  INTEGER          :: ibnd
   real(kind=dp) :: temp_gamma,w1,w2
 
-    do ibnd=1,nbnd,2
+    DO ibnd=1,nbnd,2
        w1=wg(ibnd,1)/omega
        !
-       if(ibnd<nbnd) then
+       IF(ibnd<nbnd) THEN
           w2=wg(ibnd+1,1)/omega
-       else
+       ELSE
           w2=w1
-       endif
-       temp_gamma=SUM(w1*DBLE(rx(1:nrxx,ibnd))*DBLE(rx(1:nrxx,ibnd))&
+       ENDIF
+       temp_gamma=sum(w1*dble(rx(1:nrxx,ibnd))*dble(rx(1:nrxx,ibnd))&
                +w2*aimag(rx(1:nrxx,ibnd))*aimag(rx(1:nrxx,ibnd)))
 #ifdef __PARA
-       call mp_sum(temp_gamma, intra_pool_comm)
-#endif 
-      write(stdout,'("Contribution of bands ",I02," and ",I02," to total density",E15.8)') ibnd,ibnd+1,temp_gamma
-    enddo
+       CALL mp_sum(temp_gamma, intra_pool_comm)
+#endif
+      WRITE(stdout,'("Contribution of bands ",I02," and ",I02," to total density",E15.8)') ibnd,ibnd+1,temp_gamma
+    ENDDO
     !
     !
 END SUBROUTINE check_density_gamma
 !----------------------------------------------------------------------------
 !----------------------------------------------------------------------------
-end module lr_variables
+END MODULE lr_variables
 !----------------------------------------------------------------------------

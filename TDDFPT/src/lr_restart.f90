@@ -1,5 +1,5 @@
 !-----------------------------------------------------------------------
-subroutine lr_restart(iter_restart,rflag)
+SUBROUTINE lr_restart(iter_restart,rflag)
   !---------------------------------------------------------------------
   ! ... restart the Lanczos recursion
   !---------------------------------------------------------------------
@@ -7,76 +7,76 @@ subroutine lr_restart(iter_restart,rflag)
   ! Modified by Osman Baris Malcioglu (2009)
 #include "f_defs.h"
   !
-  use io_global,            only : stdout, ionode_id
-  use control_flags,                only : gamma_only
-  use klist,                only : nks, xk 
-  use cell_base,            only : tpiba2
-  use gvect,                only : g
-  use io_files,             only : tmp_dir, prefix, diropn, wfc_dir
-  use lr_variables,         only : itermax,evc1, evc1_new, sevc1_new, rho_1_tot , rho_1_tot_im,&
+  USE io_global,            ONLY : stdout, ionode_id
+  USE control_flags,                ONLY : gamma_only
+  USE klist,                ONLY : nks, xk
+  USE cell_base,            ONLY : tpiba2
+  USE gvect,                ONLY : g
+  USE io_files,             ONLY : tmp_dir, prefix, diropn, wfc_dir
+  USE lr_variables,         ONLY : itermax,evc1, evc1_new, sevc1_new, rho_1_tot , rho_1_tot_im,&
                                    restart, nwordrestart, iunrestart,project,nbnd_total,F,&
                                    bgz_suffix
-  use charg_resp,           only : resonance_condition
-  use wvfct,                only : npw, igk, nbnd, g2kin, npwx
-  use lr_variables,         only : beta_store, gamma_store, zeta_store, norm0!,real_space
-  use becmod,               only : bec_type, becp, calbec
-  use uspp,                 only : vkb, nkb, okvan
+  USE charg_resp,           ONLY : resonance_condition
+  USE wvfct,                ONLY : npw, igk, nbnd, g2kin, npwx
+  USE lr_variables,         ONLY : beta_store, gamma_store, zeta_store, norm0!,real_space
+  USE becmod,               ONLY : bec_type, becp, calbec
+  USE uspp,                 ONLY : vkb, nkb, okvan
   USE io_global,            ONLY : ionode
-  use mp,                   only : mp_bcast
+  USE mp,                   ONLY : mp_bcast
   !use real_beta,            only : ccalbecr_gamma,s_psir,fft_orbital_gamma,bfft_orbital_gamma
   USE realus,               ONLY : real_space, fft_orbital_gamma, initialisation_level, &
                                     bfft_orbital_gamma, calbec_rs_gamma, add_vuspsir_gamma, &
                                     v_loc_psir, s_psir_gamma,igk_k,npw_k, &
-                                    real_space_debug 
-  use grid_dimensions,      only : nrxx
+                                    real_space_debug
+  USE grid_dimensions,      ONLY : nrxx
   USE lr_variables,         ONLY : lr_verbosity, charge_response, LR_polarization, n_ipol
   USE noncollin_module,     ONLY : nspin_mag
 
 
   !
-  implicit none
+  IMPLICIT NONE
   !
-  character(len=6), external :: int_to_char
+  CHARACTER(len=6), EXTERNAL :: int_to_char
   !
   !integer, intent(in) :: pol
-  integer, intent(out) :: iter_restart
-  logical, intent(out) :: rflag
+  INTEGER, INTENT(out) :: iter_restart
+  LOGICAL, INTENT(out) :: rflag
   !
   ! local variables
   !
-  integer :: i,ibnd,ibnd_occ,ibnd_virt,temp
-  integer :: ik, ig, ip
-  logical :: exst
-  character(len=256) :: tempfile, filename,tmp_dir_saved
-  integer :: pol_index
+  INTEGER :: i,ibnd,ibnd_occ,ibnd_virt,temp
+  INTEGER :: ik, ig, ip
+  LOGICAL :: exst
+  CHARACTER(len=256) :: tempfile, filename,tmp_dir_saved
+  INTEGER :: pol_index
   !
   !
-  If (lr_verbosity > 5) THEN
+  IF (lr_verbosity > 5) THEN
     WRITE(stdout,'("<lr_restart>")')
-  endif
+  ENDIF
 
   pol_index=1
-  if ( n_ipol /= 1 ) pol_index=LR_polarization
+  IF ( n_ipol /= 1 ) pol_index=LR_polarization
 
-  if (.not.restart) return
+  IF (.not.restart) RETURN
   !
   rflag = .false.
   !
   ! Restarting kintic-energy and ultrasoft
   !
-  if (gamma_only) then
+  IF (gamma_only) THEN
      !
-     do ig=1,npwx
+     DO ig=1,npwx
         !
         g2kin(ig)=((xk(1,1)+g(1,igk_k(ig,1)))**2 &
                  +(xk(2,1)+g(2,igk_k(ig,1)))**2 &
                  +(xk(3,1)+g(3,igk_k(ig,1)))**2)*tpiba2
         !
-     enddo
+     ENDDO
      !
-     call init_us_2(npw,igk,xk(1,1),vkb)
+     CALL init_us_2(npw,igk,xk(1,1),vkb)
      !
-  end if
+  ENDIF
   !
   ! Reading Lanczos coefficients
   !
@@ -84,15 +84,15 @@ subroutine lr_restart(iter_restart,rflag)
   filename = trim(prefix) // trim(bgz_suffix) // trim(int_to_char(LR_polarization))
   tempfile = trim(tmp_dir) // trim(filename)
   !
-  inquire (file = tempfile, exist = exst)
+  INQUIRE (file = tempfile, exist = exst)
   !
-  if (.not.exst) then
+  IF (.not.exst) THEN
      !
      WRITE( stdout,*) "WARNING: " // trim(filename) // " does not exist"
      rflag = .true.
-     return
+     RETURN
      !
-  end if
+  ENDIF
   !
   !
   !Ionode only reads
@@ -100,74 +100,74 @@ subroutine lr_restart(iter_restart,rflag)
   ! Note Ionode file io is done in tmp_dir
   !
 #ifdef __PARA
-  if (ionode) then
+  IF (ionode) THEN
 #endif
   !
-  ! Read and broadcast beta gamma zeta 
+  ! Read and broadcast beta gamma zeta
   !
-  open (158, file = tempfile, form = 'formatted', status = 'old')
+  OPEN (158, file = tempfile, form = 'formatted', status = 'old')
   !
-  read(158,*,end=301,err=303) iter_restart
+  READ(158,*,end=301,err=303) iter_restart
   !
-  if ( iter_restart .ge. itermax ) iter_restart = itermax
+  IF ( iter_restart >= itermax ) iter_restart = itermax
   !
-  read(158,*,end=301,err=303) norm0(pol_index)
+  READ(158,*,end=301,err=303) norm0(pol_index)
   !
-  do i=1,iter_restart
+  DO i=1,iter_restart
      !
-     read(158,*,end=301,err=303) beta_store(pol_index,i)
-     read(158,*,end=301,err=303) gamma_store(pol_index,i)
-     read(158,*,end=301,err=303) zeta_store (pol_index,:,i)
+     READ(158,*,end=301,err=303) beta_store(pol_index,i)
+     READ(158,*,end=301,err=303) gamma_store(pol_index,i)
+     READ(158,*,end=301,err=303) zeta_store (pol_index,:,i)
      !
-  end do
+  ENDDO
   !
-  close(158)
+  CLOSE(158)
 #ifdef __PARA
-  endif
-  call mp_bcast (iter_restart, ionode_id)
-  call mp_bcast (norm0(pol_index), ionode_id)
-  call mp_bcast (beta_store(pol_index,:), ionode_id)
-  call mp_bcast (gamma_store(pol_index,:), ionode_id)
-  call mp_bcast (zeta_store(pol_index,:,:), ionode_id)
+  ENDIF
+  CALL mp_bcast (iter_restart, ionode_id)
+  CALL mp_bcast (norm0(pol_index), ionode_id)
+  CALL mp_bcast (beta_store(pol_index,:), ionode_id)
+  CALL mp_bcast (gamma_store(pol_index,:), ionode_id)
+  CALL mp_bcast (zeta_store(pol_index,:,:), ionode_id)
 #endif
   !
   !
   ! Read projection
   !
-  if (project) then
+  IF (project) THEN
 #ifdef __PARA
-  if (ionode) then
+  IF (ionode) THEN
 #endif
     filename = trim(prefix) // ".projection." // trim(int_to_char(LR_polarization))
     tempfile = trim(tmp_dir) // trim(filename)
     !
     !
-    open (158, file = tempfile, form = 'formatted', status = 'unknown')
+    OPEN (158, file = tempfile, form = 'formatted', status = 'unknown')
     !
-    read(158,*,end=301,err=303) temp
+    READ(158,*,end=301,err=303) temp
     !
-    if (temp /= iter_restart) call errore ('lr_restart', 'Iteration mismatch reading projections', 1 )
+    IF (temp /= iter_restart) CALL errore ('lr_restart', 'Iteration mismatch reading projections', 1 )
     !
-    read(158,*,end=301,err=303) temp   !number of filled bands
+    READ(158,*,end=301,err=303) temp   !number of filled bands
     !
-    if (temp /= nbnd) call errore ('lr_restart', 'NBND mismatch reading projections', 1 )
+    IF (temp /= nbnd) CALL errore ('lr_restart', 'NBND mismatch reading projections', 1 )
     !
-    read(158,*,end=301,err=303) temp !total number of bands
+    READ(158,*,end=301,err=303) temp !total number of bands
     !
-    if (temp /= nbnd_total) call errore ('lr_restart', 'Total number of bands mismatch reading projections', 1 )
+    IF (temp /= nbnd_total) CALL errore ('lr_restart', 'Total number of bands mismatch reading projections', 1 )
     !
-    do ibnd_occ=1,nbnd
-       do ibnd_virt=1,(nbnd_total-nbnd)
-        read(158,*,end=301,err=303) F(ibnd_occ,ibnd_virt,pol_index)
-       enddo
-    enddo
+    DO ibnd_occ=1,nbnd
+       DO ibnd_virt=1,(nbnd_total-nbnd)
+        READ(158,*,end=301,err=303) F(ibnd_occ,ibnd_virt,pol_index)
+       ENDDO
+    ENDDO
     !
-    close(158)
+    CLOSE(158)
 #ifdef __PARA
-  end if
-  call mp_bcast (F, ionode_id)
+  ENDIF
+  CALL mp_bcast (F, ionode_id)
 #endif
-  endif
+  ENDIF
 
   !
   iter_restart = iter_restart + 1
@@ -181,92 +181,92 @@ subroutine lr_restart(iter_restart,rflag)
   !
   nwordrestart = 2 * nbnd * npwx * nks
   !
-  call diropn ( iunrestart, 'restart_lanczos.'//trim(int_to_char(LR_polarization)), nwordrestart, exst)
+  CALL diropn ( iunrestart, 'restart_lanczos.'//trim(int_to_char(LR_polarization)), nwordrestart, exst)
   !
-  call davcio(evc1(:,:,:,1),nwordrestart,iunrestart,1,-1)
-  call davcio(evc1(:,:,:,2),nwordrestart,iunrestart,2,-1)
-  call davcio(evc1_new(:,:,:,1),nwordrestart,iunrestart,3,-1)
-  call davcio(evc1_new(:,:,:,2),nwordrestart,iunrestart,4,-1)
+  CALL davcio(evc1(:,:,:,1),nwordrestart,iunrestart,1,-1)
+  CALL davcio(evc1(:,:,:,2),nwordrestart,iunrestart,2,-1)
+  CALL davcio(evc1_new(:,:,:,1),nwordrestart,iunrestart,3,-1)
+  CALL davcio(evc1_new(:,:,:,2),nwordrestart,iunrestart,4,-1)
   !
-  close( unit = iunrestart)
-  if (charge_response == 1 ) then 
-     if (resonance_condition) then
-         call diropn ( iunrestart, 'restart_lanczos-rho_tot.'//trim(int_to_char(LR_polarization)), 2*nrxx, exst)
-         call davcio(rho_1_tot_im(:,:),2*nrxx*nspin_mag,iunrestart,1,-1)
-         close( unit = iunrestart)
-     else
-         call diropn ( iunrestart, 'restart_lanczos-rho_tot.'//trim(int_to_char(LR_polarization)), 2*nrxx, exst)
-         call davcio(rho_1_tot(:,:),2*nrxx*nspin_mag,iunrestart,1,-1)
-         close( unit = iunrestart)
-       endif
-     endif
+  CLOSE( unit = iunrestart)
+  IF (charge_response == 1 ) THEN
+     IF (resonance_condition) THEN
+         CALL diropn ( iunrestart, 'restart_lanczos-rho_tot.'//trim(int_to_char(LR_polarization)), 2*nrxx, exst)
+         CALL davcio(rho_1_tot_im(:,:),2*nrxx*nspin_mag,iunrestart,1,-1)
+         CLOSE( unit = iunrestart)
+     ELSE
+         CALL diropn ( iunrestart, 'restart_lanczos-rho_tot.'//trim(int_to_char(LR_polarization)), 2*nrxx, exst)
+         CALL davcio(rho_1_tot(:,:),2*nrxx*nspin_mag,iunrestart,1,-1)
+         CLOSE( unit = iunrestart)
+       ENDIF
+     ENDIF
   !
   ! End of all file i/o for restart
   !
   !
   ! Reinitializing sevc1_new vector
   !
-  if (gamma_only) then
+  IF (gamma_only) THEN
      !
-     if ( nkb > 0 .and. okvan ) then 
-      if (real_space_debug>6) then
-       do ibnd=1,nbnd,2
-        call fft_orbital_gamma(evc1_new(:,:,1,1),ibnd,nbnd)
-        call calbec_rs_gamma(ibnd,nbnd,becp%r)
-        call s_psir_gamma(ibnd,nbnd)
-        call bfft_orbital_gamma(sevc1_new(:,:,1,1),ibnd,nbnd)
-       enddo
-      else
-       call calbec(npw_k(1),vkb,evc1_new(:,:,1,1),becp)
+     IF ( nkb > 0 .and. okvan ) THEN
+      IF (real_space_debug>6) THEN
+       DO ibnd=1,nbnd,2
+        CALL fft_orbital_gamma(evc1_new(:,:,1,1),ibnd,nbnd)
+        CALL calbec_rs_gamma(ibnd,nbnd,becp%r)
+        CALL s_psir_gamma(ibnd,nbnd)
+        CALL bfft_orbital_gamma(sevc1_new(:,:,1,1),ibnd,nbnd)
+       ENDDO
+      ELSE
+       CALL calbec(npw_k(1),vkb,evc1_new(:,:,1,1),becp)
        !call pw_gemm('Y',nkb,nbnd,npw_k(1),vkb,npwx,evc1_new(1,1,1,1),npwx,rbecp,nkb)
-       call s_psi(npwx,npw_k(1),nbnd,evc1_new(:,:,1,1),sevc1_new(:,:,1,1))
-      endif
-     else
+       CALL s_psi(npwx,npw_k(1),nbnd,evc1_new(:,:,1,1),sevc1_new(:,:,1,1))
+      ENDIF
+     ELSE
       !nkb = 0 not real space
        !
-       call s_psi(npwx,npw_k(1),nbnd,evc1_new(:,:,1,1),sevc1_new(:,:,1,1))
+       CALL s_psi(npwx,npw_k(1),nbnd,evc1_new(:,:,1,1),sevc1_new(:,:,1,1))
        !
       !
-     endif
+     ENDIF
      !
-     if ( nkb > 0 .and. okvan ) then 
-      if (real_space_debug>6) then  
-        do ibnd=1,nbnd,2
-        call fft_orbital_gamma(evc1_new(:,:,1,2),ibnd,nbnd)
-        call calbec_rs_gamma(ibnd,nbnd,becp%r)
-        call s_psir_gamma(ibnd,nbnd)
-        call bfft_orbital_gamma(sevc1_new(:,:,1,2),ibnd,nbnd)
-       enddo
-     else
-       call calbec(npw_k(1),vkb,evc1_new(:,:,1,2),becp%r)
+     IF ( nkb > 0 .and. okvan ) THEN
+      IF (real_space_debug>6) THEN
+        DO ibnd=1,nbnd,2
+        CALL fft_orbital_gamma(evc1_new(:,:,1,2),ibnd,nbnd)
+        CALL calbec_rs_gamma(ibnd,nbnd,becp%r)
+        CALL s_psir_gamma(ibnd,nbnd)
+        CALL bfft_orbital_gamma(sevc1_new(:,:,1,2),ibnd,nbnd)
+       ENDDO
+     ELSE
+       CALL calbec(npw_k(1),vkb,evc1_new(:,:,1,2),becp%r)
       !call pw_gemm('Y',nkb,nbnd,npw_k(1),vkb,npwx,evc1_new(1,1,1,2),npwx,rbecp,nkb)
-       call s_psi(npwx,npw_k(1),nbnd,evc1_new(:,:,1,2),sevc1_new(:,:,1,2))
-      endif
-     endif
+       CALL s_psi(npwx,npw_k(1),nbnd,evc1_new(:,:,1,2),sevc1_new(:,:,1,2))
+      ENDIF
+     ENDIF
      !call s_psi(npwx,npw_k(1),nbnd,evc1_new(:,:,1,2),sevc1_new(:,:,1,2))
      !
-  else
+  ELSE
      !
-     do ik=1,nks
+     DO ik=1,nks
         !
-        if ( nkb > 0 .and. okvan ) then
-           call init_us_2(npw_k(ik),igk_k(1,ik),xk(1,ik),vkb)
+        IF ( nkb > 0 .and. okvan ) THEN
+           CALL init_us_2(npw_k(ik),igk_k(1,ik),xk(1,ik),vkb)
            !call ccalbec(nkb,npwx,npw_k(ik),nbnd,becp,vkb,evc1_new(1,1,ik,1))
-           call calbec(npw_k(ik), vkb, evc1_new(:,:,ik,1), becp)
-        endif
-        call s_psi(npwx,npw_k(ik),nbnd,evc1_new(:,:,ik,1),sevc1_new(:,:,ik,1))
+           CALL calbec(npw_k(ik), vkb, evc1_new(:,:,ik,1), becp)
+        ENDIF
+        CALL s_psi(npwx,npw_k(ik),nbnd,evc1_new(:,:,ik,1),sevc1_new(:,:,ik,1))
         !
-        if (nkb > 0) call calbec(npw_k(ik), vkb, evc1_new(:,:,ik,2), becp)
+        IF (nkb > 0) CALL calbec(npw_k(ik), vkb, evc1_new(:,:,ik,2), becp)
         !call ccalbec(nkb,npwx,npw_k(ik),nbnd,becp,vkb,evc1_new(1,1,ik,2))
-        call s_psi(npwx,npw_k(ik),nbnd,evc1_new(:,:,ik,2),sevc1_new(:,:,ik,2))
+        CALL s_psi(npwx,npw_k(ik),nbnd,evc1_new(:,:,ik,2),sevc1_new(:,:,ik,2))
         !
-     enddo
+     ENDDO
      !
-  end if
+  ENDIF
   !
   !
-  return
-  301 call errore ('restart', 'A File is corrupted, file ended unexpectedly', 1 ) 
-  303 call errore ('restart', 'A File is corrupted, error in reading data', 1)
-end subroutine lr_restart
+  RETURN
+  301 CALL errore ('restart', 'A File is corrupted, file ended unexpectedly', 1 )
+  303 CALL errore ('restart', 'A File is corrupted, error in reading data', 1)
+END SUBROUTINE lr_restart
 !-----------------------------------------------------------------------

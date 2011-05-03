@@ -1,17 +1,17 @@
 !--------------------------------------------------------------
-!OBM This subroutine initialises stuff related to open shell 
+!OBM This subroutine initialises stuff related to open shell
 ! calculations (kpoint > 1 degauss/=0 or nspin/=1)
 !-------------------------------------------------------------
 #include "f_defs.h"
-subroutine lr_init_nfo()
+SUBROUTINE lr_init_nfo()
 !
 !Created by Osman Baris Malcioglu (2009)
 !
   !
   USE kinds, ONLY : DP
-  use klist,                only : nks,degauss,lgauss,ngauss,xk, nelec
-  USE wvfct,                ONLY : nbnd, et, igk, npw, g2kin 
-  use realus,               only : npw_k, igk_k
+  USE klist,                ONLY : nks,degauss,lgauss,ngauss,xk, nelec
+  USE wvfct,                ONLY : nbnd, et, igk, npw, g2kin
+  USE realus,               ONLY : npw_k, igk_k
   USE lr_variables,         ONLY : lr_verbosity
   USE io_global,            ONLY : stdout
   USE constants,            ONLY : pi, degspin
@@ -25,22 +25,22 @@ subroutine lr_init_nfo()
   USE lsda_mod,             ONLY : lsda
   USE realus,               ONLY : real_space
   USE control_ph,            ONLY : alpha_pv, nbnd_occ
-  use wvfct,                only : npwx, ecutwfc
-  use klist,             only : nks
+  USE wvfct,                ONLY : npwx, ecutwfc
+  USE klist,             ONLY : nks
  !
-  implicit none
+  IMPLICIT NONE
   !
   ! local variables
   real(kind=DP) :: small, emin, emax, xmax, fac, targ
-  integer       :: ik,ibnd, ipol
+  INTEGER       :: ik,ibnd, ipol
   !
   ! Open shell related
-  IF ( .not. ALLOCATED( igk_k ) )    allocate(igk_k(npwx,nks))
-  IF ( .not. ALLOCATED( npw_k ) )    allocate(npw_k(nks))
+  IF ( .not. allocated( igk_k ) )    ALLOCATE(igk_k(npwx,nks))
+  IF ( .not. allocated( npw_k ) )    ALLOCATE(npw_k(nks))
   !IF ( .not. ALLOCATED( nbnd_occ ) ) allocate (nbnd_occ (nks))
 
-  if (.not. real_space) then
-  do ik=1,nks
+  IF (.not. real_space) THEN
+  DO ik=1,nks
       !
       CALL gk_sort( xk(1,ik), ngm, g, ( ecutwfc / tpiba2 ), npw, igk, g2kin )
       !
@@ -49,14 +49,14 @@ subroutine lr_init_nfo()
       igk_k(:,ik) = igk(:)
       !
      !
-  enddo
-  endif
+  ENDDO
+  ENDIF
   !OBM!! The following part is derived from phonon phq_setup
   !
   ! 5) Computes the number of occupied bands for each k point
   !
   !if (.not. allocated (nbnd_occ) allocate( nbnd_occ (nks) )
-  if (lgauss) then
+  IF (lgauss) THEN
      !
      ! discard conduction bands such that w0gauss(x,n) < small
      !
@@ -73,61 +73,61 @@ subroutine lr_init_nfo()
      !
      ! - appropriate limit for Fermi-Dirac
      !
-     if (ngauss.eq. - 99) then
+     IF (ngauss== - 99) THEN
         fac = 1.d0 / sqrt (small)
         xmax = 2.d0 * log (0.5d0 * (fac + sqrt (fac * fac - 4.d0) ) )
-     endif
+     ENDIF
      targ = ef + xmax * degauss
-     do ik = 1, nks
-        do ibnd = 1, nbnd
-           if (et (ibnd, ik) .lt.targ) nbnd_occ (ik) = ibnd
-        enddo
-        if (nbnd_occ (ik) .eq.nbnd) WRITE( stdout, '(5x,/,&
+     DO ik = 1, nks
+        DO ibnd = 1, nbnd
+           IF (et (ibnd, ik) <targ) nbnd_occ (ik) = ibnd
+        ENDDO
+        IF (nbnd_occ (ik) ==nbnd) WRITE( stdout, '(5x,/,&
              &"Possibly too few bands at point ", i4,3f10.5)') &
              ik,  (xk (ipol, ik) , ipol = 1, 3)
-     enddo
-  else if (ltetra) then
-     call errore('lr_init_nfo','phonon + tetrahedra not implemented', 1)
-  else
-     if (lsda) call infomsg('lr_init_nfo','occupation numbers probably wrong')
-     if (noncolin) then
-        nbnd_occ = nint (nelec) 
-     else
-        do ik = 1, nks
+     ENDDO
+  ELSEIF (ltetra) THEN
+     CALL errore('lr_init_nfo','phonon + tetrahedra not implemented', 1)
+  ELSE
+     IF (lsda) CALL infomsg('lr_init_nfo','occupation numbers probably wrong')
+     IF (noncolin) THEN
+        nbnd_occ = nint (nelec)
+     ELSE
+        DO ik = 1, nks
            nbnd_occ (ik) = nint (nelec) / degspin
-        enddo
-     endif
-  endif
+        ENDDO
+     ENDIF
+  ENDIF
   !
   ! 6) Computes alpha_pv
   !
   emin = et (1, 1)
-  do ik = 1, nks
-     do ibnd = 1, nbnd
+  DO ik = 1, nks
+     DO ibnd = 1, nbnd
         emin = min (emin, et (ibnd, ik) )
-     enddo
-  enddo
+     ENDDO
+  ENDDO
 #ifdef __PARA
   ! find the minimum across pools
-  call mp_min( emin, inter_pool_comm )
+  CALL mp_min( emin, inter_pool_comm )
 #endif
-  if (lgauss) then
+  IF (lgauss) THEN
      emax = targ
      alpha_pv = emax - emin
-  else
+  ELSE
      emax = et (1, 1)
-     do ik = 1, nks
-        do ibnd = 1, nbnd_occ(ik)
+     DO ik = 1, nks
+        DO ibnd = 1, nbnd_occ(ik)
            emax = max (emax, et (ibnd, ik) )
-        enddo
-     enddo
+        ENDDO
+     ENDDO
 #ifdef __PARA
      ! find the maximum across pools
-     call mp_max( emax, inter_pool_comm )
+     CALL mp_max( emax, inter_pool_comm )
 #endif
      alpha_pv = 2.d0 * (emax - emin)
-  endif
+  ENDIF
   ! avoid zero value for alpha_pv
   alpha_pv = max (alpha_pv, 1.0d-2)
-return
-end subroutine lr_init_nfo
+RETURN
+END SUBROUTINE lr_init_nfo

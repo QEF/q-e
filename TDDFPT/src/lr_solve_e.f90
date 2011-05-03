@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !-------------------------------------------------------------------------
-subroutine lr_solve_e
+SUBROUTINE lr_solve_e
   !-----------------------------------------------------------------------
   !
   ! bwalker:   This routine is a driver for the solution of the linear
@@ -22,45 +22,45 @@ subroutine lr_solve_e
   !
   ! Modified by Osman Baris Malcioglu (2009)
 #include "f_defs.h"
-  use kinds,                only : dp
-  use gvect,                only : gstart
-  use io_global,            only : stdout
-  use io_files,             only : diropn, tmp_dir, wfc_dir
-  use klist,                only : nks, xk, degauss
-  use lr_variables,         only : nwordd0psi, iund0psi,LR_polarization, test_case_no
-  use lr_variables,         only : n_ipol, evc0, d0psi, evc1, lr_verbosity
-  use realus,               only : igk_k,npw_k
-  use lsda_mod,             only : lsda, isk, current_spin
-  use uspp,                 only : vkb
-  use wvfct,                only : igk, nbnd, npwx, npw, et
-  use control_flags,        only : gamma_only
-  use wavefunctions_module, only : evc
+  USE kinds,                ONLY : dp
+  USE gvect,                ONLY : gstart
+  USE io_global,            ONLY : stdout
+  USE io_files,             ONLY : diropn, tmp_dir, wfc_dir
+  USE klist,                ONLY : nks, xk, degauss
+  USE lr_variables,         ONLY : nwordd0psi, iund0psi,LR_polarization, test_case_no
+  USE lr_variables,         ONLY : n_ipol, evc0, d0psi, evc1, lr_verbosity
+  USE realus,               ONLY : igk_k,npw_k
+  USE lsda_mod,             ONLY : lsda, isk, current_spin
+  USE uspp,                 ONLY : vkb
+  USE wvfct,                ONLY : igk, nbnd, npwx, npw, et
+  USE control_flags,        ONLY : gamma_only
+  USE wavefunctions_module, ONLY : evc
   USE mp_global,            ONLY : inter_pool_comm, intra_pool_comm
   USE mp,                   ONLY : mp_max,mp_min
   USE realus,               ONLY : real_space, real_space_debug!, dvpsir_e
   USE control_ph,           ONLY : alpha_pv
   !
-  implicit none
+  IMPLICIT NONE
   !
   ! counter on bands
   ! counter on k points
   ! counter on spins
   ! counter on polarizations
-  integer :: ibnd, ik, is, ip
+  INTEGER :: ibnd, ik, is, ip
   !
   !OBM!! this has been moved to lr_init_nfo
   !! variables for calculating lr_alpha_pv
   !real(kind=dp) :: emin, emax
   !
-  character(len=6), external :: int_to_char
-  logical :: exst
+  CHARACTER(len=6), EXTERNAL :: int_to_char
+  LOGICAL :: exst
   real (kind=dp) :: anorm
-  character(len=256) :: tmp_dir_saved
+  CHARACTER(len=256) :: tmp_dir_saved
   !
-  If (lr_verbosity > 5) WRITE(stdout,'("<lr_solve_e>")')
+  IF (lr_verbosity > 5) WRITE(stdout,'("<lr_solve_e>")')
   !if ( lsda ) call errore ( 'lr_solve_e' , ' LSDA not implemented' , 1)
   !
-  call start_clock ('lr_solve_e')
+  CALL start_clock ('lr_solve_e')
 
   !OBM!!! This has been moved to lr_init_nfo
 !  !!
@@ -94,8 +94,8 @@ subroutine lr_solve_e
   !   !
   !endif
   !!
-  if( lr_verbosity > 1 ) &
-       write(stdout,'(5X,"lr_solve_e: alpha_pv=",1X,e12.5)') alpha_pv
+  IF( lr_verbosity > 1 ) &
+       WRITE(stdout,'(5X,"lr_solve_e: alpha_pv=",1X,e12.5)') alpha_pv
   !
   !
   !if ( real_space_debug > 8 .and. gamma_only) then
@@ -113,60 +113,60 @@ subroutine lr_solve_e
   !       !
   !       call dvpsir_e(ik,ipol,d0psi(:,:,1,1),lr_alpha_pv)
   !       !
-  !     end if 
+  !     end if
   !else
   !  print *, "Vkb electric field operator"
-    do ik=1,nks
+    DO ik=1,nks
         !
-        if ( lsda ) current_spin = isk(ik)
+        IF ( lsda ) current_spin = isk(ik)
        !
       evc(:,:)=evc0(:,:,ik)
       !
        npw=npw_k(ik)
        igk(:)=igk_k(:,ik)
        !
-       call init_us_2(npw,igk,xk(1,ik),vkb)
+       CALL init_us_2(npw,igk,xk(1,ik),vkb)
        !
        !   Computes/reads P_c^+ x psi_kpoint into d0psi array
        !
-       if ( n_ipol==3 ) then
+       IF ( n_ipol==3 ) THEN
           !
-           do ip=1,3
+           DO ip=1,3
              !
-             call lr_dvpsi_e(ik,ip,d0psi(:,:,ik,ip))
+             CALL lr_dvpsi_e(ik,ip,d0psi(:,:,ik,ip))
              !
-          end do
+          ENDDO
           !
-       else if ( n_ipol==1 ) then
+       ELSEIF ( n_ipol==1 ) THEN
          !
-         call lr_dvpsi_e(ik,LR_polarization,d0psi(:,:,ik,1))
+         CALL lr_dvpsi_e(ik,LR_polarization,d0psi(:,:,ik,1))
          !
-       end if
+       ENDIF
        !
        !print *, "lr_solve_e, after lr_dvpsi_e"
        !CALL lr_normalise( d0psi(:,:,1,1), anorm)
-    enddo
+    ENDDO
   !endif
   !
-  if (gstart == 2 .and. gamma_only) d0psi(1,:,:,:) = cmplx(dble(d0psi(1,:,:,:)),0.0d0,dp)
+  IF (gstart == 2 .and. gamma_only) d0psi(1,:,:,:) = cmplx(dble(d0psi(1,:,:,:)),0.0d0,dp)
 !OBM!!! debug
-if (test_case_no .eq. 2) then
-          print *,"dumping d0psi"
+IF (test_case_no == 2) THEN
+          PRINT *,"dumping d0psi"
           OPEN(UNIT=47,FILE="d0psi.dump",STATUS='NEW',ACCESS = 'SEQUENTIAL')
-          write(unit=47,FMT=*) "Kpoint --- band --- plane wave --- value for pol1 --- value for pol2 --- value for pol3"
-          do ik=1,nks
-           do ibnd=1,nbnd
-            do ip=1, npw
-             write(unit=47,FMT='(I3," ",2(I7," "), 3("(",E14.5," ",E14.5,"i)"))') ik,  &
-             ibnd, ip, d0psi(ip,ibnd,ik,1), d0psi(ip,ibnd,ik,3), d0psi(ip,ibnd,ik,3) 
-            enddo
-           enddo
-          enddo
-          close(47)
-          print *, "dump complete"
-endif
+          WRITE(unit=47,FMT=*) "Kpoint --- band --- plane wave --- value for pol1 --- value for pol2 --- value for pol3"
+          DO ik=1,nks
+           DO ibnd=1,nbnd
+            DO ip=1, npw
+             WRITE(unit=47,FMT='(I3," ",2(I7," "), 3("(",E14.5," ",E14.5,"i)"))') ik,  &
+             ibnd, ip, d0psi(ip,ibnd,ik,1), d0psi(ip,ibnd,ik,3), d0psi(ip,ibnd,ik,3)
+            ENDDO
+           ENDDO
+          ENDDO
+          CLOSE(47)
+          PRINT *, "dump complete"
+ENDIF
 !OBM!!! end of debug
- 
+
        !print *, "lr_solve_e before dump"
        !CALL lr_normalise( d0psi(:,:,1,1), anorm)
   !
@@ -174,31 +174,31 @@ endif
   !
   nwordd0psi = 2 * nbnd * npwx * nks
   !
-  !   Reading of files: 
+  !   Reading of files:
   !   This is a parallel read, done in wfc_dir
   tmp_dir_saved = tmp_dir
   IF ( wfc_dir /= 'undefined' ) tmp_dir = wfc_dir
 
-  do ip = 1, n_ipol
+  DO ip = 1, n_ipol
      !
-     if (n_ipol==1) call diropn ( iund0psi, 'd0psi.'//trim(int_to_char(LR_polarization)), nwordd0psi, exst)
-     if (n_ipol==3) call diropn ( iund0psi, 'd0psi.'//trim(int_to_char(ip)), nwordd0psi, exst)
+     IF (n_ipol==1) CALL diropn ( iund0psi, 'd0psi.'//trim(int_to_char(LR_polarization)), nwordd0psi, exst)
+     IF (n_ipol==3) CALL diropn ( iund0psi, 'd0psi.'//trim(int_to_char(ip)), nwordd0psi, exst)
      !
-     call davcio(d0psi(1,1,1,ip),nwordd0psi,iund0psi,1,1)
+     CALL davcio(d0psi(1,1,1,ip),nwordd0psi,iund0psi,1,1)
      !
      CLOSE( UNIT = iund0psi)
      !
-  end do
+  ENDDO
   ! End of file i/o
   tmp_dir = tmp_dir_saved
   !
   ! end writing
   !
-  call stop_clock ('lr_solve_e')
+  CALL stop_clock ('lr_solve_e')
   !
-  write(stdout,'(5X,"lr_wfcinit_spectrum: finished lr_solve_e")')
+  WRITE(stdout,'(5X,"lr_wfcinit_spectrum: finished lr_solve_e")')
   !
-  return
+  RETURN
   !
-end subroutine lr_solve_e
+END SUBROUTINE lr_solve_e
 !-------------------------------------------------------------------------

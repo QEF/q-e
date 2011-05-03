@@ -1,94 +1,94 @@
 !-----------------------------------------------------------------------
-subroutine lr_alloc_init()
+SUBROUTINE lr_alloc_init()
   !---------------------------------------------------------------------
   ! ... allocates and initialises linear response variables
   !---------------------------------------------------------------------
-  ! Modified by Osman Baris Malcioglu in 2009 
+  ! Modified by Osman Baris Malcioglu in 2009
 #include "f_defs.h"
   !
-  use grid_dimensions,   only : nrxx
-  use smooth_grid_dimensions,   only : nrxxs
-  use klist,             only : nks
-  use lr_variables
-  use uspp,              only : nkb
-  use lsda_mod,          only : nspin
-  use wvfct,             only : npwx, nbnd
-  use control_flags,     only : gamma_only
+  USE grid_dimensions,   ONLY : nrxx
+  USE smooth_grid_dimensions,   ONLY : nrxxs
+  USE klist,             ONLY : nks
+  USE lr_variables
+  USE uspp,              ONLY : nkb
+  USE lsda_mod,          ONLY : nspin
+  USE wvfct,             ONLY : npwx, nbnd
+  USE control_flags,     ONLY : gamma_only
   USE io_global,         ONLY : stdout
   USE charg_resp,        ONLY : w_T, w_T_beta_store, w_T_gamma_store,w_T_zeta_store,w_T_npol,chi
-  use realus,            only : igk_k, npw_k
-  use control_ph,        ONLY : nbnd_occ
+  USE realus,            ONLY : igk_k, npw_k
+  USE control_ph,        ONLY : nbnd_occ
   USE noncollin_module,  ONLY : nspin_mag
   USE eqv,               ONLY : dmuxc
-  use wavefunctions_module, only : evc
-  use kinds,                only : dp
+  USE wavefunctions_module, ONLY : evc
+  USE kinds,                ONLY : dp
   !
-  implicit none
+  IMPLICIT NONE
   !
-  If (lr_verbosity > 5) THEN
+  IF (lr_verbosity > 5) THEN
    WRITE(stdout,'("<lr_alloc_init>")')
-  endif
-  if (lr_verbosity > 7) THEN
+  ENDIF
+  IF (lr_verbosity > 7) THEN
    WRITE(stdout,'("NPWX=",I15)') npwx
    WRITE(stdout,'("NBND=",I15)') nbnd
    WRITE(stdout,'("NKS=",I15)') nks
    WRITE(stdout,'("NRXX=",I15)') nrxx
    WRITE(stdout,'("NSPIN_MAG=",I15)') nspin_mag
-  endif
+  ENDIF
   !
-  if (allocated(evc)) then 
-   deallocate(evc)
-   allocate(evc(npwx,nbnd))
-  endif
-  allocate(evc0(npwx,nbnd,nks))
-  allocate(sevc0(npwx,nbnd,nks))
-  if (project) then
+  IF (allocated(evc)) THEN
+   DEALLOCATE(evc)
+   ALLOCATE(evc(npwx,nbnd))
+  ENDIF
+  ALLOCATE(evc0(npwx,nbnd,nks))
+  ALLOCATE(sevc0(npwx,nbnd,nks))
+  IF (project) THEN
    WRITE(stdout,'(5x,"Allocating ",I5," extra bands for projection")') nbnd_total-nbnd
-   allocate(evc0_virt(npwx,(nbnd_total-nbnd),nks))
+   ALLOCATE(evc0_virt(npwx,(nbnd_total-nbnd),nks))
    !allocate(sevc0_virt(npwx,(nbnd_total-nbnd),nks))
-   allocate(F(nbnd,(nbnd_total-nbnd),n_ipol))
-   allocate(R(nbnd,(nbnd_total-nbnd),n_ipol))
-   allocate(chi(3,3))
+   ALLOCATE(F(nbnd,(nbnd_total-nbnd),n_ipol))
+   ALLOCATE(R(nbnd,(nbnd_total-nbnd),n_ipol))
+   ALLOCATE(chi(3,3))
    chi(:,:)=cmplx(0.0d0,0.0d0,dp)
    F(:,:,:)=cmplx(0.0d0,0.0d0,dp)
    R(:,:,:)=cmplx(0.0d0,0.0d0,dp)
-  endif
+  ENDIF
   !
-  allocate(evc1_old(npwx,nbnd,nks,2))
-  allocate(evc1(npwx,nbnd,nks,2))
-  allocate(evc1_new(npwx,nbnd,nks,2))
-  allocate(sevc1_new(npwx,nbnd,nks,2))
-  allocate(d0psi(npwx,nbnd,nks,n_ipol))
+  ALLOCATE(evc1_old(npwx,nbnd,nks,2))
+  ALLOCATE(evc1(npwx,nbnd,nks,2))
+  ALLOCATE(evc1_new(npwx,nbnd,nks,2))
+  ALLOCATE(sevc1_new(npwx,nbnd,nks,2))
+  ALLOCATE(d0psi(npwx,nbnd,nks,n_ipol))
   !
-  allocate(revc0(nrxxs,nbnd,nks))
+  ALLOCATE(revc0(nrxxs,nbnd,nks))
   !
-  allocate(rho_1(nrxx,nspin_mag))
+  ALLOCATE(rho_1(nrxx,nspin_mag))
   rho_1(:,:)=0.0d0
   !allocate(rho_tot(nrxx))
-  if (charge_response == 1 ) then 
+  IF (charge_response == 1 ) THEN
    !allocate(rho_1_tot(nrxx,nspin_mag)) !Due to broadening this is now done in lr_charg_resp
    !rho_1_tot(:,:)=0.0d0
    !print *,"allocating beta w_t"
-   allocate(w_T_beta_store(itermax_int))
-   allocate(w_T_gamma_store(itermax_int))
-   allocate(w_T_zeta_store(w_T_npol,itermax_int))
-   allocate(w_T(itermax_int))
+   ALLOCATE(w_T_beta_store(itermax_int))
+   ALLOCATE(w_T_gamma_store(itermax_int))
+   ALLOCATE(w_T_zeta_store(w_T_npol,itermax_int))
+   ALLOCATE(w_T(itermax_int))
    w_T_gamma_store(:)=0.0d0
    w_T_beta_store(:)=0.0d0
    w_T_zeta_store(:,:)=cmplx(0.0d0,0.0d0,dp)
 
-  endif
+  ENDIF
   !if (charge_response /=0) then
   ! allocate(w_T(itermax_int))
   !endif
 
-  allocate(dmuxc ( nrxx , nspin , nspin))
+  ALLOCATE(dmuxc ( nrxx , nspin , nspin))
   !print *, "dmuxc ALLOCATED",allocated(dmuxc)," SIZE=",size(dmuxc)
   !print *, "nks=",nks
-  
+
   !allocate (nbnd_occ (nks))
   !
-  
+
   evc0(:,:,:)=(0.0d0,0.0d0)
   evc1_old(:,:,:,:)=(0.0d0,0.0d0)
   evc1(:,:,:,:)=(0.0d0,0.0d0)
@@ -97,67 +97,67 @@ subroutine lr_alloc_init()
   !rho_tot(:)=0.0d0
   d0psi(:,:,:,:)=(0.0d0,0.0d0)
   !
-  allocate(alpha_store(n_ipol,itermax))
-  allocate(beta_store(n_ipol,itermax))
-  allocate(gamma_store(n_ipol,itermax))
-  allocate(zeta_store(n_ipol,n_ipol,itermax))
+  ALLOCATE(alpha_store(n_ipol,itermax))
+  ALLOCATE(beta_store(n_ipol,itermax))
+  ALLOCATE(gamma_store(n_ipol,itermax))
+  ALLOCATE(zeta_store(n_ipol,n_ipol,itermax))
   alpha_store(:,:)=0.0d0
   beta_store(:,:)=0.0d0
   gamma_store(:,:)=0.0d0
   zeta_store(:,:,:)=(0.0d0,0.0d0)
   !
-  if(gamma_only) then
-     call lr_alloc_init_gamma()
-  else
-     call lr_alloc_init_k()
-  endif
+  IF(gamma_only) THEN
+     CALL lr_alloc_init_gamma()
+  ELSE
+     CALL lr_alloc_init_k()
+  ENDIF
   !
-  return
+  RETURN
   !
-contains
+CONTAINS
   !
-  subroutine lr_alloc_init_gamma()
+  SUBROUTINE lr_alloc_init_gamma()
     !
-    use becmod,               only : allocate_bec_type, bec_type, becp
+    USE becmod,               ONLY : allocate_bec_type, bec_type, becp
     !
-    if (nkb > 0) then
+    IF (nkb > 0) THEN
 #ifdef __STD_F95
-       if (.not. associated(becp%r)) call allocate_bec_type(nkb,nbnd,becp)
+       IF (.not. associated(becp%r)) CALL allocate_bec_type(nkb,nbnd,becp)
 #else
-       if (.not. allocated(becp%r)) call allocate_bec_type(nkb,nbnd,becp)
+       IF (.not. allocated(becp%r)) CALL allocate_bec_type(nkb,nbnd,becp)
 #endif
        becp%r(:,:)=0.0d0
-       allocate(becp1(nkb,nbnd))
+       ALLOCATE(becp1(nkb,nbnd))
        becp1(:,:)=0.0d0
-       if (project) then
-        allocate(becp1_virt(nkb,nbnd_total-nbnd))
+       IF (project) THEN
+        ALLOCATE(becp1_virt(nkb,nbnd_total-nbnd))
         becp1_virt(:,:)=0.0d0
-       endif
-    endif
+       ENDIF
+    ENDIF
     !
-    return
-  end subroutine lr_alloc_init_gamma
+    RETURN
+  END SUBROUTINE lr_alloc_init_gamma
   !
-  subroutine lr_alloc_init_k()
-    use becmod,               only : allocate_bec_type, bec_type, becp
+  SUBROUTINE lr_alloc_init_k()
+    USE becmod,               ONLY : allocate_bec_type, bec_type, becp
     !
-    if (nkb > 0) then
+    IF (nkb > 0) THEN
 #ifdef __STD_F95
-       if(.not. associated(becp%k)) call allocate_bec_type(nkb,nbnd,becp) 
+       IF(.not. associated(becp%k)) CALL allocate_bec_type(nkb,nbnd,becp)
 #else
-       if(.not. allocated(becp%k)) call allocate_bec_type(nkb,nbnd,becp) 
+       IF(.not. allocated(becp%k)) CALL allocate_bec_type(nkb,nbnd,becp)
 #endif
        becp%k(:,:)=(0.0d0,0.0d0)
-       allocate(becp1_c(nkb,nbnd,nks))
-       becp1_c(:,:,:)=(0.0d0,0.0d0)  
-       if (project) then
-        allocate(becp1_c_virt(nkb,nbnd_total-nbnd,nks))
+       ALLOCATE(becp1_c(nkb,nbnd,nks))
+       becp1_c(:,:,:)=(0.0d0,0.0d0)
+       IF (project) THEN
+        ALLOCATE(becp1_c_virt(nkb,nbnd_total-nbnd,nks))
         becp1_c_virt(:,:,:)=(0.0d0,0.0d0)
-       endif
-    endif
+       ENDIF
+    ENDIF
     !
-    return
-  end subroutine lr_alloc_init_k
+    RETURN
+  END SUBROUTINE lr_alloc_init_k
   !
-end subroutine lr_alloc_init
+END SUBROUTINE lr_alloc_init
 !----------------------------------------------------------------------------

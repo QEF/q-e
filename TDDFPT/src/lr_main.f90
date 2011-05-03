@@ -32,9 +32,9 @@ PROGRAM lr_main
   USE ions_base,             ONLY : tau,nat,atm,ityp
   USE environment,           ONLY: environment_start
   USE mp_global,             ONLY : nimage, mp_startup
-  
+
   USE control_ph,            ONLY : nbnd_occ
-  use wvfct,                 only : nbnd
+  USE wvfct,                 ONLY : nbnd
   USE wavefunctions_module,  ONLY : psic
   !Debugging
   USE lr_variables, ONLY: check_all_bands_gamma, check_density_gamma,check_vector_gamma
@@ -48,7 +48,7 @@ PROGRAM lr_main
   INTEGER           :: iter_restart,iteration
   LOGICAL           :: rflag
   CHARACTER (len=9) :: code = 'TDDFPT'
-  complex(kind=dp)     :: sum_F,sum_c
+  COMPLEX(kind=dp)     :: sum_F,sum_c
   !
   !
   pol_index=1
@@ -67,18 +67,18 @@ PROGRAM lr_main
 !  WRITE( stdout, '(/5x,"Please cite this project as:  ")' )
 !  WRITE( stdout, '(/5x,"O.B.Malcioglu, R. Gebauer, D. Rocca, S. Baroni,")' )
 !  WRITE( stdout, '(/5x,"""turboTDDFT – a code for the simulation of molecular")' )
-!  WRITE( stdout, '(/5x,"spectra using the Liouville-Lanczos approach to")' ) 
+!  WRITE( stdout, '(/5x,"spectra using the Liouville-Lanczos approach to")' )
 !  WRITE( stdout, '(/5x,"time-dependent density-functional perturbation theory""")' )
 !  WRITE( stdout, '(/5x,"CPC, (in press)")' )
-  
+
   WRITE( stdout, '(/5x,"----------------------------------------")' )
   !
   CALL start_clock('lr_main')
   !
   WRITE( stdout, '(/5x,"Ultrasoft (Vanderbilt) Pseudopotentials")' )
-  If (lr_verbosity > 5) THEN
+  IF (lr_verbosity > 5) THEN
    WRITE(stdout,'("<lr_main>")')
-  endif
+  ENDIF
   !
   !   Reading input file and PWSCF xml, some initialisation
   !
@@ -93,89 +93,89 @@ PROGRAM lr_main
   !   Allocate and zero lr variables
   !
   !OBM_DEBUG
-  If (lr_verbosity > 6) THEN
+  IF (lr_verbosity > 6) THEN
      WRITE(stdout,'(/,5X,"Step-main1")')
-  endif
+  ENDIF
   !OBM_DEBUG
   !
   !
   !Initialisation of degauss/openshell related stuff
   !
-  call lr_init_nfo()
-  if (project) then
-   if(nbnd > nbnd_occ(1)) then 
+  CALL lr_init_nfo()
+  IF (project) THEN
+   IF(nbnd > nbnd_occ(1)) THEN
     WRITE(stdout,'(/,5X,"Virtual states in ground state run will be used in projection analysis")')
-   else
+   ELSE
     WRITE(stdout,'(/,5X,"No virtual states for projection found")')
     project=.false.
-   endif
-  endif
+   ENDIF
+  ENDIF
 
-  IF (nbnd>nbnd_occ(1)) then
+  IF (nbnd>nbnd_occ(1)) THEN
    WRITE(stdout,'(/,5X,"Warning: There are virtual states in the input file, trying to disregard in response calculation")')
    nbnd_total=nbnd
    nbnd=nbnd_occ(1)
-  else
+  ELSE
    nbnd_total=nbnd
-  endif
+  ENDIF
   !
-  CALL lr_alloc_init()  
+  CALL lr_alloc_init()
   !
   !  Charge response: initialisation
   !
   !
   !   Read in ground state wavefunctions
-  ! 
+  !
   !OBM_DEBUG
-  If (lr_verbosity > 6) THEN
+  IF (lr_verbosity > 6) THEN
    WRITE(stdout,'(/,5X,"Step-main2")')
-  endif
+  ENDIF
   !OBM_DEBUG
   CALL lr_read_wf()
   !
   !   Set up initial response orbitals
   !
   !OBM_DEBUG
-  If (lr_verbosity > 6) THEN
+  IF (lr_verbosity > 6) THEN
    WRITE(stdout,'(/,5X,"Step-main3")')
-  endif
+  ENDIF
   !OBM_DEBUG
   !
-  IF ( test_restart(1) ) then 
+  IF ( test_restart(1) ) THEN
     CALL lr_read_d0psi()
-  else
+  ELSE
     CALL lr_solve_e()
-  endif
+  ENDIF
 
-  DEALLOCATE( psic ) 
+  DEALLOCATE( psic )
 
-  if(project) then
+  IF(project) THEN
      CALL sd0psi() !after this d0psi is Sd0psi the d0psi is read afterwards again...
-     call lr_calc_R()
+     CALL lr_calc_R()
      DO ip=1, n_ipol
-      write(stdout,'(/,/5x,"Oscillator strengths for polarization direction",1x,i8)') ip
-      write(stdout,'(5x,"occ",1x,"con",8x,"Re(R)",14x,"Im(R)")')
-      do ibnd_occ=1,nbnd
-       do ibnd_virt=1,(nbnd_total-nbnd)
-       write(stdout,'(5x,i3,1x,i3,3x,E16.8,2X,E16.8)') & 
-       ibnd_occ,ibnd_virt,DBLE(R(ibnd_occ,ibnd_virt,ip)),AIMAG(R(ibnd_occ,ibnd_virt,ip)) 
-       enddo
-      enddo
-     enddo
-  endif
+      WRITE(stdout,'(/,/5x,"Oscillator strengths for polarization direction",1x,i8)') ip
+      WRITE(stdout,'(5x,"occ",1x,"con",8x,"Re(R)",14x,"Im(R)")')
+      DO ibnd_occ=1,nbnd
+       DO ibnd_virt=1,(nbnd_total-nbnd)
+       WRITE(stdout,'(5x,i3,1x,i3,3x,E16.8,2X,E16.8)') &
+       ibnd_occ,ibnd_virt,dble(R(ibnd_occ,ibnd_virt,ip)),aimag(R(ibnd_occ,ibnd_virt,ip))
+       ENDDO
+      ENDDO
+     ENDDO
+  ENDIF
   !
   !   Set up initial stuff for derivatives
   !
   !OBM_DEBUG
-  If (lr_verbosity > 6) THEN
+  IF (lr_verbosity > 6) THEN
    WRITE(stdout,'(/,5X,"Step-main4")')
-  endif
+  ENDIF
   !OBM_DEBUG
   CALL lr_dv_setup()
   !OBM_DEBUG
-  If (lr_verbosity > 6) THEN
+  IF (lr_verbosity > 6) THEN
    WRITE(stdout,'(/,5X,"Step-main5")')
-  endif
+  ENDIF
   !OBM_DEBUG
   !Coordinates of the read atom, just in case
   IF (lr_verbosity > 1) THEN
@@ -188,30 +188,30 @@ PROGRAM lr_main
   !   Lanczos loop where the real work happens
   !
    DO ip=1, n_ipol
-    if (n_ipol/=1) then 
+    IF (n_ipol/=1) THEN
       LR_polarization=ip
       pol_index=LR_polarization
-    endif
-    ! 
-    if (charge_response == 1 ) then  
+    ENDIF
+    !
+    IF (charge_response == 1 ) THEN
          !
          ! Read precalculated beta gamma z
          !
-         call read_wT_beta_gamma_z() 
-         call lr_calc_w_T()
-     endif 
+         CALL read_wT_beta_gamma_z()
+         CALL lr_calc_w_T()
+     ENDIF
      !
      !
-     IF (test_restart(2)) then 
+     IF (test_restart(2)) THEN
       !
         !
         CALL lr_restart(iter_restart,rflag)
         CALL lr_read_d0psi()
         !
-        write(stdout,'(/5x,"Restarting Lanczos loop",1x,i8)') LR_polarization
+        WRITE(stdout,'(/5x,"Restarting Lanczos loop",1x,i8)') LR_polarization
        !
-     else
-      !  
+     ELSE
+      !
         !
         CALL lr_read_d0psi()
         evc1(:,:,:,1) = d0psi(:,:,:,pol_index)
@@ -220,113 +220,113 @@ PROGRAM lr_main
         !
         iter_restart=1
         !
-        write(stdout,'(/5x,"Starting Lanczos loop",1x,i8)')   LR_polarization
-      ! 
-     END IF 
-     if (lr_verbosity >10) then
-      write(stdout,'("d0psi")')
-      do ibnd=1,nbnd
-             call check_vector_gamma(d0psi(:,ibnd,1,pol_index))
-      enddo
-     endif
+        WRITE(stdout,'(/5x,"Starting Lanczos loop",1x,i8)')   LR_polarization
+      !
+     ENDIF
+     IF (lr_verbosity >10) THEN
+      WRITE(stdout,'("d0psi")')
+      DO ibnd=1,nbnd
+             CALL check_vector_gamma(d0psi(:,ibnd,1,pol_index))
+      ENDDO
+     ENDIF
 
-     ! 
+     !
      CALL sd0psi() !after this d0psi is Sd0psi !OBM:Check if this is really necessary
      !
      !
-     if (lr_verbosity >10) then
-      write(stdout,'("initial evc1")')
-      do ibnd=1,nbnd
-             call check_vector_gamma(evc1(:,ibnd,1,1))
-      enddo
-      write(stdout,'("initial sd0psi")')
-      do ibnd=1,nbnd
-             call check_vector_gamma(d0psi(:,ibnd,1,pol_index))
-      enddo
-     endif
+     IF (lr_verbosity >10) THEN
+      WRITE(stdout,'("initial evc1")')
+      DO ibnd=1,nbnd
+             CALL check_vector_gamma(evc1(:,ibnd,1,1))
+      ENDDO
+      WRITE(stdout,'("initial sd0psi")')
+      DO ibnd=1,nbnd
+             CALL check_vector_gamma(d0psi(:,ibnd,1,pol_index))
+      ENDDO
+     ENDIF
 
      !
      lancz_loop1 : DO iteration = iter_restart, itermax
         !
         LR_iteration=iteration
-        write(stdout,'(/5x,"Lanczos iteration:",1x,i8)') LR_iteration
+        WRITE(stdout,'(/5x,"Lanczos iteration:",1x,i8)') LR_iteration
         !
-        call one_lanczos_step()
+        CALL one_lanczos_step()
         !
-        IF ( lr_io_level > 0 .and. (mod(LR_iteration,restart_step)==0 .OR. &
-                              LR_iteration==itermax .OR. LR_iteration==1) )&
+        IF ( lr_io_level > 0 .and. (mod(LR_iteration,restart_step)==0 .or. &
+                              LR_iteration==itermax .or. LR_iteration==1) )&
            CALL lr_write_restart()
-     END DO lancz_loop1
-     ! 
+     ENDDO lancz_loop1
+     !
 
-    if (charge_response == 1 ) then 
-      if (resonance_condition) then 
+    IF (charge_response == 1 ) THEN
+      IF (resonance_condition) THEN
        !response charge density, absorbtive
-       if (plot_type == 1 .or. plot_type == 5) &
-        call lr_dump_rho_tot_xyzd(aimag(rho_1_tot_im(:,1)),"absorbtive")
-       if (plot_type == 2 .or. plot_type == 5) &
-        call lr_dump_rho_tot_xcrys(aimag(rho_1_tot_im(:,1)),"absorbtive")
-       if (plot_type == 3 .or. plot_type == 5) &
-        call lr_dump_rho_tot_cube(aimag(rho_1_tot_im(:,1)),"absorbtive")
+       IF (plot_type == 1 .or. plot_type == 5) &
+        CALL lr_dump_rho_tot_xyzd(aimag(rho_1_tot_im(:,1)),"absorbtive")
+       IF (plot_type == 2 .or. plot_type == 5) &
+        CALL lr_dump_rho_tot_xcrys(aimag(rho_1_tot_im(:,1)),"absorbtive")
+       IF (plot_type == 3 .or. plot_type == 5) &
+        CALL lr_dump_rho_tot_cube(aimag(rho_1_tot_im(:,1)),"absorbtive")
        !response charge density, dispersive
-       if (plot_type == 1 .or. plot_type == 5) &
-        call lr_dump_rho_tot_xyzd(dble(rho_1_tot_im(:,1)),"dispersive")
-       if (plot_type == 2 .or. plot_type == 5) &
-        call lr_dump_rho_tot_xcrys(dble(rho_1_tot_im(:,1)),"dispersive")
-       if (plot_type == 3 .or. plot_type == 5) &
-        call lr_dump_rho_tot_cube(dble(rho_1_tot_im(:,1)),"dispersive")
-      else
-      if (plot_type == 1 .or. plot_type == 5) call lr_dump_rho_tot_xyzd(rho_1_tot(:,1),"summed-rho")
-      if (plot_type == 2 .or. plot_type == 5) call lr_dump_rho_tot_xcrys(rho_1_tot(:,1),"summed-rho")
-      if (plot_type == 3 .or. plot_type == 5) call lr_dump_rho_tot_cube(rho_1_tot(:,1),"summed-rho")
-      endif
-    endif
-     if (project) then
-      write(stdout,'(/,/5x,"Projection of virtual states for polarization direction",1x,i8)') LR_polarization
-      write(stdout,'(2x,"occ",1x,"vir",8x,"Re(F)",14x,"Im(F)",8x, &
+       IF (plot_type == 1 .or. plot_type == 5) &
+        CALL lr_dump_rho_tot_xyzd(dble(rho_1_tot_im(:,1)),"dispersive")
+       IF (plot_type == 2 .or. plot_type == 5) &
+        CALL lr_dump_rho_tot_xcrys(dble(rho_1_tot_im(:,1)),"dispersive")
+       IF (plot_type == 3 .or. plot_type == 5) &
+        CALL lr_dump_rho_tot_cube(dble(rho_1_tot_im(:,1)),"dispersive")
+      ELSE
+      IF (plot_type == 1 .or. plot_type == 5) CALL lr_dump_rho_tot_xyzd(rho_1_tot(:,1),"summed-rho")
+      IF (plot_type == 2 .or. plot_type == 5) CALL lr_dump_rho_tot_xcrys(rho_1_tot(:,1),"summed-rho")
+      IF (plot_type == 3 .or. plot_type == 5) CALL lr_dump_rho_tot_cube(rho_1_tot(:,1),"summed-rho")
+      ENDIF
+    ENDIF
+     IF (project) THEN
+      WRITE(stdout,'(/,/5x,"Projection of virtual states for polarization direction",1x,i8)') LR_polarization
+      WRITE(stdout,'(2x,"occ",1x,"vir",8x,"Re(F)",14x,"Im(F)",8x, &
     & " Frac. pres. in Re(chi_",I1,"_",I1,") and Im(chi_",I1,"_",I1,")")') &
     &  ip,ip,ip,ip
        sum_f=cmplx(0.0d0,0.0d0,dp)
-      do ibnd_occ=1,nbnd
-       do ibnd_virt=1,(nbnd_total-nbnd)
+      DO ibnd_occ=1,nbnd
+       DO ibnd_virt=1,(nbnd_total-nbnd)
        F(ibnd_occ,ibnd_virt,ip)=F(ibnd_occ,ibnd_virt,ip)*cmplx(w_T_norm0_store,0.0d0,dp)
        sum_f=F(ibnd_occ,ibnd_virt,ip)*conjg(R(ibnd_occ,ibnd_virt,ip))
-       write(stdout,'(2x,i3,1x,i3,3x,E16.8,2X,E16.8,17X,F8.5,2x,F8.5)') & 
-       ibnd_occ,ibnd_virt,DBLE(F(ibnd_occ,ibnd_virt,ip)),AIMAG(F(ibnd_occ,ibnd_virt,ip)),&
-       (dble(sum_f)/dble(chi(ip,ip))), (AIMAG(sum_f)/AIMAG(chi(ip,ip)))       
-       enddo
-      enddo
-     endif
+       WRITE(stdout,'(2x,i3,1x,i3,3x,E16.8,2X,E16.8,17X,F8.5,2x,F8.5)') &
+       ibnd_occ,ibnd_virt,dble(F(ibnd_occ,ibnd_virt,ip)),aimag(F(ibnd_occ,ibnd_virt,ip)),&
+       (dble(sum_f)/dble(chi(ip,ip))), (aimag(sum_f)/aimag(chi(ip,ip)))
+       ENDDO
+      ENDDO
+     ENDIF
      !
-  END DO
-  DEALLOCATE( revc0 ) 
+  ENDDO
+  DEALLOCATE( revc0 )
   !
   !
-  WRITE(stdout,'(5x,"End of Lanczos iterations")') 
+  WRITE(stdout,'(5x,"End of Lanczos iterations")')
   !
   !Final reports
   !
-  if (project .and. n_ipol == 3) then
-      write(stdout,'(/,/5x,"Participation of virtual states to absorbtion coefficent")') 
-      write(stdout,'(5x,"occ",1x,"vir",5x,"Re(Tr(F.R))",6x,"Im(TR(F.R))",5x,"fraction in alpha")')
-      do ibnd_occ=1,nbnd
-       do ibnd_virt=1,(nbnd_total-nbnd)
+  IF (project .and. n_ipol == 3) THEN
+      WRITE(stdout,'(/,/5x,"Participation of virtual states to absorbtion coefficent")')
+      WRITE(stdout,'(5x,"occ",1x,"vir",5x,"Re(Tr(F.R))",6x,"Im(TR(F.R))",5x,"fraction in alpha")')
+      DO ibnd_occ=1,nbnd
+       DO ibnd_virt=1,(nbnd_total-nbnd)
        sum_f=cmplx(0.0d0,0.0d0,dp)
        sum_c=cmplx(0.0d0,0.0d0,dp)
-        do ip=1,n_ipol
+        DO ip=1,n_ipol
          sum_f=sum_f+F(ibnd_occ,ibnd_virt,ip)*conjg(R(ibnd_occ,ibnd_virt,ip))
          sum_c=sum_c+chi(ip,ip)
-        enddo
-        write(stdout,'(5x,i3,1x,i3,3x,E16.8,2X,E16.8,2X,F8.5)') & 
-       ibnd_occ,ibnd_virt,DBLE(sum_F),AIMAG(sum_F),(AIMAG(sum_f)/AIMAG(sum_c)) 
-       enddo
-      enddo
-  endif
+        ENDDO
+        WRITE(stdout,'(5x,i3,1x,i3,3x,E16.8,2X,E16.8,2X,F8.5)') &
+       ibnd_occ,ibnd_virt,dble(sum_F),aimag(sum_F),(aimag(sum_f)/aimag(sum_c))
+       ENDDO
+      ENDDO
+  ENDIF
 
   !
   !   Deallocate pw variables
   !
-  CALL clean_pw( .FALSE. )  
+  CALL clean_pw( .false. )
   !
   WRITE(stdout,'(5x,"Finished linear response calculation...")')
   !
@@ -336,9 +336,9 @@ PROGRAM lr_main
   !
   CALL stop_lr()
   !
-  If (lr_verbosity > 5) THEN
+  IF (lr_verbosity > 5) THEN
    WRITE(stdout,'("<end of lr_main>")')
-  endif
+  ENDIF
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !Additional small-time subroutines
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -347,126 +347,126 @@ CONTAINS
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !This tests whether the restart flag is applicable
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
- use lr_variables,     only : n_ipol,LR_polarization,restart,bgz_suffix
- use io_files,         only: prefix, tmp_dir, nd_nmbr, wfc_dir
+ USE lr_variables,     ONLY : n_ipol,LR_polarization,restart,bgz_suffix
+ USE io_files,         ONLY: prefix, tmp_dir, nd_nmbr, wfc_dir
  USE mp,               ONLY : mp_bcast, mp_barrier,mp_sum
  USE io_global,        ONLY : ionode, ionode_id
 
  IMPLICIT NONE
-  integer, intent(in) :: test_this
-  character(len=256) :: tempfile, filename, tmp_dir_saved
-  logical :: exst
-  character(len=6), external :: int_to_char
-  integer :: i, temp_restart
+  INTEGER, INTENT(in) :: test_this
+  CHARACTER(len=256) :: tempfile, filename, tmp_dir_saved
+  LOGICAL :: exst
+  CHARACTER(len=6), EXTERNAL :: int_to_char
+  INTEGER :: i, temp_restart
 
  !
- !test_this= 1 : d0psi files 
- !test_this= 2 : lanczos restart files 
+ !test_this= 1 : d0psi files
+ !test_this= 2 : lanczos restart files
 
  temp_restart=0
  !print *, "test_restart with restart=",restart
- if (.not.restart) then 
+ IF (.not.restart) THEN
   test_restart = .false.
-  return  
- endif
+  RETURN
+ ENDIF
  test_restart=.true.
- if (test_this == 1) then
+ IF (test_this == 1) THEN
  !
  !Check for parallel i/o files that are in wfc_dir
  tmp_dir_saved = tmp_dir
  IF ( wfc_dir /= 'undefined' ) tmp_dir = wfc_dir
  !
- if ( n_ipol == 1 ) then
+ IF ( n_ipol == 1 ) THEN
   filename = trim(prefix)//'.d0psi.'//trim(int_to_char(1))
-  tempfile = trim(tmp_dir) // trim(filename) //nd_nmbr 
-  inquire (file = tempfile, exist = exst)
+  tempfile = trim(tmp_dir) // trim(filename) //nd_nmbr
+  INQUIRE (file = tempfile, exist = exst)
   !print *, tempfile," exst=",exst
-  if (.not. exst) then
+  IF (.not. exst) THEN
     temp_restart=1
-  endif
- else 
+  ENDIF
+ ELSE
   DO i=1, n_ipol
    filename = trim(prefix)//'.d0psi.'//trim(int_to_char(i))
    tempfile = trim(tmp_dir) // trim(filename) //nd_nmbr
-   inquire (file = tempfile, exist = exst)
+   INQUIRE (file = tempfile, exist = exst)
    !print *, tempfile," exst=",exst
-   if (.not. exst) then
+   IF (.not. exst) THEN
      temp_restart=1
-   endif
-  END DO
- endif
- 
+   ENDIF
+  ENDDO
+ ENDIF
+
  tmp_dir = tmp_dir_saved
- 
- IF ( wfc_dir /= 'undefined' ) then
+
+ IF ( wfc_dir /= 'undefined' ) THEN
  ! check if these files can be read from outdir instead of wfcdir
  !
- if ( n_ipol == 1 ) then
+ IF ( n_ipol == 1 ) THEN
   filename = trim(prefix)//'.d0psi.'//trim(int_to_char(1))
-  tempfile = trim(tmp_dir) // trim(filename) //nd_nmbr 
-  inquire (file = tempfile, exist = exst)
-  if (exst) then
+  tempfile = trim(tmp_dir) // trim(filename) //nd_nmbr
+  INQUIRE (file = tempfile, exist = exst)
+  IF (exst) THEN
     temp_restart=0
-  endif
- else 
+  ENDIF
+ ELSE
   DO i=1, n_ipol
    filename = trim(prefix)//'.d0psi.'//trim(int_to_char(i))
    tempfile = trim(tmp_dir) // trim(filename) //nd_nmbr
-   inquire (file = tempfile, exist = exst)
-   if (exst) then
+   INQUIRE (file = tempfile, exist = exst)
+   IF (exst) THEN
      temp_restart=0
-   endif
-  END DO
- endif
- endif
- endif !for test_this = 1
- if (test_this == 2) then
+   ENDIF
+  ENDDO
+ ENDIF
+ ENDIF
+ ENDIF !for test_this = 1
+ IF (test_this == 2) THEN
 
  !Restart files are always written in outdir
- if ( n_ipol == 1 ) then
+ IF ( n_ipol == 1 ) THEN
   filename = trim(prefix)//'.restart_lanczos.'//trim(int_to_char(1))
   tempfile = trim(tmp_dir) // trim(filename) //nd_nmbr
- else 
+ ELSE
   filename = trim(prefix)//'.restart_lanczos.'//trim(int_to_char(LR_polarization))
   tempfile = trim(tmp_dir) // trim(filename)//nd_nmbr
- endif
- inquire (file = tempfile, exist = exst)
+ ENDIF
+ INQUIRE (file = tempfile, exist = exst)
  !print *, tempfile," exst=",exst
- if (.not. exst) then
+ IF (.not. exst) THEN
     temp_restart=1
- endif
+ ENDIF
  !
  !End of parallel file i/o
  !
- if ( n_ipol == 1 ) then
+ IF ( n_ipol == 1 ) THEN
   filename = trim(prefix) // trim(bgz_suffix) // trim(int_to_char(1))
   tempfile = trim(tmp_dir) // trim(filename)
- else 
+ ELSE
   filename = trim(prefix) // trim(bgz_suffix) // trim(int_to_char(LR_polarization))
   tempfile = trim(tmp_dir) // trim(filename)
- endif
- inquire (file = tempfile, exist = exst)
+ ENDIF
+ INQUIRE (file = tempfile, exist = exst)
  !print *, tempfile," exst=",exst
- if (.not. exst) then
+ IF (.not. exst) THEN
     temp_restart=1
- endif
- endif !for test_this = 2
- 
+ ENDIF
+ ENDIF !for test_this = 2
+
   !print *,"temp_restart",temp_restart
 #ifdef __PARA
-    call mp_sum(temp_restart)
+    CALL mp_sum(temp_restart)
 #endif
   !print *, "current temp_restart", temp_restart
-  if (temp_restart > 0 ) then 
+  IF (temp_restart > 0 ) THEN
    !print *,"restart falsified",nd_nmbr
    !WRITE(stdout,'(5X,A,3X,"is missing, unable to restart.")') offender
    WRITE(stdout,'(5X,"There are missing files!")')
-   if (test_this==1) WRITE(stdout,'(5X,"d0psi files can not be found,trying to recompansate")')
-   if (test_this==2) WRITE(stdout,'(5X,"lanczos restart files can not be found, starting run from scratch")')
+   IF (test_this==1) WRITE(stdout,'(5X,"d0psi files can not be found,trying to recompansate")')
+   IF (test_this==2) WRITE(stdout,'(5X,"lanczos restart files can not be found, starting run from scratch")')
    test_restart=.false.
-  endif
-  
-  RETURN 
+  ENDIF
+
+  RETURN
  END FUNCTION test_restart
 END PROGRAM lr_main
 !-----------------------------------------------------------------------

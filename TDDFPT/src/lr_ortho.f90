@@ -14,14 +14,14 @@ SUBROUTINE lr_ortho(dvpsi, evq, ikk, ikq, sevc, inverse)
   !
   !
   ! This routine ortogonalizes dvpsi to the valence states: ps = <evq|dvpsi>
-  ! It should be quite general. It works for metals and insulators, with 
+  ! It should be quite general. It works for metals and insulators, with
   ! NC as well as with US PP, both SR or FR.
   ! Note that on output it changes sign. So it applies -P^+_c.
   !
   !OBM!! evc0 ->evq sevc0 -> sevc dvpsi -> input/output
   !
 USE kinds, ONLY : DP
-use gvect,                only : gstart
+USE gvect,                ONLY : gstart
 USE klist, ONLY : lgauss, degauss, ngauss
 USE noncollin_module, ONLY : noncolin, npol
 USE wvfct, ONLY : npwx, nbnd, et
@@ -32,78 +32,78 @@ USE control_ph,  ONLY : alpha_pv, nbnd_occ
 USE uspp,        ONLY : vkb, okvan
 USE mp_global,   ONLY : intra_pool_comm
 USE mp,          ONLY : mp_sum
-!use lr_variables, ONLY : lr_alpha_pv, nbnd_occ, 
-use lr_variables, ONLY : lr_verbosity
-use realus,       ONLY : npw_k
-use control_flags,        only : gamma_only
+!use lr_variables, ONLY : lr_alpha_pv, nbnd_occ,
+USE lr_variables, ONLY : lr_verbosity
+USE realus,       ONLY : npw_k
+USE control_flags,        ONLY : gamma_only
 USE io_global,      ONLY : stdout
 !
 IMPLICIT NONE
-INTEGER, INTENT(IN) :: ikk, ikq   ! the index of the k and k+q points
-COMPLEX(DP), INTENT(IN) :: evq(npwx*npol,nbnd)
-COMPLEX(DP), INTENT(INOUT) :: dvpsi(npwx*npol,nbnd)
-COMPLEX(DP), INTENT(IN) :: sevc(npwx*npol,nbnd) ! work space allocated by
+INTEGER, INTENT(in) :: ikk, ikq   ! the index of the k and k+q points
+COMPLEX(DP), INTENT(in) :: evq(npwx*npol,nbnd)
+COMPLEX(DP), INTENT(inout) :: dvpsi(npwx*npol,nbnd)
+COMPLEX(DP), INTENT(in) :: sevc(npwx*npol,nbnd) ! work space allocated by
                                                    ! the calling routine (was called dpsi)
 !real(kind=dp), intent(IN) :: lr_alpha_pv !This is calculated manually in tddfpt
-logical, intent(in):: inverse !if .true. |dvspi> =  |dvpsi> - |evq><sevc|dvpsi>  instead of |dvspi> =  |dvpsi> - |sevc><evq|dvpsi> 
+LOGICAL, INTENT(in):: inverse !if .true. |dvspi> =  |dvpsi> - |evq><sevc|dvpsi>  instead of |dvspi> =  |dvpsi> - |sevc><evq|dvpsi>
 
 
-logical::  inverse_mode
+LOGICAL::  inverse_mode
 
 ! functions computing the delta and theta function
 
 CALL start_clock ('lr_ortho')
 
-If (lr_verbosity > 5)   WRITE(stdout,'("<lr_ortho>")')
+IF (lr_verbosity > 5)   WRITE(stdout,'("<lr_ortho>")')
   !
-  !if (.not. present(inverse)) then 
+  !if (.not. present(inverse)) then
   !  inverse_mode=.false.
   !else
     inverse_mode=inverse
   !endif
-  if (gamma_only) then
+  IF (gamma_only) THEN
      !
-     call lr_ortho_gamma()
+     CALL lr_ortho_gamma()
      !
-  else if (noncolin) then
+  ELSEIF (noncolin) THEN
     !
-    call lr_ortho_noncolin()
+    CALL lr_ortho_noncolin()
     !
-  else
+  ELSE
      !
-     call lr_ortho_k()
+     CALL lr_ortho_k()
      !
-  end if
+  ENDIF
 
 CALL stop_clock ('lr_ortho')
 RETURN
-contains
+CONTAINS
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !
 !multiple K point specific
 !
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
- subroutine lr_ortho_k()
+ SUBROUTINE lr_ortho_k()
   IMPLICIT NONE
   COMPLEX(DP), ALLOCATABLE :: ps(:,:)
   INTEGER :: ibnd, jbnd, nbnd_eff
   REAL(DP) :: wg1, w0g, wgp, wwg, deltae, theta
-  REAL(DP), EXTERNAL :: w0gauss, wgauss 
-  
+  REAL(DP), EXTERNAL :: w0gauss, wgauss
+
    ALLOCATE(ps(nbnd,nbnd))
    !
-   if (lgauss) then
+   IF (lgauss) THEN
        !
        !  metallic case
        !
        ps = (0.d0, 0.d0)
-       if (inverse_mode) then
+       IF (inverse_mode) THEN
        CALL ZGEMM( 'C', 'N', nbnd, nbnd_occ (ikk), npw_k(ikk), (1.d0,0.d0), &
                      sevc, npwx, dvpsi, npwx, (0.d0,0.d0), ps, nbnd )
-       else
+       ELSE
        CALL ZGEMM( 'C', 'N', nbnd, nbnd_occ (ikk), npw_k(ikk), (1.d0,0.d0), &
                      evq, npwx, dvpsi, npwx, (0.d0,0.d0), ps, nbnd )
-       endif
+       ENDIF
        !
        DO ibnd = 1, nbnd_occ (ikk)
           wg1 = wgauss ((ef-et(ibnd,ikk)) / degauss, ngauss)
@@ -128,8 +128,8 @@ contains
              ps(jbnd,ibnd) = wwg * ps(jbnd,ibnd)
              !
           ENDDO
-          call DSCAL (2*npw_k(ikk), wg1, dvpsi(1,ibnd), 1)
-       END DO
+          CALL DSCAL (2*npw_k(ikk), wg1, dvpsi(1,ibnd), 1)
+       ENDDO
        nbnd_eff=nbnd
    ELSE
       !
@@ -138,102 +138,102 @@ contains
       ps = (0.d0, 0.d0)
       !OBM!!!
       !ps = <evq|dvpsi>
-      ! in the old version it was <sevc|dvpsi> 
-      if (inverse_mode) then
+      ! in the old version it was <sevc|dvpsi>
+      IF (inverse_mode) THEN
       CALL ZGEMM( 'C', 'N', nbnd_occ(ikq), nbnd_occ (ikk), npw_k(ikk), &
                 (1.d0,0.d0), sevc, npwx, dvpsi, npwx, &
                 (0.d0,0.d0), ps, nbnd )
-      else
+      ELSE
       CALL ZGEMM( 'C', 'N', nbnd_occ(ikq), nbnd_occ (ikk), npw_k(ikk), &
                 (1.d0,0.d0), evq, npwx, dvpsi, npwx, &
                 (0.d0,0.d0), ps, nbnd )
-      endif
+      ENDIF
       nbnd_eff=nbnd_occ(ikk)
-   END IF
+   ENDIF
 #ifdef __PARA
-   call mp_sum(ps(:,1:nbnd_eff),intra_pool_comm)
+   CALL mp_sum(ps(:,1:nbnd_eff),intra_pool_comm)
 #endif
    !!
    !! |dvspi> =  -(|dvpsi> - |sevc><evq|dvpsi>)
    !!
-   !OBM!!! changed to |dvspi> =  |dvpsi> - |sevc><evq|dvpsi> 
-   if (lgauss) then
+   !OBM!!! changed to |dvspi> =  |dvpsi> - |sevc><evq|dvpsi>
+   IF (lgauss) THEN
       !
       !  metallic case
       !
-      if (inverse_mode) then
+      IF (inverse_mode) THEN
       CALL ZGEMM( 'N', 'N', npw_k(ikk), nbnd_occ(ikk), nbnd, &
                 (-1.d0,0.d0), evq, npwx, ps, nbnd, (1.0d0,0.d0), &
                  dvpsi, npwx )
-      else
+      ELSE
       CALL ZGEMM( 'N', 'N', npw_k(ikk), nbnd_occ(ikk), nbnd, &
                 (-1.d0,0.d0), sevc, npwx, ps, nbnd, (1.0d0,0.d0), &
                  dvpsi, npwx )
-      endif
+      ENDIF
    ELSE
       !
       !  Insulators: note that nbnd_occ(ikk)=nbnd_occ(ikq) in an insulator
       !
-      if (inverse_mode) then
+      IF (inverse_mode) THEN
       CALL ZGEMM( 'N', 'N', npw_k(ikk), nbnd_occ(ikk), nbnd_occ(ikk), &
                 (-1.d0,0.d0), evq, npwx, ps, nbnd, (1.0d0,0.d0), &
                  dvpsi, npwx )
-      else
+      ELSE
       CALL ZGEMM( 'N', 'N', npw_k(ikk), nbnd_occ(ikk), nbnd_occ(ikk), &
                 (-1.d0,0.d0), sevc, npwx, ps, nbnd, (1.0d0,0.d0), &
                  dvpsi, npwx )
-      endif
+      ENDIF
    ENDIF
    DEALLOCATE(ps)
-  end subroutine lr_ortho_k
+  END SUBROUTINE lr_ortho_k
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !
 !Gamma point specific
 !
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
- subroutine lr_ortho_gamma()
+ SUBROUTINE lr_ortho_gamma()
   IMPLICIT NONE
   COMPLEX(DP), ALLOCATABLE :: ps_c(:,:)
   REAL(DP), ALLOCATABLE :: ps(:,:)
   INTEGER :: ibnd, jbnd, nbnd_eff
   REAL(DP) :: wg1, w0g, wgp, wwg, deltae, theta
-  REAL(DP), EXTERNAL :: w0gauss, wgauss 
-  
+  REAL(DP), EXTERNAL :: w0gauss, wgauss
+
    ALLOCATE(ps(nbnd,nbnd))
    ALLOCATE(ps_c(nbnd,nbnd))
    !
-   if (lgauss) then
-       call errore ('lr_ortho', "degauss with gamma point algorithms",1)
+   IF (lgauss) THEN
+       CALL errore ('lr_ortho', "degauss with gamma point algorithms",1)
    ELSE
       !
       !  insulators
       !  ps = <evq|dvpsi>
-      ! in old version it was ps = <S evc0|sv> 
+      ! in old version it was ps = <S evc0|sv>
      ps = 0.d0
-     if (inverse_mode) then
+     IF (inverse_mode) THEN
      CALL DGEMM( 'C', 'N', nbnd, nbnd ,2*npw_k(1), &
                2.d0, sevc, 2*npwx, dvpsi, 2*npwx, &
-               0.d0, ps, nbnd )                          
+               0.d0, ps, nbnd )
                !ps = 2*<sevc|dvpsi>
-     else
+     ELSE
      CALL DGEMM( 'C', 'N', nbnd, nbnd ,2*npw_k(1), &
                2.d0, evq, 2*npwx, dvpsi, 2*npwx, &
                0.d0, ps, nbnd )
                !ps = 2*<evq|dvpsi>
-     endif
+     ENDIF
      nbnd_eff=nbnd
-     if (gstart == 2) then
-     if (inverse_mode) then
+     IF (gstart == 2) THEN
+     IF (inverse_mode) THEN
          CALL DGER( nbnd, nbnd, -1.D0, sevc, 2*npwx, dvpsi, 2*npwx, ps, nbnd )
          !PS = PS - sevc*dvpsi
-     else
+     ELSE
          CALL DGER( nbnd, nbnd, -1.D0, evq, 2*npwx, dvpsi, 2*npwx, ps, nbnd )
          !PS = PS - evc*dvpsi
-     endif
-     endif
-  END IF
+     ENDIF
+     ENDIF
+  ENDIF
 #ifdef __PARA
-   call mp_sum(ps(:,:),intra_pool_comm)
+   CALL mp_sum(ps(:,:),intra_pool_comm)
 #endif
   ! in the original dpsi was used as a storage for sevc, since in
   ! tddfpt we have it stored in memory as sevc0 this part is obsolote
@@ -248,47 +248,47 @@ contains
   !CALL s_psi (npwx, npwq, nbnd_eff, evq, dpsi)
 
 
-  ps_c = cmplx(ps, 0.d0, dp) 
+  ps_c = cmplx(ps, 0.d0, dp)
   !!
   !! |dvspi> =  -(|dvpsi> - S|evq><evq|dvpsi>)
   !!
-  !OBM!!! changed to |dvspi> =  |dvpsi>  - |sevc><evq|dvpsi> 
-  if (lgauss) then
-          !errore ? 
+  !OBM!!! changed to |dvspi> =  |dvpsi>  - |sevc><evq|dvpsi>
+  IF (lgauss) THEN
+          !errore ?
   ELSE
      !
      !  Insulators: note that nbnd_occ(ikk)=nbnd_occ(ikq) in an insulator
      !
-     if (inverse_mode) then
+     IF (inverse_mode) THEN
      CALL ZGEMM( 'N', 'N', npw_k(1), nbnd, nbnd, &
                (-1.d0,0.d0), evq, npwx, ps_c, nbnd, (1.0d0,0.d0), &
                 dvpsi, npwx )
                 !dvpsi=dvpsi-|evq><sevc|dvpsi>
-     else
+     ELSE
      CALL ZGEMM( 'N', 'N', npw_k(1), nbnd, nbnd, &
                (-1.d0,0.d0), sevc, npwx, ps_c, nbnd, (1.0d0,0.d0), &
                 dvpsi, npwx )
                 !dvpsi=dvpsi-|sevc><evq|dvpsi>
-     endif
+     ENDIF
   ENDIF
    DEALLOCATE(ps)
    DEALLOCATE(ps_c)
-  end subroutine lr_ortho_gamma
+  END SUBROUTINE lr_ortho_gamma
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !
 !noncolin specific
 !
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
- subroutine lr_ortho_noncolin()
+ SUBROUTINE lr_ortho_noncolin()
   IMPLICIT NONE
   COMPLEX(DP), ALLOCATABLE :: ps(:,:)
   INTEGER :: ibnd, jbnd, nbnd_eff
   REAL(DP) :: wg1, w0g, wgp, wwg, deltae, theta
-  REAL(DP), EXTERNAL :: w0gauss, wgauss 
-  
+  REAL(DP), EXTERNAL :: w0gauss, wgauss
+
    ALLOCATE(ps(nbnd,nbnd))
    !
-   if (lgauss) then
+   IF (lgauss) THEN
        !
        !  metallic case
        !
@@ -320,7 +320,7 @@ contains
              !
           ENDDO
              CALL DSCAL (2*npwx*npol, wg1, dvpsi(1,ibnd), 1)
-       END DO
+       ENDDO
        nbnd_eff=nbnd
    ELSE
       !
@@ -331,9 +331,9 @@ contains
                 (1.d0,0.d0), evq, npwx*npol, dvpsi, npwx*npol, &
                 (0.d0,0.d0), ps, nbnd )
       nbnd_eff=nbnd_occ(ikk)
-   END IF
+   ENDIF
 #ifdef __PARA
-   call mp_sum(ps(:,1:nbnd_eff),intra_pool_comm)
+   CALL mp_sum(ps(:,1:nbnd_eff),intra_pool_comm)
 #endif
    ! in the original dpsi was used as a storage for sevc, since in
    ! tddfpt we have it stored in memory as sevc0 this part is obsolote
@@ -350,7 +350,7 @@ contains
    !! |dvspi> =  -(|dvpsi> - S|evq><evq|dvpsi>)
    !OBM!!! changed to |dvspi> =  |dvpsi> - S|evq><evq|dvpsi> using this
    !!
-   if (lgauss) then
+   IF (lgauss) THEN
       !
       !  metallic case
       !
@@ -366,8 +366,8 @@ contains
                    dvpsi, npwx*npol )
    ENDIF
    DEALLOCATE(ps)
-  end subroutine lr_ortho_noncolin
+  END SUBROUTINE lr_ortho_noncolin
 
 
-end subroutine lr_ortho
+END SUBROUTINE lr_ortho
 !-----------------------------------------------------------------------

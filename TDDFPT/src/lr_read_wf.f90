@@ -1,5 +1,5 @@
 !-----------------------------------------------------------------------
-subroutine lr_read_wf()
+SUBROUTINE lr_read_wf()
   !---------------------------------------------------------------------
   ! ... reads in and stores the ground state wavefunctions
   ! ... for use in Lanczos linear response calculation
@@ -8,23 +8,23 @@ subroutine lr_read_wf()
   ! Modified by Osman Baris Malcioglu (2009)
 #include "f_defs.h"
   !
-  use io_global,            only : stdout
-  use klist,                only : nks, xk
-  use cell_base,            only : tpiba2
-  use gvect,                only : ngm, g
-  use io_files,             only : nwordwfc, iunwfc, prefix, diropn, tmp_dir, wfc_dir 
-  use lr_variables,         only : evc0, sevc0 ,revc0, evc0_virt, sevc0_virt, nbnd_total, &
+  USE io_global,            ONLY : stdout
+  USE klist,                ONLY : nks, xk
+  USE cell_base,            ONLY : tpiba2
+  USE gvect,                ONLY : ngm, g
+  USE io_files,             ONLY : nwordwfc, iunwfc, prefix, diropn, tmp_dir, wfc_dir
+  USE lr_variables,         ONLY : evc0, sevc0 ,revc0, evc0_virt, sevc0_virt, nbnd_total, &
                                    becp1_virt,becp1_c_virt
-  use realus,               only : igk_k,npw_k
-  use lr_variables,         only : becp1, becp1_c,test_case_no,size_evc,project
-  use wvfct,                only : npw, igk, nbnd, g2kin, npwx, ecutwfc
-  use control_flags,        only : gamma_only
+  USE realus,               ONLY : igk_k,npw_k
+  USE lr_variables,         ONLY : becp1, becp1_c,test_case_no,size_evc,project
+  USE wvfct,                ONLY : npw, igk, nbnd, g2kin, npwx, ecutwfc
+  USE control_flags,        ONLY : gamma_only
   !use wavefunctions_module,only : evc
-  use gvecs,              only : nls, nlsm
-  use fft_base,             only : dffts
-  use fft_interfaces,       only : invfft
-  use uspp,                 only : vkb, nkb, okvan
-  use becmod,               only : bec_type, becp, calbec
+  USE gvecs,              ONLY : nls, nlsm
+  USE fft_base,             ONLY : dffts
+  USE fft_interfaces,       ONLY : invfft
+  USE uspp,                 ONLY : vkb, nkb, okvan
+  USE becmod,               ONLY : bec_type, becp, calbec
   !use lr_variables,         only : real_space
   !use real_beta,            only : ccalbecr_gamma,s_psir,fft_orbital_gamma,bfft_orbital_gamma
   USE realus,               ONLY : real_space, fft_orbital_gamma, initialisation_level, &
@@ -37,39 +37,39 @@ subroutine lr_read_wf()
 
 
   !
-  implicit none
+  IMPLICIT NONE
   !
   !
 
   !
   ! local variables
-  integer :: ik, ibnd, ig, itmp1,itmp2,itmp3
-  logical :: exst
-  character(len=256) :: filename, tmp_dir_saved
+  INTEGER :: ik, ibnd, ig, itmp1,itmp2,itmp3
+  LOGICAL :: exst
+  CHARACTER(len=256) :: filename, tmp_dir_saved
   !OBM debug
   real(kind=dp) :: obm_debug
-  complex(kind=dp),external :: lr_dot
+  COMPLEX(kind=dp),EXTERNAL :: lr_dot
   !
-  If (lr_verbosity > 5) THEN
+  IF (lr_verbosity > 5) THEN
     WRITE(stdout,'("<lr_read_wf>")')
-  endif
+  ENDIF
   !
-  if (nbnd_total>nbnd .or. project) then
-   call virt_read()
-  else
-   call normal_read()
-  endif
+  IF (nbnd_total>nbnd .or. project) THEN
+   CALL virt_read()
+  ELSE
+   CALL normal_read()
+  ENDIF
   !
   !print *, "evc0",lr_dot(evc0(:,:,1),evc0(:,:,1))
   !print *, "sevc0",lr_dot(sevc0(:,:,1),sevc0(:,:,1))
   !print *, "<evc0|sevc0>",lr_dot(evc0(:,:,1),sevc0(:,:,1))
   !print *, "<revc0>",lr_dot(revc0(:,:,1),revc0(:,:,1))
   !print *, "becp1",lr_dot(becp1(:,:),becp1(:,:))
-  return
+  RETURN
 !!!!
-  contains
+  CONTAINS
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-subroutine normal_read()
+SUBROUTINE normal_read()
 !
 !The usual way of reading wavefunctions
 !
@@ -84,37 +84,37 @@ USE lr_variables, ONLY: check_all_bands_gamma, check_density_gamma,&
   !   This is a parallel read, done in wfc_dir
   tmp_dir_saved = tmp_dir
   IF ( wfc_dir /= 'undefined' ) tmp_dir = wfc_dir
-  call diropn ( iunwfc, 'wfc', nwordwfc, exst)
+  CALL diropn ( iunwfc, 'wfc', nwordwfc, exst)
   !
-  if (.not.exst .and. wfc_dir == 'undefined') call errore('lr_read_wfc', TRIM( prefix )//'.wfc'//' not found',1)
+  IF (.not.exst .and. wfc_dir == 'undefined') CALL errore('lr_read_wfc', trim( prefix )//'.wfc'//' not found',1)
   !
-  if (.not.exst .and. wfc_dir /= 'undefined') then
+  IF (.not.exst .and. wfc_dir /= 'undefined') THEN
     WRITE( stdout, '(/5x,"Attempting to read wfc from outdir instead of wfcdir")' )
     CLOSE( UNIT = iunwfc)
     tmp_dir = tmp_dir_saved
-    call diropn ( iunwfc, 'wfc', nwordwfc, exst)
-    if (.not.exst) call errore('lr_read_wfc', TRIM( prefix )//'.wfc'//' not found',1)
-  endif
-  if (gamma_only) then
+    CALL diropn ( iunwfc, 'wfc', nwordwfc, exst)
+    IF (.not.exst) CALL errore('lr_read_wfc', trim( prefix )//'.wfc'//' not found',1)
+  ENDIF
+  IF (gamma_only) THEN
    WRITE( stdout, '(/5x,"Gamma point algorithm")' )
-  else
-   call errore('lr_read_wfc', 'k-point algorithm is not tested yet',1)
+  ELSE
+   CALL errore('lr_read_wfc', 'k-point algorithm is not tested yet',1)
    WRITE( stdout, '(/5x,"Generalised algorithm !warning")' )
-  endif
+  ENDIF
 
-  do ik=1,nks
+  DO ik=1,nks
      !
-     if (.not. real_space_debug > 0 ) then !else done in init_realspace realus
+     IF (.not. real_space_debug > 0 ) THEN !else done in init_realspace realus
        CALL gk_sort( xk(1,ik), ngm, g, ( ecutwfc / tpiba2 ), npw, igk, g2kin )
        !
        npw_k(ik) = npw
        !
        igk_k(:,ik) = igk(:)
-     endif
+     ENDIF
      !
-     call davcio(evc0(:,:,ik),nwordwfc,iunwfc,ik,-1)
+     CALL davcio(evc0(:,:,ik),nwordwfc,iunwfc,ik,-1)
      !
-  enddo
+  ENDDO
   !
   !
   CLOSE( UNIT = iunwfc)
@@ -126,119 +126,119 @@ USE lr_variables, ONLY: check_all_bands_gamma, check_density_gamma,&
   ! vkb * evc0 and initialization of sevc0
   !
   !
-  if ( okvan ) then
+  IF ( okvan ) THEN
      !
-     if ( gamma_only ) then
+     IF ( gamma_only ) THEN
         !
         ! Following line is to be removed when real space implementation is complete
-        call init_us_2(npw,igk_k(:,1),xk(1,1),vkb)
+        CALL init_us_2(npw,igk_k(:,1),xk(1,1),vkb)
         !
-        if (real_space_debug>0) then
+        IF (real_space_debug>0) THEN
         !
          !
          !
-          do ibnd=1,nbnd,2
-             call fft_orbital_gamma(evc0(:,:,1),ibnd,nbnd)
-             call calbec_rs_gamma(ibnd,nbnd,becp1)
+          DO ibnd=1,nbnd,2
+             CALL fft_orbital_gamma(evc0(:,:,1),ibnd,nbnd)
+             CALL calbec_rs_gamma(ibnd,nbnd,becp1)
              becp%r(:,ibnd)=becp1(:,ibnd)
-             if (ibnd + 1 .le. nbnd) becp%r(:,ibnd+1)=becp1(:,ibnd+1)
-             call s_psir_gamma(ibnd,nbnd)
-             call bfft_orbital_gamma(sevc0(:,:,1),ibnd,nbnd)
-          enddo
+             IF (ibnd + 1 <= nbnd) becp%r(:,ibnd+1)=becp1(:,ibnd+1)
+             CALL s_psir_gamma(ibnd,nbnd)
+             CALL bfft_orbital_gamma(sevc0(:,:,1),ibnd,nbnd)
+          ENDDO
           !rbecp=becp1
           !print *,rbecp
           !
-          if (test_case_no .eq. 1) then
-           write(stdout,'(/5x,"Test Case 1, dumping Real space calculated rbecp and sevc0",1x)')
+          IF (test_case_no == 1) THEN
+           WRITE(stdout,'(/5x,"Test Case 1, dumping Real space calculated rbecp and sevc0",1x)')
            filename=trim(prefix) // "-rbecp-rs.dump"
            OPEN(UNIT=47,FILE=filename,STATUS='NEW',ACCESS = 'SEQUENTIAL')
-           write(unit=47,FMT='("#RBECP SIZE :",i6," number of beta fs",i6," bands",i6)') size(becp%r)&
+           WRITE(unit=47,FMT='("#RBECP SIZE :",i6," number of beta fs",i6," bands",i6)') size(becp%r)&
                                                             ,size(becp%r,1),size(becp%r,2)
 
-           do itmp2=1, SIZE(becp%r,2)
-             write(unit=47,FMT='("#Band no",i3)') itmp2
-             do itmp1=1, SIZE(becp%r,1)
-              write(unit=47,FMT=*) becp%r(itmp1,itmp2)
-             enddo
-            enddo
-           close(47)
+           DO itmp2=1, size(becp%r,2)
+             WRITE(unit=47,FMT='("#Band no",i3)') itmp2
+             DO itmp1=1, size(becp%r,1)
+              WRITE(unit=47,FMT=*) becp%r(itmp1,itmp2)
+             ENDDO
+            ENDDO
+           CLOSE(47)
            filename=trim(prefix) // "-sevc0-rs.dump"
            OPEN(UNIT=48,FILE=filename,STATUS='NEW',ACCESS = 'SEQUENTIAL')
-           write(unit=48,FMT='("#SEVC0 SIZE :",i6," NPW ",i6," BANDS ",i6," DIM3",i6)') size(sevc0), &
+           WRITE(unit=48,FMT='("#SEVC0 SIZE :",i6," NPW ",i6," BANDS ",i6," DIM3",i6)') size(sevc0), &
                                         size(sevc0,1), size(sevc0,2), size(sevc0,3)
-           do itmp2=1, SIZE(sevc0,2)
-             write(unit=48,FMT='("#Band no",i3)') itmp2
-             do itmp1=1, SIZE(sevc0,1)
-               write(unit=48,FMT='(i6,2x,e21.15, 2x, e21.15,2x)') itmp1, DBLE(sevc0(itmp1,itmp2,1)), AIMAG(sevc0(itmp1,itmp2,1))
-             enddo
-            enddo
+           DO itmp2=1, size(sevc0,2)
+             WRITE(unit=48,FMT='("#Band no",i3)') itmp2
+             DO itmp1=1, size(sevc0,1)
+               WRITE(unit=48,FMT='(i6,2x,e21.15, 2x, e21.15,2x)') itmp1, dble(sevc0(itmp1,itmp2,1)), aimag(sevc0(itmp1,itmp2,1))
+             ENDDO
+            ENDDO
 
-           close(48)
-          endif
+           CLOSE(48)
+          ENDIF
           !print *, becp1-rbecp
           !
           ! makedo part until spsi is in place - obsolote
           ! call s_psi(npwx, npw_k(1), nbnd, evc0(:,:,1), sevc0(:,:,1))
-        else
+        ELSE
            !
            !call pw_gemm('Y',nkb,nbnd,npw_k(1),vkb,npwx,evc0,npwx,becp1,nkb)
-           call calbec(npw_k(1),vkb,evc0(:,:,1),becp1)
+           CALL calbec(npw_k(1),vkb,evc0(:,:,1),becp1)
            !
            becp%r=becp1
            !
-           call s_psi(npwx, npw_k(1), nbnd, evc0(:,:,1), sevc0(:,:,1))
+           CALL s_psi(npwx, npw_k(1), nbnd, evc0(:,:,1), sevc0(:,:,1))
            ! Test case
-           if (test_case_no .eq. 1) then
-            write(stdout,'(/5x,"Test Case 1, dumping Fourier space calculated rbecp and sevc0",1x)')
+           IF (test_case_no == 1) THEN
+            WRITE(stdout,'(/5x,"Test Case 1, dumping Fourier space calculated rbecp and sevc0",1x)')
             filename=trim(prefix) // "-rbecp.dump"
             OPEN(UNIT=47,FILE=filename,STATUS='NEW',ACCESS = 'SEQUENTIAL')
-            write(unit=47,FMT='("#RBECP SIZE :",i6," number of beta fs",i6," bands",i6)') size(becp%r)&
+            WRITE(unit=47,FMT='("#RBECP SIZE :",i6," number of beta fs",i6," bands",i6)') size(becp%r)&
                                                             ,size(becp%r,1),size(becp%r,2)
-            do itmp2=1, SIZE(becp%r,2)
-             write(unit=47,FMT='("#Band no",i3)') itmp2
-             do itmp1=1, SIZE(becp%r,1)
-              write(unit=47,FMT=*) becp%r(itmp1,itmp2)
-             enddo
-            enddo
-            close(47)
+            DO itmp2=1, size(becp%r,2)
+             WRITE(unit=47,FMT='("#Band no",i3)') itmp2
+             DO itmp1=1, size(becp%r,1)
+              WRITE(unit=47,FMT=*) becp%r(itmp1,itmp2)
+             ENDDO
+            ENDDO
+            CLOSE(47)
             filename=trim(prefix) // "-sevc0.dump"
             OPEN(UNIT=48,FILE=filename,STATUS='NEW',ACCESS = 'SEQUENTIAL')
-            write(unit=48,FMT='("#SEVC0 SIZE :",i6," NPW ",i6," BANDS ",i6," DIM3",i6)') size(sevc0), &
+            WRITE(unit=48,FMT='("#SEVC0 SIZE :",i6," NPW ",i6," BANDS ",i6," DIM3",i6)') size(sevc0), &
                                         size(sevc0,1), size(sevc0,2), size(sevc0,3)
-            do itmp2=1, SIZE(sevc0,2)
-              write(unit=48,FMT='("#Band no",i3)') itmp2
-              do itmp1=1, SIZE(sevc0,1)
-                write(unit=48,FMT='(i6,2x,e21.15, 2x, e21.15,2x)') itmp1, DBLE(sevc0(itmp1,itmp2,1)), AIMAG(sevc0(itmp1,itmp2,1))
-              enddo
-             enddo
-             close(48)
-           endif
+            DO itmp2=1, size(sevc0,2)
+              WRITE(unit=48,FMT='("#Band no",i3)') itmp2
+              DO itmp1=1, size(sevc0,1)
+                WRITE(unit=48,FMT='(i6,2x,e21.15, 2x, e21.15,2x)') itmp1, dble(sevc0(itmp1,itmp2,1)), aimag(sevc0(itmp1,itmp2,1))
+              ENDDO
+             ENDDO
+             CLOSE(48)
+           ENDIF
 
            !
-        endif
-     else
+        ENDIF
+     ELSE
         !
         ! K point generalized stuff starts here
-        do ik=1,nks
+        DO ik=1,nks
            !
-           call init_us_2(npw_k(ik),igk_k(1,ik),xk(1,ik),vkb)
+           CALL init_us_2(npw_k(ik),igk_k(1,ik),xk(1,ik),vkb)
            !
            !call ccalbec(nkb,npwx,npw_k(ik),nbnd,becp1_c(:,:,ik),vkb,evc0(:,:,ik))
-           call calbec(npw_k(ik),vkb,evc0(:,:,ik),becp1_c(:,:,ik))
+           CALL calbec(npw_k(ik),vkb,evc0(:,:,ik),becp1_c(:,:,ik))
            !
            becp%k=becp1_c(:,:,ik)
            !
-           call s_psi (npwx, npw_k(ik), nbnd, evc0(:,:,ik), sevc0(:,:,ik))
+           CALL s_psi (npwx, npw_k(ik), nbnd, evc0(:,:,ik), sevc0(:,:,ik))
            !
-        end do
+        ENDDO
         !
-     end if
+     ENDIF
      !
-  else
+  ELSE
      !
      sevc0=evc0
      !
-  end if
+  ENDIF
   !
   !
   ! Inverse fourier transform of evc0
@@ -246,13 +246,13 @@ USE lr_variables, ONLY: check_all_bands_gamma, check_density_gamma,&
   !
   revc0=(0.0d0,0.0d0)
   !
-  if ( gamma_only ) then
+  IF ( gamma_only ) THEN
      !
-     do ibnd=1,nbnd,2
+     DO ibnd=1,nbnd,2
         !
-        if (ibnd<nbnd) then
+        IF (ibnd<nbnd) THEN
            !
-           do ig=1,npw_k(1)
+           DO ig=1,npw_k(1)
               !
               revc0(nls(igk_k(ig,1)),ibnd,1)=evc0(ig,ibnd,1)+&
                      (0.0d0,1.0d0)*evc0(ig,ibnd+1,1)
@@ -260,97 +260,97 @@ USE lr_variables, ONLY: check_all_bands_gamma, check_density_gamma,&
               revc0(nlsm(igk_k(ig,1)),ibnd,1)=conjg(evc0(ig,ibnd,1)-&
                      (0.0d0,1.0d0)*evc0(ig,ibnd+1,1))
               !
-           end do
+           ENDDO
            !
-        else
+        ELSE
            !
-           do ig=1,npw_k(1)
+           DO ig=1,npw_k(1)
               !
               revc0(nls(igk_k(ig,1)),ibnd,1)=evc0(ig,ibnd,1)
               !
               revc0(nlsm(igk_k(ig,1)),ibnd,1)=conjg(evc0(ig,ibnd,1))
               !
-           enddo
+           ENDDO
            !
-        endif
+        ENDIF
         !
         CALL invfft ('Wave', revc0(:,ibnd,1), dffts)
         !
-     end do
+     ENDDO
      !
-  else
+  ELSE
      !
-     do ik=1,nks
+     DO ik=1,nks
         !
-        do ibnd=1,nbnd
+        DO ibnd=1,nbnd
            !
-           do ig=1,npw_k(ik)
+           DO ig=1,npw_k(ik)
               !
               revc0(nls(igk_k(ig,ik)),ibnd,ik)=evc0(ig,ibnd,ik)
               !
-           enddo
+           ENDDO
            !
            CALL invfft ('Wave', revc0(:,ibnd,ik), dffts)
            !
-        end do
+        ENDDO
         !
-     end do
+     ENDDO
      !
-  end if
+  ENDIF
   !
   !print * , "evc0 ",evc0(1:3,1,1)
   !
-  if (lr_verbosity >10) then
-          call check_all_bands_gamma(evc0(:,:,1),sevc0(:,:,1),nbnd,nbnd)
-          write(stdout,'("evc0")')
-          do ibnd=1,nbnd
-             call check_vector_gamma(evc0(:,ibnd,1))
-          enddo
-          call check_density_gamma(revc0(:,:,1),nbnd)
-  endif
+  IF (lr_verbosity >10) THEN
+          CALL check_all_bands_gamma(evc0(:,:,1),sevc0(:,:,1),nbnd,nbnd)
+          WRITE(stdout,'("evc0")')
+          DO ibnd=1,nbnd
+             CALL check_vector_gamma(evc0(:,ibnd,1))
+          ENDDO
+          CALL check_density_gamma(revc0(:,:,1),nbnd)
+  ENDIF
   !
   !OBM!!! debug---
   !CALL lr_normalise( evc0(:,:,1), obm_debug)
   !print *, "norm of evc0 ",obm_debug
   !OBM!!! debug---
   ! OBM - Last minute check for real space implementation,
-  IF ( real_space_debug > 0 .and. .NOT. gamma_only ) &
+  IF ( real_space_debug > 0 .and. .not. gamma_only ) &
        CALL errore( ' iosys ', ' Linear response calculation ' // &
        & 'real space algorithms with k-points not implemented', 1 )
   !
-end subroutine normal_read
+END SUBROUTINE normal_read
 !-----------------------------------------------------------------------
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-subroutine virt_read()
+SUBROUTINE virt_read()
 !
 !The modifications to read also the virtual orbitals
 !
 USE control_ph,            ONLY : nbnd_occ
-use grid_dimensions,       only : nrxx
+USE grid_dimensions,       ONLY : nrxx
 USE lr_variables, ONLY: check_all_bands_gamma, check_density_gamma,&
                         check_vector_gamma
   IMPLICIT NONE
-  complex(kind=dp), allocatable :: evc_all(:,:,:)
-  complex(kind=dp), allocatable :: sevc_all(:,:,:)
-  real(kind=dp), allocatable :: becp1_all(:,:)
-  complex(kind=dp), allocatable :: becp1_c_all(:,:,:)
-  complex(kind=dp), allocatable :: revc_all(:,:,:)
+  COMPLEX(kind=dp), ALLOCATABLE :: evc_all(:,:,:)
+  COMPLEX(kind=dp), ALLOCATABLE :: sevc_all(:,:,:)
+  real(kind=dp), ALLOCATABLE :: becp1_all(:,:)
+  COMPLEX(kind=dp), ALLOCATABLE :: becp1_c_all(:,:,:)
+  COMPLEX(kind=dp), ALLOCATABLE :: revc_all(:,:,:)
 
   !First pretend everything is normal
   nbnd=nbnd_total
   !
-  allocate(revc_all(nrxx,nbnd,nks))
-  allocate(evc_all(npwx,nbnd,nks))
-  allocate(sevc_all(npwx,nbnd,nks))
-  if (nkb > 0) then
-    if(gamma_only) then
-       allocate(becp1_all(nkb,nbnd))
+  ALLOCATE(revc_all(nrxx,nbnd,nks))
+  ALLOCATE(evc_all(npwx,nbnd,nks))
+  ALLOCATE(sevc_all(npwx,nbnd,nks))
+  IF (nkb > 0) THEN
+    IF(gamma_only) THEN
+       ALLOCATE(becp1_all(nkb,nbnd))
        becp1_all(:,:)=0.0d0
-    else
-       allocate(becp1_c_all(nkb,nbnd,nks))
+    ELSE
+       ALLOCATE(becp1_c_all(nkb,nbnd,nks))
        becp1_c_all(:,:,:)=(0.0d0,0.0d0)
-    endif
-  endif
+    ENDIF
+  ENDIF
 
 
   nwordwfc = 2 * nbnd * npwx
@@ -360,40 +360,40 @@ USE lr_variables, ONLY: check_all_bands_gamma, check_density_gamma,&
   !   This is a parallel read, done in wfc_dir
   tmp_dir_saved = tmp_dir
   IF ( wfc_dir /= 'undefined' ) tmp_dir = wfc_dir
-  call diropn ( iunwfc, 'wfc', nwordwfc, exst)
+  CALL diropn ( iunwfc, 'wfc', nwordwfc, exst)
   !
-  if (.not.exst .and. wfc_dir == 'undefined') call errore('lr_read_wfc', TRIM( prefix )//'.wfc'//' not found',1)
+  IF (.not.exst .and. wfc_dir == 'undefined') CALL errore('lr_read_wfc', trim( prefix )//'.wfc'//' not found',1)
   !
-  if (.not.exst .and. wfc_dir /= 'undefined') then
+  IF (.not.exst .and. wfc_dir /= 'undefined') THEN
     WRITE( stdout, '(/5x,"Attempting to read from outdir instead of wfcdir")' )
     CLOSE( UNIT = iunwfc)
     tmp_dir = tmp_dir_saved
-    call diropn ( iunwfc, 'wfc', nwordwfc, exst)
-    if (.not.exst) call errore('lr_read_wfc', TRIM( prefix )//'.wfc'//' not found',1)
-  endif
+    CALL diropn ( iunwfc, 'wfc', nwordwfc, exst)
+    IF (.not.exst) CALL errore('lr_read_wfc', trim( prefix )//'.wfc'//' not found',1)
+  ENDIF
   !
-  if (gamma_only) then
+  IF (gamma_only) THEN
    WRITE( stdout, '(/5x,"Gamma point algorithm")' )
-  else
-   call errore('lr_read_wfc', 'k-point algorithm is not tested yet',1)
+  ELSE
+   CALL errore('lr_read_wfc', 'k-point algorithm is not tested yet',1)
    WRITE( stdout, '(/5x,"Generalised algorithm !warning")' )
-  endif
+  ENDIF
 
-  do ik=1,nks
+  DO ik=1,nks
      !
-     if (.not. real_space_debug > 0 ) then !else done in init_realspace realus
+     IF (.not. real_space_debug > 0 ) THEN !else done in init_realspace realus
        CALL gk_sort( xk(1,ik), ngm, g, ( ecutwfc / tpiba2 ), npw, igk, g2kin )
        !
        npw_k(ik) = npw
        !
        igk_k(:,ik) = igk(:)
-     endif
+     ENDIF
      !
      !   Read in the ground state wavefunctions
      !   This is a parallel read, done in wfc_dir
-     call davcio(evc_all(:,:,ik),nwordwfc,iunwfc,ik,-1)
+     CALL davcio(evc_all(:,:,ik),nwordwfc,iunwfc,ik,-1)
      !
-  enddo
+  ENDDO
   !
   !
   CLOSE( UNIT = iunwfc)
@@ -405,56 +405,56 @@ USE lr_variables, ONLY: check_all_bands_gamma, check_density_gamma,&
   ! vkb * evc_all and initialization of sevc_all
   !
   !
-  if ( okvan ) then
+  IF ( okvan ) THEN
      !
-     if ( gamma_only ) then
+     IF ( gamma_only ) THEN
         !
         ! Following line is to be removed when real space implementation is complete
-        call init_us_2(npw,igk_k(:,1),xk(1,1),vkb)
+        CALL init_us_2(npw,igk_k(:,1),xk(1,1),vkb)
         !
-        if (real_space_debug>0) then
+        IF (real_space_debug>0) THEN
         !
          !
          !
-          do ibnd=1,nbnd,2
-             call fft_orbital_gamma(evc_all(:,:,1),ibnd,nbnd)
-             call calbec_rs_gamma(ibnd,nbnd,becp1_all)
+          DO ibnd=1,nbnd,2
+             CALL fft_orbital_gamma(evc_all(:,:,1),ibnd,nbnd)
+             CALL calbec_rs_gamma(ibnd,nbnd,becp1_all)
              becp%r(:,ibnd)=becp1_all(:,ibnd)
-             if (ibnd + 1 .le. nbnd) becp%r(:,ibnd+1)=becp1_all(:,ibnd+1)
-             call s_psir_gamma(ibnd,nbnd)
-             call bfft_orbital_gamma(sevc_all(:,:,1),ibnd,nbnd)
-          enddo
-        else
+             IF (ibnd + 1 <= nbnd) becp%r(:,ibnd+1)=becp1_all(:,ibnd+1)
+             CALL s_psir_gamma(ibnd,nbnd)
+             CALL bfft_orbital_gamma(sevc_all(:,:,1),ibnd,nbnd)
+          ENDDO
+        ELSE
            !
-           call calbec(npw_k(1),vkb,evc_all(:,:,1),becp1_all)
+           CALL calbec(npw_k(1),vkb,evc_all(:,:,1),becp1_all)
            !
            becp%r=becp1_all
            !
-           call s_psi(npwx, npw_k(1), nbnd, evc_all(:,:,1), sevc_all(:,:,1))
+           CALL s_psi(npwx, npw_k(1), nbnd, evc_all(:,:,1), sevc_all(:,:,1))
            !
-        endif
-     else
+        ENDIF
+     ELSE
         !
         ! K point generalized stuff starts here
-        do ik=1,nks
+        DO ik=1,nks
            !
-           call init_us_2(npw_k(ik),igk_k(1,ik),xk(1,ik),vkb)
+           CALL init_us_2(npw_k(ik),igk_k(1,ik),xk(1,ik),vkb)
            !
-           call calbec(npw_k(ik),vkb,evc_all(:,:,ik),becp1_c_all(:,:,ik),nbnd)
+           CALL calbec(npw_k(ik),vkb,evc_all(:,:,ik),becp1_c_all(:,:,ik),nbnd)
            !
            becp%k=becp1_c_all(:,:,ik)
            !
-           call s_psi (npwx, npw_k(ik), nbnd, evc_all(:,:,ik), sevc_all(:,:,ik))
+           CALL s_psi (npwx, npw_k(ik), nbnd, evc_all(:,:,ik), sevc_all(:,:,ik))
            !
-        end do
+        ENDDO
         !
-     end if
+     ENDIF
      !
-  else
+  ELSE
      !
      sevc_all=evc_all
      !
-  end if
+  ENDIF
   !
   !
   ! Inverse fourier transform of evc_all
@@ -462,13 +462,13 @@ USE lr_variables, ONLY: check_all_bands_gamma, check_density_gamma,&
   !
   revc_all=(0.0d0,0.0d0)
   !
-  if ( gamma_only ) then
+  IF ( gamma_only ) THEN
      !
-     do ibnd=1,nbnd,2
+     DO ibnd=1,nbnd,2
         !
-        if (ibnd<nbnd) then
+        IF (ibnd<nbnd) THEN
            !
-           do ig=1,npw_k(1)
+           DO ig=1,npw_k(1)
               !
               revc_all(nls(igk_k(ig,1)),ibnd,1)=evc_all(ig,ibnd,1)+&
                      (0.0d0,1.0d0)*evc_all(ig,ibnd+1,1)
@@ -476,43 +476,43 @@ USE lr_variables, ONLY: check_all_bands_gamma, check_density_gamma,&
               revc_all(nlsm(igk_k(ig,1)),ibnd,1)=conjg(evc_all(ig,ibnd,1)-&
                      (0.0d0,1.0d0)*evc_all(ig,ibnd+1,1))
               !
-           end do
+           ENDDO
            !
-        else
+        ELSE
            !
-           do ig=1,npw_k(1)
+           DO ig=1,npw_k(1)
               !
               revc_all(nls(igk_k(ig,1)),ibnd,1)=evc_all(ig,ibnd,1)
               !
               revc_all(nlsm(igk_k(ig,1)),ibnd,1)=conjg(evc_all(ig,ibnd,1))
               !
-           enddo
+           ENDDO
            !
-        endif
+        ENDIF
         !
         CALL invfft ('Wave', revc_all(:,ibnd,1), dffts)
         !
-     end do
+     ENDDO
      !
-  else
+  ELSE
      !
-     do ik=1,nks
+     DO ik=1,nks
         !
-        do ibnd=1,nbnd
+        DO ibnd=1,nbnd
            !
-           do ig=1,npw_k(ik)
+           DO ig=1,npw_k(ik)
               !
               revc_all(nls(igk_k(ig,ik)),ibnd,ik)=evc_all(ig,ibnd,ik)
               !
-           enddo
+           ENDDO
            !
            CALL invfft ('Wave', revc_all(:,ibnd,ik), dffts)
            !
-        end do
+        ENDDO
         !
-     end do
+     ENDDO
      !
-  end if
+  ENDIF
   !
   !now everything goes into right place
   !
@@ -524,52 +524,52 @@ USE lr_variables, ONLY: check_all_bands_gamma, check_density_gamma,&
   sevc0(:,:,:)=sevc_all(:,1:nbnd,:)
   revc0=(0.0d0,0.0d0)
   revc0(:,:,:)=revc_all(:,1:nbnd,:)
-  if (nkb>0) then
-  if (gamma_only) then
+  IF (nkb>0) THEN
+  IF (gamma_only) THEN
     becp1(:,:)=becp1_all(:,1:nbnd)
     becp%r=0.0d0
     becp%r=becp1
-  else
+  ELSE
     becp1_c(:,:,:)=becp1_c_all(:,1:nbnd,:)
     becp%k=(0.0d0,0.0d0)
     becp%k=becp1_c(:,:,1)
-  endif
-  endif
-  if (project) then
+  ENDIF
+  ENDIF
+  IF (project) THEN
    evc0_virt(:,:,:)=evc_all(:,nbnd+1:nbnd_total,:)
    !sevc0_virt(:,:,:)=sevc_all(:,nbnd+1:nbnd_total,:)
-   if (nkb>0) then
-   if (gamma_only) then
+   IF (nkb>0) THEN
+   IF (gamma_only) THEN
     becp1_virt(:,:)=becp1_all(:,nbnd+1:nbnd_total)
-   else
+   ELSE
     becp1_c_virt(:,:,:)=becp1_c_all(:,nbnd+1:nbnd_total,:)
-   endif
-   endif
-  endif
-  if (lr_verbosity >10) then
-          call check_all_bands_gamma(evc_all(:,:,1),sevc_all(:,:,1),nbnd_total,nbnd)
-          call check_density_gamma(revc_all(:,:,1),nbnd)
-          write(stdout,'("evc0")')
-          do ibnd=1,nbnd
-             call check_vector_gamma(evc0(:,ibnd,1))
-          enddo
-  endif
-  if (nkb>0) then
-  if (gamma_only) then
-   deallocate(becp1_all)
-  else
-   deallocate(becp1_c_all)
-  endif
-  endif
-  deallocate(evc_all)
-  deallocate(sevc_all)
-  deallocate(revc_all)
+   ENDIF
+   ENDIF
+  ENDIF
+  IF (lr_verbosity >10) THEN
+          CALL check_all_bands_gamma(evc_all(:,:,1),sevc_all(:,:,1),nbnd_total,nbnd)
+          CALL check_density_gamma(revc_all(:,:,1),nbnd)
+          WRITE(stdout,'("evc0")')
+          DO ibnd=1,nbnd
+             CALL check_vector_gamma(evc0(:,ibnd,1))
+          ENDDO
+  ENDIF
+  IF (nkb>0) THEN
+  IF (gamma_only) THEN
+   DEALLOCATE(becp1_all)
+  ELSE
+   DEALLOCATE(becp1_c_all)
+  ENDIF
+  ENDIF
+  DEALLOCATE(evc_all)
+  DEALLOCATE(sevc_all)
+  DEALLOCATE(revc_all)
 
   ! OBM - Last minute check for real space implementation,
-  IF ( real_space_debug > 0 .and. .NOT. gamma_only ) &
+  IF ( real_space_debug > 0 .and. .not. gamma_only ) &
        CALL errore( ' iosys ', ' Linear response calculation ' // &
        & 'real space algorithms with k-points not implemented', 1 )
   !
-end subroutine virt_read
+END SUBROUTINE virt_read
 !-----------------------------------------------------------------------
-end subroutine lr_read_wf
+END SUBROUTINE lr_read_wf

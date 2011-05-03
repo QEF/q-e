@@ -10,11 +10,11 @@
 !
 !
 ! Modified by Osman Baris Malcioglu (2009)
-subroutine lr_dvpsi_e(ik,ipol,dvpsi)
+SUBROUTINE lr_dvpsi_e(ik,ipol,dvpsi)
 !----------------------------------------------------------------------
   !----------------------------------------------------------------------
   !
-  ! On output: dvpsi contains P_c^+ x | psi_ik > in crystal axis 
+  ! On output: dvpsi contains P_c^+ x | psi_ik > in crystal axis
   !            (projected on at(*,ipol) )
   !
   ! dvpsi is COMPUTED and WRITTEN on file (vkb,evc,igk must be set) !OBM: This is now handled elesewhere
@@ -32,7 +32,7 @@ subroutine lr_dvpsi_e(ik,ipol,dvpsi)
   USE noncollin_module,ONLY : noncolin, npol
   USE uspp,            ONLY : okvan, nkb, vkb, qq, qq_so, deeq, deeq_nc
   USE uspp_param,      ONLY : nh
-  use control_flags,   only : gamma_only
+  USE control_flags,   ONLY : gamma_only
   !USE ramanm,          ONLY : eth_rps
   !USE eqv,             ONLY : d0psi, eprec
   !USE phus,            ONLY : becp1, becp1_nc !becp1 is calculated here for every k point
@@ -47,18 +47,18 @@ subroutine lr_dvpsi_e(ik,ipol,dvpsi)
   USE realus,                ONLY : real_space, fft_orbital_gamma, initialisation_level, &
                                     bfft_orbital_gamma, calbec_rs_gamma, add_vuspsir_gamma, &
                                     v_loc_psir, s_psir_gamma,npw_k, real_space_debug
- 
+
    USE lr_variables,   ONLY : lr_verbosity, evc0
    USE io_global,      ONLY : stdout
 !DEBUG
   USE lr_variables, ONLY: check_all_bands_gamma, check_density_gamma,check_vector_gamma,check_vector_f
   !
   !
-  implicit none
+  IMPLICIT NONE
   !
-  integer, intent(IN) :: ipol, ik 
+  INTEGER, INTENT(in) :: ipol, ik
   !
-  complex(kind=dp),intent(out) :: dvpsi(npwx,nbnd) 
+  COMPLEX(kind=dp),INTENT(out) :: dvpsi(npwx,nbnd)
   real(kind=dp) :: atnorm
 
   !
@@ -66,37 +66,37 @@ subroutine lr_dvpsi_e(ik,ipol,dvpsi)
   !
   ! Local variables
   !  !
-  complex(kind=dp),allocatable :: d0psi(:,:) 
+  COMPLEX(kind=dp),ALLOCATABLE :: d0psi(:,:)
   !
 
-  integer :: ig, na, ibnd, jbnd, ikb, jkb, nt, lter, ih, jh, ijkb0, nrec
+  INTEGER :: ig, na, ibnd, jbnd, ikb, jkb, nt, lter, ih, jh, ijkb0, nrec
   ! counters
 
-  real(DP), allocatable  :: gk (:,:), h_diag (:,:), eprec(:)
+  real(DP), ALLOCATABLE  :: gk (:,:), h_diag (:,:), eprec(:)
 
   ! the derivative of |k+G|
   real(DP) ::   anorm, thresh
   ! preconditioning cut-off
   ! the desired convergence of linter
 
-  logical :: conv_root
+  LOGICAL :: conv_root
   ! true if convergence has been achieved
 
-  complex(DP), allocatable :: ps2(:,:,:), dvkb (:,:), dvkb1 (:,:),  &
-       work (:,:), spsi(:,:), psc(:,:,:,:) 
-  real(kind=dp), external :: ddot
-  complex(DP), external :: ZDOTC
+  COMPLEX(DP), ALLOCATABLE :: ps2(:,:,:), dvkb (:,:), dvkb1 (:,:),  &
+       work (:,:), spsi(:,:), psc(:,:,:,:)
+  real(kind=dp), EXTERNAL :: ddot
+  COMPLEX(DP), EXTERNAL :: ZDOTC
   ! the scalar products
-  external lr_ch_psi_all, cg_psi
+  EXTERNAL lr_ch_psi_all, cg_psi
   !
   !obm debug
-  real(DP) ::obm_debug 
+  real(DP) ::obm_debug
   !
-  call start_clock ('lr_dvpsi_e') 
+  CALL start_clock ('lr_dvpsi_e')
 
-  If (lr_verbosity > 5) WRITE(stdout,'("<lr_dvpsi_e>")')
+  IF (lr_verbosity > 5) WRITE(stdout,'("<lr_dvpsi_e>")')
 
-  allocate(d0psi(npwx*npol,nbnd))
+  ALLOCATE(d0psi(npwx*npol,nbnd))
   d0psi=(0.d0, 0.d0)
   dvpsi=(0.d0, 0.d0)
   !if (this_pcxpsi_is_on_file(ik,ipol)) then
@@ -106,49 +106,49 @@ subroutine lr_dvpsi_e(ik,ipol,dvpsi)
   !   return
   !end if
   !
-  allocate (work ( npwx, MAX(nkb,1)))
+  ALLOCATE (work ( npwx, max(nkb,1)))
 
-  allocate (gk ( 3, npwx))    
-  allocate (h_diag( npwx*npol, nbnd))
-  !OBM!!!! eprec is also calculated on the fly for each k point     
-  allocate(eprec(nbnd))
+  ALLOCATE (gk ( 3, npwx))
+  ALLOCATE (h_diag( npwx*npol, nbnd))
+  !OBM!!!! eprec is also calculated on the fly for each k point
+  ALLOCATE(eprec(nbnd))
   !OBM!!!!
-  evc(:,:)=evc0(:,:,ik) 
-  if (nkb > 0) then
-     allocate (dvkb (npwx, nkb), dvkb1(npwx, nkb))
+  evc(:,:)=evc0(:,:,ik)
+  IF (nkb > 0) THEN
+     ALLOCATE (dvkb (npwx, nkb), dvkb1(npwx, nkb))
      dvkb (:,:) = (0.d0, 0.d0)
      dvkb1(:,:) = (0.d0, 0.d0)
-  end if
-  do ig = 1, npw_k(ik)
+  ENDIF
+  DO ig = 1, npw_k(ik)
      gk (1, ig) = (xk (1, ik) + g (1, igk (ig) ) ) * tpiba
      gk (2, ig) = (xk (2, ik) + g (2, igk (ig) ) ) * tpiba
      gk (3, ig) = (xk (3, ik) + g (3, igk (ig) ) ) * tpiba
      g2kin (ig) = gk (1, ig) **2 + gk (2, ig) **2 + gk (3, ig) **2
-  enddo 
-  if (lr_verbosity > 10 ) then
-       write(stdout,'("lr_dvpsi_e g2kin:",F15.8)') SUM(g2kin(:))
-  endif
+  ENDDO
+  IF (lr_verbosity > 10 ) THEN
+       WRITE(stdout,'("lr_dvpsi_e g2kin:",F15.8)') sum(g2kin(:))
+  ENDIF
 
 
   !
   ! this is  the kinetic contribution to [H,x]:  -2i (k+G)_ipol * psi
   !
-  do ibnd = 1, nbnd_occ (ik)
-     do ig = 1, npw_k(ik)
+  DO ibnd = 1, nbnd_occ (ik)
+     DO ig = 1, npw_k(ik)
         d0psi (ig, ibnd) = (at(1, ipol) * gk(1, ig) + &
              at(2, ipol) * gk(2, ig) + &
              at(3, ipol) * gk(3, ig) ) &
              *(0.d0,-2.d0)*evc (ig, ibnd)
-     enddo
+     ENDDO
      IF (noncolin) THEN
-        do ig = 1, npw_k(ik)
+        DO ig = 1, npw_k(ik)
            d0psi (ig+npwx, ibnd) = (at(1, ipol) * gk(1, ig) + &
                 at(2, ipol) * gk(2, ig) + &
                 at(3, ipol) * gk(3, ig) ) &
                  *(0.d0,-2.d0)*evc (ig+npwx, ibnd)
-        end do
-     END IF
-  enddo
+        ENDDO
+     ENDIF
+  ENDDO
   !!OBM debug
   !      obm_debug=0
   !     do ibnd=1,nbnd
@@ -157,18 +157,18 @@ subroutine lr_dvpsi_e(ik,ipol,dvpsi)
   !        !
   !     enddo
   !     print *, "lr_dvpsi_e d0psi kinetic contribution", obm_debug
-  if (lr_verbosity > 10 ) then
-       write(stdout,'("lr_dvpsi_e d0psi kinetic contribution:")')
-       do ibnd=1,nbnd
-          call check_vector_gamma(d0psi(:,ibnd))
-       enddo
-  endif
+  IF (lr_verbosity > 10 ) THEN
+       WRITE(stdout,'("lr_dvpsi_e d0psi kinetic contribution:")')
+       DO ibnd=1,nbnd
+          CALL check_vector_gamma(d0psi(:,ibnd))
+       ENDDO
+  ENDIF
   !!obm_debug
 
 
 
 !
-! Uncomment this goto and the continue below to calculate 
+! Uncomment this goto and the continue below to calculate
 ! the matrix elements of p without the commutator with the
 ! nonlocal potential.
 !
@@ -176,95 +176,95 @@ subroutine lr_dvpsi_e(ik,ipol,dvpsi)
   !
   ! and this is the contribution from nonlocal pseudopotentials
   !
-  call gen_us_dj (ik, dvkb)
-  call gen_us_dy (ik, at (1, ipol), dvkb1) 
-  if (lr_verbosity > 10 ) then
-       write(stdout,'("lr_dvpsi_e dvkb:")') 
+  CALL gen_us_dj (ik, dvkb)
+  CALL gen_us_dy (ik, at (1, ipol), dvkb1)
+  IF (lr_verbosity > 10 ) THEN
+       WRITE(stdout,'("lr_dvpsi_e dvkb:")')
        jkb=0
-      do nt = 1, ntyp
-       do na = 1, nat
-        if (nt == ityp (na)) then
-           do ikb = 1, nh (nt)
+      DO nt = 1, ntyp
+       DO na = 1, nat
+        IF (nt == ityp (na)) THEN
+           DO ikb = 1, nh (nt)
               jkb = jkb + 1
-                call check_vector_f(dvkb(:,jkb))
-           enddo
-        endif
-       enddo
-      enddo
-  endif
-  if (lr_verbosity > 10 ) then
-       write(stdout,'("lr_dvpsi_e dvkb1:")') 
+                CALL check_vector_f(dvkb(:,jkb))
+           ENDDO
+        ENDIF
+       ENDDO
+      ENDDO
+  ENDIF
+  IF (lr_verbosity > 10 ) THEN
+       WRITE(stdout,'("lr_dvpsi_e dvkb1:")')
        jkb=0
-      do nt = 1, ntyp
-       do na = 1, nat
-        if (nt == ityp (na)) then
-           do ikb = 1, nh (nt)
+      DO nt = 1, ntyp
+       DO na = 1, nat
+        IF (nt == ityp (na)) THEN
+           DO ikb = 1, nh (nt)
               jkb = jkb + 1
-                call check_vector_f(dvkb1(:,jkb))
-           enddo
-        endif
-       enddo
-      enddo
-  endif
+                CALL check_vector_f(dvkb1(:,jkb))
+           ENDDO
+        ENDIF
+       ENDDO
+      ENDDO
+  ENDIF
 
 
 
-  do ig = 1, npw_k(ik)
-     if (g2kin (ig) < 1.0d-10) then
+  DO ig = 1, npw_k(ik)
+     IF (g2kin (ig) < 1.0d-10) THEN
         gk (1, ig) = 0.d0
         gk (2, ig) = 0.d0
         gk (3, ig) = 0.d0
-     else
+     ELSE
         gk (1, ig) = gk (1, ig) / sqrt (g2kin (ig) )
         gk (2, ig) = gk (2, ig) / sqrt (g2kin (ig) )
         gk (3, ig) = gk (3, ig) / sqrt (g2kin (ig) )
-     endif
-  enddo
+     ENDIF
+  ENDDO
 
   jkb = 0
   work=(0.d0,0.d0)
-  do nt = 1, ntyp
-     do na = 1, nat
-        if (nt == ityp (na)) then
-           do ikb = 1, nh (nt)
+  DO nt = 1, ntyp
+     DO na = 1, nat
+        IF (nt == ityp (na)) THEN
+           DO ikb = 1, nh (nt)
               jkb = jkb + 1
-              do ig = 1, npw_k(ik)
+              DO ig = 1, npw_k(ik)
                  work (ig,jkb) = dvkb1 (ig, jkb) + dvkb (ig, jkb) * &
                       (at (1, ipol) * gk (1, ig) + &
                        at (2, ipol) * gk (2, ig) + &
                        at (3, ipol) * gk (3, ig) )
-              enddo
-           enddo
-        endif
-     enddo
-  enddo
-  deallocate (gk)
-  !OBM!!!be careful, from bwalker, why?!!!!! 
+              ENDDO
+           ENDDO
+        ENDIF
+     ENDDO
+  ENDDO
+  DEALLOCATE (gk)
+  !OBM!!!be careful, from bwalker, why?!!!!!
   work(:,:)=(0.0d0,1.0d0)*work(:,:)
-  !OBM!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! 
-  if (lr_verbosity > 10 ) then
-       write(stdout,'("lr_dvpsi_e non-local contribution:")')
+  !OBM!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  IF (lr_verbosity > 10 ) THEN
+       WRITE(stdout,'("lr_dvpsi_e non-local contribution:")')
        jkb=0
-      do nt = 1, ntyp
-       do na = 1, nat
-        if (nt == ityp (na)) then
-           do ikb = 1, nh (nt)
+      DO nt = 1, ntyp
+       DO na = 1, nat
+        IF (nt == ityp (na)) THEN
+           DO ikb = 1, nh (nt)
               jkb = jkb + 1
-                call check_vector_gamma(work(:,jkb))
-           enddo
-        endif
-       enddo
-      enddo
-  endif
+                CALL check_vector_gamma(work(:,jkb))
+           ENDDO
+        ENDIF
+       ENDDO
+      ENDDO
+  ENDIF
 
 
-  if(gamma_only) then
-     call lr_dvpsi_e_gamma()
-  else if (noncolin) then
-     call lr_dvpsi_e_noncolin()
-  else
-     call lr_dvpsi_e_k()
-  endif
+  IF(gamma_only) THEN
+     CALL lr_dvpsi_e_gamma()
+  ELSEIF (noncolin) THEN
+     CALL lr_dvpsi_e_noncolin()
+  ELSE
+     CALL lr_dvpsi_e_k()
+  ENDIF
   !!OBM debug
   !      obm_debug=0
   !     do ibnd=1,nbnd
@@ -273,53 +273,53 @@ subroutine lr_dvpsi_e(ik,ipol,dvpsi)
   !        !
   !     enddo
   !     print *, "lr_dvpsi_e norm of dvpsi being returned=", obm_debug
-  ! 
-  if (lr_verbosity > 10 ) then
-       write(stdout,'("lr_dvpsi_e d0psi after lr_dvpsi_e case specific calc:")')
-       do ibnd=1,nbnd
-          call check_vector_gamma(d0psi(:,ibnd))
-       enddo
-       write(stdout,'("lr_dvpsi_e dvpsii after lr_dvpsi_e case specific calc:")')
-       do ibnd=1,nbnd
-          call check_vector_gamma(dvpsi(:,ibnd))
-       enddo
-  endif
+  !
+  IF (lr_verbosity > 10 ) THEN
+       WRITE(stdout,'("lr_dvpsi_e d0psi after lr_dvpsi_e case specific calc:")')
+       DO ibnd=1,nbnd
+          CALL check_vector_gamma(d0psi(:,ibnd))
+       ENDDO
+       WRITE(stdout,'("lr_dvpsi_e dvpsii after lr_dvpsi_e case specific calc:")')
+       DO ibnd=1,nbnd
+          CALL check_vector_gamma(dvpsi(:,ibnd))
+       ENDDO
+  ENDIF
 
   !!obm_debug
 
   IF (nkb > 0) THEN
-     deallocate (dvkb1, dvkb)
-  END IF
+     DEALLOCATE (dvkb1, dvkb)
+  ENDIF
   !OBM!!!! End of Brent's seperation
-  
-  deallocate (h_diag)
-  deallocate (work)
 
-  deallocate (eprec)
-  deallocate (d0psi)
-  
+  DEALLOCATE (h_diag)
+  DEALLOCATE (work)
+
+  DEALLOCATE (eprec)
+  DEALLOCATE (d0psi)
+
   !OBM!!!! Addendum to PH dvpsi
-  if (okvan) then
-    allocate (spsi ( npwx*npol, nbnd))    
-    call sm1_psi(.true.,ik,npwx,npw_k(ik),nbnd,dvpsi,spsi)
+  IF (okvan) THEN
+    ALLOCATE (spsi ( npwx*npol, nbnd))
+    CALL sm1_psi(.true.,ik,npwx,npw_k(ik),nbnd,dvpsi,spsi)
     dvpsi(:,:) = spsi(:,:)
-    deallocate(spsi)  
+    DEALLOCATE(spsi)
     !!OBM debug
-    If (lr_verbosity > 7) then 
+    IF (lr_verbosity > 7) THEN
         obm_debug=0
-       do ibnd=1,nbnd
+       DO ibnd=1,nbnd
           !
           obm_debug=obm_debug+ZDOTC(npwx*npol,dvpsi(:,ibnd),1,dvpsi(:,ibnd),1)
           !
-       enddo
-#ifdef __PARA 
-       call mp_sum(obm_debug, intra_pool_comm)
-#endif 
+       ENDDO
+#ifdef __PARA
+       CALL mp_sum(obm_debug, intra_pool_comm)
+#endif
        WRITE(stdout,'("lr_dvpsi_e: dvpsi after sm1_psi:",E15.5)') obm_debug
-    endif 
-  endif
-  
-  ! 
+    ENDIF
+  ENDIF
+
+  !
   ! For some ibrav the crystal axes are not normalized
   ! Here we include the correct normalization
   ! for Lanczos initial wfcs
@@ -330,11 +330,11 @@ subroutine lr_dvpsi_e(ik,ipol,dvpsi)
   !nrec = (ipol - 1)*nksq + ik
   !call davcio(dvpsi, lrebar, iuebar, nrec, 1)
   !this_pcxpsi_is_on_file(ik,ipol) = .true.
-  call stop_clock ('lr_dvpsi_e')
+  CALL stop_clock ('lr_dvpsi_e')
   !
-  return
+  RETURN
   !
-contains
+CONTAINS
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !
 !
@@ -342,48 +342,48 @@ contains
 !
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-  subroutine lr_dvpsi_e_k()
+  SUBROUTINE lr_dvpsi_e_k()
   !OBM!! The k point part is essentially the same as the phonon dvpsi_e, with noncolin part removed
   USE becmod,          ONLY : bec_type, becp, calbec
-  
-  implicit none
-  
-  complex(kind=dp), allocatable :: becp1(:,:),becp2(:,:)  
-  
+
+  IMPLICIT NONE
+
+  COMPLEX(kind=dp), ALLOCATABLE :: becp1(:,:),becp2(:,:)
+
   IF (nkb > 0) THEN
-        allocate (becp1 (nkb, nbnd))
-        allocate (becp2 (nkb, nbnd))
-  END IF
+        ALLOCATE (becp1 (nkb, nbnd))
+        ALLOCATE (becp2 (nkb, nbnd))
+  ENDIF
      becp1=0.0
      becp2=0.0
      becp%k=0.0
-     
+
      ! OBM : Change calbec to use calbec_type as soon as possible
      !
-     call calbec (npw_k(ik), vkb, evc, becp1)
-     
-     if(nkb>0) then !If there are no beta functions, below loop returns an error
-       call calbec (npw_k(ik), work, evc, becp2)
-    
+     CALL calbec (npw_k(ik), vkb, evc, becp1)
+
+     IF(nkb>0) THEN !If there are no beta functions, below loop returns an error
+       CALL calbec (npw_k(ik), work, evc, becp2)
+
      ijkb0 = 0
-     allocate (ps2 ( nkb, nbnd, 2))
+     ALLOCATE (ps2 ( nkb, nbnd, 2))
      ps2=(0.d0,0.d0)
-     do nt = 1, ntyp
-        do na = 1, nat
-           if (nt == ityp (na)) then
-              do ih = 1, nh (nt)
+     DO nt = 1, ntyp
+        DO na = 1, nat
+           IF (nt == ityp (na)) THEN
+              DO ih = 1, nh (nt)
                  ikb = ijkb0 + ih
-                 do jh = 1, nh (nt)
+                 DO jh = 1, nh (nt)
                     jkb = ijkb0 + jh
-                    do ibnd = 1, nbnd_occ (ik)
-                         !OBM!!! Notice that in the original version ikb is 1, I 
+                    DO ibnd = 1, nbnd_occ (ik)
+                         !OBM!!! Notice that in the original version ikb is 1, I
                          !       think this was a bug of the original code
                           ps2(ikb,ibnd,1) = ps2(ikb,ibnd,1)+ becp2(jkb,ibnd)* &
                               (deeq(ih,jh,na,current_spin) &
                               -et(ibnd,ik)*qq(ih,jh,nt))
                           ps2(ikb,ibnd,2) = ps2(ikb,ibnd,2) +becp1(jkb,ibnd) * &
                               (-1.d0,0.d0)*(deeq(ih,jh,na,current_spin)&
-                              -et(ibnd,ik)*qq(ih,jh,nt)) 
+                              -et(ibnd,ik)*qq(ih,jh,nt))
                          !original from Phonon
                          !ps2(ikb,ibnd,1) = ps2(ikb,ibnd,1)+ becp2(jkb,ibnd)* &
                          !     (0.d0,-1.d0)*(deeq(ih,jh,na,current_spin) &
@@ -392,81 +392,81 @@ contains
                          !     (0.d0,-1.d0)*(deeq(ih,jh,na,current_spin)&
                          !     -et(ibnd,ik)*qq(ih,jh,nt))
                          !OBM!!! But why?
-                    enddo
-                 enddo
-              enddo
+                    ENDDO
+                 ENDDO
+              ENDDO
               ijkb0=ijkb0+nh(nt)
-           end if
-        end do
-     end do
-     if (ikb /= nkb .OR. jkb /= nkb) call errore ('lr_dvpsi_e', 'unexpected error',1)
-     !OBM!!! In the archaic version Brent used, this part was embedded in the 
+           ENDIF
+        ENDDO
+     ENDDO
+     IF (ikb /= nkb .or. jkb /= nkb) CALL errore ('lr_dvpsi_e', 'unexpected error',1)
+     !OBM!!! In the archaic version Brent used, this part was embedded in the
      !       above loop as ZAXPY
-     ! 
-     
+     !
+
         CALL ZGEMM( 'N', 'N', npw_k(ik), nbnd_occ(ik), nkb, &
              (1.d0,0.d0), vkb(1,1), npwx, ps2(1,1,1), nkb, (1.d0,0.d0), &
              d0psi(1,1), npwx )
         CALL ZGEMM( 'N', 'N', npw_k(ik), nbnd_occ(ik), nkb, &
              (1.d0,0.d0),work(1,1), npwx, ps2(1,1,2), nkb, (1.d0,0.d0), &
              d0psi(1,1), npwx )
-        deallocate (ps2)
-     endif
+        DEALLOCATE (ps2)
+     ENDIF
      !print *, "new version k point, before ortho", d0psi(1:3,1)
      !
      !    orthogonalize d0psi to the valence subspace: ps = <evc|d0psi>
      !    Apply -P^+_c
      !OBM!! lr_ortho no longer calculates sevc, do it beforhand
-     
+
      IF (okvan) CALL calbec ( npw_k(ik), vkb, evc, becp, nbnd)
      CALL s_psi (npwx, npw_k(ik), nbnd, evc, dvpsi)
      CALL lr_ortho(d0psi, evc, ik, ik, dvpsi,.false.)
      !d0psi=-d0psi
-     
+
     !print *, "new version k point, after ortho", d0psi(1:3,1)
-    
-     
+
+
      !
      !   d0psi contains P^+_c [H-eS,x] psi_v for the polarization direction ipol
      !   Now solve the linear systems (H-e_vS)*P_c(x*psi_v)=P_c^+ [H-e_vS,x]*psi_v
      !
-     !OBM!!! thresh = eth_rps 
+     !OBM!!! thresh = eth_rps
      thresh = 1.d-5
      h_diag=0.d0
-     
+
      !OBM!!! on the fly calculation of eprec
      ! I am using the work as a working memory, it seems not to be used anymore
-        deallocate (work)
-        allocate (work(npwx,nbnd))
-        do ibnd=1,nbnd 
-          ! 
+        DEALLOCATE (work)
+        ALLOCATE (work(npwx,nbnd))
+        DO ibnd=1,nbnd
+          !
           work = 0.d0
-          ! 
-          conv_root = .true. 
-          ! 
-          do ig=1,npw_k(ik) 
-             work(ig,1)=g2kin(ig)*evc(ig,ibnd) 
-          enddo
-          ! 
-          eprec(ibnd)=1.35d0*ZDOTC(npw_k(ik),evc(1,ibnd),1,work,1) 
-          ! 
-       enddo
-       ! 
-#ifdef __PARA 
-       call mp_sum(eprec, intra_pool_comm)
-#endif 
+          !
+          conv_root = .true.
+          !
+          DO ig=1,npw_k(ik)
+             work(ig,1)=g2kin(ig)*evc(ig,ibnd)
+          ENDDO
+          !
+          eprec(ibnd)=1.35d0*ZDOTC(npw_k(ik),evc(1,ibnd),1,work,1)
+          !
+       ENDDO
+       !
+#ifdef __PARA
+       CALL mp_sum(eprec, intra_pool_comm)
+#endif
        !OBM!!!
-       !print *, "eprec", eprec     
-       do ibnd = 1, nbnd_occ (ik)
-          do ig = 1, npw_k(ik)
+       !print *, "eprec", eprec
+       DO ibnd = 1, nbnd_occ (ik)
+          DO ig = 1, npw_k(ik)
              h_diag (ig, ibnd) = 1.d0 / max (1.0d0, g2kin (ig) / eprec (ibnd) )
-          enddo
+          ENDDO
           IF (noncolin) THEN
-             do ig = 1, npw_k(ik)
+             DO ig = 1, npw_k(ik)
                 h_diag (ig+npwx, ibnd) = 1.d0/max(1.0d0,g2kin(ig)/eprec(ibnd))
-             enddo
-          END IF
-       enddo
+             ENDDO
+          ENDIF
+       ENDDO
        !
        !print *, h_diag(1:10,1)
        !OBM!!! upto here, the dvpsi was used as a scratch
@@ -474,13 +474,13 @@ contains
        dvpsi(:,:) = (0.d0, 0.d0)
        !
        !OBM!!!! Original was
-       !call lr_cgsolve_all(et(1,ik),d0psi,dvpsi,h_diag,npwx,npw_k(ik),& 
+       !call lr_cgsolve_all(et(1,ik),d0psi,dvpsi,h_diag,npwx,npw_k(ik),&
        !            thresh,ik,lter,conv_root,anorm,nbnd_occ (ik),lr_alpha_pv)
-       call lr_cgsolve_all (lr_ch_psi_all, cg_psi, et (1, ik), d0psi, dvpsi, &
+       CALL lr_cgsolve_all (lr_ch_psi_all, cg_psi, et (1, ik), d0psi, dvpsi, &
             h_diag, npwx, npw_k(ik), thresh, ik, lter, conv_root, anorm, &
             nbnd_occ(ik), 1)
        !
-       if (.not.conv_root) WRITE( stdout, '(5x,"ik",i4," ibnd",i4, &
+       IF (.not.conv_root) WRITE( stdout, '(5x,"ik",i4," ibnd",i4, &
             & " linter: root not converged ",e10.3)') &
             ik, ibnd, anorm
        !
@@ -490,33 +490,33 @@ contains
        !
        !
        ! we have now obtained P_c x |psi>.
-       ! In the case of USPP this quantity is needed for the Born 
+       ! In the case of USPP this quantity is needed for the Born
        ! effective charges, so we save it to disc
        !
        ! In the US case we obtain P_c x |psi>, but we need P_c^+ x | psi>,
        ! therefore we apply S again, and then subtract the additional term
        ! furthermore we add the term due to dipole of the augmentation charges.
        !
-       if (okvan) then
+       IF (okvan) THEN
           !
           ! for effective charges
           !
           ! nrec = (ipol - 1) * nksq + ik
           ! call davcio (dvpsi, lrcom, iucom, nrec, 1)
           !
-          allocate (spsi ( npwx*npol, nbnd))    
+          ALLOCATE (spsi ( npwx*npol, nbnd))
           CALL calbec (npw_k(ik), vkb, dvpsi, becp )
           CALL s_psi(npwx,npw_k(ik),nbnd,dvpsi,spsi)
-          call DCOPY(2*npwx*npol*nbnd,spsi,1,dvpsi,1)
-          deallocate (spsi)
-          call lr_adddvepsi_us_k(becp1,becp2,ipol,ik,dvpsi) 
+          CALL DCOPY(2*npwx*npol*nbnd,spsi,1,dvpsi,1)
+          DEALLOCATE (spsi)
+          CALL lr_adddvepsi_us_k(becp1,becp2,ipol,ik,dvpsi)
           !call adddvepsi_us(becp2,ipol,ik)
-       endif
-      
+       ENDIF
+
        !OBM!!!! Addendum to PH/dvpsi_e
-       ! 
+       !
        work = 0.d0 !Reset working space in any case
-       ! orthogonalize dvpsi to the valence subspace 
+       ! orthogonalize dvpsi to the valence subspace
        !
        !OBM!!!! due to modifications, lr_ortho requires sevc as input, putting it into work
        IF (okvan) CALL calbec ( npw_k(ik), vkb, evc, becp, nbnd)
@@ -524,13 +524,13 @@ contains
        CALL lr_ortho(dvpsi, evc, ik, ik, work,.false.) !very strange, check: wothout the last false, normconserving pps fail
        !dvpsi=-dvpsi
        !OBM!!!! end of orthogonolization
-       IF (nkb > 0) then
-             deallocate(becp1)
-             deallocate(becp2)
-       endif
+       IF (nkb > 0) THEN
+             DEALLOCATE(becp1)
+             DEALLOCATE(becp2)
+       ENDIF
        !
        !OBM!!!!
-  end subroutine lr_dvpsi_e_k
+  END SUBROUTINE lr_dvpsi_e_k
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !
 !
@@ -538,37 +538,37 @@ contains
 !
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-  subroutine lr_dvpsi_e_noncolin()
+  SUBROUTINE lr_dvpsi_e_noncolin()
   !OBM!! essentially the same as the phonon dvpsi_e, only with non-collinear part
   USE becmod,          ONLY : bec_type, becp, calbec
-  
-  implicit none
-  
-  complex(kind=dp), allocatable :: becp1_nc(:,:,:), becp2_nc(:,:,:)
-  
-  call errore ('lr_dvpsi_e', 'non collinear not implemented', 1) !well, everything is here, but have to understand the formulation, do not have the time
+
+  IMPLICIT NONE
+
+  COMPLEX(kind=dp), ALLOCATABLE :: becp1_nc(:,:,:), becp2_nc(:,:,:)
+
+  CALL errore ('lr_dvpsi_e', 'non collinear not implemented', 1) !well, everything is here, but have to understand the formulation, do not have the time
   IF (nkb > 0) THEN
-        allocate (becp1_nc (nkb, npol, nbnd))
-        allocate (becp2_nc (nkb, npol, nbnd))
-  END IF
- 
+        ALLOCATE (becp1_nc (nkb, npol, nbnd))
+        ALLOCATE (becp2_nc (nkb, npol, nbnd))
+  ENDIF
+
      !OBM!!! This part is seperated as gamma_only and k_point in Brent's version
         !OBM!!becp1 is also calculated
-        call calbec (npw_k(ik), vkb, evc, becp1_nc)
-        if(nkb>0) call calbec (npw_k(ik), work, evc, becp2_nc)
-    
+        CALL calbec (npw_k(ik), vkb, evc, becp1_nc)
+        IF(nkb>0) CALL calbec (npw_k(ik), work, evc, becp2_nc)
+
      ijkb0 = 0
-        allocate (psc ( nkb, npol, nbnd, 2))
+        ALLOCATE (psc ( nkb, npol, nbnd, 2))
         psc=(0.d0,0.d0)
-     do nt = 1, ntyp
-        do na = 1, nat
-           if (nt == ityp (na)) then
-              do ih = 1, nh (nt)
+     DO nt = 1, ntyp
+        DO na = 1, nat
+           IF (nt == ityp (na)) THEN
+              DO ih = 1, nh (nt)
                  ikb = ijkb0 + ih
-                 do jh = 1, nh (nt)
+                 DO jh = 1, nh (nt)
                     jkb = ijkb0 + jh
-                    do ibnd = 1, nbnd_occ (ik)
-                          IF (lspinorb) THEN 
+                    DO ibnd = 1, nbnd_occ (ik)
+                          IF (lspinorb) THEN
                              psc(ikb,1,ibnd,1)=psc(ikb,1,ibnd,1)+(0.d0,-1.d0)* &
                                 (becp2_nc(jkb,1,ibnd)*(deeq_nc(ih,jh,na,1)  &
                                     -et(ibnd,ik)*qq_so(ih,jh,1,nt) )+       &
@@ -606,16 +606,16 @@ contains
                                  ( becp1_nc(jkb,2,ibnd)*(deeq_nc(ih,jh,na,4) &
                                                 -et(ibnd,ik)*qq(ih,jh,nt))+ &
                                    becp1_nc(jkb,1,ibnd)*deeq_nc(ih,jh,na,3) )
-                          END IF
-                    enddo
-                 enddo
-              enddo
+                          ENDIF
+                    ENDDO
+                 ENDDO
+              ENDDO
               ijkb0=ijkb0+nh(nt)
-           end if
-        end do
-     end do
-     if (ikb /= nkb .OR. jkb /= nkb) call errore ('lr_dvpsi_e', 'unexpected error',1)
-     !OBM!!! In the archaic version Brent used, this part was embedded in the 
+           ENDIF
+        ENDDO
+     ENDDO
+     IF (ikb /= nkb .or. jkb /= nkb) CALL errore ('lr_dvpsi_e', 'unexpected error',1)
+     !OBM!!! In the archaic version Brent used, this part was embedded in the
      !       above loop as ZAXPY
         CALL ZGEMM( 'N', 'N', npw_k(ik), nbnd_occ(ik)*npol, nkb, &
              (1.d0,0.d0), vkb(1,1), npwx, psc(1,1,1,1), nkb, (1.d0,0.d0), &
@@ -623,8 +623,8 @@ contains
         CALL ZGEMM( 'N', 'N', npw_k(ik), nbnd_occ(ik)*npol, nkb, &
              (1.d0,0.d0),work(1,1), npwx, psc(1,1,1,2), nkb, (1.d0,0.d0), &
              d0psi, npwx )
-        deallocate (psc)
-    
+        DEALLOCATE (psc)
+
      !
      !    orthogonalize d0psi to the valence subspace: ps = <evc|d0psi>
      !    Apply -P^+_c
@@ -637,54 +637,54 @@ contains
      !   d0psi contains P^+_c [H-eS,x] psi_v for the polarization direction ipol
      !   Now solve the linear systems (H-e_vS)*P_c(x*psi_v)=P_c^+ [H-e_vS,x]*psi_v
      !
-     !OBM!!! thresh = eth_rps 
+     !OBM!!! thresh = eth_rps
      thresh = 1.d-5
      h_diag=0.d0
-     
+
      !OBM!!! on the fly calculation of eprec
      ! I am using the work as a working memory, it seems not to be used anymore
-        deallocate (work)
-        allocate (work(npwx,nbnd))
-        do ibnd=1,nbnd 
-          ! 
+        DEALLOCATE (work)
+        ALLOCATE (work(npwx,nbnd))
+        DO ibnd=1,nbnd
+          !
           work = 0.d0
-          ! 
-          conv_root = .true. 
-          ! 
-          do ig=1,npw_k(ik) 
-             work(ig,1)=g2kin(ig)*evc(ig,ibnd) 
-          enddo
-          ! 
-          eprec(ibnd)=1.35d0*ZDOTC(npw_k(ik),evc(1,ibnd),1,work,1) 
-          ! 
-       enddo
-       ! 
-#ifdef __PARA 
-       call mp_sum(eprec, intra_pool_comm)
-#endif 
+          !
+          conv_root = .true.
+          !
+          DO ig=1,npw_k(ik)
+             work(ig,1)=g2kin(ig)*evc(ig,ibnd)
+          ENDDO
+          !
+          eprec(ibnd)=1.35d0*ZDOTC(npw_k(ik),evc(1,ibnd),1,work,1)
+          !
+       ENDDO
+       !
+#ifdef __PARA
+       CALL mp_sum(eprec, intra_pool_comm)
+#endif
        !OBM!!!
        !print *, "eprec", eprec
-       do ibnd = 1, nbnd_occ (ik)
-          do ig = 1, npw_k(ik)
+       DO ibnd = 1, nbnd_occ (ik)
+          DO ig = 1, npw_k(ik)
              h_diag (ig, ibnd) = 1.d0 / max (1.0d0, g2kin (ig) / eprec (ibnd) )
-          enddo
-             do ig = 1, npw_k(ik)
+          ENDDO
+             DO ig = 1, npw_k(ik)
                 h_diag (ig+npwx, ibnd) = 1.d0/max(1.0d0,g2kin(ig)/eprec(ibnd))
-             enddo
-       enddo
+             ENDDO
+       ENDDO
        !
        !OBM!!! upto here, the dvpsi was used as a scratch
        !
        dvpsi(:,:) = (0.d0, 0.d0)
        !
        !OBM!!!! Original was
-       !call lr_cgsolve_all(et(1,ik),d0psi,dvpsi,h_diag,npwx,npw_k(ik),& 
+       !call lr_cgsolve_all(et(1,ik),d0psi,dvpsi,h_diag,npwx,npw_k(ik),&
        !            thresh,ik,lter,conv_root,anorm,nbnd_occ (ik),lr_alpha_pv)
-       call lr_cgsolve_all (lr_ch_psi_all, cg_psi, et (1, ik), d0psi, dvpsi, &
+       CALL lr_cgsolve_all (lr_ch_psi_all, cg_psi, et (1, ik), d0psi, dvpsi, &
             h_diag, npwx, npw_k(ik), thresh, ik, lter, conv_root, anorm, &
             nbnd_occ(ik), 1)
        !
-       if (.not.conv_root) WRITE( stdout, '(5x,"ik",i4," ibnd",i4, &
+       IF (.not.conv_root) WRITE( stdout, '(5x,"ik",i4," ibnd",i4, &
             & " linter: root not converged ",e10.3)') &
             ik, ibnd, anorm
        !
@@ -692,32 +692,32 @@ contains
        !
        !
        ! we have now obtained P_c x |psi>.
-       ! In the case of USPP this quantity is needed for the Born 
+       ! In the case of USPP this quantity is needed for the Born
        ! effective charges, so we save it to disc
        !
        ! In the US case we obtain P_c x |psi>, but we need P_c^+ x | psi>,
        ! therefore we apply S again, and then subtract the additional term
        ! furthermore we add the term due to dipole of the augmentation charges.
        !
-       if (okvan) then
+       IF (okvan) THEN
           !
           ! for effective charges
           !
           ! nrec = (ipol - 1) * nksq + ik
           ! call davcio (dvpsi, lrcom, iucom, nrec, 1)
           !
-          allocate (spsi ( npwx*npol, nbnd))    
+          ALLOCATE (spsi ( npwx*npol, nbnd))
           CALL calbec (npw_k(ik), vkb, dvpsi, becp )
           CALL s_psi(npwx,npw_k(ik),nbnd,dvpsi,spsi)
-          call DCOPY(2*npwx*npol*nbnd,spsi,1,dvpsi,1)
-          deallocate (spsi)
+          CALL DCOPY(2*npwx*npol*nbnd,spsi,1,dvpsi,1)
+          DEALLOCATE (spsi)
           !OBM!!! non collinear in lr_addd_vespi is still not working
           !call adddvepsi_us(becp2_nc,ipol,ik)
-       endif     
+       ENDIF
        !OBM!!!! Addendum to PH/dv_psi_e
-       ! 
+       !
        work = 0.d0 !Reset working space in any case
-       ! orthogonalize dvpsi to the valence subspace 
+       ! orthogonalize dvpsi to the valence subspace
        !
        !OBM!!!! due to modifications, lr_ortho requires sevc as input, putting it into work
        IF (okvan) CALL calbec ( npw_k(ik), vkb, evc, becp, nbnd )
@@ -725,13 +725,13 @@ contains
        CALL lr_ortho(dvpsi, evc, ik, ik, work,.false.)
        !dvpsi=-dvpsi
        !OBM!!!! end of orthogonolization
-       IF (nkb > 0) then
-             deallocate(becp1_nc)
-             deallocate(becp2_nc)
-       endif
+       IF (nkb > 0) THEN
+             DEALLOCATE(becp1_nc)
+             DEALLOCATE(becp2_nc)
+       ENDIF
        !
        !OBM!!!!
-  end subroutine lr_dvpsi_e_noncolin
+  END SUBROUTINE lr_dvpsi_e_noncolin
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !
@@ -739,46 +739,46 @@ contains
 !GAMMA point modifications
 !
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  subroutine lr_dvpsi_e_gamma
+  SUBROUTINE lr_dvpsi_e_gamma
   !OBM!! modified for gamma point algorithms
   USE becmod,          ONLY : bec_type,becp, calbec
-  
-  implicit none
-  
-  real(kind=dp), allocatable :: becp1(:,:),becp2(:,:)  
-  
+
+  IMPLICIT NONE
+
+  real(kind=dp), ALLOCATABLE :: becp1(:,:),becp2(:,:)
+
   IF (nkb > 0) THEN
-        allocate (becp1 (nkb, nbnd))
-        allocate (becp2 (nkb, nbnd))
-  END IF
+        ALLOCATE (becp1 (nkb, nbnd))
+        ALLOCATE (becp2 (nkb, nbnd))
+  ENDIF
      becp1=0.0
      becp2=0.0
      becp%r=0.0
- 
-     call calbec (npw, vkb, evc, becp1)
- 
-     if(nkb>0) then
-  
-      call calbec (npw, work, evc, becp2)
-    
+
+     CALL calbec (npw, vkb, evc, becp1)
+
+     IF(nkb>0) THEN
+
+      CALL calbec (npw, work, evc, becp2)
+
      ijkb0 = 0
-     allocate (ps2 ( nkb, nbnd, 2))
+     ALLOCATE (ps2 ( nkb, nbnd, 2))
      ps2=(0.d0,0.d0)
-     do nt = 1, ntyp
-        do na = 1, nat
-           if (nt == ityp (na)) then
-              do ih = 1, nh (nt)
+     DO nt = 1, ntyp
+        DO na = 1, nat
+           IF (nt == ityp (na)) THEN
+              DO ih = 1, nh (nt)
                  ikb = ijkb0 + ih
-                 do jh = 1, nh (nt)
+                 DO jh = 1, nh (nt)
                     jkb = ijkb0 + jh
-                    do ibnd = 1, nbnd_occ (ik)
+                    DO ibnd = 1, nbnd_occ (ik)
                          !OBM!!! Notice that in the original version ikb is 1
                           ps2(ikb,ibnd,1) = ps2(ikb,ibnd,1)+ becp2(jkb,ibnd)* &
                               (deeq(ih,jh,na,current_spin) &
                               -et(ibnd,ik)*qq(ih,jh,nt))
                           ps2(ikb,ibnd,2) = ps2(ikb,ibnd,2) +becp1(jkb,ibnd) * &
                               (-1.d0,0.d0)*(deeq(ih,jh,na,current_spin)&
-                              -et(ibnd,ik)*qq(ih,jh,nt)) 
+                              -et(ibnd,ik)*qq(ih,jh,nt))
                          !original from Phonon
                          !ps2(ikb,ibnd,1) = ps2(ikb,ibnd,1)+ becp2(jkb,ibnd)* &
                          !     (0.d0,-1.d0)*(deeq(ih,jh,na,current_spin) &
@@ -787,15 +787,15 @@ contains
                          !     (0.d0,-1.d0)*(deeq(ih,jh,na,current_spin)&
                          !     -et(ibnd,ik)*qq(ih,jh,nt))
                          !OBM!!! But why?
-                    enddo
-                 enddo
-              enddo
+                    ENDDO
+                 ENDDO
+              ENDDO
               ijkb0=ijkb0+nh(nt)
-           end if
-        end do
-     end do
-     if (ikb /= nkb .OR. jkb /= nkb) call errore ('lr_dvpsi_e', 'unexpected error',1)
-     !OBM!!! In the archaic version Brent used, this part was embedded in the 
+           ENDIF
+        ENDDO
+     ENDDO
+     IF (ikb /= nkb .or. jkb /= nkb) CALL errore ('lr_dvpsi_e', 'unexpected error',1)
+     !OBM!!! In the archaic version Brent used, this part was embedded in the
      !       above loop as ZAXPY
         CALL ZGEMM( 'N', 'N', npw, nbnd_occ(ik), nkb, &
              (1.d0,0.d0), vkb(1,1), npwx, ps2(1,1,1), nkb, (1.d0,0.d0), &
@@ -803,8 +803,8 @@ contains
         CALL ZGEMM( 'N', 'N', npw, nbnd_occ(ik), nkb, &
              (1.d0,0.d0),work(1,1), npwx, ps2(1,1,2), nkb, (1.d0,0.d0), &
              d0psi(1,1), npwx )
-        deallocate (ps2)
-     endif
+        DEALLOCATE (ps2)
+     ENDIF
      !
      !    orthogonalize d0psi to the valence subspace: ps = <evc|d0psi>
      !    Apply -P^+_c
@@ -815,54 +815,54 @@ contains
      CALL lr_ortho(d0psi, evc, ik, ik, dvpsi,.false.) !Strange bug, without last .false., norm conserving pps fail
      !d0psi=-d0psi
      !print *, "new version,gamma after ortho", d0psi(1:3,1)
-     
+
      !
      !   d0psi contains P^+_c [H-eS,x] psi_v for the polarization direction ipol
      !   Now solve the linear systems (H-e_vS)*P_c(x*psi_v)=P_c^+ [H-e_vS,x]*psi_v
      !
-     !OBM!!! thresh = eth_rps 
+     !OBM!!! thresh = eth_rps
      thresh = 1.d-5
      h_diag=0.d0
-     
+
      !OBM!!! on the fly calculation of eprec
      ! I am using the work as a working memory, it seems not to be used anymore
-        deallocate (work)
-        allocate (work(npwx,nbnd))
-        do ibnd=1,nbnd 
-          ! 
+        DEALLOCATE (work)
+        ALLOCATE (work(npwx,nbnd))
+        DO ibnd=1,nbnd
+          !
           work = 0.d0
-          ! 
-          conv_root = .true. 
-          ! 
-          do ig=1,npw
-             work(ig,1)=g2kin(ig)*evc(ig,ibnd) 
-          enddo
-          ! 
-          eprec(ibnd)=2.0d0*DDOT(2*npw,evc(1,ibnd),1,work,1)                  
-          !                                                                    
-          if(gstart==2) eprec(ibnd)=eprec(ibnd)-dble(evc(1,ibnd))*dble(work(1,ibnd))
-          !                                                                    
-          eprec(ibnd)=1.35d0*eprec(ibnd)                                       
-          !OBM!!! was : eprec(ibnd)=1.35d0*ZDOTC(npw_k(ik),evc(1,ibnd),1,work,1) 
-          ! 
-       enddo
-       ! 
-#ifdef __PARA 
-       call mp_sum(eprec, intra_pool_comm)
-#endif 
+          !
+          conv_root = .true.
+          !
+          DO ig=1,npw
+             work(ig,1)=g2kin(ig)*evc(ig,ibnd)
+          ENDDO
+          !
+          eprec(ibnd)=2.0d0*DDOT(2*npw,evc(1,ibnd),1,work,1)
+          !
+          IF(gstart==2) eprec(ibnd)=eprec(ibnd)-dble(evc(1,ibnd))*dble(work(1,ibnd))
+          !
+          eprec(ibnd)=1.35d0*eprec(ibnd)
+          !OBM!!! was : eprec(ibnd)=1.35d0*ZDOTC(npw_k(ik),evc(1,ibnd),1,work,1)
+          !
+       ENDDO
+       !
+#ifdef __PARA
+       CALL mp_sum(eprec, intra_pool_comm)
+#endif
        !print *, eprec
        !OBM!!!
        !print *, "eprec", eprec
-       do ibnd = 1, nbnd_occ (ik)
-          do ig = 1, npw
+       DO ibnd = 1, nbnd_occ (ik)
+          DO ig = 1, npw
              h_diag (ig, ibnd) = 1.d0 / max (1.0d0, g2kin (ig) / eprec (ibnd) )
-          enddo
+          ENDDO
           IF (noncolin) THEN
-             do ig = 1, npw
+             DO ig = 1, npw
                 h_diag (ig+npwx, ibnd) = 1.d0/max(1.0d0,g2kin(ig)/eprec(ibnd))
-             enddo
-          END IF
-       enddo
+             ENDDO
+          ENDIF
+       ENDDO
        !print *, h_diag(1:10,1)
        !
        !OBM!!! upto here, the dvpsi was used as a scratch
@@ -870,13 +870,13 @@ contains
        dvpsi(:,:) = (0.d0, 0.d0)
        !
        !OBM!!!! Original was
-       !call lr_cgsolve_all(et(1,ik),d0psi,dvpsi,h_diag,npwx,npw,& 
+       !call lr_cgsolve_all(et(1,ik),d0psi,dvpsi,h_diag,npwx,npw,&
        !            thresh,ik,lter,conv_root,anorm,nbnd_occ (ik),lr_alpha_pv)
-       call lr_cgsolve_all (lr_ch_psi_all, cg_psi, et (1, ik), d0psi, dvpsi, &
+       CALL lr_cgsolve_all (lr_ch_psi_all, cg_psi, et (1, ik), d0psi, dvpsi, &
             h_diag, npwx, npw, thresh, ik, lter, conv_root, anorm, &
             nbnd_occ(ik), 1)
        !
-       if (.not.conv_root) WRITE( stdout, '(5x,"ik",i4," ibnd",i4, &
+       IF (.not.conv_root) WRITE( stdout, '(5x,"ik",i4," ibnd",i4, &
             & " linter: root not converged ",e10.3)') &
             ik, ibnd, anorm
        !
@@ -886,33 +886,33 @@ contains
        !
        !
        ! we have now obtained P_c x |psi>.
-       ! In the case of USPP this quantity is needed for the Born 
+       ! In the case of USPP this quantity is needed for the Born
        ! effective charges, so we save it to disc
        !
        ! In the US case we obtain P_c x |psi>, but we need P_c^+ x | psi>,
        ! therefore we apply S again, and then subtract the additional term
        ! furthermore we add the term due to dipole of the augmentation charges.
        !
-       if (okvan) then
+       IF (okvan) THEN
           !
           ! for effective charges
           !
           ! nrec = (ipol - 1) * nksq + ik
           ! call davcio (dvpsi, lrcom, iucom, nrec, 1)
           !
-          allocate (spsi ( npwx*npol, nbnd))    
+          ALLOCATE (spsi ( npwx*npol, nbnd))
           CALL calbec (npw, vkb, dvpsi, becp )
           CALL s_psi(npwx,npw,nbnd,dvpsi,spsi)
-          call DCOPY(2*npwx*npol*nbnd,spsi,1,dvpsi,1)
-          deallocate (spsi)
-          call lr_adddvepsi_us_gamma(becp1,becp2,ipol,ik,dvpsi) 
+          CALL DCOPY(2*npwx*npol*nbnd,spsi,1,dvpsi,1)
+          DEALLOCATE (spsi)
+          CALL lr_adddvepsi_us_gamma(becp1,becp2,ipol,ik,dvpsi)
           !call adddvepsi_us(becp2,ipol,ik)
-       endif
-      
+       ENDIF
+
        !OBM!!!! Addendum to PH dvpsi_e
-       ! 
+       !
        work = 0.d0 !Reset working space in any case
-       ! orthogonalize dvpsi to the valence subspace 
+       ! orthogonalize dvpsi to the valence subspace
        !
        !OBM!!!! due to modifications, lr_ortho requires sevc as input, putting it into work
        IF (okvan) CALL calbec ( npw, vkb, evc, becp, nbnd)
@@ -920,15 +920,15 @@ contains
        CALL lr_ortho(dvpsi, evc, ik, ik, work,.false.)
        !dvpsi=-dvpsi
        !OBM!!!! end of orthogonolization
-       
-       IF (nkb > 0) then
-             deallocate(becp1)
-             deallocate(becp2)
-       endif
+
+       IF (nkb > 0) THEN
+             DEALLOCATE(becp1)
+             DEALLOCATE(becp2)
+       ENDIF
        !
        !OBM!!!!
-  end subroutine lr_dvpsi_e_gamma
+  END SUBROUTINE lr_dvpsi_e_gamma
 
-end subroutine lr_dvpsi_e
+END SUBROUTINE lr_dvpsi_e
 
 

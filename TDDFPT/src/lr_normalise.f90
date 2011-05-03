@@ -3,53 +3,53 @@
 ! ... have an inner product of 1
 !-----------------------------------------------------------------------
 ! Modified by Osman Baris Malcioglu (2009)
-subroutine lr_normalise(evc1,norm)
+SUBROUTINE lr_normalise(evc1,norm)
   !
 #include "f_defs.h"
   !
-  use gvect,                only : gstart
-  use cell_base,            only : omega
-  use io_global,            only : stdout
-  use kinds,                only : dp
-  use klist,                only : nks,xk
-  use lsda_mod,             only : nspin
-  use lr_variables,         only : lanc_norm
-  use realus,               only : igk_k,npw_k
-  use uspp,                 only : vkb,nkb,okvan
-  use wvfct,                only : nbnd,npwx,npw,wg
-  use control_flags,        only : gamma_only
+  USE gvect,                ONLY : gstart
+  USE cell_base,            ONLY : omega
+  USE io_global,            ONLY : stdout
+  USE kinds,                ONLY : dp
+  USE klist,                ONLY : nks,xk
+  USE lsda_mod,             ONLY : nspin
+  USE lr_variables,         ONLY : lanc_norm
+  USE realus,               ONLY : igk_k,npw_k
+  USE uspp,                 ONLY : vkb,nkb,okvan
+  USE wvfct,                ONLY : nbnd,npwx,npw,wg
+  USE control_flags,        ONLY : gamma_only
   USE lr_variables,   ONLY : lr_verbosity
   !
-  implicit none
+  IMPLICIT NONE
   !
-  real(kind=dp), intent(out) :: norm
+  real(kind=dp), INTENT(out) :: norm
   !
   ! local variables
-  integer :: ik
-  complex(kind=dp) :: evc1(npwx,nbnd,nks)
-  complex(kind=dp), allocatable :: spsi(:,:,:)
-  integer :: ibnd,ig
+  INTEGER :: ik
+  COMPLEX(kind=dp) :: evc1(npwx,nbnd,nks)
+  COMPLEX(kind=dp), ALLOCATABLE :: spsi(:,:,:)
+  INTEGER :: ibnd,ig
   !
-  allocate(spsi(npwx,nbnd,nks)) 
+  ALLOCATE(spsi(npwx,nbnd,nks))
   !
-  If (lr_verbosity > 5) THEN
+  IF (lr_verbosity > 5) THEN
     WRITE(stdout,'("<lr_normalise>")')
-  endif
-  if(gamma_only) then
-     call lr_normalise_gamma()
-  else
-     call lr_normalise_k()
-  endif
+  ENDIF
+  IF(gamma_only) THEN
+     CALL lr_normalise_gamma()
+  ELSE
+     CALL lr_normalise_k()
+  ENDIF
   !
-  deallocate(spsi)
+  DEALLOCATE(spsi)
   !
-  return
+  RETURN
   !
-contains
+CONTAINS
   !
-  subroutine lr_normalise_gamma()
+  SUBROUTINE lr_normalise_gamma()
     !
-    use becmod,                   only : bec_type, becp,calbec
+    USE becmod,                   ONLY : bec_type, becp,calbec
     !use lr_variables,             only : real_space
     !use real_beta,                only : ccalbecr_gamma,s_psir,fft_orbital_gamma,bfft_orbital_gamma
       USE realus,               ONLY : real_space, fft_orbital_gamma, initialisation_level, &
@@ -59,47 +59,47 @@ contains
     !
     !
     !
-    implicit none
+    IMPLICIT NONE
     !
     real(kind=dp) :: prod
-    complex(kind=dp), external :: lr_dot
-    integer :: ibnd,ig
+    COMPLEX(kind=dp), EXTERNAL :: lr_dot
+    INTEGER :: ibnd,ig
     !
     prod=0.0d0
     !
-    if ( nkb > 0 ) then
+    IF ( nkb > 0 ) THEN
      !
-     if (real_space_debug>6) then
-     ! real space & nkb > 0 
+     IF (real_space_debug>6) THEN
+     ! real space & nkb > 0
       !
-      do ibnd=1,nbnd,2
-          call fft_orbital_gamma(evc1(:,:,1),ibnd,nbnd)
-          call calbec_rs_gamma(ibnd,nbnd,becp%r)
-          call s_psir_gamma(ibnd,nbnd)
-          call bfft_orbital_gamma(spsi(:,:,1),ibnd,nbnd)
-      enddo
+      DO ibnd=1,nbnd,2
+          CALL fft_orbital_gamma(evc1(:,:,1),ibnd,nbnd)
+          CALL calbec_rs_gamma(ibnd,nbnd,becp%r)
+          CALL s_psir_gamma(ibnd,nbnd)
+          CALL bfft_orbital_gamma(spsi(:,:,1),ibnd,nbnd)
+      ENDDO
       !
      !
-     else
+     ELSE
      !
-      !the non real_space & nkb > 0 case 
+      !the non real_space & nkb > 0 case
        !
-       call calbec(npw_k(1),vkb,evc1(:,:,1),becp)
-       !call pw_gemm('Y',nkb,nbnd,npw_k(1),vkb,npwx,evc1(1,1,1),npwx,rbecp,nkb) 
+       CALL calbec(npw_k(1),vkb,evc1(:,:,1),becp)
+       !call pw_gemm('Y',nkb,nbnd,npw_k(1),vkb,npwx,evc1(1,1,1),npwx,rbecp,nkb)
        !
-       call s_psi(npwx,npw_k(1),nbnd,evc1(1,1,1),spsi)
+       CALL s_psi(npwx,npw_k(1),nbnd,evc1(1,1,1),spsi)
       !
      !
-     endif
-    else
+     ENDIF
+    ELSE
     ! The nkb == 0 part
       ! JUST array copying
-       call s_psi(npwx,npw_k(1),nbnd,evc1(1,1,1),spsi)
+       CALL s_psi(npwx,npw_k(1),nbnd,evc1(1,1,1),spsi)
       !
      !
     !
-    endif
-    !The below two lines are the replicated part in real space implementation 
+    ENDIF
+    !The below two lines are the replicated part in real space implementation
     !call calbec(npw_k(1),vkb,evc1(:,:,1),rbecp)
     !call s_psi(npwx,npw_k(1),nbnd,evc1(1,1,1),spsi)
     !
@@ -108,49 +108,49 @@ contains
     !
     evc1(:,:,1)=cmplx(prod,0.0d0,dp)*evc1(:,:,1)
     !
-    write(stdout,'(5X,"Norm of initial Lanczos vectors=",1x,f21.15)') 1.0d0/prod
+    WRITE(stdout,'(5X,"Norm of initial Lanczos vectors=",1x,f21.15)') 1.0d0/prod
     lanc_norm=1.d0/prod**2/omega
     norm=1.0d0/prod
     !
-    return
-  end subroutine lr_normalise_gamma
+    RETURN
+  END SUBROUTINE lr_normalise_gamma
   !
-  subroutine lr_normalise_k()
+  SUBROUTINE lr_normalise_k()
     !
-    use becmod,              only : becp,calbec
+    USE becmod,              ONLY : becp,calbec
     !
     real(kind=dp) :: prod
-    complex(kind=dp), external :: lr_dot
+    COMPLEX(kind=dp), EXTERNAL :: lr_dot
     !
     prod=0.0d0
     !
-    do ik=1,nks
+    DO ik=1,nks
        !
-       if ( nkb > 0 .and. okvan) then
+       IF ( nkb > 0 .and. okvan) THEN
           !
-          call init_us_2(npw_k(ik),igk_k(1,ik),xk(1,ik),vkb)
+          CALL init_us_2(npw_k(ik),igk_k(1,ik),xk(1,ik),vkb)
           !
-          !call ccalbec(nkb,npwx,npw_k(ik),nbnd,becp,vkb,evc1(1,1,ik)) 
-          call calbec(npw_k(ik),vkb,evc1(:,:,ik),becp)
+          !call ccalbec(nkb,npwx,npw_k(ik),nbnd,becp,vkb,evc1(1,1,ik))
+          CALL calbec(npw_k(ik),vkb,evc1(:,:,ik),becp)
           !
-       endif
+       ENDIF
           !
-          call s_psi(npwx,npw_k(ik),nbnd,evc1(:,:,ik),spsi(:,:,ik)) 
+          CALL s_psi(npwx,npw_k(ik),nbnd,evc1(:,:,ik),spsi(:,:,ik))
           !
-    end do
+    ENDDO
     !
     prod=dble( lr_dot( evc1(1,1,1),spsi(1,1,1) ) )
     prod=1.0d0/sqrt(abs(prod))
     !
     evc1(:,:,:)=cmplx(prod,0.0d0,dp)*evc1(:,:,:)
     !
-    write(stdout,'(5X,"Norm of initial Lanczos vectors=",1x,f21.15)') 1.0d0/prod
+    WRITE(stdout,'(5X,"Norm of initial Lanczos vectors=",1x,f21.15)') 1.0d0/prod
     lanc_norm=1.d0/prod**2/omega
     norm=1.0d0/prod
     !
-    return
+    RETURN
     !
-  end subroutine lr_normalise_k
+  END SUBROUTINE lr_normalise_k
   !
-end subroutine lr_normalise
+END SUBROUTINE lr_normalise
 !-----------------------------------------------------------------------

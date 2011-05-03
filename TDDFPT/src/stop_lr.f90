@@ -16,11 +16,11 @@ SUBROUTINE stop_lr( )
   USE mp,    ONLY : mp_end, mp_barrier
   !
   USE parallel_include
-  use lr_variables,         only : n_ipol, LR_polarization, beta_store
-  use lr_variables,         only :  gamma_store, zeta_store, norm0, rho_1_tot
-  use lr_variables,         only : lr_verbosity, itermax, bgz_suffix
+  USE lr_variables,         ONLY : n_ipol, LR_polarization, beta_store
+  USE lr_variables,         ONLY :  gamma_store, zeta_store, norm0, rho_1_tot
+  USE lr_variables,         ONLY : lr_verbosity, itermax, bgz_suffix
   USE io_global,            ONLY : ionode
-  use io_files,             only : tmp_dir, prefix
+  USE io_files,             ONLY : tmp_dir, prefix
   USE io_global,      ONLY : stdout
   ! For gaussian cube file
   USE ions_base,  ONLY : nat, ityp, atm, ntyp => nsp, tau
@@ -28,51 +28,51 @@ SUBROUTINE stop_lr( )
   !
   IMPLICIT NONE
   !
-  character(len=6), external :: int_to_char
+  CHARACTER(len=6), EXTERNAL :: int_to_char
   !
-  character(len=256) :: filename
+  CHARACTER(len=256) :: filename
   !
-  integer :: ip,i,j
+  INTEGER :: ip,i,j
   !
   !
-  
-  If (lr_verbosity > 5) THEN
+
+  IF (lr_verbosity > 5) THEN
     WRITE(stdout,'("<stop_lr>")')
-  endif
+  ENDIF
   ! I write the beta gamma and z coefficents to output directory for
   ! easier post processing. These can also be read from the output log file
 #ifdef __PARA
-  if (ionode) then
+  IF (ionode) THEN
 #endif
   !
-  do ip=1,n_ipol
-   if (n_ipol==3) filename = trim(prefix) // trim(bgz_suffix) // trim(int_to_char(ip))
-   if (n_ipol==1) filename = trim(prefix) // trim(bgz_suffix) // trim(int_to_char(LR_polarization))
+  DO ip=1,n_ipol
+   IF (n_ipol==3) filename = trim(prefix) // trim(bgz_suffix) // trim(int_to_char(ip))
+   IF (n_ipol==1) filename = trim(prefix) // trim(bgz_suffix) // trim(int_to_char(LR_polarization))
    filename = trim(tmp_dir) // trim(filename)
   !
   !
-  open (158, file = filename, form = 'formatted', status = 'replace')
+  OPEN (158, file = filename, form = 'formatted', status = 'replace')
   !
-  write(158,*) itermax
+  WRITE(158,*) itermax
   !
-  write(158,*) norm0(ip)
+  WRITE(158,*) norm0(ip)
   !
-  do i=1,itermax
+  DO i=1,itermax
      !
-     write(158,*) beta_store(ip,i)
-     write(158,*) gamma_store(ip,i)
+     WRITE(158,*) beta_store(ip,i)
+     WRITE(158,*) gamma_store(ip,i)
      !This is absolutely necessary for cross platform compatibilty
-     do j=1,n_ipol                                    
-      write(158,*) zeta_store (ip,j,i)
-     end do
+     DO j=1,n_ipol
+      WRITE(158,*) zeta_store (ip,j,i)
+     ENDDO
      !
-  end do
+  ENDDO
   !
-  close(158)
+  CLOSE(158)
   !
-  enddo
+  ENDDO
 #ifdef __PARA
-  end if
+  ENDIF
 #endif
   !
   !   Deallocate lr variables

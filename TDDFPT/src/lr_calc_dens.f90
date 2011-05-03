@@ -1,5 +1,5 @@
 !-----------------------------------------------------------------------
-subroutine lr_calc_dens( evc1, response_calc )
+SUBROUTINE lr_calc_dens( evc1, response_calc )
   !---------------------------------------------------------------------
   ! ... calculates response charge density from linear response
   ! ... orbitals and ground state orbitals
@@ -13,70 +13,70 @@ subroutine lr_calc_dens( evc1, response_calc )
 
 #include "f_defs.h"
   !
-  use ions_base,                    only : ityp,nat,ntyp=>nsp
-  use cell_base,                    only : omega
-  use ener,                     only : ef
-  use gvecs,                  only : nls,nlsm,doublegrid
-  use grid_dimensions,          only : nrxx,nr1,nr2,nr3
-  use fft_base,                 only : dffts
-  use fft_interfaces,           only : invfft
-  use io_global,                only : stdout
-  use kinds,                    only : dp
-  use klist,                    only : nks,xk,wk
-  use lr_variables,             only : evc0,revc0,rho_1,lr_verbosity, &
+  USE ions_base,                    ONLY : ityp,nat,ntyp=>nsp
+  USE cell_base,                    ONLY : omega
+  USE ener,                     ONLY : ef
+  USE gvecs,                  ONLY : nls,nlsm,doublegrid
+  USE grid_dimensions,          ONLY : nrxx,nr1,nr2,nr3
+  USE fft_base,                 ONLY : dffts
+  USE fft_interfaces,           ONLY : invfft
+  USE io_global,                ONLY : stdout
+  USE kinds,                    ONLY : dp
+  USE klist,                    ONLY : nks,xk,wk
+  USE lr_variables,             ONLY : evc0,revc0,rho_1,lr_verbosity, &
                                        charge_response, itermax,&
                                        cube_save, rho_1_tot,rho_1_tot_im, &
                                        LR_iteration, LR_polarization, &
                                        project,evc0_virt,F,nbnd_total,n_ipol, becp1_virt
-  use lsda_mod,                 only : current_spin, isk
-  use wavefunctions_module,     only : psic
-  use wvfct,                    only : nbnd,et,wg,npwx,npw
-  use control_flags,            only : gamma_only
-  use uspp,                     only : vkb,nkb,okvan,qq,becsum
-  use uspp_param,               only : upf, nh
+  USE lsda_mod,                 ONLY : current_spin, isk
+  USE wavefunctions_module,     ONLY : psic
+  USE wvfct,                    ONLY : nbnd,et,wg,npwx,npw
+  USE control_flags,            ONLY : gamma_only
+  USE uspp,                     ONLY : vkb,nkb,okvan,qq,becsum
+  USE uspp_param,               ONLY : upf, nh
   USE io_global,                ONLY : ionode, stdout
-  use io_files,                 only : tmp_dir, prefix
-  use mp,                       only : mp_sum
-  use mp_global,                ONLY : inter_pool_comm, intra_pool_comm,nproc
-  use realus,                   only : igk_k,npw_k,addusdens_r
-  use charg_resp,               only : w_T, lr_dump_rho_tot_cube,&
+  USE io_files,                 ONLY : tmp_dir, prefix
+  USE mp,                       ONLY : mp_sum
+  USE mp_global,                ONLY : inter_pool_comm, intra_pool_comm,nproc
+  USE realus,                   ONLY : igk_k,npw_k,addusdens_r
+  USE charg_resp,               ONLY : w_T, lr_dump_rho_tot_cube,&
                                        lr_dump_rho_tot_xyzd, &
                                        lr_dump_rho_tot_xcrys,&
                                        resonance_condition,epsil
   USE noncollin_module,     ONLY : nspin_mag
-  use control_flags,         only : tqr
-  use becmod,              only : becp
+  USE control_flags,         ONLY : tqr
+  USE becmod,              ONLY : becp
   !
-  implicit none
+  IMPLICIT NONE
   !
-  character(len=6), external :: int_to_char
+  CHARACTER(len=6), EXTERNAL :: int_to_char
   !
-  complex(kind=dp), intent(in) :: evc1(npwx,nbnd,nks)
-  logical, intent(in) :: response_calc
+  COMPLEX(kind=dp), INTENT(in) :: evc1(npwx,nbnd,nks)
+  LOGICAL, INTENT(in) :: response_calc
   !
   ! functions
   real(kind=dp) :: ddot
   !
   ! local variables
-  integer :: ir,ik,ibnd,jbnd,ig,ijkb0,np,na,ijh,ih,jh,ikb,jkb,ispin
-  integer :: i, j, k, l
+  INTEGER :: ir,ik,ibnd,jbnd,ig,ijkb0,np,na,ijh,ih,jh,ikb,jkb,ispin
+  INTEGER :: i, j, k, l
   real(kind=dp) :: w1,w2,scal
   real(kind=dp) :: rho_sum!,weight
-  real(kind=dp), allocatable :: rho_sum_resp_x(:),rho_sum_resp_y(:),rho_sum_resp_z(:) ! These are temporary buffers for response cha
+  real(kind=dp), ALLOCATABLE :: rho_sum_resp_x(:),rho_sum_resp_y(:),rho_sum_resp_z(:) ! These are temporary buffers for response cha
 
   !complex(kind=dp), external :: ZDOTC
   !complex(kind=dp), allocatable :: spsi(:,:)
   !
-  character(len=256) :: tempfile, filename
+  CHARACTER(len=256) :: tempfile, filename
   !
   !OBM DEBUG
-  complex(kind=dp),external :: lr_dot
+  COMPLEX(kind=dp),EXTERNAL :: lr_dot
 
-  If (lr_verbosity > 5) THEN
+  IF (lr_verbosity > 5) THEN
     WRITE(stdout,'("<lr_calc_dens>")')
-  endif
+  ENDIF
   !
-  call start_clock('lr_calc_dens')
+  CALL start_clock('lr_calc_dens')
   !
   !allocate(spsi(npwx,nbnd))
   !spsi(:,:)=(0.0d0,0.0d0)
@@ -85,77 +85,77 @@ subroutine lr_calc_dens( evc1, response_calc )
   psic(:)=(0.0d0,0.0d0)
   rho_1(:,:)=0.0d0
   !
-  if(gamma_only) then
-     call lr_calc_dens_gamma()
-  else
-     call lr_calc_dens_k()
-  endif
+  IF(gamma_only) THEN
+     CALL lr_calc_dens_gamma()
+  ELSE
+     CALL lr_calc_dens_k()
+  ENDIF
   !print *, "rho_1 after lr_calc_dens calculates",SUM(rho_1)
   !print *, "norm of evc1 after lr_calc_dens calculates", lr_dot(evc1(1,1,1),evc1(1,1,1))
 
   !
   ! ... If a double grid is used, interpolate onto the fine grid
   !
-  if ( doublegrid ) call interpolate(rho_1,rho_1,1)
+  IF ( doublegrid ) CALL interpolate(rho_1,rho_1,1)
   !
   ! ... Here we add the Ultrasoft contribution to the charge
   !
   !IF ( okvan ) CALL lr_addusdens(rho_1)
   !print *, "rho_1 before addusdens",SUM(rho_1)
   !call start_clock('lrcd_usdens') !TQR makes a huge gain here
-  if(okvan) then
-   if (tqr) then
+  IF(okvan) THEN
+   IF (tqr) THEN
     CALL addusdens_r(rho_1,.false.)
-   else
+   ELSE
     CALL addusdens(rho_1)
-   endif
-  endif
+   ENDIF
+  ENDIF
   DEALLOCATE ( psic )
   !call stop_clock('lrcd_usdens')
   !
   !print *, "rho_1 after addusdens",SUM(rho_1)
 #ifdef __PARA
   !call poolreduce(nrxx,rho_1)
-  call mp_sum(rho_1, inter_pool_comm)
+  CALL mp_sum(rho_1, inter_pool_comm)
 #endif
   !
   ! check response charge density sums to 0
   !call start_clock('lrcd_sp') !Minimal lag, no need to improve
-if (lr_verbosity > 0) then
+IF (lr_verbosity > 0) THEN
 
-  do ispin = 1, nspin_mag
+  DO ispin = 1, nspin_mag
    rho_sum=0.0d0
-   rho_sum=SUM(rho_1(:,ispin))
+   rho_sum=sum(rho_1(:,ispin))
    !
 #ifdef __PARA
-   call mp_sum(rho_sum, intra_pool_comm )
+   CALL mp_sum(rho_sum, intra_pool_comm )
 #endif
    !
    rho_sum=rho_sum*omega/(nr1*nr2*nr3)
    !
-   if(abs(rho_sum)>1.0d-12) then
-     if (tqr) then
-      write(stdout,'(5X, "lr_calc_dens: Charge drift due to real space implementation = " ,1X,e12.5)')&
+   IF(abs(rho_sum)>1.0d-12) THEN
+     IF (tqr) THEN
+      WRITE(stdout,'(5X, "lr_calc_dens: Charge drift due to real space implementation = " ,1X,e12.5)')&
            rho_sum
       !seems useless
       !rho_sum=rho_sum/(1.0D0*nrxxs)
       !rho_1(:,ispin)=rho_1(:,ispin)-rho_sum
-     else
-      write(stdout,'(5X,"lr_calc_dens: ****** response charge density does not sum to zero")')
+     ELSE
+      WRITE(stdout,'(5X,"lr_calc_dens: ****** response charge density does not sum to zero")')
       !
-      write(stdout,'(5X,"lr_calc_dens: ****** response charge density =",1X,e12.5)')&
+      WRITE(stdout,'(5X,"lr_calc_dens: ****** response charge density =",1X,e12.5)')&
            rho_sum
       !
-      write(stdout,'(5X,"lr_calc_dens: ****** response charge density, US part =",1X,e12.5)')&
+      WRITE(stdout,'(5X,"lr_calc_dens: ****** response charge density, US part =",1X,e12.5)')&
            scal
       !     call errore(' lr_calc_dens ','Linear response charge density '// &
       !          & 'does not sum to zero',1)
-     endif
-   endif
-  enddo
+     ENDIF
+   ENDIF
+  ENDDO
   !
-endif
-   IF (charge_response == 2 .and. LR_iteration /=0) then
+ENDIF
+   IF (charge_response == 2 .and. LR_iteration /=0) THEN
      !
      ALLOCATE( rho_sum_resp_x( nr1 ) )
      ALLOCATE( rho_sum_resp_y( nr2 ) )
@@ -175,60 +175,60 @@ endif
         rho_sum_resp_y(j)=rho_sum_resp_y(j)+rho_1(ir,1)
         rho_sum_resp_z(k)=rho_sum_resp_z(k)+rho_1(ir,1)
         !
-     END DO
+     ENDDO
      !
 #ifdef __PARA
-     call mp_sum(rho_sum_resp_x, intra_pool_comm)
-     call mp_sum(rho_sum_resp_y, intra_pool_comm)
-     call mp_sum(rho_sum_resp_z, intra_pool_comm)
-     if (ionode) then
+     CALL mp_sum(rho_sum_resp_x, intra_pool_comm)
+     CALL mp_sum(rho_sum_resp_y, intra_pool_comm)
+     CALL mp_sum(rho_sum_resp_z, intra_pool_comm)
+     IF (ionode) THEN
 #endif
-     write(stdout,'(5X,"Dumping plane sums of densities for iteration ",I4)') LR_iteration
+     WRITE(stdout,'(5X,"Dumping plane sums of densities for iteration ",I4)') LR_iteration
      !
      filename = trim(prefix) // ".density_x"
      tempfile = trim(tmp_dir) // trim(filename)
      !
-     open (158, file = tempfile, form = 'formatted', status = 'unknown', position = 'append')
+     OPEN (158, file = tempfile, form = 'formatted', status = 'unknown', position = 'append')
      !
-     do i=1,nr1
-        write(158,*) rho_sum_resp_x(i)
-     end do
+     DO i=1,nr1
+        WRITE(158,*) rho_sum_resp_x(i)
+     ENDDO
      !
-     close(158)
+     CLOSE(158)
      !
      filename = trim(prefix) // ".density_y"
      tempfile = trim(tmp_dir) // trim(filename)
      !
-     open (158, file = tempfile, form = 'formatted', status = 'unknown', position = 'append')
+     OPEN (158, file = tempfile, form = 'formatted', status = 'unknown', position = 'append')
      !
-     do i=1,nr2
-        write(158,*) rho_sum_resp_y(i)
-     end do
+     DO i=1,nr2
+        WRITE(158,*) rho_sum_resp_y(i)
+     ENDDO
      !
-     close(158)
+     CLOSE(158)
      !
      filename = trim(prefix) // ".density_z"
      tempfile = trim(tmp_dir) // trim(filename)
      !
-     open (158, file = tempfile, form = 'formatted', status = 'unknown', position = 'append')
+     OPEN (158, file = tempfile, form = 'formatted', status = 'unknown', position = 'append')
      !
-     do i=1,nr3
-        write(158,*) rho_sum_resp_z(i)
-     end do
+     DO i=1,nr3
+        WRITE(158,*) rho_sum_resp_z(i)
+     ENDDO
      !
-     close(158)
+     CLOSE(158)
      !
 #ifdef __PARA
-     end if
+     ENDIF
 #endif
      !
      DEALLOCATE( rho_sum_resp_x )
      DEALLOCATE( rho_sum_resp_y )
      DEALLOCATE( rho_sum_resp_z )
      !
-  END IF
-  IF (charge_response == 1 .and. response_calc) then
-    if (LR_iteration < itermax) WRITE(stdout,'(5x,"Calculating total response charge density")')
+  ENDIF
+  IF (charge_response == 1 .and. response_calc) THEN
+    IF (LR_iteration < itermax) WRITE(stdout,'(5x,"Calculating total response charge density")')
     ! the charge response, it is actually equivalent to an element of
     ! V^T . phi_v where V^T is the is the transpose of the Krylov subspace generated
     ! by the Lanczos algorithm. The total charge density can be written
@@ -243,25 +243,25 @@ endif
     !
     !print *,"1"
     !print *,"weight",(-1.0d0*AIMAG(w_T(LR_iteration)))
-    if (resonance_condition) then
+    IF (resonance_condition) THEN
     !singular matrix, the broadening term dominates, phi' has strong imaginary component
      !DO ir=1,nrxx
      ! rho_1_tot_im(ir,:)=rho_1_tot_im(ir,:)+cmplx(rho_1(ir,:),0.0d0,dp)*w_T(LR_iteration)
      !enddo
-     call zaxpy(nrxx, w_T(LR_iteration),cmplx(rho_1(:,1),0.0d0,dp),1,rho_1_tot_im(:,1),1) !spin not implemented
-    else
+     CALL zaxpy(nrxx, w_T(LR_iteration),cmplx(rho_1(:,1),0.0d0,dp),1,rho_1_tot_im(:,1),1) !spin not implemented
+    ELSE
     !not at resonance, the imaginary part is neglected ,these are the non-absorbing oscillations
      !DO ir=1,nrxx
      ! rho_1_tot(ir,:)=rho_1_tot(ir,:)+rho_1(ir,:)*dble(w_T(LR_iteration))
      !enddo
-     call daxpy(nrxx, dble(w_T(LR_iteration)),rho_1(:,1),1,rho_1_tot(:,1),1) !spin not implemented
-    endif
-    If (lr_verbosity > 9) THEN
-     if (LR_iteration == 2) then
-       call lr_dump_rho_tot_cube(rho_1(:,1),"first-rho1")
-     endif
-     if (LR_iteration == itermax .or. LR_iteration == itermax-1) call lr_dump_rho_tot_cube(rho_1(:,1),"last--rho1")
-    endif
+     CALL daxpy(nrxx, dble(w_T(LR_iteration)),rho_1(:,1),1,rho_1_tot(:,1),1) !spin not implemented
+    ENDIF
+    IF (lr_verbosity > 9) THEN
+     IF (LR_iteration == 2) THEN
+       CALL lr_dump_rho_tot_cube(rho_1(:,1),"first-rho1")
+     ENDIF
+     IF (LR_iteration == itermax .or. LR_iteration == itermax-1) CALL lr_dump_rho_tot_cube(rho_1(:,1),"last--rho1")
+    ENDIF
     !print *,"2"
     !
     !
@@ -270,17 +270,17 @@ endif
   !
   !deallocate(spsi)
   !
-  call stop_clock('lr_calc_dens')
+  CALL stop_clock('lr_calc_dens')
   !
   !call stop_clock('lrcd_sp')
-  return
+  RETURN
   !
-contains
+CONTAINS
   !
-  subroutine lr_calc_dens_gamma
+  SUBROUTINE lr_calc_dens_gamma
     !
-    use becmod,              only : bec_type, becp, calbec
-    use lr_variables,        only : becp1   !,real_space
+    USE becmod,              ONLY : bec_type, becp, calbec
+    USE lr_variables,        ONLY : becp1   !,real_space
     !use real_beta,           only : ccalbecr_gamma, fft_orbital_gamma
     USE io_global,           ONLY : stdout
     USE realus,              ONLY : real_space, fft_orbital_gamma, initialisation_level, &
@@ -289,16 +289,16 @@ contains
 
     !
 
-    do ibnd=1,nbnd,2
-       call fft_orbital_gamma(evc1(:,:,1),ibnd,nbnd)
+    DO ibnd=1,nbnd,2
+       CALL fft_orbital_gamma(evc1(:,:,1),ibnd,nbnd)
        !
        w1=wg(ibnd,1)/omega
        !
-       if(ibnd<nbnd) then
+       IF(ibnd<nbnd) THEN
           w2=wg(ibnd+1,1)/omega
-       else
+       ELSE
           w2=w1
-       endif
+       ENDIF
        !call start_clock('lrcd-lp1')
        ! OBM:
        ! (n'(r,w)=2*sum_v (psi_v(r) . q_v(r,w))
@@ -310,56 +310,56 @@ contains
        ! charge density can be calculated. This is in no way the final
        ! response charge density.
        ! the loop is over real space points.
-       do ir=1,dffts%nnr
+       DO ir=1,dffts%nnr
           rho_1(ir,1)=rho_1(ir,1) &
                +2.0d0*(w1*real(revc0(ir,ibnd,1),dp)*real(psic(ir),dp)&
                +w2*aimag(revc0(ir,ibnd,1))*aimag(psic(ir)))
-       enddo
+       ENDDO
        !
        !call stop_clock('lrcd-lp1')
        ! OBM - psic now contains the response functions at
        ! real space, eagerly putting all the real space stuff at this point.
        ! notice that betapointlist() is called in lr_readin at the very start
-       IF ( real_space_debug > 6 .and. okvan) then
+       IF ( real_space_debug > 6 .and. okvan) THEN
         ! The rbecp term
-        call calbec_rs_gamma(ibnd,nbnd,becp%r)
-       endif
+        CALL calbec_rs_gamma(ibnd,nbnd,becp%r)
+       ENDIF
        ! End of real space stuff
-    enddo
+    ENDDO
     !
     ! ... If we have a US pseudopotential we compute here the becsum term
     ! This corresponds to the right hand side of the formula (36) in Ultrasoft paper
     ! be careful about calling lr_calc_dens, as it modifies this globally
     !call start_clock('lrcd-us')
-    IF ( okvan ) then
+    IF ( okvan ) THEN
        !
        scal = 0.0d0
        becsum(:,:,:) = 0.0d0
        !
-       IF ( real_space_debug <= 6) then !in real space, the value is calculated above
+       IF ( real_space_debug <= 6) THEN !in real space, the value is calculated above
           !call pw_gemm('Y',nkb,nbnd,npw_k(1),vkb,npwx,evc1,npwx,rbecp,nkb)
-          call calbec(npw_k(1), vkb, evc1(:,:,1), becp)
-       endif
+          CALL calbec(npw_k(1), vkb, evc1(:,:,1), becp)
+       ENDIF
        !
-       call start_clock( 'becsum' )
+       CALL start_clock( 'becsum' )
        !
-       do ibnd = 1, nbnd
+       DO ibnd = 1, nbnd
           scal = 0.0d0
           !
           w1 = wg(ibnd,1)
           ijkb0 = 0
           !
-          do np = 1, ntyp
+          DO np = 1, ntyp
              !
-             if ( upf(np)%tvanp ) then
+             IF ( upf(np)%tvanp ) THEN
                 !
-                do na = 1, nat
+                DO na = 1, nat
                    !
-                   if ( ityp(na) == np ) then
+                   IF ( ityp(na) == np ) THEN
                       !
                       ijh = 1
                       !
-                      do ih = 1, nh(np)
+                      DO ih = 1, nh(np)
                          !
                          ikb = ijkb0 + ih
                          !
@@ -370,7 +370,7 @@ contains
                          !
                          ijh = ijh + 1
                          !
-                         do jh = ( ih + 1 ), nh(np)
+                         DO jh = ( ih + 1 ), nh(np)
                             !
                             jkb = ijkb0 + jh
                             !
@@ -383,102 +383,102 @@ contains
                             !
                             ijh = ijh + 1
                             !
-                         end do
+                         ENDDO
                          !
-                      end do
+                      ENDDO
                       !
                       ijkb0 = ijkb0 + nh(np)
                       !
-                   end if
+                   ENDIF
                    !
-                end do
+                ENDDO
                 !
-             else
+             ELSE
                 !
-                do na = 1, nat
+                DO na = 1, nat
                    !
-                   if ( ityp(na) == np ) ijkb0 = ijkb0 + nh(np)
+                   IF ( ityp(na) == np ) ijkb0 = ijkb0 + nh(np)
                    !
-                end do
+                ENDDO
                 !
-             end if
+             ENDIF
              !
-          end do
+          ENDDO
           !
            ! OBM debug
            !write(stdout,'(5X,"lr_calc_dens: ibnd,scal=",1X,i3,1X,e12.5)')&
            !     ibnd,scal
-       end do
+       ENDDO
        !
-       call stop_clock( 'becsum' )
+       CALL stop_clock( 'becsum' )
        !
-    endif
+    ENDIF
     !call stop_clock('lrcd-us')
     !
-    return
+    RETURN
     !
-  end subroutine lr_calc_dens_gamma
+  END SUBROUTINE lr_calc_dens_gamma
   !-----------------------------------------------------------------------
-  subroutine lr_calc_dens_k
+  SUBROUTINE lr_calc_dens_k
     !
-    use becmod,              only : bec_type, becp, calbec
-    use lr_variables,        only : becp1_c
+    USE becmod,              ONLY : bec_type, becp, calbec
+    USE lr_variables,        ONLY : becp1_c
     !
-    do ik=1,nks
-       do ibnd=1,nbnd
+    DO ik=1,nks
+       DO ibnd=1,nbnd
           psic(:)=(0.0d0,0.0d0)
-          do ig=1,npw_k(ik)
+          DO ig=1,npw_k(ik)
              psic(nls(igk_k(ig,ik)))=evc1(ig,ibnd,ik)
-          enddo
+          ENDDO
           !
           CALL invfft ('Wave', psic, dffts)
           !
           w1=wg(ibnd,ik)/omega
           !
           ! loop over real space points
-          do ir=1,dffts%nnr
+          DO ir=1,dffts%nnr
              rho_1(ir,:)=rho_1(ir,:) &
                   +2.0d0*w1*real(conjg(revc0(ir,ibnd,ik))*psic(ir),dp)
-          enddo
+          ENDDO
           !
-       enddo
-    enddo
+       ENDDO
+    ENDDO
     !
     ! ... If we have a US pseudopotential we compute here the becsum term
     !
-    IF ( okvan ) then
+    IF ( okvan ) THEN
        !
-       do ik =1,nks
+       DO ik =1,nks
           !
-          call init_us_2(npw_k(ik),igk_k(1,ik),xk(1,ik),vkb)
+          CALL init_us_2(npw_k(ik),igk_k(1,ik),xk(1,ik),vkb)
           !
           scal = 0.0d0
           becsum(:,:,:) = 0.0d0
           !
-          IF ( nkb > 0 .and. okvan ) then
+          IF ( nkb > 0 .and. okvan ) THEN
              ! call ccalbec(nkb,npwx,npw_k(ik),nbnd,becp,vkb,evc1)
-             call calbec(npw_k(ik),vkb,evc1(:,:,ik),becp)
-          endif
+             CALL calbec(npw_k(ik),vkb,evc1(:,:,ik),becp)
+          ENDIF
           !
-          call start_clock( 'becsum' )
+          CALL start_clock( 'becsum' )
           !
-          do ibnd = 1, nbnd
+          DO ibnd = 1, nbnd
              scal = 0.0d0
              !
              w1 = wg(ibnd,ik)
              ijkb0 = 0
              !
-             do np = 1, ntyp
+             DO np = 1, ntyp
                 !
-                if ( upf(np)%tvanp ) then
+                IF ( upf(np)%tvanp ) THEN
                    !
-                   do na = 1, nat
+                   DO na = 1, nat
                       !
-                      if ( ityp(na) == np ) then
+                      IF ( ityp(na) == np ) THEN
                          !
                          ijh = 1
                          !
-                         do ih = 1, nh(np)
+                         DO ih = 1, nh(np)
                             !
                             ikb = ijkb0 + ih
                             !
@@ -489,7 +489,7 @@ contains
                             !
                             ijh = ijh + 1
                             !
-                            do jh = ( ih + 1 ), nh(np)
+                            DO jh = ( ih + 1 ), nh(np)
                                !
                                jkb = ijkb0 + jh
                                !
@@ -502,41 +502,41 @@ contains
                                !
                                ijh = ijh + 1
                                !
-                            end do
+                            ENDDO
                             !
-                         end do
+                         ENDDO
                          !
                          ijkb0 = ijkb0 + nh(np)
                          !
-                      end if
+                      ENDIF
                       !
-                   end do
+                   ENDDO
                    !
-                else
+                ELSE
                    !
-                   do na = 1, nat
+                   DO na = 1, nat
                       !
-                      if ( ityp(na) == np ) ijkb0 = ijkb0 + nh(np)
+                      IF ( ityp(na) == np ) ijkb0 = ijkb0 + nh(np)
                       !
-                   end do
+                   ENDDO
                    !
-                end if
+                ENDIF
                 !
-             end do
+             ENDDO
              !
              ! write(stdout,'(5X,"lr_calc_dens: ibnd,scal=",1X,i3,1X,e12.5)')&
              !      ibnd,scal
-          end do
-          call stop_clock( 'becsum' )
+          ENDDO
+          CALL stop_clock( 'becsum' )
           !
-       enddo
+       ENDDO
        !
-    endif
+    ENDIF
     !
-    return
+    RETURN
     !
-  end subroutine lr_calc_dens_k
+  END SUBROUTINE lr_calc_dens_k
 !-------------------------------------------------------------------------------
 !-----------------------------------------------------------------------
-end subroutine lr_calc_dens
+END SUBROUTINE lr_calc_dens
 !-----------------------------------------------------------------------
