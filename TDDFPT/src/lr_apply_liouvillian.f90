@@ -168,7 +168,6 @@ SUBROUTINE lr_apply_liouvillian( evc1, evc1_new, sevc1_new, interaction )
         !
         DO ibnd=1,nbnd
            !
-           IF(lr_verbosity>6) WRITE(stdout,9000) ibnd,1,sevc1_new(1,ibnd,ik)
            !
            IF (abs(aimag(sevc1_new(1,ibnd,ik)))>1.0d-12) THEN
               !

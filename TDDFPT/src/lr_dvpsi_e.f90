@@ -125,10 +125,6 @@ SUBROUTINE lr_dvpsi_e(ik,ipol,dvpsi)
      gk (3, ig) = (xk (3, ik) + g (3, igk (ig) ) ) * tpiba
      g2kin (ig) = gk (1, ig) **2 + gk (2, ig) **2 + gk (3, ig) **2
   ENDDO
-  IF (lr_verbosity > 10 ) THEN
-       WRITE(stdout,'("lr_dvpsi_e g2kin:",F15.8)') sum(g2kin(:))
-  ENDIF
-
 
   !
   ! this is  the kinetic contribution to [H,x]:  -2i (k+G)_ipol * psi
@@ -149,21 +145,6 @@ SUBROUTINE lr_dvpsi_e(ik,ipol,dvpsi)
         ENDDO
      ENDIF
   ENDDO
-  !!OBM debug
-  !      obm_debug=0
-  !     do ibnd=1,nbnd
-  !        !
-  !        obm_debug=obm_debug+ZDOTC(npwx*npol,d0psi(:,ibnd),1,d0psi(:,ibnd),1)
-  !        !
-  !     enddo
-  !     print *, "lr_dvpsi_e d0psi kinetic contribution", obm_debug
-  IF (lr_verbosity > 10 ) THEN
-       WRITE(stdout,'("lr_dvpsi_e d0psi kinetic contribution:")')
-       DO ibnd=1,nbnd
-          CALL check_vector_gamma(d0psi(:,ibnd))
-       ENDDO
-  ENDIF
-  !!obm_debug
 
 
 
@@ -178,35 +159,6 @@ SUBROUTINE lr_dvpsi_e(ik,ipol,dvpsi)
   !
   CALL gen_us_dj (ik, dvkb)
   CALL gen_us_dy (ik, at (1, ipol), dvkb1)
-  IF (lr_verbosity > 10 ) THEN
-       WRITE(stdout,'("lr_dvpsi_e dvkb:")')
-       jkb=0
-      DO nt = 1, ntyp
-       DO na = 1, nat
-        IF (nt == ityp (na)) THEN
-           DO ikb = 1, nh (nt)
-              jkb = jkb + 1
-                CALL check_vector_f(dvkb(:,jkb))
-           ENDDO
-        ENDIF
-       ENDDO
-      ENDDO
-  ENDIF
-  IF (lr_verbosity > 10 ) THEN
-       WRITE(stdout,'("lr_dvpsi_e dvkb1:")')
-       jkb=0
-      DO nt = 1, ntyp
-       DO na = 1, nat
-        IF (nt == ityp (na)) THEN
-           DO ikb = 1, nh (nt)
-              jkb = jkb + 1
-                CALL check_vector_f(dvkb1(:,jkb))
-           ENDDO
-        ENDIF
-       ENDDO
-      ENDDO
-  ENDIF
-
 
 
   DO ig = 1, npw_k(ik)
@@ -242,20 +194,6 @@ SUBROUTINE lr_dvpsi_e(ik,ipol,dvpsi)
   !OBM!!!be careful, from bwalker, why?!!!!!
   work(:,:)=(0.0d0,1.0d0)*work(:,:)
   !OBM!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  IF (lr_verbosity > 10 ) THEN
-       WRITE(stdout,'("lr_dvpsi_e non-local contribution:")')
-       jkb=0
-      DO nt = 1, ntyp
-       DO na = 1, nat
-        IF (nt == ityp (na)) THEN
-           DO ikb = 1, nh (nt)
-              jkb = jkb + 1
-                CALL check_vector_gamma(work(:,jkb))
-           ENDDO
-        ENDIF
-       ENDDO
-      ENDDO
-  ENDIF
 
 
   IF(gamma_only) THEN
@@ -265,27 +203,6 @@ SUBROUTINE lr_dvpsi_e(ik,ipol,dvpsi)
   ELSE
      CALL lr_dvpsi_e_k()
   ENDIF
-  !!OBM debug
-  !      obm_debug=0
-  !     do ibnd=1,nbnd
-  !        !
-  !        obm_debug=obm_debug+ZDOTC(npwx*npol,dvpsi(:,ibnd),1,dvpsi(:,ibnd),1)
-  !        !
-  !     enddo
-  !     print *, "lr_dvpsi_e norm of dvpsi being returned=", obm_debug
-  !
-  IF (lr_verbosity > 10 ) THEN
-       WRITE(stdout,'("lr_dvpsi_e d0psi after lr_dvpsi_e case specific calc:")')
-       DO ibnd=1,nbnd
-          CALL check_vector_gamma(d0psi(:,ibnd))
-       ENDDO
-       WRITE(stdout,'("lr_dvpsi_e dvpsii after lr_dvpsi_e case specific calc:")')
-       DO ibnd=1,nbnd
-          CALL check_vector_gamma(dvpsi(:,ibnd))
-       ENDDO
-  ENDIF
-
-  !!obm_debug
 
   IF (nkb > 0) THEN
      DEALLOCATE (dvkb1, dvkb)
@@ -304,19 +221,6 @@ SUBROUTINE lr_dvpsi_e(ik,ipol,dvpsi)
     CALL sm1_psi(.true.,ik,npwx,npw_k(ik),nbnd,dvpsi,spsi)
     dvpsi(:,:) = spsi(:,:)
     DEALLOCATE(spsi)
-    !!OBM debug
-    IF (lr_verbosity > 7) THEN
-        obm_debug=0
-       DO ibnd=1,nbnd
-          !
-          obm_debug=obm_debug+ZDOTC(npwx*npol,dvpsi(:,ibnd),1,dvpsi(:,ibnd),1)
-          !
-       ENDDO
-#ifdef __PARA
-       CALL mp_sum(obm_debug, intra_pool_comm)
-#endif
-       WRITE(stdout,'("lr_dvpsi_e: dvpsi after sm1_psi:",E15.5)') obm_debug
-    ENDIF
   ENDIF
 
   !

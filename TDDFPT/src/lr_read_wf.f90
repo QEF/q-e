@@ -297,22 +297,7 @@ USE lr_variables, ONLY: check_all_bands_gamma, check_density_gamma,&
      ENDDO
      !
   ENDIF
-  !
-  !print * , "evc0 ",evc0(1:3,1,1)
-  !
-  IF (lr_verbosity >10) THEN
-          CALL check_all_bands_gamma(evc0(:,:,1),sevc0(:,:,1),nbnd,nbnd)
-          WRITE(stdout,'("evc0")')
-          DO ibnd=1,nbnd
-             CALL check_vector_gamma(evc0(:,ibnd,1))
-          ENDDO
-          CALL check_density_gamma(revc0(:,:,1),nbnd)
-  ENDIF
-  !
-  !OBM!!! debug---
-  !CALL lr_normalise( evc0(:,:,1), obm_debug)
-  !print *, "norm of evc0 ",obm_debug
-  !OBM!!! debug---
+
   ! OBM - Last minute check for real space implementation,
   IF ( real_space_debug > 0 .and. .not. gamma_only ) &
        CALL errore( ' iosys ', ' Linear response calculation ' // &
@@ -546,14 +531,8 @@ USE lr_variables, ONLY: check_all_bands_gamma, check_density_gamma,&
    ENDIF
    ENDIF
   ENDIF
-  IF (lr_verbosity >10) THEN
-          CALL check_all_bands_gamma(evc_all(:,:,1),sevc_all(:,:,1),nbnd_total,nbnd)
-          CALL check_density_gamma(revc_all(:,:,1),nbnd)
-          WRITE(stdout,'("evc0")')
-          DO ibnd=1,nbnd
-             CALL check_vector_gamma(evc0(:,ibnd,1))
-          ENDDO
-  ENDIF
+
+
   IF (nkb>0) THEN
   IF (gamma_only) THEN
    DEALLOCATE(becp1_all)

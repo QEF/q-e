@@ -121,27 +121,6 @@ CONTAINS
           sevc1_new(:,:,:,2)=sevc1_new(:,:,:,1)
        ENDIF
        LR_iteration=1
-       !Debugging
-       IF (lr_verbosity >10) THEN
-         !write(stdout,'("evc1_new(1), first step")')
-         !do ibnd=1,nbnd
-         !       call check_vector_gamma(evc1_new(:,ibnd,1,1))
-         !enddo
-         !write(stdout,'("sevc1_new(1), first step")')
-         !do ibnd=1,nbnd
-         !       call check_vector_gamma(sevc1_new(:,ibnd,1,1))
-         !enddo
-         !write(stdout,'("evc1_new(2), first step")')
-         !do ibnd=1,nbnd
-         !       call check_vector_gamma(evc1_new(:,ibnd,1,2))
-         !enddo
-         !write(stdout,'("sevc1_new(2), first step")')
-         !do ibnd=1,nbnd
-         !       call check_vector_gamma(sevc1_new(:,ibnd,1,2))
-         !enddo
-         temp=dble(lr_dot(evc1_new(1,1,1,1),sevc1_new(1,1,1,2)))
-         WRITE(stdout,'("<evc1_new(1)|sevc1_new(2)> first step",E15.8)') temp
-       ENDIF
     ENDIF
     !
     ! The lanczos algorithm starts here
@@ -157,12 +136,6 @@ CONTAINS
      CALL lr_ortho(evc1_new(:,:,ik,1), evc0(:,:,ik), ik, ik, sevc0(:,:,ik),.true.)
      CALL lr_ortho(evc1_new(:,:,ik,2), evc0(:,:,ik), ik, ik, sevc0(:,:,ik),.true.)
     ENDDO
-    IF (lr_verbosity >10) THEN
-         temp=dble(lr_dot(evc1_new(1,1,1,1),sevc0(1,1,1)))
-         WRITE(stdout,'("<evc1_new(1)|sevc0>",E15.8)') temp
-         temp=dble(lr_dot(evc1_new(1,1,1,2),sevc0(1,1,1)))
-         WRITE(stdout,'("<evc1_new(2)|sevc0>",E15.8)') temp
-    ENDIF
 
     !
     ! By construction <p|Lq>=0 should be 0, forcing this both conserves resources and increases stability
@@ -295,18 +268,6 @@ CONTAINS
     evc1_new(:,:,:,:)=(0.0d0,0.0d0)
     sevc1_new(:,:,:,:)=(0.0d0,0.0d0)
     !
-    IF (lr_verbosity >10) THEN
-          WRITE(stdout,'("evc1(1), rotate")')
-          DO ibnd=1,nbnd
-                 CALL check_vector_gamma(evc1(:,ibnd,1,1))
-          ENDDO
-          WRITE(stdout,'("evc1(2), rotate")')
-          DO ibnd=1,nbnd
-                 CALL check_vector_gamma(evc1(:,ibnd,1,2))
-          ENDDO
-    ENDIF
-
-
     !
     !
     IF(.not.ltammd) THEN
@@ -326,16 +287,6 @@ CONTAINS
        CALL zcopy(size_evc,evc1_new(:,:,:,1),1,evc1_new(:,:,:,2),1) !evc1_new(,1) = evc1_new(,2)
 
     ENDIF
-    IF (lr_verbosity >10) THEN
-          WRITE(stdout,'("evc1(1), apply L")')
-          DO ibnd=1,nbnd
-                 CALL check_vector_gamma(evc1_new(:,ibnd,1,1))
-          ENDDO
-          WRITE(stdout,'("evc1(2), apply L")')
-          DO ibnd=1,nbnd
-                 CALL check_vector_gamma(evc1_new(:,ibnd,1,2))
-          ENDDO
-    ENDIF
     !
     ! qdash(i+1)=f(q(i))-gamma*q(i-1)
     ! pdash(i+1)=f(p(i))-beta*p(i-1)
@@ -344,16 +295,6 @@ CONTAINS
     !OBM BLAS
     CALL zaxpy(size_evc,-cmplx(gamma,0.0d0,kind=dp),evc1_old(:,:,:,1),1,evc1_new(:,:,:,1),1)
     CALL zaxpy(size_evc,-cmplx(beta,0.0d0,kind=dp),evc1_old(:,:,:,2),1,evc1_new(:,:,:,2),1)
-    IF (lr_verbosity >10) THEN
-          WRITE(stdout,'("evc1(1), final")')
-          DO ibnd=1,nbnd
-                 CALL check_vector_gamma(evc1_new(:,ibnd,1,1))
-          ENDDO
-          WRITE(stdout,'("evc1(2), final")')
-          DO ibnd=1,nbnd
-                 CALL check_vector_gamma(evc1_new(:,ibnd,1,2))
-          ENDDO
-    ENDIF
     !
     CALL stop_clock('one_step')
     !

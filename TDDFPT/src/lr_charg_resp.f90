@@ -1310,9 +1310,6 @@ IMPLICIT NONE
             !
          ENDDO
          !
-          ! OBM debug
-          IF (lr_verbosity >9) WRITE(stdout,'(5X,"lr_calc_F Node US contribution: occ,virt,scal=",1X,2i5,1X,e12.5)')&
-               ibnd_occ,ibnd_virt,scal
 
       ENDIF
       ! US part finished
@@ -1332,10 +1329,6 @@ IMPLICIT NONE
       !and finally (note:parellization handled in dot product, each node has the copy of F)
       !
       F(ibnd_occ,ibnd_virt,ipol)=F(ibnd_occ,ibnd_virt,ipol)+cmplx(SSUM,0.0d0,dp)*w_T(LR_iteration)
-     IF (lr_verbosity>9) THEN
-        WRITE(STDOUT,'("occ=",I4," con=",I4," <|>=",E15.8, " w_T=",2(F8.3,1x), " F=",2(F10.5,1X))') &
-        ibnd_occ,ibnd_virt,SSUM,w_T(LR_iteration),F(ibnd_occ,ibnd_virt,ipol)
-     ENDIF
      ENDDO
     ENDDO
     END SUBROUTINE lr_calc_F

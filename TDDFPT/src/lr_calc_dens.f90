@@ -256,15 +256,6 @@ ENDIF
      !enddo
      CALL daxpy(nrxx, dble(w_T(LR_iteration)),rho_1(:,1),1,rho_1_tot(:,1),1) !spin not implemented
     ENDIF
-    IF (lr_verbosity > 9) THEN
-     IF (LR_iteration == 2) THEN
-       CALL lr_dump_rho_tot_cube(rho_1(:,1),"first-rho1")
-     ENDIF
-     IF (LR_iteration == itermax .or. LR_iteration == itermax-1) CALL lr_dump_rho_tot_cube(rho_1(:,1),"last--rho1")
-    ENDIF
-    !print *,"2"
-    !
-    !
   !
   ENDIF
   !

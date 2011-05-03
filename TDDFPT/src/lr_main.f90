@@ -92,12 +92,6 @@ PROGRAM lr_main
   !
   !   Allocate and zero lr variables
   !
-  !OBM_DEBUG
-  IF (lr_verbosity > 6) THEN
-     WRITE(stdout,'(/,5X,"Step-main1")')
-  ENDIF
-  !OBM_DEBUG
-  !
   !
   !Initialisation of degauss/openshell related stuff
   !
@@ -126,20 +120,10 @@ PROGRAM lr_main
   !
   !   Read in ground state wavefunctions
   !
-  !OBM_DEBUG
-  IF (lr_verbosity > 6) THEN
-   WRITE(stdout,'(/,5X,"Step-main2")')
-  ENDIF
-  !OBM_DEBUG
   CALL lr_read_wf()
   !
   !   Set up initial response orbitals
   !
-  !OBM_DEBUG
-  IF (lr_verbosity > 6) THEN
-   WRITE(stdout,'(/,5X,"Step-main3")')
-  ENDIF
-  !OBM_DEBUG
   !
   IF ( test_restart(1) ) THEN
     CALL lr_read_d0psi()
@@ -166,17 +150,8 @@ PROGRAM lr_main
   !
   !   Set up initial stuff for derivatives
   !
-  !OBM_DEBUG
-  IF (lr_verbosity > 6) THEN
-   WRITE(stdout,'(/,5X,"Step-main4")')
-  ENDIF
-  !OBM_DEBUG
   CALL lr_dv_setup()
-  !OBM_DEBUG
-  IF (lr_verbosity > 6) THEN
-   WRITE(stdout,'(/,5X,"Step-main5")')
-  ENDIF
-  !OBM_DEBUG
+
   !Coordinates of the read atom, just in case
   IF (lr_verbosity > 1) THEN
    WRITE(stdout,'(/,5X,"Positions of atoms in internal coordinates")')
@@ -223,27 +198,11 @@ PROGRAM lr_main
         WRITE(stdout,'(/5x,"Starting Lanczos loop",1x,i8)')   LR_polarization
       !
      ENDIF
-     IF (lr_verbosity >10) THEN
-      WRITE(stdout,'("d0psi")')
-      DO ibnd=1,nbnd
-             CALL check_vector_gamma(d0psi(:,ibnd,1,pol_index))
-      ENDDO
-     ENDIF
 
      !
      CALL sd0psi() !after this d0psi is Sd0psi !OBM:Check if this is really necessary
      !
      !
-     IF (lr_verbosity >10) THEN
-      WRITE(stdout,'("initial evc1")')
-      DO ibnd=1,nbnd
-             CALL check_vector_gamma(evc1(:,ibnd,1,1))
-      ENDDO
-      WRITE(stdout,'("initial sd0psi")')
-      DO ibnd=1,nbnd
-             CALL check_vector_gamma(d0psi(:,ibnd,1,pol_index))
-      ENDDO
-     ENDIF
 
      !
      lancz_loop1 : DO iteration = iter_restart, itermax
