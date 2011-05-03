@@ -1,14 +1,14 @@
 New in 4.3.1 version:
 
    * Effective Screening Medium (Otani and Sugino PRB 73 115407 (2006).
-   * CPV: much faster implementation of LDA+U
+   * CPV: faster implementation of LDA+U
 
 Fixed in 4.3.1 version:
 
    * atomic: behavior of which_augfun='PSQ' made consistent with documentation
    * CP+PLUMED wasn't working
    * Misc compilation and configure problems: line exceeding 132 characters, 
-     syntax not accepted by some compilers, pathscale+mpif90 not recignized, 
+     syntax not accepted by some compilers, pathscale+mpif90 not recognized, 
      etc.
    * PW: nasty out-of-bound bug leading to mysterious crashes or 
      incorrect results in some variable-cell calculations. Also in
