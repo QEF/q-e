@@ -627,7 +627,30 @@ input_description -distribution {Quantum Espresso} -package CP -program cp.x {
                    Use with care and if you know what you are doing!
 	    }
 	}
-
+        var lda_plus_u        -type LOGICAL {
+            default { .FALSE. }
+            info { lda_plus_u = .TRUE. enables calculation with LDA+U
+                   ("rotationally invariant"). See also Hubbard_U.
+                   Anisimov, Zaanen, and Andersen, PRB 44, 943 (1991); 
+                   Anisimov et al., PRB 48, 16929 (1993);
+                   Liechtenstein, Anisimov, and Zaanen, PRB 52, R5467 (1994);
+                   Cococcioni and de Gironcoli, PRB 71, 035105 (2005).
+            }
+        }
+        dimension Hubbard_U -start 1 -end ntyp -type REAL {
+            default { 0.D0 for all species }
+            status {
+                LDA+U works only for a few selected elements. Modify
+                CPV/ldaU.f90 if you plan to use LDA+U with an    
+                element that is not configured there.
+            }
+            info {
+                Hubbard_U(i): parameter U (in eV) for LDA+U calculations.
+                Currently only the simpler, one-parameter LDA+U is 
+                implemented (no "alpha" or "J" terms)
+                 }
+            }
+        }
         var assume_isolated -type CHARACTER {
             default { 'none' }
             info {
