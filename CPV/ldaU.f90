@@ -723,10 +723,10 @@ end function set_Hubbard_l
             end do
          end do
          !
-         CALL dgemm( 'C', 'N', n, ldim, 2*ngw, 2.0_DP, dwfc, 2*ngw, spsi, &
+         CALL dgemm( 'C', 'N', n, ldim, 2*ngw, 2.0_DP, spsi, 2*ngw, dwfc, &
                     2*ngw, 0.0_DP, dproj(1,offset+1), n )
          IF ( gstart == 2 ) &
-            CALL dger( n, ldim, -1.0_DP, dwfc, 2*ngw, spsi, 2*ngw, &
+            CALL dger( n, ldim, -1.0_DP, spsi, 2*ngw, dwfc, 2*ngw, &
                        dproj(1,offset+1), n )
          call mp_sum( dproj, intra_bgrp_comm )
       end if
