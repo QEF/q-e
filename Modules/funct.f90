@@ -472,7 +472,7 @@ CONTAINS
     !
     if (.not. dft_defined) then
     
-      write(*,"(A,A)") "Setting by parts: ", TRIM(dftout)      
+      ! write(*,"(A,A)") "Setting by parts: ", TRIM(dftout)      
 
       !  exchange
       iexch = notset
