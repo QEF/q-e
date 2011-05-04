@@ -49,6 +49,7 @@ SUBROUTINE setup_nscf (xq)
   USE paw_variables,      ONLY : okpaw
   USE modes,              ONLY : nsymq, invsymq !, gi, gimq, irgq, irotmq, minus_q
   USE uspp_param,         ONLY : n_atom_wfc
+  USE input_parameters,   ONLY : nk1, nk2, nk3, k1, k2, k3
   !
   IMPLICIT NONE
   !
@@ -117,13 +118,31 @@ SUBROUTINE setup_nscf (xq)
   !
   call s_axis_to_cart ()
   IF (okpaw) CALL d_matrix(d1,d2,d3)
+
+  
   !
   ! ... Input k-points are assumed to be  given in the IBZ of the Bravais
   ! ... lattice, with the full point symmetry of the lattice.
   !
-  nkstot = nks_start
-  xk(:,1:nkstot) = xk_start(:,1:nkstot)
-  wk(1:nkstot)   = wk_start(1:nkstot)
+  if(nk1.eq.0.OR.nk2.eq.0.OR.nk3.eq.0) then
+     !
+     !  In this case I keep the same points of the Charge density
+     !  calculations
+     !
+     nkstot = nks_start
+     xk(:,1:nkstot) = xk_start(:,1:nkstot)
+     wk(1:nkstot)   = wk_start(1:nkstot)
+  else
+     !
+     ! In this case I generate a new set of k-points
+     !
+     nks_start=nk1*nk2*nk3
+
+     CALL kpoint_grid ( nrot, time_reversal, s, t_rev, bg, nks_start, &
+          k1,k2,k3, nk1,nk2,nk3, nkstot, xk, wk)
+
+  endif
+
   !
   ! ... If some symmetries of the lattice are missing in the crystal,
   ! ... "irreducible_BZ" computes the missing k-points.

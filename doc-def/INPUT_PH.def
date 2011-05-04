@@ -298,6 +298,25 @@ input_description -distribution {Quantum Espresso} -package PWscf -program ph.x 
 	    }
 	}
 
+
+        vargroup -type INTEGER {
+            var nk1
+            var nk2
+            var nk3
+            var k1
+            var k2
+            var k3
+            default { 0,0,0,0,0,0 }
+            info {
+                When these parameters are specified the phonon program
+                runs a pw non-self consistent calculation with a different
+                k-point grid thant that used for the charge density.
+                This occurs even in the Gamma case.
+                nk1,nk2,nk3 are the parameters of the Monkhorst-Pack grid
+                with offset determined by k1,k2,k3.
+            }
+        }
+
 	group {
 	    label { Specification of irreducible representation }
 

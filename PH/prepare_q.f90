@@ -35,6 +35,7 @@ SUBROUTINE prepare_q(auxdyn, do_band, do_iq, setup_pw, iq)
   USE freq_ph,         ONLY : fpol
   USE output,          ONLY : fildyn
   USE ph_restart,      ONLY : ph_writefile
+  USE input_parameters,ONLY : nk1, nk2, nk3
   !
   IMPLICIT NONE
   !
@@ -136,10 +137,15 @@ SUBROUTINE prepare_q(auxdyn, do_band, do_iq, setup_pw, iq)
   !
   CALL ph_writefile('init',0)
   !
-  ! ... In the case of q != 0, we make first a non selfconsistent run
+  ! ... In the case:
+  !     of q = 0 and one of nk1, nk2 or nk3 = 0 we do not make a 
+  !              non selfconsistent run
+  !     of q = 0 and nk1*nk2*nk3 \=0  we do make first a nscf run
+  !     of q \= 0   we do make first a nscf run
   !
-  setup_pw = (.NOT.lgamma.OR.modenum /= 0).AND..NOT. done_bands
+  !  setup_pw = (.NOT.lgamma.OR.modenum /= 0).AND..NOT. done_bands
 
+  setup_pw = (.NOT.lgamma.OR.modenum /= 0.OR.nk1*nk2*nk3 .ne. 0).AND..NOT. done_bands
   do_band=.FALSE.
   DO irr=start_irr, MIN(ABS(last_irr),rep_iq(iq))
      IF (done_rep_iq(irr,iq) /= 1) THEN

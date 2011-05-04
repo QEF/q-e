@@ -50,6 +50,7 @@ SUBROUTINE check_initial_status(auxdyn)
   USE mp,              ONLY : mp_bcast
   USE xml_io_base,     ONLY : create_directory
   USE mp_global,       ONLY : mp_global_end
+  USE input_parameters, ONLY: nk1, nk2, nk3
   !
   USE acfdtest,        ONLY : acfdt_is_active, acfdt_num_der
   !
@@ -119,8 +120,9 @@ SUBROUTINE check_initial_status(auxdyn)
      ENDIF   
   ELSE  
      ! this is the standard treatment
-     IF ((ldisp.OR..NOT.lgamma.OR.modenum/=0).AND.(.NOT.lqdir)) &
+     IF (((ldisp.OR..NOT.lgamma.OR.modenum/=0).AND.(.NOT.lqdir)).OR.nk1*nk2*nk3.ne.0) &
                                            CALL write_rho( rho, nspin )
+
   ENDIF
 !!!!!!!!!!!!!!!!!!!!!!!! END OF ACFDT TEST !!!!!!!!!!!!!!!!
   !
@@ -184,7 +186,7 @@ SUBROUTINE check_initial_status(auxdyn)
      ! ... each q /= gamma works on a different directory. We create them
      ! here and copy the charge density inside
      !
-     IF (.NOT.lgamma.AND.lqdir) THEN
+     IF ((.NOT.lgamma.OR.nk1*nk2*nk3 .ne. 0).AND.lqdir) THEN
         tmp_dir_phq= TRIM (tmp_dir_ph) //TRIM(prefix)//&
                           & '_q' // TRIM(int_to_char(iq))//'/'
         filename=TRIM(tmp_dir_phq)//TRIM(prefix)//'.save/charge-density.dat'

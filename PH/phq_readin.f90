@@ -22,7 +22,7 @@ SUBROUTINE phq_readin()
   USE ions_base,     ONLY : nat, ntyp => nsp
   USE io_global,     ONLY : ionode_id
   USE mp,            ONLY : mp_bcast
-  USE input_parameters, ONLY : max_seconds
+  USE input_parameters, ONLY : max_seconds, nk1, nk2, nk3, k1, k2, k3
   USE ions_base,     ONLY : amass, pmass, atm
   USE klist,         ONLY : xk, nks, nkstot, lgauss, two_fermi_energies, lgauss
   USE ktetra,        ONLY : ltetra
@@ -89,7 +89,8 @@ SUBROUTINE phq_readin()
                        ldisp, nq1, nq2, nq3, &
                        eth_rps, eth_ns, lraman, elop, dek, recover,  &
                        fpol, asr, lrpa, lnoloc, start_irr, last_irr, &
-                       start_q, last_q, nogg, ldiag, search_sym, lqdir
+                       start_q, last_q, nogg, ldiag, search_sym, lqdir, &
+                       nk1, nk2, nk3, k1, k2, k3
   ! tr2_ph       : convergence threshold
   ! amass        : atomic masses
   ! alpha_mix    : the mixing parameter
@@ -125,6 +126,9 @@ SUBROUTINE phq_readin()
   ! ldiag        : if .true. force diagonalization of the dyn mat
   ! lqdir        : if .true. each q writes in its own directory
   ! search_sym   : if .true. analyze symmetry if possible
+  ! nk1,nk2,nk3,
+  ! ik1, ik2, ik3: when specified in input it uses for the phonon run
+  !                a different mesh than that used for the charge density.
 
   IF (ionode) THEN
   !
@@ -197,6 +201,13 @@ SUBROUTINE phq_readin()
   ldiag        =.FALSE.
   lqdir        =.FALSE.
   search_sym   =.TRUE.
+  nk1       = 0
+  nk2       = 0
+  nk3       = 0
+  k1       = 0
+  k2       = 0
+  k3       = 0
+
   !
   ! ...  reading the namelist inputph
   !
@@ -204,7 +215,7 @@ SUBROUTINE phq_readin()
 
   CALL mp_bcast(ios, ionode_id)
   !
-   CALL errore( 'phq_readin', 'reading inputph namelist', ABS( ios ) )
+  CALL errore( 'phq_readin', 'reading inputph namelist', ABS( ios ) )
   !
   IF (ionode) tmp_dir = trimcheck (outdir)
   CALL bcast_ph_input ( )

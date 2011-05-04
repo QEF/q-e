@@ -39,6 +39,7 @@ SUBROUTINE openfilq()
   USE io_global,      ONLY : ionode
   USE ramanm, ONLY: lraman, elop, iuchf, iud2w, iuba2, lrchf, lrd2w, lrba2
   USE acfdtest,        ONLY : acfdt_is_active, acfdt_num_der
+  USE input_parameters, ONLY : nk1, nk2, nk3
   !
   IMPLICIT NONE
   !
@@ -69,7 +70,7 @@ SUBROUTINE openfilq()
      ENDIF
   ELSE  
      ! this is the standard treatment
-     IF (lgamma.AND.modenum==0) tmp_dir=tmp_dir_save
+     IF (lgamma.AND.modenum==0.AND.nk1.eq.0.AND.nk2.eq.0.AND.nk3.eq.0) tmp_dir=tmp_dir_save
   ENDIF
 !!!!!!!!!!!!!!!!!!!!!!!! END OF ACFDT TEST !!!!!!!!!!!!!!!!
   iuwfc = 20
