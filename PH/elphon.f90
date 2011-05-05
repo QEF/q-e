@@ -334,7 +334,8 @@ SUBROUTINE elphsum ( )
   !
   ! Quantities ending with "fit" are relative to the "dense" grid
   !
-  REAL(DP), allocatable :: etfit(:,:), xkfit(:,:), wkfit(:)
+  REAL(DP), allocatable :: xkfit(:,:)
+  REAL(DP), allocatable, target :: etfit(:,:), wkfit(:)
   INTEGER :: nksfit, nk1fit, nk2fit, nk3fit, nkfit, nksfit_real
   INTEGER, allocatable :: eqkfit(:), eqqfit(:), sfit(:)
   !
@@ -366,8 +367,8 @@ SUBROUTINE elphsum ( )
   COMPLEX(DP) :: el_ph_sum (3*nat,3*nat)
 
   COMPLEX(DP), POINTER :: el_ph_mat_collect(:,:,:,:)
-  REAL(DP), ALLOCATABLE :: xk_collect(:,:), wk_collect(:), wkfit_dist(:), &
-                 etfit_dist(:,:)
+  REAL(DP), ALLOCATABLE :: xk_collect(:,:), wk_collect(:)
+  REAL(DP), POINTER :: wkfit_dist(:), etfit_dist(:,:)
   INTEGER :: nksfit_dist, rest, kunit_save
   INTEGER :: nks_real, ispin, nksqtot
   !
@@ -446,10 +447,15 @@ SUBROUTINE elphsum ( )
   kunit_save=kunit
   kunit=1
 
+#ifdef __PARA
   ALLOCATE(etfit_dist(nbnd,nksfit_dist))
   ALLOCATE(wkfit_dist(nksfit_dist))
   CALL poolscatter( 1, nksfit, wkfit, nksfit_dist, wkfit_dist )
   CALL poolscatter( nbnd, nksfit, etfit, nksfit_dist, etfit_dist )
+#else
+   wkfit_dist => wkfit
+   etfit_dist => etfit
+#endif
   !
   do isig=1,nsig
      !
@@ -464,8 +470,10 @@ SUBROUTINE elphsum ( )
      dosfit(isig) = dos_ef ( ngauss1, deg(isig), effit(isig), etfit_dist, &
           wkfit_dist, nksfit_dist, nbnd) / 2.0d0
   enddo
+#ifdef __PARA
   DEALLOCATE(etfit_dist)
   DEALLOCATE(wkfit_dist)
+#endif
   kunit=kunit_save
   allocate (eqkfit(nkfit), eqqfit(nkfit), sfit(nkfit))
   !
