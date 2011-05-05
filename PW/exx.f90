@@ -231,11 +231,11 @@ CONTAINS
   ! allocate and fill the array index_xkq(nkstot,nqs)
   !
   if ( nspin == 2 ) then
-     allocate ( index_xkq(2*nkstot,nqs) )
-     allocate ( x_occupation(nbnd,2*nkstot) )
+     if(.not.ALLOCATED(index_xkq)) allocate ( index_xkq(2*nkstot,nqs) )
+     if(.not.ALLOCATED(x_occupation)) allocate ( x_occupation(nbnd,2*nkstot) )
   else
-     allocate ( index_xkq(nkstot,nqs) )
-     allocate ( x_occupation(nbnd,nkstot) )
+     if(.not.ALLOCATED(index_xkq)) allocate ( index_xkq(nkstot,nqs) )
+     if(.not.ALLOCATED(x_occupation)) allocate ( x_occupation(nbnd,nkstot) )
   end if
   nkqs = 0
   new_ikq(:) = 0
