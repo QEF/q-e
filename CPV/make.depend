@@ -224,6 +224,8 @@ cpr.o : ortho_base.o
 cpr.o : pres_ai_mod.o
 cpr.o : smallbox_gvec.o
 cpr.o : wannier.o
+cpr_loop.o : ../Modules/ions_base.o
+cpr_loop.o : ../Modules/kind.o
 cpr_mod.o : ../Modules/kind.o
 cprstart.o : ../Modules/check_stop.o
 cprstart.o : ../Modules/control_flags.o
@@ -569,8 +571,6 @@ ldaU.o : ../Modules/uspp.o
 ldaU.o : gvecw.o
 ldaU.o : ldaUpen.o
 ldaUpen.o : ../Modules/kind.o
-main_loops.o : ../Modules/ions_base.o
-main_loops.o : ../Modules/kind.o
 mainvar.o : ../Modules/cell_base.o
 mainvar.o : ../Modules/descriptors.o
 mainvar.o : ../Modules/energies.o
@@ -605,7 +605,6 @@ move_electrons.o : ../Modules/energies.o
 move_electrons.o : ../Modules/griddim.o
 move_electrons.o : ../Modules/ions_base.o
 move_electrons.o : ../Modules/kind.o
-move_electrons.o : ../Modules/mp_global.o
 move_electrons.o : ../Modules/recvec.o
 move_electrons.o : ../Modules/uspp.o
 move_electrons.o : cg.o
