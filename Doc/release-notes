@@ -15,6 +15,7 @@ Fixed in 4.3.1 version:
      variable-cell: last scf step could crash due to insufficient
      FFT grid if the final cell was larger than the initial one
    * NEB + nonlocal exchange (DF-vdW) or hybrid functionals wasn't working
+   * NEB: incorrect parsing of intermediate images fixed
    * HSE numerical problems in function expint
    * XSPECTRA wasn't working any longer due to missing updates to
      read_file_xspectra.f90
