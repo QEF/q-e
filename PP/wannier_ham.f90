@@ -17,7 +17,6 @@ PROGRAM wannier_ham
   USE kinds, ONLY: DP
   USE io_files,   ONLY : prefix, tmp_dir, trimcheck
   USE wannier_new, ONLY: nwan, use_energy_int
-  USE ktetra
   USE mp,         ONLY : mp_bcast
   USE read_cards_module, ONLY : read_cards
   USE mp_global,     ONLY : mp_startup

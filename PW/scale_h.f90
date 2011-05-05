@@ -22,7 +22,7 @@ subroutine scale_h
   USE klist,      ONLY : xk, wk, nkstot
   USE us,         ONLY : nqxq, nqx, qrad, tab, tab_at, dq
   USE control_flags, ONLY : iverbosity
-  USE start_k,    ONLY : nks_start, xk_start
+  USE start_k,   ONLY : nks_start, xk_start
 #ifdef __MPI
   USE mp,         ONLY : mp_max
   USE mp_global,  ONLY : intra_pool_comm

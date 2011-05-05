@@ -35,7 +35,7 @@ SUBROUTINE prepare_q(auxdyn, do_band, do_iq, setup_pw, iq)
   USE freq_ph,         ONLY : fpol
   USE output,          ONLY : fildyn
   USE ph_restart,      ONLY : ph_writefile
-  USE input_parameters,ONLY : nk1, nk2, nk3
+  USE start_k,        ONLY : nk1, nk2, nk3
   !
   IMPLICIT NONE
   !

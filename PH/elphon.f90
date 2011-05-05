@@ -301,27 +301,27 @@ SUBROUTINE elphsum ( )
   !      Original routine written by Francesco Mauri, modified by PG
   !      New version by  Malgorzata Wierzbowska
   !
-  USE kinds,     ONLY : DP
-  USE constants, ONLY : pi, rytoev, degspin
-  USE ions_base,     ONLY : nat, ityp, tau
-  USE cell_base,     ONLY : at, bg
-  USE lsda_mod, ONLY: isk, nspin
-  USE klist, ONLY: nks, nkstot, xk, wk, nelec
-  USE ktetra, ONLY: nk1, nk2, nk3
-  USE symm_base, ONLY: s, irt, nsym, invs
+  USE kinds,       ONLY : DP
+  USE constants,   ONLY : pi, rytoev, degspin
+  USE ions_base,   ONLY : nat, ityp, tau
+  USE cell_base,   ONLY : at, bg
+  USE lsda_mod,    ONLY: isk, nspin
+  USE klist,       ONLY: nks, nkstot, xk, wk, nelec
+  USE start_k,    ONLY: nk1, nk2, nk3
+  USE symm_base,   ONLY: s, irt, nsym, invs
   USE noncollin_module, ONLY: nspin_lsda, nspin_mag
-  USE wvfct, ONLY: nbnd, et
-  USE parameters, ONLY : npk
-  USE el_phon, ONLY : el_ph_mat
-  USE qpoint, ONLY : xq, nksq
-  USE modes,  ONLY : u, minus_q, nsymq, rtau
-  USE dynmat, ONLY : dyn, w2
-  USE io_global, ONLY : stdout, ionode, ionode_id
-  USE mp_global, ONLY : my_pool_id, npool, kunit, intra_image_comm
-  USE mp, ONLY : mp_bcast
-  USE control_ph, ONLY : lgamma, tmp_dir_phq, xmldyn
-  USE save_ph,    ONLY : tmp_dir_save
-  USE io_files,  ONLY : prefix, tmp_dir
+  USE wvfct,       ONLY: nbnd, et
+  USE parameters,  ONLY : npk
+  USE el_phon,     ONLY : el_ph_mat
+  USE qpoint,      ONLY : xq, nksq
+  USE modes,       ONLY : u, minus_q, nsymq, rtau
+  USE dynmat,      ONLY : dyn, w2
+  USE io_global,   ONLY : stdout, ionode, ionode_id
+  USE mp_global,   ONLY : my_pool_id, npool, kunit, intra_image_comm
+  USE mp,          ONLY : mp_bcast
+  USE control_ph,  ONLY : lgamma, tmp_dir_phq, xmldyn
+  USE save_ph,     ONLY : tmp_dir_save
+  USE io_files,    ONLY : prefix, tmp_dir
   !
   IMPLICIT NONE
   ! epsw = 20 cm^-1, in Ry

@@ -54,8 +54,9 @@ SUBROUTINE setup()
                                  starting_magnetization
   USE ener,               ONLY : ef
   USE electrons_base,     ONLY : set_nelup_neldw
-  USE ktetra,             ONLY : nk1, nk2, nk3, k1, k2, k3, &
-                                 tetra, ntetra, ltetra
+  USE start_k,           ONLY : nks_start, xk_start, wk_start, &
+                                 nk1, nk2, nk3, k1, k2, k3
+  USE ktetra,             ONLY : tetra, ntetra, ltetra
   USE symm_base,          ONLY : s, t_rev, irt, ftau, nrot, nsym, invsym, &
                                  d1,d2,d3, time_reversal, sname, set_sym_bl, &
                                  find_sym
@@ -82,7 +83,6 @@ SUBROUTINE setup()
 #endif
   USE funct,              ONLY : dft_is_meta, dft_is_hybrid, dft_is_gradient
   USE paw_variables,      ONLY : okpaw
-  USE start_k,            ONLY : nks_start, xk_start, wk_start
 ! DCC
 !  USE ee_mod,             ONLY : do_coarse, do_mltgrid
 

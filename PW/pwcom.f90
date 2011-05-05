@@ -91,8 +91,6 @@ MODULE ktetra
   SAVE
   !
   INTEGER :: &
-       nk1, nk2, nk3,   &! the special-point grid
-       k1, k2, k3,      &! the offset from the origin
        ntetra            ! number of tetrahedra
   INTEGER, ALLOCATABLE :: &
        tetra(:,:)        ! index of k-points in a given tetrahedron
@@ -467,21 +465,6 @@ MODULE bp
 !
 END MODULE bp
 !
-MODULE start_k
-  !
-  USE kinds, ONLY: DP
-  !
-  SAVE
-
-  INTEGER :: nks_start=0
-    ! number of initial k points
-  REAL(DP), ALLOCATABLE :: wk_start(:)
-    ! initial weight of k points
-  REAL(DP), ALLOCATABLE :: xk_start(:,:)
-    ! initial coordinates of k points
-
-END MODULE start_k
-!
 MODULE pwcom
   !
   USE constants, ONLY : e2, rytoev, amconv, pi, tpi, fpi
@@ -492,7 +475,6 @@ MODULE pwcom
   USE gvecs
   USE klist
   USE lsda_mod
-  USE ktetra
   USE vlocal
   USE wvfct
   USE ener
@@ -505,6 +487,5 @@ MODULE pwcom
   USE bp
   USE fixed_occ
   USE spin_orb
-  USE start_k
   !
 END MODULE pwcom

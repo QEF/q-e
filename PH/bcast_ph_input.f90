@@ -29,7 +29,8 @@ subroutine bcast_ph_input ( )
   use io_files, ONLY : tmp_dir, prefix
   USE control_flags, only: iverbosity, modenum
   USE ramanm, ONLY: lraman, elop, dek, eth_rps, eth_ns
-  USE input_parameters, ONLY: max_seconds, nk1, nk2, nk3, k1, k2, k3
+  USE input_parameters, ONLY: max_seconds
+  USE start_k,      ONLY : nk1, nk2, nk3, k1, k2, k3
   USE ions_base,     ONLY : amass
   USE io_global, ONLY : ionode_id
   USE printout_base, ONLY : title

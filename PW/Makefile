@@ -107,6 +107,7 @@ interpolate.o \
 io_rho_xml.o \
 irrek.o \
 iweights.o \
+start_k.o \
 kpoint_grid.o \
 lchk_tauxk.o \
 make_pointlists.o \

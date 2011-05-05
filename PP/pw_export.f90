@@ -371,6 +371,7 @@ SUBROUTINE write_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
 
   USE kinds,          ONLY : DP
   USE pwcom
+  USE start_k,        ONLY : nk1, nk2, nk3, k1, k2, k3
   USE control_flags,  ONLY : gamma_only
   USE global_version, ONLY : version_number
   USE becmod,         ONLY : bec_type, becp, calbec, &

@@ -83,13 +83,14 @@ MODULE pw_restart
       USE klist,                ONLY : nks, nkstot, xk, ngk, wk, qnorm, &
                                        lgauss, ngauss, degauss, nelec, &
                                        two_fermi_energies, nelup, neldw
+      USE start_k,             ONLY : nk1, nk2, nk3, k1, k2, k3, &
+                                       nks_start, xk_start, wk_start
+      USE ktetra,               ONLY : ntetra, tetra, ltetra
       USE gvect,                ONLY : ngm, ngm_g, g, mill
       USE grid_dimensions,      ONLY : nr1, nr2, nr3
       USE basis,                ONLY : natomwfc
       USE gvecs,              ONLY : ngms_g, dual
       USE smooth_grid_dimensions,ONLY: nr1s, nr2s, nr3s
-      USE ktetra,               ONLY : nk1, nk2, nk3, k1, k2, k3, &
-                                       ntetra, tetra, ltetra
       USE wvfct,                ONLY : npw, npwx, g2kin, et, wg, &
                                        igk, nbnd, ecutwfc
       USE ener,                 ONLY : ef, ef_up, ef_dw
@@ -112,7 +113,6 @@ MODULE pw_restart
       USE mp_global,            ONLY : kunit, nproc, nproc_pool, me_pool, &
                                        nproc_image, &
                                        root_pool, intra_pool_comm, inter_pool_comm, intra_image_comm 
-      USE start_k,              ONLY : nks_start, xk_start, wk_start
 #ifdef EXX
       USE funct,                ONLY : get_exx_fraction, get_screening_parameter
       USE exx,                  ONLY : x_gamma_extrapolation, nq1, nq2, nq3, &
@@ -2367,9 +2367,9 @@ MODULE pw_restart
       !
       USE lsda_mod, ONLY : lsda
       USE klist,    ONLY : nkstot, xk, wk, qnorm
-      USE ktetra,   ONLY : nk1, nk2, nk3, k1, k2, k3
-      USE start_k,  ONLY : nks_start, xk_start, wk_start
-      USE symm_base,ONLY : nrot, s, sname
+      USE start_k,    ONLY : nks_start, xk_start, wk_start, &
+                              nk1, nk2, nk3, k1, k2, k3
+      USE symm_base,   ONLY : nrot, s, sname
       !
       IMPLICIT NONE
       !

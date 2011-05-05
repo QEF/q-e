@@ -101,7 +101,8 @@ SUBROUTINE iosys()
                             tot_charge_        => tot_charge, &
                             tot_magnetization_ => tot_magnetization
   !
-  USE ktetra,        ONLY : ltetra, nk1, nk2, nk3
+  USE ktetra,        ONLY : ltetra
+  USE start_k,      ONLY : nk1, nk2, nk3
   !
   USE ldaU,          ONLY : Hubbard_U_     => hubbard_u, &
                             Hubbard_alpha_ => hubbard_alpha, &
@@ -1497,14 +1498,14 @@ SUBROUTINE read_cards_pw ( psfile, tau_format )
                                  trd_ht, f_inp, rd_for
   USE cell_base,          ONLY : at, ibrav, symm_type
   USE ions_base,          ONLY : nat, ntyp => nsp, ityp, tau, atm, extfor
-  USE klist,              ONLY : nkstot_ => nkstot
-  USE ktetra,             ONLY : nk1_   => nk1, &
+  USE start_k,           ONLY : nk1_   => nk1, &
                                  nk2_   => nk2, &
                                  nk3_   => nk3, &
                                  k1_    => k1,  &
                                  k2_    => k2,  &
                                  k3_    => k3
-  USE klist,              ONLY : lxkcry, &
+  USE klist,              ONLY : nkstot_ => nkstot, &
+                                 lxkcry, &
                                  xk_    => xk, &
                                  wk_    => wk
   USE fixed_occ,          ONLY : tfixed_occ, &

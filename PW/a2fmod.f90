@@ -24,7 +24,7 @@ MODULE a2F
       USE klist,        ONLY : nks, nkstot, xk, wk
       USE ions_base,    ONLY : nat
       USE wvfct,        ONLY : et, nbnd
-      USE ktetra,       ONLY : nk1, nk2, nk3 
+      USE start_k,     ONLY : nk1, nk2, nk3 
       USE symm_base,    ONLY : s, nsym, irt
       USE io_global,    ONLY : ionode
       implicit none

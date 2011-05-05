@@ -990,7 +990,7 @@ MODULE ph_restart
    END SUBROUTINE init_status_run
 
    SUBROUTINE destroy_status_run()
-   USE start_k,         ONLY : xk_start, wk_start
+   USE start_k,    ONLY : xk_start, wk_start
    USE disp, ONLY : nqs, done_iq, done_rep_iq, rep_iq, nsymq_iq, npert_iq, &
                     comp_iq, comp_irr_iq, x_q
    IMPLICIT NONE

@@ -17,7 +17,6 @@ PROGRAM pw2wannier90
   USE cell_base,  ONLY : at, bg
   USE lsda_mod,   ONLY : nspin, isk
   USE klist,      ONLY : nkstot
-  USE ktetra,     ONLY : k1, k2, k3, nk1, nk2, nk3
   USE io_files,   ONLY : prefix, tmp_dir, trimcheck
   USE noncollin_module, ONLY : noncolin
   USE control_flags,    ONLY : gamma_only
