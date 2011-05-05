@@ -85,9 +85,9 @@ enddo
 do i=1,nimage
 if(i>=1.and.i<10) then
 write(a_tmp,'(i1)') i
-elseif(i>10.and.i<100) then
+elseif(i>=10.and.i<100) then
 write(a_tmp,'(i2)') i
-elseif(i>100.and.i<1000) then
+elseif(i>=100.and.i<1000) then
 write(a_tmp,'(i3)')
 endif
 
@@ -160,8 +160,9 @@ if(trim(dummy)=="BEGIN") then
         !
         if(i/=nimage.and.i/=1) then
         do j=2,i
+           dummy=""
         do while (trim(dummy)/="INTERMEDIATE_IMAGE")
-          read(parse_unit,'(A256)') dummy
+          read(parse_unit,'(A256)') dummy   
         enddo
         enddo
         if(trim(dummy)=="INTERMEDIATE_IMAGE") then
