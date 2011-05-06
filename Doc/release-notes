@@ -1,12 +1,12 @@
 New in 4.3.1 version:
 
    * Effective Screening Medium (Otani and Sugino PRB 73 115407 (2006).
-   * CPV: faster implementation of LDA+U
+   * CP: faster implementation of LDA+U
 
 Fixed in 4.3.1 version:
 
    * atomic: behavior of which_augfun='PSQ' made consistent with documentation
-   * CP+PLUMED wasn't working
+   * CP: LDA+U buggy, PLUMED wasn't working
    * Misc compilation and configure problems: line exceeding 132 characters, 
      syntax not accepted by some compilers, pathscale+mpif90 not recognized, 
      etc.
@@ -14,6 +14,8 @@ Fixed in 4.3.1 version:
      incorrect results in some variable-cell calculations. Also in
      variable-cell: last scf step could crash due to insufficient
      FFT grid if the final cell was larger than the initial one
+   * PW: minor bug in damped dynamics (hessian matrix incorrectly reset)
+   * Electron-Phonon code wasn't working any longer in serial execution
    * NEB + nonlocal exchange (DF-vdW) or hybrid functionals wasn't working
    * NEB: incorrect parsing of intermediate images fixed
    * HSE numerical problems in function expint
@@ -222,7 +224,7 @@ Fixed in version 4.1.1:
 
   * Possible memory leak in PW/update_pot.f90
 
-  * Spin-polarized calculations in CPV had a bug since v.4.1  when using
+  * Spin-polarized calculations in CP had a bug since v.4.1  when using
     parallel distributed diagonalization ("ortho" group)
 
   * FFT glitches: Nec SX routines were not properly called,
@@ -292,7 +294,7 @@ Fixed in version 4.1:
 
 Fixed in version 4.0.5:
 
-  * option calwf=1 (CPV with Wannier functions) was not working
+  * option calwf=1 (CP with Wannier functions) was not working
 
   * more problems in symmetry analysis in special cases for C_4h and
     D_2h symmetry
@@ -335,7 +337,7 @@ Fixed in version 4.0.4:
 
 Fixed in version 4.0.3:
 
-  * CPV: array qv allocated in newd wasn't deallocated in all cases,
+  * CP: array qv allocated in newd wasn't deallocated in all cases,
     leading to either a crash or a memory leak (Ralph)
 
   * Task groups bug fix: array tg_rho was not cleared at every k point cycle. 
@@ -571,7 +573,7 @@ Fixed in version 2.1.4:
 
 Fixed in version 2.1.3:
  
-  *  case ibrav=0 in CPV was not properly working
+  *  case ibrav=0 in CP was not properly working
 
   *  forces in CP with core corrections were wrong
      (reported by Giacomo Saielli)
