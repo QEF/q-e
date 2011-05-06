@@ -275,8 +275,7 @@ end function set_Hubbard_l
                       ns(iat,ispin(i),m1,m2) = ns(iat,ispin(i),m1,m2) + &
      &                               f(i) * proj(i,k+m2) * proj(i,k+m1)
                      end do
-                     ns(iat,1,m2,m1) = ns(iat,1,m1,m2)
-                     ns(iat,2,m2,m1) = ns(iat,2,m1,m2)
+                     ns(iat,:,m2,m1) = ns(iat,:,m1,m2)
                   end do
                end do
             end if
@@ -390,7 +389,7 @@ end function set_Hubbard_l
 
       if ( tfor .or. tprnfor ) then
         call start_clock('new_ns:forc')
-        allocate (bp(nhsa,n), dbp(nhsa,n,3), wdb(nhsa,n_atomic_wfc,3))
+        allocate (bp(nhsa,n), dbp(nhsa,nx,3), wdb(nhsa,n_atomic_wfc,3))
         allocate(dns(nat,nspin,ldmx,ldmx))
         allocate (spsi(ngw,n))
 !
@@ -745,7 +744,6 @@ end function set_Hubbard_l
          do iv=1,nh(alpha_s)
             do jv=1,nh(alpha_s)
                do m=1,n_atomic_wfc
-!                       do m1=1,2**Hubbard_l(is) + 1
                   dproj(ibnd,m) =                                       &
      &                        dproj(ibnd,m) + qq(iv,jv,alpha_s) *       &
      &                         ( wfcdbeta(m,iv)*betapsi(jv,ibnd) +      &
