@@ -1336,7 +1336,7 @@ CONTAINS
          ! ... iterations: this is one to clean-up the memory of the starting
          ! ... configuration
          !
-         IF ( mod( istep, nstep ) == 0 ) inv_hess(:,:) = identity( dim )
+         IF ( mod( istep, nrefresh ) == 0 ) inv_hess(:,:) = identity( dim )
          !
          IF ( etot < etotold ) THEN
             !
