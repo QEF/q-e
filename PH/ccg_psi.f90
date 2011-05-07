@@ -15,6 +15,7 @@ subroutine ccg_psi (lda, n, m, psi, h_diag, flag)
   !
   !
   USE kinds, only : DP
+  USE noncollin_module, ONLY : noncolin, npol
   implicit none
 
   integer :: lda, n, m, flag
@@ -22,10 +23,10 @@ subroutine ccg_psi (lda, n, m, psi, h_diag, flag)
   ! input: the real dimension of the vector
   ! input: the number of vectors
   ! input: flag=1 use h_diag, flag=-1 use conjg(h_diag)
-  complex(kind=DP) :: psi (lda, m)
+  complex(kind=DP) :: psi (lda*npol, m)
   ! inp/out: the vector to be preconditioned
 
-  complex(kind=DP) :: h_diag (lda, m)
+  complex(kind=DP) :: h_diag (lda*npol, m)
   ! input: the preconditioning vector
 
   integer :: k, i
@@ -40,8 +41,19 @@ subroutine ccg_psi (lda, n, m, psi, h_diag, flag)
          psi (i, k) = psi (i, k) * CONJG(h_diag (i, k))
        else
          print*, 'flag is neither 1 nor -1. Stop'
-       endif
+       endif  
      enddo
+     IF (noncolin) THEN
+        do i = 1, n
+           if (flag .eq. 1) then
+              psi (i+lda, k) = psi (i+lda, k) * h_diag (i+lda, k)
+           else if (flag .eq. -1) then
+              psi (i+lda, k) = psi (i+lda, k) * CONJG(h_diag (i+lda, k))
+           else
+              print*, 'flag is neither 1 nor -1. Stop'
+           endif  
+        end do
+     END IF
   enddo
   return
 end subroutine ccg_psi

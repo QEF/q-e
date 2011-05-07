@@ -18,6 +18,7 @@ subroutine cch_psi_all (n, h, ah, e, ik, m)
   USE becmod, ONLY : becp, calbec
   USE uspp, ONLY: nkb, vkb
   USE wvfct, ONLY : npwx, nbnd
+  USE noncollin_module, ONLY : noncolin, npol
 
   USE control_ph, ONLY : alpha_pv, nbnd_occ
   USE eqv,  ONLY : evq
@@ -36,7 +37,7 @@ subroutine cch_psi_all (n, h, ah, e, ik, m)
   complex(kind=DP) :: e (m)
   ! input: the eigenvalue + iu
 
-  complex(kind=DP) :: h (npwx, m), ah (npwx, m)
+  complex(kind=DP) :: h (npwx*npol, m), ah (npwx*npol, m)
   ! input: the vector
   ! output: the operator applied to the vector
   !
@@ -53,9 +54,9 @@ subroutine cch_psi_all (n, h, ah, e, ik, m)
   ! the product of the S matrix and h
 
   call start_clock ('ch_psi')
-  allocate (ps  ( nbnd , m))
-  allocate (hpsi( npwx , m))
-  allocate (spsi( npwx , m))
+  allocate (ps  ( nbnd , m))    
+  allocate (hpsi( npwx * npol, m))    
+  allocate (spsi( npwx * npol, m))    
   hpsi (:,:) = (0.d0, 0.d0)
   spsi (:,:) = (0.d0, 0.d0)
   !
@@ -67,10 +68,17 @@ subroutine cch_psi_all (n, h, ah, e, ik, m)
   !
   !   then we compute the operator H-epsilon S
   !
+  ah=(0.0_DP, 0.0_DP)
   do ibnd = 1, m
      do ig = 1, n
         ah (ig, ibnd) = hpsi (ig, ibnd) - e (ibnd) * spsi (ig, ibnd)
      enddo
+     IF (noncolin) THEN
+        do ig = 1, n
+           ah (ig+npwx, ibnd) = hpsi (ig+npwx, ibnd) - e (ibnd) * &
+                                spsi (ig+npwx, ibnd)
+        enddo
+     END IF
   enddo
   !
   !   Here we compute the projector in the valence band
@@ -78,16 +86,26 @@ subroutine cch_psi_all (n, h, ah, e, ik, m)
   ikq = ikqs(ik)
   ps (:,:) = (0.d0, 0.d0)
 
-  call zgemm ('C', 'N', nbnd_occ (ikq) , m, n, (1.d0, 0.d0) , evq, &
-       npwx, spsi, npwx, (0.d0, 0.d0) , ps, nbnd)
+  IF (noncolin) THEN
+     call zgemm ('C', 'N', nbnd_occ (ikq) , m, npwx*npol, (1.d0, 0.d0) , evq, &
+          npwx*npol, spsi, npwx*npol, (0.d0, 0.d0) , ps, nbnd)
+  ELSE
+     call zgemm ('C', 'N', nbnd_occ (ikq) , m, n, (1.d0, 0.d0) , evq, &
+          npwx, spsi, npwx, (0.d0, 0.d0) , ps, nbnd)
+  ENDIF
   ps (:,:) = ps(:,:) * alpha_pv
 #ifdef __PARA
   call mp_sum (ps, intra_pool_comm)
 #endif
 
   hpsi (:,:) = (0.d0, 0.d0)
-  call zgemm ('N', 'N', n, m, nbnd_occ (ikq) , (1.d0, 0.d0) , evq, &
-       npwx, ps, nbnd, (1.d0, 0.d0) , hpsi, npwx)
+  IF (noncolin) THEN
+     call zgemm ('N', 'N', npwx*npol, m, nbnd_occ (ikq) , (1.d0, 0.d0) , evq, &
+          npwx*npol, ps, nbnd, (1.d0, 0.d0) , hpsi, npwx*npol)
+  ELSE
+     call zgemm ('N', 'N', n, m, nbnd_occ (ikq) , (1.d0, 0.d0) , evq, &
+          npwx, ps, nbnd, (1.d0, 0.d0) , hpsi, npwx)
+  END IF
   spsi(:,:) = hpsi(:,:)
   !
   !    And apply S again
@@ -99,6 +117,11 @@ subroutine cch_psi_all (n, h, ah, e, ik, m)
      do ig = 1, n
         ah (ig, ibnd) = ah (ig, ibnd) + spsi (ig, ibnd)
      enddo
+     IF (noncolin) THEN
+        do ig = 1, n
+           ah (ig+npwx, ibnd) = ah (ig+npwx, ibnd) + spsi (ig+npwx, ibnd)
+        enddo
+     END IF
   enddo
 
   deallocate (spsi)
