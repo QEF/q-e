@@ -307,7 +307,7 @@ SUBROUTINE elphsum ( )
   USE cell_base,   ONLY : at, bg
   USE lsda_mod,    ONLY: isk, nspin
   USE klist,       ONLY: nks, nkstot, xk, wk, nelec
-  USE start_k,    ONLY: nk1, nk2, nk3
+  USE input_parameters, ONLY: nk1, nk2, nk3
   USE symm_base,   ONLY: s, irt, nsym, invs
   USE noncollin_module, ONLY: nspin_lsda, nspin_mag
   USE wvfct,       ONLY: nbnd, et

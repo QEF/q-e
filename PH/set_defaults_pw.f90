@@ -45,8 +45,8 @@ SUBROUTINE setup_nscf (xq)
   USE mp_global,          ONLY : kunit
   USE spin_orb,           ONLY : domag
   USE noncollin_module,   ONLY : noncolin
-  USE start_k,           ONLY : nks_start, xk_start, wk_start, &
-                                 nk1, nk2, nk3, k1, k2, k3
+  USE start_k,            ONLY : nks_start, xk_start, wk_start
+  USE input_parameters,   ONLY : nk1, nk2, nk3, k1, k2, k3
   USE paw_variables,      ONLY : okpaw
   USE modes,              ONLY : nsymq, invsymq !, gi, gimq, irgq, irotmq, minus_q
   USE uspp_param,         ONLY : n_atom_wfc

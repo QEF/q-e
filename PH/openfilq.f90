@@ -39,7 +39,7 @@ SUBROUTINE openfilq()
   USE io_global,      ONLY : ionode
   USE ramanm,         ONLY: lraman, elop, iuchf, iud2w, iuba2, lrchf, lrd2w, lrba2
   USE acfdtest,       ONLY : acfdt_is_active, acfdt_num_der
-  USE start_k,       ONLY : nk1, nk2, nk3
+  USE input_parameters,ONLY: nk1, nk2, nk3
   !
   IMPLICIT NONE
   !

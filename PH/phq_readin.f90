@@ -22,11 +22,11 @@ SUBROUTINE phq_readin()
   USE ions_base,     ONLY : nat, ntyp => nsp
   USE io_global,     ONLY : ionode_id
   USE mp,            ONLY : mp_bcast
-  USE input_parameters, ONLY : max_seconds
   USE ions_base,     ONLY : amass, pmass, atm
+  USE input_parameters, ONLY : max_seconds
+  USE input_parameters, ONLY : nk1, nk2, nk3, k1, k2, k3
   USE klist,         ONLY : xk, nks, nkstot, lgauss, two_fermi_energies, lgauss
   USE ktetra,        ONLY : ltetra
-  USE start_k,      ONLY : nk1, nk2, nk3, k1, k2, k3
   USE control_flags, ONLY : gamma_only, tqr, restart, lkpoint_dir
   USE uspp,          ONLY : okvan
   USE fixed_occ,     ONLY : tfixed_occ

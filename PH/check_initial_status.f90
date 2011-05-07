@@ -41,7 +41,8 @@ SUBROUTINE check_initial_status(auxdyn)
   USE save_ph,         ONLY : tmp_dir_save
   USE ph_restart,      ONLY : ph_readfile, check_status_run, init_status_run, &
                               ph_writefile
-  USE start_k,        ONLY : nks_start, nk1, nk2, nk3
+  USE start_k,         ONLY : nks_start
+  USE input_parameters,ONLY : nk1, nk2, nk3
   USE save_ph,         ONLY : save_ph_input_variables
   USE io_rho_xml,      ONLY : write_rho
   USE mp_global,       ONLY : nimage, my_image_id, intra_image_comm
