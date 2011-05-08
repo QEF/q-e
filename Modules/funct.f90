@@ -454,8 +454,8 @@ CONTAINS
        call set_dft_value (inlc,0) !Default    
        dft_defined = .true.
 
-    ! special cases : PZ 
-    else IF ('PZ' .EQ. TRIM(dftout) ) THEN
+    ! special cases : PZ  (LDA is equivalent to PZ)
+    else IF (('PZ' .EQ. TRIM(dftout) ).OR.('LDA' .EQ. TRIM(dftout) )) THEN
        call set_dft_value (iexch,1) 
        call set_dft_value (icorr, 1) 
        CALL set_dft_value( igcx,  0)
