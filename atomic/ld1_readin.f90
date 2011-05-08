@@ -40,7 +40,7 @@ subroutine ld1_readin
                          rmatch_augfun_nc,                    &
                          rhos, bmat, lsmall, &              ! extra for paw2us
                          lgipaw_reconstruction, lsave_wfc, &
-                         relpert, noscf, &
+                         relpert, noscf, max_out_wfc, &
                          rcutv ! LDA-1/2
 
   use funct, only : set_dft_from_name
@@ -95,6 +95,8 @@ subroutine ld1_readin
        file_charge, & ! file with the all-electron charge
        write_coulomb, & ! if .true. write a fake pseudopotential file with the
                      ! Coulomb potential for usage in all-electron calculations
+       max_out_wfc,   & ! maximum number of wavefunctions written in the
+                        ! output file
        relpert       ! compute relativistic perturbative corrections
 
   namelist /test/                 &
@@ -201,6 +203,7 @@ subroutine ld1_readin
   latt= 0
   title = ' '
   config= ' '
+  max_out_wfc=7
 
   verbosity='low'
   lpaw = .false.
@@ -654,7 +657,7 @@ subroutine bcast_input()
   USE mp,         ONLY : mp_bcast
   USE ld1inc,   ONLY : zed, beta, tr2, iswitch, nlc, rlderiv, eminld, emaxld, &
                      deld, lsd, rel, lsmall, isic, latt, title, prefix, vdw, &
-                     nld, noscf, relpert, file_charge
+                     nld, noscf, relpert, file_charge, max_out_wfc
 
 
 implicit none
@@ -679,6 +682,7 @@ implicit none
    call mp_bcast( relpert, ionode_id )
    call mp_bcast( vdw, ionode_id )
    call mp_bcast( file_charge, ionode_id )
+   call mp_bcast( max_out_wfc, ionode_id )
 #endif
 return
 end subroutine bcast_input

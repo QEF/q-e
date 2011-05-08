@@ -20,14 +20,11 @@ subroutine write_results
                         dhrsic, dxcsic, eps0, iter, psi, rytoev_fact, lsmall, &
                         core_state, ekinc, ekinv, ae_fc_energy, cau_fact, &
                         relpert, evel, edar, eso, noscf, iswitch, rho, &
-                        file_charge
+                        file_charge, max_out_wfc
 
   use funct, only :  get_iexch, get_dft_name
   implicit none
 
-  integer, parameter :: max_out_wfc=7 
-  ! max number of wfcts written to file
-  ! you need to change the format as well if you increase this
   integer :: is, i, j, n, m, im(40), ios, counter, ismax
   real(DP):: work(ndmx), dum, int_0_inf_dr, ravg, r2avg, sij, ene, mm, &
              sij1, sij2, charge_large, charge_small, work1(ndmx), work2(ndmx)

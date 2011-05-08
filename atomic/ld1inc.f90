@@ -167,6 +167,8 @@ MODULE ld1inc
        isic,      &  ! if true uses self-interaction correction
        latt,      &  ! if true Latter's correction is applied
        iswitch,   &  ! control the type of run
+       max_out_wfc, & ! maximum number of wavefunctions written on the
+                     !   wavefunctions file.
        rel           ! 0 nonrelativistic calculation
   ! 1 scalar relativistic calculation
   ! 2 calculation with the full dirac equation

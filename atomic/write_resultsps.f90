@@ -18,13 +18,12 @@ SUBROUTINE write_resultsps ( )
                   grid, enl,  eps0, iter, etot, etots, etot0, lpaw, &
                   etots0, ekin, encl, ehrt, ecxc, nlcc, ecc, evxt, epseu, &
                   dhrsic, dxcsic, file_wavefunctionsps, phits, rytoev_fact, &
-                  verbosity, frozen_core, ae_fc_energy, jj
+                  verbosity, frozen_core, ae_fc_energy, jj, max_out_wfc
+
   USE ld1inc,    ONLY : nwf, el, psi, rcut
   USE funct, ONLY: get_dft_name
   IMPLICIT NONE
 
-  INTEGER, PARAMETER :: max_out_wfc=6
-  ! max_out_wfc = max number of PS wfcts written to file
   INTEGER :: counter
   real(DP) :: psiaux(ndmx,2*max_out_wfc), phase
   CHARACTER (len=2) :: elaux(2*max_out_wfc)

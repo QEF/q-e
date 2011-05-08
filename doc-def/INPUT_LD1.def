@@ -158,6 +158,14 @@ input_description -distribution {Quantum Espresso} -program ld1.x {
 	    }
 	}
 
+	var max_out_wfc  -type INTEGER  {
+	    default { 7 }
+	    info {
+		Maximum number of atomic wavefunctions written in the output
+                file.
+	    }
+	}
+
 	var noscf  -type LOGICAL {
 	    default { .false. }
 	    info {
