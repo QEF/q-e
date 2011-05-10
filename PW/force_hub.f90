@@ -88,7 +88,7 @@ SUBROUTINE force_hub(forceh)
       DO ipol = 1,3
          DO alpha = 1,nat                 ! the displaced atom
             IF ( gamma_only ) THEN
-               CALL dndtau_gamma(ldim,oatwfc,proj%r,swfcatom,spsi,alpha,ipol,dns)
+               CALL dndtau_gamma(ldim,oatwfc,proj%r,swfcatom,spsi,alpha,ipol,ik,dns)
             ELSE
                CALL dndtau_k (ldim,oatwfc,proj%k,swfcatom,spsi,alpha,ipol,ik,dns)
             ENDIF
@@ -203,7 +203,7 @@ SUBROUTINE dndtau_k (ldim, offset, proj, wfcatom, spsi, alpha, ipol, ik, dns)
 END SUBROUTINE dndtau_k
 !
 !-----------------------------------------------------------------------
-SUBROUTINE dndtau_gamma (ldim, offset, rproj, wfcatom, spsi, alpha, ipol, dns)
+SUBROUTINE dndtau_gamma (ldim, offset, rproj, wfcatom, spsi, alpha, ipol, ik, dns)
    !-----------------------------------------------------------------------
    !
    ! This routine computes the derivative of the ns with respect to the ionic
@@ -219,13 +219,13 @@ SUBROUTINE dndtau_gamma (ldim, offset, rproj, wfcatom, spsi, alpha, ipol, dns)
    
    IMPLICIT NONE
 
-   INTEGER, INTENT(IN) ::  alpha, ipol, ldim, offset(nat)
+   INTEGER, INTENT(IN) ::  alpha, ipol, ik, ldim, offset(nat)
    ! offset(nat): offset of d electrons of atom d in the natomwfc ordering
    COMPLEX (DP), INTENT(IN) ::  wfcatom(npwx,natomwfc), spsi(npwx,nbnd)
    REAL(DP), INTENT (IN) ::  rproj(natomwfc,nbnd)
    REAL (DP), INTENT (OUT) :: dns(ldim,ldim,nspin,nat)
    !
-   INTEGER ::  ibnd, is, na, nt, m1, m2, ik=1
+   INTEGER ::  ibnd, is, na, nt, m1, m2
    REAL (DP), ALLOCATABLE :: dproj(:,:)
    !
    !
