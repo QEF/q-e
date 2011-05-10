@@ -24,33 +24,37 @@ applied to so far can be found at:
 
 ---------------------------------------------------------------------
 
-The example will first check if every file is present, and then run
-the simulations. As for this particular kind of implementation, the
-vdw-DF need a so called "table", a universal file that has to be
+The example will first check if all the necessary files are present, 
+and then run the simulations. 
+As for this particular kind of implementation, the
+vdw-DF need a so called "vdW_kernel_table", a universal file that has to be
 generated once and used for all other calculations.
 
 This table, stored in ACSII format, usually ships with the QE distri-
 bution, in case the file is not present the example will launch the
 routine needed to generate it. It can be a long process, up to 30 mins
 in basic single CPU machine, but once generated can be used in any
-other machine and ofr any other calculations.
+other machine and for any other calculation.
 
-After the check, and the possiible generation, the example will proceed
-with two simulations, in particolar
+After the check, and the possible generation, the example will proceed
+with two simulations, in particular
 
 1) A variable cell relaxation of a simple 1x1 graphite. The parameters
-used (such as k-point mesh and energy cutoffs are not converged, use them
-only for some proof-of-concet runs). Here the stress will be used to
-converge the cell at 0 pressure.
+used (such as k-point mesh and energy cutoffs) are not converged, use them
+only for test runs, increase them accordingly for production runs.
+Here the stress will be used to converge the cell at 0 pressure.
 
 2) A self-consistent energy calculation of a water dimer in the
 equilibrium configuration.  Check the energies and forces against
 those in the reference file.
 
-bonus) If you have in the PP dir the Ar.pz-rrkj.UPF you can activate the
-last exaple by removing the comments from the execution lines (277-280). In 
+bonus) If you have the Ar.pz-rrkj.UPF in the PP_dir, you can activate the
+last example by removing the comments from the execution lines (277-280). In 
 this example it's shown how to tun a BFGS relaxation of the forces for the 
 Argon dimer. Check that the energies and forces agree with those in the 
-reference file, and that the final positions are right.
+reference file, and that the final positions are correct.
 
- 
+---
+IMPORTANT NOTE: This feature works the most accurately when Revised-PBE 
+(RPB of short-name "revPBE" (Zhang-Yang)) is used as the gradient correction 
+on the exchange part of the XC functional.
