@@ -6,6 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !
+!#define DEBUG
 !----------------------------------------------------------------------------
 SUBROUTINE forces()
   !----------------------------------------------------------------------------
@@ -262,12 +263,12 @@ SUBROUTINE forces()
      END DO
   end if
   !
-  if(do_comp) then
-      WRITE( stdout, '(5x,"The corrective potential contrib.  to forces")')
-      DO na = 1, nat
-          WRITE( stdout, 9035) na, ityp(na), ( force_vcorr(ipol,na), ipol = 1, 3 )
-      END DO
-  endif
+!  if(do_comp) then
+!      WRITE( stdout, '(5x,"The corrective potential contrib.  to forces")')
+!      DO na = 1, nat
+!          WRITE( stdout, 9035) na, ityp(na), ( force_vcorr(ipol,na), ipol = 1, 3 )
+!      END DO
+!  endif
 
   WRITE( stdout, '(5x,"The non-local contrib.  to forces")')
   DO na = 1, nat
