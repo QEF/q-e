@@ -53,7 +53,7 @@ program fqha
   write(*,"('Check: 3*Nat = ',f8.4,5x'zero-point energy (Ry)=',f15.8)") norm,F0
   write (*,"('Output file for the Free energy >>> ',$)")
   read(*,'(a)') filename
-  if ( filename == '') then
+  if ( filename == ' ') then
      filename = 'fqha.out'
      write(*,"(' output to file ',a)") trim(filename)
   end if

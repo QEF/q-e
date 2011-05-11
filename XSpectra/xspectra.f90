@@ -161,7 +161,7 @@ PROGRAM X_Spectra
   !
 
   calculation='xanes'
-  prefix=''
+  prefix=' '
   verbosity='low'
   x_save_file='xanes.sav'
   CALL get_env( 'ESPRESSO_TMPDIR', outdir )
@@ -3427,8 +3427,7 @@ SUBROUTINE verify_hpsi
   IF (lda_plus_u) CALL init_xanes_ldau
 
   mpimea=mpime
-  filenumber=''
-
+  filenumber=' '
 
   DO  j=1, 3
      mpimeb=mod(mpimea,10)

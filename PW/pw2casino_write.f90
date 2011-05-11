@@ -1143,7 +1143,7 @@ CONTAINS
          sgn='-'
          av_quote=-av_quote
       ELSE
-         sgn=''
+         sgn=' '
       ENDIF ! Sign
       IF(aint(av_quote)>dble(huge(1)))THEN
          write_mean='ERROR: NUMBERS ARE TOO LARGE IN WRITE_MEAN!'
@@ -1161,7 +1161,7 @@ CONTAINS
             RETURN
          ENDIF ! Vast number
          dec_part=nint((av_quote-dble(int_part))*10.d0**dble(-lowest_digit_to_quote))
-         zero_pad=''
+         zero_pad=' '
          IF(dec_part<0)THEN
             write_mean='ERROR: BUG IN WRITE_MEAN! (2)'
             RETURN

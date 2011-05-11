@@ -117,7 +117,7 @@ MODULE path_io_routines
        !
        IF ( CI_scheme == "manual" ) THEN
           !
-          outline = ''
+          outline = ' '
           !
           DO i = 2, num_of_images
              !

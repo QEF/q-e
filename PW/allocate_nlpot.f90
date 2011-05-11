@@ -84,7 +84,7 @@ subroutine allocate_nlpot
   ! at k+q_gipaw
   if (trim(program_name) == 'GIPAW') then
     if (cell_factor == 1.d0) cell_factor = 1.1d0
-    write(stdout,'(5X,''q-space interpolation up to '',F8.2,'' Rydberg'')') ecutwfc*cell_factor
+    write(stdout,"(5X,'q-space interpolation up to ',F8.2,' Rydberg')") ecutwfc*cell_factor
   endif
   !
   ! This routine is called also by the phonon code, in which case it should

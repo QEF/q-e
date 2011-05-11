@@ -218,7 +218,7 @@ subroutine write_results
   print_fc=(verbosity=='high'.and.iswitch>1) 
   write(stdout,*)
   if (print_fc) then
-      vstates=''
+      vstates=' '
       do n=1,nwf
          if (.not.core_state(n)) vstates=TRIM(vstates)//el(n)//","
       enddo
