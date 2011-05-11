@@ -28,7 +28,7 @@ SUBROUTINE write_resultsps ( )
   real(DP) :: psiaux(ndmx,2*max_out_wfc), phase
   CHARACTER (len=2) :: elaux(2*max_out_wfc)
 
-  INTEGER :: i, j, n, ios
+  INTEGER :: i, j, n, wfc_num, ios
   CHARACTER (len=20) :: dft_name
   !
   !
@@ -138,6 +138,7 @@ SUBROUTINE write_resultsps ( )
   !
   IF (file_wavefunctionsps/=' ') THEN
      counter=1
+     wfc_num=MIN(nwfts, max_out_wfc)
      DO i=1,nwfts
         IF (counter > max_out_wfc) exit
         elaux(counter)=elts(i)
@@ -151,8 +152,8 @@ SUBROUTINE write_resultsps ( )
                     exit
                  ENDIF
               ENDDO
-              psiaux(:,nwfts+counter)=psi(:,1,j)*phase
-              elaux(nwfts+counter)=el(j)
+              psiaux(:,wfc_num+counter)=psi(:,1,j)*phase
+              elaux(wfc_num+counter)=el(j)
               exit
            ENDIF
         ENDDO
