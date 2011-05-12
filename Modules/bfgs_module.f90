@@ -92,11 +92,10 @@ MODULE bfgs_module
    INTEGER :: &
       scf_iter,          &! number of scf iterations
       bfgs_iter,         &! number of bfgs iterations
-      gdiis_iter          ! number of gdiis iterations
-   !
-   LOGICAL :: &
-      tr_min_hit          ! .TRUE. if the trust_radius has already been
-                          !  set to the minimum value at the previous step
+      gdiis_iter,        &! number of gdiis iterations
+      tr_min_hit = 0      ! set to 1 if the trust_radius has already been
+                          ! set to the minimum value at the previous step
+                          ! set to 2 if trust_radius is reset again: exit
    LOGICAL :: &
       conv_bfgs           ! .TRUE. when bfgs convergence has been achieved
    !
@@ -247,7 +246,7 @@ CONTAINS
 #endif
       END IF
       !
-      stop_bfgs = conv_bfgs .OR. ( scf_iter >= nstep )
+      stop_bfgs = conv_bfgs .OR. ( scf_iter >= nstep ) .OR. ( tr_min_hit > 1 )
       !
       ! ... quick return if possible
       !
@@ -314,10 +313,16 @@ CONTAINS
                    FMT = '(/,5X,"trust_radius < trust_radius_min")' )
             WRITE( UNIT = stdout, FMT = '(/,5X,"resetting bfgs history",/)' )
             !
-            ! ... if tr_min_hit the history has already been reset at the 
+            ! ... if tr_min_hit=1 the history has already been reset at the 
             ! ... previous step : something is going wrong
-            IF ( tr_min_hit ) CALL errore( 'bfgs', &
-                            'bfgs history already reset at previous step', 1 )
+            !
+            IF ( tr_min_hit == 1 ) THEN
+               CALL infomsg( 'bfgs', &
+                            'history already reset at previous step: stopping' )
+               tr_min_hit = 2 
+            ELSE
+               tr_min_hit = 1
+            END IF
             !
             CALL reset_bfgs( n )
             !
@@ -328,11 +333,9 @@ CONTAINS
             !
             trust_radius = min(trust_radius_ini, nr_step_length)
             !
-            tr_min_hit = .TRUE.
-            !
          ELSE
             !
-            tr_min_hit = .FALSE.
+            tr_min_hit = 0
             !
          END IF
          !
@@ -395,8 +398,7 @@ CONTAINS
          IF ( bfgs_iter == 1 ) THEN
             !
             trust_radius = min(trust_radius_ini, nr_step_length)
-            !
-            tr_min_hit = .FALSE.
+            tr_min_hit = 0
             !
          ELSE
             !
@@ -631,7 +633,7 @@ CONTAINS
          pos_old(:,:)  = 0.0_DP
          grad_old(:,:) = 0.0_DP
          !
-         tr_min_hit = .FALSE.
+         tr_min_hit = 0
          !
       END IF
       !
@@ -828,8 +830,14 @@ CONTAINS
          !
          ! ... if tr_min_hit the history has already been reset at the 
          ! ... previous step : something is going wrong
-         IF ( tr_min_hit ) CALL errore( 'bfgs', &
-                         'bfgs history already reset at previous step', 1 )
+         !
+         IF ( tr_min_hit == 1 ) THEN
+            CALL infomsg( 'bfgs', &
+                          'history already reset at previous step: stopping' )
+            tr_min_hit = 2 
+         ELSE
+            tr_min_hit = 1
+         END IF
          !
          WRITE( UNIT = stdout, &
                 FMT = '(5X,"small trust_radius: resetting bfgs history",/)' )
@@ -842,11 +850,9 @@ CONTAINS
          !
          trust_radius = min(trust_radius_min, nr_step_length )
          !
-         tr_min_hit = .TRUE.
-         !
       ELSE
          !
-         tr_min_hit = .FALSE.
+         tr_min_hit = 0
          !
       END IF
       !
