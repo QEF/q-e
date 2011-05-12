@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2008 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -15,18 +15,19 @@ SUBROUTINE lr_dv_setup
   !  1) Set non linear core correction stuff
   !  2) computes dmuxc 3) with GC if needed
   !
-#include "f_defs.h"
   !
   USE kinds,         ONLY : DP
   USE ions_base,     ONLY : ntyp => nsp
   USE lsda_mod,      ONLY : nspin, lsda
   USE scf,           ONLY : rho, rho_core
+  USE fft_base,      ONLY : dfftp
   USE gvect,         ONLY : ngm
-  USE grid_dimensions,ONLY: nrxx
   ! USE atom,          ONLY : nlcc
   USE uspp_param,    ONLY : upf
+  USE spin_orb,      ONLY : domag
   !USE lr_variables,  ONLY : dmuxc, nlcc_any
-  USE nlcc_ph,       ONLY : nlcc_any
+  USE nlcc_ph,       ONLY : drc,nlcc_any
+  USE noncollin_module, ONLY : noncolin,nspin_mag
   USE eqv,           ONLY : dmuxc
   USE funct,         ONLY : dmxc, dmxc_spin
   USE lr_variables,  ONLY : lr_verbosity
@@ -38,7 +39,10 @@ SUBROUTINE lr_dv_setup
   ! total up charge
   ! total down charge
   !
-  INTEGER :: nt, ir
+  real(DP) :: auxdmuxc(4,4)
+
+  !
+  INTEGER :: nt, ir,is,js
   ! counter on mesh points
   !
   IF (lr_verbosity > 5) THEN
@@ -52,29 +56,44 @@ SUBROUTINE lr_dv_setup
   !do nt = 1, ntyp
   !   nlcc_any = nlcc_any.or.nlcc (nt)
   !enddo
+  nlcc_any = ANY ( upf(1:ntyp)%nlcc )
+  if (nlcc_any) allocate (drc( ngm, ntyp))
+
   !
   ! 2) Computes the derivative of the xc potential
   !
-  dmuxc(:,:,:) = 0.0D0
-  IF (lsda) THEN
-     DO ir = 1, nrxx
+  !
+  dmuxc(:,:,:) = 0.d0
+  if (lsda) then
+     do ir = 1, dfftp%nnr
         rhoup = rho%of_r (ir, 1) + 0.5d0 * rho_core (ir)
         rhodw = rho%of_r (ir, 2) + 0.5d0 * rho_core (ir)
-        CALL dmxc_spin (rhoup, rhodw, dmuxc(ir,1,1), dmuxc(ir,2,1), &
+        call dmxc_spin (rhoup, rhodw, dmuxc(ir,1,1), dmuxc(ir,2,1), &
                                       dmuxc(ir,1,2), dmuxc(ir,2,2) )
-     ENDDO
-  ELSE
-     DO ir = 1, nrxx
-        rhotot = rho%of_r (ir, 1) + rho_core (ir)
-        IF (rhotot>1.d-30) dmuxc (ir, 1, 1) = dmxc (rhotot)
-        IF (rhotot<-1.d-30) dmuxc (ir, 1, 1) = -dmxc ( -rhotot)
-     ENDDO
-  ENDIF
-  DEALLOCATE(rho_core)
+     enddo
+  else
+!    IF (noncolin.and.domag) THEN
+!       do ir = 1, dfftp%nnr
+!          rhotot = rho%of_r (ir, 1) + rho_core (ir)
+!          call dmxc_nc (rhotot, rho%of_r(ir,2), rho%of_r(ir,3), rho%of_r(ir,4), auxdmuxc)
+!          DO is=1,nspin_mag
+!             DO js=1,nspin_mag
+!                dmuxc(ir,is,js)=auxdmuxc(is,js)
+!             END DO
+!          END DO
+!       enddo
+!    ELSE
+        do ir = 1, dfftp%nnr
+           rhotot = rho%of_r (ir, 1) + rho_core (ir)
+           if (rhotot.gt.1.d-30) dmuxc (ir, 1, 1) = dmxc (rhotot)
+           if (rhotot.lt. - 1.d-30) dmuxc (ir, 1, 1) = - dmxc ( - rhotot)
+        enddo
+!     END IF
+  endif
   !
-  ! 3) Setup all gradient correction stuff
+  ! 3.1) Setup all gradient correction stuff
   !
-  CALL lr_setup_dgc()
+  call setup_dgc
   !
   IF (lr_verbosity > 5) WRITE(stdout,'("<end of lr_dv_setup>")')
   CALL stop_clock ('lr_dv_setup')

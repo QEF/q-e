@@ -32,7 +32,6 @@ lr_lanczos.o \
 lr_apply_liouvillian.o \
 lr_main.o \
 lr_dv_setup.o \
-lr_setup_dgc.o \
 lr_solve_e.o \
 lr_dvpsi_e.o \
 lr_ch_psi_all.o \
