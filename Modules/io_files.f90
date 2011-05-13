@@ -223,7 +223,7 @@ CONTAINS
     !
   END FUNCTION check_writable 
 !-----------------------------------------------------------------------
-subroutine diropn (unit, extension, recl, exst)
+subroutine diropn (unit, extension, recl, exst, tmp_dir_)
   !-----------------------------------------------------------------------
   !
   !     this routine opens a file named "prefix"."extension" in tmp_dir 
@@ -246,6 +246,8 @@ subroutine diropn (unit, extension, recl, exst)
   !
   character(len=*) :: extension
   ! input: name of the file to open
+  character(len=*), optional :: tmp_dir_
+  ! optional variable, if present it is used as tmp_dir
   integer :: unit, recl
   ! input: unit of the file to open
   ! input: length of the records
@@ -261,6 +263,10 @@ subroutine diropn (unit, extension, recl, exst)
   ! used to check I/O operations
   ! length of the record
   logical :: opnd
+
+  ! Check if the optional variable tmp_dir is included
+  !
+
   ! if true the file is already opened
   !
   if (unit < 0) call errore ('diropn', 'wrong unit', 1)
@@ -275,7 +281,12 @@ subroutine diropn (unit, extension, recl, exst)
   !
   if (extension == ' ') call errore ('diropn','filename extension not given',2)
   filename = trim(prefix) // "." // trim(extension)
-  tempfile = trim(tmp_dir) // trim(filename) //nd_nmbr
+  if (present(tmp_dir_)) then
+     tempfile = trim(tmp_dir_) // trim(filename) //nd_nmbr
+  else
+     tempfile = trim(tmp_dir) // trim(filename) //nd_nmbr
+  endif
+
   inquire (file = tempfile, exist = exst)
   !
   !      the unit for record length is unfortunately machine-dependent
