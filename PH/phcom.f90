@@ -332,7 +332,8 @@ MODULE control_ph
              ldiag=.FALSE.,        & ! if true force the diagonalization
              lqdir=.FALSE.,        & ! if true each q writes in its directory
              xmldyn=.FALSE.,   & ! if true the dynamical matrix is in xml form
-             all_done      ! if .TRUE. all representations have been done
+             all_done, &      ! if .TRUE. all representations have been done
+             dvscf_star      ! if .TRUE. obtain dvscf_q' for q' belonging by star{q} (in cart. coord.)
   !
 END MODULE control_ph
 !

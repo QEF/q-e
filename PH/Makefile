@@ -93,6 +93,7 @@ localdos.o \
 mode_group.o \
 newdq.o \
 openfilq.o \
+open_dvscf_star_q.o \
 orthogonalize.o \
 phcom.o \
 ph_restart.o \

@@ -40,7 +40,7 @@ SUBROUTINE phq_readin()
                             nmix_ph, ldisp, recover, lrpa, lnoloc, start_irr, &
                             last_irr, start_q, last_q, current_iq, tmp_dir_ph, &
                             ext_recover, ext_restart, u_from_file, ldiag, &
-                            search_sym, lqdir
+                            search_sym, lqdir, dvscf_star
   USE save_ph,       ONLY : tmp_dir_save
   USE gamma_gamma,   ONLY : asr
   USE qpoint,        ONLY : nksq, xq
@@ -91,7 +91,7 @@ SUBROUTINE phq_readin()
                        eth_rps, eth_ns, lraman, elop, dek, recover,  &
                        fpol, asr, lrpa, lnoloc, start_irr, last_irr, &
                        start_q, last_q, nogg, ldiag, search_sym, lqdir, &
-                       nk1, nk2, nk3, k1, k2, k3
+                       nk1, nk2, nk3, k1, k2, k3, dvscf_star
   ! tr2_ph       : convergence threshold
   ! amass        : atomic masses
   ! alpha_mix    : the mixing parameter
@@ -130,6 +130,8 @@ SUBROUTINE phq_readin()
   ! nk1,nk2,nk3,
   ! ik1, ik2, ik3: when specified in input it uses for the phonon run
   !                a different mesh than that used for the charge density.
+  ! dvscf_star   : if .true. write in a directory the dvscf_q' for all q' in the
+  !                star of q. The dvscf_q' is written in cartesian coordinates
 
   IF (ionode) THEN
   !
@@ -208,6 +210,7 @@ SUBROUTINE phq_readin()
   k1       = 0
   k2       = 0
   k3       = 0
+  dvscf_star =.FALSE.
 
   !
   ! ...  reading the namelist inputph
@@ -385,6 +388,10 @@ SUBROUTINE phq_readin()
      'elph with image parallelization is not yet available',1)
 
   IF (elph.OR.fildvscf /= ' ') lqdir=.TRUE.
+
+  IF(dvscf_star.and.nimage>1) CALL errore('phq_readin',&
+       'dvscf_star with image parallelization is not yet available',1)
+
   IF (.NOT.ldisp) lqdir=.FALSE.
 
   IF (i_cons /= 0) &
@@ -453,6 +460,8 @@ SUBROUTINE phq_readin()
   IF (elph.AND..NOT.lgauss) CALL errore ('phq_readin', 'Electron-&
        &phonon only for metals', 1)
   IF (elph.AND.fildvscf.EQ.' ') CALL errore ('phq_readin', 'El-ph needs &
+       &a DeltaVscf file', 1)
+  IF (dvscf_star.AND.fildvscf.EQ.' ') CALL errore ('phq_readin', 'dvscf_star needs &
        &a DeltaVscf file', 1)
   !
   !   There might be other variables in the input file which describe

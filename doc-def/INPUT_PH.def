@@ -178,6 +178,19 @@ input_description -distribution {Quantum Espresso} -package PWscf -program ph.x 
 	    info { If .true. restart from an interrupted run.}
 	}
 
+        var dvscf_star -type LOGICAL {
+            default { .false. }
+            info {
+                If .true. the potential variations at all q-points in the 
+                star of xq are obtained by using symmetry and written in
+                the subdirectory outdir/_ph0/Rotated_DVSCF/ . The 
+                potential variations written out are in real space and in 
+                the cartesian basis. 
+
+            }
+        }
+
+
 	var elph  -type LOGICAL { 
 	    default { .false. }
 	    info {

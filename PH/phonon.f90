@@ -50,7 +50,7 @@ PROGRAM phonon
 
   USE io_global,       ONLY : stdout
   USE disp,            ONLY : nqs
-  USE control_ph,      ONLY : epsil, trans, elph, bands_computed
+  USE control_ph,      ONLY : epsil, trans, elph, bands_computed, dvscf_star
   USE output,          ONLY : fildrho
   USE check_stop,      ONLY : check_stop_init
   USE ph_restart,      ONLY : ph_writefile, destroy_status_run
@@ -119,6 +119,11 @@ PROGRAM phonon
         IF ( fildrho /= ' ' ) CALL punch_plot_ph()
         !
      END IF
+     !
+     !  calculates dvscf_q' for q' belonging to star{q}
+     !  where q is in the IBZ.
+     !
+     IF( dvscf_star ) call open_dvscf_star_q(iq)
      !
      !  electron-phonon interaction
      !
