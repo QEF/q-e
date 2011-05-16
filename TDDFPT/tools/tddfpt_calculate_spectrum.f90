@@ -261,6 +261,8 @@ IF (ionode) THEN !No need for parallelization in this code
 !
 ! Lets see if the environment is suitable for perceived color analysis
 !
+  
+  do_perceived=.false.
 
   IF (verbosity > 2) THEN
    IF (units == 0 .and. start<vis_start .and. end>vis_end .and. n_ipol == 3) THEN
