@@ -263,14 +263,14 @@ IF (lread_cond) THEN
   call save_cond (.false.,1,efl,nrzl,nocrosl,noinsl,   &
                   norbl,rl,rabl,betarl)
   if(ikind.eq.1) then
-    call save_cond (.false.,2,efs,nrzs,-1,      &
+    call save_cond (.false.,2,efs,nrzs,ik,      &
                              noinss,norbs,rs,rabs,betars)
     norbr = norbl
     nocrosr = nocrosl
     noinsr = noinsl
   endif
   if(ikind.eq.2) then
-    call save_cond (.false.,2,efs,nrzs,-1,      &
+    call save_cond (.false.,2,efs,nrzs,ik,      &
                              noinss,norbs,rs,rabs,betars)
 
     call save_cond (.false.,3,efr,nrzr,nocrosr,&

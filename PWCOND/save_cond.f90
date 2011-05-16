@@ -352,7 +352,7 @@ subroutine save_cond (lwrite, lsr, ef, nrz, nocros, noins,  &
       else
         allocate( zpseur(2, norb, norb) )
       endif
-      vppotr = vppotr
+      vppotr = vppot
       zr = z
       taunewr = taunew
       tblmr = tblm
