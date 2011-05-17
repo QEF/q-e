@@ -275,10 +275,6 @@ ESM_example:
     potential of a polarized or charged medium. Calculations are for a water
     molecule and an Al(111) electrode.
 
-GIPAW_example:
-    This example shows how to use gipaw.x to calculate the magnetic susceptibility
-    and NMR chemical shift of fcc Si, diamond, and of two molecules: CH4 and C2H4.
-
 GRID_example
     This example shows how to use ph.x on a GRID.
 

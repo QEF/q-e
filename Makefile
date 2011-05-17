@@ -15,7 +15,6 @@ default :
 	@echo '  pwcond       ballistic conductance'
 	@echo '  d3           third-order derivatives'
 	@echo '  vdw          vdW calculation'
-	@echo '  gipaw        magnetic response (NMR, EPR, ...)'
 	@echo '  w90          Maximally localised Wannier Functions'
 	@echo '  want         Quantum Transport with Wannier functions'
 	@echo '  plumed       Patch for calculating free-energy paths with pw or cp'
@@ -93,10 +92,9 @@ acfdt : bindir mods libs pw ph
 	( cd ACFDT ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= all ; \
 	else $(MAKE) $(MFLAGS) TLDEPS= all ; fi ) ; fi
 
-gipaw : bindir mods libs pw
-	if test -d GIPAW ; then \
-	( cd GIPAW ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= all ; \
-	else $(MAKE) $(MFLAGS) TLDEPS= all ; fi ) ; fi
+gipaw :
+	@echo "GIPAW is no longer distributed in this archive."
+	@echo "Download the newest version from: http://qe-forge.org/frs/?group_id=37"
 
 gww   : bindir pw ph
 	if test -d GWW ; then \
