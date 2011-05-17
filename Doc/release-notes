@@ -1,12 +1,13 @@
 New in 4.3.1 version:
 
+   * New, improved version of GIPAW (available as a separate package)
    * Effective Screening Medium (Otani and Sugino PRB 73 115407 (2006).
    * CP: faster implementation of LDA+U
 
 Fixed in 4.3.1 version:
 
    * atomic: behavior of which_augfun='PSQ' made consistent with documentation
-   * CP: LDA+U buggy, PLUMED wasn't working
+   * CP: LDA+U buggy; PLUMED wasn't working
    * Misc compilation and configure problems: line exceeding 132 characters, 
      syntax not accepted by some compilers, pathscale+mpif90 not recognized, 
      etc.
@@ -15,7 +16,10 @@ Fixed in 4.3.1 version:
      variable-cell: last scf step could crash due to insufficient
      FFT grid if the final cell was larger than the initial one
    * PW: minor bug in damped dynamics (hessian matrix incorrectly reset)
+   * PW: bug in LDA+U forces for the Gamma-only case
    * Electron-Phonon code wasn't working any longer in serial execution
+   * PWCOND: fixed bug when the write/read option is used for the case 
+     of different leads. 
    * NEB + nonlocal exchange (DF-vdW) or hybrid functionals wasn't working
    * NEB: incorrect parsing of intermediate images fixed
    * HSE numerical problems in function expint

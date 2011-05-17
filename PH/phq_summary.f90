@@ -72,7 +72,7 @@ subroutine phq_summary
        nmix_ph
 100 format (/,5x,a75,/,/,5x, &
        &     'bravais-lattice index     = ',i12,/,5x, &
-       &     'lattice parameter (a_0)   = ',f12.4,'  a.u.',/,5x, &
+       &     'lattice parameter (alat)  = ',f12.4,'  a.u.',/,5x, &
        &     'unit-cell volume          = ',f12.4,' (a.u.)^3',/,5x, &
        &     'number of atoms/cell      = ',i12,/,5x, &
        &     'number of atomic types    = ',i12,/,5x, &
@@ -106,11 +106,11 @@ subroutine phq_summary
   WRITE( stdout, '(2(3x,3(2x,"celldm(",i1,")=",f11.5),/))') (i, &
        celldm (i) , i = 1, 6)
   WRITE( stdout, '(5x, &
-       &  "crystal axes: (cart. coord. in units of a_0)",/, &
+       &  "crystal axes: (cart. coord. in units of alat)",/, &
        &         3(15x,"a(",i1,") = (",3f8.4," )  ",/ ) )')  (apol, &
        & (at (ipol, apol) , ipol = 1, 3) , apol = 1, 3)
   WRITE( stdout, '(5x, &
-       &"reciprocal axes: (cart. coord. in units 2 pi/a_0)",/, &
+       &"reciprocal axes: (cart. coord. in units 2 pi/alat)",/, &
        &         3(15x,"b(",i1,") = (",3f8.4," )  ",/ ) )')  (apol, &
        & (bg (ipol, apol) , ipol = 1, 3) , apol = 1, 3)
   !
@@ -119,7 +119,7 @@ subroutine phq_summary
   WRITE( stdout, '(/, 5x,"Atoms inside the unit cell: ")')
   WRITE( stdout, '(/,3x,"Cartesian axes")')
   WRITE( stdout, '(/,5x,"site n.  atom      mass ", &
-       &                "          positions (a_0 units)")')
+       &                "          positions (alat units)")')
 
   WRITE( stdout, '(7x,i2,5x,a6,f8.4,"   tau(",i2, &
        &                              ") = (",3f11.5,"  )")')  &
@@ -220,7 +220,7 @@ subroutine phq_summary
           &             nkstot, TRIM(smearing), degauss
   endif
   IF (iverbosity==1 .or. (nkstot < 100 .and. .not.ldisp) ) then
-     WRITE( stdout, '(23x,"cart. coord. in units 2pi/a_0")')
+     WRITE( stdout, '(23x,"cart. coord. in units 2pi/alat")')
      do ik = 1, nkstot
         WRITE( stdout, '(8x,"k(",i5,") = (",3f12.7,"), wk =",f12.7)') ik, &
              (xk (ipol, ik) , ipol = 1, 3) , wk (ik)

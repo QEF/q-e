@@ -339,7 +339,7 @@ SUBROUTINE forces()
   END IF
   !
   IF( textfor ) &
-     WRITE( stdout, '(/5x,"Enegy of the external Forces = ", F18.8)' ) compute_eextfor()
+     WRITE( stdout, '(/5x,"Energy of the external Forces = ", F18.8)' ) compute_eextfor()
   !
   DEALLOCATE( forcenl, forcelc, forcecc, forceh, forceion, forcescc )
   !

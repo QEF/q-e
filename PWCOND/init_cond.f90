@@ -165,24 +165,24 @@ subroutine init_cond (nregion, flag)
   write(stdout,'(/,5x,''GEOMETRY:'')')
   write (stdout, 100) alat, omega, sarea, zlen, nat, ntyp
 100 format (/,5x,                                                     &
-     &   'lattice parameter (a_0)   = ',f12.4,'  a.u.',/,5x,          &
+     &   'lattice parameter (alat)  = ',f12.4,'  a.u.',/,5x,          &
      &   'the volume                = ',f12.4,' (a.u.)^3',/,5x,       &
      &   'the cross section         = ',f12.4,' (a.u.)^2',/,5x,       &
-     &   'l of the unit cell        = ',f12.4,' (a_0)',/,5x,          &
+     &   'l of the unit cell        = ',f12.4,' (alat)',/,5x,         &
      &   'number of atoms/cell      = ',i12,/,5x,                     &
      &   'number of atomic types    = ',i12,/,5x)
 
-  write(stdout,'(5x,''crystal axes: (cart. coord. in units of a_0)'',/,    &
-      &     3(15x,''a('',i1,'') = ('',3f8.4,'' )  '',/ ) )')          &
+  write(stdout,'(5x,"crystal axes: (cart. coord. in units of alat)",/,&
+      &     3(15x,"a(",i1,") = (",3f8.4," )  ",/ ) )')                &
       &     ( na, (at(nt,na), nt=1,3), na=1,3)
 
-  write(stdout,'(/,3x,''Cartesian axes'')')
-  write(stdout, '(/,5x,''site n.     atom        '',  &
-      &           ''          positions (a_0 units)'')')
-  write(stdout, '(7x,i4,8x,a6,'' tau('',i3,'')=('',3f8.4,''  )'')')  &
+  write(stdout,'(/,3x,"Cartesian axes")')
+  write(stdout, '(/,5x,"site n.     atom        ",  &
+      &           "          positions (alat units)")')
+  write(stdout, '(7x,i4,8x,a6," tau(",i3,")=(",3f8.4,"  )")')   &
       &         ( na,atm(ityp(na)),na,                          &
       &         ( tau(nt,na),nt=1,3),na=1,nat )
-  write (stdout, 300) nr1s, nr2s, nr3s, nr1sx, nr2sx, nr3sx,     &
+  write (stdout, 300) nr1s, nr2s, nr3s, nr1sx, nr2sx, nr3sx,    &
                  nr1, nr2, nr3, nr1x, nr2x, nr3x
 300   format (/,5x,                                         &
         &      'nr1s                      = ',i12,/,5x,     &
@@ -200,8 +200,8 @@ subroutine init_cond (nregion, flag)
 
   write(stdout,*) '_______________________________'
   write(stdout,*) ' Radii of nonlocal spheres: '
-  write(stdout, '(/,5x,''type       ibeta     ang. mom.'',  &
-      &           ''          radius (a_0 units)'')')
+  write(stdout, '(/,5x,"type       ibeta     ang. mom.",  &
+      &           "          radius (alat units)")')
   write(stdout, '(7x,a6,3x,i3,7x,i3,14x,f12.4)')                     &
       &        ( ( atm(nt), ib, upf(nt)%lll(ib), rsph(ib,nt),        &
       &         ib=1,upf(nt)%nbeta ), nt=1,ntyp)

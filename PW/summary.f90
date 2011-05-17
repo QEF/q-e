@@ -98,7 +98,7 @@ SUBROUTINE summary()
   !
 100 FORMAT( /,/,5X, &
        &     'bravais-lattice index     = ',I12,/,5X, &
-       &     'lattice parameter (a_0)   = ',F12.4,'  a.u.',/,5X, &
+       &     'lattice parameter (alat)  = ',F12.4,'  a.u.',/,5X, &
        &     'unit-cell volume          = ',F12.4,' (a.u.)^3',/,5X, &
        &     'number of atoms/cell      = ',I12,/,5X, &
        &     'number of atomic types    = ',I12)
@@ -180,12 +180,12 @@ SUBROUTINE summary()
        ( i, celldm(i), i = 1, 6 )
   !
   WRITE( stdout, '(5X, &
-       &     "crystal axes: (cart. coord. in units of a_0)",/, &
+       &     "crystal axes: (cart. coord. in units of alat)",/, &
        &       3(15x,"a(",i1,") = (",3f11.6," )  ",/ ) )')  (apol,  &
        (at (ipol, apol) , ipol = 1, 3) , apol = 1, 3)
   !
   WRITE( stdout, '(5x, &
-       &   "reciprocal axes: (cart. coord. in units 2 pi/a_0)",/, &
+       &   "reciprocal axes: (cart. coord. in units 2 pi/alat)",/, &
        &            3(15x,"b(",i1,") = (",3f10.6," )  ",/ ) )')  (apol,&
        &  (bg (ipol, apol) , ipol = 1, 3) , apol = 1, 3)
   !
@@ -233,7 +233,7 @@ SUBROUTINE summary()
   !    description of the atoms inside the unit cell
   !
   WRITE( stdout, '(/,3x,"Cartesian axes")')
-  WRITE( stdout, '(/,5x,"site n.     atom                  positions (a_0 units)")')
+  WRITE( stdout, '(/,5x,"site n.     atom                  positions (alat units)")')
 
   WRITE( stdout, '(7x,i3,8x,a6," tau(",i3,") = (",3f12.7,"  )")') &
              (na, atm(ityp(na)), na, (tau(ipol,na), ipol=1,3), na=1,nat)
@@ -283,7 +283,7 @@ SUBROUTINE summary()
 
   ENDIF
   IF (iverbosity==1 .OR. nkstot < 100 ) THEN
-     WRITE( stdout, '(23x,"cart. coord. in units 2pi/a_0")')
+     WRITE( stdout, '(23x,"cart. coord. in units 2pi/alat")')
      DO ik = 1, nkstot
         WRITE( stdout, '(8x,"k(",i5,") = (",3f12.7,"), wk =",f12.7)') ik, &
              (xk (ipol, ik) , ipol = 1, 3) , wk (ik)

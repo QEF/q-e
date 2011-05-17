@@ -91,7 +91,7 @@ SUBROUTINE cond_out ()
        &      'norbf                    = ',i12,/,5x,          &
        &      'nrz                      = ',i12,/,5x)
   write(stdout, '(6x,''iorb      type   ibeta   ang. mom.'',3x,  &
-       &        ''m       position (a_0)'')')
+       &        ''m       position (alat)'')')
   write(stdout,'(5x,i4,4x,i5,5x,i3,6x,i3,6x,i3,''   taunew('',          &
        &    i4,'')=('',3f8.4,'')'')')                           &
        &    ( iorb,tblml(1,iorb), tblml(2,iorb), tblml(3,iorb),&
@@ -110,7 +110,7 @@ SUBROUTINE cond_out ()
     write(stdout,'(''----- Information about right lead -----'')')
     write (stdout, 200) nocrosr, noinsr, norbr, norbf, nrzr
     write(stdout, '(6x,''iorb      type   ibeta   ang. mom.'',3x,  &
-       &        ''m       position (a_0)'')')
+       &        ''m       position (alat)'')')
     write(stdout,'(5x,i4,4x,i5,5x,i3,6x,i3,6x,i3,''   taunew('',          &
        &    i4,'')=('',3f8.4,'')'')')                           &
        &    ( iorb,tblmr(1,iorb), tblmr(2,iorb), tblmr(3,iorb),&
@@ -135,7 +135,7 @@ SUBROUTINE cond_out ()
        &      'norbf                    = ',i12,/,5x,          &
        &      'nrz                      = ',i12,/,5x)
     write(stdout, '(6x,''iorb      type   ibeta   ang. mom.'',3x,  &
-       &        ''m       position (a_0)'')')
+       &        ''m       position (alat)'')')
     write(stdout,'(5x,i4,4x,i5,5x,i3,6x,i3,6x,i3,''   taunew('',          &
        &    i4,'')=('',3f8.4,'')'')')                           &
        &    ( iorb,tblms(1,iorb), tblms(2,iorb), tblms(3,iorb),&
