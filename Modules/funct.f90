@@ -135,7 +135,7 @@ module funct
   !              "psx"    PBEsol exchange                igcx =10
   !              "wcx"    Wu-Cohen                       igcx =11
   !              "hse"    HSE screened exchange          igcx =12
-  !              "rpw86"  revised PW86                   igcx =13
+  !              "rw86"   revised PW86                   igcx =13
   !
   ! Gradient Correction on Correlation:
   !              "nogc"   none                           igcc =0 (default)
@@ -170,7 +170,7 @@ module funct
   !              hcth    Handy et al, JCP 109, 6264 (1998)
   !              olyp    Handy et al, JCP 116, 5411 (2002)
   !              revPBE  Zhang and Yang, PRL 80, 890 (1998)
-  !              rpw86   E. Amonn D. Murray et al, J. Chem. Theory comp. 5, 2754 (2009) 
+  !              rw86    E. Amonn D. Murray et al, J. Chem. Theory comp. 5, 2754 (2009) 
   !              wc      Z. Wu and R. E. Cohen, PRB 73, 235116 (2006)
   !              tpss    J.Tao, J.P.Perdew, V.N.Staroverov, G.E. Scuseria, 
   !                      PRL 91, 146401 (2003)
