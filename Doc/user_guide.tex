@@ -134,8 +134,11 @@ or patch some \qe\ routines can be installed as {\em plug-ins}:
       M. Bonomi {\it et al}, Comp. Phys. Comm. {\bf 180}, 1961 (2009) \\
       (\texttt{http://merlino.mi.infm.it/\~{}plumed/PLUMED}).
 \item \texttt{GIPAW} (Gauge-Independent Projector Augmented Waves):
-      NMR chemical shifts and EPR g-tensor, available at:
-      \texttt{http://qe-forge.org/frs/?group_id=37}
+      NMR chemical shifts and EPR g-tensor, written by Davide Ceresoli 
+      (Univ. Oxford), Emine Kucukbenli (SISSA), Ari Seitsonen (Univ.Zurich),
+      Uwe Gerstmann,  Francesco Mauri (Univ. Paris VI).
+      Available at \texttt{http://qe-forge.org/frs/?group\_id=37}
+      (see also \texttt{http://www.gipaw.net}).
 \end{itemize}
 This guide documents \PWscf, \texttt{NEB}, \CP, \PHonon, \PostProc.
 The remaining packages have separate documentation.
@@ -319,10 +322,6 @@ Other packages in \qe:
 \texttt{PWcond} was written by Alexander Smogunov (CEA) and Andrea 
 Dal Corso. For an introduction, see 
 \texttt{http://people.sissa.it/\~{}smogunov/PWCOND/pwcond.html}
-\item
-\texttt{GIPAW} (\texttt{http://www.gipaw.net})
-was written by Davide Ceresoli (Univ. Oxford), Ari Seitsonen (Univ.Zurich),
-Uwe Gerstmann,  Francesco Mauri (Univ. Paris VI).
 \item
 \texttt{PWgui} was written by Anton Kokalj (IJS Ljubljana) and is 
 based on his GUIB concept (\texttt{http://www-k3.ijs.si/kokalj/guib/}).
@@ -612,9 +611,12 @@ script. This is actually a wrapper to the true \configure,
 located in the \texttt{install/} subdirectory. \configure\
 will (try to) detect compilers and libraries available on
 your machine, and set up things accordingly. Presently it is expected
-to work on most Linux 32- and 64-bit PCs (all Intel and AMD CPUs) and PC clusters, SGI Altix, IBM SP  machines, NEC SX, Cray XT
-machines, Mac OS X, MS-Windows PCs. It may work with
-some assistance also on other architectures (see below). 
+to work on most Linux 32- and 64-bit PCs (all Intel and AMD CPUs) and 
+PC clusters, SGI Altix, IBM SP and BlueGene machines, NEC SX, Cray XT
+machines, Mac OS X, MS-Windows PCs. A GPU-enabled version is currently
+available as a separate branch of the svn repository. See the following 
+message and instructions:\\
+\texttt{http://www.democritos.it/pipermail/pw\_forum/2011-May/020399.html}.
 
 Instructions for the impatient:
 \begin{verbatim}
