@@ -20,7 +20,7 @@ SUBROUTINE openfilq()
                              lrdrhous, lrebar, lrdrho, lint3paw, iuint3paw
   USE io_files,       ONLY : tmp_dir, diropn
   USE control_ph,     ONLY : epsil, zue, ext_recover, trans, elph, lgamma, &
-                             tmp_dir_phq, start_irr, last_irr, xmldyn
+                             tmp_dir_phq, start_irr, last_irr, xmldyn, dvscf_dir
   USE save_ph,        ONLY : tmp_dir_save
   USE ions_base,      ONLY : nat
   USE qpoint,         ONLY : nksq
@@ -150,12 +150,20 @@ SUBROUTINE openfilq()
 400 IF (fildvscf.NE.' ') THEN
      iudvscf = 27
      IF ( me_pool == 0 ) THEN
-        CALL diropn (iudvscf, fildvscf, lrdrho, exst)
+        IF(dvscf_dir.NE.' ') then
+           CALL diropn (iudvscf, fildvscf, lrdrho, exst, dvscf_dir)
+        ELSE
+          CALL diropn (iudvscf, fildvscf, lrdrho, exst )
+        ENDIF
         IF (okpaw) THEN
            filint=TRIM(fildvscf)//'_paw'
            lint3paw = 2 * nhm * nhm * 3 * nat * nspin_mag
            iuint3paw=34
-           CALL diropn (iuint3paw, filint, lint3paw, exst)
+           IF(dvscf_dir.NE.' ') then
+              CALL diropn (iuint3paw, filint, lint3paw, exst, dvscf_dir)
+           ELSE
+              CALL diropn (iuint3paw, filint, lint3paw, exst)
+           ENDIF
         ENDIF
      END IF
   END IF

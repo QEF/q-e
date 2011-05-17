@@ -40,7 +40,7 @@ SUBROUTINE phq_readin()
                             nmix_ph, ldisp, recover, lrpa, lnoloc, start_irr, &
                             last_irr, start_q, last_q, current_iq, tmp_dir_ph, &
                             ext_recover, ext_restart, u_from_file, ldiag, &
-                            search_sym, lqdir, dvscf_star
+                            search_sym, lqdir, dvscf_star, dvscf_dir
   USE save_ph,       ONLY : tmp_dir_save
   USE gamma_gamma,   ONLY : asr
   USE qpoint,        ONLY : nksq, xq
@@ -91,7 +91,7 @@ SUBROUTINE phq_readin()
                        eth_rps, eth_ns, lraman, elop, dek, recover,  &
                        fpol, asr, lrpa, lnoloc, start_irr, last_irr, &
                        start_q, last_q, nogg, ldiag, search_sym, lqdir, &
-                       nk1, nk2, nk3, k1, k2, k3, dvscf_star
+                       nk1, nk2, nk3, k1, k2, k3, dvscf_star, dvscf_dir
   ! tr2_ph       : convergence threshold
   ! amass        : atomic masses
   ! alpha_mix    : the mixing parameter
@@ -132,6 +132,8 @@ SUBROUTINE phq_readin()
   !                a different mesh than that used for the charge density.
   ! dvscf_star   : if .true. write in a directory the dvscf_q' for all q' in the
   !                star of q. The dvscf_q' is written in cartesian coordinates
+  ! dvscf_dir    : if present the dvscf file is read not from tmp_dir but from dvscf_dir
+  !
 
   IF (ionode) THEN
   !
@@ -211,6 +213,7 @@ SUBROUTINE phq_readin()
   k2       = 0
   k3       = 0
   dvscf_star =.FALSE.
+  dvscf_dir=' '
 
   !
   ! ...  reading the namelist inputph
@@ -222,6 +225,9 @@ SUBROUTINE phq_readin()
   CALL errore( 'phq_readin', 'reading inputph namelist', ABS( ios ) )
   !
   IF (ionode) tmp_dir = trimcheck (outdir)
+
+  dvscf_dir=trim(dvscf_dir)
+
   CALL bcast_ph_input ( )
   CALL mp_bcast(nogg, ionode_id )
   !
