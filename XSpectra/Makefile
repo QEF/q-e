@@ -15,10 +15,10 @@ XOBJS = \
 ./init_xspectra_ldau.o \
 ./lr_sm1_psi.o
 
-GIPAWOBJS=../GIPAW/paw_gipaw.o \
-../GIPAW/gipaw_module.o \
-../GIPAW/init_gipaw_1.o \
-../GIPAW/init_gipaw_2.o
+GIPAWOBJS=./paw_gipaw.o \
+./gipaw_module.o \
+./init_gipaw_1.o \
+./init_gipaw_2.o
 
 QEMODS = ../Modules/libqemod.a
 PWOBJS = ../PW/libpw.a 
