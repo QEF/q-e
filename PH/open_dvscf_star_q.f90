@@ -69,7 +69,6 @@ SUBROUTINE open_dvscf_star_q( q_index )
   CHARACTER(len=10)     :: star_i, star_minus_i
   CHARACTER(LEN=256) :: fildvscfrot,fildvscfrot_asc
   CHARACTER(LEN=256) :: fildvscfrot_imq,fildvscfrot_asc_imq
-  CHARACTER(LEN=256) :: dvscf_dir
 
   
   CALL start_clock ('open_dvscf_star_q')
@@ -83,8 +82,7 @@ SUBROUTINE open_dvscf_star_q( q_index )
 
   dvscf_dir=trim(tmp_dir_ph)//'Rotated_DVSCF/'
 
-  IF (ionode) inquire (file =TRIM(dvscf_dir)//'.', &
-                           exist = exst)
+  IF (ionode) inquire (file =TRIM(dvscf_dir)//'.', exist = exst)
 
   if(.not.exst) CALL create_directory(dvscf_dir)
    
@@ -98,8 +96,6 @@ SUBROUTINE open_dvscf_star_q( q_index )
              ' opening file '//trim(dvscf_dir)//'Q_POINTS.D', 1 )
      END IF
   END IF
-  
-  
   
   !
   ! I identify the label of the q' in the open zone.
@@ -389,11 +385,11 @@ SUBROUTINE open_dvscf_star_q( q_index )
      star_i=label_q(q_rot)
      write(stdout,*) 'star_i=',star_i
      fildvscfrot='dvscf_sym_q'//star_i(1:lstr_iq(q_rot))//'_'
-     fildvscfrot_asc=trim(dvscf_dir)//trim(prefix)//"."//'dvscf_asc_sym_q'//star_i(1:lstr_iq(q_rot))//'_'//nd_nmbr     
+     fildvscfrot_asc=trim(dvscf_dir)//trim(prefix)//"."//'dvscf_asc_sym_q'//star_i(1:lstr_iq(q_rot))//'_'//nd_nmbr 
      if (imq == 0) then
         star_minus_i=label_q(q_rot+nq)
         fildvscfrot_imq='dvscf_sym_q'//star_minus_i(1:lstr_iq(q_rot+nq))//'_'
-        fildvscfrot_asc_imq=trim(dvscf_dir)//trim(prefix)//"."//'dvscf_asc_sym_q'//star_minus_i(1:lstr_iq(q_rot+nq))//'_'//nd_nmbr     
+        fildvscfrot_asc_imq=trim(dvscf_dir)//trim(prefix)//"."//'dvscf_asc_sym_q'//star_minus_i(1:lstr_iq(q_rot+nq))//'_'//nd_nmbr 
      endif
      
      IF ( me_pool.eq.root_pool.and.ascii_dvscf ) THEN
