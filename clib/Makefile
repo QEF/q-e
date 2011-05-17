@@ -1,10 +1,8 @@
 # Makefile for clib
 
 include ../make.sys
-include ./plumed.inc
 
 OBJS = \
-$(PLUMED_OBJECTS) \
 customize_signals.o \
 stack.o \
 c_mkdir.o \
@@ -29,5 +27,4 @@ source :
 clean :
 	- rm -f clib.a *.o *.mod *.i core*
 
-$(PLUMED_OBJECTS): metadyn.h
 include make.depend
