@@ -18,6 +18,8 @@ Fixed in 4.3.1 version:
    * PW: minor bug in damped dynamics (hessian matrix incorrectly reset)
    * PW: bug in LDA+U forces for the Gamma-only case
    * Electron-Phonon code wasn't working any longer in serial execution
+   * PH with input variable "fildrho" and D3 were not working due to 
+     inconsistencies in the calls to io_pattern
    * PWCOND: fixed bug when the write/read option is used for the case 
      of different leads. 
    * NEB + nonlocal exchange (DF-vdW) or hybrid functionals wasn't working

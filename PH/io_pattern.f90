@@ -6,24 +6,20 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !---------------------------------------------------------------------
-SUBROUTINE io_pattern (fildrho,nirr,npert,u,iflag)
+SUBROUTINE io_pattern (nat, fildrho, nirr, npert, u, iflag )
 !---------------------------------------------------------------------
   !
   USE kinds, ONLY : DP
-  USE ions_base, ONLY : nat
   USE io_global,  ONLY : stdout
 
   IMPLICIT NONE
-!
-!   the i/o variables first
-!
-  INTEGER :: nirr, npert(3*nat), iflag
-  COMPLEX(DP) :: u(3*nat,3*nat)
-  CHARACTER (len=*)  ::  fildrho   ! name of the file
+  !
+  INTEGER, INTENT(IN) :: nat, iflag
+  INTEGER, INTENT(INOUT) :: nirr, npert(3*nat)
+  COMPLEX(DP), INTENT(INOUT) :: u(3*nat,3*nat)
+  CHARACTER (len=*), INTENT(IN)  ::  fildrho   ! name of the file
+  !
   CHARACTER (len=256)::  filname   ! complete name of the file
-!
-!   here the local variables
-!
   INTEGER :: i,iunit
   LOGICAL :: exst
 
