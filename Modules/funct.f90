@@ -617,10 +617,10 @@ CONTAINS
 
      if ( present (nomsg) ) return
 
-     write (stdout,'(/,5x,a)') "XC functional enforced from input :"
+     write (stdout,'(/,5x,a)') "IMPORTANT: XC functional enforced from input :"
      call write_dft_name
-     write (stdout,'(5x,a)') "!!! Any further DFT definition will be discarded"
-     write (stdout,'(5x,a/)') "!!! Please, verify this is what you really want !"
+     write (stdout,'(5x,a)') "Any further DFT definition will be discarded"
+     write (stdout,'(5x,a/)') "Please, verify this is what you really want"
 
      return
   end subroutine enforce_input_dft
