@@ -49,7 +49,6 @@ INPUT_*.txt,html Description of input parameters (text and html) for:
       PROJWFC    Projection over atomic wfcs (projwave.x)
       DOS        Density of state calculation (dos.x)
       PH         Phonon calculations (ph.x)
-      GIPAW      NMR chemical shifts with GIPAW (gipaw.x)
       D3         3rd-order energy derivatives (d3.x)
       LD1        atomic pseudopotential generation code (ld1.x) 
       PWCOND     Ballistic conductance (pwcond.x)

@@ -90,7 +90,7 @@ tail -1 config.log >> $OUT
 echo "#" >> $OUT
 echo "# MAKE ALL " >> $OUT
 echo "#" >> $OUT
-make all gipaw >& make.log
+make all >& make.log
 errors=`grep -c -e Error make.log`
 if test  "$errors" = "0" ; then
    echo "make all: success" >> $OUT

@@ -13,7 +13,6 @@ HTMLS = \
 	INPUT_D3.html \
 	INPUT_DOS.html \
 	INPUT_BANDS.html \
-	INPUT_GIPAW.html \
 	INPUT_CPPP.html \
 	INPUT_PWCOND.html \
 	INPUT_pw_export.html

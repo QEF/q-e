@@ -7,7 +7,7 @@ cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
 if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
 
 # clean all example directories
-for dir in example* Recover_example Restart_example GRID_example XSpectra_example WorkFct_example dipole_example cluster_example CLS_FS_example CLS_IS_example EXX_example GWW_example GIPAW_example VCSexample
+for dir in example* Recover_example Restart_example GRID_example XSpectra_example WorkFct_example dipole_example cluster_example CLS_FS_example CLS_IS_example EXX_example GWW_example VCSexample
 do
     if test -d $dir/results
     then

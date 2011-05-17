@@ -12,7 +12,7 @@ TOPDIR=`pwd`
 if test $# = 0
 then
     dirs=" Modules clib PW CPV flib pwtools upftools PP PWCOND \
-           Gamma PH D3 atomic GIPAW VdW XSpectra \
+           Gamma PH D3 atomic VdW XSpectra \
 	   GWW/gww GWW/pw4gww GWW/head ACFDT NEB Solvent" 
           
 else
@@ -29,12 +29,12 @@ do
     case $DIR in 
         EE | flib | upftools | atomic | CPV | Solvent | PW )
                   DEPENDS="$DEPENDS ../Modules "      ;;
-	PP | PWCOND | Gamma | PH | GIPAW | pwtools )
+	PP | PWCOND | Gamma | PH | pwtools )
 		  DEPENDS="$DEPENDS ../Modules ../PW" ;;
 	D3 | VdW | ACFDT ) 
                   DEPENDS="$DEPENDS ../Modules ../PW ../PH" ;;
 	XSpectra  )
-		  DEPENDS="$DEPENDS ../Modules ../PW ../GIPAW"  ;;
+		  DEPENDS="$DEPENDS ../Modules ../PW"  ;;
         GWW/pw4gww )
                   DEPENDS="../../include ../../iotk/src ../../Modules \
 		  ../../PW " ;;
