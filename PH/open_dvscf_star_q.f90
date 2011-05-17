@@ -80,20 +80,20 @@ SUBROUTINE open_dvscf_star_q( q_index )
   ! directory where the rotated dvscf are to be set
   !
 
-  dvscf_dir=trim(tmp_dir_ph)//'Rotated_DVSCF/'
+  rdvscf_dir=trim(tmp_dir_ph)//'Rotated_DVSCF/'
 
-  IF (ionode) inquire (file =TRIM(dvscf_dir)//'.', exist = exst)
+  IF (ionode) inquire (file =TRIM(rdvscf_dir)//'.', exist = exst)
 
-  if(.not.exst) CALL create_directory(dvscf_dir)
+  if(.not.exst) CALL create_directory(rdvscf_dir)
    
 
   IF ( me_pool.eq.root_pool ) THEN 
      iu_qp=find_free_unit()
-     OPEN( UNIT = iu_qp, FILE = trim(dvscf_dir)//'Q_POINTS.D', &
+     OPEN( UNIT = iu_qp, FILE = trim(rdvscf_dir)//'Q_POINTS.D', &
           STATUS = 'unknown', IOSTAT = ierr)
      IF( ierr /= 0 ) then 
         CALL errore( ' open in open_dvscf_star_q', &
-             ' opening file '//trim(dvscf_dir)//'Q_POINTS.D', 1 )
+             ' opening file '//trim(rdvscf_dir)//'Q_POINTS.D', 1 )
      END IF
   END IF
   
@@ -385,11 +385,11 @@ SUBROUTINE open_dvscf_star_q( q_index )
      star_i=label_q(q_rot)
      write(stdout,*) 'star_i=',star_i
      fildvscfrot='dvscf_sym_q'//star_i(1:lstr_iq(q_rot))//'_'
-     fildvscfrot_asc=trim(dvscf_dir)//trim(prefix)//"."//'dvscf_asc_sym_q'//star_i(1:lstr_iq(q_rot))//'_'//nd_nmbr 
+     fildvscfrot_asc=trim(rdvscf_dir)//trim(prefix)//"."//'dvscf_asc_sym_q'//star_i(1:lstr_iq(q_rot))//'_'//nd_nmbr 
      if (imq == 0) then
         star_minus_i=label_q(q_rot+nq)
         fildvscfrot_imq='dvscf_sym_q'//star_minus_i(1:lstr_iq(q_rot+nq))//'_'
-        fildvscfrot_asc_imq=trim(dvscf_dir)//trim(prefix)//"."//'dvscf_asc_sym_q'//star_minus_i(1:lstr_iq(q_rot+nq))//'_'//nd_nmbr 
+        fildvscfrot_asc_imq=trim(rdvscf_dir)//trim(prefix)//"."//'dvscf_asc_sym_q'//star_minus_i(1:lstr_iq(q_rot+nq))//'_'//nd_nmbr 
      endif
      
      IF ( me_pool.eq.root_pool.and.ascii_dvscf ) THEN
@@ -403,10 +403,10 @@ SUBROUTINE open_dvscf_star_q( q_index )
      
      IF ( me_pool.eq.root_pool )  then
         iudvrot=find_free_unit()
-        CALL diropn (iudvrot, fildvscfrot, lrdrho, exst, dvscf_dir)
+        CALL diropn (iudvrot, fildvscfrot, lrdrho, exst, rdvscf_dir)
         if (imq == 0) then
           iudvrot_imq=find_free_unit()
-          CALL diropn (iudvrot_imq, fildvscfrot_imq, lrdrho, exst, dvscf_dir)
+          CALL diropn (iudvrot_imq, fildvscfrot_imq, lrdrho, exst, rdvscf_dir)
         endif
      endif
   
