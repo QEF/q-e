@@ -69,6 +69,7 @@ SUBROUTINE open_dvscf_star_q( q_index )
   CHARACTER(len=10)     :: star_i, star_minus_i
   CHARACTER(LEN=256) :: fildvscfrot,fildvscfrot_asc
   CHARACTER(LEN=256) :: fildvscfrot_imq,fildvscfrot_asc_imq
+  CHARACTER(LEN=256) :: rdvscf_dir
 
   
   CALL start_clock ('open_dvscf_star_q')
