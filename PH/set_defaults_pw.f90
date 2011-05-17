@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !----------------------------------------------------------------------------
-SUBROUTINE setup_nscf (xq)
+SUBROUTINE setup_nscf ( newgrid, xq )
   !----------------------------------------------------------------------------
   !
   ! ... This routine initializes variables for the non-scf calculations at k
@@ -45,8 +45,8 @@ SUBROUTINE setup_nscf (xq)
   USE mp_global,          ONLY : kunit
   USE spin_orb,           ONLY : domag
   USE noncollin_module,   ONLY : noncolin
-  USE start_k,            ONLY : nks_start, xk_start, wk_start
-  USE input_parameters,   ONLY : nk1, nk2, nk3, k1, k2, k3
+  USE start_k,            ONLY : nks_start, xk_start, wk_start, &
+                                 nk1, nk2, nk3, k1, k2, k3
   USE paw_variables,      ONLY : okpaw
   USE modes,              ONLY : nsymq, invsymq !, gi, gimq, irgq, irotmq, minus_q
   USE uspp_param,         ONLY : n_atom_wfc
@@ -54,6 +54,7 @@ SUBROUTINE setup_nscf (xq)
   IMPLICIT NONE
   !
   REAL (DP), INTENT(IN) :: xq(3)
+  LOGICAL, INTENT (IN) :: newgrid
   !
   REAL (DP), ALLOCATABLE :: rtau (:,:,:)
   LOGICAL  :: minus_q, magnetic_sym, sym(48)
@@ -124,7 +125,7 @@ SUBROUTINE setup_nscf (xq)
   ! ... Input k-points are assumed to be  given in the IBZ of the Bravais
   ! ... lattice, with the full point symmetry of the lattice.
   !
-  if(nk1.eq.0.OR.nk2.eq.0.OR.nk3.eq.0) then
+  if( .NOT. newgrid ) then
      !
      !  In this case I keep the same points of the Charge density
      !  calculations

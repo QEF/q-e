@@ -1410,6 +1410,7 @@ setlocal.o : ../Modules/mp_global.o
 setlocal.o : ../Modules/recvec.o
 setlocal.o : esm.o
 setlocal.o : martyna_tuckerman.o
+setlocal.o : ms2.o
 setlocal.o : pwcom.o
 setlocal.o : scf_mod.o
 setqf.o : ../Modules/kind.o

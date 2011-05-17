@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2004 PWSCF group
+! Copyright (C) 2001-2011 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -23,8 +23,8 @@ SUBROUTINE phq_readin()
   USE io_global,     ONLY : ionode_id
   USE mp,            ONLY : mp_bcast
   USE ions_base,     ONLY : amass, pmass, atm
-  USE input_parameters, ONLY : max_seconds
-  USE input_parameters, ONLY : nk1, nk2, nk3, k1, k2, k3
+  USE input_parameters, ONLY : max_seconds, nk1, nk2, nk3, k1, k2, k3
+  USE start_k,       ONLY : init_start_grid
   USE klist,         ONLY : xk, nks, nkstot, lgauss, two_fermi_energies, lgauss
   USE ktetra,        ONLY : ltetra
   USE control_flags, ONLY : gamma_only, tqr, restart, lkpoint_dir
@@ -35,7 +35,7 @@ SUBROUTINE phq_readin()
   USE cellmd,        ONLY : lmovecell
   USE printout_base, ONLY : title
   USE control_ph,    ONLY : maxter, alpha_mix, lgamma, lgamma_gamma, epsil, &
-                            zue, zeu, xmldyn,       &
+                            zue, zeu, xmldyn, newgrid,                      &
                             trans, reduce_io, elph, tr2_ph, niter_ph,       &
                             nmix_ph, ldisp, recover, lrpa, lnoloc, start_irr, &
                             last_irr, start_q, last_q, current_iq, tmp_dir_ph, &
@@ -357,6 +357,13 @@ SUBROUTINE phq_readin()
 1001 CONTINUE
 
   CALL read_file ( )
+  !
+  ! init_start_grid returns .true. if a new k-point grid is set from values
+  ! read from input (this happens if nk1*nk2*nk3, else it returns .false.,
+  ! leaves the current values, as read in read_file, unchanged)
+  !
+  newgrid = init_start_grid (nk1, nk2, nk3, k1, k2, k3) 
+  !
   tmp_dir=tmp_dir_save
   !
   IF (modenum > 3*nat) CALL errore ('phq_readin', ' Wrong modenum ', 2)

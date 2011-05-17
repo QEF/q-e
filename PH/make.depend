@@ -187,7 +187,6 @@ ch_psi_all.o : ../PW/noncol.o
 ch_psi_all.o : ../PW/pwcom.o
 ch_psi_all.o : phcom.o
 check_initial_status.o : ../Modules/control_flags.o
-check_initial_status.o : ../Modules/input_parameters.o
 check_initial_status.o : ../Modules/io_files.o
 check_initial_status.o : ../Modules/io_global.o
 check_initial_status.o : ../Modules/ions_base.o
@@ -594,7 +593,6 @@ elph.o : ../Modules/kind.o
 elphon.o : ../Modules/cell_base.o
 elphon.o : ../Modules/constants.o
 elphon.o : ../Modules/fft_base.o
-elphon.o : ../Modules/input_parameters.o
 elphon.o : ../Modules/io_files.o
 elphon.o : ../Modules/io_global.o
 elphon.o : ../Modules/ions_base.o
@@ -607,6 +605,7 @@ elphon.o : ../Modules/uspp.o
 elphon.o : ../Modules/wavefunctions.o
 elphon.o : ../PW/noncol.o
 elphon.o : ../PW/pwcom.o
+elphon.o : ../PW/start_k.o
 elphon.o : ../PW/symm_base.o
 elphon.o : elph.o
 elphon.o : phcom.o
@@ -865,6 +864,7 @@ phq_readin.o : ../Modules/uspp.o
 phq_readin.o : ../Modules/xml_io_base.o
 phq_readin.o : ../PW/noncol.o
 phq_readin.o : ../PW/pwcom.o
+phq_readin.o : ../PW/start_k.o
 phq_readin.o : ph_restart.o
 phq_readin.o : phcom.o
 phq_readin.o : ramanm.o
@@ -932,7 +932,6 @@ polariz.o : ../PW/pwcom.o
 polariz.o : ../PW/symme.o
 polariz.o : phcom.o
 prepare_q.o : ../Modules/control_flags.o
-prepare_q.o : ../Modules/input_parameters.o
 prepare_q.o : ../Modules/io_files.o
 prepare_q.o : ../Modules/io_global.o
 prepare_q.o : ../PW/pwcom.o
@@ -1066,7 +1065,6 @@ set_defaults_pw.o : ../Modules/cell_base.o
 set_defaults_pw.o : ../Modules/constants.o
 set_defaults_pw.o : ../Modules/control_flags.o
 set_defaults_pw.o : ../Modules/griddim.o
-set_defaults_pw.o : ../Modules/input_parameters.o
 set_defaults_pw.o : ../Modules/io_global.o
 set_defaults_pw.o : ../Modules/ions_base.o
 set_defaults_pw.o : ../Modules/kind.o

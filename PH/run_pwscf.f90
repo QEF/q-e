@@ -21,7 +21,7 @@ SUBROUTINE run_pwscf(do_band)
   USE control_flags,   ONLY : restart
   USE qpoint,          ONLY : xq
   USE control_ph,      ONLY : done_bands, reduce_io, recover, tmp_dir_phq, &
-                              ext_restart, bands_computed
+                              ext_restart, bands_computed, newgrid
   USE save_ph,         ONLY : tmp_dir_save
   !
   USE acfdtest,      ONLY : acfdt_is_active, acfdt_num_der, ir_point, delta_vrs
@@ -30,10 +30,9 @@ SUBROUTINE run_pwscf(do_band)
  !
   IMPLICIT NONE
   !
-  CHARACTER(LEN=256) :: dirname, file_base_in, file_base_out
-  !
   LOGICAL, INTENT(IN) :: do_band
   !
+  CHARACTER(LEN=256) :: dirname, file_base_in, file_base_out
   LOGICAL :: exst
   !
   CALL start_clock( 'PWSCF' )
@@ -56,7 +55,7 @@ SUBROUTINE run_pwscf(do_band)
   CALL restart_from_file()
   conv_ions=.true.
   !
-  CALL setup_nscf (xq)
+  CALL setup_nscf ( newgrid, xq )
   CALL init_run()
 !!!!!!!!!!!!!!!!!!!!!!!! ACFDT TEST !!!!!!!!!!!!!!!!
   IF (acfdt_is_active) THEN

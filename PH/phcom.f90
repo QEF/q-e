@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2004 PWSCF group
+! Copyright (C) 2001-2011 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -334,7 +334,8 @@ MODULE control_ph
              lqdir=.FALSE.,        & ! if true each q writes in its directory
              xmldyn=.FALSE.,   & ! if true the dynamical matrix is in xml form
              all_done, &      ! if .TRUE. all representations have been done
-             dvscf_star      ! if .TRUE. obtain dvscf_q' for q' belonging by star{q} (in cart. coord.)
+             dvscf_star,&     ! if .TRUE. obtain dvscf_q' for q' belonging by star{q} (in cart. coord.)
+             newgrid=.FALSE.  ! if .TRUE. use new k-point grid nk1,nk2,nk3
   !
 END MODULE control_ph
 !

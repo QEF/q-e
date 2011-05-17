@@ -37,12 +37,11 @@ SUBROUTINE check_initial_status(auxdyn)
   USE control_ph,      ONLY : ldisp, recover, done_bands,  &
                               start_q, last_q, current_iq, tmp_dir_ph, lgamma, &
                               ext_recover, ext_restart, tmp_dir_phq, lqdir, &
-                              start_irr, last_irr
+                              start_irr, last_irr, newgrid
   USE save_ph,         ONLY : tmp_dir_save
   USE ph_restart,      ONLY : ph_readfile, check_status_run, init_status_run, &
                               ph_writefile
   USE start_k,         ONLY : nks_start
-  USE input_parameters,ONLY : nk1, nk2, nk3
   USE save_ph,         ONLY : save_ph_input_variables
   USE io_rho_xml,      ONLY : write_rho
   USE mp_global,       ONLY : nimage, my_image_id, intra_image_comm
@@ -120,9 +119,8 @@ SUBROUTINE check_initial_status(auxdyn)
      ENDIF   
   ELSE  
      ! this is the standard treatment
-     IF (((ldisp.OR..NOT.lgamma.OR.modenum/=0).AND.(.NOT.lqdir)).OR.nk1*nk2*nk3.ne.0) &
-                                           CALL write_rho( rho, nspin )
-
+     IF ( ( ( ldisp .OR. .NOT.lgamma .OR. modenum/=0 ) .AND. (.NOT.lqdir) ) &
+          .OR. newgrid ) CALL write_rho( rho, nspin )
   ENDIF
 !!!!!!!!!!!!!!!!!!!!!!!! END OF ACFDT TEST !!!!!!!!!!!!!!!!
   !
@@ -186,7 +184,7 @@ SUBROUTINE check_initial_status(auxdyn)
      ! ... each q /= gamma works on a different directory. We create them
      ! here and copy the charge density inside
      !
-     IF ((.NOT.lgamma.OR.nk1*nk2*nk3 .ne. 0).AND.lqdir) THEN
+     IF ((.NOT.lgamma.OR. newgrid).AND.lqdir) THEN
         tmp_dir_phq= TRIM (tmp_dir_ph) //TRIM(prefix)//&
                           & '_q' // TRIM(int_to_char(iq))//'/'
         filename=TRIM(tmp_dir_phq)//TRIM(prefix)//'.save/charge-density.dat'
