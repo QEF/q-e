@@ -112,6 +112,16 @@ input_description -distribution {Quantum Espresso} -package PWscf -program ph.x 
 	    }
 	}
 
+        var dvscf_dir  -type CHARACTER {
+            default { ' ' }
+            info {
+                Directory from where the file fildvscf is read 
+                (used in electron-phonon calculation). If not
+                specified the fildvscf is read from outdir.
+            }
+        }
+
+
 	var epsil  -type LOGICAL { 
 	    default { .false. }
 	    info {
