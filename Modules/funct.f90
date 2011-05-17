@@ -448,10 +448,10 @@ CONTAINS
     ! special cases : BLYP (note, BLYP=>B88)
     else IF ('BLYP' .EQ. TRIM(dftout) ) THEN
        call set_dft_value (iexch,1) !Default
-       call set_dft_value (icorr, 1) !Default
-       CALL set_dft_value( igcx,  1 )
-       call set_dft_value (igcc, 0) !Default       
-       call set_dft_value (inlc,0) !Default    
+       call set_dft_value (icorr,3)
+       CALL set_dft_value( igcx, 1 )
+       call set_dft_value (igcc, 3)
+       call set_dft_value (inlc, 0) !Default    
        dft_defined = .true.
 
     ! special cases : PZ  (LDA is equivalent to PZ)
@@ -592,7 +592,7 @@ CONTAINS
     ! local
 
     if ( m /= notset .and. m /= i) then
-         write(*, '(A,2I4)') "parametro", m, i
+         write(*, '(A,2I4)') "parameters", m, i
          call errore ('set_dft_value', 'two conflicting matching values', 1)
     end if
     m = i
