@@ -38,10 +38,10 @@ MODULE start_k
        IF ( nk1_ > 0 ) nk1 = nk1_
        IF ( nk2_ > 0 ) nk2 = nk2_
        IF ( nk3_ > 0 ) nk3 = nk3_
-       IF (  k1_ > 0 )  k1 = nk1_
-       IF (  k2_ > 0 )  k2 = nk2_
-       IF (  k3_ > 0 )  k3 = nk3_
-       init_start_grid = (nk1*nk2*nk3 > 0)
+       IF (  k1_ > 0 )  k1 = k1_
+       IF (  k2_ > 0 )  k2 = k2_
+       IF (  k3_ > 0 )  k3 = k3_
+       init_start_grid = (nk1_*nk2_*nk3_ > 0)
        !
     END FUNCTION init_start_grid
 
