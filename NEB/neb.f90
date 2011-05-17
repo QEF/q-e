@@ -131,8 +131,9 @@ PROGRAM neb
   CALL allocate_path_input_ions(input_images)
   CALL engine_to_path_pos(1)
   CALL engine_to_path_fix_atom_pos()
-
+write(0,*) "input_images: ", input_images
   do i=2,input_images
+write(0,*) "i: ", i
     CALL set_engine_input_defaults()
     CALL clean_pw(.true.)
 !    if(i>=1.and.i<10) then

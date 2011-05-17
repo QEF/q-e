@@ -163,6 +163,7 @@ if(trim(dummy)=="BEGIN") then
            dummy=""
         do while (trim(dummy)/="INTERMEDIATE_IMAGE")
           read(parse_unit,'(A256)') dummy   
+          write(0,*) i,j,trim(dummy)
         enddo
         enddo
         if(trim(dummy)=="INTERMEDIATE_IMAGE") then
