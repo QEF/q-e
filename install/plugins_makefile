@@ -11,12 +11,36 @@ W90=wannier90-latest
 WANT=want-latest
 YAMBO=yambo-latest
 PLUMED=PLUMED-latest
+GIPAW=qe-gipaw-latest
 #
 # MAIN target
 #
 
 EXTLIBS=liblapack libblas libiotk
 
+##########################################################
+# GIPAW
+###########################################################
+gipaw:  uncompress-gipaw configure-gipaw
+	if test -d ../GIPAW; then \
+	cd ../GIPAW; $(MAKE) all; cd ../bin; ln -fs ../GIPAW/gipaw.x . ; fi
+	touch make-gipaw
+uncompress-gipaw: touch-dummy
+	if test ! -e ../archive/qe-gipaw-latest.tar.gz && test ! -d ../GIPAW ; then \
+	wget -O ../archive/qe-gipaw-latest.tar.gz http://qe-forge.org/frs/download.php/153/qe-gipaw-latest.tar.gz > /dev/null 2>&1; \
+	if test "`echo $$?`" -ne "0" ; then \
+	curl -o ../archive/qe-gipaw-latest.tar.gz http://qe-forge.org/frs/download.php/153/qe-gipaw-latest.tar.gz > /dev/null 2>&1; \
+	if test "`echo $$?`" -ne "0" ; then \
+	echo "unable to download qe-gipaw. Test whether curl or wget is installed in your computer."; \
+	fi ; fi ; fi 
+	if test ! -d ../GIPAW; then \
+	(gzip -dc ../archive/qe-gipaw-latest.tar.gz | (cd ../ ; tar -xvf -)) ; \
+	(cd ../ ; ln -s qe-gipaw* GIPAW) ; fi 
+	touch uncompress-gipaw
+configure-gipaw: touch-dummy
+	cd ../GIPAW ; \
+	./configure --with-qe-source=${TOPDIR}
+	touch ./configure-gipaw
 ###########################################################
 # wannier90
 ###########################################################
@@ -148,12 +172,21 @@ extlibs:
 # cleaning
 ###################################
 # each lib independently
+gipaw_clean:
+	if test -d ../GIPAW; then (cd ../GIPAW; \
+	$(MAKE) clean); fi
+	rm -f ../bin/gipaw.x
+	rm -rf ./make-gipaw 
+gipaw_veryclean: gipaw_clean
+	if test -d ../GIPAW; then (cd ../GIPAW; \
+	rm -f config.log config.status ); fi
+	rm -rf ./configure-gipaw
 w90_clean:
 	if test -d ../W90; then (cd ../W90; \
 	$(MAKE) veryclean); fi
 	rm -f ../bin/wannier90.x
 	rm -rf ./make-w90 ./configure-w90
-w90_veryclean:
+w90_veryclean: w90_clean
 	if test -d ../W90; then (rm -R -f ../W90); fi
 	if test -d ../wannier90*; then (rm -R -f ../wannier90*); fi
 	rm -f ../bin/wannier90.x
@@ -163,7 +196,7 @@ want_clean:
 	$(MAKE) clean); fi
 	- rm -rf ./make-want ./configure-want
 
-want_veryclean:
+want_veryclean: want_clean
 	if test -d ../WANT; then (rm -R -f ../WANT); fi
 	if test -d ../want*; then (rm -R -f ../want*); fi
 	- rm -rf ./make-want ./configure-want ./uncompress-want
@@ -172,7 +205,7 @@ yambo_clean:
 	$(MAKE) clean); fi
 	- rm -rf ./make-yambo ./configure-yambo
 
-yambo_veryclean:
+yambo_veryclean: yambo_clean
 	if test -d ../YAMBO; then (rm -R -f ../YAMBO); fi
 	if test -d ../yambo*; then (rm -R -f ../yambo*); fi
 	- rm -rf ./make-yambo ./configure-yambo ./uncompress-yambo

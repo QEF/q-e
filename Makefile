@@ -19,6 +19,7 @@ default :
 	@echo '  want         Quantum Transport with Wannier functions'
 	@echo '  plumed       Patch for calculating free-energy paths with pw or cp'
 	@echo '  gww          GW with Wannier Functions'
+	@echo '  gipaw        NMR and EPR spectra'
 	@echo '  yambo        electronic excitations with plane waves'
 	@echo '  tools        misc tools for data analysis'
 	@echo '  ld1          utilities for pseudopotential generation'
@@ -92,9 +93,8 @@ acfdt : bindir mods libs pw ph
 	( cd ACFDT ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= all ; \
 	else $(MAKE) $(MFLAGS) TLDEPS= all ; fi ) ; fi
 
-gipaw :
-	@echo "GIPAW is no longer distributed in this archive."
-	@echo "Download the newest version from: http://qe-forge.org/frs/?group_id=37"
+gipaw : pw
+	cd install ; $(MAKE) $(MFLAGS) -f plugins_makefile $@
 
 gww   : bindir pw ph
 	if test -d GWW ; then \
