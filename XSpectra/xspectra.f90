@@ -16,7 +16,7 @@ PROGRAM X_Spectra
   USE parameters,      ONLY : ntypx,lmaxx,lqmax
   USE ions_base,       ONLY : nat, ntyp => nsp, ityp, tau
   USE ktetra,          ONLY : ltetra, ntetra, tetra
-  USE input_parameters,ONLY : nk1, nk2, nk3, k1, k2, k3
+  USE start_k,         ONLY : nk1, nk2, nk3, k1, k2, k3
   USE wvfct,           ONLY : npwx,nbnd,npw,igk,et! et(nbnd,nkstot)
   USE radial_grids,    ONLY : ndmx
   USE atom,            ONLY : rgrid

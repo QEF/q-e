@@ -377,7 +377,7 @@ SUBROUTINE read_file_xspectra(xread_wf)
 
 
     subroutine read_k_points
-      USE input_parameters,   ONLY : nk1, nk2, nk3, k1, k2, k3
+      USE start_k,            ONLY : nk1, nk2, nk3, k1, k2, k3
       USE io_global,          ONLY : ionode_id 
       USE klist,              ONLY : npk
       USE constants,          ONLY : degspin

@@ -90,7 +90,6 @@ read_file_xspectra.o : ../Modules/control_flags.o
 read_file_xspectra.o : ../Modules/fft_base.o
 read_file_xspectra.o : ../Modules/fft_interfaces.o
 read_file_xspectra.o : ../Modules/griddim.o
-read_file_xspectra.o : ../Modules/input_parameters.o
 read_file_xspectra.o : ../Modules/io_files.o
 read_file_xspectra.o : ../Modules/io_global.o
 read_file_xspectra.o : ../Modules/ions_base.o
@@ -113,6 +112,7 @@ read_file_xspectra.o : ../PW/pw_restart.o
 read_file_xspectra.o : ../PW/pwcom.o
 read_file_xspectra.o : ../PW/realus.o
 read_file_xspectra.o : ../PW/scf_mod.o
+read_file_xspectra.o : ../PW/start_k.o
 read_file_xspectra.o : ../PW/symm_base.o
 read_file_xspectra.o : paw_gipaw.o
 xspectra.o : ../Modules/atom.o
@@ -121,7 +121,6 @@ xspectra.o : ../Modules/constants.o
 xspectra.o : ../Modules/control_flags.o
 xspectra.o : ../Modules/environment.o
 xspectra.o : ../Modules/griddim.o
-xspectra.o : ../Modules/input_parameters.o
 xspectra.o : ../Modules/io_files.o
 xspectra.o : ../Modules/io_global.o
 xspectra.o : ../Modules/ions_base.o
@@ -139,6 +138,7 @@ xspectra.o : ../PW/becmod.o
 xspectra.o : ../PW/noncol.o
 xspectra.o : ../PW/pwcom.o
 xspectra.o : ../PW/scf_mod.o
+xspectra.o : ../PW/start_k.o
 xspectra.o : ../PW/symm_base.o
 xspectra.o : paw_gipaw.o
 xspectra.o : radin_mod.o
