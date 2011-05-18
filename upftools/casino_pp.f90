@@ -81,7 +81,7 @@ CONTAINS
 
     INTEGER :: l, i, ir, nb, gsorbs, j,k,m,tmp, lquant, orbs, nquant
     INTEGER, ALLOCATABLE :: gs(:,:)
-    INTEGER, ALLOCATABLE, INTENT(IN) :: waveunit(:)
+    INTEGER, INTENT(IN) :: waveunit(nofiles)
 
     NULLIFY (  mhead, mptr, mtail )
     dft_ = 'HF'   !Hardcoded at the moment should eventually be HF anyway
