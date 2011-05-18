@@ -85,11 +85,13 @@ PROGRAM neb
   engine_prefix = "pw_"
   !
   if(lfound_parsing_file) then
+    write(0,*) ""
     write(0,*) "parsing_file_name: ", trim(parsing_file_name)
   call path_gen_inputs(trim(parsing_file_name),engine_prefix,input_images,root,neb_comm)
   !
   else
   !
+    write(0,*) ""
     write(0,*) "NO input file found, assuming nothing to parse."
     write(0,*) "Searching argument -input_images or --input_images"
     CALL input_images_getarg(input_images,lfound_input_images)
@@ -131,9 +133,7 @@ PROGRAM neb
   CALL allocate_path_input_ions(input_images)
   CALL engine_to_path_pos(1)
   CALL engine_to_path_fix_atom_pos()
-write(0,*) "input_images: ", input_images
   do i=2,input_images
-write(0,*) "i: ", i
     CALL set_engine_input_defaults()
     CALL clean_pw(.true.)
 !    if(i>=1.and.i<10) then
