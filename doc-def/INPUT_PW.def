@@ -1180,7 +1180,32 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 		estimated energy error < conv_thr
 	    }
 	}
-	 
+	
+	var adaptive_thr -type LOGICAL { 
+	    default { .FALSE }
+	    info {
+		If .TRUE. this turns on the use of an adaptive conv_thr for 
+		the inner scf loops when using EXX.
+	    }
+	}
+
+	var conv_thr_init -type REAL { 
+	    default { 1.D-3 }
+	    info {
+		When adaptive_thr = .TRUE. this is the convergence threshold 
+		used for the first scf cycle.		
+	    }
+	}
+	
+	var conv_thr_multi -type REAL { 
+	    default { 1.D-1 }
+	    info {
+		When adaptive_thr = .TRUE. the convergence threshold for 
+		each scf cycle is given by:
+		min( conv_thr, conv_thr_multi * dexx )
+	    }
+	}
+
 	var mixing_mode -type CHARACTER {
 	    default { 'plain' }
 	    info {
