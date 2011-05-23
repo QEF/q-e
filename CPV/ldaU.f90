@@ -461,9 +461,9 @@ end function set_Hubbard_l
            forceh = 2.d0 * forceh
            force_pen=2.d0 * force_pen
         end if
-
-        forceh = forceh + force_pen
-!
+        ! convert to Hartree a.u. 
+        forceh = (forceh + force_pen)/2.0_dp
+        !
         deallocate ( spsi, dns, bp, dbp, wdb)
         call stop_clock('new_ns:forc')
       end if
