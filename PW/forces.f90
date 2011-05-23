@@ -1,12 +1,11 @@
 !
-! Copyright (C) 2001-2006 Quantum ESPRESSO group
+! Copyright (C) 2001-2011 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !
-!#define DEBUG
 !----------------------------------------------------------------------------
 SUBROUTINE forces()
   !----------------------------------------------------------------------------
@@ -27,7 +26,8 @@ SUBROUTINE forces()
   USE kinds,         ONLY : DP
   USE io_global,     ONLY : stdout
   USE cell_base,     ONLY : at, bg, alat, omega  
-  USE ions_base,     ONLY : nat, ntyp => nsp, ityp, tau, zv, amass, extfor, compute_eextfor
+  USE ions_base,     ONLY : nat, ntyp => nsp, ityp, tau, zv, amass, extfor, &
+                            compute_eextfor
   USE grid_dimensions,ONLY: nr1, nr2, nr3, nr1x, nr2x, nr3x, nrxx
   USE gvect,         ONLY : ngm, gstart, ngl, nl, igtongl, g, gg, gcutm
   USE lsda_mod,      ONLY : nspin
@@ -38,9 +38,8 @@ SUBROUTINE forces()
   USE ions_base,     ONLY : if_pos
   USE ldaU,          ONLY : lda_plus_u
   USE extfield,      ONLY : tefield, forcefield
-  USE control_flags, ONLY : gamma_only, remove_rigid_rot, lbfgs, textfor, llondon
-! DCC
-!  USE ee_mod,        ONLY : vcomp, do_comp, ecomp, which_compensation
+  USE control_flags, ONLY : gamma_only, remove_rigid_rot, textfor, &
+                            iverbosity, llondon
 #ifdef __SOLVENT
   USE solvent_base,  ONLY : do_solvent, epsinfty, eps_mode, rhopol
 #endif
@@ -49,7 +48,6 @@ SUBROUTINE forces()
   USE uspp,          ONLY : okvan
   USE mp_global,     ONLY : me_pool
   USE martyna_tuckerman, ONLY: do_comp_mt, wg_corr_force
-  !
   USE london_module, ONLY : force_london
   !
   IMPLICIT NONE
@@ -63,13 +61,11 @@ SUBROUTINE forces()
                            forcescc(:,:), &
                            forceh(:,:)
     ! nonlocal, local, core-correction, ewald, scf correction terms, and hubbard
-! DCC
-!  REAL( DP ), ALLOCATABLE :: force_vcorr(:,:)
 #ifdef __SOLVENT
   REAL(DP), ALLOCATABLE :: force_solvent(:,:)
 #endif
 
-  REAL(DP) :: sumfor, sumscf, sum_mm
+  REAL(DP) :: sumfor, sumscf, sum_mm, eext
   REAL(DP),PARAMETER :: eps = 1.e-12_dp
   INTEGER  :: ipol, na
     ! counter on polarization
@@ -114,9 +110,7 @@ SUBROUTINE forces()
   IF ( llondon ) THEN
     !
     ALLOCATE ( force_disp ( 3 , nat ) )
-    !
     force_disp ( : , : ) = 0.0_DP
-    !
     force_disp = force_london( alat , nat , ityp , at , bg , tau )
     !
   END IF
@@ -125,22 +119,14 @@ SUBROUTINE forces()
   ! ... The SCF contribution
   !
   CALL force_corr( forcescc )
-
+  !
   IF (do_comp_mt) THEN
     !
     ALLOCATE ( force_mt ( 3 , nat ) )
-    CALL wg_corr_force( omega, nat, ntyp, ityp, ngm, g, tau, zv, strf, nspin, rho%of_g, force_mt )
+    CALL wg_corr_force( omega, nat, ntyp, ityp, ngm, g, tau, zv, strf, &
+                        nspin, rho%of_g, force_mt )
 
   END IF
-! DCC
-!  IF( do_comp ) THEN
-!      ALLOCATE( force_vcorr(3, nat  ) )
-!      force_vcorr(:,:)=0
-!      CALL add_dccdil_forces(vcomp, force_vcorr, &
-!                             nr1, nr2, nr3, nr1x, nr2x, nr3x, nrxx )
-!
-!  END IF
-
 #ifdef __SOLVENT
   IF (do_solvent) THEN
     !
@@ -236,7 +222,6 @@ SUBROUTINE forces()
   !
   IF( textfor ) force(:,:) = force(:,:) + extfor(:,:)
   !
-  !
   ! ... call void routine for user define/ plugin patches on forces
   !
   CALL plugin_forces()
@@ -254,48 +239,40 @@ SUBROUTINE forces()
   force(:,:)    = force(:,:)    * DBLE( if_pos )
   forcescc(:,:) = forcescc(:,:) * DBLE( if_pos )
   !
-#if defined (DEBUG)
-  !
-  if(do_comp_mt) then
-     WRITE( stdout, '(5x,"The Martyna-Tuckerman correction term to forces")')
+  IF ( iverbosity > 0 ) THEN
+     IF ( do_comp_mt .and. iverbosity > 0 ) THEN
+        WRITE( stdout, '(5x,"The Martyna-Tuckerman correction term to forces")')
+        DO na = 1, nat
+           WRITE( stdout, 9035) na, ityp(na), ( force_mt(ipol,na), ipol = 1, 3 )
+        END DO
+     END IF
+     !
+     WRITE( stdout, '(5x,"The non-local contrib.  to forces")')
      DO na = 1, nat
-        WRITE( stdout, 9035) na, ityp(na), ( force_mt(ipol,na), ipol = 1, 3 )
+        WRITE( stdout, 9035) na, ityp(na), ( forcenl(ipol,na), ipol = 1, 3 )
      END DO
-  end if
-  !
-!  if(do_comp) then
-!      WRITE( stdout, '(5x,"The corrective potential contrib.  to forces")')
-!      DO na = 1, nat
-!          WRITE( stdout, 9035) na, ityp(na), ( force_vcorr(ipol,na), ipol = 1, 3 )
-!      END DO
-!  endif
-
-  WRITE( stdout, '(5x,"The non-local contrib.  to forces")')
-  DO na = 1, nat
-     WRITE( stdout, 9035) na, ityp(na), ( forcenl(ipol,na), ipol = 1, 3 )
-  END DO
-  WRITE( stdout, '(5x,"The ionic contribution  to forces")')
-  DO na = 1, nat
-     WRITE( stdout, 9035) na, ityp(na), ( forceion(ipol,na), ipol = 1, 3 )
-  END DO
-  WRITE( stdout, '(5x,"The local contribution  to forces")')
-  DO na = 1, nat
-     WRITE( stdout, 9035) na, ityp(na), ( forcelc(ipol,na), ipol = 1, 3 )
-  END DO
-  WRITE( stdout, '(5x,"The core correction contribution to forces")')
-  DO na = 1, nat
-     WRITE( stdout, 9035) na, ityp(na), ( forcecc(ipol,na), ipol = 1, 3 )
-  END DO
-  WRITE( stdout, '(5x,"The Hubbard contrib.    to forces")')
-  DO na = 1, nat
-     WRITE( stdout, 9035) na, ityp(na), ( forceh(ipol,na), ipol = 1, 3 )
-  END DO
-  WRITE( stdout, '(5x,"The SCF correction term to forces")')
-  DO na = 1, nat
-     WRITE( stdout, 9035) na, ityp(na), ( forcescc(ipol,na), ipol = 1, 3 )
-  END DO
-  !
-#endif
+     WRITE( stdout, '(5x,"The ionic contribution  to forces")')
+     DO na = 1, nat
+        WRITE( stdout, 9035) na, ityp(na), ( forceion(ipol,na), ipol = 1, 3 )
+     END DO
+     WRITE( stdout, '(5x,"The local contribution  to forces")')
+     DO na = 1, nat
+        WRITE( stdout, 9035) na, ityp(na), ( forcelc(ipol,na), ipol = 1, 3 )
+     END DO
+     WRITE( stdout, '(5x,"The core correction contribution to forces")')
+     DO na = 1, nat
+        WRITE( stdout, 9035) na, ityp(na), ( forcecc(ipol,na), ipol = 1, 3 )
+     END DO
+     WRITE( stdout, '(5x,"The Hubbard contrib.    to forces")')
+     DO na = 1, nat
+        WRITE( stdout, 9035) na, ityp(na), ( forceh(ipol,na), ipol = 1, 3 )
+     END DO
+     WRITE( stdout, '(5x,"The SCF correction term to forces")')
+     DO na = 1, nat
+        WRITE( stdout, 9035) na, ityp(na), ( forcescc(ipol,na), ipol = 1, 3 )
+     END DO
+     !
+  END IF
   !
   sumfor = 0.D0
   sumscf = 0.D0
@@ -303,7 +280,6 @@ SUBROUTINE forces()
   DO na = 1, nat
      !
      sumfor = sumfor + force(1,na)**2 + force(2,na)**2 + force(3,na)**2
-     !
      sumscf = sumscf + forcescc(1,na)**2 + forcescc(2,na)**2+ forcescc(3,na)**2
      !
   END DO
@@ -317,14 +293,10 @@ SUBROUTINE forces()
   IF ( llondon ) THEN
      !
      sum_mm = 0.D0
-     !
      DO na = 1, nat
-        !
         sum_mm = sum_mm + &
                  force_disp(1,na)**2 + force_disp(2,na)**2 + force_disp(3,na)**2
-        !
      END DO
-     !
      sum_mm = SQRT( sum_mm )
      !
      WRITE ( stdout, '(/,5x, "Total Dispersion Force = ",F12.6)') sum_mm
@@ -338,8 +310,10 @@ SUBROUTINE forces()
      !
   END IF
   !
-  IF( textfor ) &
-     WRITE( stdout, '(/5x,"Energy of the external Forces = ", F18.8)' ) compute_eextfor()
+  IF( textfor ) THEN
+    eext =  compute_eextfor()
+    WRITE( stdout, '(/5x,"Energy of the external Forces = ", F18.8)' ) eext
+  END IF
   !
   DEALLOCATE( forcenl, forcelc, forcecc, forceh, forceion, forcescc )
   !
@@ -347,18 +321,14 @@ SUBROUTINE forces()
   !
   CALL stop_clock( 'forces' )
   !
-  IF ( lbfgs .AND. ( sumfor < 10.D0*sumscf ) .AND. (sumfor > eps) ) &
-  WRITE( stdout,'(5x,"SCF correction compared to forces is too large, reduce conv_thr")')
-!     CALL errore( 'forces', 'scf correction on ' // &
-!                & 'the force is too large: reduce conv_thr', 1 )
+  IF ( ( sumfor < 10.D0*sumscf ) .AND. ( sumfor > eps ) ) &
+  WRITE( stdout,'(5x,"SCF correction compared to forces is large: ", &
+                     "reduce conv_thr to get better values")')
   !
   IF(ALLOCATED(force_mt))   DEALLOCATE( force_mt )
-! DCC
-!  IF(ALLOCATED(force_vcorr))   DEALLOCATE( force_vcorr )
 #ifdef __SOLVENT
   IF(ALLOCATED(force_solvent)) DEALLOCATE( force_solvent )
 #endif
-
 
   RETURN
   !
