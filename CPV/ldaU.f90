@@ -457,21 +457,22 @@ end function set_Hubbard_l
             end do
          end do
         end do
-        if (nspin.eq.1) then
-           forceh = 2.d0 * forceh
-           force_pen=2.d0 * force_pen
-        end if
-        ! convert to Hartree a.u. 
-        forceh = (forceh + force_pen)/2.0_dp
+        ! I am not sure why the following instruction (present in PW)
+        ! seems to yield a wrong factor here ... PG
+        !if (nspin.eq.1) then
+        !   forceh = 2.d0 * forceh
+        !   force_pen=2.d0 * force_pen
+        !end if
+        forceh = forceh + force_pen
         !
         deallocate ( spsi, dns, bp, dbp, wdb)
         call stop_clock('new_ns:forc')
       end if
       deallocate ( wfc, becwfc, proj, offset, swfc)
       deallocate ( f1, vet, lambda )
-!
+      !
       call stop_clock('new_ns')
-!
+      !
       return
       end subroutine new_ns
 !
