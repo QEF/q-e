@@ -33,7 +33,14 @@ PROGRAM upf2casino
        & in the CASINO pp file is what you expected.'
 
   CALL read_upf(upf_in, grid, ierr, 5)
-
+  
+  IF (upf_in%typ /= 'NC') THEN
+     WRITE(0,*) ''
+     WRITE(0,*) 'WRONG PSEUDOPOTENTIAL!'
+     WRITE(0,*) 'Only norm-conserving pps can be used in CASINO!'
+     STOP
+  ENDIF
+  
   WRITE(0,*) "Number of grid points: ", grid%mesh
   WRITE(0,*) "Number of KB projectors: ", upf_in%nbeta
   WRITE(0,*) "Channel(s) of KB projectors: ", upf_in%lll

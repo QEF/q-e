@@ -20,6 +20,10 @@ Monte Carlo code.
 Of course all pseudopotentials generated via these automatic tools should 
 be tested before being used for production runs.
 
+It should be noted that ultrasoft and PAW pseudopotentials cannot be used
+with the CASINO code. Currently only UPF files containing norm-conserving 
+pseudopotentials can be converted using these utilities.
+
 ============
 casino2upf.x
 ============
