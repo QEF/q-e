@@ -441,6 +441,7 @@ pw_export.o : ../Modules/wavefunctions.o
 pw_export.o : ../Modules/wrappers.o
 pw_export.o : ../PW/becmod.o
 pw_export.o : ../PW/pwcom.o
+pw_export.o : ../PW/start_k.o
 pw_export.o : ../PW/symm_base.o
 pw_export.o : ../iotk/src/iotk_module.o
 qexml.o : ../iotk/src/iotk_module.o

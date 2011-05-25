@@ -709,7 +709,6 @@ io_dyn_mat.o : ../Modules/mp.o
 io_dyn_mat.o : ../Modules/mp_global.o
 io_dyn_mat.o : ../iotk/src/iotk_module.o
 io_pattern.o : ../Modules/io_global.o
-io_pattern.o : ../Modules/ions_base.o
 io_pattern.o : ../Modules/kind.o
 localdos.o : ../Modules/cell_base.o
 localdos.o : ../Modules/fft_base.o
