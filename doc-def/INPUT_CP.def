@@ -648,7 +648,6 @@ input_description -distribution {Quantum Espresso} -package CP -program cp.x {
                 Hubbard_U(i): parameter U (in eV) for LDA+U calculations.
                 Currently only the simpler, one-parameter LDA+U is 
                 implemented (no "alpha" or "J" terms)
-                 }
             }
         }
         var assume_isolated -type CHARACTER {
