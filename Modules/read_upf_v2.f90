@@ -128,6 +128,12 @@ SUBROUTINE read_upf_v2(u, upf, grid, ierr)             !
       TYPE(pseudo_upf),INTENT(INOUT) :: upf  ! the pseudo data
       INTEGER                     :: ierr ! /= 0 if something went wrong
       CHARACTER(len=iotk_attlenx) :: attr
+      CHARACTER(len=256) :: dft_buffer  ! needed to allow the string defining the
+                                        ! DFT flavor to be longer than upf%dft 
+                                        ! (currntly 25) without getting iotk upset. 
+                                        ! An error message is issued if trimmed 
+                                        ! dft_buffer exceeds upf%dft size.
+      INTEGER :: len_buffer
       !
       INTEGER :: nw
       !
@@ -153,7 +159,13 @@ SUBROUTINE read_upf_v2(u, upf, grid, ierr)             !
          CALL iotk_scan_attr(attr, 'paw_as_gipaw',      upf%paw_as_gipaw, default=.false.)
          !
          CALL iotk_scan_attr(attr, 'core_correction',upf%nlcc)
-         CALL iotk_scan_attr(attr, 'functional',     upf%dft)
+!         CALL iotk_scan_attr(attr, 'functional',     upf%dft)
+         CALL iotk_scan_attr(attr, 'functional',     dft_buffer)
+         len_buffer=len_trim(dft_buffer)
+         if (len_buffer > len(upf%dft)) &
+            call errore('read_upf_v2','String defining DFT is too long',len_buffer)
+         upf%dft=TRIM(dft_buffer)
+
          CALL iotk_scan_attr(attr, 'z_valence',      upf%zp)
          CALL iotk_scan_attr(attr, 'total_psenergy', upf%etotps,    default=0._dp)
          CALL iotk_scan_attr(attr, 'wfc_cutoff',     upf%ecutwfc,   default=0._dp)

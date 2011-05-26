@@ -235,7 +235,7 @@ CONTAINS
       CALL iotk_write_attr(attr, 'paw_as_gipaw',      upf%paw_as_gipaw,  newline=.true.)
       !
       CALL iotk_write_attr(attr, 'core_correction',upf%nlcc,       newline=.true.)
-      CALL iotk_write_attr(attr, 'functional',     upf%dft,        newline=.true.)
+      CALL iotk_write_attr(attr, 'functional',     TRIM(upf%dft),  newline=.true.)
       CALL iotk_write_attr(attr, 'z_valence',      upf%zp,         newline=.true.)
       CALL iotk_write_attr(attr, 'total_psenergy', upf%etotps,     newline=.true.)
       CALL iotk_write_attr(attr, 'wfc_cutoff',     upf%ecutwfc,    newline=.true.)

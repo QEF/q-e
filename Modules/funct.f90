@@ -190,7 +190,7 @@ module funct
   integer :: icorr = notset
   integer :: igcx  = notset
   integer :: igcc  = notset
-  integer :: inlc   = notset
+  integer :: inlc  = notset
   real(DP):: exx_fraction = 0.0_DP
   real(DP):: screening_parameter = 0.0_DP
   logical :: isgradient  = .false.
@@ -237,7 +237,7 @@ module funct
   data gradc / 'NOGC', 'P86', 'GGC', 'BLYP', 'PBC', 'HCTH', 'META',&
                 'B3LP', 'PSC', 'PBE', 'TPSS' / 
 
-  data nonlocc / 'NONL', 'VDW', 'VDW2' / 
+  data nonlocc / '    ', 'VDW1', 'VDW2' / 
 
 CONTAINS
   !-----------------------------------------------------------------------
@@ -256,11 +256,21 @@ CONTAINS
     logical :: dft_defined = .false.
     logical, external :: matches
     character (len=1), external :: capital
+    integer ::  save_iexch, save_icorr, save_igcx, save_igcc, save_inlc
+    
     !
     !
     ! Exit if discard_input_dft
     !
     if ( discard_input_dft ) return
+    !
+    ! save current status of XC indices
+    !
+    save_iexch = iexch
+    save_icorr = icorr
+    save_igcx  = igcx
+    save_igcc  = igcc
+    save_inlc  = inlc
     !
     ! convert to uppercase
     !
@@ -505,7 +515,7 @@ CONTAINS
       !  non-local correlation
       !     THE LOOP IS REVERSED TO HANDLE THE VDW2 CASE BEFORE THE VDW
       inlc = notset
-      do i = ncnl ,0, -1
+      do i = ncnl ,1, -1
          if (matches (nonlocc (i), dftout) ) call set_dft_value (inlc, i)
       enddo
       if (inlc .eq. notset) call set_dft_value (inlc,0)
@@ -545,6 +555,29 @@ CONTAINS
 
 
     call set_auxiliary_flags
+    !
+    ! check dft has not been previously set differently 
+    !
+    if (save_iexch .ne. notset .and. save_iexch .ne. iexch) then
+       write (stdout,*) iexch, save_iexch
+       call errore('set_dft_from_name',' conflicting values for iexch',1)
+    end if
+    if (save_icorr .ne. notset .and. save_icorr .ne. icorr) then
+       write (stdout,*) icorr, save_icorr
+       call errore('set_dft_from_name',' conflicting values for icorr',1)
+    end if
+    if (save_igcx .ne. notset .and. save_igcx .ne. igcx) then
+       write (stdout,*) igcx, save_igcx
+       call errore('set_dft_from_name',' conflicting values for igcx',1)
+    end if
+    if (save_igcc .ne. notset .and. save_igcc .ne. igcc) then
+       write (stdout,*) igcc, save_igcc
+       call errore('set_dft_from_name',' conflicting values for igcc',1)
+    end if
+    if (save_inlc .ne. notset .and. save_inlc .ne. inlc) then
+       write (stdout,*) inlc, save_inlc
+       call errore('set_dft_from_name',' conflicting values for inlc',1)
+    end if
 
     return
   end subroutine set_dft_from_name
