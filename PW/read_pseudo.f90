@@ -19,7 +19,7 @@ subroutine readpp
   USE atom,             ONLY :  msh, rgrid
   USE uspp_param, ONLY : newpseudo
   USE ions_base,  ONLY : ntyp => nsp
-  USE funct,      ONLY : get_iexch, get_icorr, get_igcx, get_igcc
+  USE funct,      ONLY : get_iexch, get_icorr, get_igcx, get_igcc, get_inlc
   USE io_files,   ONLY : pseudo_dir, psfile
   USE io_global,  ONLY : stdout
   USE ions_base,  ONLY : zv
@@ -37,7 +37,7 @@ subroutine readpp
   real(DP), allocatable :: chi2r(:)
   real(DP):: norm
   integer :: iunps, isupf, l, nt, nb, ir, ios
-  integer :: iexch_, icorr_, igcx_, igcc_
+  integer :: iexch_, icorr_, igcx_, igcc_, inlc_
   integer, external :: pseudo_type
   !
   iunps = 4
@@ -90,7 +90,7 @@ subroutine readpp
         file_pseudo = pseudo_dir (1:l) //psfile (nt)
      endif
      
-
+     write (stdout,'(10x,a,/15x,a)') "Reading PseudoPotential from ",trim(file_pseudo)
      !
      ! Try to open the pseudo
      !
@@ -161,9 +161,11 @@ subroutine readpp
         icorr_ = get_icorr()
         igcx_  = get_igcx()
         igcc_  = get_igcc()
+        inlc_  = get_inlc()
      else
         if ( iexch_ /= get_iexch() .or. icorr_ /= get_icorr() .or. &
-             igcx_  /= get_igcx()  .or. igcc_ /= get_igcc() ) then
+             igcx_  /= get_igcx()  .or. igcc_ /= get_igcc() .or.  &
+             inlc_ /= get_inlc() ) then
            CALL errore( 'readpp','inconsistent DFT read',nt)
         end if
      end if
@@ -312,7 +314,7 @@ SUBROUTINE check_atwfc_norm(nt)
   end do
   deallocate (work, gi )
   if ( LEN_TRIM(renorm) > 0 ) WRITE( stdout, &
-     '(5x,"file ",a,": wavefunction(s) ",a," renormalized")') &
+     '(15x,"file ",a,": wavefunction(s) ",a," renormalized")') &
      trim(psfile(nt)),trim(renorm)
   return
 end subroutine check_atwfc_norm
