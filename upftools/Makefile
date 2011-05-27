@@ -17,6 +17,9 @@ all : tldeps casino2upf.x cpmd2upf.x fhi2upf.x fpmd2upf.x \
 casino2upf.x : casino2upf.o casino_pp.o $(OBJS) $(QEMODS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ casino2upf.o casino_pp.o $(OBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
 
+upf2upf2.x : upf2upf2.o $(OBJS) $(QEMODS) $(LIBOBJS)
+	$(LD) $(LDFLAGS) -o $@ upf2upf2.o $(OBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
+
 cpmd2upf.x : cpmd2upf.o $(OBJS) $(QEMODS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ cpmd2upf.o $(OBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
 
