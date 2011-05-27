@@ -70,6 +70,23 @@ MODULE random_numbers
       !
     END FUNCTION randy
     !
+    !------------------------------------------------------------------------
+    SUBROUTINE set_random_seed ( )
+      !------------------------------------------------------------------------
+      !
+      ! poor-man random seed for randy
+      !
+      INTEGER, DIMENSION (8) :: itime
+      INTEGER :: iseed, irand
+      !
+      CALL date_and_time ( values = itime ) 
+      ! itime contains: year, month, day, time difference in minutes, hours,
+      !                 minutes, seconds and milliseconds. 
+      iseed = ( itime(8) + itime(6) ) * ( itime(7) + itime(4) )
+      irand = randy ( iseed )
+      !
+    END SUBROUTINE set_random_seed
+    !
     !-----------------------------------------------------------------------
     FUNCTION gauss_dist_scal( mu, sigma )
       !-----------------------------------------------------------------------

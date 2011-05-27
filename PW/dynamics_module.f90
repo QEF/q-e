@@ -1,14 +1,12 @@
 !
-! Copyright (C) 2001-2009 Quantum ESPRESSO group
+! Copyright (C) 2001-2011 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !
-#define __BFGS
-!#define __NPT
-!
+#undef __NPT
 #if defined (__NPT)
 #define RELAXTIME 2000.D0
 #define TARGPRESS 2.39D0
@@ -133,13 +131,14 @@ CONTAINS
       REAL(DP) :: total_mass, temp_new, temp_av, elapsed_time
       REAL(DP) :: delta(3), ml(3), mlt
       INTEGER  :: na
+      ! istep0 counts MD steps done during this run
+      ! (istep counts instead all MD steps, including those of previous runs)
+      INTEGER, SAVE :: istep0 = 0 
 #if defined (__NPT)
       REAL(DP) :: chi, press_new
 #endif
       LOGICAL  :: file_exists, leof
-      !
       REAL(DP), EXTERNAL :: dnrm2
-      !
       !
       ! ... the number of degrees of freedom
       !
@@ -198,7 +197,7 @@ CONTAINS
          !
       ENDIF
       !
-      IF ( istep >= nstep ) THEN
+      IF ( istep0 >= nstep ) THEN
          !
          conv_ions = .true.
          !
@@ -215,6 +214,7 @@ CONTAINS
       !
       elapsed_time = elapsed_time + dt*2.D0*au_ps
       !
+      istep0= istep0+ 1
       istep = istep + 1
       !
       WRITE( UNIT = stdout, &
@@ -434,8 +434,17 @@ CONTAINS
             CASE( 'andersen', 'Andersen' )
                !
                WRITE( UNIT = stdout, &
-                     FMT = '(/,5X,"temperature is ", &
-                              &     "controlled by Andersen thermostat"/)' )
+                     FMT = '(/,5X,"temperature is controlled by Andersen ", &
+                              &   "thermostat",/,5x,"Collision frequency =",&
+                              &    f7.4,"/timestep")' ) 1.0_dp/nraise
+               !
+            CASE( 'berendsen', 'Berendsen' )
+               !
+               WRITE( UNIT = stdout, &
+                     FMT = '(/,5X,"temperature is controlled by soft ", &
+                            &     "(Berendsen) velocity rescaling",/,5x,&
+                            &     "Characteristic time =",i3,"*timestep")') &
+                               nraise
                !
             CASE( 'initial', 'Initial' )
                !
@@ -514,6 +523,7 @@ CONTAINS
          !
          IMPLICIT NONE
          !
+         INTEGER :: nat_moved
          REAL(DP) :: sigma, kt
          !
          IF(.not.vel_defined)THEN
@@ -574,25 +584,20 @@ CONTAINS
          CASE( 'berendsen', 'Berendsen' )
             !
             WRITE( UNIT = stdout, &
-                  FMT = '(/,5X,"Soft velocity rescaling with tau=",i3, &
-                        & "*time step: T_new = ",F6.1,"K ")' ) nraise,temp_new
+                FMT = '(/,5X,"Soft (Berendsen) velocity rescaling")' )
             !
             CALL thermalize( nraise, temp_new, temperature )
             !
          CASE( 'andersen', 'Andersen' )
             !
             kt = temperature / ry_to_kelvin
-            !
-            WRITE( UNIT = stdout, &
-                  FMT = '(/,5X,"Andersen thermostat with acceptance rate ",&
-                              & f6.3,": T_new = ",F6.1,"K ")' ) temp_new
-            !
-            CALL thermalize( nraise, temp_new, temperature )
+            nat_moved = 0
             !
             DO na = 1, nat
                !
                IF ( randy() < 1.D0 / dble( nraise ) ) THEN
                   !
+                  nat_moved = nat_moved + 1
                   sigma = sqrt( kt / mass(na) )
                   !
                   ! ... N.B. velocities must in a.u. units of alat and are zero
@@ -604,6 +609,10 @@ CONTAINS
                ENDIF
                !
             ENDDO
+            !
+            IF ( nat_moved > 0) WRITE( UNIT = stdout, &
+               FMT = '(/,5X,"Andersen thermostat: ",I4," collisions")' ) &
+                     nat_moved
             !
          CASE( 'initial', 'Initial' )
             !
@@ -629,14 +638,17 @@ CONTAINS
          USE control_flags,  ONLY : lfixatom
          USE cell_base,      ONLY : alat
          USE ions_base,      ONLY : nat, if_pos
-         USE random_numbers, ONLY : gauss_dist
+         USE random_numbers, ONLY : gauss_dist, set_random_seed
          !
          IMPLICIT NONE
          !
          INTEGER  :: na, nb
          REAL(DP) :: total_mass, kt, sigma, ek, ml(3), system_temp
          !
+         ! ... next command prevents different MD runs to start
+         ! ... with exactly the same "random" velocities
          !
+         call set_random_seed ( )
          kt = temperature / ry_to_kelvin
          !
          ! ... starting velocities have a Maxwell-Boltzmann distribution
@@ -1290,8 +1302,6 @@ CONTAINS
       REAL(DP), INTENT(inout) :: force(:,:)
       REAL(DP), INTENT(in)    :: etotold
       !
-#if defined (__BFGS)
-      !
       REAL(DP), ALLOCATABLE :: pos(:), pos_p(:)
       REAL(DP), ALLOCATABLE :: grad(:), grad_p(:), precond_grad(:)
       REAL(DP), ALLOCATABLE :: inv_hess(:,:)
@@ -1402,8 +1412,6 @@ CONTAINS
       DEALLOCATE( inv_hess )
       DEALLOCATE( y, s )
       DEALLOCATE( Hy, yH )
-      !
-#endif
       !
    END SUBROUTINE force_precond
    !
