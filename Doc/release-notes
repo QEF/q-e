@@ -1,3 +1,13 @@
+Fixed in svn version
+
+   * Yet another LDA+CPU+U fix: forces were wrong in spin-polarized case 
+   * code was not stopping anymore when two inconsistent dft were given
+   * default for non-local correlation is set to "   " AND upf%dft is trimmed 
+     before being written by write_upf_v2.f90. Therefore older versions of pw
+     will still work if no vdW is present
+   * inlc label for vdw-df is set as VDW1, consistently with the comment and 
+     needed to avoid matching conflict with VDW2
+
 New in 4.3.1 version:
 
    * New, improved version of GIPAW (available as a separate package)

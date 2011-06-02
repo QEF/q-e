@@ -275,6 +275,8 @@ end function set_Hubbard_l
                       ns(iat,ispin(i),m1,m2) = ns(iat,ispin(i),m1,m2) + &
      &                               f(i) * proj(i,k+m2) * proj(i,k+m1)
                      end do
+                  end do
+                  do m2 = m1+1, 2*Hubbard_l(is) + 1
                      ns(iat,:,m2,m1) = ns(iat,:,m1,m2)
                   end do
                end do
@@ -597,7 +599,8 @@ end function set_Hubbard_l
       real(DP),     intent(in) :: wfc(ngw,n_atomic_wfc),  c(2,ngw,nx),  &
      &                            eigr(2,ngw,nat),betae(2,ngw,nhsa),    &
      &                            becwfc(nhsa,n_atomic_wfc),            &
-     &                            bp(nhsa,n), dbp(nhsa,n,3), wdb(nhsa,n_atomic_wfc,3)
+     &                            bp(nhsa,n), dbp(nhsa,nx,3),           &
+                                  wdb(nhsa,n_atomic_wfc,3)
       real(DP),     intent(in) :: proj(n,n_atomic_wfc)
       complex (DP), intent(in) :: spsi(ngw,n)
 ! output
@@ -683,7 +686,7 @@ end function set_Hubbard_l
 ! input: S|evc>
        real(DP), intent(in) ::becwfc(nhsa,n_atomic_wfc),            &
      &                            wfc(2,ngw,n_atomic_wfc),              &
-     &            bp(nhsa,n), dbp(nhsa,n,3), wdb(nhsa,n_atomic_wfc,3)
+     &            bp(nhsa,n), dbp(nhsa,nx,3), wdb(nhsa,n_atomic_wfc,3)
        real(DP), intent(out) :: dproj(n,n_atomic_wfc)
 ! output: the derivative of the projection
 !
