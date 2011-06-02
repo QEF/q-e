@@ -513,35 +513,31 @@ ELSEIF (code_group==22) THEN
          IF (axis==0) call errore('divide_class','unknown D_4h axis ',1)
       ENDIF
    END DO
-   first=.TRUE.
-   first1=.TRUE.
    DO iclass=2,nclass
       ts=tipo_sym(smat(1,1,elem(1,iclass)))
       IF (ts==4) THEN
+         which_irr(iclass)=0
          CALL versor(smat(1,1,elem(1,iclass)),ax)
          IF (is_axis(ax,axis)) THEN
             which_irr(iclass)=3
          ELSE
-            IF (first) THEN
-               which_irr(iclass)=4
-               first=.FALSE.
-            ELSE
-               which_irr(iclass)=5
-            END IF 
+            DO ipol=1,3
+               IF (is_axis(ax,ipol)) which_irr(iclass)=4
+            ENDDO
+            IF (which_irr(iclass)==0) which_irr(iclass)=5
          END IF
       ELSEIF (ts==2) THEN
          which_irr(iclass)=6
       ELSEIF (ts==5) THEN
+         which_irr(iclass)=0
          CALL mirror_axis(smat(1,1,elem(1,iclass)),ax)
          IF (is_axis(ax,axis)) THEN
             which_irr(iclass)=8
          ELSE 
-            IF (first1) THEN
-               which_irr(iclass)=9
-               first1=.FALSE.
-            ELSE
-               which_irr(iclass)=10
-            END IF 
+            DO ipol=1,3
+               IF (is_axis(ax,ipol)) which_irr(iclass)=9
+            ENDDO
+            IF (which_irr(iclass)==0) which_irr(iclass)=10
          END IF
       ELSEIF (ts==6) THEN
          which_irr(iclass)=7
