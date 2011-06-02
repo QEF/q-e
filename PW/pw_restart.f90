@@ -1451,6 +1451,7 @@ MODULE pw_restart
       CHARACTER(LEN=*), INTENT(IN)  :: dirname
       INTEGER,          INTENT(OUT) :: ierr
       !
+      LOGICAL :: found
       CHARACTER(LEN=80) :: bravais_lattice, es_corr
       !
       !
@@ -1469,8 +1470,9 @@ MODULE pw_restart
          !
          CALL iotk_scan_begin( iunpun, "CELL" )
          !
-         CALL iotk_scan_dat( iunpun, &
-                             "NON-PERIODIC_CELL_CORRECTION", es_corr )
+         CALL iotk_scan_dat( iunpun, "NON-PERIODIC_CELL_CORRECTION", &
+                             es_corr, FOUND=found )
+         IF ( .NOT. found ) es_corr="None"
          SELECT CASE ( TRIM(es_corr))
          CASE ("Makov-Payne")
             do_makov_payne = .true.
