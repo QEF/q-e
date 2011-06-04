@@ -145,15 +145,6 @@
           nstw = count( stw > 0 )
           nsts = count( sts > 0 )
 
-          IF (ionode) THEN
-            WRITE( stdout,*)
-            WRITE( stdout,10)
- 10         FORMAT(3X,'Stick Mesh',/, &
-                   3X,'----------')
-            WRITE( stdout,15) nst, nstw, nsts
- 15         FORMAT( 3X, 'nst =', I6, ',  nstw =', I6, ', nsts =', I6 )
-          ENDIF
-
           ALLOCATE(ist(nst,5))
 
           ALLOCATE(nstp(nproc))
@@ -243,22 +234,25 @@
             !
           END IF
 
-          IF (ionode) WRITE( stdout,118)
- 118      FORMAT(3X,'            n.st   n.stw   n.sts    n.g    n.gw   n.gs')
-          WRITE( stdout,121) minval(nstp),  minval(nstpw), minval(nstps), minval(sstp), minval(sstpw), minval(sstps)
-          WRITE( stdout,122) maxval(nstp),  maxval(nstpw), maxval(nstps), maxval(sstp), maxval(sstpw), maxval(sstps)
-!          DO ip = 1, nproc
-!            IF (ionode) THEN
-!              WRITE( stdout,120) ip, nstp(ip),  nstpw(ip), nstps(ip), sstp(ip), sstpw(ip), sstps(ip)
-!            END IF
-!          END DO
           IF (ionode) THEN
-            WRITE( stdout,120)  sum(nstp),  sum(nstpw), sum(nstps), sum(sstp), sum(sstpw), sum(sstps)
+             WRITE( stdout,*)
+             WRITE( stdout, '(5X,"Parallelization info")')
+             WRITE( stdout, '(5X,"--------------------")')
+             !WRITE( stdout, '(5X,I7," dense-grid, ",I7," smooth-grid, ", &
+             !                  &I6," plane-wave sticks")') 
+             WRITE( stdout, '(5X,"sticks:   dense  smooth     PW", &
+                            & 5X,"G-vecs:    dense   smooth      PW")') 
+             WRITE( stdout,'(5X,"Min",4X,2I8,I7,12X,2I9,I8)') &
+                minval(nstp), minval(nstps), minval(nstpw), &
+                minval(sstp), minval(sstps), minval(sstpw)
+             WRITE( stdout,'(5X,"Max",4X,2I8,I7,12X,2I9,I8)') &
+                maxval(nstp), maxval(nstps), maxval(nstpw), &
+                maxval(sstp), maxval(sstps), maxval(sstpw)
+             WRITE( stdout,'(5X,"Sum",4X,2I8,I7,12X,2I9,I8)') &
+                sum(nstp), sum(nstps), sum(nstpw), &
+                sum(sstp), sum(sstps), sum(sstpw)
+             WRITE( stdout,'(5X,"Tot",4X,2I8,I7)') nst, nsts, nstw
           ENDIF
- 120      FORMAT(3X,7I8)
- 121      FORMAT(3X,'min    ',6I8)
- 122      FORMAT(3X,'max    ',6I8)
-
 
           DEALLOCATE( ist )
           DEALLOCATE( idx )
