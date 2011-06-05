@@ -1249,46 +1249,28 @@ SUBROUTINE iosys()
     CASE( 'makov-payne', 'm-p', 'mp' )
       !
       do_makov_payne = .true.
-!      do_comp        = .false.
-!      do_coarse      = .false.
-!      do_mltgrid     = .false.
       do_comp_mt     = .false.
       do_comp_esm    = .false.
       !
     CASE( 'dcc' )
       !
       CALL errore('iosys','density countercharge correction currently disabled',1)
-!      do_comp        = .true.
-!      do_coarse      = .false.
-!      do_mltgrid     = .true.
-      do_makov_payne = .false.
-      do_comp_mt     = .false.
-      do_comp_esm    = .false.
       !
     CASE( 'martyna-tuckerman', 'm-t', 'mt' )
       !
       do_comp_mt     = .true.
-!      do_comp        = .false.
-!      do_coarse      = .false.
-!      do_mltgrid     = .false.
       do_makov_payne = .false.
       do_comp_esm    = .false.
       !
     CASE( 'esm' )
       !
       do_comp_esm    = .true.
-!     do_comp        = .false.
-!     do_coarse      = .false.
-!     do_mltgrid     = .false.
       do_comp_mt     = .false.
       do_makov_payne = .false.
       !
     CASE( 'none' )
       !
       do_makov_payne = .false.
-!      do_comp        = .false.
-!      do_coarse      = .false.
-!      do_mltgrid     = .false.
       do_comp_mt     = .false.
       do_comp_esm    = .false.
       !
@@ -1313,6 +1295,8 @@ SUBROUTINE iosys()
   ENDIF
   !
   IF ( tefield ) ALLOCATE( forcefield( 3, nat_ ) )
+  !
+  ! ... note that read_cards_pw no longer reads cards!
   !
   CALL read_cards_pw ( psfile, tau_format )
   !
@@ -1495,7 +1479,7 @@ SUBROUTINE read_cards_pw ( psfile, tau_format )
                                  tapos, rd_pos, atomic_positions, if_pos,  &
                                  sp_pos, k_points, xk, wk, nk1, nk2, nk3,  &
                                  k1, k2, k3, nkstot, cell_symmetry, rd_ht, &
-                                 trd_ht, f_inp, rd_for
+                                 trd_ht, f_inp, rd_for, tavel, sp_vel
   USE cell_base,          ONLY : at, ibrav, symm_type
   USE ions_base,          ONLY : nat, ntyp => nsp, ityp, tau, atm, extfor
   USE start_k,           ONLY : nk1_   => nk1, &
@@ -1514,7 +1498,6 @@ SUBROUTINE read_cards_pw ( psfile, tau_format )
                                  if_pos_ =>  if_pos
   USE ions_base,          ONLY : amass
   USE control_flags,      ONLY : lfixatom, gamma_only, textfor
-  USE read_cards_module,  ONLY : read_cards
   !
   IMPLICIT NONE
   !
@@ -1528,7 +1511,6 @@ SUBROUTINE read_cards_pw ( psfile, tau_format )
   !
   !
   amass = 0
-  !
   !
   IF ( .not. taspc ) &
      CALL errore( 'read_cards_pw', 'atomic species info missing', 1 )
@@ -1559,11 +1541,16 @@ SUBROUTINE read_cards_pw ( psfile, tau_format )
      !
   ENDDO
   !
+  ! ... check for initial velocities read from input file
+  !
+  IF ( tavel .AND. ANY ( sp_pos(:) /= sp_vel(:) ) ) &
+      CALL errore("cards","list of species in block ATOMIC_VELOCITIES &
+                 & must be identical to those in ATOMIC_POSITIONS")
+  !
   ! ... calculate fixatom
   !
   fixatom = 0
-  !
-  IF ( any( if_pos(:,1:nat) == 0 ) ) lfixatom = .true.
+  lfixatom = any( if_pos(:,1:nat) == 0 ) 
   !
   DO ia = 1, nat
      !

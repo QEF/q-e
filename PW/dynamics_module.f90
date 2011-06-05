@@ -407,7 +407,7 @@ CONTAINS
       SUBROUTINE md_init()
          !--------------------------------------------------------------------
          !
-         USE input_parameters, ONLY: tavel, sp_vel, sp_pos, rd_vel
+         USE input_parameters, ONLY: tavel,rd_vel
          IMPLICIT NONE
          !
          istep = 0
@@ -486,10 +486,6 @@ CONTAINS
          ENDDO
          !
          IF ( tavel ) THEN ! initial velocities available from input file
-            !
-            IF ( ANY ( sp_pos(:) /= sp_vel(:) ) ) &
-               CALL errore("md_init","list of species in block ATOMIC_VELOCITIES &
-                 & must be identical to those in ATOMIC_POSITIONS")
             !
             vel(:,:) = rd_vel(:,:) / alat
             !
