@@ -11,7 +11,7 @@
 !=----------------------------------------------------------------------------=!
 
         USE kinds
-        USE io_files,     ONLY: pseudounit
+        USE io_files,     ONLY: pseudounit, psfile, pseudo_dir
         USE pseudo_types, ONLY: pseudo_upf
         USE pseudo_types, ONLY: nullify_pseudo_upf, deallocate_pseudo_upf
         USE uspp_param,   ONLY: upf
@@ -25,32 +25,11 @@
         REAL(DP) :: TOLMESH = 1.d-5
 
         PUBLIC :: readpp
-        PUBLIC :: pseudo_filename, check_file_type
+        PUBLIC :: check_file_type
 
 !=----------------------------------------------------------------------------=!
    CONTAINS
 !=----------------------------------------------------------------------------=!
-
-CHARACTER(LEN=256) FUNCTION pseudo_filename( is )
-  USE io_files, ONLY: psfile, pseudo_dir
-  INTEGER, INTENT(IN) :: is
-  INTEGER :: l
-
-  IF (TRIM(pseudo_dir) == ' ' ) THEN
-     pseudo_filename=TRIM(psfile(is))
-  ELSE
-     l = LEN_TRIM (pseudo_dir)
-     IF (pseudo_dir (l:l) .ne.'/') THEN
-        pseudo_filename = pseudo_dir (1:l) //'/'//TRIM(psfile(is))
-     ELSE
-        pseudo_filename = pseudo_dir (1:l) //TRIM(psfile (is))
-     END IF
-  END IF
-  RETURN
-END FUNCTION pseudo_filename
-
-!=----------------------------------------------------------------------------=!
-
 INTEGER FUNCTION check_file_type( is )
   !
   ! ...   This subroutine guesses the pseudopotential type
@@ -72,7 +51,7 @@ INTEGER FUNCTION check_file_type( is )
   !
   info = 0  
   ios  = 0
-  filename = pseudo_filename( is )
+  filename = TRIM( pseudo_dir ) // TRIM( psfile(is) )
   !
   INQUIRE ( FILE = TRIM(filename), EXIST=exst )
   IF ( .NOT. exst) THEN
@@ -209,7 +188,7 @@ END FUNCTION check_file_type
 
       DO is = 1, nsp
 
-        filename = TRIM( pseudo_filename( is ) )
+        filename = TRIM( pseudo_dir ) // TRIM( psfile(is) )
         !
         upf(is)%nlcc  = .FALSE.
         upf(is)%nbeta = 0

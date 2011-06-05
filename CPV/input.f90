@@ -107,7 +107,8 @@ MODULE input
      USE io_files,                ONLY : psfile_     => psfile , &
                                          pseudo_dir_ => pseudo_dir, &
                                          outdir_     => outdir, &
-                                         prefix_     => prefix, tmp_dir
+                                         prefix_     => prefix, &
+                                         tmp_dir, trimcheck
      USE ions_base,               ONLY : nsp_ => nsp, nat_ => nat
      !
      IMPLICIT NONE
@@ -117,8 +118,8 @@ MODULE input
         CALL errore( 'iosys_pseudo ', 'input file has not been read yet!', 1 )
      !
      prefix_  = TRIM( prefix  )
-     outdir_  = TRIM( outdir )
-     tmp_dir  = TRIM( outdir )
+     outdir_  = trimcheck( outdir )
+     tmp_dir  = trimcheck( outdir )
      !
      ! ... Set internal variables for the number of species and number of atoms
      !
@@ -127,7 +128,7 @@ MODULE input
      !
      psfile_         = ' '
      psfile_(1:nsp_) = atom_pfile(1:nsp_)
-     pseudo_dir_     = TRIM( pseudo_dir  )
+     pseudo_dir_     = trimcheck( pseudo_dir  )
      !
      ! ... read in pseudopotentials and wavefunctions files
      !
