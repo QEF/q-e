@@ -1,10 +1,12 @@
 Fixed in svn version
 
+   * PHonon: problem with the D_4h group when the matrices of the group 
+     are not in the same order as in the routine cubicsym
    * Yet another LDA+CPU+U fix: forces were wrong in spin-polarized case 
-   * code was not stopping anymore when two inconsistent dft were given
-   * default for non-local correlation is set to "   " AND upf%dft is trimmed 
-     before being written by write_upf_v2.f90. Therefore older versions of pw
-     will still work if no vdW is present
+   * PW was not stopping anymore when two inconsistent dft were given
+   * atomic: default for non-local correlation is set to "   " AND upf%dft 
+     is trimmed before being written by write_upf_v2.f90. Therefore older 
+     versions of pw will still work if no vdW is present
    * inlc label for vdw-df is set as VDW1, consistently with the comment and 
      needed to avoid matching conflict with VDW2
 

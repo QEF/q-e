@@ -1091,7 +1091,7 @@ SUBROUTINE iosys()
   tefield_    = tefield
   dipfield_   = dipfield
   prefix_     = trim( prefix )
-  pseudo_dir_ = trim( pseudo_dir )
+  pseudo_dir_ = trimcheck( pseudo_dir )
   nstep_      = nstep
   iprint_     = iprint
   lecrpa_     = lecrpa

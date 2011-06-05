@@ -36,13 +36,12 @@ subroutine readpp
   ! file name complete with path
   real(DP), allocatable :: chi2r(:)
   real(DP):: norm
-  integer :: iunps, isupf, l, nt, nb, ir, ios
+  integer :: iunps, isupf, nt, nb, ir, ios
   integer :: iexch_, icorr_, igcx_, igcc_, inlc_
   integer, external :: pseudo_type
   !
+  !
   iunps = 4
-  l = len_trim (pseudo_dir)
-
   IF( ALLOCATED( rgrid ) ) THEN
      DO nt = 1, SIZE( rgrid )
         CALL deallocate_radial_grid( rgrid( nt ) )
@@ -82,21 +81,17 @@ subroutine readpp
      rgrid(nt)%xmin = 0.d0
      rgrid(nt)%dx = 0.d0
      !
-     ! add slash at the end if needed
+     ! pseudo_dir should already contain a slash at the end
      !
-     if (pseudo_dir (l:l) .ne.'/') then
-        file_pseudo = pseudo_dir (1:l) //'/'//psfile (nt)
-     else
-        file_pseudo = pseudo_dir (1:l) //psfile (nt)
-     endif
-     
-     write (stdout,'(10x,a,/15x,a)') "Reading PseudoPotential from ",trim(file_pseudo)
+     file_pseudo = TRIM (pseudo_dir) // TRIM (psfile(nt))
      !
+     ! write (stdout,'(10x,a,/15x,a)') "Reading PseudoPotential from ",
+     !                                 TRIM(file_pseudo)
      ! Try to open the pseudo
      !
      open (unit = iunps, file = file_pseudo, status = 'old', form = &
           'formatted', action='read', iostat = ios)
-     call errore ('readpp', 'file '//trim(file_pseudo)//' not found', ios)
+     call errore ('readpp', 'file '//TRIM(file_pseudo)//' not found', ios)
      !
      ! read UPF  pseudopotentials - the UPF format is detected via the
      ! presence of the keyword '<PP_HEADER>' at the beginning of the file

@@ -348,7 +348,7 @@ SUBROUTINE print_ps_info
   !-----------------------------------------------------------------------
   !
   USE io_global,       ONLY : stdout
-  USE io_files,        ONLY : psfile
+  USE io_files,        ONLY : pseudo_dir, psfile
   USE ions_base,       ONLY : ntyp => nsp
   USE atom,            ONLY : rgrid
   USE uspp_param,      ONLY : upf
@@ -371,8 +371,8 @@ SUBROUTINE print_ps_info
      !
      IF ( upf(nt)%nlcc ) ps = TRIM(ps) // ' + core correction'
      !
-     WRITE( stdout, '(/5x,"PseudoPot. #",i2," for ",a2," read from file ",a)')&
-             nt, upf(nt)%psd, TRIM (psfile(nt))
+     WRITE( stdout, '(/5x,"PseudoPot. #",i2," for ",a2," read from file:", &
+           & /5x,a)') nt, upf(nt)%psd, TRIM(pseudo_dir)//TRIM (psfile(nt))
      WRITE( stdout, '(5x,"MD5 check sum: ", a )') upf(nt)%md5_cksum
      !
      WRITE( stdout, '( 5x,"Pseudo is ",a,", Zval =",f5.1)') &
