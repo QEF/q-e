@@ -1638,7 +1638,7 @@ MODULE pw_restart
       !
       IF ( ierr > 0 ) RETURN
       !
-      pseudo_dir = TRIM( dirname )
+      pseudo_dir = TRIM( dirname ) // '/'
 
       !
       IF ( ionode ) THEN
