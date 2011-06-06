@@ -1614,7 +1614,7 @@ MODULE pw_restart
       !
       USE ions_base, ONLY : nat, nsp, ityp, amass, atm, tau, if_pos
       USE cell_base, ONLY : alat
-      USE io_files,  ONLY : psfile, pseudo_dir
+      USE io_files,  ONLY : psfile, pseudo_dir, trimcheck
       !
       IMPLICIT NONE
       !
@@ -1638,8 +1638,7 @@ MODULE pw_restart
       !
       IF ( ierr > 0 ) RETURN
       !
-      pseudo_dir = TRIM( dirname ) // '/'
-
+      pseudo_dir = trimcheck ( dirname ) 
       !
       IF ( ionode ) THEN
          !
