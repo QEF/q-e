@@ -20,7 +20,7 @@ SUBROUTINE lr_readin
   USE kinds,               ONLY : DP
   USE io_files,            ONLY : tmp_dir, prefix,trimcheck,wfc_dir
   USE lsda_mod,            ONLY : current_spin, nspin
-  USE control_flags,       ONLY : twfcollect
+  USE control_flags,       ONLY : twfcollect,use_para_diag
   USE scf,                 ONLY : vltot, v, vrs, vnew, &
                                    & destroy_scf_type
   USE grid_dimensions,     ONLY : nrxx
@@ -203,6 +203,9 @@ END SELECT
 
   DEALLOCATE( strf )
   CALL destroy_scf_type(vnew)
+  !
+  !
+  !
 
   !
   !
@@ -253,5 +256,15 @@ END SELECT
        CALL errore( ' iosys ', ' Linear response calculation ' // &
        & 'not implemented with symmetry', 1 )
   !
+  !
+  !Scalapack related stuff, 
+  !
+#ifdef __PARA
+  use_para_diag = .true.
+  CALL check_para_diag( nbnd )
+#else
+  use_para_diag = .FALSE.
+#endif
+
   RETURN
 END SUBROUTINE lr_readin
