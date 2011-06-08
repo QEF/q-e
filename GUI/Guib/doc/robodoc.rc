@@ -30,7 +30,7 @@ ignore files:
 	index
 	file
 	.xrefs
-	CVS
+	.svn
 
 headertypes:
 	n "Namespaces" robo_namespaces
