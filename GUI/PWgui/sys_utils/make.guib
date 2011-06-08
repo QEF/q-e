@@ -15,7 +15,7 @@ fi
 
 
 #
-# create a complete Guib archive out of CVS + plus add the TclTkLib 
+# create a complete Guib archive out of SVN + plus add the TclTkLib 
 #
 cd ..
 if [ -d Guib ]; then
@@ -30,7 +30,7 @@ if [ -d Guib ]; then
     exit 1
 fi
 
-cvs co Guib >& /dev/null
+svn co Guib >& /dev/null
 cd Guib
 guib_root=$(pwd)
 version=$(cat VERSION)

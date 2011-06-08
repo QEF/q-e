@@ -108,6 +108,6 @@ mv lib/$GUIB_DIRNAME ../
 # ------------------------------------------------------------------------
 
 cd $TOPDIR
-tar --exclude=CVS* -zcvf pwgui_vfs-$PWGUI_VERSION.tgz $pwgui_vfs/
+tar --exclude=CVS* --exclude=.svn* -zcvf pwgui_vfs-$PWGUI_VERSION.tgz $pwgui_vfs/
 
 exit 0
