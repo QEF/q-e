@@ -77,7 +77,7 @@ distclean: veryclean
 	-cd lib/; rm -f *
 	cd $(PWGUI_VFS); $(MAKE) distclean	
 
-cvsinit:
+svninit:
 	-cd doc/pwdocs; $(MAKE)
 	-if test ! -d lib; then mkdir lib; fi
 	-cd lib/; rm -f Guib-*;

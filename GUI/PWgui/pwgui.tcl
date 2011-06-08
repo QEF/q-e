@@ -31,14 +31,14 @@ if { [info exists env(PWGUI)] } {
     if { $guib_dir != "" } {
 	set env(GUIB) $guib_dir
     } else {
-	# we arrive here, if we are using CVS version of code
+	# we arrive here, if we are using SVN version of code
 	if { [file isdirectory [file join $env(PWGUI) .. Guib]] } {
 	    puts "   "
-	    puts "   It seems you are using CVS version of PWgui/Quantum-Espresso."
+	    puts "   It seems you are using SVN version of PWgui/Quantum-Espresso."
 	    puts "   "
-	    puts "   For the CVS version you need to do the following:"
+	    puts "   For the SVN version you need to do the following:"
 	    puts "      * cd into GUI/PWgui directory, and"
-	    puts "      * execute: make cvsinit"
+	    puts "      * execute: make svninit"
 	    puts "   "
 	    exit
 	}

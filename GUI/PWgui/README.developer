@@ -3,7 +3,7 @@
  ==============================================================================
 
 
-*** see INSTALL.cvs for how to run CVS version of PWgui !!!
+*** see INSTALL.svn for how to run SVN version of PWgui !!!
 
 
 FOR PWscf DEVELOPERS: UPDATING the PWgui MODULES
@@ -13,7 +13,7 @@ If some new variables have been added to a given PWscf program, please
 update corresponding module definition files, which are located in
 modules/ directory.
 
-Before committing changes to CVS repository, please check that the
+Before committing changes to SVN repository, please check that the
 updated module works!!! If you face troubles, please consult
 tone.kokalj@ijs.si.
 

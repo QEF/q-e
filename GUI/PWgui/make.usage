@@ -8,9 +8,9 @@
 	If you donwloaded any of the *.tgz package, you do not need to 
 	call "make". See INSTALL file instead.
 
-* CVS-related target:
+* SVN-related target:
  
-	cvsinit ...   initialize the PWgui after it was CVS-downloaded
+	svninit ...   initialize the PWgui after it was SVN-downloaded
 
 * Distribution-related targets:
 
