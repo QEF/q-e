@@ -44,8 +44,8 @@ SUBROUTINE input_from_file( )
                STATUS = 'OLD', IOSTAT = ierr )
         !
         ! TODO: return error code instead
-        !CALL errore( 'input_from_file', 'input file ' // TRIM( input_file ) &
-        !     & // ' not found' , ierr )
+        CALL errore( 'input_from_file', 'input file ' // TRIM( input_file ) &
+             & // ' not found' , ierr )
         !
      END IF
      !
