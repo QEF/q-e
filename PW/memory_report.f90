@@ -19,31 +19,33 @@ SUBROUTINE memory_report()
   USE ldaU,      ONLY : lda_plus_u
   USE lsda_mod,  ONLY : nspin
   USE noncollin_module,     ONLY : npol
-  USE wavefunctions_module, ONLY : evc
   USE control_flags, ONLY: isolve, nmix, gamma_only, lscf
+  USE mp_global, ONLY : np_ortho
   !
   IMPLICIT NONE
   !
   INTEGER, PARAMETER :: Mb=1024*1024, complex_size=16, real_size=8
-  INTEGER :: size
+  INTEGER :: g_size, nbnd_l
+  INTEGER*8 :: large_size
   !
+  ! the conversions to double prevent integer overflow in very large run
   !
   WRITE( stdout, '(/5x,"Largest allocated arrays",5x,"est. size (Mb)", &
                    &5x,"dimensions")')
   WRITE( stdout, '(8x,"Kohn-Sham Wavefunctions   ",f10.2," Mb", &
                  & 5x,"(",i7,",",i4,")")') &
-     DBLE(complex_size*nbnd*npol*npwx)/Mb, npwx*npol,nbnd
+     complex_size*nbnd*npol*DBLE(npwx)/Mb, npwx*npol,nbnd
   IF ( lda_plus_u ) &
      WRITE( stdout, '(8x,"Atomic wavefunctions      ",f10.2," Mb", &
                     & 5x,"(",i7,",",i4,")")') &
-     DBLE(complex_size*natomwfc*npol*npwx)/Mb, npwx*npol,natomwfc
+     complex_size*natomwfc*npol*DBLE(npwx)/Mb, npwx*npol,natomwfc
   WRITE( stdout, '(8x,"NL pseudopotentials       ",f10.2," Mb", &
                  & 5x,"(",i7,",",i4,")")') &
-     DBLE(complex_size*nkb*npwx)/Mb, npwx, nkb
+     complex_size*nkb*DBLE(npwx)/Mb, npwx, nkb
   IF ( nspin == 2 ) THEN
      WRITE( stdout, '(8x,"Each V/rho on FFT grid    ",f10.2," Mb", &
                     & 5x,"(",i7,",",i4,")")') &
-                    DBLE(complex_size*nrxx*nspin)/Mb, nrxx, nspin
+                    DBLE(complex_size*nspin*nrxx)/Mb, nrxx, nspin
   ELSE
      WRITE( stdout, '(8x,"Each V/rho on FFT grid    ",f10.2," Mb", &
                     & 5x,"(",i7,")")') DBLE(complex_size*nrxx)/Mb, nrxx
@@ -56,32 +58,30 @@ SUBROUTINE memory_report()
   WRITE( stdout, '(5x,"Largest temporary arrays",5x,"est. size (Mb)", &
                    &5x,"dimensions")')
   IF ( gamma_only) THEN
-     size = real_size
+     g_size = real_size
   ELSE
-     size = complex_size
+     g_size = complex_size
   END IF
   !
   IF ( isolve == 0 ) THEN
      WRITE( stdout, '(8x,"Auxiliary wavefunctions   ",f10.2," Mb", &
                  & 5x,"(",i7,",",i4,")")') &
-     DBLE(size*nbndx*npol*npwx)/Mb, npwx*npol, nbndx
-     WRITE( stdout, '(8x,"Each subspace H/S matrix  ",f10.2," Mb", &
-                 & 5x,"(",i7,",",i4,")")') &
-     DBLE(size*nbndx*nbndx)/Mb, nbndx, nbndx
-  ELSE
-     WRITE( stdout, '(8x,"Each subspace H/S matrix  ",f10.2," Mb", &
-                 & 5x,"(",i7,",",i4,")")') &
-     DBLE(size*nbnd*nbnd)/Mb, nbnd, nbnd
+     g_size*nbndx*npol*DBLE(npwx)/Mb, npwx*npol, nbndx
   ENDIF
+  ! nbnd_l : estimated dimension of distributed matrices
+  nbnd_l = nbndx/np_ortho(1)
+  WRITE( stdout, '(8x,"Each subspace H/S matrix  ",f10.2," Mb", &
+                 & 5x,"(",i7,",",i4,")")') &
+  DBLE(g_size*nbnd_l*nbnd_l)/Mb, nbnd_l, nbnd_l
   !
   IF ( npol > 1 ) THEN
      WRITE( stdout, '(8x,"Each <psi_i|beta_j> matrix",f10.2," Mb", &
                  & 5x,"(",i7,",",i4,",",i4,")")') &
-     DBLE(size*nkb*npol*nbnd)/Mb, nkb, npol, nbnd
+     DBLE(g_size*nkb*npol*nbnd)/Mb, nkb, npol, nbnd
   ELSE
      WRITE( stdout, '(8x,"Each <psi_i|beta_j> matrix",f10.2," Mb", &
                  & 5x,"(",i7,",",i4,")")') &
-     DBLE(size*nkb*nbnd)/Mb, nkb, nbnd
+     DBLE(g_size*nkb*nbnd)/Mb, nkb, nbnd
   END IF
   !
   IF ( lscf) WRITE( stdout, &
