@@ -1,5 +1,5 @@
  ==============================================================================
-             * * * README file for O-sesame/GUI directory * * *
+             * * * README file for espresso/GUI directory * * *
  ==============================================================================
 
 
@@ -12,7 +12,7 @@ This directory hosts two subdirectories:
 
 The PWgui GUI is based on Guib engine (see
 http://www-k3.ijs.si/kokalj/guib/guib.html). Currently, the Guib
-engine is also included in O-sesame repository (O-sesame/GUI/Guib
+engine is also included in QE repository (espresso/GUI/Guib
 directory).
 
 
@@ -20,7 +20,7 @@ IMPORTANT:
 **********
 
 	1. Enter the PWgui/ directory and read the following files:
-			INSTALL.cvs      (REQUIRED)
+			INSTALL.svn      (REQUIRED)
 			INSTALL          (optional)
 			README           (optional)
 			README.developer (optional)
