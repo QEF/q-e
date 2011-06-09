@@ -180,12 +180,7 @@ SUBROUTINE PAW_atomic_becsum()
                                    upf(nt)%paw%oc(nb) / DBLE(2*nhtol(ih,nt)+1)
                 !
              ELSE IF (nspin==4) THEN
-                IF (upf(nt)%has_so) THEN
-                   becsum(ijh,na,1) = upf(nt)%paw%oc(nb) / &
-                                      (2.0_DP*nhtoj(ih,nt)+1.0_DP)
-                ELSE
-                   becsum(ijh,na,1) = upf(nt)%paw%oc(nb)/DBLE(2*nhtol(ih,nt)+1)
-                END IF
+                becsum(ijh,na,1) = upf(nt)%paw%oc(nb)/DBLE(2*nhtol(ih,nt)+1)
                 IF (nspin_mag==4) THEN
                    becsum(ijh,na,2) = becsum(ijh,na,1)*               &
                                       starting_magnetization(nt)*     &
