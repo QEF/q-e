@@ -85,17 +85,17 @@ plan_avg.x : plan_avg.o $(PPOBJS) $(MODULES) $(LIBOBJS)
 
 plotband.x : plotband.o $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ \
-		plotband.o $(LIBOBJS) $(LIBS)
+		plotband.o $(PPOBJS) $(MODULES) $(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../PP/$@ . )
 
 plotproj.x : plotproj.o $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ \
-		plotproj.o $(LIBOBJS) $(LIBS)
+		plotproj.o $(PPOBJS) $(MODULES) $(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../PP/$@ . )
 
 plotrho.x : plotrho.o $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ \
-		plotrho.o $(LIBOBJS) $(LIBS)
+		plotrho.o $(PPOBJS) $(MODULES) $(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../PP/$@ . )
 
 pmw.x : poormanwannier.o $(PPOBJS) $(MODULES) $(LIBOBJS)
