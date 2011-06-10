@@ -196,6 +196,9 @@ CONTAINS
       ! ... the BFGS file read (pos & grad) in scaled coordinates
       !
       call invmat(3, h, hinv, omega)
+      ! volume is defined to be positve even for left-handed vector triplet
+      omega = abs(omega) 
+      !
       hinv_block = 0.d0
       FORALL ( k=0:nat-1, i=1:3, j=1:3 ) hinv_block(i+3*k,j+3*k) = hinv(i,j)
       !
