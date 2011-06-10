@@ -323,7 +323,7 @@ SUBROUTINE forces()
   !
   IF ( ( sumfor < 10.D0*sumscf ) .AND. ( sumfor > eps ) ) &
   WRITE( stdout,'(5x,"SCF correction compared to forces is large: ", &
-                     "reduce conv_thr to get better values")')
+                   &  "reduce conv_thr to get better values")')
   !
   IF(ALLOCATED(force_mt))   DEALLOCATE( force_mt )
 #ifdef __SOLVENT
