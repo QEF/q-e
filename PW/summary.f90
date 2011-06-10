@@ -235,7 +235,7 @@ SUBROUTINE summary()
   WRITE( stdout, '(/,3x,"Cartesian axes")')
   WRITE( stdout, '(/,5x,"site n.     atom                  positions (alat units)")')
 
-  WRITE( stdout, '(7x,i3,8x,a6," tau(",i3,") = (",3f12.7,"  )")') &
+  WRITE( stdout, '(6x,i4,8x,a6," tau(",i4,") = (",3f12.7,"  )")') &
              (na, atm(ityp(na)), na, (tau(ipol,na), ipol=1,3), na=1,nat)
   !
   !  output of starting magnetization
@@ -263,7 +263,7 @@ SUBROUTINE summary()
      WRITE( stdout, '(/,5x,"site n.     atom        ", &
           &             "          positions (cryst. coord.)")')
 
-     WRITE( stdout, '(7x,i3,8x,a6," tau(",i3,") = (",3f11.7,"  )")') &
+     WRITE( stdout, '(6x,i4,8x,a6," tau(",i4,") = (",3f11.7,"  )")') &
            (na, atm(ityp(na)), na,  (xau(ipol,na), ipol=1,3), na=1,nat)
      !
      !   deallocate work space
@@ -304,17 +304,17 @@ SUBROUTINE summary()
              ik, (xkg (ipol) , ipol = 1, 3) , wk (ik)
      ENDDO
   ENDIF
-  WRITE( stdout, '(/5x,"G cutoff =",f10.4,"  (", &
-       &       i7," G-vectors)","     FFT grid: (",i3, &
-       &       ",",i3,",",i3,")")') gcutm, ngm_g, nr1, nr2, nr3
+  WRITE( stdout, '(/5x,"Dense  grid: ",i8," G-vectors", 5x, &
+       &               "FFT dimensions: (",i4,",",i4,",",i4,")")') &
+       &         ngm_g, nr1, nr2, nr3
   IF (doublegrid) THEN
      !
      ngmtot = ngms
      CALL mp_sum (ngmtot, intra_pool_comm)
      !
-     WRITE( stdout, '(5x,"G cutoff =",f10.4,"  (", &
-          &    i7," G-vectors)","  smooth grid: (",i3, &
-          &    ",",i3,",",i3,")")') gcutms, ngmtot, nr1s, nr2s, nr3s
+     WRITE( stdout, '(/5x,"Smooth grid: ",i8," G-vectors", 5x, &
+       &               "FFT dimensions: (",i4,",",i4,",",i4,")")') &
+       &         ngmtot, nr1s, nr2s, nr3s
   ENDIF
 
 ! DCC

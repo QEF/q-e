@@ -332,6 +332,6 @@ SUBROUTINE forces()
 
   RETURN
   !
-9035 FORMAT(5X,'atom ',I3,' type ',I2,'   force = ',3F14.8)
+9035 FORMAT(5X,'atom ',I4,' type ',I2,'   force = ',3F14.8)
   !
 END SUBROUTINE forces

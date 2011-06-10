@@ -101,7 +101,8 @@ PROGRAM neb
     CALL input_images_getarg(input_images,lfound_input_images)
     CALL mp_bcast(input_images,root,neb_comm)
   !
-    IF(.not.lfound_input_images) CALL errore('string_methods', 'Nor file to parse nor input images found',1)
+    IF(.not.lfound_input_images) CALL errore('string_methods', &
+      'Neither a file to parse nor input files for each image found',1)
   !
   endif
   !

@@ -1,5 +1,11 @@
 Fixed in svn version
 
+   * PWGui documentation updated to reflect cvs to svn switch
+   * Some formats increased to fit printout of large cells
+   * PW: the cell volume omega must be positive definite even when the 
+     lattice vectors form a left-handed set
+   * PW: a bad initialization (of becsum) in the paw spin/orbit case 
+     made the convergence more difficult
    * PHonon: problem with the D_4h group when the matrices of the group 
      are not in the same order as in the routine cubicsym
    * Yet another LDA+CPU+U fix: forces were wrong in spin-polarized case 
