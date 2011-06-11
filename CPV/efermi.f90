@@ -167,7 +167,7 @@ SUBROUTINE EFERMI(NEL,NBANDS,DEL,NKPTS,OCC,EF,EIGVAL, &
 
   
   REAL(kind=DP) :: weight(nkpts), sort(nbands*nkpts)
-  REAL(kind=DP), EXTERNAL :: qe_erfc,FERMID,DELTHM,POSHM,POSHM2, SPLINE
+  REAL(kind=DP), EXTERNAL :: qe_erfc,FERMID,DELTHM,POSHM,POSHM2, EFERMI_SPLINE
   INTEGER, PARAMETER :: JMAX =300
   REAL(kind=DP), PARAMETER :: XACC=1.0D-17
 
@@ -393,7 +393,7 @@ SUBROUTINE EFERMI(NEL,NBANDS,DEL,NKPTS,OCC,EF,EIGVAL, &
         ELSEIF(ISMEAR.EQ.3) THEN
            Z1 = Z1 + WEIGHT(ISPPT)*DELTHM(X)/fspin
         ELSEIF(ISMEAR.EQ.4) THEN
-           Z1 = Z1 + WEIGHT(ISPPT)*SPLINE(-X)/fspin
+           Z1 = Z1 + WEIGHT(ISPPT)*EFERMI_SPLINE(-X)/fspin
         ELSEIF(ISMEAR.EQ.5) THEN
            Z1 = Z1 + WEIGHT(ISPPT)*POSHM(X)/fspin
         ELSEIF(ISMEAR.EQ.6) THEN
@@ -419,7 +419,7 @@ SUBROUTINE EFERMI(NEL,NBANDS,DEL,NKPTS,OCC,EF,EIGVAL, &
         ELSEIF(ISMEAR.EQ.3) THEN
            Z1 = Z1 + WEIGHT(ISPPT)*DELTHM(X)/fspin
         ELSEIF(ISMEAR.EQ.4) THEN
-           Z1 = Z1 + WEIGHT(ISPPT)*SPLINE(-X)/fspin
+           Z1 = Z1 + WEIGHT(ISPPT)*EFERMI_SPLINE(-X)/fspin
         ELSEIF(ISMEAR.EQ.5) THEN
            Z1 = Z1 + WEIGHT(ISPPT)*POSHM(X)/fspin
         ELSEIF(ISMEAR.EQ.6) THEN
@@ -460,7 +460,7 @@ SUBROUTINE EFERMI(NEL,NBANDS,DEL,NKPTS,OCC,EF,EIGVAL, &
            ELSEIF(ISMEAR.EQ.3) THEN
               Z1 = Z1 + WEIGHT(ISPPT)*DELTHM(X)/fspin
            ELSEIF(ISMEAR.EQ.4) THEN
-              Z1 = Z1 + WEIGHT(ISPPT)*SPLINE(-X)/fspin
+              Z1 = Z1 + WEIGHT(ISPPT)*EFERMI_SPLINE(-X)/fspin
            ELSEIF(ISMEAR.EQ.5) THEN
               Z1 = Z1 + WEIGHT(ISPPT)*POSHM(X)/fspin
            ELSEIF(ISMEAR.EQ.6) THEN
@@ -494,7 +494,7 @@ SUBROUTINE EFERMI(NEL,NBANDS,DEL,NKPTS,OCC,EF,EIGVAL, &
         ELSEIF(ISMEAR.EQ.3) THEN
            OCC(J,ISPPT) = DELTHM(X)
         ELSEIF(ISMEAR.EQ.4) THEN
-           OCC(J,ISPPT) = SPLINE(-X)
+           OCC(J,ISPPT) = EFERMI_SPLINE(-X)
         ELSEIF(ISMEAR.EQ.5) THEN
            OCC(J,ISPPT) = POSHM(X)
         ELSEIF(ISMEAR.EQ.6) THEN
@@ -645,13 +645,13 @@ FUNCTION delthm(xx)
   RETURN
 END FUNCTION delthm
 !-----------------------------------------------------------------------
-FUNCTION spline(x)
+FUNCTION efermi_spline(x)
 
   USE kinds,  ONLY : DP
   
   implicit none
 
-  REAL(kind=DP) :: spline
+  REAL(kind=DP) :: efermi_spline
   REAL(kind=DP), INTENT(in) :: x
 
   REAL(kind=DP) :: eesqh,sq2i,fx
@@ -663,10 +663,10 @@ FUNCTION spline(x)
   else
      fx=1.d0-eesqh*exp(-(x-sq2i)**2)
   endif
-  spline=2.d0*fx
+  efermi_spline=2.d0*fx
 !
   return
-END FUNCTION spline
+END FUNCTION efermi_spline
 !-----------------------------------------------------------------------
 FUNCTION poshm(x)
 !
