@@ -713,7 +713,7 @@ SUBROUTINE electrons()
   !
   ! ... formats
   !
-9000 FORMAT(/'     total cpu time spent up to now is ',F9.2,' secs' )
+9000 FORMAT(/'     total cpu time spent up to now is ',F10.1,' secs' )
 9001 FORMAT(/'     per-process dynamical memory: ',f7.1,' Mb' )
 9002 FORMAT(/'     Self-consistent Calculation' )
 9010 FORMAT(/'     iteration #',I3,'     ecut=', F9.2,' Ry',5X,'beta=',F4.2 )

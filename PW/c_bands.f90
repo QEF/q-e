@@ -1,5 +1,5 @@
 
-! Copyright (C) 2001-2007 Quantum ESPRESSO group
+! Copyright (C) 2001-2011 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -734,6 +734,6 @@ SUBROUTINE c_bands_nscf( ik_ )
   ! formats
   !
 9001 FORMAT(/'     Computing kpt #: ',I5 )
-9000 FORMAT( '     total cpu time spent up to now is ',F9.2,' secs' )
+9000 FORMAT( '     total cpu time spent up to now is ',F10.1,' secs' )
   !
 END SUBROUTINE c_bands_nscf

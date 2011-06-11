@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2007 Quantum ESPRESSO group
+! Copyright (C) 2001-2011 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -88,7 +88,7 @@
   !
   CALL stop_clock( 'electrons' )
   !
-9000 FORMAT(/'     total cpu time spent up to now is ',F9.2,' secs' )
+9000 FORMAT(/'     total cpu time spent up to now is ',F10.1,' secs' )
 9002 FORMAT(/'     Band Structure Calculation' )
 9102 FORMAT(/'     End of band structure calculation' )
   !
