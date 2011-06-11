@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2008 Quantum ESPRESSO group
+! Copyright (C) 2001-2011 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -93,6 +93,7 @@ SUBROUTINE setup()
   LOGICAL  :: magnetic_sym
   REAL(DP) :: iocc, ionic_charge
   !
+  LOGICAL, EXTERNAL  :: check_para_diag
   INTEGER, EXTERNAL :: set_Hubbard_l
   !
   ! ... okvan/okpaw = .TRUE. : at least one pseudopotential is US/PAW
@@ -368,7 +369,7 @@ SUBROUTINE setup()
   IF ( isolve == 0 ) nbndx = david * nbnd
   !
 #ifdef __PARA
-  IF ( use_para_diag )  CALL check_para_diag( nbnd )
+  use_para_diag = check_para_diag( nbnd )
 #else
   use_para_diag = .FALSE.
 #endif
@@ -654,9 +655,8 @@ SUBROUTINE setup()
 END SUBROUTINE setup
 !
 !----------------------------------------------------------------------------
-SUBROUTINE check_para_diag( nbnd )
+LOGICAL FUNCTION check_para_diag( nbnd )
   !
-  USE control_flags,    ONLY : use_para_diag, gamma_only
   USE io_global,        ONLY : stdout, ionode, ionode_id
   USE mp_global,        ONLY : nproc_pool, init_ortho_group, nproc_ortho, &
                                np_ortho, intra_pool_comm
@@ -665,45 +665,22 @@ SUBROUTINE check_para_diag( nbnd )
 
   INTEGER, INTENT(IN) :: nbnd
   LOGICAL, SAVE :: first = .TRUE.
-  INTEGER :: np
 
   !  avoid synchronization problems when more images are active 
 
   IF( .NOT. first ) RETURN
-
   first = .FALSE.
-
-  use_para_diag = .TRUE.
   !
-  !  here we re-initialize the sub group of processors that will take part
-  !  in the matrix diagonalization. 
-  !  NOTE that the maximum number of processors may not be the optimal one,
-  !  and -ndiag N argument can be used to force a given number N of processors
+  IF( np_ortho(1) > nbnd ) &
+     CALL errore ('check_para_diag', 'Too few bands for required ndiag',nbnd)
   !
-  np = MAX( INT( SQRT( DBLE( nproc_ortho ) + 0.1d0 ) ), 1 )
+  check_para_diag = ( np_ortho( 1 ) > 1 .AND. np_ortho( 2 ) > 1 )
   !
-  IF( nbnd < np ) THEN
-      !
-      !  Make ortho group compatible with the number of electronic states
-      !
-      IF ( ionode ) WRITE(stdout,'(5X,"Too few bands for required ortho ", &
-                    & "group size ",i4,": reducing to ",i4)') np**2, nbnd**2
-      np = MIN( nbnd, np )
-      !
-  END IF
-  !
-  CALL init_ortho_group( np * np, intra_pool_comm )
-
-  !  if too few resources for parallel diag. switch back to serial one
-
-  IF ( np_ortho( 1 ) == 1 .AND. np_ortho( 2 ) == 1 ) use_para_diag = .FALSE.
-
   IF ( ionode ) THEN
      !
      WRITE( stdout, '(/,5X,"Subspace diagonalization in iterative solution ",&
                      &     "of the eigenvalue problem:")' ) 
-     !
-     IF ( use_para_diag ) THEN
+     IF ( check_para_diag ) THEN
         WRITE( stdout, '(5X,"parallel, distributed-memory algorithm ", &
               & "(size of sub-group: ", I2, "*", I3, " procs)",/)') &
                np_ortho(1), np_ortho(2)
@@ -712,6 +689,6 @@ SUBROUTINE check_para_diag( nbnd )
      END IF
      !
   END IF
-
+  !
   RETURN
-END SUBROUTINE check_para_diag
+END FUNCTION check_para_diag

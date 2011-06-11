@@ -173,7 +173,7 @@ SUBROUTINE iosys()
                             io_level, ethr, lscf, lbfgs, lmd, &
                             ldamped, lbands, llang,                    &
                             lconstrain, restart, twfcollect, &
-                            use_para_diag, llondon, nofrac, do_makov_payne, &
+                            llondon, nofrac, do_makov_payne, &
                             lecrpa_           => lecrpa
   !
   USE wvfct,         ONLY : nbnd_ => nbnd, &
@@ -872,11 +872,6 @@ SUBROUTINE iosys()
      startingwfc = 'atomic'
      !
   ENDIF
-
-  ! parallel distributed diagonalization is the default
-  ! (with more than 4 procs)
-  !
-  use_para_diag = .true.
   !
   SELECT CASE( trim( diagonalization ) )
   CASE ( 'cg' )
