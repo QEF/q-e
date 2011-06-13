@@ -17,6 +17,8 @@ PROGRAM uspp2upf
   CHARACTER(len=256) filein, fileout
   !
   !
+  IF ( TRIM(filein) == ' ') &
+       CALL errore ('uspp2upf', 'usage: uspp2upf "file-to-be-converted"', 1)
   CALL get_file ( filein )
   OPEN(unit=1,file=filein,status='old',form='unformatted')
   CALL read_uspp(1)

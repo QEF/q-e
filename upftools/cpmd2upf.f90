@@ -23,9 +23,9 @@ PROGRAM cpmd2upf
   CHARACTER(len=256) filein, fileout
   INTEGER :: ios
   !
-  CALL get_file ( filein )
   IF ( TRIM(filein) == ' ') &
        CALL errore ('cpmd2upf', 'usage: cpmd2upf "file-to-be-converted"', 1)
+  CALL get_file ( filein )
   OPEN ( unit=1, file=filein, status = 'old', form='formatted', iostat=ios )
   IF ( ios /= 0) CALL errore ('cpmd2upf', 'file: '//trim(filein)//' not found', 2)
   !
@@ -68,20 +68,27 @@ MODULE cpmd
   !
   INTEGER :: ixc, pstype = 0 
   real(8) :: alphaxc
-  INTEGER :: z, zv
-  !
-  real(8) :: alphaloc, alpha(0:3), a(0:3), b(0:3)
+  REAL(8) :: z, zv
+  ! Grid variables
   INTEGER :: mesh
   real(8) :: amesh, rmax, xmin
   real(8), ALLOCATABLE :: r(:)
-  !
+  ! PP variables
+  INTEGER, parameter :: lmaxx=3
   INTEGER ::lmax
+  ! Car PP variables
+  real(8) :: alphaloc, alpha(0:lmaxx), a(0:lmaxx), b(0:lmaxx)
+  ! Goedecker PP variables
+  INTEGER, parameter :: ncmax=4, nlmax=2
+  integer :: nc, nl(0:lmaxx) 
+  real(8) :: rc, rl(0:lmaxx), c(ncmax), h(0:lmaxx, nlmax*(nlmax+1)/2 )
+  ! Numeric PP variables
   real(8), ALLOCATABLE :: vnl(:,:)
   real(8), ALLOCATABLE :: chi(:,:)
-  !
+  ! Core correction variables
   LOGICAL :: nlcc
   real(8), ALLOCATABLE :: rho_atc(:)
-  !
+  ! Variables used for reading and for checks
   INTEGER :: maxinfo, info_lines
   PARAMETER (maxinfo = 100)
   CHARACTER (len=80), ALLOCATABLE :: info_sect(:)
@@ -98,11 +105,11 @@ SUBROUTINE read_cpmd(iunps)
   INTEGER :: iunps
   !
   INTEGER :: found = 0, closed = 0, unknown = 0
-  INTEGER :: i, l, ios
+  INTEGER :: i, l, dum, ios
   CHARACTER (len=80) line
   CHARACTER (len=4) token
   real (8) :: amesh_, vnl0(0:3)
-  LOGICAL :: grid_read = .FALSE.
+  LOGICAL :: grid_read = .FALSE., wfc_read=.FALSE.
   LOGICAL, EXTERNAL :: matches
   INTEGER, EXTERNAL :: locate
   REAL(8), EXTERNAL :: qe_erf
@@ -117,7 +124,7 @@ SUBROUTINE read_cpmd(iunps)
      l = len_trim(line)
      i = locate('=',line)
      READ (line(i+1:l),*) z
-     ! ZV
+     ! Zv
      READ (iunps,'(a)',end=200,err=200) line
      l = len_trim(line)
      i = locate('=',line)
@@ -129,17 +136,20 @@ SUBROUTINE read_cpmd(iunps)
      READ (line(i+1:l),*) ixc, alphaxc
      ! TYPE
      READ (iunps,'(a)',end=200,err=200) line
-     IF ( matches("NORMCONSERVING",line) .AND. ( matches("NUMERIC",line) &
-                                     .OR. matches("LOGARITHMIC",line)  ) )THEN
-        pstype = 1
-     ELSE IF ( matches("NORMCONSERVING",line) .AND. matches("CAR",line) ) THEN
-        pstype = 2
+     IF ( matches("NORMCONSERVING",line) ) THEN
+        IF ( matches("NUMERIC",line) .OR. matches("LOGARITHMIC",line)  ) THEN
+           pstype = 1
+        ELSE IF ( matches("CAR",line) ) THEN
+           pstype = 2
+        ELSE IF ( matches("GOEDECKER",line) ) THEN
+           pstype = 3
+        END IF
      END IF
      IF (pstype == 0 ) CALL errore('read_cpmd','unknown type: '//line,1)
   ELSEIF (matches ("&INFO", trim(line)) ) THEN
      found = found + 1
      ! read (iunps,'(a)') title
-     ! store info section for later perusal (FIXME: not yet implemented. 2004/10/12, AK)
+     ! store info section for later perusal
      ALLOCATE (info_sect(maxinfo))
      DO i=1,maxinfo
         READ (iunps,'(a)',end=20,err=20) title
@@ -183,7 +193,7 @@ SUBROUTINE read_cpmd(iunps)
            CALL check_radial_grid ( amesh_, mesh, r, amesh )
            grid_read = .TRUE.
         END IF
-     ELSE
+     ELSE IF ( pstype == 2 ) THEN
      !
      ! NORMCONSERVING CAR
      !
@@ -199,8 +209,40 @@ SUBROUTINE read_cpmd(iunps)
            READ(line, *) alpha(lmax+1), a(lmax+1), b(lmax+1)
            alpha(lmax+1) = 1.d0/alpha(lmax+1)**2
         END DO
+     ELSE IF ( pstype == 3 ) THEN
+     !
+     ! NORMCONSERVING GOEDECKER
+     !
+        c(:) = 0.d0
+        rl(:) = 0.d0
+        nl(:) = 0
+        h(:,:) = 0.d0
+        READ(iunps, *) lmax
+        lmax = lmax - 1
+	IF ( lmax > lmaxx ) &
+          CALL errore('read_cpmd',' incorrect parameter read',1)
+        READ(iunps, *) rc
+        READ(iunps, '(A)') line
+	IF ( nc > ncmax ) &
+          CALL errore('read_cpmd',' incorrect parameter read',2)
+        ! I am not sure if it is possible to use nc in the same line
+        ! where it is read. Just in case, better to read twice
+        READ(line, *) dum, (c(i), i=1,nc)
+        DO l=0,lmax+1
+           READ(iunps, '(A)') line
+           IF ( matches ("&END", trim(line)) ) THEN
+              closed = closed + 1
+              EXIT
+           END IF
+           READ(line, *) rl(l), nl(l)
+	   IF ( nl(l) > nlmax ) &
+             CALL errore('read_cpmd',' incorrect parameter read',3)
+	   IF ( nl(l) > 0 ) &
+              READ(line, *) rl(l), dum, ( h(l,i), i=1,nl(l)*(nl(l)+1)/2)
+        END DO
      END IF
   ELSEIF (matches ("&WAVEFUNCTION", trim(line)) ) THEN
+     wfc_read=.TRUE.
      found = found + 1
      READ (iunps,'(A)') line
      READ (line,*,iostat=ios) mesh, amesh_
@@ -242,13 +284,37 @@ SUBROUTINE read_cpmd(iunps)
   GOTO 10
 
 20 CONTINUE
-   rmax = r(mesh)
-   xmin = log(z*r(1))
-  IF (nlcc .and. found /= 5 .or. .not.nlcc .and. found /= 4) &
-       CALL errore('read_cpmd','some &FIELD card missing',found)
+
+  IF ( pstype /= 3 ) THEN
+     IF (nlcc .and. found /= 5 .or. .not.nlcc .and. found /= 4) &
+         CALL errore('read_cpmd','some &FIELD card missing',found)
+  ELSE
+     IF (found /= 3) &
+         CALL errore('read_cpmd','some &FIELD card missing',found)
+  ENDIF
   IF (closed /= found) &
        CALL errore('read_cpmd','some &END card missing',closed)
   IF (unknown /= 0 ) PRINT '("WARNING: ",i3," cards not read")', unknown
+  !
+  IF ( .NOT. grid_read ) THEN 
+     PRINT '("I need a radial grid r_i = e^{xmin+(i-1)*dx}/Z, i=1,mesh")'
+     PRINT '("Z=",f6.2,":  xmin, dx, rmax (e.g. -8.0, 0.0125, 100) > ",$)',z
+     READ (5,*)  xmin, amesh, rmax
+     mesh = 1 + (log(z*rmax)-xmin)/amesh
+     mesh = (mesh/2)*2+1 ! mesh is odd (for historical reasons?)
+     ALLOCATE (r(mesh))
+     DO i=1, mesh
+        r(i) = exp (xmin+(i-1)*amesh)/z
+     END DO
+     PRINT '(I4," grid points, rmax=",f8.4)', mesh, r(mesh)
+     grid_read = .TRUE.
+  END IF
+  rmax = r(mesh)
+  xmin = log(z*r(1))
+  !
+  IF ( .NOT. wfc_read ) &
+     PRINT '("No atomic wfc read! Manually add them to the UPF file",/ &
+           & "e.g. copy them from another PP with the same radial grid")'
   !
   IF ( pstype == 2 ) THEN
      ALLOCATE (vnl(mesh,0:lmax))
@@ -272,18 +338,20 @@ SUBROUTINE convert_cpmd(upf)
   USE cpmd
   USE pseudo_types, ONLY : pseudo_upf
   USE funct, ONLY :  dft_name
+  USE constants, ONLY : e2
   !
   IMPLICIT NONE
   !
   TYPE(pseudo_upf) :: upf 
   !
-  real(8), ALLOCATABLE :: aux(:)
-  real(8) :: vll, rcloc
+  REAL(8), ALLOCATABLE :: aux(:)
+  REAL(8) :: x, vll, rcloc, fac, al
+  REAL(8), EXTERNAL :: mygamma, qe_erf
   CHARACTER (len=20):: dft
   CHARACTER (len=2):: label
   CHARACTER (len=2), EXTERNAL :: atom_name
-  INTEGER :: lloc, my_lmax
-  INTEGER :: iexch, icorr, igcx, igcc, inlc, l, i, ir, iv
+  INTEGER :: lloc, my_lmax, iexch, icorr, igcx, igcc, inlc
+  INTEGER :: l, i, j, ij, ir, iv, jv
   !
   ! NOTE: many CPMD pseudopotentials created with the 'Hamann' code
   ! from Juerg Hutter's homepage have additional (bogus) entries for
@@ -296,25 +364,41 @@ SUBROUTINE convert_cpmd(upf)
   DO i=1,info_lines
      PRINT '(A)', info_sect(i)
   ENDDO
-  PRINT '("max L to use ( <= ",I1," ) > ",$)', lmax
-  READ (5,*) my_lmax
-  IF ((my_lmax <= lmax) .and. (my_lmax >= 0)) lmax = my_lmax
-  PRINT '("local L ( <= ",I1," ), Rc for local pot (au) > ",$)', lmax
-  READ (5,*) lloc, rcloc
+  IF ( pstype == 3 ) THEN
+     ! not actually used, except by write_upf to write a meaningful message
+     lloc = -3
+     rcloc=0.0
+  ELSE
+     PRINT '("max L to use ( <= ",I1," ) > ",$)', lmax
+     READ (5,*) my_lmax
+     IF ((my_lmax <= lmax) .and. (my_lmax >= 0)) lmax = my_lmax
+     PRINT '("local L ( <= ",I1," ), Rc for local pot (au) > ",$)', lmax
+     READ (5,*) lloc, rcloc
+  END IF
   !
+  IF ( pstype == 3 ) THEN
+     upf%generated= "Generated in analytical, separable form"
+     upf%author   = "Authors: Goedecker/Hartwigsen/Hutter/Teter"
+     upf%date     = "Phys.Rev.B58, 3641 (1998); B54, 1703 (1996)"
+  ElSE
+     upf%generated= "Generated using unknown code"
+     upf%author   = "Author: unknown"
+     upf%date     = "Generation date: as well"
+  END IF
   upf%nv       = "2.0.1"
-  upf%generated= "Generated using unknown code"
-  upf%author   = "Author: unknown"
-  upf%date     = "Generation date: as well"
   upf%comment  = "Info: automatically converted from CPMD format"
-  upf%psd      = atom_name (z)
+  upf%psd      = atom_name ( NINT(z) )
   ! reasonable assumption
   IF (z > 18) THEN
      upf%rel = 'no'
   ELSE
      upf%rel = 'scalar'
   ENDIF
-  upf%typ = 'SL'
+  IF ( pstype == 3 ) THEN
+     upf%typ = 'NL'
+  ELSE
+     upf%typ = 'SL'
+  END IF
   upf%tvanp = .FALSE.
   upf%tpawp = .FALSE.
   upf%tcoulombp=.FALSE.
@@ -344,7 +428,11 @@ SUBROUTINE convert_cpmd(upf)
   ENDIF
   upf%lloc = lloc
   upf%lmax_rho = 0
-  upf%nwfc = lmax+1
+  IF ( pstype == 3 ) THEN
+     upf%nwfc = 0
+  ELSE
+     upf%nwfc = lmax+1
+  END IF
   !
   ALLOCATE( upf%els(upf%nwfc) )
   ALLOCATE( upf%oc(upf%nwfc) )
@@ -390,33 +478,49 @@ SUBROUTINE convert_cpmd(upf)
   ALLOCATE (upf%rho_atc(upf%mesh))
   IF (upf%nlcc) upf%rho_atc(:) = rho_atc(1:upf%mesh)
 
-  ALLOCATE (upf%vloc(upf%mesh))
-  ! the factor 2 converts from Hartree to Rydberg
-  upf%vloc(:) = vnl(1:upf%mesh,upf%lloc)*2.d0
   upf%rcloc = rcloc
+  ALLOCATE (upf%vloc(upf%mesh))
+  !
+  ! the factor e2=2 converts from Hartree to Rydberg
+  !
+  IF ( upf%typ == "SL" ) THEN
+     upf%vloc(:) = vnl(1:upf%mesh,upf%lloc)*e2
+     ALLOCATE(upf%vnl(upf%mesh,0:upf%lmax,1))
+     upf%vnl(:,:,1) = vnl(1:upf%mesh,0:upf%lmax)*e2
+     upf%nbeta= lmax
+  ELSE
+     DO i=1,upf%mesh
+        x = (upf%r(i)/rc)**2
+        upf%vloc(i) = e2 * ( -upf%zp*qe_erf(x/sqrt(2.d0))/upf%r(i) + &
+             exp ( -0.5d0*x ) * (c(1) + x*( c(2) + x*( c(3) + x*c(4) ) ) ) )
+     END DO
+     upf%nbeta=0
+     DO l=0,upf%lmax
+        upf%nbeta = upf%nbeta + nl(l)
+     END DO
+  END IF
 
-  ALLOCATE(upf%vnl(upf%mesh,0:upf%lmax,1))
-  upf%vnl(:,:,1) = vnl(1:upf%mesh,0:upf%lmax)
-
-  upf%nbeta= lmax
   IF (upf%nbeta > 0) THEN
-
      ALLOCATE(upf%els_beta(upf%nbeta) )
      ALLOCATE(upf%lll(upf%nbeta))
      ALLOCATE(upf%kbeta(upf%nbeta))
-     iv=0  ! counter on beta functions
-     DO i=1,upf%nwfc
-        l=upf%lchi(i)
-        IF (l/=lloc) THEN
-           iv=iv+1
-           DO ir = upf%mesh,1,-1
-              IF ( ABS ( vnl(ir,l) - vnl(ir,lloc) ) > 1.0E-6 ) THEN
-                 upf%kbeta(iv)=ir
-                 exit
-              ENDIF
-           ENDDO
-        ENDIF
-     ENDDO
+     IF ( pstype == 3 ) THEN
+        upf%kbeta(:) = upf%mesh
+     ELSE
+        iv=0  ! counter on beta functions
+        DO i=1,upf%nwfc
+           l=upf%lchi(i)
+           IF (l/=lloc) THEN
+              iv=iv+1
+              DO ir = upf%mesh,1,-1
+                 IF ( ABS ( vnl(ir,l) - vnl(ir,lloc) ) > 1.0E-6 ) THEN
+                    upf%kbeta(iv)=ir
+                    exit
+                 ENDIF
+              ENDDO
+           ENDIF
+        ENDDO
+     ENDIF
      ! the number of points used in the evaluation of integrals
      ! should be even (for simpson integration)
      DO i=1,upf%nbeta
@@ -431,25 +535,49 @@ SUBROUTINE convert_cpmd(upf)
      ALLOCATE(upf%rcut  (upf%nbeta))
      ALLOCATE(upf%rcutus(upf%nbeta))
      ALLOCATE(aux(upf%kkbeta))
-     iv=0  ! counter on beta functions
-     DO i=1,upf%nwfc
-        l=upf%lchi(i)
-        IF (l/=lloc) THEN
-           iv=iv+1
-           upf%lll(iv)=l
-           upf%els_beta(iv)=upf%els(i)
-           DO ir=1,upf%kbeta(iv)
-              ! the factor 2 converts from Hartree to Rydberg
-              upf%beta(ir,iv) = 2.d0 * chi(ir,l+1) * &
-                   ( vnl(ir,l) - vnl(ir,lloc) )
-              aux(ir) = chi(ir,l+1) * upf%beta(ir,iv)
-           ENDDO
-           upf%rcut  (iv) = upf%r(upf%kbeta(iv))
-           upf%rcutus(iv) = 0.0
-           CALL simpson(upf%kbeta(iv),aux,upf%rab,vll)
-           upf%dion(iv,iv) = 1.0d0/vll
-        ENDIF
-     ENDDO
+
+     IF ( pstype == 3 ) THEN
+        iv=0  ! counter on beta functions
+        DO l=0,upf%lmax
+           ij = 0
+           DO i=1, nl(l)
+              iv = iv+1
+              DO j=i, nl(l)
+                 jv = iv+j-i
+                 ij=ij+1
+                 upf%dion(iv,jv) = h(l,ij)/e2
+                 if ( j > i ) upf%dion(jv,iv) = upf%dion(iv,jv)
+              END  DO
+              fac= sqrt(2d0) / ( rl(l)**al * sqrt(mygamma(l+2*i)) )
+              DO ir=1,upf%mesh
+                 x = (upf%r(ir)/rl(l))**2
+                 upf%beta(ir,iv) = upf%r(ir)**(l+2*(i-1)) * &
+                                     exp ( -0.5d0*x ) * fac * e2
+              END DO
+           END DO
+        END DO
+     ELSE
+        iv=0  ! counter on beta functions
+        DO i=1,upf%nwfc
+           l=upf%lchi(i)
+           IF (l/=lloc) THEN
+              iv=iv+1
+              upf%lll(iv)=l
+              upf%els_beta(iv)=upf%els(i)
+              DO ir=1,upf%kbeta(iv)
+                 ! the factor 2 converts from Hartree to Rydberg
+                 upf%beta(ir,iv) = e2 * chi(ir,l+1) * &
+                      ( vnl(ir,l) - vnl(ir,lloc) )
+                 aux(ir) = chi(ir,l+1) * upf%beta(ir,iv)
+              ENDDO
+              upf%rcut  (iv) = upf%r(upf%kbeta(iv))
+              upf%rcutus(iv) = 0.0
+              CALL simpson(upf%kbeta(iv),aux,upf%rab,vll)
+              upf%dion(iv,iv) = 1.0d0/vll
+           ENDIF
+        ENDDO
+     ENDIF
+
      DEALLOCATE(aux)
   ENDIF
 
@@ -511,6 +639,24 @@ SUBROUTINE check_radial_grid ( amesh_, mesh, r, amesh )
    ENDDO
    RETURN
 END
+! ------------------------------------------------------------------
+REAL(8) FUNCTION mygamma ( n )
+  !------------------------------------------------------------------
+  !
+  ! mygamma(n)  = \Gamma(n-1/2) = sqrt(pi)*(2n-3)!!/2**(n-1)
+  !
+  USE constants, ONLY : pi
+  IMPLICIT NONE
+  INTEGER, INTENT(IN) :: n
+  !
+  REAL(8) :: x
+  INTEGER, EXTERNAL :: semifact
+  !
+  IF ( n < 2 ) call errore('mygamma','unexpected input argument',1)
+  mygamma = sqrt(pi) * semifact(2*n-3) / 2.d0**(n-1)
+  !
+  RETURN
+END FUNCTION mygamma
 ! ------------------------------------------------------------------
 INTEGER FUNCTION locate(onechar,string)
   ! ------------------------------------------------------------------

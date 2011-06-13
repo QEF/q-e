@@ -18,6 +18,8 @@ PROGRAM rrkj2upf
   CHARACTER(len=256) filein, fileout
   !
   !
+  IF ( TRIM(filein) == ' ') &
+       CALL errore ('rrkj2upf', 'usage: rrkj2upf "file-to-be-converted"', 1)
   CALL get_file ( filein )
   OPEN (unit = 1, file = filein, status = 'old', form = 'formatted')
   CALL read_rrkj(1)
