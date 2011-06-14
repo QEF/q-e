@@ -33,7 +33,7 @@ SUBROUTINE potinit()
   USE fft_base,             ONLY : dfftp
   USE fft_interfaces,       ONLY : fwfft
   USE gvect,                ONLY : ngm, gstart, nl, g, gg
-  USE gvecs,              ONLY : doublegrid
+  USE gvecs,                ONLY : doublegrid
   USE control_flags,        ONLY : lscf
   USE scf,                  ONLY : rho, rho_core, rhog_core, &
                                    vltot, v, vrs, kedtau
@@ -120,10 +120,8 @@ SUBROUTINE potinit()
      WRITE( UNIT = stdout, &
             FMT = '(/5X,"Initial potential from superposition of free atoms")' )
      !
-     !
      CALL atomic_rho( rho%of_r, nspin )
      ! ... in the lda+U case set the initial value of ns
-     !
      IF ( lda_plus_u ) CALL init_ns()
      ! ... in the paw case uses atomic becsum
      IF ( okpaw )      CALL PAW_atomic_becsum()
@@ -159,19 +157,18 @@ SUBROUTINE potinit()
   !
   CALL mp_sum(  charge , intra_pool_comm )
   !
-  IF ( lscf .AND. ABS( charge - nelec ) / charge > 1.D-7 ) THEN
+  IF ( lscf .AND. ABS( charge - nelec ) > ( 1.D-7 * charge ) ) THEN
      !
-     WRITE( stdout, &
-            '(/,5X,"starting charge ",F10.5,", renormalised to ",F10.5)') &
-         charge, nelec
-     !
-     IF (nat>0) THEN
+     IF ( charge > 1.D-8 .AND. nat > 0 ) THEN
+        WRITE( stdout, '(/,5X,"starting charge ",F10.5, &
+                         & ", renormalised to ",F10.5)') charge, nelec
         rho%of_r = rho%of_r / charge * nelec
-     ELSE
+     ELSE 
+        WRITE( stdout, '(/,5X,"Starting from uniform charge")')
         rho%of_r = nelec / omega
      ENDIF
      !
-  ELSE IF ( .NOT. lscf .AND. ABS( charge - nelec ) / charge > 1.D-3 ) THEN
+  ELSE IF ( .NOT. lscf .AND. ABS( charge - nelec ) > (1.D-3 * charge ) ) THEN
      !
      CALL errore( 'potinit', 'starting and expected charges differ', 1 )
      !
@@ -201,7 +198,7 @@ SUBROUTINE potinit()
      !
   end if
   !
-  ! ... compute the potential and store it in vr
+  ! ... compute the potential and store it in v
   !
   CALL v_of_rho( rho, rho_core, rhog_core, &
                  ehart, etxc, vtxc, eth, etotefield, charge, v )
