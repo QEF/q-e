@@ -233,11 +233,11 @@ CONTAINS
             EXIT
          ENDIF
       ENDDO
-   ENDIF
 !
 !  Average the two functions
 !
-   chiaux(:)=(chiq(:,nb,nt)*(l+1.0_DP)+chiq(:,nc,nt)*l)/(2.0_DP*l+1.0_DP)
+      chiaux(:)=(chiq(:,nb,nt)*(l+1.0_DP)+chiq(:,nc,nt)*l)/(2.0_DP*l+1.0_DP)
+   ENDIF
 !
 !  and construct the starting wavefunctions as in the noncollinear case.
 !
