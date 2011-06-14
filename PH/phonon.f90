@@ -29,7 +29,7 @@ PROGRAM phonon
   ! ... dielectric constant       NC [5], US [5], PAW [3]
   ! ... born effective charges    NC [5], US [5], PAW [3]
   ! ... polarizability (iu)       NC [2], US [2]
-  ! ... elctron-phonon            NC [3], US [3]
+  ! ... electron-phonon           NC [3], US [3]
   ! ... electro-optic             NC [1]
   ! ... raman tensor              NC [1]
   !
