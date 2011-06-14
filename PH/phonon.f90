@@ -47,6 +47,7 @@ PROGRAM phonon
   ! [7] [6] + Hubbard U
   ! [8] [7] + Hybrid functionals
   ! [9] ? + External Electric field
+  ! [10] ? + nonperiodic boundary conditions.
 
   USE io_global,       ONLY : stdout
   USE disp,            ONLY : nqs
