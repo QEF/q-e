@@ -236,22 +236,29 @@
 
           IF (ionode) THEN
              WRITE( stdout,*)
-             WRITE( stdout, '(5X,"Parallelization info")')
+             IF ( nproc > 1 ) THEN
+                WRITE( stdout, '(5X,"Parallelization info")')
+             ELSE
+                WRITE( stdout, '(5X,"G-vector sticks info")')
+             ENDIF
              WRITE( stdout, '(5X,"--------------------")')
-             !WRITE( stdout, '(5X,I7," dense-grid, ",I7," smooth-grid, ", &
-             !                  &I6," plane-wave sticks")') 
              WRITE( stdout, '(5X,"sticks:   dense  smooth     PW", &
                             & 5X,"G-vecs:    dense   smooth      PW")') 
-             WRITE( stdout,'(5X,"Min",4X,2I8,I7,12X,2I9,I8)') &
-                minval(nstp), minval(nstps), minval(nstpw), &
-                minval(sstp), minval(sstps), minval(sstpw)
-             WRITE( stdout,'(5X,"Max",4X,2I8,I7,12X,2I9,I8)') &
-                maxval(nstp), maxval(nstps), maxval(nstpw), &
-                maxval(sstp), maxval(sstps), maxval(sstpw)
+             IF ( nproc > 1 ) THEN
+                WRITE( stdout,'(5X,"Min",4X,2I8,I7,12X,2I9,I8)') &
+                   minval(nstp), minval(nstps), minval(nstpw), &
+                   minval(sstp), minval(sstps), minval(sstpw)
+                WRITE( stdout,'(5X,"Max",4X,2I8,I7,12X,2I9,I8)') &
+                   maxval(nstp), maxval(nstps), maxval(nstpw), &
+                   maxval(sstp), maxval(sstps), maxval(sstpw)
+             END IF
              WRITE( stdout,'(5X,"Sum",4X,2I8,I7,12X,2I9,I8)') &
                 sum(nstp), sum(nstps), sum(nstpw), &
                 sum(sstp), sum(sstps), sum(sstpw)
-             WRITE( stdout,'(5X,"Tot",4X,2I8,I7)') nst, nsts, nstw
+             ! in the case k=0, the lines above and below differ:
+             ! above all sticks, below only those in the half sphere
+             IF ( .NOT. tk ) &
+                 WRITE( stdout,'(5X,"Tot",4X,2I8,I7)') nst, nsts, nstw
           ENDIF
 
           DEALLOCATE( ist )
