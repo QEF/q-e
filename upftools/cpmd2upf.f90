@@ -345,7 +345,7 @@ SUBROUTINE convert_cpmd(upf)
   TYPE(pseudo_upf) :: upf 
   !
   REAL(8), ALLOCATABLE :: aux(:)
-  REAL(8) :: x, vll, rcloc, fac, al
+  REAL(8) :: x, vll, rcloc, fac
   REAL(8), EXTERNAL :: mygamma, qe_erf
   CHARACTER (len=20):: dft
   CHARACTER (len=2):: label
@@ -542,13 +542,16 @@ SUBROUTINE convert_cpmd(upf)
            ij = 0
            DO i=1, nl(l)
               iv = iv+1
+              upf%lll(iv)=l
+              upf%rcut  (iv) = 0.0
+              upf%rcutus(iv) = 0.0
               DO j=i, nl(l)
                  jv = iv+j-i
                  ij=ij+1
                  upf%dion(iv,jv) = h(l,ij)/e2
                  if ( j > i ) upf%dion(jv,iv) = upf%dion(iv,jv)
               END  DO
-              fac= sqrt(2d0) / ( rl(l)**al * sqrt(mygamma(l+2*i)) )
+              fac= sqrt(2d0*rl(l)) / ( rl(l)**(l+2*i) * sqrt(mygamma(l+2*i)) )
               DO ir=1,upf%mesh
                  x = (upf%r(ir)/rl(l))**2
                  upf%beta(ir,iv) = upf%r(ir)**(l+2*(i-1)) * &
