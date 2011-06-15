@@ -47,7 +47,8 @@ subroutine n_plane_waves (ecutwfc, tpiba2, nks, xk, g, ngm, npwx, ngk)
      enddo
 100  npwx = max (npwx, ngk (nk) )
   enddo
-  if (npwx <= 0) call errore ('n_plane_waves', 'No PWs !', 1)
+  if (npwx <= 0) call errore ('n_plane_waves', &
+                'No plane waves found: running on too many processors?', 1)
   !
   ! when using pools, set npwx to the maximum value across pools
   ! (you may run into trouble at restart otherwise)
