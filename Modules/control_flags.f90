@@ -39,7 +39,8 @@ MODULE control_flags
             trane,dt_old,ampre, tranp, amprp, tdipole, t_diis, t_diis_simple,&
             t_diis_rot, tnosee, tnosep, tnoseh, tcp, tcap, tdamp, tdampions, &
             tconvthrs, tolp, convergence_criteria, tionstep, nstepe,         &
-            tsteepdesc, tatomicwfc, tscreen, gamma_only, force_pairing, lecrpa
+            tsteepdesc, tatomicwfc, tscreen, gamma_only, force_pairing,      &
+            lecrpa, tddfpt
   !
   PUBLIC :: fix_dependencies, check_flags
   PUBLIC :: tksw, trhor, thdyn, iprsta, trhow
@@ -84,6 +85,7 @@ MODULE control_flags
   INTEGER :: printwfc      = -1      ! Print wave functions, temporarely used only by ensemble-dft
   LOGICAL :: force_pairing = .FALSE. ! Force pairing
   LOGICAL :: lecrpa        = .FALSE. ! RPA correlation energy request
+  LOGICAL :: tddfpt        = .FALSE. ! use tddfpt specific tweaks to ph.x routines
   !
   TYPE (convergence_criteria) :: tconvthrs
                               !  thresholds used to check GS convergence

@@ -7,7 +7,7 @@
 !
 !
 !-----------------------------------------------------------------------
-subroutine h_psiq (lda, n, m, psi, hpsi, spsi)
+SUBROUTINE h_psiq (lda, n, m, psi, hpsi, spsi)
   !-----------------------------------------------------------------------
   !
   !     This routine computes the product of the Hamiltonian
@@ -15,6 +15,9 @@ subroutine h_psiq (lda, n, m, psi, hpsi, spsi)
   !     in psi. It first computes the bec matrix of these
   !     wavefunctions and then with the routines hus_1psi and
   !     s_psi computes for each band the required products
+  !
+  !     Merged with lr_h_psiq June 2011. This function is now used both
+  !     in ph.x and turbo_lanczos.x
   !
 
   USE kinds,  ONLY : DP
@@ -30,40 +33,77 @@ subroutine h_psiq (lda, n, m, psi, hpsi, spsi)
   USE uspp,   ONLY : vkb
   USE wvfct,  ONLY : g2kin
   USE qpoint, ONLY : igkq
-  implicit none
+
+  !Needed only for TDDFPT
+  USE control_flags,         ONLY : gamma_only, tddfpt
+  USE wvfct,  ONLY : igk
+
+  IMPLICIT NONE
   !
   !     Here the local variables
   !
-  integer :: ibnd
+  INTEGER :: ibnd
   ! counter on bands
 
-  integer :: lda, n, m
+  INTEGER :: lda, n, m
   ! input: the leading dimension of the array psi
   ! input: the real dimension of psi
   ! input: the number of psi to compute
-  integer :: j
+  INTEGER :: j
   ! do loop index
 
-  complex(DP) :: psi (lda*npol, m), hpsi (lda*npol, m), spsi (lda*npol, m)
-  complex(DP) :: sup, sdwn
+  COMPLEX(DP), INTENT(INOUT)  :: psi (lda*npol, m)
+  COMPLEX(DP), INTENT(OUT) :: hpsi (lda*npol, m), spsi (lda*npol, m)
+  COMPLEX(DP) :: sup, sdwn
   ! input: the functions where to apply H and S
   ! output: H times psi
   ! output: S times psi (Us PP's only)
 
+  CALL start_clock ('h_psiq')
 
-  call start_clock ('h_psiq')
-  call start_clock ('init')
+  IF (tddfpt) THEN
+     igkq => igk
+  ENDIF
+  ! if the calling program is turbo_lanczos pointer igkq needs
+  ! to be given a valid target.
 
-  call calbec ( n, vkb, psi, becp, m)
+  IF (gamma_only) THEN
+
+   CALL h_psiq_gamma()
+
+  ELSE
+
+   CALL h_psiq_k()
+
+  ENDIF
+
+  IF (tddfpt) THEN
+     NULLIFY(igkq)
+  ENDIF
+
+  CALL stop_clock ('h_psiq')
+  RETURN
+
+CONTAINS
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!k point part
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  SUBROUTINE h_psiq_k()
+
+    IMPLICIT NONE
+
+  CALL start_clock ('init')
+
+  CALL calbec ( n, vkb, psi, becp, m)
   !
   ! Here we apply the kinetic energy (k+G)^2 psi
   !
-  hpsi=(0.d0,0.d0)
-  do ibnd = 1, m
-     do j = 1, n
+  hpsi=(0.0_dp,0.0_dp)
+  DO ibnd = 1, m
+     DO j = 1, n
         hpsi (j, ibnd) = g2kin (j) * psi (j, ibnd)
-     enddo
-  enddo
+     ENDDO
+  ENDDO
   IF (noncolin) THEN
      DO ibnd = 1, m
         DO j = 1, n
@@ -71,86 +111,165 @@ subroutine h_psiq (lda, n, m, psi, hpsi, spsi)
         ENDDO
      ENDDO
   ENDIF
-  call stop_clock ('init')
+  CALL stop_clock ('init')
   !
   ! the local potential V_Loc psi. First the psi in real space
   !
 
-  do ibnd = 1, m
-     call start_clock ('firstfft')
+  DO ibnd = 1, m
+     CALL start_clock ('firstfft')
      IF (noncolin) THEN
-        psic_nc = (0.d0, 0.d0)
-        do j = 1, n
+        psic_nc = (0.0_dp, 0.0_dp)
+        DO j = 1, n
            psic_nc(nls(igkq(j)),1) = psi (j, ibnd)
            psic_nc(nls(igkq(j)),2) = psi (j+lda, ibnd)
-        enddo
+        ENDDO
         CALL invfft ('Wave', psic_nc(:,1), dffts)
         CALL invfft ('Wave', psic_nc(:,2), dffts)
      ELSE
-        psic(:) = (0.d0, 0.d0)
-        do j = 1, n
+        psic(:) = (0.0_dp, 0.0_dp)
+        DO j = 1, n
            psic (nls(igkq(j))) = psi (j, ibnd)
-        enddo
+        ENDDO
         CALL invfft ('Wave', psic, dffts)
-     END IF
-     call stop_clock ('firstfft')
+     ENDIF
+     CALL stop_clock ('firstfft')
      !
      !   and then the product with the potential vrs = (vltot+vr) on the smoo
      !
-     if (noncolin) then
-        if (domag) then
-           do j=1, dffts%nnr
+     IF (noncolin) THEN
+        IF (domag) THEN
+           DO j=1, dffts%nnr
               sup = psic_nc(j,1) * (vrs(j,1)+vrs(j,4)) + &
-                    psic_nc(j,2) * (vrs(j,2)-(0.d0,1.d0)*vrs(j,3))
+                    psic_nc(j,2) * (vrs(j,2)-(0.0_dp,1.0_dp)*vrs(j,3))
               sdwn = psic_nc(j,2) * (vrs(j,1)-vrs(j,4)) + &
-                    psic_nc(j,1) * (vrs(j,2)+(0.d0,1.d0)*vrs(j,3))
+                    psic_nc(j,1) * (vrs(j,2)+(0.0_dp,1.0_dp)*vrs(j,3))
               psic_nc(j,1)=sup
               psic_nc(j,2)=sdwn
-           end do
-        else
-           do j=1, dffts%nnr
+           ENDDO
+        ELSE
+           DO j=1, dffts%nnr
               psic_nc(j,1)=psic_nc(j,1) * vrs(j,1)
               psic_nc(j,2)=psic_nc(j,2) * vrs(j,1)
-           enddo
-        endif
-     else
-        do j = 1, dffts%nnr
+           ENDDO
+        ENDIF
+     ELSE
+        DO j = 1, dffts%nnr
            psic (j) = psic (j) * vrs (j, current_spin)
-        enddo
-     endif
+        ENDDO
+     ENDIF
      !
      !   back to reciprocal space
      !
-     call start_clock ('secondfft')
+     CALL start_clock ('secondfft')
      IF (noncolin) THEN
         CALL fwfft ('Wave', psic_nc(:,1), dffts)
         CALL fwfft ('Wave', psic_nc(:,2), dffts)
      !
      !   addition to the total product
      !
-        do j = 1, n
+        DO j = 1, n
            hpsi (j, ibnd) = hpsi (j, ibnd) + psic_nc (nls(igkq(j)), 1)
            hpsi (j+lda, ibnd) = hpsi (j+lda, ibnd) + psic_nc (nls(igkq(j)), 2)
-        enddo
+        ENDDO
      ELSE
         CALL fwfft ('Wave', psic, dffts)
      !
      !   addition to the total product
      !
-        do j = 1, n
+        DO j = 1, n
            hpsi (j, ibnd) = hpsi (j, ibnd) + psic (nls(igkq(j)))
-        enddo
-     END IF
-     call stop_clock ('secondfft')
-  enddo
+        ENDDO
+     ENDIF
+     CALL stop_clock ('secondfft')
+  ENDDO
   !
   !  Here the product with the non local potential V_NL psi
   !
 
-  call add_vuspsi (lda, n, m, hpsi)
+  CALL add_vuspsi (lda, n, m, hpsi)
 
-  call s_psi (lda, n, m, psi, spsi)
+  CALL s_psi (lda, n, m, psi, spsi)
 
-  call stop_clock ('h_psiq')
-  return
-end subroutine h_psiq
+END SUBROUTINE h_psiq_k
+
+
+SUBROUTINE h_psiq_gamma()
+
+    USE becmod, ONLY : becp, calbec
+    USE gvect,  ONLY : gstart
+    USE realus, ONLY : real_space, fft_orbital_gamma, &
+                       bfft_orbital_gamma, calbec_rs_gamma, add_vuspsir_gamma, &
+                       v_loc_psir, s_psir_gamma, real_space_debug
+    USE uspp,                  ONLY : nkb
+
+    IMPLICIT NONE
+
+    CALL start_clock ('init')
+    !
+    ! Here we apply the kinetic energy (k+G)^2 psi
+    !
+    IF(gstart==2) psi(1,:)=cmplx(real(psi(1,:),dp),0.0d0,dp)
+    !
+    DO ibnd=1,m
+
+       DO j=1,n
+
+          hpsi(j,ibnd)=g2kin(j)*psi(j,ibnd)
+
+       ENDDO
+
+    ENDDO
+
+    CALL stop_clock ('init')
+      IF (nkb > 0 .and. real_space_debug>2) THEN
+        DO ibnd=1,m,2
+
+           CALL fft_orbital_gamma(psi,ibnd,m,.true.)
+          !transform the psi real space, saved in temporary memory
+
+           CALL calbec_rs_gamma(ibnd,m,becp%r)
+           !rbecp on psi
+
+           CALL s_psir_gamma(ibnd,m)
+           !psi -> spsi
+
+           CALL bfft_orbital_gamma(spsi,ibnd,m)
+           !return back to real space
+
+           CALL fft_orbital_gamma(hpsi,ibnd,m)
+           ! spsi above is now replaced by hpsi
+
+           CALL v_loc_psir(ibnd,m)
+           ! hpsi -> hpsi + psi*vrs  (psi read from temporary memory)
+
+           CALL add_vuspsir_gamma(ibnd,m)
+           ! hpsi -> hpsi + vusp
+
+           CALL bfft_orbital_gamma(hpsi,ibnd,m,.true.)
+           !transform back hpsi, clear psi in temporary memory
+
+        ENDDO
+
+     ELSE
+
+    CALL vloc_psi_gamma(lda,n,m,psi,vrs(1,current_spin),hpsi)
+
+    IF (noncolin) THEN
+
+        CALL errore ("h_psiq","gamma and noncolin not implemented yet",1)
+
+    ELSE
+
+        CALL calbec ( n, vkb, psi, becp, m)
+
+     ENDIF
+
+     CALL add_vuspsi (lda, n, m, hpsi)
+     CALL s_psi (lda, n, m, psi, spsi)
+
+  ENDIF
+
+  END SUBROUTINE h_psiq_gamma
+
+END SUBROUTINE h_psiq

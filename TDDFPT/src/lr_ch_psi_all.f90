@@ -83,7 +83,7 @@ SUBROUTINE lr_ch_psi_all (n, h, ah, e, ik, m)
   !    print *, "lr_ch_psi_all h", obm_debug
   !!obm_debug
  !
-  CALL lr_h_psiq (npwx, n, m, h, hpsi, spsi)
+  CALL h_psiq (npwx, n, m, h, hpsi, spsi)
   !!OBM debug
   !    obm_debug=0
   !    do ibnd=1,m

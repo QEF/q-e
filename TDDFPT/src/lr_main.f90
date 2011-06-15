@@ -36,6 +36,7 @@ PROGRAM lr_main
   USE control_ph,            ONLY : nbnd_occ
   USE wvfct,                 ONLY : nbnd
   USE wavefunctions_module,  ONLY : psic
+  USE control_flags,          ONLY : tddfpt
   !Debugging
   USE lr_variables, ONLY: check_all_bands_gamma, check_density_gamma,check_vector_gamma
   !
@@ -79,6 +80,8 @@ PROGRAM lr_main
   IF (lr_verbosity > 5) THEN
    WRITE(stdout,'("<lr_main>")')
   ENDIF
+  !Let the phonon routines know that they are doing tddfpt.
+  tddfpt=.TRUE.
   !
   !   Reading input file and PWSCF xml, some initialisation
   !
