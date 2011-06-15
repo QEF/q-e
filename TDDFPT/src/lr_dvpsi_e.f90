@@ -87,7 +87,7 @@ SUBROUTINE lr_dvpsi_e(ik,ipol,dvpsi)
   real(kind=dp), EXTERNAL :: ddot
   COMPLEX(DP), EXTERNAL :: ZDOTC
   ! the scalar products
-  EXTERNAL lr_ch_psi_all, cg_psi
+  EXTERNAL ch_psi_all, cg_psi
   !
   !obm debug
   real(DP) ::obm_debug
@@ -380,7 +380,7 @@ CONTAINS
        !OBM!!!! Original was
        !call lr_cgsolve_all(et(1,ik),d0psi,dvpsi,h_diag,npwx,npw_k(ik),&
        !            thresh,ik,lter,conv_root,anorm,nbnd_occ (ik),lr_alpha_pv)
-       CALL lr_cgsolve_all (lr_ch_psi_all, cg_psi, et (1, ik), d0psi, dvpsi, &
+       CALL lr_cgsolve_all (ch_psi_all, cg_psi, et (1, ik), d0psi, dvpsi, &
             h_diag, npwx, npw_k(ik), thresh, ik, lter, conv_root, anorm, &
             nbnd_occ(ik), 1)
        !
@@ -584,7 +584,7 @@ CONTAINS
        !OBM!!!! Original was
        !call lr_cgsolve_all(et(1,ik),d0psi,dvpsi,h_diag,npwx,npw_k(ik),&
        !            thresh,ik,lter,conv_root,anorm,nbnd_occ (ik),lr_alpha_pv)
-       CALL lr_cgsolve_all (lr_ch_psi_all, cg_psi, et (1, ik), d0psi, dvpsi, &
+       CALL lr_cgsolve_all (ch_psi_all, cg_psi, et (1, ik), d0psi, dvpsi, &
             h_diag, npwx, npw_k(ik), thresh, ik, lter, conv_root, anorm, &
             nbnd_occ(ik), 1)
        !
@@ -776,7 +776,7 @@ CONTAINS
        !OBM!!!! Original was
        !call lr_cgsolve_all(et(1,ik),d0psi,dvpsi,h_diag,npwx,npw,&
        !            thresh,ik,lter,conv_root,anorm,nbnd_occ (ik),lr_alpha_pv)
-       CALL lr_cgsolve_all (lr_ch_psi_all, cg_psi, et (1, ik), d0psi, dvpsi, &
+       CALL lr_cgsolve_all (ch_psi_all, cg_psi, et (1, ik), d0psi, dvpsi, &
             h_diag, npwx, npw, thresh, ik, lter, conv_root, anorm, &
             nbnd_occ(ik), 1)
        !

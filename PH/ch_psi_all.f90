@@ -7,129 +7,230 @@
 !
 
 !-----------------------------------------------------------------------
-subroutine ch_psi_all (n, h, ah, e, ik, m)
+SUBROUTINE ch_psi_all (n, h, ah, e, ik, m)
   !-----------------------------------------------------------------------
   !
   ! This routine applies the operator ( H - \epsilon S + alpha_pv P_v)
   ! to a vector h. The result is given in Ah.
   !
+  ! Merged with lr_ch_psi_all June 2011. This function is now used both
+  ! in ph.x and turbo_lanczos.x
+  !
 
-  USE kinds, only : DP
-  USE wvfct, ONLY : npwx, nbnd
-  USE becmod, ONLY : bec_type, becp, calbec
-  USE uspp, ONLY: nkb, vkb
-  USE noncollin_module, ONLY : noncolin, npol
+  USE kinds,                ONLY : DP
+  USE wvfct,                ONLY : npwx, nbnd
+  USE becmod,               ONLY : bec_type, becp, calbec
+  USE uspp,                 ONLY : nkb, vkb
+  USE noncollin_module,     ONLY : noncolin, npol
 
-  USE control_ph, ONLY : alpha_pv, nbnd_occ
-  USE eqv,        ONLY : evq
-  USE qpoint,     ONLY : ikqs
+  USE control_ph,           ONLY : alpha_pv, nbnd_occ
+  USE eqv,                  ONLY : evq
+  USE qpoint,               ONLY : ikqs
 
-  USE mp_global, ONLY: intra_pool_comm
-  USE mp,        ONLY: mp_sum
+  USE mp_global,            ONLY : intra_pool_comm
+  USE mp,                   ONLY : mp_sum
 
-  implicit none
+  !Needed only for TDDFPT
+  USE control_flags,        ONLY : gamma_only, tddfpt
+  USE wavefunctions_module, ONLY : evc
 
-  integer :: n, m, ik
+  IMPLICIT NONE
+
+  INTEGER, INTENT(IN) :: n, m, ik
   ! input: the dimension of h
   ! input: the number of bands
   ! input: the k point
 
-  real(DP) :: e (m)
+  REAL(DP), INTENT(IN) :: e (m)
   ! input: the eigenvalue
 
-  complex(DP) :: h (npwx*npol, m), ah (npwx*npol, m)
+  COMPLEX(DP), INTENT(IN)  :: h (npwx*npol, m)
+  complex(DP), INTENT(OUT) :: ah (npwx*npol, m)
   ! input: the vector
   ! output: the operator applied to the vector
   !
   !   local variables
   !
-  integer :: ibnd, ikq, ig
+  INTEGER :: ibnd, ikq, ig
   ! counter on bands
   ! the point k+q
   ! counter on G vetors
 
-  complex(DP), allocatable :: ps (:,:), hpsi (:,:), spsi (:,:)
+  COMPLEX(DP), ALLOCATABLE :: ps (:,:), hpsi (:,:), spsi (:,:)
   ! scalar products
   ! the product of the Hamiltonian and h
   ! the product of the S matrix and h
 
-  call start_clock ('ch_psi')
-  allocate (ps  ( nbnd , m))
-  allocate (hpsi( npwx*npol , m))
-  allocate (spsi( npwx*npol , m))
+  CALL start_clock ('ch_psi')
+  ALLOCATE (ps  ( nbnd , m))
+  ALLOCATE (hpsi( npwx*npol , m))
+  ALLOCATE (spsi( npwx*npol , m))
   hpsi (:,:) = (0.d0, 0.d0)
   spsi (:,:) = (0.d0, 0.d0)
   !
   !   compute the product of the hamiltonian with the h vector
   !
-  call h_psiq (npwx, n, m, h, hpsi, spsi)
+  CALL h_psiq (npwx, n, m, h, hpsi, spsi)
 
-  call start_clock ('last')
+  CALL start_clock ('last')
   !
   !   then we compute the operator H-epsilon S
   !
   ah=(0.d0,0.d0)
-  do ibnd = 1, m
-     do ig = 1, n
+  DO ibnd = 1, m
+     DO ig = 1, n
         ah (ig, ibnd) = hpsi (ig, ibnd) - e (ibnd) * spsi (ig, ibnd)
-     enddo
-  enddo
+     ENDDO
+  ENDDO
   IF (noncolin) THEN
-     do ibnd = 1, m
-        do ig = 1, n
+     DO ibnd = 1, m
+        DO ig = 1, n
            ah (ig+npwx,ibnd)=hpsi(ig+npwx,ibnd)-e(ibnd)*spsi(ig+npwx,ibnd)
-        end do
-     end do
-  END IF
-  !
-  !   Here we compute the projector in the valence band
-  !
-  ikq = ikqs(ik)
-  ps (:,:) = (0.d0, 0.d0)
-
-  IF (noncolin) THEN
-     call zgemm ('C', 'N', nbnd_occ (ikq) , m, npwx*npol, (1.d0, 0.d0) , evq, &
-       npwx*npol, spsi, npwx*npol, (0.d0, 0.d0) , ps, nbnd)
-  ELSE
-     call zgemm ('C', 'N', nbnd_occ (ikq) , m, n, (1.d0, 0.d0) , evq, &
-       npwx, spsi, npwx, (0.d0, 0.d0) , ps, nbnd)
+        ENDDO
+     ENDDO
   ENDIF
-  ps (:,:) = ps(:,:) * alpha_pv
+
+  IF(gamma_only) THEN
+
+       CALL ch_psi_all_gamma()
+
+    ELSE
+
+       IF(tddfpt) THEN
+          ikq = ik
+          evq => evc
+       ELSE
+          ikq = ikqs(ik)
+       ENDIF
+          
+       CALL ch_psi_all_k()
+
+  ENDIF
+
+
+  DEALLOCATE (spsi)
+  DEALLOCATE (hpsi)
+  DEALLOCATE (ps)
+
+  IF (tddfpt) NULLIFY(evq)
+
+  CALL stop_clock ('last')
+  CALL stop_clock ('ch_psi')
+  RETURN
+CONTAINS
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!K-point part
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  SUBROUTINE ch_psi_all_k()
+
+    USE becmod, ONLY : becp, calbec
+    
+    IMPLICIT NONE
+    !
+    !   Here we compute the projector in the valence band
+    !
+    ps (:,:) = (0.d0, 0.d0)
+    
+    IF (noncolin) THEN
+       CALL zgemm ('C', 'N', nbnd_occ (ikq) , m, npwx*npol, (1.d0, 0.d0) , evq, &
+            npwx*npol, spsi, npwx*npol, (0.d0, 0.d0) , ps, nbnd)
+    ELSE
+       CALL zgemm ('C', 'N', nbnd_occ (ikq) , m, n, (1.d0, 0.d0) , evq, &
+            npwx, spsi, npwx, (0.d0, 0.d0) , ps, nbnd)
+    ENDIF
+    ps (:,:) = ps(:,:) * alpha_pv
 #ifdef __PARA
-  call mp_sum ( ps, intra_pool_comm )
+    CALL mp_sum ( ps, intra_pool_comm )
 #endif
+    
+    hpsi (:,:) = (0.d0, 0.d0)
+    IF (noncolin) THEN
+       CALL zgemm ('N', 'N', npwx*npol, m, nbnd_occ (ikq) , (1.d0, 0.d0) , evq, &
+            npwx*npol, ps, nbnd, (1.d0, 0.d0) , hpsi, npwx*npol)
+    ELSE
+       CALL zgemm ('N', 'N', n, m, nbnd_occ (ikq) , (1.d0, 0.d0) , evq, &
+            npwx, ps, nbnd, (1.d0, 0.d0) , hpsi, npwx)
+    END IF
+    spsi(:,:) = hpsi(:,:)
+    !
+    !    And apply S again
+    !
+    CALL calbec (n, vkb, hpsi, becp, m)
+    CALL s_psi (npwx, n, m, hpsi, spsi)
+    DO ibnd = 1, m
+       DO ig = 1, n
+          ah (ig, ibnd) = ah (ig, ibnd) + spsi (ig, ibnd)
+       ENDDO
+    ENDDO
+    IF (noncolin) THEN
+       DO ibnd = 1, m
+          DO ig = 1, n
+             ah (ig+npwx, ibnd) = ah (ig+npwx, ibnd) + spsi (ig+npwx, ibnd)
+          ENDDO
+       ENDDO
+    END IF
+  END SUBROUTINE ch_psi_all_k
 
-  hpsi (:,:) = (0.d0, 0.d0)
-  IF (noncolin) THEN
-     call zgemm ('N', 'N', npwx*npol, m, nbnd_occ (ikq) , (1.d0, 0.d0) , evq, &
-          npwx*npol, ps, nbnd, (1.d0, 0.d0) , hpsi, npwx*npol)
-  ELSE
-     call zgemm ('N', 'N', n, m, nbnd_occ (ikq) , (1.d0, 0.d0) , evq, &
-          npwx, ps, nbnd, (1.d0, 0.d0) , hpsi, npwx)
-  END IF
-  spsi(:,:) = hpsi(:,:)
-  !
-  !    And apply S again
-  !
-  call calbec (n, vkb, hpsi, becp, m)
-  call s_psi (npwx, n, m, hpsi, spsi)
-  do ibnd = 1, m
-     do ig = 1, n
-        ah (ig, ibnd) = ah (ig, ibnd) + spsi (ig, ibnd)
-     enddo
-  enddo
-  IF (noncolin) THEN
-     do ibnd = 1, m
-        do ig = 1, n
-           ah (ig+npwx, ibnd) = ah (ig+npwx, ibnd) + spsi (ig+npwx, ibnd)
-        enddo
-     enddo
-  END IF
-
-  deallocate (spsi)
-  deallocate (hpsi)
-  deallocate (ps)
-  call stop_clock ('last')
-  call stop_clock ('ch_psi')
-  return
-end subroutine ch_psi_all
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!gamma part
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  SUBROUTINE ch_psi_all_gamma()
+    
+    USE becmod, ONLY : becp,  calbec
+    USE realus, ONLY : real_space, fft_orbital_gamma, &
+         bfft_orbital_gamma, calbec_rs_gamma, &
+         s_psir_gamma,real_space_debug
+    
+    IMPLICIT NONE
+    
+    ps (:,:) = 0.d0
+    
+    IF (noncolin) THEN
+       CALL errore('ch_psi_all', 'non collin in gamma point not implemented',1)
+    ELSE
+       CALL DGEMM( 'C', 'N', nbnd, m, n, 2.D0,evc, 2*npwx*npol, spsi, 2*npwx*npol, 0.D0, ps, nbnd )
+    ENDIF
+    ps (:,:) = ps(:,:) * alpha_pv
+#ifdef __PARA
+    CALL mp_sum ( ps, intra_pool_comm )
+#endif
+    
+    hpsi (:,:) = (0.d0, 0.d0)
+    IF (noncolin) THEN
+       CALL ZGEMM ('N', 'N', npwx*npol, m, nbnd_occ (ik) , (1.d0, 0.d0) , evc, &
+            npwx*npol, ps, nbnd, (1.d0, 0.d0) , hpsi, npwx*npol)
+    ELSE
+       CALL DGEMM ('N', 'N', 2*n, m, nbnd_occ (ik) , 1.d0 , evc, &
+            2*npwx, ps, nbnd, 1.d0 , hpsi, 2*npwx)
+    ENDIF
+    spsi(:,:) = hpsi(:,:)
+    !
+    !    And apply S again
+    !
+    IF (real_space_debug >6 ) THEN
+       DO ibnd=1,m,2
+          CALL fft_orbital_gamma(hpsi,ibnd,m)
+          CALL calbec_rs_gamma(ibnd,m,becp%r)
+          CALL s_psir_gamma(ibnd,m)
+          CALL bfft_orbital_gamma(spsi,ibnd,m)
+       ENDDO
+    ELSE
+       CALL calbec (n, vkb, hpsi, becp, m)
+       CALL s_psi (npwx, n, m, hpsi, spsi)
+    ENDIF
+    DO ibnd = 1, m
+       DO ig = 1, n
+          ah (ig, ibnd) = ah (ig, ibnd) + spsi (ig, ibnd)
+       ENDDO
+    ENDDO
+    IF (noncolin) THEN
+       DO ibnd = 1, m
+          DO ig = 1, n
+             ah (ig+npwx, ibnd) = ah (ig+npwx, ibnd) + spsi (ig+npwx, ibnd)
+          ENDDO
+       ENDDO
+    ENDIF
+  END SUBROUTINE ch_psi_all_gamma
+ 
+END SUBROUTINE ch_psi_all
