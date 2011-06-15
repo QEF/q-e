@@ -21,7 +21,7 @@ PROGRAM neb
   USE path_base,        ONLY : initialize_path, search_mep
   USE path_io_routines, ONLY : path_summary
   USE image_io_routines, ONLY : io_image_start
-  USE mp_global,         ONLY : mp_bcast
+  USE mp_global,         ONLY : mp_bcast, mp_rank
   !
   USE mp_image_global_module, ONLY : mp_image_startup, world_comm
   USE mp_image_global_module, ONLY : me_image, nimage
@@ -81,11 +81,12 @@ PROGRAM neb
   !
   ! ... open input file
   !
-  CALL input_file_name_getarg(parsing_file_name,lfound_parsing_file)
+  if(mpime==root) CALL input_file_name_getarg(parsing_file_name,lfound_parsing_file)
   !
   engine_prefix = "pw_"
   !
   CALL mp_bcast(parsing_file_name,root,neb_comm)
+  CALL mp_bcast(lfound_parsing_file,root,neb_comm)
   !
   !
   if(lfound_parsing_file) then
@@ -98,8 +99,9 @@ PROGRAM neb
     write(0,*) ""
     write(0,*) "NO input file found, assuming nothing to parse."
     write(0,*) "Searching argument -input_images or --input_images"
-    CALL input_images_getarg(input_images,lfound_input_images)
+    if(mpime==root) CALL input_images_getarg(input_images,lfound_input_images)
     CALL mp_bcast(input_images,root,neb_comm)
+    CALL mp_bcast(lfound_input_images,root,neb_comm)
   !
     IF(.not.lfound_input_images) CALL errore('string_methods', &
       'Neither a file to parse nor input files for each image found',1)
