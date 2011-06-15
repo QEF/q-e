@@ -34,9 +34,6 @@ lr_main.o \
 lr_dv_setup.o \
 lr_solve_e.o \
 lr_dvpsi_e.o \
-lr_ch_psi_all.o \
-lr_cgsolve_all.o \
-lr_h_psiq.o \
 lr_sm1_psi.o \
 stop_lr.o \
 lr_read_d0psi.o \

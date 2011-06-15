@@ -55,9 +55,11 @@ subroutine cgsolve_all (h_psi, cg_psi, e, d0psi, dpsi, h_diag, &
   !   revised (extensively)       6 Apr 1997 by A. Dal Corso & F. Mauri
   !   revised (to reduce memory) 29 May 2004 by S. de Gironcoli
   !
-  USE kinds, only : DP
-  USE mp_global, ONLY: intra_pool_comm
-  USE mp,        ONLY: mp_sum
+  USE kinds,          ONLY : DP
+  USE mp_global,      ONLY : intra_pool_comm
+  USE mp,             ONLY : mp_sum
+  USE control_flags,  ONLY : gamma_only
+  USE gvect,          ONLY : gstart
 
   implicit none
   !
@@ -103,6 +105,7 @@ subroutine cgsolve_all (h_psi, cg_psi, e, d0psi, dpsi, h_diag, &
   !  the ratio between rho
   !  step length
   complex(DP), external :: zdotc
+  REAL(kind=dp), EXTERNAL :: ddot
   !  the scalar product
   real(DP), allocatable :: rho (:), rhoold (:), eu (:), a(:), c(:)
   ! the residue
@@ -153,7 +156,16 @@ subroutine cgsolve_all (h_psi, cg_psi, e, d0psi, dpsi, h_diag, &
            lbnd = lbnd+1
            call zcopy (ndmx*npol, g (1, ibnd), 1, h (1, ibnd), 1)
            call cg_psi(ndmx, ndim, 1, h(1,ibnd), h_diag(1,ibnd) )
-           rho(lbnd) = zdotc (ndmx*npol, h(1,ibnd), 1, g(1,ibnd), 1)
+           
+           IF (gamma_only) THEN
+              rho(lbnd)=2.0d0*ddot(2*ndmx*npol,h(1,ibnd),1,g(1,ibnd),1)
+              IF(gstart==2) THEN
+                 rho(lbnd)=rho(lbnd)-DBLE(h(1,ibnd))*DBLE(g(1,ibnd))
+              ENDIF
+           ELSE
+              rho(lbnd) = zdotc (ndmx*npol, h(1,ibnd), 1, g(1,ibnd), 1)
+           ENDIF
+
         endif
      enddo
      kter_eff = kter_eff + DBLE (lbnd) / DBLE (nbnd)
@@ -210,8 +222,17 @@ subroutine cgsolve_all (h_psi, cg_psi, e, d0psi, dpsi, h_diag, &
      do ibnd = 1, nbnd
         if (conv (ibnd) .eq.0) then
            lbnd=lbnd+1
-           a(lbnd) = zdotc (ndmx*npol, h(1,ibnd), 1, g(1,ibnd), 1)
-           c(lbnd) = zdotc (ndmx*npol, h(1,ibnd), 1, t(1,lbnd), 1)
+           IF (gamma_only) THEN
+              a(lbnd) = 2.0d0*ddot(2*ndmx*npol,h(1,ibnd),1,g(1,ibnd),1)
+              c(lbnd) = 2.0d0*ddot(2*ndmx*npol,h(1,ibnd),1,t(1,lbnd),1)
+              IF (gstart == 2) THEN
+                 a(lbnd)=a(lbnd)-DBLE(h(1,ibnd))*DBLE(g(1,ibnd))
+                 c(lbnd)=c(lbnd)-DBLE(h(1,ibnd))*DBLE(t(1,lbnd))
+              ENDIF
+           ELSE
+              a(lbnd) = zdotc (ndmx*npol, h(1,ibnd), 1, g(1,ibnd), 1)
+              c(lbnd) = zdotc (ndmx*npol, h(1,ibnd), 1, t(1,lbnd), 1)
+           ENDIF
         end if
      end do
 #ifdef __PARA
