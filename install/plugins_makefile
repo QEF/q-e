@@ -131,7 +131,7 @@ configure-yambo: touch-dummy
 	--with-iotk="$(TOPDIR)/iotk" \
 	PFC="$(MPIF90)" \
 	FC="$(LD)" \
-	FCFLAGS="$(F90FLAGS) $(FDFLAGS) $(IFLAGS) $(MODFLAGS)"
+	FCFLAGS="$(F90FLAGS) $(FDFLAGS) $(IFLAGS) $(MODFLAGS) $(FFLAGS_NOMAIN)"
 	F77="$(F77)" \
 	FFLAGS="$(FFLAGS)"
 	AR="$(AR)" \

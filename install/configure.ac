@@ -136,6 +136,8 @@ f77=$F77           # Fortran 77 serial compiler (must be in execution path)
 f90=$F90           # Fortran 90 serial compiler (must be in execution path)
 mpif90=$MPIF90     # Fortran 90 parallel compiler (must be in execution path)
 fflags=$FFLAGS     # Flags for Fortran 77 and 90 compilers
+fflags_nomain=$FFLAGS_NOMAIN # Flags for linking Fortran sources with main in a different language
+fflags_noopt=$FFLAGS_NOOPT # as FFLAGS With optimization disabled
 f90flags=$F90FLAGS # Flags for Fortran 90 compiler only
 ld=$LD             # Loader (must be in the execution path)
 ldflags=$LDFLAGS   # Flags for loader
@@ -551,6 +553,7 @@ ia32:ifort* | ia64:ifort* | x86_64:ifort* | mac686:ifort*  )
         if test "$use_debug" -eq 1; then
             try_fflags="$try_fflags -fpe0 -CB"
         fi
+	try_fflags_nomain="-nofor_main"
         try_fflags_openmp="-openmp"
         try_f90flags="\$(FFLAGS) -nomodule"
         try_fflags_noopt="-O0 -assume byterecl -g -traceback"
@@ -563,6 +566,7 @@ ia32:ifort* | ia64:ifort* | x86_64:ifort* | mac686:ifort*  )
 ia32:pgf* | ia64:pgf* | x86_64:pgf* )
 # in try_fflags we use -O3 instead of -fast because some *.f files in Multigrid
 # confuse the optimizer when option -fast is enabled
+	try_fflags_nomain="-Mnomain"
         try_fflags="-O3 -r8"
         try_fflags_openmp="-mp"
         try_f90flags="-fast -Mcache_align -r8"
@@ -654,6 +658,7 @@ sparc:f90 )
         ;;
 crayxt*:pgf* )
 # see comment above for pgf*
+	try_fflags_nomain="-Mnomain"
         try_fflags_openmp="-mp"
         try_fflags="-O3 -r8"
         try_f90flags="-fast -Mcache_align -r8 -Mpreprocess"
@@ -758,9 +763,13 @@ fi
 if test "$fflags" = ""   ; then fflags=$try_fflags     ; fi
 if test "$f90flags" = "" ; then f90flags=$try_f90flags ; fi
 if test "$fflags_noopt" = ""   ; then fflags_noopt=$try_fflags_noopt     ; fi
+if test "$fflags_nomain" = ""   ; then fflags_nomain=$try_fflags_nomain     ; fi
+
 echo setting FFLAGS... $fflags
 echo setting F90FLAGS... $f90flags
 echo setting FFLAGS_NOOPT... $fflags_noopt
+if test "$fflags_nomain" != "" ; then echo setting FFLAGS_NOMAIN... $fflags_nomain ; fi
+
 if test "$imod" = "" ; then imod="-I" ; fi
 
 # tentative C and loader flags, good for many cases
@@ -1913,6 +1922,7 @@ AC_SUBST(f90flags)
 AC_SUBST(f77)
 AC_SUBST(fflags)
 AC_SUBST(fflags_noopt)
+AC_SUBST(fflags_nomain)
 AC_SUBST(pre_fdflags)
 AC_SUBST(imod)
 AC_SUBST(iflags)
