@@ -20,7 +20,7 @@ SUBROUTINE input_from_file( )
   !
   IMPLICIT NONE
   !
-  INTEGER             :: unit = 5, &
+  INTEGER             :: stdin = 5, stderr = 6, &
                          ilen, iiarg, nargs, ierr
   ! do not define iargc as external: g95 does not like it
   INTEGER             :: iargc
@@ -29,6 +29,8 @@ SUBROUTINE input_from_file( )
   ! ... Input from file ?
   !
   nargs = iargc()
+  !
+  ierr = -1
   !
   DO iiarg = 1, ( nargs - 1 )
      !
@@ -40,12 +42,15 @@ SUBROUTINE input_from_file( )
         !
         CALL getarg( ( iiarg + 1 ) , input_file )
         !
-        OPEN ( UNIT = unit, FILE = input_file, FORM = 'FORMATTED', &
+        OPEN ( UNIT = stdin, FILE = input_file, FORM = 'FORMATTED', &
                STATUS = 'OLD', IOSTAT = ierr )
         !
-        ! TODO: return error code instead
-        CALL errore( 'input_from_file', 'input file ' // TRIM( input_file ) &
-             & // ' not found' , ierr )
+        ! TODO: return error code ierr (-1 no file, 0 file opened, > 1 error)
+        ! do not call "errore" here: it may hang in parallel execution
+        ! if this routine ois called by ionode only
+        !
+        IF ( ierr > 0 ) WRITE (stderr, &
+                '(" *** input file ",A," not found ***")' ) TRIM( input_file )
         !
      END IF
      !
