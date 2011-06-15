@@ -113,7 +113,7 @@ SUBROUTINE read_fhi(iunps)
   READ(iunps,'(a)') info
   READ(info,*,iostat=i) Zval, l
   IF ( i /= 0 .or. zval <= 0.0 .or. zval > 100.0 ) THEN
-     WRITE (6,'("read_fhi: assuming abinit format")')
+     WRITE (6,'("Assuming abinit format. First line:",/,A)') TRIM(info)
      READ(iunps,*) Zatom, Zion, pspdat
      READ(iunps,*) pspcod, pspxc, lmax,lloc, mmax, r2well
      IF (pspcod /= 6) THEN
@@ -250,7 +250,9 @@ SUBROUTINE convert_fhi (upf)
   !
   IF (pspxc == 7) THEN
      upf%dft = 'PW'
-  ELSE
+  ELSE IF (pspxc == 11) THEN
+     upf%dft = 'PBE'
+  ELSE 
      IF (pspxc > 0) THEN
         PRINT '("DFT read from abinit file: ",i1)', pspxc
      ENDIF
@@ -263,12 +265,9 @@ SUBROUTINE convert_fhi (upf)
   upf%ecutrho=0.0d0
   upf%ecutwfc=0.0d0
   !
-  IF ( lloc < 0 ) THEN
-     PRINT '("l local (max: ",i1,") > ",$)', lmax
-     READ (5,*) upf%lloc
-  ELSE
-     upf%lloc = lloc
-  ENDIF
+  PRINT '("Confirm or modify l max, l loc (read:",2i3,") > ",$)', lmax, lloc
+  READ (5,*) lmax, upf%lloc
+
   IF ( lmax == upf%lloc) THEN
      upf%lmax = lmax-1
   ELSE
@@ -328,10 +327,16 @@ SUBROUTINE convert_fhi (upf)
 
   ALLOCATE(upf%vnl(upf%mesh,0:upf%lmax,1))
   DO l=0, upf%lmax
-     upf%vnl(:,l,1) =  comp(l)%pot(:)
+     upf%vnl(:,l,1) = 2.d0*comp(l)%pot(:)
   END DO
 
-  upf%nbeta= upf%lmax
+  ! calculate number of nonlocal projectors
+  IF ( upf%lloc >= 0 .AND. upf%lloc <= upf%lmax ) THEN
+     upf%nbeta= upf%lmax
+  ELSE
+     upf%nbeta= upf%lmax+1
+  ENDIF
+
   IF (upf%nbeta > 0) THEN
 
      ALLOCATE(upf%els_beta(upf%nbeta) )
