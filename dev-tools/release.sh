@@ -7,11 +7,11 @@ LC_ALL=C
 export LC_ALL
 
 #
-VERSION=4.3
+VERSION=4.3.2
 ESPRESSO_DIR=espresso-$VERSION
 GUI=PWgui-$VERSION
 # options (yes/no)
-do_doc=no
+do_doc=yes
 do_GUI=no
 do_ChangeLogs=no
 
