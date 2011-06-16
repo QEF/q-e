@@ -1303,18 +1303,26 @@ SUBROUTINE iosys()
      celldm_(2) = b / a
      celldm_(3) = c / a
      !
-     IF ( ibrav_ /= 14 ) THEN
-        !
-        ! ... trigonal and monoclinic lattices
-        !
-        celldm_(4) = cosab
-     ELSE
+     IF ( ibrav_ == 14 ) THEN
         !
         ! ... triclinic lattice
         !
         celldm_(4) = cosbc
         celldm_(5) = cosac
         celldm_(6) = cosab
+        !
+     ELSE IF ( ibrav_ ==-12 ) THEN
+        !
+        ! ... monoclinic P lattice, unique axis b
+        !
+        celldm_(5) = cosac
+        !
+     ELSE
+        !
+        ! ... trigonal and monoclinic lattices, unique axis c
+        !
+        celldm_(4) = cosab
+        !
      ENDIF
      !
   ELSEIF ( celldm_(1) /= 0.D0 .and. a /= 0.D0 ) THEN

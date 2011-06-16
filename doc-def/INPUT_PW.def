@@ -372,7 +372,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                    11          Orthorhombic body-centered      celldm(2)=b/a,celldm(3)=c/a
                    12          Monoclinic P, unique axis c     celldm(2)=b/a,celldm(3)=c/a,
                                                                celldm(4)=cos(ab)
-                  -12          Monoclinic P, uniqe axis b      celldm(2)=b/a,celldm(3)=c/a,
+                  -12          Monoclinic P, unique axis b     celldm(2)=b/a,celldm(3)=c/a,
                                                                celldm(5)=cos(ac)
                    13          Monoclinic base-centered        celldm(2)=b/a,celldm(3)=c/a,
                                                                celldm(4)=cos(ab)

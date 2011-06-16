@@ -726,7 +726,7 @@ SUBROUTINE set_sym_bl(ibrav, symm_type)
      CALL hexsym( )
      symm_type='hexagonal'
      !
-  ELSE IF ( ( ibrav >= 1 .AND. ibrav <= 14 ) .OR. &
+  ELSE IF ( ( ibrav >= 1 .AND. ibrav <= 14 ) .OR. (ibrav == -12 ) .OR. &
             ( ibrav == 0 .AND. symm_type == 'cubic' ) ) THEN
      !
      ! ... here for the cubic bravais lattice

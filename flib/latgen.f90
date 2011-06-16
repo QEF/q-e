@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2003 PWSCF group
+! Copyright (C) 2001-2011 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -247,8 +247,8 @@ subroutine latgen(ibrav,celldm,a1,a2,a3,omega)
      sen=sqrt(1.d0-celldm(5)**2)
      a1(1)=celldm(1)
      a2(2)=celldm(1)*celldm(2)
-     a3(1)=celldm(1)*celldm(3)*sen
-     a3(3)=celldm(1)*celldm(3)*celldm(5)
+     a3(1)=celldm(1)*celldm(3)*celldm(5)
+     a3(3)=celldm(1)*celldm(3)*sen
      !
   else if (ibrav == 13) then
      !
