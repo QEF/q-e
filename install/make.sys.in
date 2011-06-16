@@ -78,6 +78,11 @@ FFLAGS         = @fflags@
 
 FFLAGS_NOOPT   = @fflags_noopt@
 
+# compiler flag needed by some compilers when the main is not fortran
+# Currently used for Yambo
+
+FFLAGS_NOMAIN   = @fflags_nomain@
+
 # Linker, linker-specific flags (if any)
 # Typically LD coincides with F90 or MPIF90, LD_LIBS is empty
 
