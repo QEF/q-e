@@ -112,7 +112,6 @@ SUBROUTINE force_hub(forceh)
 #ifdef __PARA
    CALL mp_sum( forceh, inter_pool_comm )
 #endif
-
    DEALLOCATE(dns, spsi)
    call deallocate_bec_type (proj)
    call deallocate_bec_type (becp)
@@ -294,7 +293,6 @@ SUBROUTINE dprojdtau_k (wfcatom, spsi, alpha, ipol, offset, dproj)
    USE gvect,                ONLY : g
    USE klist,                ONLY : nks, xk
    USE ldaU,                 ONLY : Hubbard_l, Hubbard_U, Hubbard_alpha
-   USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
    USE wvfct,                ONLY : nbnd, npwx, npw, igk, wg
    USE uspp,                 ONLY : nkb, vkb, qq
    USE uspp_param,           ONLY : nhm, nh
@@ -427,7 +425,6 @@ SUBROUTINE dprojdtau_gamma (wfcatom, spsi, alpha, ipol, offset, dproj)
    USE gvect,                ONLY : g, gstart
    USE klist,                ONLY : nks, xk
    USE ldaU,                 ONLY : Hubbard_l, Hubbard_U, Hubbard_alpha
-   USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
    USE wvfct,                ONLY : nbnd, npwx, npw, igk, wg
    USE uspp,                 ONLY : nkb, vkb, qq
    USE uspp_param,           ONLY : nhm, nh
@@ -493,7 +490,6 @@ SUBROUTINE dprojdtau_gamma (wfcatom, spsi, alpha, ipol, offset, dproj)
 #ifdef __PARA
    CALL mp_sum( dproj, intra_pool_comm )
 #endif
-
    jkb2 = 0
    DO nt=1,ntyp
       DO na=1,nat
