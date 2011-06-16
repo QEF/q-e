@@ -42,7 +42,6 @@
       use mp_global,                ONLY : intra_bgrp_comm, np_ortho, me_ortho, ortho_comm
       use dener
       use constants,                only : pi, au_gpa
-      use io_files,                 only : psfile, pseudo_dir
       USE io_files,                 ONLY : tmp_dir, prefix
       use uspp,                     only : nhsa=> nkb, nhsavb=> nkbus, betae => vkb, rhovan => becsum, deeq,qq
       use uspp_param,               only : nh, nvb, ish

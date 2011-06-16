@@ -429,16 +429,20 @@
 
          IF( tfor ) THEN
            if( ( tcp .or. tcap .or. tnosep ) .and. tsdp ) then
-             call errore(' ions_print_info',' t contr. for ions when tsdp=.t.',1)
+             call errore(' ions_print_info', &
+               ' Temperature control not allowed with steepest descent',1)
            endif
            IF(.not. tcp .and. .not. tcap .and. .not. tnosep ) THEN
               WRITE( stdout,550)
            ELSE IF( tcp .and. tcap ) then
-             call errore(' ions_print_info',' tcp and tcap both true',1)
+             call errore(' ions_print_info', ' Velocity rescaling not' &
+                         //' compatible with random velocity initialization',1)
            ELSE IF( tcp .and. tnosep ) then
-             call errore(' ions_print_info',' tcp and tnosep both true',1)
+             call errore(' ions_print_info', ' Velocity rescaling and' &
+                         //' Nose thermostat are incompatible',1)
            ELSE IF(tcap .and. tnosep ) then
-             call errore(' ions_print_info',' tcap and tnosep both true',1)
+             call errore(' ions_print_info', ' Nose thermostat not' &
+                         //' compatible with random velocity initialization',1)
            ELSE IF(tcp) THEN
              WRITE( stdout,555) tempw,tolp
            ELSE IF(tcap) THEN
