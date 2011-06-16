@@ -750,7 +750,6 @@ input.o : ../Modules/mm_dispersion.o
 input.o : ../Modules/mp.o
 input.o : ../Modules/mp_global.o
 input.o : ../Modules/printout_base.o
-input.o : ../Modules/read_cards.o
 input.o : ../Modules/read_namelists.o
 input.o : ../Modules/recvec.o
 input.o : ../Modules/wannier_new.o
@@ -831,9 +830,9 @@ martyna_tuckerman.o : pwcom.o
 memory_report.o : ../Modules/control_flags.o
 memory_report.o : ../Modules/griddim.o
 memory_report.o : ../Modules/io_global.o
+memory_report.o : ../Modules/mp_global.o
 memory_report.o : ../Modules/recvec.o
 memory_report.o : ../Modules/uspp.o
-memory_report.o : ../Modules/wavefunctions.o
 memory_report.o : noncol.o
 memory_report.o : pwcom.o
 mix_pot.o : ../Modules/io_files.o
