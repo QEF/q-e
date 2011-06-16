@@ -370,8 +370,10 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                     9          Orthorhombic base-centered(bco) celldm(2)=b/a,celldm(3)=c/a
                    10          Orthorhombic face-centered      celldm(2)=b/a,celldm(3)=c/a
                    11          Orthorhombic body-centered      celldm(2)=b/a,celldm(3)=c/a
-                   12          Monoclinic P                    celldm(2)=b/a,celldm(3)=c/a,
+                   12          Monoclinic P, unique axis c     celldm(2)=b/a,celldm(3)=c/a,
                                                                celldm(4)=cos(ab)
+                  -12          Monoclinic P, uniqe axis b      celldm(2)=b/a,celldm(3)=c/a,
+                                                               celldm(5)=cos(ac)
                    13          Monoclinic base-centered        celldm(2)=b/a,celldm(3)=c/a,
                                                                celldm(4)=cos(ab)
                    14          Triclinic                       celldm(2)= b/a,
@@ -380,10 +382,12 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                                                                celldm(5)= cos(ac),
                                                                celldm(6)= cos(ab)
               
-                For P lattices: the special axis (c) is the z-axis, one basal-plane
+                For P lattices: the special (or unique) axis (c) is the z-axis, one basal-plane
                 vector (a) is along x, the other basal-plane vector (b) is at angle
                 gamma for monoclinic, at 120 degrees for trigonal and hexagonal
                 lattices, at 90 degrees for cubic, tetragonal, orthorhombic lattices
+                Alternate choice (more commonly used in crystallography) for monoclinic:
+                axis b is unique (orthogonal to a); axis c forms angle beta with axis a.
               
                 sc simple cubic
                 ====================
@@ -438,8 +442,11 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
               
                 monoclinic (p)
                 =============================
-		   v1 = (a,0,0), v2= (b*cos(gamma), b*sin(gamma), 0),  v3 = (0, 0, c)
-                where gamma is the angle between axis a and b
+		   v1 = (a,0,0), v2= (b*cos(gamma), b*sin(gamma), 0),  v3 = (0,0,c)
+                (unique axis c) where gamma is the angle between axis a and b. 
+                Alternate choice (ibrav=-12) uses b as unique axis:
+		   v1 = (a,0,0), v2 = (0,b,0), v3 = (a*sin(beta),0,c*cos(beta))
+                where beta is the angle between axis a and c
               
                 base centered monoclinic
                 =============================
@@ -485,8 +492,10 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 		var cosAC
 		var cosBC
 		info {
-		    Traditional crystallographic constants (a,b,c in ANGSTROM),
-		    cosab = cosine of the angle between axis a and b
+		    Traditional crystallographic constants: a,b,c in ANGSTROM
+		    cosAB = cosine of the angle between axis a and b (gamma)
+		    cosAC = cosine of the angle between axis a and c (beta)
+		    cosBC = cosine of the angle between axis b and c (alpha)
 		    specify either these OR celldm but NOT both.
 		    
 		    The axis are chosen according to the value of ibrav.

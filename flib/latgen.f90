@@ -12,13 +12,15 @@ subroutine latgen(ibrav,celldm,a1,a2,a3,omega)
   !     sets up the crystallographic vectors a1, a2, and a3.
   !
   !     ibrav is the structure index:
-  !       1  cubic p (sc)                8  orthorhombic p
-  !       2  cubic f (fcc)               9  one face centered orthorhombic
-  !       3  cubic i (bcc)              10  all face centered orthorhombic
-  !       4  hexagonal and trigonal p   11  body centered orthorhombic
-  !       5  trigonal r                 12  monoclinic p
-  !       6  tetragonal p (st)          13  one face centered monoclinic
-  !       7  tetragonal i (bct)         14  triclinic p
+  !       1  cubic P (sc)                8  orthorhombic P
+  !       2  cubic F (fcc)               9  one face centered orthorhombic
+  !       3  cubic I (bcc)              10  all face centered orthorhombic
+  !       4  hexagonal and trigonal P   11  body centered orthorhombic
+  !       5  trigonal R                 12  monoclinic P (unique axis: c)
+  !       6  tetragonal P (st)          13  one face centered monoclinic
+  !       7  tetragonal I (bct)         14  triclinic P
+  !     Also accepted:
+  !       0  "free" structure          -12  monoclinic P (unique axis: b)
   !
   !     celldm are parameters which fix the shape of the unit cell
   !     omega is the unit-cell volume
@@ -222,7 +224,7 @@ subroutine latgen(ibrav,celldm,a1,a2,a3,omega)
      !
   else if (ibrav == 12) then
      !
-     !     Simple monoclinic lattice
+     !     Simple monoclinic lattice, unique (i.e. orthogonal to a) axis: c
      !
      if (celldm (2) <= 0.d0) call errore ('latgen', 'wrong celldm(2)', ibrav)
      if (celldm (3) <= 0.d0) call errore ('latgen', 'wrong celldm(3)', ibrav)
@@ -233,6 +235,20 @@ subroutine latgen(ibrav,celldm,a1,a2,a3,omega)
      a2(1)=celldm(1)*celldm(2)*celldm(4)
      a2(2)=celldm(1)*celldm(2)*sen
      a3(3)=celldm(1)*celldm(3)
+     !
+  else if (ibrav ==-12) then
+     !
+     !     Simple monoclinic lattice, unique axis: b (more common)
+     !
+     if (celldm (2) <= 0.d0) call errore ('latgen', 'wrong celldm(2)', ibrav)
+     if (celldm (3) <= 0.d0) call errore ('latgen', 'wrong celldm(3)', ibrav)
+     if (abs(celldm(5))>=1.d0) call errore ('latgen', 'wrong celldm(5)', ibrav)
+     !
+     sen=sqrt(1.d0-celldm(5)**2)
+     a1(1)=celldm(1)
+     a2(2)=celldm(1)*celldm(2)
+     a3(1)=celldm(1)*celldm(3)*sen
+     a3(3)=celldm(1)*celldm(3)*celldm(5)
      !
   else if (ibrav == 13) then
      !
