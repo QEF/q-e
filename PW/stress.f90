@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2007 Quantum ESPRESSO group
+! Copyright (C) 2001-2011 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -7,16 +7,15 @@
 !
 !
 !----------------------------------------------------------------------
-subroutine stress
+subroutine stress ( sigma ) 
   !----------------------------------------------------------------------
   !
   USE io_global,     ONLY : stdout
   USE kinds,         ONLY : DP
-  USE cell_base,     ONLY : omega, alat, at, bg, fix_volume
+  USE cell_base,     ONLY : omega, alat, at, bg
   USE ions_base,     ONLY : nat, ntyp => nsp, ityp, tau, zv
   USE constants,     ONLY : uakbar
   USE ener,          ONLY : etxc, vtxc
-  USE force_mod,     ONLY : sigma
   USE gvect,         ONLY : ngm, gstart, nl, g, gg, gcutm
   USE grid_dimensions,ONLY: nr1, nr2, nr3, nrxx
   USE ldaU,          ONLY : lda_plus_u
@@ -34,7 +33,9 @@ subroutine stress
   USE funct,         ONLY : dft_is_hybrid, exx_is_active
 #endif
   !
-  implicit none
+  IMPLICIT NONE
+  !
+  REAL(DP), INTENT(OUT) :: sigma(3,3)
   !
   real(DP) :: sigmakin (3, 3), sigmaloc (3, 3), sigmahar (3, 3), &
        sigmaxc (3, 3), sigmaxcc (3, 3), sigmaewa (3, 3), sigmanlc (3, 3), &
@@ -149,13 +150,6 @@ subroutine stress
   ! but prevents loss of symmetry in long vc-bfgs runs
 
   CALL symmatrix ( sigma )
-
-  if (fix_volume) then
-      WRITE(stdout,9001) (sigma(1,1) + sigma(2,2) + sigma(3,3)) * uakbar / 3d0
-      WRITE(stdout,*)
-      call impose_deviatoric_stress(sigma)
-  endif
-
   !
   ! write results in Ryd/(a.u.)^3 and in kbar
   !

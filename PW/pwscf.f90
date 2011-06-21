@@ -13,9 +13,10 @@ PROGRAM pwscf
   !
   USE io_global,        ONLY : stdout, ionode, ionode_id
   USE parameters,       ONLY : ntypx, npk, lmaxx
+  USE cell_base,        ONLY : fix_volume
   USE control_flags,    ONLY : conv_elec, gamma_only, lscf
   USE control_flags,    ONLY : conv_ions, istep, nstep, restart, lmd, lbfgs
-  USE force_mod,        ONLY : lforce, lstres
+  USE force_mod,        ONLY : lforce, lstres, sigma
   USE environment,      ONLY : environment_start, environment_end
   USE check_stop,       ONLY : check_stop_init
   USE mp_global,        ONLY : mp_startup, mp_bcast, mp_global_end, intra_image_comm
@@ -167,9 +168,11 @@ PROGRAM pwscf
      !
      ! ... stress calculation
      !
-     IF ( lstres ) CALL stress()
+     IF ( lstres ) CALL stress ( sigma )
      !
      IF ( lmd .OR. lbfgs ) THEN
+        !
+        if (fix_volume) CALL impose_deviatoric_stress(sigma)
         !
         ! ... ionic step (for molecular dynamics or optimization)
         !
