@@ -439,7 +439,7 @@ CONTAINS
               
     ! special cases : OEP no GC part (nor LDA...) and no correlation by default
     else IF ('OEP' .EQ. TRIM(dftout) ) THEN
-       call set_dft_value (iexch,1) !Default
+       call set_dft_value (iexch,4) 
        call set_dft_value (icorr, 0)
        CALL set_dft_value( igcx,  0 )
        call set_dft_value (igcc, 0) !Default       
@@ -448,7 +448,7 @@ CONTAINS
 
     ! special cases : HF no GC part (nor LDA...) and no correlation by default
     else IF ('HF' .EQ. TRIM(dftout) ) THEN
-       call set_dft_value (iexch,1) !Default
+       call set_dft_value (iexch,5) 
        call set_dft_value (icorr, 0)
        CALL set_dft_value( igcx,  0 )
        call set_dft_value (igcc, 0) !Default       
