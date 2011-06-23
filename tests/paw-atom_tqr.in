@@ -14,7 +14,7 @@
     tqr=.true.
  /
 ATOMIC_SPECIES
- Cu   1.000  Cu.pbe-paw_kj.UPF 
+ Cu   1.000  Cu.pbe-kjpaw.UPF 
 ATOMIC_POSITIONS {alat}
 Cu  0.0   0.0   0.0
 K_POINTS {gamma}

@@ -15,7 +15,7 @@
   mixing_beta = 0.7D0,
 /
 ATOMIC_SPECIES
-N  1.00  N.pbe-paw_kj.UPF
+N  1.00  N.pbe-kjpaw.UPF
 ATOMIC_POSITIONS {bohr}
 N  0.000  0.0  0.0  0 0 0
 K_POINTS Gamma

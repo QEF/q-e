@@ -18,8 +18,8 @@
 &IONS
 /
 ATOMIC_SPECIES
-O  1.00  O.pbe-paw_kj.UPF
-H  1.00  H.pbe-paw_kj.UPF
+O  1.00  O.pbe-kjpaw.UPF
+H  1.00  H.pbe-kjpaw.UPF
 ATOMIC_POSITIONS {bohr}
 O  0.0  0.0  0.0  0 0 0
 H  1.0  1.0  1.0

@@ -19,8 +19,8 @@
     ion_dynamics = 'bfgs'
  /
 ATOMIC_SPECIES
- O   16.00  O.pbe-paw_kj.UPF
- H    1.00  H.pbe-paw_kj.UPF
+ O   16.00  O.pbe-kjpaw.UPF
+ H    1.00  H.pbe-kjpaw.UPF
 ATOMIC_POSITIONS {bohr}
 H        1.116339788  -1.457719099   0.000000000
 H        1.116339788   1.457719099   0.000000000
