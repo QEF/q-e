@@ -34,7 +34,7 @@ $ECHO
 
 # required executables and pseudopotentials
 BIN_LIST="pw.x"
-PSEUDO_LIST=" H.pbe-paw_kj.UPF N.pbe-paw_kj.UPF O.pbe-paw_kj.UPF"
+PSEUDO_LIST=" H.pbe-kjpaw.UPF N.pbe-kjpaw.UPF O.pbe-kjpaw.UPF"
 
 $ECHO
 $ECHO "  executables directory: $BIN_DIR"
@@ -124,7 +124,7 @@ cat > n.in << EOF
   mixing_beta = 0.7D0,
 /
 ATOMIC_SPECIES
-N  1.00  N.pbe-paw_kj.UPF
+N  1.00  N.pbe-kjpaw.UPF
 ATOMIC_POSITIONS {bohr}
 N  0.000  0.0  0.0  0 0 0
 K_POINTS Gamma
@@ -168,8 +168,8 @@ cat > nh4+.in << EOF
 &IONS
 /
 ATOMIC_SPECIES
-N  1.00  N.pbe-paw_kj.UPF
-H  1.00  H.pbe-paw_kj.UPF
+N  1.00  N.pbe-kjpaw.UPF
+H  1.00  H.pbe-kjpaw.UPF
 ATOMIC_POSITIONS {bohr}
 N  0.0  0.0  0.0  0 0 0
 H  1.0  1.0  1.0
@@ -213,8 +213,8 @@ cat > h2o.in << EOF
 &IONS
 /
 ATOMIC_SPECIES
-O  1.00  O.pbe-paw_kj.UPF
-H  1.00  H.pbe-paw_kj.UPF
+O  1.00  O.pbe-kjpaw.UPF
+H  1.00  H.pbe-kjpaw.UPF
 ATOMIC_POSITIONS {bohr}
 O  0.0  0.0  0.0  0 0 0
 H  1.0  1.0  1.0

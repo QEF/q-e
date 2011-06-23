@@ -29,7 +29,7 @@ $ECHO
 
 # required executables and pseudopotentials
 BIN_LIST="pw.x ph.x bands.x plotband.x"
-PSEUDO_LIST="Fe.rel-pbe-paw_kj.UPF Au.rel-pz-paw_kj.UPF"
+PSEUDO_LIST="Fe.rel-pbe-kjpaw.UPF Au.rel-pz-kjpaw.UPF"
 
 $ECHO
 $ECHO "  executables directory: $BIN_DIR"
@@ -121,7 +121,7 @@ cat > Au.scf_pz.in << EOF
     conv_thr =  1.0d-9
  /
 ATOMIC_SPECIES
-Au   0.0  Au.rel-pz-paw_kj.UPF
+Au   0.0  Au.rel-pz-kjpaw.UPF
 ATOMIC_POSITIONS
  Au  0.00 0.00 0.00
 K_POINTS AUTOMATIC
@@ -193,7 +193,7 @@ cat > Fe.scf_pbe.in << EOF
     conv_thr =  1.0d-10
  /
 ATOMIC_SPECIES
-Fe  0.0    Fe.rel-pbe-paw_kj.UPF
+Fe  0.0    Fe.rel-pbe-kjpaw.UPF
 ATOMIC_POSITIONS
 Fe  0.0000000   0.00000000   0.0  
 K_POINTS AUTOMATIC
@@ -233,7 +233,7 @@ cat > Fe.band_pbe.in << EOF
     conv_thr =  1.0d-10
  /
 ATOMIC_SPECIES
-Fe  0.0    Fe.rel-pbe-paw_kj.UPF
+Fe  0.0    Fe.rel-pbe-kjpaw.UPF
 ATOMIC_POSITIONS
 Fe  0.0000000   0.00000000   0.0  
 K_POINTS tpiba_b

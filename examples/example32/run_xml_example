@@ -29,7 +29,7 @@ $ECHO
 
 # required executables and pseudopotentials
 BIN_LIST="pw.x ph.x"
-PSEUDO_LIST="H.lda-paw_kj.UPF C.lda-paw_kj.UPF"
+PSEUDO_LIST="H.lda-kjpaw.UPF C.lda-kjpaw.UPF"
 
 $ECHO
 $ECHO "  executables directory: $BIN_DIR"
@@ -114,7 +114,7 @@ cat > c.scf.xml << EOF
 				<real>0.0</real>
 			</property>
 			<property name="pseudofile">
-				<string>C.lda-paw_kj.UPF</string>
+				<string>C.lda-kjpaw.UPF</string>
 			</property>
 		</specie>
 	</atomic_species>
@@ -274,7 +274,7 @@ cat > Cu.scf_pbe.xml << EOF
 				<real>0.0</real>
 			</property>
 			<property name="pseudofile">
-				<string>Cu.pbe-paw_kj.UPF</string>
+				<string>Cu.pbe-kjpaw.UPF</string>
 			</property>
 		</specie>
 	</atomic_species>
@@ -417,7 +417,7 @@ ch4 molecule in a cubic box -->
 				<real>1.0</real>
 			</property>
 			<property name="pseudofile">
-				<string>H.lda-paw_kj.UPF</string>
+				<string>H.lda-kjpaw.UPF</string>
 			</property>
 		</specie>
 		<specie name="C">
@@ -425,7 +425,7 @@ ch4 molecule in a cubic box -->
 				<real>12.0</real>
 			</property>
 			<property name="pseudofile">
-				<string>C.lda-paw_kj.UPF</string>
+				<string>C.lda-kjpaw.UPF</string>
 			</property>
 		</specie>
 	</atomic_species>

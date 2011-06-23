@@ -29,7 +29,7 @@ $ECHO
 
 # required executables and pseudopotentials
 BIN_LIST="pw.x ph.x"
-PSEUDO_LIST="Fe.rel-pbe-paw_kj.UPF Au.rel-pz-paw_kj.UPF"
+PSEUDO_LIST="Fe.rel-pbe-kjpaw.UPF Au.rel-pz-kjpaw.UPF"
 
 $ECHO
 $ECHO "  executables directory: $BIN_DIR"
@@ -115,7 +115,7 @@ cat > Au.scf_pz.xml << EOF
 				<real>0.0</real>
 			</property>
 			<property name="pseudofile">
-				<string>Au.rel-pz-paw_kj.UPF</string>
+				<string>Au.rel-pz-kjpaw.UPF</string>
 			</property>
 		</specie>
 	</atomic_species>
@@ -282,7 +282,7 @@ cat > Fe.scf_pbe.xml << EOF
 				<real>0.0</real>
 			</property>
 			<property name="pseudofile">
-				<string>Fe.rel-pbe-paw_kj.UPF</string>
+				<string>Fe.rel-pbe-kjpaw.UPF</string>
 			</property>
 			<property name="starting_magnetization">
 				<real>0.5</real>
@@ -409,7 +409,7 @@ cat > Fe.band_pbe.xml << EOF
 				<real>0.0</real>
 			</property>
 			<property name="pseudofile">
-				<string>Fe.rel-pbe-paw_kj.UPF</string>
+				<string>Fe.rel-pbe-kjpaw.UPF</string>
 			</property>
 			<property name="starting_magnetization">
 				<real>0.5</real>

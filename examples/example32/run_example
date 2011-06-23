@@ -29,7 +29,7 @@ $ECHO
 
 # required executables and pseudopotentials
 BIN_LIST="pw.x ph.x"
-PSEUDO_LIST="H.lda-paw_kj.UPF C.lda-paw_kj.UPF"
+PSEUDO_LIST="H.lda-kjpaw.UPF C.lda-kjpaw.UPF"
 
 $ECHO
 $ECHO "  executables directory: $BIN_DIR"
@@ -115,7 +115,7 @@ cat > c.scf.in << EOF
     conv_thr =  1.0d-9
  /
 ATOMIC_SPECIES
- C   0.0  C.lda-paw_kj.UPF
+ C   0.0  C.lda-kjpaw.UPF
 ATOMIC_POSITIONS
  C  0.00 0.00 0.00
  C  0.25 0.25 0.25
@@ -183,7 +183,7 @@ cat > Cu.scf_pbe.in << EOF
     conv_thr =  1.0d-9
  /
 ATOMIC_SPECIES
-Cu   0.0  Cu.pbe-paw_kj.UPF
+Cu   0.0  Cu.pbe-kjpaw.UPF
 ATOMIC_POSITIONS
  Cu  0.00 0.00 0.00
 K_POINTS AUTOMATIC
@@ -236,8 +236,8 @@ ch4 molecule in a cubic box
     conv_thr =  1.0d-10
  /
 ATOMIC_SPECIES
- H  1.0   H.lda-paw_kj.UPF
- C  12.0  C.lda-paw_kj.UPF
+ H  1.0   H.lda-kjpaw.UPF
+ C  12.0  C.lda-kjpaw.UPF
 ATOMIC_POSITIONS
 H        0.080728893   0.080728893   0.080728893
 H       -0.080728893  -0.080728893   0.080728893

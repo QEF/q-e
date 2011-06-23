@@ -20,7 +20,7 @@ $ECHO "This example shows how to use the recover feature of ph.x "
 
 # required executables and pseudopotentials
 BIN_LIST="pw.x ph.x"
-PSEUDO_LIST="Si.pz-vbc.UPF Ni.pbe-nd-rrkjus.UPF Au.rel-pz-paw_kj.UPF"
+PSEUDO_LIST="Si.pz-vbc.UPF Ni.pbe-nd-rrkjus.UPF Au.rel-pz-kjpaw.UPF"
 
 $ECHO
 $ECHO "  executables directory: $BIN_DIR"
@@ -256,7 +256,7 @@ cat > Cu.scf_pbe.in << EOF
     conv_thr =  1.0d-9
  /
 ATOMIC_SPECIES
-Cu   0.0  Cu.pbe-paw_kj.UPF
+Cu   0.0  Cu.pbe-kjpaw.UPF
 ATOMIC_POSITIONS
  Cu  0.00 0.00 0.00
 K_POINTS AUTOMATIC
@@ -324,7 +324,7 @@ cat > Au.scf_rel.in << EOF
     conv_thr =  1.0d-9
  /
 ATOMIC_SPECIES
-Au   0.0  Au.rel-pz-paw_kj.UPF
+Au   0.0  Au.rel-pz-kjpaw.UPF
 ATOMIC_POSITIONS
 Au  0.00 0.00 0.00
 K_POINTS AUTOMATIC
