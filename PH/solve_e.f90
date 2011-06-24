@@ -215,7 +215,7 @@ subroutine solve_e
            !
            ! Orthogonalize dvpsi to valence states: ps = <evc|dvpsi>
            !
-           CALL orthogonalize(dvpsi, evc, ik, ik, dpsi)
+           CALL orthogonalize(dvpsi, evc, ik, ik, dpsi, npwq)
            !
            if (iter == 1) then
               !

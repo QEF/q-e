@@ -31,7 +31,7 @@ subroutine dvpsi_e (ik, ipol)
   USE ramanm,          ONLY : eth_rps
   USE eqv,             ONLY : dpsi, dvpsi, eprec
   USE phus,            ONLY : becp1
-  USE qpoint,          ONLY : nksq
+  USE qpoint,          ONLY : nksq, npwq
   USE units_ph,        ONLY : this_pcxpsi_is_on_file, lrcom, iucom, &
                               lrebar, iuebar
   USE control_ph,      ONLY : nbnd_occ
@@ -78,7 +78,7 @@ subroutine dvpsi_e (ik, ipol)
   !    Apply -P^+_c
   !    NB it uses dvpsi as workspace
   !
-  CALL orthogonalize(dpsi, evc, ik, ik, dvpsi)
+  CALL orthogonalize(dpsi, evc, ik, ik, dvpsi, npwq)
   dpsi=-dpsi
   !
   !   dpsi contains P^+_c [H-eS,x] psi_v for the three crystal polarizations

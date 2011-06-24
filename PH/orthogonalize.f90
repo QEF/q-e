@@ -7,7 +7,7 @@
 !
 !
 !-----------------------------------------------------------------------
-SUBROUTINE orthogonalize(dvpsi, evq, ikk, ikq, dpsi)
+SUBROUTINE orthogonalize(dvpsi, evq, ikk, ikq, dpsi, npwq)
 !------------------------------------------------------------------------
   !
   ! This routine ortogonalizes dvpsi to the valence states: ps = <evq|dvpsi>
@@ -22,7 +22,6 @@ USE klist, ONLY : lgauss, degauss, ngauss
 USE noncollin_module, ONLY : noncolin, npol
 USE wvfct, ONLY : npwx, nbnd, et
 USE ener, ONLY : ef
-USE qpoint, ONLY : npwq
 USE control_ph,  ONLY : alpha_pv, nbnd_occ
 USE becmod,      ONLY : bec_type, becp, calbec
 USE uspp,        ONLY : vkb, okvan
@@ -32,6 +31,7 @@ USE mp,          ONLY : mp_sum
 !
 IMPLICIT NONE
 INTEGER, INTENT(IN) :: ikk, ikq   ! the index of the k and k+q points
+INTEGER, INTENT(IN) :: npwq       ! the number of plane waves for q
 COMPLEX(DP), INTENT(IN) :: evq(npwx*npol,nbnd)
 COMPLEX(DP), INTENT(INOUT) :: dvpsi(npwx*npol,nbnd)
 COMPLEX(DP), INTENT(INOUT) :: dpsi(npwx*npol,nbnd) ! work space allocated by
