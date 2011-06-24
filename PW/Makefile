@@ -245,7 +245,7 @@ tldeps:
 	test -n "$(TLDEPS)" && ( cd .. ; $(MAKE) $(MFLAGS) $(TLDEPS) || exit 1) || :
 
 clean :
-	- /bin/rm -f pw.x *.o *.a *~ *.F90 *.d *.mod *.i *.L
+	- /bin/rm -f *.x *.o *.a *~ *.F90 *.d *.mod *.i *.L
 
 generate_vdW_kernel_table.x : generate_vdW_kernel_table.o
 	$(LD) $(LDFLAGS) -o $@ \
