@@ -27,7 +27,9 @@ USE becmod,      ONLY : bec_type, becp, calbec
 USE uspp,        ONLY : vkb, okvan
 USE mp_global,   ONLY : intra_pool_comm
 USE mp,          ONLY : mp_sum
-
+USE control_flags, ONLY : gamma_only
+USE realus,      ONLY : npw_k
+USE gvect,       ONLY : gstart
 !
 IMPLICIT NONE
 INTEGER, INTENT(IN) :: ikk, ikq   ! the index of the k and k+q points
@@ -38,19 +40,30 @@ COMPLEX(DP), INTENT(INOUT) :: dpsi(npwx*npol,nbnd) ! work space allocated by
                                                    ! the calling routine
 
 COMPLEX(DP), ALLOCATABLE :: ps(:,:)
+REAL(DP), ALLOCATABLE :: ps_r(:,:)
+
 INTEGER :: ibnd, jbnd, nbnd_eff
 REAL(DP) :: wg1, w0g, wgp, wwg, deltae, theta
 REAL(DP), EXTERNAL :: w0gauss, wgauss
 ! functions computing the delta and theta function
 
 CALL start_clock ('ortho')
+IF (gamma_only) THEN
+   ALLOCATE(ps_r(nbnd,nbnd))
+   ps_r = 0.0_DP
+ENDIF
+
 ALLOCATE(ps(nbnd,nbnd))
+ps = (0.0_DP, 0.0_DP)
+
 !
 if (lgauss) then
    !
+   IF (gamma_only) CALL errore ('orthogonalize', "degauss with gamma &
+        & point algorithms",1)
+   !
    !  metallic case
    !
-   ps = (0.d0, 0.d0)
    IF (noncolin) THEN
       CALL zgemm( 'C', 'N', nbnd, nbnd_occ (ikk), npwx*npol, (1.d0,0.d0), &
                  evq, npwx*npol, dvpsi, npwx*npol, (0.d0,0.d0), ps, nbnd )
@@ -93,11 +106,18 @@ ELSE
    !
    !  insulators
    !
-   ps = (0.d0, 0.d0)
    IF (noncolin) THEN
       CALL zgemm( 'C', 'N',nbnd_occ(ikq), nbnd_occ(ikk), npwx*npol, &
              (1.d0,0.d0), evq, npwx*npol, dvpsi, npwx*npol, &
              (0.d0,0.d0), ps, nbnd )
+   ELSEIF (gamma_only) THEN
+            CALL dgemm( 'C', 'N', nbnd_occ(ikq), nbnd_occ (ikk), 2*npwq, &
+             2.0_DP, evq, 2*npwx, dvpsi, 2*npwx, &
+             0.0_DP, ps_r, nbnd )
+            IF (gstart == 2 ) THEN
+               CALL DGER( nbnd_occ(ikq), nbnd_occ (ikk), -1.0_DP, evq, &
+                    & 2*npwq, dvpsi, 2*npwx, ps_r, nbnd )
+            ENDIF
    ELSE
       CALL zgemm( 'C', 'N', nbnd_occ(ikq), nbnd_occ (ikk), npwq, &
              (1.d0,0.d0), evq, npwx, dvpsi, npwx, &
@@ -106,7 +126,11 @@ ELSE
    nbnd_eff=nbnd_occ(ikk)
 END IF
 #ifdef __PARA
+IF (gamma_only) THEN
+   call mp_sum(ps_r(:,:),intra_pool_comm)
+ELSE
    call mp_sum(ps(:,1:nbnd_eff),intra_pool_comm)
+ENDIF
 #endif
 !
 ! dpsi is used as work space to store S|evc>
@@ -137,6 +161,11 @@ ELSE
       CALL zgemm( 'N', 'N', npwx*npol, nbnd_occ(ikk), nbnd_occ(ikk), &
                 (1.d0,0.d0),dpsi,npwx*npol,ps,nbnd,(-1.0d0,0.d0), &
                 dvpsi, npwx*npol )
+   ELSEIF (gamma_only) THEN
+      ps = CMPLX (ps_r,0.0_DP, KIND=DP)
+      CALL ZGEMM( 'N', 'N', npwq, nbnd_occ(ikk), nbnd_occ(ikk), &
+               (1.d0,0.d0), dpsi, npwx, ps, nbnd, (-1.0d0,0.d0), &
+                dvpsi, npwx )
    ELSE
       CALL zgemm( 'N', 'N', npwq, nbnd_occ(ikk), nbnd_occ(ikk), &
              (1.d0,0.d0), dpsi, npwx, ps, nbnd, (-1.0d0,0.d0), &

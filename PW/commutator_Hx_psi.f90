@@ -33,14 +33,14 @@ subroutine commutator_Hx_psi (ik, nbnd_occ, becp1, becp2, ipol, dpsi, dvpsi)
   USE becmod,          ONLY : becp, bec_type, calbec
   USE uspp,            ONLY : nkb, vkb
   USE uspp_param,      ONLY : nh, nhm
+  USE control_flags,   ONLY : gamma_only
 
   implicit none
   COMPLEX(DP), INTENT(OUT)    :: dpsi(npwx*npol,nbnd), dvpsi(npwx*npol,nbnd)
   TYPE(bec_type), INTENT(IN)  :: becp1 ! dimensions ( nkb, nbnd )
   TYPE(bec_type), INTENT(INOUT) :: becp2 ! dimensions ( nkb, nbnd )
- 
   !
-  integer, intent(IN) :: ik, nbnd_occ, ipol
+  INTEGER, INTENT(IN) :: ik, nbnd_occ, ipol
   !
   ! Local variables
   !
@@ -54,7 +54,8 @@ subroutine commutator_Hx_psi (ik, nbnd_occ, becp1, becp2, ipol, dpsi, dvpsi)
        work (:,:), psc(:,:,:,:), aux(:), deff_nc(:,:,:,:)
   REAL(DP), allocatable :: deff(:,:,:)
   !
-  call start_clock ('commutator_Hx_psi')
+
+  CALL start_clock ('commutator_Hx_psi')
   dpsi=(0.d0, 0.d0)
   dvpsi=(0.d0, 0.d0)
   !
@@ -134,7 +135,12 @@ subroutine commutator_Hx_psi (ik, nbnd_occ, becp1, becp2, ipol, dpsi, dvpsi)
   enddo
   deallocate (gk)
 
-  call calbec (npw, work, evc, becp2)
+  ! In the case of gamma point systems becp2 is real
+  ! so we have to include a factor of i before calling
+  ! calbec otherwise we would be stuck with the wrong component
+  ! of becp2 later on.
+  IF (gamma_only) work=(0.0_DP,1.0_DP)*work
+  CALL calbec (npw, work, evc, becp2)
 
   IF (noncolin) THEN
      allocate (psc ( nkb, npol, nbnd, 2))
@@ -170,11 +176,19 @@ subroutine commutator_Hx_psi (ik, nbnd_occ, becp1, becp2, ipol, dpsi, dvpsi)
                                  becp1%nc(jkb,js,ibnd)*deff_nc(ih,jh,na,ijs) 
                           END DO
                        END DO
+                    ELSEIF (gamma_only) THEN
+                       ! Note the different prefactors due to the factor 
+                       ! of i introduced to work(:,:), as becp[1,2] are
+                       ! real.
+                       ps2(ikb,ibnd,1) = ps2(ikb,ibnd,1) + becp2%r(jkb,ibnd) * &
+                            (1.0d0, 0.0d0)*deff(ih,jh,na) 
+                       ps2(ikb,ibnd,2) = ps2(ikb,ibnd,2) + becp1%r(jkb,ibnd)* &
+                            (-1.0d0, 0.0d0)*deff(ih,jh,na)
                     ELSE
                        ps2(ikb,ibnd,1) = ps2(ikb,ibnd,1) + becp2%k(jkb,ibnd) * &
-                            (0.d0,-1.d0) * deff(ih,jh,na) 
+                            (0.0d0,-1.0d0)*deff(ih,jh,na) 
                        ps2(ikb,ibnd,2) = ps2(ikb,ibnd,2) + becp1%k(jkb,ibnd)* &
-                            (0.d0,-1.d0)*deff(ih,jh,na)
+                            (0.0d0,-1.0d0)*deff(ih,jh,na)
                     END IF
                  enddo
               enddo

@@ -457,10 +457,12 @@ USE wvfct, ONLY : npw, npwx, nbnd
 USE control_flags, ONLY : gamma_only
 USE kinds, ONLY : DP
 
+USE becmod,                ONLY : bec_type
+
 IMPLICIT NONE
 
 INTEGER, INTENT(in) :: ipol, kpoint
-real(kind=dp), INTENT(in) :: becp1(nkb,nbnd),becp2(nkb,nbnd)
+TYPE(bec_type), INTENT(in) :: becp1, becp2
 COMPLEX(kind=dp) :: dvpsi(npwx,nbnd)
 
 real(kind=dp), ALLOCATABLE :: dpqq(:,:,:,:)
@@ -487,8 +489,8 @@ DO nt = 1, ntyp
                     at(3,ipol)*dpqq(ih,jh,3,nt)
                DO ibnd=1, nbnd
                   ps(ibnd) = ps(ibnd)                             &
-                     + becp2(jkb,ibnd)*qq(ih,jh,nt)+  &
-                       becp1(jkb,ibnd)*fact
+                     + becp2%r(jkb,ibnd)*qq(ih,jh,nt)+  &
+                       becp1%r(jkb,ibnd)*fact
                ENDDO
             ENDDO
             DO ibnd = 1, nbnd
@@ -523,10 +525,12 @@ USE wvfct, ONLY : npw, npwx, nbnd
 USE control_flags, ONLY : gamma_only
 USE kinds, ONLY : DP
 
+USE becmod,                ONLY : bec_type
+
 IMPLICIT NONE
 
 INTEGER, INTENT(in) :: ipol, kpoint
-COMPLEX(kind=dp), INTENT(in) :: becp1(nkb,nbnd),becp2(nkb,nbnd)
+TYPE(bec_type), INTENT(in) :: becp1, becp2
 COMPLEX(kind=dp) :: dvpsi(npwx,nbnd)
 
 real(kind=dp), ALLOCATABLE :: dpqq(:,:,:,:)
@@ -553,8 +557,8 @@ DO nt = 1, ntyp
                     at(3,ipol)*dpqq(ih,jh,3,nt)
                DO ibnd=1, nbnd
                   ps(ibnd) = ps(ibnd)                             &
-                     + becp2(jkb,ibnd)*qq(ih,jh,nt)+  &
-                       becp1(jkb,ibnd)*fact
+                     + becp2%k(jkb,ibnd)*qq(ih,jh,nt)+  &
+                       becp1%k(jkb,ibnd)*fact
                ENDDO
             ENDDO
             DO ibnd = 1, nbnd
