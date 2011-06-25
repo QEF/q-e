@@ -247,6 +247,9 @@ CONTAINS
     !
     IF ( nkb == 0 .or. .not. okvan ) RETURN
     !
+    IF (.not.allocated(BB_)) recalc = .true.
+    IF (recalc .and. allocated(BB_)) DEALLOCATE(BB_)
+
     IF(recalc) THEN
        ALLOCATE(BB_(nkb,nkb,nks))
        BB_=(0.d0,0.d0)
