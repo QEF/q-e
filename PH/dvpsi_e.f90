@@ -135,7 +135,7 @@ subroutine dvpsi_e (ik, ipol)
      CALL s_psi(npwx,npw,nbnd,dvpsi,spsi)
      call dcopy(2*npwx*npol*nbnd,spsi,1,dvpsi,1)
      deallocate (spsi)
-     call adddvepsi_us(becp2,ipol,ik)
+     CALL adddvepsi_us(becp1(ik),becp2,ipol,ik,dvpsi)
   endif
 
   IF (nkb > 0) call deallocate_bec_type (becp2)

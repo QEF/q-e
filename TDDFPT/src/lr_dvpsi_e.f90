@@ -22,6 +22,7 @@ SUBROUTINE lr_dvpsi_e(ik,ipol,dvpsi)
   !
   USE kinds,                ONLY : DP
   USE cell_base,            ONLY : tpiba, at
+  USE ions_base,            ONLY : ntyp => nsp
   USE io_global,            ONLY : stdout
   USE klist,                ONLY : xk
   USE wvfct,                ONLY : npw, npwx, nbnd, igk, g2kin, et
@@ -30,7 +31,8 @@ SUBROUTINE lr_dvpsi_e(ik,ipol,dvpsi)
   USE becmod,               ONLY : allocate_bec_type, calbec, becp,&
                                    & deallocate_bec_type,  bec_type
   USE uspp,                 ONLY : okvan, nkb, vkb
-  USE uspp_param,           ONLY : nh
+  USE uspp_param,           ONLY : nh, nhm
+  USE phus,                 ONLY : dpqq 
   USE control_flags,        ONLY : gamma_only
   USE control_ph,           ONLY : nbnd_occ
   USE realus,               ONLY : npw_k
@@ -154,13 +156,11 @@ SUBROUTINE lr_dvpsi_e(ik,ipol,dvpsi)
      CALL s_psi(npwx,npw_k(ik),nbnd,dvpsi,spsi)
      CALL DCOPY(2*npwx*npol*nbnd,spsi,1,dvpsi,1)
      DEALLOCATE (spsi)
-     IF(gamma_only) THEN
-        CALL lr_adddvepsi_us_gamma(becp1,becp2,ipol,ik,dvpsi)
-     ELSEIF (noncolin) THEN
-
-     ELSE
-        CALL lr_adddvepsi_us_k(becp1,becp2,ipol,ik,dvpsi)
-     ENDIF
+     ALLOCATE (dpqq( nhm, nhm, 3, ntyp))
+     CALL compute_qdipol(dpqq)
+     CALL qdipol_cryst()
+     CALL adddvepsi_us(becp1,becp2,ipol,ik,dvpsi)
+     DEALLOCATE (dpqq)
   ENDIF
   !
   ! orthogonalize dvpsi to the valence subspace

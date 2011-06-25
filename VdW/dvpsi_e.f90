@@ -237,7 +237,7 @@ SUBROUTINE dvpsi_e_vdw (kpoint, ipol)
      IF (nkb > 0) CALL calbec (npw, vkb, dvpsi, becp)
      CALL s_psi(npwx,npw,nbnd,dvpsi,spsi)
      CALL dcopy(2*npwx*nbnd,spsi,1,dvpsi,1)
-     CALL adddvepsi_us(becp2,ipol,kpoint)
+     CALL adddvepsi_us(becp1(kpoint),becp2,ipol,kpoint,dvpsi)
   ENDIF
 
   IF (nkb > 0) DEALLOCATE (dvkb1, dvkb, becp2)
