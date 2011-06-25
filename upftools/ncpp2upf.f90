@@ -79,7 +79,7 @@ SUBROUTINE read_ncpp(iunps)
   CHARACTER (len=255) line
   EXTERNAL qe_erf
 
-  READ(iunps, '(a)', end=300, err=300 ) dft_
+  READ(iunps, *, end=300, err=300 ) dft_
   IF (dft_(1:2)=='**') dft_ = 'PZ'
 
   READ (iunps, *, err=300) psd_, zp_, lmax_, nlc, nnl, nlcc_, &

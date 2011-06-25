@@ -1,6 +1,8 @@
 Fixed in svn version
 
-   * More glitches with new xc functionals: HF, OEP, PZ
+   * Removed lines in iotk that confused some preprocessors
+   * More glitches with new xc functionals, compatibility with 
+     previous cases: HF, OEP, PZ
    * Variable-cell optimization at fixed volume broke hexagonal symmetry
    * NEB: possible problem in parallel execution (if command-line arguments
      are not available to all processors) avoided by broadcasting arguments
