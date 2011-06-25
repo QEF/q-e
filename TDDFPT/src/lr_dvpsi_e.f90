@@ -210,9 +210,12 @@ CONTAINS
   SUBROUTINE lr_calc_eprec(eprec)
 
     USE kinds,                ONLY : DP
+    USE gvect,                ONLY : gstart
     USE wvfct,                ONLY : npw, npwx, nbnd, g2kin
     USE wavefunctions_module, ONLY : evc
     USE realus,               ONLY : npw_k
+    USE mp,                   ONLY : mp_sum
+    USE mp_global,            ONLY : intra_pool_comm
 
     IMPLICIT NONE
 
