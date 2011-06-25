@@ -1222,11 +1222,17 @@ causes a mysterious error in compilation of iotk and should be replaced by
 \begin{verbatim}
    /lib/cpp -P --traditional
 \end{verbatim}
-The MVAPICH parallel environment with Pathscale compilers also works.
-(info by Paolo Giannozzi, July 2008)
+The MVAPICH parallel environment with Pathscale compilers also works
+(info by Paolo Giannozzi, July 2008). 
 
-Version 3.1 of the Pathscale EKO compiler also works 
-(info by Cezary Sliwa, April 2011).
+Version 3.1 and version 4 (open source!) of the Pathscale EKO compiler
+also work (info by Cezary Sliwa, April 2011, and Carlo Nervi, June 2011).
+In case of mysterious errors while compiling \texttt{iotk},
+remove all lines like:
+\begin{verbatim}
+# 1 "iotk_base.spp"
+\end{verbatim}
+from all \texttt{iotk} source files.
 
 \paragraph{Linux PCs with gfortran}
 
@@ -2595,8 +2601,8 @@ must be the same as in the input data of \pwx. Presently
 you must also specify \texttt{amass(i)} (a real variable): the atomic mass 
 of atomic type $i$.
 
-After the namelist you must specify the q-vector of the phonon mode.
-This must be the same q-vector given in the input of \pwx.
+After the namelist you must specify the q-vector of the phonon mode,
+in cartesian coordinates and in units of $2\pi/a$.
     
 Notice that the dynamical matrix calculated by \phx\ at $q=0$ does not
 contain the non-analytic term occurring in polar materials, i.e. there is no
