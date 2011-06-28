@@ -636,6 +636,7 @@ aix:*xlf* )
         try_f90flags="\$(FFLAGS) -qsuffix=cpp=f90 -qfree=f90"
         try_fflags_noopt="-q64 -O0"
         try_ldflags="-q64"
+        try_ldflags_openmp="-qsmp=omp"
         # try_ldflags_static="-bstatic"
         pre_fdflags="-WF,"
         xlf_flags=1
