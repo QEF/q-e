@@ -1548,7 +1548,7 @@ SUBROUTINE read_cards_pw ( psfile, tau_format )
   !
   IF ( tavel .AND. ANY ( sp_pos(:) /= sp_vel(:) ) ) &
       CALL errore("cards","list of species in block ATOMIC_VELOCITIES &
-                 & must be identical to those in ATOMIC_POSITIONS")
+                 & must be identical to those in ATOMIC_POSITIONS",1)
   !
   ! ... calculate fixatom
   !
