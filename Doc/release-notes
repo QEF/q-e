@@ -1,5 +1,6 @@
 Fixed in svn version
 
+   * OpenMP crash with PAW
    * Removed lines in iotk that confused some preprocessors
    * More glitches with new xc functionals, compatibility with 
      previous cases: HF, OEP, PZ

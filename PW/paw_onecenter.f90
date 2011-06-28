@@ -419,7 +419,7 @@ SUBROUTINE PAW_xc_potential(i, rho_lm, rho_core, v_lm, energy)
     IF (nspin==2) lsd=1
     !
 !$omp parallel default(private), &
-!$omp shared(i,rad,v_lm,rho_lm,rho_core,v_rad,ix_s,ix_e,energy,e_of_tid,nspin,g,lsd)
+!$omp shared(i,rad,v_lm,rho_lm,rho_core,v_rad,ix_s,ix_e,energy,e_of_tid,nspin,nspin_mag,g,lsd)
 #ifdef __OPENMP
     mytid = omp_get_thread_num()+1 ! take the thread ID
     ntids = omp_get_num_threads()  ! take the number of threads
