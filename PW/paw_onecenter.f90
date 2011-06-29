@@ -417,9 +417,13 @@ SUBROUTINE PAW_xc_potential(i, rho_lm, rho_core, v_lm, energy)
     ! true if using spin
     lsd = 0
     IF (nspin==2) lsd=1
+    IF (with_small_so) THEN
+       ALLOCATE(g_rad(i%m,rad(i%t)%nx,nspin))
+       g_rad = 0.0_DP
+    ENDIF
     !
 !$omp parallel default(private), &
-!$omp shared(i,rad,v_lm,rho_lm,rho_core,v_rad,ix_s,ix_e,energy,e_of_tid,nspin,g,lsd,nspin_mag,with_small_so)
+!$omp shared(i,rad,v_lm,rho_lm,rho_core,v_rad,ix_s,ix_e,energy,e_of_tid,nspin,g,lsd,nspin_mag,with_small_so,g_rad)
 #ifdef __OPENMP
     mytid = omp_get_thread_num()+1 ! take the thread ID
     ntids = omp_get_num_threads()  ! take the number of threads
@@ -432,10 +436,6 @@ SUBROUTINE PAW_xc_potential(i, rho_lm, rho_core, v_lm, energy)
     rho_loc = 0._dp
     !
     ALLOCATE( rho_rad(i%m,nspin_mag) ) 
-    IF (with_small_so) THEN
-       ALLOCATE(g_rad(i%m,rad(i%t)%nx,nspin))
-       g_rad = 0.0_DP
-    ENDIF
     !
     IF (present(energy)) THEN
 !$omp single
@@ -447,7 +447,6 @@ SUBROUTINE PAW_xc_potential(i, rho_lm, rho_core, v_lm, energy)
     ENDIF
 !$omp workshare
     v_rad = 0.0_dp
-!!!not really needed    IF (with_small_so) g_rad = 0.0_DP
 !$omp end workshare
 !$omp do
     DO ix = ix_s, ix_e
@@ -621,7 +620,7 @@ SUBROUTINE PAW_gcxc_potential(i, rho_lm,rho_core, v_lm, energy)
     vout_lm=0.0_DP
 
 !$omp parallel default(private) &
-!$omp& shared(i,g,nspin,rad,e_gcxc,egcxc_of_tid,gc_rad,h_rad,rho_lm,rho_core,energy,ix_s,ix_e)
+!$omp& shared(i,g,nspin,nspin_gga,nspin_mag,rad,e_gcxc,egcxc_of_tid,gc_rad,h_rad,rho_lm,rhoout_lm,rho_core,energy,ix_s,ix_e)
     mytid = 1
     ntids = 1
 #ifdef __OPENMP
