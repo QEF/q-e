@@ -312,9 +312,7 @@ SUBROUTINE read_cpmd(iunps)
   rmax = r(mesh)
   xmin = log(z*r(1))
   !
-  IF ( .NOT. wfc_read ) &
-     PRINT '("No atomic wfc read! Manually add them to the UPF file",/ &
-           & "e.g. copy them from another PP with the same radial grid")'
+  IF ( .NOT. wfc_read ) PRINT '("Notice: atomic wfcs not found")'
   !
   IF ( pstype == 2 ) THEN
      ALLOCATE (vnl(mesh,0:lmax))
@@ -349,6 +347,7 @@ SUBROUTINE convert_cpmd(upf)
   REAL(8), EXTERNAL :: mygamma, qe_erf
   CHARACTER (len=20):: dft
   CHARACTER (len=2):: label
+  CHARACTER (len=1):: spdf(0:3) = ['S','P','D','F']
   CHARACTER (len=2), EXTERNAL :: atom_name
   INTEGER :: lloc, my_lmax, iexch, icorr, igcx, igcc, inlc
   INTEGER :: l, i, j, ij, ir, iv, jv
@@ -520,21 +519,20 @@ SUBROUTINE convert_cpmd(upf)
               ENDDO
            ENDIF
         ENDDO
+        ! the number of points used in the evaluation of integrals
+        ! should be even (for simpson integration)
+        DO i=1,upf%nbeta
+           IF ( MOD (upf%kbeta(i),2) == 0 .AND. upf%kbeta(i) < upf%mesh) &
+              upf%kbeta(i)=upf%kbeta(i)+1
+        END DO
+        upf%kkbeta = MAXVAL(upf%kbeta(:))
      ENDIF
-     ! the number of points used in the evaluation of integrals
-     ! should be even (for simpson integration)
-     DO i=1,upf%nbeta
-        IF ( MOD (upf%kbeta(i),2) == 0 .AND. upf%kbeta(i) < upf%mesh) &
-           upf%kbeta(i)=upf%kbeta(i)+1
-     END DO
-     upf%kkbeta = MAXVAL(upf%kbeta(:))
      ALLOCATE(upf%beta(upf%mesh,upf%nbeta))
      ALLOCATE(upf%dion(upf%nbeta,upf%nbeta))
      upf%beta(:,:) =0.d0
      upf%dion(:,:) =0.d0
      ALLOCATE(upf%rcut  (upf%nbeta))
      ALLOCATE(upf%rcutus(upf%nbeta))
-     ALLOCATE(aux(upf%kkbeta))
 
      IF ( pstype == 3 ) THEN
         iv=0  ! counter on beta functions
@@ -543,8 +541,7 @@ SUBROUTINE convert_cpmd(upf)
            DO i=1, nl(l)
               iv = iv+1
               upf%lll(iv)=l
-              upf%rcut  (iv) = 0.0
-              upf%rcutus(iv) = 0.0
+              WRITE (upf%els_beta(iv), '(I1,A1)' ) i, spdf(l)
               DO j=i, nl(l)
                  jv = iv+j-i
                  ij=ij+1
@@ -557,9 +554,27 @@ SUBROUTINE convert_cpmd(upf)
                  upf%beta(ir,iv) = upf%r(ir)**(l+2*(i-1)) * &
                                      exp ( -0.5d0*x ) * fac * e2
               END DO
+              ! look for index kbeta such that v(i)=0 if i>kbeta 
+              DO ir=upf%mesh,1,-1
+                 IF ( ABS(upf%beta(ir,iv)) > 1.D-12 ) EXIT
+              END DO
+              IF ( ir < 2 ) THEN
+                 CALL errore('cpmd2upf','zero beta function?!?',iv)
+              ELSE IF ( MOD(ir,2) /= 0 ) THEN
+                 ! even index
+                 upf%kbeta(iv) = ir
+              ELSE IF ( ir < upf%mesh .AND. MOD(ir,2) == 0 ) THEN
+                 ! odd index
+                 upf%kbeta(iv) = ir+1
+              END IF
+              ! not really the same thing as rc in PP generation
+              upf%rcut  (iv) = upf%r(upf%kbeta(iv))
+              upf%rcutus(iv) = 0.0
            END DO
         END DO
+        upf%kkbeta = MAXVAL(upf%kbeta(:))
      ELSE
+        ALLOCATE(aux(upf%kkbeta))
         iv=0  ! counter on beta functions
         DO i=1,upf%nwfc
            l=upf%lchi(i)
@@ -568,7 +583,7 @@ SUBROUTINE convert_cpmd(upf)
               upf%lll(iv)=l
               upf%els_beta(iv)=upf%els(i)
               DO ir=1,upf%kbeta(iv)
-                 ! the factor 2 converts from Hartree to Rydberg
+                 ! the factor e2 converts from Hartree to Rydberg
                  upf%beta(ir,iv) = e2 * chi(ir,l+1) * &
                       ( vnl(ir,l) - vnl(ir,lloc) )
                  aux(ir) = chi(ir,l+1) * upf%beta(ir,iv)
@@ -579,9 +594,8 @@ SUBROUTINE convert_cpmd(upf)
               upf%dion(iv,iv) = 1.0d0/vll
            ENDIF
         ENDDO
+        DEALLOCATE(aux)
      ENDIF
-
-     DEALLOCATE(aux)
   ENDIF
 
   ALLOCATE (upf%chi(upf%mesh,upf%nwfc))
