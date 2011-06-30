@@ -1414,8 +1414,10 @@ MODULE read_namelists_module
 #endif
        !
        !
-       IF( ibrav < 0 .OR. ibrav > 14 ) &
-          CALL errore( sub_name ,' ibrav out of range ', MAX( 1, ibrav) )
+       IF( ibrav < 0 .OR. ibrav > 14 ) THEN
+          IF ( ibrav /= -12 .AND. ibrav /= -5 ) &
+             CALL errore( sub_name ,' ibrav out of range ', MAX( 1, ibrav) )
+       END IF
        !
        IF( ( ibrav /= 0 ) .AND. ( celldm(1) == 0.0_DP ) .AND. ( a == 0.0_DP ) ) &
            CALL errore( ' iosys ', &

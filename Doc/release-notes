@@ -1,3 +1,9 @@
+New in svn version
+
+   * A few crystal lattices can be specified using the traditional
+     crystallography parameter (labelled with negative ibrav values)
+   * A few extensions to PP format converters, conversion to UPF v.2
+
 Fixed in svn version
 
    * OpenMP crash with PAW

@@ -16,11 +16,12 @@ subroutine latgen(ibrav,celldm,a1,a2,a3,omega)
   !       2  cubic F (fcc)               9  one face centered orthorhombic
   !       3  cubic I (bcc)              10  all face centered orthorhombic
   !       4  hexagonal and trigonal P   11  body centered orthorhombic
-  !       5  trigonal R                 12  monoclinic P (unique axis: c)
+  !       5  trigonal R, 3-fold axis c  12  monoclinic P (unique axis: c)
   !       6  tetragonal P (st)          13  one face centered monoclinic
   !       7  tetragonal I (bct)         14  triclinic P
   !     Also accepted:
   !       0  "free" structure          -12  monoclinic P (unique axis: b)
+  !      -5  trigonal R, threefold axis along (111) 
   !
   !     celldm are parameters which fix the shape of the unit cell
   !     omega is the unit-cell volume
@@ -122,7 +123,7 @@ subroutine latgen(ibrav,celldm,a1,a2,a3,omega)
      !
   else if (ibrav == 5) then
      !
-     !     trigonal lattice
+     !     trigonal lattice, threefold axis along c (001)
      !
      if (celldm (4) <= -0.5d0 .or. celldm (4) >= 1) &
           call errore ('latgen', 'wrong celldm(4)', ibrav)
@@ -138,6 +139,24 @@ subroutine latgen(ibrav,celldm,a1,a2,a3,omega)
      a3(2)= a1(2)
      a3(3)= a2(3)
      !
+  else if (ibrav ==-5) then
+     !
+     !     trigonal lattice, threefold axis along (111)
+     !
+     if (celldm (4) <= -0.5d0 .or. celldm (4) >= 1) &
+          call errore ('latgen', 'wrong celldm(4)', ibrav)
+     !
+     term1 = sqrt(1.0_dp + 2.0_dp*celldm(4))
+     term2 = sqrt(1.0_dp - celldm(4))
+     a1(1) = celldm(1)*(term1-2.0_dp*term2)/3.0_dp
+     a1(2) = celldm(1)*(term1+term2)/3.0_dp
+     a1(3) = a1(2)
+     a2(1) = a1(3)
+     a2(2) = a1(1)
+     a2(3) = a1(2)
+     a3(1) = a1(2)
+     a3(2) = a1(3)
+     a3(3) = a1(1)
   else if (ibrav == 6) then
      !
      !     tetragonal lattice

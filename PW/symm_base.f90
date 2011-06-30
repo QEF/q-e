@@ -718,7 +718,7 @@ SUBROUTINE set_sym_bl(ibrav, symm_type)
 
   CHARACTER(LEN=9), INTENT(INOUT) :: symm_type
 
-  IF ( ibrav == 4 .OR. ibrav == 5 .OR. &
+  IF ( ibrav == 4 .OR. ABS(ibrav) == 5 .OR. &
      ( ibrav == 0 .AND. symm_type == 'hexagonal' ) )  THEN
      !
      ! ... here the hexagonal or trigonal bravais lattice
