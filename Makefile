@@ -32,7 +32,6 @@ default :
 	@echo '  tar          create a tarball of the source tree'
 	@echo '  tar-gui      create a tarball of the GUI sources'
 	@echo '  doc          build documentation'
-	@echo '  log          create ChangeLog and ChangeLog.html files'
 	@echo '  links        create links to all executables in bin/'
 
 ###########################################################
@@ -248,7 +247,7 @@ distclean veryclean : clean
 tar :
 	@if test -f espresso.tar.gz ; then /bin/rm espresso.tar.gz ; fi
 	# do not include unneeded stuff 
-	find ./ -type f | grep -v -e /CVS/ -e'/\.' -e'\.o$$' \
+	find ./ -type f | grep -v -e /.svn/ -e'/\.' -e'\.o$$' \
              -e'\.mod$$' -e'\.a$$' -e'\.d$$' -e'\.i$$' -e'\.F90$$' -e'\.x$$' \
 	     -e'~$$' -e'\./GUI' | xargs tar rvf espresso.tar
 	gzip espresso.tar
@@ -256,17 +255,16 @@ tar :
 #########################################################
 # Tools for the developers
 #########################################################
-# TAR-GUI works only if we have CVS-sources !!!
 tar-gui :
 	@if test -d GUI/PWgui ; then \
 	    cd GUI/PWgui ; \
 	    if test "$(MAKE)" = "" ; then \
-		make $(MFLAGS) TLDEPS= clean cvsinit pwgui-source; \
-	    else $(MAKE) $(MFLAGS) TLDEPS= clean cvsinit pwgui-source; fi; \
+		make $(MFLAGS) TLDEPS= clean svninit pwgui-source; \
+	    else $(MAKE) $(MFLAGS) TLDEPS= clean svninit pwgui-source; fi; \
 	    mv PWgui-*.tgz ../.. ; \
 	else \
 	    echo ; \
-	    echo "  Sorry, tar-gui works only for CVS-sources !!!" ; \
+	    echo "  Sorry, tar-gui works only for svn sources !!!" ; \
 	    echo ; \
 	fi
 
@@ -282,14 +280,6 @@ doc :
 	if test -d doc-def ; then \
 	( cd doc-def ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= all ; \
 	else $(MAKE) $(MFLAGS) TLDEPS= all ; fi ) ; fi
-
-
-# produce a log file of all changes - will work only if you have read
-# access to the cvs server. For usage by developers
-log :
-	-perl ./cvs2cl.pl
-	-perl ./cvs2cl.pl --xml --header /dev/null --stdout \
-		| perl ./cl2html.pl --entries 0 > ChangeLog.html
 
 depend:
 	@echo 'Checking dependencies...'

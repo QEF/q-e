@@ -1,4 +1,4 @@
-TODO LIST - May 2011
+TODO LIST - June 2011
 
 0) Suspected bugs/problems:
   0.1  verbosity/iverbosity/iprsta mess
@@ -14,18 +14,16 @@ TODO LIST - May 2011
 1.1 www.quantum-espresso.org:
   1.1.0 Better download page that allows selection of packages
         (see 1.3.0)
-  1.1.1 update home page picture and sample applications
-  1.1.2 better access to the contents (for developers)
-1.2 Wiki:
-  1.2.1 Still the starting point for documentation, but it should contain
-        only links to html, pdf, and a few selected wiki pages
-        The list of papers should be replaced by, or integrated with,
+  1.1.1 move to wordpress or whatever gives to developers better access
+        to the contents 
+  1.1.2 Move all contents of wiki into the new web site
+  1.1.3 The list of papers should be replaced by, or integrated with,
         a query to some database for cited papers.
-1.3 CVS/packaging:
+1.3 svn/packaging:
   1.3.0 Rethink a directory structure that better reflects the structure
         of QE as packages (see 1.1.0, 2.0). Lots of files to be moved
-        around: a good reason to move to subversion.
-  1.3.1 complete removal of pseudopotentials from CVS: only PPs in old
+        around
+  1.3.1 complete removal of pseudopotentials from svn: only PPs in old
         formats should eventually remain there
   1.3.2 run (and fix: sometimes it doesn't work) source-normalizer script
         dev-tools/src-normal
@@ -39,12 +37,12 @@ TODO LIST - May 2011
   1.4.1 Send monthly reminder? possibly with netiquette
   1.4.2 move to qe-forge, changing names
 1.5 Interoperability:
-  1.5.1 we should maintain somewhere (in the user guide and the wiki)
+  1.5.1 we should maintain somewhere (in the user guide and the web site)
         a list of external "QE-interoperable codes", i.e. that either
         provide input data for QE or read output/data files from QE
 1.6 qe-forge:
-  1.6.1 there should be somewhere (developer manual and wiki) a short 
-        introduction to qe-forge and its usage
+  1.6.1 there should be in the developer manual a short introduction to 
+        qe-forge and its usage
 1.7 Testing
   1.7.1 The automated tests should be moved to a machine that can
         send e-mail to q-e-commits
@@ -53,7 +51,8 @@ TODO LIST - May 2011
         The current mechanism is way too rough.
   1.7.3 Many functionalities are still untested and there is not even an
         example. PP/ is a notable offender: there are a lot of possible
-        calculations, most of which are never tested.
+        calculations, most of which are never tested. Other untested
+        features: contraints, thermostats, ...
 
 2) Documentation
 
@@ -64,13 +63,13 @@ TODO LIST - May 2011
 2.1 Better (and shorter) FAQ list. Notably missing:
     - hardware for QE
     - segmentation fault (present but not visible enough)
-2.2 QE-Tutorial: should be moved to the cvs or svn of qe-forge.
+2.2 QE-Tutorial: should be moved to the svn of qe-forge.
 2.3 Documentation on how to generate PP for GIPAW calculation is missing
 
 3) Pseudopotentials 
 
 3.1 Set up standard tests for all PPs
-3.2 Implement Goedecker PPs
+3.2 Verify conversion of Goedecker PPs to UPF
 3.3 Implement OEP PPs
 3.4 Standard recipe for generating reasonable PPs:
     - Set of prescriptions for generation
@@ -102,7 +101,7 @@ TODO LIST - May 2011
   4.1.2 XMCD in XSpectra
   4.1.4 new GWW (GWL)
   4.1.5 EPW (electron-phonon with Wannier stuff): released, 
-        has to be aligned with CVS version
+        has to be aligned with current version
   4.1.6 G-space symmetrization also for phonons. In the meantime:
         remove check on nonsymmorphic symmetries in pw.x, leave it
         only in the phonon code
