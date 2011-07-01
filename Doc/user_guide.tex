@@ -4194,7 +4194,6 @@ the typical place where to ask questions about \qe.
 % how to contact maintainers
 % how to submit a bug report
 % which hardware for QE
-% How to find E(V) for a noncubic crystal  
 
 \subsection{Installation}
 
@@ -4231,7 +4230,7 @@ the required initialization script for the compiler. See also above.
 
 \paragraph{\configure\ doesn't recognize my system, what should I do?}
 
-If compilation/linking works, never mind, Otherwise, try to supply a suitable  
+If compilation/linking works, never mind; otherwise, try to supply a suitable  
 supported architecture, or/and manually edit the \texttt{make.sys} file. 
 Detailed instructions in Sec.\ref{Sec:Installation}.
 
@@ -4270,6 +4269,12 @@ set of external libraries, compiled with the same compiler you are using.
 ii) If you are using no external libraries and still getting missing symbols, 
 your compiler and compiler libraries are not correctly installed.
 
+\paragraph{Compilation works but the executable doesn't start because
+{\em shared libraries ... not found}}
+This is a frequent problem with MKL libraries. You need to set some
+environment variables telling the system where the shared libraries are.
+See the documentation by Intel that comes with MKL libraries.
+
 \subsection{Pseudopotentials}
 
 \paragraph{Can I mix USPP/NCPP/PAW ?}
@@ -4289,8 +4294,9 @@ First, a general rule: when you ask for a pseudopotential, you should
 always specify which kind of PP you need (NCPP, USPP
 PAW, full- or scalar-relativistic, for which XC functional,
 and, for many elements, with how many electrons in valence).
-If you do not find anything suitable in the ``pseudo'' page of the web 
-site, we have bad news for you: you have to produce it by yourself. 
+If you do not find anything suitable in the pseudopotential page 
+of the web site, or in the links thereof, we have bad news for you: 
+you have to produce it by yourself. 
 See \ref{SubSec:pseudo} for more.
 
 \paragraph{Where can I find pseudopotentials for rare-earth X?}
@@ -4303,6 +4309,7 @@ convinced that it is, see above.
 
 What is available (no warranty) is in directory \texttt{upftools/}.
 You are most welcome to contribute a new converter.
+
 
 \subsection{Input data}
 
@@ -4336,6 +4343,12 @@ and have some understanding of space groups and Wyckoff positions".
 See also:
 \texttt{http://cci.lbl.gov/cctbx/index.html}.
 
+\paragraph{My crystal has a $^4H^{21}_{3_11c}\times \sqrt{\pi}$
+structure, how does this translate to QE input data?}
+
+There are several different way to specify structures,
+described in detail in \texttt{Doc/INPUT\_PW.*}.
+
 \paragraph{How can I generate a supercell?}
 
 If you need to create a supercell and are too lazy to create a 
@@ -4362,7 +4375,6 @@ mathematical theory of symmetry in solids} by Bradley and Cracknell.
 Auxiliary code \texttt{kpoints.x}, found in \texttt{pwtools/} and 
 produced by \texttt{make tools}, generates uniform grids of k-points 
 that are equivalent to Monkhorst-Pack grids. 
-
 
 
 \subsection{Parallel execution}
@@ -4398,13 +4410,21 @@ beware control characters like DOS control-M: they can confuse
 the namelist-reading code. If this happens to the first namelist 
 to be read (usually "\&CONTROL") in parallel execution, see above.
 
-\paragraph{Why is my parallel job crashing with mysterious errors?}
+
+
+\subsection{Frequent errors during execution}
+
+\paragraph{Why is my job crashing with ``segmentation fault''?}
+
+Possible reasons: too much memory requested; executable or libraries
+fitted to a different hardware; code bug; compiler bug. The latter are
+typically not reproducible on different architectures or compilers; 
+code bugs may sometimes be elusive, but typically yield a more
+reproducible, pattern of problems.
 
 Mysterious, unpredictable, erratic errors in parallel execution are
 almost always coming from bugs in the compiler or/and in the MPI 
 libraries and sometimes even to flaky hardware. Sorry, not our fault.
-
-\subsection{Frequent errors during execution}
 
 \paragraph{Why is the code saying {\em Wrong atomic coordinates}?}
 
@@ -4533,24 +4553,26 @@ vacuum level is, which cannot be said from a bulk calculation only"
 (Stefano Baroni, Sept. 2008). 
 
 \paragraph{Why I don't get zero pressure/stress at equilibrium?}
-
-It depends. If you make a calculation with fixed cell parameters, you
+If you make a calculation with fixed cell parameters, you
 will never get exactly zero pressure/stress, unless you use the cell
 that yields perfect equilibrium for your pseudopotentials,  cutoffs,
 k-points, etc.. Such cell will anyway be slightly different from the
 experimental one. Note however that pressures/stresses in the order of
 a few KBar correspond to very small differences in terms of lattice parameters.
 
-If you obtain the equilibrium cell from a variable-cell optimization,
-do not forget that the pressure/stress calculated with the modified
-kinetic energy functional (very useful for variable-cell calculations)
-slightly differ from those calculated without it. Also note that the
-PW basis set used during variable-cell calculations is
-determined by the given cutoff and the {\em initial} cell. If you
-make a calculation with the final geometry at the same cutoff,
-you may get slightly different  results. The difference should
+\paragraph{Why do I get different results from vc-relax and from scf 
+on the same structure?}
+Frst of all, you should verify that the structure is really the same
+(hint: compare Ewald energies). Also note that
+that: a) the modified kinetic energy functional (often used in
+variable-cell calculations) affects the calculated pressure/stress;
+b) the PW basis set used in a variable-cell calculations is
+determined by the cutoff and the {\em initial} cell gemometry. 
+If you make a calculation with the final geometry at the same 
+cutoff, you get slightly different results. The difference should
 be small, though, unless you are using a too low cutoff for your
-system.
+system. Since v.4.3.1, a final scf is performed at the end of the
+vc-relax run to check for this.
 
 \paragraph{Why do I get {\em negative starting charge}?}
 Self-consistency requires an initial guess for the charge density in
