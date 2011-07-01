@@ -1157,6 +1157,12 @@ not recognize the Cray-specific software environment. Older Cray
 machines: T3D, T3E, X1, are no longer supported.
 
 \subsubsection{IBM AIX}
+
+v.4.3.1 of the CP code, Wannier-function dynamics, crashes with
+``segmentation violation'' on some AIX v.6 machines.
+Workaround: compile it with \texttt{mpxlf95} instead of 
+\texttt{mpxlf90}. (Info by Roberto Scipioni, June 2011)
+
 On IBM machines with ESSL libraries installed, there is a 
 potential conflict between a few LAPACK routines that are also part of ESSL, 
 but with a different calling sequence. The appearance of run-time errors like {\em
@@ -1187,7 +1193,7 @@ Beware: the default integer type for 64-bit machine is typically
 but it will not give you any advantage and you may run into trouble.
 
 Currently the following compilers are supported by \configure:
-Intel (ifort), Portland (pgf90), g95, gfortran, Pathscale (pathf95), 
+Intel (ifort), Portland (pgf90), gfortran, g95, Pathscale (pathf95), 
 Sun Studio (sunf95),  AMD Open64 (openf95). The ordering approximately
 reflects the quality of support. Both Intel MKL and AMD acml mathematical
 libraries are supported. Some combinations of compilers and of libraries
@@ -1236,7 +1242,7 @@ from all \texttt{iotk} source files.
 
 \paragraph{Linux PCs with gfortran}
 
-gfortran is supported. Some gfortran versions produce nonfunctional
+Old gfortran versions often produce nonfunctional
 phonon executables (segmentation faults and the like); other versions
 miscompile iotk (the executables work but crash with a mysterious iotk
 error when reading from data files). Recent versions should be fine.
@@ -2132,7 +2138,7 @@ allowed XC functionals and of their acronyms can be found in
 \texttt{Modules/funct.f90}.
 
 More documentation on pseudopotentials and on the UPF format
-can be found in the wiki.
+can be found in the Wiki.
 \section{Using \PWscf}
 
 
@@ -4183,7 +4189,7 @@ the typical place where to ask questions about \qe.
 
 %More FAQS:
 % how/where to submit problems 
-% whom to contact for which problem (download, web, wiki, qeforge,
+% whom to contact for which problem (download, web, qeforge,
 %    mailing list, bug, help ...)
 % how to contact maintainers
 % how to submit a bug report
