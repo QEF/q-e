@@ -94,7 +94,7 @@ module funct
   !              "pbe0"  = "pb0x+pw+pb0x+pbc"  = PBE0
   !              "hse"   = "nox+pw+hse+pbc"    = Heyd-Scuseria-Ernzerhof HSE 06
   !              "b3lyp" = "b3lp+vwn+b3lp+b3lp"= B3LYP
-  !              "vdw-df"= "sla+pw+rpb+vdw"    = vdW-DF
+  !              "vdw-df"= "sla+pw+rpb+vdw1"   = vdW-DF
   ! or by any nonconflicting combination of the following keywords
   ! (case-insensitive):
   !
