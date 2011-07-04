@@ -1,9 +1,7 @@
-TODO LIST - June 2011
+TODO LIST - July 2011
 
 0) Suspected bugs/problems:
-  0.1  verbosity/iverbosity/iprsta mess
   0.2  nstep ignored in vc-relax and other cases
-  0.4  f_inp, fixed occupancies, etc.
   0.5  Small energy differences between PW and CP - maybe PP-related, 
        but might also be a problem of Ewald calculation in CP ("raggio"?)
   0.6  Numerical instabilities with: BLYP; TPSS; noncollinear GGA; LDA+U
@@ -29,20 +27,21 @@ TODO LIST - June 2011
         dev-tools/src-normal
   1.3.3 Files in flib/ use modules in Modules/, while files in Modules/
         in turn call files in flib/. This kind of circular dependency
-        should be avoided.
+        should be avoided. There isn't any good reason for the distinction
+        between 'modules' and 'libraries' anyway
   1.3.4 Everything that is not in the "QE core" or that is used only for 
         special purposes should be extracted and moved into external 
         libs or plugins or whatever is appropriate
 1.4 mailing lists:
   1.4.1 Send monthly reminder? possibly with netiquette
-  1.4.2 move to qe-forge, changing names
+  1.4.2 move to qe-forge, changing names; or move to forums?
 1.5 Interoperability:
   1.5.1 we should maintain somewhere (in the user guide and the web site)
         a list of external "QE-interoperable codes", i.e. that either
         provide input data for QE or read output/data files from QE
 1.6 qe-forge:
-  1.6.1 there should be in the developer manual a short introduction to 
-        qe-forge and its usage
+  1.6.1 there should be a short introduction to qe-forge and its usage
+        in the developer manual
 1.7 Testing
   1.7.1 The automated tests should be moved to a machine that can
         send e-mail to q-e-commits
@@ -56,10 +55,9 @@ TODO LIST - June 2011
 
 2) Documentation
 
-2.0 We should decide a strategy on where to put the documentation.
-    Now it is in Doc/ for everything, except for atomic/ and GWW/.
-    We should decide which packages should have the documentation
-    in other places. The same applies to examples. See 1.3.0
+2.0 The documentation in Doc/ should be split into package-specific
+    documentation, to be included into each package (see 1.3.0).
+    The same applies to tests and examples.
 2.1 Better (and shorter) FAQ list. Notably missing:
     - hardware for QE
     - segmentation fault (present but not visible enough)
@@ -223,6 +221,8 @@ TODO LIST - June 2011
         allocation: see recent GIPAW workaround for an example of
         allocation confusion (qnorm, cell_factor in allocate_nlpot)
   4.4.4 More PW/CP merge:
+        - verbosity/iverbosity/iprsta mess
+        - f_inp, fixed occupancies
         - lda+U modules
         - "cell_base_init" from CP to PW
         - "cellmd" module of PW and "cell_base" of CP
