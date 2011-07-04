@@ -14,6 +14,7 @@ cryst_to_car.o \
 dost.o \
 erf.o \
 expint.o \
+find_free_unit.o \
 flush_unit.o \
 functionals.o \
 lsda_functionals.o \
@@ -38,6 +39,8 @@ sort.o \
 sph_bes.o \
 sph_dbes.o \
 transto.o \
+trimcheck.o \
+test_input_file.o \
 date_and_tim.o \
 volume.o \
 dylmr2.o \
