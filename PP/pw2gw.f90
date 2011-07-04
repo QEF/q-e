@@ -17,7 +17,7 @@ PROGRAM pw2gw
   ! This subroutine writes files containing plane wave coefficients
   ! and other stuff needed by GW codes
 
-  USE io_files,   ONLY : prefix, outdir, tmp_dir, trimcheck
+  USE io_files,   ONLY : prefix, outdir, tmp_dir
   USE io_global,  ONLY : ionode, ionode_id
   USE mp,         ONLY : mp_bcast
   USE mp_global,  ONLY : kunit, nproc, mp_startup
@@ -25,6 +25,9 @@ PROGRAM pw2gw
   USE us,         ONLY : spline_ps
   !
   IMPLICIT NONE
+  !
+  CHARACTER(LEN=256), EXTERNAL :: trimcheck
+  !
   INTEGER :: ios
   INTEGER :: kunittmp
   LOGICAL :: use_gmaps

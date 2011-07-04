@@ -32,7 +32,7 @@ SUBROUTINE open_dvscf_star_q( q_index )
   USE phcom
   USE el_phon
   USE io_global, ONLY : stdout , ionode
-  use io_files, only: prefix,  tmp_dir, nd_nmbr, diropn, find_free_unit
+  use io_files, only: prefix,  tmp_dir, nd_nmbr, diropn
   USE io_global, ONLY : stdout, ionode, ionode_id
   USE mp_global, ONLY : my_pool_id, npool, kunit,  me_pool, root_pool
   USE mp,  ONLY : mp_barrier
@@ -46,6 +46,9 @@ SUBROUTINE open_dvscf_star_q( q_index )
   USE xml_io_base,     ONLY : create_directory
 !  USE noncollin_module, ONLY : nspin
   implicit none
+  !
+  INTEGER, EXTERNAL :: find_free_unit
+  !
   integer :: q_index
 !
 

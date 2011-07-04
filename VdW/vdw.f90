@@ -31,6 +31,7 @@ PROGRAM vdw
   USE check_stop,      ONLY : check_stop_init
   !
   IMPLICIT NONE
+  !
   REAL (kind=DP) :: charge, vstart
   INTEGER :: i
   !
@@ -127,7 +128,7 @@ SUBROUTINE vdw_init ( )
   USE gvect
   USE grid_dimensions
   USE vlocal,    ONLY : strf
-  USE io_files,  ONLY : tmp_dir, prefix, trimcheck
+  USE io_files,  ONLY : tmp_dir, prefix
   USE io_global, ONLY : ionode, ionode_id, stdout
   USE mp,        ONLY : mp_bcast
   USE parser,    ONLY : read_line
@@ -135,7 +136,9 @@ SUBROUTINE vdw_init ( )
   USE control_vdw
 
   IMPLICIT NONE
-
+  !
+  CHARACTER(LEN=256), EXTERNAL :: trimcheck
+  !
   INTEGER :: plot_num, kpoint, kband, spin_component, ios, flen
   LOGICAL :: stm_wfc_matching, lsign
 

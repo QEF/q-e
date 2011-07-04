@@ -20,12 +20,15 @@ PROGRAM pmw
   !
   USE kinds,      ONLY : DP
   USE io_global,  ONLY : stdout, ionode, ionode_id
-  USE io_files,   ONLY : prefix, tmp_dir, trimcheck
+  USE io_files,   ONLY : prefix, tmp_dir
   USE mp,         ONLY : mp_bcast
   USE mp_global,  ONLY : mp_startup
   USE environment,ONLY : environment_start
   !
   IMPLICIT NONE
+  !
+  CHARACTER(LEN=256), EXTERNAL :: trimcheck
+  !
   CHARACTER(len=256) :: outdir
   INTEGER :: ios
   INTEGER :: first_band, last_band

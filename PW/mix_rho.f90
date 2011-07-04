@@ -39,7 +39,6 @@ SUBROUTINE mix_rho( input_rhout, rhoin, alphamix, dr2, tr2_min, iter, n_iter, co
   USE gvecs,        ONLY : ngms
   USE lsda_mod,       ONLY : nspin
   USE control_flags,  ONLY : imix, ngm0, tr2, io_level
-  USE io_files,       ONLY : find_free_unit
   ! ... for PAW:
   USE uspp_param,     ONLY : nhm
   USE scf,            ONLY : scf_type, create_scf_type, destroy_scf_type, &
@@ -114,6 +113,7 @@ SUBROUTINE mix_rho( input_rhout, rhoin, alphamix, dr2, tr2_min, iter, n_iter, co
   !
   ! ... external functions
   !
+  INTEGER, EXTERNAL :: find_free_unit
   !
   CALL start_clock( 'mix_rho' )
   !

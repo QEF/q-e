@@ -469,7 +469,6 @@ CONTAINS
     use funct,                ONLY : get_exx_fraction, start_exx, exx_is_active, &
                                      get_screening_parameter
     USE smooth_grid_dimensions,ONLY: nrxxs
-    USE io_files,             ONLY : find_free_unit
     USE io_global,            ONLY : stdout
 
     implicit none
@@ -503,7 +502,7 @@ CONTAINS
     !It saves all the wavefunctions in a single file called prefix.exx
     !
     USE wavefunctions_module, ONLY : evc  
-    USE io_files,             ONLY : find_free_unit, nwordwfc, iunwfc, iunigk, &
+    USE io_files,             ONLY : nwordwfc, iunwfc, iunigk, &
                                      tmp_dir, prefix
     USE io_global,            ONLY : stdout
     USE buffers,              ONLY : get_buffer

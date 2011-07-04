@@ -18,7 +18,7 @@ SUBROUTINE pw2casino()
   !
   USE control_flags, ONLY : istep, nstep
   !
-  USE io_files, ONLY : tmp_dir, find_free_unit
+  USE io_files, ONLY : tmp_dir
   !
   USE plugin_flags, ONLY : use_pw2casino
   !
@@ -27,6 +27,8 @@ SUBROUTINE pw2casino()
   CHARACTER(len=4) :: postfix
   !
   CHARACTER(len=6), EXTERNAL :: int_to_char
+  !
+  INTEGER, EXTERNAL :: find_free_unit
   !
   INTEGER :: tmp_unit
   !

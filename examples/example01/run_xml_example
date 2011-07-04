@@ -218,7 +218,7 @@ for diago in david cg ; do
 </input>
 EOF
     $ECHO "  running the scf calculation for Si...\c"
-    $PW_COMMAND -xmlinput si.scf.$diago.xml > si.scf.$diago.out
+    $PW_COMMAND < si.scf.$diago.xml > si.scf.$diago.out
     check_failure $?
     $ECHO " done"
 
@@ -346,7 +346,7 @@ EOF
 </input>
 EOF
     $ECHO "  running the band-structure calculation for Si...\c"
-    $PW_COMMAND -xmlinput si.band.$diago.xml > si.band.$diago.out
+    $PW_COMMAND < si.band.$diago.xml > si.band.$diago.out
     check_failure $?
     $ECHO " done"
 
@@ -554,7 +554,7 @@ EOF
 </input>
 EOF
     $ECHO "  running the scf calculation for Al...\c"
-    $PW_COMMAND -xmlinput al.scf.$diago.xml > al.scf.$diago.out
+    $PW_COMMAND < al.scf.$diago.xml > al.scf.$diago.out
     check_failure $?
     $ECHO " done"
 
@@ -676,7 +676,7 @@ EOF
 </input>
 EOF
     $ECHO "  running the band-structure calculation for Al...\c"
-    $PW_COMMAND -xmlinput al.band.$diago.xml > al.band.$diago.out
+    $PW_COMMAND < al.band.$diago.xml > al.band.$diago.out
     check_failure $?
     $ECHO " done"
 
@@ -823,7 +823,7 @@ EOF
 </input>
 EOF
     $ECHO "  running the scf calculation for Cu...\c"
-    $PW_COMMAND -xmlinput cu.scf.$diago.xml > cu.scf.$diago.out
+    $PW_COMMAND < cu.scf.$diago.xml > cu.scf.$diago.out
     check_failure $?
     $ECHO " done"
 
@@ -951,7 +951,7 @@ EOF
 </input>
 EOF
     $ECHO "  running the band-structure calculation for Cu...\c"
-    $PW_COMMAND -xmlinput cu.band.$diago.xml > cu.band.$diago.out
+    $PW_COMMAND < cu.band.$diago.xml > cu.band.$diago.out
     check_failure $?
     $ECHO " done"
 
@@ -1187,7 +1187,7 @@ EOF
 </input>
 EOF
     $ECHO "  running the scf calculation for Ni...\c"
-    $PW_COMMAND -xmlinput ni.scf.$diago.xml > ni.scf.$diago.out
+    $PW_COMMAND < ni.scf.$diago.xml > ni.scf.$diago.out
     check_failure $?
     $ECHO " done"
 
@@ -1329,7 +1329,7 @@ EOF
 </input>
 EOF
     $ECHO "  running the band-structure calculation for Ni...\c"
-    $PW_COMMAND -xmlinput ni.band.$diago.xml > ni.band.$diago.out|
+    $PW_COMMAND < ni.band.$diago.xml > ni.band.$diago.out|
     check_failure $?
     $ECHO " done"
 done

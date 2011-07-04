@@ -44,7 +44,7 @@ SUBROUTINE phq_readin()
   USE partial,       ONLY : atomo, nat_todo
   USE output,        ONLY : fildyn, fildvscf, fildrho
   USE disp,          ONLY : nq1, nq2, nq3
-  USE io_files,      ONLY : tmp_dir, prefix, trimcheck
+  USE io_files,      ONLY : tmp_dir, prefix
   USE noncollin_module, ONLY : i_cons, noncolin
   USE ldaU,          ONLY : lda_plus_u
   USE control_flags, ONLY : iverbosity, modenum
@@ -61,6 +61,8 @@ SUBROUTINE phq_readin()
 !#endif
   !
   IMPLICIT NONE
+  !
+  CHARACTER(LEN=256), EXTERNAL :: trimcheck
   !
   INTEGER :: ios, ipol, iter, na, it
     ! integer variable for I/O control

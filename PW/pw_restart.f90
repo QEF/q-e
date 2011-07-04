@@ -26,9 +26,11 @@ MODULE pw_restart
   USE mp_global, ONLY : my_pool_id, intra_image_comm, intra_pool_comm
   USE mp,        ONLY : mp_bcast, mp_sum, mp_max
   USE parser,    ONLY : version_compare
-
+  !
   !
   IMPLICIT NONE
+  !
+  CHARACTER(LEN=256), external :: trimcheck
   !
   SAVE
   !
@@ -1614,7 +1616,7 @@ MODULE pw_restart
       !
       USE ions_base, ONLY : nat, nsp, ityp, amass, atm, tau, if_pos
       USE cell_base, ONLY : alat
-      USE io_files,  ONLY : psfile, pseudo_dir, trimcheck
+      USE io_files,  ONLY : psfile, pseudo_dir
       !
       IMPLICIT NONE
       !

@@ -15,7 +15,7 @@ PROGRAM wannier_ham
 
   USE io_global, ONLY: stdout, ionode, ionode_id
   USE kinds, ONLY: DP
-  USE io_files,   ONLY : prefix, tmp_dir, trimcheck
+  USE io_files,   ONLY : prefix, tmp_dir
   USE wannier_new, ONLY: nwan, use_energy_int
   USE mp,         ONLY : mp_bcast
   USE read_cards_module, ONLY : read_cards
@@ -23,6 +23,9 @@ PROGRAM wannier_ham
   USE environment,   ONLY : environment_start
 
   IMPLICIT NONE
+  !
+  CHARACTER(LEN=256), EXTERNAL :: trimcheck
+  !
   CHARACTER(len=256) :: outdir
   INTEGER :: ios
   LOGICAL :: plot_bands, u_matrix

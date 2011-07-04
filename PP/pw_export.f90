@@ -270,7 +270,7 @@ PROGRAM pw_export
   USE pwcom
   USE grid_dimensions, ONLY : nr1, nr2, nr3
   USE io_global, ONLY : stdout, ionode, ionode_id
-  USE io_files,  ONLY : psfile, pseudo_dir, trimcheck
+  USE io_files,  ONLY : psfile, pseudo_dir
   USE io_files,  ONLY : prefix, tmp_dir, outdir
   USE ions_base, ONLY : ntype => nsp
   USE iotk_module
@@ -279,6 +279,9 @@ PROGRAM pw_export
   USE environment,   ONLY : environment_start
   !
   IMPLICIT NONE
+  !
+  CHARACTER(LEN=256), EXTERNAL :: trimcheck
+  !
   INTEGER :: ik, i, kunittmp, ios
 
   CHARACTER(len=200) :: pp_file

@@ -1,10 +1,11 @@
 subroutine path_gen_inputs(parse_file_name,engine_prefix,nimage,root,comm)
 !
-USE io_files, only : find_free_unit
 USE mp_global, only : mp_rank
 
 implicit none
 !
+INTEGER, EXTERNAL :: find_free_unit 
+! 
 character(len=*), intent(in) :: parse_file_name
 character(len=*), intent(in) :: engine_prefix
 integer, intent(out) :: nimage

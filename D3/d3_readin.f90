@@ -20,11 +20,13 @@ SUBROUTINE d3_readin()
   USE phcom
   USE d3com
   USE noncollin_module, ONLY : noncolin
-  USE io_files,      ONLY : tmp_dir, prefix, trimcheck
+  USE io_files,      ONLY : tmp_dir, prefix
   USE io_global,     ONLY : ionode, ionode_id
   USE mp,            ONLY : mp_bcast
   !
   IMPLICIT NONE
+  !
+  CHARACTER(LEN=256), EXTERNAL :: trimcheck
   !
   INTEGER :: ios, ipol, iter, na, it, ii
   ! counters

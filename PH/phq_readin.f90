@@ -47,7 +47,7 @@ SUBROUTINE phq_readin()
   USE partial,       ONLY : atomo, nat_todo, nat_todo_input
   USE output,        ONLY : fildyn, fildvscf, fildrho
   USE disp,          ONLY : nq1, nq2, nq3
-  USE io_files,      ONLY : tmp_dir, prefix, trimcheck
+  USE io_files,      ONLY : tmp_dir, prefix
   USE noncollin_module, ONLY : i_cons, noncolin
   USE ldaU,          ONLY : lda_plus_u
   USE control_flags, ONLY : iverbosity, modenum, twfcollect
@@ -62,6 +62,8 @@ SUBROUTINE phq_readin()
   USE xml_io_base, ONLY : create_directory
   !
   IMPLICIT NONE
+  !
+  CHARACTER(LEN=256), EXTERNAL :: trimcheck
   !
   INTEGER :: ios, ipol, iter, na, it, ierr
     ! integer variable for I/O control

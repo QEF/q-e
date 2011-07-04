@@ -78,7 +78,7 @@ SUBROUTINE iosys()
                             eamp_     => eamp, &
                             forcefield
   !
-  USE io_files,      ONLY : input_drho, output_drho, trimcheck, &
+  USE io_files,      ONLY : input_drho, output_drho, &
                             psfile, tmp_dir, wfc_dir, &
                             prefix_     => prefix, &
                             pseudo_dir_ => pseudo_dir
@@ -313,6 +313,8 @@ SUBROUTINE iosys()
   USE input_parameters,       ONLY : deallocate_input_parameters
   !
   IMPLICIT NONE
+  !
+  CHARACTER(LEN=256), EXTERNAL :: trimcheck
   !
   INTEGER  :: ia, image, nt, inlc
   REAL(DP) :: theta, phi

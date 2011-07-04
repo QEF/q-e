@@ -17,7 +17,7 @@ PROGRAM initial_state
   !
   USE io_global,  ONLY : stdout, ionode, ionode_id
   USE kinds,      ONLY : DP
-  USE io_files,   ONLY : prefix, tmp_dir, iunwfc, nwordwfc, trimcheck
+  USE io_files,   ONLY : prefix, tmp_dir, iunwfc, nwordwfc
   USE ions_base,  ONLY : nat
   USE klist,      ONLY : nks, xk
   USE wvfct,      ONLY : npw, igk
@@ -29,6 +29,9 @@ PROGRAM initial_state
   USE environment,ONLY : environment_start
   !
   IMPLICIT NONE
+  !
+  CHARACTER(LEN=256), EXTERNAL :: trimcheck
+  !
   CHARACTER(len=256) :: outdir
   INTEGER :: ios, ik, excite(ntypx)
   NAMELIST / inputpp / outdir, prefix, excite

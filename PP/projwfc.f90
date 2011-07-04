@@ -128,17 +128,18 @@ PROGRAM projwfc
   USE constants,  ONLY : rytoev
   USE kinds,      ONLY : DP
   USE klist,      ONLY : degauss, ngauss, lgauss
-  USE io_files,   ONLY : nd_nmbr, prefix, tmp_dir, trimcheck
+  USE io_files,   ONLY : nd_nmbr, prefix, tmp_dir
   USE noncollin_module, ONLY : noncolin
   USE mp,               ONLY : mp_bcast
   USE mp_global,        ONLY : mp_startup, nproc_ortho
   USE environment,      ONLY : environment_start
   !
   ! for GWW
-  USE io_files,     ONLY : find_free_unit
-  !
   !
   IMPLICIT NONE
+  !
+  CHARACTER(LEN=256), EXTERNAL :: trimcheck
+  !
   CHARACTER (len=256) :: filpdos, filproj, io_choice, outdir
   REAL (DP)      :: Emin, Emax, DeltaE, degauss1, smoothing
   INTEGER :: ngauss1, ios
@@ -343,13 +344,15 @@ SUBROUTINE projwave( filproj, lsym, lgww )
   USE uspp, ONLY: nkb, vkb
   USE uspp_param, ONLY: upf
   USE becmod,   ONLY: bec_type, becp, calbec, allocate_bec_type, deallocate_bec_type
-  USE io_files, ONLY: nd_nmbr, prefix, tmp_dir, nwordwfc, iunwfc, find_free_unit
+  USE io_files, ONLY: nd_nmbr, prefix, tmp_dir, nwordwfc, iunwfc
   USE spin_orb, ONLY: lspinorb
   USE wavefunctions_module, ONLY: evc
   !
   USE projections
   !
   IMPLICIT NONE
+  !
+  INTEGER, EXTERNAL :: find_free_unit
   !
   CHARACTER (len=*) :: filproj
   INTEGER :: ik, ibnd, i, j, k, na, nb, nt, isym, n,  m, m1, l, nwfc,&
@@ -2123,7 +2126,7 @@ SUBROUTINE pprojwave( filproj, lsym )
   USE uspp, ONLY: nkb, vkb
   USE uspp_param, ONLY: upf
   USE becmod,   ONLY: bec_type, becp, calbec, allocate_bec_type, deallocate_bec_type
-  USE io_files, ONLY: nd_nmbr, prefix, tmp_dir, nwordwfc, iunwfc, find_free_unit
+  USE io_files, ONLY: nd_nmbr, prefix, tmp_dir, nwordwfc, iunwfc
   USE spin_orb, ONLY: lspinorb
   USE mp,       ONLY: mp_bcast
   USE mp_global,        ONLY : npool, nproc_pool, me_pool, root_pool, &
@@ -2137,6 +2140,8 @@ SUBROUTINE pprojwave( filproj, lsym )
   USE projections
   !
   IMPLICIT NONE
+  !
+  INTEGER, EXTERNAL :: find_free_unit
   !
   COMPLEX(DP), PARAMETER :: zero = ( 0.0d0, 0.0d0 )
   COMPLEX(DP), PARAMETER :: one  = ( 1.0d0, 0.0d0 )

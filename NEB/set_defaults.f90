@@ -37,7 +37,6 @@ SUBROUTINE set_engine_io_units()
   !-----------------------------------------------------------------------------
   !
   USE io_global, ONLY : stdout, xmlinputunit, ionode
-  USE io_files,  ONLY : find_free_unit
   !
   if(ionode) stdout = find_free_unit()
   !

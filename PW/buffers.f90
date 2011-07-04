@@ -22,6 +22,8 @@ MODULE buffers
   INTEGER :: nword_
   CHARACTER(LEN=80) :: extension_
   !
+  INTEGER, EXTERNAL :: find_free_unit
+  !
   CONTAINS
   !-----------------------------------------------------------------------
   SUBROUTINE open_buffer (unit, extension, nword, maxrec, exst)
@@ -170,7 +172,7 @@ SUBROUTINE close_buffer ( unit, status )
   !     unit =-1 : deallocate buffer; if "status='keep'" save to file
   !                (using saved value of extension)
   !
-  USE io_files,       ONLY : find_free_unit, diropn
+  USE io_files, ONLY : diropn
   !
   IMPLICIT NONE
   !
@@ -225,7 +227,7 @@ SUBROUTINE init_buffer ( unit, exst, ierr )
   !     exst     : T if the file where to read from is present
   !     ierr     : 0 if everything ok, 1 otherwise
   !
-  USE io_files,       ONLY : find_free_unit, diropn
+  USE io_files, ONLY : diropn
   !
   IMPLICIT NONE
   !

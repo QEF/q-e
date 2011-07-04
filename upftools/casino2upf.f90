@@ -15,9 +15,11 @@ PROGRAM casino2upf
 
   USE casino_pp
   USE upf_module
-  USE io_files, ONLY : find_free_unit
   
   IMPLICIT NONE
+  !
+  INTEGER, EXTERNAL :: find_free_unit
+  !
   CHARACTER(len=256) :: pp_data = 'pp.data'
   CHARACTER(len=256), ALLOCATABLE:: wavefile(:)
   INTEGER, ALLOCATABLE :: waveunit(:)

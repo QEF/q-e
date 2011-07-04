@@ -12,7 +12,6 @@ PROGRAM neb
   ! ... Nudged Elastic Band / Strings Method algorithm
   !
   USE io_global,        ONLY : meta_ionode_id, xmlinputunit
-  USE io_files,         ONLY : find_free_unit
   USE parameters,       ONLY : ntypx, npk, lmaxx
   USE control_flags,    ONLY : conv_elec, conv_ions, lpath, gamma_only
   USE environment,      ONLY : environment_start, environment_end

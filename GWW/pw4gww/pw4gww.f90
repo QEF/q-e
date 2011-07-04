@@ -53,7 +53,7 @@ program pp_punch
   use grid_dimensions, ONLY : nrxx
   USE constants,       ONLY : rytoev
   use io_global, ONLY : stdout, ionode, ionode_id
-  use io_files,  ONLY : psfile, pseudo_dir, trimcheck
+  use io_files,  ONLY : psfile, pseudo_dir
   use io_files,  ONLY : prefix, tmp_dir, outdir
   use ions_base, ONLY : ntype => nsp
   use iotk_module
@@ -141,6 +141,9 @@ program pp_punch
 
   !
   implicit none
+  !
+  CHARACTER(LEN=256), EXTERNAL :: trimcheck
+  !
   integer :: i, kunittmp, ios
 
   character(len=200) :: pp_file

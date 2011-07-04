@@ -10,7 +10,7 @@
 PROGRAM bands
   !-----------------------------------------------------------------------
   !
-  USE io_files,  ONLY : prefix, tmp_dir, trimcheck
+  USE io_files,  ONLY : prefix, tmp_dir
   USE mp_global, ONLY : npool, nproc, nproc_pool, nproc_file, &
                         nproc_pool_file, mp_startup
   USE control_flags, ONLY : twfcollect
@@ -22,6 +22,8 @@ PROGRAM bands
   USE mp,        ONLY : mp_bcast
   !
   IMPLICIT NONE
+  !
+  CHARACTER(LEN=256), EXTERNAL :: trimcheck
   !
   CHARACTER (len=256) :: filband, filp, outdir
   LOGICAL :: lsigma(4), lsym, lp, no_overlap

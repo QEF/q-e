@@ -21,7 +21,7 @@ SUBROUTINE do_cond(done)
   USE uspp,       ONLY: okvan
   USE symm_base,  ONLY: nsym, s, t_rev, time_reversal
   USE cond
-  USE io_files,   ONLY: outdir, tmp_dir, prefix,  trimcheck
+  USE io_files,   ONLY: outdir, tmp_dir, prefix
   !!! RECOVER
   USE cond_restart
   USE input_parameters, ONLY: max_seconds
@@ -36,7 +36,9 @@ SUBROUTINE do_cond(done)
   USE environment,   ONLY : environment_start
 
   IMPLICIT NONE
-
+  !
+  CHARACTER(LEN=256), EXTERNAL :: trimcheck
+  !
   LOGICAL, INTENT(OUT) :: done
   !
   REAL(DP) :: wtot, tk

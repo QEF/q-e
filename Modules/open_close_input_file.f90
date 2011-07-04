@@ -7,13 +7,13 @@
 !
 !
 !----------------------------------------------------------------------------
-SUBROUTINE open_input_file_x(xmlinput,attr,unit)
+SUBROUTINE open_input_file_x(lxmlinput,attr,unit)
   !-----------------------------------------------------------------------------
   !
   ! ...  this subroutine opens the input file standard input ( unit 5 )
   ! ...  Use "-input filename" to read input from file "filename":
   ! ...  may be useful if you have trouble reading from standard input
-  ! ...  or xml input
+  ! ...  or xml input. xml input can be opened on a different unit than 5.
   ! ...  ---------------------------------------------------------------
   !
   USE kinds,         ONLY : DP
@@ -24,76 +24,147 @@ SUBROUTINE open_input_file_x(xmlinput,attr,unit)
   !
   IMPLICIT NONE
   !
-  LOGICAL, intent(inout), optional :: xmlinput
+  INTEGER, EXTERNAL :: find_free_unit
+  !
+  LOGICAL, intent(inout), optional :: lxmlinput
   CHARACTER (len=*), intent(inout), optional :: attr
   INTEGER, intent(in), optional :: unit
   !
-  LOGICAL :: xmlinput_loc,checkxml
+  LOGICAL :: lxmlinput_loc,lcheckxml
   INTEGER :: unit_loc
   !
   INTEGER  :: iiarg, nargs, iargc, ierr
   CHARACTER (len=50) :: arg
   !
+  INTEGER :: stderr=6, stdin=5
+  CHARACTER(LEN=256) :: dummy, input_file, temp_file
+  INTEGER :: stdtmp
+  LOGICAL :: lfound
   !
 #if defined(__ABSOFT)
 #   define getarg getarg_
 #   define iargc  iargc_
 #endif
   !
-  xmlinput_loc = .false.
+  lxmlinput_loc = .false.
   unit_loc = 5
-  checkxml = .false.
+  lcheckxml = .false.
   !
-  IF(present(attr).and.(.not.present(xmlinput))) THEN
+  IF(present(attr).and.(.not.present(lxmlinput))) THEN
      !
      CALL errore('open_input_file', 'xmlinput not present in routine call')
      !
-  ELSEIF(present(xmlinput).and.(.not.present(attr))) THEN
+  ELSEIF(present(lxmlinput).and.(.not.present(attr))) THEN
      !
      CALL errore('open_input_file', 'attr not present in routine call')
      !
   ENDIF
   !
-  IF (present(attr).and.(present(xmlinput))) checkxml = .true.
+  IF (present(attr).and.(present(lxmlinput))) lcheckxml = .true.
   !
   IF(PRESENT(unit)) unit_loc = unit
+  !
   xmlinputunit = unit_loc
   !
   ! ... check if use xml input or not
   !
-  xmlinput_loc = .false.
+  lxmlinput_loc = .false.
+  !
+  !
+  ! ... Input from file ?
+  !
+  temp_file="input_tmp.in"
+  !
+  lfound=.false.
+  stdtmp = find_free_unit()
+  OPEN(UNIT = stdtmp, FILE = trim(temp_file))
+  !
   nargs = iargc()
   !
-  IF (checkxml) THEN
-     DO iiarg = 1, ( nargs - 1 )
-        !
-        CALL getarg( iiarg, arg )
-        !
-        IF ( trim( arg ) == '-xmlinput') THEN
-           CALL getarg( ( iiarg + 1 ) , arg )
-           xmlinput_loc = .true.
-           WRITE(stdout, '(5x,a)') "Waiting for xml input..."
-           CALL iotk_open_read( unit_loc, arg, attr = attr, qe_syntax = .true., ierr = ierr)
-           IF (ierr /= 0) CALL errore('open_input_file','error opening xml file', abs(ierr))
-           EXIT
-        ENDIF
-        !
-     ENDDO
+  ierr = -1
+  !
+  DO iiarg = 1, ( nargs - 1 )
      !
-     xmlinput = xmlinput_loc
+     CALL getarg( iiarg, input_file )
      !
+     IF ( TRIM( input_file ) == '-input' .OR. &
+          TRIM( input_file ) == '-inp'   .OR. &
+          TRIM( input_file ) == '-in' ) THEN
+        !
+        CALL getarg( ( iiarg + 1 ) , input_file )
+        !
+        OPEN ( UNIT = unit_loc, FILE = input_file, FORM = 'FORMATTED', &
+               STATUS = 'OLD', IOSTAT = ierr )
+! starting copy file
+        if(ierr==0) then
+          dummy=""
+          do while (TRIM(dummy).ne."MAGICALME")
+            read(unit_loc,fmt='(A256)',END=10) dummy
+            write(stdtmp,*) trim(dummy)
+          enddo
+10 CONTINUE
+        endif
+        !
+        ! TODO: return error code ierr (-1 no file, 0 file opened, > 1 error)
+        ! do not call "errore" here: it may hang in parallel execution
+        ! if this routine ois called by ionode only
+        !
+        IF ( ierr > 0 ) WRITE (stderr, &
+                '(" *** input file ",A," not found ***")' ) TRIM( input_file )
+        !
+        lfound=.true.
+        !
+     END IF
+     !
+  END DO
+!
+if(lfound) CLOSE(unit_loc)
+!
+if(.not.lfound) then
+! if no file specified then copy from standard input
+  dummy=""
+  do while (TRIM(dummy).ne."MAGICALME")
+    read(stdin,fmt='(A256)',END=20) dummy
+    write(stdtmp,*) trim(dummy)
+  enddo
+endif
+!
+!
+20 CONTINUE
+!
+CLOSE(stdtmp)
+OPEN ( UNIT = unit_loc, FILE = trim(temp_file) , FORM = 'FORMATTED', &
+          STATUS = 'OLD', IOSTAT = ierr )
+!
+
+  !
+  IF (lcheckxml) THEN
+    !
+    CALL test_input_xml(unit_loc,lxmlinput_loc)
+    !
+    lxmlinput = lxmlinput_loc
+    !
+    IF(lxmlinput_loc) then
+      CLOSE(unit_loc)
+      WRITE(stdout, '(5x,a)') "Waiting for xml input..."
+      CALL iotk_open_read( unit_loc, "input_tmp.in", attr = attr, qe_syntax = .true., ierr = ierr)
+      IF (ierr /= 0) CALL errore('open_input_file','error opening xml file', abs(ierr))
+    ENDIF
+    !
   ENDIF
   !
-  IF (.not.xmlinput_loc) THEN
-     CALL input_from_file(unit_loc)
-     WRITE(stdout, '(5x,a)') "Waiting for input..."
+  IF(.not.lxmlinput_loc) THEN
+    CLOSE(unit_loc)
+    OPEN ( UNIT = unit_loc, FILE = "input_tmp.in" , FORM = 'FORMATTED', &
+          STATUS = 'OLD', IOSTAT = ierr )
+    WRITE(stdout, '(5x,a)') "Waiting for input..."
   ENDIF
   !
   RETURN
   !
 END SUBROUTINE open_input_file_x
 
-SUBROUTINE close_input_file_x(xmlinput,unit)
+SUBROUTINE close_input_file_x(lxmlinput,unit)
   !
   ! ...  this subroutine close the input file for the specified unit
   ! ...  ( default is unit 5 )
@@ -107,21 +178,21 @@ SUBROUTINE close_input_file_x(xmlinput,unit)
   !
   IMPLICIT NONE
   !
-  LOGICAL, intent(inout), optional :: xmlinput
+  LOGICAL, intent(inout), optional :: lxmlinput
   INTEGER, intent(in), optional :: unit
   !
-  LOGICAL :: xmlinput_loc
+  LOGICAL :: lxmlinput_loc
   LOGICAL :: opened
   INTEGER :: unit_loc, ierr
   !
   !
   unit_loc = 5
-  xmlinput_loc = .false.
+  lxmlinput_loc = .false.
   !
-  IF (present(xmlinput)) xmlinput_loc = xmlinput
+  IF (present(lxmlinput)) lxmlinput_loc = lxmlinput
   IF(present(unit)) unit_loc = unit
   !
-  IF (xmlinput_loc) THEN
+  IF (lxmlinput_loc) THEN
      !
      CALL iotk_close_read(unit=unit_loc, ierr = ierr)
      IF (ierr /= 0) CALL errore('close_input_file','error closing xml file', abs(ierr) )

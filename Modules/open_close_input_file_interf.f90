@@ -23,7 +23,7 @@ MODULE open_close_input_file_interf
   !
   !
   INTERFACE open_input_file
-  SUBROUTINE open_input_file_x(xmlinput,attr,unit)
+  SUBROUTINE open_input_file_x(lxmlinput,attr,unit)
   !
   ! ...  this subroutine opens the input file standard input ( unit 5 )
   ! ...  Use "-input filename" to read input from file "filename":
@@ -39,7 +39,7 @@ MODULE open_close_input_file_interf
   !
   IMPLICIT NONE
   !
-  LOGICAL, intent(inout), optional :: xmlinput
+  LOGICAL, intent(inout), optional :: lxmlinput
   CHARACTER (len=iotk_attlenx), intent(inout), optional :: attr
   INTEGER, intent(in), optional :: unit
   !
@@ -48,7 +48,7 @@ END INTERFACE
   !
   !
 INTERFACE close_input_file
-SUBROUTINE close_input_file_x(xmlinput,unit)
+SUBROUTINE close_input_file_x(lxmlinput,unit)
   !
   ! ...  this subroutine close the input file for the specified unit
   ! ...  ( default is unit 5 )
@@ -62,7 +62,7 @@ SUBROUTINE close_input_file_x(xmlinput,unit)
   !
   IMPLICIT NONE
   !
-  LOGICAL, intent(inout), optional :: xmlinput
+  LOGICAL, intent(inout), optional :: lxmlinput
   INTEGER, intent(in), optional :: unit
   !
 END SUBROUTINE close_input_file_x

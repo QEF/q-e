@@ -15,12 +15,15 @@ SUBROUTINE cg_readin()
   USE cgcom
   USE control_flags, ONLY : gamma_only
   USE uspp,          ONLY : okvan
-  USE io_files,  ONLY : tmp_dir, prefix, trimcheck
+  USE io_files,  ONLY : tmp_dir, prefix
   USE io_global, ONLY : ionode, ionode_id
   USE noncollin_module, ONLY : noncolin
   USE mp,        ONLY : mp_bcast
   !
   IMPLICIT NONE
+  !
+  CHARACTER(LEN=256), EXTERNAL :: trimcheck
+  !
   INTEGER :: iunit =5
   CHARACTER(len=256) :: outdir
   NAMELIST /inputph/ prefix, fildyn, trans, epsil, raman, nmodes,     &

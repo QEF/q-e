@@ -17,7 +17,7 @@ PROGRAM pw2wannier90
   USE cell_base,  ONLY : at, bg
   USE lsda_mod,   ONLY : nspin, isk
   USE klist,      ONLY : nkstot
-  USE io_files,   ONLY : prefix, tmp_dir, trimcheck
+  USE io_files,   ONLY : prefix, tmp_dir
   USE noncollin_module, ONLY : noncolin
   USE control_flags,    ONLY : gamma_only
   USE environment,ONLY : environment_start
@@ -25,6 +25,9 @@ PROGRAM pw2wannier90
   USE wannier
   !
   IMPLICIT NONE
+  !
+  CHARACTER(LEN=256), EXTERNAL :: trimcheck
+  !
   INTEGER :: ios
   CHARACTER(len=4) :: spin_component
   CHARACTER(len=256) :: outdir
@@ -544,7 +547,6 @@ SUBROUTINE read_nnkp
   USE constants, ONLY : eps6, tpi, bohr => BOHR_RADIUS_ANGS
   USE cell_base, ONLY : at, bg, alat
   USE gvect,     ONLY : g, gg
-  USE io_files,  ONLY : find_free_unit
   USE klist,     ONLY : nkstot, xk
   USE mp,        ONLY : mp_bcast, mp_sum
   USE mp_global, ONLY : intra_pool_comm
@@ -553,7 +555,9 @@ SUBROUTINE read_nnkp
   USE wannier
 
   IMPLICIT NONE
-
+  ! 
+  INTEGER, EXTERNAL :: find_free_unit
+  !
   real(DP) :: g_(3), gg_
   INTEGER :: ik, ib, ig, ipol, iw, idum, indexb
   INTEGER numk, i, j
@@ -828,7 +832,6 @@ SUBROUTINE compute_mmn
    USE gvecs,         ONLY : nls, nlsm
    USE klist,           ONLY : nkstot, xk
    USE io_files,        ONLY : nwordwfc, iunwfc
-   USE io_files,        ONLY : find_free_unit
    USE gvect,           ONLY : g, ngm, gstart
    USE cell_base,       ONLY : tpiba2, omega, alat, tpiba, at, bg
    USE ions_base,       ONLY : nat, ntyp => nsp, ityp, tau
@@ -844,7 +847,9 @@ SUBROUTINE compute_mmn
    USE wannier
 
    IMPLICIT NONE
-
+   !
+   INTEGER, EXTERNAL :: find_free_unit
+   !
    INTEGER :: mmn_tot, ik, ikp, ipol, ib, npwq, i, m, n
    INTEGER :: ikb, jkb, ih, jh, na, nt, ijkb0, ind, nbt
    INTEGER :: ikevc, ikpevcq
@@ -1225,7 +1230,6 @@ SUBROUTINE compute_amn
    USE control_flags,   ONLY : gamma_only
    USE wavefunctions_module, ONLY : evc
    USE io_files,        ONLY : nwordwfc, iunwfc
-   USE io_files,        ONLY : find_free_unit
    USE gvect,           ONLY : g, ngm, gstart
    USE cell_base,       ONLY : tpiba2
    USE uspp,            ONLY : nkb, vkb
@@ -1240,7 +1244,9 @@ SUBROUTINE compute_amn
    USE wvfct,           ONLY : ecutwfc
 
    IMPLICIT NONE
-
+   !
+   INTEGER, EXTERNAL :: find_free_unit
+   !
    COMPLEX(DP) :: amn, zdotc
    real(DP):: ddot
    COMPLEX(DP), ALLOCATABLE :: sgf(:,:)
@@ -1456,11 +1462,12 @@ SUBROUTINE write_band
    USE wvfct, ONLY : nbnd, et
    USE klist, ONLY : nkstot
    USE constants, ONLY: rytoev
-   USE io_files, ONLY : find_free_unit
    USE wannier
 
    IMPLICIT NONE
-
+   !
+   INTEGER, EXTERNAL :: find_free_unit
+   !
    INTEGER ik, ibnd, ibnd1, ikevc
 
    IF (wan_mode=='standalone') THEN
@@ -1493,7 +1500,7 @@ SUBROUTINE write_plot
    USE wvfct, ONLY : nbnd, npw, igk, g2kin, ecutwfc
    USE control_flags, ONLY : gamma_only
    USE wavefunctions_module, ONLY : evc, psic
-   USE io_files, ONLY : find_free_unit, nwordwfc, iunwfc
+   USE io_files, ONLY : nwordwfc, iunwfc
    USE wannier
    USE gvecs,         ONLY : nls, nlsm
    USE klist,           ONLY : nkstot, xk
@@ -1504,6 +1511,9 @@ SUBROUTINE write_plot
    USE noncollin_module,ONLY : noncolin
 
    IMPLICIT NONE
+   !
+   INTEGER, EXTERNAL :: find_free_unit
+   !
    INTEGER ik, ibnd, ibnd1, ikevc, i1, j, spin
    CHARACTER*20 wfnname
 
@@ -1648,7 +1658,7 @@ SUBROUTINE write_parity
    USE wvfct,                ONLY : nbnd, npw, igk, g2kin, ecutwfc
    USE control_flags,        ONLY : gamma_only
    USE wavefunctions_module, ONLY : evc
-   USE io_files,             ONLY : find_free_unit, nwordwfc, iunwfc
+   USE io_files,             ONLY : nwordwfc, iunwfc
    USE wannier
    USE klist,                ONLY : nkstot, xk
    USE gvect,                ONLY : g, ngm
@@ -1656,7 +1666,9 @@ SUBROUTINE write_parity
    USE constants,            ONLY : eps6
 
    IMPLICIT NONE
-
+   !
+   INTEGER, EXTERNAL :: find_free_unit
+   !
    INTEGER                      :: ibnd,igv,kgamma,ik,i,ig_idx(32)
    INTEGER,DIMENSION(nproc)     :: num_G,displ
 

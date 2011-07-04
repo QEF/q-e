@@ -88,69 +88,9 @@ MODULE io_files
   INTEGER :: iunwf    = 114
   INTEGER :: nwordwpp = 2
   INTEGER :: nwordwf  = 2
-
+  !
+  INTEGER, EXTERNAL :: find_free_unit
 CONTAINS
-  !
-  !-----------------------------------------------------------------------
-  FUNCTION trimcheck ( directory )
-    !-----------------------------------------------------------------------
-    !
-    ! ... verify if directory ends with /, add one if needed; 
-    ! ... trim white spaces and put the result in trimcheck
-    !
-    IMPLICIT NONE
-    !
-    CHARACTER (LEN=*), INTENT(IN) :: directory
-    CHARACTER (LEN=256) :: trimcheck
-    INTEGER  :: l
-    !
-    l = LEN_TRIM( directory )
-    IF ( l == 0 ) CALL errore( 'trimcheck', ' input name empty', 1)
-    !
-    IF ( directory(l:l) == '/' ) THEN
-       trimcheck = TRIM ( directory)
-    ELSE
-       IF ( l < LEN( trimcheck ) ) THEN
-          trimcheck = TRIM ( directory ) // '/'
-       ELSE
-          CALL errore(  'trimcheck', ' input name too long', l )
-       END IF
-    END IF
-    !
-    RETURN
-    !
-  END FUNCTION trimcheck
-  !
-  !--------------------------------------------------------------------------
-  FUNCTION find_free_unit()
-    !--------------------------------------------------------------------------
-    !
-    IMPLICIT NONE
-    !
-    INTEGER :: find_free_unit
-    INTEGER :: iunit
-    LOGICAL :: opnd
-    !
-    !
-    unit_loop: DO iunit = 99, 1, -1
-       !
-       INQUIRE( UNIT = iunit, OPENED = opnd )
-       !
-       IF ( .NOT. opnd ) THEN
-          !
-          find_free_unit = iunit
-          !
-          RETURN
-          !
-       END IF
-       !
-    END DO unit_loop
-    !
-    CALL errore( 'find_free_unit()', 'free unit not found ?!?', 1 )
-    !
-    RETURN
-    !
-  END FUNCTION find_free_unit
   !
   !--------------------------------------------------------------------------
   SUBROUTINE delete_if_present( filename, in_warning )

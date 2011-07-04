@@ -20,7 +20,7 @@ PROGRAM plan_avg
   USE gvecs,   ONLY : dual
   USE klist,     ONLY : nkstot, xk
   USE ions_base, ONLY : nat, ntyp=>nsp, ityp, tau, atm, zv
-  USE io_files,  ONLY : tmp_dir, prefix, trimcheck
+  USE io_files,  ONLY : tmp_dir, prefix
   USE io_global, ONLY : ionode, ionode_id
   USE wvfct,     ONLY : nbnd, ecutwfc
   USE mp,        ONLY : mp_bcast
@@ -29,6 +29,9 @@ PROGRAM plan_avg
   USE environment,   ONLY : environment_start
   !
   IMPLICIT NONE
+  !
+  CHARACTER(LEN=256), EXTERNAL :: trimcheck
+  !
   INTEGER :: ninter
   CHARACTER(len=256) :: filplot, outdir
   REAL(DP), ALLOCATABLE :: averag (:,:,:), plan (:,:,:)

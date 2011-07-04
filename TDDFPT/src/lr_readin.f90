@@ -18,7 +18,7 @@ SUBROUTINE lr_readin
 
   USE lr_variables
   USE kinds,               ONLY : DP
-  USE io_files,            ONLY : tmp_dir, prefix,trimcheck,wfc_dir
+  USE io_files,            ONLY : tmp_dir, prefix,wfc_dir
   USE lsda_mod,            ONLY : current_spin, nspin
   USE control_flags,       ONLY : twfcollect,use_para_diag
   USE scf,                 ONLY : vltot, v, vrs, vnew, &
@@ -47,6 +47,8 @@ SUBROUTINE lr_readin
   USE DFUNCT,         ONLY : newd
   USE vlocal,         ONLY : strf
   IMPLICIT NONE
+  !
+  CHARACTER(LEN=256), EXTERNAL :: trimcheck
   !
   CHARACTER(len=256) :: beta_gamma_z_prefix
           ! fine control of beta_gamma_z file

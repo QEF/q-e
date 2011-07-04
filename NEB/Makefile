@@ -36,8 +36,7 @@ path_to_engine_fix_atom_pos.o \
 path_to_engine_mp.o \
 path_variables.o \
 set_defaults.o \
-stop_run_path.o \
-test_input_file.o
+stop_run_path.o 
 
 QEMODS=../Modules/libqemod.a
 PWOBJS= ../PW/libpw.a

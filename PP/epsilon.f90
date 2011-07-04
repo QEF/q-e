@@ -21,7 +21,7 @@
   !
   PUBLIC :: grid_build, grid_destroy
   PUBLIC :: focc, wgrid, alpha
-
+  !
 CONTAINS
 
 !---------------------------------------------
@@ -139,7 +139,7 @@ PROGRAM epsilon
   USE mp,          ONLY : mp_bcast
   USE iotk_module
   USE xml_io_base
-  USE io_files,    ONLY : tmp_dir, prefix, outdir, trimcheck
+  USE io_files,    ONLY : tmp_dir, prefix, outdir
   USE constants,   ONLY : RYTOEV
   USE ener,        ONLY : ef
   USE klist,       ONLY : lgauss
@@ -150,6 +150,8 @@ PROGRAM epsilon
   USE environment, ONLY : environment_start
   !
   IMPLICIT NONE
+  !
+  CHARACTER(LEN=256), EXTERNAL :: trimcheck
   !
   ! input variables
   !

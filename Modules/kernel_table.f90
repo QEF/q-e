@@ -31,7 +31,7 @@ MODULE kernel_table
   !!  kernel_table rather than passing variables around all over the place.
   
   USE kinds,                  ONLY : dp
-  USE io_files,               ONLY : find_free_unit, pseudo_dir
+  USE io_files,               ONLY : pseudo_dir
   USE constants,              ONLY : pi
   use wrappers,               ONLY : md5_from_file
   implicit none
@@ -72,6 +72,7 @@ MODULE kernel_table
   CHARACTER(LEN=30)  :: double_format = "(1p4e23.14)"
   CHARACTER(len=32)  :: vdw_kernel_md5_cksum = 'NOT SET'
   !
+  INTEGER, EXTERNAL :: find_free_unit
   ! --------------------------------------------------------------------------
 
 CONTAINS
@@ -87,8 +88,6 @@ CONTAINS
 
   subroutine initialize_kernel_table()
     
-    USE io_files,         ONLY : find_free_unit
-
     integer :: q1_i, q2_i                           !! Indexing variables
 
     integer :: kernel_file                          !! The unit number for the kernel file

@@ -177,19 +177,22 @@ PROGRAM PAWplot
   USE cell_base,  ONLY : bg
   USE gvect,      ONLY : ngm, nl
   USE scf,        ONLY : rho
-  USE io_files,   ONLY : tmp_dir, prefix, trimcheck
+  USE io_files,   ONLY : tmp_dir, prefix
   USE noncollin_module, ONLY : noncolin
   USE paw_variables,    ONLY : okpaw
   USE paw_postproc_,    ONLY : PAW_make_ae_charge_
   !
   IMPLICIT NONE
+  !
+  CHARACTER(LEN=256), EXTERNAL :: trimcheck
+  LOGICAL, EXTERNAL :: matches
+  !
   CHARACTER(len=256) :: outdir, filplot
   CHARACTER(len=16)  :: plot
   INTEGER :: spin_component, nx,ny,nz, flag, ios, is
   REAL(dp) :: e1(3), e2(3), e3(3), x0(3)
   REAL(dp), ALLOCATABLE :: rhoplot(:), rhopaw(:,:), r(:,:)
   COMPLEX(dp), ALLOCATABLE :: rhog(:)
-  LOGICAL, EXTERNAL :: matches
   LOGICAL :: onedim, twodim, tredim
   !
   NAMELIST / inputpp / outdir, prefix, spin_component, &

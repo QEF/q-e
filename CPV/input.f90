@@ -24,6 +24,8 @@ MODULE input
    !
    LOGICAL :: has_been_read = .FALSE.
    !
+   CHARACTER(LEN=256), EXTERNAL :: trimcheck
+   !
    CONTAINS
    !
    !-------------------------------------------------------------------------
@@ -46,7 +48,7 @@ MODULE input
      !
      CHARACTER(LEN=2) :: prog
      CHARACTER(LEN=iotk_attlenx) :: attr
-     LOGICAL :: xmlinput
+     LOGICAL :: lxmlinput
      !
      !
      prog = 'CP'
@@ -56,13 +58,13 @@ MODULE input
         !
         CALL xml_input_dump()
         !
-        CALL open_input_file( xmlinput, attr) 
+        CALL open_input_file( lxmlinput, attr) 
         !
      END IF
      !
-     CALL mp_bcast( xmlinput, meta_ionode_id )
+     CALL mp_bcast( lxmlinput, meta_ionode_id )
      !
-     IF ( xmlinput ) THEN
+     IF ( lxmlinput ) THEN
         !
         CALL read_xml ( 'CP', attr )
         !
@@ -77,7 +79,7 @@ MODULE input
         CALL read_cards ( prog )
         !
      END IF
-     IF ( meta_ionode) CALL close_input_file( xmlinput )
+     IF ( meta_ionode) CALL close_input_file( lxmlinput )
 
      lneb = ( TRIM( calculation ) == 'neb' )
      !
@@ -108,7 +110,7 @@ MODULE input
                                          pseudo_dir_ => pseudo_dir, &
                                          outdir_     => outdir, &
                                          prefix_     => prefix, &
-                                         tmp_dir, trimcheck
+                                         tmp_dir
      USE ions_base,               ONLY : nsp_ => nsp, nat_ => nat
      !
      IMPLICIT NONE

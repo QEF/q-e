@@ -11,8 +11,6 @@ MODULE path_io_units_module
   !
   ! ... this module contains the I/O units and files used by  "path"-routines
   !
-  USE io_files, ONLY : find_free_unit
-  !
   IMPLICIT NONE
   !
   !
@@ -38,6 +36,7 @@ MODULE path_io_units_module
   INTEGER :: iuncrd      = 2027 ! unit for saving coordinates in pw.x input format
   INTEGER :: iunnewimage = 28 ! unit for parallelization among images
   !
+  INTEGER, EXTERNAL :: find_free_unit
   !
   CONTAINS
   !

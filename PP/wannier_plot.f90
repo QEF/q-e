@@ -16,7 +16,7 @@ PROGRAM wannier_plot
 
   USE io_global, ONLY: stdout, ionode, ionode_id
   USE kinds,         ONLY : DP
-  USE io_files,      ONLY : prefix, tmp_dir, trimcheck
+  USE io_files,      ONLY : prefix, tmp_dir
   USE wannier_new,   ONLY : nwan, plot_wan_num, plot_wan_spin
   USE mp,            ONLY : mp_bcast
   USE io_global,     ONLY : ionode, stdout
@@ -24,6 +24,9 @@ PROGRAM wannier_plot
   USE environment,   ONLY : environment_start
 
   IMPLICIT NONE
+  !
+  CHARACTER(LEN=256), EXTERNAL :: trimcheck
+  !
   CHARACTER(len=256) :: outdir
   INTEGER :: ios,nc(3),n0(3)
   NAMELIST /inputpp/ outdir, prefix, nwan, plot_wan_num, plot_wan_spin, nc, n0

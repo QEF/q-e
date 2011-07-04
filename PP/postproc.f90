@@ -26,6 +26,7 @@ PROGRAM pp
 
   !
   IMPLICIT NONE
+  !
   CHARACTER(len=256) :: filplot
   INTEGER :: plot_num
   !
@@ -64,7 +65,7 @@ SUBROUTINE extract (filplot,plot_num)
   USE grid_dimensions, ONLY : nr1, nr2, nr3
   USE klist,     ONLY : two_fermi_energies
   USE vlocal,    ONLY : strf
-  USE io_files,  ONLY : tmp_dir, prefix, trimcheck
+  USE io_files,  ONLY : tmp_dir, prefix
   USE io_global, ONLY : ionode, ionode_id
   USE mp_global,     ONLY : nproc, nproc_pool, nproc_file, nproc_pool_file
   USE control_flags, ONLY : twfcollect
@@ -73,6 +74,9 @@ SUBROUTINE extract (filplot,plot_num)
   USE mp,        ONLY : mp_bcast
 
   IMPLICIT NONE
+  !
+  CHARACTER(LEN=256), EXTERNAL :: trimcheck
+  !
   CHARACTER(len=256), INTENT(out) :: filplot
   INTEGER, INTENT(out) :: plot_num
 
