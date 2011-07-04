@@ -43,6 +43,7 @@ addcore.o : ../Modules/recvec.o
 addcore.o : ../Modules/uspp.o
 addcore.o : phcom.o
 adddvepsi_us.o : ../Modules/cell_base.o
+adddvepsi_us.o : ../Modules/control_flags.o
 adddvepsi_us.o : ../Modules/ions_base.o
 adddvepsi_us.o : ../Modules/kind.o
 adddvepsi_us.o : ../Modules/uspp.o
@@ -790,13 +791,16 @@ openfilq.o : acfdtest.o
 openfilq.o : phcom.o
 openfilq.o : ramanm.o
 openfilq.o : save_ph_input.o
+orthogonalize.o : ../Modules/control_flags.o
 orthogonalize.o : ../Modules/kind.o
 orthogonalize.o : ../Modules/mp.o
 orthogonalize.o : ../Modules/mp_global.o
+orthogonalize.o : ../Modules/recvec.o
 orthogonalize.o : ../Modules/uspp.o
 orthogonalize.o : ../PW/becmod.o
 orthogonalize.o : ../PW/noncol.o
 orthogonalize.o : ../PW/pwcom.o
+orthogonalize.o : ../PW/realus.o
 orthogonalize.o : phcom.o
 pcgreen.o : ../Modules/kind.o
 pcgreen.o : ../Modules/mp.o

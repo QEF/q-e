@@ -45,7 +45,6 @@ neb.o : ../Modules/check_stop.o
 neb.o : ../Modules/control_flags.o
 neb.o : ../Modules/environment.o
 neb.o : ../Modules/image_io_routines.o
-neb.o : ../Modules/io_files.o
 neb.o : ../Modules/io_global.o
 neb.o : ../Modules/mp_global.o
 neb.o : ../Modules/mp_image_global_module.o
@@ -79,7 +78,6 @@ path_base.o : path_io_units_module.o
 path_base.o : path_opt_routines.o
 path_base.o : path_reparametrisation.o
 path_base.o : path_variables.o
-path_gen_inputs.o : ../Modules/io_files.o
 path_gen_inputs.o : ../Modules/mp_global.o
 path_input_parameters_module.o : ../Modules/kind.o
 path_input_parameters_module.o : ../Modules/parameters.o
@@ -104,7 +102,6 @@ path_io_routines.o : path_input_parameters_module.o
 path_io_routines.o : path_io_units_module.o
 path_io_routines.o : path_reparametrisation.o
 path_io_routines.o : path_variables.o
-path_io_units_module.o : ../Modules/io_files.o
 path_opt_routines.o : ../Modules/basic_algebra_routines.o
 path_opt_routines.o : ../Modules/constants.o
 path_opt_routines.o : ../Modules/io_global.o
@@ -137,7 +134,6 @@ path_to_engine_mp.o : ../Modules/mp_global.o
 path_to_engine_mp.o : ../Modules/mp_image_global_module.o
 path_variables.o : ../Modules/kind.o
 set_defaults.o : ../Modules/input_parameters.o
-set_defaults.o : ../Modules/io_files.o
 set_defaults.o : ../Modules/io_global.o
 stop_run_path.o : ../Modules/environment.o
 stop_run_path.o : ../Modules/image_io_routines.o

@@ -244,6 +244,7 @@ close_files.o : ../Modules/wannier_new.o
 close_files.o : buffers.o
 close_files.o : pwcom.o
 commutator_Hx_psi.o : ../Modules/cell_base.o
+commutator_Hx_psi.o : ../Modules/control_flags.o
 commutator_Hx_psi.o : ../Modules/io_global.o
 commutator_Hx_psi.o : ../Modules/ions_base.o
 commutator_Hx_psi.o : ../Modules/kind.o
@@ -844,7 +845,6 @@ mix_rho.o : ../Modules/constants.o
 mix_rho.o : ../Modules/control_flags.o
 mix_rho.o : ../Modules/fft_base.o
 mix_rho.o : ../Modules/fft_interfaces.o
-mix_rho.o : ../Modules/io_files.o
 mix_rho.o : ../Modules/io_global.o
 mix_rho.o : ../Modules/ions_base.o
 mix_rho.o : ../Modules/kind.o
@@ -1138,6 +1138,7 @@ pwcom.o : ../Modules/constants.o
 pwcom.o : ../Modules/kind.o
 pwcom.o : ../Modules/parameters.o
 pwcom.o : ../Modules/recvec.o
+pwscf.o : ../Modules/cell_base.o
 pwscf.o : ../Modules/check_stop.o
 pwscf.o : ../Modules/control_flags.o
 pwscf.o : ../Modules/environment.o

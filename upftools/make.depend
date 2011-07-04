@@ -1,5 +1,4 @@
 any2upf.o : write_upf.o
-casino2upf.o : ../Modules/io_files.o
 casino2upf.o : ../Modules/upf.o
 casino2upf.o : casino_pp.o
 casino_pp.o : ../Modules/funct.o
