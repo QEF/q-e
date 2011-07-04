@@ -123,30 +123,6 @@ CONTAINS
 
 !=----------------------------------------------------------------------------=!
 
-      SUBROUTINE check_file_type( iunit, info )
-
-! ... This sub. check if a given fortran unit 'iunit' contains a UPF pseudopot.
-
-        INTEGER, INTENT(in) :: iunit
-        INTEGER, INTENT(out) :: info
-        CHARACTER(len=80) :: dummy
-        INTEGER :: ios
-        LOGICAL, EXTERNAL :: matches
-        info = 0
-        ios  = 0
-        header_loop: DO WHILE (ios == 0)
-          READ (iunit, *, iostat = ios, err = 200) dummy
-          IF (matches ("<PP_HEADER>", dummy) ) THEN
-            info = 1
-            exit header_loop
-          ENDIF
-        ENDDO header_loop
-200     CONTINUE
-        RETURN
-      END SUBROUTINE check_file_type
-
-!=----------------------------------------------------------------------------=!
-
       SUBROUTINE analytic_to_numeric(ap)
         TYPE (pseudo_ncpp), INTENT(inout) :: ap
         INTEGER :: ir, mesh, lmax, l, n, il, ib, ll
