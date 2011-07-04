@@ -194,7 +194,7 @@ cat > si.scf.xml << EOF
 </input>
 EOF
 $ECHO "  running the scf calculation for Si...\c"
-$PW_COMMAND -xmlinput si.scf.xml > si.scf.out
+$PW_COMMAND < si.scf.xml > si.scf.out
 check_failure $?
 $ECHO " done"
 
@@ -339,7 +339,7 @@ cat > si.scf.xml << EOF
 </input>
 EOF
 $ECHO "  running the scf calculation for Si again...\c"
-$PW_COMMAND -xmlinput si.scf.xml > si.scf.out
+$PW_COMMAND < si.scf.xml > si.scf.out
 check_failure $?
 $ECHO " done"
 # single mode phonon calculation at X
@@ -486,7 +486,7 @@ cat > c.scf.xml << EOF
 </input>
 EOF
 $ECHO "  running the scf calculation for C...\c"
-$PW_COMMAND -xmlinput c.scf.xml > c.scf.out
+$PW_COMMAND < c.scf.xml > c.scf.out
 check_failure $?
 $ECHO " done"
 
@@ -649,7 +649,7 @@ cat > ni.scf.xml << EOF
 </input>
 EOF
 $ECHO "  running the scf calculation for Ni...\c"
-$PW_COMMAND -xmlinput ni.scf.xml > ni.scf.out
+$PW_COMMAND < ni.scf.xml > ni.scf.out
 check_failure $?
 $ECHO " done"
 
