@@ -331,7 +331,7 @@ CONTAINS
        
    else if ('VDW-DF2' .EQ. TRIM(dftout) ) then
     ! Special case vdW-DF2
-       call set_dft_value (iexch, 1)
+       call set_dft_value (iexch, 0)
        call set_dft_value (icorr, 4)
        call set_dft_value (igcx, 13)
        call set_dft_value (igcc, 0)
@@ -526,6 +526,9 @@ CONTAINS
     ! Last check
     ! No more defaults, the code exit if the dft is not defined
     ! ----------------------------------------------------------------
+
+    if (igcx == 13 .and. iexch > 0 ) &
+          call errore('set_dft_from_name','revPW86 already contains LDA contribution',iexch)
    
     ! Back compatibility - TO BE REMOVED
  
