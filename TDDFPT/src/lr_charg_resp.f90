@@ -30,10 +30,10 @@ SUBROUTINE read_wT_beta_gamma_z()
   USE mp,                   ONLY : mp_bcast, mp_barrier
   USE lr_variables,         ONLY : LR_polarization, itermax
   USE mp_global,                ONLY : inter_pool_comm, intra_pool_comm
-  USE io_files,                 ONLY : trimcheck
   !
   IMPLICIT NONE
   !
+  CHARACTER(LEN=256), EXTERNAL :: trimcheck
   !
   CHARACTER(len=6), EXTERNAL :: int_to_char
   ! local
