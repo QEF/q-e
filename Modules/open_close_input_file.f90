@@ -50,13 +50,13 @@ SUBROUTINE open_input_file_x(lxmlinput,attr,unit)
   unit_loc = 5
   lcheckxml = .false.
   !
-  IF(present(attr).and.(.not.present(lxmlinput))) THEN
+  IF ( present(attr).and.(.not.present(lxmlinput)) ) THEN
      !
-     CALL errore('open_input_file', 'xmlinput not present in routine call')
+     CALL errore('open_input_file', 'xmlinput not present in routine call',1)
      !
-  ELSEIF(present(lxmlinput).and.(.not.present(attr))) THEN
+  ELSE IF ( present(lxmlinput).and.(.not.present(attr)) ) THEN
      !
-     CALL errore('open_input_file', 'attr not present in routine call')
+     CALL errore('open_input_file', 'attr not present in routine call',1)
      !
   ENDIF
   !
@@ -107,7 +107,7 @@ SUBROUTINE open_input_file_x(lxmlinput,attr,unit)
         !
         ! TODO: return error code ierr (-1 no file, 0 file opened, > 1 error)
         ! do not call "errore" here: it may hang in parallel execution
-        ! if this routine ois called by ionode only
+        ! if this routine is called by ionode only
         !
         IF ( ierr > 0 ) WRITE (stderr, &
                 '(" *** input file ",A," not found ***")' ) TRIM( input_file )
