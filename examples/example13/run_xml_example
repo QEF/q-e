@@ -62,8 +62,8 @@ for FILE in $PSEUDO_LIST ; do
     if test ! -r $PSEUDO_DIR/$FILE ; then
        $ECHO
        $ECHO "Downloading $FILE to $PSEUDO_DIR...\c"
-            wget  http://www.quantum-espresso.org/pseudo/1.3/UPF/$FILE \
-                -O $PSEUDO_DIR/$FILE 2> /dev/null 
+            $WGET $PSEUDO_DIR/$FILE \
+                http://www.quantum-espresso.org/pseudo/1.3/UPF/$FILE 2> /dev/null
     fi
     if test $? != 0; then
         $ECHO
@@ -238,7 +238,7 @@ Iron -->
 </input>
 EOF
 $ECHO "  running the scf calculation for Fe...\c"
-$PW_COMMAND -xmlinput fe.scf.xml > fe.scf.out
+$PW_COMMAND < fe.scf.xml > fe.scf.out
 check_failure $?
 $ECHO " done"
 
@@ -393,7 +393,7 @@ Iron -->
 </input>
 EOF
 $ECHO "  running band structure calculation for Fe...\c"
-$PW_COMMAND -xmlinput fe.band.xml > fe.band.out
+$PW_COMMAND < fe.band.xml > fe.band.out
 check_failure $?
 $ECHO " done"
 
@@ -568,7 +568,7 @@ cat > fe.pen.xml << EOF
 </input>
 EOF
 $ECHO "  running scf calculation for Fe with penalty functional...\c"
-$PW_COMMAND -xmlinput fe.pen.xml > fe.pen.out
+$PW_COMMAND < fe.pen.xml > fe.pen.out
 check_failure $?
 $ECHO " done"
 
@@ -737,7 +737,7 @@ cat > fe.angl.xml << EOF
 </input>
 EOF
 $ECHO "  running the scf calculation for Fe with constrained angle...\c"
-$PW_COMMAND -xmlinput fe.angl.xml > fe.angl.out
+$PW_COMMAND < fe.angl.xml > fe.angl.out
 check_failure $?
 $ECHO " done"
 
@@ -907,7 +907,7 @@ cat > fe.total.xml << EOF
 </input>
 EOF
 $ECHO "  running the scf calculation for Fe with constrained magnetization...\c"
-$PW_COMMAND -xmlinput fe.total.xml > fe.total.out
+$PW_COMMAND < fe.total.xml > fe.total.out
 check_failure $?
 $ECHO " done"
 
@@ -1050,7 +1050,7 @@ cat > cu.scf.xml << EOF
 </input>
 EOF
 $ECHO "  running the scf calculation for Cu...\c"
-$PW_COMMAND -xmlinput cu.scf.xml > cu.scf.out
+$PW_COMMAND < cu.scf.xml > cu.scf.out
 check_failure $?
 $ECHO " done"
 
@@ -1185,7 +1185,7 @@ cat > cu.band.xml << EOF
 </input>
 EOF
 $ECHO "  running the band-structure calculation for Cu...\c"
-$PW_COMMAND -xmlinput cu.band.xml > cu.band.out
+$PW_COMMAND < cu.band.xml > cu.band.out
 check_failure $?
 $ECHO " done"
 
@@ -1334,7 +1334,7 @@ cat > cu.cg.xml << EOF
 </input>
 EOF
 $ECHO "  running the scf calculation for Cu with cg diagonalization...\c"
-$PW_COMMAND -xmlinput cu.cg.xml > cu.cg.out
+$PW_COMMAND < cu.cg.xml > cu.cg.out
 check_failure $?
 $ECHO " done"
 
@@ -1483,7 +1483,7 @@ cat > cu.diis.xml << EOF
 </input>
 EOF
 #$ECHO "  running the scf calculation for Cu with diis diagonalization...\c"
-#$PW_COMMAND -xmlinput cu.diis.xml > cu.diis.out
+#$PW_COMMAND < cu.diis.xml > cu.diis.out
 #check_failure $?
 #$ECHO " done"
 
@@ -1684,7 +1684,7 @@ cat > ni.scf.xml << EOF
 </input>
 EOF
 $ECHO "  running the scf calculation for Ni...\c"
-$PW_COMMAND -xmlinput ni.scf.xml > ni.scf.out
+$PW_COMMAND < ni.scf.xml > ni.scf.out
 check_failure $?
 $ECHO " done"
 
@@ -1818,7 +1818,7 @@ cat > ni.band.xml << EOF
 </input>
 EOF
 $ECHO "  running the band-structure calculation for Ni...\c"
-$PW_COMMAND -xmlinput ni.band.xml > ni.band.out
+$PW_COMMAND < ni.band.xml > ni.band.out
 check_failure $?
 $ECHO " done"
 
@@ -1985,7 +1985,7 @@ cat > o2.relax.xml << EOF
 </input>
 EOF
 $ECHO "  running scf calculation with relax for oxygen molecule...\c"
-$PW_COMMAND -xmlinput o2.relax.xml > o2.relax.out
+$PW_COMMAND < o2.relax.xml > o2.relax.out
 check_failure $?
 $ECHO " done"
 

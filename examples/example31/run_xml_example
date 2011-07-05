@@ -62,8 +62,8 @@ for FILE in $PSEUDO_LIST ; do
     if test ! -r $PSEUDO_DIR/$FILE ; then
        $ECHO
        $ECHO "Downloading $FILE to $PSEUDO_DIR...\c"
-            wget  http://www.quantum-espresso.org/pseudo/1.3/UPF/$FILE \
-                -O $PSEUDO_DIR/$FILE 2> /dev/null 
+            $WGET $PSEUDO_DIR/$FILE \
+                http://www.quantum-espresso.org/pseudo/1.3/UPF/$FILE 2> /dev/null
     fi
     if test $? != 0; then
         $ECHO
@@ -261,7 +261,7 @@ cat > si.scf.efield.xml << EOF
 </input>
 EOF
 $ECHO "  running the PW calculation for bulk Si E_field=0.0  a.u. ...\c"
-$PW_COMMAND -xmlinput si.scf.efield.xml > si.scf.efield.out
+$PW_COMMAND < si.scf.efield.xml > si.scf.efield.out
 check_failure $?
 $ECHO " done"
 
@@ -438,7 +438,7 @@ cat > si.scf.efield2.xml << EOF
 </input>
 EOF
 $ECHO "  running the PW calculation for bulk Si E_field=0.001  a.u. ...\c"
-$PW_COMMAND -xmlinput si.scf.efield2.xml > si.scf.efield2.out
+$PW_COMMAND < si.scf.efield2.xml > si.scf.efield2.out
 check_failure $?
 $ECHO " done"
 

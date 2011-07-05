@@ -61,8 +61,8 @@ for FILE in $PSEUDO_LIST ; do
     if test ! -r $PSEUDO_DIR/$FILE ; then
        $ECHO
        $ECHO "Downloading $FILE to $PSEUDO_DIR...\c"
-            wget  http://www.quantum-espresso.org/pseudo/1.3/UPF/$FILE \
-                -O $PSEUDO_DIR/$FILE 2> /dev/null 
+            $WGET $PSEUDO_DIR/$FILE \
+                http://www.quantum-espresso.org/pseudo/1.3/UPF/$FILE 2> /dev/null
     fi
     if test $? != 0; then
         $ECHO
@@ -303,7 +303,7 @@ cat > h2o.scf.xml << EOF
 EOF
 
 $ECHO "  running electronic minimization...\c"
-$CP_COMMAND -xmlinput h2o.scf.xml > h2o.scf.out
+$CP_COMMAND < h2o.scf.xml > h2o.scf.out
 check_failure $?
 $ECHO " done"
 
@@ -574,7 +574,7 @@ cat > h2o.wannier.xml << EOF
 EOF
 
 $ECHO "  running Wannier function calculation...\c"
-$CP_COMMAND -xmlinput h2o.wannier.xml > h2o.wannier.out
+$CP_COMMAND < h2o.wannier.xml > h2o.wannier.out
 check_failure $?
 $ECHO " done"
 

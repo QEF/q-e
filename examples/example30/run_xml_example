@@ -69,8 +69,8 @@ for FILE in $PSEUDO_LIST ; do
     if test ! -r $PSEUDO_DIR/$FILE ; then
        $ECHO
        $ECHO "Downloading $FILE to $PSEUDO_DIR...\c"
-            wget  http://www.quantum-espresso.org/pseudo/1.3/UPF/$FILE \
-                -O $PSEUDO_DIR/$FILE 2> /dev/null 
+            $WGET $PSEUDO_DIR/$FILE \
+                http://www.quantum-espresso.org/pseudo/1.3/UPF/$FILE 2> /dev/null
     fi
     if test $? != 0; then
         $ECHO
@@ -808,7 +808,7 @@ ma nn sapevo in che field metterli  -->
 </input>
 EOF
 $ECHO "  running the CG calculation for bulk MgO E_field=0. a.u. ...\c"
-$CP_COMMAND -xmlinput mgo.cp.cg.xml > mgo.cp.cg.out
+$CP_COMMAND < mgo.cp.cg.xml > mgo.cp.cg.out
 check_failure $?
 $ECHO " done"
 
@@ -1527,7 +1527,7 @@ ma nn sapevo in che field metterli  -->
 </input>
 EOF
 $ECHO "  running the CG calculation for bulk MgO E_field=0.001 a.u. ...\c"
-$CP_COMMAND -xmlinput mgo.cp.cg.efield.xml > mgo.cp.cg.efield.out
+$CP_COMMAND < mgo.cp.cg.efield.xml > mgo.cp.cg.efield.out
 check_failure $?
 $ECHO " done"
 
@@ -2219,7 +2219,7 @@ ma nn sapevo in che field metterli  -->
 </input>
 EOF
 $ECHO "  running the CP- damped MD calculation for bulk MgO E_field=0.001 a.u. ...\c"
-$CP_COMMAND -xmlinput mgo.cp.damp.efield.xml > mgo.cp.damp.efield.out
+$CP_COMMAND < mgo.cp.damp.efield.xml > mgo.cp.damp.efield.out
 check_failure $?
 $ECHO " done"
 

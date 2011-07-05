@@ -66,8 +66,8 @@ for FILE in $PSEUDO_LIST ; do
     if test ! -r $PSEUDO_DIR/$FILE ; then
        $ECHO
        $ECHO "Downloading $FILE to $PSEUDO_DIR...\c"
-            wget  http://www.quantum-espresso.org/pseudo/1.3/UPF/$FILE \
-                -O $PSEUDO_DIR/$FILE 2> /dev/null 
+            $WGET $PSEUDO_DIR/$FILE \
+                http://www.quantum-espresso.org/pseudo/1.3/UPF/$FILE 2> /dev/null
     fi
     if test $? != 0; then
         $ECHO
@@ -318,7 +318,7 @@ FeO Wustite in LDA -->
 </input>
 EOF
 $ECHO "  running scf for FeO in LDA ...\c"
-#$PW_COMMAND -xmlinput feo_LDA.xml > feo_LDA.out
+#$PW_COMMAND < feo_LDA.xml > feo_LDA.out
 check_failure $?
 $ECHO " done"
 
@@ -553,7 +553,7 @@ FeO Wustite whithin LDA+U using standard initial ns matrices -->
 </input>
 EOF
 $ECHO "  running scf for FeO in LDA+U using standard ns initial matrices...\c"
-$PW_COMMAND -xmlinput feo_standard.xml > feo_standard.out
+$PW_COMMAND < feo_standard.xml > feo_standard.out
 check_failure $?
 $ECHO " done"
 
@@ -793,7 +793,7 @@ FeO Wustite whithin LDA+U with user-defined ns initial matrices -->
 </input>
 EOF
 $ECHO "  running scf for FeO in LDA+U using user-defined ns initial matrices...\c"
-$PW_COMMAND -xmlinput feo_user_ns.xml > feo_user_ns.out
+$PW_COMMAND < feo_user_ns.xml > feo_user_ns.out
 check_failure $?
 $ECHO " done"
 
@@ -1040,7 +1040,7 @@ FeO Wustite whithin LDA+U with user defined ns + Wannier -->
 </input>
 EOF
 $ECHO "  3) running scf for FeO in LDA+U using Wannier projectors...\c"
-$PW_COMMAND -xmlinput feo_wannier.xml > feo_wannier.out
+$PW_COMMAND < feo_wannier.xml > feo_wannier.out
 check_failure $?
 $ECHO " done"
 

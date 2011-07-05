@@ -64,8 +64,8 @@ for FILE in $PSEUDO_LIST ; do
     if test ! -r $PSEUDO_DIR/$FILE ; then
        $ECHO
        $ECHO "Downloading $FILE to $PSEUDO_DIR...\c"
-            wget  http://www.quantum-espresso.org/pseudo/1.3/UPF/$FILE \
-                -O $PSEUDO_DIR/$FILE 2> /dev/null 
+            $WGET $PSEUDO_DIR/$FILE \
+                http://www.quantum-espresso.org/pseudo/1.3/UPF/$FILE 2> /dev/null
     fi
     if test $? != 0; then
         $ECHO
@@ -178,7 +178,7 @@ cat > co.rx.xml << EOF
 </input>
 EOF
 $ECHO "  running the geometry relaxation for CO...\c"
-$PW_COMMAND -xmlinput co.rx.xml > co.rx.out
+$PW_COMMAND < co.rx.xml > co.rx.out
 check_failure $?
 $ECHO " done"
 
@@ -330,7 +330,7 @@ cat > al001.rx.xml << EOF
 </input>
 EOF
 $ECHO "  running the geometry relaxation for Al (001) using BFGS...\c"
-$PW_COMMAND -xmlinput al001.rx.xml > al001.rx.out
+$PW_COMMAND < al001.rx.xml > al001.rx.out
 check_failure $?
 $ECHO " done"
 
@@ -493,7 +493,7 @@ cat > al001.mm.xml << EOF
 </input>
 EOF
 $ECHO "  running the geometry relaxation for Al (001) using damped MD...\c"
-$PW_COMMAND -xmlinput al001.mm.xml > al001.mm.out
+$PW_COMMAND < al001.mm.xml > al001.mm.out
 check_failure $?
 $ECHO " done"
 

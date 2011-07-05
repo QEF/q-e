@@ -66,8 +66,8 @@ for FILE in $PSEUDO_LIST ; do
     if test ! -r $PSEUDO_DIR/$FILE ; then
        $ECHO
        $ECHO "Downloading $FILE to $PSEUDO_DIR...\c"
-            wget  http://www.quantum-espresso.org/pseudo/1.3/UPF/$FILE \
-                -O $PSEUDO_DIR/$FILE 2> /dev/null 
+            $WGET $PSEUDO_DIR/$FILE \
+                http://www.quantum-espresso.org/pseudo/1.3/UPF/$FILE 2> /dev/null
     fi
     if test $? != 0; then
         $ECHO
@@ -241,7 +241,7 @@ cat > pt.scf.xml << EOF
 </input>
 EOF
 $ECHO "  running the scf calculation for Pt with spin-orbit coupling...\c"
-$PW_COMMAND -xmlinput pt.scf.xml > pt.scf.out
+$PW_COMMAND < pt.scf.xml > pt.scf.out
 check_failure $?
 $ECHO " done"
 
@@ -393,7 +393,7 @@ cat > pt.nscf.xml << EOF
 </input>
 EOF
 $ECHO "  running the non-scf calculation for Pt with spin-orbit coupling...\c"
-$PW_COMMAND -xmlinput pt.nscf.xml > pt.nscf.out
+$PW_COMMAND < pt.nscf.xml > pt.nscf.out
 check_failure $?
 $ECHO " done"
 
@@ -559,7 +559,7 @@ Pt -->
 </input>
 EOF
 $ECHO "  running the scf calculation for Pt with spin-orbit coupling...\c"
-$PW_COMMAND -xmlinput pt.scf_ph.xml > pt.scf_ph.out
+$PW_COMMAND < pt.scf_ph.xml > pt.scf_ph.out
 check_failure $?
 $ECHO " done"
 
@@ -745,7 +745,7 @@ cat > pt.tet.xml << EOF
 </input>
 EOF
 $ECHO "  running the scf calculation for Pt with tetragonal cell...\c"
-$PW_COMMAND -xmlinput pt.tet.xml > pt.tet.out
+$PW_COMMAND < pt.tet.xml > pt.tet.out
 check_failure $?
 $ECHO " done"
 
@@ -922,7 +922,7 @@ cat > pt4.xml << EOF
 </input>
 EOF
 $ECHO "  running the self-consistent calculation of fcc-Pt with 4 atoms...\c"
-$PW_COMMAND -xmlinput pt4.xml > pt4.out
+$PW_COMMAND < pt4.xml > pt4.out
 check_failure $?
 $ECHO " done"
 

@@ -67,8 +67,8 @@ for FILE in $PSEUDO_LIST ; do
     if test ! -r $PSEUDO_DIR/$FILE ; then
        $ECHO
        $ECHO "Downloading $FILE to $PSEUDO_DIR...\c"
-            wget  http://www.quantum-espresso.org/pseudo/1.3/UPF/$FILE \
-                -O $PSEUDO_DIR/$FILE 2> /dev/null 
+            $WGET $PSEUDO_DIR/$FILE \
+                http://www.quantum-espresso.org/pseudo/1.3/UPF/$FILE 2> /dev/null
     fi
     if test $? != 0; then
         $ECHO
@@ -289,7 +289,7 @@ cat > ni.scf.xml << EOF
 </input>
 EOF
 $ECHO "  running the scf calculation for Ni...\c"
-$PW_COMMAND -xmlinput ni.scf.xml > ni.scf.out
+$PW_COMMAND < ni.scf.xml > ni.scf.out
 check_failure $?
 $ECHO " done"
 
@@ -520,7 +520,7 @@ cat > ni.band.xml << EOF
 </input>
 EOF
 $ECHO "  running the band-structure calculation for Ni...\c"
-$PW_COMMAND -xmlinput ni.band.xml > ni.band.out
+$PW_COMMAND < ni.band.xml > ni.band.out
 check_failure $?
 $ECHO " done"
 
@@ -739,7 +739,7 @@ cat > ni.dos2.in << EOF
 EOF
 
 $ECHO "  running DOS calculation for Ni...\c"
-$PW_COMMAND -xmlinput ni.dos.xml > ni.dos.out
+$PW_COMMAND < ni.dos.xml > ni.dos.out
 check_failure $?
 $DOS_COMMAND < ni.dos2.in > ni.dos2.out
 check_failure $?
@@ -892,7 +892,7 @@ cat > ni.scf_SP.xml << EOF
 </input>
 EOF
 $ECHO "  running the scf calculation  spin-polarization ... \c"
-$PW_COMMAND -xmlinput ni.scf_SP.xml > ni.scf0.SP.out
+$PW_COMMAND < ni.scf_SP.xml > ni.scf0.SP.out
 check_failure $?
 $ECHO " done"
 
@@ -1046,7 +1046,7 @@ EOF
 
 # input file ni.fs.in ready
 $ECHO "  running the Fermi Surface calculation ... \c"
-$PW_COMMAND   -xmlinput ni.fs_SP.xml > ni.fs.SP.out 
+$PW_COMMAND < ni.fs_SP.xml > ni.fs.SP.out 
 check_failure $?
 $ECHO " done"
 
@@ -1192,7 +1192,7 @@ cat > ni.scf_NSP.xml << EOF
 </input>
 EOF
 $ECHO "  running the scf calculation  non spin-polarized case ... \c"
-$PW_COMMAND -xmlinput ni.scf_NSP.xml > ni.scf0.NSP.out
+$PW_COMMAND < ni.scf_NSP.xml > ni.scf0.NSP.out
 check_failure $?
 $ECHO " done"
 
@@ -1330,7 +1330,7 @@ EOF
 
 # input file ni.fs.in ready
 $ECHO "  running the Fermi Surface calculation ... \c"
-$PW_COMMAND   -xmlinput ni.fs_NSP.xml > ni.fs_NSP.out 
+$PW_COMMAND < ni.fs_NSP.xml > ni.fs_NSP.out 
 check_failure $?
 $ECHO " done"
 

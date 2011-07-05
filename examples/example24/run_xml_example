@@ -65,8 +65,8 @@ for FILE in $PSEUDO_LIST ; do
     if test ! -r $PSEUDO_DIR/$FILE ; then
        $ECHO
        $ECHO "Downloading $FILE to $PSEUDO_DIR...\c"
-            wget  http://www.quantum-espresso.org/pseudo/1.3/UPF/$FILE \
-                -O $PSEUDO_DIR/$FILE 2> /dev/null 
+            $WGET $PSEUDO_DIR/$FILE \
+                http://www.quantum-espresso.org/pseudo/1.3/UPF/$FILE 2> /dev/null
     fi
     if test $? != 0; then
         $ECHO
@@ -234,7 +234,7 @@ cat > pt.scf.xml << EOF
 EOF
 
 $ECHO "  running scf pw.x for Pt with gga-pbe and spin-orbit coupling...\c"
-$PW_COMMAND -xmlinput pt.scf.xml > pt.scf.out
+$PW_COMMAND < pt.scf.xml > pt.scf.out
 check_failure $?
 $ECHO " done"
 
@@ -415,7 +415,7 @@ cat > ni.scf.xml << EOF
 </input>
 EOF
 $ECHO "  running scf pw.x for noncollinear Ni with gga-pbe...\c"
-$PW_COMMAND -xmlinput ni.scf.xml > ni.scf.out
+$PW_COMMAND < ni.scf.xml > ni.scf.out
 check_failure $?
 $ECHO " done"
 
@@ -599,7 +599,7 @@ cat > ni_so.scf.xml << EOF
 </input>
 EOF
 $ECHO "  running scf pw.x for Ni with gga-pbe and spin-orbit...\c"
-$PW_COMMAND -xmlinput ni_so.scf.xml > ni_so.scf.out
+$PW_COMMAND < ni_so.scf.xml > ni_so.scf.out
 check_failure $?
 $ECHO " done"
 
