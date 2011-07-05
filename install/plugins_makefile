@@ -26,13 +26,13 @@ gipaw:  uncompress-gipaw configure-gipaw
 	cd ../GIPAW; $(MAKE) all; cd ../bin; ln -fs ../GIPAW/gipaw.x . ; fi
 	touch make-gipaw
 uncompress-gipaw: touch-dummy
-	if test ! -e ../archive/qe-gipaw-latest.tar.gz && test ! -d ../GIPAW ; then \
+	@(if test ! -e ../archive/qe-gipaw-latest.tar.gz && test ! -d ../GIPAW ; then \
 	wget -O ../archive/qe-gipaw-latest.tar.gz http://qe-forge.org/frs/download.php/154/qe-gipaw-latest.tar.gz > /dev/null 2>&1; \
 	if test "`echo $$?`" -ne "0" ; then \
 	curl -o ../archive/qe-gipaw-latest.tar.gz http://qe-forge.org/frs/download.php/154/qe-gipaw-latest.tar.gz > /dev/null 2>&1; \
 	if test "`echo $$?`" -ne "0" ; then \
-	echo "unable to download qe-gipaw. Test whether curl or wget is installed in your computer."; \
-	fi ; fi ; fi 
+	echo "unable to download qe-gipaw. Test whether curl or wget is installed in your computer." ; \
+	fi ; fi ; fi) 
 	if test ! -d ../GIPAW; then \
 	(gzip -dc ../archive/qe-gipaw-latest.tar.gz | (cd ../ ; tar -xvf -)) ; \
 	(cd ../ ; ln -s qe-gipaw* GIPAW) ; fi 
@@ -51,8 +51,8 @@ w90: test-w90 uncompress-w90 configure-w90
 #	-(cd ../bin; ln -fs ../W90/wannier90.x .)
 	touch make-w90
 test-w90: touch-dummy
-	if test ! -e ../archive/$(W90).tar.gz && test ! -d ../W90; then \
-	echo "The release contains no Wannier90 package"; fi 
+	@(if test ! -e ../archive/$(W90).tar.gz && test ! -d ../W90; then \
+	echo "The release contains no Wannier90 package"; fi) 
 	touch ./test-want
 uncompress-w90: touch-dummy
 	if (test -e archive/$(W90).tar.gz) || (test ! -d ../W90); then \
@@ -74,8 +74,8 @@ want: extlibs test-want uncompress-want configure-want
 #	- ( cd ../bin ; ln -sf ../WANT/bin/* . ) 
 	touch ./make-want
 test-want: touch-dummy
-	if test ! -e ../archive/$(WANT).tar.gz && test ! -d ../WANT; then \
-	echo "The release contains no WANT package"; fi 
+	@(if test ! -e ../archive/$(WANT).tar.gz && test ! -d ../WANT; then \
+	echo "The release contains no WANT package"; fi) 
 	touch ./test-want
 uncompress-want: touch-dummy
 	if (test -e archive/$(WANT).tar.gz) || (test ! -d ../WANT); then \
@@ -116,8 +116,8 @@ yambo: extlibs test-yambo uncompress-yambo configure-yambo
 	cd ../YAMBO; $(MAKE) all; fi
 	touch ./make-yambo
 test-yambo: touch-dummy
-	if test ! -e ../archive/$(YAMBO).tar.gz && test ! -d ../YAMBO; then \
-	echo "The release contains no YAMBO package"; fi 
+	@(if test ! -e ../archive/$(YAMBO).tar.gz && test ! -d ../YAMBO; then \
+	echo "The release contains no YAMBO package"; fi) 
 	touch ./test-yambo
 uncompress-yambo: touch-dummy
 	if (test -e archive/$(YAMBO).tar.gz) || (test ! -d ../YAMBO); then \
@@ -148,8 +148,8 @@ plumed: test-plumed uncompress-plumed patch-plumed
 	cd ../; $(MAKE) pw; $(MAKE) cp; fi
 	touch make-plumed
 test-plumed: touch-dummy
-	if test ! -e ../archive/$(PLUMED).tar.gz && test ! -d ../PLUMED; then \
-	echo "The release contains no PLUMED package"; fi 
+	@(if test ! -e ../archive/$(PLUMED).tar.gz && test ! -d ../PLUMED; then \
+	echo "The release contains no PLUMED package"; fi) 
 	touch ./test-plumed
 uncompress-plumed: touch-dummy
 	if (test -e archive/$(PLUMED).tar.gz) || (test ! -d ../PLUMED); then \
