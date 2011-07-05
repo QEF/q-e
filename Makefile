@@ -225,7 +225,7 @@ clean :
 		else $(MAKE) $(MFLAGS) TLDEPS= clean ; fi ) \
 	    fi \
 	done
-	- cd install ; $(MAKE) $(MFLAGS) --file=plugins_makefile clean
+	- cd install ; $(MAKE) $(MFLAGS) -f plugins_makefile clean
 	- /bin/rm -rf bin/*.x tmp
 	- cd tests; /bin/rm -rf CRASH *.out *.out2 
 
