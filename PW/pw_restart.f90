@@ -100,7 +100,7 @@ MODULE pw_restart
       USE ldaU,                 ONLY : lda_plus_u, Hubbard_lmax, Hubbard_l, &
                                        Hubbard_U, Hubbard_alpha
       USE spin_orb,             ONLY : lspinorb, domag
-      USE symm_base,            ONLY : nrot, nsym, invsym, s, ftau, irt, &
+      USE symm_base,            ONLY : nrot, nsym, invsym, s, ft, ftau, irt, &
                                        t_rev, sname, time_reversal, no_t_rev
       USE lsda_mod,             ONLY : nspin, isk, lsda, starting_magnetization
       USE noncollin_module,     ONLY : angle1, angle2, i_cons, mcons, bfield, &
@@ -353,8 +353,8 @@ MODULE pw_restart
 !-------------------------------------------------------------------------------
          !
          CALL write_symmetry( ibrav, symm_type, nrot, nsym, invsym, noinv, &
-                              time_reversal, no_t_rev, &
-                              nr1, nr2, nr3, ftau, s, sname, irt, nat, t_rev )
+                              time_reversal, no_t_rev, ft, s, sname, irt,  &
+                              nat, t_rev )
          !
 !-------------------------------------------------------------------------------
 ! ... ELECTRIC FIELD
@@ -1756,7 +1756,7 @@ MODULE pw_restart
     SUBROUTINE read_symmetry( dirname, ierr )
       !------------------------------------------------------------------------
       !
-      USE symm_base,       ONLY : nrot, nsym, invsym, s, ftau, irt, t_rev, &
+      USE symm_base,       ONLY : nrot, nsym, invsym, s, ft,ftau, irt, t_rev, &
                                   sname, sr, invs, inverse_s, s_axis_to_cart, &
                                   time_reversal, no_t_rev
       USE control_flags,   ONLY : noinv
@@ -1768,7 +1768,6 @@ MODULE pw_restart
       INTEGER,          INTENT(OUT) :: ierr
       !
       INTEGER  :: i, nat_
-      REAL(DP) :: tmp(3)
       LOGICAL  :: found
       !
       ierr = 0
@@ -1798,6 +1797,7 @@ MODULE pw_restart
             s(3,3,nsym) = 1
             sr(:,:,nsym) = DBLE(s(:,:,nsym))
             ftau(:,nsym)= 0
+            ft  (:,nsym)= 0
             sname(nsym) = 'identity'
             do i = 1, SIZE( irt, 2 )
                irt(nsym,i) = i
@@ -1838,12 +1838,12 @@ MODULE pw_restart
                CALL iotk_scan_attr( attr, "T_REV", t_rev(i) )
                !
                CALL iotk_scan_dat( iunpun, "ROTATION", s(:,:,i) )
-               CALL iotk_scan_dat( iunpun, "FRACTIONAL_TRANSLATION", tmp(:) )
+               CALL iotk_scan_dat( iunpun, "FRACTIONAL_TRANSLATION", ft(:,i) )
                CALL iotk_scan_dat( iunpun, "EQUIVALENT_IONS", irt(i,1:nat_) )
                !
-               ftau(1,i) = NINT( tmp(1)*DBLE( nr1 ) )
-               ftau(2,i) = NINT( tmp(2)*DBLE( nr2 ) )
-               ftau(3,i) = NINT( tmp(3)*DBLE( nr3 ) )
+               ftau(1,i) = NINT( ft(1,i)*DBLE( nr1 ) )
+               ftau(2,i) = NINT( ft(2,i)*DBLE( nr2 ) )
+               ftau(3,i) = NINT( ft(3,i)*DBLE( nr3 ) )
                !
                CALL iotk_scan_end( iunpun, "SYMM" // TRIM( iotk_index( i ) ) )
                !

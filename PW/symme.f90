@@ -11,7 +11,7 @@ MODULE symme
   
   USE kinds,      ONLY : DP
   USE cell_base,  ONLY : at, bg
-  USE symm_base,  ONLY : s, sname, ftau, nrot, nsym, t_rev, time_reversal,&
+  USE symm_base,  ONLY : s, sname, ft, nrot, nsym, t_rev, time_reversal, &
                          irt, invs, invsym
   !
   ! ... Routines used for symmetrization 
@@ -753,19 +753,21 @@ gloop:    DO jg=iig,ngm_
     COMPLEX(DP) , INTENT (INOUT) :: rhog_( ngm_, nspin_ )
     !
     REAL(DP), ALLOCATABLE :: g0(:,:)
-    REAL(DP) :: sg(3), ft(3,48), arg
+    REAL(DP) :: sg(3), ft_(3,48), arg
     COMPLEX(DP) :: fact, rhosum(2), mag(3), magrot(3), magsum(3)
     INTEGER :: irot(48), ig, isg, igl, ng, ns, nspin_lsda, is
     LOGICAL, ALLOCATABLE :: done(:)
     LOGICAL :: non_symmorphic(48)
     !
-    ! convert fractional translations to a.u.
+    ! convert fractional translations to cartesian, in a0 units
     !
     DO ns=1,nsym
-       non_symmorphic(ns) = (ftau(1,ns)/=0 .OR. ftau(2,ns)/=0 .OR. ftau(3,ns)/=0)
-       IF ( non_symmorphic(ns) ) ft(:,ns) = at(:,1)*ftau(1,ns)/nr1 + &
-                                            at(:,2)*ftau(2,ns)/nr2 + &
-                                            at(:,3)*ftau(3,ns)/nr3
+       non_symmorphic(ns) = ( ft(1,ns) /= 0.0_dp .OR. &
+                              ft(2,ns) /= 0.0_dp .OR. &
+                              ft(3,ns) /= 0.0_dp )
+       IF ( non_symmorphic(ns) ) ft_(:,ns) = at(:,1)*ft(1,ns) + &
+                                             at(:,2)*ft(2,ns) + &
+                                             at(:,3)*ft(3,ns)
     END DO
     !
     IF ( nspin_ == 4 ) THEN
@@ -840,9 +842,9 @@ gloop:    DO jg=iig,ngm_
                    IF (t_rev(invs(ns)) == 1)        magrot(:)=-magrot(:)
                 END IF
                 IF ( non_symmorphic (ns) )  THEN
-                   arg = tpi * ( g_(1,isg) * ft(1,ns) + &
-                                 g_(2,isg) * ft(2,ns) + &
-                                 g_(3,isg) * ft(3,ns) )
+                   arg = tpi * ( g_(1,isg) * ft_(1,ns) + &
+                                 g_(2,isg) * ft_(2,ns) + &
+                                 g_(3,isg) * ft_(3,ns) )
                    fact = CMPLX ( COS(arg), -SIN(arg), KIND=dp )
                    DO is=1,nspin_lsda
                       rhosum(is) = rhosum(is) + rhog_(isg, is) * fact
@@ -880,9 +882,9 @@ gloop:    DO jg=iig,ngm_
                             magrot(3) * at(:,3)
                 END IF
                 IF ( non_symmorphic (ns) )  THEN
-                   arg = tpi * ( g_(1,isg) * ft(1,ns) + &
-                                 g_(2,isg) * ft(2,ns) + &
-                                 g_(3,isg) * ft(3,ns) )
+                   arg = tpi * ( g_(1,isg) * ft_(1,ns) + &
+                                 g_(2,isg) * ft_(2,ns) + &
+                                 g_(3,isg) * ft_(3,ns) )
                    fact = CMPLX ( COS(arg), SIN(arg), KIND=dp )
                    DO is=1,nspin_lsda
                       rhog_(isg,is) = rhosum(is) * fact

@@ -1,11 +1,13 @@
-New in svn version
+New in 4.3.2 version
 
    * A few crystal lattices can be specified using the traditional
      crystallography parameter (labelled with negative ibrav values)
    * A few extensions to PP format converters, conversion to UPF v.2
 
-Fixed in svn version
+Fixed in 4.3.2 version
 
+   * Funny results in the last step of variable-cell optimization,
+     due to bad symmetrization in presence of fractional translations
    * OpenMP crash with PAW
    * Removed lines in iotk that confused some preprocessors
    * More glitches with new xc functionals, compatibility with 

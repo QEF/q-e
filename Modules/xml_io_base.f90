@@ -962,19 +962,18 @@ MODULE xml_io_base
     !
     !------------------------------------------------------------------------
     SUBROUTINE write_symmetry( ibrav, symm_type, nrot, nsym, invsym, noinv, &
-                               time_reversal, no_t_rev, &
-                               nr1, nr2, nr3, ftau, s, sname, irt, nat, t_rev )
+                               time_reversal, no_t_rev, ft, &
+                               s, sname, irt, nat, t_rev )
       !------------------------------------------------------------------------
       !
-      INTEGER,          INTENT(IN) :: ibrav, nrot, nsym,  nr1, nr2, nr3
+      INTEGER,          INTENT(IN) :: ibrav, nrot, nsym
       CHARACTER(LEN=*), INTENT(IN) :: symm_type
       LOGICAL,          INTENT(IN) :: invsym, noinv, time_reversal, no_t_rev
-      INTEGER,          INTENT(IN) :: s(:,:,:), ftau(:,:)
+      INTEGER,          INTENT(IN) :: s(:,:,:), irt(:,:), nat, t_rev(:)
+      REAL(DP),         INTENT(IN) :: ft(:,:)
       CHARACTER(LEN=*), INTENT(IN) :: sname(:)
-      INTEGER,          INTENT(IN) :: irt(:,:), nat, t_rev(:)
       !
       INTEGER  :: i
-      REAL(DP) :: tmp(3)
       !
       !
       CALL iotk_write_begin( iunpun, "SYMMETRIES" )
@@ -1006,12 +1005,8 @@ MODULE xml_io_base
          CALL iotk_write_attr ( attr, "T_REV", t_rev(i) )
          CALL iotk_write_empty( iunpun, "INFO", ATTR = attr )
          !
-         tmp(1) = ftau(1,i) / DBLE( nr1 )
-         tmp(2) = ftau(2,i) / DBLE( nr2 )
-         tmp(3) = ftau(3,i) / DBLE( nr3 )
-         !
          CALL iotk_write_dat( iunpun, "ROTATION", s(:,:,i), COLUMNS=3 )
-         CALL iotk_write_dat( iunpun, "FRACTIONAL_TRANSLATION", tmp(1:3), COLUMNS=3 )
+         CALL iotk_write_dat( iunpun, "FRACTIONAL_TRANSLATION", ft(:,i), COLUMNS=3 )
          CALL iotk_write_dat( iunpun, "EQUIVALENT_IONS", irt(i,1:nat), COLUMNS=8 )
          !
          CALL iotk_write_end( iunpun, "SYMM" // TRIM( iotk_index( i ) ) )

@@ -21,7 +21,7 @@ MODULE symm_base
   !
   ! ... Exported variables
   !
-  PUBLIC :: s, sr, sname, ftau, nrot, nsym, t_rev, no_t_rev, &
+  PUBLIC :: s, sr, sname, ft, ftau, nrot, nsym, t_rev, no_t_rev, &
             time_reversal, irt, invs, invsym, is_symmorphic, d1, d2, d3
   INTEGER :: &
        s(3,3,48),            &! symmetry matrices, in crystal axis
@@ -30,6 +30,7 @@ MODULE symm_base
        nrot,                 &! number of bravais lattice symmetries 
        nsym                   ! number of crystal symmetries
   REAL (DP) :: &
+       ft (3,48),            &! fractional translations, in crystal axis
        sr (3,3,48)            ! symmetry matrices, in cartesian axis
   CHARACTER(LEN=45) ::  sname(48)   ! name of the symmetries
   INTEGER :: &
@@ -51,6 +52,11 @@ MODULE symm_base
   !
   PUBLIC ::  hexsym, cubicsym, find_sym, inverse_s, copy_sym, checkallsym, &
              s_axis_to_cart, set_sym, set_sym_bl, symmorphic
+  !
+  ! ... Note about fractional translations: ftau should be replaced by ft,
+  ! ... that do not depend upon either upon the FFT grid or the lattice
+  ! ... parameter (important for variable-cell calculations).
+  ! ... The ftau are used only for symmetrization in the phonon code
   !
 CONTAINS
    !
@@ -493,7 +499,7 @@ subroutine sgam_at ( nat, tau, ityp, nr1, nr2, nr3, nofrac, sym )
   real(DP) , allocatable :: xau (:,:), rau (:,:)
   ! atomic coordinates in crystal axis
   logical :: fractional_translations
-  real(DP) :: ft (3), ft1, ft2, ft3
+  real(DP) :: ft_(3), ft1, ft2, ft3
   !
   allocate(xau(3,nat))
   allocate(rau(3,nat))
@@ -518,18 +524,18 @@ subroutine sgam_at ( nat, tau, ityp, nr1, nr2, nr3, nofrac, sym )
   do na = 2, nat
      if ( fractional_translations ) then
         if (ityp (nb) == ityp (na) ) then
-           ft (:) = xau(:,na) - xau(:,nb) - nint( xau(:,na) - xau(:,nb) )
+           ft_(:) = xau(:,na) - xau(:,nb) - nint( xau(:,na) - xau(:,nb) )
            !
-           sym(irot) = checksym ( irot, nat, ityp, xau, xau, ft )
+           sym(irot) = checksym ( irot, nat, ityp, xau, xau, ft_ )
            !
            if ( sym (irot) .and. &
-               (abs (ft(1) **2 + ft(2) **2 + ft (3) **2) < 1.d-8) ) &
+               (abs (ft_(1) **2 + ft_(2) **2 + ft_(3) **2) < 1.d-8) ) &
                call errore ('sgam_at', 'overlapping atoms', na)
            if (sym (irot) ) then
               fractional_translations = .false.
               WRITE( stdout, '(5x,"Found symmetry operation: I + (",&
              &   3f8.4, ")",/,5x,"This is a supercell,", &
-             &   " fractional translations are disabled")') ft
+             &   " fractional translations are disabled")') ft_
            endif
         endif
      end if
@@ -562,9 +568,10 @@ subroutine sgam_at ( nat, tau, ityp, nr1, nr2, nr3, nofrac, sym )
      !      first attempt: no fractional translation
      !
      ftau (:, irot) = 0
-     ft (:) = 0.d0
+     ft (:, irot) = 0
+     ft_(:) = 0.d0
      !
-     sym(irot) = checksym ( irot, nat, ityp, xau, rau, ft )
+     sym(irot) = checksym ( irot, nat, ityp, xau, rau, ft_ )
      !
      if (.not.sym (irot) .and. fractional_translations) then
         nb = 1
@@ -573,25 +580,27 @@ subroutine sgam_at ( nat, tau, ityp, nr1, nr2, nr3, nofrac, sym )
               !
               !      second attempt: check all possible fractional translations
               !
-              ft (:) = rau(:,na) - xau(:,nb) - nint( rau(:,na) - xau(:,nb) )
+              ft_ (:) = rau(:,na) - xau(:,nb) - nint( rau(:,na) - xau(:,nb) )
               !
-              sym(irot) = checksym ( irot, nat, ityp, xau, rau, ft )
+              sym(irot) = checksym ( irot, nat, ityp, xau, rau, ft_ )
               !
               if (sym (irot) ) then
+                 ft (:,irot) = ft_(:)
                  ! convert ft to FFT coordinates
                  ! for later use in symmetrization
-                 ft1 = ft (1) * nr1
-                 ft2 = ft (2) * nr2
-                 ft3 = ft (3) * nr3
+                 ft1 = ft_(1) * nr1
+                 ft2 = ft_(2) * nr2
+                 ft3 = ft_(3) * nr3
                  ! check if the fractional translations are commensurate
                  ! with the FFT grid, discard sym.op. if not
+                 ! (needed because ph.x symmetrizes in real space)
                  if (abs (ft1 - nint (ft1) ) / nr1 > 1.0d-5 .or. &
                      abs (ft2 - nint (ft2) ) / nr2 > 1.0d-5 .or. &
                      abs (ft3 - nint (ft3) ) / nr3 > 1.0d-5) then
                     WRITE( stdout, '(5x,"warning: symmetry operation", &
                          &     " # ",i2," not allowed.   fractional ", &
                          &     "translation:"/5x,3f11.7,"  in crystal", &
-                         &     " coordinates")') irot, ft
+                         &     " coordinates")') irot, ft_
                     sym (irot) = .false.
                  endif
                  ftau (1, irot) = nint (ft1)
@@ -783,6 +792,7 @@ INTEGER FUNCTION copy_sym ( nrot_, sym )
   logical, intent(inout) :: sym(48)
   !
   integer :: stemp(3,3), ftemp(3), ttemp, irot, jrot
+  REAL(dp) :: ft_(3)
   integer, allocatable :: irtemp(:)
   character(len=45) :: nametemp
   !
@@ -803,6 +813,9 @@ INTEGER FUNCTION copy_sym ( nrot_, sym )
            ftemp(:) = ftau(:,jrot)
            ftau (:, jrot) = ftau (:, irot)
            ftau (:, irot) = ftemp(:)
+           ft_(:) = ft(:,jrot)
+           ft (:, jrot) = ft (:, irot)
+           ft (:, irot) = ft_(:)
            irtemp (:) = irt (jrot,:)
            irt (jrot,:) = irt (irot,:)
            irt (irot,:) = irtemp (:)
@@ -874,7 +887,7 @@ LOGICAL FUNCTION is_group ( nr1, nr2, nr3 )
 END FUNCTION is_group
 !
 !-----------------------------------------------------------------------
-logical function checksym ( irot, nat, ityp, xau, rau, ft )
+logical function checksym ( irot, nat, ityp, xau, rau, ft_ )
   !-----------------------------------------------------------------------
   !
   !   This function receives as input all the atomic positions xau,
@@ -888,10 +901,10 @@ logical function checksym ( irot, nat, ityp, xau, rau, ft )
   integer, intent(in) :: nat, ityp (nat), irot
   ! nat : number of atoms
   ! ityp: the type of each atom
-  real(DP), intent(in) :: xau (3, nat), rau (3, nat), ft (3)
+  real(DP), intent(in) :: xau (3, nat), rau (3, nat), ft_(3)
   ! xau: the initial vectors (in crystal coordinates)
   ! rau: the rotated vectors (as above)
-  ! ft:  fractionary translation (as above)
+  ! ft_: fractionary translation (as above)
   !
   integer :: na, nb
   logical, external :: eqvect
@@ -900,7 +913,7 @@ logical function checksym ( irot, nat, ityp, xau, rau, ft )
   do na = 1, nat
      do nb = 1, nat
         checksym = ( ityp (na) == ityp (nb) .and. &
-                     eqvect (rau (1, na), xau (1, nb), ft) )
+                     eqvect (rau (1, na), xau (1, nb), ft_) )
         if ( checksym ) then
            !
            ! the rotated atom does coincide with one of the like atoms
@@ -938,7 +951,7 @@ subroutine checkallsym ( nat, tau, ityp, nr1, nr2, nr3 )
   !
   integer :: na, kpol, isym, i, j, k, l
   logical :: loksym (48)
-  real(DP) :: sx (3, 3), sy(3,3), ft (3)
+  real(DP) :: sx (3, 3), sy(3,3), ft_(3)
   real(DP) , allocatable :: xau(:,:), rau(:,:)
   real(DP), parameter :: eps = 1.0d-7
   !
@@ -982,11 +995,11 @@ subroutine checkallsym ( nat, tau, ityp, nr1, nr2, nr3 )
         enddo
      enddo
      !
-     ft (1) = ftau (1, isym) / DBLE (nr1)
-     ft (2) = ftau (2, isym) / DBLE (nr2)
-     ft (3) = ftau (3, isym) / DBLE (nr3)
+     ft_(1) = ftau (1, isym) / DBLE (nr1)
+     ft_(2) = ftau (2, isym) / DBLE (nr2)
+     ft_(3) = ftau (3, isym) / DBLE (nr3)
      !
-     loksym(isym) =  checksym ( isym, nat, ityp, xau, rau, ft )
+     loksym(isym) =  checksym ( isym, nat, ityp, xau, rau, ft_ )
      !
   enddo
   !
