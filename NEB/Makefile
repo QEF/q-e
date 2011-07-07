@@ -1,4 +1,4 @@
-# Makefile for Modules
+# Makefile for NEB
 
 include ../make.sys
 
