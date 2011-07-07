@@ -148,7 +148,7 @@ module funct
   !              "b3lp"   B3LYP (Lee-Yang-Parr*0.81)     igcc =7
   !              "psc"    PBEsol corr                    igcc =8
   !
-  ! Van der Walls functionals
+  ! Van der Walls functionals (nonlocal term only)
   !	         "nonlc"   none                           inlc =0 (default)
   !              "vdw1"    vdW-DF1                        inlc =1
   !              "vdw2"    vdW-DF2                        inlc =2
