@@ -511,7 +511,9 @@ the same directory).
 
 Plug-ins such as \texttt{YAMBO} or \texttt{PLUMED} should instead be downloaded into
 subdirectory \texttt{archive} but \uppercase{not unpacked or uncompressed}:
-command \texttt{make} will take care of this during installation. 
+command \texttt{make} will take care of this during installation. \texttt{GIPAW}
+is automatically downloaded from \texttt{http://qe-forge.org/frs/?group\_id=37}
+and compiled by typing \texttt{make gipaw} from the main espresso directory.
 
 Occasionally, patches for the current version, fixing some errors and bugs,
 may be distributed as a "diff" file. In order to install a patch (for 
@@ -924,11 +926,13 @@ generation (see specific documentation in \texttt{atomic\_doc/}).
 \item \texttt{make plumed} uncompress and move/rename \texttt{PLUMED} , patches \texttt{PW},
 \texttt{CPV} and \texttt{clib} routines and compiles \texttt{PW} and \texttt{CPV}.
 \item \texttt{make w90} uncompress and move/rename \texttt{wannier90}, copy an appropriate
-make.sys and produces \texttt{W90/wannier90.x}.
+make.sys and produces all executables in texttt{W90/wannier90.x} and in \texttt{bin}.
 \item \texttt{make want} uncompress and move/rename \texttt{want}, run \texttt{want}'s configure
 and produces all \texttt{want} executables in \texttt{WANT/bin}
 \item \texttt{make yambo} uncompress and move/rename \texttt{yambo}, run \texttt{yambo}'s configure
 and produces all \texttt{yambo} executables in \texttt{YAMBO/bin}.
+\item \texttt{make gipaw} download QE-GIPAW, uncompress and move/rename \texttt{gipaw}, run \texttt{gipaw}'s configure
+and produces all \texttt{gipaw} executables in \texttt{GIPAW/bin} and in \texttt{bin}.
 \end{itemize}
 For the setup of the GUI, refer to the \texttt{PWgui-X.Y.Z /INSTALL} file, where
 X.Y.Z stands for the version number of the GUI (should be the same as the
@@ -4075,8 +4079,8 @@ If simply typing \texttt{make yambo} produces an error such as :
 \begin{verbatim}
 undefined reference to `MAIN__'
 \end{verbatim}
-you need to run the \texttt{YAMBO} configure by yourself specifying 
-\texttt{./configure -nofor\_main} for intel compiler of \texttt{./configure -Mnomain} 
+you need to run the \texttt{YAMBO} configure by yourself specifying the apropriate compiler option, for instance,
+\texttt{./configure -nofor\_main} for intel compiler or \texttt{./configure -Mnomain} 
 for PGI. If you do not manage to solve
 the problem go to \texttt{YAMBO} official web site (\texttt{http://www.yambo-code.org}) for 
 specific information.
