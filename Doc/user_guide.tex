@@ -1301,8 +1301,8 @@ Sliwa, April 2011).
 
 \paragraph{Linux PCs with Intel compiler (ifort)}
 
-The Intel compiler, ifort, is available for  free for personal 
-usage (\texttt{http://software.intel.com/})  It seem to produce the faster executables, 
+The Intel compiler, ifort, is available for free for personal 
+usage (\texttt{http://software.intel.com/}). It seem to produce the faster executables, 
 at least on Intel CPUs, but not all versions work as expected.
 ifort versions $<9.1$ are not recommended, due to the presence of subtle 
 and insidious bugs. In case of trouble, update your version with 
@@ -2612,7 +2612,7 @@ you must also specify \texttt{amass(i)} (a real variable): the atomic mass
 of atomic type $i$.
 
 After the namelist you must specify the q-vector of the phonon mode,
-in cartesian coordinates and in units of $2\pi/a$.
+in Cartesian coordinates and in units of $2\pi/a$.
     
 Notice that the dynamical matrix calculated by \phx\ at $q=0$ does not
 contain the non-analytic term occurring in polar materials, i.e. there is no
@@ -4079,11 +4079,12 @@ If simply typing \texttt{make yambo} produces an error such as :
 \begin{verbatim}
 undefined reference to `MAIN__'
 \end{verbatim}
-you need to run the \texttt{YAMBO} configure by yourself specifying the apropriate compiler option, for instance,
+you need to run the \texttt{YAMBO} configure by yourself specifying the 
+appropriate compiler option, for instance,
 \texttt{-nofor\_main} for intel compiler or \texttt{-Mnomain} 
 for PGI. If you do not manage to solve
-the problem go to \texttt{YAMBO} official web site (\texttt{http://www.yambo-code.org}) for 
-specific information.
+the problem, consult the official \texttt{YAMBO} web site
+(\texttt{http://www.yambo-code.org}) for specific information.
 
 \subsection{PostProc}
 
@@ -4566,7 +4567,7 @@ a few KBar correspond to very small differences in terms of lattice parameters.
 
 \paragraph{Why do I get different results from vc-relax and from scf 
 on the same structure?}
-Frst of all, you should verify that the structure is really the same
+First of all, you should verify that the structure is really the same
 (hint: compare Ewald energies). Also note that
 that: a) the modified kinetic energy functional (often used in
 variable-cell calculations) affects the calculated pressure/stress;
