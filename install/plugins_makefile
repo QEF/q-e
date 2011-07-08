@@ -23,7 +23,7 @@ EXTLIBS=liblapack libblas libiotk
 ###########################################################
 gipaw:  uncompress-gipaw configure-gipaw
 	if test -d ../GIPAW; then \
-	cd ../GIPAW; $(MAKE) all; cd ../bin; ln -fs ../GIPAW/gipaw.x . ; fi
+	cd ../GIPAW; $(MAKE) all; cd ../bin; ln -fs ../GIPAW/bin/gipaw.x . ; fi
 	touch make-gipaw
 uncompress-gipaw: touch-dummy
 	@(if test ! -e ../archive/qe-gipaw-latest.tar.gz && test ! -d ../GIPAW ; then \
