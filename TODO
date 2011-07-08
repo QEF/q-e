@@ -93,6 +93,11 @@ TODO LIST - July 2011
         (langevin code)
   4.0.3 Image parallelization on k-points of EXX (no longer working) should
         be replaced by pool parallelization.
+  4.0.4 Accurate Cleaning of exx.f90. "If" loop in Vexx is confusing. Exx_divergence is
+        confusing and contains some suspect values.
+  4.0.5 Martyna-Tuckerman has to be extended to any system dimensionality and to exx, using
+        coulomb_vcut trick.
+  4.0.6 Better restart for Exx. Exx should restart from any stop point.
 
 4.1  New developments to be added (sooner or later):
   4.1.1 Moka structure builder + new xml input/output (RS)
