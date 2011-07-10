@@ -284,6 +284,10 @@ SUBROUTINE convert_fhi (upf)
   ALLOCATE( upf%rcut_chi (upf%nwfc) )
   ALLOCATE( upf%rcutus_chi(upf%nwfc) )
 
+  PRINT '("PPs in FHI format do not contain information on atomic valence (pseudo-)wavefunctions")'
+  PRINT '("Provide the label and the occupancy for each atomic wavefunction used in the PP generation")'
+  PRINT '("If unknown: list valence wfcts and occupancies for the atomic ground state ", &
+         &"in increasing l order: s,p,d,f")'
   DO i=1, upf%nwfc
 10   PRINT '("Wavefunction # ",i1,": label (e.g. 4s), occupancy > ",$)', i
      READ (5,*) label, upf%oc(i)
