@@ -14,7 +14,7 @@ SUBROUTINE sym_band(filband, spin_component, firstk, lastk)
   USE ions_base,            ONLY : nat, ityp, ntyp => nsp
   USE cell_base,            ONLY : tpiba2, at, bg, ibrav
   USE constants,            ONLY : rytoev
-  USE grid_dimensions,      ONLY : nr1x, nr2x, nr3x, nrxx, nr1, nr2, nr3
+  USE grid_dimensions,      ONLY : dense
   USE gvect,                ONLY : ngm, nl, g
   USE lsda_mod,             ONLY : nspin
   USE wvfct,                ONLY : et, nbnd, npwx, npw, igk, g2kin, ecutwfc
@@ -115,19 +115,19 @@ SUBROUTINE sym_band(filband, spin_component, firstk, lastk)
      IF (noncolin) THEN
         IF (domag) THEN
            CALL find_band_sym_so(evc,et(1,ik),at,nbnd,npw,nsym_is, &
-                ngm,sk_is,ftau_is,d_spin_is,gk_is,xk(1,ik),igk,nl,nr1,nr2,&
-                nr3,nr1x,nr2x,nr3x,nrxx,npwx,rap_et(1,ik),times(1,1,ik), &
+                ngm,sk_is,ftau_is,d_spin_is,gk_is,xk(1,ik),igk,nl,dense%nr1,dense%nr2,&
+                dense%nr3,dense%nr1x,dense%nr2x,dense%nr3x,dense%nrxx,npwx,rap_et(1,ik),times(1,1,ik), &
                 ngroup(ik),istart(1,ik),accuracy)
         ELSE
            CALL find_band_sym_so(evc,et(1,ik),at,nbnd,npw,nsymk,ngm, &
-                sk,ftauk,d_spink,gk,xk(1,ik),igk,nl,nr1,nr2,nr3,nr1x, &
-                nr2x,nr3x,nrxx,npwx,rap_et(1,ik),times(1,1,ik),ngroup(ik),&
+                sk,ftauk,d_spink,gk,xk(1,ik),igk,nl,dense%nr1,dense%nr2,dense%nr3,dense%nr1x, &
+                dense%nr2x,dense%nr3x,dense%nrxx,npwx,rap_et(1,ik),times(1,1,ik),ngroup(ik),&
                 istart(1,ik),accuracy)
         ENDIF
      ELSE
         CALL find_band_sym (evc, et(1,ik), at, nbnd, npw, nsymk, ngm, &
-             sk, ftauk, gk, xk(1,ik), igk, nl, nr1, nr2, nr3, nr1x, &
-             nr2x, nr3x, nrxx, npwx, rap_et(1,ik), times(1,1,ik), ngroup(ik),&
+             sk, ftauk, gk, xk(1,ik), igk, nl, dense%nr1, dense%nr2, dense%nr3, dense%nr1x, &
+             dense%nr2x, dense%nr3x, dense%nrxx, npwx, rap_et(1,ik), times(1,1,ik), ngroup(ik),&
              istart(1,ik),accuracy)
      ENDIF
 

@@ -395,7 +395,7 @@ SUBROUTINE cg_neweps
   USE io_global, ONLY : stdout
   USE ions_base, ONLY : nat, tau
   USE pwcom
-  USE grid_dimensions, ONLY : nrxx
+  USE grid_dimensions, ONLY : dense
   USE scf, ONLY : rho, rho_core
   USE cgcom
   USE funct, ONLY: dmxc
@@ -412,7 +412,7 @@ SUBROUTINE cg_neweps
   !  new derivative of the xc potential
   !
   dmuxc(:) = 0.d0
-  DO i = 1,nrxx
+  DO i = 1,dense%nrxx
      rhotot = rho%of_r(i,current_spin)+rho_core(i)
      IF ( rhotot> 1.d-30 ) dmuxc(i)= dmxc( rhotot)
      IF ( rhotot<-1.d-30 ) dmuxc(i)=-dmxc(-rhotot)

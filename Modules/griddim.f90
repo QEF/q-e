@@ -5,10 +5,40 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+!=----------------------------------------------------------------------------=!
+   MODULE grid_types
+!=----------------------------------------------------------------------------=!
+
+     !  Types containing dimensions of the 3D real and reciprocal space grid
+
+     IMPLICIT NONE
+     SAVE
+
+     TYPE grid_dim
+       !  dimensions of the 3D grid (global)
+       INTEGER :: nr1 = 0 
+       INTEGER :: nr2 = 0
+       INTEGER :: nr3 = 0
+       !  dimensions of the arrays for the 3D grid (global)
+       !  may differ from nr1 ,nr2 ,nr3 in order to boost performances
+       INTEGER :: nr1x = 0
+       INTEGER :: nr2x = 0
+       INTEGER :: nr3x = 0
+       ! size of the arrays allocated for the FFT, local to each processor:
+       ! in parallel execution may differ from nr1x*nr2x*nr3x
+       ! Not to be confused either with nr1*nr2*nr3 
+       INTEGER :: nrxx = 0
+     END TYPE
+
+!=----------------------------------------------------------------------------=!
+   END MODULE grid_types
+!=----------------------------------------------------------------------------=!
 
 !=----------------------------------------------------------------------------=!
    MODULE grid_dimensions
 !=----------------------------------------------------------------------------=!
+
+     USE grid_types
 
      !  Dimensions of the 3D real and reciprocal space FFT grid
      !  relative to the charge density and potential ("dense" grid)
@@ -17,19 +47,7 @@
      SAVE
 
      !  dimensions of the "dense" 3D grid (global)
-     INTEGER :: nr1  = 0, nr2  = 0, nr3  = 0
-
-     !  dimensions of the arrays for the "dense" 3D grid (global)
-     !  may differ from nr1 ,nr2 ,nr3 in order to boost performances
-     INTEGER :: nr1x = 0, nr2x = 0, nr3x = 0
-
-     ! size of the arrays allocated for the FFT, local to each processor:
-     ! in parallel execution may differ from nr1x*nr2x*nr3x
-     ! Not to be confused either with nr1*nr2*nr3 
-     INTEGER :: nrxx  = 0
-
-     PRIVATE
-     PUBLIC :: nr1, nr2,nr3, nr1x,nr2x,nr3x, nrxx
+     TYPE (grid_dim) :: dense
 
 !=----------------------------------------------------------------------------=!
    END MODULE grid_dimensions
@@ -39,6 +57,8 @@
    MODULE smooth_grid_dimensions
 !=----------------------------------------------------------------------------=!
 
+     USE grid_types
+
      !  This module contains the dimensions of the 3D real and reciprocal space
      !  FFT grid relative to the smooth part of the charge density
      !  (may differ from the full charge density grid for USPP )
@@ -47,12 +67,7 @@
      SAVE
 
      !  parameter description: same as above but for smooth grid
-     INTEGER :: nr1s = 0, nr2s = 0, nr3s = 0
-     INTEGER :: nr1sx= 0, nr2sx= 0, nr3sx= 0
-     INTEGER :: nrxxs = 0
-
-     PRIVATE
-     PUBLIC :: nr1s, nr2s,nr3s, nr1sx,nr2sx,nr3sx, nrxxs
+     TYPE (grid_dim) :: smooth
 
 !=----------------------------------------------------------------------------=!
    END MODULE smooth_grid_dimensions
@@ -66,8 +81,7 @@
      ! parameters
 
      USE kinds, ONLY: DP
-     USE grid_dimensions, ONLY: nr1, nr2, nr3, nr1x, nr2x, nr3x
-     USE smooth_grid_dimensions, ONLY: nr1s, nr2s, nr3s, nr1sx, nr2sx, nr3sx
+     USE grid_types, ONLY: grid_dim
 
      IMPLICIT NONE
      SAVE
@@ -78,7 +92,7 @@
    CONTAINS
 
 
-     SUBROUTINE realspace_grids_init( at, bg, gcutm, gcuts )
+     SUBROUTINE realspace_grids_init( dense, smooth, at, bg, gcutm, gcuts )
        !
        USE fft_scalar, only: good_fft_dimension, good_fft_order
        USE io_global, only: stdout
@@ -87,68 +101,69 @@
        !
        REAL(DP), INTENT(IN) :: at(3,3), bg(3,3)
        REAL(DP), INTENT(IN) :: gcutm, gcuts
+       TYPE(grid_dim), INTENT(OUT) :: dense, smooth
        !
-       IF( nr1 == 0 .OR. nr2 == 0 .OR. nr3 == 0 ) THEN
+       IF( dense%nr1 == 0 .OR. dense%nr2 == 0 .OR. dense%nr3 == 0 ) THEN
          !
          ! ... calculate the size of the real-space dense grid for FFT
          ! ... first, an estimate of nr1,nr2,nr3, based on the max values
          ! ... of n_i indices in:   G = i*b_1 + j*b_2 + k*b_3   
          ! ... We use G*a_i = n_i => n_i .le. |Gmax||a_i|
          !
-         nr1 = int ( sqrt (gcutm) * &
+         dense%nr1 = int ( sqrt (gcutm) * &
                sqrt (at(1, 1)**2 + at(2, 1)**2 + at(3, 1)**2) ) + 1
-         nr2 = int ( sqrt (gcutm) * &
+         dense%nr2 = int ( sqrt (gcutm) * &
                sqrt (at(1, 2)**2 + at(2, 2)**2 + at(3, 2)**2) ) + 1
-         nr3 = int ( sqrt (gcutm) * &
+         dense%nr3 = int ( sqrt (gcutm) * &
                sqrt (at(1, 3)**2 + at(2, 3)**2 + at(3, 3)**2) ) + 1
          !
-         CALL grid_set( bg, gcutm, nr1, nr2, nr3 )
+         CALL grid_set( bg, gcutm, dense%nr1, dense%nr2, dense%nr3 )
          !
        ELSE
          WRITE( stdout, '( /, 3X,"Info: using nr1, nr2, nr3 values from input" )' )
        END IF
 
-       nr1 = good_fft_order( nr1 )
-       nr2 = good_fft_order( nr2 )
-       nr3 = good_fft_order( nr3 )
+       dense%nr1 = good_fft_order( dense%nr1 )
+       dense%nr2 = good_fft_order( dense%nr2 )
+       dense%nr3 = good_fft_order( dense%nr3 )
 
-       nr1x  = good_fft_dimension( nr1 )
-       nr2x  = nr2
-       nr3x  = good_fft_dimension( nr3 )
+       dense%nr1x  = good_fft_dimension( dense%nr1 )
+       dense%nr2x  = dense%nr2
+       dense%nr3x  = good_fft_dimension( dense%nr3 )
 
        ! ... As above, for the smooth grid
 
-       IF( nr1s == 0 .OR. nr2s == 0 .OR. nr3s == 0 ) THEN
+       IF( smooth%nr1 == 0 .OR. smooth%nr2 == 0 .OR. smooth%nr3 == 0 ) THEN
          !
          IF ( gcuts == gcutm ) THEN
             ! ... No double grid, the two grids are the same
-            nr1s = nr1 ; nr2s = nr2 ; nr3s = nr3
-            nr1sx= nr1x; nr2sx= nr2x; nr3sx= nr3x
+            smooth%nr1 = dense%nr1 ; smooth%nr2 = dense%nr2 ; smooth%nr3 = dense%nr3
+            smooth%nr1x= dense%nr1x; smooth%nr2x= dense%nr2x; smooth%nr3x= dense%nr3x
             RETURN
          END IF
          !
-         nr1s= int (2 * sqrt (gcuts) * &
+         smooth%nr1= int (2 * sqrt (gcuts) * &
                sqrt (at(1, 1)**2 + at(2, 1)**2 + at(3, 1)**2) ) + 1
-         nr2s= int (2 * sqrt (gcuts) * &
+         smooth%nr2= int (2 * sqrt (gcuts) * &
                sqrt (at(1, 2)**2 + at(2, 2)**2 + at(3, 2)**2) ) + 1
-         nr3s= int (2 * sqrt (gcuts) * &
+         smooth%nr3= int (2 * sqrt (gcuts) * &
                sqrt (at(1, 3)**2 + at(2, 3)**2 + at(3, 3)**2) ) + 1
          !
-         CALL grid_set( bg, gcuts, nr1s, nr2s, nr3s )
+         CALL grid_set( bg, gcuts, smooth%nr1, smooth%nr2, smooth%nr3 )
          !
        ELSE
          WRITE( stdout, '( /, 3X,"Info: using nr1s, nr2s, nr3s values from input" )' )
        END IF
 
-       nr1s = good_fft_order( nr1s )
-       nr2s = good_fft_order( nr2s )
-       nr3s = good_fft_order( nr3s )
+       smooth%nr1 = good_fft_order( smooth%nr1 )
+       smooth%nr2 = good_fft_order( smooth%nr2 )
+       smooth%nr3 = good_fft_order( smooth%nr3 )
 
-       nr1sx = good_fft_dimension(nr1s)
-       nr2sx = nr2s
-       nr3sx = good_fft_dimension(nr3s)
+       smooth%nr1x = good_fft_dimension(smooth%nr1)
+       smooth%nr2x = smooth%nr2
+       smooth%nr3x = good_fft_dimension(smooth%nr3)
 
-       IF ( nr1s > nr1 .or. nr2s > nr2 .or. nr3s > nr3 ) THEN
+       IF ( smooth%nr1 > dense%nr1 .or. smooth%nr2 > dense%nr2 .or. smooth%nr3 > dense%nr3 ) THEN
           CALL errore(' realspace_grids_init ', ' smooth grid larger than dense grid?',1)
        END IF
 
@@ -158,17 +173,17 @@
 
 !=----------------------------------------------------------------------------=!
 
-    SUBROUTINE realspace_grids_info ( dfftp, dffts, nproc_ )
+    SUBROUTINE realspace_grids_info ( dense, smooth, dfftp, dffts, nproc_ )
 
       !  Print info on local and global dimensions for real space grids
 
       USE io_global, ONLY: ionode, stdout
       USE fft_types, ONLY: fft_dlay_descriptor
-      USE grid_dimensions, ONLY: nrxx
-      USE smooth_grid_dimensions, ONLY: nrxxs
+      USE grid_types, ONLY: grid_dim
 
       IMPLICIT NONE
 
+      TYPE(grid_dim), INTENT(IN) :: dense, smooth
       TYPE(fft_dlay_descriptor), INTENT(IN) :: dfftp, dffts
       INTEGER, INTENT(IN) :: nproc_
 
@@ -179,9 +194,9 @@
         WRITE( stdout,*)
         WRITE( stdout,*) '  Real Mesh'
         WRITE( stdout,*) '  ---------'
-        WRITE( stdout,1000) nr1, nr2, nr3, nr1, nr2, dfftp%npl, 1, 1, nproc_
-        WRITE( stdout,1010) nr1x, nr2x, nr3x
-        WRITE( stdout,1020) nrxx
+        WRITE( stdout,1000) dense%nr1, dense%nr2, dense%nr3, dense%nr1, dense%nr2, dfftp%npl, 1, 1, nproc_
+        WRITE( stdout,1010) dense%nr1x, dense%nr2x, dense%nr3x
+        WRITE( stdout,1020) dense%nrxx
         WRITE( stdout,*) '  Number of x-y planes for each processors: '
         WRITE( stdout, fmt = '( 3X, "nr3l = ", 10I5 )' ) &
            ( dfftp%npp( i ), i = 1, nproc_ )
@@ -189,9 +204,9 @@
         WRITE( stdout,*)
         WRITE( stdout,*) '  Smooth Real Mesh'
         WRITE( stdout,*) '  ----------------'
-        WRITE( stdout,1000) nr1s, nr2s, nr3s, nr1s, nr2s, dffts%npl,1,1, nproc_
-        WRITE( stdout,1010) nr1sx, nr2sx, nr3sx
-        WRITE( stdout,1020) nrxxs
+        WRITE( stdout,1000) smooth%nr1, smooth%nr2, smooth%nr3, smooth%nr1, smooth%nr2, dffts%npl,1,1, nproc_
+        WRITE( stdout,1010) smooth%nr1x, smooth%nr2x, smooth%nr3x
+        WRITE( stdout,1020) smooth%nrxx
         WRITE( stdout,*) '  Number of x-y planes for each processors: '
         WRITE( stdout, fmt = '( 3X, "nr3sl = ", 10I5 )' ) &
            ( dffts%npp( i ), i = 1, nproc_ )

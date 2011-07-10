@@ -22,7 +22,7 @@ SUBROUTINE makov_payne(etot)
   USE electrons_base,    ONLY : nspin
   USE cell_base,         ONLY : at, bg, omega, alat, ibrav
   USE parallel_include
-  USE grid_dimensions,   ONLY : nr1x, nr2x, nr3x, nrxx
+  USE grid_dimensions,   ONLY : dense
   USE gvecw ,            ONLY : ngw
   USE fft_base,          ONLY : dfftp
 #if defined __PARA
@@ -57,11 +57,11 @@ REAL(KIND=DP), ALLOCATABLE:: rhodist2(:)
   RETURN
  ENDIF
 !
- usunx=1.0D0/DBLE(nr1x)
- usuny=1.0D0/DBLE(nr2x)
- usunz=1.0D0/DBLE(nr3x)
- ALLOCATE ( r(nat,3),rhof(nr1x,nr2x,nr3x),&
-  & rgx(nr1x),rgy(nr2x),rgz(nr3x),zvv(nat) )
+ usunx=1.0D0/DBLE(dense%nr1x)
+ usuny=1.0D0/DBLE(dense%nr2x)
+ usunz=1.0D0/DBLE(dense%nr3x)
+ ALLOCATE ( r(nat,3),rhof(dense%nr1x,dense%nr2x,dense%nr3x),&
+  & rgx(dense%nr1x),rgy(dense%nr2x),rgz(dense%nr3x),zvv(nat) )
  !
  DO i=1,nat
   zvv(i)=zv(ityp(i)) 
@@ -74,8 +74,8 @@ REAL(KIND=DP), ALLOCATABLE:: rhodist2(:)
  rhof=0.0D0
 !
 !--------------------------------------------------------------------
-ALLOCATE(rhodist1(nr1x*nr2x*nr3x))
-IF (nspin.EQ.2) ALLOCATE(rhodist2(nr1x*nr2x*nr3x))
+ALLOCATE(rhodist1(dense%nr1x*dense%nr2x*dense%nr3x))
+IF (nspin.EQ.2) ALLOCATE(rhodist2(dense%nr1x*dense%nr2x*dense%nr3x))
 #if defined __PARA
 ALLOCATE( displs( nproc_bgrp ), recvcount( nproc_bgrp ) )
 !
@@ -111,9 +111,9 @@ ENDIF
 #if defined __PARA
 IF ( ionode ) THEN
 #endif
- DO k = 1, nr3x
-  DO j = 1, nr2x
-   DO i = 1, nr1x
+ DO k = 1, dense%nr3x
+  DO j = 1, dense%nr2x
+   DO i = 1, dense%nr1x
     ip=ip+1
     IF (nspin == 1 )rhof(i,j,k)=rhodist1(ip)
     IF (nspin == 2 )rhof(i,j,k)=rhodist1(ip)+rhodist2(ip)
@@ -121,13 +121,13 @@ IF ( ionode ) THEN
   ENDDO
  ENDDO
  ip=0
- DO i=1,nr1x
+ DO i=1,dense%nr1x
   rgx(i)=DBLE(i-1)*usunx*alat
  ENDDO
- DO i=1,nr2x
+ DO i=1,dense%nr2x
   rgy(i)=DBLE(i-1)*usuny*alat
  ENDDO
- DO i=1,nr3x
+ DO i=1,dense%nr3x
   rgz(i)=DBLE(i-1)*usunz*alat
  ENDDO
  !
@@ -153,13 +153,13 @@ IF ( ionode ) THEN
  !
  ! shift of the electon density
  !
- DO i=1,nr1x
+ DO i=1,dense%nr1x
   rgx(i)=(rgx(i)-R0(1))-alat*anint( (rgx(i)-R0(1))/alat )
  ENDDO
- DO i=1,nr2x
+ DO i=1,dense%nr2x
   rgy(i)=(rgy(i)-R0(2))-alat*anint( (rgy(i)-R0(2))/alat )
  ENDDO
- DO i=1,nr3x
+ DO i=1,dense%nr3x
   rgz(i)=(rgz(i)-R0(3))-alat*anint( (rgz(i)-R0(3))/alat )
  ENDDO
  
@@ -184,9 +184,9 @@ IF ( ionode ) THEN
    dipole_el = 0.0D0
    quadrupole_el = 0.0D0
  
-  DO i = 1, nr1x
-   DO j = 1, nr2x
-    DO k = 1, nr3x
+  DO i = 1, dense%nr1x
+   DO j = 1, dense%nr2x
+    DO k = 1, dense%nr3x
  
      charge_el = charge_el + rhof(i,j,k)
      dipole_el(1) = dipole_el(1) + rgx(i)*rhof(i,j,k)
@@ -199,9 +199,9 @@ IF ( ionode ) THEN
     ENDDO
    ENDDO
   ENDDO
-   charge_el=charge_el*alat**3/DBLE(nr1x*nr2x*nr3x)
-   dipole_el=dipole_el*alat**3/DBLE(nr1x*nr2x*nr3x)
-   quadrupole_el=quadrupole_el*alat**3/DBLE(nr1x*nr2x*nr3x)
+   charge_el=charge_el*alat**3/DBLE(dense%nr1x*dense%nr2x*dense%nr3x)
+   dipole_el=dipole_el*alat**3/DBLE(dense%nr1x*dense%nr2x*dense%nr3x)
+   quadrupole_el=quadrupole_el*alat**3/DBLE(dense%nr1x*dense%nr2x*dense%nr3x)
  
    ! ... compute ionic+electronic total charge, dipole and quadrupole moments
    !

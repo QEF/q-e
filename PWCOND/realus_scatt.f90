@@ -23,7 +23,7 @@ MODULE realus_scatt
    USE ions_base,        ONLY : nat, tau, ityp
    USE cell_base,        ONLY : at, bg
    USE realus
-   USE grid_dimensions,  ONLY : nr1, nr2, nr3, nr1x, nr2x, nr3x, nrxx
+   USE grid_dimensions,  ONLY : dense
    USE uspp,             ONLY : okvan
    USE uspp_param,       ONLY : upf
    USE mp_global,        ONLY : me_pool
@@ -44,9 +44,9 @@ MODULE realus_scatt
    mbx = mbr*SQRT( bg(1,1)**2 + bg(1,2)**2 + bg(1,3)**2 )
    mby = mbr*SQRT( bg(2,1)**2 + bg(2,2)**2 + bg(2,3)**2 )
    mbz = mbr*SQRT( bg(3,1)**2 + bg(3,2)**2 + bg(3,3)**2 )
-   dmbx = 2*ANINT( mbx*nr1x ) + 2
-   dmby = 2*ANINT( mby*nr2x ) + 2
-   dmbz = 2*ANINT( mbz*nr3x ) + 2
+   dmbx = 2*ANINT( mbx*dense%nr1x ) + 2
+   dmby = 2*ANINT( mby*dense%nr2x ) + 2
+   dmbz = 2*ANINT( mbz*dense%nr3x ) + 2
    roughestimate = ANINT( DBLE( dmbx*dmby*dmbz ) * pi / 6.D0 )
 !--
 
@@ -54,25 +54,25 @@ MODULE realus_scatt
    ALLOCATE( orig_or_copy( roughestimate, nat ) )
 
 #if defined (__PARA)
-   idx0 = nr1x*nr2x * SUM ( dfftp%npp(1:me_pool) )
+   idx0 = dense%nr1x*dense%nr2x * SUM ( dfftp%npp(1:me_pool) )
 #else
    idx0 = 0
 #endif
 
-   inv_nr1 = 1.D0 / DBLE( nr1 )
-   inv_nr2 = 1.D0 / DBLE( nr2 )
-   inv_nr3 = 1.D0 / DBLE( nr3 )
+   inv_nr1 = 1.D0 / DBLE( dense%nr1 )
+   inv_nr2 = 1.D0 / DBLE( dense%nr2 )
+   inv_nr3 = 1.D0 / DBLE( dense%nr3 )
 
    DO ia = 1, nat
        IF ( .NOT. upf(ityp(ia))%tvanp ) CYCLE
        mbia = 0
        boxradsq_ia = boxrad(ityp(ia))**2
-       DO ir = 1, nrxx
+       DO ir = 1, dense%nrxx
          idx   = idx0 + ir - 1
-         k     = idx / (nr1x*nr2x)
-         idx   = idx - (nr1x*nr2x)*k
-         j     = idx / nr1x
-         idx   = idx - nr1x*j
+         k     = idx / (dense%nr1x*dense%nr2x)
+         idx   = idx - (dense%nr1x*dense%nr2x)*k
+         j     = idx / dense%nr1x
+         idx   = idx - dense%nr1x*j
          i     = idx
          DO ipol = 1, 3
            posi(ipol) = DBLE( i )*inv_nr1*at(ipol,1) + &

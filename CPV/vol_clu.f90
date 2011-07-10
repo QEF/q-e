@@ -28,7 +28,7 @@ SUBROUTINE vol_clu(rho_real,rho_g,s_fac,flag)
       use control_flags,  only: tpre
       use fft_base,       ONLY : dfftp
       USE fft_interfaces, ONLY: invfft
-      use grid_dimensions,only: nr1, nr2, nr3, nr1x, nr2x, nr3x, nrxx
+      use grid_dimensions,only: dense
       use pres_ai_mod, only: rho_thr, n_cntr, cntr, step_rad, fill_vac, &
      &                       delta_eps, delta_sigma, axis,              &
      &                       abisur, dthr, Surf_t, rho_gaus, v_vol,     &
@@ -51,7 +51,7 @@ SUBROUTINE vol_clu(rho_real,rho_g,s_fac,flag)
       real(kind=8) dx, dxx, xcc(4500)
       real(kind=8) weight0, wpiu, wmeno, maxr, minr
       real(kind=8) tau00(3), dist
-      real(kind=8) rho_real(nrxx,nspin), rhoc
+      real(kind=8) rho_real(dense%nrxx,nspin), rhoc
       real(kind=8) alfa(nsx), alfa0, sigma, hgt 
       real(kind=8) pos_cry(3), pos_car(3), pos_aux(3)
       real(kind=8) pos_cry0(3), dpvdh(3,3)
@@ -78,12 +78,12 @@ SUBROUTINE vol_clu(rho_real,rho_g,s_fac,flag)
       integer shift(nproc), incr(nproc),  ppp(nproc) 
       integer displs(nproc), ip, me
 #endif
-      if (abisur) allocate(drho(3,nrxx))
-      if (abisur) allocate(d2rho(3,nrxx))
-      if (abisur) allocate(dxdyrho(nrxx))
-      if (abisur) allocate(dxdzrho(nrxx))
-      if (abisur) allocate(dydzrho(nrxx))
-      allocate(psi(nrxx))
+      if (abisur) allocate(drho(3,dense%nrxx))
+      if (abisur) allocate(d2rho(3,dense%nrxx))
+      if (abisur) allocate(dxdyrho(dense%nrxx))
+      if (abisur) allocate(dxdzrho(dense%nrxx))
+      if (abisur) allocate(dydzrho(dense%nrxx))
+      allocate(psi(dense%nrxx))
 
       call start_clock( 'vol_clu' )
 
@@ -128,15 +128,15 @@ SUBROUTINE vol_clu(rho_real,rho_g,s_fac,flag)
          end do
 ! This doesn't work yet.....
          if (jellium) then
-            do ir3 = 1,nr3
-               do ir2 = 1,nr2
-                  do ir1 = 1,nr1
-                     ir = ir1 + (ir2-1)*nr1 + (ir3-1)*nr2*nr1
+            do ir3 = 1,dense%nr3
+               do ir2 = 1,dense%nr2
+                  do ir1 = 1,dense%nr1
+                     ir = ir1 + (ir2-1)*dense%nr1 + (ir3-1)*dense%nr2*dense%nr1
                      dist = 0.d0
                      do i = 1,3
-                        posv(i,ir) = (DBLE(ir1)-1.0d0)*at(i,1)/DBLE(nr1) +&
-     &                               (DBLE(ir2)-1.0d0)*at(i,2)/DBLE(nr2) +&
-     &                               (DBLE(ir3)-1.0d0)*at(i,3)/DBLE(nr3)
+                        posv(i,ir) = (DBLE(ir1)-1.0d0)*at(i,1)/DBLE(dense%nr1) +&
+     &                               (DBLE(ir2)-1.0d0)*at(i,2)/DBLE(dense%nr2) +&
+     &                               (DBLE(ir3)-1.0d0)*at(i,3)/DBLE(dense%nr3)
                      end do
                   end do
                end do
@@ -259,7 +259,7 @@ SUBROUTINE vol_clu(rho_real,rho_g,s_fac,flag)
             psi(nlm(ig))= conjg(rhotmp(ig,1))
          end do
          call invfft('Dense',psi, dfftp )
-         do ir = 1,nrxx
+         do ir = 1,dense%nrxx
             rho_gaus(ir) = real(psi(ir))
          end do
       else            
@@ -268,7 +268,7 @@ SUBROUTINE vol_clu(rho_real,rho_g,s_fac,flag)
             psi(nlm(ig))= conjg(rhotmp(ig,1)) + ci*conjg(rhotmp(ig,2))
          end do
          call invfft('Dense',psi, dfftp )
-         do ir = 1,nrxx
+         do ir = 1,dense%nrxx
             rho_gaus(ir) = real(psi(ir))+aimag(psi(ir))
          end do
       end if
@@ -277,7 +277,7 @@ SUBROUTINE vol_clu(rho_real,rho_g,s_fac,flag)
 
       e_j = 0.d0
 
-      do ir = 1,nrxx
+      do ir = 1,dense%nrxx
    
          v_vol(ir) = 0.d0
 
@@ -307,11 +307,11 @@ SUBROUTINE vol_clu(rho_real,rho_g,s_fac,flag)
             end if
             if (nspin.eq.1) then
                e_j = e_j + v_vol(ir) * rho_real(ir,1) * omega /         &
-     &                                DBLE(nr1*nr2*nr3)
+     &                                DBLE(dense%nr1*dense%nr2*dense%nr3)
             else
                e_j = e_j + v_vol(ir) *                                  &
                      ( rho_real(ir,1) + rho_real(ir,2) ) * omega /      &
-     &                                DBLE(nr1*nr2*nr3)
+     &                                DBLE(dense%nr1*dense%nr2*dense%nr3)
             end if
          end if
 
@@ -366,7 +366,7 @@ SUBROUTINE vol_clu(rho_real,rho_g,s_fac,flag)
                   do is = 1,nspin
                      dpvdh(k,j) = dpvdh(k,j) +                       &
      &                    v_vol(ir)*drhor(ir,is,k,j)*omega/          &
-     &                    DBLE(nr1*nr2*nr3)
+     &                    DBLE(dense%nr1*dense%nr2*dense%nr3)
                   end do
                end do
             end do
@@ -399,9 +399,9 @@ SUBROUTINE vol_clu(rho_real,rho_g,s_fac,flag)
       call mp_sum(surfclu,intra_bgrp_comm)
       call mp_sum(dpvdh,intra_bgrp_comm)
 #endif
-      volclu = volclu * omega / DBLE(nr1*nr2*nr3)
-      n_ele = n_ele * omega / DBLE(nr1*nr2*nr3)
-      surfclu = surfclu * omega / DBLE(nr1*nr2*nr3) / dthr
+      volclu = volclu * omega / DBLE(dense%nr1*dense%nr2*dense%nr3)
+      n_ele = n_ele * omega / DBLE(dense%nr1*dense%nr2*dense%nr3)
+      surfclu = surfclu * omega / DBLE(dense%nr1*dense%nr2*dense%nr3) / dthr
       do i = 1,3
          do j = 1,3
             stress_vol(i,j) =  dpvdh(i,1)*h(j,1) + dpvdh(i,2)*h(j,2) +  &

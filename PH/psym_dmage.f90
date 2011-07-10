@@ -13,7 +13,7 @@ SUBROUTINE psym_dmage (dvtosym)
   ! ...  p-symmetrize the magnetization change due to an electric field.
   !
   USE kinds,     ONLY : DP
-  USE grid_dimensions, ONLY : nr1x,nr2x,nr3x
+  USE grid_dimensions, ONLY : dense
   USE fft_base,   ONLY : dfftp
   USE lsda_mod,   ONLY : nspin
   USE mp_global, ONLY : me_pool
@@ -34,7 +34,7 @@ SUBROUTINE psym_dmage (dvtosym)
 
   CALL start_clock ('psym_dmage')
 
-  ALLOCATE (ddvtosym ( nr1x * nr2x * nr3x, nspin, 3))
+  ALLOCATE (ddvtosym ( dense%nr1x * dense%nr2x * dense%nr3x, nspin, 3))
   npp0 = 1
   DO i = 1, me_pool
      npp0 = npp0 + dfftp%npp (i) * dfftp%nnp

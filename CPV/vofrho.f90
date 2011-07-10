@@ -30,8 +30,8 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, tlast,  
       USE cell_base,          ONLY: omega, r_to_s
       USE cell_base,          ONLY: alat, at, tpiba2, h, ainv
       USE gvect,              ONLY: gstart, gg, g
-      USE grid_dimensions,    ONLY: nr1, nr2, nr3, nrxx
-      USE smooth_grid_dimensions, ONLY: nrxxs
+      USE grid_dimensions,    ONLY: dense
+      USE smooth_grid_dimensions, ONLY: smooth
       USE electrons_base,   ONLY: nspin
       USE constants,        ONLY: pi, fpi, au_gpa
       USE energies,         ONLY: etot, eself, enl, ekin, epseu, esr, eht, exc, eextfor 
@@ -112,8 +112,8 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, tlast,  
       !
       ht = TRANSPOSE( h )
       !
-      ALLOCATE( v( nrxx ) )
-      ALLOCATE( vs( nrxxs ) )
+      ALLOCATE( v( dense%nrxx ) )
+      ALLOCATE( vs( smooth%nrxx ) )
       ALLOCATE( vtemp( ngm ) )
       ALLOCATE( rhotmp( ngm ) )
       !
@@ -331,12 +331,12 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, tlast,  
          iss = 1
          if (abivol.or.abisur) then
 !$omp parallel do
-            do ir=1,nrxx
+            do ir=1,dense%nrxx
                v(ir)=CMPLX( rhor( ir, iss ) + v_vol( ir ), 0.d0 ,kind=DP)
             end do           
          else
 !$omp parallel do
-            do ir=1,nrxx
+            do ir=1,dense%nrxx
                v(ir)=CMPLX( rhor( ir, iss ), 0.d0 ,kind=DP)
             end do
          end if
@@ -358,13 +358,13 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, tlast,  
          isdw=2
          if (abivol.or.abisur) then
 !$omp parallel do
-            do ir=1,nrxx
+            do ir=1,dense%nrxx
                v(ir)=CMPLX ( rhor(ir,isup)+v_vol(ir), &
                              rhor(ir,isdw)+v_vol(ir),kind=DP)
             end do
          else
 !$omp parallel do
-            do ir=1,nrxx
+            do ir=1,dense%nrxx
                v(ir)=CMPLX (rhor(ir,isup),rhor(ir,isdw),kind=DP)
             end do
          end if
@@ -421,13 +421,13 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, tlast,  
          CALL invfft('Dense',v, dfftp )
 !
 !$omp parallel do
-         DO ir=1,nrxx
+         DO ir=1,dense%nrxx
             rhor(ir,iss)=DBLE(v(ir))
          END DO
 !
 !     calculation of average potential
 !
-         vave=SUM(rhor(:,iss))/DBLE(nr1*nr2*nr3)
+         vave=SUM(rhor(:,iss))/DBLE(dense%nr1*dense%nr2*dense%nr3)
       ELSE
          isup=1
          isdw=2
@@ -439,14 +439,14 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, tlast,  
 !
          CALL invfft('Dense',v, dfftp )
 !$omp parallel do
-         DO ir=1,nrxx
+         DO ir=1,dense%nrxx
             rhor(ir,isup)= DBLE(v(ir))
             rhor(ir,isdw)=AIMAG(v(ir))
          END DO
          !
          !     calculation of average potential
          !
-         vave=(SUM(rhor(:,isup))+SUM(rhor(:,isdw))) / 2.0d0 / DBLE( nr1 * nr2 * nr3 )
+         vave=(SUM(rhor(:,isup))+SUM(rhor(:,isdw))) / 2.0d0 / DBLE( dense%nr1 * dense%nr2 * dense%nr3 )
       ENDIF
 
       CALL mp_sum( vave, intra_bgrp_comm )
@@ -468,7 +468,7 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, tlast,  
          CALL invfft('Smooth',vs, dffts )
          !
 !$omp parallel do
-         DO ir=1,nrxxs
+         DO ir=1,smooth%nrxx
             rhos(ir,iss)=DBLE(vs(ir))
          END DO
          !
@@ -485,7 +485,7 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, tlast,  
          CALL invfft('Smooth',vs, dffts )
          !
 !$omp parallel do
-         DO ir=1,nrxxs
+         DO ir=1,smooth%nrxx
             rhos(ir,isup)= DBLE(vs(ir))
             rhos(ir,isdw)=AIMAG(vs(ir))
          END DO

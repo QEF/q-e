@@ -25,8 +25,8 @@ SUBROUTINE move_ions()
   USE cell_base,              ONLY : alat, at, bg, omega, cell_force, fix_volume
   USE cellmd,                 ONLY : omega_old, at_old, press, lmovecell, calc
   USE ions_base,              ONLY : nat, ityp, tau, if_pos
-  USE grid_dimensions,        ONLY : nr1, nr2, nr3
-  USE smooth_grid_dimensions, ONLY : nr1s,nr2s,nr3s
+  USE grid_dimensions,        ONLY : dense
+  USE smooth_grid_dimensions, ONLY : smooth
   USE grid_subroutines,       ONLY : realspace_grids_init
   USE gvect,                  ONLY : gcutm
   USE gvecs,                  ONLY : gcutms
@@ -258,7 +258,7 @@ SUBROUTINE move_ions()
      ! ... before leaving check that the new positions still transform
      ! ... according to the symmetry of the system.
      !
-     CALL checkallsym( nat, tau, ityp, nr1, nr2, nr3 )
+     CALL checkallsym( nat, tau, ityp, dense%nr1, dense%nr2, dense%nr3 )
      !
   END IF
 
@@ -288,8 +288,8 @@ SUBROUTINE move_ions()
      conv_ions = .FALSE.
      ! ... allow re-calculation of FFT grid
      !
-     nr1=0; nr2=0; nr3=0; nr1s=0; nr2s=0; nr3s=0
-     CALL realspace_grids_init (at, bg, gcutm, gcutms )
+     dense%nr1=0; dense%nr2=0; dense%nr3=0; smooth%nr1=0; smooth%nr2=0; smooth%nr3=0
+     CALL realspace_grids_init (dense, smooth,at, bg, gcutm, gcutms )
      CALL init_run()
      !
   ELSE IF (restart_with_starting_magnetiz) THEN

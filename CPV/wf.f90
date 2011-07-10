@@ -30,13 +30,13 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
   USE smallbox_gvec,                    ONLY : npb, nmb, ngb
   USE gvecw,                    ONLY : ngw
   USE gvect,       ONLY : gstart
-  USE smooth_grid_dimensions,   ONLY : nrxxs
+  USE smooth_grid_dimensions,   ONLY : smooth
   USE control_flags,            ONLY : iprsta
   USE qgb_mod,                  ONLY : qgb
   USE wannier_base,             ONLY : wfg, nw, weight, indexplus, indexplusz, &
                                        indexminus, indexminusz, tag, tagp,     &
                                        expo, wfsd
-  USE grid_dimensions,          ONLY : nr1, nr2, nr3
+  USE grid_dimensions,          ONLY : dense
   USE smallbox_grid_dim,            ONLY : nnrbx
   USE uspp_param,               ONLY : nh, nhm
   USE uspp,                     ONLY : nkb
@@ -413,7 +413,7 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
            isa = isa + 1
         END DO
      END DO
-     t1=omega/DBLE(nr1*nr2*nr3)
+     t1=omega/DBLE(dense%nr1*dense%nr2*dense%nr3)
      X=X*t1
      DO i=1, nbsp
         DO j=i+1, nbsp
@@ -1377,7 +1377,7 @@ SUBROUTINE grid_map()
   !
   USE kinds,                  ONLY : DP
   USE efcalc,                 ONLY : xdist, ydist, zdist
-  USE smooth_grid_dimensions, ONLY : nrxxs
+  USE smooth_grid_dimensions, ONLY : smooth
   USE fft_base,               ONLY : dffts
   USE mp_global,              ONLY : me_bgrp
   USE parallel_include
@@ -1388,9 +1388,9 @@ SUBROUTINE grid_map()
   !
   me = me_bgrp + 1
   !
-  ALLOCATE(xdist(nrxxs))
-  ALLOCATE(ydist(nrxxs))
-  ALLOCATE(zdist(nrxxs))
+  ALLOCATE(xdist(smooth%nrxx))
+  ALLOCATE(ydist(smooth%nrxx))
+  ALLOCATE(zdist(smooth%nrxx))
   !
   nr1s = dffts%nr1
   nr2s = dffts%nr2
@@ -1973,7 +1973,7 @@ SUBROUTINE small_box_wf( i_1, j_1, k_1, nw1 )
   USE io_global,              ONLY : stdout
   USE constants,              ONLY : fpi
   USE wannier_base,           ONLY : expo
-  USE grid_dimensions,        ONLY : nr1, nr2, nr3, nr1x, nr2x, nr3x, nrxx
+  USE grid_dimensions,        ONLY : dense
   USE fft_base,               ONLY : dfftp
   USE mp_global,              ONLY : me_bgrp
   USE parallel_include
@@ -1987,25 +1987,25 @@ SUBROUTINE small_box_wf( i_1, j_1, k_1, nw1 )
 
   me = me_bgrp + 1
 
-  ALLOCATE(expo(nrxx,nw1))
+  ALLOCATE(expo(dense%nrxx,nw1))
 
   DO inw=1,nw1
 
      WRITE( stdout, * ) inw ,":", i_1(inw), j_1(inw), k_1(inw)
 
-     DO ir3=1,nr3
+     DO ir3=1,dense%nr3
 #ifdef __PARA
         ibig3 = ir3 - dfftp%ipp( me )
         IF(ibig3.GT.0.AND.ibig3.LE.dfftp%npp(me)) THEN
 #else
            ibig3=ir3
 #endif
-           DO ir2=1,nr2
-              DO ir1=1,nr1
-                 x =  (((ir1-1)/DBLE(nr1x))*i_1(inw) +                          &
-                      &                  ((ir2-1)/DBLE(nr2x))*j_1(inw) +             &
-                      &                  ((ir3-1)/DBLE(nr3x))*k_1(inw))*0.5d0*fpi
-                 expo(ir1+(ir2-1)*nr1x+(ibig3-1)*nr1x*nr2x,inw) = CMPLX(COS(x), -SIN(x),kind=DP)
+           DO ir2=1,dense%nr2
+              DO ir1=1,dense%nr1
+                 x =  (((ir1-1)/DBLE(dense%nr1x))*i_1(inw) +                          &
+                      &                  ((ir2-1)/DBLE(dense%nr2x))*j_1(inw) +             &
+                      &                  ((ir3-1)/DBLE(dense%nr3x))*k_1(inw))*0.5d0*fpi
+                 expo(ir1+(ir2-1)*dense%nr1x+(ibig3-1)*dense%nr1x*dense%nr2x,inw) = CMPLX(COS(x), -SIN(x),kind=DP)
               END DO
            END DO
 #ifdef __PARA
@@ -2028,7 +2028,7 @@ FUNCTION boxdotgridcplx(irb,qv,vr)
   !      use ion_parameters
   !
   USE kinds,           ONLY : DP
-  USE grid_dimensions, ONLY : nrxx, nr1, nr2, nr3, nr1x, nr2x, nr3x
+  USE grid_dimensions, ONLY : dense
   USE smallbox_grid_dim,   ONLY : nnrbx, nr1b, nr2b, nr3b,  nr1bx, nr2bx, nr3bx
   USE fft_base,        ONLY : dfftp
   USE mp_global,       ONLY : me_bgrp
@@ -2036,7 +2036,7 @@ FUNCTION boxdotgridcplx(irb,qv,vr)
   IMPLICIT NONE
   !
   INTEGER,           INTENT(IN):: irb(3)
-  COMPLEX(DP), INTENT(IN):: qv(nnrbx), vr(nrxx)
+  COMPLEX(DP), INTENT(IN):: qv(nnrbx), vr(dense%nrxx)
   COMPLEX(DP)            :: boxdotgridcplx
   !
   INTEGER :: ir1, ir2, ir3, ir, ibig1, ibig2, ibig3, ibig, me
@@ -2047,18 +2047,18 @@ FUNCTION boxdotgridcplx(irb,qv,vr)
 
   DO ir3=1,nr3b
      ibig3=irb(3)+ir3-1
-     ibig3=1+MOD(ibig3-1,nr3)
+     ibig3=1+MOD(ibig3-1,dense%nr3)
 #ifdef __PARA
      ibig3 = ibig3 - dfftp%ipp( me )
      IF (ibig3.GT.0.AND.ibig3.LE.dfftp%npp(me)) THEN
 #endif
         DO ir2=1,nr2b
            ibig2=irb(2)+ir2-1
-           ibig2=1+MOD(ibig2-1,nr2)
+           ibig2=1+MOD(ibig2-1,dense%nr2)
            DO ir1=1,nr1b
               ibig1=irb(1)+ir1-1
-              ibig1=1+MOD(ibig1-1,nr1)
-              ibig=ibig1 + (ibig2-1)*nr1x + (ibig3-1)*nr1x*nr2x
+              ibig1=1+MOD(ibig1-1,dense%nr1)
+              ibig=ibig1 + (ibig2-1)*dense%nr1x + (ibig3-1)*dense%nr1x*dense%nr2x
               ir  =ir1 + (ir2-1)*nr1bx + (ir3-1)*nr1bx*nr2bx
               boxdotgridcplx = boxdotgridcplx + qv(ir)*vr(ibig)
            END DO

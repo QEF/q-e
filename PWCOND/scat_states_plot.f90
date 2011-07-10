@@ -18,7 +18,7 @@ subroutine scat_states_plot(ik,ien,norb,nocros,nchan,vec,veceig,left_to_right)
   use noncollin_module, ONLY : noncolin, npol
   USE spin_orb,         ONLY : domag
   use lsda_mod,         ONLY : nspin
-  USE grid_dimensions,  ONLY : nr1, nr2, nr3
+  USE grid_dimensions,  ONLY : dense
   USE cell_base,        ONLY : alat, at
   USE cond,             ONLY : ikind, n2d, nrzpl, nrzps, taunewl, taunews,  &
                                lorb3d, funz0, lcharge, denergy, rho_scatt,  &
@@ -35,7 +35,7 @@ subroutine scat_states_plot(ik,ien,norb,nocros,nchan,vec,veceig,left_to_right)
   CHARACTER(LEN=50) :: filename
   LOGICAL :: norm_flag, left_to_right
 
-  ALLOCATE( spin_mag(nspin,nchan,nr1*nr2*nr3) )
+  ALLOCATE( spin_mag(nspin,nchan,dense%nr1*dense%nr2*dense%nr3) )
 
 !---
 ! Construct the states
@@ -54,13 +54,13 @@ subroutine scat_states_plot(ik,ien,norb,nocros,nchan,vec,veceig,left_to_right)
   endif
 !---
 
-  allocate( zdata(nr3) )
-  allocate( aux_plot(nr1*nr2*nr3) )
+  allocate( zdata(dense%nr3) )
+  allocate( aux_plot(dense%nr1*dense%nr2*dense%nr3) )
 
 !-- z-mezh (in \AA)
-  raux1 = at(3,3)*alat*0.5291772108d0 / nr3
+  raux1 = at(3,3)*alat*0.5291772108d0 / dense%nr3
   zdata(1) = 0.d0
-  do iz = 2, nr3
+  do iz = 2, dense%nr3
    zdata(iz) = zdata(iz-1) + raux1
   enddo
 !---
@@ -94,16 +94,16 @@ subroutine scat_states_plot(ik,ien,norb,nocros,nchan,vec,veceig,left_to_right)
 !--
   do ichan = 1, nchan
     write(stdout,*) 'Channel ', ichan
-    do iz = 1, nr3
+    do iz = 1, dense%nr3
       do ipol = 1, nspin0
         mag(ipol) = 0.d0
-        do ix = 1, nr1
-           do iy = 1, nr2
-             ij = ix + (iy - 1) * nr1 + (iz - 1) * nr1 * nr2
+        do ix = 1, dense%nr1
+           do iy = 1, dense%nr2
+             ij = ix + (iy - 1) * dense%nr1 + (iz - 1) * dense%nr1 * dense%nr2
              mag(ipol) = mag(ipol) + spin_mag(ipol,ichan,ij)
            enddo
         enddo
-        mag(ipol) = mag(ipol) * sarea / (nr1*nr2)
+        mag(ipol) = mag(ipol) * sarea / (dense%nr1*dense%nr2)
         if (lcharge) rho_scatt(iz,ipol) = rho_scatt(iz,ipol) + mag(ipol)*raux2
       enddo
       write(stdout,'(5f12.6)') zdata(iz), (mag(ipol), ipol = 1, nspin0)
@@ -122,13 +122,13 @@ subroutine scat_states_plot(ik,ien,norb,nocros,nchan,vec,veceig,left_to_right)
      write(stdout,*) '-- Total charge --'
      write(stdout,'(2a11,a13)') '--- z, Ang','n(z)'
     endif
-    do iz = 1, nr3
+    do iz = 1, dense%nr3
       write(stdout,'(5f12.6)') zdata(iz), (rho_scatt(iz,ipol), ipol = 1, nspin0)
       do ipol = 1, nspin0
         mag(ipol) = mag(ipol) + rho_scatt(iz,ipol)
       enddo
     enddo
-    mag(:) = mag(:) / nr3 * at(3,3) * alat
+    mag(:) = mag(:) / dense%nr3 * at(3,3) * alat
     if (noncolin) then
      write(stdout,'(''Nelec and Magn. Moment '',4f12.6)') (mag(ipol), ipol = 1, nspin0)
     else
@@ -194,11 +194,11 @@ subroutine scat_states_plot(ik,ien,norb,nocros,nchan,vec,veceig,left_to_right)
       ix = 1
       IF (noncolin.AND.domag) ix = nspin
       do ipol = 1, ix
-        do ij = 1, nr1*nr2*nr3
+        do ij = 1, dense%nr1*dense%nr2*dense%nr3
            aux_plot(ij) = spin_mag(ipol,ichan,ij)
         enddo
         call xsf_fast_datagrid_3d &
-          (aux_plot, nr1, nr2, nr3, nr1, nr2, nr3, at, alat, ounit)
+          (aux_plot, dense%nr1, dense%nr2, dense%nr3, dense%nr1, dense%nr2, dense%nr3, at, alat, ounit)
       enddo
       CLOSE(ounit)
     enddo
@@ -233,7 +233,7 @@ SUBROUTINE scat_states_comp(nchan, nrzp, norb, nocros, taunew, vec, &
  USE scf,       ONLY : rho
  USE uspp_param,ONLY : upf, nhm, nh
  USE uspp,      ONLY : nkb, vkb, becsum
- USE grid_dimensions,ONLY: nr1, nr2, nr3, nr1x, nr2x, nr3x, nrxx
+ USE grid_dimensions,ONLY: dense
  USE ions_base, ONLY : ityp, zv, nat, ntyp => nsp, tau, atm
  USE fft_scalar,ONLY : cft_2xy
  USE splinelib, ONLY : spline, splint
@@ -247,7 +247,7 @@ SUBROUTINE scat_states_comp(nchan, nrzp, norb, nocros, taunew, vec, &
  INTEGER :: iorb, iorb1
  REAL(DP) :: r_aux1, r_aux2, r_aux3, taunew(4,norb)
  COMPLEX(DP), PARAMETER :: one=(1.d0,0.d0), zero=(0.d0,0.d0)
- REAL(DP) :: spin_mag_tot(nspin,nchan,nr1*nr2*nr3)
+ REAL(DP) :: spin_mag_tot(nspin,nchan,dense%nr1*dense%nr2*dense%nr3)
 
  INTEGER :: is, js, ix, jx
  COMPLEX(DP), ALLOCATABLE :: fung(:), amat(:,:), aux_proc(:,:), &
@@ -261,16 +261,16 @@ SUBROUTINE scat_states_comp(nchan, nrzp, norb, nocros, taunew, vec, &
 
  ALLOCATE( ind(nat) )
  ALLOCATE( fung(ngper) )
- ALLOCATE( funr(nr1*nr2) )
- ALLOCATE( aux_proc(nr1*nr2*nrzp,npol) )
+ ALLOCATE( funr(dense%nr1*dense%nr2) )
+ ALLOCATE( aux_proc(dense%nr1*dense%nr2*nrzp,npol) )
  ALLOCATE( amat(norb*npol,norb*npol) )
  ALLOCATE( vec1(norb*npol) )
  ALLOCATE( ipiv(norb*npol) )
- ALLOCATE( spin_mag(nr1x*nr2x*nr3x,nspin) )
+ ALLOCATE( spin_mag(dense%nr1x*dense%nr2x*dense%nr3x,nspin) )
  ALLOCATE( xdata(dffts%nr3+1) )
  ALLOCATE( ydata(dffts%nr3+1) )
- ALLOCATE( xdatax(nr3) )
- ALLOCATE( ydatax(nr3) )
+ ALLOCATE( xdatax(dense%nr3) )
+ ALLOCATE( ydatax(dense%nr3) )
  ALLOCATE( y2d(dffts%nr3+1) )
  IF (noncolin) ALLOCATE(becsum_nc(nhm*(nhm+1)/2,nat,npol,npol))
  ALLOCATE( becsum_orig(nhm*(nhm+1)/2,nat,nspin) )
@@ -487,11 +487,11 @@ SUBROUTINE scat_states_comp(nchan, nrzp, norb, nocros, taunew, vec, &
           DO ig=1,ngper
              funr(nl_2d(ig))=fung(ig)
           END DO
-          call cft_2xy(funr, 1, nr1, nr2, nr1, nr2, 1)
-          DO ix=1,nr1
-             DO jx=1,nr2
-                ir=ix + (jx - 1) * nr1 + (ik - 1) * nr1 * nr2
-                ig=ix+(jx-1)*nr1
+          call cft_2xy(funr, 1, dense%nr1, dense%nr2, dense%nr1, dense%nr2, 1)
+          DO ix=1,dense%nr1
+             DO jx=1,dense%nr2
+                ir=ix + (jx - 1) * dense%nr1 + (ik - 1) * dense%nr1 * dense%nr2
+                ig=ix+(jx-1)*dense%nr1
                 aux_proc(ir,ipol) = funr(ig)
              END DO
           END DO
@@ -504,10 +504,10 @@ SUBROUTINE scat_states_comp(nchan, nrzp, norb, nocros, taunew, vec, &
 ! calculates PS density and spin magnetization
   rho%of_r(:,:) = 0.d0
   do ik = 1, nrzp
-    DO ix=1,nr1
-      DO jx=1,nr2
-       ig=ix + (jx - 1) * nr1 + (ik - 1) * nr1 * nr2
-       ig1=ix + (jx - 1) * nr1x + (ik - 1) * nr1x * nr2x
+    DO ix=1,dense%nr1
+      DO jx=1,dense%nr2
+       ig=ix + (jx - 1) * dense%nr1 + (ik - 1) * dense%nr1 * dense%nr2
+       ig1=ix + (jx - 1) * dense%nr1x + (ik - 1) * dense%nr1x * dense%nr2x
        rho%of_r(ig1,1) = DBLE(aux_proc(ig,1))**2+AIMAG(aux_proc(ig,1))**2
        IF (noncolin) THEN
         rho%of_r(ig1,2) = 2.D0*(DBLE(aux_proc(ig,1))*DBLE(aux_proc(ig,2)) + &
@@ -529,8 +529,8 @@ SUBROUTINE scat_states_comp(nchan, nrzp, norb, nocros, taunew, vec, &
   do ig = 1, dffts%nr3+1
    xdata(ig) = r_aux1*(ig-1)
   enddo
-  r_aux2 = 1.d0/nr3
-  do ig = 1, nr3
+  r_aux2 = 1.d0/dense%nr3
+  do ig = 1, dense%nr3
    xdatax(ig) = r_aux2*(ig-1)
   enddo
 
@@ -541,12 +541,12 @@ SUBROUTINE scat_states_comp(nchan, nrzp, norb, nocros, taunew, vec, &
   endif
 
   do ipol = 1, nspin
-   DO ix = 1, nr1
-    DO jx = 1, nr2
+   DO ix = 1, dense%nr1
+    DO jx = 1, dense%nr2
 
      ydata = 0.d0
      do ig = 1, nrzp
-      ig1=ix + (jx - 1) * nr1x + (ig - 1) * nr1x * nr2x
+      ig1=ix + (jx - 1) * dense%nr1x + (ig - 1) * dense%nr1x * dense%nr2x
       ydata(ik+ig) = rho%of_r(ig1,ipol)
      enddo
      CALL mp_sum(ydata, intra_pool_comm )
@@ -557,11 +557,11 @@ SUBROUTINE scat_states_comp(nchan, nrzp, norb, nocros, taunew, vec, &
      endif
      r_aux3 = 0.d0
      CALL spline( xdata, ydata, 0.d0, r_aux3, y2d )
-     do ig = 1, nr3
+     do ig = 1, dense%nr3
        ydatax(ig) = splint( xdata, ydata, y2d, xdatax(ig) )
      enddo
-     do ig = 1, nr3
-       ig1=ix + (jx - 1) * nr1x + (ig - 1) * nr1x * nr2x
+     do ig = 1, dense%nr3
+       ig1=ix + (jx - 1) * dense%nr1x + (ig - 1) * dense%nr1x * dense%nr2x
        spin_mag(ig1,ipol) = spin_mag(ig1,ipol) + ydatax(ig)
      enddo
 
@@ -574,19 +574,19 @@ SUBROUTINE scat_states_comp(nchan, nrzp, norb, nocros, taunew, vec, &
 ! Normalization
  IF (norm_flag) THEN
     r_aux1 = SUM(spin_mag(:,1))
-    r_aux1 = r_aux1*omega/(nr1*nr2*nr3)
+    r_aux1 = r_aux1*omega/(dense%nr1*dense%nr2*dense%nr3)
     r_aux1 = 1.d0/r_aux1
-    CALL dscal(nr1x*nr2x*nr3x*nspin,r_aux1,spin_mag,1)
+    CALL dscal(dense%nr1x*dense%nr2x*dense%nr3x*nspin,r_aux1,spin_mag,1)
  END IF
 !-------
 
 !----
 ! save in the spin_mag_tot array
-  DO ix = 1, nr1
-    DO jx = 1, nr2
-      do ig = 1, nr3
-        ir = ix + (jx - 1) * nr1 + (ig - 1) * nr1 * nr2
-        ig1= ix + (jx - 1) * nr1x + (ig - 1) * nr1x * nr2x
+  DO ix = 1, dense%nr1
+    DO jx = 1, dense%nr2
+      do ig = 1, dense%nr3
+        ir = ix + (jx - 1) * dense%nr1 + (ig - 1) * dense%nr1 * dense%nr2
+        ig1= ix + (jx - 1) * dense%nr1x + (ig - 1) * dense%nr1x * dense%nr2x
         do ipol = 1, nspin
           spin_mag_tot(ipol,ichan,ir) = spin_mag(ig1,ipol)
         enddo

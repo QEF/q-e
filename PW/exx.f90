@@ -468,7 +468,7 @@ CONTAINS
     !This subroutine is called when restarting an exx calculation
     use funct,                ONLY : get_exx_fraction, start_exx, exx_is_active, &
                                      get_screening_parameter
-    USE smooth_grid_dimensions,ONLY: nrxxs
+    USE smooth_grid_dimensions,ONLY: smooth
     USE io_global,            ONLY : stdout
 
     implicit none
@@ -477,7 +477,7 @@ CONTAINS
 
     if (.not. l_exx_was_active ) return ! nothing had happpened yet
     !!
-    exx_nwordwfc=2*nrxxs
+    exx_nwordwfc=2*smooth%nrxx
     !iunexx = find_free_unit()
     !call diropn(iunexx,'exx', exx_nwordwfc, exst) 
     erfc_scrlen = get_screening_parameter()

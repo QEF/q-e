@@ -17,7 +17,7 @@ subroutine stress ( sigma )
   USE constants,     ONLY : uakbar
   USE ener,          ONLY : etxc, vtxc
   USE gvect,         ONLY : ngm, gstart, nl, g, gg, gcutm
-  USE grid_dimensions,ONLY: nr1, nr2, nr3, nrxx
+  USE grid_dimensions,ONLY: dense
   USE ldaU,          ONLY : lda_plus_u
   USE lsda_mod,      ONLY : nspin
   USE scf,           ONLY : rho, rho_core, rhog_core
@@ -79,7 +79,7 @@ subroutine stress ( sigma )
   !  xc contribution: add gradient corrections (non diagonal)
   !
   call stres_gradcorr ( rho%of_r, rho%of_g, rho_core, rhog_core, nspin, &
-                        nr1, nr2, nr3, nrxx, nl, ngm, g, alat, omega, sigmaxc)
+                        dense%nr1, dense%nr2, dense%nr3, dense%nrxx, nl, ngm, g, alat, omega, sigmaxc)
   !
   ! core correction contribution
   !

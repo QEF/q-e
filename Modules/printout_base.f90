@@ -77,8 +77,9 @@ CONTAINS
      END IF
 
      CALL mp_bcast(ierr, ionode_id, intra_image_comm)
-     IF( ierr /= 0 ) &
-        CALL errore(' printout_base_init ',' error in opening unit, check outdir ',iunit)
+     IF( ierr /= 0 ) THEN
+        CALL errore(' printout_base_init ',' error in opening unit, check outdir = '//TRIM(outdir),iunit)
+     END IF
 
     RETURN
   END SUBROUTINE printout_base_init
@@ -106,6 +107,7 @@ CONTAINS
     END DO
     IF( PRESENT( suffix ) ) THEN
        IF( .NOT. ok ) &
+          CALL errore(" printout_base_open ", " file with suffix "//suffix//" not found ", 1 )
           CALL errore(" printout_base_open ", " file with suffix "//suffix//" not found ", 1 )
     END IF
     RETURN
@@ -218,7 +220,6 @@ CONTAINS
     END IF
     !
     IF( PRESENT( nfi ) .AND. PRESENT( tps ) ) THEN
-       WRITE( iunit, 30 ) nfi, tps
     ELSE IF( PRESENT( what ) ) THEN
        IF( what == 'pos' ) THEN
           WRITE( iunit, 40 )

@@ -21,7 +21,7 @@ subroutine drhodvus (irr, imode0, dvscfin, npe)
   !
   USE kinds,     ONLY : DP
   USE ions_base, ONLY : nat, ntyp=>nsp, ityp
-  USE grid_dimensions, ONLY : nr1, nr2, nr3
+  USE grid_dimensions, ONLY : dense
   USE cell_base, ONLY : omega
   USE ions_base, ONLY : nat
   USE fft_base,  ONLY : dfftp
@@ -67,7 +67,7 @@ subroutine drhodvus (irr, imode0, dvscfin, npe)
   call start_clock ('drhodvus')
   allocate (drhous ( dfftp%nnr, nspin_mag))
   dyn1 (:,:) = (0.d0, 0.d0)
-  nrtot = nr1 * nr2 * nr3
+  nrtot = dense%nr1 * dense%nr2 * dense%nr3
   mode0 = 0
   do irr1 = 1, nirr
      do ipert = 1, npert (irr1)

@@ -993,7 +993,7 @@ MODULE realus
     !   the Q function in real space
     !
       USE cell_base,        ONLY : omega
-      USE grid_dimensions,  ONLY : nr1, nr2, nr3, nrxx
+      USE grid_dimensions,  ONLY : dense
       USE lsda_mod,         ONLY : nspin
       USE ions_base,        ONLY : nat, ityp
       USE uspp_param,       ONLY : upf, nh, nhm
@@ -1006,7 +1006,7 @@ MODULE realus
           IMPLICIT NONE
       !
       ! Input: potential , output: contribution to integral
-      REAL(kind=dp), INTENT(in)  :: vr(nrxx,nspin)
+      REAL(kind=dp), INTENT(in)  :: vr(dense%nrxx,nspin)
       REAL(kind=dp), INTENT(out) :: deeq( nhm, nhm, nat, nspin )
       LOGICAL, INTENT(in) :: skip_vltot !If .false. vltot is added to vr when necessary
       !Internal
@@ -1021,7 +1021,7 @@ MODULE realus
 
       deeq(:,:,:,:) = 0.D0
       !
-      ALLOCATE( aux( nrxx ) )
+      ALLOCATE( aux( dense%nrxx ) )
       !
       DO is = 1, nspin_mag
          !
@@ -1058,7 +1058,7 @@ MODULE realus
          ENDDO
       ENDDO
       !
-      deeq(:,:,:,:) = deeq(:,:,:,:)*omega/(nr1*nr2*nr3)
+      deeq(:,:,:,:) = deeq(:,:,:,:)*omega/(dense%nr1*dense%nr2*dense%nr3)
       !
       DEALLOCATE( aux )
       !
@@ -1433,7 +1433,7 @@ MODULE realus
       USE lsda_mod,         ONLY : nspin
       !USE scf,              ONLY : rho
       USE klist,            ONLY : nelec
-      USE grid_dimensions,  ONLY : nr1, nr2, nr3, nrxx
+      USE grid_dimensions,  ONLY : dense
       USE uspp,             ONLY : okvan, becsum
       USE uspp_param,       ONLY : upf, nh
       USE noncollin_module, ONLY : noncolin, nspin_mag, nspin_lsda
@@ -1444,7 +1444,7 @@ MODULE realus
       !
       IMPLICIT NONE
       !
-      REAL(kind=dp), INTENT(inout) :: rho_1(nrxx,nspin_mag) !The charge density to be augmented
+      REAL(kind=dp), INTENT(inout) :: rho_1(dense%nrxx,nspin_mag) !The charge density to be augmented
       LOGICAL, INTENT(in) :: rescale !If this is the ground charge density, enable rescaling
       !
       INTEGER  :: ia, nt, ir, irb, ih, jh, ijh, is, mbia, nhnt, iqs
@@ -1502,7 +1502,7 @@ MODULE realus
 
       IF (rescale) THEN
       !OBM, RHO IS NOT NECESSARILY GROUND STATE CHARGE DENSITY, thus rescaling is optional
-       charge = sum( rho_1(:,1:nspin_lsda) )*omega / ( nr1*nr2*nr3 )
+       charge = sum( rho_1(:,1:nspin_lsda) )*omega / ( dense%nr1*dense%nr2*dense%nr3 )
 
        CALL mp_sum(  charge , intra_pool_comm )
        CALL mp_sum(  charge , inter_pool_comm )
@@ -1553,7 +1553,7 @@ MODULE realus
     USE cell_base,             ONLY : omega
     USE wavefunctions_module,  ONLY : psic
     USE ions_base,             ONLY : nat, ntyp => nsp, ityp
-    USE smooth_grid_dimensions,ONLY : nr1s,  nr2s,  nr3s
+    USE smooth_grid_dimensions,ONLY : smooth
     USE uspp_param,            ONLY : nh, nhm
     USE fft_base,              ONLY : tg_gather, dffts
     USE mp_global,             ONLY : me_pool, intra_pool_comm
@@ -1581,7 +1581,7 @@ MODULE realus
 
     ELSE !non task groups part starts here
 
-    fac = sqrt(omega) / (nr1s*nr2s*nr3s)
+    fac = sqrt(omega) / (smooth%nr1*smooth%nr2*smooth%nr3)
     !
     becp_r(:,ibnd)=0.d0
     IF ( ibnd+1 .le. m ) becp_r(:,ibnd+1)=0.d0
@@ -1661,7 +1661,7 @@ MODULE realus
     USE cell_base,             ONLY : omega
     USE wavefunctions_module,  ONLY : psic
     USE ions_base,             ONLY : nat, ntyp => nsp, ityp
-    USE smooth_grid_dimensions,ONLY : nr1s,  nr2s,  nr3s
+    USE smooth_grid_dimensions,ONLY : smooth
     USE uspp_param,            ONLY : nh, nhm
     USE becmod,                ONLY : bec_type, becp
     USE fft_base,              ONLY : tg_gather, dffts
@@ -1688,7 +1688,7 @@ MODULE realus
 
     ELSE !non task groups part starts here
 
-    fac = sqrt(omega) / (nr1s*nr2s*nr3s)
+    fac = sqrt(omega) / (smooth%nr1*smooth%nr2*smooth%nr3)
     !
     becp%k(:,ibnd)=0.d0
        iqs = 1
@@ -2655,7 +2655,7 @@ MODULE realus
   !
   USE kinds,                ONLY : DP
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
-  USE grid_dimensions,      ONLY : nrxx
+  USE grid_dimensions,      ONLY : dense
   USE gvect,                ONLY : ngm, nl, nlm, gg, g
   USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
   USE uspp,                 ONLY : okvan, becsum, nkb
@@ -2673,7 +2673,7 @@ MODULE realus
   !
   !
   INTEGER, INTENT(in) :: iw,jw!the states indices
-  REAL(kind=DP), INTENT(inout) :: r_ij(nrxx)!where to add the us term
+  REAL(kind=DP), INTENT(inout) :: r_ij(dense%nrxx)!where to add the us term
   INTEGER, INTENT(in) :: ik!spin index for spin polarized calculations NOT IMPLEMENTED YET
   REAL(kind=DP), INTENT(in) ::  becp_iw( nkb)!overlap of wfcs with us  projectors
   REAL(kind=DP), INTENT(in) ::  becp_jw( nkb)!overlap of wfcs with us  projectors
@@ -2762,7 +2762,7 @@ MODULE realus
 
   USE kinds,                ONLY : DP
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
-  USE grid_dimensions,      ONLY : nrxx
+  USE grid_dimensions,      ONLY : dense
   USE gvect,                ONLY : ngm, nl, nlm, gg, g
   USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
   USE uspp,                 ONLY : okvan, becsum, nkb
@@ -2774,7 +2774,7 @@ MODULE realus
   !
   IMPLICIT NONE
   !
-  COMPLEX(kind=DP), INTENT(inout) :: r_ij(nrxx)!where to add the us term
+  COMPLEX(kind=DP), INTENT(inout) :: r_ij(dense%nrxx)!where to add the us term
   COMPLEX(kind=DP), INTENT(in) ::  becp_iw( nkb)!overlap of wfcs with us  projectors
   COMPLEX(kind=DP), INTENT(in) ::  becp_jw( nkb)!overlap of wfcs with us  projectors
 
@@ -2943,7 +2943,7 @@ MODULE realus
   !
   USE kinds,                ONLY : DP
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
-  USE grid_dimensions,      ONLY : nr1, nr2, nr3, nrxx
+  USE grid_dimensions,      ONLY : dense
   USE gvect,                ONLY : ngm, nl, nlm, gg, g
   USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
   USE uspp,                 ONLY : okvan, becsum, nkb, qq
@@ -2960,7 +2960,7 @@ MODULE realus
   INTEGER :: is, ia, nhnt, na, nt, ih, jh, ir, mbia, irb, iqs
   REAL(kind=DP) :: sca
   REAL(kind=DP), INTENT(out) ::  qq_op(nhm, nhm,nat)!US augmentation charges to be calculated
-  REAL(kind=DP), INTENT(in)  ::   op(nrxx)!operator
+  REAL(kind=DP), INTENT(in)  ::   op(dense%nrxx)!operator
 
   qq_op(:,:,:)=0.d0
   DO is=1,nspin
@@ -2991,7 +2991,7 @@ MODULE realus
               ENDDO
               !!!! call mp_sum(sca , intra_pool_comm)
               CALL mp_sum(sca)
-              sca=sca/dble(nr1*nr2*nr3)
+              sca=sca/dble(dense%nr1*dense%nr2*dense%nr3)
               qq_op(ih,jh,ia)=sca
               qq_op(jh,ih,ia)=sca
            ENDDO

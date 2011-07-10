@@ -15,7 +15,7 @@ subroutine dpsidvdpsi (nu_q0)
   USE mp_global,  ONLY : inter_pool_comm, intra_pool_comm
   USE mp,         ONLY : mp_sum
   use pwcom
-  USE grid_dimensions, ONLY : nrxx
+  USE grid_dimensions, ONLY : dense
   USE uspp,       ONLY : nkb, vkb
   use phcom
   use d3com
@@ -32,7 +32,7 @@ subroutine dpsidvdpsi (nu_q0)
 
 
   allocate  (dqpsi( npwx, nbnd))
-  allocate  (dvloc( nrxx))
+  allocate  (dvloc( dense%nrxx))
   allocate  (d3dyn1( 3 * nat, 3 * nat, 3 * nat))
   if (.not.allmodes) then
      allocate  (d3dyn2( 3 * nat, 3 * nat, 3 * nat))

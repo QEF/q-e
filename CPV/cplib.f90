@@ -1136,7 +1136,7 @@ subroutine nlinit
       use gvect,           ONLY : ngm
       use cp_interfaces,   ONLY : pseudopotential_indexes, compute_dvan, &
                                   compute_betagx, compute_qradx
-      USE grid_dimensions, ONLY : nrxx
+      USE grid_dimensions, ONLY : grid_dim, dense
 
 !
       implicit none
@@ -1167,7 +1167,7 @@ subroutine nlinit
       !
       call aainit( lmaxkb + 1 )
       !
-      CALL allocate_core( nrxx, ngm, ngb, nsp )
+      CALL allocate_core( dense%nrxx, ngm, ngb, nsp )
       !
       !
       allocate( beta( ngw, nhm, nsp ) )
@@ -1503,7 +1503,6 @@ END SUBROUTINE print_lambda_x
       USE mp,                 ONLY: mp_sum
       USE mp_global,          ONLY: intra_bgrp_comm
       USE uspp_param,         ONLY: upf
-      USE grid_dimensions,    ONLY: nr1, nr2, nr3
       USE fft_interfaces,     ONLY: fwfft
       USE fft_base,           ONLY: dfftp
 

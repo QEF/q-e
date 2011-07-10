@@ -30,7 +30,7 @@
       USE gvecs,                  ONLY: nlsm, nls
       USE uspp,                   ONLY: nhsa=>nkb, dvan, deeq
       USE uspp_param,             ONLY: nhm, nh, ish
-      USE smooth_grid_dimensions, ONLY: nrxxs
+      USE smooth_grid_dimensions, ONLY: smooth
       USE constants,              ONLY: pi, fpi
       USE ions_base,              ONLY: nsp, na, nat
       USE gvecw,                  ONLY: ngw, ggp
@@ -73,7 +73,7 @@
          ALLOCATE( psi( dffts%tg_nnr * dffts%nogrp ) )
       ELSE
          nogrp_ = 1
-         ALLOCATE( psi( nrxxs ) )
+         ALLOCATE( psi( smooth%nrxx ) )
       END IF
       !
       ci = ( 0.0d0, 1.0d0 )
@@ -132,14 +132,14 @@
          !
          IF( PRESENT( v1 ) ) THEN
 !$omp parallel do 
-            DO ir=1,nrxxs
+            DO ir=1,smooth%nrxx
                psi(ir)=CMPLX ( v(ir,iss1)* DBLE(psi(ir)), &
                               v1(ir,iss2)*AIMAG(psi(ir)) ,kind=DP)
             END DO
 !$omp end parallel do 
          ELSE
 !$omp parallel do 
-            DO ir=1,nrxxs
+            DO ir=1,smooth%nrxx
                psi(ir)=CMPLX( v(ir,iss1)* DBLE(psi(ir)), &
                               v(ir,iss2)*AIMAG(psi(ir)) ,kind=DP)
             END DO

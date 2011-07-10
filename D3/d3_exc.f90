@@ -18,7 +18,7 @@ SUBROUTINE d3_exc
   USE kinds,      ONLY : DP
   USE pwcom
   USE scf, only : rho, rho_core
-  USE grid_dimensions, only : nrxx, nr1, nr2, nr3
+  USE grid_dimensions, only : dense
   USE phcom
   USE d3com
   USE io_global, ONLY : ionode_id
@@ -35,10 +35,10 @@ SUBROUTINE d3_exc
   COMPLEX (DP), ALLOCATABLE :: work1 (:), work2 (:), &
                                       work3 (:), d3dyn1 (:,:,:)
 
-  ALLOCATE (d2muxc( nrxx))
-  ALLOCATE (work1 ( nrxx))
-  ALLOCATE (work2 ( nrxx))
-  ALLOCATE (work3 ( nrxx))
+  ALLOCATE (d2muxc( dense%nrxx))
+  ALLOCATE (work1 ( dense%nrxx))
+  ALLOCATE (work2 ( dense%nrxx))
+  ALLOCATE (work3 ( dense%nrxx))
   ALLOCATE (d3dyn1( 3*nat, 3*nat, 3*nat))
 
 !  IF ( my_pool_id == 0 ) THEN
@@ -46,7 +46,7 @@ SUBROUTINE d3_exc
      ! Calculates third derivative of Exc
      !
      d2muxc(:) = 0.d0
-     DO ir = 1, nrxx
+     DO ir = 1, dense%nrxx
         rhotot = rho%of_r (ir, 1) + rho_core (ir)
         IF (rhotot > 1.d-30) d2muxc (ir) = d2mxc (rhotot)
         IF (rhotot < - 1.d-30) d2muxc (ir) = - d2mxc ( - rhotot)
@@ -63,7 +63,7 @@ SUBROUTINE d3_exc
               DO kpert = 1, 3 * nat
                  CALL davcio_drho (work3, lrdrho, iudrho, kpert, - 1)
                  aux = CMPLX(0.d0, 0.d0,kind=DP)
-                 DO ir = 1, nrxx
+                 DO ir = 1, dense%nrxx
                     aux = aux + &
                           d2muxc (ir) * work1 (ir) * &
                           CONJG (work2 (ir) ) * work3 (ir)
@@ -71,7 +71,7 @@ SUBROUTINE d3_exc
                  !
                  CALL mp_sum ( aux, intra_pool_comm )
                  !
-                 d3dyn1 (ipert, jpert, kpert) = omega * aux / (nr1 * nr2 * nr3)
+                 d3dyn1 (ipert, jpert, kpert) = omega * aux / (dense%nr1 * dense%nr2 * dense%nr3)
                  !
               ENDDO
            ENDDO

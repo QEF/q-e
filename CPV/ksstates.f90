@@ -140,7 +140,7 @@ CONTAINS
         USE io_global, ONLY: ionode, ionode_id
         USE io_global, ONLY: stdout
         USE gvecw, ONLY: ngw
-        USE grid_dimensions, ONLY: nr1, nr2, nr3, nr1x, nr2x, nr3x, nrxx
+        USE grid_dimensions, ONLY: dense
         USE fft_base, ONLY: dfftp, dffts
         USE fft_interfaces, ONLY: invfft
         USE xml_io_base, ONLY: write_rho_xml
@@ -155,13 +155,13 @@ CONTAINS
         INTEGER   ::  i
         REAL(DP) :: charge
 
-        ALLOCATE( psi( nrxx ) )
-        ALLOCATE( rpsi2( nrxx ) )
+        ALLOCATE( psi( dense%nrxx ) )
+        ALLOCATE( rpsi2( dense%nrxx ) )
 
         CALL c2psi( psi, dffts%nnr, c, c, ngw, 1 )
         CALL invfft( 'Wave', psi, dffts )
 
-        DO i = 1, nrxx
+        DO i = 1, dense%nrxx
            rpsi2( i ) = DBLE( psi( i ) )**2
         END DO
         charge = SUM( rpsi2 )
@@ -174,7 +174,7 @@ CONTAINS
 
         IF ( ionode ) THEN
           WRITE( stdout,'(3X,A15," integrated charge : ",F14.5)')  &
-     &      TRIM(file_name), charge / DBLE(nr1*nr2*nr3)
+     &      TRIM(file_name), charge / DBLE(dense%nr1*dense%nr2*dense%nr3)
         END IF
 
         DEALLOCATE( rpsi2, psi )

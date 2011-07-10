@@ -27,7 +27,7 @@ SUBROUTINE open_dvscf_star_q( q_index )
   USE ions_base,     ONLY : nat, ntyp => nsp, ityp, tau, atm, amass
   USE wvfct,     ONLY : npwx,npw,igk
   USE symm_base,  ONLY : s, ftau,nsym,irt, invs
-  USE grid_dimensions, ONLY: nr1, nr2, nr3, nr1x, nr2x, nr3x
+  USE grid_dimensions, ONLY: dense
   USE lsda_mod, ONLY: nspin
   USE phcom
   USE el_phon
@@ -229,9 +229,9 @@ SUBROUTINE open_dvscf_star_q( q_index )
   
   write(stdout,*) '==============================================='
 
-  ALLOCATE (dvscf_at (nr1x * nr2x * nr3x , nspin , 3*nat ))
-  ALLOCATE (dvrot ( nr1x * nr2x * nr3x , nspin , 3*nat) )
-  ALLOCATE (dvrot_scr ( nr1x * nr2x * nr3x , nspin , 3*nat) )
+  ALLOCATE (dvscf_at (dense%nr1x * dense%nr2x * dense%nr3x , nspin , 3*nat ))
+  ALLOCATE (dvrot ( dense%nr1x * dense%nr2x * dense%nr3x , nspin , 3*nat) )
+  ALLOCATE (dvrot_scr ( dense%nr1x * dense%nr2x * dense%nr3x , nspin , 3*nat) )
 
   dvscf_at=CMPLX(0.d0,0.d0)
   dvrot=CMPLX(0.d0,0.d0)
@@ -433,9 +433,9 @@ SUBROUTINE open_dvscf_star_q( q_index )
      
      
      do is=1,nspin
-        do  k = 1, nr3
-           do j = 1, nr2
-              do i = 1, nr1
+        do  k = 1, dense%nr3
+           do j = 1, dense%nr2
+              do i = 1, dense%nr1
                  
                  
                  !
@@ -454,27 +454,27 @@ SUBROUTINE open_dvscf_star_q( q_index )
                  rk = s(1, 3, isym2) * (i - 1) + s(2,3, isym2) * (j - 1) &
                       + s(3, 3, isym2) * (k - 1) - ftau (3, isym2)
                  
-                 ri = mod (ri, nr1) + 1
+                 ri = mod (ri, dense%nr1) + 1
                  
-                 rj = mod (rj, nr2) + 1                 
+                 rj = mod (rj, dense%nr2) + 1                 
                  
-                 rk = mod (rk, nr3) + 1
+                 rk = mod (rk, dense%nr3) + 1
                  
                  
                  if (ri < 1) then 
-                    ri = ri + nr1
+                    ri = ri + dense%nr1
                  endif
                  
                  if (rj < 1) then 
-                    rj = rj + nr2
+                    rj = rj + dense%nr2
                  endif
                  
                  if (rk < 1) then 
-                    rk = rk + nr3
+                    rk = rk + dense%nr3
                  endif
                  
-                 n=(i-1) + (j-1)*nr1 + (k-1)*nr2*nr1 + 1
-                 nn=(ri-1) + (rj-1)*nr1 + (rk-1)*nr2*nr1 + 1
+                 n=(i-1) + (j-1)*dense%nr1 + (k-1)*dense%nr2*dense%nr1 + 1
+                 nn=(ri-1) + (rj-1)*dense%nr1 + (rk-1)*dense%nr2*dense%nr1 + 1
                  
                  
                  do na=1,nat
@@ -553,11 +553,11 @@ SUBROUTINE open_dvscf_star_q( q_index )
         do na=1,nat
            do ipol=1,3
               irr=(na-1)*3+ipol
-              do  k = 1, nr3
-                 do j = 1, nr2
-                    do i = 1, nr1
+              do  k = 1, dense%nr3
+                 do j = 1, dense%nr2
+                    do i = 1, dense%nr1
                        
-                       n=(i-1) + (j-1)*nr1 + (k-1)*nr2*nr1 + 1
+                       n=(i-1) + (j-1)*dense%nr1 + (k-1)*dense%nr2*dense%nr1 + 1
                        
                        write(iudvrot_asc,'(1i10,2f16.10)')   n, dvrot(n,1,irr)
                     enddo
@@ -569,11 +569,11 @@ SUBROUTINE open_dvscf_star_q( q_index )
            do na=1,nat
               do ipol=1,3
                  irr=(na-1)*3+ipol
-                 do  k = 1, nr3
-                    do j = 1, nr2
-                       do i = 1, nr1
+                 do  k = 1, dense%nr3
+                    do j = 1, dense%nr2
+                       do i = 1, dense%nr1
                           
-                          n=(i-1) + (j-1)*nr1 + (k-1)*nr2*nr1 + 1
+                          n=(i-1) + (j-1)*dense%nr1 + (k-1)*dense%nr2*dense%nr1 + 1
                           
                           write(iudvrot_asc_imq,'(1i10,2f16.10)')   n, conjg(dvrot(n,1,irr))
                        enddo

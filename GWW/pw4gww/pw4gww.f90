@@ -50,7 +50,7 @@ program pp_punch
 
   USE kinds,     ONLY : i4b
   use pwcom
-  use grid_dimensions, ONLY : nrxx
+  use grid_dimensions, ONLY : dense
   USE constants,       ONLY : rytoev
   use io_global, ONLY : stdout, ionode, ionode_id
   use io_files,  ONLY : psfile, pseudo_dir
@@ -412,7 +412,7 @@ program pp_punch
     CALL init_ns()
   endif
 
-  CALL set_vrs(vrs, vltot, v%of_r, kedtau, v%kin_r, nrxx, nspin, doublegrid )
+  CALL set_vrs(vrs, vltot, v%of_r, kedtau, v%kin_r, dense%nrxx, nspin, doublegrid )
 
 !-------------------------------------------------
 ! allocating wannier stuff (from init_run.f90)

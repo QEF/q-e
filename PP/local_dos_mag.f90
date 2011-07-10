@@ -20,7 +20,7 @@ SUBROUTINE local_dos_mag(spin_component, kpoint, kband, raux)
   USE fft_base,             ONLY : dffts
   USE fft_interfaces,       ONLY : invfft
   USE gvect,                ONLY : ngm, g
-  USE grid_dimensions,      ONLY : nrxx
+  USE grid_dimensions,      ONLY : dense
   USE gvecs,              ONLY : nls, doublegrid
   USE klist,                ONLY : nks, xk
   USE scf,                  ONLY : rho
@@ -38,7 +38,7 @@ SUBROUTINE local_dos_mag(spin_component, kpoint, kband, raux)
   ! ... local variables
   !
   INTEGER :: spin_component, kpoint, kband
-  REAL(DP) :: raux(nrxx)
+  REAL(DP) :: raux(dense%nrxx)
 
   INTEGER :: ikb, jkb, ijkb0, ih, jh, ijh, na, np
   ! counters on beta functions, atoms, pseudopotentials
@@ -263,7 +263,7 @@ SUBROUTINE local_dos_mag(spin_component, kpoint, kband, raux)
   !
   IF ( okvan ) CALL addusdens(rho%of_r(:,:))
 
-  DO ir=1,nrxx
+  DO ir=1,dense%nrxx
      raux(ir)=rho%of_r(ir,spin_component+1)
   ENDDO
   !

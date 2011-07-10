@@ -14,7 +14,7 @@ subroutine sym_dmag (nper, irr, dmagtosym)
   !
   USE kinds, only : DP
   USE constants, ONLY: tpi
-  USE grid_dimensions, ONLY: nr1, nr2, nr3, nr1x, nr2x, nr3x
+  USE grid_dimensions, ONLY: dense
   USE cell_base, ONLY : at, bg
   USE symm_base, ONLY : s, ftau, t_rev, sname, invs
   USE noncollin_module, ONLY: nspin_mag
@@ -27,7 +27,7 @@ subroutine sym_dmag (nper, irr, dmagtosym)
   ! the number of perturbations
   ! the representation under conside
 
-  complex(DP) :: dmagtosym (nr1x, nr2x, nr3x, nspin_mag, nper)
+  complex(DP) :: dmagtosym (dense%nr1x, dense%nr2x, dense%nr3x, nspin_mag, nper)
   ! the magnetization to symmetrize (only 2:4 components)
 
   integer :: is, ri, rj, rk, i, j, k, ipert, jpert, ipol, isym, &
@@ -59,14 +59,14 @@ subroutine sym_dmag (nper, irr, dmagtosym)
   if (nsymq == 1.and. (.not.minus_q) ) return
   call start_clock ('sym_dmag')
 
-  allocate (dmagsym(  nr1x , nr2x , nr3x , 3, nper))
+  allocate (dmagsym(  dense%nr1x , dense%nr2x , dense%nr3x , 3, nper))
   allocate (dmags( 3, nper))
   !
   ! if necessary we symmetrize with respect to  S(irotmq)*q = -q + Gi
   !
-  in1 = tpi / DBLE (nr1)
-  in2 = tpi / DBLE (nr2)
-  in3 = tpi / DBLE (nr3)
+  in1 = tpi / DBLE (dense%nr1)
+  in2 = tpi / DBLE (dense%nr2)
+  in3 = tpi / DBLE (dense%nr3)
 
   if (minus_q) then
      g1 (1) = 0.d0
@@ -81,21 +81,21 @@ subroutine sym_dmag (nper, irr, dmagtosym)
      term (2, 1) = CMPLX(cos (g2 (1) ), sin (g2 (1) ) ,kind=DP)
      term (3, 1) = CMPLX(cos (g3 (1) ), sin (g3 (1) ) ,kind=DP)
      phase (1) = (1.d0, 0.d0)
-     do k = 1, nr3
-        do j = 1, nr2
-           do i = 1, nr1
+     do k = 1, dense%nr3
+        do j = 1, dense%nr2
+           do i = 1, dense%nr1
               ri = s (1, 1, irotmq) * (i - 1) + s (2, 1, irotmq) * (j - 1) &
                  + s (3, 1, irotmq) * (k - 1) - ftau (1, irotmq)
-              ri = mod (ri, nr1) + 1
-              if (ri < 1) ri = ri + nr1
+              ri = mod (ri, dense%nr1) + 1
+              if (ri < 1) ri = ri + dense%nr1
               rj = s (1, 2, irotmq) * (i - 1) + s (2, 2, irotmq) * (j - 1) &
                  + s (3, 2, irotmq) * (k - 1) - ftau (2, irotmq)
-              rj = mod (rj, nr2) + 1
-              if (rj < 1) rj = rj + nr2
+              rj = mod (rj, dense%nr2) + 1
+              if (rj < 1) rj = rj + dense%nr2
               rk = s (1, 3, irotmq) * (i - 1) + s (2, 3, irotmq) * (j - 1) &
                  + s (3, 3, irotmq) * (k - 1) - ftau (3, irotmq)
-              rk = mod (rk, nr3) + 1
-              if (rk < 1) rk = rk + nr3
+              rk = mod (rk, dense%nr3) + 1
+              if (rk < 1) rk = rk + dense%nr3
 
               do ipert = 1, nper
                  aux2 = (0.d0, 0.d0)
@@ -159,23 +159,23 @@ subroutine sym_dmag (nper, irr, dmagtosym)
   do isym = 1, nsymq
      phase (isym) = (1.d0, 0.d0)
   enddo
-  do k = 1, nr3
-     do j = 1, nr2
-        do i = 1, nr1
+  do k = 1, dense%nr3
+     do j = 1, dense%nr2
+        do i = 1, dense%nr1
            do isym = 1, nsymq
               irot = irgq (isym)
               ri = s (1, 1, irot) * (i - 1) + s (2, 1, irot) * (j - 1) &
                  + s (3, 1, irot) * (k - 1) - ftau (1, irot)
-              ri = mod (ri, nr1) + 1
-              if (ri < 1) ri = ri + nr1
+              ri = mod (ri, dense%nr1) + 1
+              if (ri < 1) ri = ri + dense%nr1
               rj = s (1, 2, irot) * (i - 1) + s (2, 2, irot) * (j - 1) &
                  + s (3, 2, irot) * (k - 1) - ftau (2, irot)
-              rj = mod (rj, nr2) + 1
-              if (rj < 1) rj = rj + nr2
+              rj = mod (rj, dense%nr2) + 1
+              if (rj < 1) rj = rj + dense%nr2
               rk = s (1, 3, irot) * (i - 1) + s (2, 3, irot) * (j - 1) &
                  + s (3, 3, irot) * (k - 1) - ftau (3, irot)
-              rk = mod (rk, nr3) + 1
-              if (rk < 1) rk = rk + nr3
+              rk = mod (rk, dense%nr3) + 1
+              if (rk < 1) rk = rk + dense%nr3
               dmags=(0.d0,0.d0)
               do ipert = 1, nper
                  do jpert = 1, nper

@@ -17,7 +17,7 @@ SUBROUTINE work_function (wf)
   USE lsda_mod,  ONLY : nspin, current_spin
   USE scf,       ONLY : rho, vltot, v, rho_core, rhog_core
   USE gvect
-  USE grid_dimensions, ONLY : nrxx, nr1x, nr2x, nr3x, nr1, nr2, nr3
+  USE grid_dimensions, ONLY : dense
   USE cell_base, ONLY : omega, alat
   USE fft_base,  ONLY : grid_gather
   USE mp,        ONLY : mp_bcast
@@ -31,14 +31,14 @@ SUBROUTINE work_function (wf)
   REAL(DP), ALLOCATABLE :: vxc(:,:)
   ! auxiliary vectors for charge and potential
 
-  ALLOCATE (raux1( nr1x * nr2x * nr3x))
-  ALLOCATE (vaux1( nr1x * nr2x * nr3x))
-  ALLOCATE (vaux2( nr1x * nr2x * nr3x))
+  ALLOCATE (raux1( dense%nr1x * dense%nr2x * dense%nr3x))
+  ALLOCATE (vaux1( dense%nr1x * dense%nr2x * dense%nr3x))
+  ALLOCATE (vaux2( dense%nr1x * dense%nr2x * dense%nr3x))
 
   nspin0=nspin
   IF (nspin==4) nspin0=1
 
-  ALLOCATE (vxc(nrxx,nspin))
+  ALLOCATE (vxc(dense%nrxx,nspin))
   CALL v_xc (rho, rho_core, rhog_core, etxc, vtxc, vxc)
 
   IF ( ionode ) THEN
@@ -53,11 +53,11 @@ SUBROUTINE work_function (wf)
   DO current_spin=1,nspin0
 
 #ifdef __PARA
-     ALLOCATE (aux  ( nrxx))
+     ALLOCATE (aux  ( dense%nrxx))
      aux(:) = rho%of_r(:,current_spin) + rho_core(:)/nspin0
      CALL grid_gather (aux, raux1)
 #else
-     raux1(1:nrxx) = rho%of_r(1:nrxx,current_spin) + rho_core(1:nrxx)/nspin0
+     raux1(1:dense%nrxx) = rho%of_r(1:dense%nrxx,current_spin) + rho_core(1:dense%nrxx)/nspin0
 #endif
      !
 #ifdef __PARA
@@ -66,8 +66,8 @@ SUBROUTINE work_function (wf)
      aux(:) = aux(:) - vxc(:,current_spin)
      CALL grid_gather (aux, vaux2)
 #else
-     vaux1(1:nrxx) = vltot(1:nrxx) + v%of_r(1:nrxx,current_spin)
-     vaux2(1:nrxx) = vaux1(1:nrxx) -vxc(1:nrxx,current_spin)
+     vaux1(1:dense%nrxx) = vltot(1:dense%nrxx) + v%of_r(1:dense%nrxx,current_spin)
+     vaux2(1:dense%nrxx) = vaux1(1:dense%nrxx) -vxc(1:dense%nrxx,current_spin)
 #endif
      !
 #ifdef __PARA
@@ -84,16 +84,16 @@ SUBROUTINE work_function (wf)
               WRITE(19,*) " SPIN DOWN "
            ENDIF
         ENDIF
-        DO nmean = 1, nr3
+        DO nmean = 1, dense%nr3
            wmean1 = 0.d0
            wmean2 = 0.d0
            meancharge = 0.d0
            wx1 = 0.d0
            wx2 = 0.d0
            wxm = 0.d0
-           DO n2 = 1, nr2
-              DO n1 = 1, nr1
-                 ni = n1 + (n2 - 1) * nr1x + (nmean - 1) * nr1x * nr2x
+           DO n2 = 1, dense%nr2
+              DO n1 = 1, dense%nr1
+                 ni = n1 + (n2 - 1) * dense%nr1x + (nmean - 1) * dense%nr1x * dense%nr2x
                  meancharge = meancharge+raux1 (ni)
                  wxm = wxm + raux1 (ni) **2
                  wmean1 = wmean1 + vaux1 (ni)
@@ -102,13 +102,13 @@ SUBROUTINE work_function (wf)
                  wx2 = wx2 + vaux2 (ni) **2
               ENDDO
            ENDDO
-           wmean1 = wmean1 / dble (nr1 * nr2)
-           wmean2 = wmean2 / dble (nr1 * nr2)
-           meancharge = meancharge / dble (nr1 * nr2)
-           wx1 = dsqrt (wx1 / dble (nr1 * nr2) - wmean1 * wmean1)
-           wx2 = dsqrt (wx2 / dble (nr1 * nr2) - wmean2 * wmean2)
-           wxm = dsqrt (wxm / dble (nr1 * nr2) - meancharge**2)
-           IF (nmean== (nr3 + 1) / 2) THEN
+           wmean1 = wmean1 / dble (dense%nr1 * dense%nr2)
+           wmean2 = wmean2 / dble (dense%nr1 * dense%nr2)
+           meancharge = meancharge / dble (dense%nr1 * dense%nr2)
+           wx1 = dsqrt (wx1 / dble (dense%nr1 * dense%nr2) - wmean1 * wmean1)
+           wx2 = dsqrt (wx2 / dble (dense%nr1 * dense%nr2) - wmean2 * wmean2)
+           wxm = dsqrt (wxm / dble (dense%nr1 * dense%nr2) - meancharge**2)
+           IF (nmean== (dense%nr3 + 1) / 2) THEN
               wf = wf + (wmean2 - ef)
               IF (nspin == 2) THEN
                  IF (current_spin==1) THEN

@@ -6,8 +6,8 @@ SUBROUTINE lr_alloc_init()
   ! Modified by Osman Baris Malcioglu in 2009
 #include "f_defs.h"
   !
-  USE grid_dimensions,   ONLY : nrxx
-  USE smooth_grid_dimensions,   ONLY : nrxxs
+  USE grid_dimensions,   ONLY : dense
+  USE smooth_grid_dimensions,   ONLY : smooth
   USE klist,             ONLY : nks
   USE lr_variables
   USE uspp,              ONLY : nkb
@@ -32,7 +32,7 @@ SUBROUTINE lr_alloc_init()
    WRITE(stdout,'("NPWX=",I15)') npwx
    WRITE(stdout,'("NBND=",I15)') nbnd
    WRITE(stdout,'("NKS=",I15)') nks
-   WRITE(stdout,'("NRXX=",I15)') nrxx
+   WRITE(stdout,'("NRXX=",I15)') dense%nrxx
    WRITE(stdout,'("NSPIN_MAG=",I15)') nspin_mag
   ENDIF
   !
@@ -60,13 +60,13 @@ SUBROUTINE lr_alloc_init()
   ALLOCATE(sevc1_new(npwx,nbnd,nks,2))
   ALLOCATE(d0psi(npwx,nbnd,nks,n_ipol))
   !
-  ALLOCATE(revc0(nrxxs,nbnd,nks))
+  ALLOCATE(revc0(smooth%nrxx,nbnd,nks))
   !
-  ALLOCATE(rho_1(nrxx,nspin_mag))
+  ALLOCATE(rho_1(dense%nrxx,nspin_mag))
   rho_1(:,:)=0.0d0
-  !allocate(rho_tot(nrxx))
+  !allocate(rho_tot(dense%nrxx))
   IF (charge_response == 1 ) THEN
-   !allocate(rho_1_tot(nrxx,nspin_mag)) !Due to broadening this is now done in lr_charg_resp
+   !allocate(rho_1_tot(dense%nrxx,nspin_mag)) !Due to broadening this is now done in lr_charg_resp
    !rho_1_tot(:,:)=0.0d0
    !print *,"allocating beta w_t"
    ALLOCATE(w_T_beta_store(itermax_int))
@@ -82,7 +82,7 @@ SUBROUTINE lr_alloc_init()
   ! allocate(w_T(itermax_int))
   !endif
 
-  ALLOCATE(dmuxc ( nrxx , nspin , nspin))
+  ALLOCATE(dmuxc ( dense%nrxx , nspin , nspin))
   !print *, "dmuxc ALLOCATED",allocated(dmuxc)," SIZE=",size(dmuxc)
   !print *, "nks=",nks
 

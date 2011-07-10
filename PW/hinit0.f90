@@ -18,7 +18,7 @@ SUBROUTINE hinit0()
   USE cell_base,    ONLY : at, bg, omega, tpiba2
   USE cellmd,       ONLY : omega_old, at_old, lmovecell
   USE klist,        ONLY : nks, xk
-  USE grid_dimensions,  ONLY : nr1, nr2, nr3
+  USE grid_dimensions,  ONLY : dense
   USE gvect,        ONLY : ngm, ig_l2g, g, eigts1, eigts2, eigts3
   USE vlocal,       ONLY : strf
   USE wvfct,        ONLY : npw, g2kin, igk, ecutwfc
@@ -81,7 +81,7 @@ SUBROUTINE hinit0()
   ! ... initialize the structure factor
   !
   CALL struc_fact( nat, tau, nsp, ityp, ngm, g, bg, &
-                   nr1, nr2, nr3, strf, eigts1, eigts2, eigts3 )
+                   dense%nr1, dense%nr2, dense%nr3, strf, eigts1, eigts2, eigts3 )
   !
   ! ... calculate the total local potential
   !

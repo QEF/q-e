@@ -27,12 +27,12 @@ SUBROUTINE init_run()
   USE gvecs,                    ONLY : ngms
   USE gvect,                    ONLY : ngm
   USE gvect,       ONLY : gstart
-  USE grid_dimensions,          ONLY : nrxx, nr1, nr2, nr3
+  USE grid_dimensions,          ONLY : dense
   USE fft_base,                 ONLY : dfftp
   USE electrons_base,           ONLY : nspin, nbsp, nbspx, nupdwn, f
   USE uspp,                     ONLY : nkb, vkb, deeq, becsum,nkbus
   USE core,                     ONLY : rhoc
-  USE smooth_grid_dimensions,   ONLY : nrxxs
+  USE smooth_grid_dimensions,   ONLY : smooth
   USE wavefunctions_module,     ONLY : c0_bgrp, cm_bgrp, phi_bgrp
   USE ensemble_dft,             ONLY : tens, z0t
   USE cg_module,                ONLY : tcg
@@ -149,8 +149,8 @@ SUBROUTINE init_run()
   !     allocation of all arrays not already allocated in init and nlinit
   !=======================================================================
   !
-  CALL allocate_mainvar( ngw, ngw_g, ngb, ngms, ngm, nr1,nr2,nr3, dfftp%nr1x, &
-                         dfftp%nr2x, dfftp%npl, nrxx, nrxxs, nat, nax, nsp,   &
+  CALL allocate_mainvar( ngw, ngw_g, ngb, ngms, ngm, dense%nr1,dense%nr2,dense%nr3, dfftp%nr1x, &
+                         dfftp%nr2x, dfftp%npl, dense%nrxx, smooth%nrxx, nat, nax, nsp,   &
                          nspin, nbsp, nbspx, nupdwn, nkb, gstart, nudx, &
                          tpre, nbspx_bgrp )
   !
@@ -201,22 +201,22 @@ SUBROUTINE init_run()
   !
   IF ( dft_is_meta() .AND. tpre ) THEN
      !
-     ALLOCATE( crosstaus( nrxxs, 6, nspin ) )
-     ALLOCATE( dkedtaus(  nrxxs, 3, 3, nspin ) )
-     ALLOCATE( gradwfc(   nrxxs, 3 ) )
+     ALLOCATE( crosstaus( smooth%nrxx, 6, nspin ) )
+     ALLOCATE( dkedtaus(  smooth%nrxx, 3, 3, nspin ) )
+     ALLOCATE( gradwfc(   smooth%nrxx, 3 ) )
      !
   END IF
   !
   IF ( lwf ) THEN
      IF( nbgrp > 1 ) &
         CALL errore( ' init_run ', ' wannier with band paralleliztion not implemented ', 1 )
-     CALL allocate_wannier( nbsp, nrxxs, nspin, ngm )
+     CALL allocate_wannier( nbsp, smooth%nrxx, nspin, ngm )
   END IF
   !
   IF ( tens .OR. tcg ) THEN
      IF( nbgrp > 1 ) &
         CALL errore( ' init_run ', ' ensemble_dft with band paralleliztion not implemented ', 1 )
-     CALL allocate_ensemble_dft( nkb, nbsp, ngw, nudx, nspin, nbspx, nrxxs, nat, nlax, nrlx )
+     CALL allocate_ensemble_dft( nkb, nbsp, ngw, nudx, nspin, nbspx, smooth%nrxx, nat, nlax, nrlx )
   END IF
   !
   IF ( tcg ) THEN 

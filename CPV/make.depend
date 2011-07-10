@@ -602,7 +602,6 @@ move_electrons.o : ../Modules/cell_base.o
 move_electrons.o : ../Modules/control_flags.o
 move_electrons.o : ../Modules/electrons_base.o
 move_electrons.o : ../Modules/energies.o
-move_electrons.o : ../Modules/griddim.o
 move_electrons.o : ../Modules/ions_base.o
 move_electrons.o : ../Modules/kind.o
 move_electrons.o : ../Modules/recvec.o

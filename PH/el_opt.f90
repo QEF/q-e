@@ -14,7 +14,7 @@ subroutine el_opt
   use kinds, only : DP
   USE cell_base,  ONLY : omega, at, bg
   USE constants,  ONLY : e2, fpi
-  USE grid_dimensions, ONLY : nr1, nr2, nr3
+  USE grid_dimensions, ONLY : dense
   USE klist,      ONLY : wk, ngk
   USE ions_base,  ONLY : nat
   USE fft_base,   ONLY : dfftp
@@ -119,7 +119,7 @@ subroutine el_opt
                                               aux3(:,ipa) * &
                                               aux3(:,ipb) * &
                                               aux3(:,ipc) ) ) * &
-                                 omega / (nr1*nr2*nr3)
+                                 omega / (dense%nr1*dense%nr2*dense%nr3)
         enddo
      enddo
   enddo

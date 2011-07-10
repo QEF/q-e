@@ -34,9 +34,9 @@
       use gvecw, only: ngw
       use gvect, only: gstart
       use ions_base, only: na, nat, pmass, nax, nsp, rcmax
-      use grid_dimensions, only: nrxx, nr1, nr2, nr3
+      use grid_dimensions, only: grid_dim, dense
       use cell_base, only: omega, alat, tpiba2
-      use smooth_grid_dimensions, only: nrxxs
+      use smooth_grid_dimensions, only: grid_dim, smooth
       use local_pseudo, only: vps, rhops
       use io_global,                ONLY : stdout, ionode, ionode_id
       use mp_global,                ONLY : intra_bgrp_comm, np_ortho, me_ortho, ortho_comm
@@ -73,14 +73,14 @@
       real(dp) :: becdr(nhsa,nbspx,3)
       integer irb(3,nat)
       complex(dp) :: eigrb(ngb,nat)
-      real(dp) :: rhor(nrxx,nspin)
-      real(dp) :: vpot(nrxx,nspin)
+      real(dp) :: rhor(dense%nrxx,nspin)
+      real(dp) :: vpot(dense%nrxx,nspin)
       complex(dp) :: rhog(ngm,nspin)
-      real(dp) :: rhos(nrxxs,nspin)
-      real(dp) :: rhoc(nrxx)
-      complex(dp) :: ei1(-nr1:nr1,nat)
-      complex(dp) :: ei2(-nr2:nr2,nat)
-      complex(dp) :: ei3(-nr3:nr3,nat)
+      real(dp) :: rhos(smooth%nrxx,nspin)
+      real(dp) :: rhoc(dense%nrxx)
+      complex(dp) :: ei1(-dense%nr1:dense%nr1,nat)
+      complex(dp) :: ei2(-dense%nr2:dense%nr2,nat)
+      complex(dp) :: ei3(-dense%nr3:dense%nr3,nat)
       complex(dp) :: sfac( ngms, nsp )
       real(dp) :: fion(3,nat)
       real(dp) :: ema0bg(ngw)
@@ -298,7 +298,7 @@
         call prefor(eigr,betae)!ATTENZIONE
 
         do i=1,nbsp,2
-          call dforce( i, bec, betae, c0,c2,c3,rhos, nrxxs, ispin,f,nbsp,nspin)
+          call dforce( i, bec, betae, c0,c2,c3,rhos, smooth%nrxx, ispin,f,nbsp,nspin)
           if(tefield .and. (evalue.ne.0.d0)) then
             call dforceb(c0, i, betae, ipolp, bec ,ctabin(1,1,ipolp), gqq, gqqm, qmat, deeq, df)
             c2(1:ngw)=c2(1:ngw)+evalue*df(1:ngw)
@@ -838,7 +838,7 @@
   
         call prefor(eigr,betae)
         do i=1,nbsp,2
-          call dforce(i,bec,betae,c0,c2,c3,rhos,nrxxs,ispin,f,nbsp,nspin)
+          call dforce(i,bec,betae,c0,c2,c3,rhos,smooth%nrxx,ispin,f,nbsp,nspin)
           if(tefield.and.(evalue .ne. 0.d0)) then
             call dforceb &
                (c0, i, betae, ipolp, bec ,ctabin(1,1,ipolp), gqq, gqqm, qmat, deeq, df)

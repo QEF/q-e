@@ -15,15 +15,15 @@ SUBROUTINE ggen1d (ngm1d, g1d, gg1d, ig1dto3d, nl1d, igtongl1d)
   USE kinds, ONLY: DP
   USE cell_base, ONLY : at
   USE gvect, ONLY: ngm, g, gg, igtongl
-  USE grid_dimensions, ONLY: nr3
+  USE grid_dimensions, ONLY: dense
   IMPLICIT NONE
-  INTEGER :: ngm1d, ig1dto3d (nr3), igtongl1d (nr3), nl1d (nr3)
+  INTEGER :: ngm1d, ig1dto3d (dense%nr3), igtongl1d (dense%nr3), nl1d (dense%nr3)
   ! output: the number of 1D G vectors on this processor
   ! output: correspondence 1D with 3D G vectors
   ! output: the correspondence with the shells
   ! output: correspondence 1D FFT mesh G with array
 
-  real(DP) :: g1d (3, nr3), gg1d (nr3)
+  real(DP) :: g1d (3, dense%nr3), gg1d (dense%nr3)
   ! output: ngm1d 3D vectors with the 1D G of this
   ! output: ngm1d scalars with the modulus of 1D G
   !
@@ -47,12 +47,12 @@ SUBROUTINE ggen1d (ngm1d, g1d, gg1d, ig1dto3d, nl1d, igtongl1d)
         !    a vector of the 1D grid has been found
         !
         ig1d = ig1d+1
-        IF (ig1d>nr3) CALL errore ('ggen1d', 'too many G', 1)
+        IF (ig1d>dense%nr3) CALL errore ('ggen1d', 'too many G', 1)
         g1d (3, ig1d) = g (3, ig)
         gg1d (ig1d) = gg (ig)
         ig1dto3d (ig1d) = ig
         nl1d (ig1d) = nint (g (3, ig) * at (3, 3) ) + 1
-        IF (nl1d (ig1d) <1) nl1d (ig1d) = nl1d (ig1d) + nr3
+        IF (nl1d (ig1d) <1) nl1d (ig1d) = nl1d (ig1d) + dense%nr3
      ENDIF
   ENDDO
 

@@ -58,8 +58,8 @@ MODULE cp_restart
                                            intra_bgrp_comm, intra_image_comm, inter_bgrp_comm, &
                                            root_bgrp, intra_pool_comm
       USE printout_base,            ONLY : title
-      USE grid_dimensions,          ONLY : nr1, nr2, nr3, nr1x, nr2x
-      USE smooth_grid_dimensions,   ONLY : nr1s, nr2s, nr3s
+      USE grid_dimensions,          ONLY : grid_dim, dense
+      USE smooth_grid_dimensions,   ONLY : smooth
       USE smallbox_grid_dim,        ONLY : nr1b, nr2b, nr3b
       USE gvect,                    ONLY : ngm, ngm_g
       USE gvecs,                    ONLY : ngms_g, ecuts, dual
@@ -363,8 +363,8 @@ MODULE cp_restart
 ! ... PLANE_WAVES
 !-------------------------------------------------------------------------------
          !
-         CALL write_planewaves( ecutwfc, dual, ngw_g, gamma_only, nr1, nr2, &
-                                nr3, ngm_g, nr1s, nr2s, nr3s, ngms_g, nr1b, &
+         CALL write_planewaves( ecutwfc, dual, ngw_g, gamma_only, dense%nr1, dense%nr2, &
+                                dense%nr3, ngm_g, smooth%nr1, smooth%nr2, smooth%nr3, ngms_g, nr1b, &
                                 nr2b, nr3b, mill_g, .FALSE. )
          !
 !-------------------------------------------------------------------------------
@@ -932,8 +932,8 @@ MODULE cp_restart
       USE io_files,                 ONLY : iunpun, xmlpun, iunwfc, nwordwfc, &
                                            tmp_dir, diropn
       USE printout_base,            ONLY : title
-      USE grid_dimensions,          ONLY : nr1, nr2, nr3
-      USE smooth_grid_dimensions,   ONLY : nr1s, nr2s, nr3s
+      USE grid_dimensions,          ONLY : grid_dim, dense
+      USE smooth_grid_dimensions,   ONLY : smooth
       USE smallbox_grid_dim,            ONLY : nr1b, nr2b, nr3b
       USE gvect,                    ONLY : ngm
       USE gvecw,                    ONLY : ngw, ngw_g

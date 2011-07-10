@@ -21,7 +21,7 @@
       USE uspp,             ONLY: deeq
       USE ions_base,        ONLY: nat, nsp, na
       USE constants,        ONLY: pi, fpi
-      USE grid_dimensions,  ONLY: nr3, nrxx
+      USE grid_dimensions,  ONLY: dense
       USE smallbox_gvec,            ONLY: ngb, npb, nmb, gxb
       USE small_box,        ONLY: omegab, tpibab
       USE smallbox_grid_dim,    ONLY: nr1b, nr2b, nr3b, nr1bx, nr2bx, nr3bx, nnrbx
@@ -39,7 +39,7 @@
       INTEGER irb(3,nat)
       REAL(DP) rhovan(nhm*(nhm+1)/2,nat,nspin)
       COMPLEX(DP) eigrb(ngb,nat)
-      REAL(DP)  vr(nrxx,nspin)
+      REAL(DP)  vr(dense%nrxx,nspin)
 ! output
       REAL(DP)  fion(3,nat)
 ! local

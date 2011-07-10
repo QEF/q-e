@@ -14,15 +14,15 @@
 !  ... initialize FFT descriptors for both dense and smooth grids
 
 !  ... Most important dependencies: next three modules
-      USE grid_dimensions
-      USE smooth_grid_dimensions
       USE stick_base
 !
       USE kinds, ONLY: DP
+      USE grid_types, ONLY: grid_dim
       USE io_global, ONLY: ionode, stdout
       USE fft_types, ONLY: fft_dlay_descriptor, fft_dlay_allocate, &
                            fft_dlay_set, fft_dlay_scalar
 
+      IMPLICIT NONE
       PRIVATE
       SAVE
 
@@ -33,13 +33,14 @@
 !=----------------------------------------------------------------------=
 
       SUBROUTINE pstickset( gamma_only, bg, gcut, gkcut, gcuts, &
-          dfftp, dffts, ngw, ngm, ngs, mype, root, nproc, comm, nogrp_ )
+          dfftp, dffts, ngw, ngm, ngs, dense, smooth, mype, root, nproc, comm, nogrp_ )
 
           LOGICAL, INTENT(in) :: gamma_only
 ! ...     bg(:,1), bg(:,2), bg(:,3) reciprocal space base vectors.
           REAL(DP), INTENT(in) :: bg(3,3)
           REAL(DP), INTENT(in) :: gcut, gkcut, gcuts
           TYPE(fft_dlay_descriptor), INTENT(inout) :: dfftp, dffts
+          TYPE(grid_dim),            INTENT(inout) :: dense, smooth
           INTEGER, INTENT(out) :: ngw, ngm, ngs
 
           INTEGER, INTENT(IN) :: mype, root, nproc, comm
@@ -118,9 +119,9 @@
           INTEGER, ALLOCATABLE :: idx(:)
 
           tk    = .not. gamma_only
-          ub(1) = ( nr1 - 1 ) / 2
-          ub(2) = ( nr2 - 1 ) / 2
-          ub(3) = ( nr3 - 1 ) / 2
+          ub(1) = ( dense%nr1 - 1 ) / 2
+          ub(2) = ( dense%nr2 - 1 ) / 2
+          ub(3) = ( dense%nr3 - 1 ) / 2
           lb    = - ub
 
           ! ...       Allocate maps
@@ -190,12 +191,12 @@
 
 #if defined __PARA
 
-          CALL fft_dlay_allocate( dfftp, mype, root, nproc, comm, nogrp_ , nr1x,  nr2x )
-          CALL fft_dlay_allocate( dffts, mype, root, nproc, comm, nogrp_ , nr1sx, nr2sx )
+          CALL fft_dlay_allocate( dfftp, mype, root, nproc, comm, nogrp_ , dense%nr1x,  dense%nr2x )
+          CALL fft_dlay_allocate( dffts, mype, root, nproc, comm, nogrp_ , smooth%nr1x, smooth%nr2x )
 
-          CALL fft_dlay_set( dfftp, tk, nst, nr1, nr2, nr3, nr1x, nr2x, nr3x, &
+          CALL fft_dlay_set( dfftp, tk, nst, dense%nr1, dense%nr2, dense%nr3, dense%nr1x, dense%nr2x, dense%nr3x, &
             ub, lb, idx, ist(:,1), ist(:,2), nstp, nstpw, sstp, sstpw, st, stw )
-          CALL fft_dlay_set( dffts, tk, nsts, nr1s, nr2s, nr3s, nr1sx, nr2sx, nr3sx, &
+          CALL fft_dlay_set( dffts, tk, nsts, smooth%nr1, smooth%nr2, smooth%nr3, smooth%nr1x, smooth%nr2x, smooth%nr3x, &
             ub, lb, idx, ist(:,1), ist(:,2), nstps, nstpw, sstps, sstpw, sts, stw )
 
 #else
@@ -209,16 +210,16 @@
           IF( ngm_ /= ngm ) CALL errore( ' pstickset ', ' inconsistent ngm ', abs( ngm - ngm_ ) )
           IF( ngs_ /= ngs ) CALL errore( ' pstickset ', ' inconsistent ngs ', abs( ngs - ngs_ ) )
 
-          CALL fft_dlay_allocate( dfftp, mype, root, nproc, comm, 1, max(nr1x, nr3x),  nr2x  )
-          CALL fft_dlay_allocate( dffts, mype, root, nproc, comm, 1, max(nr1sx, nr3sx), nr2sx )
+          CALL fft_dlay_allocate( dfftp, mype, root, nproc, comm, 1, max(dense%nr1x, dense%nr3x),  dense%nr2x  )
+          CALL fft_dlay_allocate( dffts, mype, root, nproc, comm, 1, max(smooth%nr1x, smooth%nr3x), smooth%nr2x )
 
-          CALL fft_dlay_scalar( dfftp, ub, lb, nr1, nr2, nr3, nr1x, nr2x, nr3x, stw )
-          CALL fft_dlay_scalar( dffts, ub, lb, nr1s, nr2s, nr3s, nr1sx, nr2sx, nr3sx, stw )
+          CALL fft_dlay_scalar( dfftp, ub, lb, dense%nr1, dense%nr2, dense%nr3, dense%nr1x, dense%nr2x, dense%nr3x, stw )
+          CALL fft_dlay_scalar( dffts, ub, lb, smooth%nr1, smooth%nr2, smooth%nr3, smooth%nr1x, smooth%nr2x, smooth%nr3x, stw )
 
 #endif
-      !   set the dimensions of the arrays allocated for the FFT
-      nrxx  = dfftp % nnr
-      nrxxs = dffts % nnr          
+          !   set the dimensions of the arrays allocated for the FFT
+          dense%nrxx  = dfftp % nnr
+          smooth%nrxx = dffts % nnr          
 
 ! ...     Maximum number of sticks (potentials)
           nstpx  = maxval( nstp )

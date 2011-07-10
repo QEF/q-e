@@ -259,11 +259,11 @@
       SUBROUTINE fillgrad_x( nspin, rhog, gradr )
          USE kinds,           ONLY: DP         
          USE gvect,           ONLY: ngm
-         USE grid_dimensions, ONLY: nrxx
+         USE grid_dimensions, ONLY: grid_dim, dense
          IMPLICIT NONE
          INTEGER, INTENT(IN) :: nspin
          complex(DP) :: rhog( ngm, nspin )
-         real(DP)    :: gradr( nrxx, 3, nspin )
+         real(DP)    :: gradr( dense%nrxx, 3, nspin )
       END SUBROUTINE fillgrad_x
    END INTERFACE
 
@@ -597,11 +597,11 @@
       SUBROUTINE strucf_x( sfac, ei1, ei2, ei3, mill, ngm )
          USE kinds,            ONLY: DP
          USE ions_base,        ONLY: nat
-         USE grid_dimensions,  ONLY: nr1, nr2, nr3
+         USE grid_dimensions,  ONLY: grid_dim, dense
          IMPLICIT NONE
-         COMPLEX(DP) :: ei1( -nr1 : nr1, nat )
-         COMPLEX(DP) :: ei2( -nr2 : nr2, nat )
-         COMPLEX(DP) :: ei3( -nr3 : nr3, nat )
+         COMPLEX(DP) :: ei1( -dense%nr1 : dense%nr1, nat )
+         COMPLEX(DP) :: ei2( -dense%nr2 : dense%nr2, nat )
+         COMPLEX(DP) :: ei3( -dense%nr3 : dense%nr3, nat )
          INTEGER      :: mill( :, : )
          INTEGER      :: ngm
          COMPLEX(DP), INTENT(OUT) :: sfac(:,:)
@@ -706,7 +706,7 @@
       SUBROUTINE force_loc_x( tscreen, rhoeg, fion, rhops, vps, ei1, ei2, ei3, &
                         sfac, omega, screen_coul )
          USE kinds,              ONLY: DP
-         USE grid_dimensions,    ONLY: nr1, nr2, nr3
+         USE grid_dimensions,    ONLY: grid_dim, dense
          USE ions_base,          ONLY: nat
          IMPLICIT NONE
          LOGICAL     :: tscreen
@@ -714,9 +714,9 @@
          REAL(DP)    :: rhops(:,:), vps(:,:)  
          COMPLEX(DP) :: rhoeg(:)
          COMPLEX(DP), INTENT(IN) :: sfac(:,:)
-            COMPLEX(DP) :: ei1(-nr1:nr1,nat)
-         COMPLEX(DP) :: ei2(-nr2:nr2,nat)
-         COMPLEX(DP) :: ei3(-nr3:nr3,nat)
+         COMPLEX(DP) :: ei1(-dense%nr1:dense%nr1,nat)
+         COMPLEX(DP) :: ei2(-dense%nr2:dense%nr2,nat)
+         COMPLEX(DP) :: ei3(-dense%nr3:dense%nr3,nat)
          REAL(DP)    :: omega
          COMPLEX(DP) :: screen_coul(:)
       END SUBROUTINE

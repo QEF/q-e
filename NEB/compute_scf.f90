@@ -26,7 +26,7 @@ SUBROUTINE compute_scf( fii, lii, stat  )
   USE vlocal,           ONLY : strf
   USE cell_base,        ONLY : bg, alat
   USE gvect,            ONLY : ngm, g, eigts1, eigts2, eigts3
-  USE grid_dimensions,  ONLY : nr1, nr2, nr3
+  USE grid_dimensions,  ONLY : dense
   USE ions_base,        ONLY : tau, nat, nsp, ityp
   USE ener,             ONLY : etot
   USE force_mod,        ONLY : force
@@ -331,7 +331,7 @@ SUBROUTINE compute_scf( fii, lii, stat  )
             ! ... (needed for the old atomic charge)
             !
             CALL struc_fact( nat, tauold(:,:,1), nsp, ityp, ngm, g, bg, &
-                             nr1, nr2, nr3, strf, eigts1, eigts2, eigts3 )
+                             dense%nr1, dense%nr2, dense%nr3, strf, eigts1, eigts2, eigts3 )
             !
          END IF
          !

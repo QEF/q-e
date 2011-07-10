@@ -22,7 +22,6 @@ SUBROUTINE move_electrons_x( nfi, tfirst, tlast, b1, b2, b3, fion, c0_bgrp, &
   USE cell_base,            ONLY : omega, ibrav, h, press
   USE uspp,                 ONLY : becsum, vkb, nkb
   USE energies,             ONLY : ekin, enl, entropy, etot
-  USE grid_dimensions,      ONLY : nrxx
   USE electrons_base,       ONLY : nbsp, nspin, f, nudx, nupdwn, nbspx_bgrp, nbsp_bgrp
   USE core,                 ONLY : nlcc_any, rhoc
   USE ions_positions,       ONLY : tau0

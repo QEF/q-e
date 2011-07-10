@@ -20,7 +20,7 @@ subroutine gen_dpdvp
   USE ions_base,  ONLY : nat
   USE kinds, only : DP
   use pwcom
-  USE grid_dimensions, ONLY : nrxx
+  USE grid_dimensions, ONLY : dense
   USE uspp, ONLY: vkb
   USE wavefunctions_module,  ONLY: evc
   USE io_files,      ONLY : iunigk
@@ -40,7 +40,7 @@ subroutine gen_dpdvp
 
 
   if (degauss.eq.0.d0) return
-  allocate (dvloc( nrxx))
+  allocate (dvloc( dense%nrxx))
   allocate (dpsidvpsi( nbnd, nbnd))
   rewind (unit = iunigk)
 

@@ -17,7 +17,7 @@ SUBROUTINE addnlcc_zstar_eu_us( drhoscf )
   USE lsda_mod, ONLY : nspin
   USE gvect, ONLY : ngm, nl, g
   USE fft_base, ONLY : dfftp
-  USE grid_dimensions, ONLY : nr1, nr2, nr3
+  USE grid_dimensions, ONLY : dense
   USE noncollin_module, ONLY : nspin_lsda, nspin_gga
   USE efield_mod, ONLY : zstareu0
   USE qpoint, ONLY : xq
@@ -53,7 +53,7 @@ SUBROUTINE addnlcc_zstar_eu_us( drhoscf )
         !
         !  compute the exchange and correlation potential for this mode
         !
-        nrtot = nr1 * nr2 * nr3
+        nrtot = dense%nr1 * dense%nr2 * dense%nr3
         fac = 1.d0 / DBLE (nspin_lsda)
         DO ipert = 1, npe
            mode = imode0 + ipert

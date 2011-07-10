@@ -17,9 +17,9 @@ subroutine matrix_wannier_gamma_big( matsincos, ispin, n_set, itask )
   USE uspp,                 ONLY : okvan, nkb
   USE io_files,             ONLY : find_free_unit, diropn
   USE io_global,            ONLY : stdout
-  USE smooth_grid_dimensions,ONLY: nrxxs
+  USE smooth_grid_dimensions,ONLY: smooth
   USE realus,               ONLY : qsave, box,maxbox
-  USE grid_dimensions,      ONLY : nr1, nr2, nr3, nr1x, nr2x, nr3x, nrxx
+  USE grid_dimensions,      ONLY : dense
   USE wannier_gw,           ONLY : becp_gw, expgsave, becp_gw_c, maxiter2,num_nbnd_first,num_nbndv,nbnd_normal
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
   USE uspp_param,           ONLY : upf, lmaxq, nh, nhm
@@ -56,11 +56,11 @@ subroutine matrix_wannier_gamma_big( matsincos, ispin, n_set, itask )
   call flush_unit(stdout)
 
   iunwfcreal2=find_free_unit()
-  CALL diropn( iunwfcreal2, 'real_whole', nrxxs, exst )
+  CALL diropn( iunwfcreal2, 'real_whole', smooth%nrxx, exst )
 
 
-  allocate(tmprealis(nrxxs,n_set),tmprealjs(nrxxs,n_set), tmpreal(nrxxs))
-  allocate(tmpexp2(nrxxs,6))
+  allocate(tmprealis(smooth%nrxx,n_set),tmprealjs(smooth%nrxx,n_set), tmpreal(smooth%nrxx))
+  allocate(tmpexp2(smooth%nrxx,6))
 
 !set up exponential grid
 
@@ -128,7 +128,7 @@ subroutine matrix_wannier_gamma_big( matsincos, ispin, n_set, itask )
 
      do iw=(iiw-1)*n_set+1,min(iiw*n_set,nbnd_eff)
 !read from disk wfc on coarse grid
-        CALL davcio( tmprealis(:,iw-(iiw-1)*n_set),nrxxs,iunwfcreal2,iw,-1)
+        CALL davcio( tmprealis(:,iw-(iiw-1)*n_set),smooth%nrxx,iunwfcreal2,iw,-1)
      enddo
 !read in iw wfcs
      do jjw=iiw,nbnd_eff/n_set+1
@@ -136,7 +136,7 @@ subroutine matrix_wannier_gamma_big( matsincos, ispin, n_set, itask )
         call flush_unit(stdout)
 
         do jw=(jjw-1)*n_set+1,min(jjw*n_set,nbnd_eff)
-           CALL davcio( tmprealjs(:,jw-(jjw-1)*n_set),nrxxs,iunwfcreal2,jw,-1)
+           CALL davcio( tmprealjs(:,jw-(jjw-1)*n_set),smooth%nrxx,iunwfcreal2,jw,-1)
         enddo
         !do product
 
@@ -158,7 +158,7 @@ subroutine matrix_wannier_gamma_big( matsincos, ispin, n_set, itask )
 !calculate matrix element
               do mdir=1,3
                  sca=0.d0
-                 do ir=1,nrxxs
+                 do ir=1,smooth%nrxx
                     sca=sca+tmpreal(ir)*tmpexp2(ir,mdir)
                  enddo
                  sca=sca/dble(dffts%nr1*dffts%nr2*dffts%nr3)
@@ -185,38 +185,38 @@ subroutine matrix_wannier_gamma_big( matsincos, ispin, n_set, itask )
   write(stdout,*) 'Calculate US'
   call flush_unit(stdout)
   if(okvan) then
-    allocate(tmpexp(nrxx))
+    allocate(tmpexp(dense%nrxx))
     allocate(expgsave(maxval(nh),maxval(nh),nat,3))
     expgsave(:,:,:,:)=0.d0
    do mdir=1,3
 
 #ifndef __PARA
       if(mdir==1) then
-         do ix=1,nr1
-            ee=exp(cmplx(0.d0,1.d0)*tpi*real(ix)/real(nr1))
-            do iy=1,nr2
-              do  iz=1,nr3
-                 nn=(iz-1)*nr1x*nr2x+(iy-1)*nr1x+ix
+         do ix=1,dense%nr1
+            ee=exp(cmplx(0.d0,1.d0)*tpi*real(ix)/real(dense%nr1))
+            do iy=1,dense%nr2
+              do  iz=1,dense%nr3
+                 nn=(iz-1)*dense%nr1x*dense%nr2x+(iy-1)*dense%nr1x+ix
                  tmpexp(nn)=ee
               enddo
            enddo
          enddo
       else if(mdir==2) then
-         do iy=1,nr2
-            ee=exp(cmplx(0.d0,1.d0)*tpi*real(iy)/real(nr2))
-            do ix=1,nr1
-              do  iz=1,nr3
-                 nn=(iz-1)*nr1x*nr2x+(iy-1)*nr1x+ix
+         do iy=1,dense%nr2
+            ee=exp(cmplx(0.d0,1.d0)*tpi*real(iy)/real(dense%nr2))
+            do ix=1,dense%nr1
+              do  iz=1,dense%nr3
+                 nn=(iz-1)*dense%nr1x*dense%nr2x+(iy-1)*dense%nr1x+ix
                  tmpexp(nn)=ee
               enddo
             enddo
          enddo
       else if(mdir==3) then
-         do iz=1,nr3
-         ee=exp(cmplx(0.d0,1.d0)*tpi*real(iz)/real(nr3))
-            do ix=1,nr1
-              do  iy=1,nr2
-                 nn=(iz-1)*nr1x*nr2x+(iy-1)*nr1x+ix
+         do iz=1,dense%nr3
+         ee=exp(cmplx(0.d0,1.d0)*tpi*real(iz)/real(dense%nr3))
+            do ix=1,dense%nr1
+              do  iy=1,dense%nr2
+                 nn=(iz-1)*dense%nr1x*dense%nr2x+(iy-1)*dense%nr1x+ix
                  tmpexp(nn)=ee
               enddo
             enddo
@@ -232,16 +232,16 @@ subroutine matrix_wannier_gamma_big( matsincos, ispin, n_set, itask )
       end do
 
       do iz=1,dfftp%npp(me_pool+1)
-         do iy=1,nr2
-            do ix=1,nr1
+         do iy=1,dense%nr2
+            do ix=1,dense%nr1
 
-               nn=(iz-1)*nr1x*nr2x+(iy-1)*nr1x+ix
+               nn=(iz-1)*dense%nr1x*dense%nr2x+(iy-1)*dense%nr1x+ix
                if(mdir==1) then
-                  tmpexp(nn)= exp(cmplx(0.d0,1.d0)*tpi*real(ix-1)/real(nr1))
+                  tmpexp(nn)= exp(cmplx(0.d0,1.d0)*tpi*real(ix-1)/real(dense%nr1))
                elseif(mdir==2) then
-                  tmpexp(nn)= exp(cmplx(0.d0,1.d0)*tpi*real(iy-1)/real(nr2))
+                  tmpexp(nn)= exp(cmplx(0.d0,1.d0)*tpi*real(iy-1)/real(dense%nr2))
                else
-                  tmpexp(nn)= exp(cmplx(0.d0,1.d0)*tpi*real(iz+nr3_start-1-1)/real(nr3))
+                  tmpexp(nn)= exp(cmplx(0.d0,1.d0)*tpi*real(iz+nr3_start-1-1)/real(dense%nr3))
                endif
             enddo
          enddo
@@ -301,7 +301,7 @@ subroutine matrix_wannier_gamma_big( matsincos, ispin, n_set, itask )
         END IF
      ENDDO
 
-     expgsave(:,:,:,mdir)=expgsave(:,:,:,mdir)*omega/dble(nr1*nr2*nr3)
+     expgsave(:,:,:,mdir)=expgsave(:,:,:,mdir)*omega/dble(dense%nr1*dense%nr2*dense%nr3)
 
 #ifdef __PARA
      !!!call reduce (2  *maxval(nh) *maxval(nh)* nat, expgsave(:,:,:,mdir))

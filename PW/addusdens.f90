@@ -13,13 +13,13 @@ SUBROUTINE addusdens(rho)
   USE realus,               ONLY : addusdens_r
   USE control_flags,        ONLY : tqr
   USE noncollin_module,     ONLY : nspin_mag
-  USE grid_dimensions,      ONLY : nrxx
+  USE grid_dimensions,      ONLY : dense
   USE kinds,                ONLY : DP
   !
   IMPLICIT NONE
   !
   !
-  REAL(kind=dp), intent(inout) :: rho(nrxx,nspin_mag)
+  REAL(kind=dp), intent(inout) :: rho(dense%nrxx,nspin_mag)
   !
   IF ( tqr ) THEN
      CALL addusdens_r(rho,.true.)

@@ -15,10 +15,9 @@ SUBROUTINE ultralocalization(nbndv,ultra_thr,isubspace,max_array)
 
   USE io_files,             ONLY : find_free_unit, diropn
   USE io_global,            ONLY : stdout
-  USE smooth_grid_dimensions,ONLY: nr1s, nr2s, nr3s, nr1sx, nr2sx, nr3sx, &
-                                   nrxxs
-  USE gvecs,              ONLY : nls, nlsm, doublegrid
-  USE grid_dimensions,      ONLY : nr1, nr2, nr3, nr1x, nr2x, nr3x, nrxx
+  USE smooth_grid_dimensions,ONLY: smooth
+  USE gvecs,                ONLY : nls, nlsm, doublegrid
+  USE grid_dimensions,      ONLY : dense
   use mp_global,            ONLY : nproc_pool, me_pool
   USE wvfct,                ONLY : igk, g2kin, npwx, npw, nbnd, nbndx
   USE basis
@@ -84,13 +83,13 @@ SUBROUTINE ultralocalization(nbndv,ultra_thr,isubspace,max_array)
   allocate(eigvector_set(nbnd,nmaxeig),eigvector_tmp(nbnd))
 
 
-  allocate(tmpreal(nrxx))
+  allocate(tmpreal(dense%nrxx))
   allocate(eigenvector2(nbnd),eigenvector_old(nbnd,max_array))
   allocate(iwork(5*nbnd),ifail(nbnd))
   allocate(eigx(nbnd,nbnd),eigy(nbnd,nbnd),eigz(nbnd,nbnd))
-  allocate(exp_x(nrxx),exp_y(nrxx),exp_z(nrxx))
-  allocate(sums(nr1,nr2,nr3))
-  allocate(tmp_s(nrxxs),tmp_r(nrxx))
+  allocate(exp_x(dense%nrxx),exp_y(dense%nrxx),exp_z(dense%nrxx))
+  allocate(sums(dense%nr1,dense%nr2,dense%nr3))
+  allocate(tmp_s(smooth%nrxx),tmp_r(dense%nrxx))
   if(okvan) allocate(becp_gw2(nkb,nbnd))
 
   if(isubspace==0) then
@@ -110,16 +109,16 @@ SUBROUTINE ultralocalization(nbndv,ultra_thr,isubspace,max_array)
 
  alfa=0.01d0
 
- allocate(tmpreali(nrxxs,n_bands))
- allocate(tmprealj(nrxxs))
- allocate(min_1(nr2,nr3,n_bands),min_2(nr2,nr3,n_bands))
- allocate(max_1(nr2,nr3,n_bands),max_2(nr2,nr3,n_bands))
+ allocate(tmpreali(smooth%nrxx,n_bands))
+ allocate(tmprealj(smooth%nrxx))
+ allocate(min_1(dense%nr2,dense%nr3,n_bands),min_2(dense%nr2,dense%nr3,n_bands))
+ allocate(max_1(dense%nr2,dense%nr3,n_bands),max_2(dense%nr2,dense%nr3,n_bands))
  allocate(eigenvector(nbnd,n_bands))
 
   radmax=no_radius/alat
 
-  nrsmin=min(nr1,nr2)
-  nrsmin=min(nr3,nrsmin)
+  nrsmin=min(dense%nr1,dense%nr2)
+  nrsmin=min(dense%nr3,nrsmin)
 !if nrsmin is even set to nrsmin -1,
   if(is_even(nrsmin)) then
     nrsmin=nrsmin-1
@@ -130,10 +129,10 @@ SUBROUTINE ultralocalization(nbndv,ultra_thr,isubspace,max_array)
 !open outpu file
 
    iunrealwan = find_free_unit()
-   CALL diropn( iunrealwan, 'real_whole', nrxxs, exst )
+   CALL diropn( iunrealwan, 'real_whole', smooth%nrxx, exst )
 !read in wave-functions
   do iw=n_first,n_last
-    CALL davcio( tmpreali(:,iw-n_first+1),nrxxs,iunrealwan,iw,-1)
+    CALL davcio( tmpreali(:,iw-n_first+1),smooth%nrxx,iunrealwan,iw,-1)
   enddo
    CLOSE(iunrealwan)
 !first valence subspace
@@ -145,13 +144,13 @@ SUBROUTINE ultralocalization(nbndv,ultra_thr,isubspace,max_array)
   exp_x(:)=(0.d0,0.d0)
   exp_y(:)=(0.d0,0.d0)
   exp_z(:)=(0.d0,0.d0)
-  do ix=1,nr1s
-     do iy=1,nr2s
-        do iz=1,nr3s
-           nn=(iz-1)*nr1sx*nr2sx+(iy-1)*nr1sx+ix
-           exp_x(nn)=exp((0.d0,1.d0)*tpi*real(ix)/real(nr1s))
-           exp_y(nn)=exp((0.d0,1.d0)*tpi*real(iy)/real(nr2s))
-           exp_z(nn)=exp((0.d0,1.d0)*tpi*real(iz)/real(nr3s))
+  do ix=1,smooth%nr1
+     do iy=1,smooth%nr2
+        do iz=1,smooth%nr3
+           nn=(iz-1)*smooth%nr1x*smooth%nr2x+(iy-1)*smooth%nr1x+ix
+           exp_x(nn)=exp((0.d0,1.d0)*tpi*real(ix)/real(smooth%nr1))
+           exp_y(nn)=exp((0.d0,1.d0)*tpi*real(iy)/real(smooth%nr2))
+           exp_z(nn)=exp((0.d0,1.d0)*tpi*real(iz)/real(smooth%nr3))
         enddo
      enddo
   enddo
@@ -165,14 +164,14 @@ SUBROUTINE ultralocalization(nbndv,ultra_thr,isubspace,max_array)
        eigz(iw,jw)=(0.d0,0.d0)
        tmp_s(:)=tmpreali(:,iww)*tmpreali(:,jww)
 
-       do ir=1,nrxxs
+       do ir=1,smooth%nrxx
           eigx(iw,jw)=eigx(iw,jw)+exp_x(ir)*tmp_s(ir)
           eigy(iw,jw)=eigy(iw,jw)+exp_y(ir)*tmp_s(ir)
           eigz(iw,jw)=eigz(iw,jw)+exp_z(ir)*tmp_s(ir)
       enddo
-      eigx(iw,jw)=eigx(iw,jw)/real(nr1s*nr2s*nr3s)
-      eigy(iw,jw)=eigy(iw,jw)/real(nr1s*nr2s*nr3s)
-      eigz(iw,jw)=eigz(iw,jw)/real(nr1s*nr2s*nr3s)
+      eigx(iw,jw)=eigx(iw,jw)/real(smooth%nr1*smooth%nr2*smooth%nr3)
+      eigy(iw,jw)=eigy(iw,jw)/real(smooth%nr1*smooth%nr2*smooth%nr3)
+      eigz(iw,jw)=eigz(iw,jw)/real(smooth%nr1*smooth%nr2*smooth%nr3)
       eigx(jw,iw)=eigx(iw,jw)
       eigy(jw,iw)=eigy(iw,jw)
       eigz(jw,iw)=eigz(iw,jw)
@@ -185,13 +184,13 @@ SUBROUTINE ultralocalization(nbndv,ultra_thr,isubspace,max_array)
     exp_x(:)=(0.d0,0.d0)
     exp_y(:)=(0.d0,0.d0)
     exp_z(:)=(0.d0,0.d0)
-    do ix=1,nr1
-       do iy=1,nr2
-          do iz=1,nr3
-             nn=(iz-1)*nr1x*nr2x+(iy-1)*nr1x+ix
-             exp_x(nn)=exp((0.d0,1.d0)*tpi*real(ix)/real(nr1))
-             exp_y(nn)=exp((0.d0,1.d0)*tpi*real(iy)/real(nr2))
-             exp_z(nn)=exp((0.d0,1.d0)*tpi*real(iz)/real(nr3))
+    do ix=1,dense%nr1
+       do iy=1,dense%nr2
+          do iz=1,dense%nr3
+             nn=(iz-1)*dense%nr1x*dense%nr2x+(iy-1)*dense%nr1x+ix
+             exp_x(nn)=exp((0.d0,1.d0)*tpi*real(ix)/real(dense%nr1))
+             exp_y(nn)=exp((0.d0,1.d0)*tpi*real(iy)/real(dense%nr2))
+             exp_z(nn)=exp((0.d0,1.d0)*tpi*real(iz)/real(dense%nr3))
           enddo
        enddo
     enddo
@@ -205,14 +204,14 @@ SUBROUTINE ultralocalization(nbndv,ultra_thr,isubspace,max_array)
          scac1=(0.d0,0.d0)
          scac2=(0.d0,0.d0)
          scac3=(0.d0,0.d0)
-         do ir=1,nrxx
+         do ir=1,dense%nrxx
             scac1=scac1+exp_x(ir)*tmp_r(ir)
             scac2=scac2+exp_y(ir)*tmp_r(ir)
             scac3=scac3+exp_z(ir)*tmp_r(ir)
           enddo
-          eigx(iw,jw)=eigx(iw,jw)+scac1/real(nr1*nr2*nr3)
-          eigy(iw,jw)=eigy(iw,jw)+scac2/real(nr1*nr2*nr3)
-          eigz(iw,jw)=eigz(iw,jw)+scac3/real(nr1*nr2*nr3)
+          eigx(iw,jw)=eigx(iw,jw)+scac1/real(dense%nr1*dense%nr2*dense%nr3)
+          eigy(iw,jw)=eigy(iw,jw)+scac2/real(dense%nr1*dense%nr2*dense%nr3)
+          eigz(iw,jw)=eigz(iw,jw)+scac3/real(dense%nr1*dense%nr2*dense%nr3)
           eigx(jw,iw)=eigx(iw,jw)
           eigy(jw,iw)=eigy(iw,jw)
           eigz(jw,iw)=eigz(iw,jw)
@@ -245,17 +244,17 @@ SUBROUTINE ultralocalization(nbndv,ultra_thr,isubspace,max_array)
         iqq=iqq+1
         if(.not.converged(iqq)) then
 
-          do iy=1,nr2s
-              do iz=1,nr3s
+          do iy=1,smooth%nr2
+              do iz=1,smooth%nr3
                 min_1(iy,iz,iqq)=0
                 max_1(iy,iz,iqq)=0
                 min_2(iy,iz,iqq)=0
                 max_2(iy,iz,iqq)=0
-                do ix=1,nr1s
-                  nn=(iz-1)*nr1sx*nr2sx+(iy-1)*nr1sx+ix
-                  rx=rdistance(real(ix)*at(1,1)/real(nr1s),center(1,iqq),at(1,1))
-                  ry=rdistance(real(iy)*at(2,2)/real(nr2s),center(2,iqq),at(2,2))
-                  rz=rdistance(real(iz)*at(3,3)/real(nr3s),center(3,iqq),at(3,3))
+                do ix=1,smooth%nr1
+                  nn=(iz-1)*smooth%nr1x*smooth%nr2x+(iy-1)*smooth%nr1x+ix
+                  rx=rdistance(real(ix)*at(1,1)/real(smooth%nr1),center(1,iqq),at(1,1))
+                  ry=rdistance(real(iy)*at(2,2)/real(smooth%nr2),center(2,iqq),at(2,2))
+                  rz=rdistance(real(iz)*at(3,3)/real(smooth%nr3),center(3,iqq),at(3,3))
                   if(sqrt(rx**2.d0+ry**2.d0+rz**2.d0) <= radmax) then
                     if(min_1(iy,iz,iqq)==0) min_1(iy,iz,iqq)=ix
                   else
@@ -265,13 +264,13 @@ SUBROUTINE ultralocalization(nbndv,ultra_thr,isubspace,max_array)
                      endif
                   endif
                 enddo
-                if(min_1(iy,iz,iqq)/=0 .and. max_1(iy,iz,iqq)==0)  max_1(iy,iz,iqq)=nr1s+1
-                if(min_1(iy,iz,iqq)==1 .and. max_1(iy,iz,iqq)/=(nr1s+1)) then
-                  do ix=nr1s,1,-1
-                    nn=(iz-1)*nr1sx*nr2sx+(iy-1)*nr1sx+ix
-                    rx=rdistance(real(ix)*at(1,1)/real(nr1s),center(1,iqq),at(1,1))
-                    ry=rdistance(real(iy)*at(2,2)/real(nr2s),center(2,iqq),at(2,2))
-                    rz=rdistance(real(iz)*at(3,3)/real(nr3s),center(3,iqq),at(3,3))
+                if(min_1(iy,iz,iqq)/=0 .and. max_1(iy,iz,iqq)==0)  max_1(iy,iz,iqq)=smooth%nr1+1
+                if(min_1(iy,iz,iqq)==1 .and. max_1(iy,iz,iqq)/=(smooth%nr1+1)) then
+                  do ix=smooth%nr1,1,-1
+                    nn=(iz-1)*smooth%nr1x*smooth%nr2x+(iy-1)*smooth%nr1x+ix
+                    rx=rdistance(real(ix)*at(1,1)/real(smooth%nr1),center(1,iqq),at(1,1))
+                    ry=rdistance(real(iy)*at(2,2)/real(smooth%nr2),center(2,iqq),at(2,2))
+                    rz=rdistance(real(iz)*at(3,3)/real(smooth%nr3),center(3,iqq),at(3,3))
                     if(sqrt(rx**2.d0+ry**2.d0+rz**2.d0) <= radmax) then
                       if(max_2(iy,iz,iqq)==0) max_2(iy,iz,iqq)=ix
                     else
@@ -301,11 +300,11 @@ SUBROUTINE ultralocalization(nbndv,ultra_thr,isubspace,max_array)
           kww=kw-n_first+1
           sums(:,:,:)=0.d0
           tmp_s(:)=tmpreali(:,jww)*tmpreali(:,kww)
-          do iy=1,nr2s
-            do iz=1,nr3s
+          do iy=1,smooth%nr2
+            do iz=1,smooth%nr3
               sca=0.d0
-              do ix=1,nr1s
-                nn=(iz-1)*nr1sx*nr2sx+(iy-1)*nr1sx+ix
+              do ix=1,smooth%nr1
+                nn=(iz-1)*smooth%nr1x*smooth%nr2x+(iy-1)*smooth%nr1x+ix
                 sca=sca+tmp_s(nn)
                 sums(ix,iy,iz)=sca
               enddo
@@ -315,8 +314,8 @@ SUBROUTINE ultralocalization(nbndv,ultra_thr,isubspace,max_array)
           do iw=ifirst,ilast
             iqq=iqq+1
             if(.not.converged(iqq))then
-              do iy=1,nr2s
-                do iz=1,nr3s
+              do iy=1,smooth%nr2
+                do iz=1,smooth%nr3
                    if(max_1(iy,iz,iqq)/=0) then
                       if(min_1(iy,iz,iqq)/=1) then
                         loc_mat(jww,kww,iqq)=loc_mat(jww,kww,iqq)+&
@@ -330,7 +329,7 @@ SUBROUTINE ultralocalization(nbndv,ultra_thr,isubspace,max_array)
                    endif
                 enddo
               enddo
-              loc_mat(jww,kww,iqq)=loc_mat(jww,kww,iqq)/real(nr1s*nr2s*nr3s)
+              loc_mat(jww,kww,iqq)=loc_mat(jww,kww,iqq)/real(smooth%nr1*smooth%nr2*smooth%nr3)
               loc_mat(kww,jww,iqq)=loc_mat(jww,kww,iqq)
             endif
          enddo
@@ -345,17 +344,17 @@ SUBROUTINE ultralocalization(nbndv,ultra_thr,isubspace,max_array)
           iqq=iqq+1
           if(.not.converged(iqq)) then
 
-            do iy=1,nr2
-                do iz=1,nr3
+            do iy=1,dense%nr2
+                do iz=1,dense%nr3
                   min_1(iy,iz,iqq)=0
                   max_1(iy,iz,iqq)=0
                   min_2(iy,iz,iqq)=0
                   max_2(iy,iz,iqq)=0
-                  do ix=1,nr1
-                    nn=(iz-1)*nr1x*nr2x+(iy-1)*nr1x+ix
-                    rx=rdistance(real(ix)*at(1,1)/real(nr1),center(1,iqq),at(1,1))
-                    ry=rdistance(real(iy)*at(2,2)/real(nr2),center(2,iqq),at(2,2))
-                    rz=rdistance(real(iz)*at(3,3)/real(nr3),center(3,iqq),at(3,3))
+                  do ix=1,dense%nr1
+                    nn=(iz-1)*dense%nr1x*dense%nr2x+(iy-1)*dense%nr1x+ix
+                    rx=rdistance(real(ix)*at(1,1)/real(dense%nr1),center(1,iqq),at(1,1))
+                    ry=rdistance(real(iy)*at(2,2)/real(dense%nr2),center(2,iqq),at(2,2))
+                    rz=rdistance(real(iz)*at(3,3)/real(dense%nr3),center(3,iqq),at(3,3))
                     if(sqrt(rx**2.d0+ry**2.d0+rz**2.d0) <= radmax) then
                       if(min_1(iy,iz,iqq)==0) min_1(iy,iz,iqq)=ix
                     else
@@ -365,13 +364,13 @@ SUBROUTINE ultralocalization(nbndv,ultra_thr,isubspace,max_array)
                        endif
                     endif
                   enddo
-                  if(min_1(iy,iz,iqq)/=0 .and. max_1(iy,iz,iqq)==0)  max_1(iy,iz,iqq)=nr1+1
-                  if(min_1(iy,iz,iqq)==1 .and. max_1(iy,iz,iqq)/=(nr1+1)) then
-                    do ix=nr1,1,-1
-                      nn=(iz-1)*nr1x*nr2x+(iy-1)*nr1x+ix
-                      rx=rdistance(real(ix)*at(1,1)/real(nr1),center(1,iqq),at(1,1))
-                      ry=rdistance(real(iy)*at(2,2)/real(nr2),center(2,iqq),at(2,2))
-                      rz=rdistance(real(iz)*at(3,3)/real(nr3),center(3,iqq),at(3,3))
+                  if(min_1(iy,iz,iqq)/=0 .and. max_1(iy,iz,iqq)==0)  max_1(iy,iz,iqq)=dense%nr1+1
+                  if(min_1(iy,iz,iqq)==1 .and. max_1(iy,iz,iqq)/=(dense%nr1+1)) then
+                    do ix=dense%nr1,1,-1
+                      nn=(iz-1)*dense%nr1x*dense%nr2x+(iy-1)*dense%nr1x+ix
+                      rx=rdistance(real(ix)*at(1,1)/real(dense%nr1),center(1,iqq),at(1,1))
+                      ry=rdistance(real(iy)*at(2,2)/real(dense%nr2),center(2,iqq),at(2,2))
+                      rz=rdistance(real(iz)*at(3,3)/real(dense%nr3),center(3,iqq),at(3,3))
                       if(sqrt(rx**2.d0+ry**2.d0+rz**2.d0) <= radmax) then
                         if(max_2(iy,iz,iqq)==0) max_2(iy,iz,iqq)=ix
                       else
@@ -401,23 +400,23 @@ SUBROUTINE ultralocalization(nbndv,ultra_thr,isubspace,max_array)
             sums(:,:,:)=0.d0
             tmp_r(:)=0.d0
             call adduspos_gamma_r(jw,kw,tmp_r,1,becp_gw(:,jw),becp_gw(:,kw))
-            do iy=1,nr2
-              do iz=1,nr3
+            do iy=1,dense%nr2
+              do iz=1,dense%nr3
                 sca=0.d0
-                do ix=1,nr1
-                  nn=(iz-1)*nr1x*nr2x+(iy-1)*nr1x+ix
+                do ix=1,dense%nr1
+                  nn=(iz-1)*dense%nr1x*dense%nr2x+(iy-1)*dense%nr1x+ix
                   sca=sca+tmp_r(nn)
                   sums(ix,iy,iz)=sca
                 enddo
               enddo
             enddo
-            sums(:,:,:)=sums(:,:,:)/dble(nr1*nr2*nr3)
+            sums(:,:,:)=sums(:,:,:)/dble(dense%nr1*dense%nr2*dense%nr3)
             iqq=0
             do iw=ifirst,ilast
               iqq=iqq+1
               if(.not.converged(iqq))then
-                do iy=1,nr2
-                  do iz=1,nr3
+                do iy=1,dense%nr2
+                  do iz=1,dense%nr3
                      if(max_1(iy,iz,iqq)/=0) then
                         if(min_1(iy,iz,iqq)/=1) then
                           loc_mat(jww,kww,iqq)=loc_mat(jww,kww,iqq)+&
@@ -576,19 +575,19 @@ SUBROUTINE ultralocalization(nbndv,ultra_thr,isubspace,max_array)
 
 !determines integer coordinates of center of wannier wfcs
 
-      nc1=aint(center(1,iqq)/(at(1,1))*real(nr1))
-      nc2=aint(center(2,iqq)/(at(2,2))*real(nr2))
-      nc3=aint(center(3,iqq)/(at(3,3))*real(nr3))
+      nc1=aint(center(1,iqq)/(at(1,1))*real(dense%nr1))
+      nc2=aint(center(2,iqq)/(at(2,2))*real(dense%nr2))
+      nc3=aint(center(3,iqq)/(at(3,3))*real(dense%nr3))
 
 
-      if(nc1<1) nc1=nr1+nc1
-      if(nc1>nr1) nc1=nc1-nr1
+      if(nc1<1) nc1=dense%nr1+nc1
+      if(nc1>dense%nr1) nc1=nc1-dense%nr1
 
-      if(nc2<1) nc2=nr2+nc2
-      if(nc2>nr2) nc2=nc2-nr2
+      if(nc2<1) nc2=dense%nr2+nc2
+      if(nc2>dense%nr2) nc2=nc2-dense%nr2
 
-      if(nc3<1) nc3=nr3+nc3
-      if(nc3>nr3) nc3=nc3-nr3
+      if(nc3<1) nc3=dense%nr3+nc3
+      if(nc3>dense%nr3) nc3=nc3-dense%nr3
 
 
       write(stdout,*)'Wannier :', iw, 'Center :', nc1,nc2,nc3
@@ -602,23 +601,23 @@ SUBROUTINE ultralocalization(nbndv,ultra_thr,isubspace,max_array)
                do iz=-nll,nll
 
                  n1=nc1+ix
-                 if(n1<1) n1=nr1+n1
-                 if(n1>nr1) n1=n1-nr1
+                 if(n1<1) n1=dense%nr1+n1
+                 if(n1>dense%nr1) n1=n1-dense%nr1
 
                  n2=nc2+iy
-                 if(n2<1) n2=nr2+n2
-                 if(n2>nr2) n2=n2-nr2
+                 if(n2<1) n2=dense%nr2+n2
+                 if(n2>dense%nr2) n2=n2-dense%nr2
 
                  n3=nc3+iz
-                 if(n3<1) n3=nr3+n3
-                 if(n3>nr3) n3=n3-nr3
+                 if(n3<1) n3=dense%nr3+n3
+                 if(n3>dense%nr3) n3=n3-dense%nr3
 
-                 nn=(n3-1)*nr1x*nr2x+(n2-1)*nr1x+n1
+                 nn=(n3-1)*dense%nr1x*dense%nr2x+(n2-1)*dense%nr1x+n1
                  norm=norm+tmp_r(nn)
                enddo
              enddo
           enddo
-        norm=norm/real(nr1*nr2*nr3)
+        norm=norm/real(dense%nr1*dense%nr2*dense%nr3)
         if(norm >= cutoff) then
           exit
         endif
@@ -628,16 +627,16 @@ SUBROUTINE ultralocalization(nbndv,ultra_thr,isubspace,max_array)
 !determines integer origin
 
                  no1=nc1-nll
-                 if(no1<1) no1=nr1+no1
-                 if(no1>nr1) no1=no1-nr1
+                 if(no1<1) no1=dense%nr1+no1
+                 if(no1>dense%nr1) no1=no1-dense%nr1
 
                  no2=nc2-nll
-                 if(no2<1) no2=nr2+no2
-                 if(no2>nr2) no2=no2-nr2
+                 if(no2<1) no2=dense%nr2+no2
+                 if(no2>dense%nr2) no2=no2-dense%nr2
 
                  no3=nc3-nll
-                 if(no3<1) no3=nr3+no3
-                 if(no3>nr3) no3=no3-nr3
+                 if(no3<1) no3=dense%nr3+no3
+                 if(no3>dense%nr3) no3=no3-dense%nr3
 
 !put on array
                  if(doublegrid) then
@@ -651,17 +650,17 @@ SUBROUTINE ultralocalization(nbndv,ultra_thr,isubspace,max_array)
                     do iz=0,2*nll
 
                       n1=no1+ix
-                      if(n1<1) n1=nr1+n1
-                      if(n1>nr1) n1=n1-nr1
+                      if(n1<1) n1=dense%nr1+n1
+                      if(n1>dense%nr1) n1=n1-dense%nr1
 
                       n2=no2+iy
-                      if(n2<1) n2=nr2+n2
-                      if(n2>nr2) n2=n2-nr2
+                      if(n2<1) n2=dense%nr2+n2
+                      if(n2>dense%nr2) n2=n2-dense%nr2
 
                       n3=no3+iz
-                      if(n3<1) n3=nr3+n3
-                      if(n3>nr3) n3=n3-nr3
-                      nn=(n3-1)*nr1x*nr2x+(n2-1)*nr1x+n1
+                      if(n3<1) n3=dense%nr3+n3
+                      if(n3>dense%nr3) n3=n3-dense%nr3
+                      nn=(n3-1)*dense%nr1x*dense%nr2x+(n2-1)*dense%nr1x+n1
                      tmpreal(iz*(2*nll+1)*(2*nll+1)+iy*(2*nll+1)+ix+1)=&
                 &  tmp_r(nn)
                   enddo

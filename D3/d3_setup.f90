@@ -47,7 +47,7 @@ SUBROUTINE d3_setup()
   USE io_files,      ONLY : tmp_dir
   USE kinds,         ONLY : DP
   USE pwcom
-  USE grid_dimensions,ONLY: nrxx, nr1, nr2, nr3
+  USE grid_dimensions,ONLY: dense
   USE scf, only : rho, rho_core, v, vltot, vrs, kedtau
   USE symm_base,     ONLY : nrot, nsym, s, ftau, irt, invs, inverse_s, &
                             s_axis_to_cart, find_sym, copy_sym, s_axis_to_cart
@@ -89,20 +89,20 @@ SUBROUTINE d3_setup()
   !
   ! 1) Computes the total local potential (external+scf) on the smoot grid
   !
-  CALL set_vrs (vrs, vltot, v%of_r, kedtau, v%kin_r, nrxx, nspin, doublegrid)
+  CALL set_vrs (vrs, vltot, v%of_r, kedtau, v%kin_r, dense%nrxx, nspin, doublegrid)
   !
   ! 2) Computes the derivative of the xc potential
   !
   dmuxc (:,:,:) = 0.d0
   IF (lsda) THEN
-     DO ir = 1, nrxx
+     DO ir = 1, dense%nrxx
         rhoup = rho%of_r (ir, 1) + 0.5d0 * rho_core (ir)
         rhodw = rho%of_r (ir, 2) + 0.5d0 * rho_core (ir)
         CALL dmxc_spin (rhoup, rhodw, dmuxc (ir, 1, 1), &
              dmuxc (ir, 2, 1), dmuxc (ir, 1, 2), dmuxc (ir, 2, 2) )
      ENDDO
   ELSE
-     DO ir = 1, nrxx
+     DO ir = 1, dense%nrxx
         rhotot = rho%of_r (ir, nspin) + rho_core (ir)
         IF (rhotot > 1.d-30) dmuxc (ir, 1, 1) = dmxc (rhotot)
         IF (rhotot < - 1.d-30) dmuxc (ir, 1, 1) = - dmxc ( - rhotot)
@@ -180,7 +180,7 @@ SUBROUTINE d3_setup()
   !
   modenum = 0
   magnetic_sym = .false.
-  CALL find_sym ( nat, tau, ityp, nr1, nr2, nr3, .FALSE., &
+  CALL find_sym ( nat, tau, ityp, dense%nr1, dense%nr2, dense%nr3, .FALSE., &
                magnetic_sym, mdum, .FALSE.)
   sym(:)       =.false.
   sym(1:nsym)=.true.

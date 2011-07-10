@@ -23,7 +23,7 @@ SUBROUTINE punch_plot_e()
   USE io_global,  ONLY : stdout, ionode
   USE fft_base,   ONLY : grid_gather
   USE printout_base, ONLY : title
-  USE grid_dimensions,ONLY : nr1,nr2,nr3, nr1x,nr2x,nr3x
+  USE grid_dimensions,ONLY : dense
   USE fft_base,   ONLY : dfftp
   USE gvect,      ONLY : gcutm
   USE gvecs,    ONLY : dual
@@ -107,7 +107,7 @@ SUBROUTINE punch_plot_e()
         ! not used
         plot_num = - 1
         WRITE (iunplot, '(a)') title
-        WRITE (iunplot, '(8i8)') nr1x, nr2x, nr3x, nr1, nr2, nr3, nat, &
+        WRITE (iunplot, '(8i8)') dense%nr1x, dense%nr2x, dense%nr3x, dense%nr1, dense%nr2, dense%nr3, nat, &
              ntyp
         WRITE (iunplot, '(i6,6f12.8)') ibrav, celldm
         WRITE (iunplot, '(3f20.10,i6)') gcutm, dual, ecutwfc, plot_num
@@ -124,10 +124,10 @@ SUBROUTINE punch_plot_e()
      IF (lsda) CALL daxpy (dfftp%nnr, 1.d0, aux1 (1,2, ipol), 2, raux, 1)
      !
 #if defined (__PARA)
-     ALLOCATE (raux1( nr1x * nr2x * nr3x))
+     ALLOCATE (raux1( dense%nr1x * dense%nr2x * dense%nr3x))
      CALL grid_gather (raux, raux1)
      IF ( ionode ) WRITE (iunplot, '(5(1pe17.9))') &
-          (raux1 (ir) , ir = 1, nr1x * nr2x * nr3x)
+          (raux1 (ir) , ir = 1, dense%nr1x * dense%nr2x * dense%nr3x)
      DEALLOCATE (raux1)
 #else
      WRITE (iunplot, '( 5( 1pe17.9 ) )') (raux (ir) , ir = 1, dfftp%nnr)

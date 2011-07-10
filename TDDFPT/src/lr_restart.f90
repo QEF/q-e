@@ -28,7 +28,7 @@ SUBROUTINE lr_restart(iter_restart,rflag)
                                     bfft_orbital_gamma, calbec_rs_gamma, add_vuspsir_gamma, &
                                     v_loc_psir, s_psir_gamma,igk_k,npw_k, &
                                     real_space_debug
-  USE grid_dimensions,      ONLY : nrxx
+  USE grid_dimensions,      ONLY : dense
   USE lr_variables,         ONLY : lr_verbosity, charge_response, LR_polarization, n_ipol
   USE noncollin_module,     ONLY : nspin_mag
 
@@ -191,12 +191,12 @@ SUBROUTINE lr_restart(iter_restart,rflag)
   CLOSE( unit = iunrestart)
   IF (charge_response == 1 ) THEN
      IF (resonance_condition) THEN
-         CALL diropn ( iunrestart, 'restart_lanczos-rho_tot.'//trim(int_to_char(LR_polarization)), 2*nrxx, exst)
-         CALL davcio(rho_1_tot_im(:,:),2*nrxx*nspin_mag,iunrestart,1,-1)
+         CALL diropn ( iunrestart, 'restart_lanczos-rho_tot.'//trim(int_to_char(LR_polarization)), 2*dense%nrxx, exst)
+         CALL davcio(rho_1_tot_im(:,:),2*dense%nrxx*nspin_mag,iunrestart,1,-1)
          CLOSE( unit = iunrestart)
      ELSE
-         CALL diropn ( iunrestart, 'restart_lanczos-rho_tot.'//trim(int_to_char(LR_polarization)), 2*nrxx, exst)
-         CALL davcio(rho_1_tot(:,:),2*nrxx*nspin_mag,iunrestart,1,-1)
+         CALL diropn ( iunrestart, 'restart_lanczos-rho_tot.'//trim(int_to_char(LR_polarization)), 2*dense%nrxx, exst)
+         CALL davcio(rho_1_tot(:,:),2*dense%nrxx*nspin_mag,iunrestart,1,-1)
          CLOSE( unit = iunrestart)
        ENDIF
      ENDIF

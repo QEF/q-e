@@ -126,7 +126,7 @@ SUBROUTINE vdw_init ( )
   USE ener,      ONLY : ef
   USE ions_base, ONLY : nat, ntyp=>nsp, ityp, tau
   USE gvect
-  USE grid_dimensions
+  USE grid_dimensions, ONLY: dense
   USE vlocal,    ONLY : strf
   USE io_files,  ONLY : tmp_dir, prefix
   USE io_global, ONLY : ionode, ionode_id, stdout
@@ -213,7 +213,7 @@ SUBROUTINE vdw_init ( )
   !
   CALL read_file ( )
   CALL openfil_pp ( )
-  CALL struc_fact (nat, tau, ntyp, ityp, ngm, g, bg, nr1, nr2, nr3, &
+  CALL struc_fact (nat, tau, ntyp, ityp, ngm, g, bg, dense%nr1, dense%nr2, dense%nr3, &
        strf, eigts1, eigts2, eigts3)
   CALL init_us_1 ( )
   !

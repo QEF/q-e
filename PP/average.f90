@@ -48,9 +48,9 @@ PROGRAM average
   USE gvect,                ONLY : gcutm
   USE gvecs,                ONLY : doublegrid, gcutms, dual
   USE wvfct,                ONLY : ecutwfc
-  USE grid_dimensions,      ONLY : nr1, nr2, nr3, nr1x, nr2x, nr3x, nrxx
+  USE grid_dimensions,      ONLY : dense
   USE grid_subroutines,     ONLY : realspace_grids_init
-  USE smooth_grid_dimensions,ONLY: nr1s, nr2s, nr3s
+  USE smooth_grid_dimensions,ONLY: smooth
   USE ions_base,            ONLY : zv, tau, nat, ntyp => nsp, ityp, atm
   USE lsda_mod,             ONLY : nspin
   USE wavefunctions_module, ONLY : psic
@@ -132,7 +132,7 @@ PROGRAM average
 
 1100 CALL errore ('average', 'readin input', abs (ios) )
 
-     CALL read_io_header(filename (1), title, nr1x, nr2x, nr3x, nr1, nr2, nr3, &
+     CALL read_io_header(filename (1), title, dense%nr1x, dense%nr2x, dense%nr3x, dense%nr1, dense%nr2, dense%nr3, &
           nat, ntyp, ibrav, celldm, at, gcutm, dual, ecutwfc, plot_num)
      nspin = 1
      CALL latgen (ibrav, celldm, at(1,1), at(1,2), at(1,3), omega )
@@ -144,16 +144,16 @@ PROGRAM average
      tpiba2 = tpiba**2
 
      IF (idir==1) THEN
-        nfft=nr1
-        nfftx=nr1x
+        nfft=dense%nr1
+        nfftx=dense%nr1x
         leng=alat*sqrt(at(1,1)**2+at(2,1)**2+at(3,1)**2)
      ELSEIF (idir==2) THEN
-        nfft=nr2
-        nfftx=nr2x
+        nfft=dense%nr2
+        nfftx=dense%nr2x
         leng=alat*sqrt(at(1,2)**2+at(2,2)**2+at(3,2)**2)
      ELSEIF (idir==3) THEN
-        nfft=nr3
-        nfftx=nr3x
+        nfft=dense%nr3
+        nfftx=dense%nr3x
         leng=alat*sqrt(at(1,3)**2+at(2,3)**2+at(3,3)**2)
      ELSE
         CALL errore('average','idir is wrong',1)
@@ -170,13 +170,13 @@ PROGRAM average
      ENDIF
      ! not sure whether this is the correct thing to do in presence
      ! of a double grid, but the info on nrXs is not read from file!
-     nr1s = nr1 ; nr2s = nr2 ; nr3s = nr3
+     smooth%nr1 = dense%nr1 ; smooth%nr2 = dense%nr2 ; smooth%nr3 = dense%nr3
      ! as above: this can be used in allocate_fft
      nks = 0
 
      CALL volume (alat, at (1, 1), at (1, 2), at (1, 3), omega)
 
-     CALL realspace_grids_init (at, bg, gcutm, gcutms )
+     CALL realspace_grids_init ( dense, smooth, at, bg, gcutm, gcutms )
 
      CALL allocate_fft ( )
      !
@@ -184,11 +184,11 @@ PROGRAM average
      !
      ! Read first file
      !
-     CALL plot_io (filename (1), title, nr1x, nr2x, nr3x, nr1, nr2, &
-          nr3, nat, ntyp, ibrav, celldm, at, gcutm, dual, ecutwfc, &
+     CALL plot_io (filename (1), title, dense%nr1x, dense%nr2x, dense%nr3x, dense%nr1, dense%nr2, &
+          dense%nr3, nat, ntyp, ibrav, celldm, at, gcutm, dual, ecutwfc, &
           plot_num, atm, ityp, zv, tau, rho%of_r, -1)
      !
-     DO ir = 1, nrxx
+     DO ir = 1, dense%nrxx
         psic (ir) = weight (1) * cmplx(rho%of_r(ir, 1),0.d0,kind=DP)
      ENDDO
      !
@@ -211,9 +211,9 @@ PROGRAM average
         DEALLOCATE (taus)
         !
         IF (nats>nat) CALL errore ('chdens', 'wrong file order? ', 1)
-        IF (nr1x/=nr1sxa.or.nr2x/=nr2sxa) &
+        IF (dense%nr1x/=nr1sxa.or.dense%nr2x/=nr2sxa) &
              CALL errore ('average', 'incompatible nr1x or nr2x', 1)
-        IF (nr1/=nr1sa.or.nr2/=nr2sa.or.nr3/=nr3sa) &
+        IF (dense%nr1/=nr1sa.or.dense%nr2/=nr2sa.or.dense%nr3/=nr3sa) &
              CALL errore ('average', 'incompatible nr1 or nr2 or nr3', 1)
         IF (ibravs/=ibrav) CALL errore ('average', 'incompatible ibrav', 1)
         IF (gcutmsa/=gcutm.or.duals/=dual.or.ecuts/=ecutwfc ) &
@@ -222,7 +222,7 @@ PROGRAM average
            IF (abs( celldm (i)-celldms (i) ) > 1.0d-7 ) &
                 CALL errore ('chdens', 'incompatible celldm', 1)
         ENDDO
-        DO ir = 1, nrxx
+        DO ir = 1, dense%nrxx
            psic (ir) = psic (ir) + weight(ifile) * cmplx(rho%of_r(ir, 1),0.d0,kind=DP)
         ENDDO
      ENDDO
@@ -236,40 +236,40 @@ PROGRAM average
      !     planar averages
      !
      IF (idir==1) THEN
-        DO i = 1, nr1
+        DO i = 1, dense%nr1
            funcr (i) = 0.d0
            funci (i) = 0.d0
-           DO j = 1, nr2
-              DO k = 1, nr3
-                 ir = i + (j - 1) * nr1x + (k - 1) * nr1x * nr2x
+           DO j = 1, dense%nr2
+              DO k = 1, dense%nr3
+                 ir = i + (j - 1) * dense%nr1x + (k - 1) * dense%nr1x * dense%nr2x
                  funcr (i) = funcr (i) + dble (psic(ir))
               ENDDO
            ENDDO
-           funcr (i) = funcr (i) / (dble (nr2 * nr3))
+           funcr (i) = funcr (i) / (dble (dense%nr2 * dense%nr3))
         ENDDO
      ELSEIF (idir==2) THEN
-        DO j = 1, nr2
+        DO j = 1, dense%nr2
            funcr (j) = 0.d0
            funci (j) = 0.d0
-           DO i = 1, nr1
-              DO k = 1, nr3
-                 ir = i + (j - 1) * nr1x + (k - 1) * nr1x * nr2x
+           DO i = 1, dense%nr1
+              DO k = 1, dense%nr3
+                 ir = i + (j - 1) * dense%nr1x + (k - 1) * dense%nr1x * dense%nr2x
                  funcr (j) = funcr (j) + dble (psic (ir) )
               ENDDO
            ENDDO
-           funcr (j) = funcr (j) / (dble (nr1 * nr3) )
+           funcr (j) = funcr (j) / (dble (dense%nr1 * dense%nr3) )
         ENDDO
      ELSEIF (idir==3) THEN
-        DO k = 1, nr3
+        DO k = 1, dense%nr3
            funcr (k) = 0.d0
            funci (k) = 0.d0
-           DO j = 1, nr2
-              DO i = 1, nr1
-                 ir = i + (j - 1) * nr1x + (k - 1) * nr1x * nr2x
+           DO j = 1, dense%nr2
+              DO i = 1, dense%nr1
+                 ir = i + (j - 1) * dense%nr1x + (k - 1) * dense%nr1x * dense%nr2x
                  funcr (k) = funcr (k) + dble (psic (ir) )
               ENDDO
            ENDDO
-           funcr (k) = funcr (k) / (dble (nr1 * nr2) )
+           funcr (k) = funcr (k) / (dble (dense%nr1 * dense%nr2) )
         ENDDO
      ELSE
         CALL errore('average','wrong idir',1)

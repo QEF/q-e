@@ -16,16 +16,16 @@ subroutine allocate_locpot
   USE ions_base, ONLY : nat, ntyp => nsp
   USE vlocal,    ONLY : vloc, strf
   USE gvect,     ONLY : eigts1, eigts2, eigts3, ngm, ngl
-  USE grid_dimensions, ONLY : nr1, nr2, nr3
+  USE grid_dimensions, ONLY : dense
   !
   implicit none
   !
   allocate (vloc( ngl, ntyp))    
   allocate (strf( ngm, ntyp))    
 
-  allocate( eigts1(-nr1:nr1,nat) )
-  allocate( eigts2(-nr2:nr2,nat) )
-  allocate( eigts3(-nr3:nr3,nat) )
+  allocate( eigts1(-dense%nr1:dense%nr1,nat) )
+  allocate( eigts2(-dense%nr2:dense%nr2,nat) )
+  allocate( eigts3(-dense%nr3:dense%nr3,nat) )
 
   return
 end subroutine allocate_locpot

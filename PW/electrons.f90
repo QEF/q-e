@@ -25,7 +25,7 @@ SUBROUTINE electrons()
   USE ions_base,            ONLY : zv, nat, nsp, ityp, tau, compute_eextfor
   USE basis,                ONLY : starting_pot
   USE bp,                   ONLY : lelfield
-  USE grid_dimensions,      ONLY : nr1, nr2, nr3, nr1x, nr2x, nr3x, nrxx
+  USE grid_dimensions,      ONLY : dense
   USE gvect,                ONLY : ngm, gstart, nl, nlm, g, gg, gcutm
   USE gvecs,              ONLY : doublegrid, ngms
   USE klist,                ONLY : xk, wk, nelec, ngk, nks, nkstot, lgauss
@@ -460,7 +460,7 @@ SUBROUTINE electrons()
 #endif
      ! ... define the total local potential (external + scf)
      !
-     CALL set_vrs( vrs, vltot, v%of_r, kedtau, v%kin_r, nrxx, nspin, doublegrid )
+     CALL set_vrs( vrs, vltot, v%of_r, kedtau, v%kin_r, dense%nrxx, nspin, doublegrid )
      !
      ! ... in the US case we have to recompute the self-consistent
      ! ... term in the nonlocal potential
@@ -779,7 +779,7 @@ SUBROUTINE electrons()
           magtot = 0.D0
           absmag = 0.D0
           !
-          DO ir = 1, nrxx
+          DO ir = 1, dense%nrxx
              !
              mag = rho%of_r(ir,1) - rho%of_r(ir,2)
              !
@@ -788,8 +788,8 @@ SUBROUTINE electrons()
              !
           END DO
           !
-          magtot = magtot * omega / ( nr1*nr2*nr3 )
-          absmag = absmag * omega / ( nr1*nr2*nr3 )
+          magtot = magtot * omega / ( dense%nr1*dense%nr2*dense%nr3 )
+          absmag = absmag * omega / ( dense%nr1*dense%nr2*dense%nr3 )
           !
           CALL mp_sum( magtot, intra_pool_comm )
           CALL mp_sum( absmag, intra_pool_comm )
@@ -799,7 +799,7 @@ SUBROUTINE electrons()
           magtot_nc = 0.D0
           absmag    = 0.D0
           !
-          DO ir = 1,nrxx
+          DO ir = 1,dense%nrxx
              !
              mag = SQRT( rho%of_r(ir,2)**2 + &
                          rho%of_r(ir,3)**2 + &
@@ -820,11 +820,11 @@ SUBROUTINE electrons()
           !
           DO i = 1, 3
              !
-             magtot_nc(i) = magtot_nc(i) * omega / ( nr1*nr2*nr3 )
+             magtot_nc(i) = magtot_nc(i) * omega / ( dense%nr1*dense%nr2*dense%nr3 )
              !
           END DO
           !
-          absmag = absmag * omega / ( nr1*nr2*nr3 )
+          absmag = absmag * omega / ( dense%nr1*dense%nr2*dense%nr3 )
           !
        END IF
        !
@@ -868,7 +868,7 @@ SUBROUTINE electrons()
        IF ( dft_is_meta() ) &
           delta_e = delta_e - SUM( rho%kin_r(:,:)*v%kin_r(:,:) )
        !
-       delta_e = omega * delta_e / ( nr1*nr2*nr3 )
+       delta_e = omega * delta_e / ( dense%nr1*dense%nr2*dense%nr3 )
        !
        CALL mp_sum( delta_e, intra_pool_comm )
        !
@@ -904,7 +904,7 @@ SUBROUTINE electrons()
           delta_escf = delta_escf - &
                        SUM( (rhoin%kin_r(:,:)-rho%kin_r(:,:) )*v%kin_r(:,:))
        !
-       delta_escf = omega * delta_escf / ( nr1*nr2*nr3 )
+       delta_escf = omega * delta_escf / ( dense%nr1*dense%nr2*dense%nr3 )
        !
        CALL mp_sum( delta_escf, intra_pool_comm )
        !

@@ -22,7 +22,7 @@ SUBROUTINE cg_setup
   USE cgcom
   USE funct, ONLY : dft_is_gradient, dmxc
   USE dfunct,          ONLY : newd
-  USE grid_dimensions, ONLY : nr1, nr2, nr3, nrxx
+  USE grid_dimensions, ONLY : dense
   !
   IMPLICIT NONE
   !
@@ -41,32 +41,32 @@ SUBROUTINE cg_setup
   !
   !  sum self-consistent part (vr) and local part (vltot) of potential
   !
-  CALL set_vrs(vrs,vltot,v%of_r,kedtau, v%kin_r, nrxx,nspin,doublegrid)
+  CALL set_vrs(vrs,vltot,v%of_r,kedtau, v%kin_r, dense%nrxx,nspin,doublegrid)
   !
   !  allocate memory for various arrays
   !
-  ALLOCATE  (dmuxc( nrxx))
+  ALLOCATE  (dmuxc( dense%nrxx))
   ALLOCATE  (dvpsi( npwx, nbnd))
   ALLOCATE  ( dpsi( npwx, nbnd))
-  ALLOCATE  ( auxr( nrxx))
-  ALLOCATE  ( aux2( nrxx))
-  ALLOCATE  ( aux3( nrxx))
+  ALLOCATE  ( auxr( dense%nrxx))
+  ALLOCATE  ( aux2( dense%nrxx))
+  ALLOCATE  ( aux3( dense%nrxx))
   !
   !  allocate memory for gradient corrections (if needed)
   !
   IF ( dft_is_gradient() ) THEN
-     ALLOCATE  ( dvxc_rr(nrxx,nspin,nspin))
-     ALLOCATE  ( dvxc_sr(nrxx,nspin,nspin))
-     ALLOCATE  ( dvxc_ss(nrxx,nspin,nspin))
-     ALLOCATE  ( dvxc_s (nrxx,nspin,nspin))
-     ALLOCATE  ( grho   (3, nrxx, nspin))
+     ALLOCATE  ( dvxc_rr(dense%nrxx,nspin,nspin))
+     ALLOCATE  ( dvxc_sr(dense%nrxx,nspin,nspin))
+     ALLOCATE  ( dvxc_ss(dense%nrxx,nspin,nspin))
+     ALLOCATE  ( dvxc_s (dense%nrxx,nspin,nspin))
+     ALLOCATE  ( grho   (3, dense%nrxx, nspin))
   ENDIF
   !
   !
   !  initialize structure factor array
   !
   CALL struc_fact ( nat, tau, ntyp, ityp, ngm, g, bg,               &
-       &                  nr1, nr2, nr3, strf, eigts1, eigts2, eigts3 )
+       &                  dense%nr1, dense%nr2, dense%nr3, strf, eigts1, eigts2, eigts3 )
   !
   !  compute drhocore/dtau for each atom type (if needed)
   !
@@ -84,7 +84,7 @@ SUBROUTINE cg_setup
   !  derivative of the xc potential
   !
   dmuxc(:) = 0.d0
-  DO i = 1,nrxx
+  DO i = 1,dense%nrxx
      rhotot = rho%of_r(i,current_spin)+rho_core(i)
      IF ( rhotot> 1.d-30 ) dmuxc(i)= dmxc( rhotot)
      IF ( rhotot<-1.d-30 ) dmuxc(i)=-dmxc(-rhotot)

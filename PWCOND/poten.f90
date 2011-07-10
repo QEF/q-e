@@ -13,7 +13,7 @@ SUBROUTINE poten(vppot,nrz,z)
 ! This subroutine computes the 2D Fourier components of the
 ! local potential in each slab.
 !
-  USE grid_dimensions, ONLY : nr1, nr2, nr3, nrxx, nr1x, nr2x, nr3x
+  USE grid_dimensions, ONLY : dense
   USE constants, ONLY : tpi
   USE cell_base, ONLY : at, bg
   USE scf, only : vltot, v
@@ -44,8 +44,8 @@ SUBROUTINE poten(vppot,nrz,z)
   CALL start_clock('poten')
   ALLOCATE( ipiv( nrz ) )
   ALLOCATE( gz( nrz ) )
-  ALLOCATE( aux( nr1x*nr2x*nr3x ) )
-  ALLOCATE( auxr( nrxx ) )
+  ALLOCATE( aux( dense%nr1x*dense%nr2x*dense%nr3x ) )
+  ALLOCATE( auxr( dense%nrxx ) )
   ALLOCATE( amat( nrz, nrz ) )
   ALLOCATE( amat0( nrz, nrz ) )
 
@@ -96,7 +96,7 @@ ENDIF
 !
 !
 #ifdef __PARA
-  allocate ( allv(nr1x*nr2x*nr3x) )
+  allocate ( allv(dense%nr1x*dense%nr2x*dense%nr3x) )
 #endif
 
 vppot = 0.d0
@@ -124,34 +124,34 @@ DO ispin=1,nspin_eff
 !  To find FFT of the local potential
 !  (use serial FFT even in the parallel case)
 !
-  CALL cfft3d (aux,nr1,nr2,nr3,nr1x,nr2x,nr3x,-1)
+  CALL cfft3d (aux,dense%nr1,dense%nr2,dense%nr3,dense%nr1x,dense%nr2x,dense%nr3x,-1)
 
   DO i = 1, nrx
     IF(i.GT.nrx/2+1) THEN
-        ix = nr1-(nrx-i)
+        ix = dense%nr1-(nrx-i)
     ELSE
         ix = i
     ENDIF
     DO j = 1, nry
       IF(j.GT.nry/2+1) THEN
-         jx = nr2-(nry-j)
+         jx = dense%nr2-(nry-j)
       ELSE
          jx = j
       ENDIF
       ij = i+(j-1)*nrx
-      ijx = ix+(jx-1)*nr1x
+      ijx = ix+(jx-1)*dense%nr1x
 
       DO k = 1, nrz
         il = k-1
         IF (il.GT.nrz/2) il = il-nrz
-        IF(il.LE.nr3/2.AND.il.GE.-(nr3-1)/2) THEN
+        IF(il.LE.dense%nr3/2.AND.il.GE.-(dense%nr3-1)/2) THEN
 
          IF(k.GT.nrz/2+1) THEN
-            kx = nr3-(nrz-k)
+            kx = dense%nr3-(nrz-k)
          ELSE
             kx = k
          ENDIF
-         vppot(k, ij, is(ispin), js(ispin)) = aux(ijx+(kx-1)*nr1x*nr2x)
+         vppot(k, ij, is(ispin), js(ispin)) = aux(ijx+(kx-1)*dense%nr1x*dense%nr2x)
 
         ENDIF
       ENDDO

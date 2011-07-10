@@ -88,12 +88,8 @@ SUBROUTINE iosys()
   USE gvecs,         ONLY : dual
   USE gvect,         ONLY : ecutrho_ => ecutrho
   !
-  USE grid_dimensions, ONLY : nr1_ => nr1, &
-                            nr2_     => nr2, &
-                            nr3_     => nr3
-  USE smooth_grid_dimensions, ONLY : nr1s_ => nr1s, &
-                            nr2s_ => nr2s, &
-                            nr3s_ => nr3s
+  USE grid_dimensions, ONLY : dense
+  USE smooth_grid_dimensions, ONLY : smooth
   !
   USE klist,         ONLY : ngauss, two_fermi_energies, &
                             smearing_          => smearing, &
@@ -1101,17 +1097,17 @@ SUBROUTINE iosys()
   emaxpos_ = emaxpos
   eopreg_  = eopreg
   eamp_    = eamp
-  nr1_     = nr1
-  nr2_     = nr2
-  nr3_     = nr3
+  dense%nr1     = nr1
+  dense%nr2     = nr2
+  dense%nr3     = nr3
   ecutrho_ = ecutrho
   ecutwfc_ = ecutwfc
   ecfixed_ = ecfixed
   qcutz_   = qcutz
   q2sigma_ = q2sigma
-  nr1s_    = nr1s
-  nr2s_    = nr2s
-  nr3s_    = nr3s
+  smooth%nr1    = nr1s
+  smooth%nr2    = nr2s
+  smooth%nr3    = nr3s
   degauss_ = degauss
   !
   tot_charge_        = tot_charge

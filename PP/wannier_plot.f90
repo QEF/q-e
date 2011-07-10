@@ -102,7 +102,7 @@ SUBROUTINE plot_wannier(nc,n0)
   USE fft_base,      ONLY : dffts
   USE fft_interfaces,ONLY : invfft
   USE gvect
-  USE grid_dimensions,ONLY: nr1, nr2, nr3 
+  USE grid_dimensions,ONLY: dense
   USE gvecs
   USE cell_base
   USE ions_base, ONLY : nat, ntyp=>nsp, ityp, tau, atm, zv
@@ -131,7 +131,7 @@ SUBROUTINE plot_wannier(nc,n0)
   CALL init_us_1
   CALL init_at_1
 
-  CALL struc_fact (nat, tau, ntyp, ityp, ngm, g, bg, nr1, nr2, nr3, &
+  CALL struc_fact (nat, tau, ntyp, ityp, ngm, g, bg, dense%nr1, dense%nr2, dense%nr3, &
        strf, eigts1, eigts2, eigts3)
 
   current_spin = 1

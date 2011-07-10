@@ -13,7 +13,7 @@ SUBROUTINE d3_init
   USE pwcom
   USE uspp_param, ONLY : upf
   USE atom,       ONLY : msh, rgrid
-  USE grid_dimensions, ONLY : nrxx, nr1, nr2, nr3, nr1x, nr2x, nr3x
+  USE grid_dimensions, ONLY : dense
   USE phcom
   USE d3com
   USE mp,         ONLY : mp_barrier
@@ -27,7 +27,7 @@ SUBROUTINE d3_init
   COMPLEX (DP), ALLOCATABLE :: drhoscf (:,:)
   COMPLEX (DP), ALLOCATABLE :: drhoscf2 (:,:,:)
 
-  ALLOCATE (drhoscf( nrxx, 3))
+  ALLOCATE (drhoscf( dense%nrxx, 3))
 
 !
 !  the fourier trasform of the core charge both for q=0 and q.ne.0
@@ -101,7 +101,7 @@ SUBROUTINE d3_init
            imode0 = imode0 + npert (irr1)
         ENDDO
 
-        ALLOCATE (drhoscf2( nrxx, nspin,npert(irr) ))
+        ALLOCATE (drhoscf2( dense%nrxx, nspin,npert(irr) ))
 
         DO ipert = 1, npert (irr)
            CALL davcio_drho (drhoscf2(1,1,ipert), lrdrho, iudrho, &

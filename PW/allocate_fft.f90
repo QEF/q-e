@@ -16,8 +16,8 @@ SUBROUTINE allocate_fft
   USE io_global, ONLY : stdout
   USE gvect,     ONLY : ngm, g, gg, nl, nlm, mill, igtongl
   USE gvecs,   ONLY : ngms, nls, nlsm
-  USE grid_dimensions,        ONLY : nr1, nr2, nr3, nrxx
-  USE smooth_grid_dimensions, ONLY : nr1s, nr2s, nr3s, nrxxs
+  USE grid_dimensions,        ONLY : dense
+  USE smooth_grid_dimensions, ONLY : smooth
 ! DCC
 !  USE gcoarse,   ONLY : nr1c,nr2c,nr3c,nrxxc,ngmc, nlc, nlcm
 !  USE ee_mod,    ONLY : do_coarse
@@ -41,22 +41,22 @@ SUBROUTINE allocate_fft
 !  IF( do_coarse ) CALL data_structure_coarse( gamma_only, nr1,nr2,nr3, ecutwfc )
   !
 
-  IF (nrxx.lt.ngm) THEN
+  IF (dense%nrxx.lt.ngm) THEN
      WRITE( stdout, '(/,4x," nr1=",i4," nr2= ", i4, " nr3=",i4, &
-          &" nrxx = ",i8," ngm=",i8)') nr1, nr2, nr3, nrxx, ngm
+          &" nrxx = ",i8," ngm=",i8)') dense%nr1, dense%nr2, dense%nr3, dense%nrxx, ngm
      CALL errore ('allocate_fft', 'the nr"s are too small!', 1)
 
   ENDIF
-  IF (nrxxs.lt.ngms) THEN
+  IF (smooth%nrxx.lt.ngms) THEN
      WRITE( stdout, '(/,4x," nr1s=",i4," nr2s= ", i4, " nr3s=",i4, &
-          &" nrxxs = ",i8," ngms=",i8)') nr1s, nr2s, nr3s, nrxxs, ngms
+          &" nrxxs = ",i8," ngms=",i8)') smooth%nr1, smooth%nr2, smooth%nr3, smooth%nrxx, ngms
      CALL errore ('allocate_fft', 'the nrs"s are too small!', 1)
 
   ENDIF
   IF (ngm  <= 0) CALL errore ('allocate_fft', 'wrong ngm', 1)
   IF (ngms <= 0) CALL errore ('allocate_fft', 'wrong ngms', 1)
-  IF (nrxx <= 0) CALL errore ('allocate_fft', 'wrong nrxx', 1)
-  IF (nrxxs<= 0) CALL errore ('allocate_fft', 'wrong nrxxs', 1)
+  IF (dense%nrxx <= 0) CALL errore ('allocate_fft', 'wrong nrxx', 1)
+  IF (smooth%nrxx<= 0) CALL errore ('allocate_fft', 'wrong nrxxs', 1)
   IF (nspin<= 0) CALL errore ('allocate_fft', 'wrong nspin', 1)
   !
   !     Allocate memory for all kind of stuff.
@@ -64,16 +64,16 @@ SUBROUTINE allocate_fft
   CALL create_scf_type(rho)
   CALL create_scf_type(v,    do_not_allocate_becsum = .true.)
   CALL create_scf_type(vnew, do_not_allocate_becsum = .true.)
-  ALLOCATE (vltot( nrxx))
-  ALLOCATE (rho_core( nrxx))
+  ALLOCATE (vltot( dense%nrxx))
+  ALLOCATE (rho_core( dense%nrxx))
   IF (dft_is_meta() ) THEN
-     ALLOCATE ( kedtau(nrxxs,nspin) )
+     ALLOCATE ( kedtau(smooth%nrxx,nspin) )
   ELSE
      ALLOCATE ( kedtau(1,nspin) )
   ENDIF
   ALLOCATE( rhog_core( ngm ) )
-  ALLOCATE (psic( nrxx))
-  ALLOCATE (vrs( nrxx, nspin))
+  ALLOCATE (psic( dense%nrxx))
+  ALLOCATE (vrs( dense%nrxx, nspin))
 
 ! DCC
 !  IF( do_coarse ) THEN
@@ -81,15 +81,15 @@ SUBROUTINE allocate_fft
 !     IF (gamma_only) ALLOCATE (nlcm(ngmc))
 !  ENDIF
 
-  IF (noncolin) ALLOCATE (psic_nc( nrxx, npol))
+  IF (noncolin) ALLOCATE (psic_nc( dense%nrxx, npol))
 
   IF ( ((report.ne.0).or.(i_cons.ne.0)) .and. (noncolin.and.domag) .or. (i_cons.eq.1) ) THEN
 !
 ! In order to print out local quantities, integrated around the atoms,
 ! we need the following variables
 !
-     ALLOCATE(pointlist(nrxx))
-     ALLOCATE(factlist(nrxx))
+     ALLOCATE(pointlist(dense%nrxx))
+     ALLOCATE(factlist(dense%nrxx))
      ALLOCATE(r_loc(nat))
      CALL make_pointlists
   ENDIF

@@ -865,16 +865,8 @@ MODULE input
            nr1b_ => nr1b, &
            nr2b_ => nr2b, &
            nr3b_ => nr3b
-     USE grid_dimensions,          ONLY: &
-           nrxx, &  !  variable is used to workaround internal compiler error (IBM xlf)
-           nr1_ => nr1, &
-           nr2_ => nr2, &
-           nr3_ => nr3
-     USE smooth_grid_dimensions,   ONLY: &
-           nrxxs, &  !  variable is used to workaround internal compiler error (IBM xlf)
-           nr1s_ => nr1s, &
-           nr2s_ => nr2s, &
-           nr3s_ => nr3s
+     USE grid_dimensions,          ONLY: dense
+     USE smooth_grid_dimensions,   ONLY: smooth
      USE kohn_sham_states,   ONLY : ks_states_init
      USE electrons_module,   ONLY : electrons_setup
      USE electrons_base,     ONLY : electrons_base_initval
@@ -939,16 +931,16 @@ MODULE input
      ! set size for potentials and charge density
      ! (re-calculated automatically)
 
-     nr1_  = nr1
-     nr2_  = nr2
-     nr3_  = nr3
+     dense%nr1  = nr1
+     dense%nr2  = nr2
+     dense%nr3  = nr3
 
      ! set size for wavefunctions
      ! (re-calculated automatically)
 
-     nr1s_ = nr1s
-     nr2s_ = nr2s
-     nr3s_ = nr3s
+     smooth%nr1 = nr1s
+     smooth%nr2 = nr2s
+     smooth%nr3 = nr3s
 
      CALL efield_init( epol, efield )
 

@@ -15,7 +15,7 @@ PROGRAM plan_avg
   USE kinds,     ONLY : DP
   USE printout_base, ONLY: title
   USE cell_base, ONLY : ibrav, celldm, at
-  USE grid_dimensions, ONLY : nr1x, nr2x, nr3x, nr1, nr2, nr3
+  USE grid_dimensions, ONLY : dense
   USE gvect,     ONLY : gcutm
   USE gvecs,   ONLY : dual
   USE klist,     ONLY : nkstot, xk
@@ -87,7 +87,7 @@ PROGRAM plan_avg
   CALL openfil_pp ( )
   !
   ALLOCATE (averag( nat, nbnd, nkstot))
-  ALLOCATE (plan(nr3, nbnd, nkstot))
+  ALLOCATE (plan(dense%nr3, nbnd, nkstot))
   !
   CALL do_plan_avg (averag, plan, ninter)
   !
@@ -97,7 +97,7 @@ PROGRAM plan_avg
           STATUS = 'unknown', err = 100, IOSTAT = ios)
 100  CALL errore ('plan_avg', 'opening file '//trim(filplot), abs (ios) )
      WRITE (iunplot, '(a)') title
-     WRITE (iunplot, '(8i8)') nr1x, nr2x, nr3x, nr1, nr2, nr3, nat, ntyp
+     WRITE (iunplot, '(8i8)') dense%nr1x, dense%nr2x, dense%nr3x, dense%nr1, dense%nr2, dense%nr3, nat, ntyp
      WRITE (iunplot, '(i6,6f12.8)') ibrav, celldm
      IF  (ibrav == 0) THEN
         WRITE ( iunplot, * ) at(:,1)
@@ -117,7 +117,7 @@ PROGRAM plan_avg
                 ik) , ibnd
            WRITE (iunplot, '(4(1pe17.9))') (averag (ir, ibnd, ik) , ir = 1, &
                 ninter)
-           DO ir = 1, nr3
+           DO ir = 1, dense%nr3
               WRITE (iunplot, * ) ir, plan (ir, ibnd, ik)
            ENDDO
         ENDDO
@@ -161,7 +161,7 @@ SUBROUTINE do_plan_avg (averag, plan, ninter)
   IMPLICIT NONE
   INTEGER :: ninter
   ! output: the number of planes
-  real(DP) :: averag (nat, nbnd, nkstot), plan (nr3, nbnd, nkstot)
+  real(DP) :: averag (nat, nbnd, nkstot), plan (dense%nr3, nbnd, nkstot)
   ! output: the average charge on ea
   ! output: the planar average
   !
@@ -215,8 +215,8 @@ SUBROUTINE do_plan_avg (averag, plan, ninter)
   !
   DO iin = 1, ninter
      z1 (iin) = mod (avg (iin), celldm (3) ) / ntau (iin)
-     ind = (z1 (iin) / celldm (3) ) * nr3 + 1
-     IF (ind<=0) ind = ind+nr3
+     ind = (z1 (iin) / celldm (3) ) * dense%nr3 + 1
+     IF (ind<=0) ind = ind+dense%nr3
      i1 (iin) = ind
   ENDDO
   !
@@ -232,7 +232,7 @@ SUBROUTINE do_plan_avg (averag, plan, ninter)
         ENDIF
      ENDDO
   ENDDO
-  ntau (ninter + 1) = ntau (1) + nr3
+  ntau (ninter + 1) = ntau (1) + dense%nr3
   !
   !    and compute the point associated to each plane
   !
@@ -262,23 +262,23 @@ SUBROUTINE do_plan_avg (averag, plan, ninter)
         DO ir = 1, i1 (1) - 1
            averag (1, ibnd, ik) = averag (1, ibnd, ik) + plan (ir, ibnd, ik)
         ENDDO
-        DO ir = i1 (ninter), nr3
+        DO ir = i1 (ninter), dense%nr3
            averag (1, ibnd, ik) = averag (1, ibnd, ik) + plan (ir, ibnd, ik)
         ENDDO
-        averag (1, ibnd, ik) = averag (1, ibnd, ik) * zdim / nr3
+        averag (1, ibnd, ik) = averag (1, ibnd, ik) * zdim / dense%nr3
         sum = averag (1, ibnd, ik)
         DO iin = 2, ninter
            DO ir = i1 (iin - 1), i1 (iin) - 1
               averag(iin,ibnd,ik) = averag(iin,ibnd,ik) + plan(ir,ibnd,ik)
            ENDDO
-           averag (iin, ibnd, ik) = averag (iin, ibnd, ik) * zdim / nr3
+           averag (iin, ibnd, ik) = averag (iin, ibnd, ik) * zdim / dense%nr3
            sum = sum + averag (iin, ibnd, ik)
         ENDDO
      ENDDO
   ENDDO
   CALL deallocate_bec_type (becp)
 #ifdef __PARA
-  CALL poolrecover (plan, nr3 * nbnd, nkstot, nks)
+  CALL poolrecover (plan, dense%nr3 * nbnd, nkstot, nks)
   CALL poolrecover (averag, nat * nbnd, nkstot, nks)
   CALL poolrecover (xk, 3, nkstot, nks)
 #endif

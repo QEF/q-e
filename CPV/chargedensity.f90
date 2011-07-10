@@ -107,10 +107,10 @@
       USE gvect,              ONLY: gstart
       USE uspp,               ONLY: nkb
       USE uspp_param,         ONLY: nh, nhm
-      USE grid_dimensions,    ONLY: nr1, nr2, nr3, nr1x, nr2x, nr3x, nrxx
+      USE grid_dimensions,    ONLY: grid_dim, dense
       USE cell_base,          ONLY: omega
       USE smooth_grid_dimensions, &
-                              ONLY: nrxxs
+                              ONLY: grid_dim, smooth
       USE electrons_base,     ONLY: nspin, nbsp_bgrp, ispin_bgrp, f_bgrp
       USE constants,          ONLY: pi, fpi
       USE mp,                 ONLY: mp_sum
@@ -228,11 +228,11 @@
          !
          CALL read_rho( nspin, rhor )
 
-         ALLOCATE( psi( nrxx ) )
+         ALLOCATE( psi( dense%nrxx ) )
 !
          IF(nspin.EQ.1)THEN
             iss=1
-            DO ir=1,nrxx
+            DO ir=1,dense%nrxx
                psi(ir)=CMPLX(rhor(ir,iss),0.d0,kind=DP)
             END DO
             CALL fwfft('Dense', psi, dfftp )
@@ -242,7 +242,7 @@
          ELSE
             isup=1
             isdw=2
-            DO ir=1,nrxx
+            DO ir=1,dense%nrxx
                psi(ir)=CMPLX(rhor(ir,isup),rhor(ir,isdw),kind=DP)
             END DO
             CALL fwfft('Dense', psi, dfftp )
@@ -289,7 +289,7 @@
             !
             iss1=1
             sa1=f_bgrp(i)/omega
-            DO ir=1,nrxxs
+            DO ir=1,smooth%nrxx
                rhos(ir,iss1)=rhos(ir,iss1) + sa1*( DBLE(psis(ir)))**2
             END DO
             !
@@ -299,11 +299,11 @@
             !
          ELSE
             !
-            ALLOCATE( psis( nrxxs ) ) 
+            ALLOCATE( psis( smooth%nrxx ) ) 
             !
             DO i = 1, nbsp_bgrp, 2
                !
-               CALL c2psi( psis, nrxxs, c_bgrp( 1, i ), c_bgrp( 1, i+1 ), ngw, 2 )
+               CALL c2psi( psis, smooth%nrxx, c_bgrp( 1, i ), c_bgrp( 1, i+1 ), ngw, 2 )
 
                CALL invfft('Wave',psis, dffts )
                !
@@ -317,7 +317,7 @@
                   sa2  = 0.0d0
                END IF
                !
-               DO ir = 1, nrxxs
+               DO ir = 1, smooth%nrxx
                   rhos(ir,iss1) = rhos(ir,iss1) + sa1 * ( DBLE(psis(ir)))**2
                   rhos(ir,iss2) = rhos(ir,iss2) + sa2 * (AIMAG(psis(ir)))**2
                END DO
@@ -334,11 +334,11 @@
          !
          !     smooth charge in g-space is put into rhog(ig)
          !
-         ALLOCATE( psis( nrxxs ) ) 
+         ALLOCATE( psis( smooth%nrxx ) ) 
          !
          IF(nspin.EQ.1)THEN
             iss=1
-            DO ir=1,nrxxs
+            DO ir=1,smooth%nrxx
                psis(ir)=CMPLX(rhos(ir,iss),0.d0,kind=DP)
             END DO
             CALL fwfft('Smooth', psis, dffts )
@@ -348,7 +348,7 @@
          ELSE
             isup=1
             isdw=2
-             DO ir=1,nrxxs
+             DO ir=1,smooth%nrxx
                psis(ir)=CMPLX(rhos(ir,isup),rhos(ir,isdw),kind=DP)
             END DO
             CALL fwfft('Smooth',psis, dffts )
@@ -360,7 +360,7 @@
             END DO
          ENDIF
          !
-         ALLOCATE( psi( nrxx ) )
+         ALLOCATE( psi( dense%nrxx ) )
          !
          IF( nspin .EQ. 1 ) THEN
             ! 
@@ -373,7 +373,7 @@
                psi(nl (ig))=      rhog(ig,iss)
             END DO
             CALL invfft('Dense',psi, dfftp )
-            DO ir=1,nrxx
+            DO ir=1,dense%nrxx
                rhor(ir,iss)=DBLE(psi(ir))
             END DO
             !
@@ -389,7 +389,7 @@
                psi(nl(ig))=rhog(ig,isup)+ci*rhog(ig,isdw)
             END DO
             CALL invfft('Dense',psi, dfftp )
-            DO ir=1,nrxx
+            DO ir=1,dense%nrxx
                rhor(ir,isup)= DBLE(psi(ir))
                rhor(ir,isdw)=AIMAG(psi(ir))
             END DO
@@ -424,9 +424,9 @@
           ( MOD(nfi, iprint_stdout) == 0 ) .AND. ( .NOT. tcg ) ) THEN
 
          IF( iprsta > 2 ) THEN
-            CALL checkrho( nrxx, nspin, rhor, rmin, rmax, rsum, rnegsum )
-            rnegsum = rnegsum * omega / DBLE(nr1*nr2*nr3)
-            rsum    = rsum    * omega / DBLE(nr1*nr2*nr3)
+            CALL checkrho( dense%nrxx, nspin, rhor, rmin, rmax, rsum, rnegsum )
+            rnegsum = rnegsum * omega / DBLE(dense%nr1*dense%nr2*dense%nr3)
+            rsum    = rsum    * omega / DBLE(dense%nr1*dense%nr2*dense%nr3)
             WRITE( stdout,'(a,4(1x,f12.6))')                                     &
      &     ' rhoofr: rmin rmax rnegsum rsum  ',rmin,rmax,rnegsum,rsum
          END IF
@@ -466,7 +466,7 @@
          !
          DO iss=1,nspin
             rsumg(iss)=omega*DBLE(rhog(1,iss))
-            rsumr(iss)=SUM(rhor(:,iss),1)*omega/DBLE(nr1*nr2*nr3)
+            rsumr(iss)=SUM(rhor(:,iss),1)*omega/DBLE(dense%nr1*dense%nr2*dense%nr3)
          END DO
 
          IF (gstart.NE.2) THEN
@@ -668,7 +668,7 @@
       !
       USE kinds,              ONLY: DP
       use gvect,              ONLY: g, ngm, nl, nlm
-      use grid_dimensions,    ONLY: nr1, nr2, nr3, nr1x, nr2x, nr3x, nrxx
+      use grid_dimensions,    ONLY: grid_dim, dense
       use cell_base,          ONLY: tpiba
       USE fft_interfaces,     ONLY: invfft
       USE fft_base,           ONLY: dfftp
@@ -678,20 +678,20 @@
       integer, intent(in) :: nspin
       complex(DP) :: rhog( ngm, nspin )
 ! output
-      real(DP) ::    gradr( nrxx, 3, nspin )
+      real(DP) ::    gradr( dense%nrxx, 3, nspin )
 ! local
       complex(DP), allocatable :: v(:)
       complex(DP) :: ci
       integer     :: iss, ig, ir
 !
 !
-      allocate( v( nrxx ) ) 
+      allocate( v( dense%nrxx ) ) 
       !
       ci = ( 0.0d0, 1.0d0 )
       do iss = 1, nspin
 !$omp parallel default(shared), private(ig)
 !$omp do
-         do ig = 1, nrxx
+         do ig = 1, dense%nrxx
             v( ig ) = ( 0.0d0, 0.0d0 )
          end do
 !$omp do
@@ -705,11 +705,11 @@
          !
 !$omp parallel default(shared), private(ig,ir)
 !$omp do
-         do ir=1,nrxx
+         do ir=1,dense%nrxx
             gradr(ir,1,iss)=DBLE(v(ir))
          end do
 !$omp do
-         do ig=1,nrxx
+         do ig=1,dense%nrxx
             v(ig)=(0.0d0,0.0d0)
          end do
 !$omp do
@@ -724,7 +724,7 @@
          call invfft( 'Dense', v, dfftp )
          !
 !$omp parallel do default(shared)
-         do ir=1,nrxx
+         do ir=1,dense%nrxx
             gradr(ir,2,iss)= DBLE(v(ir))
             gradr(ir,3,iss)=AIMAG(v(ir))
          end do
@@ -789,11 +789,11 @@ SUBROUTINE drhov(irb,eigrb,rhovan,drhovan,rhog,rhor,drhog,drhor)
       USE control_flags,            ONLY: iprint
       USE ions_base,                ONLY: na, nsp, nat
       USE uspp_param,               ONLY: nhm, nh, nvb
-      USE grid_dimensions,          ONLY: nr1, nr2, nr3, nr1x, nr2x, nr3x, nrxx
+      USE grid_dimensions,          ONLY: grid_dim, dense
       USE electrons_base,           ONLY: nspin
-      USE smallbox_gvec,                    ONLY: ngb, npb, nmb
+      USE smallbox_gvec,            ONLY: ngb, npb, nmb
       USE gvect,                    ONLY: ngm, nlm, nl
-      USE smallbox_grid_dim,            ONLY: nr1b, nr2b, nr3b, nr1bx, nr2bx, nr3bx, nnrbx
+      USE smallbox_grid_dim,        ONLY: nr1b, nr2b, nr3b, nr1bx, nr2bx, nr3bx, nnrbx
       USE cell_base,                ONLY: ainv
       USE qgb_mod,                  ONLY: qgb, dqgb
       USE fft_interfaces,           ONLY: fwfft, invfft
@@ -804,12 +804,12 @@ SUBROUTINE drhov(irb,eigrb,rhovan,drhovan,rhog,rhor,drhog,drhor)
       IMPLICIT NONE
 ! input
       INTEGER,     INTENT(IN) ::  irb(3,nat)
-      REAL(DP),    INTENT(IN) ::  rhor(nrxx,nspin)
+      REAL(DP),    INTENT(IN) ::  rhor(dense%nrxx,nspin)
       REAL(DP),    INTENT(IN) ::  rhovan(nhm*(nhm+1)/2,nat,nspin)
       REAL(DP),    INTENT(IN) ::  drhovan(nhm*(nhm+1)/2,nat,nspin,3,3)
       COMPLEX(DP), INTENT(IN) ::  eigrb(ngb,nat), rhog(ngm,nspin)
 ! output
-      REAL(DP),    INTENT(OUT) :: drhor(nrxx,nspin,3,3)
+      REAL(DP),    INTENT(OUT) :: drhor(dense%nrxx,nspin,3,3)
       COMPLEX(DP), INTENT(OUT) :: drhog(ngm,nspin,3,3)
 ! local
       INTEGER i, j, isup, isdw, nfft, ifft, iv, jv, ig, ijv, is, iss,   &
@@ -829,7 +829,7 @@ SUBROUTINE drhov(irb,eigrb,rhovan,drhovan,rhog,rhor,drhog,drhor)
       DO j=1,3
          DO i=1,3
             DO iss=1,nspin
-               DO ir=1,nrxx
+               DO ir=1,dense%nrxx
                   drhor(ir,iss,i,j)=-rhor(ir,iss)*ainv(j,i)
                END DO
                DO ig=1,ngm
@@ -841,7 +841,7 @@ SUBROUTINE drhov(irb,eigrb,rhovan,drhovan,rhog,rhor,drhog,drhor)
 
       IF ( nvb < 0 ) RETURN
 
-      ALLOCATE( v( nrxx ) )
+      ALLOCATE( v( dense%nrxx ) )
 
       ci =( 0.0d0, 1.0d0 )
 
@@ -960,7 +960,7 @@ SUBROUTINE drhov(irb,eigrb,rhovan,drhovan,rhog,rhor,drhog,drhor)
 
                iss = 1
 
-               DO ir=1,nrxx
+               DO ir=1,dense%nrxx
                   drhor(ir,iss,i,j) = drhor(ir,iss,i,j) + DBLE(v(ir))
                END DO
 !
@@ -1037,7 +1037,7 @@ SUBROUTINE drhov(irb,eigrb,rhovan,drhovan,rhog,rhor,drhog,drhor)
                DEALLOCATE( dqgbt )
                DEALLOCATE( qv )
 !
-               DO ir=1,nrxx
+               DO ir=1,dense%nrxx
                   drhor(ir,isup,i,j) = drhor(ir,isup,i,j) + DBLE(v(ir))
                   drhor(ir,isdw,i,j) = drhor(ir,isdw,i,j) +AIMAG(v(ir))
                ENDDO
@@ -1081,7 +1081,7 @@ SUBROUTINE rhov(irb,eigrb,rhovan,rhog,rhor)
       USE mp,                       ONLY: mp_sum
       USE uspp_param,               ONLY: nh, nhm, nvb
       USE uspp,                     ONLY: deeq
-      USE grid_dimensions,          ONLY: nr1, nr2, nr3, nr1x, nr2x, nr3x, nrxx
+      USE grid_dimensions,          ONLY: grid_dim, dense
       USE electrons_base,           ONLY: nspin
       USE smallbox_gvec,                    ONLY: npb, nmb, ngb
       USE gvect,                    ONLY: ngm, nl, nlm
@@ -1099,7 +1099,7 @@ SUBROUTINE rhov(irb,eigrb,rhovan,rhog,rhor)
       INTEGER,     INTENT(in) :: irb(3,nat)
       COMPLEX(DP), INTENT(in):: eigrb(ngb,nat)
       ! 
-      REAL(DP),     INTENT(inout):: rhor(nrxx,nspin)
+      REAL(DP),     INTENT(inout):: rhor(dense%nrxx,nspin)
       COMPLEX(DP),  INTENT(inout):: rhog(ngm,nspin)
 !
       INTEGER     :: isup, isdw, nfft, ifft, iv, jv, ig, ijv, is, iss, isa, ia, ir, i, j
@@ -1123,7 +1123,7 @@ SUBROUTINE rhov(irb,eigrb,rhovan,rhog,rhor)
       ci=(0.d0,1.d0)
 !
 !
-      ALLOCATE( v( nrxx ) )
+      ALLOCATE( v( dense%nrxx ) )
 
       ! private variable need to be initialized, otherwise
       ! outside the parallel region they have an undetermined value
@@ -1143,9 +1143,9 @@ SUBROUTINE rhov(irb,eigrb,rhovan,rhog,rhor)
 
 !$omp parallel default(none) &
 !$omp          shared(nvb, na, nnrbx, ngb, nh, rhovan, qgb, eigrb, dfftb, iprsta, omegab, irb, v, nr1b, &
-!$omp                 nr2b, nr3b, nmb, stdout, ci, npb, rhor ) &
+!$omp                 nr2b, nr3b, nmb, stdout, ci, npb, rhor, dense ) &
 !$omp          private(mytid, ntids, is, ia, nfft, ifft, iv, jv, ijv, sumrho, qgbt, ig, iss, isa, ca, &
-!$omp                  qv, itid, ir, nrxx )
+!$omp                  qv, itid, ir )
 
          iss=1
          isa=1
@@ -1264,7 +1264,7 @@ SUBROUTINE rhov(irb,eigrb,rhovan,rhog,rhor)
 
          iss = 1
 
-         DO ir=1,nrxx
+         DO ir=1,dense%nrxx
             rhor(ir,iss)=rhor(ir,iss)+DBLE(v(ir))        
          END DO
 
@@ -1275,7 +1275,7 @@ SUBROUTINE rhov(irb,eigrb,rhovan,rhog,rhor)
             CALL mp_sum( ca, intra_bgrp_comm )
 
             WRITE( stdout,'(a,2f12.8)')                                  &
-     &           ' rhov: int  n_v(r)  dr = ',omega*ca/(nr1*nr2*nr3)
+     &           ' rhov: int  n_v(r)  dr = ',omega*ca/(dense%nr1*dense%nr2*dense%nr3)
          ENDIF
 !
          CALL fwfft('Dense',v, dfftp )
@@ -1363,7 +1363,7 @@ SUBROUTINE rhov(irb,eigrb,rhovan,rhog,rhor)
             END DO
          END DO
 !
-         DO ir=1,nrxx
+         DO ir=1,dense%nrxx
             rhor(ir,isup)=rhor(ir,isup)+DBLE(v(ir)) 
             rhor(ir,isdw)=rhor(ir,isdw)+AIMAG(v(ir)) 
          END DO
@@ -1371,7 +1371,7 @@ SUBROUTINE rhov(irb,eigrb,rhovan,rhog,rhor)
          IF(iprsta.GT.2) THEN
             ca = SUM(v)
             CALL mp_sum( ca, intra_bgrp_comm )
-            WRITE( stdout,'(a,2f12.8)') 'rhov:in n_v  ',omega*ca/(nr1*nr2*nr3)
+            WRITE( stdout,'(a,2f12.8)') 'rhov:in n_v  ',omega*ca/(dense%nr1*dense%nr2*dense%nr3)
          ENDIF
 !
          CALL fwfft('Dense',v, dfftp )
@@ -1422,7 +1422,7 @@ END SUBROUTINE rhov
       !
       use kinds,           ONLY: DP
       USE fft_base,        ONLY: dfftp
-      use grid_dimensions, ONLY: nrxx
+      use grid_dimensions, ONLY: grid_dim, dense
       use xml_io_base,     ONLY: read_rho_xml, restart_dir
       use control_flags,   ONLY: ndr
       USE io_files,        ONLY: tmp_dir
@@ -1432,7 +1432,7 @@ END SUBROUTINE rhov
       implicit none
       !
       integer  :: nspin
-      real(DP) :: rhor( nrxx, nspin )
+      real(DP) :: rhor( dense%nrxx, nspin )
       !
       integer            :: is
       CHARACTER(LEN=256) :: filename, dirname
@@ -1471,7 +1471,7 @@ END SUBROUTINE rhov
 !
       use kinds,           ONLY: DP
       use parallel_include
-      use grid_dimensions, only : nr1x, nr2x, nr3x, nrxx
+      use grid_dimensions, only : grid_dim, dense
       use gvecw ,          only : ngw
       USE mp_global,       ONLY : nproc_bgrp, intra_bgrp_comm
       USE io_global,       ONLY : ionode, ionode_id
@@ -1483,7 +1483,7 @@ END SUBROUTINE rhov
       implicit none
       !
       integer,       INTENT(IN) :: rhounit, nspin
-      real(kind=DP), INTENT(IN) :: rhor( nrxx, nspin )
+      real(kind=DP), INTENT(IN) :: rhor( dense%nrxx, nspin )
       !
       integer :: ir, is
 
@@ -1497,12 +1497,12 @@ END SUBROUTINE rhov
          !
          WRITE( rhounit, '("3  2")' )
          ! 
-         WRITE( rhounit, '(3(2X,I3))' ) nr1x, nr2x, nr3x
+         WRITE( rhounit, '(3(2X,I3))' ) dense%nr1x, dense%nr2x, dense%nr3x
          !  
          WRITE( rhounit, '(3(2X,"0",2X,F16.10))' ) &
-             ( DBLE(nr1x-1) / DBLE(nr1x) ) * at(1,1)*alat * bohr_radius_angs, &
-             ( DBLE(nr2x-1) / DBLE(nr2x) ) * at(2,2)*alat * bohr_radius_angs, &
-             ( DBLE(nr3x-1) / DBLE(nr3x) ) * at(3,3)*alat * bohr_radius_angs
+             ( DBLE(dense%nr1x-1) / DBLE(dense%nr1x) ) * at(1,1)*alat * bohr_radius_angs, &
+             ( DBLE(dense%nr2x-1) / DBLE(dense%nr2x) ) * at(2,2)*alat * bohr_radius_angs, &
+             ( DBLE(dense%nr3x-1) / DBLE(dense%nr3x) ) * at(3,3)*alat * bohr_radius_angs
          !  
       END IF
       !
@@ -1510,7 +1510,7 @@ END SUBROUTINE rhov
          !
          ALLOCATE( displs( nproc_bgrp ), recvcount( nproc_bgrp ) )
          !
-         if (ionode) allocate(rhodist(nr1x*nr2x*nr3x))
+         if (ionode) allocate(rhodist(dense%nr1x*dense%nr2x*dense%nr3x))
          !
          do proc=1,nproc_bgrp
             recvcount(proc) =  dfftp%nnp  * ( dfftp%npp(proc) )
@@ -1531,7 +1531,7 @@ END SUBROUTINE rhov
             ! write the charge density to unit "rhounit" from first node only
             !
             if ( ionode ) &
-               write( rhounit, '(F12.7)' ) (rhodist(ir),ir=1,nr1x*nr2x*nr3x)
+               write( rhounit, '(F12.7)' ) (rhodist(ir),ir=1,dense%nr1x*dense%nr2x*dense%nr3x)
             !
          end do
       
@@ -1541,7 +1541,7 @@ END SUBROUTINE rhov
       ELSE
 
          IF ( ionode ) THEN
-            WRITE( rhounit, '(F12.7)' ) ( ( rhor(ir,is), ir = 1, nrxx ), is = 1, nspin )
+            WRITE( rhounit, '(F12.7)' ) ( ( rhor(ir,is), ir = 1, dense%nrxx ), is = 1, nspin )
          END IF
 
       END IF COLLECT_CHARGE

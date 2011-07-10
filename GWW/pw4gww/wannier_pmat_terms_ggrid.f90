@@ -19,7 +19,7 @@
   USE mp,                   ONLY : mp_bcast, mp_sum
   USE kinds,                ONLY : DP
   USE gvect
-  USE grid_dimensions,      ONLY : nr1, nr2, nr3
+  USE grid_dimensions,      ONLY : dense
   USE basis
   USE klist
   USE constants,            ONLY : e2, pi, tpi, fpi
@@ -88,9 +88,9 @@
    call flush_unit(stdout)
 
 
-  rspacel(1)=nr1
-  rspacel(2)=nr2
-  rspacel(3)=nr3
+  rspacel(1)=dense%nr1
+  rspacel(2)=dense%nr2
+  rspacel(3)=dense%nr3
 
 !  if(.not.lnonorthogonal) pmat(1:3,1:numw_prod,1:numw_prod)=(0.d0,0.d0)
   omat(:,:)=0.d0

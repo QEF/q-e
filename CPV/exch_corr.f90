@@ -17,7 +17,7 @@
       use funct,           only : dft_is_gradient, dft_is_meta
       use gvect,           only : ngm
       use gvecs,           only : ngms
-      use grid_dimensions, only : nr1, nr2, nr3, nrxx
+      use grid_dimensions, only : dense
       use cell_base,       only : ainv, omega, h
       use ions_base,       only : nsp
       use control_flags,   only : tpre, iprsta
@@ -47,7 +47,7 @@
       ! output
       ! rhor contains the exchange-correlation potential
       !
-      real(DP) :: rhor( nrxx, nspin ), rhoc( nrxx )
+      real(DP) :: rhor( dense%nrxx, nspin ), rhoc( dense%nrxx )
       real(DP) :: dxc( 3, 3 ), exc
       real(DP) :: dcc( 3, 3 ), drc( 3, 3 )
       !
@@ -68,7 +68,7 @@
       !
       if ( dft_is_gradient() ) then
          !
-         allocate( gradr( nrxx, 3, nspin ) )
+         allocate( gradr( dense%nrxx, 3, nspin ) )
          call fillgrad( nspin, rhog, gradr )
          ! 
       else
@@ -88,9 +88,9 @@
 
          !  allocate the sic_arrays
          !
-         ALLOCATE( self_rho( nrxx, nspin ) )
+         ALLOCATE( self_rho( dense%nrxx, nspin ) )
          ALLOCATE( self_rhog(ngm, nspin ) )
-         IF( dft_is_gradient() ) ALLOCATE( self_gradr( nrxx, 3, nspin ) )
+         IF( dft_is_gradient() ) ALLOCATE( self_gradr( dense%nrxx, 3, nspin ) )
 
          self_rho(:, 1) = rhor( :, 2)
          self_rho(:, 2) = rhor( :, 2)
@@ -109,14 +109,14 @@
 !
       if( dft_is_meta() ) then
          !
-         call tpssmeta( nrxx, nspin, gradr, rhor, kedtaur, exc )
+         call tpssmeta( dense%nrxx, nspin, gradr, rhor, kedtaur, exc )
          !
       else
          !
-         CALL exch_corr_cp(nrxx, nspin, gradr, rhor, exc)
+         CALL exch_corr_cp(dense%nrxx, nspin, gradr, rhor, exc)
          !
          IF ( ttsic ) THEN
-            CALL exch_corr_cp(nrxx, nspin, self_gradr, self_rho, self_exc)
+            CALL exch_corr_cp(dense%nrxx, nspin, self_gradr, self_rho, self_exc)
             self_exc = sic_alpha * (exc - self_exc)
             exc = exc - self_exc
          END IF
@@ -126,8 +126,8 @@
       call mp_sum( exc, intra_bgrp_comm )
       IF ( ttsic ) call mp_sum( self_exc, intra_bgrp_comm )
 
-      exc = exc * omega / DBLE( nr1 * nr2 * nr3 )
-      IF ( ttsic ) self_exc = self_exc * omega/DBLE(nr1 * nr2 *nr3 )
+      exc = exc * omega / DBLE( dense%nr1 * dense%nr2 * dense%nr3 )
+      IF ( ttsic ) self_exc = self_exc * omega/DBLE(dense%nr1 * dense%nr2 *dense%nr3 )
 
       !     WRITE(*,*) 'Debug: calcolo exc', exc, 'eself', self_exc
       !
@@ -142,14 +142,14 @@
          do iss = 1, nspin
             do j=1,3
                do i=1,3
-                  do ir=1,nrxx
+                  do ir=1,dense%nrxx
                      dxc(i,j) = dxc(i,j) + rhor( ir, iss ) * drhor( ir, iss, i, j )
                   end do
                end do
             end do
          end do
          !
-         dxc = dxc * omega / DBLE( nr1*nr2*nr3 )
+         dxc = dxc * omega / DBLE( dense%nr1*dense%nr2*dense%nr3 )
          !
          call mp_sum ( dxc, intra_bgrp_comm )
          !
@@ -220,7 +220,7 @@
          !
          dcc = 0.0d0
          !
-         IF( nlcc_any ) CALL  denlcc( nrxx, nspin, rhor, sfac, drhocg, dcc )
+         IF( nlcc_any ) CALL  denlcc( dense%nrxx, nspin, rhor, sfac, drhocg, dcc )
          !
          ! DEBUG
          !
@@ -234,14 +234,14 @@
             IF( nlcc_any ) THEN
                do j=1,3
                   do i=1,3
-                     do ir=1,nrxx
+                     do ir=1,dense%nrxx
                         drc(i,j) = drc(i,j) + rhor( ir, iss ) * rhoc( ir ) * ainv(j,i)
                      end do
                   end do
                end do
                call mp_sum ( drc, intra_bgrp_comm )
             END IF
-            dxc = dxc - drc * ( 1.0d0 / nspin ) * omega / ( nr1*nr2*nr3 )
+            dxc = dxc - drc * ( 1.0d0 / nspin ) * omega / ( dense%nr1*dense%nr2*dense%nr3 )
          end do
          !
       END IF
@@ -269,7 +269,7 @@
       use control_flags, only: iprint, tpre
       use gvect, only: g
       use gvect, only: ngm, nl, nlm
-      use grid_dimensions, only: nr1, nr2, nr3, nrxx, nr1x, nr2x, nr3x
+      use grid_dimensions, only: dense
       use cell_base, only: ainv, tpiba, omega
       use cp_main_variables, only: drhog
       USE fft_interfaces, ONLY: fwfft, invfft
@@ -278,7 +278,7 @@
       implicit none  
 ! input                   
       integer nspin
-      real(DP)    :: gradr( nrxx, 3, nspin ), rhor( nrxx, nspin ), dexc( 3, 3 )
+      real(DP)    :: gradr( dense%nrxx, 3, nspin ), rhor( dense%nrxx, nspin ), dexc( 3, 3 )
       complex(DP) :: rhog( ngm, nspin )
 !
       complex(DP), allocatable:: v(:)
@@ -286,7 +286,7 @@
       complex(DP) ::  ci, fp, fm
       integer :: iss, ig, ir, i,j
 !
-      allocate(v(nrxx))
+      allocate(v(dense%nrxx))
       allocate(x(ngm))
       allocate(vtemp(ngm))
       !
@@ -298,7 +298,7 @@
 !     _________________________________________________________________
 !     second part xc-potential: 3 forward ffts
 !
-         do ir=1,nrxx
+         do ir=1,dense%nrxx
             v(ir)=CMPLX(gradr(ir,1,iss),0.d0,kind=DP)
          end do
          call fwfft('Dense',v, dfftp )
@@ -319,7 +319,7 @@
             end do
          endif
 !
-         do ir=1,nrxx
+         do ir=1,dense%nrxx
             v(ir)=CMPLX(gradr(ir,2,iss),gradr(ir,3,iss),kind=DP)
          end do
          call fwfft('Dense',v, dfftp )
@@ -354,7 +354,7 @@
 !     _________________________________________________________________
 !     second part xc-potential: 1 inverse fft
 !
-         do ig=1,nrxx
+         do ig=1,dense%nrxx
             v(ig)=(0.0d0,0.0d0)
          end do
          do ig=1,ngm
@@ -362,7 +362,7 @@
             v(nlm(ig))=CONJG(x(ig))
          end do
          call invfft('Dense',v, dfftp )
-         do ir=1,nrxx
+         do ir=1,dense%nrxx
             rhor(ir,iss)=rhor(ir,iss)-DBLE(v(ir))
          end do
       end do

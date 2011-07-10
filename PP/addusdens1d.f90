@@ -18,7 +18,7 @@ SUBROUTINE addusdens1d (plan, prho)
   USE kinds, ONLY: DP
   USE cell_base, ONLY: alat, omega, celldm
   USE ions_base, ONLY: nat, ntyp => nsp, ityp
-  USE grid_dimensions, ONLY: nr3, nr3x, nrxx
+  USE grid_dimensions, ONLY: dense
   USE gvect, ONLY: nl, eigts1, eigts2, eigts3, mill
   USE lsda_mod, ONLY: current_spin
   USE uspp, ONLY: becsum
@@ -30,8 +30,8 @@ SUBROUTINE addusdens1d (plan, prho)
   !     here the local variables
   !
   IMPLICIT NONE
-  INTEGER :: ig, na, nt, ih, jh, ijh, ngm1d, ig1dto3d (nr3), &
-       igtongl1d (nr3), nl1d (nr3)
+  INTEGER :: ig, na, nt, ih, jh, ijh, ngm1d, ig1dto3d (dense%nr3), &
+       igtongl1d (dense%nr3), nl1d (dense%nr3)
   ! counter on G vectors
   ! counter on atoms
   ! counter on atomic types
@@ -43,8 +43,8 @@ SUBROUTINE addusdens1d (plan, prho)
   ! the correspondence 1D with the 3D shells
   ! correspondence 1D FFT mesh G with array G
 
-  real(DP) :: plan (nr3), dimz, g1d (3, nr3), gg1d (nr3), qmod (nr3), &
-       qgr (nr3), qgi (nr3), ylmk0 (nr3, lmaxq * lmaxq)
+  real(DP) :: plan (dense%nr3), dimz, g1d (3, dense%nr3), gg1d (dense%nr3), qmod (dense%nr3), &
+       qgr (dense%nr3), qgi (dense%nr3), ylmk0 (dense%nr3, lmaxq * lmaxq)
   !  the planar average
   !  dimension along z
   !  ngm1d 3D vectors with the 1D G of this proc
@@ -54,7 +54,7 @@ SUBROUTINE addusdens1d (plan, prho)
   ! imaginary part of qg
   ! the spherical harmonics
 
-  COMPLEX(DP) :: skk, prho (nrxx), qg (nr3x)
+  COMPLEX(DP) :: skk, prho (dense%nrxx), qg (dense%nr3x)
   ! auxiliary variable
   ! auxiliary space for the charge
   ! auxiliary variable for FFT
@@ -112,12 +112,12 @@ SUBROUTINE addusdens1d (plan, prho)
   CALL mp_sum(  qg, intra_pool_comm )
 #endif
   dimz = alat * celldm (3)
-  DO ig = 1, nr3
+  DO ig = 1, dense%nr3
      qgr (ig) =  dble (qg (ig) )
      qgi (ig) = aimag (qg (ig) )
   ENDDO
-  CALL cft (qgr, qgi, nr3, nr3, nr3, 1)
-  DO ig = 1, nr3
+  CALL cft (qgr, qgi, dense%nr3, dense%nr3, dense%nr3, 1)
+  DO ig = 1, dense%nr3
      plan (ig) = qgr (ig) * omega / dimz
   ENDDO
   DEALLOCATE (aux, qgm)

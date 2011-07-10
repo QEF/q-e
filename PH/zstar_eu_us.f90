@@ -20,7 +20,7 @@ subroutine zstar_eu_us
   USE ions_base, ONLY : nat, ntyp => nsp, ityp
   USE klist,     ONLY : xk, wk
   USE gvecs,   ONLY : doublegrid
-  USE grid_dimensions,        ONLY : nr1,nr2,nr3
+  USE grid_dimensions,        ONLY : dense
   USE fft_base, ONLY : dfftp, dffts
   USE lsda_mod,  ONLY : nspin, current_spin, isk, lsda
   USE io_files,  ONLY : iunigk
@@ -176,7 +176,7 @@ subroutine zstar_eu_us
            do is=1,nspin_mag
               zstareu0(jpol,mode) =  zstareu0(jpol,mode) -                  &
                  dot_product(dvscf(1:dfftp%nnr,is,jpol),drhoscfh(1:dfftp%nnr,is)) &
-               * omega / DBLE(nr1*nr2*nr3)
+               * omega / DBLE(dense%nr1*dense%nr2*dense%nr3)
            end do
         end do
      end do

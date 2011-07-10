@@ -53,8 +53,8 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
                                        greash, tpiba2, omega, alat, ibrav,  &
                                        celldm, h, hold, hnew, velh,         &
                                        wmass, press, iforceh, cell_force
-  USE grid_dimensions,          ONLY : nrxx, nr1, nr2, nr3
-  USE smooth_grid_dimensions,   ONLY : nrxxs, nr1s, nr2s, nr3s
+  USE grid_dimensions,          ONLY : dense
+  !USE smooth_grid_dimensions,   ONLY : smooth
   USE local_pseudo,             ONLY : allocate_local_pseudo
   USE io_global,                ONLY : stdout, ionode, ionode_id
   USE dener,                    ONLY : detot
@@ -257,7 +257,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
      !
      IF ( tfor .OR. thdyn ) THEN
         !
-        CALL phfacs( eigts1,eigts2,eigts3, eigr, mill, taus, nr1,nr2,nr3, nat )
+        CALL phfacs( eigts1,eigts2,eigts3, eigr, mill, taus, dense%nr1,dense%nr2,dense%nr3, nat )
         !
         ! ... strucf calculates the structure factor sfac
         !
@@ -480,7 +480,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
         !
         ! ... phfac calculates eigr
         !
-        CALL phfacs( eigts1,eigts2,eigts3, eigr, mill, tausp, nr1,nr2,nr3, nat ) 
+        CALL phfacs( eigts1,eigts2,eigts3, eigr, mill, tausp, dense%nr1,dense%nr2,dense%nr3, nat ) 
         ! ... prefor calculates vkb
         !
         CALL prefor( eigr, vkb )
@@ -735,7 +735,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
               CALL phbox( taub, iprsta, eigrb ) 
            END IF
            CALL r_to_s( tau0, taus, na, nsp, ainv )
-           CALL phfacs( eigts1,eigts2,eigts3, eigr, mill, taus, nr1,nr2,nr3, nat )
+           CALL phfacs( eigts1,eigts2,eigts3, eigr, mill, taus, dense%nr1,dense%nr2,dense%nr3, nat )
            CALL strucf( sfac, eigts1, eigts2, eigts3, mill, ngms )
            !
            IF ( thdyn )    CALL formf( tfirst, eself )

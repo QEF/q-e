@@ -13,7 +13,7 @@ SUBROUTINE memory_report()
   USE io_global, ONLY : stdout
   USE wvfct,     ONLY : npwx, nbnd, nbndx
   USE basis,     ONLY : natomwfc
-  USE grid_dimensions,  ONLY : nr1, nr2, nr3, nrxx
+  USE grid_dimensions,  ONLY : dense
   USE gvect,     ONLY : ngl, ngm
   USE uspp,      ONLY : nkb
   USE ldaU,      ONLY : lda_plus_u
@@ -44,10 +44,10 @@ SUBROUTINE memory_report()
   IF ( nspin == 2 ) THEN
      WRITE( stdout, '(8x,"Each V/rho on FFT grid    ",f10.2," Mb", &
                     & 5x,"(",i7,",",i4,")")') &
-                    DBLE(complex_size*nspin*nrxx)/Mb, nrxx, nspin
+                    DBLE(complex_size*nspin*dense%nrxx)/Mb, dense%nrxx, nspin
   ELSE
      WRITE( stdout, '(8x,"Each V/rho on FFT grid    ",f10.2," Mb", &
-                    & 5x,"(",i7,")")') DBLE(complex_size*nrxx)/Mb, nrxx
+                    & 5x,"(",i7,")")') DBLE(complex_size*dense%nrxx)/Mb, dense%nrxx
   END IF
   WRITE( stdout, '(8x,"Each G-vector array       ",f10.2," Mb", &
                  & 5x,"(",i7,")")') DBLE(real_size*ngm)/Mb, ngm
@@ -85,7 +85,7 @@ SUBROUTINE memory_report()
   !
   IF ( lscf) WRITE( stdout, &
      '(8x,"Arrays for rho mixing     ",f10.2," Mb", 5x,"(",i7,",",i4,")")') &
-     DBLE(complex_size*nrxx*nmix)/Mb, nrxx, nmix
+     DBLE(complex_size*dense%nrxx*nmix)/Mb, dense%nrxx, nmix
   !
   RETURN
   !

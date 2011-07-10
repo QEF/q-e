@@ -24,7 +24,7 @@
       use io_global,          only: stdout
       use ions_base,          only: nsp, na, nat
       use cell_base,          only: ainv, r_to_s
-      use grid_dimensions,    only: nr1, nr2, nr3
+      use grid_dimensions,    only: dense
       use gvect, only: mill
       use gvecw,              only: ngw
       use cp_interfaces,      only: phfacs
@@ -32,8 +32,8 @@
       implicit none
       real(DP) tau0(3,nat)
 !
-      complex(DP) ei1(-nr1:nr1,nat), ei2(-nr2:nr2,nat),      &
-     &                ei3(-nr3:nr3,nat), eigr(ngw,nat)
+      complex(DP) ei1(-dense%nr1:dense%nr1,nat), ei2(-dense%nr2:dense%nr2,nat),      &
+     &                ei3(-dense%nr3:dense%nr3,nat), eigr(ngw,nat)
 !
       integer :: i, isa
       real(DP), allocatable :: taus(:,:)
@@ -45,7 +45,7 @@
          WRITE( stdout,*) ( ( tau0(i,isa), i=1, 3 ), isa=1, nat )
       endif
       CALL r_to_s( tau0, taus, na, nsp, ainv )
-      CALL phfacs( ei1, ei2, ei3, eigr, mill, taus, nr1, nr2, nr3, nat )
+      CALL phfacs( ei1, ei2, ei3, eigr, mill, taus, dense%nr1, dense%nr2, dense%nr3, nat )
 
       deallocate( taus )
 !
@@ -193,15 +193,15 @@
 
       USE kinds,            ONLY: DP
       USE ions_base,        ONLY: nat, na, nsp
-      use grid_dimensions,  only: nr1, nr2, nr3
+      use grid_dimensions,  only: dense
 
       IMPLICIT NONE
 
       ! ... declare subroutine arguments
       !
-      COMPLEX(DP) :: ei1( -nr1 : nr1, nat )
-      COMPLEX(DP) :: ei2( -nr2 : nr2, nat )
-      COMPLEX(DP) :: ei3( -nr3 : nr3, nat )
+      COMPLEX(DP) :: ei1( -dense%nr1 : dense%nr1, nat )
+      COMPLEX(DP) :: ei2( -dense%nr2 : dense%nr2, nat )
+      COMPLEX(DP) :: ei3( -dense%nr3 : dense%nr3, nat )
       INTEGER      :: mill( :, : )
       INTEGER      :: ngm
       COMPLEX(DP), INTENT(OUT) :: sfac(:,:)

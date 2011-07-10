@@ -134,7 +134,7 @@
       USE gvect,           ONLY: ngm
       USE constants,       ONLY: gsmall, pi
       USE cell_base,       ONLY: tpiba2, s_to_r, alat
-      use grid_dimensions, only: nr1, nr2, nr3, nrxx
+      use grid_dimensions, only: dense
 
       IMPLICIT NONE
       
@@ -160,7 +160,7 @@
       END DO
       nr3l = dfftp%npl
 
-      ALLOCATE( grr( nrxx ) )
+      ALLOCATE( grr( dense%nrxx ) )
       ALLOCATE( grg( SIZE( screen_coul ) ) )
 
       grr = 0.0d0
@@ -169,15 +169,15 @@
       !
       rc  = 7.0d0 / alat
       rc2 = rc**2
-      fact  = omega / ( nr1 * nr2 * nr3 )
-      IF( MOD(nr1 * nr2 * nr3, 2) /= 0 ) fact = -fact
+      fact  = omega / ( dense%nr1 * dense%nr2 * dense%nr3 )
+      IF( MOD(dense%nr1 * dense%nr2 * dense%nr3, 2) /= 0 ) fact = -fact
 
       DO k = 1, nr3l
-        s(3) = DBLE ( (k-1) + (ir3 - 1) ) / nr3 - 0.5d0
-        DO j = 1, nr2
-          s(2) = DBLE ( (j-1) + (ir2 - 1) ) / nr2 - 0.5d0
-          DO i = 1, nr1
-            s(1) = DBLE ( (i-1) + (ir1 - 1) ) / nr1 - 0.5d0
+        s(3) = DBLE ( (k-1) + (ir3 - 1) ) / dense%nr3 - 0.5d0
+        DO j = 1, dense%nr2
+          s(2) = DBLE ( (j-1) + (ir2 - 1) ) / dense%nr2 - 0.5d0
+          DO i = 1, dense%nr1
+            s(1) = DBLE ( (i-1) + (ir1 - 1) ) / dense%nr1 - 0.5d0
             CALL S_TO_R( S, R, hmat )
             rmod = SQRT( r(1)**2 + r(2)**2 + r(3)**2 )
             ir =  i + (j-1)*dfftp%nr1x + (k-1)*dfftp%nr1x*dfftp%nr2x
@@ -417,7 +417,7 @@
       USE constants,          ONLY: fpi
       USE cell_base,          ONLY: tpiba2, tpiba
       USE io_global,          ONLY: stdout
-      USE grid_dimensions,    ONLY: nr1, nr2, nr3
+      USE grid_dimensions,    ONLY: dense
       USE gvect, ONLY: mill, gstart, g, gg
       USE ions_base,          ONLY: nat, nsp, na
       USE gvect,              ONLY: ngm
@@ -432,9 +432,9 @@
       REAL(DP)    :: rhops(:,:), vps(:,:)
       COMPLEX(DP) :: rhoeg(:)
       COMPLEX(DP), INTENT(IN) :: sfac(:,:)
-      COMPLEX(DP) :: ei1(-nr1:nr1,nat)
-      COMPLEX(DP) :: ei2(-nr2:nr2,nat)
-      COMPLEX(DP) :: ei3(-nr3:nr3,nat)
+      COMPLEX(DP) :: ei1(-dense%nr1:dense%nr1,nat)
+      COMPLEX(DP) :: ei2(-dense%nr2:dense%nr2,nat)
+      COMPLEX(DP) :: ei3(-dense%nr3:dense%nr3,nat)
       REAL(DP)    :: omega
       COMPLEX(DP) :: screen_coul(:)
 
@@ -838,7 +838,7 @@
       USE gvect, ONLY: gstart, gg
       USE gvect, ONLY: ngm
       USE gvecw, ONLY: ngw
-      use grid_dimensions, only: nr1, nr2, nr3, nrxx
+      use grid_dimensions, only: dense
       USE fft_interfaces, ONLY: fwfft, invfft
 
       IMPLICIT NONE
@@ -875,8 +875,8 @@
       nr3l = dfftp%npl
       omega = ht%deth
 
-      ALLOCATE( density( nrxx ) )
-      ALLOCATE( psi( nrxx ) )
+      ALLOCATE( density( dense%nrxx ) )
+      ALLOCATE( psi( dense%nrxx ) )
       ALLOCATE( k_density( ngm ) )
 
       CALL c2psi(  psi, dffts%nnr, wfc, wfc, ngw, 1 )
@@ -908,22 +908,22 @@
             !WRITE(6,*) 'ATOM ', ind_localisation( isa_input )
             !WRITE(6,*) 'POS  ', atoms_m%taus( :, isa_sorted )
 
-            work  = nr1
+            work  = dense%nr1
             work2 = sic_rloc * work
             work  = work * R(1) - work2
             Xmin  = FLOOR(work)
             work  = work + 2*work2
             Xmax  = FLOOR(work)
-            IF ( Xmax > nr1 ) Xmax = nr1
+            IF ( Xmax > dense%nr1 ) Xmax = dense%nr1
             IF ( Xmin < 1 ) Xmin = 1
 
-            work  = nr2
+            work  = dense%nr2
             work2 = sic_rloc * work
             work  = work * R(2) - work2
             Ymin  = FLOOR(work)
             work  = work + 2*work2
             Ymax  = FLOOR(work)
-            IF ( Ymax > nr2 ) Ymax = nr2
+            IF ( Ymax > dense%nr2 ) Ymax = dense%nr2
             IF ( Ymin < 1 ) Ymin = 1
 
             work  = nr3l

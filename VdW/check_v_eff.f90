@@ -30,7 +30,7 @@ SUBROUTINE check_v_eff ( veff, charge )
   USE fft_base,             ONLY : dffts
   USE fft_interfaces,       ONLY : fwfft, invfft
   USE gvect,                ONLY : g, gg, gstart, ngm, nl
-  USE grid_dimensions,      ONLY : nrxx, nr1, nr2, nr3
+  USE grid_dimensions,      ONLY : dense
   USE wvfct,                ONLY : g2kin, wg, nbndx, et, nbnd, npwx, igk, &
                                    ecutwfc, npw
   USE gvecs,              ONLY : nls, nlsm, doublegrid
@@ -48,7 +48,7 @@ SUBROUTINE check_v_eff ( veff, charge )
   !
   ! ... First the I/O variables
   !
-  REAL(kind=DP)              :: veff (nrxx, nspin)        ! in: effective potential
+  REAL(kind=DP)              :: veff (dense%nrxx, nspin)        ! in: effective potential
   REAL(kind=DP), ALLOCATABLE :: vrs_ (:, :)        ! to keep the local potential
   REAL(kind=DP) ::    charge    ! out: the charge difference  between  rho_check & rho-fft
   !
@@ -81,7 +81,7 @@ SUBROUTINE check_v_eff ( veff, charge )
   !
   ! ... allocate arrays
   !
-  ALLOCATE( vrs_ ( nrxx, nspin ) )
+  ALLOCATE( vrs_ ( dense%nrxx, nspin ) )
   ALLOCATE( h_diag( npwx,1 ) )
   ALLOCATE( s_diag( npwx,1 ) )
   ALLOCATE( btype(  nbnd ) )
@@ -154,7 +154,7 @@ SUBROUTINE check_v_eff ( veff, charge )
           !
           DO ibnd = 1, nbnd
              !
-             psic(1:nrxx) = sqrt(abs(rho_fft(1:nrxx,1)))
+             psic(1:dense%nrxx) = sqrt(abs(rho_fft(1:dense%nrxx,1)))
              !
              CALL fwfft ('Wave', psic, dffts)
              !
@@ -262,7 +262,7 @@ SUBROUTINE check_v_eff ( veff, charge )
           !
           ! compute the weight
           !
-          nelecr = sum(rho_fft) * omega / (nr1*nr2*nr3)
+          nelecr = sum(rho_fft) * omega / (dense%nr1*dense%nr2*dense%nr3)
 #ifdef __PARA
           CALL mp_sum( nelecr, intra_pool_comm )
 #endif
@@ -277,7 +277,7 @@ SUBROUTINE check_v_eff ( veff, charge )
                                                  aimag( psic(ir) )**2 )
              !
           ENDDO
-          nelecr = sum(rho_veff) * omega / (nr1*nr2*nr3)
+          nelecr = sum(rho_veff) * omega / (dense%nr1*dense%nr2*dense%nr3)
 #ifdef __PARA
           CALL mp_sum( nelecr, intra_pool_comm )
 #endif
@@ -287,10 +287,10 @@ SUBROUTINE check_v_eff ( veff, charge )
        !  compute the charge difference
        !
        charge = 0.d0
-       DO ir = 1, nrxx
+       DO ir = 1, dense%nrxx
           charge = charge + abs( rho_fft(ir,nspin) - rho_veff(ir,nspin) )
        ENDDO
-       charge = charge * omega / (nr1*nr2*nr3) / nelecr
+       charge = charge * omega / (dense%nr1*dense%nr2*dense%nr3) / nelecr
 #ifdef __PARA
           CALL mp_sum( charge, intra_pool_comm )
 #endif
