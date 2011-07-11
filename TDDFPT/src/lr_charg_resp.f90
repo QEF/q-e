@@ -774,7 +774,8 @@ SUBROUTINE lr_dump_rho_tot_xyzd(rho,identifier)
                !
                DO i1 = 1, dense%nr1
                   !
-                  rho_plane(i1+(i2-1)*dense%nr1) = rho(i1+(i2-1)*dense%nr1x+(kk-1)*ldr)
+                  rho_plane(i1+(i2-1)*dense%nr1) = rho(i1+(i2-1)&
+                       &*dense%nr1x+(kk-1)*ldr) 
                   !
                ENDDO
                !
@@ -783,8 +784,8 @@ SUBROUTINE lr_dump_rho_tot_xyzd(rho,identifier)
          ENDIF
          !Send plane to ionode
          IF ( kowner(i3) /= ionode_pool .and. my_pool_id == iopool_id ) &
-            CALL mp_get( rho_plane, rho_plane, &
-                                          me_pool, ionode_pool, kowner(i3), i3, intra_pool_comm )
+            CALL mp_get( rho_plane, rho_plane, me_pool, ionode_pool,&
+            & kowner(i3), i3, intra_pool_comm ) 
          !
          ! write
          IF ( ionode ) THEN
@@ -792,9 +793,15 @@ SUBROUTINE lr_dump_rho_tot_xyzd(rho,identifier)
                !
                DO i1 = 1, dense%nr1
                   !
-                  WRITE(158,'(f15.8,3X)', advance='no') (dble(i1-1)*(alat*BOHR_RADIUS_ANGS*(at(1,1)+at(2,1)+at(3,1))/dble(dense%nr1-1)))
-                  WRITE(158,'(f15.8,3X)', advance='no') (dble(i2-1)*(alat*BOHR_RADIUS_ANGS*(at(1,2)+at(2,2)+at(3,2))/dble(dense%nr2-1)))
-                  WRITE(158,'(f15.8,3X)', advance='no') (dble(i3-1)*(alat*BOHR_RADIUS_ANGS*(at(1,3)+at(2,3)+at(3,3))/dble(dense%nr3-1)))
+                  WRITE(158,'(f15.8,3X)', advance='no') (DBLE(i1-1)&
+                       &*(alat*BOHR_RADIUS_ANGS*(at(1,1)+at(2,1)+at(3&
+                       &,1))/DBLE(dense%nr1-1))) 
+                  WRITE(158,'(f15.8,3X)', advance='no') (DBLE(i2-1)&
+                       &*(alat*BOHR_RADIUS_ANGS*(at(1,2)+at(2,2)+at(3&
+                       &,2))/DBLE(dense%nr2-1))) 
+                  WRITE(158,'(f15.8,3X)', advance='no') (DBLE(i3-1)&
+                       &*(alat*BOHR_RADIUS_ANGS*(at(1,3)+at(2,3)+at(3&
+                       &,3))/DBLE(dense%nr3-1))) 
                   WRITE(158,'(e13.5)') rho_plane((i2-1)*dense%nr1+i1)
                ENDDO
              ENDDO
@@ -810,7 +817,8 @@ SUBROUTINE lr_dump_rho_tot_xyzd(rho,identifier)
    !
      !
 
-     filename = trim(prefix) // "-" // identifier // "-pol" //trim(int_to_char(LR_polarization))// ".xyzd"
+     filename = TRIM(prefix) // "-" // identifier // "-pol" &
+          &//TRIM(int_to_char(LR_polarization))// ".xyzd" 
      WRITE(stdout,'(/5X,"Writing xyzd file for response charge density")')
      !write(stdout, *) filename
      !write(stdout,'(5X,"|rho|=",D15.8)') rho_sum
@@ -820,10 +828,17 @@ SUBROUTINE lr_dump_rho_tot_xyzd(rho,identifier)
   DO i3=0,(dense%nr3-1)
    DO i2=0,(dense%nr2-1)
     DO i1=0,(dense%nr1-1)
-     WRITE(158,'(f15.8,3X)', advance='no') (dble(i1)*(alat*BOHR_RADIUS_ANGS*(at(1,1)+at(2,1)+at(3,1))/dble(dense%nr1-1)))
-     WRITE(158,'(f15.8,3X)', advance='no') (dble(i2)*(alat*BOHR_RADIUS_ANGS*(at(1,2)+at(2,2)+at(3,2))/dble(dense%nr2-1)))
-     WRITE(158,'(f15.8,3X)', advance='no') (dble(i3)*(alat*BOHR_RADIUS_ANGS*(at(1,3)+at(2,3)+at(3,3))/dble(dense%nr3-1)))
-     WRITE(158,'(e13.5)') rho(i3*dense%nr1*dense%nr2+i2*dense%nr1+i1+1)
+     WRITE(158,'(f15.8,3X)', advance='no') (DBLE(i1)*(alat&
+          &*BOHR_RADIUS_ANGS*(at(1,1)+at(2,1)+at(3,1))& 
+          &/DBLE(dense%nr1-1))) 
+     WRITE(158,'(f15.8,3X)', advance='no') (DBLE(i2)*(alat&
+          &*BOHR_RADIUS_ANGS*(at(1,2)+at(2,2)+at(3,2))&
+          &/DBLE(dense%nr2-1))) 
+     WRITE(158,'(f15.8,3X)', advance='no') (DBLE(i3)*(alat&
+          &*BOHR_RADIUS_ANGS*(at(1,3)+at(2,3)+at(3,3))&
+          &/DBLE(dense%nr3-1))) 
+     WRITE(158,'(e13.5)') &
+          &rho(i3*dense%nr1*dense%nr2+i2*dense%nr1+i1+1)
     ENDDO
    ENDDO
   ENDDO
