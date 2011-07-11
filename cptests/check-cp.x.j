@@ -2,14 +2,7 @@
 
 # Automated checks for cp.x - CC 2009
 #
-# Missing pseudotentials are automatically downloaded by wget:
-WGET="wget -O"
-# if wget does not exist on your machine, try curl (uncomment next line):
-#WGET="curl -o"
-# for openmp or mpi parallel execution - like in examples/
-#PARA_PREFIX="env OMP_NUM_THREADS=2"
-#PARA_PREFIX="mpirun -np 2"
-#PARA_POSTFIX="-npool 1"
+. ../examples/environment_variables
 #
 # You shouldn't need to modify anything below this line.
 #
