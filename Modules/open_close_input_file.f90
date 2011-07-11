@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2009 Quantum ESPRESSO group
+! Copyright (C) 2011 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -46,7 +46,6 @@ SUBROUTINE open_input_file_x(lxmlinput,attr,unit)
 #   define iargc  iargc_
 #endif
   !
-  lxmlinput_loc = .false.
   unit_loc = 5
   lcheckxml = .false.
   !
@@ -69,7 +68,6 @@ SUBROUTINE open_input_file_x(lxmlinput,attr,unit)
   ! ... check if use xml input or not
   !
   lxmlinput_loc = .false.
-  !
   !
   ! ... Input from file ?
   !
@@ -95,48 +93,45 @@ SUBROUTINE open_input_file_x(lxmlinput,attr,unit)
         !
         OPEN ( UNIT = unit_loc, FILE = input_file, FORM = 'FORMATTED', &
                STATUS = 'OLD', IOSTAT = ierr )
-! starting copy file
-        if(ierr==0) then
+        !
+        ! copy file
+        !
+        IF ( ierr == 0 ) THEN
+          lfound=.true.
           dummy=""
           do while (TRIM(dummy).ne."MAGICALME")
             read(unit_loc,fmt='(A256)',END=10) dummy
             write(stdtmp,*) trim(dummy)
           enddo
-10 CONTINUE
-        endif
-        !
-        ! TODO: return error code ierr (-1 no file, 0 file opened, > 1 error)
-        ! do not call "errore" here: it may hang in parallel execution
-        ! if this routine is called by ionode only
-        !
-        IF ( ierr > 0 ) WRITE (stderr, &
-                '(" *** input file ",A," not found ***")' ) TRIM( input_file )
-        !
-        lfound=.true.
-        !
+        ELSE IF ( ierr > 0 ) THEN
+           !
+           ! do not call "errore" here: it may hang in parallel execution
+           ! since this routine is called by ionode only
+           WRITE (stderr, '(" *** input file ",A," not found ***")' ) TRIM( input_file )
+           !
+        ENDIF
      END IF
      !
   END DO
-!
-if(lfound) CLOSE(unit_loc)
-!
-if(.not.lfound) then
-! if no file specified then copy from standard input
-  dummy=""
-  do while (TRIM(dummy).ne."MAGICALME")
-    read(stdin,fmt='(A256)',END=20) dummy
-    write(stdtmp,*) trim(dummy)
-  enddo
-endif
-!
-!
+10 CONTINUE
+  !
+  IF (lfound) THEN
+     CLOSE(unit_loc)
+  ELSE
+     ! if no file specified then copy from standard input
+     dummy=""
+     WRITE(stdout, '(5x,a)') "Waiting for input..."
+     do while (TRIM(dummy).ne."MAGICALME")
+       read(stdin,fmt='(A256)',END=20) dummy
+       write(stdtmp,*) trim(dummy)
+     enddo
+  ENDIF
+  !
 20 CONTINUE
-!
-CLOSE(stdtmp)
-OPEN ( UNIT = unit_loc, FILE = trim(temp_file) , FORM = 'FORMATTED', &
+  !
+  CLOSE(stdtmp)
+  OPEN ( UNIT = unit_loc, FILE = trim(temp_file) , FORM = 'FORMATTED', &
           STATUS = 'OLD', IOSTAT = ierr )
-!
-
   !
   IF (lcheckxml) THEN
     !
@@ -145,19 +140,19 @@ OPEN ( UNIT = unit_loc, FILE = trim(temp_file) , FORM = 'FORMATTED', &
     lxmlinput = lxmlinput_loc
     !
     IF(lxmlinput_loc) then
-      CLOSE(unit_loc)
-      WRITE(stdout, '(5x,a)') "Waiting for xml input..."
-      CALL iotk_open_read( unit_loc, "input_tmp.in", attr = attr, qe_syntax = .true., ierr = ierr)
-      IF (ierr /= 0) CALL errore('open_input_file','error opening xml file', abs(ierr))
+       CLOSE(unit_loc)
+       WRITE(stdout, '(5x,a)') "Reading from xml input file "//TRIM(input_file)
+       CALL iotk_open_read( unit_loc, "input_tmp.in", attr = attr, qe_syntax = .true., ierr = ierr)
+       IF (ierr /= 0) CALL errore('open_input_file','error opening xml file', abs(ierr))
     ENDIF
     !
   ENDIF
   !
   IF(.not.lxmlinput_loc) THEN
-    CLOSE(unit_loc)
-    OPEN ( UNIT = unit_loc, FILE = "input_tmp.in" , FORM = 'FORMATTED', &
-          STATUS = 'OLD', IOSTAT = ierr )
-    WRITE(stdout, '(5x,a)') "Waiting for input..."
+     CLOSE(unit_loc)
+     WRITE(stdout, '(5x,a)') "Reading from input file "//TRIM(input_file)
+     OPEN ( UNIT = unit_loc, FILE = "input_tmp.in" , FORM = 'FORMATTED', &
+            STATUS = 'OLD', IOSTAT = ierr )
   ENDIF
   !
   RETURN
