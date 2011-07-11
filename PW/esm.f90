@@ -1235,8 +1235,8 @@ SUBROUTINE esm_printpot ()
         call grid_gather( vltot, work3 )
         call mp_sum(work3, intra_pool_comm)
 #else
-        work2(1:nrxx)=vh(1:nrxx)
-        work3(1:nrxx)=vltot(1:nrxx)
+        work2(1:dense%nrxx)=vh(1:dense%nrxx)
+        work3(1:dense%nrxx)=vltot(1:dense%nrxx)
 #endif
         if( nspin == 2 ) then
           vh(:)=rho%of_r(:,1)+rho%of_r(:,2)
@@ -1247,7 +1247,7 @@ SUBROUTINE esm_printpot ()
         call grid_gather( vh, work1 )
         call mp_sum(work1, intra_pool_comm)
 #else
-        work1(1:nrxx)=vh(1:nrxx)
+        work1(1:dense%nrxx)=vh(1:dense%nrxx)
 #endif
         deallocate(vh)
         IF ( ionode ) then

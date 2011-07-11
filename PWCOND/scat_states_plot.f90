@@ -464,7 +464,7 @@ SUBROUTINE scat_states_comp(nchan, nrzp, norb, nocros, taunew, vec, &
 #ifdef __PARA
      CALL grid_gather (rho%of_r(:,ipol),spin_mag(:,ipol))
 #else
-     do ig = 1, nrxx
+     do ig = 1, dense%nrxx
        spin_mag(ig,ipol) = rho%of_r(ig,ipol)
      enddo
 #endif
