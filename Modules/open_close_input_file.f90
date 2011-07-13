@@ -73,6 +73,8 @@ SUBROUTINE open_input_file_x(lxmlinput,attr,unit)
   !
   temp_file="input_tmp.in"
   !
+  input_file=""
+  !
   lfound=.false.
   stdtmp = find_free_unit()
   OPEN(UNIT = stdtmp, FILE = trim(temp_file))
@@ -120,6 +122,9 @@ SUBROUTINE open_input_file_x(lxmlinput,attr,unit)
   ELSE
      ! if no file specified then copy from standard input
      dummy=""
+     ! also input_file which is used later must now be set to
+     ! something sensible
+     input_file="stdin"
      WRITE(stdout, '(5x,a)') "Waiting for input..."
      do while (TRIM(dummy).ne."MAGICALME")
        read(stdin,fmt='(A256)',END=20) dummy
@@ -141,7 +146,7 @@ SUBROUTINE open_input_file_x(lxmlinput,attr,unit)
     !
     IF(lxmlinput_loc) then
        CLOSE(unit_loc)
-       WRITE(stdout, '(5x,a)') "Reading from xml input file "//TRIM(input_file)
+       WRITE(stdout, '(5x,a)') "Reading xml input from "//TRIM(input_file)
        CALL iotk_open_read( unit_loc, "input_tmp.in", attr = attr, qe_syntax = .true., ierr = ierr)
        IF (ierr /= 0) CALL errore('open_input_file','error opening xml file', abs(ierr))
     ENDIF
@@ -150,7 +155,7 @@ SUBROUTINE open_input_file_x(lxmlinput,attr,unit)
   !
   IF(.not.lxmlinput_loc) THEN
      CLOSE(unit_loc)
-     WRITE(stdout, '(5x,a)') "Reading from input file "//TRIM(input_file)
+     WRITE(stdout, '(5x,a)') "Reading input from "//TRIM(input_file)
      OPEN ( UNIT = unit_loc, FILE = "input_tmp.in" , FORM = 'FORMATTED', &
             STATUS = 'OLD', IOSTAT = ierr )
   ENDIF
