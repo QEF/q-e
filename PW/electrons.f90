@@ -173,7 +173,7 @@ SUBROUTINE electrons()
   if ( exx_is_active())  then
      CALL v_of_rho( rho, rho_core, rhog_core, &
                     ehart, etxc, vtxc, eth, etotefield, charge, v)
-     CALL set_vrs( vrs, vltot, v%of_r, kedtau, v%kin_r, nrxx, nspin, doublegrid )
+     CALL set_vrs( vrs, vltot, v%of_r, kedtau, v%kin_r, dense%nrxx, nspin, doublegrid )
    end if
 #endif
 
@@ -440,7 +440,7 @@ SUBROUTINE electrons()
      !
      IF ( do_solvent  )  THEN
        !
-       CALL calc_esolvent( nrxx, nspin, rhoin%of_r, vltot_zero, &
+       CALL calc_esolvent( dense%nrxx, nspin, rhoin%of_r, vltot_zero, &
                            desolvent, esolvent, ecavity, epressure )
        !
        IF ( .NOT. conv_elec .AND. dr2 < solvent_thr ) THEN
@@ -451,7 +451,7 @@ SUBROUTINE electrons()
          !
          vltot = vltot_zero
          !
-         CALL calc_vsolvent( nrxx, nspin, rhoin%of_r, vltot )
+         CALL calc_vsolvent( dense%nrxx, nspin, rhoin%of_r, vltot )
          !
        END IF
        !
@@ -541,7 +541,7 @@ SUBROUTINE electrons()
                           ehart, etxc, vtxc, eth, etotefield, charge, v)
            IF (okpaw) CALL PAW_potential(rho%bec, ddd_PAW, epaw)
            !
-           CALL set_vrs( vrs, vltot, v%of_r, kedtau, v%kin_r, nrxx, nspin, doublegrid )
+           CALL set_vrs( vrs, vltot, v%of_r, kedtau, v%kin_r, dense%nrxx, nspin, doublegrid )
            !
            conv_elec = .false.
            iter = 0
