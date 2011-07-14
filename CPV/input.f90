@@ -865,8 +865,7 @@ MODULE input
            nr1b_ => nr1b, &
            nr2b_ => nr2b, &
            nr3b_ => nr3b
-     USE grid_dimensions,          ONLY: dense
-     USE smooth_grid_dimensions,   ONLY: smooth
+     USE fft_base,           ONLY: dfftp, dffts
      USE kohn_sham_states,   ONLY : ks_states_init
      USE electrons_module,   ONLY : electrons_setup
      USE electrons_base,     ONLY : electrons_base_initval
@@ -931,16 +930,16 @@ MODULE input
      ! set size for potentials and charge density
      ! (re-calculated automatically)
 
-     dense%nr1  = nr1
-     dense%nr2  = nr2
-     dense%nr3  = nr3
+     dfftp%nr1  = nr1
+     dfftp%nr2  = nr2
+     dfftp%nr3  = nr3
 
      ! set size for wavefunctions
      ! (re-calculated automatically)
 
-     smooth%nr1 = nr1s
-     smooth%nr2 = nr2s
-     smooth%nr3 = nr3s
+     dffts%nr1 = nr1s
+     dffts%nr2 = nr2s
+     dffts%nr3 = nr3s
 
      CALL efield_init( epol, efield )
 

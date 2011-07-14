@@ -17,8 +17,7 @@ SUBROUTINE lr_calc_dens( evc1, response_calc )
   USE cell_base,                    ONLY : omega
   USE ener,                     ONLY : ef
   USE gvecs,                  ONLY : nls,nlsm,doublegrid
-  USE grid_dimensions,          ONLY : dense
-  USE fft_base,                 ONLY : dffts
+  USE fft_base,                 ONLY : dffts, dfftp
   USE fft_interfaces,           ONLY : invfft
   USE io_global,                ONLY : stdout
   USE kinds,                    ONLY : dp
@@ -81,7 +80,7 @@ SUBROUTINE lr_calc_dens( evc1, response_calc )
   !allocate(spsi(npwx,nbnd))
   !spsi(:,:)=(0.0d0,0.0d0)
   !
-  ALLOCATE( psic(dense%nrxx) )
+  ALLOCATE( psic(dfftp%nnr) )
   psic(:)=(0.0d0,0.0d0)
   rho_1(:,:)=0.0d0
   !
@@ -131,7 +130,7 @@ IF (lr_verbosity > 0) THEN
    CALL mp_sum(rho_sum, intra_pool_comm )
 #endif
    !
-   rho_sum=rho_sum*omega/(dense%nr1*dense%nr2*dense%nr3)
+   rho_sum=rho_sum*omega/(dfftp%nr1*dfftp%nr2*dfftp%nr3)
    !
    IF(abs(rho_sum)>1.0d-12) THEN
      IF (tqr) THEN
@@ -157,15 +156,15 @@ IF (lr_verbosity > 0) THEN
 ENDIF
    IF (charge_response == 2 .and. LR_iteration /=0) THEN
      !
-     ALLOCATE( rho_sum_resp_x( dense%nr1 ) )
-     ALLOCATE( rho_sum_resp_y( dense%nr2 ) )
-     ALLOCATE( rho_sum_resp_z( dense%nr3 ) )
+     ALLOCATE( rho_sum_resp_x( dfftp%nr1 ) )
+     ALLOCATE( rho_sum_resp_y( dfftp%nr2 ) )
+     ALLOCATE( rho_sum_resp_z( dfftp%nr3 ) )
      !
      rho_sum_resp_x = 0.D0
      rho_sum_resp_y = 0.D0
      rho_sum_resp_z = 0.D0
      !
-     DO ir=1,dense%nrxx
+     DO ir=1,dfftp%nnr
         !
         i=cube_save(ir,1)+1
         j=cube_save(ir,2)+1
@@ -190,7 +189,7 @@ ENDIF
      !
      OPEN (158, file = tempfile, form = 'formatted', status = 'unknown', position = 'append')
      !
-     DO i=1,dense%nr1
+     DO i=1,dfftp%nr1
         WRITE(158,*) rho_sum_resp_x(i)
      ENDDO
      !
@@ -201,7 +200,7 @@ ENDIF
      !
      OPEN (158, file = tempfile, form = 'formatted', status = 'unknown', position = 'append')
      !
-     DO i=1,dense%nr2
+     DO i=1,dfftp%nr2
         WRITE(158,*) rho_sum_resp_y(i)
      ENDDO
      !
@@ -212,7 +211,7 @@ ENDIF
      !
      OPEN (158, file = tempfile, form = 'formatted', status = 'unknown', position = 'append')
      !
-     DO i=1,dense%nr3
+     DO i=1,dfftp%nr3
         WRITE(158,*) rho_sum_resp_z(i)
      ENDDO
      !
@@ -248,13 +247,13 @@ ENDIF
      !DO ir=1,nrxx
      ! rho_1_tot_im(ir,:)=rho_1_tot_im(ir,:)+cmplx(rho_1(ir,:),0.0d0,dp)*w_T(LR_iteration)
      !enddo
-     CALL zaxpy(dense%nrxx, w_T(LR_iteration),cmplx(rho_1(:,1),0.0d0,dp),1,rho_1_tot_im(:,1),1) !spin not implemented
+     CALL zaxpy(dfftp%nnr, w_T(LR_iteration),cmplx(rho_1(:,1),0.0d0,dp),1,rho_1_tot_im(:,1),1) !spin not implemented
     ELSE
     !not at resonance, the imaginary part is neglected ,these are the non-absorbing oscillations
      !DO ir=1,nrxx
      ! rho_1_tot(ir,:)=rho_1_tot(ir,:)+rho_1(ir,:)*dble(w_T(LR_iteration))
      !enddo
-     CALL daxpy(dense%nrxx, dble(w_T(LR_iteration)),rho_1(:,1),1,rho_1_tot(:,1),1) !spin not implemented
+     CALL daxpy(dfftp%nnr, dble(w_T(LR_iteration)),rho_1(:,1),1,rho_1_tot(:,1),1) !spin not implemented
     ENDIF
   !
   ENDIF

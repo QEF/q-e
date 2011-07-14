@@ -11,7 +11,7 @@ subroutine allocate_cond
 !
 ! This subroutine allocates some needed variables
 !
-  USE grid_dimensions,  ONLY : dense
+  USE fft_base,         ONLY : dfftp
   use lsda_mod,         ONLY : nspin
   USE noncollin_module, ONLY : npol
   use cond
@@ -46,7 +46,7 @@ subroutine allocate_cond
   ENDIF
 
   IF (lcharge.and..NOT.ALLOCATED(rho_scatt)) THEN
-    allocate( rho_scatt(dense%nr3,nspin) )
+    allocate( rho_scatt(dfftp%nr3,nspin) )
     rho_scatt(:,:) = 0.d0
   ENDIF
 

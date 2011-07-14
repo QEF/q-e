@@ -1136,7 +1136,7 @@ subroutine nlinit
       use gvect,           ONLY : ngm
       use cp_interfaces,   ONLY : pseudopotential_indexes, compute_dvan, &
                                   compute_betagx, compute_qradx
-      USE grid_dimensions, ONLY : grid_dim, dense
+      USE fft_base,        ONLY : dfftp
 
 !
       implicit none
@@ -1167,7 +1167,7 @@ subroutine nlinit
       !
       call aainit( lmaxkb + 1 )
       !
-      CALL allocate_core( dense%nrxx, ngm, ngb, nsp )
+      CALL allocate_core( dfftp%nnr, ngm, ngb, nsp )
       !
       !
       allocate( beta( ngw, nhm, nsp ) )

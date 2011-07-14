@@ -22,10 +22,10 @@ subroutine phq_summary
   USE io_global,     ONLY : stdout
   USE cell_base,     ONLY : at, bg, ibrav, alat, omega, celldm
   USE klist,         ONLY : lgauss, smearing, degauss, ngauss, nkstot, xk, wk
-  USE grid_dimensions,ONLY: dense
+  USE fft_base,      ONLY : dfftp
   USE gvect,         ONLY : gcutm, ngm
   USE gvecs,       ONLY : doublegrid, dual, gcutms, ngms
-  USE smooth_grid_dimensions, ONLY : smooth
+  USE fft_base,      ONLY : dffts
   USE symm_base,     ONLY : s, sr, ftau, sname, t_rev
   USE constants,     ONLY : amconv
   USE noncollin_module, ONLY : noncolin
@@ -163,21 +163,21 @@ subroutine phq_summary
 
         if (ftau (1, isym) .ne.0.or.ftau (2, isym) .ne.0.or.ftau (3, &
              isym) .ne.0) then
-           ft1 = at (1, 1) * ftau (1, isym) / dense%nr1 + at (1, 2) * ftau ( &
-                2, isym) / dense%nr2 + at (1, 3) * ftau (3, isym) / dense%nr3
-           ft2 = at (2, 1) * ftau (1, isym) / dense%nr1 + at (2, 2) * ftau ( &
-                2, isym) / dense%nr2 + at (2, 3) * ftau (3, isym) / dense%nr3
-           ft3 = at (3, 1) * ftau (1, isym) / dense%nr1 + at (3, 2) * ftau ( &
-                2, isym) / dense%nr2 + at (3, 3) * ftau (3, isym) / dense%nr3
+           ft1 = at (1, 1) * ftau (1, isym) / dfftp%nr1 + at (1, 2) * ftau ( &
+                2, isym) / dfftp%nr2 + at (1, 3) * ftau (3, isym) / dfftp%nr3
+           ft2 = at (2, 1) * ftau (1, isym) / dfftp%nr1 + at (2, 2) * ftau ( &
+                2, isym) / dfftp%nr2 + at (2, 3) * ftau (3, isym) / dfftp%nr3
+           ft3 = at (3, 1) * ftau (1, isym) / dfftp%nr1 + at (3, 2) * ftau ( &
+                2, isym) / dfftp%nr2 + at (3, 3) * ftau (3, isym) / dfftp%nr3
            WRITE( stdout, '(1x,"cryst.",3x,"s(",i2,") = (",3(i6,5x), &
                 &                    " )    f =( ",f10.7," )")') isymq,  (s (1, &
-                & ipol, isym) , ipol = 1, 3) , DBLE (ftau (1, isym) )  / DBLE (dense%nr1)
+                & ipol, isym) , ipol = 1, 3) , DBLE (ftau (1, isym) )  / DBLE (dfftp%nr1)
            WRITE( stdout, '(17x," (",3(i6,5x), &
                 &                    " )       ( ",f10.7," )")')  (s (2, ipol, &
-                &isym) , ipol = 1, 3) , DBLE (ftau (2, isym) )  / DBLE (dense%nr2)
+                &isym) , ipol = 1, 3) , DBLE (ftau (2, isym) )  / DBLE (dfftp%nr2)
            WRITE( stdout, '(17x," (",3(i6,5x), &
                 &                    " )       ( ",f10.7," )"/)')  (s (3, ipol, &
-                & isym) , ipol = 1, 3) , DBLE (ftau (3, isym) )  / DBLE (dense%nr3)
+                & isym) , ipol = 1, 3) , DBLE (ftau (3, isym) )  / DBLE (dfftp%nr3)
            WRITE( stdout, '(1x,"cart.",4x,"s(",i2,") = (",3f11.7, &
                 &                    " )    f =( ",f10.7," )")') isymq,  &
                 &  (sr (1, ipol,isym) , ipol = 1, 3) , ft1
@@ -207,11 +207,11 @@ subroutine phq_summary
   !
   WRITE( stdout, '(/5x,"G cutoff =",f10.4,"  (", &
        &       i7," G-vectors)","     FFT grid: (",i3, &
-       &       ",",i3,",",i3,")")') gcutm, ngm, dense%nr1, dense%nr2, dense%nr3
+       &       ",",i3,",",i3,")")') gcutm, ngm, dfftp%nr1, dfftp%nr2, dfftp%nr3
 
   if (doublegrid) WRITE( stdout, '(5x,"G cutoff =",f10.4,"  (", &
        &                      i7," G-vectors)","  smooth grid: (",i3, &
-       &                      ",",i3,",",i3,")")') gcutms, ngms, smooth%nr1, smooth%nr2, smooth%nr3
+       &                      ",",i3,",",i3,")")') gcutms, ngms, dffts%nr1, dffts%nr2, dffts%nr3
   if (.NOT.lgauss) then
      WRITE( stdout, '(5x,"number of k points=",i6)') nkstot
   else

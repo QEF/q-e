@@ -23,8 +23,7 @@ subroutine init_cond (nregion, flag)
   USE cell_base,  ONLY : at, bg, omega, alat
   USE ener,       ONLY : ef
   USE wvfct,      ONLY : ecutwfc
-  USE grid_dimensions,        ONLY : dense
-  USE smooth_grid_dimensions, ONLY : smooth
+  USE fft_base,   ONLY : dfftp, dffts
   USE noncollin_module,       ONLY : noncolin, npol
   USE cond
 
@@ -40,9 +39,9 @@ subroutine init_cond (nregion, flag)
               nrzreg(:)
   complex(DP), allocatable :: vppottot(:,:,:,:)
 
-  nrx = smooth%nr1
-  nry = smooth%nr2
-  nrztot = smooth%nr3
+  nrx = dffts%nr1
+  nry = dffts%nr2
+  nrztot = dffts%nr3
 !  if(nrztot/2*2.eq.nrztot) nrztot = nrztot+1
   zlen = at(3,3)
   dz1 = zlen/nrztot
@@ -182,8 +181,8 @@ subroutine init_cond (nregion, flag)
   write(stdout, '(7x,i4,8x,a6," tau(",i3,")=(",3f8.4,"  )")')   &
       &         ( na,atm(ityp(na)),na,                          &
       &         ( tau(nt,na),nt=1,3),na=1,nat )
-  write (stdout, 300) smooth%nr1, smooth%nr2, smooth%nr3, smooth%nr1x, smooth%nr2x, smooth%nr3x,    &
-                 dense%nr1, dense%nr2, dense%nr3, dense%nr1x, dense%nr2x, dense%nr3x
+  write (stdout, 300) dffts%nr1, dffts%nr2, dffts%nr3, dffts%nr1x, dffts%nr2x, dffts%nr3x,    &
+                 dfftp%nr1, dfftp%nr2, dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%nr3x
 300   format (/,5x,                                         &
         &      'nr1s                      = ',i12,/,5x,     &
         &      'nr2s                      = ',i12,/,5x,     &

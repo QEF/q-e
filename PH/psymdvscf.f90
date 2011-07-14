@@ -13,8 +13,6 @@ SUBROUTINE psymdvscf (nper, irr, dvtosym)
   ! ...  p-symmetrize the charge density.
   !
   USE kinds,     ONLY : DP
-  USE grid_dimensions,  ONLY : dense
-  USE fft_base,      ONLY : dfftp
   USE noncollin_module, ONLY : nspin_mag
   USE modes,     ONLY : nsymq, minus_q
   USE mp_global, ONLY : me_pool
@@ -40,7 +38,7 @@ SUBROUTINE psymdvscf (nper, irr, dvtosym)
   IF (nsymq.EQ.1.AND. (.NOT.minus_q) ) RETURN
   CALL start_clock ('psymdvscf')
 
-  ALLOCATE (ddvtosym ( dense%nr1x * dense%nr2x * dense%nr3x, nspin_mag, nper))
+  ALLOCATE (ddvtosym ( dfftp%nr1x * dfftp%nr2x * dfftp%nr3x, nspin_mag, nper))
   npp0 = 1
   DO i = 1, me_pool
      npp0 = npp0 + dfftp%npp (i) * dfftp%nnp

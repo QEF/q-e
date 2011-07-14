@@ -14,16 +14,16 @@ SUBROUTINE allocate_vdw
   ! local potential for each kind of atom, structure factor
   !
   USE lsda_mod,  ONLY : nspin
-  USE grid_dimensions, ONLY : dense
+  USE fft_base,  ONLY : dfftp
   USE wvfct,     ONLY : npwx, nbnd
   USE qpoint,    ONLY : nksq
   USE eff_v
   !
   IMPLICIT NONE
   !
-  ALLOCATE (rho_fft (dense%nrxx, nspin))
-  ALLOCATE (rho_veff(dense%nrxx, nspin))
-  ALLOCATE (veff   (dense%nrxx, nspin))
+  ALLOCATE (rho_fft (dfftp%nnr, nspin))
+  ALLOCATE (rho_veff(dfftp%nnr, nspin))
+  ALLOCATE (veff   (dfftp%nnr, nspin))
   !
   ALLOCATE (evc_veff(npwx, nbnd ))
   ALLOCATE (et_c(nbnd, nksq ))

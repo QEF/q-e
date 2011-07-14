@@ -22,8 +22,8 @@ cg_readin.o : ../PW/noncol.o
 cg_readin.o : ../PW/pwcom.o
 cg_readin.o : ../PW/symm_base.o
 cg_readin.o : cgcom.o
+cg_setup.o : ../Modules/fft_base.o
 cg_setup.o : ../Modules/funct.o
-cg_setup.o : ../Modules/griddim.o
 cg_setup.o : ../Modules/io_files.o
 cg_setup.o : ../Modules/ions_base.o
 cg_setup.o : ../Modules/kind.o
@@ -34,8 +34,8 @@ cg_setup.o : ../PW/newd.o
 cg_setup.o : ../PW/pwcom.o
 cg_setup.o : ../PW/scf_mod.o
 cg_setup.o : cgcom.o
+cg_setupdgc.o : ../Modules/fft_base.o
 cg_setupdgc.o : ../Modules/funct.o
-cg_setupdgc.o : ../Modules/griddim.o
 cg_setupdgc.o : ../Modules/kind.o
 cg_setupdgc.o : ../PW/pwcom.o
 cg_setupdgc.o : ../PW/scf_mod.o
@@ -122,8 +122,8 @@ phcg.o : ../Modules/check_stop.o
 phcg.o : ../Modules/constants.o
 phcg.o : ../Modules/control_flags.o
 phcg.o : ../Modules/environment.o
+phcg.o : ../Modules/fft_base.o
 phcg.o : ../Modules/funct.o
-phcg.o : ../Modules/griddim.o
 phcg.o : ../Modules/io_files.o
 phcg.o : ../Modules/io_global.o
 phcg.o : ../Modules/ions_base.o

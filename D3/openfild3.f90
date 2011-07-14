@@ -16,7 +16,7 @@ SUBROUTINE openfild3
   USE pwcom
   USE phcom
   USE d3com
-  USE grid_dimensions, ONLY : dense
+  USE fft_base,        ONLY : dfftp
   USE control_flags,   ONLY : twfcollect
   USE io_files,        ONLY : iunigk, prefix, tmp_dir, diropn
   USE io_global,       ONLY : ionode
@@ -95,7 +95,7 @@ SUBROUTINE openfild3
   iudrho = 25
   iud0rho = 33
   IF (lgamma) iud0rho = iudrho
-  lrdrho = 2 * dense%nr1x * dense%nr2x * dense%nr3x * nspin
+  lrdrho = 2 * dfftp%nr1x * dfftp%nr2x * dfftp%nr3x * nspin
   !
   !   is opened only by the first task of each pool
   !

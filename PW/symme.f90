@@ -744,7 +744,6 @@ gloop:    DO jg=iig,ngm_
     !
     USE kinds
     USE constants,            ONLY : tpi
-    USE grid_dimensions,      ONLY : dense
     !
     IMPLICIT NONE
     !

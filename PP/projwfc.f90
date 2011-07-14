@@ -334,7 +334,7 @@ SUBROUTINE projwave( filproj, lsym, lgww )
   USE constants, ONLY: rytoev, eps4
   USE gvect
   USE gvecs,   ONLY: dual
-  USE grid_dimensions, ONLY : dense
+  USE fft_base, ONLY : dfftp
   USE klist, ONLY: xk, nks, nkstot, nelec
   USE ldaU
   USE lsda_mod, ONLY: nspin, isk, current_spin
@@ -663,8 +663,8 @@ SUBROUTINE projwave( filproj, lsym, lgww )
               nkslast=nkstot
            ENDIF
            iunproj=33
-           CALL write_io_header(filename, iunproj, title, dense%nr1x, dense%nr2x, dense%nr3x, &
-                dense%nr1, dense%nr2, dense%nr3, nat, ntyp, ibrav, celldm, at, gcutm, dual,   &
+           CALL write_io_header(filename, iunproj, title, dfftp%nr1x, dfftp%nr2x, dfftp%nr3x, &
+                dfftp%nr1, dfftp%nr2, dfftp%nr3, nat, ntyp, ibrav, celldm, at, gcutm, dual,   &
                 ecutwfc, nkstot/nspin, nbnd, natomwfc)
            DO nwfc = 1, natomwfc
               WRITE(iunproj,'(2i5,a3,3i5)') &
@@ -820,7 +820,7 @@ SUBROUTINE projwave_nc(filproj, lsym )
   USE constants, ONLY: rytoev, eps4
   USE gvect
   USE gvecs,   ONLY: dual
-  USE grid_dimensions, ONLY : dense
+  USE fft_base, ONLY : dfftp
   USE klist, ONLY: xk, nks, nkstot, nelec
   USE ldaU
   USE lsda_mod, ONLY: nspin
@@ -1195,8 +1195,8 @@ SUBROUTINE projwave_nc(filproj, lsym )
      !
      IF (filproj/=' ') THEN
         iunproj=33
-        CALL write_io_header(filproj, iunproj, title, dense%nr1x, dense%nr2x, dense%nr3x, &
-           dense%nr1, dense%nr2, dense%nr3, nat, ntyp, ibrav, celldm, at, gcutm, dual, ecutwfc, &
+        CALL write_io_header(filproj, iunproj, title, dfftp%nr1x, dfftp%nr2x, dfftp%nr3x, &
+           dfftp%nr1, dfftp%nr2, dfftp%nr3, nat, ntyp, ibrav, celldm, at, gcutm, dual, ecutwfc, &
            nkstot,nbnd,natomwfc)
         DO nwfc = 1, natomwfc
            IF (lspinorb) THEN
@@ -2116,7 +2116,7 @@ SUBROUTINE pprojwave( filproj, lsym )
   USE constants, ONLY: rytoev, eps4
   USE gvect
   USE gvecs,   ONLY: dual
-  USE grid_dimensions, ONLY : dense
+  USE fft_base, ONLY : dfftp
   USE klist, ONLY: xk, nks, nkstot, nelec
   USE ldaU
   USE lsda_mod, ONLY: nspin, isk, current_spin
@@ -2531,8 +2531,8 @@ SUBROUTINE pprojwave( filproj, lsym )
               nkslast=nkstot
            ENDIF
            iunproj=33
-           CALL write_io_header(filename, iunproj, title, dense%nr1x, dense%nr2x, dense%nr3x, &
-                dense%nr1, dense%nr2, dense%nr3, nat, ntyp, ibrav, celldm, at, gcutm, dual, &
+           CALL write_io_header(filename, iunproj, title, dfftp%nr1x, dfftp%nr2x, dfftp%nr3x, &
+                dfftp%nr1, dfftp%nr2, dfftp%nr3, nat, ntyp, ibrav, celldm, at, gcutm, dual, &
                 ecutwfc, nkstot/nspin,nbnd,natomwfc)
            DO nwfc = 1, natomwfc
               WRITE(iunproj,'(2i5,a3,3i5)') &

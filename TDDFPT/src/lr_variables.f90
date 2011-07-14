@@ -275,9 +275,9 @@ SUBROUTINE check_density_gamma (rx,nbnd)
    USE mp,                   ONLY : mp_sum
    USE realus,               ONLY : npw_k
    USE wvfct,                ONLY : wg
-   USE grid_dimensions,      ONLY : dense
+   USE fft_base,             ONLY : dfftp
    USE io_global,            ONLY : stdout
-   USE cell_base,                    ONLY : omega
+   USE cell_base,            ONLY : omega
 
 IMPLICIT NONE
   !input/output
@@ -295,8 +295,8 @@ IMPLICIT NONE
        ELSE
           w2=w1
        ENDIF
-       temp_gamma=sum(w1*dble(rx(1:dense%nrxx,ibnd))*dble(rx(1:dense%nrxx,ibnd))&
-               +w2*aimag(rx(1:dense%nrxx,ibnd))*aimag(rx(1:dense%nrxx,ibnd)))
+       temp_gamma=sum(w1*dble(rx(1:dfftp%nnr,ibnd))*dble(rx(1:dfftp%nnr,ibnd))&
+               +w2*aimag(rx(1:dfftp%nnr,ibnd))*aimag(rx(1:dfftp%nnr,ibnd)))
 #ifdef __PARA
        CALL mp_sum(temp_gamma, intra_pool_comm)
 #endif

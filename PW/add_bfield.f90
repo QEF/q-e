@@ -28,7 +28,7 @@ SUBROUTINE add_bfield (v,rho)
   USE io_global,        ONLY : stdout
   USE ions_base,        ONLY : nat, ntyp => nsp, ityp
   USE cell_base,        ONLY : omega
-  USE grid_dimensions,  ONLY : dense
+  USE fft_base,         ONLY : dfftp
   USE lsda_mod,         ONLY : nspin
   USE mp_global,        ONLY : intra_pool_comm
   USE mp,               ONLY : mp_sum
@@ -36,8 +36,8 @@ SUBROUTINE add_bfield (v,rho)
                                pointlist, factlist, noncolin
   IMPLICIT NONE
   ! input/outpt variables
-  REAL(DP), INTENT(IN) :: rho(dense%nrxx,nspin)
-  REAL(DP), INTENT(INOUT) :: v(dense%nrxx, nspin)
+  REAL(DP), INTENT(IN) :: rho(dfftp%nnr,nspin)
+  REAL(DP), INTENT(INOUT) :: v(dfftp%nnr, nspin)
   ! local variables
   REAL(DP) :: ma, mperp, xx, fact, m1(3), etcon, fact1(3)
   REAL(DP), allocatable :: m2(:,:), m_loc(:,:), r_loc(:)
@@ -88,17 +88,17 @@ SUBROUTINE add_bfield (v,rho)
      END DO ! na
 
      if (noncolin) then
-        DO ir = 1, dense%nrxx
+        DO ir = 1, dfftp%nnr
            if (pointlist(ir) .eq. 0 ) cycle
-           fact = 2.D0*lambda*factlist(ir)*omega/(dense%nr1*dense%nr2*dense%nr3)
+           fact = 2.D0*lambda*factlist(ir)*omega/(dfftp%nr1*dfftp%nr2*dfftp%nr3)
            DO ipol = 1,3
               v(ir,ipol+1) = v(ir,ipol+1) + fact*m2(ipol,pointlist(ir))
            END DO       ! ipol
         END DO      ! points
      else
-        DO ir = 1, dense%nrxx
+        DO ir = 1, dfftp%nnr
            if (pointlist(ir) .eq. 0 ) cycle
-           fact = 2.D0*lambda*factlist(ir)*omega/(dense%nr1*dense%nr2*dense%nr3)
+           fact = 2.D0*lambda*factlist(ir)*omega/(dfftp%nr1*dfftp%nr2*dfftp%nr3)
            v(ir,1) = v(ir,1) + fact*m2(1,pointlist(ir))
            v(ir,2) = v(ir,2) - fact*m2(1,pointlist(ir))
         END DO      ! points
@@ -109,16 +109,16 @@ SUBROUTINE add_bfield (v,rho)
   ELSE IF (i_cons==3.or.i_cons==6) THEN
      m1 = 0.d0
      IF (npol==1) THEN
-        DO ir = 1,dense%nrxx
+        DO ir = 1,dfftp%nnr
            m1(1) = m1(1) + rho(ir,1) - rho(ir,2)
         END DO
-        m1(1) = m1(1) * omega / ( dense%nr1 * dense%nr2 * dense%nr3 )
+        m1(1) = m1(1) * omega / ( dfftp%nr1 * dfftp%nr2 * dfftp%nr3 )
      ELSE
         DO ipol = 1, 3
-           DO ir = 1,dense%nrxx
+           DO ir = 1,dfftp%nnr
               m1(ipol) = m1(ipol) + rho(ir,ipol+1)
            END DO
-           m1(ipol) = m1(ipol) * omega / ( dense%nr1 * dense%nr2 * dense%nr3 )
+           m1(ipol) = m1(ipol) * omega / ( dfftp%nr1 * dfftp%nr2 * dfftp%nr3 )
         END DO
      END IF
      CALL mp_sum( m1, intra_pool_comm )
@@ -127,7 +127,7 @@ SUBROUTINE add_bfield (v,rho)
        IF (npol==1) THEN
           fact = 2.D0*lambda
           bfield(1)=-fact*(m1(1)-mcons(1,1))
-          DO ir =1,dense%nrxx
+          DO ir =1,dfftp%nnr
              v(ir,1) = v(ir,1)-bfield(1)
              v(ir,2) = v(ir,2)+bfield(1)
           END DO
@@ -135,7 +135,7 @@ SUBROUTINE add_bfield (v,rho)
           fact = 2.D0*lambda
           DO ipol=1,3
              bfield(ipol)=-fact*(m1(ipol)-mcons(ipol,1))
-             DO ir =1,dense%nrxx
+             DO ir =1,dfftp%nnr
                 v(ir,ipol+1) = v(ir,ipol+1)-bfield(ipol)
              END DO
           END DO
@@ -170,7 +170,7 @@ SUBROUTINE add_bfield (v,rho)
        etcon = lambda * xx**2
        bfield(:) = 2.D0 * lambda * xx * fact1(:)
        DO ipol = 1,3
-          DO ir =1,dense%nrxx
+          DO ir =1,dfftp%nnr
              v(ir,ipol+1) = v(ir,ipol+1)+bfield(ipol)
           END DO
        END DO
@@ -193,13 +193,13 @@ SUBROUTINE add_bfield (v,rho)
      write(stdout,'(5x," External magnetic field: ", 3f13.5)') &
              (bfield(ipol),ipol=1,npol)
      IF (npol==1) THEN
-        DO ir =1,dense%nrxx
+        DO ir =1,dfftp%nnr
            v(ir,1) = v(ir,1)-bfield(ipol)
            v(ir,2) = v(ir,2)+bfield(ipol)
         END DO
      ELSE
         DO ipol = 1,3
-           DO ir =1,dense%nrxx
+           DO ir =1,dfftp%nnr
               v(ir,ipol+1) = v(ir,ipol+1)-bfield(ipol)
            END DO
         END DO

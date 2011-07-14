@@ -19,7 +19,6 @@ subroutine drho
   !
   USE kinds,      ONLY : DP
   USE gvecs,         ONLY : doublegrid
-  USE smooth_grid_dimensions, ONLY : smooth
   USE fft_base,   ONLY : dfftp, dffts
   USE lsda_mod,   ONLY : nspin
   USE cell_base,  ONLY : omega
@@ -145,7 +144,7 @@ subroutine drho
   allocate (dvlocin(dffts%nnr))
 
   wdyn (:,:) = (0.d0, 0.d0)
-  nrstot = smooth%nr1 * smooth%nr2 * smooth%nr3
+  nrstot = dffts%nr1 * dffts%nr2 * dffts%nr3
   do nu_i = 1, 3 * nat
      call compute_dvloc (nu_i, dvlocin)
      do nu_j = 1, 3 * nat

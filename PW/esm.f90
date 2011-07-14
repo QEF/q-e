@@ -49,7 +49,6 @@ CONTAINS
 !-----------------------------------------------------------------------
 SUBROUTINE esm_hartree (rhog, ehart, aux)
 
-  USE grid_dimensions,  ONLY : dense
   USE gvect,     ONLY : g, nl, nlm, ngm
   USE lsda_mod,  ONLY : nspin
   USE cell_base, ONLY : omega, alat, tpiba, tpiba2, at, bg
@@ -79,7 +78,7 @@ SUBROUTINE esm_hartree (rhog, ehart, aux)
   allocate(vg2(dfftp%nr3x),vg2_in(dfftp%nr3x),rhog3(dfftp%nr1x,dfftp%nr2x,dfftp%nr3x))
 !
 ! Map to FFT mesh (nrxx)
-  allocate(work(dense%nrxx,2))
+  allocate(work(dfftp%nnr,2))
   work(nl(1:ngm),1) = rhog(1:ngm,1)
   if (nspin == 2) work(nl(1:ngm),2) = rhog(1:ngm,2)
    IF ( gamma_only ) THEN
@@ -521,7 +520,6 @@ subroutine esm_local (aux)
   USE kinds,            ONLY : DP
   USE constants,        ONLY : pi, eps8
   USE gvect,            ONLY : g, ngm
-  USE grid_dimensions,  ONLY : dense
   USE cell_base,        ONLY : at, bg, alat, tpiba2, tpiba, omega
   USE ions_base,        ONLY : nat, tau, ityp
   USE uspp_param,       ONLY : upf
@@ -973,7 +971,6 @@ subroutine esm_force_lc ( aux, forcelc )
   USE kinds
   USE constants,        ONLY : pi, eps8
   USE gvect,            ONLY : g, ngm
-  USE grid_dimensions,  ONLY : dense
   USE cell_base,        ONLY : omega, alat, tpiba, tpiba2, at, bg
   USE ions_base,        ONLY : nat, tau, ityp
   USE uspp_param,       ONLY : upf
@@ -983,7 +980,7 @@ subroutine esm_force_lc ( aux, forcelc )
   USE fft_base,         ONLY : dfftp
 
   implicit none
-  COMPLEX(DP)             :: aux(dense%nrxx)       ! aux contains n(G) (input)   
+  COMPLEX(DP)             :: aux(dfftp%nnr)       ! aux contains n(G) (input)   
   REAL(DP)                :: forcelc(3,nat)
   !
   !    here are the local variables
@@ -1204,7 +1201,6 @@ SUBROUTINE esm_printpot ()
   USE kinds,                ONLY : DP
   USE cell_base,            ONLY : at, alat, omega
   USE gvect,                ONLY : ngm
-  USE grid_dimensions,      ONLY : dense
   USE scf,                  ONLY : rho, vltot
   USE lsda_mod,             ONLY : nspin
   USE constants,            ONLY : eps4
@@ -1219,7 +1215,7 @@ SUBROUTINE esm_printpot ()
   REAL(DP), ALLOCATABLE   :: vh(:),work1(:),work2(:),work3(:)
   INTEGER                 :: ix,iy,iz,i,k3
 
-        allocate(vh(dense%nrxx))
+        allocate(vh(dfftp%nnr))
         allocate(work1(dfftp%nr1x*dfftp%nr2x*dfftp%nr3x))
         allocate(work2(dfftp%nr1x*dfftp%nr2x*dfftp%nr3x))
         allocate(work3(dfftp%nr1x*dfftp%nr2x*dfftp%nr3x))
@@ -1235,8 +1231,8 @@ SUBROUTINE esm_printpot ()
         call grid_gather( vltot, work3 )
         call mp_sum(work3, intra_pool_comm)
 #else
-        work2(1:dense%nrxx)=vh(1:dense%nrxx)
-        work3(1:dense%nrxx)=vltot(1:dense%nrxx)
+        work2(1:dfftp%nnr)=vh(1:dfftp%nnr)
+        work3(1:dfftp%nnr)=vltot(1:dfftp%nnr)
 #endif
         if( nspin == 2 ) then
           vh(:)=rho%of_r(:,1)+rho%of_r(:,2)
@@ -1247,7 +1243,7 @@ SUBROUTINE esm_printpot ()
         call grid_gather( vh, work1 )
         call mp_sum(work1, intra_pool_comm)
 #else
-        work1(1:dense%nrxx)=vh(1:dense%nrxx)
+        work1(1:dfftp%nnr)=vh(1:dfftp%nnr)
 #endif
         deallocate(vh)
         IF ( ionode ) then

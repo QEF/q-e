@@ -14,14 +14,14 @@ subroutine set_vrs (vrs, vltot, vr, kedtau, kedtaur,nrxx, nspin, doublegrid)
   !
   USE kinds
   USE funct, only : dft_is_meta
-  USE smooth_grid_dimensions, only : smooth
+  USE fft_base, only : dffts 
   implicit none
 
   integer :: nspin, nrxx
   ! input: number of spin components: 1 if lda, 2 if lsd, 4 if noncolinear
   ! input: the fft grid dimension
   real(DP) :: vrs (nrxx, nspin), vltot (nrxx), vr (nrxx, nspin), &
-              kedtau(smooth%nrxx,nspin), kedtaur(nrxx,nspin)
+              kedtau(dffts%nnr,nspin), kedtaur(nrxx,nspin)
   ! output: total local potential on the smooth grid
   !         vrs=vltot+vr
   ! input: the total local pseudopotential

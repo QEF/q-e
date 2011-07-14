@@ -33,8 +33,8 @@ SUBROUTINE read_file()
   USE recvec_subs,          ONLY : ggen
   USE gvect,                ONLY : gg, ngm, g, gcutm, &
                                    eigts1, eigts2, eigts3, nl, gstart
-  USE grid_dimensions,      ONLY : dense
-  USE smooth_grid_dimensions,      ONLY : smooth
+  USE fft_base,             ONLY : dfftp
+  USE fft_base,             ONLY : dffts
   USE gvecs,                ONLY : ngms, nls, gcutms 
   USE spin_orb,             ONLY : lspinorb, domag
   USE scf,                  ONLY : rho, rho_core, rhog_core, v
@@ -119,7 +119,7 @@ SUBROUTINE read_file()
   !-------------------------------------------------------------------------------
   !
   CALL set_dimensions()
-  CALL realspace_grids_init ( dense, smooth, at, bg, gcutm, gcutms )
+  CALL realspace_grids_init ( dfftp, dffts, at, bg, gcutm, gcutms )
   !
   ! ... check whether LSDA
   !
@@ -163,7 +163,7 @@ SUBROUTINE read_file()
   !
   ! ... check on symmetry
   !
-  IF (nat > 0) CALL checkallsym( nat, tau, ityp, dense%nr1, dense%nr2, dense%nr3 )
+  IF (nat > 0) CALL checkallsym( nat, tau, ityp, dfftp%nr1, dfftp%nr2, dfftp%nr3 )
   !
   !  Set the different spin indices
   !
@@ -234,7 +234,7 @@ SUBROUTINE read_file()
   CALL init_vloc()
   !
   CALL struc_fact( nat, tau, nsp, ityp, ngm, g, bg, &
-                   dense%nr1, dense%nr2, dense%nr3, strf, eigts1, eigts2, eigts3 )
+                   dfftp%nr1, dfftp%nr2, dfftp%nr3, strf, eigts1, eigts2, eigts3 )
   !
   CALL setlocal()
   !

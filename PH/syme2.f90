@@ -17,12 +17,12 @@ subroutine syme2 (dvsym)
   ! the symmetric 3x3 tensor are given by the common variables: jab; a1j; a2j
   !
   use kinds,  only : DP
-  USE grid_dimensions, ONLY: dense
+  USE fft_base, ONLY: dfftp
   USE symm_base,  ONLY: nsym, s, ftau
   USE ramanm, ONLY: jab
   implicit none
 
-  complex(DP) :: dvsym (dense%nr1x, dense%nr2x, dense%nr3x, 6)
+  complex(DP) :: dvsym (dfftp%nr1x, dfftp%nr2x, dfftp%nr3x, 6)
   complex(DP), allocatable :: aux (:,:,:,:)
   ! the function to symmetrize
   ! auxiliary space
@@ -34,22 +34,22 @@ subroutine syme2 (dvsym)
   ! counter on polarizations
 
   if (nsym.eq.1) return
-  allocate (aux(dense%nr1x , dense%nr2x , dense%nr3x , 6))
+  allocate (aux(dfftp%nr1x , dfftp%nr2x , dfftp%nr3x , 6))
 
   do ip = 1, 6
-     call zcopy (dense%nr1x * dense%nr2x * dense%nr3x, dvsym (1, 1, 1, ip), &
+     call zcopy (dfftp%nr1x * dfftp%nr2x * dfftp%nr3x, dvsym (1, 1, 1, ip), &
                  1, aux (1, 1, 1, ip), 1)
   enddo
   dvsym (:,:,:,:) = (0.d0, 0.d0)
   !
   !  symmmetrize
   !
-  do kx = 1, dense%nr3
-  do jx = 1, dense%nr2
-  do ix = 1, dense%nr1
+  do kx = 1, dfftp%nr3
+  do jx = 1, dfftp%nr2
+  do ix = 1, dfftp%nr1
      do irot = 1, nsym
         call ruotaijk(s (1, 1, irot), ftau (1, irot), ix, jx, kx, &
-                      dense%nr1, dense%nr2, dense%nr3, ri, rj, rk)
+                      dfftp%nr1, dfftp%nr2, dfftp%nr3, ri, rj, rk)
         !
         ! ruotaijk finds the rotated of ix,jx,kx with the inverse of S
         !
@@ -72,7 +72,7 @@ subroutine syme2 (dvsym)
   enddo
 
   do ip = 1, 6
-     call dscal (2 * dense%nr1x * dense%nr2x * dense%nr3x, 1.d0 / DBLE (nsym), &
+     call dscal (2 * dfftp%nr1x * dfftp%nr2x * dfftp%nr3x, 1.d0 / DBLE (nsym), &
                  dvsym (1, 1, 1, ip), 1)
   enddo
 

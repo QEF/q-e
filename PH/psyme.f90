@@ -13,7 +13,6 @@ SUBROUTINE psyme (dvtosym)
   ! ...  p-symmetrize the charge density.
   !
   USE kinds,     ONLY : DP
-  USE grid_dimensions, ONLY : dense
   USE fft_base, ONLY : dfftp
   USE noncollin_module, ONLY : nspin_mag
   USE mp_global, ONLY : me_pool
@@ -32,7 +31,7 @@ SUBROUTINE psyme (dvtosym)
     ! the potential to symmet
   !
   !
-  ALLOCATE (ddvtosym ( dense%nr1x * dense%nr2x * dense%nr3x, nspin_mag, 3))
+  ALLOCATE (ddvtosym ( dfftp%nr1x * dfftp%nr2x * dfftp%nr3x, nspin_mag, 3))
   npp0 = 0
   DO i = 1, me_pool
      npp0 = npp0 + dfftp%npp (i)

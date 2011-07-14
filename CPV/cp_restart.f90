@@ -58,8 +58,6 @@ MODULE cp_restart
                                            intra_bgrp_comm, intra_image_comm, inter_bgrp_comm, &
                                            root_bgrp, intra_pool_comm
       USE printout_base,            ONLY : title
-      USE grid_dimensions,          ONLY : grid_dim, dense
-      USE smooth_grid_dimensions,   ONLY : smooth
       USE smallbox_grid_dim,        ONLY : nr1b, nr2b, nr3b
       USE gvect,                    ONLY : ngm, ngm_g
       USE gvecs,                    ONLY : ngms_g, ecuts, dual
@@ -74,7 +72,7 @@ MODULE cp_restart
       USE energies,                 ONLY : enthal, ekin, eht, esr, eself, &
                                            epseu, enl, exc, vave
       USE mp,                       ONLY : mp_sum
-      USE fft_base,                 ONLY : dfftp
+      USE fft_base,                 ONLY : dfftp, dffts
       USE constants,                ONLY : pi
       USE uspp_param,               ONLY : n_atom_wfc
       USE global_version,           ONLY : version_number
@@ -363,8 +361,8 @@ MODULE cp_restart
 ! ... PLANE_WAVES
 !-------------------------------------------------------------------------------
          !
-         CALL write_planewaves( ecutwfc, dual, ngw_g, gamma_only, dense%nr1, dense%nr2, &
-                                dense%nr3, ngm_g, smooth%nr1, smooth%nr2, smooth%nr3, ngms_g, nr1b, &
+         CALL write_planewaves( ecutwfc, dual, ngw_g, gamma_only, dfftp%nr1, dfftp%nr2, &
+                                dfftp%nr3, ngm_g, dffts%nr1, dffts%nr2, dffts%nr3, ngms_g, nr1b, &
                                 nr2b, nr3b, mill_g, .FALSE. )
          !
 !-------------------------------------------------------------------------------
@@ -932,9 +930,7 @@ MODULE cp_restart
       USE io_files,                 ONLY : iunpun, xmlpun, iunwfc, nwordwfc, &
                                            tmp_dir, diropn
       USE printout_base,            ONLY : title
-      USE grid_dimensions,          ONLY : grid_dim, dense
-      USE smooth_grid_dimensions,   ONLY : smooth
-      USE smallbox_grid_dim,            ONLY : nr1b, nr2b, nr3b
+      USE smallbox_grid_dim,        ONLY : nr1b, nr2b, nr3b
       USE gvect,                    ONLY : ngm
       USE gvecw,                    ONLY : ngw, ngw_g
       USE electrons_base,           ONLY : nspin, nbnd, nelt, nel, &

@@ -16,15 +16,14 @@
       use gvect,     only : g
       use gvecs,                  only : ngms, nlsm, nls
       use gvecw,                  only : ngw
-      use smooth_grid_dimensions, only : smooth
       use cell_base,              only : tpiba2
       USE metagga,                ONLY : kedtaus
       USE fft_interfaces,         ONLY : fwfft, invfft
-      USE fft_base,               ONLY: dffts
+      USE fft_base,               ONLY : dffts
 !
       implicit none
 !
-      complex(dp) c(ngw), ca(ngw), df(ngw), da(ngw),psi(smooth%nrxx)
+      complex(dp) c(ngw), ca(ngw), df(ngw), da(ngw),psi(dffts%nnr)
       integer iss1, iss2
       real(dp) fi, fip
 ! local variables
@@ -42,7 +41,7 @@
             end do
             call invfft('Wave',psi,dffts )
 !           on smooth grids--> grids for charge density
-            do ir=1, smooth%nrxx
+            do ir=1, dffts%nnr
                psi(ir) = CMPLX (kedtaus(ir,iss1)*DBLE(psi(ir)), &
                                 kedtaus(ir,iss2)*AIMAG(psi(ir)),kind=DP)
             end do
@@ -72,9 +71,7 @@
       use gvecw, only: ngw
       use gvect, only: g
       use gvect, only: nl, nlm
-      use grid_dimensions, only: dense
       use cell_base
-      use smooth_grid_dimensions, only: smooth
       use electrons_base, only: nx => nbspx, n => nbsp, f, ispin, nspin
       use constants, only: pi, fpi
 !
@@ -134,12 +131,12 @@
                   ! gradient of wfc in real space
             call invfft('Wave',psis, dffts )
             !           on smooth grids--> grids for charge density
-            do ir=1, smooth%nrxx
+            do ir=1, dffts%nnr
                kedtaus(ir,iss1)=kedtaus(ir,iss1)+0.5d0*sa1*DBLE(psis(ir))**2
                kedtaus(ir,iss2)=kedtaus(ir,iss2)+0.5d0*sa2*AIMAG(psis(ir))**2
             end do
             if(tpre) then
-               do ir=1, smooth%nrxx
+               do ir=1, dffts%nnr
                   gradwfc(ir,ipol)=psis(ir)
                end do
             end if
@@ -150,7 +147,7 @@
                do iy=1,ix
                   ipol2xy(ix,iy)=ipol
                   ipol2xy(iy,ix)=ipol
-                  do ir=1,smooth%nrxx
+                  do ir=1,dffts%nnr
                      crosstaus(ir,ipol,iss1) = crosstaus(ir,ipol,iss1) +&
                           sa1*DBLE(gradwfc(ir,ix))*DBLE(gradwfc(ir,iy))
                      crosstaus(ir,ipol,iss2) = crosstaus(ir,ipol,iss2) +&
@@ -166,7 +163,7 @@
             do iss=1,nspin
                do ix=1,3
                   do iy=1,3
-                     do ir=1,smooth%nrxx
+                     do ir=1,dffts%nnr
                         dkedtaus(ir,ix,iy,iss)=-kedtaus(ir,iss)*ainv(iy,ix)&
                              -crosstaus(ir,ipol2xy(1,ix),iss)*ainv(iy,1)&
                              -crosstaus(ir,ipol2xy(2,ix),iss)*ainv(iy,2)&
@@ -182,7 +179,7 @@
       if(nspin.eq.1)then
          iss=1
 
-         psis(1:smooth%nrxx)=CMPLX(kedtaus(1:smooth%nrxx,iss),0.d0,kind=DP)
+         psis(1:dffts%nnr)=CMPLX(kedtaus(1:dffts%nnr,iss),0.d0,kind=DP)
          call fwfft('Smooth',psis, dffts )
          kedtaug(1:ngms,iss)=psis(nls(1:ngms))
 
@@ -190,7 +187,7 @@
          isup=1
          isdw=2
 
-         psis(1:smooth%nrxx)=CMPLX(kedtaus(1:smooth%nrxx,isup),kedtaus(1:smooth%nrxx,isdw),kind=DP)
+         psis(1:dffts%nnr)=CMPLX(kedtaus(1:dffts%nnr,isup),kedtaus(1:dffts%nnr,isdw),kind=DP)
          call fwfft('Smooth',psis, dffts )
          do ig=1,ngms
             fp= psis(nls(ig)) + psis(nlsm(ig))
@@ -211,7 +208,7 @@
          psi(nlm(1:ngms))=CONJG(kedtaug(1:ngms,iss))
          psi(nl(1:ngms)) =      kedtaug(1:ngms,iss)
          call invfft('Dense',psi, dfftp )
-         kedtaur(1:dense%nrxx,iss)=DBLE(psi(1:dense%nrxx))
+         kedtaur(1:dfftp%nnr,iss)=DBLE(psi(1:dfftp%nnr))
 
       else 
 !     ==================================================================
@@ -227,8 +224,8 @@
             psi(nl(ig)) =kedtaug(ig,isup)+ci*kedtaug(ig,isdw)
          end do
          call invfft('Dense',psi, dfftp )
-         kedtaur(1:dense%nrxx,isup)= DBLE(psi(1:dense%nrxx))
-         kedtaur(1:dense%nrxx,isdw)=AIMAG(psi(1:dense%nrxx))
+         kedtaur(1:dfftp%nnr,isup)= DBLE(psi(1:dfftp%nnr))
+         kedtaur(1:dfftp%nnr,isdw)=AIMAG(psi(1:dfftp%nnr))
 
       endif
 
@@ -258,8 +255,6 @@
       use gvecs
       use gvect, only: ngm, nl, nlm
       use cell_base, only: omega
-      use grid_dimensions, only: dense
-      use smooth_grid_dimensions, only: smooth
       use electrons_base, only: nspin
       use constants, only: pi, fpi
       use energies, only: etot, eself, enl, ekin, epseu, esr, eht, exc
@@ -279,7 +274,7 @@
       integer iss, isup, isdw, ig, ir,i,j,k,is, ia
       real(dp) dkedxc(3,3) !metagga
       complex(dp)  fp, fm, ci
-      complex(dp)  v(dense%nrxx), vs(smooth%nrxx)
+      complex(dp)  v(dfftp%nnr), vs(dffts%nnr)
 !
       ci=(0.d0,1.d0)
 
@@ -304,7 +299,7 @@
 !
       if(nspin.eq.1) then
          iss=1
-         do ir=1,dense%nrxx
+         do ir=1,dfftp%nnr
             v(ir)=CMPLX(kedtaur(ir,iss),0.0d0,kind=DP)
          end do
          call fwfft('Dense',v, dfftp )
@@ -316,7 +311,7 @@
          isup=1
          isdw=2
 
-         v(1:dense%nrxx)=CMPLX(kedtaur(1:dense%nrxx,isup),kedtaur(1:dense%nrxx,isdw),kind=DP)
+         v(1:dfftp%nnr)=CMPLX(kedtaur(1:dfftp%nnr,isup),kedtaur(1:dfftp%nnr,isdw),kind=DP)
          call fwfft('Dense',v, dfftp )
          do ig=1,ngm
             fp=v(nl(ig))+v(nlm(ig))
@@ -337,7 +332,7 @@
 !
          call invfft('Smooth',vs, dffts )
 !
-         kedtaus(1:smooth%nrxx,iss)=DBLE(vs(1:smooth%nrxx))
+         kedtaus(1:dffts%nnr,iss)=DBLE(vs(1:dffts%nnr))
       else
          isup=1
          isdw=2
@@ -346,8 +341,8 @@
             vs(nlsm(ig))=CONJG(kedtaug(ig,isup)) +ci*conjg(kedtaug(ig,isdw))
          end do
          call invfft('Smooth',vs, dffts )
-         kedtaus(1:smooth%nrxx,isup)= DBLE(vs(1:smooth%nrxx))
-         kedtaus(1:smooth%nrxx,isdw)=AIMAG(vs(1:smooth%nrxx))
+         kedtaus(1:dffts%nnr,isup)= DBLE(vs(1:dffts%nnr))
+         kedtaus(1:dffts%nnr,isdw)=AIMAG(vs(1:dffts%nnr))
       endif
       !calculate dkedxc in real space on smooth grids  !metagga
       if(tpre) then
@@ -355,7 +350,7 @@
             do j=1,3
                do i=1,3
                   dkedxc(i,j)=0.d0
-                  do ir=1,smooth%nrxx
+                  do ir=1,dffts%nnr
                      !2.d0 : because kedtau = 0.5d0 d_Exc/d_kedtau
                       dkedxc(i,j)= dkedxc(i,j)+kedtaus(ir,iss)*2.d0*&
                            dkedtaus(ir,i,j,iss)
@@ -368,7 +363,7 @@
 #endif
           do j=1,3
              do i=1,3
-                dxc(i,j) = dxc(i,j) + omega/(smooth%nr1*smooth%nr2*smooth%nr3)*dkedxc(i,j)
+                dxc(i,j) = dxc(i,j) + omega/(dffts%nr1*dffts%nr2*dffts%nr3)*dkedxc(i,j)
              end do
           end do
        end if        

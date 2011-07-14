@@ -15,10 +15,9 @@ subroutine dvdpsi (nu_i, xq_, dvloc, vkb_, vkbq_, psi_, dvpsi_)
 !
   USE ions_base,  ONLY : nat, ityp, ntyp => nsp
   USE cell_base,  ONLY : tpiba
-  USE fft_base,   ONLY : dffts
+  USE fft_base,   ONLY : dffts, dfftp
   USE fft_interfaces,  ONLY : fwfft, invfft
   USE gvect,      ONLY : g
-  USE grid_dimensions, ONLY : dense
   USE gvecs,    ONLY : nls
   USE wvfct,      ONLY : nbnd, npwx, npw, igk
   use phcom
@@ -34,7 +33,7 @@ subroutine dvdpsi (nu_i, xq_, dvloc, vkb_, vkbq_, psi_, dvpsi_)
   ! input: the mode under consideration
   real (DP) :: xq_ (3)
   ! input: coordinates of the q point describing the perturbation
-  complex (DP) :: dvloc (dense%nrxx), psi_ (npwx, nbnd), dvpsi_ (npwx, nbnd)
+  complex (DP) :: dvloc (dfftp%nnr), psi_ (npwx, nbnd), dvpsi_ (npwx, nbnd)
   ! input: local part of the KS potential
   ! input: wavefunction
   ! output: variation of the KS potential applied to psi_
@@ -51,7 +50,7 @@ subroutine dvdpsi (nu_i, xq_, dvloc, vkb_, vkbq_, psi_, dvpsi_)
   complex (DP) , external:: zdotc
   logical :: q_eq_zero
   !
-  allocate  (aux( dense%nrxx))
+  allocate  (aux( dfftp%nnr))
   allocate  (ps( 2, nbnd))
   allocate  (wrk2( npwx))
   q_eq_zero = xq_ (1) == 0.d0 .and. xq_ (2) == 0.d0 .and. xq_ (3) == 0.d0

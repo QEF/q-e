@@ -20,13 +20,12 @@ SUBROUTINE compute_sigma_avg(sigma_avg,becp_nc,ik,lsigma)
   USE wavefunctions_module, ONLY : evc, psic_nc
   USE klist,                ONLY : nks, xk
   USE gvect,                ONLY : g,gg
-  USE grid_dimensions,      ONLY : dense
-  USE gvecs,              ONLY : nls, nlsm, doublegrid
+  USE gvecs,                ONLY : nls, nlsm, doublegrid
   USE scf,                  ONLY : rho
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
   USE mp_global,            ONLY : me_pool, intra_pool_comm
   USE mp,                   ONLY : mp_sum
-  USE fft_base,             ONLY : dffts
+  USE fft_base,             ONLY : dffts, dfftp
   USE fft_interfaces,       ONLY : invfft
 
 
@@ -186,11 +185,11 @@ SUBROUTINE compute_sigma_avg(sigma_avg,becp_nc,ik,lsigma)
 
      DO ipol=1,3
         IF (lsigma(ipol)) THEN
-           DO ir = 1,dense%nrxx
+           DO ir = 1,dfftp%nnr
               magtot1(ipol) = magtot1(ipol) + rho%of_r(ir,ipol+1)
            ENDDO
            CALL mp_sum( magtot1(ipol), intra_pool_comm )
-           magtot1(ipol) = magtot1(ipol) / ( dense%nr1 * dense%nr2 * dense%nr3 )
+           magtot1(ipol) = magtot1(ipol) / ( dfftp%nr1 * dfftp%nr2 * dfftp%nr3 )
         ENDIF
      ENDDO
 

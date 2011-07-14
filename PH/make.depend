@@ -60,7 +60,6 @@ adddvscf.o : phcom.o
 addnlcc.o : ../Modules/cell_base.o
 addnlcc.o : ../Modules/fft_base.o
 addnlcc.o : ../Modules/funct.o
-addnlcc.o : ../Modules/griddim.o
 addnlcc.o : ../Modules/ions_base.o
 addnlcc.o : ../Modules/kind.o
 addnlcc.o : ../Modules/mp.o
@@ -72,7 +71,6 @@ addnlcc.o : phcom.o
 addnlcc_zstar_eu_us.o : ../Modules/cell_base.o
 addnlcc_zstar_eu_us.o : ../Modules/fft_base.o
 addnlcc_zstar_eu_us.o : ../Modules/funct.o
-addnlcc_zstar_eu_us.o : ../Modules/griddim.o
 addnlcc_zstar_eu_us.o : ../Modules/kind.o
 addnlcc_zstar_eu_us.o : ../Modules/mp_global.o
 addnlcc_zstar_eu_us.o : ../Modules/recvec.o
@@ -209,7 +207,7 @@ check_initial_status.o : ph_restart.o
 check_initial_status.o : phcom.o
 check_initial_status.o : save_ph_input.o
 check_q_points_sym.o : ../Modules/kind.o
-chi_test.o : ../Modules/griddim.o
+chi_test.o : ../Modules/fft_base.o
 chi_test.o : ../Modules/kind.o
 chi_test.o : ../Modules/wavefunctions.o
 chi_test.o : ../PW/pwcom.o
@@ -370,7 +368,6 @@ dielec_test.o : phcom.o
 dielec_test.o : ramanm.o
 drho.o : ../Modules/cell_base.o
 drho.o : ../Modules/fft_base.o
-drho.o : ../Modules/griddim.o
 drho.o : ../Modules/ions_base.o
 drho.o : ../Modules/kind.o
 drho.o : ../Modules/mp.o
@@ -398,7 +395,6 @@ drhodv.o : ../PW/pwcom.o
 drhodv.o : phcom.o
 drhodvloc.o : ../Modules/cell_base.o
 drhodvloc.o : ../Modules/fft_base.o
-drhodvloc.o : ../Modules/griddim.o
 drhodvloc.o : ../Modules/ions_base.o
 drhodvloc.o : ../Modules/kind.o
 drhodvloc.o : ../Modules/mp.o
@@ -416,7 +412,6 @@ drhodvnl.o : ../PW/pwcom.o
 drhodvnl.o : phcom.o
 drhodvus.o : ../Modules/cell_base.o
 drhodvus.o : ../Modules/fft_base.o
-drhodvus.o : ../Modules/griddim.o
 drhodvus.o : ../Modules/io_global.o
 drhodvus.o : ../Modules/ions_base.o
 drhodvus.o : ../Modules/kind.o
@@ -578,7 +573,6 @@ ef_shift.o : phcom.o
 el_opt.o : ../Modules/cell_base.o
 el_opt.o : ../Modules/constants.o
 el_opt.o : ../Modules/fft_base.o
-el_opt.o : ../Modules/griddim.o
 el_opt.o : ../Modules/io_global.o
 el_opt.o : ../Modules/ions_base.o
 el_opt.o : ../Modules/kind.o
@@ -762,7 +756,6 @@ open_dvscf_star_q.o : ../Modules/cell_base.o
 open_dvscf_star_q.o : ../Modules/constants.o
 open_dvscf_star_q.o : ../Modules/control_flags.o
 open_dvscf_star_q.o : ../Modules/fft_base.o
-open_dvscf_star_q.o : ../Modules/griddim.o
 open_dvscf_star_q.o : ../Modules/io_files.o
 open_dvscf_star_q.o : ../Modules/io_global.o
 open_dvscf_star_q.o : ../Modules/ions_base.o
@@ -776,7 +769,6 @@ open_dvscf_star_q.o : elph.o
 open_dvscf_star_q.o : phcom.o
 openfilq.o : ../Modules/control_flags.o
 openfilq.o : ../Modules/fft_base.o
-openfilq.o : ../Modules/griddim.o
 openfilq.o : ../Modules/input_parameters.o
 openfilq.o : ../Modules/io_files.o
 openfilq.o : ../Modules/io_global.o
@@ -907,8 +899,8 @@ phq_setup.o : ramanm.o
 phq_summary.o : ../Modules/cell_base.o
 phq_summary.o : ../Modules/constants.o
 phq_summary.o : ../Modules/control_flags.o
+phq_summary.o : ../Modules/fft_base.o
 phq_summary.o : ../Modules/funct.o
-phq_summary.o : ../Modules/griddim.o
 phq_summary.o : ../Modules/io_global.o
 phq_summary.o : ../Modules/ions_base.o
 phq_summary.o : ../Modules/kind.o
@@ -964,24 +956,20 @@ psidspsi.o : ../PW/noncol.o
 psidspsi.o : ../PW/pwcom.o
 psidspsi.o : phcom.o
 psym_dmag.o : ../Modules/fft_base.o
-psym_dmag.o : ../Modules/griddim.o
 psym_dmag.o : ../Modules/kind.o
 psym_dmag.o : ../Modules/mp_global.o
 psym_dmag.o : ../PW/noncol.o
 psym_dmag.o : phcom.o
 psym_dmage.o : ../Modules/fft_base.o
-psym_dmage.o : ../Modules/griddim.o
 psym_dmage.o : ../Modules/kind.o
 psym_dmage.o : ../Modules/mp_global.o
 psym_dmage.o : ../PW/pwcom.o
 psymdvscf.o : ../Modules/fft_base.o
-psymdvscf.o : ../Modules/griddim.o
 psymdvscf.o : ../Modules/kind.o
 psymdvscf.o : ../Modules/mp_global.o
 psymdvscf.o : ../PW/noncol.o
 psymdvscf.o : phcom.o
 psyme.o : ../Modules/fft_base.o
-psyme.o : ../Modules/griddim.o
 psyme.o : ../Modules/kind.o
 psyme.o : ../Modules/mp_global.o
 psyme.o : ../PW/noncol.o
@@ -990,7 +978,6 @@ psyme2.o : ../Modules/kind.o
 psyme2.o : ../Modules/mp_global.o
 punch_plot_e.o : ../Modules/cell_base.o
 punch_plot_e.o : ../Modules/fft_base.o
-punch_plot_e.o : ../Modules/griddim.o
 punch_plot_e.o : ../Modules/io_global.o
 punch_plot_e.o : ../Modules/ions_base.o
 punch_plot_e.o : ../Modules/kind.o
@@ -1001,7 +988,6 @@ punch_plot_e.o : ../PW/pwcom.o
 punch_plot_e.o : phcom.o
 punch_plot_ph.o : ../Modules/cell_base.o
 punch_plot_ph.o : ../Modules/fft_base.o
-punch_plot_ph.o : ../Modules/griddim.o
 punch_plot_ph.o : ../Modules/io_global.o
 punch_plot_ph.o : ../Modules/ions_base.o
 punch_plot_ph.o : ../Modules/kind.o
@@ -1074,7 +1060,6 @@ set_asr_c.o : ../Modules/kind.o
 set_defaults_pw.o : ../Modules/cell_base.o
 set_defaults_pw.o : ../Modules/constants.o
 set_defaults_pw.o : ../Modules/control_flags.o
-set_defaults_pw.o : ../Modules/griddim.o
 set_defaults_pw.o : ../Modules/io_global.o
 set_defaults_pw.o : ../Modules/ions_base.o
 set_defaults_pw.o : ../Modules/kind.o
@@ -1241,19 +1226,19 @@ sym_def.o : ../Modules/kind.o
 sym_def.o : phcom.o
 sym_dmag.o : ../Modules/cell_base.o
 sym_dmag.o : ../Modules/constants.o
-sym_dmag.o : ../Modules/griddim.o
+sym_dmag.o : ../Modules/fft_base.o
 sym_dmag.o : ../Modules/kind.o
 sym_dmag.o : ../PW/noncol.o
 sym_dmag.o : ../PW/symm_base.o
 sym_dmag.o : phcom.o
 sym_dmage.o : ../Modules/cell_base.o
-sym_dmage.o : ../Modules/griddim.o
+sym_dmage.o : ../Modules/fft_base.o
 sym_dmage.o : ../Modules/kind.o
 sym_dmage.o : ../PW/pwcom.o
 sym_dmage.o : ../PW/symm_base.o
 symdvscf.o : ../Modules/cell_base.o
 symdvscf.o : ../Modules/constants.o
-symdvscf.o : ../Modules/griddim.o
+symdvscf.o : ../Modules/fft_base.o
 symdvscf.o : ../Modules/kind.o
 symdvscf.o : ../PW/noncol.o
 symdvscf.o : ../PW/symm_base.o
@@ -1261,11 +1246,11 @@ symdvscf.o : phcom.o
 symdyn_munu.o : ../Modules/kind.o
 symdynph_gq.o : ../Modules/constants.o
 symdynph_gq.o : ../Modules/kind.o
-syme.o : ../Modules/griddim.o
+syme.o : ../Modules/fft_base.o
 syme.o : ../Modules/kind.o
 syme.o : ../PW/noncol.o
 syme.o : ../PW/symm_base.o
-syme2.o : ../Modules/griddim.o
+syme2.o : ../Modules/fft_base.o
 syme2.o : ../Modules/kind.o
 syme2.o : ../PW/symm_base.o
 syme2.o : ramanm.o
@@ -1349,7 +1334,6 @@ zstar_eu.o : ../PW/symme.o
 zstar_eu.o : phcom.o
 zstar_eu_us.o : ../Modules/cell_base.o
 zstar_eu_us.o : ../Modules/fft_base.o
-zstar_eu_us.o : ../Modules/griddim.o
 zstar_eu_us.o : ../Modules/io_files.o
 zstar_eu_us.o : ../Modules/ions_base.o
 zstar_eu_us.o : ../Modules/kind.o

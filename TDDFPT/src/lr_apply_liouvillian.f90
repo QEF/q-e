@@ -19,7 +19,7 @@ SUBROUTINE lr_apply_liouvillian( evc1, evc1_new, sevc1_new, interaction )
   USE fft_interfaces,       ONLY : fwfft
   USE gvecs,              ONLY : nls, nlsm
   USE gvect,                ONLY : nl, ngm, gstart, g, gg
-  USE grid_dimensions,      ONLY : dense
+  USE fft_base,             ONLY : dfftp
   USE io_global,            ONLY : stdout
   USE kinds,                ONLY : dp
   USE klist,                ONLY : nks, xk
@@ -74,7 +74,7 @@ SUBROUTINE lr_apply_liouvillian( evc1, evc1_new, sevc1_new, interaction )
   spsi1(:,:)=(0.0d0,0.0d0)
   !
   IF( interaction ) THEN !If true, the full L is calculated
-     ALLOCATE( dvrs(dense%nrxx, nspin) )
+     ALLOCATE( dvrs(dfftp%nnr, nspin) )
      ALLOCATE( dvrss(dffts%nnr) )
      dvrs(:,:)=0.0d0
      dvrss(:)=0.0d0
@@ -89,11 +89,11 @@ SUBROUTINE lr_apply_liouvillian( evc1, evc1_new, sevc1_new, interaction )
        dvrs(:,1)=rho_1(:,1)
        !
        !call lr_dv_of_drho(dvrs)
-       ALLOCATE( dvrs_temp(dense%nrxx, nspin) )
+       ALLOCATE( dvrs_temp(dfftp%nnr, nspin) )
        dvrs_temp=cmplx(dvrs,0.0d0)         !OBM: This memory copy was hidden in lr_dv_of_drho, can it be avoided?
        DEALLOCATE ( dvrs )
        CALL dv_of_drho(0,dvrs_temp,.false.)
-       ALLOCATE ( dvrs(dense%nrxx, nspin) ) !SJB Worth getting rid of this memory bottle neck for the moment.
+       ALLOCATE ( dvrs(dfftp%nnr, nspin) ) !SJB Worth getting rid of this memory bottle neck for the moment.
        dvrs=dble(dvrs_temp)
        DEALLOCATE(dvrs_temp)
        !
@@ -101,7 +101,7 @@ SUBROUTINE lr_apply_liouvillian( evc1, evc1_new, sevc1_new, interaction )
         IF ( tqr ) THEN
          CALL newq_r(dvrs,d_deeq,.true.)
         ELSE
-         ALLOCATE( psic(dense%nrxx) )
+         ALLOCATE( psic(dfftp%nnr) )
          psic(:)=(0.0d0,0.0d0)
          CALL newq(dvrs,d_deeq,.true.)
          DEALLOCATE( psic )
@@ -114,7 +114,7 @@ SUBROUTINE lr_apply_liouvillian( evc1, evc1_new, sevc1_new, interaction )
      !
   ENDIF
   !
-  ALLOCATE ( psic (dense%nrxx) )
+  ALLOCATE ( psic (dfftp%nnr) )
   IF( gamma_only ) THEN
      !
      CALL lr_apply_liouvillian_gamma()

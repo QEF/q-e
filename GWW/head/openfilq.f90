@@ -28,7 +28,7 @@ SUBROUTINE openfilq()
   USE qpoint,         ONLY : nksq
   USE output,         ONLY : fildyn, fildvscf
   USE wvfct,          ONLY : nbnd, npwx
-  USE grid_dimensions,ONLY : dense
+  USE fft_base,       ONLY : dfftp
   USE lsda_mod,       ONLY : nspin
   USE uspp,           ONLY : nkb, okvan
   USE io_files,       ONLY : prefix, iunigk
@@ -95,7 +95,7 @@ SUBROUTINE openfilq()
   !
   IF (okvan) THEN
      iudrhous = 25
-     lrdrhous = 2 * dense%nrxx * nspin
+     lrdrhous = 2 * dfftp%nnr * nspin
      CALL diropn (iudrhous, 'prd', lrdrhous, exst)
      IF (recover.AND..NOT.exst) &
         CALL errore ('openfilq','file '//trim(prefix)//'.prd not found', 1)
@@ -105,7 +105,7 @@ SUBROUTINE openfilq()
   !  and solve_linter). Used for third-order calculations.
   !
   iudrho = 23
-  lrdrho = 2 * dense%nr1x * dense%nr2x * dense%nr3x * nspin
+  lrdrho = 2 * dfftp%nr1x * dfftp%nr2x * dfftp%nr3x * nspin
   !
   !
   !   Here the sequential files

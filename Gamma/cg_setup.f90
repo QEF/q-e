@@ -22,7 +22,7 @@ SUBROUTINE cg_setup
   USE cgcom
   USE funct, ONLY : dft_is_gradient, dmxc
   USE dfunct,          ONLY : newd
-  USE grid_dimensions, ONLY : dense
+  USE fft_base, ONLY : dfftp
   !
   IMPLICIT NONE
   !
@@ -41,32 +41,32 @@ SUBROUTINE cg_setup
   !
   !  sum self-consistent part (vr) and local part (vltot) of potential
   !
-  CALL set_vrs(vrs,vltot,v%of_r,kedtau, v%kin_r, dense%nrxx,nspin,doublegrid)
+  CALL set_vrs(vrs,vltot,v%of_r,kedtau, v%kin_r, dfftp%nnr,nspin,doublegrid)
   !
   !  allocate memory for various arrays
   !
-  ALLOCATE  (dmuxc( dense%nrxx))
+  ALLOCATE  (dmuxc( dfftp%nnr))
   ALLOCATE  (dvpsi( npwx, nbnd))
   ALLOCATE  ( dpsi( npwx, nbnd))
-  ALLOCATE  ( auxr( dense%nrxx))
-  ALLOCATE  ( aux2( dense%nrxx))
-  ALLOCATE  ( aux3( dense%nrxx))
+  ALLOCATE  ( auxr( dfftp%nnr))
+  ALLOCATE  ( aux2( dfftp%nnr))
+  ALLOCATE  ( aux3( dfftp%nnr))
   !
   !  allocate memory for gradient corrections (if needed)
   !
   IF ( dft_is_gradient() ) THEN
-     ALLOCATE  ( dvxc_rr(dense%nrxx,nspin,nspin))
-     ALLOCATE  ( dvxc_sr(dense%nrxx,nspin,nspin))
-     ALLOCATE  ( dvxc_ss(dense%nrxx,nspin,nspin))
-     ALLOCATE  ( dvxc_s (dense%nrxx,nspin,nspin))
-     ALLOCATE  ( grho   (3, dense%nrxx, nspin))
+     ALLOCATE  ( dvxc_rr(dfftp%nnr,nspin,nspin))
+     ALLOCATE  ( dvxc_sr(dfftp%nnr,nspin,nspin))
+     ALLOCATE  ( dvxc_ss(dfftp%nnr,nspin,nspin))
+     ALLOCATE  ( dvxc_s (dfftp%nnr,nspin,nspin))
+     ALLOCATE  ( grho   (3, dfftp%nnr, nspin))
   ENDIF
   !
   !
   !  initialize structure factor array
   !
   CALL struc_fact ( nat, tau, ntyp, ityp, ngm, g, bg,               &
-       &                  dense%nr1, dense%nr2, dense%nr3, strf, eigts1, eigts2, eigts3 )
+       &                  dfftp%nr1, dfftp%nr2, dfftp%nr3, strf, eigts1, eigts2, eigts3 )
   !
   !  compute drhocore/dtau for each atom type (if needed)
   !
@@ -84,7 +84,7 @@ SUBROUTINE cg_setup
   !  derivative of the xc potential
   !
   dmuxc(:) = 0.d0
-  DO i = 1,dense%nrxx
+  DO i = 1,dfftp%nnr
      rhotot = rho%of_r(i,current_spin)+rho_core(i)
      IF ( rhotot> 1.d-30 ) dmuxc(i)= dmxc( rhotot)
      IF ( rhotot<-1.d-30 ) dmuxc(i)=-dmxc(-rhotot)

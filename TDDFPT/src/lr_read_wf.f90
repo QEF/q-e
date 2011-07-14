@@ -311,7 +311,7 @@ SUBROUTINE virt_read()
 !The modifications to read also the virtual orbitals
 !
 USE control_ph,            ONLY : nbnd_occ
-USE grid_dimensions,       ONLY : dense
+USE fft_base,     ONLY : dfftp
 USE lr_variables, ONLY: check_all_bands_gamma, check_density_gamma,&
                         check_vector_gamma
   IMPLICIT NONE
@@ -324,7 +324,7 @@ USE lr_variables, ONLY: check_all_bands_gamma, check_density_gamma,&
   !First pretend everything is normal
   nbnd=nbnd_total
   !
-  ALLOCATE(revc_all(dense%nrxx,nbnd,nks))
+  ALLOCATE(revc_all(dfftp%nnr,nbnd,nks))
   ALLOCATE(evc_all(npwx,nbnd,nks))
   ALLOCATE(sevc_all(npwx,nbnd,nks))
   IF (nkb > 0) THEN

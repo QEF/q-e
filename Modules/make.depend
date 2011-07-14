@@ -212,7 +212,6 @@ stick_base.o : io_global.o
 stick_base.o : kind.o
 stick_base.o : mp.o
 stick_set.o : fft_types.o
-stick_set.o : griddim.o
 stick_set.o : io_global.o
 stick_set.o : kind.o
 stick_set.o : parallel_include.o
@@ -253,7 +252,6 @@ xc_vdW_DF.o : control_flags.o
 xc_vdW_DF.o : fft_base.o
 xc_vdW_DF.o : fft_interfaces.o
 xc_vdW_DF.o : fft_scalar.o
-xc_vdW_DF.o : griddim.o
 xc_vdW_DF.o : input_parameters.o
 xc_vdW_DF.o : io_global.o
 xc_vdW_DF.o : kernel_table.o

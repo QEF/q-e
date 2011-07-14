@@ -25,9 +25,9 @@ SUBROUTINE electrons()
   USE ions_base,            ONLY : zv, nat, nsp, ityp, tau, compute_eextfor
   USE basis,                ONLY : starting_pot
   USE bp,                   ONLY : lelfield
-  USE grid_dimensions,      ONLY : dense
+  USE fft_base,             ONLY : dfftp
   USE gvect,                ONLY : ngm, gstart, nl, nlm, g, gg, gcutm
-  USE gvecs,              ONLY : doublegrid, ngms
+  USE gvecs,                ONLY : doublegrid, ngms
   USE klist,                ONLY : xk, wk, nelec, ngk, nks, nkstot, lgauss
   USE lsda_mod,             ONLY : lsda, nspin, magtot, absmag, isk
   USE vlocal,               ONLY : strf
@@ -173,7 +173,7 @@ SUBROUTINE electrons()
   if ( exx_is_active())  then
      CALL v_of_rho( rho, rho_core, rhog_core, &
                     ehart, etxc, vtxc, eth, etotefield, charge, v)
-     CALL set_vrs( vrs, vltot, v%of_r, kedtau, v%kin_r, dense%nrxx, nspin, doublegrid )
+     CALL set_vrs( vrs, vltot, v%of_r, kedtau, v%kin_r, dfftp%nnr, nspin, doublegrid )
    end if
 #endif
 
@@ -440,7 +440,7 @@ SUBROUTINE electrons()
      !
      IF ( do_solvent  )  THEN
        !
-       CALL calc_esolvent( dense%nrxx, nspin, rhoin%of_r, vltot_zero, &
+       CALL calc_esolvent( dfftp%nnr, nspin, rhoin%of_r, vltot_zero, &
                            desolvent, esolvent, ecavity, epressure )
        !
        IF ( .NOT. conv_elec .AND. dr2 < solvent_thr ) THEN
@@ -451,7 +451,7 @@ SUBROUTINE electrons()
          !
          vltot = vltot_zero
          !
-         CALL calc_vsolvent( dense%nrxx, nspin, rhoin%of_r, vltot )
+         CALL calc_vsolvent( dfftp%nnr, nspin, rhoin%of_r, vltot )
          !
        END IF
        !
@@ -460,7 +460,7 @@ SUBROUTINE electrons()
 #endif
      ! ... define the total local potential (external + scf)
      !
-     CALL set_vrs( vrs, vltot, v%of_r, kedtau, v%kin_r, dense%nrxx, nspin, doublegrid )
+     CALL set_vrs( vrs, vltot, v%of_r, kedtau, v%kin_r, dfftp%nnr, nspin, doublegrid )
      !
      ! ... in the US case we have to recompute the self-consistent
      ! ... term in the nonlocal potential
@@ -541,7 +541,7 @@ SUBROUTINE electrons()
                           ehart, etxc, vtxc, eth, etotefield, charge, v)
            IF (okpaw) CALL PAW_potential(rho%bec, ddd_PAW, epaw)
            !
-           CALL set_vrs( vrs, vltot, v%of_r, kedtau, v%kin_r, dense%nrxx, nspin, doublegrid )
+           CALL set_vrs( vrs, vltot, v%of_r, kedtau, v%kin_r, dfftp%nnr, nspin, doublegrid )
            !
            conv_elec = .false.
            iter = 0
@@ -779,7 +779,7 @@ SUBROUTINE electrons()
           magtot = 0.D0
           absmag = 0.D0
           !
-          DO ir = 1, dense%nrxx
+          DO ir = 1, dfftp%nnr
              !
              mag = rho%of_r(ir,1) - rho%of_r(ir,2)
              !
@@ -788,8 +788,8 @@ SUBROUTINE electrons()
              !
           END DO
           !
-          magtot = magtot * omega / ( dense%nr1*dense%nr2*dense%nr3 )
-          absmag = absmag * omega / ( dense%nr1*dense%nr2*dense%nr3 )
+          magtot = magtot * omega / ( dfftp%nr1*dfftp%nr2*dfftp%nr3 )
+          absmag = absmag * omega / ( dfftp%nr1*dfftp%nr2*dfftp%nr3 )
           !
           CALL mp_sum( magtot, intra_pool_comm )
           CALL mp_sum( absmag, intra_pool_comm )
@@ -799,7 +799,7 @@ SUBROUTINE electrons()
           magtot_nc = 0.D0
           absmag    = 0.D0
           !
-          DO ir = 1,dense%nrxx
+          DO ir = 1,dfftp%nnr
              !
              mag = SQRT( rho%of_r(ir,2)**2 + &
                          rho%of_r(ir,3)**2 + &
@@ -820,11 +820,11 @@ SUBROUTINE electrons()
           !
           DO i = 1, 3
              !
-             magtot_nc(i) = magtot_nc(i) * omega / ( dense%nr1*dense%nr2*dense%nr3 )
+             magtot_nc(i) = magtot_nc(i) * omega / ( dfftp%nr1*dfftp%nr2*dfftp%nr3 )
              !
           END DO
           !
-          absmag = absmag * omega / ( dense%nr1*dense%nr2*dense%nr3 )
+          absmag = absmag * omega / ( dfftp%nr1*dfftp%nr2*dfftp%nr3 )
           !
        END IF
        !
@@ -868,7 +868,7 @@ SUBROUTINE electrons()
        IF ( dft_is_meta() ) &
           delta_e = delta_e - SUM( rho%kin_r(:,:)*v%kin_r(:,:) )
        !
-       delta_e = omega * delta_e / ( dense%nr1*dense%nr2*dense%nr3 )
+       delta_e = omega * delta_e / ( dfftp%nr1*dfftp%nr2*dfftp%nr3 )
        !
        CALL mp_sum( delta_e, intra_pool_comm )
        !
@@ -904,7 +904,7 @@ SUBROUTINE electrons()
           delta_escf = delta_escf - &
                        SUM( (rhoin%kin_r(:,:)-rho%kin_r(:,:) )*v%kin_r(:,:))
        !
-       delta_escf = omega * delta_escf / ( dense%nr1*dense%nr2*dense%nr3 )
+       delta_escf = omega * delta_escf / ( dfftp%nr1*dfftp%nr2*dfftp%nr3 )
        !
        CALL mp_sum( delta_escf, intra_pool_comm )
        !

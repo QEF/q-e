@@ -209,12 +209,12 @@ CONTAINS
     USE wvfct,         ONLY : nbnd, npwx
     USE ions_base,     ONLY : ntyp => nsp
     USE paw_gipaw,     ONLY : paw_recon
-    USE smooth_grid_dimensions, ONLY : nrxxs
+    USE fft_base,      ONLY : dffts
 
     IMPLICIT NONE
 
     allocate(evq(npwx,nbnd))
-    allocate(j_bare(nrxxs,3,3,nspin), b_ind_r(nrxxs,3,3), b_ind(ngm,3,3))
+    allocate(j_bare(dffts%nnr,3,3,nspin), b_ind_r(dffts%nnr,3,3), b_ind(ngm,3,3))
     if (.not. allocated(paw_recon) ) allocate ( paw_recon(ntyp) )
 
   END SUBROUTINE gipaw_allocate
@@ -336,8 +336,8 @@ CONTAINS
     USE lsda_mod,      ONLY : nspin, lsda
     USE scf,           ONLY : v, vrs, vltot, rho, rho_core, kedtau
     USE gvect,         ONLY : ngm
-    USE grid_dimensions,ONLY: nrxx
-    USE gvecs,       ONLY : doublegrid
+    USE fft_base,      ONLY : dfftp
+    USE gvecs,         ONLY : doublegrid
     USE klist,         ONLY : xk, degauss, ngauss, nks, nelec
     USE constants,     ONLY : degspin, pi
     USE paw_gipaw,     ONLY : paw_recon, paw_nkb, paw_vkb, paw_becp, &
@@ -766,7 +766,7 @@ CONTAINS
 
     ! computes the total local potential (external+scf) on the smooth grid
     call setlocal
-    call set_vrs (vrs, vltot, v%of_r, kedtau, v%kin_r, nrxx, nspin, doublegrid)
+    call set_vrs (vrs, vltot, v%of_r, kedtau, v%kin_r, dfftp%nnr, nspin, doublegrid)
 
     ! compute the D for the pseudopotentials
     call newd

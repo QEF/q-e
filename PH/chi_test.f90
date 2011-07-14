@@ -16,7 +16,7 @@ subroutine chi_test (dvscfs, chif, ik, depsi, auxr, auxg)
 
   USE kinds, ONLY : DP
   USE wvfct, ONLY : npwx, nbnd
-  USE smooth_grid_dimensions, ONLY : smooth
+  USE fft_base, ONLY : dffts
   use ramanm,  ONLY : lrd2w, iud2w, jab
   USE units_ph, ONLY : iuwfc, lrdwf, iudwf
   USE qpoint, ONLY : npwq, nksq
@@ -26,8 +26,8 @@ subroutine chi_test (dvscfs, chif, ik, depsi, auxr, auxg)
   implicit none
 
   integer :: ik
-  complex(DP) :: dvscfs(smooth%nrxx,3), chif(npwx,nbnd,6), depsi(npwx,nbnd,3), &
-            auxr(smooth%nrxx), auxg(npwx)
+  complex(DP) :: dvscfs(dffts%nnr,3), chif(npwx,nbnd,6), depsi(npwx,nbnd,3), &
+            auxr(dffts%nnr), auxg(npwx)
 
   complex(DP) :: tmp
   complex(DP), EXTERNAL :: zdotc
@@ -39,7 +39,7 @@ subroutine chi_test (dvscfs, chif, ik, depsi, auxr, auxg)
   allocate (ps2 (nbnd,3,6)      )
   allocate (ps3 (nbnd,3,nbnd,3) )
   allocate (ps4 (nbnd,3,nbnd)   )
-  allocate (au2r (smooth%nrxx)        )
+  allocate (au2r (dffts%nnr)        )
 
   !
   !----------------------------------------------------------
@@ -75,7 +75,7 @@ subroutine chi_test (dvscfs, chif, ik, depsi, auxr, auxg)
   do ib = 1, nbnd_occ (ik)
      call cft_wave ( evc (1, ib), au2r, +1 )
      do ip = 1, 3
-        do ir = 1, smooth%nrxx
+        do ir = 1, dffts%nnr
            auxr (ir) = au2r (ir) * dvscfs (ir, ip)
         end do
         auxg (:) = (0.d0, 0.d0)
@@ -108,7 +108,7 @@ subroutine chi_test (dvscfs, chif, ik, depsi, auxr, auxg)
      do ib = 1, nbnd_occ (ik)
         call cft_wave (depsi (1, ib, ip), au2r, +1 )
         do ipa = 1, 3
-           do ir = 1, smooth%nrxx
+           do ir = 1, dffts%nnr
               auxr (ir) = au2r (ir) * dvscfs (ir, ipa)
            enddo
            auxg (:) = (0.d0, 0.d0)
@@ -134,7 +134,7 @@ subroutine chi_test (dvscfs, chif, ik, depsi, auxr, auxg)
         call daxpy (2 * npwq, -1.d0, dvpsi (1,ib), 1, auxg, 1)
         call cft_wave (evc (1, ib), auxr, +1 )
 
-        do ir = 1, smooth%nrxx
+        do ir = 1, dffts%nnr
            auxr (ir) = auxr (ir) * dvscfs (ir, ip)
         enddo
         call cft_wave (auxg, auxr, -1 )

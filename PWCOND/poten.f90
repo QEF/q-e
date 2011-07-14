@@ -13,7 +13,6 @@ SUBROUTINE poten(vppot,nrz,z)
 ! This subroutine computes the 2D Fourier components of the
 ! local potential in each slab.
 !
-  USE grid_dimensions, ONLY : dense
   USE constants, ONLY : tpi
   USE cell_base, ONLY : at, bg
   USE scf, only : vltot, v
@@ -22,7 +21,7 @@ SUBROUTINE poten(vppot,nrz,z)
   USE mp,               ONLY : mp_bcast
   USE io_global,        ONLY : ionode_id
   USE fft_scalar,       ONLY : cfft3d
-  USE fft_base,         ONLY : grid_gather
+  USE fft_base,         ONLY : grid_gather, dfftp
 
   IMPLICIT NONE
 
@@ -44,8 +43,8 @@ SUBROUTINE poten(vppot,nrz,z)
   CALL start_clock('poten')
   ALLOCATE( ipiv( nrz ) )
   ALLOCATE( gz( nrz ) )
-  ALLOCATE( aux( dense%nr1x*dense%nr2x*dense%nr3x ) )
-  ALLOCATE( auxr( dense%nrxx ) )
+  ALLOCATE( aux( dfftp%nr1x*dfftp%nr2x*dfftp%nr3x ) )
+  ALLOCATE( auxr( dfftp%nnr ) )
   ALLOCATE( amat( nrz, nrz ) )
   ALLOCATE( amat0( nrz, nrz ) )
 
@@ -96,7 +95,7 @@ ENDIF
 !
 !
 #ifdef __PARA
-  allocate ( allv(dense%nr1x*dense%nr2x*dense%nr3x) )
+  allocate ( allv(dfftp%nr1x*dfftp%nr2x*dfftp%nr3x) )
 #endif
 
 vppot = 0.d0
@@ -124,34 +123,34 @@ DO ispin=1,nspin_eff
 !  To find FFT of the local potential
 !  (use serial FFT even in the parallel case)
 !
-  CALL cfft3d (aux,dense%nr1,dense%nr2,dense%nr3,dense%nr1x,dense%nr2x,dense%nr3x,-1)
+  CALL cfft3d (aux,dfftp%nr1,dfftp%nr2,dfftp%nr3,dfftp%nr1x,dfftp%nr2x,dfftp%nr3x,-1)
 
   DO i = 1, nrx
     IF(i.GT.nrx/2+1) THEN
-        ix = dense%nr1-(nrx-i)
+        ix = dfftp%nr1-(nrx-i)
     ELSE
         ix = i
     ENDIF
     DO j = 1, nry
       IF(j.GT.nry/2+1) THEN
-         jx = dense%nr2-(nry-j)
+         jx = dfftp%nr2-(nry-j)
       ELSE
          jx = j
       ENDIF
       ij = i+(j-1)*nrx
-      ijx = ix+(jx-1)*dense%nr1x
+      ijx = ix+(jx-1)*dfftp%nr1x
 
       DO k = 1, nrz
         il = k-1
         IF (il.GT.nrz/2) il = il-nrz
-        IF(il.LE.dense%nr3/2.AND.il.GE.-(dense%nr3-1)/2) THEN
+        IF(il.LE.dfftp%nr3/2.AND.il.GE.-(dfftp%nr3-1)/2) THEN
 
          IF(k.GT.nrz/2+1) THEN
-            kx = dense%nr3-(nrz-k)
+            kx = dfftp%nr3-(nrz-k)
          ELSE
             kx = k
          ENDIF
-         vppot(k, ij, is(ispin), js(ispin)) = aux(ijx+(kx-1)*dense%nr1x*dense%nr2x)
+         vppot(k, ij, is(ispin), js(ispin)) = aux(ijx+(kx-1)*dfftp%nr1x*dfftp%nr2x)
 
         ENDIF
       ENDDO

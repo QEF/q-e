@@ -17,7 +17,7 @@
       use funct,           only : dft_is_gradient, dft_is_meta
       use gvect,           only : ngm
       use gvecs,           only : ngms
-      use grid_dimensions, only : dense
+      use fft_base,        only : dfftp
       use cell_base,       only : ainv, omega, h
       use ions_base,       only : nsp
       use control_flags,   only : tpre, iprsta
@@ -47,7 +47,7 @@
       ! output
       ! rhor contains the exchange-correlation potential
       !
-      real(DP) :: rhor( dense%nrxx, nspin ), rhoc( dense%nrxx )
+      real(DP) :: rhor( dfftp%nnr, nspin ), rhoc( dfftp%nnr )
       real(DP) :: dxc( 3, 3 ), exc
       real(DP) :: dcc( 3, 3 ), drc( 3, 3 )
       !
@@ -68,7 +68,7 @@
       !
       if ( dft_is_gradient() ) then
          !
-         allocate( gradr( dense%nrxx, 3, nspin ) )
+         allocate( gradr( dfftp%nnr, 3, nspin ) )
          call fillgrad( nspin, rhog, gradr )
          ! 
       else
@@ -88,9 +88,9 @@
 
          !  allocate the sic_arrays
          !
-         ALLOCATE( self_rho( dense%nrxx, nspin ) )
+         ALLOCATE( self_rho( dfftp%nnr, nspin ) )
          ALLOCATE( self_rhog(ngm, nspin ) )
-         IF( dft_is_gradient() ) ALLOCATE( self_gradr( dense%nrxx, 3, nspin ) )
+         IF( dft_is_gradient() ) ALLOCATE( self_gradr( dfftp%nnr, 3, nspin ) )
 
          self_rho(:, 1) = rhor( :, 2)
          self_rho(:, 2) = rhor( :, 2)
@@ -109,14 +109,14 @@
 !
       if( dft_is_meta() ) then
          !
-         call tpssmeta( dense%nrxx, nspin, gradr, rhor, kedtaur, exc )
+         call tpssmeta( dfftp%nnr, nspin, gradr, rhor, kedtaur, exc )
          !
       else
          !
-         CALL exch_corr_cp(dense%nrxx, nspin, gradr, rhor, exc)
+         CALL exch_corr_cp(dfftp%nnr, nspin, gradr, rhor, exc)
          !
          IF ( ttsic ) THEN
-            CALL exch_corr_cp(dense%nrxx, nspin, self_gradr, self_rho, self_exc)
+            CALL exch_corr_cp(dfftp%nnr, nspin, self_gradr, self_rho, self_exc)
             self_exc = sic_alpha * (exc - self_exc)
             exc = exc - self_exc
          END IF
@@ -126,8 +126,8 @@
       call mp_sum( exc, intra_bgrp_comm )
       IF ( ttsic ) call mp_sum( self_exc, intra_bgrp_comm )
 
-      exc = exc * omega / DBLE( dense%nr1 * dense%nr2 * dense%nr3 )
-      IF ( ttsic ) self_exc = self_exc * omega/DBLE(dense%nr1 * dense%nr2 *dense%nr3 )
+      exc = exc * omega / DBLE( dfftp%nr1 * dfftp%nr2 * dfftp%nr3 )
+      IF ( ttsic ) self_exc = self_exc * omega/DBLE(dfftp%nr1 * dfftp%nr2 *dfftp%nr3 )
 
       !     WRITE(*,*) 'Debug: calcolo exc', exc, 'eself', self_exc
       !
@@ -142,14 +142,14 @@
          do iss = 1, nspin
             do j=1,3
                do i=1,3
-                  do ir=1,dense%nrxx
+                  do ir=1,dfftp%nnr
                      dxc(i,j) = dxc(i,j) + rhor( ir, iss ) * drhor( ir, iss, i, j )
                   end do
                end do
             end do
          end do
          !
-         dxc = dxc * omega / DBLE( dense%nr1*dense%nr2*dense%nr3 )
+         dxc = dxc * omega / DBLE( dfftp%nr1*dfftp%nr2*dfftp%nr3 )
          !
          call mp_sum ( dxc, intra_bgrp_comm )
          !
@@ -220,7 +220,7 @@
          !
          dcc = 0.0d0
          !
-         IF( nlcc_any ) CALL  denlcc( dense%nrxx, nspin, rhor, sfac, drhocg, dcc )
+         IF( nlcc_any ) CALL  denlcc( dfftp%nnr, nspin, rhor, sfac, drhocg, dcc )
          !
          ! DEBUG
          !
@@ -234,14 +234,14 @@
             IF( nlcc_any ) THEN
                do j=1,3
                   do i=1,3
-                     do ir=1,dense%nrxx
+                     do ir=1,dfftp%nnr
                         drc(i,j) = drc(i,j) + rhor( ir, iss ) * rhoc( ir ) * ainv(j,i)
                      end do
                   end do
                end do
                call mp_sum ( drc, intra_bgrp_comm )
             END IF
-            dxc = dxc - drc * ( 1.0d0 / nspin ) * omega / ( dense%nr1*dense%nr2*dense%nr3 )
+            dxc = dxc - drc * ( 1.0d0 / nspin ) * omega / ( dfftp%nr1*dfftp%nr2*dfftp%nr3 )
          end do
          !
       END IF
@@ -269,7 +269,6 @@
       use control_flags, only: iprint, tpre
       use gvect, only: g
       use gvect, only: ngm, nl, nlm
-      use grid_dimensions, only: dense
       use cell_base, only: ainv, tpiba, omega
       use cp_main_variables, only: drhog
       USE fft_interfaces, ONLY: fwfft, invfft
@@ -278,7 +277,7 @@
       implicit none  
 ! input                   
       integer nspin
-      real(DP)    :: gradr( dense%nrxx, 3, nspin ), rhor( dense%nrxx, nspin ), dexc( 3, 3 )
+      real(DP)    :: gradr( dfftp%nnr, 3, nspin ), rhor( dfftp%nnr, nspin ), dexc( 3, 3 )
       complex(DP) :: rhog( ngm, nspin )
 !
       complex(DP), allocatable:: v(:)
@@ -286,7 +285,7 @@
       complex(DP) ::  ci, fp, fm
       integer :: iss, ig, ir, i,j
 !
-      allocate(v(dense%nrxx))
+      allocate(v(dfftp%nnr))
       allocate(x(ngm))
       allocate(vtemp(ngm))
       !
@@ -298,7 +297,7 @@
 !     _________________________________________________________________
 !     second part xc-potential: 3 forward ffts
 !
-         do ir=1,dense%nrxx
+         do ir=1,dfftp%nnr
             v(ir)=CMPLX(gradr(ir,1,iss),0.d0,kind=DP)
          end do
          call fwfft('Dense',v, dfftp )
@@ -319,7 +318,7 @@
             end do
          endif
 !
-         do ir=1,dense%nrxx
+         do ir=1,dfftp%nnr
             v(ir)=CMPLX(gradr(ir,2,iss),gradr(ir,3,iss),kind=DP)
          end do
          call fwfft('Dense',v, dfftp )
@@ -354,7 +353,7 @@
 !     _________________________________________________________________
 !     second part xc-potential: 1 inverse fft
 !
-         do ig=1,dense%nrxx
+         do ig=1,dfftp%nnr
             v(ig)=(0.0d0,0.0d0)
          end do
          do ig=1,ngm
@@ -362,7 +361,7 @@
             v(nlm(ig))=CONJG(x(ig))
          end do
          call invfft('Dense',v, dfftp )
-         do ir=1,dense%nrxx
+         do ir=1,dfftp%nnr
             rhor(ir,iss)=rhor(ir,iss)-DBLE(v(ir))
          end do
       end do
@@ -382,17 +381,17 @@
 !
 !=----------------------------------------------------------------------------=!
 
-subroutine exch_corr_wrapper(nrxx, nspin, grhor, rhor, etxc, v, h)
+subroutine exch_corr_wrapper(nnr, nspin, grhor, rhor, etxc, v, h)
   use kinds, only: DP
   use funct, only: dft_is_gradient, get_igcc, &
                    xc, xc_spin, gcxc, gcx_spin, gcc_spin, gcc_spin_more
   implicit none
-  integer, intent(in) :: nrxx
+  integer, intent(in) :: nnr
   integer, intent(in) :: nspin
-  real(DP), intent(in) :: grhor( nrxx, 3, nspin )
-  real(DP) :: h( nrxx, nspin, nspin )
-  real(DP), intent(in) :: rhor( nrxx, nspin )
-  real(DP) :: v( nrxx, nspin )
+  real(DP), intent(in) :: grhor( nnr, 3, nspin )
+  real(DP) :: h( nnr, nspin, nspin )
+  real(DP), intent(in) :: rhor( nnr, nspin )
+  real(DP) :: v( nnr, nspin )
   real(DP) :: etxc
   integer :: ir, is, k
   real(DP) :: rup, rdw, ex, ec, vx(2), vc(2)
@@ -418,7 +417,7 @@ subroutine exch_corr_wrapper(nrxx, nspin, grhor, rhor, etxc, v, h)
      ! spin-unpolarized case
      !
 !$omp parallel do private( rhox, arhox, ex, ec, vx, vc ), reduction(+:etxc)
-     do ir = 1, nrxx
+     do ir = 1, nnr
         rhox = rhor (ir, nspin)
         arhox = abs (rhox)
         if (arhox.gt.1.d-30) then
@@ -438,7 +437,7 @@ subroutine exch_corr_wrapper(nrxx, nspin, grhor, rhor, etxc, v, h)
      neg (1) = 0
      neg (2) = 0
      neg (3) = 0
-     do ir = 1, nrxx
+     do ir = 1, nnr
         rhox = rhor(ir,1) + rhor(ir,2)
         arhox = abs(rhox)
         if (arhox.gt.1.d-30) then
@@ -465,7 +464,7 @@ subroutine exch_corr_wrapper(nrxx, nspin, grhor, rhor, etxc, v, h)
 
   if( debug_xc ) then
     open(unit=17,form='unformatted')
-    write(17) nrxx, nspin
+    write(17) nnr, nspin
     write(17) rhor
     write(17) grhor
     close(17)
@@ -482,7 +481,7 @@ subroutine exch_corr_wrapper(nrxx, nspin, grhor, rhor, etxc, v, h)
        !
 !$omp parallel do &
 !$omp private( is, grho2, arho, segno, sx, sc, v1x, v2x, v1c, v2c  ), reduction(+:etxc)
-       do k = 1, nrxx
+       do k = 1, nnr
           !
           grho2 (1) = grhor(k, 1, 1)**2 + grhor(k, 2, 1)**2 + grhor(k, 3, 1)**2
           arho = abs (rhor (k, 1) )
@@ -511,7 +510,7 @@ subroutine exch_corr_wrapper(nrxx, nspin, grhor, rhor, etxc, v, h)
        !
        !    spin-polarised case
        !
-       do k = 1, nrxx
+       do k = 1, nnr
           do is = 1, nspin
              grho2 (is) = grhor(k, 1, is)**2 + grhor(k, 2, is)**2 + grhor(k, 3, is)**2
           enddo
@@ -582,28 +581,28 @@ end subroutine exch_corr_wrapper
 !
 !=----------------------------------------------------------------------------=!
 
-subroutine exch_corr_cp(nrxx,nspin,grhor,rhor,etxc)
+subroutine exch_corr_cp(nnr,nspin,grhor,rhor,etxc)
   use kinds, only: DP
   use funct, only: dft_is_gradient
   implicit none
-  integer, intent(in) :: nrxx
+  integer, intent(in) :: nnr
   integer, intent(in) :: nspin
-  real(DP) :: grhor( nrxx, 3, nspin )
-  real(DP) :: rhor( nrxx, nspin )
+  real(DP) :: grhor( nnr, 3, nspin )
+  real(DP) :: rhor( nnr, nspin )
   real(DP) :: etxc
   integer :: k, ipol
   real(DP) ::  grup, grdw
   real(DP), allocatable :: v(:,:)
   real(DP), allocatable :: h(:,:,:)
   !
-  allocate( v( nrxx, nspin ) )
+  allocate( v( nnr, nspin ) )
   if( dft_is_gradient() ) then
-    allocate( h( nrxx, nspin, nspin ) )
+    allocate( h( nnr, nspin, nspin ) )
   else
     allocate( h( 1, 1, 1 ) )
   endif
   !
-  call exch_corr_wrapper(nrxx,nspin,grhor,rhor,etxc,v,h)
+  call exch_corr_wrapper(nnr,nspin,grhor,rhor,etxc,v,h)
 
   if( dft_is_gradient() ) then
      !
@@ -614,7 +613,7 @@ subroutine exch_corr_cp(nrxx,nspin,grhor,rhor,etxc)
         !
         do ipol = 1, 3
 !$omp do
-           do k = 1, nrxx
+           do k = 1, nnr
               grhor (k, ipol, 1) = h (k, 1, 1) * grhor (k, ipol, 1)
            enddo
 !$omp end do
@@ -625,7 +624,7 @@ subroutine exch_corr_cp(nrxx,nspin,grhor,rhor,etxc)
         !
         do ipol = 1, 3
 !$omp do
-           do k = 1, nrxx
+           do k = 1, nnr
              grup = grhor (k, ipol, 1)
              grdw = grhor (k, ipol, 2)
              grhor (k, ipol, 1) = h (k, 1, 1) * grup + h (k, 1, 2) * grdw

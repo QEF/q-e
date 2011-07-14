@@ -268,7 +268,7 @@ PROGRAM pw_export
 
   USE wrappers,  ONLY : f_mkdir
   USE pwcom
-  USE grid_dimensions, ONLY : dense
+  USE fft_base,  ONLY : dfftp
   USE io_global, ONLY : stdout, ionode, ionode_id
   USE io_files,  ONLY : psfile, pseudo_dir
   USE io_files,  ONLY : prefix, tmp_dir, outdir
@@ -631,9 +631,9 @@ SUBROUTINE write_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
        CALL iotk_write_attr ( attr,"name", trim(sname(i)), FIRST=.true. )
        CALL iotk_write_empty(50,"info"//trim(iotk_index(i)), ATTR=attr )
        !
-       tmp(1) = ftau(1,i) / dble( dense%nr1 )
-       tmp(2) = ftau(2,i) / dble( dense%nr2 )
-       tmp(3) = ftau(3,i) / dble( dense%nr3 )
+       tmp(1) = ftau(1,i) / dble( dfftp%nr1 )
+       tmp(2) = ftau(2,i) / dble( dfftp%nr2 )
+       tmp(3) = ftau(3,i) / dble( dfftp%nr3 )
        !
        CALL iotk_write_attr(attr,"units","crystal",first=.true.)
        !
@@ -658,9 +658,9 @@ SUBROUTINE write_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
     CALL iotk_write_attr(attr,"rho",dual*ecutwfc)
     CALL iotk_write_attr(attr,"units","Rydberg")
     CALL iotk_write_empty(50,"Cutoff",attr)
-    CALL iotk_write_attr(attr,"nr1",dense%nr1,first=.true.)
-    CALL iotk_write_attr(attr,"nr2",dense%nr2)
-    CALL iotk_write_attr(attr,"nr3",dense%nr3)
+    CALL iotk_write_attr(attr,"nr1",dfftp%nr1,first=.true.)
+    CALL iotk_write_attr(attr,"nr2",dfftp%nr2)
+    CALL iotk_write_attr(attr,"nr3",dfftp%nr3)
     CALL iotk_write_empty(50,"Space_grid",attr)
     CALL iotk_write_attr(attr,"nelec",nelec,first=.true.)
     CALL iotk_write_empty(50,"Charge",attr)

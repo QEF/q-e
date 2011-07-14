@@ -14,7 +14,6 @@
 !
       USE kinds,                    ONLY: DP
       USE ions_base,                ONLY: nsp, na, nat
-      USE grid_dimensions,          ONLY: dense
       USE smallbox_grid_dim,        ONLY: nr1b, nr2b, nr3b, nr1bx, nr2bx, nr3bx
       USE control_flags,            ONLY: iprsta
       USE io_global,                ONLY: stdout
@@ -39,9 +38,9 @@
       IF ( nr3b < 1) CALL errore &
          ('initbox', 'incorrect value for box grid dimensions', 3)
 
-      nr (1)=dense%nr1
-      nr (2)=dense%nr2
-      nr (3)=dense%nr3
+      nr (1)=dfftp%nr1
+      nr (2)=dfftp%nr2
+      nr (3)=dfftp%nr3
       nrb(1)=nr1b
       nrb(2)=nr2b
       nrb(3)=nr3b

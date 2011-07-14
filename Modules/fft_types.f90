@@ -21,15 +21,18 @@ MODULE fft_types
                                  ! on proc mpime -> nsp( mpime + 1 )
     INTEGER, POINTER :: nsw(:)   ! number of sticks per processor ( wave func )
                                  ! using proc index as above
-    INTEGER :: nr1      !
-    INTEGER :: nr2      ! effective FFT dimensions
-    INTEGER :: nr3      !
-    INTEGER :: nr1x     !
-    INTEGER :: nr2x     ! FFT grids leading dimensions
-    INTEGER :: nr3x     !
-    INTEGER :: npl      ! number of "Z" planes for this processor = npp( mpime + 1 )
-    INTEGER :: nnp      ! number of 0 and non 0 sticks in a plane ( ~nr1*nr2/nproc )
-    INTEGER :: nnr      ! local number of FFT grid elements  ( ~nr1*nr2*nr3/proc )
+    INTEGER :: nr1    = 0  !
+    INTEGER :: nr2    = 0  ! effective FFT dimensions of the 3D grid (global)
+    INTEGER :: nr3    = 0  ! 
+    INTEGER :: nr1x   = 0  ! FFT grids leading dimensions
+    INTEGER :: nr2x   = 0  ! dimensions of the arrays for the 3D grid (global)
+    INTEGER :: nr3x   = 0  ! may differ from nr1 ,nr2 ,nr3 in order to boost performances
+    INTEGER :: npl    = 0  ! number of "Z" planes for this processor = npp( mpime + 1 )
+    INTEGER :: nnp    = 0  ! number of 0 and non 0 sticks in a plane ( ~nr1*nr2/nproc )
+    INTEGER :: nnr    = 0  ! local number of FFT grid elements  ( ~nr1*nr2*nr3/proc )
+                           ! size of the arrays allocated for the FFT, local to each processor:
+                           ! in parallel execution may differ from nr1x*nr2x*nr3x
+                           ! Not to be confused either with nr1*nr2*nr3 
     INTEGER, POINTER :: ngl(:)   ! per proc. no. of non zero charge density/potential components
     INTEGER, POINTER :: nwl(:)   ! per proc. no. of non zero wave function plane components
     INTEGER, POINTER :: npp(:)   ! number of "Z" planes per processor

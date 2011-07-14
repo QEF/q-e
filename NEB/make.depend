@@ -2,7 +2,7 @@ compute_scf.o : ../Modules/cell_base.o
 compute_scf.o : ../Modules/check_stop.o
 compute_scf.o : ../Modules/constants.o
 compute_scf.o : ../Modules/control_flags.o
-compute_scf.o : ../Modules/griddim.o
+compute_scf.o : ../Modules/fft_base.o
 compute_scf.o : ../Modules/input_parameters.o
 compute_scf.o : ../Modules/io_files.o
 compute_scf.o : ../Modules/io_global.o

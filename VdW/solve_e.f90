@@ -24,10 +24,9 @@ SUBROUTINE solve_e_vdw ( iu )
   USE cell_base,             ONLY : omega, alat
   USE io_global,             ONLY : stdout
   USE io_files,              ONLY : iunigk, prefix, iunwfc, nwordwfc
-  USE fft_base,              ONLY : dffts
+  USE fft_base,              ONLY : dffts, dfftp
   USE fft_interfaces,        ONLY : fwfft, invfft
   USE pwcom
-  USE grid_dimensions,       ONLY : dense
   USE scf,                   ONLY : vrs
   USE check_stop,            ONLY : check_stop_now
 !  USE wavefunctions_module,  ONLY : evc
@@ -108,13 +107,13 @@ SUBROUTINE solve_e_vdw ( iu )
   CALL start_clock ('solve_e')
   tcpu = get_clock ('VdW')
   !
-  ALLOCATE (dvscfin( dense%nrxx, nspin, 3))
+  ALLOCATE (dvscfin( dfftp%nnr, nspin, 3))
   IF (doublegrid) THEN
      ALLOCATE (dvscfins(  dffts%nnr, nspin, 3))
   ELSE
      dvscfins => dvscfin
   ENDIF
-  ALLOCATE (dvscfout( dense%nrxx , nspin, 3))
+  ALLOCATE (dvscfout( dfftp%nnr , nspin, 3))
   ALLOCATE (dbecsum( nhm*(nhm+1)/2, nat, nspin, 3))
   ALLOCATE (auxg(npwx,1))
   ALLOCATE (aux1(dffts%nnr))
@@ -366,7 +365,7 @@ SUBROUTINE solve_e_vdw ( iu )
      !
      !   And we mix with the old potential
      !
-     CALL mix_potential (2 * 3 * dense%nrxx *nspin, dvscfout, dvscfin, al_mix_vdw ( &
+     CALL mix_potential (2 * 3 * dfftp%nnr *nspin, dvscfout, dvscfin, al_mix_vdw ( &
           kter), dr2, 3 * tr2_vdw, iter, nmix_vdw, flmixdpot1, convt)
      IF (doublegrid) THEN
         DO is=1,nspin

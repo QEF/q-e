@@ -30,7 +30,7 @@ SUBROUTINE c_phase_field(el_pola,ion_pola, fact_pola, pdir)
    USE ions_base,            ONLY : nat, ntyp => nsp, ityp, tau, zv, atm
    USE cell_base,            ONLY : at, alat, tpiba, omega, tpiba2
    USE constants,            ONLY : pi, tpi
-   USE grid_dimensions,      ONLY : dense
+   USE fft_base,             ONLY : dfftp
    USE gvect,                ONLY : ngm, g, gcutm, ngm_g
    USE uspp,                 ONLY : nkb, vkb, okvan
    USE uspp_param,           ONLY : upf, lmaxq, nbetam, nh, nhm
@@ -169,7 +169,7 @@ SUBROUTINE c_phase_field(el_pola,ion_pola, fact_pola, pdir)
    eps=1.0E-6_dp
 
 !  --- Recalculate FFT correspondence (see ggen.f90) ---
-   ALLOCATE (ln (-dense%nr1:dense%nr1, -dense%nr2:dense%nr2, -dense%nr3:dense%nr3) )
+   ALLOCATE (ln (-dfftp%nr1:dfftp%nr1, -dfftp%nr2:dfftp%nr2, -dfftp%nr3:dfftp%nr3) )
    DO ng=1,ngm
       mk1=nint(g(1,ng)*at(1,1)+g(2,ng)*at(2,1)+g(3,ng)*at(3,1))
       mk2=nint(g(1,ng)*at(1,2)+g(2,ng)*at(2,2)+g(3,ng)*at(3,2))

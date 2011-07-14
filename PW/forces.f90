@@ -28,7 +28,7 @@ SUBROUTINE forces()
   USE cell_base,     ONLY : at, bg, alat, omega  
   USE ions_base,     ONLY : nat, ntyp => nsp, ityp, tau, zv, amass, extfor, &
                             compute_eextfor
-  USE grid_dimensions,ONLY: dense
+  USE fft_base,      ONLY : dfftp
   USE gvect,         ONLY : ngm, gstart, ngl, nl, igtongl, g, gg, gcutm
   USE lsda_mod,      ONLY : nspin
   USE symme,         ONLY : symvector
@@ -89,7 +89,7 @@ SUBROUTINE forces()
   ! ... The local contribution
   !
   CALL force_lc( nat, tau, ityp, alat, omega, ngm, ngl, igtongl, &
-                 dense%nrxx, g, rho%of_r, nl, &
+                 dfftp%nnr, g, rho%of_r, nl, &
                  nspin, gstart, gamma_only, vloc, forcelc )
   !
   ! ... The NLCC contribution

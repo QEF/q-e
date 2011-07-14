@@ -600,16 +600,16 @@ SUBROUTINE external_gradient( a, grada )
   ! an external module
   !
   USE kinds,            ONLY : DP
-  USE grid_dimensions,  ONLY : nrxx
+  USE fft_base,         ONLY : dfftp
   USE gvect,            ONLY : ngm, nl, g
   !
   IMPLICIT NONE
   !
-  REAL, INTENT(IN)         :: a( nrxx )
-  REAL( DP ), INTENT(OUT)  :: grada( 3, nrxx )
+  REAL, INTENT(IN)         :: a( dfftp%nnr )
+  REAL( DP ), INTENT(OUT)  :: grada( 3, dfftp%nnr )
 
 ! A in real space, grad(A) in real space
-  CALL gradient( nrxx, a, ngm, g, nl, grada )
+  CALL gradient( dfftp%nnr, a, ngm, g, nl, grada )
 
   RETURN
 
@@ -625,17 +625,17 @@ SUBROUTINE external_ggradient( a, grada, ggrada )
   ! an external module
   !
   USE kinds,            ONLY : DP
-  USE grid_dimensions,  ONLY : nrxx
+  USE fft_base,         ONLY : dfftp
   USE gvect,            ONLY : ngm, nl, g
   !
   IMPLICIT NONE
   !
-  REAL, INTENT(IN)         :: a( nrxx )
-  REAL( DP ), INTENT(OUT)  :: grada( 3, nrxx )
-  REAL( DP ), INTENT(OUT)  :: ggrada( 3, 3, nrxx )
+  REAL, INTENT(IN)         :: a( dfftp%nnr )
+  REAL( DP ), INTENT(OUT)  :: grada( 3, dfftp%nnr )
+  REAL( DP ), INTENT(OUT)  :: ggrada( 3, 3, dfftp%nnr )
 
 ! A in real space, grad(A) and ggrad(A) in real space
-  CALL ggradient( nrxx, a, ngm, g, nl, grada, ggrada )
+  CALL ggradient( dfftp%nnr, a, ngm, g, nl, grada, ggrada )
 
   RETURN
 

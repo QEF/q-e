@@ -13,7 +13,7 @@ subroutine init_gper(ik)
   USE io_global,        ONLY :  stdout
   USE noncollin_module, ONLY : npol
   USE cell_base,        ONLY : bg, tpiba, tpiba2
-  USE grid_dimensions,  ONLY : dense
+  USE fft_base,         ONLY : dfftp
   USE cond
   implicit none
   integer :: ipol, igper, icount, ik, k, ig, i, il, j, jl, iw
@@ -113,9 +113,9 @@ subroutine init_gper(ik)
            nl_2ds(igper) = i+(j-1)*nrx
            ig = i
            iw = j
-           if (il.lt.0) ig = il+1+dense%nr1
-           if (jl.lt.0) iw = jl+1+dense%nr2
-           nl_2d(igper) = ig+(iw-1)*dense%nr1
+           if (il.lt.0) ig = il+1+dfftp%nr1
+           if (jl.lt.0) iw = jl+1+dfftp%nr2
+           nl_2d(igper) = ig+(iw-1)*dfftp%nr1
          END IF
       endif
     enddo

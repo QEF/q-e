@@ -16,7 +16,7 @@ SUBROUTINE cg_setupdgc
   USE scf, ONLY : rho, rho_core, rhog_core
   USE cgcom
   USE funct, ONLY: gcxc, gcx_spin, gcc_spin, dgcxc, dgcxc_spin, dft_is_gradient
-  USE grid_dimensions, ONLY: dense
+  USE fft_base, ONLY: dfftp
   !
   IMPLICIT NONE
   INTEGER k, is
@@ -51,12 +51,12 @@ SUBROUTINE cg_setupdgc
      ENDDO
   ENDIF
   DO is=1,nspin
-     CALL gradrho (dense%nr1x,dense%nr2x,dense%nr3x,dense%nr1,dense%nr2,dense%nr3,dense%nrxx,rho%of_g(1,is),   &
+     CALL gradrho (dfftp%nr1x,dfftp%nr2x,dfftp%nr3x,dfftp%nr1,dfftp%nr2,dfftp%nr3,dfftp%nnr,rho%of_g(1,is),   &
           ngm,g,nl,grho(1,1,is))
   ENDDO
   !
   IF (nspin==1) THEN
-     DO k = 1,dense%nrxx
+     DO k = 1,dfftp%nnr
         grho2(1)=grho(1,k,1)**2+grho(2,k,1)**2+grho(3,k,1)**2
         IF (abs(rho%of_r(k,1))>epsr.and.grho2(1)>epsg) THEN
            CALL gcxc(rho%of_r(k,nspin),grho2(1),sx,sc,v1x,v2x,v1c,v2c)
@@ -68,7 +68,7 @@ SUBROUTINE cg_setupdgc
         ENDIF
      ENDDO
   ELSE
-     DO k = 1,dense%nrxx
+     DO k = 1,dfftp%nnr
         grho2(2)=grho(1,k,2)**2+grho(2,k,2)**2+grho(3,k,2)**2
         rh=rho%of_r(k,1)+rho%of_r(k,2)
         grh2= (grho(1,k,1)+grho(1,k,2))**2                          &

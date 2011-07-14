@@ -119,7 +119,7 @@ SUBROUTINE lr_calc_w_T()
   USE lr_variables,         ONLY : itermax,beta_store,gamma_store, &
                                    LR_polarization,charge_response, n_ipol, &
                                    itermax_int,project,rho_1_tot_im,rho_1_tot
-  USE grid_dimensions,      ONLY : dense
+  USE fft_base,             ONLY : dfftp
   USE noncollin_module,     ONLY : nspin_mag
 
   !
@@ -279,12 +279,12 @@ SUBROUTINE lr_calc_w_T()
        IF (abs(norm) > 0.1) THEN
          resonance_condition=.true.
          IF (allocated(rho_1_tot)) DEALLOCATE (rho_1_tot)
-         IF (.not. allocated(rho_1_tot_im)) ALLOCATE(rho_1_tot_im(dense%nrxx,nspin_mag))
+         IF (.not. allocated(rho_1_tot_im)) ALLOCATE(rho_1_tot_im(dfftp%nnr,nspin_mag))
          rho_1_tot_im(:,:)=cmplx(0.0d0,0.0d0,dp)
         ELSE
          resonance_condition=.false.
          IF (allocated(rho_1_tot_im)) DEALLOCATE (rho_1_tot_im)
-         IF (.not. allocated(rho_1_tot)) ALLOCATE(rho_1_tot(dense%nrxx,nspin_mag))
+         IF (.not. allocated(rho_1_tot)) ALLOCATE(rho_1_tot(dfftp%nnr,nspin_mag))
          rho_1_tot(:,:)=0.0d0
         ENDIF
         IF (resonance_condition)  THEN
@@ -326,7 +326,7 @@ SUBROUTINE lr_calc_w_T()
    WRITE(stdout,'(I5,3X,2D15.8)') i, w_T(i)
   ENDDO
   WRITE(stdout,'("------------------------------------------------------------------------")')
-  WRITE(stdout,'("NR1=",I15," NR2=",I15," NR3=",I15)') dense%nr1, dense%nr2, dense%nr3
+  WRITE(stdout,'("NR1=",I15," NR2=",I15," NR3=",I15)') dfftp%nr1, dfftp%nr2, dfftp%nr3
   WRITE(stdout,'("------------------------------------------------------------------------")')
   ENDIF
 CALL stop_clock( 'post-processing' )
@@ -340,7 +340,7 @@ SUBROUTINE lr_dump_rho_tot_compat1()
   !-----------------------------------------------------------------------
   USE io_files,              ONLY : prefix
   USE lr_variables,          ONLY : rho_1_tot, LR_polarization, LR_iteration, cube_save
-  USE grid_dimensions,       ONLY : dense
+  USE fft_base,              ONLY : dfftp
   USE mp_global,             ONLY : inter_pool_comm, intra_pool_comm
 
   IMPLICIT NONE
@@ -357,15 +357,15 @@ SUBROUTINE lr_dump_rho_tot_compat1()
 #endif
     !
      IF ( .not. allocated(cube_save) ) CALL lr_set_boxes_density()
-     ALLOCATE( rho_sum_resp_x( dense%nr1 ) )
-     ALLOCATE( rho_sum_resp_y( dense%nr2 ) )
-     ALLOCATE( rho_sum_resp_z( dense%nr3 ) )
+     ALLOCATE( rho_sum_resp_x( dfftp%nr1 ) )
+     ALLOCATE( rho_sum_resp_y( dfftp%nr2 ) )
+     ALLOCATE( rho_sum_resp_z( dfftp%nr3 ) )
      !
      rho_sum_resp_x = 0.D0
      rho_sum_resp_y = 0.D0
      rho_sum_resp_z = 0.D0
      !
-     DO ir=1,dense%nrxx
+     DO ir=1,dfftp%nnr
         !
         i=cube_save(ir,1)+1
         j=cube_save(ir,2)+1
@@ -382,7 +382,7 @@ SUBROUTINE lr_dump_rho_tot_compat1()
      !
      OPEN (158, file = filename, form = 'formatted', status = 'unknown', position = 'append')
      !
-     DO i=1,dense%nr1
+     DO i=1,dfftp%nr1
         WRITE(158,*) rho_sum_resp_x(i)
      ENDDO
      !
@@ -392,7 +392,7 @@ SUBROUTINE lr_dump_rho_tot_compat1()
      !
      OPEN (158, file = filename, form = 'formatted', status = 'unknown', position = 'append')
      !
-     DO i=1,dense%nr2
+     DO i=1,dfftp%nr2
         WRITE(158,*) rho_sum_resp_y(i)
      ENDDO
      !
@@ -402,7 +402,7 @@ SUBROUTINE lr_dump_rho_tot_compat1()
      !
      OPEN (158, file = filename, form = 'formatted', status = 'unknown', position = 'append')
      !
-     DO i=1,dense%nr3
+     DO i=1,dfftp%nr3
         WRITE(158,*) rho_sum_resp_z(i)
      ENDDO
      !
@@ -426,7 +426,6 @@ SUBROUTINE lr_dump_rho_tot_cube(rho,identifier)
   !-----------------------------------------------------------------------
   USE io_files,              ONLY : prefix
   USE lr_variables,          ONLY : LR_polarization, LR_iteration, cube_save
-  USE grid_dimensions,       ONLY : dense
   USE cell_base
   USE ions_base,                ONLY : nat, ityp, atm, ntyp => nsp, tau
   USE mp,                   ONLY : mp_barrier, mp_sum, mp_bcast, mp_get
@@ -489,9 +488,9 @@ SUBROUTINE lr_dump_rho_tot_cube(rho,identifier)
          WRITE(158,*) identifier
          !                        origin is forced to (0.0,0.0,0.0)
          WRITE(158,'(I5,3F12.6)') nat, 0.0d0, 0.0d0, 0.0d0
-         WRITE(158,'(I5,3F12.6)') dense%nr1, (alat*at(i,1)/dble(dense%nr1),i=1,3)
-         WRITE(158,'(I5,3F12.6)') dense%nr2, (alat*at(i,2)/dble(dense%nr2),i=1,3)
-         WRITE(158,'(I5,3F12.6)') dense%nr3, (alat*at(i,3)/dble(dense%nr3),i=1,3)
+         WRITE(158,'(I5,3F12.6)') dfftp%nr1, (alat*at(i,1)/dble(dfftp%nr1),i=1,3)
+         WRITE(158,'(I5,3F12.6)') dfftp%nr2, (alat*at(i,2)/dble(dfftp%nr2),i=1,3)
+         WRITE(158,'(I5,3F12.6)') dfftp%nr3, (alat*at(i,3)/dble(dfftp%nr3),i=1,3)
 
          DO i=1,nat
             nt = ityp(i)
@@ -509,8 +508,8 @@ SUBROUTINE lr_dump_rho_tot_cube(rho,identifier)
          ENDDO
    ENDIF
 ! Header is complete, now dump the charge density, as derived from xyzd subroutine
-         ALLOCATE( rho_plane( dense%nr3x ) )
-         !ALLOCATE( kowner( dense%nr3 ) )
+         ALLOCATE( rho_plane( dfftp%nr3x ) )
+         !ALLOCATE( kowner( dfftp%nr3 ) )
         !
         ! ... find the index of the pool that will write rho
         !
@@ -536,13 +535,13 @@ SUBROUTINE lr_dump_rho_tot_cube(rho,identifier)
         !ELSE
         ! kowner = ionode_id
         !ENDIF
-        ldr = dense%nr1x*dense%nr2x
+        ldr = dfftp%nr1x*dfftp%nr2x
       !
       !
       ! Each processor is on standby to send its plane to ionode
-      DO i1 = 1, dense%nr1
+      DO i1 = 1, dfftp%nr1
          !
-         DO i2 = 1, dense%nr2
+         DO i2 = 1, dfftp%nr2
             !
             !Parallel gather of Z plane
             rho_plane(:)=0
@@ -553,7 +552,7 @@ SUBROUTINE lr_dump_rho_tot_cube(rho,identifier)
                    !
                    DO  i3=1, dfftp%npp(i)
                          !
-                         rho_temp(i3) = rho(i1+(i2-1)*dense%nr1x+(i3-1)*ldr)
+                         rho_temp(i3) = rho(i1+(i2-1)*dfftp%nr1x+(i3-1)*ldr)
                          !
                       !
                    ENDDO
@@ -576,7 +575,7 @@ SUBROUTINE lr_dump_rho_tot_cube(rho,identifier)
              ENDDO
              ! End of parallel send
              IF (ionode) THEN
-             DO  i3=1, dense%nr3
+             DO  i3=1, dfftp%nr3
                  six_count=six_count+1
                  WRITE(158,'(E13.5)',advance='no') rho_plane(i3)
                  IF (six_count == 6 ) THEN
@@ -627,9 +626,9 @@ SUBROUTINE lr_dump_rho_tot_cube(rho,identifier)
   WRITE(158,*) identifier
 !                        origin is forced to (0.0,0.0,0.0)
   WRITE(158,'(I5,3F12.6)') nat, 0.0d0, 0.0d0, 0.0d0
-  WRITE(158,'(I5,3F12.6)') dense%nr1, (alat*at(i,1)/dble(dense%nr1),i=1,3)
-  WRITE(158,'(I5,3F12.6)') dense%nr2, (alat*at(i,2)/dble(dense%nr2),i=1,3)
-  WRITE(158,'(I5,3F12.6)') dense%nr3, (alat*at(i,3)/dble(dense%nr3),i=1,3)
+  WRITE(158,'(I5,3F12.6)') dfftp%nr1, (alat*at(i,1)/dble(dfftp%nr1),i=1,3)
+  WRITE(158,'(I5,3F12.6)') dfftp%nr2, (alat*at(i,2)/dble(dfftp%nr2),i=1,3)
+  WRITE(158,'(I5,3F12.6)') dfftp%nr3, (alat*at(i,3)/dble(dfftp%nr3),i=1,3)
 
   DO i=1,nat
      nt = ityp(i)
@@ -646,12 +645,12 @@ SUBROUTINE lr_dump_rho_tot_cube(rho,identifier)
      WRITE(158,'(I5,5F12.6)') at_num, at_chrg, inpos
   ENDDO
   i=0
-  DO i1=1,dense%nr1
-   DO i2=1,dense%nr2
-    DO i3=1,dense%nr3
-         !i(i3-1)*dense%nr1x*dense%nr2x+(i2-1)*dense%nr1x+(i1-1)+1
+  DO i1=1,dfftp%nr1
+   DO i2=1,dfftp%nr2
+    DO i3=1,dfftp%nr3
+         !i(i3-1)*dfftp%nr1x*dfftp%nr2x+(i2-1)*dfftp%nr1x+(i1-1)+1
          i=i+1
-         WRITE(158,'(E13.5)',advance='no') (rho((i3-1)*dense%nr1x*dense%nr2x+(i2-1)*dense%nr1x+i1))
+         WRITE(158,'(E13.5)',advance='no') (rho((i3-1)*dfftp%nr1x*dfftp%nr2x+(i2-1)*dfftp%nr1x+i1))
          IF (i == 6 ) THEN
           WRITE(158,'("")')
           i=0
@@ -676,7 +675,6 @@ SUBROUTINE lr_dump_rho_tot_xyzd(rho,identifier)
   !-----------------------------------------------------------------------
   USE io_files,             ONLY : prefix
   USE lr_variables,         ONLY : LR_polarization, LR_iteration, cube_save
-  USE grid_dimensions,      ONLY : dense
   USE cell_base
   USE ions_base,            ONLY : nat, ityp, atm, ntyp => nsp, tau
   USE mp,                   ONLY : mp_barrier, mp_sum, mp_bcast, mp_get
@@ -710,8 +708,8 @@ SUBROUTINE lr_dump_rho_tot_xyzd(rho,identifier)
 
 #ifdef __PARA
       !Derived From Modules/xml_io_base.f90
-        ALLOCATE( rho_plane( dense%nr1*dense%nr2 ) )
-        ALLOCATE( kowner( dense%nr3 ) )
+        ALLOCATE( rho_plane( dfftp%nr1*dfftp%nr2 ) )
+        ALLOCATE( kowner( dfftp%nr3 ) )
         IF (ionode) THEN
          filename = trim(prefix) // "-" // identifier // "-pol" //trim(int_to_char(LR_polarization))// ".xyzd"
          WRITE(stdout,'(/5X,"Writing xyzd file for response charge density")')
@@ -719,9 +717,9 @@ SUBROUTINE lr_dump_rho_tot_xyzd(rho,identifier)
          !write(stdout,'(5X,"|rho|=",D15.8)') rho_sum
          OPEN (158, file = filename, form = 'formatted', status = 'replace', err=501)
          WRITE(158,'("#NAT=",I5)') nat
-         WRITE(158,'("#NR1=",I5,"at1=",3F12.6)') dense%nr1, (alat*at(i,1)/dble(dense%nr1),i=1,3)
-         WRITE(158,'("#NR2=",I5,"at2=",3F12.6)') dense%nr2, (alat*at(i,2)/dble(dense%nr2),i=1,3)
-         WRITE(158,'("#NR3=",I5,"at3=",3F12.6)') dense%nr3, (alat*at(i,3)/dble(dense%nr3),i=1,3)
+         WRITE(158,'("#NR1=",I5,"at1=",3F12.6)') dfftp%nr1, (alat*at(i,1)/dble(dfftp%nr1),i=1,3)
+         WRITE(158,'("#NR2=",I5,"at2=",3F12.6)') dfftp%nr2, (alat*at(i,2)/dble(dfftp%nr2),i=1,3)
+         WRITE(158,'("#NR3=",I5,"at3=",3F12.6)') dfftp%nr3, (alat*at(i,3)/dble(dfftp%nr3),i=1,3)
 
          DO i=1,nat
             ! wrap coordinates back into cell.
@@ -757,12 +755,12 @@ SUBROUTINE lr_dump_rho_tot_xyzd(rho,identifier)
         ELSE
          kowner = ionode_id
         ENDIF
-        ldr = dense%nr1x*dense%nr2x
+        ldr = dfftp%nr1x*dfftp%nr2x
       !
       !
       ! Each processor is on standby to send its plane to ionode
       !
-      DO i3 = 1, dense%nr3
+      DO i3 = 1, dfftp%nr3
          !
          IF( kowner(i3) == me_pool ) THEN
             !
@@ -770,12 +768,12 @@ SUBROUTINE lr_dump_rho_tot_xyzd(rho,identifier)
             !
             IF ( nproc_pool > 1 ) kk = i3 - dfftp%ipp(me_pool+1)
             !
-            DO i2 = 1, dense%nr2
+            DO i2 = 1, dfftp%nr2
                !
-               DO i1 = 1, dense%nr1
+               DO i1 = 1, dfftp%nr1
                   !
-                  rho_plane(i1+(i2-1)*dense%nr1) = rho(i1+(i2-1)&
-                       &*dense%nr1x+(kk-1)*ldr) 
+                  rho_plane(i1+(i2-1)*dfftp%nr1) = rho(i1+(i2-1)&
+                       &*dfftp%nr1x+(kk-1)*ldr) 
                   !
                ENDDO
                !
@@ -789,20 +787,20 @@ SUBROUTINE lr_dump_rho_tot_xyzd(rho,identifier)
          !
          ! write
          IF ( ionode ) THEN
-             DO i2 = 1, dense%nr2
+             DO i2 = 1, dfftp%nr2
                !
-               DO i1 = 1, dense%nr1
+               DO i1 = 1, dfftp%nr1
                   !
                   WRITE(158,'(f15.8,3X)', advance='no') (DBLE(i1-1)&
                        &*(alat*BOHR_RADIUS_ANGS*(at(1,1)+at(2,1)+at(3&
-                       &,1))/DBLE(dense%nr1-1))) 
+                       &,1))/DBLE(dfftp%nr1-1))) 
                   WRITE(158,'(f15.8,3X)', advance='no') (DBLE(i2-1)&
                        &*(alat*BOHR_RADIUS_ANGS*(at(1,2)+at(2,2)+at(3&
-                       &,2))/DBLE(dense%nr2-1))) 
+                       &,2))/DBLE(dfftp%nr2-1))) 
                   WRITE(158,'(f15.8,3X)', advance='no') (DBLE(i3-1)&
                        &*(alat*BOHR_RADIUS_ANGS*(at(1,3)+at(2,3)+at(3&
-                       &,3))/DBLE(dense%nr3-1))) 
-                  WRITE(158,'(e13.5)') rho_plane((i2-1)*dense%nr1+i1)
+                       &,3))/DBLE(dfftp%nr3-1))) 
+                  WRITE(158,'(e13.5)') rho_plane((i2-1)*dfftp%nr1+i1)
                ENDDO
              ENDDO
          ENDIF
@@ -825,20 +823,20 @@ SUBROUTINE lr_dump_rho_tot_xyzd(rho,identifier)
      OPEN (158, file = filename, form = 'formatted', status = 'replace', err=501)
 
   WRITE(158,*) "# x         y          z        density"
-  DO i3=0,(dense%nr3-1)
-   DO i2=0,(dense%nr2-1)
-    DO i1=0,(dense%nr1-1)
+  DO i3=0,(dfftp%nr3-1)
+   DO i2=0,(dfftp%nr2-1)
+    DO i1=0,(dfftp%nr1-1)
      WRITE(158,'(f15.8,3X)', advance='no') (DBLE(i1)*(alat&
           &*BOHR_RADIUS_ANGS*(at(1,1)+at(2,1)+at(3,1))& 
-          &/DBLE(dense%nr1-1))) 
+          &/DBLE(dfftp%nr1-1))) 
      WRITE(158,'(f15.8,3X)', advance='no') (DBLE(i2)*(alat&
           &*BOHR_RADIUS_ANGS*(at(1,2)+at(2,2)+at(3,2))&
-          &/DBLE(dense%nr2-1))) 
+          &/DBLE(dfftp%nr2-1))) 
      WRITE(158,'(f15.8,3X)', advance='no') (DBLE(i3)*(alat&
           &*BOHR_RADIUS_ANGS*(at(1,3)+at(2,3)+at(3,3))&
-          &/DBLE(dense%nr3-1))) 
+          &/DBLE(dfftp%nr3-1))) 
      WRITE(158,'(e13.5)') &
-          &rho(i3*dense%nr1*dense%nr2+i2*dense%nr1+i1+1)
+          &rho(i3*dfftp%nr1*dfftp%nr2+i2*dfftp%nr1+i1+1)
     ENDDO
    ENDDO
   ENDDO
@@ -878,7 +876,6 @@ SUBROUTINE lr_dump_rho_tot_xcrys(rho, identifier)
   USE constants,             ONLY : BOHR_RADIUS_ANGS
   USE io_files,              ONLY : prefix
   USE lr_variables,          ONLY : LR_polarization, LR_iteration, cube_save
-  USE grid_dimensions,       ONLY : dense
   USE cell_base
   USE ions_base,             ONLY : nat, ityp, atm, ntyp => nsp, tau
   USE mp,                   ONLY : mp_barrier, mp_sum, mp_bcast, mp_get
@@ -950,7 +947,7 @@ SUBROUTINE lr_dump_rho_tot_xcrys(rho, identifier)
         WRITE(158,'(a)') 'DATAGRID_3D_UNKNOWN'
 
         ! number of points in each direction
-        WRITE(158,*) dense%nr1+1, dense%nr2+1, dense%nr3+1
+        WRITE(158,*) dfftp%nr1+1, dfftp%nr2+1, dfftp%nr3+1
         ! origin
         WRITE(158,'(3f10.6)') 0.0d0, 0.0d0, 0.0d0
         ! 1st spanning (=lattice) vector
@@ -960,8 +957,8 @@ SUBROUTINE lr_dump_rho_tot_xcrys(rho, identifier)
         ! 3rd spanning (=lattice) vector
         WRITE(158,'(3f10.6)') (BOHR_RADIUS_ANGS*alat*at(i,3),i=1,3)
      ENDIF
-        ALLOCATE( rho_plane( dense%nr1*dense%nr2 ) )
-        ALLOCATE( kowner( dense%nr3 ) )
+        ALLOCATE( rho_plane( dfftp%nr1*dfftp%nr2 ) )
+        ALLOCATE( kowner( dfftp%nr3 ) )
         !
         ! ... find the index of the pool that will write rho
         !
@@ -987,12 +984,12 @@ SUBROUTINE lr_dump_rho_tot_xcrys(rho, identifier)
         ELSE
          kowner = ionode_id
         ENDIF
-        ldr = dense%nr1x*dense%nr2x
+        ldr = dfftp%nr1x*dfftp%nr2x
       !
       !
       ! Each processor is on standby to send its plane to ionode
       !
-      DO i3 = 1, dense%nr3
+      DO i3 = 1, dfftp%nr3
          !
          IF( kowner(i3) == me_pool ) THEN
             !
@@ -1000,11 +997,11 @@ SUBROUTINE lr_dump_rho_tot_xcrys(rho, identifier)
             !
             IF ( nproc_pool > 1 ) kk = i3 - dfftp%ipp(me_pool+1)
             !
-            DO i2 = 1, dense%nr2
+            DO i2 = 1, dfftp%nr2
                !
-               DO i1 = 1, dense%nr1
+               DO i1 = 1, dfftp%nr1
                   !
-                  rho_plane(i1+(i2-1)*dense%nr1) = rho(i1+(i2-1)*dense%nr1x+(kk-1)*ldr)
+                  rho_plane(i1+(i2-1)*dfftp%nr1) = rho(i1+(i2-1)*dfftp%nr1x+(kk-1)*ldr)
                   !
                ENDDO
                !
@@ -1018,11 +1015,11 @@ SUBROUTINE lr_dump_rho_tot_xcrys(rho, identifier)
          !
          ! write
          IF ( ionode ) THEN
-             DO i2 = 1, dense%nr2
+             DO i2 = 1, dfftp%nr2
                !
-               DO i1 = 1, dense%nr1
+               DO i1 = 1, dfftp%nr1
                        six_count=six_count+1
-                       WRITE(158,'(e13.5)',advance='no') rho_plane((i2-1)*dense%nr1+i1)
+                       WRITE(158,'(e13.5)',advance='no') rho_plane((i2-1)*dfftp%nr1+i1)
                        IF (six_count == 6 ) THEN
                          WRITE(158,'("")')
                          six_count=0
@@ -1075,7 +1072,7 @@ SUBROUTINE lr_dump_rho_tot_xcrys(rho, identifier)
   WRITE(158,'(a)') 'DATAGRID_3D_UNKNOWN'
 
   ! number of points in each direction
-  WRITE(158,*) dense%nr1+1, dense%nr2+1, dense%nr3+1
+  WRITE(158,*) dfftp%nr1+1, dfftp%nr2+1, dfftp%nr3+1
   ! origin
   WRITE(158,'(3f10.6)') 0.0d0, 0.0d0, 0.0d0
   ! 1st spanning (=lattice) vector
@@ -1086,25 +1083,25 @@ SUBROUTINE lr_dump_rho_tot_xcrys(rho, identifier)
   WRITE(158,'(3f10.6)') (BOHR_RADIUS_ANGS*alat*at(i,3),i=1,3)
 
   count=0
-  DO i3=0,dense%nr3
-     iz = mod(i3,dense%nr3)
-     !iz = mod(i3,dense%nr3) + 1
+  DO i3=0,dfftp%nr3
+     iz = mod(i3,dfftp%nr3)
+     !iz = mod(i3,dfftp%nr3) + 1
 
-     DO i2=0,dense%nr2
-        iy = mod(i2,dense%nr2)
-        !iy = mod(i2,dense%nr2) + 1
+     DO i2=0,dfftp%nr2
+        iy = mod(i2,dfftp%nr2)
+        !iy = mod(i2,dfftp%nr2) + 1
 
-        DO i1=0,dense%nr1
-           ix = mod(i1,dense%nr1)
-           !ix = mod(i1,dense%nr1) + 1
+        DO i1=0,dfftp%nr1
+           ix = mod(i1,dfftp%nr1)
+           !ix = mod(i1,dfftp%nr1) + 1
 
-           !ii = (1+ix) + iy*dense%nr1x + iz*dense%nr1x*dense%nr2x
+           !ii = (1+ix) + iy*dfftp%nr1x + iz*dfftp%nr1x*dfftp%nr2x
            IF (count<6) THEN
               count = count + 1
               !ind(count) = ii
            ELSE
               WRITE(158,'(6e13.5)') &
-                   (rho(ind_x(i)+1+dense%nr1*ind_y(i)+dense%nr1*dense%nr2*ind_z(i)),i=1,6)
+                   (rho(ind_x(i)+1+dfftp%nr1*ind_y(i)+dfftp%nr1*dfftp%nr2*ind_z(i)),i=1,6)
               count=1
               !ind(count) = ii
            ENDIF
@@ -1114,7 +1111,7 @@ SUBROUTINE lr_dump_rho_tot_xcrys(rho, identifier)
         ENDDO
      ENDDO
   ENDDO
-  WRITE(158,'(6e13.5:)') (rho(ind_x(i)+1+dense%nr1*ind_y(i)+dense%nr1*dense%nr2*ind_z(i)),i=1,count)
+  WRITE(158,'(6e13.5:)') (rho(ind_x(i)+1+dfftp%nr1*ind_y(i)+dfftp%nr1*dfftp%nr2*ind_z(i)),i=1,count)
   WRITE(158,'(a)') 'END_DATAGRID_3D'
   WRITE(158,'(a)') 'END_BLOCK_DATAGRID_3D'
 #endif
@@ -1132,7 +1129,7 @@ SUBROUTINE lr_dump_rho_tot_pxyd(rho,identifier)
   !-----------------------------------------------------------------------
   USE io_files,              ONLY : prefix
   USE lr_variables,          ONLY : LR_polarization, LR_iteration, cube_save
-  USE grid_dimensions,       ONLY : dense
+  USE fft_base,              ONLY : dfftp
   USE cell_base
   USE ions_base,             ONLY : nat, ityp, atm, ntyp => nsp, tau
   USE mp,                    ONLY : mp_barrier, mp_sum
@@ -1157,7 +1154,7 @@ SUBROUTINE lr_dump_rho_tot_pxyd(rho,identifier)
  CALL start_clock( 'post-processing' )
  IF (lr_verbosity > 5) WRITE(stdout,'("<lr_dump_rho_tot_pxyd>")')
   rho_sum=0.0d0
-  DO i=1,dense%nrxx
+  DO i=1,dfftp%nnr
      rho_sum=rho_sum+rho(i)
   ENDDO
   !
@@ -1175,14 +1172,14 @@ SUBROUTINE lr_dump_rho_tot_pxyd(rho,identifier)
      OPEN (158, file = filename, form = 'formatted', status = 'replace', err=501)
 
   WRITE(158,*) "# x         y          z        density"
-   DO i1=0,(dense%nr1-1)
-    DO i2=0,(dense%nr2-1)
+   DO i1=0,(dfftp%nr1-1)
+    DO i2=0,(dfftp%nr2-1)
      rho_sum=0
-     DO i3=0,(dense%nr3-1)
-      rho_sum=rho_sum+rho(i3*dense%nr1*dense%nr2+i2*dense%nr1+i1+1)
+     DO i3=0,(dfftp%nr3-1)
+      rho_sum=rho_sum+rho(i3*dfftp%nr1*dfftp%nr2+i2*dfftp%nr1+i1+1)
      ENDDO
-     WRITE(158,'(f15.8,3X)', advance='no') (dble(i1)*(alat*BOHR_RADIUS_ANGS*(at(1,1)+at(2,1)+at(3,1))/dble(dense%nr1-1)))
-     WRITE(158,'(f15.8,3X)', advance='no') (dble(i2)*(alat*BOHR_RADIUS_ANGS*(at(1,2)+at(2,2)+at(3,2))/dble(dense%nr2-1)))
+     WRITE(158,'(f15.8,3X)', advance='no') (dble(i1)*(alat*BOHR_RADIUS_ANGS*(at(1,1)+at(2,1)+at(3,1))/dble(dfftp%nr1-1)))
+     WRITE(158,'(f15.8,3X)', advance='no') (dble(i2)*(alat*BOHR_RADIUS_ANGS*(at(1,2)+at(2,2)+at(3,2))/dble(dfftp%nr2-1)))
      WRITE(158,'(e13.5)') rho_sum
     ENDDO
    ENDDO

@@ -34,9 +34,7 @@
       use gvecw, only: ngw
       use gvect, only: gstart
       use ions_base, only: na, nat, pmass, nax, nsp, rcmax
-      use grid_dimensions, only: grid_dim, dense
       use cell_base, only: omega, alat, tpiba2
-      use smooth_grid_dimensions, only: grid_dim, smooth
       use local_pseudo, only: vps, rhops
       use io_global,                ONLY : stdout, ionode, ionode_id
       use mp_global,                ONLY : intra_bgrp_comm, np_ortho, me_ortho, ortho_comm
@@ -59,6 +57,7 @@
       USE cp_main_variables,        ONLY : nlax, collect_lambda, distribute_lambda, descla, nrlx, nlam, drhor, drhog
       USE descriptors,              ONLY : la_npc_ , la_npr_ , la_comm_ , la_me_ , la_nrl_ , ldim_cyclic
       USE mp_global, ONLY:  me_image, my_image_id, nbgrp
+      USE fft_base,  ONLY: dffts, dfftp
 
 
 !
@@ -73,14 +72,14 @@
       real(dp) :: becdr(nhsa,nbspx,3)
       integer irb(3,nat)
       complex(dp) :: eigrb(ngb,nat)
-      real(dp) :: rhor(dense%nrxx,nspin)
-      real(dp) :: vpot(dense%nrxx,nspin)
+      real(dp) :: rhor(dfftp%nnr,nspin)
+      real(dp) :: vpot(dfftp%nnr,nspin)
       complex(dp) :: rhog(ngm,nspin)
-      real(dp) :: rhos(smooth%nrxx,nspin)
-      real(dp) :: rhoc(dense%nrxx)
-      complex(dp) :: ei1(-dense%nr1:dense%nr1,nat)
-      complex(dp) :: ei2(-dense%nr2:dense%nr2,nat)
-      complex(dp) :: ei3(-dense%nr3:dense%nr3,nat)
+      real(dp) :: rhos(dffts%nnr,nspin)
+      real(dp) :: rhoc(dfftp%nnr)
+      complex(dp) :: ei1(-dfftp%nr1:dfftp%nr1,nat)
+      complex(dp) :: ei2(-dfftp%nr2:dfftp%nr2,nat)
+      complex(dp) :: ei3(-dfftp%nr3:dfftp%nr3,nat)
       complex(dp) :: sfac( ngms, nsp )
       real(dp) :: fion(3,nat)
       real(dp) :: ema0bg(ngw)
@@ -298,7 +297,7 @@
         call prefor(eigr,betae)!ATTENZIONE
 
         do i=1,nbsp,2
-          call dforce( i, bec, betae, c0,c2,c3,rhos, smooth%nrxx, ispin,f,nbsp,nspin)
+          call dforce( i, bec, betae, c0,c2,c3,rhos, dffts%nnr, ispin,f,nbsp,nspin)
           if(tefield .and. (evalue.ne.0.d0)) then
             call dforceb(c0, i, betae, ipolp, bec ,ctabin(1,1,ipolp), gqq, gqqm, qmat, deeq, df)
             c2(1:ngw)=c2(1:ngw)+evalue*df(1:ngw)
@@ -838,7 +837,7 @@
   
         call prefor(eigr,betae)
         do i=1,nbsp,2
-          call dforce(i,bec,betae,c0,c2,c3,rhos,smooth%nrxx,ispin,f,nbsp,nspin)
+          call dforce(i,bec,betae,c0,c2,c3,rhos,dffts%nnr,ispin,f,nbsp,nspin)
           if(tefield.and.(evalue .ne. 0.d0)) then
             call dforceb &
                (c0, i, betae, ipolp, bec ,ctabin(1,1,ipolp), gqq, gqqm, qmat, deeq, df)

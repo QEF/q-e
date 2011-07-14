@@ -33,7 +33,7 @@ add_shift_us.o : ../PW/becmod.o
 add_shift_us.o : ../PW/pwcom.o
 add_shift_us.o : ../PW/symme.o
 addusdens1d.o : ../Modules/cell_base.o
-addusdens1d.o : ../Modules/griddim.o
+addusdens1d.o : ../Modules/fft_base.o
 addusdens1d.o : ../Modules/ions_base.o
 addusdens1d.o : ../Modules/kind.o
 addusdens1d.o : ../Modules/mp.o
@@ -52,6 +52,7 @@ atomic_wfc_nc_proj.o : ../PW/pwcom.o
 average.o : ../Modules/cell_base.o
 average.o : ../Modules/constants.o
 average.o : ../Modules/environment.o
+average.o : ../Modules/fft_base.o
 average.o : ../Modules/griddim.o
 average.o : ../Modules/io_files.o
 average.o : ../Modules/io_global.o
@@ -118,7 +119,6 @@ compute_ppsi.o : ../PW/pwcom.o
 compute_sigma_avg.o : ../Modules/cell_base.o
 compute_sigma_avg.o : ../Modules/fft_base.o
 compute_sigma_avg.o : ../Modules/fft_interfaces.o
-compute_sigma_avg.o : ../Modules/griddim.o
 compute_sigma_avg.o : ../Modules/ions_base.o
 compute_sigma_avg.o : ../Modules/kind.o
 compute_sigma_avg.o : ../Modules/mp.o
@@ -143,7 +143,7 @@ d_matrix_so.o : ../PW/pwcom.o
 d_matrix_so.o : ../PW/symm_base.o
 do_initial_state.o : ../Modules/cell_base.o
 do_initial_state.o : ../Modules/control_flags.o
-do_initial_state.o : ../Modules/griddim.o
+do_initial_state.o : ../Modules/fft_base.o
 do_initial_state.o : ../Modules/io_global.o
 do_initial_state.o : ../Modules/ions_base.o
 do_initial_state.o : ../Modules/kind.o
@@ -197,7 +197,7 @@ epsilon.o : ../Modules/xml_io_base.o
 epsilon.o : ../PW/pwcom.o
 epsilon.o : ../iotk/src/iotk_module.o
 ggen1d.o : ../Modules/cell_base.o
-ggen1d.o : ../Modules/griddim.o
+ggen1d.o : ../Modules/fft_base.o
 ggen1d.o : ../Modules/kind.o
 ggen1d.o : ../Modules/recvec.o
 hexspinsym.o : ../Modules/kind.o
@@ -245,7 +245,6 @@ local_dos1d.o : ../PW/pwcom.o
 local_dos_mag.o : ../Modules/cell_base.o
 local_dos_mag.o : ../Modules/fft_base.o
 local_dos_mag.o : ../Modules/fft_interfaces.o
-local_dos_mag.o : ../Modules/griddim.o
 local_dos_mag.o : ../Modules/io_files.o
 local_dos_mag.o : ../Modules/ions_base.o
 local_dos_mag.o : ../Modules/kind.o
@@ -296,7 +295,7 @@ pawplot.o : ../PW/scf_mod.o
 plan_avg.o : ../Modules/cell_base.o
 plan_avg.o : ../Modules/control_flags.o
 plan_avg.o : ../Modules/environment.o
-plan_avg.o : ../Modules/griddim.o
+plan_avg.o : ../Modules/fft_base.o
 plan_avg.o : ../Modules/io_files.o
 plan_avg.o : ../Modules/io_global.o
 plan_avg.o : ../Modules/ions_base.o
@@ -330,7 +329,7 @@ poormanwannier.o : ../PW/symm_base.o
 postproc.o : ../Modules/cell_base.o
 postproc.o : ../Modules/control_flags.o
 postproc.o : ../Modules/environment.o
-postproc.o : ../Modules/griddim.o
+postproc.o : ../Modules/fft_base.o
 postproc.o : ../Modules/io_files.o
 postproc.o : ../Modules/io_global.o
 postproc.o : ../Modules/ions_base.o
@@ -349,7 +348,6 @@ projwfc.o : ../Modules/descriptors.o
 projwfc.o : ../Modules/environment.o
 projwfc.o : ../Modules/fft_base.o
 projwfc.o : ../Modules/fft_interfaces.o
-projwfc.o : ../Modules/griddim.o
 projwfc.o : ../Modules/io_files.o
 projwfc.o : ../Modules/io_global.o
 projwfc.o : ../Modules/ions_base.o
@@ -426,7 +424,7 @@ pw2wannier90.o : ../PW/noncol.o
 pw2wannier90.o : ../PW/pwcom.o
 pw_export.o : ../Modules/control_flags.o
 pw_export.o : ../Modules/environment.o
-pw_export.o : ../Modules/griddim.o
+pw_export.o : ../Modules/fft_base.o
 pw_export.o : ../Modules/io_files.o
 pw_export.o : ../Modules/io_global.o
 pw_export.o : ../Modules/ions_base.o
@@ -470,7 +468,6 @@ sym_band.o : ../Modules/cell_base.o
 sym_band.o : ../Modules/constants.o
 sym_band.o : ../Modules/fft_base.o
 sym_band.o : ../Modules/fft_interfaces.o
-sym_band.o : ../Modules/griddim.o
 sym_band.o : ../Modules/io_files.o
 sym_band.o : ../Modules/io_global.o
 sym_band.o : ../Modules/ions_base.o
@@ -507,7 +504,6 @@ wannier_plot.o : ../Modules/constants.o
 wannier_plot.o : ../Modules/environment.o
 wannier_plot.o : ../Modules/fft_base.o
 wannier_plot.o : ../Modules/fft_interfaces.o
-wannier_plot.o : ../Modules/griddim.o
 wannier_plot.o : ../Modules/io_files.o
 wannier_plot.o : ../Modules/io_global.o
 wannier_plot.o : ../Modules/ions_base.o
@@ -527,7 +523,6 @@ wfdd.o : ../Modules/constants.o
 work_function.o : ../Modules/cell_base.o
 work_function.o : ../Modules/constants.o
 work_function.o : ../Modules/fft_base.o
-work_function.o : ../Modules/griddim.o
 work_function.o : ../Modules/io_global.o
 work_function.o : ../Modules/mp.o
 work_function.o : ../Modules/recvec.o

@@ -28,11 +28,10 @@ SUBROUTINE energies_xc( lda, n, m, e_xc, e_h )
   USE control_flags,    ONLY : gamma_only
   USE uspp,             ONLY : vkb, nkb
   USE wvfct,            ONLY : igk, g2kin, ecutwfc
-  USE fft_base,         ONLY : dffts
+  USE fft_base,         ONLY : dffts, dfftp
   USE fft_interfaces,   ONLY : fwfft, invfft
   USE gvecs,          ONLY : nls, doublegrid
   USE gvect,            ONLY : ngm, gstart, nl, nlm, g, gg, gcutm
-  USE grid_dimensions,  ONLY : dense
   USE cell_base,        ONLY : alat, omega
   USE lsda_mod,         ONLY : nspin
   USE ldaU,             ONLY : lda_plus_u
@@ -241,7 +240,7 @@ SUBROUTINE energies_xc( lda, n, m, e_xc, e_h )
          deallocate(hpsi,psi,becp%r)
        endif
        !
-       allocate(psi_r(dense%nrxx),psi_rs(dffts%nnr))
+       allocate(psi_r(dfftp%nnr),psi_rs(dffts%nnr))
        !
        iunwfcreal=find_free_unit()
        CALL diropn( iunwfcreal, 'real_whole', dffts%nnr, exst )
@@ -250,7 +249,7 @@ SUBROUTINE energies_xc( lda, n, m, e_xc, e_h )
        !
        !if(.not.allocated(rho%of_r)) write(stdout,*) 'rho not allocated'
        !if(.not.allocated(v%of_r)) write(stdout,*) 'v not allocated'
-       allocate(rho_fake_core(dense%nrxx))
+       allocate(rho_fake_core(dfftp%nnr))
        rho_fake_core(:)=0.d0
        CALL v_xc( rho, rho_core, rhog_core, etxc, vtxc, v%of_r )
        !!CALL v_xc(rho,rho_core,nr1,nr2,nr3,nr1x,nr2x,nr3x,&
@@ -278,7 +277,7 @@ SUBROUTINE energies_xc( lda, n, m, e_xc, e_h )
          endif
          !
          !
-         do ir=1,dense%nrxx
+         do ir=1,dfftp%nnr
             psi_r(ir)=psi_r(ir)**2.d0
          enddo
          !
@@ -289,10 +288,10 @@ SUBROUTINE energies_xc( lda, n, m, e_xc, e_h )
          ! CHECK if the norm if equal to 1.0
          !
          norm=0.0
-         do ir=1,dense%nrxx
+         do ir=1,dfftp%nnr
             norm=norm+psi_r(ir)
          enddo
-         norm=norm/dble(dense%nr1*dense%nr2*dense%nr3)
+         norm=norm/dble(dfftp%nr1*dfftp%nr2*dfftp%nr3)
          call  mp_sum(norm)
          !
          diff=abs( norm - 1.0d0 )
@@ -305,11 +304,11 @@ SUBROUTINE energies_xc( lda, n, m, e_xc, e_h )
          endif
          !
          e_xc(ibnd)=0.d0
-         do ir=1,dense%nrxx
+         do ir=1,dfftp%nnr
            e_xc(ibnd)=e_xc(ibnd)+psi_r(ir)*v%of_r(ir,1)!the 1 is for the spin NOT IMPLEMENTED YET
          enddo
          !
-         e_xc(ibnd)=e_xc(ibnd)/dble(dense%nr1*dense%nr2*dense%nr3)
+         e_xc(ibnd)=e_xc(ibnd)/dble(dfftp%nr1*dfftp%nr2*dfftp%nr3)
          !
          call mp_sum(e_xc(ibnd))
          !
@@ -333,7 +332,7 @@ SUBROUTINE energies_xc( lda, n, m, e_xc, e_h )
               psi_r(:)=psi_rs(:)
            endif
            !
-           do ir=1,dense%nrxx
+           do ir=1,dfftp%nnr
               psi_r(ir)=psi_r(ir)**2.d0
            enddo
            !
@@ -341,10 +340,10 @@ SUBROUTINE energies_xc( lda, n, m, e_xc, e_h )
            !
            ! CHECK the norm
            norm=0.0
-           do ir=1,dense%nrxx
+           do ir=1,dfftp%nnr
               norm=norm+psi_r(ir)
            enddo
-           norm=norm/dble(dense%nr1*dense%nr2*dense%nr3)
+           norm=norm/dble(dfftp%nr1*dfftp%nr2*dfftp%nr3)
            call  mp_sum(norm)
            !
            diff=abs( norm - 1.0d0 )
@@ -357,10 +356,10 @@ SUBROUTINE energies_xc( lda, n, m, e_xc, e_h )
            endif
            !
            e_h(ibnd)=0.d0
-           do ir=1,dense%nrxx
+           do ir=1,dfftp%nnr
               e_h(ibnd)=e_h(ibnd)+psi_r(ir)*v%of_r(ir,1)!the 1 is for the spin NOT IMPLEMENTED YET
            enddo
-           e_h(ibnd)=e_h(ibnd)/dble(dense%nr1*dense%nr2*dense%nr3)
+           e_h(ibnd)=e_h(ibnd)/dble(dfftp%nr1*dfftp%nr2*dfftp%nr3)
            !
            call mp_sum(e_h(ibnd))
            write(stdout,*) 'Routine energies_h :', ibnd, e_h(ibnd)*rytoev

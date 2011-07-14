@@ -62,7 +62,7 @@ SUBROUTINE extract (filplot,plot_num)
   USE ener,      ONLY : ef
   USE ions_base, ONLY : nat, ntyp=>nsp, ityp, tau
   USE gvect
-  USE grid_dimensions, ONLY : dense
+  USE fft_base,  ONLY : dfftp
   USE klist,     ONLY : two_fermi_energies
   USE vlocal,    ONLY : strf
   USE io_files,  ONLY : tmp_dir, prefix
@@ -181,7 +181,7 @@ SUBROUTINE extract (filplot,plot_num)
 !              'post-processing paw routines not yet tested',1)
 
   CALL openfil_pp ( )
-  CALL struc_fact (nat, tau, ntyp, ityp, ngm, g, bg, dense%nr1, dense%nr2, dense%nr3, &
+  CALL struc_fact (nat, tau, ntyp, ityp, ngm, g, bg, dfftp%nr1, dfftp%nr2, dfftp%nr3, &
        strf, eigts1, eigts2, eigts3)
 !  CALL init_us_1 ( )
   !

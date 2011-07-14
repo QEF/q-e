@@ -23,8 +23,8 @@ SUBROUTINE lr_readin
   USE control_flags,       ONLY : twfcollect,use_para_diag
   USE scf,                 ONLY : vltot, v, vrs, vnew, &
                                    & destroy_scf_type
-  USE grid_dimensions,     ONLY : dense
-  USE gvecs,             ONLY : doublegrid
+  USE fft_base,            ONLY : dfftp
+  USE gvecs,               ONLY : doublegrid
   USE wvfct,               ONLY : nbnd, et, wg
   USE lsda_mod,            ONLY : isk
   USE ener,                ONLY : ef
@@ -239,7 +239,7 @@ END SELECT
 
   !
   !print *, "set_vrs"
-  CALL set_vrs ( vrs, vltot, v%of_r, 0, 0, dense%nrxx, nspin, doublegrid )
+  CALL set_vrs ( vrs, vltot, v%of_r, 0, 0, dfftp%nnr, nspin, doublegrid )
 
   DEALLOCATE( vltot )
   CALL destroy_scf_type(v)

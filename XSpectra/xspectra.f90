@@ -884,7 +884,7 @@ SUBROUTINE xanes_dipole(a,b,ncalcv,xnorm,core_wfn,paw_iltonhb,terminator,verbosi
        xk,                & ! k-points coordinates
        wk                   ! k-points weight
   USE gvect,            ONLY: g, ngm, ngl
-  USE grid_dimensions,  ONLY: nrxx
+  USE fft_base,        ONLY: dfftp
   USE paw_gipaw,       ONLY : &
        paw_vkb,             & ! |p> projectors
        paw_becp,            & ! product of projectors and wf.
@@ -1029,7 +1029,7 @@ SUBROUTINE xanes_dipole(a,b,ncalcv,xnorm,core_wfn,paw_iltonhb,terminator,verbosi
 
   !*apsi  call set_vrs(vrs,vltot,vr,nrxx,nspin,doublegrid)
   !<CG>
-  CALL set_vrs(vrs,vltot,v%of_r,kedtau, v%kin_r,nrxx,nspin,doublegrid)
+  CALL set_vrs(vrs,vltot,v%of_r,kedtau, v%kin_r,dfftp%nnr,nspin,doublegrid)
   !</CG>
 
   !  CALL newd   ! CG
@@ -1265,7 +1265,7 @@ SUBROUTINE xanes_quadrupole(a,b,ncalcv,xnorm,core_wfn,paw_iltonhb,terminator,ver
        xk,                & ! k-points coordinates
        wk                   ! k-points weight
   USE gvect, ONLY: g,ngm,ngl
-  USE grid_dimensions,  ONLY: nrxx
+  USE fft_base,        ONLY : dfftp
   USE paw_gipaw,     ONLY : &
        paw_vkb,             & ! |p> projectors
        paw_becp,            & ! product of projectors and wf.
@@ -1430,7 +1430,7 @@ SUBROUTINE xanes_quadrupole(a,b,ncalcv,xnorm,core_wfn,paw_iltonhb,terminator,ver
 
   !<CG>
   ! set_vrs (vrs, vltot, vr, kedtau, kedtaur,nrxx, nspin, doublegrid)
-  CALL set_vrs(vrs,vltot,v%of_r,kedtau, v%kin_r,nrxx,nspin,doublegrid)
+  CALL set_vrs(vrs,vltot,v%of_r,kedtau, v%kin_r,dfftp%nnr,nspin,doublegrid)
   !</CG>
 
   IF (lda_plus_u) CALL init_xanes_ldau
@@ -3381,7 +3381,7 @@ SUBROUTINE verify_hpsi
        xk,                & ! k-points coordinates
        wk                   ! k-points weight
   USE gvect,            ONLY: g,ngm,ngl
-  USE grid_dimensions,  ONLY : nrxx
+  USE fft_base,         ONLY : dfftp
   USE paw_gipaw,        ONLY : &
        paw_vkb,             & ! |p> projectors
        paw_becp,            & ! product of projectors and wf.
@@ -3424,7 +3424,7 @@ SUBROUTINE verify_hpsi
   COMPLEX(dp) :: psi_h_psi,  psi_psi,  psi_s_psi, psi_sm1s_psi
   REAL(dp) :: difference
 
-  CALL set_vrs(vrs,vltot,v%of_r,kedtau, v%kin_r,nrxx,nspin,doublegrid)
+  CALL set_vrs(vrs,vltot,v%of_r,kedtau, v%kin_r,dfftp%nnr,nspin,doublegrid)
   IF (lda_plus_u) CALL init_xanes_ldau
 
   mpimea=mpime

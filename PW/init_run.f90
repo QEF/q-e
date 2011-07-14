@@ -23,7 +23,7 @@ SUBROUTINE init_run()
 #endif
   USE bp,                 ONLY : lberry, lelfield
 #ifdef __SOLVENT
-  USE grid_dimensions,    ONLY : nrxx
+  USE fft_base,           ONLY : dfftp
   USE solvent_base,       ONLY : do_solvent
 #endif
   USE recvec_subs,        ONLY : ggen
@@ -71,7 +71,7 @@ SUBROUTINE init_run()
   CALL allocate_bp_efield()
   IF( lberry .or. lelfield) call bp_global_map()
 #ifdef __SOLVENT
-  IF ( do_solvent ) CALL solvent_initbase( nrxx )
+  IF ( do_solvent ) CALL solvent_initbase( dfftp%nnr )
 #endif
 ! DCC
   ! ... Initializes EE variables

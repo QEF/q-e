@@ -43,8 +43,8 @@ SUBROUTINE setup()
   USE ions_base,          ONLY : nat, tau, ntyp => nsp, ityp, zv
   USE basis,              ONLY : starting_pot, natomwfc
   USE gvect,              ONLY : gcutm
-  USE grid_dimensions,    ONLY : dense
-  USE smooth_grid_dimensions,    ONLY : smooth
+  USE fft_base,           ONLY : dfftp
+  USE fft_base,           ONLY : dffts
   USE grid_subroutines,   ONLY : realspace_grids_init
   USE gvecs,              ONLY : doublegrid, gcutms, dual
   USE klist,              ONLY : xk, wk, nks, nelec, degauss, lgauss, &
@@ -407,7 +407,7 @@ SUBROUTINE setup()
   !
   ! ... calculate dimensions of the FFT grid
   !
-  CALL realspace_grids_init ( dense, smooth, at, bg, gcutm, gcutms )
+  CALL realspace_grids_init ( dfftp, dffts, at, bg, gcutm, gcutms )
   !
 ! DCC
 !  IF( do_coarse ) CALL set_fft_dim_coarse()
@@ -503,7 +503,7 @@ SUBROUTINE setup()
      !
      ! ... eliminate rotations that are not symmetry operations
      !
-     CALL find_sym ( nat, tau, ityp, dense%nr1, dense%nr2, dense%nr3, nofrac, &
+     CALL find_sym ( nat, tau, ityp, dfftp%nr1, dfftp%nr2, dfftp%nr3, nofrac, &
                   magnetic_sym, m_loc, nosym_evc )
      !
   ENDIF

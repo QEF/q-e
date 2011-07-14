@@ -14,7 +14,7 @@ subroutine symdvscf (nper, irr, dvtosym)
   !
   USE kinds, only : DP
   USE constants, ONLY: tpi
-  USE grid_dimensions, ONLY: dense
+  USE fft_base,  ONLY: dfftp
   USE cell_base, ONLY : at
   USE symm_base, ONLY : s, ftau
   USE noncollin_module, ONLY : nspin_lsda, nspin_mag
@@ -25,7 +25,7 @@ subroutine symdvscf (nper, irr, dvtosym)
   ! the number of perturbations
   ! the representation under conside
 
-  complex(DP) :: dvtosym (dense%nr1x, dense%nr2x, dense%nr3x, nspin_mag, nper)
+  complex(DP) :: dvtosym (dfftp%nr1x, dfftp%nr2x, dfftp%nr3x, nspin_mag, nper)
   ! the potential to be symmetrized
 
   integer :: is, ri, rj, rk, i, j, k, ipert, jpert, ipol, isym, &
@@ -43,13 +43,13 @@ subroutine symdvscf (nper, irr, dvtosym)
   if (nsymq == 1.and. (.not.minus_q) ) return
   call start_clock ('symdvscf')
 
-  allocate (dvsym(  dense%nr1x , dense%nr2x , dense%nr3x , nper))
+  allocate (dvsym(  dfftp%nr1x , dfftp%nr2x , dfftp%nr3x , nper))
   !
   ! if necessary we symmetrize with respect to  S(irotmq)*q = -q + Gi
   !
-  n(1) = tpi / DBLE (dense%nr1)
-  n(2) = tpi / DBLE (dense%nr2)
-  n(3) = tpi / DBLE (dense%nr3)
+  n(1) = tpi / DBLE (dfftp%nr1)
+  n(2) = tpi / DBLE (dfftp%nr2)
+  n(3) = tpi / DBLE (dfftp%nr3)
   if (minus_q) then
      gf(:) =  gimq (1) * at (1, :) * n(:) + &
               gimq (2) * at (2, :) * n(:) + &
@@ -57,22 +57,22 @@ subroutine symdvscf (nper, irr, dvtosym)
      term (:, 1) = CMPLX(cos (gf (:) ), sin (gf (:) ) ,kind=DP)
      do is = 1, nspin_lsda
         phase (1) = (1.d0, 0.d0)
-        do k = 1, dense%nr3
-           do j = 1, dense%nr2
-              do i = 1, dense%nr1
+        do k = 1, dfftp%nr3
+           do j = 1, dfftp%nr2
+              do i = 1, dfftp%nr1
                  ri = s (1, 1, irotmq) * (i - 1) + s (2, 1, irotmq) * (j - 1) &
                       + s (3, 1, irotmq) * (k - 1) - ftau (1, irotmq)
-                 ri = mod (ri, dense%nr1) + 1
-                 if (ri < 1) ri = ri + dense%nr1
+                 ri = mod (ri, dfftp%nr1) + 1
+                 if (ri < 1) ri = ri + dfftp%nr1
                  rj = s (1, 2, irotmq) * (i - 1) + s (2, 2, irotmq) * (j - 1) &
                       + s (3, 2, irotmq) * (k - 1) - ftau (2, irotmq)
-                 rj = mod (rj, dense%nr2) + 1
-                 if (rj < 1) rj = rj + dense%nr2
+                 rj = mod (rj, dfftp%nr2) + 1
+                 if (rj < 1) rj = rj + dfftp%nr2
                  rk = s (1, 3, irotmq) * (i - 1) + s (2, 3, irotmq) * (j - 1) &
                       + s (3, 3, irotmq) * (k - 1) - ftau (3, irotmq)
-                 rk = mod (rk, dense%nr3) + 1
+                 rk = mod (rk, dfftp%nr3) + 1
 
-                 if (rk < 1) rk = rk + dense%nr3
+                 if (rk < 1) rk = rk + dfftp%nr3
                  do ipert = 1, nper
                     aux2 = (0.d0, 0.d0)
                     do jpert = 1, nper
@@ -108,24 +108,24 @@ subroutine symdvscf (nper, irr, dvtosym)
      do isym = 1, nsymq
         phase (isym) = (1.d0, 0.d0)
      enddo
-     do k = 1, dense%nr3
-        do j = 1, dense%nr2
-           do i = 1, dense%nr1
+     do k = 1, dfftp%nr3
+        do j = 1, dfftp%nr2
+           do i = 1, dfftp%nr1
               do isym = 1, nsymq
                  irot = irgq (isym)
                  ri = s (1, 1, irot) * (i - 1) + s (2, 1, irot) * (j - 1) &
                     + s (3, 1, irot) * (k - 1) - ftau (1, irot)
-                 ri = mod (ri, dense%nr1) + 1
-                 if (ri < 1) ri = ri + dense%nr1
+                 ri = mod (ri, dfftp%nr1) + 1
+                 if (ri < 1) ri = ri + dfftp%nr1
                  rj = s (1, 2, irot) * (i - 1) + s (2, 2, irot) * (j - 1) &
                     + s (3, 2, irot) * (k - 1) - ftau (2, irot)
-                 rj = mod (rj, dense%nr2) + 1
-                 if (rj < 1) rj = rj + dense%nr2
+                 rj = mod (rj, dfftp%nr2) + 1
+                 if (rj < 1) rj = rj + dfftp%nr2
                  rk = s (1, 3, irot) * (i - 1) + s (2, 3, irot) * (j - 1) &
                     + s (3, 3, irot) * (k - 1) - ftau (3, irot)
-                 rk = mod (rk, dense%nr3) + 1
+                 rk = mod (rk, dfftp%nr3) + 1
 
-                 if (rk < 1) rk = rk + dense%nr3
+                 if (rk < 1) rk = rk + dfftp%nr3
                  do ipert = 1, nper
                     do jpert = 1, nper
                        dvsym (i, j, k, ipert) = dvsym (i, j, k, ipert) + &

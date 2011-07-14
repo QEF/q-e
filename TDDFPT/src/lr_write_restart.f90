@@ -16,7 +16,7 @@ SUBROUTINE lr_write_restart()
                                    bgz_suffix
   USE charg_resp,           ONLY : resonance_condition
   USE wvfct,                ONLY : nbnd, npwx, npw
-  USE grid_dimensions,      ONLY : dense
+  USE fft_base,             ONLY : dfftp
   USE io_global,            ONLY : ionode
   USE klist,                ONLY : nks
   USE noncollin_module,     ONLY : nspin_mag
@@ -127,12 +127,12 @@ SUBROUTINE lr_write_restart()
     !
        IF (charge_response == 1 ) THEN
         IF (resonance_condition) THEN
-         CALL diropn ( iunrestart, 'restart_lanczos-rho_tot.'//trim(int_to_char(LR_polarization)), 2*dense%nrxx*nspin_mag, exst)
-         CALL davcio(rho_1_tot_im(:,:),2*dense%nrxx*nspin_mag,iunrestart,1,1)
+         CALL diropn ( iunrestart, 'restart_lanczos-rho_tot.'//trim(int_to_char(LR_polarization)), 2*dfftp%nnr*nspin_mag, exst)
+         CALL davcio(rho_1_tot_im(:,:),2*dfftp%nnr*nspin_mag,iunrestart,1,1)
          CLOSE( unit = iunrestart)
         ELSE
-         CALL diropn ( iunrestart, 'restart_lanczos-rho_tot.'//trim(int_to_char(LR_polarization)), 2*dense%nrxx*nspin_mag, exst)
-         CALL davcio(rho_1_tot(:,:),2*dense%nrxx*nspin_mag,iunrestart,1,1)
+         CALL diropn ( iunrestart, 'restart_lanczos-rho_tot.'//trim(int_to_char(LR_polarization)), 2*dfftp%nnr*nspin_mag, exst)
+         CALL davcio(rho_1_tot(:,:),2*dfftp%nnr*nspin_mag,iunrestart,1,1)
          CLOSE( unit = iunrestart)
         ENDIF
        ENDIF

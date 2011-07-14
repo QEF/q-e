@@ -76,7 +76,7 @@ CONTAINS
     !! -------------------------------------------------------------------------
     
     use gvect,           ONLY : ngm, nl, g, nlm
-    USE grid_dimensions, ONLY : dense
+    USE fft_base,        ONLY : dfftp
     USE cell_base,       ONLY : omega, tpiba
     USE fft_scalar,      ONLY : cfft3d
     !! -------------------------------------------------------------------------
@@ -174,7 +174,7 @@ CONTAINS
        
        allocate( procs_Npoints(0:nproc_pool-1), procs_start(0:nproc_pool-1), procs_end(0:nproc_pool-1) )
        
-       procs_Npoints(me_pool) = dense%nrxx
+       procs_Npoints(me_pool) = dfftp%nnr
        procs_start(0) = 1
        
        ! All processors communicate how many points they have been assigned.  Each processor
@@ -205,8 +205,8 @@ CONTAINS
        ! z plane because of the integer division and the fact that arrays in Fortran start at 1.
        ! +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-       my_start_z = procs_start(me_pool)/(dense%nr1x*dense%nr2x)+1
-       my_end_z = procs_end(me_pool)/(dense%nr1x*dense%nr2x)
+       my_start_z = procs_start(me_pool)/(dfftp%nr1x*dfftp%nr2x)+1
+       my_end_z = procs_end(me_pool)/(dfftp%nr1x*dfftp%nr2x)
 
        !write(*,'(A,3I5)') "Parall en [proc, my_start_z, my_end_z]", me_pool, my_start_z, my_end_z
        ! +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -246,14 +246,14 @@ CONTAINS
 
     !! --------------------------------------------------------------------------------------------------
     
-    !! Allocate arrays.  nrxx is a PWSCF variable that holds the number of points assigned to 
+    !! Allocate arrays.  nnr is a PWSCF variable that holds the number of points assigned to 
     !! a given processor.  
     !! ---------------------------------------------------------------------------------------
 
-    allocate( q0(dense%nrxx) )
-    allocate( gradient_rho(dense%nrxx, 3) )
-    allocate( dq0_drho(dense%nrxx), dq0_dgradrho(dense%nrxx) )
-    allocate( total_rho(dense%nrxx) )
+    allocate( q0(dfftp%nnr) )
+    allocate( gradient_rho(dfftp%nnr, 3) )
+    allocate( dq0_drho(dfftp%nnr), dq0_dgradrho(dfftp%nnr) )
+    allocate( total_rho(dfftp%nnr) )
     
     !! ---------------------------------------------------------------------------------------
     
@@ -290,7 +290,7 @@ CONTAINS
     
     if (nproc_pool > 1) then
        
-       allocate( full_rho(dense%nr1x*dense%nr2x*dense%nr3x) )
+       allocate( full_rho(dfftp%nr1x*dfftp%nr2x*dfftp%nr3x) )
 
        full_rho(procs_start(me_pool):procs_end(me_pool)) = total_rho
        
@@ -345,7 +345,7 @@ CONTAINS
     !! for the convolution (equation 11 of SOLER).  The ffts used here are timed.
     !! --------------------------------------------------------------------------------------------------
 
-    allocate( thetas(dense%nrxx, Nqs) )
+    allocate( thetas(dfftp%nnr, Nqs) )
     CALL get_thetas_on_grid(total_rho, q0, thetas)
     !! ---------------------------------------------------------------------------------------------
 
@@ -389,7 +389,7 @@ CONTAINS
     
     do theta_i = 1, Nqs
        
-       !call cft3(thetas(:,theta_i), dense%nr1, dense%nr2, dense%nr3, dense%nr1x, dense%nr2x, dense%nr3x, 1)
+       !call cft3(thetas(:,theta_i), dfftp%nr1, dfftp%nr2, dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%nr3x, 1)
        CALL invfft('Dense', thetas(:,theta_i), dfftp) 
     end do
 
@@ -412,7 +412,7 @@ CONTAINS
 
     call start_clock( 'vdW_v' )
 
-    allocate( potential(dense%nrxx) )
+    allocate( potential(dfftp%nnr) )
     
     call get_potential(q0, dq0_drho, dq0_dgradrho, gradient_rho, thetas, potential)
     
@@ -428,9 +428,9 @@ CONTAINS
     !! The integral of rho(r)*potential(r) for the vtxc output variable
     !! --------------------------------------------------------------------
 
-    grid_cell_volume = omega/(dense%nr1*dense%nr2*dense%nr3)  
+    grid_cell_volume = omega/(dfftp%nr1*dfftp%nr2*dfftp%nr3)  
  
-    do i_grid = 1, dense%nrxx
+    do i_grid = 1, dfftp%nnr
        
        vtxc = vtxc + e2*grid_cell_volume*rho_valence(i_grid,1)*potential(i_grid)
     
@@ -442,7 +442,7 @@ CONTAINS
 
     call start_clock( 'vdW_v' )
 
-    allocate( potential(dense%nr1x*dense%nr2x*dense%nr3x) )
+    allocate( potential(dfftp%nr1x*dfftp%nr2x*dfftp%nr3x) )
     
     call get_potential(q0, dq0_drho, dq0_dgradrho, Nneighbors, gradient_rho, thetas, potential, my_start_z, my_end_z)
     
@@ -480,9 +480,9 @@ CONTAINS
     !! The integral of rho(r)*potential(r) for the vtxc output variable
     !! --------------------------------------------------------------------
 
-    grid_cell_volume = omega/(dense%nr1x*dense%nr2x*dense%nr3x)  
+    grid_cell_volume = omega/(dfftp%nr1x*dfftp%nr2x*dfftp%nr3x)  
  
-    do i_grid = 1, dense%nrxx
+    do i_grid = 1, dfftp%nnr
        
        vtxc = vtxc + e2*grid_cell_volume * total_rho(i_grid)*potential(procs_start(me_pool)+i_grid-1)
     
@@ -505,7 +505,7 @@ CONTAINS
 
   SUBROUTINE stress_vdW_DF(rho_valence, rho_core, sigma)
 
-      USE grid_dimensions, ONLY : dense
+      USE fft_base,        ONLY : dfftp
       use gvect,           ONLY : ngm, nl, g, nlm
       USE cell_base,       ONLY : tpiba
 
@@ -559,7 +559,7 @@ CONTAINS
          
          allocate( procs_Npoints(0:nproc_pool-1), procs_start(0:nproc_pool-1), procs_end(0:nproc_pool-1) )
          
-         procs_Npoints(me_pool) = dense%nrxx
+         procs_Npoints(me_pool) = dfftp%nnr
          procs_start(0) = 1
          
          do i_proc = 0, nproc_pool-1
@@ -575,8 +575,8 @@ CONTAINS
             
          end do
          
-         my_start_z = procs_start(me_pool)/(dense%nr1x*dense%nr2x)+1
-         my_end_z = procs_end(me_pool)/(dense%nr1x*dense%nr2x)
+         my_start_z = procs_start(me_pool)/(dfftp%nr1x*dfftp%nr2x)+1
+         my_end_z = procs_end(me_pool)/(dfftp%nr1x*dfftp%nr2x)
 
          !write(*,'(A,3I5)') "Parall stress [proc, my_start_z, my_end_z]", me_pool, my_start_z, my_end_z
 
@@ -588,11 +588,11 @@ CONTAINS
       !! Allocations
       !! ---------------------------------------------------------------------------------------
 
-      allocate( gradient_rho(dense%nrxx, 3) )
-      allocate( total_rho(dense%nrxx) )
-      allocate( q0(dense%nrxx) )
-      allocate( dq0_drho(dense%nrxx), dq0_dgradrho(dense%nrxx) )
-      allocate( thetas(dense%nrxx, Nqs) )
+      allocate( gradient_rho(dfftp%nnr, 3) )
+      allocate( total_rho(dfftp%nnr) )
+      allocate( q0(dfftp%nnr) )
+      allocate( dq0_drho(dfftp%nnr), dq0_dgradrho(dfftp%nnr) )
+      allocate( thetas(dfftp%nnr, Nqs) )
  
       !! ---------------------------------------------------------------------------------------
       !! Charge
@@ -612,7 +612,7 @@ CONTAINS
 
       if (nproc_pool > 1) then
          
-         allocate( full_rho(dense%nr1x*dense%nr2x*dense%nr3x) )
+         allocate( full_rho(dfftp%nr1x*dfftp%nr2x*dfftp%nr3x) )
 
          full_rho(procs_start(me_pool):procs_end(me_pool)) = total_rho
          
@@ -682,7 +682,7 @@ CONTAINS
       !! ----------------------------------------------------------------------------------
       use gvect,                 ONLY : ngm, nl, g, nlm, nl, gg, igtongl, &
                                         gl, ngl, gstart
-      USE grid_dimensions,       ONLY : dense
+      USE fft_base,              ONLY : dfftp
       USE cell_base,             ONLY : omega, tpiba, alat, at, tpiba2
       USE fft_scalar,            ONLY : cfft3d
 
@@ -717,7 +717,7 @@ CONTAINS
       !real(dp)       :: at_inverse(3,3)
 
       allocate( d2y_dx2(Nqs, Nqs) ) 
-      allocate( u_vdW(dense%nrxx, Nqs) )
+      allocate( u_vdW(dfftp%nnr, Nqs) )
 
       sigma(:,:) = 0.0_DP
       prefactor = 0.0_DP
@@ -755,7 +755,7 @@ CONTAINS
       !! ----------------------------------------------------------------------------------------------------
 
 
-      do i_grid = 1, dense%nrxx
+      do i_grid = 1, dfftp%nnr
 
                   q_low = 1
                   q_hi = Nqs 
@@ -817,7 +817,7 @@ CONTAINS
       call mp_sum(  sigma, intra_pool_comm )
 #endif
 
-      call dscal (9, 1.d0 / (dense%nr1 * dense%nr2 * dense%nr3), sigma, 1)
+      call dscal (9, 1.d0 / (dfftp%nr1 * dfftp%nr2 * dfftp%nr3), sigma, 1)
 
       deallocate( d2y_dx2, u_vdW )
 
@@ -835,7 +835,7 @@ CONTAINS
       !! Modules to include
       !! ----------------------------------------------------------------------------------
       use gvect,                 ONLY : ngm, nl, g, nl, gg, igtongl, gl, ngl, gstart 
-      USE grid_dimensions,       ONLY : dense
+      USE fft_base,              ONLY : dfftp
       USE cell_base,             ONLY : omega, tpiba, tpiba2
       USE constants, ONLY: pi
 
@@ -919,7 +919,7 @@ CONTAINS
   !!     dq0_dgradrho = total_rho / |gradient_rho| * d q0 / d |gradient_rho|
   !!
     
-    USE grid_dimensions, ONLY : dense
+    USE fft_base,        ONLY : dfftp
     USE kernel_table,    ONLY : q_cut, q_min
     
     real(dp),  intent(IN)    :: total_rho(:), gradient_rho(:,:)      !! Input variables needed
@@ -953,7 +953,7 @@ CONTAINS
   dq0_drho(:) = 0.0_DP
   dq0_dgradrho(:) = 0.0_DP
 
-  do i_grid = 1, dense%nrxx
+  do i_grid = 1, dfftp%nnr
           
      !! This prevents numerical problems.  If the charge density is negative (an
      !! unphysical situation), we simply treat it as very small.  In that case,
@@ -1474,7 +1474,6 @@ subroutine numerical_gradient(total_rho, gradient_rho)
 
    use gvect,             ONLY : ngm, nl, g, nlm
    USE cell_base,         ONLY : tpiba
-   USE grid_dimensions,   ONLY : dense
    USE fft_base,          ONLY : dfftp
    USE fft_interfaces,    ONLY : fwfft, invfft 
    !
@@ -1491,8 +1490,8 @@ subroutine numerical_gradient(total_rho, gradient_rho)
    complex(dp), allocatable :: c_grho(:)      !! auxiliary complex array for grad rho
  
    ! rho in G space
-   allocate ( c_rho(dense%nrxx), c_grho(dense%nrxx) )
-   c_rho(1:dense%nrxx) = CMPLX(total_rho(1:dense%nrxx),0.0_DP)
+   allocate ( c_rho(dfftp%nnr), c_grho(dfftp%nnr) )
+   c_rho(1:dfftp%nnr) = CMPLX(total_rho(1:dfftp%nnr),0.0_DP)
    CALL fwfft ('Dense', c_rho, dfftp) 
  
    do icar=1,3
@@ -1524,7 +1523,7 @@ end subroutine numerical_gradient
 
 subroutine numerical_gradient(full_rho, Nneighbors, gradient_rho, my_start_z, my_end_z)
 
-  USE grid_dimensions,   ONLY : dense
+  USE fft_base,          ONLY : dfftp
   USE cell_base,         ONLY : alat, at
   
   real(dp), intent(in) :: full_rho(:)                        !! Input array holding the value of the total charge density
@@ -1585,9 +1584,9 @@ subroutine numerical_gradient(full_rho, Nneighbors, gradient_rho, my_start_z, my
      ! Normalize by the number of grid points in each direction
      ! +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-     at_inverse(1,:) = at_inverse(1,:) * dble(dense%nr1x)
-     at_inverse(2,:) = at_inverse(2,:) * dble(dense%nr2x)
-     at_inverse(3,:) = at_inverse(3,:) * dble(dense%nr3x)
+     at_inverse(1,:) = at_inverse(1,:) * dble(dfftp%nr1x)
+     at_inverse(2,:) = at_inverse(2,:) * dble(dfftp%nr2x)
+     at_inverse(3,:) = at_inverse(3,:) * dble(dfftp%nr3x)
 
      ! +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
      
@@ -1613,8 +1612,8 @@ subroutine numerical_gradient(full_rho, Nneighbors, gradient_rho, my_start_z, my
   !! -----------------------------------------------------------------------------------------------
 
   do ix3 = my_start_z, my_end_z
-     do ix2 = 1, dense%nr2x
-        do ix1 = 1, dense%nr1x
+     do ix2 = 1, dfftp%nr2x
+        do ix1 = 1, dfftp%nr1x
            
            i_grid = i_grid + 1
           
@@ -1651,7 +1650,7 @@ end subroutine numerical_gradient
 subroutine thetas_to_uk(thetas, u_vdW)
   
   USE gvect,           ONLY : nl, nlm, gg, ngm, igtongl, gl, ngl, gstart
-  USE grid_dimensions, ONLY : dense
+  USE fft_base,        ONLY : dfftp
   USE cell_base,       ONLY : tpiba, omega
 
   complex(dp), intent(in) :: thetas(:,:)    !! On input this variable holds the theta functions (equation 11, SOLER)
@@ -1715,7 +1714,7 @@ end subroutine thetas_to_uk
 subroutine vdW_energy(thetas, vdW_xc_energy)
   
   USE gvect,           ONLY : nl, nlm, gg, ngm, igtongl, gl, ngl, gstart
-  USE grid_dimensions, ONLY : dense
+  USE fft_base,        ONLY : dfftp
   USE cell_base,       ONLY : tpiba, omega
 
   complex(dp), intent(inout) :: thetas(:,:)    !! On input this variable holds the theta functions 
@@ -1741,7 +1740,7 @@ subroutine vdW_energy(thetas, vdW_xc_energy)
 
   vdW_xc_energy = 0.0D0
  
-  allocate (u_vdW(dense%nrxx,Nqs))
+  allocate (u_vdW(dfftp%nnr,Nqs))
   u_vdW(:,:) = CMPLX(0.0_DP,0.0_DP)
 
   allocate( kernel_of_k(Nqs, Nqs) )
@@ -1822,15 +1821,15 @@ end subroutine vdW_energy
 subroutine dv_drho_vdw(rho_valence, rho_core, drho, nspin, dv_drho)
 
     USE gvect,               ONLY : nl, g, nlm, ngm
-    USE grid_dimensions,     ONLY : dense
+    USE fft_base,            ONLY : dfftp
     USE cell_base,           ONLY : alat, tpiba, omega
     USE fft_scalar,          ONLY : cfft3d
 
     integer :: nspin
     real(dp), intent(IN) :: rho_valence(:,:)       !
     real(dp), intent(IN) :: rho_core(:)    
-    complex(DP), intent(IN) :: drho (dense%nrxx, nspin)
-    complex(DP), intent(INOUT) :: dv_drho(dense%nrxx, nspin)
+    complex(DP), intent(IN) :: drho (dfftp%nnr, nspin)
+    complex(DP), intent(INOUT) :: dv_drho(dfftp%nnr, nspin)
 
     !! -------------------------------------------------------------------------
     !! For the potential
@@ -1854,14 +1853,14 @@ subroutine dv_drho_vdw(rho_valence, rho_core, drho, nspin, dv_drho)
     real(DP), allocatable :: drho_real(:)
 
  
-    allocate( q0(dense%nrxx) )
-    allocate( gradient_rho(dense%nrxx, 3) )
-    allocate( dq0_drho(dense%nrxx), dq0_dgradrho(dense%nrxx) )
-    allocate( total_rho(dense%nrxx) )
-    allocate( drho_real(dense%nrxx) )
-    allocate( thetas(dense%nrxx, Nqs) )
-    allocate( u_vdW(dense%nrxx, Nqs) )
-    allocate( potential_plus(dense%nrxx), potential_minus(dense%nrxx) )
+    allocate( q0(dfftp%nnr) )
+    allocate( gradient_rho(dfftp%nnr, 3) )
+    allocate( dq0_drho(dfftp%nnr), dq0_dgradrho(dfftp%nnr) )
+    allocate( total_rho(dfftp%nnr) )
+    allocate( drho_real(dfftp%nnr) )
+    allocate( thetas(dfftp%nnr, Nqs) )
+    allocate( u_vdW(dfftp%nnr, Nqs) )
+    allocate( potential_plus(dfftp%nnr), potential_minus(dfftp%nnr) )
    
 
     !! Derivative parameter 
@@ -1960,7 +1959,7 @@ end subroutine dv_drho_vdw
 subroutine get_potential(q0, dq0_drho, dq0_dgradrho, gradient_rho, u_vdW, potential)
 
   use gvect,               ONLY : nl, g, nlm
-  USE grid_dimensions,     ONLY : dense
+  USE fft_base,            ONLY : dfftp
   USE cell_base,           ONLY : alat, tpiba
   
   real(dp), intent(in) ::  q0(:), gradient_rho(:,:)   !! Input arrays holding the value of q0 for all points assigned
@@ -1992,7 +1991,7 @@ subroutine get_potential(q0, dq0_drho, dq0_dgradrho, gradient_rho, u_vdW, potent
   real(dp), allocatable ::h_prefactor(:)
   complex(dp), allocatable ::h(:)
 
-  allocate (h_prefactor(dense%nrxx),h(dense%nrxx))
+  allocate (h_prefactor(dfftp%nnr),h(dfftp%nnr))
 
   potential = 0.0D0
   h_prefactor   = 0.0D0
@@ -2014,7 +2013,7 @@ subroutine get_potential(q0, dq0_drho, dq0_dgradrho, gradient_rho, u_vdW, potent
   !! ---------------------------------------------------------------------------------------------
   
 
-  do i_grid = 1,dense%nrxx
+  do i_grid = 1,dfftp%nnr
            
      q_low = 1
      q_hi = Nqs 
@@ -2080,7 +2079,7 @@ end subroutine get_potential
 
 subroutine get_potential(q0, dq0_drho, dq0_dgradrho, N, gradient_rho, u_vdW, potential, my_start_z, my_end_z)
 
-  USE grid_dimensions,     ONLY : dense
+  USE fft_base,            ONLY : dfftp
   USE cell_base,           ONLY : alat, at
   
   real(dp), intent(in) ::  q0(:), gradient_rho(:,:)       !! Input arrays holding the value of q0 for all points assigned
@@ -2133,9 +2132,9 @@ subroutine get_potential(q0, dq0_drho, dq0_dgradrho, N, gradient_rho, u_vdW, pot
      at_inverse = alat * at
      call invert_3x3_matrix(at_inverse)
      
-     at_inverse(1,:) = at_inverse(1,:) * dble(dense%nr1x)
-     at_inverse(2,:) = at_inverse(2,:) * dble(dense%nr2x)
-     at_inverse(3,:) = at_inverse(3,:) * dble(dense%nr3x)
+     at_inverse(1,:) = at_inverse(1,:) * dble(dfftp%nr1x)
+     at_inverse(2,:) = at_inverse(2,:) * dble(dfftp%nr2x)
+     at_inverse(3,:) = at_inverse(3,:) * dble(dfftp%nr3x)
 
      have_at_inverse = .true.
 
@@ -2178,8 +2177,8 @@ i_grid = 0
   !! --------------------------------------------------------------------------------------------------------------------
 
   do ix3 = my_start_z, my_end_z
-     do ix2 = 1, dense%nr2x
-        do ix1 = 1, dense%nr1x
+     do ix2 = 1, dfftp%nr2x
+        do ix1 = 1, dfftp%nr1x
            
            i_grid = i_grid + 1
            
@@ -2358,7 +2357,7 @@ end function gradient_coefficients
 
 function get_3d_indices(N)
   
-  USE grid_dimensions,     ONLY : dense
+  USE fft_base,            ONLY : dfftp
    
 
   integer, intent(in), optional :: N                     !! The number of neighbors in each direction that will
@@ -2396,13 +2395,13 @@ function get_3d_indices(N)
 
      ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
      
-     allocate( rho_3d(-N+1:dense%nr1x+N, -N+1:dense%nr2x+N, -N+1:dense%nr3x+N) )
+     allocate( rho_3d(-N+1:dfftp%nr1x+N, -N+1:dfftp%nr2x+N, -N+1:dfftp%nr3x+N) )
      
      i_grid = 0
      
-     do ix3 = 1, dense%nr3x
-        do ix2 = 1, dense%nr2x
-           do ix1 = 1, dense%nr1x
+     do ix3 = 1, dfftp%nr3x
+        do ix2 = 1, dfftp%nr2x
+           do ix1 = 1, dfftp%nr1x
               
               i_grid = i_grid + 1
               
@@ -2418,13 +2417,13 @@ function get_3d_indices(N)
      ! direction
      ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-     rho_3d(-N+1:0,:,:) = rho_3d(dense%nr1x-N+1:dense%nr1x, :, :)
-     rho_3d(:,-N+1:0,:) = rho_3d(:, dense%nr2x-N+1:dense%nr2x, :)
-     rho_3d(:,:,-N+1:0) = rho_3d(:, :, dense%nr3x-N+1:dense%nr3x)
+     rho_3d(-N+1:0,:,:) = rho_3d(dfftp%nr1x-N+1:dfftp%nr1x, :, :)
+     rho_3d(:,-N+1:0,:) = rho_3d(:, dfftp%nr2x-N+1:dfftp%nr2x, :)
+     rho_3d(:,:,-N+1:0) = rho_3d(:, :, dfftp%nr3x-N+1:dfftp%nr3x)
      
-     rho_3d(dense%nr1x+1:dense%nr1x+N, :, :) = rho_3d(1:N, :, :)
-     rho_3d(:, dense%nr2x+1:dense%nr2x+N, :) = rho_3d(:, 1:N, :)
-     rho_3d(:, :, dense%nr3x+1:dense%nr3x+N) = rho_3d(:, :, 1:N)
+     rho_3d(dfftp%nr1x+1:dfftp%nr1x+N, :, :) = rho_3d(1:N, :, :)
+     rho_3d(:, dfftp%nr2x+1:dfftp%nr2x+N, :) = rho_3d(:, 1:N, :)
+     rho_3d(:, :, dfftp%nr3x+1:dfftp%nr3x+N) = rho_3d(:, :, 1:N)
      
      ! +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 

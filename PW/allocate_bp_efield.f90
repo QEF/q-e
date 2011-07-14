@@ -45,7 +45,7 @@
     USE mp,                   ONLY : mp_sum
     USE bp
     USE gvect,                ONLY : ngm_g, g, ngm
-    USE grid_dimensions,      ONLY : dense
+    USE fft_base,             ONLY : dfftp
     USE cell_base,            ONLY : at
     USE gvect,   ONLY : ig_l2g
 
@@ -59,7 +59,7 @@
 ! (for now...) coarse grid
 !and inverse realtion global g (coarse) to ix,iy,iz
 
-    allocate(ln_g(-dense%nr1:dense%nr1,-dense%nr2:dense%nr2,-dense%nr3:dense%nr3))
+    allocate(ln_g(-dfftp%nr1:dfftp%nr1,-dfftp%nr2:dfftp%nr2,-dfftp%nr3:dfftp%nr3))
     allocate(g_ln(3,ngm_g))
     
     ln_g(:,:,:)=0!it means also not found

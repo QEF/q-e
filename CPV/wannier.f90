@@ -476,13 +476,13 @@ MODULE wannier_subroutines
                                        ydist, zdist
     USE electric_field_module,  ONLY : field_tune, e_tuned, par, rel1, rel2
     USE wannier_module,         ONLY : rhos1, rhos2, wfc
-    USE smooth_grid_dimensions, ONLY : grid_dim, smooth
     USE electrons_base,         ONLY : nbsp, nspin, nupdwn, f, ispin
     USE cell_base,              ONLY : ainv, alat, at
     USE gvect,                  ONLY : gstart
     USE control_flags,          ONLY : tsde
     USE wave_base,              ONLY : wave_steepest, wave_verlet
     USE cp_interfaces,          ONLY : dforce
+    USE fft_base,               ONLY : dffts
     !
     IMPLICIT NONE
     !
@@ -547,7 +547,7 @@ MODULE wannier_subroutines
        IF(wf_efield) THEN
           rhos1=0.d0
           rhos2=0.d0
-          DO ir=1,smooth%nrxx
+          DO ir=1,dffts%nnr
              rel1(1)=xdist(ir)*a1(1)+ydist(ir)*a2(1)+zdist(ir)*a3(1)-wfc(1,i)
              rel1(2)=xdist(ir)*a1(2)+ydist(ir)*a2(2)+zdist(ir)*a3(2)-wfc(2,i)
              rel1(3)=xdist(ir)*a1(3)+ydist(ir)*a2(3)+zdist(ir)*a3(3)-wfc(3,i)
@@ -581,9 +581,9 @@ MODULE wannier_subroutines
                 rhos2(ir,:)=rhos1(ir,:)
              END IF
           END DO
-          CALL dforce(i,bec,betae,c0,c2,c3,rhos1,smooth%nrxx,ispin,f,nbsp,nspin,rhos2)
+          CALL dforce(i,bec,betae,c0,c2,c3,rhos1,dffts%nnr,ispin,f,nbsp,nspin,rhos2)
        ELSE
-          CALL dforce(i,bec,betae,c0,c2,c3,rhos,smooth%nrxx,ispin,f,nbsp,nspin)
+          CALL dforce(i,bec,betae,c0,c2,c3,rhos,dffts%nnr,ispin,f,nbsp,nspin)
        END IF
        IF(tsde) THEN
           CALL wave_steepest( cm(:, i  ), c0(:, i  ), emadt2, c2 )

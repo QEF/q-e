@@ -16,12 +16,12 @@ subroutine sym_dmage (dvsym)
   !
   USE kinds, only : DP
   USE cell_base,only : at, bg
-  USE grid_dimensions, only : dense
+  USE fft_base, only : dfftp
   USE symm_base,only : nsym, sname, s, ftau, t_rev, invs
   USE lsda_mod, only : nspin
   implicit none
 
-  complex(DP) :: dvsym (dense%nr1x, dense%nr2x, dense%nr3x, nspin, 3)
+  complex(DP) :: dvsym (dfftp%nr1x, dfftp%nr2x, dfftp%nr3x, nspin, 3)
   complex(DP), allocatable ::  aux (:,:,:,:,:)
   complex(DP) ::  dmags(3,3), mag(3), magrot(3)
   ! the potential to symmetrize
@@ -40,7 +40,7 @@ subroutine sym_dmage (dvsym)
      end do
   end do
   if (nsym == 1) return
-  allocate (aux(dense%nr1x , dense%nr2x , dense%nr3x , 3, 3))
+  allocate (aux(dfftp%nr1x , dfftp%nr2x , dfftp%nr3x , 3, 3))
 
   do is = 2, 4
      do ipol = 1, 3
@@ -51,12 +51,12 @@ subroutine sym_dmage (dvsym)
   !
   !  symmmetrize
   !
-  do k = 1, dense%nr3
-     do j = 1, dense%nr2
-        do i = 1, dense%nr1
+  do k = 1, dfftp%nr3
+     do j = 1, dfftp%nr2
+        do i = 1, dfftp%nr1
            do irot = 1, nsym
               call ruotaijk (s(1,1,irot), ftau(1,irot), i, j, k, &
-                             dense%nr1, dense%nr2, dense%nr3, ri, rj, rk)
+                             dfftp%nr1, dfftp%nr2, dfftp%nr3, ri, rj, rk)
               !
               !    ruotaijk find the rotated of i,j,k with the inverse of S
               !

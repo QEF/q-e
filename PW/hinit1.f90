@@ -13,7 +13,7 @@ SUBROUTINE hinit1()
   !
   USE ions_base,     ONLY : nat, nsp, ityp, tau
   USE cell_base,     ONLY : at, bg, omega, tpiba2
-  USE grid_dimensions,ONLY: dense
+  USE fft_base,      ONLY : dfftp
   USE gvect,         ONLY : ngm, g
   USE gvecs,         ONLY : doublegrid
   USE ldaU,          ONLY : lda_plus_u
@@ -39,7 +39,7 @@ SUBROUTINE hinit1()
   !
   ! ... define the total local potential (external+scf)
   !
-  CALL set_vrs( vrs, vltot, v%of_r, kedtau, v%kin_r, dense%nrxx, nspin, doublegrid )
+  CALL set_vrs( vrs, vltot, v%of_r, kedtau, v%kin_r, dfftp%nnr, nspin, doublegrid )
   !
   IF ( tqr ) CALL qpointlist()
   !

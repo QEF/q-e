@@ -25,8 +25,6 @@ SUBROUTINE data_structure( gamma_only )
   USE gvecs,      ONLY : gcutms, gvecs_init
   USE stick_set,  ONLY : pstickset
   USE wvfct,      ONLY : ecutwfc
-  USE grid_dimensions,        ONLY : dense
-  USE smooth_grid_dimensions, ONLY : smooth
 
 #ifdef SOLVENT
   USE mp_global,  ONLY : me_pool, nproc_pool
@@ -66,7 +64,7 @@ SUBROUTINE data_structure( gamma_only )
   nogrp = get_ntask_groups()
   !
   CALL pstickset( gamma_only, bg, gcutm, gkcut, gcutms, &
-                  dfftp, dffts, ngw_ , ngm_ , ngs_ , dense, smooth, me_pool, root_pool, nproc_pool, intra_pool_comm,   &
+                  dfftp, dffts, ngw_ , ngm_ , ngs_ , me_pool, root_pool, nproc_pool, intra_pool_comm,   &
                   nogrp )
   !
   !     on output, ngm_ and ngs_ contain the local number of G-vectors

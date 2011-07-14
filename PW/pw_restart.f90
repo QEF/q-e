@@ -89,10 +89,10 @@ MODULE pw_restart
                                        nks_start, xk_start, wk_start
       USE ktetra,               ONLY : ntetra, tetra, ltetra
       USE gvect,                ONLY : ngm, ngm_g, g, mill
-      USE grid_dimensions,      ONLY : dense
+      USE fft_base,             ONLY : dfftp
       USE basis,                ONLY : natomwfc
       USE gvecs,              ONLY : ngms_g, dual
-      USE smooth_grid_dimensions,ONLY: smooth
+      USE fft_base,           ONLY : dffts
       USE wvfct,                ONLY : npw, npwx, g2kin, et, wg, &
                                        igk, nbnd, ecutwfc
       USE ener,                 ONLY : ef, ef_up, ef_dw
@@ -367,9 +367,9 @@ MODULE pw_restart
 ! ... PLANE_WAVES
 !-------------------------------------------------------------------------------
          !
-         CALL write_planewaves( ecutwfc, dual, npwx_g, gamma_only, dense%nr1, dense%nr2, &
-                                dense%nr3, ngm_g, smooth%nr1, smooth%nr2, smooth%nr3, ngms_g, dense%nr1, &
-                                dense%nr2, dense%nr3, mill_g, lwfc )
+         CALL write_planewaves( ecutwfc, dual, npwx_g, gamma_only, dfftp%nr1, dfftp%nr2, &
+                                dfftp%nr3, ngm_g, dffts%nr1, dffts%nr2, dffts%nr3, ngms_g, dfftp%nr1, &
+                                dfftp%nr2, dfftp%nr3, mill_g, lwfc )
          !
 !-------------------------------------------------------------------------------
 ! ... SPIN
@@ -1239,9 +1239,9 @@ MODULE pw_restart
       USE ions_base,        ONLY : nat, nsp
       USE symm_base,        ONLY : nsym
       USE gvect,            ONLY : ngm_g, ecutrho
-      USE grid_dimensions,  ONLY : dense
+      USE fft_base,         ONLY : dfftp
       USE gvecs,          ONLY : ngms_g, dual
-      USE smooth_grid_dimensions,ONLY: smooth
+      USE fft_base,         ONLY: dffts
       USE lsda_mod,         ONLY : lsda
       USE noncollin_module, ONLY : noncolin
       USE ktetra,           ONLY : ntetra
@@ -1319,16 +1319,16 @@ MODULE pw_restart
          CALL iotk_scan_dat( iunpun, "GAMMA_ONLY", gamma_only )
          !
          CALL iotk_scan_empty( iunpun, "FFT_GRID", attr )
-         CALL iotk_scan_attr( attr, "nr1", dense%nr1 )
-         CALL iotk_scan_attr( attr, "nr2", dense%nr2 )
-         CALL iotk_scan_attr( attr, "nr3", dense%nr3 )
+         CALL iotk_scan_attr( attr, "nr1", dfftp%nr1 )
+         CALL iotk_scan_attr( attr, "nr2", dfftp%nr2 )
+         CALL iotk_scan_attr( attr, "nr3", dfftp%nr3 )
          !
          CALL iotk_scan_dat( iunpun, "GVECT_NUMBER", ngm_g )
          !
          CALL iotk_scan_empty( iunpun, "SMOOTH_FFT_GRID", attr )
-         CALL iotk_scan_attr( attr, "nr1s", smooth%nr1 )
-         CALL iotk_scan_attr( attr, "nr2s", smooth%nr2 )
-         CALL iotk_scan_attr( attr, "nr3s", smooth%nr3 )
+         CALL iotk_scan_attr( attr, "nr1s", dffts%nr1 )
+         CALL iotk_scan_attr( attr, "nr2s", dffts%nr2 )
+         CALL iotk_scan_attr( attr, "nr3s", dffts%nr3 )
          !
          CALL iotk_scan_dat( iunpun, "SMOOTH_GVECT_NUMBER", ngms_g )
          !
@@ -1411,13 +1411,13 @@ MODULE pw_restart
       CALL mp_bcast( dual,       ionode_id, intra_image_comm )
       CALL mp_bcast( npwx_,      ionode_id, intra_image_comm )
       CALL mp_bcast( gamma_only, ionode_id, intra_image_comm )
-      CALL mp_bcast( dense%nr1,        ionode_id, intra_image_comm )
-      CALL mp_bcast( dense%nr2,        ionode_id, intra_image_comm )
-      CALL mp_bcast( dense%nr3,        ionode_id, intra_image_comm )
+      CALL mp_bcast( dfftp%nr1,        ionode_id, intra_image_comm )
+      CALL mp_bcast( dfftp%nr2,        ionode_id, intra_image_comm )
+      CALL mp_bcast( dfftp%nr3,        ionode_id, intra_image_comm )
       CALL mp_bcast( ngm_g,      ionode_id, intra_image_comm )
-      CALL mp_bcast( smooth%nr1,       ionode_id, intra_image_comm )
-      CALL mp_bcast( smooth%nr2,       ionode_id, intra_image_comm )
-      CALL mp_bcast( smooth%nr3,       ionode_id, intra_image_comm )
+      CALL mp_bcast( dffts%nr1,       ionode_id, intra_image_comm )
+      CALL mp_bcast( dffts%nr2,       ionode_id, intra_image_comm )
+      CALL mp_bcast( dffts%nr3,       ionode_id, intra_image_comm )
       CALL mp_bcast( ngms_g,     ionode_id, intra_image_comm )
       CALL mp_bcast( lsda,       ionode_id, intra_image_comm )
       CALL mp_bcast( noncolin,   ionode_id, intra_image_comm )
@@ -1760,7 +1760,7 @@ MODULE pw_restart
                                   sname, sr, invs, inverse_s, s_axis_to_cart, &
                                   time_reversal, no_t_rev
       USE control_flags,   ONLY : noinv
-      USE grid_dimensions, ONLY : dense
+      USE fft_base,        ONLY : dfftp
       !
       IMPLICIT NONE
       !
@@ -1841,9 +1841,9 @@ MODULE pw_restart
                CALL iotk_scan_dat( iunpun, "FRACTIONAL_TRANSLATION", ft(:,i) )
                CALL iotk_scan_dat( iunpun, "EQUIVALENT_IONS", irt(i,1:nat_) )
                !
-               ftau(1,i) = NINT( ft(1,i)*DBLE( dense%nr1 ) )
-               ftau(2,i) = NINT( ft(2,i)*DBLE( dense%nr2 ) )
-               ftau(3,i) = NINT( ft(3,i)*DBLE( dense%nr3 ) )
+               ftau(1,i) = NINT( ft(1,i)*DBLE( dfftp%nr1 ) )
+               ftau(2,i) = NINT( ft(2,i)*DBLE( dfftp%nr2 ) )
+               ftau(3,i) = NINT( ft(3,i)*DBLE( dfftp%nr3 ) )
                !
                CALL iotk_scan_end( iunpun, "SYMM" // TRIM( iotk_index( i ) ) )
                !
@@ -1966,8 +1966,8 @@ MODULE pw_restart
       !
       USE gvect,   ONLY : ngm_g, ecutrho
       USE gvecs, ONLY : ngms_g, dual
-      USE grid_dimensions,        ONLY : dense
-      USE smooth_grid_dimensions, ONLY : smooth
+      USE fft_base,        ONLY : dfftp
+      USE fft_base,        ONLY : dffts
       USE wvfct,   ONLY : npwx, g2kin, ecutwfc
       USE control_flags, ONLY : gamma_only
       !
@@ -2007,16 +2007,16 @@ MODULE pw_restart
          CALL iotk_scan_dat( iunpun, "GAMMA_ONLY", gamma_only )
          !
          CALL iotk_scan_empty( iunpun, "FFT_GRID", attr )
-         CALL iotk_scan_attr( attr, "nr1", dense%nr1 )
-         CALL iotk_scan_attr( attr, "nr2", dense%nr2 )
-         CALL iotk_scan_attr( attr, "nr3", dense%nr3 )
+         CALL iotk_scan_attr( attr, "nr1", dfftp%nr1 )
+         CALL iotk_scan_attr( attr, "nr2", dfftp%nr2 )
+         CALL iotk_scan_attr( attr, "nr3", dfftp%nr3 )
          !
          CALL iotk_scan_dat( iunpun, "GVECT_NUMBER", ngm_g )
          !
          CALL iotk_scan_empty( iunpun, "SMOOTH_FFT_GRID", attr )
-         CALL iotk_scan_attr( attr, "nr1s", smooth%nr1 )
-         CALL iotk_scan_attr( attr, "nr2s", smooth%nr2 )
-         CALL iotk_scan_attr( attr, "nr3s", smooth%nr3 )
+         CALL iotk_scan_attr( attr, "nr1s", dffts%nr1 )
+         CALL iotk_scan_attr( attr, "nr2s", dffts%nr2 )
+         CALL iotk_scan_attr( attr, "nr3s", dffts%nr3 )
          !
          CALL iotk_scan_dat( iunpun, "SMOOTH_GVECT_NUMBER", ngms_g )
          !
@@ -2030,13 +2030,13 @@ MODULE pw_restart
       CALL mp_bcast( dual,       ionode_id, intra_image_comm )
       CALL mp_bcast( npwx_,      ionode_id, intra_image_comm )
       CALL mp_bcast( gamma_only, ionode_id, intra_image_comm )
-      CALL mp_bcast( dense%nr1,        ionode_id, intra_image_comm )
-      CALL mp_bcast( dense%nr2,        ionode_id, intra_image_comm )
-      CALL mp_bcast( dense%nr3,        ionode_id, intra_image_comm )
+      CALL mp_bcast( dfftp%nr1,        ionode_id, intra_image_comm )
+      CALL mp_bcast( dfftp%nr2,        ionode_id, intra_image_comm )
+      CALL mp_bcast( dfftp%nr3,        ionode_id, intra_image_comm )
       CALL mp_bcast( ngm_g,      ionode_id, intra_image_comm )
-      CALL mp_bcast( smooth%nr1,       ionode_id, intra_image_comm )
-      CALL mp_bcast( smooth%nr2,       ionode_id, intra_image_comm )
-      CALL mp_bcast( smooth%nr3,       ionode_id, intra_image_comm )
+      CALL mp_bcast( dffts%nr1,       ionode_id, intra_image_comm )
+      CALL mp_bcast( dffts%nr2,       ionode_id, intra_image_comm )
+      CALL mp_bcast( dffts%nr3,       ionode_id, intra_image_comm )
       CALL mp_bcast( ngms_g,     ionode_id, intra_image_comm )
       !
       lpw_read = .TRUE.

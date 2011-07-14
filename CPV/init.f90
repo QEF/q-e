@@ -23,8 +23,6 @@
       USE constants,            ONLY: tpi
       use io_global,            only: stdout, ionode
       use control_flags,        only: gamma_only, iprsta
-      use grid_dimensions,      only: dense
-      use smooth_grid_dimensions, only: smooth
       use cell_base,            only: ainv, at, omega, alat
       use small_box,            only: small_box_set
       use smallbox_grid_dim,    only: nr1b, nr2b, nr3b, &
@@ -81,8 +79,8 @@
 
       ! ... Initialize FFT real-space grids and small box grid
       !
-      CALL realspace_grids_init( dense, smooth, at, bg, gcutm, gcutms)
-      CALL smallbox_grid_init( dense )
+      CALL realspace_grids_init( dfftp, dffts, at, bg, gcutm, gcutms)
+      CALL smallbox_grid_init( dfftp )
 
       IF( ionode ) THEN
 
@@ -115,7 +113,7 @@
       nogrp_ = get_ntask_groups()
 
       CALL pstickset( gamma_only, bg, gcutm, gkcut, gcutms, &
-        dfftp, dffts, ngw_ , ngm_ , ngs_ , dense, smooth, me_bgrp, root_bgrp, nproc_bgrp, intra_bgrp_comm, nogrp_ )
+        dfftp, dffts, ngw_ , ngm_ , ngs_ , me_bgrp, root_bgrp, nproc_bgrp, intra_bgrp_comm, nogrp_ )
       !
       !
       ! ... Initialize reciprocal space local and global dimensions
@@ -127,7 +125,7 @@
       !
       ! ... Print real-space grid dimensions
       !
-      CALL realspace_grids_info ( dense, smooth, dfftp, dffts, nproc_bgrp )
+      CALL realspace_grids_info ( dfftp, dffts, nproc_bgrp )
       CALL smallbox_grid_info ( )
       !
       ! ... generate g-space vectors (dense and smooth grid)
@@ -151,9 +149,9 @@
       !
       !     allocate spaces for phases e^{-iG*tau_s}
       !
-      allocate( eigts1(-dense%nr1:dense%nr1,nat) )
-      allocate( eigts2(-dense%nr2:dense%nr2,nat) )
-      allocate( eigts3(-dense%nr3:dense%nr3,nat) )
+      allocate( eigts1(-dfftp%nr1:dfftp%nr1,nat) )
+      allocate( eigts2(-dfftp%nr2:dfftp%nr2,nat) )
+      allocate( eigts3(-dfftp%nr3:dfftp%nr3,nat) )
       !
       !     small boxes
       !
@@ -161,9 +159,9 @@
 
          !  set the small box parameters
 
-         rat1 = DBLE( nr1b ) / DBLE( dense%nr1 )
-         rat2 = DBLE( nr2b ) / DBLE( dense%nr2 )
-         rat3 = DBLE( nr3b ) / DBLE( dense%nr3 )
+         rat1 = DBLE( nr1b ) / DBLE( dfftp%nr1 )
+         rat2 = DBLE( nr2b ) / DBLE( dfftp%nr2 )
+         rat3 = DBLE( nr3b ) / DBLE( dfftp%nr3 )
          !
          CALL small_box_set( alat, omega, at, rat1, rat2, rat3 )
          !
@@ -334,7 +332,7 @@
                                         cell_base_reinit
       USE gvecw,                 ONLY : g2kin_init
       USE gvect,                 ONLY : g, gg, ngm, mill
-      USE grid_dimensions,       ONLY : dense
+      USE fft_base,              ONLY : dfftp
       USE small_box,             ONLY : small_box_set
       USE smallbox_subs,         ONLY : gcalb
       USE io_global,             ONLY : stdout, ionode
@@ -372,9 +370,9 @@
       !
       !   generation of little box g-vectors
       !
-      rat1 = DBLE( nr1b ) / DBLE( dense%nr1 )
-      rat2 = DBLE( nr2b ) / DBLE( dense%nr2 )
-      rat3 = DBLE( nr3b ) / DBLE( dense%nr3 )
+      rat1 = DBLE( nr1b ) / DBLE( dfftp%nr1 )
+      rat2 = DBLE( nr2b ) / DBLE( dfftp%nr2 )
+      rat3 = DBLE( nr3b ) / DBLE( dfftp%nr3 )
       CALL small_box_set( alat, omega, at, rat1, rat2, rat3 )
       !
       call gcalb ( )

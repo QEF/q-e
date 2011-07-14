@@ -16,12 +16,12 @@ subroutine stres_nonloc_dft( rho, rho_core, nspin, sigma_nonloc_dft )
                                dft_is_gradient, get_igcc, get_inlc 
   USE mp_global,        ONLY : intra_pool_comm
   USE mp,               ONLY : mp_sum
-  USE grid_dimensions,  ONLY : dense
+  USE fft_base,         ONLY : dfftp
   USE vdW_DF,           ONLY : stress_vdW_DF, print_sigma 
   !
   IMPLICIT NONE
   !
-  real(DP), intent(in)     :: rho (dense%nrxx, nspin), rho_core (dense%nrxx)
+  real(DP), intent(in)     :: rho (dfftp%nnr, nspin), rho_core (dfftp%nnr)
   real(DP), intent(inout)  :: sigma_nonloc_dft (3, 3)
   integer ::nspin, inlc
 

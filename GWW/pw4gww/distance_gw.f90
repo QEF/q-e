@@ -12,7 +12,7 @@ subroutine distance_wannier
   USE io_files,             ONLY : find_free_unit, prefix
   USE wannier_gw
   USE io_global,            ONLY : ionode, stdout
-  USE grid_dimensions,      ONLY : dense
+  USE fft_base,      ONLY : dfftp
   USE cell_base, ONLY: at, alat
 
   implicit none
@@ -25,9 +25,9 @@ subroutine distance_wannier
 
   if(ionode) then
 
-     rspacel(1)=dense%nr1
-     rspacel(2)=dense%nr2
-     rspacel(3)=dense%nr3
+     rspacel(1)=dfftp%nr1
+     rspacel(2)=dfftp%nr2
+     rspacel(3)=dfftp%nr3
 
 
      iun = find_free_unit()

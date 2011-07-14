@@ -18,7 +18,6 @@ subroutine addnlcc (imode0, drhoscf, npe)
   use scf, only : rho, rho_core
   USE gvect, ONLY : g, ngm, nl
   USE fft_base, ONLY : dfftp
-  USE grid_dimensions, ONLY : dense
   USE noncollin_module, ONLY : nspin_lsda, nspin_gga, nspin_mag
   USE dynmat, ONLY : dyn, dyn_rec
   USE modes,  ONLY : nirr, npert
@@ -68,7 +67,7 @@ subroutine addnlcc (imode0, drhoscf, npe)
 !
 !  compute the exchange and correlation potential for this mode
 !
-  nrtot = dense%nr1 * dense%nr2 * dense%nr3
+  nrtot = dfftp%nr1 * dfftp%nr2 * dfftp%nr3
   fac = 1.d0 / DBLE (nspin_lsda)
 !
 ! add core charge to the density

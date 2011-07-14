@@ -51,7 +51,7 @@ SUBROUTINE from_scratch( )
     USE atoms_type_module,    ONLY : atoms_type
     USE wave_base,            ONLY : wave_steepest
     USE wavefunctions_module, ONLY : c0_bgrp, cm_bgrp, phi_bgrp
-    USE grid_dimensions,      ONLY : dense
+    USE fft_base,             ONLY : dfftp
     USE time_step,            ONLY : delt
     USE cp_main_variables,    ONLY : setval_lambda, descla, bephi, becp_bgrp, nfi, &
                                      sfac, eigr, taub, irb, eigrb, bec_bgrp, &
@@ -106,7 +106,7 @@ SUBROUTINE from_scratch( )
        !
     END IF
     !
-    CALL phfacs( eigts1, eigts2, eigts3, eigr, mill, atoms0%taus, dense%nr1, dense%nr2, dense%nr3, atoms0%nat )
+    CALL phfacs( eigts1, eigts2, eigts3, eigr, mill, atoms0%taus, dfftp%nr1, dfftp%nr2, dfftp%nr3, atoms0%nat )
     !
     CALL strucf( sfac, eigts1, eigts2, eigts3, mill, ngms )
     !     

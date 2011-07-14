@@ -2,7 +2,7 @@ gipaw_module.o : ../Modules/atom.o
 gipaw_module.o : ../Modules/cell_base.o
 gipaw_module.o : ../Modules/constants.o
 gipaw_module.o : ../Modules/control_flags.o
-gipaw_module.o : ../Modules/griddim.o
+gipaw_module.o : ../Modules/fft_base.o
 gipaw_module.o : ../Modules/io_files.o
 gipaw_module.o : ../Modules/io_global.o
 gipaw_module.o : ../Modules/ions_base.o
@@ -120,7 +120,7 @@ xspectra.o : ../Modules/cell_base.o
 xspectra.o : ../Modules/constants.o
 xspectra.o : ../Modules/control_flags.o
 xspectra.o : ../Modules/environment.o
-xspectra.o : ../Modules/griddim.o
+xspectra.o : ../Modules/fft_base.o
 xspectra.o : ../Modules/io_files.o
 xspectra.o : ../Modules/io_global.o
 xspectra.o : ../Modules/ions_base.o

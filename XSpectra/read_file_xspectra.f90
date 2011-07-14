@@ -31,7 +31,6 @@ SUBROUTINE read_file_xspectra(xread_wf)
   USE fft_interfaces,       ONLY : fwfft
   USE gvect,                ONLY : gg, ngm, g, gcutm,&
                                    eigts1, eigts2, eigts3, nl, gstart
-  USE grid_dimensions,      ONLY : nr1, nr2, nr3, nrxx
   USE gvecs,                ONLY : ngms, nls, gcutms
   USE grid_subroutines,     ONLY : realspace_grids_init
   USE recvec_subs,          ONLY : ggen
@@ -167,7 +166,7 @@ SUBROUTINE read_file_xspectra(xread_wf)
   !
   ! ... check on symmetry
   !
-  IF (nat > 0) CALL checkallsym( nat, tau, ityp, nr1, nr2, nr3 )
+  IF (nat > 0) CALL checkallsym( nat, tau, ityp, dfftp%nr1, dfftp%nr2, dfftp%nr3 )
   !
   !  Set the different spin indices
   !
@@ -265,7 +264,7 @@ SUBROUTINE read_file_xspectra(xread_wf)
   CALL init_vloc()
   !
   CALL struc_fact( nat, tau, nsp, ityp, ngm, g, bg, &
-                   nr1, nr2, nr3, strf, eigts1, eigts2, eigts3 )
+                   dfftp%nr1, dfftp%nr2, dfftp%nr3, strf, eigts1, eigts2, eigts3 )
   !
   CALL setlocal()
   !

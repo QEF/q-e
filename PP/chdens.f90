@@ -24,10 +24,8 @@ SUBROUTINE chdens (filplot,plot_num)
   USE cell_base
   USE ions_base,  ONLY : nat, ityp, atm, ntyp => nsp, tau, zv
   USE lsda_mod,   ONLY : nspin
-  USE fft_base,   ONLY : grid_scatter, dfftp
+  USE fft_base,   ONLY : grid_scatter, dfftp, dffts
   USE fft_interfaces,  ONLY : fwfft
-  USE grid_dimensions, ONLY : dense
-  USE smooth_grid_dimensions, ONLY : smooth
   USE grid_subroutines,ONLY : realspace_grids_init
   USE gvect
   USE gvecs
@@ -201,16 +199,16 @@ SUBROUTINE chdens (filplot,plot_num)
   !
   IF (plot_num==-1) THEN
      IF (ionode) &
-        CALL read_io_header(filepp (1), title, dense%nr1x, dense%nr2x, dense%nr3x, dense%nr1, dense%nr2, &
-                dense%nr3, nat, ntyp, ibrav, celldm, at, gcutm, dual, ecutwfc, &
+        CALL read_io_header(filepp (1), title, dfftp%nr1x, dfftp%nr2x, dfftp%nr3x, dfftp%nr1, dfftp%nr2, &
+                dfftp%nr3, nat, ntyp, ibrav, celldm, at, gcutm, dual, ecutwfc, &
                 idum )
      CALL mp_bcast( title, ionode_id )
-     CALL mp_bcast( dense%nr1x, ionode_id )
-     CALL mp_bcast( dense%nr2x, ionode_id )
-     CALL mp_bcast( dense%nr3x, ionode_id )
-     CALL mp_bcast( dense%nr1, ionode_id )
-     CALL mp_bcast( dense%nr2, ionode_id )
-     CALL mp_bcast( dense%nr3, ionode_id )
+     CALL mp_bcast( dfftp%nr1x, ionode_id )
+     CALL mp_bcast( dfftp%nr2x, ionode_id )
+     CALL mp_bcast( dfftp%nr3x, ionode_id )
+     CALL mp_bcast( dfftp%nr1, ionode_id )
+     CALL mp_bcast( dfftp%nr2, ionode_id )
+     CALL mp_bcast( dfftp%nr3, ionode_id )
      CALL mp_bcast( nat, ionode_id )
      CALL mp_bcast( ntyp, ionode_id )
      CALL mp_bcast( ibrav, ionode_id )
@@ -242,11 +240,11 @@ SUBROUTINE chdens (filplot,plot_num)
 
      CALL recips (at(1,1), at(1,2), at(1,3), bg(1,1), bg(1,2), bg(1,3) )
      CALL volume (alat, at(1,1), at(1,2), at(1,3), omega)
-     CALL realspace_grids_init ( dense, smooth, at, bg, gcutm, gcutms )
+     CALL realspace_grids_init ( dfftp, dffts, at, bg, gcutm, gcutms )
   ENDIF
 
-  ALLOCATE  (rhor(dense%nr1x*dense%nr2x*dense%nr3x))
-  ALLOCATE  (rhos(dense%nr1x*dense%nr2x*dense%nr3x))
+  ALLOCATE  (rhor(dfftp%nr1x*dfftp%nr2x*dfftp%nr3x))
+  ALLOCATE  (rhos(dfftp%nr1x*dfftp%nr2x*dfftp%nr3x))
   ALLOCATE  (taus( 3 , nat))
   ALLOCATE  (ityps( nat))
   !
@@ -269,9 +267,9 @@ SUBROUTINE chdens (filplot,plot_num)
      ENDIF
      !
      IF (nats>nat) CALL errore ('chdens', 'wrong file order? ', 1)
-     IF (dense%nr1x/=nr1sxa.or.dense%nr2x/=nr2sxa) CALL &
+     IF (dfftp%nr1x/=nr1sxa.or.dfftp%nr2x/=nr2sxa) CALL &
           errore ('chdens', 'incompatible nr1x or nr2x', 1)
-     IF (dense%nr1/=nr1sa.or.dense%nr2/=nr2sa.or.dense%nr3/=nr3sa) CALL &
+     IF (dfftp%nr1/=nr1sa.or.dfftp%nr2/=nr2sa.or.dfftp%nr3/=nr3sa) CALL &
           errore ('chdens', 'incompatible nr1 or nr2 or nr3', 1)
      IF (ibravs/=ibrav) CALL errore ('chdens', 'incompatible ibrav', 1)
      IF (abs(gcutmsa-gcutm)>1.d-8.or.abs(duals-dual)>1.d-8.or.&
@@ -371,7 +369,7 @@ SUBROUTINE chdens (filplot,plot_num)
         !
      ENDIF
 #ifdef __PARA
-     ALLOCATE(aux(dense%nrxx))
+     ALLOCATE(aux(dfftp%nnr))
      CALL grid_scatter(rhor, aux)
      psic(:) = cmplx(aux(:), 0.d0,kind=DP)
      DEALLOCATE(aux)
@@ -429,14 +427,14 @@ SUBROUTINE chdens (filplot,plot_num)
         !
         CALL xsf_struct (alat, at, nat, tau, atm, ityp, ounit)
         CALL xsf_fast_datagrid_3d &
-             (rhor, dense%nr1, dense%nr2, dense%nr3, dense%nr1x, dense%nr2x, dense%nr3x, at, alat, ounit)
+             (rhor, dfftp%nr1, dfftp%nr2, dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%nr3x, at, alat, ounit)
 
      ELSEIF (output_format == 6.and.ionode ) THEN
         !
         ! GAUSSIAN CUBE FORMAT
         !
         CALL write_cubefile (alat, at, bg, nat, tau, atm, ityp, rhor, &
-             dense%nr1, dense%nr2, dense%nr3, dense%nr1x, dense%nr2x, dense%nr3x, ounit)
+             dfftp%nr1, dfftp%nr2, dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%nr3x, ounit)
 
      ELSE
         !
@@ -447,7 +445,7 @@ SUBROUTINE chdens (filplot,plot_num)
            IF (fast3d) THEN
 
               CALL plot_fast (celldm (1), at, nat, tau, atm, ityp, &
-                  dense%nr1x, dense%nr2x, dense%nr3x, dense%nr1, dense%nr2, dense%nr3, rhor, &
+                  dfftp%nr1x, dfftp%nr2x, dfftp%nr3x, dfftp%nr1, dfftp%nr2, dfftp%nr3, rhor, &
                   bg, m1, m2, m3, x0, e1, e2, e3, output_format, ounit, &
                   rhotot)
            ELSE

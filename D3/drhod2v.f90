@@ -21,7 +21,7 @@ subroutine drhod2v
   !
   USE ions_base,  ONLY : nat
   USE kinds, only : DP
-  USE grid_dimensions, ONLY : dense
+  USE fft_base, ONLY : dfftp
   use pwcom
   use phcom
   use d3com
@@ -32,7 +32,7 @@ subroutine drhod2v
   complex (DP), allocatable :: drhoscf (:)
   ! the change of density due to perturbations
 
-  allocate  (drhoscf( dense%nrxx))
+  allocate  (drhoscf( dfftp%nnr))
 
   call read_ef
   if (.not.allmodes) then

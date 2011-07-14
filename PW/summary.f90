@@ -26,8 +26,8 @@ SUBROUTINE summary()
   USE ions_base,       ONLY : amass
   USE gvect,           ONLY : ecutrho, ngm, ngm_g, gcutm
   USE gvecs,         ONLY : doublegrid, ngms, gcutms
-  USE grid_dimensions, ONLY : dense
-  USE smooth_grid_dimensions,  ONLY : smooth
+  USE fft_base,        ONLY : dfftp
+  USE fft_base,        ONLY : dffts
   USE lsda_mod,        ONLY : lsda, starting_magnetization
   USE ldaU,            ONLY : lda_plus_U, Hubbard_u, Hubbard_alpha, &
                               Hubbard_l, Hubbard_lmax
@@ -306,7 +306,7 @@ SUBROUTINE summary()
   ENDIF
   WRITE( stdout, '(/5x,"Dense  grid: ",i8," G-vectors", 5x, &
        &               "FFT dimensions: (",i4,",",i4,",",i4,")")') &
-       &         ngm_g, dense%nr1, dense%nr2, dense%nr3
+       &         ngm_g, dfftp%nr1, dfftp%nr2, dfftp%nr3
   IF (doublegrid) THEN
      !
      ngmtot = ngms
@@ -314,7 +314,7 @@ SUBROUTINE summary()
      !
      WRITE( stdout, '(/5x,"Smooth grid: ",i8," G-vectors", 5x, &
        &               "FFT dimensions: (",i4,",",i4,",",i4,")")') &
-       &         ngmtot, smooth%nr1, smooth%nr2, smooth%nr3
+       &         ngmtot, dffts%nr1, dffts%nr2, dffts%nr3
   ENDIF
 
 ! DCC
@@ -447,7 +447,7 @@ SUBROUTINE print_symmetries ( iverbosity, noncolin, domag )
   USE rap_point_group_is, ONLY : nsym_is, sr_is, ftau_is, d_spin_is, &
        gname_is, sname_is, code_group_is
   USE cell_base,       ONLY : at
-  USE grid_dimensions, ONLY : dense
+  USE fft_base, ONLY : dfftp
   !
   IMPLICIT NONE
   !
@@ -489,19 +489,19 @@ SUBROUTINE print_symmetries ( iverbosity, noncolin, domag )
         END IF
         IF ( ftau(1,isym) == 0 .OR. ftau(2,isym) == 0 .OR. &
              ftau(3,isym).NE.0) THEN
-           ft1 = at(1,1)*ftau(1,isym)/dense%nr1 + at(1,2)*ftau(2,isym)/dense%nr2 + &
-                at(1,3)*ftau(3,isym)/dense%nr3
-           ft2 = at(2,1)*ftau(1,isym)/dense%nr1 + at(2,2)*ftau(2,isym)/dense%nr2 + &
-                at(2,3)*ftau(3,isym)/dense%nr3
-           ft3 = at(3,1)*ftau(1,isym)/dense%nr1 + at(3,2)*ftau(2,isym)/dense%nr2 + &
-                at(3,3)*ftau(3,isym)/dense%nr3
+           ft1 = at(1,1)*ftau(1,isym)/dfftp%nr1 + at(1,2)*ftau(2,isym)/dfftp%nr2 + &
+                at(1,3)*ftau(3,isym)/dfftp%nr3
+           ft2 = at(2,1)*ftau(1,isym)/dfftp%nr1 + at(2,2)*ftau(2,isym)/dfftp%nr2 + &
+                at(2,3)*ftau(3,isym)/dfftp%nr3
+           ft3 = at(3,1)*ftau(1,isym)/dfftp%nr1 + at(3,2)*ftau(2,isym)/dfftp%nr2 + &
+                at(3,3)*ftau(3,isym)/dfftp%nr3
            WRITE( stdout, '(1x,"cryst.",3x,"s(",i2,") = (",3(i6,5x), &
                 &        " )    f =( ",f10.7," )")') &
-                isym, (s(1,ipol,isym),ipol=1,3), DBLE(ftau(1,isym))/DBLE(dense%nr1)
+                isym, (s(1,ipol,isym),ipol=1,3), DBLE(ftau(1,isym))/DBLE(dfftp%nr1)
            WRITE( stdout, '(17x," (",3(i6,5x), " )       ( ",f10.7," )")') &
-                (s(2,ipol,isym),ipol=1,3), DBLE(ftau(2,isym))/DBLE(dense%nr2)
+                (s(2,ipol,isym),ipol=1,3), DBLE(ftau(2,isym))/DBLE(dfftp%nr2)
            WRITE( stdout, '(17x," (",3(i6,5x), " )       ( ",f10.7," )"/)') &
-                (s(3,ipol,isym),ipol=1,3), DBLE(ftau(3,isym))/DBLE(dense%nr3)
+                (s(3,ipol,isym),ipol=1,3), DBLE(ftau(3,isym))/DBLE(dfftp%nr3)
            WRITE( stdout, '(1x,"cart. ",3x,"s(",i2,") = (",3f11.7, &
                 &        " )    f =( ",f10.7," )")') &
                 isym, (sr(1,ipol,isym),ipol=1,3), ft1

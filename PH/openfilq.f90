@@ -26,7 +26,6 @@ SUBROUTINE openfilq()
   USE qpoint,         ONLY : nksq
   USE output,         ONLY : fildyn, fildvscf
   USE wvfct,          ONLY : nbnd, npwx
-  USE grid_dimensions,ONLY : dense
   USE fft_base,       ONLY : dfftp
   USE lsda_mod,       ONLY : nspin
   USE uspp,           ONLY : nkb, okvan
@@ -114,7 +113,7 @@ SUBROUTINE openfilq()
   !  and solve_linter). Used for third-order calculations.
   !
   iudrho = 23
-  lrdrho = 2 * dense%nr1x * dense%nr2x * dense%nr3x * nspin_mag
+  lrdrho = 2 * dfftp%nr1x * dfftp%nr2x * dfftp%nr3x * nspin_mag
   !
   !
   !   Here the sequential files

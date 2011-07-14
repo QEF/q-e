@@ -6,7 +6,7 @@ a2fmod.o : start_k.o
 a2fmod.o : symm_base.o
 add_bfield.o : ../Modules/cell_base.o
 add_bfield.o : ../Modules/constants.o
-add_bfield.o : ../Modules/griddim.o
+add_bfield.o : ../Modules/fft_base.o
 add_bfield.o : ../Modules/io_global.o
 add_bfield.o : ../Modules/ions_base.o
 add_bfield.o : ../Modules/kind.o
@@ -39,7 +39,6 @@ add_vuspsi.o : pwcom.o
 addusdens.o : ../Modules/control_flags.o
 addusdens.o : ../Modules/fft_base.o
 addusdens.o : ../Modules/fft_interfaces.o
-addusdens.o : ../Modules/griddim.o
 addusdens.o : ../Modules/ions_base.o
 addusdens.o : ../Modules/kind.o
 addusdens.o : ../Modules/recvec.o
@@ -70,7 +69,7 @@ addusstress.o : ../Modules/uspp.o
 addusstress.o : pwcom.o
 addusstress.o : scf_mod.o
 allocate_bp_efield.o : ../Modules/cell_base.o
-allocate_bp_efield.o : ../Modules/griddim.o
+allocate_bp_efield.o : ../Modules/fft_base.o
 allocate_bp_efield.o : ../Modules/io_global.o
 allocate_bp_efield.o : ../Modules/ions_base.o
 allocate_bp_efield.o : ../Modules/kind.o
@@ -78,8 +77,8 @@ allocate_bp_efield.o : ../Modules/mp.o
 allocate_bp_efield.o : ../Modules/recvec.o
 allocate_bp_efield.o : pwcom.o
 allocate_fft.o : ../Modules/control_flags.o
+allocate_fft.o : ../Modules/fft_base.o
 allocate_fft.o : ../Modules/funct.o
-allocate_fft.o : ../Modules/griddim.o
 allocate_fft.o : ../Modules/io_global.o
 allocate_fft.o : ../Modules/ions_base.o
 allocate_fft.o : ../Modules/recvec.o
@@ -87,7 +86,7 @@ allocate_fft.o : ../Modules/wavefunctions.o
 allocate_fft.o : noncol.o
 allocate_fft.o : pwcom.o
 allocate_fft.o : scf_mod.o
-allocate_locpot.o : ../Modules/griddim.o
+allocate_locpot.o : ../Modules/fft_base.o
 allocate_locpot.o : ../Modules/ions_base.o
 allocate_locpot.o : ../Modules/recvec.o
 allocate_locpot.o : pwcom.o
@@ -140,7 +139,7 @@ becmod.o : ../Modules/recvec.o
 becmod.o : noncol.o
 bp_c_phase.o : ../Modules/cell_base.o
 bp_c_phase.o : ../Modules/constants.o
-bp_c_phase.o : ../Modules/griddim.o
+bp_c_phase.o : ../Modules/fft_base.o
 bp_c_phase.o : ../Modules/io_files.o
 bp_c_phase.o : ../Modules/io_global.o
 bp_c_phase.o : ../Modules/ions_base.o
@@ -184,7 +183,7 @@ c_bands.o : pwcom.o
 c_bands.o : scf_mod.o
 c_phase_field.o : ../Modules/cell_base.o
 c_phase_field.o : ../Modules/constants.o
-c_phase_field.o : ../Modules/griddim.o
+c_phase_field.o : ../Modules/fft_base.o
 c_phase_field.o : ../Modules/io_files.o
 c_phase_field.o : ../Modules/io_global.o
 c_phase_field.o : ../Modules/ions_base.o
@@ -308,7 +307,6 @@ d_matrix.o : ../Modules/random_numbers.o
 d_matrix.o : symm_base.o
 data_structure.o : ../Modules/cell_base.o
 data_structure.o : ../Modules/fft_base.o
-data_structure.o : ../Modules/griddim.o
 data_structure.o : ../Modules/io_global.o
 data_structure.o : ../Modules/kind.o
 data_structure.o : ../Modules/mp.o
@@ -363,8 +361,8 @@ electrons.o : ../Modules/cell_base.o
 electrons.o : ../Modules/check_stop.o
 electrons.o : ../Modules/constants.o
 electrons.o : ../Modules/control_flags.o
+electrons.o : ../Modules/fft_base.o
 electrons.o : ../Modules/funct.o
-electrons.o : ../Modules/griddim.o
 electrons.o : ../Modules/io_files.o
 electrons.o : ../Modules/io_global.o
 electrons.o : ../Modules/ions_base.o
@@ -392,7 +390,6 @@ esm.o : ../Modules/constants.o
 esm.o : ../Modules/control_flags.o
 esm.o : ../Modules/fft_base.o
 esm.o : ../Modules/fft_scalar.o
-esm.o : ../Modules/griddim.o
 esm.o : ../Modules/io_global.o
 esm.o : ../Modules/ions_base.o
 esm.o : ../Modules/kind.o
@@ -423,7 +420,6 @@ exx.o : ../Modules/coulomb_vcut.o
 exx.o : ../Modules/fft_base.o
 exx.o : ../Modules/fft_interfaces.o
 exx.o : ../Modules/funct.o
-exx.o : ../Modules/griddim.o
 exx.o : ../Modules/io_files.o
 exx.o : ../Modules/io_global.o
 exx.o : ../Modules/kind.o
@@ -511,7 +507,7 @@ force_us.o : pwcom.o
 force_us.o : symme.o
 forces.o : ../Modules/cell_base.o
 forces.o : ../Modules/control_flags.o
-forces.o : ../Modules/griddim.o
+forces.o : ../Modules/fft_base.o
 forces.o : ../Modules/io_global.o
 forces.o : ../Modules/ions_base.o
 forces.o : ../Modules/kind.o
@@ -525,7 +521,7 @@ forces.o : scf_mod.o
 forces.o : symme.o
 forces_bp_efield.o : ../Modules/cell_base.o
 forces_bp_efield.o : ../Modules/constants.o
-forces_bp_efield.o : ../Modules/griddim.o
+forces_bp_efield.o : ../Modules/fft_base.o
 forces_bp_efield.o : ../Modules/io_files.o
 forces_bp_efield.o : ../Modules/io_global.o
 forces_bp_efield.o : ../Modules/ions_base.o
@@ -586,7 +582,7 @@ generate_vdW_kernel_table.o : ../Modules/kind.o
 generate_vdW_kernel_table.o : ../Modules/mp.o
 generate_vdW_kernel_table.o : ../Modules/mp_global.o
 get_locals.o : ../Modules/cell_base.o
-get_locals.o : ../Modules/griddim.o
+get_locals.o : ../Modules/fft_base.o
 get_locals.o : ../Modules/ions_base.o
 get_locals.o : ../Modules/kind.o
 get_locals.o : ../Modules/mp.o
@@ -602,7 +598,6 @@ gradcorr.o : ../Modules/control_flags.o
 gradcorr.o : ../Modules/fft_base.o
 gradcorr.o : ../Modules/fft_interfaces.o
 gradcorr.o : ../Modules/funct.o
-gradcorr.o : ../Modules/griddim.o
 gradcorr.o : ../Modules/kind.o
 gradcorr.o : ../Modules/recvec.o
 gradcorr.o : ../Modules/wavefunctions.o
@@ -627,7 +622,7 @@ h_epsi_her_apply.o : pwcom.o
 h_epsi_her_apply.o : scf_mod.o
 h_epsi_her_set.o : ../Modules/cell_base.o
 h_epsi_her_set.o : ../Modules/constants.o
-h_epsi_her_set.o : ../Modules/griddim.o
+h_epsi_her_set.o : ../Modules/fft_base.o
 h_epsi_her_set.o : ../Modules/io_files.o
 h_epsi_her_set.o : ../Modules/ions_base.o
 h_epsi_her_set.o : ../Modules/kind.o
@@ -662,7 +657,7 @@ h_psi_meta.o : pwcom.o
 h_psi_meta.o : scf_mod.o
 hinit0.o : ../Modules/cell_base.o
 hinit0.o : ../Modules/control_flags.o
-hinit0.o : ../Modules/griddim.o
+hinit0.o : ../Modules/fft_base.o
 hinit0.o : ../Modules/io_files.o
 hinit0.o : ../Modules/io_global.o
 hinit0.o : ../Modules/ions_base.o
@@ -671,7 +666,7 @@ hinit0.o : pwcom.o
 hinit0.o : realus.o
 hinit1.o : ../Modules/cell_base.o
 hinit1.o : ../Modules/control_flags.o
-hinit1.o : ../Modules/griddim.o
+hinit1.o : ../Modules/fft_base.o
 hinit1.o : ../Modules/ions_base.o
 hinit1.o : ../Modules/recvec.o
 hinit1.o : ../Modules/wannier_new.o
@@ -696,7 +691,7 @@ init_ns.o : pwcom.o
 init_ns.o : scf_mod.o
 init_run.o : ../Modules/cell_base.o
 init_run.o : ../Modules/control_flags.o
-init_run.o : ../Modules/griddim.o
+init_run.o : ../Modules/fft_base.o
 init_run.o : ../Modules/ions_base.o
 init_run.o : ../Modules/paw_variables.o
 init_run.o : ../Modules/recvec_subs.o
@@ -740,8 +735,8 @@ input.o : ../Modules/cell_base.o
 input.o : ../Modules/constants.o
 input.o : ../Modules/constraints_module.o
 input.o : ../Modules/control_flags.o
+input.o : ../Modules/fft_base.o
 input.o : ../Modules/funct.o
-input.o : ../Modules/griddim.o
 input.o : ../Modules/input_parameters.o
 input.o : ../Modules/io_files.o
 input.o : ../Modules/io_global.o
@@ -821,7 +816,6 @@ martyna_tuckerman.o : ../Modules/constants.o
 martyna_tuckerman.o : ../Modules/control_flags.o
 martyna_tuckerman.o : ../Modules/fft_base.o
 martyna_tuckerman.o : ../Modules/fft_interfaces.o
-martyna_tuckerman.o : ../Modules/griddim.o
 martyna_tuckerman.o : ../Modules/ions_base.o
 martyna_tuckerman.o : ../Modules/kind.o
 martyna_tuckerman.o : ../Modules/mp.o
@@ -830,7 +824,7 @@ martyna_tuckerman.o : ../Modules/recvec.o
 martyna_tuckerman.o : ../Modules/ws_base.o
 martyna_tuckerman.o : pwcom.o
 memory_report.o : ../Modules/control_flags.o
-memory_report.o : ../Modules/griddim.o
+memory_report.o : ../Modules/fft_base.o
 memory_report.o : ../Modules/io_global.o
 memory_report.o : ../Modules/mp_global.o
 memory_report.o : ../Modules/recvec.o
@@ -861,6 +855,7 @@ move_ions.o : ../Modules/bfgs_module.o
 move_ions.o : ../Modules/cell_base.o
 move_ions.o : ../Modules/constants.o
 move_ions.o : ../Modules/control_flags.o
+move_ions.o : ../Modules/fft_base.o
 move_ions.o : ../Modules/griddim.o
 move_ions.o : ../Modules/io_files.o
 move_ions.o : ../Modules/io_global.o
@@ -1106,8 +1101,8 @@ pw_restart.o : ../Modules/cell_base.o
 pw_restart.o : ../Modules/constants.o
 pw_restart.o : ../Modules/control_flags.o
 pw_restart.o : ../Modules/electrons_base.o
+pw_restart.o : ../Modules/fft_base.o
 pw_restart.o : ../Modules/funct.o
-pw_restart.o : ../Modules/griddim.o
 pw_restart.o : ../Modules/input_parameters.o
 pw_restart.o : ../Modules/io_files.o
 pw_restart.o : ../Modules/io_global.o
@@ -1227,7 +1222,6 @@ realus.o : ../Modules/constants.o
 realus.o : ../Modules/control_flags.o
 realus.o : ../Modules/fft_base.o
 realus.o : ../Modules/fft_interfaces.o
-realus.o : ../Modules/griddim.o
 realus.o : ../Modules/io_files.o
 realus.o : ../Modules/io_global.o
 realus.o : ../Modules/ions_base.o
@@ -1252,7 +1246,7 @@ regterg.o : ../Modules/mp_global.o
 regterg.o : ../Modules/ptoolkit.o
 regterg.o : pwcom.o
 regterg.o : realus.o
-remove_atomic_rho.o : ../Modules/griddim.o
+remove_atomic_rho.o : ../Modules/fft_base.o
 remove_atomic_rho.o : ../Modules/io_files.o
 remove_atomic_rho.o : ../Modules/io_global.o
 remove_atomic_rho.o : ../Modules/kind.o
@@ -1396,8 +1390,8 @@ set_rhoc.o : ../Modules/recvec.o
 set_rhoc.o : ../Modules/uspp.o
 set_rhoc.o : pwcom.o
 set_rhoc.o : scf_mod.o
+set_vrs.o : ../Modules/fft_base.o
 set_vrs.o : ../Modules/funct.o
-set_vrs.o : ../Modules/griddim.o
 set_vrs.o : ../Modules/kind.o
 setlocal.o : ../Modules/cell_base.o
 setlocal.o : ../Modules/constants.o
@@ -1419,6 +1413,7 @@ setup.o : ../Modules/cell_base.o
 setup.o : ../Modules/constants.o
 setup.o : ../Modules/control_flags.o
 setup.o : ../Modules/electrons_base.o
+setup.o : ../Modules/fft_base.o
 setup.o : ../Modules/funct.o
 setup.o : ../Modules/griddim.o
 setup.o : ../Modules/io_files.o
@@ -1523,8 +1518,8 @@ stres_loc.o : ../Modules/wavefunctions.o
 stres_loc.o : noncol.o
 stres_loc.o : pwcom.o
 stres_loc.o : scf_mod.o
+stres_nonloc_dft.o : ../Modules/fft_base.o
 stres_nonloc_dft.o : ../Modules/funct.o
-stres_nonloc_dft.o : ../Modules/griddim.o
 stres_nonloc_dft.o : ../Modules/kind.o
 stres_nonloc_dft.o : ../Modules/mp.o
 stres_nonloc_dft.o : ../Modules/mp_global.o
@@ -1542,8 +1537,8 @@ stres_us.o : pwcom.o
 stress.o : ../Modules/cell_base.o
 stress.o : ../Modules/constants.o
 stress.o : ../Modules/control_flags.o
+stress.o : ../Modules/fft_base.o
 stress.o : ../Modules/funct.o
-stress.o : ../Modules/griddim.o
 stress.o : ../Modules/io_global.o
 stress.o : ../Modules/ions_base.o
 stress.o : ../Modules/kind.o
@@ -1587,8 +1582,8 @@ summary.o : ../Modules/atom.o
 summary.o : ../Modules/cell_base.o
 summary.o : ../Modules/constants.o
 summary.o : ../Modules/control_flags.o
+summary.o : ../Modules/fft_base.o
 summary.o : ../Modules/funct.o
-summary.o : ../Modules/griddim.o
 summary.o : ../Modules/io_files.o
 summary.o : ../Modules/io_global.o
 summary.o : ../Modules/ions_base.o
@@ -1608,7 +1603,6 @@ symm_base.o : ../Modules/io_global.o
 symm_base.o : ../Modules/kind.o
 symme.o : ../Modules/cell_base.o
 symme.o : ../Modules/constants.o
-symme.o : ../Modules/griddim.o
 symme.o : ../Modules/kind.o
 symme.o : ../Modules/mp_global.o
 symme.o : ../Modules/parallel_include.o
@@ -1664,7 +1658,6 @@ v_of_rho.o : ../Modules/control_flags.o
 v_of_rho.o : ../Modules/fft_base.o
 v_of_rho.o : ../Modules/fft_interfaces.o
 v_of_rho.o : ../Modules/funct.o
-v_of_rho.o : ../Modules/griddim.o
 v_of_rho.o : ../Modules/io_global.o
 v_of_rho.o : ../Modules/ions_base.o
 v_of_rho.o : ../Modules/kind.o

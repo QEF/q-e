@@ -15,7 +15,6 @@ subroutine drhodvloc (nu_i0, npe, drhoscf, wdyn)
   !
   USE kinds,     ONLY : DP
   USE ions_base, ONLY : nat
-  USE smooth_grid_dimensions, ONLY : smooth
   USE fft_base, ONLY : dfftp, dffts
   USE cell_base, ONLY : omega
   USE lsda_mod,  ONLY : nspin
@@ -55,7 +54,7 @@ subroutine drhodvloc (nu_i0, npe, drhoscf, wdyn)
         do is = 1, nspin_lsda
            dynwrk (nu_i, nu_j) = dynwrk (nu_i, nu_j) + &
                 zdotc (dffts%nnr, drhoscf (1, is, ipert), 1, dvloc, 1) * &
-                  omega / (smooth%nr1 * smooth%nr2 * smooth%nr3)
+                  omega / (dffts%nr1 * dffts%nr2 * dffts%nr3)
         enddo
      enddo
 

@@ -16,7 +16,7 @@ SUBROUTINE v_of_rho( rho, rho_core, rhog_core, &
   ! ... Hartree potential is computed in reciprocal space.
   !
   USE kinds,            ONLY : DP
-  USE grid_dimensions,  ONLY : dense
+  USE fft_base,         ONLY : dfftp
   USE gvect,            ONLY : ngm
   USE lsda_mod,         ONLY : nspin
   USE noncollin_module, ONLY : noncolin
@@ -33,7 +33,7 @@ SUBROUTINE v_of_rho( rho, rho_core, rhog_core, &
   !!!!!!!!!!!!!!!!! NB: NOTE that in F90 derived data type must be INOUT and 
   !!!!!!!!!!!!!!!!! not just OUT because otherwise their allocatable or pointer
   !!!!!!!!!!!!!!!!! components are NOT defined !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  REAL(DP), INTENT(IN) :: rho_core(dense%nrxx)
+  REAL(DP), INTENT(IN) :: rho_core(dfftp%nnr)
     ! the core charge
   COMPLEX(DP), INTENT(IN) :: rhog_core(ngm)
     ! the core charge in reciprocal space
@@ -88,7 +88,7 @@ SUBROUTINE v_xc_meta( rho, rho_core, rhog_core, etxc, vtxc, v, kedtaur )
   USE kinds,            ONLY : DP
   USE constants,        ONLY : e2, eps8
   USE io_global,        ONLY : stdout
-  USE grid_dimensions,  ONLY : dense
+  USE fft_base,         ONLY : dfftp
   USE gvect,            ONLY : ngm
   USE lsda_mod,         ONLY : nspin
   USE cell_base,        ONLY : omega
@@ -100,11 +100,11 @@ SUBROUTINE v_xc_meta( rho, rho_core, rhog_core, etxc, vtxc, v, kedtaur )
   IMPLICIT NONE
   !
   TYPE (scf_type), INTENT(IN) :: rho
-  REAL(DP), INTENT(IN) :: rho_core(dense%nrxx)
+  REAL(DP), INTENT(IN) :: rho_core(dfftp%nnr)
     ! the core charge
   COMPLEX(DP), INTENT(IN) :: rhog_core(ngm)
     ! input: the core charge in reciprocal space
-  REAL(DP), INTENT(OUT) :: v(dense%nrxx,nspin), kedtaur(dense%nrxx,nspin), vtxc, etxc
+  REAL(DP), INTENT(OUT) :: v(dfftp%nnr,nspin), kedtaur(dfftp%nnr,nspin), vtxc, etxc
     ! V_xc potential
     ! local K energy density 
     ! integral V_xc * rho
@@ -132,7 +132,7 @@ SUBROUTINE v_xc_tpss( rho, rho_core, rhog_core, etxc, vtxc, v, kedtaur )
   !--------------------------------------------------------------------
   USE kinds,            ONLY : DP
   USE gvect,            ONLY : g,nl,ngm
-  USE grid_dimensions,  ONLY : dense
+  USE fft_base,         ONLY : dfftp
   USE scf,              ONLY : scf_type
   USE lsda_mod,         ONLY : nspin
   USE cell_base,        ONLY : omega, alat
@@ -144,9 +144,9 @@ SUBROUTINE v_xc_tpss( rho, rho_core, rhog_core, etxc, vtxc, v, kedtaur )
   !
   ! input
   TYPE (scf_type), INTENT(IN) :: rho
-  REAL(DP),INTENT(IN) :: rho_core(dense%nrxx)
+  REAL(DP),INTENT(IN) :: rho_core(dfftp%nnr)
   COMPLEX(DP),INTENT(IN) :: rhog_core(ngm)
-  REAL(DP),INTENT(OUT) :: etxc, vtxc, v(dense%nrxx,nspin), kedtaur(dense%nrxx,nspin)
+  REAL(DP),INTENT(OUT) :: etxc, vtxc, v(dfftp%nnr,nspin), kedtaur(dfftp%nnr,nspin)
 !  integer nspin , nnr
 !  real(8)  grho(nnr,3,nspin), rho(nnr,nspin),kedtau(nnr,nspin)
   ! output: excrho: exc * rho ;  E_xc = \int excrho(r) d_r
@@ -163,9 +163,9 @@ SUBROUTINE v_xc_tpss( rho, rho_core, rhog_core, etxc, vtxc, v, kedtaur )
   COMPLEX(DP), ALLOCATABLE :: rhogsum(:,:)
   REAL(DP), PARAMETER :: epsr = 1.0d-6, epsg = 1.0d-10
   !
-  ALLOCATE (grho(3,dense%nrxx,nspin))
-  ALLOCATE (h(3,dense%nrxx,nspin))
-  ALLOCATE (rhoout(dense%nrxx,nspin))
+  ALLOCATE (grho(3,dfftp%nnr,nspin))
+  ALLOCATE (h(3,dfftp%nnr,nspin))
+  ALLOCATE (rhoout(dfftp%nnr,nspin))
   ALLOCATE (rhogsum(ngm,nspin))
   !
   vtxc = 0.d0
@@ -182,11 +182,11 @@ SUBROUTINE v_xc_tpss( rho, rho_core, rhog_core, etxc, vtxc, v, kedtaur )
      rhoout(:,is)  = fac * rho_core(:)  + rhoout(:,is)
      rhogsum(:,is) = fac * rhog_core(:) + rhogsum(:,is)
      !
-     CALL gradrho( dense%nrxx, rhogsum(1,is), ngm, g, nl, grho(1,1,is) )
+     CALL gradrho( dfftp%nnr, rhogsum(1,is), ngm, g, nl, grho(1,1,is) )
      !
   END DO
   !
-  DO k = 1, dense%nrxx
+  DO k = 1, dfftp%nnr
      DO is = 1, nspin
         grho2 (is) = grho(1,k, is)**2 + grho(2,k,is)**2 + grho(3,k, is)**2
      ENDDO
@@ -259,14 +259,14 @@ SUBROUTINE v_xc_tpss( rho, rho_core, rhog_core, etxc, vtxc, v, kedtaur )
      ENDIF
   ENDDO
   !
-  ALLOCATE( dh( dense%nrxx ) )    
+  ALLOCATE( dh( dfftp%nnr ) )    
   !
   ! ... second term of the gradient correction :
   ! ... \sum_alpha (D / D r_alpha) ( D(rho*Exc)/D(grad_alpha rho) )
   !
   DO is = 1, nspin
      !
-     CALL grad_dot( dense%nrxx, h(1,1,is), ngm, g, nl, alat, dh )
+     CALL grad_dot( dfftp%nnr, h(1,1,is), ngm, g, nl, alat, dh )
      !
      v(:,is) = v(:,is) - dh(:)
      !
@@ -276,8 +276,8 @@ SUBROUTINE v_xc_tpss( rho, rho_core, rhog_core, etxc, vtxc, v, kedtaur )
   END DO
   DEALLOCATE(dh)
   !
-  vtxc = omega * (vtxc / ( dense%nr1 * dense%nr2 * dense%nr3 ))
-  etxc = omega * etxc / ( dense%nr1 * dense%nr2 * dense%nr3 )
+  vtxc = omega * (vtxc / ( dfftp%nr1 * dfftp%nr2 * dfftp%nr3 ))
+  etxc = omega * etxc / ( dfftp%nr1 * dfftp%nr2 * dfftp%nr3 )
   !
   CALL mp_sum(  vtxc , intra_pool_comm )
   CALL mp_sum(  etxc , intra_pool_comm )
@@ -298,7 +298,7 @@ SUBROUTINE v_xc( rho, rho_core, rhog_core, etxc, vtxc, v )
   USE kinds,            ONLY : DP
   USE constants,        ONLY : e2, eps8
   USE io_global,        ONLY : stdout
-  USE grid_dimensions,  ONLY : dense
+  USE fft_base,         ONLY : dfftp
   USE gvect,            ONLY : ngm
   USE lsda_mod,         ONLY : nspin
   USE cell_base,        ONLY : omega
@@ -312,11 +312,11 @@ SUBROUTINE v_xc( rho, rho_core, rhog_core, etxc, vtxc, v )
   IMPLICIT NONE
   !
   TYPE (scf_type), INTENT(IN) :: rho
-  REAL(DP), INTENT(IN) :: rho_core(dense%nrxx)
+  REAL(DP), INTENT(IN) :: rho_core(dfftp%nnr)
     ! the core charge
   COMPLEX(DP), INTENT(IN) :: rhog_core(ngm)
     ! input: the core charge in reciprocal space
-  REAL(DP), INTENT(OUT) :: v(dense%nrxx,nspin), vtxc, etxc
+  REAL(DP), INTENT(OUT) :: v(dfftp%nnr,nspin), vtxc, etxc
     ! V_xc potential
     ! integral V_xc * rho
     ! E_xc energy
@@ -352,7 +352,7 @@ SUBROUTINE v_xc( rho, rho_core, rhog_core, etxc, vtxc, v )
      !
 !$omp parallel do private( rhox, arhox, ex, ec, vx, vc ), &
 !$omp             reduction(+:etxc,vtxc), reduction(-:rhoneg)
-     DO ir = 1, dense%nrxx
+     DO ir = 1, dfftp%nnr
         !
         rhox = rho%of_r(ir,1) + rho_core(ir)
         !
@@ -381,7 +381,7 @@ SUBROUTINE v_xc( rho, rho_core, rhog_core, etxc, vtxc, v )
      !
 !$omp parallel do private( rhox, arhox, zeta, ex, ec, vx, vc ), &
 !$omp             reduction(+:etxc,vtxc), reduction(-:rhoneg)
-     DO ir = 1, dense%nrxx
+     DO ir = 1, dfftp%nnr
         !
         rhox = rho%of_r(ir,1) + rho%of_r(ir,2) + rho_core(ir)
         !
@@ -413,7 +413,7 @@ SUBROUTINE v_xc( rho, rho_core, rhog_core, etxc, vtxc, v )
      !
      ! ... noncolinear case
      !
-     DO ir = 1,dense%nrxx
+     DO ir = 1,dfftp%nnr
         !
         amag = SQRT( rho%of_r(ir,2)**2 + rho%of_r(ir,3)**2 + rho%of_r(ir,4)**2 )
         !
@@ -464,15 +464,15 @@ SUBROUTINE v_xc( rho, rho_core, rhog_core, etxc, vtxc, v )
   !
   CALL mp_sum(  rhoneg , intra_pool_comm )
   !
-  rhoneg(:) = rhoneg(:) * omega / ( dense%nr1*dense%nr2*dense%nr3 )
+  rhoneg(:) = rhoneg(:) * omega / ( dfftp%nr1*dfftp%nr2*dfftp%nr3 )
   !
   IF ( rhoneg(1) > eps8 .OR. rhoneg(2) > eps8 ) &
      WRITE( stdout,'(/,5X,"negative rho (up, down): ",2E10.3)') rhoneg
   !
   ! ... energy terms, local-density contribution
   !
-  vtxc = omega * vtxc / ( dense%nr1*dense%nr2*dense%nr3 )
-  etxc = omega * etxc / ( dense%nr1*dense%nr2*dense%nr3 )
+  vtxc = omega * vtxc / ( dfftp%nr1*dfftp%nr2*dfftp%nr3 )
+  etxc = omega * etxc / ( dfftp%nr1*dfftp%nr2*dfftp%nr3 )
   !
   ! ... add gradient corrections (if any)
   !
@@ -502,7 +502,6 @@ SUBROUTINE v_h( rhog, ehart, charge, v )
   USE kinds,     ONLY : DP
   USE fft_base,  ONLY : dfftp
   USE fft_interfaces,ONLY : invfft
-  USE grid_dimensions,  ONLY : dense
   USE gvect,     ONLY : nl, nlm, ngm, gg, gstart
   USE lsda_mod,  ONLY : nspin
   USE cell_base, ONLY : omega, tpiba2
@@ -704,15 +703,14 @@ END SUBROUTINE v_hubbard
   USE control_flags,   ONLY : gamma_only
   USE constants,       ONLY : fpi, e2
   USE cell_base,       ONLY : tpiba2
-  USE grid_dimensions, ONLY : nrxx
   USE gvect,           ONLY : nl, ngm, nlm, gg, gstart
   !
   IMPLICIT NONE
   !
   ! ... Declares variables
   !
-  REAL( DP ), INTENT(IN)     :: rho( nrxx )
-  REAL( DP ), INTENT(OUT)    :: v( nrxx )
+  REAL( DP ), INTENT(IN)     :: rho( dfftp%nnr )
+  REAL( DP ), INTENT(OUT)    :: v( dfftp%nnr )
   !
   ! ... Local variables
   !
@@ -723,14 +721,14 @@ END SUBROUTINE v_hubbard
   !
   ! ... Bring rho to G space
   !
-  ALLOCATE( rhoaux( nrxx ) )
+  ALLOCATE( rhoaux( dfftp%nnr ) )
   rhoaux( : ) = CMPLX(rho( : ),0.D0,kind=dp) 
   !
   CALL fwfft('Dense', rhoaux, dfftp)
   !
   ! ... Compute total potential in G space
   !
-  ALLOCATE( vaux( nrxx ) )
+  ALLOCATE( vaux( dfftp%nnr ) )
   vaux( : ) = CMPLX(0.D0,0.D0,kind=dp)
   !
   DO ig = gstart, ngm
@@ -778,15 +776,14 @@ END SUBROUTINE v_hubbard
   USE constants,       ONLY : fpi, e2
   USE control_flags,   ONLY : gamma_only
   USE cell_base,       ONLY : tpiba
-  USE grid_dimensions, ONLY : nrxx
   USE gvect,           ONLY : nl, ngm, nlm, gg, gstart, g
   !
   IMPLICIT NONE
   !
   ! ... Declares variables
   !
-  REAL( DP ), INTENT(IN)     :: rho( nrxx )
-  REAL( DP ), INTENT(OUT)    :: gradv( 3, nrxx )
+  REAL( DP ), INTENT(IN)     :: rho( dfftp%nnr )
+  REAL( DP ), INTENT(OUT)    :: gradv( 3, dfftp%nnr )
   !
   ! ... Local variables
   !
@@ -797,14 +794,14 @@ END SUBROUTINE v_hubbard
   !
   ! ... Bring rho to G space
   !
-  ALLOCATE( rhoaux( nrxx ) )
+  ALLOCATE( rhoaux( dfftp%nnr ) )
   rhoaux( : ) = CMPLX( rho( : ), 0.D0 ) 
   !
   CALL fwfft('Dense', rhoaux, dfftp)
   !
   ! ... Compute total potential in G space
   !
-  ALLOCATE( gaux( nrxx ) )
+  ALLOCATE( gaux( dfftp%nnr ) )
   !
   DO ipol = 1, 3
     !

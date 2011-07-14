@@ -21,7 +21,7 @@
       USE lsda_mod,   ONLY : nspin
       USE mp_global,  ONLY : intra_pool_comm
       USE mp,         ONLY : mp_sum
-      USE grid_dimensions,  ONLY : dense
+      USE fft_base,   ONLY : dfftp
       USE noncollin_module, ONLY : pointlist, factlist, noncolin
 
       implicit none
@@ -31,7 +31,7 @@
       real(DP) ::   &
           rholoc(nat),   &     ! integrated charge arount the atoms
           magloc(nspin-1,nat)  ! integrated magnetic moment around the atom
-      real(DP) :: rho (dense%nrxx, nspin)
+      real(DP) :: rho (dfftp%nnr, nspin)
 !
 ! local variables
 !
@@ -41,13 +41,13 @@
  
       allocate (auxrholoc(0:nat,nspin))
       auxrholoc(:,:) = 0.d0
-      do i=1,dense%nrxx
+      do i=1,dfftp%nnr
          auxrholoc(pointlist(i),1:nspin) = auxrholoc(pointlist(i),1:nspin) + &
                                            rho(i,1:nspin) * factlist(i)
       end do
       call mp_sum( auxrholoc( 0:nat, 1:nspin ), intra_pool_comm )
 !
-      fact =  omega/(dense%nr1*dense%nr2*dense%nr3)
+      fact =  omega/(dfftp%nr1*dfftp%nr2*dfftp%nr3)
       if (nspin.eq.2) then
          rholoc(1:nat)   = (auxrholoc(1:nat,1)+auxrholoc(1:nat,2)) * fact
          magloc(1,1:nat) = (auxrholoc(1:nat,1)-auxrholoc(1:nat,2)) * fact

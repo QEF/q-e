@@ -38,11 +38,8 @@
                           ONLY: gstart
       USE uspp_param,     ONLY: nvb, ish
       USE ions_base,      ONLY: na, nat, pmass, nax, nsp, rcmax
-      USE grid_dimensions, &
-                          ONLY: dense
       USE cell_base,      ONLY: omega, alat
-      USE smooth_grid_dimensions, &
-                          ONLY: smooth
+      USE fft_base,       ONLY: dfftp, dffts
       USE local_pseudo,   ONLY: vps, rhops
       USE io_global,      ONLY: stdout, ionode, ionode_id
       USE mp_global,      ONLY: intra_bgrp_comm, leg_ortho
@@ -79,14 +76,14 @@
 
       INTEGER                :: irb( 3, nat )
       COMPLEX (kind=DP)           :: eigrb( ngb, nat )
-      REAL(kind=DP)               :: rhor( dense%nrxx, nspin )
-      REAL(kind=DP)               :: vpot( dense%nrxx, nspin )
+      REAL(kind=DP)               :: rhor( dfftp%nnr, nspin )
+      REAL(kind=DP)               :: vpot( dfftp%nnr, nspin )
       COMPLEX(kind=DP)            :: rhog( ngm, nspin )
-      REAL(kind=DP)               :: rhos( smooth%nrxx, nspin )
-      REAL(kind=DP)               :: rhoc( dense%nrxx )
-      COMPLEX(kind=DP)            :: ei1( dense%nr1:dense%nr1, nat )
-      COMPLEX(kind=DP)            :: ei2( dense%nr2:dense%nr2, nat )
-      COMPLEX(kind=DP)            :: ei3( dense%nr3:dense%nr3, nat )
+      REAL(kind=DP)               :: rhos( dffts%nnr, nspin )
+      REAL(kind=DP)               :: rhoc( dfftp%nnr )
+      COMPLEX(kind=DP)            :: ei1( dfftp%nr1:dfftp%nr1, nat )
+      COMPLEX(kind=DP)            :: ei2( dfftp%nr2:dfftp%nr2, nat )
+      COMPLEX(kind=DP)            :: ei3( dfftp%nr3:dfftp%nr3, nat )
       COMPLEX(kind=DP)            :: sfac( ngms, nsp )
   
 
@@ -157,7 +154,7 @@
          ! operates the Hamiltonian on the wavefunction c0
          h0c0( :, : )= 0.D0
          DO i= 1, n, 2                      
-            CALL dforce( i, bec, betae, c0, h0c0(:,i), h0c0(:,i+1), rhos, smooth%nrxx, ispin, f, n, nspin )
+            CALL dforce( i, bec, betae, c0, h0c0(:,i), h0c0(:,i+1), rhos, dffts%nnr, ispin, f, n, nspin )
          END DO
 
     
@@ -340,11 +337,7 @@
                           ONLY: gstart
       USE uspp_param,     ONLY: nvb, ish
       USE ions_base,      ONLY: na, nat, pmass, nax, nsp, rcmax
-      USE grid_dimensions, &
-                          ONLY: dense
       USE cell_base,      ONLY: omega, alat
-      USE smooth_grid_dimensions, &
-                          ONLY: smooth
       USE local_pseudo,   ONLY: vps, rhops
       USE io_global,      ONLY: stdout, ionode, ionode_id
       USE dener
@@ -356,6 +349,7 @@
       USE mp,             ONLY: mp_sum,mp_bcast
       use cp_interfaces,  only: rhoofr, dforce, vofrho
       USE cp_main_variables, ONLY: descla, nlax, nrlx, drhor, drhog
+      USE fft_base,       ONLY: dfftp, dffts
 
       !
       IMPLICIT NONE
@@ -373,14 +367,14 @@
 
       INTEGER                :: irb( 3, nat )
       COMPLEX (kind=DP)           :: eigrb( ngb, nat )
-      REAL(kind=DP)               :: rhor( dense%nrxx, nspin )
-      REAL(kind=DP)               :: vpot( dense%nrxx, nspin )
+      REAL(kind=DP)               :: rhor( dfftp%nnr, nspin )
+      REAL(kind=DP)               :: vpot( dfftp%nnr, nspin )
       COMPLEX(kind=DP)            :: rhog( ngm, nspin )
-      REAL(kind=DP)               :: rhos( smooth%nrxx, nspin )
-      REAL(kind=DP)               :: rhoc( dense%nrxx )
-      COMPLEX(kind=DP)            :: ei1( dense%nr1:dense%nr1, nat )
-      COMPLEX(kind=DP)            :: ei2( dense%nr2:dense%nr2, nat )
-      COMPLEX(kind=DP)            :: ei3( dense%nr3:dense%nr3, nat )
+      REAL(kind=DP)               :: rhos( dffts%nnr, nspin )
+      REAL(kind=DP)               :: rhoc( dfftp%nnr )
+      COMPLEX(kind=DP)            :: ei1( dfftp%nr1:dfftp%nr1, nat )
+      COMPLEX(kind=DP)            :: ei2( dfftp%nr2:dfftp%nr2, nat )
+      COMPLEX(kind=DP)            :: ei3( dfftp%nr3:dfftp%nr3, nat )
       COMPLEX(kind=DP)            :: sfac( ngms, nsp )
   
       REAL(kind=DP), INTENT(in)   :: c0hc0(nlax,nlax,nspin)
@@ -525,11 +519,7 @@
                           ONLY: gstart
       USE uspp_param,     ONLY: nvb, ish
       USE ions_base,      ONLY: na, nat, pmass, nax, nsp, rcmax
-      USE grid_dimensions, &
-                          ONLY: dense
       USE cell_base,      ONLY: omega, alat
-      USE smooth_grid_dimensions, &
-                          ONLY: smooth
       USE local_pseudo,   ONLY: vps, rhops
       USE io_global,      ONLY: stdout, ionode, ionode_id
       USE mp_global,      ONLY: intra_bgrp_comm

@@ -32,7 +32,7 @@ subroutine solve_linter_d3 (irr, imode0, npe, isw_sl)
   USE io_global,  ONLY : stdout
   USE io_files,   ONLY : iunigk
   USE gvect,      ONLY : g
-  USE grid_dimensions, ONLY : dense 
+  USE fft_base,   ONLY : dfftp 
   USE ener,       ONLY : ef
   USE klist,      ONLY : xk, wk, degauss, ngauss
   USE wvfct,      ONLY : nbnd, npwx, npw, igk, g2kin, et
@@ -94,8 +94,8 @@ subroutine solve_linter_d3 (irr, imode0, npe, isw_sl)
   external ch_psi_all2, cg_psi
   !
   call start_clock ('solve_linter')
-  allocate  (drhoscf( dense%nrxx, npe))
-  allocate  (dvloc( dense%nrxx, npe))
+  allocate  (drhoscf( dfftp%nnr, npe))
+  allocate  (dvloc( dfftp%nnr, npe))
   allocate  (spsi( npwx))
   allocate  (auxg( npwx))
   if (degauss /= 0.d0) allocate  (dpsiaux( npwx, nbnd))

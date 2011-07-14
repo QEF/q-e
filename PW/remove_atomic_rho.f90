@@ -11,7 +11,7 @@ subroutine remove_atomic_rho
   USE io_global, ONLY: stdout
   USE io_files, ONLY: output_drho
   USE kinds, ONLY: DP
-  USE grid_dimensions, ONLY: dense
+  USE fft_base, ONLY: dfftp
   USE lsda_mod, ONLY: nspin
   USE scf, ONLY: rho
   USE io_rho_xml, ONLY : write_rho
@@ -21,7 +21,7 @@ subroutine remove_atomic_rho
   ! workspace, is the difference between the charge density
   ! and the superposition of atomic charges
 
-  allocate ( work( dense%nrxx, 1 ) )
+  allocate ( work( dfftp%nnr, 1 ) )
   work = 0.d0
   !
   IF ( nspin > 1 ) CALL errore &

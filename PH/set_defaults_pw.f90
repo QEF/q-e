@@ -31,7 +31,6 @@ SUBROUTINE setup_nscf ( newgrid, xq )
   USE ions_base,          ONLY : nat, tau, ntyp => nsp, ityp, zv
   USE force_mod,          ONLY : force
   USE basis,              ONLY : natomwfc
-  USE grid_dimensions,    ONLY : dense
   USE klist,              ONLY : xk, wk, nks, nelec, degauss, lgauss, &
                                  nkstot, qnorm
   USE lsda_mod,           ONLY : lsda, nspin, current_spin, isk, &

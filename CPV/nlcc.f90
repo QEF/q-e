@@ -111,14 +111,13 @@
       ! gives an "internal compiler error"
       use gvect, only: gstart
       use gvect,              only: ngm, nl
-      use grid_dimensions,    only: dense
       USE fft_interfaces,     ONLY: fwfft
       USE fft_base,           ONLY: dfftp
 !
       implicit none
       !
-      REAL(DP),    INTENT(IN)   :: rhoc( dense%nrxx )
-      REAL(DP),    INTENT(INOUT):: rhor( dense%nrxx, nspin )
+      REAL(DP),    INTENT(IN)   :: rhoc( dfftp%nnr )
+      REAL(DP),    INTENT(INOUT):: rhor( dfftp%nnr, nspin )
       COMPLEX(DP), INTENT(INOUT):: rhog( ngm,  nspin )
       !
       COMPLEX(DP), ALLOCATABLE :: wrk1( : )
@@ -127,7 +126,7 @@
       REAL(DP) :: rsum
       !
       IF( iprsta > 2 ) THEN
-         rsum = SUM( rhoc ) * omega / DBLE(dense%nr1*dense%nr2*dense%nr3)
+         rsum = SUM( rhoc ) * omega / DBLE(dfftp%nr1*dfftp%nr2*dfftp%nr3)
          CALL mp_sum( rsum, intra_bgrp_comm )
          WRITE( stdout, 10 ) rsum 
 10       FORMAT( 3X, 'Core Charge = ', D14.6 )
@@ -137,17 +136,17 @@
       !
       if ( nspin .eq. 1 ) then
          iss=1
-         call daxpy(dense%nrxx,1.d0,rhoc,1,rhor(1,iss),1)
+         call daxpy(dfftp%nnr,1.d0,rhoc,1,rhor(1,iss),1)
       else
          isup=1
          isdw=2
-         call daxpy(dense%nrxx,0.5d0,rhoc,1,rhor(1,isup),1)
-         call daxpy(dense%nrxx,0.5d0,rhoc,1,rhor(1,isdw),1)
+         call daxpy(dfftp%nnr,0.5d0,rhoc,1,rhor(1,isup),1)
+         call daxpy(dfftp%nnr,0.5d0,rhoc,1,rhor(1,isdw),1)
       end if 
       !
       ! rhoc(r) -> rhoc(g)  (wrk1 is used as work space)
       !
-      allocate( wrk1( dense%nrxx ) )
+      allocate( wrk1( dfftp%nnr ) )
 
       wrk1(:) = rhoc(:)
 
@@ -184,14 +183,13 @@
       USE kinds,             ONLY: DP
       use electrons_base,    only: nspin
       use smallbox_gvec,     only: gxb, ngb, npb, nmb
-      use grid_dimensions,   only: dense
       use cell_base,         only: omega
       use ions_base,         only: nsp, na, nat
       use small_box,         only: tpibab
       use uspp_param,        only: upf
       use core,              only: rhocb
       use fft_interfaces,    only: invfft
-      use fft_base,          only: dfftb
+      use fft_base,          only: dfftb, dfftp
       use gvect,             only: gstart
       use smallbox_grid_dim, only: nr1b, nr2b, nr3b, nr1bx, nr2bx, nr3bx, nnrbx
 
@@ -200,7 +198,7 @@
 ! input
       integer, intent(in)        :: irb(3,nat)
       complex(dp), intent(in):: eigrb(ngb,nat)
-      real(dp), intent(in)   :: vxc(dense%nrxx,nspin)
+      real(dp), intent(in)   :: vxc(dfftp%nnr,nspin)
 ! output
       real(dp), intent(inout):: fion1(3,nat)
 ! local
@@ -219,7 +217,7 @@
       call start_clock( 'forcecc' )
       ci = (0.d0,1.d0)
 
-      fac = omega/DBLE(dense%nr1*dense%nr2*dense%nr3*nspin)
+      fac = omega/DBLE(dfftp%nr1*dfftp%nr2*dfftp%nr3*nspin)
 
 !$omp parallel default(none) &      
 !$omp          shared(nsp, na, nnrbx,ngb, eigrb, dfftb, irb, nmb, npb, ci, rhocb, &
@@ -336,12 +334,11 @@
       use kinds, only: dp
       use ions_base,         only: nsp, na, nat
       use uspp_param,        only: upf
-      use grid_dimensions,   only: dense
       use smallbox_gvec,     only: ngb, npb, nmb
       use control_flags,     only: iprint
       use core,              only: rhocb
       use fft_interfaces,    only: invfft
-      use fft_base,          only: dfftb
+      use fft_base,          only: dfftb, dfftp
       use smallbox_grid_dim, only: nr1b, nr2b, nr3b, nr1bx, nr2bx, nr3bx, nnrbx
 
       implicit none
@@ -349,7 +346,7 @@
       integer, intent(in)        :: irb(3,nat)
       complex(dp), intent(in):: eigrb(ngb,nat)
 ! output
-      real(dp), intent(out)  :: rhoc(dense%nrxx)
+      real(dp), intent(out)  :: rhoc(dfftp%nnr)
 ! local
       integer nfft, ig, is, ia, isa
       complex(dp) ci
@@ -364,7 +361,7 @@
       call start_clock( 'set_cc' )
       ci=(0.d0,1.d0)
 
-      allocate( wrk1 ( dense%nrxx ) )
+      allocate( wrk1 ( dfftp%nnr ) )
       wrk1 (:) = (0.d0, 0.d0)
 !
 !$omp parallel default(none) &      
@@ -439,7 +436,7 @@
 
 !$omp end parallel
 
-      call dcopy( dense%nrxx, wrk1, 2, rhoc, 1 )
+      call dcopy( dfftp%nnr, wrk1, 2, rhoc, 1 )
 
       deallocate( wrk1 )
 !

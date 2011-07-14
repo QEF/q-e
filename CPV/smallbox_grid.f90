@@ -40,14 +40,14 @@
 
    CONTAINS
 
-     SUBROUTINE smallbox_grid_init( dense )
+     SUBROUTINE smallbox_grid_init( dfftp )
        !
        USE fft_scalar, only: good_fft_dimension, good_fft_order
-       USE grid_types, only: grid_dim
+       USE fft_types,  only: fft_dlay_descriptor
        !
        IMPLICIT NONE
        !
-       TYPE(grid_dim), INTENT(IN) :: dense
+       TYPE(fft_dlay_descriptor), INTENT(IN) :: dfftp
        !
        ! no default values for grid box: if nr*b=0, ignore
 
@@ -74,7 +74,7 @@
        nr2bl = nr2b
        nr3bl = nr3b
 
-       IF ( nr1b > dense%nr1 .or. nr2b > dense%nr2 .or. nr3b > dense%nr3 ) &
+       IF ( nr1b > dfftp%nr1 .or. nr2b > dfftp%nr2 .or. nr3b > dfftp%nr3 ) &
           CALL errore(' smallbox_grid_init ', ' box grid larger than dense grid?',1)
        RETURN
 
