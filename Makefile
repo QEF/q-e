@@ -217,7 +217,7 @@ clean :
 	for dir in \
 		CPV D3 Gamma Modules PH PP PW PWCOND NEB VdW ACFDT EE \
 		atomic clib flib pwtools upftools iotk GIPAW XSpectra \
-		dev-tools GWW extlibs TDDFPT \
+		dev-tools GWW extlibs TDDFPT Solvent \
 	; do \
 	    if test -d $$dir ; then \
 		( cd $$dir ; \

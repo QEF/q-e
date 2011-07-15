@@ -140,10 +140,10 @@ SUBROUTINE forces()
       !
       IF ( TRIM(eps_mode) .NE. 'ionic' ) THEN
         CALL force_lc( nat, tau, ityp, alat, omega, ngm, ngl, igtongl, &
-                       nrxx, g, rhopol, nl, &
+                       dfftp%nnr, g, rhopol, nl, &
                        1, gstart, gamma_only, vloc, force_solvent )
       ELSE
-        CALL calc_fsolvent( nrxx, force_solvent )
+        CALL calc_fsolvent( dfftp%nnr, force_solvent )
       END IF
       !
     END IF
