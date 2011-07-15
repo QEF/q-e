@@ -684,12 +684,12 @@ CONTAINS
     
 
   end subroutine exxinit
-
+  
   !-----------------------------------------------------------------------
-  subroutine vexx(lda, n, m, psi, hpsi)
+  SUBROUTINE vexx(lda, n, m, psi, hpsi)
   !-----------------------------------------------------------------------
     !This routine calculates V_xx \Psi
-
+    
     ! ... This routine computes the product of the Hamiltonian
     ! ... matrix with m wavefunctions contained in psi
     !
@@ -716,11 +716,12 @@ CONTAINS
     use fft_interfaces, ONLY : fwfft, invfft
 
     USE parallel_include  
-    USE mp_global, ONLY : nproc, inter_image_comm, me_image, my_image_id, nimage, nproc_image
+    USE mp_global, ONLY : nproc, inter_image_comm, me_image, my_image_id,&
+         & nimage, nproc_image
     USE mp,        ONLY : mp_sum
 
 
-    implicit none
+    IMPLICIT NONE
     INTEGER          :: lda, n, m, nqi, myrank, mysize
     COMPLEX(DP) :: psi(lda,m) 
     COMPLEX(DP) :: hpsi(lda,m)
@@ -728,17 +729,17 @@ CONTAINS
     ! local variables
     COMPLEX(DP), allocatable :: tempphic(:), temppsic(:), result(:)
     COMPLEX(DP), allocatable :: rhoc(:), vc(:)
-    real (DP),   allocatable :: fac(:)
-    integer          :: ibnd, ik, im , ig, ikq, iq, isym, iqi
-    integer          :: h_ibnd, half_nbnd, ierr, nrxxs
-    real(DP) :: x1, x2
-    real(DP) :: qq, xk_cryst(3), sxk(3), xkq(3), x, q(3)
+    REAL (DP),   ALLOCATABLE :: fac(:)
+    INTEGER          :: ibnd, ik, im , ig, ikq, iq, isym, iqi
+    INTEGER          :: h_ibnd, half_nbnd, ierr, nrxxs
+    REAL(DP) :: x1, x2
+    REAL(DP) :: qq, xk_cryst(3), sxk(3), xkq(3), x, q(3)
     ! <LMS> temp array for vcut_spheric
-    real(DP) :: atws(3,3)
+    REAL(DP) :: atws(3,3)
 
-    call start_clock ('vexx')
+    CALL start_clock ('vexx')
     nrxxs = dffts%nnr
-    allocate (tempphic(nrxxs), temppsic(nrxxs), result(nrxxs), &
+    ALLOCATE (tempphic(nrxxs), temppsic(nrxxs), result(nrxxs), &
               rhoc(nrxxs), vc(nrxxs), fac(ngm) )
 
     ! write (*,*) exx_nwordwfc,lda,n,m, lda*n
@@ -748,15 +749,15 @@ CONTAINS
     nqi=nqs
 !
 
-    do im=1,m !for each band of psi (the k cycle is outside band)
+    DO im=1,m !for each band of psi (the k cycle is outside band)
        temppsic(:) = ( 0.D0, 0.D0 )
        temppsic(nls(igk(1:npw))) = psi(1:npw,im)
-       if (gamma_only) temppsic(nlsm(igk(1:npw))) = CONJG(psi(1:npw,im))
+       IF (gamma_only) temppsic(nlsm(igk(1:npw))) = CONJG(psi(1:npw,im))
        CALL invfft ('Wave', temppsic, dffts)
        
        result(:) = (0.d0,0.d0)
 
-        do iqi=1,nqi
+       DO iqi=1,nqi
 !
 ! Was used for parallelization on images
 !          iq=iqi+nqi*my_image_id
@@ -764,77 +765,31 @@ CONTAINS
 !
           ikq  = index_xkq(current_k,iq)
           ik   = index_xk(ikq)
-          isym = abs(index_sym(ikq))
+          isym = ABS(index_sym(ikq))
 
           xk_cryst(:) = at(1,:)*xk(1,ik) + at(2,:)*xk(2,ik) + at(3,:)*xk(3,ik)
-          if (index_sym(ikq) < 0 ) xk_cryst = - xk_cryst
+          IF (index_sym(ikq) < 0 ) xk_cryst = - xk_cryst
           sxk(:) = s(:,1,isym)*xk_cryst(1) + &
-                   s(:,2,isym)*xk_cryst(2) + &
-                   s(:,3,isym)*xk_cryst(3) 
+               s(:,2,isym)*xk_cryst(2) + &
+               s(:,3,isym)*xk_cryst(3) 
           xkq(:) = bg(:,1)*sxk(1) + bg(:,2)*sxk(2) + bg(:,3)*sxk(3)
-
-          !CALL start_clock ('vexx_ngmloop')
-          do ig=1,ngm
-             !
-             q(1)= xk(1,current_k) - xkq(1) + g(1,ig)
-             q(2)= xk(2,current_k) - xkq(2) + g(2,ig)
-             q(3)= xk(3,current_k) - xkq(3) + g(3,ig)
-             !
-             q = q * tpiba
-             !
-             qq = ( q(1)*q(1) + q(2)*q(2) + q(3)*q(3) ) 
-             !
-             IF (x_gamma_extrapolation) THEN
-                on_double_grid = .true.
-                x= 0.5d0/tpiba*(q(1)*at(1,1)+q(2)*at(2,1)+q(3)*at(3,1))*nq1
-                on_double_grid = on_double_grid .and. (abs(x-nint(x))<eps)
-                x= 0.5d0/tpiba*(q(1)*at(1,2)+q(2)*at(2,2)+q(3)*at(3,2))*nq2
-                on_double_grid = on_double_grid .and. (abs(x-nint(x))<eps)
-                x= 0.5d0/tpiba*(q(1)*at(1,3)+q(2)*at(2,3)+q(3)*at(3,3))*nq3
-                on_double_grid = on_double_grid .and. (abs(x-nint(x))<eps)
-             ENDIF             
-
-             IF ( use_coulomb_vcut_ws ) THEN
-                !
-                fac(ig) = vcut_get(vcut,q)
-                !
-             ELSE IF ( use_coulomb_vcut_spheric ) THEN
-                !
-                fac(ig) = vcut_spheric_get(vcut,q)
-                !
-             ELSE IF (qq.gt.1.d-8) THEN
-                !
-                IF ( erfc_scrlen > 0  ) THEN
-                   fac(ig)=e2*fpi/qq*(1-exp(-qq/4.d0/erfc_scrlen**2)) * grid_factor
-                ELSE
-                   fac(ig)=e2*fpi/( qq + yukawa ) * grid_factor
-                END IF
-                IF (on_double_grid) fac(ig) = 0.d0
-                !
-             ELSE
-                !
-                fac(ig)= - exxdiv ! or rather something else (see F.Gygi)
-                !
-                IF ( use_yukawa .AND. .NOT. x_gamma_extrapolation ) &
-                   fac(ig) = fac(ig) + e2*fpi/( qq + yukawa )
-                !
-             ENDIF
-             !
-          ENDDO
-          !CALL stop_clock ('vexx_ngmloop')
           !
-          if (gamma_only) then
+          ! calculate the 1/|r-r'| factor and place it in fac
+          !
+          CALL g2_convolution(ngm, g, xk(:,current_k), xkq, fac)
+          !
+          IF (gamma_only) THEN
              half_nbnd = ( nbnd + 1 ) / 2
              h_ibnd = 0
-             do ibnd=1,nbnd, 2 !for each band of psi
+             DO ibnd=1,nbnd, 2 !for each band of psi
                 h_ibnd = h_ibnd + 1
                 x1 = x_occupation(ibnd,  ik)
-                if (ibnd < nbnd) then
+                IF (ibnd < nbnd) THEN
                    x2 = x_occupation(ibnd + 1,ik)
-                else
+                ELSE
                    x2 = 0.d0
-                end if
-                if ( abs(x1) < 1.d-6 .and.  abs(x2) < 1.d-6 ) cycle
+                END IF
+                IF ( ABS(x1) < 1.d-6 .AND.  ABS(x2) < 1.d-6 ) CYCLE
                 !
                 !loads the phi from file
                 !
@@ -842,81 +797,153 @@ CONTAINS
 WRITE(stdout,*) "from vexx, nrxxs: ", nrxxs, ikq, h_ibnd 
 call flush_unit(stdout)
 #endif
-                do ji=1, nrxxs
-                   tempphic(ji)=exxbuff(ji,ikq,h_ibnd)
+              DO ji=1, nrxxs
+                 tempphic(ji)=exxbuff(ji,ikq,h_ibnd)
                    
-                enddo
-                !CALL davcio ( tempphic, exx_nwordwfc, iunexx, &
-                !                    (ikq-1)*half_nbnd+h_ibnd, -1 )
-                !calculate rho in real space
-                rhoc(:)=CONJG(tempphic(:))*temppsic(:) / omega
-                !brings it to G-space
-                CALL fwfft ('Smooth', rhoc, dffts)
+              ENDDO
+              !CALL davcio ( tempphic, exx_nwordwfc, iunexx, &
+              !                    (ikq-1)*half_nbnd+h_ibnd, -1 )
+              !calculate rho in real space
+              rhoc(:)=CONJG(tempphic(:))*temppsic(:) / omega
+              !brings it to G-space
+              CALL fwfft ('Smooth', rhoc, dffts)
    
-                vc(:) = ( 0.D0, 0.D0 )
-                vc(nls(1:ngm))  = fac(1:ngm) * rhoc(nls(1:ngm))
-                vc(nlsm(1:ngm)) = fac(1:ngm) * rhoc(nlsm(1:ngm))
-                !brings back v in real space
-                CALL invfft ('Smooth', vc, dffts) 
+              vc(:) = ( 0.D0, 0.D0 )
+              vc(nls(1:ngm))  = fac(1:ngm) * rhoc(nls(1:ngm))
+              vc(nlsm(1:ngm)) = fac(1:ngm) * rhoc(nlsm(1:ngm))
+              !brings back v in real space
+              CALL invfft ('Smooth', vc, dffts) 
 
-                vc = CMPLX( x1 * DBLE (vc), x2 * AIMAG(vc) ,kind=DP)/ nqs
+              vc = CMPLX( x1 * DBLE (vc), x2 * AIMAG(vc) ,kind=DP)/ nqs
 
-                !accumulates over bands and k points
-                result(1:nrxxs) = result(1:nrxxs) + &
-                                  DBLE( vc(1:nrxxs) * tempphic(1:nrxxs) )
+              !accumulates over bands and k points
+              result(1:nrxxs) = result(1:nrxxs) + &
+                   DBLE( vc(1:nrxxs) * tempphic(1:nrxxs) )
 
-             end do
+           END DO
 
-          else
-             do ibnd=1,nbnd !for each band of psi
-                if ( abs(x_occupation(ibnd,ik)) < 1.d-6) cycle
-                !
-                !loads the phi from file
-                !
+        ELSE
+           DO ibnd=1,nbnd !for each band of psi
+              IF ( ABS(x_occupation(ibnd,ik)) < 1.d-6) CYCLE
+              !
+              !loads the phi from file
+              !
 #ifdef EXXDEBUG
 WRITE(stdout,*) "from vexx, nrxxs: ", nrxxs, ikq, ibnd
 if(allocated(tempphic)) write(stdout,*) "tempphic allcated"
 if(allocated(exxbuff)) write(stdout,*) "exxbuff allocated"
 call flush_unit(stdout)
 #endif
-                do ji=1, nrxxs
-                   tempphic(ji)=exxbuff(ji,ikq,ibnd)                
-                enddo
+              DO ji=1, nrxxs
+                 tempphic(ji)=exxbuff(ji,ikq,ibnd)                
+              ENDDO
                 
-                !CALL davcio ( tempphic, exx_nwordwfc, iunexx, &
-                !                        (ikq-1)*nbnd+ibnd, -1 )
-                !calculate rho in real space
-                rhoc(:)=CONJG(tempphic(:))*temppsic(:) / omega
-                !brings it to G-space
-                CALL fwfft ('Smooth', rhoc, dffts)
+              !CALL davcio ( tempphic, exx_nwordwfc, iunexx, &
+              !                        (ikq-1)*nbnd+ibnd, -1 )
+              !calculate rho in real space
+              rhoc(:)=CONJG(tempphic(:))*temppsic(:) / omega
+              !brings it to G-space
+              CALL fwfft ('Smooth', rhoc, dffts)
    
-                vc(:) = ( 0.D0, 0.D0 )
-                vc(nls(1:ngm)) = fac(1:ngm) * rhoc(nls(1:ngm))
-                if (gamma_only) vc(nlsm(1:ngm)) = fac(1:ngm) * rhoc(nlsm(1:ngm))
-                vc = vc * x_occupation(ibnd,ik) / nqs
+              vc(:) = ( 0.D0, 0.D0 )
+              vc(nls(1:ngm)) = fac(1:ngm) * rhoc(nls(1:ngm))
+              IF (gamma_only) vc(nlsm(1:ngm)) = fac(1:ngm) * rhoc(nlsm(1:ngm))
+              vc = vc * x_occupation(ibnd,ik) / nqs
 
-                !brings back v in real space
-                CALL invfft ('Smooth', vc, dffts) 
-
-                !accumulates over bands and k points
-                result(1:nrxxs)=result(1:nrxxs)+vc(1:nrxxs)*tempphic(1:nrxxs)
-             end do
-          end if
-       end do
-!
-! Was used for parallelization on images
-!       CALL mp_sum( result(1:nrxxs), inter_image_comm )
-       !brings back result in G-space
-       CALL fwfft ('Wave', result, dffts)
-       !adds it to hpsi
-       hpsi(1:npw,im)=hpsi(1:npw,im) - exxalfa*result(nls(igk(1:npw)))
-    end do
-
-    deallocate (tempphic,temppsic, result, rhoc, vc, fac )
+              !brings back v in real space
+              CALL invfft ('Smooth', vc, dffts) 
+                
+              !accumulates over bands and k points
+              result(1:nrxxs)=result(1:nrxxs)+vc(1:nrxxs)*tempphic(1:nrxxs)
+           END DO
+        END IF
+     END DO
+     !
+     ! Was used for parallelization on images
+     !       CALL mp_sum( result(1:nrxxs), inter_image_comm )
+     !brings back result in G-space
+     CALL fwfft ('Wave', result, dffts)
+     !adds it to hpsi
+     hpsi(1:npw,im)=hpsi(1:npw,im) - exxalfa*result(nls(igk(1:npw)))
+  END DO
+    
+  DEALLOCATE (tempphic,temppsic, result, rhoc, vc, fac )
    
-    call stop_clock ('vexx')
+  CALL stop_clock ('vexx')
 
-     end subroutine vexx
+END SUBROUTINE vexx
+!-----------------------------------------------------------------------
+SUBROUTINE g2_convolution(ngm, g, xk, xkq, fac)
+!-----------------------------------------------------------------------
+  ! This routine calculates the 1/|r-r'| part of the exact exchange 
+  ! expression in reciprocal space (the G^-2 factor).
+  USE kinds,     ONLY : DP
+  USE cell_base, ONLY : tpiba, at
+  USE constants, ONLY : fpi, e2, pi
+  
+  IMPLICIT NONE
+  
+  INTEGER,  INTENT(IN)    :: ngm   ! Number of G vectors
+  REAL(DP), INTENT(IN)    :: g(3,ngm) ! Cartesian components of G vectors
+  REAL(DP), INTENT(IN)    :: xk(3) ! current k vector
+  REAL(DP), INTENT(IN)    :: xkq(3) ! current q vector
+  
+  REAL(DP), INTENT(INOUT) :: fac(ngm) ! Calculated convolution
+  
+  
+  !Local variables
+  INTEGER :: ig !Counters 
+  REAL(DP) :: q(3), qq, x
+  
+  !CALL start_clock ('vexx_ngmloop')
+  DO ig=1,ngm
+     !
+     q(:)= xk(:) - xkq(:) + g(:,ig)
+     !
+     q = q * tpiba
+     !
+     qq = SUM(q(:)**2.0_DP) 
+     !
+     IF (x_gamma_extrapolation) THEN
+        on_double_grid = .TRUE.
+        x= 0.5d0/tpiba*(q(1)*at(1,1)+q(2)*at(2,1)+q(3)*at(3,1))*nq1
+        on_double_grid = on_double_grid .AND. (ABS(x-NINT(x))<eps)
+        x= 0.5d0/tpiba*(q(1)*at(1,2)+q(2)*at(2,2)+q(3)*at(3,2))*nq2
+        on_double_grid = on_double_grid .AND. (ABS(x-NINT(x))<eps)
+        x= 0.5d0/tpiba*(q(1)*at(1,3)+q(2)*at(2,3)+q(3)*at(3,3))*nq3
+        on_double_grid = on_double_grid .AND. (ABS(x-NINT(x))<eps)
+     ENDIF
+     
+     IF ( use_coulomb_vcut_ws ) THEN
+        !
+        fac(ig) = vcut_get(vcut,q)
+        !
+     ELSE IF ( use_coulomb_vcut_spheric ) THEN
+        !
+        fac(ig) = vcut_spheric_get(vcut,q)
+        !
+     ELSE IF (qq.GT.1.d-8) THEN
+        !
+        IF ( erfc_scrlen > 0  ) THEN
+           fac(ig)=e2*fpi/qq*(1-EXP(-qq/4.d0/erfc_scrlen**2)) * grid_factor
+        ELSE
+           fac(ig)=e2*fpi/( qq + yukawa ) * grid_factor
+        END IF
+        IF (on_double_grid) fac(ig) = 0.d0
+        !
+     ELSE
+        !
+        fac(ig)= - exxdiv ! or rather something else (see F.Gygi)
+        !
+        IF ( use_yukawa .AND. .NOT. x_gamma_extrapolation ) &
+             fac(ig) = fac(ig) + e2*fpi/( qq + yukawa )
+        !
+     ENDIF
+     !
+  ENDDO
+  !CALL stop_clock ('vexx_ngmloop')
+END SUBROUTINE g2_convolution
+!-----------------------------------------------------------------------
 
   function exxenergy ()
     ! This function is called to correct the deband value and have 
