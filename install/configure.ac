@@ -192,9 +192,9 @@ then
                 * )                     AC_MSG_WARN(incorrect host name ?)
         ;;
         esac
-	# workarounf for Cray-XT machines
+	# workaround for Cray-XT machines
         test -d /proc/cray_xt && arch=crayxt
-	# workarounf for IBM BG machines
+	# workaround for IBM BG machines
         test -d /bgsys && arch=ppc64-bg
 fi
 echo checking architecture... $arch
