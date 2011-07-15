@@ -6,15 +6,16 @@ The following files are always present in the CVS repository:
 
 release-notes      What is new in the current release + list of fixed bugs
                    (only those found in some official release)
-
 user-guide.tex     User guide
 developer-man.tex  Developers' manual
 INPUT_Gamma        Documentation of input data for the specialized phonon code
                    (Gamma-only and q=0 phonons only) phcg.x
 INPUT_WFDD         Input data doc for dynamics with Wannier functions (cp.x)
-INPUT_XSPECTRA     INput data doc for X-ray adsorption spectra (xspectra.x)
+INPUT_XSPECTRA     Input data doc for X-ray adsorption spectra (xspectra.x)
 eps_man.tex        Documentation for code epsilon.x, performing
                    dielectric function calculation with RPA
+plumed_quick_ref.tex 
+                   An introduction to the usage of PLUMED with QE
 README.AUTOPILOT   Notes on the "autopilot" feature, by Targacept, Inc.
 nomefile.upf       Naming convention for UPF pseudopotentials
                    The UPF format is described in the Quantum ESPRESSO wiki,
@@ -26,14 +27,11 @@ ChangeLog.old      ChangeLog for the Quantum-ESPRESSO suite after aug. 2004
 ChangeLog.pw       ChangeLog before aug 2004 for PWscf
 ChangeLog.cp       ChangeLog before aug 2004 for CP
 
-The following files are present in the released version 
-The first two are obtained by typing "make log" in the root directory
-The second two are obtained using pdflatex
+Printable versions of the *tex files are present in the released version 
 
-ChangeLog-X.Y      Updated ChangeLog for v.X.Y, text file
-ChangeLog-X.Y.html     As above, html file
-user-guide.pdf     User guide, printable version
-developer-man.pdf  Developers' manual, printable version
+user-guide.pdf        User guide, printable version
+developer-man.pdf     Developers' manual, printable version
+plumed_quick_ref.pdf  
 
 The following files are present in the released version (obtained 
 from the "helpdoc" utility: go into the ../doc-def/ directory, type
