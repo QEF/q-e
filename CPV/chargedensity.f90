@@ -788,11 +788,10 @@ SUBROUTINE drhov(irb,eigrb,rhovan,drhovan,rhog,rhor,drhog,drhor)
       USE electrons_base,           ONLY: nspin
       USE smallbox_gvec,            ONLY: ngb, npb, nmb
       USE gvect,                    ONLY: ngm, nlm, nl
-      USE smallbox_grid_dim,        ONLY: nr1b, nr2b, nr3b, nr1bx, nr2bx, nr3bx, nnrbx
       USE cell_base,                ONLY: ainv
       USE qgb_mod,                  ONLY: qgb, dqgb
       USE fft_interfaces,           ONLY: fwfft, invfft
-      USE fft_base,                 ONLY: dfftb, dfftp
+      USE fft_base,                 ONLY: dfftb, dfftp, dfftb
       USE mp_global,                ONLY: my_bgrp_id, nbgrp, inter_bgrp_comm
       USE mp,                       ONLY: mp_sum
 
@@ -850,12 +849,12 @@ SUBROUTINE drhov(irb,eigrb,rhovan,drhovan,rhog,rhor,drhog,drhor)
                v(:) = (0.d0, 0.d0)
 
 !$omp parallel default(none) &
-!$omp          shared(nvb, na, nnrbx, ngb, nh, eigrb, dfftb, irb, v, &
+!$omp          shared(nvb, na, ngb, nh, eigrb, dfftb, irb, v, &
 !$omp                 nmb, ci, npb, i, j, dqgb, qgb, nhm, rhovan, drhovan, my_bgrp_id, nbgrp ) &
 !$omp          private(mytid, ntids, is, ia, nfft, ifft, iv, jv, ijv, ig, iss, isa, &
 !$omp                  qv, itid, dqgbt, dsumt, asumt )
 
-               ALLOCATE( qv( nnrbx ) )
+               ALLOCATE( qv( dfftb%nnr ) )
                ALLOCATE( dqgbt( ngb, 2 ) )
 
 #ifdef __OPENMP
@@ -977,7 +976,7 @@ SUBROUTINE drhov(irb,eigrb,rhovan,drhovan,rhog,rhor,drhog,drhor)
          DO i=1,3
             DO j=1,3
                v(:) = (0.d0, 0.d0)
-               ALLOCATE( qv( nnrbx ) )
+               ALLOCATE( qv( dfftb%nnr ) )
                ALLOCATE( dqgbt( ngb, 2 ) )
                isa=1
                DO is=1,nvb
@@ -1081,11 +1080,10 @@ SUBROUTINE rhov(irb,eigrb,rhovan,rhog,rhor)
       USE gvect,                    ONLY: ngm, nl, nlm
       USE cell_base,                ONLY: omega
       USE small_box,                ONLY: omegab
-      USE smallbox_grid_dim,            ONLY: nr1b, nr2b, nr3b, nr1bx, nr2bx, nr3bx, nnrbx
       USE control_flags,            ONLY: iprint, iprsta, tpre
       USE qgb_mod,                  ONLY: qgb
       USE fft_interfaces,           ONLY: fwfft, invfft
-      USE fft_base,                 ONLY: dfftb, dfftp
+      USE fft_base,                 ONLY: dfftb, dfftp, dfftb
 !
       IMPLICIT NONE
       !
@@ -1136,8 +1134,8 @@ SUBROUTINE rhov(irb,eigrb,rhovan,rhog,rhor)
          !
 
 !$omp parallel default(none) &
-!$omp          shared(nvb, na, nnrbx, ngb, nh, rhovan, qgb, eigrb, dfftb, iprsta, omegab, irb, v, nr1b, &
-!$omp                 nr2b, nr3b, nmb, stdout, ci, npb, rhor, dfftp ) &
+!$omp          shared(nvb, na, ngb, nh, rhovan, qgb, eigrb, dfftb, iprsta, omegab, irb, v, &
+!$omp                 nmb, stdout, ci, npb, rhor, dfftp ) &
 !$omp          private(mytid, ntids, is, ia, nfft, ifft, iv, jv, ijv, sumrho, qgbt, ig, iss, isa, ca, &
 !$omp                  qv, itid, ir )
 
@@ -1155,7 +1153,7 @@ SUBROUTINE rhov(irb,eigrb,rhovan,rhog,rhor)
 #endif
 
          ALLOCATE( qgbt( ngb, 2 ) )
-         ALLOCATE( qv( nnrbx ) )
+         ALLOCATE( qv( dfftb%nnr ) )
 
 
          DO is = 1, nvb
@@ -1232,11 +1230,11 @@ SUBROUTINE rhov(irb,eigrb,rhovan,rhog,rhor)
                   WRITE( stdout,'(a,f12.8)') ' rhov: 1-atom g-sp = ',         &
      &                 omegab*DBLE(qgbt(1,1))
                   WRITE( stdout,'(a,f12.8)') ' rhov: 1-atom r-sp = ',         &
-     &                 omegab*DBLE(ca)/(nr1b*nr2b*nr3b)
+     &                 omegab*DBLE(ca)/(dfftb%nr1*dfftb%nr2*dfftb%nr3)
                   WRITE( stdout,'(a,f12.8)') ' rhov: 1-atom g-sp = ',         &
      &                 omegab*DBLE(qgbt(1,2))
                   WRITE( stdout,'(a,f12.8)') ' rhov: 1-atom r-sp = ',         &
-     &                 omegab*AIMAG(ca)/(nr1b*nr2b*nr3b)
+     &                 omegab*AIMAG(ca)/(dfftb%nr1*dfftb%nr2*dfftb%nr3)
                ENDIF
                !
                !  add qv(r) to v(r), in real space on the dense grid
@@ -1300,7 +1298,7 @@ SUBROUTINE rhov(irb,eigrb,rhovan,rhog,rhor)
          v (:) = (0.d0, 0.d0)
 
          ALLOCATE( qgbt( ngb, 2 ) )
-         ALLOCATE( qv( nnrbx ) )
+         ALLOCATE( qv( dfftb%nnr ) )
 
          isa=1
          DO is=1,nvb
@@ -1342,11 +1340,11 @@ SUBROUTINE rhov(irb,eigrb,rhovan,rhog,rhor)
                   WRITE( stdout,'(a,f12.8)') ' rhov: up   g-space = ',        &
      &                 omegab*DBLE(qgbt(1,1))
                   WRITE( stdout,'(a,f12.8)') ' rhov: up r-sp = ',             &
-     &                 omegab*DBLE(ca)/(nr1b*nr2b*nr3b)
+     &                 omegab*DBLE(ca)/(dfftb%nr1*dfftb%nr2*dfftb%nr3)
                   WRITE( stdout,'(a,f12.8)') ' rhov: dw g-space = ',          &
      &                 omegab*DBLE(qgbt(1,2))
                   WRITE( stdout,'(a,f12.8)') ' rhov: dw r-sp = ',             &
-     &                 omegab*AIMAG(ca)/(nr1b*nr2b*nr3b)
+     &                 omegab*AIMAG(ca)/(dfftb%nr1*dfftb%nr2*dfftb%nr3)
                ENDIF
 !
 !  add qv(r) to v(r), in real space on the dense grid

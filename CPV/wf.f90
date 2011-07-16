@@ -35,7 +35,6 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
   USE wannier_base,             ONLY : wfg, nw, weight, indexplus, indexplusz, &
                                        indexminus, indexminusz, tag, tagp,     &
                                        expo, wfsd
-  USE smallbox_grid_dim,            ONLY : nnrbx
   USE uspp_param,               ONLY : nh, nhm
   USE uspp,                     ONLY : nkb
   USE io_global,                ONLY : ionode, stdout
@@ -308,7 +307,7 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
      !
      ! ... Augmentation Part first
      !
-     ALLOCATE( qv( nnrbx ) )
+     ALLOCATE( qv( dfftb%nnr ) )
      !
      X = ZERO
      !
@@ -319,7 +318,7 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
               inl = ish(is) + (iv-1)*na(is) + ia
               jv = iv 
               ijv=(jv-1)*jv/2 + iv
-              qv( 1 : nnrbx ) = 0.D0 
+              qv( 1 : dfftb%nnr ) = 0.D0 
               DO ig=1,ngb
                  qv(npb(ig))=eigrb(ig,isa)*qgb(ig,ijv,is)
                  qv(nmb(ig))=CONJG(eigrb(ig,isa)*qgb(ig,ijv,is))
@@ -363,7 +362,7 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
               DO jv = iv+1, nh(is)
                  jnl = ish(is) + (jv-1)*na(is) + ia
                  ijv = (jv-1)*jv/2 + iv
-                 qv( 1:nnrbx ) = 0.D0
+                 qv( 1:dfftb%nnr ) = 0.D0
                  DO ig=1,ngb
                     qv(npb(ig))=eigrb(ig,isa)*qgb(ig,ijv,is)
                     qv(nmb(ig))=CONJG(eigrb(ig,isa)*qgb(ig,ijv,is))
@@ -2024,14 +2023,13 @@ FUNCTION boxdotgridcplx(irb,qv,vr)
   !      use ion_parameters
   !
   USE kinds,           ONLY : DP
-  USE smallbox_grid_dim,   ONLY : nnrbx, nr1b, nr2b, nr3b,  nr1bx, nr2bx, nr3bx
-  USE fft_base,        ONLY : dfftp
+  USE fft_base,        ONLY : dfftp, dfftb
   USE mp_global,       ONLY : me_bgrp
   !
   IMPLICIT NONE
   !
   INTEGER,           INTENT(IN):: irb(3)
-  COMPLEX(DP), INTENT(IN):: qv(nnrbx), vr(dfftp%nnr)
+  COMPLEX(DP), INTENT(IN):: qv(dfftb%nnr), vr(dfftp%nnr)
   COMPLEX(DP)            :: boxdotgridcplx
   !
   INTEGER :: ir1, ir2, ir3, ir, ibig1, ibig2, ibig3, ibig, me
@@ -2040,21 +2038,21 @@ FUNCTION boxdotgridcplx(irb,qv,vr)
   !
   boxdotgridcplx = ZERO
 
-  DO ir3=1,nr3b
+  DO ir3=1,dfftb%nr3
      ibig3=irb(3)+ir3-1
      ibig3=1+MOD(ibig3-1,dfftp%nr3)
 #ifdef __PARA
      ibig3 = ibig3 - dfftp%ipp( me )
      IF (ibig3.GT.0.AND.ibig3.LE.dfftp%npp(me)) THEN
 #endif
-        DO ir2=1,nr2b
+        DO ir2=1,dfftb%nr2
            ibig2=irb(2)+ir2-1
            ibig2=1+MOD(ibig2-1,dfftp%nr2)
-           DO ir1=1,nr1b
+           DO ir1=1,dfftb%nr1
               ibig1=irb(1)+ir1-1
               ibig1=1+MOD(ibig1-1,dfftp%nr1)
               ibig=ibig1 + (ibig2-1)*dfftp%nr1x + (ibig3-1)*dfftp%nr1x*dfftp%nr2x
-              ir  =ir1 + (ir2-1)*nr1bx + (ir3-1)*nr1bx*nr2bx
+              ir  =ir1 + (ir2-1)*dfftb%nr1x + (ir3-1)*dfftb%nr1x*dfftb%nr2x
               boxdotgridcplx = boxdotgridcplx + qv(ir)*vr(ibig)
            END DO
         END DO

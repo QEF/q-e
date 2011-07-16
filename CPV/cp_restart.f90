@@ -58,7 +58,6 @@ MODULE cp_restart
                                            intra_bgrp_comm, intra_image_comm, inter_bgrp_comm, &
                                            root_bgrp, intra_pool_comm
       USE printout_base,            ONLY : title
-      USE smallbox_grid_dim,        ONLY : nr1b, nr2b, nr3b
       USE gvect,                    ONLY : ngm, ngm_g
       USE gvecs,                    ONLY : ngms_g, ecuts, dual
       USE gvecw,                    ONLY : ngw, ngw_g, ecutwfc
@@ -72,7 +71,7 @@ MODULE cp_restart
       USE energies,                 ONLY : enthal, ekin, eht, esr, eself, &
                                            epseu, enl, exc, vave
       USE mp,                       ONLY : mp_sum
-      USE fft_base,                 ONLY : dfftp, dffts
+      USE fft_base,                 ONLY : dfftp, dffts, dfftb
       USE constants,                ONLY : pi
       USE uspp_param,               ONLY : n_atom_wfc
       USE global_version,           ONLY : version_number
@@ -362,8 +361,8 @@ MODULE cp_restart
 !-------------------------------------------------------------------------------
          !
          CALL write_planewaves( ecutwfc, dual, ngw_g, gamma_only, dfftp%nr1, dfftp%nr2, &
-                                dfftp%nr3, ngm_g, dffts%nr1, dffts%nr2, dffts%nr3, ngms_g, nr1b, &
-                                nr2b, nr3b, mill_g, .FALSE. )
+                                dfftp%nr3, ngm_g, dffts%nr1, dffts%nr2, dffts%nr3, ngms_g, dfftb%nr1, &
+                                dfftb%nr2, dfftb%nr3, mill_g, .FALSE. )
          !
 !-------------------------------------------------------------------------------
 ! ... SPIN
@@ -930,7 +929,6 @@ MODULE cp_restart
       USE io_files,                 ONLY : iunpun, xmlpun, iunwfc, nwordwfc, &
                                            tmp_dir, diropn
       USE printout_base,            ONLY : title
-      USE smallbox_grid_dim,        ONLY : nr1b, nr2b, nr3b
       USE gvect,                    ONLY : ngm
       USE gvecw,                    ONLY : ngw, ngw_g
       USE electrons_base,           ONLY : nspin, nbnd, nelt, nel, &

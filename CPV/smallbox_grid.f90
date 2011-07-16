@@ -13,85 +13,67 @@
      !  used for atomic augmentation charge density (USPP)
      !  Dependencies:
      !     fft_scalar       good_fft_dimension, good_fft_order
-     !     grid_dimensions  nr1, nr2, nr3
      !     io_global        stdout, ionode
      !
 
      IMPLICIT NONE
      SAVE
 
-     !  dimensions of the "small box" 3D grid (global)
-     INTEGER :: nr1b  = 0, nr2b  = 0, nr3b  = 0
-
-     !  dimensions of the arrays for the "small box" 3D grid (global)
-     !  may differ from nr1b,nr2b,nr3b in order to boost performances
-     INTEGER :: nr1bx = 0, nr2bx = 0, nr3bx = 0
-
-     !  dimensions of the "small box" 3D grid (local on each processor)
-     INTEGER :: nr1bl = 0, nr2bl = 0, nr3bl = 0
-
-     ! size of the arrays allocated for the FFT, local to each processor:
-     ! in parallel execution may differ from nr1bx*nr2bx*nr3bx
-     INTEGER :: nnrbx  = 0
-
      PRIVATE
-     PUBLIC :: nr1b, nr2b, nr3b, nr1bx, nr2bx, nr3bx, nnrbx
      PUBLIC :: smallbox_grid_init, smallbox_grid_info
 
    CONTAINS
 
-     SUBROUTINE smallbox_grid_init( dfftp )
+     SUBROUTINE smallbox_grid_init( dfftp, dfftb )
        !
        USE fft_scalar, only: good_fft_dimension, good_fft_order
        USE fft_types,  only: fft_dlay_descriptor
        !
        IMPLICIT NONE
        !
-       TYPE(fft_dlay_descriptor), INTENT(IN) :: dfftp
+       TYPE(fft_dlay_descriptor), INTENT(IN)    :: dfftp
+       TYPE(fft_dlay_descriptor), INTENT(INOUT) :: dfftb
        !
        ! no default values for grid box: if nr*b=0, ignore
 
-       IF( nr1b > 0 .AND. nr2b > 0 .AND. nr3b > 0 ) THEN
+       IF( dfftb%nr1 > 0 .AND. dfftb%nr2 > 0 .AND. dfftb%nr3 > 0 ) THEN
 
-          nr1b = good_fft_order( nr1b )
-          nr2b = good_fft_order( nr2b )
-          nr3b = good_fft_order( nr3b )
-          nr1bx = good_fft_dimension( nr1b )
+          dfftb%nr1 = good_fft_order( dfftb%nr1 )
+          dfftb%nr2 = good_fft_order( dfftb%nr2 )
+          dfftb%nr3 = good_fft_order( dfftb%nr3 )
+          dfftb%nr1x = good_fft_dimension( dfftb%nr1 )
 
        ELSE
  
-          nr1bx = nr1b
+          dfftb%nr1x = dfftb%nr1
 
        END IF
 
-       nr2bx = nr2b
-       nr3bx = nr3b
-       nnrbx = nr1bx * nr2bx * nr3bx
+       dfftb%nr2x = dfftb%nr2
+       dfftb%nr3x = dfftb%nr3
+       dfftb%nnr  = dfftb%nr1x * dfftb%nr2x * dfftb%nr3x
 
-       ! small box grid is not distributed
-
-       nr1bl = nr1b
-       nr2bl = nr2b
-       nr3bl = nr3b
-
-       IF ( nr1b > dfftp%nr1 .or. nr2b > dfftp%nr2 .or. nr3b > dfftp%nr3 ) &
+       IF ( dfftb%nr1 > dfftp%nr1 .or. dfftb%nr2 > dfftp%nr2 .or. dfftb%nr3 > dfftp%nr3 ) &
           CALL errore(' smallbox_grid_init ', ' box grid larger than dense grid?',1)
        RETURN
 
      END SUBROUTINE smallbox_grid_init
 
-     SUBROUTINE smallbox_grid_info( )
+     SUBROUTINE smallbox_grid_info( dfftb )
        !
-       USE io_global, ONLY: stdout, ionode
+       USE io_global,  ONLY: stdout, ionode
+       USE fft_types,  ONLY: fft_dlay_descriptor
+       !
+       TYPE(fft_dlay_descriptor), INTENT(IN) :: dfftb
        !
        IF ( ionode ) THEN
-         IF ( nr1b > 0 .AND. nr2b > 0 .AND. nr3b > 0 ) THEN
+         IF ( dfftb%nr1 > 0 .AND. dfftb%nr2 > 0 .AND. dfftb%nr3 > 0 ) THEN
            WRITE( stdout,*)
            WRITE( stdout,*) '  Small Box Real Mesh'
            WRITE( stdout,*) '  -------------------'
-           WRITE( stdout,1000) nr1b, nr2b, nr3b, nr1bl, nr2bl, nr3bl, 1, 1, 1
-           WRITE( stdout,1010) nr1bx, nr2bx, nr3bx
-           WRITE( stdout,1020) nnrbx
+           WRITE( stdout,1000) dfftb%nr1, dfftb%nr2, dfftb%nr3, dfftb%nr1, dfftb%nr2, dfftb%nr3, 1, 1, 1
+           WRITE( stdout,1010) dfftb%nr1x, dfftb%nr2x, dfftb%nr3x
+           WRITE( stdout,1020) dfftb%nnr
          END IF
        END IF
 

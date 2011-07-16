@@ -90,7 +90,6 @@ chargedensity.o : gvecw.o
 chargedensity.o : mainvar.o
 chargedensity.o : modules.o
 chargedensity.o : smallbox.o
-chargedensity.o : smallbox_grid.o
 chargedensity.o : smallbox_gvec.o
 chargedensity.o : wannier_base.o
 cp_autopilot.o : ../Modules/autopilot.o
@@ -137,7 +136,6 @@ cp_restart.o : ../Modules/xml_io_base.o
 cp_restart.o : ../iotk/src/iotk_module.o
 cp_restart.o : gvecw.o
 cp_restart.o : mainvar.o
-cp_restart.o : smallbox_grid.o
 cplib.o : ../Modules/atom.o
 cplib.o : ../Modules/cell_base.o
 cplib.o : ../Modules/constants.o
@@ -323,7 +321,6 @@ fft.o : ../Modules/fft_base.o
 fft.o : ../Modules/kind.o
 fft.o : ../Modules/mp_global.o
 fft.o : ../Modules/recvec.o
-fft.o : smallbox_grid.o
 forces.o : ../Modules/cell_base.o
 forces.o : ../Modules/constants.o
 forces.o : ../Modules/control_flags.o
@@ -523,7 +520,6 @@ input.o : ldaUpen.o
 input.o : mainvar.o
 input.o : pres_ai_mod.o
 input.o : read_pseudo.o
-input.o : smallbox_grid.o
 input.o : wannier_base.o
 ions_nose.o : ../Modules/constants.o
 ions_nose.o : ../Modules/control_flags.o
@@ -618,7 +614,6 @@ newd.o : ../Modules/mp_global.o
 newd.o : ../Modules/uspp.o
 newd.o : modules.o
 newd.o : smallbox.o
-newd.o : smallbox_grid.o
 newd.o : smallbox_gvec.o
 nl_base.o : ../Modules/cell_base.o
 nl_base.o : ../Modules/constants.o
@@ -652,7 +647,6 @@ nlcc.o : modules.o
 nlcc.o : pseudo_base.o
 nlcc.o : pseudopot.o
 nlcc.o : smallbox.o
-nlcc.o : smallbox_grid.o
 nlcc.o : smallbox_gvec.o
 nlcc.o : spline.o
 ortho.o : ../Modules/control_flags.o
@@ -893,12 +887,11 @@ smallbox_lib.o : ../Modules/kind.o
 smallbox_lib.o : ../Modules/mp_global.o
 smallbox_lib.o : cp_interfaces.o
 smallbox_lib.o : smallbox.o
-smallbox_lib.o : smallbox_grid.o
 smallbox_lib.o : smallbox_gvec.o
+smallbox_subs.o : ../Modules/fft_base.o
 smallbox_subs.o : ../Modules/io_global.o
 smallbox_subs.o : ../Modules/kind.o
 smallbox_subs.o : smallbox.o
-smallbox_subs.o : smallbox_grid.o
 smallbox_subs.o : smallbox_gvec.o
 spline.o : ../Modules/kind.o
 stop_run.o : ../Modules/constraints_module.o
@@ -1004,7 +997,6 @@ wf.o : ../Modules/recvec.o
 wf.o : ../Modules/uspp.o
 wf.o : gvecw.o
 wf.o : modules.o
-wf.o : smallbox_grid.o
 wf.o : smallbox_gvec.o
 wf.o : wannier.o
 wf.o : wannier_base.o

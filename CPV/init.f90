@@ -25,8 +25,7 @@
       use control_flags,        only: gamma_only, iprsta
       use cell_base,            only: ainv, at, omega, alat
       use small_box,            only: small_box_set
-      use smallbox_grid_dim,    only: nr1b, nr2b, nr3b, &
-                                      smallbox_grid_init,smallbox_grid_info
+      use smallbox_grid_dim,    only: smallbox_grid_init,smallbox_grid_info
       USE grid_subroutines,     ONLY: realspace_grids_init, realspace_grids_info
       use ions_base,            only: nat
       USE recvec_subs,          ONLY: ggen
@@ -35,7 +34,7 @@
       use gvecs,                only: gcutms, gvecs_init
       use gvecw,                only: gkcut, gvecw_init, g2kin_init
       USE smallbox_subs,        ONLY: ggenb
-      USE fft_base,             ONLY: dfftp, dffts
+      USE fft_base,             ONLY: dfftp, dffts, dfftb
       USE fft_scalar,           ONLY: cft_b_omp_init
       USE stick_set,            ONLY: pstickset
       USE control_flags,        ONLY: tdipole, gamma_only
@@ -80,7 +79,7 @@
       ! ... Initialize FFT real-space grids and small box grid
       !
       CALL realspace_grids_init( dfftp, dffts, at, bg, gcutm, gcutms)
-      CALL smallbox_grid_init( dfftp )
+      CALL smallbox_grid_init( dfftp, dfftb )
 
       IF( ionode ) THEN
 
@@ -126,7 +125,7 @@
       ! ... Print real-space grid dimensions
       !
       CALL realspace_grids_info ( dfftp, dffts, nproc_bgrp )
-      CALL smallbox_grid_info ( )
+      CALL smallbox_grid_info ( dfftb )
       !
       ! ... generate g-space vectors (dense and smooth grid)
       !
@@ -155,13 +154,13 @@
       !
       !     small boxes
       !
-      IF ( nr1b > 0 .AND. nr2b > 0 .AND. nr3b > 0 ) THEN
+      IF ( dfftb%nr1 > 0 .AND. dfftb%nr2 > 0 .AND. dfftb%nr3 > 0 ) THEN
 
          !  set the small box parameters
 
-         rat1 = DBLE( nr1b ) / DBLE( dfftp%nr1 )
-         rat2 = DBLE( nr2b ) / DBLE( dfftp%nr2 )
-         rat3 = DBLE( nr3b ) / DBLE( dfftp%nr3 )
+         rat1 = DBLE( dfftb%nr1 ) / DBLE( dfftp%nr1 )
+         rat2 = DBLE( dfftb%nr2 ) / DBLE( dfftp%nr2 )
+         rat3 = DBLE( dfftb%nr3 ) / DBLE( dfftp%nr3 )
          !
          CALL small_box_set( alat, omega, at, rat1, rat2, rat3 )
          !
@@ -170,7 +169,7 @@
          CALL ggenb ( ecutrho, iprsta )
          !
 #if defined __OPENMP && defined __FFTW 
-         CALL cft_b_omp_init( nr1b, nr2b, nr3b )
+         CALL cft_b_omp_init( dfftb%nr1, dfftb%nr2, dfftb%nr3 )
 #endif
       ELSE IF( okvan .OR. nlcc_any ) THEN
 
@@ -332,11 +331,10 @@
                                         cell_base_reinit
       USE gvecw,                 ONLY : g2kin_init
       USE gvect,                 ONLY : g, gg, ngm, mill
-      USE fft_base,              ONLY : dfftp
+      USE fft_base,              ONLY : dfftp, dfftb
       USE small_box,             ONLY : small_box_set
       USE smallbox_subs,         ONLY : gcalb
       USE io_global,             ONLY : stdout, ionode
-      USE smallbox_grid_dim,     ONLY : nr1b, nr2b, nr3b
       !
       implicit none
       !
@@ -366,13 +364,13 @@
       !
       call g2kin_init ( gg, tpiba2 )
       !
-      IF ( nr1b == 0 .OR. nr2b == 0 .OR. nr3b == 0 ) RETURN
+      IF ( dfftb%nr1 == 0 .OR. dfftb%nr2 == 0 .OR. dfftb%nr3 == 0 ) RETURN
       !
       !   generation of little box g-vectors
       !
-      rat1 = DBLE( nr1b ) / DBLE( dfftp%nr1 )
-      rat2 = DBLE( nr2b ) / DBLE( dfftp%nr2 )
-      rat3 = DBLE( nr3b ) / DBLE( dfftp%nr3 )
+      rat1 = DBLE( dfftb%nr1 ) / DBLE( dfftp%nr1 )
+      rat2 = DBLE( dfftb%nr2 ) / DBLE( dfftp%nr2 )
+      rat3 = DBLE( dfftb%nr3 ) / DBLE( dfftp%nr3 )
       CALL small_box_set( alat, omega, at, rat1, rat2, rat3 )
       !
       call gcalb ( )

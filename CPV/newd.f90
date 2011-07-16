@@ -23,7 +23,6 @@
       USE constants,        ONLY: pi, fpi
       USE smallbox_gvec,            ONLY: ngb, npb, nmb, gxb
       USE small_box,        ONLY: omegab, tpibab
-      USE smallbox_grid_dim,    ONLY: nr1b, nr2b, nr3b, nr1bx, nr2bx, nr3bx, nnrbx
       USE qgb_mod,          ONLY: qgb
       USE electrons_base,   ONLY: nspin
       USE control_flags,    ONLY: iprint, thdyn, tfor, tprnfor
@@ -55,16 +54,16 @@
 #endif
 
 !
-      IF ( nr1b==0 .OR. nr2b==0 .OR. nr3b==0 ) RETURN
+      IF ( dfftb%nr1==0 .OR. dfftb%nr2==0 .OR. dfftb%nr3==0 ) RETURN
       CALL start_clock( 'newd' )
       ci=(0.d0,1.d0)
-      fac=omegab/DBLE(nr1b*nr2b*nr3b)
+      fac=omegab/DBLE(dfftb%nr1*dfftb%nr2*dfftb%nr3)
       deeq (:,:,:,:) = 0.d0
       fvan (:,:,:) = 0.d0
 
 
 !$omp parallel default(none) &
-!$omp          shared(nvb, na, nnrbx, ngb, nh, qgb, eigrb, dfftb, irb, vr, nmb, npb, ci, deeq, &
+!$omp          shared(nvb, na, ngb, nh, qgb, eigrb, dfftb, irb, vr, nmb, npb, ci, deeq, &
 !$omp                 fac, nspin, my_bgrp_id, nbgrp ) &
 !$omp          private(mytid, ntids, is, ia, nfft, iv, jv, ijv, ig, isa, qv, itid, res, iss )
 
@@ -77,7 +76,7 @@
 #endif
 
 
-      ALLOCATE( qv( nnrbx ) )
+      ALLOCATE( qv( dfftb%nnr ) )
 !
 ! calculation of deeq_i,lm = \int V_eff(r) q_i,lm(r) dr
 !
@@ -171,13 +170,13 @@
          !     -----------------------------------------------------------------
 
 !$omp parallel default(none) &
-!$omp          shared(nvb, na, nnrbx, ngb, nh, qgb, eigrb, dfftb, irb, vr, nmb, npb, ci, deeq, &
+!$omp          shared(nvb, na, ngb, nh, qgb, eigrb, dfftb, irb, vr, nmb, npb, ci, deeq, &
 !$omp                 fac, nspin, rhovan, tpibab, gxb, fvan, my_bgrp_id, nbgrp ) &
 !$omp          private(mytid, ntids, is, ia, ik, nfft, iv, jv, ijv, ig, isa, qv, itid, res, iss, &
 !$omp                  fac1, fac2, facg1, facg2 )
 
 
-         ALLOCATE( qv( nnrbx ) )
+         ALLOCATE( qv( dfftb%nnr ) )
 
          iss=1
          isa=1
@@ -276,7 +275,7 @@
          !     case nspin=2: up and down spin fft's combined into a single fft
          !     -----------------------------------------------------------------
 
-         ALLOCATE( qv( nnrbx ) )
+         ALLOCATE( qv( dfftb%nnr ) )
          isup=1
          isdw=2
          isa=1

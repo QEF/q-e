@@ -31,10 +31,14 @@
              !  Dimensions of the 3D real and reciprocal space FFT grid
              !  relative to the charge density and potential ("dense" grid)
         TYPE ( fft_dlay_descriptor ) :: dffts ! descriptor for smooth grid
-             !  This module contains the dimensions of the 3D real and reciprocal space
+             !  Dimensions of the 3D real and reciprocal space
              !  FFT grid relative to the smooth part of the charge density
              !  (may differ from the full charge density grid for USPP )
         TYPE ( fft_dlay_descriptor ) :: dfftb ! descriptor for box grids
+             !  Dimensions of the 3D real and reciprocal space
+             !  FFT grid relative to the "small box" computation
+             !  of the atomic augmentation part of the 
+             !  charge density used in USPP (to speed up CPV iterations)
 
         SAVE
 

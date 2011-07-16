@@ -606,11 +606,11 @@ subroutine exch_corr_cp(nnr,nspin,grhor,rhor,etxc)
 
   if( dft_is_gradient() ) then
      !
-!$omp parallel default(shared), private(ipol,k,grup,grdw)
      if( nspin == 1 ) then
         !
         ! h contains D(rho*Exc)/D(|grad rho|) * (grad rho) / |grad rho|
         !
+!$omp parallel default(none), shared(nnr,grhor,h), private(ipol,k)
         do ipol = 1, 3
 !$omp do
            do k = 1, nnr
@@ -618,10 +618,12 @@ subroutine exch_corr_cp(nnr,nspin,grhor,rhor,etxc)
            enddo
 !$omp end do
         end do
+!$omp end parallel
         !
         !
      else
         !
+!$omp parallel default(none), shared(nnr,grhor,h), private(ipol,k,grup,grdw)
         do ipol = 1, 3
 !$omp do
            do k = 1, nnr
@@ -632,9 +634,9 @@ subroutine exch_corr_cp(nnr,nspin,grhor,rhor,etxc)
            enddo
 !$omp end do
         enddo
+!$omp end parallel
         !
      end if
-!$omp end parallel
      !
   end if
 

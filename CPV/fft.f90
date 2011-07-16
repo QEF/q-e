@@ -254,13 +254,12 @@
 ! nfft=2  add imaginary part of qv(r) to real part of array vr(r)
 !
       USE kinds, ONLY: dp
-      USE smallbox_grid_dim,   ONLY: nr1b, nr2b, nr3b, nr1bx, nr2bx, nnrbx
-      USE fft_base, ONLY: dfftp
+      USE fft_base, ONLY: dfftp, dfftb
       USE mp_global, ONLY: me_bgrp
 
       IMPLICIT NONE
       INTEGER, INTENT(in):: nfft, irb(3)
-      REAL(dp), INTENT(in):: qv(2,nnrbx)
+      REAL(dp), INTENT(in):: qv(2,dfftb%nnr)
       COMPLEX(dp), INTENT(inout):: vr(dfftp%nnr)
 !
       INTEGER ir1, ir2, ir3, ir, ibig1, ibig2, ibig3, ibig
@@ -270,25 +269,25 @@
 
       me = me_bgrp + 1
 
-      DO ir3=1,nr3b
+      DO ir3=1,dfftb%nr3
          ibig3=irb(3)+ir3-1
          ibig3=1+MOD(ibig3-1,dfftp%nr3)
          IF(ibig3.LT.1.OR.ibig3.GT.dfftp%nr3)                                 &
      &        CALL errore('box2grid','ibig3 wrong',ibig3)
          ibig3=ibig3-dfftp%ipp(me)
          IF ( ibig3 .GT. 0 .AND. ibig3 .LE. ( dfftp%npp(me) ) ) THEN
-            DO ir2=1,nr2b
+            DO ir2=1,dfftb%nr2
                ibig2=irb(2)+ir2-1
                ibig2=1+MOD(ibig2-1,dfftp%nr2)
                IF(ibig2.LT.1.OR.ibig2.GT.dfftp%nr2)                           &
      &              CALL errore('box2grid','ibig2 wrong',ibig2)
-               DO ir1=1,nr1b
+               DO ir1=1,dfftb%nr1
                   ibig1=irb(1)+ir1-1
                   ibig1=1+MOD(ibig1-1,dfftp%nr1)
                   IF(ibig1.LT.1.OR.ibig1.GT.dfftp%nr1)                        &
      &                 CALL errore('box2grid','ibig1 wrong',ibig1)
                   ibig=ibig1+(ibig2-1)*dfftp%nr1x+(ibig3-1)*dfftp%nr1x*dfftp%nr2x
-                  ir=ir1+(ir2-1)*nr1bx+(ir3-1)*nr1bx*nr2bx
+                  ir=ir1+(ir2-1)*dfftb%nr1x+(ir3-1)*dfftb%nr1x*dfftb%nr2x
 !$omp critical
                   vr(ibig) = vr(ibig)+qv(nfft,ir)
 !$omp end critical
@@ -309,14 +308,13 @@
 ! irb   : position of the box in the dense grid
 !
       USE kinds, ONLY: dp
-      USE smallbox_grid_dim,   ONLY: nr1b, nr2b, nr3b, nr1bx, nr2bx, nnrbx
-      USE fft_base, ONLY: dfftp
+      USE fft_base, ONLY: dfftp, dfftb
       USE mp_global, ONLY: me_bgrp
       !
       IMPLICIT NONE
       !
       INTEGER, INTENT(in):: irb(3)
-      COMPLEX(dp), INTENT(in):: qv(nnrbx)
+      COMPLEX(dp), INTENT(in):: qv(dfftb%nnr)
       COMPLEX(dp), INTENT(inout):: v(dfftp%nnr)
 !
       INTEGER ir1, ir2, ir3, ir, ibig1, ibig2, ibig3, ibig
@@ -324,25 +322,25 @@
 
       me = me_bgrp + 1
 
-      DO ir3=1,nr3b
+      DO ir3=1,dfftb%nr3
          ibig3=irb(3)+ir3-1
          ibig3=1+MOD(ibig3-1,dfftp%nr3)
          IF(ibig3.LT.1.OR.ibig3.GT.dfftp%nr3)                                 &
      &        CALL errore('box2grid2','ibig3 wrong',ibig3)
          ibig3=ibig3-dfftp%ipp(me)
          IF (ibig3.GT.0.AND.ibig3.LE. dfftp%npp(me) ) THEN
-            DO ir2=1,nr2b
+            DO ir2=1,dfftb%nr2
                ibig2=irb(2)+ir2-1
                ibig2=1+MOD(ibig2-1,dfftp%nr2)
                IF(ibig2.LT.1.OR.ibig2.GT.dfftp%nr2)                           &
      &              CALL errore('box2grid2','ibig2 wrong',ibig2)
-               DO ir1=1,nr1b
+               DO ir1=1,dfftb%nr1
                   ibig1=irb(1)+ir1-1
                   ibig1=1+MOD(ibig1-1,dfftp%nr1)
                   IF(ibig1.LT.1.OR.ibig1.GT.dfftp%nr1)                        &
      &                 CALL errore('box2grid2','ibig1 wrong',ibig1)
                   ibig=ibig1+(ibig2-1)*dfftp%nr1x+(ibig3-1)*dfftp%nr1x*dfftp%nr2x
-                  ir=ir1+(ir2-1)*nr1bx+(ir3-1)*nr1bx*nr2bx
+                  ir=ir1+(ir2-1)*dfftb%nr1x+(ir3-1)*dfftb%nr1x*dfftb%nr2x
                   v(ibig) = v(ibig)+qv(ir)
                END DO
             END DO
@@ -364,12 +362,11 @@
 ! Parallel execution: remember to sum the contributions from other nodes
 !
       USE kinds, ONLY: dp
-      USE smallbox_grid_dim,   ONLY: nr1b, nr2b, nr3b, nr1bx, nr2bx, nnrbx
-      USE fft_base, ONLY: dfftp
+      USE fft_base, ONLY: dfftp, dfftb
       USE mp_global, ONLY: me_bgrp
       IMPLICIT NONE
       INTEGER, INTENT(in):: nfft, irb(3)
-      REAL(dp), INTENT(in):: qv(2,nnrbx), vr(dfftp%nnr)
+      REAL(dp), INTENT(in):: qv(2,dfftb%nnr), vr(dfftp%nnr)
 !
       INTEGER ir1, ir2, ir3, ir, ibig1, ibig2, ibig3, ibig
       INTEGER me
@@ -381,19 +378,19 @@
 
       boxdotgrid=0.d0
 
-      DO ir3=1,nr3b
+      DO ir3=1,dfftb%nr3
          ibig3=irb(3)+ir3-1
          ibig3=1+MOD(ibig3-1,dfftp%nr3)
          ibig3=ibig3-dfftp%ipp(me)
          IF (ibig3.GT.0.AND.ibig3.LE. dfftp%npp(me) ) THEN
-            DO ir2=1,nr2b
+            DO ir2=1,dfftb%nr2
                ibig2=irb(2)+ir2-1
                ibig2=1+MOD(ibig2-1,dfftp%nr2)
-               DO ir1=1,nr1b
+               DO ir1=1,dfftb%nr1
                   ibig1=irb(1)+ir1-1
                   ibig1=1+MOD(ibig1-1,dfftp%nr1)
                   ibig=ibig1 + (ibig2-1)*dfftp%nr1x + (ibig3-1)*dfftp%nr1x*dfftp%nr2x
-                  ir  =ir1 + (ir2-1)*nr1bx + (ir3-1)*nr1bx*nr2bx
+                  ir  =ir1 + (ir2-1)*dfftb%nr1x + (ir3-1)*dfftb%nr1x*dfftb%nr2x
                   boxdotgrid = boxdotgrid + qv(nfft,ir)*vr(ibig)
                END DO
             END DO

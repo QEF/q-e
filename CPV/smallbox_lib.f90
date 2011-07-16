@@ -14,11 +14,10 @@
 !
       USE kinds,                    ONLY: DP
       USE ions_base,                ONLY: nsp, na, nat
-      USE smallbox_grid_dim,        ONLY: nr1b, nr2b, nr3b, nr1bx, nr2bx, nr3bx
       USE control_flags,            ONLY: iprsta
       USE io_global,                ONLY: stdout
       USE mp_global,                ONLY: nproc_bgrp, me_bgrp, intra_bgrp_comm
-      USE fft_base,                 ONLY: dfftb, dfftp, fft_dlay_descriptor
+      USE fft_base,                 ONLY: dfftb, dfftp, dfftb, fft_dlay_descriptor
       USE fft_types,                ONLY: fft_box_set
 
       IMPLICIT NONE
@@ -31,19 +30,19 @@
       REAL(DP) :: x(3), xmod
       INTEGER  :: nr(3), nrb(3), xint, is, ia, i, isa
 !
-      IF ( nr1b < 1) CALL errore &
+      IF ( dfftb%nr1 < 1) CALL errore &
          ('initbox', 'incorrect value for box grid dimensions', 1)
-      IF ( nr2b < 1) CALL errore &
+      IF ( dfftb%nr2 < 1) CALL errore &
          ('initbox', 'incorrect value for box grid dimensions', 2)
-      IF ( nr3b < 1) CALL errore &
+      IF ( dfftb%nr3 < 1) CALL errore &
          ('initbox', 'incorrect value for box grid dimensions', 3)
 
       nr (1)=dfftp%nr1
       nr (2)=dfftp%nr2
       nr (3)=dfftp%nr3
-      nrb(1)=nr1b
-      nrb(2)=nr2b
-      nrb(3)=nr3b
+      nrb(1)=dfftb%nr1
+      nrb(2)=dfftb%nr2
+      nrb(3)=dfftb%nr3
 !
       isa = 0
       DO is=1,nsp
@@ -102,7 +101,7 @@
 
       ! initialize FFT descriptor
 
-      CALL fft_box_set( dfftb, nr1b, nr2b, nr3b, nr1bx, nr2bx, nr3bx, &
+      CALL fft_box_set( dfftb, dfftb%nr1, dfftb%nr2, dfftb%nr3, dfftb%nr1x, dfftb%nr2x, dfftb%nr3x, &
                         nat, irb, dfftp%npp, dfftp%ipp )
 
       IF( iprsta > 2 ) THEN
@@ -144,7 +143,7 @@
       use cp_interfaces, only: phfacs
       use small_box,     only: bgb, alatb
       use smallbox_gvec, only: ngb, mill_b
-      use smallbox_grid_dim, only: nr1b, nr2b, nr3b
+      use fft_base,      only: dfftb
 !                 
       IMPLICIT NONE    
       REAL(DP), INTENT(IN)    :: taub(3,nat)
@@ -156,9 +155,9 @@
       complex(dp), allocatable:: ei1b(:,:), ei2b(:,:), ei3b(:,:)
       real(dp), allocatable :: taus(:,:)
 !
-      allocate(ei1b(-nr1b:nr1b,nat))
-      allocate(ei2b(-nr2b:nr2b,nat))
-      allocate(ei3b(-nr3b:nr3b,nat))
+      allocate(ei1b(-dfftb%nr1:dfftb%nr1,nat))
+      allocate(ei2b(-dfftb%nr2:dfftb%nr2,nat))
+      allocate(ei3b(-dfftb%nr3:dfftb%nr3,nat))
       allocate( taus( 3, nat ) )
 !
       if(iprsta.gt.3) then
@@ -171,7 +170,7 @@
       ainvb(3,:) = bgb(:,3)/alatb
 
       CALL r_to_s( taub, taus, na, nsp, ainvb )
-      CALL phfacs( ei1b, ei2b, ei3b, eigrb, mill_b, taus, nr1b,nr2b,nr3b, nat )
+      CALL phfacs( ei1b, ei2b, ei3b, eigrb, mill_b, taus, dfftb%nr1,dfftb%nr2,dfftb%nr3, nat )
 !
       if(iprsta.gt.4) then
          WRITE( stdout,*)

@@ -14,9 +14,9 @@ MODULE smallbox_subs
 !  ... G-vector components onto the FFT grid(s) in reciprocal space
 !  ... Small-Box grid
 
-   USE small_box, ONLY :  bgb, tpibab
+   USE small_box,     ONLY :  bgb, tpibab
    USE smallbox_gvec, ONLY :  ngb, ngbl, gb, gxb, glb, npb, nmb, mill_b, gcutb
-   USE smallbox_grid_dim, ONLY : nr1b, nr2b, nr3b, nr1bx, nr2bx, nr3bx
+   USE fft_base,      ONLY : dfftb
 
    PRIVATE
    SAVE
@@ -50,9 +50,9 @@ CONTAINS
     !
     gcutb = ecutrho / tpibab**2
     !    
-    nr1m1=nr1b-1
-    nr2m1=nr2b-1
-    nr3m1=nr3b-1
+    nr1m1=dfftb%nr1-1
+    nr2m1=dfftb%nr2-1
+    nr3m1=dfftb%nr3-1
     ngb=0
     !
     !     first step : count the number of vectors with g2 < gcutb
@@ -172,34 +172,34 @@ CONTAINS
        ! n1pb,n2pb,n3pb: indexes of G
        ! negative indexes are refolded (note that by construction i.ge.0)
        !
-       IF(i<0) n1pb=n1pb+nr1b
-       IF(j<0) n2pb=n2pb+nr2b
-       IF(k<0) n3pb=n3pb+nr3b
+       IF(i<0) n1pb=n1pb+dfftb%nr1
+       IF(j<0) n2pb=n2pb+dfftb%nr2
+       IF(k<0) n3pb=n3pb+dfftb%nr3
        !
        ! n1mb,n2mb,n3mb: indexes of -G
        !
        IF(i==0) THEN
           n1mb=1
        ELSE
-          n1mb=nr1b-n1pb+2
+          n1mb=dfftb%nr1-n1pb+2
        ENDIF
        IF(j==0) THEN
           n2mb=1
        ELSE
-          n2mb=nr2b-n2pb+2
+          n2mb=dfftb%nr2-n2pb+2
        ENDIF
        IF(k==0) THEN
           n3mb=1
        ELSE
-          n3mb=nr3b-n3pb+2
+          n3mb=dfftb%nr3-n3pb+2
        ENDIF
        !
        ! conversion from (i,j,k) index to combined 1-d ijk index:
        ! ijk = 1 + (i-1)+(j-1)*ix+(k-1)*ix*jx
        ! where the (i,j,k) array is assumed to be dimensioned (ix,jx,kx)
        !
-       npb(ig) = n1pb+(n2pb-1)*nr1bx+(n3pb-1)*nr1bx*nr2bx
-       nmb(ig) = n1mb+(n2mb-1)*nr1bx+(n3mb-1)*nr1bx*nr2bx
+       npb(ig) = n1pb+(n2pb-1)*dfftb%nr1x+(n3pb-1)*dfftb%nr1x*dfftb%nr2x
+       nmb(ig) = n1mb+(n2mb-1)*dfftb%nr1x+(n3mb-1)*dfftb%nr1x*dfftb%nr2x
     ENDDO
     !
     ! shells of G - first calculate their number and position
@@ -275,7 +275,7 @@ CONTAINS
     !
     INTEGER :: ig, i1,i2,i3
 
-    IF ( nr1b == 0 .OR. nr2b == 0 .OR. nr3b == 0 ) return
+    IF ( dfftb%nr1 == 0 .OR. dfftb%nr2 == 0 .OR. dfftb%nr3 == 0 ) return
     !
     do ig=1,ngb
        i1=mill_b(1,ig)

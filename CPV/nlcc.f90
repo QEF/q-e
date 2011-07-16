@@ -191,7 +191,6 @@
       use fft_interfaces,    only: invfft
       use fft_base,          only: dfftb, dfftp
       use gvect,             only: gstart
-      use smallbox_grid_dim, only: nr1b, nr2b, nr3b, nr1bx, nr2bx, nr3bx, nnrbx
 
       implicit none
 
@@ -220,13 +219,13 @@
       fac = omega/DBLE(dfftp%nr1*dfftp%nr2*dfftp%nr3*nspin)
 
 !$omp parallel default(none) &      
-!$omp          shared(nsp, na, nnrbx,ngb, eigrb, dfftb, irb, nmb, npb, ci, rhocb, &
+!$omp          shared(nsp, na, ngb, eigrb, dfftb, irb, nmb, npb, ci, rhocb, &
 !$omp                 gxb, nat, fac, upf, vxc, nspin, tpibab, fion1 ) &
 !$omp          private(mytid, ntids, is, ia, nfft, ig, isa, qv, itid, res, ix, fcc, facg, iss )
 
 
       allocate( fcc( 3, nat ) )
-      allocate( qv( nnrbx ) )
+      allocate( qv( dfftb%nnr ) )
 
       fcc(:,:) = 0.d0
 
@@ -339,7 +338,6 @@
       use core,              only: rhocb
       use fft_interfaces,    only: invfft
       use fft_base,          only: dfftb, dfftp
-      use smallbox_grid_dim, only: nr1b, nr2b, nr3b, nr1bx, nr2bx, nr3bx, nnrbx
 
       implicit none
 ! input
@@ -365,11 +363,11 @@
       wrk1 (:) = (0.d0, 0.d0)
 !
 !$omp parallel default(none) &      
-!$omp          shared(nsp, na, nnrbx, ngb, eigrb, dfftb, irb, nmb, npb, ci, rhocb, &
+!$omp          shared(nsp, na, ngb, eigrb, dfftb, irb, nmb, npb, ci, rhocb, &
 !$omp                 nat, upf, wrk1 ) &
 !$omp          private(mytid, ntids, is, ia, nfft, ig, isa, qv, itid )
 
-      allocate( qv ( nnrbx ) )
+      allocate( qv ( dfftb%nnr ) )
 !
       isa = 0
 

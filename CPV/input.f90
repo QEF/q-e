@@ -860,18 +860,13 @@ MODULE input
      USE pres_ai_mod,      ONLY : pres_ai_init
      USE ldaU_cp,          ONLY : ldaU_init0
      USE step_penalty,     ONLY : ldaUpen_init
-     !
-     USE smallbox_grid_dim,    ONLY:  nnrbx, &  !  variable is used to workaround internal compiler error (IBM xlf)
-           nr1b_ => nr1b, &
-           nr2b_ => nr2b, &
-           nr3b_ => nr3b
-     USE fft_base,           ONLY: dfftp, dffts
-     USE kohn_sham_states,   ONLY : ks_states_init
-     USE electrons_module,   ONLY : electrons_setup
-     USE electrons_base,     ONLY : electrons_base_initval
-     USE ensemble_dft,       ONLY : ensemble_initval,tens
-     USE wannier_base,       ONLY : wannier_init
-     USE efield_module,      ONLY : tefield
+     USE fft_base,         ONLY : dfftp, dffts, dfftb
+     USE kohn_sham_states, ONLY : ks_states_init
+     USE electrons_module, ONLY : electrons_setup
+     USE electrons_base,   ONLY : electrons_base_initval
+     USE ensemble_dft,     ONLY : ensemble_initval,tens
+     USE wannier_base,     ONLY : wannier_init
+     USE efield_module,    ONLY : tefield
      !
      IMPLICIT NONE
      !
@@ -923,9 +918,9 @@ MODULE input
 
      ! set box grid module variables
 
-     nr1b_ = nr1b  
-     nr2b_ = nr2b
-     nr3b_ = nr3b
+     dfftb%nr1 = nr1b  
+     dfftb%nr2 = nr2b
+     dfftb%nr3 = nr3b
 
      ! set size for potentials and charge density
      ! (re-calculated automatically)
