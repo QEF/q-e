@@ -34,7 +34,7 @@
        !
        REAL(DP), INTENT(IN) :: at(3,3), bg(3,3)
        REAL(DP), INTENT(IN) :: gcutm, gcuts
-       TYPE(fft_dlay_descriptor), INTENT(OUT) :: dfftp, dffts
+       TYPE(fft_dlay_descriptor), INTENT(INOUT) :: dfftp, dffts
        !
        IF( dfftp%nr1 == 0 .OR. dfftp%nr2 == 0 .OR. dfftp%nr3 == 0 ) THEN
          !
