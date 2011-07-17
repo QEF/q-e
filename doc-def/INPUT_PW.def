@@ -363,7 +363,8 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                     2          cubic F (fcc)                     not used
                     3          cubic I (bcc)                     not used
                     4          Hexagonal and Trigonal P        celldm(3)=c/a
-                    5          Trigonal R                      celldm(4)=cos(alpha)
+                    5          Trigonal R, 3fold axis c        celldm(4)=cos(alpha)
+                   -5          Trigonal R, 3fold axis <111>    celldm(4)=cos(alpha)
                     6          Tetragonal P (st)               celldm(3)=c/a
                     7          Tetragonal I (bct)              celldm(3)=c/a
                     8          Orthorhombic P                  celldm(2)=b/a,celldm(3)=c/a
@@ -407,14 +408,17 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
               
                 trigonal(r)
                 ===================
-                for these groups, the z-axis is chosen as the 3-fold axis, but the
-                crystallographic vectors form a three-fold star around the z-axis,
-                and the primitive cell is a simple rhombohedron. The crystallographic
-                vectors are:
+                ibrav=5: The z-axis is chosen as the 3-fold axis, the crystallographic
+                vectors form a three-fold star around the z-axis, the primitive cell 
+                is a simple rhombohedron. The crystallographic vectors are:
                       v1 = a(tx,-ty,tz),   v2 = a(0,2ty,tz),   v3 = a(-tx,-ty,tz).
                 where c=cos(alpha) is the cosine of the angle alpha between any pair
                 of crystallographic vectors, tc, ty, tz are defined as
-                     tx=sqrt((1-c)/2), ty=sqrt((1-c)/6), tz=sqrt((1+2c)/3)
+                      tx=sqrt((1-c)/2), ty=sqrt((1-c)/6), tz=sqrt((1+2c)/3)
+                ibrav=-5, alternate description: the crystallographic vectors are
+                      v1 = a/sqrt(3) (u,v,v), v2 = a/sqrt(3) (v,u,v),  v3 = a/sqrt(3) (v,v,u)
+                and form a three-fold star around <111>. u and v are defined as
+                      u = tz - 2*sqrt(2)*ty,  v = tz + sqrt(2)*ty
               
                 simple tetragonal (p)
                 ====================
