@@ -15,7 +15,7 @@
      SAVE
 
      !
-     COMPLEX(DP), POINTER :: &
+     COMPLEX(DP), ALLOCATABLE, TARGET :: &
        evc(:,:)     ! wavefunctions in the PW basis set
                     ! noncolinear case: first index
                     ! is a combined PW + spin index
@@ -40,7 +40,7 @@
        IF( ALLOCATED( phi_bgrp ) ) DEALLOCATE( phi_bgrp )
        IF( ALLOCATED( psic_nc ) ) DEALLOCATE( psic_nc )
        IF( ALLOCATED( psic ) ) DEALLOCATE( psic )
-       IF( ASSOCIATED( evc ) ) DEALLOCATE( evc )
+       IF( ALLOCATED( evc ) ) DEALLOCATE( evc )
      END SUBROUTINE deallocate_wavefunctions
 
 !=----------------------------------------------------------------------------=!
