@@ -36,7 +36,7 @@ SUBROUTINE lr_alloc_init()
    WRITE(stdout,'("NSPIN_MAG=",I15)') nspin_mag
   ENDIF
   !
-  IF (allocated(evc)) THEN
+  IF (ASSOCIATED(evc)) THEN
    DEALLOCATE(evc)
    ALLOCATE(evc(npwx,nbnd))
   ENDIF

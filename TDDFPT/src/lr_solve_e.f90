@@ -120,7 +120,7 @@ SUBROUTINE lr_solve_e
         !
         IF ( lsda ) current_spin = isk(ik)
        !
-      evc(:,:)=evc0(:,:,ik)
+      evc=>evc0(:,:,ik)
       !
        npw=npw_k(ik)
        igk(:)=igk_k(:,ik)

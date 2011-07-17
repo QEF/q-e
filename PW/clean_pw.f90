@@ -145,7 +145,7 @@ SUBROUTINE clean_pw( lflag )
   !
   ! ... arrays allocated in allocate_wfc.f90 ( and never deallocated )
   !
-  IF ( ALLOCATED( evc ) )        DEALLOCATE( evc )
+  IF ( ASSOCIATED( evc ) )        DEALLOCATE( evc )
   !
   ! ... arrays allocated for LDA+U calculations
   !

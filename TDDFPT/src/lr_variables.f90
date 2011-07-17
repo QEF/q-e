@@ -55,7 +55,7 @@ MODULE lr_variables
   COMPLEX(kind=dp), ALLOCATABLE :: becp1_c_virt(:,:,:)
 
   !
-  COMPLEX(kind=dp), ALLOCATABLE :: &
+  COMPLEX(kind=dp), ALLOCATABLE, TARGET :: &
        evc0(:,:,:),       &    ! the ground state wavefunctions (plane wave, band, k point)
        evc0_virt(:,:,:),  &    ! unoccupied ground state wavefunctions (plane wave, band, k point)
        sevc0(:,:,:),      &    ! S * ground state wavefunctions
