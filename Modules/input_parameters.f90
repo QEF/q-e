@@ -1405,11 +1405,6 @@ MODULE input_parameters
         INTEGER :: newnfi_card = 0
 
 !
-!    2DPROCMESH
-!
-        LOGICAL :: t2dpegrid_inp = .false.
-
-!
 !    OCCUPATIONS
 !
         REAL(DP), ALLOCATABLE :: f_inp(:,:)

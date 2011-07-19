@@ -87,10 +87,6 @@ CONTAINS
       k2       = 0
       k3       = 0
       !
-      ! ... Grids
-      !
-      t2dpegrid_inp = .false.
-      !
       ! ... Electronic states
       !
       tf_inp = .false.
@@ -808,28 +804,6 @@ CONTAINS
       RETURN
       !
    END SUBROUTINE card_setnfi
-   !
-   !
-   !------------------------------------------------------------------------
-   !    BEGIN manual
-   !----------------------------------------------------------------------
-   !
-   ! 2DPROCMESH
-   !
-   !   Distribute the Y and Z FFT dimensions across processors,
-   !   instead of Z dimension only ( default distribution )
-   !
-   ! Syntax:
-   !
-   !    2DPROCMESH
-   !
-   ! Where:
-   !
-   !    no parameters
-   !
-   !----------------------------------------------------------------------
-   !    END manual
-   !------------------------------------------------------------------------
    !
    !
    !------------------------------------------------------------------------

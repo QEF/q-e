@@ -155,9 +155,6 @@ CONTAINS
        newnfi_card  = -1
        tnewnfi_card = .FALSE.
        !
-       ! ... warning : this variable doesn't exist in any source file
-       t2dpegrid_inp = .FALSE.
-       !
     CASE DEFAULT
        CALL errore ( 'card_default', 'You want to initialize a card that does &
             &not exist or is not yet implemented ( '//trim(card)//' card)', 1 )
