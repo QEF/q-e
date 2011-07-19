@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2009 Quantum ESPRESSO group
+! Copyright (C) 2002-2011 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -10,14 +10,12 @@ MODULE read_cards_module
    !---------------------------------------------------------------------------
    !
    ! ...  This module handles the reading of cards from standard input
-   ! ...  Written by Carlo Cavazzoni and modified for "path" implementation
-   ! ...  by Carlo Sbraccia
+   ! ...  Original version written by Carlo Cavazzoni
    !
    USE kinds,     ONLY : DP
    USE io_global, ONLY : stdout
    USE constants, ONLY : angstrom_au
-   USE parser,    ONLY : field_count, read_line, get_field, &
-                         parse_unit
+   USE parser,    ONLY : field_count, read_line, get_field, parse_unit
    USE io_global, ONLY : ionode, ionode_id
    !
    USE input_parameters
@@ -235,10 +233,6 @@ CONTAINS
          IF ( ( prog == 'PW' ) .and. ionode ) &
             WRITE( stdout,'(a)') 'Warning: card '//trim(input_line)//' ignored'
          !
-!      ELSEIF ( trim(card) == 'CLIMBING_IMAGES' ) THEN
-         !
-!         CALL card_climbing_images( input_line )
-
       ELSEIF ( trim(card) == 'PLOT_WANNIER' ) THEN
          !
          CALL card_plot_wannier( input_line )
@@ -321,14 +315,12 @@ CONTAINS
          !
          CALL read_line( input_line )
          READ( input_line, *, iostat=ierr ) lb_pos, atom_mass(is), psfile
-            CALL errore( ' card_atomic_species ', 'cannot read atomic specie from: '//trim(input_line), abs(ierr))
+            CALL errore( ' card_atomic_species ', &
+                'cannot read atomic specie from: '//trim(input_line), abs(ierr))
          atom_pfile(is) = trim( psfile )
          lb_pos         = adjustl( lb_pos )
          atom_label(is) = trim( lb_pos )
          !
-!             IF ( atom_mass(is) <= 0.0_DP ) THEN
-!                CALL errore( ' card_atomic_species ',' invalid  atom_mass ', is )
-!             END IF
          DO ip = 1, is - 1
             IF ( atom_label(ip) == atom_label(is) ) THEN
                CALL errore( ' card_atomic_species ', &
@@ -383,9 +375,6 @@ CONTAINS
    !    END manual
    !------------------------------------------------------------------------
    !
-   ! ... routine modified for NEB           ( C.S. 21/10/2003 )
-   ! ... routine modified for SMD           ( Y.K. 15/04/2004 )
-   !
    SUBROUTINE card_atomic_positions( input_line, prog )
       !
       USE wrappers, ONLY: feval_infix
@@ -418,10 +407,7 @@ CONTAINS
          CALL errore( 'card_atomic_positions', 'nat out of range', nat )
       ENDIF
       !
-      !
-!new
       CALL allocate_input_ions(ntyp,nat)
-      !
       !
       if_pos = 1
       !
@@ -443,99 +429,82 @@ CONTAINS
                         & 'unknown option for ATOMIC_POSITION: '&
                         & // input_line, 1 )
          ENDIF
-         IF ( prog == 'FP' ) atomic_positions = 'bohr'
          IF ( prog == 'CP' ) atomic_positions = 'bohr'
          IF ( prog == 'PW' ) atomic_positions = 'alat'
       ENDIF
       !
-
+      reader_loop : DO ia = 1,nat,1
          !
-
-         reader_loop : DO ia = 1,nat,1
-            !
-            CALL read_line( input_line, end_of_file = tend )
-            IF ( tend ) &
-               CALL errore( 'read_cards', &
+         CALL read_line( input_line, end_of_file = tend )
+         IF ( tend ) CALL errore( 'read_cards', &
                            'end of file reading atomic positions', ia )
-            !
-            CALL field_count( nfield, input_line )
-
-            !
-            IF ( sic /= 'none' .and. nfield /= 8 ) &
+         !
+         CALL field_count( nfield, input_line )
+         !
+         IF ( sic /= 'none' .and. nfield /= 8 ) &
                CALL errore( 'read_cards', &
                            'ATOMIC_POSITIONS with sic, 8 columns required', 1 )
-            !
-            IF ( nfield /= 4 .and. nfield /= 7 .and. nfield /= 8) &
+         !
+         IF ( nfield /= 4 .and. nfield /= 7 .and. nfield /= 8) &
                CALL errore( 'read_cards', 'wrong number of columns ' // &
                            & 'in ATOMIC_POSITIONS', ia )
 
-            ! read atom symbol (column 1) and coordinate
-            CALL get_field(1, lb_pos, input_line)
-            lb_pos = trim(lb_pos)
-            !
-            error_msg = 'Error while parsing atomic position card.'
-            ! read field 2 (atom X coordinate)
-            CALL get_field(2, field_str, input_line)
-               rd_pos(1,ia) = feval_infix(ierr, field_str )
-               CALL errore('card_atomic_positions', error_msg, ierr)
-            ! read field 2 (atom Y coordinate)
-            CALL get_field(3, field_str, input_line)
-               rd_pos(2,ia) = feval_infix(ierr, field_str )
-               CALL errore('card_atomic_positions', error_msg, ierr)
-            ! read field 2 (atom Z coordinate)
-            CALL get_field(4, field_str, input_line)
-               rd_pos(3,ia) = feval_infix(ierr, field_str )
-               CALL errore('card_atomic_positions', error_msg, ierr)
-               !
-            IF ( nfield >= 7 ) THEN
-               ! read constrains (fields 5-7, if present)
-               CALL get_field(5, field_str, input_line)
-               READ(field_str, *) if_pos(1,ia)
-               CALL get_field(6, field_str, input_line)
-               READ(field_str, *) if_pos(2,ia)
-               CALL get_field(7, field_str, input_line)
-               READ(field_str, *) if_pos(3,ia)
-            ENDIF
-               !
-            IF ( nfield == 8 ) THEN
-               CALL get_field(5, field_str, input_line)
-               READ(field_str, *) id_loc(ia)
-            ENDIF
-            !
-            match_label: DO is = 1, ntyp
-               !
-               IF ( trim(lb_pos) == trim( atom_label(is) ) ) THEN
-                  !
-                  sp_pos(ia) = is
-                  exit match_label
-                  !
-               ENDIF
-               !
-            ENDDO match_label
-            !
-
-
-            IF( ( sp_pos(ia) < 1 ) .or. ( sp_pos(ia) > ntyp ) ) THEN
-               !
-               CALL errore( 'read_cards', 'species '//trim(lb_pos)// &
-                           & ' in ATOMIC_POSITIONS is nonexistent', ia )
-               !
-            ENDIF
-            !
-            is = sp_pos(ia)
-            !
-            na_inp(is) = na_inp(is) + 1
-            !
-
-         ENDDO reader_loop
+         ! read atom symbol (column 1) and coordinate
+         CALL get_field(1, lb_pos, input_line)
+         lb_pos = trim(lb_pos)
          !
-      !
-!       DO is = 1, ntyp
-!          IF( na_inp( is ) < 1 ) THEN
-!             CALL errore( 'read_cards', &
-!                'no atom found in ATOMIC_POSITIONS for species '//TRIM(atom_label(is)), is )
-!          END IF
-!       END DO
+         error_msg = 'Error while parsing atomic position card.'
+         ! read field 2 (atom X coordinate)
+         CALL get_field(2, field_str, input_line)
+         rd_pos(1,ia) = feval_infix(ierr, field_str )
+         CALL errore('card_atomic_positions', error_msg, ierr)
+         ! read field 2 (atom Y coordinate)
+         CALL get_field(3, field_str, input_line)
+         rd_pos(2,ia) = feval_infix(ierr, field_str )
+         CALL errore('card_atomic_positions', error_msg, ierr)
+         ! read field 2 (atom Z coordinate)
+         CALL get_field(4, field_str, input_line)
+         rd_pos(3,ia) = feval_infix(ierr, field_str )
+         CALL errore('card_atomic_positions', error_msg, ierr)
+               !
+         IF ( nfield >= 7 ) THEN
+            ! read constrains (fields 5-7, if present)
+            CALL get_field(5, field_str, input_line)
+            READ(field_str, *) if_pos(1,ia)
+            CALL get_field(6, field_str, input_line)
+            READ(field_str, *) if_pos(2,ia)
+            CALL get_field(7, field_str, input_line)
+            READ(field_str, *) if_pos(3,ia)
+         ENDIF
+         !
+         IF ( nfield == 8 ) THEN
+            CALL get_field(5, field_str, input_line)
+            READ(field_str, *) id_loc(ia)
+         ENDIF
+         !
+         match_label: DO is = 1, ntyp
+            !
+            IF ( trim(lb_pos) == trim( atom_label(is) ) ) THEN
+               !
+               sp_pos(ia) = is
+               exit match_label
+               !
+            ENDIF
+            !
+         ENDDO match_label
+         !
+         IF( ( sp_pos(ia) < 1 ) .or. ( sp_pos(ia) > ntyp ) ) THEN
+            !
+            CALL errore( 'read_cards', 'species '//trim(lb_pos)// &
+                           & ' in ATOMIC_POSITIONS is nonexistent', ia )
+            !
+         ENDIF
+         !
+         is = sp_pos(ia)
+         !
+         na_inp(is) = na_inp(is) + 1
+         !
+      ENDDO reader_loop
       !
       tapos = .true.
       !
@@ -943,7 +912,7 @@ CONTAINS
                !
                f_inp(nbnd_read,is) = feval_infix(ierr, field_str )
                CALL errore('card_occupations',&
-                           'Error parsing occupation: '//trim(field_str), nbnd_read*ierr)
+                  'Error parsing occupation: '//trim(field_str), nbnd_read*ierr)
             ENDDO
          ENDDO
          !
@@ -1346,8 +1315,9 @@ CONTAINS
                                     constr_inp(3,i), &
                                     constr_inp(4,i)
                !
-               WRITE(stdout,'(7x,i3,a,i3,a,i2,a,2f12.6)') &
-                  i,') '//constr_type_inp(i)(1:4),int(constr_inp(1,i)) ,' coordination wrt type:', int(constr_inp(2,i)), &
+               WRITE(stdout,'(7x,i3,a,i3,a,i2,a,2f12.6)') i, &
+                  ') '//constr_type_inp(i)(1:4),int(constr_inp(1,i)) ,&
+                  ' coordination wrt type:', int(constr_inp(2,i)), &
                   ' cutoff distance and smoothing:',  constr_inp(3:4,i)
             ELSEIF ( nfield == 6 ) THEN
                !
@@ -1360,8 +1330,9 @@ CONTAINS
                !
                constr_target_set(i) = .true.
                !
-               WRITE(stdout,'(7x,i3,a,i3,a,i2,a,2f12.6,a,f12.6)') &
-                  i,') '//constr_type_inp(i)(1:4),int(constr_inp(1,i)) ,' coordination wrt type:', int(constr_inp(2,i)), &
+               WRITE(stdout,'(7x,i3,a,i3,a,i2,a,2f12.6,a,f12.6)') i, &
+                  ') '//constr_type_inp(i)(1:4),int(constr_inp(1,i)) , &
+                  ' coordination wrt type:', int(constr_inp(2,i)), &
                   ' cutoff distance and smoothing:',  constr_inp(3:4,i), &
                   '; target:', constr_target_inp(i)
             ELSE
@@ -1390,8 +1361,9 @@ CONTAINS
                !
                constr_target_set(i) = .true.
                !
-               WRITE(stdout,'(7x,i3,a,2i3,a,f12.6)') &
-                  i,') distance between atoms: ', int(constr_inp(1:2,i)), '; target:',  constr_target_inp(i)
+               WRITE(stdout,'(7x,i3,a,2i3,a,f12.6)') i, &
+                  ') distance between atoms: ', int(constr_inp(1:2,i)), &
+                  '; target:',  constr_target_inp(i)
             ELSE
                !
                CALL errore( 'card_constraints', &
@@ -1420,8 +1392,9 @@ CONTAINS
                !
                constr_target_set(i) = .true.
                !
-               WRITE(stdout, '(7x,i3,a,3i3,a,f12.6)') &
-                  i,') planar angle between atoms: ', int(constr_inp(1:3,i)), '; target:', constr_target_inp(i)
+               WRITE(stdout, '(7x,i3,a,3i3,a,f12.6)') i, &
+                  ') planar angle between atoms: ', int(constr_inp(1:3,i)), &
+                  '; target:', constr_target_inp(i)
             ELSE
                !
                CALL errore( 'card_constraints', &
@@ -1452,8 +1425,9 @@ CONTAINS
                !
                constr_target_set(i) = .true.
                !
-               WRITE(stdout, '(7x,i3,a,4i3,a,f12.6)') &
-                  i,') torsional angle between atoms: ', int(constr_inp(1:4,i)), '; target:', constr_target_inp(i)
+               WRITE(stdout, '(7x,i3,a,4i3,a,f12.6)') i, &
+                  ') torsional angle between atoms: ', int(constr_inp(1:4,i)),&
+                  '; target:', constr_target_inp(i)
             ELSE
                !
                CALL errore( 'card_constraints', &
@@ -1471,8 +1445,9 @@ CONTAINS
                                     constr_inp(3,i), &
                                     constr_inp(4,i)
                !
-               WRITE(stdout, '(7x,i3,a,i3,a,3f12.6)') &
-                  i,') bennet projection of atom ', int(constr_inp(1,i)), ' along vector:', constr_inp(2:4,i)
+               WRITE(stdout, '(7x,i3,a,i3,a,3f12.6)') i, &
+                  ') bennet projection of atom ', int(constr_inp(1,i)), &
+                  ' along vector:', constr_inp(2:4,i)
             ELSEIF ( nfield == 6 ) THEN
                !
                READ( input_line, * ) constr_type_inp(i), &
@@ -1484,8 +1459,9 @@ CONTAINS
                !
                constr_target_set(i) = .true.
                !
-               WRITE(stdout, '(7x,i3,a,i3,a,3f12.6,a,f12.6)') &
-                  i,') bennet projection of atom ', int(constr_inp(1,i)), ' along vector:', constr_inp(2:4,i), &
+               WRITE(stdout, '(7x,i3,a,i3,a,3f12.6,a,f12.6)') i, &
+                  ') bennet projection of atom ', int(constr_inp(1,i)), &
+                  ' along vector:', constr_inp(2:4,i), &
                   '; target:', constr_target_inp(i)
             ELSE
                !
@@ -1613,8 +1589,6 @@ CONTAINS
       RETURN
       !
    END SUBROUTINE
-   !
-   !
    !
    !
    !------------------------------------------------------------------------
