@@ -138,8 +138,10 @@ SUBROUTINE init_run()
   IF ( lwf ) CALL clear_nbeg( nbeg )
   !
   !=======================================================================
-  !     allocate and initialize nonlocal potentials
+  !     allocate and initialize local and nonlocal potentials
   !=======================================================================
+  !
+  CALL allocate_local_pseudo( ngms, nsp )
   !
   CALL nlinit()
   !
@@ -151,8 +153,6 @@ SUBROUTINE init_run()
                          dfftp%nr2x, dfftp%npl, dfftp%nnr, dffts%nnr, nat, nax, nsp,   &
                          nspin, nbsp, nbspx, nupdwn, nkb, gstart, nudx, &
                          tpre, nbspx_bgrp )
-  !
-  CALL allocate_local_pseudo( ngms, nsp )
   !
   !  initialize wave functions descriptors and allocate wf
   !

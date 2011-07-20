@@ -415,6 +415,7 @@ init.o : ../Modules/stick_set.o
 init.o : ../Modules/uspp.o
 init.o : atoms_type.o
 init.o : berry_phase.o
+init.o : cp_interfaces.o
 init.o : cp_restart.o
 init.o : electrons.o
 init.o : gvecw.o
@@ -642,7 +643,6 @@ nlcc.o : ../Modules/mp.o
 nlcc.o : ../Modules/mp_global.o
 nlcc.o : ../Modules/recvec.o
 nlcc.o : ../Modules/uspp.o
-nlcc.o : cp_interfaces.o
 nlcc.o : modules.o
 nlcc.o : pseudo_base.o
 nlcc.o : pseudopot.o

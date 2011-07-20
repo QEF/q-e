@@ -138,40 +138,7 @@
 !------------------------------------------------------------------------------!
 
 
-   LOGICAL FUNCTION chkpstab_x(hg, xgtabmax)
-      !
-      USE kinds,         ONLY: DP
-      USE mp,            ONLY: mp_max
-      USE io_global,     ONLY: stdout
-      USE mp_global,     ONLY: intra_bgrp_comm
-      USE cell_base,     ONLY: tpiba
-      USE control_flags, ONLY: iprsta
-      !
-      IMPLICIT NONE
-      !
-      REAL(DP), INTENT(IN) :: hg(:)
-      REAL(DP), INTENT(IN) :: xgtabmax
-      REAL(DP) :: xgmax
-
-      chkpstab_x = .FALSE.
-      !
-      xgmax = tpiba * SQRT( MAXVAL( hg ) )
-      CALL mp_max( xgmax, intra_bgrp_comm )
-      !
-      IF( xgmax > xgtabmax ) THEN
-         chkpstab_x = .TRUE.
-         IF( iprsta > 2 ) &
-            WRITE( stdout, fmt='(  "CHKPSTAB: recalculate pseudopotential table" )' )
-      END IF
-      !
-      RETURN
-   END FUNCTION chkpstab_x
-
-
-!------------------------------------------------------------------------------!
-
-
-   SUBROUTINE compute_xgtab_x( xgmin, xgmax, xgtabmax )
+   SUBROUTINE compute_xgtab_x( xgmin, xgmax )
       !
       USE kinds,              ONLY : DP
       USE cell_base,          ONLY : tpiba, tpiba2
@@ -179,29 +146,28 @@
       USE mp_global,          ONLY : intra_bgrp_comm
       USE gvect,              ONLY : gg
       USE pseudopotential,    ONLY : xgtab
-      USE betax,              ONLY : mmx
+      USE betax,              ONLY : mmx, refg
       !
       IMPLICIT NONE
       !
-      REAL(DP), INTENT(OUT)  :: xgmax, xgmin, xgtabmax
+      REAL(DP), INTENT(OUT)  :: xgmax, xgmin
       !
-      INTEGER    :: ig, nval
+      INTEGER   :: ig
       REAL(DP)  :: xg, dxg, res
       !
-      IF( .NOT. ALLOCATED( xgtab ) )     ALLOCATE( xgtab( mmx ) )
-      nval = mmx
+      IF( ALLOCATED( xgtab ) )  & 
+         DEALLOCATE( xgtab )
+
+      ALLOCATE( xgtab( mmx ) )
       !
       xgmin = 0.0d0
-      xgmax = tpiba * SQRT( MAXVAL( gg ) )
-      CALL mp_max(xgmax, intra_bgrp_comm)
-      xgmax = xgmax + (xgmax-xgmin)
-      dxg   = (xgmax - xgmin) / DBLE(nval-1)
+      xgmax = SQRT( refg * mmx )
+      dxg   = (xgmax - xgmin) / DBLE( mmx - 1 )
       !
       DO ig = 1, SIZE( xgtab )
          xgtab(ig) = xgmin + DBLE(ig-1) * dxg
       END DO
       !
-      xgtabmax = xgtab( SIZE( xgtab ) )
       xgtab = xgtab**2 / tpiba**2
       !
       RETURN
@@ -222,7 +188,7 @@
       USE uspp_param,         only : upf, oldvan
       USE control_flags,      only : tpre
       use gvect, ONLY : gg, gstart
-      USE cp_interfaces,      ONLY : compute_xgtab, chkpstab
+      USE cp_interfaces,      ONLY : compute_xgtab
       USE pseudopotential,    ONLY : vps_sp, dvps_sp, xgtab
       USE local_pseudo,       ONLY : vps0
       USE betax,              ONLY : mmx
@@ -232,18 +198,13 @@
       INTEGER   :: is, ig
       REAL(DP)  :: xgmax, xgmin
       LOGICAL   :: compute_tab
-      REAL(DP)  :: xgtabmax = 0.0d0
       !
       IF( .NOT. ALLOCATED( rgrid ) ) &
          CALL errore( ' build_pstab_x ', ' rgrid not allocated ', 1 )
       IF( .NOT. ALLOCATED( upf ) ) &
          CALL errore( ' build_pstab_x ', ' upf not allocated ', 1 )
       !
-      compute_tab = chkpstab( gg, xgtabmax ) 
-      !
-      IF( ALLOCATED( vps_sp ) ) THEN
-         !
-         IF( .NOT. compute_tab ) return
+      IF( ALLOCATED( vps_sp ) .AND. ALLOCATED( dvps_sp ) ) THEN
          !
          DO is = 1, nsp
             CALL kill_spline( vps_sp(is), 'a' )
@@ -254,7 +215,11 @@
          !
       END IF
       !
-      CALL compute_xgtab( xgmin, xgmax, xgtabmax )
+      IF(  ALLOCATED( vps_sp ) .OR. ALLOCATED( dvps_sp ) ) THEN
+         CALL errore( ' build_pstab_x ', ' inconsistent allocation ', 1 )
+      END IF
+      !
+      CALL compute_xgtab( xgmin, xgmax )
       !
       ALLOCATE( vps_sp(nsp))
       ALLOCATE( dvps_sp(nsp))
@@ -301,7 +266,7 @@
       USE splines,            ONLY : init_spline, allocate_spline, kill_spline, nullify_spline
       USE pseudo_base,        ONLY : compute_rhocg
       USE gvect, ONLY : gg, gstart
-      USE cp_interfaces,      ONLY : compute_xgtab, chkpstab
+      USE cp_interfaces,      ONLY : compute_xgtab
       USE pseudopotential,    ONLY : rhoc1_sp, rhocp_sp, xgtab
       USE betax,              ONLY : mmx
 
@@ -310,18 +275,13 @@
       INTEGER  :: is
       REAL(DP) :: xgmax, xgmin
       LOGICAL  :: compute_tab
-      REAL(DP) :: xgtabmax = 0.0d0
       !
       IF( .NOT. ALLOCATED( rgrid ) ) &
          CALL errore( ' build_cctab_x ', ' rgrid not allocated ', 1 )
       IF( .NOT. ALLOCATED( upf ) ) &
          CALL errore( ' build_cctab_x ', ' upf not allocated ', 1 )
       !
-      compute_tab = chkpstab( gg, xgtabmax )
-      !
-      IF( ALLOCATED( rhoc1_sp ) ) THEN
-         !
-         IF( .NOT. compute_tab ) return
+      IF( ALLOCATED( rhoc1_sp ) .AND. ALLOCATED( rhocp_sp ) ) THEN
          !
          DO is = 1, nsp
             CALL kill_spline(rhoc1_sp(is),'a')
@@ -332,7 +292,11 @@
          !
       END IF
       !
-      CALL compute_xgtab( xgmin, xgmax, xgtabmax )
+      IF(  ALLOCATED( rhoc1_sp ) .OR. ALLOCATED( rhocp_sp ) ) THEN
+         CALL errore( ' build_cctab_x ', ' inconsistent allocation ', 1 )
+      END IF
+      !
+      CALL compute_xgtab( xgmin, xgmax )
       !
       ALLOCATE( rhoc1_sp(nsp))
       ALLOCATE( rhocp_sp(nsp))
@@ -871,7 +835,7 @@
 !------------------------------------------------------------------------------!
 
 
-    LOGICAL FUNCTION check_tables_x( )
+    LOGICAL FUNCTION check_tables_x( gmax )
       !
       ! check table size against cell variations
       !
@@ -883,14 +847,16 @@
       USE gvecw,              ONLY : ngw
       USE cell_base,          ONLY : tpiba2
       USE small_box,          ONLY : tpibab
-      USE smallbox_gvec,              ONLY : gb, ngb
-      USE gvect, ONLY : gg
+      USE smallbox_gvec,      ONLY : gb, ngb
+      USE gvect, ONLY : gg, ngm
       !
       IMPLICIT NONE
       !
-      REAL(DP) :: g2, g2b, gmax
+      REAL(DP), INTENT(OUT) :: gmax
+      REAL(DP) :: g2, g2b
       !
-      g2  = MAXVAL( gg( 1:ngw ) )
+      g2  = MAXVAL( gg( 1:ngm ) )
+      !
       g2  = g2 * tpiba2 / refg
       !
       IF( ALLOCATED( gb ) ) THEN
@@ -908,7 +874,7 @@
       CALL mp_max( gmax, intra_bgrp_comm )
       !
       check_tables_x = .FALSE.
-      IF( ( INT( gmax ) + 2 ) > mmx ) check_tables_x = .TRUE.
+      IF( INT( gmax ) + 2 >= mmx ) check_tables_x = .TRUE.
       !
       RETURN
     END FUNCTION check_tables_x

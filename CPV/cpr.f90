@@ -84,7 +84,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
                                        surfclu, Surf_t, abivol, abisur
   USE wavefunctions_module,     ONLY : c0_bgrp, cm_bgrp, phi_bgrp
   USE wannier_module,           ONLY : allocate_wannier
-  USE cp_interfaces,            ONLY : printout_new, move_electrons
+  USE cp_interfaces,            ONLY : printout_new, move_electrons, newinit
   USE cell_nose,                ONLY : xnhh0, xnhhm, xnhhp, vnhh, temph, &
                                        qnh, cell_nosevel, cell_noseupd,  &
                                        cell_nose_nrg, cell_nose_shiftvar
@@ -467,7 +467,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
            hold = h
            h    = hnew
            !
-           CALL newinit( h )
+           CALL newinit( h, iprsta )
            !
            CALL newnlinit()
            !

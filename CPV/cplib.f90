@@ -15,11 +15,10 @@
           USE gvecw,           ONLY: ecfixed, qcutz, q2sigma
           USE gvect,           ONLY: ecutrho
           USE gvecs,           ONLY: ecuts, dual, doublegrid
-          use betax,           only: mmx, refg
           USE pseudopotential, only: tpstab
-          USE control_flags,   only: thdyn
           USE io_global,       only: stdout, ionode
           USE uspp,            only: okvan
+          use betax,           only: mmx, refg
 
           IMPLICIT NONE
           REAL(DP), INTENT(IN) ::  ecutwfc_, ecutrho_, ecfixed_, qcutz_, &
@@ -54,7 +53,6 @@
              ecuts = ecutrho
              !
           END IF
-
           !
           ecfixed = ecfixed_
           qcutz   = qcutz_
@@ -62,23 +60,33 @@
 
           IF( refg_ < 0.0001d0 ) THEN
              tpstab = .FALSE.
-             refg = 0.05d0
+             refg   = 0.05d0
           ELSE
-             refg = refg_
+             refg   = refg_
           END IF
 
-          IF( thdyn ) THEN
-             !  ... a larger table is used when cell is moving to allow 
-             !  ... large volume fluctuation
-             mmx  = NINT( 2.0d0 * ecutrho / refg )
-          ELSE
-             mmx  = NINT( 1.2d0 * ecutrho / refg )
-          END IF
-
-             mmx  = NINT( 2.0d0 * ecutrho / refg ) ! debug
+          CALL set_interpolation_table_size( mmx, refg, ecutrho )
 
           RETURN
         END SUBROUTINE ecutoffs_setup
+
+
+        SUBROUTINE set_interpolation_table_size( mmx, refg, gmax )
+          USE control_flags,   only: thdyn
+          USE kinds,           only: DP
+          IMPLICIT NONE
+          INTEGER, INTENT(OUT) :: mmx
+          REAL(DP), INTENT(IN) :: refg
+          REAL(DP), INTENT(IN) :: gmax
+          IF( thdyn ) THEN
+             !  ... a larger table is used when cell is moving to allow 
+             !  ... large volume fluctuation
+             mmx  = NINT( 2.0d0 * gmax / refg )
+          ELSE
+             mmx  = NINT( 1.2d0 * gmax / refg )
+          END IF
+          RETURN
+        END SUBROUTINE set_interpolation_table_size
 
 
         SUBROUTINE gcutoffs_setup( alat, tk_inp, nk_inp, kpoints_inp )
@@ -779,7 +787,6 @@ subroutine formf( tfirst, eself )
   use uspp_param,      ONLY : upf, oldvan
   use pseudo_base,     ONLY : compute_rhops, formfn, formfa, compute_eself
   use pseudopotential, ONLY : tpstab, vps_sp, dvps_sp
-  use cp_interfaces,   ONLY : build_pstab
   use splines,         ONLY : spline
   use gvect,           ONLY : gstart, gg
   use constants,       ONLY : autoev
@@ -808,12 +815,6 @@ subroutine formf( tfirst, eself )
   endif
   !
   1200 format(/,3x,'formf: eself=',f12.5)
-  !
-  IF( tpstab ) THEN
-     !
-     CALL build_pstab( )
-     !
-  END IF
   !
   do is = 1, nsp
 
@@ -898,22 +899,40 @@ SUBROUTINE newnlinit()
   !
   use control_flags,    ONLY : tpre
   use pseudopotential,  ONLY : tpstab
-  use cp_interfaces,    ONLY : interpolate_beta, interpolate_qradb, &
-                               exact_beta, check_tables, exact_qradb
+  use cp_interfaces,    ONLY : interpolate_beta, interpolate_qradb, compute_qradx, compute_betagx, &
+                               exact_beta, check_tables, exact_qradb, build_pstab, build_cctab
+  use betax,            only : mmx, refg
+  use kinds,            only : dp
+  use io_global,        only : ionode, stdout
   !
   IMPLICIT NONE
   !
-  LOGICAL :: recompute_table
+  LOGICAL  :: recompute_table
+  REAL(DP) :: gmax
   ! 
   ! ... initialization for vanderbilt species
   !
   IF( tpstab ) THEN
 
-     recompute_table = tpre .AND. check_tables()
+     recompute_table = tpre .AND. check_tables( gmax )
      !
-     IF ( recompute_table ) &
-        CALL errore( ' newnlinit', &
-                  'interpolation tables recalculation, not implemented yet', 1 )
+     IF ( recompute_table ) THEN
+
+        IF( ionode ) &
+           WRITE( stdout, * ) "newnliinit: recomputing the pseudopotentials tables" 
+        !"!
+
+        CALL set_interpolation_table_size( mmx, refg, gmax )
+
+        CALL compute_qradx( tpre )
+
+        call compute_betagx( tpre )
+
+        call build_pstab()
+        !
+        call build_cctab()
+
+     END IF
      !
      !     initialization that is common to all species
      !
@@ -1135,8 +1154,9 @@ subroutine nlinit
       use smallbox_gvec,           ONLY : ngb
       use gvect,           ONLY : ngm
       use cp_interfaces,   ONLY : pseudopotential_indexes, compute_dvan, &
-                                  compute_betagx, compute_qradx
+                                  compute_betagx, compute_qradx, build_pstab, build_cctab
       USE fft_base,        ONLY : dfftp
+      use pseudopotential, ONLY : tpstab
 
 !
       implicit none
@@ -1211,6 +1231,14 @@ subroutine nlinit
       !   calculate array  dvan(iv,jv,is)
       !
       call compute_dvan()
+      !
+      IF( tpstab ) THEN
+
+         call build_pstab()
+         !
+         call build_cctab()
+         !
+      END IF
       !
       ! newnlinit stores qgb and qq, calculates arrays  beta  rhocb
       ! and derivatives wrt cell dbeta

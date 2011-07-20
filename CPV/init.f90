@@ -162,7 +162,7 @@
          rat2 = DBLE( dfftb%nr2 ) / DBLE( dfftp%nr2 )
          rat3 = DBLE( dfftb%nr3 ) / DBLE( dfftp%nr3 )
          !
-         CALL small_box_set( alat, omega, at, rat1, rat2, rat3 )
+         CALL small_box_set( alat, omega, at, rat1, rat2, rat3, tprint = .TRUE. )
          !
          !  generate small-box G-vectors, initialize FFT tables
          !
@@ -217,6 +217,7 @@
       USE fft_types,        ONLY: fft_box_allocate
       USE cp_main_variables,     ONLY: ht0, htm, taub
       USE atoms_type_module,     ONLY: atoms_type
+      USE cp_interfaces,         ONLY: newinit
 
       implicit none
       !
@@ -305,7 +306,7 @@
       !
       !   generate true g-space
       !
-      call newinit( ht0%hmat )
+      call newinit( ht0%hmat, iprsta = 2 )
       !
       CALL invmat( 3, h, ainv, deth )
       !
@@ -318,7 +319,7 @@
 
 !-----------------------------------------------------------------------
 
-    subroutine newinit( h )
+    subroutine newinit_x( h, iprsta )
       !
       !     re-initialization of lattice parameters and g-space vectors.
       !     Note that direct and reciprocal lattice primitive vectors
@@ -339,6 +340,7 @@
       implicit none
       !
       REAL(DP), INTENT(IN) :: h(3,3)
+      INTEGER,  INTENT(IN) :: iprsta
       !
       REAL(DP) :: rat1, rat2, rat3
       INTEGER :: ig, i1, i2, i3
@@ -371,9 +373,9 @@
       rat1 = DBLE( dfftb%nr1 ) / DBLE( dfftp%nr1 )
       rat2 = DBLE( dfftb%nr2 ) / DBLE( dfftp%nr2 )
       rat3 = DBLE( dfftb%nr3 ) / DBLE( dfftp%nr3 )
-      CALL small_box_set( alat, omega, at, rat1, rat2, rat3 )
+      CALL small_box_set( alat, omega, at, rat1, rat2, rat3, tprint = ( iprsta > 1 ) )
       !
       call gcalb ( )
       !
       return
-    end subroutine newinit
+    end subroutine newinit_x

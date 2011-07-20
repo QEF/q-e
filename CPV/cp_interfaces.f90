@@ -24,7 +24,6 @@
    PUBLIC :: interpolate_qradb
    PUBLIC :: exact_beta
    PUBLIC :: build_cctab
-   PUBLIC :: chkpstab
    PUBLIC :: build_pstab
    PUBLIC :: check_tables
    PUBLIC :: fill_qrl
@@ -95,6 +94,7 @@
    PUBLIC :: c_bgrp_pack
    PUBLIC :: vofrho
    PUBLIC :: enkin
+   PUBLIC :: newinit
 
    ! ------------------------------------ !
 
@@ -172,15 +172,6 @@
       END SUBROUTINE
    END INTERFACE
 
-   INTERFACE chkpstab
-      LOGICAL FUNCTION chkpstab_x(hg, xgtabmax)
-         USE kinds,              ONLY: DP
-         IMPLICIT NONE
-         REAL(DP), INTENT(IN) :: hg(:)
-         REAL(DP), INTENT(IN) :: xgtabmax
-      END FUNCTION
-   END INTERFACE
-
    INTERFACE build_pstab
       SUBROUTINE build_pstab_x( )
          IMPLICIT NONE
@@ -188,8 +179,10 @@
    END INTERFACE
 
    INTERFACE check_tables
-      LOGICAL FUNCTION check_tables_x( )
+      LOGICAL FUNCTION check_tables_x( gmax )
+         USE kinds,              ONLY: DP
          IMPLICIT NONE
+         REAL(DP), INTENT(OUT) :: gmax
       END FUNCTION check_tables_x
    END INTERFACE
 
@@ -210,10 +203,10 @@
    END INTERFACE
 
    INTERFACE compute_xgtab
-      SUBROUTINE compute_xgtab_x( xgmin, xgmax, xgtabmax )
+      SUBROUTINE compute_xgtab_x( xgmin, xgmax )
          USE kinds,      ONLY: DP         
          IMPLICIT NONE
-         REAL(DP), INTENT(OUT)  :: xgmax, xgmin, xgtabmax
+         REAL(DP), INTENT(OUT)  :: xgmax, xgmin
       END SUBROUTINE
    END INTERFACE
 
@@ -883,6 +876,15 @@
          REAL(DP) :: enkin_x
       END FUNCTION enkin_x
    END INTERFACE 
+
+   INTERFACE newinit
+      SUBROUTINE newinit_x( h, iprsta )
+         USE kinds, ONLY: dp
+         IMPLICIT NONE
+         REAL(DP),    INTENT(IN) :: h( 3, 3 )
+         INTEGER,     INTENT(IN) :: iprsta
+      END SUBROUTINE
+   END INTERFACE
 !=----------------------------------------------------------------------------=!
    END MODULE
 !=----------------------------------------------------------------------------=!

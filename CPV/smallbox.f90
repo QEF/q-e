@@ -33,11 +33,12 @@
 !------------------------------------------------------------------------------!
 !
 
-     SUBROUTINE small_box_set( alat, omega, at, rat1, rat2, rat3 )
+     SUBROUTINE small_box_set( alat, omega, at, rat1, rat2, rat3, tprint )
        USE constants, ONLY: pi
-       USE io_global, ONLY: stdout
+       USE io_global, ONLY: stdout, ionode
        IMPLICIT NONE
        REAL(DP), INTENT(IN) :: alat, omega, at(3,3), rat1, rat2, rat3
+       LOGICAL,  INTENT(IN) :: tprint
 
        alatb  = alat * rat1
        IF( alatb <= 0.0_DP ) CALL errore(' small_box_set ', ' alatb <= 0 ', 1 )
@@ -49,13 +50,15 @@
 !
        CALL recips( atb(1,1), atb(1,2), atb(1,3), bgb(1,1), bgb(1,2), bgb(1,3) )
 
-       WRITE( stdout,*)
-       WRITE( stdout,220)
-220    format( 3X, 'unit vectors of box grid cell',/,                        &
-     &         3X, 'in real space:',25x,'in reciprocal space:')
-       WRITE( stdout,'(3X,3f10.4,10x,3f10.4)') atb(:,1)*alatb, bgb(:,1)
-       WRITE( stdout,'(3X,3f10.4,10x,3f10.4)') atb(:,2)*alatb, bgb(:,2)
-       WRITE( stdout,'(3X,3f10.4,10x,3f10.4)') atb(:,3)*alatb, bgb(:,3)
+       IF( tprint .AND. ionode ) THEN
+          WRITE( stdout,*)
+          WRITE( stdout,220)
+220       format( 3X, 'unit vectors of box grid cell',/,                        &
+     &            3X, 'in real space:',25x,'in reciprocal space:')
+          WRITE( stdout,'(3X,3f10.4,10x,3f10.4)') atb(:,1)*alatb, bgb(:,1)
+          WRITE( stdout,'(3X,3f10.4,10x,3f10.4)') atb(:,2)*alatb, bgb(:,2)
+          WRITE( stdout,'(3X,3f10.4,10x,3f10.4)') atb(:,3)*alatb, bgb(:,3)
+       END IF
 
        RETURN
      END SUBROUTINE small_box_set

@@ -21,7 +21,6 @@
      use smallbox_gvec,      ONLY : ngb, gb
      use small_box,          ONLY : omegab, tpibab
      use pseudo_base,        ONLY : compute_rhocg
-     use cp_interfaces,      ONLY : build_cctab, chkpstab
      use pseudopotential,    ONLY : tpstab, rhoc1_sp, rhocp_sp
      use cell_base,          ONLY : omega, tpiba2, tpiba
      USE splines,            ONLY : spline
@@ -43,12 +42,6 @@
         CALL errore( ' core_charge_ftr ', ' rgrid not allocated ', 1 )
      IF( .NOT. ALLOCATED( upf ) ) &
         CALL errore( ' core_charge_ftr ', ' upf not allocated ', 1 )
-     !
-     IF( tpstab ) THEN
-        !
-        CALL build_cctab( )
-        !
-     END IF
      !
      do is = 1, nsp
         !
