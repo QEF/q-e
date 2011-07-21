@@ -79,7 +79,7 @@ MODULE cpmd
   ! Car PP variables
   real(8) :: alphaloc, alpha(0:lmaxx), a(0:lmaxx), b(0:lmaxx)
   ! Goedecker PP variables
-  INTEGER, parameter :: ncmax=4, nlmax=2
+  INTEGER, parameter :: ncmax=4, nlmax=3
   integer :: nc, nl(0:lmaxx) 
   real(8) :: rc, rl(0:lmaxx), c(ncmax), h(0:lmaxx, nlmax*(nlmax+1)/2 )
   ! Numeric PP variables
@@ -106,7 +106,7 @@ SUBROUTINE read_cpmd(iunps)
   !
   INTEGER :: found = 0, closed = 0, unknown = 0
   INTEGER :: i, l, dum, ios
-  CHARACTER (len=80) line
+  CHARACTER (len=256) line
   CHARACTER (len=4) token
   real (8) :: amesh_, vnl0(0:3)
   LOGICAL :: grid_read = .FALSE., wfc_read=.FALSE.
@@ -220,11 +220,12 @@ SUBROUTINE read_cpmd(iunps)
         READ(iunps, *) lmax
         lmax = lmax - 1
 	IF ( lmax > lmaxx ) &
-          CALL errore('read_cpmd',' incorrect parameter read',1)
+          CALL errore('read_cpmd','incorrect parameter read',1)
         READ(iunps, *) rc
         READ(iunps, '(A)') line
+        READ(line, *) nc
 	IF ( nc > ncmax ) &
-          CALL errore('read_cpmd',' incorrect parameter read',2)
+          CALL errore('read_cpmd','incorrect parameter read',2)
         ! I am not sure if it is possible to use nc in the same line
         ! where it is read. Just in case, better to read twice
         READ(line, *) dum, (c(i), i=1,nc)
@@ -236,7 +237,7 @@ SUBROUTINE read_cpmd(iunps)
            END IF
            READ(line, *) rl(l), nl(l)
 	   IF ( nl(l) > nlmax ) &
-             CALL errore('read_cpmd',' incorrect parameter read',3)
+             CALL errore('read_cpmd','incorrect parameter read',3)
 	   IF ( nl(l) > 0 ) &
               READ(line, *) rl(l), dum, ( h(l,i), i=1,nl(l)*(nl(l)+1)/2)
         END DO
@@ -297,9 +298,13 @@ SUBROUTINE read_cpmd(iunps)
   IF (unknown /= 0 ) PRINT '("WARNING: ",i3," cards not read")', unknown
   !
   IF ( .NOT. grid_read ) THEN 
-     PRINT '("I need a radial grid r_i = e^{xmin+(i-1)*dx}/Z, i=1,mesh")'
-     PRINT '("Z=",f6.2,":  xmin, dx, rmax (e.g. -8.0, 0.0125, 100) > ",$)',z
-     READ (5,*)  xmin, amesh, rmax
+     xmin = -7.0d0
+     amesh=0.0125d0
+     rmax =100.0d0
+     PRINT '("A radial grid must be provided. We use the following one:")'
+     PRINT '("r_i = e^{xmin+(i-1)*dx}/Z, i=1,mesh, with parameters:")'
+     PRINT '("Z=",f6.2,", xmin=",f6.2," dx=",f8.4," rmax=",f6.1)")', &
+           z, xmin, amesh, rmax
      mesh = 1 + (log(z*rmax)-xmin)/amesh
      mesh = (mesh/2)*2+1 ! mesh is odd (for historical reasons?)
      ALLOCATE (r(mesh))
@@ -343,7 +348,7 @@ SUBROUTINE convert_cpmd(upf)
   TYPE(pseudo_upf) :: upf 
   !
   REAL(8), ALLOCATABLE :: aux(:)
-  REAL(8) :: x, vll, rcloc, fac
+  REAL(8) :: x, x2, vll, rcloc, fac
   REAL(8), EXTERNAL :: mygamma, qe_erf
   CHARACTER (len=20):: dft
   CHARACTER (len=2):: label
@@ -377,12 +382,12 @@ SUBROUTINE convert_cpmd(upf)
   !
   IF ( pstype == 3 ) THEN
      upf%generated= "Generated in analytical, separable form"
-     upf%author   = "Authors: Goedecker/Hartwigsen/Hutter/Teter"
+     upf%author   = "Goedecker/Hartwigsen/Hutter/Teter"
      upf%date     = "Phys.Rev.B58, 3641 (1998); B54, 1703 (1996)"
   ElSE
      upf%generated= "Generated using unknown code"
-     upf%author   = "Author: unknown"
-     upf%date     = "Generation date: as well"
+     upf%author   = "unknown"
+     upf%date     = "unknown"
   END IF
   upf%nv       = "2.0.1"
   upf%comment  = "Info: automatically converted from CPMD format"
@@ -489,9 +494,10 @@ SUBROUTINE convert_cpmd(upf)
      upf%nbeta= lmax
   ELSE
      DO i=1,upf%mesh
-        x = (upf%r(i)/rc)**2
+        x = upf%r(i)/rc
+        x2=x**2
         upf%vloc(i) = e2 * ( -upf%zp*qe_erf(x/sqrt(2.d0))/upf%r(i) + &
-             exp ( -0.5d0*x ) * (c(1) + x*( c(2) + x*( c(3) + x*c(4) ) ) ) )
+             exp ( -0.5d0*x2 ) * (c(1) + x2*( c(2) + x2*( c(3) + x2*c(4) ) ) ) )
      END DO
      upf%nbeta=0
      DO l=0,upf%lmax
@@ -550,9 +556,9 @@ SUBROUTINE convert_cpmd(upf)
               END  DO
               fac= sqrt(2d0*rl(l)) / ( rl(l)**(l+2*i) * sqrt(mygamma(l+2*i)) )
               DO ir=1,upf%mesh
-                 x = (upf%r(ir)/rl(l))**2
+                 x2 = (upf%r(ir)/rl(l))**2
                  upf%beta(ir,iv) = upf%r(ir)**(l+2*(i-1)) * &
-                                     exp ( -0.5d0*x ) * fac * e2
+                                     exp ( -0.5d0*x2 ) * fac * e2
               END DO
               ! look for index kbeta such that v(i)=0 if i>kbeta 
               DO ir=upf%mesh,1,-1
