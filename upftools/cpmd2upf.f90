@@ -418,6 +418,8 @@ SUBROUTINE convert_cpmd(upf)
   ELSEIF (igcc==2) THEN
      igcc=3
   ENDIF
+  ! PBE
+  IF (igcx==3 .AND. igcc==4) icorr=4
   inlc = 0
   CALL dft_name (iexch, icorr, igcx, igcc, inlc, upf%dft, dft)
   !
