@@ -75,7 +75,7 @@ MODULE cpmd
   real(8), ALLOCATABLE :: r(:)
   ! PP variables
   INTEGER, parameter :: lmaxx=3
-  INTEGER ::lmax
+  INTEGER ::lmax, nwfc=0
   ! Car PP variables
   real(8) :: alphaloc, alpha(0:lmaxx), a(0:lmaxx), b(0:lmaxx)
   ! Goedecker PP variables
@@ -86,7 +86,7 @@ MODULE cpmd
   real(8), ALLOCATABLE :: vnl(:,:)
   real(8), ALLOCATABLE :: chi(:,:)
   ! Core correction variables
-  LOGICAL :: nlcc
+  LOGICAL :: nlcc=.false.
   real(8), ALLOCATABLE :: rho_atc(:)
   ! Variables used for reading and for checks
   INTEGER :: maxinfo, info_lines
@@ -114,7 +114,6 @@ SUBROUTINE read_cpmd(iunps)
   INTEGER, EXTERNAL :: locate
   REAL(8), EXTERNAL :: qe_erf
   !
-  nlcc = .false.
   info_lines = 0
 10 READ (iunps,'(A)',end=20,err=20) line
   IF (matches ("&ATOM", trim(line)) ) THEN
@@ -252,9 +251,18 @@ SUBROUTINE read_cpmd(iunps)
         amesh_ = -1.0d0
      ENDIF
      IF ( .NOT. grid_read )  ALLOCATE(r(mesh))
-     ALLOCATE(chi(mesh,lmax+1))
-     DO i=1,mesh
-        READ(iunps, *) r(i),(chi(i,l+1),l=0,lmax)
+     ! find number of atomic wavefunctions
+     READ (iunps,'(A)') line
+     DO nwfc = lmax+1,1,-1
+        READ(line,*,iostat=ios) r(1),(vnl0(l),l=0,nwfc-1)
+        IF ( ios == 0 ) EXIT
+     ENDDO
+     IF ( ios /= 0 ) &
+        CALL errore('read_cpmd','at least one atomic wvfct should be present',1)
+     ALLOCATE(chi(mesh,nwfc))
+     chi(1,1:nwfc) = vnl0(0:nwfc-1)
+     DO i=2,mesh
+        READ(iunps, *) r(i),(chi(i,l),l=1,nwfc)
      ENDDO
      IF ( .NOT.grid_read ) THEN
         CALL check_radial_grid ( amesh_, mesh, r, amesh )
@@ -340,7 +348,6 @@ SUBROUTINE convert_cpmd(upf)
   !
   USE cpmd
   USE pseudo_types, ONLY : pseudo_upf
-  USE funct, ONLY :  dft_name
   USE constants, ONLY : e2
   !
   IMPLICIT NONE
@@ -354,8 +361,7 @@ SUBROUTINE convert_cpmd(upf)
   CHARACTER (len=2):: label
   CHARACTER (len=1):: spdf(0:3) = ['S','P','D','F']
   CHARACTER (len=2), EXTERNAL :: atom_name
-  INTEGER :: lloc, my_lmax, iexch, icorr, igcx, igcc, inlc
-  INTEGER :: l, i, j, ij, ir, iv, jv
+  INTEGER :: lloc, my_lmax, l, i, j, ij, ir, iv, jv
   !
   ! NOTE: many CPMD pseudopotentials created with the 'Hamann' code
   ! from Juerg Hutter's homepage have additional (bogus) entries for
@@ -399,7 +405,7 @@ SUBROUTINE convert_cpmd(upf)
      upf%rel = 'scalar'
   ENDIF
   IF ( pstype == 3 ) THEN
-     upf%typ = 'NL'
+     upf%typ = 'NC'
   ELSE
      upf%typ = 'SL'
   END IF
@@ -408,20 +414,28 @@ SUBROUTINE convert_cpmd(upf)
   upf%tcoulombp=.FALSE.
   upf%nlcc = nlcc
   !
-  iexch = ixc/1000
-  icorr = (ixc-1000*iexch)/100
-  igcx  = (ixc-1000*iexch-100*icorr)/10
-  igcc  = (ixc-1000*iexch-100*icorr-10*igcx)
-  ! We have igcc=2 (PW91) and 3 (LYP) exchanged wrt CPMD conventions
-  IF (igcc==3) THEN
-     igcc=2
-  ELSEIF (igcc==2) THEN
-     igcc=3
+  IF (ixc==1100) THEN
+     upf%dft='SLA-PZ-NOGX-NOGC'
+  ELSEIF (ixc==1111) THEN
+     upf%dft='SLA-PZ-B86-P88'
+  ELSEIF (ixc==1134 .OR. ixc==1434) THEN
+     upf%dft='SLA-PW-PBX-PBC'
+  ELSEIF (ixc==1134) THEN
+     upf%dft='revPBE'
+  ELSEIF (ixc==1312) THEN
+     upf%dft='BLYP'
+  ELSEIF (ixc==362) THEN
+     upf%dft='OLYP'
+  ELSEIF (ixc==1372) THEN
+     upf%dft='XLYP'
+  ELSEIF (ixc==55) THEN
+     upf%dft='HCTH'
+  ELSE
+     PRINT '("Unknown DFT ixc=",i4,". Please provide a DFT name > ",$)', ixc
+     READ *, upf%dft
   ENDIF
-  ! PBE
-  IF (igcx==3 .AND. igcc==4) icorr=4
-  inlc = 0
-  CALL dft_name (iexch, icorr, igcx, igcc, inlc, upf%dft, dft)
+  PRINT '("Assuming DFT: ",A," . Please check this is what you want")', &
+          TRIM(upf%dft)
   !
   upf%zp = zv
   upf%etotps =0.0d0
@@ -434,11 +448,7 @@ SUBROUTINE convert_cpmd(upf)
   ENDIF
   upf%lloc = lloc
   upf%lmax_rho = 0
-  IF ( pstype == 3 ) THEN
-     upf%nwfc = 0
-  ELSE
-     upf%nwfc = lmax+1
-  END IF
+  upf%nwfc = nwfc
   !
   ALLOCATE( upf%els(upf%nwfc) )
   ALLOCATE( upf%oc(upf%nwfc) )
@@ -561,6 +571,10 @@ SUBROUTINE convert_cpmd(upf)
                  x2 = (upf%r(ir)/rl(l))**2
                  upf%beta(ir,iv) = upf%r(ir)**(l+2*(i-1)) * &
                                      exp ( -0.5d0*x2 ) * fac * e2
+                 ! ...remember: the beta functions in the UPF format
+                 ! ...have to be multiplied by a factor r !!!
+                 upf%beta(ir,iv) = upf%beta(ir,iv)*upf%r(ir)
+                 !
               END DO
               ! look for index kbeta such that v(i)=0 if i>kbeta 
               DO ir=upf%mesh,1,-1
