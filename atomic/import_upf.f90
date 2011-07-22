@@ -57,7 +57,7 @@ subroutine import_upf ( )
   nlcc = upf%nlcc
   call set_dft_from_name (upf%dft)
 
-  if (upf%typ.eq.'NC') then
+  if (upf%typ.eq.'NC'.OR.upf%typ.eq.'SL') then
      pseudotype=2
   else
      pseudotype=3
