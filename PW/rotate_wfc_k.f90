@@ -124,11 +124,7 @@ SUBROUTINE protate_wfc_k( npwx, npw, nstart, nbnd, npol, psi, overlap, evc, e )
                                intra_pool_comm, &
                                ortho_comm, np_ortho, me_ortho, ortho_comm_id,&
                                leg_ortho
-  USE descriptors,      ONLY : descla_siz_ , descla_init , lambda_node_ , &
-                               la_nx_ , la_nrl_ , la_n_ , &
-                               ilac_ , ilar_ , nlar_ , nlac_ , la_npc_ , &
-                               la_npr_ , la_me_ , la_comm_ , &
-                               la_myr_ , la_myc_ , nlax_
+  USE descriptors,      ONLY : descla_init , la_descriptor
   USE parallel_toolkit, ONLY : zsqmred, zsqmher, zsqmdst
   USE mp,               ONLY : mp_bcast, mp_root_sum, mp_sum, mp_barrier
   !
@@ -155,16 +151,16 @@ SUBROUTINE protate_wfc_k( npwx, npw, nstart, nbnd, npol, psi, overlap, evc, e )
   COMPLEX(DP), ALLOCATABLE :: aux(:,:), hc(:,:), sc(:,:), vc(:,:)
   REAL(DP),    ALLOCATABLE :: en(:)
   !
-  INTEGER :: desc( descla_siz_ )
+  TYPE(la_descriptor) :: desc
     ! matrix distribution descriptors
   INTEGER :: nx
     ! maximum local block dimension
   LOGICAL :: la_proc
     ! flag to distinguish procs involved in linear algebra
-  INTEGER, ALLOCATABLE :: desc_ip( :, :, : )
+  TYPE(la_descriptor), ALLOCATABLE :: desc_ip( :, : )
   INTEGER, ALLOCATABLE :: rank_ip( :, : )
   !
-  ALLOCATE( desc_ip( descla_siz_ , np_ortho(1), np_ortho(2) ) )
+  ALLOCATE( desc_ip( np_ortho(1), np_ortho(2) ) )
   ALLOCATE( rank_ip( np_ortho(1), np_ortho(2) ) )
   !
   CALL desc_init( nstart, desc, desc_ip )
@@ -238,28 +234,28 @@ CONTAINS
   SUBROUTINE desc_init( nsiz, desc, desc_ip )
      !
      INTEGER, INTENT(IN)  :: nsiz
-     INTEGER, INTENT(OUT) :: desc(:)
-     INTEGER, INTENT(OUT) :: desc_ip(:,:,:)
+     TYPE(la_descriptor), INTENT(OUT) :: desc
+     TYPE(la_descriptor), INTENT(OUT) :: desc_ip(:,:)
      INTEGER :: i, j, rank
      INTEGER :: coor_ip( 2 )
      !
      CALL descla_init( desc, nsiz, nsiz, np_ortho, me_ortho, ortho_comm, ortho_comm_id )
      !
-     nx = desc( nlax_ )
+     nx = desc%nrcx
      !
-     DO j = 0, desc( la_npc_ ) - 1
-        DO i = 0, desc( la_npr_ ) - 1
+     DO j = 0, desc%npc - 1
+        DO i = 0, desc%npr - 1
            coor_ip( 1 ) = i
            coor_ip( 2 ) = j
-           CALL descla_init( desc_ip(:,i+1,j+1), desc( la_n_ ), desc( la_nx_ ), &
+           CALL descla_init( desc_ip(i+1,j+1), desc%n, desc%nx, &
                              np_ortho, coor_ip, ortho_comm, 1 )
-           CALL GRID2D_RANK( 'R', desc( la_npr_ ), desc( la_npc_ ), i, j, rank )
+           CALL GRID2D_RANK( 'R', desc%npr, desc%npc, i, j, rank )
            rank_ip( i+1, j+1 ) = rank * leg_ortho
         END DO
      END DO
      !
      la_proc = .FALSE.
-     IF( desc( lambda_node_ ) > 0 ) la_proc = .TRUE.
+     IF( desc%active_node > 0 ) la_proc = .TRUE.
      !
      RETURN
   END SUBROUTINE desc_init
@@ -280,15 +276,15 @@ CONTAINS
      !
      work = ( 0.0_DP, 0.0_DP )
      !
-     DO ipc = 1, desc( la_npc_ ) !  loop on column procs 
+     DO ipc = 1, desc%npc !  loop on column procs 
         !
-        nc = desc_ip( nlac_ , 1, ipc )
-        ic = desc_ip( ilac_ , 1, ipc )
+        nc = desc_ip( 1, ipc )%nc
+        ic = desc_ip( 1, ipc )%ic
         !
-        DO ipr = 1, ipc ! desc( la_npr_ ) ! ipc ! use symmetry for the loop on row procs
+        DO ipr = 1, ipc ! desc%npr ! ipc ! use symmetry for the loop on row procs
            !
-           nr = desc_ip( nlar_ , ipr, ipc )
-           ir = desc_ip( ilar_ , ipr, ipc )
+           nr = desc_ip( ipr, ipc )%nr
+           ir = desc_ip( ipr, ipc )%ir
            !
            !  rank of the processor for which this block (ipr,ipc) is destinated
            !
@@ -324,10 +320,10 @@ CONTAINS
 
      ALLOCATE( vtmp( nx, nx ) )
      !
-     DO ipc = 1, desc( la_npc_ )
+     DO ipc = 1, desc%npc
         !
-        nc = desc_ip( nlac_ , 1, ipc )
-        ic = desc_ip( ilac_ , 1, ipc )
+        nc = desc_ip( 1, ipc )%nc
+        ic = desc_ip( 1, ipc )%ic
         !
         IF( ic <= nbnd ) THEN
            !
@@ -335,14 +331,14 @@ CONTAINS
            !
            beta = ( 0.D0, 0.D0 )
 
-           DO ipr = 1, desc( la_npr_ )
+           DO ipr = 1, desc%npr
               !
-              nr = desc_ip( nlar_ , ipr, ipc )
-              ir = desc_ip( ilar_ , ipr, ipc )
+              nr = desc_ip( ipr, ipc )%nr
+              ir = desc_ip( ipr, ipc )%ir
               !
               root = rank_ip( ipr, ipc )
 
-              IF( ipr-1 == desc( la_myr_ ) .AND. ipc-1 == desc( la_myc_ ) .AND. la_proc ) THEN
+              IF( ipr-1 == desc%myr .AND. ipc-1 == desc%myc .AND. la_proc ) THEN
                  !
                  !  this proc sends his block
                  ! 

@@ -42,25 +42,25 @@ SUBROUTINE dsqmdst( n, ar, ldar, a, lda, desc )
   REAL(DP)            :: ar(ldar,*)  !  matrix to be splitted, replicated on all proc
   INTEGER, INTENT(IN) :: lda
   REAL(DP)            :: a(lda,*)
-  INTEGER, INTENT(IN) :: desc( descla_siz_ )
+  TYPE(la_descriptor), INTENT(IN) :: desc
   !
   REAL(DP), PARAMETER :: zero = 0_DP
   !
   INTEGER :: i, j, nr, nc, ic, ir, nx
   !
-  IF( desc( lambda_node_ ) <= 0 ) THEN
+  IF( desc%active_node <= 0 ) THEN
      RETURN
   END IF
 
-  nx  = desc( nlax_ )
-  ir  = desc( ilar_ )
-  ic  = desc( ilac_ )
-  nr  = desc( nlar_ )
-  nc  = desc( nlac_ )
+  nx  = desc%nrcx
+  ir  = desc%ir
+  ic  = desc%ic
+  nr  = desc%nr
+  nc  = desc%nc
 
   IF( lda < nx ) &
      CALL errore( " dsqmdst ", " inconsistent dimension lda ", lda )
-  IF( n /= desc( la_n_ ) ) &
+  IF( n /= desc%n ) &
      CALL errore( " dsqmdst ", " inconsistent dimension n ", n )
 
   DO j = 1, nc
@@ -98,25 +98,25 @@ SUBROUTINE zsqmdst( n, ar, ldar, a, lda, desc )
   COMPLEX(DP)         :: ar(ldar,*)  !  matrix to be splitted, replicated on all proc
   INTEGER, INTENT(IN) :: lda
   COMPLEX(DP)         :: a(lda,*)
-  INTEGER, INTENT(IN) :: desc( descla_siz_ )
+  TYPE(la_descriptor), INTENT(IN) :: desc
   !
   COMPLEX(DP), PARAMETER :: zero = ( 0_DP , 0_DP )
   !
   INTEGER :: i, j, nr, nc, ic, ir, nx
   !
-  IF( desc( lambda_node_ ) <= 0 ) THEN
+  IF( desc%active_node <= 0 ) THEN
      RETURN
   END IF
 
-  nx  = desc( nlax_ )
-  ir  = desc( ilar_ )
-  ic  = desc( ilac_ )
-  nr  = desc( nlar_ )
-  nc  = desc( nlac_ )
+  nx  = desc%nrcx
+  ir  = desc%ir
+  ic  = desc%ic
+  nr  = desc%nr
+  nc  = desc%nc
 
   IF( lda < nx ) &
      CALL errore( " zsqmdst ", " inconsistent dimension lda ", lda )
-  IF( n /= desc( la_n_ ) ) &
+  IF( n /= desc%n ) &
      CALL errore( " zsqmdst ", " inconsistent dimension n ", n )
 
   DO j = 1, nc
@@ -156,7 +156,7 @@ SUBROUTINE dsqmcll( n, a, lda, ar, ldar, desc, comm )
   REAL(DP)            :: ar(ldar,*)  !  matrix to be merged, replicated on all proc
   INTEGER, INTENT(IN) :: lda
   REAL(DP)            :: a(lda,*)
-  INTEGER, INTENT(IN) :: desc( descla_siz_ )
+  TYPE(la_descriptor), INTENT(IN) :: desc
   INTEGER, INTENT(IN) :: comm
   !
   INTEGER :: i, j
@@ -168,14 +168,14 @@ SUBROUTINE dsqmcll( n, a, lda, ar, ldar, desc, comm )
 
   REAL(DP), ALLOCATABLE :: buf(:,:)
   !
-  IF( desc( lambda_node_ ) > 0 ) THEN
+  IF( desc%active_node > 0 ) THEN
      !
-     np = desc( la_npr_ ) * desc( la_npc_ ) 
-     nx = desc( nlax_ )
-     npr = desc( la_npr_ )
-     npc = desc( la_npc_ )
+     np = desc%npr * desc%npc
+     nx = desc%nrcx
+     npr = desc%npr
+     npc = desc%npc
      !
-     IF( desc( la_myr_ ) == 0 .AND. desc( la_myc_ ) == 0 ) THEN
+     IF( desc%myr == 0 .AND. desc%myc == 0 ) THEN
         ALLOCATE( buf( nx, nx * np ) )
      ELSE
         ALLOCATE( buf( 1, 1 ) )
@@ -184,20 +184,20 @@ SUBROUTINE dsqmcll( n, a, lda, ar, ldar, desc, comm )
      IF( lda /= nx ) &
         CALL errore( " dsqmcll ", " inconsistent dimension lda ", lda )
      !
-     IF( desc( la_n_ ) /= n ) &
+     IF( desc%n /= n ) &
         CALL errore( " dsqmcll ", " inconsistent dimension n ", n )
      !
      CALL mpi_gather( a, nx*nx, mpi_double_precision, &
-                      buf, nx*nx, mpi_double_precision, 0, desc( la_comm_ ) , ierr )
+                      buf, nx*nx, mpi_double_precision, 0, desc%comm , ierr )
      !
      IF( ierr /= 0 ) &
         CALL errore( " dsqmcll ", " in gather ", ABS( ierr ) )
      !
-     IF( desc( la_myr_ ) == 0 .AND. desc( la_myc_ ) == 0 ) THEN
+     IF( desc%myr == 0 .AND. desc%myc == 0 ) THEN
         DO ipc = 1, npc
-           CALL descla_local_dims( ic, nc, n, desc( la_nx_ ), npc, ipc-1 )
+           CALL descla_local_dims( ic, nc, n, desc%nx, npc, ipc-1 )
            DO ipr = 1, npr
-              CALL descla_local_dims( ir, nr, n, desc( la_nx_ ), npr, ipr-1 )
+              CALL descla_local_dims( ir, nr, n, desc%nx, npr, ipr-1 )
               noff = ( ipc - 1 + npc * ( ipr - 1 ) ) * nx
               DO j = 1, nc
                  DO i = 1, nr
@@ -248,7 +248,7 @@ SUBROUTINE zsqmcll( n, a, lda, ar, ldar, desc, comm )
   COMPLEX(DP)         :: ar(ldar,*)  !  matrix to be merged, replicated on all proc
   INTEGER, INTENT(IN) :: lda
   COMPLEX(DP)         :: a(lda,*)
-  INTEGER, INTENT(IN) :: desc( descla_siz_ )
+  TYPE(la_descriptor), INTENT(IN) :: desc
   INTEGER, INTENT(IN) :: comm
   !
   INTEGER :: i, j
@@ -260,14 +260,14 @@ SUBROUTINE zsqmcll( n, a, lda, ar, ldar, desc, comm )
 
   COMPLEX(DP), ALLOCATABLE :: buf(:,:)
   !
-  IF( desc( lambda_node_ ) > 0 ) THEN
+  IF( desc%active_node > 0 ) THEN
      !
-     np = desc( la_npr_ ) * desc( la_npc_ ) 
-     nx = desc( nlax_ )
-     npr = desc( la_npr_ )
-     npc = desc( la_npc_ )
+     np = desc%npr * desc%npc 
+     nx = desc%nrcx
+     npr = desc%npr
+     npc = desc%npc
      !
-     IF( desc( la_myr_ ) == 0 .AND. desc( la_myc_ ) == 0 ) THEN
+     IF( desc%myr == 0 .AND. desc%myc == 0 ) THEN
         ALLOCATE( buf( nx, nx * np ) )
      ELSE
         ALLOCATE( buf( 1, 1 ) )
@@ -276,20 +276,20 @@ SUBROUTINE zsqmcll( n, a, lda, ar, ldar, desc, comm )
      IF( lda /= nx ) &
         CALL errore( " zsqmcll ", " inconsistent dimension lda ", lda )
      !
-     IF( desc( la_n_ ) /= n ) &
+     IF( desc%n /= n ) &
         CALL errore( " zsqmcll ", " inconsistent dimension n ", n )
      !
      CALL mpi_gather( a, nx*nx, mpi_double_complex, &
-                      buf, nx*nx, mpi_double_complex, 0, desc( la_comm_ ) , ierr )
+                      buf, nx*nx, mpi_double_complex, 0, desc%comm , ierr )
      !
      IF( ierr /= 0 ) &
         CALL errore( " zsqmcll ", " in gather ", ABS( ierr ) )
      !
-     IF( desc( la_myr_ ) == 0 .AND. desc( la_myc_ ) == 0 ) THEN
+     IF( desc%myr == 0 .AND. desc%myc == 0 ) THEN
         DO ipc = 1, npc
-           CALL descla_local_dims( ic, nc, n, desc( la_nx_ ), npc, ipc-1 )
+           CALL descla_local_dims( ic, nc, n, desc%nx, npc, ipc-1 )
            DO ipr = 1, npr
-              CALL descla_local_dims( ir, nr, n, desc( la_nx_ ), npr, ipr-1 )
+              CALL descla_local_dims( ir, nr, n, desc%nx, npr, ipr-1 )
               noff = ( ipc - 1 + npc * ( ipr - 1 ) ) * nx
               DO j = 1, nc
                  DO i = 1, nr
@@ -337,17 +337,17 @@ SUBROUTINE dsqmwpb( n, a, lda, desc )
    INTEGER, INTENT(IN) :: n
    INTEGER, INTENT(IN) :: lda
    REAL(DP)            :: a(lda,*)  !  matrix to be redistributed into b
-   INTEGER, INTENT(IN) :: desc( descla_siz_ )
+   TYPE(la_descriptor), INTENT(IN) :: desc
    !
    INTEGER :: i, j
    !
-   DO j = 1, desc( nlac_ )
-      DO i = desc( nlar_ ) + 1, desc( nlax_ )
+   DO j = 1, desc%nc
+      DO i = desc%nr + 1, desc%nrcx
          a( i, j ) = 0_DP
       END DO
    END DO
-   DO j = desc( nlac_ ) + 1, desc( nlax_ )
-      DO i = 1, desc( nlax_ )
+   DO j = desc%nc + 1, desc%nrcx
+      DO i = 1, desc%nrcx
          a( i, j ) = 0_DP
       END DO
    END DO
@@ -369,7 +369,7 @@ SUBROUTINE dsqmsym( n, a, lda, desc )
    INTEGER, INTENT(IN) :: n
    INTEGER, INTENT(IN) :: lda
    REAL(DP)            :: a(lda,*) 
-   INTEGER, INTENT(IN) :: desc( descla_siz_ )
+   TYPE(la_descriptor), INTENT(IN) :: desc
 #if defined __MPI
    INTEGER :: istatus( MPI_STATUS_SIZE )
 #endif
@@ -380,20 +380,20 @@ SUBROUTINE dsqmsym( n, a, lda, desc )
 
 #if defined __MPI
 
-   IF( desc( lambda_node_ ) <= 0 ) THEN
+   IF( desc%active_node <= 0 ) THEN
       RETURN
    END IF
 
-   IF( n /= desc( la_n_ ) ) &
+   IF( n /= desc%n ) &
       CALL errore( " dsqmsym ", " wrong global dim n ", n )
-   IF( lda /= desc( nlax_ ) ) &
+   IF( lda /= desc%nrcx ) &
       CALL errore( " dsqmsym ", " wrong leading dim lda ", lda )
 
-   comm = desc( la_comm_ )
+   comm = desc%comm
 
-   nr = desc( nlar_ ) 
-   nc = desc( nlac_ ) 
-   IF( desc( la_myc_ ) == desc( la_myr_ ) ) THEN
+   nr = desc%nr 
+   nc = desc%nc 
+   IF( desc%myc == desc%myr ) THEN
       !
       !  diagonal block, procs work locally
       !
@@ -403,24 +403,24 @@ SUBROUTINE dsqmsym( n, a, lda, desc )
          END DO
       END DO
       !
-   ELSE IF( desc( la_myc_ ) > desc( la_myr_ ) ) THEN
+   ELSE IF( desc%myc > desc%myr ) THEN
       !
       !  super diagonal block, procs send the block to sub diag.
       !
-      CALL GRID2D_RANK( 'R', desc( la_npr_ ), desc( la_npc_ ), &
-                             desc( la_myc_ ), desc( la_myr_ ), dest )
+      CALL GRID2D_RANK( 'R', desc%npr, desc%npc, &
+                             desc%myc, desc%myr, dest )
       CALL mpi_isend( a, lda*lda, MPI_DOUBLE_PRECISION, dest, 1, comm, sreq, ierr )
       !
       IF( ierr /= 0 ) &
          CALL errore( " dsqmsym ", " in isend ", ABS( ierr ) )
       !
-   ELSE IF( desc( la_myc_ ) < desc( la_myr_ ) ) THEN
+   ELSE IF( desc%myc < desc%myr ) THEN
       !
       !  sub diagonal block, procs receive the block from super diag,
       !  then transpose locally
       !
-      CALL GRID2D_RANK( 'R', desc( la_npr_ ), desc( la_npc_ ), &
-                             desc( la_myc_ ), desc( la_myr_ ), sour )
+      CALL GRID2D_RANK( 'R', desc%npr, desc%npc, &
+                             desc%myc, desc%myr, sour )
       CALL mpi_recv( a, lda*lda, MPI_DOUBLE_PRECISION, sour, 1, comm, istatus, ierr )
       !
       IF( ierr /= 0 ) &
@@ -436,7 +436,7 @@ SUBROUTINE dsqmsym( n, a, lda, desc )
       !
    END IF
 
-   IF( desc( la_myc_ ) > desc( la_myr_ ) ) THEN
+   IF( desc%myc > desc%myr ) THEN
       !
       CALL MPI_Wait( sreq, istatus, ierr )
       !
@@ -475,7 +475,7 @@ SUBROUTINE zsqmher( n, a, lda, desc )
    INTEGER, INTENT(IN) :: n
    INTEGER, INTENT(IN) :: lda
    COMPLEX(DP)         :: a(lda,lda) 
-   INTEGER, INTENT(IN) :: desc( descla_siz_ )
+   TYPE(la_descriptor), INTENT(IN) :: desc
 #if defined __MPI
    INTEGER :: istatus( MPI_STATUS_SIZE )
 #endif
@@ -488,20 +488,20 @@ SUBROUTINE zsqmher( n, a, lda, desc )
 
 #if defined __MPI
 
-   IF( desc( lambda_node_ ) <= 0 ) THEN
+   IF( desc%active_node <= 0 ) THEN
       RETURN
    END IF
 
-   IF( n /= desc( la_n_ ) ) &
+   IF( n /= desc%n ) &
       CALL errore( " zsqmsym ", " wrong global dim n ", n )
-   IF( lda /= desc( nlax_ ) ) &
+   IF( lda /= desc%nrcx ) &
       CALL errore( " zsqmsym ", " wrong leading dim lda ", lda )
 
-   comm = desc( la_comm_ )
+   comm = desc%comm
 
-   nr = desc( nlar_ ) 
-   nc = desc( nlac_ ) 
-   IF( desc( la_myc_ ) == desc( la_myr_ ) ) THEN
+   nr = desc%nr 
+   nc = desc%nc 
+   IF( desc%myc == desc%myr ) THEN
       !
       !  diagonal block, procs work locally
       !
@@ -512,24 +512,24 @@ SUBROUTINE zsqmher( n, a, lda, desc )
          END DO
       END DO
       !
-   ELSE IF( desc( la_myc_ ) > desc( la_myr_ ) ) THEN
+   ELSE IF( desc%myc > desc%myr ) THEN
       !
       !  super diagonal block, procs send the block to sub diag.
       !
-      CALL GRID2D_RANK( 'R', desc( la_npr_ ), desc( la_npc_ ), &
-                             desc( la_myc_ ), desc( la_myr_ ), dest )
+      CALL GRID2D_RANK( 'R', desc%npr, desc%npc, &
+                             desc%myc, desc%myr, dest )
       CALL mpi_isend( a, lda*lda, MPI_DOUBLE_COMPLEX, dest, 1, comm, sreq, ierr )
       !
       IF( ierr /= 0 ) &
          CALL errore( " zsqmher ", " in mpi_isend ", ABS( ierr ) )
       !
-   ELSE IF( desc( la_myc_ ) < desc( la_myr_ ) ) THEN
+   ELSE IF( desc%myc < desc%myr ) THEN
       !
       !  sub diagonal block, procs receive the block from super diag,
       !  then transpose locally
       !
-      CALL GRID2D_RANK( 'R', desc( la_npr_ ), desc( la_npc_ ), &
-                             desc( la_myc_ ), desc( la_myr_ ), sour )
+      CALL GRID2D_RANK( 'R', desc%npr, desc%npc, &
+                             desc%myc, desc%myr, sour )
       CALL mpi_recv( a, lda*lda, MPI_DOUBLE_COMPLEX, sour, 1, comm, istatus, ierr )
       !
       IF( ierr /= 0 ) &
@@ -550,7 +550,7 @@ SUBROUTINE zsqmher( n, a, lda, desc )
       !
    END IF
 
-   IF( desc( la_myc_ ) > desc( la_myr_ ) ) THEN
+   IF( desc%myc > desc%myr ) THEN
       !
       CALL MPI_Wait( sreq, istatus, ierr )
       !
@@ -565,9 +565,9 @@ SUBROUTINE zsqmher( n, a, lda, desc )
    ALLOCATE( tst2( n, n ) )
    tst1 = 0.0d0
    tst2 = 0.0d0
-   do j = 1, desc( nlac_ )
-   do i = 1, desc( nlar_ )
-      tst1( i + desc( ilar_ ) - 1, j + desc( ilac_ ) - 1 ) = a( i , j )
+   do j = 1, desc%nc
+   do i = 1, desc%nr
+      tst1( i + desc%ir - 1, j + desc%ic - 1 ) = a( i , j )
    end do
    end do
    CALL MPI_REDUCE( tst1, tst2, n*n, MPI_DOUBLE_COMPLEX, MPI_SUM, 0, comm, ierr )
@@ -633,11 +633,11 @@ SUBROUTINE dsqmred( na, a, lda, desca, nb, b, ldb, descb )
    INTEGER, INTENT(IN) :: na
    INTEGER, INTENT(IN) :: lda
    REAL(DP)            :: a(lda,lda)  !  matrix to be redistributed into b
-   INTEGER, INTENT(IN) :: desca( descla_siz_ )
+   TYPE(la_descriptor), INTENT(IN) :: desca
    INTEGER, INTENT(IN) :: nb
    INTEGER, INTENT(IN) :: ldb
    REAL(DP)            :: b(ldb,ldb)
-   INTEGER, INTENT(IN) :: descb( descla_siz_ )
+   TYPE(la_descriptor), INTENT(IN) :: descb
 
    INTEGER :: ipc, ipr, npc, npr
    INTEGER :: ipr_old, ir_old, nr_old, irx_old
@@ -647,13 +647,13 @@ SUBROUTINE dsqmred( na, a, lda, desca, nb, b, ldb, descb )
    INTEGER :: nr_new, ir_new, irx_new, ir, nr, nrtot, irb, ire
    INTEGER :: nc_new, ic_new, icx_new, ic, nc, nctot, icb, ice
    INTEGER :: ib, i, j, myid
-   INTEGER :: nrsnd( desca( la_npr_ ) )
-   INTEGER :: ncsnd( desca( la_npr_ ) )
-   INTEGER :: displ( desca( la_npr_ ) )
-   INTEGER :: irb_new( desca( la_npr_ ) )
-   INTEGER :: ire_new( desca( la_npr_ ) )
-   INTEGER :: icb_new( desca( la_npr_ ) )
-   INTEGER :: ice_new( desca( la_npr_ ) )
+   INTEGER :: nrsnd( desca%npr )
+   INTEGER :: ncsnd( desca%npr )
+   INTEGER :: displ( desca%npr )
+   INTEGER :: irb_new( desca%npr )
+   INTEGER :: ire_new( desca%npr )
+   INTEGER :: icb_new( desca%npr )
+   INTEGER :: ice_new( desca%npr )
    REAL(DP), ALLOCATABLE :: buf(:)
    REAL(DP), ALLOCATABLE :: ab(:,:)
    REAL(DP), ALLOCATABLE :: tst1(:,:)
@@ -662,7 +662,7 @@ SUBROUTINE dsqmred( na, a, lda, desca, nb, b, ldb, descb )
     INTEGER :: istatus( MPI_STATUS_SIZE )
 #endif
 
-   IF( desca( lambda_node_ ) <= 0 ) THEN
+   IF( desca%active_node <= 0 ) THEN
       RETURN
    END IF
 
@@ -670,20 +670,20 @@ SUBROUTINE dsqmred( na, a, lda, desca, nb, b, ldb, descb )
 
    IF( nb < na ) &
       CALL errore( " dsqmred ", " nb < na, this sub. work only with nb >= na ", nb )
-   IF( nb /= descb( la_n_ ) ) &
+   IF( nb /= descb%n ) &
       CALL errore( " dsqmred ", " wrong global dim nb ", nb )
-   IF( na /= desca( la_n_ ) ) &
+   IF( na /= desca%n ) &
       CALL errore( " dsqmred ", " wrong global dim na ", na )
-   IF( ldb /= descb( nlax_ ) ) &
+   IF( ldb /= descb%nrcx ) &
       CALL errore( " dsqmred ", " wrong leading dim ldb ", ldb )
-   IF( lda /= desca( nlax_ ) ) &
+   IF( lda /= desca%nrcx ) &
       CALL errore( " dsqmred ", " wrong leading dim lda ", lda )
 
-   npr   = desca( la_npr_ )
-   myrow = desca( la_myr_ )
-   npc   = desca( la_npc_ )
-   mycol = desca( la_myc_ )
-   comm  = desca( la_comm_ )
+   npr   = desca%npr
+   myrow = desca%myr
+   npc   = desca%npc
+   mycol = desca%myc
+   comm  = desca%comm
 
 #if defined __MPI
 
@@ -713,13 +713,13 @@ SUBROUTINE dsqmred( na, a, lda, desca, nb, b, ldb, descb )
    IF( rank /= mycol ) &
       CALL errore( " dsqmred ", " building row_comm ", rank )
 
-   ALLOCATE( buf( descb( nlax_ ) * descb( nlax_ ) ) )
-   ALLOCATE( ab( descb( nlax_ ), desca( nlax_ ) ) )
+   ALLOCATE( buf( descb%nrcx * descb%nrcx ) )
+   ALLOCATE( ab( descb%nrcx, desca%nrcx ) )
 
    ! write( 3000 + myid, * ) 'na, nb = ', na, nb
 
-   DO j = 1, descb( nlac_ )
-      DO i = 1, descb( nlar_ )
+   DO j = 1, descb%nc
+      DO i = 1, descb%nr
          b( i, j ) = 0.0d0
       END DO
    END DO
@@ -730,7 +730,7 @@ SUBROUTINE dsqmred( na, a, lda, desca, nb, b, ldb, descb )
 
    DO ipr = 1, npr
       !
-      CALL descla_local_dims( ir_new, nr_new, nb, descb( la_nx_ ), npr, ipr-1 )
+      CALL descla_local_dims( ir_new, nr_new, nb, descb%nx, npr, ipr-1 )
       !
       irx_new = ir_new + nr_new - 1
 
@@ -738,7 +738,7 @@ SUBROUTINE dsqmred( na, a, lda, desca, nb, b, ldb, descb )
       !
       DO ipr_old = 1, npr
          !
-         CALL descla_local_dims( ir_old, nr_old, na, desca( la_nx_ ), npr, ipr_old-1 )
+         CALL descla_local_dims( ir_old, nr_old, na, desca%nx, npr, ipr_old-1 )
          !
          irx_old = ir_old + nr_old - 1
          !
@@ -775,7 +775,7 @@ SUBROUTINE dsqmred( na, a, lda, desca, nb, b, ldb, descb )
          IF( ( myrow == ipr_old - 1 ) .AND. ( nrsnd( ipr_old ) > 0 ) ) THEN
             IF(  myrow /= ipr - 1 ) THEN
                ib = 0
-               DO j = 1, desca( nlac_ )
+               DO j = 1, desca%nc
                   DO i = irb, ire
                      ib = ib + 1
                      buf( ib ) = a( i, j )
@@ -785,7 +785,7 @@ SUBROUTINE dsqmred( na, a, lda, desca, nb, b, ldb, descb )
                IF( ierr /= 0 ) &
                   CALL errore( " dsqmred ", " in mpi_isend ", ABS( ierr ) )
             ELSE
-               DO j = 1, desca( nlac_ )
+               DO j = 1, desca%nc
                   ib = irb
                   DO i = irb_new( ipr_old ), ire_new( ipr_old )
                      ab( i, j ) = a( ib, j )
@@ -800,7 +800,7 @@ SUBROUTINE dsqmred( na, a, lda, desca, nb, b, ldb, descb )
          IF( nrsnd( ipr_old ) /= ire_new( ipr_old ) - irb_new( ipr_old ) + 1 ) &
             CALL errore( " dsqmred ", " somthing wrong with row 2 ", nrsnd( ipr_old ) )
          !
-         nrsnd( ipr_old ) = nrsnd( ipr_old ) * desca( nlac_ )
+         nrsnd( ipr_old ) = nrsnd( ipr_old ) * desca%nc
          !
       END DO
       !
@@ -817,7 +817,7 @@ SUBROUTINE dsqmred( na, a, lda, desca, nb, b, ldb, descb )
                   IF( ib /= nrsnd(ipr_old) ) &
                      CALL errore( " dsqmred ", " somthing wrong with row 3 ", ib )
                   ib = 0
-                  DO j = 1, desca( nlac_ )
+                  DO j = 1, desca%nc
                      DO i = irb_new( ipr_old ), ire_new( ipr_old )
                         ib = ib + 1
                         ab( i, j ) = buf( ib )
@@ -842,7 +842,7 @@ SUBROUTINE dsqmred( na, a, lda, desca, nb, b, ldb, descb )
 
    DO ipc = 1, npc
       !
-      CALL descla_local_dims( ic_new, nc_new, nb, descb( la_nx_ ), npc, ipc-1 )
+      CALL descla_local_dims( ic_new, nc_new, nb, descb%nx, npc, ipc-1 )
       !
       icx_new = ic_new + nc_new - 1
       !
@@ -850,7 +850,7 @@ SUBROUTINE dsqmred( na, a, lda, desca, nb, b, ldb, descb )
       !
       DO ipc_old = 1, npc
          !
-         CALL descla_local_dims( ic_old, nc_old, na, desca( la_nx_ ), npc, ipc_old-1 )
+         CALL descla_local_dims( ic_old, nc_old, na, desca%nx, npc, ipc_old-1 )
          !
          icx_old = ic_old + nc_old - 1
          !
@@ -888,7 +888,7 @@ SUBROUTINE dsqmred( na, a, lda, desca, nb, b, ldb, descb )
             IF(  mycol /= ipc - 1 ) THEN
                ib = 0
                DO j = icb, ice
-                  DO i = 1, descb( nlax_ )
+                  DO i = 1, descb%nrcx
                      ib = ib + 1
                      buf( ib ) = ab( i, j )
                   END DO
@@ -899,7 +899,7 @@ SUBROUTINE dsqmred( na, a, lda, desca, nb, b, ldb, descb )
             ELSE
                ib = icb
                DO j = icb_new( ipc_old ), ice_new( ipc_old )
-                  DO i = 1, descb( nlax_ )
+                  DO i = 1, descb%nrcx
                         b( i, j ) = ab( i, ib )
                   END DO
                   ib = ib + 1
@@ -912,7 +912,7 @@ SUBROUTINE dsqmred( na, a, lda, desca, nb, b, ldb, descb )
          IF( ncsnd( ipc_old ) /= ice_new( ipc_old ) - icb_new( ipc_old ) + 1 ) &
             CALL errore( " dsqmred ", " somthing wrong with col 2 ", ncsnd( ipc_old ) )
          !
-         ncsnd( ipc_old ) = ncsnd( ipc_old ) * descb( nlax_ )
+         ncsnd( ipc_old ) = ncsnd( ipc_old ) * descb%nrcx
          !
       END DO
       !
@@ -968,9 +968,9 @@ SUBROUTINE dsqmred( na, a, lda, desca, nb, b, ldb, descb )
 
    ab = 0.0d0
 
-   do j = 1, desca( nlac_ )
-   do i = 1, desca( nlar_ )
-      ab( i + desca( ilar_ ) - 1, j + desca( ilac_ ) - 1 ) = a( i , j )
+   do j = 1, desca%nc
+   do i = 1, desca%nr
+      ab( i + desca%ir - 1, j + desca%ic - 1 ) = a( i , j )
    end do
    end do
 
@@ -978,9 +978,9 @@ SUBROUTINE dsqmred( na, a, lda, desca, nb, b, ldb, descb )
 
    ab = 0.0d0
 
-   do j = 1, descb( nlac_ )
-   do i = 1, descb( nlar_ )
-      ab( i + descb( ilar_ ) - 1, j + descb( ilac_ ) - 1 ) = b( i , j )
+   do j = 1, descb%nc
+   do i = 1, descb%nr
+      ab( i + descb%ir - 1, j + descb%ic - 1 ) = b( i , j )
    end do
    end do
 
@@ -1023,11 +1023,11 @@ SUBROUTINE zsqmred( na, a, lda, desca, nb, b, ldb, descb )
    INTEGER, INTENT(IN) :: na
    INTEGER, INTENT(IN) :: lda
    COMPLEX(DP)         :: a(lda,lda)  !  matrix to be redistributed into b
-   INTEGER, INTENT(IN) :: desca( descla_siz_ )
+   TYPE(la_descriptor), INTENT(IN) :: desca
    INTEGER, INTENT(IN) :: nb
    INTEGER, INTENT(IN) :: ldb
    COMPLEX(DP)         :: b(ldb,ldb)
-   INTEGER, INTENT(IN) :: descb( descla_siz_ )
+   TYPE(la_descriptor), INTENT(IN) :: descb
 
    INTEGER :: ipc, ipr, npc, npr
    INTEGER :: ipr_old, ir_old, nr_old, irx_old
@@ -1037,13 +1037,13 @@ SUBROUTINE zsqmred( na, a, lda, desca, nb, b, ldb, descb )
    INTEGER :: nr_new, ir_new, irx_new, ir, nr, nrtot, irb, ire
    INTEGER :: nc_new, ic_new, icx_new, ic, nc, nctot, icb, ice
    INTEGER :: ib, i, j, myid
-   INTEGER :: nrsnd( desca( la_npr_ ) )
-   INTEGER :: ncsnd( desca( la_npr_ ) )
-   INTEGER :: displ( desca( la_npr_ ) )
-   INTEGER :: irb_new( desca( la_npr_ ) )
-   INTEGER :: ire_new( desca( la_npr_ ) )
-   INTEGER :: icb_new( desca( la_npr_ ) )
-   INTEGER :: ice_new( desca( la_npr_ ) )
+   INTEGER :: nrsnd( desca%npr )
+   INTEGER :: ncsnd( desca%npr )
+   INTEGER :: displ( desca%npr )
+   INTEGER :: irb_new( desca%npr )
+   INTEGER :: ire_new( desca%npr )
+   INTEGER :: icb_new( desca%npr )
+   INTEGER :: ice_new( desca%npr )
    COMPLEX(DP), ALLOCATABLE :: buf(:)
    COMPLEX(DP), ALLOCATABLE :: ab(:,:)
    COMPLEX(DP), ALLOCATABLE :: tst1(:,:)
@@ -1052,7 +1052,7 @@ SUBROUTINE zsqmred( na, a, lda, desca, nb, b, ldb, descb )
     INTEGER :: istatus( MPI_STATUS_SIZE )
 #endif
 
-   IF( desca( lambda_node_ ) <= 0 ) THEN
+   IF( desca%active_node <= 0 ) THEN
       RETURN
    END IF
 
@@ -1060,20 +1060,20 @@ SUBROUTINE zsqmred( na, a, lda, desca, nb, b, ldb, descb )
 
    IF( nb < na ) &
       CALL errore( " zsqmred ", " nb < na, this sub. work only with nb >= na ", nb )
-   IF( nb /= descb( la_n_ ) ) &
+   IF( nb /= descb%n ) &
       CALL errore( " zsqmred ", " wrong global dim nb ", nb )
-   IF( na /= desca( la_n_ ) ) &
+   IF( na /= desca%n ) &
       CALL errore( " zsqmred ", " wrong global dim na ", na )
-   IF( ldb /= descb( nlax_ ) ) &
+   IF( ldb /= descb%nrcx ) &
       CALL errore( " zsqmred ", " wrong leading dim ldb ", ldb )
-   IF( lda /= desca( nlax_ ) ) &
+   IF( lda /= desca%nrcx ) &
       CALL errore( " zsqmred ", " wrong leading dim lda ", lda )
 
-   npr   = desca( la_npr_ )
-   myrow = desca( la_myr_ )
-   npc   = desca( la_npc_ )
-   mycol = desca( la_myc_ )
-   comm  = desca( la_comm_ )
+   npr   = desca%npr
+   myrow = desca%myr
+   npc   = desca%npc
+   mycol = desca%myc
+   comm  = desca%comm
 
 #if defined __MPI
 
@@ -1103,11 +1103,11 @@ SUBROUTINE zsqmred( na, a, lda, desca, nb, b, ldb, descb )
    IF( rank /= mycol ) &
       CALL errore( " zsqmred ", " building row_comm ", rank )
 
-   ALLOCATE( buf( descb( nlax_ ) * descb( nlax_ ) ) )
-   ALLOCATE( ab( descb( nlax_ ), desca( nlax_ ) ) )
+   ALLOCATE( buf( descb%nrcx * descb%nrcx ) )
+   ALLOCATE( ab( descb%nrcx, desca%nrcx ) )
 
-   DO j = 1, descb( nlac_ )
-      DO i = 1, descb( nlar_ )
+   DO j = 1, descb%nc
+      DO i = 1, descb%nr
          b( i, j ) = ( 0_DP , 0_DP )
       END DO
    END DO
@@ -1118,13 +1118,13 @@ SUBROUTINE zsqmred( na, a, lda, desca, nb, b, ldb, descb )
 
    DO ipr = 1, npr
       !
-      CALL descla_local_dims( ir_new, nr_new, nb, descb( la_nx_ ), npr, ipr-1 )
+      CALL descla_local_dims( ir_new, nr_new, nb, descb%nx, npr, ipr-1 )
       !
       irx_new = ir_new + nr_new - 1
       !
       DO ipr_old = 1, npr
          !
-         CALL descla_local_dims( ir_old, nr_old, na, desca( la_nx_ ), npr, ipr_old-1 )
+         CALL descla_local_dims( ir_old, nr_old, na, desca%nx, npr, ipr_old-1 )
          !
          irx_old = ir_old + nr_old - 1
          !
@@ -1155,7 +1155,7 @@ SUBROUTINE zsqmred( na, a, lda, desca, nb, b, ldb, descb )
          IF( ( myrow == ipr_old - 1 ) .AND. ( nrsnd( ipr_old ) > 0 ) ) THEN
             IF(  myrow /= ipr - 1 ) THEN
                ib = 0
-               DO j = 1, desca( nlac_ )
+               DO j = 1, desca%nc
                   DO i = irb, ire
                      ib = ib + 1
                      buf( ib ) = a( i, j )
@@ -1165,7 +1165,7 @@ SUBROUTINE zsqmred( na, a, lda, desca, nb, b, ldb, descb )
                IF( ierr /= 0 ) &
                   CALL errore( " zsqmred ", " in mpi_isend 1 ", ABS( ierr ) )
             ELSE
-               DO j = 1, desca( nlac_ )
+               DO j = 1, desca%nc
                   ib = irb
                   DO i = irb_new( ipr_old ), ire_new( ipr_old )
                      ab( i, j ) = a( ib, j )
@@ -1180,7 +1180,7 @@ SUBROUTINE zsqmred( na, a, lda, desca, nb, b, ldb, descb )
          IF( nrsnd( ipr_old ) /= ire_new( ipr_old ) - irb_new( ipr_old ) + 1 ) &
             CALL errore( " zsqmred ", " somthing wrong with row 2 ", nrsnd( ipr_old ) )
          !
-         nrsnd( ipr_old ) = nrsnd( ipr_old ) * desca( nlac_ )
+         nrsnd( ipr_old ) = nrsnd( ipr_old ) * desca%nc
          !
       END DO
       !
@@ -1197,7 +1197,7 @@ SUBROUTINE zsqmred( na, a, lda, desca, nb, b, ldb, descb )
                   IF( ib /= nrsnd(ipr_old) ) &
                      CALL errore( " zsqmred ", " somthing wrong with row 3 ", ib )
                   ib = 0
-                  DO j = 1, desca( nlac_ )
+                  DO j = 1, desca%nc
                      DO i = irb_new( ipr_old ), ire_new( ipr_old )
                         ib = ib + 1
                         ab( i, j ) = buf( ib )
@@ -1222,13 +1222,13 @@ SUBROUTINE zsqmred( na, a, lda, desca, nb, b, ldb, descb )
 
    DO ipc = 1, npc
       !
-      CALL descla_local_dims( ic_new, nc_new, nb, descb( la_nx_ ), npc, ipc-1 )
+      CALL descla_local_dims( ic_new, nc_new, nb, descb%nx, npc, ipc-1 )
       !
       icx_new = ic_new + nc_new - 1
       !
       DO ipc_old = 1, npc
          !
-         CALL descla_local_dims( ic_old, nc_old, na, desca( la_nx_ ), npc, ipc_old-1 )
+         CALL descla_local_dims( ic_old, nc_old, na, desca%nx, npc, ipc_old-1 )
          !
          icx_old = ic_old + nc_old - 1
          !
@@ -1260,7 +1260,7 @@ SUBROUTINE zsqmred( na, a, lda, desca, nb, b, ldb, descb )
             IF(  mycol /= ipc - 1 ) THEN
                ib = 0
                DO j = icb, ice
-                  DO i = 1, descb( nlax_ )
+                  DO i = 1, descb%nrcx
                      ib = ib + 1
                      buf( ib ) = ab( i, j )
                   END DO
@@ -1271,7 +1271,7 @@ SUBROUTINE zsqmred( na, a, lda, desca, nb, b, ldb, descb )
             ELSE
                ib = icb
                DO j = icb_new( ipc_old ), ice_new( ipc_old )
-                  DO i = 1, descb( nlax_ )
+                  DO i = 1, descb%nrcx
                         b( i, j ) = ab( i, ib )
                   END DO
                   ib = ib + 1
@@ -1284,7 +1284,7 @@ SUBROUTINE zsqmred( na, a, lda, desca, nb, b, ldb, descb )
          IF( ncsnd( ipc_old ) /= ice_new( ipc_old ) - icb_new( ipc_old ) + 1 ) &
             CALL errore( " zsqmred ", " somthing wrong with col 2 ", ncsnd( ipc_old ) )
          !
-         ncsnd( ipc_old ) = ncsnd( ipc_old ) * descb( nlax_ )
+         ncsnd( ipc_old ) = ncsnd( ipc_old ) * descb%nrcx
          !
       END DO
       !
@@ -1338,9 +1338,9 @@ SUBROUTINE zsqmred( na, a, lda, desca, nb, b, ldb, descb )
 
    ab = 0.0d0
 
-   do j = 1, desca( nlac_ )
-   do i = 1, desca( nlar_ )
-      ab( i + desca( ilar_ ) - 1, j + desca( ilac_ ) - 1 ) = a( i , j )
+   do j = 1, desca%nc
+   do i = 1, desca%nr
+      ab( i + desca%ir - 1, j + desca%ic - 1 ) = a( i , j )
    end do
    end do
 
@@ -1348,9 +1348,9 @@ SUBROUTINE zsqmred( na, a, lda, desca, nb, b, ldb, descb )
 
    ab = 0.0d0
 
-   do j = 1, descb( nlac_ )
-   do i = 1, descb( nlar_ )
-      ab( i + descb( ilar_ ) - 1, j + descb( ilac_ ) - 1 ) = b( i , j )
+   do j = 1, descb%nc
+   do i = 1, descb%nr
+      ab( i + descb%ir - 1, j + descb%ic - 1 ) = b( i , j )
    end do
    end do
 
@@ -1724,8 +1724,7 @@ SUBROUTINE sqr_mm_cannon( transa, transb, n, alpha, a, lda, b, ldb, beta, c, ldc
    !  Parallel square matrix multiplication with Cannon's algorithm
    !
    USE kinds,       ONLY : DP
-   USE descriptors, ONLY : ilar_ , nlar_ , ilac_ , nlac_ , nlax_ , &
-                           la_comm_ , lambda_node_ , la_npr_ , la_npc_ , la_myr_ , la_myc_
+   USE descriptors
    !
    IMPLICIT NONE
    !
@@ -1734,7 +1733,7 @@ SUBROUTINE sqr_mm_cannon( transa, transb, n, alpha, a, lda, b, ldb, beta, c, ldc
    REAL(DP), INTENT(IN) :: alpha, beta
    INTEGER, INTENT(IN) :: lda, ldb, ldc
    REAL(DP) :: a(lda,*), b(ldb,*), c(ldc,*)
-   INTEGER, INTENT(IN) :: desc(*)
+   TYPE(la_descriptor), INTENT(IN) :: desc
    !
    !  performs one of the matrix-matrix operations
    !
@@ -1767,7 +1766,7 @@ SUBROUTINE sqr_mm_cannon( transa, transb, n, alpha, a, lda, b, ldb, beta, c, ldc
    !
 #endif
    !
-   IF( desc( lambda_node_ ) < 0 ) THEN
+   IF( desc%active_node < 0 ) THEN
       !
       !  processors not interested in this computation return quickly
       !
@@ -1779,7 +1778,7 @@ SUBROUTINE sqr_mm_cannon( transa, transb, n, alpha, a, lda, b, ldb, beta, c, ldc
       RETURN
    END IF
 
-   IF( desc( la_npr_ ) == 1 ) THEN 
+   IF( desc%npr == 1 ) THEN 
       !
       !  quick return if only one processor is used 
       !
@@ -1789,21 +1788,21 @@ SUBROUTINE sqr_mm_cannon( transa, transb, n, alpha, a, lda, b, ldb, beta, c, ldc
       !
    END IF
 
-   IF( desc( la_npr_ ) /= desc( la_npc_ ) ) &
+   IF( desc%npr /= desc%npc ) &
       CALL errore( ' sqr_mm_cannon ', ' works only with square processor mesh ', 1 )
    !
    !  Retrieve communicator and mesh geometry
    !
-   np    = desc( la_npr_ )
-   comm  = desc( la_comm_ )
-   rowid = desc( la_myr_  )
-   colid = desc( la_myc_  )
+   np    = desc%npr
+   comm  = desc%comm
+   rowid = desc%myr
+   colid = desc%myc
    !
    !  Retrieve the size of the local block
    !
-   nr    = desc( nlar_ ) 
-   nc    = desc( nlac_ ) 
-   nb    = desc( nlax_ )
+   nr    = desc%nr 
+   nc    = desc%nc 
+   nb    = desc%nrcx
    !
 #if defined (__MPI)
    CALL MPI_BARRIER( comm, ierr )
@@ -2029,8 +2028,7 @@ SUBROUTINE sqr_zmm_cannon( transa, transb, n, alpha, a, lda, b, ldb, beta, c, ld
    !  Parallel square matrix multiplication with Cannon's algorithm
    !
    USE kinds,       ONLY : DP
-   USE descriptors, ONLY : ilar_ , nlar_ , ilac_ , nlac_ , nlax_ , &
-                           la_comm_ , lambda_node_ , la_npr_ , la_npc_ , la_myr_ , la_myc_
+   USE descriptors
    !
    IMPLICIT NONE
    !
@@ -2039,7 +2037,7 @@ SUBROUTINE sqr_zmm_cannon( transa, transb, n, alpha, a, lda, b, ldb, beta, c, ld
    COMPLEX(DP), INTENT(IN) :: alpha, beta
    INTEGER, INTENT(IN) :: lda, ldb, ldc
    COMPLEX(DP) :: a(lda,*), b(ldb,*), c(ldc,*)
-   INTEGER, INTENT(IN) :: desc(*)
+   TYPE(la_descriptor), INTENT(IN) :: desc
    !
    !  performs one of the matrix-matrix operations
    !
@@ -2074,7 +2072,7 @@ SUBROUTINE sqr_zmm_cannon( transa, transb, n, alpha, a, lda, b, ldb, beta, c, ld
    !
 #endif
    !
-   IF( desc( lambda_node_ ) < 0 ) THEN
+   IF( desc%active_node < 0 ) THEN
       !
       !  processors not interested in this computation return quickly
       !
@@ -2086,7 +2084,7 @@ SUBROUTINE sqr_zmm_cannon( transa, transb, n, alpha, a, lda, b, ldb, beta, c, ld
       RETURN
    END IF
 
-   IF( desc( la_npr_ ) == 1 ) THEN 
+   IF( desc%npr == 1 ) THEN 
       !
       !  quick return if only one processor is used 
       !
@@ -2096,21 +2094,21 @@ SUBROUTINE sqr_zmm_cannon( transa, transb, n, alpha, a, lda, b, ldb, beta, c, ld
       !
    END IF
 
-   IF( desc( la_npr_ ) /= desc( la_npc_ ) ) &
+   IF( desc%npr /= desc%npc ) &
       CALL errore( ' sqr_zmm_cannon ', ' works only with square processor mesh ', 1 )
    !
    !  Retrieve communicator and mesh geometry
    !
-   np    = desc( la_npr_ )
-   comm  = desc( la_comm_ )
-   rowid = desc( la_myr_  )
-   colid = desc( la_myc_  )
+   np    = desc%npr
+   comm  = desc%comm
+   rowid = desc%myr
+   colid = desc%myc
    !
    !  Retrieve the size of the local block
    !
-   nr    = desc( nlar_ ) 
-   nc    = desc( nlac_ ) 
-   nb    = desc( nlax_ )
+   nr    = desc%nr 
+   nc    = desc%nc 
+   nb    = desc%nrcx
    !
 #if defined (__MPI)
    CALL MPI_BARRIER( comm, ierr )
@@ -2338,15 +2336,14 @@ SUBROUTINE sqr_tr_cannon( n, a, lda, b, ldb, desc )
    !  Parallel square matrix transposition with Cannon's algorithm
    !
    USE kinds,       ONLY : DP
-   USE descriptors, ONLY : ilar_ , nlar_ , ilac_ , nlac_ , nlax_ , la_npc_ , la_n_ , &
-                           la_comm_ , lambda_node_ , la_npr_ , la_myr_ , la_myc_
+   USE descriptors
    !
    IMPLICIT NONE
    !
    INTEGER, INTENT(IN) :: n
    INTEGER, INTENT(IN) :: lda, ldb
    REAL(DP)            :: a(lda,*), b(ldb,*)
-   INTEGER, INTENT(IN) :: desc(*)
+   TYPE(la_descriptor), INTENT(IN) :: desc
    !
 #if defined (__MPI)
    !
@@ -2367,7 +2364,7 @@ SUBROUTINE sqr_tr_cannon( n, a, lda, b, ldb, desc )
    !
 #endif
    !
-   IF( desc( lambda_node_ ) < 0 ) THEN
+   IF( desc%active_node < 0 ) THEN
       RETURN
    END IF
 
@@ -2375,31 +2372,31 @@ SUBROUTINE sqr_tr_cannon( n, a, lda, b, ldb, desc )
      RETURN
    END IF
 
-   IF( desc( la_npr_ ) == 1 ) THEN
+   IF( desc%npr == 1 ) THEN
       CALL mytranspose( a, lda, b, ldb, n, n )
       RETURN
    END IF
 
-   IF( desc( la_npr_ ) /= desc( la_npc_ ) ) &
+   IF( desc%npr /= desc%npc ) &
       CALL errore( ' sqr_tr_cannon ', ' works only with square processor mesh ', 1 )
-   IF( n /= desc( la_n_ ) ) &
+   IF( n /= desc%n ) &
       CALL errore( ' sqr_tr_cannon ', ' inconsistent size n  ', 1 )
-   IF( lda /= desc( nlax_ ) ) &
+   IF( lda /= desc%nrcx ) &
       CALL errore( ' sqr_tr_cannon ', ' inconsistent size lda  ', 1 )
-   IF( ldb /= desc( nlax_ ) ) &
+   IF( ldb /= desc%nrcx ) &
       CALL errore( ' sqr_tr_cannon ', ' inconsistent size ldb  ', 1 )
 
-   comm = desc( la_comm_ )
+   comm = desc%comm
 
-   rowid = desc( la_myr_ )
-   colid = desc( la_myc_ )
-   np    = desc( la_npr_ )
+   rowid = desc%myr
+   colid = desc%myc
+   np    = desc%npr
    !
    !  Compute the size of the local block
    !
-   nr = desc( nlar_ ) 
-   nc = desc( nlac_ ) 
-   nb = desc( nlax_ )
+   nr = desc%nr 
+   nc = desc%nc 
+   nb = desc%nrcx
    !
    allocate( ablk( nb, nb ) )
    DO j = 1, nc
@@ -2478,15 +2475,14 @@ SUBROUTINE redist_row2col( n, a, b, ldx, nx, desc )
    !  to obtain b, with the second dim. distributed over processor clolumn 
    !
    USE kinds,       ONLY : DP
-   USE descriptors, ONLY : ilar_ , nlar_ , ilac_ , nlac_ , nlax_ , la_npc_ , la_n_ , &
-                           la_comm_ , lambda_node_ , la_npr_ , la_myr_ , la_myc_
+   USE descriptors
    !
    IMPLICIT NONE
    !
    INTEGER, INTENT(IN) :: n
    INTEGER, INTENT(IN) :: ldx, nx
    REAL(DP)            :: a(ldx,nx), b(ldx,nx)
-   INTEGER, INTENT(IN) :: desc(*)
+   TYPE(la_descriptor), INTENT(IN) :: desc
    !
 #if defined (__MPI)
    !
@@ -2505,7 +2501,7 @@ SUBROUTINE redist_row2col( n, a, b, ldx, nx, desc )
    !
 #endif
    !
-   IF( desc( lambda_node_ ) < 0 ) THEN
+   IF( desc%active_node < 0 ) THEN
       RETURN
    END IF
 
@@ -2513,23 +2509,23 @@ SUBROUTINE redist_row2col( n, a, b, ldx, nx, desc )
      RETURN
    END IF
 
-   IF( desc( la_npr_ ) == 1 ) THEN
+   IF( desc%npr == 1 ) THEN
       b = a
       RETURN
    END IF
 
-   IF( desc( la_npr_ ) /= desc( la_npc_ ) ) &
+   IF( desc%npr /= desc%npc ) &
       CALL errore( ' redist_row2col ', ' works only with square processor mesh ', 1 )
-   IF( n /= desc( la_n_ ) ) &
+   IF( n /= desc%n ) &
       CALL errore( ' redist_row2col ', ' inconsistent size n  ', 1 )
-   IF( nx /= desc( nlax_ ) ) &
+   IF( nx /= desc%nrcx ) &
       CALL errore( ' redist_row2col ', ' inconsistent size lda  ', 1 )
 
-   comm = desc( la_comm_ )
+   comm = desc%comm
 
-   rowid = desc( la_myr_ )
-   colid = desc( la_myc_ )
-   np    = desc( la_npr_ )
+   rowid = desc%myr
+   colid = desc%myc
+   np    = desc%npr
    !
    irdst = colid
    icdst = rowid
@@ -2569,15 +2565,14 @@ SUBROUTINE cyc2blk_redist( n, a, lda, nca, b, ldb, ncb, desc )
    !  B (output) is distributed by block across 2D processors grid
    !
    USE kinds,       ONLY : DP
-   USE descriptors, ONLY : ilar_ , nlar_ , ilac_ , nlac_ , nlax_ , lambda_node_ , la_npr_ , &
-                           descla_siz_ , la_npc_ , la_n_ , la_me_ , la_comm_
+   USE descriptors
    !
    IMPLICIT NONE
    !
    INTEGER, INTENT(IN) :: n
    INTEGER, INTENT(IN) :: lda, nca, ldb, ncb
    REAL(DP) :: a( lda, nca ), b( ldb, ncb )
-   INTEGER  :: desc( descla_siz_ )
+   TYPE(la_descriptor), INTENT(IN) :: desc
    !
 #if defined (__MPI)
    !
@@ -2589,56 +2584,64 @@ SUBROUTINE cyc2blk_redist( n, a, lda, nca, b, ldb, ncb, desc )
    integer :: np, ip, me, nproc, comm_a
    integer :: ip_ir, ip_ic, ip_nr, ip_nc, il, nbuf, ip_irl
    integer :: i, ii, j, jj, nr, nc, nb, nrl, irl, ir, ic
+   INTEGER :: me_ortho(2), np_ortho(2)
    !
    real(DP), allocatable :: rcvbuf(:,:,:)
    real(DP), allocatable :: sndbuf(:,:)
-   integer, allocatable :: ip_desc(:,:)
+   TYPE(la_descriptor) :: ip_desc
    !
    character(len=256) :: msg
    !
 #if defined (__MPI)
 
-   IF( desc( lambda_node_ ) < 0 ) THEN
+   IF( desc%active_node < 0 ) THEN
       RETURN
    END IF
 
-   np = desc( la_npr_ )  !  dimension of the processor mesh
-   nb = desc( nlax_ )    !  leading dimension of the local matrix block
-   me = desc( la_me_ )   !  my processor id (starting from 0)
-   comm_a = desc( la_comm_ )
-   nproc  = desc( la_npr_ ) * desc( la_npc_ )
+   np = desc%npr  !  dimension of the processor mesh
+   nb = desc%nrcx    !  leading dimension of the local matrix block
+   me = desc%mype   !  my processor id (starting from 0)
+   comm_a = desc%comm
+   nproc  = desc%npr * desc%npc
 
-   IF( np /= desc( la_npc_ ) ) &
+   IF( np /= desc%npc ) &
       CALL errore( ' cyc2blk_redist ', ' works only with square processor mesh ', 1 )
    IF( n < 1 ) &
       CALL errore( ' cyc2blk_redist ', ' n less or equal zero ', 1 )
-   IF( desc( la_n_ ) < nproc ) &
+   IF( desc%n < nproc ) &
       CALL errore( ' cyc2blk_redist ', ' nb less than the number of proc ', 1 )
 
-   ALLOCATE( ip_desc( descla_siz_ , nproc ) )
-
-   CALL mpi_barrier( comm_a, ierr )
-
-   CALL mpi_allgather( desc, descla_siz_ , mpi_integer, ip_desc, descla_siz_ , mpi_integer, comm_a, ierr )
-   IF( ierr /= 0 ) &
-      CALL errore( " cyc2blk_redist ", " in mpi_allgather ", ABS( ierr ) )
-   !
    nbuf = (nb/nproc+2) * nb
    !
    ALLOCATE( sndbuf( nb/nproc+2, nb ) )
    ALLOCATE( rcvbuf( nb/nproc+2, nb, nproc ) )
-   
+   !
+   ! loop over all processors
+   ! 
    DO ip = 0, nproc - 1
       !
-      IF( ip_desc( nlax_ , ip + 1 ) /= nb ) &
+      ! 2D proc ortho grid sizes
+      !
+      np_ortho(1) = desc%npr
+      np_ortho(2) = desc%npc
+      !
+      ! compute other processor coordinates me_ortho
+      !
+      CALL GRID2D_COORDS( 'R', ip, np_ortho(1), np_ortho(2), me_ortho(1), me_ortho(2) )
+      !
+      ! initialize other processor descriptor
+      !
+      CALL descla_init( ip_desc, desc%n, desc%nx, np_ortho, me_ortho, desc%comm, 1 )
+
+      IF( ip_desc%nrcx /= nb ) &
          CALL errore( ' cyc2blk_redist ', ' inconsistent block dim nb ', 1 )
       !
-      IF( ip_desc( lambda_node_ , ip + 1 ) > 0 ) THEN
+      IF( ip_desc%active_node > 0 ) THEN
 
-         ip_nr = ip_desc( nlar_ , ip + 1) 
-         ip_nc = ip_desc( nlac_ , ip + 1) 
-         ip_ir = ip_desc( ilar_ , ip + 1) 
-         ip_ic = ip_desc( ilac_ , ip + 1) 
+         ip_nr = ip_desc%nr
+         ip_nc = ip_desc%nc
+         ip_ir = ip_desc%ir
+         ip_ic = ip_desc%ic
          !
          DO j = 1, ip_nc
             jj = j + ip_ic - 1
@@ -2665,10 +2668,10 @@ SUBROUTINE cyc2blk_redist( n, a, lda, nca, b, ldb, ncb, desc )
    END DO
 
    !
-   nr  = desc( nlar_ ) 
-   nc  = desc( nlac_ )
-   ir  = desc( ilar_ )
-   ic  = desc( ilac_ )
+   nr  = desc%nr 
+   nc  = desc%nc
+   ir  = desc%ir
+   ic  = desc%ic
    !
    DO ip = 0, nproc - 1
       DO j = 1, nc
@@ -2684,8 +2687,6 @@ SUBROUTINE cyc2blk_redist( n, a, lda, nca, b, ldb, ncb, desc )
       END DO
    END DO
    !
-   !
-   DEALLOCATE( ip_desc )
    DEALLOCATE( rcvbuf )
    DEALLOCATE( sndbuf )
    
@@ -2729,15 +2730,14 @@ SUBROUTINE cyc2blk_zredist( n, a, lda, nca, b, ldb, ncb, desc )
    !  B (output) is distributed by block across 2D processors grid
    !
    USE kinds,       ONLY : DP
-   USE descriptors, ONLY : ilar_ , nlar_ , ilac_ , nlac_ , nlax_ , lambda_node_ , la_npr_ , &
-                           descla_siz_ , la_npc_ , la_n_ , la_me_ , la_comm_
+   USE descriptors
    !
    IMPLICIT NONE
    !
    INTEGER, INTENT(IN) :: n
    INTEGER, INTENT(IN) :: lda, nca, ldb, ncb
    COMPLEX(DP) :: a( lda, nca ), b( ldb, ncb )
-   INTEGER  :: desc( descla_siz_ )
+   TYPE(la_descriptor), INTENT(IN) :: desc
    !
 #if defined (__MPI)
    !
@@ -2749,39 +2749,32 @@ SUBROUTINE cyc2blk_zredist( n, a, lda, nca, b, ldb, ncb, desc )
    integer :: np, ip, me, nproc, comm_a
    integer :: ip_ir, ip_ic, ip_nr, ip_nc, il, nbuf, ip_irl
    integer :: i, ii, j, jj, nr, nc, nb, nrl, irl, ir, ic
+   INTEGER :: me_ortho(2), np_ortho(2)
    !
    COMPLEX(DP), allocatable :: rcvbuf(:,:,:)
    COMPLEX(DP), allocatable :: sndbuf(:,:)
-   integer, allocatable :: ip_desc(:,:)
+   TYPE(la_descriptor) :: ip_desc
    !
    character(len=256) :: msg
    !
 #if defined (__MPI)
 
-   IF( desc( lambda_node_ ) < 0 ) THEN
+   IF( desc%active_node < 0 ) THEN
       RETURN
    END IF
 
-   np = desc( la_npr_ )  !  dimension of the processor mesh
-   nb = desc( nlax_ )    !  leading dimension of the local matrix block
-   me = desc( la_me_ )   !  my processor id (starting from 0)
-   comm_a = desc( la_comm_ )
-   nproc  = desc( la_npr_ ) * desc( la_npc_ )
+   np = desc%npr  !  dimension of the processor mesh
+   nb = desc%nrcx    !  leading dimension of the local matrix block
+   me = desc%mype   !  my processor id (starting from 0)
+   comm_a = desc%comm
+   nproc  = desc%npr * desc%npc
 
-   IF( np /= desc( la_npc_ ) ) &
+   IF( np /= desc%npc ) &
       CALL errore( ' cyc2blk_zredist ', ' works only with square processor mesh ', 1 )
    IF( n < 1 ) &
       CALL errore( ' cyc2blk_zredist ', ' n less or equal zero ', 1 )
-   IF( desc( la_n_ ) < nproc ) &
+   IF( desc%n < nproc ) &
       CALL errore( ' cyc2blk_zredist ', ' nb less than the number of proc ', 1 )
-
-   ALLOCATE( ip_desc( descla_siz_ , nproc ) )
-
-   CALL mpi_barrier( comm_a, ierr )
-
-   CALL mpi_allgather( desc, descla_siz_ , mpi_integer, ip_desc, descla_siz_ , mpi_integer, comm_a, ierr )
-   IF( ierr /= 0 ) &
-      CALL errore( " cyc2blk_zredist ", " in mpi_allgather ", ABS( ierr ) )
    !
    nbuf = (nb/nproc+2) * nb
    !
@@ -2790,28 +2783,37 @@ SUBROUTINE cyc2blk_zredist( n, a, lda, nca, b, ldb, ncb, desc )
    
    DO ip = 0, nproc - 1
       !
-      IF( ip_desc( lambda_node_ , ip + 1 ) > 0 ) THEN
+      ! 2D proc ortho grid sizes
+      !
+      np_ortho(1) = desc%npr
+      np_ortho(2) = desc%npc
+      !
+      ! compute other processor coordinates me_ortho
+      !
+      CALL GRID2D_COORDS( 'R', ip, np_ortho(1), np_ortho(2), me_ortho(1), me_ortho(2) )
+      !
+      ! initialize other processor descriptor
+      !
+      CALL descla_init( ip_desc, desc%n, desc%nx, np_ortho, me_ortho, desc%comm, 1 )
 
-         ip_nr = ip_desc( nlar_ , ip + 1) 
-         ip_nc = ip_desc( nlac_ , ip + 1) 
-         ip_ir = ip_desc( ilar_ , ip + 1) 
-         ip_ic = ip_desc( ilac_ , ip + 1) 
-         !
-         DO j = 1, ip_nc
-            jj = j + ip_ic - 1
-            il = 1
-            DO i = 1, ip_nr
-               ii = i + ip_ir - 1
-               IF( MOD( ii - 1, nproc ) == me ) THEN
-                  CALL check_sndbuf_index()
-                  sndbuf( il, j ) = a( ( ii - 1 )/nproc + 1, jj )
-                  il = il + 1
-               END IF 
-            END DO
+      ip_nr = ip_desc%nr
+      ip_nc = ip_desc%nc
+      ip_ir = ip_desc%ir
+      ip_ic = ip_desc%ic
+      !
+      DO j = 1, ip_nc
+         jj = j + ip_ic - 1
+         il = 1
+         DO i = 1, ip_nr
+            ii = i + ip_ir - 1
+            IF( MOD( ii - 1, nproc ) == me ) THEN
+               CALL check_sndbuf_index()
+               sndbuf( il, j ) = a( ( ii - 1 )/nproc + 1, jj )
+               il = il + 1
+            END IF 
          END DO
+      END DO
    
-      END IF
-
       CALL mpi_barrier( comm_a, ierr )
 
       CALL mpi_gather( sndbuf, nbuf, mpi_double_complex, &
@@ -2822,10 +2824,10 @@ SUBROUTINE cyc2blk_zredist( n, a, lda, nca, b, ldb, ncb, desc )
    END DO
 
    !
-   nr  = desc( nlar_ ) 
-   nc  = desc( nlac_ )
-   ir  = desc( ilar_ )
-   ic  = desc( ilac_ )
+   nr  = desc%nr 
+   nc  = desc%nc
+   ir  = desc%ir
+   ic  = desc%ic
    !
    DO ip = 0, nproc - 1
       DO j = 1, nc
@@ -2842,7 +2844,6 @@ SUBROUTINE cyc2blk_zredist( n, a, lda, nca, b, ldb, ncb, desc )
    END DO
    !
    !
-   DEALLOCATE( ip_desc )
    DEALLOCATE( rcvbuf )
    DEALLOCATE( sndbuf )
    
@@ -2888,15 +2889,14 @@ SUBROUTINE blk2cyc_redist( n, a, lda, nca, b, ldb, ncb, desc )
    !  B (input) is distributed by block across 2D processors grid
    !
    USE kinds,       ONLY : DP
-   USE descriptors, ONLY : ilar_ , nlar_ , ilac_ , nlac_ , nlax_ , lambda_node_ , la_npr_ , &
-                           descla_siz_ , la_npc_ , la_n_ , la_me_ , la_comm_
+   USE descriptors
    !
    IMPLICIT NONE
    !
    INTEGER, INTENT(IN) :: n
    INTEGER, INTENT(IN) :: lda, nca, ldb, ncb
    REAL(DP) :: a( lda, nca ), b( ldb, ncb )
-   INTEGER  :: desc( descla_siz_ )
+   TYPE(la_descriptor), INTENT(IN) :: desc
    !
 #if defined (__MPI)
    !
@@ -2908,49 +2908,42 @@ SUBROUTINE blk2cyc_redist( n, a, lda, nca, b, ldb, ncb, desc )
    integer :: np, ip, me, comm_a, nproc
    integer :: ip_ir, ip_ic, ip_nr, ip_nc, il, nbuf, ip_irl
    integer :: i, ii, j, jj, nr, nc, nb, nrl, irl, ir, ic
+   INTEGER :: me_ortho(2), np_ortho(2)
    !
-   real(DP), allocatable :: rcvbuf(:,:,:)
-   real(DP), allocatable :: sndbuf(:,:)
-   integer, allocatable :: ip_desc(:,:)
+   REAL(DP), allocatable :: rcvbuf(:,:,:)
+   REAL(DP), allocatable :: sndbuf(:,:)
+   TYPE(la_descriptor) :: ip_desc
    !
    character(len=256) :: msg
    !
 #if defined (__MPI)
 
-   IF( desc( lambda_node_ ) < 0 ) THEN
+   IF( desc%active_node < 0 ) THEN
       RETURN
    END IF
 
-   np = desc( la_npr_ )  !  dimension of the processor mesh
-   nb = desc( nlax_ )    !  leading dimension of the local matrix block
-   me = desc( la_me_ )   !  my processor id (starting from 0)
-   comm_a = desc( la_comm_ )
-   nproc  = desc( la_npr_ ) * desc( la_npc_ )
+   np = desc%npr  !  dimension of the processor mesh
+   nb = desc%nrcx    !  leading dimension of the local matrix block
+   me = desc%mype   !  my processor id (starting from 0)
+   comm_a = desc%comm
+   nproc  = desc%npr * desc%npc
 
-   IF( np /= desc( la_npc_ ) ) &
+   IF( np /= desc%npc ) &
       CALL errore( ' blk2cyc_redist ', ' works only with square processor mesh ', 1 )
    IF( n < 1 ) &
       CALL errore( ' blk2cyc_redist ', ' n less or equal zero ', 1 )
-   IF( desc( la_n_ ) < nproc ) &
+   IF( desc%n < nproc ) &
       CALL errore( ' blk2cyc_redist ', ' nb less than the number of proc ', 1 )
-
-   ALLOCATE( ip_desc( descla_siz_ , nproc ) )
-
-   CALL mpi_barrier( comm_a, ierr )
-
-   CALL mpi_allgather( desc, descla_siz_ , mpi_integer, ip_desc, descla_siz_ , mpi_integer, comm_a, ierr )
-   IF( ierr /= 0 ) &
-      CALL errore( " blk2cyc_redist ", " in mpi_allgather ", ABS( ierr ) )
    !
    nbuf = (nb/nproc+2) * nb
    !
    ALLOCATE( sndbuf( nb/nproc+2, nb ) )
    ALLOCATE( rcvbuf( nb/nproc+2, nb, nproc ) )
    !
-   nr  = desc( nlar_ ) 
-   nc  = desc( nlac_ )
-   ir  = desc( ilar_ )
-   ic  = desc( ilac_ )
+   nr  = desc%nr 
+   nc  = desc%nc
+   ir  = desc%ir
+   ic  = desc%ic
    !
    DO ip = 0, nproc - 1
       DO j = 1, nc
@@ -2973,30 +2966,38 @@ SUBROUTINE blk2cyc_redist( n, a, lda, nca, b, ldb, ncb, desc )
    
    DO ip = 0, nproc - 1
       !
-      IF( ip_desc( lambda_node_ , ip + 1 ) > 0 ) THEN
-
-         ip_nr = ip_desc( nlar_ , ip + 1) 
-         ip_nc = ip_desc( nlac_ , ip + 1) 
-         ip_ir = ip_desc( ilar_ , ip + 1) 
-         ip_ic = ip_desc( ilac_ , ip + 1) 
-         !
-         DO j = 1, ip_nc
-            jj = j + ip_ic - 1
-            il = 1
-            DO i = 1, ip_nr
-               ii = i + ip_ir - 1
-               IF( MOD( ii - 1, nproc ) == me ) THEN
-                  a( ( ii - 1 )/nproc + 1, jj ) = rcvbuf( il, j, ip+1 )
-                  il = il + 1
-               END IF 
-            END DO
+      ! 2D proc ortho grid sizes
+      !
+      np_ortho(1) = desc%npr
+      np_ortho(2) = desc%npc
+      !
+      ! compute other processor coordinates me_ortho
+      !
+      CALL GRID2D_COORDS( 'R', ip, np_ortho(1), np_ortho(2), me_ortho(1), me_ortho(2) )
+      !
+      ! initialize other processor descriptor
+      !
+      CALL descla_init( ip_desc, desc%n, desc%nx, np_ortho, me_ortho, desc%comm, 1 )
+      !
+      ip_nr = ip_desc%nr
+      ip_nc = ip_desc%nc
+      ip_ir = ip_desc%ir
+      ip_ic = ip_desc%ic
+      !
+      DO j = 1, ip_nc
+         jj = j + ip_ic - 1
+         il = 1
+         DO i = 1, ip_nr
+            ii = i + ip_ir - 1
+            IF( MOD( ii - 1, nproc ) == me ) THEN
+               a( ( ii - 1 )/nproc + 1, jj ) = rcvbuf( il, j, ip+1 )
+               il = il + 1
+            END IF 
          END DO
+      END DO
    
-      END IF
-     
    END DO
    !
-   DEALLOCATE( ip_desc )
    DEALLOCATE( rcvbuf )
    DEALLOCATE( sndbuf )
    
@@ -3018,15 +3019,14 @@ SUBROUTINE blk2cyc_zredist( n, a, lda, nca, b, ldb, ncb, desc )
    !  B (input) is distributed by block across 2D processors grid
    !
    USE kinds,       ONLY : DP
-   USE descriptors, ONLY : ilar_ , nlar_ , ilac_ , nlac_ , nlax_ , lambda_node_ , la_npr_ , &
-                           descla_siz_ , la_npc_ , la_n_ , la_me_ , la_comm_
+   USE descriptors
    !
    IMPLICIT NONE
    !
    INTEGER, INTENT(IN) :: n
    INTEGER, INTENT(IN) :: lda, nca, ldb, ncb
    COMPLEX(DP) :: a( lda, nca ), b( ldb, ncb )
-   INTEGER  :: desc( descla_siz_ )
+   TYPE(la_descriptor), INTENT(IN) :: desc
    !
 #if defined (__MPI)
    !
@@ -3038,49 +3038,42 @@ SUBROUTINE blk2cyc_zredist( n, a, lda, nca, b, ldb, ncb, desc )
    integer :: np, ip, me, comm_a, nproc
    integer :: ip_ir, ip_ic, ip_nr, ip_nc, il, nbuf, ip_irl
    integer :: i, ii, j, jj, nr, nc, nb, nrl, irl, ir, ic
+   INTEGER :: me_ortho(2), np_ortho(2)
    !
    COMPLEX(DP), allocatable :: rcvbuf(:,:,:)
    COMPLEX(DP), allocatable :: sndbuf(:,:)
-   integer, allocatable :: ip_desc(:,:)
+   TYPE(la_descriptor) :: ip_desc
    !
    character(len=256) :: msg
    !
 #if defined (__MPI)
 
-   IF( desc( lambda_node_ ) < 0 ) THEN
+   IF( desc%active_node < 0 ) THEN
       RETURN
    END IF
 
-   np = desc( la_npr_ )  !  dimension of the processor mesh
-   nb = desc( nlax_ )    !  leading dimension of the local matrix block
-   me = desc( la_me_ )   !  my processor id (starting from 0)
-   comm_a = desc( la_comm_ )
-   nproc  = desc( la_npr_ ) * desc( la_npc_ )
+   np = desc%npr  !  dimension of the processor mesh
+   nb = desc%nrcx    !  leading dimension of the local matrix block
+   me = desc%mype   !  my processor id (starting from 0)
+   comm_a = desc%comm
+   nproc  = desc%npr * desc%npc
 
-   IF( np /= desc( la_npc_ ) ) &
+   IF( np /= desc%npc ) &
       CALL errore( ' blk2cyc_zredist ', ' works only with square processor mesh ', 1 )
    IF( n < 1 ) &
       CALL errore( ' blk2cyc_zredist ', ' n less or equal zero ', 1 )
-   IF( desc( la_n_ ) < nproc ) &
+   IF( desc%n < nproc ) &
       CALL errore( ' blk2cyc_zredist ', ' nb less than the number of proc ', 1 )
-
-   ALLOCATE( ip_desc( descla_siz_ , nproc ) )
-
-   CALL mpi_barrier( comm_a, ierr )
-
-   CALL mpi_allgather( desc, descla_siz_ , mpi_integer, ip_desc, descla_siz_ , mpi_integer, comm_a, ierr )
-   IF( ierr /= 0 ) &
-      CALL errore( " blk2cyc_zredist ", " in mpi_allgather ", ABS( ierr ) )
    !
    nbuf = (nb/nproc+2) * nb
    !
    ALLOCATE( sndbuf( nb/nproc+2, nb ) )
    ALLOCATE( rcvbuf( nb/nproc+2, nb, nproc ) )
    !
-   nr  = desc( nlar_ ) 
-   nc  = desc( nlac_ )
-   ir  = desc( ilar_ )
-   ic  = desc( ilac_ )
+   nr  = desc%nr 
+   nc  = desc%nc
+   ir  = desc%ir
+   ic  = desc%ic
    !
    DO ip = 0, nproc - 1
       DO j = 1, nc
@@ -3103,30 +3096,38 @@ SUBROUTINE blk2cyc_zredist( n, a, lda, nca, b, ldb, ncb, desc )
    
    DO ip = 0, nproc - 1
       !
-      IF( ip_desc( lambda_node_ , ip + 1 ) > 0 ) THEN
-
-         ip_nr = ip_desc( nlar_ , ip + 1) 
-         ip_nc = ip_desc( nlac_ , ip + 1) 
-         ip_ir = ip_desc( ilar_ , ip + 1) 
-         ip_ic = ip_desc( ilac_ , ip + 1) 
-         !
-         DO j = 1, ip_nc
-            jj = j + ip_ic - 1
-            il = 1
-            DO i = 1, ip_nr
-               ii = i + ip_ir - 1
-               IF( MOD( ii - 1, nproc ) == me ) THEN
-                  a( ( ii - 1 )/nproc + 1, jj ) = rcvbuf( il, j, ip+1 )
-                  il = il + 1
-               END IF 
-            END DO
+      ! 2D proc ortho grid sizes
+      !
+      np_ortho(1) = desc%npr
+      np_ortho(2) = desc%npc
+      !
+      ! compute other processor coordinates me_ortho
+      !
+      CALL GRID2D_COORDS( 'R', ip, np_ortho(1), np_ortho(2), me_ortho(1), me_ortho(2) )
+      !
+      ! initialize other processor descriptor
+      !
+      CALL descla_init( ip_desc, desc%n, desc%nx, np_ortho, me_ortho, desc%comm, 1 )
+      !
+      ip_nr = ip_desc%nr
+      ip_nc = ip_desc%nc
+      ip_ir = ip_desc%ir
+      ip_ic = ip_desc%ic
+      !
+      DO j = 1, ip_nc
+         jj = j + ip_ic - 1
+         il = 1
+         DO i = 1, ip_nr
+            ii = i + ip_ir - 1
+            IF( MOD( ii - 1, nproc ) == me ) THEN
+               a( ( ii - 1 )/nproc + 1, jj ) = rcvbuf( il, j, ip+1 )
+               il = il + 1
+            END IF 
          END DO
+      END DO
    
-      END IF
-     
    END DO
    !
-   DEALLOCATE( ip_desc )
    DEALLOCATE( rcvbuf )
    DEALLOCATE( sndbuf )
    
@@ -3150,15 +3151,14 @@ END SUBROUTINE blk2cyc_zredist
 
 SUBROUTINE qe_pzpotrf( sll, ldx, n, desc )
    !
-   use descriptors, ONLY: descla_local_dims, descla_siz_ , la_myr_ , la_myc_ , la_me_ , nlax_ ,&
-                          nlar_ , nlac_ , ilar_ , ilac_ , la_comm_ , la_nx_ , la_npr_ , la_npc_
+   use descriptors
    use parallel_include
    use kinds
    !
    implicit none
    !
    integer :: n, ldx
-   integer :: desc( descla_siz_ )
+   TYPE(la_descriptor), INTENT(IN) :: desc
    real(DP)  :: one, zero
    complex(DP) :: sll( ldx, ldx ), cone, czero
    integer :: myrow, mycol, ierr
@@ -3177,21 +3177,21 @@ SUBROUTINE qe_pzpotrf( sll, ldx, n, desc )
 
 #if defined __MPI
 
-   myrow = desc( la_myr_ )
-   mycol = desc( la_myc_ )
-   myid  = desc( la_me_ )
-   np    = desc( la_npr_ )
+   myrow = desc%myr
+   mycol = desc%myc
+   myid  = desc%mype
+   np    = desc%npr
 
-   IF( desc( la_npr_ ) /= desc( la_npc_ ) ) THEN
+   IF( desc%npr /= desc%npc ) THEN
       CALL errore( ' pzpotrf ', ' only square grid are allowed ', 1 ) 
    END IF
 
-   IF( ldx /= desc( nlax_ ) ) THEN
+   IF( ldx /= desc%nrcx ) THEN
       CALL errore( ' pzpotrf ', ' wrong leading dimension ldx ', ldx ) 
    END IF
 
-   nr = desc( nlar_ )
-   nc = desc( nlac_ )
+   nr = desc%nr
+   nc = desc%nc
 
    ALLOCATE( ssnd( ldx, ldx ) )
    ALLOCATE( srcv( ldx, ldx ) )
@@ -3201,7 +3201,7 @@ SUBROUTINE qe_pzpotrf( sll, ldx, n, desc )
       !    Update and factorize the current diagonal block and test
       !    for non-positive-definiteness.
       !
-      CALL descla_local_dims( jir, jnr, n, desc( la_nx_ ), np, jb-1 )
+      CALL descla_local_dims( jir, jnr, n, desc%nx, np, jb-1 )
       !
       !    since we loop on diagonal blocks/procs we have jnc == jnr
       !
@@ -3216,7 +3216,7 @@ SUBROUTINE qe_pzpotrf( sll, ldx, n, desc )
           key   = myid
       END IF
       !
-      CALL mpi_comm_split( desc( la_comm_ ) , color, key, ccomm, ierr )
+      CALL mpi_comm_split( desc%comm , color, key, ccomm, ierr )
       IF( ierr /= 0 ) &
          CALL errore( " pzpotrf ", " in mpi_comm_split 1 ", ABS( ierr ) )
       !  
@@ -3228,7 +3228,7 @@ SUBROUTINE qe_pzpotrf( sll, ldx, n, desc )
           key   = myid
       END IF
       !
-      CALL mpi_comm_split( desc( la_comm_ ), color, key, rcomm, ierr )
+      CALL mpi_comm_split( desc%comm, color, key, rcomm, ierr )
       IF( ierr /= 0 ) &
          CALL errore( " pzpotrf ", " in mpi_comm_split 2 ", ABS( ierr ) )
       !
@@ -3297,9 +3297,9 @@ SUBROUTINE qe_pzpotrf( sll, ldx, n, desc )
          END IF
          !
          DO ib = jb + 1, np
-            CALL descla_local_dims( iir, inr, n, desc( la_nx_ ), np, ib-1 )
+            CALL descla_local_dims( iir, inr, n, desc%nx, np, ib-1 )
             DO kb = 1, jb - 1
-               CALL descla_local_dims( kic, knc, n, desc( la_nx_ ), np, kb-1 )
+               CALL descla_local_dims( kic, knc, n, desc%nx, np, kb-1 )
                IF( ( myrow == ( ib - 1 ) ) .AND. ( mycol == ( kb - 1 ) ) ) THEN
                   CALL zgemm( 'N', 'C', inr, jnr, knc, -CONE, sll, ldx, srcv, ldx, czero, ssnd, ldx )
                END IF
@@ -3381,15 +3381,14 @@ END SUBROUTINE qe_pzpotrf
 
 SUBROUTINE qe_pdpotrf( sll, ldx, n, desc )
    !
-   use descriptors, ONLY: descla_local_dims, descla_siz_ , la_myr_ , la_myc_ , la_me_ , nlax_ , &
-                          nlar_ , nlac_ , ilar_ , ilac_ , la_comm_ , la_nx_ , la_npr_ , la_npc_
+   use descriptors
    use parallel_include
    use kinds
    !
    implicit none
    !
    integer  :: n, ldx
-   integer  :: desc( descla_siz_ )
+   TYPE(la_descriptor), INTENT(IN) :: desc
    REAL(DP) :: one, zero
    REAL(DP) :: sll( ldx, ldx )
    integer  :: myrow, mycol, ierr
@@ -3406,21 +3405,21 @@ SUBROUTINE qe_pdpotrf( sll, ldx, n, desc )
 
 #if defined __MPI
 
-   myrow = desc( la_myr_ )
-   mycol = desc( la_myc_ )
-   myid  = desc( la_me_ )
-   np    = desc( la_npr_ )
+   myrow = desc%myr
+   mycol = desc%myc
+   myid  = desc%mype
+   np    = desc%npr
 
-   IF( desc( la_npr_ ) /= desc( la_npc_ ) ) THEN
+   IF( desc%npr /= desc%npc ) THEN
       CALL errore( ' pdpotrf ', ' only square grid are allowed ', 1 ) 
    END IF
 
-   IF( ldx /= desc( nlax_ ) ) THEN
+   IF( ldx /= desc%nrcx ) THEN
       CALL errore( ' pdpotrf ', ' wrong leading dimension ldx ', ldx ) 
    END IF
 
-   nr = desc( nlar_ )
-   nc = desc( nlac_ )
+   nr = desc%nr
+   nc = desc%nc
 
    ALLOCATE( ssnd( ldx, ldx ) )
    ALLOCATE( srcv( ldx, ldx ) )
@@ -3430,7 +3429,7 @@ SUBROUTINE qe_pdpotrf( sll, ldx, n, desc )
       !    Update and factorize the current diagonal block and test
       !    for non-positive-definiteness.
       !
-      CALL descla_local_dims( jir, jnr, n, desc( la_nx_ ), np, jb-1 )
+      CALL descla_local_dims( jir, jnr, n, desc%nx, np, jb-1 )
       !
       !    since we loop on diagonal blocks/procs we have jnc == jnr
       !
@@ -3445,7 +3444,7 @@ SUBROUTINE qe_pdpotrf( sll, ldx, n, desc )
           key   = myid
       END IF
       !
-      CALL mpi_comm_split( desc( la_comm_ ) , color, key, ccomm, ierr )
+      CALL mpi_comm_split( desc%comm , color, key, ccomm, ierr )
       IF( ierr /= 0 ) &
          CALL errore( " pdpotrf ", " in mpi_comm_split 1 ", ABS( ierr ) )
       !  
@@ -3457,7 +3456,7 @@ SUBROUTINE qe_pdpotrf( sll, ldx, n, desc )
           key   = myid
       END IF
       !
-      CALL mpi_comm_split( desc( la_comm_ ), color, key, rcomm, ierr )
+      CALL mpi_comm_split( desc%comm, color, key, rcomm, ierr )
       IF( ierr /= 0 ) &
          CALL errore( " pdpotrf ", " in mpi_comm_split 2 ", ABS( ierr ) )
       !
@@ -3524,9 +3523,9 @@ SUBROUTINE qe_pdpotrf( sll, ldx, n, desc )
          END IF
          !
          DO ib = jb + 1, np
-            CALL descla_local_dims( iir, inr, n, desc( la_nx_ ), np, ib-1 )
+            CALL descla_local_dims( iir, inr, n, desc%nx, np, ib-1 )
             DO kb = 1, jb - 1
-               CALL descla_local_dims( kic, knc, n, desc( la_nx_ ), np, kb-1 )
+               CALL descla_local_dims( kic, knc, n, desc%nx, np, kb-1 )
                IF( ( myrow == ( ib - 1 ) ) .AND. ( mycol == ( kb - 1 ) ) ) THEN
                   CALL dgemm( 'N', 'T', inr, jnr, knc, -ONE, sll, ldx, srcv, ldx, zero, ssnd, ldx )
                END IF
@@ -3639,13 +3638,12 @@ SUBROUTINE qe_pztrtri ( sll, ldx, n, desc )
 
     USE kinds
     USE parallel_include
-    USE descriptors, ONLY: descla_local_dims, descla_siz_ , la_myr_ , la_myc_ , la_me_ , nlax_ , &
-                          nlar_ , nlac_ , ilar_ , ilac_ , la_comm_ , la_nx_ , la_npr_ , la_npc_
+    USE descriptors
 
     IMPLICIT NONE
 
     INTEGER, INTENT( IN ) :: n, ldx
-    INTEGER, INTENT( IN ) :: desc( descla_siz_ )
+    TYPE(la_descriptor), INTENT(IN) :: desc
     COMPLEX(DP), INTENT( INOUT ) :: sll( ldx, ldx )
 
     COMPLEX(DP), PARAMETER :: ONE = (1.0_DP, 0.0_DP)
@@ -3669,21 +3667,21 @@ SUBROUTINE qe_pztrtri ( sll, ldx, n, desc )
     COMPLEX(DP), ALLOCATABLE, DIMENSION( :, : ) :: B, C, BUF_RECV 
     COMPLEX(DP) :: first
 
-    myrow = desc( la_myr_ )
-    mycol = desc( la_myc_ )
-    myid  = desc( la_me_ )
-    np    = desc( la_npr_ )
-    comm  = desc( la_comm_ )
+    myrow = desc%myr
+    mycol = desc%myc
+    myid  = desc%mype
+    np    = desc%npr
+    comm  = desc%comm
 
-    IF( desc( la_npr_ ) /= desc( la_npc_ ) ) THEN
+    IF( desc%npr /= desc%npc ) THEN
        CALL errore( ' pztrtri ', ' only square grid are allowed ', 1 ) 
     END IF
-    IF( ldx /= desc( nlax_ ) ) THEN
+    IF( ldx /= desc%nrcx ) THEN
        CALL errore( ' pztrtri ', ' wrong leading dimension ldx ', ldx ) 
     END IF
 
-    nr = desc( nlar_ )
-    nc = desc( nlac_ )
+    nr = desc%nr
+    nc = desc%nc
 
     !  clear elements outside local meaningful block nr*nc
 
@@ -4001,13 +3999,12 @@ SUBROUTINE qe_pdtrtri ( sll, ldx, n, desc )
 
     USE kinds
     USE parallel_include
-    USE descriptors, ONLY: descla_local_dims, descla_siz_ , la_myr_ , la_myc_ , la_me_ , nlax_ , &
-                          nlar_ , nlac_ , ilar_ , ilac_ , la_comm_ , la_nx_ , la_npr_ , la_npc_
+    USE descriptors
 
     IMPLICIT NONE
 
     INTEGER, INTENT( IN ) :: n, ldx
-    INTEGER, INTENT( IN ) :: desc( descla_siz_ )
+    TYPE(la_descriptor), INTENT(IN) :: desc
     REAL(DP), INTENT( INOUT ) :: sll( ldx, ldx )
 
     REAL(DP), PARAMETER :: ONE = 1.0_DP
@@ -4031,21 +4028,21 @@ SUBROUTINE qe_pdtrtri ( sll, ldx, n, desc )
     REAL(DP), ALLOCATABLE, DIMENSION( :, : ) :: B, C, BUF_RECV 
     REAL(DP) :: first
 
-    myrow = desc( la_myr_ )
-    mycol = desc( la_myc_ )
-    myid  = desc( la_me_ )
-    np    = desc( la_npr_ )
-    comm  = desc( la_comm_ )
+    myrow = desc%myr
+    mycol = desc%myc
+    myid  = desc%mype
+    np    = desc%npr
+    comm  = desc%comm
 
-    IF( desc( la_npr_ ) /= desc( la_npc_ ) ) THEN
+    IF( desc%npr /= desc%npc ) THEN
        CALL errore( ' pdtrtri ', ' only square grid are allowed ', 1 ) 
     END IF
-    IF( ldx /= desc( nlax_ ) ) THEN
+    IF( ldx /= desc%nrcx ) THEN
        CALL errore( ' pdtrtri ', ' wrong leading dimension ldx ', ldx ) 
     END IF
 
-    nr = desc( nlar_ )
-    nc = desc( nlac_ )
+    nr = desc%nr
+    nc = desc%nc
 
     !  clear elements outside local meaningful block nr*nc
 
@@ -4338,16 +4335,14 @@ END SUBROUTINE qe_pdtrtri
 
 SUBROUTINE qe_pdsyevd( tv, n, desc, hh, ldh, e )
    USE kinds
-   USE descriptors,      ONLY : descla_siz_ , lambda_node_ , nlax_ , la_nrl_ , &
-                               la_npc_ , la_npr_ , la_me_ , la_comm_ , la_nrlx_ , &
-                               nlar_ , la_myc_ , la_myr_
+   USE descriptors
    USE dspev_module,     ONLY : pdspev_drv
    IMPLICIT NONE
    LOGICAL, INTENT(IN) :: tv
        ! if tv is true compute eigenvalues and eigenvectors (not used)
    INTEGER, INTENT(IN) :: n, ldh
        ! n = matrix size, ldh = leading dimension of hh
-   INTEGER, INTENT(IN) :: desc( descla_siz_ )
+   TYPE(la_descriptor), INTENT(IN) :: desc
        ! desc = descrittore della matrice 
    REAL(DP) :: hh( ldh, ldh )
        ! input:  hh = matrix to be diagonalized
@@ -4358,8 +4353,8 @@ SUBROUTINE qe_pdsyevd( tv, n, desc, hh, ldh, e )
    REAL(DP), ALLOCATABLE :: diag(:,:), vv(:,:)
    CHARACTER :: jobv
 
-   nrl  = desc( la_nrl_ )
-   nrlx = desc( la_nrlx_ )
+   nrl  = desc%nrl
+   nrlx = desc%nrlx
 
    ALLOCATE( diag( nrlx, n ) )
    ALLOCATE( vv( nrlx, n ) )
@@ -4372,7 +4367,7 @@ SUBROUTINE qe_pdsyevd( tv, n, desc, hh, ldh, e )
    CALL blk2cyc_redist( n, diag, nrlx, n, hh, ldh, ldh, desc )
    !
    CALL pdspev_drv( jobv, diag, nrlx, e, vv, nrlx, nrl, n, &
-        desc( la_npc_ ) * desc( la_npr_ ), desc( la_me_ ), desc( la_comm_ ) )
+        desc%npc * desc%npr, desc%mype, desc%comm )
    !
    IF( tv ) CALL cyc2blk_redist( n, vv, nrlx, n, hh, ldh, ldh, desc )
    !
@@ -4386,16 +4381,14 @@ END SUBROUTINE
 
 SUBROUTINE qe_pzheevd( tv, n, desc, hh, ldh, e )
    USE kinds
-   USE descriptors,      ONLY : descla_siz_ , lambda_node_ , nlax_ , la_nrl_ , &
-                               la_npc_ , la_npr_ , la_me_ , la_comm_ , la_nrlx_ , &
-                               nlar_ , la_myc_ , la_myr_
+   USE descriptors
    USE zhpev_module,     ONLY : pzhpev_drv
    IMPLICIT NONE
    LOGICAL, INTENT(IN) :: tv
        ! if tv is true compute eigenvalues and eigenvectors (not used)
    INTEGER, INTENT(IN) :: n, ldh
        ! n = matrix size, ldh = leading dimension of hh
-   INTEGER, INTENT(IN) :: desc( descla_siz_ )
+   TYPE(la_descriptor), INTENT(IN) :: desc
        ! desc = descrittore della matrice 
    COMPLEX(DP) :: hh( ldh, ldh )
        ! input:  hh = matrix to be diagonalized
@@ -4406,8 +4399,8 @@ SUBROUTINE qe_pzheevd( tv, n, desc, hh, ldh, e )
    COMPLEX(DP), ALLOCATABLE :: diag(:,:), vv(:,:)
    CHARACTER :: jobv
 
-   nrl  = desc( la_nrl_ )
-   nrlx = desc( la_nrlx_ )
+   nrl  = desc%nrl
+   nrlx = desc%nrlx
    !
    ALLOCATE( diag( nrlx, n ) )
    ALLOCATE( vv( nrlx, n ) )
@@ -4418,7 +4411,7 @@ SUBROUTINE qe_pzheevd( tv, n, desc, hh, ldh, e )
    CALL blk2cyc_zredist( n, diag, nrlx, n, hh, ldh, ldh, desc )
    !
    CALL pzhpev_drv( jobv, diag, nrlx, e, vv, nrlx, nrl, n, &
-        desc( la_npc_ ) * desc( la_npr_ ), desc( la_me_ ), desc( la_comm_ ) )
+        desc%npc * desc%npr, desc%mype, desc%comm )
    !
    if( tv ) CALL cyc2blk_zredist( n, vv, nrlx, n, hh, ldh, ldh, desc )
    !
@@ -4435,8 +4428,7 @@ SUBROUTINE sqr_dsetmat( what, n, alpha, a, lda, desc )
    !  Set the values of a square distributed matrix 
    !
    USE kinds,       ONLY : DP
-   USE descriptors, ONLY : ilar_ , nlar_ , ilac_ , nlac_ , nlax_ , descla_siz_ , &
-                           lambda_node_ , la_npr_ , la_npc_ , la_myr_ , la_myc_
+   USE descriptors
    !
    IMPLICIT NONE
    !
@@ -4453,12 +4445,12 @@ SUBROUTINE sqr_dsetmat( what, n, alpha, a, lda, desc )
      ! leading dimension of a
    REAL(DP) :: a(lda,*)
      ! matrix whose values have to be set
-   INTEGER, INTENT(IN) :: desc( descla_siz_ )
+   TYPE(la_descriptor), INTENT(IN) :: desc
      ! descriptor of matrix a
 
    INTEGER :: i, j
 
-   IF( desc( lambda_node_ ) < 0 ) THEN
+   IF( desc%active_node < 0 ) THEN
       !
       !  processors not interested in this computation return quickly
       !
@@ -4468,42 +4460,42 @@ SUBROUTINE sqr_dsetmat( what, n, alpha, a, lda, desc )
 
    SELECT CASE( what )
      CASE( 'U', 'u' )
-        IF( desc( la_myc_ ) > desc( la_myr_ ) ) THEN
-           DO j = 1, desc( nlac_ )
-              DO i = 1, desc( nlar_ )
+        IF( desc%myc > desc%myr ) THEN
+           DO j = 1, desc%nc
+              DO i = 1, desc%nr
                  a( i, j ) = alpha
               END DO
            END DO
-        ELSE IF( desc( la_myc_ ) == desc( la_myr_ ) ) THEN
-           DO j = 1, desc( nlac_ )
+        ELSE IF( desc%myc == desc%myr ) THEN
+           DO j = 1, desc%nc
               DO i = 1, j - 1
                  a( i, j ) = alpha
               END DO
            END DO
         END IF
      CASE( 'L', 'l' )
-        IF( desc( la_myc_ ) < desc( la_myr_ ) ) THEN
-           DO j = 1, desc( nlac_ )
-              DO i = 1, desc( nlar_ )
+        IF( desc%myc < desc%myr ) THEN
+           DO j = 1, desc%nc
+              DO i = 1, desc%nr
                  a( i, j ) = alpha
               END DO
            END DO
-        ELSE IF( desc( la_myc_ ) == desc( la_myr_ ) ) THEN
-           DO j = 1, desc( nlac_ )
-              DO i = j - 1, desc( nlar_ )
+        ELSE IF( desc%myc == desc%myr ) THEN
+           DO j = 1, desc%nc
+              DO i = j - 1, desc%nr
                  a( i, j ) = alpha
               END DO
            END DO
         END IF
      CASE( 'D', 'd' )
-        IF( desc( la_myc_ ) == desc( la_myr_ ) ) THEN
-           DO i = 1, desc( nlar_ )
+        IF( desc%myc == desc%myr ) THEN
+           DO i = 1, desc%nr
               a( i, i ) = alpha
            END DO
         END IF
      CASE DEFAULT
-        DO j = 1, desc( nlac_ )
-           DO i = 1, desc( nlar_ )
+        DO j = 1, desc%nc
+           DO i = 1, desc%nr
               a( i, j ) = alpha
            END DO
         END DO
@@ -4518,8 +4510,7 @@ SUBROUTINE sqr_zsetmat( what, n, alpha, a, lda, desc )
    !  Set the values of a square distributed matrix 
    !
    USE kinds,       ONLY : DP
-   USE descriptors, ONLY : ilar_ , nlar_ , ilac_ , nlac_ , nlax_ , descla_siz_ , &
-                           lambda_node_ , la_npr_ , la_npc_ , la_myr_ , la_myc_
+   USE descriptors
    !
    IMPLICIT NONE
    !
@@ -4537,12 +4528,12 @@ SUBROUTINE sqr_zsetmat( what, n, alpha, a, lda, desc )
      ! leading dimension of a
    COMPLEX(DP) :: a(lda,*)
      ! matrix whose values have to be set
-   INTEGER, INTENT(IN) :: desc( descla_siz_ )
+   TYPE(la_descriptor), INTENT(IN) :: desc
      ! descriptor of matrix a
 
    INTEGER :: i, j
 
-   IF( desc( lambda_node_ ) < 0 ) THEN
+   IF( desc%active_node < 0 ) THEN
       !
       !  processors not interested in this computation return quickly
       !
@@ -4552,48 +4543,48 @@ SUBROUTINE sqr_zsetmat( what, n, alpha, a, lda, desc )
 
    SELECT CASE( what )
      CASE( 'U', 'u' )
-        IF( desc( la_myc_ ) > desc( la_myr_ ) ) THEN
-           DO j = 1, desc( nlac_ )
-              DO i = 1, desc( nlar_ )
+        IF( desc%myc > desc%myr ) THEN
+           DO j = 1, desc%nc
+              DO i = 1, desc%nr
                  a( i, j ) = alpha
               END DO
            END DO
-        ELSE IF( desc( la_myc_ ) == desc( la_myr_ ) ) THEN
-           DO j = 1, desc( nlac_ )
+        ELSE IF( desc%myc == desc%myr ) THEN
+           DO j = 1, desc%nc
               DO i = 1, j - 1
                  a( i, j ) = alpha
               END DO
            END DO
         END IF
      CASE( 'L', 'l' )
-        IF( desc( la_myc_ ) < desc( la_myr_ ) ) THEN
-           DO j = 1, desc( nlac_ )
-              DO i = 1, desc( nlar_ )
+        IF( desc%myc < desc%myr ) THEN
+           DO j = 1, desc%nc
+              DO i = 1, desc%nr
                  a( i, j ) = alpha
               END DO
            END DO
-        ELSE IF( desc( la_myc_ ) == desc( la_myr_ ) ) THEN
-           DO j = 1, desc( nlac_ )
-              DO i = j - 1, desc( nlar_ )
+        ELSE IF( desc%myc == desc%myr ) THEN
+           DO j = 1, desc%nc
+              DO i = j - 1, desc%nr
                  a( i, j ) = alpha
               END DO
            END DO
         END IF
      CASE( 'D', 'd' )
-        IF( desc( la_myc_ ) == desc( la_myr_ ) ) THEN
-           DO i = 1, desc( nlar_ )
+        IF( desc%myc == desc%myr ) THEN
+           DO i = 1, desc%nr
               a( i, i ) = alpha
            END DO
         END IF
      CASE( 'H', 'h' )
-        IF( desc( la_myc_ ) == desc( la_myr_ ) ) THEN
-           DO i = 1, desc( nlar_ )
+        IF( desc%myc == desc%myr ) THEN
+           DO i = 1, desc%nr
               a( i, i ) = CMPLX( DBLE( a(i,i) ), 0_DP, KIND=DP )
            END DO
         END IF
      CASE DEFAULT
-        DO j = 1, desc( nlac_ )
-           DO i = 1, desc( nlar_ )
+        DO j = 1, desc%nc
+           DO i = 1, desc%nr
               a( i, j ) = alpha
            END DO
         END DO

@@ -391,8 +391,9 @@
       SUBROUTINE ortho_x &
          ( eigr, cp_bgrp, phi_bgrp, x0, descla, diff, iter, ccc, bephi, becp_bgrp )
          USE kinds,          ONLY: DP
+         USE descriptors,    ONLY: la_descriptor
          IMPLICIT NONE
-         INTEGER,     INTENT(IN)    :: descla( : , : )
+         TYPE(la_descriptor),  INTENT(IN) :: descla( : )
          COMPLEX(DP) :: eigr( :, : )
          COMPLEX(DP) :: cp_bgrp( :, : ), phi_bgrp( :, : )
          REAL(DP)    :: x0( :, :, : ), diff, ccc
@@ -407,7 +408,7 @@
          ( iopt, cp, ngwx, phi, becp_dist, qbecp, nkbx, bephi, qbephi, &
            x0, nx0, descla, diff, iter, n, nss, istart )
          USE kinds,          ONLY: DP
-         USE descriptors,    ONLY: descla_siz_
+         USE descriptors,    ONLY: la_descriptor
          IMPLICIT NONE
          INTEGER,  INTENT(IN)  :: iopt
          INTEGER,  INTENT(IN)  :: ngwx, nkbx, nx0
@@ -417,7 +418,7 @@
          REAL(DP)    :: becp_dist(:,:)
          REAL(DP)    :: qbephi( :, : ), qbecp( :, : )
          REAL(DP)    :: x0( nx0, nx0 )
-         INTEGER,  INTENT(IN)  :: descla( descla_siz_ )
+         TYPE(la_descriptor),  INTENT(IN) :: descla
          INTEGER,  INTENT(OUT) :: iter
          REAL(DP), INTENT(OUT) :: diff
       END SUBROUTINE

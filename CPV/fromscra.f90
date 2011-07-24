@@ -56,7 +56,7 @@ SUBROUTINE from_scratch( )
     USE cp_main_variables,    ONLY : setval_lambda, descla, bephi, becp_bgrp, nfi, &
                                      sfac, eigr, taub, irb, eigrb, bec_bgrp, &
                                      lambda, lambdam, lambdap, ema0bg, rhog, rhor, rhos, &
-                                     vpot, ht0, edft, nlax, becdr_bgrp, dbec, drhor, drhog
+                                     vpot, ht0, edft, becdr_bgrp, dbec, drhor, drhog
     USE mp_global,            ONLY : np_ortho, me_ortho, ortho_comm, mpime, inter_bgrp_comm, nbgrp
     USE mp,                   ONLY : mp_sum
     !
@@ -210,7 +210,7 @@ SUBROUTINE from_scratch( )
             CALL runcp_uspp_force_pairing( nfi, fccc, ccc, ema0bg, dt2bye, rhos, bec_bgrp, cm_bgrp, &
         &                 c0_bgrp, ei_unp, fromscra = .TRUE. )
             !
-            CALL setval_lambda( lambda(:,:,2), nupdwn(1), nupdwn(1), 0.d0, descla(:,1) )
+            CALL setval_lambda( lambda(:,:,2), nupdwn(1), nupdwn(1), 0.d0, descla(1) )
             !
          ELSE
             !

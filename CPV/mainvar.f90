@@ -18,6 +18,7 @@ MODULE cp_main_variables
   USE energies,          ONLY : dft_energy_type
   USE pres_ai_mod,       ONLY : abivol, abisur, jellium, t_gauss, rho_gaus, &
                                 v_vol, posv, f_vol
+  USE descriptors,       ONLY : la_descriptor
   !
   IMPLICIT NONE
   SAVE
@@ -64,10 +65,10 @@ MODULE cp_main_variables
   !
   REAL(DP), ALLOCATABLE :: lambda(:,:,:), lambdam(:,:,:), lambdap(:,:,:)
   !
-  INTEGER,  ALLOCATABLE :: descla(:,:) ! descriptor of the lambda distribution
+  TYPE(la_descriptor), ALLOCATABLE :: descla(:) ! descriptor of the lambda distribution
                                        ! see descriptors_module
-  INTEGER :: nlax = 0                  ! leading dimension of the distribute (by block) lambda matrix 
-  INTEGER :: nlam = 1                  ! dimension of lambda matrix, can be 1 or nlax depending on la_proc
+  INTEGER :: nrcx = 0                  ! leading dimension of the distribute (by block) lambda matrix 
+  INTEGER :: nlam = 1                  ! dimension of lambda matrix, can be 1 or nrcx depending on la_proc
   INTEGER :: nrlx = 0                  ! leading dimension of the distribute (by row  ) lambda matrix
   LOGICAL :: la_proc = .FALSE.         ! indicate if a proc own a block of lambda
   !
@@ -120,7 +121,7 @@ MODULE cp_main_variables
       USE mp_global,   ONLY: np_ortho, me_ortho, intra_bgrp_comm, ortho_comm, &
                              me_bgrp, ortho_comm_id
       USE mp,          ONLY: mp_max, mp_min
-      USE descriptors, ONLY: descla_siz_ , descla_init , nlax_ , la_nrlx_ , lambda_node_
+      USE descriptors, ONLY: la_descriptor, descla_init
       !
       INTEGER,           INTENT(IN) :: ngw, ngw_g, ngb, ngs, ng, nr1,nr2,nr3, &
                                        nnr, nrxxs, nat, nax, nsp, nspin, &
@@ -176,19 +177,19 @@ MODULE cp_main_variables
       !  Compute local dimensions for lambda matrixes
       !
 
-      ALLOCATE( descla( descla_siz_ , nspin ) )
+      ALLOCATE( descla( nspin ) )
       !
-      nlax = 0
+      nrcx = 0
       nrlx = 0
       DO iss = 1, nspin
-         CALL descla_init( descla( :, iss ), nupdwn( iss ), nudx, np_ortho, me_ortho, ortho_comm, ortho_comm_id )
-         nlax = MAX( nlax, descla( nlax_ , iss ) )
-         nrlx = MAX( nrlx, descla( la_nrlx_ , iss ) )
-         IF( descla( lambda_node_ , iss ) > 0 ) la_proc = .TRUE.
+         CALL descla_init( descla( iss ), nupdwn( iss ), nudx, np_ortho, me_ortho, ortho_comm, ortho_comm_id )
+         nrcx = MAX( nrcx, descla( iss )%nrcx )
+         nrlx = MAX( nrlx, descla( iss )%nrlx )
+         IF( descla( iss )%active_node > 0 ) la_proc = .TRUE.
       END DO
       !
       nlam = 1
-      IF( la_proc ) nlam = nlax
+      IF( la_proc ) nlam = nrcx
       !
       !  ... End with lambda dimensions
       !
@@ -212,11 +213,11 @@ MODULE cp_main_variables
       !
       ALLOCATE( bec_bgrp( nhsa, nbspx_bgrp ) )
       !
-      ALLOCATE( bephi( nhsa, nspin*nlax ) )
+      ALLOCATE( bephi( nhsa, nspin*nrcx ) )
       ALLOCATE( becp_bgrp( nhsa, nbspx_bgrp ) )  
       !
       IF ( tpre ) THEN
-        ALLOCATE( dbec( nhsa, 2*nlax, 3, 3 ) )
+        ALLOCATE( dbec( nhsa, 2*nrcx, 3, 3 ) )
       ELSE
         ALLOCATE( dbec( 1, 1, 1, 1 ) )
       END IF
@@ -268,16 +269,16 @@ MODULE cp_main_variables
     !
     !------------------------------------------------------------------------
     SUBROUTINE distribute_lambda( lambda_repl, lambda_dist, desc )
-       USE descriptors, ONLY: lambda_node_ , ilar_ , ilac_ , nlac_ , nlar_
+       USE descriptors
        REAL(DP), INTENT(IN)  :: lambda_repl(:,:)
        REAL(DP), INTENT(OUT) :: lambda_dist(:,:)
-       INTEGER,  INTENT(IN)  :: desc(:)
+       TYPE(la_descriptor), INTENT(IN)  :: desc
        INTEGER :: i, j, ic, ir
-       IF( desc( lambda_node_ ) > 0 ) THEN
-          ir = desc( ilar_ )       
-          ic = desc( ilac_ )       
-          DO j = 1, desc( nlac_ )
-             DO i = 1, desc( nlar_ )
+       IF( desc%active_node > 0 ) THEN
+          ir = desc%ir
+          ic = desc%ic
+          DO j = 1, desc%nc
+             DO i = 1, desc%nr
                 lambda_dist( i, j ) = lambda_repl( i + ir - 1, j + ic - 1 )
              END DO
           END DO
@@ -288,28 +289,28 @@ MODULE cp_main_variables
     !
     !------------------------------------------------------------------------
     SUBROUTINE distribute_bec( bec_repl, bec_dist, desc, nspin )
-       USE descriptors, ONLY: lambda_node_ , ilar_ , nlar_ , la_n_ , nlax_
+       USE descriptors
        REAL(DP), INTENT(IN)  :: bec_repl(:,:)
        REAL(DP), INTENT(OUT) :: bec_dist(:,:)
-       INTEGER,  INTENT(IN)  :: desc(:,:)
+       TYPE(la_descriptor), INTENT(IN)  :: desc(:)
        INTEGER,  INTENT(IN)  :: nspin
-       INTEGER :: i, ir, n, nlax
+       INTEGER :: i, ir, n, nrcx
        !
-       IF( desc( lambda_node_ , 1 ) > 0 ) THEN
+       IF( desc( 1 )%active_node > 0 ) THEN
           !
           bec_dist = 0.0d0
           !
-          ir = desc( ilar_ , 1 )
-          DO i = 1, desc( nlar_ , 1 )
+          ir = desc( 1 )%ir
+          DO i = 1, desc( 1 )%nr
              bec_dist( :, i ) = bec_repl( :, i + ir - 1 )
           END DO
           !
           IF( nspin == 2 ) THEN
-             n     = desc( la_n_ , 1 )  !  number of states with spin 1 ( nupdw(1) )
-             nlax  = desc( nlax_ , 1 )   !  array elements reserved for each spin ( bec(:,2*nlax) )
-             ir = desc( ilar_ , 2 )
-             DO i = 1, desc( nlar_ , 2 )
-                bec_dist( :, i + nlax ) = bec_repl( :, i + ir - 1 + n )
+             n     = desc( 1 )%n  !  number of states with spin 1 ( nupdw(1) )
+             nrcx  = desc( 1 )%nrcx   !  array elements reserved for each spin ( bec(:,2*nrcx) )
+             ir = desc( 2 )%ir
+             DO i = 1, desc( 2 )%nr
+                bec_dist( :, i + nrcx ) = bec_repl( :, i + ir - 1 + n )
              END DO
           END IF
           !
@@ -320,17 +321,17 @@ MODULE cp_main_variables
     !
     !------------------------------------------------------------------------
     SUBROUTINE distribute_zmat( zmat_repl, zmat_dist, desc )
-       USE descriptors, ONLY: lambda_node_ , la_nrl_ , la_me_ , la_npr_ , la_npc_ , la_n_
+       USE descriptors
        REAL(DP), INTENT(IN)  :: zmat_repl(:,:)
        REAL(DP), INTENT(OUT) :: zmat_dist(:,:)
-       INTEGER,  INTENT(IN)  :: desc(:)
+       TYPE(la_descriptor), INTENT(IN)  :: desc
        INTEGER :: i, ii, j, me, np
-       me = desc( la_me_ )
-       np = desc( la_npc_ ) * desc( la_npr_ )
-       IF( desc( lambda_node_ ) > 0 ) THEN
-          DO j = 1, desc( la_n_ )
+       me = desc%mype
+       np = desc%npc * desc%npr
+       IF( desc%active_node > 0 ) THEN
+          DO j = 1, desc%n
              ii = me + 1
-             DO i = 1, desc( la_nrl_ )
+             DO i = 1, desc%nrl
                 zmat_dist( i, j ) = zmat_repl( ii, j )
                 ii = ii + np
              END DO
@@ -344,17 +345,17 @@ MODULE cp_main_variables
     SUBROUTINE collect_lambda( lambda_repl, lambda_dist, desc )
        USE mp_global,   ONLY: intra_bgrp_comm
        USE mp,          ONLY: mp_sum
-       USE descriptors, ONLY: lambda_node_ , ilar_ , ilac_ , nlac_ , nlar_
+       USE descriptors
        REAL(DP), INTENT(OUT) :: lambda_repl(:,:)
        REAL(DP), INTENT(IN)  :: lambda_dist(:,:)
-       INTEGER,  INTENT(IN)  :: desc(:)
+       TYPE(la_descriptor), INTENT(IN)  :: desc
        INTEGER :: i, j, ic, ir
        lambda_repl = 0.0d0
-       IF( desc( lambda_node_ ) > 0 ) THEN
-          ir = desc( ilar_ )       
-          ic = desc( ilac_ )       
-          DO j = 1, desc( nlac_ )
-             DO i = 1, desc( nlar_ )
+       IF( desc%active_node > 0 ) THEN
+          ir = desc%ir
+          ic = desc%ic
+          DO j = 1, desc%nc
+             DO i = 1, desc%nr
                 lambda_repl( i + ir - 1, j + ic - 1 ) = lambda_dist( i, j )
              END DO
           END DO
@@ -368,29 +369,29 @@ MODULE cp_main_variables
     SUBROUTINE collect_bec( bec_repl, bec_dist, desc, nspin )
        USE mp_global,   ONLY: intra_bgrp_comm
        USE mp,          ONLY: mp_sum
-       USE descriptors, ONLY: lambda_node_ , ilar_ , nlar_ , la_myc_ , nlax_ , la_n_
+       USE descriptors
        USE io_global, ONLY : stdout
        REAL(DP), INTENT(OUT) :: bec_repl(:,:)
        REAL(DP), INTENT(IN)  :: bec_dist(:,:)
-       INTEGER,  INTENT(IN)  :: desc(:,:)
+       TYPE(la_descriptor), INTENT(IN)  :: desc(:)
        INTEGER,  INTENT(IN)  :: nspin
-       INTEGER :: i, ir, n, nlax, iss
+       INTEGER :: i, ir, n, nrcx, iss
        !
        bec_repl = 0.0d0
        !
        !  bec is distributed across row processor, the first column is enough
        !
-       IF( desc( lambda_node_ , 1 ) > 0 .AND. ( desc( la_myc_ , 1 ) == 0 ) ) THEN
-          ir = desc( ilar_ , 1 )
-          DO i = 1, desc( nlar_ , 1 )
+       IF( desc( 1 )%active_node > 0 .AND. ( desc( 1 )%myc == 0 ) ) THEN
+          ir = desc( 1 )%ir
+          DO i = 1, desc( 1 )%nr
              bec_repl( :, i + ir - 1 ) = bec_dist( :, i )
           END DO
           IF( nspin == 2 ) THEN
-             n  = desc( la_n_ , 1 )   ! number of states with spin==1 ( nupdw(1) )
-             nlax = desc( nlax_ , 1 ) ! array elements reserved for each spin ( bec(:,2*nlax) )
-             ir = desc( ilar_ , 2 )
-             DO i = 1, desc( nlar_ , 2 )
-                bec_repl( :, i + ir - 1 + n ) = bec_dist( :, i + nlax )
+             n  = desc( 1 )%n   ! number of states with spin==1 ( nupdw(1) )
+             nrcx = desc( 1 )%nrcx ! array elements reserved for each spin ( bec(:,2*nrcx) )
+             ir = desc( 2 )%ir
+             DO i = 1, desc( 2 )%nr
+                bec_repl( :, i + ir - 1 + n ) = bec_dist( :, i + nrcx )
              END DO
           END IF
        END IF
@@ -404,17 +405,17 @@ MODULE cp_main_variables
     SUBROUTINE collect_zmat( zmat_repl, zmat_dist, desc )
        USE mp_global,   ONLY: intra_bgrp_comm
        USE mp,          ONLY: mp_sum
-       USE descriptors, ONLY: lambda_node_ , la_nrl_ , la_me_ , la_npr_ , la_npc_ , la_n_
+       USE descriptors
        REAL(DP), INTENT(OUT) :: zmat_repl(:,:)
        REAL(DP), INTENT(IN)  :: zmat_dist(:,:)
-       INTEGER,  INTENT(IN)  :: desc(:)
+       TYPE(la_descriptor), INTENT(IN)  :: desc
        INTEGER :: i, ii, j, me, np, nrl
        zmat_repl = 0.0d0
-       me = desc( la_me_ )
-       np = desc( la_npc_ ) * desc( la_npr_ )
-       nrl = desc( la_nrl_ )
-       IF( desc( lambda_node_ ) > 0 ) THEN
-          DO j = 1, desc( la_n_ )
+       me = desc%mype
+       np = desc%npc * desc%npr
+       nrl = desc%nrl
+       IF( desc%active_node > 0 ) THEN
+          DO j = 1, desc%n
              ii = me + 1
              DO i = 1, nrl
                 zmat_repl( ii, j ) = zmat_dist( i, j )
@@ -429,15 +430,15 @@ MODULE cp_main_variables
     !
     !------------------------------------------------------------------------
     SUBROUTINE setval_lambda( lambda_dist, i, j, val, desc )
-       USE descriptors, ONLY: lambda_node_ , ilar_ , ilac_ , nlac_ , nlar_
+       USE descriptors
        REAL(DP), INTENT(OUT) :: lambda_dist(:,:)
        INTEGER,  INTENT(IN)  :: i, j
        REAL(DP), INTENT(IN)  :: val
-       INTEGER,  INTENT(IN)  :: desc(:)
-       IF( desc( lambda_node_ ) > 0 ) THEN
-          IF( ( i >= desc( ilar_ ) ) .AND. ( i - desc( ilar_ ) + 1 <= desc( nlar_ ) ) ) THEN
-             IF( ( j >= desc( ilac_ ) ) .AND. ( j - desc( ilac_ ) + 1 <= desc( nlac_ ) ) ) THEN
-                lambda_dist( i - desc( ilar_ ) + 1, j - desc( ilac_ ) + 1 ) = val
+       TYPE(la_descriptor), INTENT(IN)  :: desc
+       IF( desc%active_node > 0 ) THEN
+          IF( ( i >= desc%ir ) .AND. ( i - desc%ir + 1 <= desc%nr ) ) THEN
+             IF( ( j >= desc%ic ) .AND. ( j - desc%ic + 1 <= desc%nc ) ) THEN
+                lambda_dist( i - desc%ir + 1, j - desc%ic + 1 ) = val
              END IF
           END IF
        END IF

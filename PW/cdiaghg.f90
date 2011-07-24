@@ -197,9 +197,7 @@ SUBROUTINE pcdiaghg( n, h, s, ldh, e, v, desc )
   USE mp,               ONLY : mp_bcast
   USE mp_global,        ONLY : root_pool, intra_pool_comm
   USE zhpev_module,     ONLY : pzhpev_drv, zhpev_drv
-  USE descriptors,      ONLY : descla_siz_ , lambda_node_ , nlax_ , la_nrl_ , la_nrlx_ , &
-                               la_npc_ , la_npr_ , la_me_ , la_comm_ , la_myc_ , la_myr_ , &
-                               nlar_ , nlac_ , ilar_ , ilac_
+  USE descriptors,      ONLY : la_descriptor
   USE parallel_toolkit, ONLY : zsqmdst, zsqmcll
 #if defined __SCALAPACK
   USE mp_global,        ONLY : ortho_cntx, me_blacs, np_ortho, me_ortho
@@ -220,7 +218,7 @@ SUBROUTINE pcdiaghg( n, h, s, ldh, e, v, desc )
     ! eigenvalues
   COMPLEX(DP), INTENT(OUT) :: v(ldh,ldh)
     ! eigenvectors (column-wise)
-  INTEGER, INTENT(IN) :: desc( descla_siz_ )
+  TYPE(la_descriptor), INTENT(IN) :: desc
   !
   INTEGER             :: nx
 #if defined __SCALAPACK
@@ -234,9 +232,9 @@ SUBROUTINE pcdiaghg( n, h, s, ldh, e, v, desc )
   !
   CALL start_clock( 'cdiaghg' )
   !
-  IF( desc( lambda_node_ ) > 0 ) THEN
+  IF( desc%active_node > 0 ) THEN
      !
-     nx   = desc( nlax_ )
+     nx   = desc%nrcx
      !
      IF( nx /= ldh ) &
         CALL errore(" pcdiaghg ", " inconsistent leading dimension ", ldh )
@@ -253,10 +251,10 @@ SUBROUTINE pcdiaghg( n, h, s, ldh, e, v, desc )
   !
   ! ... Cholesky decomposition of sl ( L is stored in sl )
   !
-  IF( desc( lambda_node_ ) > 0 ) THEN
+  IF( desc%active_node > 0 ) THEN
      !
 #if defined __SCALAPACK
-     CALL descinit( descsca, n, n, desc( nlax_ ), desc( nlax_ ), 0, 0, ortho_cntx, SIZE( ss, 1 ) , info )
+     CALL descinit( descsca, n, n, desc%nrcx, desc%nrcx, 0, 0, ortho_cntx, SIZE( ss, 1 ) , info )
      !
      IF( info /= 0 ) CALL errore( ' cdiaghg ', ' desckinit ', ABS( info ) )
 #endif
@@ -278,7 +276,7 @@ SUBROUTINE pcdiaghg( n, h, s, ldh, e, v, desc )
   !
   CALL start_clock( 'cdiaghg:inversion' )
   !
-  IF( desc( lambda_node_ ) > 0 ) THEN
+  IF( desc%active_node > 0 ) THEN
      !
 #if defined __SCALAPACK
      !CALL clear_upper_tr( ss )
@@ -301,7 +299,7 @@ SUBROUTINE pcdiaghg( n, h, s, ldh, e, v, desc )
   !
   CALL start_clock( 'cdiaghg:paragemm' )
   !
-  IF( desc( lambda_node_ ) > 0 ) THEN
+  IF( desc%active_node > 0 ) THEN
      !
      CALL sqr_zmm_cannon( 'N', 'N', n, ONE, ss, nx, hh, nx, ZERO, v, nx, desc )
      !
@@ -309,7 +307,7 @@ SUBROUTINE pcdiaghg( n, h, s, ldh, e, v, desc )
   !
   ! ... hl = ( L^-1*H )*(L^-1)^T
   !
-  IF( desc( lambda_node_ ) > 0 ) THEN
+  IF( desc%active_node > 0 ) THEN
      !
      CALL sqr_zmm_cannon( 'N', 'C', n, ONE, v, nx, ss, nx, ZERO, hh, nx, desc )
      !
@@ -323,7 +321,7 @@ SUBROUTINE pcdiaghg( n, h, s, ldh, e, v, desc )
   CALL stop_clock( 'cdiaghg:paragemm' )
   !
   !
-  IF ( desc( lambda_node_ ) > 0 ) THEN
+  IF ( desc%active_node > 0 ) THEN
      ! 
 #ifdef TEST_DIAG
      CALL test_drv_begin()
@@ -331,7 +329,7 @@ SUBROUTINE pcdiaghg( n, h, s, ldh, e, v, desc )
 
 #ifdef __SCALAPACK
      !
-     CALL pzheevd_drv( .true., n, desc( nlax_ ), hh, e, ortho_cntx )
+     CALL pzheevd_drv( .true., n, desc%nrcx, hh, e, ortho_cntx )
      !
 #else
      !
@@ -349,7 +347,7 @@ SUBROUTINE pcdiaghg( n, h, s, ldh, e, v, desc )
   !
   CALL start_clock( 'cdiaghg:paragemm' )
   !
-  IF ( desc( lambda_node_ ) > 0 ) THEN
+  IF ( desc%active_node > 0 ) THEN
      !
      CALL sqr_zmm_cannon( 'C', 'N', n, ONE, ss, nx, hh, nx, ZERO, v, nx, desc )
      !
@@ -359,7 +357,7 @@ SUBROUTINE pcdiaghg( n, h, s, ldh, e, v, desc )
   !
   CALL stop_clock( 'cdiaghg:paragemm' )
   !
-  IF ( desc( lambda_node_ ) > 0 ) THEN
+  IF ( desc%active_node > 0 ) THEN
      DEALLOCATE( ss, hh )
   END IF
   !
@@ -371,7 +369,7 @@ CONTAINS
   !
   SUBROUTINE test_drv_begin()
      ALLOCATE( tt( n, n ) )
-     CALL zsqmcll( n, hh, nx, tt, n, desc, desc( la_comm_ ) )
+     CALL zsqmcll( n, hh, nx, tt, n, desc, desc%comm )
      RETURN
   END SUBROUTINE test_drv_begin
   !
@@ -380,7 +378,7 @@ CONTAINS
      INTEGER :: i, j, k
      COMPLEX(DP), ALLOCATABLE :: diag(:,:)
      !
-     IF( desc( la_myc_ ) == 0 .AND. desc( la_myr_ ) == 0 ) THEN
+     IF( desc%myc == 0 .AND. desc%myr == 0 ) THEN
 
         write( 100, fmt="(A20,2D18.10)" ) ' e code = ', e( 1 ), e( n )
         ALLOCATE( diag( n*(n+1)/2, 1 ) )
@@ -405,7 +403,7 @@ CONTAINS
         close(100)
         DEALLOCATE( diag )
      END IF
-     CALL mp_bcast( tt, 0, desc( la_comm_ ) )
+     CALL mp_bcast( tt, 0, desc%comm )
      CALL zsqmdst( n, tt, n, hh, nx, desc )
      DEALLOCATE( tt )
      CALL errore('cdiaghg','stop serial',1)

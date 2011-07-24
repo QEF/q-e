@@ -15,9 +15,8 @@
 !
       USE kinds,             ONLY: DP
       use electrons_base,    ONLY: nudx, nspin, nupdwn, iupdwn, nx => nbspx
-      USE cp_main_variables, ONLY: descla, nlax, nrlx
-      USE descriptors,       ONLY: la_npc_ , la_npr_ , la_comm_ , la_me_ , la_nrl_ , &
-                                   lambda_node_ , ldim_cyclic
+      USE cp_main_variables, ONLY: descla, nrlx
+      USE descriptors,       ONLY: la_descriptor , ldim_cyclic
       USE mp,                ONLY: mp_sum, mp_bcast
 
       implicit none
@@ -42,12 +41,12 @@
 
          nss      = nupdwn( iss )
          istart   = iupdwn( iss )
-         np_rot   = descla( la_npr_  , iss ) * descla( la_npc_ , iss )
-         me_rot   = descla( la_me_   , iss )
-         nrl      = descla( la_nrl_  , iss )
-         comm_rot = descla( la_comm_ , iss )
+         np_rot   = descla( iss )%npr * descla( iss )%npc
+         me_rot   = descla( iss )%mype
+         nrl      = descla( iss )%nrl
+         comm_rot = descla( iss )%comm
 
-         IF( descla( lambda_node_ , iss ) > 0 ) THEN
+         IF( descla( iss )%active_node > 0 ) THEN
 
             ALLOCATE( mtmp( nrlx, nudx ) )
 
@@ -93,8 +92,8 @@
       use uspp, only :nhsa=>nkb, nhsavb=>nkbus, qq
       use gvecw, only: ngw
       use ions_base, only: nsp, na
-      USE cp_main_variables, ONLY: descla, nlax, nrlx
-      USE descriptors,       ONLY: la_npc_ , la_npr_ , la_comm_ , la_me_ , la_nrl_
+      USE cp_main_variables, ONLY: descla, nrlx
+      USE descriptors,       ONLY: la_descriptor
       USE cp_interfaces,     ONLY: protate
 
       implicit none
@@ -110,10 +109,10 @@
       DO iss = 1, nspin
          istart   = iupdwn( iss )
          nss      = nupdwn( iss )
-         np_rot   = descla( la_npr_  , iss ) * descla( la_npc_ , iss )
-         me_rot   = descla( la_me_   , iss )
-         nrl      = descla( la_nrl_  , iss )
-         comm_rot = descla( la_comm_ , iss )
+         np_rot   = descla( iss )%npr * descla( iss )%npc
+         me_rot   = descla( iss )%mype
+         nrl      = descla( iss )%nrl
+         comm_rot = descla( iss )%comm
          CALL protate ( c0, bec, c0diag, becdiag, ngw, nss, istart, z0(:,:,iss), nrl, &
                         na, nsp, ish, nh, np_rot, me_rot, comm_rot )
       END DO

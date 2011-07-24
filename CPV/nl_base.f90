@@ -503,8 +503,8 @@ SUBROUTINE caldbec_bgrp( eigr, c_bgrp, dbec )
   use uspp_param, only : nh, nhm, ish
   use gvect,      only : gstart
   use gvecw,      only : ngw
-  USE cp_main_variables,  ONLY : descla, la_proc, nlax, nlam
-  USE descriptors,        ONLY : nlar_ , nlac_ , ilar_ , ilac_ , nlax_ , la_myr_ , la_myc_
+  USE cp_main_variables,  ONLY : descla, la_proc, nrcx, nlam
+  USE descriptors,        ONLY : la_descriptor
   use electrons_base,     only : nspin, iupdwn, nupdwn, nbspx_bgrp, iupdwn_bgrp, nupdwn_bgrp, &
                                  ibgrp_g2l, i2gupdwn_bgrp, nbspx, nbsp_bgrp
   !
@@ -512,7 +512,7 @@ SUBROUTINE caldbec_bgrp( eigr, c_bgrp, dbec )
   !
   complex(DP), intent(in)  :: c_bgrp( ngw, nbspx_bgrp )
   real(DP),    intent(in)  :: eigr(2,ngw,nat)
-  real(DP),    intent(out) :: dbec( nkb, 2*nlax, 3, 3 )
+  real(DP),    intent(out) :: dbec( nkb, 2*nrcx, 3, 3 )
   !
   real(DP), allocatable :: wrk2(:,:,:), dwrk_bgrp(:,:)
   !
@@ -583,15 +583,15 @@ SUBROUTINE caldbec_bgrp( eigr, c_bgrp, dbec )
            inl=ish(is)+1
            do iss=1,nspin
               IF( la_proc ) THEN
-                 nr = descla( nlar_ , iss )
-                 ir = descla( ilar_ , iss )
+                 nr = descla( iss )%nr
+                 ir = descla( iss )%ir
                  istart = iupdwn( iss )
                  nss    = nupdwn( iss )
                  do ii = 1, nr
                     ibgrp_i = ibgrp_g2l( ii + ir - 1 + istart - 1 )
                     IF( ibgrp_i > 0 ) THEN
                        do iw = 1, nanh
-                          dbec( iw + inl - 1, ii + (iss-1)*nlax, i, j ) = dwrk_bgrp( iw, ibgrp_i )
+                          dbec( iw + inl - 1, ii + (iss-1)*nrcx, i, j ) = dwrk_bgrp( iw, ibgrp_i )
                        end do
                     END IF
                  end do
@@ -627,14 +627,14 @@ subroutine dennl( bec_bgrp, dbec, drhovan, denl )
   use io_global,  only : stdout
   use mp,         only : mp_sum
   use mp_global,  only : intra_bgrp_comm
-  USE cp_main_variables,  ONLY : descla, la_proc, nlax, nlam
-  USE descriptors,        ONLY : nlar_ , nlac_ , ilar_ , ilac_ , nlax_ , la_myr_ , la_myc_
+  USE cp_main_variables,  ONLY : descla, la_proc, nrcx, nlam
+  USE descriptors,        ONLY : la_descriptor
   use electrons_base,     only : nbspx_bgrp, nbsp_bgrp, ispin_bgrp, f_bgrp, nspin, iupdwn, nupdwn, ibgrp_g2l
   use gvect, only : gstart
 
   implicit none
 
-  real(DP), intent(in)  :: dbec( nkb, 2*nlax, 3, 3 )
+  real(DP), intent(in)  :: dbec( nkb, 2*nrcx, 3, 3 )
   real(DP), intent(in)  :: bec_bgrp( nkb, nbspx_bgrp )
   real(DP), intent(out) :: drhovan( nhm*(nhm+1)/2, nat, nspin, 3, 3 )
   real(DP), intent(out) :: denl( 3, 3 )
@@ -663,9 +663,9 @@ subroutine dennl( bec_bgrp, dbec, drhovan, denl )
               isa=isa+1
               dsums=0.d0
               do iss=1,nspin
-                 IF( descla( la_myr_ , iss ) == descla( la_myc_ , iss ) ) THEN
-                    nr = descla( nlar_ , iss )
-                    ir = descla( ilar_ , iss )
+                 IF( descla( iss )%myr == descla( iss )%myc ) THEN
+                    nr = descla( iss )%nr
+                    ir = descla( iss )%ir
                     istart = iupdwn( iss )
                     nss    = nupdwn( iss )
                     do i=1,nr
@@ -675,8 +675,8 @@ subroutine dennl( bec_bgrp, dbec, drhovan, denl )
                           do k=1,3
                              do j=1,3
                                 dsums(iss,k,j)=dsums(iss,k,j)+f_bgrp(ibgrp)*       &
- &                          (dbec(inl,i+(iss-1)*nlax,k,j)*bec_bgrp(jnl,ibgrp)          &
- &                          + bec_bgrp(inl,ibgrp)*dbec(jnl,i+(iss-1)*nlax,k,j))
+ &                          (dbec(inl,i+(iss-1)*nrcx,k,j)*bec_bgrp(jnl,ibgrp)          &
+ &                          + bec_bgrp(inl,ibgrp)*dbec(jnl,i+(iss-1)*nrcx,k,j))
                              enddo
                           enddo
                        END IF
@@ -685,7 +685,7 @@ subroutine dennl( bec_bgrp, dbec, drhovan, denl )
               end do
               !
               do iss=1,nspin
-                 IF( descla( la_myr_ , iss ) == descla( la_myc_ , iss ) ) THEN
+                 IF( descla( iss )%myr == descla( iss )%myc ) THEN
                  dsum=0.d0
                  do k=1,3
                     do j=1,3

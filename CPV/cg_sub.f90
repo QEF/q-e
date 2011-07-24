@@ -54,8 +54,8 @@
       use cp_electronic_mass,       ONLY : emass_cutoff
       use orthogonalize_base,       ONLY : calphi_bgrp
       use cp_interfaces,            ONLY : rhoofr, dforce, compute_stress, vofrho
-      USE cp_main_variables,        ONLY : nlax, collect_lambda, distribute_lambda, descla, nrlx, nlam, drhor, drhog
-      USE descriptors,              ONLY : la_npc_ , la_npr_ , la_comm_ , la_me_ , la_nrl_ , ldim_cyclic
+      USE cp_main_variables,        ONLY : collect_lambda, distribute_lambda, descla, nrlx, nlam, drhor, drhog
+      USE descriptors,              ONLY : la_descriptor, ldim_cyclic
       USE mp_global, ONLY:  me_image, my_image_id, nbgrp
       USE fft_base,  ONLY: dffts, dfftp
 
@@ -391,8 +391,8 @@
            do iss=1,nspin
               nss=nupdwn(iss)
               istart=iupdwn(iss)
-              me_rot = descla( la_me_ , iss )
-              np_rot = descla( la_npc_ , iss ) * descla( la_npr_ , iss )
+              me_rot = descla( iss )%mype
+              np_rot = descla( iss )%npc * descla( iss )%npr
               allocate( fmat_ ( nrlx, nudx ) )
               do ip = 1, np_rot
                  if( me_rot == ( ip - 1 ) ) then
@@ -419,8 +419,8 @@
               do iss=1,nspin
                  nss=nupdwn(iss)
                  istart=iupdwn(iss)
-                 me_rot = descla( la_me_ , iss )
-                 np_rot = descla( la_npc_ , iss ) * descla( la_npr_ , iss )
+                 me_rot = descla( iss )%mype
+                 np_rot = descla( iss )%npc * descla( iss )%npr
                  allocate( fmat_ ( nrlx, nudx ) )
                  do ip = 1, np_rot
                     if( me_rot == ( ip - 1 ) ) then
@@ -509,8 +509,8 @@
          do iss = 1, nspin
             nss    = nupdwn(iss)
             istart = iupdwn(iss)
-            me_rot = descla( la_me_ , iss )
-            np_rot = descla( la_npc_ , iss ) * descla( la_npr_ , iss )
+            me_rot = descla( iss )%mype
+            np_rot = descla( iss )%npc * descla( iss )%npr
             allocate( fmat_ ( nrlx, nudx ) )
             do ip = 1, np_rot
                if( me_rot == ( ip - 1 ) ) then
@@ -904,7 +904,7 @@
            !
            CALL mp_sum( lambda_repl, intra_bgrp_comm )
            !
-           CALL distribute_lambda( lambda_repl, lambda( :, :, is ), descla( :, is ) )
+           CALL distribute_lambda( lambda_repl, lambda( :, :, is ), descla( is ) )
            !
         end do
 
@@ -922,12 +922,12 @@
               !
               lambdap(:,:,iss) = 0.0d0
               !
-              CALL cyc2blk_redist( nss, fmat0(1,1,iss), nrlx, SIZE(fmat0,2), lambda_dist, nlam, nlam, descla(1,iss) )
+              CALL cyc2blk_redist( nss, fmat0(1,1,iss), nrlx, SIZE(fmat0,2), lambda_dist, nlam, nlam, descla(iss) )
               !
               ! Perform lambdap = lambda * fmat0
               !
               CALL sqr_mm_cannon( 'N', 'N', nss, 1.0d0, lambda(1,1,iss), nlam, lambda_dist, nlam, &
-                                  0.0d0, lambdap(1,1,iss), nlam, descla(1,iss) )
+                                  0.0d0, lambdap(1,1,iss), nlam, descla(iss) )
               !
               lambda_dist      = lambda(:,:,iss)
               lambda(:,:,iss)  = lambdap(:,:,iss)

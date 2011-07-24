@@ -91,7 +91,7 @@ CONTAINS
 
 SUBROUTINE diagonalize_parallel( n, rhos, rhod, s, desc )
 
-      USE descriptors, ONLY: lambda_node_ , nlax_ 
+      USE descriptors
 #ifdef __SCALAPACK
       USE mp_global,    ONLY: ortho_cntx
       USE dspev_module, ONLY: pdsyevd_drv
@@ -102,7 +102,7 @@ SUBROUTINE diagonalize_parallel( n, rhos, rhod, s, desc )
       REAL(DP)              :: rhod(:)   !  output eigenvalues
       REAL(DP)              :: s(:,:)    !  output eigenvectors
       INTEGER,   INTENT(IN) :: n         !  size of the global matrix
-      INTEGER,   INTENT(IN) :: desc(:)
+      TYPE(la_descriptor), INTENT(IN) :: desc
 
       IF( n < 1 ) RETURN
 
@@ -112,9 +112,9 @@ SUBROUTINE diagonalize_parallel( n, rhos, rhod, s, desc )
       IF( SIZE(s,1) /= SIZE(rhos,1) .OR. SIZE(s,2) /= SIZE(rhos,2) ) &
          CALL errore( " diagonalize_parallel ", " inconsistent dimension for s and rhos ", 1 )
 
-      IF ( desc( lambda_node_ ) > 0 ) THEN
+      IF ( desc%active_node > 0 ) THEN
          !
-         IF( SIZE(s,1) /= desc( nlax_ ) ) &
+         IF( SIZE(s,1) /= desc%nrcx ) &
             CALL errore( " diagonalize_parallel ", " inconsistent dimension ", 1 )
          !
          !  Compute local dimension of the cyclically distributed matrix
@@ -122,7 +122,7 @@ SUBROUTINE diagonalize_parallel( n, rhos, rhod, s, desc )
          s = rhos
          !
 #ifdef __SCALAPACK
-         CALL pdsyevd_drv( .true. , n, desc( nlax_ ), s, SIZE(s,1), rhod, ortho_cntx )
+         CALL pdsyevd_drv( .true. , n, desc%nrcx, s, SIZE(s,1), rhod, ortho_cntx )
 #else
          CALL qe_pdsyevd( .true., n, desc, s, SIZE(s,1), rhod )
 #endif
@@ -144,8 +144,7 @@ END SUBROUTINE diagonalize_parallel
       USE io_global,   ONLY: ionode, stdout
       USE mp,          ONLY: mp_sum, mp_bcast, mp_barrier
       USE mp,          ONLY: mp_max
-      USE descriptors, ONLY: descla_siz_ , descla_init , nlar_ , nlac_ , &
-                             ilar_ , ilac_ , nlax_ , lambda_node_ , la_myc_ , la_myr_
+      USE descriptors, ONLY: la_descriptor, descla_init
       !
       IMPLICIT NONE
       !
@@ -153,7 +152,7 @@ END SUBROUTINE diagonalize_parallel
       REAL(DP), ALLOCATABLE :: s(:,:), a(:,:), d(:)
       REAL(DP) :: t1, tpar, tser
       INTEGER  :: nr, nc, ir, ic, nx
-      INTEGER  :: desc( descla_siz_ )
+      TYPE(la_descriptor) :: desc
       REAL(DP) :: cclock
       EXTERNAL :: cclock
       INTEGER, PARAMETER :: paradim = 1000
@@ -170,12 +169,12 @@ END SUBROUTINE diagonalize_parallel
       CALL descla_init( desc, n, n, np_ortho, me_ortho, ortho_comm, ortho_comm_id )
 
       nx = 1
-      IF( desc( lambda_node_ ) > 0 ) nx = desc( nlax_ )
+      IF( desc%active_node > 0 ) nx = desc%nrcx
 
-      nr = desc( nlar_ )
-      nc = desc( nlac_ )
-      ir = desc( ilar_ )
-      ic = desc( ilac_ )
+      nr = desc%nr
+      nc = desc%nc
+      ir = desc%ir
+      ic = desc%ic
 
       ALLOCATE( s( nx, nx ) )
       ALLOCATE( a( nx, nx ) )
@@ -199,8 +198,7 @@ END SUBROUTINE diagonalize_parallel
 
       DEALLOCATE( s, a )
       !
-      IF( desc( la_myc_ ) == 0 .AND. desc( la_myr_ ) == 0 .AND. &
-          desc( lambda_node_ ) > 0  .AND. n < paradim ) THEN
+      IF( desc%myc == 0 .AND. desc%myr == 0 .AND. desc%active_node > 0  .AND. n < paradim ) THEN
 
          ! when n >= paradim do not mesure serial perf, go parallel
 
@@ -261,7 +259,7 @@ END SUBROUTINE diagonalize_parallel
 
       SUBROUTINE set_a()
          INTEGER :: i, j, ii, jj
-         IF( desc( lambda_node_ ) < 0 ) RETURN
+         IF( desc%active_node < 0 ) RETURN
          DO j = 1, nc
             DO i = 1, nr
                ii = i + ir - 1
@@ -290,7 +288,7 @@ END SUBROUTINE diagonalize_parallel
       USE io_global,   ONLY: ionode, stdout
       USE mp,          ONLY: mp_sum, mp_bcast, mp_barrier
       USE mp,          ONLY: mp_max
-      USE descriptors, ONLY: descla_siz_ , descla_init , nlar_ , nlac_ , la_comm_ , lambda_node_
+      USE descriptors, ONLY: descla_init , la_descriptor
       !
       IMPLICIT NONE
       !
@@ -299,7 +297,7 @@ END SUBROUTINE diagonalize_parallel
       REAL(DP), ALLOCATABLE :: c(:,:), a(:,:), b(:,:)
       REAL(DP) :: t1, tcan
       INTEGER  :: nr, nc, ir, ic, np, lnode
-      INTEGER  :: desc( descla_siz_ )
+      TYPE(la_descriptor) :: desc
       !
       REAL(DP) :: cclock
       EXTERNAL :: cclock
@@ -316,8 +314,8 @@ END SUBROUTINE diagonalize_parallel
 
       CALL descla_init( desc, n, n, np_ortho, me_ortho, ortho_comm, ortho_comm_id )
 
-      nr = desc( nlar_ )
-      nc = desc( nlac_ )
+      nr = desc%nr
+      nc = desc%nc
    
       ALLOCATE( a( nr, nc ), c( nr, nc ), b( nr, nc ) )
    
@@ -386,13 +384,12 @@ END SUBROUTINE diagonalize_parallel
       USE control_flags,     ONLY: ortho_eps, ortho_max
       USE mp_global,         ONLY: intra_bgrp_comm, me_bgrp, nproc_bgrp
       USE mp,                ONLY: mp_sum, mp_max
-      USE descriptors,       ONLY: nlar_ , nlac_ , ilar_ , ilac_ , lambda_node_ , &
-                                   la_myr_ , la_myc_ , la_comm_ , descla_siz_ , nlax_
+      USE descriptors,       ONLY: la_descriptor
 
       IMPLICIT NONE
 
       INTEGER, INTENT(IN) :: nss, ldx, nx0
-      INTEGER, INTENT(IN) :: desc( descla_siz_ )
+      TYPE(la_descriptor), INTENT(IN) :: desc
       REAL(DP) :: u   ( ldx, ldx )
       REAL(DP) :: diag( nss )
       REAL(DP) :: xloc( nx0, nx0 )
@@ -418,7 +415,7 @@ END SUBROUTINE diagonalize_parallel
       IF( ldx/= nx0 ) &
          CALL errore( " ortho_iterate ", " inconsistent dimensions ldx, nx0 ", nx0 )
 
-      IF( desc( lambda_node_ ) < 0 ) then
+      IF( desc%active_node < 0 ) then
          xloc = 0.0d0
          iter = 0
          go to 100
@@ -426,12 +423,12 @@ END SUBROUTINE diagonalize_parallel
       !
       !  Compute the size of the local block
       !
-      nr = desc( nlar_ )
-      nc = desc( nlac_ )
-      ir = desc( ilar_ )
-      ic = desc( ilac_ )
+      nr = desc%nr
+      nc = desc%nc
+      ir = desc%ir
+      ic = desc%ic
 
-      IF( ldx/= desc( nlax_ ) ) &
+      IF( ldx/= desc%nrcx ) &
          CALL errore( " ortho_iterate ", " inconsistent dimensions ldx ", ldx )
 
       ALLOCATE( tr1(ldx,ldx), tr2(ldx,ldx) )
@@ -483,7 +480,7 @@ END SUBROUTINE diagonalize_parallel
             END DO
          END DO
 
-         CALL mp_max( diff, desc( la_comm_ ) )
+         CALL mp_max( diff, desc%comm )
 
 
          IF( diff < ortho_eps ) EXIT ITERATIVE_LOOP
@@ -539,13 +536,12 @@ END SUBROUTINE diagonalize_parallel
       USE control_flags,     ONLY: ortho_eps, ortho_max
       USE mp_global,         ONLY: intra_bgrp_comm, me_bgrp, nproc_bgrp
       USE mp,                ONLY: mp_sum, mp_max
-      USE descriptors,       ONLY: nlar_ , nlac_ , ilar_ , ilac_ , lambda_node_ , &
-                                   la_myr_ , la_myc_ , la_comm_ , descla_siz_ , nlax_
+      USE descriptors,       ONLY: la_descriptor
 
       IMPLICIT NONE
 
       INTEGER, INTENT(IN) :: nss, ldx, nx0
-      INTEGER, INTENT(IN) :: desc( descla_siz_ )
+      TYPE(la_descriptor), INTENT(IN) :: desc
       REAL(DP) :: u   ( ldx, ldx )
       REAL(DP) :: diag( nss )
       REAL(DP) :: xloc( nx0, nx0 )
@@ -567,7 +563,7 @@ END SUBROUTINE diagonalize_parallel
       IF( ldx/= nx0 ) &
          CALL errore( " ortho_alt_iterate ", " inconsistent dimensions ldx, nx0 ", nx0 )
 
-      if( desc( lambda_node_ ) < 0 ) then
+      if( desc%active_node < 0 ) then
          xloc = 0.0d0
          iter = 0
          go to 100
@@ -575,12 +571,12 @@ END SUBROUTINE diagonalize_parallel
       !
       !  Compute the size of the local block
       !
-      nr = desc( nlar_ )
-      nc = desc( nlac_ )
-      ir = desc( ilar_ )
-      ic = desc( ilac_ )
+      nr = desc%nr
+      nc = desc%nc
+      ir = desc%ir
+      ic = desc%ic
 
-      IF( ldx/= desc( nlax_ ) ) &
+      IF( ldx/= desc%nrcx ) &
          CALL errore( " ortho_alt_iterate ", " inconsistent dimensions ldx ", ldx )
 
       ALLOCATE( tmp1(ldx,ldx), tmp2(ldx,ldx), x1(ldx,ldx), sigd(nss) )
@@ -638,13 +634,13 @@ END SUBROUTINE diagonalize_parallel
         CALL sqr_mm_cannon( 'T', 'N', nss, 1.0d0, tau, ldx, xloc, nx0, 0.0d0, tmp1, ldx, desc)
         !
         sigd = 0.0d0
-        IF( desc( la_myr_ ) == desc( la_myc_ ) ) THEN
+        IF( desc%myr == desc%myc ) THEN
            DO i = 1, nr
               SIGD( i + ir - 1 )   =  tmp1(i,i)
               tmp1(i,i) = -SIGD( i + ir - 1 )
            ENDDO
         END IF
-        CALL mp_sum( sigd, desc( la_comm_ ) )
+        CALL mp_sum( sigd, desc%comm )
 
         CALL sqr_mm_cannon( 'T', 'N', nss, 1.0d0, xloc, nx0, tmp1, ldx, 0.0d0, x1, ldx, desc)
         !
@@ -667,7 +663,7 @@ END SUBROUTINE diagonalize_parallel
           END DO
         END DO
 
-        CALL mp_max( diff, desc( la_comm_ ) )
+        CALL mp_max( diff, desc%comm )
 
         IF( diff < ortho_eps ) EXIT ITERATIVE_LOOP
 
@@ -706,9 +702,7 @@ END SUBROUTINE diagonalize_parallel
       USE control_flags,      ONLY: iprsta
       USE io_global,          ONLY: stdout
       USE mp_global,          ONLY: intra_bgrp_comm, leg_ortho, inter_bgrp_comm, my_bgrp_id, nbgrp
-      USE descriptors,        ONLY: lambda_node_ , la_npc_ , la_npr_ , descla_siz_ , &
-                                    descla_init , la_comm_ , ilar_ , ilac_ , nlar_ , &
-                                    nlac_ , la_myr_ , la_myc_ , la_nx_ , la_n_ , nlax_
+      USE descriptors,        ONLY: la_descriptor, descla_init
       USE parallel_toolkit,   ONLY: dsqmsym
 !
       IMPLICIT NONE
@@ -718,26 +712,26 @@ END SUBROUTINE diagonalize_parallel
       REAL(DP)    :: qbecp( nkbx, ldx )
       REAL(DP)    :: becp_dist( nkbx, ldx )
       REAL(DP)    :: sig( ldx, ldx )
-      INTEGER     :: desc( descla_siz_ )
+      TYPE(la_descriptor), INTENT(IN) :: desc
 !
       INTEGER :: i, j, ipr, ipc, nr, nc, ir, ic, npr, npc
       INTEGER :: ii, jj, root
-      INTEGER :: desc_ip( descla_siz_ )
+      TYPE(la_descriptor):: desc_ip
       INTEGER :: np( 2 ), coor_ip( 2 )
       !
       REAL(DP), ALLOCATABLE :: sigp(:,:)
 !
       IF( nss < 1 ) RETURN
 
-      np(1) = desc( la_npr_ )
-      np(2) = desc( la_npc_ )
+      np(1) = desc%npr
+      np(2) = desc%npc
 
-      nx = desc( nlax_ )
+      nx = desc%nrcx
 
       ALLOCATE( sigp( nx, nx ) ) 
 
-      IF( desc( lambda_node_ ) > 0 ) THEN
-         IF( desc( nlax_ ) /= ldx ) &
+      IF( desc%active_node > 0 ) THEN
+         IF( desc%nrcx /= ldx ) &
             CALL errore( " sigset ", " inconsistent dimension ldx ", ldx )
          IF( nx /= ldx ) &
             CALL errore( " sigset ", " inconsistent dimension nx ", nx )
@@ -754,15 +748,15 @@ END SUBROUTINE diagonalize_parallel
             coor_ip(1) = ipr - 1
             coor_ip(2) = ipc - 1
 
-            CALL descla_init( desc_ip, desc( la_n_ ), desc( la_nx_ ), np, coor_ip, desc( la_comm_ ), 1 )
+            CALL descla_init( desc_ip, desc%n, desc%nx, np, coor_ip, desc%comm, 1 )
 
-            nr = desc_ip( nlar_ )
-            nc = desc_ip( nlac_ )
-            ir = desc_ip( ilar_ )
-            ic = desc_ip( ilac_ )
+            nr = desc_ip%nr
+            nc = desc_ip%nc
+            ir = desc_ip%ir
+            ic = desc_ip%ic
             !
-            CALL GRID2D_RANK( 'R', desc_ip( la_npr_ ), desc_ip( la_npc_ ), &
-                                   desc_ip( la_myr_ ), desc_ip( la_myc_ ), root )
+            CALL GRID2D_RANK( 'R', desc_ip%npr, desc_ip%npc, &
+                                   desc_ip%myr, desc_ip%myc, root )
 
             IF( MOD( root , nbgrp ) == my_bgrp_id ) THEN
 
@@ -793,14 +787,14 @@ END SUBROUTINE diagonalize_parallel
       !
       CALL dsqmsym( nss, sig, nx, desc )
       !
-      IF( desc( lambda_node_ ) > 0 ) THEN
+      IF( desc%active_node > 0 ) THEN
          !
-         nr = desc( nlar_ )
-         nc = desc( nlac_ )
-         ir = desc( ilar_ )
-         ic = desc( ilac_ )
+         nr = desc%nr
+         nc = desc%nc
+         ir = desc%ir
+         ic = desc%ic
          !
-         IF( desc( la_myr_ ) == desc( la_myc_ ) ) THEN
+         IF( desc%myr == desc%myc ) THEN
             DO i = 1, nr
                sig(i,i) = sig(i,i) + 1.0d0
             END DO
@@ -846,10 +840,7 @@ END SUBROUTINE diagonalize_parallel
       USE mp_global,          ONLY: inter_bgrp_comm, my_bgrp_id, nbgrp
       USE control_flags,      ONLY: iprsta
       USE io_global,          ONLY: stdout
-      USE descriptors,        ONLY: lambda_node_ , la_npc_ , la_npr_ , descla_siz_ , &
-                                    descla_init , la_comm_ , ilar_ , ilac_ , nlar_ , &
-                                    nlac_ , la_myr_ , la_myc_ , la_nx_ , la_n_ , nlax_
-
+      USE descriptors,        ONLY: la_descriptor, descla_init
 !
       IMPLICIT NONE
 !
@@ -857,11 +848,11 @@ END SUBROUTINE diagonalize_parallel
       COMPLEX(DP) :: cp( ngwx, n ), phi( ngwx, n )
       REAL(DP)    :: bephi( nkbx, ldx ), qbecp( nkbx, ldx )
       REAL(DP)    :: rho( ldx, ldx )
-      INTEGER     :: desc( descla_siz_ )
+      TYPE(la_descriptor), INTENT(IN) :: desc
       !
       INTEGER :: i, j, ipr, ipc, nr, nc, ir, ic, npr, npc
       INTEGER :: ii, jj, root, nx
-      INTEGER :: desc_ip( descla_siz_ )
+      TYPE(la_descriptor) :: desc_ip
       INTEGER :: np( 2 ), coor_ip( 2 )
 
       REAL(DP), ALLOCATABLE :: rhop(:,:)
@@ -872,13 +863,13 @@ END SUBROUTINE diagonalize_parallel
 
       IF( nss < 1 ) RETURN
 
-      np(1) = desc( la_npr_ )
-      np(2) = desc( la_npc_ )
+      np(1) = desc%npr
+      np(2) = desc%npc
 
-      nx = desc( nlax_ )
+      nx = desc%nrcx
 
-      IF( desc( lambda_node_ ) > 0 ) THEN
-         IF( desc( nlax_ ) /= ldx ) &
+      IF( desc%active_node > 0 ) THEN
+         IF( desc%nrcx /= ldx ) &
             CALL errore( " rhoset ", " inconsistent dimension ldx ", ldx )
          IF( nx /= ldx ) &
             CALL errore( " rhoset ", " inconsistent dimension nx ", nx )
@@ -897,15 +888,15 @@ END SUBROUTINE diagonalize_parallel
             coor_ip(1) = ipr - 1
             coor_ip(2) = ipc - 1
 
-            CALL descla_init( desc_ip, desc( la_n_ ), desc( la_nx_ ), np, coor_ip, desc( la_comm_ ), 1 )
+            CALL descla_init( desc_ip, desc%n, desc%nx, np, coor_ip, desc%comm, 1 )
 
-            nr = desc_ip( nlar_ )
-            nc = desc_ip( nlac_ )
-            ir = desc_ip( ilar_ )
-            ic = desc_ip( ilac_ )
+            nr = desc_ip%nr
+            nc = desc_ip%nc
+            ir = desc_ip%ir
+            ic = desc_ip%ic
             !
-            CALL GRID2D_RANK( 'R', desc_ip( la_npr_ ), desc_ip( la_npc_ ), &
-                                   desc_ip( la_myr_ ), desc_ip( la_myc_ ), root )
+            CALL GRID2D_RANK( 'R', desc_ip%npr, desc_ip%npc, &
+                                   desc_ip%myr, desc_ip%myc, root )
             !
             IF( MOD( root , nbgrp ) == my_bgrp_id ) THEN
 
@@ -933,10 +924,10 @@ END SUBROUTINE diagonalize_parallel
          CALL mp_sum( rho, inter_bgrp_comm )
       END IF
 
-      IF( desc( lambda_node_ ) > 0 ) THEN
+      IF( desc%active_node > 0 ) THEN
          !
-         nr = desc( nlar_ )
-         nc = desc( nlac_ )
+         nr = desc%nr
+         nc = desc%nc
          !
          !  bephi is distributed among processor rows
          !  qbephi is distributed among processor columns
@@ -984,9 +975,7 @@ END SUBROUTINE diagonalize_parallel
       USE io_global,          ONLY: stdout
       USE mp_global,          ONLY: intra_bgrp_comm, leg_ortho
       USE mp_global,          ONLY: inter_bgrp_comm, my_bgrp_id, nbgrp
-      USE descriptors,        ONLY: lambda_node_ , la_npc_ , la_npr_ , descla_siz_ , &
-                                    descla_init , la_comm_ , ilar_ , ilac_ , nlar_ , &
-                                    nlac_ , la_myr_ , la_myc_ , la_nx_ , la_n_ , nlax_
+      USE descriptors,        ONLY: la_descriptor, descla_init
       USE parallel_toolkit,   ONLY: dsqmsym
 !
       IMPLICIT NONE
@@ -995,11 +984,11 @@ END SUBROUTINE diagonalize_parallel
       COMPLEX(DP) :: phi( ngwx, n )
       REAL(DP)    :: bephi( nkbx, ldx ), qbephi( nkbx, ldx )
       REAL(DP)    :: tau( ldx, ldx )
-      INTEGER     :: desc( descla_siz_ )
+      TYPE(la_descriptor), INTENT(IN) :: desc
       !
       INTEGER :: i, j, ipr, ipc, nr, nc, ir, ic, npr, npc
       INTEGER :: ii, jj, root
-      INTEGER :: desc_ip( descla_siz_ )
+      TYPE(la_descriptor) :: desc_ip
       INTEGER :: np( 2 ), coor_ip( 2 )
 
       REAL(DP), ALLOCATABLE :: taup( :, : )
@@ -1008,13 +997,13 @@ END SUBROUTINE diagonalize_parallel
       !
       !  get dimensions of the square processor grid
       !
-      np(1) = desc( la_npr_ )
-      np(2) = desc( la_npc_ )
+      np(1) = desc%npr
+      np(2) = desc%npc
       !
-      nx = desc( nlax_ )
+      nx = desc%nrcx
       !
-      IF( desc( lambda_node_ ) > 0 ) THEN
-         IF( desc( nlax_ ) /= ldx ) &
+      IF( desc%active_node > 0 ) THEN
+         IF( desc%nrcx /= ldx ) &
             CALL errore( " tauset ", " inconsistent dimension ldx ", ldx )
          IF( nx /= ldx ) &
             CALL errore( " tauset ", " inconsistent dimension nx ", nx )
@@ -1037,15 +1026,15 @@ END SUBROUTINE diagonalize_parallel
             coor_ip(1) = ipr - 1
             coor_ip(2) = ipc - 1
 
-            CALL descla_init( desc_ip, desc( la_n_ ), desc( la_nx_ ), np, coor_ip, desc( la_comm_ ), 1 )
+            CALL descla_init( desc_ip, desc%n, desc%nx, np, coor_ip, desc%comm, 1 )
 
-            nr = desc_ip( nlar_ )
-            nc = desc_ip( nlac_ )
-            ir = desc_ip( ilar_ )
-            ic = desc_ip( ilac_ )
+            nr = desc_ip%nr
+            nc = desc_ip%nc
+            ir = desc_ip%ir
+            ic = desc_ip%ic
             !
-            CALL GRID2D_RANK( 'R', desc_ip( la_npr_ ), desc_ip( la_npc_ ), &
-                                   desc_ip( la_myr_ ), desc_ip( la_myc_ ), root )
+            CALL GRID2D_RANK( 'R', desc_ip%npr, desc_ip%npc, &
+                                   desc_ip%myr, desc_ip%myc, root )
             !
             IF( MOD( root , nbgrp ) == my_bgrp_id ) THEN
 
@@ -1079,10 +1068,10 @@ END SUBROUTINE diagonalize_parallel
       !
       CALL dsqmsym( nss, tau, nx, desc )
       !
-      IF( desc( lambda_node_ ) > 0 ) THEN
+      IF( desc%active_node > 0 ) THEN
          !
-         nr = desc( nlar_ )
-         nc = desc( nlac_ )
+         nr = desc%nr
+         nc = desc%nc
          !
          !  bephi is distributed among processor rows
          !  qbephi is distributed among processor columns
@@ -1130,13 +1119,11 @@ END SUBROUTINE diagonalize_parallel
       USE mp,                ONLY: mp_sum, mp_bcast
       USE mp_global,         ONLY: intra_bgrp_comm, leg_ortho, me_bgrp, inter_bgrp_comm
       USE electrons_base,    ONLY: nbspx_bgrp, ibgrp_g2l, nbsp, nspin,  nupdwn, iupdwn, nbspx
-      USE descriptors,       ONLY: nlar_ , nlac_ , ilar_ , ilac_ , lambda_node_ , descla_siz_ , la_comm_ , &
-                                   la_npc_ , la_npr_ , nlax_ , la_n_ , la_nx_ , la_myr_ , la_myc_ , &
-                                   descla_init
+      USE descriptors,       ONLY: descla_init, la_descriptor
 !
       IMPLICIT NONE
 !
-      INTEGER, INTENT(IN) :: desc( : , : )
+      TYPE(la_descriptor), INTENT(IN) :: desc( : )
       COMPLEX(DP) :: cp_bgrp( :, : ), phi( :, : )
       REAL(DP), INTENT(IN) :: ccc
       REAL(DP)    :: bec_bgrp( :, : ), x0( :, :, : )
@@ -1145,25 +1132,25 @@ END SUBROUTINE diagonalize_parallel
 
       ! local variables
 
-      INTEGER :: i, j, ig, is, iv, ia, inl, nr, nc, ir, ic, nx0, ngwx, nkbx, iss, nlax
+      INTEGER :: i, j, ig, is, iv, ia, inl, nr, nc, ir, ic, nx0, ngwx, nkbx, iss, nrcx
       INTEGER :: ipr, ipc, root, i1, i2, nss, istart
       INTEGER :: ibgrp_i, ibgrp_i_first, nbgrp_i, i_first
       REAL(DP),    ALLOCATABLE :: wtemp(:,:) 
       REAL(DP),    ALLOCATABLE :: xd(:,:) 
       REAL(DP),    ALLOCATABLE :: bephi_tmp(:,:) 
       INTEGER :: np( 2 ), coor_ip( 2 )
-      INTEGER :: desc_ip( descla_siz_ )
+      TYPE(la_descriptor) :: desc_ip
 
       DO iss = 1, nspin
          !
          !  size of the local block
          !
-         nlax = desc( nlax_ , iss )
+         nrcx = desc( iss )%nrcx
          !
          nss = nupdwn(iss)
          istart = iupdwn(iss)
-         i1 = (iss-1)*nlax+1
-         i2 = iss*nlax
+         i1 = (iss-1)*nrcx+1
+         i2 = iss*nrcx
          nx0 = SIZE( x0, 1 )
          ngwx = SIZE( phi, 1 )
          nkbx = SIZE( bephi, 1 )
@@ -1172,17 +1159,17 @@ END SUBROUTINE diagonalize_parallel
          !
          IF( nss < 1 ) CYCLE
          !
-         IF( desc( lambda_node_ , iss ) > 0 ) THEN
-            IF( nx0 /= desc( nlax_ , iss ) ) &
+         IF( desc( iss )%active_node > 0 ) THEN
+            IF( nx0 /= desc( iss )%nrcx ) &
                CALL errore( " updatc ", " inconsistent dimension nx0 ", nx0 )
          END IF
          !
-         np(1) = desc( la_npr_ , iss )
-         np(2) = desc( la_npc_ , iss )
+         np(1) = desc( iss )%npr
+         np(2) = desc( iss )%npc
          !
          CALL start_clock( 'updatc' )
    
-         ALLOCATE( xd( nlax, nlax ) )
+         ALLOCATE( xd( nrcx, nrcx ) )
    
          IF( nvb > 0 )THEN
             DO i = 1, nss
@@ -1193,8 +1180,8 @@ END SUBROUTINE diagonalize_parallel
                   END DO
                END IF
             END DO
-            ALLOCATE( wtemp( nlax, nkb ) )
-            ALLOCATE( bephi_tmp( nkbx, nlax ) )
+            ALLOCATE( wtemp( nrcx, nkb ) )
+            ALLOCATE( bephi_tmp( nkbx, nrcx ) )
          END IF
    
    
@@ -1225,15 +1212,15 @@ END SUBROUTINE diagonalize_parallel
                coor_ip(1) = ipr - 1
                coor_ip(2) = ipc - 1
    
-               CALL descla_init( desc_ip, desc( la_n_ , iss ), desc( la_nx_ , iss ), np, coor_ip, desc( la_comm_ , iss ), 1 )
+               CALL descla_init( desc_ip, desc( iss )%n, desc( iss )%nx, np, coor_ip, desc( iss )%comm, 1 )
    
-               nr = desc_ip( nlar_ )
-               nc = desc_ip( nlac_ )
-               ir = desc_ip( ilar_ )
-               ic = desc_ip( ilac_ )
+               nr = desc_ip%nr
+               nc = desc_ip%nc
+               ir = desc_ip%ir
+               ic = desc_ip%ic
                !
-               CALL GRID2D_RANK( 'R', desc_ip( la_npr_ ), desc_ip( la_npc_ ), &
-                                      desc_ip( la_myr_ ), desc_ip( la_myc_ ), root )
+               CALL GRID2D_RANK( 'R', desc_ip%npr, desc_ip%npc, &
+                                      desc_ip%myr, desc_ip%myc, root )
                !
                ! we need to update only states local to the current band group,
                ! so here we compute the overlap between ortho and band group.
@@ -1252,16 +1239,16 @@ END SUBROUTINE diagonalize_parallel
    
                root = root * leg_ortho
    
-               IF( desc( la_myr_ , iss ) == ipr - 1 .AND. &
-                   desc( la_myc_ , iss ) == ipc - 1 .AND. &
-                   desc( lambda_node_ , iss ) > 0 ) THEN
+               IF( desc( iss )%myr == ipr - 1 .AND. &
+                   desc( iss )%myc == ipc - 1 .AND. &
+                   desc( iss )%active_node > 0 ) THEN
                   xd = x0(:,:,iss) * ccc
                END IF
    
                CALL mp_bcast( xd, root, intra_bgrp_comm )
    
                CALL dgemm( 'N', 'N', 2*ngw, nbgrp_i, nr, 1.0d0, phi(1,istart+ir-1), 2*ngwx, &
-                           xd(1,i_first), nlax, 1.0d0, cp_bgrp(1,ibgrp_i_first), 2*ngwx )
+                           xd(1,i_first), nrcx, 1.0d0, cp_bgrp(1,ibgrp_i_first), 2*ngwx )
    
                IF( nvb > 0 )THEN
    
@@ -1269,7 +1256,7 @@ END SUBROUTINE diagonalize_parallel
                   !
                   !     bec of vanderbilt species are updated 
                   !
-                  CALL dgemm( 'N', 'T', nr, nkbus, nc, 1.0d0, xd, nlax, bephi_tmp, nkbx, 0.0d0, wtemp, nlax )
+                  CALL dgemm( 'N', 'T', nr, nkbus, nc, 1.0d0, xd, nrcx, bephi_tmp, nkbx, 0.0d0, wtemp, nrcx )
                   !
                   ! here nr and ir are still valid, since they are the same for all procs in the same row
                   !
@@ -1456,20 +1443,18 @@ END SUBROUTINE diagonalize_parallel
       END SUBROUTINE calphi_bgrp
 
 
-   SUBROUTINE bec_bgrp2ortho( bec_bgrp, bec_ortho, nlax, desc )
+   SUBROUTINE bec_bgrp2ortho( bec_bgrp, bec_ortho, nrcx, desc )
       USE kinds,             ONLY: DP
       USE uspp,              ONLY: nkb, nkbus
       USE mp,                ONLY: mp_sum
       USE mp_global,         ONLY: intra_bgrp_comm, leg_ortho, me_bgrp, inter_bgrp_comm
       USE electrons_base,    ONLY: nbspx_bgrp, ibgrp_g2l, nspin
-      USE descriptors,       ONLY: nlar_ , nlac_ , ilar_ , ilac_ , lambda_node_ , descla_siz_ , la_comm_ , &
-                                   la_npc_ , la_npr_ , nlax_ , la_n_ , la_nx_ , la_myr_ , la_myc_ , &
-                                   descla_init
+      USE descriptors,       ONLY: la_descriptor
       !
       IMPLICIT NONE
       !
-      INTEGER, INTENT(IN) :: nlax
-      INTEGER, INTENT(IN) :: desc(:,:)
+      INTEGER, INTENT(IN) :: nrcx
+      TYPE(la_descriptor), INTENT(IN) :: desc( : )
       REAL(DP), INTENT(IN)  :: bec_bgrp(:,:)
       REAL(DP), INTENT(OUT) :: bec_ortho(:,:)
       !
@@ -1477,9 +1462,9 @@ END SUBROUTINE diagonalize_parallel
       !
       bec_ortho = 0.0d0
       !
-      IF( desc( lambda_node_ , 1 ) > 0 ) THEN
-         ir = desc( ilar_ , 1 )
-         nr = desc( nlar_ , 1 )
+      IF( desc( 1 )%active_node > 0 ) THEN
+         ir = desc( 1 )%ir
+         nr = desc( 1 )%nr
          do i = 1, nr
             ibgrp_i = ibgrp_g2l( i + ir - 1 )
             IF( ibgrp_i > 0 ) THEN
@@ -1489,14 +1474,14 @@ END SUBROUTINE diagonalize_parallel
       END IF
       !
       IF( nspin == 2 ) THEN
-         IF( desc( lambda_node_ , 2 ) > 0 ) THEN
-            nup = desc( la_n_ , 1 )
-            ir = desc( ilar_ , 2 )
-            nr = desc( nlar_ , 2 )
+         IF( desc( 2 )%active_node > 0 ) THEN
+            nup = desc( 1 )%n
+            ir = desc( 2 )%ir
+            nr = desc( 2 )%nr
             do i = 1, nr
                ibgrp_i = ibgrp_g2l( i + ir - 1 + nup )
                IF( ibgrp_i > 0 ) THEN
-                  bec_ortho( :, i + nlax ) = bec_bgrp( :, ibgrp_i )
+                  bec_ortho( :, i + nrcx ) = bec_bgrp( :, ibgrp_i )
                END IF
             end do
          END IF

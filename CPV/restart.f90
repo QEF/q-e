@@ -265,12 +265,12 @@
       !
       ctot = 0.0d0
       !
-      CALL collect_lambda( lambda_repl, lambda(:,:,1), descla(:,1) )
+      CALL collect_lambda( lambda_repl, lambda(:,:,1), descla(1) )
       !
       CALL crot( ctot, c0, SIZE( c0, 1 ), nupdwn(1), iupdwn_tot(1), iupdwn(1), lambda_repl, nudx, eitmp )
       !
       IF( nspin == 2 ) THEN
-         CALL collect_lambda( lambda_repl, lambda(:,:,2), descla(:,2) )
+         CALL collect_lambda( lambda_repl, lambda(:,:,2), descla(2) )
          CALL crot( ctot, c0, SIZE( c0, 1 ), nupdwn(2), iupdwn_tot(2), iupdwn(2), lambda_repl, nudx, eitmp )
       END IF
       !

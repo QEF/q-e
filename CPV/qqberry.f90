@@ -22,8 +22,7 @@ subroutine qqberry2( gqq,gqqm, ipol)
   use gvecw,              only: ngw
   use gvect,              only: mill
   use constants
-  use ions_base
-  use ions_base,          only: nas => nax
+  use ions_base,          only: nas => nax, na, nsp
   use cell_base,          only: at, alat
   use gvect,              only: g, gg
   use mp,                 only: mp_sum

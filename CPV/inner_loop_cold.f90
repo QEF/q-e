@@ -53,10 +53,8 @@
 
       USE cp_interfaces,  ONLY: rhoofr, dforce, protate, vofrho
       USE cg_module,      ONLY: itercg
-      USE cp_main_variables, ONLY: distribute_lambda, descla, nlax, collect_lambda, drhor, drhog
-      USE descriptors,       ONLY: lambda_node_ , la_npc_ , la_npr_ , descla_siz_ , &
-                                   descla_init , la_comm_ , ilar_ , ilac_ , nlar_ , &
-                                   nlac_ , la_myr_ , la_myc_ , la_nx_ , la_n_ , la_me_ , la_nrl_
+      USE cp_main_variables, ONLY: distribute_lambda, descla, nrcx, collect_lambda, drhor, drhog
+      USE descriptors,       ONLY: descla_init , la_descriptor
       USE dspev_module,   ONLY: pdspev_drv, dspev_drv
 
 
@@ -98,13 +96,13 @@
       REAL(kind=DP), ALLOCATABLE :: epsi0(:,:)
 
       INTEGER :: np(2), coor_ip(2), ipr, ipc, nr, nc, ir, ic, ii, jj, root, j
-      INTEGER :: desc_ip( descla_siz_ )
+      TYPE(la_descriptor) :: desc_ip
       INTEGER :: np_rot, me_rot, comm_rot, nrl
 
       CALL start_clock( 'inner_loop')
 
       allocate(fion2(3,nat))
-      allocate(c0hc0(nlax,nlax,nspin))
+      allocate(c0hc0(nrcx,nrcx,nspin))
       allocate(h0c0(ngw,nx))
 
 
@@ -167,23 +165,22 @@
             nss= nupdwn( is )
             istart= iupdwn( is )
 
-            np(1) = descla( la_npr_ , is )
-            np(2) = descla( la_npc_ , is )
+            np(1) = descla( is )%npr
+            np(2) = descla( is )%npc
 
             DO ipc = 1, np(2)
                DO ipr = 1, np(1)
 
                   coor_ip(1) = ipr - 1
                   coor_ip(2) = ipc - 1
-                  CALL descla_init( desc_ip, descla( la_n_ , is ), descla( la_nx_ , is ), np, coor_ip, descla( la_comm_ , is ), 1 )
+                  CALL descla_init( desc_ip, descla( is )%n, descla( is )%nx, np, coor_ip, descla( is )%comm, 1 )
 
-                  nr = desc_ip( nlar_ )
-                  nc = desc_ip( nlac_ )
-                  ir = desc_ip( ilar_ )
-                  ic = desc_ip( ilac_ )
+                  nr = desc_ip%nr
+                  nc = desc_ip%nc
+                  ir = desc_ip%ir
+                  ic = desc_ip%ic
 
-                  CALL GRID2D_RANK( 'R', desc_ip( la_npr_ ), desc_ip( la_npc_ ), &
-                                    desc_ip( la_myr_ ), desc_ip( la_myc_ ), root )
+                  CALL GRID2D_RANK( 'R', desc_ip%npr, desc_ip%npc, desc_ip%myr, desc_ip%myc, root )
                   !
                   root = root * leg_ortho
 
@@ -205,8 +202,8 @@
 
                   CALL mp_root_sum( mtmp, c0hc0(1:nr,1:nc,is), root, intra_bgrp_comm )
 
-!                  IF( coor_ip(1) == descla( la_myr_ , is ) .AND. &
-!                      coor_ip(2) == descla( la_myc_ , is ) .AND. descla( lambda_node_ , is ) > 0 ) THEN
+!                  IF( coor_ip(1) == descla( is )%myr .AND. &
+!                      coor_ip(2) == descla( is )%myc .AND. descla( is )%active_node > 0 ) THEN
 !                     c0hc0(1:nr,1:nc,is) = mtmp
 !                  END IF
 
@@ -348,7 +345,7 @@
       USE ions_positions, ONLY: tau0
       USE mp,             ONLY: mp_sum,mp_bcast
       use cp_interfaces,  only: rhoofr, dforce, vofrho
-      USE cp_main_variables, ONLY: descla, nlax, nrlx, drhor, drhog
+      USE cp_main_variables, ONLY: descla, nrcx, nrlx, drhor, drhog
       USE fft_base,       ONLY: dfftp, dffts
 
       !
@@ -377,8 +374,8 @@
       COMPLEX(kind=DP)            :: ei3( dfftp%nr3:dfftp%nr3, nat )
       COMPLEX(kind=DP)            :: sfac( ngms, nsp )
   
-      REAL(kind=DP), INTENT(in)   :: c0hc0(nlax,nlax,nspin)
-      REAL(kind=DP), INTENT(in)   :: c1hc1(nlax,nlax,nspin)
+      REAL(kind=DP), INTENT(in)   :: c0hc0(nrcx,nrcx,nspin)
+      REAL(kind=DP), INTENT(in)   :: c1hc1(nrcx,nrcx,nspin)
       REAL(kind=DP), INTENT(in)   :: lambda
       REAL(kind=DP), INTENT(out)  :: free_energy
 
@@ -391,7 +388,7 @@
 
       CALL start_clock( 'inner_lambda')
       
-      allocate(clhcl(nlax,nlax,nspin))
+      allocate(clhcl(nrcx,nrcx,nspin))
       allocate(eaux(nx))
       allocate(faux(nx))
       allocate(zauxt(nrlx,nudx,nspin))
@@ -533,11 +530,8 @@
 
       USE cp_interfaces,  ONLY: rhoofr, dforce, protate
       USE cg_module,      ONLY: itercg
-      USE cp_main_variables, ONLY: distribute_lambda, descla, nlax, collect_lambda, nrlx
-      USE descriptors,       ONLY: lambda_node_ , la_npc_ , la_npr_ , descla_siz_ , &
-                                   descla_init , la_comm_ , ilar_ , ilac_ , nlar_ , &
-                                   nlac_ , la_myr_ , la_myc_ , la_nx_ , la_n_ , &
-                                   la_me_ , la_nrl_ 
+      USE cp_main_variables, ONLY: distribute_lambda, descla, nrcx, collect_lambda, nrlx
+      USE descriptors,       ONLY: la_descriptor, descla_init
       USE dspev_module,   ONLY: pdspev_drv, dspev_drv
 
 
@@ -546,7 +540,7 @@
 
       COMPLEX(kind=DP)            :: c0( ngw, n )
       REAL(kind=DP)               :: bec( nhsa, n )
-      REAL(kind=DP)               :: psihpsi( nlax, nlax, nspin )
+      REAL(kind=DP)               :: psihpsi( nrcx, nrcx, nspin )
       REAL(kind=DP)               :: z0t( nrlx, nudx, nspin )
       REAL(kind=DP)               :: e0( nx )
 
@@ -564,20 +558,20 @@
  
             istart   = iupdwn( is )
             nss      = nupdwn( is )
-            np_rot   = descla( la_npr_ , is )  * descla( la_npc_ , is )
-            me_rot   = descla( la_me_ , is )
-            nrl      = descla( la_nrl_ , is )
-            comm_rot = descla( la_comm_ , is )
+            np_rot   = descla( is )%npr  * descla( is )%npc
+            me_rot   = descla( is )%mype
+            nrl      = descla( is )%nrl
+            comm_rot = descla( is )%comm
 
             allocate( dval( nx ) )
 
             dval = 0.0d0
 
-            IF( descla( lambda_node_ , is ) > 0 ) THEN
+            IF( descla( is )%active_node > 0 ) THEN
                !
                ALLOCATE( epsi0( nrl, nss ), zaux( nrl, nss ) )
 
-               CALL blk2cyc_redist( nss, epsi0, nrl, nss, psihpsi(1,1,is), SIZE(psihpsi,1), SIZE(psihpsi,2), descla(1,is) )
+               CALL blk2cyc_redist( nss, epsi0, nrl, nss, psihpsi(1,1,is), SIZE(psihpsi,1), SIZE(psihpsi,2), descla(is) )
 
                CALL pdspev_drv( 'V', epsi0, nrl, dval, zaux, nrl, nrl, nss, np_rot, me_rot, comm_rot )
                !
@@ -597,7 +591,7 @@
 
             z0t(:,:,is) = 0.0d0
 
-            IF( descla( lambda_node_ , is ) > 0 ) THEN
+            IF( descla( is )%active_node > 0 ) THEN
                !NB zaux is transposed
                !ALLOCATE( mtmp( nudx, nudx ) )
                z0t( 1:nrl , 1:nss, is ) = zaux( 1:nrl, 1:nss )

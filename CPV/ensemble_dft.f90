@@ -106,20 +106,19 @@ CONTAINS
 
   SUBROUTINE id_matrix_init( descla, nspin )
     ! initialization of the matrix identity
-    USE descriptors,       ONLY: lambda_node_ , la_npc_ , la_npr_ , descla_siz_ , &
-                                 la_comm_ ,  la_me_ , la_nrl_
+    USE descriptors
     IMPLICIT NONE
     INTEGER, INTENT(IN) :: nspin
-    INTEGER, INTENT(IN) :: descla( descla_siz_ , nspin )
+    TYPE(la_descriptor), INTENT(IN) :: descla( nspin )
     INTEGER :: is, i, ii
     INTEGER :: np, me
     z0t(:,:,:)=0.0d0
     do is = 1, nspin
-       np = descla( la_npc_ , is ) * descla( la_npr_ , is )
-       me = descla( la_me_ , is )
-       IF( descla( lambda_node_ , is ) > 0 ) THEN
+       np = descla( is )%npc * descla( is )%npr
+       me = descla( is )%mype
+       IF( descla( is )%active_node > 0 ) THEN
           ii = me + 1
-          DO i = 1, descla( la_nrl_ , is )
+          DO i = 1, descla( is )%nrl
              z0t( i, ii , is ) = 1.d0
              ii = ii + np
           END DO
@@ -131,18 +130,18 @@ CONTAINS
 
   SUBROUTINE h_matrix_init( descla, nspin )
     ! initialization of the psihpsi matrix 
-    USE descriptors, ONLY: lambda_node_ , nlar_ , la_myr_ , la_myc_
+    USE descriptors
     IMPLICIT NONE
     INTEGER, INTENT(IN) :: nspin
-    INTEGER, INTENT(IN) :: descla(:,:)
+    TYPE(la_descriptor), INTENT(IN) :: descla( nspin )
     INTEGER :: is, i, nr
       psihpsi(:,:,:)=0.0d0
       do is = 1, nspin
-         IF( descla( lambda_node_ , is ) > 0 ) THEN
+         IF( descla( is )%active_node > 0 ) THEN
             !
-            nr = descla( nlar_ , is )
+            nr = descla( is )%nr
             !
-!            IF( descla( la_myr_ , is ) == descla( la_myc_ , is ) ) THEN
+!            IF( descla( is )%la_myr == descla( is )%la_myc ) THEN
                DO i = 1, nr
                   psihpsi(i,i,is) = 1.0d0
                END DO
@@ -253,15 +252,15 @@ CONTAINS
   END SUBROUTINE ensemble_dft_info
 
 
-  SUBROUTINE allocate_ensemble_dft( nhsa, n, ngw, nudx, nspin, nx, nrxxs, nat, nlax, nrlx )
+  SUBROUTINE allocate_ensemble_dft( nhsa, n, ngw, nudx, nspin, nx, nrxxs, nat, nrcx, nrlx )
     IMPLICIT NONE
-    INTEGER, INTENT(IN) :: nhsa, n, ngw, nudx, nspin, nx, nrxxs, nat, nlax, nrlx
+    INTEGER, INTENT(IN) :: nhsa, n, ngw, nudx, nspin, nx, nrxxs, nat, nrcx, nrlx
       allocate(c0diag(ngw,nx))
       allocate(z0t(nrlx,nudx,nspin))
       allocate(becdiag(nhsa,n))
       allocate(e0(nx))
       allocate(fmat0(nrlx,nudx,nspin))
-      allocate(psihpsi(nlax,nlax,nspin))
+      allocate(psihpsi(nrcx,nrcx,nspin))
     RETURN
   END SUBROUTINE allocate_ensemble_dft
 

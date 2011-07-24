@@ -178,9 +178,7 @@ SUBROUTINE prdiaghg( n, h, s, ldh, e, v, desc )
   USE kinds,            ONLY : DP
   USE mp,               ONLY : mp_bcast
   USE mp_global,        ONLY : root_pool, intra_pool_comm
-  USE descriptors,      ONLY : descla_siz_ , lambda_node_ , nlax_ , &
-                               la_npc_ , la_npr_ , la_me_ , la_comm_ , &
-                               nlar_ , la_myc_ , la_myr_
+  USE descriptors,      ONLY : la_descriptor
 #if defined __SCALAPACK
   USE mp_global,        ONLY : ortho_cntx, me_blacs, np_ortho, me_ortho
   USE dspev_module,     ONLY : pdsyevd_drv
@@ -200,7 +198,7 @@ SUBROUTINE prdiaghg( n, h, s, ldh, e, v, desc )
     ! eigenvalues
   REAL(DP), INTENT(OUT) :: v(ldh,ldh)
     ! eigenvectors (column-wise)
-  INTEGER, INTENT(IN)   :: desc( descla_siz_ )
+  TYPE(la_descriptor), INTENT(IN) :: desc
   !
   INTEGER               :: nx
     ! local block size
@@ -214,9 +212,9 @@ SUBROUTINE prdiaghg( n, h, s, ldh, e, v, desc )
   !
   CALL start_clock( 'rdiaghg' )
   !
-  IF( desc( lambda_node_ ) > 0 ) THEN
+  IF( desc%active_node > 0 ) THEN
      !
-     nx   = desc( nlax_ )
+     nx   = desc%nrcx
      !
      IF( nx /= ldh ) &
         CALL errore(" prdiaghg ", " inconsistent leading dimension ", ldh )
@@ -233,10 +231,10 @@ SUBROUTINE prdiaghg( n, h, s, ldh, e, v, desc )
   !
   ! ... Cholesky decomposition of s ( L is stored in s )
   !
-  IF( desc( lambda_node_ ) > 0 ) THEN
+  IF( desc%active_node > 0 ) THEN
      !
 #ifdef __SCALAPACK
-     CALL descinit( desch, n, n, desc( nlax_ ), desc( nlax_ ), 0, 0, ortho_cntx, SIZE( hh, 1 ) , info )
+     CALL descinit( desch, n, n, desc%nrcx, desc%nrcx, 0, 0, ortho_cntx, SIZE( hh, 1 ) , info )
   
      IF( info /= 0 ) CALL errore( ' cdiaghg ', ' descinit ', ABS( info ) )
 #endif
@@ -256,7 +254,7 @@ SUBROUTINE prdiaghg( n, h, s, ldh, e, v, desc )
   !
   CALL start_clock( 'rdiaghg:inversion' )
   !
-  IF( desc( lambda_node_ ) > 0 ) THEN
+  IF( desc%active_node > 0 ) THEN
      !
 #ifdef __SCALAPACK
      ! 
@@ -277,7 +275,7 @@ SUBROUTINE prdiaghg( n, h, s, ldh, e, v, desc )
   !
   CALL start_clock( 'rdiaghg:paragemm' )
   !
-  IF( desc( lambda_node_ ) > 0 ) THEN
+  IF( desc%active_node > 0 ) THEN
      !
      CALL sqr_mm_cannon( 'N', 'N', n, ONE, ss, nx, hh, nx, ZERO, v, nx, desc )
      !
@@ -285,7 +283,7 @@ SUBROUTINE prdiaghg( n, h, s, ldh, e, v, desc )
   !
   ! ... h = ( L^-1*H )*(L^-1)^T
   !
-  IF( desc( lambda_node_ ) > 0 ) THEN
+  IF( desc%active_node > 0 ) THEN
      !
      CALL sqr_mm_cannon( 'N', 'T', n, ONE, v, nx, ss, nx, ZERO, hh, nx, desc )
      !
@@ -293,12 +291,12 @@ SUBROUTINE prdiaghg( n, h, s, ldh, e, v, desc )
   !
   CALL stop_clock( 'rdiaghg:paragemm' )
   !
-  IF ( desc( lambda_node_ ) > 0 ) THEN
+  IF ( desc%active_node > 0 ) THEN
      ! 
      !  Compute local dimension of the cyclically distributed matrix
      !
 #ifdef __SCALAPACK
-     CALL pdsyevd_drv( .true., n, desc( nlax_ ), hh, SIZE(hh,1), e, ortho_cntx )
+     CALL pdsyevd_drv( .true., n, desc%nrcx, hh, SIZE(hh,1), e, ortho_cntx )
 #else
      CALL qe_pdsyevd( .true., n, desc, hh, SIZE(hh,1), e )
 #endif
@@ -309,7 +307,7 @@ SUBROUTINE prdiaghg( n, h, s, ldh, e, v, desc )
   !
   CALL start_clock( 'rdiaghg:paragemm' )
   !
-  IF ( desc( lambda_node_ ) > 0 ) THEN
+  IF ( desc%active_node > 0 ) THEN
      !
      CALL sqr_mm_cannon( 'T', 'N', n, ONE, ss, nx, hh, nx, ZERO, v, nx, desc )
      !

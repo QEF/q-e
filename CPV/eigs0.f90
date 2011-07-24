@@ -17,10 +17,8 @@
       use constants,         only : autoev
       use dspev_module,      only : dspev_drv, pdspev_drv
       USE sic_module,        only : self_interaction
-      USE cp_main_variables, only : nlax, nlam, la_proc
-      USE descriptors,       ONLY : nlar_ , nlac_ , ilar_ , ilac_ , lambda_node_ , la_me_ , la_n_ , &
-                                    descla_siz_ , la_npr_ , la_npc_ , la_nrl_ , la_nrlx_ , la_comm_ , &
-                                    nlax_ , la_myc_ , la_myr_
+      USE cp_main_variables, only : nlam, la_proc
+      USE descriptors,       ONLY : la_descriptor
       USE mp,                only : mp_sum, mp_bcast
       USE mp_global,         only : intra_bgrp_comm, root_bgrp, me_bgrp
 
@@ -28,7 +26,7 @@
 ! input
       logical, intent(in) :: tprint, lf
       integer, intent(in) :: nspin, nx, nudx, nupdwn(nspin), iupdwn(nspin)
-      integer, intent(in) :: desc( descla_siz_ , 2 )
+      type(la_descriptor), intent(in) :: desc( 2 )
       real(DP), intent(in) :: lambda( nlam, nlam, nspin ), f( nx )
       real(DP), intent(out) :: ei( nudx, nspin )
 ! local variables
@@ -67,13 +65,13 @@
 
          IF( la_proc ) THEN
 
-            np = desc( la_npc_ , iss ) * desc( la_npr_ , iss )
+            np = desc( iss )%npc * desc( iss )%npr
 
             IF( np > 1 ) THEN
 
                !  matrix is distributed
 
-               CALL qe_pdsyevd( .false., n, desc(1,iss), lambda(1,1,iss), SIZE(lambda,1), wr )
+               CALL qe_pdsyevd( .false., n, desc(iss), lambda(1,1,iss), SIZE(lambda,1), wr )
 
             ELSE
 
@@ -120,9 +118,9 @@
             ei( 1:n,       1 ) = ei( 1:n, 1 ) / 2.0d0
             ei( nupdwn(1), 1 ) = 0.0d0
             if( la_proc ) then
-               IF( desc( la_myc_ , iss ) == desc( la_myr_ , iss ) ) THEN
-                  ir = desc( ilar_ , iss )
-                  nr = desc( nlar_ , iss )
+               IF( desc( iss )%myc == desc( iss )%myr ) THEN
+                  ir = desc( iss )%ir
+                  nr = desc( iss )%nr
                   IF( nupdwn(1) >= ir .AND. nupdwn(1) < ir + nr ) then
                      ei( nupdwn(1), 1 ) = lambda( nupdwn(1)-ir+1, nupdwn(1)-ir+1, 1 )
                   end if

@@ -16,11 +16,10 @@
       USE orthogonalize_base, ONLY: rhoset, sigset, tauset, ortho_iterate,   &
                                     ortho_alt_iterate, diagonalize_serial,   &
                                     use_parallel_diag, diagonalize_parallel
-      USE descriptors,        ONLY: lambda_node_ , nlar_ , nlac_ , ilar_ , ilac_ , &
-                                    nlax_ , la_comm_ , descla_siz_
+      USE descriptors,        ONLY: la_descriptor
       USE mp_global,          ONLY: nproc_bgrp, me_bgrp, intra_bgrp_comm
       USE mp,                 ONLY: mp_sum
-      USE cp_main_variables,  ONLY: nlam, la_proc, nlax
+      USE cp_main_variables,  ONLY: nlam, la_proc, nrcx
 
       IMPLICIT  NONE
 
@@ -34,7 +33,7 @@
       REAL(DP)    :: becp_dist( :, : )
       REAL(DP)    :: qbephi( :, : ), qbecp( :, : )
       REAL(DP)    :: x0( nx0, nx0 )
-      INTEGER,  INTENT(IN)  :: descla( descla_siz_ )
+      TYPE(la_descriptor),  INTENT(IN)  :: descla
       INTEGER,  INTENT(OUT) :: iter
       REAL(DP), INTENT(OUT) :: diff
 
@@ -48,16 +47,16 @@
       !
       IF( la_proc ) THEN
          !
-         IF( nx0 /= descla( nlax_ ) ) &
+         IF( nx0 /= descla%nrcx ) &
             CALL errore( ' ortho_gamma ', ' inconsistent dimensions nx0 ' , nx0 )
-         IF( nlam /= descla( nlax_ ) ) &
+         IF( nlam /= descla%nrcx ) &
             CALL errore( ' ortho_gamma ', ' inconsistent dimensions nlam ' , nlam )
          !
-         nr = descla( nlar_ )
-         nc = descla( nlac_ )
+         nr = descla%nr
+         nc = descla%nc
          !
-         ir = descla( ilar_ )
-         ic = descla( ilac_ )
+         ir = descla%ir
+         ic = descla%ic
          !
       ELSE
          !
@@ -209,7 +208,7 @@
                END DO
             END DO
          END IF
-         CALL mp_sum( a, descla( la_comm_ ) )
+         CALL mp_sum( a, descla%comm )
          RETURN
       END SUBROUTINE
 
@@ -260,15 +259,15 @@
       USE control_flags,  ONLY: force_pairing
       USE io_global,      ONLY: stdout, ionode
       USE cp_interfaces,  ONLY: ortho_gamma, c_bgrp_expand, c_bgrp_pack
-      USE descriptors,    ONLY: nlac_ , ilac_ , descla_siz_ , nlar_ , ilar_
-      USE cp_main_variables,  ONLY: nlam, la_proc, nlax, collect_bec
+      USE descriptors,    ONLY: la_descriptor
+      USE cp_main_variables,  ONLY: nlam, la_proc, nrcx, collect_bec
       USE mp_global,          ONLY: nproc_bgrp, me_bgrp, intra_bgrp_comm, inter_bgrp_comm  ! DEBUG
       USE orthogonalize_base, ONLY: bec_bgrp2ortho
       USE mp,                 ONLY : mp_sum
       !
       IMPLICIT NONE
       !
-      INTEGER,    INTENT(IN) :: descla(:,:)
+      TYPE(la_descriptor), INTENT(IN) :: descla(:)
       COMPLEX(DP) :: eigr(:,:)
       COMPLEX(DP) :: cp_bgrp(:,:), phi_bgrp(:,:)
       REAL(DP)    :: x0(:,:,:), diff, ccc
@@ -298,19 +297,19 @@
       !
       CALL start_clock( 'ortho' )
 
-      ALLOCATE( becp_dist( nkbx, nlax*nspin ) )
+      ALLOCATE( becp_dist( nkbx, nrcx*nspin ) )
 
       IF( nvb > 0 ) THEN
          !
          becp_bgrp = 0.0d0
          !
          CALL nlsm1 ( nbsp_bgrp, 1, nvb, eigr, phi_bgrp, becp_bgrp )
-         CALL bec_bgrp2ortho( becp_bgrp, bephi, nlax, descla )
+         CALL bec_bgrp2ortho( becp_bgrp, bephi, nrcx, descla )
          !
          becp_bgrp = 0.0d0
          !
          CALL nlsm1 ( nbsp_bgrp, 1, nvb, eigr, cp_bgrp, becp_bgrp )
-         CALL bec_bgrp2ortho( becp_bgrp, becp_dist, nlax, descla )
+         CALL bec_bgrp2ortho( becp_bgrp, becp_dist, nrcx, descla )
          !
       END IF
       !
@@ -319,10 +318,10 @@
       ALLOCATE( qbephi( nkbx, nx0, nspin ) )
       !
       IF( nvb > 0 ) THEN
-         ALLOCATE( bec_col ( nkbx, nlax*nspin ) )
-         CALL redist_row2col( nupdwn(1), bephi, bec_col, nkbx, nlax, descla(1,1) )
+         ALLOCATE( bec_col ( nkbx, nrcx*nspin ) )
+         CALL redist_row2col( nupdwn(1), bephi, bec_col, nkbx, nrcx, descla(1) )
          IF( nspin == 2 ) THEN
-            CALL redist_row2col( nupdwn(2), bephi(1,nlax+1), bec_col(1,nlax+1), nkbx, nlax, descla(1,2) )
+            CALL redist_row2col( nupdwn(2), bephi(1,nrcx+1), bec_col(1,nrcx+1), nkbx, nrcx, descla(2) )
          END IF
       END IF
       !
@@ -337,12 +336,12 @@
                IF( ABS( qqf ) > 1.D-5 ) THEN
                   DO iss = 1, nspin
                      istart = iupdwn(iss)
-                     nc     = descla( nlac_ , iss )
-                     ic     = descla( ilac_ , iss ) + istart - 1
+                     nc     = descla( iss )%nc
+                     ic     = descla( iss )%ic + istart - 1
                      IF( la_proc ) THEN
                         DO i = 1, nc
                            icc=i+ic-1
-                           CALL daxpy( na(is), qqf, bec_col(jnl+1,i+(iss-1)*nlax),1,qbephi(inl+1,i,iss), 1 ) 
+                           CALL daxpy( na(is), qqf, bec_col(jnl+1,i+(iss-1)*nrcx),1,qbephi(inl+1,i,iss), 1 ) 
                         END DO
                      END IF
                   END DO
@@ -357,9 +356,9 @@
       qbecp  = 0.d0
 
       IF( nvb > 0 ) THEN
-         CALL redist_row2col( nupdwn(1), becp_dist, bec_col, nkbx, nlax, descla(1,1) )
+         CALL redist_row2col( nupdwn(1), becp_dist, bec_col, nkbx, nrcx, descla(1) )
          IF( nspin == 2 ) THEN
-            CALL redist_row2col( nupdwn(2), becp_dist(1,nlax+1), bec_col(1,nlax+1), nkbx, nlax, descla(1,2) )
+            CALL redist_row2col( nupdwn(2), becp_dist(1,nrcx+1), bec_col(1,nrcx+1), nkbx, nrcx, descla(2) )
          END IF
       END IF
 
@@ -372,11 +371,11 @@
                IF( ABS( qqf ) > 1.D-5 ) THEN
                   DO iss = 1, nspin
                      istart = iupdwn(iss)
-                     nc     = descla( nlac_ , iss )
-                     ic     = descla( ilac_ , iss ) + istart - 1
+                     nc     = descla( iss )%nc
+                     ic     = descla( iss )%ic + istart - 1
                      IF( la_proc ) THEN
                         DO i = 1, nc
-                           CALL daxpy( na(is), qqf, bec_col(jnl+1,i+(iss-1)*nlax),1, qbecp(inl+1,i,iss), 1 )
+                           CALL daxpy( na(is), qqf, bec_col(jnl+1,i+(iss-1)*nrcx),1, qbecp(inl+1,i,iss), 1 )
                         END DO
                      END IF
                   END DO
@@ -404,9 +403,9 @@
 
          IF( la_proc ) xloc = x0(:,:,iss) * ccc
 
-         CALL ortho_gamma( 0, cp_bgrp, ngwx, phi_bgrp, becp_dist(:,(iss-1)*nlax+1:iss*nlax), qbecp(:,:,iss), nkbx, &
-                           bephi(:,((iss-1)*nlax+1):iss*nlax), &
-                           qbephi(:,:,iss), xloc, nx0, descla(:,iss), diff, iter, nbsp, nss, istart )
+         CALL ortho_gamma( 0, cp_bgrp, ngwx, phi_bgrp, becp_dist(:,(iss-1)*nrcx+1:iss*nrcx), qbecp(:,:,iss), nkbx, &
+                           bephi(:,((iss-1)*nrcx+1):iss*nrcx), &
+                           qbephi(:,:,iss), xloc, nx0, descla(iss), diff, iter, nbsp, nss, istart )
 
          IF( iter > ortho_max ) THEN
             WRITE( stdout, 100 ) diff, iter

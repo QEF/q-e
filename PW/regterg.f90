@@ -496,9 +496,7 @@ SUBROUTINE pregterg( npw, npwx, nvec, nvecx, evc, ethr, &
   USE mp_global,        ONLY : npool, nproc_pool, me_pool, root_pool, &
                                intra_pool_comm, &
                                ortho_comm, np_ortho, me_ortho, ortho_comm_id, leg_ortho
-  USE descriptors,      ONLY : descla_siz_ , descla_init , lambda_node_ , la_nx_ , la_nrl_ , la_n_ , &
-                               ilac_ , ilar_ , nlar_ , nlac_ , la_npc_ , la_npr_ , la_me_ , la_comm_ , &
-                               la_myr_ , la_myc_ , nlax_ , descla_local_dims
+  USE descriptors,      ONLY : la_descriptor, descla_init, descla_local_dims
   USE parallel_toolkit, ONLY : dsqmdst, dsqmcll, dsqmred, dsqmsym
   USE mp,               ONLY : mp_bcast, mp_root_sum, mp_sum
   !
@@ -552,7 +550,7 @@ SUBROUTINE pregterg( npw, npwx, nvec, nvecx, evc, ethr, &
   REAL(DP) :: empty_ethr 
     ! threshold for empty bands
   INTEGER :: npw2, npwx2
-  INTEGER :: desc( descla_siz_ ), desc_old( descla_siz_ )
+  TYPE(la_descriptor) :: desc, desc_old
   INTEGER, ALLOCATABLE :: irc_ip( : )
   INTEGER, ALLOCATABLE :: nrc_ip( : )
   INTEGER, ALLOCATABLE :: rank_ip( :, : )
@@ -744,12 +742,12 @@ SUBROUTINE pregterg( npw, npwx, nvec, nvecx, evc, ethr, &
         vl = hl
         DEALLOCATE( hl )
         ALLOCATE( hl( nx , nx ) )
-        CALL dsqmred( nbase, vl, desc_old( nlax_ ), desc_old, nbase+notcnv, hl, nx, desc )
+        CALL dsqmred( nbase, vl, desc_old%nrcx, desc_old, nbase+notcnv, hl, nx, desc )
 
         vl = sl
         DEALLOCATE( sl )
         ALLOCATE( sl( nx , nx ) )
-        CALL dsqmred( nbase, vl, desc_old( nlax_ ), desc_old, nbase+notcnv, sl, nx, desc )
+        CALL dsqmred( nbase, vl, desc_old%nrcx, desc_old, nbase+notcnv, sl, nx, desc )
 
         DEALLOCATE( vl )
         ALLOCATE( vl( nx , nx ) )
@@ -895,7 +893,7 @@ CONTAINS
   SUBROUTINE desc_init( nsiz, desc, irc_ip, nrc_ip )
      !
      INTEGER, INTENT(IN)  :: nsiz
-     INTEGER, INTENT(OUT) :: desc(:) 
+     TYPE(la_descriptor), INTENT(OUT) :: desc
      INTEGER, INTENT(OUT) :: irc_ip(:)
      INTEGER, INTENT(OUT) :: nrc_ip(:)
 
@@ -903,30 +901,30 @@ CONTAINS
      !
      CALL descla_init( desc, nsiz, nsiz, np_ortho, me_ortho, ortho_comm, ortho_comm_id )
      !
-     nx = desc( nlax_ )
+     nx = desc%nrcx
      !
-     DO j = 0, desc( la_npc_ ) - 1
-        CALL descla_local_dims( irc_ip( j + 1 ), nrc_ip( j + 1 ), desc( la_n_ ), desc( la_nx_ ), np_ortho(1), j )
-        DO i = 0, desc( la_npr_ ) - 1
-           CALL GRID2D_RANK( 'R', desc( la_npr_ ), desc( la_npc_ ), i, j, rank )
+     DO j = 0, desc%npc - 1
+        CALL descla_local_dims( irc_ip( j + 1 ), nrc_ip( j + 1 ), desc%n, desc%nx, np_ortho(1), j )
+        DO i = 0, desc%npr - 1
+           CALL GRID2D_RANK( 'R', desc%npr, desc%npc, i, j, rank )
            rank_ip( i+1, j+1 ) = rank * leg_ortho
         END DO
      END DO
      !
      la_proc = .FALSE.
-     IF( desc( lambda_node_ ) > 0 ) la_proc = .TRUE.
+     IF( desc%active_node > 0 ) la_proc = .TRUE.
      !
      RETURN
   END SUBROUTINE desc_init
   !
   !
   SUBROUTINE set_to_identity( distmat, desc )
-     INTEGER, INTENT(IN)  :: desc(:) 
+     TYPE(la_descriptor), INTENT(IN)  :: desc
      REAL(DP), INTENT(OUT) :: distmat(:,:)
      INTEGER :: i
      distmat = 0_DP
-     IF( desc( la_myc_ ) == desc( la_myr_ ) .AND. desc( lambda_node_ ) > 0 ) THEN
-        DO i = 1, desc( nlac_ )
+     IF( desc%myc == desc%myr .AND. desc%active_node > 0 ) THEN
+        DO i = 1, desc%nc
            distmat( i, i ) = 1_DP
         END DO
      END IF 
@@ -946,7 +944,7 @@ CONTAINS
      !
      n = 0
      !
-     DO ipc = 1, desc( la_npc_ )
+     DO ipc = 1, desc%npc
         !
         nc = nrc_ip( ipc )
         ic = irc_ip( ipc )
@@ -974,7 +972,7 @@ CONTAINS
                  notcnv_ip( ipc ) = notcnv_ip( ipc ) + 1
                  !
                  IF ( npl /= nl ) THEN
-                    IF( la_proc .AND. desc( la_myc_ ) == ipc-1 ) THEN
+                    IF( la_proc .AND. desc%myc == ipc-1 ) THEN
                        vl( :, npl) = vl( :, nl )
                     END IF
                  END IF
@@ -1005,7 +1003,7 @@ CONTAINS
      ALLOCATE( vtmp( nx, nx ) )
      ALLOCATE( ptmp( npwx, nx ) )
 
-     DO ipc = 1, desc( la_npc_ )
+     DO ipc = 1, desc%npc
         !
         IF( notcnv_ip( ipc ) > 0 ) THEN
 
@@ -1015,14 +1013,14 @@ CONTAINS
            ptmp = 0.0d0
            beta = 0.0d0
 
-           DO ipr = 1, desc( la_npr_ )
+           DO ipr = 1, desc%npr
               !
               nr = nrc_ip( ipr )
               ir = irc_ip( ipr )
               !
               root = rank_ip( ipr, ipc )
 
-              IF( ipr-1 == desc( la_myr_ ) .AND. ipc-1 == desc( la_myc_ ) .AND. la_proc ) THEN
+              IF( ipr-1 == desc%myr .AND. ipc-1 == desc%myc .AND. la_proc ) THEN
                  vtmp(:,1:notcl) = vl(:,1:notcl)
               END IF
 
@@ -1074,7 +1072,7 @@ CONTAINS
 
      ALLOCATE( vtmp( nx, nx ) )
      !
-     DO ipc = 1, desc( la_npc_ )
+     DO ipc = 1, desc%npc
         !
         nc = nrc_ip( ipc )
         ic = irc_ip( ipc )
@@ -1085,14 +1083,14 @@ CONTAINS
            !
            beta = 0.0d0
 
-           DO ipr = 1, desc( la_npr_ )
+           DO ipr = 1, desc%npr
               !
               nr = nrc_ip( ipr )
               ir = irc_ip( ipr )
               !
               root = rank_ip( ipr, ipc )
 
-              IF( ipr-1 == desc( la_myr_ ) .AND. ipc-1 == desc( la_myc_ ) .AND. la_proc ) THEN
+              IF( ipr-1 == desc%myr .AND. ipc-1 == desc%myc .AND. la_proc ) THEN
                  !
                  !  this proc sends his block
                  ! 
@@ -1132,7 +1130,7 @@ CONTAINS
 
      ALLOCATE( vtmp( nx, nx ) )
      !
-     DO ipc = 1, desc( la_npc_ )
+     DO ipc = 1, desc%npc
         !
         nc = nrc_ip( ipc )
         ic = irc_ip( ipc )
@@ -1143,14 +1141,14 @@ CONTAINS
            !
            beta = 0_DP
            !
-           DO ipr = 1, desc( la_npr_ )
+           DO ipr = 1, desc%npr
               !
               nr = nrc_ip( ipr )
               ir = irc_ip( ipr )
               !
               root = rank_ip( ipr, ipc )
 
-              IF( ipr-1 == desc( la_myr_ ) .AND. ipc-1 == desc( la_myc_ ) .AND. la_proc ) THEN
+              IF( ipr-1 == desc%myr .AND. ipc-1 == desc%myc .AND. la_proc ) THEN
                  !
                  !  this proc sends his block
                  ! 
@@ -1192,7 +1190,7 @@ CONTAINS
 
      ALLOCATE( vtmp( nx, nx ) )
      !
-     DO ipc = 1, desc( la_npc_ )
+     DO ipc = 1, desc%npc
         !
         nc = nrc_ip( ipc )
         ic = irc_ip( ipc )
@@ -1203,14 +1201,14 @@ CONTAINS
            !
            beta = 0.0d0
            !
-           DO ipr = 1, desc( la_npr_ )
+           DO ipr = 1, desc%npr
               !
               nr = nrc_ip( ipr )
               ir = irc_ip( ipr )
               !
               root = rank_ip( ipr, ipc )
 
-              IF( ipr-1 == desc( la_myr_ ) .AND. ipc-1 == desc( la_myc_ ) .AND. la_proc ) THEN
+              IF( ipr-1 == desc%myr .AND. ipc-1 == desc%myc .AND. la_proc ) THEN
                  !
                  !  this proc sends his block
                  ! 
@@ -1258,7 +1256,7 @@ CONTAINS
      !
      work = 0.0d0
      !
-     DO ipc = 1, desc( la_npc_ ) !  loop on column procs 
+     DO ipc = 1, desc%npc !  loop on column procs 
         !
         nc = nrc_ip( ipc )
         ic = irc_ip( ipc )
@@ -1308,7 +1306,7 @@ CONTAINS
      !
      vtmp = 0.0d0
      !
-     DO ipc = 1, desc( la_npc_ )
+     DO ipc = 1, desc%npc
         !
         nc = nrc_ip( ipc )
         ic = irc_ip( ipc )
@@ -1324,7 +1322,7 @@ CONTAINS
               icc = nb1-ic+1
            END IF
 
-           DO ipr = 1, ipc ! desc( la_npr_ ) use symmetry
+           DO ipr = 1, ipc ! desc%npr use symmetry
               !
               nr = nrc_ip( ipr )
               ir = irc_ip( ipr )
@@ -1337,7 +1335,7 @@ CONTAINS
               IF ( gstart == 2 ) &
                  CALL DGER( nr, nc, -1.D0, v( 1, ir ), npwx2, w(1,ii), npwx2, vtmp, nx )
 
-              IF(  (desc( lambda_node_ ) > 0) .AND. (ipr-1 == desc( la_myr_ )) .AND. (ipc-1 == desc( la_myc_ )) ) THEN
+              IF(  (desc%active_node > 0) .AND. (ipr-1 == desc%myr) .AND. (ipc-1 == desc%myc) ) THEN
                  CALL mp_root_sum( vtmp(:,1:nc), dm(:,icc:icc+nc-1), root, intra_pool_comm )
               ELSE
                  CALL mp_root_sum( vtmp(:,1:nc), dm, root, intra_pool_comm )
@@ -1361,9 +1359,9 @@ CONTAINS
   SUBROUTINE set_e_from_h()
      INTEGER :: nc, ic, i
      e(1:nbase) = 0.0d0
-     IF( desc( la_myc_ ) == desc( la_myr_ ) .AND. la_proc ) THEN
-        nc = desc( nlac_ )
-        ic = desc( ilac_ )
+     IF( desc%myc == desc%myr .AND. la_proc ) THEN
+        nc = desc%nc
+        ic = desc%ic
         DO i = 1, nc
            e( i + ic - 1 ) = hl( i, i )
         END DO
@@ -1376,9 +1374,9 @@ CONTAINS
      INTEGER :: nc, ic, i
      IF( la_proc ) THEN
         hl = 0.0d0
-        IF( desc( la_myc_ ) == desc( la_myr_ ) ) THEN
-           nc = desc( nlac_ )
-           ic = desc( ilac_ )
+        IF( desc%myc == desc%myr ) THEN
+           nc = desc%nc
+           ic = desc%ic
            DO i = 1, nc
               hl(i,i) = e( i + ic - 1 )
            END DO

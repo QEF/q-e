@@ -815,7 +815,7 @@ MODULE cp_restart
             !
             ALLOCATE( mrepl( nudx, nudx ) )
             !
-            CALL collect_lambda( mrepl, lambda0(:,:,iss), descla(:,iss) )
+            CALL collect_lambda( mrepl, lambda0(:,:,iss), descla(iss) )
             !
             IF ( ionode ) THEN
                !
@@ -829,7 +829,7 @@ MODULE cp_restart
                !
             END IF
             !
-            CALL collect_lambda( mrepl, lambdam(:,:,iss), descla(:,iss) )
+            CALL collect_lambda( mrepl, lambdam(:,:,iss), descla(iss) )
             !
             IF ( ionode ) THEN
                !
@@ -845,7 +845,7 @@ MODULE cp_restart
             !
             IF( PRESENT( mat_z ) ) THEN
                !
-               CALL collect_zmat( mrepl, mat_z(:,:,iss), descla(:,iss) )
+               CALL collect_zmat( mrepl, mat_z(:,:,iss), descla(iss) )
                !
                IF ( ionode ) THEN
                   !
@@ -1691,7 +1691,7 @@ MODULE cp_restart
 
             CALL mp_bcast( mrepl, ionode_id, intra_image_comm )
 
-            CALL distribute_lambda( mrepl, lambda0(:,:,iss), descla(:,iss) )
+            CALL distribute_lambda( mrepl, lambda0(:,:,iss), descla(iss) )
 
             IF( ionode ) THEN
                CALL iotk_scan_dat( iunpun, "LAMBDAM" // TRIM( cspin ), mrepl, FOUND = found )
@@ -1703,7 +1703,7 @@ MODULE cp_restart
             ! 
             CALL mp_bcast( mrepl, ionode_id, intra_image_comm )
 
-            CALL distribute_lambda( mrepl, lambdam(:,:,iss), descla(:,iss) )
+            CALL distribute_lambda( mrepl, lambdam(:,:,iss), descla(iss) )
             !
             IF ( PRESENT( mat_z ) ) THEN
                !
@@ -1717,7 +1717,7 @@ MODULE cp_restart
 
                CALL mp_bcast( mrepl, ionode_id, intra_image_comm )
 
-               CALL distribute_zmat( mrepl, mat_z(:,:,iss), descla(:,iss) )
+               CALL distribute_zmat( mrepl, mat_z(:,:,iss), descla(iss) )
                !
             END IF
             !

@@ -16,48 +16,29 @@
       EXTERNAL ldim_block, ldim_cyclic, ldim_block_cyclic, ldim_block_sca
       EXTERNAL gind_block, gind_cyclic, gind_block_cyclic, gind_block_sca
 
-      !  Descriptor for Cannon's algorithm
+      !  Descriptor for linear algebra data distribution (like in Cannon's algorithm)
       !
-      !  Parameters to define and manage the Descriptor
-      !  of square matricxes block distributed on a square grid of processors
-      !  to be used with Cannon's algorithm for matrix multiplication
+      !  Remember here we use square matrixes block distributed on a square grid of processors
       !
-      INTEGER, PARAMETER :: descla_siz_ = 16
-      INTEGER, PARAMETER :: ilar_        = 1
-      INTEGER, PARAMETER :: nlar_        = 2
-      INTEGER, PARAMETER :: ilac_        = 3
-      INTEGER, PARAMETER :: nlac_        = 4
-      INTEGER, PARAMETER :: nlax_        = 5
-      INTEGER, PARAMETER :: lambda_node_ = 6
-      INTEGER, PARAMETER :: la_n_        = 7
-      INTEGER, PARAMETER :: la_nx_       = 8
-      INTEGER, PARAMETER :: la_npr_      = 9
-      INTEGER, PARAMETER :: la_npc_      = 10
-      INTEGER, PARAMETER :: la_myr_      = 11
-      INTEGER, PARAMETER :: la_myc_      = 12
-      INTEGER, PARAMETER :: la_comm_     = 13
-      INTEGER, PARAMETER :: la_me_       = 14
-      INTEGER, PARAMETER :: la_nrl_      = 15
-      INTEGER, PARAMETER :: la_nrlx_     = 16
+      TYPE la_descriptor  
+         INTEGER :: ir        = 0 !  globla index of the first row in the local block of the distributed matrix
+         INTEGER :: nr        = 0 !  number of row in the local block of the distributed matrix
+         INTEGER :: ic        = 0 !  global index of the first column in the local block of the distributed matrix
+         INTEGER :: nc        = 0 !  number of column in the local block of the distributed matrix
+         INTEGER :: nrcx        = 0 !  leading dimension of the distribute matrix (greather than nr and nc)
+         INTEGER :: active_node = 0 !  if > 0 the proc holds a block of the lambda matrix
+         INTEGER :: n        = 0 !  global dimension of the matrix
+         INTEGER :: nx       = 0 !  global leading dimension
+         INTEGER :: npr      = 0 !  number of row processors 
+         INTEGER :: npc      = 0 !  number of column processors 
+         INTEGER :: myr      = 0 !  processor row index
+         INTEGER :: myc      = 0 !  processor column index
+         INTEGER :: comm     = 0 !  communicator
+         INTEGER :: mype     = 0 !  processor index ( from 0 to desc( la_npr_ ) * desc( la_npc_ ) - 1 )
+         INTEGER :: nrl      = 0 !  number of local rows, when the matrix rows are cyclically distributed across proc
+         INTEGER :: nrlx     = 0 !  leading dimension, when the matrix is distributed by row
+      END TYPE
       !
-      ! desc( ilar_ )  globla index of the first row in the local block of lambda
-      ! desc( nlar_ )  number of row in the local block of lambda ( the "2" accounts for spin)
-      ! desc( ilac_ )  global index of the first column in the local block of lambda
-      ! desc( nlac_ )  number of column in the local block of lambda
-      ! desc( nlax_ )  leading dimension of the distribute lambda matrix
-      ! desc( lambda_node_ )  if > 0 the proc holds a block of the lambda matrix
-      ! desc( la_n_ )     global dimension of the matrix
-      ! desc( la_nx_ )    global leading dimension
-      ! desc( la_npr_ )   number of row processors 
-      ! desc( la_npc_ )   number of column processors 
-      ! desc( la_myr_ )   processor row index
-      ! desc( la_myc_ )   processor column index
-      ! desc( la_comm_ )  communicator
-      ! desc( la_me_ ) processor index ( from 0 to desc( la_npr_ ) * desc( la_npc_ ) - 1 )
-      ! desc( la_nrl_ ) number of local row, when the matrix is cyclically distributed across proc
-      ! desc( la_nrlx_ ) leading dimension, when the matrix is distributed by row
-
-       
    CONTAINS
 
    !------------------------------------------------------------------------
@@ -95,16 +76,16 @@
    END SUBROUTINE descla_local_dims
    !
    !
-   SUBROUTINE descla_init( desc, n, nx, np, me, comm, includeme )
+   SUBROUTINE descla_init( descla, n, nx, np, me, comm, includeme )
       !
       IMPLICIT NONE  
-      INTEGER, INTENT(OUT) :: desc(:)
+      TYPE(la_descriptor), INTENT(OUT) :: descla
       INTEGER, INTENT(IN)  :: n   !  the size of this matrix
       INTEGER, INTENT(IN)  :: nx  !  the max among different matrixes sharing 
                                   !  this descriptor or the same data distribution
       INTEGER, INTENT(IN)  :: np(2), me(2), comm
       INTEGER, INTENT(IN)  :: includeme
-      INTEGER  :: ir, nr, ic, nc, lnode, nlax, nrl, nrlx
+      INTEGER  :: ir, nr, ic, nc, lnode, nrcx, nrl, nrlx
       INTEGER  :: ip, npp
       
       IF( np(1) /= np(2) ) &
@@ -119,11 +100,11 @@
       ! find the block maximum dimensions
 
 #if __SCALAPACK
-      nlax = ldim_block_sca( nx, np(1), 0 )
+      nrcx = ldim_block_sca( nx, np(1), 0 )
 #else
-      nlax = ldim_block( nx, np(1), 0 )
+      nrcx = ldim_block( nx, np(1), 0 )
       DO ip = 1, np(1) - 1
-         nlax = MAX( nlax, ldim_block( nx, np(1), ip ) )
+         nrcx = MAX( nrcx, ldim_block( nx, np(1), ip ) )
       END DO
 #endif
       !
@@ -148,52 +129,52 @@
          !
       END IF
 
-      desc( ilar_ ) = ir
-      desc( nlar_ ) = nr
-      desc( ilac_ ) = ic
-      desc( nlac_ ) = nc
-      desc( nlax_ ) = nlax
-      desc( lambda_node_ ) = lnode
-      desc( la_n_  ) = n
-      desc( la_nx_ ) = nx
-      desc( la_npr_ ) = np(1)
-      desc( la_npc_ ) = np(2)
-      desc( la_myr_ ) = me(1)
-      desc( la_myc_ ) = me(2)
-      desc( la_comm_ ) = comm
-      desc( la_me_ )  = desc( la_myc_ ) + desc( la_myr_ ) * desc( la_npr_ )
+      descla%ir = ir    ! globla index of the first row in the local block of lambda
+      descla%nr = nr    ! number of row in the local block of lambda ( the "2" accounts for spin)
+      descla%ic = ic    ! global index of the first column in the local block of lambda
+      descla%nc = nc    ! number of column in the local block of lambda
+      descla%nrcx = nrcx  ! leading dimension of the distribute lambda matrix
+      descla%active_node = lnode 
+                          !  if > 0 the proc holds a block of the lambda matrix
+      descla%n = n        ! global dimension of the matrix
+      descla%nx = nx      ! global leading dimension
+      descla%npr = np(1)  ! number of row processors 
+      descla%npc = np(2)  ! number of column processors 
+      descla%myr = me(1)  ! processor row index
+      descla%myc = me(2)  ! processor column index
+      descla%comm = comm  ! communicator
+      descla%mype = descla%myc + descla%myr * descla%npr 
+                          ! processor index ( from 0 to desc( la_npr_ ) * desc( la_npc_ ) - 1 )
      
       npp = np(1) * np(2)
 
       !  Compute local dimension of the cyclically distributed matrix
       !
       IF( includeme == 1 ) THEN
-         nrl  = ldim_cyclic( n, npp, desc( la_me_ ) )
+         nrl  = ldim_cyclic( n, npp, descla%mype )
       ELSE
          nrl = 0
       END IF
       nrlx = n / npp + 1
 
-      desc( la_nrl_  ) = nrl
-      desc( la_nrlx_ ) = nrlx
+      descla%nrl  = nrl  ! number of local rows, when the matrix rows are cyclically distributed across procs
+      descla%nrlx = nrlx ! leading dimension 
 
       IF( nr < 0 .OR. nc < 0 ) &
          CALL errore( ' descla_init ', ' wrong valune for computed nr and nc ', 1 )
-      IF( nlax < 1 ) &
-         CALL errore( ' descla_init ', ' wrong value for computed nlax ', 2 )
-      IF( nlax < nr ) &
-         CALL errore( ' descla_init ', ' nlax < nr ', ( nr - nlax ) )
-      IF( nlax < nc ) &
-         CALL errore( ' descla_init ', ' nlax < nc ', ( nc - nlax ) )
+      IF( nrcx < 1 ) &
+         CALL errore( ' descla_init ', ' wrong value for computed nrcx ', 2 )
+      IF( nrcx < nr ) &
+         CALL errore( ' descla_init ', ' nrcx < nr ', ( nr - nrcx ) )
+      IF( nrcx < nc ) &
+         CALL errore( ' descla_init ', ' nrcx < nc ', ( nc - nrcx ) )
       IF( nrlx < nrl ) &
          CALL errore( ' descla_init ', ' nrlx < nrl ', ( nrl - nrlx ) )
       IF( nrl < 0 ) &
          CALL errore( ' descla_init ', ' nrl < 0 ', ABS( nrl ) )
 
-      ! WRITE(*,*) 'me1,me2,nr,nc,ir,ic= ', me(1), me(2), nr, nc, ir, ic
 
       RETURN
    END SUBROUTINE descla_init
-
 
    END MODULE descriptors

@@ -973,8 +973,8 @@ subroutine nlfh_x( stress, bec_bgrp, dbec, lambda )
   use constants,         ONLY : pi, fpi, au_gpa
   use io_global,         ONLY : stdout
   use control_flags,     ONLY : iprsta
-  USE cp_main_variables, ONLY : descla, la_proc, nlam, nlax
-  USE descriptors,       ONLY : nlar_ , nlac_ , ilar_ , ilac_ , nlax_
+  USE cp_main_variables, ONLY : descla, la_proc, nlam, nrcx
+  USE descriptors,       ONLY : la_descriptor
   USE mp,                ONLY : mp_sum
   USE mp_global,         ONLY : intra_bgrp_comm, inter_bgrp_comm
 
@@ -991,14 +991,14 @@ subroutine nlfh_x( stress, bec_bgrp, dbec, lambda )
   !
   REAL(DP), ALLOCATABLE :: tmpbec(:,:), tmpdh(:,:), temp(:,:), bec(:,:,:)
   !
-  ALLOCATE( bec( nkb, nlax, nspin ) )
+  ALLOCATE( bec( nkb, nrcx, nspin ) )
   !
   IF( la_proc ) THEN
      DO iss = 1, nspin
         nss = nupdwn( iss )
         istart = iupdwn( iss )
-        ic = descla( ilac_ , iss )
-        nc = descla( nlac_ , iss )
+        ic = descla( iss )%ic
+        nc = descla( iss )%nc
         DO i=1,nc
            ibgrp_i = ibgrp_g2l( i+istart-1+ic-1 )
            IF( ibgrp_i > 0 ) THEN
@@ -1015,8 +1015,8 @@ subroutine nlfh_x( stress, bec_bgrp, dbec, lambda )
   CALL mp_sum( bec, inter_bgrp_comm )
   !
   IF( la_proc ) THEN
-     nx=descla( nlax_ , 1 ) 
-     IF( nspin == 2 ) nx = MAX( nx , descla( nlax_ , 2 ) )
+     nx=descla( 1 )%nrcx
+     IF( nspin == 2 ) nx = MAX( nx , descla( 2 )%nrcx )
      ALLOCATE ( tmpbec(nhm,nx), tmpdh(nx,nhm), temp(nx,nx) )
   END IF
   !
@@ -1037,10 +1037,10 @@ subroutine nlfh_x( stress, bec_bgrp, dbec, lambda )
                  !
                  IF( la_proc ) THEN
 
-                    nr = descla( nlar_ , iss )
-                    nc = descla( nlac_ , iss )
-                    ir = descla( ilar_ , iss )
-                    ic = descla( ilac_ , iss )
+                    nr = descla( iss )%nr
+                    nc = descla( iss )%nc
+                    ir = descla( iss )%ir
+                    ic = descla( iss )%ic
 
                     tmpbec = 0.d0
                     tmpdh  = 0.d0
@@ -1060,7 +1060,7 @@ subroutine nlfh_x( stress, bec_bgrp, dbec, lambda )
                     do iv=1,nh(is)
                        inl=ish(is)+(iv-1)*na(is)+ia
                        do i = 1, nr
-                          tmpdh(i,iv) = dbec( inl, i + (iss-1)*nlax, ii, jj )
+                          tmpdh(i,iv) = dbec( inl, i + (iss-1)*nrcx, ii, jj )
                        end do
                     end do
 
@@ -1498,7 +1498,7 @@ SUBROUTINE print_lambda_x( lambda, n, nshow, ccc, iunit )
     ALLOCATE( lambda_repl( nudx, nudx ) )
     IF( ionode ) WRITE( un,*)
     DO is = 1, SIZE( lambda, 3 )
-       CALL collect_lambda( lambda_repl, lambda(:,:,is), descla(:,is) )
+       CALL collect_lambda( lambda_repl, lambda(:,:,is), descla(is) )
        IF( ionode ) THEN
           WRITE( un,3370) '    lambda   nudx, spin = ', nudx, is
           IF( nnn < n ) WRITE( un,3370) '    print only first ', nnn
@@ -1735,8 +1735,8 @@ END SUBROUTINE print_lambda_x
       USE electrons_base,    ONLY: nspin, iupdwn, nupdwn, nbspx_bgrp, ibgrp_g2l, i2gupdwn_bgrp, nbspx, &
                                    iupdwn_bgrp, nupdwn_bgrp
       USE constants,         ONLY: pi, fpi
-      USE cp_main_variables, ONLY: nlam, nlax, descla, la_proc
-      USE descriptors,       ONLY: nlar_ , nlac_ , ilar_ , ilac_ , la_myr_ , la_myc_ 
+      USE cp_main_variables, ONLY: nlam, nrcx, descla, la_proc
+      USE descriptors,       ONLY: la_descriptor
       USE mp,                ONLY: mp_sum
       USE mp_global,         ONLY: intra_bgrp_comm, inter_bgrp_comm
 !
@@ -1759,8 +1759,8 @@ END SUBROUTINE print_lambda_x
       !
       fion_tmp = 0.0d0
       !
-      ALLOCATE( temp( nlax, nlax ), tmpbec( nhm, nlax ), tmpdr( nlax, nhm ) )
-      ALLOCATE( bec( nhsa, nlax, nspin ), becdr( nhsa, nlax, nspin, 3 ) )
+      ALLOCATE( temp( nrcx, nrcx ), tmpbec( nhm, nrcx ), tmpdr( nrcx, nhm ) )
+      ALLOCATE( bec( nhsa, nrcx, nspin ), becdr( nhsa, nrcx, nspin, 3 ) )
 
       ! redistribute bec, becdr according to the ortho subgroup
       ! this is required because they are combined with "lambda" matrixes
@@ -1769,8 +1769,8 @@ END SUBROUTINE print_lambda_x
          DO iss = 1, nspin
             nss = nupdwn( iss )
             istart = iupdwn( iss )
-            ic = descla( ilac_ , iss )
-            nc = descla( nlac_ , iss )
+            ic = descla( iss )%ic
+            nc = descla( iss )%nc
             DO i=1,nc
                ibgrp_i = ibgrp_g2l( i+istart-1+ic-1 )
                IF( ibgrp_i > 0 ) THEN
@@ -1779,8 +1779,8 @@ END SUBROUTINE print_lambda_x
                   bec( :, i, iss ) = 0.0d0
                END IF
             END DO
-            ir = descla( ilar_ , iss )
-            nr = descla( nlar_ , iss )
+            ir = descla( iss )%ir
+            nr = descla( iss )%nr
             DO i=1,nr
                ibgrp_i = ibgrp_g2l( i+istart-1+ir-1 )
                IF( ibgrp_i > 0 ) THEN
@@ -1818,8 +1818,8 @@ END SUBROUTINE print_lambda_x
                   !
                   IF( la_proc ) THEN
                      ! tmpbec distributed by columns
-                     ic = descla( ilac_ , iss )
-                     nc = descla( nlac_ , iss )
+                     ic = descla( iss )%ic
+                     nc = descla( iss )%nc
                      DO iv=1,nh(is)
                         DO jv=1,nh(is)
                            inl=ish(is)+(jv-1)*na(is)+ia
@@ -1831,8 +1831,8 @@ END SUBROUTINE print_lambda_x
                         END DO
                      END DO
                      ! tmpdr distributed by rows
-                     ir = descla( ilar_ , iss )
-                     nr = descla( nlar_ , iss )
+                     ir = descla( iss )%ir
+                     nr = descla( iss )%nr
                      DO iv=1,nh(is)
                         inl=ish(is)+(iv-1)*na(is)+ia
                         DO i=1,nr
@@ -1844,11 +1844,11 @@ END SUBROUTINE print_lambda_x
                   IF(nh(is).GT.0)THEN
                      !
                      IF( la_proc ) THEN
-                        ir = descla( ilar_ , iss )
-                        ic = descla( ilac_ , iss )
-                        nr = descla( nlar_ , iss )
-                        nc = descla( nlac_ , iss )
-                        CALL dgemm( 'N', 'N', nr, nc, nh(is), 1.0d0, tmpdr, nlax, tmpbec, nhm, 0.0d0, temp, nlax )
+                        ir = descla( iss )%ir
+                        ic = descla( iss )%ic
+                        nr = descla( iss )%nr
+                        nc = descla( iss )%nc
+                        CALL dgemm( 'N', 'N', nr, nc, nh(is), 1.0d0, tmpdr, nrcx, tmpbec, nhm, 0.0d0, temp, nrcx )
                         DO j = 1, nc
                            DO i = 1, nr
                               fion_tmp(k,isa) = fion_tmp(k,isa) + 2D0 * temp( i, j ) * lambda( i, j, iss )
