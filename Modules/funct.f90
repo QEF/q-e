@@ -136,6 +136,9 @@ module funct
   !              "wcx"    Wu-Cohen                       igcx =11
   !              "hse"    HSE screened exchange          igcx =12
   !              "rw86"   revised PW86                   igcx =13
+  !              "pbe"    same as PBX, back-comp.        igcx =14
+  !              "tpss"   same as META, back-comp.       igcx =15
+  !              "c09x"   Coooper 09                     igcx =16
   !
   ! Gradient Correction on Correlation:
   !              "nogc"   none                           igcc =0 (default)
@@ -221,7 +224,7 @@ module funct
   ! data
   integer :: nxc, ncc, ngcx, ngcc, ncnl
 
-  parameter (nxc = 8, ncc =11, ngcx =15, ngcc = 10, ncnl=2)
+  parameter (nxc = 8, ncc =11, ngcx =16, ngcc = 10, ncnl=2)
 
   character (len=4) :: exc, corr
   character (len=4) :: gradx, gradc, nonlocc
@@ -232,7 +235,7 @@ module funct
               'OBW', 'GL' , 'B3LP', 'KZK' /
   data gradx / 'NOGX', 'B88', 'GGX', 'PBX',  'RPB', 'HCTH', 'OPTX',&
                'META', 'PB0X', 'B3LP','PSX', 'WCX', 'HSE', 'RW86', 'PBE', &
-               'TPSS'  / 
+               'TPSS', 'C09X' / 
 
   data gradc / 'NOGC', 'P86', 'GGC', 'BLYP', 'PBC', 'HCTH', 'META',&
                 'B3LP', 'PSC', 'PBE', 'TPSS' / 
@@ -329,6 +332,24 @@ CONTAINS
        call set_dft_value (inlc,0) !Default       
        dft_defined = .true.
        
+    else if ('VDW-DF2-C09' .EQ. TRIM(dftout) ) then
+    ! Special case vdW-DF2 with C09 exchange
+       call set_dft_value (iexch, 1)
+       call set_dft_value (icorr, 4)
+       call set_dft_value (igcx, 16)
+       call set_dft_value (igcc, 0)
+       call set_dft_value (inlc, 2)
+       dft_defined = .true.
+
+    else if ('VDW-DF-C09'  .EQ. TRIM(dftout) ) then
+    ! Special case vdW-DF with C09 exchange
+       call set_dft_value (iexch, 1)
+       call set_dft_value (icorr, 4)
+       call set_dft_value (igcx, 16)
+       call set_dft_value (igcc, 0)
+       call set_dft_value (inlc, 1)
+       dft_defined = .true.
+
    else if ('VDW-DF2' .EQ. TRIM(dftout) ) then
     ! Special case vdW-DF2
        call set_dft_value (iexch, 0)
@@ -897,6 +918,10 @@ CONTAINS
      shortname_ = 'VDW-DF'
   else if (iexch_==1.and.icorr_==4.and.igcx_==12.and.igcc_==0.and.inlc_==2) then
      shortname_ = 'VDW-DF2'
+  else if (iexch_==1.and.icorr_==4.and.igcx_==16.and.igcc_==0.and.inlc_==1) then
+     shortname_ = 'VDW-DF-C09'
+  else if (iexch_==1.and.icorr_==4.and.igcx_==16.and.igcc_==0.and.inlc_==2) then
+     shortname_ = 'VDW-DF2-C09'
   else
      shortname_ = ' '
   end if
@@ -1280,6 +1305,8 @@ subroutine gcxc (rho, grho, sx, sc, v1x, v2x, v1c, v2c)
      endif 
   elseif (igcx ==13) then ! 'rPW86'
      call rPW86 (rho, grho, sx, v1x, v2x)
+  elseif (igcx ==16) then ! 'C09x'
+     call c09x (rho, grho, sx, v1x, v2x)
   else
      sx = 0.0_DP
      v1x = 0.0_DP
