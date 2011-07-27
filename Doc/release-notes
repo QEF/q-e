@@ -3,9 +3,13 @@ New in 4.3.2 version
    * A few crystal lattices can be specified using the traditional
      crystallography parameter (labelled with negative ibrav values)
    * A few extensions to PP format converters, conversion to UPF v.2
+   * C09 GGA Exchange functional, courtesy of Ikutaro Hamada
 
 Fixed in 4.3.2 version
 
+   * Bugfix for pw2casino: total energies should now agree with pwscf total
+     energies for any number of nodes/k-points, also for hybrid functionals. 
+     Note: bwfn files produced before and after this patch will differ!
    * Funny results in the last step of variable-cell optimization,
      due to bad symmetrization in presence of fractional translations
    * OpenMP crash with PAW
