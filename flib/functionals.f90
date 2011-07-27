@@ -528,6 +528,74 @@ subroutine rPW86 (rho, grho, sx, v1x, v2x)
 end subroutine rPW86
 
 !
+!---------------------------------------------------------------
+subroutine c09x (rho, grho, sx, v1x, v2x)
+  !---------------------------------------------------------------
+  ! Cooper '09 exchange for vdW-DF (without Slater exchange):
+  ! V. R. Cooper, Phys. Rev. B 81, 161104(R) (2010)
+  !
+  ! Developed thanks to the contribution of 
+  ! Ikutaro Hamada - ikutaro@wpi-aimr.tohoku.ac.jp
+  ! WPI-Advanced Institute of Materials Research, Tohoku University  
+  !
+  USE kinds, ONLY : DP
+  USE constants, ONLY : pi
+  implicit none
+  real(DP) :: rho, grho, sx, v1x, v2x
+  ! input: charge and squared gradient
+  ! output: energy
+  ! output: potential
+  ! local variables
+  real(DP) :: kf, agrho, s1, s2, ds, dsg, exunif, fx
+  ! (3*pi2*|rho|)^(1/3)
+  ! |grho|
+  ! |grho|/(2*kf*|rho|)
+  ! s^2
+  ! n*ds/dn
+  ! n*ds/d(gn)
+  ! exchange energy LDA part
+  ! exchange energy gradient part
+  real(DP) :: dxunif, dfx, f1, f2, f3, dfx1, dfx2
+  ! numerical coefficients (NB: c2=(3 pi^2)^(1/3) )
+  real(DP) :: third, c1, c2, c5
+  parameter (third = 1.d0 / 3.d0, c1 = 0.75d0 / pi , &
+       c2 = 3.093667726280136d0, c5 = 4.d0 * third)
+  ! parameters of the functional
+  real(DP) :: kappa, mu, alpha
+  data kappa / 1.245d0  /, &
+       mu  / 0.0617d0 /, &
+       alpha / 0.0483d0 /
+  !
+  agrho = sqrt (grho)
+  kf = c2 * rho**third
+  dsg = 0.5d0 / kf
+  s1 = agrho * dsg / rho
+  s2 = s1 * s1
+  ds = - c5 * s1
+  !
+  !   Energy
+  !
+  f1 = exp( - alpha * s2 )
+  f2 = exp( - alpha * s2 / 2.0d0 )
+  f3 = mu * s2 * f1
+  fx = f3 + kappa * ( 1.0d0 - f2 )
+  exunif = - c1 * kf
+  sx = exunif * fx
+  !
+  !   Potential
+  !
+  dxunif = exunif * third
+  dfx1 = 2.0d0 * mu * s1 * ( 1.0d0 - alpha * s2 ) * f1
+  dfx2 = kappa * alpha * s1 * f2 
+  dfx = dfx1 + dfx2 
+  v1x = sx + dxunif * fx + exunif * dfx * ds
+  v2x = exunif * dfx * dsg / agrho
+
+  sx = sx * rho
+  return
+end subroutine c09x
+
+!
 !-----------------------------------------------------------------------
 subroutine perdew86 (rho, grho, sc, v1c, v2c)
   !-----------------------------------------------------------------------
