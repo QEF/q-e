@@ -460,7 +460,7 @@ CONTAINS
       !
       ! compute exact exchange contribution
       !
-      IF(dft_is_hybrid) fock2 = 0.5_DP * exxenergy2()
+      IF(dft_is_hybrid()) fock2 = 0.5_DP * exxenergy2()
       !
       etot=(ek + (etxc-etxcc)+ehart+eloc+enl+ewld)+demet+fock2
 #else
