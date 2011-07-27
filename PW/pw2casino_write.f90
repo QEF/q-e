@@ -326,6 +326,10 @@ CONTAINS
 
    SUBROUTINE calc_energies
       USE becmod, ONLY: becp, calbec, allocate_bec_type, deallocate_bec_type
+#ifdef EXX
+      USE exx,    ONLY : exxenergy2, fock2
+      USE funct,  ONLY : dft_is_hybrid
+#endif
 
       COMPLEX(DP), ALLOCATABLE :: aux(:)
       INTEGER :: ibnd, j, ig, ik, ikk, ispin, na, nt, ijkb0, ikb, ih, jh, jkb
@@ -339,6 +343,9 @@ CONTAINS
       eloc= 0.d0
       enl = 0.d0
       demet=0.d0
+#ifdef EXX
+      fock2=0.d0
+#endif
       !
       DO ispin = 1, nspin
          !
@@ -449,8 +456,16 @@ CONTAINS
       CALL v_of_rho( rho, rho_core, rhog_core, &
                      ehart, etxc, vtxc, eth, etotefield, charge, v )
       !
+#ifdef EXX      
+      !
+      ! compute exact exchange contribution
+      !
+      IF(dft_is_hybrid) fock2 = 0.5_DP * exxenergy2()
+      !
+      etot=(ek + (etxc-etxcc)+ehart+eloc+enl+ewld)+demet+fock2
+#else
       etot=(ek + (etxc-etxcc)+ehart+eloc+enl+ewld)+demet
-
+#endif
       CALL deallocate_bec_type (becp)
       DEALLOCATE (aux)
 
@@ -463,6 +478,10 @@ CONTAINS
       WRITE (stdout,*) 'Ewald energy     ', ewld/e2, ' au  =  ', ewld, ' Ry'
       WRITE (stdout,*) 'xc contribution  ',(etxc-etxcc)/e2, ' au  =  ', etxc-etxcc, ' Ry'
       WRITE (stdout,*) 'hartree energy   ', ehart/e2, ' au  =  ', ehart, ' Ry'
+#ifdef EXX
+      IF(dft_is_hybrid()) & 
+           WRITE (stdout,*) 'EXX energy       ', fock2/e2, ' au  =  ', fock2, ' Ry' 
+#endif
       IF( degauss > 0.0_dp ) &
          WRITE (stdout,*) 'Smearing (-TS)   ', demet/e2, ' au  =  ', demet, ' Ry'
       WRITE (stdout,*) 'Total energy     ', etot/e2, ' au  =  ', etot, ' Ry'
