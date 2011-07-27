@@ -95,6 +95,9 @@ module funct
   !              "hse"   = "nox+pw+hse+pbc"    = Heyd-Scuseria-Ernzerhof HSE 06
   !              "b3lyp" = "b3lp+vwn+b3lp+b3lp"= B3LYP
   !              "vdw-df"= "sla+pw+rpb+vdw1"   = vdW-DF
+  !              "vdw-df2"="sla+pw+rpb+vdw2"   = vdW-DF2
+  !              "vdw-df-c09"
+  !              "vdw-df2-c09"
   ! or by any nonconflicting combination of the following keywords
   ! (case-insensitive):
   !
@@ -138,7 +141,7 @@ module funct
   !              "rw86"   revised PW86                   igcx =13
   !              "pbe"    same as PBX, back-comp.        igcx =14
   !              "tpss"   same as META, back-comp.       igcx =15
-  !              "c09x"   Coooper 09                     igcx =16
+  !              "c09x"   Cooper 09                      igcx =16
   !
   ! Gradient Correction on Correlation:
   !              "nogc"   none                           igcc =0 (default)
@@ -151,7 +154,7 @@ module funct
   !              "b3lp"   B3LYP (Lee-Yang-Parr*0.81)     igcc =7
   !              "psc"    PBEsol corr                    igcc =8
   !
-  ! Van der Walls functionals (nonlocal term only)
+  ! Van der Waals functionals (nonlocal term only)
   !	         "nonlc"   none                           inlc =0 (default)
   !              "vdw1"    vdW-DF1                        inlc =1
   !              "vdw2"    vdW-DF2                        inlc =2
