@@ -72,6 +72,3 @@ n_last=5
 #             It will read Bands.out and result Bands.bxsf which you can
 #             rename as you like.
 #  
-# Spin-polarized calculations are not allowed, but will be done soon.
-
-   
