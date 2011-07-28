@@ -7,9 +7,8 @@
 #
 
 include ../make.sys
+include plugins_list
 W90=wannier90-latest
-WANT=want-latest
-YAMBO=yambo-latest
 PLUMED=PLUMED-latest
 GIPAW=qe-gipaw-latest
 #
@@ -53,7 +52,7 @@ w90: test-w90 uncompress-w90 configure-w90
 test-w90: touch-dummy
 	@(if test ! -e ../archive/$(W90).tar.gz && test ! -d ../W90; then \
 	echo "The release contains no Wannier90 package"; fi) 
-	touch ./test-want
+	touch ./test-w90
 uncompress-w90: touch-dummy
 	if (test -e archive/$(W90).tar.gz) || (test ! -d ../W90); then \
 	( gzip -dc ../archive/$(W90).tar.gz | (cd ../; tar -xvf -)) ; \
@@ -68,20 +67,24 @@ configure-w90: touch-dummy
 # WANT
 ###########################################################
 
-want: extlibs test-want uncompress-want configure-want
+want: extlibs uncompress-want configure-want
 	if test -d ../WANT; then \
 	cd ../WANT; $(MAKE) all; fi
 #	- ( cd ../bin ; ln -sf ../WANT/bin/* . ) 
 	touch ./make-want
-test-want: touch-dummy
-	@(if test ! -e ../archive/$(WANT).tar.gz && test ! -d ../WANT; then \
-	echo "The release contains no WANT package"; fi) 
-	touch ./test-want
 uncompress-want: touch-dummy
-	if (test -e archive/$(WANT).tar.gz) || (test ! -d ../WANT); then \
-	( gzip -dc ../archive/$(WANT).tar.gz | (cd ../; tar -xvf -)) ; \
-	( cd ../; ln -s want* WANT; cd install) ; fi
-	touch ./uncompress-want
+	@(if test ! -e ../archive/$(WANT).tar.gz && test ! -d ../WANT ; then \
+	wget -O ../archive/$(WANT).tar.gz $(WANT_URL) > /dev/null 2>&1; \
+	if test "`echo $$?`" -ne "0" ; then \
+	curl -o ../archive/$(WANT) $(WANT_URL) > /dev/null 2>&1; \
+	if test "`echo $$?`" -ne "0" ; then \
+	echo "unable to download want. Test whether curl or wget is installed in your computer." ; \
+	fi ; fi ; fi) 
+	if test ! -d ../WANT; then \
+	(gzip -dc ../archive/$(WANT).tar.gz | (cd ../ ; tar -xvf -)) ; \
+	(cd ../ ; ln -s want* WANT) ; fi 
+	touch uncompress-want
+
 configure-want: touch-dummy
 	cd ../WANT ; \
 	./conf/configure \
@@ -111,19 +114,23 @@ configure-want: touch-dummy
 # YAMBO
 ###################################################
 
-yambo: extlibs test-yambo uncompress-yambo configure-yambo
+yambo: extlibs uncompress-yambo configure-yambo
 	if test -d ../YAMBO; then \
 	cd ../YAMBO; $(MAKE) all; fi
 	touch ./make-yambo
-test-yambo: touch-dummy
-	@(if test ! -e ../archive/$(YAMBO).tar.gz && test ! -d ../YAMBO; then \
-	echo "The release contains no YAMBO package"; fi) 
-	touch ./test-yambo
 uncompress-yambo: touch-dummy
-	if (test -e archive/$(YAMBO).tar.gz) || (test ! -d ../YAMBO); then \
-	( gzip -dc ../archive/$(YAMBO).tar.gz | (cd ../; tar -xvf -)) ; \
-	(cd ../; ln -s  yambo* YAMBO; cd install) ; fi
-	touch ./uncompress-yambo
+	@(if test ! -e ../archive/$(YAMBO).tar.gz && test ! -d ../YAMBO ; then \
+	wget -O ../archive/$(YAMBO).tar.gz $(YAMBO_URL) > /dev/null 2>&1; \
+	if test "`echo $$?`" -ne "0" ; then \
+	curl -o ../archive/$(YAMBO) $(YAMBO_URL) > /dev/null 2>&1; \
+	if test "`echo $$?`" -ne "0" ; then \
+	echo "unable to download yambo. Test whether curl or wget is installed in your computer." ; \
+	fi ; fi ; fi) 
+	if test ! -d ../YAMBO; then \
+	(gzip -dc ../archive/$(YAMBO).tar.gz | (cd ../ ; tar -xvf -)) ; \
+	(cd ../ ; ln -s yambo* YAMBO) ; fi 
+	touch uncompress-yambo
+
 configure-yambo: touch-dummy
 	cd ../YAMBO ; \
 	./configure --with-blas="$(BLAS_LIBS)" \
