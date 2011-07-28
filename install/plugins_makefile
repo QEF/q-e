@@ -27,9 +27,9 @@ gipaw:  uncompress-gipaw configure-gipaw
 	touch make-gipaw
 uncompress-gipaw: touch-dummy
 	@(if test ! -e ../archive/qe-gipaw-latest.tar.gz && test ! -d ../GIPAW ; then \
-	wget -O ../archive/qe-gipaw-latest.tar.gz http://qe-forge.org/frs/download.php/154/qe-gipaw-latest.tar.gz > /dev/null 2>&1; \
+	wget -O ../archive/qe-gipaw-latest.tar.gz http://qe-forge.org/frs/download.php/166/qe-gipaw-latest.tar.gz > /dev/null 2>&1; \
 	if test "`echo $$?`" -ne "0" ; then \
-	curl -o ../archive/qe-gipaw-latest.tar.gz http://qe-forge.org/frs/download.php/154/qe-gipaw-latest.tar.gz > /dev/null 2>&1; \
+	curl -o ../archive/qe-gipaw-latest.tar.gz http://qe-forge.org/frs/download.php/166/qe-gipaw-latest.tar.gz > /dev/null 2>&1; \
 	if test "`echo $$?`" -ne "0" ; then \
 	echo "unable to download qe-gipaw. Test whether curl or wget is installed in your computer." ; \
 	fi ; fi ; fi) 
