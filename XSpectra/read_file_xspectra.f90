@@ -27,7 +27,7 @@ SUBROUTINE read_file_xspectra(xread_wf)
   USE ktetra,               ONLY : tetra, ntetra 
   USE extfield,             ONLY : forcefield, tefield
   USE cellmd,               ONLY : cell_factor, lmovecell
-  USE fft_base,             ONLY : dfftp
+  USE fft_base,             ONLY : dfftp, dffts
   USE fft_interfaces,       ONLY : fwfft
   USE gvect,                ONLY : gg, ngm, g, gcutm,&
                                    eigts1, eigts2, eigts3, nl, gstart
@@ -122,7 +122,7 @@ SUBROUTINE read_file_xspectra(xread_wf)
   !-------------------------------------------------------------------------------
   !
   CALL set_dimensions()
-  CALL realspace_grids_init (at, bg, gcutm, gcutms )  
+  CALL realspace_grids_init (dfftp,dffts,at, bg, gcutm, gcutms )  
   !
   ! ... check whether LSDA
   !
