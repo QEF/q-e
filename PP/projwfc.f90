@@ -2136,7 +2136,7 @@ SUBROUTINE pprojwave( filproj, lsym )
   USE wavefunctions_module, ONLY: evc
   USE parallel_toolkit, ONLY : zsqmred, zsqmher, zsqmdst, zsqmcll, dsqmsym
   USE zhpev_module,     ONLY : pzhpev_drv, zhpev_drv
-  USE descriptors
+  USE descriptors,      ONLY : la_descriptor, descla_init
   USE projections
   !
   IMPLICIT NONE
@@ -2166,8 +2166,8 @@ SUBROUTINE pprojwave( filproj, lsym )
   CHARACTER (len=1)  :: l_label(0:3)=(/'s','p','d','f'/)
   INTEGER, ALLOCATABLE :: idx(:)
   LOGICAL :: lsym
-  INTEGER :: desc( descla_siz_ )
-  INTEGER, ALLOCATABLE :: desc_ip( :, :, : )
+  TYPE(la_descriptor) :: desc
+  TYPE(la_descriptor), ALLOCATABLE :: desc_ip( :, : )
   INTEGER, ALLOCATABLE :: rank_ip( :, : )
     ! matrix distribution descriptors
   INTEGER :: nx, nrl, nrlx
@@ -2193,7 +2193,7 @@ SUBROUTINE pprojwave( filproj, lsym )
   !
   ALLOCATE( ic_notcnv( np_ortho(2) ) )
   ALLOCATE( notcnv_ip( np_ortho(2) ) )
-  ALLOCATE( desc_ip( descla_siz_ , np_ortho(1), np_ortho(2) ) )
+  ALLOCATE( desc_ip( np_ortho(1), np_ortho(2) ) )
   ALLOCATE( rank_ip( np_ortho(1), np_ortho(2) ) )
   !
   CALL desc_init( natomwfc, desc, desc_ip )
@@ -2293,14 +2293,14 @@ SUBROUTINE pprojwave( filproj, lsym )
      !
      ! calculate O^{-1/2}
      !
-     IF ( desc( lambda_node_ ) > 0 ) THEN
+     IF ( desc%active_node > 0 ) THEN
         !
         !  Compute local dimension of the cyclically distributed matrix
         !
         ALLOCATE(work_d (nx, nx) )
 
-        nrl  = desc( la_nrl_ )
-        nrlx = desc( la_nrlx_ )
+        nrl  = desc%nrl
+        nrlx = desc%nrlx
 
         ALLOCATE( diag( nrlx, natomwfc ) )
         ALLOCATE( vv( nrlx, natomwfc ) )
@@ -2308,7 +2308,7 @@ SUBROUTINE pprojwave( filproj, lsym )
         CALL blk2cyc_zredist( natomwfc, diag, nrlx, natomwfc, overlap_d, nx, nx, desc )
         !
         CALL pzhpev_drv( 'V', diag, nrlx, e, vv, nrlx, nrl, natomwfc, &
-           desc( la_npc_ ) * desc( la_npr_ ), desc( la_me_ ), desc( la_comm_ ) )
+           desc%npc * desc%npr, desc%mype, desc%comm )
         !
         CALL cyc2blk_zredist( natomwfc, vv, nrlx, natomwfc, work_d, nx, nx, desc )
         !
@@ -2325,11 +2325,11 @@ SUBROUTINE pprojwave( filproj, lsym )
         e (i) = 1.d0 / dsqrt (e (i) )
      ENDDO
 
-     IF ( desc( lambda_node_ ) > 0 ) THEN
+     IF ( desc%active_node > 0 ) THEN
         ALLOCATE(e_work_d (nx, nx) )
-        DO j = 1, desc( nlac_ )
-           DO i = 1, desc( nlar_ )
-              e_work_d( i, j ) = e( j + desc( ilac_ ) - 1 ) * work_d( i, j )
+        DO j = 1, desc%nc
+           DO i = 1, desc%nr
+              e_work_d( i, j ) = e( j + desc%ic - 1 ) * work_d( i, j )
            ENDDO
         ENDDO
         CALL sqr_zmm_cannon( 'N', 'C', natomwfc, ONE, e_work_d, nx, work_d, nx, ZERO, overlap_d, nx, desc )
@@ -2680,28 +2680,27 @@ CONTAINS
   SUBROUTINE desc_init( nsiz, desc, desc_ip )
      !
      INTEGER, INTENT(in)  :: nsiz
-     INTEGER, INTENT(out) :: desc(:)
-     INTEGER, INTENT(out) :: desc_ip(:,:,:)
+     TYPE(la_descriptor), INTENT(out) :: desc
+     TYPE(la_descriptor), INTENT(out) :: desc_ip(:,:)
      INTEGER :: i, j, rank
      INTEGER :: coor_ip( 2 )
      !
      CALL descla_init( desc, nsiz, nsiz, np_ortho, me_ortho, ortho_comm, ortho_comm_id )
      !
-     nx = desc( nlax_ )
+     nx = desc%nrcx
      !
-     DO j = 0, desc( la_npc_ ) - 1
-        DO i = 0, desc( la_npr_ ) - 1
+     DO j = 0, desc%npc - 1
+        DO i = 0, desc%npr - 1
            coor_ip( 1 ) = i
            coor_ip( 2 ) = j
-           CALL descla_init( desc_ip(:,i+1,j+1), desc( la_n_ ), desc( la_nx_ ), &
-                             np_ortho, coor_ip, ortho_comm, 1 )
-           CALL GRID2D_RANK( 'R', desc( la_npr_ ), desc( la_npc_ ), i, j, rank )
+           CALL descla_init( desc_ip(i+1,j+1), desc%n, desc%nx, np_ortho, coor_ip, ortho_comm, 1 )
+           CALL GRID2D_RANK( 'R', desc%npr, desc%npc, i, j, rank )
            rank_ip( i+1, j+1 ) = rank * leg_ortho
         ENDDO
      ENDDO
      !
      la_proc = .false.
-     IF( desc( lambda_node_ ) > 0 ) la_proc = .true.
+     IF( desc%active_node > 0 ) la_proc = .true.
      !
      RETURN
   END SUBROUTINE desc_init
@@ -2733,15 +2732,15 @@ CONTAINS
      ldv = size( v, 1 )
      ldw = size( w, 1 )
      !
-     DO ipc = 1, desc( la_npc_ ) !  loop on column procs
+     DO ipc = 1, desc%npc !  loop on column procs
         !
-        nc = desc_ip( nlac_ , 1, ipc )
-        ic = desc_ip( ilac_ , 1, ipc )
+        nc = desc_ip( 1, ipc )%nc
+        ic = desc_ip( 1, ipc )%ic
         !
         DO ipr = 1, ipc ! desc( la_npr_ ) ! ipc ! use symmetry for the loop on row procs
            !
-           nr = desc_ip( nlar_ , ipr, ipc )
-           ir = desc_ip( ilar_ , ipr, ipc )
+           nr = desc_ip( ipr, ipc )%nr
+           ir = desc_ip( ipr, ipc )%ir
            !
            !  rank of the processor for which this block (ipr,ipc) is destinated
            !
@@ -2798,15 +2797,15 @@ CONTAINS
      ldv = size( v, 1 )
      ldw = size( w, 1 )
      !
-     DO ipc = 1, desc( la_npc_ ) !  loop on column procs
+     DO ipc = 1, desc%npc !  loop on column procs
         !
-        nc = desc_ip( nlac_ , 1, ipc )
-        ic = desc_ip( ilac_ , 1, ipc )
+        nc = desc_ip( 1, ipc )%nc
+        ic = desc_ip( 1, ipc )%ic
         !
         DO ipr = 1, ipc ! desc( la_npr_ ) ! ipc ! use symmetry for the loop on row procs
            !
-           nr = desc_ip( nlar_ , ipr, ipc )
-           ir = desc_ip( ilar_ , ipr, ipc )
+           nr = desc_ip( ipr, ipc )%nr
+           ir = desc_ip( ipr, ipc )%ir
            !
            !  rank of the processor for which this block (ipr,ipc) is destinated
            !
@@ -2850,21 +2849,21 @@ CONTAINS
 
      ALLOCATE( vtmp( nx, nx ) )
      !
-     DO ipc = 1, desc( la_npc_ )
+     DO ipc = 1, desc%npc
         !
-        nc = desc_ip( nlac_ , 1, ipc )
-        ic = desc_ip( ilac_ , 1, ipc )
+        nc = desc_ip( 1, ipc )%nc
+        ic = desc_ip( 1, ipc )%ic
         !
         beta = ZERO
 
-        DO ipr = 1, desc( la_npr_ )
+        DO ipr = 1, desc%npr
            !
-           nr = desc_ip( nlar_ , ipr, ipc )
-           ir = desc_ip( ilar_ , ipr, ipc )
+           nr = desc_ip( ipr, ipc )%nr
+           ir = desc_ip( ipr, ipc )%ir
            !
            root = rank_ip( ipr, ipc )
 
-           IF( ipr-1 == desc( la_myr_ ) .and. ipc-1 == desc( la_myc_ ) .and. la_proc ) THEN
+           IF( ipr-1 == desc%myr .and. ipc-1 == desc%myc .and. la_proc ) THEN
               !
               !  this proc sends his block
               !
@@ -2910,21 +2909,21 @@ CONTAINS
 
      ALLOCATE( vtmp( nx, nx ) )
      !
-     DO ipc = 1, desc( la_npc_ )
+     DO ipc = 1, desc%npc
         !
-        nc = desc_ip( nlac_ , 1, ipc )
-        ic = desc_ip( ilac_ , 1, ipc )
+        nc = desc_ip( 1, ipc )%nc
+        ic = desc_ip( 1, ipc )%ic
         !
         beta = 0.0d0
 
-        DO ipr = 1, desc( la_npr_ )
+        DO ipr = 1, desc%npr
            !
-           nr = desc_ip( nlar_ , ipr, ipc )
-           ir = desc_ip( ilar_ , ipr, ipc )
+           nr = desc_ip( ipr, ipc )%nr
+           ir = desc_ip( ipr, ipc )%ir
            !
            root = rank_ip( ipr, ipc )
 
-           IF( ipr-1 == desc( la_myr_ ) .and. ipc-1 == desc( la_myc_ ) .and. la_proc ) THEN
+           IF( ipr-1 == desc%myr .and. ipc-1 == desc%myc .and. la_proc ) THEN
               !
               !  this proc sends his block
               !
