@@ -189,6 +189,7 @@ module funct
   !              pbesol  J.P. Perdew et al., PRL 100, 136406 (2008)
   !              vdW-DF  M. Dion et al., PRL 92, 246401 (2004)
   !                      T. Thonhauser et al., PRB 76, 125112 (2007)
+  !              c09x    V. R. Cooper, Phys. Rev. B 81, 161104(R) (2010)
   !
   integer, parameter:: notset = -1
   !
