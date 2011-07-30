@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2009 Quantum ESPRESSO groups
+! Copyright (C) 2002-2011 Quantum ESPRESSO groups
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -131,7 +131,7 @@ CONTAINS
          &    "395502 (2009);", &
          &/9X," URL http://www.quantum-espresso.org"", ", &
          &/5X,"in publications or presentations arising from this work. More details at",&
-         &/5x,"http://www.quantum-espresso.org/wiki/index.php/Citing_Quantum-ESPRESSO")' )
+         &/5x,"http://www.quantum-espresso.org/quote.php")' )
 
     RETURN
   END SUBROUTINE opening_message
