@@ -634,11 +634,17 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 	var nosym -type LOGICAL { 
 	    default { .FALSE. }
 	    info {
-		if (.TRUE.) symmetry is not used. Note that a k-point grid
-		provided in input is used "as is"; an automatically generated
-		k-point grid will contain only points in the irreducible BZ
-		of the lattice.  Use with care in low-symmetry large cells
-		if you cannot afford a k-point grid with the correct symmetry.
+		if (.TRUE.) symmetry is not used. Note that
+		- if the k-point grid is provided in input, it is used "as is"
+		  and symmetry-inequivalent k-points are not generated;
+		- if the k-point grid is automatically generated, it will
+		  contain only points in the irreducible BZ for the bravais
+		  lattice, irrespective of the actual crystal symmetry.
+		A careful usage of this option can be advantageous 
+		- in low-symmetry large cells, if you cannot afford a k-point
+		  grid with the correct symmetry
+		- in MD simulations
+		- in calculations for isolated atoms
 	    }
 	}
 
@@ -1955,13 +1961,14 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 				col wk
 				info {
 				    Special k-points (xk_x/y/z) in the irreducible Brillouin Zone
-				    of the lattice (with all symmetries) and weights (wk)
+				    (IBZ) of the lattice (with all symmetries) and weights (wk)
 				    See the literature for lists of special points and
 				    the corresponding weights.
 				    
 				    If the symmetry is lower than the full symmetry
 				    of the lattice, additional points with appropriate
-				    weights are generated.
+				    weights are generated. Notice that such procedure
+				    assumes that ONLY k-points in the IBZ are provided in input
 
 				    In a non-scf calculation, weights do not affect the results.
 				    If you just need eigenvalues and eigenvectors (for instance,
