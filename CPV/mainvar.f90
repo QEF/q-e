@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2005 FPMD-CPV groups
+! Copyright (C) 2002-2011 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -19,6 +19,7 @@ MODULE cp_main_variables
   USE pres_ai_mod,       ONLY : abivol, abisur, jellium, t_gauss, rho_gaus, &
                                 v_vol, posv, f_vol
   USE descriptors,       ONLY : la_descriptor
+  USE control_flags,     ONLY : lwfnscf, lwfpbe0, lwfpbe0nscf  ! Lingzhu Kong
   !
   IMPLICIT NONE
   SAVE
@@ -91,6 +92,7 @@ MODULE cp_main_variables
   COMPLEX(DP), ALLOCATABLE :: rhog(:,:)
   REAL(DP),    ALLOCATABLE :: rhor(:,:), rhos(:,:)
   REAL(DP),    ALLOCATABLE :: vpot(:,:)
+  REAL(DP),    ALLOCATABLE :: rhopr(:,:)   ! Lingzhu Kong
   !
   ! derivative wrt cell
   !
@@ -109,6 +111,38 @@ MODULE cp_main_variables
                              ! for the present run
   INTEGER :: iprint_stdout=1 ! define how often CP writes verbose information to stdout
   !
+  !==========================================================================
+  ! Lingzhu Kong
+            
+     INTEGER  :: my_nbspx
+     INTEGER  :: nord2            ! order of expansion ( points on one side)
+     INTEGER  :: lap_neig(3,3)    ! new directions
+     REAL(DP) :: lap_dir_step(3)  ! step in the new directions
+     INTEGER  :: lap_dir_num      ! number of new directions
+     REAL(DP) :: b_lap(6)         ! coefficients of the directions
+     INTEGER  :: lap_dir(3)       ! activeness of the new directions
+
+     INTEGER  np_in_sp, np_in_sp2  ! number of grid points in the 1st sphere and the shell between 1st and 2nd sphere
+
+! conversion between 3D index (i,j,k) and 1D index np
+     INTEGER,     ALLOCATABLE     :: odtothd_in_sp(:,:)
+     INTEGER,     ALLOCATABLE     :: thdtood_in_sp(:,:,:)
+     INTEGER,     ALLOCATABLE     :: thdtood(:,:,:)
+     REAL(DP),    ALLOCATABLE     :: xx_in_sp(:)
+     REAL(DP),    ALLOCATABLE     :: yy_in_sp(:)
+     REAL(DP),    ALLOCATABLE     :: zz_in_sp(:)
+
+     REAL(DP),    ALLOCATABLE     :: selfv(:,:,:)
+     REAL(DP),    ALLOCATABLE     :: pairv(:,:,:,:)
+     REAL(DP),    ALLOCATABLE     :: exx_potential(:, :)
+
+     REAL(DP),    ALLOCATABLE     :: clm(:,:)
+     REAL(DP),    ALLOCATABLE     :: coeke(:,:)
+     REAL(DP),    ALLOCATABLE     :: vwc(:,:)
+     INTEGER  ::  lmax
+     INTEGER  ::  n_exx =0
+!==========================================================================
+
   CONTAINS
     !
     !------------------------------------------------------------------------
@@ -122,6 +156,15 @@ MODULE cp_main_variables
                              me_bgrp, ortho_comm_id
       USE mp,          ONLY: mp_max, mp_min
       USE descriptors, ONLY: la_descriptor, descla_init
+!==============================================================================
+!Lingzhu Kong
+      USE mp_global,               ONLY  : nproc_image
+      USE fft_base,                ONLY  : dffts
+      USE electrons_base,          ONLY  : nbsp
+      USE wannier_base,            ONLY  : neigh, exx_ps_rcut, exx_me_rcut, vnbsp
+      USE control_flags,           ONLY  : lwfnscf, lwfpbe0, lwfpbe0nscf
+!===============================================================================
+
       !
       INTEGER,           INTENT(IN) :: ngw, ngw_g, ngb, ngs, ng, nr1,nr2,nr3, &
                                        nnr, nrxxs, nat, nax, nsp, nspin, &
@@ -131,7 +174,7 @@ MODULE cp_main_variables
       LOGICAL,           INTENT(IN) :: tpre
       INTEGER,           INTENT(IN) :: nbspx_bgrp
       !
-      INTEGER  :: iss
+      INTEGER  :: iss, ierr
       LOGICAL  :: gzero
       !
       ! ... allocation of all arrays not already allocated in init and nlinit
@@ -173,6 +216,48 @@ MODULE cp_main_variables
             ALLOCATE( drhog( 1, 1, 1, 1 ) )
             ALLOCATE( drhor( 1, 1, 1, 1 ) )
       END IF
+!=========================================================================
+!Lingzhu Kong
+      IF ( lwfpbe0 .or. lwfpbe0nscf ) THEN
+
+         lmax=6
+         nord2 = 3
+         ALLOCATE( clm(0:lmax, 0:lmax) )
+         ALLOCATE( coeke(-nord2:nord2, 6))
+         ALLOCATE( exx_potential(dffts%nnr,nbsp), stat=ierr)
+
+         CALL getnpinsp(exx_ps_rcut, exx_me_rcut, np_in_sp, np_in_sp2 )
+
+         ALLOCATE( odtothd_in_sp(3, np_in_sp + np_in_sp2 ), stat=ierr )
+         ALLOCATE( thdtood_in_sp(nr1, nr2, nr3), stat=ierr )
+         ALLOCATE( thdtood(nr1, nr2, nr3), stat=ierr )
+         ALLOCATE( xx_in_sp(1:np_in_sp+np_in_sp2), stat=ierr )
+         ALLOCATE( yy_in_sp(1:np_in_sp+np_in_sp2), stat=ierr )
+         ALLOCATE( zz_in_sp(1:np_in_sp+np_in_sp2), stat=ierr )
+
+         my_nbspx   = nbsp / nproc_image
+
+         IF( MOD(nbsp, nproc_image) /= 0)THEN
+            my_nbspx = my_nbspx + 1
+         ENDIF
+         print *, 'my_nbspx =', my_nbspx
+      END IF
+
+      IF ( lwfpbe0nscf .or. lwfnscf ) ALLOCATE( rhopr( nnr, nspin ) )
+
+      IF ( lwfpbe0nscf ) THEN
+         ALLOCATE( vwc(3, vnbsp) )
+         ALLOCATE( pairv( np_in_sp, 2, neigh, my_nbspx), stat=ierr )
+         pairv (:,:,:,:) = 0.d0
+      ENDIF
+
+      IF ( lwfpbe0 ) THEN
+         ALLOCATE( selfv( np_in_sp, 2,          my_nbspx), stat=ierr )
+         ALLOCATE( pairv( np_in_sp, 2, neigh/2, my_nbspx), stat=ierr )
+         selfv (:,:,:) = 0.d0
+         pairv (:,:,:,:) = 0.d0
+      ENDIF
+!==========================================================================
       !
       !  Compute local dimensions for lambda matrixes
       !
@@ -242,6 +327,32 @@ MODULE cp_main_variables
       IF( ALLOCATED( rhor ) )    DEALLOCATE( rhor )
       IF( ALLOCATED( rhos ) )    DEALLOCATE( rhos )
       IF( ALLOCATED( rhog ) )    DEALLOCATE( rhog )
+!====================================================================
+!Lingzhu Kong
+      IF ( lwfpbe0 )THEN
+         IF( ALLOCATED( selfv ) )          DEALLOCATE( selfv )
+      ENDIF
+
+      IF ( lwfpbe0nscf .or. lwfnscf)THEN
+         IF( ALLOCATED( rhopr ) )          DEALLOCATE( rhopr )
+      ENDIF
+         
+      IF ( lwfpbe0nscf )THEN
+         IF( ALLOCATED( vwc)    )          DEALLOCATE( vwc )
+      ENDIF
+      IF ( lwfpbe0 .or. lwfpbe0nscf ) THEN
+         IF( ALLOCATED( pairv ) )          DEALLOCATE( pairv )
+         IF( ALLOCATED( exx_potential ) )  DEALLOCATE( exx_potential )
+         IF( ALLOCATED( odtothd_in_sp ) )  DEALLOCATE(odtothd_in_sp )
+         IF( ALLOCATED( thdtood_in_sp ) )  DEALLOCATE(thdtood_in_sp )
+         IF( ALLOCATED( thdtood  ))        DEALLOCATE(thdtood)
+         IF( ALLOCATED( xx_in_sp ))        DEALLOCATE(xx_in_sp )
+         IF( ALLOCATED( yy_in_sp ))        DEALLOCATE(yy_in_sp )
+         IF( ALLOCATED( zz_in_sp ))        DEALLOCATE(zz_in_sp )
+         IF( ALLOCATED( clm )     )        DEALLOCATE(clm)
+         IF( ALLOCATED( coeke)    )        DEALLOCATE(coeke)
+      END IF
+!===================================================================
       IF( ALLOCATED( drhog ) )   DEALLOCATE( drhog )
       IF( ALLOCATED( drhor ) )   DEALLOCATE( drhor )
       IF( ALLOCATED( bec_bgrp ) )     DEALLOCATE( bec_bgrp )

@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2005 Quantum ESPRESSO group
+! Copyright (C) 2002-2011 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -36,6 +36,7 @@ MODULE input
      USE read_cards_module,     ONLY : read_cards
      USE input_parameters,      ONLY : calculation, title
      USE control_flags,         ONLY : lneb, lpath, lwf
+     USE control_flags,         ONLY : lwfnscf, lwfpbe0, lwfpbe0nscf ! Lingzhu Kong
      USE printout_base,         ONLY : title_ => title
      USE io_global,             ONLY : meta_ionode, meta_ionode_id, stdout
      USE xml_input,             ONLY : xml_input_dump
@@ -85,7 +86,16 @@ MODULE input
      !
      lpath = lneb
      !
-     lwf = ( TRIM( calculation ) == 'cp-wf' )
+!====================================================================
+!Lingzhu Kong
+     lwf = ( TRIM( calculation ) == 'cp-wf'      .OR. &
+             TRIM( calculation ) == 'cp-wf-nscf' .OR. &
+             TRIM( calculation ) == 'cp-wf-pbe0' .OR. &
+             TRIM( calculation ) == 'pbe0-nscf' )
+     lwfnscf     = ( TRIM( calculation ) == 'cp-wf-nscf' )
+     lwfpbe0     = ( TRIM( calculation ) == 'cp-wf-pbe0')
+     lwfpbe0nscf = ( TRIM( calculation ) == 'pbe0-nscf' )
+!====================================================================
      !
      ! ... Set job title and print it on standard output
      !
@@ -369,7 +379,9 @@ MODULE input
           ! Print on file STRUCTURE_FACTOR the structure factor
           ! gvectors and charge density, in reciprocal space.
      !
-     trhor_ = ( TRIM( calculation ) == 'nscf' )
+     trhor_ = ( TRIM( calculation ) == 'nscf'       .OR. &
+                TRIM( calculation ) == 'cp-wf-nscf' .OR. &
+                TRIM( calculation ) == 'pbe0-nscf'  )    ! Lingzhu Kong
      trhow_ = saverho
      tksw_  = ( TRIM( disk_io ) == 'high' )
      !
@@ -836,6 +848,11 @@ MODULE input
                                   wf_q, wf_friction, nit, nsd, nsteps, tolw,   &
                                   adapt, calwf, nwf, wffort, writev,           &
                                   wannier_index
+!===============================================================
+!Lingzhu Kong
+     USE input_parameters, ONLY : neigh, poisson_eps, dis_cutoff, exx_ps_rcut,&
+                                  exx_me_rcut, vnbsp
+!===============================================================
      !
      USE input_parameters, ONLY : abivol, abisur, pvar, fill_vac,     &
                                   scale_at, t_gauss, jellium, cntr,   &
@@ -972,12 +989,16 @@ MODULE input
      !
      lconstrain = ( ncolvar_inp + nconstr_inp > 0 )
      !
-     !
+!========================================================================
+!Lingzhu Kong
      CALL wannier_init( wf_efield, wf_switch, sw_len, efx0, efy0, efz0, &
-                        efx1, efy1, efz1, wfsd, wfdt, maxwfdt, wf_q,    &
+                        efx1, efy1, efz1, wfsd, wfdt, neigh,poisson_eps,&
+                        dis_cutoff, exx_ps_rcut, exx_me_rcut, vnbsp,    &
+                        maxwfdt, wf_q, &
                         wf_friction, nit, nsd, nsteps, tolw, adapt,     &
                         calwf, nwf, wffort, writev, wannier_index,      &
                         restart_mode )
+!========================================================================
      !
      ! ... initialize variables for clusters under pressure 
      !

@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2007 Quantum ESPRESSO group
+! Copyright (C) 2002-2011 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -185,6 +185,12 @@ MODULE control_flags
     lneb    =.FALSE., &! if .TRUE. the calc. is NEB dynamics
     lsmd    =.FALSE., &! if .TRUE. the calc. is string dynamics
     lwf     =.FALSE., &! if .TRUE. the calc. is with wannier functions
+    !=================================================================
+    !  Lingzhu Kong 
+    lwfnscf =.FALSE., &
+    lwfpbe0 =.FALSE., &! if .TRUE. the calc. is with wannier functions and with PBE0 functional
+    lwfpbe0nscf=.FALSE.,&
+    !=================================================================
     lbands  =.FALSE., &! if .TRUE. the calc. is band structure
     lconstrain=.FALSE.,&! if .TRUE. the calc. is constraint
     ldamped =.FALSE., &! if .TRUE. the calc. is a damped dynamics

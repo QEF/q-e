@@ -39,6 +39,7 @@ electrons_base.o : constants.o
 electrons_base.o : control_flags.o
 electrons_base.o : io_global.o
 electrons_base.o : kind.o
+energies.o : control_flags.o
 energies.o : io_global.o
 energies.o : kind.o
 environment.o : io_files.o

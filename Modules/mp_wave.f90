@@ -683,7 +683,7 @@ SUBROUTINE redistwf( c_dist_pw, c_dist_st, npw_p, nst_p, comm, idir )
                                     !  idir > 0  c_dist_pw --> c_dist_st
                                     !  idir < 0  c_dist_pw <-- c_dist_st
 
-   INTEGER :: mpime, nproc, ierr, npw_t, nst_t, proc, i, j, ngpww
+   INTEGER :: mpime, nproc, ierr, npw_t, nst_t, proc, i, j, ngpww, ii
    INTEGER, ALLOCATABLE :: rdispls(:),  recvcount(:)
    INTEGER, ALLOCATABLE :: sendcount(:),  sdispls(:)
    COMPLEX(DP), ALLOCATABLE :: ctmp( : )
@@ -733,6 +733,119 @@ SUBROUTINE redistwf( c_dist_pw, c_dist_st, npw_p, nst_p, comm, idir )
       ngpww = 0
       DO proc = 1, nproc
          DO i = 1, nst_p(mpime+1)
+            ii = (i-1) * npw_p(proc) 
+            DO j = 1, npw_p(proc)
+               c_dist_st( j + ngpww, i ) = ctmp( rdispls(proc) + j + ii )
+            END DO
+         END DO
+         ngpww = ngpww + npw_p(proc)
+      END DO
+
+   ELSE
+      !
+      !   Step 4. Convert the 2-d array c_dist_st into 1-d array
+      !
+      ngpww = 0
+      DO proc = 1, nproc
+         DO i = 1, nst_p(mpime+1) 
+            ii = (i-1) * npw_p(proc)
+            DO j = 1, npw_p(proc)
+               ctmp( rdispls(proc) + j + ii ) = c_dist_st( j + ngpww, i )
+            END DO
+         END DO
+         ngpww = ngpww + npw_p(proc)
+      END DO
+      !        
+      !   Step 5. Redistribute among processors. The result is stored in 2-d
+      !   array c_dist_pw consistent with the notation c(ngw,nbsp)
+      !
+      CALL MPI_BARRIER( comm, ierr )
+      IF( ierr /= 0 ) CALL errore( ' wf_redist ', ' mpi_barrier ', ierr )
+
+      CALL MPI_ALLTOALLV( ctmp, recvcount, rdispls, MPI_DOUBLE_COMPLEX,          &
+          &               c_dist_pw, sendcount , sdispls, MPI_DOUBLE_COMPLEX, comm, ierr )
+      IF( ierr /= 0 ) CALL errore( ' wf_redist ', ' mpi_alltoallv ', ierr )
+
+
+   END IF
+
+   DEALLOCATE( ctmp )
+   DEALLOCATE( rdispls, recvcount, sendcount, sdispls )
+#endif
+   RETURN
+END SUBROUTINE redistwf
+
+
+SUBROUTINE redistwfr( c_dist_pw, c_dist_st, npw_p, nst_p, comm, idir )
+   !
+   !  Redistribute wave function.
+   !  c_dist_pw are the wave functions with plane waves distributed over processors 
+   !  c_dist_st are the wave functions with electronic states distributed over processors 
+   !
+   USE kinds
+   USE parallel_include
+
+   implicit none
+
+   REAL(DP) :: c_dist_pw(:,:)
+   REAL(DP) :: c_dist_st(:,:)
+   INTEGER, INTENT(IN) :: npw_p(:)  !  the number of plane wave on each processor
+   INTEGER, INTENT(IN) :: nst_p(:)  !  the number of states on each processor
+   INTEGER, INTENT(IN) :: comm      !  group communicator
+   INTEGER, INTENT(IN) :: idir      !  direction of the redistribution 
+                                    !  idir > 0  c_dist_pw --> c_dist_st
+                                    !  idir < 0  c_dist_pw <-- c_dist_st
+
+   INTEGER :: mpime, nproc, ierr, npw_t, nst_t, proc, i, j, ngpww
+   INTEGER, ALLOCATABLE :: rdispls(:),  recvcount(:)
+   INTEGER, ALLOCATABLE :: sendcount(:),  sdispls(:)
+   REAL(DP), ALLOCATABLE :: ctmp( : )
+
+#ifdef __MPI
+   CALL mpi_comm_rank( comm, mpime, ierr )
+   IF( ierr /= 0 ) CALL errore( ' wf_redist ', ' mpi_comm_rank ', ierr )
+   CALL mpi_comm_size( comm, nproc, ierr )
+   IF( ierr /= 0 ) CALL errore( ' wf_redist ', ' mpi_comm_size ', ierr )
+
+   ALLOCATE( rdispls( nproc ), recvcount( nproc ), sendcount( nproc ), sdispls( nproc ) )
+
+   npw_t = 0
+   nst_t = 0
+   DO proc=1,nproc
+      sendcount(proc) = npw_p(mpime+1) * nst_p(proc)
+      recvcount(proc) = npw_p(proc) * nst_p(mpime+1)
+      npw_t = npw_t + npw_p(proc)
+      nst_t = nst_t + nst_p(proc)
+   END DO
+   sdispls(1)=0
+   rdispls(1)=0
+   DO proc=2,nproc
+      sdispls(proc) = sdispls(proc-1) + sendcount(proc-1)
+      rdispls(proc) = rdispls(proc-1) + recvcount(proc-1)
+   END DO
+
+   ALLOCATE( ctmp( npw_t * nst_p( mpime + 1 ) ) )
+
+   IF( idir > 0 ) THEN
+      !
+      ! ... Step 1. Communicate to all Procs so that each proc has all
+      ! ... G-vectors and some states instead of all states and some
+      ! ... G-vectors. This information is stored in the 1-d array ctmp.
+      !
+      CALL MPI_BARRIER( comm, ierr )
+      IF( ierr /= 0 ) CALL errore( ' wf_redist ', ' mpi_barrier ', ierr )
+      !
+      CALL MPI_ALLTOALLV( c_dist_pw, sendcount, sdispls, MPI_DOUBLE_PRECISION,             &
+           &             ctmp, recvcount, rdispls, MPI_DOUBLE_PRECISION, comm, ierr)
+      IF( ierr /= 0 ) CALL errore( ' wf_redist ', ' mpi_alltoallv ', ierr )
+      !
+      !   Step 2. Convert the 1-d array ctmp into a 2-d array consistent with the
+      !   original notation c(ngw,nbsp). Psitot contains ntot = SUM_Procs(ngw) G-vecs
+      !   and nstat states instead of all nbsp states
+      !
+      ngpww = 0
+      DO proc = 1, nproc
+         DO i = 1, nst_p(mpime+1)
             DO j = 1, npw_p(proc)
                c_dist_st( j + ngpww, i ) = ctmp( rdispls(proc) + j + (i-1) * npw_p(proc) )
             END DO
@@ -760,8 +873,8 @@ SUBROUTINE redistwf( c_dist_pw, c_dist_st, npw_p, nst_p, comm, idir )
       CALL MPI_BARRIER( comm, ierr )
       IF( ierr /= 0 ) CALL errore( ' wf_redist ', ' mpi_barrier ', ierr )
 
-      CALL MPI_ALLTOALLV( ctmp, recvcount, rdispls, MPI_DOUBLE_COMPLEX,          &
-          &               c_dist_pw, sendcount , sdispls, MPI_DOUBLE_COMPLEX, comm, ierr )
+      CALL MPI_ALLTOALLV( ctmp, recvcount, rdispls, MPI_DOUBLE_PRECISION,          &
+          &               c_dist_pw, sendcount , sdispls, MPI_DOUBLE_PRECISION, comm, ierr )
       IF( ierr /= 0 ) CALL errore( ' wf_redist ', ' mpi_alltoallv ', ierr )
 
 
@@ -771,9 +884,9 @@ SUBROUTINE redistwf( c_dist_pw, c_dist_st, npw_p, nst_p, comm, idir )
    DEALLOCATE( rdispls, recvcount, sendcount, sdispls )
 #endif
    RETURN
-END SUBROUTINE redistwf
-
+END SUBROUTINE redistwfr
 
 !=----------------------------------------------------------------------------=!
 
     END MODULE mp_wave
+

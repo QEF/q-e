@@ -96,10 +96,10 @@ MODULE input_parameters
         CHARACTER(len=80) :: calculation = 'none'
           ! Specify the type of the simulation
           ! See below for allowed values
-        CHARACTER(len=80) :: calculation_allowed(12)
+        CHARACTER(len=80) :: calculation_allowed(15)
         DATA calculation_allowed / 'scf', 'nscf', 'relax', 'md', 'cp', &
-          'vc-relax', 'vc-md', 'vc-cp', 'bands', 'neb', 'smd', 'cp-wf'/
-
+          'vc-relax', 'vc-md', 'vc-cp', 'bands', 'neb', 'smd', 'cp-wf', &
+          'cp-wf-nscf','cp-wf-pbe0', 'pbe0-nscf'/   ! Lingzhu Kong
         CHARACTER(len=80) :: verbosity = 'default'
           ! define the verbosity of the code output
         CHARACTER(len=80) :: verbosity_allowed(6)
@@ -1273,7 +1273,16 @@ MODULE input_parameters
           REAL(DP) :: maxwfdt
           REAL(DP) :: wf_q
           REAL(DP) :: wf_friction
-          !
+!=======================================================================
+!Lingzhu Kong
+          INTEGER  :: vnbsp
+          INTEGER  :: neigh
+          REAL(DP) :: poisson_eps
+          REAL(DP) :: dis_cutoff
+          REAL(DP) :: exx_ps_rcut
+          REAL(DP) :: exx_me_rcut
+!=======================================================================
+
           INTEGER :: nit
           INTEGER :: nsd
           INTEGER :: nsteps
@@ -1287,12 +1296,14 @@ MODULE input_parameters
           INTEGER :: wffort
           !
           LOGICAL :: writev
-          !
-          NAMELIST / wannier / wf_efield, wf_switch, sw_len, efx0, efy0, efz0, &
-                               efx1, efy1, efz1, wfsd, wfdt, maxwfdt, wf_q,    &
-                               wf_friction, nit, nsd, nsteps, tolw, adapt,     &
-                               calwf, nwf, wffort, writev
-
+!==============================================================================
+!Lingzhu Kong
+          NAMELIST / wannier / wf_efield, wf_switch, sw_len, efx0, efy0, efz0,&
+                               efx1, efy1, efz1, wfsd, wfdt, neigh,poisson_eps,&
+                               dis_cutoff,exx_ps_rcut, exx_me_rcut, vnbsp,    &
+                               maxwfdt, wf_q, wf_friction, nit, nsd, nsteps,  & 
+                               tolw, adapt, calwf, nwf, wffort, writev
+!===============================================================================
 !  END manual
 ! ----------------------------------------------------------------------
 

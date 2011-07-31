@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2005 Quantum ESPRESSO group
+! Copyright (C) 2002-2011 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -10,6 +10,7 @@
         
         USE io_global,  ONLY : stdout
         USE kinds
+        USE control_flags, ONLY : lwfpbe0, lwfpbe0nscf ! Lingzhu Kong
         IMPLICIT NONE
         SAVE
 
@@ -27,6 +28,7 @@
           REAL(DP)  :: EPSEU
           REAL(DP)  :: ENL
           REAL(DP)  :: ENT
+          REAL(DP)  :: EXX              
           REAL(DP)  :: VXC
           REAL(DP)  :: EXC
           REAL(DP)  :: SELF_VXC
@@ -60,6 +62,7 @@
         REAL(DP)  :: ESR = 0.0_DP
         REAL(DP)  :: EXC = 0.0_DP
         REAL(DP)  :: VXC = 0.0_DP
+        REAL(DP)  :: EXX = 0.0_DP                  
         REAL(DP)  :: EBAND = 0.0_DP
         REAL(DP)  :: ATOT = 0.0_DP
         REAL(DP)  :: ENTROPY = 0.0_DP
@@ -72,7 +75,7 @@
         PUBLIC :: dft_energy_type, total_energy, eig_total_energy, &
                   print_energies, debug_energies
 
-        PUBLIC :: etot, eself, enl, ekin, epseu, esr, eht, exc, ekincm
+        PUBLIC :: etot, eself, enl, ekin, epseu, esr, eht, exc, ekincm, exx  
         PUBLIC :: self_exc, self_ehte
 
         PUBLIC :: atot, entropy, egrand, enthal, vave
@@ -165,7 +168,14 @@
           ELSE
              !
  999         WRITE( stdout,100) etot, ekin, eht, esr, eself, epseu, enl, exc, vave
-             !
+
+!====================================================================================
+!Lingzhu Kong
+             if( lwfpbe0 .or. lwfpbe0nscf) then
+                WRITE( stdout,101) -exx*0.25, etot-exx*0.25
+             end if
+!====================================================================================
+
           END IF
           !
           IF( tsic ) THEN
@@ -213,7 +223,8 @@
      &         '  n-l pseudopotential energy = ',f14.5,' Hartree a.u.'/ &
      &         ' exchange-correlation energy = ',f14.5,' Hartree a.u.'/ &
      &         '           average potential = ',f14.5,' Hartree a.u.'//)
-
+  101 format(//'                  exx energy = ',F14.5,' Hartree a.u.'/ &
+     &         '       total energy with exx = ',F14.5,' Hartree a.u.' / )
           RETURN
         END SUBROUTINE print_energies
 
