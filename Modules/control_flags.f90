@@ -51,7 +51,7 @@ MODULE control_flags
   ! ...   declare execution control variables
   !
   CHARACTER(LEN=4) :: program_name = ' '  !  used to control execution flow 
-                                          !  inside module: 'FPMD' or 'CP90'
+                                          !  inside module: 'PW' or 'CP'
   !
   LOGICAL :: trhor     = .FALSE. ! read rho from unit 47 (only cp, seldom used)
   LOGICAL :: trhow     = .FALSE. ! CP code, write rho to restart dir
@@ -71,7 +71,6 @@ MODULE control_flags
   LOGICAL :: tzeroc        = .FALSE. ! set to zero the cell geometry velocities
   LOGICAL :: tstress       = .FALSE. ! print stress to standard output
   LOGICAL :: tortho        = .FALSE. ! use iterative orthogonalization
-  LOGICAL :: tconjgrad     = .FALSE. ! use conjugate gradient electronic minimization
   LOGICAL :: timing        = .FALSE. ! print out timing information
   LOGICAL :: memchk        = .FALSE. ! check for memory leakage
   LOGICAL :: tprnsfac      = .FALSE. ! print out structure factor
@@ -194,7 +193,6 @@ MODULE control_flags
     lbands  =.FALSE., &! if .TRUE. the calc. is band structure
     lconstrain=.FALSE.,&! if .TRUE. the calc. is constraint
     ldamped =.FALSE., &! if .TRUE. the calc. is a damped dynamics
-!    lcoarsegrained=.FALSE., &! if .TRUE. a coarse-grained phase-space is used
     llondon =.FALSE., & ! if .TRUE. compute semi-empirical dispersion correction
     restart =.FALSE.   ! if .TRUE. restart from results of a preceding run
   !
