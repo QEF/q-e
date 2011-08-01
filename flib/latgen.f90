@@ -13,15 +13,16 @@ subroutine latgen(ibrav,celldm,a1,a2,a3,omega)
   !
   !     ibrav is the structure index:
   !       1  cubic P (sc)                8  orthorhombic P
-  !       2  cubic F (fcc)               9  one face centered orthorhombic
+  !       2  cubic F (fcc)               9  1-face (base) centered orthorhombic
   !       3  cubic I (bcc)              10  all face centered orthorhombic
   !       4  hexagonal and trigonal P   11  body centered orthorhombic
   !       5  trigonal R, 3-fold axis c  12  monoclinic P (unique axis: c)
-  !       6  tetragonal P (st)          13  one face centered monoclinic
+  !       6  tetragonal P (st)          13  one face (base) centered monoclinic
   !       7  tetragonal I (bct)         14  triclinic P
   !     Also accepted:
   !       0  "free" structure          -12  monoclinic P (unique axis: b)
   !      -5  trigonal R, threefold axis along (111) 
+  !      -9  alternate description for base centered orthorhombic
   !
   !     celldm are parameters which fix the shape of the unit cell
   !     omega is the unit-cell volume
@@ -121,42 +122,38 @@ subroutine latgen(ibrav,celldm,a1,a2,a3,omega)
      a2(2)=celldm(1)*sr3/2.d0
      a3(3)=celldm(1)*cbya
      !
-  else if (ibrav == 5) then
+  else if (ABS(ibrav) == 5) then
      !
-     !     trigonal lattice, threefold axis along c (001)
+     !     trigonal lattice
      !
-     if (celldm (4) <= -0.5d0 .or. celldm (4) >= 1) &
+     if (celldm (4) <= -0.5_dp .or. celldm (4) >= 1.0_dp) &
           call errore ('latgen', 'wrong celldm(4)', ibrav)
      !
-     term1=sqrt(1.d0+2.d0*celldm(4))
-     term2=sqrt(1.d0-celldm(4))
-     a2(2)=sr2*celldm(1)*term2/sr3
-     a2(3)=celldm(1)*term1/sr3
-     a1(1)=celldm(1)*term2/sr2
-     a1(2)=-a1(1)/sr3
-     a1(3)= a2(3)
-     a3(1)=-a1(1)
-     a3(2)= a1(2)
-     a3(3)= a2(3)
+     term1=sqrt(1.0_dp + 2.0_dp*celldm(4))
+     term2=sqrt(1.0_dp - celldm(4))
      !
-  else if (ibrav ==-5) then
-     !
-     !     trigonal lattice, threefold axis along (111)
-     !
-     if (celldm (4) <= -0.5d0 .or. celldm (4) >= 1) &
-          call errore ('latgen', 'wrong celldm(4)', ibrav)
-     !
-     term1 = sqrt(1.0_dp + 2.0_dp*celldm(4))
-     term2 = sqrt(1.0_dp - celldm(4))
-     a1(1) = celldm(1)*(term1-2.0_dp*term2)/3.0_dp
-     a1(2) = celldm(1)*(term1+term2)/3.0_dp
-     a1(3) = a1(2)
-     a2(1) = a1(3)
-     a2(2) = a1(1)
-     a2(3) = a1(2)
-     a3(1) = a1(2)
-     a3(2) = a1(3)
-     a3(3) = a1(1)
+     IF ( ibrav == 5) THEN
+        !     threefold axis along c (001)
+        a2(2)=sr2*celldm(1)*term2/sr3
+        a2(3)=celldm(1)*term1/sr3
+        a1(1)=celldm(1)*term2/sr2
+        a1(2)=-a1(1)/sr3
+        a1(3)= a2(3)
+        a3(1)=-a1(1)
+        a3(2)= a1(2)
+        a3(3)= a2(3)
+     ELSE IF ( ibrav == -5) THEN
+        !     threefold axis along (111)
+        a1(1) = celldm(1)*(term1-2.0_dp*term2)/3.0_dp
+        a1(2) = celldm(1)*(term1+term2)/3.0_dp
+        a1(3) = a1(2)
+        a2(1) = a1(3)
+        a2(2) = a1(1)
+        a2(3) = a1(2)
+        a3(1) = a1(2)
+        a3(2) = a1(3)
+        a3(3) = a1(1)
+     END IF
   else if (ibrav == 6) then
      !
      !     tetragonal lattice
@@ -196,18 +193,26 @@ subroutine latgen(ibrav,celldm,a1,a2,a3,omega)
      a2(2)=celldm(1)*celldm(2)
      a3(3)=celldm(1)*celldm(3)
      !
-  else if (ibrav == 9) then
+  else if ( ABS(ibrav) == 9) then
      !
-     !
-     !     One face centered orthorhombic lattice
+     !     One face (base) centered orthorhombic lattice
      !
      if (celldm (2) <= 0.d0) call errore ('latgen', 'wrong celldm(2)', ibrav)
      if (celldm (3) <= 0.d0) call errore ('latgen', 'wrong celldm(3)', ibrav)
      !
-     a1(1) = 0.5d0 * celldm(1)
-     a1(2) = a1(1) * celldm(2)
-     a2(1) = - a1(1)
-     a2(2) = a1(2)
+     IF ( ibrav == 9 ) THEN
+        !   old PWscf description
+        a1(1) = 0.5d0 * celldm(1)
+        a1(2) = a1(1) * celldm(2)
+        a2(1) = - a1(1)
+        a2(2) = a1(2)
+     ELSE
+        !   alternate description
+        a1(1) = 0.5d0 * celldm(1)
+        a1(2) =-a1(1) * celldm(2)
+        a2(1) = a1(1)
+        a2(2) =-a1(2)
+     END IF
      a3(3) = celldm(1) * celldm(3)
      !
   else if (ibrav == 10) then
