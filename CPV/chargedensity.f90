@@ -121,6 +121,7 @@
       USE cp_interfaces,      ONLY: checkrho
       USE cp_main_variables,  ONLY: iprint_stdout
       USE wannier_base,       ONLY: iwf
+      USE cp_main_variables,  ONLY: rhopr ! Lingzhu Kong
 !
       IMPLICIT NONE
       INTEGER nfi
@@ -223,10 +224,18 @@
          !   non self-consistent calculation  
          !   charge density is read from unit 47
          !
-         CALL read_rho( nspin, rhor )
-
-         ALLOCATE( psi( dfftp%nnr ) )
+!=============================================================
+! Lingzhu Kong
+         IF( first ) THEN
+            CALL read_rho( nspin, rhor )
+            rhopr = rhor
+            first = .FALSE.
+         ELSE
+            rhor = rhopr
+         END IF
+!=============================================================
 !
+         ALLOCATE( psi( dfftp%nnr ) )
          IF(nspin.EQ.1)THEN
             iss=1
             DO ir=1,dfftp%nnr

@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2005-2008 Quantum ESPRESSO group
+! Copyright (C) 2005-2011 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -1827,13 +1827,15 @@ MODULE xml_io_base
     ! ... methods to write and read wavefunctions
     !
     !------------------------------------------------------------------------
-    SUBROUTINE write_wfc( iuni, ik, nk, kunit, ispin, &
-                          nspin, wf0, ngw, gamma_only, nbnd, igl, ngwl, filename, scalef, &
-                          ionode, root_in_group, intra_group_comm, inter_group_comm, parent_group_comm )
+    SUBROUTINE write_wfc( iuni, ik, nk, kunit, ispin, nspin, wf0, ngw,   &
+                          gamma_only, nbnd, igl, ngwl, filename, scalef, &
+                          ionode, root_in_group, intra_group_comm,       &
+                          inter_group_comm, parent_group_comm )
       !------------------------------------------------------------------------
       !
       USE mp_wave,    ONLY : mergewf
       USE mp,         ONLY : mp_get, mp_size, mp_rank, mp_sum
+      USE control_flags,     ONLY : lwfnscf, lwfpbe0nscf  ! Lingzhu Kong
       !
       IMPLICIT NONE
       !
@@ -1895,7 +1897,11 @@ MODULE xml_io_base
       ALLOCATE( wtmp( MAX( igwx, 1 ) ) )
       !
       wtmp = 0.0_DP
-      !
+      ! Next 3 lines: Lingzhu Kong
+      IF ( ( index(filename,'evc0') > 0 ) .and. (lwfnscf .or. lwfpbe0nscf) )THEN
+         IF ( ionode ) OPEN(60,file='cp_wf.dat',status='unknown',form='unformatted')
+      ENDIF
+
       DO j = 1, nbnd
          !
          IF ( ngroup > 1 ) THEN
@@ -1917,9 +1923,18 @@ MODULE xml_io_base
          !
          IF ( ionode ) &
             CALL iotk_write_dat( iuni, "evc" // iotk_index( j ), wtmp(1:igwx) )
+         ! Next 3 lines : Lingzhu Kong
+         IF ( ( index(filename,'evc0') > 0 ) .and. (lwfnscf .or. lwfpbe0nscf) ) THEN
+            IF ( ionode ) write(60)wtmp(1:igwx) 
+         ENDIF
          !
       END DO
-      !
+      ! Next 4 lines : Lingzhu Kong
+      IF ( ( index(filename,'evc0') > 0 ) .and. (lwfnscf .or. lwfpbe0nscf) )THEN
+          IF ( ionode ) close(60)   !Lingzhu Kong
+          write(*,*)'done writing evc0'
+      ENDIF
+
       IF ( ionode ) CALL iotk_close_write( iuni )
       !
       DEALLOCATE( wtmp )
@@ -2033,6 +2048,10 @@ MODULE xml_io_base
                                    "evc" // iotk_index( j ), wtmp(1:igwx_) )
                !
                IF ( igwx > igwx_ ) wtmp((igwx_+1):igwx) = 0.0_DP
+               ! ===========================================================
+               !       Lingzhu Kong
+               !IF ( j .eq. 1)write(*,'(10f12.5)')(wtmp(i),i=1,igwx_)
+               ! ===========================================================
                !
             END IF
             !

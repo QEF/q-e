@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2005-2010 Quantum ESPRESSO group
+! Copyright (C) 2005-2011 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -51,11 +51,14 @@ MODULE cp_restart
       !
       USE control_flags,            ONLY : gamma_only, force_pairing, trhow, &
                                            tksw, twfcollect, do_makov_payne
+      USE control_flags,            ONLY : tksw, lwfpbe0nscf, lwfnscf ! Lingzhu Kong
       USE io_files,                 ONLY : psfile, pseudo_dir, iunwfc, &
                                            nwordwfc, tmp_dir, diropn
-      USE mp_global,                ONLY : intra_image_comm, me_image, nproc_pool, nproc_image
-      USE mp_global,                ONLY : nproc, mpime, me_bgrp, nproc_bgrp, my_bgrp_id, &
-                                           intra_bgrp_comm, intra_image_comm, inter_bgrp_comm, &
+      USE mp_global,                ONLY : intra_image_comm, me_image, &
+                                           nproc_pool, nproc_image, nproc, &
+                                           mpime, me_bgrp, nproc_bgrp, &
+                                           my_bgrp_id, intra_bgrp_comm, &
+                                           intra_image_comm, inter_bgrp_comm, &
                                            root_bgrp, intra_pool_comm
       USE printout_base,            ONLY : title
       USE gvect,                    ONLY : ngm, ngm_g
@@ -826,6 +829,17 @@ MODULE cp_restart
                !
                CALL iotk_write_dat( iunpun, &
                                     "LAMBDA0" // TRIM( cspin ), mrepl )
+               !=============================================================
+               !  Lingzhu Kong
+               IF ( lwfpbe0nscf .or. lwfnscf ) THEN
+                  OPEN(60,file='cp_lambda.dat',status='unknown',form='formatted') 
+                  DO j = 1, nudx
+                     write(60, '(8f15.8)')(mrepl(i,j),i=1,nudx)
+                  ENDDO
+                  CLOSE(60)
+               ENDIF
+               !=============================================================
+
                !
             END IF
             !
@@ -1899,6 +1913,77 @@ MODULE cp_restart
       !
     END SUBROUTINE cp_read_wfc
     !
+!==============================================================================
+!Modified from cp_read_wfc to read valence states for nscf calculations
+!Lingzhu Kong
+    !------------------------------------------------------------------------
+    SUBROUTINE cp_read_wfc_Kong( ndr, tmp_dir, ik, nk, iss, nspin, c2, tag )
+      !------------------------------------------------------------------------
+      !
+      USE kinds,              ONLY : DP
+      USE gvecw,              ONLY : ngw
+      USE gvect,              ONLY : ig_l2g
+      USE wannier_base,       ONLY : vnbsp        
+      USE mp_global,          ONLY : intra_bgrp_comm, inter_bgrp_comm, &
+                                     root_bgrp, intra_pool_comm
+      IMPLICIT NONE
+      !
+      INTEGER,               INTENT(IN)  :: ndr
+      CHARACTER(LEN=*),      INTENT(IN)  :: tmp_dir
+      INTEGER,               INTENT(IN)  :: ik, iss, nk, nspin
+      CHARACTER,             INTENT(IN)  :: tag
+      COMPLEX(DP), OPTIONAL, INTENT(OUT) :: c2(:,:)
+      !
+      CHARACTER(LEN=256) :: dirname, filename
+      INTEGER            :: ik_eff, ib, nb, kunit, iss_, nspin_, ngwt_, nbnd_
+      REAL(DP)           :: scalef
+      !
+      kunit = 1
+      !
+      ik_eff = ik + ( iss - 1 ) * nk
+      !
+      dirname = restart_dir( tmp_dir, ndr )
+      !
+      IF ( tag /= 'm' ) THEN
+         !
+         IF ( nspin == 1 ) THEN
+            !
+            filename = TRIM( wfc_filename( dirname, 'evc0', ik ) )
+            !
+         ELSE
+            !
+            filename = TRIM( wfc_filename( dirname, 'evc0', ik, iss ) )
+            !
+         END IF
+         !
+      ELSE
+         !
+         IF ( nspin == 1 ) THEN
+            !
+            filename = TRIM( wfc_filename( dirname, 'evcm', ik ) )
+            !
+         ELSE
+            !
+            filename = TRIM( wfc_filename( dirname, 'evcm', ik, iss ) )
+            !
+         END IF
+         !
+      END IF
+      !
+      ib = 1
+      nb = vnbsp             
+      !
+      print *,'before read_wfc me'
+      CALL read_wfc( iunout, ik_eff, nk, kunit, iss_, nspin_, &
+                     c2(:,ib:ib+nb-1), ngwt_, nbnd_, ig_l2g, ngw,  &
+                     filename, scalef, &
+                     ionode, root_bgrp, intra_bgrp_comm, &
+                     inter_bgrp_comm, intra_pool_comm )
+
+      !
+      RETURN
+      !
+    END SUBROUTINE cp_read_wfc_Kong
     !------------------------------------------------------------------------
     SUBROUTINE cp_read_cell( ndr, tmp_dir, ascii, ht, &
                              htm, htvel, gvel, xnhh0, xnhhm, vnhh )

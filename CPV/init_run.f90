@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2005 Quantum ESPRESSO group
+! Copyright (C) 2002-2011 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -76,6 +76,10 @@ SUBROUTINE init_run()
   USE mp,                       ONLY : mp_barrier
   USE wrappers
   USE ldaU_cp
+  USE control_flags,            ONLY : lwfpbe0nscf  ! Lingzhu Kong
+  USE wavefunctions_module,     ONLY : cv0          ! Lingzhu Kong
+  USE wannier_base,             ONLY : vnbsp        ! Lingzhu Kong
+  USE cp_restart,               ONLY : cp_read_wfc_Kong  ! Lingzhu Kong
   !
   IMPLICIT NONE
   !
@@ -156,6 +160,7 @@ SUBROUTINE init_run()
   !
   !  initialize wave functions descriptors and allocate wf
   !
+  IF(lwfpbe0nscf) ALLOCATE(cv0( ngw, vnbsp ) )   ! Lingzhu Kong
   ALLOCATE( c0_bgrp( ngw, nbspx ) )
   ALLOCATE( cm_bgrp( ngw, nbspx ) )
   ALLOCATE( phi_bgrp( ngw, nbspx ) )
@@ -249,6 +254,7 @@ SUBROUTINE init_run()
   !
   hnew = h
   !
+  IF(lwfpbe0nscf) cv0=( 0.D0, 0.D0 )    ! Lingzhu Kong
   cm_bgrp  = ( 0.D0, 0.D0 )
   c0_bgrp  = ( 0.D0, 0.D0 )
   phi_bgrp = ( 0.D0, 0.D0 )
@@ -286,6 +292,12 @@ SUBROUTINE init_run()
      !     nbeg = 0, nbeg = 1
      !======================================================================
      !
+     !======================================================================
+     ! Kong, read the valence orbitals
+     IF(lwfpbe0nscf) THEN
+        CALL cp_read_wfc_Kong( 36, tmp_dir, 1, 1, 1, 1, cv0, 'v' )
+     ENDIF
+     !======================================================================
      i = 1  
      CALL readfile( i, h, hold, nfi, c0_bgrp, cm_bgrp, taus,   &
                     tausm, vels, velsm, acc, lambda, lambdam, xnhe0, xnhem, &

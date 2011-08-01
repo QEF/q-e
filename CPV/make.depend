@@ -136,6 +136,7 @@ cp_restart.o : ../Modules/xml_io_base.o
 cp_restart.o : ../iotk/src/iotk_module.o
 cp_restart.o : gvecw.o
 cp_restart.o : mainvar.o
+cp_restart.o : wannier_base.o
 cplib.o : ../Modules/atom.o
 cplib.o : ../Modules/cell_base.o
 cplib.o : ../Modules/constants.o
@@ -516,6 +517,7 @@ init_run.o : cell_nose.o
 init_run.o : cg.o
 init_run.o : cp_emass.o
 init_run.o : cp_interfaces.o
+init_run.o : cp_restart.o
 init_run.o : efield.o
 init_run.o : electrons_nose.o
 init_run.o : ensemble_dft.o
@@ -528,6 +530,7 @@ init_run.o : modules.o
 init_run.o : ortho_base.o
 init_run.o : smallbox_gvec.o
 init_run.o : wannier.o
+init_run.o : wannier_base.o
 init_run.o : wave_types.o
 inner_loop_cold.o : ../Modules/cell_base.o
 inner_loop_cold.o : ../Modules/descriptors.o
@@ -663,6 +666,7 @@ move_electrons.o : ../Modules/ions_base.o
 move_electrons.o : ../Modules/kind.o
 move_electrons.o : ../Modules/recvec.o
 move_electrons.o : ../Modules/uspp.o
+move_electrons.o : ../Modules/wavefunctions.o
 move_electrons.o : cg.o
 move_electrons.o : cp_interfaces.o
 move_electrons.o : efield.o

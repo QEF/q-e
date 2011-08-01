@@ -254,7 +254,7 @@ MODULE wannier_subroutines
 12132     FORMAT(' SMALLEST TIMESTEP IN THE SD / CG DIRECTION FOR SPREAD OPTIMIZATION= ',f10.7)
 12133     FORMAT(' LARGEST TIMESTEP IN THE SD / CG DIRECTION FOR SPREAD OPTIMIZATION = ',f10.7)
        END IF
-       WRITE( stdout, * ) "IBRAV SELECTED:",ibrav
+       WRITE( stdout, * ) "wannier_startup IBRAV SELECTED:",ibrav
        !
        CALL recips( a1, a2, a3, b1, b2, b3 )
        b1 = b1 * alat

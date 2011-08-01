@@ -42,6 +42,8 @@ SUBROUTINE move_electrons_x( nfi, tfirst, tlast, b1, b2, b3, fion, c0_bgrp, &
   USE cp_interfaces,        ONLY : rhoofr, compute_stress, vofrho
   USE electrons_module,     ONLY : distribute_c, collect_c, distribute_b
   USE gvect,                ONLY : eigts1, eigts2, eigts3 
+  USE control_flags,        ONLY : lwfpbe0, lwfpbe0nscf  ! Lingzhu Kong
+  USE wavefunctions_module, ONLY : cv0 ! Lingzhu Kong
   !
   IMPLICIT NONE
   !
@@ -76,8 +78,22 @@ SUBROUTINE move_electrons_x( nfi, tfirst, tlast, b1, b2, b3, fion, c0_bgrp, &
           CALL get_wannier_center( tfirst, cm_bgrp, bec_bgrp, eigr, &
                                    eigrb, taub, irb, ibrav, b1, b2, b3 )
      !
-     CALL rhoofr( nfi, c0_bgrp, irb, eigrb, bec_bgrp, dbec, &
-                     becsum, rhor, drhor, rhog, drhog, rhos, enl, denl, ekin, dekin6 )
+     CALL rhoofr( nfi, c0_bgrp, irb, eigrb, bec_bgrp, dbec, becsum, rhor, &
+                  drhor, rhog, drhog, rhos, enl, denl, ekin, dekin6 )
+!=================================================================
+!Lingzhu Kong
+     IF ( lwfpbe0 .or. lwfpbe0nscf ) THEN
+        call start_clock('exact_exchange')
+        IF(lwfpbe0)THEN
+           CALL exx_gs(nfi, c0_bgrp)
+        ENDIF
+        IF(lwfpbe0nscf)THEN
+           CALL exx_es(nfi, c0_bgrp, cv0)
+        ENDIF
+        call stop_clock('exact_exchange')
+     END IF
+
+!=================================================================
      !
      ! ... put core charge (if present) in rhoc(r)
      !

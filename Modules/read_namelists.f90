@@ -545,22 +545,6 @@ MODULE read_namelists_module
        pot_extrapolation = 'atomic'
        wfc_extrapolation = 'none'
        !
-       !
-       ! ... defaults for "path" optimisations variables
-       !
-!       num_of_images  = 0
-!       first_last_opt = .FALSE.
-!       use_masses     = .FALSE.
-!       use_freezing   = .FALSE.
-!       opt_scheme     = 'quick-min'
-!       temp_req       = 0.0_DP
-!       ds             = 1.0_DP
-!       path_thr       = 0.05_DP
-!       CI_scheme      = 'no-CI'
-!       k_max          = 0.1_DP
-!       k_min          = 0.1_DP
-!       fixed_tan      = .FALSE.
-       !
        ! ... BFGS defaults
        !
        bfgs_ndim        = 1
@@ -704,6 +688,15 @@ MODULE read_namelists_module
        maxwfdt     = 0.30_DP
        wf_q        = 1500.0_DP
        wf_friction = 0.3_DP
+!=======================================================================
+!Lingzhu Kong
+       neigh       = 48
+       vnbsp       = 0
+       poisson_eps = 1.D-6
+       dis_cutoff  = 7.0_DP
+       exx_ps_rcut = 5.0
+       exx_me_rcut = 10.0
+!=======================================================================
        !
        nit    = 10
        nsd    = 10
@@ -1128,21 +1121,6 @@ MODULE read_namelists_module
        CALL mp_bcast( pot_extrapolation, ionode_id )
        CALL mp_bcast( wfc_extrapolation, ionode_id )
        !
-       ! ... "path" variables broadcast
-       !
-!       CALL mp_bcast( num_of_images,      ionode_id )
-!       CALL mp_bcast( first_last_opt,     ionode_id )
-!       CALL mp_bcast( use_masses,         ionode_id )
-!       CALL mp_bcast( use_freezing,       ionode_id )
-!       CALL mp_bcast( fixed_tan,          ionode_id )
-!       CALL mp_bcast( CI_scheme,          ionode_id )
-!       CALL mp_bcast( opt_scheme,         ionode_id )
-!       CALL mp_bcast( temp_req,           ionode_id )
-!       CALL mp_bcast( ds,                 ionode_id )
-!       CALL mp_bcast( k_max,              ionode_id )
-!       CALL mp_bcast( k_min,              ionode_id )
-!       CALL mp_bcast( path_thr,           ionode_id )
-       !
        ! ... BFGS
        !
        CALL mp_bcast( bfgs_ndim,        ionode_id )
@@ -1163,7 +1141,6 @@ MODULE read_namelists_module
        RETURN
        !
      END SUBROUTINE
-     !
      !
      !=----------------------------------------------------------------------=!
      !
@@ -1267,6 +1244,15 @@ MODULE read_namelists_module
        CALL mp_bcast( efz1,        ionode_id )
        CALL mp_bcast( wfsd,        ionode_id )
        CALL mp_bcast( wfdt,        ionode_id )
+!=================================================================
+!Lingzhu Kong
+       CALL mp_bcast( neigh,       ionode_id )
+       CALL mp_bcast( poisson_eps, ionode_id )
+       CALL mp_bcast( dis_cutoff,  ionode_id )
+       CALL mp_bcast( exx_ps_rcut, ionode_id )
+       CALL mp_bcast( exx_me_rcut, ionode_id )
+       CALL mp_bcast( vnbsp,       ionode_id )
+!=================================================================
        CALL mp_bcast( maxwfdt,     ionode_id )
        CALL mp_bcast( wf_q,        ionode_id )
        CALL mp_bcast( wf_friction, ionode_id )
@@ -1414,12 +1400,7 @@ MODULE read_namelists_module
 #endif
        !
        !
-       IF( ibrav < 0 .OR. ibrav > 14 ) THEN
-          IF ( ibrav /= -12 .AND. ibrav /= -5 ) &
-             CALL errore( sub_name ,' ibrav out of range ', MAX( 1, ibrav) )
-       END IF
-       !
-       IF( ( ibrav /= 0 ) .AND. ( celldm(1) == 0.0_DP ) .AND. ( a == 0.0_DP ) ) &
+       IF( ( ibrav /= 0 ) .AND. (celldm(1) == 0.0_DP) .AND. ( a == 0.0_DP ) ) &
            CALL errore( ' iosys ', &
                       & ' invalid lattice parameters ( celldm or a )', 1 )
        !
@@ -1614,13 +1595,6 @@ MODULE read_namelists_module
        IF( ion_maxstep < 0 ) &
           CALL errore( sub_name,' ion_maxstep out of range ',1)
        !
-       ! ... general "path" variables checkin
-       !
-       !
-!       full_phs_path_flag = .FALSE.
-!       cg_phs_path_flag   = .FALSE.
-       !
-       !
        IF (sic /= 'none' .and. sic_rloc == 0.0_DP) &
           CALL errore( sub_name, ' invalid sic_rloc with sic activated ', 1 )
        !
@@ -1758,6 +1732,18 @@ MODULE read_namelists_module
              IF ( prog == 'PW' ) &
                 CALL errore( sub_name, ' calculation ' // &
                            & TRIM( calculation ) // ' not implemented ', 1 )
+!=========================================================================
+!Lingzhu Kong
+          CASE ( 'cp-wf-nscf','cp-wf-pbe0','pbe0-nscf' )
+             IF( prog == 'CP' ) THEN
+                occupations       = 'bogus'
+                electron_dynamics = 'damp'
+                ion_dynamics      = 'damp'
+             END IF
+             IF ( prog == 'PW' ) &
+                CALL errore( sub_name, ' calculation ' // &
+                           & TRIM( calculation ) // ' not implemented ', 1 )
+!=========================================================================
           CASE ('relax')
              IF( prog == 'CP' ) THEN
                 electron_dynamics = 'damp'
@@ -1789,27 +1775,7 @@ MODULE read_namelists_module
              ELSE IF( prog == 'PW' ) THEN
                 ion_dynamics = 'beeman'
              END IF
-!          CASE ( 'neb' )
              !
-             ! ... "path" optimizations
-             !
-!             IF( prog == 'CP' ) THEN
-                !
-!                electron_dynamics = 'damp'
-!                ion_dynamics      = 'none'
-!                cell_dynamics     = 'none'
-                !
-!             END IF
-             !
-!          CASE ( 'smd' )
-             !
-!             IF( prog == 'CP' ) THEN
-!                !
-!                electron_dynamics = 'damp'
-!                ion_dynamics      = 'damp'
-!                !
-!             END IF
-!             !
           CASE DEFAULT
              !
              CALL errore( sub_name,' calculation '// &
@@ -1890,7 +1856,7 @@ MODULE read_namelists_module
        !
        IF(PRESENT(unit)) unit_loc = unit
        !
-       IF( prog /= 'PW' .AND. prog /= 'CP' .AND. prog /= 'SM' ) &
+       IF( prog /= 'PW' .AND. prog /= 'CP' ) &
           CALL errore( ' read_namelists ', ' unknown calling program ', 1 )
        !
        ! ... default settings for all namelists
@@ -1906,9 +1872,6 @@ MODULE read_namelists_module
 #endif
          CALL ee_defaults( prog )
        ENDIF
-!       IF( prog == 'SM') THEN
-!         CALL path_defaults()
-!       ENDIF
        !
        ! ... Here start reading standard input file
        !
@@ -1978,7 +1941,10 @@ MODULE read_namelists_module
                TRIM( calculation ) == 'cp'       .OR. &
                TRIM( calculation ) == 'vc-cp'    .OR. &
                TRIM( calculation ) == 'smd'      .OR. &
-               TRIM( calculation ) == 'cp-wf') READ( 5, ions, iostat = ios )
+               TRIM( calculation ) == 'cp-wf-nscf' .OR. &   !Lingzhu Kong
+               TRIM( calculation ) == 'cp-wf-pbe0' .OR. &   !Lingzhu Kong
+               TRIM( calculation ) == 'pbe0-nscf'  .OR. &   !Lingzhu Kong
+               TRIM( calculation ) == 'cp-wf' ) READ( 5, ions, iostat = ios )
   
        END IF
        CALL mp_bcast( ios, ionode_id )
@@ -2053,7 +2019,10 @@ MODULE read_namelists_module
        CALL wannier_defaults( prog )
        ios = 0
        IF( ionode ) THEN
-          IF( TRIM( calculation ) == 'cp-wf' ) THEN
+          IF( TRIM( calculation ) == 'cp-wf'       .OR. & ! Lingzhu Kong
+              TRIM( calculation ) == 'cp-wf-nscf'  .OR. & ! Lingzhu Kong
+              TRIM( calculation ) == 'cp-wf-pbe0'  .OR. & ! Lingzhu Kong
+              TRIM( calculation ) == 'pbe0-nscf' ) THEN   ! Lingzhu Kong
              READ( unit_loc, wannier, iostat = ios )
           END IF
        END IF
@@ -2085,10 +2054,6 @@ MODULE read_namelists_module
        CALL wannier_ac_checkin( prog )
        !
        ENDIF
-       !
-!       IF (prog == 'SM') THEN
-!         CALL path_read_namelist(5)
-!       ENDIF
        !
        RETURN
        !
