@@ -387,8 +387,6 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
               usrt_tau0(:,:) = tau0(:,ind_bck(:))
               usrt_fion(:,:) = fion(:,ind_bck(:))
               !
-!              IF ( lcoarsegrained ) CALL set_target()
-              !
               ! ... we first remove the component of the force along the 
               ! ... constrain gradient (this constitutes the initial guess 
               ! ... for the lagrange multiplier)
@@ -428,10 +426,6 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
               !
               taup(:,:) = usrt_taup(:,ind_srt(:))
               fion(:,:) = usrt_fion(:,ind_srt(:))
-              !
-              ! ... average value of the lagrange multipliers
-              !
-!              IF ( lcoarsegrained ) CALL mean_force( nfi, etot, 1.D0 )
               !
               DEALLOCATE( usrt_tau0, usrt_taup, usrt_fion )
               !

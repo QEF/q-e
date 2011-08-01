@@ -14,13 +14,10 @@ SUBROUTINE stop_run( flag )
   !
   USE io_global,          ONLY : stdout, ionode
   USE control_flags,      ONLY : lpath, lconstrain, program_name
-!  USE control_flags,      ONLY : lcoarsegrained
   USE io_files,           ONLY : prefix
   USE environment,        ONLY : environment_end
-!  USE path_variables_pre,     ONLY : path_deallocation
   USE image_io_routines,   ONLY : io_image_stop
   USE constraints_module, ONLY : deallocate_constraint
-!  USE metadyn_vars,       ONLY : deallocate_metadyn_vars
   USE mp_global,          ONLY : mp_global_end
   !
   IMPLICIT NONE
