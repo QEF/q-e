@@ -354,116 +354,94 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 	var ibrav -type INTEGER {
 	    status { REQUIRED }
 	    info {
-                Bravais-lattice index:
-              
-                  ibrav        structure                   celldm(2)-celldm(6)
-              
-                    0          "free", see above                 not used
-                    1          cubic P (sc)                      not used
-                    2          cubic F (fcc)                     not used
-                    3          cubic I (bcc)                     not used
-                    4          Hexagonal and Trigonal P        celldm(3)=c/a
-                    5          Trigonal R, 3fold axis c        celldm(4)=cos(alpha)
-                   -5          Trigonal R, 3fold axis <111>    celldm(4)=cos(alpha)
-                    6          Tetragonal P (st)               celldm(3)=c/a
-                    7          Tetragonal I (bct)              celldm(3)=c/a
-                    8          Orthorhombic P                  celldm(2)=b/a,celldm(3)=c/a
-                    9          Orthorhombic base-centered(bco) celldm(2)=b/a,celldm(3)=c/a
-                   10          Orthorhombic face-centered      celldm(2)=b/a,celldm(3)=c/a
-                   11          Orthorhombic body-centered      celldm(2)=b/a,celldm(3)=c/a
-                   12          Monoclinic P, unique axis c     celldm(2)=b/a,celldm(3)=c/a,
-                                                               celldm(4)=cos(ab)
-                  -12          Monoclinic P, unique axis b     celldm(2)=b/a,celldm(3)=c/a,
-                                                               celldm(5)=cos(ac)
-                   13          Monoclinic base-centered        celldm(2)=b/a,celldm(3)=c/a,
-                                                               celldm(4)=cos(ab)
-                   14          Triclinic                       celldm(2)= b/a,
-                                                               celldm(3)= c/a,
-                                                               celldm(4)= cos(bc),
-                                                               celldm(5)= cos(ac),
-                                                               celldm(6)= cos(ab)
-              
-                For P lattices: the special (or unique) axis (c) is the z-axis, one basal-plane
-                vector (a) is along x, the other basal-plane vector (b) is at angle
-                gamma for monoclinic, at 120 degrees for trigonal and hexagonal
-                lattices, at 90 degrees for cubic, tetragonal, orthorhombic lattices
-                Alternate choice (more commonly used in crystallography) for monoclinic:
-                axis b is unique (orthogonal to a); axis c forms angle beta with axis a.
-              
-                sc simple cubic
-                ====================
-                v1 = a(1,0,0),  v2 = a(0,1,0),  v3 = a(0,0,1)
-              
-                fcc face centered cubic
-                ====================
-                v1 = (a/2)(-1,0,1),  v2 = (a/2)(0,1,1), v3 = (a/2)(-1,1,0).
-              
-                bcc body entered cubic
-                ====================
-                v1 = (a/2)(1,1,1),  v2 = (a/2)(-1,1,1),  v3 = (a/2)(-1,-1,1).
-              
-                simple hexagonal and trigonal(p)
-                ====================
-                v1 = a(1,0,0),  v2 = a(-1/2,sqrt(3)/2,0),  v3 = a(0,0,c/a).
-              
-                trigonal(r)
-                ===================
-                ibrav=5: The z-axis is chosen as the 3-fold axis, the crystallographic
-                vectors form a three-fold star around the z-axis, the primitive cell 
-                is a simple rhombohedron. The crystallographic vectors are:
-                      v1 = a(tx,-ty,tz),   v2 = a(0,2ty,tz),   v3 = a(-tx,-ty,tz).
-                where c=cos(alpha) is the cosine of the angle alpha between any pair
-                of crystallographic vectors, tc, ty, tz are defined as
+                Bravais-lattice index. In all cases except ibrav=0,
+                either [celldm(1)-celldm(6)] or [a,b,c,cosab,cosac,cosbc]
+                must be specified: see their description. For ibrav=0
+                you may specify the lattice parameter celldm(1) or a.
+ 
+              ibrav      structure                   celldm(2)-celldm(6)
+                                                   or: b,c,cosab,cosac,cosbc 
+                0          free 
+                    crystal axis provided in input: see card CELL_PARAMETERS
+
+                1          cubic P (sc) 
+                    v1 = a(1,0,0),  v2 = a(0,1,0),  v3 = a(0,0,1)
+
+                2          cubic F (fcc)
+                    v1 = (a/2)(-1,0,1),  v2 = (a/2)(0,1,1), v3 = (a/2)(-1,1,0)
+
+                3          cubic I (bcc)
+                    v1 = (a/2)(1,1,1),  v2 = (a/2)(-1,1,1),  v3 = (a/2)(-1,-1,1)
+
+                4          Hexagonal and Trigonal P        celldm(3)=c/a
+                    v1 = a(1,0,0),  v2 = a(-1/2,sqrt(3)/2,0),  v3 = a(0,0,c/a)
+
+                5          Trigonal R, 3fold axis c        celldm(4)=cos(alpha)
+                    The crystallographic vectors form a three-fold star around 
+                    the z-axis, the primitive cell is a simple rhombohedron:
+                    v1 = a(tx,-ty,tz),   v2 = a(0,2ty,tz),   v3 = a(-tx,-ty,tz)
+                    where c=cos(alpha) is the cosine of the angle alpha between
+                    any pair of crystallographic vectors, tx, ty, tz are:
                       tx=sqrt((1-c)/2), ty=sqrt((1-c)/6), tz=sqrt((1+2c)/3)
-                ibrav=-5, alternate description: the crystallographic vectors are
-                      v1 = a/sqrt(3) (u,v,v), v2 = a/sqrt(3) (v,u,v),  v3 = a/sqrt(3) (v,v,u)
-                and form a three-fold star around <111>. u and v are defined as
+               -5          Trigonal R, 3fold axis <111>    celldm(4)=cos(alpha)
+                    The crystallographic vectors form a three-fold star around 
+                    <111>. Defining a' = a/sqrt(3) :
+                    v1 = a' (u,v,v),   v2 = a' (v,u,v),   v3 = a' (v,v,u)
+                    where u and v are defined as
                       u = tz - 2*sqrt(2)*ty,  v = tz + sqrt(2)*ty
+                    and tx, ty, tz as for case ibrav=5
               
-                simple tetragonal (p)
-                ====================
-                   v1 = a(1,0,0),  v2 = a(0,1,0),  v3 = a(0,0,c/a)
-              
-                body centered tetragonal (i)
-                ================================
-                   v1 = (a/2)(1,-1,c/a),  v2 = (a/2)(1,1,c/a),  v3 = (a/2)(-1,-1,c/a).
-              
-                simple orthorhombic (p)
-                =============================
-                   v1 = (a,0,0),  v2 = (0,b,0), v3 = (0,0,c)
-              
-                bco base centered orthorhombic
-                =============================
-                   v1 = (a/2,b/2,0),  v2 = (-a/2,b/2,0),  v3 = (0,0,c)
-              
-                face centered orthorhombic
-                =============================
-                   v1 = (a/2,0,c/2),  v2 = (a/2,b/2,0),  v3 = (0,b/2,c/2)
-              
-                body centered orthorhombic
-                =============================
-                   v1 = (a/2,b/2,c/2),  v2 = (-a/2,b/2,c/2),  v3 = (-a/2,-b/2,c/2)
-              
-                monoclinic (p)
-                =============================
-		   v1 = (a,0,0), v2= (b*cos(gamma), b*sin(gamma), 0),  v3 = (0,0,c)
-                (unique axis c) where gamma is the angle between axis a and b. 
-                Alternate choice (ibrav=-12) uses b as unique axis:
-		   v1 = (a,0,0), v2 = (0,b,0), v3 = (a*sin(beta),0,c*cos(beta))
-                where beta is the angle between axis a and c
-              
-                base centered monoclinic
-                =============================
-                   v1 = (  a/2,         0,                -c/2),
-                   v2 = (b*cos(gamma), b*sin(gamma), 0),
-                   v3 = (  a/2,         0,                  c/2),
-                where gamma is the angle between axis a and b
-              
-                triclinic
-                =============================
-                   v1 = (a, 0, 0),
-                   v2 = (b*cos(gamma), b*sin(gamma), 0)
-                   v3 = (c*cos(beta),  c*(cos(alpha)-cos(beta)cos(gamma))/sin(gamma),
+                6          Tetragonal P (st)               celldm(3)=c/a
+                    v1 = a(1,0,0),  v2 = a(0,1,0),  v3 = a(0,0,c/a)
+
+                7          Tetragonal I (bct)              celldm(3)=c/a
+                    v1=(a/2)(1,-1,c/a),  v2=(a/2)(1,1,c/a),  v3=(a/2)(-1,-1,c/a)
+
+                8          Orthorhombic P                  celldm(2)=b/a
+                                                           celldm(3)=c/a
+                    v1 = (a,0,0),  v2 = (0,b,0), v3 = (0,0,c)
+
+                9          Orthorhombic base-centered(bco) celldm(2)=b/a
+                                                           celldm(3)=c/a
+                    v1 = (a/2, b/2,0),  v2 = (-a/2,b/2,0),  v3 = (0,0,c)
+               -9          as 9, alternate description
+                    v1 = (a/2,-b/2,0),  v2 = (a/2,-b/2,0),  v3 = (0,0,c)
+
+               10          Orthorhombic face-centered      celldm(2)=b/a
+                                                           celldm(3)=c/a
+                    v1 = (a/2,0,c/2),  v2 = (a/2,b/2,0),  v3 = (0,b/2,c/2)
+
+               11          Orthorhombic body-centered      celldm(2)=b/a
+                                                           celldm(3)=c/a
+                    v1=(a/2,b/2,c/2),  v2=(-a/2,b/2,c/2),  v3=(-a/2,-b/2,c/2)
+
+               12          Monoclinic P, unique axis c     celldm(2)=b/a
+                                                           celldm(3)=c/a,
+                                                           celldm(4)=cos(ab)
+		    v1=(a,0,0), v2=(b*cos(gamma),b*sin(gamma),0),  v3 = (0,0,c)
+                    where gamma is the angle between axis a and b. 
+              -12          Monoclinic P, unique axis b     celldm(2)=b/a
+                                                           celldm(3)=c/a,
+                                                           celldm(5)=cos(ac)
+		    v1 = (a,0,0), v2 = (0,b,0), v3 = (a*sin(beta),0,c*cos(beta))
+                    where beta is the angle between axis a and c
+
+               13          Monoclinic base-centered        celldm(2)=b/a
+                                                           celldm(3)=c/a,
+                                                           celldm(4)=cos(ab)
+                    v1 = (  a/2,         0,                -c/2),
+                    v2 = (b*cos(gamma), b*sin(gamma), 0),
+                    v3 = (  a/2,         0,                  c/2),
+                    where gamma is the angle between axis a and b
+
+               14          Triclinic                       celldm(2)= b/a,
+                                                           celldm(3)= c/a,
+                                                           celldm(4)= cos(bc),
+                                                           celldm(5)= cos(ac),
+                                                           celldm(6)= cos(ab)
+                    v1 = (a, 0, 0),
+                    v2 = (b*cos(gamma), b*sin(gamma), 0)
+                    v3 = (c*cos(beta),  c*(cos(alpha)-cos(beta)cos(gamma))/sin(gamma),
                          c*sqrt( 1 + 2*cos(alpha)cos(beta)cos(gamma)
                                    - cos(alpha)^2-cos(beta)^2-cos(gamma)^2 )/sin(gamma) )
                 where alpha is the angle between axis b and c
