@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2005 FPMD-CPV groups
+! Copyright (C) 2002-2011 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -32,13 +32,14 @@
       USE electrons_module,  ONLY : print_eigenvalues
       USE pres_ai_mod,      ONLY : P_ext, Surf_t, volclu, surfclu, abivol, &
                                    abisur, pvar, n_ele
-
       USE xml_io_base,       ONLY : save_print_counter
       USE cp_main_variables, ONLY : nprint_nfi, iprint_stdout
       USE io_files,          ONLY : tmp_dir
       USE control_flags,     ONLY : ndw, tdipole
       USE polarization,      ONLY : print_dipole
       USE io_global,         ONLY : ionode, ionode_id, stdout
+      USE control_flags,     ONLY : lwfpbe0, lwfpbe0nscf  ! Lingzhu Kong
+      USE energies,          ONLY : exx  ! Lingzhu Kong
       !
       IMPLICIT NONE
       !
@@ -255,7 +256,14 @@
       IF( ( MOD( nfi, iprint_stdout ) == 0 ) .OR. tfirst )  THEN
          !
          WRITE( stdout, * )
-         WRITE( stdout, 1947 )
+!======================================================
+!Lingzhu Kong
+         IF(lwfpbe0 .or. lwfpbe0nscf)THEN
+           WRITE( stdout, 19470 )
+         ELSE
+          WRITE( stdout, 1947)
+         END IF
+!======================================================
          IF ( abivol .AND. pvar ) write(stdout,*) 'P = ', P_ext*au_gpa
          !
       END IF
@@ -275,8 +283,17 @@
 
       IF( .not. tcg ) THEN
          !
-         WRITE( stdout, 1948 ) nfi, ekinc, temphc, tempp, etot, enthal, econs, &
-                            econt, vnhh(3,3), xnhh0(3,3), vnhp(1),  xnhp0(1)
+!===================================================================
+!Lingzhu Kong
+         IF( lwfpbe0 .or. lwfpbe0nscf ) THEN
+            WRITE( stdout, 19480 ) nfi, ekinc, temphc, tempp, -exx*0.25, &
+                                  etot-exx*0.25, enthal, econs, econt,   &
+                                  vnhh(3,3), xnhh0(3,3), vnhp(1),  xnhp0(1)
+         ELSE
+            WRITE( stdout, 1948 ) nfi, ekinc, temphc, tempp, etot, enthal, &
+                      econs, econt, vnhh(3,3), xnhh0(3,3), vnhp(1),  xnhp0(1)
+         END IF
+!===================================================================
       ELSE
          IF ( MOD( nfi, iprint ) == 0 .OR. tfirst ) THEN
             !
@@ -306,6 +323,13 @@
 1947  FORMAT( 2X,'nfi',4X,'ekinc',2X,'temph',2X,'tempp',8X,'etot',6X,'enthal', &
            & 7X,'econs',7X,'econt',4X,'vnhh',3X,'xnhh0',4X,'vnhp',3X,'xnhp0' )
 1948  FORMAT( I5,1X,F8.5,1X,F6.1,1X,F6.1,4(1X,F11.5),4(1X,F7.4) )
+!===============================================================================
+!Lingzhu Kong
+19470 FORMAT( 2X,'nfi',4X,'ekinc',2X,'temph',2X,'tempp',8X,'exx', 8X,'etot', &
+              6X,'enthal',7X,'econs',7X,'econt',4X,'vnhh',3X,'xnhh0',4X, &
+              'vnhp',3X,'xnhp0')
+19480  FORMAT( I6,1X,F8.5,1X,F6.1,1X,F6.1,5(1X,F11.5),4(1X,F7.4) )
+!===============================================================================
 2948  FORMAT( I6,1X,F8.5,1X,F6.1,1X,F6.1,4(1X,F11.5),F10.2, F8.2, F8.5 )
 2949  FORMAT( I6,1X,4(1X,F7.4), F8.5 )
       !

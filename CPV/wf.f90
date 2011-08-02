@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2005 Quantum ESPRESSO group
+! Copyright (C) 2002-2011 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -559,7 +559,7 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
      IF(nspin.EQ.1) THEN
         IF(.NOT.what1) THEN
            IF(wfsd==1) THEN
-              CALL ddyn(nbsp,O,Uall,b1,b2,b3)
+              CALL ddyn_u(nbsp,O,Uall) ! Lingzhu Kong
            ELSE IF(wfsd==2) THEN
               CALL wfsteep(nbsp,O,Uall,b1,b2,b3)
            ELSE IF(wfsd==3) THEN
@@ -579,7 +579,7 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
         END DO
         IF(.NOT.what1) THEN
            IF(wfsd==1) THEN
-             CALL ddyn(nupdwn(1), Ospin, Uspin,b1,b2,b3)
+             CALL ddyn_u(nupdwn(1), Ospin, Uspin) ! Lingzhu Kong
            ELSE IF (wfsd==2) THEN
              CALL wfsteep(nupdwn(1), Ospin, Uspin,b1,b2,b3)
            ELSE
@@ -602,7 +602,7 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
         END DO
         IF(.NOT.what1) THEN
            IF(wfsd==1) THEN
-              CALL ddyn(nupdwn(2), Ospin, Uspin,b1,b2,b3)
+              CALL ddyn_u(nupdwn(2), Ospin, Uspin) ! Lingzhu Kong
            ELSE IF (wfsd==2) THEN
               CALL wfsteep(nupdwn(2), Ospin, Uspin,b1,b2,b3)
            ELSE
@@ -843,7 +843,7 @@ SUBROUTINE ddyn( m, Omat, Umat, b1, b2, b3 )
 
      IF(ABS(t0-oldt0).LT.tolw) THEN
         IF(me.EQ.1) THEN
-           WRITE(27,*) "MLWF Generated at Step",ini
+           WRITE(*,*) "MLWF Generated at Step",ini ! Lingzhu Kong
         END IF
         IF(iprsta.GT.4) THEN
            WRITE( stdout, * ) "MLWF Generated at Step",ini
@@ -950,7 +950,7 @@ SUBROUTINE ddyn( m, Omat, Umat, b1, b2, b3 )
 
      IF(ABS(t0-oldt0).GE.tolw.AND.ini.GE.nsteps) THEN
         IF(me.EQ.1) THEN
-           WRITE(27,*) "MLWF Not generated after",ini,"Steps." 
+           WRITE(*,*) "MLWF Not generated after",ini,"Steps." ! Lingzhu Kong
         END IF
         IF(iprsta.GT.4) THEN
            WRITE( stdout, * ) "MLWF Not generated after",ini,"Steps." 
@@ -966,10 +966,10 @@ SUBROUTINE ddyn( m, Omat, Umat, b1, b2, b3 )
 
   spread=0.0d0
 
-  IF(me.EQ.1) THEN
+!  IF(me.EQ.1) THEN ! Lingzhu Kong
      iunit = printout_base_unit( "spr" )
      CALL printout_base_open( "spr" )
-  END IF
+!  END IF ! Lingzhu Kong
 
   DO i=1, m
      !
@@ -1162,9 +1162,6 @@ SUBROUTINE wfunc_init( clwf, b1, b2, b3, ibrav )
            IF(gstart.EQ.2) THEN
               indexminusz(1)=-1
            END IF
-           !           ti=(gnn(1,ig)+i_1(inw))*b1(1)+(gnn(2,ig)+j_1(inw))*b2(1)+(gnn(3,ig)+k_1(inw))*b3(1)
-           !           tj=(gnn(1,ig)+i_1(inw))*b1(2)+(gnn(2,ig)+j_1(inw))*b2(2)+(gnn(3,ig)+k_1(inw))*b3(2)
-           !           tk=(gnn(1,ig)+i_1(inw))*b1(3)+(gnn(2,ig)+j_1(inw))*b2(3)+(gnn(3,ig)+k_1(inw))*b3(3)
            ti=(gnn(1,ig)+i_1(inw))
            tj=(gnn(2,ig)+j_1(inw))
            tk=(gnn(3,ig)+k_1(inw))
@@ -1173,20 +1170,12 @@ SUBROUTINE wfunc_init( clwf, b1, b2, b3, ibrav )
               err2=ABS(gnx(2,ii)-tj)
               err3=ABS(gnx(3,ii)-tk)
               IF(gnn(1,ii).EQ.ti.AND.gnn(2,ii).EQ.tj.AND.gnn(3,ii).EQ.tk) THEN
-                 !             if(err1.lt.vt.and.err2.lt.vt.and.err3.lt.vt) then
                  indexplusz(ig)=ii
-                 !               write (6,*) "Found +", ig,ii,inw, ti,tj,tk
-                 !               write (6,*) "looking for", ti,tj,tk
                  GO TO 224
               ELSE
               END IF
            END DO
            indexplusz(ig)=-1
-           !                write (6,*) "Not Found +", ig,-1,inw
-           !               write (6,*) "looking for", ti,tj,tk
-           !224        ti=(-gnn(1,ig)+i_1(inw))*b1(1)+(-gnn(2,ig)+j_1(inw))*b2(1)+(-gnn(3,ig)+k_1(inw))*b3(1)
-           !           tj=(-gnn(1,ig)+i_1(inw))*b1(2)+(-gnn(2,ig)+j_1(inw))*b2(2)+(-gnn(3,ig)+k_1(inw))*b3(2)
-           !           tk=(-gnn(1,ig)+i_1(inw))*b1(3)+(-gnn(2,ig)+j_1(inw))*b2(3)+(-gnn(3,ig)+k_1(inw))*b3(3)
 224        ti=(-gnn(1,ig)+i_1(inw))
            tj=(-gnn(2,ig)+j_1(inw))
            tk=(-gnn(3,ig)+k_1(inw))
@@ -1199,38 +1188,24 @@ SUBROUTINE wfunc_init( clwf, b1, b2, b3, ibrav )
                  err2=ABS(gnx(2,ii)+tj)
                  err3=ABS(gnx(3,ii)+tk)
                  IF(gnn(1,ii).EQ.-ti.AND.gnn(2,ii).EQ.-tj.AND.gnn(3,ii).EQ.-tk) THEN
-                    !                    if(err1.lt.vt.and.err2.lt.vt.and.err3.lt.vt) then
                     indexminusz(ig)=ii
-                    !                     tag(ig,inw)=1
-                    !                     write (6,*) "Found -", ig,ii,inw
-                    !               write (6,*) "looking for", -ti,-tj,-tk
                     GO TO 223
                  ELSE
                  END IF
               END DO
               indexminusz(ig)=-1
-              !                tag(ig,inw)=1
-              !                write (6,*) "Not Found -", ig,-1,inw
-              !               write (6,*) "looking for", -ti,-tj,-tk
            ELSE
               DO ii=1,ngw
                  err1=ABS(gnx(1,ii)-ti)
                  err2=ABS(gnx(2,ii)-tj)
                  err3=ABS(gnx(3,ii)-tk)
                  IF(gnn(1,ii).EQ.ti.AND.gnn(2,ii).EQ.tj.AND.gnn(3,ii).EQ.tk) THEN
-                    !                  if(err1.lt.vt.and.err2.lt.vt.and.err3.lt.vt) then
                     indexminusz(ig)=ii
-                    !                   tag(ig,inw)=-1
-                    !                   write (6,*) "Found -", ig,ii,inw
-                    !               write (6,*) "looking for", ti,tj,tk
                     GO TO 223
                  ELSE
                  END IF
               END DO
               indexminusz(ig)=-1
-              !              tag(ig,inw)=-1
-              !              write (6,*) "Not Found -", ig,-1,inw
-              !               write (6,*) "looking for", ti,tj,tk
            END IF
 223        CONTINUE
         END DO
@@ -1243,9 +1218,6 @@ SUBROUTINE wfunc_init( clwf, b1, b2, b3, ibrav )
               IF(gstart.EQ.2) THEN
                  indexminus(1,inw)=-1
               END IF
-              !           ti=(bign(1,ig)+i_1(inw))*b1(1)+(bign(2,ig)+j_1(inw))*b2(1)+(bign(3,ig)+k_1(inw))*b3(1)
-              !           tj=(bign(1,ig)+i_1(inw))*b1(2)+(bign(2,ig)+j_1(inw))*b2(2)+(bign(3,ig)+k_1(inw))*b3(2)
-              !           tk=(bign(1,ig)+i_1(inw))*b1(3)+(bign(2,ig)+j_1(inw))*b2(3)+(bign(3,ig)+k_1(inw))*b3(3)
               ti=(bign(1,ig)+i_1(inw))
               tj=(bign(2,ig)+j_1(inw))
               tk=(bign(3,ig)+k_1(inw))
@@ -1269,31 +1241,21 @@ SUBROUTINE wfunc_init( clwf, b1, b2, b3, ibrav )
                  END DO
                  indexplus(ig,inw)=-1
                  tagp(ig,inw)=1
-                 !          write (6,*) "Not Found +", ig,-1,inw 
-                 !               write (6,*) "looking for", -ti,-tj,-tk
               ELSE
                  DO ii=1,ntot
                     err1=ABS(bigg(1,ii)-ti)
                     err2=ABS(bigg(2,ii)-tj)
                     err3=ABS(bigg(3,ii)-tk)
-                    !              if(err1.lt.vt.and.err2.lt.vt.and.err3.lt.vt) then
                     IF(bign(1,ii).EQ.ti.AND.bign(2,ii).EQ.tj.AND.bign(3,ii).EQ.tk) THEN
                        indexplus(ig,inw)=ii
                        tagp(ig,inw)=-1
-                       !                write (6,*) "Found +", ig,ii,inw
-                       !               write (6,*) "looking for", ti,tj,tk
                        GO TO 214
                     ELSE
                     END IF
                  END DO
                  indexplus(ig,inw)=-1
                  tagp(ig,inw)=-1
-                 !          write (6,*) "Not Found +", ig,-1,inw
-                 !               write (6,*) "looking for", ti,tj,tk
               END IF
-              !214        ti=(-bign(1,ig)+i_1(inw))*b1(1)+(-bign(2,ig)+j_1(inw))*b2(1)+(-bign(3,ig)+k_1(inw))*b3(1)
-              !           tj=(-bign(1,ig)+i_1(inw))*b1(2)+(-bign(2,ig)+j_1(inw))*b2(2)+(-bign(3,ig)+k_1(inw))*b3(2)
-              !           tk=(-bign(1,ig)+i_1(inw))*b1(3)+(-bign(2,ig)+j_1(inw))*b2(3)+(-bign(3,ig)+k_1(inw))*b3(3)
 214           ti=(-bign(1,ig)+i_1(inw))
               tj=(-bign(2,ig)+j_1(inw))
               tk=(-bign(3,ig)+k_1(inw))
@@ -1305,39 +1267,29 @@ SUBROUTINE wfunc_init( clwf, b1, b2, b3, ibrav )
                     err1=ABS(bigg(1,ii)+ti)
                     err2=ABS(bigg(2,ii)+tj)
                     err3=ABS(bigg(3,ii)+tk)
-                    !                    if(err1.lt.vt.and.err2.lt.vt.and.err3.lt.vt) then
                     IF(bign(1,ii).EQ.-ti.AND.bign(2,ii).EQ.-tj.AND.bign(3,ii).EQ.-tk) THEN
                        indexminus(ig,inw)=ii
                        tag(ig,inw)=1
-                       !                     write (6,*) "Found -", ig,ii,inw 
-                       !               write (6,*) "looking for", -ti,-tj,-tk
                        GO TO 213
                     ELSE
                     END IF
                  END DO
                  indexminus(ig,inw)=-1
                  tag(ig,inw)=1
-                 !                write (6,*) "Not Found -", ig,-1,inw 
-                 !               write (6,*) "looking for", -ti,-tj,-tk
               ELSE 
                  DO ii=1,ntot
                     err1=ABS(bigg(1,ii)-ti)
                     err2=ABS(bigg(2,ii)-tj)
                     err3=ABS(bigg(3,ii)-tk)
-                    !                 if(err1.lt.vt.and.err2.lt.vt.and.err3.lt.vt) then
                     IF(bign(1,ii).EQ.ti.AND.bign(2,ii).EQ.tj.AND.bign(3,ii).EQ.tk) THEN
                        indexminus(ig,inw)=ii
                        tag(ig,inw)=-1
-                       !                   write (6,*) "Found -", ig,ii,inw 
-                       !               write (6,*) "looking for", ti,tj,tk
                        GO TO 213
                     ELSE
                     END IF
                  END DO
                  indexminus(ig,inw)=-1
                  tag(ig,inw)=-1
-                 !              write (6,*) "Not Found -", ig,-1,inw 
-                 !               write (6,*) "looking for", ti,tj,tk
               END IF
 213           CONTINUE
            END DO
@@ -2561,7 +2513,7 @@ SUBROUTINE wfsteep( m, Omat, Umat, b1, b2, b3 )
 
      IF(ABS(oldt1-t01).LT.tolw) THEN 
         IF(me.EQ.1) THEN
-           WRITE(27,*) "MLWF Generated at Step",k
+           WRITE(*,*) "MLWF Generated at Step",k ! Lingzhu Kong
         END IF
         IF(iprsta.GT.4) THEN
            WRITE( stdout, * ) "MLWF Generated at Step",k
@@ -2782,7 +2734,7 @@ SUBROUTINE wfsteep( m, Omat, Umat, b1, b2, b3 )
      U3=ZERO
      IF(ABS(t01-oldt1).GE.tolw.AND.k.GE.nit) THEN
         IF(me.EQ.1) THEN
-           WRITE(27,*) "MLWF Not generated after",k,"Steps."
+           WRITE(*,*) "MLWF Not generated after",k,"Steps." ! Lingzhu Kong
         END IF
         IF(iprsta.GT.4) THEN
            WRITE( stdout, * ) "MLWF Not generated after",k,"Steps."
@@ -3118,3 +3070,267 @@ SUBROUTINE jacobi_rotation( m, Omat, Umat, b1, b2, b3 )
   
   RETURN
 END SUBROUTINE jacobi_rotation
+!==============================================================================
+
+    SUBROUTINE ddyn_u(nbsp, O, U)
+
+! input: the overlap matrix O
+! ouput: the unitary transformation matrix U
+
+       USE kinds,            ONLY : DP
+       USE wannier_base,     ONLY : wf_friction, nsteps, tolw, adapt, wf_q, weight, nw, wfdt
+       USE cell_base,        ONLY : alat
+       USE constants,        ONLY : tpi, autoaf => BOHR_RADIUS_ANGS
+       USE parallel_include
+       USE mp_global,        ONLY : nproc_image, me_image, intra_image_comm
+       USE cp_main_variables, ONLY: distribute_lambda, descla, nlam, collect_lambda
+       USE printout_base,     ONLY : printout_base_open, printout_base_unit, printout_base_close
+
+       IMPLICIT NONE
+   
+       INTEGER ,      INTENT(in)    :: nbsp
+       REAL(DP),      INTENT(out)   :: U(nbsp,nbsp)
+       COMPLEX(DP),   INTENT(inout) :: O(nw,nbsp,nbsp)
+   
+       INTEGER                      :: ista(0:nproc_image-1),iend(0:nproc_image-1)
+       REAL(DP),    ALLOCATABLE,  DIMENSION(:,:) :: identy,Um,Up,U0,Ul,W,X2,X3,tmpr2,tmpi2, tmpr,tmpi
+       COMPLEX(DP), ALLOCATABLE,  DIMENSION(:, :, :) :: Oc, Ocold, Ol
+   
+       INTEGER  ::  i, j, inw, nmax, iter, iunit,ini, nr, nc, ir, ic, ierr
+       REAL(DP) :: t0, myt0, fric, t2(nw), mt(nw), oldt0,fric1,spread,sp, eps, wfdt2, fricp, fricm
+   
+       ALLOCATE(Oc(nbsp,nbsp, nw), Ocold(nbsp,nbsp,nw), Ol(nlam,nlam,nw))
+       ALLOCATE(Up(nlam,nlam), U0(nlam,nlam), Um(nlam,nlam), Ul(nlam,nlam),  X2(nbsp,nbsp), X3(nbsp,nbsp))
+       ALLOCATE(W(nlam,nlam), identy(nlam,nlam))
+       ALLOCATE(tmpr(nlam,nlam), tmpi(nlam,nlam), tmpr2(nlam,nlam), tmpi2(nlam,nlam))
+
+       IF(me_image.EQ.0) THEN
+          iunit = printout_base_unit( "spr" )
+          CALL printout_base_open( "spr" )
+       END IF
+
+       eps=1.0E-13_DP
+       nmax=50
+       fric=wf_friction
+       oldt0=0.D0
+      
+       nr = descla(1)%nr
+       nc = descla(1)%nc
+       ir = descla(1)%ir
+       ic = descla(1)%ic
+
+       do inw = 1, nw
+          X2(:,:) =  REAL(O(inw, :, :))
+          X3(:,:) = AIMAG(O(inw, :, :))
+     
+          call distribute_lambda(X2, tmpr, descla(1))
+          call distribute_lambda(X3, tmpi, descla(1))
+      
+          Oc(:,:,inw) = DCMPLX(X2,X3)
+          Ol(:,:,inw) = DCMPLX(tmpr,tmpi)
+       enddo
+      
+       Ocold = Oc
+      
+       X2=0.D0
+       DO i=1,nbsp
+          X2(i,i)=1.D0
+       END DO
+       call distribute_lambda(X2, identy, descla(1))
+    
+       Ul = identy
+    
+       call para_range(1, nbsp, nproc_image, ista, iend)
+
+       DO inw = 1,nw
+          t2(inw) = 2.D0 * weight(inw)
+       ENDDO
+    
+       U0 = identy            
+       Up = identy            
+
+       DO ini=1, nsteps
+    
+          Um = identy 
+          U0 = identy 
+   
+          fric1 = fric/(2*wfdt)  
+          wfdt2 = wfdt*wfdt/(wf_q*(1+fric1))
+          fricp = 2.d0/(1+fric1)
+          fricm = (1-fric1)/(1+fric1)
+    
+          DO j = 1, nc
+             DO i = 1, nr
+                W(i,j) = 0.D0
+                DO inw = 1, nw
+                   W(i,j) = W(i,j) + &
+                   t2(inw)*REAL((Ocold(i+ir-1,j+ic-1,inw)+Ocold(j+ic-1,i+ir-1,inw))*CONJG(Oc(j+ic-1,j+ic-1,inw)) )
+                ENDDO
+                Up(i,j)=fricp*U0(i,j)-fricm*Um(i,j)+wfdt2*W(i,j)   
+             END DO
+          END DO
+    
+          CALL ortho_u(Up,U0,nlam,identy,eps,nmax,nbsp)  
+          CALL sqr_mm_cannon( 'N', 'N', nbsp, 1.0d0, Ul, nlam, Up, nlam, 0.0d0, tmpr, nlam, descla(1))  
+          Ul = tmpr
+
+          Ocold = Oc
+          DO inw = 1, nw
+             tmpr(:,:)=REAL(Ol(:,:,inw))
+             tmpi(:,:)=AIMAG(Ol(:,:,inw))
+   
+             CALL sqr_mm_cannon( 'T', 'N', nbsp, 1.0d0, Ul, nlam, tmpr, nlam, 0.0d0, tmpr2, nlam, descla(1)) 
+             CALL sqr_mm_cannon( 'T', 'N', nbsp, 1.0d0, Ul, nlam, tmpi, nlam, 0.0d0, tmpi2, nlam, descla(1)) 
+             CALL sqr_mm_cannon( 'N', 'N', nbsp, 1.0d0, tmpr2, nlam, Ul, nlam, 0.0d0, tmpr, nlam, descla(1)) 
+             CALL sqr_mm_cannon( 'N', 'N', nbsp, 1.0d0, tmpi2, nlam, Ul, nlam, 0.0d0, tmpi, nlam, descla(1)) 
+   
+             call collect_lambda(X2, tmpr, descla(1) )
+             call collect_lambda(X3, tmpi, descla(1))
+   
+             Oc(:,:,inw)=CMPLX(X2,X3)
+          ENDDO
+   
+!======================================================================
+
+       myt0=0.D0
+       DO i = ista(me_image), iend(me_image)
+!      DO i = 1, nbsp
+          DO inw=1, nw
+             myt0=myt0+DBLE(CONJG(Oc( i, i, inw))*Oc( i, i, inw))
+          END DO
+       END DO
+
+       CALL MPI_ALLREDUCE(myt0, t0, 1, MPI_REAL8, MPI_SUM, intra_image_comm, ierr)
+!      t0 = myt0
+       if(mod(ini,10) == 0)print *, 'spread at ', ini, ' = ', t0
+       IF(ABS(t0-oldt0).LT.tolw) THEN
+         WRITE(*,*) "MLWF Generated at Step",ini
+         exit
+       ELSEIF(ini.GE.nsteps) THEN
+         WRITE(*,*) "MLWF Not generated after",ini,"Steps."
+       END IF
+
+       IF(oldt0 .GT. t0) fric=fric/2.D0
+
+       oldt0=t0
+
+     END DO !cycl for nsteps
+
+     spread=0.0d0
+     DO i=1, nbsp
+        mt=1.D0-DBLE(Oc(i,i,:)*CONJG(Oc(i,i,:)))
+        sp = (alat*autoaf/tpi)**2*SUM(mt*weight)
+        IF(me_image.EQ.0) WRITE(iunit, '(f10.7)') sp
+        print *, 'sp = ',i, sp
+        IF ( sp < 0.D0 ) &
+           CALL errore( 'cp-wf', 'Something wrong WF Spread negative', 1 )  
+        spread=spread+sp
+     END DO
+
+     IF(me_image.EQ.0) CALL printout_base_close( "spr" )
+
+     spread=spread/nbsp
+     IF(me_image.EQ.0) write(*,*) "Average spread = ", spread
+
+     call collect_lambda(U,Ul,descla(1))
+
+     do inw = 1, nw
+        O(inw,:,:) = Oc(:,:,inw)
+     enddo
+
+     DEALLOCATE(tmpr,tmpi,tmpr2,tmpi2,identy,Oc,Ocold,Up,U0,Um,W,Ol, Ul, X2, X3)
+
+     RETURN
+     END SUBROUTINE ddyn_u
+
+!-------------------------------------------------------------------------
+
+      SUBROUTINE  ortho_u(up,u0,nlam,identy,eps,nmax,nbsp)
+!-----------------------------------------------------------------------
+!     input = up (non-unitary), u0 (must be unitary)
+!     output = up (unitary),
+!     the method used is similar (same) to the ortho (les houches 1988)
+!      x^t x + b x + x^t b^t + a = 1
+!     where b = up^t u0   a = up^t up
+!
+      USE kinds,            ONLY : DP
+      USE mp_global,        ONLY : me_image, intra_image_comm
+      USE mp,               ONLY : mp_max
+      USE cp_main_variables,       ONLY  : descla
+ 
+      IMPLICIT NONE
+
+      INTEGER, INTENT(IN)    :: nlam, nmax, nbsp
+      REAL(DP),INTENT(INOUT) :: up(nlam,nlam)
+      REAL(DP),INTENT(IN)    :: u0(nlam,nlam), identy(nlam,nlam),eps
+      REAL(DP) :: delta
+      INTEGER  :: i,j,iter, nc, nr
+
+      REAL(DP), ALLOCATABLE, DIMENSION(:,:) :: xloc,tmp, tmp2, tmp2t, amat, bmat
+      ALLOCATE( xloc(nlam,nlam))
+      ALLOCATE( tmp(nlam,nlam),tmp2(nlam,nlam),tmp2t(nlam,nlam) )
+      ALLOCATE( amat(nlam,nlam),bmat(nlam,nlam))
+
+      nr = descla(1)%nr
+      nc = descla(1)%nc
+
+      CALL sqr_mm_cannon( 'T', 'N', nbsp, 1.0d0, up, nlam, up, nlam, 0.0d0, amat, nlam, descla(1))
+      CALL sqr_mm_cannon( 'T', 'N', nbsp, 1.0d0, up, nlam, u0, nlam, 0.0d0, bmat, nlam, descla(1))
+
+      amat = identy-amat
+      bmat = identy-bmat
+      xloc = 0.5d0*amat
+
+      delta = 1.0E10_DP
+      DO iter = 1,nmax
+
+         CALL sqr_mm_cannon( 'N', 'N', nbsp, 1.0d0, bmat, nlam, xloc, nlam, 0.0d0, tmp2, nlam, descla(1))
+         CALL sqr_mm_cannon( 'T', 'N', nbsp, 1.0d0, xloc, nlam, xloc, nlam, 0.0d0, tmp, nlam, descla(1))
+
+         CALL sqr_tr_cannon( nbsp, tmp2, nlam, tmp2t, nlam, descla(1) )
+
+         do j=1,nc
+            do i=1,nr
+               xloc(i,j)=0.5d0*(amat(i,j) + tmp2(i,j) + tmp2t(i,j) - tmp(i,j) )
+            end do
+         end do
+
+         IF(iter .GE. 3) THEN
+
+            tmp = up         ! upnew = up + u0*xloc
+            CALL sqr_mm_cannon( 'N', 'N', nbsp, 1.0d0, u0, nlam, xloc, nlam, 1.0d0, tmp, nlam, descla(1))
+
+            tmp2 = identy
+            CALL sqr_mm_cannon( 'T', 'N', nbsp, 1.0d0, tmp, nlam, tmp, nlam, -1.0d0, tmp2, nlam, descla(1))
+            delta = 0.d0
+            do j=1,nc
+            do i=1,nr
+               delta=max(delta,abs(tmp2(i,j)) )
+            end do
+            end do
+            CALL mp_max( delta, intra_image_comm )
+            IF( delta .le. eps ) exit
+         ENDIF
+
+      ENDDO
+
+      up = tmp
+      DEALLOCATE(xloc, amat, bmat, tmp, tmp2, tmp2t)
+      return
+    
+      END SUBROUTINE ortho_u
+
+      SUBROUTINE para_range(n1, n2, nprocs, ista, iend)
+      INTEGER n1,n2,nprocs,ista(0:nprocs-1),iend(0:nprocs-1)
+      INTEGER iwork1,iwork2
+
+      iwork1 = (n2 - n1 + 1) / nprocs
+      iwork2 = MOD(n2 - n1 + 1, nprocs)
+      do irank = 0,nprocs-1
+         ista(irank) = irank * iwork1 + n1 + MIN(irank, iwork2)
+         iend(irank) = ista(irank) + iwork1 - 1
+         IF (iwork2 > irank) iend(irank) = iend(irank) + 1
+      enddo
+
+      return
+      end

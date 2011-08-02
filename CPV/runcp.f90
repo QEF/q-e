@@ -104,10 +104,12 @@
        ttsde = .FALSE.
      END IF
 
-     IF( lwf ) THEN
-
-        call ef_potential( nfi, rhos, bec_bgrp, deeq, vkb, c0_bgrp, cm_bgrp, emadt2, emaver, verl1, verl2 )
-
+!============================================================================
+! Lingzhu Kong
+!     IF( lwf ) THEN
+     IF( .false. ) THEN
+         call ef_potential( nfi, rhos, bec_bgrp, deeq, vkb, c0_bgrp, cm_bgrp,&
+                             emadt2, emaver, verl1, verl2 )
      ELSE
 
         allocate( c2( c2_siz ), c3( c2_siz ) )

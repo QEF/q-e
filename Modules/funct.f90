@@ -40,6 +40,7 @@ module funct
 !
   USE io_global, ONLY: stdout
   USE kinds,     ONLY: DP
+  USE control_flags,  ONLY : lwfpbe0, lwfpbe0nscf ! Lingzhu Kong
   IMPLICIT NONE
   PRIVATE
   SAVE
@@ -993,6 +994,13 @@ subroutine xc (rho, ex, ec, vx, vc)
   !..exchange
   if (iexch == 1) THEN             !  'sla'
      call slater (rs, ex, vx)
+!==================================================================
+!Lingzhu Kong
+     IF(lwfpbe0 .or. lwfpbe0nscf)THEN
+         ex = 0.75d0 * ex
+         vx = 0.75d0 * vx
+     END IF
+!==================================================================
   ELSEIF (iexch == 2) THEN         !  'sl1'
      call slater1(rs, ex, vx)
   ELSEIF (iexch == 3) THEN         !  'rxc'
@@ -1091,6 +1099,14 @@ subroutine xc_spin (rho, zeta, ex, ec, vxup, vxdw, vcup, vcdw)
   !..exchange
   IF (iexch == 1) THEN      ! 'sla'
      call slater_spin (rho, zeta, ex, vxup, vxdw)
+!==============================================================
+!Lingzhu Kong
+     IF( lwfpbe0 .or. lwfpbe0nscf )THEN
+          ex   = 0.75d0 * ex
+          vxup = 0.75d0 * vxup
+          vxdw = 0.75d0 * vxdw
+     END IF
+!==============================================================
   ELSEIF (iexch == 2) THEN  ! 'sl1'
      call slater1_spin (rho, zeta, ex, vxup, vxdw)
   ELSEIF (iexch == 3) THEN  ! 'rxc'
@@ -1171,6 +1187,12 @@ subroutine xc_spin_vec (rho, zeta, length, evx, evc)
   select case (iexch)
   case(1)            ! 'sla'
      call slater_spin_vec (rho, zeta, evx, length)
+!=========================================================
+!Lingzhu Kong
+     if (lwfpbe0 .or. lwfpbe0nscf) then
+        evx = 0.75_DP * evx
+     end if
+!=========================================================
   case(2)            ! 'sl1'
      do i=1,length
         call slater1_spin (rho(i), zeta(i), evx(i,3), evx(i,1), evx(i,2))
@@ -1274,6 +1296,14 @@ subroutine gcxc (rho, grho, sx, sc, v1x, v2x, v1c, v2c)
      call ggax (rho, grho, sx, v1x, v2x)
   elseif (igcx == 3) then
      call pbex (rho, grho, 1, sx, v1x, v2x)
+!==============================================================
+!Lingzhu Kong
+     IF( lwfpbe0 .or. lwfpbe0nscf )THEN
+          sx  = 0.75d0 * sx
+          v1x = 0.75d0 * v1x
+          v2x = 0.75d0 * v2x
+     END IF
+!==============================================================
   elseif (igcx == 4) then
      call pbex (rho, grho, 2, sx, v1x, v2x)
   elseif (igcx == 5 .and. igcc == 5) then
@@ -1452,6 +1482,16 @@ subroutine gcx_spin (rhoup, rhodw, grhoup2, grhodw2, &
        v2xup = (1.0_DP - exx_fraction) * v2xup
        v2xdw = (1.0_DP - exx_fraction) * v2xdw
      end if
+!=============================================================
+!Lingzhu Kong
+     if (igcx == 3 .and. (lwfpbe0 .or. lwfpbe0nscf) ) then
+       sx =    0.75D0 * sx
+       v1xup = 0.75D0 * v1xup
+       v1xdw = 0.75D0 * v1xdw
+       v2xup = 0.75D0 * v2xup
+       v2xdw = 0.75D0 * v2xdw
+     end if
+!=============================================================
      if (igcx == 12 .and. exx_started ) then
 
         call pbexsr_lsd (rhoup, rhodw, grhoup2, grhodw2, sxsr,  &
@@ -1616,6 +1656,16 @@ subroutine gcx_spin_vec(rhoup, rhodw, grhoup2, grhodw2, &
         v2xup = (1.0_DP - exx_fraction) * v2xup
         v2xdw = (1.0_DP - exx_fraction) * v2xdw
      end if
+!=============================================================
+!Lingzhu Kong
+     if (igcx == 3 .and. (lwfpbe0 .or. lwfpbe0nscf) ) then
+       sx =    0.75D0 * sx
+       v1xup = 0.75D0 * v1xup
+       v1xdw = 0.75D0 * v1xdw
+       v2xup = 0.75D0 * v2xup
+       v2xdw = 0.75D0 * v2xdw
+     end if
+!=============================================================
   case(9)
      do i=1,length
         if (rhoup(i) > small .and. sqrt(abs(grhoup2(i)) ) > small) then
