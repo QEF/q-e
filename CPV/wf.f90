@@ -3081,10 +3081,10 @@ END SUBROUTINE jacobi_rotation
        USE wannier_base,     ONLY : wf_friction, nsteps, tolw, adapt, wf_q, weight, nw, wfdt
        USE cell_base,        ONLY : alat
        USE constants,        ONLY : tpi, autoaf => BOHR_RADIUS_ANGS
-       USE parallel_include
        USE mp_global,        ONLY : nproc_image, me_image, intra_image_comm
        USE cp_main_variables, ONLY: distribute_lambda, descla, nlam, collect_lambda
        USE printout_base,     ONLY : printout_base_open, printout_base_unit, printout_base_close
+       USE parallel_include
 
        IMPLICIT NONE
    
@@ -3199,8 +3199,10 @@ END SUBROUTINE jacobi_rotation
              myt0=myt0+DBLE(CONJG(Oc( i, i, inw))*Oc( i, i, inw))
           END DO
        END DO
-
-       CALL MPI_ALLREDUCE(myt0, t0, 1, MPI_REAL8, MPI_SUM, intra_image_comm, ierr)
+#ifdef __MPI
+       CALL mpi_allreduce (myt0, t0, 1, MPI_DOUBLE_PRECISION, MPI_SUM, &
+                           intra_image_comm, ierr)
+#endif
 !      t0 = myt0
        if(mod(ini,10) == 0)print *, 'spread at ', ini, ' = ', t0
        IF(ABS(t0-oldt0).LT.tolw) THEN

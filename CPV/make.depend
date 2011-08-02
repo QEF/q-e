@@ -403,6 +403,7 @@ forces.o : ../Modules/recvec.o
 forces.o : ../Modules/uspp.o
 forces.o : ensemble_dft.o
 forces.o : gvecw.o
+forces.o : mainvar.o
 fpmdpp.o : ../Modules/constants.o
 fpmdpp.o : ../Modules/io_files.o
 fpmdpp.o : ../Modules/io_global.o
@@ -1071,6 +1072,7 @@ wf.o : ../Modules/printout_base.o
 wf.o : ../Modules/recvec.o
 wf.o : ../Modules/uspp.o
 wf.o : gvecw.o
+wf.o : mainvar.o
 wf.o : modules.o
 wf.o : smallbox_gvec.o
 wf.o : wannier.o
