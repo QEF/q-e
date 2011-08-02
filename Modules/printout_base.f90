@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002 FPMD group
+! Copyright (C) 2002-2011 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -78,7 +78,8 @@ CONTAINS
 
      CALL mp_bcast(ierr, ionode_id, intra_image_comm)
      IF( ierr /= 0 ) THEN
-        CALL errore(' printout_base_init ',' error in opening unit, check outdir = '//TRIM(outdir),iunit)
+        CALL errore(' printout_base_init ', &
+              ' error in opening unit, check outdir = '//TRIM(outdir),iunit)
      END IF
 
     RETURN
@@ -88,7 +89,7 @@ CONTAINS
   SUBROUTINE printout_base_open( suffix )
     CHARACTER(LEN=*), OPTIONAL, INTENT(IN) :: suffix
     INTEGER :: iunit
-    LOGICAL :: ok
+    LOGICAL :: ok=.true.
     ! ...  Open units 30, 31, ... 42 for simulation output
     IF( PRESENT( suffix ) ) THEN
        IF( LEN( suffix ) /= 3 ) &
@@ -97,7 +98,8 @@ CONTAINS
     END IF
     DO iunit = LBOUND( fort_unit, 1 ), UBOUND( fort_unit, 1 )
        IF( PRESENT( suffix ) ) THEN
-          IF( index( fort_unit(iunit), suffix, back=.TRUE. ) == ( len_trim( fort_unit(iunit) ) - 2 ) ) THEN
+          IF( index( fort_unit(iunit), suffix, back=.TRUE. ) == &
+              ( len_trim( fort_unit(iunit) ) - 2 )                ) THEN
              OPEN( UNIT=iunit, FILE=fort_unit(iunit), STATUS='unknown', POSITION='append')
              ok = .true.
           END IF
@@ -107,7 +109,6 @@ CONTAINS
     END DO
     IF( PRESENT( suffix ) ) THEN
        IF( .NOT. ok ) &
-          CALL errore(" printout_base_open ", " file with suffix "//suffix//" not found ", 1 )
           CALL errore(" printout_base_open ", " file with suffix "//suffix//" not found ", 1 )
     END IF
     RETURN

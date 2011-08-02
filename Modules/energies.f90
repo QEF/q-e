@@ -28,7 +28,7 @@
           REAL(DP)  :: EPSEU
           REAL(DP)  :: ENL
           REAL(DP)  :: ENT
-          REAL(DP)  :: EXX              
+          REAL(DP)  :: exx              
           REAL(DP)  :: VXC
           REAL(DP)  :: EXC
           REAL(DP)  :: SELF_VXC
@@ -62,7 +62,7 @@
         REAL(DP)  :: ESR = 0.0_DP
         REAL(DP)  :: EXC = 0.0_DP
         REAL(DP)  :: VXC = 0.0_DP
-        REAL(DP)  :: EXX = 0.0_DP                  
+        REAL(DP)  :: exx = 0.0_DP                  
         REAL(DP)  :: EBAND = 0.0_DP
         REAL(DP)  :: ATOT = 0.0_DP
         REAL(DP)  :: ENTROPY = 0.0_DP
