@@ -151,7 +151,6 @@ SUBROUTINE from_scratch( )
     CALL formf( tfirst, eself )
     !
     edft%eself = eself
-
     IF( tefield ) THEN
       CALL efield_berry_setup( eigr, tau0 )
     END IF
@@ -176,121 +175,120 @@ SUBROUTINE from_scratch( )
     !
     if ( nlcc_any ) CALL set_cc( irb, eigrb, rhoc )
     !
-
-       IF( .NOT. tcg ) THEN
+    IF( .NOT. tcg ) THEN
    
-         IF( tens ) THEN
-           CALL compute_entropy( entropy, f(1), nspin )
-           entropy = entropy * nbsp
-         END IF
-         !
-         vpot = rhor
-         !
-         CALL vofrho( nfi, vpot, drhor, rhog, drhog, rhos, rhoc, tfirst, tlast, &
-        &  eigts1, eigts2, eigts3, irb, eigrb, sfac, tau0, fion )
+      IF( tens ) THEN
+        CALL compute_entropy( entropy, f(1), nspin )
+        entropy = entropy * nbsp
+      END IF
+      !
+      vpot = rhor
+      !
+      CALL vofrho( nfi, vpot, drhor, rhog, drhog, rhos, rhoc, tfirst, tlast, &
+     &  eigts1, eigts2, eigts3, irb, eigrb, sfac, tau0, fion )
 
-         IF( tefield ) THEN
-           CALL berry_energy( enb, enbi, bec_bgrp, cm_bgrp, fion ) 
-           etot = etot + enb + enbi
-         END IF
-         IF( tefield2 ) THEN
-           CALL berry_energy2( enb, enbi, bec_bgrp, cm_bgrp, fion )
-           etot = etot + enb + enbi
-         END IF
+      IF( tefield ) THEN
+        CALL berry_energy( enb, enbi, bec_bgrp, cm_bgrp, fion ) 
+        etot = etot + enb + enbi
+      END IF
+      IF( tefield2 ) THEN
+        CALL berry_energy2( enb, enbi, bec_bgrp, cm_bgrp, fion )
+        etot = etot + enb + enbi
+      END IF
 
-         CALL compute_stress( stress, detot, h, omega )
+      CALL compute_stress( stress, detot, h, omega )
 
-         if(iprsta.gt.2) &
+      if(iprsta.gt.2) &
              CALL printout_pos( stdout, fion, nat, head = ' fion ' )
 
-         CALL newd( vpot, irb, eigrb, becsum, fion )
+      CALL newd( vpot, irb, eigrb, becsum, fion )
+      !
+      IF( force_pairing ) THEN
          !
-         IF( force_pairing ) THEN
-            !
-            CALL runcp_uspp_force_pairing( nfi, fccc, ccc, ema0bg, dt2bye, rhos, bec_bgrp, cm_bgrp, &
-        &                 c0_bgrp, ei_unp, fromscra = .TRUE. )
-            !
-            CALL setval_lambda( lambda(:,:,2), nupdwn(1), nupdwn(1), 0.d0, descla(1) )
-            !
-         ELSE
-            !
-            CALL runcp_uspp( nfi, fccc, ccc, ema0bg, dt2bye, rhos, bec_bgrp, cm_bgrp, c0_bgrp, fromscra = .TRUE. )
-            !
-         ENDIF
+         CALL runcp_uspp_force_pairing( nfi, fccc, ccc, ema0bg, dt2bye, rhos,&
+                    bec_bgrp, cm_bgrp, c0_bgrp, ei_unp, fromscra = .TRUE. )
          !
-         !     nlfq needs deeq bec
+         CALL setval_lambda( lambda(:,:,2), nupdwn(1), nupdwn(1), 0.d0, descla(1) )
          !
-         IF( ttforce ) THEN
-            CALL nlfq_bgrp( cm_bgrp, eigr, bec_bgrp, becdr_bgrp, fion )
-         END IF
+      ELSE
          !
-         !     calphi calculates phi
-         !     the electron mass rises with g**2
+         CALL runcp_uspp( nfi, fccc, ccc, ema0bg, dt2bye, rhos, bec_bgrp, cm_bgrp, c0_bgrp, fromscra = .TRUE. )
          !
-         CALL calphi_bgrp( cm_bgrp, ngw, bec_bgrp, nkb, vkb, phi_bgrp, nbspx_bgrp, ema0bg )
-         !
-         IF( force_pairing ) &
+      ENDIF
+      !
+      !     nlfq needs deeq bec
+      !
+      IF( ttforce ) THEN
+         CALL nlfq_bgrp( cm_bgrp, eigr, bec_bgrp, becdr_bgrp, fion )
+      END IF
+      !
+      !     calphi calculates phi
+      !     the electron mass rises with g**2
+      !
+      CALL calphi_bgrp( cm_bgrp, ngw, bec_bgrp, nkb, vkb, phi_bgrp, nbspx_bgrp, ema0bg )
+      !
+      IF( force_pairing ) &
          &   phi_bgrp( :, iupdwn(2):(iupdwn(2)+nupdwn(2)-1) ) =    phi_bgrp( :, 1:nupdwn(2))
 
-         if( tortho ) then
-            CALL ortho( eigr, c0_bgrp, phi_bgrp, lambda, descla, bigr, iter, ccc, bephi, becp_bgrp )
-         else
-            CALL gram_bgrp( vkb, bec_bgrp, nkb, c0_bgrp, ngw )
-         endif
-         !
-         IF ( ttforce ) THEN
-            CALL nlfl_bgrp( bec_bgrp, becdr_bgrp, lambda, fion )
-         END IF
+      if( tortho ) then
+         CALL ortho( eigr, c0_bgrp, phi_bgrp, lambda, descla, bigr, iter, ccc, bephi, becp_bgrp )
+      else
+         CALL gram_bgrp( vkb, bec_bgrp, nkb, c0_bgrp, ngw )
+      endif
+      !
+      IF ( ttforce ) THEN
+         CALL nlfl_bgrp( bec_bgrp, becdr_bgrp, lambda, fion )
+      END IF
 
-         if ( iprsta >= 3 ) CALL print_lambda( lambda, nbsp, 9, ccc )
+      if ( iprsta >= 3 ) CALL print_lambda( lambda, nbsp, 9, ccc )
 
+      !
+      if ( tstress ) CALL nlfh( stress, bec_bgrp, dbec, lambda )
+      !
+      IF ( tortho ) THEN
+         CALL updatc( ccc, lambda, phi_bgrp, bephi, becp_bgrp, bec_bgrp, c0_bgrp, descla )
+      END IF
+      !
+      IF( force_pairing ) THEN
          !
-         if ( tstress ) CALL nlfh( stress, bec_bgrp, dbec, lambda )
+         c0_bgrp ( :, iupdwn(2):(iupdwn(2)+nupdwn(2)-1) ) = c0_bgrp( :, 1:nupdwn(2))
+         phi_bgrp( :, iupdwn(2):(iupdwn(2)+nupdwn(2)-1) ) = phi_bgrp( :, 1:nupdwn(2))
+         lambda(:,:,2) = lambda(:,:,1)
          !
-         IF ( tortho ) THEN
-            CALL updatc( ccc, lambda, phi_bgrp, bephi, becp_bgrp, bec_bgrp, c0_bgrp, descla )
-         END IF
-         !
-         IF( force_pairing ) THEN
-            !
-            c0_bgrp ( :, iupdwn(2):(iupdwn(2)+nupdwn(2)-1) ) = c0_bgrp( :, 1:nupdwn(2))
-            phi_bgrp( :, iupdwn(2):(iupdwn(2)+nupdwn(2)-1) ) = phi_bgrp( :, 1:nupdwn(2))
-            lambda(:,:,2) = lambda(:,:,1)
-            !
-         ENDIF
-         !
-         !
-         CALL calbec_bgrp ( nvb+1, nsp, eigr, c0_bgrp, bec_bgrp )
-         !
-         if ( tstress ) CALL caldbec_bgrp( eigr, cm_bgrp, dbec )
+      ENDIF
+      !
+      !
+      CALL calbec_bgrp ( nvb+1, nsp, eigr, c0_bgrp, bec_bgrp )
+      !
+      if ( tstress ) CALL caldbec_bgrp( eigr, cm_bgrp, dbec )
 
-         if ( iprsta >= 3 ) CALL dotcsc( eigr, c0_bgrp, ngw, nbsp_bgrp )
-         !
-         xnhp0 = 0.0d0
-         xnhpm = 0.0d0
-         vnhp  = 0.0d0
-         fionm = 0.0d0
-         !
-         CALL ions_vel( vels, taus, tausm, na, nsp, delt )
-         !
-         xnhh0(:,:) = 0.0d0
-         xnhhm(:,:) = 0.0d0
-         vnhh (:,:) = 0.0d0
-         velh (:,:) = ( h(:,:) - hold(:,:) ) / delt
-         !
-         CALL elec_fakekine( ekincm, ema0bg, emass, c0_bgrp, cm_bgrp, ngw, nbsp_bgrp, 1, delt )
+      if ( iprsta >= 3 ) CALL dotcsc( eigr, c0_bgrp, ngw, nbsp_bgrp )
+      !
+      xnhp0 = 0.0d0
+      xnhpm = 0.0d0
+      vnhp  = 0.0d0
+      fionm = 0.0d0
+      !
+      CALL ions_vel( vels, taus, tausm, na, nsp, delt )
+      !
+      xnhh0(:,:) = 0.0d0
+      xnhhm(:,:) = 0.0d0
+      vnhh (:,:) = 0.0d0
+      velh (:,:) = ( h(:,:) - hold(:,:) ) / delt
+      !
+      CALL elec_fakekine( ekincm, ema0bg, emass, c0_bgrp, cm_bgrp, ngw, nbsp_bgrp, 1, delt )
 
-         xnhe0 = 0.0d0
-         xnhem = 0.0d0
-         vnhe  = 0.0d0
+      xnhe0 = 0.0d0
+      xnhem = 0.0d0
+      vnhe  = 0.0d0
 
-         lambdam = lambda
-         !
-       ELSE 
-          !
-          c0_bgrp = cm_bgrp
-          !
-       END IF
+      lambdam = lambda
+      !
+    ELSE 
+       !
+       c0_bgrp = cm_bgrp
+       !
+    END IF
     !
     RETURN
     !
