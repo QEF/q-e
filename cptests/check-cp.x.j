@@ -115,7 +115,7 @@ check_cp () {
   # get reference total energy (cut to 6 significant digits)
   e0=`grep "total energy =" $fname | tail -1 | awk '{printf "%18.6f\n", $4}'`
   # get reference number for stress matrix
-  s0=`grep -A 3 "Total stress" $fname | tail -3 | tr '\n' ' ' | awk '{ printf "%-18.8lf", $1+$2+$3+$4+$5+$6+$7+$8+$9 }'`
+  s0=`grep -A 3 "Total stress" $fname | tail -3 | tr '\n' ' ' | awk '{ printf "%-18.8f", $1+$2+$3+$4+$5+$6+$7+$8+$9 }'`
   # get reference eigenvalues
   v0u=`grep -A 2 "Eigenvalues (eV).*spin.*1" $fname | tail -1 | awk '{ for(i=1;i<=NF;i++) { v=v+$i; } print v }'` 
   v0d=`grep -A 2 "Eigenvalues (eV).*spin.*2" $fname | tail -1 | awk '{ for(i=1;i<=NF;i++) { v=v+$i; } print v }'` 
@@ -127,7 +127,7 @@ check_cp () {
   #
   fname=$1.out$2
   e1=`grep "total energy =" $fname | tail -1 | awk '{printf "%18.6f\n", $4}'`
-  s1=`grep -A 3 "Total stress" $fname | tail -3 | tr '\n' ' ' | awk '{ printf "%-18.8lf", $1+$2+$3+$4+$5+$6+$7+$8+$9 }'`
+  s1=`grep -A 3 "Total stress" $fname | tail -3 | tr '\n' ' ' | awk '{ printf "%-18.8f", $1+$2+$3+$4+$5+$6+$7+$8+$9 }'`
   v1u=`grep -A 2 "Eigenvalues (eV).*spin.*1" $fname | tail -1 | awk '{ for(i=1;i<=NF;i++) { v=v+$i; } print v }'` 
   v1d=`grep -A 2 "Eigenvalues (eV).*spin.*2" $fname | tail -1 | awk '{ for(i=1;i<=NF;i++) { v=v+$i; } print v }'` 
   t1=`grep -A 6 "Averaged Physical Quantities"  $fname | tail -1 | awk '{ print $4 }'`
