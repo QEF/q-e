@@ -19,7 +19,7 @@
       USE descriptors,        ONLY: la_descriptor
       USE mp_global,          ONLY: nproc_bgrp, me_bgrp, intra_bgrp_comm
       USE mp,                 ONLY: mp_sum
-      USE cp_main_variables,  ONLY: nlam, la_proc, nrcx
+      USE cp_main_variables,  ONLY: nlam, nrcx
 
       IMPLICIT  NONE
 
@@ -45,7 +45,7 @@
       !
       ! ...   Subroutine body
       !
-      IF( la_proc ) THEN
+      IF( descla%active_node > 0 ) THEN
          !
          IF( nx0 /= descla%nrcx ) &
             CALL errore( ' ortho_gamma ', ' inconsistent dimensions nx0 ' , nx0 )
@@ -84,7 +84,7 @@
       !
       CALL rhoset( cp, ngwx, phi, bephi, nkbx, qbecp, n, nss, istart, rhos, nlam, descla )
       !
-      IF( la_proc ) THEN
+      IF( descla%active_node > 0 ) THEN
          !
          ALLOCATE( rhot( nlam, nlam ) )   !   transpose of rho
          !
@@ -131,7 +131,7 @@
          !
       ELSE
          !
-         IF( la_proc ) THEN
+         IF( descla%active_node > 0 ) THEN
             !
             ALLOCATE( wrk( nss, nss ), STAT = info )
             IF( info /= 0 ) CALL errore( ' ortho ', ' allocating matrixes ', 1 )
@@ -178,7 +178,7 @@
       !
       DEALLOCATE( rhoa, rhos, rhod, s, sig, tau )
       !
-      IF( la_proc )  CALL consistency_check( x0 )
+      IF( descla%active_node > 0 )  CALL consistency_check( x0 )
 
       RETURN
 
@@ -187,7 +187,7 @@
       SUBROUTINE distribute_matrix( a, b )
          REAL(DP) :: a(:,:), b(:,:)
          INTEGER :: i, j
-         IF( la_proc ) THEN
+         IF( descla%active_node > 0 ) THEN
             DO j = 1, nc
                DO i = 1, nr
                   b( i, j ) = a( i + ir - 1, j + ic - 1 )
@@ -201,7 +201,7 @@
          REAL(DP) :: a(:,:), b(:,:)
          INTEGER :: i, j
          a = 0.0d0
-         IF( la_proc ) THEN
+         IF( descla%active_node > 0 ) THEN
             DO j = 1, nc
                DO i = 1, nr
                   a( ir + i - 1, ic + j - 1 ) = b( i, j )
@@ -260,7 +260,7 @@
       USE io_global,      ONLY: stdout, ionode
       USE cp_interfaces,  ONLY: ortho_gamma, c_bgrp_expand, c_bgrp_pack
       USE descriptors,    ONLY: la_descriptor
-      USE cp_main_variables,  ONLY: nlam, la_proc, nrcx, collect_bec
+      USE cp_main_variables,  ONLY: nlam, nrcx, collect_bec
       USE mp_global,          ONLY: nproc_bgrp, me_bgrp, intra_bgrp_comm, inter_bgrp_comm  ! DEBUG
       USE orthogonalize_base, ONLY: bec_bgrp2ortho
       USE mp,                 ONLY : mp_sum
@@ -338,7 +338,7 @@
                      istart = iupdwn(iss)
                      nc     = descla( iss )%nc
                      ic     = descla( iss )%ic + istart - 1
-                     IF( la_proc ) THEN
+                     IF( descla( iss )%active_node > 0 ) THEN
                         DO i = 1, nc
                            icc=i+ic-1
                            CALL daxpy( na(is), qqf, bec_col(jnl+1,i+(iss-1)*nrcx),1,qbephi(inl+1,i,iss), 1 ) 
@@ -373,7 +373,7 @@
                      istart = iupdwn(iss)
                      nc     = descla( iss )%nc
                      ic     = descla( iss )%ic + istart - 1
-                     IF( la_proc ) THEN
+                     IF( descla( iss )%active_node > 0 ) THEN
                         DO i = 1, nc
                            CALL daxpy( na(is), qqf, bec_col(jnl+1,i+(iss-1)*nrcx),1, qbecp(inl+1,i,iss), 1 )
                         END DO
@@ -401,7 +401,7 @@
          nss    = nupdwn(iss)
          istart = iupdwn(iss)
 
-         IF( la_proc ) xloc = x0(:,:,iss) * ccc
+         IF( descla( iss )%active_node > 0 ) xloc = x0(:,:,iss) * ccc
 
          CALL ortho_gamma( 0, cp_bgrp, ngwx, phi_bgrp, becp_dist(:,(iss-1)*nrcx+1:iss*nrcx), qbecp(:,:,iss), nkbx, &
                            bephi(:,((iss-1)*nrcx+1):iss*nrcx), &
@@ -416,7 +416,7 @@
             WRITE( stdout, 100 ) diff, iter
          ENDIF
          !     
-         IF( la_proc ) x0( :, :, iss ) = xloc / ccc
+         IF( descla( iss )%active_node > 0 ) x0( :, :, iss ) = xloc / ccc
          !
       END DO
 

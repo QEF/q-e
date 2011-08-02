@@ -503,7 +503,7 @@ SUBROUTINE caldbec_bgrp( eigr, c_bgrp, dbec )
   use uspp_param, only : nh, nhm, ish
   use gvect,      only : gstart
   use gvecw,      only : ngw
-  USE cp_main_variables,  ONLY : descla, la_proc, nrcx, nlam
+  USE cp_main_variables,  ONLY : descla, nrcx
   USE descriptors,        ONLY : la_descriptor
   use electrons_base,     only : nspin, iupdwn, nupdwn, nbspx_bgrp, iupdwn_bgrp, nupdwn_bgrp, &
                                  ibgrp_g2l, i2gupdwn_bgrp, nbspx, nbsp_bgrp
@@ -582,7 +582,7 @@ SUBROUTINE caldbec_bgrp( eigr, c_bgrp, dbec )
 
            inl=ish(is)+1
            do iss=1,nspin
-              IF( la_proc ) THEN
+              IF( descla( iss )%active_node > 0 ) THEN
                  nr = descla( iss )%nr
                  ir = descla( iss )%ir
                  istart = iupdwn( iss )
@@ -627,7 +627,7 @@ subroutine dennl( bec_bgrp, dbec, drhovan, denl )
   use io_global,  only : stdout
   use mp,         only : mp_sum
   use mp_global,  only : intra_bgrp_comm
-  USE cp_main_variables,  ONLY : descla, la_proc, nrcx, nlam
+  USE cp_main_variables,  ONLY : descla, nrcx
   USE descriptors,        ONLY : la_descriptor
   use electrons_base,     only : nbspx_bgrp, nbsp_bgrp, ispin_bgrp, f_bgrp, nspin, iupdwn, nupdwn, ibgrp_g2l
   use gvect, only : gstart
@@ -646,9 +646,6 @@ subroutine dennl( bec_bgrp, dbec, drhovan, denl )
   denl=0.d0
   drhovan=0.0d0
 
-  IF( la_proc ) THEN
-
-
   do is=1,nsp
      do iv=1,nh(is)
         do jv=iv,nh(is)
@@ -663,7 +660,7 @@ subroutine dennl( bec_bgrp, dbec, drhovan, denl )
               isa=isa+1
               dsums=0.d0
               do iss=1,nspin
-                 IF( descla( iss )%myr == descla( iss )%myc ) THEN
+                 IF( ( descla( iss )%active_node > 0 ) .AND. ( descla( iss )%myr == descla( iss )%myc ) ) THEN
                     nr = descla( iss )%nr
                     ir = descla( iss )%ir
                     istart = iupdwn( iss )
@@ -681,28 +678,21 @@ subroutine dennl( bec_bgrp, dbec, drhovan, denl )
                           enddo
                        END IF
                     end do
-                 END IF
-              end do
-              !
-              do iss=1,nspin
-                 IF( descla( iss )%myr == descla( iss )%myc ) THEN
-                 dsum=0.d0
-                 do k=1,3
-                    do j=1,3
-                       drhovan(ijv,isa,iss,j,k)=dsums(iss,j,k)
-                       dsum(j,k)=dsum(j,k)+dsums(iss,j,k)
+                    dsum=0.d0
+                    do k=1,3
+                       do j=1,3
+                          drhovan(ijv,isa,iss,j,k)=dsums(iss,j,k)
+                          dsum(j,k)=dsum(j,k)+dsums(iss,j,k)
+                       enddo
                     enddo
-                 enddo
-                 if(iv.ne.jv) dsum=2.d0*dsum
-                 denl = denl + dsum * dvan(jv,iv,is)
+                    if(iv.ne.jv) dsum=2.d0*dsum
+                    denl = denl + dsum * dvan(jv,iv,is)
                  END IF
               end do
            end do
         end do
      end do
   end do
-
-  END IF
 
   CALL mp_sum( denl,    intra_bgrp_comm )
   CALL mp_sum( drhovan, intra_bgrp_comm )

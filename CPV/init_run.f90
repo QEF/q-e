@@ -45,7 +45,7 @@ SUBROUTINE init_run()
                                        irb, eigrb, rhog, rhos, rhor,     &
                                        acc, acc_this_run, wfill, &
                                        edft, nfi, vpot, ht0, htm, iprint_stdout
-  USE cp_main_variables,        ONLY : allocate_mainvar, nrcx, descla, nrlx, nlam
+  USE cp_main_variables,        ONLY : allocate_mainvar, nrcx, descla, nrlx
   USE energies,                 ONLY : eself, enl, ekin, etot, enthal, ekincm
   USE dener,                    ONLY : detot
   USE time_step,                ONLY : dt2, delt, tps

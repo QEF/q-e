@@ -69,9 +69,8 @@ MODULE cp_main_variables
   TYPE(la_descriptor), ALLOCATABLE :: descla(:) ! descriptor of the lambda distribution
                                        ! see descriptors_module
   INTEGER :: nrcx = 0                  ! leading dimension of the distribute (by block) lambda matrix 
-  INTEGER :: nlam = 1                  ! dimension of lambda matrix, can be 1 or nrcx depending on la_proc
+  INTEGER :: nlam = 1                  ! dimension of lambda matrix, can be 1 or nrcx 
   INTEGER :: nrlx = 0                  ! leading dimension of the distribute (by row  ) lambda matrix
-  LOGICAL :: la_proc = .FALSE.         ! indicate if a proc own a block of lambda
   !
   INTEGER, PARAMETER :: nacx = 10      ! max number of averaged
                                        ! quantities saved to the restart
@@ -266,15 +265,14 @@ MODULE cp_main_variables
       !
       nrcx = 0
       nrlx = 0
+      nlam = 1
       DO iss = 1, nspin
          CALL descla_init( descla( iss ), nupdwn( iss ), nudx, np_ortho, me_ortho, ortho_comm, ortho_comm_id )
          nrcx = MAX( nrcx, descla( iss )%nrcx )
          nrlx = MAX( nrlx, descla( iss )%nrlx )
-         IF( descla( iss )%active_node > 0 ) la_proc = .TRUE.
+         IF( descla( iss )%active_node > 0 ) nlam = nrcx
       END DO
       !
-      nlam = 1
-      IF( la_proc ) nlam = nrcx
       !
       !  ... End with lambda dimensions
       !

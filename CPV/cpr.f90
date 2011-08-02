@@ -618,7 +618,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
               WRITE( stdout, '(10F9.6)' ) ( f(i), i = 1, nbspx )  
            END IF
            !
-           CALL eigs( nfi, lambdap, lambda )
+           CALL eigs( nfi, lambdap, lambda, descla )
            !
         ELSE
            !

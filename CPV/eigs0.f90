@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !-----------------------------------------------------------------------
-   subroutine eigs0( ei, tprint, nspin, nupdwn, iupdwn, lf, f, nx, lambda, nudx, desc )
+   subroutine eigs0( ei, nudx, tprint, nspin, nupdwn, iupdwn, lf, f, nx, lambda, nlam, desc )
 !-----------------------------------------------------------------------
 !     computes eigenvalues (wr) of the real symmetric matrix lambda
 !     Note that lambda as calculated is multiplied by occupation numbers
@@ -17,7 +17,6 @@
       use constants,         only : autoev
       use dspev_module,      only : dspev_drv, pdspev_drv
       USE sic_module,        only : self_interaction
-      USE cp_main_variables, only : nlam, la_proc
       USE descriptors,       ONLY : la_descriptor
       USE mp,                only : mp_sum, mp_bcast
       USE mp_global,         only : intra_bgrp_comm, root_bgrp, me_bgrp
@@ -25,7 +24,7 @@
       implicit none
 ! input
       logical, intent(in) :: tprint, lf
-      integer, intent(in) :: nspin, nx, nudx, nupdwn(nspin), iupdwn(nspin)
+      integer, intent(in) :: nspin, nx, nudx, nupdwn(nspin), iupdwn(nspin), nlam
       type(la_descriptor), intent(in) :: desc( 2 )
       real(DP), intent(in) :: lambda( nlam, nlam, nspin ), f( nx )
       real(DP), intent(out) :: ei( nudx, nspin )
@@ -63,7 +62,7 @@
 
          allocate( wr( n ) )
 
-         IF( la_proc ) THEN
+         IF( desc( iss )%active_node > 0 ) THEN
 
             np = desc( iss )%npc * desc( iss )%npr
 
@@ -71,7 +70,7 @@
 
                !  matrix is distributed
 
-               CALL qe_pdsyevd( .false., n, desc(iss), lambda(1,1,iss), SIZE(lambda,1), wr )
+               CALL qe_pdsyevd( .false., n, desc(iss), lambda(1,1,iss), nlam, wr )
 
             ELSE
 
@@ -117,7 +116,7 @@
             !
             ei( 1:n,       1 ) = ei( 1:n, 1 ) / 2.0d0
             ei( nupdwn(1), 1 ) = 0.0d0
-            if( la_proc ) then
+            if( desc( iss )%active_node > 0 ) then
                IF( desc( iss )%myc == desc( iss )%myr ) THEN
                   ir = desc( iss )%ir
                   nr = desc( iss )%nr
@@ -317,26 +316,27 @@
 !
 
 !-----------------------------------------------------------------------
-   SUBROUTINE cp_eigs_x( nfi, lambdap, lambda )
+   SUBROUTINE cp_eigs_x( nfi, lambdap, lambda, descla )
 !-----------------------------------------------------------------------
 
       USE kinds,             ONLY: DP
       use ensemble_dft,      only: tens
-      use electrons_base,    only: nx => nbspx, f, nspin
+      use electrons_base,    only: nbspx, f, nspin
       use electrons_base,    only: iupdwn, nupdwn, nudx
       use electrons_module,  only: ei
       use io_global,         only: stdout
-      USE cp_main_variables, only: descla
+      USE descriptors,       ONLY: la_descriptor
 
       IMPLICIT NONE
 
       INTEGER :: nfi
       REAL(DP) :: lambda( :, :, : ), lambdap( :, :, : )
+      TYPE(la_descriptor), INTENT(IN) :: descla( : )
 
       if( .not. tens ) then
-         call eigs0( ei, .false. , nspin, nupdwn, iupdwn, .true. , f, nx, lambda, nudx, descla )
+         call eigs0( ei, nudx, .false. , nspin, nupdwn, iupdwn, .true. , f, nbspx, lambda, SIZE(lambda,1), descla )
       else
-         call eigs0( ei, .false. , nspin, nupdwn, iupdwn, .false. , f, nx, lambdap, nudx, descla )
+         call eigs0( ei, nudx, .false. , nspin, nupdwn, iupdwn, .false. , f, nbspx, lambdap, SIZE(lambdap,1), descla )
       endif
 
       RETURN

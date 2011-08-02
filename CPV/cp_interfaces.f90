@@ -358,11 +358,13 @@
 
 
    INTERFACE eigs
-      SUBROUTINE cp_eigs_x( nfi, lambdap, lambda )
+      SUBROUTINE cp_eigs_x( nfi, lambdap, lambda, desc )
          USE kinds,            ONLY: DP
+         USE descriptors,      ONLY: la_descriptor
          IMPLICIT NONE
          INTEGER :: nfi
          REAL(DP) :: lambda( :, :, : ), lambdap( :, :, : )
+         TYPE(la_descriptor), INTENT(IN) :: desc( : )
       END SUBROUTINE
    END INTERFACE
 

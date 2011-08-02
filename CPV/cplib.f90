@@ -973,7 +973,7 @@ subroutine nlfh_x( stress, bec_bgrp, dbec, lambda )
   use constants,         ONLY : pi, fpi, au_gpa
   use io_global,         ONLY : stdout
   use control_flags,     ONLY : iprsta
-  USE cp_main_variables, ONLY : descla, la_proc, nlam, nrcx
+  USE cp_main_variables, ONLY : descla, nrcx
   USE descriptors,       ONLY : la_descriptor
   USE mp,                ONLY : mp_sum
   USE mp_global,         ONLY : intra_bgrp_comm, inter_bgrp_comm
@@ -993,8 +993,8 @@ subroutine nlfh_x( stress, bec_bgrp, dbec, lambda )
   !
   ALLOCATE( bec( nkb, nrcx, nspin ) )
   !
-  IF( la_proc ) THEN
-     DO iss = 1, nspin
+  DO iss = 1, nspin
+     IF( descla( iss )%active_node > 0 ) THEN
         nss = nupdwn( iss )
         istart = iupdwn( iss )
         ic = descla( iss )%ic
@@ -1007,16 +1007,22 @@ subroutine nlfh_x( stress, bec_bgrp, dbec, lambda )
               bec( :, i, iss ) = 0.0d0
            END IF
         END DO
-     END DO
-  ELSE
-     bec   = 0.0d0
-  END IF
+     ELSE
+        bec(:,:,iss)   = 0.0d0
+     END IF
+  END DO
 
   CALL mp_sum( bec, inter_bgrp_comm )
   !
-  IF( la_proc ) THEN
-     nx=descla( 1 )%nrcx
-     IF( nspin == 2 ) nx = MAX( nx , descla( 2 )%nrcx )
+  nx = 0
+  IF( descla( 1 )%active_node > 0 ) THEN
+     nx = descla( 1 )%nrcx
+  END IF
+  IF( ( nspin == 2 ) .AND. ( descla( 2 )%active_node > 0 ) ) THEN
+     nx = MAX( nx , descla( 2 )%nrcx )
+  END IF
+
+  IF( ( descla( 1 )%active_node > 0 ) .OR. ( descla( 2 )%active_node > 0 ) ) THEN
      ALLOCATE ( tmpbec(nhm,nx), tmpdh(nx,nhm), temp(nx,nx) )
   END IF
   !
@@ -1035,7 +1041,7 @@ subroutine nlfh_x( stress, bec_bgrp, dbec, lambda )
                  istart = iupdwn( iss )
                  nss    = nupdwn( iss )
                  !
-                 IF( la_proc ) THEN
+                 IF( descla( iss )%active_node > 0 ) THEN
 
                     nr = descla( iss )%nr
                     nc = descla( iss )%nc
@@ -1050,7 +1056,6 @@ subroutine nlfh_x( stress, bec_bgrp, dbec, lambda )
                           inl=ish(is)+(jv-1)*na(is)+ia
                           if(abs(qq(iv,jv,is)).gt.1.e-5) then
                              do i = 1, nc
-                                !tmpbec(iv,i) = tmpbec(iv,i) +  qq(iv,jv,is) * bec(inl, i + istart - 1 + ic - 1 )
                                 tmpbec(iv,i) = tmpbec(iv,i) +  qq(iv,jv,is) * bec( inl, i, iss  )
                              end do
                           endif
@@ -1097,7 +1102,7 @@ subroutine nlfh_x( stress, bec_bgrp, dbec, lambda )
      enddo
   enddo
 
-  IF( la_proc ) THEN
+  IF( ( descla( 1 )%active_node > 0 ) .OR. ( descla( 2 )%active_node > 0 ) ) THEN
      DEALLOCATE ( tmpbec, tmpdh, temp )
   END IF
 
@@ -1735,7 +1740,7 @@ END SUBROUTINE print_lambda_x
       USE electrons_base,    ONLY: nspin, iupdwn, nupdwn, nbspx_bgrp, ibgrp_g2l, i2gupdwn_bgrp, nbspx, &
                                    iupdwn_bgrp, nupdwn_bgrp
       USE constants,         ONLY: pi, fpi
-      USE cp_main_variables, ONLY: nlam, nrcx, descla, la_proc
+      USE cp_main_variables, ONLY: nlam, nrcx, descla
       USE descriptors,       ONLY: la_descriptor
       USE mp,                ONLY: mp_sum
       USE mp_global,         ONLY: intra_bgrp_comm, inter_bgrp_comm
@@ -1765,8 +1770,8 @@ END SUBROUTINE print_lambda_x
       ! redistribute bec, becdr according to the ortho subgroup
       ! this is required because they are combined with "lambda" matrixes
       
-      IF( la_proc ) THEN
-         DO iss = 1, nspin
+      DO iss = 1, nspin
+         IF( descla( iss )%active_node > 0 ) THEN
             nss = nupdwn( iss )
             istart = iupdwn( iss )
             ic = descla( iss )%ic
@@ -1793,11 +1798,13 @@ END SUBROUTINE print_lambda_x
                   becdr(:,i,iss,3) = 0.0d0
                END IF
             END DO
-         END DO
-      ELSE
-         bec   = 0.0d0
-         becdr = 0.0d0
-      END IF
+         ELSE
+            bec(:,:,iss)   = 0.0d0
+            becdr(:,:,iss,1) = 0.0d0
+            becdr(:,:,iss,2) = 0.0d0
+            becdr(:,:,iss,3) = 0.0d0
+         END IF
+      END DO
 
       CALL mp_sum( bec, inter_bgrp_comm )
       CALL mp_sum( becdr, inter_bgrp_comm )
@@ -1816,7 +1823,7 @@ END SUBROUTINE print_lambda_x
                   tmpbec = 0.d0
                   tmpdr  = 0.d0
                   !
-                  IF( la_proc ) THEN
+                  IF( descla( iss )%active_node > 0 ) THEN
                      ! tmpbec distributed by columns
                      ic = descla( iss )%ic
                      nc = descla( iss )%nc
@@ -1843,7 +1850,7 @@ END SUBROUTINE print_lambda_x
                   !
                   IF(nh(is).GT.0)THEN
                      !
-                     IF( la_proc ) THEN
+                     IF( descla( iss )%active_node > 0 ) THEN
                         ir = descla( iss )%ir
                         ic = descla( iss )%ic
                         nr = descla( iss )%nr
