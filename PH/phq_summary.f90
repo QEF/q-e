@@ -31,7 +31,7 @@ subroutine phq_summary
   USE noncollin_module, ONLY : noncolin
   USE spin_orb,      ONLY : lspinorb, domag
   USE funct,         ONLY : write_dft_name
-  USE printout_base, ONLY : title
+  USE run_info, ONLY : title
   USE gamma_gamma,   ONLY : with_symmetry, nasr
   USE control_ph,    ONLY : lgamma_gamma, lnoloc, lrpa, zue, epsil, ldisp, &
                             nmix_ph, alpha_mix, tr2_ph, zeu

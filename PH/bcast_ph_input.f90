@@ -33,7 +33,7 @@ subroutine bcast_ph_input ( )
   USE input_parameters, ONLY : nk1, nk2, nk3, k1, k2, k3
   USE ions_base,     ONLY : amass
   USE io_global, ONLY : ionode_id
-  USE printout_base, ONLY : title
+  USE run_info, ONLY : title
 
   implicit none
   !

@@ -1439,7 +1439,7 @@ MODULE pw_restart
       !------------------------------------------------------------------------
       !
       USE constants, ONLY : pi
-      USE printout_base, ONLY: title
+      USE run_info,  ONLY: title
       USE cell_base, ONLY : ibrav, alat, symm_type, at, bg, celldm
       USE cell_base, ONLY : tpiba, tpiba2, omega
       USE cellmd,    ONLY : lmovecell, cell_factor

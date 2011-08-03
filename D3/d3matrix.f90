@@ -15,7 +15,7 @@ subroutine d3matrix
   ! The result is written on a iudyn file
   !
   USE ions_base,  ONLY : nat, ityp, ntyp => nsp, tau, atm, amass
-  USE printout_base, ONLY : title
+  USE run_info, ONLY : title
   USE kinds, only : DP
   use pwcom
   USE symm_base, ONLY : s, irt, invs

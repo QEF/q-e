@@ -31,7 +31,7 @@ SUBROUTINE chdens (filplot,plot_num)
   USE gvecs
   USE recvec_subs,   ONLY: ggen 
   USE wvfct,         ONLY: ecutwfc
-  USE printout_base, ONLY: title
+  USE run_info, ONLY: title
   USE control_flags, ONLY: gamma_only
   USE wavefunctions_module,  ONLY: psic
 

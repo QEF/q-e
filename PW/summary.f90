@@ -18,7 +18,7 @@ SUBROUTINE summary()
   !
   USE io_global,       ONLY : stdout
   USE kinds,           ONLY : DP
-  USE printout_base,   ONLY: title
+  USE run_info,        ONLY: title
   USE constants,       ONLY : amconv
   USE cell_base,       ONLY : alat, ibrav, omega, at, bg, celldm
   USE ions_base,       ONLY : nat, atm, zv, tau, ntyp => nsp, ityp

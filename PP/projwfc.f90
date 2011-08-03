@@ -327,7 +327,7 @@ SUBROUTINE projwave( filproj, lsym, lgww )
   !-----------------------------------------------------------------------
   !
   USE io_global, ONLY : stdout, ionode
-  USE printout_base, ONLY: title
+  USE run_info, ONLY: title
   USE ions_base, ONLY : zv, tau, nat, ntyp => nsp, ityp, atm
   USE basis,     ONLY : natomwfc
   USE cell_base
@@ -815,7 +815,7 @@ SUBROUTINE projwave_nc(filproj, lsym )
   USE io_global,  ONLY : stdout, ionode
   USE ions_base, ONLY : zv, tau, nat, ntyp => nsp, ityp, atm
   USE basis,     ONLY : natomwfc
-  USE printout_base, ONLY: title
+  USE run_info, ONLY: title
   USE cell_base
   USE constants, ONLY: rytoev, eps4
   USE gvect
@@ -2109,7 +2109,7 @@ SUBROUTINE pprojwave( filproj, lsym )
   !-----------------------------------------------------------------------
   !
   USE io_global, ONLY : stdout, ionode
-  USE printout_base, ONLY: title
+  USE run_info, ONLY: title
   USE ions_base, ONLY : zv, tau, nat, ntyp => nsp, ityp, atm
   USE basis,     ONLY : natomwfc
   USE cell_base
@@ -2960,7 +2960,7 @@ SUBROUTINE projwave_boxes( filpdos, filproj, n_proj_boxes, irmin, irmax, plotbox
   !-----------------------------------------------------------------------
   !
   USE io_global, ONLY : stdout, ionode
-  USE printout_base, ONLY: title
+  USE run_info, ONLY: title
   USE atom
   USE ions_base, ONLY : zv, tau, nat, ntyp => nsp, ityp, atm
   USE basis,     ONLY : natomwfc

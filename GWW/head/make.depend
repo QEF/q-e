@@ -4,7 +4,7 @@ bcast_ph_input.o : ../../Modules/io_files.o
 bcast_ph_input.o : ../../Modules/io_global.o
 bcast_ph_input.o : ../../Modules/ions_base.o
 bcast_ph_input.o : ../../Modules/mp.o
-bcast_ph_input.o : ../../Modules/printout_base.o
+bcast_ph_input.o : ../../Modules/run_info.o
 bcast_ph_input.o : ../../PH/phcom.o
 bcast_ph_input.o : ../../PH/ramanm.o
 bcast_ph_input.o : ../pw4gww/wannier_gw.o
@@ -76,7 +76,7 @@ phq_readin.o : ../../Modules/mp.o
 phq_readin.o : ../../Modules/mp_global.o
 phq_readin.o : ../../Modules/parameters.o
 phq_readin.o : ../../Modules/paw_variables.o
-phq_readin.o : ../../Modules/printout_base.o
+phq_readin.o : ../../Modules/run_info.o
 phq_readin.o : ../../Modules/uspp.o
 phq_readin.o : ../../PH/ph_restart.o
 phq_readin.o : ../../PH/phcom.o

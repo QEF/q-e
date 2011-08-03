@@ -31,7 +31,7 @@ SUBROUTINE phq_readin()
   USE uspp,          ONLY : okvan
   USE fixed_occ,     ONLY : tfixed_occ
   USE lsda_mod,      ONLY : lsda, nspin
-  USE printout_base, ONLY : title
+  USE run_info, ONLY : title
   USE control_ph,    ONLY : maxter, alpha_mix, lgamma, lgamma_gamma, epsil, &
                             zue, trans, reduce_io, nogg, &
                             elph, tr2_ph, niter_ph, nmix_ph, lnscf, &

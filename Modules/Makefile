@@ -20,7 +20,6 @@ coulomb_vcut.o \
 descriptors.o \
 dspev_drv.o \
 electrons_base.o \
-energies.o \
 environment.o \
 error_handler.o \
 fft_base.o \
@@ -52,7 +51,6 @@ paw_variables.o \
 plugin_flags.o \
 plugin_arguments.o \
 pseudo_types.o \
-printout_base.o \
 ptoolkit.o \
 radial_grids.o \
 random_numbers.o \
@@ -66,6 +64,7 @@ read_xml_cards.o \
 read_xml_fields.o \
 recvec.o \
 recvec_subs.o \
+run_info.o \
 set_signal.o \
 sic.o \
 splinelib.o \

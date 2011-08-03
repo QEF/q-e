@@ -18,7 +18,7 @@ subroutine d3_summary
   !
   USE kinds, only : DP
   USE ions_base,  ONLY : nat, ityp, ntyp => nsp, atm, tau, amass
-  USE printout_base, ONLY : title
+  USE run_info, ONLY : title
   USE io_global,  ONLY : stdout
   USE symm_base,   ONLY : s, sr, sname, ftau
   USE control_flags, ONLY : iverbosity

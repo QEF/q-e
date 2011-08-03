@@ -11,7 +11,7 @@ bcast_d3_input.o : ../Modules/control_flags.o
 bcast_d3_input.o : ../Modules/io_files.o
 bcast_d3_input.o : ../Modules/ions_base.o
 bcast_d3_input.o : ../Modules/mp.o
-bcast_d3_input.o : ../Modules/printout_base.o
+bcast_d3_input.o : ../Modules/run_info.o
 bcast_d3_input.o : ../PH/phcom.o
 bcast_d3_input.o : ../PW/pwcom.o
 bcast_d3_input.o : d3com.o
@@ -66,7 +66,7 @@ d3_readin.o : ../Modules/io_files.o
 d3_readin.o : ../Modules/io_global.o
 d3_readin.o : ../Modules/ions_base.o
 d3_readin.o : ../Modules/mp.o
-d3_readin.o : ../Modules/printout_base.o
+d3_readin.o : ../Modules/run_info.o
 d3_readin.o : ../Modules/uspp.o
 d3_readin.o : ../PH/phcom.o
 d3_readin.o : ../PW/noncol.o
@@ -98,7 +98,7 @@ d3_summary.o : ../Modules/fft_base.o
 d3_summary.o : ../Modules/io_global.o
 d3_summary.o : ../Modules/ions_base.o
 d3_summary.o : ../Modules/kind.o
-d3_summary.o : ../Modules/printout_base.o
+d3_summary.o : ../Modules/run_info.o
 d3_summary.o : ../PH/phcom.o
 d3_summary.o : ../PW/pwcom.o
 d3_summary.o : ../PW/symm_base.o
@@ -135,7 +135,7 @@ d3ionq.o : ../Modules/mp_global.o
 d3matrix.o : ../Modules/control_flags.o
 d3matrix.o : ../Modules/ions_base.o
 d3matrix.o : ../Modules/kind.o
-d3matrix.o : ../Modules/printout_base.o
+d3matrix.o : ../Modules/run_info.o
 d3matrix.o : ../PH/phcom.o
 d3matrix.o : ../PW/pwcom.o
 d3matrix.o : ../PW/symm_base.o

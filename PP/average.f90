@@ -41,7 +41,7 @@ PROGRAM average
   USE klist,                ONLY : nks
   USE parameters,           ONLY : ntypx
   USE constants,            ONLY : pi
-  USE printout_base,        ONLY : title
+  USE run_info,        ONLY : title
   USE io_global,            ONLY : stdout
   USE cell_base,            ONLY : ibrav, alat, omega, celldm, tpiba, &
                                    tpiba2, at, bg

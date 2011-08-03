@@ -37,7 +37,7 @@ MODULE input
      USE input_parameters,      ONLY : calculation, title
      USE control_flags,         ONLY : lneb, lpath, lwf
      USE control_flags,         ONLY : lwfnscf, lwfpbe0, lwfpbe0nscf ! Lingzhu Kong
-     USE printout_base,         ONLY : title_ => title
+     USE run_info,              ONLY : title_ => title
      USE io_global,             ONLY : meta_ionode, meta_ionode_id, stdout
      USE xml_input,             ONLY : xml_input_dump
      USE read_xml_module,       ONLY : read_xml

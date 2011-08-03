@@ -22,7 +22,7 @@ subroutine dynmatrix
   USE control_flags, ONLY : modenum
   USE cell_base,     ONLY : at, bg, celldm, ibrav, omega, symm_type
   USE symm_base,     ONLY : s, sr, irt, nsym, time_reversal, invs
-  USE printout_base, ONLY : title
+  USE run_info, ONLY : title
   USE dynmat,        ONLY : dyn, w2
   USE qpoint,        ONLY : xq
   USE noncollin_module, ONLY : nspin_mag
@@ -235,7 +235,7 @@ end subroutine dynmatrix
 !
   USE ions_base, ONLY : ntyp => nsp, nat, ityp, tau, atm, pmass
   USE cell_base, ONLY : ibrav, celldm, at, symm_type
-  USE printout_base, ONLY : title
+  USE run_info, ONLY : title
 
   IMPLICIT NONE
   INTEGER, INTENT(IN) :: iudyn

@@ -150,7 +150,7 @@ bcast_ph_input.o : ../Modules/io_global.o
 bcast_ph_input.o : ../Modules/ions_base.o
 bcast_ph_input.o : ../Modules/mp.o
 bcast_ph_input.o : ../Modules/mp_global.o
-bcast_ph_input.o : ../Modules/printout_base.o
+bcast_ph_input.o : ../Modules/run_info.o
 bcast_ph_input.o : phcom.o
 bcast_ph_input.o : ramanm.o
 ccg_psi.o : ../Modules/kind.o
@@ -549,7 +549,7 @@ dynmatrix.o : ../Modules/control_flags.o
 dynmatrix.o : ../Modules/io_global.o
 dynmatrix.o : ../Modules/ions_base.o
 dynmatrix.o : ../Modules/kind.o
-dynmatrix.o : ../Modules/printout_base.o
+dynmatrix.o : ../Modules/run_info.o
 dynmatrix.o : ../PW/noncol.o
 dynmatrix.o : ../PW/symm_base.o
 dynmatrix.o : io_dyn_mat.o
@@ -861,7 +861,7 @@ phq_readin.o : ../Modules/mp.o
 phq_readin.o : ../Modules/mp_global.o
 phq_readin.o : ../Modules/parameters.o
 phq_readin.o : ../Modules/paw_variables.o
-phq_readin.o : ../Modules/printout_base.o
+phq_readin.o : ../Modules/run_info.o
 phq_readin.o : ../Modules/uspp.o
 phq_readin.o : ../Modules/xml_io_base.o
 phq_readin.o : ../PW/noncol.o
@@ -904,7 +904,7 @@ phq_summary.o : ../Modules/funct.o
 phq_summary.o : ../Modules/io_global.o
 phq_summary.o : ../Modules/ions_base.o
 phq_summary.o : ../Modules/kind.o
-phq_summary.o : ../Modules/printout_base.o
+phq_summary.o : ../Modules/run_info.o
 phq_summary.o : ../Modules/recvec.o
 phq_summary.o : ../PW/noncol.o
 phq_summary.o : ../PW/pwcom.o
@@ -981,7 +981,7 @@ punch_plot_e.o : ../Modules/fft_base.o
 punch_plot_e.o : ../Modules/io_global.o
 punch_plot_e.o : ../Modules/ions_base.o
 punch_plot_e.o : ../Modules/kind.o
-punch_plot_e.o : ../Modules/printout_base.o
+punch_plot_e.o : ../Modules/run_info.o
 punch_plot_e.o : ../Modules/recvec.o
 punch_plot_e.o : ../PW/noncol.o
 punch_plot_e.o : ../PW/pwcom.o
@@ -991,7 +991,7 @@ punch_plot_ph.o : ../Modules/fft_base.o
 punch_plot_ph.o : ../Modules/io_global.o
 punch_plot_ph.o : ../Modules/ions_base.o
 punch_plot_ph.o : ../Modules/kind.o
-punch_plot_ph.o : ../Modules/printout_base.o
+punch_plot_ph.o : ../Modules/run_info.o
 punch_plot_ph.o : ../Modules/recvec.o
 punch_plot_ph.o : ../PW/pwcom.o
 punch_plot_ph.o : phcom.o

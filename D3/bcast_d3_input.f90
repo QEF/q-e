@@ -21,7 +21,7 @@ subroutine bcast_d3_input
   use io_files, only: prefix, tmp_dir
   use ions_base, only: amass
   use control_flags, only: iverbosity
-  use printout_base, only: title
+  use run_info, only: title
 
   implicit none
   integer :: root = 0

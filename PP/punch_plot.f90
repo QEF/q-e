@@ -22,7 +22,7 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
   USE constants,        ONLY : rytoev
   USE cell_base,        ONLY : at, bg, omega, alat, celldm, ibrav
   USE ions_base,        ONLY : nat, ntyp => nsp, ityp, tau, zv, atm
-  USE printout_base,    ONLY : title
+  USE run_info,    ONLY : title
   USE extfield,         ONLY : tefield, dipfield
   USE fft_base,         ONLY : dfftp
   USE fft_interfaces,   ONLY : fwfft, invfft

@@ -33,7 +33,7 @@ SUBROUTINE phq_readin()
   USE lsda_mod,      ONLY : lsda, nspin
   USE spin_orb,      ONLY : domag
   USE cellmd,        ONLY : lmovecell
-  USE printout_base, ONLY : title
+  USE run_info, ONLY : title
   USE control_ph,    ONLY : maxter, alpha_mix, lgamma, lgamma_gamma, epsil, &
                             zue, zeu, xmldyn, newgrid,                      &
                             trans, reduce_io, elph, tr2_ph, niter_ph,       &

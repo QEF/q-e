@@ -17,6 +17,10 @@ MODULE environment
   USE global_version, ONLY: version_number
 
   IMPLICIT NONE
+
+  ! ...  title of the simulation
+  CHARACTER(LEN=75) :: title
+
   SAVE
 
   PRIVATE

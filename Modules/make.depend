@@ -39,9 +39,6 @@ electrons_base.o : constants.o
 electrons_base.o : control_flags.o
 electrons_base.o : io_global.o
 electrons_base.o : kind.o
-energies.o : control_flags.o
-energies.o : io_global.o
-energies.o : kind.o
 environment.o : io_files.o
 environment.o : io_global.o
 environment.o : kind.o
@@ -66,6 +63,7 @@ fft_parallel.o : kind.o
 fft_parallel.o : parallel_include.o
 fft_scalar.o : kind.o
 fft_types.o : io_global.o
+funct.o : control_flags.o
 funct.o : io_global.o
 funct.o : kind.o
 funct.o : xc_vdW_DF.o
@@ -130,10 +128,6 @@ plugin_arguments.o : mp_global.o
 plugin_arguments.o : plugin_flags.o
 plugin_flags.o : kind.o
 plugin_flags.o : parameters.o
-printout_base.o : io_global.o
-printout_base.o : kind.o
-printout_base.o : mp.o
-printout_base.o : mp_global.o
 pseudo_types.o : kind.o
 pseudo_types.o : radial_grids.o
 ptoolkit.o : descriptors.o

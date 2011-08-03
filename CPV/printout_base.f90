@@ -14,9 +14,6 @@ MODULE printout_base
   IMPLICIT NONE
   SAVE
 
-  CHARACTER(LEN=75) :: title
-  ! ...  title of the simulation
-
   CHARACTER(LEN=256) :: fort_unit(30:42)
   ! ...  fort_unit = fortran units for saving physical quantity
 

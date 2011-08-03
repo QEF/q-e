@@ -57,7 +57,7 @@ SUBROUTINE iosys()
   !
   USE basis,         ONLY : startingconfig, starting_wfc, starting_pot
   !
-  USE printout_base, ONLY : title_ => title
+  USE run_info,      ONLY : title_ => title
   !
   USE cellmd,        ONLY : cmass, omega_old, at_old, ntcheck, &
                             cell_factor_ => cell_factor , &

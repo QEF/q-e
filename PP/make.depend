@@ -60,7 +60,7 @@ average.o : ../Modules/ions_base.o
 average.o : ../Modules/kind.o
 average.o : ../Modules/mp_global.o
 average.o : ../Modules/parameters.o
-average.o : ../Modules/printout_base.o
+average.o : ../Modules/run_info.o
 average.o : ../Modules/recvec.o
 average.o : ../Modules/wavefunctions.o
 average.o : ../PW/pwcom.o
@@ -101,7 +101,7 @@ chdens.o : ../Modules/kind.o
 chdens.o : ../Modules/mp.o
 chdens.o : ../Modules/mp_global.o
 chdens.o : ../Modules/parameters.o
-chdens.o : ../Modules/printout_base.o
+chdens.o : ../Modules/run_info.o
 chdens.o : ../Modules/recvec.o
 chdens.o : ../Modules/recvec_subs.o
 chdens.o : ../Modules/wavefunctions.o
@@ -302,7 +302,7 @@ plan_avg.o : ../Modules/ions_base.o
 plan_avg.o : ../Modules/kind.o
 plan_avg.o : ../Modules/mp.o
 plan_avg.o : ../Modules/mp_global.o
-plan_avg.o : ../Modules/printout_base.o
+plan_avg.o : ../Modules/run_info.o
 plan_avg.o : ../Modules/recvec.o
 plan_avg.o : ../Modules/uspp.o
 plan_avg.o : ../Modules/wavefunctions.o
@@ -354,7 +354,7 @@ projwfc.o : ../Modules/ions_base.o
 projwfc.o : ../Modules/kind.o
 projwfc.o : ../Modules/mp.o
 projwfc.o : ../Modules/mp_global.o
-projwfc.o : ../Modules/printout_base.o
+projwfc.o : ../Modules/run_info.o
 projwfc.o : ../Modules/ptoolkit.o
 projwfc.o : ../Modules/recvec.o
 projwfc.o : ../Modules/uspp.o
@@ -374,7 +374,7 @@ punch_plot.o : ../Modules/fft_interfaces.o
 punch_plot.o : ../Modules/io_global.o
 punch_plot.o : ../Modules/ions_base.o
 punch_plot.o : ../Modules/kind.o
-punch_plot.o : ../Modules/printout_base.o
+punch_plot.o : ../Modules/run_info.o
 punch_plot.o : ../Modules/recvec.o
 punch_plot.o : ../Modules/wavefunctions.o
 punch_plot.o : ../PW/noncol.o

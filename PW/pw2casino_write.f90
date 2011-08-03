@@ -11,7 +11,7 @@ SUBROUTINE write_casino_wfn(gather,blip,multiplicity,binwrite,single_precision_b
    USE kinds, ONLY: DP,sgl
    USE ions_base, ONLY : nat, ntyp => nsp, ityp, tau, zv, atm
    USE cell_base, ONLY: omega, alat, tpiba2, at, bg
-   USE printout_base, ONLY: title    ! title of the run
+   USE run_info,  ONLY: title    ! title of the run
    USE constants, ONLY: tpi, e2
    USE ener, ONLY: ewld, ehart, etxc, vtxc, etot, etxcc, demet, ef
    USE fft_base,  ONLY: dfftp

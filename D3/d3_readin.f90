@@ -15,7 +15,7 @@ SUBROUTINE d3_readin()
   USE ions_base,     ONLY : nat, ntyp => nsp, amass
   USE uspp,          ONLY : okvan
   USE pwcom
-  USE printout_base, ONLY : title
+  USE run_info, ONLY : title
   USE control_flags, ONLY : iverbosity
   USE phcom
   USE d3com

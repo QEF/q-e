@@ -60,7 +60,7 @@ MODULE cp_restart
                                            my_bgrp_id, intra_bgrp_comm, &
                                            intra_image_comm, inter_bgrp_comm, &
                                            root_bgrp, intra_pool_comm
-      USE printout_base,            ONLY : title
+      USE run_info,                 ONLY : title
       USE gvect,                    ONLY : ngm, ngm_g
       USE gvecs,                    ONLY : ngms_g, ecuts, dual
       USE gvecw,                    ONLY : ngw, ngw_g, ecutwfc
@@ -942,7 +942,7 @@ MODULE cp_restart
       USE control_flags,            ONLY : gamma_only, force_pairing, iprsta, twfcollect
       USE io_files,                 ONLY : iunpun, xmlpun, iunwfc, nwordwfc, &
                                            tmp_dir, diropn
-      USE printout_base,            ONLY : title
+      USE run_info,                 ONLY : title
       USE gvect,                    ONLY : ngm
       USE gvecw,                    ONLY : ngw, ngw_g
       USE electrons_base,           ONLY : nspin, nbnd, nelt, nel, &

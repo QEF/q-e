@@ -34,7 +34,7 @@ subroutine bcast_ph_input ( )
   USE input_parameters, ONLY: max_seconds
   USE ions_base,     ONLY : amass
   USE io_global, ONLY : ionode_id
-  USE printout_base, ONLY : title
+  USE run_info, ONLY : title
 !#ifdef __GWW
   USE wannier_gw,    ONLY : l_head, omega_gauss, n_gauss, grid_type
 !#endif __GWW

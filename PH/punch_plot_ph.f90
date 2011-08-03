@@ -31,7 +31,7 @@ SUBROUTINE punch_plot_ph()
   USE modes,      ONLY : ubar, u, npert, npertx, nirr
   USE partial,    ONLY : comp_irr
   USE wvfct,      ONLY : ecutwfc
-  USE printout_base, ONLY : title
+  USE run_info, ONLY : title
 
   IMPLICIT NONE
 

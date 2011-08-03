@@ -9,7 +9,7 @@
 SUBROUTINE writedyn ( )
   !
   USE ions_base, ONLY : nat, tau, ityp, ntyp => nsp, atm, amass
-  USE printout_base, ONLY : title
+  USE run_info, ONLY : title
   USE cgcom
   USE pwcom
   IMPLICIT NONE

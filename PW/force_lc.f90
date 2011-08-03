@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2011 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -8,8 +8,7 @@
 !
 !----------------------------------------------------------------------
 subroutine force_lc (nat, tau, ityp, alat, omega, ngm, ngl, &
-     igtongl, nrxx, g, rho, nl, &
-     nspin, gstart, gamma_only, vloc, forcelc)
+     igtongl, g, rho, nl, nspin, gstart, gamma_only, vloc, forcelc)
   !----------------------------------------------------------------------
   !
   USE kinds
@@ -23,30 +22,29 @@ subroutine force_lc (nat, tau, ityp, alat, omega, ngm, ngl, &
   !
   !   first the dummy variables
   !
-  integer, intent(in) :: nat, ngm, nrxx, nspin, ngl, gstart, &
+  integer, intent(in) :: nat, ngm, nspin, ngl, gstart, &
                          igtongl (ngm), nl (ngm), ityp (nat)
-  ! input: the number of atoms in the cell
-  ! input: the number of G vectors
-  ! input: FFT dimensions
-  ! input: number of spin polarizations
-  ! input: the number of shells
-  ! input: correspondence G <-> shell of G
-  ! input: the correspondence fft mesh <-> G vec
-  ! input: the types of atoms
+  ! nat:    number of atoms in the cell
+  ! ngm:    number of G vectors
+  ! nspin:  number of spin polarizations
+  ! ngl:    number of shells
+  ! igtongl correspondence G <-> shell of G
+  ! nl:     correspondence fft mesh <-> G vec
+  ! ityp:   types of atoms
 
-  logical :: gamma_only
+  logical, intent(in) :: gamma_only
 
-  real(DP) :: tau (3, nat), g (3, ngm), vloc (ngl, * ), &
-       rho (nrxx, nspin), alat, omega
-  ! input: the coordinates of the atoms
-  ! input: the coordinates of G vectors
-  ! input: the local potential
-  ! input: the valence charge
-  ! input: the length measure
-  ! input: the volume of the cell
+  real(DP), intent(in) :: tau (3, nat), g (3, ngm), vloc (ngl, * ), &
+       rho (dfftp%nnr, nspin), alat, omega
+  ! tau:  coordinates of the atoms
+  ! g:    coordinates of G vectors
+  ! vloc: local potential
+  ! rho:  valence charge
+  ! alat: lattice parameter
+  ! omega: unit cell volume
 
-  real(DP) :: forcelc (3, nat)
-  ! output: the local forces on atoms
+  real(DP), intent(out) :: forcelc (3, nat)
+  ! the local-potential contribution to forces on atoms
 
   integer :: ipol, ig, na
   ! counter on polarizations
@@ -60,7 +58,7 @@ subroutine force_lc (nat, tau, ityp, alat, omega, ngm, ngl, &
   ! contribution to the force from the local part of the bare potential
   ! F_loc = Omega \Sum_G n*(G) d V_loc(G)/d R_i
   !
-  allocate (aux(nrxx))
+  allocate (aux(dfftp%nnr))
   if ( nspin == 2) then
       aux(:) = CMPLX( rho(:,1)+rho(:,2), 0.0_dp, kind=dp )
   else

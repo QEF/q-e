@@ -28,12 +28,12 @@ PROGRAM head
   USE mp_global,       ONLY : mp_startup
   USE environment,     ONLY : environment_start
   USE klist,           ONLY : lgauss, nks
+  USE start_k,         ONLY : xk_start, wk_start, nks_start
   USE basis,           ONLY : starting_wfc, starting_pot, startingconfig
   USE force_mod,       ONLY : force
   USE io_files,        ONLY : prefix, tmp_dir
   USE input_parameters,ONLY : pseudo_dir
   USE ions_base,       ONLY : nat
-  USE start_k,         ONLY : xk_start, wk_start, nks_start
   USE noncollin_module,ONLY : noncolin
   USE scf,             ONLY : rho
   USE lsda_mod,        ONLY : nspin

@@ -29,6 +29,7 @@ efield.o \
 eigs0.o \
 electrons.o \
 electrons_nose.o \
+energies.o \
 ensemble_dft.o \
 exch_corr.o \
 exx_ggrid.o \
@@ -73,6 +74,7 @@ polarization.o \
 potentials.o \
 pres_ai_mod.o \
 print_out.o \
+printout_base.o \
 problem_size.o \
 pseudo_base.o \
 pseudopot.o \
