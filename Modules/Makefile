@@ -77,7 +77,6 @@ upf_to_internal.o \
 uspp.o \
 wave_base.o \
 wavefunctions.o \
-wannier.o \
 write_upf_v2.o \
 xc_vdW_DF.o \
 xml_input.o \

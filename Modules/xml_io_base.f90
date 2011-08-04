@@ -930,37 +930,6 @@ MODULE xml_io_base
     END SUBROUTINE write_ions
     !
     !------------------------------------------------------------------------
-!   SUBROUTINE write_vdw_df(vdw_table_name, resource_dir, copy_dirname)
-!
-!      CHARACTER(LEN=*), INTENT(IN) :: vdw_table_name
-!      CHARACTER(LEN=*), INTENT(IN) :: resource_dir
-!      CHARACTER(LEN=*), INTENT(IN) :: copy_dirname
-!      !
-!      INTEGER            :: i, flen
-!      CHARACTER(LEN=256) :: file_table
-!  
-!
-!      CALL iotk_write_begin( iunpun, "VDW_KERNEL" )
-!      CALL iotk_write_dat( iunpun, "VDW_KERNEL_NAME", vdw_table_name )
-!      CALL iotk_write_end( iunpun, "VDW_KERNEL" )    
-!
-!      flen = LEN_TRIM( resource_dir )
-!      IF ( resource_dir(flen:flen) /= '/' ) THEN
-!          !
-!          file_table = resource_dir(1:flen) // '/' // vdw_table_name
-!          !
-!      ELSE
-!          !
-!          file_table = resource_dir(1:flen) // vdw_table_name
-!          !
-!      END IF
-!      !
-!      CALL copy_file( TRIM( file_table ), TRIM( copy_dirname ) // "/" // TRIM( vdw_table_name ) )
-!
-!    END SUBROUTINE write_vdw_df
-!
-    !
-    !------------------------------------------------------------------------
     SUBROUTINE write_symmetry( ibrav, symm_type, nrot, nsym, invsym, noinv, &
                                time_reversal, no_t_rev, ft, &
                                s, sname, irt, nat, t_rev )
