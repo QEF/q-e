@@ -631,7 +631,6 @@ CONTAINS
          ! ... Starting thermalization of the system
          !
          USE symm_base,      ONLY : invsym, nsym, irt
-         USE control_flags,  ONLY : lfixatom
          USE cell_base,      ONLY : alat
          USE ions_base,      ONLY : nat, if_pos
          USE random_numbers, ONLY : gauss_dist, set_random_seed
@@ -1191,7 +1190,7 @@ CONTAINS
             FILE = trim( tmp_dir ) // trim( prefix ) // ".msd.dat" )
       !
       WRITE( 4, '(2(2X,F16.8))' ) &
-          ( istep*dt*2.D0*au_ps ), sum( msd(:) ) / dble( nat - fixatom )
+          ( istep*dt*2.D0*au_ps ), sum( msd(:) ) / dble( nat-fixatom )
       !
       CLOSE( UNIT = 4, STATUS = 'KEEP' )
       !
@@ -1248,7 +1247,7 @@ CONTAINS
       ENDDO
       !
       WRITE( UNIT = stdout, FMT = '(/,5X,"< D > = ",F16.8," cm^2/s")' ) &
-          sum( diff_coeff(:) ) / dble( nat - fixatom )
+          sum( diff_coeff(:) ) / dble( nat-fixatom )
       !
       ! ... radial distribution function g(r)
       !

@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2011 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -8,14 +8,13 @@
 !*
 !*
 subroutine vcinit (mxdtyp, mxdatm, ntype, natot, rat, ityp, avec, &
-     vcell, force, frr, calc, temp, vx2, vy2, vz2, rms, vmean, ekin, &
+     vcell, force, if_pos, frr, calc, temp, vx2, vy2, vz2, rms, vmean, ekin, &
      avmod, theta, atmass, cmass, press, p, dt, aveci, avecd, avec2d, &
      avec2di, sigma, sig0, avec0, v0, rati, ratd, rat2d, rat2di, enew, &
      uta, eka, eta, ekla, utl, etl, ut, ekint, etot, iforceh)
   !
   ! rmw (18/8/99)
-  !
-  !     Last updated in 04/12/2005 by Cesar RS Silva
+  ! Cesar RS Silva (04/12/2005)
   !
   ! input:
   ! mxdtyp = array dimension for type of atoms
@@ -50,7 +49,6 @@ subroutine vcinit (mxdtyp, mxdatm, ntype, natot, rat, ityp, avec, &
   ! theta(3,3) = angle between lattice vectors
   ! avmod(3) = lattice vectors moduli
   !
-  !
   USE kinds
   implicit none
   !
@@ -60,14 +58,13 @@ subroutine vcinit (mxdtyp, mxdatm, ntype, natot, rat, ityp, avec, &
   !
   character (len=2) :: calc
   !
-
   integer :: mxdatm, mxdtyp
   real(DP) :: avec (3, 3), avecd (3, 3), avec2d (3, 3), avec2di (3, &
        3), aveci (3, 3), g (3, 3), gm1 (3, 3), gd (3, 3), sigma (3, 3), &
        sigav (3, 3), gmgd (3, 3), avec0 (3, 3), sig0 (3, 3), avmod (3), &
        theta (3, 3), pim (3, 3), piml (3, 3), frr (3, 3)
   !
-  integer :: ityp (mxdatm), natot, iforceh(3,3)
+  integer :: ityp (mxdatm), natot, if_pos(3,mxdatm), iforceh(3,3)
   real(DP) :: atmass (mxdtyp), rat (3, mxdatm), ratd (3, mxdatm), &
        rati (3, mxdatm), rat2d (3, mxdatm), rat2di (3, mxdatm)
   !
@@ -133,7 +130,8 @@ subroutine vcinit (mxdtyp, mxdatm, ntype, natot, rat, ityp, avec, &
         do l = 1, 3
            ratd(l,na) = zero
            do k = 1, 3
-              ratd(l,na) = rat2di(k,na) * sigma(k,l) / vcell + ratd(l,na)
+              IF ( if_pos(l,na) == 1 ) &
+                 ratd(l,na) = rat2di(k,na) * sigma(k,l) / vcell + ratd(l,na) 
            enddo
         enddo
      enddo
@@ -150,7 +148,7 @@ subroutine vcinit (mxdtyp, mxdatm, ntype, natot, rat, ityp, avec, &
   do na = 1, natot
      nt = ityp(na)
      do l = 1, 3
-        rat2d (l, na) = force (l, na) / atmass (nt)
+        rat2d (l, na) = if_pos(l,na) * force (l, na) / atmass (nt)
         rat2di(l, na) = zero
      enddo
   enddo
@@ -382,7 +380,7 @@ end subroutine vcinit
 !*
 !*
 subroutine vcmove (mxdtyp, mxdatm, ntype, ityp, rat, avec, vcell, &
-     force, frr, calc, avmod, theta, atmass, cmass, press, p, dt, &
+     force, if_pos, frr, calc, avmod, theta, atmass, cmass, press, p, dt, &
      avecd, avec2d, aveci, avec2di, sigma, sig0, avec0, v0, ratd, &
      rat2d, rati, rat2di, enew, uta, eka, eta, ekla, utl, etl, ut, &
      ekint, etot, temp, tolp, ntcheck, ntimes, nst, tnew, nzero, natot, &
@@ -443,10 +441,9 @@ subroutine vcmove (mxdtyp, mxdatm, ntype, ityp, rat, avec, vcell, &
   !
   integer :: mxdatm, mxdtyp
 
-  integer :: ityp (mxdatm), iforceh(3,3)
+  integer :: ityp (mxdatm), if_pos(3,mxdtyp), iforceh(3,3)
   real(DP) :: avec (3, 3), rat (3, mxdatm)
   !
-
   real(DP) :: atmass (mxdtyp), ratd (3, mxdatm), rat2d (3, mxdatm), &
        avecd (3, 3), avec2d (3, 3), g (3, 3), gm1 (3, 3), gd (3, 3), &
        sigma (3, 3), avec0 (3, 3), sig0 (3, 3), avmod (3), theta (3, 3), &
@@ -493,7 +490,7 @@ subroutine vcmove (mxdtyp, mxdatm, ntype, ityp, rat, avec, vcell, &
   do na = 1, natot
      nt = ityp (na)
      do i = 1, 3
-        rat2d (i, na) = force (i, na) / atmass (nt)
+        rat2d (i, na) = if_pos(i,na) * force (i, na) / atmass (nt)
      enddo
   enddo
   !
@@ -538,7 +535,7 @@ subroutine vcmove (mxdtyp, mxdatm, ntype, ityp, rat, avec, vcell, &
         do na = 1, natot
            nt = ityp (na)
            do k = 1, 3
-              rat2d (k, na) = force (k, na) / atmass (nt)
+              rat2d (k, na) = if_pos(k,na) * force (k, na) / atmass (nt)
               do m = 1, 3
                  rat2d (k, na) = rat2d (k, na) - gmgd (k, m) * ratd (m, na)
               enddo

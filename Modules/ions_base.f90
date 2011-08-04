@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2005 Quantum ESPRESSO group
+! Copyright (C) 2002-2011 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -50,12 +50,12 @@
       CHARACTER(LEN=80)     :: tau_format   ! format of input atomic positions:
                                             ! 'alat','crystal','bohr','angstrom'
 
-      INTEGER, ALLOCATABLE :: if_pos(:,:)  ! if if_pos( x, i ) = 0 then  x coordinate of 
-                                           ! the i-th atom will be kept fixed
+      ! if_pos( x, i ) = 0 : x coordinate of i-th atom will be kept fixed
+      INTEGER, ALLOCATABLE :: if_pos(:,:)  ! allowed values: 0 or 1 only
       INTEGER, ALLOCATABLE :: iforce(:,:)  ! if_pos sorted by specie 
-      INTEGER :: fixatom   = -1            ! to be removed
-      INTEGER :: ndofp     = -1            ! ionic degree of freedom
-      INTEGER :: ndfrz     = 0             ! frozen degrees of freedom
+      INTEGER :: fixatom   = 0            ! number of frozen atoms
+      INTEGER :: ndofp     =-1            ! ionic degree of freedom
+      INTEGER :: ndfrz     = 0            ! frozen degrees of freedom
 
       REAL(DP) :: fricp   ! friction parameter for damped dynamics
       REAL(DP) :: greasp  ! friction parameter for damped dynamics
@@ -353,32 +353,17 @@
       !
       ! ... The constrain on fixed coordinates is implemented using the array
       ! ... if_pos whose value is 0 when the coordinate is to be kept fixed, 1
-      ! ... otherwise. fixatom is maintained for compatibility. ( C.S. 15/10/2003 )
+      ! ... otherwise. 
       !
       if_pos = 1
       if_pos(:,:) = if_pos_(:,1:nat)
       !
       iforce = 0
-      !
       iforce(:,:) = if_pos(:,ind_srt(:))
       !
-      ndofp = COUNT( iforce /= 0 )
-      !
-      ndfrz = COUNT( iforce == 0 )
-      !
-      ! ... TEMP: calculate fixatom (to be removed)
-      !
-      fixatom = 0
-      !
-      DO ia = 1, nat
-        !
-        IF ( if_pos(1,ia) /= 0 .OR. &
-             if_pos(2,ia) /= 0 .OR. &
-             if_pos(3,ia) /= 0 ) CYCLE
-        !
-        fixatom = fixatom + 1
-        !
-      END DO
+      fixatom=COUNT( if_pos(1,:)==0 .AND. if_pos(2,:)==0 .AND. if_pos(3,:)==0 )
+      ndofp = COUNT( iforce == 1 )
+      ndfrz = 3*nat - ndofp
       !
       amass(1:nsp) = amass_(1:nsp)
       !

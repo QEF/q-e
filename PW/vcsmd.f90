@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2009 Quantum ESPRESSO group
+! Copyright (C) 2001-2011 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -34,7 +34,7 @@ SUBROUTINE vcsmd()
   USE cellmd,          ONLY : nzero, ntimes, calc, press, at_old, omega_old, &
                               cmass, ntcheck, lmovecell
   USE dynamics_module, ONLY : dt, temperature
-  USE ions_base,       ONLY : fixatom, amass_ => amass 
+  USE ions_base,       ONLY : amass, if_pos 
   USE relax,           ONLY : epse, epsf, epsp
   USE force_mod,       ONLY : force, sigma
   USE control_flags,   ONLY : nstep, istep, tolp, conv_ions 
@@ -54,7 +54,7 @@ SUBROUTINE vcsmd()
   !  tau(i,na) =  position of the na-th atom
   !  at (icar,ivec) = direct Bravais lattice vectors
   !  bg (icar,ivec) = reciprocal lattice vectors
-  !  amass(nt) = mass (in atomic ryd units) for atom of nt-th type
+  !  amass_(nt) = mass (in atomic ryd units) for atom of nt-th type
   !  cmass = cell mass in ryd units.
   !  press = target pressure in ryd/(a.u.)^3
   !
@@ -71,7 +71,7 @@ SUBROUTINE vcsmd()
                    sig0(3,3),    & ! sigma at t=0
                    v0              ! volume at t=0
   REAL(DP), ALLOCATABLE ::      &
-                   amass(:),     & ! scaled atomic masses
+                   amass_(:),    & ! scaled atomic masses
                    rat(:,:),     & ! atomic positions (lattice coord)
                    rati(:,:),    & ! rat at previous step
                    ratd(:,:),    & ! rat derivatives at current step
@@ -109,8 +109,8 @@ SUBROUTINE vcsmd()
   !
   ! ... Allocate work arrays
   !
-  ALLOCATE( amass(ntyp) )
-  amass(1:ntyp) = amass_(1:ntyp) * amconv
+  ALLOCATE( amass_(ntyp) )
+  amass_(1:ntyp) = amass(1:ntyp) * amconv
   ALLOCATE( rat(3,nat) )
   ALLOCATE( rati(3,nat) )
   ALLOCATE( ratd(3,nat) )
@@ -329,9 +329,9 @@ SUBROUTINE vcsmd()
      !
      enew = etot - e_start
      !
-     CALL vcinit( ntyp, nat, ntyp, nat-fixatom, rat, ityp, avec, vcell, force,   &
+     CALL vcinit( ntyp, nat, ntyp, nat, rat, ityp, avec, vcell, force, if_pos, &
                 sigma, calc, temperature, vx2, vy2, vz2, rms, vmean, ekin,     &
-                avmod, theta, amass, cmass, press, p, dt, aveci, avecd, avec2d,&
+                avmod, theta, amass_,cmass, press, p, dt, aveci, avecd, avec2d,&
                 avec2di, sigmamet, sig0, avec0, v0, rati, ratd, rat2d, rat2di, &
                 enew, uta, eka, eta, ekla, utl, etl, ut, ekint, edyn, iforceh )
      !
@@ -339,12 +339,12 @@ SUBROUTINE vcsmd()
      !
      enew = etot - e_start
      !
-     CALL vcmove( ntyp, nat, ntyp, ityp, rat, avec, vcell, force,                &
-                sigma, calc, avmod, theta, amass, cmass, press, p, dt, avecd,  &
+     CALL vcmove( ntyp, nat, ntyp, ityp, rat, avec, vcell, force, if_pos,      &
+                sigma, calc, avmod, theta, amass_,cmass, press, p, dt, avecd,  &
                 avec2d, aveci, avec2di, sigmamet, sig0, avec0, v0, ratd, rat2d,&
                 rati, rat2di, enew, uta, eka, eta, ekla, utl, etl, ut, ekint,  &
                 edyn, temperature, tolp, ntcheck, ntimes, istep, tnew, nzero,  &
-                nat-fixatom, acu, ack, acp, acpv, avu, avk, avp, avpv, iforceh)
+                nat, acu, ack, acp, acpv, avu, avk, avp, avpv, iforceh)
      !
   END IF
   !
@@ -457,7 +457,7 @@ SUBROUTINE vcsmd()
   !
   ! ... Deallocate
   !
-  DEALLOCATE( amass, rat, rati, ratd, rat2d, rat2di, tauold )
+  DEALLOCATE( amass_, rat, rati, ratd, rat2d, rat2di, tauold )
   !
   RETURN
   !

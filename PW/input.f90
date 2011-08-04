@@ -1495,9 +1495,7 @@ SUBROUTINE read_cards_pw ( psfile, tau_format )
                                  wk_    => wk
   USE fixed_occ,          ONLY : tfixed_occ, &
                                  f_inp_ => f_inp
-  USE ions_base,          ONLY : fixatom, &
-                                 if_pos_ =>  if_pos
-  USE ions_base,          ONLY : amass
+  USE ions_base,          ONLY : if_pos_ =>  if_pos, amass, fixatom
   USE control_flags,      ONLY : lfixatom, gamma_only, textfor
   !
   IMPLICIT NONE
@@ -1548,26 +1546,13 @@ SUBROUTINE read_cards_pw ( psfile, tau_format )
       CALL errore("cards","list of species in block ATOMIC_VELOCITIES &
                  & must be identical to those in ATOMIC_POSITIONS",1)
   !
-  ! ... calculate fixatom
-  !
-  fixatom = 0
-  lfixatom = any( if_pos(:,1:nat) == 0 ) 
-  !
-  DO ia = 1, nat
-     !
-     IF ( if_pos(1,ia) /= 0 .or. &
-          if_pos(2,ia) /= 0 .or. &
-          if_pos(3,ia) /= 0 ) CYCLE
-     !
-     fixatom = fixatom + 1
-     !
-  ENDDO
-  !
   ! ... The constrain on fixed coordinates is implemented using the array
   ! ... if_pos whose value is 0 when the coordinate is to be kept fixed, 1
-  ! ... otherwise. fixatom is maintained for compatibility. ( C.S. 15/10/2003 )
+  ! ... otherwise. 
   !
   if_pos_(:,:) = if_pos(:,1:nat)
+  fixatom = COUNT( if_pos_(1,:)==0 .AND. if_pos_(2,:)==0 .AND. if_pos_(3,:)==0 )
+  lfixatom = ANY ( if_pos_ == 0 )
   !
   tau_format = trim( atomic_positions )
   !
