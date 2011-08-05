@@ -959,7 +959,7 @@ SUBROUTINE newnlinit()
 END SUBROUTINE newnlinit
 !
 !-----------------------------------------------------------------------
-subroutine nlfh_x( stress, bec_bgrp, dbec, lambda )
+subroutine nlfh_x( stress, bec_bgrp, dbec, lambda, descla )
   !-----------------------------------------------------------------------
   !
   !     contribution to the internal stress tensor due to the constraints
@@ -973,7 +973,6 @@ subroutine nlfh_x( stress, bec_bgrp, dbec, lambda )
   use constants,         ONLY : pi, fpi, au_gpa
   use io_global,         ONLY : stdout
   use control_flags,     ONLY : iprsta
-  USE cp_main_variables, ONLY : descla, nrcx
   USE descriptors,       ONLY : la_descriptor
   USE mp,                ONLY : mp_sum
   USE mp_global,         ONLY : intra_bgrp_comm, inter_bgrp_comm
@@ -981,15 +980,18 @@ subroutine nlfh_x( stress, bec_bgrp, dbec, lambda )
 !
   implicit none
 
+  TYPE(la_descriptor), INTENT(IN) :: descla(:)
   REAL(DP), INTENT(INOUT) :: stress(3,3) 
   REAL(DP), INTENT(IN)    :: bec_bgrp( :, : ), dbec( :, :, :, : )
   REAL(DP), INTENT(IN)    :: lambda( :, :, : )
 !
   INTEGER  :: i, j, ii, jj, inl, iv, jv, ia, is, iss, nss, istart
-  INTEGER  :: jnl, ir, ic, nr, nc, nx, ibgrp_i
+  INTEGER  :: jnl, ir, ic, nr, nc, ibgrp_i, nrcx
   REAL(DP) :: fpre(3,3), TT, T1, T2
   !
   REAL(DP), ALLOCATABLE :: tmpbec(:,:), tmpdh(:,:), temp(:,:), bec(:,:,:)
+  !
+  nrcx = MAXVAL( descla( : )%nrcx )
   !
   ALLOCATE( bec( nkb, nrcx, nspin ) )
   !
@@ -1014,16 +1016,8 @@ subroutine nlfh_x( stress, bec_bgrp, dbec, lambda )
 
   CALL mp_sum( bec, inter_bgrp_comm )
   !
-  nx = 0
-  IF( descla( 1 )%active_node > 0 ) THEN
-     nx = descla( 1 )%nrcx
-  END IF
-  IF( ( nspin == 2 ) .AND. ( descla( 2 )%active_node > 0 ) ) THEN
-     nx = MAX( nx , descla( 2 )%nrcx )
-  END IF
-
   IF( ( descla( 1 )%active_node > 0 ) .OR. ( descla( 2 )%active_node > 0 ) ) THEN
-     ALLOCATE ( tmpbec(nhm,nx), tmpdh(nx,nhm), temp(nx,nx) )
+     ALLOCATE ( tmpbec(nhm,nrcx), tmpdh(nrcx,nhm), temp(nrcx,nrcx) )
   END IF
   !
   fpre = 0.d0
@@ -1072,7 +1066,7 @@ subroutine nlfh_x( stress, bec_bgrp, dbec, lambda )
                     if(nh(is).gt.0)then
 
                        CALL dgemm &
-                       ( 'N', 'N', nr, nc, nh(is), 1.0d0, tmpdh, nx, tmpbec, nhm, 0.0d0, temp, nx )
+                       ( 'N', 'N', nr, nc, nh(is), 1.0d0, tmpdh, nrcx, tmpbec, nhm, 0.0d0, temp, nrcx )
 
                        do j = 1, nc
                           do i = 1, nr
@@ -1482,13 +1476,15 @@ subroutine dylmr2_( nylm, ngy, g, gg, ainv, dylm )
 end subroutine dylmr2_
 
 
-SUBROUTINE print_lambda_x( lambda, n, nshow, ccc, iunit )
+SUBROUTINE print_lambda_x( lambda, descla, n, nshow, ccc, iunit )
     USE kinds, ONLY : DP
+    USE descriptors,       ONLY: la_descriptor
     USE io_global,         ONLY: stdout, ionode
-    USE cp_main_variables, ONLY: collect_lambda, descla
+    USE cp_main_variables, ONLY: collect_lambda
     USE electrons_base,    ONLY: nudx
     IMPLICIT NONE
     real(DP), intent(in) :: lambda(:,:,:), ccc
+    TYPE(la_descriptor), INTENT(IN) :: descla(:)
     integer, intent(in) :: n, nshow
     integer, intent(in), optional :: iunit
     !
@@ -1727,7 +1723,7 @@ END SUBROUTINE print_lambda_x
    END FUNCTION enkin_x
 
 !-------------------------------------------------------------------------
-      SUBROUTINE nlfl_bgrp( bec_bgrp, becdr_bgrp, lambda, fion )
+      SUBROUTINE nlfl_bgrp_x( bec_bgrp, becdr_bgrp, lambda, descla, fion )
 !-----------------------------------------------------------------------
 !     contribution to fion due to the orthonormality constraint
 ! 
@@ -1740,17 +1736,19 @@ END SUBROUTINE print_lambda_x
       USE electrons_base,    ONLY: nspin, iupdwn, nupdwn, nbspx_bgrp, ibgrp_g2l, i2gupdwn_bgrp, nbspx, &
                                    iupdwn_bgrp, nupdwn_bgrp
       USE constants,         ONLY: pi, fpi
-      USE cp_main_variables, ONLY: nlam, nrcx, descla
       USE descriptors,       ONLY: la_descriptor
       USE mp,                ONLY: mp_sum
       USE mp_global,         ONLY: intra_bgrp_comm, inter_bgrp_comm
 !
       IMPLICIT NONE
-      REAL(DP) bec_bgrp(nhsa,nbspx_bgrp), becdr_bgrp(nhsa,nbspx_bgrp,3), lambda(nlam,nlam,nspin)
-      REAL(DP) fion(3,nat)
+      REAL(DP) :: bec_bgrp(:,:), becdr_bgrp(:,:,:)
+      REAL(DP), INTENT(IN) :: lambda(:,:,:)
+      TYPE(la_descriptor), INTENT(IN) :: descla(:)
+      REAL(DP), INTENT(INOUT) :: fion(:,:)
+
 !
       INTEGER :: k, is, ia, iv, jv, i, j, inl, isa, iss, nss, istart, ir, ic, nr, nc, ibgrp_i
-      INTEGER :: n1, n2, m1, m2
+      INTEGER :: n1, n2, m1, m2, nrcx
       REAL(DP), ALLOCATABLE :: temp(:,:), tmpbec(:,:),tmpdr(:,:) 
       REAL(DP), ALLOCATABLE :: fion_tmp(:,:)
       REAL(DP), ALLOCATABLE :: bec(:,:,:)
@@ -1763,6 +1761,8 @@ END SUBROUTINE print_lambda_x
       ALLOCATE( fion_tmp( 3, nat ) )
       !
       fion_tmp = 0.0d0
+      !
+      nrcx = MAXVAL( descla( : )%nrcx )
       !
       ALLOCATE( temp( nrcx, nrcx ), tmpbec( nhm, nrcx ), tmpdr( nrcx, nhm ) )
       ALLOCATE( bec( nhsa, nrcx, nspin ), becdr( nhsa, nrcx, nspin, 3 ) )
@@ -1884,7 +1884,7 @@ END SUBROUTINE print_lambda_x
       !
       RETURN
 
-      END SUBROUTINE nlfl_bgrp
+      END SUBROUTINE nlfl_bgrp_x
 
 
 !

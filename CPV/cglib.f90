@@ -15,14 +15,14 @@
 !
       USE kinds,             ONLY: DP
       use electrons_base,    ONLY: nudx, nspin, nupdwn, iupdwn, nx => nbspx
-      USE cp_main_variables, ONLY: descla, nrlx
+      USE cp_main_variables, ONLY: descla
       USE descriptors,       ONLY: la_descriptor , ldim_cyclic
       USE mp,                ONLY: mp_sum, mp_bcast
 
       implicit none
       logical firstiter
 
-      real(DP) :: zmat( nrlx, nudx, nspin ), fmat( nrlx, nudx, nspin ), fdiag( nx )
+      real(DP) :: zmat( MAXVAL(descla(:)%nrlx), nudx, nspin ), fmat( MAXVAL(descla(:)%nrlx), nudx, nspin ), fdiag( nx )
                   !  NOTE: zmat and fmat are distributed by row across processors
                   !        fdiag is replicated
 
@@ -48,7 +48,7 @@
 
          IF( descla( iss )%active_node > 0 ) THEN
 
-            ALLOCATE( mtmp( nrlx, nudx ) )
+            ALLOCATE( mtmp( MAXVAL(descla(:)%nrlx), nudx ) )
 
             DO ip = 1, np_rot
 
@@ -92,14 +92,14 @@
       use uspp, only :nhsa=>nkb, nhsavb=>nkbus, qq
       use gvecw, only: ngw
       use ions_base, only: nsp, na
-      USE cp_main_variables, ONLY: descla, nrlx
+      USE cp_main_variables, ONLY: descla
       USE descriptors,       ONLY: la_descriptor
       USE cp_interfaces,     ONLY: protate
 
       implicit none
       integer iss, nss, istart
       integer :: np_rot, me_rot, nrl, comm_rot
-      real(kind=DP)    z0( nrlx, nudx, nspin )
+      real(kind=DP)    z0( MAXVAL(descla(:)%nrlx), nudx, nspin )
       real(kind=DP)    bec( nhsa, n ), becdiag( nhsa, n )
       complex(kind=DP) c0( ngw, nx ), c0diag( ngw, nx )
       logical firstiter

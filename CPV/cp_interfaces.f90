@@ -49,6 +49,7 @@
    PUBLIC :: ortho_gamma
 
    PUBLIC :: nlfh
+   PUBLIC :: nlfl_bgrp
 
    PUBLIC :: pseudo_stress
    PUBLIC :: compute_gagb
@@ -298,9 +299,10 @@
    INTERFACE writefile
       SUBROUTINE writefile_x &
       &     ( h,hold,nfi,c0,cm,taus,tausm,vels,velsm,acc,           &
-      &       lambda,lambdam,xnhe0,xnhem,vnhe,xnhp0,xnhpm,vnhp,nhpcl,nhpdim,ekincm,&
+      &       lambda,lambdam,descla,xnhe0,xnhem,vnhe,xnhp0,xnhpm,vnhp,nhpcl,nhpdim,ekincm,&
       &       xnhh0,xnhhm,vnhh,velh, fion, tps, mat_z, occ_f, rho )
          USE kinds,            ONLY: DP
+         USE descriptors,      ONLY: la_descriptor
          implicit none
          integer, INTENT(IN) :: nfi
          REAL(DP), INTENT(IN) :: h(3,3), hold(3,3)
@@ -308,6 +310,7 @@
          REAL(DP), INTENT(IN) :: tausm(:,:), taus(:,:), fion(:,:)
          REAL(DP), INTENT(IN) :: vels(:,:), velsm(:,:)
          REAL(DP), INTENT(IN) :: acc(:), lambda(:,:,:), lambdam(:,:,:)
+         TYPE(la_descriptor),  INTENT(IN) :: descla( : )
          REAL(DP), INTENT(IN) :: xnhe0, xnhem, vnhe, ekincm
          REAL(DP), INTENT(IN) :: xnhp0(:), xnhpm(:), vnhp(:)
          integer,      INTENT(in) :: nhpcl, nhpdim
@@ -751,12 +754,14 @@
    END INTERFACE
 
    INTERFACE set_evtot
-      SUBROUTINE set_evtot_x( c0, ctot, lambda, iupdwn_tot, nupdwn_tot )
+      SUBROUTINE set_evtot_x( c0, ctot, lambda, descla, iupdwn_tot, nupdwn_tot )
          USE kinds,            ONLY: DP
+         USE descriptors,      ONLY: la_descriptor
          IMPLICIT NONE
          COMPLEX(DP), INTENT(IN)  :: c0(:,:)
          COMPLEX(DP), INTENT(OUT) :: ctot(:,:)
          REAL(DP),    INTENT(IN)  :: lambda(:,:,:)
+         TYPE(la_descriptor), INTENT(IN) :: descla(:)
          INTEGER,     INTENT(IN)  :: iupdwn_tot(2), nupdwn_tot(2)
       END SUBROUTINE
    END INTERFACE
@@ -801,20 +806,37 @@
    END INTERFACE
 
    INTERFACE nlfh
-      SUBROUTINE nlfh_x( stress, bec, dbec, lambda )
+      SUBROUTINE nlfh_x( stress, bec, dbec, lambda, descla )
          USE kinds, ONLY : DP
+         USE descriptors,       ONLY: la_descriptor
          IMPLICIT NONE
          REAL(DP), INTENT(INOUT) :: stress(3,3) 
          REAL(DP), INTENT(IN)    :: bec( :, : ), dbec( :, :, :, : )
          REAL(DP), INTENT(IN)    :: lambda( :, :, : )
+         TYPE(la_descriptor), INTENT(IN) :: descla(:)
       END SUBROUTINE
    END INTERFACE
 
+   INTERFACE nlfl_bgrp
+      SUBROUTINE nlfl_bgrp_x( bec_bgrp, becdr_bgrp, lambda, descla, fion )
+         USE kinds,             ONLY: DP
+         USE descriptors,       ONLY: la_descriptor
+         IMPLICIT NONE
+         REAL(DP) :: bec_bgrp(:,:), becdr_bgrp(:,:,:)
+         REAL(DP), INTENT(IN) :: lambda(:,:,:)
+         TYPE(la_descriptor), INTENT(IN) :: descla(:)
+         REAL(DP), INTENT(INOUT) :: fion(:,:)
+      END SUBROUTINE
+   END INTERFACE
+
+
    INTERFACE print_lambda
-      SUBROUTINE print_lambda_x( lambda, n, nshow, ccc, iunit )
+      SUBROUTINE print_lambda_x( lambda, descla, n, nshow, ccc, iunit )
          USE kinds, ONLY : DP
+         USE descriptors,       ONLY: la_descriptor
          IMPLICIT NONE
          REAL(DP), INTENT(IN) :: lambda(:,:,:), ccc
+         TYPE(la_descriptor), INTENT(IN) :: descla(:)
          INTEGER, INTENT(IN) :: n, nshow
          INTEGER, INTENT(IN), OPTIONAL :: iunit
       END SUBROUTINE

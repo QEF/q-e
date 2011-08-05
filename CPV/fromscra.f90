@@ -42,7 +42,7 @@ SUBROUTINE from_scratch( )
     USE cg_module,            ONLY : tcg
     USE ensemble_dft,         ONLY : tens, compute_entropy
     USE cp_interfaces,        ONLY : runcp_uspp, runcp_uspp_force_pairing, &
-                                     strucf, phfacs, nlfh, vofrho
+                                     strucf, phfacs, nlfh, vofrho, nlfl_bgrp
     USE cp_interfaces,        ONLY : rhoofr, ortho, wave_rand_init, elec_fakekine
     USE cp_interfaces,        ONLY : compute_stress
     USE cp_interfaces,        ONLY : print_lambda
@@ -237,13 +237,13 @@ SUBROUTINE from_scratch( )
       endif
       !
       IF ( ttforce ) THEN
-         CALL nlfl_bgrp( bec_bgrp, becdr_bgrp, lambda, fion )
+         CALL nlfl_bgrp( bec_bgrp, becdr_bgrp, lambda, descla, fion )
       END IF
 
-      if ( iprsta >= 3 ) CALL print_lambda( lambda, nbsp, 9, ccc )
+      if ( iprsta >= 3 ) CALL print_lambda( lambda, descla, nbsp, 9, ccc )
 
       !
-      if ( tstress ) CALL nlfh( stress, bec_bgrp, dbec, lambda )
+      if ( tstress ) CALL nlfh( stress, bec_bgrp, dbec, lambda, descla )
       !
       IF ( tortho ) THEN
          CALL updatc( ccc, lambda, phi_bgrp, bephi, becp_bgrp, bec_bgrp, c0_bgrp, descla )

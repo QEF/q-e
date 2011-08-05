@@ -53,7 +53,7 @@
 
       USE cp_interfaces,  ONLY: rhoofr, dforce, protate, vofrho
       USE cg_module,      ONLY: itercg
-      USE cp_main_variables, ONLY: distribute_lambda, descla, nrcx, collect_lambda, drhor, drhog
+      USE cp_main_variables, ONLY: distribute_lambda, descla, collect_lambda, drhor, drhog
       USE descriptors,       ONLY: descla_init , la_descriptor
       USE dspev_module,   ONLY: pdspev_drv, dspev_drv
 
@@ -102,7 +102,7 @@
       CALL start_clock( 'inner_loop')
 
       allocate(fion2(3,nat))
-      allocate(c0hc0(nrcx,nrcx,nspin))
+      allocate(c0hc0(MAXVAL( descla(:)%nrcx ),MAXVAL( descla(:)%nrcx ),nspin))
       allocate(h0c0(ngw,nx))
 
 
@@ -345,7 +345,7 @@
       USE ions_positions, ONLY: tau0
       USE mp,             ONLY: mp_sum,mp_bcast
       use cp_interfaces,  only: rhoofr, dforce, vofrho
-      USE cp_main_variables, ONLY: descla, nrcx, nrlx, drhor, drhog
+      USE cp_main_variables, ONLY: descla, drhor, drhog
       USE fft_base,       ONLY: dfftp, dffts
 
       !
@@ -374,8 +374,8 @@
       COMPLEX(kind=DP)            :: ei3( dfftp%nr3:dfftp%nr3, nat )
       COMPLEX(kind=DP)            :: sfac( ngms, nsp )
   
-      REAL(kind=DP), INTENT(in)   :: c0hc0(nrcx,nrcx,nspin)
-      REAL(kind=DP), INTENT(in)   :: c1hc1(nrcx,nrcx,nspin)
+      REAL(kind=DP), INTENT(in)   :: c0hc0(MAXVAL(descla(:)%nrcx),MAXVAL(descla(:)%nrcx),nspin)
+      REAL(kind=DP), INTENT(in)   :: c1hc1(MAXVAL(descla(:)%nrcx),MAXVAL(descla(:)%nrcx),nspin)
       REAL(kind=DP), INTENT(in)   :: lambda
       REAL(kind=DP), INTENT(out)  :: free_energy
 
@@ -388,10 +388,10 @@
 
       CALL start_clock( 'inner_lambda')
       
-      allocate(clhcl(nrcx,nrcx,nspin))
+      allocate(clhcl(MAXVAL( descla(:)%nrcx ),MAXVAL( descla(:)%nrcx ),nspin))
       allocate(eaux(nx))
       allocate(faux(nx))
-      allocate(zauxt(nrlx,nudx,nspin))
+      allocate(zauxt(MAXVAL(descla(:)%nrlx),nudx,nspin))
       allocate(fion2(3,nat))
 
 
@@ -530,7 +530,7 @@
 
       USE cp_interfaces,  ONLY: rhoofr, dforce, protate
       USE cg_module,      ONLY: itercg
-      USE cp_main_variables, ONLY: distribute_lambda, descla, nrcx, collect_lambda, nrlx
+      USE cp_main_variables, ONLY: distribute_lambda, descla, collect_lambda
       USE descriptors,       ONLY: la_descriptor, descla_init
       USE dspev_module,   ONLY: pdspev_drv, dspev_drv
 
@@ -540,8 +540,8 @@
 
       COMPLEX(kind=DP)            :: c0( ngw, n )
       REAL(kind=DP)               :: bec( nhsa, n )
-      REAL(kind=DP)               :: psihpsi( nrcx, nrcx, nspin )
-      REAL(kind=DP)               :: z0t( nrlx, nudx, nspin )
+      REAL(kind=DP)               :: psihpsi( MAXVAL( descla(:)%nrcx ), MAXVAL( descla(:)%nrcx ), nspin )
+      REAL(kind=DP)               :: z0t( MAXVAL(descla(:)%nrlx), nudx, nspin )
       REAL(kind=DP)               :: e0( nx )
 
       INTEGER :: i,k, is, nss, istart, ig

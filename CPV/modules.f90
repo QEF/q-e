@@ -5,57 +5,6 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-!     n     = total number of electronic states
-!     nx    = if n is even, nx=n ; if it is odd, nx=n+1
-!             nx is used only to dimension arrays
-
-!     tpiba   = 2*pi/alat
-!     tpiba2  = (2*pi/alat)**2
-!     ng      = number of G vectors for density and potential
-!     ngl     = number of shells of G
-
-!     G-vector quantities for the thick grid - see also doc in ggen 
-!     g2      = G^2 in increasing order (in units of tpiba2=(2pi/a)^2)
-!     gl      = shells of G^2           ( "   "   "    "      "      )
-!     g       = G-vectors               ( "   "   "  tpiba =(2pi/a)  )
-!     g2_g    = all G^2 in increasing order, replicated on all procs
-!
-!     mill    = miller index of G vecs (local to the processors)
-!     mill_g  = miller index of G vecs (increasing order), replicated on all procs
-!     ig_l2g  = "l2g" means local to global, this array convert a local
-!               G-vector index into the global index, in other words
-!               the index of the G-v. in the overall array of G-vectors
-!     bi?     = base vector used to generate the reciprocal space
-!
-!     np      = fft index for G>
-!     nm      = fft index for G<
-!
-
-
-!
-!  lqmax:  maximum angular momentum of Q (Vanderbilt augmentation charges)
-! 
-
-!  nbeta    number of beta functions (sum over all l)
-!  kkbeta   last radial mesh point used to describe functions
-!                 which vanish outside core
-!  nqf      coefficients in Q smoothing
-!  nqlc     angular momenta present in Q smoothing
-!  lll      lll(j) is l quantum number of j'th beta function
-!  lmaxq      highest angular momentum that is present in Q functions
-!  lmaxkb   highest angular momentum that is present in beta functions
-!  dion     bare pseudopotential D_{\mu,\nu} parameters
-!              (ionic and screening parts subtracted out)
-!  betar    the beta function on a r grid (actually, r*beta)
-!  qqq      Q_ij matrix
-!  qfunc    Q_ij(r) function (for r>rinner)
-!  rinner   radius at which to cut off partial core or Q_ij
-!
-!  qfcoef   coefficients to pseudize qfunc for different total
-!              angular momentum (for r<rinner)
-!  vloc_at  local potential for each atom
-
-
 module local_pseudo
   use kinds, only: DP
   implicit none

@@ -10,7 +10,7 @@
 !
    subroutine runcg_uspp( nfi, tfirst, tlast, eigr, bec, irb, eigrb, &
       rhor, rhog, rhos, rhoc, ei1, ei2, ei3, sfac, fion, ema0bg, becdr, &
-      lambdap, lambda, vpot, c0, cm, phi, dbec  )
+      lambdap, lambda, nlam, vpot, c0, cm, phi, dbec  )
 
       use kinds, only: dp
       use control_flags, only: iprint, thdyn, tpre, iprsta, &
@@ -53,8 +53,8 @@
       use mp,                       only : mp_sum, mp_bcast
       use cp_electronic_mass,       ONLY : emass_cutoff
       use orthogonalize_base,       ONLY : calphi_bgrp
-      use cp_interfaces,            ONLY : rhoofr, dforce, compute_stress, vofrho
-      USE cp_main_variables,        ONLY : collect_lambda, distribute_lambda, descla, nrlx, nlam, drhor, drhog
+      use cp_interfaces,            ONLY : rhoofr, dforce, compute_stress, vofrho, nlfl_bgrp
+      USE cp_main_variables,        ONLY : collect_lambda, distribute_lambda, descla, drhor, drhog
       USE descriptors,              ONLY : la_descriptor, ldim_cyclic
       USE mp_global, ONLY:  me_image, my_image_id, nbgrp
       USE fft_base,  ONLY: dffts, dfftp
@@ -65,7 +65,7 @@
 !
       CHARACTER(LEN=80) :: uname
       CHARACTER(LEN=6), EXTERNAL :: int_to_char
-      integer :: nfi
+      integer :: nfi, nlam
       logical :: tfirst , tlast
       complex(dp) :: eigr(ngw,nat)
       real(dp) :: bec(nhsa,nbspx)
@@ -91,7 +91,7 @@
       real(dp) :: dbec(nhsa,nbspx,3,3)
 !
 !
-      integer :: i, j, ig, k, is, iss,ia, iv, jv, il, ii, jj, kk, ip
+      integer :: i, j, ig, k, is, iss,ia, iv, jv, il, ii, jj, kk, ip, nrlx
       integer :: inl, jnl, niter, istart, nss, nrl, me_rot, np_rot , comm
       real(dp) :: enb, enbi, x
       complex(dp), allocatable :: c2(:)
@@ -124,6 +124,7 @@
       real(DP)  passof,passov !step to minimum: effective, estimated
       real(DP)  ene0,ene1,dene0,enesti !energy terms for linear minimization along hi
    
+      nrlx = MAXVAL(descla(:)%nrlx)
 
       allocate(bec0(nhsa,nbspx),becm(nhsa,nbspx), becdrdiag(nhsa,nbspx,3))
       allocate (ave_ene(nbspx))
@@ -943,7 +944,7 @@
         !
   
         !
-        CALL nlfl_bgrp( bec, becdr, lambda, fion ) 
+        CALL nlfl_bgrp( bec, becdr, lambda, descla, fion ) 
           
         ! bforceion adds the force term due to electronic berry phase
         ! only in US-case

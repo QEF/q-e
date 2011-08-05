@@ -503,7 +503,7 @@ SUBROUTINE caldbec_bgrp( eigr, c_bgrp, dbec )
   use uspp_param, only : nh, nhm, ish
   use gvect,      only : gstart
   use gvecw,      only : ngw
-  USE cp_main_variables,  ONLY : descla, nrcx
+  USE cp_main_variables,  ONLY : descla
   USE descriptors,        ONLY : la_descriptor
   use electrons_base,     only : nspin, iupdwn, nupdwn, nbspx_bgrp, iupdwn_bgrp, nupdwn_bgrp, &
                                  ibgrp_g2l, i2gupdwn_bgrp, nbspx, nbsp_bgrp
@@ -512,14 +512,15 @@ SUBROUTINE caldbec_bgrp( eigr, c_bgrp, dbec )
   !
   complex(DP), intent(in)  :: c_bgrp( ngw, nbspx_bgrp )
   real(DP),    intent(in)  :: eigr(2,ngw,nat)
-  real(DP),    intent(out) :: dbec( nkb, 2*nrcx, 3, 3 )
+  real(DP),    intent(out) :: dbec( nkb, 2*MAXVAL(descla(:)%nrcx), 3, 3 )
   !
   real(DP), allocatable :: wrk2(:,:,:), dwrk_bgrp(:,:)
   !
   integer   :: ig, is, iv, ia, l, ixr, ixi, inl, i, j, ii, isa, nanh, iw, iss, nr, ir, istart, nss
-  integer   :: n1, n2, m1, m2, ibgrp_i
+  integer   :: n1, n2, m1, m2, ibgrp_i, nrcx
   real(DP) :: signre, signim, arg
   !
+  nrcx = MAXVAL(descla(:)%nrcx)
   !
   dbec = 0.0d0
   !
@@ -627,21 +628,23 @@ subroutine dennl( bec_bgrp, dbec, drhovan, denl )
   use io_global,  only : stdout
   use mp,         only : mp_sum
   use mp_global,  only : intra_bgrp_comm
-  USE cp_main_variables,  ONLY : descla, nrcx
+  USE cp_main_variables,  ONLY : descla
   USE descriptors,        ONLY : la_descriptor
   use electrons_base,     only : nbspx_bgrp, nbsp_bgrp, ispin_bgrp, f_bgrp, nspin, iupdwn, nupdwn, ibgrp_g2l
   use gvect, only : gstart
 
   implicit none
 
-  real(DP), intent(in)  :: dbec( nkb, 2*nrcx, 3, 3 )
+  real(DP), intent(in)  :: dbec( nkb, 2*MAXVAL(descla(:)%nrcx), 3, 3 )
   real(DP), intent(in)  :: bec_bgrp( nkb, nbspx_bgrp )
   real(DP), intent(out) :: drhovan( nhm*(nhm+1)/2, nat, nspin, 3, 3 )
   real(DP), intent(out) :: denl( 3, 3 )
 
   real(DP) :: dsum(3,3),dsums(2,3,3), detmp(3,3)
   integer   :: is, iv, jv, ijv, inl, jnl, isa, ism, ia, iss, i,j,k
-  integer   :: istart, nss, ii, ir, nr, ibgrp
+  integer   :: istart, nss, ii, ir, nr, ibgrp, nrcx
+  !
+  nrcx = MAXVAL(descla(:)%nrcx)
   !
   denl=0.d0
   drhovan=0.0d0

@@ -45,7 +45,7 @@ SUBROUTINE init_run()
                                        irb, eigrb, rhog, rhos, rhor,     &
                                        acc, acc_this_run, wfill, &
                                        edft, nfi, vpot, ht0, htm, iprint_stdout
-  USE cp_main_variables,        ONLY : allocate_mainvar, nrcx, descla, nrlx
+  USE cp_main_variables,        ONLY : allocate_mainvar, descla
   USE energies,                 ONLY : eself, enl, ekin, etot, enthal, ekincm
   USE dener,                    ONLY : detot
   USE time_step,                ONLY : dt2, delt, tps
@@ -219,7 +219,8 @@ SUBROUTINE init_run()
   IF ( tens .OR. tcg ) THEN
      IF( nbgrp > 1 ) &
         CALL errore( ' init_run ', ' ensemble_dft with band paralleliztion not implemented ', 1 )
-     CALL allocate_ensemble_dft( nkb, nbsp, ngw, nudx, nspin, nbspx, dffts%nnr, nat, nrcx, nrlx )
+     CALL allocate_ensemble_dft( nkb, nbsp, ngw, nudx, nspin, nbspx, dffts%nnr, nat, &
+                                 MAXVAL(descla(:)%nrcx), MAXVAL(descla(:)%nrlx) )
   END IF
   !
   IF ( tcg ) THEN 

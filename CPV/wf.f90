@@ -3082,7 +3082,7 @@ END SUBROUTINE jacobi_rotation
        USE cell_base,        ONLY : alat
        USE constants,        ONLY : tpi, autoaf => BOHR_RADIUS_ANGS
        USE mp_global,        ONLY : nproc_image, me_image, intra_image_comm
-       USE cp_main_variables, ONLY: distribute_lambda, descla, nlam, collect_lambda
+       USE cp_main_variables, ONLY: distribute_lambda, descla, collect_lambda
        USE printout_base,     ONLY : printout_base_open, printout_base_unit, printout_base_close
        USE parallel_include
 
@@ -3096,8 +3096,17 @@ END SUBROUTINE jacobi_rotation
        REAL(DP),    ALLOCATABLE,  DIMENSION(:,:) :: identy,Um,Up,U0,Ul,W,X2,X3,tmpr2,tmpi2, tmpr,tmpi
        COMPLEX(DP), ALLOCATABLE,  DIMENSION(:, :, :) :: Oc, Ocold, Ol
    
-       INTEGER  ::  i, j, inw, nmax, iter, iunit,ini, nr, nc, ir, ic, ierr
+       INTEGER  ::  i, j, inw, nmax, iter, iunit,ini, nr, nc, ir, ic, ierr, nlam
        REAL(DP) :: t0, myt0, fric, t2(nw), mt(nw), oldt0,fric1,spread,sp, eps, wfdt2, fricp, fricm
+
+       nlam = 1
+       IF( SIZE( descla ) < 2 ) THEN
+          IF( descla(1)%active_node > 0 ) &
+             nlam = descla(1)%nrcx
+       ELSE
+          IF( ( descla(1)%active_node > 0 ) .OR. ( descla(2)%active_node > 0 ) ) &
+             nlam = MAX( descla(1)%nrcx, descla(2)%nrcx )
+       END IF
    
        ALLOCATE(Oc(nbsp,nbsp, nw), Ocold(nbsp,nbsp,nw), Ol(nlam,nlam,nw))
        ALLOCATE(Up(nlam,nlam), U0(nlam,nlam), Um(nlam,nlam), Ul(nlam,nlam),  X2(nbsp,nbsp), X3(nbsp,nbsp))

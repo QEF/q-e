@@ -11,7 +11,7 @@
 
    SUBROUTINE writefile_x                                         &
      &     ( h,hold,nfi,c0,cm,taus,tausm,vels,velsm,acc,           &
-     &       lambda,lambdam,xnhe0,xnhem,vnhe,xnhp0,xnhpm,vnhp,nhpcl,nhpdim,ekincm,&
+     &       lambda,lambdam,descla,xnhe0,xnhem,vnhe,xnhp0,xnhpm,vnhp,nhpcl,nhpdim,ekincm,&
      &       xnhh0,xnhhm,vnhh,velh, fion, tps, mat_z, occ_f, rho )
 !-----------------------------------------------------------------------
 !
@@ -28,6 +28,7 @@
       USE control_flags,    ONLY: tksw, ndw, io_level, twfcollect
       USE xml_io_base,      ONLY: restart_dir, kpoint_dir
       USE electrons_module, ONLY: collect_c
+      USE descriptors,      ONLY: la_descriptor
       USE gvecw,            ONLY: ngw
 
 !
@@ -46,6 +47,7 @@
       REAL(DP), INTENT(in) :: rho(:,:)
       REAL(DP), INTENT(in) :: occ_f(:)
       REAL(DP), INTENT(in) :: mat_z(:,:,:)
+      TYPE(la_descriptor), INTENT(IN) :: descla(:)
 
       REAL(DP) :: ht(3,3), htm(3,3), htvel(3,3), gvel(3,3)
       INTEGER  :: nk = 1, ispin, i, ib
@@ -83,7 +85,7 @@
          !
          ALLOCATE( ctot( SIZE( c0, 1 ), nupdwn_tot(1) * nspin ) )
          !
-         CALL set_evtot( c0, ctot, lambda, iupdwn_tot, nupdwn_tot )
+         CALL set_evtot( c0, ctot, lambda, descla, iupdwn_tot, nupdwn_tot )
          !
       END IF
       !
@@ -242,13 +244,14 @@
 
 
 !------------------------------------------------------------------------------!
-   SUBROUTINE set_evtot_x( c0, ctot, lambda, iupdwn_tot, nupdwn_tot )
+   SUBROUTINE set_evtot_x( c0, ctot, lambda, descla, iupdwn_tot, nupdwn_tot )
 !------------------------------------------------------------------------------!
       USE kinds,             ONLY: DP
       USE electrons_base,    ONLY: nupdwn, nspin, iupdwn, nudx
       USE electrons_module,  ONLY: ei
       USE cp_interfaces,     ONLY: crot
-      USE cp_main_variables, ONLY: collect_lambda, descla
+      USE descriptors,       ONLY: la_descriptor
+      USE cp_main_variables, ONLY: collect_lambda
       !
       IMPLICIT NONE
       !
@@ -256,6 +259,7 @@
       COMPLEX(DP), INTENT(OUT) :: ctot(:,:)
       REAL(DP),    INTENT(IN)  :: lambda(:,:,:)
       INTEGER,     INTENT(IN)  :: iupdwn_tot(2), nupdwn_tot(2)
+      TYPE(la_descriptor), INTENT(IN) :: descla(:)
       !
       REAL(DP),    ALLOCATABLE :: eitmp(:)
       REAL(DP),    ALLOCATABLE :: lambda_repl(:,:)

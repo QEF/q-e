@@ -19,7 +19,6 @@
       USE descriptors,        ONLY: la_descriptor
       USE mp_global,          ONLY: nproc_bgrp, me_bgrp, intra_bgrp_comm
       USE mp,                 ONLY: mp_sum
-      USE cp_main_variables,  ONLY: nlam, nrcx
 
       IMPLICIT  NONE
 
@@ -49,8 +48,6 @@
          !
          IF( nx0 /= descla%nrcx ) &
             CALL errore( ' ortho_gamma ', ' inconsistent dimensions nx0 ' , nx0 )
-         IF( nlam /= descla%nrcx ) &
-            CALL errore( ' ortho_gamma ', ' inconsistent dimensions nlam ' , nlam )
          !
          nr = descla%nr
          nc = descla%nc
@@ -63,18 +60,16 @@
          nr = 1
          nc = 1
          !
-         IF( nlam /= 1 ) &
-            CALL errore( ' ortho_gamma ', ' inconsistent dimensions nlam, should be 1 ' , nlam )
          IF( nx0 /= 1 ) &
             CALL errore( ' ortho_gamma ', ' inconsistent dimensions nx0, should be 1 ' , nx0 )
          !
       END IF
       !
-      ALLOCATE( rhos( nlam, nlam ) )
-      ALLOCATE( rhoa( nlam, nlam ) )   !   antisymmetric part of rho
-      ALLOCATE( s( nlam, nlam ) ) 
-      ALLOCATE( sig( nlam, nlam ) ) 
-      ALLOCATE( tau( nlam, nlam ) ) 
+      ALLOCATE( rhos( nx0, nx0 ) )
+      ALLOCATE( rhoa( nx0, nx0 ) )   !   antisymmetric part of rho
+      ALLOCATE( s( nx0, nx0 ) ) 
+      ALLOCATE( sig( nx0, nx0 ) ) 
+      ALLOCATE( tau( nx0, nx0 ) ) 
       !
       ALLOCATE( rhod( nss ) )
       !
@@ -82,16 +77,16 @@
       !
       CALL start_clock( 'rhoset' )
       !
-      CALL rhoset( cp, ngwx, phi, bephi, nkbx, qbecp, n, nss, istart, rhos, nlam, descla )
+      CALL rhoset( cp, ngwx, phi, bephi, nkbx, qbecp, n, nss, istart, rhos, nx0, descla )
       !
       IF( descla%active_node > 0 ) THEN
          !
-         ALLOCATE( rhot( nlam, nlam ) )   !   transpose of rho
+         ALLOCATE( rhot( nx0, nx0 ) )   !   transpose of rho
          !
          !    distributed array rhos contains "rho", 
          !    now transpose rhos and store the result in distributed array rhot
          !
-         CALL sqr_tr_cannon( nss, rhos, nlam, rhot, nlam, descla )
+         CALL sqr_tr_cannon( nss, rhos, nx0, rhot, nx0, descla )
          !
          !  Compute the symmetric part of rho
          !
@@ -153,24 +148,24 @@
       !     sig = 1-<cp|s|cp>
       !
       CALL start_clock( 'sigset' )
-      CALL sigset( cp, ngwx, becp_dist, nkbx, qbecp, n, nss, istart, sig, nlam, descla )
+      CALL sigset( cp, ngwx, becp_dist, nkbx, qbecp, n, nss, istart, sig, nx0, descla )
       CALL stop_clock( 'sigset' )
       !
       !     tau = <s'c0|s|s'c0>
       !
       CALL start_clock( 'tauset' )
-      CALL tauset( phi, ngwx, bephi, nkbx, qbephi, n, nss, istart, tau, nlam, descla )
+      CALL tauset( phi, ngwx, bephi, nkbx, qbephi, n, nss, istart, tau, nx0, descla )
       CALL stop_clock( 'tauset' )
       !
       CALL start_clock( 'ortho_iter' )
       !
       IF( iopt == 0 ) THEN
          !
-         CALL ortho_iterate( iter, diff, s, nlam, rhod, x0, nx0, sig, rhoa, rhos, tau, nss, descla)
+         CALL ortho_iterate( iter, diff, s, nx0, rhod, x0, nx0, sig, rhoa, rhos, tau, nss, descla)
          !
       ELSE
          !
-         CALL ortho_alt_iterate( iter, diff, s, nlam, rhod, x0, nx0, sig, rhoa, tau, nss, descla)
+         CALL ortho_alt_iterate( iter, diff, s, nx0, rhod, x0, nx0, sig, rhoa, tau, nss, descla)
          !
       END IF
       !
@@ -260,7 +255,7 @@
       USE io_global,      ONLY: stdout, ionode
       USE cp_interfaces,  ONLY: ortho_gamma, c_bgrp_expand, c_bgrp_pack
       USE descriptors,    ONLY: la_descriptor
-      USE cp_main_variables,  ONLY: nlam, nrcx, collect_bec
+      USE cp_main_variables,  ONLY: collect_bec
       USE mp_global,          ONLY: nproc_bgrp, me_bgrp, intra_bgrp_comm, inter_bgrp_comm  ! DEBUG
       USE orthogonalize_base, ONLY: bec_bgrp2ortho
       USE mp,                 ONLY : mp_sum
@@ -281,7 +276,7 @@
       INTEGER :: nkbx
       INTEGER :: istart, nss, ifail, i, j, iss, iv, jv, ia, is, inl, jnl
       INTEGER :: n1, n2, m1, m2
-      INTEGER :: nspin_sub, nx0, nc, ic, icc, nr, ir, ngwx
+      INTEGER :: nspin_sub, nx0, nc, ic, icc, nr, ir, ngwx, nrcx
       REAL(DP) :: qqf, dum
       !
       nkbx = nkb
@@ -289,13 +284,11 @@
       !
       nx0 = SIZE( x0, 1 )
       !
-      IF( nx0 /= nlam ) &
-         CALL errore( " ortho_cp ", " inconsistent dimensions for x0 ", nx0 )
-      !
-      !
       !     calculation of becp and bephi
       !
       CALL start_clock( 'ortho' )
+
+      nrcx = MAXVAL( descla( : )%nrcx )
 
       ALLOCATE( becp_dist( nkbx, nrcx*nspin ) )
 

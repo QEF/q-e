@@ -68,9 +68,6 @@ MODULE cp_main_variables
   !
   TYPE(la_descriptor), ALLOCATABLE :: descla(:) ! descriptor of the lambda distribution
                                        ! see descriptors_module
-  INTEGER :: nrcx = 0                  ! leading dimension of the distribute (by block) lambda matrix 
-  INTEGER :: nlam = 1                  ! dimension of lambda matrix, can be 1 or nrcx 
-  INTEGER :: nrlx = 0                  ! leading dimension of the distribute (by row  ) lambda matrix
   !
   INTEGER, PARAMETER :: nacx = 10      ! max number of averaged
                                        ! quantities saved to the restart
@@ -173,7 +170,7 @@ MODULE cp_main_variables
       LOGICAL,           INTENT(IN) :: tpre
       INTEGER,           INTENT(IN) :: nbspx_bgrp
       !
-      INTEGER  :: iss, ierr
+      INTEGER  :: iss, ierr, nlam, nrcx
       LOGICAL  :: gzero
       !
       ! ... allocation of all arrays not already allocated in init and nlinit
@@ -263,15 +260,21 @@ MODULE cp_main_variables
 
       ALLOCATE( descla( nspin ) )
       !
-      nrcx = 0
-      nrlx = 0
-      nlam = 1
       DO iss = 1, nspin
          CALL descla_init( descla( iss ), nupdwn( iss ), nudx, np_ortho, me_ortho, ortho_comm, ortho_comm_id )
-         nrcx = MAX( nrcx, descla( iss )%nrcx )
-         nrlx = MAX( nrlx, descla( iss )%nrlx )
-         IF( descla( iss )%active_node > 0 ) nlam = nrcx
       END DO
+      !
+      nrcx = MAXVAL( descla( : )%nrcx )
+      !
+      nlam = 1
+      IF( SIZE( descla ) < 2 ) THEN
+         IF( descla(1)%active_node > 0 ) &
+            nlam = descla(1)%nrcx
+      ELSE
+         IF( ( descla(1)%active_node > 0 ) .OR. ( descla(2)%active_node > 0 ) ) &
+            nlam = MAX( descla(1)%nrcx, descla(2)%nrcx )
+      END IF
+
       !
       !
       !  ... End with lambda dimensions
