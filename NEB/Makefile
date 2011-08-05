@@ -21,12 +21,12 @@ engine_to_path_alat.o \
 engine_to_path_nat.o \
 engine_to_path_fix_atom_pos.o \
 input.o \
-io_tools.o \
 path_base.o \
 path_formats.o \
 path_gen_inputs.o \
 path_input_parameters_module.o \
 path_io_routines.o \
+path_io_tools.o \
 path_io_units_module.o \
 path_opt_routines.o \
 path_reparametrisation.o \
