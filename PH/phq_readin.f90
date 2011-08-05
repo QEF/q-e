@@ -24,7 +24,7 @@ SUBROUTINE phq_readin()
   USE mp,            ONLY : mp_bcast
   USE ions_base,     ONLY : amass, pmass, atm
   USE input_parameters, ONLY : max_seconds, nk1, nk2, nk3, k1, k2, k3
-  USE start_k,       ONLY : init_start_grid
+  USE start_k,       ONLY : reset_grid
   USE klist,         ONLY : xk, nks, nkstot, lgauss, two_fermi_energies, lgauss
   USE ktetra,        ONLY : ltetra
   USE control_flags, ONLY : gamma_only, tqr, restart, lkpoint_dir
@@ -364,7 +364,7 @@ SUBROUTINE phq_readin()
   ! read from input (this happens if nk1*nk2*nk3, else it returns .false.,
   ! leaves the current values, as read in read_file, unchanged)
   !
-  newgrid = init_start_grid (nk1, nk2, nk3, k1, k2, k3) 
+  newgrid = reset_grid (nk1, nk2, nk3, k1, k2, k3) 
   !
   tmp_dir=tmp_dir_save
   !

@@ -1260,9 +1260,6 @@ report_mag.o : ../Modules/kind.o
 report_mag.o : noncol.o
 report_mag.o : pwcom.o
 report_mag.o : scf_mod.o
-reset_k_points.o : ../Modules/input_parameters.o
-reset_k_points.o : pwcom.o
-reset_k_points.o : start_k.o
 restart_from_file.o : ../Modules/control_flags.o
 restart_from_file.o : ../Modules/io_files.o
 restart_from_file.o : ../Modules/io_global.o

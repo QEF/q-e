@@ -1483,16 +1483,7 @@ SUBROUTINE read_cards_pw ( psfile, tau_format )
                                  trd_ht, f_inp, rd_for, tavel, sp_vel
   USE cell_base,          ONLY : at, ibrav, symm_type
   USE ions_base,          ONLY : nat, ntyp => nsp, ityp, tau, atm, extfor
-  USE start_k,           ONLY : nk1_   => nk1, &
-                                 nk2_   => nk2, &
-                                 nk3_   => nk3, &
-                                 k1_    => k1,  &
-                                 k2_    => k2,  &
-                                 k3_    => k3
-  USE klist,              ONLY : nkstot_ => nkstot, &
-                                 lxkcry, &
-                                 xk_    => xk, &
-                                 wk_    => wk
+  USE start_k,            ONLY : init_start_k
   USE fixed_occ,          ONLY : tfixed_occ, &
                                  f_inp_ => f_inp
   USE ions_base,          ONLY : if_pos_ =>  if_pos, amass, fixatom
@@ -1556,12 +1547,12 @@ SUBROUTINE read_cards_pw ( psfile, tau_format )
   !
   tau_format = trim( atomic_positions )
   !
-  CALL reset_k_points ( )
+  CALL init_start_k ( nk1, nk2, nk3, k1, k2, k3, k_points, nkstot, xk, wk )
   gamma_only = ( k_points == 'gamma' )
   !
   IF ( tfixed_occ ) THEN
      !
-     IF ( nkstot_ > 1 .or. ( nk1 * nk2 * nk3 ) > 1 ) &
+     IF ( nkstot > 1 .or. ( nk1 * nk2 * nk3 ) > 1 ) &
         CALL errore( 'read_cards_pw', &
                    & 'only one k point with fixed occupations', 1 )
      !

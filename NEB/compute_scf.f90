@@ -396,8 +396,8 @@ SUBROUTINE compute_scf( fii, lii, stat  )
          !
       END IF
       !
-      ! ... input values are restored at the end of each iteration ( they are
-      ! ... modified by init_run )
+      ! ... input values are restored at the end of each iteration
+      ! ... ( they are modified by init_run ) - OBSOLETE?
       !
 !      starting_pot = 'atomic'
 !      starting_wfc = 'file'
@@ -405,7 +405,6 @@ SUBROUTINE compute_scf( fii, lii, stat  )
       ethr = diago_thr_init
       !
       CALL close_files(.FALSE.)
-      CALL reset_k_points ( )
       !
       RETURN
       !

@@ -155,7 +155,6 @@ read_pseudo.o \
 regterg.o \
 remove_atomic_rho.o \
 report_mag.o \
-reset_k_points.o \
 restart_from_file.o \
 restart_in_electrons.o \
 restart_in_ions.o \

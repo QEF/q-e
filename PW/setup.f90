@@ -55,7 +55,7 @@ SUBROUTINE setup()
                                  starting_magnetization
   USE ener,               ONLY : ef
   USE electrons_base,     ONLY : set_nelup_neldw
-  USE start_k,           ONLY : nks_start, xk_start, wk_start, &
+  USE start_k,            ONLY : nks_start, xk_start, wk_start, &
                                  nk1, nk2, nk3, k1, k2, k3
   USE ktetra,             ONLY : tetra, ntetra, ltetra
   USE symm_base,          ONLY : s, t_rev, irt, ftau, nrot, nsym, invsym, &
@@ -90,7 +90,7 @@ SUBROUTINE setup()
   !
   IMPLICIT NONE
   !
-  INTEGER  :: na, nt, input_nks, is, ierr, ibnd, ik
+  INTEGER  :: na, nt, is, ierr, ibnd, ik
   LOGICAL  :: magnetic_sym
   REAL(DP) :: iocc, ionic_charge
   !
@@ -106,7 +106,7 @@ SUBROUTINE setup()
 
 #if ! defined (EXX)
   IF ( dft_is_hybrid() ) CALL errore( 'setup ', &
-                         'HYBRID XC not implemented in PWscf', 1 )
+                         'PWscf not compiled for hybrid functionals', 1 )
 #else
   IF ( dft_is_hybrid() ) THEN
      IF (.NOT. lscf) CALL errore( 'setup ', &
@@ -409,10 +409,6 @@ SUBROUTINE setup()
   !
   CALL realspace_grids_init ( dfftp, dffts, at, bg, gcutm, gcutms )
   !
-! DCC
-!  IF( do_coarse ) CALL set_fft_dim_coarse()
-!  IF( do_mltgrid ) CALL set_mltgrid_dim()
-  !
   !  ... generate transformation matrices for the crystal point group
   !  ... First we generate all the symmetry matrices of the Bravais lattice
   !
@@ -431,15 +427,9 @@ SUBROUTINE setup()
   magnetic_sym = noncolin .AND. domag 
   time_reversal = .NOT. noinv .AND. .NOT. magnetic_sym
   !
-  ! ... If  lxkcry = .TRUE. , the input k-point components in crystal
-  ! ... axis are transformed into cartesian coordinates - done here
-  ! ... and not in input because the reciprocal lattice is needed
-  !
-  IF ( lxkcry .AND. nkstot > 0 ) CALL cryst_to_cart( nkstot, xk, bg, 1 )
-  !
   ! ... Automatic generation of k-points (if required)
   !
-  IF ( nkstot == 0 ) THEN
+  IF ( nks_start == 0 ) THEN
      !
      IF (lelfield) THEN
          !
@@ -464,35 +454,28 @@ SUBROUTINE setup()
         !
      END IF
      !
-  ELSE IF( lelfield) THEN
+  ELSE 
+     nkstot = nks_start
+     xk(:,1:nkstot) = xk_start(:,1:nks_start)
+     wk(1:nkstot) = wk_start(1:nks_start)
      !
-     allocate(nx_el(nkstot*nspin,3))
-     ! <AF>
-     IF ( gdir < 0 .OR. gdir > 3 ) CALL errore('setup','invalid gdir value',10) 
-     IF ( gdir == 0 )  CALL errore('setup','needed gdir probably not set',10) 
-     !
-     do ik=1,nkstot
-        nx_el(ik,gdir)=ik
-     enddo
-     !
-     if(nspin==2)      nx_el(nkstot+1:2*nkstot,:)=nx_el(1:nkstot,:)+nkstot
-     nppstr_3d(gdir)=nppstr
-     l3dstring=.false.
-     nosym = .TRUE.
-     nrot  = 1
-     nsym  = 1
-     !
+     IF( lelfield) THEN
+        !
+        allocate(nx_el(nkstot*nspin,3))
+        ! <AF>
+        IF ( gdir<0 .OR. gdir>3 ) CALL errore('setup','invalid gdir value',10) 
+        IF ( gdir == 0 ) CALL errore('setup','needed gdir probably not set',10) 
+        !
+        nx_el(1:nkstot,gdir)=ik
+        if(nspin==2) nx_el(nkstot+1:2*nkstot,:) = nx_el(1:nkstot,:) + nkstot
+        nppstr_3d(gdir)=nppstr
+        l3dstring=.false.
+        nosym = .TRUE.
+        nrot  = 1
+        nsym  = 1
+        !
+     END IF
   END IF
-  !
-  !  Save the initial k point for phonon calculation
-  !
-  IF (nks_start==0) THEN
-      nks_start=nkstot
-      IF ( .NOT. ALLOCATED( xk_start ) ) ALLOCATE( xk_start( 3, nks_start ) )
-      IF ( .NOT. ALLOCATED( wk_start ) ) ALLOCATE( wk_start( nks_start ) )
-      xk_start(:,:)=xk(:,1:nkstot)
-      wk_start(:)=wk(1:nkstot)
-  ENDIF
   !
   IF ( nat==0 ) THEN
      !
@@ -515,7 +498,6 @@ SUBROUTINE setup()
            .AND. .NOT. ( calc == 'mm' .OR. calc == 'nm' ) ) &
        CALL infomsg( 'setup', 'Dynamics, you should have no symmetries' )
   !
-  input_nks = nkstot
   IF ( nat > 0 ) THEN
      !
      ! ... Input k-points are assumed to be  given in the IBZ of the Bravais
@@ -535,7 +517,7 @@ SUBROUTINE setup()
      ! ... if calculating bands, we leave k-points unchanged and read the
      ! Fermi energy
      !
-     nkstot = input_nks
+     nkstot = nks_start
      CALL pw_readfile( 'reset', ierr )
      CALL pw_readfile( 'ef',   ierr )
      CALL errore( 'setup ', 'problem reading ef from file ' // &
