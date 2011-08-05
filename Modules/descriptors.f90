@@ -28,7 +28,7 @@
          INTEGER :: nrcx        = 0 !  leading dimension of the distribute matrix (greather than nr and nc)
          INTEGER :: active_node = 0 !  if > 0 the proc holds a block of the lambda matrix
          INTEGER :: n        = 0 !  global dimension of the matrix
-         INTEGER :: nx       = 0 !  global leading dimension
+         INTEGER :: nx       = 0 !  global leading dimension ( >= n )
          INTEGER :: npr      = 0 !  number of row processors 
          INTEGER :: npc      = 0 !  number of column processors 
          INTEGER :: myr      = 0 !  processor row index
