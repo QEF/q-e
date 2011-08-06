@@ -94,7 +94,7 @@
 !
       USE kinds,              ONLY: DP
       use electrons_base,     only: nspin
-      use control_flags,      only: iprsta
+      use control_flags,      only: iverbosity
       use io_global,          only: stdout
       use mp_global,          only: intra_bgrp_comm
       use cell_base,          only: omega
@@ -118,7 +118,7 @@
       integer :: ig, ir, iss, isup, isdw
       REAL(DP) :: rsum
       !
-      IF( iprsta > 2 ) THEN
+      IF( iverbosity > 2 ) THEN
          rsum = SUM( rhoc ) * omega / DBLE(dfftp%nr1*dfftp%nr2*dfftp%nr3)
          CALL mp_sum( rsum, intra_bgrp_comm )
          WRITE( stdout, 10 ) rsum 

@@ -20,7 +20,7 @@
       !  calculated in ggen .
       !
       use kinds,              only: DP
-      use control_flags,      only: iprsta
+      use control_flags,      only: iverbosity
       use io_global,          only: stdout
       use ions_base,          only: nsp, na, nat
       use cell_base,          only: ainv, r_to_s
@@ -40,7 +40,7 @@
 !
       allocate( taus(3,nat) )
 !
-      if(iprsta.gt.3) then
+      if( iverbosity > 3 ) then
          WRITE( stdout,*) ' phfac: tau0 '
          WRITE( stdout,*) ( ( tau0(i,isa), i=1, 3 ), isa=1, nat )
       endif

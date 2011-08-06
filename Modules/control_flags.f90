@@ -43,7 +43,7 @@ MODULE control_flags
             lecrpa, tddfpt
   !
   PUBLIC :: fix_dependencies, check_flags
-  PUBLIC :: tksw, trhor, thdyn, iprsta, trhow
+  PUBLIC :: tksw, trhor, thdyn, trhow
   PUBLIC :: twfcollect, printwfc
   PUBLIC :: lkpoint_dir
   PUBLIC :: program_name
@@ -109,7 +109,6 @@ MODULE control_flags
   INTEGER :: iprint =10 ! print output every iprint step
   INTEGER :: isave  = 0 ! write restart to ndr unit every isave step
   INTEGER :: nv0rd  = 0 !
-  INTEGER :: iprsta = 0 ! output verbosity (increasing from 0 to infinity)
   !
   ! ... .TRUE. if only gamma point is used
   !
@@ -271,8 +270,8 @@ MODULE control_flags
   !
   INTEGER, PUBLIC :: &
     io_level = 1       ! variable controlling the amount of I/O to file
-  INTEGER, PUBLIC :: &
-    iverbosity         ! type of printing ( 0 few, 1 all )
+  INTEGER, PUBLIC :: & ! variable controlling the amount of I/O to output
+    iverbosity = 0     ! -2 minimal, -1 low, 0 medium, 1 high, 2 debug
   !
   ! ... miscellany
   !

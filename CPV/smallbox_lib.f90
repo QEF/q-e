@@ -14,7 +14,7 @@
 !
       USE kinds,                    ONLY: DP
       USE ions_base,                ONLY: nsp, na, nat
-      USE control_flags,            ONLY: iprsta
+      USE control_flags,            ONLY: iverbosity
       USE io_global,                ONLY: stdout
       USE mp_global,                ONLY: nproc_bgrp, me_bgrp, intra_bgrp_comm
       USE fft_base,                 ONLY: dfftb, dfftp, dfftb, fft_dlay_descriptor
@@ -104,7 +104,7 @@
       CALL fft_box_set( dfftb, dfftb%nr1, dfftb%nr2, dfftb%nr3, dfftb%nr1x, dfftb%nr2x, dfftb%nr3x, &
                         nat, irb, dfftp%npp, dfftp%ipp )
 
-      IF( iprsta > 2 ) THEN
+      IF( iverbosity > 2 ) THEN
            isa = 1
            DO is=1,nsp
               WRITE( stdout, '( /, 2x, "species= ", i2 )' ) is
@@ -130,7 +130,7 @@
    END SUBROUTINE initbox
 !
 !-----------------------------------------------------------------------
-      SUBROUTINE phbox( taub, iprsta, eigrb )
+      SUBROUTINE phbox( taub, iverbosity, eigrb )
 !-----------------------------------------------------------------------
 !     calculates the phase factors for the g's of the little box
 !     eigrt=exp(-i*g*tau) .
@@ -148,7 +148,7 @@
       IMPLICIT NONE    
       REAL(DP), INTENT(IN)    :: taub(3,nat)
       COMPLEX(DP), INTENT(OUT) :: eigrb(ngb,nat)
-      INTEGER, INTENT(IN) :: iprsta
+      INTEGER, INTENT(IN) :: iverbosity
 ! local           
       REAL(DP)    :: ainvb(3,3)
       integer :: i,j,k, is, ia, ig, isa
@@ -160,7 +160,7 @@
       allocate(ei3b(-dfftb%nr3:dfftb%nr3,nat))
       allocate( taus( 3, nat ) )
 !
-      if(iprsta.gt.3) then
+      if(iverbosity > 3) then
          WRITE( stdout,*) ' phbox: taub '
          WRITE( stdout,*) ( (taub(i,isa), i=1, 3 ), isa=1, nat )
       endif
@@ -172,7 +172,7 @@
       CALL r_to_s( taub, taus, na, nsp, ainvb )
       CALL phfacs( ei1b, ei2b, ei3b, eigrb, mill_b, taus, dfftb%nr1,dfftb%nr2,dfftb%nr3, nat )
 !
-      if(iprsta.gt.4) then
+      if(iverbosity > 3) then
          WRITE( stdout,*)
          if(nsp.gt.1) then
             isa = 0

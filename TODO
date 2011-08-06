@@ -1,7 +1,9 @@
-TODO LIST - July 2011
+TODO LIST - August 2011
 
 0) Suspected bugs/problems:
+  0.1  somethiong happened to elf calculation between 4.1 to 4.2
   0.2  nstep ignored in vc-relax and other cases
+  0.3  wf_collect and phonons on the grid + unneeded scf calculations
   0.5  Small energy differences between PW and CP - maybe PP-related, 
        but might also be a problem of Ewald calculation in CP ("raggio"?)
   0.6  Numerical instabilities with: BLYP; TPSS; noncollinear GGA; LDA+U
@@ -226,7 +228,6 @@ TODO LIST - July 2011
         allocation: see recent GIPAW workaround for an example of
         allocation confusion (qnorm, cell_factor in allocate_nlpot)
   4.4.4 More PW/CP merge:
-        - verbosity/iverbosity/iprsta mess
         - f_inp, fixed occupancies
         - lda+U modules
         - "cell_base_init" from CP to PW

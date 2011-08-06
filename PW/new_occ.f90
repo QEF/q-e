@@ -102,7 +102,7 @@ SUBROUTINE new_evc()
      CALL mp_sum ( proj, intra_pool_comm )
 #endif
 
-     IF (iverbosity == 1) THEN
+     IF ( iverbosity > 0 ) THEN
         DO ibnd=1,nbnd
            WRITE(6,*) 'bands ', ibnd, et(ibnd,ik)*rytoev
            WRITE(6,'(8f9.4)') (ABS(proj(iatwfc,ibnd)), iatwfc=1,natomwfc)

@@ -578,7 +578,7 @@
       use uspp,       only: qq, beta
       USE betax,      only: refg, qradx, mmx, dqradx
       use smallbox_gvec,      only: ngb
-      use control_flags, only: iprint, iprsta
+      use control_flags, only: iprint, iverbosity
       use cell_base,  only: ainv
       use constants,  only: pi, fpi
       use qgb_mod,    only: qgb, dqgb
@@ -724,7 +724,7 @@
          !
          !     qradb(ig,l,k,is) = 4pi/omega int_0^r dr r^2 j_l(qr) q(r,l,k,is)
          !
-         if( iprsta .ge. 4 ) WRITE( stdout,*)  '  qradb  '
+         if( iverbosity > 3 ) WRITE( stdout,*)  '  qradb  '
          !
          c = fpi / omegab
          !
@@ -889,7 +889,7 @@
       !
       !
       USE kinds, ONLY : DP
-      USE control_flags, only: iprsta
+      USE control_flags, only: iverbosity
       USE constants, only: pi, fpi
       USE io_global, only: stdout
       USE gvecw, only: ngw
@@ -916,7 +916,7 @@
          !   
          !   calculation of array  beta(ig,iv,is)
          !  
-         if( iprsta .ge. 4 ) WRITE( stdout,*)  '  beta  '
+         if( iverbosity > 3 ) WRITE( stdout,*)  '  beta  '
          c = fpi / sqrt(omega)
          do iv = 1, nh(is)
             lp = nhtolm( iv, is )
@@ -941,7 +941,7 @@
          call dylmr2_( (lmaxkb+1)**2, ngw, g, gg, ainv, dylm )
          !
          do is = 1, nsp
-            if( iprsta .ge. 4 ) WRITE( stdout,*)  '  dbeta  '
+            if( iverbosity > 3 ) WRITE( stdout,*)  '  dbeta  '
             c = fpi / sqrt(omega)
             do iv = 1, nh(is)
                lp = nhtolm(iv,is)
@@ -993,7 +993,7 @@
       !
       !
       USE kinds,         ONLY : DP
-      use control_flags, only: iprint, iprsta
+      use control_flags, only: iprint, iverbosity
       use io_global, only: stdout
       use gvecw, only: ngw
       use cell_base, only: ainv
@@ -1040,7 +1040,7 @@
          !
          !     qradb(ig,l,k,is) = 4pi/omega int_0^r dr r^2 j_l(qr) q(r,l,k,is)
          !
-         if( iprsta .ge. 4 ) WRITE( stdout,*)  '  qradb  '
+         if( iverbosity > 3 ) WRITE( stdout,*)  '  qradb  '
          !
          c = fpi / omegab
          !
@@ -1170,7 +1170,7 @@
       ! compute array beta without interpolation
       !
       !
-      USE control_flags, only : iprsta
+      USE control_flags, only : iverbosity
       USE kinds,         ONLY : DP
       USE constants,     only : pi, fpi
       USE io_global,     only : stdout
@@ -1274,7 +1274,7 @@
          !   
          !   calculation of array  beta(ig,iv,is)
          !  
-         if( iprsta .ge. 4 ) WRITE( stdout,*)  '  beta  '
+         if( iverbosity > 3 ) WRITE( stdout,*)  '  beta  '
          c = fpi / sqrt(omega)
          do iv = 1, nh(is)
             lp = nhtolm( iv, is )
@@ -1294,7 +1294,7 @@
          call dylmr2_( (lmaxkb+1)**2, ngw, g, gg, ainv, dylm )
          !
          do is = 1, nsp
-            if( iprsta .ge. 4 ) WRITE( stdout,*)  '  dbeta  '
+            if( iverbosity > 3 ) WRITE( stdout,*)  '  dbeta  '
             c = fpi / sqrt(omega)
             do iv = 1, nh(is)
                lp = nhtolm(iv,is)

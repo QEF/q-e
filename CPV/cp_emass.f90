@@ -28,7 +28,7 @@
 !------------------------------------------------------------------------------!
 
     SUBROUTINE emass_precond( ema0bg, ggp, ngw, tpiba2, emaec )
-      USE control_flags, ONLY: iprsta
+      USE control_flags, ONLY: iverbosity
       IMPLICIT NONE
       REAL(DP), INTENT(OUT) :: ema0bg(:)
       REAL(DP), INTENT(IN) :: ggp(:), tpiba2, emaec
@@ -38,7 +38,7 @@
       !  for g**2>emaec the electron mass ema0bg(g) rises quadratically
       do i = 1, ngw
          ema0bg(i) = 1.0d0 / MAX( 1.d0, tpiba2 * ggp(i) / emaec )
-         IF( iprsta > 3 ) print *,i,' ema0bg(i) ',ema0bg(i)
+         IF( iverbosity > 3 ) print *,i,' ema0bg(i) ',ema0bg(i)
       end do
 
       RETURN

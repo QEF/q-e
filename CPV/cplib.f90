@@ -776,7 +776,7 @@ subroutine formf( tfirst, eself )
   ! 
   USE kinds,           ONLY : DP
   use mp,              ONLY : mp_sum
-  use control_flags,   ONLY : iprint, tpre, iprsta
+  use control_flags,   ONLY : iprint, tpre, iverbosity
   use io_global,       ONLY : stdout
   use mp_global,       ONLY : intra_bgrp_comm
   use gvecs,           ONLY : ngms
@@ -810,7 +810,7 @@ subroutine formf( tfirst, eself )
   !
   eself = compute_eself( na, zv, rcmax, nsp )
 
-  if( tfirst .or. ( iprsta >= 4 ) )then
+  if( tfirst .or. ( iverbosity > 3 ) )then
      WRITE( stdout, 1200 ) eself
   endif
   !
@@ -854,7 +854,7 @@ subroutine formf( tfirst, eself )
      call compute_rhops( rhops(:,is), drhops(:,is), zv(is), rcmax(is), gg, &
                          omega, tpiba2, ngms, tpre )
 
-     if( tfirst .or. ( iprsta >= 4 ) )then
+     if( tfirst .or. ( iverbosity > 3 ) )then
         vpsum = SUM( vps( 1:ngms, is ) )
         rhopsum = SUM( rhops( 1:ngms, is ) )
         call mp_sum( vpsum, intra_bgrp_comm )
@@ -876,7 +876,7 @@ subroutine formf( tfirst, eself )
      DeltaV0 = DeltaV0 + na(is) / omega * vps0(is)
   END DO
   !
-  IF ( tfirst .or. ( iprsta >= 4 ) ) THEN
+  IF ( tfirst .or. ( iverbosity > 3 ) ) THEN
       write(6,'("   Delta V(G=0): ",f10.6,"Ry, ",f11.6,"eV")') &
          deltaV0, deltaV0*autoev
   END IF
@@ -972,7 +972,7 @@ subroutine nlfh_x( stress, bec_bgrp, dbec, lambda, descla )
   use cell_base,         ONLY : omega, h
   use constants,         ONLY : pi, fpi, au_gpa
   use io_global,         ONLY : stdout
-  use control_flags,     ONLY : iprsta
+  use control_flags,     ONLY : iverbosity
   USE descriptors,       ONLY : la_descriptor
   USE mp,                ONLY : mp_sum
   USE mp_global,         ONLY : intra_bgrp_comm, inter_bgrp_comm
@@ -1103,7 +1103,7 @@ subroutine nlfh_x( stress, bec_bgrp, dbec, lambda, descla )
   DEALLOCATE( bec )
 
 
-  IF( iprsta > 2 ) THEN
+  IF( iverbosity > 2 ) THEN
      WRITE( stdout,*) 
      WRITE( stdout,*) "constraints contribution to stress"
      WRITE( stdout,5555) ((-fpre(i,j),j=1,3),i=1,3)

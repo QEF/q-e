@@ -99,22 +99,23 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 	}
 	
 	var verbosity -type CHARACTER {
+	    default { 'low' }
 	    info {
-		'high' | 'default' | 'low' | 'minimal'
+		Currently two verbosity levels are implemented:
+                  'high' and 'low'. 'debug' and 'medium' have the same
+                  effect as 'high'; 'default' and 'minimal', as 'low'
 	    }
 	}
 	
 	var restart_mode -type CHARACTER {
 	    default { 'from_scratch' }
 	    info {
-		'from_scratch'  : from scratch
-	                          NEB and SMD only: the starting path is obtained
-	                          with a linear interpolation between the images
-	                          specified in the ATOMIC_POSITIONS card.
-			          Note that in the linear interpolation
-	                          periodic boundary conditions ARE NON USED.
-	    
-		'restart'       : from previous interrupted run
+		'from_scratch'  : from scratch. This is the normal way
+                                  to perform a PWscf calculation
+		'restart'       : from previous interrupted run. Use this
+                                  switch only if you want to continue an
+                                  interrupted calculation, not to start a 
+                                  new one. See also startingpot, startingwfc
 	    }
 	}
 	
@@ -1333,7 +1334,8 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                          ( default for scf, *relax, *md )
 
                'file'  : start from existing "charge-density.xml" file
-                         ( default, only possibility for nscf, bands )
+                         For nscf and bands alculation this is the default
+                         and the only sensible possibility.
 	    }
 	}
 

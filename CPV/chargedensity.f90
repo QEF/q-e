@@ -98,7 +98,7 @@
 !     e_v = sum_i,ij rho_i,ij d^ion_is,ji
 !
       USE kinds,              ONLY: DP
-      USE control_flags,      ONLY: iprint, iprsta, thdyn, tpre, trhor
+      USE control_flags,      ONLY: iprint, iverbosity, thdyn, tpre, trhor
       USE ions_base,          ONLY: nat
       USE gvect,              ONLY: ngm,  nl, nlm
       USE gvecs,              ONLY: ngms, nls, nlsm
@@ -426,10 +426,10 @@
 !
 !     here to check the integral of the charge density
 !
-      IF( ( iprsta > 2 ) .OR. ( nfi == 0 ) .OR. &
+      IF( ( iverbosity > 2 ) .OR. ( nfi == 0 ) .OR. &
           ( MOD(nfi, iprint_stdout) == 0 ) .AND. ( .NOT. tcg ) ) THEN
 
-         IF( iprsta > 2 ) THEN
+         IF( iverbosity > 2 ) THEN
             CALL checkrho( dfftp%nnr, nspin, rhor, rmin, rmax, rsum, rnegsum )
             rnegsum = rnegsum * omega / DBLE(dfftp%nr1*dfftp%nr2*dfftp%nr3)
             rsum    = rsum    * omega / DBLE(dfftp%nr1*dfftp%nr2*dfftp%nr3)
@@ -1089,7 +1089,7 @@ SUBROUTINE rhov(irb,eigrb,rhovan,rhog,rhor)
       USE gvect,                    ONLY: ngm, nl, nlm
       USE cell_base,                ONLY: omega
       USE small_box,                ONLY: omegab
-      USE control_flags,            ONLY: iprint, iprsta, tpre
+      USE control_flags,            ONLY: iprint, iverbosity, tpre
       USE qgb_mod,                  ONLY: qgb
       USE fft_interfaces,           ONLY: fwfft, invfft
       USE fft_base,                 ONLY: dfftb, dfftp, dfftb
@@ -1143,7 +1143,7 @@ SUBROUTINE rhov(irb,eigrb,rhovan,rhog,rhor)
          !
 
 !$omp parallel default(none) &
-!$omp          shared(nvb, na, ngb, nh, rhovan, qgb, eigrb, dfftb, iprsta, omegab, irb, v, &
+!$omp          shared(nvb, na, ngb, nh, rhovan, qgb, eigrb, dfftb, iverbosity, omegab, irb, v, &
 !$omp                 nmb, stdout, ci, npb, rhor, dfftp ) &
 !$omp          private(mytid, ntids, is, ia, nfft, ifft, iv, jv, ijv, sumrho, qgbt, ig, iss, isa, ca, &
 !$omp                  qv, itid, ir )
@@ -1234,7 +1234,7 @@ SUBROUTINE rhov(irb,eigrb,rhovan,rhog,rhor)
                !  qv = US augmentation charge in real space on box grid
                !       for atomic species is, real(qv)=atom ia, imag(qv)=atom ia+1
  
-               IF(iprsta.GT.2) THEN
+               IF( iverbosity > 2 ) THEN
                   ca = SUM(qv)
                   WRITE( stdout,'(a,f12.8)') ' rhov: 1-atom g-sp = ',         &
      &                 omegab*DBLE(qgbt(1,1))
@@ -1270,7 +1270,7 @@ SUBROUTINE rhov(irb,eigrb,rhovan,rhog,rhor)
          END DO
 
 !
-         IF(iprsta.GT.2) THEN
+         IF( iverbosity > 2 ) THEN
             ca = SUM(v)
 
             CALL mp_sum( ca, intra_bgrp_comm )
@@ -1281,7 +1281,7 @@ SUBROUTINE rhov(irb,eigrb,rhovan,rhog,rhor)
 !
          CALL fwfft('Dense',v, dfftp )
 !
-         IF(iprsta.GT.2) THEN
+         IF( iverbosity > 2 ) THEN
             WRITE( stdout,*) ' rhov: smooth ',omega*rhog(1,iss)
             WRITE( stdout,*) ' rhov: vander ',omega*v(1)
             WRITE( stdout,*) ' rhov: all    ',omega*(rhog(1,iss)+v(1))
@@ -1294,7 +1294,7 @@ SUBROUTINE rhov(irb,eigrb,rhovan,rhog,rhor)
          END DO
 
 !
-         IF(iprsta.GT.2) WRITE( stdout,'(a,2f12.8)')                          &
+         IF( iverbosity > 2 ) WRITE( stdout,'(a,2f12.8)')                          &
      &        ' rhov: n_v(g=0) = ',omega*DBLE(rhog(1,iss))
 !
       ELSE
@@ -1344,7 +1344,7 @@ SUBROUTINE rhov(irb,eigrb,rhovan,rhog,rhor)
 !  qv is the now the US augmentation charge for atomic species is
 !  and atom ia: real(qv)=spin up, imag(qv)=spin down
 !
-               IF(iprsta.GT.2) THEN
+               IF( iverbosity > 2 ) THEN
                   ca = SUM(qv)
                   WRITE( stdout,'(a,f12.8)') ' rhov: up   g-space = ',        &
      &                 omegab*DBLE(qgbt(1,1))
@@ -1369,7 +1369,7 @@ SUBROUTINE rhov(irb,eigrb,rhovan,rhog,rhor)
             rhor(ir,isdw)=rhor(ir,isdw)+AIMAG(v(ir)) 
          END DO
 !
-         IF(iprsta.GT.2) THEN
+         IF( iverbosity > 2 ) THEN
             ca = SUM(v)
             CALL mp_sum( ca, intra_bgrp_comm )
             WRITE( stdout,'(a,2f12.8)') 'rhov:in n_v  ',omega*ca/(dfftp%nr1*dfftp%nr2*dfftp%nr3)
@@ -1377,7 +1377,7 @@ SUBROUTINE rhov(irb,eigrb,rhovan,rhog,rhor)
 !
          CALL fwfft('Dense',v, dfftp )
 !
-         IF(iprsta.GT.2) THEN
+         IF( iverbosity > 2 ) THEN
             WRITE( stdout,*) 'rhov: smooth up',omega*rhog(1,isup)
             WRITE( stdout,*) 'rhov: smooth dw',omega*rhog(1,isdw)
             WRITE( stdout,*) 'rhov: vander up',omega*DBLE(v(1))
@@ -1396,11 +1396,11 @@ SUBROUTINE rhov(irb,eigrb,rhovan,rhog,rhor)
          END DO
 
 !
-         IF(iprsta.GT.2) WRITE( stdout,'(a,2f12.8)')                          &
-     &        ' rhov: n_v(g=0) up   = ',omega*DBLE (rhog(1,isup))
-         IF(iprsta.GT.2) WRITE( stdout,'(a,2f12.8)')                          &
+         IF( iverbosity > 2 ) THEN
+            WRITE( stdout,'(a,2f12.8,/,a,2f12.8)')                 &
+     &        ' rhov: n_v(g=0) up   = ',omega*DBLE (rhog(1,isup)), &
      &        ' rhov: n_v(g=0) down = ',omega*DBLE(rhog(1,isdw))
-
+         END IF
          DEALLOCATE(qgbt)
          DEALLOCATE( qv )
 !

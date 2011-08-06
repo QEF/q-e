@@ -939,7 +939,7 @@ MODULE cp_restart
                             ekincm, c02, cm2, mat_z )
       !------------------------------------------------------------------------
       !
-      USE control_flags,            ONLY : gamma_only, force_pairing, iprsta, twfcollect
+      USE control_flags,            ONLY : gamma_only, force_pairing, iverbosity, twfcollect
       USE io_files,                 ONLY : iunpun, xmlpun, iunwfc, nwordwfc, &
                                            tmp_dir, diropn
       USE run_info,                 ONLY : title
@@ -1829,7 +1829,7 @@ MODULE cp_restart
       !
       if ( nprint_nfi == -2 ) then
          CALL read_print_counter( nprint_nfi, tmp_dir, ndr )
-         IF( iprsta > 2 ) write( stdout,*) 'nprint_nfi= ',nprint_nfi
+         IF( iverbosity > 2 ) write( stdout,*) 'nprint_nfi= ',nprint_nfi
       endif
       !
       RETURN

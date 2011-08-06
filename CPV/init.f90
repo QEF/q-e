@@ -22,7 +22,7 @@
       USE kinds,                ONLY: dp
       USE constants,            ONLY: tpi
       use io_global,            only: stdout, ionode
-      use control_flags,        only: gamma_only, iprsta
+      use control_flags,        only: gamma_only, iverbosity
       use cell_base,            only: ainv, at, omega, alat
       use small_box,            only: small_box_set
       use smallbox_grid_dim,    only: smallbox_grid_init,smallbox_grid_info
@@ -166,7 +166,7 @@
          !
          !  generate small-box G-vectors, initialize FFT tables
          !
-         CALL ggenb ( ecutrho, iprsta )
+         CALL ggenb ( ecutrho, iverbosity )
          !
 #if defined __OPENMP && defined __FFTW 
          CALL cft_b_omp_init( dfftb%nr1, dfftb%nr2, dfftb%nr3 )
@@ -306,7 +306,7 @@
       !
       !   generate true g-space
       !
-      call newinit( ht0%hmat, iprsta = 2 )
+      call newinit( ht0%hmat, iverbosity = 2 )
       !
       CALL invmat( 3, h, ainv, deth )
       !
@@ -319,7 +319,7 @@
 
 !-----------------------------------------------------------------------
 
-    subroutine newinit_x( h, iprsta )
+    subroutine newinit_x( h, iverbosity )
       !
       !     re-initialization of lattice parameters and g-space vectors.
       !     Note that direct and reciprocal lattice primitive vectors
@@ -340,7 +340,7 @@
       implicit none
       !
       REAL(DP), INTENT(IN) :: h(3,3)
-      INTEGER,  INTENT(IN) :: iprsta
+      INTEGER,  INTENT(IN) :: iverbosity
       !
       REAL(DP) :: rat1, rat2, rat3
       INTEGER :: ig, i1, i2, i3
@@ -373,7 +373,7 @@
       rat1 = DBLE( dfftb%nr1 ) / DBLE( dfftp%nr1 )
       rat2 = DBLE( dfftb%nr2 ) / DBLE( dfftp%nr2 )
       rat3 = DBLE( dfftb%nr3 ) / DBLE( dfftp%nr3 )
-      CALL small_box_set( alat, omega, at, rat1, rat2, rat3, tprint = ( iprsta > 1 ) )
+      CALL small_box_set( alat, omega, at, rat1, rat2, rat3, tprint = ( iverbosity > 1 ) )
       !
       call gcalb ( )
       !

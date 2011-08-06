@@ -650,7 +650,7 @@ END FUNCTION saw
 
     USE constants, ONLY: pi 
     USE io_global, ONLY: stdout
-    USE control_flags, ONLY: iprsta
+    USE control_flags, ONLY: iverbosity
 
     IMPLICIT NONE
     REAL(DP), INTENT(IN) :: ht (3,3)
@@ -661,7 +661,7 @@ END FUNCTION saw
     tpiba  = 2.0_DP * pi / alat
     tpiba2 = tpiba * tpiba
     !
-    IF( iprsta > 3 ) THEN
+    IF( iverbosity > 3 ) THEN
       WRITE( stdout, 210 )
       WRITE( stdout, 220 ) ( ht( 1, j ), j = 1, 3 )
       WRITE( stdout, 220 ) ( ht( 2, j ), j = 1, 3 )
@@ -683,7 +683,7 @@ END FUNCTION saw
     ainv(2,:) = bg(:,2)/alat
     ainv(3,:) = bg(:,3)/alat
     !
-    IF( iprsta > 3 ) THEN
+    IF( iverbosity > 3 ) THEN
       WRITE( stdout, 305 ) alat
       WRITE( stdout, 310 ) at(:,1)*alat
       WRITE( stdout, 320 ) at(:,2)*alat

@@ -250,7 +250,7 @@
       USE uspp_param,     ONLY: nh, ish, nvb
       USE electrons_base, ONLY: f, nbsp_bgrp, iupdwn_bgrp, nupdwn_bgrp, i2gupdwn_bgrp, nbsp, nspin, nupdwn, iupdwn
       USE gvecw,          ONLY: ngw
-      USE control_flags,  ONLY: iprint, iprsta, ortho_max
+      USE control_flags,  ONLY: iprint, iverbosity, ortho_max
       USE control_flags,  ONLY: force_pairing
       USE io_global,      ONLY: stdout, ionode
       USE cp_interfaces,  ONLY: ortho_gamma, c_bgrp_expand, c_bgrp_pack
@@ -405,7 +405,7 @@
             CALL errore('ortho','max number of iterations exceeded',iter)
          END IF
 
-         IF( iprsta > 2 ) THEN
+         IF( iverbosity > 2 ) THEN
             WRITE( stdout, 100 ) diff, iter
          ENDIF
          !     

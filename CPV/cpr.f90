@@ -12,7 +12,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
   !
   USE kinds,                    ONLY : DP
   USE constants,                ONLY : bohr_radius_angs, amu_au
-  USE control_flags,            ONLY : iprint, isave, thdyn, tpre, iprsta,     &
+  USE control_flags,            ONLY : iprint, isave, thdyn, tpre, iverbosity,     &
                                        tfor, remove_rigid_rot, taurdr,         &
                                        tprnfor, tsdc, lconstrain, lwf, lneb,   &
                                        ndr, ndw, nomore, tsde, &
@@ -250,7 +250,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
         !
         CALL initbox( tau0, alat, at, ainv, taub, irb )
         !
-        CALL phbox( taub, iprsta, eigrb )
+        CALL phbox( taub, iverbosity, eigrb )
         !
      END IF
      !
@@ -461,7 +461,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
            hold = h
            h    = hnew
            !
-           CALL newinit( h, iprsta )
+           CALL newinit( h, iverbosity )
            !
            CALL newnlinit()
            !
@@ -494,13 +494,13 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
            !
            CALL gram_bgrp( vkb, bec_bgrp, nkb, cm_bgrp, ngw )
            !
-           IF ( iprsta > 4 ) CALL dotcsc( eigr, cm_bgrp, ngw, nbsp_bgrp )
+           IF ( iverbosity > 3 ) CALL dotcsc( eigr, cm_bgrp, ngw, nbsp_bgrp )
            !
         END IF
         !
         !  correction to displacement of ions
         !
-        IF ( iprsta >= 3 ) CALL print_lambda( lambda, descla, nbsp, 9, 1.D0 )
+        IF ( iverbosity > 2 ) CALL print_lambda( lambda, descla, nbsp, 9, 1.D0 )
         !
         IF ( tortho ) THEN
            CALL updatc( ccc, lambda, phi_bgrp, bephi, becp_bgrp, bec_bgrp, cm_bgrp, descla )
@@ -519,7 +519,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
            CALL caldbec_bgrp( eigr, cm_bgrp, dbec )
         END IF
         !
-        IF ( iprsta >= 3 ) CALL dotcsc( eigr, cm_bgrp, ngw, nbsp_bgrp )
+        IF ( iverbosity > 2 ) CALL dotcsc( eigr, cm_bgrp, ngw, nbsp_bgrp )
         !
      END IF
      !
@@ -725,7 +725,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
            !
            IF ( okvan .or. nlcc_any ) THEN
               CALL initbox( tau0, alat, at, ainv, taub, irb )
-              CALL phbox( taub, iprsta, eigrb ) 
+              CALL phbox( taub, iverbosity, eigrb ) 
            END IF
            CALL r_to_s( tau0, taus, na, nsp, ainv )
            CALL phfacs( eigts1,eigts2,eigts3, eigr, mill, taus, dfftp%nr1,dfftp%nr2,dfftp%nr3, nat )
@@ -878,7 +878,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
                   xnhp0, xnhpm, vnhp, nhpcl,nhpdim,ekincm, xnhh0, xnhhm,    &
                   vnhh, velh, fion, tps, z0t, f, rhor )
   !
-  IF( iprsta > 2 ) CALL print_lambda( lambda, descla, nbsp, nbsp, 1.D0 )
+  IF( iverbosity > 2 ) CALL print_lambda( lambda, descla, nbsp, nbsp, 1.D0 )
   !
   IF (lda_plus_u) DEALLOCATE( forceh )
 

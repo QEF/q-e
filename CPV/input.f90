@@ -216,7 +216,7 @@ MODULE input
                                memchk_     => memchk, &
                                tpre_       => tpre, &
                                timing_     => timing, &
-                               iprsta_     => iprsta, &
+                               iverbosity_ => iverbosity, &
                                taurdr_     => taurdr, &
                                nbeg_       => nbeg, &
                                gamma_only_ => gamma_only, &
@@ -367,7 +367,13 @@ MODULE input
      !
      ! ... set the level of output, the code verbosity 
      !
-     iprsta_ = 1
+     trhor_ = ( TRIM( calculation ) == 'nscf'       .OR. &
+                TRIM( calculation ) == 'cp-wf-nscf' .OR. &
+                TRIM( calculation ) == 'pbe0-nscf'  )    ! Lingzhu Kong
+     trhow_ = saverho
+     tksw_  = ( TRIM( disk_io ) == 'high' )
+     !
+     iverbosity_ = 1
      timing_ = .FALSE.
           ! The code write to files fort.8 fort.41 fort.42 fort.43
           ! a detailed report of subroutines timing
@@ -379,34 +385,34 @@ MODULE input
           ! Print on file STRUCTURE_FACTOR the structure factor
           ! gvectors and charge density, in reciprocal space.
      !
-     trhor_ = ( TRIM( calculation ) == 'nscf'       .OR. &
-                TRIM( calculation ) == 'cp-wf-nscf' .OR. &
-                TRIM( calculation ) == 'pbe0-nscf'  )    ! Lingzhu Kong
-     trhow_ = saverho
-     tksw_  = ( TRIM( disk_io ) == 'high' )
-     !
      SELECT CASE( TRIM( verbosity ) )
        CASE( 'minimal' )
          !
-         iprsta_ = 0
+         iverbosity_ = 0
          !
        CASE( 'low', 'default' )
          !
-         iprsta_ = 1
+         iverbosity_ = 1
          timing_ = .TRUE.
          !
        CASE( 'medium' )
          !
-         iprsta_   = 2
+         iverbosity_   = 2
          timing_   = .TRUE.
          tprnsfac_ = .TRUE.
          !
        CASE( 'high' )
          !
-         iprsta_   = 3
+         iverbosity_   = 3
          memchk_   = .TRUE.
          timing_   = .TRUE.
          tprnsfac_ = .TRUE.
+         !
+       CASE( 'debug' )
+         !
+         iverbosity_   = 4
+         memchk_   = .TRUE.
+         timing_   = .TRUE.
          !
        CASE DEFAULT
          !
@@ -822,16 +828,15 @@ MODULE input
 
      USE constants,        ONLY : amu_au, pi
      !
-     USE input_parameters, ONLY: ibrav , celldm , trd_ht, dt,    &
+     USE input_parameters, ONLY: ibrav , celldm , trd_ht, dt,                 &
            cell_symmetry, rd_ht, a, b, c, cosab, cosac, cosbc, ntyp , nat ,   &
            na_inp , sp_pos , rd_pos , rd_vel, atom_mass, atom_label, if_pos,  &
            atomic_positions, id_loc, sic, sic_epsilon, sic_rloc, ecutwfc,     &
            ecutrho, ecfixed, qcutz, q2sigma, tk_inp, wmass,                   &
            ion_radius, emass, emass_cutoff, temph, fnoseh, nr1b, nr2b, nr3b,  &
            tempw, fnosep, nr1, nr2, nr3, nr1s, nr2s, nr3s, ekincw, fnosee,    &
-           outdir, prefix,                                                    &
-           k_points, nkstot, nk1, nk2, nk3, k1, k2, k3,                       &
-           xk, wk, occupations, n_inner, fermi_energy, rotmass, occmass,      &
+           outdir, prefix, nkstot, xk,                                        &
+           occupations, n_inner, fermi_energy, rotmass, occmass,              &
            rotation_damping, occupation_damping, occupation_dynamics,         &
            rotation_dynamics, degauss, smearing, nhpcl, nhptyp, ndega,        &
            nhgrp, fnhscl, cell_units, restart_mode, sic_alpha ,               &
@@ -1065,7 +1070,7 @@ MODULE input
       orthogonalization
 
     USE control_flags, ONLY:  tortho, tnosee, trane, ampre, &
-                              trhor, tksw, tfor, tnosep, iprsta, &
+                              trhor, tksw, tfor, tnosep, iverbosity, &
                               thdyn, tnoseh
     !
     USE electrons_nose,       ONLY: electrons_nose_info
@@ -1153,7 +1158,7 @@ MODULE input
       IF(tefield) call efield_info( ) 
       IF(tefield2) call efield_info2( )
 
-      WRITE( stdout,700) iprsta
+      WRITE( stdout,700) iverbosity
 
     END IF
     !
@@ -1170,7 +1175,7 @@ MODULE input
 535 FORMAT( 3X,'Electron dynamics : the temperature is not controlled')
 590 FORMAT( 3X,'Electron temperature control via nose thermostat')
     !
-700 FORMAT( /,3X, 'Verbosity: iprsta = ',i2,/)
+700 FORMAT( /,3X, 'Verbosity: iverbosity = ',i2,/)
 720 FORMAT(   3X, 'charge density is read from file')
 722 FORMAT(   3X, 'Wavefunctions will be written to file as Kohn-Sham states')
     !

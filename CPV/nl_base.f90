@@ -412,7 +412,7 @@
       use io_global,      only : stdout
       use electrons_base, only : n => nbsp
       use gvecw,          only : ngw
-      use control_flags,  only : iprint, iprsta
+      use control_flags,  only : iprint, iverbosity
       use uspp_param,     only : nh, ish
       use uspp,           only : nkb
 !
@@ -430,7 +430,7 @@
       !
       call nlsm1( n, nspmn, nspmx, eigr, c, bec )
 !
-      if ( iprsta > 2 ) then
+      if ( iverbosity > 2 ) then
          WRITE( stdout,*)
          do is=1,nspmx
             WRITE( stdout,'(33x,a,i4)') ' calbec: bec (is)',is

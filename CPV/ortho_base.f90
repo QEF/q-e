@@ -699,7 +699,7 @@ END SUBROUTINE diagonalize_parallel
       USE gvecw,              ONLY: ngw
       USE gvect, ONLY: gstart
       USE mp,                 ONLY: mp_root_sum, mp_sum
-      USE control_flags,      ONLY: iprsta
+      USE control_flags,      ONLY: iverbosity
       USE io_global,          ONLY: stdout
       USE mp_global,          ONLY: intra_bgrp_comm, leg_ortho, inter_bgrp_comm, my_bgrp_id, nbgrp
       USE descriptors,        ONLY: la_descriptor, descla_init
@@ -805,7 +805,7 @@ END SUBROUTINE diagonalize_parallel
                          nkbx, qbecp( 1, 1 ), nkbx, 1.0d0, sig, ldx )
          ENDIF
          !
-         IF( iprsta > 4 ) THEN
+         IF( iverbosity > 3 ) THEN
             WRITE( stdout,*)
             WRITE( stdout,'(26x,a)') '    sig '
             DO i = 1, nr
@@ -838,7 +838,7 @@ END SUBROUTINE diagonalize_parallel
       USE mp,                 ONLY: mp_root_sum, mp_sum
       USE mp_global,          ONLY: intra_bgrp_comm, me_bgrp, leg_ortho
       USE mp_global,          ONLY: inter_bgrp_comm, my_bgrp_id, nbgrp
-      USE control_flags,      ONLY: iprsta
+      USE control_flags,      ONLY: iverbosity
       USE io_global,          ONLY: stdout
       USE descriptors,        ONLY: la_descriptor, descla_init
 !
@@ -942,7 +942,7 @@ END SUBROUTINE diagonalize_parallel
 
          END IF
 
-         IF ( iprsta > 4 ) THEN
+         IF ( iverbosity > 3 ) THEN
             WRITE( stdout,*)
             WRITE( stdout,'(26x,a)') '    rho '
             DO i=1,nr
@@ -971,7 +971,7 @@ END SUBROUTINE diagonalize_parallel
       USE gvecw,              ONLY: ngw
       USE gvect,              ONLY: gstart
       USE mp,                 ONLY: mp_root_sum, mp_sum
-      USE control_flags,      ONLY: iprsta
+      USE control_flags,      ONLY: iverbosity
       USE io_global,          ONLY: stdout
       USE mp_global,          ONLY: intra_bgrp_comm, leg_ortho
       USE mp_global,          ONLY: inter_bgrp_comm, my_bgrp_id, nbgrp
@@ -1083,7 +1083,7 @@ END SUBROUTINE diagonalize_parallel
             !
          END IF
 
-         IF( iprsta > 4 ) THEN
+         IF( iverbosity > 3 ) THEN
             WRITE( stdout,*)
             WRITE( stdout,'(26x,a)') '    tau '
             DO i=1,nr
@@ -1115,7 +1115,7 @@ END SUBROUTINE diagonalize_parallel
       USE uspp,              ONLY: nkb, nkbus
       USE uspp_param,        ONLY: nh, nvb, ish
       USE gvecw,             ONLY: ngw
-      USE control_flags,     ONLY: iprsta
+      USE control_flags,     ONLY: iverbosity
       USE mp,                ONLY: mp_sum, mp_bcast
       USE mp_global,         ONLY: intra_bgrp_comm, leg_ortho, me_bgrp, inter_bgrp_comm
       USE electrons_base,    ONLY: nbspx_bgrp, ibgrp_g2l, nbsp, nspin,  nupdwn, iupdwn, nbspx
@@ -1280,7 +1280,7 @@ END SUBROUTINE diagonalize_parallel
             DEALLOCATE( bephi_tmp )
          END IF
          !
-         IF ( iprsta > 2 ) THEN
+         IF ( iverbosity > 2 ) THEN
             WRITE( stdout,*)
             DO is = 1, nvb
                IF( nvb > 1 ) THEN
@@ -1326,7 +1326,7 @@ END SUBROUTINE diagonalize_parallel
       USE gvecw,          ONLY: ngw
       USE electrons_base, ONLY: nbsp_bgrp, nbsp
       USE constants,      ONLY: pi, fpi
-      USE control_flags,  ONLY: iprsta
+      USE control_flags,  ONLY: iverbosity
       USE mp,             ONLY: mp_sum
 !
       IMPLICIT NONE
@@ -1399,7 +1399,7 @@ END SUBROUTINE diagonalize_parallel
 
       !   
 
-      IF(iprsta > 2) THEN
+      IF(iverbosity > 2) THEN
          emtot=0.0d0
          IF( PRESENT( ema0bg ) ) THEN
             DO j=1,nbsp_bgrp

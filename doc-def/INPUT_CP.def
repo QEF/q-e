@@ -95,8 +95,10 @@ input_description -distribution {Quantum Espresso} -package CP -program cp.x {
 	}
 	
 	var verbosity -type CHARACTER {
+	    default {'low'}
 	    info {
-		'high' | 'default' | 'low' | 'minimal'
+               In order of decreasing verbose output:
+		'debug' | 'high' | 'medium' | 'low','default' | 'minimal'
 	    }
 	}
 
@@ -113,13 +115,7 @@ input_description -distribution {Quantum Espresso} -package CP -program cp.x {
 	var restart_mode -type CHARACTER {
 	    default { 'restart' }
 	    info {
-		'from_scratch'  : from scratch
-	                          NEB and SMD only: the starting path is obtained
-	                          with a linear interpolation between the images
-	                          specified in the ATOMIC_POSITIONS card.
-			          Note that in the linear interpolation
-	                          periodic boundary conditions ARE NON USED.
-	    
+		'from_scratch'   : from scratch
 		'restart'        : from previous interrupted run
                 'reset_counters' : continue a previous simulation,
                                    performs  "nstep" new steps, resetting

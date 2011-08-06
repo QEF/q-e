@@ -157,7 +157,7 @@ subroutine stress ( sigma )
                   (sigma(l,1), sigma(l,2), sigma(l,3),                    &
             sigma(l,1)*uakbar, sigma(l,2)*uakbar, sigma(l,3)*uakbar, l=1,3)
 
-  if (iverbosity.ge.1) WRITE( stdout, 9005) &
+  if ( iverbosity > 0 ) WRITE( stdout, 9005) &
      (sigmakin(l,1)*uakbar,sigmakin(l,2)*uakbar,sigmakin(l,3)*uakbar, l=1,3),&
      (sigmaloc(l,1)*uakbar,sigmaloc(l,2)*uakbar,sigmaloc(l,3)*uakbar, l=1,3),&
      (sigmanlc(l,1)*uakbar,sigmanlc(l,2)*uakbar,sigmanlc(l,3)*uakbar, l=1,3),&
@@ -170,12 +170,12 @@ subroutine stress ( sigma )
      (sigma_nonloc_dft(l,1)*uakbar,sigma_nonloc_dft(l,2)*uakbar,sigma_nonloc_dft(l,3)*uakbar, l=1,3)
 
 #ifdef EXX
-  if (iverbosity.ge.1) WRITE( stdout, 9006) &
+  if ( iverbosity > 0 ) WRITE( stdout, 9006) &
      (sigmaexx(l,1)*uakbar,sigmaexx(l,2)*uakbar,sigmaexx(l,3)*uakbar, l=1,3)
 9006 format (5x,'EXX     stress (kbar)',3f10.2/2(26x,3f10.2/)/ )
 #endif
 
-  if(lelfield .and. iverbosity >= 1) then
+  if( lelfield .and. iverbosity > 0 ) then
      write(stdout,*) "Stress tensor electronic el field part:"
      write(stdout,*) (sigmael(l,1),sigmael(l,2),sigmael(l,3), l=1,3)
      write(stdout,*) "Stress tensor electronic el field part:"

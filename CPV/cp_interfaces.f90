@@ -903,11 +903,11 @@
    END INTERFACE 
 
    INTERFACE newinit
-      SUBROUTINE newinit_x( h, iprsta )
+      SUBROUTINE newinit_x( h, iverbosity )
          USE kinds, ONLY: dp
          IMPLICIT NONE
          REAL(DP),    INTENT(IN) :: h( 3, 3 )
-         INTEGER,     INTENT(IN) :: iprsta
+         INTEGER,     INTENT(IN) :: iverbosity
       END SUBROUTINE
    END INTERFACE
 !=----------------------------------------------------------------------------=!

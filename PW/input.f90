@@ -1048,9 +1048,13 @@ SUBROUTINE iosys()
                      & ' conv_thr must be reduced', 1 )
   !
   SELECT CASE( trim( verbosity ) )
-  CASE( 'high' )
+  CASE( 'debug', 'high', 'medium' )
      !
      iverbosity = 1
+     !
+  CASE( 'low', 'default', 'minimal' )
+     !
+     iverbosity = 0 
      !
   CASE DEFAULT
      !

@@ -44,7 +44,7 @@
 
         use kinds,         only: DP
         use constants,     only: fpi
-        use control_flags, only: iprsta
+        use control_flags, only: iverbosity
         use io_global,     only: stdout
 
         implicit none
@@ -111,9 +111,8 @@
         end if
 !$omp end parallel
 
-        if(iprsta >= 4) &
-             WRITE( stdout,'(a,f12.8)') ' integrated core charge= ',omegab*rhocb(1)
-        
+        if(iverbosity > 3) WRITE( stdout,'(a,f12.8)') &
+                           ' integrated core charge= ',omegab*rhocb(1)
 
         return
       end subroutine compute_rhocg

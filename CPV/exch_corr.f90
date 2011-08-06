@@ -20,7 +20,7 @@
       use fft_base,        only : dfftp
       use cell_base,       only : ainv, omega, h
       use ions_base,       only : nsp
-      use control_flags,   only : tpre, iprsta
+      use control_flags,   only : tpre, iverbosity
       use core,            only : drhocg, nlcc_any
       use mp,              only : mp_sum
       use metagga,         ONLY : kedtaur
@@ -164,7 +164,7 @@
          ! write (stdout,*) "derivative of e(xc)"
          ! write (stdout,5555) ((dxc(i,j),j=1,3),i=1,3)
          !
-         IF( iprsta > 2 ) THEN
+         IF( iverbosity > 2 ) THEN
             DO i=1,3
                DO j=1,3
                   detmp(i,j)=exc*ainv(j,i)

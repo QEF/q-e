@@ -57,7 +57,6 @@
 
       USE constants,         ONLY   : eps8
       USE io_global,         ONLY   : stdout
-      USE control_flags,     ONLY   : iprsta
 
       REAL(DP),         INTENT(IN) :: zv_ (:), tot_charge_
       REAL(DP),         INTENT(IN) :: f_inp(:,:)

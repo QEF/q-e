@@ -21,7 +21,7 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, tlast,  
 !     rhos output: total potential on smooth real space grid
 !
       USE kinds,              ONLY: dp
-      USE control_flags,      ONLY: iprint, iprsta, thdyn, tpre, tfor, &
+      USE control_flags,      ONLY: iprint, iverbosity, thdyn, tpre, tfor, &
                                     tprnfor, iesr, textfor
       USE io_global,          ONLY: stdout
       USE ions_base,          ONLY: nsp, na, nat, rcmax, compute_eextfor
@@ -531,7 +531,7 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, tlast,  
          !
          DEALLOCATE( gagb )
          !
-         IF( ( iprsta > 2 ) .AND. ( MOD( nfi - 1, iprint) == 0 ) ) THEN  
+         IF( ( iverbosity > 2 ) .AND. ( MOD( nfi - 1, iprint) == 0 ) ) THEN  
             !
             WRITE( stdout,*)
             WRITE( stdout,*) "From vofrho:"

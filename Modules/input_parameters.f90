@@ -103,8 +103,8 @@ MODULE input_parameters
         CHARACTER(len=80) :: verbosity = 'default'
           ! define the verbosity of the code output
         CHARACTER(len=80) :: verbosity_allowed(6)
-        DATA verbosity_allowed / 'high' , 'medium', 'default' , 'low' , 'minimal' ,&
-                                 'default+projwfc' /
+        DATA verbosity_allowed / 'debug', 'high', 'medium', 'default', &
+                                 'low', 'minimal' /
 
         CHARACTER(len=80) :: restart_mode = 'restart'
           ! specify how to start/restart the simulation

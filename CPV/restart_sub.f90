@@ -10,7 +10,7 @@ SUBROUTINE from_restart( )
    !
    USE kinds,                 ONLY : DP
    USE control_flags,         ONLY : tbeg, taurdr, tfor, tsdp, tv0rd, &
-                                     iprsta, tsde, tzeroe, tzerop, nbeg, tranp, amprp, thdyn, &
+                                     iverbosity, tsde, tzeroe, tzerop, nbeg, tranp, amprp, thdyn, &
                                      tzeroc, force_pairing, trhor, ampre, trane, tpre, dt_old
    USE wavefunctions_module,  ONLY : c0_bgrp, cm_bgrp
    USE electrons_module,      ONLY : occn_info
@@ -117,7 +117,7 @@ SUBROUTINE from_restart( )
    !
    IF ( okvan .or. nlcc_any ) THEN
       CALL initbox( tau0, alat, at, ainv, taub, irb )
-      CALL phbox( taub, iprsta, eigrb )
+      CALL phbox( taub, iverbosity, eigrb )
    END IF
    !
    CALL phfacs( eigts1, eigts2, eigts3, eigr, mill, taus, dfftp%nr1, dfftp%nr2, dfftp%nr3, nat )

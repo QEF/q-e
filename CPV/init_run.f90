@@ -14,7 +14,7 @@ SUBROUTINE init_run()
   ! ... appropriate routines) the memory
   !
   USE kinds,                    ONLY : DP
-  USE control_flags,            ONLY : nbeg, nomore, lwf, iprsta, iprint, &
+  USE control_flags,            ONLY : nbeg, nomore, lwf, iverbosity, iprint, &
                                        ndr, tfor, tprnfor, tpre, &
                                        force_pairing, newnfi, tnewnfi, ndw
   USE cp_electronic_mass,       ONLY : emass, emass_cutoff
@@ -165,7 +165,7 @@ SUBROUTINE init_run()
   ALLOCATE( cm_bgrp( ngw, nbspx ) )
   ALLOCATE( phi_bgrp( ngw, nbspx ) )
   !
-  IF ( iprsta > 2 ) THEN
+  IF ( iverbosity > 2 ) THEN
      !
      CALL wave_descriptor_info( wfill, 'wfill', stdout )
      !
@@ -174,9 +174,9 @@ SUBROUTINE init_run()
   ! Depending on the verbosity set the frequency of
   ! verbose information to stdout
   !
-  IF( iprsta < 1 ) iprint_stdout = 100 * iprint
-  IF( iprsta ==1 ) iprint_stdout = 10 * iprint
-  IF( iprsta > 1 ) iprint_stdout = iprint
+  IF( iverbosity < 1 ) iprint_stdout = 100 * iprint
+  IF( iverbosity ==1 ) iprint_stdout = 10 * iprint
+  IF( iverbosity > 1 ) iprint_stdout = iprint
   !
   acc          = 0.D0
   acc_this_run = 0.D0

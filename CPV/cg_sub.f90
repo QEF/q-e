@@ -13,7 +13,7 @@
       lambdap, lambda, nlam, vpot, c0, cm, phi, dbec  )
 
       use kinds, only: dp
-      use control_flags, only: iprint, thdyn, tpre, iprsta, &
+      use control_flags, only: iprint, thdyn, tpre, iverbosity, &
             tfor, taurdr, tprnfor
       use control_flags, only: nbeg, nomore, tsde, tortho, tnosee, &
             tnosep, trane, tranp, tsdp, tcp, tcap, ampre, amprp, tnoseh
@@ -602,7 +602,7 @@
 
         call minparabola(ene0,spasso*dene0,ene1,passof,passo,enesti)
 
-        if(iprsta.gt.1) write(6,*) ene0,dene0,ene1,passo, gamma, esse
+        if( iverbosity > 1 ) write(6,*) ene0,dene0,ene1,passo, gamma, esse
 
         !set new step
 
@@ -669,7 +669,7 @@
         !check with  what supposed
 
         if(ionode) then
-            if(iprsta.gt.1) then
+            if( iverbosity > 1 ) then
                  write(stdout,*) 'cg_sub: estimate :'  , (enesti-enever)/(ene0-enever)
                  write(stdout,*) 'cg_sub: minmum   :'  , enever,passo,passov
              endif

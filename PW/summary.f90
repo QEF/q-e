@@ -14,7 +14,7 @@ SUBROUTINE summary()
   !    the input file and from the setup routine, before starting the
   !    self-consistent calculation.
   !
-  !    if iverbosity = 0 only a partial summary is done.
+  !    if iverbosity < 1 only a partial summary is done.
   !
   USE io_global,       ONLY : stdout
   USE kinds,           ONLY : DP
@@ -240,7 +240,7 @@ SUBROUTINE summary()
   !
   !  output of starting magnetization
   !
-  IF (iverbosity.EQ.1) THEN
+  IF (iverbosity > 0) THEN
      !
      !   allocate work space
      !
@@ -282,7 +282,7 @@ SUBROUTINE summary()
      WRITE( stdout, '(/5x,"number of k points=",i6)') nkstot
 
   ENDIF
-  IF (iverbosity==1 .OR. nkstot < 100 ) THEN
+  IF ( iverbosity > 0 .OR. nkstot < 100 ) THEN
      WRITE( stdout, '(23x,"cart. coord. in units 2pi/alat")')
      DO ik = 1, nkstot
         WRITE( stdout, '(8x,"k(",i5,") = (",3f12.7,"), wk =",f12.7)') ik, &
@@ -292,7 +292,7 @@ SUBROUTINE summary()
      WRITE( stdout, '(/5x,a)') &
      "Number of k-points >= 100: set verbosity='high' to print them."
   ENDIF
-  IF (iverbosity.EQ.1) THEN
+  IF ( iverbosity > 0 ) THEN
      WRITE( stdout, '(/23x,"cryst. coord.")')
      DO ik = 1, nkstot
         DO ipol = 1, 3
@@ -468,7 +468,7 @@ SUBROUTINE print_symmetries ( iverbosity, noncolin, domag )
         WRITE( stdout, '(/5x,i2," Sym.Ops. (no inversion)",/)') nsym
      ENDIF
   ENDIF
-  IF (iverbosity == 1) THEN
+  IF ( iverbosity > 0 ) THEN
      WRITE( stdout, '(36x,"s",24x,"frac. trans.")')
      nsym_is=0
      DO isym = 1, nsym

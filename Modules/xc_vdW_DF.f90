@@ -49,10 +49,9 @@ MODULE vdW_DF
   USE mp,                ONLY : mp_bcast, mp_sum, mp_barrier, mp_bcast_cv
   USE mp_global,         ONLY : me_pool, nproc_pool, intra_pool_comm, root_pool
   USE io_global,         ONLY : ionode
-  USE input_parameters,  ONLY : verbosity
   USE fft_base,          ONLY : dfftp
   USE fft_interfaces,    ONLY : fwfft, invfft 
-  USE control_flags,     ONLY : gamma_only
+  USE control_flags,     ONLY : iverbosity, gamma_only
   USE io_global,         ONLY : stdout
  
   IMPLICIT NONE
@@ -220,7 +219,7 @@ CONTAINS
        
        !! +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
        
-       if (ionode .and. verbosity .ne. "minimal") then
+       if (ionode ) then
           
           write(*,'(/ /A )') "---------------------------------------------------------------------------------"
           write(*,'(A /)') "Carrying out vdW-DF run using the following parameters:"
@@ -367,7 +366,7 @@ CONTAINS
     !! If verbosity is set to high we output the total non-local correlation energy found
     !! ---------------------------------------------------------------------------------------
 
-    if (verbosity .eq. "high") then
+    if (iverbosity > 0) then
 
        call mp_sum(Ec_nl,intra_pool_comm)
     
