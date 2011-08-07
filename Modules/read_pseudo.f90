@@ -228,7 +228,7 @@ SUBROUTINE readpp ( input_dft )
   !
   ! more intializations
   !
-  okvan = ( nvb > 1 )
+  okvan = ( nvb > 0 )
   nlcc_any = ANY ( upf(1:ntyp)%nlcc )
   !
   return
