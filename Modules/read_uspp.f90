@@ -163,10 +163,6 @@ CONTAINS
     ! convert from "our" conventions to Vanderbilt conventions
     call dftname_cp (nint(exfact), upf%dft)
     call set_dft_from_name( upf%dft )
-#if !defined (EXX)
-    IF ( dft_is_hybrid() ) &
-         CALL errore( 'readvan', 'HYBRID XC not implemented', 1 )
-#endif
     IF ( dft_is_meta() ) &
          CALL errore( 'readvan ', 'META-GGA not implemented', 1 )
     !

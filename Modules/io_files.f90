@@ -21,7 +21,8 @@ MODULE io_files
   CHARACTER(len=256) :: wfc_dir = 'undefined'     ! directory for large files on each node, should be kept 'undefined' if not known 
   CHARACTER(len=256) :: prefix  = 'os'            ! prepended to file names
   CHARACTER(len=6)   :: nd_nmbr = '000000'        ! node number (used only in parallel case)
-  CHARACTER(len=256) :: pseudo_dir = './'
+  CHARACTER(len=256) :: pseudo_dir = './'    ! original location of PP files
+  CHARACTER(len=256) :: pseudo_dir_cur = ' ' ! current location when restarting
   CHARACTER(len=256) :: psfile( ntypx ) = 'UPF'
   CHARACTER(len=256) :: outdir  = './'
   !

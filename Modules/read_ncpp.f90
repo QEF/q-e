@@ -123,12 +123,6 @@ subroutine read_ncpp (iunps, np, upf)
   END IF
   call set_dft_from_name( upf%dft )
   !
-#if defined (EXX)
-#else
-  IF ( dft_is_hybrid() ) &
-    CALL errore( 'read_ncpp ', 'HYBRID XC not implemented in PWscf', 1 )
-#endif
-  !
   !    calculate the number of beta functions
   !
   upf%nbeta = 0

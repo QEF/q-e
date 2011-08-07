@@ -11,7 +11,7 @@
 !=----------------------------------------------------------------------------=!
 
         USE kinds
-        USE io_files,     ONLY: pseudounit, psfile, pseudo_dir
+        USE io_files,     ONLY: pseudounit, psfile, pseudo_dir, pseudo_dir_cur
         USE pseudo_types, ONLY: pseudo_upf
         USE pseudo_types, ONLY: nullify_pseudo_upf, deallocate_pseudo_upf
         USE uspp_param,   ONLY: upf
@@ -51,9 +51,26 @@ INTEGER FUNCTION check_file_type( is )
   !
   info = 0  
   ios  = 0
-  filename = TRIM( pseudo_dir ) // TRIM( psfile(is) )
   !
-  INQUIRE ( FILE = TRIM(filename), EXIST=exst )
+  ! try first pseudo_dir_cur if set: in case of restart from file,
+  ! this is where PP files should be located
+  !
+  exst = .FALSE.
+  IF ( pseudo_dir_cur /= ' ' ) THEN
+     filename  = TRIM (pseudo_dir_cur) // TRIM (psfile(is))
+     INQUIRE ( FILE = TRIM(filename), EXIST=exst )
+     IF ( .NOT. exst ) CALL infomsg &
+                  ('readpp', 'file '//TRIM(filename)//' not found')
+     !
+     ! file not found? no panic (yet): if the restart file is not visible
+     ! to all processors, this may happen. Try the original location
+  END IF
+  !
+  IF ( .NOT. exst) THEN
+     filename  = TRIM (pseudo_dir) // TRIM (psfile(is))
+     INQUIRE ( FILE = TRIM(filename), EXIST=exst )
+  END IF
+  !
   IF ( .NOT. exst) THEN
      check_file_type = -1
      return

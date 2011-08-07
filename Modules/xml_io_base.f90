@@ -904,9 +904,7 @@ MODULE xml_io_base
          !
       ENDDO
       !
-      ! BEWARE: the following instruction is part of a ugly hack to allow
-      !         restarting in parallel execution in machines without a
-      !         parallel file system - See read_ions in pw_restart.f90
+      ! This is the original location where PP files are read from
       !
       CALL iotk_write_dat( iunpun, "PSEUDO_DIR", TRIM( pseudo_dir) )
       !

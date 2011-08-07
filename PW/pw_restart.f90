@@ -21,7 +21,7 @@ MODULE pw_restart
   USE kinds,     ONLY : DP
   USE constants, ONLY : e2
   USE io_files,  ONLY : tmp_dir, prefix, iunpun, xmlpun, delete_if_present, &
-                        qexml_version, qexml_version_init
+                        qexml_version, qexml_version_init, pseudo_dir
   USE io_global, ONLY : ionode, ionode_id
   USE mp_global, ONLY : my_pool_id, intra_image_comm, intra_pool_comm
   USE mp,        ONLY : mp_bcast, mp_sum, mp_max
@@ -77,10 +77,6 @@ MODULE pw_restart
       USE noncollin_module,     ONLY : noncolin, npol
       USE io_files,             ONLY : nwordwfc, iunwfc, iunigk, psfile
       USE buffers,              ONLY : get_buffer
-      USE input_parameters,     ONLY : pseudo_dir 
-                                     ! warning, pseudo_dir in the data-file
-                                     ! should always point to the original
-                                     ! dir specified in the input.
       USE wavefunctions_module, ONLY : evc
       USE klist,                ONLY : nks, nkstot, xk, ngk, wk, qnorm, &
                                        lgauss, ngauss, degauss, nelec, &
@@ -1616,7 +1612,7 @@ MODULE pw_restart
       !
       USE ions_base, ONLY : nat, nsp, ityp, amass, atm, tau, if_pos
       USE cell_base, ONLY : alat
-      USE io_files,  ONLY : psfile, pseudo_dir
+      USE io_files,  ONLY : psfile, pseudo_dir, pseudo_dir_cur
       !
       IMPLICIT NONE
       !
@@ -1640,7 +1636,9 @@ MODULE pw_restart
       !
       IF ( ierr > 0 ) RETURN
       !
-      pseudo_dir = trimcheck ( dirname ) 
+      ! this is where PP files should be read from
+      !
+      pseudo_dir_cur = trimcheck ( dirname ) 
       !
       IF ( ionode ) THEN
          !
@@ -1675,47 +1673,12 @@ MODULE pw_restart
             !
          ENDDO
          !
+         ! this is the original location of PP files
+         !
+         CALL iotk_scan_dat( iunpun, "PSEUDO_DIR", pseudo_dir )
+         !
       ENDIF
       !
-      !--------------------------------------------------------------
-      ! BEWARE: the following instructions are a ugly hack to allow
-      !         restarting in parallel execution in machines without a
-      !         parallel file system. Ideally, PP files should be read
-      !         by ionode only and broadcast to all other processors.
-      !         Since this is not implemented, all processors read PP
-      !         files. This creates a serious problem however when the
-      !         data directory is not visible to all processors,
-      !         as in PC clusters without a parallel file system.
-      !
-      IF (nsp>0) THEN
-         CALL mp_bcast( psfile(1), ionode_id, intra_image_comm )
-      !
-         INQUIRE ( FILE =  TRIM( dirname ) // '/' //  TRIM( psfile(1) ), &
-             EXIST = exst )
-      ELSE
-         exst=.TRUE.
-      END IF
-      !
-      ierr = 0
-      IF ( .NOT. exst ) ierr = -1 
-      CALL mp_sum( ierr, intra_image_comm )
-      !
-      IF ( ierr < 0 ) THEN
-         !
-         ! ... PP files in data directory are NOT visible to all processors:
-         ! ... PP files are read from the original location
-         !
-         IF ( ionode ) CALL iotk_scan_dat( iunpun, "PSEUDO_DIR", pseudo_dir )
-         !
-         CALL mp_bcast( pseudo_dir, ionode_id, intra_image_comm )
-         !
-         CALL infomsg( 'read_ions ', &
-                     & 'PP will be read from ' // TRIM( pseudo_dir ) )
-         !
-      END IF
-      !
-      ! End of ugly hack
-      !--------------------------------------------------------------
       IF ( ionode ) THEN
          !
          DO i = 1, nat
@@ -1742,6 +1705,7 @@ MODULE pw_restart
       CALL mp_bcast( atm,    ionode_id, intra_image_comm )
       CALL mp_bcast( amass,  ionode_id, intra_image_comm )
       CALL mp_bcast( psfile, ionode_id, intra_image_comm )
+      CALL mp_bcast( pseudo_dir, ionode_id, intra_image_comm )
       CALL mp_bcast( ityp,   ionode_id, intra_image_comm )
       CALL mp_bcast( tau,    ionode_id, intra_image_comm )
       CALL mp_bcast( if_pos, ionode_id, intra_image_comm )

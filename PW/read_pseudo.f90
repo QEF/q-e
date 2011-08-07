@@ -20,7 +20,7 @@ subroutine readpp
   USE uspp_param, ONLY : newpseudo
   USE ions_base,  ONLY : ntyp => nsp
   USE funct,      ONLY : get_iexch, get_icorr, get_igcx, get_igcc, get_inlc
-  USE io_files,   ONLY : pseudo_dir, psfile
+  USE io_files,   ONLY : pseudo_dir, pseudo_dir_cur, psfile
   USE io_global,  ONLY : stdout
   USE ions_base,  ONLY : zv
   USE uspp_param, ONLY : upf
@@ -81,17 +81,30 @@ subroutine readpp
      rgrid(nt)%xmin = 0.d0
      rgrid(nt)%dx = 0.d0
      !
-     ! pseudo_dir should already contain a slash at the end
+     ! pseudo_dir* should already contain a slash at the end
+     ! try first pseudo_dir_cur if set: in case of restart from file,
+     ! this is where PP files should be located
      !
-     file_pseudo = TRIM (pseudo_dir) // TRIM (psfile(nt))
-     !
-     ! write (stdout,'(10x,a,/15x,a)') "Reading PseudoPotential from ",
-     !                                 TRIM(file_pseudo)
-     ! Try to open the pseudo
-     !
-     open (unit = iunps, file = file_pseudo, status = 'old', form = &
+     ios = 1
+     IF ( pseudo_dir_cur /= ' ' ) THEN
+        file_pseudo  = TRIM (pseudo_dir_cur) // TRIM (psfile(nt))
+        OPEN  (unit = iunps, file = file_pseudo, status = 'old', form = &
           'formatted', action='read', iostat = ios)
-     call errore ('readpp', 'file '//TRIM(file_pseudo)//' not found', ios)
+        IF ( ios /= 0 ) CALL infomsg &
+                     ('readpp', 'file '//TRIM(file_pseudo)//' not found')
+        !
+        ! file not found? no panic (yet): if the restart file is not visible
+        ! to all processors, this may happen. Try the original location
+     END IF
+     !
+     ! try the original location pseudo_dir, as set in input
+     !
+     IF ( ios /= 0 ) THEN
+        file_pseudo = TRIM (pseudo_dir) // TRIM (psfile(nt))
+        OPEN  (unit = iunps, file = file_pseudo, status = 'old', &
+               form = 'formatted', action='read', iostat = ios)
+        CALL errore('readpp', 'file '//TRIM(file_pseudo)//' not found',ABS(ios))
+     END IF
      !
      ! read UPF  pseudopotentials - the UPF format is detected via the
      ! presence of the keyword '<PP_HEADER>' at the beginning of the file
