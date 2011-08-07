@@ -115,7 +115,7 @@ MODULE input
      !
      USE input_parameters,        ONLY : atom_pfile, pseudo_dir, ntyp, nat, &
                                          prefix, outdir, input_dft
-     USE read_pseudo_module_fpmd, ONLY : readpp
+     USE read_pseudo_mod,         ONLY : readpp
      USE io_files,                ONLY : psfile_     => psfile , &
                                          pseudo_dir_ => pseudo_dir, &
                                          outdir_     => outdir, &

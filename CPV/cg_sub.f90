@@ -18,7 +18,6 @@
       use control_flags, only: nbeg, nomore, tsde, tortho, tnosee, &
             tnosep, trane, tranp, tsdp, tcp, tcap, ampre, amprp, tnoseh
 
-      use core, only: nlcc_any
 !---ensemble-DFT
       use energies, only: eht, epseu, exc, etot, eself, enl, ekin,          &
      &                    atot, entropy, egrand
@@ -41,7 +40,9 @@
       use dener
       use constants,                only : pi, au_gpa
       USE io_files,                 ONLY : tmp_dir, prefix
-      use uspp,                     only : nhsa=> nkb, nhsavb=> nkbus, betae => vkb, rhovan => becsum, deeq,qq
+      use uspp,                     only : nhsa=> nkb, nhsavb=> nkbus, &
+                                           betae => vkb, rhovan => becsum, &
+                                           deeq, qq, nlcc_any
       use uspp_param,               only : nh, nvb, ish
       use cg_module,                only : ene_ok,  maxiter,niter_cg_restart, &
                                            conv_thr, passop, enever, itercg

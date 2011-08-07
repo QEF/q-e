@@ -56,6 +56,7 @@ radial_grids.o \
 random_numbers.o \
 read_namelists.o \
 read_ncpp.o \
+read_pseudo.o \
 read_upf_v1.o \
 read_upf_v2.o \
 read_uspp.o \

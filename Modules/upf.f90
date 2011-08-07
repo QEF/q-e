@@ -29,7 +29,10 @@
 !------------------------------------------------+
 SUBROUTINE read_upf(upf, grid, ierr, unit, filename)             !
    !---------------------------------------------+
-   ! Read pseudopotential in UPF format version 2, uses iotk
+   ! Read pseudopotential in UPF format (either v.1 or v.2)
+   ! ierr = -1 : read UPF v.1 
+   ! ierr =  0 : read UPF v.2 
+   ! ierr =  1 : not an UPF file, or error while reading
    !
    USE radial_grids, ONLY: radial_grid_type, deallocate_radial_grid
    USE read_upf_v1_module,ONLY: read_upf_v1
@@ -65,6 +68,7 @@ SUBROUTINE read_upf(upf, grid, ierr, unit, filename)             !
       CALL deallocate_pseudo_upf( upf )
       CALL deallocate_radial_grid( grid )
       CALL read_upf_v1( u, upf, grid, ierr )
+      IF(ierr==0) ierr=-1
    ENDIF
 
    RETURN

@@ -36,7 +36,6 @@ control_flags.o : kind.o
 control_flags.o : parameters.o
 dspev_drv.o : kind.o
 electrons_base.o : constants.o
-electrons_base.o : control_flags.o
 electrons_base.o : io_global.o
 electrons_base.o : kind.o
 environment.o : io_files.o
@@ -156,6 +155,20 @@ read_ncpp.o : funct.o
 read_ncpp.o : kind.o
 read_ncpp.o : parameters.o
 read_ncpp.o : pseudo_types.o
+read_pseudo.o : atom.o
+read_pseudo.o : constants.o
+read_pseudo.o : funct.o
+read_pseudo.o : io_files.o
+read_pseudo.o : io_global.o
+read_pseudo.o : ions_base.o
+read_pseudo.o : kind.o
+read_pseudo.o : pseudo_types.o
+read_pseudo.o : radial_grids.o
+read_pseudo.o : read_uspp.o
+read_pseudo.o : upf.o
+read_pseudo.o : upf_to_internal.o
+read_pseudo.o : uspp.o
+read_pseudo.o : wrappers.o
 read_upf_v1.o : kind.o
 read_upf_v1.o : pseudo_types.o
 read_upf_v1.o : radial_grids.o
@@ -227,7 +240,6 @@ uspp.o : kind.o
 uspp.o : parameters.o
 uspp.o : pseudo_types.o
 uspp.o : random_numbers.o
-wannier.o : kind.o
 wannier_new.o : kind.o
 wave_base.o : kind.o
 wave_base.o : mp.o
@@ -247,7 +259,6 @@ xc_vdW_DF.o : control_flags.o
 xc_vdW_DF.o : fft_base.o
 xc_vdW_DF.o : fft_interfaces.o
 xc_vdW_DF.o : fft_scalar.o
-xc_vdW_DF.o : input_parameters.o
 xc_vdW_DF.o : io_global.o
 xc_vdW_DF.o : kernel_table.o
 xc_vdW_DF.o : kind.o

@@ -19,7 +19,6 @@
 
       ! declares modules
       USE kinds,          ONLY: dp
-      USE core,           ONLY: nlcc_any
       USE energies,       ONLY: eht, epseu, exc, etot, eself, enl, &
                                 ekin, atot, entropy, egrand
       USE electrons_base, ONLY: f, nspin, nel, iupdwn, nupdwn, nudx, &
@@ -32,10 +31,9 @@
                                 niter_cold_restart, lambda_cold
       USE gvect,          ONLY: ngm
       USE gvecs,          ONLY: ngms
-      USE smallbox_gvec,          ONLY: ngb
+      USE smallbox_gvec,  ONLY: ngb
       USE gvecw,          ONLY: ngw
-      USE gvect, &
-                          ONLY: gstart
+      USE gvect,          ONLY: gstart
       USE uspp_param,     ONLY: nvb, ish
       USE ions_base,      ONLY: na, nat, pmass, nax, nsp, rcmax
       USE cell_base,      ONLY: omega, alat
@@ -45,7 +43,7 @@
       USE mp_global,      ONLY: intra_bgrp_comm, leg_ortho
       USE dener
       USE uspp,           ONLY: nhsa=> nkb, betae => vkb, &
-                                rhovan => becsum, deeq
+                                rhovan => becsum, deeq, nlcc_any
       USE uspp_param,     ONLY: nh
       USE cg_module,      ONLY: ene_ok
       USE ions_positions, ONLY: tau0
@@ -318,7 +316,6 @@
 
       ! declares modules
       USE kinds,          ONLY: dp
-      USE core,           ONLY: nlcc_any
       USE energies,       ONLY: eht, epseu, exc, etot, eself, enl, &
                                 ekin, atot, entropy, egrand
       USE electrons_base, ONLY: f, nspin, nel, iupdwn, nupdwn, nudx, &
@@ -328,19 +325,17 @@
                                  c0diag, becdiag
       USE gvect,          ONLY: ngm
       USE gvecs,          ONLY: ngms
-      USE smallbox_gvec,          ONLY: ngb
+      USE smallbox_gvec,  ONLY: ngb
       USE gvecw,          ONLY: ngw
-      USE gvect, &
-                          ONLY: gstart
-      USE uspp_param,     ONLY: nvb, ish
+      USE gvect,          ONLY: gstart
+      USE uspp_param,     ONLY: nvb, ish, nh
       USE ions_base,      ONLY: na, nat, pmass, nax, nsp, rcmax
       USE cell_base,      ONLY: omega, alat
       USE local_pseudo,   ONLY: vps, rhops
       USE io_global,      ONLY: stdout, ionode, ionode_id
       USE dener
       USE uspp,           ONLY: nhsa=> nkb, betae => vkb, &
-                                rhovan => becsum, deeq
-      USE uspp_param,     ONLY: nh
+                                rhovan => becsum, deeq, nlcc_any
       USE cg_module,      ONLY: ene_ok
       USE ions_positions, ONLY: tau0
       USE mp,             ONLY: mp_sum,mp_bcast

@@ -31,8 +31,7 @@ SUBROUTINE from_restart( )
    USE wave_base,             ONLY : rande_base
    USE efield_module,         ONLY : efield_berry_setup,  tefield, &
                                      efield_berry_setup2, tefield2
-   USE uspp,                  ONLY : okvan, vkb, nkb
-   USE core,                  ONLY : nlcc_any
+   USE uspp,                  ONLY : okvan, vkb, nkb, nlcc_any
    USE cp_main_variables,     ONLY : ht0, htm, lambdap, lambda, lambdam, eigr, &
                                      sfac, taub, irb, eigrb, edft, bec_bgrp, dbec
    USE time_step,             ONLY : delt

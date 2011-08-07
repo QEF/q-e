@@ -20,10 +20,10 @@ SUBROUTINE move_electrons_x( nfi, tfirst, tlast, b1, b2, b3, fion, c0_bgrp, &
                                    drhog, sfac, ema0bg, bec_bgrp, becdr_bgrp, &
                                    taub, lambda, lambdam, lambdap, vpot, dbec, descla
   USE cell_base,            ONLY : omega, ibrav, h, press
-  USE uspp,                 ONLY : becsum, vkb, nkb
+  USE uspp,                 ONLY : becsum, vkb, nkb, nlcc_any
   USE energies,             ONLY : ekin, enl, entropy, etot
   USE electrons_base,       ONLY : nbsp, nspin, f, nudx, nupdwn, nbspx_bgrp, nbsp_bgrp
-  USE core,                 ONLY : nlcc_any, rhoc
+  USE core,                 ONLY : rhoc
   USE ions_positions,       ONLY : tau0
   USE ions_base,            ONLY : nat
   USE dener,                ONLY : detot, denl, dekin6

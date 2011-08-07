@@ -21,7 +21,7 @@ SUBROUTINE iosys()
   !
   !
   USE kinds,         ONLY : DP
-  USE funct,         ONLY : enforce_input_dft, dft_has_finite_size_correction, &
+  USE funct,         ONLY : dft_has_finite_size_correction, &
                             set_finite_size_volume, get_inlc 
 #if defined(EXX)
   USE funct,         ONLY: set_exx_fraction, set_screening_parameter
@@ -206,6 +206,8 @@ SUBROUTINE iosys()
                             print_wannier_coeff_    => print_wannier_coeff
 
   USE realus,                ONLY : real_space_ => real_space
+
+  USE read_pseudo_mod,       ONLY : readpp
 
 #if defined __MS2
   USE MS2,                   ONLY : MS2_enabled_ => MS2_enabled, &
@@ -476,20 +478,6 @@ SUBROUTINE iosys()
                 & trim( calculation ) // ' not implemented', 1 )
      !
   END SELECT
-  !
-  ! ... translate from input to internals of PWscf, various checks
-  !
-  IF (input_dft /='none') CALL enforce_input_dft (input_dft)
-  !
-#if defined(EXX)
-  ! Set variables for functionals.f90 (HSE)
-  ! if enforced in input
-    !
-    IF (exx_fraction >= 0.0_DP) CALL set_exx_fraction (exx_fraction)
-    IF (screening_parameter >= 0.0_DP) &
-        & CALL set_screening_parameter (screening_parameter)
-    !
-#endif
   !
   IF ( tefield .and. ( .not. nosym ) ) THEN
      nosym = .true.
@@ -1388,9 +1376,19 @@ SUBROUTINE iosys()
   !
   CALL init_dofree ( cell_dofree )
   !
-  ! ... read pseudopotentials
+  ! ... read pseudopotentials (also sets DFT)
   !
-  CALL readpp()
+  CALL readpp ( input_dft )
+  !
+#if defined(EXX)
+    !
+    ! Set variables for hybrid functional HSE
+    !
+    IF (exx_fraction >= 0.0_DP) CALL set_exx_fraction (exx_fraction)
+    IF (screening_parameter >= 0.0_DP) &
+        & CALL set_screening_parameter (screening_parameter)
+    !
+#endif
   !
   ! ... read the vdw kernel table if needed
   !

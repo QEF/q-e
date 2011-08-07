@@ -44,8 +44,7 @@
       USE problem_size,         ONLY: cpsizes
       USE mp_global,            ONLY: me_bgrp, root_bgrp, nproc_bgrp, nbgrp, my_bgrp_id, intra_bgrp_comm
       USE mp_global,            ONLY: get_ntask_groups
-      USE core,                 ONLY: nlcc_any
-      USE uspp,                 ONLY: okvan
+      USE uspp,                 ONLY: okvan, nlcc_any
 
       implicit none
 ! 

@@ -1143,14 +1143,15 @@ subroutine nlinit
       use control_flags,   ONLY : iprint, tpre
       use io_global,       ONLY : stdout, ionode
       use gvecw,           ONLY : ngw
-      use core,            ONLY : rhocb, nlcc_any, allocate_core
+      use core,            ONLY : rhocb, allocate_core
       use constants,       ONLY : pi, fpi
       use ions_base,       ONLY : na, nsp
-      use uspp,            ONLY : aainit, beta, qq, dvan, nhtol, nhtolm, indv, dbeta
+      use uspp,            ONLY : aainit, beta, qq, dvan, nhtol, nhtolm, indv,&
+                                  dbeta
       use uspp_param,      ONLY : upf, lmaxq, nbetam, lmaxkb, nhm, nh, ish, nvb
       use atom,            ONLY : rgrid
       use qgb_mod,         ONLY : qgb, dqgb
-      use smallbox_gvec,           ONLY : ngb
+      use smallbox_gvec,   ONLY : ngb
       use gvect,           ONLY : ngm
       use cp_interfaces,   ONLY : pseudopotential_indexes, compute_dvan, &
                                   compute_betagx, compute_qradx, build_pstab, build_cctab

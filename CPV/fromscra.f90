@@ -28,9 +28,9 @@ SUBROUTINE from_scratch( )
     USE energies,             ONLY : entropy, eself, enl, ekin, enthal, etot, ekincm
     USE energies,             ONLY : dft_energy_type, debug_energies
     USE dener,                ONLY : denl, denl6, dekin6, detot
-    USE uspp,                 ONLY : vkb, becsum, deeq, nkb, okvan
+    USE uspp,                 ONLY : vkb, becsum, deeq, nkb, okvan, nlcc_any
     USE io_global,            ONLY : stdout, ionode
-    USE core,                 ONLY : nlcc_any, rhoc
+    USE core,                 ONLY : rhoc
     USE gvecw,                ONLY : ngw
     USE gvecs,                ONLY : ngms
     USE gvect,                ONLY : ngm, gg

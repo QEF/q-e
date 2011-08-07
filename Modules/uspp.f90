@@ -104,7 +104,8 @@ MODULE uspp
   PRIVATE
   SAVE
   PUBLIC :: nlx, lpx, lpl, ap, aainit, indv, nhtol, nhtolm, nkb, nkbus, &
-       vkb, dvan, deeq, qq, nhtoj, ijtoh, beta, becsum, okvan, deallocate_uspp
+       vkb, dvan, deeq, qq, nhtoj, ijtoh, beta, becsum, deallocate_uspp
+  PUBLIC :: okvan, nlcc_any
   PUBLIC :: qq_so, dvan_so, deeq_nc 
   PUBLIC :: dbeta
   INTEGER, PARAMETER :: &
@@ -127,7 +128,8 @@ MODULE uspp
        ijtoh(:,:,:)       ! correspondence beta indexes ih,jh -> composite index ijh
   !
   LOGICAL :: &
-       okvan = .FALSE.    ! if .TRUE. at least one pseudo is Vanderbilt
+       okvan = .FALSE.,&  ! if .TRUE. at least one pseudo is Vanderbilt
+       nlcc_any=.FALSE.   ! if .TRUE. at least one pseudo has core corrections
   !
   COMPLEX(DP), ALLOCATABLE, TARGET :: &
        vkb(:,:)                ! all beta functions in reciprocal space

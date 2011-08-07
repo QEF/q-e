@@ -132,16 +132,15 @@ END MODULE
 MODULE core
    !
    USE kinds
+   USE uspp, ONLY : nlcc_any
    ! 
    IMPLICIT NONE
    SAVE
-   !     nlcc_any = 0 no core correction on any atom
    !     rhocb  = core charge in G space (box grid)
    !     rhoc   = core charge in real space  (dense grid)
    !     rhocg  = core charge in G space  (dense grid)
    !     drhocg = derivative of core charge in G space (used for stress)
    !
-   LOGICAL :: nlcc_any
    REAL(DP), ALLOCATABLE:: rhocb(:,:)
    REAL(DP), ALLOCATABLE:: rhoc(:)
    REAL(DP), ALLOCATABLE:: rhocg(:,:)

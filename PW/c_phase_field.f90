@@ -143,7 +143,6 @@ SUBROUTINE c_phase_field(el_pola,ion_pola, fact_pola, pdir)
 !  -------------------------------------------------------------------------   !
 !                               INITIALIZATIONS
 !  -------------------------------------------------------------------------   !
-
    ALLOCATE (psi1(npwx,nbnd))
    ALLOCATE (psi(npwx,nbnd))
    ALLOCATE (aux(ngm))
@@ -224,7 +223,6 @@ SUBROUTINE c_phase_field(el_pola,ion_pola, fact_pola, pdir)
       gpar(pdir)=1.d0/at(pdir,pdir)!
       gvec=tpiba/sqrt(at(pdir,1)**2.d0+at(pdir,2)**2.d0+at(pdir,3)**2.d0)
    endif      
-      
 !  --- Find vector between consecutive points in strings ---
    if(nppstr_3d(pdir).ne.1) then  ! orthorhombic cell 
       dk(1)=xk(1,nx_el(2,pdir))-xk(1,nx_el(1,pdir))

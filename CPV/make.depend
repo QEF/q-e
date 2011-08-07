@@ -317,6 +317,7 @@ exch_corr.o : ../Modules/mp.o
 exch_corr.o : ../Modules/mp_global.o
 exch_corr.o : ../Modules/recvec.o
 exch_corr.o : ../Modules/sic.o
+exch_corr.o : ../Modules/uspp.o
 exch_corr.o : cp_interfaces.o
 exch_corr.o : mainvar.o
 exch_corr.o : modules.o
@@ -492,7 +493,6 @@ init.o : electrons.o
 init.o : gvecw.o
 init.o : ions_positions.o
 init.o : mainvar.o
-init.o : modules.o
 init.o : problem_size.o
 init.o : smallbox.o
 init.o : smallbox_grid.o
@@ -572,6 +572,7 @@ input.o : ../Modules/mp.o
 input.o : ../Modules/open_close_input_file_interf.o
 input.o : ../Modules/read_cards.o
 input.o : ../Modules/read_namelists.o
+input.o : ../Modules/read_pseudo.o
 input.o : ../Modules/read_xml.o
 input.o : ../Modules/run_info.o
 input.o : ../Modules/sic.o
@@ -594,7 +595,6 @@ input.o : ldaUpen.o
 input.o : mainvar.o
 input.o : pres_ai_mod.o
 input.o : printout_base.o
-input.o : read_pseudo.o
 input.o : wannier_base.o
 ions_nose.o : ../Modules/constants.o
 ions_nose.o : ../Modules/control_flags.o
@@ -662,6 +662,7 @@ makov_payne.o : ions_positions.o
 makov_payne.o : mainvar.o
 metaxc.o : ../Modules/kind.o
 modules.o : ../Modules/kind.o
+modules.o : ../Modules/uspp.o
 move_electrons.o : ../Modules/cell_base.o
 move_electrons.o : ../Modules/control_flags.o
 move_electrons.o : ../Modules/electrons_base.o
@@ -885,23 +886,10 @@ qqberry.o : ../Modules/uspp.o
 qqberry.o : cp_interfaces.o
 qqberry.o : gvecw.o
 qqberry.o : modules.o
-read_pseudo.o : ../Modules/atom.o
-read_pseudo.o : ../Modules/funct.o
-read_pseudo.o : ../Modules/io_files.o
-read_pseudo.o : ../Modules/io_global.o
-read_pseudo.o : ../Modules/ions_base.o
-read_pseudo.o : ../Modules/kind.o
-read_pseudo.o : ../Modules/mp.o
-read_pseudo.o : ../Modules/pseudo_types.o
-read_pseudo.o : ../Modules/radial_grids.o
-read_pseudo.o : ../Modules/read_uspp.o
-read_pseudo.o : ../Modules/upf.o
-read_pseudo.o : ../Modules/upf_to_internal.o
-read_pseudo.o : ../Modules/uspp.o
-read_pseudo.o : modules.o
 restart.o : ../Modules/autopilot.o
 restart.o : ../Modules/cell_base.o
 restart.o : ../Modules/control_flags.o
+restart.o : ../Modules/descriptors.o
 restart.o : ../Modules/electrons_base.o
 restart.o : ../Modules/io_files.o
 restart.o : ../Modules/ions_base.o
@@ -936,7 +924,6 @@ restart_sub.o : gvecw.o
 restart_sub.o : ions_nose.o
 restart_sub.o : ions_positions.o
 restart_sub.o : mainvar.o
-restart_sub.o : modules.o
 restart_sub.o : printout_base.o
 runcp.o : ../Modules/control_flags.o
 runcp.o : ../Modules/electrons_base.o
@@ -1010,6 +997,7 @@ vofrho.o : ../Modules/mp.o
 vofrho.o : ../Modules/mp_global.o
 vofrho.o : ../Modules/recvec.o
 vofrho.o : ../Modules/sic.o
+vofrho.o : ../Modules/uspp.o
 vofrho.o : cp_interfaces.o
 vofrho.o : energies.o
 vofrho.o : ldaU.o
@@ -1035,6 +1023,7 @@ vol_clu.o : mainvar.o
 vol_clu.o : pres_ai_mod.o
 wannier.o : ../Modules/cell_base.o
 wannier.o : ../Modules/control_flags.o
+wannier.o : ../Modules/descriptors.o
 wannier.o : ../Modules/electrons_base.o
 wannier.o : ../Modules/fft_base.o
 wannier.o : ../Modules/io_global.o

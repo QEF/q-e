@@ -17,6 +17,7 @@
      use kinds,              ONLY : DP
      use ions_base,          ONLY : nsp
      use atom,               ONLY : rgrid
+     use uspp,               ONLY : nlcc_any
      use uspp_param,         ONLY : upf
      use smallbox_gvec,      ONLY : ngb, gb
      use small_box,          ONLY : omegab, tpibab
@@ -26,7 +27,7 @@
      USE splines,            ONLY : spline
      use gvect,              ONLY : ngm
      use gvect,              ONLY : gg, gstart
-     USE core,               ONLY : rhocb, rhocg, drhocg, nlcc_any
+     USE core,               ONLY : rhocb, rhocg, drhocg
      !
      IMPLICIT NONE
      !

@@ -81,7 +81,6 @@ pseudopot.o \
 pseudopot_sub.o \
 qmatrixd.o \
 qqberry.o \
-read_pseudo.o \
 restart.o \
 restart_sub.o \
 runcp.o \

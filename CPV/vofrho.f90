@@ -34,7 +34,7 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, tlast,  
       USE constants,        ONLY: pi, fpi, au_gpa
       USE energies,         ONLY: etot, eself, enl, ekin, epseu, esr, eht, exc, eextfor 
       USE local_pseudo,     ONLY: vps, dvps, rhops
-      USE core,             ONLY: nlcc_any
+      USE uspp,             ONLY: nlcc_any
       USE smallbox_gvec
       USE dener,            ONLY: detot, dekin, dps, dh, dsr, dxc, denl, &
                                   detot6, dekin6, dps6, dh6, dsr6, dxc6, denl6

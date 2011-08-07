@@ -21,7 +21,8 @@
       use cell_base,       only : ainv, omega, h
       use ions_base,       only : nsp
       use control_flags,   only : tpre, iverbosity
-      use core,            only : drhocg, nlcc_any
+      use core,            only : drhocg
+      use uspp,            only : nlcc_any
       use mp,              only : mp_sum
       use metagga,         ONLY : kedtaur
       USE io_global,       ONLY : stdout
