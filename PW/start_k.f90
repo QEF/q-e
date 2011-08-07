@@ -51,18 +51,28 @@ MODULE start_k
        !
        ! variables for manual grid
        !
-       nks_start = nk_
+       IF ( k_points == 'gamma' ) THEN
+          nks_start = 1
+       ELSE
+          nks_start = nk_
+       END IF
+       !
        IF ( nks_start > 0) THEN
           IF ( .NOT. ALLOCATED (xk_start) ) ALLOCATE ( xk_start(3,nks_start) )
           IF ( .NOT. ALLOCATED (wk_start) ) ALLOCATE ( wk_start(nks_start) )
           !
-          ! k-points in crystal axis: transform to cartesian (in unist 2pi/a)
+          ! k-points in crystal axis: transform to cartesian (in units 2pi/a)
           ! BEWARE: reciprocal axis bg NEEDED, must have been initialized
           !
           IF ( k_points == 'crystal' ) CALL cryst_to_cart(nk_, xk_, bg, 1)
           !
-          xk_start(:,:) = xk_(:,1:nk_)
-          wk_start(:) = wk_(1:nk_)
+          IF ( k_points == 'gamma' ) THEN
+            xk_start(:,1) = 0.0_dp
+            wk_start(1)   = 1.0_dp
+          ELSE
+            xk_start(:,:) = xk_(:,1:nk_)
+            wk_start(:)   = wk_(1:nk_)
+          ENDIF
        END IF
        !
     END SUBROUTINE init_start_k 
