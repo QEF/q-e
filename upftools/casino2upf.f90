@@ -20,7 +20,8 @@ PROGRAM casino2upf
   !
   INTEGER, EXTERNAL :: find_free_unit
   !
-  CHARACTER(len=256) :: pp_data = 'pp.data'
+  CHARACTER(len=256) :: pp_data 
+  CHARACTER(len=256) :: upf_file
   CHARACTER(len=256), ALLOCATABLE:: wavefile(:)
   INTEGER, ALLOCATABLE :: waveunit(:)
   INTEGER nofiles, i, ios, pp_unit
@@ -28,11 +29,14 @@ PROGRAM casino2upf
 
   NAMELIST / inputpp / &
        pp_data,        &         !CASINO pp filename
+       upf_file,        &         !output file
        tn_grid,        &         !.true. if Trail and Needs grid is used
        tn_prefac,      &         
        xmin,           &         !xmin for standard QE grid
        dx                        !dx for Trail and Needs and standard QE
                                  !grid
+  pp_data= 'pp.data'
+  upf_file= 'out.UPF'
 
   WRITE(0,*) 'CASINO2UPF Converter'
 
@@ -74,7 +78,7 @@ PROGRAM casino2upf
 
   CALL convert_casino(upf_out)
 
-  CALL write_upf(upf=upf_out,unit=6) !filename=fileout)
+  CALL write_upf(upf=upf_out,filename=upf_file)
 
   STOP
 

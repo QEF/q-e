@@ -32,11 +32,11 @@ The first of these is casino2upf.x . This utility takes a given CASINO
 tabulated pseudopotential file and one or more awfn.data files specifying 
 the pseudoatomic wavefunctions to be used in creating the 
 Kleinman-Bylander projectors. A UPF file containing the projectors and the 
-local potential is then written to stdout. Any errors are communicated to 
-the user via stderr.
+local potential is then written to the file name specified in inputpp. Any
+errors are communicated to the user via stderr.
 
 Usage:
-	./casino2upf.x < inputpp > output.UPF
+	./casino2upf.x < inputpp 
 
 A sample inputpp file for converting a Trail and Needs pseudopotential 
 would be:
@@ -44,6 +44,7 @@ would be:
 inputpp:
 	&inputpp
 		pp_data='pp.data'
+		upf_file='my_pseudo_potential.UPF'
 	/
 	3
 	awfn.data_s1_2S
