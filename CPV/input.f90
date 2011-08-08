@@ -115,7 +115,7 @@ MODULE input
      !
      USE input_parameters,        ONLY : atom_pfile, pseudo_dir, ntyp, nat, &
                                          prefix, outdir, input_dft
-     USE read_pseudo_mod,         ONLY : readpp
+     USE read_pseudo_mod,         ONLY : readpp, check_order
      USE io_files,                ONLY : psfile_     => psfile , &
                                          pseudo_dir_ => pseudo_dir, &
                                          outdir_     => outdir, &
@@ -144,7 +144,8 @@ MODULE input
      !
      ! ... read in pseudopotentials and wavefunctions files
      !
-     CALL readpp( input_dft )
+     CALL readpp( input_dft, .TRUE. )
+     CALL check_order ( )
      !
      RETURN
      !

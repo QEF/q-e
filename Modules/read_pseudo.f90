@@ -12,8 +12,10 @@ MODULE read_pseudo_mod
   ! read pseudopotential files. Note that each processor reads!
   ! Main input module:
   USE io_files,     ONLY: pseudo_dir, pseudo_dir_cur, psfile
+  USE ions_base,    ONLY: ntyp => nsp
   ! Main output modules:
   USE atom,         ONLY: msh, rgrid
+  USE ions_base,    ONLY: zv
   USE uspp_param,   ONLY: upf, newpseudo, oldvan, nvb
   USE uspp,         ONLY: okvan, nlcc_any
 
@@ -21,18 +23,21 @@ MODULE read_pseudo_mod
   SAVE
   PRIVATE
   !
-  PUBLIC :: readpp
+  PUBLIC :: readpp, check_order
   !
   CONTAINS
   !
   !-----------------------------------------------------------------------
-SUBROUTINE readpp ( input_dft )
+SUBROUTINE readpp ( input_dft, printout )
   !-----------------------------------------------------------------------
   !
+  ! read PP files and put the result into the "upf" structure
+  ! set DFT to input_dft if present, to the value read in PP files otherwise
+  !
   USE kinds,        ONLY: DP
-  USE io_global,    ONLY: stdout
+  USE mp, ONLY: mp_bcast, mp_sum
+  USE io_global,    ONLY: stdout, ionode
   USE pseudo_types, ONLY: pseudo_upf, nullify_pseudo_upf, deallocate_pseudo_upf
-  USE ions_base,    ONLY: ntyp => nsp, zv
   USE funct,        ONLY: enforce_input_dft, &
                           get_iexch, get_icorr, get_igcx, get_igcc, get_inlc
   use radial_grids, ONLY: deallocate_radial_grid, nullify_radial_grid
@@ -44,9 +49,11 @@ SUBROUTINE readpp ( input_dft )
   IMPLICIT NONE
   !
   CHARACTER(len=*), INTENT(INOUT) :: input_dft
+  LOGICAL, OPTIONAL, INTENT(IN) :: printout
   !
   REAL(DP), parameter :: rcut = 10.d0
   CHARACTER(len=256) :: file_pseudo ! file name complete with path
+  LOGICAL :: printout_ = .FALSE.
   INTEGER :: iunps, isupf, nt, nb, ir, ios
   INTEGER :: iexch_, icorr_, igcx_, igcc_, inlc_
   !
@@ -84,7 +91,15 @@ SUBROUTINE readpp ( input_dft )
      CALL nullify_pseudo_upf( upf( nt ) )
   end do
   !
-   IF (input_dft /='none') CALL enforce_input_dft (input_dft)
+  IF (input_dft /='none') CALL enforce_input_dft (input_dft)
+  !
+  IF ( PRESENT(printout) ) THEN
+     printout_ = printout
+  END IF
+  IF ( ionode .AND. printout_) THEN
+     WRITE( stdout,"(//,3X,'Atomic Pseudopotentials Parameters',/, &
+                   &    3X,'----------------------------------' )" )
+  END IF
   !
   nvb = 0
   do nt = 1, ntyp
@@ -103,6 +118,7 @@ SUBROUTINE readpp ( input_dft )
         file_pseudo  = TRIM (pseudo_dir_cur) // TRIM (psfile(nt))
         OPEN  (unit = iunps, file = file_pseudo, status = 'old', &
                form = 'formatted', action='read', iostat = ios)
+        CALL mp_sum (ios)
         IF ( ios /= 0 ) CALL infomsg &
                      ('readpp', 'file '//TRIM(file_pseudo)//' not found')
         !
@@ -117,6 +133,7 @@ SUBROUTINE readpp ( input_dft )
         file_pseudo = TRIM (pseudo_dir) // TRIM (psfile(nt))
         OPEN  (unit = iunps, file = file_pseudo, status = 'old', &
                form = 'formatted', action='read', iostat = ios)
+        CALL mp_sum (ios)
         CALL errore('readpp', 'file '//TRIM(file_pseudo)//' not found',ABS(ios))
      END IF
      !
@@ -125,10 +142,17 @@ SUBROUTINE readpp ( input_dft )
      ! start reading - UPF first: the UPF format is detected via the
      ! presence of the keyword '<PP_HEADER>' at the beginning of the file
      !
+     IF( ionode .AND. printout_ ) THEN
+        WRITE( stdout, "(/,3X,'Reading pseudopotential for specie # ',I2, &
+                       & ' from file :',/,3X,A)") nt, TRIM(file_pseudo)
+     END IF
+     !
      call read_upf(upf(nt), rgrid(nt), isupf, unit=iunps)
      !
      if (isupf ==-1 .OR. isupf== 0) then
         !
+        IF( ionode .AND. printout_ ) &
+           WRITE( stdout, "(3X,'file type is UPF v.',i1)"), isupf+2
         call set_pseudo_upf (nt, upf(nt))
         ! 
         ! UPF is assumed to be multi-projector
@@ -153,14 +177,20 @@ SUBROUTINE readpp ( input_dft )
            newpseudo (nt) = ( pseudo_type (psfile (nt) ) == 2 )
            !
            IF ( newpseudo (nt) ) THEN
+              IF( ionode .AND. printout_ ) &
+                 WRITE( stdout, "(3X,'file type is RRKJ3')")
               call readrrkj (iunps, nt, upf(nt))
            ELSE
+              IF( ionode .AND. printout_ ) &
+                 WRITE( stdout, "(3X,'file type is Vanderbilt US PP')")
               CALL readvan (iunps, nt, upf(nt))
            ENDIF
            CALL set_pseudo_upf (nt, upf(nt), rgrid(nt))
            !
         else
            newpseudo (nt) = .false.
+           IF( ionode .AND. printout_ ) &
+              WRITE( stdout, "(3X,'file type is old PWscf NC format')")
            ! 
            call read_ncpp (iunps, nt, upf(nt))
            !
@@ -343,4 +373,13 @@ SUBROUTINE check_atwfc_norm(nt)
   !
 END SUBROUTINE check_atwfc_norm
 
+SUBROUTINE check_order
+   ! CP-specific check
+   INTEGER :: nt
+   DO nt =2, ntyp
+      IF ( (.NOT. upf(nt-1)%tvanp) .AND. upf(nt)%tvanp ) THEN
+        CALL errore ('readpp', 'ultrasoft PPs must precede norm-conserving',nt)
+      ENDIF
+   END DO
+END SUBROUTINE check_order
 END MODULE read_pseudo_mod
