@@ -47,7 +47,7 @@ input_description -distribution {Quantum Espresso} -package CP -program cp.x {
 	  Y 0.5  0.0  0.0
 	  Z O.0  0.2  0.2
 
-	[ CELL_PARAMETERS { cubic | hexagonal }
+	[ CELL_PARAMETERS { cubic | hexagonal } { bohr | angstrom }
 	   v1(1) v1(2) v1(3)
 	   v2(1) v2(2) v2(3)
 	   v3(1) v3(2) v3(3) ]
@@ -1834,6 +1834,13 @@ Nota Bene 1:   For calwf = 5, wffort is not used. The
 		derived from the cubic symmetry group (default) or from the hexagonal
 		symmetry group (assuming c axis as the z axis, a axis along the x axis).
 	    }
+            enum { bohr | angstrom }
+            info {
+                bohr / angstrom: lattice vectors in bohr radii / angstrom.
+                nothing specified: if a lattice constant (celldm(1) or a)
+                is present, lattice vectors are in units of the lattice
+                constant; otherwise, in bohr radii            }
+	    }
 	}
 
 	label { 
@@ -1849,8 +1856,6 @@ Nota Bene 1:   For calwf = 5, wffort is not used. The
 			        v1(1)  v1(2)  v1(3)    ... 1st lattice vector
 			        v2(1)  v2(2)  v2(3)    ... 2nd lattice vector
 			        v3(1)  v3(2)  v3(3)    ... 3rd lattice vector
-			    
-			    In alat units if celldm(1) was specified or in a.u. otherwise.
 			}		    
 			row v1
 			row v2

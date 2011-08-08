@@ -870,7 +870,7 @@ MODULE input
      USE input_parameters, ONLY : step_pen, A_pen, alpha_pen, sigma_pen
      !
      USE ions_base,        ONLY : tau, ityp, zv
-     USE cell_base,        ONLY : cell_base_init, at, cell_alat
+     USE cell_base,        ONLY : cell_base_init, cell_dyn_init, at, cell_alat
      USE cell_nose,        ONLY : cell_nose_init
      USE ions_base,        ONLY : ions_base_init, greasp_ => greasp
      USE sic_module,       ONLY : sic_initval
@@ -907,10 +907,10 @@ MODULE input
      !
      massa_totale = SUM( atom_mass(1:ntyp)*na_inp(1:ntyp) )
      !
-     CALL cell_base_init( ibrav , celldm , trd_ht, cell_symmetry, rd_ht, &
-                          cell_units, a, b, c, cosab, cosac, cosbc , wmass, &
-                          massa_totale, press, cell_damping, greash, &
-                          cell_dofree )
+     CALL cell_base_init( ibrav, celldm, a, b, c, cosab, cosac, cosbc, &
+                          trd_ht, cell_symmetry, rd_ht, cell_units )
+     CALL cell_dyn_init ( trd_ht, rd_ht, wmass, massa_totale, press, &
+                          cell_damping, greash, cell_dofree )
      !
      alat_ = cell_alat()
 

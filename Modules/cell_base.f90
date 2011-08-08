@@ -10,11 +10,37 @@
   MODULE cell_base
 !------------------------------------------------------------------------------!
 
-      USE kinds, ONLY : DP
+    USE kinds, ONLY : DP
+    USE constants, ONLY : pi, bohr_radius_angs
+    USE io_global, ONLY : stdout
 !
-      IMPLICIT NONE
-      SAVE
-!
+    IMPLICIT NONE
+    SAVE
+    !
+    !  ibrav: index of the bravais lattice (see latgen.f90)
+    INTEGER          :: ibrav
+    !  symm_type: 'cubic' or 'hexagonal' when ibrav=0
+    CHARACTER(len=9) :: symm_type
+    !  celldm: old-style parameters of the simulation cell (se latgen.f90)
+    REAL(DP) :: celldm(6) = (/ 0.0_DP,0.0_DP,0.0_DP,0.0_DP,0.0_DP,0.0_DP /)
+    !  traditional crystallographic cell parameters (alpha=cosbc and so on)
+    REAL(DP) :: a, b, c, cosab, cosac, cosbc
+    !  alat: lattice parameter - often used to scale quantities, or
+    !  in combination to other parameters/constants to define new units
+    REAL(DP) :: alat = 0.0_DP
+    ! omega: volume of the simulation cell
+    REAl(DP) :: omega = 0.0_DP
+    ! tpiba: 2 PI/alat, tpiba2=tpiba^2
+    REAL(DP) :: tpiba  = 0.0_DP, tpiba2 = 0.0_DP
+    !  direct and reciprocal lattice primitive vectors
+    !  at(:,i) are the lattice vectors of the simulation cell, a_i,
+    !          in alat units: a_i(:) = at(:,i)/alat
+    !  bg(:,i) are the reciprocal lattice vectors, b_i,
+    !          in tpiba=2pi/alat units: b_i(:) = bg(:,i)/tpiba
+    REAL(DP) :: at(3,3) = RESHAPE( (/ 0.0_DP /), (/ 3, 3 /), (/ 0.0_DP /) )
+    REAL(DP) :: bg(3,3) = RESHAPE( (/ 0.0_DP /), (/ 3, 3 /), (/ 0.0_DP /) )
+    !
+! -------------------------------------------------------------------------
 ! ...  periodicity box
 ! ...  In the matrix "a" every row is the vector of each side of 
 ! ...  the cell in the real space
@@ -34,25 +60,6 @@
           INTEGER :: perd(3)
         END TYPE boxdimensions
 
-        INTEGER          :: ibrav      ! index of the bravais lattice
-        CHARACTER(len=9) :: symm_type  ! 'cubic' or 'hexagonal' when ibrav=0
-        REAL(DP) :: celldm(6) = (/ 0.0_DP,0.0_DP,0.0_DP,0.0_DP,0.0_DP,0.0_DP /)
-                                       ! parameters of the simulation cell
-        REAL(DP) :: alat = 0.0_DP
-        !  alat = lattice parameter, often used to scale quantities, or
-        !  in combination to other parameters/constants to define new units
-
-        REAl(DP) :: omega = 0.0_DP   !  volume of the simulation cell
-        REAL(DP) :: tpiba  = 0.0_DP  !  = 2 PI / alat
-        REAL(DP) :: tpiba2 = 0.0_DP  !  = ( 2 PI / alat ) ** 2
-
-        !  direct and reciprocal lattice primitive vectors
-        !  at(:,i) are the lattice vectors of the simulation cell, a_i,
-        !          in alat units: a_i(:) = at(:,i)/alat
-        !  bg(:,i) are the reciprocal lattice vectors, b_i,
-        !          in tpiba=2pi/alat units: b_i(:) = bg(:,i)/tpiba
-        REAL(DP) :: at(3,3) = RESHAPE( (/ 0.0_DP /), (/ 3, 3 /), (/ 0.0_DP /) )
-        REAL(DP) :: bg(3,3) = RESHAPE( (/ 0.0_DP /), (/ 3, 3 /), (/ 0.0_DP /) )
         !  The following relations should always be kept valid:
         !     h = at*alat; ainv = h^(-1); ht=transpose(h)
         REAL(DP) :: h(3,3)    = 0.0_DP ! simulation cell at time t 
@@ -69,7 +76,7 @@
         REAL(DP) :: wmass = 0.0_DP     ! cell fictitious mass
         REAL(DP) :: press = 0.0_DP     ! external pressure 
 
-        REAL(DP) :: frich  = 0.0_DP    ! firction parameter for cell damped dynamics
+        REAL(DP) :: frich  = 0.0_DP    ! friction parameter for cell damped dynamics
         REAL(DP) :: greash = 1.0_DP    ! greas parameter for damped dynamics
 
         LOGICAL :: tcell_base_init = .FALSE.
@@ -89,14 +96,130 @@
         INTERFACE r_to_s
           MODULE PROCEDURE r_to_s1, r_to_s1b, r_to_s3
         END INTERFACE
-
-!
 !------------------------------------------------------------------------------!
   CONTAINS
 !------------------------------------------------------------------------------!
 !
+  SUBROUTINE cell_base_init( ibrav_, celldm_, a_, b_, c_, cosab_, cosac_, &
+               cosbc_, trd_ht, cell_symmetry, rd_ht, cell_units )
+    !
+    ! ... initialize cell_base module variables, set up crystal lattice
+    !
 
+    IMPLICIT NONE
+    INTEGER, INTENT(IN) :: ibrav_
+    REAL(DP), INTENT(IN) :: celldm_ (6)
+    LOGICAL, INTENT(IN) :: trd_ht
+    CHARACTER(LEN=*), INTENT(IN) :: cell_symmetry
+    REAL(DP), INTENT(IN) :: rd_ht (3,3)
+    CHARACTER(LEN=*), INTENT(IN) :: cell_units
+    REAL(DP), INTENT(IN) :: a_ , b_ , c_ , cosab_, cosac_, cosbc_
 
+    REAL(DP) :: units
+    !
+    IF ( ibrav_ == 0 .and. .not. trd_ht ) THEN
+       CALL errore('cell_base_init', 'ibrav=0: must read cell parameters', 1)
+    ELSE IF ( ibrav /= 0 .and. trd_ht ) THEN
+       CALL errore('cell_base_init', 'redundant data for cell parameters', 2)
+    END IF
+    !
+    ibrav  = ibrav_
+    celldm = celldm_
+    a = a_ ; b = b_ ; c = c_ ; cosab = cosab_ ; cosac = cosac_ ; cosbc = cosbc_
+    !
+    IF ( trd_ht ) THEN
+      !
+      ! ... crystal lattice vectors read from input: find units
+      !
+      SELECT CASE ( TRIM( cell_units ) )
+        CASE ( 'bohr' )
+          units = 1.0_DP
+        CASE ( 'angstrom' )
+          units = 1.0_DP / bohr_radius_angs
+        CASE DEFAULT
+          IF( celldm( 1 ) /= 0.0_DP ) THEN
+             units = celldm( 1 )
+          ELSE IF ( a /= 0.0_dp ) THEN
+             units = a / bohr_radius_angs
+          ELSE
+             units = 1.0_DP
+          END IF
+     END SELECT
+     !
+     ! ... Beware the transpose operation between matrices ht and at!
+     !
+     at = TRANSPOSE( rd_ht ) * units
+     !
+     ! ... at is in atomic units: find alat, bring at to alat units, find omega
+     !
+     IF( celldm( 1 ) /= 0.0_DP ) THEN
+        alat = celldm( 1 )
+     ELSE IF ( a /= 0.0_dp ) THEN
+        alat = a / bohr_radius_angs
+     ELSE
+        alat = SQRT ( at(1,1)**2+at(2,1)**2+at(3,1)**2 )
+     END IF
+     at(:,:) = at(:,:) / alat
+     CALL volume( alat, at(1,1), at(1,2), at(1,3), omega )
+     symm_type = cell_symmetry
+     !
+  ELSE
+  ! ... crystal lattice via celldm or crystallographica parameters
+  !
+     IF ( celldm(1) == 0.D0 .and. a /= 0.D0 ) THEN
+        !
+        celldm(1) = a / bohr_radius_angs
+        celldm(2) = b / a
+        celldm(3) = c / a
+        !
+        IF ( ibrav == 14 ) THEN
+           !
+           ! ... triclinic lattice
+           !
+           celldm(4) = cosbc
+           celldm(5) = cosac
+           celldm(6) = cosab
+           !
+        ELSE IF ( ibrav ==-12 ) THEN
+           !
+           ! ... monoclinic P lattice, unique axis b
+           !
+           celldm(5) = cosac
+           !
+        ELSE
+           !
+           ! ... trigonal and monoclinic lattices, unique axis c
+           !
+           celldm(4) = cosab
+           !
+        ENDIF
+        !
+     ELSE IF ( celldm(1) /= 0.D0 .and. a /= 0.D0 ) THEN
+        !
+        CALL errore( 'input', 'do not specify both celldm and a,b,c!', 1 )
+        !
+     END IF
+     !
+     ! ... generate at (in atomic units) from ibrav and celldm
+     !
+     CALL latgen( ibrav, celldm, at(1,1), at(1,2), at(1,3), omega )
+     !
+     ! ... define lattice constants alat, divide at by alat
+     !
+     alat = celldm(1)
+     at(:,:) = at(:,:) / alat
+     !
+  END IF
+  !
+  ! ... Generate the reciprocal lattice vectors
+  !
+  CALL recips( at(1,1), at(1,2), at(1,3), bg(1,1), bg(1,2), bg(1,3) )
+  !
+  tpiba  = 2.0_DP * pi / alat
+  tpiba2 = tpiba * tpiba
+  RETURN
+  !
+  END SUBROUTINE cell_base_init
 
 !------------------------------------------------------------------------------!
 ! ...     set box
@@ -403,48 +526,21 @@ END FUNCTION saw
 
 !------------------------------------------------------------------------------!
 
-  SUBROUTINE cell_base_init( ibrav_ , celldm_ , trd_ht, cell_symmetry, rd_ht, cell_units, &
-               a_ , b_ , c_ , cosab, cosac, cosbc, wc_ , total_ions_mass , press_ ,  &
+  SUBROUTINE cell_dyn_init( trd_ht, rd_ht, wc_ , total_ions_mass , press_ , &
                frich_ , greash_ , cell_dofree )
 
-    USE constants, ONLY: bohr_radius_angs, au_gpa, pi, amu_au
+    USE constants, ONLY: au_gpa, amu_au
     USE io_global, ONLY: stdout
 
     IMPLICIT NONE
-    INTEGER, INTENT(IN) :: ibrav_
-    REAL(DP), INTENT(IN) :: celldm_ (6)
-    LOGICAL, INTENT(IN) :: trd_ht
-    CHARACTER(LEN=*), INTENT(IN) :: cell_symmetry
-    REAL(DP), INTENT(IN) :: rd_ht (3,3)
-    CHARACTER(LEN=*), INTENT(IN) :: cell_units
-    REAL(DP), INTENT(IN) :: a_ , b_ , c_ , cosab, cosac, cosbc
     CHARACTER(LEN=*), INTENT(IN) :: cell_dofree
+    LOGICAL, INTENT(IN) :: trd_ht
+    REAL(DP), INTENT(IN) :: rd_ht (3,3)
     REAL(DP),  INTENT(IN) :: wc_ , frich_ , greash_ , total_ions_mass
-    REAL(DP),  INTENT(IN) :: press_  ! external pressure from imput ( in KBar = 0.1 GPa )
-
-
-    REAL(DP) :: a, b, c, units
-    INTEGER   :: j
-
+    REAL(DP),  INTENT(IN) :: press_ ! external pressure from input 
+                                    ! ( in KBar = 0.1 GPa )
+    INTEGER   :: i,j
     !
-    ! ... set up crystal lattice, and initialize cell_base module
-    !
-
-    celldm = celldm_
-    a = a_
-    b = b_
-    c = c_
-    ibrav  = ibrav_
-
-    IF ( ibrav == 0 .AND. .NOT. trd_ht ) &
-      CALL errore( ' cell_base_init ', ' ibrav=0: must read cell parameters', 1 )
-    IF ( ibrav /= 0 .AND. trd_ht ) &
-      CALL errore( ' cell_base_init ', ' redundant data for cell parameters', 2 )
-
-    IF ( celldm(1) /= 0.0_DP .AND. a /= 0.0_DP ) THEN
-      CALL errore( ' cell_base_init ', ' do not specify both celldm and a,b,c!', 1 )
-    END IF
-
     press  = press_ / 10.0_DP ! convert press in KBar to GPa
     press  = press  / au_gpa  ! convert to AU
     !  frich  = frich_   ! for the time being this is set elsewhere
@@ -467,101 +563,19 @@ END FUNCTION saw
 130 format(3X,'wmass (calculated)      = ',f15.2,' [AU]')
 
     IF( wmass <= 0.0_DP ) &
-      CALL errore(' cell_base_init ',' wmass out of range ',0)
-
-
-
-    ! ... if celldm(1) /= 0  rd_ht should be in unit of alat
+      CALL errore(' cell_dyn_init',' wmass out of range ',0)
 
     IF ( trd_ht ) THEN
       !
-      SELECT CASE ( TRIM( cell_units ) )
-        CASE ( 'bohr' )
-          units = 1.0_DP
-        CASE ( 'angstrom' )
-          units = 1.0_DP / BOHR_RADIUS_ANGS
-        CASE ( 'alat' )
-          IF( celldm( 1 ) == 0.0_DP ) &
-            CALL errore( ' cell_base_init ', ' cell_parameter in alat without celldm(1) ', 1 )
-          units = celldm( 1 )
-        CASE DEFAULT
-          units = 1.0_DP
-      END SELECT
-      !
-      symm_type = cell_symmetry
-      !
-      !    The matrix "ht" in FPMD correspond to the transpose of matrix "at" in PW
-      !
-      at        = TRANSPOSE( rd_ht ) * units
       WRITE( stdout, 210 )
       WRITE( stdout, 220 ) ( rd_ht( 1, j ), j = 1, 3 )
       WRITE( stdout, 220 ) ( rd_ht( 2, j ), j = 1, 3 )
       WRITE( stdout, 220 ) ( rd_ht( 3, j ), j = 1, 3 )
       !
-      IF ( ANY( celldm(1:6) /= 0 ) .AND. TRIM( cell_units ) /= 'alat' ) THEN
-        WRITE( stdout, 230 )
-        celldm(1:6) = 0.0_DP
-      END IF
-      !
-      IF ( a /= 0 ) THEN
-        WRITE( stdout, 240 )
-        a = 0.0_DP
-        b = 0.0_DP
-        c = 0.0_DP
-      END IF
-      !
 210   format(3X,'initial cell from CELL_PARAMETERS card')
 220   format(3X,3F14.8)
-230   format(3X,'celldm(1:6) are ignored')
-240   format(3X,'a, b, c are ignored')
       !
-
-      IF ( celldm(1) == 0.0_DP ) THEN
-        !
-        ! ... input at are in atomic units: define alat
-        !
-        celldm(1) = SQRT( at(1,1)**2 + at(1,2)**2 + at(1,3)**2 )
-      END IF
-
-      alat = celldm(1)
-      !
-      ! ... bring at to alat units
-      !
-      at(:,:) = at(:,:) / alat
-
-    ELSE 
-
-      IF( a /= 0.0_DP ) THEN
-
-        celldm(1) = a / bohr_radius_angs
-        celldm(2) = b / a
-        celldm(3) = c / a
-        IF ( ibrav == 14 ) THEN
-           celldm(4) = cosbc
-           celldm(5) = cosac
-           celldm(6) = cosab
-        ELSE IF ( ibrav ==-12 ) THEN
-           celldm(5) = cosac
-        ELSE
-           celldm(4) = cosab
-        END IF
-      END IF
-
-      !
-      ! ... generate at (atomic units)
-      !
-      CALL latgen( ibrav, celldm, at(1,1), at(1,2), at(1,3), omega )
-      alat = celldm(1)
-      !
-      ! ... bring at to alat units
-      !
-      at(:,:) = at(:,:) / alat
-
     END IF
-    !
-    CALL volume( alat, at(1,1), at(1,2), at(1,3), omega )
-    !
-    CALL recips(  at(1,1), at(1,2), at(1,3),  bg(1,1), bg(1,2), bg(1,3) )
     !
     ainv(1,:) = bg(:,1)/alat
     ainv(2,:) = bg(:,2)/alat
@@ -593,7 +607,7 @@ END FUNCTION saw
 
 
     RETURN
-  END SUBROUTINE cell_base_init
+  END SUBROUTINE cell_dyn_init
 
 !------------------------------------------------------------------------------!
   SUBROUTINE init_dofree ( cell_dofree ) 
@@ -648,8 +662,6 @@ END FUNCTION saw
 
   SUBROUTINE cell_base_reinit( ht )
 
-    USE constants, ONLY: pi 
-    USE io_global, ONLY: stdout
     USE control_flags, ONLY: iverbosity
 
     IMPLICIT NONE
@@ -918,7 +930,6 @@ END FUNCTION saw
     cell_alat = alat
     return 
   end function cell_alat
-
 !
 !------------------------------------------------------------------------------!
    END MODULE cell_base

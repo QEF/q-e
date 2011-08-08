@@ -71,7 +71,7 @@
       use gvecw, only: ngw
       use gvect, only: g
       use gvect, only: nl, nlm
-      use cell_base
+      use cell_base, only : omega, tpiba, ainv
       use electrons_base, only: nx => nbspx, n => nbsp, f, ispin, nspin
       use constants, only: pi, fpi
 !

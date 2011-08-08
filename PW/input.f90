@@ -45,10 +45,8 @@ SUBROUTINE iosys()
                             nberrycyc_ => nberrycyc, &
                             efield_cart_ => efield_cart
   !
-  USE cell_base,     ONLY : at, bg, alat, omega, &
-                            celldm_ => celldm, &
-                            ibrav_  => ibrav, &
-                            init_dofree
+  USE cell_base,     ONLY : at, alat, omega, &
+                            cell_base_init, init_dofree
   !
   USE ions_base,     ONLY : if_pos, ityp, tau, extfor, &
                             ntyp_ => nsp, &
@@ -298,10 +296,10 @@ SUBROUTINE iosys()
   USE input_parameters, ONLY : use_wannier, nwan, constrain_pot, &
                                use_energy_int, print_wannier_coeff
   !
-  ! ... "path" specific
+  ! ... CARDS
   !
-  !
-  USE input_parameters, ONLY : nconstr_inp, ncolvar_inp
+  USE input_parameters, ONLY : nconstr_inp, ncolvar_inp, trd_ht, rd_ht, &
+                               cell_symmetry, cell_units
   !
   USE constraints_module,    ONLY : init_constraint
   USE read_namelists_module, ONLY : read_namelists, sm_not_set
@@ -1081,8 +1079,6 @@ SUBROUTINE iosys()
   iprint_     = iprint
   lecrpa_     = lecrpa
   !
-  celldm_  = celldm
-  ibrav_   = ibrav
   nat_     = nat
   ntyp_    = ntyp
   edir_    = edir
@@ -1287,55 +1283,8 @@ SUBROUTINE iosys()
   !
   ! ... set up atomic positions and crystal lattice
   !
-  IF ( celldm_(1) == 0.D0 .and. a /= 0.D0 ) THEN
-     !
-     celldm_(1) = a / bohr_radius_angs
-     celldm_(2) = b / a
-     celldm_(3) = c / a
-     !
-     IF ( ibrav_ == 14 ) THEN
-        !
-        ! ... triclinic lattice
-        !
-        celldm_(4) = cosbc
-        celldm_(5) = cosac
-        celldm_(6) = cosab
-        !
-     ELSE IF ( ibrav_ ==-12 ) THEN
-        !
-        ! ... monoclinic P lattice, unique axis b
-        !
-        celldm_(5) = cosac
-        !
-     ELSE
-        !
-        ! ... trigonal and monoclinic lattices, unique axis c
-        !
-        celldm_(4) = cosab
-        !
-     ENDIF
-     !
-  ELSEIF ( celldm_(1) /= 0.D0 .and. a /= 0.D0 ) THEN
-     !
-     CALL errore( 'input', 'do not specify both celldm and a,b,c!', 1 )
-     !
-  ENDIF
-  !
-  ! ... generate at (in atomic units) from ibrav and celldm
-  !
-  CALL latgen( ibrav_, celldm_, at(1,1), at(1,2), at(1,3), omega )
-  !
-  ! ... define alat
-  !
-  alat = celldm_(1)
-  !
-  ! ... convert at to unit of alat
-  !
-  at = at / alat
-  !
-  ! ... Generate the reciprocal lattice vectors
-  !
-  CALL recips( at(1,1), at(1,2), at(1,3), bg(1,1), bg(1,2), bg(1,3) )
+  call cell_base_init ( ibrav, celldm, a, b, c, cosab, cosac, cosbc, &
+                        trd_ht, cell_symmetry, rd_ht, cell_units )
   !
   CALL convert_tau ( tau_format, nat_, tau)
   !
@@ -1481,8 +1430,8 @@ SUBROUTINE read_cards_pw ( psfile, tau_format )
   USE input_parameters,   ONLY : atom_label, atom_pfile, atom_mass, taspc, &
                                  tapos, rd_pos, atomic_positions, if_pos,  &
                                  sp_pos, k_points, xk, wk, nk1, nk2, nk3,  &
-                                 k1, k2, k3, nkstot, cell_symmetry, rd_ht, &
-                                 trd_ht, f_inp, rd_for, tavel, sp_vel
+                                 k1, k2, k3, nkstot, &
+                                 f_inp, rd_for, tavel, sp_vel
   USE cell_base,          ONLY : at, ibrav, symm_type
   USE ions_base,          ONLY : nat, ntyp => nsp, ityp, tau, atm, extfor
   USE start_k,            ONLY : init_start_k
@@ -1498,7 +1447,6 @@ SUBROUTINE read_cards_pw ( psfile, tau_format )
   INTEGER, EXTERNAL :: atomic_number
   REAL(DP), EXTERNAL :: atom_weight
   !
-  LOGICAL :: tcell = .false.
   INTEGER :: is, ia
   !
   !
@@ -1563,19 +1511,6 @@ SUBROUTINE read_cards_pw ( psfile, tau_format )
      DEALLOCATE ( f_inp )
      !
   ENDIF
-  !
-  IF ( trd_ht ) THEN
-    !
-    symm_type = cell_symmetry
-    at        = transpose( rd_ht )
-    tcell     = .true.
-    !
-  ENDIF
-  !
-  IF ( ibrav == 0 .and. .not. tcell ) &
-     CALL errore( 'read_cards_pw', 'ibrav=0: must read cell parameters', 1 )
-  IF ( ibrav /= 0 .and. tcell ) &
-     CALL errore( 'read_cards_pw', 'redundant data for cell parameters', 2 )
   !
   RETURN
   !
