@@ -66,13 +66,13 @@ MODULE exx
   LOGICAL           :: use_regularization = .TRUE.
   !
   ! yukawa method
-  LOGICAL           :: use_yukawa = .FALSE.
   REAL (DP)         :: yukawa = 0.d0
   !
   ! erfc screening
-  LOGICAL           :: use_erfc_simple_div = .FALSE.
   REAL (DP)         :: erfc_scrlen = 0.d0
   !
+  ! erf screening
+  REAL (DP)         :: erf_scrlen = 0.d0
   ! cutoff techniques
   LOGICAL           :: use_coulomb_vcut_ws = .FALSE.
   LOGICAL           :: use_coulomb_vcut_spheric = .FALSE.
@@ -336,17 +336,6 @@ CONTAINS
      !
      use_regularization = .TRUE.
      !
-  CASE ( "yukawa" ) 
-     !
-     use_yukawa = .TRUE.
-     IF ( yukawa <= 0.0 ) CALL errore(sub_name,'invalid yukawa parameter', 1)
-     !
-  CASE ( "erfc_simple" )
-     !
-     use_erfc_simple_div = .TRUE.
-     erfc_scrlen = get_screening_parameter()
-     write(0,*) "erfc_scrlen", erfc_scrlen
-     IF ( erfc_scrlen <= 0.0 ) CALL errore(sub_name,'invalid screening length', 1)
      !
   CASE ( "vcut_ws" )
      !
@@ -553,7 +542,11 @@ CONTAINS
        exxalfa = get_exx_fraction()
 #ifdef EXXDEBUG
        write (stdout,*) " ! EXXALFA SET TO ", exxalfa
+write(stdout,*) "exxinit, erfc_scrlen set to: ", erfc_scrlen
+write(stdout,*) "exxinit, yukawa set to: ", yukawa
 #endif
+     !
+
        call start_exx
     endif
 
@@ -926,6 +919,8 @@ SUBROUTINE g2_convolution(ngm, g, xk, xkq, fac)
         !
         IF ( erfc_scrlen > 0  ) THEN
            fac(ig)=e2*fpi/qq*(1-EXP(-qq/4.d0/erfc_scrlen**2)) * grid_factor
+        ELSEIF( erf_scrlen > 0 ) THEN
+           fac(ig)=e2*fpi/qq*(EXP(-qq/4.d0/erf_scrlen**2)) * grid_factor
         ELSE
            fac(ig)=e2*fpi/( qq + yukawa ) * grid_factor
         END IF
@@ -935,8 +930,9 @@ SUBROUTINE g2_convolution(ngm, g, xk, xkq, fac)
         !
         fac(ig)= - exxdiv ! or rather something else (see F.Gygi)
         !
-        IF ( use_yukawa .AND. .NOT. x_gamma_extrapolation ) &
+        IF ( yukawa > 0.d0.AND. .NOT. x_gamma_extrapolation ) &
              fac(ig) = fac(ig) + e2*fpi/( qq + yukawa )
+        IF( erfc_scrlen > 0.d0.AND. .NOT. x_gamma_extrapolation ) fac(ig) = fac(ig) + e2*pi/(erfc_scrlen**2)
         !
      ENDIF
      !
@@ -1121,6 +1117,8 @@ END SUBROUTINE g2_convolution
                    !
                    IF ( erfc_scrlen > 0 ) THEN
                       fac(ig)=e2*fpi/qq*(1-exp(-qq/4.d0/erfc_scrlen**2)) * grid_factor
+                   ELSEIF ( erf_scrlen > 0 ) THEN
+                      fac(ig)=e2*fpi/qq*(exp(-qq/4.d0/erf_scrlen**2)) * grid_factor
                    ELSE
                       fac(ig)=e2*fpi/( qq + yukawa ) * grid_factor
                    END IF
@@ -1131,8 +1129,10 @@ END SUBROUTINE g2_convolution
                    !
                    fac(ig)= - exxdiv ! or rather something else (see F.Gygi)
                    !
-                   IF ( use_yukawa .AND. .NOT. x_gamma_extrapolation) &
-                      fac(ig) = fac(ig) + e2*fpi/( qq + yukawa )
+                   IF ( yukawa > 0.d0.AND. .NOT. x_gamma_extrapolation ) &
+                       fac(ig) = fac(ig) + e2*fpi/( qq + yukawa )
+                   IF( erfc_scrlen > 0.d0.AND. .NOT. x_gamma_extrapolation ) fac(ig) = fac(ig) + e2*pi/(erfc_scrlen**2)
+                   !
                 ENDIF
                 !
              ENDDO
@@ -1252,15 +1252,6 @@ END SUBROUTINE g2_convolution
         return
      END IF
 
-     IF ( use_erfc_simple_div .AND. erfc_scrlen > 0 .AND. &
-          .NOT. x_gamma_extrapolation ) THEN
-        exx_divergence = -e2*pi/(erfc_scrlen**2)
-#ifdef EXXDEBUG
-        write(stdout,*) 'exx_divergence', exx_divergence
-#endif
-        return
-     END IF
-
      dq1= 1.d0/DBLE(nq1)
      dq2= 1.d0/DBLE(nq2) 
      dq3= 1.d0/DBLE(nq3) 
@@ -1287,17 +1278,18 @@ END SUBROUTINE g2_convolution
                     on_double_grid = on_double_grid .and. (abs(x-nint(x))<eps)
                  end if
                  if (.not.on_double_grid) then
-                    if ( qq > 1.d-8 .OR. use_yukawa ) then
+                    if ( qq > 1.d-8 ) then
                        if ( erfc_scrlen > 0 ) then
                           div = div + exp( -alpha * qq) / qq * &
                                 (1-exp(-qq*tpiba2/4.d0/erfc_scrlen**2)) * grid_factor
+                       elseif ( erf_scrlen >0 ) then
+                          div = div + exp( -alpha * qq) / qq * &
+                                (exp(-qq*tpiba2/4.d0/erf_scrlen**2)) * grid_factor
                        else
 
                           div = div + exp( -alpha * qq) / (qq + yukawa/tpiba2) &
                                                      * grid_factor
                        endif
-                    else
-                       div = div - alpha ! or maybe something else
                     end if
                  end if
               end do
@@ -1307,12 +1299,14 @@ END SUBROUTINE g2_convolution
      call mp_sum(  div, intra_pool_comm )
      if (gamma_only) then
         div = 2.d0 * div
-        if ( .not. x_gamma_extrapolation ) then
-           if ( use_yukawa ) then
-              div = div - tpiba2/yukawa
-           else
-              div = div + alpha
-           end if
+     endif
+     if ( .not. x_gamma_extrapolation ) then
+        if ( yukawa > 0.d0) then
+           div = div + tpiba2/yukawa
+        elseif( erfc_scrlen > 0.d0 ) then
+           div = div + tpiba2/4.d0/erfc_scrlen**2
+        else
+           div = div - alpha
         end if
      end if
 
@@ -1328,12 +1322,15 @@ END SUBROUTINE g2_convolution
         qq = q_ * q_
         if ( erfc_scrlen > 0 ) then
            aa = aa  -exp( -alpha * qq) * exp(-qq/4.d0/erfc_scrlen**2) * dq
+        elseif ( erf_scrlen > 0 ) then
+           aa = 0.d0
         else
            aa = aa - exp( -alpha * qq) * yukawa / (qq + yukawa) * dq
         end if
      end do
      aa = aa * 8.d0 /fpi
      aa = aa + 1.d0/sqrt(alpha*0.25d0*fpi) 
+     if( erf_scrlen > 0) aa = 1.d0/sqrt((alpha+1.d0/4.d0/erf_scrlen**2)*0.25d0*fpi)
 #ifdef EXXDEBUG
      write (stdout,*) aa, 1.d0/sqrt(alpha*0.25d0*fpi)
 #endif   
@@ -1495,7 +1492,7 @@ END SUBROUTINE g2_convolution
                  else
                     fac(ig)= -exxdiv ! or rather something else (see f.gygi)
                     fac_stress(ig) = 0.d0  ! or -exxdiv_stress (not yet implemented)
-                    if ( use_yukawa .and. .not. x_gamma_extrapolation) then
+                    if ( yukawa> 0.d0 .and. .not. x_gamma_extrapolation) then
                        fac(ig) = fac(ig) + e2*fpi/( qq + yukawa )
                        fac_stress(ig) = 2.d0 * e2*fpi/(qq+yukawa)**2
                     endif
