@@ -483,6 +483,24 @@ CONTAINS
        ENDIF
 
     END IF
+!
+!   Outside the PAW spheres augfun should be exactly 0. On some machine
+!   it is equal to zero to machine precision and sometimes it is negative, 
+!   so as to confuse the check for negative charge. So we set it to zero
+!   explicitely.
+!
+    DO ns = 1, nbeta
+       l1 = pawset_%l(ns)
+       DO ns1 = ns, nbeta
+          l2 = pawset_%l(ns1)
+          DO l3 = max (l1-l2,l2-l1), l1+l2
+             DO n = pawset_%irc+1, pawset_%grid%mesh
+                pawset_%augfun(n,ns,ns1,l3) = 0.0_DP
+                pawset_%augfun(n,ns1,ns,l3) = 0.0_DP
+             END DO
+          END DO
+       END DO
+    END DO
     !
     !
     ! Copy kinetic energy differences
