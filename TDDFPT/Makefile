@@ -6,15 +6,15 @@ default: all
 all:
 	if [ ! -d bin ] ; then mkdir bin; fi;
 	if test -d src ; then \
-	( cd src ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= all ; \
-	else $(MAKE) $(MFLAGS) TLDEPS= all ; fi ) ; fi ; \
+	( cd src ; if test "$(MAKE)" = "" ; then make $(MFLAGS) $@ ; \
+	else $(MAKE) $(MFLAGS) $@ ; fi ) ; fi ; \
 	if test -d tools ; then \
-	( cd tools ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= all ; \
-	else $(MAKE) $(MFLAGS) TLDEPS= all ; fi ) ; fi ; \
+	( cd tools ; if test "$(MAKE)" = "" ; then make $(MFLAGS) $@ ; \
+	else $(MAKE) $(MFLAGS) $@ ; fi ) ; fi ; \
 
 clean :
 	if test -d src ; then \
-	( cd src ; if test "$(MAKE)" = "" ; then make clean ; \
+	( cd src ; if test "$(MAKE)" = "" ; then make clean; \
 	else $(MAKE) clean ; fi ) ; fi ;\
 	if test -d tools ; then \
 	( cd tools ; if test "$(MAKE)" = "" ; then make clean ; \
