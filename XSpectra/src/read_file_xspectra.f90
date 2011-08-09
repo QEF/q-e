@@ -55,6 +55,7 @@ SUBROUTINE read_file_xspectra(xread_wf)
 !<CG>
   USE paw_gipaw,            ONLY : set_paw_upf
 !</CG>
+  USE read_pseudo_mod,      ONLY : readpp       
 
   !
   IMPLICIT NONE
@@ -67,6 +68,7 @@ SUBROUTINE read_file_xspectra(xread_wf)
   LOGICAL  :: xread_wf
 !</MCB>
   !
+  CHARACTER(len=80) :: input_dft = 'none'
   !
   ! ... first we get the version of the qexml file
   !     if not already read
@@ -187,7 +189,7 @@ SUBROUTINE read_file_xspectra(xread_wf)
   !
   CALL pw_readfile( 'pseudo', ierr )
   !
-  CALL readpp()
+  CALL readpp( input_dft )
   !
   !<CG>
   DO nt = 1, nsp

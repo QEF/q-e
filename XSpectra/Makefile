@@ -1,37 +1,19 @@
-# Makefile for X-ray spectra calculation (XSPECTRA)
+# Makefile for XSpectra
+# Adapted from TDDFPT main Makefile
 
-include ../make.sys
+default: all
 
-# location of needed modules
-MODFLAGS= $(MOD_FLAG)../iotk/src $(MOD_FLAG)../Modules \
-          $(MOD_FLAG)../PW $(MOD_FLAG).
-
-XOBJS = \
-./xspectra_mod.o \
-./radin_mod.o \
-./mygetK.o \
-./read_file_xspectra.o \
-./ipoolscatter.o \
-./init_xspectra_ldau.o \
-./lr_sm1_psi.o
-
-GIPAWOBJS=./paw_gipaw.o \
-./gipaw_module.o \
-./init_gipaw_1.o \
-./init_gipaw_2.o
-
-QEMODS = ../Modules/libqemod.a
-PWOBJS = ../PW/libpw.a 
-
-all : xspectra.x 
-
-xspectra.x :   xspectra.o $(XOBJS) $(GIPAWOBJS) $(QEMODS) $(PWOBJS)
-	$(MPIF90) -o $@  xspectra.o $(XOBJS) $(GIPAWOBJS) \
-		$(PWOBJS) $(QEMODS) $(LDFLAGS) $(LIBOBJS) $(LIBS)
-	- ( cd ../bin ; ln -fs ../XSpectra/$@ . )
+all:
+	if test -d src ; then \
+	( cd src ; if test "$(MAKE)" = "" ; then make $(MFLAGS) $@; \
+	else $(MAKE) $(MFLAGS) $@ ; fi ) ; fi ; \
 
 clean :
-	- /bin/rm -f *.x *.o *~ *.F90 *.d *.mod *.i *.L
+	if test -d src ; then \
+	( cd src ; if test "$(MAKE)" = "" ; then make clean ; \
+	else $(MAKE) clean ; fi ) ; fi ;\
 
-include make.depend
-# DO NOT DELETE
+distclean: clean
+
+
+

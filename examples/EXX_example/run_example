@@ -132,7 +132,7 @@ K_POINTS
    0.3750000  0.3750000  0.6250000   3.00
 EOF
 $ECHO "  running the scf calculation for Si with nq = $nq ...\c"
-$PW_COMMAND < si.in > si.PBE0_nq=${nq}.out
+#$PW_COMMAND < si.in > si.PBE0_nq=${nq}.out
 $ECHO " done"
 grep -e ! si.PBE0_nq=${nq}.out | tail -1
 
@@ -160,6 +160,7 @@ cat > si.in << EOF
     ecutwfc =12.0,  nbnd = 8,
     input_dft='hse', nqx1 = $nq, nqx2 = $nq, nqx3 = $nq, 
     x_gamma_extrapolation = $x_gamma_extrapolation
+    exxdiv_treatment = $exxdiv_treatment
  /
  &electrons
     mixing_beta = 0.7 

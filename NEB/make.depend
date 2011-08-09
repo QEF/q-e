@@ -39,8 +39,6 @@ input.o : ../Modules/wrappers.o
 input.o : ../Modules/xml_io_base.o
 input.o : path_input_parameters_module.o
 input.o : path_variables.o
-io_tools.o : ../Modules/io_global.o
-io_tools.o : ../Modules/kind.o
 neb.o : ../Modules/check_stop.o
 neb.o : ../Modules/control_flags.o
 neb.o : ../Modules/environment.o
@@ -102,6 +100,8 @@ path_io_routines.o : path_input_parameters_module.o
 path_io_routines.o : path_io_units_module.o
 path_io_routines.o : path_reparametrisation.o
 path_io_routines.o : path_variables.o
+path_io_tools.o : ../Modules/io_global.o
+path_io_tools.o : ../Modules/kind.o
 path_opt_routines.o : ../Modules/basic_algebra_routines.o
 path_opt_routines.o : ../Modules/constants.o
 path_opt_routines.o : ../Modules/io_global.o

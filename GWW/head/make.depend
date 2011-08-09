@@ -35,8 +35,10 @@ head.o : ../../PW/io_rho_xml.o
 head.o : ../../PW/noncol.o
 head.o : ../../PW/pwcom.o
 head.o : ../../PW/scf_mod.o
+head.o : ../../PW/start_k.o
 head.o : ../pw4gww/wannier_gw.o
 openfilq.o : ../../Modules/control_flags.o
+openfilq.o : ../../Modules/fft_base.o
 openfilq.o : ../../Modules/io_files.o
 openfilq.o : ../../Modules/io_global.o
 openfilq.o : ../../Modules/kind.o
@@ -57,6 +59,7 @@ phq_init.o : ../../Modules/ions_base.o
 phq_init.o : ../../Modules/kind.o
 phq_init.o : ../../Modules/mp.o
 phq_init.o : ../../Modules/mp_global.o
+phq_init.o : ../../Modules/recvec.o
 phq_init.o : ../../Modules/uspp.o
 phq_init.o : ../../Modules/wavefunctions.o
 phq_init.o : ../../PH/phcom.o

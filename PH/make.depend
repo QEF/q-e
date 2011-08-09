@@ -904,8 +904,8 @@ phq_summary.o : ../Modules/funct.o
 phq_summary.o : ../Modules/io_global.o
 phq_summary.o : ../Modules/ions_base.o
 phq_summary.o : ../Modules/kind.o
-phq_summary.o : ../Modules/run_info.o
 phq_summary.o : ../Modules/recvec.o
+phq_summary.o : ../Modules/run_info.o
 phq_summary.o : ../PW/noncol.o
 phq_summary.o : ../PW/pwcom.o
 phq_summary.o : ../PW/symm_base.o
@@ -981,8 +981,8 @@ punch_plot_e.o : ../Modules/fft_base.o
 punch_plot_e.o : ../Modules/io_global.o
 punch_plot_e.o : ../Modules/ions_base.o
 punch_plot_e.o : ../Modules/kind.o
-punch_plot_e.o : ../Modules/run_info.o
 punch_plot_e.o : ../Modules/recvec.o
+punch_plot_e.o : ../Modules/run_info.o
 punch_plot_e.o : ../PW/noncol.o
 punch_plot_e.o : ../PW/pwcom.o
 punch_plot_e.o : phcom.o
@@ -991,8 +991,8 @@ punch_plot_ph.o : ../Modules/fft_base.o
 punch_plot_ph.o : ../Modules/io_global.o
 punch_plot_ph.o : ../Modules/ions_base.o
 punch_plot_ph.o : ../Modules/kind.o
-punch_plot_ph.o : ../Modules/run_info.o
 punch_plot_ph.o : ../Modules/recvec.o
+punch_plot_ph.o : ../Modules/run_info.o
 punch_plot_ph.o : ../PW/pwcom.o
 punch_plot_ph.o : phcom.o
 q2qstar_ph.o : ../Modules/kind.o

@@ -1,0 +1,50 @@
+
+XSPECTRA : X-ray spectra calculation
+
+---------
+by C. Gougoussis, M. Calandra, A. Seitsonen and F. Mauri
+
+The theoretical approach on which XSpectra is based was
+described in:
+
+Christos Gougoussis, Matteo Calandra, Ari P. Seitsonen, Francesco Mauri,
+"First principles calculations of X-ray absorption in an ultrasoft
+pseudopotentials scheme: from $\alpha$-quartz to high-T$_c$ compounds",
+Phys. Rev. B 80, 075102 (2009)
+
+you should cite this work in all publications using this software.
+
+If you use only Norm Conserving pseudopotentials, you should also
+cite the following publication:
+
+M. Taillefumier, D. Cabaret, A. M. Flank, and F. Mauri
+"X-ray absorption near-edge structure calculations with the pseudopotentials: Application to the K edge in diamond and αalpha
+-quartz"
+Phys. Rev. B 66, 195107 (2002)
+
+The implementation of the DFT+U approximation and its application to
+K-edge XAS in NiO was performed in:
+
+C. Gougoussis, M. Calandra, A. Seitsonen, Ch. Brouder, A. Shukla, F. Mauri
+" Intrinsic charge transfer gap in NiO from  Ni K -edge x-ray absorption spectroscopy", Phys. Rev. B 79, 045118 (2009)
+
+
+Finally you should cite properly the Quantum Espresso package.
+
+------------------------------------------------------------------------
+For more information about XSpectra read doc/INPUT_XSPECTRA
+------------------------------------------------------------------------
+
+This module uses subroutines from PW with the general infrasturcture provided by
+Quantum Espresso. 
+
+The directory XSpectra must reside immediately under the espresso directory for Makefiles to work. 
+
+Standart compilation: Run "make xspectra" in espresso directory where XSpectra is a subdirectory
+ 
+Directory Structure: 
+src      : The source files
+doc      : The documentation
+examples :
+tools    : small programms and scripts
+           1) Plot core density for UPF pseudopotential format

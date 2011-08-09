@@ -58,6 +58,9 @@ SUBROUTINE read_file()
   USE funct,                ONLY : get_inlc 
   USE kernel_table,          ONLY : initialize_kernel_table
   !
+  USE input_parameters,     ONLY : input_dft
+  USE read_pseudo_mod,      ONLY : readpp
+  !
   IMPLICIT NONE
   !
   INTEGER  :: i, is, ik, ibnd, nb, nt, ios, isym, ierr, inlc
@@ -184,7 +187,7 @@ SUBROUTINE read_file()
   !
   CALL pw_readfile( 'pseudo', ierr )
   !
-  CALL readpp()
+  CALL readpp( input_dft )
   !
   ! ... read the vdw kernel table if needed
   !
