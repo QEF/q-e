@@ -132,7 +132,7 @@ K_POINTS
    0.3750000  0.3750000  0.6250000   3.00
 EOF
 $ECHO "  running the scf calculation for Si with nq = $nq ...\c"
-#$PW_COMMAND < si.in > si.PBE0_nq=${nq}.out
+$PW_COMMAND < si.in > si.PBE0_nq=${nq}.out
 $ECHO " done"
 grep -e ! si.PBE0_nq=${nq}.out | tail -1
 
