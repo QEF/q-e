@@ -17,7 +17,7 @@ program special_points
   !
   use kinds,     only: dp
   use cell_base, only: at, bg
-  use symm_base, only: hexsym, cubicsym, s, nrot
+  use symm_base, only: set_sym_bl, s, nrot
   implicit none
   integer, parameter :: nptx=20000
   character(len=30) :: filout
@@ -114,11 +114,8 @@ program special_points
   !
   !.......................................................................
   !
-  if(ibrav.eq.4.or.ibrav.eq.5) then
-     call hexsym  ( )
-  else
-     call cubicsym( )
-  endif
+  call set_sym_bl ( )
+  !
   write(2,'(//,1x,i3,2x,a19)') nrot,'symmetry operations' 
   do n6=0,(nrot-1)/6
      nf=min(nrot-6*n6,6)

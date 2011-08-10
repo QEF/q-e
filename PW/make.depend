@@ -1189,6 +1189,7 @@ read_file.o : ../Modules/ions_base.o
 read_file.o : ../Modules/kernel_table.o
 read_file.o : ../Modules/kind.o
 read_file.o : ../Modules/paw_variables.o
+read_file.o : ../Modules/read_pseudo.o
 read_file.o : ../Modules/recvec.o
 read_file.o : ../Modules/recvec_subs.o
 read_file.o : ../Modules/uspp.o
