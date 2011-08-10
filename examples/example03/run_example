@@ -108,7 +108,7 @@ cat > co.rx.in << EOF
 /
 &IONS
 /
-CELL_PARAMETERS cubic
+CELL_PARAMETERS bohr
 12.0  0.0  0.0
  0.0 12.0  0.0
  0.0  0.0 12.0
