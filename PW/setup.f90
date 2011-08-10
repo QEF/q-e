@@ -38,8 +38,7 @@ SUBROUTINE setup()
   USE io_global,          ONLY : stdout
   USE io_files,           ONLY : tmp_dir, prefix, xmlpun, delete_if_present
   USE constants,          ONLY : pi, degspin
-  USE cell_base,          ONLY : at, bg, alat, tpiba, tpiba2, ibrav, &
-                                 symm_type, omega
+  USE cell_base,          ONLY : at, bg, alat, tpiba, tpiba2, ibrav, omega
   USE ions_base,          ONLY : nat, tau, ntyp => nsp, ityp, zv
   USE basis,              ONLY : starting_pot, natomwfc
   USE gvect,              ONLY : gcutm
@@ -412,7 +411,7 @@ SUBROUTINE setup()
   !  ... generate transformation matrices for the crystal point group
   !  ... First we generate all the symmetry matrices of the Bravais lattice
   !
-  call set_sym_bl(ibrav, symm_type)
+  call set_sym_bl ( )
   !
   ! ... If lecrpa is true, nosym must be set to true also
   !

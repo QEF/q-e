@@ -411,8 +411,8 @@ PROGRAM matdyn
      ALLOCATE ( z(3*nat,3*nat), w2(3*nat,nq) )
 
      if(la2F.and.ionode) open(300,file='dyna2F',status='unknown')
-     IF (xmlifc) CALL set_sym(ibrav, nat, tau, ityp, nspin_mag, m_loc, &
-                      6, 6, 6, .FALSE., symm_type )
+     IF (xmlifc) CALL set_sym(nat, tau, ityp, nspin_mag, m_loc, &
+                      6, 6, 6, .FALSE. )
 
      ALLOCATE(num_rap_mode(3*nat,nq))
      ALLOCATE(high_sym(nq))
@@ -1766,7 +1766,7 @@ SUBROUTINE gen_qpoints (ibrav, at_, bg_, nat, tau, ityp, nk1, nk2, nk3, &
   xqq (:) =0.d0
   at = at_
   bg = bg_
-  CALL set_sym_bl(ibrav, symm_type)
+  CALL set_sym_bl ( )
   !
   CALL kpoint_grid ( nrot, time_reversal, s, t_rev, bg, nqx, &
                            0,0,0, nk1,nk2,nk3, nq, q, wk)

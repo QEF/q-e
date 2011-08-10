@@ -20,9 +20,6 @@ TODO LIST - August 2011
   1.1.3 The list of papers should be replaced by, or integrated with,
         a query to some database for cited papers.
 1.3 svn/packaging:
-  1.3.0 Rethink a directory structure that better reflects the structure
-        of QE as packages (see 1.1.0, 2.0). Lots of files to be moved
-        around
   1.3.1 complete removal of pseudopotentials from svn: only PPs in old
         formats should eventually remain there
   1.3.2 run (and fix: sometimes it doesn't work) source-normalizer script
@@ -57,9 +54,6 @@ TODO LIST - August 2011
 
 2) Documentation
 
-2.0 The documentation in Doc/ should be split into package-specific
-    documentation, to be included into each package (see 1.3.0).
-    The same applies to tests and examples.
 2.1 Better (and shorter) FAQ list. Notably missing:
     - hardware for QE
     - segmentation fault (present but not visible enough)
@@ -214,7 +208,7 @@ TODO LIST - August 2011
           other modules
   4.4.2 Avoid monster routines that do too many things at the same time
         depending on the value of too many variables. An example:
-        read_file, readpp
+        read_file
   4.4.3 There is some confusion in the various initialization steps:
          - default values at startup
          - reading of the input data and copy into internal variables
@@ -230,7 +224,7 @@ TODO LIST - August 2011
   4.4.4 More PW/CP merge:
         - f_inp, fixed occupancies
         - lda+U modules
-        - "cell_base_init" from CP to PW
+        - makov-payne
         - "cellmd" module of PW and "cell_base" of CP
         - PW "real-space" approach / CP "small boxes" 
         - there should be a single function or routine for periodic boundary 

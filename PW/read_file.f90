@@ -42,11 +42,12 @@ SUBROUTINE read_file()
   USE vlocal,               ONLY : strf
   USE io_files,             ONLY : tmp_dir, prefix, iunpun, nwordwfc, iunwfc
   USE buffers,              ONLY : open_buffer, close_buffer
-  USE uspp_param,           ONLY : upf
   USE noncollin_module,     ONLY : noncolin, npol, nspin_lsda, nspin_mag, nspin_gga
   USE pw_restart,           ONLY : pw_readfile
+  USE read_pseudo_mod,      ONLY : readpp
   USE xml_io_base,          ONLY : pp_check_file
-  USE uspp,                 ONLY : okvan, becsum
+  USE uspp,                 ONLY : becsum
+  USE uspp_param,           ONLY : upf
   USE paw_variables,        ONLY : okpaw, ddd_PAW
   USE paw_onecenter,        ONLY : paw_potential
   USE paw_init,             ONLY : paw_init_onecenter, allocate_paw_internals
@@ -55,18 +56,14 @@ SUBROUTINE read_file()
   USE io_global,            ONLY : stdout
   USE dfunct,               ONLY : newd
   USE control_flags,        ONLY : gamma_only
-  USE funct,                ONLY : get_inlc 
-  USE kernel_table,          ONLY : initialize_kernel_table
-  !
-  USE input_parameters,     ONLY : input_dft
-  USE read_pseudo_mod,      ONLY : readpp
-  !
-  IMPLICIT NONE
+  USE funct,                ONLY : get_inlc, get_dft_name
+  USE kernel_table,         ONLY : initialize_kernel_table
   !
   INTEGER  :: i, is, ik, ibnd, nb, nt, ios, isym, ierr, inlc
   REAL(DP) :: rdum(1,1), ehart, etxc, vtxc, etotefield, charge
   REAL(DP) :: sr(3,3,48)
   LOGICAL  :: exst
+  CHARACTER(LEN=20) dft_name
   !
   !
   ! ... first we get the version of the qexml file
@@ -186,8 +183,8 @@ SUBROUTINE read_file()
   ! ... read pseudopotentials
   !
   CALL pw_readfile( 'pseudo', ierr )
-  !
-  CALL readpp( input_dft )
+  dft_name = get_dft_name () ! already set, should not be set again
+  CALL readpp ( dft_name )
   !
   ! ... read the vdw kernel table if needed
   !
@@ -197,7 +194,6 @@ SUBROUTINE read_file()
       call initialize_kernel_table()
   endif
   !
-  okvan = ANY ( upf(:)%tvanp )
   okpaw = ANY ( upf(1:nsp)%tpawp )
   !
   IF ( .NOT. lspinorb ) CALL average_pp ( nsp )

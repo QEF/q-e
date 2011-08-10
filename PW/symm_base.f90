@@ -50,7 +50,7 @@ MODULE symm_base
   !
   ! ... Exported routines
   !
-  PUBLIC ::  hexsym, cubicsym, find_sym, inverse_s, copy_sym, checkallsym, &
+  PUBLIC ::  find_sym, inverse_s, copy_sym, checkallsym, &
              s_axis_to_cart, set_sym, set_sym_bl, symmorphic
   !
   ! ... Note about fractional translations: ftau should be replaced by ft,
@@ -87,25 +87,30 @@ CONTAINS
    END SUBROUTINE inverse_s 
    !
 !-----------------------------------------------------------------------
-subroutine cubicsym ( )
+subroutine set_sym_bl ( )
   !-----------------------------------------------------------------------
   !
-  ! Provides symmetry operations for all cubic and lower-symmetry
-  ! bravais lattices (Hexagonal and Trigonal excepted) 
+  ! Provides symmetry operations for all bravais lattices
+  ! Tests first the 24 proper rotations for the cubic lattice; 
+  ! then the 8 rotations specific for the hexagonal axis (special axis c);
+  ! then inversion is added
   !
   implicit none
   !
-  real(DP) :: s0(3, 3, 24), overlap (3, 3), rat (3), rot (3, 3), &
-       value
-  ! the s matrices in cartesian axis
-  ! inverse overlap matrix between direct lattice
-  ! the rotated of a direct vector ( cartesian )
-  ! the rotated of a direct vector ( crystal axis )
-  ! component of the s matrix in axis basis
+  ! sin3 = sin(pi/3), cos3 = cos(pi/3), msin3 = -sin(pi/3), mcos3 = -cos(pi/3)
+  !
+  real(DP), parameter :: sin3 = 0.866025403784438597d0, cos3 = 0.5d0, &
+                             msin3 =-0.866025403784438597d0, mcos3 = -0.5d0
+  real(DP) :: s0(3, 3, 32), overlap (3, 3), rat (3), rot (3, 3), value
+  ! s0: the s matrices in cartesian axis
+  ! overlap: inverse overlap matrix between direct lattice
+  ! rat: the rotated of a direct vector ( cartesian )
+  ! rot: the rotated of a direct vector ( crystal axis )
+  ! value: component of the s matrix in axis basis
   integer :: jpol, kpol, mpol, irot
   ! counters over the polarizations and the rotations
 
-  character :: s0name (48) * 45
+  character :: s0name (64) * 45
   ! full name of the rotational part of each symmetry operation
 
   data s0/ 1.d0,  0.d0,  0.d0,  0.d0,  1.d0,  0.d0,  0.d0,  0.d0,  1.d0, &
@@ -131,56 +136,80 @@ subroutine cubicsym ( )
            0.d0,  1.d0,  0.d0,  0.d0,  0.d0,  1.d0,  1.d0,  0.d0,  0.d0, &
            0.d0, -1.d0,  0.d0,  0.d0,  0.d0, -1.d0,  1.d0,  0.d0,  0.d0, &
            0.d0, -1.d0,  0.d0,  0.d0,  0.d0,  1.d0, -1.d0,  0.d0,  0.d0, &
-           0.d0,  1.d0,  0.d0,  0.d0,  0.d0, -1.d0, -1.d0,  0.d0,  0.d0 /
-  data s0name/&
-       &        'identity                                    ',&
-       &        '180 deg rotation - cart. axis [0,0,1]       ',&
-       &        '180 deg rotation - cart. axis [0,1,0]       ',&
-       &        '180 deg rotation - cart. axis [1,0,0]       ',&
-       &        '180 deg rotation - cart. axis [1,1,0]       ',&
-       &        '180 deg rotation - cart. axis [1,-1,0]      ',&
-       &        ' 90 deg rotation - cart. axis [0,0,-1]      ',&
-       &        ' 90 deg rotation - cart. axis [0,0,1]       ',&
-       &        '180 deg rotation - cart. axis [1,0,1]       ',&
-       &        '180 deg rotation - cart. axis [-1,0,1]      ',&
-       &        ' 90 deg rotation - cart. axis [0,1,0]       ',&
-       &        ' 90 deg rotation - cart. axis [0,-1,0]      ',&
-       &        '180 deg rotation - cart. axis [0,1,1]       ',&
-       &        '180 deg rotation - cart. axis [0,1,-1]      ',&
-       &        ' 90 deg rotation - cart. axis [-1,0,0]      ',&
-       &        ' 90 deg rotation - cart. axis [1,0,0]       ',&
-       &        '120 deg rotation - cart. axis [-1,-1,-1]    ',&
-       &        '120 deg rotation - cart. axis [-1,1,1]      ',&
-       &        '120 deg rotation - cart. axis [1,1,-1]      ',&
-       &        '120 deg rotation - cart. axis [1,-1,1]      ',&
-       &        '120 deg rotation - cart. axis [1,1,1]       ',&
-       &        '120 deg rotation - cart. axis [-1,1,-1]     ',&
-       &        '120 deg rotation - cart. axis [1,-1,-1]     ',&
-       &        '120 deg rotation - cart. axis [-1,-1,1]     ',&
-       &        'inversion                                    ',&
-       &        'inv. 180 deg rotation - cart. axis [0,0,1]  ',&
-       &        'inv. 180 deg rotation - cart. axis [0,1,0]  ',&
-       &        'inv. 180 deg rotation - cart. axis [1,0,0]  ',&
-       &        'inv. 180 deg rotation - cart. axis [1,1,0]  ',&
-       &        'inv. 180 deg rotation - cart. axis [1,-1,0] ',&
-       &        'inv.  90 deg rotation - cart. axis [0,0,-1] ',&
-       &        'inv.  90 deg rotation - cart. axis [0,0,1]  ',&
-       &        'inv. 180 deg rotation - cart. axis [1,0,1]  ',&
-       &        'inv. 180 deg rotation - cart. axis [-1,0,1] ',&
-       &        'inv.  90 deg rotation - cart. axis [0,1,0]  ',&
-       &        'inv.  90 deg rotation - cart. axis [0,-1,0] ',&
-       &        'inv. 180 deg rotation - cart. axis [0,1,1]  ',&
-       &        'inv. 180 deg rotation - cart. axis [0,1,-1] ',&
-       &        'inv.  90 deg rotation - cart. axis [-1,0,0] ',&
-  &        'inv.  90 deg rotation - cart. axis [1,0,0]  ',&
-  &        'inv. 120 deg rotation - cart. axis [-1,-1,-1]',&
-  &        'inv. 120 deg rotation - cart. axis [-1,1,1] ',&
-  &        'inv. 120 deg rotation - cart. axis [1,1,-1]' ,&
-  &        'inv. 120 deg rotation - cart. axis [1,-1,1] ',&
-  &        'inv. 120 deg rotation - cart. axis [1,1,1]  ',&
-  &        'inv. 120 deg rotation - cart. axis [-1,1,-1] ',&
-  &        'inv. 120 deg rotation - cart. axis [1,-1,-1]',&
-  &        'inv. 120 deg rotation - cart. axis [-1,-1,1] ' /
+           0.d0,  1.d0,  0.d0,  0.d0,  0.d0, -1.d0, -1.d0,  0.d0,  0.d0, &
+           cos3,  sin3, 0.d0, msin3,  cos3, 0.d0, 0.d0, 0.d0,  1.d0, &
+           cos3, msin3, 0.d0,  sin3,  cos3, 0.d0, 0.d0, 0.d0,  1.d0, &
+          mcos3,  sin3, 0.d0, msin3, mcos3, 0.d0, 0.d0, 0.d0,  1.d0, &
+          mcos3, msin3, 0.d0,  sin3, mcos3, 0.d0, 0.d0, 0.d0,  1.d0, &
+           cos3, msin3, 0.d0, msin3, mcos3, 0.d0, 0.d0, 0.d0, -1.d0, &
+           cos3,  sin3, 0.d0,  sin3, mcos3, 0.d0, 0.d0, 0.d0, -1.d0, &
+          mcos3, msin3, 0.d0, msin3,  cos3, 0.d0, 0.d0, 0.d0, -1.d0, &
+          mcos3,  sin3, 0.d0,  sin3,  cos3, 0.d0, 0.d0, 0.d0, -1.d0 /
+
+  data s0name/  'identity                                     ',&
+                '180 deg rotation - cart. axis [0,0,1]        ',&
+                '180 deg rotation - cart. axis [0,1,0]        ',&
+                '180 deg rotation - cart. axis [1,0,0]        ',&
+                '180 deg rotation - cart. axis [1,1,0]        ',&
+                '180 deg rotation - cart. axis [1,-1,0]       ',&
+                ' 90 deg rotation - cart. axis [0,0,-1]       ',&
+                ' 90 deg rotation - cart. axis [0,0,1]        ',&
+                '180 deg rotation - cart. axis [1,0,1]        ',&
+                '180 deg rotation - cart. axis [-1,0,1]       ',&
+                ' 90 deg rotation - cart. axis [0,1,0]        ',&
+                ' 90 deg rotation - cart. axis [0,-1,0]       ',&
+                '180 deg rotation - cart. axis [0,1,1]        ',&
+                '180 deg rotation - cart. axis [0,1,-1]       ',&
+                ' 90 deg rotation - cart. axis [-1,0,0]       ',&
+                ' 90 deg rotation - cart. axis [1,0,0]        ',&
+                '120 deg rotation - cart. axis [-1,-1,-1]     ',&
+                '120 deg rotation - cart. axis [-1,1,1]       ',&
+                '120 deg rotation - cart. axis [1,1,-1]       ',&
+                '120 deg rotation - cart. axis [1,-1,1]       ',&
+                '120 deg rotation - cart. axis [1,1,1]        ',&
+                '120 deg rotation - cart. axis [-1,1,-1]      ',&
+                '120 deg rotation - cart. axis [1,-1,-1]      ',&
+                '120 deg rotation - cart. axis [-1,-1,1]      ',&
+                ' 60 deg rotation - cryst. axis [0,0,1]       ',&
+                ' 60 deg rotation - cryst. axis [0,0,-1]      ',&
+                '120 deg rotation - cryst. axis [0,0,1]       ',&
+                '120 deg rotation - cryst. axis [0,0,-1]      ',&
+                '180 deg rotation - cryst. axis [1,-1,0]      ',&
+                '180 deg rotation - cryst. axis [2,1,0]       ',&
+                '180 deg rotation - cryst. axis [0,1,0]       ',&
+                '180 deg rotation - cryst. axis [1,1,0]       ',&
+                'inversion                                    ',&
+                'inv. 180 deg rotation - cart. axis [0,0,1]   ',&
+                'inv. 180 deg rotation - cart. axis [0,1,0]   ',&
+                'inv. 180 deg rotation - cart. axis [1,0,0]   ',&
+                'inv. 180 deg rotation - cart. axis [1,1,0]   ',&
+                'inv. 180 deg rotation - cart. axis [1,-1,0]  ',&
+                'inv.  90 deg rotation - cart. axis [0,0,-1]  ',&
+                'inv.  90 deg rotation - cart. axis [0,0,1]   ',&
+                'inv. 180 deg rotation - cart. axis [1,0,1]   ',&
+                'inv. 180 deg rotation - cart. axis [-1,0,1]  ',&
+                'inv.  90 deg rotation - cart. axis [0,1,0]   ',&
+                'inv.  90 deg rotation - cart. axis [0,-1,0]  ',&
+                'inv. 180 deg rotation - cart. axis [0,1,1]   ',&
+                'inv. 180 deg rotation - cart. axis [0,1,-1]  ',&
+                'inv.  90 deg rotation - cart. axis [-1,0,0]  ',&
+                'inv.  90 deg rotation - cart. axis [1,0,0]   ',&
+                'inv. 120 deg rotation - cart. axis [-1,-1,-1]',&
+                'inv. 120 deg rotation - cart. axis [-1,1,1]  ',&
+                'inv. 120 deg rotation - cart. axis [1,1,-1]  ',&
+                'inv. 120 deg rotation - cart. axis [1,-1,1]  ',&
+                'inv. 120 deg rotation - cart. axis [1,1,1]   ',&
+                'inv. 120 deg rotation - cart. axis [-1,1,-1] ',&
+                'inv. 120 deg rotation - cart. axis [1,-1,-1] ',&
+                'inv. 120 deg rotation - cart. axis [-1,-1,1] ',& 
+                'inv.  60 deg rotation - cryst. axis [0,0,1]  ',&
+                'inv.  60 deg rotation - cryst. axis [0,0,-1] ',&
+                'inv. 120 deg rotation - cryst. axis [0,0,1]  ',&
+                'inv. 120 deg rotation - cryst. axis [0,0,-1] ',&
+                'inv. 180 deg rotation - cryst. axis [1,-1,0] ',&
+                'inv. 180 deg rotation - cryst. axis [2,1,0]  ',&
+                'inv. 180 deg rotation - cryst. axis [0,1,0]  ',&
+                'inv. 180 deg rotation - cryst. axis [1,1,0]  ' /
 
   !    compute the overlap matrix for crystal axis
 
@@ -197,7 +226,7 @@ subroutine cubicsym ( )
   call invmat (3, rot, overlap, value)
 
   nrot = 1
-  do irot = 1,24
+  do irot = 1,32
      !
      !   for each possible symmetry
      !
@@ -251,7 +280,7 @@ subroutine cubicsym ( )
      do kpol = 1,3
         do jpol = 1,3
            s(kpol,jpol,irot+nrot) = -s(kpol,jpol,irot)
-           sname(irot+nrot) = s0name(irot+24)
+           sname(irot+nrot) = s0name(irot+32)
         end do
      end do
   end do
@@ -259,145 +288,8 @@ subroutine cubicsym ( )
   nrot = 2*nrot
 
   return
-end subroutine cubicsym
-!
-!-----------------------------------------------------------------------
-subroutine hexsym ( )
-!-----------------------------------------------------------------------
   !
-  ! Provides symmetry operations for Hexagonal and Trigonal lattices.
-  ! The c axis is assumed to be along the z axis
-  !
-  implicit none
-  !
-  ! sin3 = sin(pi/3), cos3 = cos(pi/3), msin3 = -sin(pi/3), mcos3 = -cos(pi/3)
-  !
-  real(DP), parameter :: sin3 = 0.866025403784438597d0, cos3 = 0.5d0, &
-                             msin3 =-0.866025403784438597d0, mcos3 = -0.5d0
-  !
-  real(DP) :: s0(3, 3, 12), overlap (3, 3), rat (3), rot (3, 3), &
-       value
-  ! the s matrices in cartesian coordinates
-  ! inverse overlap matrix between direct lattice
-  ! the rotated of a direct vector (cartesian)
-  ! the rotated of a direct vector (crystal axis)
-  integer :: jpol, kpol, mpol, irot
-  ! counters over polarizations and rotations
-  character :: s0name (24) * 45
-  ! full name of the rotation part of each symmetry operation
-
-  data s0/ 1.d0,  0.d0, 0.d0,  0.d0,  1.d0, 0.d0, 0.d0, 0.d0,  1.d0, &
-          -1.d0,  0.d0, 0.d0,  0.d0, -1.d0, 0.d0, 0.d0, 0.d0,  1.d0, &
-          -1.d0,  0.d0, 0.d0,  0.d0,  1.d0, 0.d0, 0.d0, 0.d0, -1.d0, &
-           1.d0,  0.d0, 0.d0,  0.d0, -1.d0, 0.d0, 0.d0, 0.d0, -1.d0, &
-           cos3,  sin3, 0.d0, msin3,  cos3, 0.d0, 0.d0, 0.d0,  1.d0, &
-           cos3, msin3, 0.d0,  sin3,  cos3, 0.d0, 0.d0, 0.d0,  1.d0, &
-          mcos3,  sin3, 0.d0, msin3, mcos3, 0.d0, 0.d0, 0.d0,  1.d0, &
-          mcos3, msin3, 0.d0,  sin3, mcos3, 0.d0, 0.d0, 0.d0,  1.d0, &
-           cos3, msin3, 0.d0, msin3, mcos3, 0.d0, 0.d0, 0.d0, -1.d0, &
-           cos3,  sin3, 0.d0,  sin3, mcos3, 0.d0, 0.d0, 0.d0, -1.d0, &
-          mcos3, msin3, 0.d0, msin3,  cos3, 0.d0, 0.d0, 0.d0, -1.d0, &
-          mcos3,  sin3, 0.d0,  sin3,  cos3, 0.d0, 0.d0, 0.d0, -1.d0 /
-
-  data s0name/ 'identity                                     ',&
-               '180 deg rotation - cryst. axis [0,0,1]       ',&
-               '180 deg rotation - cryst. axis [1,2,0]       ',&
-               '180 deg rotation - cryst. axis [1,0,0]       ',&
-               ' 60 deg rotation - cryst. axis [0,0,1]       ',&
-               ' 60 deg rotation - cryst. axis [0,0,-1]      ',&
-               '120 deg rotation - cryst. axis [0,0,1]       ',&
-               '120 deg rotation - cryst. axis [0,0,-1]      ',&
-               '180 deg rotation - cryst. axis [1,-1,0]      ',&
-               '180 deg rotation - cryst. axis [2,1,0]       ',&
-               '180 deg rotation - cryst. axis [0,1,0]       ',&
-               '180 deg rotation - cryst. axis [1,1,0]       ',&
-               'inversion                                    ',&
-               'inv. 180 deg rotation - cryst. axis [0,0,1]  ',&
-               'inv. 180 deg rotation - cryst. axis [1,2,0]  ',&
-               'inv. 180 deg rotation - cryst. axis [1,0,0]  ',&
-               'inv.  60 deg rotation - cryst. axis [0,0,1]  ',&
-               'inv.  60 deg rotation - cryst. axis [0,0,-1] ',&
-               'inv. 120 deg rotation - cryst. axis [0,0,1]  ',&
-               'inv. 120 deg rotation - cryst. axis [0,0,-1] ',&
-               'inv. 180 deg rotation - cryst. axis [1,-1,0] ',&
-               'inv. 180 deg rotation - cryst. axis [2,1,0]  ',&
-               'inv. 180 deg rotation - cryst. axis [0,1,0]  ',&
-               'inv. 180 deg rotation - cryst. axis [1,1,0]  ' /
-  !
-  !   first compute the overlap matrix between direct lattice vectors
-  !
-  do jpol = 1, 3
-     do kpol = 1, 3
-        rot (kpol, jpol) = at (1, kpol) * at (1, jpol) + at (2, kpol) &
-             * at (2, jpol) + at (3, kpol) * at (3, jpol)
-     enddo
-  enddo
-  !
-  !    then its inverse (rot is used as work space)
-  !
-  call invmat (3, rot, overlap, value)
-  nrot = 1
-  do irot = 1, 12
-     !
-     !   for each possible symmetry
-     !
-     do jpol = 1, 3
-        do mpol = 1, 3
-           !
-           !   compute, in cartesian coordinates the rotated vector
-           !
-           rat (mpol) = s0(mpol, 1, irot) * at (1, jpol) + &
-                        s0(mpol, 2, irot) * at (2, jpol) + &
-                        s0(mpol, 3, irot) * at (3, jpol)
-        enddo
-        do kpol = 1, 3
-           !
-           !   the rotated vector is projected on the direct lattice
-           !
-           rot (kpol, jpol) = at (1, kpol) * rat (1) + &
-                              at (2, kpol) * rat (2) + &
-                              at (3, kpol) * rat (3)
-        enddo
-     enddo
-     !
-     !  and the inverse of the overlap matrix is applied
-     !
-     do jpol = 1, 3
-        do kpol = 1, 3
-           value = overlap (jpol, 1) * rot (1, kpol) + &
-                   overlap (jpol, 2) * rot (2, kpol) + &
-                   overlap (jpol, 3) * rot (3, kpol)
-           if (abs (DBLE (nint (value) ) - value) > 1.0d-8) then
-              !
-              ! if a noninteger is obtained, this implies that this operation
-              ! is not a symmetry operation for the given lattice
-              !
-              goto 10
-           endif
-           s (kpol, jpol, nrot) = nint (value)
-           sname (nrot) = s0name (irot)
-        enddo
-     enddo
-     nrot = nrot + 1
-10   continue
-  enddo
-  nrot = nrot - 1
-  !
-  !   set the inversion symmetry ( Bravais lattices have always inversion)
-  !
-  do irot = 1, nrot
-     do kpol = 1, 3
-        do jpol = 1, 3
-           s (kpol, jpol, irot + nrot) = -s (kpol, jpol, irot)
-           sname (irot + nrot) = s0name (irot + 12)
-        enddo
-     enddo
-
-  enddo
-
-  nrot = 2 * nrot
-  return
-end subroutine hexsym
+end subroutine set_sym_bl
 !
 !-----------------------------------------------------------------------
 SUBROUTINE find_sym ( nat, tau, ityp, nr1, nr2, nr3, nofrac, &
@@ -716,64 +608,27 @@ subroutine sgam_at_mag ( nat, m_loc, sym )
   return
 END SUBROUTINE sgam_at_mag
 !
-SUBROUTINE set_sym_bl(ibrav, symm_type) 
-!
-! This subroutine receives as input the index of the Bravais lattice, or
-! symm_type if ibrav=0 and the at and bg in cell_base and sets all the 
-! symmetry matrices of the Bravais lattice: nrot, s, sname 
-!
-  IMPLICIT NONE
-  INTEGER, INTENT(IN) :: ibrav
-
-  CHARACTER(LEN=9), INTENT(INOUT) :: symm_type
-
-  IF ( ibrav == 4 .OR. ABS(ibrav) == 5 .OR. &
-     ( ibrav == 0 .AND. symm_type == 'hexagonal' ) )  THEN
-     !
-     ! ... here the hexagonal or trigonal bravais lattice
-     !
-     CALL hexsym( )
-     symm_type='hexagonal'
-     !
-  ELSE IF ( ( ibrav >= 1 .AND. ibrav <= 14 ) .OR. (ibrav == -12 ) .OR. &
-            ( ibrav == 0 .AND. symm_type == 'cubic' ) ) THEN
-     !
-     ! ... here for the cubic bravais lattice
-     !
-     CALL cubicsym( )
-     symm_type='cubic'
-     !
-  ELSE
-     !
-     CALL errore( 'set_sym_bl', 'wrong ibrav/symm_type', 1 )
-     !
-  ENDIF
-  END SUBROUTINE set_sym_bl
-
-  SUBROUTINE set_sym(ibrav, nat, tau, ityp, nspin_mag, m_loc, nr1, nr2, nr3, &
-                   nofrac, symm_type)
+SUBROUTINE set_sym(nat, tau, ityp, nspin_mag, m_loc, nr1, nr2, nr3, &
+                   nofrac)
   !
-  ! This routine receives as input the bravais lattice, (or symm_type if
-  ! ibrav=0) the atoms and their positions, if there is noncollinear 
-  ! magnetism and the initial magnetic moments, the fft dimesions nr1, nr2, 
-  ! nr3 and it sets the symmetry elements of this module. Note that at 
-  ! and bg are those in  cell_base. It sets nrot, nsym, s, sname, sr, invs, 
-  ! ftau, irt, t_rev,  time_reversal, and invsym
-  ! 
+  ! This routine receives as input atomic types and positions, if there
+  ! is noncollinear magnetism and the initial magnetic moments, the fft
+  ! dimesions nr1, nr2, nr3; it sets the symmetry elements of this module.
+  ! Note that at and bg are those in cell_base. It sets nrot, nsym, s,
+  ! sname, sr, invs, ftau, irt, t_rev,  time_reversal, and invsym
   ! 
   !-----------------------------------------------------------------------
   !
   IMPLICIT NONE
   ! input 
-  INTEGER, INTENT(IN)  :: ibrav, nat, ityp(nat), nspin_mag, nr1, nr2, nr3
+  INTEGER, INTENT(IN)  :: nat, ityp(nat), nspin_mag, nr1, nr2, nr3
   REAL(DP), INTENT(IN) :: tau(3,nat)
   REAL(DP), INTENT(IN) :: m_loc(3,nat) 
   LOGICAL, INTENT(IN)  ::  nofrac
-  CHARACTER(LEN=9), INTENT(INOUT) :: symm_type
   !
   time_reversal = (nspin_mag /= 4)
   t_rev(:) = 0
-  CALL set_sym_bl(ibrav, symm_type)
+  CALL set_sym_bl ( )
 
   !
   CALL find_sym ( nat, tau, ityp, nr1, nr2, nr3, nofrac,.not.time_reversal, &
