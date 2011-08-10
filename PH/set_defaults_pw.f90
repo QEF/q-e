@@ -118,13 +118,11 @@ SUBROUTINE setup_nscf ( newgrid, xq )
   !
   call s_axis_to_cart ()
   IF (okpaw) CALL d_matrix(d1,d2,d3)
-
-  
   !
   ! ... Input k-points are assumed to be  given in the IBZ of the Bravais
   ! ... lattice, with the full point symmetry of the lattice.
   !
-  if( .NOT. newgrid ) then
+  if( nks_start > 0 .AND. .NOT. newgrid ) then
      !
      !  In this case I keep the same points of the Charge density
      !  calculations
@@ -136,9 +134,7 @@ SUBROUTINE setup_nscf ( newgrid, xq )
      !
      ! In this case I generate a new set of k-points
      !
-     nks_start=nk1*nk2*nk3
-
-     CALL kpoint_grid ( nrot, time_reversal, s, t_rev, bg, nks_start, &
+     CALL kpoint_grid ( nrot, time_reversal, s, t_rev, bg, nk1*nk2*nk3, &
           k1,k2,k3, nk1,nk2,nk3, nkstot, xk, wk)
 
   endif

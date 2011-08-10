@@ -41,7 +41,6 @@ SUBROUTINE check_initial_status(auxdyn)
   USE save_ph,         ONLY : tmp_dir_save
   USE ph_restart,      ONLY : ph_readfile, check_status_run, init_status_run, &
                               ph_writefile
-  USE start_k,         ONLY : nks_start
   USE save_ph,         ONLY : save_ph_input_variables
   USE io_rho_xml,      ONLY : write_rho
   USE mp_global,       ONLY : nimage, my_image_id, intra_image_comm
@@ -202,8 +201,6 @@ SUBROUTINE check_initial_status(auxdyn)
   ENDDO
   !
   auxdyn = fildyn
-  !
-  IF (nks_start==0) CALL errore('check_initial_status','wrong starting k',1)
   !
   RETURN
   END SUBROUTINE check_initial_status

@@ -71,8 +71,6 @@ SUBROUTINE run_pwscf(do_band)
      CALL punch( 'all' )
      done_bands=.TRUE.
   ENDIF
- 
-
   !
   CALL seqopn( 4, 'restart', 'UNFORMATTED', exst )
   CLOSE( UNIT = 4, STATUS = 'DELETE' )
