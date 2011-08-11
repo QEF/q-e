@@ -54,6 +54,7 @@ pseudo_types.o \
 ptoolkit.o \
 radial_grids.o \
 random_numbers.o \
+read_input.o \
 read_namelists.o \
 read_ncpp.o \
 read_pseudo.o \

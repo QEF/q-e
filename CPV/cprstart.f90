@@ -18,10 +18,11 @@
 PROGRAM main
   !----------------------------------------------------------------------------
   !
-  USE input,         ONLY : read_input_file, iosys_pseudo, iosys
+  USE input,         ONLY : iosys_pseudo, iosys
+  USE read_input,    ONLY : read_input_file
   USE mp_global,     ONLY : mp_startup, nimage, me_image, root_image
   USE io_global,     ONLY : ionode, ionode_id, io_global_start
-  USE control_flags, ONLY : lneb, lsmd, program_name
+  USE control_flags, ONLY : lneb, lsmd
   USE environment,   ONLY : environment_start
   USE check_stop,    ONLY : check_stop_init
   USE mp_global,     ONLY : mp_bcast, intra_image_comm
@@ -30,15 +31,13 @@ PROGRAM main
   !
   ! ... program starts here
   !
-  program_name = 'CP'
-  !
   ! ... initialize MPI (parallel processing handling)
   !
   CALL mp_startup ( )
   !
   ! ... start the environment
   !
-  CALL environment_start( program_name )
+  CALL environment_start( 'CP' )
   !
   ! reset IO nodes
   ! (do this to make each "image head node" an ionode)
@@ -50,7 +49,7 @@ PROGRAM main
   !
   ! ... readin the input file
   !
-  CALL read_input_file()
+  CALL read_input_file( 'CP' )
   !
   ! ... read in pseudopotentials files and then
   ! ... copy pseudopotential parameters into internal variables

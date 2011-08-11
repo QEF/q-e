@@ -9,105 +9,22 @@
 MODULE input
    !---------------------------------------------------------------------------
    !
-   USE kinds,     ONLY: DP
+   USE kinds,      ONLY: DP
+   USE read_input, ONLY : has_been_read
    !
    IMPLICIT NONE
    SAVE
    !
    PRIVATE                      !  Input Subroutines
                                 !  should be called in the following order
-                                !
-   PUBLIC :: read_input_file    !  a) This sub. should be called first
+                                !  a) read input file (module read_input)
    PUBLIC :: iosys_pseudo       !  b) then read pseudo files
    PUBLIC :: iosys              !  c) finally copy variables to modules
    PUBLIC :: modules_setup, set_control_flags
    !
-   LOGICAL :: has_been_read = .FALSE.
-   !
    CHARACTER(LEN=256), EXTERNAL :: trimcheck
    !
    CONTAINS
-   !
-   !-------------------------------------------------------------------------
-   SUBROUTINE read_input_file()
-     !-------------------------------------------------------------------------
-     !
-     USE read_namelists_module, ONLY : read_namelists
-     USE read_cards_module,     ONLY : read_cards
-     USE input_parameters,      ONLY : calculation, title
-     USE control_flags,         ONLY : lneb, lpath, lwf
-     USE control_flags,         ONLY : lwfnscf, lwfpbe0, lwfpbe0nscf ! Lingzhu Kong
-     USE run_info,              ONLY : title_ => title
-     USE io_global,             ONLY : meta_ionode, meta_ionode_id, stdout
-     USE xml_input,             ONLY : xml_input_dump
-     USE read_xml_module,       ONLY : read_xml
-     USE mp,                    ONLY : mp_bcast
-     USE iotk_module,           ONLY : iotk_attlenx
-     USE open_close_input_file_interf, ONLY : open_input_file, close_input_file
-     !
-     IMPLICIT NONE
-     !
-     CHARACTER(LEN=2) :: prog
-     CHARACTER(LEN=iotk_attlenx) :: attr
-     LOGICAL :: lxmlinput
-     !
-     !
-     prog = 'CP'
-     !
-     !
-     IF ( meta_ionode ) THEN
-        !
-        CALL xml_input_dump()
-        !
-        CALL open_input_file( lxmlinput, attr) 
-        !
-     END IF
-     !
-     CALL mp_bcast( lxmlinput, meta_ionode_id )
-     !
-     IF ( lxmlinput ) THEN
-        !
-        CALL read_xml ( 'CP', attr )
-        !
-     ELSE
-        !
-        ! ... Read NAMELISTS 
-        !
-        CALL read_namelists( prog )
-        !
-        ! ... Read CARDS 
-        !
-        CALL read_cards ( prog )
-        !
-     END IF
-     IF ( meta_ionode) CALL close_input_file( lxmlinput )
-
-     lneb = ( TRIM( calculation ) == 'neb' )
-     !
-     lpath = lneb
-     !
-!====================================================================
-!Lingzhu Kong
-     lwf = ( TRIM( calculation ) == 'cp-wf'      .OR. &
-             TRIM( calculation ) == 'cp-wf-nscf' .OR. &
-             TRIM( calculation ) == 'cp-wf-pbe0' .OR. &
-             TRIM( calculation ) == 'pbe0-nscf' )
-     lwfnscf     = ( TRIM( calculation ) == 'cp-wf-nscf' )
-     lwfpbe0     = ( TRIM( calculation ) == 'cp-wf-pbe0')
-     lwfpbe0nscf = ( TRIM( calculation ) == 'pbe0-nscf' )
-!====================================================================
-     !
-     ! ... Set job title and print it on standard output
-     !
-     title_ = title
-     !
-     WRITE( stdout, '(/,3X,"Job Title: ",A )' ) TRIM( title_ )
-     !
-     has_been_read = .TRUE.
-     !
-     RETURN
-     !
-   END SUBROUTINE read_input_file
    !
    !-------------------------------------------------------------------------
    SUBROUTINE iosys_pseudo()
@@ -116,18 +33,24 @@ MODULE input
      USE input_parameters,        ONLY : atom_pfile, pseudo_dir, ntyp, nat, &
                                          prefix, outdir, input_dft
      USE read_pseudo_mod,         ONLY : readpp, check_order
+     USE io_global,               ONLY : stdout
      USE io_files,                ONLY : psfile_     => psfile , &
                                          pseudo_dir_ => pseudo_dir, &
                                          outdir_     => outdir, &
                                          prefix_     => prefix, &
                                          tmp_dir
      USE ions_base,               ONLY : nsp_ => nsp, nat_ => nat
-     !
-     IMPLICIT NONE
+     USE input_parameters,        ONLY : title
+     USE run_info,                ONLY : title_ => title
      !
      !
      IF ( .NOT. has_been_read ) &
         CALL errore( 'iosys_pseudo ', 'input file has not been read yet!', 1 )
+     !
+     ! ... Set job title and print it on standard output
+     !
+     title_ = title
+     WRITE( stdout, '(/,3X,"Job Title: ",A )' ) TRIM( title_ )
      !
      prefix_  = TRIM( prefix  )
      outdir_  = trimcheck( outdir )
@@ -266,6 +189,8 @@ MODULE input
      USE control_flags, ONLY : iesr, tvhmean, vhrmin, vhrmax, vhasse
      USE control_flags, ONLY : textfor
      USE control_flags, ONLY : do_makov_payne, twfcollect
+     USE control_flags, ONLY : lwf, lwfnscf, lwfpbe0, lwfpbe0nscf ! Lingzhu Kong
+     USE control_flags, ONLY : lneb, lpath
      !
      ! ...  Other modules
      !
@@ -365,6 +290,20 @@ MODULE input
      !
      emass_ = emass
      emaec_ = emass_cutoff
+     ! no longer implemented!
+     lneb = ( TRIM( calculation ) == 'neb' )
+     lpath = lneb
+!====================================================================
+!Lingzhu Kong
+     lwf = ( TRIM( calculation ) == 'cp-wf'      .OR. &
+             TRIM( calculation ) == 'cp-wf-nscf' .OR. &
+             TRIM( calculation ) == 'cp-wf-pbe0' .OR. &
+             TRIM( calculation ) == 'pbe0-nscf' )
+     lwfnscf     = ( TRIM( calculation ) == 'cp-wf-nscf' )
+     lwfpbe0     = ( TRIM( calculation ) == 'cp-wf-pbe0')
+     lwfpbe0nscf = ( TRIM( calculation ) == 'pbe0-nscf' )
+!====================================================================
+
      !
      ! ... set the level of output, the code verbosity 
      !

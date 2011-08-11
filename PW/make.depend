@@ -1144,13 +1144,9 @@ pwscf.o : ../Modules/image_io_routines.o
 pwscf.o : ../Modules/io_files.o
 pwscf.o : ../Modules/io_global.o
 pwscf.o : ../Modules/mp_global.o
-pwscf.o : ../Modules/open_close_input_file_interf.o
 pwscf.o : ../Modules/parameters.o
-pwscf.o : ../Modules/read_cards.o
-pwscf.o : ../Modules/read_namelists.o
-pwscf.o : ../Modules/read_xml.o
+pwscf.o : ../Modules/read_input.o
 pwscf.o : ../Modules/xml_io_base.o
-pwscf.o : ../iotk/src/iotk_module.o
 pwscf.o : ms2.o
 pwscf.o : pwcom.o
 qvan2.o : ../Modules/kind.o
