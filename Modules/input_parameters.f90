@@ -26,7 +26,7 @@ MODULE input_parameters
 !=----------------------------------------------------------------------------=!
   !
   USE kinds,      ONLY : DP
-  USE parameters, ONLY : nsx, npk, lqmax
+  USE parameters, ONLY : nsx, lqmax
   USE wannier_new,ONLY : wannier_data
   !
   IMPLICIT NONE
@@ -1395,7 +1395,7 @@ MODULE input_parameters
 !
 ! ...   k-points inputs
         LOGICAL :: tk_inp = .false.
-        REAL(DP) :: xk(3,npk) = 0.0_DP, wk(npk) = 0.0_DP
+        REAL(DP), ALLOCATABLE :: xk(:,:), wk(:)
         INTEGER :: nkstot = 0, nk1 = 0, nk2 = 0, nk3 = 0, k1 = 0, k2 = 0, k3 = 0
         CHARACTER(len=80) :: k_points = 'gamma'
           ! k_points = 'automatic' | 'crystal' | 'tpiba' | 'gamma'*
@@ -1604,6 +1604,8 @@ CONTAINS
 
   SUBROUTINE deallocate_input_parameters()
     !
+    IF ( allocated( xk ) ) DEALLOCATE( xk )
+    IF ( allocated( wk ) ) DEALLOCATE( wk )
     IF ( allocated( rd_pos ) ) DEALLOCATE( rd_pos )
     IF ( allocated( sp_pos ) ) DEALLOCATE( sp_pos )
     IF ( allocated( if_pos ) ) DEALLOCATE( if_pos )

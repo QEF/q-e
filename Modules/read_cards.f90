@@ -646,7 +646,7 @@ CONTAINS
       INTEGER            :: nkaux
       INTEGER, ALLOCATABLE :: wkaux(:)
       REAL(DP), ALLOCATABLE :: xkaux(:,:)
-      REAL(DP) :: delta
+      REAL(DP) :: delta, wk0
       LOGICAL, EXTERNAL  :: matches
       LOGICAL            :: tend,terr
       LOGICAL            :: kband = .false.
@@ -700,29 +700,46 @@ CONTAINS
          IF (tend) GOTO 10
          IF (terr) GOTO 20
          READ(input_line, *, END=10, ERR=20) nkstot
-         IF ( nkstot > size (xk,2)  ) CALL errore &
-                  ('card_kpoints', 'too many k-points',nkstot)
          !
-         DO i = 1, nkstot
-            CALL read_line( input_line, end_of_file = tend, error = terr )
-            IF (tend) GOTO 10
-            IF (tend) GOTO 20
-            READ(input_line,*, END=10, ERR=20) xk(1,i), xk(2,i), xk(3,i), wk(i)
-         ENDDO
-         IF (kband) THEN
+         IF (.NOT. kband) THEN
+            ALLOCATE ( xk(3, nkstot), wk(nkstot) )
+            DO i = 1, nkstot
+               CALL read_line( input_line, end_of_file = tend, error = terr )
+               IF (tend) GOTO 10
+               IF (tend) GOTO 20
+               READ(input_line,*, END=10, ERR=20) xk(1,i),xk(2,i),xk(3,i),wk(i)
+            ENDDO
+         ELSE
             nkaux=nkstot
-            ALLOCATE(xkaux(3,nkstot))
-            ALLOCATE(wkaux(nkstot))
-            xkaux(:,1:nkstot)=xk(:,1:nkstot)
-            wkaux(1:nkstot)=nint(wk(1:nkstot))
+            ALLOCATE(xkaux(3,nkstot), wkaux(nkstot))
+            DO i = 1, nkstot
+               CALL read_line( input_line, end_of_file = tend, error = terr )
+               IF (tend) GOTO 10
+               IF (tend) GOTO 20
+               READ(input_line,*, END=10, ERR=20) xkaux(1,i), xkaux(2,i), &
+                                                  xkaux(3,i), wk0
+               wkaux(i) = NINT ( wk0 ) ! beware: wkaux is integer
+            ENDDO
+            ! Count k-points first
+            nkstot=0
+            DO i=1,nkaux-1
+               IF ( wkaux(i) > 0 ) THEN
+                  nkstot=nkstot+wkaux(i)
+               ELSEIF ( wkaux(i) == 0 ) THEN
+                  nkstot=nkstot+1
+               ELSE
+                  CALL errore ('card_kpoints', 'wrong number of points',i)
+               ENDIF  
+            ENDDO
+            nkstot=nkstot+1
+            ALLOCATE ( xk(3,nkstot), wk(nkstot) )
+            ! Now fill the points
             nkstot=0
             DO i=1,nkaux-1
                IF (wkaux(i)>0) THEN
                   delta=1.0_DP/wkaux(i)
                   DO j=0,wkaux(i)-1
                      nkstot=nkstot+1
-                     IF ( nkstot > size (xk,2)  ) CALL errore &
-                           ('card_kpoints', 'too many k-points',nkstot)
                      xk(:,nkstot)=xkaux(:,i)+delta*j*(xkaux(:,i+1)-xkaux(:,i))
                      wk(nkstot)=1.0_DP
                   ENDDO
@@ -735,8 +752,6 @@ CONTAINS
                ENDIF  
             ENDDO
             nkstot=nkstot+1
-            xk(:,nkstot)=xkaux(:,nkaux)
-            wk(nkstot)=1.0_DP
             DEALLOCATE(xkaux)
             DEALLOCATE(wkaux)
          ENDIF
@@ -744,6 +759,7 @@ CONTAINS
       ELSEIF ( k_points == 'gamma' ) THEN
          !
          nkstot = 1
+         ALLOCATE ( xk(3,1), wk(1) )
          xk(:,1) = 0.0_DP
          wk(1) = 1.0_DP
          !
