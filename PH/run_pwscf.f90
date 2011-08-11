@@ -17,7 +17,6 @@ SUBROUTINE run_pwscf(do_band)
   USE basis,           ONLY : starting_wfc, starting_pot, startingconfig
   USE io_files,        ONLY : prefix, tmp_dir
   USE lsda_mod,        ONLY : nspin
-  USE input_parameters,ONLY : pseudo_dir
   USE control_flags,   ONLY : restart
   USE qpoint,          ONLY : xq
   USE control_ph,      ONLY : done_bands, reduce_io, recover, tmp_dir_phq, &
@@ -51,7 +50,6 @@ SUBROUTINE run_pwscf(do_band)
   starting_pot      = 'file'
   starting_wfc      = 'atomic'
   restart = ext_restart
-  pseudo_dir= TRIM( tmp_dir_save ) // TRIM( prefix ) // '.save'
   CALL restart_from_file()
   conv_ions=.true.
   !

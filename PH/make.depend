@@ -200,7 +200,6 @@ check_initial_status.o : ../Modules/xml_io_base.o
 check_initial_status.o : ../PW/io_rho_xml.o
 check_initial_status.o : ../PW/pwcom.o
 check_initial_status.o : ../PW/scf_mod.o
-check_initial_status.o : ../PW/start_k.o
 check_initial_status.o : ../PW/symm_base.o
 check_initial_status.o : acfdtest.o
 check_initial_status.o : ph_restart.o
@@ -1045,7 +1044,6 @@ rigid.o : ../Modules/kind.o
 rotate_and_add_dyn.o : ../Modules/constants.o
 rotate_and_add_dyn.o : ../Modules/kind.o
 run_pwscf.o : ../Modules/control_flags.o
-run_pwscf.o : ../Modules/input_parameters.o
 run_pwscf.o : ../Modules/io_files.o
 run_pwscf.o : ../PW/pwcom.o
 run_pwscf.o : ../PW/scf_mod.o

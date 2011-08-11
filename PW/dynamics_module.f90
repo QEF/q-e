@@ -40,6 +40,7 @@ MODULE dynamics_module
          nraise,      &! parameter used in thermalization
          ndof          ! the number of degrees of freedom
    LOGICAL :: &
+         tavel=.FALSE.,&! if true, starting velocities were read from input
          vel_defined,  &! if true, vel is used rather than tau_old to do the next step
          control_temp, &! if true a thermostat is used to control the temperature
          refold_pos     ! if true the positions are refolded into the supercell
@@ -407,7 +408,6 @@ CONTAINS
       SUBROUTINE md_init()
          !--------------------------------------------------------------------
          !
-         USE input_parameters, ONLY: tavel,rd_vel
          IMPLICIT NONE
          !
          istep = 0
@@ -487,7 +487,7 @@ CONTAINS
          !
          IF ( tavel ) THEN ! initial velocities available from input file
             !
-            vel(:,:) = rd_vel(:,:) / alat
+            vel(:,:) = vel(:,:) / alat
             !
          ELSEIF ( control_temp ) THEN
             !

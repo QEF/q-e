@@ -15,6 +15,10 @@ MODULE symm_base
   ! ... The variables needed to describe the symmetry properties
   ! ... and the routines to find crystal symmetries
   !  
+  ! ... are acceptance criteria
+  !
+  REAL(DP), parameter :: eps1 = 1.0d-6, eps2 = 1.0d-5
+  !
   SAVE
   !
   PRIVATE
@@ -257,7 +261,7 @@ subroutine set_sym_bl ( )
            value = overlap(jpol,1)*rot(1,kpol) +&
            &       overlap(jpol,2)*rot(2,kpol) +&
            &       overlap(jpol,3)*rot(3,kpol)
-           if ( abs(DBLE(nint(value))-value) > 1.0d-8) then
+           if ( abs(DBLE(nint(value))-value) > eps1 ) then
               !
               ! if a noninteger is obtained, this implies that this operation
               ! is not a symmetry operation for the given lattice
@@ -486,9 +490,9 @@ subroutine sgam_at ( nat, tau, ityp, nr1, nr2, nr3, nofrac, sym )
                  ! check if the fractional translations are commensurate
                  ! with the FFT grid, discard sym.op. if not
                  ! (needed because ph.x symmetrizes in real space)
-                 if (abs (ft1 - nint (ft1) ) / nr1 > 1.0d-5 .or. &
-                     abs (ft2 - nint (ft2) ) / nr2 > 1.0d-5 .or. &
-                     abs (ft3 - nint (ft3) ) / nr3 > 1.0d-5) then
+                 if (abs (ft1 - nint (ft1) ) / nr1 > eps2 .or. &
+                     abs (ft2 - nint (ft2) ) / nr2 > eps2 .or. &
+                     abs (ft3 - nint (ft3) ) / nr3 > eps2 ) then
                     WRITE( stdout, '(5x,"warning: symmetry operation", &
                          &     " # ",i2," not allowed.   fractional ", &
                          &     "translation:"/5x,3f11.7,"  in crystal", &
@@ -578,10 +582,10 @@ subroutine sgam_at_mag ( nat, m_loc, sym )
            !
            t1 = ( abs(mrau(1,na) - mxau(1,nb)) +       &
                   abs(mrau(2,na) - mxau(2,nb)) +       &
-                  abs(mrau(3,na) - mxau(3,nb)) < 1.0D-5 ) .and. t1
+                  abs(mrau(3,na) - mxau(3,nb)) < eps2 ) .and. t1
            t2 = ( abs(mrau(1,na) + mxau(1,nb))+       &
                   abs(mrau(2,na) + mxau(2,nb))+       &
-                  abs(mrau(3,na) + mxau(3,nb)) < 1.0D-5 ) .and. t2
+                  abs(mrau(3,na) + mxau(3,nb)) < eps2 ) .and. t2
            !
         enddo
         !
@@ -808,7 +812,6 @@ subroutine checkallsym ( nat, tau, ityp, nr1, nr2, nr3 )
   logical :: loksym (48)
   real(DP) :: sx (3, 3), sy(3,3), ft_(3)
   real(DP) , allocatable :: xau(:,:), rau(:,:)
-  real(DP), parameter :: eps = 1.0d-7
   !
   allocate (xau( 3 , nat))    
   allocate (rau( 3 , nat))    
@@ -825,7 +828,7 @@ subroutine checkallsym ( nat, tau, ityp, nr1, nr2, nr3 )
      do i = 1, 3
         sy (i,i) = sy (i,i) - 1.0_dp
      end do
-     if (any (abs (sy) > eps) ) &
+     if (any (abs (sy) > eps1 ) ) &
          call errore ('checkallsym', 'not orthogonal operation', isym)
   enddo
   !

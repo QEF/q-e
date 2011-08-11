@@ -1257,7 +1257,7 @@ SUBROUTINE iosys()
       !
     CASE DEFAULT
       !
-      call errore ('iosys','unrecongnized value for assume_isolated',1)
+      call errore ('iosys','unrecognized value for assume_isolated',1)
   END SELECT
   !
   ! ... read following cards
@@ -1431,7 +1431,8 @@ SUBROUTINE read_cards_pw ( psfile, tau_format )
                                  tapos, rd_pos, atomic_positions, if_pos,  &
                                  sp_pos, k_points, xk, wk, nk1, nk2, nk3,  &
                                  k1, k2, k3, nkstot, &
-                                 f_inp, rd_for, tavel, sp_vel
+                                 f_inp, rd_for, tavel, sp_vel, rd_vel
+  USE dynamics_module,    ONLY : tavel_ => tavel, vel
   USE cell_base,          ONLY : at, ibrav
   USE ions_base,          ONLY : nat, ntyp => nsp, ityp, tau, atm, extfor
   USE start_k,            ONLY : init_start_k
@@ -1486,6 +1487,13 @@ SUBROUTINE read_cards_pw ( psfile, tau_format )
   IF ( tavel .AND. ANY ( sp_pos(:) /= sp_vel(:) ) ) &
       CALL errore("cards","list of species in block ATOMIC_VELOCITIES &
                  & must be identical to those in ATOMIC_POSITIONS",1)
+  tavel_ = tavel
+  IF ( tavel_ ) THEN
+     ALLOCATE( vel(3, nat) )
+     DO ia = 1, nat
+        vel(:,ia) = rd_vel(:,ia)
+     END DO
+  END IF
   !
   ! ... The constrain on fixed coordinates is implemented using the array
   ! ... if_pos whose value is 0 when the coordinate is to be kept fixed, 1

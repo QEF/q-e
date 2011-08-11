@@ -466,7 +466,7 @@ SUBROUTINE setup()
         IF ( gdir == 0 ) CALL errore('setup','needed gdir probably not set',10) 
         !
         DO ik=1,nkstot
-           nx_el(1:nkstot,gdir)=ik
+           nx_el(ik,gdir)=ik
         END DO
         if(nspin==2) nx_el(nkstot+1:2*nkstot,:) = nx_el(1:nkstot,:) + nkstot
         nppstr_3d(gdir)=nppstr
