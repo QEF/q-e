@@ -706,7 +706,7 @@ CONTAINS
             DO i = 1, nkstot
                CALL read_line( input_line, end_of_file = tend, error = terr )
                IF (tend) GOTO 10
-               IF (tend) GOTO 20
+               IF (terr) GOTO 20
                READ(input_line,*, END=10, ERR=20) xk(1,i),xk(2,i),xk(3,i),wk(i)
             ENDDO
          ELSE
@@ -715,7 +715,7 @@ CONTAINS
             DO i = 1, nkstot
                CALL read_line( input_line, end_of_file = tend, error = terr )
                IF (tend) GOTO 10
-               IF (tend) GOTO 20
+               IF (terr) GOTO 20
                READ(input_line,*, END=10, ERR=20) xkaux(1,i), xkaux(2,i), &
                                                   xkaux(3,i), wk0
                wkaux(i) = NINT ( wk0 ) ! beware: wkaux is integer
