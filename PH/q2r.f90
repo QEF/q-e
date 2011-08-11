@@ -87,7 +87,6 @@ PROGRAM q2r
   CHARACTER(len=20)  :: crystal
   CHARACTER(len=256) :: fildyn, filin, filj, filf, flfrc
   CHARACTER(len=3)   :: atm(ntypx)
-  CHARACTER(len=9)   :: symm_type
   CHARACTER(LEN=6), EXTERNAL :: int_to_char
   !
   LOGICAL :: lq, lrigid, lrigid1, lnogridinfo, xmldyn
@@ -203,12 +202,11 @@ PROGRAM q2r
            ENDIF
            IF (ifile==1) THEN
               CALL read_dyn_mat_header(ntyp, nat, ibrav, nspin_mag, &
-                 celldm, at, bg, omega, symm_type, atm, amass, tau, ityp, &
+                 celldm, at, bg, omega, atm, amass, tau, ityp, &
                  m_loc, nqs, lrigid, epsil, zeu )
            ELSE
               CALL read_dyn_mat_header(ntyp, nat, ibrav, nspin_mag, &
-                 celldm, at, bg, omega, symm_type, atm, amass, tau, ityp, &
-                 m_loc, nqs)
+                 celldm, at, bg, omega, atm, amass, tau, ityp, m_loc, nqs)
            ENDIF
            ALLOCATE (phiq(3,3,nat,nat,nqs) )
            DO iq=1,nqs
@@ -221,7 +219,7 @@ PROGRAM q2r
            CALL mp_bcast(ierr, ionode_id)
            IF (ierr /= 0) CALL errore('q2r','file '//TRIM(filin)//' missing!',1)
            CALL read_file (nqs, q, epsil, lrigid,  &
-                ntyp, nat, ibrav, symm_type, celldm, at, atm, amass)
+                ntyp, nat, ibrav, celldm, at, atm, amass)
            IF (ionode) CLOSE(unit=1)
         ENDIF
         IF (ifile == 1) THEN
@@ -303,19 +301,17 @@ PROGRAM q2r
      IF (xmldyn) THEN
         IF (lrigid) THEN
            CALL write_dyn_mat_header( flfrc, ntyp, nat, ibrav, nspin_mag,  &
-                celldm, at, bg, omega, symm_type, atm, amass, tau, ityp,   &
+                celldm, at, bg, omega, atm, amass, tau, ityp,   &
                 m_loc, nqs, epsil, zeu)
         ELSE
            CALL write_dyn_mat_header( flfrc, ntyp, nat, ibrav, nspin_mag,  &
-                celldm, at, bg, omega, symm_type, atm, amass, tau, ityp,    &
-                m_loc, nqs)
+                celldm, at, bg, omega, atm, amass, tau, ityp, m_loc, nqs)
         ENDIF
         CALL write_ifc(nr1,nr2,nr3,nat,phid)
      ELSE IF (ionode) THEN
      OPEN(unit=2,file=flfrc,status='unknown',form='formatted')
      WRITE(2,'(i3,i5,i3,6f11.7)') ntyp,nat,ibrav,celldm
      if (ibrav==0) then
-        write (2,'(a)') symm_type
         write (2,'(2x,3f15.9)') ((at(i,j),i=1,3),j=1,3)
      end if
      DO nt = 1,ntyp
@@ -523,7 +519,7 @@ END SUBROUTINE gammaq2r
 !
 !----------------------------------------------------------------------------
 SUBROUTINE read_file( nqs, xq, epsil, lrigid, &
-                      ntyp, nat, ibrav, symm_type, celldm, at, atm, amass )
+                      ntyp, nat, ibrav, celldm, at, atm, amass )
   !----------------------------------------------------------------------------
   !
   USE kinds, ONLY : DP
@@ -540,7 +536,6 @@ SUBROUTINE read_file( nqs, xq, epsil, lrigid, &
   REAL(DP) :: epsil(3,3)
   REAL(DP) :: xq(3,48), celldm(6), at(3,3), amass(ntyp)
   CHARACTER(LEN=3) atm(ntyp)
-  CHARACTER(LEN=9) symm_type
   ! local variables
   INTEGER :: ntyp1,nat1,ibrav1,ityp1
   INTEGER :: i, j, na, nb, nt, ios
@@ -548,7 +543,6 @@ SUBROUTINE read_file( nqs, xq, epsil, lrigid, &
   REAL(DP) :: phir(3),phii(3)
   CHARACTER(LEN=75) :: line
   CHARACTER(LEN=3)  :: atm1
-  CHARACTER(LEN=9) symm_type1
   LOGICAL, SAVE :: first =.TRUE.
   !
   IF (ionode) THEN
@@ -562,7 +556,6 @@ SUBROUTINE read_file( nqs, xq, epsil, lrigid, &
      IF (ionode) THEN
         READ(1,*) ntyp,nat,ibrav,(celldm(i),i=1,6)
         if (ibrav==0) then
-           read (1,'(a)') symm_type
            read (1,*) ((at(i,j),i=1,3),j=1,3)
         end if
      END IF
@@ -571,7 +564,6 @@ SUBROUTINE read_file( nqs, xq, epsil, lrigid, &
      CALL mp_bcast(ibrav, ionode_id)
      CALL mp_bcast(celldm, ionode_id)
      IF (ibrav==0) THEN
-        CALL mp_bcast(symm_type, ionode_id)
         CALL mp_bcast(at, ionode_id)
      ENDIF
 
@@ -614,10 +606,6 @@ SUBROUTINE read_file( nqs, xq, epsil, lrigid, &
              CALL errore('read_file','wrong celldm',i)
      END DO
      if (ibrav==0) then
-         IF (ionode) read (1,*) symm_type1
-         CALL mp_bcast(symm_type1, ionode_id)
-         if (symm_type1 /= symm_type) &
-            CALL errore('read_file','wrong symm_type for ibrav=0',1)
          IF (ionode) read (1,*) ((at1(i,j),i=1,3),j=1,3)
          CALL mp_bcast(at1, ionode_id)
          do i=1,3

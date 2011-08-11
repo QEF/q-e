@@ -130,13 +130,9 @@ compute_sigma_avg.o : ../PW/noncol.o
 compute_sigma_avg.o : ../PW/pwcom.o
 compute_sigma_avg.o : ../PW/scf_mod.o
 cube.o : ../Modules/kind.o
-cubicspinsym.o : ../Modules/kind.o
-cubicspinsym.o : ../PW/symm_base.o
-d_matrix_nc.o : ../Modules/cell_base.o
 d_matrix_nc.o : ../Modules/kind.o
 d_matrix_nc.o : ../Modules/random_numbers.o
 d_matrix_nc.o : ../PW/symm_base.o
-d_matrix_so.o : ../Modules/cell_base.o
 d_matrix_so.o : ../Modules/kind.o
 d_matrix_so.o : ../Modules/random_numbers.o
 d_matrix_so.o : ../PW/pwcom.o
@@ -200,8 +196,6 @@ ggen1d.o : ../Modules/cell_base.o
 ggen1d.o : ../Modules/fft_base.o
 ggen1d.o : ../Modules/kind.o
 ggen1d.o : ../Modules/recvec.o
-hexspinsym.o : ../Modules/kind.o
-hexspinsym.o : ../PW/symm_base.o
 initial_state.o : ../Modules/environment.o
 initial_state.o : ../Modules/io_files.o
 initial_state.o : ../Modules/io_global.o
@@ -444,6 +438,8 @@ pw_export.o : ../iotk/src/iotk_module.o
 qexml.o : ../iotk/src/iotk_module.o
 qexml_example.o : qexml.o
 smallgk.o : ../Modules/kind.o
+spinsym.o : ../Modules/kind.o
+spinsym.o : ../PW/symm_base.o
 stm.o : ../Modules/cell_base.o
 stm.o : ../Modules/constants.o
 stm.o : ../Modules/control_flags.o

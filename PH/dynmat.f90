@@ -92,7 +92,6 @@ end Module dynamical
       logical :: xmldyn, lrigid, lraman
       logical, external :: has_xml
       integer :: ibrav, nqs
-      character(len=9) :: symm_type
       integer, allocatable :: itau(:)
       namelist /input/ amass, asr, axis, fildyn, filout, filmol, filxsf, q
 !
@@ -133,7 +132,7 @@ end Module dynamical
          ALLOCATE (zstar(3,3,nat))
          ALLOCATE (dchi_dtau(3,3,3,nat) )
          CALL read_dyn_mat_header(ntyp, nat, ibrav, nspin_mag, &
-                 celldm, at, bg, omega, symm_type, atm, amass_, tau, ityp, &
+                 celldm, at, bg, omega, atm, amass_, tau, ityp, &
                  m_loc, nqs, lrigid, eps0, zstar, lraman, dchi_dtau)
          IF (nqs /= 1) CALL errore('dynmat','only q=0 matrix allowed',1)
          a0=celldm(1) ! define alat
@@ -225,7 +224,6 @@ end Module dynamical
       character(len=80) :: line
       real(DP) :: celldm(6), dyn0r(3,3,2)
       integer :: ibrav, nt, na, nb, naa, nbb, i, j, k, ios
-      CHARACTER(len=9) :: symm_type
       logical :: qfinito, noraman
       !
       !
@@ -236,7 +234,6 @@ end Module dynamical
       read(1,*) ntyp,nat,ibrav,celldm
       !
       if (ibrav==0) then
-         read(1,'(a)') symm_type
          read(1,*) ((at(i,j),i=1,3),j=1,3)
       end if
       !

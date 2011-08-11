@@ -17,7 +17,7 @@ cgracsc.o \
 compute_ppsi.o \
 compute_sigma_avg.o \
 cube.o \
-cubicspinsym.o \
+spinsym.o \
 dosg.o \
 do_initial_state.o \
 do_shift_ew.o \
@@ -25,7 +25,6 @@ d_matrix_nc.o \
 d_matrix_so.o \
 elf.o \
 ggen1d.o \
-hexspinsym.o \
 local_dos.o \
 local_dos_mag.o \
 local_dos1d.o \

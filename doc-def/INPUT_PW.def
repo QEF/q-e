@@ -52,7 +52,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 	   nks
 	   xk_x, xk_y, xk_z,  wk
 
-	[ CELL_PARAMETERS { cubic | hexagonal } { bohr | angstrom }
+	[ CELL_PARAMETERS { bohr | angstrom }
 	   v1(1) v1(2) v1(3)
 	   v2(1) v2(2) v2(3)
 	   v3(1) v3(2) v3(3) ]
@@ -1996,13 +1996,6 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
     #
     card CELL_PARAMETERS {
 	flag lattice_type -use optional {
-	    enum {  cubic | hexagonal }
-	    default { cubic }
-	    info {
-		Flag "cubic" or "hexagonal" specify if you want to look for symmetries
-		derived from the cubic symmetry group (default) or from the hexagonal
-		symmetry group (assuming c axis as the z axis, a axis along the x axis).
-	    }
 	    enum { bohr | angstrom }
 	    info {
 		bohr / angstrom: lattice vectors in bohr radii / angstrom.

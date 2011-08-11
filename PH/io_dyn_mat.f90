@@ -37,12 +37,11 @@ MODULE io_dyn_mat
   CONTAINS
     !
     SUBROUTINE write_dyn_mat_header( fildyn, ntyp, nat, ibrav, nspin_mag,  &
-               celldm, at, bg, omega, symm_type, atm, amass, tau, ityp, m_loc, &
+               celldm, at, bg, omega, atm, amass, tau, ityp, m_loc, &
                nqs, epsil, zstareu, lraman, ramtns)
     !
     INTEGER, INTENT(IN) :: ntyp, nat, ibrav, nspin_mag, nqs
     CHARACTER(LEN=256), INTENT(IN) :: fildyn
-    CHARACTER(LEN=9), INTENT(IN) :: symm_type
     CHARACTER(LEN=3), INTENT(IN) :: atm(ntyp)
     REAL(DP), INTENT(IN) :: celldm(6)
     REAL(DP), INTENT(IN) :: at(3,3)
@@ -89,7 +88,6 @@ MODULE io_dyn_mat
        CALL iotk_write_dat(iunout, "BRAVAIS_LATTICE_INDEX", ibrav )
        CALL iotk_write_dat(iunout, "SPIN_COMPONENTS", nspin_mag )
        CALL iotk_write_dat(iunout, "CELL_DIMENSIONS", celldm )
-       CALL iotk_write_dat(iunout, "CELL_SYMMETRY", symm_type )
        CALL iotk_write_dat(iunout, "AT", at, COLUMNS=3 )
        CALL iotk_write_dat(iunout, "BG", bg, COLUMNS=3 )
        CALL iotk_write_dat(iunout, "UNIT_CELL_VOLUME_AU", omega )
@@ -287,12 +285,11 @@ MODULE io_dyn_mat
     END SUBROUTINE read_dyn_mat_param
 
     SUBROUTINE read_dyn_mat_header(ntyp, nat, ibrav, nspin_mag,  &
-               celldm, at, bg, omega, symm_type, atm, amass, tau, ityp, m_loc, &
+               celldm, at, bg, omega, atm, amass, tau, ityp, m_loc, &
                nqs, lrigid, epsil, zstareu, lraman, ramtns)
 
     INTEGER, INTENT(IN) :: ntyp, nat
     INTEGER, INTENT(OUT) :: ibrav, nspin_mag, nqs
-    CHARACTER(LEN=9), INTENT(OUT) :: symm_type
     CHARACTER(LEN=3), INTENT(OUT) :: atm(ntyp)
     REAL(DP), INTENT(OUT) :: celldm(6)
     REAL(DP), INTENT(OUT) :: at(3,3)
@@ -318,7 +315,6 @@ MODULE io_dyn_mat
        CALL iotk_scan_dat( iunout, "BRAVAIS_LATTICE_INDEX", ibrav )
        CALL iotk_scan_dat( iunout, "SPIN_COMPONENTS", nspin_mag )
        CALL iotk_scan_dat( iunout, "CELL_DIMENSIONS", celldm )
-       CALL iotk_scan_dat( iunout, "CELL_SYMMETRY", symm_type )
        CALL iotk_scan_dat( iunout, "AT", at )
        CALL iotk_scan_dat( iunout, "BG", bg )
        CALL iotk_scan_dat( iunout, "UNIT_CELL_VOLUME_AU", omega )
@@ -383,7 +379,6 @@ MODULE io_dyn_mat
     CALL mp_bcast(ibrav,ionode_id)
     CALL mp_bcast(nspin_mag,ionode_id)
     CALL mp_bcast(celldm,ionode_id)
-    CALL mp_bcast(symm_type,ionode_id)
     CALL mp_bcast(at,ionode_id)
     CALL mp_bcast(bg,ionode_id)
     CALL mp_bcast(omega,ionode_id)

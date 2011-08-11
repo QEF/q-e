@@ -299,7 +299,7 @@ SUBROUTINE iosys()
   ! ... CARDS
   !
   USE input_parameters, ONLY : nconstr_inp, ncolvar_inp, trd_ht, rd_ht, &
-                               cell_symmetry, cell_units
+                               cell_units
   !
   USE constraints_module,    ONLY : init_constraint
   USE read_namelists_module, ONLY : read_namelists, sm_not_set
@@ -1284,7 +1284,7 @@ SUBROUTINE iosys()
   ! ... set up atomic positions and crystal lattice
   !
   call cell_base_init ( ibrav, celldm, a, b, c, cosab, cosac, cosbc, &
-                        trd_ht, cell_symmetry, rd_ht, cell_units )
+                        trd_ht, rd_ht, cell_units )
   !
   CALL convert_tau ( tau_format, nat_, tau)
   !
@@ -1432,7 +1432,7 @@ SUBROUTINE read_cards_pw ( psfile, tau_format )
                                  sp_pos, k_points, xk, wk, nk1, nk2, nk3,  &
                                  k1, k2, k3, nkstot, &
                                  f_inp, rd_for, tavel, sp_vel
-  USE cell_base,          ONLY : at, ibrav, symm_type
+  USE cell_base,          ONLY : at, ibrav
   USE ions_base,          ONLY : nat, ntyp => nsp, ityp, tau, atm, extfor
   USE start_k,            ONLY : init_start_k
   USE fixed_occ,          ONLY : tfixed_occ, &

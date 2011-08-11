@@ -1,3 +1,9 @@
+Incompatible changes in svn version:
+
+   * Options 'cubic'/'hexagonal' to CELL_PARAMETERS removed: it is no 
+     longer useful, the code will anyway find the correct sym.ops.
+   * Options 'bohr'/'angstrom'/'alat' to CELL_PARAMETERS implemented
+
 New in 4.3.2 version
 
    * A few crystal lattices can be specified using the traditional

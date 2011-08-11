@@ -17,13 +17,13 @@ SUBROUTINE open_dvscf_star_q( q_index )
   !         symmetry operations 
   !    (iii) dumps it in a special directory
   !
-  !    Original routine written by Matteo Calandra and Gianni Profera,
+  !    Original routine written by Matteo Calandra and Gianni Profeta,
   !          adapted to ldisp case, fractional translations and imq=.true.
   !          by Matteo. Calandra.
   !
   !-----------------------------------------------------------------------
   USE kinds, ONLY : DP
-  USE cell_base,     ONLY : omega,at, bg, celldm, ibrav, symm_type,tpiba2
+  USE cell_base,     ONLY : omega,at, bg, celldm, ibrav, tpiba2
   USE ions_base,     ONLY : nat, ntyp => nsp, ityp, tau, atm, amass
   USE wvfct,     ONLY : npwx,npw,igk
   USE symm_base,  ONLY : s, ftau,nsym,irt, invs

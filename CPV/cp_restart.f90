@@ -66,8 +66,7 @@ MODULE cp_restart
       USE gvecw,                    ONLY : ngw, ngw_g, ecutwfc
       USE gvect,                    ONLY : ig_l2g, mill
       USE electrons_base,           ONLY : nspin, nelt, nel, nudx
-      USE cell_base,                ONLY : ibrav, alat, celldm, &
-                                           symm_type, s_to_r
+      USE cell_base,                ONLY : ibrav, alat, celldm, s_to_r
       USE ions_base,                ONLY : nsp, nat, na, atm, zv, &
                                            pmass, amass, iforce, ind_bck
       USE funct,                    ONLY : get_dft_name, get_inlc
@@ -347,8 +346,7 @@ MODULE cp_restart
          !
          CALL recips( a1, a2, a3, b1, b2, b3 )
          !
-         CALL write_cell( ibrav, symm_type, &
-                          celldm, alat, a1, a2, a3, b1, b2, b3, &
+         CALL write_cell( ibrav, celldm, alat, a1, a2, a3, b1, b2, b3, &
                           do_makov_payne, .FALSE., .FALSE. )
          !
 !-------------------------------------------------------------------------------
@@ -947,8 +945,7 @@ MODULE cp_restart
       USE gvecw,                    ONLY : ngw, ngw_g
       USE electrons_base,           ONLY : nspin, nbnd, nelt, nel, &
                                            nupdwn, iupdwn, nudx
-      USE cell_base,                ONLY : ibrav, alat, celldm, symm_type, &
-                                           s_to_r, r_to_s
+      USE cell_base,                ONLY : ibrav, alat, celldm, s_to_r, r_to_s
       USE ions_base,                ONLY : nsp, nat, na, atm, zv, pmass, &
                                            sort_tau, ityp, ions_cofmass
       USE gvect,       ONLY : ig_l2g, mill
@@ -1018,7 +1015,6 @@ MODULE cp_restart
       ! ... variables read for testing pourposes
       !
       INTEGER               :: ibrav_
-      CHARACTER(LEN=9)      :: symm_type_
       CHARACTER(LEN=3)      :: atm_(ntypx)
       INTEGER               :: nat_, nsp_, na_
       INTEGER               :: nk_, ik_, nt_
@@ -1139,8 +1135,7 @@ MODULE cp_restart
       !
       IF ( ionode ) THEN
          !
-         CALL read_cell( ibrav_, symm_type_, celldm_, &
-                         alat_, a1_, a2_, a3_, b1, b2, b3 )
+         CALL read_cell( ibrav_, celldm_, alat_, a1_, a2_, a3_, b1, b2, b3 )
          !
          CALL recips( a1_, a2_, a3_, b1, b2, b3 )
          !
@@ -2018,7 +2013,6 @@ MODULE cp_restart
       REAL(DP)         :: celldm_(6)
       REAL(DP)         :: a1_(3), a2_(3), a3_(3)
       REAL(DP)         :: b1_(3), b2_(3), b3_(3)
-      CHARACTER(LEN=9) :: symm_type_
       !
       !
       dirname = restart_dir( tmp_dir, ndr ) 
@@ -2094,8 +2088,7 @@ MODULE cp_restart
             !
             ! ... MD steps have not been found, try to restart from cell data
             !
-            CALL read_cell( ibrav_, symm_type_, celldm_, &
-                            alat_, a1_, a2_, a3_, b1_, b2_, b3_ )
+            CALL read_cell( ibrav_, celldm_, alat_, a1_,a2_,a3_, b1_, b2_, b3_ )
             !
             ht(1,:) = a1_
             ht(2,:) = a2_
@@ -2134,12 +2127,10 @@ MODULE cp_restart
     END SUBROUTINE cp_read_cell
     !
     !------------------------------------------------------------------------
-    SUBROUTINE read_cell( ibrav, symm_type, &
-                          celldm, alat, a1, a2, a3, b1, b2, b3 )
+    SUBROUTINE read_cell( ibrav, celldm, alat, a1, a2, a3, b1, b2, b3 )
       !------------------------------------------------------------------------
       !
       INTEGER,          INTENT(OUT) :: ibrav
-      CHARACTER(LEN=*), INTENT(OUT) :: symm_type
       REAL(DP),         INTENT(OUT) :: celldm(6), alat
       REAL(DP),         INTENT(OUT) :: a1(3), a2(3), a3(3)
       REAL(DP),         INTENT(OUT) :: b1(3), b2(3), b3(3)
@@ -2183,9 +2174,6 @@ MODULE cp_restart
         CASE( "Triclinic P" )
            ibrav = 14
       END SELECT
-      !
-      IF ( ibrav == 0 ) &
-         CALL iotk_scan_dat( iunpun, "CELL_SYMMETRY", symm_type )
       !
       CALL iotk_scan_dat( iunpun, "LATTICE_PARAMETER", alat )
       CALL iotk_scan_dat( iunpun, "CELL_DIMENSIONS", celldm(1:6) )

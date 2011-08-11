@@ -189,7 +189,6 @@ CONTAINS
        !
        !
     CASE ( 'CELL' )
-       CALL mp_bcast( cell_symmetry, ionode_id )
        CALL mp_bcast( ibrav, ionode_id )
        CALL mp_bcast( celldm, ionode_id )
        CALL mp_bcast( A, ionode_id )
@@ -378,20 +377,6 @@ CONTAINS
          &card', ABS( ierr ) )
     !
     IF ( found ) THEN
-       !
-       CALL iotk_scan_attr( attr, 'sym', option, default='cubic', ierr = ierr )
-       IF ( ierr /= 0 ) CALL errore( 'card_xml_cell', 'error scanning sym &
-            &attribute of cell node', abs(ierr) )
-       !
-       IF ( trim(option) == 'hexagonal' ) THEN
-          !
-          cell_symmetry = 'hexagonal'
-          !
-       ELSE
-          !
-          cell_symmetry = 'cubic'
-          !
-       END IF
        !
        CALL iotk_scan_attr( attr, 'type', option, ierr = ierr )
        IF ( ierr /= 0 ) CALL errore( 'card_xml_cell', 'error scanning type &

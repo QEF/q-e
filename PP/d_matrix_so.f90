@@ -14,7 +14,6 @@ SUBROUTINE d_matrix_so (dyj12, dyj32, dyj52, dyj72)
   ! subspaces
   !
   USE kinds, ONLY: DP
-  USE cell_base, ONLY : ibrav, symm_type
   USE symm_base, ONLY:  nsym, sr
   USE spin_orb,   ONLY : rot_ylm
   USE random_numbers, ONLY : randy
@@ -63,35 +62,7 @@ SUBROUTINE d_matrix_so (dyj12, dyj32, dyj52, dyj72)
   !
   !    Here we find the true symmetries of the crystal
   !
-  IF ( ibrav == 4 .or. ibrav == 5 ) THEN
-     !
-     ! ... here the hexagonal or trigonal bravais lattice
-     !
-     CALL hexspinsym( s_spin )
-     !
-  ELSEIF ( ibrav >=1  .and. ibrav <= 14 ) THEN
-     !
-     ! ... here for the cubic bravais lattice
-     !
-     CALL cubicspinsym( s_spin )
-     !
-  ELSEIF ( ibrav == 0 ) THEN
-     !
-     IF ( symm_type == 'cubic' ) THEN
-        !
-        CALL cubicspinsym( s_spin )
-        !
-     ELSEIF ( symm_type == 'hexagonal' ) THEN
-        !
-        CALL hexspinsym( s_spin )
-        !
-     ENDIF
-     !
-  ELSE
-     !
-     CALL errore( 'd_matrix_so', 'wrong ibrav', 1 )
-     !
-  ENDIF
+  CALL spinsym( s_spin )
   !
   ! Transformation matrices from the | l m s s_z > basis to the
   ! | j mj l s > basis in the l-subspace

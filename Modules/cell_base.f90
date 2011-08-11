@@ -19,8 +19,6 @@
     !
     !  ibrav: index of the bravais lattice (see latgen.f90)
     INTEGER          :: ibrav
-    !  symm_type: 'cubic' or 'hexagonal' when ibrav=0
-    CHARACTER(len=9) :: symm_type
     !  celldm: old-style parameters of the simulation cell (se latgen.f90)
     REAL(DP) :: celldm(6) = (/ 0.0_DP,0.0_DP,0.0_DP,0.0_DP,0.0_DP,0.0_DP /)
     !  traditional crystallographic cell parameters (alpha=cosbc and so on)
@@ -101,7 +99,7 @@
 !------------------------------------------------------------------------------!
 !
   SUBROUTINE cell_base_init( ibrav_, celldm_, a_, b_, c_, cosab_, cosac_, &
-               cosbc_, trd_ht, cell_symmetry, rd_ht, cell_units )
+               cosbc_, trd_ht, rd_ht, cell_units )
     !
     ! ... initialize cell_base module variables, set up crystal lattice
     !
@@ -110,7 +108,6 @@
     INTEGER, INTENT(IN) :: ibrav_
     REAL(DP), INTENT(IN) :: celldm_ (6)
     LOGICAL, INTENT(IN) :: trd_ht
-    CHARACTER(LEN=*), INTENT(IN) :: cell_symmetry
     REAL(DP), INTENT(IN) :: rd_ht (3,3)
     CHARACTER(LEN=*), INTENT(IN) :: cell_units
     REAL(DP), INTENT(IN) :: a_ , b_ , c_ , cosab_, cosac_, cosbc_
@@ -161,7 +158,6 @@
      END IF
      at(:,:) = at(:,:) / alat
      CALL volume( alat, at(1,1), at(1,2), at(1,3), omega )
-     symm_type = cell_symmetry
      !
   ELSE
   ! ... crystal lattice via celldm or crystallographica parameters

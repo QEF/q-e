@@ -131,7 +131,6 @@ PROGRAM matdyn
   INTEGER :: nr1, nr2, nr3, nsc, nk1, nk2, nk3, ntetra, ibrav
   CHARACTER(LEN=256) :: flfrc, flfrq, flvec, fltau, fldos, filename
   CHARACTER(LEN=10)  :: asr
-  CHARACTER(LEN=9)   :: symm_type
   LOGICAL :: dos, has_zstar
   COMPLEX(DP), ALLOCATABLE :: dyn(:,:,:,:), dyn_blk(:,:,:,:)
   COMPLEX(DP), ALLOCATABLE :: z(:,:)
@@ -247,7 +246,7 @@ PROGRAM matdyn
         ALLOCATE (atm(ntyp_blk))
         ALLOCATE (zeu(3,3,nat_blk))
         CALL read_dyn_mat_header(ntyp_blk, nat_blk, ibrav, nspin_mag, &
-                 celldm, at_blk, bg_blk, omega_blk, symm_type, atm, amass_blk, &
+                 celldm, at_blk, bg_blk, omega_blk, atm, amass_blk, &
                  tau_blk, ityp_blk,  m_loc, nqs, has_zstar, epsil, zeu )
         alat=celldm(1)
         call volume(alat,at_blk(1,1),at_blk(1,2),at_blk(1,3),omega_blk)
@@ -256,7 +255,7 @@ PROGRAM matdyn
         CALL read_ifc(nr1,nr2,nr3,nat_blk,frc)
      ELSE
         CALL readfc ( flfrc, nr1, nr2, nr3, epsil, nat_blk, &
-            ibrav, symm_type, alat, at_blk, ntyp_blk, &
+            ibrav, alat, at_blk, ntyp_blk, &
             amass_blk, omega_blk, has_zstar)
      ENDIF
      !
@@ -345,7 +344,7 @@ PROGRAM matdyn
         nqx = nk1*nk2*nk3
         ALLOCATE ( tetra(4,ntetra), q(3,nqx) )
         CALL gen_qpoints (ibrav, at, bg, nat, tau, ityp, nk1, nk2, nk3, &
-             symm_type, ntetra, nqx, nq, q, tetra)
+             ntetra, nqx, nq, q, tetra)
      ELSE
         !
         ! read q-point list
@@ -590,7 +589,7 @@ END PROGRAM matdyn
 !
 !-----------------------------------------------------------------------
 SUBROUTINE readfc ( flfrc, nr1, nr2, nr3, epsil, nat,    &
-                    ibrav, symm_type, alat, at, ntyp, amass, omega, has_zstar )
+                    ibrav, alat, at, ntyp, amass, omega, has_zstar )
   !-----------------------------------------------------------------------
   !
   USE kinds,      ONLY : DP
@@ -610,7 +609,6 @@ SUBROUTINE readfc ( flfrc, nr1, nr2, nr3, epsil, nat,    &
   REAL(DP) amass(ntyp), amass_from_file, celldm(6), omega
   INTEGER nt
   CHARACTER(LEN=3) atm
-  CHARACTER(LEN=9) symm_type
   !
   !
   IF (ionode) OPEN (unit=1,file=flfrc,status='old',form='formatted')
@@ -620,7 +618,6 @@ SUBROUTINE readfc ( flfrc, nr1, nr2, nr3, epsil, nat,    &
   IF (ionode)THEN
      READ(1,*) ntyp,nat,ibrav,(celldm(i),i=1,6)
      if (ibrav==0) then
-        read(1,'(a)') symm_type
         read(1,*) ((at(i,j),i=1,3),j=1,3)
      end if
   ENDIF
@@ -629,7 +626,6 @@ SUBROUTINE readfc ( flfrc, nr1, nr2, nr3, epsil, nat,    &
   CALL mp_bcast(ibrav, ionode_id)
   CALL mp_bcast(celldm, ionode_id)
   IF (ibrav==0) THEN
-     CALL mp_bcast(symm_type, ionode_id)
      CALL mp_bcast(at, ionode_id)
   ENDIF
   !
@@ -1741,7 +1737,7 @@ END SUBROUTINE write_tau
 !
 !-----------------------------------------------------------------------
 SUBROUTINE gen_qpoints (ibrav, at_, bg_, nat, tau, ityp, nk1, nk2, nk3, &
-     symm_type, ntetra, nqx, nq, q, tetra)
+     ntetra, nqx, nq, q, tetra)
   !-----------------------------------------------------------------------
   !
   USE kinds,      ONLY : DP
@@ -1753,7 +1749,6 @@ SUBROUTINE gen_qpoints (ibrav, at_, bg_, nat, tau, ityp, nk1, nk2, nk3, &
   ! input
   INTEGER :: ibrav, nat, nk1, nk2, nk3, ntetra, ityp(*)
   REAL(DP) :: at_(3,3), bg_(3,3), tau(3,nat)
-  character(LEN=9)    :: symm_type
   ! output
   INTEGER :: nqx, nq, tetra(4,ntetra)
   REAL(DP) :: q(3,nqx)

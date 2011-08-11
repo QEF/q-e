@@ -1444,7 +1444,6 @@ MODULE input_parameters
 !    CELL_PARAMETERS
 !
        REAL(DP) :: rd_ht(3,3) = 0.0_DP
-       CHARACTER(len=80) :: cell_symmetry = 'none'
        CHARACTER(len=80) :: cell_units = 'alat'
        LOGICAL   :: trd_ht = .false.
 

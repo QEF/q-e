@@ -743,13 +743,11 @@ MODULE xml_io_base
     !
     !
     !------------------------------------------------------------------------
-    SUBROUTINE write_cell( ibrav, symm_type, &
-                           celldm, alat, a1, a2, a3, b1, b2, b3, &
+    SUBROUTINE write_cell( ibrav, celldm, alat, a1, a2, a3, b1, b2, b3, &
                            do_mp, do_mt, do_esm )
       !------------------------------------------------------------------------
       !
       INTEGER,          INTENT(IN) :: ibrav
-      CHARACTER(LEN=*), INTENT(IN) :: symm_type
       REAL(DP),         INTENT(IN) :: celldm(6), alat
       REAL(DP),         INTENT(IN) :: a1(3), a2(3), a3(3)
       REAL(DP),         INTENT(IN) :: b1(3), b2(3), b3(3)
@@ -806,8 +804,6 @@ MODULE xml_io_base
          
       CALL iotk_write_dat( iunpun, &
                            "BRAVAIS_LATTICE", TRIM( bravais_lattice ) )
-      !
-      CALL iotk_write_dat( iunpun, "CELL_SYMMETRY", symm_type )
       !
       CALL iotk_write_attr( attr, "UNITS", "Bohr", FIRST = .TRUE. )
       CALL iotk_write_dat( iunpun, "LATTICE_PARAMETER", alat, ATTR = attr )
@@ -928,13 +924,12 @@ MODULE xml_io_base
     END SUBROUTINE write_ions
     !
     !------------------------------------------------------------------------
-    SUBROUTINE write_symmetry( ibrav, symm_type, nrot, nsym, invsym, noinv, &
+    SUBROUTINE write_symmetry( ibrav, nrot, nsym, invsym, noinv, &
                                time_reversal, no_t_rev, ft, &
                                s, sname, irt, nat, t_rev )
       !------------------------------------------------------------------------
       !
       INTEGER,          INTENT(IN) :: ibrav, nrot, nsym
-      CHARACTER(LEN=*), INTENT(IN) :: symm_type
       LOGICAL,          INTENT(IN) :: invsym, noinv, time_reversal, no_t_rev
       INTEGER,          INTENT(IN) :: s(:,:,:), irt(:,:), nat, t_rev(:)
       REAL(DP),         INTENT(IN) :: ft(:,:)
@@ -944,9 +939,6 @@ MODULE xml_io_base
       !
       !
       CALL iotk_write_begin( iunpun, "SYMMETRIES" )
-      !
-      IF ( ibrav == 0 ) &
-         CALL iotk_write_dat( iunpun, "CELL_SYMMETRY", symm_type )
       !
       CALL iotk_write_dat( iunpun, "NUMBER_OF_SYMMETRIES", nsym )
       CALL iotk_write_dat( iunpun, "NUMBER_OF_BRAVAIS_SYMMETRIES", nrot )
@@ -1432,6 +1424,7 @@ MODULE xml_io_base
       ! ... these are k-points and weights in the Irreducible BZ
       !
       IF (present(nks_start).and.present(xk_start).and.present(wk_start)) THEN
+         !
          CALL iotk_write_dat( iunpun, "STARTING_K-POINTS", nks_start )
          !
          DO ik = 1, nks_start

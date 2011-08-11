@@ -71,7 +71,7 @@ MODULE pw_restart
       USE realus,               ONLY : real_space
       USE global_version,       ONLY : version_number
       USE cell_base,            ONLY : at, bg, alat, tpiba, tpiba2, &
-                                       ibrav, symm_type, celldm
+                                       ibrav, celldm
       USE gvect,   ONLY : ig_l2g
       USE ions_base,            ONLY : nsp, ityp, atm, nat, tau, if_pos
       USE noncollin_module,     ONLY : noncolin, npol
@@ -332,7 +332,7 @@ MODULE pw_restart
 ! ... CELL
 !-------------------------------------------------------------------------------
          !
-         CALL write_cell( ibrav, symm_type, celldm, alat, &
+         CALL write_cell( ibrav, celldm, alat, &
                           at(:,1), at(:,2), at(:,3), bg(:,1), bg(:,2), bg(:,3), &
                           do_makov_payne, do_comp_mt, do_comp_esm )
          IF (lmovecell) CALL write_moving_cell(lmovecell, cell_factor)
@@ -348,7 +348,7 @@ MODULE pw_restart
 ! ... SYMMETRIES
 !-------------------------------------------------------------------------------
          !
-         CALL write_symmetry( ibrav, symm_type, nrot, nsym, invsym, noinv, &
+         CALL write_symmetry( ibrav, nrot, nsym, invsym, noinv, &
                               time_reversal, no_t_rev, ft, s, sname, irt,  &
                               nat, t_rev )
          !
@@ -1436,7 +1436,7 @@ MODULE pw_restart
       !
       USE constants, ONLY : pi
       USE run_info,  ONLY: title
-      USE cell_base, ONLY : ibrav, alat, symm_type, at, bg, celldm
+      USE cell_base, ONLY : ibrav, alat, at, bg, celldm
       USE cell_base, ONLY : tpiba, tpiba2, omega
       USE cellmd,    ONLY : lmovecell, cell_factor
       USE control_flags, ONLY : do_makov_payne
@@ -1528,20 +1528,6 @@ MODULE pw_restart
             ibrav = 0
          END SELECT
          !
-!  let us assume that we were consistent in the writing phase
-         CALL iotk_scan_dat( iunpun, "CELL_SYMMETRY", symm_type )
-!
-!         IF ( TRIM( bravais_lattice ) == "Trigonal R" .OR. &
-!              TRIM( bravais_lattice ) == "Hexagonal and Trigonal P" ) THEN
-!            !
-!            symm_type = 'hexagonal'
-!            !
-!         ELSE
-!            !
-!            symm_type = 'cubic'
-!            !
-!         END IF
-         !
          CALL iotk_scan_dat( iunpun, "LATTICE_PARAMETER", alat )
          !
          ! ... some internal variables
@@ -1580,7 +1566,6 @@ MODULE pw_restart
       END IF
       !
       CALL mp_bcast( ibrav,     ionode_id, intra_image_comm )
-      CALL mp_bcast( symm_type, ionode_id, intra_image_comm )
       CALL mp_bcast( alat,      ionode_id, intra_image_comm )
       CALL mp_bcast( celldm,    ionode_id, intra_image_comm )
       CALL mp_bcast( tpiba,     ionode_id, intra_image_comm )

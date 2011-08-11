@@ -1081,12 +1081,6 @@ CONTAINS
          CALL errore( ' card_cell_parameters ', ' two occurrences', 2 )
       ENDIF
       !
-      IF ( matches( 'HEXAGONAL', input_line ) ) THEN
-         cell_symmetry = 'hexagonal'
-      ELSE
-         cell_symmetry = 'cubic'
-      ENDIF
-      !
       IF ( matches( "BOHR", input_line ) ) THEN
          cell_units = 'bohr'
       ELSEIF ( matches( "ANGSTROM", input_line ) ) THEN

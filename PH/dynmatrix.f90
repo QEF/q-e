@@ -20,7 +20,7 @@ subroutine dynmatrix
   USE ions_base,     ONLY : nat, ntyp => nsp, ityp, tau, atm, pmass, zv
   USE io_global,     ONLY : stdout
   USE control_flags, ONLY : modenum
-  USE cell_base,     ONLY : at, bg, celldm, ibrav, omega, symm_type
+  USE cell_base,     ONLY : at, bg, celldm, ibrav, omega
   USE symm_base,     ONLY : s, sr, irt, nsym, time_reversal, invs
   USE run_info, ONLY : title
   USE dynmat,        ONLY : dyn, w2
@@ -148,11 +148,11 @@ subroutine dynmatrix
      IF (imq==0) nqq=2*nq
      IF (lgamma.AND.done_epsil.AND.done_zeu) THEN
         CALL write_dyn_mat_header( fildyn, ntyp, nat, ibrav, nspin_mag, &
-             celldm, at, bg, omega, symm_type, atm, pmass, tau, ityp, m_loc, &
+             celldm, at, bg, omega, atm, pmass, tau, ityp, m_loc, &
              nqq, epsilon, zstareu, lraman, ramtns*omega/fpi*convfact)
      ELSE
         CALL write_dyn_mat_header( fildyn, ntyp, nat, ibrav, nspin_mag, &
-             celldm, at, bg, omega, symm_type, atm, pmass, tau,ityp,m_loc,nqq)
+             celldm, at, bg, omega, atm, pmass, tau,ityp,m_loc,nqq)
      ENDIF
   ELSE
      CALL write_old_dyn_mat(iudyn)
@@ -234,7 +234,7 @@ end subroutine dynmatrix
 !  will be tested.
 !
   USE ions_base, ONLY : ntyp => nsp, nat, ityp, tau, atm, pmass
-  USE cell_base, ONLY : ibrav, celldm, at, symm_type
+  USE cell_base, ONLY : ibrav, celldm, at
   USE run_info, ONLY : title
 
   IMPLICIT NONE
@@ -245,7 +245,6 @@ end subroutine dynmatrix
   WRITE (iudyn, '(a)') title
   WRITE (iudyn, '(i3,i5,i3,6f11.7)') ntyp, nat, ibrav, celldm
   IF (ibrav==0) THEN
-     WRITE (iudyn,'(a)') symm_type
      WRITE (iudyn,'(2x,3f15.9)') ((at(i,j),i=1,3),j=1,3)
   END IF
   DO nt = 1, ntyp

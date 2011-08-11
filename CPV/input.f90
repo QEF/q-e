@@ -830,7 +830,7 @@ MODULE input
      USE constants,        ONLY : amu_au, pi
      !
      USE input_parameters, ONLY: ibrav , celldm , trd_ht, dt,                 &
-           cell_symmetry, rd_ht, a, b, c, cosab, cosac, cosbc, ntyp , nat ,   &
+           rd_ht, a, b, c, cosab, cosac, cosbc, ntyp , nat ,                  &
            na_inp , sp_pos , rd_pos , rd_vel, atom_mass, atom_label, if_pos,  &
            atomic_positions, id_loc, sic, sic_epsilon, sic_rloc, ecutwfc,     &
            ecutrho, ecfixed, qcutz, q2sigma, tk_inp, wmass,                   &
@@ -908,7 +908,7 @@ MODULE input
      massa_totale = SUM( atom_mass(1:ntyp)*na_inp(1:ntyp) )
      !
      CALL cell_base_init( ibrav, celldm, a, b, c, cosab, cosac, cosbc, &
-                          trd_ht, cell_symmetry, rd_ht, cell_units )
+                          trd_ht, rd_ht, cell_units )
      CALL cell_dyn_init ( trd_ht, rd_ht, wmass, massa_totale, press, &
                           cell_damping, greash, cell_dofree )
      !
