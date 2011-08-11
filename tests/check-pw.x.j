@@ -300,7 +300,7 @@ do
   #
   # now check subsequent non-scf step if required
   # look for $name.in2
-  n=2
+  for n in 1 2; do
   if test -f $name.in$n; then
      $ECHO "Checking $name, step $n ...\c"
      ###
@@ -320,14 +320,18 @@ do
      ###
      if test -f $name.ref$n ; then
         # reference file exists
-        check_nscf $name $n
+        if test $n = 1; then
+           check_nscf $name $n
+        else
+           check_nscf $name $n
+        fi
         # extract wall time statistics
         get_times $name
      else
         $ECHO  "not checked, reference file not available "
      fi
   fi
-
+  done
 done
 
 $ECHO  "Total wall time (s) spent in this run: " $totout
