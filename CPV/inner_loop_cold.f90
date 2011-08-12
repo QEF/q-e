@@ -49,7 +49,7 @@
       USE ions_positions, ONLY: tau0
       USE mp,             ONLY: mp_sum,mp_bcast, mp_root_sum
 
-      USE cp_interfaces,  ONLY: rhoofr, dforce, protate, vofrho
+      USE cp_interfaces,  ONLY: rhoofr, dforce, protate, vofrho, calbec
       USE cg_module,      ONLY: itercg
       USE cp_main_variables, ONLY: distribute_lambda, descla, collect_lambda, drhor, drhog
       USE descriptors,       ONLY: descla_init , la_descriptor

@@ -624,6 +624,7 @@ ldaU.o : ../Modules/mp_global.o
 ldaU.o : ../Modules/parameters.o
 ldaU.o : ../Modules/recvec.o
 ldaU.o : ../Modules/uspp.o
+ldaU.o : cp_interfaces.o
 ldaU.o : gvecw.o
 ldaU.o : ldaUpen.o
 ldaUpen.o : ../Modules/kind.o
@@ -703,6 +704,7 @@ nl_base.o : ../Modules/mp.o
 nl_base.o : ../Modules/mp_global.o
 nl_base.o : ../Modules/recvec.o
 nl_base.o : ../Modules/uspp.o
+nl_base.o : cp_interfaces.o
 nl_base.o : gvecw.o
 nl_base.o : mainvar.o
 nlcc.o : ../Modules/atom.o

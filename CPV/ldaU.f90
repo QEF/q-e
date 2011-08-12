@@ -201,6 +201,7 @@ end function set_Hubbard_l
       USE step_penalty,       ONLY: step_pen
       USE dspev_module,       only: dspev_drv
       USE mp_global,          only: nbgrp
+      USE cp_interfaces,      only: nlsm1, nlsm2_bgrp
 !
       implicit none
 #ifdef __PARA
@@ -812,6 +813,7 @@ end function set_Hubbard_l
       USE gvect,              ONLY: gstart
       USE ions_base,          ONLY: nsp, na, nat
       USE uspp,               ONLY: nhsa => nkb
+      USE cp_interfaces,      only: nlsm1
 !
       IMPLICIT NONE
       INTEGER,     INTENT(IN) :: nx, n, n_atomic_wfc, offset(nsp,nat)

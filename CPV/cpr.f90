@@ -93,7 +93,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
   USE gvecw,                    ONLY : ecutwfc
   USE gvect,                    ONLY : ecutrho
   USE time_step,                ONLY : delt, tps, dt2,  twodelt
-  USE cp_interfaces,            ONLY : cp_print_rho, nlfh, print_lambda
+  USE cp_interfaces,            ONLY : cp_print_rho, nlfh, print_lambda, prefor, dotcsc
   USE cp_main_variables,        ONLY : acc, lambda, lambdam, lambdap, &
                                        ema0bg, sfac, eigr, iprint_stdout,  &
                                        irb, taub, eigrb, rhog, rhos, &
@@ -105,7 +105,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
   USE wannier_subroutines,      ONLY : wannier_startup, wf_closing_options, &
                                        ef_enthalpy
   USE cp_interfaces,            ONLY : writefile, eigs, strucf, phfacs
-  USE cp_interfaces,            ONLY : ortho, elec_fakekine
+  USE cp_interfaces,            ONLY : ortho, elec_fakekine, calbec_bgrp, calbec, caldbec_bgrp
   USE constraints_module,       ONLY : check_constraint, remove_constr_force
 !  USE metadyn_base,             ONLY : set_target, mean_force
   USE cp_autopilot,             ONLY : pilot

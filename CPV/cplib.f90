@@ -1517,7 +1517,7 @@ END SUBROUTINE print_lambda_x
 !-----------------------------------------------------------------------
 !
 !-----------------------------------------------------------------------
-      SUBROUTINE denlcc( nnr, nspin, vxcr, sfac, drhocg, dcc )
+   SUBROUTINE denlcc_x( nnr, nspin, vxcr, sfac, drhocg, dcc )
 !-----------------------------------------------------------------------
 !
 ! derivative of non linear core correction exchange energy wrt cell 
@@ -1540,14 +1540,14 @@ END SUBROUTINE print_lambda_x
 
       ! input
 
-      INTEGER, INTENT(IN)   :: nnr, nspin
-      REAL(DP)              :: vxcr( nnr, nspin )
-      COMPLEX(DP)           :: sfac( ngms, nsp )
-      REAL(DP)              :: drhocg( ngm, nsp )
+      INTEGER,     INTENT(IN) :: nnr, nspin
+      REAL(DP),    INTENT(IN) :: vxcr( :, : )
+      COMPLEX(DP), INTENT(IN) :: sfac( :, : )
+      REAL(DP),    INTENT(IN) :: drhocg( :, : )
 
       ! output
 
-      REAL(DP), INTENT(OUT) ::  dcc(3,3)
+      REAL(DP), INTENT(OUT) ::  dcc( :, : )
 
       ! local
 
@@ -1591,12 +1591,12 @@ END SUBROUTINE print_lambda_x
       CALL mp_sum( dcc( 1:3, 1:3 ), intra_bgrp_comm )
 
       RETURN
-      END SUBROUTINE denlcc
+   END SUBROUTINE denlcc_x
 
 
 
 !-----------------------------------------------------------------------
-      SUBROUTINE dotcsc( eigr, cp, ngw, n )
+      SUBROUTINE dotcsc_x( eigr, cp, ngw, n )
 !-----------------------------------------------------------------------
 !
       USE kinds,              ONLY: DP
@@ -1607,11 +1607,12 @@ END SUBROUTINE print_lambda_x
       USE uspp_param,         ONLY: nh, ish, nvb
       USE mp,                 ONLY: mp_sum
       USE mp_global,          ONLY: intra_bgrp_comm, nbgrp
+      USE cp_interfaces,      ONLY: nlsm1
 !
       IMPLICIT NONE
 !
-      INTEGER, INTENT(IN) :: ngw, n
-      COMPLEX(DP) ::  eigr(ngw,nat), cp(ngw,n)
+      INTEGER,     INTENT(IN) :: ngw, n
+      COMPLEX(DP), INTENT(IN) :: eigr(:,:), cp(:,:)
 ! local variables
       REAL(DP) rsum, csc(n) ! automatic array
       COMPLEX(DP) temp(ngw) ! automatic array
@@ -1620,7 +1621,7 @@ END SUBROUTINE print_lambda_x
       INTEGER i,kmax,nnn,k,ig,is,ia,iv,jv,inl,jnl
 !
       IF( nbgrp > 1 ) &
-         CALL errore( ' dotcsc ', ' parallelization over bands not yet implemented ', 1 )
+         CALL errore( ' dotcsc ', ' parallelization over bands not yet implemented ', 1 ) 
 !
       ALLOCATE(becp(nkb,n))
 !
@@ -1667,7 +1668,7 @@ END SUBROUTINE print_lambda_x
       DEALLOCATE(becp)
 !
       RETURN
-      END SUBROUTINE dotcsc
+      END SUBROUTINE dotcsc_x
 
 
 !
@@ -1928,21 +1929,21 @@ END SUBROUTINE print_lambda_x
 
 !
 !-------------------------------------------------------------------------
-      SUBROUTINE prefor(eigr,betae)
+      SUBROUTINE prefor_x(eigr,betae)
 !-----------------------------------------------------------------------
 !
 !     input :        eigr =  e^-ig.r_i
 !     output:        betae_i,i(g) = (-i)**l beta_i,i(g) e^-ig.r_i 
 !
       USE kinds,      ONLY : DP
-      USE ions_base,  ONLY : nsp, na, nat
+      USE ions_base,  ONLY : nsp, na
       USE gvecw,      ONLY : ngw
-      USE uspp,       ONLY : nkb, beta, nhtol
+      USE uspp,       ONLY : beta, nhtol
       USE uspp_param, ONLY : nh, ish
 !
       IMPLICIT NONE
-      COMPLEX(DP) :: eigr( ngw, nat )
-      COMPLEX(DP) :: betae( ngw, nkb )
+      COMPLEX(DP), INTENT(IN) :: eigr( :, : )
+      COMPLEX(DP), INTENT(OUT) :: betae( :, : )
 !
       INTEGER     :: is, iv, ia, inl, ig, isa
       COMPLEX(DP) :: ci
@@ -1964,4 +1965,4 @@ END SUBROUTINE print_lambda_x
       CALL stop_clock( 'prefor' )
 !
       RETURN
-      END SUBROUTINE prefor
+      END SUBROUTINE prefor_x

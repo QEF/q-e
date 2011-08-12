@@ -54,7 +54,8 @@
       use mp,                       only : mp_sum, mp_bcast
       use cp_electronic_mass,       ONLY : emass_cutoff
       use orthogonalize_base,       ONLY : calphi_bgrp
-      use cp_interfaces,            ONLY : rhoofr, dforce, compute_stress, vofrho, nlfl_bgrp
+      use cp_interfaces,            ONLY : rhoofr, dforce, compute_stress, vofrho, nlfl_bgrp, prefor
+      use cp_interfaces,            ONLY : nlsm2_bgrp, calbec, caldbec_bgrp, nlfq_bgrp
       USE cp_main_variables,        ONLY : collect_lambda, distribute_lambda, descla, drhor, drhog
       USE descriptors,              ONLY : la_descriptor, ldim_cyclic
       USE mp_global, ONLY:  me_image, my_image_id, nbgrp

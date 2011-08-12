@@ -118,7 +118,7 @@
       USE cp_interfaces,      ONLY: stress_kin, enkin
       USE fft_interfaces,     ONLY: fwfft, invfft
       USE fft_base,           ONLY: dffts, dfftp
-      USE cp_interfaces,      ONLY: checkrho
+      USE cp_interfaces,      ONLY: checkrho, ennl, calrhovan, dennl
       USE cp_main_variables,  ONLY: iprint_stdout
       USE wannier_base,       ONLY: iwf
       USE cp_main_variables,  ONLY: rhopr ! Lingzhu Kong
@@ -146,7 +146,6 @@
       INTEGER  :: iss, isup, isdw, iss1, iss2, ios, i, ir, ig, k
       REAL(DP) :: rsumr(2), rsumg(2), sa1, sa2, detmp(6), mtmp(3,3)
       REAL(DP) :: rnegsum, rmin, rmax, rsum
-      REAL(DP), EXTERNAL :: ennl
       COMPLEX(DP) :: ci,fp,fm
       COMPLEX(DP), ALLOCATABLE :: psi(:), psis(:)
       REAL(DP), ALLOCATABLE :: drhovan(:,:,:,:,:)
@@ -195,7 +194,7 @@
          !
          !     calculation of non-local energy
          !
-         enl = ennl( rhovan, bec_bgrp )
+         CALL ennl( enl, rhovan, bec_bgrp )
          !
          IF( nbgrp > 1 ) THEN
             CALL mp_sum( enl, inter_bgrp_comm )

@@ -7,7 +7,7 @@
 !
 !
 !-----------------------------------------------------------------------
-   subroutine nlsm1 ( n, nspmn, nspmx, eigr, c, becp )
+   subroutine nlsm1_x ( n, nspmn, nspmx, eigr, c, becp )
 !-----------------------------------------------------------------------
 
       !     computes: the array becp
@@ -32,14 +32,14 @@
 !
       implicit none
 
-      integer,   intent(in)  :: n, nspmn, nspmx
-      real(DP), intent(in)  :: eigr( 2, ngw, nat ), c( 2, ngw, n )
-      real(DP), intent(out) :: becp( nkb, n )
+      integer,     intent(in)  :: n, nspmn, nspmx
+      complex(DP), intent(in)  :: eigr( :, : ), c( :, : )
+      real(DP), intent(out) :: becp( :, : )
       !
-      integer   :: isa, ig, is, iv, ia, l, ixr, ixi, inl, i, nhx
-      real(DP)  :: signre, signim, arg
+      integer   :: isa, ig, is, iv, ia, l, inl, i, nhx
       real(DP), allocatable :: becps( :, : )
-      real(DP), allocatable :: wrk2( :, :, : )
+      complex(DP), allocatable :: wrk2( :, : )
+      complex(DP) :: cfact
       !
       call start_clock( 'nlsm1' )
 
@@ -55,7 +55,7 @@
             CYCLE
          END IF
          !
-         allocate( wrk2( 2, ngw, na( is ) ) )
+         allocate( wrk2( ngw, na( is ) ) )
          !
          IF( nproc_bgrp > 1 ) THEN
             nhx = nh( is ) * na( is )
@@ -66,29 +66,19 @@
          !
          do iv = 1, nh( is )
             !
-!$omp parallel default(shared), private(l,ixr,ixi,signre,signim,ig,arg,ia)
+!$omp parallel default(shared), private(l,ig,ia,cfact)
             l = nhtol( iv, is )
             !
             if (l == 0) then
-               ixr = 1
-               ixi = 2
-               signre =  1.0d0
-               signim =  1.0d0
+               cfact =   cmplx( 1.0_dp , 0.0_dp )
             else if (l == 1) then
-               ixr = 2
-               ixi = 1
-               signre =  1.0d0
-               signim = -1.0d0
+               cfact = - cmplx( 0.0_dp , 1.0_dp )
             else if (l == 2) then
-               ixr = 1
-               ixi = 2
-               signre = -1.0d0
-               signim = -1.0d0
+               cfact = - cmplx( 0.0_dp , 1.0_dp )
+               cfact = cfact * cfact
             else if (l == 3) then
-               ixr = 2
-               ixi = 1
-               signre = -1.0d0
-               signim =  1.0d0
+               cfact = - cmplx( 0.0_dp , 1.0_dp )
+               cfact = cfact * cfact * cfact
             endif
 !
 !$omp do
@@ -97,16 +87,13 @@
                !  q = 0   component (with weight 1.0)
                !
                if (gstart == 2) then
-                  wrk2( 1, 1, ia ) = signre*beta(1,iv,is)*eigr(ixr,1,ia+isa)
-                  wrk2( 2, 1, ia ) = signim*beta(1,iv,is)*eigr(ixi,1,ia+isa)
+                  wrk2( 1, ia ) = cfact * beta(1,iv,is) * eigr(1,ia+isa)
                end if
                !
                !   q > 0   components (with weight 2.0)
                !
                do ig = gstart, ngw
-                  arg = 2.0d0 * beta(ig,iv,is)
-                  wrk2( 1, ig, ia ) = signre*arg*eigr(ixr,ig,ia+isa)
-                  wrk2( 2, ig, ia ) = signim*arg*eigr(ixi,ig,ia+isa)
+                  wrk2( ig, ia ) = 2.0d0 * cfact * beta(ig,iv,is) * eigr(ig,ia+isa)
                end do
                !
             end do
@@ -150,12 +137,12 @@
       call stop_clock( 'nlsm1' )
 
       return
-   end subroutine nlsm1
+   end subroutine nlsm1_x
 !-----------------------------------------------------------------------
 
 
 !-------------------------------------------------------------------------
-   subroutine nlsm2_bgrp( ngw, nkb, eigr, c_bgrp, becdr_bgrp, nbspx_bgrp, nbsp_bgrp )
+   subroutine nlsm2_bgrp_x( ngw, nkb, eigr, c_bgrp, becdr_bgrp, nbspx_bgrp, nbsp_bgrp )
 !-----------------------------------------------------------------------
 
       !     computes: the array becdr
@@ -169,7 +156,7 @@
  
       USE kinds,      ONLY : DP
       use ions_base,  only : nsp, na, nat
-      use uspp,       only : nhtol, beta  !, nkb
+      use uspp,       only : nhtol, beta
       use uspp_param, only : nh, ish
       use cell_base,  only : tpiba
       use mp,         only : mp_sum
@@ -178,15 +165,16 @@
 !
       implicit none
     
-      integer,  intent(in)  :: ngw, nkb, nbspx_bgrp, nbsp_bgrp
-      real(DP), intent(in)  :: eigr(2,ngw,nat), c_bgrp(2,ngw,nbspx_bgrp)
-      real(DP), intent(out) :: becdr_bgrp(nkb,nbspx_bgrp,3)
+      integer,     intent(in)  :: ngw, nkb, nbspx_bgrp, nbsp_bgrp
+      complex(DP), intent(in)  :: eigr(:,:), c_bgrp(:,:)
+      real(DP),    intent(out) :: becdr_bgrp(:,:,:)
       !
-      real(DP), allocatable :: gk(:)
-      real(DP), allocatable :: wrk2(:,:,:)
+      real(DP),    allocatable :: gk(:)
+      complex(DP), allocatable :: wrk2(:,:)
       !
-      integer   :: ig, is, iv, ia, k, l, ixr, ixi, inl, isa, i
-      real(DP) :: signre, signim, arg
+      integer  :: ig, is, iv, ia, k, l, inl, isa, i
+      real(DP) :: arg
+      complex(DP) :: cfact
 !
       call start_clock( 'nlsm2' )
 
@@ -204,48 +192,39 @@
 
          do is=1,nsp
 
-            allocate( wrk2( 2, ngw, na( is ) ) )
+            allocate( wrk2( ngw, na( is ) ) )
 
             do iv=1,nh(is)
                !
                !     order of states:  s_1  p_x1  p_z1  p_y1  s_2  p_x2  p_z2  p_y2
                !
-!$omp parallel default(shared), private(l,ixr,ixi,signre,signim,ig,arg,ia)
+!$omp parallel default(none), shared(na,nhtol,gstart,wrk2,gk,beta,eigr,ngw,iv,is,isa), private(l,cfact,ig,arg,ia)
                l=nhtol(iv,is)
-               if (l.eq.0) then
-                  ixr = 2
-                  ixi = 1
-                  signre =  1.0d0
-                  signim = -1.0d0
-               else if (l.eq.1) then
-                  ixr = 1
-                  ixi = 2
-                  signre = -1.0d0
-                  signim = -1.0d0
-               else if (l.eq.2) then
-                  ixr = 2
-                  ixi = 1
-                  signre = -1.0d0
-                  signim =  1.0d0
+
+               ! compute (-i)^(l+1)
+               !
+               if (l == 0) then
+                  cfact = - cmplx( 0.0_dp , 1.0_dp )
+               else if (l == 1) then
+                  cfact = - cmplx( 0.0_dp , 1.0_dp )
+                  cfact = cfact * cfact
+               else if (l == 2) then
+                  cfact = - cmplx( 0.0_dp , 1.0_dp )
+                  cfact = cfact * cfact * cfact
                else if (l == 3) then
-                  ixr = 1
-                  ixi = 2
-                  signre =  1.0d0
-                  signim =  1.0d0
+                  cfact =   cmplx( 1.0_dp , 0.0_dp )
                endif
-!    
+
 !$omp do
                do ia=1,na(is)
                   !    q = 0   component (with weight 1.0)
                   if (gstart == 2) then
-                     wrk2(1,1,ia) = signre*gk(1)*beta(1,iv,is)*eigr(ixr,1,ia+isa)
-                     wrk2(2,1,ia) = signim*gk(1)*beta(1,iv,is)*eigr(ixi,1,ia+isa)
+                     wrk2(1,ia) = cfact*gk(1)*beta(1,iv,is)*eigr(1,ia+isa)
                   end if
                   !    q > 0   components (with weight 2.0)
                   do ig=gstart,ngw
                      arg = 2.0d0*gk(ig)*beta(ig,iv,is)
-                     wrk2(1,ig,ia) = signre*arg*eigr(ixr,ig,ia+isa)
-                     wrk2(2,ig,ia) = signim*arg*eigr(ixi,ig,ia+isa)
+                     wrk2(ig,ia) = cfact * arg * eigr(ig,ia+isa)
                   end do
                end do
 !$omp end do
@@ -272,29 +251,30 @@
       call stop_clock( 'nlsm2' )
 !
       return
-   end subroutine nlsm2_bgrp
+   end subroutine nlsm2_bgrp_x
 !-----------------------------------------------------------------------
 
 
 
 !-----------------------------------------------------------------------
-   real(8) function ennl( rhovan, bec_bgrp )
+   SUBROUTINE ennl_x( ennl_val, rhovan, bec_bgrp )
 !-----------------------------------------------------------------------
       !
       ! calculation of nonlocal potential energy term and array rhovan
       !
       use kinds,          only : DP
-      use uspp_param,     only : nhm, nh, ish
-      use uspp,           only : nkb, dvan
+      use uspp_param,     only : nh, ish
+      use uspp,           only : dvan
       use electrons_base, only : nbsp_bgrp, nspin, ispin_bgrp, f_bgrp, nbspx_bgrp
-      use ions_base,      only : nsp, nat, na
+      use ions_base,      only : nsp, na
       !
       implicit none
       !
       ! input
       !
-      real(DP) :: bec_bgrp( nkb, nbspx_bgrp )
-      real(DP) :: rhovan( nhm*(nhm+1)/2, nat, nspin )
+      real(DP), intent(out) :: ennl_val
+      real(DP), intent(out) :: rhovan( :, :, : )
+      real(DP), intent(in)  :: bec_bgrp( :, : )
       !
       ! local
       !
@@ -339,15 +319,15 @@
       end do
 !$omp end parallel
       !
-      ennl = ennl_t
+      ennl_val = ennl_t
       !
       return
-   end function ennl
+   end subroutine ennl_x
 !-----------------------------------------------------------------------
 
 
 !-----------------------------------------------------------------------
-   subroutine calrhovan( rhovan, bec, iwf )
+   subroutine calrhovan_x( rhovan, bec, iwf )
 !-----------------------------------------------------------------------
       !
       ! calculation of rhovan relative to state iwf
@@ -362,8 +342,8 @@
       !
       ! input
       !
-      real(DP) :: bec( nkb, n )
-      real(DP) :: rhovan( nhm*(nhm+1)/2, nat, nspin )
+      real(DP), intent(out) :: rhovan( :, :, : )
+      real(DP), intent(in) :: bec( :, : )
       integer, intent(in) :: iwf
       !
       ! local
@@ -390,13 +370,13 @@
       end do
       !
       return
-   end subroutine calrhovan
+   end subroutine calrhovan_x
 !-----------------------------------------------------------------------
 
 
 
 !-----------------------------------------------------------------------
-   subroutine calbec ( nspmn, nspmx, eigr, c, bec )
+   subroutine calbec_x ( nspmn, nspmx, eigr, c, bec )
 !-----------------------------------------------------------------------
 
       !     this routine calculates array bec
@@ -408,19 +388,18 @@
       !
       
       USE kinds,          ONLY : DP
-      use ions_base,      only : na, nat
+      use ions_base,      only : na
       use io_global,      only : stdout
-      use electrons_base, only : n => nbsp
-      use gvecw,          only : ngw
-      use control_flags,  only : iprint, iverbosity
+      use electrons_base, only : nbsp
+      use control_flags,  only : iverbosity
       use uspp_param,     only : nh, ish
-      use uspp,           only : nkb
+      use cp_interfaces,  only : nlsm1
 !
       implicit none
       !
       integer,     intent(in)  :: nspmn, nspmx
-      real(DP),    intent(out) :: bec( nkb, n )
-      complex(DP), intent(in)  :: c( ngw, n ), eigr( ngw,nat )
+      real(DP),    intent(out) :: bec( :, : )
+      complex(DP), intent(in)  :: c( :, : ), eigr( :, : )
 
       ! local variables
 
@@ -428,7 +407,7 @@
 !
       call start_clock( 'calbec' )
       !
-      call nlsm1( n, nspmn, nspmx, eigr, c, bec )
+      call nlsm1( nbsp, nspmn, nspmx, eigr, c, bec )
 !
       if ( iverbosity > 2 ) then
          WRITE( stdout,*)
@@ -437,18 +416,18 @@
             do ia=1,na(is)
                   WRITE( stdout,'(33x,a,i4)') ' calbec: bec (ia)',ia
                   WRITE( stdout,'(8f9.4)')                                    &
-     &             ((bec(ish(is)+(iv-1)*na(is)+ia,i),iv=1,nh(is)),i=1,n)
+     &             ((bec(ish(is)+(iv-1)*na(is)+ia,i),iv=1,nh(is)),i=1,nbsp)
             end do
          end do
       endif
       call stop_clock( 'calbec' )
 !
       return
-   end subroutine calbec
+   end subroutine calbec_x
 !-----------------------------------------------------------------------
 
 !-----------------------------------------------------------------------
-   subroutine calbec_bgrp ( nspmn, nspmx, eigr, c_bgrp, bec_bgrp )
+   subroutine calbec_bgrp_x ( nspmn, nspmx, eigr, c_bgrp, bec_bgrp )
 !-----------------------------------------------------------------------
 
       !     this routine calculates array bec
@@ -465,12 +444,13 @@
       use gvecw,          only : ngw
       use uspp_param,     only : nh, ish
       use uspp,           only : nkb
+      use cp_interfaces,  only : nlsm1
 !
       implicit none
       !
       integer,     intent(in)  :: nspmn, nspmx
-      real(DP),    intent(out) :: bec_bgrp( nkb, nbspx_bgrp )
-      complex(DP), intent(in)  :: c_bgrp( ngw, nbspx_bgrp ), eigr( ngw,nat )
+      real(DP),    intent(out) :: bec_bgrp( :, : )
+      complex(DP), intent(in)  :: c_bgrp( :, : ), eigr( :, : )
 !
       call start_clock( 'calbec' )
       !
@@ -479,11 +459,11 @@
       call stop_clock( 'calbec' )
 !
       return
-   end subroutine calbec_bgrp
+   end subroutine calbec_bgrp_x
 
 
 !-----------------------------------------------------------------------
-SUBROUTINE caldbec_bgrp( eigr, c_bgrp, dbec )
+SUBROUTINE caldbec_bgrp_x( eigr, c_bgrp, dbec )
   !-----------------------------------------------------------------------
   !
   !     this routine calculates array dbec, derivative of bec:
@@ -510,15 +490,16 @@ SUBROUTINE caldbec_bgrp( eigr, c_bgrp, dbec )
   !
   implicit none
   !
-  complex(DP), intent(in)  :: c_bgrp( ngw, nbspx_bgrp )
-  real(DP),    intent(in)  :: eigr(2,ngw,nat)
-  real(DP),    intent(out) :: dbec( nkb, 2*MAXVAL(descla(:)%nrcx), 3, 3 )
+  complex(DP), intent(in)  :: c_bgrp( :, : )
+  complex(DP), intent(in)  :: eigr(:,:)
+  real(DP),    intent(out) :: dbec( :, :, :, : )
   !
-  real(DP), allocatable :: wrk2(:,:,:), dwrk_bgrp(:,:)
+  complex(DP), allocatable :: wrk2(:,:)
+  real(DP),    allocatable :: dwrk_bgrp(:,:)
   !
-  integer   :: ig, is, iv, ia, l, ixr, ixi, inl, i, j, ii, isa, nanh, iw, iss, nr, ir, istart, nss
+  integer   :: ig, is, iv, ia, l, inl, i, j, ii, isa, nanh, iw, iss, nr, ir, istart, nss
   integer   :: n1, n2, m1, m2, ibgrp_i, nrcx
-  real(DP) :: signre, signim, arg
+  complex(DP) :: cfact
   !
   nrcx = MAXVAL(descla(:)%nrcx)
   !
@@ -530,31 +511,21 @@ SUBROUTINE caldbec_bgrp( eigr, c_bgrp, dbec )
         isa = 0
 
         do is=1,nsp
-           allocate( wrk2( 2, ngw, na(is) ) )
+           allocate( wrk2( ngw, na(is) ) )
            nanh = na(is)*nh(is)
            allocate( dwrk_bgrp( nanh, nbspx_bgrp ) )
            do iv=1,nh(is)
               l=nhtol(iv,is)
               if (l == 0) then
-                 ixr = 1
-                 ixi = 2
-                 signre =  1.0d0
-                 signim =  1.0d0
+                 cfact =   cmplx( 1.0_dp , 0.0_dp )
               else if (l == 1) then
-                 ixr = 2
-                 ixi = 1
-                 signre =  1.0d0
-                 signim = -1.0d0
+                 cfact = - cmplx( 0.0_dp , 1.0_dp )
               else if (l == 2) then
-                 ixr = 1
-                 ixi = 2
-                 signre = -1.0d0
-                 signim = -1.0d0
+                 cfact = - cmplx( 0.0_dp , 1.0_dp )
+                 cfact = cfact * cfact
               else if (l == 3) then
-                 ixr = 2
-                 ixi = 1
-                 signre = -1.0d0
-                 signim =  1.0d0
+                 cfact = - cmplx( 0.0_dp , 1.0_dp )
+                 cfact = cfact * cfact * cfact
               else
                  CALL errore(' caldbec  ', ' l not implemented ', ABS( l ) )
               endif
@@ -562,14 +533,11 @@ SUBROUTINE caldbec_bgrp( eigr, c_bgrp, dbec )
               do ia=1,na(is)
                  if (gstart == 2) then
                     !     q = 0   component (with weight 1.0)
-                    wrk2(1,1,ia)= signre*dbeta(1,iv,is,i,j)*eigr(ixr,1,ia+isa)
-                    wrk2(2,1,ia)= signim*dbeta(1,iv,is,i,j)*eigr(ixi,1,ia+isa)
+                    wrk2(1,ia)= cfact*dbeta(1,iv,is,i,j)*eigr(1,ia+isa)
                  end if
                  !     q > 0   components (with weight 2.0)
                  do ig = gstart, ngw
-                    arg = 2.0d0*dbeta(ig,iv,is,i,j)
-                    wrk2(1,ig,ia) = signre*arg*eigr(ixr,ig,ia+isa)
-                    wrk2(2,ig,ia) = signim*arg*eigr(ixi,ig,ia+isa)
+                    wrk2(ig,ia) = 2.0d0*cfact*dbeta(ig,iv,is,i,j)*eigr(ig,ia+isa)
                  end do
               end do
               inl=(iv-1)*na(is)+1
@@ -609,12 +577,12 @@ SUBROUTINE caldbec_bgrp( eigr, c_bgrp, dbec )
   end if
   !
   return
-end subroutine caldbec_bgrp
+end subroutine caldbec_bgrp_x
 !-----------------------------------------------------------------------
 
 
 !-----------------------------------------------------------------------
-subroutine dennl( bec_bgrp, dbec, drhovan, denl )
+subroutine dennl_x( bec_bgrp, dbec, drhovan, denl )
   !-----------------------------------------------------------------------
   !
   !  compute the contribution of the non local part of the
@@ -635,9 +603,9 @@ subroutine dennl( bec_bgrp, dbec, drhovan, denl )
 
   implicit none
 
-  real(DP), intent(in)  :: dbec( nkb, 2*MAXVAL(descla(:)%nrcx), 3, 3 )
-  real(DP), intent(in)  :: bec_bgrp( nkb, nbspx_bgrp )
-  real(DP), intent(out) :: drhovan( nhm*(nhm+1)/2, nat, nspin, 3, 3 )
+  real(DP), intent(in)  :: dbec( :, :, :, : )
+  real(DP), intent(in)  :: bec_bgrp( :, : )
+  real(DP), intent(out) :: drhovan( :, :, :, :, : )
   real(DP), intent(out) :: denl( 3, 3 )
 
   real(DP) :: dsum(3,3),dsums(2,3,3), detmp(3,3)
@@ -710,14 +678,14 @@ subroutine dennl( bec_bgrp, dbec, drhovan, denl )
 
   !
   return
-end subroutine dennl
+end subroutine dennl_x
 !-----------------------------------------------------------------------
 
 
 
 
 !-----------------------------------------------------------------------
-subroutine nlfq_bgrp( c_bgrp, eigr, bec_bgrp, becdr_bgrp, fion )
+subroutine nlfq_bgrp_x( c_bgrp, eigr, bec_bgrp, becdr_bgrp, fion )
   !-----------------------------------------------------------------------
   !
   !     contribution to fion due to nonlocal part
@@ -731,13 +699,14 @@ subroutine nlfq_bgrp( c_bgrp, eigr, bec_bgrp, becdr_bgrp, fion )
   use constants,      only : pi, fpi
   use mp_global,      only : intra_bgrp_comm, nbgrp, inter_bgrp_comm
   use mp,             only : mp_sum
+  use cp_interfaces,  only : nlsm2_bgrp
   !
   implicit none
   !
-  real(DP),    intent(in)  :: bec_bgrp( nkb, nbspx_bgrp ), c_bgrp( 2, ngw, nbspx_bgrp )
-  real(DP),    intent(out) :: becdr_bgrp( nkb, nbspx_bgrp, 3 )
-  complex(DP), intent(in)  :: eigr( ngw, nat )
-  real(DP),    intent(out) :: fion( 3, nat )
+  COMPLEX(DP), INTENT(IN)  ::  c_bgrp( :, : ), eigr( :, : )
+  REAL(DP),    INTENT(IN)  ::  bec_bgrp( :, : )
+  REAL(DP),    INTENT(OUT)  ::  becdr_bgrp( :, :, : )
+  REAL(DP),    INTENT(OUT) ::  fion( :, : )
   !
   integer  :: k, is, ia, isa, inl, iv, jv, i
   real(DP) :: temp
@@ -834,4 +803,4 @@ subroutine nlfq_bgrp( c_bgrp, eigr, bec_bgrp, becdr_bgrp, fion )
   call stop_clock( 'nlfq' )
   !
   return
-end subroutine nlfq_bgrp
+end subroutine nlfq_bgrp_x

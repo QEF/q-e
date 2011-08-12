@@ -42,10 +42,10 @@ SUBROUTINE from_scratch( )
     USE cg_module,            ONLY : tcg
     USE ensemble_dft,         ONLY : tens, compute_entropy
     USE cp_interfaces,        ONLY : runcp_uspp, runcp_uspp_force_pairing, &
-                                     strucf, phfacs, nlfh, vofrho, nlfl_bgrp
+                                     strucf, phfacs, nlfh, vofrho, nlfl_bgrp, prefor
     USE cp_interfaces,        ONLY : rhoofr, ortho, wave_rand_init, elec_fakekine
-    USE cp_interfaces,        ONLY : compute_stress
-    USE cp_interfaces,        ONLY : print_lambda
+    USE cp_interfaces,        ONLY : compute_stress, dotcsc, calbec_bgrp, caldbec_bgrp
+    USE cp_interfaces,        ONLY : print_lambda, nlfq_bgrp
     USE printout_base,        ONLY : printout_pos
     USE orthogonalize_base,   ONLY : updatc, calphi_bgrp
     USE atoms_type_module,    ONLY : atoms_type

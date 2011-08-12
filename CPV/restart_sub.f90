@@ -26,7 +26,7 @@ SUBROUTINE from_restart( )
    USE printout_base,         ONLY : printout_pos
    USE gvecs,                 ONLY : ngms
    USE gvecw,                 ONLY : ngw
-   USE cp_interfaces,         ONLY : phfacs, strucf
+   USE cp_interfaces,         ONLY : phfacs, strucf, prefor, calbec_bgrp, caldbec_bgrp
    USE energies,              ONLY : eself, dft_energy_type
    USE wave_base,             ONLY : rande_base
    USE efield_module,         ONLY : efield_berry_setup,  tefield, &

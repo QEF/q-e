@@ -253,7 +253,7 @@
       USE control_flags,  ONLY: iprint, iverbosity, ortho_max
       USE control_flags,  ONLY: force_pairing
       USE io_global,      ONLY: stdout, ionode
-      USE cp_interfaces,  ONLY: ortho_gamma, c_bgrp_expand, c_bgrp_pack
+      USE cp_interfaces,  ONLY: ortho_gamma, c_bgrp_expand, c_bgrp_pack, nlsm1
       USE descriptors,    ONLY: la_descriptor
       USE cp_main_variables,  ONLY: collect_bec
       USE mp_global,          ONLY: nproc_bgrp, me_bgrp, intra_bgrp_comm, inter_bgrp_comm  ! DEBUG

@@ -96,6 +96,18 @@
    PUBLIC :: vofrho
    PUBLIC :: enkin
    PUBLIC :: newinit
+   PUBLIC :: prefor
+   PUBLIC :: denlcc
+   PUBLIC :: dotcsc
+   PUBLIC :: nlsm1
+   PUBLIC :: nlsm2_bgrp
+   PUBLIC :: calbec_bgrp
+   PUBLIC :: ennl
+   PUBLIC :: calrhovan
+   PUBLIC :: calbec
+   PUBLIC :: caldbec_bgrp
+   PUBLIC :: dennl
+   PUBLIC :: nlfq_bgrp
 
    ! ------------------------------------ !
 
@@ -908,8 +920,133 @@
          IMPLICIT NONE
          REAL(DP),    INTENT(IN) :: h( 3, 3 )
          INTEGER,     INTENT(IN) :: iverbosity
-      END SUBROUTINE
+      END SUBROUTINE newinit_x
    END INTERFACE
+
+   INTERFACE prefor
+      SUBROUTINE prefor_x( eigr, betae )
+         USE kinds, ONLY: dp
+         IMPLICIT NONE
+         COMPLEX(DP), INTENT(IN) :: eigr( :, : ) 
+         COMPLEX(DP), INTENT(OUT) :: betae( :, : )
+      END SUBROUTINE prefor_x
+   END INTERFACE
+
+   INTERFACE denlcc
+      SUBROUTINE denlcc_x( nnr, nspin, vxcr, sfac, drhocg, dcc )
+         USE kinds, ONLY: dp
+         IMPLICIT NONE
+         INTEGER,     INTENT(IN) :: nnr, nspin
+         REAL(DP),    INTENT(IN) :: vxcr( :, : )
+         COMPLEX(DP), INTENT(IN) :: sfac( :, : ) 
+         REAL(DP),    INTENT(IN) :: drhocg( :, : ) 
+         REAL(DP), INTENT(OUT) ::  dcc( :, : )
+      END SUBROUTINE denlcc_x
+   END INTERFACE
+
+   INTERFACE dotcsc
+      SUBROUTINE dotcsc_x( eigr, cp, ngw, n )
+         USE kinds, ONLY: dp
+         IMPLICIT NONE
+         INTEGER,     INTENT(IN) :: ngw, n
+         COMPLEX(DP), INTENT(IN) :: eigr(:,:), cp(:,:)
+      END SUBROUTINE dotcsc_x
+   END INTERFACE
+
+   INTERFACE nlsm1
+      SUBROUTINE nlsm1_x ( n, nspmn, nspmx, eigr, c, becp )
+         USE kinds,      ONLY : DP
+         IMPLICIT NONE
+         INTEGER,     INTENT(IN)  :: n, nspmn, nspmx
+         COMPLEX(DP), INTENT(IN)  :: eigr( :, : ), c( :, : )
+         REAL(DP),    INTENT(OUT) :: becp( :, : )
+      END SUBROUTINE nlsm1_x 
+   END INTERFACE
+
+   INTERFACE nlsm2_bgrp
+      SUBROUTINE  nlsm2_bgrp_x( ngw, nkb, eigr, c_bgrp, becdr_bgrp, nbspx_bgrp, nbsp_bgrp )
+         USE kinds,      ONLY : DP
+         IMPLICIT NONE
+         INTEGER,     INTENT(IN)  :: ngw, nkb, nbspx_bgrp, nbsp_bgrp
+         COMPLEX(DP), INTENT(IN)  :: eigr( :, : ), c_bgrp( :, : )
+         REAL(DP),    INTENT(OUT) :: becdr_bgrp( :, :, : )
+      END SUBROUTINE nlsm2_bgrp_x
+   END INTERFACE
+
+   INTERFACE calbec_bgrp
+      SUBROUTINE calbec_bgrp_x ( nspmn, nspmx, eigr, c_bgrp, bec_bgrp )
+         USE kinds,      ONLY : DP
+         IMPLICIT NONE
+         INTEGER,     INTENT(IN)  :: nspmn, nspmx
+         COMPLEX(DP), INTENT(IN)  :: eigr( :, : ), c_bgrp( :, : )
+         REAL(DP),    INTENT(OUT) :: bec_bgrp( :, : )
+      END SUBROUTINE calbec_bgrp_x 
+   END INTERFACE
+
+   INTERFACE ennl
+      SUBROUTINE ennl_x( ennl_val, rhovan, bec_bgrp )
+         USE kinds,              ONLY: DP
+         IMPLICIT NONE
+         REAL(DP), INTENT(OUT) :: ennl_val
+         REAL(DP), INTENT(OUT) :: rhovan( :, :, : )
+         REAL(DP), INTENT(IN)  :: bec_bgrp( :, : )
+      END SUBROUTINE ennl_x
+   END INTERFACE
+
+   INTERFACE calrhovan
+      SUBROUTINE calrhovan_x( rhovan, bec, iwf )
+         USE kinds,              ONLY: DP
+         IMPLICIT NONE
+         REAL(DP), INTENT(OUT) :: rhovan( :, :, : )
+         REAL(DP), INTENT(IN)  :: bec( :, : )
+         INTEGER,  INTENT(IN)  :: iwf
+      END SUBROUTINE calrhovan_x
+   END INTERFACE
+
+   INTERFACE calbec
+      SUBROUTINE calbec_x( nspmn, nspmx, eigr, c, bec )
+         USE kinds,              ONLY: DP
+         IMPLICIT NONE
+         INTEGER,     INTENT(IN)  ::  nspmn, nspmx
+         REAL(DP),    INTENT(OUT) ::  bec( :, : )
+         COMPLEX(DP), INTENT(IN)  ::  c( :, : ), eigr( :, : )
+      END SUBROUTINE calbec_x
+   END INTERFACE
+
+   INTERFACE caldbec_bgrp
+      SUBROUTINE caldbec_bgrp_x( eigr, c_bgrp, dbec )
+         USE kinds,              ONLY: DP
+         IMPLICIT NONE
+         COMPLEX(DP), INTENT(IN)  ::  c_bgrp( :, : ), eigr( :, : )
+         REAL(DP),    INTENT(OUT) ::  dbec( :, :, :, : )
+      END SUBROUTINE caldbec_bgrp_x
+   END INTERFACE
+
+   INTERFACE dennl
+      SUBROUTINE dennl_x( bec_bgrp, dbec, drhovan, denl )
+         USE kinds,              ONLY: DP
+         IMPLICIT NONE
+         REAL(DP),    INTENT(IN)  ::  dbec( :, :, :, : )
+         REAL(DP),    INTENT(IN)  ::  bec_bgrp( :, : )
+         REAL(DP),    INTENT(OUT) ::  drhovan( :, :, :, :, : )
+         REAL(DP),    INTENT(OUT) ::  denl( 3, 3 )
+      END SUBROUTINE dennl_x
+   END INTERFACE
+
+   INTERFACE nlfq_bgrp
+      SUBROUTINE nlfq_bgrp_x( c_bgrp, eigr, bec_bgrp, becdr_bgrp, fion )
+         USE kinds,              ONLY: DP
+         IMPLICIT NONE
+         COMPLEX(DP), INTENT(IN)  ::  c_bgrp( :, : ), eigr( :, : )
+         REAL(DP),    INTENT(IN)  ::  bec_bgrp( :, : )
+         REAL(DP),    INTENT(OUT) ::  becdr_bgrp( :, :, : )
+         REAL(DP),    INTENT(OUT) ::  fion( :, : )
+      END SUBROUTINE nlfq_bgrp_x
+   END INTERFACE
+
+
+!=----------------------------------------------------------------------------=!
+
 !=----------------------------------------------------------------------------=!
    END MODULE
 !=----------------------------------------------------------------------------=!

@@ -30,7 +30,7 @@
       use kinds,           ONLY : DP
       use constants,       ONLY : au_gpa
       USE sic_module,      ONLY : self_interaction, sic_alpha
-      USE cp_interfaces,   ONLY : fillgrad
+      USE cp_interfaces,   ONLY : fillgrad, denlcc
       use cp_main_variables,    only : drhor
 !
       implicit none
