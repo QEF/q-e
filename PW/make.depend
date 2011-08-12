@@ -341,7 +341,6 @@ dynamics_module.o : ../Modules/cell_base.o
 dynamics_module.o : ../Modules/constants.o
 dynamics_module.o : ../Modules/constraints_module.o
 dynamics_module.o : ../Modules/control_flags.o
-dynamics_module.o : ../Modules/input_parameters.o
 dynamics_module.o : ../Modules/io_files.o
 dynamics_module.o : ../Modules/io_global.o
 dynamics_module.o : ../Modules/ions_base.o

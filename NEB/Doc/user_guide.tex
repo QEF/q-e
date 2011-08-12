@@ -1,0 +1,587 @@
+\documentclass[12pt,a4paper]{article}
+\def\version{4.3.2}
+\def\qe{{\sc Quantum ESPRESSO}}
+\def\neb{{\sc Nudged Elastic Band}}
+\usepackage{html}
+
+% BEWARE: don't revert from graphicx for epsfig, because latex2html
+% doesn't handle epsfig commands !!!
+\usepackage{graphicx}
+
+\textwidth = 17cm
+\textheight = 24cm
+\topmargin =-1 cm
+\oddsidemargin = 0 cm
+
+\def\pwx{\texttt{pw.x}}
+\def\cpx{\texttt{cp.x}}
+\def\phx{\texttt{ph.x}}
+\def\nebx{\texttt{neb.x}}
+\def\configure{\texttt{configure}}
+\def\PWscf{\texttt{PWscf}}
+\def\PHonon{\texttt{PHonon}}
+\def\CP{\texttt{CP}}
+\def\PostProc{\texttt{PostProc}}
+\def\make{\texttt{make}}
+
+\begin{document} 
+\author{}
+\date{}
+
+\def\qeImage{../../Doc/quantum_espresso.pdf}
+\def\democritosImage{../../Doc/democritos.pdf}
+
+\begin{htmlonly}
+\def\qeImage{../../Doc/quantum_espresso.png}
+\def\democritosImage{../../Doc/democritos.png}
+\end{htmlonly}
+
+\title{
+  \includegraphics[width=5cm]{\qeImage} \hskip 2cm
+  \includegraphics[width=6cm]{\democritosImage}\\
+  \vskip 1cm
+  % title
+  \Huge User's Guide for \neb \ \smallskip
+  \Large (version \version)
+}
+%\endhtmlonly
+
+%\latexonly
+%\title{
+% \epsfig{figure=quantum_espresso.png,width=5cm}\hskip 2cm
+% \epsfig{figure=democritos.png,width=6cm}\vskip 1cm
+%  % title
+%  \Huge User's Guide for \qe \smallskip
+%  \Large (version \version)
+%}
+%\endlatexonly
+
+\maketitle
+
+\tableofcontents
+
+\section{Introduction}
+
+This guide covers the installation and usage of \qe\ (opEn-Source 
+Package for Research in Electronic Structure, Simulation,
+and Optimization), version \version.
+
+  \texttt{NEB}:
+        energy barriers and reaction pathways through the Nudged Elastic Band method.
+The following auxiliary codes are included as well:
+A copy of required external libraries are included:
+
+The \qe\ codes work on many different types of Unix machines,
+including parallel machines using both OpenMP and MPI 
+(Message Passing Interface).
+Running \qe\ on Mac OS X and MS-Windows is also possible: 
+see section \ref{Sec:Installation}.
+
+Further documentation, beyond what is provided in this guide, can be found in:
+
+This guide does not explain the basic Unix concepts (shell, execution 
+path, directories etc.) and utilities needed to run \qe; it does not 
+explain either solid state physics and its computational methods.
+If you want to learn the latter, you should read a good textbook, 
+such as e.g. the book by Richard Martin:
+
+All trademarks mentioned in this guide belong to their respective owners.
+
+\texttt{NEB} calculates reaction pathways and energy barriers 
+using the Nudged Elastic Band (NEB) and Fourier String Method Dynamics 
+(SMD) methods. Note that these calculations are no longer performed
+by the \pwx\ executable of \PWscf. Also note that NEB with Car-Parrinello
+Molecular Dynamics is currently not implemented.
+
+  Carlo Sbraccia (Princeton) for NEB, Strings method,
+  for improvements to structural optimization
+  and to many other parts;
+
+
+\qe\ is free software, released under the 
+GNU General Public License. See
+\texttt{http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt}, 
+or the file License in the distribution).
+    
+We shall greatly appreciate if scientific work done using this code will 
+contain an explicit acknowledgment and the following reference:
+\begin{quote}
+P. Giannozzi, S. Baroni, N. Bonini, M. Calandra, R. Car, C. Cavazzoni,
+D. Ceresoli, G. L. Chiarotti, M. Cococcioni, I. Dabo, A. Dal Corso,
+S. Fabris, G. Fratesi, S. de Gironcoli, R. Gebauer, U. Gerstmann,
+C. Gougoussis, A. Kokalj, M. Lazzeri, L. Martin-Samos, N. Marzari,
+F. Mauri, R. Mazzarello, S. Paolini, A. Pasquarello, L. Paulatto,
+C. Sbraccia, S. Scandolo, G. Sclauzero, A. P. Seitsonen, A. Smogunov,
+P. Umari, R. M. Wentzcovitch, J.Phys.:Condens.Matter 21, 395502 (2009),
+http://arxiv.org/abs/0906.2569
+\end{quote}
+\section{Installation}
+
+\subsection{Download}
+ 
+is automatically downloaded from \texttt{http://qe-forge.org/frs/?group\_id=37}
+and compiled by typing \texttt{make gipaw} from the main espresso directory.
+
+\subsection{Prerequisites}
+\label{Sec:Installation}
+
+To install \qe\ from source, you need first of all a minimal Unix 
+environment: basically, a command shell (e.g.,
+bash or tcsh) and the utilities \make, \texttt{awk}, \texttt{sed}.
+ MS-Windows users need
+
+\subsection{\configure}
+
+To install the \qe\ source package, run the \configure\
+Symlinks to executable programs will be placed in the
+\texttt{bin/}
+subdirectory. Note that both C and Fortran compilers must be in your execution
+path, as specified in the PATH environment variable.
+
+\subsection{Libraries}
+\label{Sec:Libraries}
+
+\qe\ makes use of the following external libraries:
+\begin{itemize}
+\item BLAS (\texttt{http://www.netlib.org/blas/}) and 
+\item LAPACK (\texttt{http://www.netlib.org/lapack/}) for linear algebra 
+\item FFTW (\texttt{http://www.fftw.org/}) for Fast Fourier Transforms
+\end{itemize}
+A copy of the needed routines is provided with the distribution. However,
+when available, optimized vendor-specific libraries should be used: this
+often yields huge performance gains.
+
+\qe\ can use the following architecture-specific replacements for BLAS and LAPACK:\\
+
+\qe\ has an internal copy of an old FFTW version, and it 
+can use the following vendor-specific FFT libraries:
+
+MPI libraries are usually needed for parallel execution 
+
+\qe\ can use the MASS vector math
+library from IBM, if available (only on AIX).
+
+\subsection{Compilation}
+
+\begin{itemize}
+\item \texttt{make neb} produces the following codes in \texttt{NEB/}
+for NEB calculations:
+\begin{itemize}
+\item \nebx: calculates reaction barriers and pathways using NEB.
+\item \texttt{path\_int.x}: used by utility \texttt{path\_int.sh}
+  that generates, starting from a path (a set of images), a new one with a 
+  different number of images. The initial and final points of the new
+ path can differ from those in the original one. 
+\end{itemize}
+\end{itemize}
+   
+\subsection{Running examples}
+\label{SubSec:Examples}
+As a final check that compilation was successful, you may want to run some or
+all of the examples. You should first of all ensure that you have downloaded 
+
+To run the examples, you should follow this procedure:
+\begin{enumerate}   
+\item Go to the \texttt{examples/} directory and edit the 
+  \texttt{environment\_variables} file, setting the following variables as needed: 
+\begin{quote}
+   BIN\_DIR: directory where executables reside\\
+   PSEUDO\_DIR: directory where pseudopotential files reside\\
+   TMP\_DIR: directory to be used as temporary storage area
+\end{quote}
+\end{enumerate}
+The default values of BIN\_DIR and PSEUDO\_DIR should be fine, 
+unless you have installed things in nonstandard places. TMP\_DIR 
+must be a directory where you have read and write access to, with 
+enough available space to host the temporary files produced by the 
+example runs, and possibly offering high I/O performance (i.e., don't 
+use an NFS-mounted directory). NOTA BENE: do not use a
+directory containing other data, the examples will clean it!
+If you have compiled the parallel version of \qe\ (this
+is the default if parallel libraries are detected), you will usually
+have to specify a driver program (such as \texttt{mpirun} or \texttt{mpiexec}) 
+and the number of processors: see Sec.\ref{SubSec:para} for
+details. In order to do that, edit again the \texttt{environment\_variables} 
+file
+and set the PARA\_PREFIX and PARA\_POSTFIX variables as needed. 
+Parallel executables will be run by a command like this: 
+\begin{verbatim}
+      $PARA_PREFIX pw.x $PARA_POSTFIX < file.in > file.out
+\end{verbatim}
+For example, if the command line is like this (as for an IBM SP):
+\begin{verbatim}
+      poe pw.x -procs 4 < file.in > file.out
+\end{verbatim}
+you should set PARA\_PREFIX="poe", PARA\_POSTFIX="-procs
+4". Furthermore, if your machine does not support interactive use, you
+must run the commands specified below through the batch queuing
+system installed on that machine. Ask your system administrator for
+instructions. 
+To run a single example, go to the corresponding directory (e.g.
+ \texttt{example/example01}) and execute: 
+\begin{verbatim}
+      ./run_example
+\end{verbatim}
+This will create a subdirectory results, containing the input and
+output files generated by the calculation. Some examples take only a
+few seconds to run, while others may require several minutes depending
+on your system.
+
+In each example's directory, the \texttt{reference/} subdirectory contains
+verified output files, that you can check your results against. They
+were generated on a Linux PC using the Intel compiler. On different
+architectures the precise numbers could be slightly different, in
+particular if different FFT dimensions are automatically selected. For
+this reason, a plain diff of your results against the reference data
+doesn't work, or at least, it requires human inspection of the
+results. 
+
+\newpage
+
+\section{Parallelism}
+\label{Sec:para}
+
+\subsection{Understanding Parallelism}
+
+Two different parallelization paradigms are currently implemented 
+in \qe:
+\begin{enumerate}
+\item {\em Message-Passing (MPI)}. A copy of the executable runs 
+on each CPU; each copy lives in a different world, with its own
+private set of data, and communicates with other executables only
+via calls to MPI libraries. MPI parallelization requires compilation 
+for parallel execution, linking with MPI libraries, execution using 
+a launcher program (depending upon the specific machine). The number of CPUs used
+is specified at run-time either as an option to the launcher or
+by the batch queue system. 
+\item {\em OpenMP}.  A single executable spawn subprocesses
+(threads) that perform in parallel specific tasks. 
+OpenMP can be implemented via compiler directives ({\em explicit} 
+OpenMP) or via {\em multithreading} libraries  ({\em library} OpenMP).
+Explicit OpenMP require compilation for OpenMP execution;
+library OpenMP requires only linking to a multithreading
+version of mathematical libraries, e.g.:
+ESSLSMP, ACML\_MP, MKL (the latter is natively multithreading).
+The number of threads is specified at run-time in the environment 
+variable OMP\_NUM\_THREADS. 
+\end{enumerate}
+
+MPI is the well-established, general-purpose parallelization.
+In \qe\ several parallelization levels, specified at run-time
+via command-line options to the executable, are implemented
+with MPI. This is your first choice for execution on a parallel 
+machine.
+
+Library OpenMP is a low-effort parallelization suitable for
+multicore CPUs. Its effectiveness relies upon the quality of 
+the multithreading libraries and the availability of 
+multithreading FFTs. If you are using MKL,\footnote{Beware: 
+MKL v.10.2.2 has a buggy \texttt{dsyev} yielding wrong results 
+with more than one thread; fixed in v.10.2.4}
+you may want to select FFTW3 (set \texttt{CPPFLAGS=-D\_\_FFTW3...}
+in \texttt{make.sys}) and to link with the MKL interface to FFTW3. 
+You will get a decent speedup ($\sim 25$\%) on two cores.
+
+Explicit OpenMP is a very recent addition, still at an 
+experimental stage, devised to increase scalability on
+large multicore parallel machines. Explicit OpenMP is 
+devised to be run together with MPI and also together 
+with multithreaded libraries. BEWARE: you have to be VERY 
+careful to prevent conflicts between the various kinds of
+parallelization. If you don't know how to run MPI processes
+and OpenMP threads in a controlled manner, forget about mixed 
+OpenMP-MPI parallelization.
+
+\subsection{Running on parallel machines}
+\label{SubSec:para}
+
+Parallel execution is strongly system- and installation-dependent. 
+Typically one has to specify:
+\begin{enumerate}
+\item a launcher program (not always needed), 
+such as \texttt{poe}, \texttt{mpirun}, \texttt{mpiexec},
+  with the  appropriate options (if any);
+\item the number of processors, typically as an option to the launcher
+  program, but in some cases to be specified after the name of the
+  program to be
+  executed; 
+\item the program to be executed, with the proper path if needed: for
+  instance, \pwx, or \texttt{./pw.x}, or \texttt{\$HOME/bin/pw.x}, or
+  whatever applies; 
+\item other \qe-specific parallelization options, to be
+  read and interpreted by the running code: 
+\begin{itemize}
+\item the number of ``images'' used by NEB or phonon calculations;
+\item the number of ``pools'' into which processors are to be grouped
+  (\pwx\ only);
+\item the number of ``task groups'' into which processors are to be
+  grouped;
+\item the number of processors performing iterative diagonalization
+  (for \pwx) or orthonormalization (for \cpx).
+\end{itemize}
+\end{enumerate}
+Items 1) and 2) are machine- and installation-dependent, and may be 
+different for interactive and batch execution. Note that large
+parallel machines are  often configured so as to disallow interactive
+execution: if in doubt, ask your system administrator.
+Item 3) also depend on your specific configuration (shell, execution
+path, etc). 
+Item 4) is optional but may be important: see the following section
+for the meaning of the various options.
+
+For illustration, here is how to run \pwx\ on 16 processors partitioned into
+8 pools (2 processors each), for several typical cases. 
+
+IBM SP machines, batch:
+\begin{verbatim}
+   pw.x -npool 8 < input
+\end{verbatim}
+This should also work interactively, with environment variables NPROC
+set to 16, MP\_HOSTFILE set to the file containing a list of processors.
+
+\subsection{Parallelization levels}
+
+Data structures are distributed across processors.
+Processors are organized in a hierarchy of groups, 
+which are identified by different MPI communicators level.
+The groups hierarchy is as follow:
+\begin{verbatim}
+                 /  pools _ task   groups
+  world _ images
+                 \ linear-algebra  groups
+\end{verbatim}
+
+{\bf world}: is the group of all processors (MPI\_COMM\_WORLD).
+
+{\bf images}: Processors can then be divided into different "images",
+corresponding to a point in configuration space (i.e. to
+a different set of atomic positions) for NEB calculations;
+to one (or more than one) "irrep" or wave-vector in phonon
+calculations.
+
+{\bf Communications}:
+Images and pools are loosely coupled and processors communicate
+between different images and pools only once in a while, whereas
+processors within each pool are tightly coupled and communications
+are significant. This means that Gigabit ethernet (typical for
+cheap PC clusters) is ok up to 4-8 processors per pool, but {\em fast}
+communication hardware (e.g. Mirynet or comparable) is absolutely 
+needed beyond 8 processors per pool.
+
+{\bf Choosing parameters}:
+To control the number of processors in each group,
+command line switches: \texttt{-nimage}, \texttt{-npools},
+\texttt{-ntg}, \texttt{northo} (for \cpx) or \texttt{-ndiag}
+(for \pwx) are used.
+As an example consider the following command line:
+\begin{verbatim}
+mpirun -np 4096 ./pw.x -nimage 8 -npool 2 -ntg 8 -ndiag 144 -input my.input
+\end{verbatim}
+This executes \PWscf\ on 4096 processors, to simulate a system
+with 8 images, each of which is distributed across 512 processors.
+k-points are distributed across 2 pools of 256 processors each, 
+3D FFT is performed using 8 task groups (64 processors each, so
+the 3D real-space grid is cut into 64 slices), and the diagonalization
+of the subspace Hamiltonian is distributed to a square grid of 144
+processors (12x12).
+
+Default values are: \texttt{-nimage 1 -npool 1 -ntg 1} ; 
+\texttt{ndiag} is set to 1 if ScaLAPACK is not compiled,
+it is set to the square integer smaller than or equal to  half the number 
+of processors of each pool.
+
+\newpage
+
+\section{Using \qe}
+
+Input files for \PWscf\ codes may be either written by hand 
+or produced via the \texttt{PWgui} graphical interface by Anton Kokalj, 
+included in the \qe\ distribution. See \texttt{PWgui-x.y.z/INSTALL}
+(where x.y.z is the version number) for more info on \texttt{PWgui}, 
+or \texttt{GUI/README} if you are using SVN sources.
+    
+You may take the examples distributed with \qe\ as
+templates for writing your own input files: see Sec.\ref{SubSec:Examples}.
+In the following, whenever we mention "Example N", we refer to those. 
+Input files are those in the \texttt{results/} subdirectories, with names ending
+with \texttt{.in} 
+(they will appear after you have run the examples).
+    
+
+\subsection{Input data}
+
+Input data for the basic codes of the \qe\ distribution, \pwx\ and \cpx,
+is organized as several namelists, followed by other fields
+introduced by keywords. The namelists are
+
+
+\subsection{Data files}
+
+The output data files are written in the directory specified by variable
+\texttt{outdir}, with names specified by variable \texttt{prefix} (a string that is prepended
+to all file names, whose default value is: \texttt{prefix='pwscf'}). The \texttt{iotk}
+toolkit is used to write the file in a XML format, whose definition can
+be found in the Developer Manual. In order to use the data directory
+on a different machine, you need to convert the binary files to formatted
+and back, using the \texttt{bin/iotk} script.
+
+
+\section{NEB calculations}
+
+{\bf Reminder 1:} NEB calculations are no longer performed by \pwx.
+In order to perform a NEB calculation, you should compile
+\texttt{NEB/neb.x} (command \texttt{make neb}). 
+
+\noindent {\bf  Reminder 2:} \nebx\ does not read from standard input.
+You cannot use input redirection, as in \texttt{neb.x < neb.in ...}.
+
+A NEB calculation can be run in two different ways:
+\begin{enumerate}
+\item by reading a single input file, to be specified using command-line 
+options \texttt{neb.x -inp} or \texttt{neb.x -input};
+\item by specifying the number $N$ of images (i.e. points in the 
+configuration space), using command-line option 
+\texttt{neb.x -input\_images N}, and providing input data in 
+a \texttt{neb.dat} file and in files \texttt{pw\_X.in}, $X=1,...,N$.
+\end{enumerate}
+
+For case 1) the input file contains KEYWORDS (see below for format 
+specifications). 
+These KEYWORDS enable the code to distinguish which part of the file 
+contains NEB-specific data and which parts contains input data for the
+energy and force computational engine (currently only PW).
+After the parsing, different files are generated: \texttt{neb.dat}, with
+NEB-specific input data, and a set of PWscf input files 
+\texttt{pw\_1.in},..,\texttt{pw\_N.in} PWscf input files, one for each
+set of atomic position. All options for a single SCF calculation apply.
+
+The general structure of the file to be parsed is:
+
+\begin{verbatim}
+BEGIN
+BEGIN_PATH_INPUT
+~... neb specific namelists and cards
+END_PATH_INPUT
+BEGIN_ENGINE_INPUT
+BEGIN_ENGINE_INPUT
+~...pw specific namelists and cards
+BEGIN_POSITIONS
+FIRST_IMAGE
+~...pw ATOMIC_POSITIONS card
+INTERMEDIATE_IMAGE
+~...pw ATOMIC_POSITIONS card
+LAST_IMAGE
+~...pw ATOMIC_POSITIONS card
+END_POSITIONS
+~... other pw specific cards
+END_ENGINE_INPUT
+END
+\end{verbatim}
+
+For case 2), the \texttt{neb.dat} file and all \texttt{pw\_X.in} 
+should be already present. 
+
+A detailed description of all NEB-specific input variables 
+is contained in files \texttt{Doc/INPUT\_NEB.*}. See Example 17. 
+
+A NEB calculation will produce a number of files in the current directory
+(i.e. in the directory were the code is run) containing additional information
+on the minimum-energy path. The files are organized as following
+(where \texttt{prefix} is specified in the input file):
+\begin{description}
+\item[\texttt{prefix.dat}]
+is a three-column file containing the position of each image on the reaction
+coordinate (arb. units), its energy in eV relative to the energy of the first image
+and the residual error for the image in eV/$a_0$.
+\item[\texttt{prefix.int}]
+contains an interpolation of the path energy profile that pass exactly through each
+image; it is computed using both the image energies and their derivatives
+\item[\texttt{prefix.path}]
+information used by \qe\ 
+to restart a path calculation, its format depends on the input
+details and is undocumented
+\item[\texttt{prefix.axsf}]
+atomic positions of all path images in the XCrySDen animation format:
+to visualize it, use \texttt{xcrysden -\--axsf prefix.axsf}
+\item[\texttt{prefix.xyz}]
+atomic positions of all path images in the generic xyz format, used by
+many quantum-chemistry softwares
+\item[\texttt{prefix.crd}]
+path information in the input format used by \pwx, suitable for a manual
+restart of the calculation
+\end{description}
+
+"NEB calculation are a bit tricky in general and require extreme care to be
+setup correctly. NEB also takes easily hundreds of iteration to converge,
+of course depending on the number of atoms and of images. Here is some
+free advice:
+\begin{enumerate}
+\item 
+Don't use Climbing Image (CI) from the beginning. It makes convergence slower, 
+especially if the special image changes during the convergence process (this 
+may happen if \texttt{CI\_scheme='auto'} and if it does it may mess up everything).
+Converge your calculation, then restart from the last configuration with
+CI option enabled (note that this will {\em increase} the barrier).
+\item
+Carefully choose the initial path. Remember that \qe\ assumes continuity
+between the first and the last image at the initial condition. In other 
+words, periodic images are NOT used; you may have to manually translate
+an atom by one or more unit cell base vectors in order to have a meaningful
+initial path. You can visualize NEB input files with XCrySDen as animations,
+take some time to check if any atoms overlap or get very close in the initial
+path (you will have to add intermediate images, in this case).
+\item
+Try to start the NEB process with most atomic positions fixed, 
+in order to converge the more "problematic" ones, before leaving
+all atoms move.
+\item
+Especially for larger systems, you can start NEB with lower accuracy 
+(less k-points, lower cutoff) and then increase it when it has
+converged to refine your calculation.
+\item
+Use the Broyden algorithm instead of the default one: it is a bit more
+fragile, but it removes the problem of "oscillations" in the calculated
+activation energies. If these oscillations persist, and you cannot afford 
+more images, focus to a smaller problem, decompose it into pieces.
+\item
+A gross estimate of the required number of iterations is
+(number of images) * (number of atoms) * 3. Atoms that do not
+move should not be counted. It may take half that many iterations, 
+or twice as many, but more or less that's the order of magnitude, 
+unless one starts from a very good or very bad initial guess.
+\end{enumerate}
+(Courtesy of Lorenzo Paulatto)
+
+\section{Performances}
+
+\subsection{Execution time}
+
+Since v.4.2 \qe\ prints real (wall) time instead of CPU time.
+
+The following is a rough estimate of the complexity of a plain
+scf calculation with \pwx, for NCPP. USPP and PAW 
+
+\subsection{File space requirements}
+
+A typical \pwx\ run will require an amount of temporary disk space in the
+order of O double precision complex numbers:
+$$O = N_k M N + q N_{r1} N_{r2}N_{r3}$$
+
+\section{Troubleshooting}
+
+Almost all problems in \qe\ arise from incorrect input data 
+and result in
+error stops. Error messages should be self-explanatory, but unfortunately
+this is not always true. If the code issues a warning messages and continues,
+pay attention to it but do not assume that something is necessarily wrong in
+your calculation: most warning messages signal harmless problems.
+
+\paragraph{errors in examples with parallel execution}
+
+If you get error messages in the example scripts -- i.e. not errors in
+the codes -- on a parallel machine, such as e.g.: 
+{\em run example: -n: command not found}
+you may have forgotten 
+the " " in the definitions of PARA\_PREFIX and PARA\_POSTFIX.
+
+\end{document}

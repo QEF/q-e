@@ -1,0 +1,70 @@
+# Makefile for NEB
+
+include ../../make.sys
+
+# location of needed modules
+MODFLAGS= $(MOD_FLAG)../../iotk/src \
+	  $(MOD_FLAG)../../Modules \
+	  $(MOD_FLAG)../../PW $(MOD_FLAG).
+
+#location of needed libraries
+LIBOBJS= ../../iotk/src/libiotk.a ../../flib/flib.a \
+         ../../clib/clib.a ../../flib/ptools.a
+
+NEBOBJS = \
+neb.o \
+compute_scf.o
+
+NEBLIBS = \
+engine_to_path_pos.o \
+engine_to_path_alat.o \
+engine_to_path_nat.o \
+engine_to_path_fix_atom_pos.o \
+input.o \
+path_base.o \
+path_formats.o \
+path_gen_inputs.o \
+path_input_parameters_module.o \
+path_io_routines.o \
+path_io_tools.o \
+path_io_units_module.o \
+path_opt_routines.o \
+path_reparametrisation.o \
+path_read_cards_module.o \
+path_read_namelists_module.o \
+path_to_engine_fix_atom_pos.o \
+path_to_engine_mp.o \
+path_variables.o \
+set_defaults.o \
+stop_run_path.o 
+
+QEMODS=../../Modules/libqemod.a
+PWOBJS= ../../PW/libpw.a
+
+TLDEPS=bindir mods libs liblapack libblas pw
+
+all : tldeps neb.x path_interpolation.x
+
+neb.x : $(NEBOBJS) libneb.a $(LIBOBJS) $(PWOBJS) $(QEMODS)
+	$(LD) $(LDFLAGS) -o $@ \
+	$(NEBOBJS) libneb.a $(PWOBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
+	- ( cd ../../bin; ln -fs ../NEB/src/$@ . )
+
+path_interpolation.x : path_interpolation.o $(PWOBJS) $(QEMODS) $(LIBOBJS)
+	$(LD) $(LDFLAGS) -o $@ \
+	path_interpolation.o $(PWOBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
+	- ( cd ../../bin ; ln -fs ../NEB/src/$@ . )
+
+libneb.a : $(NEBLIBS)
+	$(AR) $(ARFLAGS) $@ $?
+	$(RANLIB) $@
+
+tldeps:
+	test -n "$(TLDEPS)" && ( cd ../.. ; $(MAKE) $(MFLAGS) $(TLDEPS) || exit 1) || :
+
+clean :
+	- /bin/rm -f *.x *.o *.a *~ *.F90 *.d *.mod *.i *.L
+	- /bin/rm -f ../../bin/neb.x
+	- /bin/rm -f ../../bin/path_interpolation.x
+
+include make.depend

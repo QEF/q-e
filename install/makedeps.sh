@@ -13,7 +13,7 @@ if test $# = 0
 then
     dirs=" Modules clib PW CPV flib pwtools upftools PP PWCOND \
            Gamma PH D3 atomic VdW XSpectra//src \
-	   GWW//gww GWW//pw4gww GWW//head ACFDT NEB Solvent" 
+	   GWW//gww GWW//pw4gww GWW//head ACFDT NEB//src Solvent" 
           
 else
     dirs=$*
@@ -43,8 +43,8 @@ do
 	GWW/head )
                   DEPENDS="../../include ../../iotk/src ../../Modules \
 		  ../../PW ../../PH ../pw4gww " ;;
-	NEB )
-		  DEPENDS="$DEPENDS ../Modules ../PW" ;;
+	NEB/src )
+		  DEPENDS="../../include ../../iotk/src ../../Modules ../../PW" ;;
 
     esac
 

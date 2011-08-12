@@ -8,7 +8,7 @@ EXAMPLE_DIR=`pwd`
 if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
 
 # function to test the exit status of a job
-. ../check_failure.sh
+. ../../check_failure.sh
 
 $ECHO
 $ECHO "$EXAMPLE_DIR : starting"
@@ -23,7 +23,7 @@ $ECHO
 $ECHO "xml format is automatically detected."
 
 # set the needed environment variables
-. ../environment_variables
+. ../../environment_variables
 
 # required executables and pseudopotentials
 BIN_LIST="neb.x"
