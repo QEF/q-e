@@ -140,7 +140,7 @@ or patch some \qe\ routines can be installed as {\em plug-ins}:
       Available at \texttt{http://qe-forge.org/frs/?group\_id=37}
       (see also \texttt{http://www.gipaw.net}).
 \end{itemize}
-This guide documents \PWscf, \texttt{NEB}, \CP, \PHonon, \PostProc.
+This guide documents \PWscf, \CP, \PHonon, \PostProc.
 The remaining packages have separate documentation.
 
 The \qe\ codes work on many different types of Unix machines,
@@ -2446,132 +2446,6 @@ file formats used by the two codes.
 \texttt{CASINO} uses the `\texttt{CASINO} tabulated format', \texttt{PWSCF} officially supports 
 the UPFv2 format (though it will read other `deprecated' formats).
 This can be done through the `casino2upf' and `upf2casino' tools included in the upftools directory (see the upftools/README file for instructions). An alternative converter `casinogon' is included in the \texttt{CASINO} distribution which produces the deprecated GON format but which can be useful when using non-standard grids.
-
-\section{NEB calculations}
-
-{\bf Reminder 1:} NEB calculations are no longer performed by \pwx.
-In order to perform a NEB calculation, you should compile
-\texttt{NEB/neb.x} (command \texttt{make neb}). 
-
-\noindent {\bf  Reminder 2:} \nebx\ does not read from standard input.
-You cannot use input redirection, as in \texttt{neb.x < neb.in ...}.
-
-A NEB calculation can be run in two different ways:
-\begin{enumerate}
-\item by reading a single input file, to be specified using command-line 
-options \texttt{neb.x -inp} or \texttt{neb.x -input};
-\item by specifying the number $N$ of images (i.e. points in the 
-configuration space), using command-line option 
-\texttt{neb.x -input\_images N}, and providing input data in 
-a \texttt{neb.dat} file and in files \texttt{pw\_X.in}, $X=1,...,N$.
-\end{enumerate}
-
-For case 1) the input file contains KEYWORDS (see below for format 
-specifications). 
-These KEYWORDS enable the code to distinguish which part of the file 
-contains NEB-specific data and which parts contains input data for the
-energy and force computational engine (currently only PW).
-After the parsing, different files are generated: \texttt{neb.dat}, with
-NEB-specific input data, and a set of PWscf input files 
-\texttt{pw\_1.in},..,\texttt{pw\_N.in} PWscf input files, one for each
-set of atomic position. All options for a single SCF calculation apply.
-
-The general structure of the file to be parsed is:
-
-\begin{verbatim}
-BEGIN
-BEGIN_PATH_INPUT
-~... neb specific namelists and cards
-END_PATH_INPUT
-BEGIN_ENGINE_INPUT
-BEGIN_ENGINE_INPUT
-~...pw specific namelists and cards
-BEGIN_POSITIONS
-FIRST_IMAGE
-~...pw ATOMIC_POSITIONS card
-INTERMEDIATE_IMAGE
-~...pw ATOMIC_POSITIONS card
-LAST_IMAGE
-~...pw ATOMIC_POSITIONS card
-END_POSITIONS
-~... other pw specific cards
-END_ENGINE_INPUT
-END
-\end{verbatim}
-
-For case 2), the \texttt{neb.dat} file and all \texttt{pw\_X.in} 
-should be already present. 
-
-A detailed description of all NEB-specific input variables 
-is contained in files \texttt{Doc/INPUT\_NEB.*}. See Example 17. 
-
-A NEB calculation will produce a number of files in the current directory
-(i.e. in the directory were the code is run) containing additional information
-on the minimum-energy path. The files are organized as following
-(where \texttt{prefix} is specified in the input file):
-\begin{description}
-\item[\texttt{prefix.dat}]
-is a three-column file containing the position of each image on the reaction
-coordinate (arb. units), its energy in eV relative to the energy of the first image
-and the residual error for the image in eV/$a_0$.
-\item[\texttt{prefix.int}]
-contains an interpolation of the path energy profile that pass exactly through each
-image; it is computed using both the image energies and their derivatives
-\item[\texttt{prefix.path}]
-information used by \qe\ 
-to restart a path calculation, its format depends on the input
-details and is undocumented
-\item[\texttt{prefix.axsf}]
-atomic positions of all path images in the XCrySDen animation format:
-to visualize it, use \texttt{xcrysden -\--axsf prefix.axsf}
-\item[\texttt{prefix.xyz}]
-atomic positions of all path images in the generic xyz format, used by
-many quantum-chemistry softwares
-\item[\texttt{prefix.crd}]
-path information in the input format used by \pwx, suitable for a manual
-restart of the calculation
-\end{description}
-
-"NEB calculation are a bit tricky in general and require extreme care to be
-setup correctly. NEB also takes easily hundreds of iteration to converge,
-of course depending on the number of atoms and of images. Here is some
-free advice:
-\begin{enumerate}
-\item 
-Don't use Climbing Image (CI) from the beginning. It makes convergence slower, 
-especially if the special image changes during the convergence process (this 
-may happen if \texttt{CI\_scheme='auto'} and if it does it may mess up everything).
-Converge your calculation, then restart from the last configuration with
-CI option enabled (note that this will {\em increase} the barrier).
-\item
-Carefully choose the initial path. Remember that \qe\ assumes continuity
-between the first and the last image at the initial condition. In other 
-words, periodic images are NOT used; you may have to manually translate
-an atom by one or more unit cell base vectors in order to have a meaningful
-initial path. You can visualize NEB input files with XCrySDen as animations,
-take some time to check if any atoms overlap or get very close in the initial
-path (you will have to add intermediate images, in this case).
-\item
-Try to start the NEB process with most atomic positions fixed, 
-in order to converge the more "problematic" ones, before leaving
-all atoms move.
-\item
-Especially for larger systems, you can start NEB with lower accuracy 
-(less k-points, lower cutoff) and then increase it when it has
-converged to refine your calculation.
-\item
-Use the Broyden algorithm instead of the default one: it is a bit more
-fragile, but it removes the problem of "oscillations" in the calculated
-activation energies. If these oscillations persist, and you cannot afford 
-more images, focus to a smaller problem, decompose it into pieces.
-\item
-A gross estimate of the required number of iterations is
-(number of images) * (number of atoms) * 3. Atoms that do not
-move should not be counted. It may take half that many iterations, 
-or twice as many, but more or less that's the order of magnitude, 
-unless one starts from a very good or very bad initial guess.
-\end{enumerate}
-(Courtesy of Lorenzo Paulatto)
 
 \section{Phonon calculations}
 
