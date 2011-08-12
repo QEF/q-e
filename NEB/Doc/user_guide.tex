@@ -1,7 +1,7 @@
 \documentclass[12pt,a4paper]{article}
 \def\version{4.3.2}
 \def\qe{{\sc Quantum ESPRESSO}}
-\def\neb{{\sc Nudged Elastic Band}}
+\def\neb{{\sc NEB}}
 \usepackage{html}
 
 % BEWARE: don't revert from graphicx for epsfig, because latex2html
@@ -62,44 +62,24 @@
 
 \section{Introduction}
 
-This guide covers the installation and usage of \qe\ (opEn-Source 
-Package for Research in Electronic Structure, Simulation,
-and Optimization), version \version.
+This guide covers the installation and usage of \neb \ (opEn-Source 
+Package for energy barriers and reaction pathway calculations through the
+Nudged Elastic Band method
+, version \version.
 
-  \texttt{NEB}:
-        energy barriers and reaction pathways through the Nudged Elastic Band method.
-The following auxiliary codes are included as well:
-A copy of required external libraries are included:
+\neb \ is part of the \qe \ distribution and can not be compiled nor used independently.
 
-The \qe\ codes work on many different types of Unix machines,
-including parallel machines using both OpenMP and MPI 
-(Message Passing Interface).
-Running \qe\ on Mac OS X and MS-Windows is also possible: 
-see section \ref{Sec:Installation}.
-
-Further documentation, beyond what is provided in this guide, can be found in:
-
-This guide does not explain the basic Unix concepts (shell, execution 
-path, directories etc.) and utilities needed to run \qe; it does not 
-explain either solid state physics and its computational methods.
-If you want to learn the latter, you should read a good textbook, 
-such as e.g. the book by Richard Martin:
-
-All trademarks mentioned in this guide belong to their respective owners.
-
-\texttt{NEB} calculates reaction pathways and energy barriers 
+\neb \ calculates reaction pathways and energy barriers 
 using the Nudged Elastic Band (NEB) and Fourier String Method Dynamics 
 (SMD) methods. Note that these calculations are no longer performed
 by the \pwx\ executable of \PWscf. Also note that NEB with Car-Parrinello
 Molecular Dynamics is currently not implemented.
 
-  Carlo Sbraccia (Princeton) for NEB, Strings method,
-  for improvements to structural optimization
-  and to many other parts;
+The original \qe \ implementation of the Nudged Elastic Band and 
+String Method Dynamics was developed by Carlo Sbraccia (Princeton).
 
-
-\qe\ is free software, released under the 
-GNU General Public License. See
+\neb\ is free software, released under the 
+GNU General Public License. \\ See
 \texttt{http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt}, 
 or the file License in the distribution).
     
@@ -115,57 +95,36 @@ C. Sbraccia, S. Scandolo, G. Sclauzero, A. P. Seitsonen, A. Smogunov,
 P. Umari, R. M. Wentzcovitch, J.Phys.:Condens.Matter 21, 395502 (2009),
 http://arxiv.org/abs/0906.2569
 \end{quote}
+
+All trademarks mentioned in this guide belong to their respective owners.
+
 \section{Installation}
 
 \subsection{Download}
  
 is automatically downloaded from \texttt{http://qe-forge.org/frs/?group\_id=37}
-and compiled by typing \texttt{make gipaw} from the main espresso directory.
+
 
 \subsection{Prerequisites}
 \label{Sec:Installation}
 
-To install \qe\ from source, you need first of all a minimal Unix 
-environment: basically, a command shell (e.g.,
-bash or tcsh) and the utilities \make, \texttt{awk}, \texttt{sed}.
- MS-Windows users need
+To install \neb\ from source, you need first of all a minimal Unix 
+environment and the \qe \ distribution.
 
 \subsection{\configure}
 
-To install the \qe\ source package, run the \configure\
-Symlinks to executable programs will be placed in the
-\texttt{bin/}
-subdirectory. Note that both C and Fortran compilers must be in your execution
-path, as specified in the PATH environment variable.
+For instruction on how to install the \qe\ source package please refer to
+the \qe \ general documentation (user\_guide) that is available at
+\begin{verbatim}
+http://www.quantum-espresso.org/wiki/index.php/Main_Page. 
+\end{verbatim}
 
-\subsection{Libraries}
-\label{Sec:Libraries}
-
-\qe\ makes use of the following external libraries:
-\begin{itemize}
-\item BLAS (\texttt{http://www.netlib.org/blas/}) and 
-\item LAPACK (\texttt{http://www.netlib.org/lapack/}) for linear algebra 
-\item FFTW (\texttt{http://www.fftw.org/}) for Fast Fourier Transforms
-\end{itemize}
-A copy of the needed routines is provided with the distribution. However,
-when available, optimized vendor-specific libraries should be used: this
-often yields huge performance gains.
-
-\qe\ can use the following architecture-specific replacements for BLAS and LAPACK:\\
-
-\qe\ has an internal copy of an old FFTW version, and it 
-can use the following vendor-specific FFT libraries:
-
-MPI libraries are usually needed for parallel execution 
-
-\qe\ can use the MASS vector math
-library from IBM, if available (only on AIX).
+After the correct installation of \qe \, the installation and compilation of \neb \
+can be done just typing \texttt{make neb} from the main espresso directory.
 
 \subsection{Compilation}
 
-\begin{itemize}
-\item \texttt{make neb} produces the following codes in \texttt{NEB/}
-for NEB calculations:
+Typing \texttt{make neb} will produce the following codes in \texttt{NEB/src}:
 \begin{itemize}
 \item \nebx: calculates reaction barriers and pathways using NEB.
 \item \texttt{path\_int.x}: used by utility \texttt{path\_int.sh}
@@ -173,7 +132,10 @@ for NEB calculations:
   different number of images. The initial and final points of the new
  path can differ from those in the original one. 
 \end{itemize}
-\end{itemize}
+
+Symlinks to executable programs will be placed in the
+\texttt{bin/} subdirectory.
+
    
 \subsection{Running examples}
 \label{SubSec:Examples}
