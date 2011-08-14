@@ -1,0 +1,59 @@
+BEGIN
+BEGIN_PATH_INPUT
+&PATH
+  restart_mode      = 'from_scratch'
+  string_method     = 'neb',
+  nstep_path        = 20, 
+  ds                = 2.D0,
+  opt_scheme        = "broyden",
+  num_of_images     = 8,
+  k_max             = 0.3D0,
+  k_min             = 0.2D0,
+  path_thr          = 0.2D0,
+/
+END_PATH_INPUT
+BEGIN_ENGINE_INPUT
+&CONTROL
+  prefix         = "symmetric_H2+H"
+  outdir         = "/Users/giannozz/tmp",
+  pseudo_dir     = "/Users/giannozz/CVS/espresso/pseudo",
+/
+&SYSTEM
+  ibrav                  = 0,
+  celldm(1)              = 1.D0,
+  nat                    = 3,
+  ntyp                   = 1,
+  ecutwfc                = 20.0D0,
+  ecutrho                = 100.0D0,
+  nspin                  = 2,
+  starting_magnetization = 0.5D0,
+  occupations            = "smearing",
+  degauss                = 0.03D0,
+/
+&ELECTRONS
+  conv_thr    = 1.D-8,
+  mixing_beta = 0.3D0,
+/
+&IONS
+/
+ATOMIC_SPECIES
+H  1.00794  HUSPBE.RRKJ3
+K_POINTS { gamma }
+CELL_PARAMETERS { cubic }
+  12.00000  0.00000  0.00000
+   0.00000  5.00000  0.00000
+   0.00000  0.00000  5.00000
+BEGIN_POSITIONS
+FIRST_IMAGE
+ATOMIC_POSITIONS { bohr }
+H   -4.56670009      0.00000000      0.00000000  1  0  0
+H    0.00000000      0.00000000      0.00000000  0  0  0
+H    1.55776676      0.00000000      0.00000000  1  0  0
+LAST_IMAGE
+ATOMIC_POSITIONS { bohr }
+H   -1.55776676      0.00000000      0.00000000
+H    0.00000000      0.00000000      0.00000000
+H    4.56670009      0.00000000      0.00000000
+END_POSITIONS
+END_ENGINE_INPUT
+END
