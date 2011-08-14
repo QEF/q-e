@@ -19,10 +19,15 @@ MODULE acfdtest
  LOGICAL :: acfdt_term2 = .FALSE.
  LOGICAL :: acfdt_term3 = .FALSE.
  LOGICAL :: test_oep=.FALSE. 
+ LOGICAL :: do_numer_eig=.FALSE. 
+ LOGICAL :: int_numer_eig=.FALSE. 
  INTEGER :: ir_point=0
  REAL(DP):: delta_vrs=0.0_DP
  REAL(DP):: f1=1.0_DP
  REAL(DP):: f2=1.0_DP
  REAL(DP):: f3=1.0_DP
+ REAL(DP):: sum_der_etot=1.0_DP
+ REAL(DP), ALLOCATABLE :: vrs_save(:)
+ REAL(DP), ALLOCATABLE :: den_xc(:)
 END MODULE acfdtest
 

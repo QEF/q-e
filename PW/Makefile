@@ -25,6 +25,7 @@ allocate_wfc.o \
 atomic_rho.o \
 atomic_wfc.o \
 average_pp.o \
+acfdt_in_pw.o \
 becmod.o \
 newd.o \
 bp_c_phase.o \

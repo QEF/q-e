@@ -696,7 +696,7 @@ CONTAINS
     !character(len=*), intent(in) :: dft_
     !logical, intent(in), optional :: nomsg
 
-    iexch = 1; icorr = 0; igcx = 0; igcc = 0
+    iexch = 0; icorr = 0; igcx = 0; igcc = 0
     exx_fraction = 1.0_DP
     ishybrid = ( exx_fraction /= 0.0_DP )
 
