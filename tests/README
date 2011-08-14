@@ -34,9 +34,6 @@ metaGGA   C4H6     meta-GGA
 metal     Al fcc   occupancies: all smearing schemes, tetrahedra
                    stress in metals
                    non-scf calculation with smearing and tetrahedra
-neb       H        NEB calculation for the H2+H proton exchange
-                   Automatic, manual, no choice of the climbing image
-                   Old RRKJ format for pseudopotentials
 noncolin  Fe bcc   noncollinear magnetization
                    davidson and cg diagonalizations
                    constraints: atomic, atomic direction, total magnetization

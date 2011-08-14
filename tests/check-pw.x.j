@@ -85,36 +85,6 @@ get_pp () {
     done
 }
 ########################################################################
-# function to test NEB calculations - usage: check_neb "file prefix"
-# obsolete - will be moved to NEB-specific tests
-########################################################################
-check_neb () {
-  # get reference number of neb iterations
-  n0=`grep 'neb: convergence' $1.ref | awk '{print $1}'`
-  # get reference activation energy (truncated to 4 significant digits)
-  e0=`grep 'activation energy' $1.ref | tail -1 | awk '{printf "%8.4f\n", $5}'`
-  #
-  n1=`grep 'neb: convergence' $1.out | awk '{print $1}'`
-  e1=`grep 'activation energy' $1.out | tail -1 | awk '{printf "%8.4f\n", $5}'`
-  if test "$e1" = "$e0"
-  then
-    if test "$n1" = "$n0"
-    then
-      $ECHO  "passed"
-    fi
-  fi
-  if test "$e1" != "$e0"
-  then
-    $ECHO "discrepancy in activation energy detected"
-    $ECHO "Reference: $e0, You got: $e1"
-  fi
-  if test "$n1" != "$n0"
-  then
-    $ECHO "discrepancy in number of neb iterations detected"
-    $ECHO "Reference: $n0, You got: $n1"
-  fi
-}
-########################################################################
 # function to test scf calculations - usage: check_scf "file prefix"
 ########################################################################
 check_scf () {
@@ -275,20 +245,9 @@ do
   ###
   if test -f $name.ref ; then
      # reference file exists
-     # NEB case no longer tested here
-     #if grep 'neb: convergence achieved' $name.ref > /dev/null; then
-        #
-        # Specific test for NEB
-        #
-	#check_neb $name
-        #
-     #else
-        #
-        # Test for scf/relax/md/vc-relax
-        #
-	check_scf $name
-        #
-     #fi
+     # Test for scf/relax/md/vc-relax
+     #
+     check_scf $name
      #
      # extract wall time statistics
      #
@@ -321,6 +280,7 @@ do
      if test -f $name.ref$n ; then
         # reference file exists
         if test $n = 1; then
+	   # this should actually be "check_bands", but it has to be written!
            check_nscf $name $n
         else
            check_nscf $name $n
