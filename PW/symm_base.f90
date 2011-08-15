@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2010 Quantum ESPRESSO group
+! Copyright (C) 2010-2011 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -15,7 +15,7 @@ MODULE symm_base
   ! ... The variables needed to describe the symmetry properties
   ! ... and the routines to find crystal symmetries
   !  
-  ! ... are acceptance criteria
+  ! ... these are acceptance criteria
   !
   REAL(DP), parameter :: eps1 = 1.0d-6, eps2 = 1.0d-5
   !
@@ -25,17 +25,24 @@ MODULE symm_base
   !
   ! ... Exported variables
   !
-  PUBLIC :: s, sr, sname, ft, ftau, nrot, nsym, t_rev, no_t_rev, &
-            time_reversal, irt, invs, invsym, is_symmorphic, d1, d2, d3
+  PUBLIC :: s, sr, sname, ft, ftau, nrot, nsym, nsym_ns, nsym_na, t_rev, &
+            no_t_rev, time_reversal, irt, invs, invsym, d1, d2, d3
   INTEGER :: &
        s(3,3,48),            &! symmetry matrices, in crystal axis
        invs(48),             &! index of inverse operation: S^{-1}_i=S(invs(i))
        ftau(3,48),           &! fractional translations, in FFT coordinates
        nrot,                 &! number of bravais lattice symmetries 
-       nsym                   ! number of crystal symmetries
+       nsym = 1,             &! total number of crystal symmetries
+       nsym_ns = 0,          &! nonsymmorphic (fractional translation) symms
+       nsym_na = 0            ! excluded nonsymmorphic symmetries because
+                              ! fract. transl. is noncommensurate with FFT grid
   REAL (DP) :: &
        ft (3,48),            &! fractional translations, in crystal axis
        sr (3,3,48)            ! symmetry matrices, in cartesian axis
+  !
+  ! ... note: ftau are used for symmetrization in real space (phonon, exx)
+  ! ... in which case they must be commensurated with the FFT grid
+  !
   CHARACTER(LEN=45) ::  sname(48)   ! name of the symmetries
   INTEGER :: &
        t_rev(48) = 0          ! time reversal flag, for noncolinear magnetism
@@ -44,7 +51,6 @@ MODULE symm_base
   LOGICAL :: &
        time_reversal=.true., &! if .TRUE. the system has time_reversal symmetry
        invsym,               &! if .TRUE. the system has inversion symmetry
-       is_symmorphic,        &! if .TRUE. the space group is symmorphic
        no_t_rev=.FALSE.       ! if .TRUE. remove the symmetries that 
                               ! require time reversal               
   REAL(DP),TARGET :: &
@@ -55,12 +61,7 @@ MODULE symm_base
   ! ... Exported routines
   !
   PUBLIC ::  find_sym, inverse_s, copy_sym, checkallsym, &
-             s_axis_to_cart, set_sym, set_sym_bl, symmorphic
-  !
-  ! ... Note about fractional translations: ftau should be replaced by ft,
-  ! ... that do not depend upon either upon the FFT grid or the lattice
-  ! ... parameter (important for variable-cell calculations).
-  ! ... The ftau are used only for symmetrization in the phonon code
+             s_axis_to_cart, set_sym, set_sym_bl
   !
 CONTAINS
    !
@@ -336,7 +337,7 @@ SUBROUTINE find_sym ( nat, tau, ityp, nr1, nr2, nr3, nofrac, &
   !
   nsym = copy_sym ( nrot, sym )
   !
-  IF ( .not. is_group(nr1,nr2,nr3) ) THEN
+  IF ( .not. is_group ( ) ) THEN
      CALL infomsg ('find_sym', 'Not a group! symmetry disabled')
      nsym = 1
   END IF
@@ -349,7 +350,7 @@ SUBROUTINE find_sym ( nat, tau, ityp, nr1, nr2, nr3, nofrac, &
   !
   CALL s_axis_to_cart ( ) 
   !
-  is_symmorphic=symmorphic(nsym, ftau)
+  ! is_symmorphic = ALL ( ft(:,1:nsym) == 0.0_dp ) 
   !
   return
   !
@@ -437,6 +438,7 @@ subroutine sgam_at ( nat, tau, ityp, nr1, nr2, nr3, nofrac, sym )
      end if
   enddo
   !
+  nsym_ns = 0 
   do irot = 1, nrot
      !
      ! check that the grid is compatible with the S rotation
@@ -452,8 +454,8 @@ subroutine sgam_at ( nat, tau, ityp, nr1, nr2, nr3, nofrac, sym )
              &         " not compatible with FFT grid. ")') irot
         WRITE( stdout, '(3i4)') ( (s (i, j, irot) , j = 1, 3) , i = 1, 3)
         goto 100
-
      endif
+
      do na = 1, nat
         ! rau = rotated atom coordinates
         rau (:, na) = s (1,:, irot) * xau (1, na) + &
@@ -481,35 +483,44 @@ subroutine sgam_at ( nat, tau, ityp, nr1, nr2, nr3, nofrac, sym )
               sym(irot) = checksym ( irot, nat, ityp, xau, rau, ft_ )
               !
               if (sym (irot) ) then
+                 nsym_ns = nsym_ns + 1
                  ft (:,irot) = ft_(:)
-                 ! convert ft to FFT coordinates
-                 ! for later use in symmetrization
-                 ft1 = ft_(1) * nr1
-                 ft2 = ft_(2) * nr2
-                 ft3 = ft_(3) * nr3
-                 ! check if the fractional translations are commensurate
-                 ! with the FFT grid, discard sym.op. if not
-                 ! (needed because ph.x symmetrizes in real space)
-                 if (abs (ft1 - nint (ft1) ) / nr1 > eps2 .or. &
-                     abs (ft2 - nint (ft2) ) / nr2 > eps2 .or. &
-                     abs (ft3 - nint (ft3) ) / nr3 > eps2 ) then
-                    WRITE( stdout, '(5x,"warning: symmetry operation", &
-                         &     " # ",i2," not allowed.   fractional ", &
-                         &     "translation:"/5x,3f11.7,"  in crystal", &
-                         &     " coordinates")') irot, ft_
-                    sym (irot) = .false.
-                 endif
-                 ftau (1, irot) = nint (ft1)
-                 ftau (2, irot) = nint (ft2)
-                 ftau (3, irot) = nint (ft3)
-                 goto 100
-              endif
+                 go to 100
+              end if
            endif
         enddo
 
      endif
 100  continue
   enddo
+  !
+  ! convert ft to FFT coordinates - for real-space symmetrization
+  ! 
+  nsym_na = 0
+  do irot =1, nrot
+     if ( sym(irot) ) then
+        ft1 = ft(1,irot) * nr1
+        ft2 = ft(2,irot) * nr2
+        ft3 = ft(3,irot) * nr3
+        ! check if the fractional translations are commensurate
+        ! with the FFT grid, discard sym.op. if not
+        ! (needed because ph.x symmetrizes in real space)
+        if (abs (ft1 - nint (ft1) ) / nr1 > eps2 .or. &
+            abs (ft2 - nint (ft2) ) / nr2 > eps2 .or. &
+            abs (ft3 - nint (ft3) ) / nr3 > eps2 ) then
+            !     WRITE( stdout, '(5x,"warning: symmetry operation", &
+            !          &     " # ",i2," not allowed.   fractional ", &
+            !          &     "translation:"/5x,3f11.7,"  in crystal", &
+            !          &     " coordinates")') irot, ft_
+            sym (irot) = .false.
+            nsym_na = nsym_na + 1
+            nsym_ns = nsym_ns - 1
+         endif
+         ftau (1, irot) = nint (ft1)
+         ftau (2, irot) = nint (ft2)
+         ftau (3, irot) = nint (ft3)
+      end if
+  end do
   !
   !   deallocate work space
   !
@@ -617,7 +628,7 @@ SUBROUTINE set_sym(nat, tau, ityp, nspin_mag, m_loc, nr1, nr2, nr3, &
   !
   ! This routine receives as input atomic types and positions, if there
   ! is noncollinear magnetism and the initial magnetic moments, the fft
-  ! dimesions nr1, nr2, nr3; it sets the symmetry elements of this module.
+  ! dimensions nr1, nr2, nr3; it sets the symmetry elements of this module.
   ! Note that at and bg are those in cell_base. It sets nrot, nsym, s,
   ! sname, sr, invs, ftau, irt, t_rev,  time_reversal, and invsym
   ! 
@@ -698,24 +709,24 @@ END FUNCTION copy_sym
 
 !
 !-----------------------------------------------------------------------
-LOGICAL FUNCTION is_group ( nr1, nr2, nr3 )
+LOGICAL FUNCTION is_group ( )
   !-----------------------------------------------------------------------
   !
   !  Checks that {S} is a group 
   !
   IMPLICIT NONE
   !
-  INTEGER, INTENT(IN) :: nr1,nr2,nr3
-  !
-  INTEGER :: isym, jsym, ksym, ss (3, 3), stau(3)
+  INTEGER :: isym, jsym, ksym, ss (3, 3)
+  REAL (DP) :: st(3), dt(3)
   LOGICAL :: found
   !
   DO isym = 1, nsym
      DO jsym = 1, nsym
         ! 
         ss = MATMUL (s(:,:,isym),s(:,:,jsym))
-        stau(:)= ftau(:,jsym) + s(1,:,jsym)*ftau(1,isym) + &
-                 s(2,:,jsym)*ftau(2,isym) + s(3,:,jsym)*ftau(3,isym) 
+        st(:)= ft(:,jsym) + s(1,:,jsym)*ft(1,isym) + &
+                            s(2,:,jsym)*ft(2,isym) + &
+                            s(3,:,jsym)*ft(3,isym) 
         !
         !     here we check that the input matrices really form a group:
         !        S(k)   = S(i)*S(j)
@@ -723,10 +734,11 @@ LOGICAL FUNCTION is_group ( nr1, nr2, nr3 )
         !
         found = .false.
         DO ksym = 1, nsym
+           dt(:) = ft(:,ksym) - st(:) - NINT( ft(:,ksym) - st(:) ) 
            IF ( ALL( s(:,:,ksym) == ss(:,:) ) .AND. &
-                ( MOD( ftau(1,ksym)-stau(1), nr1 ) == 0 ) .AND. &
-                ( MOD( ftau(2,ksym)-stau(2), nr2 ) == 0 ) .AND. &
-                ( MOD( ftau(3,ksym)-stau(3), nr3 ) == 0 ) ) THEN
+                ( ABS ( dt(1) ) < eps2 ) .AND. &
+                ( ABS ( dt(2) ) < eps2 ) .AND. &
+                ( ABS ( dt(3) ) < eps2 ) ) THEN
               IF (found) THEN
                  is_group = .false.
                  RETURN
@@ -810,7 +822,7 @@ subroutine checkallsym ( nat, tau, ityp, nr1, nr2, nr3 )
   !
   integer :: na, kpol, isym, i, j, k, l
   logical :: loksym (48)
-  real(DP) :: sx (3, 3), sy(3,3), ft_(3)
+  real(DP) :: sx (3, 3), sy(3,3)
   real(DP) , allocatable :: xau(:,:), rau(:,:)
   !
   allocate (xau( 3 , nat))    
@@ -853,11 +865,7 @@ subroutine checkallsym ( nat, tau, ityp, nr1, nr2, nr3 )
         enddo
      enddo
      !
-     ft_(1) = ftau (1, isym) / DBLE (nr1)
-     ft_(2) = ftau (2, isym) / DBLE (nr2)
-     ft_(3) = ftau (3, isym) / DBLE (nr3)
-     !
-     loksym(isym) =  checksym ( isym, nat, ityp, xau, rau, ft_ )
+     loksym(isym) =  checksym ( isym, nat, ityp, xau, rau, ft(1,isym) )
      !
   enddo
   !
@@ -871,8 +879,8 @@ subroutine checkallsym ( nat, tau, ityp, nr1, nr2, nr3 )
           'the following symmetry operation is not satisfied  ', -isym)
   end do
   if (ANY (.not.loksym (1:nsym) ) ) then
-      !call symmetrize_at(nsym, s, nat, tau, ityp, at, bg, nr1, nr2, &
-      !                   nr3, irt, ftau, alat, omega)
+      !call symmetrize_at (nsym, s, invs, ft, irt, nat, tau, at, bg, &
+      !                    alat, omega)
       call errore ('checkallsym', &
            'some of the original symmetry operations not satisfied ',1)
   end if
@@ -900,28 +908,5 @@ subroutine s_axis_to_cart ( )
   enddo
   !
  end subroutine s_axis_to_cart
-
-  LOGICAL FUNCTION symmorphic(nrot, ftau)
-!
-!  This function receives the fractionary translations and check if
-!  one of them is non zero. In this case the space group is non symmorphic and
-!  the function returns .false.
-!
-  IMPLICIT NONE
-  INTEGER, INTENT(IN) :: ftau(3,nrot)
-  INTEGER, INTENT(IN)  :: nrot
-
-  INTEGER :: isym
-
-  symmorphic=.TRUE.
-  DO isym=1,nrot
-     symmorphic=( symmorphic.AND.(ftau(1,isym)==0).AND.  &
-                                 (ftau(2,isym)==0).AND.  &
-                                 (ftau(3,isym)==0) )
-
-  END DO
-
-  RETURN
-  END FUNCTION symmorphic
 
 END MODULE symm_base

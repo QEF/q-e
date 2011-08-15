@@ -438,7 +438,8 @@ SUBROUTINE print_symmetries ( iverbosity, noncolin, domag )
   !
   USE kinds,           ONLY : dp
   USE io_global,       ONLY : stdout 
-  USE symm_base,       ONLY : nsym, invsym, s, sr, t_rev, ftau, sname
+  USE symm_base,       ONLY : nsym, nsym_ns, nsym_na, invsym, s, sr, &
+                              t_rev, ftau, sname
   USE rap_point_group, ONLY : code_group, nclass, nelem, elem, &
        which_irr, char_mat, name_rap, name_class, gname, ir_ram
   USE rap_point_group_so, ONLY : nrap, nelem_so, elem_so, has_e, &
@@ -463,11 +464,29 @@ SUBROUTINE print_symmetries ( iverbosity, noncolin, domag )
      WRITE( stdout, '(/5x,"No symmetry found")')
   ELSE
      IF (invsym) THEN
-        WRITE( stdout, '(/5x,i2," Sym.Ops. (with inversion)",/)') nsym
+        IF ( nsym_ns > 0 ) THEN
+           WRITE( stdout, '(/5x,i2," Sym.Ops. (including inversion) found", &
+                         &  "(",i2," are non-symmorphic ops)")' ) nsym, nsym_ns
+        ELSE 
+           WRITE( stdout, '(/5x,i2," Sym.Ops. (including inversion) found")' )&
+                         nsym
+        END IF
      ELSE
-        WRITE( stdout, '(/5x,i2," Sym.Ops. (no inversion)",/)') nsym
+        IF ( nsym_ns > 0 ) THEN
+           WRITE( stdout, '(/5x,i2," Sym.Ops. (no inversion) found",&
+                         &  "(",i2," are non-symmorphic ops)")' ) nsym, nsym_ns
+        ELSE
+           WRITE( stdout,'(/5x,i2," Sym.Ops. (no inversion) found")' ) nsym
+        END IF
      ENDIF
   ENDIF
+  IF ( nsym_na > 0 ) THEN 
+      WRITE( stdout, '(10x,"(note: ",i2," additional sym.ops. were found ", &
+                   &   "but ignored",/,10x," their fractional transations ", &
+                   &   "are incommensurate with FFT grid)",/)') nsym_na
+  ELSE
+      WRITE( stdout, '(/)' )
+  END IF
   IF ( iverbosity > 0 ) THEN
      WRITE( stdout, '(36x,"s",24x,"frac. trans.")')
      nsym_is=0

@@ -35,7 +35,6 @@ subroutine set_irr (nat, at, bg, xq, s, sr, tau, ntyp, ityp, ftau, invs, nsym, &
   USE kinds, only : DP
   USE constants, ONLY: tpi
   USE random_numbers, ONLY : randy
-  USE symm_base, ONLY : symmorphic
   USE rap_point_group, ONLY : name_rap
 #ifdef __PARA
   use mp, only: mp_bcast
@@ -111,7 +110,7 @@ subroutine set_irr (nat, at, bg, xq, s, sr, tau, ntyp, ityp, ftau, invs, nsym, &
 ! rotated pattern
 ! the phase factor
 
-  logical :: lgamma, is_symmorphic, magnetic_sym
+  logical :: lgamma, magnetic_sym
 ! if true gamma point
 !
 !   Allocate the necessary quantities
@@ -121,8 +120,9 @@ subroutine set_irr (nat, at, bg, xq, s, sr, tau, ntyp, ityp, ftau, invs, nsym, &
 !   find the small group of q
 !
   call smallgq (xq,at,bg,s,nsym,irgq,nsymq,irotmq,minus_q,gi,gimq)
-  is_symmorphic=symmorphic(nsymq, ftau)
-  IF (.not.is_symmorphic) THEN
+  ! are there non-symmorphic operations?
+  ! note that in input search_sym should be initialized to=.true.
+  IF ( ANY ( ftau(:,1:nsymq) /= 0 ) ) THEN
      DO isym=1,nsymq
         search_sym=( search_sym.and.(abs(gi(1,irgq(isym)))<1.d-8).and.  &
                                     (abs(gi(2,irgq(isym)))<1.d-8).and.  &

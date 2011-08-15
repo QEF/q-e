@@ -1742,7 +1742,7 @@ SUBROUTINE gen_qpoints (ibrav, at_, bg_, nat, tau, ityp, nk1, nk2, nk3, &
   !
   USE kinds,      ONLY : DP
   USE cell_base,  ONLY : at, bg
-  USE symm_base,  ONLY : set_sym_bl, find_sym, s, ftau, irt, nsym, &
+  USE symm_base,  ONLY : set_sym_bl, find_sym, s, irt, nsym, &
                          nrot, t_rev, time_reversal,  sname
   !
   IMPLICIT NONE
@@ -2234,7 +2234,7 @@ SUBROUTINE find_representations_mode_q( nat, ntyp, xq, w2, u, tau, ityp, pmass,&
   USE cell_base,  ONLY : at, bg
   USE symm_base,  ONLY : find_sym, s, sr, ftau, irt, nsym, &
                          nrot, t_rev, time_reversal, sname, copy_sym, &
-                         s_axis_to_cart, symmorphic
+                         s_axis_to_cart
 
   IMPLICIT NONE
   INTEGER, INTENT(IN) :: nat, ntyp, nspin_mag
@@ -2246,7 +2246,7 @@ SUBROUTINE find_representations_mode_q( nat, ntyp, xq, w2, u, tau, ityp, pmass,&
   INTEGER, INTENT(OUT) :: num_rap_mode(3*nat)
   REAL(DP) :: gi (3, 48), gimq (3), sr_is(3,3,48), rtau(3,48,nat)
   INTEGER :: irgq (48), irotmq, nsymq, nsym_is, isym, i
-  LOGICAL :: minus_q, search_sym, is_symmorphic, sym(48), magnetic_sym
+  LOGICAL :: minus_q, search_sym, sym(48), magnetic_sym
 !
 !  find the small group of q
 !
@@ -2259,15 +2259,11 @@ SUBROUTINE find_representations_mode_q( nat, ntyp, xq, w2, u, tau, ityp, pmass,&
 
   CALL smallgq (xq,at,bg,s,nsym,irgq,nsymq,irotmq,minus_q,gi,gimq)
 !
-!  decide if the small group of q is symmorphic
-!
-  is_symmorphic=symmorphic(nsymq,ftau)
-!
-!  if it is non symmorphic search the symmetries only if there are no
-!  G such that Sq -> q+G
+!  if the small group of q is non symmorphic,
+!  search the symmetries only if there are no G such that Sq -> q+G
 !
   search_sym=.TRUE.
-  IF (.NOT.is_symmorphic) THEN
+  IF ( ANY ( ftau(:,1:nsymq) /= 0 ) ) THEN
      DO isym=1,nsymq
         search_sym=( search_sym.and.(abs(gi(1,irgq(isym)))<1.d-8).and.  &
                                     (abs(gi(2,irgq(isym)))<1.d-8).and.  &

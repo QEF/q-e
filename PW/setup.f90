@@ -25,7 +25,7 @@ SUBROUTINE setup()
   ! ...    s         symmetry matrices in the direct lattice vectors basis
   ! ...    nsym      number of crystal symmetry operations
   ! ...    nrot      number of lattice symmetry operations
-  ! ...    ftau      fractionary translations
+  ! ...    ft        fractionary translations
   ! ...    irt       for each atom gives the corresponding symmetric
   ! ...    invsym    if true the system has inversion symmetry
   ! ... 3) generates k-points corresponding to the actual crystal symmetry
@@ -57,7 +57,7 @@ SUBROUTINE setup()
   USE start_k,            ONLY : nks_start, xk_start, wk_start, &
                                  nk1, nk2, nk3, k1, k2, k3
   USE ktetra,             ONLY : tetra, ntetra, ltetra
-  USE symm_base,          ONLY : s, t_rev, irt, ftau, nrot, nsym, invsym, &
+  USE symm_base,          ONLY : s, t_rev, irt, nrot, nsym, invsym, &
                                  d1,d2,d3, time_reversal, sname, set_sym_bl, &
                                  find_sym
   USE wvfct,              ONLY : nbnd, nbndx, ecutwfc

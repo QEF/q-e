@@ -96,7 +96,7 @@ MODULE pw_restart
       USE ldaU,                 ONLY : lda_plus_u, Hubbard_lmax, Hubbard_l, &
                                        Hubbard_U, Hubbard_alpha
       USE spin_orb,             ONLY : lspinorb, domag
-      USE symm_base,            ONLY : nrot, nsym, invsym, s, ft, ftau, irt, &
+      USE symm_base,            ONLY : nrot, nsym, invsym, s, ft, irt, &
                                        t_rev, sname, time_reversal, no_t_rev
       USE lsda_mod,             ONLY : nspin, isk, lsda, starting_magnetization
       USE noncollin_module,     ONLY : angle1, angle2, i_cons, mcons, bfield, &

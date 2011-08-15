@@ -7,77 +7,47 @@
 !
 !
 !-----------------------------------------------------------------------
-subroutine symmetrize_at(nsym, s, nat, tau, ityp, at, bg, &
-           nr1, nr2, nr3, irt, ftau, alat, omega)
+subroutine symmetrize_at(nsym, s, invs, ft, irt, nat, tau, at, bg, alat, omega)
   !-----------------------------------------------------------------------
   !
-  !     given a point group, this routine finds the subgroup which is
-  !     the point group of the crystal under consideration
-  !     non symmorphic groups non allowed, provided that fractional
-  !     translations are commensurate with the FFT grid
-  !
-  !     It sets the array sym, which for each operation of the original
-  !     point group is true if this operation is also an operation of the
-  !     total point group
+  !     force atomic coordinates to have the symmetry of a given point group
+  !     do the same for 
   !
   USE io_global,  ONLY : stdout
   USE cellmd, ONLY: at_old, lmovecell
-  USE symm_base, ONLY: invs
   USE kinds
   implicit none
   !
   !     input variables
   !
-  integer :: nsym, s (3, 3, 48), nat, ityp (nat), nr1, nr2, nr3
-  real(DP) :: tau (3, nat), at (3, 3), bg (3, 3), alat, omega
-  ! nsym : number of symmetry operation of the crystal
-  ! s    : symmetry operations of parent group
-  ! nat  : number of atoms in the unit cell
-  ! ityp : species of each atom in the unit cell
-  ! nr*  : dimensions of the FFT mesh
-  ! tau  : cartesian coordinates of the atoms
-  ! at   : basis of the real-space lattice
-  ! bg   :  "   "   "  reciprocal-space lattice
-  !
-  !     output variables
-  !
-  integer :: irt (48, nat), ftau (3, 48)
-  ! irt(isym,na) : sym.op. isym sends atom na into atom irt(isym,na)
-  ! ftau(:,isym) : fractional translation associated to sym.op. isym
-  !                (in FFT coordinates: crystal axis, multiplied by nr*)
-  ! sym(isym)    : flag indicating if sym.op. isym in the parent group
-  !                is a true symmetry operation of the crystal
+  integer, intent(in) :: nsym, s(3,3,48), invs(48), nat, irt (48, nat) 
+  real(DP), intent(in) :: ft (3, 48)
+  real(DP), intent(inout) :: tau (3, nat), at (3, 3), bg (3, 3), alat, omega
   !
   !    local variables
   !
   integer :: na, icar, ipol, jpol, kpol, lpol, irot
-  ! counters
   real(DP) , allocatable :: xau (:,:)
   ! atomic coordinates in crystal axis
-  real(DP) :: work, obnr(3), bg_old(3,3), sat(3,3), wrk(3,3), ba(3,3)
+  real(DP) :: work, bg_old(3,3), sat(3,3), wrk(3,3), ba(3,3)
   !
   allocate(xau(3,nat))
   !
   !     Compute the coordinates of each atom in the basis of
   !     the direct lattice vectors
   !
-
   xau = tau
   tau = 0.d0
 
   call cryst_to_cart( nat, xau, bg, -1 )
 
-  !
-  obnr(1) = 1.d0/DBLE(nr1)
-  obnr(2) = 1.d0/DBLE(nr2)
-  obnr(3) = 1.d0/DBLE(nr3)
   do irot = 1, nsym
      do na = 1, nat
         do kpol = 1, 3
            work =  s (1, kpol, irot) * xau (1, na) + &
                    s (2, kpol, irot) * xau (2, na) + &
                    s (3, kpol, irot) * xau (3, na) - &
-                   ftau(kpol,irot)* obnr(kpol) 
+                   ft(kpol,irot)
            tau (kpol, irt(irot,na)) = tau (kpol, irt(irot,na)) + work &
                                     - nint(work-xau(kpol,irt(irot,na))) 
         enddo
