@@ -26,7 +26,7 @@ MODULE symm_base
   ! ... Exported variables
   !
   PUBLIC :: s, sr, sname, ft, ftau, nrot, nsym, nsym_ns, nsym_na, t_rev, &
-            no_t_rev, time_reversal, irt, invs, invsym, d1, d2, d3
+            allfrac, no_t_rev, time_reversal, irt, invs, invsym, d1, d2, d3
   INTEGER :: &
        s(3,3,48),            &! symmetry matrices, in crystal axis
        invs(48),             &! index of inverse operation: S^{-1}_i=S(invs(i))
@@ -51,6 +51,8 @@ MODULE symm_base
   LOGICAL :: &
        time_reversal=.true., &! if .TRUE. the system has time_reversal symmetry
        invsym,               &! if .TRUE. the system has inversion symmetry
+       allfrac= .FALSE.,     &! if .TRUE. all fractionary transations allowed,
+                              ! even those not commensurae with FFT grid
        no_t_rev=.FALSE.       ! if .TRUE. remove the symmetries that 
                               ! require time reversal               
   REAL(DP),TARGET :: &
@@ -494,11 +496,12 @@ subroutine sgam_at ( nat, tau, ityp, nr1, nr2, nr3, nofrac, sym )
 100  continue
   enddo
   !
-  ! convert ft to FFT coordinates - for real-space symmetrization
+  ! convert ft to FFT coordinates, check if compatible with FFT grid
+  ! for real-space symmetrization (if done: currently, exx, phonon)
   ! 
   nsym_na = 0
   do irot =1, nrot
-     if ( sym(irot) ) then
+     if ( sym(irot) .AND. .NOT. allfrac ) then
         ft1 = ft(1,irot) * nr1
         ft2 = ft(2,irot) * nr2
         ft3 = ft(3,irot) * nr3

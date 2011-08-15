@@ -465,18 +465,18 @@ SUBROUTINE print_symmetries ( iverbosity, noncolin, domag )
   ELSE
      IF (invsym) THEN
         IF ( nsym_ns > 0 ) THEN
-           WRITE( stdout, '(/5x,i2," Sym.Ops. (including inversion) found", &
-                         &  "(",i2," are non-symmorphic ops)")' ) nsym, nsym_ns
+           WRITE( stdout, '(/5x,i2," Sym. Ops., with inversion, found ", &
+                    &  "(",i2," have fractional translation)")' ) nsym, nsym_ns
         ELSE 
-           WRITE( stdout, '(/5x,i2," Sym.Ops. (including inversion) found")' )&
+           WRITE( stdout, '(/5x,i2," Sym. Ops., with inversion, found")' )&
                          nsym
         END IF
      ELSE
         IF ( nsym_ns > 0 ) THEN
-           WRITE( stdout, '(/5x,i2," Sym.Ops. (no inversion) found",&
-                         &  "(",i2," are non-symmorphic ops)")' ) nsym, nsym_ns
+           WRITE( stdout, '(/5x,i2," Sym. Ops. (no inversion) found ",&
+                    &  "(",i2," have fractional translation)")' ) nsym, nsym_ns
         ELSE
-           WRITE( stdout,'(/5x,i2," Sym.Ops. (no inversion) found")' ) nsym
+           WRITE( stdout,'(/5x,i2," Sym. Ops. (no inversion) found")' ) nsym
         END IF
      ENDIF
   ENDIF

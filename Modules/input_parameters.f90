@@ -352,6 +352,9 @@ MODULE input_parameters
           ! if .true. use symmetry only to symmetrize k points
         LOGICAL :: force_symmorphic = .false.
           ! if .true. disable fractionary translations (nonsymmorphic groups)
+        LOGICAL :: use_all_frac = .false.
+          ! if .true. enable usage of all fractionary translations, 
+          ! disabling check if they are commensurate with FFT grid
 
         REAL(DP) :: ecfixed = 0.0_DP, qcutz = 0.0_DP, q2sigma = 0.0_DP
           ! parameters for modified kinetic energy functional to be used
@@ -481,7 +484,7 @@ MODULE input_parameters
 
         NAMELIST / system / ibrav, celldm, a, b, c, cosab, cosac, cosbc, nat, &
              ntyp, nbnd, ecutwfc, ecutrho, nr1, nr2, nr3, nr1s, nr2s,  &
-             nr3s, nr1b, nr2b, nr3b, nosym, nosym_evc, noinv,                 &
+             nr3s, nr1b, nr2b, nr3b, nosym, nosym_evc, noinv, use_all_frac,   &
              force_symmorphic, starting_magnetization,                        &
              occupations, degauss, nspin, ecfixed,              &
              qcutz, q2sigma, lda_plus_U, Hubbard_U, Hubbard_alpha,            &

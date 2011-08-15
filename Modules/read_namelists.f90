@@ -170,6 +170,7 @@ MODULE read_namelists_module
        nosym = .FALSE.
        nosym_evc = .FALSE.
        force_symmorphic = .FALSE.
+       use_all_frac = .FALSE.
        noinv = .FALSE.
        ecfixed = 0.0_DP
        qcutz   = 0.0_DP
@@ -820,6 +821,7 @@ MODULE read_namelists_module
        CALL mp_bcast( nosym_evc,         ionode_id )
        CALL mp_bcast( noinv,             ionode_id )
        CALL mp_bcast( force_symmorphic,  ionode_id )
+       CALL mp_bcast( use_all_frac,      ionode_id )
        CALL mp_bcast( ecfixed,           ionode_id )
        CALL mp_bcast( qcutz,             ionode_id )
        CALL mp_bcast( q2sigma,           ionode_id )

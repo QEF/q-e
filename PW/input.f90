@@ -190,7 +190,7 @@ SUBROUTINE iosys()
                        starting_spin_angle_ => starting_spin_angle
 
   !
-  USE symm_base, ONLY : no_t_rev_=> no_t_rev
+  USE symm_base, ONLY : no_t_rev_=> no_t_rev, allfrac
   !
   USE bfgs_module,   ONLY : bfgs_ndim_        => bfgs_ndim, &
                             trust_radius_max_ => trust_radius_max, &
@@ -219,7 +219,7 @@ SUBROUTINE iosys()
                                wfcdir, prefix, etot_conv_thr, forc_conv_thr,   &
                                pseudo_dir, disk_io, tefield, dipfield, lberry, &
                                gdir, nppstr, wf_collect,lelfield, efield,      &
-                               nberrycyc, lkpoint_dir, efield_cart, lecrpa,    & 
+                               nberrycyc, lkpoint_dir, efield_cart, lecrpa,    &
                                vdw_table_name
 
 #if defined __MS2
@@ -231,8 +231,9 @@ SUBROUTINE iosys()
   USE input_parameters, ONLY : ibrav, celldm, a, b, c, cosab, cosac, cosbc, &
                                nat, ntyp, nbnd,tot_charge,tot_magnetization,&
                                ecutwfc, ecutrho, nr1, nr2, nr3, nr1s, nr2s, &
-                               nr3s, noinv, nosym, nosym_evc,               &
-                               force_symmorphic, starting_magnetization,    &
+                               nr3s, noinv, nosym, nosym_evc, no_t_rev,     &
+                               use_all_frac, force_symmorphic,              &
+                               starting_magnetization,                      &
                                occupations, degauss, smearing, nspin,       &
                                ecfixed, qcutz, q2sigma, lda_plus_U,         &
                                Hubbard_U, Hubbard_alpha, input_dft, la2F,   &
@@ -250,7 +251,7 @@ SUBROUTINE iosys()
                                B_field, fixed_magnetization, report, lspinorb,&
                                starting_spin_angle,                           &
                                assume_isolated, spline_ps, london, london_s6, &
-                               london_rcut, one_atom_occupations, no_t_rev,   &
+                               london_rcut, one_atom_occupations, &
                                esm_bc, esm_efield, esm_w, esm_nfit
 #ifdef __SOLVENT
   !
@@ -1111,6 +1112,7 @@ SUBROUTINE iosys()
   one_atom_occupations_ = one_atom_occupations
   !
   no_t_rev_ = no_t_rev
+  allfrac   = use_all_frac
   !
   spline_ps_ = spline_ps
   !
