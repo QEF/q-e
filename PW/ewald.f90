@@ -102,15 +102,7 @@ function ewald (alat, nat, ntyp, ityp, zv, at, bg, tau, omega, g, &
      !
      ! ... call ESM-specific Ewald routine for G-space sum only
      !
-     IF (gstart == 2) THEN
-        !
-        CALL esm_ewald (charge, alpha, ewaldg)
-        !
-     ELSE
-        !
-        ewaldg = 0.d0
-        !
-     END IF
+     CALL esm_ewald (charge, alpha, ewaldg)
      !
   ELSE
      if (gstart==2) then

@@ -108,7 +108,7 @@ cat > H2O.noesm.in << EOF
     assume_isolated = 'esm', esm_bc='pbc'
  /
  &electrons
-    mixing_beta = 0.7
+    mixing_beta = 0.5
  /
 ATOMIC_SPECIES
  H  1.00794  H.pbe-rrkjus.UPF 
@@ -117,10 +117,7 @@ ATOMIC_POSITIONS
 O        0.000000000   0.500000000   0.000000000    0   0   0
 H        0.043138813   0.431028632   0.043078297    0   0   0
 H        0.036635422   0.576406407   0.035949164
-K_POINTS
- 2
-0.0 0.0 0.0 1.00
-0.25 0.25 0.25 1.00
+K_POINTS gamma
 EOF
 $ECHO "  running the scf calculation for H2O without ESM...\c"
 $PW_COMMAND < H2O.noesm.in > H2O.noesm.out
@@ -145,7 +142,7 @@ cat > H2O.bc1.in << EOF
     assume_isolated = 'esm', esm_bc='bc1'
  /
  &electrons
-    mixing_beta = 0.7
+    mixing_beta = 0.5
  /
 ATOMIC_SPECIES
  H  1.00794  H.pbe-rrkjus.UPF 
@@ -154,10 +151,7 @@ ATOMIC_POSITIONS
 O        0.000000000   0.500000000   0.000000000    0   0   0
 H        0.043138813   0.431028632   0.043078297    0   0   0
 H        0.036635422   0.576406407   0.035949164
-K_POINTS
- 2
-0.0 0.0 0.0 1.00
-0.25 0.25 0.25 1.00
+K_POINTS gamma
 EOF
 $ECHO "  running the scf calculation for H2O with ESM bc1 (vacuum-slab-vacuum)...\c"
 $PW_COMMAND < H2O.bc1.in > H2O.bc1.out
@@ -188,7 +182,7 @@ cat > Al111.bc2.in << EOF
     assume_isolated='esm', esm_bc='bc2'
  /
  &electrons
-    mixing_beta = 0.7
+    mixing_beta = 0.5
  /
 ATOMIC_SPECIES
  Al  26.981538   Al.pbe-rrkj.UPF
@@ -232,7 +226,7 @@ cat > Al111.bc2_efield.in << EOF
     assume_isolated='esm', esm_bc='bc2', esm_efield=0.00192148511256006
  /
  &electrons
-    mixing_beta = 0.7
+    mixing_beta = 0.5
  /
 ATOMIC_SPECIES
  Al  26.981538   Al.pbe-rrkj.UPF
@@ -276,7 +270,7 @@ cat > Al111.bc3.in << EOF
     assume_isolated='esm', esm_bc='bc3'
  /
  &electrons
-    mixing_beta = 0.7
+    mixing_beta = 0.5
  /
 ATOMIC_SPECIES
  Al  26.981538   Al.pbe-rrkj.UPF
@@ -313,7 +307,7 @@ cat > Al111.bc3_m005.in << EOF
  /
  &system
     ibrav = 0, celldm(1) = 7.653393855, 
-    nelec = 21.005,
+    tot_charge = -0.005,
     nat= 7, ntyp= 1,
     ecutwfc = 20.0,
     nosym=.TRUE.
@@ -321,7 +315,7 @@ cat > Al111.bc3_m005.in << EOF
     assume_isolated='esm', esm_bc='bc3'
  /
  &electrons
-    mixing_beta = 0.7
+    mixing_beta = 0.5
  /
 ATOMIC_SPECIES
  Al  26.981538   Al.pbe-rrkj.UPF
@@ -358,7 +352,7 @@ cat > Al111.bc3_p005.in << EOF
  /
  &system
     ibrav = 0, celldm(1) = 7.653393855, 
-    nelec = 20.995,
+    tot_charge = 0.005,
     nat= 7, ntyp= 1,
     ecutwfc = 20.0,
     nosym=.TRUE.
@@ -366,7 +360,7 @@ cat > Al111.bc3_p005.in << EOF
     assume_isolated='esm', esm_bc='bc3'
  /
  &electrons
-    mixing_beta = 0.7
+    mixing_beta = 0.5
  /
 ATOMIC_SPECIES
  Al  26.981538   Al.pbe-rrkj.UPF

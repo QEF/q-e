@@ -91,16 +91,16 @@ subroutine force_lc (nat, tau, ityp, alat, omega, ngm, ngl, &
         forcelc (ipol, na) = fact * forcelc (ipol, na) * omega * tpi / alat
      enddo
   enddo
-#ifdef __PARA
-  call mp_sum(  forcelc, intra_pool_comm )
-#endif
-
   IF ( do_comp_esm .and. ( esm_bc .ne. 'pbc' ) ) THEN
      !
-     ! ... Perform corrections for ESM method
+     ! ... Perform corrections for ESM method (add long-range part)
      !
      CALL esm_force_lc ( aux, forcelc )
   ENDIF
+
+#ifdef __PARA
+  call mp_sum(  forcelc, intra_pool_comm )
+#endif
 
   deallocate (aux)
   return

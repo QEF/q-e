@@ -34,6 +34,7 @@ SUBROUTINE init_run()
 ! Wannier_ac
   USE wannier_new,        ONLY : use_wannier    
   USE dfunct,                 only : newd
+  USE esm,                ONLY : do_comp_esm, esm_ggen_2d
   !
   IMPLICIT NONE
   !
@@ -51,6 +52,7 @@ SUBROUTINE init_run()
   ! ... generate reciprocal-lattice vectors and fft indices
   !
   CALL ggen ( gamma_only, at, bg )
+  IF (do_comp_esm) CALL esm_ggen_2d ()
   CALL gshells ( lmovecell )
   !
   ! ... variable initialization for parallel symmetrization
