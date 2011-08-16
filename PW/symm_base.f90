@@ -26,7 +26,8 @@ MODULE symm_base
   ! ... Exported variables
   !
   PUBLIC :: s, sr, sname, ft, ftau, nrot, nsym, nsym_ns, nsym_na, t_rev, &
-            allfrac, no_t_rev, time_reversal, irt, invs, invsym, d1, d2, d3
+            allfrac, no_t_rev, time_reversal, irt, invs, invsym, d1, d2, d3, &
+            nosym, nosym_evc
   INTEGER :: &
        s(3,3,48),            &! symmetry matrices, in crystal axis
        invs(48),             &! index of inverse operation: S^{-1}_i=S(invs(i))
@@ -49,10 +50,13 @@ MODULE symm_base
   INTEGER, ALLOCATABLE :: &
        irt(:,:)               ! symmetric atom for each atom and sym.op.
   LOGICAL :: &
-       time_reversal=.true., &! if .TRUE. the system has time_reversal symmetry
+       time_reversal=.true., &! if .TRUE. the system has time reversal symmetry
        invsym,               &! if .TRUE. the system has inversion symmetry
        allfrac= .FALSE.,     &! if .TRUE. all fractionary transations allowed,
-                              ! even those not commensurae with FFT grid
+                              ! even those not commensurate with FFT grid
+       nosym = .FALSE.,      &! if .TRUE. no symmetry is used
+       nosym_evc = .FALSE.,  &! if .TRUE. symmetry is used only to symmetrize
+                              ! k points
        no_t_rev=.FALSE.       ! if .TRUE. remove the symmetries that 
                               ! require time reversal               
   REAL(DP),TARGET :: &
@@ -300,7 +304,7 @@ end subroutine set_sym_bl
 !
 !-----------------------------------------------------------------------
 SUBROUTINE find_sym ( nat, tau, ityp, nr1, nr2, nr3, nofrac, &
-                   magnetic_sym, m_loc, nosym_evc )
+                   magnetic_sym, m_loc )
   !-----------------------------------------------------------------------
   !
   !     This routine finds the point group of the crystal, by eliminating
@@ -311,7 +315,7 @@ SUBROUTINE find_sym ( nat, tau, ityp, nr1, nr2, nr3, nofrac, &
   !
   integer, intent(in) :: nat, ityp (nat), nr1, nr2, nr3  
   real(DP), intent(in) :: tau (3,nat), m_loc(3,nat)
-  logical, intent(in) :: magnetic_sym, nosym_evc, nofrac
+  logical, intent(in) :: magnetic_sym, nofrac
   !
   logical :: sym (48)
   ! if true the corresponding operation is a symmetry operation
@@ -343,6 +347,7 @@ SUBROUTINE find_sym ( nat, tau, ityp, nr1, nr2, nr3, nofrac, &
      CALL infomsg ('find_sym', 'Not a group! symmetry disabled')
      nsym = 1
   END IF
+  !
   ! check if inversion (I) is a symmetry.
   ! If so, it should be the (nsym/2+1)-th operation of the group
   !
@@ -351,8 +356,6 @@ SUBROUTINE find_sym ( nat, tau, ityp, nr1, nr2, nr3, nofrac, &
   CALL inverse_s ( ) 
   !
   CALL s_axis_to_cart ( ) 
-  !
-  ! is_symmorphic = ALL ( ft(:,1:nsym) == 0.0_dp ) 
   !
   return
   !
@@ -647,14 +650,11 @@ SUBROUTINE set_sym(nat, tau, ityp, nspin_mag, m_loc, nr1, nr2, nr3, &
   time_reversal = (nspin_mag /= 4)
   t_rev(:) = 0
   CALL set_sym_bl ( )
-
-  !
   CALL find_sym ( nat, tau, ityp, nr1, nr2, nr3, nofrac,.not.time_reversal, &
-                  m_loc, .FALSE. )
+                  m_loc )
   !
   RETURN
   END SUBROUTINE set_sym
-!
 !
 !-----------------------------------------------------------------------
 INTEGER FUNCTION copy_sym ( nrot_, sym ) 

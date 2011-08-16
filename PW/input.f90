@@ -158,8 +158,6 @@ SUBROUTINE iosys()
                             mixing_beta_      => mixing_beta, &
                             nstep_            => nstep, &
                             iprint_           => iprint, &
-                            nosym_            => nosym, &
-                            nosym_evc_        => nosym_evc, &
                             noinv_            => noinv, &
                             modenum_          => modenum, &
                             lkpoint_dir_      => lkpoint_dir, &
@@ -190,7 +188,8 @@ SUBROUTINE iosys()
                        starting_spin_angle_ => starting_spin_angle
 
   !
-  USE symm_base, ONLY : no_t_rev_=> no_t_rev, allfrac
+  USE symm_base, ONLY : no_t_rev_ => no_t_rev, allfrac, &
+                        nosym_ => nosym, nosym_evc_=> nosym_evc
   !
   USE bfgs_module,   ONLY : bfgs_ndim_        => bfgs_ndim, &
                             trust_radius_max_ => trust_radius_max, &

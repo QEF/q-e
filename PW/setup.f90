@@ -57,12 +57,12 @@ SUBROUTINE setup()
   USE start_k,            ONLY : nks_start, xk_start, wk_start, &
                                  nk1, nk2, nk3, k1, k2, k3
   USE ktetra,             ONLY : tetra, ntetra, ltetra
-  USE symm_base,          ONLY : s, t_rev, irt, nrot, nsym, invsym, &
+  USE symm_base,          ONLY : s, t_rev, irt, nrot, nsym, invsym, nosym, &
                                  d1,d2,d3, time_reversal, sname, set_sym_bl, &
                                  find_sym
   USE wvfct,              ONLY : nbnd, nbndx, ecutwfc
   USE control_flags,      ONLY : tr2, ethr, lscf, lmd, david, lecrpa,  &
-                                 isolve, niter, noinv, nosym, nosym_evc, &
+                                 isolve, niter, noinv, &
                                  nofrac, lbands, use_para_diag, gamma_only
   USE cellmd,             ONLY : calc
   USE uspp_param,         ONLY : upf, n_atom_wfc
@@ -488,7 +488,7 @@ SUBROUTINE setup()
      ! ... eliminate rotations that are not symmetry operations
      !
      CALL find_sym ( nat, tau, ityp, dfftp%nr1, dfftp%nr2, dfftp%nr3, nofrac, &
-                  magnetic_sym, m_loc, nosym_evc )
+                  magnetic_sym, m_loc )
      !
   ENDIF
   !

@@ -176,12 +176,12 @@ SUBROUTINE d3_setup()
   !
   ! 5.0) Computes the inverse of each matrix
   !
-  ! TEMP TEMP TEMP TEMP: ths should not be needed any longer
+  ! TEMP TEMP TEMP TEMP: this should not be needed any longer
   !
   modenum = 0
   magnetic_sym = .false.
   CALL find_sym ( nat, tau, ityp, dfftp%nr1, dfftp%nr2, dfftp%nr3, .FALSE., &
-               magnetic_sym, mdum, .FALSE.)
+               magnetic_sym, mdum )
   sym(:)       =.false.
   sym(1:nsym)=.true.
   !

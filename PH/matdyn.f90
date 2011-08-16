@@ -1753,7 +1753,7 @@ SUBROUTINE gen_qpoints (ibrav, at_, bg_, nat, tau, ityp, nk1, nk2, nk3, &
   INTEGER :: nqx, nq, tetra(4,ntetra)
   REAL(DP) :: q(3,nqx)
   ! local
-  LOGICAL :: nosym_evc=.false., nofrac=.false.
+  LOGICAL :: nofrac=.false.
   REAL(DP) :: xqq(3), wk(nqx), mdum(3,nat)
   !
   time_reversal = .true.
@@ -1766,8 +1766,7 @@ SUBROUTINE gen_qpoints (ibrav, at_, bg_, nat, tau, ityp, nk1, nk2, nk3, &
   CALL kpoint_grid ( nrot, time_reversal, s, t_rev, bg, nqx, &
                            0,0,0, nk1,nk2,nk3, nq, q, wk)
   !
-  CALL find_sym ( nat, tau, ityp, 6, 6, 6, nofrac, &
-                  .not.time_reversal, mdum, nosym_evc )
+  CALL find_sym ( nat, tau, ityp, 6, 6, 6, nofrac, .not.time_reversal, mdum )
   !
   CALL irreducible_BZ (nrot, s, nsym, time_reversal, at, bg, nqx, nq, q, wk, &
                        t_rev)
