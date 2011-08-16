@@ -8,7 +8,7 @@ EXAMPLE_DIR=`pwd`
 if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
 
 # function to test the exit status of a job
-. ../check_failure.sh
+. ../../../examples/check_failure.sh
 
 $ECHO
 $ECHO "$EXAMPLE_DIR : starting"
@@ -22,7 +22,9 @@ $ECHO "ph.x is used to calculate the phonons at X and Gamma of fcc-Pt"
 $ECHO "including spin-orbit coupling."
 
 # set the needed environment variables
-. ../environment_variables
+cd ../
+. ../../examples/environment_variables
+cd example02
 
 # required executables and pseudopotentials
 BIN_LIST="pw.x pwcond.x bands.x"

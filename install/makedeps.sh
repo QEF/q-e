@@ -11,7 +11,7 @@ TOPDIR=`pwd`
 
 if test $# = 0
 then
-    dirs=" Modules clib PW CPV flib pwtools upftools PP PWCOND \
+    dirs=" Modules clib PW CPV flib pwtools upftools PP PWCOND//src \
            Gamma PH D3 atomic VdW XSpectra//src \
 	   GWW//gww GWW//pw4gww GWW//head ACFDT NEB//src Solvent" 
           
@@ -34,6 +34,8 @@ do
 	D3 | VdW | ACFDT ) 
                   DEPENDS="$DEPENDS ../Modules ../PW ../PH" ;;
 	XSpectra/src  )
+		  DEPENDS="../../iotk/src ../../include ../../Modules ../../PW"  ;;
+	PWCOND/src )
 		  DEPENDS="../../iotk/src ../../include ../../Modules ../../PW"  ;;
         GWW/pw4gww )
                   DEPENDS="../../include ../../iotk/src ../../Modules \
