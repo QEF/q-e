@@ -26,8 +26,8 @@ MODULE symm_base
   ! ... Exported variables
   !
   PUBLIC :: s, sr, sname, ft, ftau, nrot, nsym, nsym_ns, nsym_na, t_rev, &
-            allfrac, no_t_rev, time_reversal, irt, invs, invsym, d1, d2, d3, &
-            nosym, nosym_evc
+            no_t_rev, time_reversal, irt, invs, invsym, d1, d2, d3, &
+            allfrac, nofrac, nosym, nosym_evc
   INTEGER :: &
        s(3,3,48),            &! symmetry matrices, in crystal axis
        invs(48),             &! index of inverse operation: S^{-1}_i=S(invs(i))
@@ -52,6 +52,7 @@ MODULE symm_base
   LOGICAL :: &
        time_reversal=.true., &! if .TRUE. the system has time reversal symmetry
        invsym,               &! if .TRUE. the system has inversion symmetry
+       nofrac= .FALSE.,      &! if .TRUE. fract. translations are not allowed
        allfrac= .FALSE.,     &! if .TRUE. all fractionary transations allowed,
                               ! even those not commensurate with FFT grid
        nosym = .FALSE.,      &! if .TRUE. no symmetry is used
@@ -303,8 +304,7 @@ subroutine set_sym_bl ( )
 end subroutine set_sym_bl
 !
 !-----------------------------------------------------------------------
-SUBROUTINE find_sym ( nat, tau, ityp, nr1, nr2, nr3, nofrac, &
-                   magnetic_sym, m_loc )
+SUBROUTINE find_sym ( nat, tau, ityp, nr1, nr2, nr3, magnetic_sym, m_loc )
   !-----------------------------------------------------------------------
   !
   !     This routine finds the point group of the crystal, by eliminating
@@ -315,7 +315,7 @@ SUBROUTINE find_sym ( nat, tau, ityp, nr1, nr2, nr3, nofrac, &
   !
   integer, intent(in) :: nat, ityp (nat), nr1, nr2, nr3  
   real(DP), intent(in) :: tau (3,nat), m_loc(3,nat)
-  logical, intent(in) :: magnetic_sym, nofrac
+  logical, intent(in) :: magnetic_sym
   !
   logical :: sym (48)
   ! if true the corresponding operation is a symmetry operation
@@ -325,7 +325,7 @@ SUBROUTINE find_sym ( nat, tau, ityp, nr1, nr2, nr3, nofrac, &
   !
   !    Here we find the true symmetries of the crystal
   !
-  CALL sgam_at ( nat, tau, ityp, nr1, nr2, nr3, nofrac, sym )
+  CALL sgam_at ( nat, tau, ityp, nr1, nr2, nr3, sym )
   !
   !    Here we check for magnetic symmetries
   !
@@ -362,7 +362,7 @@ SUBROUTINE find_sym ( nat, tau, ityp, nr1, nr2, nr3, nofrac, &
 END SUBROUTINE find_sym
 !
 !-----------------------------------------------------------------------
-subroutine sgam_at ( nat, tau, ityp, nr1, nr2, nr3, nofrac, sym )
+subroutine sgam_at ( nat, tau, ityp, nr1, nr2, nr3, sym )
   !-----------------------------------------------------------------------
   !
   !     Given the point group of the Bravais lattice, this routine finds 
@@ -387,8 +387,6 @@ subroutine sgam_at ( nat, tau, ityp, nr1, nr2, nr3, nofrac, sym )
   real(DP), intent(in) :: tau (3, nat)
   !
   ! tau  : cartesian coordinates of the atoms
-  !
-  logical, intent(in) :: nofrac
   !
   !     output variables
   !
@@ -629,8 +627,7 @@ subroutine sgam_at_mag ( nat, m_loc, sym )
   return
 END SUBROUTINE sgam_at_mag
 !
-SUBROUTINE set_sym(nat, tau, ityp, nspin_mag, m_loc, nr1, nr2, nr3, &
-                   nofrac)
+SUBROUTINE set_sym(nat, tau, ityp, nspin_mag, m_loc, nr1, nr2, nr3)
   !
   ! This routine receives as input atomic types and positions, if there
   ! is noncollinear magnetism and the initial magnetic moments, the fft
@@ -645,13 +642,11 @@ SUBROUTINE set_sym(nat, tau, ityp, nspin_mag, m_loc, nr1, nr2, nr3, &
   INTEGER, INTENT(IN)  :: nat, ityp(nat), nspin_mag, nr1, nr2, nr3
   REAL(DP), INTENT(IN) :: tau(3,nat)
   REAL(DP), INTENT(IN) :: m_loc(3,nat) 
-  LOGICAL, INTENT(IN)  ::  nofrac
   !
   time_reversal = (nspin_mag /= 4)
   t_rev(:) = 0
   CALL set_sym_bl ( )
-  CALL find_sym ( nat, tau, ityp, nr1, nr2, nr3, nofrac,.not.time_reversal, &
-                  m_loc )
+  CALL find_sym ( nat, tau, ityp, nr1, nr2, nr3, .not.time_reversal, m_loc )
   !
   RETURN
   END SUBROUTINE set_sym

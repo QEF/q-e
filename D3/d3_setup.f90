@@ -180,7 +180,7 @@ SUBROUTINE d3_setup()
   !
   modenum = 0
   magnetic_sym = .false.
-  CALL find_sym ( nat, tau, ityp, dfftp%nr1, dfftp%nr2, dfftp%nr3, .FALSE., &
+  CALL find_sym ( nat, tau, ityp, dfftp%nr1, dfftp%nr2, dfftp%nr3, &
                magnetic_sym, mdum )
   sym(:)       =.false.
   sym(1:nsym)=.true.

@@ -163,9 +163,9 @@ SUBROUTINE iosys()
                             lkpoint_dir_      => lkpoint_dir, &
                             tqr_              => tqr, &
                             io_level, ethr, lscf, lbfgs, lmd, &
-                            ldamped, lbands, llang,                    &
+                            ldamped, lbands, llang,           &
                             lconstrain, restart, twfcollect, &
-                            llondon, nofrac, do_makov_payne, &
+                            llondon, do_makov_payne, &
                             lecrpa_           => lecrpa
   !
   USE wvfct,         ONLY : nbnd_ => nbnd, &
@@ -188,7 +188,7 @@ SUBROUTINE iosys()
                        starting_spin_angle_ => starting_spin_angle
 
   !
-  USE symm_base, ONLY : no_t_rev_ => no_t_rev, allfrac, &
+  USE symm_base, ONLY : no_t_rev_ => no_t_rev, nofrac, allfrac, &
                         nosym_ => nosym, nosym_evc_=> nosym_evc
   !
   USE bfgs_module,   ONLY : bfgs_ndim_        => bfgs_ndim, &

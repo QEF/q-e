@@ -255,8 +255,7 @@ MODULE control_flags
   ! ... system's symmetries
   !
   LOGICAL, PUBLIC :: &
-    noinv = .FALSE.,&  ! if .TRUE. q=>-q symmetry not used in k-point generation
-    nofrac= .FALSE.    ! if .TRUE. fractionary transations are not allowed
+    noinv = .FALSE.    ! if .TRUE. q=>-q symmetry not used in k-point generation
   !
   ! ... phonon calculation
   !
