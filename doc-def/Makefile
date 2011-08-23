@@ -5,10 +5,8 @@ HTMLS = \
 	INPUT_PW.html \
         INPUT_CP.html \
 	INPUT_PH.html \
-        INPUT_NEB.html \
 	INPUT_PP.html \
 	INPUT_PROJWFC.html \
-	INPUT_LD1.html \
 	INPUT_D3.html \
 	INPUT_DOS.html \
 	INPUT_BANDS.html \

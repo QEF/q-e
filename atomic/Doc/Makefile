@@ -1,3 +1,5 @@
+HELPDOC=../../dev-tools/helpdoc
+
 LATEX   = pdflatex
 LATEX2HTML = latex2html
 
@@ -7,7 +9,7 @@ LOGS = $(PDFS:.pdf=.log)
 OUTS = $(PDFS:.pdf=.out)
 TOCS = $(PDFS:.pdf=.toc)
 
-all:  pdf html
+all:  pdf html defs
 pdf:  $(PDFS)
 html: pseudo-gen
 
@@ -18,7 +20,8 @@ $(PDFS): %.pdf: %.tex
 clean:
 	- rm -f $(PDFS) $(AUXS) $(LOGS) $(OUTS) $(TOCS) *~
 	- rm -rf pseudo-gen/
-	- rm -f INPUT_*.html INPUT_*.txt
+	- rm -f INPUT_*.html INPUT_*.txt INPUT_*.xml
+	- rm -rf ../../Doc/INPUT_LD1.*
 
 pseudo-gen: pseudo-gen.pdf
 	 rm -rf pseudo-gen/
@@ -40,3 +43,13 @@ pseudo-gen: pseudo-gen.pdf
 	@echo "***"
 	@echo ""
 
+defs: INPUT_LD1.html INPUT_LD1.txt link_on_main_doc
+
+INPUT_LD1.html: %.html: %.def
+	$(HELPDOC) $<
+INPUT_LD1.txt: %.txt: %.def
+	$(HELPDOC) $<
+link_on_main_doc:
+	-( cd ../../Doc ; ln -fs ../atomic/Doc/INPUT_LD1.html . ; \
+        ln -fs ../atomic/Doc/INPUT_LD1.xml . ; \
+        ln -fs ../atomic/Doc/INPUT_LD1.txt .)

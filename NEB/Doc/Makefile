@@ -1,3 +1,5 @@
+HELPDOC=../../dev-tools/helpdoc
+
 LATEX   = pdflatex
 LATEX2HTML = latex2html
 
@@ -8,7 +10,7 @@ OUTS = $(PDFS:.pdf=.out)
 TOCS = $(PDFS:.pdf=.toc)
 
 doc:  all
-all:  pdf html
+all:  pdf html defs
 pdf:  $(PDFS)
 html: user_guide
 
@@ -19,7 +21,8 @@ $(PDFS): %.pdf: %.tex
 clean:
 	- rm -f $(PDFS) $(AUXS) $(LOGS) $(OUTS) $(TOCS) *~
 	- rm -rf user_guide/
-	- rm -f INPUT_*.html INPUT_*.txt
+	- rm -f INPUT_*.html INPUT_*.txt INPUT_*.xml
+	- rm -rf ../../Doc/INPUT_NEB.*
 
 user_guide: user_guide.pdf
 	 rm -rf user_guide/
@@ -41,3 +44,12 @@ user_guide: user_guide.pdf
 	@echo "***"
 	@echo ""
 
+defs: INPUT_NEB.html INPUT_NEB.txt link_on_main_doc
+INPUT_NEB.html: %.html: %.def
+	$(HELPDOC) $<
+INPUT_NEB.txt: %.txt: %.def
+	$(HELPDOC) $<
+link_on_main_doc:
+	-( cd ../../Doc ; ln -fs ../NEB/Doc/INPUT_NEB.html . ; \
+	ln -fs ../NEB/Doc/INPUT_NEB.xml . ; \
+	ln -fs ../NEB/Doc/INPUT_NEB.txt .)

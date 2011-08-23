@@ -1832,7 +1832,7 @@ Nota Bene 1:   For calwf = 5, wffort is not used. The
                 bohr / angstrom: lattice vectors in bohr radii / angstrom.
                 nothing specified: if a lattice constant (celldm(1) or a)
                 is present, lattice vectors are in units of the lattice
-                constant; otherwise, in bohr radii            }
+                constant; otherwise, in bohr radii.
 	    }
 	}
 
@@ -1866,7 +1866,7 @@ Nota Bene 1:   For calwf = 5, wffort is not used. The
 
     card CONSTRAINTS {
 	label {
-	    Optional card, used for constrained dynamics or constrained optimisations ! 	    
+	    Optional card, used for constrained dynamics or constrained optimisations    
 	}
 	message {
 	    When this card is present the SHAKE algorithm is automatically used.
