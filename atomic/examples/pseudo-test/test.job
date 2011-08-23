@@ -2,8 +2,8 @@
 
 work=./results
 reference=./reference
-. ../../examples/environment_variables
-BIN_DIR=../../bin
+. ../../../examples/environment_variables
+BIN_DIR=../../../bin
 
 mkdir $work
 rm -f $work/*
@@ -12,13 +12,17 @@ ld1_command="$PARA_PREFIX $BIN_DIR/ld1.x $PARA_POSTFIX"
 
 echo "ld1_command =" $ld1_command
 
+
 if test -e difference ; then /bin/rm difference > /dev/null ; fi
 touch difference
 
-for atom in ar f fe he cu cu1 h pt mg u u1 w ne_oep c_oep ; do
+for atom in s ni rh al ga as o ; do
     $ld1_command < $atom.in > $work/$atom.out
     echo "diff -wib ./results/$atom.out ./reference/$atom.out" >> difference
     diff -wib $work/$atom.out $reference/ >> difference
 done
 
-/bin/rm ld1.wfc out_* >& /dev/null
+/bin/rm ld1*.wfc ld1*.dlog 
+
+# mv Garel.tm.UPF $work
+# diff $work/Garel.tm.UPF $reference/Garel.tm.UPF   >> difference

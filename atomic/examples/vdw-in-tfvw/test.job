@@ -1,6 +1,6 @@
 #!/bin/bash
 
-LD1=../../bin/ld1.x
+LD1=../../../bin/ld1.x
 workd=./results/
 
 mkdir -p $workd

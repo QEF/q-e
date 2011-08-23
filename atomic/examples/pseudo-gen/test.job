@@ -2,8 +2,8 @@
 
 work=./results
 reference=./reference
-. ../../examples/environment_variables
-BIN_DIR=../../bin
+. ../../../examples/environment_variables
+BIN_DIR=../../../bin
 
 mkdir $work
 rm -f $work/*

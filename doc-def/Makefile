@@ -1,6 +1,5 @@
 HELPDOC = ../dev-tools/helpdoc
 DOC_DIR = ../Doc
-ATOMIC_DOC_DIR = ../atomic_doc
 
 HTMLS = \
 	INPUT_PW.html \
@@ -20,14 +19,11 @@ HTMLS = \
 XMLS = $(HTMLS:.html=.xml)
 TXTS = $(HTMLS:.html=.txt)
 
-helpdoc: $(HTMLS) $(TXTS) copy copy_ld1
+helpdoc: $(HTMLS) $(TXTS) copy
 all:  helpdoc
 
 copy: $(HTMLS) $(TXTS)
 	cp $(HTMLS) $(TXTS) $(DOC_DIR)
-
-copy_ld1: INPUT_LD1.html INPUT_LD1.txt
-	cp INPUT_LD1.html INPUT_LD1.txt $(ATOMIC_DOC_DIR)
 
 $(HTMLS): %.html: %.def input_xx.xsl
 	$(HELPDOC) $<

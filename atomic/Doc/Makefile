@@ -1,0 +1,42 @@
+LATEX   = pdflatex
+LATEX2HTML = latex2html
+
+PDFS = pseudo-gen.pdf
+AUXS = $(PDFS:.pdf=.aux)
+LOGS = $(PDFS:.pdf=.log)
+OUTS = $(PDFS:.pdf=.out)
+TOCS = $(PDFS:.pdf=.toc)
+
+all:  pdf html
+pdf:  $(PDFS)
+html: pseudo-gen
+
+$(PDFS): %.pdf: %.tex
+	$(LATEX)  $<
+	$(LATEX)  $<
+
+clean:
+	- rm -f $(PDFS) $(AUXS) $(LOGS) $(OUTS) $(TOCS) *~
+	- rm -rf pseudo-gen/
+	- rm -f INPUT_*.html INPUT_*.txt
+
+pseudo-gen: pseudo-gen.pdf
+	 rm -rf pseudo-gen/
+	 latex2html \
+                -t "User's Guide for LD1" \
+                -html_version 3.2,math \
+                -toc_depth 5 -split 5 -toc_stars -show_section_numbers \
+                -local_icons -image_type png \
+                pseudo-gen.tex
+	cd pseudo-gen; \
+        for file in *.html; do \
+                cp $$file /tmp/$$file; \
+                cat /tmp/$$file | sed 's/HREF="http/NAME="http/g' | sed 's/mathend000#//g' - > $$file; \
+                rm -f /tmp/$$file; \
+        done
+	@echo ""
+	@echo "***"
+	@echo "*** User's Guide created in pseudo-gen/pseudo-gen.html"
+	@echo "***"
+	@echo ""
+

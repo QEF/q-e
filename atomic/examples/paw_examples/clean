@@ -24,3 +24,5 @@ for input in $LIST; do
   rm -rf ${input/.in/.out} ${input/.in/-dlog.ps} ${input/.in/}
 done
 
+cd ../
+rm -r -f results

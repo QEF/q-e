@@ -7,7 +7,7 @@ error(){
 cd $(dirname $0) || 
    error "Cannot find myself! Run the script as ./test" 4
 
-LD1=$(cd ../../bin/; echo `pwd`/ld1.x)
+LD1=$(cd ../../../bin/; echo `pwd`/ld1.x)
 test -x $LD1 ||
    error "Cannot find ld1.x, or not executable." 126
  

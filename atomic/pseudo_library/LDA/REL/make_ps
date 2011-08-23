@@ -1,6 +1,6 @@
 #!/bin/bash
 
-PWDIR='../../../../'
+PWDIR='../../../..'
 work=./WORK
 . $PWDIR/examples/environment_variables
 BIN_DIR=$PWDIR/bin
