@@ -50,7 +50,7 @@ subroutine import_upf ( )
 100   call errore('import_upf','open error on file '//file_pseudo,ios)
   call read_upf(upf, rgrid, ierr, unit=iunps)
   !
-  if (ierr .ne. 0) &
+  if (ierr>0) &
      call errore('import_upf','reading pseudo upf',abs(ierr))
   !
   zval  = upf%zp
