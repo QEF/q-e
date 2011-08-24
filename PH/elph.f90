@@ -12,6 +12,9 @@ MODULE el_phon
   !
   SAVE
   !
+  INTEGER :: elph_nbnd_min, elph_nbnd_max
+  INTEGER :: el_ph_ngauss, el_ph_nsigma
+  REAL(DP) :: el_ph_sigma
   COMPLEX(DP), ALLOCATABLE, TARGET :: &
        el_ph_mat(:,:,:,:)    !  nbnd, nbnd, nks, 3*nat
   !

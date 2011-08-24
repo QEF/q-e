@@ -310,6 +310,7 @@ MODULE control_ph
              done_epsil=.FALSE.,  &! .TRUE. when diel. constant is available
              trans,       &! if .TRUE. computes phonons
              elph,        &! if .TRUE. computes electron-ph interaction coeffs
+             elph_mat,    &! if .TRUE. eph coefficients for Wannier.
              zue,         &! if .TRUE. computes eff. charges as induced polarization
              done_zue=.FALSE., &! .TRUE. when the eff. charges are available
              zeu,         &! if .TRUE. computes eff. charges as induced forces

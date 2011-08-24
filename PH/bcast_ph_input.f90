@@ -19,7 +19,7 @@ subroutine bcast_ph_input ( )
   USE mp_global, only : intra_image_comm
   USE control_ph, ONLY : start_irr, last_irr, start_q, last_q, nmix_ph, &
                          niter_ph, lnoloc, alpha_mix, tr2_ph, lrpa, recover, &
-                         ldisp, elph, reduce_io, zue, zeu, epsil, trans, &
+                         ldisp, elph, elph_mat, reduce_io, zue, zeu, epsil, trans, &
                          lgamma, ldiag, lqdir, search_sym, dvscf_star, dvscf_dir
   USE gamma_gamma, ONLY : asr
   USE disp, ONLY : nq1, nq2, nq3
@@ -34,6 +34,7 @@ subroutine bcast_ph_input ( )
   USE ions_base,     ONLY : amass
   USE io_global, ONLY : ionode_id
   USE run_info, ONLY : title
+  USE el_phon, ONLY : elph_nbnd_min,elph_nbnd_max,el_ph_ngauss, el_ph_nsigma, el_ph_sigma
 
   implicit none
   !
@@ -46,6 +47,7 @@ subroutine bcast_ph_input ( )
   call mp_bcast (zeu, ionode_id )
   call mp_bcast (reduce_io, ionode_id )
   call mp_bcast (elph, ionode_id )
+  call mp_bcast (elph_mat, ionode_id )
   call mp_bcast (ldisp, ionode_id )
   call mp_bcast (lraman, ionode_id )
   call mp_bcast (elop, ionode_id )
@@ -79,6 +81,10 @@ subroutine bcast_ph_input ( )
   CALL mp_bcast( k1, ionode_id )
   CALL mp_bcast( k2, ionode_id )
   CALL mp_bcast( k3, ionode_id )
+  CALL mp_bcast( elph_nbnd_min, ionode_id )
+  CALL mp_bcast( elph_nbnd_max, ionode_id )
+  CALL mp_bcast( el_ph_ngauss, ionode_id )
+  CALL mp_bcast( el_ph_nsigma, ionode_id )
 
   !
   ! real*8
@@ -90,6 +96,7 @@ subroutine bcast_ph_input ( )
   call mp_bcast (alpha_mix, ionode_id )
   call mp_bcast (max_seconds, ionode_id )
   call mp_bcast (dek, ionode_id )
+  CALL mp_bcast( el_ph_sigma, ionode_id )
   !
   ! characters
   !

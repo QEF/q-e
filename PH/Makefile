@@ -72,6 +72,7 @@ dynmat_us.o \
 dynmatcc.o \
 dynmatrix.o \
 ef_shift.o \
+ep_matrix_element_wannier.o \
 elph.o \
 el_ph_collect.o \
 elphon.o \
