@@ -33,8 +33,8 @@ SUBROUTINE open_dvscf_star_q( q_index )
   USE io_global, ONLY : stdout , ionode
   use io_files, only: prefix,  tmp_dir, nd_nmbr, diropn
   USE io_global, ONLY : stdout, ionode, ionode_id
-  USE mp_global, ONLY : my_pool_id, npool, kunit,  me_pool, root_pool
-  USE mp,  ONLY : mp_barrier
+  USE mp_global, ONLY : my_pool_id, npool, kunit,  me_pool, root_pool, intra_image_comm
+  USE mp,  ONLY : mp_barrier, mp_bcast
   USE constants, ONLY: tpi
   USE control_flags, ONLY : modenum, noinv 
   USE modes,  ONLY : npert, nirr
@@ -86,7 +86,7 @@ SUBROUTINE open_dvscf_star_q( q_index )
   rdvscf_dir=trim(tmp_dir_ph)//'Rotated_DVSCF/'
 
   IF (ionode) inquire (file =TRIM(rdvscf_dir)//'.', exist = exst)
-
+  CALL mp_bcast( exst, ionode_id, intra_image_comm )
   if(.not.exst) CALL create_directory(rdvscf_dir)
    
 
@@ -137,7 +137,8 @@ SUBROUTINE open_dvscf_star_q( q_index )
   else
     index_start_q=0
   endif
-    
+ 
+
 !  write(stdout,*) 'index_start_q=',index_start_q
 
   allocate(phase_sxq(nat))
@@ -237,7 +238,7 @@ SUBROUTINE open_dvscf_star_q( q_index )
   dvrot_scr=CMPLX(0.d0,0.d0)
   
   imode0 = 0
-  
+
   DO irr = 1, nirr
      
      
@@ -375,6 +376,7 @@ SUBROUTINE open_dvscf_star_q( q_index )
        dvrot(:,:,imode0)=dvscf_at(:,:,imode0)*phase_xq
     enddo
   enddo
+
 
 
   dvscf_at=dvrot
