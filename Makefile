@@ -44,8 +44,8 @@ pw : bindir mods liblapack libblas libs libiotk libsolvent
 
 cp : bindir mods liblapack libblas libs libiotk
 	if test -d CPV ; then \
-	( cd CPV ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= cp ; \
-	else $(MAKE) $(MFLAGS) TLDEPS= cp ; fi ) ; fi
+	( cd CPV ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= all ; \
+	else $(MAKE) $(MFLAGS) TLDEPS= all ; fi ) ; fi
 
 ph : bindir mods libs pw
 	if test -d PH ; then \
