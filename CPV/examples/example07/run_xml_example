@@ -8,19 +8,21 @@ EXAMPLE_DIR=`pwd`
 if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
 
 # function to test the exit status of a job
-. ../check_failure.sh
+. ../../../examples/check_failure.sh
 
 $ECHO
 $ECHO "$EXAMPLE_DIR : starting"
 $ECHO
-$ECHO "This example shows how to use pw.x to perform SCF"
+$ECHO "This example shows how to use cp.x to perform SCF"
 $ECHO "simulation of C4H6 with TPSS metaGGA Exc."
 
 # set the needed environment variables
-. ../environment_variables
+cd ../
+. ../../examples/environment_variables
+cd example07
 
 # required executables and pseudopotentials
-BIN_LIST="pw.x"
+BIN_LIST="cp.x "
 PSEUDO_LIST="C.tpss-mt.UPF H.tpss-mt.UPF"
 
 $ECHO
@@ -73,9 +75,9 @@ done
 $ECHO " done"
 
 # how to run executables
-PW_COMMAND="$PARA_PREFIX $BIN_DIR/pw.x $PARA_POSTFIX"
+CP_COMMAND="$PARA_PREFIX $BIN_DIR/cp.x $PARA_POSTFIX"
 $ECHO
-$ECHO "  running pw.x as: $PW_COMMAND"
+$ECHO "  running cp.x as: $CP_COMMAND"
 $ECHO
 
 # clean TMP_DIR
@@ -83,7 +85,8 @@ $ECHO "  cleaning $TMP_DIR...\c"
 rm -rf $TMP_DIR/*
 $ECHO " done"
 
-cat > c4h6.pw.metaGGA.xml << EOF
+# molecular dynamics calculation
+cat > c4h6.cp.metaGGA.xml << EOF
 <?xml version="1.0" encoding="UTF-8"?>
 
 
@@ -130,35 +133,35 @@ cat > c4h6.pw.metaGGA.xml << EOF
 					-0.291292E+01   0.249129E+01   0.952936E+00
 				</real>
 			</position>
-		</atom>	
+		</atom>		
 		<atom name="H">
 			<position>
 				<real rank="1" n1="3">
 					0.203629E+01  -0.270414E+01  -0.104887E+01
 				</real>
 			</position>
-		</atom>	
+		</atom>		
 		<atom name="H">
 			<position>
 				<real rank="1" n1="3">
 					0.310911E+01  -0.162987E+01   0.189331E+01
 				</real>
 			</position>
-		</atom>	
+		</atom>		
 		<atom name="H">
 			<position>
 				<real rank="1" n1="3">
 					0.244815E+01   0.263846E+01   0.332670E+00
 				</real>
 			</position>
-		</atom>	
+		</atom>		
 		<atom name="H">
 			<position>
 				<real rank="1" n1="3">
 					0.940835E+00   0.160187E+01  -0.258377E+01
 				</real>
 			</position>
-		</atom>	
+		</atom>		
 		<atom name="C">
 			<position>
 				<real rank="1" n1="3">
@@ -172,29 +175,25 @@ cat > c4h6.pw.metaGGA.xml << EOF
 					-0.136126E+01   0.116614E+01   0.825189E+00
 				</real>
 			</position>
-		</atom>	<atom name="C">
+		</atom>		
+		<atom name="C">
 			<position>
 				<real rank="1" n1="3">
 					0.154872E+01  -0.143358E+01   0.510627E+00
 				</real>
 			</position>
-		</atom>	<atom name="C">
+		</atom>	
+		<atom name="C">
 			<position>
 				<real rank="1" n1="3">
 					0.109484E+01   0.137081E+01  -0.496954E+00
 				</real>
 			</position>
-		</atom>	
+		</atom>			
 	</atomic_list>		
 	
 	
 	<field name="InputOutput">
-
-		<parameter name="restart_mode">
-			<string>
-				from_scratch
-			</string>
-		</parameter>
 
 		<parameter name="pseudo_dir">
 			<string>
@@ -208,18 +207,30 @@ cat > c4h6.pw.metaGGA.xml << EOF
 			</string>
 		</parameter>
 		
-		<parameter name="tstress">
-			<logical>
-				true
-			</logical>
-		</parameter>	
+		<parameter name="restart_mode">
+			<string>
+				from_scratch
+			</string>
+		</parameter>
+		
+		<parameter name="iprint">
+			<integer>
+				100
+			</integer>
+		</parameter>
 		
 		<parameter name="tprnfor">
 			<logical>
-				true
+				TRUE
 			</logical>
 		</parameter>
 		
+		<parameter name="tstress">
+			<logical>
+				TRUE
+			</logical>
+		</parameter>
+	
 	</field>
 	
 	<field name="Numerics">
@@ -229,7 +240,7 @@ cat > c4h6.pw.metaGGA.xml << EOF
 				30.0
 			</real>
 		</parameter>
-		
+	
 	</field>
 	
 	<field name="Options">
@@ -239,15 +250,79 @@ cat > c4h6.pw.metaGGA.xml << EOF
 				11
 			</integer>
 		</parameter>
-		
+	
 	</field>
 	
-	<k_points type="gamma">
-	</k_points>
+	
+	<field name="CP">
+	
+<!--nstep e dt esistono anche nel PW ma nn sapevo in che field metterli  -->
+		<parameter name="nstep">
+			<integer>
+				500
+			</integer>
+		</parameter>
+		
+		<parameter name="dt">
+			<real>
+				4.0
+			</real>
+		</parameter>
+<!-- Da qui in poi esistono solo in CP-->
+		<parameter name="isave">
+			<integer>
+				500
+			</integer>
+		</parameter>
+		
+		<parameter name="nr1b">
+			<integer>
+				10
+			</integer>
+		</parameter>
+		
+		<parameter name="nr2b">
+			<integer>
+				10
+			</integer>
+		</parameter>
+		
+		<parameter name="nr3b">
+			<integer>
+				10
+			</integer>
+		</parameter>
+		
+		<parameter name="electron_dynamics">
+			<string>
+				damp
+			</string>
+		</parameter>
+		
+		<parameter name="electron_damping">
+			<real>
+				0.15D0
+			</real>
+		</parameter>
+		
+		<parameter name="emass">
+			<real>
+				350.D0
+			</real>
+		</parameter>
+		
+		<parameter name="emass_cutoff">
+			<real>
+				2.5D0
+			</real>
+		</parameter>
+			
+	</field>
+	
 </input>
 EOF
-$ECHO "  running the pw.x SCF calculation...\c"
-$PW_COMMAND < c4h6.pw.metaGGA.xml > c4h6.pw.metaGGA.out
+$ECHO "  running the cp.x SCF calculation...\c"
+$CP_COMMAND < c4h6.cp.metaGGA.xml > c4h6.cp.metaGGA.out
 check_failure $?
 $ECHO " done"
 

@@ -151,6 +151,7 @@ bcast_ph_input.o : ../Modules/ions_base.o
 bcast_ph_input.o : ../Modules/mp.o
 bcast_ph_input.o : ../Modules/mp_global.o
 bcast_ph_input.o : ../Modules/run_info.o
+bcast_ph_input.o : elph.o
 bcast_ph_input.o : phcom.o
 bcast_ph_input.o : ramanm.o
 ccg_psi.o : ../Modules/kind.o
@@ -609,6 +610,22 @@ elphon.o : ../PW/symm_base.o
 elphon.o : elph.o
 elphon.o : phcom.o
 elphon.o : save_ph_input.o
+ep_matrix_element_wannier.o : ../Modules/cell_base.o
+ep_matrix_element_wannier.o : ../Modules/constants.o
+ep_matrix_element_wannier.o : ../Modules/control_flags.o
+ep_matrix_element_wannier.o : ../Modules/fft_base.o
+ep_matrix_element_wannier.o : ../Modules/io_files.o
+ep_matrix_element_wannier.o : ../Modules/io_global.o
+ep_matrix_element_wannier.o : ../Modules/ions_base.o
+ep_matrix_element_wannier.o : ../Modules/kind.o
+ep_matrix_element_wannier.o : ../Modules/mp.o
+ep_matrix_element_wannier.o : ../Modules/mp_global.o
+ep_matrix_element_wannier.o : ../Modules/recvec.o
+ep_matrix_element_wannier.o : ../PW/noncol.o
+ep_matrix_element_wannier.o : ../PW/pwcom.o
+ep_matrix_element_wannier.o : ../PW/symm_base.o
+ep_matrix_element_wannier.o : elph.o
+ep_matrix_element_wannier.o : phcom.o
 find_mode_sym.o : ../Modules/constants.o
 find_mode_sym.o : ../Modules/io_global.o
 find_mode_sym.o : ../Modules/kind.o
@@ -866,6 +883,7 @@ phq_readin.o : ../Modules/xml_io_base.o
 phq_readin.o : ../PW/noncol.o
 phq_readin.o : ../PW/pwcom.o
 phq_readin.o : ../PW/start_k.o
+phq_readin.o : elph.o
 phq_readin.o : ph_restart.o
 phq_readin.o : phcom.o
 phq_readin.o : ramanm.o
@@ -1096,7 +1114,6 @@ set_irr.o : ../Modules/mp.o
 set_irr.o : ../Modules/mp_global.o
 set_irr.o : ../Modules/random_numbers.o
 set_irr.o : ../PW/pwcom.o
-set_irr.o : ../PW/symm_base.o
 set_irr_mode.o : ../Modules/constants.o
 set_irr_mode.o : ../Modules/kind.o
 set_irr_nosym.o : ../Modules/kind.o

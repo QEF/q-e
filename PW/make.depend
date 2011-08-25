@@ -4,6 +4,7 @@ a2fmod.o : ../Modules/kind.o
 a2fmod.o : pwcom.o
 a2fmod.o : start_k.o
 a2fmod.o : symm_base.o
+acfdt_in_pw.o : ../Modules/kind.o
 add_bfield.o : ../Modules/cell_base.o
 add_bfield.o : ../Modules/constants.o
 add_bfield.o : ../Modules/fft_base.o
@@ -697,6 +698,7 @@ init_run.o : ../Modules/recvec_subs.o
 init_run.o : ../Modules/uspp.o
 init_run.o : ../Modules/wannier_new.o
 init_run.o : dynamics_module.o
+init_run.o : esm.o
 init_run.o : newd.o
 init_run.o : paw_init.o
 init_run.o : pwcom.o
@@ -1593,7 +1595,6 @@ symme.o : symm_base.o
 symmetrize_at.o : ../Modules/io_global.o
 symmetrize_at.o : ../Modules/kind.o
 symmetrize_at.o : pwcom.o
-symmetrize_at.o : symm_base.o
 tabd.o : ../Modules/kind.o
 transform_becsum_nc.o : ../Modules/ions_base.o
 transform_becsum_nc.o : ../Modules/kind.o

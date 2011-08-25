@@ -1,0 +1,317 @@
+#!/bin/sh
+
+# run from directory where this script is
+cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
+EXAMPLE_DIR=`pwd`
+
+# check whether echo has the -e option
+if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
+
+# function to test the exit status of a job
+. ../../../examples/check_failure.sh
+
+$ECHO
+$ECHO "$EXAMPLE_DIR : starting"
+$ECHO
+$ECHO "This example shows how to use cp.x to perform molecular dynamics"
+$ECHO "simulation of SiO2."
+
+# set the needed environment variables
+cd ../
+. ../../examples/environment_variables
+cd example01
+
+# required executables and pseudopotentials
+BIN_LIST="cp.x"
+PSEUDO_LIST="Si.pz-vbc.UPF O.pz-rrkjus.UPF"
+
+$ECHO
+$ECHO "  executables directory: $BIN_DIR"
+$ECHO "  pseudo directory:      $PSEUDO_DIR"
+$ECHO "  temporary directory:   $TMP_DIR"
+$ECHO "  checking that needed directories and files exist...\c"
+
+# check for directories
+for DIR in "$BIN_DIR" "$PSEUDO_DIR" ; do
+    if test ! -d $DIR ; then
+        $ECHO
+        $ECHO "ERROR: $DIR not existent or not a directory"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+for DIR in "$TMP_DIR" "$EXAMPLE_DIR/results" ; do
+    if test ! -d $DIR ; then
+        mkdir $DIR
+    fi
+done
+cd $EXAMPLE_DIR/results
+
+# check for executables
+for FILE in $BIN_LIST ; do
+    if test ! -x $BIN_DIR/$FILE ; then
+        $ECHO
+        $ECHO "ERROR: $BIN_DIR/$FILE not existent or not executable"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+
+# check for pseudopotentials
+for FILE in $PSEUDO_LIST ; do
+    if test ! -r $PSEUDO_DIR/$FILE ; then
+       $ECHO
+       $ECHO "Downloading $FILE to $PSEUDO_DIR...\c"
+            $WGET $PSEUDO_DIR/$FILE \
+                http://www.quantum-espresso.org/pseudo/1.3/UPF/$FILE 2> /dev/null 
+    fi
+    if test $? != 0; then
+        $ECHO
+        $ECHO "ERROR: $PSEUDO_DIR/$FILE not existent or not readable"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+$ECHO " done"
+
+# how to run executables
+CP_COMMAND="$PARA_PREFIX $BIN_DIR/cp.x $PARA_POSTFIX"
+$ECHO
+$ECHO "  running cp.x as: $CP_COMMAND"
+$ECHO
+
+# clean TMP_DIR
+$ECHO "  cleaning $TMP_DIR...\c"
+rm -rf $TMP_DIR/*
+$ECHO " done"
+
+# molecular dynamics calculation
+cat >  sio2.cp.start.in << EOF
+ &control
+    calculation='cp',
+    restart_mode='from_scratch',
+    nstep=20, iprint=20, isave=20,
+    dt=5.0,
+    ndr=90, ndw=91,
+    pseudo_dir='$PSEUDO_DIR/',
+    outdir='$TMP_DIR/',
+ /
+ &system
+    ibrav=8, celldm(1)=9.28990, celldm(2)=1.73206, celldm(3)=1.09955,
+    nat=18, ntyp=2, nbnd=48, nspin=1,
+    ecutwfc=20.0, ecutrho=150.0,
+    nr1b=16, nr2b=16, nr3b=16,
+    qcutz=150., q2sigma=2.0, ecfixed=16.0,
+ /
+ &electrons
+    electron_dynamics='damp', electron_damping=0.2,
+    startingwfc='random', ampre=0.01,
+    emass=700., emass_cutoff=3.,
+ /
+ &ions
+    ion_dynamics='none',
+    ion_radius(1)=1.0, ion_radius(2)=1.0,
+ /
+ATOMIC_SPECIES
+   O  16.00 O.pz-rrkjus.UPF
+  Si  28.00 Si.pz-vbc.UPF
+ATOMIC_POSITIONS
+ O  3.18829368  14.83237039   1.22882961
+ O  7.83231469   6.78704039   1.22882961
+ O  2.07443467   5.99537992   4.73758250
+ O  6.72031366  14.04231898   4.73758250
+ O  3.96307134  11.26989826   7.87860582
+ O  8.60802134   3.22295920   7.87860582
+ O  3.96307134   4.81915267   9.14625133
+ O  8.60802134  12.86448267   9.14625133
+ O  3.18736469   1.25668055   5.58029607
+ O  7.83324368   9.30201055   5.58029607
+ O  2.07536366  10.09206195   2.07358613
+ O  6.71938467   2.04673195   2.07358613
+Si  0.28891589   8.04533000   3.40456284
+Si  4.93386589   0.00000000   3.40456284
+Si  2.13389003  12.27717358  -0.04188031
+Si  6.77884003   4.23184358  -0.04188031
+Si  2.13389003   3.81348642   6.85202747
+Si  6.77884003  11.85881642   6.85202747
+EOF
+$ECHO "  running the calculation with fixed ions...\c"
+$CP_COMMAND < sio2.cp.start.in > sio2.cp.start.out
+check_failure $?
+$ECHO " done"
+
+# molecular dynamics calculation
+cat > sio2.cp.restart.in << EOF
+ &control
+    calculation='cp',
+    restart_mode='reset_counters',
+    nstep=50, iprint=50, isave=50,
+    dt=15.0,
+    ndr=91, ndw=92,
+    pseudo_dir='$PSEUDO_DIR/',
+    outdir='$TMP_DIR/',
+ /
+ &system
+    ibrav=8, celldm(1)=9.28990, celldm(2)=1.73206, celldm(3)=1.09955,
+    nat=18, ntyp=2, nbnd=48, nspin=1,
+    ecutwfc=20.0, ecutrho=150.0,
+    nr1b=16, nr2b=16, nr3b=16,
+    qcutz=150., q2sigma=2.0, ecfixed=16.0,
+ /
+ &electrons
+    electron_dynamics='damp', electron_damping=0.2,
+    emass=700., emass_cutoff=3.,
+ /
+ &ions
+    ion_dynamics='none',
+    ion_radius(1)=1.0, ion_radius(2)=1.0,
+ /
+ATOMIC_SPECIES
+   O  16.00 O.pz-rrkjus.UPF
+  Si  28.00 Si.pz-vbc.UPF
+ATOMIC_POSITIONS
+ O  3.18829368  14.83237039   1.22882961
+ O  7.83231469   6.78704039   1.22882961
+ O  2.07443467   5.99537992   4.73758250
+ O  6.72031366  14.04231898   4.73758250
+ O  3.96307134  11.26989826   7.87860582
+ O  8.60802134   3.22295920   7.87860582
+ O  3.96307134   4.81915267   9.14625133
+ O  8.60802134  12.86448267   9.14625133
+ O  3.18736469   1.25668055   5.58029607
+ O  7.83324368   9.30201055   5.58029607
+ O  2.07536366  10.09206195   2.07358613
+ O  6.71938467   2.04673195   2.07358613
+Si  0.28891589   8.04533000   3.40456284
+Si  4.93386589   0.00000000   3.40456284
+Si  2.13389003  12.27717358  -0.04188031
+Si  6.77884003   4.23184358  -0.04188031
+Si  2.13389003   3.81348642   6.85202747
+Si  6.77884003  11.85881642   6.85202747
+EOF
+$ECHO "  running the calculation with fixed ions, restart...\c"
+$CP_COMMAND < sio2.cp.restart.in > sio2.cp.restart.out
+check_failure $?
+$ECHO " done"
+
+# molecular dynamics calculation
+cat > sio2.vc-cp.in << EOF
+ &control
+    calculation='vc-cp',
+    restart_mode='reset_counters',
+    nstep=10, iprint=10, isave=10,
+    dt=12.0,
+    ndr=92, ndw=93,
+    pseudo_dir='$PSEUDO_DIR/',
+    outdir='$TMP_DIR/',
+ /
+ &system
+    ibrav=8, celldm(1)=9.28990, celldm(2)=1.73206, celldm(3)=1.09955,
+    nat=18, ntyp=2, nbnd=48, nspin=1,
+    ecutwfc=20.0, ecutrho=150.0,
+    nr1b=16, nr2b=16, nr3b=16,
+    qcutz=150., q2sigma=2.0, ecfixed=16.0,
+ /
+ &electrons
+    electron_dynamics='verlet', ortho_max=30,
+    emass=700., emass_cutoff=3.,
+ /
+ &ions
+    ion_dynamics='verlet', ion_temperature='nose',
+    tempw=300, fnosep=6.6666,
+    ion_radius(1)=1.0, ion_radius(2)=1.0,
+ /
+ &cell
+    cell_dynamics='pr', cell_temperature='nose',
+    temph=300., fnoseh=8.6071, press=1.0,
+ /
+ATOMIC_SPECIES
+   O  16.00 O.pz-rrkjus.UPF
+  Si  28.00 Si.pz-vbc.UPF
+ATOMIC_POSITIONS
+ O  3.18829368  14.83237039   1.22882961
+ O  7.83231469   6.78704039   1.22882961
+ O  2.07443467   5.99537992   4.73758250
+ O  6.72031366  14.04231898   4.73758250
+ O  3.96307134  11.26989826   7.87860582
+ O  8.60802134   3.22295920   7.87860582
+ O  3.96307134   4.81915267   9.14625133
+ O  8.60802134  12.86448267   9.14625133
+ O  3.18736469   1.25668055   5.58029607
+ O  7.83324368   9.30201055   5.58029607
+ O  2.07536366  10.09206195   2.07358613
+ O  6.71938467   2.04673195   2.07358613
+Si  0.28891589   8.04533000   3.40456284
+Si  4.93386589   0.00000000   3.40456284
+Si  2.13389003  12.27717358  -0.04188031
+Si  6.77884003   4.23184358  -0.04188031
+Si  2.13389003   3.81348642   6.85202747
+Si  6.77884003  11.85881642   6.85202747
+EOF
+$ECHO "  running the variable-cell calculation...\c"
+$CP_COMMAND < sio2.vc-cp.in > sio2.vc-cp.out
+check_failure $?
+$ECHO " done"
+
+# molecular dynamics calculation
+cat > sio2.vc-cp.restart.in << EOF
+ &control
+    calculation='vc-cp',
+    restart_mode='reset_counters',
+    nstep=10, iprint=10, isave=10,
+    dt=12.0,
+    ndr=93, ndw=94,
+    pseudo_dir='$PSEUDO_DIR/',
+    outdir='$TMP_DIR/',
+ /
+ &system
+    ibrav=8, celldm(1)=9.28990, celldm(2)=1.73206, celldm(3)=1.09955,
+    nat=18, ntyp=2, nbnd=48, nspin=1,
+    ecutwfc=20.0, ecutrho=150.0,
+    nr1b=16, nr2b=16, nr3b=16,
+    qcutz=150., q2sigma=2.0, ecfixed=16.0,
+ /
+ &electrons
+    electron_dynamics='verlet', ortho_max=30,
+    emass=700., emass_cutoff=3.,
+ /
+ &ions
+    ion_dynamics='verlet', ion_temperature='nose',
+    tempw=300, fnosep=6.6666,
+    ion_radius(1)=1.0, ion_radius(2)=1.0,
+ /
+ &cell
+    cell_dynamics='pr', cell_temperature='nose',
+    temph=300., fnoseh=8.6071, press=1.0,
+ /
+ATOMIC_SPECIES
+   O  16.00 O.pz-rrkjus.UPF
+  Si  28.00 Si.pz-vbc.UPF
+ATOMIC_POSITIONS
+ O  3.18829368  14.83237039   1.22882961
+ O  7.83231469   6.78704039   1.22882961
+ O  2.07443467   5.99537992   4.73758250
+ O  6.72031366  14.04231898   4.73758250
+ O  3.96307134  11.26989826   7.87860582
+ O  8.60802134   3.22295920   7.87860582
+ O  3.96307134   4.81915267   9.14625133
+ O  8.60802134  12.86448267   9.14625133
+ O  3.18736469   1.25668055   5.58029607
+ O  7.83324368   9.30201055   5.58029607
+ O  2.07536366  10.09206195   2.07358613
+ O  6.71938467   2.04673195   2.07358613
+Si  0.28891589   8.04533000   3.40456284
+Si  4.93386589   0.00000000   3.40456284
+Si  2.13389003  12.27717358  -0.04188031
+Si  6.77884003   4.23184358  -0.04188031
+Si  2.13389003   3.81348642   6.85202747
+Si  6.77884003  11.85881642   6.85202747
+EOF
+
+$ECHO "  running the variable-cell calculation, restart...\c"
+$CP_COMMAND < sio2.vc-cp.restart.in >  sio2.vc-cp.restart.out
+check_failure $?
+$ECHO " done"
+
+$ECHO
+$ECHO "$EXAMPLE_DIR : done"

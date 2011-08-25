@@ -11,7 +11,7 @@ TOPDIR=`pwd`
 
 if test $# = 0
 then
-    dirs=" Modules clib PW CPV flib pwtools upftools PP PWCOND//src \
+    dirs=" Modules clib PW CPV//src flib pwtools upftools PP PWCOND//src \
            Gamma PH D3 atomic//src VdW XSpectra//src \
 	   GWW//gww GWW//pw4gww GWW//head ACFDT NEB//src Solvent" 
           
@@ -27,8 +27,10 @@ do
     # in directory DIR should be listed in DEPENDS
     DEPENDS="../include ../iotk/src"
     case $DIR in 
-        EE | flib | upftools | CPV | Solvent | PW )
+        EE | flib | upftools | Solvent | PW )
                   DEPENDS="$DEPENDS ../Modules "      ;;
+	CPV/src )
+		  DEPENDS="../../Modules ../../iotk/src ../../include" ;;
 	atomic/src )
 		  DEPENDS="../../iotk/src ../../include ../../Modules" ;;
 	PP | PWCOND | Gamma | PH | pwtools )

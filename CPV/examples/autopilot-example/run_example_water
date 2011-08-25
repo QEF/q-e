@@ -1,0 +1,189 @@
+#!/bin/sh
+
+# run from directory where this script is
+cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
+EXAMPLE_DIR=`pwd`
+
+# check whether echo has the -e option
+if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
+
+$ECHO
+$ECHO "$EXAMPLE_DIR : starting"
+$ECHO
+$ECHO "This example (a water molecule) shows how to use cp.x to perform"
+$ECHO "molecular dynamics with variable parameters using AUTOPILOT."
+$ECHO "The variables are changed without stopping and starting cp.x."
+$ECHO "For example the dt value can be changed from 3 to 5 to 10 to 15"
+$ECHO "at predefined time steps. For other advanced options like STRING"
+$ECHO "(send a signal to a running cp.x process to change some parameter"
+$ECHO "on the fly) or Pause please consult the AUTOPILOT documentation."
+
+# set the needed environment variables 
+cd ../
+. ../../examples/environment_variables
+cd autopilot-example
+
+# required executables and pseudopotentials
+BIN_LIST="cp.x"
+PSEUDO_LIST="H_US.van O_US.van"
+
+$ECHO
+$ECHO "  executables directory: $BIN_DIR"
+$ECHO "  pseudo directory:      $PSEUDO_DIR"
+$ECHO "  temporary directory:   $TMP_DIR"
+$ECHO "  checking that needed directories and files exist...\c"
+
+# check for directories
+for DIR in "$BIN_DIR" "$PSEUDO_DIR" ; do
+    if test ! -d $DIR ; then 
+        $ECHO
+        $ECHO "ERROR: $DIR not existent or not a directory"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+for DIR in "$TMP_DIR" "$EXAMPLE_DIR/results" ; do
+    if test ! -d $DIR ; then
+        mkdir $DIR
+    fi
+done
+cd $EXAMPLE_DIR/results
+
+# check for executables
+for FILE in $BIN_LIST ; do
+    if test ! -x $BIN_DIR/$FILE ; then
+        $ECHO
+        $ECHO "ERROR: $BIN_DIR/$FILE not existent or not executable"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+
+# check for pseudopotentials
+for FILE in $PSEUDO_LIST ; do
+    if test ! -r $PSEUDO_DIR/$FILE ; then
+        $ECHO
+        $ECHO "ERROR: $PSEUDO_DIR/$FILE not existent or not readable"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+$ECHO " done"
+
+# how to run executables
+CP_COMMAND="$PARA_PREFIX $BIN_DIR/cp.x $PARA_POSTFIX"
+$ECHO
+$ECHO "  running cp.x as: $CP_COMMAND"
+$ECHO
+
+# clean TMP_DIR
+$ECHO "  cleaning $TMP_DIR...\c"
+rm -rf $TMP_DIR/*
+$ECHO " done"
+
+# molecular dynamics calculation
+cat > water.autopilot.in << EOF
+  &CONTROL
+    calculation='cp',
+    title="WATER",
+    restart_mode='from_scratch',
+    nstep=10000, iprint=30, isave=30,
+    tstress=.FALSE.,
+    tprnfor=.FALSE.,
+    dt = 3.,
+    ndr=90,
+    ndw=91,
+    ekin_conv_thr=1e-09
+    pseudo_dir='$PSEUDO_DIR/',
+    outdir='$TMP_DIR/',
+  /
+  &SYSTEM
+    ibrav = 1,
+    celldm(1) = 10.,
+    nat =3,
+    ntyp =2,
+    nbnd =4,
+    ecutwfc =25.0,
+    ecutrho =200.0,
+    nr1b=20, nr2b=20, nr3b=20,
+    occupations = 'fixed',
+    nspin=1,
+    ecfixed =25.0
+  /
+  &ELECTRONS
+    emass = 700.,
+    emass_cutoff = 3.,
+    orthogonalization = 'ortho',
+    electron_maxstep = 200,
+    ortho_eps = 1.e-10,
+    ortho_max = 250,
+    electron_dynamics= 'damp',
+    electron_damping =0.15,
+    startingwfc='random'
+    ampre=0.02
+  /
+  &IONS
+    ion_dynamics    = 'none',
+    ion_radius      = 1.0,
+    ion_damping     = 0.0,
+    ion_positions   = 'default',
+    ion_temperature = 'not_controlled',
+    tempw=800,
+    fnosep=37.22179
+  /
+AUTOPILOT
+    on_step =  31  : dt=5
+    on_step =  61  : dt=10
+    on_step =  91  : dt=15
+    on_step =  91  : iprint=100
+    on_step =  91  : isave=100
+    on_step = 191  : ion_dynamics    = 'damp'
+    on_step = 191  : electron_damping =0.00
+    on_step = 191  : isave=500
+    on_step = 191  : isave=500
+    on_step = 691  : ion_temperature = 'nose'
+    on_step = 691  : tempw=150
+    on_step = 1191 : tempw=300
+    on_step = 1691 : tempw=500
+    on_step = 2191 : iprint=50
+    on_step = 2191 : isave=50
+    on_step = 2191 : electron_damping = 0.10
+    on_step = 2191 : ion_dynamics = 'none'
+    on_step = 2191 : ion_temperature ='not_controlled'
+    on_step = 2241 : iprint=200
+    on_step = 2241 : isave=200
+    on_step = 2241 : electron_damping =0.00
+    on_step = 2241 : ion_dynamics    = 'damp'
+    on_step = 2441 : iprint=900
+    on_step = 2441 : isave=500
+    on_step = 2441 : electron_damping =0.15
+    on_step = 2441 : ion_temperature = 'nose'
+    on_step = 2441 : tempw=800
+    on_step = 3341 : iprint=200
+    on_step = 3341 : isave=200
+    on_step = 3341 : electron_damping =0.00
+    on_step = 3541 : iprint=50
+    on_step = 3541 : isave=50
+    on_step = 3541 : ion_dynamics    = 'none'
+    on_step = 3541 : ion_temperature = 'not_controlled'
+    on_step = 3591 : iprint=2000
+    on_step = 3591 : isave=2000
+    on_step = 3591 : ion_dynamics    = 'damp'
+    on_step = 3591 : ion_temperature = 'nose'
+    on_step = 6591 : iprint=10000
+    on_step = 6591 : isave=500
+    on_step = 6591 : electron_damping =0.00
+    on_step = 6591 : ion_temperature = 'nose'
+ENDRULES
+ATOMIC_SPECIES
+ H   1.00794000    H_US.van 
+ O  15.99940000    O_US.van
+ATOMIC_POSITIONS {bohr}
+ H     0.57164238	  0.94335166	  0.96565043
+ H    -0.24339682	 -0.43501513	 -1.37874473
+ O    -0.32824556	 -0.50852550	  0.41309430
+EOF
+$ECHO "  running CP  calculation with AUTOPILOT option...\c"
+$CP_COMMAND < water.autopilot.in > water.autopilot.out
+$ECHO " done"
+exit 0
