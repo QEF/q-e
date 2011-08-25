@@ -1,0 +1,1362 @@
+\documentclass[12pt,a4paper]{article}
+\def\version{4.3.2}
+\def\qe{{\sc Quantum ESPRESSO}}
+
+\usepackage{html}
+
+% BEWARE: don't revert from graphicx for epsfig, because latex2html
+% doesn't handle epsfig commands !!!
+\usepackage{graphicx}
+
+\textwidth = 17cm
+\textheight = 24cm
+\topmargin =-1 cm
+\oddsidemargin = 0 cm
+
+\def\pwx{\texttt{pw.x}}
+\def\cpx{\texttt{cp.x}}
+\def\phx{\texttt{ph.x}}
+\def\nebx{\texttt{neb.x}}
+\def\configure{\texttt{configure}}
+\def\PWscf{\texttt{PWscf}}
+\def\PHonon{\texttt{PHonon}}
+\def\CP{\texttt{CP}}
+\def\PostProc{\texttt{PostProc}}
+\def\make{\texttt{make}}
+
+\begin{document} 
+\author{}
+\date{}
+
+\def\qeImage{../../Doc/quantum_espresso.pdf}
+\def\democritosImage{../../Doc/democritos.pdf}
+
+\begin{htmlonly}
+\def\qeImage{../../Doc/quantum_espresso.png}
+\def\democritosImage{../../Doc/democritos.png}
+\end{htmlonly}
+
+\title{
+  \includegraphics[width=5cm]{\qeImage} \hskip 2cm
+  \includegraphics[width=6cm]{\democritosImage}\\
+  \vskip 1cm
+  % title
+  \Huge User's Guide for \CP\ \smallskip
+  \Large (version \version)
+}
+%\endhtmlonly
+
+%\latexonly
+%\title{
+% \epsfig{figure=quantum_espresso.png,width=5cm}\hskip 2cm
+% \epsfig{figure=democritos.png,width=6cm}\vskip 1cm
+%  % title
+%  \Huge User's Guide for \qe \smallskip
+%  \Large (version \version)
+%}
+%\endlatexonly
+
+\maketitle
+
+\tableofcontents
+
+\section{Introduction}
+
+This guide covers the installation and usage of \CP \ (opEn-Source
+Package for Car-Parrinello Molecular Dynamics.
+, version \version.
+
+\CP \ is part of the \qe \ distribution and can not be compiled nor used independently.
+
+\CP\ can perform Car-Parrinello molecular dynamics, including
+variable-cell dynamics, and free-energy surface calculation at
+fixed cell through meta-dynamics, if patched with PLUMED.
+
+The \CP\ package is based on the original code written by
+ Roberto Car
+and Michele Parrinello. \CP\ was developed by Alfredo Pasquarello
+(IRRMA, Lausanne), Kari Laasonen (Oulu), Andrea Trave, Roberto
+Car (Princeton), Nicola Marzari (Univ. Oxford), Paolo Giannozzi, and others.
+FPMD, later merged with \CP, was developed by Carlo
+Cavazzoni, 
+Gerardo Ballabio (CINECA), Sandro Scandolo (ICTP), 
+Guido Chiarotti (SISSA), Paolo Focher, and others.
+We quote in particular:
+\begin{itemize}
+  \item Manu Sharma (Princeton) and Yudong Wu (Princeton) for
+   maximally localized Wannier functions and dynamics with 
+   Wannier functions;
+  \item Paolo Umari (Univ. Padua) for finite electric fields and conjugate
+   gradients;
+  \item Paolo Umari and Ismaila Dabo for ensemble-DFT;
+  \item Xiaofei Wang (Princeton) for META-GGA;
+  \item The Autopilot feature was implemented by Targacept, Inc.
+\end{itemize}
+This guide has been mostly writen by Gerardo Ballabio and Carlo Cavazzoni.
+
+\CP\ is free software, released under the
+GNU General Public License. \\ See
+\texttt{http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt},
+or the file License in the distribution).
+
+We shall greatly appreciate if scientific work done using this code will
+contain an explicit acknowledgment and the following reference:
+\begin{quote}
+P. Giannozzi, S. Baroni, N. Bonini, M. Calandra, R. Car, C. Cavazzoni,
+D. Ceresoli, G. L. Chiarotti, M. Cococcioni, I. Dabo, A. Dal Corso,
+S. Fabris, G. Fratesi, S. de Gironcoli, R. Gebauer, U. Gerstmann,
+C. Gougoussis, A. Kokalj, M. Lazzeri, L. Martin-Samos, N. Marzari,
+F. Mauri, R. Mazzarello, S. Paolini, A. Pasquarello, L. Paulatto,
+C. Sbraccia, S. Scandolo, G. Sclauzero, A. P. Seitsonen, A. Smogunov,
+P. Umari, R. M. Wentzcovitch, J.Phys.:Condens.Matter 21, 395502 (2009),
+http://arxiv.org/abs/0906.2569
+\end{quote}
+
+\section{Installation}
+
+\subsection{Download}
+
+\CP is automatically downloaded from \texttt{http://qe-forge.org/frs/?group\_id=37}
+
+
+\subsection{Prerequisites}
+\label{Sec:Installation}
+
+To install \CP\ from source, you need first of all a minimal Unix
+environment and the \qe \ distribution.
+
+\subsection{\configure}
+
+For instruction on how to install the \qe\ source package please refer to
+the \qe \ general documentation (user\_guide) that is available at
+\begin{verbatim}
+http://www.quantum-espresso.org/wiki/index.php/Main_Page.
+\end{verbatim}
+
+After the correct installation of \qe \, the installation and compilation of \CP \
+can be done just typing \texttt{make cp} from the main espresso directory.
+
+\subsection{Compilation}
+
+Typing \texttt{make cp} will produce the following codes in \texttt{CPV/src}:
+\begin{itemize}
+\item \cpx: calculates reaction barriers and pathways using NEB.
+\item \texttt{cppp.x}: postprocessing code for cp.
+\end{itemize}
+
+Symlinks to executable programs will be placed in the
+\texttt{bin/} subdirectory.
+
+
+\subsection{Running examples}
+\label{SubSec:Examples}
+As a final check that compilation was successful, you may want to run some or
+all of the examples. You should first of all ensure that you have downloaded
+
+To run the examples, you should follow this procedure:
+\begin{enumerate}
+\item Go to the \texttt{examples/} directory from the main \qe \ directory and edit the
+  \texttt{environment\_variables} file, setting the following variables as needed:
+\begin{quote}
+   BIN\_DIR: directory where executables reside\\
+   PSEUDO\_DIR: directory where pseudopotential files reside\\
+   TMP\_DIR: directory to be used as temporary storage area
+\end{quote}
+\end{enumerate}
+The default values of BIN\_DIR and PSEUDO\_DIR should be fine,
+unless you have installed things in nonstandard places. TMP\_DIR
+must be a directory where you have read and write access to, with
+enough available space to host the temporary files produced by the
+example runs, and possibly offering high I/O performance (i.e., don't
+use an NFS-mounted directory). NOTA BENE: do not use a
+directory containing other data, the examples will clean it!
+If you have compiled the parallel version of \qe\ (this
+is the default if parallel libraries are detected), you will usually
+have to specify a driver program (such as \texttt{mpirun} or \texttt{mpiexec})
+and the number of processors: see Sec.\ref{SubSec:para} for
+details. In order to do that, edit again the \texttt{environment\_variables}
+file
+and set the PARA\_PREFIX and PARA\_POSTFIX variables as needed.
+Parallel executables will be run by a command like this:
+\begin{verbatim}
+      $PARA_PREFIX cp.x $PARA_POSTFIX < file.in > file.out
+\end{verbatim}
+For example, if the command line is like this (as for an IBM SP):
+\begin{verbatim}
+      poe cp.x -procs 4 < file.in > file.out
+\end{verbatim}
+you should set PARA\_PREFIX="poe", PARA\_POSTFIX="-procs
+4". Furthermore, if your machine does not support interactive use, you
+must run the commands specified below through the batch queuing
+system installed on that machine. Ask your system administrator for
+instructions.
+
+Go to CPV/examples/example* and execute:
+\begin{verbatim}
+      ./run_example
+\end{verbatim}
+This will create a subdirectory results, containing the input and
+output files generated by the calculation.
+
+The \texttt{reference/} subdirectory contains
+verified output files, that you can check your results against. They
+were generated on a Linux PC using the Intel compiler. On different
+architectures the precise numbers could be slightly different, in
+particular if different FFT dimensions are automatically selected. For
+this reason, a plain diff of your results against the reference data
+doesn't work, or at least, it requires human inspection of the
+results.
+
+To run tests, go to directory \texttt{tests} and follow the directions in the header of file 
+\texttt{tests/check\_cp.x.j}, editing variables PARA\_PREFIX, PARA\_POSTFIX 
+if needed (see below).
+
+Let us now consider examples.
+The \texttt{README} file in each example's directory contains a detailed information of
+what the particular example does. 
+If you find that any relevant feature isn't being tested, please contact us 
+(or even better, write and send us a new example yourself !).
+
+\section{Parallelism}
+\label{Sec:para}
+
+\subsection{Understanding Parallelism}
+
+Two different parallelization paradigms are currently implemented 
+in \qe:
+\begin{enumerate}
+\item {\em Message-Passing (MPI)}. A copy of the executable runs 
+on each CPU; each copy lives in a different world, with its own
+private set of data, and communicates with other executables only
+via calls to MPI libraries. MPI parallelization requires compilation 
+for parallel execution, linking with MPI libraries, execution using 
+a launcher program (depending upon the specific machine). The number of CPUs used
+is specified at run-time either as an option to the launcher or
+by the batch queue system. 
+\item {\em OpenMP}.  A single executable spawn subprocesses
+(threads) that perform in parallel specific tasks. 
+OpenMP can be implemented via compiler directives ({\em explicit} 
+OpenMP) or via {\em multithreading} libraries  ({\em library} OpenMP).
+Explicit OpenMP require compilation for OpenMP execution;
+library OpenMP requires only linking to a multithreading
+version of mathematical libraries, e.g.:
+ESSLSMP, ACML\_MP, MKL (the latter is natively multithreading).
+The number of threads is specified at run-time in the environment 
+variable OMP\_NUM\_THREADS. 
+\end{enumerate}
+
+MPI is the well-established, general-purpose parallelization.
+In \qe\ several parallelization levels, specified at run-time
+via command-line options to the executable, are implemented
+with MPI. This is your first choice for execution on a parallel 
+machine.
+
+Library OpenMP is a low-effort parallelization suitable for
+multicore CPUs. Its effectiveness relies upon the quality of 
+the multithreading libraries and the availability of 
+multithreading FFTs. If you are using MKL,\footnote{Beware: 
+MKL v.10.2.2 has a buggy \texttt{dsyev} yielding wrong results 
+with more than one thread; fixed in v.10.2.4}
+you may want to select FFTW3 (set \texttt{CPPFLAGS=-D\_\_FFTW3...}
+in \texttt{make.sys}) and to link with the MKL interface to FFTW3. 
+You will get a decent speedup ($\sim 25$\%) on two cores.
+
+Explicit OpenMP is a very recent addition, still at an 
+experimental stage, devised to increase scalability on
+large multicore parallel machines. Explicit OpenMP is 
+devised to be run together with MPI and also together 
+with multithreaded libraries. BEWARE: you have to be VERY 
+careful to prevent conflicts between the various kinds of
+parallelization. If you don't know how to run MPI processes
+and OpenMP threads in a controlled manner, forget about mixed 
+OpenMP-MPI parallelization.
+
+\subsection{Running on parallel machines}
+\label{SubSec:para}
+
+Parallel execution is strongly system- and installation-dependent. 
+Typically one has to specify:
+\begin{enumerate}
+\item a launcher program (not always needed), 
+such as \texttt{poe}, \texttt{mpirun}, \texttt{mpiexec},
+  with the  appropriate options (if any);
+\item the number of processors, typically as an option to the launcher
+  program, but in some cases to be specified after the name of the
+  program to be
+  executed; 
+\item the program to be executed, with the proper path if needed: for
+  instance, \cpx, or \texttt{./cp.x}, or \texttt{\$HOME/bin/cp.x}, or
+  whatever applies; 
+\item other \qe-specific parallelization options, to be
+  read and interpreted by the running code: 
+\begin{itemize}
+\item the number of ``task groups'' into which processors are to be
+  grouped;
+\item the number of processors performing iterative orthonormalization.
+\end{itemize}
+\end{enumerate}
+Items 1) and 2) are machine- and installation-dependent, and may be 
+different for interactive and batch execution. Note that large
+parallel machines are  often configured so as to disallow interactive
+execution: if in doubt, ask your system administrator.
+Item 3) also depend on your specific configuration (shell, execution
+path, etc). 
+Item 4) is optional but may be important: see the following section
+for the meaning of the various options.
+
+For illustration, here is how to run \cpx\ on 16 processors with 4 processors for the
+iterative orthonormalization, for several typical cases.
+
+IBM SP machines, batch:
+\begin{verbatim}
+   cp.x -ndiag 4 < input
+\end{verbatim}
+This should also work interactively, with environment variables NPROC
+set to 16, MP\_HOSTFILE set to the file containing a list of processors.
+
+IBM SP machines, interactive, using \texttt{poe}:
+\begin{verbatim}
+   poe cp.x -ndiag 4 < input
+\end{verbatim}
+PC clusters using \texttt{mpiexec}:
+\begin{verbatim}
+   mpiexec -n 16 cp.x -ndiag 4 < input
+\end{verbatim}
+SGI Altix and PC clusters using \texttt{mpirun}:
+\begin{verbatim}   mpirun -np 16 cp.x -ndiag 4 < input
+\end{verbatim}
+IBM BlueGene using \texttt{mpirun}:
+ \begin{verbatim}
+  mpirun -np 16 -exe /path/to/executable/cp.x -args "-ndiag 4" \
+    -in /path/to/input -cwd /path/to/work/directory
+\end{verbatim}
+If you want to run in parallel the examples distributed with \qe\
+(see Sec.\ref{SubSec:Examples}), set PARA\_PREFIX to everything
+before the executable (\pwx\ in the above examples),
+PARA\_POSTFIX to what follows it until the first redirection sign 
+($<, >, |,..$), if any. For execution using OpenMP on N threads, 
+set  PARA\_PREFIX to \texttt{env OMP\_NUM\_THREADS=N}.
+
+\subsection{Parallelization levels}
+
+Data structures are distributed across processors.
+Processors are organized in a hierarchy of groups, 
+which are identified by different MPI communicators level.
+The groups hierarchy is as follow:
+\begin{verbatim}
+                 /   task   groups
+  world _ images
+                 \ linear-algebra  groups
+\end{verbatim}
+
+{\bf world}: is the group of all processors (MPI\_COMM\_WORLD).
+
+{\bf images}: Processors can then be divided into different "images",
+corresponding to a point in configuration space (i.e. to
+a different set of atomic positions) for NEB calculations;
+to one (or more than one) "irrep" or wave-vector in phonon
+calculations.
+
+{\bf task groups}: 
+In order to allow good parallelization of the 3D FFT when 
+the number of processors exceeds the number of FFT planes,
+data can be redistributed to "task groups" so that each group 
+can process several wavefunctions at the same time.
+
+{\bf linear-algebra group}:
+A further level of parallelization, independent on
+PW or k-point parallelization, is the parallelization of
+iterative orthonormalization
+(\cpx). The procedure requires the diagonalization of 
+arrays whose dimension is the number of Kohn-Sham states
+(or a small multiple). All such arrays are distributed block-like
+across the ``linear-algebra group'', a subgroup of the pool of processors,
+organized in a square 2D grid. As a consequence the number of processors
+in the linear-algebra group is given by $n^2$, where $n$ is an integer;
+$n^2$ must be smaller than the number of processors of a single pool.
+The diagonalization is then performed
+in parallel using standard linear algebra operations.
+(This diagonalization is used by, but should not be confused with,
+the iterative Davidson algorithm). One can choose to compile
+ScaLAPACK if available, internal built-in algorithms otherwise.
+
+{\bf Communications}:
+Images and pools are loosely coupled and processors communicate
+between different images and pools only once in a while, whereas
+processors within each pool are tightly coupled and communications
+are significant. This means that Gigabit ethernet (typical for
+cheap PC clusters) is ok up to 4-8 processors per pool, but {\em fast}
+communication hardware (e.g. Mirynet or comparable) is absolutely 
+needed beyond 8 processors per pool.
+
+{\bf Choosing parameters}:
+To control the number of processors in each group,
+command line switches: \texttt{-nimage}, \texttt{-npools},
+\texttt{-ntg}, \texttt{northo} are used.
+
+Default values are: \texttt{-nimage 1 -npool 1 -ntg 1} ; 
+\texttt{ndiag} is set to 1 if ScaLAPACK is not compiled,
+it is set to the square integer smaller than or equal to  half the number 
+of processors of each pool.
+
+\paragraph{Massively parallel calculations}
+For very large jobs (i.e. O(1000) atoms or so) or for very long jobs
+to be run on massively parallel  machines (e.g. IBM BlueGene) it is
+crucial to use in an effective way both the "task group" and the
+"linear-algebra" parallelization. Without a judicious choice of
+parameters, large jobs will find a stumbling block in either memory or 
+CPU requirements. In particular, the linear-algebra parallelization is
+used in the diagonalization  of matrices in the subspace of Kohn-Sham
+states (whose dimension is as a strict minimum equal to the number of
+occupied states). These are stored as block-distributed matrices
+(distributed across processors) and diagonalized using custom-tailored
+diagonalization algorithms that work on block-distributed matrices.
+
+Since v.4.1, ScaLAPACK can be used to diagonalize block distributed
+matrices, yielding better speed-up than the default algorithms for
+large ($ > 1000$) matrices, when using a large number of processors 
+($> 512$). If you want to test ScaLAPACK,
+use \texttt{configure --with-scalapack}. This
+will add
+\texttt{-D\_\_SCALAPACK} to DFLAGS in \texttt{make.sys} and set LAPACK\_LIBS to something
+like:
+\begin{verbatim}
+    LAPACK_LIBS = -lscalapack -lblacs -lblacsF77init -lblacs -llapack
+\end{verbatim}
+The repeated \texttt{-lblacs} is not an error, it is needed! If \configure\ does not recognize
+ScaLAPACK, inquire with your system manager
+on the correct way to link them.
+
+A further possibility to expand scalability, especially on machines
+like IBM BlueGene, is to use mixed MPI-OpenMP. The idea is to have
+one (or more) MPI process(es) per multicore node, with OpenMP
+parallelization inside a same node. This option is activated by  \texttt{configure --with-openmp},
+which adds preprocessing flag -D\_\_OPENMP
+and one  of the following compiler options:
+\begin{quote}
+ ifort: \texttt{-openmp}\\
+ xlf:   \texttt{-qsmp=omp}\\
+ PGI:   \texttt{-mp}\\
+ ftn:   \texttt{-mp=nonuma}
+\end{quote}
+OpenMP parallelization is currently implemented and tested for the following combinations of FFTs
+and libraries:
+\begin{quote}
+ internal FFTW copy: \texttt{-D\_\_FFTW}\\
+ ESSL: \texttt{-D\_\_ESSL} or \texttt{-D\_\_LINUX\_ESSL}, link 
+ with \texttt{-lesslsmp}\\
+ ACML: \texttt{-D\_\_ACML}, link with \texttt{-lacml\_mp}.
+\end{quote}
+Currently, ESSL (when available) are faster than internal FFTW,
+which in turn are faster than ACML.
+
+\subsubsection{Understanding parallel I/O}
+In parallel execution, each processor has its own slice of wavefunctions, 
+to be written to temporary files during the calculation. The way wavefunctions 
+are written by \pwx\ is governed by variable \texttt{wf\_collect}, 
+in namelist \&CONTROL 
+If \texttt{wf\_collect=.true.}, the final wavefunctions are collected into a single 
+directory, written by a single processor, whose format is independent on 
+the number of processors. If \texttt{wf\_collect=.false.} (default) each processor
+writes its own slice of the final 
+wavefunctions to disk in the internal format used by \PWscf. 
+
+The former case requires more
+disk I/O and disk space, but produces portable data files; the latter case
+requires less I/O and disk space, but the data so produced can be read only
+by a job running on the same number of processors and pools, and if
+all files are on a file system that is visible to all processors
+(i.e., you cannot use local scratch directories: there is presently no
+way to ensure that the distribution of processes on processors will
+follow the same pattern for different jobs).
+
+\cpx\ instead always collects the final wavefunctions into a single directory.
+Files written by \pwx\ can be read by \cpx\ only if \texttt{wf\_collect=.true.} (and if
+produced for $k=0$ case). 
+The directory for data is specified in input variables
+\texttt{outdir} and \texttt{prefix} (the former can be specified
+as well in environment variable ESPRESSO\_TMPDIR):
+\texttt{outdir/prefix.save}. A copy of pseudopotential files
+is also written there. If some processor cannot access the
+data directory, the pseudopotential files are read instead
+from the pseudopotential directory specified in input data.
+Unpredictable results may follow if those files
+are not the same as those in the data directory!
+
+{\em IMPORTANT:}
+Avoid I/O to network-mounted disks (via NFS) as much as you can! 
+Ideally the scratch directory \texttt{outdir} should be a modern 
+Parallel File System. If you do not have any, you can use local
+scratch disks (i.e. each node is physically connected to a disk
+and writes to it) but you may run into trouble anyway if you 
+need to access your files that are scattered in an unpredictable
+way across disks residing on different nodes.
+
+You can use input variable \texttt{disk\_io='minimal'}, or even 
+\texttt{'none'}, if you run
+into trouble (or into angry system managers) with excessive I/O with \pwx. 
+The code will store wavefunctions into RAM during the calculation.
+Note however that this will increase your memory usage and may limit 
+or prevent restarting from interrupted runs.
+\paragraph{Cray XT3}
+On the cray xt3 there is a special hack to keep files in
+memory instead of writing them without changes to the code.
+You have to do a: 
+module load iobuf
+before compiling and then add liobuf at link time.
+If you run a job you set the environment variable 
+IOBUF\_PARAMS to proper numbers and you can gain a lot.
+Here is one example:
+\begin{verbatim}
+env IOBUF_PARAMS='*.wfc*:noflush:count=1:size=15M:verbose,\
+*.dat:count=2:size=50M:lazyflush:lazyclose:verbose,\
+*.UPF*.xml:count=8:size=8M:verbose' pbsyod =\
+\~{}/espresso/bin/pw.x npool 4 in si64pw2x2x2.inp > & \
+si64pw2x2x232moreiobuf.out &
+\end{verbatim}
+This will ignore all flushes on the *wfc* (scratch files) using a
+single i/o buffer large enough to contain the whole file ($\sim 12$ Mb here).
+this way they are actually never(!) written to disk.
+The *.dat files are part of the restart, so needed, but you can be
+'lazy' since they are writeonly. .xml files have a lot of accesses
+(due to iotk), but with a few rather small buffers, this can be
+handled as well. You have to pay attention not to make the buffers
+too large, if the code needs a lot of memory, too and in this example
+there is a lot of room for improvement. After you have tuned those
+parameters, you can remove the 'verboses' and enjoy the fast execution.
+Apart from the i/o issues the cray xt3 is a really nice and fast machine.
+(Info by Axel Kohlmeyer, maybe obsolete)
+
+\section{Using \CP}
+
+You may take the examples distributed with \CP\ as
+templates for writing your own input files: see Sec.\ref{SubSec:Examples}.
+In the following, whenever we mention "Example N", we refer to those. 
+Input files are those in the \texttt{results/} subdirectories, with names ending
+with \texttt{.in} 
+(they will appear after you have run the examples).
+
+It is important to understand that a CP simulation is a sequence of different 
+runs, some of them used to "prepare" the initial state of the system, and 
+other performed to collect statistics, or to modify the state of the system
+itself, i.e. modify the temperature or the pressure.
+    
+To prepare and run a CP simulation you should first of all
+define the system:
+  \begin{quote}
+    atomic positions\\
+    system cell\\
+    pseudopotentials\\
+    cut-offs\\
+    number of electrons and bands (optional)\\
+    FFT grids (optional)
+  \end{quote}
+An example of input file (Benzene Molecule):
+\begin{verbatim}
+         &control
+            title = 'Benzene Molecule',
+            calculation = 'cp',
+            restart_mode = 'from_scratch',
+            ndr = 51,
+            ndw = 51,
+            nstep = 100,
+            iprint = 10,
+            isave = 100,
+            tstress = .TRUE.,
+            tprnfor = .TRUE.,
+            dt    = 5.0d0,
+            etot_conv_thr = 1.d-9,
+            ekin_conv_thr = 1.d-4,
+            prefix = 'c6h6',
+            pseudo_dir='/scratch/benzene/',
+            outdir='/scratch/benzene/Out/'
+         /
+         &system
+            ibrav = 14,
+            celldm(1) = 16.0,
+            celldm(2) = 1.0,
+            celldm(3) = 0.5,
+            celldm(4) = 0.0,
+            celldm(5) = 0.0,
+            celldm(6) = 0.0,
+            nat = 12,
+            ntyp = 2,
+            nbnd = 15,
+            ecutwfc = 40.0,
+            nr1b= 10, nr2b = 10, nr3b = 10,
+            input_dft = 'BLYP'
+         /
+         &electrons
+            emass = 400.d0,
+            emass_cutoff = 2.5d0,
+            electron_dynamics = 'sd'
+         /
+         &ions
+            ion_dynamics = 'none'
+         /
+         &cell
+            cell_dynamics = 'none',
+            press = 0.0d0,
+          /
+          ATOMIC_SPECIES
+          C 12.0d0 c_blyp_gia.pp
+          H 1.00d0 h.ps
+          ATOMIC_POSITIONS (bohr)
+          C     2.6 0.0 0.0
+          C     1.3 -1.3 0.0
+          C    -1.3 -1.3 0.0
+          C    -2.6 0.0 0.0
+          C    -1.3 1.3 0.0
+          C     1.3 1.3 0.0
+          H     4.4 0.0 0.0
+          H     2.2 -2.2 0.0
+          H    -2.2 -2.2 0.0
+          H    -4.4 0.0 0.0
+          H    -2.2 2.2 0.0
+          H     2.2 2.2 0.0
+\end{verbatim} 
+You can find the description of the input variables in file 
+\texttt{Doc/INPUT\_CP.*}.
+   
+
+\subsection{Input data}
+
+Input data for \cpx,
+is organized as several namelists, followed by other fields
+introduced by keywords. The namelists are
+
+\begin{tabular}{ll}
+      \&CONTROL:& general variables controlling the run\\
+      \&SYSTEM: &structural information on the system under investigation\\
+      \&ELECTRONS: &electronic variables: self-consistency, smearing\\
+      \&IONS (optional): &ionic variables: relaxation, dynamics\\
+      \&CELL (optional): &variable-cell optimization or dynamics\\
+\end{tabular}    \\
+Optional namelist may be omitted if the calculation to be performed
+does not require them. This depends on the value of variable calculation
+in namelist \&CONTROL. Most variables in namelists have default values. Only
+the following variables in \&SYSTEM must always be specified:
+
+\begin{tabular}{lll}
+      \texttt{ibrav} & (integer)& Bravais-lattice index\\
+      \texttt{celldm} &(real, dimension 6)& crystallographic constants\\
+      \texttt{nat} &(integer)& number of atoms in the unit cell\\
+      \texttt{ntyp} &(integer)& number of types of atoms in the unit cell\\
+      \texttt{ecutwfc} &(real)& kinetic energy cutoff (Ry) for wavefunctions.
+\end{tabular}    \\
+For metallic systems, you have to specify how metallicity is treated
+in
+variable \texttt{occupations}. If you choose \texttt{occupations='smearing'},
+you have
+to specify the smearing width \texttt{degauss} and optionally the smearing
+type
+\texttt{smearing}. Spin-polarized systems must be treated as metallic system, except the 
+special case of a single k-point, for which occupation numbers can be fixed
+(\texttt{occupations='from input'} and card OCCUPATIONS).
+    
+Explanations for the meaning of variables \texttt{ibrav} and \texttt{celldm},
+as well as on alternative ways to input structural data,
+are in files \texttt{Doc/INPUT\_PW.*} (for \pwx) and \texttt{Doc/INPUT\_CP.*}
+(for \cpx). These files are the reference for input data and describe 
+a large number of other variables as well. Almost all variables have default 
+values, which may or may not fit your needs.
+    
+After the namelists, you have several fields (``cards'')
+introduced by keywords with self-explanatory names:
+\begin{quote}
+       ATOMIC\_SPECIES\\
+       ATOMIC\_POSITIONS\\
+       K\_POINTS\\
+       CELL\_PARAMETERS (optional)\\
+       OCCUPATIONS (optional)\\
+\end{quote}
+The keywords may be followed on the same line by an option. Unknown
+fields are ignored by. 
+See the files mentioned above for details on the available ``cards''.
+ 
+Note about k points: The k-point grid can be either automatically generated 
+or manually provided as a list of k-points and a weight in the Irreducible
+Brillouin Zone only of the Bravais lattice of the crystal. The code will 
+generate (unless instructed not to do so: see variable \texttt{nosym}) all
+required k-point 
+and weights if the symmetry of the system is lower than the symmetry of the
+Bravais lattice. The automatic generation of k-points follows the convention
+of Monkhorst and Pack.
+
+\subsection{Data files}
+
+The output data files are written in the directory specified by variable
+\texttt{outdir}, with names specified by variable \texttt{prefix} (a string that is prepended
+to all file names, whose default value is: \texttt{prefix='pwscf'}). The \texttt{iotk}
+toolkit is used to write the file in a XML format, whose definition can
+be found in the Developer Manual. In order to use the data directory
+on a different machine, you need to convert the binary files to formatted
+and back, using the \texttt{bin/iotk} script.
+
+The execution stops if you create a file \texttt{prefix.EXIT} in the working 
+directory. NOTA BENE: this is the directory where the program 
+is executed, NOT the directory \texttt{outdir} defined in input, where files 
+are written. Note that with some versions of MPI, the working directory 
+is the directory where the \pwx\ executable is! The advantage of this 
+procedure is that all files are properly closed, whereas  just killing 
+the process may leave data and output files in unusable state.
+
+\subsection{Format of arrays containing charge density, potential, etc.}
+
+The index of arrays used to store functions defined on 3D meshes is
+actually a shorthand for three indices, following the FORTRAN convention 
+("leftmost index runs faster"). An example will explain this better. 
+Suppose you have a 3D array \texttt{psi(nr1x,nr2x,nr3x)}. FORTRAN 
+compilers store this array sequentially  in the computer RAM in the following way:
+\begin{verbatim}
+        psi(   1,   1,   1)
+        psi(   2,   1,   1)
+        ...
+        psi(nr1x,   1,   1)
+        psi(   1,   2,   1)
+        psi(   2,   2,   1)
+        ...
+        psi(nr1x,   2,   1)
+        ...
+        ...
+        psi(nr1x,nr2x,   1)
+        ...
+        psi(nr1x,nr2x,nr3x)
+etc
+\end{verbatim}
+Let \texttt{ind} be the position of the \texttt{(i,j,k)} element in the above list: 
+the following relation
+\begin{verbatim}
+        ind = i + (j - 1) * nr1x + (k - 1) *  nr2x * nr1x
+\end{verbatim}
+holds. This should clarify the relation between 1D and 3D indexing. In real
+space, the \texttt{(i,j,k)} point of the FFT grid with dimensions 
+\texttt{nr1} ($\le$\texttt{nr1x}), 
+\texttt{nr2}  ($\le$\texttt{nr2x}), , \texttt{nr3} ($\le$\texttt{nr3x}), is
+$$
+r_{ijk}=\frac{i-1}{nr1} \tau_1  +  \frac{j-1}{nr2} \tau_2 +
+\frac{k-1}{nr3} \tau_3 
+$$
+where the $\tau_i$ are the basis vectors of the Bravais lattice. 
+The latter are stored row-wise in the \texttt{at} array:
+$\tau_1 = $ \texttt{at(:, 1)}, 
+$\tau_2 = $ \texttt{at(:, 2)}, 
+$\tau_3 = $ \texttt{at(:, 3)}.
+
+The distinction between the dimensions of the FFT grid,
+\texttt{(nr1,nr2,nr3)} and the physical dimensions of the array,
+\texttt{(nr1x,nr2x,nr3x)} is done only because it is computationally
+convenient in some cases that the two sets are not the same.
+In particular, it is often convenient to have \texttt{nrx1}=\texttt{nr1}+1
+to reduce memory conflicts.
+
+\subsection{Reaching the electronic ground state}
+
+The first run, when starting from scratch, is always an electronic 
+minimization, with fixed ions and cell, to bring the electronic system on the ground state (GS) relative to the starting atomic configuration. This step is conceptually very similar to
+self-consistency in a \pwx\ run.
+
+Sometimes a single run is not enough to reach the GS. In this case,
+you need to re-run the electronic minimization stage. Use the input 
+of the first run, changing \texttt{restart\_mode = 'from\_scratch'}
+to \texttt{restart\_mode = 'restart'}.
+   
+NOTA BENE: Unless you are already experienced with the system 
+you are studying or with the internals of the code, you will usually need 
+to tune some input parameters, like \texttt{emass}, \texttt{dt}, and cut-offs. For this 
+purpose, a few trial runs could be useful: you can perform short
+minimizations (say, 10 steps) changing and adjusting these parameters 
+to fit your needs. You can specify the degree of convergence with these
+two thresholds:
+\begin{quote}
+\texttt{etot\_conv\_thr}: total energy difference between two consecutive steps\\
+\texttt{ekin\_conv\_thr}: value of the fictitious kinetic energy of the electrons.
+\end{quote}
+   
+Usually we consider the system on the GS when 
+\texttt{ekin\_conv\_thr} $ < 10^{-5}$.
+You could check the value of the fictitious kinetic energy on the standard 
+output (column EKINC).
+
+Different strategies are available to minimize electrons, but the most used 
+ones are:
+\begin{itemize}
+\item steepest descent: \texttt{electron\_dynamics = 'sd'}
+\item damped dynamics: \texttt{electron\_dynamics = 'damp'},
+\texttt{electron\_damping} = a number typically ranging from 0.1 and 0.5 
+\end{itemize}
+See the input description to compute the optimal damping factor.
+
+\subsection{Relax the system}
+
+Once your system is in the GS, depending on how you have prepared the starting
+atomic configuration:
+\begin{enumerate}
+\item
+if you have set the atomic positions "by hand" and/or from a classical code, 
+check the forces on atoms, and if they are large ($\sim 0.1 \div 1.0$
+atomic units), you should perform an ionic minimization, otherwise the
+system could break up during the dynamics.
+\item
+if you have taken the positions from a previous run or a previous ab-initio 
+simulation, check the forces, and if they are too small ($\sim 10^{-4}$ 
+atomic units), this means that atoms are already in equilibrium positions 
+and, even if left free, they will not move. Then you need to randomize 
+positions a little bit (see below).
+\end{enumerate}
+
+Let us consider case 1). There are 
+different strategies to relax the system, but the most used 
+are again steepest-descent or damped-dynamics for ions and electrons. 
+You could also mix electronic and ionic minimization scheme freely, 
+i.e. ions in steepest-descent and electron in with damped-dynamics or vice versa.
+\begin{itemize}    
+\item[(a)] suppose we want to perform steepest-descent for ions. Then we should specify 
+the following section for ions:
+\begin{verbatim} 
+         &ions
+           ion_dynamics = 'sd'
+         /
+\end{verbatim} 
+Change also the ionic masses to accelerate the minimization:
+\begin{verbatim} 
+         ATOMIC_SPECIES
+          C 2.0d0 c_blyp_gia.pp
+          H 2.00d0 h.ps
+\end{verbatim} 
+while leaving other input parameters unchanged.
+{\em Note} that if the forces are really high ($> 1.0$ atomic units), you
+should always use steepest descent for the first ($\sim 100$
+relaxation steps. 
+\item[(b)] As the system approaches the equilibrium positions, the steepest 
+descent scheme slows down, so is better to switch to damped dynamics:
+\begin{verbatim} 
+         &ions
+           ion_dynamics = 'damp',
+           ion_damping = 0.2,
+           ion_velocities = 'zero'
+         /
+\end{verbatim}
+A  value of \texttt{ion\_damping} around 0.05 is good for many systems. 
+It is also better to specify to restart with zero ionic and electronic 
+velocities, since we have changed the masses.
+    
+Change further the ionic masses to accelerate the minimization:
+\begin{verbatim} 
+           ATOMIC_SPECIES
+           C 0.1d0 c_blyp_gia.pp
+           H 0.1d0 h.ps
+\end{verbatim}
+\item[(c)] when the system is really close to the equilibrium, the damped dynamics 
+slow down too, especially because, since we are moving electron and ions 
+together, the ionic forces are not properly correct, then it is often better 
+to perform a ionic step every N electronic steps, or to move ions only when
+electron are in their GS (within the chosen threshold).
+    
+This can be specified by adding, in the ionic section, the 
+\texttt{ion\_nstepe}
+parameter, then the \&IONS namelist become as follows:
+\begin{verbatim} 
+         &ions
+           ion_dynamics = 'damp',
+           ion_damping = 0.2,
+           ion_velocities = 'zero',
+           ion_nstepe = 10
+         /
+\end{verbatim}
+Then we specify in the \&CONTROL namelist:
+\begin{verbatim} 
+           etot_conv_thr = 1.d-6,
+           ekin_conv_thr = 1.d-5,
+           forc_conv_thr = 1.d-3
+\end{verbatim}
+As a result, the code checks every 10 electronic steps whether
+the electronic system satisfies the two thresholds 
+\texttt{etot\_conv\_thr}, \texttt{ekin\_conv\_thr}: if it does, 
+the ions are advanced by one step.
+The process thus continues until the forces become smaller than
+\texttt{forc\_conv\_thr}.
+
+{\em Note} that to fully relax the system you need many runs, and different 
+strategies, that you should mix and change in order to speed-up the convergence.
+The process is not automatic, but is strongly based on experience, and trial 
+and error.
+
+Remember also that the convergence to the equilibrium positions depends on 
+the energy threshold for the electronic GS, in fact correct forces (required
+to move ions toward the minimum) are obtained only when electrons are in their 
+GS. Then a small threshold on forces could not be satisfied, if you do not 
+require an even smaller threshold on total energy.
+\end{itemize}
+
+Let us now move to case 2: randomization of positions.
+   
+If you have relaxed the system or if the starting system is already in
+the equilibrium positions, then you need to displace ions from the equilibrium 
+positions, otherwise they will not move in a dynamics simulation.
+After the randomization you should bring electrons on the GS again,
+in order to start a dynamic with the correct forces and with electrons 
+in the GS. Then you should switch off the ionic dynamics and activate 
+the randomization for each species, specifying the amplitude of the 
+randomization itself. This could be done with the following 
+\&IONS namelist:
+\begin{verbatim}
+          &ions
+            ion_dynamics = 'none',
+            tranp(1) = .TRUE.,
+            tranp(2) = .TRUE.,
+            amprp(1) = 0.01
+            amprp(2) = 0.01
+          /
+\end{verbatim}
+In this way a random displacement (of max 0.01 a.u.) is added to atoms of 
+species 1 and 2. All other input parameters could remain the same.
+Note that the difference in the total energy (etot) between relaxed and
+randomized positions can be used to estimate the temperature that will
+be reached by the system. In fact, starting with zero ionic velocities,
+all the difference is potential energy, but in a dynamics simulation, the
+energy will be equipartitioned between kinetic and potential, then to
+estimate the temperature take the difference in energy (de), convert it
+in Kelvin, divide for the number of atoms and multiply by 2/3.
+Randomization could be useful also while we are relaxing the system,
+especially when we suspect that the ions are in a local minimum or in
+an energy plateau.
+
+\subsection{CP dynamics}
+
+At this point after having minimized the electrons, and with ions displaced from their equilibrium positions, we are ready to start a CP
+dynamics. We need to specify \texttt{'verlet'} both in ionic and electronic
+dynamics. The threshold in control input section will be ignored, like
+any parameter related to minimization strategy. The first time we perform 
+a CP run after a minimization, it is always better to put velocities equal
+to zero, unless we have velocities, from a previous simulation, to
+specify in the input file. Restore the proper masses for the ions. In this
+way we will sample the microcanonical ensemble. The input section
+changes as follow:
+\begin{verbatim}
+           &electrons
+              emass = 400.d0,
+              emass_cutoff = 2.5d0,
+              electron_dynamics = 'verlet',
+              electron_velocities = 'zero'
+           /
+           &ions
+              ion_dynamics = 'verlet',
+              ion_velocities = 'zero'
+           /
+           ATOMIC_SPECIES
+           C 12.0d0 c_blyp_gia.pp
+           H 1.00d0 h.ps
+\end{verbatim}
+
+If you want to specify the initial velocities for ions, you have to set
+\texttt{ion\_velocities ='from\_input'}, and add the IONIC\_VELOCITIES
+card, after the ATOMIC\_POSITION card, with the list of velocities in 
+atomic units.
+
+NOTA BENE: in restarting the dynamics after the first CP run,
+remember to remove or comment the velocities parameters:
+\begin{verbatim}
+           &electrons
+              emass = 400.d0,
+              emass_cutoff = 2.5d0,
+              electron_dynamics = 'verlet'
+              ! electron_velocities = 'zero'
+           /
+           &ions
+              ion_dynamics = 'verlet'
+              ! ion_velocities = 'zero'
+           /
+\end{verbatim}
+otherwise you will quench the system interrupting the sampling of the
+microcanonical ensemble.
+
+\paragraph{ Varying the temperature }
+   
+It is possible to change the temperature of the system or to sample the 
+canonical ensemble fixing the average temperature, this is done using 
+the Nos\'e thermostat. To activate this thermostat for ions you have 
+to specify in namelist \&IONS:
+\begin{verbatim}
+           &ions
+              ion_dynamics = 'verlet',
+              ion_temperature = 'nose',
+              fnosep = 60.0,
+              tempw = 300.0
+           /  
+\end{verbatim}
+where \texttt{fnosep} is the frequency of the thermostat in THz, that should be
+chosen to be comparable with the center of the vibrational spectrum of
+the system, in order to excite as many vibrational modes as possible.
+\texttt{tempw} is the desired average temperature in Kelvin.
+   
+{\em Note:} to avoid a strong coupling between the Nos\'e thermostat 
+and the system, proceed step by step. Don't switch on the thermostat 
+from a completely relaxed configuration: adding a random displacement
+is strongly recommended. Check which is the average temperature via a
+few steps of a microcanonical simulation. Don't increase the temperature
+too much. Finally switch on the thermostat. In the case of molecular system,
+different modes have to be thermalized: it is better to use a chain of 
+thermostat or equivalently running different simulations with different 
+frequencies. 
+ 
+\paragraph{ No\'se thermostat for electrons }
+
+It is possible to specify also the thermostat for the electrons. This is
+usually activated in metals or in systems where we have a transfer of
+energy between ionic and electronic degrees of freedom. Beware: the
+usage of electronic thermostats is quite delicate. The following information 
+comes from K. Kudin: 
+
+''The main issue is that there is usually some "natural" fictitious kinetic 
+energy that electrons gain from the ionic motion ("drag"). One could easily 
+quantify how much of the fictitious energy comes from this drag by doing a CP 
+run, then a couple of CG (same as BO) steps, and then going back to CP.
+The fictitious electronic energy at the last CP restart will be purely 
+due to the drag effect.''
+
+''The thermostat on electrons will either try to overexcite the otherwise 
+"cold" electrons, or it will try to take them down to an unnaturally cold 
+state where their fictitious kinetic energy is even below what would be 
+just due pure drag. Neither of this is good.''
+
+''I think the only workable regime with an electronic thermostat is a 
+mild overexcitation of the electrons, however, to do this one will need 
+to know rather precisely what is the fictitious kinetic energy due to the
+drag.''
+
+
+\subsection{Advanced usage}
+
+\subsubsection{ Self-interaction Correction }
+
+The self-interaction correction (SIC) included in the \CP\
+package is based
+on the Constrained Local-Spin-Density approach proposed my F. Mauri and 
+coworkers (M. D'Avezac et al. PRB 71, 205210 (2005)). It was used for
+the first time in \qe\ by F. Baletto, C. Cavazzoni 
+and S.Scandolo (PRL 95, 176801 (2005)).
+
+This approach is a simple and nice way to treat ONE, and only one, 
+excess charge. It is moreover necessary to check a priori that 
+the spin-up and spin-down eigenvalues are not too different, for the 
+corresponding neutral system, working in the Local-Spin-Density 
+Approximation (setting \texttt{nspin = 2}). If these two conditions are satisfied
+and you are interest in charged systems, you can apply the SIC.
+This approach is a on-the-fly method to correct the self-interaction 
+with the excess charge with itself.
+
+Briefly, both the Hartree and the XC part have been 
+corrected to avoid the interaction of the excess charge with tself.
+
+For example, for the Boron atoms, where we have an even number of 
+electrons (valence electrons = 3), the parameters for working with
+the SIC are:
+\begin{verbatim}
+           &system
+           nbnd= 2,
+           total_magnetization=1,
+           sic_alpha = 1.d0,
+           sic_epsilon = 1.0d0,
+           sic = 'sic_mac',
+           force_pairing = .true.,
+
+           &ions
+           ion_dynamics = 'none',
+           ion_radius(1) = 0.8d0,
+           sic_rloc = 1.0,
+
+           ATOMIC_POSITIONS (bohr)
+           B 0.00 0.00 0.00 0 0 0 1
+\end{verbatim}
+The two main parameters are:
+\begin{quote}
+\texttt{force\_pairing = .true.}, which forces the paired electrons to be the same;\\ 
+\texttt{sic='sic\_mac'}, which instructs the code to use Mauri's correction.
+\end{quote}
+Remember to add an extra-column in ATOMIC\_POSITIONS with "1" to activate
+SIC for those atoms.
+
+{\bf Warning}: 
+This approach has known problems for dissociation mechanism
+driven by excess electrons.
+
+Comment 1:
+Two parameters, \texttt{sic\_alpha} and \texttt{sic\_epsilon'}, have been introduced 
+following the suggestion of M. Sprik (ICR(05)) to treat the radical
+(OH)-H$_2$O. In any case, a complete ab-initio approach is followed 
+using \texttt{sic\_alpha=1}, \texttt{sic\_epsilon=1}.
+
+Comment 2:
+When you apply this SIC scheme to a molecule or to an atom, which are neutral,
+remember to add the correction to the energy level as proposed by Landau: 
+in a neutral system, subtracting the self-interaction, the unpaired electron
+feels a charged system, even if using a compensating positive background. 
+For a cubic box, the correction term due to the Madelung energy is approx. 
+given by $1.4186/L_{box} - 1.047/(L_{box})^3$, where $L_{box}$ is the 
+linear dimension of your box (=celldm(1)). The Madelung coefficient is 
+taken from I. Dabo et al. PRB 77, 115139 (2007).
+(info by F. Baletto, francesca.baletto@kcl.ac.uk)
+
+% \subsubsection{ Variable-cell MD }
+
+%The variable-cell MD is when the Car-Parrinello technique is also applied 
+%to the cell. This technique is useful to study system at very high pressure.
+
+\subsubsection{ ensemble-DFT }
+
+The ensemble-DFT (eDFT) is a robust method to simulate the metals in the 
+framework of ''ab-initio'' molecular dynamics. It was introduced in 1997 
+by Marzari et al.
+
+The specific subroutines for the eDFT are in 
+\texttt{CPV/ensemble\_dft.f90} where you 
+define all the quantities of interest. The subroutine 
+\texttt{CPV/inner\_loop\_cold.f90}
+called by \texttt{cg\_sub.f90}, control the inner loop, and so the minimization of 
+the free energy $A$ with respect to the occupation matrix.
+
+To select a eDFT calculations, the user has to set:
+\begin{verbatim}
+            calculation = 'cp'
+            occupations= 'ensemble' 
+            tcg = .true.
+            passop= 0.3
+            maxiter = 250
+\end{verbatim}
+to use the CG procedure. In the eDFT it is also the outer loop, where the
+energy is minimized with respect to the wavefunction keeping fixed the 
+occupation matrix. While the specific parameters for the inner loop.
+Since eDFT was born to treat metals, keep in mind that we want to describe 
+the broadening of the occupations around the Fermi energy.
+Below the new parameters in the electrons list, are listed.
+\begin{itemize}
+\item \texttt{smearing}: used to select the occupation distribution;
+there are two options: Fermi-Dirac smearing='fd', cold-smearing
+smearing='cs' (recommended) 
+\item \texttt{degauss}: is the electronic temperature; it controls the broadening
+of the occupation numbers around the Fermi energy. 
+\item \texttt{ninner}: is the number of iterative cycles in the inner loop, 
+done to minimize the free energy $A$ with respect the occupation numbers.
+The typical range is 2-8.
+\item \texttt{conv\_thr}: is the threshold value to stop the search of the 'minimum' 
+free energy.
+\item \texttt{niter\_cold\_restart}: controls the frequency at which a full iterative
+inner cycle is done. It is in the range $1\div$\texttt{ninner}. It is a trick to speed up 
+the calculation.
+\item \texttt{lambda\_cold}: is the length step along the search line for the best 
+value for $A$, when the iterative cycle is not performed. The value is close 
+to 0.03, smaller for large and complicated metallic systems.
+\end{itemize}
+{\em NOTE:} \texttt{degauss} is in Hartree, while in \PWscf is in Ry (!!!). 
+The typical range is 0.01-0.02 Ha.
+
+The input for an Al surface is:
+\begin{verbatim}
+            &CONTROL
+             calculation = 'cp',
+             restart_mode = 'from_scratch',
+             nstep  = 10,
+             iprint = 5,
+             isave  = 5,
+             dt    = 125.0d0,
+             prefix = 'Aluminum_surface',
+             pseudo_dir = '~/UPF/',
+             outdir = '/scratch/'
+             ndr=50
+             ndw=51
+            /
+            &SYSTEM
+             ibrav=  14,
+             celldm(1)= 21.694d0, celldm(2)= 1.00D0, celldm(3)= 2.121D0,
+             celldm(4)= 0.0d0,   celldm(5)= 0.0d0, celldm(6)= 0.0d0,
+             nat= 96,
+             ntyp= 1,
+             nspin=1,
+             ecutwfc= 15,
+             nbnd=160,
+             input_dft = 'pbe'
+             occupations= 'ensemble',
+             smearing='cs',
+             degauss=0.018,
+            /
+            &ELECTRONS
+             orthogonalization = 'Gram-Schmidt',
+             startingwfc = 'random',
+             ampre = 0.02,
+             tcg = .true.,
+             passop= 0.3,
+             maxiter = 250,
+             emass_cutoff = 3.00,
+             conv_thr=1.d-6
+             n_inner = 2,
+             lambda_cold = 0.03,
+             niter_cold_restart = 2,
+            /
+            &IONS
+             ion_dynamics  = 'verlet',
+             ion_temperature = 'nose'
+             fnosep = 4.0d0,
+             tempw = 500.d0
+            /
+            ATOMIC_SPECIES
+             Al 26.89 Al.pbe.UPF
+\end{verbatim}
+{\em NOTA1}  remember that the time step is to integrate the ionic dynamics,
+so you can choose something in the range of 1-5 fs. \\
+{\em NOTA2} with eDFT you are simulating metals or systems for which the 
+occupation number is also fractional, so the number of band, \texttt{nbnd}, has to 
+be chosen such as to have some empty states. As a rule of thumb, start
+with an initial occupation number of about 1.6-1.8 (the more bands you 
+consider, the more the calculation is accurate, but it also takes longer.
+The CPU time scales almost linearly with the number of bands.) \\
+{\em NOTA3} the parameter \texttt{emass\_cutoff} is used in the preconditioning 
+and it has a completely different meaning with respect to plain CP. 
+It ranges between 4 and 7.
+
+All the other parameters have the same meaning in the usual \CP\ input, 
+and they are discussed above.
+
+\subsubsection{Free-energy surface calculations}
+Once \texttt{CP} is patched with \texttt{PLUMED} plug-in, it becomes possible to turn-on most of the PLUMED functionalities
+running \texttt{CP} as: \texttt{./cp.x -plumed} plus the other usual \texttt{CP} arguments. The PLUMED input file has to be located in the specified \texttt{outdir} with
+the fixed name \texttt{plumed.dat}.
+
+
+\subsubsection{Treatment of USPPs}
+
+The cutoff \texttt{ecutrho} defines the resolution on the real space FFT mesh (as expressed 
+by \texttt{nr1}, \texttt{nr2} and \texttt{nr3}, that the code left on its own sets automatically).
+In the USPP case we refer to this mesh as the "hard" mesh, since it 
+is denser than the smooth mesh that is needed to represent the square 
+of the non-norm-conserving wavefunctions.
+  
+On this "hard", fine-spaced mesh, you need to determine the size of the
+cube that will encompass the largest of the augmentation charges - this
+is what \texttt{nr1b}, \texttt{nr2b}, \texttt{nr3b} are. hey are independent 
+of the system size, but dependent on the size
+of the augmentation charge (an atomic property that doesn't vary 
+that much for different systems) and on the
+real-space resolution needed by augmentation charges (rule of thumb:
+\texttt{ecutrho} is between 6 and 12 times \texttt{ecutwfc}).
+
+The small boxes should be set as small as possible, but large enough
+to contain the core of the largest element in your system.
+The formula for estimating the box size is quite simple: 
+\begin{quote}
+   \texttt{nr1b} = $2 R_c / L_x \times$ \texttt{nr1}
+\end{quote}
+and the like, where $R_{cut}$ is largest cut-off radius among the various atom
+types present in the system, $L_x$ is the
+physical length of your box along the $x$ axis. You have to round your
+result to the nearest larger integer.
+In practice, \texttt{nr1b} etc. are often in the region of 20-24-28; testing seems
+again a necessity.
+
+The core charge is in principle finite only at the core region (as defined
+by some $R_{rcut}$ ) and vanishes out side the core. Numerically the charge is
+represented in a Fourier series which may give rise to small charge
+oscillations outside the core and even to negative charge density, but
+only if the cut-off is too low. Having these small boxes removes the
+charge oscillations problem (at least outside the box) and also offers
+some numerical advantages in going to higher cut-offs." (info by Nicola Marzari)
+
+\section{Performances}
+
+\subsection{Execution time}
+
+\subsection{Memory requirements}
+
+\subsection{File space requirements}
+
+
+\subsection{Parallelization issues}
+\label{SubSec:badpara}
+
+\cpx\ can run in principle on any number of processors.
+The effectiveness of parallelization is ultimately judged by the 
+''scaling'', i.e. how the time needed to perform a job scales
+ with the number of processors, and depends upon:
+\begin{itemize}
+\item the size and type of the system under study;
+\item the judicious choice of the various levels of parallelization 
+(detailed in Sec.\ref{SubSec:para});
+\item the availability of fast interprocess communications (or lack of it).
+\end{itemize}
+Ideally one would like to have linear scaling, i.e. $T \sim T_0/N_p$ for 
+$N_p$ processors, where $T_0$ is the estimated time for serial execution.
+ In addition, one would like to have linear scaling of
+the RAM per processor: $O_N \sim O_0/N_p$, so that large-memory systems
+fit into the RAM of each processor.
+
+As a general rule, image parallelization:
+\begin{itemize}
+\item  may give good scaling, but the slowest image will determine
+the overall performances (''load balancing'' may be a problem);
+\item requires very little communications (suitable for ethernet 
+communications);
+\item does not reduce the required memory per processor (unsuitable for 
+large-memory jobs).
+\end{itemize}
+Parallelization on k-points:
+\begin{itemize}
+\item guarantees (almost) linear scaling if the number of k-points
+is a multiple of the number of pools;
+\item requires little communications (suitable for ethernet communications);
+\item does not reduce the required memory per processor (unsuitable for 
+large-memory jobs).
+\end{itemize}
+Parallelization on PWs:
+\begin{itemize}
+\item yields good to very good scaling, especially if the number of processors
+in a pool is a divisor of $N_3$ and $N_{r3}$ (the dimensions along the z-axis 
+of the FFT grids, \texttt{nr3} and \texttt{nr3s}, which coincide for NCPPs);
+\item requires heavy communications (suitable for Gigabit ethernet up to 
+4, 8 CPUs at most, specialized communication hardware needed for 8 or more
+processors );
+\item yields almost linear reduction of memory per processor with the number
+of processors in the pool.
+\end{itemize}
+
+A note on scaling: optimal serial performances are achieved when the data are
+as much as possible kept into the cache. As a side effect, PW
+parallelization may yield superlinear (better than linear) scaling,
+thanks to the increase in serial speed coming from the reduction of data size 
+(making it easier for the machine to keep data in the cache).
+
+VERY IMPORTANT: For each system there is an optimal range of number of processors on which to 
+run the job.  A too large number of processors will yield performance 
+degradation. If the size of pools is especially delicate: $N_p$ should not 
+exceed $N_3$ and $N_{r3}$, and should ideally be no larger than
+$1/2\div1/4 N_3$ and/or $N_{r3}$. In order to increase scalability,
+it is often convenient to 
+further subdivide a pool of processors into ''task groups''.
+When the number of processors exceeds the number of FFT planes, 
+data can be redistributed to "task groups" so that each group 
+can process several wavefunctions at the same time.
+
+The optimal number of processors for "linear-algebra"
+parallelization, taking care of multiplication and diagonalization 
+of $M\times M$ matrices, should be determined by observing the
+performances of \texttt{cdiagh/rdiagh} (\pwx) or \texttt{ortho} (\cpx)
+for different numbers of processors in the linear-algebra group
+(must be a square integer).
+
+Actual parallel performances will also depend on the available software 
+(MPI libraries) and on the available communication hardware. For
+PC clusters, OpenMPI (\texttt{http://www.openmpi.org/}) seems to yield better 
+performances than other implementations (info by Kostantin Kudin). 
+Note however that you need a decent communication hardware (at least 
+Gigabit ethernet) in order to have acceptable performances with 
+PW parallelization. Do not expect good scaling with cheap hardware: 
+PW calculations are by no means an "embarrassing parallel" problem.
+   
+Also note that multiprocessor motherboards for Intel Pentium CPUs typically 
+have just one memory bus for all processors. This dramatically
+slows down any code doing massive access to memory (as most codes 
+in the \qe\ distribution do) that runs on processors of the same
+motherboard.
+
+\section{Troubleshooting}
+
+\end{document}

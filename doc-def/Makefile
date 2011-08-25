@@ -3,14 +3,12 @@ DOC_DIR = ../Doc
 
 HTMLS = \
 	INPUT_PW.html \
-        INPUT_CP.html \
 	INPUT_PH.html \
 	INPUT_PP.html \
 	INPUT_PROJWFC.html \
 	INPUT_D3.html \
 	INPUT_DOS.html \
 	INPUT_BANDS.html \
-	INPUT_CPPP.html \
 	INPUT_pw_export.html
 
 XMLS = $(HTMLS:.html=.xml)

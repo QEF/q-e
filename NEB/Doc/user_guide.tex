@@ -395,6 +395,16 @@ unless one starts from a very good or very bad initial guess.
 \end{enumerate}
 (Courtesy of Lorenzo Paulatto)
 
+The code \texttt{path\_int.x} is
+is a tool to generate a new path (what is actually
+generated is the restart file) starting from an old one through
+interpolation (cubic splines). The new path can be discretized with a
+different number of images (this is its main purpose), images are
+equispaced and the interpolation can be also
+performed on a subsection of the old path. The input file needed by
+\texttt{path\_int.x} can be easily set up  with the help of the self-explanatory
+\texttt{path\_int.sh} shell script.
+
 
 \section{Performances}
 
