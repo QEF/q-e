@@ -12,7 +12,7 @@ TOPDIR=`pwd`
 if test $# = 0
 then
     dirs=" Modules clib PW CPV//src flib pwtools upftools PP PWCOND//src \
-           Gamma PH D3 atomic//src VdW XSpectra//src \
+           Gamma PH//src D3 atomic//src VdW XSpectra//src \
 	   GWW//gww GWW//pw4gww GWW//head ACFDT NEB//src Solvent" 
           
 else
@@ -33,10 +33,12 @@ do
 		  DEPENDS="../../Modules ../../iotk/src ../../include" ;;
 	atomic/src )
 		  DEPENDS="../../iotk/src ../../include ../../Modules" ;;
-	PP | PWCOND | Gamma | PH | pwtools )
+	PP | PWCOND | Gamma | pwtools )
 		  DEPENDS="$DEPENDS ../Modules ../PW" ;;
+	PH/src )
+		 DEPENDS="../../include ../../iotk/src ../../Modules ../../PW" ;;
 	D3 | VdW | ACFDT ) 
-                  DEPENDS="$DEPENDS ../Modules ../PW ../PH" ;;
+                  DEPENDS="$DEPENDS ../Modules ../PW ../PH/src" ;;
 	XSpectra/src  )
 		  DEPENDS="../../iotk/src ../../include ../../Modules ../../PW"  ;;
 	PWCOND/src )
@@ -48,7 +50,7 @@ do
                   DEPENDS="../../include ../../iotk/src ../../Modules " ;;
 	GWW/head )
                   DEPENDS="../../include ../../iotk/src ../../Modules \
-		  ../../PW ../../PH ../pw4gww " ;;
+		  ../../PW ../../PH/src ../pw4gww " ;;
 	NEB/src )
 		  DEPENDS="../../include ../../iotk/src ../../Modules ../../PW" ;;
 
