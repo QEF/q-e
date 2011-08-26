@@ -4,7 +4,7 @@ include ../make.sys
 
 # location of needed modules
 MODFLAGS= $(MOD_FLAG)../iotk/src $(MOD_FLAG)../Modules \
-          $(MOD_FLAG)../PW $(MOD_FLAG)../PH $(MOD_FLAG).
+          $(MOD_FLAG)../PW $(MOD_FLAG)../PH/src $(MOD_FLAG).
 
 D3OBJS = \
 allocate_d3.o \
@@ -62,7 +62,7 @@ write_d3dyn.o \
 write_igk.o \
 writed3dyn_5.o
 
-PHOBJS = ../PH/libph.a
+PHOBJS = ../PH/src/libph.a
 PWOBJS = ../PW/libpw.a
 QEMODS = ../Modules/libqemod.a
 
