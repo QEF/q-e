@@ -696,6 +696,7 @@ subroutine bcast_inputp()
                          file_chi, file_qvan, file_wfcaegen, file_wfcncgen, &
                          file_wfcusgen, file_recon, which_augfun, &
                          rmatch_augfun, lgipaw_reconstruction, lsave_wfc, &
+                         rmatch_augfun_nc, & 
                          use_paw_as_gipaw !EMINE
 implicit none
 #ifdef __PARA
@@ -722,6 +723,7 @@ implicit none
   call mp_bcast( file_recon,  ionode_id )
   call mp_bcast( which_augfun,  ionode_id )
   call mp_bcast( rmatch_augfun,  ionode_id )
+  call mp_bcast( rmatch_augfun_nc, ionode_id )
   call mp_bcast( lsave_wfc, ionode_id )
   call mp_bcast( lgipaw_reconstruction, ionode_id )
 #endif
