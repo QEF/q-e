@@ -103,7 +103,7 @@ SUBROUTINE open_input_file_x(lxmlinput,attr,unit)
           dummy=""
           do while (TRIM(dummy).ne."MAGICALME")
             read(unit_loc,fmt='(A256)',END=10) dummy
-            write(stdtmp,*) trim(dummy)
+            write(stdtmp,'(A)') trim(dummy)
           enddo
         ELSE IF ( ierr > 0 ) THEN
            !
@@ -128,7 +128,7 @@ SUBROUTINE open_input_file_x(lxmlinput,attr,unit)
      WRITE(stdout, '(5x,a)') "Waiting for input..."
      do while (TRIM(dummy).ne."MAGICALME")
        read(stdin,fmt='(A256)',END=20) dummy
-       write(stdtmp,*) trim(dummy)
+       write(stdtmp,'(A)') trim(dummy)
      enddo
   ENDIF
   !
