@@ -250,14 +250,15 @@ SUBROUTINE read_file()
      rho%of_g(:,is) = psic(nl(:))
      !
   END DO
+
+#ifdef EXX
+  call pw_readfile('exx', ierr)
+#endif
   !
   ! ... recalculate the potential
   !
   CALL v_of_rho( rho, rho_core, rhog_core, &
                  ehart, etxc, vtxc, eth, etotefield, charge, v )
-#ifdef EXX
-  call pw_readfile('exx', ierr)
-#endif
   !
   ! ... reads the wavefunctions and writes them in 'distributed' form 
   ! ... to unit iunwfc (for compatibility)

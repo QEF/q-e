@@ -112,7 +112,7 @@ MODULE pw_restart
                                        nproc_image, &
                                        root_pool, intra_pool_comm, inter_pool_comm, intra_image_comm 
 #ifdef EXX
-      USE funct,                ONLY : get_exx_fraction, get_screening_parameter
+      USE funct,                ONLY : get_exx_fraction, get_screening_parameter, exx_is_active
       USE exx,                  ONLY : x_gamma_extrapolation, nq1, nq2, nq3, &
                                        exxdiv_treatment, yukawa, ecutvcut
 #endif
@@ -393,7 +393,7 @@ MODULE pw_restart
          CALL write_exx( x_gamma_extrapolation, nq1, nq2, nq3, &
                          exxdiv_treatment, yukawa, ecutvcut, &
                          get_exx_fraction(), &
-                         get_screening_parameter() )
+                         get_screening_parameter(), exx_is_active() )
 #endif
          !
 !-------------------------------------------------------------------------------
@@ -3215,7 +3215,7 @@ MODULE pw_restart
       ! ... read EXX variables
       !
       USE funct,                ONLY : set_exx_fraction, set_screening_parameter, &
-                                       enforce_input_dft
+                                       enforce_input_dft, start_exx
       USE exx,                  ONLY : x_gamma_extrapolation, nq1, nq2, nq3, &
                                        exxdiv_treatment, yukawa, ecutvcut
       IMPLICIT NONE
@@ -3224,6 +3224,7 @@ MODULE pw_restart
       INTEGER,          INTENT(OUT) :: ierr
       CHARACTER(LEN=80) :: dft_name
       REAL(DP) :: exx_fraction, screening_parameter
+      LOGICAL :: exx_is_active
       !
       IF ( ionode ) THEN
          CALL iotk_open_read( iunpun, FILE = TRIM( dirname ) // '/' // &
@@ -3245,6 +3246,7 @@ MODULE pw_restart
          call iotk_scan_dat(iunpun, "ecutvcut", ecutvcut)
          call iotk_scan_dat(iunpun, "exx_fraction", exx_fraction)
          call iotk_scan_dat(iunpun, "screening_parameter", screening_parameter)
+         call iotk_scan_dat(iunpun, "exx_is_active", exx_is_active)
          CALL iotk_scan_end( iunpun, "EXACT_EXCHANGE" )
          CALL iotk_close_read( iunpun )
       END IF
@@ -3258,9 +3260,11 @@ MODULE pw_restart
       CALL mp_bcast( ecutvcut, ionode_id, intra_image_comm )
       CALL mp_bcast( exx_fraction, ionode_id, intra_image_comm )
       CALL mp_bcast( screening_parameter, ionode_id, intra_image_comm )
+      CALL mp_bcast( exx_is_active, ionode_id, intra_image_comm )
       call enforce_input_dft(dft_name)
       call set_exx_fraction(exx_fraction)
       call set_screening_parameter(screening_parameter)
+      if (exx_is_active) call start_exx
       RETURN
       !
     END SUBROUTINE read_exx
