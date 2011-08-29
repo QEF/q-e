@@ -96,7 +96,7 @@ SUBROUTINE iosys()
                             tot_magnetization_ => tot_magnetization
   !
   USE ktetra,        ONLY : ltetra
-  USE start_k,      ONLY : nk1, nk2, nk3
+  USE start_k,       ONLY : init_start_k
   !
   USE ldaU,          ONLY : Hubbard_U_     => hubbard_u, &
                             Hubbard_alpha_ => hubbard_alpha, &
@@ -149,7 +149,7 @@ SUBROUTINE iosys()
   !
   USE relax,         ONLY : epse, epsf, epsp, starting_scf_threshold
   !
-  USE control_flags, ONLY : isolve, max_cg_iter, david, tr2, imix, &
+  USE control_flags, ONLY : isolve, max_cg_iter, david, tr2, imix, gamma_only,&
                             nmix, iverbosity, niter, pot_order, wfc_order, &
                             remove_rigid_rot_ => remove_rigid_rot, &
                             diago_full_acc_   => diago_full_acc, &
@@ -159,7 +159,6 @@ SUBROUTINE iosys()
                             nstep_            => nstep, &
                             iprint_           => iprint, &
                             noinv_            => noinv, &
-                            modenum_          => modenum, &
                             lkpoint_dir_      => lkpoint_dir, &
                             tqr_              => tqr, &
                             io_level, ethr, lscf, lbfgs, lmd, &
@@ -298,6 +297,8 @@ SUBROUTINE iosys()
   !
   ! ... CARDS
   !
+  USE input_parameters,   ONLY : k_points, xk, wk, nk1, nk2, nk3,  &
+                                 k1, k2, k3, nkstot
   USE input_parameters, ONLY : nconstr_inp, ncolvar_inp, trd_ht, rd_ht, &
                                cell_units
   !
@@ -944,7 +945,6 @@ SUBROUTINE iosys()
   CASE( 'not_controlled', 'not-controlled', 'not controlled' )
      !
      control_temp = .false.
-
      !
   CASE( 'initial' )
      !
@@ -1287,6 +1287,13 @@ SUBROUTINE iosys()
   call cell_base_init ( ibrav, celldm, a, b, c, cosab, cosac, cosbc, &
                         trd_ht, rd_ht, cell_units )
   !
+  ! ... set up k-points
+  !
+  CALL init_start_k ( nk1, nk2, nk3, k1, k2, k3, k_points, nkstot, xk, wk )
+  gamma_only = ( k_points == 'gamma' )
+  IF ( tfixed_occ .AND. (nkstot > 1 .OR. ( nk1 * nk2 * nk3 ) > 1 ) ) &
+     CALL errore( 'input', 'only one k point with fixed occupations', 1 )
+  !
   CALL convert_tau ( tau_format, nat_, tau)
   !
   IF ( wmass == 0.D0 ) THEN
@@ -1430,17 +1437,13 @@ SUBROUTINE read_cards_pw ( psfile, tau_format )
   USE kinds,              ONLY : DP
   USE input_parameters,   ONLY : atom_label, atom_pfile, atom_mass, taspc, &
                                  tapos, rd_pos, atomic_positions, if_pos,  &
-                                 sp_pos, k_points, xk, wk, nk1, nk2, nk3,  &
-                                 k1, k2, k3, nkstot, &
-                                 f_inp, rd_for, tavel, sp_vel, rd_vel
+                                 sp_pos, f_inp, rd_for, tavel, sp_vel, rd_vel
   USE dynamics_module,    ONLY : tavel_ => tavel, vel
   USE cell_base,          ONLY : at, ibrav
   USE ions_base,          ONLY : nat, ntyp => nsp, ityp, tau, atm, extfor
-  USE start_k,            ONLY : init_start_k
-  USE fixed_occ,          ONLY : tfixed_occ, &
-                                 f_inp_ => f_inp
+  USE fixed_occ,          ONLY : tfixed_occ, f_inp_ => f_inp
   USE ions_base,          ONLY : if_pos_ =>  if_pos, amass, fixatom
-  USE control_flags,      ONLY : lfixatom, gamma_only, textfor
+  USE control_flags,      ONLY : lfixatom, textfor
   !
   IMPLICIT NONE
   !
@@ -1506,14 +1509,7 @@ SUBROUTINE read_cards_pw ( psfile, tau_format )
   !
   tau_format = trim( atomic_positions )
   !
-  CALL init_start_k ( nk1, nk2, nk3, k1, k2, k3, k_points, nkstot, xk, wk )
-  gamma_only = ( k_points == 'gamma' )
-  !
   IF ( tfixed_occ ) THEN
-     !
-     IF ( nkstot > 1 .or. ( nk1 * nk2 * nk3 ) > 1 ) &
-        CALL errore( 'read_cards_pw', &
-                   & 'only one k point with fixed occupations', 1 )
      !
      f_inp_ = f_inp
      !

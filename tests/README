@@ -49,7 +49,7 @@ relax2    Al       forces in metals
                    bfgs_ndim=3
 scf       Si fcc   davidson and cg diagonalizations
                    simple, TF, local-TF mixing, ndim=4,8
-                   Gamma, automatic, list of k-points
+                   Gamma, automatic, list of k-points (tpiba, crystal, tpiba_b)
                    wf_collect and disk_io options
                    stress with k-points and at Gamma
                    non-scf calculation
