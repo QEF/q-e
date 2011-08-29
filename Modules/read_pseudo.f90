@@ -152,7 +152,7 @@ SUBROUTINE readpp ( input_dft, printout )
      if (isupf ==-1 .OR. isupf== 0) then
         !
         IF( ionode .AND. printout_ ) &
-           WRITE( stdout, "(3X,'file type is UPF v.',i1)"), isupf+2
+           WRITE( stdout, "(3X,'file type is UPF v.',i1)") isupf+2
         call set_pseudo_upf (nt, upf(nt))
         ! 
         ! UPF is assumed to be multi-projector
