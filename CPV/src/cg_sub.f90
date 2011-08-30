@@ -32,7 +32,7 @@
       use smallbox_gvec, only: ngb
       use gvecw, only: ngw
       use gvect, only: gstart
-      use ions_base, only: na, nat, pmass, nax, nsp, rcmax
+      use ions_base, only: na, nat, nax, nsp, rcmax
       use cell_base, only: omega, alat, tpiba2
       use local_pseudo, only: vps, rhops
       use io_global,                ONLY : stdout, ionode, ionode_id

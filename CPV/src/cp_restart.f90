@@ -68,7 +68,7 @@ MODULE cp_restart
       USE electrons_base,           ONLY : nspin, nelt, nel, nudx
       USE cell_base,                ONLY : ibrav, alat, celldm, s_to_r
       USE ions_base,                ONLY : nsp, nat, na, atm, zv, &
-                                           pmass, amass, iforce, ind_bck
+                                           amass, iforce, ind_bck
       USE funct,                    ONLY : get_dft_name, get_inlc
       USE energies,                 ONLY : enthal, ekin, eht, esr, eself, &
                                            epseu, enl, exc, vave
@@ -946,7 +946,7 @@ MODULE cp_restart
       USE electrons_base,           ONLY : nspin, nbnd, nelt, nel, &
                                            nupdwn, iupdwn, nudx
       USE cell_base,                ONLY : ibrav, alat, celldm, s_to_r, r_to_s
-      USE ions_base,                ONLY : nsp, nat, na, atm, zv, pmass, &
+      USE ions_base,                ONLY : nsp, nat, na, atm, zv, &
                                            sort_tau, ityp, ions_cofmass
       USE gvect,       ONLY : ig_l2g, mill
       USE cp_main_variables,        ONLY : nprint_nfi, distribute_lambda, descla, distribute_zmat
@@ -1020,7 +1020,7 @@ MODULE cp_restart
       INTEGER               :: nk_, ik_, nt_
       LOGICAL               :: gamma_only_ , lsda_
       REAL(DP)              :: alat_, a1_(3), a2_(3), a3_(3)
-      REAL(DP)              :: pmass_, zv_ 
+      REAL(DP)              :: zv_ 
       REAL(DP)              :: celldm_(6)
       INTEGER               :: iss_, nspin_, ngwt_, nbnd_ , nbnd_tot
       INTEGER               :: nstates_up_ , nstates_dw_ , ntmp, nel_(2)

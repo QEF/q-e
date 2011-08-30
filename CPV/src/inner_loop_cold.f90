@@ -35,7 +35,7 @@
       USE gvecw,          ONLY: ngw
       USE gvect,          ONLY: gstart
       USE uspp_param,     ONLY: nvb, ish
-      USE ions_base,      ONLY: na, nat, pmass, nax, nsp, rcmax
+      USE ions_base,      ONLY: na, nat, nax, nsp, rcmax
       USE cell_base,      ONLY: omega, alat
       USE fft_base,       ONLY: dfftp, dffts
       USE local_pseudo,   ONLY: vps, rhops
@@ -329,7 +329,7 @@
       USE gvecw,          ONLY: ngw
       USE gvect,          ONLY: gstart
       USE uspp_param,     ONLY: nvb, ish, nh
-      USE ions_base,      ONLY: na, nat, pmass, nax, nsp, rcmax
+      USE ions_base,      ONLY: na, nat, nax, nsp, rcmax
       USE cell_base,      ONLY: omega, alat
       USE local_pseudo,   ONLY: vps, rhops
       USE io_global,      ONLY: stdout, ionode, ionode_id
@@ -510,7 +510,7 @@
       USE gvect, &
                           ONLY: gstart
       USE uspp_param,     ONLY: nvb, ish
-      USE ions_base,      ONLY: na, nat, pmass, nax, nsp, rcmax
+      USE ions_base,      ONLY: na, nat, nax, nsp, rcmax
       USE cell_base,      ONLY: omega, alat
       USE local_pseudo,   ONLY: vps, rhops
       USE io_global,      ONLY: stdout, ionode, ionode_id

@@ -691,7 +691,6 @@ MODULE wannier_subroutines
     USE gvecw,          ONLY : ngw
     USE control_flags,  ONLY : ndw
     USE cell_base,      ONLY : h, hold
-    USE ions_base,      ONLY : pmass
     USE uspp_param,     ONLY : nvb
     USE cp_interfaces,  ONLY : writefile
     USE descriptors,    ONLY : la_descriptor
