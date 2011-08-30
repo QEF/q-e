@@ -112,6 +112,8 @@ SUBROUTINE setup()
                          'HYBRID XC not allowed in non-scf calculations', 1 )
      IF ( okvan .OR. okpaw ) CALL errore( 'setup ', &
                          'HYBRID XC not implemented for USPP or PAW', 1 )
+     IF ( noncolin ) CALL errore( 'setup ', &
+                      'HYBRID XC not implemented for noncolinear magnetism', 1 )
   END IF
 #endif
   !
