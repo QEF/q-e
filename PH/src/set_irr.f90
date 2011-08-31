@@ -10,7 +10,7 @@
 subroutine set_irr (nat, at, bg, xq, s, sr, tau, ntyp, ityp, ftau, invs, nsym, &
                     rtau, irt, irgq, nsymq, minus_q, irotmq, u, npert,   &
                     nirr, gi, gimq, iverbosity, u_from_file, eigen, search_sym,&
-                    nspin_mag, t_rev, pmass, num_rap_mode, name_rap_mode)
+                    nspin_mag, t_rev, amass, num_rap_mode, name_rap_mode)
 !---------------------------------------------------------------------
 !
 !     This subroutine computes a basis for all the irreducible
@@ -67,7 +67,7 @@ subroutine set_irr (nat, at, bg, xq, s, sr, tau, ntyp, ityp, ftau, invs, nsym, &
 ! output: the number of the representation of each mode
 
   real(DP) :: xq (3), rtau (3, 48, nat), at (3, 3), bg (3, 3), &
-       gi (3, 48), gimq (3), sr(3,3,48), tau(3,nat), pmass(ntyp)
+       gi (3, 48), gimq (3), sr(3,3,48), tau(3,nat), amass(ntyp)
 ! input: the q point
 ! input: the R associated to each tau
 ! input: the direct lattice vectors
@@ -76,7 +76,7 @@ subroutine set_irr (nat, at, bg, xq, s, sr, tau, ntyp, ityp, ftau, invs, nsym, &
 ! output: [S(irotmq)*q + q]
 ! input: symmetry matrices in cartesian coordinates
 ! input: the atomic positions
-! input: the mass of each atom
+! input: the mass of each atom (in amu)
 
   complex(DP) :: u(3*nat, 3*nat)
 ! output: the pattern vectors
@@ -208,7 +208,7 @@ subroutine set_irr (nat, at, bg, xq, s, sr, tau, ntyp, ityp, ftau, invs, nsym, &
 
      IF (search_sym) THEN
         CALL find_mode_sym (u, eigen, at, bg, tau, nat, nsymq, &
-                  sr, irt, xq, rtau, pmass, ntyp, ityp, 0, lgamma, &
+                  sr, irt, xq, rtau, amass, ntyp, ityp, 0, lgamma, &
                   .FALSE., nspin_mag, name_rap_mode, num_rap_mode )
 !
 !   Order the modes so that we first make all those that belong to the first

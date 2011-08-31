@@ -24,7 +24,7 @@ TMP_DIR=$HOME/tmp
 # needed if some PP has to be downloaded from web site
 WGET="wget -O"
 # for machines that do not have wget (e.g. Mac OS-X)
-WGET="curl -o"
+#WGET="curl -o"
 
 # To run the ESPRESSO programs on a parallel machine, you may have to
 # add the appropriate commands (poe, mpirun, mpprun...) and/or options
@@ -38,5 +38,5 @@ WGET="curl -o"
 # To run on a single processor, you can usually leave them empty.
 
 #PARA_PREFIX="mpirun -np 2"
-PARA_PREFIX=" "
+PARA_PREFIX="env OMP_NUM_THREADS=1 "
 PARA_POSTFIX=

@@ -51,7 +51,7 @@ subroutine phq_setup
   !
   !
   USE kinds,         ONLY : DP
-  USE ions_base,     ONLY : tau, nat, ntyp => nsp, ityp, pmass
+  USE ions_base,     ONLY : tau, nat, ntyp => nsp, ityp, amass
   USE cell_base,     ONLY : at, bg
   USE io_global,     ONLY : stdout
   USE ener,          ONLY : ef, ef_up, ef_dw
@@ -352,7 +352,7 @@ subroutine phq_setup
         call set_irr (nat, at, bg, xq, s, sr, tau, ntyp, ityp, ftau, invs,&
                     nsym, rtau, irt, irgq, nsymq, minus_q, irotmq, u, npert, &
                     nirr, gi, gimq, iverbosity, u_from_file, w2, search_sym, &
-                    nspin_mag, t_rev, pmass, num_rap_mode, name_rap_mode)
+                    nspin_mag, t_rev, amass, num_rap_mode, name_rap_mode)
         npertx = 0
         DO irr = 1, nirr
            npertx = max (npertx, npert (irr) )

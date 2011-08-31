@@ -230,10 +230,6 @@ PROGRAM matdyn
      CALL mp_bcast(la2f,ionode_id)
      CALL mp_bcast(q_in_band_form,ionode_id)
      !
-     ! convert masses to atomic units
-     !
-     amass(:) = amass(:) * amconv
-     !
      ! read force constants
      !
      ntyp_blk = ntypx ! avoids fake out-of-bound error
@@ -2224,8 +2220,8 @@ subroutine readfg ( ifn, nr1, nr2, nr3, nat, frcg )
 end subroutine readfg
 !
 !
-SUBROUTINE find_representations_mode_q( nat, ntyp, xq, w2, u, tau, ityp, pmass,&
-                  name_rap_mode, num_rap_mode, nspin_mag )
+SUBROUTINE find_representations_mode_q ( nat, ntyp, xq, w2, u, tau, ityp, &
+                  amass, name_rap_mode, num_rap_mode, nspin_mag )
 
   USE kinds,      ONLY : DP
   USE cell_base,  ONLY : at, bg
@@ -2235,7 +2231,7 @@ SUBROUTINE find_representations_mode_q( nat, ntyp, xq, w2, u, tau, ityp, pmass,&
 
   IMPLICIT NONE
   INTEGER, INTENT(IN) :: nat, ntyp, nspin_mag
-  REAL(DP), INTENT(IN) :: xq(3), pmass(ntyp), tau(3,nat)
+  REAL(DP), INTENT(IN) :: xq(3), amass(ntyp), tau(3,nat)
   REAL(DP), INTENT(IN) :: w2(3*nat)
   INTEGER, INTENT(IN) :: ityp(nat)
   COMPLEX(DP), INTENT(IN) :: u(3*nat,3*nat)
@@ -2277,7 +2273,7 @@ SUBROUTINE find_representations_mode_q( nat, ntyp, xq, w2, u, tau, ityp, pmass,&
      sym (1:nsym) = .TRUE.
      CALL sgam_ph (at, bg, nsym, s, irt, tau, rtau, nat, sym)
      CALL find_mode_sym (u, w2, at, bg, tau, nat, nsymq, sr, irt, xq, rtau, &
-                         pmass, ntyp, ityp, 1, .FALSE., .FALSE., &
+                         amass, ntyp, ityp, 1, .FALSE., .FALSE., &
                          nspin_mag, name_rap_mode, num_rap_mode)
   ENDIF
   RETURN

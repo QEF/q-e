@@ -25,7 +25,7 @@ SUBROUTINE phq_readin()
   USE io_global,     ONLY : ionode_id
   USE mp,            ONLY : mp_bcast
   USE input_parameters, ONLY : max_seconds
-  USE ions_base,     ONLY : amass, pmass, atm
+  USE ions_base,     ONLY : amass, atm
   USE klist,         ONLY : xk, nks, nkstot, lgauss, two_fermi_energies
   USE control_flags, ONLY : gamma_only, tqr, restart, lkpoint_dir
   USE uspp,          ONLY : okvan
@@ -340,10 +340,6 @@ SUBROUTINE phq_readin()
               atom_weight(atomic_number(TRIM(atm(it))))
      IF (amass_input(it) > 0.D0) amass(it) = amass_input(it)
      IF (amass(it) <= 0.D0) CALL errore ('phq_readin', 'Wrong masses', it)
-     !
-     !  convert masses to a.u.
-     !
-     pmass(it) = amconv * amass(it)
   ENDDO
   lgamma_gamma=.FALSE.
   IF (nkstot==1.OR.(nkstot==2.AND.nspin==2)) THEN

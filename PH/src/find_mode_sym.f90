@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2006 Quantum ESPRESSO group
+! Copyright (C) 2006-2011 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -18,7 +18,7 @@ SUBROUTINE find_mode_sym (u, w2, at, bg, tau, nat, nsym, sr, irt, xq, &
   !
   USE io_global,  ONLY : stdout
   USE kinds, ONLY : DP
-  USE constants, ONLY : RY_TO_CMM1
+  USE constants, ONLY : amconv, RY_TO_CMM1
   USE rap_point_group, ONLY : code_group, nclass, nelem, elem, which_irr, &
        char_mat, name_rap, name_class, gname, ir_ram
   USE rap_point_group_is, ONLY : gname_is
@@ -84,11 +84,12 @@ SUBROUTINE find_mode_sym (u, w2, at, bg, tau, nat, nsym, sr, irt, xq, &
   IF (flag==1) THEN
      !
      !  Find the eigenvalues of the dynmaical matrix
+     !  Note that amass is in amu; amconv converts it to Ry au
      !
      DO nu_i = 1, nmodes
         DO mu = 1, nmodes
            na = (mu - 1) / 3 + 1
-           z (mu, nu_i) = u (mu, nu_i) * SQRT (amass (ityp (na) ) )
+           z (mu, nu_i) = u (mu, nu_i) * SQRT (amconv*amass (ityp (na) ) )
         END DO
      END DO
   ELSE

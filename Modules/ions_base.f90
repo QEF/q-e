@@ -27,12 +27,10 @@
 
       !     zv(is)    = (pseudo-)atomic charge
       !     amass(is) = mass of ions, in atomic mass units
-      !     pmass(is) = mass of ions, in atomic units - TEMP: used by phonon
       !     rcmax(is) = Ewald radius (for ion-ion interactions)
 
       REAL(DP) :: zv(ntypx)    = 0.0_DP
       REAL(DP) :: amass(ntypx) = 0.0_DP
-      REAL(DP) :: pmass(ntypx) = 0.0_DP
       REAL(DP) :: rcmax(ntypx) = 0.0_DP
 
       !     ityp( i ) = the type of i-th atom in stdin

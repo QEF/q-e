@@ -17,7 +17,7 @@ subroutine dynmatrix
   !
   USE kinds,         ONLY : DP
   USE constants,     ONLY : FPI, BOHR_RADIUS_ANGS
-  USE ions_base,     ONLY : nat, ntyp => nsp, ityp, tau, atm, pmass, zv
+  USE ions_base,     ONLY : nat, ntyp => nsp, ityp, tau, atm, amass, zv
   USE io_global,     ONLY : stdout
   USE control_flags, ONLY : modenum
   USE cell_base,     ONLY : at, bg, celldm, ibrav, omega
@@ -148,11 +148,11 @@ subroutine dynmatrix
      IF (imq==0) nqq=2*nq
      IF (lgamma.AND.done_epsil.AND.done_zeu) THEN
         CALL write_dyn_mat_header( fildyn, ntyp, nat, ibrav, nspin_mag, &
-             celldm, at, bg, omega, atm, pmass, tau, ityp, m_loc, &
+             celldm, at, bg, omega, atm, amass, tau, ityp, m_loc, &
              nqq, epsilon, zstareu, lraman, ramtns*omega/fpi*convfact)
      ELSE
         CALL write_dyn_mat_header( fildyn, ntyp, nat, ibrav, nspin_mag, &
-             celldm, at, bg, omega, atm, pmass, tau,ityp,m_loc,nqq)
+             celldm, at, bg, omega, atm, amass, tau,ityp,m_loc,nqq)
      ENDIF
   ELSE
      CALL write_old_dyn_mat(iudyn)
@@ -209,9 +209,9 @@ subroutine dynmatrix
   !   Diagonalizes the dynamical matrix at q
   !
   IF (ldiag_loc) THEN
-     call dyndia (xq, nmodes, nat, ntyp, ityp, pmass, iudyn, dyn, w2)
+     call dyndia (xq, nmodes, nat, ntyp, ityp, amass, iudyn, dyn, w2)
      IF (search_sym) CALL find_mode_sym (dyn, w2, at, bg, tau, nat, nsymq, sr,&
-              irt, xq, rtau, pmass, ntyp, ityp, 1, lgamma, lgamma_gamma, &
+              irt, xq, rtau, amass, ntyp, ityp, 1, lgamma, lgamma_gamma, &
                                         nspin_mag, name_rap_mode, num_rap_mode)
   END IF
 !
@@ -233,7 +233,8 @@ end subroutine dynmatrix
 !  It will be removed when the xml file format of the dynamical matrix
 !  will be tested.
 !
-  USE ions_base, ONLY : ntyp => nsp, nat, ityp, tau, atm, pmass
+  USE constants, ONLY: amconv
+  USE ions_base, ONLY : ntyp => nsp, nat, ityp, tau, atm, amass
   USE cell_base, ONLY : ibrav, celldm, at
   USE run_info, ONLY : title
 
@@ -248,7 +249,7 @@ end subroutine dynmatrix
      WRITE (iudyn,'(2x,3f15.9)') ((at(i,j),i=1,3),j=1,3)
   END IF
   DO nt = 1, ntyp
-     WRITE (iudyn, * ) nt, ' ''', atm (nt) , ' '' ', pmass (nt)
+     WRITE (iudyn, * ) nt, ' ''', atm (nt) , ' '' ', amconv*amass(nt)
   ENDDO
   DO na = 1, nat
      WRITE (iudyn, '(2i5,3f15.7)') na, ityp (na) , (tau (j, na) , j = 1, 3)
