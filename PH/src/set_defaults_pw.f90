@@ -40,7 +40,8 @@ SUBROUTINE setup_nscf ( newgrid, xq )
                                  copy_sym, s_axis_to_cart
   USE wvfct,              ONLY : nbnd, nbndx
   USE control_flags,      ONLY : ethr, isolve, david, &
-                                 noinv, modenum, use_para_diag
+                                 noinv, modenum, use_para_diag, lecrpa
+  USE control_ph,         ONLY : elph_mat
   USE mp_global,          ONLY : kunit
   USE spin_orb,           ONLY : domag
   USE noncollin_module,   ONLY : noncolin
@@ -49,6 +50,7 @@ SUBROUTINE setup_nscf ( newgrid, xq )
   USE paw_variables,      ONLY : okpaw
   USE modes,              ONLY : nsymq, invsymq !, gi, gimq, irgq, irotmq, minus_q
   USE uspp_param,         ONLY : n_atom_wfc
+ 
   !
   IMPLICIT NONE
   !
@@ -57,6 +59,7 @@ SUBROUTINE setup_nscf ( newgrid, xq )
   !
   REAL (DP), ALLOCATABLE :: rtau (:,:,:)
   LOGICAL  :: minus_q, magnetic_sym, sym(48)
+  LOGICAL  :: skip_equivalence
   !
   IF ( .NOT. ALLOCATED( force ) ) ALLOCATE( force( 3, nat ) )
   !
@@ -134,8 +137,17 @@ SUBROUTINE setup_nscf ( newgrid, xq )
      !
      ! In this case I generate a new set of k-points
      !
-     CALL kpoint_grid ( nrot, time_reversal, s, t_rev, bg, nk1*nk2*nk3, &
-          k1,k2,k3, nk1,nk2,nk3, nkstot, xk, wk)
+
+     if(elph_mat) then
+        skip_equivalence=lecrpa
+        lecrpa=.true.
+        CALL kpoint_grid ( nrot, time_reversal, s, t_rev, bg, nk1*nk2*nk3, &
+             k1,k2,k3, nk1,nk2,nk3, nkstot, xk, wk)
+        lecrpa=skip_equivalence
+     else
+        CALL kpoint_grid ( nrot, time_reversal, s, t_rev, bg, nk1*nk2*nk3, &
+             k1,k2,k3, nk1,nk2,nk3, nkstot, xk, wk)
+     endif
 
   endif
 
@@ -143,6 +155,7 @@ SUBROUTINE setup_nscf ( newgrid, xq )
   ! ... If some symmetries of the lattice are missing in the crystal,
   ! ... "irreducible_BZ" computes the missing k-points.
   !
+  if(.not.elph_mat) &
   CALL irreducible_BZ (nrot, s, nsymq, minus_q, at, bg, npk, nkstot, xk, wk, &
                        t_rev)
   !
