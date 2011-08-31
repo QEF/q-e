@@ -79,6 +79,7 @@ SUBROUTINE readmat (iudyn, ibrav, celldm, nat, ntyp, ityp, omega, &
   !-----------------------------------------------------------------------
   !
   USE kinds, ONLY : DP
+  USE constants, ONLY : amconv
   IMPLICIT NONE
   ! Input
   INTEGER :: iudyn, ibrav, nat, ntyp, ityp (nat)
@@ -101,13 +102,13 @@ SUBROUTINE readmat (iudyn, ibrav, celldm, nat, ntyp, ityp, omega, &
   READ (iudyn, '(a)') line
   READ (iudyn, '(a)') line
   READ (iudyn, * ) ntyp_, nat_, ibrav_, celldm_
-  IF (ntyp.NE.ntyp_.OR.nat.NE.nat_.OR.ibrav_.NE.ibrav.OR.ABS ( &
-       celldm_ (1) - celldm (1) ) .GT.1.0d-5) CALL errore ('readmat', &
-       'inconsistent data', 1)
+  IF ( ntyp.NE.ntyp_ .OR. nat.NE.nat_ .OR.ibrav_.NE.ibrav .OR. &
+       ABS ( celldm_ (1) - celldm (1) ) > 1.0d-5) &
+          CALL errore ('readmat', 'inconsistent data', 1)
   DO nt = 1, ntyp
      READ (iudyn, * ) i, atm, amass_
-     IF (nt.NE.i.OR.ABS (amass_ - amass (nt) ) .GT.1.0d-5) CALL errore ( &
-          'readmat', 'inconsistent data', 1 + nt)
+     IF ( nt.NE.i .OR. ABS (amass_ - amconv*amass (nt) ) > 1.0d-5) &
+        CALL errore ( 'readmat', 'inconsistent data', 1 + nt)
   ENDDO
   DO na = 1, nat
      READ (iudyn, * ) i, ityp_, tau_
@@ -130,16 +131,16 @@ SUBROUTINE readmat (iudyn, ibrav, celldm, nat, ntyp, ityp, omega, &
      ENDDO
   ENDDO
   !
-  ! divide the dynamical matrix by the masses
+  ! divide the dynamical matrix by the (input) masses (in amu)
   !
   DO nb = 1, nat
      DO j = 1, 3
         DO na = 1, nat
            DO i = 1, 3
               dynr (1, i, na, j, nb) = dynr (1, i, na, j, nb) / SQRT (amass ( &
-                   ityp (na) ) * amass (ityp (nb) ) )
+                   ityp (na) ) * amass (ityp (nb) ) ) / amconv
               dynr (2, i, na, j, nb) = dynr (2, i, na, j, nb) / SQRT (amass ( &
-                   ityp (na) ) * amass (ityp (nb) ) )
+                   ityp (na) ) * amass (ityp (nb) ) ) / amconv
            ENDDO
         ENDDO
      ENDDO
@@ -155,7 +156,7 @@ SUBROUTINE readmat (iudyn, ibrav, celldm, nat, ntyp, ityp, omega, &
   DO nu = 1, 3 * nat
      DO mu = 1, 3 * nat
         na = (mu - 1) / 3 + 1
-        dyn (mu, nu) = dyn (mu, nu) / SQRT (amass (ityp (na) ) )
+        dyn (mu, nu) = dyn (mu, nu) / SQRT ( amconv * amass (ityp (na) ) )
      ENDDO
   ENDDO
   !
