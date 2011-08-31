@@ -20,9 +20,9 @@
       USE energies,          ONLY : print_energies, dft_energy_type
       USE printout_base,     ONLY : printout_base_open, printout_base_close, &
                                     printout_pos, printout_cell, printout_stress
-      USE constants,         ONLY : au_gpa, amu_si, bohr_radius_cm, &
-                                    amu_au, BOHR_RADIUS_ANGS, pi
-      USE ions_base,         ONLY : na, nsp, nat, ind_bck, atm, ityp, pmass, cdmi, &
+      USE constants,         ONLY : au_gpa, bohr_radius_cm, amu_au, &
+                                    BOHR_RADIUS_ANGS, pi
+      USE ions_base,         ONLY : na, nsp, nat, ind_bck, atm, ityp, amass, cdmi, &
                                     ions_cofmass, ions_displacement, label_srt
       USE cell_base,         ONLY : s_to_r, get_volume
       USE efield_module,     ONLY : tefield, pberryel, pberryion, &
@@ -65,7 +65,7 @@
       REAL(DP) :: out_press, volume
       REAL(DP) :: totalmass
       INTEGER  :: isa, is, ia, kilobytes
-      REAL(DP),         ALLOCATABLE :: tauw( :, : )
+      REAL(DP), ALLOCATABLE :: tauw(:, :)
       LOGICAL  :: tsic, tfile, tstdout
       LOGICAL, PARAMETER :: nice_output_files=.false.
       !
@@ -134,7 +134,7 @@
             !
             totalmass = 0.0d0
             DO is = 1, nsp
-              totalmass = totalmass + pmass(is) * na(is) / amu_au
+              totalmass = totalmass + amass(is) * na(is)
             END DO
             totalmass = totalmass / volume * 11.2061d0 ! AMU_SI * 1000.0 / BOHR_RADIUS_CM**3 
             IF(tstdout) &
@@ -142,7 +142,7 @@
             !
             ! Compute Center of mass displacement since the initialization of step counter
             !
-            CALL ions_cofmass( tau0, pmass, na, nsp, cdm0 )
+            CALL ions_cofmass( tau0, amass, na, nsp, cdm0 )
             !
             IF(tstdout) &
                WRITE( stdout,1000) SUM( ( cdm0(:)-cdmi(:) )**2 ) 
@@ -337,8 +337,6 @@
    END SUBROUTINE printout_new_x
    !  
    !
-
-
 !=----------------------------------------------------------------------------=!
   SUBROUTINE print_legend()
 !=----------------------------------------------------------------------------=!

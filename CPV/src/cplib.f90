@@ -357,7 +357,7 @@
          USE control_flags, ONLY: tranp, amprp, tnosep, tolp, tfor, tsdp, tzerop, &
                                   tv0rd, taurdr, nv0rd, nbeg, tcp, tcap
          USE ions_base,     ONLY: tau_srt, if_pos, ind_srt, nsp, na, &
-                                  pmass, nat, fricp, greasp, rcmax
+                                  amass, nat, fricp, greasp, rcmax
          USE ions_nose,     ONLY: tempw, ndega
          USE constants,     ONLY: amu_au
 
@@ -398,7 +398,7 @@
          WRITE(stdout,660) 
          isa = 0
          DO IS = 1, nsp
-           WRITE(stdout,1000) is, na(is), pmass(is), pmass(is) / amu_au, rcmax(is)
+           WRITE(stdout,1000) is, na(is), amass(is)*amu_au, amass(is), rcmax(is)
            DO IA = 1, na(is)
              isa = isa + 1
              WRITE(stdout,1010) ( tau_srt(k,isa), K = 1,3 )

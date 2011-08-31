@@ -205,7 +205,8 @@
       use io_global,        only: stdout, ionode
       use mp_global,        only: nproc_bgrp, me_bgrp, intra_bgrp_comm, root_bgrp
       USE io_files,         ONLY: tmp_dir     
-      use ions_base,        only: na, nsp, nat, tau_srt, ind_srt, if_pos, atm, na, pmass
+      use ions_base,        only: na, nsp, nat, tau_srt, ind_srt, if_pos, atm,&
+                                  amass
       use cell_base,        only: at, alat, r_to_s, cell_init, deth
 
       use cell_base,        only: ibrav, ainv, h, hold, tcell_base_init
@@ -214,9 +215,10 @@
       use cp_restart,       only: cp_read_cell
       USE fft_base,         ONLY: dfftb
       USE fft_types,        ONLY: fft_box_allocate
-      USE cp_main_variables,     ONLY: ht0, htm, taub
-      USE atoms_type_module,     ONLY: atoms_type
-      USE cp_interfaces,         ONLY: newinit
+      USE cp_main_variables,ONLY: ht0, htm, taub
+      USE atoms_type_module,ONLY: atoms_type
+      USE cp_interfaces,    ONLY: newinit
+      USE constants,        ONLY: amu_au
 
       implicit none
       !
@@ -225,7 +227,7 @@
       integer :: i, j
       real(DP) :: gvel(3,3), ht(3,3)
       real(DP) :: xnhh0(3,3), xnhhm(3,3), vnhh(3,3), velh(3,3)
-      REAL(DP), ALLOCATABLE :: taus_srt( :, : )
+      REAL(DP), ALLOCATABLE :: pmass(:), taus_srt( :, : )
 
       IF( .NOT. tcell_base_init ) &
          CALL errore( ' init_geometry ', ' cell_base_init has not been call yet! ', 1 )
@@ -248,13 +250,14 @@
       ! according to the cell given in the standard input too
       ! taus_srt = scaled, tau_srt = atomic units
       !
-      ALLOCATE( taus_srt( 3, nat ) )
+      ALLOCATE( taus_srt( 3, nat ), pmass(nsp) )
       
       CALL r_to_s( tau_srt, taus_srt, na, nsp, ainv )
 
+      pmass (:) = amass(1:nsp) * amu_au
       CALL atoms_init( atomsm, atoms0, atomsp, taus_srt, ind_srt, if_pos, atm, ht0%hmat, nat, nsp, na, pmass )
       !
-      DEALLOCATE( taus_srt )
+      DEALLOCATE( pmass, taus_srt )
       !
       !  Allocate box descriptor
       !

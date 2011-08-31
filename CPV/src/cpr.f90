@@ -43,7 +43,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
   USE smallbox_gvec,                    ONLY : ngb
   USE gvecw,                    ONLY : ngw
   USE gvect,       ONLY : gstart, mill, eigts1, eigts2, eigts3
-  USE ions_base,                ONLY : na, nat, pmass, nax, nsp, rcmax
+  USE ions_base,                ONLY : na, nat, amass, nax, nsp, rcmax
   USE ions_base,                ONLY : ind_srt, ions_cofmass, ions_kinene, &
                                        ions_temp, ions_thermal_stress, if_pos, extfor
   USE ions_base,                ONLY : ions_vrescal, fricp, greasp, &
@@ -158,7 +158,8 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
   CHARACTER(LEN=3) :: labelw( nat )
     ! for force_pairing
   INTEGER   :: nspin_sub , i1, i2
-  !
+    ! pmass contains masses in atomic Hartree units
+  REAL(DP), ALLOCATABLE :: pmass(:)
   REAL(DP), ALLOCATABLE :: forceh(:,:)
   !
   etot_out = 0.D0
@@ -169,6 +170,8 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
   tlast  = .FALSE.
   nacc   = 5
   !
+  ALLOCATE ( pmass (nsp) )
+  pmass(1:nsp) = amass(1:nsp) * amu_au
   nspin_sub = nspin
   IF( force_pairing ) nspin_sub = 1
   !
@@ -845,6 +848,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
   !
   !===================== end of main loop of molecular dynamics ===============
   !
+  DEALLOCATE ( pmass )
   ! ... Here copy relevant physical quantities into the output arrays/variables
   !
   etot_out = etot

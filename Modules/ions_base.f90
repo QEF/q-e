@@ -26,11 +26,10 @@
       INTEGER :: nat     = 0
 
       !     zv(is)    = (pseudo-)atomic charge
-      !     pmass(is) = mass (converted to a.u.) of ions
+      !     amass(is) = mass of ions, in atomic mass units
       !     rcmax(is) = Ewald radius (for ion-ion interactions)
 
       REAL(DP) :: zv(ntypx)    = 0.0_DP
-      REAL(DP) :: pmass(ntypx) = 0.0_DP
       REAL(DP) :: amass(ntypx) = 0.0_DP
       REAL(DP) :: rcmax(ntypx) = 0.0_DP
 
@@ -370,9 +369,7 @@
       IF ( ANY( amass(1:nsp) <= 0.0_DP ) ) &
          CALL errore( 'ions_base_init ', 'invalid  mass', 1 ) 
       !
-      pmass(1:nsp) = amass_(1:nsp) * amu_au
-      !
-      CALL ions_cofmass( tau_srt, pmass, na, nsp, cdmi )
+      CALL ions_cofmass( tau_srt, amass, na, nsp, cdmi )
       !
       DO ia = 1, nat
          !
@@ -753,7 +750,7 @@
 
      INTEGER  :: isa
 
-     CALL ions_cofmass( tau, pmass, na, nsp, cdmi )
+     CALL ions_cofmass( tau, amass, na, nsp, cdmi )
      DO isa = 1, nat
         taui(:,isa) = tau(:,isa) - cdmi(:)
      END DO
@@ -783,9 +780,9 @@
       REAL(DP) :: rdist(3), r2, cdm(3)
       INTEGER  :: is, ia, isa
 
-      ! ...   Compute the current value of cdm "Centro Di Massa"
+      ! ...   Compute the current value of cdm "Center of Mass"
       !
-      CALL ions_cofmass(tau, pmass, na, nsp, cdm )
+      CALL ions_cofmass(tau, amass, na, nsp, cdm )
       !
       IF( SIZE( dis ) < nsp ) &
           CALL errore(' displacement ',' size of dis too small ', 1)

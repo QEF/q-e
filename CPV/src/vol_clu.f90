@@ -19,7 +19,7 @@ SUBROUTINE vol_clu(rho_real,rho_g,s_fac,flag)
       use parameters,     only: nsx
       use cell_base,      only: alat, at, h, omega, tpiba, tpiba2
       use electrons_base, only: nspin
-      use ions_base,      only: na, nsp, pmass
+      use ions_base,      only: na, nsp, amass
       use ions_positions, only: tau0
       use gvect, only: g, gg
       use gvecs,          only: ngms
@@ -194,9 +194,9 @@ SUBROUTINE vol_clu(rho_real,rho_g,s_fac,flag)
             mtot = 0.d0
             do is = 1,nsp
                do ia = 1,na(is)
-                  cm(k) = cm(k) + tauv(k,ia,is)*pmass(is)
+                  cm(k) = cm(k) + tauv(k,ia,is)*amass(is)
                end do
-               mtot = mtot + pmass(is)
+               mtot = mtot + amass(is)
             end do
             cm(k) = cm(k)/mtot
          end do
