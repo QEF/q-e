@@ -11,49 +11,39 @@ TOPDIR=`pwd`
 
 if test $# = 0
 then
-    dirs=" Modules clib PW CPV//src flib pwtools upftools PP PWCOND//src \
-           Gamma PH//src D3 atomic//src VdW XSpectra//src \
-	   GWW//gww GWW//pw4gww GWW//head ACFDT NEB//src Solvent" 
+    dirs=" Modules clib PW CPV/src flib pwtools upftools PP PWCOND/src \
+           Gamma PH/src D3 atomic/src VdW XSpectra/src \
+	   GWW/gww GWW/pw4gww GWW/head ACFDT NEB/src Solvent" 
           
 else
     dirs=$*
 fi
 
-for DIR_ in $dirs
+for DIR in $dirs
 do
-    DIR=`echo $DIR_ | sed 's?/??' `
     # set inter-directory dependencies - only directories containing
     # modules that are used, or files that are included, by routines
     # in directory DIR should be listed in DEPENDS
-    DEPENDS="../include ../iotk/src"
+    LEVEL1=..
+    LEVEL2=../..
+    DEPENDS="$LEVEL1/include $LEVEL1/iotk/src"
     case $DIR in 
         EE | flib | upftools | Solvent | PW )
-                  DEPENDS="$DEPENDS ../Modules "      ;;
-	CPV/src )
-		  DEPENDS="../../Modules ../../iotk/src ../../include" ;;
-	atomic/src )
-		  DEPENDS="../../iotk/src ../../include ../../Modules" ;;
+             DEPENDS="$LEVEL1/include $LEVEL1/iotk/src $LEVEL1/Modules" ;;
 	PP | PWCOND | Gamma | pwtools )
-		  DEPENDS="$DEPENDS ../Modules ../PW" ;;
-	PH/src )
-		 DEPENDS="../../include ../../iotk/src ../../Modules ../../PW" ;;
+             DEPENDS="$LEVEL1/include $LEVEL1/iotk/src $LEVEL1/Modules \
+                      $LEVEL1/PW" ;;
 	D3 | VdW | ACFDT ) 
-                  DEPENDS="$DEPENDS ../Modules ../PW ../PH/src" ;;
-	XSpectra/src  )
-		  DEPENDS="../../iotk/src ../../include ../../Modules ../../PW"  ;;
-	PWCOND/src )
-		  DEPENDS="../../iotk/src ../../include ../../Modules ../../PW"  ;;
-        GWW/pw4gww )
-                  DEPENDS="../../include ../../iotk/src ../../Modules \
-		  ../../PW " ;;
-	GWW/gww )
-                  DEPENDS="../../include ../../iotk/src ../../Modules " ;;
+             DEPENDS="$LEVEL1/include $LEVEL1/iotk/src $LEVEL1/Modules \
+                      $LEVEL1/PW $LEVEL1/PH/src" ;;
+	CPV/src | atomic/src | GWW/gww )
+             DEPENDS="$LEVEL2/include $LEVEL2/iotk/src $LEVEL2/Modules" ;;
+	PH/src | XSpectra/src  | PWCOND/src | GWW/pw4gww | NEB/src )
+             DEPENDS="$LEVEL2/include $LEVEL2/iotk/src $LEVEL2/Modules \
+                      $LEVEL2/PW" ;;
 	GWW/head )
-                  DEPENDS="../../include ../../iotk/src ../../Modules \
-		  ../../PW ../../PH/src ../pw4gww " ;;
-	NEB/src )
-		  DEPENDS="../../include ../../iotk/src ../../Modules ../../PW" ;;
-
+             DEPENDS="$LEVEL2/include $LEVEL2/iotk/src $LEVEL2/Modules \
+                      $LEVEL2/PW $LEVEL2/PH/src $LEVEL1/pw4gww " ;;
     esac
 
     # generate dependencies file (only for directories that are present)
