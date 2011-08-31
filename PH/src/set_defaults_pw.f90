@@ -138,6 +138,13 @@ SUBROUTINE setup_nscf ( newgrid, xq )
      ! In this case I generate a new set of k-points
      !
 
+     !
+     ! In the case of electron-phonon matrix element with
+     ! wannier functions the k-points should not be reduced
+     ! This is achieved by setting to true the flag lecrpa.
+     ! To avoid conflicts this is stored in skip_equivalence 
+     ! and then set to its initial value after the call
+     !
      if(elph_mat) then
         skip_equivalence=lecrpa
         lecrpa=.true.
