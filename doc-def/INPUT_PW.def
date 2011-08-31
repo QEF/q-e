@@ -124,8 +124,10 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 	    info {
 		This flag controls the way wavefunctions are stored to disk :
 
-		.TRUE.  collect wavefunctions from all processors and store
-                        them into the output data directory outdir/prefix.save
+		.TRUE.  collect wavefunctions from all processors, store them
+                        into the output data directory outdir/prefix.save,
+                        one wavefunction per k-point in subdirs K000001/,
+                        K000001/, etc. 
 
 		.FALSE. do not collect wavefunctions, leave them in temporary
 	                local files (one per processor). The resulting format
@@ -211,8 +213,10 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 	var lkpoint_dir -type LOGICAL { 
 	    default { .true. }
 	    info {
-		If .false. it does not open a subdirectory for each k_point 
-		in the prefix.save directory. 
+		If .false. a subdirectory for each k_point is not opened
+		in the prefix.save directory; Kohn-Sham eigenvalues are
+                stored instead in a single file for all k-points. Currently
+                doesnh't work together with wf_collect
 	    }
 	}
        		
