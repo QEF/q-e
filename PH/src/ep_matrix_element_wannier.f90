@@ -19,62 +19,86 @@ SUBROUTINE ep_matrix_element_wannier()
   USE fft_base, ONLY : dfftp, dffts
   USE noncollin_module, ONLY : nspin_mag
   USE dynmat, ONLY : dyn, w2
-  USE qpoint, ONLY : xq
+  USE qpoint, ONLY : xq, nksq, ikks
   USE modes,  ONLY : npert, nirr
-  USE control_ph, ONLY : trans, elph_mat
+  USE control_ph, ONLY : trans, elph_mat, dvscf_dir
   USE units_ph, ONLY : iudyn, lrdrho, iudvscf
   USE io_global, ONLY : stdout
+  USE mp_global, ONLY : me_pool, root_pool
   USE modes, ONLY : u
+  USE klist, ONLY : xk
+  USE wvfct, ONLY : npwx
   !
   IMPLICIT NONE
   !
   LOGICAL :: read_dvscf_cart, ascii_dvscf
-  INTEGER :: irr, imode0, ipert, is
+  INTEGER :: irr, imode0, ipert, is, ik
   ! counter on the representations
   ! counter on the modes
   ! the change of Vscf due to perturbations
+  INTEGER, allocatable :: kpq(:), g_kpq(:,:),igqg(:)
+  REAL(DP), allocatable :: xk_gamma(:,:)
   COMPLEX(DP), POINTER :: dvscfin(:,:,:), dvscfins (:,:,:)
 
 
   CALL start_clock ('elphon')
 
+  allocate(kpq(nksq),g_kpq(3,nksq),igqg(nksq))
+
+  ALLOCATE (xk_gamma(3,nksq))
+  
+  do ik=1,nksq
+     xk_gamma(1:3,ik)=xk(1:3,ikks(ik))
+  enddo
+
+  !
+  !first of all I identify q' in the list of xk such that
+  !   (i) q' is in the set of xk 
+  !   (ii) k+q'+G=k+q 
+  !  and G is a G vector depending on k and q.
+  !
+
+  call get_equivalent_kpq(xk_gamma,xq,kpq,g_kpq,igqg)
+
+
   ascii_dvscf=.false.
   if(elph_mat) read_dvscf_cart=.true.
 
-   if(read_dvscf_cart) then
-      write(stdout,*)
-      write(stdout,*) 'Reading dvscf in cartesian coordinates !'
-      write(stdout,*)
+  if(read_dvscf_cart) then
+     write(stdout,*)
+     write(stdout,*) 'Reading dvscf in cartesian coordinates !'
+     write(stdout,*)
+     
+     u=CMPLX(0.d0,0.d0)
+     do irr=1,3*nat
+        u(irr,irr)=CMPLX(1.d0,0.d0)
+     enddo
+     
 
-      u=CMPLX(0.d0,0.d0)
-      do irr=1,3*nat
-         u(irr,irr)=CMPLX(1.d0,0.d0)
-      enddo
+!     if(ascii_dvscf) then
+!        ALLOCATE (dvrot ( nrxx , nspin , 3*nat) )
+!        fildvscf_asc=trim(tmp_dir)//trim(prefix)//"."//trim(fildvscf)//'1'
+!        open(unit=7899,file=fildvscf_asc,status='unknown')
+!        dvrot=CMPLX(0.0,0.0)
+!        do na=1,nat
+!           do ipol=1,3
+!              irr=(na-1)*3+ipol
+!              do  k = 1, dfftp%nr3
+!                 do j = 1, dfftp%nr2
+!                    do i = 1, dfftp%nr1
+!                       read(7899,*)   n, rep,imp
+!                       dvrot(n,1,irr)=CMPLX(rep,imp)
+!                    enddo
+!                 enddo
+!              enddo
+!           enddo
+!        enddo
+!        close(7899)
+!     endif
+     
+  endif
 
-!      if(ascii_dvscf) then
-!         ALLOCATE (dvrot ( nrxx , nspin , 3*nat) )
-!         fildvscf_asc=trim(tmp_dir)//trim(prefix)//"."//trim(fildvscf)//'1'
-!         open(unit=7899,file=fildvscf_asc,status='unknown')
-!         dvrot=CMPLX(0.0,0.0)
-!         do na=1,nat
-!            do ipol=1,3
-!               irr=(na-1)*3+ipol
-!               do  k = 1, dfftp%nr3
-!                  do j = 1, dfftp%nr2
-!                     do i = 1, dfftp%nr1
-!                        read(7899,*)   n, rep,imp
-!                        dvrot(n,1,irr)=CMPLX(rep,imp)
-!                     enddo
-!                  enddo
-!               enddo
-!            enddo
-!         enddo
-!         close(7899)
-!      endif
-
-   endif
-
-   
+  
 
   !
   ! read Delta Vscf and calculate electron-phonon coefficients
@@ -103,7 +127,7 @@ SUBROUTINE ep_matrix_element_wannier()
         dvscfins => dvscfin
      ENDIF
      CALL newdq (dvscfin, npert(irr))
-     CALL elphel (npert (irr), imode0, dvscfins)
+     CALL elphel_refolded (npert (irr), imode0, dvscfins, igqg, kpq, g_kpq, xk_gamma)
      !
      imode0 = imode0 + npert (irr)
      IF (doublegrid) DEALLOCATE (dvscfins)
@@ -116,6 +140,9 @@ SUBROUTINE ep_matrix_element_wannier()
   IF (.NOT.trans) CALL readmat (iudyn, ibrav, celldm, nat, ntyp, &
        ityp, omega, pmass, tau, xq, w2, dyn)
   !
+  deallocate(xk_gamma)
+  deallocate(kpq,g_kpq,igqg)
+
   CALL stop_clock ('elphon')
   RETURN
 END SUBROUTINE ep_matrix_element_wannier
@@ -176,7 +203,7 @@ SUBROUTINE elphsum_wannier
   CHARACTER(len=20) :: char_deg
   CHARACTER(len=1) :: char_ng
   character(len=80) :: filelph
-  CHARACTER(len=20) ::  file_elphmat
+  CHARACTER(len=256) ::  file_elphmat
   !
   COMPLEX(DP) :: el_ph_sum (3*nat,3*nat), dyn_corr(3*nat,3*nat)
 
@@ -185,7 +212,8 @@ SUBROUTINE elphsum_wannier
   nmodes=3*nat
 
   write(filelph,'(A5,f9.6,A1,f9.6,A1,f9.6)') 'elph.',xq(1),'.',xq(2),'.',xq(3)
-  write(file_elphmat,'(A8)') 'elph.mat'
+!  write(file_elphmat,'(A8)') 'elph.mat'
+  file_elphmat=prefix//'elph.mat'
   ! parallel case: only first node writes
   IF ( me_pool /= root_pool ) THEN
      iuelph = 0
@@ -236,10 +264,14 @@ SUBROUTINE elphsum_wannier
         call cryst_to_cart(1,xk_dummy,at,-1)
         WRITE (iuelphmat) (xk_dummy(ipert),ipert=1,3)
         WRITE (iuelphmat) (et(ibnd,ikk),ibnd=elph_nbnd_min,elph_nbnd_max)
+        write(stdout,*) 'elphmat'
         do nu=1,nmodes
            WRITE (iuelphmat) &
                 ((el_ph_mat (jbnd, ibnd, ik, nu),jbnd=elph_nbnd_min,elph_nbnd_max),&
                 ibnd=elph_nbnd_min,elph_nbnd_max)
+           do jbnd=elph_nbnd_min,elph_nbnd_max
+              write(stdout,'(3i4,8f16.8)') ik,nu,jbnd,(el_ph_mat (jbnd, ibnd, ik, nu),ibnd=1,4)
+           enddo
         enddo
      enddo
      
@@ -395,3 +427,454 @@ SUBROUTINE elphsum_wannier
   return
 END SUBROUTINE ELPHSUM_WANNIER
    
+!
+!-----------------------------------------------------------------------
+SUBROUTINE elphel_refolded (npe, imode0, dvscfins, igqg, kpq, g_kpq, xk_gamma)
+  !-----------------------------------------------------------------------
+  !
+  !      Calculation of the electron-phonon matrix elements el_ph_mat
+  !         <\psi(k+q)|dV_{SCF}/du^q_{i a}|\psi(k)>
+  !      Original routine written by Francesco Mauri
+  !
+  USE kinds, ONLY : DP
+  USE fft_base, ONLY : dffts
+  USE wavefunctions_module,  ONLY: evc
+  USE io_files, ONLY: iunigk, prefix, diropn
+  USE klist, ONLY: xk
+  USE lsda_mod, ONLY: lsda, current_spin, isk
+  USE noncollin_module, ONLY : noncolin, npol, nspin_mag
+  USE wvfct, ONLY: nbnd, npw, npwx, igk
+  USE uspp, ONLY : vkb
+  USE el_phon, ONLY : el_ph_mat
+  USE modes, ONLY : u
+  USE units_ph, ONLY : iubar, lrbar, lrwfc, iuwfc
+  USE eqv,      ONLY : dvpsi!, evq
+  USE qpoint,   ONLY : igkq, npwq, nksq, ikks, ikqs
+  USE control_ph, ONLY : trans, lgamma, dvscf_dir
+  USE mp_global, ONLY: intra_pool_comm, me_pool, root_pool
+  USE mp,        ONLY: mp_sum
+  USE ions_base, ONLY : nat
+
+  IMPLICIT NONE
+  !
+  INTEGER :: npe, imode0, npwq_refolded
+  INTEGER :: igqg(nksq), kpq(nksq), g_kpq(3,nksq)
+  real(DP) :: xk_gamma(3,nksq)
+  COMPLEX(DP) :: dvscfins (dffts%nnr, nspin_mag, npe)
+  COMPLEX(DP), allocatable :: evq(:,:)
+
+
+  ! LOCAL variables
+  logical :: exst
+  INTEGER :: nrec, ik, ikk, ikq, ikqg,ipert, mode, ibnd, jbnd, ir, ig, &
+       ios, iunwfcwann
+
+  COMPLEX(DP) , ALLOCATABLE :: aux1 (:,:), elphmat (:,:,:)
+  COMPLEX(DP), EXTERNAL :: zdotc
+  INTEGER, EXTERNAL :: find_free_unit
+  !
+  allocate (evq(npol*npwx,nbnd))
+  ALLOCATE (aux1    (dffts%nnr, npol))
+  ALLOCATE (elphmat ( nbnd , nbnd , 3*nat))
+
+  
+  iunwfcwann=find_free_unit()
+  CALL diropn (iunwfcwann, 'wfc', lrwfc, exst, dvscf_dir)
+  IF (.NOT.exst) THEN
+     CALL errore ('elphel_refolded', 'file '//trim(prefix)//'.wfc not found in Rotated_DVSCF', 1)
+  END IF
+  !
+  !  Start the loops over the k-points
+  !
+  IF (nksq.GT.1) REWIND (unit = iunigk)
+  DO ik = 1, nksq
+     
+     IF (nksq.GT.1) THEN
+        READ (iunigk, err = 100, iostat = ios) npw, igk
+100     CALL errore ('elphel', 'reading igk', ABS (ios) )
+     ENDIF
+     !
+     !  ik = counter of k-points with vector k
+     !  ikk= index of k-point with vector k
+     !  ikq= index of k-point with vector k+q
+     !       k and k+q are alternated if q!=0, are the same if q=0
+     !
+     IF (lgamma) npwq = npw
+     ikk = ikks(ik)
+     ikq = ikqs(ik)
+     ikqg = kpq(ik)
+
+     IF (lsda) current_spin = isk (ikk)
+     IF (.NOT.lgamma.AND.nksq.GT.1) THEN
+        READ (iunigk, err = 200, iostat = ios) npwq, igkq
+200     CALL errore ('elphel', 'reading igkq', ABS (ios) )
+     ENDIF
+
+     
+
+     !
+     CALL init_us_2 (npwq, igkq, xk (1, ikq), vkb)
+     !
+     ! read unperturbed wavefuctions psi(k) and psi(k+q)
+     !
+     evc=cmplx(0.d0,0.d0)
+
+     IF (nksq.GT.1) THEN
+        IF (lgamma) THEN
+           CALL davcio (evc, lrwfc, iunwfcwann, ikk, - 1)
+        ELSE
+           CALL davcio (evc, lrwfc, iunwfcwann, ik, - 1)
+           CALL davcio (evq, lrwfc, iunwfcwann, ikqg, - 1)
+        ENDIF
+     ENDIF
+     !
+
+
+
+     call calculate_and_apply_phase(ik, ikqg, igqg, npwq_refolded, g_kpq,xk_gamma, evq)
+     
+     
+     DO ipert = 1, npe
+        write(6,*) 'ipert=',ipert
+        nrec = (ipert - 1) * nksq + ik
+        !
+        !  dvbare_q*psi_kpoint is read from file (if available) or recalculated
+        !
+        IF (trans) THEN
+           CALL davcio (dvpsi, lrbar, iubar, nrec, - 1)
+        ELSE
+           mode = imode0 + ipert
+           ! TODO : .false. or .true. ???
+           CALL dvqpsi_us (ik, u (1, mode), .FALSE. )
+        ENDIF
+        !
+        ! calculate dvscf_q*psi_k
+        !
+        write(6,*) 'aa'
+
+        DO ibnd = 1, nbnd
+           CALL cft_wave (evc(1, ibnd), aux1, +1)
+           CALL apply_dpot(dffts%nnr, Aux1, dvscfins(1,1,ipert), current_spin)
+           CALL cft_wave (dvpsi(1, ibnd), aux1, -1)
+        END DO
+        CALL adddvscf (ipert, ik)
+        write(6,*) 'bb'
+!        write(6,*) 'dvpsi'
+!        do ibnd=1,npw
+!           write(6,'(8F16.8)') (dvpsi(ibnd, jbnd),jbnd=1,4)
+!        enddo
+
+
+
+
+        write(6,*) 'cc'
+        !
+        ! calculate elphmat(j,i)=<psi_{k+q,j}|dvscf_q*psi_{k,i}> for this pertur
+        !
+!        DO ibnd =1, nbnd
+!           DO jbnd = 1, nbnd
+!              elphmat (jbnd, ibnd, ipert) = zdotc (npwq, evq (1, jbnd), 1, &
+!                   dvpsi (1, ibnd), 1)
+!              IF (noncolin) &
+!                 elphmat (jbnd, ibnd, ipert) = elphmat (jbnd, ibnd, ipert)+ &
+!                   zdotc (npwq, evq(npwx+1,jbnd),1,dvpsi(npwx+1,ibnd), 1)
+!           ENDDO
+!        ENDDO
+!     ENDDO
+
+        DO ibnd =1, nbnd
+           DO jbnd = 1, nbnd
+              elphmat (jbnd, ibnd, ipert) = zdotc (npwq_refolded, evq (1, jbnd), 1, &
+                   dvpsi (1, ibnd), 1)
+              IF (noncolin) &
+                 elphmat (jbnd, ibnd, ipert) = elphmat (jbnd, ibnd, ipert)+ &
+                   zdotc (npwq_refolded, evq(npwx+1,jbnd),1,dvpsi(npwx+1,ibnd), 1)
+           ENDDO
+        ENDDO
+     ENDDO
+     !
+     CALL mp_sum (elphmat, intra_pool_comm)
+     !
+     !  save all e-ph matrix elements into el_ph_mat
+     !
+     DO ipert = 1, npe
+        DO jbnd = 1, nbnd
+           DO ibnd = 1, nbnd
+              el_ph_mat (ibnd, jbnd, ik, ipert + imode0) = elphmat (ibnd, jbnd, ipert)
+           ENDDO
+        ENDDO
+     ENDDO
+     write(6,*) 'done ik=',ik
+  ENDDO
+  
+  CLOSE( UNIT = iunwfcwann, STATUS = 'KEEP' )
+  call stop_ph(.true.)
+  !
+  DEALLOCATE (elphmat)
+  DEALLOCATE (aux1)
+  DEALLOCATE(evq)
+  !
+
+  RETURN
+END SUBROUTINE elphel_refolded
+!
+subroutine get_equivalent_kpq(xk,xq,kpq,g_kpq, igqg)
+    !==================================================================!
+    !                                                                  !
+    !  Set up the k+q shell for electron-phonon coupling               ! 
+    !                                                                  !
+    !===================================================================  
+  USE kinds, ONLY : DP
+  USE io_global, ONLY : stdout
+  USE cell_base,   ONLY : at, bg
+  USE qpoint, ONLY : nksq, ikks
+  USE gvect, ONLY: g, gg
+  USE qpoint, ONLY : nksq
+  ! WARNING g_kpq mesh is an integer
+  implicit none
+  
+  ! Variables that are private
+  
+  integer :: iqx,iqy,iqz,i,j,k,n,nn,iq,ik, ig
+  integer :: kpq(nksq),g_kpq(3,nksq),igqg(nksq)
+  real(kind=dp) :: gg_
+  real(kind=dp) :: xq(3), xk(3,*)
+  real(kind=dp) :: xkpq(3),Gvec(3),xq_crys(3)
+  real(kind=dp), allocatable :: xk_crys(:,:)
+
+  !
+  ! nksq = number of k point per pool withour k+q
+  !
+
+
+  xq_crys=xq
+
+  call cryst_to_cart (1, xq_crys, at, -1)
+
+!  write(stdout,*) xq_crys,'xq_c'
+  allocate(xk_crys(3,nksq))
+
+  do ik=1,nksq
+     xk_crys(1:3,ik)=xk(1:3,ik)
+  enddo
+  call cryst_to_cart (nksq, xk_crys, at, -1)
+     
+  !
+  ! kpt_latt are the BZ vectors in crystalline coordinates
+  ! xq is the q vector in crystalline coordinates
+  !
+  
+  do iq=1,nksq
+     xkpq(:)=xk_crys(:,iq)+xq_crys(:)
+     do i=1,nksq
+        do iqx=-4,4
+           do iqy=-4,4
+              do iqz=-4,4
+                 Gvec(1)=real(iqx,dp)+xkpq(1)
+                 Gvec(2)=real(iqy,dp)+xkpq(2)
+                 Gvec(3)=real(iqz,dp)+xkpq(3)
+                   
+                 if(dabs(xk_crys(1,i)-Gvec(1)).lt.1.d-6.and. &
+                      dabs(xk_crys(2,i)-Gvec(2)).lt.1.d-6.and. &
+                      dabs(xk_crys(3,i)-Gvec(3)).lt.1.d-6) then
+                    kpq(iq)=i
+                    g_kpq(1,iq)=-iqx
+                    g_kpq(2,iq)=-iqy
+                    g_kpq(3,iq)=-iqz
+                    goto 99
+                 endif
+              enddo
+           enddo
+        enddo
+     enddo
+     CALL errore ('get_equivalent_kpq', 'cannot find index k+q ', 2 )
+     stop
+99   continue
+  enddo
+
+
+
+
+  !
+  ! here between all the g-vectors I find the index of that
+  ! related to the translation in the Brillouin zone.
+  !
+
+  igqg=0
+  do ik=1,nksq
+     Gvec(:) = REAL( g_kpq(:,ik),dp )
+     call cryst_to_cart (1, Gvec, bg, 1)
+     gg_ = Gvec(1)*Gvec(1) + Gvec(2)*Gvec(2) + Gvec(3)*Gvec(3)
+     igqg(ik)=0
+     ig=1
+     do while  (gg(ig) <= gg_ + 1.d-6) 
+        if ( (abs(g(1,ig)-Gvec(1)) < 1.d-6) .and.  &
+             (abs(g(2,ig)-Gvec(2)) < 1.d-6) .and.  &
+             (abs(g(3,ig)-Gvec(3)) < 1.d-6)  ) then
+           igqg(ik) = ig
+           
+        endif
+        ig= ig +1
+     end do
+  end do
+
+
+  write(stdout,'(1x,a)') '+-------------------------------------+' 
+  write(stdout,'(1x,a)') '|   k    k+q        G        igqg     |'
+  write(stdout,'(1x,a)') '| ----  ------  ---------- -----------|'
+  
+  do k=1,nksq
+     write(stdout,'(6i6)') k,kpq(k),(g_kpq(i,k),i=1,3),igqg(k)
+     !       write(stdout,'(6f10.4,3i4)')(kpt_latt(i,k),i=1,3),(kpt_latt(i,indexkpq(k)),i=1,3),(g_kpq(i,k),i=1,3)
+  enddo
+  write(stdout,'(1x,a)') '+-------------------------------------------------+' 
+
+  deallocate(xk_crys)
+
+  
+end subroutine get_equivalent_kpq
+
+subroutine calculate_and_apply_phase(ik, ikqg, igqg, npwq_refolded, g_kpq, xk_gamma, evq)
+  USE kinds, ONLY : DP
+  USE fft_base, ONLY : dffts
+  USE fft_interfaces,        ONLY : fwfft, invfft
+  USE wvfct, ONLY: nbnd, npw, npwx,  g2kin, ecutwfc, nbnd
+  USE gvect, ONLY : ngm, g
+  USE gvecs, ONLY : nls
+  USE cell_base, ONLY : bg, tpiba2
+  USE qpoint, ONLY : nksq, npwq
+!  USE eqv,      ONLY : evq
+  USE noncollin_module,     ONLY : npol
+
+  IMPLICIT NONE
+
+  INTEGER :: ik, ikqg,   npwq_refolded
+  INTEGER :: igqg(nksq)
+  INTEGER :: g_kpq(3,nksq)
+  REAL (DP) :: xk_gamma(3,nksq)
+  complex(dp) :: evq(npwx*npol,nbnd)
+!  internal
+  INTEGER :: npw_, m
+  INTEGER, allocatable :: igk_(:), igkq_(:)
+  REAL(DP) :: xkqg(3), g_(3)
+  COMPLEX (DP), allocatable :: psi_scratch(:)
+  complex(DP), allocatable :: phase(:)
+
+  allocate(igk_(npwx), igkq_(npwx))
+  allocate (psi_scratch ( dffts%nnr) )
+  allocate (phase(dffts%nnr))
+  call flush(6)
+
+
+  g_(:)=real( g_kpq(:,ik), dp )
+  call cryst_to_cart (1, g_, bg, 1)
+  xkqg(:)=xk_gamma(:,ikqg)+g_(:)
+
+  npw_=0
+  npwq_refolded=0
+  igk_=0
+  igkq_=0
+
+
+  call gk_sort (xk_gamma(1,ikqg), ngm, g, ecutwfc / tpiba2, npw_, igk_, g2kin)
+
+  call gk_sort (xkqg, ngm, g, ecutwfc / tpiba2, npwq_refolded, igkq_, g2kin)
+
+  write(6,*) npw, npw_, npwq_refolded, npwq
+  write(6,*) npw, npw_, npwq_refolded, npwq
+
+  phase(:) = CMPLX(0.d0,0.d0)
+
+  if ( igqg(ik)>0) then
+     phase( nls(igqg(ik)) ) = (1.d0,0.d0)
+  endif
+
+
+  CALL invfft ('Wave', phase, dffts)
+  !  call cft3s (phase, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, +2)
+  phase(:)=conjg(phase(:))
+
+
+  if(npwq_refolded.ne.npw_) call errore('elphel_refolded', 'Warning : npwq_refolded \= npw_',-1)
+  
+  do m=1,nbnd
+     psi_scratch = (0.d0, 0.d0)
+     psi_scratch(nls (igk_ (1:npw_) ) ) = evq (1:npw_, m)
+     CALL invfft ('Wave', psi_scratch, dffts)
+     !     call cft3s (psic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, +2)
+     psi_scratch(1:dffts%nnr) = psi_scratch(1:dffts%nnr) * phase(1:dffts%nnr)
+     !     call cft3s (psic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, -2)
+     CALL fwfft ('Wave', psi_scratch, dffts)
+     evq(1:npwq_refolded,m) = psi_scratch(nls (igkq_(1:npwq_refolded) ) )
+  enddo
+
+
+
+  deallocate(psi_scratch)
+  DEALLOCATE(phase)
+  deallocate(igk_, igkq_)
+  
+  return
+end subroutine calculate_and_apply_phase
+  
+!
+! Copyright (C) 2001 PWSCF group
+! This file is distributed under the terms of the
+! GNU General Public License. See the file `License'
+! in the root directory of the present distribution,
+! or http://www.gnu.org/copyleft/gpl.txt .
+!
+!
+!-----------------------------------------------------------------------
+subroutine trnvect (vect, at, bg, iflag)
+  !-----------------------------------------------------------------------
+  !
+  !  This routine transforms a vector (like forces which in the
+  !  crystal axis is represented on the basis of the reciprocal lattice
+  !  vectors) from crystal to cartesian axis (iflag.gt.0)
+  !  and viceversa (iflag.le.0)
+  !
+  USE kinds
+  implicit none
+  integer :: iflag
+  ! input: gives the versus of the transformati
+
+  real(DP) :: vect (3), at (3, 3), bg (3, 3)
+  ! inp/out: the vector to transform
+  ! input: direct lattice vectors
+  ! input: reciprocal lattice vectors
+  real(DP) :: work (3)
+  ! a working array
+
+  integer :: ipol, ialpha
+  ! counter on crystal coordinates
+  ! counter on cartesian coordinates
+  if (iflag.gt.0) then
+     !
+     !     forward transformation, from crystal to cartesian axis
+     !
+     do ipol = 1, 3
+        work (ipol) = vect (ipol)
+     enddo
+     do ialpha = 1, 3
+        vect (ialpha) = 0.d0
+        do ipol = 1, 3
+           vect (ialpha) = vect (ialpha) + work (ipol) * bg (ialpha, ipol)
+        enddo
+     enddo
+  else
+     !
+     !    backward transformation, from cartesian to crystal axis
+     !
+     do ipol = 1, 3
+        work (ipol) = 0.d0
+        do ialpha = 1, 3
+           work (ipol) = work (ipol) + vect (ialpha) * at (ialpha, ipol)
+        enddo
+     enddo
+     do ipol = 1, 3
+        vect (ipol) = work (ipol)
+     enddo
+  endif
+  return
+end subroutine trnvect
