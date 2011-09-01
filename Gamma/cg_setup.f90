@@ -35,10 +35,6 @@ SUBROUTINE cg_setup
   !
   CALL start_clock('cg_setup')
   !
-  !  convert masses to atomic units
-  !
-  CALL dscal(ntyp,amconv,amass,1)
-  !
   !  sum self-consistent part (vr) and local part (vltot) of potential
   !
   CALL set_vrs(vrs,vltot,v%of_r,kedtau, v%kin_r, dfftp%nnr,nspin,doublegrid)

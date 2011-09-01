@@ -14,6 +14,7 @@ SUBROUTINE dyndiar (dyn,nat3,nmodes,u,nat,ityp,amass,w2,dynout)
   !   and mode displacements in "dynout". dyn is unchanged on output.
   !
   USE kinds, ONLY : DP
+  USE constants, ONLY : amconv
   USE io_global,  ONLY : stdout
   IMPLICIT NONE
   INTEGER :: nmodes, nat3, nat,ityp(nat), iudyn
@@ -58,7 +59,7 @@ SUBROUTINE dyndiar (dyn,nat3,nmodes,u,nat,ityp,amass,w2,dynout)
   ENDDO
   WRITE( stdout,9005) dif
   !
-  !  fill the mass matrix
+  !  fill the mass matrix (masses are in amu, amconv converts to a.u.)
   !
   DO nu_i = 1,nmodes
      DO nu_j = 1,nmodes
@@ -66,7 +67,7 @@ SUBROUTINE dyndiar (dyn,nat3,nmodes,u,nat,ityp,amass,w2,dynout)
         DO mu = 1,3*nat
            na = (mu-1)/3+1
            nt = ityp(na)
-           m(nu_i,nu_j) = m(nu_i,nu_j) + amass(nt)*u(mu,nu_i)*u(mu,nu_j)
+           m(nu_i,nu_j) = m(nu_i,nu_j) + amconv*amass(nt)*u(mu,nu_i)*u(mu,nu_j)
         ENDDO
      ENDDO
   ENDDO

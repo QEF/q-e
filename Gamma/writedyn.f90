@@ -10,6 +10,7 @@ SUBROUTINE writedyn ( )
   !
   USE ions_base, ONLY : nat, tau, ityp, ntyp => nsp, atm, amass
   USE run_info, ONLY : title
+  USE constants, ONLY : amconv
   USE cgcom
   USE pwcom
   IMPLICIT NONE
@@ -18,13 +19,13 @@ SUBROUTINE writedyn ( )
   iudyn = 20
   OPEN(unit=iudyn,file=fildyn,form='formatted',status='unknown')
   !
-  !  write the dynamical matrix on on file
+  !  write the dynamical matrix to file
   !
   WRITE(iudyn,'(a)') title
   WRITE(iudyn,'(a)') title_ph
   WRITE(iudyn,'(i3,i5,i3,6f11.7)') ntyp,nat,ibrav,celldm
   DO nt = 1,ntyp
-     WRITE(iudyn,*) nt," '",atm(nt),"' ",amass(nt)
+     WRITE(iudyn,*) nt," '",atm(nt),"' ",amconv*amass(nt)
   ENDDO
   DO na=1,nat
      WRITE(iudyn,'(2i5,3f15.7)') na,ityp(na),(tau(j,na),j=1,3)

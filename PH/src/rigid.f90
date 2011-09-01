@@ -219,6 +219,7 @@ subroutine dyndiag (nat,ntyp,amass,ityp,dyn,w2,z)
   !-----------------------------------------------------------------------
   !
   !   diagonalise the dynamical matrix
+  !   On input:  amass = masses, in amu
   !   On output: w2 = energies, z = displacements
   !
   use kinds, only: dp

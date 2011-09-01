@@ -36,7 +36,7 @@ end Module dynamical
 !                    (default: fildyn='matdyn')
 !  q(3)      real    calculate LO modes (add nonanalytic terms) along
 !                    the direction q (default: q=(0,0,0) )
-!  amass(nt) real    mass for atom type nt, a.u.
+!  amass(nt) real    mass for atom type nt, amu
 !                    (default: amass is read from file fildyn)
 !  asr   character   indicates the type of Acoustic Sum Rule imposed
 !                     - 'no': no Acoustic Sum Rules imposed (default)
@@ -147,18 +147,14 @@ end Module dynamical
       ELSE
          call readmat ( fildyn, asr, axis, nat, ntyp, atm, a0, &
               at, omega, amass_, eps0, q_ )
-         amconv = 1.66042d-24/9.1095d-28*0.5d0
+         amconv = 1.66042d-24/9.1095d-28*0.5d0 ! converts amu to au
       ENDIF
       !
-      gamma = abs(q_(1)**2+q_(2)**2+q_(3)**2).lt.1.0d-8
+      gamma = ( abs( q_(1)**2+q_(2)**2+q_(3)**2 ) < 1.0d-8 )
       do nt=1, ntyp
-         if (amass(nt) > 0.0d0) then
-            amass(nt)=amass(nt)*amconv
-         else
-            amass(nt)=amass_(nt)
-         end if
+         if (amass(nt) <= 0.0d0) amass(nt)=amass_(nt)/amconv
       end do
-!
+      !
       if (gamma) then
          allocate (itau(nat))
          do na=1,nat
