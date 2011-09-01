@@ -14,7 +14,7 @@ SUBROUTINE ep_matrix_element_wannier()
   !
   USE kinds, ONLY : DP
   USE cell_base, ONLY : celldm, omega, ibrav
-  USE ions_base, ONLY : nat, ntyp => nsp, ityp, tau, amass
+  USE ions_base, ONLY : nat, ntyp => nsp, ityp, tau, pmass
   USE gvecs, ONLY: doublegrid
   USE fft_base, ONLY : dfftp, dffts
   USE noncollin_module, ONLY : nspin_mag
@@ -138,7 +138,7 @@ SUBROUTINE ep_matrix_element_wannier()
   ! calculated in a previous run
   !
   IF (.NOT.trans) CALL readmat (iudyn, ibrav, celldm, nat, ntyp, &
-       ityp, omega, amass, tau, xq, w2, dyn)
+       ityp, omega, pmass, tau, xq, w2, dyn)
   !
   deallocate(xk_gamma)
   deallocate(kpq,g_kpq,igqg)
@@ -281,6 +281,7 @@ SUBROUTINE elphsum_wannier
      !
   END IF
   !
+  call stop_ph(.true.)
 
   DO isig = 1, el_ph_nsigma
      !     degauss1 = 0.01 * isig
@@ -535,7 +536,6 @@ SUBROUTINE elphel_refolded (npe, imode0, dvscfins, igqg, kpq, g_kpq, xk_gamma)
      
      
      DO ipert = 1, npe
-        write(6,*) 'ipert=',ipert
         nrec = (ipert - 1) * nksq + ik
         !
         !  dvbare_q*psi_kpoint is read from file (if available) or recalculated
@@ -550,7 +550,6 @@ SUBROUTINE elphel_refolded (npe, imode0, dvscfins, igqg, kpq, g_kpq, xk_gamma)
         !
         ! calculate dvscf_q*psi_k
         !
-        write(6,*) 'aa'
 
         DO ibnd = 1, nbnd
            CALL cft_wave (evc(1, ibnd), aux1, +1)
@@ -558,30 +557,9 @@ SUBROUTINE elphel_refolded (npe, imode0, dvscfins, igqg, kpq, g_kpq, xk_gamma)
            CALL cft_wave (dvpsi(1, ibnd), aux1, -1)
         END DO
         CALL adddvscf (ipert, ik)
-        write(6,*) 'bb'
-!        write(6,*) 'dvpsi'
-!        do ibnd=1,npw
-!           write(6,'(8F16.8)') (dvpsi(ibnd, jbnd),jbnd=1,4)
-!        enddo
-
-
-
-
-        write(6,*) 'cc'
         !
         ! calculate elphmat(j,i)=<psi_{k+q,j}|dvscf_q*psi_{k,i}> for this pertur
         !
-!        DO ibnd =1, nbnd
-!           DO jbnd = 1, nbnd
-!              elphmat (jbnd, ibnd, ipert) = zdotc (npwq, evq (1, jbnd), 1, &
-!                   dvpsi (1, ibnd), 1)
-!              IF (noncolin) &
-!                 elphmat (jbnd, ibnd, ipert) = elphmat (jbnd, ibnd, ipert)+ &
-!                   zdotc (npwq, evq(npwx+1,jbnd),1,dvpsi(npwx+1,ibnd), 1)
-!           ENDDO
-!        ENDDO
-!     ENDDO
-
         DO ibnd =1, nbnd
            DO jbnd = 1, nbnd
               elphmat (jbnd, ibnd, ipert) = zdotc (npwq_refolded, evq (1, jbnd), 1, &
@@ -604,11 +582,9 @@ SUBROUTINE elphel_refolded (npe, imode0, dvscfins, igqg, kpq, g_kpq, xk_gamma)
            ENDDO
         ENDDO
      ENDDO
-     write(6,*) 'done ik=',ik
   ENDDO
   
   CLOSE( UNIT = iunwfcwann, STATUS = 'KEEP' )
-  call stop_ph(.true.)
   !
   DEALLOCATE (elphmat)
   DEALLOCATE (aux1)
@@ -817,3 +793,64 @@ subroutine calculate_and_apply_phase(ik, ikqg, igqg, npwq_refolded, g_kpq, xk_ga
   return
 end subroutine calculate_and_apply_phase
   
+!
+! Copyright (C) 2001 PWSCF group
+! This file is distributed under the terms of the
+! GNU General Public License. See the file `License'
+! in the root directory of the present distribution,
+! or http://www.gnu.org/copyleft/gpl.txt .
+!
+!
+!-----------------------------------------------------------------------
+subroutine trnvect (vect, at, bg, iflag)
+  !-----------------------------------------------------------------------
+  !
+  !  This routine transforms a vector (like forces which in the
+  !  crystal axis is represented on the basis of the reciprocal lattice
+  !  vectors) from crystal to cartesian axis (iflag.gt.0)
+  !  and viceversa (iflag.le.0)
+  !
+  USE kinds
+  implicit none
+  integer :: iflag
+  ! input: gives the versus of the transformati
+
+  real(DP) :: vect (3), at (3, 3), bg (3, 3)
+  ! inp/out: the vector to transform
+  ! input: direct lattice vectors
+  ! input: reciprocal lattice vectors
+  real(DP) :: work (3)
+  ! a working array
+
+  integer :: ipol, ialpha
+  ! counter on crystal coordinates
+  ! counter on cartesian coordinates
+  if (iflag.gt.0) then
+     !
+     !     forward transformation, from crystal to cartesian axis
+     !
+     do ipol = 1, 3
+        work (ipol) = vect (ipol)
+     enddo
+     do ialpha = 1, 3
+        vect (ialpha) = 0.d0
+        do ipol = 1, 3
+           vect (ialpha) = vect (ialpha) + work (ipol) * bg (ialpha, ipol)
+        enddo
+     enddo
+  else
+     !
+     !    backward transformation, from cartesian to crystal axis
+     !
+     do ipol = 1, 3
+        work (ipol) = 0.d0
+        do ialpha = 1, 3
+           work (ipol) = work (ipol) + vect (ialpha) * at (ialpha, ipol)
+        enddo
+     enddo
+     do ipol = 1, 3
+        vect (ipol) = work (ipol)
+     enddo
+  endif
+  return
+end subroutine trnvect
