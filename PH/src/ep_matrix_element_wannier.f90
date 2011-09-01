@@ -14,7 +14,7 @@ SUBROUTINE ep_matrix_element_wannier()
   !
   USE kinds, ONLY : DP
   USE cell_base, ONLY : celldm, omega, ibrav
-  USE ions_base, ONLY : nat, ntyp => nsp, ityp, tau, pmass
+  USE ions_base, ONLY : nat, ntyp => nsp, ityp, tau, amass
   USE gvecs, ONLY: doublegrid
   USE fft_base, ONLY : dfftp, dffts
   USE noncollin_module, ONLY : nspin_mag
@@ -138,7 +138,7 @@ SUBROUTINE ep_matrix_element_wannier()
   ! calculated in a previous run
   !
   IF (.NOT.trans) CALL readmat (iudyn, ibrav, celldm, nat, ntyp, &
-       ityp, omega, pmass, tau, xq, w2, dyn)
+       ityp, omega, amass, tau, xq, w2, dyn)
   !
   deallocate(xk_gamma)
   deallocate(kpq,g_kpq,igqg)
@@ -739,7 +739,7 @@ subroutine calculate_and_apply_phase(ik, ikqg, igqg, npwq_refolded, g_kpq, xk_ga
   allocate(igk_(npwx), igkq_(npwx))
   allocate (psi_scratch ( dffts%nnr) )
   allocate (phase(dffts%nnr))
-  call flush(6)
+  call flush_unit (6)
 
 
   g_(:)=real( g_kpq(:,ik), dp )
