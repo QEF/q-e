@@ -90,7 +90,7 @@ SUBROUTINE setup()
   IMPLICIT NONE
   !
   INTEGER  :: na, nt, is, ierr, ibnd, ik
-  LOGICAL  :: magnetic_sym
+  LOGICAL  :: magnetic_sym, skip_equivalence=.FALSE.
   REAL(DP) :: iocc, ionic_charge
   !
   LOGICAL, EXTERNAL  :: check_para_diag
@@ -418,6 +418,7 @@ SUBROUTINE setup()
   ! ... If lecrpa is true, nosym must be set to true also
   !
   IF ( lecrpa ) nosym = .TRUE.
+  IF ( lecrpa ) skip_equivalence=.TRUE.
   !
   ! ... If nosym is true do not use any point-group symmetry
   !
@@ -450,8 +451,8 @@ SUBROUTINE setup()
         !
      ELSE
         !
-        CALL kpoint_grid ( nrot, time_reversal, s, t_rev, bg, npk, &
-                         k1,k2,k3, nk1,nk2,nk3, nkstot, xk, wk)
+        CALL kpoint_grid ( nrot, time_reversal, skip_equivalence, s, t_rev, bg,&
+                           npk, k1,k2,k3, nk1,nk2,nk3, nkstot, xk, wk)
         !
      END IF
      !

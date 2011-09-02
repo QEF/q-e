@@ -1749,6 +1749,7 @@ SUBROUTINE gen_qpoints (ibrav, at_, bg_, nat, tau, ityp, nk1, nk2, nk3, &
   REAL(DP) :: q(3,nqx)
   ! local
   REAL(DP) :: xqq(3), wk(nqx), mdum(3,nat)
+  LOGICAL :: skip_equivalence=.FALSE.
   !
   time_reversal = .true.
   t_rev(:) = 0
@@ -1757,7 +1758,7 @@ SUBROUTINE gen_qpoints (ibrav, at_, bg_, nat, tau, ityp, nk1, nk2, nk3, &
   bg = bg_
   CALL set_sym_bl ( )
   !
-  CALL kpoint_grid ( nrot, time_reversal, s, t_rev, bg, nqx, &
+  CALL kpoint_grid ( nrot, time_reversal, skip_equivalence, s, t_rev, bg, nqx, &
                            0,0,0, nk1,nk2,nk3, nq, q, wk)
   !
   CALL find_sym ( nat, tau, ityp, 6, 6, 6, .not.time_reversal, mdum )

@@ -40,22 +40,22 @@ SUBROUTINE kp_strings ( nppstr, gdir, nrot, s, bg, npk, &
    INTEGER :: kindex
 !  time reversal and no magnetic symmetries assumed
    INTEGER :: t_rev(48) = 0
-   LOGICAL :: time_reversal = .true.
+   LOGICAL :: time_reversal = .true., skip_equivalence=.FALSE.
    REAL(dp) :: dk(3)
    REAL(dp) :: xk0(3,npk)
    REAL(dp) :: wk0(npk)
 
 !  --- Generate a k-point grid in the two dimensions other than gdir ---
    IF (gdir == 1) THEN
-      CALL kpoint_grid (nrot, time_reversal, s, t_rev, bg, npk, &
-                        k1,k2,k3, 1,nk2,nk3, nks, xk0, wk0 ) 
+      CALL kpoint_grid (nrot, time_reversal, skip_equivalence, s, t_rev, bg, &
+                        npk, k1,k2,k3, 1,nk2,nk3, nks, xk0, wk0 ) 
 
    ELSE IF (gdir == 2) THEN
-      CALL kpoint_grid (nrot, time_reversal, s, t_rev, bg, npk, &
-                        k1,k2,k3, nk1,1,nk3, nks, xk0, wk0 ) 
+      CALL kpoint_grid (nrot, time_reversal, skip_equivalence, s, t_rev, bg, &
+                        npk, k1,k2,k3, nk1,1,nk3, nks, xk0, wk0 ) 
    ELSE IF (gdir == 3) THEN
-      CALL kpoint_grid (nrot, time_reversal, s, t_rev, bg, npk, &
-                        k1,k2,k3, nk1,nk2,1, nks, xk0, wk0 ) 
+      CALL kpoint_grid (nrot, time_reversal, skip_equivalence, s, t_rev, bg, &
+                        npk, k1,k2,k3, nk1,nk2,1, nks, xk0, wk0 ) 
    ELSE
       CALL errore('kp_strings','gdir different from 1, 2, or 3',1)
    END IF

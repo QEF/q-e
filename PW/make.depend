@@ -787,7 +787,6 @@ iweights.o : ../Modules/kind.o
 iweights.o : ../Modules/mp.o
 iweights.o : ../Modules/mp_global.o
 iweights.o : noncol.o
-kpoint_grid.o : ../Modules/control_flags.o
 kpoint_grid.o : ../Modules/io_global.o
 kpoint_grid.o : ../Modules/kind.o
 kpoint_grid.o : pwcom.o

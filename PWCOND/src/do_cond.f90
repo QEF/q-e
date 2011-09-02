@@ -43,7 +43,7 @@ SUBROUTINE do_cond(done)
   !
   REAL(DP) :: wtot, tk
   INTEGER :: ik, ipol, ien, ios
-  LOGICAL :: lso_l, lso_s, lso_r
+  LOGICAL :: lso_l, lso_s, lso_r, skip_equivalence = .FALSE.
   !!! RECOVER
   LOGICAL :: tran_save
   !!!
@@ -347,8 +347,8 @@ IF (lda_plus_u) call errore('do_cond','PWCOND not working with LDA+U',1)
 IF (nkpts==0) THEN
    time_reversal = .NOT. (noncolin .AND. domag)
    IF (ionode) THEN
-      CALL kpoint_grid( nsym, time_reversal, s, t_rev, bg, npk, &
-                        k1ts, k2ts, 0, nk1ts, nk2ts, 1, nkpts, xk, wkpt )
+      CALL kpoint_grid( nsym, time_reversal, skip_equivalence, s, t_rev, bg, &
+                        npk, k1ts, k2ts, 0, nk1ts, nk2ts, 1, nkpts, xk, wkpt )
       call cryst_to_cart(nkpts,xk,at,-1)
       DO ik=1,nkpts
          xyk(1,ik)=xk(1,ik)

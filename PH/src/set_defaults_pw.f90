@@ -40,7 +40,7 @@ SUBROUTINE setup_nscf ( newgrid, xq )
                                  copy_sym, s_axis_to_cart
   USE wvfct,              ONLY : nbnd, nbndx
   USE control_flags,      ONLY : ethr, isolve, david, &
-                                 noinv, modenum, use_para_diag, lecrpa
+                                 noinv, modenum, use_para_diag
   USE control_ph,         ONLY : elph_mat
   USE mp_global,          ONLY : kunit
   USE spin_orb,           ONLY : domag
@@ -137,25 +137,12 @@ SUBROUTINE setup_nscf ( newgrid, xq )
      !
      ! In this case I generate a new set of k-points
      !
-
-     !
      ! In the case of electron-phonon matrix element with
      ! wannier functions the k-points should not be reduced
-     ! This is achieved by setting to true the flag lecrpa.
-     ! To avoid conflicts this is stored in skip_equivalence 
-     ! and then set to its initial value after the call
      !
-     if(elph_mat) then
-        skip_equivalence=lecrpa
-        lecrpa=.true.
-        CALL kpoint_grid ( nrot, time_reversal, s, t_rev, bg, nk1*nk2*nk3, &
-             k1,k2,k3, nk1,nk2,nk3, nkstot, xk, wk)
-        lecrpa=skip_equivalence
-     else
-        CALL kpoint_grid ( nrot, time_reversal, s, t_rev, bg, nk1*nk2*nk3, &
-             k1,k2,k3, nk1,nk2,nk3, nkstot, xk, wk)
-     endif
-
+     skip_equivalence = elph_mat
+     CALL kpoint_grid ( nrot, time_reversal, skip_equivalence, s, t_rev, &
+                      bg, nk1*nk2*nk3, k1,k2,k3, nk1,nk2,nk3, nkstot, xk, wk)
   endif
 
   !

@@ -20,7 +20,7 @@ SUBROUTINE q_points ( )
   implicit none
 
   integer :: i, iq, ierr, iudyn = 26
-  logical :: exist_gamma, check
+  logical :: exist_gamma, check, skip_equivalence=.FALSE.
   logical, external :: check_q_points_sym
   real(DP), allocatable, dimension(:) :: wq
 
@@ -33,7 +33,7 @@ SUBROUTINE q_points ( )
 
   allocate (wq(nqmax))
   allocate (x_q(3,nqmax))
-  call kpoint_grid( nsym, time_reversal, s, t_rev, bg, nqmax, &
+  call kpoint_grid( nsym, time_reversal, skip_equivalence, s, t_rev, bg, nqmax,&
                          0,0,0, nq1,nq2,nq3, nqs, x_q, wq )
   deallocate (wq)
   !
