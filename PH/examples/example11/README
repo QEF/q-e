@@ -1,0 +1,12 @@
+This example tests pw.x and ph.x for the noncollinear/spin-orbit case and PAW.
+
+The calculation proceeds as follows:
+
+1) make a self-consistent calculation for Au
+   (input=Au.scf_pz.in, output=Au.scf_pz.out).
+
+2) make a phonon calculation at the Gamma point (input=Au.phG_pz.in,
+   output=Au.phG_pz.out).
+
+3) make a phonon calculation at the X point (input=Au.phX_pz.in,
+   output=Au.phX_pz.out).

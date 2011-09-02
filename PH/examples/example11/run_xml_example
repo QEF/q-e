@@ -14,22 +14,23 @@ EXAMPLE_DIR=`pwd`
 if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
 
 # function to test the exit status of a job
-. ../check_failure.sh
+. ../../../examples/check_failure.sh
 
 $ECHO
 $ECHO "$EXAMPLE_DIR : starting"
 $ECHO
-$ECHO "This example shows how to use pw.x and phcg.x to calculate the normal"
-$ECHO "modes of a molecule (SiH4) at Gamma. "
+$ECHO "This example calculates the phonon modes of relativistic Au at the gamma and X points"
+$ECHO " with PAW in the noncollinear and spin-orbit case."
 $ECHO
 
 # set the needed environment variables
-. ../environment_variables
+cd ../
+. ../../examples/environment_variables
+cd example11
 
 # required executables and pseudopotentials
-
-BIN_LIST="pw.x phcg.x "
-PSEUDO_LIST="Si.pz-vbc.UPF H.pz-vbc.UPF C.pz-rrkjus.UPF"
+BIN_LIST="pw.x ph.x"
+PSEUDO_LIST="Au.rel-pz-kjpaw.UPF"
 
 $ECHO
 $ECHO "  executables directory: $BIN_DIR"
@@ -82,12 +83,10 @@ $ECHO " done"
 
 # how to run executables
 PW_COMMAND="$PARA_PREFIX $BIN_DIR/pw.x $PARA_POSTFIX"
-PHCG_COMMAND="$PARA_PREFIX $BIN_DIR/phcg.x $PARA_POSTFIX"
-DYNMAT_COMMAND=" $BIN_DIR/dynmat.x"
+PH_COMMAND="$PARA_PREFIX $BIN_DIR/ph.x $PARA_POSTFIX"
 $ECHO
 $ECHO "  running pw.x     as: $PW_COMMAND"
-$ECHO "  running phcg.x   as: $PHCG_COMMAND"
-$ECHO "  running dynmat.x as: $DYNMAT_COMMAND"
+$ECHO "  running ph.x     as: $PH_COMMAND"
 $ECHO
 
 # clean TMP_DIR
@@ -95,81 +94,50 @@ $ECHO "  cleaning $TMP_DIR...\c"
 rm -rf $TMP_DIR/*
 $ECHO " done"
 
-# self-consistent calculation
-cat > sih4.scf.xml << EOF
+# self-consistent calculation for Au with PAW-PP
+cat > Au.scf_pz.xml << EOF
 <?xml version="1.0" encoding="UTF-8"?>
 
-
-<input calculation="scf" prefix="sih4" title="Test Silane SiH4 gamma only">
+<input calculation="scf" prefix="Au">
 
 	<cell type="qecell">
-		<qecell ibrav="2" alat="12.0">
+		<qecell ibrav="2" alat="7.666">
 			<real rank="1" n1="5">
 				0.0 0.0 0.0 0.0 0.0
 			</real>
 		</qecell>
 	</cell>
 
-	<atomic_species ntyp="2">
-		<specie name="Si">
+	<atomic_species ntyp="1">
+		<specie name="Au">
 			<property name="mass">
-				<real>28.086</real>
+				<real>0.0</real>
 			</property>
 			<property name="pseudofile">
-				<string>Si.pz-vbc.UPF</string>
-			</property>
-		</specie>
-		<specie name="H">
-			<property name="mass">
-				<real>1.008</real>
-			</property>
-			<property name="pseudofile">
-				<string>H.pz-vbc.UPF</string>
+				<string>Au.rel-pz-kjpaw.UPF</string>
 			</property>
 		</specie>
 	</atomic_species>
 
-	<atomic_list units="alat" nat="5" >
-		<atom name="Si">
+	<atomic_list units="alat" nat="1" >
+		<atom name="Au">
 			<position>
 				<real rank="1" n1="3">
-					0.000000000   0.000000000   0.000000000
+					0.00 0.00 0.00
 				</real>
 			</position>
-		</atom>	
-		<atom name="H">
-			<position>
-				<real rank="1" n1="3">
-					0.128530744   0.128530744   0.128530744
-				</real>
-			</position>
-		</atom>	
-		<atom name="H">
-			<position>
-				<real rank="1" n1="3">
-					-0.128530744  -0.128530744   0.128530744
-				</real>
-			</position>
-		</atom>	
-		<atom name="H">
-			<position>
-				<real rank="1" n1="3">
-					-0.128530744   0.128530744  -0.128530744
-				</real>
-			</position>
-		</atom>	
-		<atom name="H">
-			<position>
-				<real rank="1" n1="3">
-					0.128530744  -0.128530744  -0.128530744
-				</real>
-			</position>
-		</atom>						
-	</atomic_list>	
+		</atom>				
+	</atomic_list>		
 	
 	
 	<field name="InputOutput">
 
+		<parameter name="restart_mode">
+			<string>
+				from_scratch
+			</string>
+		</parameter>
+		
 		<parameter name="pseudo_dir">
 			<string>
 				$PSEUDO_DIR/
@@ -178,36 +146,24 @@ cat > sih4.scf.xml << EOF
 		
 		<parameter name="outdir">
 			<string>
-				$TMP_DIR/
+				$TMP_DIR
 			</string>
 		</parameter>
 		
-		<parameter name="tstress">
-			<logical>
-				true
-			</logical>
-		</parameter>	
-		
-		<parameter name="tprnfor">
-			<logical>
-				true
-			</logical>
-		</parameter>			
-					
 	</field>
 	
 	<field name="Numerics">
 
 		<parameter name="ecutwfc">
 			<real>
-				16.0
+				35.0
 			</real>
 		</parameter>
 		
-		<parameter name="mixing_mode">
-			<string>
-				plain
-			</string>
+		<parameter name="ecutrho">
+			<real>
+				300.0
+			</real>
 		</parameter>
 		
 		<parameter name="mixing_beta">
@@ -218,49 +174,89 @@ cat > sih4.scf.xml << EOF
 		
 		<parameter name="conv_thr">
 			<real>
-				1.0d-8
+				1.0d-9
 			</real>
 		</parameter>
 		
 	</field>
 	
-	<k_points type="gamma">	
+	<field name="Options">
+
+		<parameter name="occupations">
+			<string>
+				smearing
+			</string>
+		</parameter>
+		
+		<parameter name="smearing">
+			<string>
+				mp
+			</string>
+		</parameter>
+		
+		<parameter name="degauss">
+			<real>
+				0.04
+			</real>
+		</parameter>			
+		
+		<parameter name="noncolin">
+			<logical>
+				true
+			</logical>
+		</parameter>
+		
+		<parameter name="lspinorb">
+			<logical>
+				true
+			</logical>
+		</parameter>
+		
+	</field>	
+	
+	<k_points type="automatic">
+		<mesh>
+			<integer rank="1" n1="6">
+				4 4 4 1 1 1
+			</integer>
+		</mesh> 
 	</k_points>
 </input>
 EOF
-$ECHO "  running the scf calculation for SiH4...\c"
-$PW_COMMAND < sih4.scf.xml > sih4.scf.out
+$ECHO "  running the scf calculation for Au with PAW and spin-orbit...\c"
+$PW_COMMAND < Au.scf_pz.xml > Au.scf_pz.out
 check_failure $?
 $ECHO " done"
 
-# normal mode calculation for SiH4
-cat > sih4.nm.in << EOF
-normal modes for sih4
+# phonon calculation at G
+cat > Au.phG_pz.in << EOF
+phonons of Au at Gamma
  &inputph
   tr2_ph=1.0d-14,
-  prefix='sih4',
-  amass(1)=28.086,
-  amass(2)=1.008,
-  outdir='$TMP_DIR/',
-  epsil=.true.,
-  trans=.true., asr=.true.
-  raman=.false.
-  fildyn='sih4.dyn'
+  prefix='Au',
+  fildyn='Aug.dyn',
+  outdir='$TMP_DIR/'
  /
- 0.0 0.0 0.0
+0.0 0.0 0.0
 EOF
-$ECHO "  running normal mode calculation for SiH4...\c"
-$PHCG_COMMAND < sih4.nm.in > sih4.nm.out
+$ECHO "  running ph.x for Au at Gamma with PAW and spin-orbit...\c"
+$PH_COMMAND < Au.phG_pz.in > Au.phG_pz.out
 check_failure $?
 $ECHO " done"
 
-# IR cross sections  for SiH4
-cat > sih4.dyn.in << EOF
- &input fildyn='sih4.dyn', asr='zero-dim' /
+# phonon calculation at X
+cat > Au.phX_pz.in << EOF
+phonons of Au at X
+ &inputph
+  tr2_ph=1.0d-14,
+  prefix='Au',
+  fildyn='AuX.dyn',
+  outdir='$TMP_DIR/'
+ /
+1.0 0.0 0.0
 EOF
-
-$ECHO "  running IR cross section calculation for SiH4...\c"
-$DYNMAT_COMMAND < sih4.dyn.in > sih4.dyn.out
+$ECHO "  running ph.x for Au at X with PAW and spin-orbit...\c"
+$PH_COMMAND < Au.phX_pz.in > Au.phX_pz.out
 check_failure $?
 $ECHO " done"
 

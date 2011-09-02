@@ -1,0 +1,27 @@
+
+This example shows how to use pw.x and ph.x to calculate the normal modes 
+of a molecule (CH4). 
+
+1) make a self-consistent calculation at Gamma.
+   (input=ch4.scf.in, output=ch4.scf.out)
+   Note that you need to specify K_POINTS {Gamma} in order to use 
+   Gamma-specific algorithms (i.e. exploit the fact that psi(r) at k=0 
+   are real to keep half of the plane waves and to perform two FFT's at
+   the same time). If you use the alternative syntax, for instance:
+   K_POINTS
+   1
+   0. 0. 0. 1.
+   you are NOT using Gamma-specific algorithms. 
+
+2) make a phonon calculation for the Gamma point.
+   (input=ch4.nm.in, output=ch4.nm.out)
+   Note that the calculation is not intended to be a good one,
+   but just a test one! Rotation modes have negative frequencies.
+   This is a consequence of the supercell approach. Translational
+   modes have zero frequency because the translational Acoustic Sum 
+   Rule (ASR) is imposed by construction in the calculation
+   (option asr=.true.)
+
+3) calculate the IR cross section (input=ch4.dyn.in, output=ch4.dyn.out).
+   By applying the appropriate ASR for molecules (option asr='zero-dim')
+   the rotational modes are forced to have zero frequency as well.

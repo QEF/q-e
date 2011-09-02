@@ -38,5 +38,5 @@ WGET="wget -O"
 # To run on a single processor, you can usually leave them empty.
 
 #PARA_PREFIX="mpirun -np 2"
-PARA_PREFIX="env OMP_NUM_THREADS=1 "
+PARA_PREFIX=" "
 PARA_POSTFIX=

@@ -1,0 +1,308 @@
+#!/bin/sh
+
+# run from directory where this script is
+cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
+EXAMPLE_DIR=`pwd`
+
+# check whether echo has the -e option
+if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
+
+# function to test the exit status of a job
+. ../../../examples/check_failure.sh
+
+$ECHO
+$ECHO "$EXAMPLE_DIR : starting"
+$ECHO
+$ECHO "This example tests the Born effective charges and dielectric constant"
+$ECHO "together with the noncollinear or the spin-orbit part of the code"
+$ECHO "The collinear version for insulators with fixed total "
+$ECHO "magnetization is also tested."
+
+# set the needed environment variables
+cd ../
+. ../../examples/environment_variables
+cd example10
+
+# required executables and pseudopotentials
+BIN_LIST="pw.x ph.x "
+PSEUDO_LIST="Si.rel-pbe-rrkj.UPF C.pz-rrkjus.UPF O.pbe-rrkjus.UPF"
+
+$ECHO
+$ECHO "  executables directory: $BIN_DIR"
+$ECHO "  pseudo directory:      $PSEUDO_DIR"
+$ECHO "  temporary directory:   $TMP_DIR"
+$ECHO
+$ECHO "  checking that needed directories and files exist...\c"
+
+# check for directories
+for DIR in "$BIN_DIR" "$PSEUDO_DIR" ; do
+    if test ! -d $DIR ; then
+        $ECHO
+        $ECHO "ERROR: $DIR not existent or not a directory"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+for DIR in "$TMP_DIR" "$EXAMPLE_DIR/results" ; do
+    if test ! -d $DIR ; then
+        mkdir $DIR
+    fi
+done
+cd $EXAMPLE_DIR/results
+
+# check for executables
+for FILE in $BIN_LIST ; do
+    if test ! -x $BIN_DIR/$FILE ; then
+        $ECHO
+        $ECHO "ERROR: $BIN_DIR/$FILE not existent or not executable"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+
+# check for pseudopotentials
+for FILE in $PSEUDO_LIST ; do
+    if test ! -r $PSEUDO_DIR/$FILE ; then
+       $ECHO
+       $ECHO "Downloading $FILE to $PSEUDO_DIR...\c"
+            $WGET $PSEUDO_DIR/$FILE \
+                http://www.quantum-espresso.org/pseudo/1.3/UPF/$FILE 2> /dev/null 
+    fi
+    if test $? != 0; then
+        $ECHO
+        $ECHO "ERROR: $PSEUDO_DIR/$FILE not existent or not readable"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+$ECHO " done"
+
+# how to run executables
+PW_COMMAND="$PARA_PREFIX $BIN_DIR/pw.x $PARA_POSTFIX"
+PH_COMMAND="$PARA_PREFIX $BIN_DIR/ph.x $PARA_POSTFIX"
+$ECHO
+$ECHO "  running pw.x as: $PW_COMMAND"
+$ECHO "  running ph.x as: $PH_COMMAND"
+$ECHO
+
+# clean TMP_DIR
+$ECHO "  cleaning $TMP_DIR...\c"
+rm -rf $TMP_DIR/*
+$ECHO " done"
+#
+# self-consistent calculation. This example demonstrates the use of spin-orbit
+# together with gga-pbe. Dielectric constant and effective charges
+# 
+cat > si.scf.in << EOF
+ &control
+    calculation='scf',
+    restart_mode='from_scratch',
+    prefix='Si_pbe',
+    pseudo_dir = '$PSEUDO_DIR',
+    outdir='$TMP_DIR'
+ /
+ &system
+    ibrav = 2, celldm(1) =10.35, nat=  2, ntyp= 1,
+    ecutwfc = 20.0
+    noncolin=.true.,
+    lspinorb=.true.,
+ /
+ &electrons
+    mixing_beta = 0.7
+    conv_thr = 1.0d-10
+ /
+ATOMIC_SPECIES
+ Si   28.0855  Si.rel-pbe-rrkj.UPF
+ATOMIC_POSITIONS
+ Si  0.00 0.00 0.00
+ Si  0.25 0.25 0.25
+K_POINTS AUTOMATIC
+2 2 2 1 1 1
+EOF
+$ECHO "  running pw.x for Si with gga-pbe and spin-orbit coupling...\c"
+$PW_COMMAND < si.scf.in > si.scf.out
+check_failure $?
+$ECHO " done"
+
+cat > si.phG.in << EOF
+phonons of Si at Gamma
+ &inputph
+  tr2_ph=1.0d-16,
+  epsil=.true.,
+  prefix='Si_pbe',
+  fildyn='Sig.dyn',
+  amass(1)=28.0855,
+  outdir='$TMP_DIR/'
+ /
+0.0 0.0 0.0
+EOF
+$ECHO "  running ph.x at Gamma for Si with gga-pbe and spin-orbit coupling...\c"
+$PH_COMMAND < si.phG.in > si.phG.out
+check_failure $?
+$ECHO " done"
+
+# self-consistent calculation. This example demonstrates the use of 
+# the noncollinear dielectric constants and effective charges.
+# For diamond these quantities are calculated in example02. The same 
+# calculation is repeated here after setting noncolin=.true. 
+# 
+cat > c.scf.in << EOF
+ &control
+    calculation='scf',
+    restart_mode='from_scratch',
+    prefix='C',
+    pseudo_dir = '$PSEUDO_DIR',
+    outdir='$TMP_DIR'
+ /
+ &system
+    ibrav = 2, celldm(1) =6.74, nat=  2, ntyp= 1,
+    noncolin=.true.,
+    ecutwfc = 27.0
+    ecutrho = 300.0
+ /
+ &electrons
+    mixing_beta = 0.7
+    conv_thr =  1.0d-9
+ /
+ATOMIC_SPECIES
+ C   12.0107  C.pz-rrkjus.UPF
+ATOMIC_POSITIONS
+ C  0.00 0.00 0.00
+ C  0.25 0.25 0.25
+K_POINTS AUTOMATIC
+4 4 4 1 1 1
+EOF
+$ECHO "  running pw.x for C with noncolin=.true....\c"
+$PW_COMMAND < c.scf.in > c.scf.out
+check_failure $?
+$ECHO " done"
+
+cat > c.phG.in << EOF
+phonons of C at Gamma
+ &inputph
+  tr2_ph=1.0d-14,
+  epsil=.true.,
+  prefix='C',
+  outdir='$TMP_DIR'
+ /
+0.0 0.0 0.0
+EOF
+$ECHO "  running ph.x at Gamma for C with noncolin=.true....\c"
+$PH_COMMAND < c.phG.in > c.phG.out
+check_failure $?
+$ECHO " done"
+
+cat > o2.scf.in << EOF
+o2
+o2 molecule in a cubic box
+ &control
+    calculation = 'relax',
+    prefix='o2_mol',
+    tprnfor = .true.,
+    pseudo_dir='$PSEUDO_DIR',
+    outdir='$TMP_DIR'
+ /
+ &system
+    ibrav=  1,
+    celldm(1) =10.0,
+    nat=2,
+    ntyp= 1,
+    ecutwfc =45,
+    ecutrho =500,
+    nspin=2
+    starting_magnetization=0.5,
+    tot_magnetization=2.0
+ /
+ &electrons
+    mixing_beta = 0.5,
+    conv_thr =  1.0d-12
+ /
+ &ions
+ /
+ATOMIC_SPECIES
+O  0.0   O.pbe-rrkjus.UPF
+ATOMIC_POSITIONS BOHR
+O       -1.156  0.000000000   0.000000000
+O        1.156   0.000000000   0.000000000
+K_POINTS AUTOMATIC
+1 1 1 0 0 0
+EOF
+$ECHO "  running pw.x at Gamma for O2 with LSDA and constrained magnetization...\c"
+$PW_COMMAND < o2.scf.in > o2.scf.out
+check_failure $?
+$ECHO " done"
+
+cat > o2.phG.in << EOF
+phonons of O2 at Gamma
+ &inputph
+  tr2_ph=1.0d-15,
+  epsil=.true.,
+  zue=.true.,
+  prefix='o2_mol',
+  outdir='$TMP_DIR'
+ /
+0.0 0.0 0.0
+EOF
+$ECHO "  running ph.x at Gamma for O2 with LSDA and constrained magnetization...\c"
+$PH_COMMAND < o2.phG.in > o2.phG.out
+check_failure $?
+$ECHO " done"
+
+cat > o2_nc.scf.in << EOF
+o2
+o2 molecule in a cubic box
+ &control
+    calculation = 'relax',
+    prefix='o2_nc_mol',
+    tprnfor = .true.,
+    pseudo_dir='$PSEUDO_DIR',
+    outdir='$TMP_DIR'
+ /
+ &system
+    ibrav=  1,
+    celldm(1) =10.0,
+    nat=2,
+    ntyp= 1,
+    ecutwfc =45,
+    ecutrho =500,
+    nspin=4
+    starting_magnetization=0.5,
+ /
+ &electrons
+    mixing_beta = 0.5,
+    conv_thr =  1.0d-12
+ /
+ &ions
+ /
+ATOMIC_SPECIES
+O  0.0   O.pbe-rrkjus.UPF
+ATOMIC_POSITIONS BOHR
+O    0.0 0.0  -1.156  
+O    0.0 0.0   1.156  
+K_POINTS AUTOMATIC
+1 1 1 0 0 0
+EOF
+$ECHO "  running pw.x at Gamma for O2 with noncolin=.true....\c"
+$PW_COMMAND < o2_nc.scf.in > o2_nc.scf.out
+check_failure $?
+$ECHO " done"
+
+cat > o2_nc.phG.in << EOF
+phonons of O2 at Gamma
+ &inputph
+  tr2_ph=1.0d-15,
+  epsil=.true.,
+  zue=.true.,
+  prefix='o2_nc_mol',
+  outdir='$TMP_DIR'
+ /
+0.0 0.0 0.0
+EOF
+$ECHO "  running ph.x at Gamma for O2 with noncolin=.true....\c"
+$PH_COMMAND < o2_nc.phG.in > o2_nc.phG.out
+check_failure $?
+$ECHO " done"
+
+$ECHO
+$ECHO "$EXAMPLE_DIR: done"
+

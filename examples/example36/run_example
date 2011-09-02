@@ -20,16 +20,15 @@ $ECHO
 $ECHO "$EXAMPLE_DIR : starting"
 $ECHO
 $ECHO "This example tests pw.x with PAW in the noncollinear, spin-orbit case."
-$ECHO "It calculates the band structure of ferromagnetic bcc-Fe,"
-$ECHO "and the phonon modes of relativistic Au at the gamma and X points" 
+$ECHO "It calculates the band structure of ferromagnetic bcc-Fe."
 $ECHO
 
 # set the needed environment variables
 . ../environment_variables
 
 # required executables and pseudopotentials
-BIN_LIST="pw.x ph.x bands.x plotband.x"
-PSEUDO_LIST="Fe.rel-pbe-kjpaw.UPF Au.rel-pz-kjpaw.UPF"
+BIN_LIST="pw.x bands.x plotband.x"
+PSEUDO_LIST="Fe.rel-pbe-kjpaw.UPF"
 
 $ECHO
 $ECHO "  executables directory: $BIN_DIR"
@@ -84,10 +83,8 @@ $ECHO " done"
 PW_COMMAND="$PARA_PREFIX $BIN_DIR/pw.x $PARA_POSTFIX"
 BAND_COMMAND="$PARA_PREFIX $BIN_DIR/bands.x $PARA_POSTFIX"
 PLOTBAND_COMMAND="$BIN_DIR/plotband.x"
-PH_COMMAND="$PARA_PREFIX $BIN_DIR/ph.x $PARA_POSTFIX"
 $ECHO
 $ECHO "  running pw.x     as: $PW_COMMAND"
-$ECHO "  running ph.x     as: $PH_COMMAND"
 $ECHO "  running bands.x  as: $BAND_COMMAND"
 $ECHO "  running plotband.x  as: $PLOTBAND_COMMAND"
 $ECHO
@@ -95,73 +92,6 @@ $ECHO
 # clean TMP_DIR
 $ECHO "  cleaning $TMP_DIR...\c"
 rm -rf $TMP_DIR/*
-$ECHO " done"
-
-# self-consistent calculation for Au with PAW-PP
-cat > Au.scf_pz.in << EOF
- &control
-    calculation='scf',
-    restart_mode='from_scratch',
-    prefix='Au',
-    pseudo_dir = '$PSEUDO_DIR/',
-    outdir='$TMP_DIR/'
- /
- &system
-    ibrav = 2, celldm(1) =7.666, nat=  1, ntyp= 1,
-    noncolin=.true.,
-    lspinorb=.true.,
-    occupations='smearing',
-    smearing='mp',
-    degauss=0.04,
-    ecutwfc = 35.0
-    ecutrho = 300.0
- /
- &electrons
-    mixing_beta = 0.7
-    conv_thr =  1.0d-9
- /
-ATOMIC_SPECIES
-Au   0.0  Au.rel-pz-kjpaw.UPF
-ATOMIC_POSITIONS
- Au  0.00 0.00 0.00
-K_POINTS AUTOMATIC
-4 4 4 1 1 1
-EOF
-$ECHO "  running the scf calculation for Au with PAW and spin-orbit...\c"
-$PW_COMMAND < Au.scf_pz.in > Au.scf_pz.out
-check_failure $?
-$ECHO " done"
-
-# phonon calculation at G
-cat > Au.phG_pz.in << EOF
-phonons of Au at Gamma
- &inputph
-  tr2_ph=1.0d-14,
-  prefix='Au',
-  fildyn='Aug.dyn',
-  outdir='$TMP_DIR/'
- /
-0.0 0.0 0.0
-EOF
-$ECHO "  running ph.x for Au at Gamma with PAW and spin-orbit...\c"
-$PH_COMMAND < Au.phG_pz.in > Au.phG_pz.out
-check_failure $?
-$ECHO " done"
-
-# phonon calculation at X
-cat > Au.phX_pz.in << EOF
-phonons of Au at X
- &inputph
-  tr2_ph=1.0d-14,
-  prefix='Au',
-  fildyn='AuX.dyn',
-  outdir='$TMP_DIR/'
- /
-1.0 0.0 0.0
-EOF
-$ECHO "  running ph.x for Au at X with PAW and spin-orbit...\c"
-$PH_COMMAND < Au.phX_pz.in > Au.phX_pz.out
-check_failure $?
 $ECHO " done"
 
 # self-consistent calculation for bcc-Fe with fully relativistic PAW-PP

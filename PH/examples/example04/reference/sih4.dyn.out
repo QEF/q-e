@@ -1,0 +1,32 @@
+
+     Reading Dynamical Matrix from file sih4.dyn
+     ...Force constants read
+     ...epsilon and Z* read
+     Acoustic Sum Rule: || Z*(ASR) - Z*(orig)|| =    0.386321E+01
+     Acoustic Sum Rule: ||dyn(ASR) - dyn(orig)||=    0.345645E-01
+     A direction for q was not specified:TO-LO splitting will be absent
+
+     Polarizability (A^3 units)
+     multiply by 0.436605 for Clausius-Mossotti correction
+        19.720762    0.000000    0.000000
+         0.000000   19.720762    0.000000
+         0.000000    0.000000   19.720740
+
+     IR cross sections are in (D/A)^2/amu units
+
+#  mode   [cm-1]     [THz]       IR
+    1      0.00    0.0000    0.0000
+    2      0.00    0.0000    0.0000
+    3      0.00    0.0000    0.0000
+    4      0.00    0.0000    0.0000
+    5      0.00    0.0000    0.0000
+    6      0.00    0.0000    0.0000
+    7    740.97   22.2136    0.0000
+    8    740.97   22.2136    0.0000
+    9    903.97   27.1003   13.3082
+   10    903.97   27.1003   13.3082
+   11    903.97   27.1003   13.3082
+   12   2519.39   75.5288   49.9869
+   13   2519.39   75.5288   49.9869
+   14   2519.39   75.5288   49.9869
+   15   2751.03   82.4733    0.0000
