@@ -26,8 +26,7 @@ SUBROUTINE forces()
   USE kinds,         ONLY : DP
   USE io_global,     ONLY : stdout
   USE cell_base,     ONLY : at, bg, alat, omega  
-  USE ions_base,     ONLY : nat, ntyp => nsp, ityp, tau, zv, amass, extfor, &
-                            compute_eextfor
+  USE ions_base,     ONLY : nat, ntyp => nsp, ityp, tau, zv, amass, extfor
   USE fft_base,      ONLY : dfftp
   USE gvect,         ONLY : ngm, gstart, ngl, nl, igtongl, g, gg, gcutm
   USE lsda_mod,      ONLY : nspin
@@ -65,7 +64,7 @@ SUBROUTINE forces()
   REAL(DP), ALLOCATABLE :: force_solvent(:,:)
 #endif
 
-  REAL(DP) :: sumfor, sumscf, sum_mm, eext
+  REAL(DP) :: sumfor, sumscf, sum_mm
   REAL(DP),PARAMETER :: eps = 1.e-12_dp
   INTEGER  :: ipol, na
     ! counter on polarization
@@ -308,11 +307,6 @@ SUBROUTINE forces()
      !
      DEALLOCATE ( force_disp )
      !
-  END IF
-  !
-  IF( textfor ) THEN
-    eext =  compute_eextfor()
-    WRITE( stdout, '(/5x,"Energy of the external Forces = ", F18.8)' ) eext
   END IF
   !
   DEALLOCATE( forcenl, forcelc, forcecc, forceh, forceion, forcescc )

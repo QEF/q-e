@@ -100,7 +100,8 @@ SUBROUTINE electrons()
   REAL(DP) :: &
       tr2_min,     &! estimated error on energy coming from diagonalization
       descf,       &! correction for variational energy
-      en_el=0.0_DP  ! electric field contribution to the total energy
+      en_el=0.0_DP,&! electric field contribution to the total energy
+      eext=0.0_DP   ! external forces contribution to the total energy
   LOGICAL :: &
       first
   !
@@ -516,7 +517,10 @@ SUBROUTINE electrons()
      !
      etot = eband + ( etxc - etxcc ) + ewld + ehart + deband + demet + descf +en_el
      IF (okpaw) etot = etot + epaw
-     IF (textfor) etot = etot + compute_eextfor()
+     IF( textfor ) THEN
+        eext =  compute_eextfor()
+        etot = etot + eext
+     END IF
      IF (llondon) THEN
         etot = etot + elondon
         hwf_energy = hwf_energy + elondon
@@ -602,6 +606,8 @@ SUBROUTINE electrons()
         !
 #endif
         !
+        IF ( textfor)             WRITE( stdout, &
+            '(/5x,"Energy of the external Forces = ", F18.8)' ) eext
         IF ( tefield )            WRITE( stdout, 9061 ) etotefield
         IF ( lda_plus_u )         WRITE( stdout, 9065 ) eth
         IF ( ABS (descf) > eps8 ) WRITE( stdout, 9069 ) descf
