@@ -93,7 +93,7 @@ module funct
   !              "wc"    = "sla+pw+wcx+pbc"    = Wu-Cohen
   !              "tpss"  = "sla+pw+tpss+tpss"  = TPSS Meta-GGA
   !              "pbe0"  = "pb0x+pw+pb0x+pbc"  = PBE0
-  !              "hse"   = "nox+pw+hse+pbc"    = Heyd-Scuseria-Ernzerhof HSE 06
+  !              "hse"   = "sla+pw+hse+pbc"    = Heyd-Scuseria-Ernzerhof HSE 06
   !              "b3lyp" = "b3lp+vwn+b3lp+b3lp"= B3LYP
   !              "vdw-df"= "sla+pw+rpb+vdw1"   = vdW-DF
   !              "vdw-df2"="sla+pw+rpb+vdw2"   = vdW-DF2
