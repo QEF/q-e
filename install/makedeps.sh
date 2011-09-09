@@ -19,8 +19,10 @@ else
     dirs=$*
 fi
 
-for DIR in $dirs
+for dir in $dirs
 do
+    # the following command removes a trailing slash
+    DIR=`echo ${dir%/}`
     # set inter-directory dependencies - only directories containing
     # modules that are used, or files that are included, by routines
     # in directory DIR should be listed in DEPENDS
