@@ -7,7 +7,6 @@ MODFLAGS= $(MOD_FLAG)../../iotk/src $(MOD_FLAG)../../Modules \
           $(MOD_FLAG)../../PW $(MOD_FLAG).
 
 PPOBJS = \
-../../PP/stop_pp.o \
 ../../PP/xsf.o
 
 PWCONDOBJS = \

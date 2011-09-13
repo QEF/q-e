@@ -15,17 +15,17 @@
 
 program pwcond
 
- logical :: alldone
+  USE mp_global, ONLY: mp_global_end
 
- call do_cond (alldone)
+  logical :: alldone
 
- call stop_pp
+  call do_cond (alldone)
 
- ! actually does not work, since stop_pp already stops program (fix?)
- if ( alldone ) then
-    stop
- else
-    stop 1
- endif
+#ifdef __PARA
+  CALL mp_global_end()
+#endif
+
+  STOP
 
 end program pwcond
+
