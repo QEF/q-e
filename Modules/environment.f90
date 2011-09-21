@@ -39,6 +39,7 @@ CONTAINS
     LOGICAL           :: exst, debug = .false.
     CHARACTER(LEN=80) :: code_version, uname
     CHARACTER(LEN=6), EXTERNAL :: int_to_char
+    INTEGER :: iost
 
     ! ... Intel compilers v .ge.8 allocate a lot of stack space
     ! ... Stack limit is often small, thus causing SIGSEGV and crash
@@ -67,8 +68,9 @@ CONTAINS
 
        INQUIRE( FILE=TRIM(crash_file), EXIST=exst )
        IF( exst ) THEN
-          OPEN(  UNIT=crashunit, FILE=TRIM(crash_file), STATUS='OLD' )
-          CLOSE( UNIT=crashunit, STATUS='DELETE' )
+          OPEN(  UNIT=crashunit, FILE=TRIM(crash_file), STATUS='OLD',IOSTAT=iost )
+          IF(iost==0) CLOSE( UNIT=crashunit, STATUS='DELETE', IOSTAT=iost )
+          IF(iost/=0) WRITE(stdout,'(5x,"Remark: CRASH file could not ne deleted")')
        END IF
 
     ELSE
