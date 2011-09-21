@@ -614,6 +614,7 @@ ep_matrix_element_wannier.o : ../../Modules/cell_base.o
 ep_matrix_element_wannier.o : ../../Modules/constants.o
 ep_matrix_element_wannier.o : ../../Modules/control_flags.o
 ep_matrix_element_wannier.o : ../../Modules/fft_base.o
+ep_matrix_element_wannier.o : ../../Modules/fft_interfaces.o
 ep_matrix_element_wannier.o : ../../Modules/io_files.o
 ep_matrix_element_wannier.o : ../../Modules/io_global.o
 ep_matrix_element_wannier.o : ../../Modules/ions_base.o
@@ -621,6 +622,8 @@ ep_matrix_element_wannier.o : ../../Modules/kind.o
 ep_matrix_element_wannier.o : ../../Modules/mp.o
 ep_matrix_element_wannier.o : ../../Modules/mp_global.o
 ep_matrix_element_wannier.o : ../../Modules/recvec.o
+ep_matrix_element_wannier.o : ../../Modules/uspp.o
+ep_matrix_element_wannier.o : ../../Modules/wavefunctions.o
 ep_matrix_element_wannier.o : ../../PW/noncol.o
 ep_matrix_element_wannier.o : ../../PW/pwcom.o
 ep_matrix_element_wannier.o : ../../PW/symm_base.o

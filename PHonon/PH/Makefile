@@ -200,27 +200,27 @@ all : tldeps libph.a ph.x dynmat.x matdyn.x q2r.x lambda.x fqha.x
 ph.x : phonon.o libph.a $(PWOBJS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o ph.x phonon.o libph.a \
 		 $(PWOBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
-	- ( cd ../../bin ; ln -fs ../PH/src/ph.x . )
+	- ( cd ../../bin ; ln -fs ../PHonon/PH/ph.x . )
 
 dynmat.x : dynmat.o rigid.o libph.a $(PWOBJS)  $(MODULES) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ dynmat.o rigid.o libph.a \
 		 $(PWOBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
-	- ( cd ../../bin ; ln -fs ../PH/src/$@ . )
+	- ( cd ../../bin ; ln -fs ../PHonon/PH/$@ . )
 
 matdyn.x : matdyn.o rigid.o libph.a $(PWOBJS)  $(MODULES) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ matdyn.o rigid.o libph.a \
 		 $(PWOBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
-	- ( cd ../../bin ; ln -fs ../PH/src/$@ . )
+	- ( cd ../../bin ; ln -fs ../PHonon/PH/$@ . )
 
 q2r.x : q2r.o rigid.o libph.a $(PWOBJS)  $(MODULES) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ q2r.o rigid.o libph.a \
 		 $(PWOBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
-	- ( cd ../../bin ; ln -fs ../PH/src/$@ . )
+	- ( cd ../../bin ; ln -fs ../PHonon/PH/$@ . )
 
 lambda.x : lambda.o $(PWOBJS) $(QEMODS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ lambda.o \
                  $(PWOBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
-	- ( cd ../../bin ; ln -fs ../PH/src/$@ . )
+	- ( cd ../../bin ; ln -fs ../PHonon/PH/$@ . )
 
 fqha.o :
 	$(MPIF90) $(FFLAGS_NOOPT) -c fqha.f90
@@ -228,7 +228,7 @@ fqha.o :
 fqha.x : fqha.o $(PWOBJS) $(QEMODS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ fqha.o \
                  $(PWOBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
-	- ( cd ../../bin ; ln -fs ../PH/src/$@ . )
+	- ( cd ../../bin ; ln -fs ../PHonon/PH/$@ . )
 
 tldeps:
 	test -n "$(TLDEPS)" && ( cd ../.. ; $(MAKE) $(MFLAGS) $(TLDEPS) || exit 1) || :

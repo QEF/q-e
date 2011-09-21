@@ -9,7 +9,7 @@ IFLAGS=-I../../include
 
 # location of needed modules
 MODFLAGS= $(MOD_FLAG)../../iotk/src $(MOD_FLAG)../../Modules \
-          $(MOD_FLAG)../../PH/src $(MOD_FLAG)../../PW \
+          $(MOD_FLAG)../../PHonon/PH $(MOD_FLAG)../../PW \
 	  $(MOD_FLAG)../pw4gww $(MOD_FLAG).
 
 #location of needed libraries
@@ -26,7 +26,7 @@ phq_readin.o \
 solve_head.o 
 
 QEMODS = ../../Modules/libqemod.a
-LIBPWPH = ../pw4gww/libpw4gww.a ../../PH/src/libph.a ../../PW/libpw.a
+LIBPWPH = ../pw4gww/libpw4gww.a ../../PHonon/PH/libph.a ../../PW/libpw.a
 
 LIBMIN= ../minpack/minpacklib.a
 

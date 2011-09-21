@@ -14,21 +14,24 @@ EXAMPLE_DIR=`pwd`
 if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
 
 # function to test the exit status of a job
-. ../check_failure.sh
+. ../../../check_failure.sh
 
 $ECHO
 $ECHO "$EXAMPLE_DIR : starting"
 $ECHO
-$ECHO "This example shows how to use pw.x, ph.x and d3.x to calculate the"
-$ECHO "third-order expansion coefficients of the total energy of Si."
+$ECHO "This example shows how to use pw.x and phcg.x to calculate the normal"
+$ECHO "modes of a molecule (SiH4) at Gamma. "
+$ECHO
 
 # set the needed environment variables
-. ../environment_variables
+cd ../
+. ../../examples/environment_variables
+cd example12
 
 # required executables and pseudopotentials
 
-BIN_LIST="pw.x ph.x d3.x"
-PSEUDO_LIST="Si.pz-vbc.UPF"
+BIN_LIST="pw.x phcg.x "
+PSEUDO_LIST="Si.pz-vbc.UPF H.pz-vbc.UPF C.pz-rrkjus.UPF"
 
 $ECHO
 $ECHO "  executables directory: $BIN_DIR"
@@ -81,12 +84,12 @@ $ECHO " done"
 
 # how to run executables
 PW_COMMAND="$PARA_PREFIX $BIN_DIR/pw.x $PARA_POSTFIX"
-PH_COMMAND="$PARA_PREFIX $BIN_DIR/ph.x $PARA_POSTFIX"
-D3_COMMAND="$PARA_PREFIX $BIN_DIR/d3.x $PARA_POSTFIX"
+PHCG_COMMAND="$PARA_PREFIX $BIN_DIR/phcg.x $PARA_POSTFIX"
+DYNMAT_COMMAND=" $BIN_DIR/dynmat.x"
 $ECHO
-$ECHO "  running pw.x as: $PW_COMMAND"
-$ECHO "  running ph.x as: $PH_COMMAND"
-$ECHO "  running d3.x as: $D3_COMMAND"
+$ECHO "  running pw.x     as: $PW_COMMAND"
+$ECHO "  running phcg.x   as: $PHCG_COMMAND"
+$ECHO "  running dynmat.x as: $DYNMAT_COMMAND"
 $ECHO
 
 # clean TMP_DIR
@@ -95,20 +98,21 @@ rm -rf $TMP_DIR/*
 $ECHO " done"
 
 # self-consistent calculation
-cat > si.scf.xml << EOF
+cat > sih4.scf.xml << EOF
 <?xml version="1.0" encoding="UTF-8"?>
 
-<input calculation="scf" prefix="si">
+
+<input calculation="scf" prefix="sih4" title="Test Silane SiH4 gamma only">
 
 	<cell type="qecell">
-		<qecell ibrav="2" alat="10.20">
+		<qecell ibrav="2" alat="12.0">
 			<real rank="1" n1="5">
 				0.0 0.0 0.0 0.0 0.0
 			</real>
 		</qecell>
 	</cell>
 
-	<atomic_species ntyp="1">
+	<atomic_species ntyp="2">
 		<specie name="Si">
 			<property name="mass">
 				<real>28.086</real>
@@ -117,34 +121,57 @@ cat > si.scf.xml << EOF
 				<string>Si.pz-vbc.UPF</string>
 			</property>
 		</specie>
+		<specie name="H">
+			<property name="mass">
+				<real>1.008</real>
+			</property>
+			<property name="pseudofile">
+				<string>H.pz-vbc.UPF</string>
+			</property>
+		</specie>
 	</atomic_species>
 
-	<atomic_list units="alat" nat="2" >
+	<atomic_list units="alat" nat="5" >
 		<atom name="Si">
 			<position>
 				<real rank="1" n1="3">
-					0.00 0.00 0.00
+					0.000000000   0.000000000   0.000000000
 				</real>
 			</position>
 		</atom>	
-		<atom name="Si">
+		<atom name="H">
 			<position>
 				<real rank="1" n1="3">
-					0.25 0.25 0.25
+					0.128530744   0.128530744   0.128530744
 				</real>
 			</position>
-		</atom>					
-	</atomic_list>		
+		</atom>	
+		<atom name="H">
+			<position>
+				<real rank="1" n1="3">
+					-0.128530744  -0.128530744   0.128530744
+				</real>
+			</position>
+		</atom>	
+		<atom name="H">
+			<position>
+				<real rank="1" n1="3">
+					-0.128530744   0.128530744  -0.128530744
+				</real>
+			</position>
+		</atom>	
+		<atom name="H">
+			<position>
+				<real rank="1" n1="3">
+					0.128530744  -0.128530744  -0.128530744
+				</real>
+			</position>
+		</atom>						
+	</atomic_list>	
 	
 	
 	<field name="InputOutput">
 
-		<parameter name="restart_mode">
-			<string>
-				from_scratch
-			</string>
-		</parameter>
-		
 		<parameter name="pseudo_dir">
 			<string>
 				$PSEUDO_DIR/
@@ -153,7 +180,7 @@ cat > si.scf.xml << EOF
 		
 		<parameter name="outdir">
 			<string>
-				$TMP_DIR
+				$TMP_DIR/
 			</string>
 		</parameter>
 		
@@ -167,16 +194,22 @@ cat > si.scf.xml << EOF
 			<logical>
 				true
 			</logical>
-		</parameter>
-		
+		</parameter>			
+					
 	</field>
 	
 	<field name="Numerics">
 
 		<parameter name="ecutwfc">
 			<real>
-				24.0
+				16.0
 			</real>
+		</parameter>
+		
+		<parameter name="mixing_mode">
+			<string>
+				plain
+			</string>
 		</parameter>
 		
 		<parameter name="mixing_beta">
@@ -191,97 +224,45 @@ cat > si.scf.xml << EOF
 			</real>
 		</parameter>
 		
-	</field>	
+	</field>
 	
-	<k_points type="automatic">
-		<mesh>
-			<integer rank="1" n1="6">
-				4 4 4 1 1 1
-			</integer>
-		</mesh> 
+	<k_points type="gamma">	
 	</k_points>
 </input>
 EOF
-$ECHO "  running the scf calculation for Si...\c"
-$PW_COMMAND < si.scf.xml > si.scf.out
+$ECHO "  running the scf calculation for SiH4...\c"
+$PW_COMMAND < sih4.scf.xml > sih4.scf.out
 check_failure $?
 $ECHO " done"
 
-# calculation of the dynamical matrix at Gamma
-cat > si.phG.in << EOF
-phonons of Si at Gamma
+# normal mode calculation for SiH4
+cat > sih4.nm.in << EOF
+normal modes for sih4
  &inputph
-  tr2_ph=1.0d-12,
-  prefix='si',
-  epsil=.false.,
-  trans=.true.,
-  zue=.false.,
-  amass(1)=28.0855,
-  amass(2)=28.0855,
+  tr2_ph=1.0d-14,
+  prefix='sih4',
+  amass(1)=28.086,
+  amass(2)=1.008,
   outdir='$TMP_DIR/',
-  fildyn='si.dyn_G',
-  fildrho='si.drho_G',
+  epsil=.true.,
+  trans=.true., asr=.true.
+  raman=.false.
+  fildyn='sih4.dyn'
  /
-0.0 0.0 0.0
+ 0.0 0.0 0.0
 EOF
-$ECHO "  running the phonon calculation for Si at Gamma...\c"
-$PH_COMMAND < si.phG.in > si.phG.out
+$ECHO "  running normal mode calculation for SiH4...\c"
+$PHCG_COMMAND < sih4.nm.in > sih4.nm.out
 check_failure $?
 $ECHO " done"
 
-# calculation of the anharmonic tensor at Gamma
-cat > si.d3G.in << EOF
-Anharm at Gamma
-&inputph
-   prefix = 'si',
-   fildrho = 'si.drho_G',
-   fild0rho = 'si.drho_G',
-   amass(1) = 28.0855,
-   outdir = '$TMP_DIR/',
-   fildyn = 'si.anh_G',
- /
-0.0 0.0 0.0
+# IR cross sections  for SiH4
+cat > sih4.dyn.in << EOF
+ &input fildyn='sih4.dyn', asr='zero-dim' /
 EOF
-$ECHO "  running the calculation of D3(0,0,0)...\c"
-$D3_COMMAND < si.d3G.in > si.d3G.out
-check_failure $?
-$ECHO " done"
 
-# calculation of the dynamical matrix at the X-point
-cat > si.phX.in << EOF
-phonons of Si at the X-point
- &inputph
-  tr2_ph=1.0d-12,
-  prefix='si',
-  trans=.true.,
-  amass(1)=28.0855,
-  amass(2)=28.0855,
-  outdir='$TMP_DIR/',
-  fildyn='si.dyn_X',
-  fildrho='si.drho_X',
- /
-0.0 0.0 1.0
-EOF
-$ECHO "  running the phonon calculation for Si at X...\c"
-$PH_COMMAND < si.phX.in > si.phX.out
-check_failure $?
-$ECHO " done"
-
-# calculation of the anharmonic tensor at X
-cat > si.d3X.in << EOF
-Anharm at the X-point
-&inputph
-   prefix = 'si',
-   fildrho = 'si.drho_X',
-   fild0rho = 'si.drho_G',
-   amass(1) = 28.0855,
-   outdir = '$TMP_DIR/',
-   fildyn = 'si.anh_X',
- /
-0.0 0.0 1.0
-EOF
-$ECHO "  running the calculation of D3(0,X,-X)...\c"
-$D3_COMMAND < si.d3X.in > si.d3X.out
+$ECHO "  running IR cross section calculation for SiH4...\c"
+$DYNMAT_COMMAND < sih4.dyn.in > sih4.dyn.out
 check_failure $?
 $ECHO " done"
 

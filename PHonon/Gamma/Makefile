@@ -1,10 +1,12 @@
 # Makefile for Gamma-only phonon code
 
-include ../make.sys
+include ../../make.sys
 
 # location of needed modules
-MODFLAGS= $(MOD_FLAG)../iotk/src $(MOD_FLAG)../Modules \
-          $(MOD_FLAG)../PW $(MOD_FLAG).
+MODFLAGS= $(MOD_FLAG)../../iotk/src $(MOD_FLAG)../../Modules \
+          $(MOD_FLAG)../../PW $(MOD_FLAG).
+
+LIBOBJS        = ../../flib/ptools.a ../../flib/flib.a ../../clib/clib.a ../../iotk/src/libiotk.a
 
 CGOBJS = \
 a_h.o \
@@ -36,8 +38,8 @@ solve_ph.o \
 writedyn.o \
 zvscal.o
 
-PWOBJS = ../PW/libpw.a
-QEMODS = ../Modules/libqemod.a
+PWOBJS = ../../PW/libpw.a
+QEMODS = ../../Modules/libqemod.a
 
 TLDEPS= bindir mods libs pw
 
@@ -46,11 +48,12 @@ all : tldeps phcg.x
 phcg.x : $(PWOBJS) $(CGOBJS) $(QEMODS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o phcg.x \
 		$(CGOBJS) $(PWOBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
-	- ( cd ../bin ; ln -fs ../Gamma/phcg.x . )
+	- ( cd ../../bin ; ln -fs ../../PHonon/Gamma/phcg.x . )
 tldeps:
-	test -n "$(TLDEPS)" && ( cd .. ; $(MAKE) $(MFLAGS) $(TLDEPS) || exit 1) || :
+	test -n "$(TLDEPS)" && ( cd ../.. ; $(MAKE) $(MFLAGS) $(TLDEPS) || exit 1) || :
 
 clean :
 	- /bin/rm -f *.x *.o *.d *.i *~ *.F90 *.mod *.L
+	- /bin/rm -f ../../bin/phcg.x
 
 include make.depend

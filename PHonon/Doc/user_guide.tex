@@ -1,0 +1,547 @@
+\documentclass[12pt,a4paper]{article}
+\def\version{4.3.2}
+\def\qe{{\sc Quantum ESPRESSO}}
+
+\usepackage{html}
+
+% BEWARE: don't revert from graphicx for epsfig, because latex2html
+% doesn't handle epsfig commands !!!
+\usepackage{graphicx}
+
+\textwidth = 17cm
+\textheight = 24cm
+\topmargin =-1 cm
+\oddsidemargin = 0 cm
+
+\def\pwx{\texttt{pw.x}}
+\def\cpx{\texttt{cp.x}}
+\def\phx{\texttt{ph.x}}
+\def\nebx{\texttt{neb.x}}
+\def\configure{\texttt{configure}}
+\def\PWscf{\texttt{PWscf}}
+\def\PHonon{\texttt{PHonon}}
+\def\CP{\texttt{CP}}
+\def\PostProc{\texttt{PostProc}}
+\def\make{\texttt{make}}
+
+\begin{document} 
+\author{}
+\date{}
+
+\def\qeImage{../../Doc/quantum_espresso.pdf}
+\def\democritosImage{../../Doc/democritos.pdf}
+
+%\begin{htmlonly}
+%\def\qeImage{../../Doc/quantum_espresso.png}
+%\def\democritosImage{../../Doc/democritos.png}
+%\end{htmlonly}
+
+\title{
+  \includegraphics[width=5cm]{\qeImage} \hskip 2cm
+  \includegraphics[width=6cm]{\democritosImage}\\
+  \vskip 1cm
+  % title
+  \Huge User's Guide for the \PHonon\ package \smallskip
+  \Large (version \version)
+}
+
+%\latexonly
+%\title{
+% \epsfig{figure=quantum_espresso.png,width=5cm}\hskip 2cm
+% \epsfig{figure=democritos.png,width=6cm}\vskip 1cm
+%  % title
+%  \Huge User's Guide for \PHonon\ \smallskip
+%  \Large (version \version)
+%}
+%\endlatexonly
+
+\maketitle
+
+\tableofcontents
+
+\section{Introduction}
+
+This guide covers the installation and usage of \PHonon\ (opEn-Source 
+Package for the calculation of vibrational properties through 
+Density Functional Perturbation Theory)
+, version \version.
+
+\PHonon\ is part of the \qe\ distribution and can not be compiled 
+nor used independently.
+
+Further documentation, beyond what is provided in this guide, can be found in:
+\begin{itemize}
+\item the \texttt{pw\_forum} mailing list (\texttt{pw\_forum@pwscf.org}).
+   You can subscribe to this list, browse and search its archives
+   (links in \texttt{http://www.quantum-espresso.org/contacts.php}).
+   See section \ref{SubSec:Contacts}, ``Contacts'', for more info.
+  \item the \texttt{Doc/} directory of the \qe\ distribution,
+   containing a detailed description of input data for most codes
+   in files \texttt{INPUT\_*.txt} and \texttt{INPUT\_*.html},
+   plus and a few additional pdf documents
+  \item the \qe\ web site:\\
+   \texttt{http://www.quantum-espresso.org};
+  \item the \qe\ Wiki:\\
+   \texttt{http://www.quantum-espresso.org/wiki/index.php/Main\_Page}.
+\end{itemize}
+People who want to contribute to \qe\ should read the 
+Developer Manual: \texttt{Doc/developer\_man.pdf}.
+
+All trademarks mentioned in this guide belong to their respective owners.
+
+\PHonon\ can perform the following types of calculations:
+\begin{itemize}
+  \item phonon frequencies and eigenvectors at a generic wave vector,
+  using Density-Functional Perturbation Theory;
+  \item effective charges and dielectric tensors;
+  \item electron-phonon interaction coefficients for metals;
+  \item interatomic force constants in real space;
+  \item third-order anharmonic phonon lifetimes;
+  \item Infrared and Raman (nonresonant) cross section.
+\end{itemize}
+\PHonon\ can be used whenever \PWscf\ can be 
+used, with the exceptions of DFT+U, nonlocal VdW and hybrid functionals. 
+USPP and PAW are not implemented for higher-order response calculations.
+See the header of file \texttt{PH/phonon.f90} for a complete and
+updated list of what \PHonon\ can and cannot do.
+Calculations, in the Quasi-Harmonic approximations, of the vibrational 
+free energy can be performed using the \texttt{QHA}  package.
+
+In the following, the cited affiliation is either the current one 
+or the one where the last known contribution was done.
+
+The \PHonon\ package
+was originally developed by Stefano Baroni, Stefano
+de Gironcoli, Andrea Dal Corso (SISSA), Paolo Giannozzi, and many others.
+We quote in particular:
+\begin{itemize}
+  \item Michele Lazzeri (Univ.Paris VI) for the 2n+1 code and Raman 
+  cross section calculation with 2nd-order response;
+ \item Andrea Dal Corso for USPP, noncolinear, spin-orbit
+ extensions to \PHonon.
+ \end{itemize}
+
+This guide was mostly written by Paolo Giannozzi.
+
+We shall greatly appreciate if scientific work done using this code will 
+contain an explicit acknowledgment and the following reference:
+\begin{quote}
+P. Giannozzi, S. Baroni, N. Bonini, M. Calandra, R. Car, C. Cavazzoni,
+D. Ceresoli, G. L. Chiarotti, M. Cococcioni, I. Dabo, A. Dal Corso,
+S. Fabris, G. Fratesi, S. de Gironcoli, R. Gebauer, U. Gerstmann,
+C. Gougoussis, A. Kokalj, M. Lazzeri, L. Martin-Samos, N. Marzari,
+F. Mauri, R. Mazzarello, S. Paolini, A. Pasquarello, L. Paulatto,
+C. Sbraccia, S. Scandolo, G. Sclauzero, A. P. Seitsonen, A. Smogunov,
+P. Umari, R. M. Wentzcovitch, J.Phys.:Condens.Matter 21, 395502 (2009),
+http://arxiv.org/abs/0906.2569
+\end{quote}
+
+\section{Installation}
+
+\subsection{Download}
+
+\begin{tabular}{ll} 
+\texttt{PH/}      & \PHonon: source files for phonon calculations (\texttt{ph.x})
+                   and analysis\\
+\texttt{Gamma/}  & \PHonon: source files for Gamma-only phonon calculation
+                  (\texttt{phcg.x})\\
+\texttt{D3/}     & \PHonon: source files for third-order derivative 
+                  calculations (\texttt{d3.x})\\
+\end{tabular}
+
+\subsection{Prerequisites}
+\label{Sec:Installation}
+
+\subsection{\configure}
+
+
+\subsection{Compilation}
+
+for phonon calculations:
+\begin{itemize}
+  \item \phx\ : Calculates phonon frequencies and displacement patterns,
+    dielectric tensors, effective charges (uses data produced by \pwx). 
+  \item \texttt{dynmat.x}: applies various kinds of Acoustic Sum Rule (ASR),
+    calculates LO-TO splitting at ${\bf q} = 0$ in insulators, IR and Raman
+    cross sections (if the coefficients have been properly calculated),
+    from the dynamical matrix produced by \phx
+  \item \texttt{q2r.x}: calculates Interatomic Force Constants (IFC) in real space
+    from dynamical matrices produced by \phx\ on a regular {\bf q}-grid 
+ \item \texttt{matdyn.x}: produces phonon frequencies at a generic wave vector
+    using the IFC file calculated by \texttt{q2r.x}; may also calculate phonon DOS, 
+    the electron-phonon coefficient $\lambda$, the function $\alpha^2F(\omega)$
+\item \texttt{lambda.x}: also calculates $\lambda$ and $\alpha^2F(\omega)$,
+   plus $T_c$ for  superconductivity using the McMillan formula
+\item \texttt{make d3} produces \texttt{D3/d3.x}:
+  calculates anharmonic phonon lifetimes (third-order derivatives
+  of the energy), using data produced by \pwx\ and \phx\ (USPP 
+  and PAW not supported). 
+\item \texttt{make gamma} produces \texttt{Gamma/phcg.x}: 
+  a version of \phx\ that calculates phonons at ${\bf q} = 0$ using
+  conjugate-gradient minimization of the density functional expanded to
+  second-order. Only the $\Gamma$ (${\bf k} = 0$) point is used for Brillouin zone
+  integration. It is faster and takes less memory than \phx, but does
+  not support USPP and PAW.
+\end{itemize}
+   
+\subsection{Running examples}
+\label{SubSec:Examples}
+
+\section{Parallelism}
+\label{Sec:para}
+
+\subsection{Running on parallel machines}
+\label{SubSec:para}
+
+\subsection{Parallelization levels}
+
+{\bf images}: Processors can then be divided into different "images",
+corresponding to a point in configuration space (i.e. to
+a different set of atomic positions) for NEB calculations;
+to one (or more than one) "irrep" or wave-vector in phonon
+calculations.
+
+{\bf pools}: When k-point sampling is used, each image group can be 
+subpartitioned into "pools", and k-points can distributed to pools.
+Within each pool, reciprocal space basis set (PWs)
+and real-space grids are distributed across processors.
+This is usually referred to as "PW parallelization".
+All linear-algebra operations on array of  PW / 
+real-space grids are automatically and effectively parallelized.
+3D FFT is used to transform electronic wave functions from
+reciprocal to real space and vice versa. The 3D FFT is
+parallelized by distributing planes of the 3D grid in real
+space to processors (in reciprocal space, it is columns of
+G-vectors that are distributed to processors). 
+
+{\bf task groups}: 
+In order to allow good parallelization of the 3D FFT when 
+the number of processors exceeds the number of FFT planes,
+data can be redistributed to "task groups" so that each group 
+can process several wavefunctions at the same time.
+
+{\bf linear-algebra group}:
+A further level of parallelization, independent on
+PW or k-point parallelization, is the parallelization of
+subspace diagonalization (\pwx) or iterative orthonormalization
+(\cpx). Both operations required the diagonalization of 
+arrays whose dimension is the number of Kohn-Sham states
+(or a small multiple). All such arrays are distributed block-like
+across the ``linear-algebra group'', a subgroup of the pool of processors,
+organized in a square 2D grid. As a consequence the number of processors
+in the linear-algebra group is given by $n^2$, where $n$ is an integer;
+$n^2$ must be smaller than the number of processors of a single pool.
+The diagonalization is then performed
+in parallel using standard linear algebra operations.
+(This diagonalization is used by, but should not be confused with,
+the iterative Davidson algorithm). One can choose to compile
+ScaLAPACK if available, internal built-in algorithms otherwise.
+
+{\bf Communications}:
+Images and pools are loosely coupled and processors communicate
+between different images and pools only once in a while, whereas
+processors within each pool are tightly coupled and communications
+are significant. This means that Gigabit ethernet (typical for
+cheap PC clusters) is ok up to 4-8 processors per pool, but {\em fast}
+communication hardware (e.g. Mirynet or comparable) is absolutely 
+needed beyond 8 processors per pool.
+
+{\bf Choosing parameters}:
+To control the number of processors in each group,
+command line switches: \texttt{-nimage}, \texttt{-npools},
+\texttt{-ntg}, \texttt{northo} (for \cpx) or \texttt{-ndiag}
+(for \pwx) are used.
+As an example consider the following command line:
+\begin{verbatim}
+mpirun -np 4096 ./pw.x -nimage 8 -npool 2 -ntg 8 -ndiag 144 -input my.input
+\end{verbatim}
+This executes \PWscf\ on 4096 processors, to simulate a system
+with 8 images, each of which is distributed across 512 processors.
+k-points are distributed across 2 pools of 256 processors each, 
+3D FFT is performed using 8 task groups (64 processors each, so
+the 3D real-space grid is cut into 64 slices), and the diagonalization
+of the subspace Hamiltonian is distributed to a square grid of 144
+processors (12x12).
+
+Default values are: \texttt{-nimage 1 -npool 1 -ntg 1} ; 
+\texttt{ndiag} is set to 1 if ScaLAPACK is not compiled,
+it is set to the square integer smaller than or equal to  half the number 
+of processors of each pool.
+
+\paragraph{phonon on grid}
+
+\section{Using \PHonon}
+
+Phonon calculation is presently a two-step process.
+First, you have to find the ground-state atomic and electronic configuration;
+Second, you can calculate phonons using Density-Functional Perturbation Theory.
+Further processing to calculate Interatomic Force Constants, to add macroscopic
+electric field and impose Acoustic Sum Rules at q=0 may be needed.
+In the following, we will indicate by $q$ the phonon wavevectors, 
+while $k$ will indicate Bloch vectors used for summing over the Brillouin Zone.
+
+Since version 4.0 it is possible to safely stop execution of 
+\phx\ code using
+the same mechanism of the \pwx\ code, i.e. by creating a file \texttt{prefix.EXIT} in the 
+working directory. Execution can be resumed by setting \texttt{recover=.true.} 
+in the subsequent input data.
+
+\subsection{Single-q calculation}
+
+The phonon code \phx\ calculates normal modes at a given q-vector, starting
+from data files produced by \pwx with a simple SCF calculation.
+NOTE: the alternative procedure in which a band-structure calculation 
+with \texttt{calculation='phonon} was performed as an intermediate step is no
+longer implemented since version 4.1. It is also no longer needed to
+specify \texttt{lnscf=.true.} for $q\ne 0$.
+
+The output data file appear in the directory specified by variables outdir,
+with names specified by variable prefix. After the output file(s) has been
+produced (do not remove any of the files, unless you know which are used
+and which are not), you can run \phx.
+    
+The first input line of \phx\ is a job identifier. At the second line the
+namelist \&INPUTPH starts. The meaning of the variables in the namelist
+(most of them having a default value) is described in file 
+\texttt{Doc/INPUT\_PH.*}. Variables \texttt{outdir} and \texttt{prefix} 
+must be the same as in the input data of \pwx. Presently
+you must also specify \texttt{amass(i)} (a real variable): the atomic mass 
+of atomic type $i$.
+
+After the namelist you must specify the q-vector of the phonon mode,
+in Cartesian coordinates and in units of $2\pi/a$.
+    
+Notice that the dynamical matrix calculated by \phx\ at $q=0$ does not
+contain the non-analytic term occurring in polar materials, i.e. there is no
+LO-TO splitting in insulators. Moreover no Acoustic Sum Rule (ASR) is
+applied. In order to have the complete dynamical matrix at $q=0$ including
+the non-analytic terms, you need to calculate effective charges by specifying
+option \texttt{epsil=.true.} to \phx. This is however not possible (because
+not physical!) for metals (i.e. any system subject to a broadening).
+
+At $q=0$, use program \texttt{dynmat.x} to calculate the correct LO-TO 
+splitting, IR cross sections, and to impose various forms of ASR. 
+If \phx\ was instructed to calculate Raman coefficients, 
+\texttt{dynmat.x} will also calculate Raman cross sections
+for a typical experimental setup.
+Input documentation in the header of \texttt{PH/dynmat.f90}.
+
+A sample phonon calculation is performed in Example 02.
+
+\subsection{Calculation of interatomic force constants in real space}
+
+First, dynamical matrices are calculated and saved for a suitable uniform 
+grid of q-vectors (only those in the Irreducible Brillouin Zone of the
+crystal are needed). Although this can be done one q-vector at the time, a
+simpler procedure is to specify variable \texttt{ldisp=.true.} and to set 
+variables \texttt{nq1}, \texttt{nq2}, \texttt{nq3} to some suitable 
+Monkhorst-Pack grid, that will be automatically generated, centered at $q=0$. 
+Do not forget to specify \texttt{epsil=.true.} in the input data of
+\phx\ if you want the correct TO-LO splitting in polar
+materials.
+    
+Second, code \texttt{q2r.x} reads the dynamical matrices produced in the
+preceding step and Fourier-transform them, writing a file of Interatomic Force
+Constants in real space, up to a distance that depends on the size of the grid
+of q-vectors. Input documentation in the header of \texttt{PH/q2r.f90}.
+
+Program \texttt{matdyn.x} may be used to produce phonon modes and
+frequencies at any q using the Interatomic Force Constants file as input.
+Input documentation in the header of \texttt{PH/matdyn.f90}.
+
+For more details, see Example 06.
+
+\subsection{Calculation of electron-phonon interaction coefficients}
+
+The calculation of electron-phonon coefficients in metals is made difficult 
+by the slow convergence of the sum at the Fermi energy. It is convenient to 
+use a coarse k-point grid to calculate phonons on a suitable wavevector grid;
+a dense k-point grid to calculate the sum at the Fermi energy. The calculation
+proceeds in this way:
+\begin{enumerate}
+\item a scf calculation for the dense k-point grid (or a scf calculation 
+followed by a non-scf one on the dense k-point grid); specify 
+option \texttt{la2f=.true.} to \pwx\ in order to save a file with 
+the eigenvalues on the dense k-point grid. The latter MUST contain 
+all k and k+q grid points used in the subsequent electron-phonon 
+calculation. All grids MUST be unshifted, i.e. include $k=0$.
+\item a normal scf + phonon dispersion calculation on the coarse k-point
+grid, specifying option \texttt{elph=.true.}. and the file name where
+the self-consistent first-order variation of the potential is to be 
+stored: variable \texttt{fildvscf}).
+The electron-phonon coefficients are calculated using several
+values of Gaussian broadening (see \texttt{PH/elphon.f90}) because this quickly
+shows whether results are converged or not with respect to the k-point grid
+and Gaussian broadening.
+\item Finally, you can use \texttt{matdyn.x} and \texttt{lambda.x} 
+(input documentation in the header of \texttt{PH/lambda.f90})
+to get the $\alpha^2F(\omega)$ function, the electron-phonon coefficient
+$\lambda$, and an estimate of the critical temperature $T_c$.
+\end{enumerate}
+For more details, see Example 07.
+
+\subsection{Distributed Phonon calculations}
+A complete phonon dispersion calculation can be quite long and
+expensive, but it can be split into a number of semi-independent 
+calculations, using options \texttt{start\_q}, \texttt{last\_q},
+\texttt{start\_irr}, \texttt{last\_irr}. An example on how to 
+distribute the calculations and collect the results can be found
+in \texttt{examples/GRID\_example}. Reference:\\
+{\it Calculation of Phonon Dispersions on the GRID using Quantum
+     ESPRESSO},
+     R. di Meo, A. Dal Corso, P. Giannozzi, and S. Cozzini, in 
+     {\it Chemistry and Material Science Applications on Grid Infrastructures},
+     editors: S. Cozzini, A. Lagan\`a, ICTP Lecture Notes Series, 
+     Vol. 24, pp.165-183 (2009). 
+
+\section{Performances}
+
+\subsection{Execution time}
+
+
+\subsection{Memory requirements}
+
+A typical self-consistency or molecular-dynamics run requires a maximum
+memory in the order of $O$ double precision complex numbers, where
+$$ O = m M N + P N + p N_1 N_2 N_3 + q N_{r1} N_{r2} N_{r3}$$
+with $m, p, q$ = small factors; all other variables have the same meaning as
+above. Note that if the $\Gamma-$point only ($k=0$) is used to sample the 
+Brillouin Zone, the value of N will be cut into half.
+
+The memory required by the phonon code follows the same patterns, with
+somewhat larger factors $m, p, q$.
+
+\subsection{File space requirements}
+
+\section{Troubleshooting}
+
+\paragraph{ph.x stops with {\em error reading file}}
+The data file produced by \pwx\ is bad or incomplete or produced
+by an incompatible version of the code.
+In parallel execution: if you did not set \texttt{wf\_collect=.true.}, the number
+of processors and pools for the phonon run should be the same as for the
+self-consistent run; all files must be visible to all processors.
+
+\paragraph{ph.x mumbles something like {\em cannot recover} or {\em error
+  reading recover file}} 
+You have a bad restart file from a preceding failed execution.
+Remove all files \texttt{recover*} in \texttt{outdir}.
+
+\paragraph{ph.x says {\em occupation numbers probably wrong} and
+ continues} You have a
+metallic or spin-polarized system but occupations are not set to 
+\texttt{'smearing'}.
+
+\paragraph{ph.x does not yield acoustic modes with zero frequency at $q=0$}
+This may not be an error: the Acoustic Sum Rule (ASR) is never exactly
+verified, because the system is never exactly translationally
+invariant as it should be.  The calculated frequency of the acoustic
+mode is typically less than 10 cm$^{-1}$, but in some cases it may be
+much higher, up to 100 cm$^{-1}$. The ultimate test is to diagonalize
+the dynamical matrix with program \texttt{dynmat.x}, imposing the ASR. If you
+obtain an acoustic mode with a much smaller $\omega$ (let us say 
+$< 1 \mbox{cm}^{-1}$ ) 
+with all other modes virtually unchanged, you can trust your results.
+
+''The problem is [...] in the fact that the XC 
+energy is computed in real space on a discrete grid and hence the
+total energy is invariant (...) only for translation in the FFT
+grid. Increasing the charge density cutoff increases the grid density
+thus making the integral more exact thus reducing the problem,
+unfortunately rather slowly...This problem is usually more severe for
+GGA  than with LDA because the GGA functionals have functional forms
+that vary more strongly with the position; particularly so for
+isolated molecules or system with significant portions of "vacuum"
+because in the exponential tail of the charge density a) the finite
+cutoff  (hence there is an effect due to cutoff) induces oscillations
+in rho and b) the reduced gradient is diverging.''(info by Stefano de
+Gironcoli, June 2008) 
+
+\paragraph{ph.x yields really lousy phonons, with bad or negative
+  frequencies or wrong symmetries or gross ASR violations} 
+Possible reasons
+\begin{itemize}
+\item if this happens only for acoustic modes at $q=0$ that should
+  have $\omega=0$: Acoustic Sum Rule violation, see the item before
+  this one.
+\item wrong data file read.
+\item wrong atomic masses given in input will yield wrong frequencies
+  (but the content of file fildyn should be valid, since the force
+  constants, not the dynamical matrix, are written to file). 
+\item convergence threshold for either SCF (\texttt{conv\_thr}) or phonon
+  calculation (\texttt{tr2\_ph}) too large: try to reduce them. 
+\item maybe your system does have negative or strange phonon
+  frequencies, with the approximations you used. A negative frequency
+  signals a mechanical instability of the chosen structure. Check that
+  the structure is reasonable, and check the following parameters: 
+\begin{itemize}
+\item The cutoff for wavefunctions, \texttt{ecutwfc}
+\item For USPP: the cutoff for the charge density, \texttt{ecutrho}
+\item The k-point grid, especially for metallic systems.
+\end{itemize}
+\end{itemize}
+Note that "negative" frequencies are actually imaginary: the negative
+sign flags eigenvalues of the dynamical matrix for which $\omega^2 <
+0$. 
+
+\paragraph{{\em Wrong degeneracy} error in star\_q}
+Verify the q-vector for which you are calculating phonons. In order to
+check whether a symmetry operation belongs to the small group of $q$,
+the code compares $q$ and the rotated $q$, with an acceptance tolerance of  
+$10^{-5}$ (set in routine \texttt{PW/eqvect.f90}). You may run into trouble if
+your q-vector differs from a high-symmetry point by an amount in that
+order of magnitude.
+
+\section{Frequently Asked Questions}
+
+\paragraph{ Is there a simple way to determine the symmetry of a given 
+phonon mode?} 
+
+A symmetry analyzer was added in v.3.2 by Andrea Dal Corso. 
+Other packages that perform symmetry analysis of phonons and normal modes:\\
+ISOTROPY package: http://stokes.byu.edu/iso/isotropy.html\\
+ACKJ, ACMI packages: http://www.cpc.cs.qub.ac.uk.
+
+\paragraph{I am not getting zero acoustic mode frequencies, why? }
+
+Because the Acoustic Sum Rule (ASR), i.e. the translational invariance,
+is violated in approximated calculations. In PW calculations, 
+the main and most irreducible violation comes from the discreteness
+of the FFT grid. There may be other reasons, though, notably
+insufficient convergence: "Recently I found that the parameters
+\texttt{tr2\_ph} for the phonons and \texttt{conv\_thr} for the 
+ground state can affect the quality of the phonon calculation,
+ especially the "vanishing" frequencies for molecules."
+(Info from Katalyn Gaal-Nagy). Anyway: if the nonzero frequencies are
+small, you can impose the ASR to the dynamical matrix, usually with
+excellent results.
+
+Nonzero frequencies for rotational modes of a molecule are a fictitious 
+effect of the finite supercell size, or else, of a less than perfect
+convergence of the geometry of the molecule.
+
+\paragraph{Why do I get negative phonon frequencies? }
+
+"Negative" frequencies actually are "imaginary" frequencies 
+($\omega^2<0$). If these occur for acoustic frequencies at Gamma point, 
+or for rotational modes of a molecule, see above.
+In all other cases: it depends. It may be a problem of bad
+convergence (see above), or it may signal a real instability.
+
+\paragraph{Why do I get a message {\em no elec. field with metals}? }
+
+If you want to calculate the contribution of macroscopic electric 
+fields to phonons -- a quantity that is well-defined in insulators 
+only --- you cannot use smearing in the scf calculation, or else the
+code will complain. 
+
+\paragraph{How can I calculate Raman/IR coefficients in metals?}
+
+You cannot: they are well defined only for insulators.
+
+\paragraph{How can I calculate the electron-phonon coefficients
+in insulators?}
+
+You cannot: the current implementation is for metals only.
+
+\end{document}

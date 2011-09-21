@@ -28,6 +28,7 @@ cond_restart.o : condcom.o
 condcom.o : ../../Modules/kind.o
 condcom.o : ../../Modules/parameters.o
 condcom.o : ../../Modules/radial_grids.o
+condmain.o : ../../Modules/mp_global.o
 do_cond.o : ../../Modules/cell_base.o
 do_cond.o : ../../Modules/check_stop.o
 do_cond.o : ../../Modules/constants.o

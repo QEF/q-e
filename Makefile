@@ -7,7 +7,7 @@ default :
 	@echo 'where target is one of the following:'
 	@echo '  pw           basic code for scf, structure optimization, MD'
 	@echo '  cp           CP code: CP MD with ultrasoft pseudopotentials'
-	@echo '  ph           phonon code'
+	@echo '  ph           phonon code, Gamma-only version and third-order derivatives'
 	@echo '  neb          code for Nudged Elastic Band method'
 	@echo '  tddfpt       time dependent dft code'
 	@echo '  pp           postprocessing programs'
@@ -48,8 +48,8 @@ cp : bindir mods liblapack libblas libs libiotk
 	else $(MAKE) $(MFLAGS) TLDEPS= all ; fi ) ; fi
 
 ph : bindir mods libs pw
-	if test -d PH ; then \
-	( cd PH ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= all ; \
+	if test -d PHonon ; then \
+	( cd PHonon ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= all ; \
 	else $(MAKE) $(MFLAGS) TLDEPS= all ; fi ) ; fi
 
 neb : bindir mods libs pw
@@ -67,19 +67,9 @@ pp : bindir mods libs pw
 	( cd PP ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= all ; \
 	else $(MAKE) $(MFLAGS) TLDEPS= all ; fi ) ; fi
 
-gamma : bindir mods libs pw
-	if test -d Gamma ; then \
-	( cd Gamma ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= all ; \
-	else $(MAKE) $(MFLAGS) TLDEPS= all ; fi ) ; fi
-
 pwcond : bindir mods libs pw pp
 	if test -d PWCOND ; then \
 	( cd PWCOND ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= all ; \
-	else $(MAKE) $(MFLAGS) TLDEPS= all ; fi ) ; fi
-
-d3 : bindir mods libs pw ph
-	if test -d D3 ; then \
-	( cd D3 ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= all ; \
 	else $(MAKE) $(MFLAGS) TLDEPS= all ; fi ) ; fi
 
 vdw : bindir mods libs pw ph pp

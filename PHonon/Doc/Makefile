@@ -23,13 +23,13 @@ clean:
 	- rm -f $(PDFS) $(AUXS) $(LOGS) $(OUTS) $(TOCS) *~
 	- rm -rf user_guide/
 	- rm -f INPUT_*.html INPUT_*.txt INPUT_*.xml
-	- rm -rf ../../Doc/INPUT_CP*.*
+	- rm -rf ../../Doc/INPUT_PH.* ../../Doc/INPUT_D3.*
 
 
 user_guide: user_guide.pdf
 	rm -rf user_guide/
 	latex2html \
-                -t "User's Guide for The Quantum ESPRESSO Car-Parrinello Molecular Dynamics" \
+                -t "User's Guide for the PHonon package" \
                 -html_version 3.2,math \
                 -toc_depth 5 -split 5 -toc_stars -show_section_numbers \
                 -local_icons -image_type png \
@@ -47,20 +47,20 @@ user_guide: user_guide.pdf
 	@echo ""
 
 
-defs: INPUT_CP.html INPUT_CP.txt INPUT_CPPP.html INPUT_CPPP.txt link_on_main_doc
-INPUT_CP.html: %.html: %.def
+defs: INPUT_PH.html INPUT_PH.txt INPUT_D3.html INPUT_D3.txt link_on_main_doc
+INPUT_PH.html: %.html: %.def
 	$(HELPDOC) $<
-INPUT_CP.txt: %.txt: %.def
+INPUT_PH.txt: %.txt: %.def
 	$(HELPDOC) $<
-INPUT_CPPP.html: %.html: %.def
+INPUT_D3.html: %.html: %.def
 	$(HELPDOC) $<
-INPUT_CPPP.txt: %.txt: %.def
+INPUT_D3.txt: %.txt: %.def
 	$(HELPDOC) $<
 
 link_on_main_doc:
-	-( cd ../../Doc ; ln -fs ../CPV/Doc/INPUT_CP.html . ; \
-	ln -fs ../CPV/Doc/INPUT_CP.xml . ; \
-	ln -fs ../CPV/Doc/INPUT_CP.txt . ; \
-	ln -fs ../CPV/Doc/INPUT_CPPP.html . ; \
-	ln -fs ../CPV/Doc/INPUT_CPPP.xml . ; \
-	ln -fs ../CPV/Doc/INPUT_CPPP.txt)
+	-( cd ../../Doc ; ln -fs ../PH/Doc/INPUT_PH.html . ; \
+	ln -fs ../PH/Doc/INPUT_PH.xml . ; \
+	ln -fs ../PH/Doc/INPUT_PH.txt . ; \
+	ln -fs ../PH/Doc/INPUT_D3.html . ; \
+	ln -fs ../PH/Doc/INPUT_D3.xml . ; \
+	ln -fs ../PH/Doc/INPUT_D3.txt)

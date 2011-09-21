@@ -1,10 +1,12 @@
 # Makefile for 3rd derivative calculations - D3
 
-include ../make.sys
+include ../../make.sys
 
 # location of needed modules
-MODFLAGS= $(MOD_FLAG)../iotk/src $(MOD_FLAG)../Modules \
-          $(MOD_FLAG)../PW $(MOD_FLAG)../PH/src $(MOD_FLAG).
+MODFLAGS= $(MOD_FLAG)../../iotk/src $(MOD_FLAG)../../Modules \
+          $(MOD_FLAG)../../PW $(MOD_FLAG)../../PHonon/PH $(MOD_FLAG).
+
+LIBOBJS        = ../../flib/ptools.a ../../flib/flib.a ../../clib/clib.a ../../iotk/src/libiotk.a
 
 D3OBJS = \
 allocate_d3.o \
@@ -62,22 +64,26 @@ write_d3dyn.o \
 write_igk.o \
 writed3dyn_5.o
 
-PHOBJS = ../PH/src/libph.a
-PWOBJS = ../PW/libpw.a
-QEMODS = ../Modules/libqemod.a
+PHOBJS = ../../PHonon/PH/libph.a
+PWOBJS = ../../PW/libpw.a
+QEMODS = ../../Modules/libqemod.a
 
-TLDEPS= bindir mods libs pw ph
+TLDEPS= bindir mods libs pw
+TLDEPS2 = phonon
 
-all : tldeps d3.x
+all : tldeps tldeps2 d3.x
 
 d3.x : $(D3OBJS) $(PHOBJS) $(PWOBJS) $(QEMODS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o d3.x $(D3OBJS) \
 		$(PHOBJS) $(PWOBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
-	- ( cd ../bin ; ln -fs ../D3/d3.x . )
+	- ( cd ../../bin ; ln -fs ../../PHonon/D3/d3.x . )
 tldeps:
-	test -n "$(TLDEPS)" && ( cd .. ; $(MAKE) $(MFLAGS) $(TLDEPS) || exit 1) || :
+	test -n "$(TLDEPS)" && ( cd ../.. ; $(MAKE) $(MFLAGS) $(TLDEPS) || exit 1) || :
+tldeps2:
+	test -n "$(TLDEPS2)" && ( cd ../ ; $(MAKE) $(MFLAGS) $(TLDEPS2) || exit 1) || :
 
 clean :
 	- /bin/rm -f d3.x *.o *~ *.F90 *.d *.i *.mod *.L
+	- /bin/rm -f ../../bin/d3.x
 
 include make.depend
