@@ -117,6 +117,8 @@ SUBROUTINE iosys()
                             eps_mode_ => eps_mode,            &
                             solvationrad_ => solvationrad,    &
                             atomicspread_ => atomicspread,    &
+                            ifdtype_ => ifdtype,              &
+                            nfdpoint_ => nfdpoint,            &
                             mixrhopol_ => mixrhopol,          &
                             tolrhopol_ => tolrhopol,          &
                             gamma_ => gamma,                  &
@@ -258,6 +260,7 @@ SUBROUTINE iosys()
   USE input_parameters, ONLY : verbose, solvent_thr,                          &
                                stype, rhozero, rhomin, tbeta,                 &
                                epsinfty, eps_mode, solvationrad, atomicspread,&
+                               ifdtype, nfdpoint,                             &
                                mixrhopol, tolrhopol,                          &
                                gamma, delta,                                  &
                                extpressure 
@@ -1195,6 +1198,10 @@ SUBROUTINE iosys()
   solvationrad_( 1:ntyp ) = solvationrad( 1:ntyp )
   ALLOCATE( atomicspread_( ntyp ) )
   atomicspread_( 1:ntyp ) = atomicspread( 1:ntyp )
+  !
+  ifdtype_ = ifdtype
+  nfdpoint_ = nfdpoint
+  !
   mixrhopol_ = mixrhopol
   tolrhopol_ = tolrhopol
   !

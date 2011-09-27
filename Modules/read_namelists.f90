@@ -282,6 +282,9 @@ MODULE read_namelists_module
        solvationrad(:) = 3.D0
        atomicspread(:) = 0.5D0
        !
+       ifdtype  = 1
+       nfdpoint = 1
+       !
        mixrhopol = 0.5
        tolrhopol = 1.D-10
        !
