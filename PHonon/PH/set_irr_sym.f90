@@ -11,11 +11,10 @@ subroutine set_irr_sym (nat, at, bg, xq, s, rtau, irt, &
      irgq, nsymq, minus_q, irotmq, t, tmq, u, npert, nirr, npertx )
 !---------------------------------------------------------------------
 !
-!     This subroutine computes:
+!     This subroutine computes: 
 !     1) the matrices which represent the small group of q on the
 !        pattern basis.
 !
-  USE io_global,  ONLY : stdout
   USE kinds, ONLY : DP
   USE constants, ONLY: tpi
 
@@ -55,14 +54,14 @@ subroutine set_irr_sym (nat, at, bg, xq, s, rtau, irt, &
 !
 !   here the local variables
 !
-  integer :: na, nb, imode, jmode, ipert, jpert, nsymtot, imode0, &
+  integer :: na, imode, jmode, ipert, jpert, kpert, nsymtot, imode0, &
        irr, ipol, jpol, isymq, irot, sna
   ! counters and auxiliary variables
 
   real(DP) :: arg
 ! the argument of the phase
 
-  complex(DP) :: wrk_u (3, nat), wrk_ru (3, nat), fase
+  complex(DP) :: wrk_u (3, nat), wrk_ru (3, nat), fase, wrk
 ! pattern
 ! rotated pattern
 ! the phase factor
@@ -149,6 +148,24 @@ subroutine set_irr_sym (nat, at, bg, xq, s, rtau, irt, &
            enddo
         enddo
         imode0 = imode0 + npert (irr)
+
+!
+! If the representations are irreducible, the rotations should be unitary matrices
+! if this is not the case, the way the representations have been chosen has failed
+! for some reasons (check set_irr.f90)
+!
+        do ipert = 1, npert (irr)
+           do jpert = 1, npert (irr)
+              wrk = cmplx(0.d0,0.d0)
+              do kpert = 1, npert (irr)
+                 wrk = wrk + t (ipert,kpert,irot,irr) * conjg( t(jpert,kpert,irot,irr))
+              enddo
+              if (jpert.ne.ipert .and. abs(wrk).gt. 1.d-6 ) &
+                     call errore('set_irr_sym','wrong representation',100*irr+10*jpert+ipert)
+              if (jpert.eq.ipert .and. abs(wrk-1.d0).gt. 1.d-6 ) &
+                     call errore('set_irr_sym','wrong representation',100*irr+10*jpert+ipert)
+           enddo
+        enddo
      enddo
 
   enddo
@@ -157,7 +174,6 @@ subroutine set_irr_sym (nat, at, bg, xq, s, rtau, irt, &
 !
 ! parallel stuff: first node broadcasts everything to all nodes
 !
-400 continue
   call mp_bcast (t, ionode_id, intra_image_comm)
   call mp_bcast (tmq, ionode_id, intra_image_comm)
 #endif
