@@ -76,7 +76,7 @@ all : tldeps tldeps2 d3.x
 d3.x : $(D3OBJS) $(PHOBJS) $(PWOBJS) $(QEMODS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o d3.x $(D3OBJS) \
 		$(PHOBJS) $(PWOBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
-	- ( cd ../../bin ; ln -fs ../../PHonon/D3/d3.x . )
+	- ( cd ../../bin ; ln -fs ../PHonon/D3/d3.x . )
 tldeps:
 	test -n "$(TLDEPS)" && ( cd ../.. ; $(MAKE) $(MFLAGS) $(TLDEPS) || exit 1) || :
 tldeps2:

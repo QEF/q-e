@@ -48,7 +48,7 @@ all : tldeps phcg.x
 phcg.x : $(PWOBJS) $(CGOBJS) $(QEMODS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o phcg.x \
 		$(CGOBJS) $(PWOBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
-	- ( cd ../../bin ; ln -fs ../../PHonon/Gamma/phcg.x . )
+	- ( cd ../../bin ; ln -fs ../PHonon/Gamma/phcg.x . )
 tldeps:
 	test -n "$(TLDEPS)" && ( cd ../.. ; $(MAKE) $(MFLAGS) $(TLDEPS) || exit 1) || :
 
