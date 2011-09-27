@@ -122,7 +122,8 @@ SUBROUTINE orthoatwfc
      !
      IF (noncolin) THEN
         CALL zgemm ('c', 'n', natomwfc, natomwfc, npwx*npol, (1.d0, 0.d0), &
-             wfcatom, npwx, swfcatom, npwx, (0.d0,0.d0), overlap, natomwfc)
+             wfcatom, npwx*npol, swfcatom, npwx*npol, (0.d0,0.d0), overlap, &
+                                                                   natomwfc)
      ELSE
          CALL zgemm ('c', 'n', natomwfc, natomwfc, npw, (1.d0, 0.d0), &
              wfcatom, npwx, swfcatom, npwx, (0.d0, 0.d0), overlap, natomwfc)
