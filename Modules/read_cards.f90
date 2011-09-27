@@ -752,6 +752,8 @@ CONTAINS
                ENDIF  
             ENDDO
             nkstot=nkstot+1
+            xk(:,nkstot)=xkaux(:,nkaux)
+            wk(nkstot)=1.0_DP
             DEALLOCATE(xkaux)
             DEALLOCATE(wkaux)
          ENDIF
