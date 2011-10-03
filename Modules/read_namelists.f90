@@ -923,6 +923,9 @@ MODULE read_namelists_module
        CALL mp_bcast( solvationrad,               ionode_id )
        CALL mp_bcast( atomicspread,               ionode_id )
        !
+       CALL mp_bcast( ifdtype,                    ionode_id )
+       CALL mp_bcast( nfdpoint,                   ionode_id )
+       !
        CALL mp_bcast( mixrhopol,                  ionode_id )
        CALL mp_bcast( tolrhopol,                  ionode_id )
        !
