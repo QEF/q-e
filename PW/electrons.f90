@@ -23,7 +23,7 @@ SUBROUTINE electrons()
   USE io_global,            ONLY : stdout, ionode
   USE cell_base,            ONLY : at, bg, alat, omega, tpiba2
   USE ions_base,            ONLY : zv, nat, nsp, ityp, tau, compute_eextfor
-  USE basis,                ONLY : starting_pot
+  USE basis,                ONLY : starting_pot, starting_wfc
   USE bp,                   ONLY : lelfield
   USE fft_base,             ONLY : dfftp
   USE gvect,                ONLY : ngm, gstart, nl, nlm, g, gg, gcutm
@@ -58,10 +58,9 @@ SUBROUTINE electrons()
   USE uspp,                 ONLY : okvan
 #if defined (EXX)
   USE exx,                  ONLY : exxinit, exxenergy, exxenergy2, &
-                                   fock0, fock1, fock2, dexx
+                                   fock0, fock1, fock2, dexx, exx_restart
   USE funct,                ONLY : dft_is_hybrid, exx_is_active
-  USE control_flags,        ONLY : adapt_thr, tr2_init, &
-                                  &tr2_multi
+  USE control_flags,        ONLY : adapt_thr, tr2_init, tr2_multi
 #endif
   USE funct,                ONLY : dft_is_meta
   USE mp_global,            ONLY : intra_pool_comm, npool
@@ -146,6 +145,13 @@ SUBROUTINE electrons()
      IF( exx_is_active() ) THEN
        iter = 0
        call save_in_electrons( iter, dr2 )
+       WRITE( stdout, '(5x,"EXX: now go back to refine exchange calculation")')
+     ELSE IF ( dft_is_hybrid() .AND. TRIM(starting_wfc) == 'file' ) THEN
+       !
+       ! suggested by Hannu Komsa: useful when several calculations with 
+       ! different values of alpha have to be performed
+       !
+       call exx_restart(.true.)
        WRITE( stdout, '(5x,"EXX: now go back to refine exchange calculation")')
      ENDIF
 #endif
