@@ -529,7 +529,7 @@ SUBROUTINE electrons()
 #if defined (EXX)
      !
      etot = etot - 0.5D0*fock0
-     hwf_energy = hwf_energy -0.5*fock0
+     hwf_energy = hwf_energy -0.5D0*fock0
      !
      IF ( dft_is_hybrid() .AND. conv_elec ) THEN
         !

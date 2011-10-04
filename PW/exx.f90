@@ -54,7 +54,7 @@ MODULE exx
   ! and related issues
   !
   REAL (DP)         :: eps =1.d-6
-  REAL (DP)         :: exxdiv = 0.0
+  REAL (DP)         :: exxdiv = 0.d0
   CHARACTER(80)     :: exxdiv_treatment 
   !
   ! x_gamma_extrapolation
@@ -918,7 +918,7 @@ SUBROUTINE g2_convolution(ngm, g, xk, xkq, fac)
      ELSE IF (qq.GT.1.d-8) THEN
         !
         IF ( erfc_scrlen > 0  ) THEN
-           fac(ig)=e2*fpi/qq*(1-EXP(-qq/4.d0/erfc_scrlen**2)) * grid_factor
+           fac(ig)=e2*fpi/qq*(1.d0-EXP(-qq/4.d0/erfc_scrlen**2)) * grid_factor
         ELSEIF( erf_scrlen > 0 ) THEN
            fac(ig)=e2*fpi/qq*(EXP(-qq/4.d0/erf_scrlen**2)) * grid_factor
         ELSE
@@ -1116,7 +1116,7 @@ END SUBROUTINE g2_convolution
                 ELSE IF (qq > 1.d-8) THEN
                    !
                    IF ( erfc_scrlen > 0 ) THEN
-                      fac(ig)=e2*fpi/qq*(1-exp(-qq/4.d0/erfc_scrlen**2)) * grid_factor
+                      fac(ig)=e2*fpi/qq*(1.d0-exp(-qq/4.d0/erfc_scrlen**2)) * grid_factor
                    ELSEIF ( erf_scrlen > 0 ) THEN
                       fac(ig)=e2*fpi/qq*(exp(-qq/4.d0/erf_scrlen**2)) * grid_factor
                    ELSE
@@ -1281,7 +1281,7 @@ END SUBROUTINE g2_convolution
                     if ( qq > 1.d-8 ) then
                        if ( erfc_scrlen > 0 ) then
                           div = div + exp( -alpha * qq) / qq * &
-                                (1-exp(-qq*tpiba2/4.d0/erfc_scrlen**2)) * grid_factor
+                                (1.d0-exp(-qq*tpiba2/4.d0/erfc_scrlen**2)) * grid_factor
                        elseif ( erf_scrlen >0 ) then
                           div = div + exp( -alpha * qq) / qq * &
                                 (exp(-qq*tpiba2/4.d0/erf_scrlen**2)) * grid_factor
