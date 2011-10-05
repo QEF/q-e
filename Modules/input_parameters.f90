@@ -491,7 +491,7 @@ MODULE input_parameters
              edir, emaxpos, eopreg, eamp, smearing, starting_ns_eigenvalue,   &
              U_projection_type, input_dft, la2F, assume_isolated,             &
 #if defined (EXX)
-             x_gamma_extrapolation, nqx1, nqx2, nqx3,                         &
+             nqx1, nqx2, nqx3,                         &
              exxdiv_treatment, x_gamma_extrapolation, yukawa, ecutvcut,       &
              exx_fraction, screening_parameter,                               &
 #endif
