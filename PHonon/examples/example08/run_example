@@ -31,7 +31,7 @@ cd example08
 
 # required executables and pseudopotentials
 BIN_LIST="pw.x ph.x"
-PSEUDO_LIST="H.pz-kjpaw.UPF C.pz-kjpaw.UPF"
+PSEUDO_LIST="H.pz-kjpaw.UPF C.pz-kjpaw.UPF Cu.pbe-kjpaw.UPF"
 
 $ECHO
 $ECHO "  executables directory: $BIN_DIR"
