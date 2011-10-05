@@ -1475,7 +1475,7 @@ END SUBROUTINE g2_convolution
 
                  else if (qq > 1.d-8) then
                     if ( erfc_scrlen > 0 ) then
-                       fac(ig)=e2*fpi/qq*(1-exp(-qq/4.d0/erfc_scrlen**2)) * grid_factor
+                       fac(ig)=e2*fpi/qq*(1.d0-exp(-qq/4.d0/erfc_scrlen**2)) * grid_factor
                        fac_stress(ig) = -e2*fpi * 2.d0/qq**2 * ( &
                            (1.d0+qq/4.d0/erfc_scrlen**2)*exp(-qq/4.d0/erfc_scrlen**2) - 1.d0) * &
                            grid_factor
