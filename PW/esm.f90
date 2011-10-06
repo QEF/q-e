@@ -1289,103 +1289,84 @@ end subroutine esm_force_lc
 !
 SUBROUTINE esm_printpot ()
   USE kinds,                ONLY : DP
-  USE cell_base,            ONLY : at, alat, omega
-  USE gvect,                ONLY : ngm
+  USE cell_base,            ONLY : at, alat
   USE scf,                  ONLY : rho, vltot
   USE lsda_mod,             ONLY : nspin
   USE mp,                   ONLY : mp_sum
-  USE mp_global,            ONLY : intra_pool_comm, me_pool
-  USE fft_base,             ONLY : grid_gather, dfftp
+  USE mp_global,            ONLY : intra_pool_comm
+  USE fft_base,             ONLY : dfftp
   USE io_global,            ONLY : ionode, stdout
   !
   IMPLICIT NONE
   !
   REAL(DP)                :: z1,z2,z3,z4,charge,ehart,bohr,rydv,L,area
-  REAL(DP), ALLOCATABLE   :: vh(:),work1(:),work2(:),work3(:)
-  INTEGER                 :: ix,iy,iz,i,k3
+  REAL(DP), ALLOCATABLE   :: work1(:),work2(:,:),work3(:), work4(:,:)
+  INTEGER                 :: ix,iy,iz,izz,i,k3
 
-        allocate(vh(dfftp%nnr))
-        allocate(work1(dfftp%nr1x*dfftp%nr2x*dfftp%nr3x))
-        allocate(work2(dfftp%nr1x*dfftp%nr2x*dfftp%nr3x))
-        allocate(work3(dfftp%nr1x*dfftp%nr2x*dfftp%nr3x))
-        vh(:)=0.d0; work1(:)=0.d0; work2(:)=0.d0; work3(:)=0.d0
+        allocate(work1(dfftp%nnr))
+        allocate(work2(dfftp%nnr,nspin))
+        allocate(work3(dfftp%nnr))
+        allocate(work4(5,dfftp%nr3))
+        work1(:)=0.d0; work2(:,:)=0.d0; work3(:)=0.d0; work4(:,:)=0.d0
         L=alat*at(3,3)
         area=(at(1,1)*at(2,2)-at(2,1)*at(1,2))*alat**2
         bohr=0.52917720859d0
         rydv=13.6058d0
-        CALL v_h (rho%of_g, ehart, charge, vh)
-#ifdef __PARA
-        call grid_gather( vh, work2 )
-        call mp_sum(work2, intra_pool_comm)
-        call grid_gather( vltot, work3 )
-        call mp_sum(work3, intra_pool_comm)
-#else
-        work2(1:dfftp%nnr)=vh(1:dfftp%nnr)
+        CALL v_h (rho%of_g, ehart, charge, work2)
         work3(1:dfftp%nnr)=vltot(1:dfftp%nnr)
-#endif
         if( nspin == 2 ) then
-          vh(:)=rho%of_r(:,1)+rho%of_r(:,2)
+           work1(:)=rho%of_r(:,1)+rho%of_r(:,2)
         else
-          vh(:)=rho%of_r(:,1)
+           work1(:)=rho%of_r(:,1)
         endif
-#ifdef __PARA
-        call grid_gather( vh, work1 )
-        call mp_sum(work1, intra_pool_comm)
-#else
-        work1(1:dfftp%nnr)=vh(1:dfftp%nnr)
-#endif
-        deallocate(vh)
-        IF ( ionode ) then
-        write(stdout,                                                 &
-              FMT = '(/,5x, "ESM Charge and Potential",&
-                     &/,5x, "========================",/)' )
-        write(stdout, 9051)
-        write(stdout, 9052)
+
 ! z = position along slab (A)
 ! rho = planar-summed charge density of slab section (e)
-! v_hartree = planar-averaged hartree potential term (eV/A)
-! v_local = planar-averaged local potential term (eV/A)
-        do iz=dfftp%nr3/2+2,dfftp%nr3
-           k3=iz-1-dfftp%nr3
+! v_hartree = planar-averaged hartree potential term (eV)
+! v_local = planar-averaged local potential term (eV)
+
+!$omp parallel do private( iz, izz, k3, z1, z2, z3, z4, iy, ix, i )
+        do iz = 1, dfftp%npp(dfftp%mype+1)
+           izz = iz + dfftp%ipp(dfftp%mype+1)
+           k3 = izz - 1
+           if( k3 > dfftp%nr3/2 ) k3 = k3 - dfftp%nr3
            z1=0.d0;z2=0.d0;z3=0.d0;z4=0.d0
            do iy=1,dfftp%nr2
            do ix=1,dfftp%nr1
               i=ix+(iy-1)*dfftp%nr1+(iz-1)*dfftp%nr1*dfftp%nr2
               z1=z1+work1(i)*area/dble(dfftp%nr1*dfftp%nr2)
-              z2=z2+(work2(i)+work3(i))/dble(dfftp%nr1*dfftp%nr2)
-              z3=z3+work2(i)/dble(dfftp%nr1*dfftp%nr2)
+              z2=z2+(work2(i,1)+work3(i))/dble(dfftp%nr1*dfftp%nr2)
+              z3=z3+work2(i,1)/dble(dfftp%nr1*dfftp%nr2)
               z4=z4+work3(i)/dble(dfftp%nr1*dfftp%nr2)
            enddo
            enddo
-           write(stdout,'(f9.3,f13.5,2f19.7,f18.7)') &
-           dble(k3)/dble(dfftp%nr3)*L*bohr, z1, z3*rydv/bohr, &
-             z4*rydv/bohr, z2*rydv/bohr
+           work4(1:5,izz) = (/dble(k3)/dble(dfftp%nr3)*L*bohr, z1, z3*rydv, &
+                z4*rydv, z2*rydv/)
         enddo
-        !do iz=1,dfftp%nr3x/2+1-esm_nfit
-        do iz=1,dfftp%nr3/2+1
-           k3=iz-1
-           z1=0.d0;z2=0.d0;z3=0.d0;z4=0.d0
-           do iy=1,dfftp%nr2
-           do ix=1,dfftp%nr1
-              i=ix+(iy-1)*dfftp%nr1+(iz-1)*dfftp%nr1*dfftp%nr2
-              z1=z1+work1(i)*area/dble(dfftp%nr1*dfftp%nr2)
-              z2=z2+(work2(i)+work3(i))/dble(dfftp%nr1*dfftp%nr2)
-              z3=z3+work2(i)/dble(dfftp%nr1*dfftp%nr2)
-              z4=z4+work3(i)/dble(dfftp%nr1*dfftp%nr2)
+#ifdef __PARA
+        call mp_sum(work4, intra_pool_comm)
+#endif
+
+        IF ( ionode ) then
+           write(stdout,                                             &
+                 FMT = '(/,5x, "ESM Charge and Potential",&
+                        &/,5x, "========================",/)' )
+           write(stdout, 9051)
+           write(stdout, 9052)
+           do k3 = dfftp%nr3/2-dfftp%nr3+1, dfftp%nr3/2
+              iz = k3 + dfftp%nr3 + 1
+              if( iz > dfftp%nr3 ) iz = iz - dfftp%nr3
+              write(stdout,'(f9.3,f13.5,2f19.7,f18.7)') work4(1:5,iz)
            enddo
-           enddo
-           write(stdout,'(f9.3,f13.5,2f19.7,f18.7)') &
-           dble(k3)/dble(dfftp%nr3)*L*bohr, z1, z3*rydv/bohr, &
-             z4*rydv/bohr, z2*rydv/bohr
-        enddo
-        deallocate(work1,work2,work3)
-        write(stdout,*) 
+           write(stdout,*) 
         ENDIF
+        deallocate(work1,work2,work3,work4)
 9051    FORMAT( 4x,'z (A)',6x,'rho (e)',6x,'Avg v_hartree',8x,&
         &'Avg v_local',2x,'Avg v_hart+v_loc' )
-9052    FORMAT(35x,'(eV/A)',13x,'(eV/A)',12x,'(eV/A)',/,4x,& 
+9052    FORMAT(37x,'(eV)',15x,'(eV)',14x,'(eV)',/,4x,& 
  &'==========================================================================' )
 END SUBROUTINE esm_printpot
+
 !
 !-----------------------------------------------------------------------
 !--------------ESM SUMMARY PRINTOUT SUBROUTINE--------------------------
