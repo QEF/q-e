@@ -201,16 +201,22 @@ input_description -distribution {Quantum Espresso} -package PWscf -program ph.x 
         }
 
 
-	var elph  -type LOGICAL { 
-	    default { .false. }
+	var electron_phonon  -type CHARACTER { 
+	    default { ' ' }
 	    info {
-		If .true. electron-phonon lambda coefficients are computed.
-		
+		If equal to 'simple' electron-phonon lambda coefficients 
+                are computed for a given q and a grid of k-points specified
+                by the variables nk1, nk2, nk3, k1, k2, k3.
+
+                If equal to 'interpolated' electron-phonon is calculated
+                by interpolation over the Brillouin Zone as in 
+                M. Wierzbowska, et al. arXiv:cond-mat/0504077	
+   	
 		For metals only, requires gaussian smearing.
 		
-		If elph .and. trans, the lambdas are calculated in the same
-		run, using the same k-point grid for phonons and lambdas
-		If elph.and..not.trans, the lambdas are calculated using
+		If trans=.true., the lambdas are calculated in the same
+		run, using the same k-point grid for phonons and lambdas.
+		If trans=.false., the lambdas are calculated using
 		previously saved DeltaVscf in fildvscf, previously saved
 		dynamical matrix, and the present punch file. This allows
 		the use of a different (larger) k-point grid.
