@@ -51,7 +51,8 @@ PROGRAM phonon
 
   USE io_global,       ONLY : stdout
   USE disp,            ONLY : nqs
-  USE control_ph,      ONLY : epsil, trans, elph, elph_mat, bands_computed, dvscf_star
+  USE control_ph,      ONLY : epsil, trans, bands_computed, dvscf_star
+  USE el_phon,         ONLY : elph, elph_mat, elph_simple
   USE output,          ONLY : fildrho
   USE check_stop,      ONLY : check_stop_init
   USE ph_restart,      ONLY : ph_writefile, destroy_status_run
@@ -133,19 +134,21 @@ PROGRAM phonon
         IF ( .NOT. trans ) THEN
            !
            CALL dvanqq()
-           if(elph_mat) then
+           IF ( elph_mat ) then
               call ep_matrix_element_wannier()
-           else
+           ELSE
               CALL elphon()
-           endif
+           END IF
            !
         END IF
         !
-        if(elph_mat) then
+        IF ( elph_mat ) then
            call elphsum_wannier()
-        else
+        ELSEIF( elph_simple ) then
+           CALL elphsum_simple()
+        ELSE
            CALL elphsum()
-        endif
+        END IF
         !
      END IF
      !

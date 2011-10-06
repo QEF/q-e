@@ -19,7 +19,7 @@ SUBROUTINE openfilq()
                              lrwfc, lrdwf, lrbar, lrcom, lrdvkb3, &
                              lrdrhous, lrebar, lrdrho, lint3paw, iuint3paw
   USE io_files,       ONLY : tmp_dir, diropn
-  USE control_ph,     ONLY : epsil, zue, ext_recover, trans, elph, lgamma, &
+  USE control_ph,     ONLY : epsil, zue, ext_recover, trans, lgamma, &
                              tmp_dir_phq, start_irr, last_irr, xmldyn, dvscf_dir
   USE save_ph,        ONLY : tmp_dir_save
   USE ions_base,      ONLY : nat
@@ -39,6 +39,7 @@ SUBROUTINE openfilq()
   USE ramanm,         ONLY: lraman, elop, iuchf, iud2w, iuba2, lrchf, lrd2w, lrba2
   USE acfdtest,       ONLY : acfdt_is_active, acfdt_num_der
   USE input_parameters,ONLY: nk1, nk2, nk3
+  USE el_phon , ONLY     : elph
   !
   IMPLICIT NONE
   !

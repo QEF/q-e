@@ -19,8 +19,9 @@ subroutine bcast_ph_input ( )
   USE mp_global, only : intra_image_comm
   USE control_ph, ONLY : start_irr, last_irr, start_q, last_q, nmix_ph, &
                          niter_ph, lnoloc, alpha_mix, tr2_ph, lrpa, recover, &
-                         ldisp, elph, elph_mat, reduce_io, zue, zeu, epsil, trans, &
-                         lgamma, ldiag, lqdir, search_sym, dvscf_star, dvscf_dir
+                         ldisp, reduce_io, zue, zeu, epsil, trans, &
+                         lgamma, ldiag, lqdir, search_sym, dvscf_star, dvscf_dir, &
+                         electron_phonon
   USE gamma_gamma, ONLY : asr
   USE disp, ONLY : nq1, nq2, nq3
   USE partial, ONLY : nat_todo
@@ -46,8 +47,6 @@ subroutine bcast_ph_input ( )
   call mp_bcast (zue, ionode_id )
   call mp_bcast (zeu, ionode_id )
   call mp_bcast (reduce_io, ionode_id )
-  call mp_bcast (elph, ionode_id )
-  call mp_bcast (elph_mat, ionode_id )
   call mp_bcast (ldisp, ionode_id )
   call mp_bcast (lraman, ionode_id )
   call mp_bcast (elop, ionode_id )
@@ -107,6 +106,7 @@ subroutine bcast_ph_input ( )
   call mp_bcast (tmp_dir, ionode_id )
   call mp_bcast (prefix, ionode_id )
   call mp_bcast (dvscf_dir, ionode_id )
+  call mp_bcast (electron_phonon, ionode_id )
 #endif
   return
 end subroutine bcast_ph_input

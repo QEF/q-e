@@ -57,8 +57,9 @@ MODULE ph_restart
       !
       USE global_version,       ONLY : version_number
       USE control_ph,           ONLY : current_iq, done_bands, &
-                                       ldisp, epsil, trans, elph, zue, zeu
+                                       ldisp, epsil, trans, zue, zeu
       USE ramanm,               ONLY : lraman, elop
+      USE el_phon,              ONLY : elph
       USE disp, ONLY : nqs, x_q
       USE xml_io_base, ONLY : write_header, create_directory
       !
@@ -200,9 +201,10 @@ MODULE ph_restart
          SUBROUTINE write_partial_ph()
             USE modes, ONLY : nirr, npert, u, name_rap_mode, nsymq
             USE partial, ONLY : done_irr
-            USE control_ph, ONLY : current_iq, epsil, trans, elph, zue, lgamma,&
+            USE control_ph, ONLY : current_iq, epsil, trans, zue, lgamma,&
                                    where_rec, rec_code, done_epsil, done_zeu, &
                                    done_zue
+            USE el_phon, ONLY : elph
             USE ramanm,  ONLY : lraman, elop, ramtns, eloptns, done_lraman, &
                                 done_elop
             USE efield_mod, ONLY : zstareu, zstarue, epsilon
@@ -571,7 +573,8 @@ MODULE ph_restart
     !------------------------------------------------------------------------
     SUBROUTINE read_control_ph( dirname, ierr )
       !------------------------------------------------------------------------
-      USE control_ph, ONLY : ldisp, epsil, trans, elph, zue, zeu
+      USE control_ph, ONLY : ldisp, epsil, trans, zue, zeu
+      USE el_phon, ONLY : elph
       USE ramanm,     ONLY : lraman, elop
 
       !
@@ -764,9 +767,10 @@ MODULE ph_restart
 !
 !
     USE modes, ONLY : nirr, npert, u, name_rap_mode
-    USE control_ph, ONLY : current_iq, epsil, trans, elph, zue, zeu, lgamma, &
+    USE control_ph, ONLY : current_iq, epsil, trans, zue, zeu, lgamma, &
                            where_rec, rec_code, rec_code_read, done_epsil, &
                            done_zeu, done_zue
+    USE el_phon, ONLY : elph
     USE ramanm,  ONLY : lraman, elop, ramtns, eloptns, done_lraman, done_elop
     USE efield_mod, ONLY : zstareu, zstarue, epsilon
 

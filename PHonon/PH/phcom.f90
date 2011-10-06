@@ -299,6 +299,7 @@ MODULE control_ph
               time_now,          & ! CPU time up to now
               alpha_pv             ! the alpha value for shifting the bands
   CHARACTER(LEN=10)  :: where_rec='no_recover'! where the ph run recovered
+  CHARACTER(LEN=12) :: electron_phonon
   CHARACTER(LEN=256) :: flmixdpot, tmp_dir_ph, tmp_dir_phq
   CHARACTER(LEN=256)  :: dvscf_dir
   INTEGER :: rec_code,    &! code for recover
@@ -309,8 +310,6 @@ MODULE control_ph
              epsil,       &! if .TRUE. computes dielec. const and eff. charges
              done_epsil=.FALSE.,  &! .TRUE. when diel. constant is available
              trans,       &! if .TRUE. computes phonons
-             elph,        &! if .TRUE. computes electron-ph interaction coeffs
-             elph_mat,    &! if .TRUE. eph coefficients for Wannier.
              zue,         &! if .TRUE. computes eff. charges as induced polarization
              done_zue=.FALSE., &! .TRUE. when the eff. charges are available
              zeu,         &! if .TRUE. computes eff. charges as induced forces

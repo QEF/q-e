@@ -36,11 +36,12 @@ SUBROUTINE phq_readin()
   USE run_info, ONLY : title
   USE control_ph,    ONLY : maxter, alpha_mix, lgamma, lgamma_gamma, epsil, &
                             zue, zeu, xmldyn, newgrid,                      &
-                            trans, reduce_io, elph, elph_mat, tr2_ph, niter_ph,       &
+                            trans, reduce_io, tr2_ph, niter_ph,       &
                             nmix_ph, ldisp, recover, lrpa, lnoloc, start_irr, &
                             last_irr, start_q, last_q, current_iq, tmp_dir_ph, &
                             ext_recover, ext_restart, u_from_file, ldiag, &
-                            search_sym, lqdir, dvscf_star, dvscf_dir
+                            search_sym, lqdir, dvscf_star, dvscf_dir, &
+                            electron_phonon
   USE save_ph,       ONLY : tmp_dir_save
   USE gamma_gamma,   ONLY : asr
   USE qpoint,        ONLY : nksq, xq
@@ -60,7 +61,7 @@ SUBROUTINE phq_readin()
   USE freq_ph,       ONLY : fpol, fiu, nfs, nfsmax
   USE ph_restart,    ONLY : ph_readfile
   USE xml_io_base, ONLY : create_directory
-  USE el_phon, ONLY : elph_nbnd_min, elph_nbnd_max, el_ph_sigma, el_ph_nsigma, el_ph_ngauss
+  USE el_phon, ONLY : elph,elph_mat,elph_simple,elph_nbnd_min, elph_nbnd_max, el_ph_sigma, el_ph_nsigma, el_ph_ngauss
   !
   IMPLICIT NONE
   !
@@ -88,14 +89,19 @@ SUBROUTINE phq_readin()
   !
   NAMELIST / INPUTPH / tr2_ph, amass, alpha_mix, niter_ph, nmix_ph,  &
                        nat_todo, iverbosity, outdir, epsil,  &
-                       trans, elph, elph_mat, zue, zeu, max_seconds, reduce_io, &
+                       trans,  zue, zeu, max_seconds, reduce_io, &
                        modenum, prefix, fildyn, fildvscf, fildrho,   &
                        ldisp, nq1, nq2, nq3, &
                        eth_rps, eth_ns, lraman, elop, dek, recover,  &
                        fpol, asr, lrpa, lnoloc, start_irr, last_irr, &
                        start_q, last_q, nogg, ldiag, search_sym, lqdir, &
                        nk1, nk2, nk3, k1, k2, k3, dvscf_star, dvscf_dir, &
-                       elph_nbnd_min, elph_nbnd_max, el_ph_ngauss,el_ph_nsigma, el_ph_sigma  
+                       elph_nbnd_min, elph_nbnd_max, el_ph_ngauss,el_ph_nsigma, el_ph_sigma,  &
+                       electron_phonon
+!
+!  elph, elph_mat
+!
+
   ! tr2_ph       : convergence threshold
   ! amass        : atomic masses
   ! alpha_mix    : the mixing parameter
@@ -106,6 +112,7 @@ SUBROUTINE phq_readin()
   ! outdir       : directory where input, output, temporary files reside
   ! epsil        : if true calculate dielectric constant
   ! trans        : if true calculate phonon
+  ! electron-phonon : select the kind of electron-phonon calculation
   ! elph         : if true calculate electron-phonon coefficients
   ! elph_mat     : if true eph coefficients for wannier
   ! zue          : if .true. calculate effective charges ( d force / dE )
@@ -193,8 +200,9 @@ SUBROUTINE phq_readin()
   zeu          = .TRUE.
   zue          = .FALSE.
   fpol         = .FALSE.
-  elph         = .FALSE.
-  elph_mat     = .FALSE.
+  electron_phonon=' '
+!  elph         = .FALSE.
+!  elph_mat     = .FALSE.
   elph_nbnd_min = 1
   elph_nbnd_max = 0
   el_ph_sigma = 0.02
@@ -416,19 +424,40 @@ SUBROUTINE phq_readin()
      CALL errore('phq_readin',&
      'pw.x run with a different number of pools. Use wf_collect=.true.',1)
 
-  if(elph_mat.AND..NOT.elph) &
-       call errore('phq_readin','elph_mat=.TRUE requires elph=.TRUE.',1)
+  SELECT CASE( trim( electron_phonon ) )
+  CASE( 'simple' )
+     elph=.true.
+     elph_mat=.false.
+     elph_simple=.true. 
+  CASE( 'Wannier' )
+     elph=.true.
+     elph_mat=.true.
+     elph_simple=.false.
+  CASE( 'interpolated' )
+     elph=.true.
+     elph_mat=.false.
+     elph_simple=.false.
+  CASE DEFAULT
+     elph=.false.
+     elph_mat=.false.
+     elph_simple=.false.
+  END SELECT
 
   IF (elph.and.nimage>1) CALL errore('phq_readin',&
-       'elph with image parallelization is not yet available',1)
+       'el-ph with image parallelization is not yet available',1)
 
   if(elph_mat.and.fildvscf.eq.' ') call errore('phq_readin',&
-       'elph_mat requires fildvscf',1)
+       'el-ph with wannier requires fildvscf',1)
+
+  IF(elph_mat.and.nproc.ne.1) call errore('phq_readin',&
+       'el-ph with wannier only on single processor',1)
   
   IF (elph.OR.fildvscf /= ' ') lqdir=.TRUE.
 
   IF(dvscf_star.and.nimage>1) CALL errore('phq_readin',&
        'dvscf_star with image parallelization is not yet available',1)
+
+
 
   IF (.NOT.ldisp) lqdir=.FALSE.
 

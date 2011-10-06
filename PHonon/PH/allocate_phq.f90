@@ -40,8 +40,8 @@ subroutine allocate_phq
   USE units_ph, ONLY : this_pcxpsi_is_on_file, this_dvkb3_is_on_file
   USE dynmat, ONLY : dyn00, dyn, dyn_rec, w2
   USE modes, ONLY : u, ubar, rtau, npert, name_rap_mode, num_rap_mode
-  USE control_ph, ONLY : elph, lgamma
-  USE el_phon, ONLY : el_ph_mat
+  USE control_ph, ONLY :  lgamma
+  USE el_phon, ONLY : el_ph_mat, elph
 
 
   implicit none

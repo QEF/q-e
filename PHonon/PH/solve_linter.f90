@@ -44,10 +44,11 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
   USE paw_variables,        ONLY : okpaw
   USE paw_onecenter,        ONLY : paw_dpotential
   USE paw_symmetry,         ONLY : paw_dusymmetrize, paw_dumqsymmetrize
-  USE control_ph,           ONLY : rec_code, niter_ph, nmix_ph, elph, tr2_ph, &
+  USE control_ph,           ONLY : rec_code, niter_ph, nmix_ph, tr2_ph, &
                                    alpha_pv, lgamma, lgamma_gamma, convt, &
                                    nbnd_occ, alpha_mix, ldisp, rec_code_read, &
                                    where_rec, flmixdpot, ext_recover
+  USE el_phon,              ONLY : elph
   USE nlcc_ph,              ONLY : nlcc_any
   USE units_ph,             ONLY : iudrho, lrdrho, iudwf, lrdwf, iubar, lrbar, &
                                    iuwfc, lrwfc, iunrec, iudvscf, &
