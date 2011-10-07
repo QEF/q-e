@@ -339,7 +339,7 @@ CONTAINS
  IF ( wfc_dir /= 'undefined' ) tmp_dir = wfc_dir
  !
  IF ( n_ipol == 1 ) THEN
-  filename = trim(prefix)//'.d0psi.'//trim(int_to_char(1))
+  filename = trim(prefix)//'.d0psi.'//trim(int_to_char(LR_polarization))
   tempfile = trim(tmp_dir) // trim(filename) //nd_nmbr
   INQUIRE (file = tempfile, exist = exst)
   !print *, tempfile," exst=",exst
@@ -364,7 +364,7 @@ CONTAINS
  ! check if these files can be read from outdir instead of wfcdir
  !
  IF ( n_ipol == 1 ) THEN
-  filename = trim(prefix)//'.d0psi.'//trim(int_to_char(1))
+  filename = trim(prefix)//'.d0psi.'//trim(int_to_char(LR_polarization))
   tempfile = trim(tmp_dir) // trim(filename) //nd_nmbr
   INQUIRE (file = tempfile, exist = exst)
   IF (exst) THEN
@@ -386,7 +386,7 @@ CONTAINS
 
  !Restart files are always written in outdir
  IF ( n_ipol == 1 ) THEN
-  filename = trim(prefix)//'.restart_lanczos.'//trim(int_to_char(1))
+  filename = trim(prefix)//'.restart_lanczos.'//trim(int_to_char(LR_polarization))
   tempfile = trim(tmp_dir) // trim(filename) //nd_nmbr
  ELSE
   filename = trim(prefix)//'.restart_lanczos.'//trim(int_to_char(LR_polarization))
@@ -401,7 +401,7 @@ CONTAINS
  !End of parallel file i/o
  !
  IF ( n_ipol == 1 ) THEN
-  filename = trim(prefix) // trim(bgz_suffix) // trim(int_to_char(1))
+  filename = trim(prefix) // trim(bgz_suffix) // trim(int_to_char(LR_polarization))
   tempfile = trim(tmp_dir) // trim(filename)
  ELSE
   filename = trim(prefix) // trim(bgz_suffix) // trim(int_to_char(LR_polarization))
