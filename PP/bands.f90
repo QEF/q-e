@@ -93,13 +93,9 @@ PROGRAM bands
   !
   CALL read_file()
 
-  IF (nproc /= nproc_file .and. .not. twfcollect)  &
-     CALL errore('bands',&
-     'pw.x run with a different number of processors. Use wf_collect=.true.',1)
-
   IF (nproc_pool /= nproc_pool_file .and. .not. twfcollect)  &
      CALL errore('bands',&
-     'pw.x run with a different number of pools. Use wf_collect=.true.',1)
+     'pw.x run with a different number of procs/pools. Use wf_collect=.true.',1)
 
   IF (two_fermi_energies.or.i_cons /= 0) &
      CALL errore('bands',&
