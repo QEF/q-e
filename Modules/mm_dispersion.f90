@@ -206,7 +206,7 @@ MODULE london_module
                           & /, 5X, "  atom      VdW radius       C_6     " , / )' )
          DO ata = 1 , ntyp
             !
-            WRITE (stdout , '( 8X, A3 , 6X , F7.3 , 8X , F7.3 )' ) &
+            WRITE (stdout , '( 8X, A3 , 6X , F7.3 , 6X , F9.3 )' ) &
                                atom_label ( ata ) , R_vdw ( ata ) , C6_i ( ata )
             !
          END DO
