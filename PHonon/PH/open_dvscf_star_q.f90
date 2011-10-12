@@ -55,7 +55,7 @@ SUBROUTINE open_dvscf_star_q( q_index )
   integer                   :: iq, ichosen_sym(48), lstr_iq(2*48), isym,i,j,ipol
   integer                   :: nsym_rot, q_rot, imode0, irr, is, ipert, na, nar,isym2
   integer                   :: k,n,nn, ri,rj,rk,iudvrot_asc,iudvrot, iudvrot_asc_imq,iudvrot_imq
-  integer :: nq, isq (48), imq, index0,index_start_q
+  integer :: nq, isq (48), imq, index0,index_start_q, index_inequiv
   integer :: iu_qp, ierr
   ! nq :  degeneracy of the star of q
   ! isq: index of q in the star of a given sym.op.
@@ -117,14 +117,15 @@ SUBROUTINE open_dvscf_star_q( q_index )
 
           IF ( me_pool.eq.root_pool ) THEN           
              do q_rot=1,nq
-                write(iu_qp,'(3f16.10,1i4)') (sxq(j,q_rot),j=1,3),index_start_q+q_rot
+                write(iu_qp,'(3f16.10,2i4)') (sxq(j,q_rot),j=1,3),index_start_q+q_rot,iq
              enddo
              if(imq == 0) then
                 do q_rot=nq+1,2*nq
-                   write(iu_qp,'(3f16.10,1i4)') (-sxq(j,q_rot-nq),j=1,3),index_start_q+q_rot
+                   write(iu_qp,'(3f16.10,2i4)') (-sxq(j,q_rot-nq),j=1,3),index_start_q+q_rot,iq
                 enddo
              endif
           endif
+          index_inequiv=iq
 
           if (imq == 0) then
              index_start_q=index_start_q+2*nq
@@ -151,11 +152,12 @@ SUBROUTINE open_dvscf_star_q( q_index )
 
   IF ( me_pool.eq.root_pool ) THEN           
      do iq=1,nq
-        write(iu_qp,'(3f16.10,1i4)') (sxq(j,iq),j=1,3),index_start_q+iq
+        write(iu_qp,'(3f16.10,2i4)') (sxq(j,iq),j=1,3),index_start_q+iq,index_inequiv+1
      enddo
      if(imq == 0) then
         do iq=nq+1,2*nq
-           write(iu_qp,'(3f16.10,1i4, a4)') (-sxq(j,iq-nq),j=1,3),index_start_q+iq, '  -q'
+           write(iu_qp,'(3f16.10,2i4, a4)') &
+                (-sxq(j,iq-nq),j=1,3),index_start_q+iq, index_inequiv+1, '  -q'
         enddo
      endif
      close(iu_qp)
