@@ -213,8 +213,8 @@ SUBROUTINE elphsum_wannier
   nmodes=3*nat
 
   write(filelph,'(A5,f9.6,A1,f9.6,A1,f9.6)') 'elph.',xq(1),'.',xq(2),'.',xq(3)
-!  write(file_elphmat,'(A8)') 'elph.mat'
-  file_elphmat=prefix//'elph.mat'
+  file_elphmat=trim(adjustl(prefix))//'_elph.mat'
+
   ! parallel case: only first node writes
   IF ( me_pool /= root_pool ) THEN
      iuelph = 0
@@ -696,15 +696,15 @@ subroutine get_equivalent_kpq(xk,xq,kpq,g_kpq, igqg)
   end do
 
 
-  write(stdout,'(1x,a)') '+-------------------------------------+' 
-  write(stdout,'(1x,a)') '|   k    k+q        G        igqg     |'
-  write(stdout,'(1x,a)') '| ----  ------  ---------- -----------|'
-  
-  do k=1,nksq
-     write(stdout,'(6i6)') k,kpq(k),(g_kpq(i,k),i=1,3),igqg(k)
-     !       write(stdout,'(6f10.4,3i4)')(kpt_latt(i,k),i=1,3),(kpt_latt(i,indexkpq(k)),i=1,3),(g_kpq(i,k),i=1,3)
-  enddo
-  write(stdout,'(1x,a)') '+-------------------------------------------------+' 
+!  write(stdout,'(1x,a)') '+-------------------------------------+' 
+!  write(stdout,'(1x,a)') '|   k    k+q        G        igqg     |'
+!  write(stdout,'(1x,a)') '| ----  ------  ---------- -----------|'
+!  
+!  do k=1,nksq
+!     write(stdout,'(6i6)') k,kpq(k),(g_kpq(i,k),i=1,3),igqg(k)
+!     !       write(stdout,'(6f10.4,3i4)')(kpt_latt(i,k),i=1,3),(kpt_latt(i,indexkpq(k)),i=1,3),(g_kpq(i,k),i=1,3)
+!  enddo
+!  write(stdout,'(1x,a)') '+-------------------------------------------------+' 
 
   deallocate(xk_crys)
 
