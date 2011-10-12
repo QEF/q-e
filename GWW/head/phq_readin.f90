@@ -34,9 +34,10 @@ SUBROUTINE phq_readin()
   USE run_info, ONLY : title
   USE control_ph,    ONLY : maxter, alpha_mix, lgamma, lgamma_gamma, epsil, &
                             zue, trans, reduce_io, nogg, &
-                            elph, tr2_ph, niter_ph, nmix_ph, lnscf, &
+                            tr2_ph, niter_ph, nmix_ph, lnscf, &
                             ldisp, recover, lrpa, lnoloc, start_irr, &
                             last_irr, start_q, last_q, current_iq, tmp_dir_ph
+  USE el_phon,       ONLY : elph
   USE save_ph,       ONLY : tmp_dir_save
   USE ph_restart,    ONLY : ph_readfile
   USE gamma_gamma,   ONLY : asr

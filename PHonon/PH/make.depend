@@ -592,6 +592,7 @@ el_ph_collect.o : ../../PW/pwcom.o
 elph.o : ../../Modules/kind.o
 elphon.o : ../../Modules/cell_base.o
 elphon.o : ../../Modules/constants.o
+elphon.o : ../../Modules/control_flags.o
 elphon.o : ../../Modules/fft_base.o
 elphon.o : ../../Modules/io_files.o
 elphon.o : ../../Modules/io_global.o
@@ -799,6 +800,7 @@ openfilq.o : ../../Modules/uspp.o
 openfilq.o : ../../PW/noncol.o
 openfilq.o : ../../PW/pwcom.o
 openfilq.o : acfdtest.o
+openfilq.o : elph.o
 openfilq.o : phcom.o
 openfilq.o : ramanm.o
 openfilq.o : save_ph_input.o
@@ -830,6 +832,7 @@ ph_restart.o : ../../Modules/version.o
 ph_restart.o : ../../Modules/xml_io_base.o
 ph_restart.o : ../../PW/start_k.o
 ph_restart.o : ../../iotk/src/iotk_module.o
+ph_restart.o : elph.o
 ph_restart.o : phcom.o
 ph_restart.o : ramanm.o
 phcom.o : ../../Modules/kind.o
@@ -849,6 +852,7 @@ phonon.o : ../../Modules/environment.o
 phonon.o : ../../Modules/image_io_routines.o
 phonon.o : ../../Modules/io_global.o
 phonon.o : ../../Modules/mp_global.o
+phonon.o : elph.o
 phonon.o : ph_restart.o
 phonon.o : phcom.o
 phonon.o : save_ph_input.o
@@ -913,6 +917,7 @@ phq_setup.o : ../../PW/pwcom.o
 phq_setup.o : ../../PW/scf_mod.o
 phq_setup.o : ../../PW/symm_base.o
 phq_setup.o : acfdtest.o
+phq_setup.o : elph.o
 phq_setup.o : ph_restart.o
 phq_setup.o : phcom.o
 phq_setup.o : ramanm.o
@@ -1090,6 +1095,7 @@ set_defaults_pw.o : ../../PW/noncol.o
 set_defaults_pw.o : ../../PW/pwcom.o
 set_defaults_pw.o : ../../PW/start_k.o
 set_defaults_pw.o : ../../PW/symm_base.o
+set_defaults_pw.o : elph.o
 set_defaults_pw.o : phcom.o
 set_drhoc.o : ../../Modules/atom.o
 set_drhoc.o : ../../Modules/cell_base.o
@@ -1220,6 +1226,7 @@ solve_linter.o : ../../PW/paw_onecenter.o
 solve_linter.o : ../../PW/paw_symmetry.o
 solve_linter.o : ../../PW/pwcom.o
 solve_linter.o : ../../PW/scf_mod.o
+solve_linter.o : elph.o
 solve_linter.o : phcom.o
 solve_linter.o : write_rec.o
 star_q.o : ../../Modules/io_global.o
