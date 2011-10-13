@@ -149,7 +149,7 @@ SUBROUTINE ep_matrix_element_wannier()
 END SUBROUTINE ep_matrix_element_wannier
 
 !-----------------------------------------------------------------------
-SUBROUTINE elphsum_wannier
+SUBROUTINE elphsum_wannier(q_index)
   !-----------------------------------------------------------------------
   !
   !      Sum over BZ of the electron-phonon matrix elements el_ph_mat
@@ -180,6 +180,11 @@ SUBROUTINE elphsum_wannier
   USE mp,        ONLY: mp_sum
   !
   IMPLICIT NONE
+  !
+  INTEGER :: q_index
+  !
+  !
+
   ! eps = 20 cm^-1, in Ry
   REAL(DP) :: eps
   PARAMETER (eps = 20.d0 / 13.6058d0 / 8065.5d0)
@@ -209,11 +214,12 @@ SUBROUTINE elphsum_wannier
   COMPLEX(DP) :: el_ph_sum (3*nat,3*nat), dyn_corr(3*nat,3*nat)
 
   INTEGER, EXTERNAL :: find_free_unit
+  CHARACTER (LEN=6), EXTERNAL :: int_to_char
 
   nmodes=3*nat
 
   write(filelph,'(A5,f9.6,A1,f9.6,A1,f9.6)') 'elph.',xq(1),'.',xq(2),'.',xq(3)
-  file_elphmat=trim(adjustl(prefix))//'_elph.mat'
+  file_elphmat=trim(adjustl(prefix))//'_elph.mat.q_'// TRIM( int_to_char( q_index ) )
 
   ! parallel case: only first node writes
   IF ( me_pool /= root_pool ) THEN

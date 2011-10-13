@@ -143,7 +143,7 @@ PROGRAM phonon
         END IF
         !
         IF ( elph_mat ) then
-           call elphsum_wannier()
+           call elphsum_wannier(iq)
         ELSEIF( elph_simple ) then
            CALL elphsum_simple()
         ELSE

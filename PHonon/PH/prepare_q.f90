@@ -33,8 +33,9 @@ SUBROUTINE prepare_q(auxdyn, do_band, do_iq, setup_pw, iq)
   USE io_files,        ONLY : prefix
   USE ramanm,          ONLY : lraman, elop
   USE freq_ph,         ONLY : fpol
-  USE output,          ONLY : fildyn
+  USE output,          ONLY : fildyn, fildvscf
   USE ph_restart,      ONLY : ph_writefile
+  USE el_phon,         ONLY : elph_mat, wan_index_dyn
   !
   IMPLICIT NONE
   !
@@ -73,7 +74,12 @@ SUBROUTINE prepare_q(auxdyn, do_band, do_iq, setup_pw, iq)
      !
      ! ... set the name for the output file
      !
-     fildyn = TRIM( auxdyn ) // TRIM( int_to_char( iq ) )
+     if(elph_mat) then
+        fildyn = TRIM( auxdyn ) // TRIM( int_to_char( wan_index_dyn(iq) ) )
+        fildvscf = TRIM( fildvscf ) // TRIM( int_to_char( iq ) ) // '_'
+     else
+        fildyn = TRIM( auxdyn ) // TRIM( int_to_char( iq ) )
+     endif
      !
      ! ... set the q point
      !

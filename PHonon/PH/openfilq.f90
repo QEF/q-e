@@ -153,7 +153,7 @@ SUBROUTINE openfilq()
         IF(dvscf_dir.NE.' ') then
            CALL diropn (iudvscf, fildvscf, lrdrho, exst, dvscf_dir)
         ELSE
-          CALL diropn (iudvscf, fildvscf, lrdrho, exst )
+           CALL diropn (iudvscf, fildvscf, lrdrho, exst )
         ENDIF
         IF (okpaw) THEN
            filint=TRIM(fildvscf)//'_paw'
