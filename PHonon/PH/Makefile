@@ -117,6 +117,7 @@ psym_dmage.o \
 punch_plot_e.o \
 punch_plot_ph.o \
 q_points.o \
+q_points_wannier.o \
 q2qstar_ph.o \
 qdipol_cryst.o \
 random_matrix.o \
