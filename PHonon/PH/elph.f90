@@ -19,5 +19,6 @@ MODULE el_phon
   REAL(DP) :: el_ph_sigma
   COMPLEX(DP), ALLOCATABLE, TARGET :: &
        el_ph_mat(:,:,:,:)    !  nbnd, nbnd, nks, 3*nat
+  CHARACTER (LEN=256) :: auxdvscf
   !
 END MODULE el_phon

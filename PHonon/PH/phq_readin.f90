@@ -61,7 +61,8 @@ SUBROUTINE phq_readin()
   USE freq_ph,       ONLY : fpol, fiu, nfs, nfsmax
   USE ph_restart,    ONLY : ph_readfile
   USE xml_io_base, ONLY : create_directory
-  USE el_phon, ONLY : elph,elph_mat,elph_simple,elph_nbnd_min, elph_nbnd_max, el_ph_sigma, el_ph_nsigma, el_ph_ngauss
+  USE el_phon, ONLY : elph,elph_mat,elph_simple,elph_nbnd_min, elph_nbnd_max, &
+        el_ph_sigma, el_ph_nsigma, el_ph_ngauss,auxdvscf
   !
   IMPLICIT NONE
   !
@@ -433,6 +434,7 @@ SUBROUTINE phq_readin()
      elph=.true.
      elph_mat=.true.
      elph_simple=.false.
+     auxdvscf=trim(fildvscf)
   CASE( 'interpolated' )
      elph=.true.
      elph_mat=.false.
