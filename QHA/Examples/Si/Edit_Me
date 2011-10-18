@@ -29,9 +29,9 @@ cat >matdyn.init <<EOF
 &input
     amass(1)=28.01,
     asr='crystal',
-    flfrc=$FC_file,
+    flfrc='$FC_file',
     flfrq='frequency'
-&end
+/
 EOF
 
 #

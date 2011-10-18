@@ -28,9 +28,9 @@ cat >matdyn.init <<EOF
 &input
     amass(1)=26.98,
     asr='crystal',
-    flfrc=$FC_file,
+    flfrc='$FC_file',
     flfrq='frequency'
-&end
+/
 EOF
 
 # Temperature range for thermodynamic properties
