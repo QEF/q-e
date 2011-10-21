@@ -1,0 +1,21 @@
+#!/bin/sh
+
+# run from directory where this script is
+cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
+
+# check whether echo has the -e option
+if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
+
+# clean all example directories
+for dir in example* ;
+do
+    if test -d $dir/results
+    then
+        cd $dir
+        $ECHO "cleaning `pwd`...\c"
+        /bin/rm -rf results reference.old
+        $ECHO " done"
+        cd ..
+    fi
+done
+$ECHO "cleaning all : done"
