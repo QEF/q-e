@@ -30,6 +30,7 @@ SUBROUTINE clean_pw( lflag )
   USE wavefunctions_module, ONLY : evc, psic, psic_nc
   USE us,                   ONLY : qrad, tab, tab_at, tab_d2y, spline_ps
   USE uspp,                 ONLY : deallocate_uspp
+  USE uspp_param,           ONLY : upf
   USE ldaU,                 ONLY : lda_plus_u, oatwfc, swfcatom
   USE extfield,             ONLY : forcefield
   USE fft_base,             ONLY : dfftp, dffts  
@@ -39,17 +40,19 @@ SUBROUTINE clean_pw( lflag )
   USE noncollin_module,     ONLY : deallocate_noncol
   USE dynamics_module,      ONLY : deallocate_dyn_vars
   USE paw_init,             ONLY : deallocate_paw_internals
-  USE atom,                 ONLY : rgrid
+  USE atom,                 ONLY : msh, rgrid
   USE radial_grids,         ONLY : deallocate_radial_grid
-  USE wannier_new,           ONLY : use_wannier
+  USE wannier_new,          ONLY : use_wannier
   !
-  USE london_module,      ONLY : dealloca_london
-  USE constraints_module, ONLY : deallocate_constraint
+  USE london_module,        ONLY : dealloca_london
+  USE constraints_module,   ONLY : deallocate_constraint
+  USE realus,               ONLY : deallocatenewdreal
+  USE pseudo_types,         ONLY : deallocate_pseudo_upf
 #ifdef EXX
-  USE exx,                ONLY : deallocate_exx
+  USE exx,                  ONLY : deallocate_exx
 #endif
 #ifdef __SOLVENT
-  USE solvent_base,       ONLY : do_solvent
+  USE solvent_base,         ONLY : do_solvent
 #endif
   !
   IMPLICIT NONE
@@ -59,10 +62,18 @@ SUBROUTINE clean_pw( lflag )
     ! as well as arrays allocated in iosys.
     ! --> .TRUE. means the real end!!!
     ! .FALSE. in  neb, smd, phonon calculations
+  INTEGER :: nt
   !
   ! ... arrays allocated in input.f90, read_file.f90 or setup.f90
   !
   IF ( lflag ) THEN
+     !
+     IF( ALLOCATED( upf ) ) THEN
+        DO nt = 1, SIZE( upf )
+           CALL deallocate_pseudo_upf( upf( nt ) )
+        END DO
+        DEALLOCATE( upf )
+     END IF
      !
      CALL deallocate_ions_base()
      !
@@ -133,7 +144,10 @@ SUBROUTINE clean_pw( lflag )
   END IF
   !
   CALL deallocate_uspp() 
-  IF(lflag) CALL deallocate_radial_grid(rgrid) !not required in phonons
+  IF (lflag) THEN
+     CALL deallocate_radial_grid(rgrid) !not required in phonons
+     DEALLOCATE (msh)
+  END IF 
   !
   CALL deallocate_noncol() 
   !
@@ -170,6 +184,10 @@ SUBROUTINE clean_pw( lflag )
   ! ... additional arrays for PAW
   !
   CALL deallocate_paw_internals()
+  !
+  ! ... arrays for real-space algorithm
+  !
+  CALL  deallocatenewdreal()
   !
   ! for Wannier_ac
   if (use_wannier) CALL wannier_clean()

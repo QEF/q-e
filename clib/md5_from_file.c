@@ -122,7 +122,9 @@ int F77_FUNC_(file_md5,FILE_MD5)( const int * f_name, const int * f_len, int * o
 
      get_md5( f ,  md5, err) ;
      for( i = 0; i < 32; i++ ) out[ i ] = md5[ i ]; 
-    
+
+     free(f); 
+     free(md5); 
      return err;
 } 
 
