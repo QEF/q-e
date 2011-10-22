@@ -106,6 +106,7 @@ void get_md5(const char *file, char *md5, int err)
      }
      fclose(fp);
 
+     free(data);
      err = 0;
      return;
 }
