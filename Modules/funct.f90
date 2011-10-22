@@ -1715,7 +1715,7 @@ subroutine gcx_spin_vec(rhoup, rhodw, grhoup2, grhodw2, &
      v2xdw = 2.0_DP * v2xdw
 
   case default
-     call errore ('gcx_spin', 'not implemented', igcx)
+     call errore ('gcx_spin_vec', 'not implemented', igcx)
   end select
   !
   if (igcx.ne.0) then
