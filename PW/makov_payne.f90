@@ -242,30 +242,30 @@ SUBROUTINE write_dipole( etot, x0, dipole_el, quadrupole_el, qq )
   ! ... A positive dipole goes from the - charge to the + charge.
   !
   WRITE( stdout, '(/5X,"Dipole moments (with respect to x0):")' )
-  WRITE( stdout, '( 5X,"Elect",3F9.4," au (Ry),",3F9.4," Debye")' ) &
+  WRITE( stdout, '( 5X,"Elect",3F9.4," au (Ha),",3F9.4," Debye")' ) &
       (-dipole_el(ip), ip = 1, 3), (-dipole_el(ip)*debye, ip = 1, 3 )
-  WRITE( stdout, '( 5X,"Ionic",3F9.4," au (Ry),", 3F9.4," Debye")' ) &
+  WRITE( stdout, '( 5X,"Ionic",3F9.4," au (Ha),", 3F9.4," Debye")' ) &
       ( dipole_ion(ip),ip = 1, 3), ( dipole_ion(ip)*debye,ip = 1, 3 )
 #ifdef __SOLVENT
   IF ( do_solvent ) &
-    WRITE( stdout, '( 5X,"Diele",3F9.4," au (Ry),", 3F9.4," Debye")' ) &
+    WRITE( stdout, '( 5X,"Diele",3F9.4," au (Ha),", 3F9.4," Debye")' ) &
       (-pol_dipole(ip),ip = 1, 3), (-pol_dipole(ip)*debye,ip = 1, 3 )
 #endif
-  WRITE( stdout, '( 5X,"Total",3F9.4," au (Ry),", 3F9.4," Debye")' ) &
+  WRITE( stdout, '( 5X,"Total",3F9.4," au (Ha),", 3F9.4," Debye")' ) &
       ( dipole(ip),    ip = 1, 3), ( dipole(ip)*debye,    ip = 1, 3 )
   !
   ! ... print the electronic, ionic and total quadrupole moments
   !
-  WRITE( stdout, '(/5X,"Electrons quadrupole moment",F20.8," a.u. (Ry)")' )  &
+  WRITE( stdout, '(/5X,"Electrons quadrupole moment",F20.8," a.u. (Ha)")' )  &
       -quadrupole_el
-  WRITE( stdout, '( 5X,"     Ions quadrupole moment",F20.8," a.u. (Ry)")' ) &
+  WRITE( stdout, '( 5X,"     Ions quadrupole moment",F20.8," a.u. (Ha)")' ) &
       quadrupole_ion
 #ifdef __SOLVENT
   IF ( do_solvent ) &
-    WRITE( stdout, '( 5X,"Dielectr. quadrupole moment",F20.8," a.u. (Ry)")' )  &
+    WRITE( stdout, '( 5X,"Dielectr. quadrupole moment",F20.8," a.u. (Ha)")' )  &
       -pol_quadrupole
 #endif
-  WRITE( stdout, '( 5X,"    Total quadrupole moment",F20.8," a.u. (Ry)")' ) &
+  WRITE( stdout, '( 5X,"    Total quadrupole moment",F20.8," a.u. (Ha)")' ) &
       quadrupole
   !
   IF ( ibrav < 1 .OR. ibrav > 3 ) THEN
