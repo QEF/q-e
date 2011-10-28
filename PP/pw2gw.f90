@@ -449,7 +449,7 @@ SUBROUTINE compute_gw( use_gmaps )
     size_tab_d2y=size(tab_d2y,1)
 
     ALLOCATE(vec_tab(1:size_tab))
-    ALLOCATE(vec_tab_d2y(1:size_tab_d2y))
+    if(.not.allocated(vec_tab_d2y)) ALLOCATE(vec_tab_d2y(1:size_tab_d2y))
 
     DO nt = 1, ntyp
       DO nb = 1, upf(nt)%nbeta
@@ -472,7 +472,7 @@ SUBROUTINE compute_gw( use_gmaps )
 
    DEALLOCATE(vkb0)
    DEALLOCATE(vec_tab)
-   IF(spline_ps)  DEALLOCATE(vec_tab_d2y)
+   IF(allocated(vec_tab_d2y))  DEALLOCATE(vec_tab_d2y)
 
   ENDDO
 !---------------------------
@@ -487,7 +487,7 @@ SUBROUTINE compute_gw( use_gmaps )
     size_tab_d2y=size(tab_d2y,1)
 
     ALLOCATE(vec_tab(1:size_tab))
-    ALLOCATE(vec_tab_d2y(1:size_tab_d2y))
+    IF(.not. allocated(vec_tab_d2y)) ALLOCATE(vec_tab_d2y(1:size_tab_d2y))
     DO nt = 1, ntyp
       DO nb = 1, upf(nt)%nbeta
         djl(:) = 0.0_dp
@@ -510,7 +510,7 @@ SUBROUTINE compute_gw( use_gmaps )
 
    DEALLOCATE(djl)
    DEALLOCATE(vec_tab)
-   IF(spline_ps)  DEALLOCATE(vec_tab_d2y)
+   IF(allocated(vec_tab_d2y))  DEALLOCATE(vec_tab_d2y)
 
   ENDDO
 !-----------------------
