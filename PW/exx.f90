@@ -343,11 +343,11 @@ CONTAINS
      IF ( x_gamma_extrapolation ) &
           CALL errore(sub_name,'cannot use x_gamm_extrap and vcut_ws', 1)
      !
-  CASE ( "vcut_spheric" ) 
+  CASE ( "vcut_spherical" ) 
      !
      use_coulomb_vcut_spheric = .TRUE.
      IF ( x_gamma_extrapolation ) &
-          CALL errore(sub_name,'cannot use x_gamm_extrap and vcut_spheric', 1)
+          CALL errore(sub_name,'cannot use x_gamm_extrap and vcut_spherical', 1)
      !
   CASE ( "none" )
      use_regularization = .FALSE.
