@@ -2147,7 +2147,7 @@ function dos_gam (nbndx, nq, jbnd, ntetra, tetra, gamma, et, ef)
         f41 = 1.0_dp - f14
 
         G  =  3.0_dp * f21 * f31 * f41 / (ef-e1)
-        P1 =  o13 * (f12 + f12 + f14)
+        P1 =  o13 * (f12 + f13 + f14)
         P2 =  o13 * f21
         P3 =  o13 * f31
         P4 =  o13 * f41
