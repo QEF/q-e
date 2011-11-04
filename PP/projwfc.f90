@@ -2348,8 +2348,8 @@ SUBROUTINE pprojwave( filproj, lsym )
         DEALLOCATE( roverlap_d )
      ELSE
         CALL wf_times_overlap( swfcatom, overlap_d, wfcatom )
-        DEALLOCATE( overlap_d )
      ENDIF
+     IF( ALLOCATED( overlap_d ) ) DEALLOCATE( overlap_d )
 
      !
      ! make the projection <psi_i| O^{-1/2} \hat S | phi_j>
