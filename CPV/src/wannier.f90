@@ -182,7 +182,7 @@ MODULE electric_field_module
   !
   LOGICAL        :: field_tune, ft
   REAL(DP) :: efe_elec, efe_ion, prefactor, e_tuned(3)
-  REAL(DP) :: tt(3), cdmm(3), tt2(3)
+  REAL(DP) :: tt(3), tt2(3)
   REAL(DP) :: par, alen, blen, clen, rel1(3), rel2(3)
   !
 END MODULE electric_field_module

@@ -16,7 +16,7 @@ SUBROUTINE from_scratch( )
                                      force_pairing
     USE ions_positions,       ONLY : taus, tau0, tausm, vels, fion, fionm, atoms0
     USE ions_base,            ONLY : na, nsp, randpos, zv, ions_vel
-    USE ions_base,            ONLY : taui, cdmi, nat, iforce
+    USE ions_base,            ONLY : cdmi, nat, iforce
     USE ions_nose,            ONLY : xnhp0, xnhpm, vnhp
     USE cell_base,            ONLY : ainv, h, s_to_r, ibrav, omega, press, &
                                      hold, r_to_s, deth, wmass, iforceh,   &

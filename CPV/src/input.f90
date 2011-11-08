@@ -808,7 +808,7 @@ MODULE input
      USE input_parameters, ONLY : lda_plus_u, Hubbard_U
      USE input_parameters, ONLY : step_pen, A_pen, alpha_pen, sigma_pen
      !
-     USE ions_base,        ONLY : tau, ityp, zv
+     USE ions_base,        ONLY : zv
      USE cell_base,        ONLY : cell_base_init, cell_dyn_init, at, cell_alat
      USE cell_nose,        ONLY : cell_nose_init
      USE ions_base,        ONLY : ions_base_init, greasp_ => greasp
