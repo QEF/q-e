@@ -1,9 +1,22 @@
+New in svn version
+
+   * More ways of calculating electron-phonon coefficients
+
 Incompatible changes in svn version:
 
    * atomic masses are in amu unless otherwise stated
    * Options 'cubic'/'hexagonal' to CELL_PARAMETERS removed: it is no 
      longer useful, the code will anyway find the correct sym.ops.
    * Options 'bohr'/'angstrom'/'alat' to CELL_PARAMETERS implemented
+   * PHonon: variable 'elph' replaced by 'electron_phonon'
+
+Fixed in svn version
+
+   * Bug in k-point generation in the noncollinear case
+   * ESM with spin polarization fixed
+   * Weird problem with irreps in PHonon
+   * Bug in turbo_lanczos.x . Restarts of polarizations other than ipol=1 
+     or ipol=4 were not working properly due to buggy test_restart routine.
 
 New in 4.3.2 version
 
