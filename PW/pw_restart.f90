@@ -1746,7 +1746,7 @@ MODULE pw_restart
             s(3,3,nsym) = 1
             sr(:,:,nsym) = DBLE(s(:,:,nsym))
             ftau(:,nsym)= 0
-            ft  (:,nsym)= 0
+            ft  (:,nsym)= 0.0_DP
             sname(nsym) = 'identity'
             do i = 1, SIZE( irt, 2 )
                irt(nsym,i) = i
@@ -1830,6 +1830,7 @@ MODULE pw_restart
       CALL mp_bcast( no_t_rev,  ionode_id, intra_image_comm )
       CALL mp_bcast( s,      ionode_id, intra_image_comm )
       CALL mp_bcast( ftau,   ionode_id, intra_image_comm )
+      CALL mp_bcast( ft,     ionode_id, intra_image_comm )
       CALL mp_bcast( sname,  ionode_id, intra_image_comm )
       CALL mp_bcast( irt,    ionode_id, intra_image_comm )
       CALL mp_bcast( t_rev,  ionode_id, intra_image_comm )
