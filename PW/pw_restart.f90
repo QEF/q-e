@@ -634,6 +634,8 @@ MODULE pw_restart
       ENDDO k_points_loop1
       !
       !
+      IF (.NOT.lkpoint_dir.AND.ionode) CALL iotk_close_write( iunout )
+      !
       DEALLOCATE ( raux )
       ! 
       ! 
@@ -695,8 +697,6 @@ MODULE pw_restart
          CALL iotk_write_end( iunpun, "EIGENVECTORS" )
          !
          CALL iotk_close_write( iunpun )
-         !
-         IF (.NOT.lkpoint_dir) CALL iotk_close_write( iunout )
          !
          CALL delete_if_present( TRIM( dirname ) // '/' // TRIM( xmlpun ) // '.bck' )
          !
