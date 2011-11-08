@@ -14,13 +14,13 @@ EXAMPLE_DIR=`pwd`
 if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
 
 # function to test the exit status of a job
-. ../../../check_failure.sh
+. ../../../examples/check_failure.sh
 
 $ECHO
 $ECHO "$EXAMPLE_DIR : starting"
 $ECHO
 $ECHO "This example shows how to use pw.x and phcg.x to calculate the normal"
-$ECHO "modes of a molecule (SiH4) at Gamma.
+$ECHO "modes of a molecule (SiH4) at Gamma."
 $ECHO
 
 # set the needed environment variables
