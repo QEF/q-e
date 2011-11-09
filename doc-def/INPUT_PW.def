@@ -649,8 +649,8 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 	var noinv -type LOGICAL { 
 	    default { .FALSE. }
 	    info {
-		if (.TRUE.) disable the usage of time reversal (q => -q) 
-		symmetry in k-point generation
+		if (.TRUE.) disable the usage of inversion symmetry 
+                in k-point generation
 	    }
 	}
 
