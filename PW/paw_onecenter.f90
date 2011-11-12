@@ -619,8 +619,18 @@ SUBROUTINE PAW_gcxc_potential(i, rho_lm,rho_core, v_lm, energy)
     ALLOCATE(segni_rad(i%m,rad(i%t)%nx))      ! charge density as lm components
     vout_lm=0.0_DP
 
-!$omp parallel default(private) &
-!$omp& shared(i,g,nspin,nspin_gga,nspin_mag,rad,e_gcxc,egcxc_of_tid,gc_rad,h_rad,rho_lm,rhoout_lm,rho_core,energy,ix_s,ix_e)
+    IF ( nspin_mag == 2 .OR. nspin_mag == 4 ) THEN
+       !   transform the noncollinear case into sigma-GGA case
+       IF (noncolin) THEN
+          CALL compute_rho_spin_lm(i, rho_lm, rhoout_lm, segni_rad)
+       ELSE
+          rhoout_lm=rho_lm
+       ENDIF
+    ENDIF
+
+!$omp parallel default(private), &
+!$omp shared(i,g,nspin,nspin_gga,nspin_mag,rad,e_gcxc,egcxc_of_tid,gc_rad,h_rad,rho_lm,rhoout_lm,rho_core,energy,ix_s,ix_e)
+
     mytid = 1
     ntids = 1
 #ifdef __OPENMP
@@ -630,7 +640,7 @@ SUBROUTINE PAW_gcxc_potential(i, rho_lm,rho_core, v_lm, energy)
     ALLOCATE( rho_rad(i%m,nspin_gga))! charge density sampled
     ALLOCATE( grad(i%m,3,nspin_gga) )! gradient
     ALLOCATE( grad2(i%m,nspin_gga)  )! square modulus of gradient
-                                                             ! (first of charge, than of hamiltonian)
+                                     ! (first of charge, than of hamiltonian)
 !$omp workshare
     gc_rad = 0.0d0
     h_rad  = 0.0d0
@@ -695,12 +705,6 @@ SUBROUTINE PAW_gcxc_potential(i, rho_lm,rho_core, v_lm, energy)
         ALLOCATE( v2xup_vec(i%m) )
         ALLOCATE( v2xdw_vec(i%m) )
 
-        !   transform the noncollinear case into sigma-GGA case
-        IF (noncolin) THEN
-           CALL compute_rho_spin_lm(i, rho_lm, rhoout_lm, segni_rad)
-        ELSE
-           rhoout_lm=rho_lm
-        ENDIF
         !
         !   this is the \sigma-GGA case
         !
