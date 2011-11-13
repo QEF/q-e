@@ -49,7 +49,7 @@ subroutine irreducible_BZ (nrot, s, nsym, minus_q, at, bg, npk, nks, &
   !    Find the coset in the point group of the Bravais lattice
   !
   IF (noncolin.AND.domag) THEN
-     call irrek_nc(at, bg, nrot, invs, nsym, irg, minus_q, npk, nks, xk, &
+     call irrek_nc(at, bg, nrot, invs, nsym, irg, npk, nks, xk, &
                        wk, t_rev)
   ELSE
      sym(1:nsym) = .true.
@@ -213,7 +213,7 @@ subroutine irrek (at, bg, nrot, invs, nsym, irg, minus_q, npk, &
   return
 end subroutine irrek
 !-----------------------------------------------------------------------
-subroutine irrek_nc (at, bg, nrot, invs, nsym, irg, minus_q, npk, &
+subroutine irrek_nc (at, bg, nrot, invs, nsym, irg, npk, &
                   nks, xk, wk, t_rev)
   !-----------------------------------------------------------------------
   !
@@ -222,6 +222,7 @@ subroutine irrek_nc (at, bg, nrot, invs, nsym, irg, minus_q, npk, &
   !  its subgroups.
   !
   USE kinds, only : DP
+  USE control_flags, only : lbands
   implicit none
   !
   integer, intent(in) :: npk, nrot, nsym, invs (3, 3, 48), irg (nrot)
@@ -238,8 +239,6 @@ subroutine irrek_nc (at, bg, nrot, invs, nsym, irg, minus_q, npk, &
   ! basis vectors of the Bravais and reciprocal lattice
   real(DP), intent(inout) :: xk (3, npk), wk (npk)
   ! special points and weights
-  logical, intent(in) :: minus_q
-  ! .true. if symmetries q = -q+G are acceptable
   !
   !    here the local variables
   !
@@ -256,6 +255,7 @@ subroutine irrek_nc (at, bg, nrot, invs, nsym, irg, minus_q, npk, &
   logical :: satm
   ! true if equivalent point found
 
+  IF (lbands) RETURN
   nks0 = nks
   nks=0
   start_k=0
@@ -290,16 +290,6 @@ subroutine irrek_nc (at, bg, nrot, invs, nsym, irg, minus_q, npk, &
                      nint (xk_new (2, ik) - xkn (2) ) ) < 1.0d-5 .and. &
                      abs  (xk_new (3, ik) - xkn (3) - &
                      nint (xk_new (3, ik) - xkn (3) ) ) < 1.0d-5
-              !
-              !  .... or equivalent to minus each other when minus_q=.t.
-              !
-              if (minus_q) satm = satm .or. &
-                   abs  (xk_new (1, ik) + xkn (1) - &
-                   nint (xk_new (1, ik) + xkn (1) ) ) < 1.0d-5 .and. &
-                   abs  (xk_new (2, ik) + xkn (2) - &
-                   nint (xk_new (2, ik) + xkn (2) ) ) < 1.0d-5 .and. &
-                   abs  (xk_new (3, ik) + xkn (3) - &
-                   nint (xk_new (3, ik) + xkn (3) ) ) < 1.0d-5
               IF ( satm ) THEN
                  wk_new(ik) = wk_new(ik) + wk(jk)
                  GOTO 100
