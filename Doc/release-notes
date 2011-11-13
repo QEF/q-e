@@ -4,14 +4,17 @@ New in svn version
 
 Incompatible changes in svn version:
 
+   * Directory reorganization: whole packages into subdirectories,
+     almost nothing is in the same directory where it used to be. 
    * atomic masses are in amu unless otherwise stated
    * Options 'cubic'/'hexagonal' to CELL_PARAMETERS removed: it is no 
      longer useful, the code will anyway find the correct sym.ops.
    * Options 'bohr'/'angstrom'/'alat' to CELL_PARAMETERS implemented
-   * PHonon: variable 'elph' replaced by 'electron_phonon'
+   * PHonon: input variable 'elph' replaced by 'electron_phonon'
 
 Fixed in svn version
 
+   * Bug in CASINO to UPF converter
    * Bug in k-point generation in the noncollinear case
    * ESM with spin polarization fixed
    * Weird problem with irreps in PHonon

@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2008 Quantum ESPRESSO  group
+! Copyright (C) 2001-2011 Quantum ESPRESSO  group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -7,8 +7,8 @@
 !
 !
 !-----------------------------------------------------------------------
-subroutine irreducible_BZ (nrot, s, nsym, minus_q, at, bg, npk, nks, &
-                           xk, wk, t_rev)
+subroutine irreducible_BZ (nrot, s, nsym, minus_q, magnetic_sym, at, bg, &
+                           npk, nks, xk, wk, t_rev)
   !-----------------------------------------------------------------------
   !
   !     This routine finds the special points in the irreducible wedge of 
@@ -17,13 +17,11 @@ subroutine irreducible_BZ (nrot, s, nsym, minus_q, at, bg, npk, nks, &
   !     of the point group of the Bravais lattice.
   !
   USE kinds, only : DP
-  USE noncollin_module, ONLY : noncolin
-  USE spin_orb, ONLY : domag
   implicit none
   !
   integer,  intent(in) :: nrot, nsym, npk, s(3,3,48), t_rev(48)
   real(DP), intent(in) :: at (3,3), bg (3,3)
-  logical,  intent(in) :: minus_q
+  logical,  intent(in) :: minus_q, magnetic_sym
   integer,  intent(inout) :: nks
   real(DP), intent(inout) :: xk (3, npk), wk (npk)
   !
@@ -48,9 +46,9 @@ subroutine irreducible_BZ (nrot, s, nsym, minus_q, at, bg, npk, nks, &
   !
   !    Find the coset in the point group of the Bravais lattice
   !
-  IF (noncolin.AND.domag) THEN
+  IF ( magnetic_sym ) THEN
      call irrek_nc(at, bg, nrot, invs, nsym, irg, npk, nks, xk, &
-                       wk, t_rev)
+                   wk, t_rev)
   ELSE
      sym(1:nsym) = .true.
      sym(nsym+1:)= .false.
@@ -222,7 +220,6 @@ subroutine irrek_nc (at, bg, nrot, invs, nsym, irg, npk, &
   !  its subgroups.
   !
   USE kinds, only : DP
-  USE control_flags, only : lbands
   implicit none
   !
   integer, intent(in) :: npk, nrot, nsym, invs (3, 3, 48), irg (nrot)
@@ -255,7 +252,6 @@ subroutine irrek_nc (at, bg, nrot, invs, nsym, irg, npk, &
   logical :: satm
   ! true if equivalent point found
 
-  IF (lbands) RETURN
   nks0 = nks
   nks=0
   start_k=0
