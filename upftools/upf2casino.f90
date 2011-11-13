@@ -15,7 +15,9 @@ PROGRAM upf2casino
   !     format to CASINO tabulated format
 
   USE upf_module
-  USE radial_grids, ONLY: radial_grid_type, deallocate_radial_grid
+  USE radial_grids, ONLY : radial_grid_type, deallocate_radial_grid, &
+       & nullify_radial_grid
+  USE pseudo_types, ONLY : nullify_pseudo_upf
   USE casino_pp
 
   IMPLICIT NONE
@@ -23,7 +25,8 @@ PROGRAM upf2casino
   TYPE(pseudo_upf) :: upf_in
   TYPE(radial_grid_type) :: grid
 
-
+  CALL nullify_pseudo_upf ( upf_in )
+  CALL nullify_radial_grid ( grid )
 
   WRITE(0,*) 'UPF2CASINO Converter'
   WRITE(0,*) 'Usage: ./upf2casino < pp_in.UPF > pp_out.dat'

@@ -15,7 +15,8 @@ PROGRAM casino2upf
 
   USE casino_pp
   USE upf_module
-  
+  USE pseudo_types, ONLY : nullify_pseudo_upf, deallocate_pseudo_upf
+
   IMPLICIT NONE
   !
   INTEGER, EXTERNAL :: find_free_unit
@@ -37,6 +38,8 @@ PROGRAM casino2upf
                                  !grid
   pp_data= 'pp.data'
   upf_file= 'out.UPF'
+  
+  CALL nullify_pseudo_upf( upf_out )
 
   WRITE(0,*) 'CASINO2UPF Converter'
 
@@ -79,7 +82,9 @@ PROGRAM casino2upf
   CALL convert_casino(upf_out)
 
   CALL write_upf(upf=upf_out,filename=upf_file)
-
+  
+  CALL  deallocate_pseudo_upf( upf_out )
+  
   STOP
 
 END PROGRAM casino2upf
