@@ -222,6 +222,7 @@ clean_pw.o : ../Modules/fft_base.o
 clean_pw.o : ../Modules/fft_types.o
 clean_pw.o : ../Modules/ions_base.o
 clean_pw.o : ../Modules/mm_dispersion.o
+clean_pw.o : ../Modules/pseudo_types.o
 clean_pw.o : ../Modules/radial_grids.o
 clean_pw.o : ../Modules/recvec.o
 clean_pw.o : ../Modules/stick_base.o
@@ -233,6 +234,7 @@ clean_pw.o : exx.o
 clean_pw.o : noncol.o
 clean_pw.o : paw_init.o
 clean_pw.o : pwcom.o
+clean_pw.o : realus.o
 clean_pw.o : scf_mod.o
 clean_pw.o : symm_base.o
 clean_pw.o : symme.o

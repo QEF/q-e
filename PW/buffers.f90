@@ -47,18 +47,20 @@ MODULE buffers
   !
   INTEGER :: ierr
   !
+  exst = .FALSE.
   IF ( unit == -1 ) THEN
      !
-     IF ( ALLOCATED ( buffer1 ) ) THEN
+     exst =  ALLOCATED ( buffer1 )
+     !
+     IF ( exst ) THEN
         !
-        CALL errore ('open_buffer', 'buffer already allocated',1)
+        CALL infomsg ('open_buffer', 'buffer already allocated')
         !
      ELSE
         !
         nword_ = nword
         extension_ = extension
         ALLOCATE ( buffer1 ( nword, maxrec ) )
-        call init_buffer (unit, exst, ierr)
         !
      END IF
      !
