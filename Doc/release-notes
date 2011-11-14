@@ -14,6 +14,7 @@ Incompatible changes in svn version:
 
 Fixed in svn version
 
+   * CP + OpenMP without MPI wasn't working with ultrasoft pseudopotentials
    * Bug in CASINO to UPF converter
    * Bug in k-point generation in the noncollinear case
    * ESM with spin polarization fixed

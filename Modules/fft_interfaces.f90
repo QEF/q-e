@@ -165,8 +165,14 @@
                           dffts%isind, dffts%iplw )
 #endif
       ELSE IF( grid_type == 'Box' ) THEN
+#if defined __OPENMP && defined __FFTW
+         call cft_b_omp( f, dfftb%nr1, dfftb%nr2, dfftb%nr3, &
+                            dfftb%nr1x, dfftb%nr2x, dfftb%nr3x, &
+                            dfftb%imin3( ia ), dfftb%imax3( ia ), 1 )
+#else
          call cfft3d( f, dfftb%nr1, dfftb%nr2, dfftb%nr3, &
                          dfftb%nr1x, dfftb%nr2x, dfftb%nr3x, 1)
+#endif
       END IF
 
 #endif
