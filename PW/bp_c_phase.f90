@@ -553,7 +553,7 @@ SUBROUTINE c_phase
 !                    --- R=atom index: SUM_{ijR} q(ijR) <u_nk|beta_iR>   ---
 !                    --- <beta_jR|u_mk'> e^i(k-k')*R =                   ---
 !                    --- also <u_nk|beta_iR>=<psi_nk|beta_iR> = becp^*   ---
-                     IF ( l_cal(mb) .AND. l_cal(mb) ) THEN
+                     IF ( l_cal(nb) .AND. l_cal(mb) ) THEN
                         if (okvan) then
                            pref = (0.d0,0.d0)
                            DO jkb=1,nkb
