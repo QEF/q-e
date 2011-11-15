@@ -215,7 +215,7 @@ o2 molecule in a cubic box
  /
  &electrons
     mixing_beta = 0.5,
-    conv_thr =  1.0d-12
+    conv_thr =  1.0d-10
  /
  &ions
  /
@@ -270,7 +270,7 @@ o2 molecule in a cubic box
  /
  &electrons
     mixing_beta = 0.5,
-    conv_thr =  1.0d-12
+    conv_thr =  1.0d-10
  /
  &ions
  /
