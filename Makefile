@@ -203,8 +203,9 @@ links : bindir
 clean :
 	touch make.sys 
 	for dir in \
-		CPV D3 Gamma Modules PH PP PW PWCOND NEB VdW ACFDT EE \
-		atomic clib flib pwtools upftools iotk GIPAW XSpectra \
+		CPV PHonon/D3 PHonon/Gamma Modules PHonon/PH PP PW PWCOND \
+		NEB VdW ACFDT EE \
+		atomic/src clib flib pwtools upftools iotk GIPAW XSpectra \
 		dev-tools GWW extlibs TDDFPT Solvent \
 	; do \
 	    if test -d $$dir ; then \
@@ -226,6 +227,7 @@ distclean veryclean : clean
 	CPV/version.h ChangeLog* intel.pcl */intel.pcl
 	- rm -f espresso.tar.gz
 	- cd examples ; ./make_clean
+	- cd PHonon/examples ; ./make_clean
 	- cd atomic_doc ; ./make_clean
 	- for dir in Doc doc-def; do \
 	    test -d $$dir && ( cd $$dir ; $(MAKE) $(MFLAGS) TLDEPS= clean ) \
