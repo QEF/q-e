@@ -9,7 +9,7 @@
     celldm(1)     = 7.3699
     nat           = 5
     ntyp          = 3
-    nbnd          = 24
+    nbnd          = 22
     ecutwfc       = 25.0
     ecutrho       =200.0
  /

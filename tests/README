@@ -10,7 +10,7 @@ atom       O       occupancies from input, also with spin polarization
                    PBE and spin-polarized PBE
                    PBE and s-PBE stress
 berry     PbTiO3   scf: Q function in real space (tqr=.true.)
-                   nscf: Berry's phase calculation
+                   nscf: Berry phase calculation (with and without empty bands)
 cluster  N,NH4,H2O Martyna-Tuckermann method for isolated systems
            NH4     Makov-Payne correction for isolated systems
 dipole    CO on Ni dipole field correction
