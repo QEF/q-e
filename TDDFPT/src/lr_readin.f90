@@ -22,7 +22,7 @@ SUBROUTINE lr_readin
   USE lsda_mod,            ONLY : current_spin, nspin
   USE control_flags,       ONLY : twfcollect,use_para_diag
   USE scf,                 ONLY : vltot, v, vrs, vnew, &
-                                   & destroy_scf_type
+                                  & destroy_scf_type
   USE fft_base,            ONLY : dfftp
   USE gvecs,               ONLY : doublegrid
   USE wvfct,               ONLY : nbnd, et, wg
@@ -34,18 +34,22 @@ SUBROUTINE lr_readin
   USE input_parameters,    ONLY : degauss, nosym,wfcdir,outdir
   USE ktetra,              ONLY : ltetra
   USE realus,              ONLY : real_space, real_space_debug, &
-                                   init_realspace_vars, qpointlist, &
-                                   betapointlist,read_rs_status,newd_r
+                                  & init_realspace_vars, qpointlist, &
+                                  & betapointlist,read_rs_status,newd_r
   USE funct,               ONLY : dft_is_meta
   USE io_global,           ONLY : stdout
-  USE control_flags,       ONLY : tqr
+  USE control_flags,       ONLY : tqr, twfcollect
   USE iotk_module
   USE charg_resp,          ONLY : w_T_prefix, omeg, w_T_npol, epsil
-  USE mp,        ONLY : mp_bcast,mp_barrier
-  USE mp_global, ONLY : my_pool_id, intra_image_comm, intra_pool_comm
-  USE io_global, ONLY : ionode, ionode_id
-  USE DFUNCT,         ONLY : newd
-  USE vlocal,         ONLY : strf
+  USE mp,                  ONLY : mp_bcast,mp_barrier
+  USE mp_global,           ONLY : my_pool_id, intra_image_comm, &
+                                  & intra_pool_comm, nproc_image, &
+                                  & nproc_pool, nproc_pool_file, &
+                                  & nproc_image_file
+  USE io_global,           ONLY : ionode, ionode_id
+  USE DFUNCT,              ONLY : newd
+  USE vlocal,              ONLY : strf
+
   IMPLICIT NONE
   !
   CHARACTER(LEN=256), EXTERNAL :: trimcheck
@@ -257,6 +261,12 @@ END SELECT
   IF ( .not. nosym ) &
        CALL errore( ' iosys ', ' Linear response calculation ' // &
        & 'not implemented with symmetry', 1 )
+  IF (nproc_image /= nproc_image_file .and. .not. twfcollect)  &
+     CALL errore('lr_readin',&
+     'pw.x run with a different number of processors. Use wf_collect=.true.',1)
+  IF (nproc_pool /= nproc_pool_file .and. .not. twfcollect)  &
+     CALL errore('lr_readin',&
+     'pw.x run with a different number of pools. Use wf_collect=.true.',1)
   !
   !
   !Scalapack related stuff, 
