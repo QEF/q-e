@@ -1,9 +1,3 @@
-!-------------------------------------------------------------------------------
-! Delphine dice che forse non funziona nel caso ' S'
-! Dovrei averlo corretto eliminando i trim e vari 
-! Adesso gli elementi devono essere rientrati senza spazi.
-!     MC
-!-----------------------------------------------------------------
   ! initializes seuilK
   ! Compile par Gwyn Williams,
   ! http://xray.uu.se/hypertext/EBindEnergies.html
@@ -11,9 +5,8 @@ function mygetK(sym)
   use kinds, ONLY : dp
   implicit none
   real(dp) :: mygetK
-  character(len=2) :: sym
-  ! a table with all the energies of K edges of the atoms in eV
-
+  character(len=2), intent(in) :: sym
+  ! seuilK: a table with all the energies of K edges of the atoms in eV
   type seuilK
      character(len=2) :: name
      real(dp) :: Kenergy
@@ -60,17 +53,22 @@ function mygetK(sym)
       seuilK('Ac',106755.0),seuilK('Th',109651.0),&! 90
       seuilK('Pa',112601.0),seuilK('U',115606.0) /)
 
+  character(len=2) :: sym1
   integer :: i
 
   do i = 1, Size_tab
-     if (sym.eq.seuilK_tab(i)%name) then
+!-------------------------------------------------------------------------------
+! paranoid comparison, should prevent any problem with spaces
+!-----------------------------------------------------------------
+     sym1 = trim(adjustl(seuilK_tab(i)%name))
+     if ( trim(adjustl(sym)) == sym1 ) then
         mygetK = seuilK_tab(i)%Kenergy
         return
      end if
   end do
 
-  write(*,'(3A)') 'Could not find the element ', trim(sym), &
-       ' in the table of K edge energies!'
+  write(*,'(A)') 'Could not find element >'//trim(adjustl(sym))// &
+       '< in the table of K edge energies!'
   stop
 
 end function mygetK
