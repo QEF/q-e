@@ -420,21 +420,20 @@ SUBROUTINE c_phase
 
    el_loc=0.d0
    kpoint=0
-
-   ! l_cal(n) = .true./.false. if n-th state is occupied/empty
-
    ALLOCATE ( l_cal(nbnd) ) 
-   DO nb = 1, nbnd
-      IF ( nspin == 2 .AND. tfixed_occ) THEN
-          l_cal(nb) = ( f_inp(nb,is) /= 0.0_dp )
-      ELSE
-          l_cal(nb) = ( nb <= NINT ( nelec/2.0_dp ) )
-      ENDIF
-   END DO
 
 !  --- Start loop over spin ---
    DO is=1,nspin 
-       
+
+      ! l_cal(n) = .true./.false. if n-th state is occupied/empty
+      DO nb = 1, nbnd
+         IF ( nspin == 2 .AND. tfixed_occ) THEN
+            l_cal(nb) = ( f_inp(nb,is) /= 0.0_dp )
+         ELSE
+            l_cal(nb) = ( nb <= NINT ( nelec/2.0_dp ) )
+         ENDIF
+      END DO
+
 !     --- Start loop over orthogonal k-points ---
       DO kort=1,nkort
 

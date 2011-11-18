@@ -114,7 +114,7 @@ subroutine h_epsi_her_set(pdir, e_field)
    INTEGER :: ijkb0,  ibnd,jh, ih, ikb, ik
 
 
-   LOGICAL l_cal!flag for doing mat calculation, used for spin polarized systems
+   LOGICAL, ALLOCATABLE :: l_cal(:) ! flag for empty/occupied states
    INTEGER, ALLOCATABLE  :: map_g(:)
 
    REAL(dp) :: dkfact
@@ -137,11 +137,11 @@ subroutine h_epsi_her_set(pdir, e_field)
    ALLOCATE( evct(npwx,nbnd))
    ALLOCATE( map_g(npwx))
 
-   
+   ALLOCATE(ln(-dfftp%nr1:dfftp%nr1,-dfftp%nr2:dfftp%nr2,-dfftp%nr3:dfftp%nr3),&
+            ln0(-dfftp%nr1:dfftp%nr1,-dfftp%nr2:dfftp%nr2,-dfftp%nr3:dfftp%nr3))
+   ALLOCATE(aux(ngm),aux0(ngm))
 
-   allocate( ln(-dfftp%nr1:dfftp%nr1,-dfftp%nr2:dfftp%nr2,-dfftp%nr3:dfftp%nr3), &
-             ln0(-dfftp%nr1:dfftp%nr1,-dfftp%nr2:dfftp%nr2,-dfftp%nr3:dfftp%nr3))
-   allocate(aux(ngm),aux0(ngm))
+   ALLOCATE (l_cal(nbnd))
   
 !determines the spin polarization
 
@@ -159,10 +159,17 @@ subroutine h_epsi_her_set(pdir, e_field)
          is = 1
       end if
 
+      ! l_cal(n) = .true./.false. if n-th state is occupied/empty
+      DO nb = 1, nbnd
+         IF ( nspin == 2 .AND. tfixed_occ) THEN
+            l_cal(nb) = ( f_inp(nb,is) /= 0.0_dp )
+         ELSE
+            l_cal(nb) = ( nb <= NINT ( nelec/2.0_dp ) )
+         ENDIF
+      END DO
 
       ik_stringa=mod(ik-1,nppstr_3d(pdir))+1
       nstring=nks/nppstr_3d(pdir)
-
  
  !  --- Define a small number ---
       eps=0.000001d0
@@ -190,12 +197,6 @@ subroutine h_epsi_her_set(pdir, e_field)
             END DO
          END DO
       endif
-      
-   
-
-!  --- Allocate memory for arrays ---
-  
- 
 
 !  -------------------------------------------------------------------------   !
 !           electronic polarization: set values for k-points strings           !
@@ -374,19 +375,9 @@ subroutine h_epsi_her_set(pdir, e_field)
          mat=(0.d0,0.d0)
          DO nb=1,nbnd
             DO mb=1,nbnd
-!added support for spin polarized case
-               l_cal=.true.
-               if( nspin==2 .and. tfixed_occ) then
-                  if(f_inp(nb,is)==0.d0 .or. f_inp(mb,is)==0.d0) then
-                     l_cal=.false.
-                     if(nb==mb) then
-                        mat(nb,mb)=1.d0
-                     else
-                        mat(nb,mb)=0.d0
-                     endif
-                  endif
-               endif
-               if(l_cal) then
+               IF ( .NOT. l_cal(nb) .OR. .NOT. l_cal(mb) ) THEN
+                  IF ( nb == mb )  mat(nb,mb)=1.d0
+               ELSE
                   aux=(0.d0,0.d0)
                   aux0=(0.d0,0.d0)
                   DO ig=1,npw1
@@ -408,18 +399,7 @@ subroutine h_epsi_her_set(pdir, e_field)
          call  mp_sum( mat, intra_pool_comm )
          DO nb=1,nbnd
             DO mb=1,nbnd
-               l_cal=.true.
-               if( nspin==2 .and. tfixed_occ) then
-                  if(f_inp(nb,is)==0.d0 .or. f_inp(mb,is)==0.d0) then
-                     l_cal=.false.
-                     if(nb==mb) then
-                        mat(nb,mb)=1.d0
-                     else
-                        mat(nb,mb)=0.d0
-                     endif
-                  endif
-               endif
-               if(l_cal) then
+               IF ( l_cal(nb) .AND. l_cal(mb) ) THEN
                   if(okvan) then
                      pref = (0.d0,0.d0)
                      DO jkb=1,nkb
@@ -435,7 +415,7 @@ subroutine h_epsi_her_set(pdir, e_field)
                      ENDDO
                      mat(nb,mb) = mat(nb,mb) + pref
                   endif
-               endif
+               ENDIF
             ENDDO
          ENDDO
 
@@ -591,18 +571,9 @@ subroutine h_epsi_her_set(pdir, e_field)
 
          DO nb=1,nbnd
             DO mb=1,nbnd
-               l_cal=.true.
-               if( nspin==2 .and. tfixed_occ) then
-                  if(f_inp(nb,is)==0.d0 .or. f_inp(mb,is)==0.d0) then
-                     l_cal=.false.
-                     if(nb==mb) then
-                        mat(nb,mb)=1.d0
-                     else
-                        mat(nb,mb)=0.d0
-                     endif
-                  endif
-               endif
-               if(l_cal) then
+               IF ( .NOT. l_cal(nb) .OR. .NOT. l_cal(mb) ) THEN
+                  IF ( nb == mb )  mat(nb,mb)=1.d0
+               ELSE
                   if(.not.l_para) then
                      aux=(0.d0,0.d0)
                      aux0=(0.d0,0.d0)
@@ -640,18 +611,7 @@ subroutine h_epsi_her_set(pdir, e_field)
          call mp_sum( mat, intra_pool_comm )
          DO nb=1,nbnd
             DO mb=1,nbnd
-               l_cal=.true.
-               if( nspin==2 .and. tfixed_occ) then
-                  if(f_inp(nb,is)==0.d0 .or. f_inp(mb,is)==0.d0) then
-                     l_cal=.false.
-                     if(nb==mb) then
-                        mat(nb,mb)=1.d0
-                     else
-                        mat(nb,mb)=0.d0
-                     endif
-                  endif
-               endif
-               if(l_cal) then
+               IF ( l_cal(nb) .AND. l_cal(mb) ) THEN
 !                    --- Calculate the augmented part: ij=KB projectors, ---
 !                    --- R=atom index: SUM_{ijR} q(ijR) <u_nk|beta_iR>   ---
 !                    --- <beta_jR|u_mk'> e^i(k-k')*R =                   ---
@@ -806,18 +766,9 @@ subroutine h_epsi_her_set(pdir, e_field)
          mat=(0.d0,0.d0)
          DO nb=1,nbnd
             DO mb=1,nbnd
-               l_cal=.true.
-               if( nspin==2 .and. tfixed_occ) then
-                  if(f_inp(nb,is)==0.d0 .or. f_inp(mb,is)==0.d0) then
-                     l_cal=.false.
-                     if(nb==mb) then
-                        mat(nb,mb)=1.d0
-                     else
-                        mat(nb,mb)=0.d0
-                     endif
-                  endif
-               endif
-               if(l_cal) then
+               IF ( .NOT. l_cal(nb) .OR. .NOT. l_cal(mb) ) THEN
+                  IF ( nb == mb )  mat(nb,mb)=1.d0
+               ELSE
                   aux=(0.d0,0.d0)
                   aux0=(0.d0,0.d0)
                   DO ig=1,npw1
@@ -839,19 +790,7 @@ subroutine h_epsi_her_set(pdir, e_field)
       call mp_sum( mat, intra_pool_comm )
       DO nb=1,nbnd
          DO mb=1,nbnd
-            l_cal=.true.
-            if( nspin==2 .and. tfixed_occ) then
-               if(f_inp(nb,is)==0.d0 .or. f_inp(mb,is)==0.d0) then
-                  l_cal=.false.
-                  if(nb==mb) then
-                     mat(nb,mb)=1.d0
-                  else
-                     mat(nb,mb)=0.d0
-                  endif
-               endif
-            endif
-            if(l_cal) then
-              
+            IF ( l_cal(nb) .AND. l_cal(mb) ) THEN
                if(okvan) then
                   pref = (0.d0,0.d0)
                   DO jkb=1,nkb
@@ -867,7 +806,7 @@ subroutine h_epsi_her_set(pdir, e_field)
                   ENDDO
                   mat(nb,mb) = mat(nb,mb) + pref
                endif
-            endif
+            ENDIF
          ENDDO
       ENDDO
 
@@ -1019,18 +958,9 @@ subroutine h_epsi_her_set(pdir, e_field)
       mat=(0.d0,0.d0)
       DO nb=1,nbnd
          DO mb=1,nbnd
-            l_cal=.true.
-            if( nspin==2 .and. tfixed_occ) then
-               if(f_inp(nb,is)==0.d0 .or. f_inp(mb,is)==0.d0) then
-                  l_cal=.false.
-                  if(nb==mb) then
-                     mat(nb,mb)=1.d0
-                  else
-                     mat(nb,mb)=0.d0
-                  endif
-               endif
-            endif
-            if(l_cal) then
+            IF ( .NOT. l_cal(nb) .OR. .NOT. l_cal(mb) ) THEN
+               IF ( nb == mb )  mat(nb,mb)=1.d0
+            ELSE
                if(.not.l_para) then
                   aux=(0.d0,0.d0)
                   aux0=(0.d0,0.d0)
@@ -1066,18 +996,7 @@ subroutine h_epsi_her_set(pdir, e_field)
       call mp_sum(  mat, intra_pool_comm )
       DO nb=1,nbnd
          DO mb=1,nbnd
-            l_cal=.true.
-            if( nspin==2 .and. tfixed_occ) then
-               if(f_inp(nb,is)==0.d0 .or. f_inp(mb,is)==0.d0) then
-                  l_cal=.false.
-                  if(nb==mb) then
-                     mat(nb,mb)=1.d0
-                  else
-                     mat(nb,mb)=0.d0
-                  endif
-               endif
-            endif
-            if(l_cal) then
+            IF ( l_cal(nb) .AND. l_cal(mb) ) THEN
                if(okvan) then 
                   pref = (0.d0,0.d0)
                   DO jkb=1,nkb
@@ -1093,7 +1012,7 @@ subroutine h_epsi_her_set(pdir, e_field)
                   ENDDO
                   mat(nb,mb) = mat(nb,mb) + pref
                endif
-            endif
+            ENDIF
          ENDDO
       ENDDO
 
@@ -1192,7 +1111,7 @@ subroutine h_epsi_her_set(pdir, e_field)
   END  DO !on ik
 
 
-
+  DEALLOCATE (l_cal)
   DEALLOCATE( evct)
   DEALLOCATE( map_g)
   deallocate(ln,ln0)

@@ -128,8 +128,7 @@ SUBROUTINE c_phase_field(el_pola,ion_pola, fact_pola, pdir)
    COMPLEX(dp), ALLOCATABLE :: psi1(:,:)
    COMPLEX(dp) :: zeta_loc
 
-
-   LOGICAL l_cal!flag for doing mat calculation
+   LOGICAL, ALLOCATABLE :: l_cal(:) ! flag for occupied/empty states
    INTEGER, ALLOCATABLE :: map_g(:)
 
    REAL(dp) :: dkfact
@@ -148,6 +147,7 @@ SUBROUTINE c_phase_field(el_pola,ion_pola, fact_pola, pdir)
    ALLOCATE (aux(ngm))
    ALLOCATE (aux0(ngm))
    ALLOCATE (map_g(npwx))
+   ALLOCATE (l_cal(nbnd))
    if(pdir==3) then
       l_para=.false.
    else
@@ -159,10 +159,8 @@ SUBROUTINE c_phase_field(el_pola,ion_pola, fact_pola, pdir)
    zeta_tot=(1.d0,0.d0)
 
 !  --- Check that we are working with an insulator with no empty bands ---
-   IF ((degauss > 0.01d0) .OR. (nbnd /= nelec/2)) &
-        WRITE (stdout,*) 'PAY ATTENTION: EL FIELD AND OCCUPATIONS'
-   !  CALL errore('c_phase', &
-   !        'Polarization only for insulators and no empty bands',1)
+   IF ( degauss > 0.0_dp )  CALL errore('c_phase', &
+           'Polarization only for insulators and no empty bands',1)
 
    !  --- Define a small number ---
    eps=1.0E-6_dp
@@ -301,6 +299,15 @@ SUBROUTINE c_phase_field(el_pola,ion_pola, fact_pola, pdir)
    zeta=(1.d0,0.d0)
 !  --- Start loop over spin ---
    DO is=1,nspin 
+
+      ! l_cal(n) = .true./.false. if n-th state is occupied/empty
+      DO nb = 1, nbnd
+         IF ( nspin == 2 .AND. tfixed_occ) THEN
+            l_cal(nb) = ( f_inp(nb,is) /= 0.0_dp )
+         ELSE
+            l_cal(nb) = ( nb <= NINT ( nelec/2.0_dp ) )
+         ENDIF
+      END DO
        
 !     --- Start loop over orthogonal k-points ---
       DO kort=1,nkort
@@ -400,19 +407,9 @@ SUBROUTINE c_phase_field(el_pola,ion_pola, fact_pola, pdir)
                mat=(0.d0,0.d0)
                DO nb=1,nbnd
                   DO mb=1,nbnd
-                     ! added support for spin polarized case
-                     l_cal=.true.
-                     if( nspin==2 .and. tfixed_occ) then
-                        if(f_inp(nb,is)==0.d0 .or. f_inp(mb,is)==0.d0) then
-                           l_cal=.false.
-                           if(nb==mb) then
-                              mat(nb,mb)=1.d0
-                           else
-                              mat(nb,mb)=0.d0
-                           endif
-                        endif
-                     endif
-                     if(l_cal) then
+                     IF ( .NOT. l_cal(nb) .OR. .NOT. l_cal(mb) ) THEN
+                        IF ( nb == mb )  mat(nb,mb)=1.d0
+                     ELSE
                         aux=(0.d0,0.d0)
                         aux0=(0.d0,0.d0)
                         DO ig=1,npw0
@@ -470,7 +467,7 @@ SUBROUTINE c_phase_field(el_pola,ion_pola, fact_pola, pdir)
                       
                            mat(nb,mb) = mat(nb,mb) + pref
                         endif
-                     endif !on l_cal
+                     ENDIF !on l_cal
                   ENDDO
                ENDDO
 
@@ -547,6 +544,7 @@ SUBROUTINE c_phase_field(el_pola,ion_pola, fact_pola, pdir)
 !  -------------------------------------------------------------------------   !
 
 !  --- Free memory ---
+   DEALLOCATE(l_cal)
    DEALLOCATE(pdl_elec)
    DEALLOCATE(mod_elec)
    DEALLOCATE(wstring)
