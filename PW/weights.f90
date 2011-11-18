@@ -53,7 +53,7 @@ SUBROUTINE weights()
               IF ( nspin == 1 ) wg(:,ik) = wg(:,ik)/2.0_dp
            END DO
            !
-           ef = 1.0d10
+           ef = -1.0d10
            DO ik = 1, nkstot
               DO ibnd = 1, nbnd
                  IF ( wg(ibnd,ik) > 0.D0 ) ef = MAX( ef, et(ibnd,ik) )
