@@ -203,6 +203,7 @@ check_initial_status.o : ../../PW/pwcom.o
 check_initial_status.o : ../../PW/scf_mod.o
 check_initial_status.o : ../../PW/symm_base.o
 check_initial_status.o : acfdtest.o
+check_initial_status.o : elph.o
 check_initial_status.o : ph_restart.o
 check_initial_status.o : phcom.o
 check_initial_status.o : save_ph_input.o
@@ -962,6 +963,7 @@ prepare_q.o : ../../Modules/control_flags.o
 prepare_q.o : ../../Modules/io_files.o
 prepare_q.o : ../../Modules/io_global.o
 prepare_q.o : ../../PW/pwcom.o
+prepare_q.o : elph.o
 prepare_q.o : ph_restart.o
 prepare_q.o : phcom.o
 prepare_q.o : ramanm.o
@@ -1035,6 +1037,11 @@ q_points.o : ../../Modules/io_global.o
 q_points.o : ../../Modules/kind.o
 q_points.o : ../../PW/symm_base.o
 q_points.o : phcom.o
+q_points_wannier.o : ../../Modules/io_global.o
+q_points_wannier.o : ../../Modules/kind.o
+q_points_wannier.o : ../../Modules/mp_global.o
+q_points_wannier.o : elph.o
+q_points_wannier.o : phcom.o
 qdipol_cryst.o : ../../Modules/cell_base.o
 qdipol_cryst.o : ../../Modules/ions_base.o
 qdipol_cryst.o : ../../Modules/kind.o
