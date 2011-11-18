@@ -21,8 +21,8 @@ subroutine bcast_ph_input ( )
   use mp, only: mp_bcast
   USE control_ph, ONLY : start_irr, last_irr, start_q, last_q, nmix_ph, &
                          niter_ph, lnoloc, alpha_mix, tr2_ph, lrpa, recover, &
-                         ldisp, lnscf, elph, reduce_io, zue, epsil, trans, &
-                         lgamma, nogg
+                         ldisp, lnscf, reduce_io, zue, epsil, trans, lgamma, &
+                         nogg
   USE gamma_gamma, ONLY : asr
   USE disp, ONLY : nq1, nq2, nq3
   USE freq_ph, ONLY : fpol, nfs, fiu
@@ -38,6 +38,7 @@ subroutine bcast_ph_input ( )
 !#ifdef __GWW
   USE wannier_gw,    ONLY : l_head, omega_gauss, n_gauss, grid_type
 !#endif __GWW
+  USE el_phon, ONLY : elph
 
   implicit none
   !
