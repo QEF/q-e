@@ -557,6 +557,7 @@ SUBROUTINE setup()
      !
      if (nspin /= 4) call errore ('setup','nspin should be 4; check iosys',1)
      current_spin = 1
+     isk(:) = 1
      !
   ELSE
      !
@@ -564,6 +565,7 @@ SUBROUTINE setup()
      !
      wk(1:nkstot)    = wk(1:nkstot) * degspin
      current_spin = 1
+     isk(:) = 1
      !
      IF ( nspin /= 1 ) &
         CALL errore( 'setup', 'nspin should be 1; check iosys', 1 )

@@ -685,8 +685,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 		'fixed' :       for insulators with a gap
 
 		'from_input' :  The occupation are read from input file.
-                                Presently works only with one k-point
-                                (LSDA, noncolinear allowed).
+                                Requires "nbnd" to be set in input
 	    }
 	}
 

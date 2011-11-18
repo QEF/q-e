@@ -1298,8 +1298,6 @@ SUBROUTINE iosys()
   !
   CALL init_start_k ( nk1, nk2, nk3, k1, k2, k3, k_points, nkstot, xk, wk )
   gamma_only = ( k_points == 'gamma' )
-  IF ( tfixed_occ .AND. (nkstot > 1 .OR. ( nk1 * nk2 * nk3 ) > 1 ) ) &
-     CALL errore( 'input', 'only one k point with fixed occupations', 1 )
   !
   CALL convert_tau ( tau_format, nat_, tau)
   !
