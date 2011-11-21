@@ -210,6 +210,18 @@ SUBROUTINE forces()
         !
      END DO
      !
+#ifdef __MS2
+     !
+     ! ... impose total force of the quantum subsystem /= 0
+     !
+     DO na = 1, nat
+        !
+        force(ipol,na) = force(ipol,na) + sumfor / DBLE( nat )
+        !
+     END DO
+     !
+#endif
+     !
   END DO
   !
   ! ... resymmetrize (should not be needed, but ...)
