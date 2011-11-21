@@ -234,7 +234,7 @@ subroutine ld1_readin
   call mp_bcast(dft, ionode_id )
   call mp_bcast(rel_dist, ionode_id )
 !
-  call set_dft_from_name(dft)
+  IF (iswitch /= 2 ) call set_dft_from_name(dft)
 
   if (zed == 0.0_dp .and. atom /= ' ') then
      zed = DBLE(atomic_number(atom))
