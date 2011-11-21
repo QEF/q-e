@@ -197,8 +197,14 @@ $ECHO "  running now a few molecules with Gamma sampling ...\c"
 $ECHO
 PSEUDO_DIR=$EXAMPLE_DIR/Pseudo
 $ECHO "  pseudo directory changed to:      $PSEUDO_DIR"
+$ECHO
 
-xc=pbe0
+
+for xc in pbe0 hse ; do
+
+$ECHO "  Exchange and correlation is: " $xc "...\c"
+$ECHO
+
 ps=1nlcc
 ecut=80
 
@@ -461,7 +467,7 @@ EOF
 $ECHO "  running o2 molecule..\c"
 $PW_COMMAND < o2.inp > o2.$xc.$ps.out-$ecut
 $ECHO " done"
-$ECHO " summarize"
+$ECHO
 cat > summarize << EOF
 grep -e ! n.$xc.$ps.out-$ecut  | tail -1 | awk '{print \$5}' > N
 grep -e ! n2.$xc.$ps.out-$ecut | tail -1 | awk '{print \$5}' > N2
@@ -475,6 +481,8 @@ paste CO O C | awk '{be= (\$1-\$2-\$3) * 13.6058 * 23.06; print "CO : ",be}'
 rm C N O CO O2 N2
 EOF
 sh summarize
+$ECHO 
+done
 
 #rm -f *.inp
 rm -fr $TMP_DIR/*
