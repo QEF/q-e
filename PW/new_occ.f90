@@ -15,6 +15,7 @@ SUBROUTINE new_evc()
   ! It makes linear combinations of the degenerate bands so 
   ! that they have maximum overlap with the atomic states, and order 
   ! the bands in the same order as the atomic states.
+  ! Weights "wg" must have been set to fixed values (as read in input)
   !
   USE io_global,            ONLY : stdout
   USE kinds,                ONLY : DP
@@ -30,7 +31,6 @@ SUBROUTINE new_evc()
   USE gvect,                ONLY : gstart
   USE io_files,             ONLY : iunigk, nwordwfc, iunwfc, nwordatwfc, iunsat
   USE buffers,              ONLY : get_buffer, save_buffer
-  USE fixed_occ,            ONLY : one_atom_occupations, f_inp
   USE mp_global,            ONLY : intra_pool_comm
   USE mp,                   ONLY : mp_sum
 
@@ -64,10 +64,6 @@ SUBROUTINE new_evc()
   ALLOCATE(start_band(nbnd))
   ALLOCATE(used_atwfc(nbnd))
   ALLOCATE(ind(nbnd))
-  !
-  !  The weights are fixed
-  !
-  wg=f_inp
   !
   !  we start a loop over k points
   !
