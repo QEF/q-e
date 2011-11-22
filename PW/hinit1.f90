@@ -50,14 +50,14 @@ SUBROUTINE hinit1()
   !
   ! ... update the D matrix and the PAW coefficients
   !
-  CALL newd()
-  !
   IF (okpaw) THEN
      CALL paw_atomic_becsum()
 !     CALL compute_becsum(.true.)
      CALL PAW_potential(rho%bec, ddd_paw)
      CALL PAW_symmetrize_ddd(ddd_paw)
   ENDIF
+  ! 
+  CALL newd()
   !
   ! ... and recalculate the products of the S with the atomic wfcs used 
   ! ... in LDA+U calculations
