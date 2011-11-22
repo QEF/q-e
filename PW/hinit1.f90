@@ -23,6 +23,11 @@ SUBROUTINE hinit1()
   USE realus,        ONLY : qpointlist
   USE wannier_new,   ONLY : use_wannier
   USE martyna_tuckerman, ONLY : tag_wg_corr_as_obsolete
+  USE scf,           ONLY : rho
+  USE paw_variables, ONLY : okpaw, ddd_paw
+  USE paw_onecenter, ONLY : paw_potential
+  USE paw_init,      ONLY : paw_atomic_becsum
+  USE paw_symmetry,  ONLY : paw_symmetrize_ddd
   USE dfunct,        ONLY : newd
   !
   IMPLICIT NONE
@@ -43,9 +48,16 @@ SUBROUTINE hinit1()
   !
   IF ( tqr ) CALL qpointlist()
   !
-  ! ... update the D matrix
+  ! ... update the D matrix and the PAW coefficients
   !
   CALL newd()
+  !
+  IF (okpaw) THEN
+     CALL paw_atomic_becsum()
+!     CALL compute_becsum(.true.)
+     CALL PAW_potential(rho%bec, ddd_paw)
+     CALL PAW_symmetrize_ddd(ddd_paw)
+  ENDIF
   !
   ! ... and recalculate the products of the S with the atomic wfcs used 
   ! ... in LDA+U calculations
