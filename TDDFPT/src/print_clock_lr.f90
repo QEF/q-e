@@ -80,8 +80,9 @@ SUBROUTINE print_clock_lr()
    WRITE( stdout, '(5X,"General routines")' )
    !
    CALL print_clock( 'calbec' )
-   CALL print_clock( 'cft3' )
-   CALL print_clock( 'cft3s' )
+   CALL print_clock( 'fft' )
+   CALL print_clock( 'ffts' )
+   CALL print_clock( 'fftw' )
    CALL print_clock( 'interpolate' )
    CALL print_clock( 'davcio' )
    CALL print_clock( 'newq' )
@@ -99,6 +100,17 @@ SUBROUTINE print_clock_lr()
    CALL print_clock ('mp_sum')
     WRITE( stdout, * )
 #endif
+   !
+#ifdef EXX
+   WRITE( stdout, '(5X,"EXX routines")' )
+   !
+   CALL print_clock( 'exx_grid' )
+   CALL print_clock( 'exxinit' )
+   CALL print_clock( 'vexx' )
+   CALL print_clock( 'exxenergy' )
+   CALL print_clock( 'exxen2' )
+   CALL print_clock ('cycleig')
+#endif   
    !
    CALL print_clock( 'post-processing' )
    RETURN

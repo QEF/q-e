@@ -21,7 +21,8 @@ SUBROUTINE stop_lr( )
   USE lr_variables,         ONLY : lr_verbosity, itermax, bgz_suffix
   USE io_global,            ONLY : ionode
   USE io_files,             ONLY : tmp_dir, prefix
-  USE io_global,      ONLY : stdout
+  USE io_global,            ONLY : stdout
+  USE environment,          ONLY : environment_end
   ! For gaussian cube file
   USE ions_base,  ONLY : nat, ityp, atm, ntyp => nsp, tau
   USE cell_base,  ONLY : celldm, at, bg
@@ -78,8 +79,9 @@ SUBROUTINE stop_lr( )
   !   Deallocate lr variables
   !
   CALL lr_dealloc()
-
-
+  !
+  CALL environment_end('TDDFPT')
+  !
   CALL mp_barrier()
   !
   CALL mp_end()
