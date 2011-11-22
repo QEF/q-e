@@ -276,7 +276,7 @@ rm -rf $TMP_DIR/*
 $ECHO " done"
 # extracting core wavefunction
 $ECHO "  extracting core wavefunction from pseudo...\c"
-../../../XSpectra/upf2plotcore.sh $PSEUDO_DIR/C_PBE_TM_2pj.UPF > ./C.wfc
+../../../XSpectra/tools/upf2plotcore.sh $PSEUDO_DIR/C_PBE_TM_2pj.UPF > ./C.wfc
 $ECHO " done"
 #
 # self-consistent calculation for diamond with core hole. 
