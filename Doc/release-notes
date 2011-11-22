@@ -14,6 +14,10 @@ Incompatible changes in svn version:
 
 Fixed in svn version
 
+   * Workaround for frequent crashes in PAW with vc-relax
+   * In some cases spin-polarized HSE was yielding NaN's
+   * PHonon: an array not always allocated was passed as variable to 
+     routine dynmatrix.f90 - harmless but not nice
    * disk_io='low' or 'none' wasn't working if a wavefunction file from a
      previous run was found
    * CP + OpenMP without MPI wasn't working with ultrasoft pseudopotentials
