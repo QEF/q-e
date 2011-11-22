@@ -162,7 +162,7 @@ SUBROUTINE check_initial_status(auxdyn)
      IF ((start_irr==0).AND.(last_irr==0)) THEN
         CALL ph_writefile('init',0)
         CALL clean_pw(.FALSE.)
-        CALL close_files()
+        CALL close_files(.FALSE.)
         CALL mp_global_end()
         STOP
      ENDIF
