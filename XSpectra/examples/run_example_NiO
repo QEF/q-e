@@ -108,7 +108,7 @@ rm -rf $TMP_DIR/*
 $ECHO " done"
 # extracting core wavefunction
 $ECHO "  extracting core wavefunction from pseudo...\c"
-../../../XSpectra/upf2plotcore.sh $PSEUDO_DIR/Ni_PBE_TM_2pj.UPF > ./Ni.wfc
+../../../XSpectra/tools/upf2plotcore.sh $PSEUDO_DIR/Ni_PBE_TM_2pj.UPF > ./Ni.wfc
 $ECHO " done"
 
 $ECHO "#"
@@ -144,11 +144,11 @@ cat > NiO.scf.in << EOF
  /
 ATOMIC_SPECIES
 Ni 58.6934   Ni_PBE_TM_2pj.UPF
-Ni_B  58.6934   Ni_PBE_TM_2pj.UPF
+NiB  58.6934   Ni_PBE_TM_2pj.UPF
 O  15.9994   O_PBE_TM.UPF
 ATOMIC_POSITIONS crystal
 Ni  0.0000000000  0.0000000000  0.0000000000
-Ni_B  -.5000000000  1.5000000000  -.5000000000
+NiB  -.5000000000  1.5000000000  -.5000000000
 O  0.7500000000  -.2500000000  -.2500000000
 O  -.7500000000  0.2500000000  0.2500000000
 K_POINTS automatic
