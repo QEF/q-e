@@ -251,7 +251,7 @@ SUBROUTINE forces()
   forcescc(:,:) = forcescc(:,:) * DBLE( if_pos )
   !
   IF ( iverbosity > 0 ) THEN
-     IF ( do_comp_mt .and. iverbosity > 0 ) THEN
+     IF ( do_comp_mt ) THEN
         WRITE( stdout, '(5x,"The Martyna-Tuckerman correction term to forces")')
         DO na = 1, nat
            WRITE( stdout, 9035) na, ityp(na), ( force_mt(ipol,na), ipol = 1, 3 )
@@ -283,6 +283,13 @@ SUBROUTINE forces()
         WRITE( stdout, 9035) na, ityp(na), ( forcescc(ipol,na), ipol = 1, 3 )
      END DO
      !
+     IF ( llondon) THEN
+        WRITE( stdout, '(/,5x,"Dispersion contribution to forces:")')
+        DO na = 1, nat
+           WRITE( stdout, 9035) na, ityp(na), (force_disp(ipol,na), ipol = 1, 3)
+        END DO
+     END IF
+     !
   END IF
   !
   sumfor = 0.D0
@@ -301,7 +308,7 @@ SUBROUTINE forces()
   WRITE( stdout, '(/5x,"Total force = ",F12.6,5X, &
               &  "Total SCF correction = ",F12.6)') sumfor, sumscf
   !
-  IF ( llondon ) THEN
+  IF ( llondon .AND. iverbosity > 0 ) THEN
      !
      sum_mm = 0.D0
      DO na = 1, nat
@@ -309,19 +316,12 @@ SUBROUTINE forces()
                  force_disp(1,na)**2 + force_disp(2,na)**2 + force_disp(3,na)**2
      END DO
      sum_mm = SQRT( sum_mm )
-     !
      WRITE ( stdout, '(/,5x, "Total Dispersion Force = ",F12.6)') sum_mm
-     !
-     WRITE( stdout, '(/,5x,"Dispersion forces acting on atoms:")')
-     DO na = 1, nat
-        WRITE( stdout, 9035) na, ityp(na), ( force_disp(ipol,na), ipol = 1, 3 )
-     END DO
-     !
-     DEALLOCATE ( force_disp )
      !
   END IF
   !
   DEALLOCATE( forcenl, forcelc, forcecc, forceh, forceion, forcescc )
+  IF ( llondon ) DEALLOCATE ( force_disp )
   !
   lforce = .TRUE.
   !
