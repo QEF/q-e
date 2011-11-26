@@ -21,7 +21,7 @@ MODULE dynamics_module
    USE io_global, ONLY : stdout
    USE io_files,  ONLY : prefix, tmp_dir
    USE constants, ONLY : tpi, fpi
-   USE constants, ONLY : amconv, ry_to_kelvin, au_ps, bohr_radius_cm, uakbar
+   USE constants, ONLY : amconv, ry_to_kelvin, au_ps, bohr_radius_cm, ry_kbar
    USE constants, ONLY : eps8
    USE control_flags, ONLY : tolp
    !
@@ -341,7 +341,7 @@ CONTAINS
       !
       ! ... find the new pressure (in Kbar)
       !
-      press_new = uakbar*( nat*temp_new/ry_to_kelvin + virial ) / omega
+      press_new = ry_kbar*( nat*temp_new/ry_to_kelvin + virial ) / omega
       !
       chi = 1.D0 - dt / RELAXTIME*( TARGPRESS - press_new )
       !

@@ -2495,8 +2495,6 @@ end subroutine invert_3x3_matrix
 
 SUBROUTINE print_sigma(sigma, title)
   
-  USE constants,     ONLY : uakbar
-
   real(dp), intent(in) :: sigma(:,:)
   character(len=*), intent(in) :: title
   integer :: l

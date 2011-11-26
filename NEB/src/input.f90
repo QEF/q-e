@@ -21,13 +21,9 @@ SUBROUTINE ioneb()
   !
   !
   USE kinds,         ONLY : DP
-  USE constants,     ONLY : autoev, eV_to_kelvin, pi, rytoev, &
-                            uakbar, amconv, bohr_radius_angs, eps8
+  USE constants,     ONLY : autoev, eV_to_kelvin
   USE io_global,     ONLY : stdout
-  !
-  !
   USE io_files,      ONLY : tmp_dir 
-  !
   USE path_variables, ONLY : lsteep_des, lquick_min, &
                              lbroyden, lbroyden2, &
                              llangevin, &

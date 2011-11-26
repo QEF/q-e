@@ -28,7 +28,7 @@ SUBROUTINE iosys()
   USE control_flags, ONLY: adapt_thr, tr2_init, tr2_multi
 #endif
   USE constants,     ONLY : autoev, eV_to_kelvin, pi, rytoev, &
-                            uakbar, amconv, bohr_radius_angs, eps8
+                            ry_kbar, amconv, bohr_radius_angs, eps8
   USE mp_global,     ONLY : npool, nproc_pool
   !
   USE io_global,     ONLY : stdout, ionode, ionode_id
@@ -1332,7 +1332,7 @@ SUBROUTINE iosys()
   !
   ! ... unit conversion for pressure
   !
-  press_ = press_ / uakbar
+  press_ = press_ / ry_kbar
   !
   ! ... set constraints for cell dynamics/optimization
   !

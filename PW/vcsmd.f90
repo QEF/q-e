@@ -28,7 +28,7 @@ SUBROUTINE vcsmd()
   !
   USE kinds,           ONLY : DP
   USE io_global,       ONLY : stdout
-  USE constants,       ONLY : e2, uakbar, amconv
+  USE constants,       ONLY : e2, ry_kbar, amconv
   USE cell_base,       ONLY : omega, alat, at, bg, iforceh, fix_volume
   USE ions_base,       ONLY : tau, nat, ntyp => nsp, ityp, atm
   USE cellmd,          ONLY : nzero, ntimes, calc, press, at_old, omega_old, &
@@ -213,11 +213,11 @@ SUBROUTINE vcsmd()
      DO i = 1, 3
         !
         conv_ions = conv_ions .AND. &
-             ( ABS( sigma(i,i) - press ) * uakbar * iforceh(i,i) < epsp )
+             ( ABS( sigma(i,i) - press ) * ry_kbar * iforceh(i,i) < epsp )
         !
         DO j = ( i + 1 ), 3
            conv_ions = conv_ions .AND. &
-             ( ABS( sigma(i,j) ) * uakbar * iforceh(i,j) < epsp )
+             ( ABS( sigma(i,j) ) * ry_kbar * iforceh(i,j) < epsp )
         END DO
         !
      END DO

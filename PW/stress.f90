@@ -14,7 +14,7 @@ subroutine stress ( sigma )
   USE kinds,         ONLY : DP
   USE cell_base,     ONLY : omega, alat, at, bg
   USE ions_base,     ONLY : nat, ntyp => nsp, ityp, tau, zv
-  USE constants,     ONLY : uakbar
+  USE constants,     ONLY : ry_kbar
   USE ener,          ONLY : etxc, vtxc
   USE gvect,         ONLY : ngm, gstart, nl, g, gg, gcutm
   USE fft_base,      ONLY : dfftp
@@ -153,25 +153,25 @@ subroutine stress ( sigma )
   !
   ! write results in Ryd/(a.u.)^3 and in kbar
   !
-  WRITE( stdout, 9000) (sigma(1,1) + sigma(2,2) + sigma(3,3)) * uakbar / 3d0,  &
+  WRITE( stdout, 9000) (sigma(1,1) + sigma(2,2) + sigma(3,3)) * ry_kbar/3d0, &
                   (sigma(l,1), sigma(l,2), sigma(l,3),                    &
-            sigma(l,1)*uakbar, sigma(l,2)*uakbar, sigma(l,3)*uakbar, l=1,3)
+            sigma(l,1)*ry_kbar, sigma(l,2)*ry_kbar, sigma(l,3)*ry_kbar, l=1,3)
 
   if ( iverbosity > 0 ) WRITE( stdout, 9005) &
-     (sigmakin(l,1)*uakbar,sigmakin(l,2)*uakbar,sigmakin(l,3)*uakbar, l=1,3),&
-     (sigmaloc(l,1)*uakbar,sigmaloc(l,2)*uakbar,sigmaloc(l,3)*uakbar, l=1,3),&
-     (sigmanlc(l,1)*uakbar,sigmanlc(l,2)*uakbar,sigmanlc(l,3)*uakbar, l=1,3),&
-     (sigmahar(l,1)*uakbar,sigmahar(l,2)*uakbar,sigmahar(l,3)*uakbar, l=1,3),&
-     (sigmaxc (l,1)*uakbar,sigmaxc (l,2)*uakbar,sigmaxc (l,3)*uakbar, l=1,3),&
-     (sigmaxcc(l,1)*uakbar,sigmaxcc(l,2)*uakbar,sigmaxcc(l,3)*uakbar, l=1,3),&
-     (sigmaewa(l,1)*uakbar,sigmaewa(l,2)*uakbar,sigmaewa(l,3)*uakbar, l=1,3),&
-     (sigmah  (l,1)*uakbar,sigmah  (l,2)*uakbar,sigmah  (l,3)*uakbar, l=1,3),&
-     (sigmalon(l,1)*uakbar,sigmalon(l,2)*uakbar,sigmalon(l,3)*uakbar, l=1,3), &
-     (sigma_nonloc_dft(l,1)*uakbar,sigma_nonloc_dft(l,2)*uakbar,sigma_nonloc_dft(l,3)*uakbar, l=1,3)
+     (sigmakin(l,1)*ry_kbar,sigmakin(l,2)*ry_kbar,sigmakin(l,3)*ry_kbar, l=1,3),&
+     (sigmaloc(l,1)*ry_kbar,sigmaloc(l,2)*ry_kbar,sigmaloc(l,3)*ry_kbar, l=1,3),&
+     (sigmanlc(l,1)*ry_kbar,sigmanlc(l,2)*ry_kbar,sigmanlc(l,3)*ry_kbar, l=1,3),&
+     (sigmahar(l,1)*ry_kbar,sigmahar(l,2)*ry_kbar,sigmahar(l,3)*ry_kbar, l=1,3),&
+     (sigmaxc (l,1)*ry_kbar,sigmaxc (l,2)*ry_kbar,sigmaxc (l,3)*ry_kbar, l=1,3),&
+     (sigmaxcc(l,1)*ry_kbar,sigmaxcc(l,2)*ry_kbar,sigmaxcc(l,3)*ry_kbar, l=1,3),&
+     (sigmaewa(l,1)*ry_kbar,sigmaewa(l,2)*ry_kbar,sigmaewa(l,3)*ry_kbar, l=1,3),&
+     (sigmah  (l,1)*ry_kbar,sigmah  (l,2)*ry_kbar,sigmah  (l,3)*ry_kbar, l=1,3),&
+     (sigmalon(l,1)*ry_kbar,sigmalon(l,2)*ry_kbar,sigmalon(l,3)*ry_kbar, l=1,3), &
+     (sigma_nonloc_dft(l,1)*ry_kbar,sigma_nonloc_dft(l,2)*ry_kbar,sigma_nonloc_dft(l,3)*ry_kbar, l=1,3)
 
 #ifdef EXX
   if ( iverbosity > 0 ) WRITE( stdout, 9006) &
-     (sigmaexx(l,1)*uakbar,sigmaexx(l,2)*uakbar,sigmaexx(l,3)*uakbar, l=1,3)
+     (sigmaexx(l,1)*ry_kbar,sigmaexx(l,2)*ry_kbar,sigmaexx(l,3)*ry_kbar, l=1,3)
 9006 format (5x,'EXX     stress (kbar)',3f10.2/2(26x,3f10.2/)/ )
 #endif
 

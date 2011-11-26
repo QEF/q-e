@@ -18,7 +18,7 @@ SUBROUTINE move_ions()
   ! ... coefficients for potential and wavefunctions extrapolation are
   ! ... also computed here
   !
-  USE constants,              ONLY : e2, eps8, uakbar
+  USE constants,              ONLY : e2, eps8, ry_kbar
   USE io_global,              ONLY : stdout
   USE io_files,               ONLY : tmp_dir, iunupdate
   USE kinds,                  ONLY : DP
@@ -140,8 +140,7 @@ SUBROUTINE move_ions()
            omega_old = omega
            etot = etot + press * omega
            CALL cell_force( fcell, - transpose(bg)/alat, sigma, omega, press )
-           epsp1 = epsp / uakbar
-!           epsp1 = omega * epsp / alat / uakbar
+           epsp1 = epsp / ry_kbar
         END IF
         !
         CALL bfgs( pos, h, etot, grad, fcell, fixion, tmp_dir, stdout, epse,&
