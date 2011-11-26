@@ -236,10 +236,9 @@ SUBROUTINE rcl_init(l,uvalue,jvalue,rcl)
    DOUBLE PRECISION rcl(4),uvalue,jvalue
 
 ! local variables
-   DOUBLE PRECISION ev2ry,uv,jv
+   DOUBLE PRECISION uv,jv
    INTEGER          i
    CALL dinit(rcl,4)
-   ev2ry = 13.6058d0
 
    uv = uvalue
    jv = jvalue

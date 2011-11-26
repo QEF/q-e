@@ -72,6 +72,7 @@ SUBROUTINE extract (filplot,plot_num)
   USE noncollin_module, ONLY : i_cons
   USE paw_variables, ONLY : okpaw
   USE mp,        ONLY : mp_bcast
+  USE constants, ONLY : rytoev
 
   IMPLICIT NONE
   !
@@ -185,8 +186,8 @@ SUBROUTINE extract (filplot,plot_num)
   !
   IF (emax == +999.0d0) emax = ef
   IF (plot_num == 10) THEN
-     emin = emin / 13.6058d0
-     emax = emax / 13.6058d0
+     emin = emin / rytoev
+     emax = emax / rytoev
   ENDIF
   !
   !

@@ -1296,7 +1296,7 @@ SUBROUTINE esm_printpot ()
   USE mp_global,            ONLY : intra_pool_comm
   USE fft_base,             ONLY : dfftp
   USE io_global,            ONLY : ionode, stdout
-  USE const,                ONLY : rytoev, bohr_radius_angs
+  USE constants,            ONLY : rytoev, bohr_radius_angs
   !
   IMPLICIT NONE
   !

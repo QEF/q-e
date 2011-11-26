@@ -40,6 +40,7 @@ SUBROUTINE do_initial_state (excite)
   USE parameters, ONLY : ntypx
   USE control_flags, ONLY: gamma_only
   USE DFUNCT,     ONLY : newd
+  USE constants,  ONLY : rytoev
   !
   IMPLICIT NONE
   !
@@ -55,8 +56,6 @@ SUBROUTINE do_initial_state (excite)
                                 delta_zv(:)
   !
   ! nonlocal, local, core-correction, ewald, and scf correction terms
-  REAL(DP) :: ryd_to_ev
-  PARAMETER ( ryd_to_ev = 13.6058d0)
   !
   INTEGER :: ipol, na, nt, ik
   ! counter on polarization
@@ -189,34 +188,34 @@ SUBROUTINE do_initial_state (excite)
   ! ... write on output the initial state core level shifts
   !
   DO na = 1, nat
-     WRITE( stdout, 9035) na, ityp(na),  shift(na), shift(na)*ryd_to_ev
+     WRITE( stdout, 9035) na, ityp(na),  shift(na), shift(na)*rytoev
   ENDDO
   WRITE (stdout,*)
 #define DEBUG
 #ifdef DEBUG
   WRITE( stdout, '(5x,"The FERMI ENERGY contribution to shift")')
   DO na = 1, nat
-     WRITE( stdout, 9035) na, ityp(na), shift_ef(na), shift_ef(na)*ryd_to_ev
+     WRITE( stdout, 9035) na, ityp(na), shift_ef(na), shift_ef(na)*rytoev
   ENDDO
   WRITE( stdout, '(5x,"The NON LOCAL contribution to shift")')
   DO na = 1, nat
-     WRITE( stdout, 9035) na, ityp(na), shift_nl(na), shift_nl(na)*ryd_to_ev
+     WRITE( stdout, 9035) na, ityp(na), shift_nl(na), shift_nl(na)*rytoev
   ENDDO
   WRITE( stdout, '(5x,"The LOCAL contribution to shift")')
   DO na = 1, nat
-     WRITE( stdout, 9035) na, ityp(na), shift_lc(na), shift_lc(na)*ryd_to_ev
+     WRITE( stdout, 9035) na, ityp(na), shift_lc(na), shift_lc(na)*rytoev
   ENDDO
   WRITE( stdout, '(5x,"The IONIC contribution to shift")')
   DO na = 1, nat
-     WRITE( stdout, 9035) na, ityp(na), shift_ion(na), shift_ion(na)*ryd_to_ev
+     WRITE( stdout, 9035) na, ityp(na), shift_ion(na), shift_ion(na)*rytoev
   ENDDO
   WRITE( stdout, '(5x,"The CC contribution to shift")')
   DO na = 1, nat
-     WRITE( stdout, 9035) na, ityp(na), shift_cc(na), shift_cc(na)*ryd_to_ev
+     WRITE( stdout, 9035) na, ityp(na), shift_cc(na), shift_cc(na)*rytoev
   ENDDO
   WRITE( stdout, '(5x,"The Hubbard contribution to shift")')
   DO na = 1, nat
-     WRITE( stdout, 9035) na, ityp(na), shift_hub(na), shift_hub(na)*ryd_to_ev
+     WRITE( stdout, 9035) na, ityp(na), shift_hub(na), shift_hub(na)*rytoev
   ENDDO
 #endif
   !
