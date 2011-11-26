@@ -549,7 +549,7 @@ PROGRAM X_Spectra
         DO i=1,nkstot
            WRITE(stdout,'("k=[",3f14.8,"]   spin=",1i2)') &
                 xk(1,i),xk(2,i),xk(3,i),isk(i)
-           WRITE(stdout, '(8f9.4)') (et(j,i)*13.605,j=1,nbnd)
+           WRITE(stdout, '(8f9.4)') (et(j,i)*rytoev,j=1,nbnd)
         ENDDO
 
 
@@ -575,7 +575,7 @@ PROGRAM X_Spectra
      IF(.NOT.xread_wf) THEN        !Fermi level must be read from input
         ef=ef_r
         WRITE( stdout,*)
-        WRITE( stdout,'(">> Fermi level from input (Ryd)=",1f14.8)') ef
+        WRITE( stdout,'(">> Fermi level from input (Ry)=",1f14.8)') ef
      ENDIF
 
      IF(TRIM(calculation).EQ.'fermi_level') THEN
@@ -592,7 +592,7 @@ PROGRAM X_Spectra
            IF ( nspin.EQ.1) THEN
               ibnd =  NINT (nelec) / 2
               ef = MAXVAL ( et( ibnd  , 1:nkstot) )
-              WRITE( stdout, '(">> Fermi level (Ryd) = ",1f14.8)') ef
+              WRITE( stdout, '(">> Fermi level (Ry) = ",1f14.8)') ef
               !SPIN POLARIZED CALCULATION
            ELSEIF(nspin.EQ.2) THEN
               ibnd    = NINT( nelec )
@@ -608,7 +608,7 @@ PROGRAM X_Spectra
                  ef = MAXVAL( et(ibnd_dw,1:nkstot/2) )
                  ef_dw = ef
                  WRITE( stdout,&
-                      '(">> Fermi level down (Ryd)= ",1f14.8)')&
+                      '(">> Fermi level down (Ry)= ",1f14.8)')&
                       ef_dw
                  !
               ELSE IF ( ibnd_dw == 0 ) THEN
@@ -616,7 +616,7 @@ PROGRAM X_Spectra
                  ef = MAXVAL( et(ibnd_up,1:nkstot/2) )
                  ef_up = ef
                  WRITE( stdout,&
-                      '(">> Fermi level up (Ryd)= ",1f14.8)')&
+                      '(">> Fermi level up (Ry)= ",1f14.8)')&
                       ef_up
                  !
               ELSE
@@ -627,12 +627,12 @@ PROGRAM X_Spectra
                  ef_up =  MAXVAL( et(ibnd_up,1:nkstot/2) )
                  ef_dw =  MAXVAL( et(ibnd_dw,nkstot/2+1:nkstot) )
                  WRITE( stdout,&
-                      '(">> Fermi level up (Ryd)= ",1f14.8,&
-                      &" Fermi level down (Ryd)= ",1f14.8)') &
+                      '(">> Fermi level up (Ry)= ",1f14.8,&
+                      &" Fermi level down (Ry)= ",1f14.8)') &
                       ef_up,ef_dw
                  !
               END IF
-              WRITE( stdout,'(">> Fermi level (Ryd)=",1f14.8)') ef
+              WRITE( stdout,'(">> Fermi level (Ry)=",1f14.8)') ef
            END IF
 
         ENDIF
@@ -683,7 +683,7 @@ PROGRAM X_Spectra
      ! Fermi level read from file
      ef=ef_r
      WRITE( stdout,*)
-     WRITE( stdout,'(">> Fermi level read from file (Ryd)=",1f14.8)') ef
+     WRITE( stdout,'(">> Fermi level read from file (Ry)=",1f14.8)') ef
      WRITE( stdout,*)
   ENDIF   !$$$$$$$$$$$$$$$$$$  xonly_plot if structure
 
@@ -1857,8 +1857,8 @@ END SUBROUTINE lanczos
 SUBROUTINE lanczos_uspp (a,b,psi,ncalcv, terminator)
   USE kinds, ONLY : DP
   USE wvfct,  ONLY:  npwx,nbndx, nbnd,npw,igk,g2kin
-  !USE wavefunctions_module, ONLY : psic
   USE becmod, ONLY: becp, calbec
+  USE constants, ONLY: rytoev
   USE uspp,   ONLY : vkb, nkb
   USE cell_base, ONLY:omega
   USE xspectra, ONLY : xniter, xnepoint,xcheck_conv,xnitermax,xemin,xemax,xgamma,xerror
@@ -1877,8 +1877,7 @@ SUBROUTINE lanczos_uspp (a,b,psi,ncalcv, terminator)
   LOGICAL converge
   LOGICAL iconv
   INTEGER ibnd,j,i,m
-  REAL(KIND=dp)  norm,error,xemin_ryd,xemax_ryd,ryd2eV,xgamma_ryd
-  parameter(ryd2ev = 13.6058d0)
+  REAL(KIND=dp)  norm,error,xemin_ryd,xemax_ryd,xgamma_ryd
   COMPLEX(KIND=dp):: ac,bc
   REAL(KIND=dp), ALLOCATABLE :: comp(:)
   COMPLEX(KIND=dp), ALLOCATABLE :: u(:), v1(:), v2(:), v3(:)
@@ -1902,9 +1901,9 @@ SUBROUTINE lanczos_uspp (a,b,psi,ncalcv, terminator)
   a(:)=0.d0
   b(:)=0.d0
 
-  xemax_ryd=xemax/Ryd2eV
-  xemin_ryd=xemin/Ryd2eV
-  xgamma_ryd=xgamma/Ryd2eV
+  xemax_ryd=xemax/rytoev
+  xemin_ryd=xemin/rytoev
+  xgamma_ryd=xgamma/rytoev
 
   iconv=.false.
   ! ------------------------  1st iteration --------------------------
@@ -3590,11 +3589,11 @@ SUBROUTINE initialize_gamma_tab
   USE xspectra, ONLY : xemin, xemax, xnepoint
   USE kinds, ONLY :dp
   USE io_global, ONLY : stdout
+  USE constants, ONLY : rytoev
   USE gamma_variable_mod
   IMPLICIT NONE
   REAL(dp) :: e,x,y,dx
   INTEGER :: i,j,n
-  REAL (dp), parameter :: ryd2ev = 13.6058d0
   dx=(xemax-xemin)/dfloat(xnepoint)
 
   DO n=1, xnepoint
@@ -3612,7 +3611,7 @@ SUBROUTINE initialize_gamma_tab
         y=(gamma_points(i-1,2)*(gamma_points(i,1)-x)+gamma_points(i,2)*(x-gamma_points(i-1,1)))&
              /(gamma_points(i,1)-gamma_points(i-1,1))
      ENDIF
-     gamma_tab(n)=y/ryd2ev
+     gamma_tab(n)=y/rytoev
   ENDDO
 
 END SUBROUTINE initialize_gamma_tab
