@@ -1296,10 +1296,11 @@ SUBROUTINE esm_printpot ()
   USE mp_global,            ONLY : intra_pool_comm
   USE fft_base,             ONLY : dfftp
   USE io_global,            ONLY : ionode, stdout
+  USE const,                ONLY : rytoev, bohr_radius_angs
   !
   IMPLICIT NONE
   !
-  REAL(DP)                :: z1,z2,z3,z4,charge,ehart,bohr,rydv,L,area
+  REAL(DP)                :: z1,z2,z3,z4,charge,ehart,L,area
   REAL(DP), ALLOCATABLE   :: work1(:),work2(:,:),work3(:), work4(:,:)
   INTEGER                 :: ix,iy,iz,izz,i,k3
 
@@ -1310,8 +1311,6 @@ SUBROUTINE esm_printpot ()
         work1(:)=0.d0; work2(:,:)=0.d0; work3(:)=0.d0; work4(:,:)=0.d0
         L=alat*at(3,3)
         area=(at(1,1)*at(2,2)-at(2,1)*at(1,2))*alat**2
-        bohr=0.52917720859d0
-        rydv=13.6058d0
         CALL v_h (rho%of_g, ehart, charge, work2)
         work3(1:dfftp%nnr)=vltot(1:dfftp%nnr)
         if( nspin == 2 ) then
@@ -1340,8 +1339,8 @@ SUBROUTINE esm_printpot ()
               z4=z4+work3(i)/dble(dfftp%nr1*dfftp%nr2)
            enddo
            enddo
-           work4(1:5,izz) = (/dble(k3)/dble(dfftp%nr3)*L*bohr, z1, z3*rydv, &
-                z4*rydv, z2*rydv/)
+           work4(1:5,izz) = (/dble(k3)/dble(dfftp%nr3)*L*bohr_radius_angs, &
+                              z1, z3*rytoev,z4*rytoev, z2*rytoev/)
         enddo
 #ifdef __PARA
         call mp_sum(work4, intra_pool_comm)
