@@ -158,7 +158,7 @@ SUBROUTINE elphsum_wannier(q_index)
   !            missing calc_sigma_yet
   !-----------------------------------------------------------------------
   USE kinds, ONLY : DP
-  USE constants, ONLY : pi
+  USE constants, ONLY : pi, ry_to_cmm1, rytoev
   USE ions_base, ONLY : nat, ityp, tau,amass,tau, ntyp => nsp, atm
   USE cell_base, ONLY : at, bg, ibrav, celldm 
   USE fft_base,  ONLY: dfftp
@@ -181,14 +181,9 @@ SUBROUTINE elphsum_wannier(q_index)
   !
   IMPLICIT NONE
   !
-  INTEGER :: q_index
+  INTEGER, INTENT(IN) :: q_index
   !
-  !
-
-  ! eps = 20 cm^-1, in Ry
-  REAL(DP) :: eps
-  PARAMETER (eps = 20.d0 / 13.6058d0 / 8065.5d0)
-  !
+  REAL(DP), PARAMETER :: eps = 20_dp/ry_to_cmm1 ! eps = 20 cm^-1, in Ry
   !
   INTEGER :: ik, ikk, ikq, isig, ibnd, jbnd, ipert, jpert, nu, mu, &
        vu, ngauss1, nsig, iuelph, ios, iuelphmat,icnt,i,j,rrho,nt,k
@@ -367,11 +362,11 @@ SUBROUTINE elphsum_wannier(q_index)
           bg, nsymq, nat, irotmq, minus_q)
      !
      WRITE (6, 9000) degauss1, ngauss1
-     WRITE (6, 9005) dosef, ef1 * 13.6058
+     WRITE (6, 9005) dosef, ef1 * rytoev
      WRITE (6, 9006) phase_space
      IF (iuelph.NE.0) THEN
         WRITE (iuelph, 9000) degauss1, ngauss1
-        WRITE (iuelph, 9005) dosef, ef1 * 13.6058
+        WRITE (iuelph, 9005) dosef, ef1 * rytoev
      ENDIF
      
      DO nu = 1, nmodes

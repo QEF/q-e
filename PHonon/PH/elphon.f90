@@ -735,7 +735,7 @@ SUBROUTINE elphsum_simple
   !      Rewritten by Matteo Calandra
   !-----------------------------------------------------------------------
   USE kinds, ONLY : DP
-  USE constants, ONLY : pi
+  USE constants, ONLY : pi, ry_to_cmm1, rytoev
   USE ions_base, ONLY : nat, ityp, tau,amass,tau, ntyp => nsp, atm
   USE cell_base, ONLY : at, bg, ibrav, celldm 
   USE fft_base,  ONLY: dfftp
@@ -757,10 +757,7 @@ SUBROUTINE elphsum_simple
   USE mp,        ONLY: mp_sum
   !
   IMPLICIT NONE
-  ! eps = 20 cm^-1, in Ry
-  REAL(DP) :: eps
-  PARAMETER (eps = 20.d0 / 13.6058d0 / 8065.5d0)
-  !
+  REAL(DP), PARAMETER :: eps = 20_dp/ry_to_cmm1 ! eps = 20 cm^-1, in Ry
   !
   INTEGER :: ik, ikk, ikq, isig, ibnd, jbnd, ipert, jpert, nu, mu, &
        vu, ngauss1, nsig, iuelph, ios, iuelphmat,icnt,i,j,rrho,nt,k
@@ -886,11 +883,11 @@ SUBROUTINE elphsum_simple
           bg, nsymq, nat, irotmq, minus_q)
      !
      WRITE (6, 9000) degauss1, ngauss1
-     WRITE (6, 9005) dosef, ef1 * 13.6058
+     WRITE (6, 9005) dosef, ef1 * rytoev
      WRITE (6, 9006) phase_space
      IF (iuelph.NE.0) THEN
         WRITE (iuelph, 9000) degauss1, ngauss1
-        WRITE (iuelph, 9005) dosef, ef1 * 13.6058
+        WRITE (iuelph, 9005) dosef, ef1 * rytoev
      ENDIF
      
      DO nu = 1, nmodes
@@ -902,9 +899,8 @@ SUBROUTINE elphsum_simple
            ENDDO
         ENDDO
         write(819+mu,*) gamma
-        gamma = 3.1415926 * gamma / 2.d0
-        
-        write(6,*) 'gamma*pi/2=',gamma*pi/2
+        gamma = pi * gamma / 2.d0
+        write(6,*) 'gamma*pi/2=',gamma
         !
         ! the factor 2 comes from the factor sqrt(hbar/2/M/omega) that appears
         ! in the definition of the electron-phonon matrix element g
@@ -919,11 +915,10 @@ SUBROUTINE elphsum_simple
         ! is absent because we sum, not average, over the Fermi surface.
         ! The factor 2 is provided by the sum over spins
         !
-        
-        IF (SQRT (ABS (w2 (nu) ) ) .GT.eps) THEN
+        IF (SQRT (ABS (w2 (nu) ) ) > eps) THEN
            ! lambda is the adimensional el-ph coupling for mode nu:
            ! lambda(nu)= gamma(nu)/(pi N(Ef) \omega_{q,nu}^2)
-           lambda = gamma / 3.1415926 / w2 (nu) / dosef
+           lambda = gamma / pi / w2 (nu) / dosef
         ELSE
            lambda = 0.0
         ENDIF

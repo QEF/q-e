@@ -14,7 +14,7 @@ SUBROUTINE dyndiar (dyn,nat3,nmodes,u,nat,ityp,amass,w2,dynout)
   !   and mode displacements in "dynout". dyn is unchanged on output.
   !
   USE kinds, ONLY : DP
-  USE constants, ONLY : amconv
+  USE constants, ONLY : amconv, ry_to_thz, ry_to_cmm1
   USE io_global,  ONLY : stdout
   IMPLICIT NONE
   INTEGER :: nmodes, nat3, nat,ityp(nat), iudyn
@@ -23,7 +23,7 @@ SUBROUTINE dyndiar (dyn,nat3,nmodes,u,nat,ityp,amass,w2,dynout)
   !
   INTEGER:: nu_i, nu_j, mu, na, nb, nt, i, j
   real(DP), ALLOCATABLE :: m(:,:), z(:,:)
-  real(DP) :: rydthz, rydcm1, w1, unorm, sum, dif
+  real(DP) :: w1, unorm, sum, dif
   !
   ALLOCATE  ( m  ( nat3, nat3))
   ALLOCATE  ( z  ( nat3, nat3))
@@ -78,11 +78,6 @@ SUBROUTINE dyndiar (dyn,nat3,nmodes,u,nat,ityp,amass,w2,dynout)
   !
   CALL rdiaghg (nat3, nmodes, dynout, m, nat3, w2, z)
   !
-  !  conversion factors ryd=>thz e ryd=>1/cm
-  !
-  rydthz = 13.6058d0*241.796d0
-  rydcm1 = 13.6058d0*8065.5d0
-  !
   !  write frequencies
   !
   WRITE( stdout,'(5x,"diagonalizing the dynamical matrix ..."//)')
@@ -92,7 +87,7 @@ SUBROUTINE dyndiar (dyn,nat3,nmodes,u,nat,ityp,amass,w2,dynout)
   DO nu_i = 1,nmodes
      w1 = sqrt(abs(w2(nu_i)))
      IF (w2(nu_i)<0.0) w1 = -w1
-     WRITE( stdout,9010) nu_i, w1*rydthz, w1*rydcm1
+     WRITE( stdout,9010) nu_i, w1*ry_to_thz, w1*ry_to_cmm1
      !  bring eigendisplacements in cartesian axis
      DO mu = 1,3*nat
         DO i = 1,nmodes

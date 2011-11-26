@@ -315,7 +315,7 @@ subroutine writemodes (nax,nat,q,w2,z,iout)
   !   write modes on output file in a readable way
   !
   use kinds, only: dp
-  USE constants, ONLY : RY_TO_THZ, RY_TO_CMM1
+  USE constants, ONLY : ry_to_thz, ry_to_cmm1
   implicit none
   ! input
   integer nax, nat, iout
@@ -324,15 +324,9 @@ subroutine writemodes (nax,nat,q,w2,z,iout)
   ! local
   integer nat3, na, ipol, i, j
   real(DP):: freq(3*nat)
-  real(DP):: rydthz,rydcm1,cm1thz,znorm
+  real(DP):: znorm
   !
   nat3=3*nat
-  !
-  !  conversion factors RYD=>THZ, RYD=>1/CM e 1/CM=>THZ
-  !
-  rydthz = RY_TO_THZ
-  rydcm1 = RY_TO_CMM1
-  cm1thz = RY_TO_THZ/RY_TO_CMM1
   !
   !  write frequencies and normalised displacements
   !
@@ -341,9 +335,9 @@ subroutine writemodes (nax,nat,q,w2,z,iout)
   write(iout,'(1x,74(''*''))')
   do i = 1,nat3
      !
-     freq(i)= sqrt(abs(w2(i)))*rydcm1
+     freq(i)= sqrt(abs(w2(i)))
      if (w2(i).lt.0.0_DP) freq(i) = -freq(i)
-     write (iout,9010) i, freq(i)*cm1thz, freq(i)
+     write (iout,9010) i, freq(i)*ry_to_thz, freq(i)*ry_to_cmm1
      znorm = 0.0d0
      do j=1,nat3
         znorm=znorm+abs(z(j,i))**2
@@ -359,7 +353,7 @@ subroutine writemodes (nax,nat,q,w2,z,iout)
   !      if (flvec.ne.' ') then
   !         open (unit=iout,file=flvec,status='unknown',form='unformatted')
   !         write(iout) nat, nat3, (ityp(i),i=1,nat), (q(i),i=1,3)
-  !         write(iout) (freq(i),i=1,nat3), ((z(i,j),i=1,nat3),j=1,nat3)
+  !         write(iout) (freq(i)*ry_to_cmm1,i=1,nat3), ((z(i,j),i=1,nat3),j=1,nat3)
   !         close(iout)
   !      end if
   !
@@ -377,6 +371,7 @@ subroutine writemolden (flmol, gamma, nat, atm, a0, tau, ityp, w2, z)
   !   write modes on output file in a molden-friendly way
   !
   use kinds, only: dp
+  USE constants, ONLY : ry_to_cmm1
   implicit none
   ! input
   integer :: nat, ityp(nat)
@@ -388,7 +383,7 @@ subroutine writemolden (flmol, gamma, nat, atm, a0, tau, ityp, w2, z)
   ! local
   integer :: nat3, na, ipol, i, j, iout
   real(DP) :: freq(3*nat)
-  real(DP) :: rydcm1, znorm
+  real(DP) :: znorm
   !
   if (flmol.eq.' ') then
      return
@@ -398,15 +393,13 @@ subroutine writemolden (flmol, gamma, nat, atm, a0, tau, ityp, w2, z)
   end if
   nat3=3*nat
   !
-  rydcm1 = 13.6058d0*8065.5d0
-  !
   !  write frequencies and normalised displacements
   !
   write(iout,'(''[Molden Format]'')')
   !
   write(iout,'(''[FREQ]'')')
   do i = 1,nat3
-     freq(i)= sqrt(abs(w2(i)))*rydcm1
+     freq(i)= sqrt(abs(w2(i)))*ry_to_cmm1
      if (w2(i).lt.0.0d0) freq(i) = 0.0d0
      write (iout,'(f8.2)') freq(i)
   end do

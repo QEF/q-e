@@ -101,7 +101,7 @@ SUBROUTINE cg_dchi(dchi_dtau)
   !
   !  calculate dX/dtau with finite differences
   !
-  USE constants,  ONLY : BOHR_RADIUS_ANGS
+  USE constants,  ONLY : bohr_radius_angs
   USE ions_base,  ONLY : nat, tau
   USE io_global,  ONLY : stdout, ionode
   USE io_files,   ONLY : iunres
@@ -150,7 +150,7 @@ SUBROUTINE cg_dchi(dchi_dtau)
   !
 2 CONTINUE
   !
-  convfact = BOHR_RADIUS_ANGS**2
+  convfact = bohr_radius_angs**2
   !
   DO na=na_,nat
      DO ipol=1,3
@@ -254,7 +254,7 @@ END SUBROUTINE cg_dchi
 SUBROUTINE cg_eps0dyn(w2,dynout)
   !-----------------------------------------------------------------------
   !
-  USE constants,  ONLY : BOHR_RADIUS_ANGS
+  USE constants,  ONLY : bohr_radius_angs
   USE ions_base,  ONLY : nat, tau, ityp, amass
   USE io_global,  ONLY : stdout, ionode
   USE io_files,   ONLY : iunres
@@ -391,7 +391,7 @@ END SUBROUTINE cg_eps0dyn
 SUBROUTINE cg_neweps
   !-----------------------------------------------------------------------
   !
-  USE constants, ONLY : BOHR_RADIUS_ANGS
+  USE constants, ONLY : bohr_radius_angs
   USE io_global, ONLY : stdout
   USE ions_base, ONLY : nat, tau
   USE pwcom
@@ -520,18 +520,15 @@ SUBROUTINE raman_cs(dynout,dchi_dtau)
   !
   !  calculate Raman cross section
   !
+  USE kinds,     ONLY : DP
+  USE constants, ONLY : amu_ry
   USE ions_base, ONLY : nat
-  USE io_global,  ONLY : stdout
-  USE pwcom
-  USE cgcom
+  USE io_global, ONLY : stdout
   !
   REAL(DP) :: dynout(3*nat,3*nat), dchi_dtau(3,3,3,nat)
   !
   INTEGER :: nu, na, ipol, jpol, lpol
   REAL(DP), ALLOCATABLE :: raman_activity(:,:,:)
-  REAL(DP), PARAMETER   :: r1fac = 911.444d0
-  !
-  !   conversion factor from (Ry au for mass)^(-1) to amu(-1)
   !
   ALLOCATE  ( raman_activity( 3, 3, nmodes))
   WRITE( stdout,'(/5x, "Raman tensor for mode nu : dX_{alpha,beta}/d nu"/)')
@@ -548,8 +545,11 @@ SUBROUTINE raman_cs(dynout,dchi_dtau)
            ENDDO
         ENDDO
      ENDDO
+     !
+     !   conversion factor from (Ry au for mass)^(-1) to amu(-1)
+     !
      WRITE( stdout,'(i5,3x,3e14.6,2(/8x,3e14.6))') &
-             nu,( ( raman_activity(ipol,jpol,nu)*r1fac,jpol=1,3), ipol=1,3)
+             nu,( ( raman_activity(ipol,jpol,nu)*amu_ry,jpol=1,3), ipol=1,3)
   ENDDO
   DEALLOCATE(raman_activity)
   !
@@ -562,7 +562,7 @@ SUBROUTINE raman_cs2(w2,dynout)
   !
   !  calculate d X/d u  (u=phonon mode) with finite differences
   !
-  USE constants,  ONLY : BOHR_RADIUS_ANGS
+  USE constants,  ONLY : bohr_radius_angs, ry_to_thz, ry_to_cmm1, amu_ry
   USE ions_base,  ONLY : nat, tau
   USE io_global,  ONLY :  stdout, ionode
   USE io_files,   ONLY : iunres
@@ -582,7 +582,7 @@ SUBROUTINE raman_cs2(w2,dynout)
   DATA delta4/-2.d0, -1.d0, 1.d0, 2.d0/
   DATA coeff4/ 0.08333333333333d0,-0.66666666666666d0,              &
        &       0.66666666666667d0,-0.08333333333337d0 /
-  REAL(8):: polar(3), rydcm1, cm1thz, freq, r1fac, cmfac, irfac
+  REAL(8):: polar(3), freq, cmfac, irfac
   REAL(8):: alpha, beta2
   !
   CALL start_clock('raman_cs2')
@@ -615,13 +615,9 @@ SUBROUTINE raman_cs2(w2,dynout)
   !
 2 CONTINUE
   !
-  !   conversion factor from (Ry au for mass)^(-1) to amu(-1)
-  !
-  r1fac = 911.444d0
-  !
   !   conversion factor from bohr^2*(Ry au for mass)^(-1/2) to A^2 amu(-1/2)
   !
-  convfact = BOHR_RADIUS_ANGS**2*sqrt(r1fac)
+  convfact = bohr_radius_angs**2*sqrt(amu_ry)
   !
   DO nu=first,last
      IF (nu<nu_) GOTO 11
@@ -711,11 +707,6 @@ SUBROUTINE raman_cs2(w2,dynout)
           nu,( ( raman_activity(ipol,jpol,nu-first+1),jpol=1,3), ipol=1,3)
   ENDDO
   !
-  !  conversion factors RYD=>THZ, RYD=>1/CM e 1/CM=>THZ
-  !
-  rydcm1 = 13.6058d0*8065.5d0
-  cm1thz = 241.796d0/8065.5d0
-  !
   !  derivatives of epsilon are translated into derivatives of molecular
   !  polarizabilities by assuming a Clausius-Mossotti behavior
   !  (for anisotropic systems epsilon is replaced by its trace)
@@ -728,7 +719,7 @@ SUBROUTINE raman_cs2(w2,dynout)
   !   1 e = 4.80324x10^(-10) esu = 4.80324 Debye/A
   !     (1 Debye = 10^(-18) esu*cm = 0.2081928 e*A)
   !
-  irfac = 4.80324d0**2/2.d0*r1fac
+  irfac = 4.80324d0**2/2.d0*amu_ry
   !
   ALLOCATE (infrared(3*nat))
   !
@@ -759,7 +750,7 @@ SUBROUTINE raman_cs2(w2,dynout)
   !
   DO nu = 1,3*nat
      !
-     freq = sqrt(abs(w2(nu)))*rydcm1
+     freq = sqrt(abs(w2(nu)))
      IF (w2(nu)<0.0) freq = -freq
      !
      ! alpha, beta2: see PRB 54, 7830 (1996) and refs quoted therein
@@ -780,7 +771,7 @@ SUBROUTINE raman_cs2(w2,dynout)
         beta2 = 0
      ENDIF
      WRITE( stdout,'(i5,f10.2,f12.4,2f10.4)') &
-          nu, freq, freq*cm1thz, infrared(nu), &
+          nu, freq*ry_to_cmm1, freq*ry_to_thz, infrared(nu), &
           (45.d0*alpha**2 + 7.0d0*beta2)
   ENDDO
   !
