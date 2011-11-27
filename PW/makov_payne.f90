@@ -166,7 +166,7 @@ SUBROUTINE write_dipole( etot, x0, dipole_el, quadrupole_el, qq )
   !
   USE kinds,      ONLY : DP
   USE io_global,  ONLY : stdout
-  USE constants,  ONLY : e2, pi, rytoev
+  USE constants,  ONLY : e2, pi, rytoev, au_debye
   USE ions_base,  ONLY : nat, ityp, tau, zv
   USE cell_base,  ONLY : at, bg, omega, alat, ibrav
   USE io_global,  ONLY : ionode
@@ -181,7 +181,7 @@ SUBROUTINE write_dipole( etot, x0, dipole_el, quadrupole_el, qq )
   REAL(DP), INTENT(IN)  :: dipole_el(0:3), quadrupole_el
   REAL(DP), INTENT(OUT) :: qq
   !
-  REAL(DP) :: debye, dipole_ion(3), quadrupole_ion, dipole(3), quadrupole
+  REAL(DP) :: dipole_ion(3), quadrupole_ion, dipole(3), quadrupole
   REAL(DP) :: zvia, zvtot
   REAL(DP) :: corr1, corr2, aa, bb
   INTEGER  :: ia, ip
@@ -234,8 +234,6 @@ SUBROUTINE write_dipole( etot, x0, dipole_el, quadrupole_el, qq )
   WRITE( stdout, '(/5X,"charge density inside the ", &
        &               "Wigner-Seitz cell:",3F14.8," el.")' ) dipole_el(0)
   !
-  debye = 2.54176D0
-  !
   WRITE( stdout, &
          '(/5X,"reference position (x0):",5X,3F14.8," bohr")' ) x0(:)*alat
   !
@@ -243,16 +241,16 @@ SUBROUTINE write_dipole( etot, x0, dipole_el, quadrupole_el, qq )
   !
   WRITE( stdout, '(/5X,"Dipole moments (with respect to x0):")' )
   WRITE( stdout, '( 5X,"Elect",3F9.4," au (Ha),",3F9.4," Debye")' ) &
-      (-dipole_el(ip), ip = 1, 3), (-dipole_el(ip)*debye, ip = 1, 3 )
+      (-dipole_el(ip), ip = 1, 3), (-dipole_el(ip)*au_debye, ip = 1, 3 )
   WRITE( stdout, '( 5X,"Ionic",3F9.4," au (Ha),", 3F9.4," Debye")' ) &
-      ( dipole_ion(ip),ip = 1, 3), ( dipole_ion(ip)*debye,ip = 1, 3 )
+      ( dipole_ion(ip),ip = 1, 3), ( dipole_ion(ip)*au_debye,ip = 1, 3 )
 #ifdef __SOLVENT
   IF ( do_solvent ) &
     WRITE( stdout, '( 5X,"Diele",3F9.4," au (Ha),", 3F9.4," Debye")' ) &
-      (-pol_dipole(ip),ip = 1, 3), (-pol_dipole(ip)*debye,ip = 1, 3 )
+      (-pol_dipole(ip),ip = 1, 3), (-pol_dipole(ip)*au_debye,ip = 1, 3 )
 #endif
   WRITE( stdout, '( 5X,"Total",3F9.4," au (Ha),", 3F9.4," Debye")' ) &
-      ( dipole(ip),    ip = 1, 3), ( dipole(ip)*debye,    ip = 1, 3 )
+      ( dipole(ip),    ip = 1, 3), ( dipole(ip)*au_debye,    ip = 1, 3 )
   !
   ! ... print the electronic, ionic and total quadrupole moments
   !

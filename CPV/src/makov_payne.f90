@@ -17,7 +17,7 @@ SUBROUTINE makov_payne(etot)
   USE ions_base,         ONLY : nat, zv
   USE ions_positions,    ONLY : tau0, ityp
   USE io_global,         ONLY : stdout, ionode, ionode_id
-  USE constants,         ONLY : pi,AUTOEV
+  USE constants,         ONLY : pi, autoev, au_debye
   USE cp_main_variables, ONLY : rhor
   USE electrons_base,    ONLY : nspin
   USE cell_base,         ONLY : at, bg, omega, alat, ibrav
@@ -36,7 +36,7 @@ INTEGER, ALLOCATABLE, DIMENSION(:) :: zvv
 REAL(DP), ALLOCATABLE, DIMENSION(:,:,:) :: rhof
 REAL(DP), ALLOCATABLE, DIMENSION(:,:) :: r
 REAL(DP) :: h(3,3),volumetto,a(3,3)
-REAL(DP) :: usunx,usuny,usunz,R0(3),qq,aa,bb,debye
+REAL(DP) :: usunx,usuny,usunz,R0(3),qq,aa,bb
 REAL(DP) :: charge, charge_ion, charge_el
 REAL(DP) :: dipole(3), dipole_ion(3), dipole_el(3)
 REAL(DP) :: quadrupole, quadrupole_ion, quadrupole_el
@@ -213,8 +213,6 @@ IF ( ionode ) THEN
    WRITE( stdout, '(/5X,"charge density inside the ", &
         &               "Wigner-Seitz cell:",3F14.8," el.")' ) charge_el
    !
-   debye = 2.54176D0
-   !
    WRITE( stdout, &
           '(/5X,"reference position (R0):",5X,3F14.8," bohr")' ) R0(:)
    !
@@ -222,11 +220,11 @@ IF ( ionode ) THEN
    !
    WRITE( stdout, '(/5X,"Dipole moments (with respect to x0):")' )
    WRITE( stdout, '( 5X,"Elect",3F10.4," au,  ", 3F10.4," Debye")' ) &
-       (-dipole_el(ip), ip = 1, 3), (-dipole_el(ip)*debye, ip = 1, 3 )
+       (-dipole_el(ip), ip = 1, 3), (-dipole_el(ip)*au_debye, ip = 1, 3 )
    WRITE( stdout, '( 5X,"Ionic",3F10.4," au,  ", 3F10.4," Debye")' ) &
-       ( dipole_ion(ip),ip = 1, 3), ( dipole_ion(ip)*debye,ip = 1, 3 )
+       ( dipole_ion(ip),ip = 1, 3), ( dipole_ion(ip)*au_debye,ip = 1, 3 )
    WRITE( stdout, '( 5X,"Total",3F10.4," au,  ", 3F10.4," Debye")' ) &
-       ( dipole(ip),    ip = 1, 3), ( dipole(ip)*debye,    ip = 1, 3 )
+       ( dipole(ip),    ip = 1, 3), ( dipole(ip)*au_debye,    ip = 1, 3 )
    !
    ! ... print the electronic, ionic and total quadrupole moments
    !
@@ -253,11 +251,11 @@ IF ( ionode ) THEN
    WRITE( stdout, '(/,5X,"*********    MAKOV-PAYNE CORRECTION    *********")' )
    !
    WRITE( stdout,'(/5X,"Makov-Payne correction ",F14.8," a.u. = ",F6.3, &
-        &              " eV (1st order, 1/a0)")'   ) -corr1, -corr1*AUTOEV
+        &              " eV (1st order, 1/a0)")'   ) -corr1, -corr1*autoev
    WRITE( stdout,'( 5X,"                       ",F14.8," a.u. = ",F6.3, &
-        &              " eV (2nd order, 1/a0^3)")' ) -corr2, -corr2*AUTOEV
+        &              " eV (2nd order, 1/a0^3)")' ) -corr2, -corr2*autoev
    WRITE( stdout,'( 5X,"                       ",F14.8," a.u. = ",F6.3, &
-        &              " eV (total)")' ) -corr1-corr2, (-corr1-corr2)*AUTOEV
+        &              " eV (total)")' ) -corr1-corr2, (-corr1-corr2)*autoev
    !
    WRITE( stdout,'(/5X,"corrected Total energy = ",F14.8," a.u.")' ) &
        etot - corr1 - corr2

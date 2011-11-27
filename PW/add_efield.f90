@@ -45,7 +45,7 @@ SUBROUTINE add_efield(vpoten,etotefield,rho,iflag)
   !
   !
   USE kinds,         ONLY : DP
-  USE constants,     ONLY : fpi, eps8, e2
+  USE constants,     ONLY : fpi, eps8, e2, au_debye
   USE ions_base,     ONLY : nat, ityp, zv
   USE cell_base,     ONLY : alat, at, omega, bg, saw
   USE extfield,      ONLY : tefield, dipfield, edir, eamp, emaxpos, &
@@ -73,7 +73,7 @@ SUBROUTINE add_efield(vpoten,etotefield,rho,iflag)
   INTEGER :: index, index0, i, j, k
   INTEGER :: ir, na, ipol
   REAL(DP) :: length, vamp, value, sawarg, e_dipole, ion_dipole
-  REAL(DP) :: tot_dipole, bmod, debye
+  REAL(DP) :: tot_dipole, bmod
 
   LOGICAL :: first=.TRUE.
   SAVE first
@@ -98,7 +98,6 @@ SUBROUTINE add_efield(vpoten,etotefield,rho,iflag)
   !---------------------
 
   bmod=SQRT(bg(1,edir)**2+bg(2,edir)**2+bg(3,edir)**2)
-  debye = 2.54176D0
 
   tot_dipole=0._dp
   e_dipole  =0._dp
@@ -192,14 +191,14 @@ SUBROUTINE add_efield(vpoten,etotefield,rho,iflag)
           !
           IF ( iverbosity > 0 ) THEN
               WRITE( stdout, '(8X,"Elec. dipole ",1F15.4," Ry au,  ", 1F15.4," Debye")' ) &
-                                            e_dipole, (e_dipole*debye)
+                                            e_dipole, (e_dipole*au_debye)
               WRITE( stdout, '(8X,"Ion. dipole  ",1F15.4," Ry au,", 1F15.4," Debye")' ) &
-                                          ion_dipole, (ion_dipole*debye)
+                                          ion_dipole, (ion_dipole*au_debye)
           ENDIF
 
           WRITE( stdout, '(8X,"Dipole       ",1F15.4," Ry au, ", 1F15.4," Debye")' ) &
                                             (tot_dipole* (omega/fpi)),   &
-                                            ((tot_dipole* (omega/fpi))*debye)  
+                                            ((tot_dipole* (omega/fpi))*au_debye)  
 
           WRITE( stdout, '(8x,"Dipole field     ", f11.4," Ry au")') tot_dipole
           WRITE( stdout,*)
