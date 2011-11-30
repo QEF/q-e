@@ -230,6 +230,7 @@ end Module dynamical
       read(1,*) ntyp,nat,ibrav,celldm
       !
       if (ibrav==0) then
+         read(1,'(a)') line
          read(1,*) ((at(i,j),i=1,3),j=1,3)
       end if
       !

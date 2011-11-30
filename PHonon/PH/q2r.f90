@@ -556,6 +556,7 @@ SUBROUTINE read_file( nqs, xq, epsil, lrigid, &
      IF (ionode) THEN
         READ(1,*) ntyp,nat,ibrav,(celldm(i),i=1,6)
         if (ibrav==0) then
+           read (1,'(a)') atm1  ! for compatibility
            read (1,*) ((at(i,j),i=1,3),j=1,3)
         end if
      END IF
@@ -606,6 +607,7 @@ SUBROUTINE read_file( nqs, xq, epsil, lrigid, &
              CALL errore('read_file','wrong celldm',i)
      END DO
      if (ibrav==0) then
+         IF (ionode) read (1,'(a)') atm1 ! for compatibility
          IF (ionode) read (1,*) ((at1(i,j),i=1,3),j=1,3)
          CALL mp_bcast(at1, ionode_id)
          do i=1,3

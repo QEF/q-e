@@ -246,6 +246,7 @@ end subroutine dynmatrix
   WRITE (iudyn, '(a)') title
   WRITE (iudyn, '(i3,i5,i3,6f11.7)') ntyp, nat, ibrav, celldm
   IF (ibrav==0) THEN
+     WRITE (iudyn,'("Basis vectors")')
      WRITE (iudyn,'(2x,3f15.9)') ((at(i,j),i=1,3),j=1,3)
   END IF
   DO nt = 1, ntyp
