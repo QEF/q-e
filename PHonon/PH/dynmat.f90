@@ -476,7 +476,7 @@ subroutine set_asr ( asr, axis, nat, tau, dyn, zeu )
   complex(DP), intent(inout) :: dyn(3,3,nat,nat)
   !
   integer :: i,j,n,m,p,k,l,q,r,na, nb, na1, i1, j1
-  real(DP) dynr_new(2,3,3,nat,nat), zeu_new(3,3,nat)
+  real(DP), allocatable:: dynr_new(:,:,:,:,:), zeu_new(:,:,:)
   real(DP), allocatable :: u(:,:,:,:,:)
   ! These are the "vectors" associated with the sum rules
   !
@@ -484,25 +484,25 @@ subroutine set_asr ( asr, axis, nat, tau, dyn, zeu )
   ! indices of the vectors u that are not independent to the preceding ones,
   ! n_less = number of such vectors, i_less = temporary parameter
   !
-  integer ind_v(9*nat*nat,2,4)
-  real(DP) v(9*nat*nat,2)
+  integer, allocatable :: ind_v(:,:,:)
+  real(DP), allocatable :: v(:,:)
   ! These are the "vectors" associated with symmetry conditions, coded by
   ! indicating the positions (i.e. the four indices) of the non-zero elements
   ! (there should be only 2 of them) and the value of that element.
   ! We do so in order to use limit the amount of memory used.
   !
-  real(DP) w(3,3,nat,nat), x(3,3,nat,nat)
+  real(DP), allocatable :: w(:,:,:,:), x(:,:,:,:)
   real(DP) sum, scal, norm2
   ! temporary vectors and parameters
   !
-  real(DP) zeu_u(6*3,3,3,nat)
+  real(DP), allocatable :: zeu_u(:,:,:,:)
   ! These are the "vectors" associated with the sum rules on effective charges
   !
   integer zeu_less(6*3),nzeu_less,izeu_less
   ! indices of the vectors zeu_u that are not independent to the preceding
   ! ones, nzeu_less = number of such vectors, izeu_less = temporary parameter
   !
-  real(DP) zeu_w(3,3,nat), zeu_x(3,3,nat)
+  real(DP), allocatable :: zeu_w(:,:,:), zeu_x(:,:,:)
   ! temporary vectors
   !
   ! Initialization
@@ -539,6 +539,8 @@ subroutine set_asr ( asr, axis, nat, tau, dyn, zeu )
      ! generating the vectors of the orthogonal of the subspace to project
      ! the effective charges matrix on
      !
+     allocate ( zeu_new(3,3,nat) )
+     allocate (zeu_u(6*3,3,3,nat) )
      zeu_u(:,:,:,:)=0.0d0
      do i=1,3
         do j=1,3
@@ -589,6 +591,7 @@ subroutine set_asr ( asr, axis, nat, tau, dyn, zeu )
      !
      ! Gram-Schmidt orthonormalization of the set of vectors created.
      !
+     allocate ( zeu_w(3,3,nat), zeu_x(3,3,nat) )
      nzeu_less=0
      do k=1,p
         zeu_w(:,:,:)=zeu_u(k,:,:,:)
@@ -653,6 +656,9 @@ subroutine set_asr ( asr, axis, nat, tau, dyn, zeu )
            enddo
         enddo
      enddo
+     deallocate (zeu_w, zeu_x)
+     deallocate (zeu_u)
+     deallocate (zeu_new)
   endif
   !
   ! ASR on dynamical matrix
@@ -675,6 +681,7 @@ subroutine set_asr ( asr, axis, nat, tau, dyn, zeu )
      ! the dyn. matrix on
      !
      allocate (u(6*3*nat,3,3,nat,nat))
+     allocate (dynr_new(2,3,3,nat,nat))
      u(:,:,:,:,:)=0.0d0
      do i=1,3
         do j=1,3
@@ -736,6 +743,8 @@ subroutine set_asr ( asr, axis, nat, tau, dyn, zeu )
         enddo
      endif
      !
+     allocate (ind_v(9*nat*nat,2,4))
+     allocate (v(9*nat*nat,2))
      m=0
      do i=1,3
         do j=1,3
@@ -774,6 +783,7 @@ subroutine set_asr ( asr, axis, nat, tau, dyn, zeu )
      ! Note that the vectors corresponding to symmetry constraints are already
      ! orthonormalized by construction.
      !
+     allocate ( w(3,3,nat,nat), x(3,3,nat,nat))
      n_less=0
      do k=1,p
         w(:,:,:,:)=u(k,:,:,:,:)
@@ -873,6 +883,9 @@ subroutine set_asr ( asr, axis, nat, tau, dyn, zeu )
      !  if (DABS(scal).gt.1d-10) write(6,'("k= ",I8," dyn|u(k)= ",F15.10)') k,scal
      !enddo
      !
+     deallocate ( w, x )
+     deallocate ( v )
+     deallocate ( ind_v )
      deallocate ( u )
      !
      do i=1,3
@@ -885,6 +898,7 @@ subroutine set_asr ( asr, axis, nat, tau, dyn, zeu )
            enddo
         enddo
      enddo
+     deallocate ( dynr_new )
   endif
   !
   return
