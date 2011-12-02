@@ -35,11 +35,11 @@ SUBROUTINE openfilq()
   USE paw_variables,  ONLY : okpaw
   USE control_flags,  ONLY : twfcollect
   USE mp_global,      ONLY : me_pool
-  USE io_global,      ONLY : ionode
+  USE io_global,      ONLY : ionode,stdout
   USE ramanm,         ONLY: lraman, elop, iuchf, iud2w, iuba2, lrchf, lrd2w, lrba2
   USE acfdtest,       ONLY : acfdt_is_active, acfdt_num_der
   USE input_parameters,ONLY: nk1, nk2, nk3
-  USE el_phon , ONLY     : elph
+  USE el_phon , ONLY     : elph, elph_mat, iunwfcwann
   !
   IMPLICIT NONE
   !
@@ -52,6 +52,7 @@ SUBROUTINE openfilq()
   !
   REAL(DP) :: edum(1,1), wdum(1,1)
   INTEGER :: ndr, ierr
+  INTEGER, EXTERNAL :: find_free_unit
   !
   !
   IF (LEN_TRIM(prefix) == 0) CALL errore ('openfilq', 'wrong prefix', 1)
@@ -78,6 +79,13 @@ SUBROUTINE openfilq()
   CALL diropn (iuwfc, 'wfc', lrwfc, exst)
   IF (.NOT.exst) THEN
      CALL errore ('openfilq', 'file '//trim(prefix)//'.wfc not found', 1)
+  END IF
+  IF (elph_mat) then
+     iunwfcwann=733
+     CALL diropn (iunwfcwann, 'wfc', lrwfc, exst, dvscf_dir)
+     IF (.NOT.exst) THEN
+        CALL errore ('elphel_refolded', 'file '//trim(prefix)//'.wfc not found in Rotated_DVSCF', 1)
+     END IF
   END IF
   !
   ! From now on all files are written with the _ph prefix
@@ -151,6 +159,8 @@ SUBROUTINE openfilq()
      iudvscf = 27
      IF ( me_pool == 0 ) THEN
         IF(dvscf_dir.NE.' ') then
+           write(stdout,*) 'Reading dvscf file ',trim(adjustl(fildvscf))
+           write(stdout,*) 'in directory ',trim(adjustl(dvscf_dir))
            CALL diropn (iudvscf, fildvscf, lrdrho, exst, dvscf_dir)
         ELSE
            CALL diropn (iudvscf, fildvscf, lrdrho, exst )

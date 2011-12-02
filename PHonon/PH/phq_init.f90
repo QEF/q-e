@@ -58,7 +58,9 @@ SUBROUTINE phq_init()
 
   USE mp_global,           ONLY : intra_pool_comm
   USE mp,                  ONLY : mp_sum
-  USE acfdtest,           ONLY : acfdt_is_active, acfdt_num_der
+  USE acfdtest,            ONLY : acfdt_is_active, acfdt_num_der
+  USE el_phon,             ONLY : elph_mat, iunwfcwann, npwq_refolded, &
+                           kpq,g_kpq,igqg,xk_gamma
   !
   IMPLICIT NONE
   !
@@ -73,11 +75,13 @@ SUBROUTINE phq_init()
     ! index for wavefunctions at k
     ! counter on atoms
     ! counter on G vectors
+  INTEGER :: ikqg         !for the case elph_mat=.true.
   REAL(DP) :: arg
     ! the argument of the phase
   COMPLEX(DP), ALLOCATABLE :: aux1(:,:)
     ! used to compute alphap
   COMPLEX(DP), EXTERNAL :: zdotc
+
   !
   !
   IF (all_done) RETURN
@@ -118,6 +122,28 @@ SUBROUTINE phq_init()
   !
   IF ( nksq > 1 ) REWIND( iunigk )
   !
+ 
+  !
+  ! only for electron-phonon coupling with wannier functions
+  ! 
+  if(elph_mat) then
+    ALLOCATE(kpq(nksq),g_kpq(3,nksq),igqg(nksq))
+    ALLOCATE (xk_gamma(3,nksq))
+ 
+    do ik=1,nksq
+      xk_gamma(1:3,ik)=xk(1:3,ikks(ik))
+    enddo
+      !
+      !first of all I identify q' in the list of xk such that
+      !   (i) q' is in the set of xk
+      !   (ii) k+q'+G=k+q
+      !  and G is a G vector depending on k and q.
+      !
+    call get_equivalent_kpq(xk_gamma,xq,kpq,g_kpq,igqg)
+
+  endif
+
+ 
   DO ik = 1, nksq
      !
      ikk  = ikks(ik)
@@ -163,7 +189,11 @@ SUBROUTINE phq_init()
      !
      ! ... read the wavefunctions at k
      !
-     CALL davcio( evc, lrwfc, iuwfc, ikk, -1 )
+    if(elph_mat) then
+       CALL davcio (evc, lrwfc, iunwfcwann, ik, - 1)
+    else
+       CALL davcio( evc, lrwfc, iuwfc, ikk, -1 )
+    endif
      !
      ! ... e) we compute the becp terms which are used in the rest of
      ! ...    the code
@@ -202,8 +232,14 @@ SUBROUTINE phq_init()
      ENDIF
   ELSE
      ! this is the standard treatment
-     IF ( .NOT. lgamma ) &
+     IF ( .NOT. lgamma .and..not. elph_mat )then 
         CALL davcio( evq, lrwfc, iuwfc, ikq, -1 )
+     ELSEIF(.NOT. lgamma .and. elph_mat) then
+        ikqg = kpq(ik)
+        CALL davcio (evq, lrwfc, iunwfcwann, ikqg, - 1)
+        call calculate_and_apply_phase(ik, ikqg, igqg, &
+           npwq_refolded, g_kpq,xk_gamma, evq)
+     ENDIF
   ENDIF
 !!!!!!!!!!!!!!!!!!!!!!!! END OF ACFDT TEST !!!!!!!!!!!!!!!!
      !
@@ -235,6 +271,7 @@ SUBROUTINE phq_init()
 #endif
   !
   DEALLOCATE( aux1 )
+     
   !
   CALL dvanqq()
   CALL drho()

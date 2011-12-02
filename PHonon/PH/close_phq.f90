@@ -25,6 +25,7 @@ SUBROUTINE close_phq( flag )
   USE recover_mod,   ONLY : clean_recover
   USE output,        ONLY : fildrho, fildvscf
   USE ramanm,        ONLY : lraman, elop, iuchf, iud2w, iuba2
+  USE el_phon,       ONLY : elph_mat,iunwfcwann
   !
   IMPLICIT NONE
   !
@@ -83,6 +84,9 @@ SUBROUTINE close_phq( flag )
   ENDIF
   !
   CLOSE( UNIT = iunigk, STATUS = 'DELETE' )
+
+  if(elph_mat) CLOSE( UNIT = iunwfcwann, STATUS = 'keep' ) 
+
   !
   RETURN
   !
