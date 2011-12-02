@@ -160,12 +160,6 @@ SUBROUTINE elphsum_wannier(q_index)
   INTEGER :: q_index
   !
   !
-
-  ! eps = 20 cm^-1, in Ry
-  REAL(DP) :: eps
-  PARAMETER (eps = 20.d0 / 13.6058d0 / 8065.5d0)
-  !
-  !
   logical :: minus_qloc,sym (48)
   integer :: nq, imq, isq(48)
   INTEGER :: ik, ikk, ikq, ibnd, jbnd, ipert, jpert, nu, mu, &
