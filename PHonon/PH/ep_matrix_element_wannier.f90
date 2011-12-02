@@ -139,23 +139,18 @@ SUBROUTINE elphsum_wannier(q_index)
   !            Dev. Comment: missing calc_sigma_yet
   !-----------------------------------------------------------------------
   USE kinds, ONLY : DP
-  USE constants, ONLY : pi
   USE ions_base, ONLY : nat, ityp, tau,amass,tau, ntyp => nsp, atm
   USE cell_base, ONLY : at, bg, ibrav, celldm 
-  USE fft_base,  ONLY: dfftp
-  USE symm_base, ONLY : s, sr, irt, nsym, time_reversal, invs
-  USE klist, ONLY : xk, nelec, nks, wk
+  USE symm_base, ONLY : s, sr, irt, nsym, time_reversal, invs, ftau
+  USE klist, ONLY : xk, nelec
   USE wvfct, ONLY : nbnd, et
   USE el_phon
   USE mp_global, ONLY : me_pool, root_pool, inter_pool_comm, npool, intra_pool_comm
   USE io_global, ONLY : stdout
-  USE klist, only : degauss,ngauss
-  USE control_flags, ONLY : modenum, noinv
-  USE units_ph,       ONLY :iudyn
   USE io_files,  ONLY : prefix
   USE qpoint, ONLY : xq, nksq
   USE dynmat, ONLY : dyn, w2
-  USE modes, ONLY : u,rtau, irgq, nsymq,irotmq, minus_q
+  USE modes, ONLY : u
   USE control_ph, only : lgamma
   USE lsda_mod, only : isk,nspin, current_spin,lsda
   USE mp,        ONLY: mp_sum
@@ -171,24 +166,17 @@ SUBROUTINE elphsum_wannier(q_index)
   PARAMETER (eps = 20.d0 / 13.6058d0 / 8065.5d0)
   !
   !
-  INTEGER :: ik, ikk, ikq, isig, ibnd, jbnd, ipert, jpert, nu, mu, &
-       vu, ngauss1, nsig, iuelph, ios, iuelphmat,icnt,i,j,rrho,nt,k
-  INTEGER :: na,nb,icar,jcar,iu_sym,nmodes
-  INTEGER :: iu_Delta_dyn,iu_analdyn,iu_nonanaldyn
+  logical :: minus_qloc,sym (48)
+  integer :: nq, imq, isq(48)
+  INTEGER :: ik, ikk, ikq, ibnd, jbnd, ipert, jpert, nu, mu, &
+         ios, iuelphmat,i,j,nt,k
+  INTEGER :: iu_sym,nmodes
   INTEGER :: io_file_unit
   !   for star_q
-  INTEGER :: nsymloc, sloc(3,3,48), invsloc(48), irtloc(48,nat), &
-             nqloc, isqloc(48), imqloc
-  REAL(DP) :: rtauloc(3,48,nat), sxqloc(3,48)
+  REAL(DP) :: rtauloc(3,48,nat)
   !   end of star_q definitions
-  REAL(DP) :: weight, w0g1, w0g2, w0gauss, wgauss,degauss1, dosef, &
-       ef1, phase_space, lambda, gamma, wg1, w0g,wgp,deltae
-  REAL(DP), EXTERNAL :: dos_ef, efermig
+  real(DP) :: sxq (3, 48)
   REAL(DP) xk_dummy(3)
-  COMPLEX(DP), allocatable :: phi(:,:,:,:),phi_nonanal(:,:,:,:)
-  COMPLEX(DP), allocatable :: dyn_mat_r(:,:),zz(:,:)
-  CHARACTER(len=20) :: char_deg
-  CHARACTER(len=1) :: char_ng
   character(len=80) :: filelph
   CHARACTER(len=256) ::  file_elphmat
   !
@@ -207,6 +195,10 @@ SUBROUTINE elphsum_wannier(q_index)
   IF ( me_pool /= root_pool ) THEN
      iuelphmat = 0
   ELSE
+     !
+     ! First I dump information for the electron-phonon interaction
+     !
+
      !
      iuelphmat = find_free_unit()
      OPEN (unit = iuelphmat, file = file_elphmat, status = 'unknown', err = &
@@ -245,6 +237,44 @@ SUBROUTINE elphsum_wannier(q_index)
         enddo
      enddo
      
+     !
+     ! Then I dump symmetry operations
+     !
+     sym(1:nsym)=.true.
+     call smallg_q (xq, 0, at, bg, nsym, s, ftau, sym, minus_qloc)
+     IF ( .not. time_reversal ) minus_qloc = .false.
+     
+     call sgam_ph (at, bg, nsym, s, irt, tau, rtauloc, nat, sym)
+     call star_q(xq, at, bg, nsym , s , invs , nq, sxq, &
+          isq, imq, .FALSE. )
+
+     
+     do j=1,3
+        write(iuelphmat) (at(i,j),i=1,3)
+     enddo
+     do j=1,3
+        write(iuelphmat) (bg(i,j),i=1,3)
+     enddo
+     write(iuelphmat) nsym,nq,imq
+     do i=1,nsym
+        write(iuelphmat) i,invs,isq(i)
+        do j=1,3
+           do k=1,3
+              write(iuelphmat) k,j, s(k,j,i)
+           enddo
+        enddo
+        do j=1,nat
+           write(iuelphmat) j, irt(i,j) 
+        enddo
+        do j=1,3
+           do k=1,nat
+              write(iuelphmat) j,i, rtauloc(j,i,k)  
+           enddo
+        enddo
+        do j=1,3
+           write(iuelphmat) j, sxq(j,i)
+        enddo
+     enddo
      
      close(iuelphmat)
      
