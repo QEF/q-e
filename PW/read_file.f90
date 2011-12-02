@@ -58,6 +58,7 @@ SUBROUTINE read_file()
   USE control_flags,        ONLY : gamma_only
   USE funct,                ONLY : get_inlc, get_dft_name
   USE kernel_table,         ONLY : initialize_kernel_table
+  USE esm,                  ONLY : do_comp_esm, esm_ggen_2d
   !
   INTEGER  :: i, is, ik, ibnd, nb, nt, ios, isym, ierr, inlc
   REAL(DP) :: rdum(1,1), ehart, etxc, vtxc, etotefield, charge
@@ -203,6 +204,7 @@ SUBROUTINE read_file()
   CALL pre_init()
   CALL allocate_fft()
   CALL ggen ( gamma_only, at, bg ) 
+  IF (do_comp_esm) CALL esm_ggen_2d ()
   CALL gshells ( lmovecell ) 
   !
   ! ... allocate the potential and wavefunctions
