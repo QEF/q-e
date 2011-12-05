@@ -3877,8 +3877,15 @@ phonon mode?}
 
 A symmetry analyzer was added in v.3.2 by Andrea Dal Corso. 
 Other packages that perform symmetry analysis of phonons and normal modes:\\
-ISOTROPY package: http://stokes.byu.edu/iso/isotropy.html\\
-ACKJ, ACMI packages: http://www.cpc.cs.qub.ac.uk.
+ACKJ, ACMI packages: http://www.cpc.cs.qub.ac.uk\\
+ISOTROPY package: http://stokes.byu.edu/iso/isotropy.html.\\
+``The Isotropy Software has a module, called SMODES, that does a full
+analysis of phonon modes; including their Raman/Infrared activity. It
+uses 'simple' group theory only, and the only input it needs is the
+structure: Therefore, it cannot be affected by any lack of convergence
+or other errors in the DF(P)T calculation. I suggest always using
+SMODES -before- doing a phonon calculation to know what to expect.''
+(info by Turan Birol, dec. 2011)
 
 \paragraph{I am not getting zero acoustic mode frequencies, why? }
 
