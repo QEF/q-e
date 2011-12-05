@@ -607,8 +607,10 @@ SUBROUTINE electrons()
         !
 #if defined (EXX)
         !
-        WRITE( stdout, 9062 ) - fock1
-        WRITE( stdout, 9064 ) 0.5D0*fock2
+        IF ( dft_is_hybrid()) THEN
+           WRITE( stdout, 9062 ) - fock1
+           WRITE( stdout, 9064 ) 0.5D0*fock2
+        ENDIF
         !
 #endif
         !
