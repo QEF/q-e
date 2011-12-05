@@ -16,7 +16,8 @@ SUBROUTINE data_structure( gamma_only )
   USE kinds,      ONLY : DP
   USE io_global,  ONLY : stdout
   USE mp,         ONLY : mp_max
-  USE mp_global,  ONLY : me_pool, nproc_pool, inter_pool_comm, intra_pool_comm, root_pool
+  USE mp_global,  ONLY : me_pool, nproc_pool, inter_pool_comm, intra_pool_comm, root_pool, mpime
+  USE mp_global,  ONLY : me_bgrp, nproc_bgrp, inter_bgrp_comm, intra_bgrp_comm, root_bgrp
   USE mp_global,  ONLY : get_ntask_groups
   USE fft_base,   ONLY : dfftp, dffts
   USE cell_base,  ONLY : bg, tpiba
@@ -30,11 +31,26 @@ SUBROUTINE data_structure( gamma_only )
   USE mp_global,  ONLY : me_pool, nproc_pool
 #endif
 
+
   !
   IMPLICIT NONE
   LOGICAL, INTENT(in) :: gamma_only
   REAL (DP) :: gkcut
   INTEGER :: ik, ngm_, ngs_, ngw_ , nogrp
+  INTEGER :: me, nproc, inter_comm, intra_comm, root
+#ifdef __BANDS
+  me = me_bgrp
+  nproc = nproc_bgrp
+  inter_comm = inter_bgrp_comm
+  intra_comm = intra_bgrp_comm
+  root = root_bgrp
+#else
+  me = me_pool
+  nproc = nproc_pool
+  inter_comm = inter_pool_comm
+  intra_comm = intra_pool_comm
+  root = root_pool
+#endif
   !
   ! ... calculate gkcut = max |k+G|^2, in (2pi/a)^2 units
   !
@@ -57,26 +73,25 @@ SUBROUTINE data_structure( gamma_only )
   !
   ! ... find maximum value among all the processors
   !
-  CALL mp_max (gkcut, inter_pool_comm )
+  CALL mp_max (gkcut, inter_comm )
   !
   ! ... set up fft descriptors, including parallel stuff: sticks, planes, etc.
   !
   nogrp = get_ntask_groups()
   !
   CALL pstickset( gamma_only, bg, gcutm, gkcut, gcutms, &
-                  dfftp, dffts, ngw_ , ngm_ , ngs_ , me_pool, root_pool, nproc_pool, intra_pool_comm,   &
+                  dfftp, dffts, ngw_ , ngm_ , ngs_ , me, root, nproc, intra_comm,   &
                   nogrp )
   !
   !     on output, ngm_ and ngs_ contain the local number of G-vectors
   !     for the two grids. Initialize local and global number of G-vectors
   !
-  call gvect_init ( ngm_ , intra_pool_comm )
-  call gvecs_init ( ngs_ , intra_pool_comm );
+  call gvect_init ( ngm_ , intra_comm )
+  call gvecs_init ( ngs_ , intra_comm );
   !
-
 #ifdef __SOLVENT
   CALL solvent_initgrid( dfftp%nr1, dfftp%nr2, dfftp%nr3, dfftp%nr1x, &
-               dfftp%nr2x, dfftp%nr3x, me_pool, nproc_pool, dfftp%npp )
+               dfftp%nr2x, dfftp%nr3x, me, nproc, dfftp%npp )
 #endif
 
 END SUBROUTINE data_structure

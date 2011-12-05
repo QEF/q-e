@@ -24,7 +24,7 @@ subroutine setlocal
   USE fft_interfaces,ONLY : invfft
   USE gvect,     ONLY : nl, nlm, ngm
   USE control_flags, ONLY : gamma_only
-  USE mp_global, ONLY : intra_pool_comm
+  USE mp_global, ONLY : intra_pool_comm, intra_bgrp_comm
   USE mp,        ONLY : mp_sum
   USE martyna_tuckerman, ONLY : wg_corr_loc, do_comp_mt
   USE esm,       ONLY : esm_local, esm_bc, do_comp_esm
@@ -72,7 +72,11 @@ subroutine setlocal
   !
   v_of_0=0.0_DP
   if (gg(1) < eps8) v_of_0 = DBLE ( aux (nl(1)) )
+#ifdef __BANDS
+  call mp_sum( v_of_0, intra_bgrp_comm )
+#else
   call mp_sum( v_of_0, intra_pool_comm )
+#endif
   !
   ! ... aux = potential in G-space . FFT to real space
   !

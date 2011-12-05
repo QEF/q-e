@@ -46,7 +46,7 @@ SUBROUTINE potinit()
   USE io_files,             ONLY : tmp_dir, prefix, iunocc, input_drho
   USE spin_orb,             ONLY : domag
   USE mp,                   ONLY : mp_bcast, mp_sum
-  USE mp_global,            ONLY : intra_image_comm, inter_pool_comm, intra_pool_comm
+  USE mp_global,            ONLY : intra_image_comm, inter_pool_comm, intra_pool_comm, inter_bgrp_comm, intra_bgrp_comm, mpime
   USE io_global,            ONLY : ionode, ionode_id
   USE pw_restart,           ONLY : pw_readfile
   USE io_rho_xml,           ONLY : read_rho
@@ -155,7 +155,11 @@ SUBROUTINE potinit()
      !
   END IF
   !
+#ifdef __BANDS
+  CALL mp_sum(  charge , intra_bgrp_comm )
+#else
   CALL mp_sum(  charge , intra_pool_comm )
+#endif
   !
   IF ( lscf .AND. ABS( charge - nelec ) > ( 1.D-7 * charge ) ) THEN
      !

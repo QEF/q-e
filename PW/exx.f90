@@ -501,7 +501,9 @@ CONTAINS
     USE klist,                ONLY : wk, ngk, nks
     USE symm_base,            ONLY : nsym, s, ftau
 
-    use mp_global,            ONLY : nproc_pool, me_pool
+    use mp_global,            ONLY : nproc_pool, me_pool, nproc_bgrp, me_bgrp, &
+                                     init_index_over_band, inter_bgrp_comm, &
+                                     mpime
     use funct,                ONLY : get_exx_fraction, start_exx, exx_is_active, &
                                      get_screening_parameter 
     use fft_base,             ONLY : cgather_smooth, cscatter_smooth, dffts
@@ -520,12 +522,14 @@ CONTAINS
     integer, allocatable :: rir(:,:)
 
     call start_clock ('exxinit')
-
     ! Beware: not the same as nrxxs in parallel case
     nxxs = dffts%nr1x * dffts%nr2x * dffts%nr3x
     nrxxs= dffts%nnr
 #ifdef __PARA
     allocate(psic_all(nxxs), temppsic_all(nxxs) )
+#ifdef __BANDS
+    CALL init_index_over_band(inter_bgrp_comm,nbnd)
+#endif
 #endif
     allocate(present(nsym),rir(nxxs,nsym))
     allocate(temppsic(nrxxs), psic(nrxxs),tempevc( npwx, nbnd ))
@@ -546,7 +550,6 @@ write(stdout,*) "exxinit, erfc_scrlen set to: ", erfc_scrlen
 write(stdout,*) "exxinit, yukawa set to: ", yukawa
 #endif
      !
-
        call start_exx
     endif
 
@@ -616,7 +619,11 @@ write(stdout,*) "exxinit, yukawa set to: ", yukawa
                 isym = abs(index_sym(ikq) )
 #ifdef __PARA
                 call cgather_smooth(temppsic,temppsic_all)
+#ifdef __BANDS
+                IF ( me_bgrp == 0 ) &
+#else
                 IF ( me_pool == 0 ) &
+#endif
                      psic_all(1:nxxs) = temppsic_all(rir(1:nxxs,isym))
                 call cscatter_smooth(psic_all,psic)
 #else
@@ -644,7 +651,11 @@ write(stdout,*) "exxinit, yukawa set to: ", yukawa
                 isym = abs(index_sym(ikq) )
 #ifdef __PARA
                 call cgather_smooth(temppsic,temppsic_all)
+#ifdef __BANDS
+                IF ( me_bgrp == 0 ) &
+#else
                 IF ( me_pool == 0 ) &
+#endif
                     psic_all(1:nxxs) = temppsic_all(rir(1:nxxs,isym))
                 call cscatter_smooth(psic_all,psic)
 #else
@@ -671,7 +682,6 @@ write(stdout,*) "exxinit, yukawa set to: ", yukawa
     do ik =1,nks
        x_occupation(1:nbnd,ik) = wg (1:nbnd, ik) / wk(ik) 
     end do
-
     call stop_clock ('exxinit')  
 
     
@@ -710,8 +720,9 @@ write(stdout,*) "exxinit, yukawa set to: ", yukawa
 
     USE parallel_include  
     USE mp_global, ONLY : nproc, inter_image_comm, me_image, my_image_id,&
-         & nimage, nproc_image
-    USE mp,        ONLY : mp_sum
+         & nimage, nproc_image, ibnd_start, ibnd_end, mpime, inter_bgrp_comm, intra_bgrp_comm,&
+         & my_bgrp_id, nbgrp
+    USE mp,        ONLY : mp_sum, mp_barrier
 
 
     IMPLICIT NONE
@@ -741,6 +752,17 @@ write(stdout,*) "exxinit, yukawa set to: ", yukawa
 !    nqi=nqs/nimage
     nqi=nqs
 !
+
+#ifdef __BANDS
+if(my_bgrp_id>0) then
+  hpsi=0.D0
+  psi=0.D0
+endif
+if(nbgrp>1) then
+  call mp_sum(hpsi,inter_bgrp_comm)
+  call mp_sum(psi,inter_bgrp_comm)
+endif
+#endif
 
     DO im=1,m !for each band of psi (the k cycle is outside band)
        temppsic(:) = ( 0.D0, 0.D0 )
@@ -773,11 +795,16 @@ write(stdout,*) "exxinit, yukawa set to: ", yukawa
           !
           IF (gamma_only) THEN
              half_nbnd = ( nbnd + 1 ) / 2
+#ifdef __BANDS
+             h_ibnd = ibnd_start/2
+             DO ibnd=ibnd_start,ibnd_end, 2 !for each band of psi
+#else
              h_ibnd = 0
              DO ibnd=1,nbnd, 2 !for each band of psi
+#endif
                 h_ibnd = h_ibnd + 1
                 x1 = x_occupation(ibnd,  ik)
-                IF (ibnd < nbnd) THEN
+                IF (ibnd < ibnd_end) THEN
                    x2 = x_occupation(ibnd + 1,ik)
                 ELSE
                    x2 = 0.d0
@@ -816,7 +843,11 @@ call flush_unit(stdout)
            END DO
 
         ELSE
+#ifdef __BANDS
+           DO ibnd=ibnd_start,ibnd_end !for each band of psi
+#else
            DO ibnd=1,nbnd !for each band of psi
+#endif
               IF ( ABS(x_occupation(ibnd,ik)) < 1.d-6) CYCLE
               !
               !loads the phi from file
@@ -840,7 +871,7 @@ call flush_unit(stdout)
    
               vc(:) = ( 0.D0, 0.D0 )
               vc(nls(1:ngm)) = fac(1:ngm) * rhoc(nls(1:ngm))
-              IF (gamma_only) vc(nlsm(1:ngm)) = fac(1:ngm) * rhoc(nlsm(1:ngm))
+!              IF (gamma_only) vc(nlsm(1:ngm)) = fac(1:ngm) * rhoc(nlsm(1:ngm))
               vc = vc * x_occupation(ibnd,ik) / nqs
 
               !brings back v in real space
@@ -850,7 +881,14 @@ call flush_unit(stdout)
               result(1:nrxxs)=result(1:nrxxs)+vc(1:nrxxs)*tempphic(1:nrxxs)
            END DO
         END IF
+!#ifdef __BANDS
+!        CALL mp_sum( result(1:nrxxs), inter_bgrp_comm)
+!#endif
      END DO
+#ifdef __BANDS
+        CALL mp_sum( result(1:nrxxs), inter_bgrp_comm)
+#endif
+
      !
      ! Was used for parallelization on images
      !       CALL mp_sum( result(1:nrxxs), inter_image_comm )
@@ -952,7 +990,7 @@ END SUBROUTINE g2_convolution
     USE wavefunctions_module, ONLY : evc
     USE lsda_mod,   ONLY : lsda, current_spin, isk
     USE klist,      ONLY : ngk, nks
-    USE mp_global,  ONLY : inter_pool_comm, intra_pool_comm
+    USE mp_global,  ONLY : inter_pool_comm, intra_pool_comm, inter_bgrp_comm, intra_bgrp_comm, nbgrp
     USE mp,         ONLY : mp_sum
 
     implicit none
@@ -991,12 +1029,15 @@ END SUBROUTINE g2_convolution
 
     if (gamma_only) energy = 2.d0 * energy
 
-
+#ifdef __BANDS
+    call mp_sum( energy, intra_bgrp_comm)
+#else
     call mp_sum( energy, intra_pool_comm )
+#endif
     call mp_sum( energy, inter_pool_comm )
-
+    ! 
     exxenergy = energy
-
+    !
     call stop_clock ('exxenergy')
   end function exxenergy
 
@@ -1017,8 +1058,8 @@ END SUBROUTINE g2_convolution
     USE klist,     ONLY : xk, ngk, nks
     USE lsda_mod,  ONLY : lsda, current_spin, isk
     USE gvect,     ONLY : g, nl
-    USE mp_global, ONLY : inter_pool_comm, intra_pool_comm, inter_image_comm
-    USE mp_global, ONLY : my_image_id, nimage
+    USE mp_global, ONLY : inter_pool_comm, intra_pool_comm, inter_image_comm, inter_bgrp_comm, intra_bgrp_comm, nbgrp
+    USE mp_global, ONLY : my_image_id, nimage, ibnd_start, ibnd_end
     USE mp,        ONLY : mp_sum
     use fft_base,  ONLY : dffts
     use fft_interfaces, ONLY : fwfft, invfft
@@ -1057,8 +1098,11 @@ END SUBROUTINE g2_convolution
           READ( iunigk ) igk
           call get_buffer (evc, nwordwfc, iunwfc, ikk)
        END IF
-
+#ifdef __BANDS
+       do jbnd=ibnd_start, ibnd_end !for each band of psi (the k cycle is outside band)
+#else
        do jbnd=1, nbnd !for each band of psi (the k cycle is outside band)
+#endif
           temppsic(:) = ( 0.D0, 0.D0 )
           temppsic(nls(igk(1:npw))) = evc(1:npw,jbnd)
           if(gamma_only) temppsic(nlsm(igk(1:npw))) = CONJG(evc(1:npw,jbnd))
@@ -1211,11 +1255,16 @@ END SUBROUTINE g2_convolution
 ! Was used for image parallelization
 !    call mp_sum( energy, inter_image_comm )
 !
-    call mp_sum( energy, intra_pool_comm )
+#ifdef __BANDS
+    call mp_sum( energy, inter_bgrp_comm )
+    call mp_sum( energy, intra_bgrp_comm )
+#else
+    call mp_sum( energy, intra_pool_comm)
+#endif
     call mp_sum( energy, inter_pool_comm )
-
+    !
     exxenergy2 = energy
-
+    !
     call stop_clock ('exxen2')
 
   end function  exxenergy2
@@ -1228,7 +1277,7 @@ END SUBROUTINE g2_convolution
      USE wvfct,     ONLY : ecutwfc
      USE io_global, ONLY : stdout
      USE control_flags, ONLY : gamma_only
-     USE mp_global, ONLY : intra_pool_comm
+     USE mp_global, ONLY : intra_pool_comm, intra_bgrp_comm
      USE mp,        ONLY : mp_sum
 
      implicit none
@@ -1296,7 +1345,11 @@ END SUBROUTINE g2_convolution
            end do
         end do
      end do
+#ifdef __BANDS
+     call mp_sum(  div, intra_bgrp_comm )
+#else
      call mp_sum(  div, intra_pool_comm )
+#endif
      if (gamma_only) then
         div = 2.d0 * div
      endif
@@ -1370,7 +1423,7 @@ END SUBROUTINE g2_convolution
   USE klist,     ONLY : xk, ngk, nks
   USE lsda_mod,  ONLY : lsda, current_spin, isk
   USE gvect,     ONLY : g, nl
-  USE mp_global, ONLY : inter_pool_comm, intra_pool_comm
+  USE mp_global, ONLY : inter_pool_comm, intra_pool_comm,inter_bgrp_comm, intra_bgrp_comm
   USE mp_global, ONLY : my_image_id, nimage
   USE mp,        ONLY : mp_sum 
   use fft_base,  ONLY : dffts
@@ -1573,9 +1626,12 @@ END SUBROUTINE g2_convolution
 ! Was used for image parallelization
 !  call mp_sum( exx_stress_, inter_image_comm )
 !
+#ifdef __BANDS
+  call mp_sum( exx_stress_, intra_bgrp_comm )
+#else
   call mp_sum( exx_stress_, intra_pool_comm )
+#endif
   call mp_sum( exx_stress_, inter_pool_comm )
-
   exx_stress = exx_stress_
 
   call stop_clock ('exx_stress')

@@ -13,7 +13,7 @@ subroutine force_lc (nat, tau, ityp, alat, omega, ngm, ngl, &
   !
   USE kinds
   USE constants, ONLY : tpi
-  USE mp_global, ONLY : intra_pool_comm
+  USE mp_global, ONLY : intra_pool_comm, intra_bgrp_comm
   USE mp,        ONLY : mp_sum
   USE fft_base,  ONLY : dfftp
   USE fft_interfaces, ONLY : fwfft
@@ -99,7 +99,11 @@ subroutine force_lc (nat, tau, ityp, alat, omega, ngm, ngl, &
   ENDIF
 
 #ifdef __PARA
+#ifdef __BANDS
+  call mp_sum(  forcelc, intra_bgrp_comm )
+#else
   call mp_sum(  forcelc, intra_pool_comm )
+#endif
 #endif
 
   deallocate (aux)

@@ -23,7 +23,8 @@ MODULE pw_restart
   USE io_files,  ONLY : tmp_dir, prefix, iunpun, xmlpun, delete_if_present, &
                         qexml_version, qexml_version_init, pseudo_dir
   USE io_global, ONLY : ionode, ionode_id
-  USE mp_global, ONLY : my_pool_id, intra_image_comm, intra_pool_comm
+  USE mp_global, ONLY : my_pool_id, intra_image_comm, intra_pool_comm, &
+                        my_bgrp_id, intra_image_comm, intra_bgrp_comm, mpime
   USE mp,        ONLY : mp_bcast, mp_sum, mp_max
   USE parser,    ONLY : version_compare
   !
@@ -109,8 +110,9 @@ MODULE pw_restart
                                        emaxpos, eopreg, eamp
       USE io_rho_xml,           ONLY : write_rho
       USE mp_global,            ONLY : kunit, nproc, nproc_pool, me_pool, &
-                                       nproc_image, &
-                                       root_pool, intra_pool_comm, inter_pool_comm, intra_image_comm 
+                                       nproc_image, nproc_bgrp, me_bgrp, &
+                                       root_pool, intra_pool_comm, inter_pool_comm, intra_image_comm, &
+                                       root_bgrp, intra_bgrp_comm, inter_bgrp_comm, nbgrp
 #ifdef EXX
       USE funct,                ONLY : get_exx_fraction, get_screening_parameter, exx_is_active
       USE exx,                  ONLY : x_gamma_extrapolation, nq1, nq2, nq3, &
@@ -223,7 +225,11 @@ MODULE pw_restart
       !
       ngm_g = ngm
       !
+#ifdef __BANDS
+      CALL mp_sum( ngm_g, intra_bgrp_comm )
+#else
       CALL mp_sum( ngm_g, intra_pool_comm )
+#endif
       !
       ! ... collect all G-vectors across processors within the pools
       !
@@ -239,7 +245,11 @@ MODULE pw_restart
          !
       END DO
       !
+#ifdef __BANDS
+      CALL mp_sum( mill_g, intra_bgrp_comm )
+#else
       CALL mp_sum( mill_g, intra_pool_comm )
+#endif
       !
       ! ... build the igk_l2g array, yielding the correspondence between
       ! ... the local k+G index and the global G index - see also ig_l2g
@@ -270,6 +280,9 @@ MODULE pw_restart
       ngk_g(iks:ike) = ngk(1:nks)
       !
       CALL mp_sum( ngk_g, intra_image_comm )
+#ifdef __BANDS
+     ngk_g = ngk_g / nbgrp
+#endif
       !
       ! ... compute the maximum G vector index among all G+k an processors
       !
@@ -835,10 +848,17 @@ MODULE pw_restart
                 !
              END IF
              !
+#ifdef __BANDS
+             CALL write_wfc( iunout, ik, nkstot, kunit, ispin, nspin, &
+                             evc, npw_g, gamma_only, nbnd, igk_l2g_kdip(:,ik-iks+1),   &
+                             ngk(ik-iks+1), filename, 1.D0, &
+                             ionode, root_bgrp, intra_bgrp_comm, inter_bgrp_comm, intra_image_comm )
+#else
              CALL write_wfc( iunout, ik, nkstot, kunit, ispin, nspin, &
                              evc, npw_g, gamma_only, nbnd, igk_l2g_kdip(:,ik-iks+1),   &
                              ngk(ik-iks+1), filename, 1.D0, &
                              ionode, root_pool, intra_pool_comm, inter_pool_comm, intra_image_comm )
+#endif
              !
              ik_eff = ik + num_k_points
              !
@@ -863,10 +883,17 @@ MODULE pw_restart
                 !
              END IF
              !
+#ifdef __BANDS
+             CALL write_wfc( iunout, ik_eff, nkstot, kunit, ispin, nspin, &
+                             evc, npw_g, gamma_only, nbnd, igk_l2g_kdip(:,ik_eff-iks+1), &
+                             ngk(ik_eff-iks+1), filename, 1.D0, &
+                             ionode, root_bgrp, intra_bgrp_comm, inter_bgrp_comm, intra_image_comm )
+#else
              CALL write_wfc( iunout, ik_eff, nkstot, kunit, ispin, nspin, &
                              evc, npw_g, gamma_only, nbnd, igk_l2g_kdip(:,ik_eff-iks+1), &
                              ngk(ik_eff-iks+1), filename, 1.D0, &
                              ionode, root_pool, intra_pool_comm, inter_pool_comm, intra_image_comm )
+#endif
              !
            ELSE
              !
@@ -896,11 +923,19 @@ MODULE pw_restart
                    !!! TEMP
                    nkl=(ipol-1)*npwx+1
                    nkr= ipol   *npwx
+#ifdef __BANDS
+                   CALL write_wfc( iunout, ik, nkstot, kunit, ipol, npol,   &
+                                   evc(nkl:nkr,:), npw_g, gamma_only, nbnd, &
+                                   igk_l2g_kdip(:,ik-iks+1), ngk(ik-iks+1), &
+                                   filename, 1.D0, &
+                                   ionode, root_bgrp, intra_bgrp_comm, inter_bgrp_comm, intra_image_comm )
+#else
                    CALL write_wfc( iunout, ik, nkstot, kunit, ipol, npol,   &
                                    evc(nkl:nkr,:), npw_g, gamma_only, nbnd, &
                                    igk_l2g_kdip(:,ik-iks+1), ngk(ik-iks+1), &
                                    filename, 1.D0, &
                                    ionode, root_pool, intra_pool_comm, inter_pool_comm, intra_image_comm )
+#endif
                    !
                 END DO
                 !
@@ -920,11 +955,19 @@ MODULE pw_restart
                    !
                 END IF
                 !
+#ifdef __BANDS
+                CALL write_wfc( iunout, ik, nkstot, kunit, ispin, nspin, &
+                                evc, npw_g, gamma_only, nbnd,            &
+                                igk_l2g_kdip(:,ik-iks+1),                &
+                                ngk(ik-iks+1), filename, 1.D0, &
+                                ionode, root_bgrp, intra_bgrp_comm, inter_bgrp_comm, intra_image_comm )
+#else
                 CALL write_wfc( iunout, ik, nkstot, kunit, ispin, nspin, &
                                 evc, npw_g, gamma_only, nbnd,            &
                                 igk_l2g_kdip(:,ik-iks+1),                &
                                 ngk(ik-iks+1), filename, 1.D0, &
                                 ionode, root_pool, intra_pool_comm, inter_pool_comm, intra_image_comm )
+#endif
                 !
              END IF
              !
@@ -941,7 +984,7 @@ MODULE pw_restart
       USE io_rho_xml,    ONLY : read_rho
       USE scf,           ONLY : rho
       USE lsda_mod,      ONLY : nspin
-      USE mp_global,     ONLY : intra_pool_comm
+      USE mp_global,     ONLY : intra_pool_comm, intra_bgrp_comm
       USE mp,            ONLY : mp_sum
       !
       IMPLICIT NONE
@@ -2846,8 +2889,9 @@ MODULE pw_restart
       USE buffers,              ONLY : save_buffer
       USE gvect,                ONLY : ngm, ngm_g, g
       USE noncollin_module,     ONLY : noncolin, npol
-      USE mp_global,            ONLY : kunit, nproc, nproc_pool, me_pool, &
-                                       root_pool, intra_pool_comm, inter_pool_comm, intra_image_comm 
+      USE mp_global,            ONLY : kunit, nproc, nproc_pool, me_pool, me_bgrp, &
+                                       root_pool, intra_pool_comm, inter_pool_comm, intra_image_comm, &
+                                       root_bgrp, intra_bgrp_comm, inter_bgrp_comm
       !
       IMPLICIT NONE
       !
@@ -2857,7 +2901,7 @@ MODULE pw_restart
       CHARACTER(LEN=256)   :: filename
       INTEGER              :: ik, ipol, ik_eff, num_k_points
       INTEGER, ALLOCATABLE :: kisort(:)
-      INTEGER              :: npool, nkbl, nkl, nkr, npwx_g
+      INTEGER              :: npool, nkbl, nkl, nkr, npwx_g, nbgrp
       INTEGER              :: ike, iks, npw_g, ispin
       INTEGER, ALLOCATABLE :: ngk_g(:)
       INTEGER, ALLOCATABLE :: igk_l2g(:,:), igk_l2g_kdip(:,:)
@@ -2922,7 +2966,11 @@ MODULE pw_restart
       !
       ngm_g = ngm
       !
+#ifdef __BANDS
+      CALL mp_sum( ngm_g, intra_bgrp_comm )
+#else
       CALL mp_sum( ngm_g, intra_pool_comm )
+#endif
       !
       ! ... build the igk_l2g array, yielding the correspondence between
       ! ... the local k+G index and the global G index - see also ig_l2g
@@ -3041,10 +3089,17 @@ MODULE pw_restart
                !
             END IF
             !
+#ifdef __BANDS
+            CALL read_wfc( iunout, ik, nkstot, kunit, ispin, nspin,      &
+                           evc, npw_g, nbnd, igk_l2g_kdip(:,ik-iks+1),   &
+                           ngk(ik-iks+1), filename, scalef, &
+                           ionode, root_bgrp, intra_bgrp_comm, inter_bgrp_comm, intra_image_comm )
+#else
             CALL read_wfc( iunout, ik, nkstot, kunit, ispin, nspin,      &
                            evc, npw_g, nbnd, igk_l2g_kdip(:,ik-iks+1),   &
                            ngk(ik-iks+1), filename, scalef, &
                            ionode, root_pool, intra_pool_comm, inter_pool_comm, intra_image_comm )
+#endif
             !
             IF ( ( ik >= iks ) .AND. ( ik <= ike ) ) THEN
                !
@@ -3066,10 +3121,17 @@ MODULE pw_restart
                !
             END IF
             !
+#ifdef __BANDS
+            CALL read_wfc( iunout, ik_eff, nkstot, kunit, ispin, nspin,      &
+                           evc, npw_g, nbnd, igk_l2g_kdip(:,ik_eff-iks+1),   &
+                           ngk(ik_eff-iks+1), filename, scalef, &
+                           ionode, root_bgrp, intra_bgrp_comm, inter_bgrp_comm, intra_image_comm )
+#else
             CALL read_wfc( iunout, ik_eff, nkstot, kunit, ispin, nspin,      &
                            evc, npw_g, nbnd, igk_l2g_kdip(:,ik_eff-iks+1),   &
                            ngk(ik_eff-iks+1), filename, scalef, &
                            ionode, root_pool, intra_pool_comm, inter_pool_comm, intra_image_comm )
+#endif
             !
             IF ( ( ik_eff >= iks ) .AND. ( ik_eff <= ike ) ) THEN
                !
@@ -3097,11 +3159,19 @@ MODULE pw_restart
                   !!! TEMP
                   nkl=(ipol-1)*npwx+1
                   nkr= ipol   *npwx
+#ifdef __BANDS
+                  CALL read_wfc( iunout, ik, nkstot, kunit, ispin,          &
+                                 npol, evc(nkl:nkr,:), npw_g, nbnd,         &
+                                 igk_l2g_kdip(:,ik-iks+1), ngk(ik-iks+1),   &
+                                 filename, scalef, & 
+                                 ionode, root_bgrp, intra_bgrp_comm, inter_bgrp_comm, intra_image_comm )
+#else
                   CALL read_wfc( iunout, ik, nkstot, kunit, ispin,          &
                                  npol, evc(nkl:nkr,:), npw_g, nbnd,         &
                                  igk_l2g_kdip(:,ik-iks+1), ngk(ik-iks+1),   &
                                  filename, scalef, & 
                                  ionode, root_pool, intra_pool_comm, inter_pool_comm, intra_image_comm )
+#endif
                   !
                END DO
                !
@@ -3114,10 +3184,17 @@ MODULE pw_restart
                   !
                END IF
                !
+#ifdef __BANDS
+               CALL read_wfc( iunout, ik, nkstot, kunit, ispin, nspin,         &
+                              evc, npw_g, nbnd, igk_l2g_kdip(:,ik-iks+1),      &
+                              ngk(ik-iks+1), filename, scalef, &
+                              ionode, root_bgrp, intra_bgrp_comm, inter_bgrp_comm, intra_image_comm )
+#else
                CALL read_wfc( iunout, ik, nkstot, kunit, ispin, nspin,         &
                               evc, npw_g, nbnd, igk_l2g_kdip(:,ik-iks+1),      &
                               ngk(ik-iks+1), filename, scalef, &
                               ionode, root_pool, intra_pool_comm, inter_pool_comm, intra_image_comm )
+#endif
                !
             END IF
             !
@@ -3375,8 +3452,13 @@ MODULE pw_restart
          itmp(igk_l2g(ig)) = igk_l2g(ig)
          !
       END DO
+      
       !
+#ifdef __BANDS
+      CALL mp_sum( itmp, intra_bgrp_comm )
+#else
       CALL mp_sum( itmp, intra_pool_comm )
+#endif
       !
       ngg = 0
       DO ig = 1, npw_g

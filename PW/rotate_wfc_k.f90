@@ -13,7 +13,7 @@ SUBROUTINE rotate_wfc_k( npwx, npw, nstart, nbnd, npol, psi, overlap, evc, e )
   ! ... Serial version of rotate_wfc for colinear, k-point calculations
   !
   USE kinds,         ONLY : DP
-  USE mp_global,     ONLY : intra_pool_comm
+  USE mp_global,     ONLY : intra_pool_comm, intra_bgrp_comm
   USE mp,            ONLY : mp_sum
   !
   IMPLICIT NONE
@@ -67,7 +67,11 @@ SUBROUTINE rotate_wfc_k( npwx, npw, nstart, nbnd, npol, psi, overlap, evc, e )
               aux, kdmx, ( 0.D0, 0.D0 ), hc, nstart )
   !            
 #if defined (__PARA)
+#ifdef __BANDS
+  CALL mp_sum(  hc , intra_bgrp_comm )
+#else
   CALL mp_sum(  hc , intra_pool_comm )
+#endif
 #endif
   !
   IF ( overlap ) THEN
@@ -85,7 +89,11 @@ SUBROUTINE rotate_wfc_k( npwx, npw, nstart, nbnd, npol, psi, overlap, evc, e )
   END IF
   !
 #if defined (__PARA)
+#ifdef __BANDS
+  CALL mp_sum(  sc , intra_bgrp_comm )
+#else
   CALL mp_sum(  sc , intra_pool_comm )
+#endif
 #endif
   !
   ! ... Diagonalize
@@ -121,7 +129,8 @@ SUBROUTINE protate_wfc_k( npwx, npw, nstart, nbnd, npol, psi, overlap, evc, e )
   !
   USE kinds,            ONLY : DP
   USE mp_global,        ONLY : npool, nproc_pool, me_pool, root_pool, &
-                               intra_pool_comm, &
+                               intra_pool_comm, intra_bgrp_comm, &
+                               nbgrp, nproc_bgrp, me_bgrp, root_bgrp, &
                                ortho_comm, np_ortho, me_ortho, ortho_comm_id,&
                                leg_ortho
   USE descriptors,      ONLY : descla_init , la_descriptor
@@ -296,8 +305,11 @@ CONTAINS
                        v(1,ir), kdmx, w(1,ic), kdmx, ( 0.D0, 0.D0 ), work, nx )
 
            ! accumulate result on dm of root proc.
-
+#ifdef __BANDS
+           CALL mp_root_sum( work, dm, root, intra_bgrp_comm )
+#else
            CALL mp_root_sum( work, dm, root, intra_pool_comm )
+#endif
 
         END DO
         !
@@ -342,14 +354,22 @@ CONTAINS
                  !
                  !  this proc sends his block
                  ! 
+#ifdef __BANDS
+                 CALL mp_bcast( vc(:,1:nc), root, intra_bgrp_comm )
+#else
                  CALL mp_bcast( vc(:,1:nc), root, intra_pool_comm )
+#endif
                  CALL ZGEMM( 'N', 'N', kdim, nc, nr, ( 1.D0, 0.D0 ), &
                           psi(1,ir), kdmx, vc, nx, beta, aux(1,ic), kdmx )
               ELSE
                  !
                  !  all other procs receive
                  ! 
+#ifdef __BANDS
+                 CALL mp_bcast( vtmp(:,1:nc), root, intra_bgrp_comm )
+#else
                  CALL mp_bcast( vtmp(:,1:nc), root, intra_pool_comm )
+#endif
                  CALL ZGEMM( 'N', 'N', kdim, nc, nr, ( 1.D0, 0.D0 ), &
                           psi(1,ir), kdmx, vtmp, nx, beta, aux(1,ic), kdmx )
               END IF

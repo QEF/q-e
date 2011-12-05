@@ -37,7 +37,7 @@ subroutine atomic_rho (rhoa, nspina)
   USE wavefunctions_module, ONLY : psic
   USE noncollin_module,     ONLY : angle1, angle2
   USE uspp_param,           ONLY : upf
-  USE mp_global,            ONLY : intra_pool_comm
+  USE mp_global,            ONLY : intra_pool_comm, intra_bgrp_comm
   USE mp,                   ONLY : mp_sum
   USE fft_base,             ONLY : dfftp
   USE fft_interfaces,       ONLY : invfft
@@ -160,8 +160,13 @@ subroutine atomic_rho (rhoa, nspina)
      rhoneg = omega * rhoneg / (dfftp%nr1 * dfftp%nr2 * dfftp%nr3)
      rhoima = omega * rhoima / (dfftp%nr1 * dfftp%nr2 * dfftp%nr3)
 #ifdef __PARA
+#ifdef __BANDS
+     call mp_sum(  rhoneg, intra_bgrp_comm )
+     call mp_sum(  rhoima, intra_bgrp_comm )
+#else
      call mp_sum(  rhoneg, intra_pool_comm )
      call mp_sum(  rhoima, intra_pool_comm )
+#endif
 #endif
      IF ( rhoima > 1.0d-4 ) THEN
         WRITE( stdout,'(5x,"Check: imaginary charge or magnetization=",&

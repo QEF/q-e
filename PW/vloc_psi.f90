@@ -16,7 +16,7 @@ SUBROUTINE vloc_psi_gamma(lda, n, m, psi, v, hpsi)
   USE kinds,   ONLY : DP
   USE gvecs, ONLY : nls, nlsm
   USE wvfct,   ONLY : igk
-  USE mp_global,     ONLY : me_pool
+  USE mp_global,     ONLY : me_pool, me_bgrp
   USE fft_base,      ONLY : dffts, tg_gather
   USE fft_interfaces,ONLY : fwfft, invfft
   USE wavefunctions_module,  ONLY: psic
@@ -113,7 +113,11 @@ SUBROUTINE vloc_psi_gamma(lda, n, m, psi, v, hpsi)
         !
         CALL invfft ('Wave', tg_psic, dffts)
         !
+#ifdef __BANDS
+        DO j = 1, dffts%nr1x*dffts%nr2x*dffts%tg_npp( me_bgrp + 1 )
+#else
         DO j = 1, dffts%nr1x*dffts%nr2x*dffts%tg_npp( me_pool + 1 )
+#endif
            tg_psic (j) = tg_psic (j) * tg_v(j)
         ENDDO
         !
@@ -157,7 +161,11 @@ SUBROUTINE vloc_psi_gamma(lda, n, m, psi, v, hpsi)
               ENDDO
            ENDIF
            !
+#ifdef __BANDS
+           ioff = ioff + dffts%nr3x * dffts%nsw( me_bgrp + 1 )
+#else
            ioff = ioff + dffts%nr3x * dffts%nsw( me_pool + 1 )
+#endif
            !
         ENDDO
         !
@@ -202,7 +210,7 @@ SUBROUTINE vloc_psi_k(lda, n, m, psi, v, hpsi)
   USE kinds,   ONLY : DP
   USE gvecs, ONLY : nls, nlsm
   USE wvfct,   ONLY : igk
-  USE mp_global,     ONLY : me_pool
+  USE mp_global,     ONLY : me_pool, me_bgrp
   USE fft_base,      ONLY : dffts, tg_gather
   USE fft_interfaces,ONLY : fwfft, invfft
   USE wavefunctions_module,  ONLY: psic
@@ -284,7 +292,11 @@ SUBROUTINE vloc_psi_k(lda, n, m, psi, v, hpsi)
      IF( dffts%have_task_groups ) THEN
         !
 !$omp parallel do
+#ifdef __BANDS
+        DO j = 1, dffts%nr1x*dffts%nr2x*dffts%tg_npp( me_bgrp + 1 )
+#else
         DO j = 1, dffts%nr1x*dffts%nr2x*dffts%tg_npp( me_pool + 1 )
+#endif
            tg_psic (j) = tg_psic (j) * tg_v(j)
         ENDDO
 !$omp end parallel do
@@ -319,7 +331,11 @@ SUBROUTINE vloc_psi_k(lda, n, m, psi, v, hpsi)
 !$omp end parallel do
            ENDIF
            !
+#ifdef __BANDS
+           ioff = ioff + dffts%nr3x * dffts%nsw( me_bgrp + 1 )
+#else
            ioff = ioff + dffts%nr3x * dffts%nsw( me_pool + 1 )
+#endif
            !
         ENDDO
         !
@@ -354,7 +370,7 @@ SUBROUTINE vloc_psi_nc (lda, n, m, psi, v, hpsi)
   USE kinds,   ONLY : DP
   USE gvecs, ONLY : nls, nlsm
   USE wvfct,   ONLY : igk
-  USE mp_global,     ONLY : me_pool
+  USE mp_global,     ONLY : me_pool, me_bgrp
   USE fft_base,      ONLY : dffts, dfftp, tg_gather
   USE fft_interfaces,ONLY : fwfft, invfft
   USE noncollin_module,     ONLY: npol
@@ -437,7 +453,11 @@ SUBROUTINE vloc_psi_nc (lda, n, m, psi, v, hpsi)
      !   product with the potential v = (vltot+vr) on the smooth grid
      !
      IF( dffts%have_task_groups ) THEN
+#ifdef __BANDS
+        DO j=1, dffts%nr1x*dffts%nr2x*dffts%tg_npp( me_bgrp + 1 )
+#else
         DO j=1, dffts%nr1x*dffts%nr2x*dffts%tg_npp( me_pool + 1 )
+#endif
            sup = tg_psic(j,1) * (tg_v(j,1)+tg_v(j,4)) + &
                  tg_psic(j,2) * (tg_v(j,2)-(0.d0,1.d0)*tg_v(j,3))
            sdwn = tg_psic(j,2) * (tg_v(j,1)-tg_v(j,4)) + &
@@ -475,7 +495,11 @@ SUBROUTINE vloc_psi_nc (lda, n, m, psi, v, hpsi)
                  ENDDO
               ENDIF
               !
+#ifdef __BANDS
+              ioff = ioff + dffts%nr3x * dffts%nsw( me_bgrp + 1 )
+#else
               ioff = ioff + dffts%nr3x * dffts%nsw( me_pool + 1 )
+#endif
               !
            ENDDO
 

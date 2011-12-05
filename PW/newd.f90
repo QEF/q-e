@@ -15,7 +15,6 @@ SUBROUTINE newq(vr,deeq,skip_vltot)
   !   This routine computes the integral of the perturbed potential with
   !   the Q function 
   !
-
   USE kinds,                ONLY : DP
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
   USE cell_base,            ONLY : omega
@@ -31,7 +30,7 @@ SUBROUTINE newq(vr,deeq,skip_vltot)
   USE wavefunctions_module, ONLY : psic
   USE spin_orb,             ONLY : lspinorb, domag
   USE noncollin_module,     ONLY : nspin_mag
-  USE mp_global,            ONLY : intra_pool_comm
+  USE mp_global,            ONLY : intra_pool_comm, intra_bgrp_comm
   USE mp,                   ONLY : mp_sum
   !
   IMPLICIT NONE
@@ -111,8 +110,8 @@ SUBROUTINE newq(vr,deeq,skip_vltot)
               !
               CALL qvan2( ngm, ih, jh, nt, qmod, qgm, ylmk0 )
               !
-!$omp parallel default(shared), private(na,qgm_na,is,dtmp,ig,mytid,ntids)
 #ifdef __OPENMP
+!$omp parallel default(shared), private(na,qgm_na,is,dtmp,ig,mytid,ntids)
               mytid = omp_get_thread_num()  ! take the thread ID
               ntids = omp_get_num_threads() ! take the number of threads
 #endif
@@ -161,7 +160,9 @@ SUBROUTINE newq(vr,deeq,skip_vltot)
               END DO
               !
               DEALLOCATE( qgm_na )
+#ifdef __OPENMP
 !$omp end parallel
+#endif
               !
            END DO
            !
@@ -171,12 +172,15 @@ SUBROUTINE newq(vr,deeq,skip_vltot)
      !
   END DO
   !
+#ifdef __BANDS
+  CALL mp_sum( deeq( :, :, :, 1:nspin_mag ), intra_bgrp_comm )
+#else
   CALL mp_sum( deeq( :, :, :, 1:nspin_mag ), intra_pool_comm )
+#endif
   !
   DEALLOCATE( aux, qgm, qmod, ylmk0 )
-
+  !
 END SUBROUTINE newq
-
 !---------------------------------------
 SUBROUTINE newd()
   USE uspp,          ONLY : deeq
@@ -292,7 +296,6 @@ SUBROUTINE newd_g()
      !
   END DO atoms
   !
-
   CALL stop_clock( 'newd' )
   !
   RETURN

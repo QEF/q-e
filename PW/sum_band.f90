@@ -780,7 +780,9 @@ SUBROUTINE sum_band()
           !
           CALL start_clock( 'sum_band:becsum' )
           !
+#ifdef __OPENMP
 !$omp parallel default(shared), private(ibnd,w1,ijkb0,np,na,ijh,ih,jh,ikb,jkb,is,js,mytid,ntids,icnt)
+#endif
 #ifdef __OPENMP
           mytid = omp_get_thread_num()  ! take the thread ID
           ntids = omp_get_num_threads() ! take the number of threads
@@ -894,7 +896,9 @@ SUBROUTINE sum_band()
              !
           END DO
           !
+#ifdef __OPENMP
 !$omp end parallel
+#endif
           !
           CALL stop_clock( 'sum_band:becsum' )
           !

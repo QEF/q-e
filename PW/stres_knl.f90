@@ -22,7 +22,7 @@ subroutine stres_knl (sigmanlc, sigmakin)
   USE control_flags,        ONLY: gamma_only
   USE noncollin_module,     ONLY: noncolin, npol
   USE wavefunctions_module, ONLY: evc
-  USE mp_global,            ONLY: inter_pool_comm, intra_pool_comm
+  USE mp_global,            ONLY: inter_pool_comm, intra_pool_comm, intra_bgrp_comm
   USE mp,                   ONLY: mp_sum
   implicit none
   real(DP) :: sigmanlc (3, 3), sigmakin (3, 3)
@@ -89,9 +89,14 @@ subroutine stres_knl (sigmanlc, sigmakin)
   !
   call addusstres (sigmanlc)
 #ifdef __PARA
+#ifdef __BANDS
+  call mp_sum( sigmakin, intra_bgrp_comm )
+  call mp_sum( sigmanlc, intra_bgrp_comm )
+#else
   call mp_sum( sigmakin, intra_pool_comm )
-  call mp_sum( sigmakin, inter_pool_comm )
   call mp_sum( sigmanlc, intra_pool_comm )
+#endif
+  call mp_sum( sigmakin, inter_pool_comm )
   call mp_sum( sigmanlc, inter_pool_comm )
 #endif
   !

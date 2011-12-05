@@ -17,7 +17,7 @@ function ewald (alat, nat, ntyp, ityp, zv, at, bg, tau, omega, g, &
   !
   USE kinds
   USE constants, ONLY : tpi, e2
-  USE mp_global, ONLY : intra_pool_comm
+  USE mp_global, ONLY : intra_pool_comm, intra_bgrp_comm
   USE mp,        ONLY : mp_sum
   USE martyna_tuckerman, ONLY : wg_corr_ewald, do_comp_mt
   USE esm,       ONLY : do_comp_esm, esm_bc, esm_ewald
@@ -169,7 +169,11 @@ function ewald (alat, nat, ntyp, ityp, zv, at, bg, tau, omega, g, &
 #ifdef __PARA
 
 
+#ifdef __BANDS
+  call mp_sum(  ewald, intra_bgrp_comm )
+#else
   call mp_sum(  ewald, intra_pool_comm )
+#endif
 #endif
   !      call mp_sum( ewaldr, intra_pool_comm )
   !      call mp_sum( ewaldg, intra_pool_comm )

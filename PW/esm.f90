@@ -452,9 +452,10 @@ SUBROUTINE esm_ewald ( charge, alpha, ewg )
   z1=z0+abs(esm_w)
   g=sqrt(alpha)
   sa=omega/L
-
+#ifdef __OPENMP
 !$omp parallel private( nth, ith, ew, it1, it2, z, zp, tt, kk1, kk2, cc1, cc2, &
 !$omp                   ng_2d, k1, k2, gp2, ipol, t, gp, ff, arg1, arg2, t1, t2 )
+#endif
 #ifdef __OPENMP
   nth=omp_get_num_threads()
   ith=omp_get_thread_num()
@@ -572,7 +573,9 @@ SUBROUTINE esm_ewald ( charge, alpha, ewg )
   enddo
 !$omp atomic
   ewg=ewg+ew
+#ifdef __OPENMP
 !$omp end parallel
+#endif
 
   ewg=2.0*ewg
 

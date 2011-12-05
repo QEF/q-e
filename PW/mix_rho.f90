@@ -440,7 +440,7 @@ SUBROUTINE approx_screening2( drho, rhobest )
   USE control_flags,        ONLY : ngm0, gamma_only
   USE scf,                  ONLY : mix_type, local_tf_ddot
   USE mp,                   ONLY : mp_max, mp_min, mp_sum
-  USE mp_global,            ONLY : intra_image_comm, intra_pool_comm
+  USE mp_global,            ONLY : intra_image_comm, intra_pool_comm, intra_bgrp_comm
   USE fft_base,             ONLY : dffts
   USE fft_interfaces,       ONLY : fwfft, invfft
   !
@@ -539,7 +539,11 @@ SUBROUTINE approx_screening2( drho, rhobest )
      !
   END DO
   !
+#ifdef __BANDS
+  CALL mp_sum( avg_rsm1 , intra_bgrp_comm )
+#else
   CALL mp_sum( avg_rsm1 , intra_pool_comm )
+#endif
   !
   CALL mp_min( min_rs, intra_image_comm )
   CALL mp_max( max_rs, intra_image_comm )

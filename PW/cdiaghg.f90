@@ -22,6 +22,7 @@ SUBROUTINE cdiaghg( n, m, h, s, ldh, e, v )
   USE kinds,            ONLY : DP
   USE mp,               ONLY : mp_bcast, mp_sum, mp_barrier, mp_max
   USE mp_global,        ONLY : me_pool, root_pool, intra_pool_comm
+  USE mp_global,        ONLY : me_bgrp, root_bgrp, intra_bgrp_comm
   !
   IMPLICIT NONE
   !
@@ -55,7 +56,11 @@ SUBROUTINE cdiaghg( n, m, h, s, ldh, e, v )
   !
   ! ... only the first processor diagonalizes the matrix
   !
+#ifdef __BANDS
+  IF ( me_bgrp == root_bgrp ) THEN
+#else
   IF ( me_pool == root_pool ) THEN
+#endif
      !
      ! ... save the diagonal of input S (it will be overwritten)
      !
@@ -174,8 +179,13 @@ SUBROUTINE cdiaghg( n, m, h, s, ldh, e, v )
   !
   ! ... broadcast eigenvectors and eigenvalues to all other processors
   !
+#ifdef __BANDS
+  CALL mp_bcast( e, root_bgrp, intra_bgrp_comm )
+  CALL mp_bcast( v, root_bgrp, intra_bgrp_comm )
+#else
   CALL mp_bcast( e, root_pool, intra_pool_comm )
   CALL mp_bcast( v, root_pool, intra_pool_comm )
+#endif
   !
   CALL stop_clock( 'cdiaghg' )
   !
@@ -196,6 +206,7 @@ SUBROUTINE pcdiaghg( n, h, s, ldh, e, v, desc )
   USE kinds,            ONLY : DP
   USE mp,               ONLY : mp_bcast
   USE mp_global,        ONLY : root_pool, intra_pool_comm
+  USE mp_global,        ONLY : root_bgrp, intra_bgrp_comm
   USE zhpev_module,     ONLY : pzhpev_drv, zhpev_drv
   USE descriptors,      ONLY : la_descriptor
   USE parallel_toolkit, ONLY : zsqmdst, zsqmcll
@@ -353,7 +364,11 @@ SUBROUTINE pcdiaghg( n, h, s, ldh, e, v, desc )
      !
   END IF
   !
+#ifdef __BANDS
+  CALL mp_bcast( e, root_bgrp, intra_bgrp_comm )
+#else
   CALL mp_bcast( e, root_pool, intra_pool_comm )
+#endif
   !
   CALL stop_clock( 'cdiaghg:paragemm' )
   !

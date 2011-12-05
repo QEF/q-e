@@ -15,7 +15,7 @@ subroutine stres_ewa (alat, nat, ntyp, ityp, zv, at, bg, tau, &
   !
   USE kinds
   USE constants, only : tpi, e2, eps6
-  USE mp_global, ONLY : intra_pool_comm
+  USE mp_global, ONLY : intra_pool_comm, intra_bgrp_comm
   USE mp,        ONLY : mp_sum
 
   implicit none
@@ -173,7 +173,11 @@ subroutine stres_ewa (alat, nat, ntyp, ityp, zv, at, bg, tau, &
      enddo
   enddo
 #ifdef __PARA
+#ifdef __BANDS
+  call mp_sum(  sigmaewa, intra_bgrp_comm )
+#else
   call mp_sum(  sigmaewa, intra_pool_comm )
+#endif
 #endif
   return
 end subroutine stres_ewa

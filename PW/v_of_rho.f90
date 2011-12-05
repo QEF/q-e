@@ -137,7 +137,7 @@ SUBROUTINE v_xc_tpss( rho, rho_core, rhog_core, etxc, vtxc, v, kedtaur )
   USE lsda_mod,         ONLY : nspin
   USE cell_base,        ONLY : omega, alat
   USE constants,        ONLY : e2
-  USE mp_global,        ONLY : intra_pool_comm
+  USE mp_global,        ONLY : intra_pool_comm, intra_bgrp_comm
   USE mp,               ONLY : mp_sum
 
   IMPLICIT NONE
@@ -279,8 +279,13 @@ SUBROUTINE v_xc_tpss( rho, rho_core, rhog_core, etxc, vtxc, v, kedtaur )
   vtxc = omega * (vtxc / ( dfftp%nr1 * dfftp%nr2 * dfftp%nr3 ))
   etxc = omega * etxc / ( dfftp%nr1 * dfftp%nr2 * dfftp%nr3 )
   !
+#ifdef __BANDS
+  CALL mp_sum(  vtxc , intra_bgrp_comm )
+  CALL mp_sum(  etxc , intra_bgrp_comm )
+#else
   CALL mp_sum(  vtxc , intra_pool_comm )
   CALL mp_sum(  etxc , intra_pool_comm )
+#endif
   DEALLOCATE(grho)
   DEALLOCATE(h)
   DEALLOCATE(rhoout)
@@ -305,7 +310,7 @@ SUBROUTINE v_xc( rho, rho_core, rhog_core, etxc, vtxc, v )
   USE spin_orb,         ONLY : domag
   USE funct,            ONLY : xc, xc_spin
   USE scf,              ONLY : scf_type
-  USE mp_global,        ONLY : intra_pool_comm
+  USE mp_global,        ONLY : intra_pool_comm, intra_bgrp_comm, mpime
   USE mp,               ONLY : mp_sum
 
   !
@@ -462,7 +467,11 @@ SUBROUTINE v_xc( rho, rho_core, rhog_core, etxc, vtxc, v )
      !
   END IF
   !
+#ifdef __BANDS
+  CALL mp_sum(  rhoneg , intra_bgrp_comm )
+#else
   CALL mp_sum(  rhoneg , intra_pool_comm )
+#endif
   !
   rhoneg(:) = rhoneg(:) * omega / ( dfftp%nr1*dfftp%nr2*dfftp%nr3 )
   !
@@ -483,8 +492,13 @@ SUBROUTINE v_xc( rho, rho_core, rhog_core, etxc, vtxc, v )
   !
   CALL nonloccorr(rho%of_r, rho_core, etxc, vtxc, v)
   !
+#ifdef __BANDS
+  CALL mp_sum(  vtxc , intra_bgrp_comm )
+  CALL mp_sum(  etxc , intra_bgrp_comm )
+#else
   CALL mp_sum(  vtxc , intra_pool_comm )
   CALL mp_sum(  etxc , intra_pool_comm )
+#endif
   !
   CALL stop_clock( 'v_xc' )
   !
@@ -506,7 +520,7 @@ SUBROUTINE v_h( rhog, ehart, charge, v )
   USE lsda_mod,  ONLY : nspin
   USE cell_base, ONLY : omega, tpiba2
   USE control_flags, ONLY : gamma_only
-  USE mp_global, ONLY: intra_pool_comm
+  USE mp_global, ONLY: intra_pool_comm, intra_bgrp_comm
   USE mp,        ONLY: mp_sum
   USE martyna_tuckerman, ONLY : wg_corr_h, do_comp_mt
   USE esm,       ONLY: do_comp_esm, esm_hartree, esm_bc
@@ -537,7 +551,11 @@ SUBROUTINE v_h( rhog, ehart, charge, v )
      !
   END IF
   !
+#ifdef __BANDS
+  CALL mp_sum(  charge , intra_bgrp_comm )
+#else
   CALL mp_sum(  charge , intra_pool_comm )
+#endif
   !
   ! ... calculate hartree potential in G-space (NB: V(G=0)=0 )
   !
@@ -602,7 +620,11 @@ SUBROUTINE v_h( rhog, ehart, charge, v )
         DEALLOCATE( rgtot, vaux )
      end if
      !
-     CALL mp_sum(  ehart , intra_pool_comm )
+#ifdef __BANDS
+     CALL mp_sum(  ehart , intra_bgrp_comm )
+#else
+     CALL mp_sum(  ehart , intra_bgrp_comm )
+#endif
      ! 
      aux(:) = 0.D0
      !

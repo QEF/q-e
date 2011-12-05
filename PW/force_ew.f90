@@ -16,7 +16,7 @@ subroutine force_ew (alat, nat, ntyp, ityp, zv, at, bg, tau, &
   !
   USE kinds
   USE constants, ONLY : tpi, e2
-  USE mp_global, ONLY : intra_pool_comm
+  USE mp_global, ONLY : intra_pool_comm, intra_bgrp_comm
   USE mp,        ONLY : mp_sum
   USE esm,       ONLY : esm_force_ew, do_comp_esm, esm_bc
   implicit none
@@ -169,7 +169,11 @@ subroutine force_ew (alat, nat, ntyp, ityp, zv, at, bg, tau, &
   enddo
 100 continue
 #ifdef __PARA
+#ifdef __BANDS
+  CALL mp_sum( forceion, intra_bgrp_comm )
+#else
   CALL mp_sum( forceion, intra_pool_comm )
+#endif
 #endif
   return
 end subroutine force_ew

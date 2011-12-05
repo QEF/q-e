@@ -24,7 +24,7 @@ SUBROUTINE regterg( npw, npwx, nvec, nvecx, evc, ethr, &
   !
   USE kinds,         ONLY : DP
   USE io_global,     ONLY : stdout
-  USE mp_global,     ONLY : intra_pool_comm
+  USE mp_global,     ONLY : intra_pool_comm, intra_bgrp_comm
   USE mp,            ONLY : mp_sum 
   USE realus,        ONLY :  real_space, fft_orbital_gamma, initialisation_level,&
                              bfft_orbital_gamma, calbec_rs_gamma, s_psir_gamma
@@ -162,7 +162,11 @@ SUBROUTINE regterg( npw, npwx, nvec, nvecx, evc, ethr, &
   IF ( gstart == 2 ) &
      CALL DGER( nbase, nbase, -1.D0, psi, npwx2, hpsi, npwx2, hr, nvecx )
   !
+#ifdef __BANDS
+  CALL mp_sum( hr( :, 1:nbase ), intra_bgrp_comm )
+#else
   CALL mp_sum( hr( :, 1:nbase ), intra_pool_comm )
+#endif
   !
   IF ( uspp ) THEN
      !
@@ -182,7 +186,11 @@ SUBROUTINE regterg( npw, npwx, nvec, nvecx, evc, ethr, &
      !
   END IF
   !
+#ifdef __BANDS
+  CALL mp_sum( sr( :, 1:nbase ), intra_bgrp_comm )
+#else
   CALL mp_sum( sr( :, 1:nbase ), intra_pool_comm )
+#endif
   !
   IF ( lrot ) THEN
      !
@@ -280,7 +288,11 @@ SUBROUTINE regterg( npw, npwx, nvec, nvecx, evc, ethr, &
         !
      END DO
      !
+#ifdef __BANDS
+     CALL mp_sum( ew( 1:notcnv ), intra_bgrp_comm )
+#else
      CALL mp_sum( ew( 1:notcnv ), intra_pool_comm )
+#endif
      !
      DO n = 1, notcnv
         !
@@ -323,7 +335,11 @@ SUBROUTINE regterg( npw, npwx, nvec, nvecx, evc, ethr, &
         CALL DGER( nbase+notcnv, notcnv, -1.D0, psi, &
                    npwx2, hpsi(1,nb1), npwx2, hr(1,nb1), nvecx )
      !
+#ifdef __BANDS
+     CALL mp_sum( hr( :, nb1 : nb1+notcnv-1 ), intra_bgrp_comm )
+#else
      CALL mp_sum( hr( :, nb1 : nb1+notcnv-1 ), intra_pool_comm )
+#endif
      !
      IF ( uspp ) THEN
         !
@@ -345,7 +361,11 @@ SUBROUTINE regterg( npw, npwx, nvec, nvecx, evc, ethr, &
         !
      END IF
      !
+#ifdef __BANDS
+     CALL mp_sum( sr( :, nb1 : nb1+notcnv-1 ), intra_bgrp_comm  )
+#else
      CALL mp_sum( sr( :, nb1 : nb1+notcnv-1 ), intra_pool_comm  )
+#endif
      !
      CALL stop_clock( 'regterg:overlap' )
      !
@@ -409,7 +429,7 @@ SUBROUTINE regterg( npw, npwx, nvec, nvecx, evc, ethr, &
            ! ... last iteration, some roots not converged: return
            !
            WRITE( stdout, '(5X,"WARNING: ",I5, &
-                &   " eigenvalues not converged")' ) notcnv
+                &   " eigenvalues not converged in regterg")' ) notcnv
            !
            CALL stop_clock( 'regterg:last' )
            !
@@ -494,7 +514,8 @@ SUBROUTINE pregterg( npw, npwx, nvec, nvecx, evc, ethr, &
   USE kinds,     ONLY : DP
   USE io_global, ONLY : stdout
   USE mp_global,        ONLY : npool, nproc_pool, me_pool, root_pool, &
-                               intra_pool_comm, &
+                               intra_pool_comm, intra_bgrp_comm,&
+                               nbgrp, nproc_bgrp, me_bgrp, root_bgrp, &
                                ortho_comm, np_ortho, me_ortho, ortho_comm_id, leg_ortho
   USE descriptors,      ONLY : la_descriptor, descla_init, descla_local_dims
   USE parallel_toolkit, ONLY : dsqmdst, dsqmcll, dsqmred, dsqmsym
@@ -709,7 +730,11 @@ SUBROUTINE pregterg( npw, npwx, nvec, nvecx, evc, ethr, &
         !
      END DO
      !
+#ifdef __BANDS
+     CALL mp_sum( ew( 1:notcnv ), intra_bgrp_comm )
+#else
      CALL mp_sum( ew( 1:notcnv ), intra_pool_comm )
+#endif
      !
      DO n = 1, notcnv
         !
@@ -1024,7 +1049,11 @@ CONTAINS
                  vtmp(:,1:notcl) = vl(:,1:notcl)
               END IF
 
+#ifdef __BANDS
+              CALL mp_bcast( vtmp(:,1:notcl), root, intra_bgrp_comm )
+#else
               CALL mp_bcast( vtmp(:,1:notcl), root, intra_pool_comm )
+#endif
               ! 
               IF ( uspp ) THEN
                  !
@@ -1094,14 +1123,22 @@ CONTAINS
                  !
                  !  this proc sends his block
                  ! 
+#ifdef __BANDS
+                 CALL mp_bcast( vl(:,1:nc), root, intra_bgrp_comm )
+#else
                  CALL mp_bcast( vl(:,1:nc), root, intra_pool_comm )
+#endif
                  CALL DGEMM( 'N', 'N', npw2, nc, nr, 1.D0, &
                           psi(1,ir), npwx2, vl, nx, beta, evc(1,ic), npwx2 )
               ELSE
                  !
                  !  all other procs receive
                  ! 
+#ifdef __BANDS
+                 CALL mp_bcast( vtmp(:,1:nc), root, intra_bgrp_comm )
+#else
                  CALL mp_bcast( vtmp(:,1:nc), root, intra_pool_comm )
+#endif
                  CALL DGEMM( 'N', 'N', npw2, nc, nr, 1.D0, &
                           psi(1,ir), npwx2, vtmp, nx, beta, evc(1,ic), npwx2 )
               END IF
@@ -1152,14 +1189,22 @@ CONTAINS
                  !
                  !  this proc sends his block
                  ! 
+#ifdef __BANDS
+                 CALL mp_bcast( vl(:,1:nc), root, intra_bgrp_comm )
+#else
                  CALL mp_bcast( vl(:,1:nc), root, intra_pool_comm )
+#endif
                  CALL DGEMM( 'N', 'N', npw2, nc, nr, 1.D0, &
                           spsi(1,ir), npwx2, vl, nx, beta, psi(1,nvec+ic), npwx2 )
               ELSE
                  !
                  !  all other procs receive
                  ! 
+#ifdef __BANDS
+                 CALL mp_bcast( vtmp(:,1:nc), root, intra_bgrp_comm )
+#else
                  CALL mp_bcast( vtmp(:,1:nc), root, intra_pool_comm )
+#endif
                  CALL DGEMM( 'N', 'N', npw2, nc, nr, 1.D0, &
                           spsi(1,ir), npwx2, vtmp, nx, beta, psi(1,nvec+ic), npwx2 )
               END IF
@@ -1212,14 +1257,22 @@ CONTAINS
                  !
                  !  this proc sends his block
                  ! 
+#ifdef __BANDS
+                 CALL mp_bcast( vl(:,1:nc), root, intra_bgrp_comm )
+#else
                  CALL mp_bcast( vl(:,1:nc), root, intra_pool_comm )
+#endif§
                  CALL DGEMM( 'N', 'N', npw2, nc, nr, 1.D0, &
                           hpsi(1,ir), npwx2, vl, nx, beta, psi(1,nvec+ic), npwx2 )
               ELSE
                  !
                  !  all other procs receive
                  ! 
+#ifdef __BANDS
+                 CALL mp_bcast( vtmp(:,1:nc), root, intra_bgrp_comm )
+#else
                  CALL mp_bcast( vtmp(:,1:nc), root, intra_pool_comm )
+#endif
                  CALL DGEMM( 'N', 'N', npw2, nc, nr, 1.D0, &
                           hpsi(1,ir), npwx2, vtmp, nx, beta, psi(1,nvec+ic), npwx2 )
               END IF
@@ -1280,7 +1333,11 @@ CONTAINS
 
            ! accumulate result on dm of root proc.
 
+#ifdef __BANDS
+           CALL mp_root_sum( work, dm, root, intra_bgrp_comm )
+#else
            CALL mp_root_sum( work, dm, root, intra_pool_comm )
+#endif
 
         END DO
         !
@@ -1336,9 +1393,17 @@ CONTAINS
                  CALL DGER( nr, nc, -1.D0, v( 1, ir ), npwx2, w(1,ii), npwx2, vtmp, nx )
 
               IF(  (desc%active_node > 0) .AND. (ipr-1 == desc%myr) .AND. (ipc-1 == desc%myc) ) THEN
+#ifdef __BANDS
+                 CALL mp_root_sum( vtmp(:,1:nc), dm(:,icc:icc+nc-1), root, intra_bgrp_comm )
+#else
                  CALL mp_root_sum( vtmp(:,1:nc), dm(:,icc:icc+nc-1), root, intra_pool_comm )
+#endif
               ELSE
+#ifdef __BANDS
+                 CALL mp_root_sum( vtmp(:,1:nc), dm, root, intra_bgrp_comm )
+#else
                  CALL mp_root_sum( vtmp(:,1:nc), dm, root, intra_pool_comm )
+#endif
               END IF
 
 
@@ -1366,7 +1431,11 @@ CONTAINS
            e( i + ic - 1 ) = hl( i, i )
         END DO
      END IF
+#ifdef __BANDS
+     CALL mp_sum( e(1:nbase), intra_bgrp_comm )
+#else
      CALL mp_sum( e(1:nbase), intra_pool_comm )
+#endif
      RETURN
   END SUBROUTINE set_e_from_h
   !

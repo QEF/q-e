@@ -63,7 +63,8 @@ SUBROUTINE electrons()
   USE control_flags,        ONLY : adapt_thr, tr2_init, tr2_multi
 #endif
   USE funct,                ONLY : dft_is_meta
-  USE mp_global,            ONLY : intra_pool_comm, npool
+  USE mp_global,            ONLY : intra_pool_comm, npool, intra_bgrp_comm, nbgrp, mpime, &
+                                   inter_bgrp_comm, my_bgrp_id
   USE mp,                   ONLY : mp_sum
   !
   USE london_module,        ONLY : energy_london
@@ -376,7 +377,6 @@ SUBROUTINE electrons()
               CALL PAW_potential(rhoin%bec, ddd_paw, epaw)
               CALL PAW_symmetrize_ddd(ddd_paw)
            ENDIF
-
            !
            ! ... estimate correction needed to have variational energy:
            ! ... T + E_ion (eband + deband) are calculated in sum_band
@@ -803,8 +803,13 @@ SUBROUTINE electrons()
           magtot = magtot * omega / ( dfftp%nr1*dfftp%nr2*dfftp%nr3 )
           absmag = absmag * omega / ( dfftp%nr1*dfftp%nr2*dfftp%nr3 )
           !
+#ifdef __BANDS
+          CALL mp_sum( magtot, intra_bgrp_comm )
+          CALL mp_sum( absmag, intra_bgrp_comm )
+#else
           CALL mp_sum( magtot, intra_pool_comm )
           CALL mp_sum( absmag, intra_pool_comm )
+#endif
           !
        ELSE IF ( noncolin ) THEN
           !
@@ -827,8 +832,13 @@ SUBROUTINE electrons()
              !
           END DO
           !
-          CALL mp_sum( magtot_nc, intra_pool_comm )
-          CALL mp_sum( absmag,    intra_pool_comm )
+#ifdef __BANDS
+          CALL mp_sum( magtot, intra_bgrp_comm )
+          CALL mp_sum( absmag, intra_bgrp_comm )
+#else
+          CALL mp_sum( magtot, intra_pool_comm )
+          CALL mp_sum( absmag, intra_pool_comm )
+#endif
           !
           DO i = 1, 3
              !
@@ -882,7 +892,11 @@ SUBROUTINE electrons()
        !
        delta_e = omega * delta_e / ( dfftp%nr1*dfftp%nr2*dfftp%nr3 )
        !
+#ifdef __BANDS
+       CALL mp_sum( delta_e, intra_bgrp_comm )
+#else
        CALL mp_sum( delta_e, intra_pool_comm )
+#endif
        !
        if (lda_plus_u) then
           delta_e_hub = - SUM (rho%ns(:,:,:,:)*v%ns(:,:,:,:))
@@ -918,7 +932,11 @@ SUBROUTINE electrons()
        !
        delta_escf = omega * delta_escf / ( dfftp%nr1*dfftp%nr2*dfftp%nr3 )
        !
+#ifdef __BANDS
+       CALL mp_sum( delta_escf, intra_bgrp_comm )
+#else
        CALL mp_sum( delta_escf, intra_pool_comm )
+#endif
        !
        if (lda_plus_u) then
           delta_escf_hub = - SUM((rhoin%ns(:,:,:,:)-rho%ns(:,:,:,:))*v%ns(:,:,:,:))
