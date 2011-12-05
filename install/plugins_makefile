@@ -40,6 +40,14 @@ configure-gipaw: touch-dummy
 	cd ../GIPAW ; \
 	./configure --with-qe-source=${TOPDIR}
 	touch ./configure-gipaw
+##########################################################
+# EPW
+###########################################################
+epw: 
+	if test -d ../EPW; then \
+	cd ../EPW; $(MAKE) all; cd ../bin; ln -fs ../EPW/bin/epw.x . ; fi
+	touch make-epw
+
 ###########################################################
 # wannier90
 ###########################################################
@@ -188,6 +196,13 @@ gipaw_veryclean: gipaw_clean
 	if test -d ../GIPAW; then (cd ../GIPAW; \
 	rm -f config.log config.status ); fi
 	rm -rf ./configure-gipaw
+epw_clean:
+	if test -d ../EPW; then (cd ../EPW; \
+	$(MAKE) clean); fi
+	rm -f ../bin/epw.x
+	rm -rf ./make-epw 
+epw_veryclean: epw_clean
+
 w90_clean:
 	if test -d ../W90; then (cd ../W90; \
 	$(MAKE) veryclean); fi
@@ -229,5 +244,5 @@ plumed_veryclean: plumed_clean
 ##########################################################
 # general cleaning
 ##########################################################
-clean: w90_clean want_clean yambo_clean plumed_clean
-veryclean: w90_veryclean want_veryclean yambo_veryclean plumed_veryclean
+clean: w90_clean want_clean yambo_clean plumed_clean epw_clean
+veryclean: w90_veryclean want_veryclean yambo_veryclean plumed_veryclean epw_veryclean

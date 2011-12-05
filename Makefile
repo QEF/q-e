@@ -18,6 +18,7 @@ default :
 	@echo '  plumed       Patch for calculating free-energy paths with pw or cp'
 	@echo '  gww          GW with Wannier Functions'
 	@echo '  gipaw        NMR and EPR spectra'
+	@echo '  epw          Electron-Phonon Coupling
 	@echo '  yambo        electronic excitations with plane waves'
 	@echo '  tools        misc tools for data analysis'
 	@echo '  ld1          utilities for pseudopotential generation'
@@ -81,6 +82,9 @@ acfdt : bindir mods libs pw ph
 	else $(MAKE) $(MFLAGS) TLDEPS= all ; fi ) ; fi
 
 gipaw : pw
+	cd install ; $(MAKE) $(MFLAGS) -f plugins_makefile $@
+
+epw : pw ph
 	cd install ; $(MAKE) $(MFLAGS) -f plugins_makefile $@
 
 gww   : bindir pw ph
@@ -206,7 +210,7 @@ clean :
 		CPV PHonon/D3 PHonon/Gamma Modules PHonon/PH PP PW PWCOND \
 		NEB VdW ACFDT EE \
 		atomic/src clib flib pwtools upftools iotk GIPAW XSpectra \
-		dev-tools GWW extlibs TDDFPT Solvent \
+		dev-tools GWW extlibs TDDFPT Solvent EPW \
 	; do \
 	    if test -d $$dir ; then \
 		( cd $$dir ; \
