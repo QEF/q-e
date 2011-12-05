@@ -767,30 +767,18 @@ subroutine vcmove (mxdtyp, mxdatm, ntype, ityp, rat, avec, vcell, &
      tnew = dois / tres / DBLE (natot - 1) * avk / k_boltzmann_ry
   endif
   !
-  !       careful with zero temperature
-  !
-  !if (temp.lt.1d-14) then
-  !   ts = zero
-  !else
-  !   ts = dabs (tnew / temp - um)
-  !endif
-  !
   !       rescale velocities
   !
-  !      WRITE( stdout,*) ' ekla', ekla, tolp,ts, nst, ntcheck, ntimes
-  if (mod (nst, ntcheck) .eq.0) then
+  if ( mod (nst, ntcheck) == 0 ) then
+     !
      !       with the new definition of tolp, this is the test to perform
      !
-     ts = dabs ( tnew - temp ) 
-     if ( ( ts > tolp) .and. ( ntimes > 0 ) ) then
-        !           WRITE( stdout,*) ' ekkkeka ! non dovrei essere qui !'
-        !           WRITE( stdout,*) 'nst,ntcheck, ts, tolp,ntimes'
-        !           WRITE( stdout,*) nst,ntcheck, ts, tolp,ntimes
+     if ( ( ABS (tnew - temp ) > tolp) .and. ( abs(ntimes > 0) ) ) then
         !
-        if (tnew.le.0.1d-12) then
-           alpha = zero
+        if ( tnew < 1.0d-12) then
+           alpha = 1.0_dp
         else
-           alpha = dsqrt (temp / tnew)
+           alpha = sqrt (temp / tnew)
         endif
         do na = 1, natot
            do k = 1, 3
@@ -811,7 +799,7 @@ subroutine vcmove (mxdtyp, mxdatm, ntype, ityp, rat, avec, vcell, &
         ack = zero
         acp = zero
         acpv = zero
-        ntimes = ntimes - 1
+        if ( ntimes > 0 ) ntimes = ntimes - 1
         nzero = 0
      endif
 

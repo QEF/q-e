@@ -289,7 +289,7 @@ MODULE cellmd
                           ! during relaxation/MD
   INTEGER :: &
        nzero,            &! iteration # of last thermalization
-       ntimes,           &! number of thermalization steps to be performed
+       ntimes=-1,        &! # of thermalization steps to be performed (-i=inf)
        ntcheck            ! # of steps between thermalizations
   LOGICAL :: lmovecell    ! used in cell relaxation
   !

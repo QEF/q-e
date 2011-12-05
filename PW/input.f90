@@ -961,6 +961,7 @@ SUBROUTINE iosys()
      thermostat   = trim( ion_temperature )
      temperature  = tempw
      tolp_        = tolp
+     ntcheck      = nraise
      !
   CASE( 'rescale-v', 'rescale-V', 'rescale_v', 'rescale_V' )
      !

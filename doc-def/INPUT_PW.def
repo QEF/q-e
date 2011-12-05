@@ -1508,8 +1508,9 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 		default { 'not_controlled' }
 		info { 
 		    'rescaling'   control ionic temperature via velocity rescaling
-                                  (first method) see parameters "tempw" and "tolp"
-                                  This is the only method implemented in VC-MD
+                                  (first method) see parameters "tempw", "tolp", and
+                                  "nraise" (for VC-MD only). This rescaling method
+                                  is the only one currently implemented in VC-MD
 
 		    'rescale-v'   control ionic temperature via velocity rescaling
                                   (second method) see parameters "tempw" and "nraise"
@@ -1581,6 +1582,10 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 		    if ion_temperature='rescale-v':
 		           every 'nraise' steps the average temperature, computed from
 		           the last nraise steps, is rescaled to tempw
+
+		    if ion_temperature='rescaling' and calculation='vc-md':
+		           every 'nraise' steps the instantaneous temperature
+                           is rescaled to tempw
 		    
 		    if ion_temperature='berendsen':
 		           the "rise time" parameter is given in units of the time step:

@@ -14,6 +14,7 @@ Incompatible changes in svn version:
 
 Fixed in svn version
 
+   * Velocity rescaling in variable-cell MD wasn't really working
    * Workaround for frequent crashes in PAW with vc-relax
    * In some cases spin-polarized HSE was yielding NaN's
    * PHonon: an array not always allocated was passed as variable to 
