@@ -53,6 +53,8 @@ MODULE mp_global
   INTEGER :: nproc_bgrp  = 1  ! number of processor within a band group
   INTEGER :: inter_bgrp_comm  = 0  ! inter band group communicator
   INTEGER :: intra_bgrp_comm  = 0  ! intra band group communicator  
+  INTEGER :: ibnd_start = 0 !starting band index
+  INTEGER :: ibnd_end = 0   !ending band index
   !
   ! ... ortho (or linear-algebra) groups
   !
@@ -804,6 +806,41 @@ CONTAINS
      RETURN
      !
   END SUBROUTINE distribute_over_bgrp
+  !
+  SUBROUTINE init_index_over_band(comm,nbnd)
+    IMPLICIT NONE
+#if defined (__MPI)
+    !
+    include 'mpif.h'
+    !
+#endif
+    INTEGER, INTENT(IN) :: comm, nbnd
+
+    INTEGER :: npe, myrank, ierror, rest, k
+
+    myrank = mp_rank(comm)
+    npe = mp_size(comm)
+
+!    call mpi_comm_rank(comm, mp_rank, ierror)
+!    call mpi_comm_size(comm, mp_size, ierror)
+    rest = mod(nbnd, npe)
+    k = int(nbnd/npe)
+
+    if(k.ge.1)then
+     if(rest > myrank)then
+       ibnd_start = (myrank)*k + (myrank+1)
+       ibnd_end  =  (myrank+1)*k + (myrank+1)
+     else
+       ibnd_start = (myrank)*k + rest + 1
+       ibnd_end  =  (myrank+1)*k + rest
+     endif
+    else
+     ibnd_start = 1
+     ibnd_end = nbnd
+    endif
+
+
+  END SUBROUTINE init_index_over_band
   !
   !
   FUNCTION get_ntask_groups()
