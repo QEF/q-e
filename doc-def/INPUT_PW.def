@@ -1934,7 +1934,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 
 	choose {
 	    when -test "tpiba  OR  crystal  OR  tpiba_b  OR  crystal_b" {
-		syntax -flag {tpiba | crystal | tbiba_b | crystal_b } {
+		syntax -flag {tpiba | crystal | tpiba_b | crystal_b } {
 		    line { 
 			var nks -type INTEGER {
 			    info {Number of supplied special k-points.}
