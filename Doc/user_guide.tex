@@ -173,9 +173,13 @@ explain either solid state physics and its computational methods.
 If you want to learn the latter, you should read a good textbook, 
 such as e.g. the book by Richard Martin:
 {\em Electronic Structure: Basic Theory and Practical Methods},
-Cambridge University Press (2004); or
+Cambridge University Press (2004); or:
 {\em Density functional theory: a practical introduction}, 
-D. S. Sholl, J. A. Steckel (Wiley, 2009). 
+D. S. Sholl, J. A. Steckel (Wiley, 2009); or
+{\em Electronic Structure Calculations for Solids and Molecules:
+Theory and Computational Methods}, 
+J. Kohanoff (Cambridge University Press, 2006). 
+
 See also the ``Learn'' section in
 the \qe\ web site; the ``Reference Papers'' 
 section in the Wiki.
@@ -3814,7 +3818,8 @@ The reference level is an ill-defined quantity in calculations
 in solids with periodic boundary conditions. Absolute values of
 Kohn-Sham eigenvalues are meaningless. 
 
-\paragraph{Why do I get a strange value of the Fermi energy?}
+\paragraph{Why do I get a positive/unexpected/strange value
+of the Fermi energy?}
 
 "The value of the Fermi energy (as well as of any energy, for that
 matter) depends of the reference level. What you are referring to is
@@ -3822,6 +3827,11 @@ probably the "Fermi energy referred to the vacuum level" (i.e.
 the work function). In order to obtain that, you need to know what the
 vacuum level is, which cannot be said from a bulk calculation only"
 (Stefano Baroni, Sept. 2008). 
+
+Also note that the current algorithm for Fermi energy calculation 
+is not able to set the Fermi energy to the textbook value (i.e. in the
+middle of the gap) for insulators. You will get an unpredictable 
+value located somewhere in the gap.
 
 \paragraph{Why I don't get zero pressure/stress at equilibrium?}
 If you make a calculation with fixed cell parameters, you
