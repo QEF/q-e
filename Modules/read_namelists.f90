@@ -1384,6 +1384,11 @@ MODULE read_namelists_module
        IF( refg < 0 ) &
          CALL errore( sub_name, ' wrong table interval refg ', 1 )
        !
+#ifdef __LOWMEM
+       IF( wf_collect .EQ. .true. ) &
+         CALL errore( sub_name, ' wf_collect = .true. is not allowed with LOWMEM build ', 1 )
+#endif
+
        RETURN
        !
      END SUBROUTINE

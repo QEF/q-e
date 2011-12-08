@@ -32,7 +32,7 @@ CONTAINS
 !=----------------------------------------------------------------------=
 !
    !-----------------------------------------------------------------------
-   SUBROUTINE ggen ( gamma_only, at, bg )
+   SUBROUTINE ggen ( gamma_only, at, bg, comm )
    !----------------------------------------------------------------------
    !
    !     This routine generates all the reciprocal lattice vectors
@@ -40,26 +40,37 @@ CONTAINS
    !     computes the indices nl which give the correspondence
    !     between the fft mesh points and the array of g vectors.
    !
+   USE mp, ONLY: mp_rank, mp_size, mp_sum
+   !
    IMPLICIT NONE
    !
-   LOGICAL,  INTENT(in) :: gamma_only
-   REAL(DP), INTENT(IN) ::  at(3,3), bg(3,3)
+   LOGICAL,  INTENT(IN) :: gamma_only
+   REAL(DP), INTENT(IN) :: at(3,3), bg(3,3)
+   INTEGER,  INTENT(IN) :: comm
    !     here a few local variables
    !
    REAL(DP) ::  t (3), tt
-   INTEGER :: ngm_, n1, n2, n3, n1s, n2s, n3s
+   INTEGER :: ngm_, ngms_, n1, n2, n3, n1s, n2s, n3s
    !
    REAL(DP), ALLOCATABLE :: g2sort_g(:)
    ! array containing all g vectors, on all processors: replicated data
+   ! when compiling with __LOWMEM only g vectors for the current processor are stored
    INTEGER, ALLOCATABLE :: mill_g(:,:), mill_unsorted(:,:)
-   ! array containing all g vectors generators, on all processors:
-   !     replicated data
+   ! array containing all g vectors generators, on all processors: replicated data
+   ! when compiling with __LOWMEM only g vectors for the current processor are stored
    INTEGER, ALLOCATABLE :: igsrt(:)
    !
 #ifdef __PARA
    INTEGER :: m1, m2, mc
 #endif
    INTEGER :: ni, nj, nk, i, j, k, ipol, ng, igl, indsw
+   INTEGER :: mype, npe, ng_offset
+   INTEGER, ALLOCATABLE :: ngpe(:)
+   !
+   mype = mp_rank( comm )
+   npe  = mp_size( comm )
+   ALLOCATE( ngpe( npe ) )
+   ngpe = 0
    !
    ! counters
    !
@@ -69,18 +80,23 @@ CONTAINS
    !
    gg(:) = gcutm + 1.d0
    !
-   !     set d vector for unique ordering
-   !
    !    and computes all the g vectors inside a sphere
    !
+#ifdef __LOWMEM
+   ALLOCATE( mill_g( 3, ngm ),mill_unsorted( 3, ngm ) )
+   ALLOCATE( igsrt( ngm ) )
+   ALLOCATE( g2sort_g( ngm ) )
+#else
    ALLOCATE( mill_g( 3, ngm_g ),mill_unsorted( 3, ngm_g ) )
    ALLOCATE( igsrt( ngm_g ) )
    ALLOCATE( g2sort_g( ngm_g ) )
+#endif
    g2sort_g(:) = 1.0d20
    !
-   ! save present value of ngm 
+   ! save current value of ngm and ngms
    !
-   ngm_ = ngm
+   ngm_  = ngm
+   ngms_ = ngms
    !
    ngm = 0
    ngms = 0
@@ -101,6 +117,15 @@ CONTAINS
          ! gamma-only: exclude plane with x = 0, y < 0
          !
          IF ( gamma_only .and. i == 0 .and. j < 0) CYCLE jloop
+
+#if defined (__PARA) && defined (__LOWMEM)
+         m1 = mod (i, dfftp%nr1) + 1
+         IF (m1 < 1) m1 = m1 + dfftp%nr1
+         m2 = mod (j, dfftp%nr2) + 1
+         IF (m2 < 1) m2 = m2 + dfftp%nr2
+         mc = m1 + (m2 - 1) * dfftp%nr1x
+         IF ( dfftp%isind ( mc ) == 0) CYCLE jloop
+#endif
          kloop: DO k = -nk, nk
             !
             ! gamma-only: exclude line with x = 0, y = 0, z < 0
@@ -111,7 +136,11 @@ CONTAINS
             IF (tt <= gcutm) THEN
                ngm = ngm + 1
                IF (tt <= gcutms) ngms = ngms + 1
+#ifdef __LOWMEM
+               IF (ngm > ngm_) CALL errore ('ggen', 'too many g-vectors', ngm)
+#else
                IF (ngm > ngm_g) CALL errore ('ggen', 'too many g-vectors', ngm)
+#endif
                mill_unsorted( :, ngm ) = (/ i,j,k /)
                IF ( tt > eps8 ) THEN
                   g2sort_g(ngm) = tt
@@ -123,26 +152,56 @@ CONTAINS
       ENDDO jloop
    ENDDO iloop
 
+#ifdef __LOWMEM
+   ngpe( mype + 1 ) = ngm
+   CALL mp_sum( ngpe, comm )
+   IF (ngm  /= ngm_ ) &
+         CALL errore ('ggen', 'g-vectors missing !', abs(ngm - ngm_))
+   IF (ngms /= ngms_) &
+         CALL errore ('ggen', 'smooth g-vectors missing !', abs(ngms - ngms_))
+#else
    IF (ngm  /= ngm_g ) &
          CALL errore ('ggen', 'g-vectors missing !', abs(ngm - ngm_g))
    IF (ngms /= ngms_g) &
          CALL errore ('ggen', 'smooth g-vectors missing !', abs(ngms - ngms_g))
+#endif
+
 
    igsrt(1) = 0
+#ifdef __LOWMEM
+   CALL hpsort_eps( ngm, g2sort_g, igsrt, eps8 )
+#else
    CALL hpsort_eps( ngm_g, g2sort_g, igsrt, eps8 )
+#endif
    mill_g(1,:) = mill_unsorted(1,igsrt(:))
    mill_g(2,:) = mill_unsorted(2,igsrt(:))
    mill_g(3,:) = mill_unsorted(3,igsrt(:))
    DEALLOCATE( g2sort_g, igsrt, mill_unsorted )
 
+#ifdef __LOWMEM
+   ! compute adeguate offsets in order to avoid overlap between
+   ! g vectors once they are gathered on a single (global) array
+   !
+   ng_offset = 0
+   DO ng = 1, mype
+      ng_offset = ng_offset + ngpe( ng )
+   END DO
+#endif
+
    ngm = 0
    ngms = 0
+   !
+#ifdef __LOWMEM
+   ngloop: DO ng = 1, ngm_
+#else
    ngloop: DO ng = 1, ngm_g
+#endif
+
       i = mill_g(1, ng)
       j = mill_g(2, ng)
       k = mill_g(3, ng)
 
-#ifdef __PARA
+#if defined (__PARA) && !defined (__LOWMEM)
       m1 = mod (i, dfftp%nr1) + 1
       IF (m1 < 1) m1 = m1 + dfftp%nr1
       m2 = mod (j, dfftp%nr2) + 1
@@ -154,7 +213,13 @@ CONTAINS
       ngm = ngm + 1
 
       !  Here map local and global g index !!!
+      !  N.B. the global G vectors arrangement depends on the number of processors
+      !
+#if defined (__LOWMEM)
+      ig_l2g( ngm ) = ng + ng_offset
+#else
       ig_l2g( ngm ) = ng
+#endif
 
       g (1:3, ngm) = i * bg (:, 1) + j * bg (:, 2) + k * bg (:, 3)
       gg (ngm) = sum(g (1:3, ngm)**2)
@@ -213,6 +278,8 @@ CONTAINS
 
    IF ( gamma_only) CALL index_minusg()
 
+   DEALLOCATE( ngpe )
+
    END SUBROUTINE ggen
    !
    !-----------------------------------------------------------------------
@@ -225,10 +292,10 @@ CONTAINS
    USE gvect,    ONLY : ngm, nlm, mill
    USE gvecs,    ONLY : nlsm, ngms
    USE fft_base, ONLY : dfftp, dffts
+   !
    IMPLICIT NONE
    !
    INTEGER :: n1, n2, n3, n1s, n2s, n3s, ng
-   !
    !
    DO ng = 1, ngm
       n1 = -mill (1,ng) + 1
