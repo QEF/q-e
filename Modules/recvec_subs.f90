@@ -32,7 +32,11 @@ CONTAINS
 !=----------------------------------------------------------------------=
 !
    !-----------------------------------------------------------------------
+#ifdef __LOWMEM
    SUBROUTINE ggen ( gamma_only, at, bg, comm )
+#else
+   SUBROUTINE ggen ( gamma_only, at, bg )
+#endif
    !----------------------------------------------------------------------
    !
    !     This routine generates all the reciprocal lattice vectors
@@ -46,7 +50,9 @@ CONTAINS
    !
    LOGICAL,  INTENT(IN) :: gamma_only
    REAL(DP), INTENT(IN) :: at(3,3), bg(3,3)
+#ifdef __LOWMEM
    INTEGER,  INTENT(IN) :: comm
+#endif
    !     here a few local variables
    !
    REAL(DP) ::  t (3), tt
@@ -67,10 +73,12 @@ CONTAINS
    INTEGER :: mype, npe, ng_offset
    INTEGER, ALLOCATABLE :: ngpe(:)
    !
+#ifdef __LOWMEM
    mype = mp_rank( comm )
    npe  = mp_size( comm )
    ALLOCATE( ngpe( npe ) )
    ngpe = 0
+#endif
    !
    ! counters
    !
@@ -278,7 +286,7 @@ CONTAINS
 
    IF ( gamma_only) CALL index_minusg()
 
-   DEALLOCATE( ngpe )
+   IF( ALLOCATED( ngpe ) ) DEALLOCATE( ngpe )
 
    END SUBROUTINE ggen
    !
