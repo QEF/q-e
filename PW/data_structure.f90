@@ -27,10 +27,6 @@ SUBROUTINE data_structure( gamma_only )
   USE stick_set,  ONLY : pstickset
   USE wvfct,      ONLY : ecutwfc
 
-#ifdef SOLVENT
-  USE mp_global,  ONLY : me_pool, nproc_pool
-#endif
-
 
   !
   IMPLICIT NONE
