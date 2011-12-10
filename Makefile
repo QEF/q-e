@@ -18,7 +18,7 @@ default :
 	@echo '  plumed       Patch for calculating free-energy paths with pw or cp'
 	@echo '  gww          GW with Wannier Functions'
 	@echo '  gipaw        NMR and EPR spectra'
-	@echo '  epw          Electron-Phonon Coupling
+	@echo '  epw          Electron-Phonon Coupling'
 	@echo '  yambo        electronic excitations with plane waves'
 	@echo '  tools        misc tools for data analysis'
 	@echo '  ld1          utilities for pseudopotential generation'
