@@ -348,6 +348,8 @@
       REAL(DP), ALLOCATABLE :: dfint(:), djl(:), fint(:), jl(:)
       REAL(DP) :: xg
       !
+      CALL start_clock('betagx')
+      !
       IF( .NOT. ALLOCATED( rgrid ) ) &
          CALL errore( ' compute_betagx_x ', ' rgrid not allocated ', 1 )
       IF( .NOT. ALLOCATED( upf ) ) &
@@ -363,19 +365,22 @@
          !
          nr = upf(is)%kkbeta
          !
-         if ( tpre ) then
-            allocate( dfint( nr ) )
-            allocate( djl  ( nr ) )
-         end if
-         !
-         allocate( fint ( nr ) )
-         allocate( jl   ( nr ) )
-         !
          do iv = 1, nh(is)
             !
             l = nhtol(iv,is)
             !
-            do il = 1, mmx
+!$omp parallel default(none), private( dfint, djl, fint, jl, il, xg, ir ), &
+!$omp shared( tpre, nr, mmx, refg, l, is, rgrid, upf, indv, iv, betagx, dbetagx, oldvan )
+            if ( tpre ) then
+               allocate( dfint( nr ) )
+               allocate( djl  ( nr ) )
+            end if
+            !
+            allocate( fint ( nr ) )
+            allocate( jl   ( nr ) )
+            !
+!$omp do
+            interp_tab : do il = 1, mmx
                !
                xg = sqrt( refg * (il-1) )
                call sph_bes ( nr, rgrid(is)%r, xg, l, jl )
@@ -410,18 +415,23 @@
                   end if
                endif
                !
-            end do
-         end do
-!
-         deallocate(jl)
-         deallocate(fint)
+            end do interp_tab
+!$omp end do
+            !
+            deallocate(jl)
+            deallocate(fint)
+            !
+            if (tpre) then
+               deallocate(djl)
+               deallocate(dfint)
+            end if
+            !
+!$omp end parallel
          !
-         if (tpre) then
-            deallocate(djl)
-            deallocate(dfint)
-         end if
+         end do
          !
       end do
+      CALL stop_clock('betagx')
       RETURN
    END SUBROUTINE compute_betagx_x
 
@@ -457,6 +467,8 @@
       REAL(DP), ALLOCATABLE :: dfint(:), djl(:), fint(:), jl(:), qrl(:,:,:)
       REAL(DP) :: xg
 
+      CALL start_clock('qradx')
+
       IF( .NOT. ALLOCATED( rgrid ) ) &
          CALL errore( ' compute_qradx_x ', ' rgrid not allocated ', 1 )
       IF( .NOT. ALLOCATED( upf ) ) &
@@ -479,20 +491,23 @@
          !
          nr = upf(is)%kkbeta
          !
-         IF ( tpre ) THEN
-            ALLOCATE( djl  ( nr ) )
-            ALLOCATE( dfint( nr ) )
-         END IF
-         !
-         ALLOCATE( fint( nr ) )
-         ALLOCATE( jl  ( nr ) )
          ALLOCATE( qrl( nr, upf(is)%nbeta*(upf(is)%nbeta+1)/2, upf(is)%nqlc) )
          !
          call fill_qrl ( is, qrl )
          !
          do l = 1, upf(is)%nqlc
             !
-            do il = 1, mmx
+!$omp parallel default(none), private( djl, dfint, fint, jl, il, iv, jv, ijv, xg, ir ), &
+!$omp shared( tpre, nr, mmx, refg, rgrid, l, upf, qrl, oldvan, qradx, dqradx, is )
+            IF ( tpre ) THEN
+               ALLOCATE( djl  ( nr ) )
+               ALLOCATE( dfint( nr ) )
+            END IF
+            !
+            ALLOCATE( fint( nr ) )
+            ALLOCATE( jl  ( nr ) )
+!$omp do
+            interp_tab : do il = 1, mmx
                !
                xg = sqrt( refg * DBLE(il-1) )
                !
@@ -539,18 +554,22 @@
                end do
                !
                !
-            end do
+            end do interp_tab
+!$omp end do
+            !
+            DEALLOCATE (  jl )
+            DEALLOCATE ( fint  )
+            !
+            if ( tpre ) then
+               DEALLOCATE(djl)
+               DEALLOCATE ( dfint )
+            end if
+            !
+!$omp end parallel
+         !
          end do
          !
-         DEALLOCATE (  jl )
          DEALLOCATE ( qrl )
-         DEALLOCATE ( fint  )
-         !
-         if ( tpre ) then
-            DEALLOCATE(djl)
-            DEALLOCATE ( dfint )
-         end if
-         !
          WRITE( stdout,*)
          WRITE( stdout,'(20x,a)') '    qqq '
          !
@@ -560,6 +579,8 @@
          WRITE( stdout,*)
          !
       end do
+
+      CALL stop_clock('qradx')
 
       RETURN
     END SUBROUTINE compute_qradx_x
