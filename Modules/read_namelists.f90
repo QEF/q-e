@@ -1387,6 +1387,8 @@ MODULE read_namelists_module
 #ifdef __LOWMEM
        IF( wf_collect .EQ. .true. ) &
          CALL errore( sub_name, ' wf_collect = .true. is not allowed with LOWMEM build ', 1 )
+       IF( prog /= 'CP' ) &
+         CALL errore( sub_name, ' LOWMEM not available in '//prog//' yet ', 1 )
 #endif
 
        RETURN
