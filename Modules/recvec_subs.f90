@@ -56,7 +56,7 @@ CONTAINS
    !     here a few local variables
    !
    REAL(DP) ::  t (3), tt
-   INTEGER :: ngm_, ngms_, n1, n2, n3, n1s, n2s, n3s
+   INTEGER :: ngm_, ngms_, n1, n2, n3, n1s, n2s, n3s, ngm_offset
    !
    REAL(DP), ALLOCATABLE :: g2sort_g(:)
    ! array containing all g vectors, on all processors: replicated data
@@ -70,14 +70,14 @@ CONTAINS
    INTEGER :: m1, m2, mc
 #endif
    INTEGER :: ni, nj, nk, i, j, k, ipol, ng, igl, indsw
-   INTEGER :: mype, npe, ng_offset
-   INTEGER, ALLOCATABLE :: ngpe(:)
+   INTEGER :: mype, npe
+   INTEGER, ALLOCATABLE :: ngmpe(:)
    !
 #ifdef __LOWMEM
    mype = mp_rank( comm )
    npe  = mp_size( comm )
-   ALLOCATE( ngpe( npe ) )
-   ngpe = 0
+   ALLOCATE( ngmpe( npe ) )
+   ngmpe = 0
 #endif
    !
    ! counters
@@ -161,8 +161,8 @@ CONTAINS
    ENDDO iloop
 
 #ifdef __LOWMEM
-   ngpe( mype + 1 ) = ngm
-   CALL mp_sum( ngpe, comm )
+   ngmpe( mype + 1 ) = ngm
+   CALL mp_sum( ngmpe, comm )
    IF (ngm  /= ngm_ ) &
          CALL errore ('ggen', 'g-vectors missing !', abs(ngm - ngm_))
    IF (ngms /= ngms_) &
@@ -190,9 +190,9 @@ CONTAINS
    ! compute adeguate offsets in order to avoid overlap between
    ! g vectors once they are gathered on a single (global) array
    !
-   ng_offset = 0
+   ngm_offset = 0
    DO ng = 1, mype
-      ng_offset = ng_offset + ngpe( ng )
+      ngm_offset = ngm_offset + ngmpe( ng )
    END DO
 #endif
 
@@ -224,7 +224,7 @@ CONTAINS
       !  N.B. the global G vectors arrangement depends on the number of processors
       !
 #if defined (__LOWMEM)
-      ig_l2g( ngm ) = ng + ng_offset
+      ig_l2g( ngm ) = ng + ngm_offset
 #else
       ig_l2g( ngm ) = ng
 #endif
@@ -286,7 +286,7 @@ CONTAINS
 
    IF ( gamma_only) CALL index_minusg()
 
-   IF( ALLOCATED( ngpe ) ) DEALLOCATE( ngpe )
+   IF( ALLOCATED( ngmpe ) ) DEALLOCATE( ngmpe )
 
    END SUBROUTINE ggen
    !
