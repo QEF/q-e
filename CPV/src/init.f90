@@ -128,7 +128,11 @@
       !
       ! ... generate g-space vectors (dense and smooth grid)
       !
+#ifdef __LOWMEM
+      CALL ggen( gamma_only, at, bg, intra_bgrp_comm )
+#else
       CALL ggen( gamma_only, at, bg )
+#endif
       !
       ! ... allocate and generate (modified) kinetic energy
       !

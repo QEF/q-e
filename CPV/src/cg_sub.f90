@@ -56,7 +56,8 @@
       use orthogonalize_base,       ONLY : calphi_bgrp
       use cp_interfaces,            ONLY : rhoofr, dforce, compute_stress, vofrho, nlfl_bgrp, prefor
       use cp_interfaces,            ONLY : nlsm2_bgrp, calbec, caldbec_bgrp, nlfq_bgrp
-      USE cp_main_variables,        ONLY : collect_lambda, distribute_lambda, descla, drhor, drhog
+      use cp_interfaces,            ONLY : collect_lambda, distribute_lambda
+      USE cp_main_variables,        ONLY : descla, drhor, drhog
       USE descriptors,              ONLY : la_descriptor, ldim_cyclic
       USE mp_global, ONLY:  me_image, my_image_id, nbgrp
       USE fft_base,  ONLY: dffts, dfftp
@@ -799,14 +800,14 @@
        if(tpre) then!if pressure is need the following is written because of caldbec
           call  calbec(1,nsp,eigr,c0,bec)
           if(.not.tens) then
-            call caldbec_bgrp( eigr, c0, dbec )
+            call caldbec_bgrp( eigr, c0, dbec, descla )
             call rhoofr(nfi,c0(:,:),irb,eigrb,bec,dbec,rhovan,rhor,drhor,rhog,drhog,rhos,enl,denl,ekin,dekin6)
           else
 
             !     calculation of the rotated quantities
             call rotate( z0t, c0(:,:), bec, c0diag, becdiag, .false. )
             !     calculation of rho corresponding to the rotated wavefunctions
-            call caldbec_bgrp( eigr, c0diag, dbec )
+            call caldbec_bgrp( eigr, c0diag, dbec, descla )
             call rhoofr(nfi,c0diag,irb,eigrb,becdiag,dbec,rhovan,rhor,drhor,rhog,drhog,rhos,enl,denl,ekin,dekin6)
           endif
 

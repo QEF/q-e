@@ -51,7 +51,7 @@
 
       USE cp_interfaces,  ONLY: rhoofr, dforce, protate, vofrho, calbec
       USE cg_module,      ONLY: itercg
-      USE cp_main_variables, ONLY: distribute_lambda, descla, collect_lambda, drhor, drhog
+      USE cp_main_variables, ONLY: descla, drhor, drhog
       USE descriptors,       ONLY: descla_init , la_descriptor
       USE dspev_module,   ONLY: pdspev_drv, dspev_drv
 
@@ -525,7 +525,7 @@
 
       USE cp_interfaces,  ONLY: rhoofr, dforce, protate
       USE cg_module,      ONLY: itercg
-      USE cp_main_variables, ONLY: distribute_lambda, descla, collect_lambda
+      USE cp_main_variables, ONLY: descla
       USE descriptors,       ONLY: la_descriptor, descla_init
       USE dspev_module,   ONLY: pdspev_drv, dspev_drv
 

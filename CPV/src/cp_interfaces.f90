@@ -108,6 +108,8 @@
    PUBLIC :: caldbec_bgrp
    PUBLIC :: dennl
    PUBLIC :: nlfq_bgrp
+   PUBLIC :: collect_bec
+   PUBLIC :: distribute_lambda
 
    ! ------------------------------------ !
 
@@ -1014,22 +1016,26 @@
    END INTERFACE
 
    INTERFACE caldbec_bgrp
-      SUBROUTINE caldbec_bgrp_x( eigr, c_bgrp, dbec )
+      SUBROUTINE caldbec_bgrp_x( eigr, c_bgrp, dbec, descla )
          USE kinds,              ONLY: DP
+         USE descriptors,        ONLY: la_descriptor
          IMPLICIT NONE
          COMPLEX(DP), INTENT(IN)  ::  c_bgrp( :, : ), eigr( :, : )
          REAL(DP),    INTENT(OUT) ::  dbec( :, :, :, : )
+         TYPE(la_descriptor), INTENT(IN) :: descla( : )
       END SUBROUTINE caldbec_bgrp_x
    END INTERFACE
 
    INTERFACE dennl
-      SUBROUTINE dennl_x( bec_bgrp, dbec, drhovan, denl )
+      SUBROUTINE dennl_x( bec_bgrp, dbec, drhovan, denl, descla )
          USE kinds,              ONLY: DP
+         USE descriptors,        ONLY: la_descriptor
          IMPLICIT NONE
          REAL(DP),    INTENT(IN)  ::  dbec( :, :, :, : )
          REAL(DP),    INTENT(IN)  ::  bec_bgrp( :, : )
          REAL(DP),    INTENT(OUT) ::  drhovan( :, :, :, :, : )
          REAL(DP),    INTENT(OUT) ::  denl( 3, 3 )
+         TYPE(la_descriptor), INTENT(IN) :: descla( : )
       END SUBROUTINE dennl_x
    END INTERFACE
 
@@ -1042,6 +1048,73 @@
          REAL(DP),    INTENT(OUT) ::  becdr_bgrp( :, :, : )
          REAL(DP),    INTENT(OUT) ::  fion( :, : )
       END SUBROUTINE nlfq_bgrp_x
+   END INTERFACE
+
+   INTERFACE collect_bec
+      SUBROUTINE collect_bec_x( bec_repl, bec_dist, desc, nspin )
+         USE kinds,       ONLY : DP
+         USE descriptors, ONLY : la_descriptor
+         REAL(DP), INTENT(OUT) :: bec_repl(:,:)
+         REAL(DP), INTENT(IN)  :: bec_dist(:,:)
+         TYPE(la_descriptor), INTENT(IN)  :: desc(:)
+         INTEGER,  INTENT(IN)  :: nspin
+      END SUBROUTINE collect_bec_x
+   END INTERFACE
+
+   INTERFACE distribute_lambda
+      SUBROUTINE distribute_lambda_x( lambda_repl, lambda_dist, desc )
+         USE kinds,       ONLY : DP
+         USE descriptors, ONLY : la_descriptor
+         REAL(DP), INTENT(IN)  :: lambda_repl(:,:)
+         REAL(DP), INTENT(OUT) :: lambda_dist(:,:)
+         TYPE(la_descriptor), INTENT(IN)  :: desc
+      END SUBROUTINE distribute_lambda_x
+   END INTERFACE
+
+   PUBLIC :: collect_lambda
+   INTERFACE collect_lambda
+      SUBROUTINE collect_lambda_x( lambda_repl, lambda_dist, desc )
+         USE kinds,       ONLY : DP
+         USE descriptors, ONLY : la_descriptor
+         REAL(DP), INTENT(OUT) :: lambda_repl(:,:)
+         REAL(DP), INTENT(IN)  :: lambda_dist(:,:)
+         TYPE(la_descriptor), INTENT(IN)  :: desc
+      END SUBROUTINE collect_lambda_x
+   END INTERFACE
+
+   PUBLIC :: setval_lambda
+   INTERFACE setval_lambda
+      SUBROUTINE setval_lambda_x( lambda_dist, i, j, val, desc )
+         USE kinds,       ONLY : DP
+         USE descriptors, ONLY : la_descriptor
+         REAL(DP), INTENT(OUT) :: lambda_dist(:,:)
+         INTEGER,  INTENT(IN)  :: i, j
+         REAL(DP), INTENT(IN)  :: val
+         TYPE(la_descriptor), INTENT(IN)  :: desc
+      END SUBROUTINE setval_lambda_x
+   END INTERFACE
+
+
+   PUBLIC :: distribute_zmat
+   INTERFACE distribute_zmat
+      SUBROUTINE distribute_zmat_x( zmat_repl, zmat_dist, desc )
+         USE kinds,       ONLY : DP
+         USE descriptors, ONLY : la_descriptor
+         REAL(DP), INTENT(IN)  :: zmat_repl(:,:)
+         REAL(DP), INTENT(OUT) :: zmat_dist(:,:)
+         TYPE(la_descriptor), INTENT(IN)  :: desc
+      END SUBROUTINE distribute_zmat_x
+   END INTERFACE
+
+   PUBLIC :: collect_zmat
+   INTERFACE collect_zmat
+      SUBROUTINE collect_zmat_x( zmat_repl, zmat_dist, desc )
+         USE kinds,       ONLY : DP
+         USE descriptors, ONLY : la_descriptor
+         REAL(DP), INTENT(OUT) :: zmat_repl(:,:)
+         REAL(DP), INTENT(IN)  :: zmat_dist(:,:)
+         TYPE(la_descriptor), INTENT(IN)  :: desc
+      END SUBROUTINE collect_zmat_x
    END INTERFACE
 
 

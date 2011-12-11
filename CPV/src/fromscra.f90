@@ -45,7 +45,7 @@ SUBROUTINE from_scratch( )
                                      strucf, phfacs, nlfh, vofrho, nlfl_bgrp, prefor
     USE cp_interfaces,        ONLY : rhoofr, ortho, wave_rand_init, elec_fakekine
     USE cp_interfaces,        ONLY : compute_stress, dotcsc, calbec_bgrp, caldbec_bgrp
-    USE cp_interfaces,        ONLY : print_lambda, nlfq_bgrp
+    USE cp_interfaces,        ONLY : print_lambda, nlfq_bgrp, setval_lambda
     USE printout_base,        ONLY : printout_pos
     USE orthogonalize_base,   ONLY : updatc, calphi_bgrp
     USE atoms_type_module,    ONLY : atoms_type
@@ -53,7 +53,7 @@ SUBROUTINE from_scratch( )
     USE wavefunctions_module, ONLY : c0_bgrp, cm_bgrp, phi_bgrp
     USE fft_base,             ONLY : dfftp
     USE time_step,            ONLY : delt
-    USE cp_main_variables,    ONLY : setval_lambda, descla, bephi, becp_bgrp, nfi, &
+    USE cp_main_variables,    ONLY : descla, bephi, becp_bgrp, nfi, &
                                      sfac, eigr, taub, irb, eigrb, bec_bgrp, &
                                      lambda, lambdam, lambdap, ema0bg, rhog, rhor, rhos, &
                                      vpot, ht0, edft, becdr_bgrp, dbec, drhor, drhog
@@ -162,7 +162,7 @@ SUBROUTINE from_scratch( )
        !
        CALL calbec_bgrp ( 1, nsp, eigr, cm_bgrp, bec_bgrp )
        !
-       if ( tstress ) CALL caldbec_bgrp( eigr, cm_bgrp, dbec )
+       if ( tstress ) CALL caldbec_bgrp( eigr, cm_bgrp, dbec, descla )
        !
        CALL rhoofr( nfi, cm_bgrp, irb, eigrb, bec_bgrp, dbec, becsum, rhor, drhor, rhog, drhog, rhos, enl, denl, ekin, dekin6 )
        !
@@ -260,7 +260,7 @@ SUBROUTINE from_scratch( )
       !
       CALL calbec_bgrp ( nvb+1, nsp, eigr, c0_bgrp, bec_bgrp )
       !
-      if ( tstress ) CALL caldbec_bgrp( eigr, cm_bgrp, dbec )
+      if ( tstress ) CALL caldbec_bgrp( eigr, cm_bgrp, dbec, descla )
 
       if ( iverbosity > 2 ) CALL dotcsc( eigr, c0_bgrp, ngw, nbsp_bgrp )
       !

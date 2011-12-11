@@ -119,7 +119,7 @@
       USE fft_interfaces,     ONLY: fwfft, invfft
       USE fft_base,           ONLY: dffts, dfftp
       USE cp_interfaces,      ONLY: checkrho, ennl, calrhovan, dennl
-      USE cp_main_variables,  ONLY: iprint_stdout
+      USE cp_main_variables,  ONLY: iprint_stdout, descla
       USE wannier_base,       ONLY: iwf
       USE cp_main_variables,  ONLY: rhopr ! Lingzhu Kong
 !
@@ -207,7 +207,7 @@
          !
          ALLOCATE( drhovan( nhm*(nhm+1)/2, nat, nspin, 3, 3 ) )
          !
-         CALL dennl( bec_bgrp, dbec, drhovan, denl ) 
+         CALL dennl( bec_bgrp, dbec, drhovan, denl, descla ) 
          !
          IF( nbgrp > 1 ) THEN
             CALL mp_sum( denl, inter_bgrp_comm )

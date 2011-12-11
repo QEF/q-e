@@ -249,9 +249,8 @@
       USE kinds,             ONLY: DP
       USE electrons_base,    ONLY: nupdwn, nspin, iupdwn, nudx
       USE electrons_module,  ONLY: ei
-      USE cp_interfaces,     ONLY: crot
+      USE cp_interfaces,     ONLY: crot, collect_lambda
       USE descriptors,       ONLY: la_descriptor
-      USE cp_main_variables, ONLY: collect_lambda
       !
       IMPLICIT NONE
       !

@@ -519,7 +519,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
         CALL calbec_bgrp( nvb+1, nsp, eigr, cm_bgrp, bec_bgrp )
         !
         IF ( tpre ) THEN
-           CALL caldbec_bgrp( eigr, cm_bgrp, dbec )
+           CALL caldbec_bgrp( eigr, cm_bgrp, dbec, descla )
         END IF
         !
         IF ( iverbosity > 2 ) CALL dotcsc( eigr, cm_bgrp, ngw, nbsp_bgrp )
@@ -957,6 +957,8 @@ SUBROUTINE terminate_run()
   CALL print_clock( 'ffts' )
   CALL print_clock( 'fftw' )
   CALL print_clock( 'fft_scatter' )
+  CALL print_clock( 'betagx' )
+  CALL print_clock( 'qradx' )
 !==============================================================
 ! Lingzhu Kong
   CALL print_clock( 'wf' )

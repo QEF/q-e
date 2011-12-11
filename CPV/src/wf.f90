@@ -3082,7 +3082,8 @@ END SUBROUTINE jacobi_rotation
        USE cell_base,        ONLY : alat
        USE constants,        ONLY : tpi, autoaf => BOHR_RADIUS_ANGS
        USE mp_global,        ONLY : nproc_image, me_image, intra_image_comm
-       USE cp_main_variables, ONLY: distribute_lambda, descla, collect_lambda
+       USE cp_main_variables, ONLY: descla
+       USE cp_interfaces,     ONLY: distribute_lambda, collect_lambda
        USE printout_base,     ONLY : printout_base_open, printout_base_unit, printout_base_close
        USE parallel_include
 

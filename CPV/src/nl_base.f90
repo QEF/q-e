@@ -463,7 +463,7 @@
 
 
 !-----------------------------------------------------------------------
-SUBROUTINE caldbec_bgrp_x( eigr, c_bgrp, dbec )
+SUBROUTINE caldbec_bgrp_x( eigr, c_bgrp, dbec, descla )
   !-----------------------------------------------------------------------
   !
   !     this routine calculates array dbec, derivative of bec:
@@ -483,7 +483,6 @@ SUBROUTINE caldbec_bgrp_x( eigr, c_bgrp, dbec )
   use uspp_param, only : nh, nhm, ish
   use gvect,      only : gstart
   use gvecw,      only : ngw
-  USE cp_main_variables,  ONLY : descla
   USE descriptors,        ONLY : la_descriptor
   use electrons_base,     only : nspin, iupdwn, nupdwn, nbspx_bgrp, iupdwn_bgrp, nupdwn_bgrp, &
                                  ibgrp_g2l, i2gupdwn_bgrp, nbspx, nbsp_bgrp
@@ -493,6 +492,7 @@ SUBROUTINE caldbec_bgrp_x( eigr, c_bgrp, dbec )
   complex(DP), intent(in)  :: c_bgrp( :, : )
   complex(DP), intent(in)  :: eigr(:,:)
   real(DP),    intent(out) :: dbec( :, :, :, : )
+  TYPE(la_descriptor), intent(in) :: descla( : )
   !
   complex(DP), allocatable :: wrk2(:,:)
   real(DP),    allocatable :: dwrk_bgrp(:,:)
@@ -582,7 +582,7 @@ end subroutine caldbec_bgrp_x
 
 
 !-----------------------------------------------------------------------
-subroutine dennl_x( bec_bgrp, dbec, drhovan, denl )
+subroutine dennl_x( bec_bgrp, dbec, drhovan, denl, descla )
   !-----------------------------------------------------------------------
   !
   !  compute the contribution of the non local part of the
@@ -596,7 +596,6 @@ subroutine dennl_x( bec_bgrp, dbec, drhovan, denl )
   use io_global,  only : stdout
   use mp,         only : mp_sum
   use mp_global,  only : intra_bgrp_comm
-  USE cp_main_variables,  ONLY : descla
   USE descriptors,        ONLY : la_descriptor
   use electrons_base,     only : nbspx_bgrp, nbsp_bgrp, ispin_bgrp, f_bgrp, nspin, iupdwn, nupdwn, ibgrp_g2l
   use gvect, only : gstart
@@ -607,6 +606,7 @@ subroutine dennl_x( bec_bgrp, dbec, drhovan, denl )
   real(DP), intent(in)  :: bec_bgrp( :, : )
   real(DP), intent(out) :: drhovan( :, :, :, :, : )
   real(DP), intent(out) :: denl( 3, 3 )
+  TYPE(la_descriptor), intent(in) :: descla( : )
 
   real(DP) :: dsum(3,3),dsums(2,3,3), detmp(3,3)
   integer   :: is, iv, jv, ijv, inl, jnl, isa, ism, ia, iss, i,j,k

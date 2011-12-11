@@ -14,7 +14,6 @@ MODULE cp_restart
   !
   USE iotk_module
   USE xml_io_base
-  USE xml_io_base, ONLY : default_fmt_version => fmt_version
   !
   USE kinds,     ONLY : DP
   USE io_global, ONLY : ionode, ionode_id, stdout
@@ -77,7 +76,8 @@ MODULE cp_restart
       USE constants,                ONLY : pi
       USE uspp_param,               ONLY : n_atom_wfc
       USE global_version,           ONLY : version_number
-      USE cp_main_variables,        ONLY : collect_lambda, descla, collect_zmat
+      USE cp_main_variables,        ONLY : descla
+      USE cp_interfaces,            ONLY : collect_lambda, collect_zmat
       !
       IMPLICIT NONE
       !
@@ -949,7 +949,8 @@ MODULE cp_restart
       USE ions_base,                ONLY : nsp, nat, na, atm, zv, &
                                            sort_tau, ityp, ions_cofmass
       USE gvect,       ONLY : ig_l2g, mill
-      USE cp_main_variables,        ONLY : nprint_nfi, distribute_lambda, descla, distribute_zmat
+      USE cp_main_variables,        ONLY : nprint_nfi, descla
+      USE cp_interfaces,            ONLY : distribute_lambda, distribute_zmat
       USE mp,                       ONLY : mp_sum, mp_bcast
       USE mp_global,                ONLY : intra_image_comm, my_bgrp_id
       USE mp_global,                ONLY : root_bgrp, intra_bgrp_comm, inter_bgrp_comm, intra_pool_comm
@@ -1090,7 +1091,7 @@ MODULE cp_restart
             !
          ELSE
             !
-            qexml_version = TRIM( default_fmt_version )
+            qexml_version = TRIM( fmt_version )
             !
          ENDIF
          !

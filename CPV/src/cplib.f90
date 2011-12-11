@@ -1481,7 +1481,7 @@ SUBROUTINE print_lambda_x( lambda, descla, n, nshow, ccc, iunit )
     USE kinds, ONLY : DP
     USE descriptors,       ONLY: la_descriptor
     USE io_global,         ONLY: stdout, ionode
-    USE cp_main_variables, ONLY: collect_lambda
+    USE cp_interfaces,     ONLY: collect_lambda
     USE electrons_base,    ONLY: nudx
     IMPLICIT NONE
     real(DP), intent(in) :: lambda(:,:,:), ccc
@@ -1966,3 +1966,194 @@ END SUBROUTINE print_lambda_x
 !
       RETURN
       END SUBROUTINE prefor_x
+
+!------------------------------------------------------------------------
+    SUBROUTINE collect_bec_x( bec_repl, bec_dist, desc, nspin )
+!------------------------------------------------------------------------
+       USE kinds,       ONLY : DP
+       USE mp_global,   ONLY : intra_bgrp_comm
+       USE mp,          ONLY : mp_sum
+       USE descriptors, ONLY : la_descriptor
+       USE io_global,   ONLY : stdout
+       REAL(DP), INTENT(OUT) :: bec_repl(:,:)
+       REAL(DP), INTENT(IN)  :: bec_dist(:,:)
+       TYPE(la_descriptor), INTENT(IN)  :: desc(:)
+       INTEGER,  INTENT(IN)  :: nspin
+       INTEGER :: i, ir, n, nrcx, iss
+       !
+       bec_repl = 0.0d0
+       !
+       !  bec is distributed across row processor, the first column is enough
+       !
+       IF( desc( 1 )%active_node > 0 .AND. ( desc( 1 )%myc == 0 ) ) THEN
+          ir = desc( 1 )%ir
+          DO i = 1, desc( 1 )%nr
+             bec_repl( :, i + ir - 1 ) = bec_dist( :, i )
+          END DO
+          IF( nspin == 2 ) THEN
+             n  = desc( 1 )%n   ! number of states with spin==1 ( nupdw(1) )
+             nrcx = desc( 1 )%nrcx ! array elements reserved for each spin ( bec(:,2*nrcx) )
+             ir = desc( 2 )%ir
+             DO i = 1, desc( 2 )%nr
+                bec_repl( :, i + ir - 1 + n ) = bec_dist( :, i + nrcx )
+             END DO
+          END IF
+       END IF
+       !
+       CALL mp_sum( bec_repl, intra_bgrp_comm )
+       !
+       RETURN
+    END SUBROUTINE collect_bec_x
+
+!------------------------------------------------------------------------
+    SUBROUTINE distribute_lambda_x( lambda_repl, lambda_dist, desc )
+!------------------------------------------------------------------------
+       USE kinds,       ONLY : DP
+       USE descriptors
+       REAL(DP), INTENT(IN)  :: lambda_repl(:,:)
+       REAL(DP), INTENT(OUT) :: lambda_dist(:,:)
+       TYPE(la_descriptor), INTENT(IN)  :: desc
+       INTEGER :: i, j, ic, ir
+       IF( desc%active_node > 0 ) THEN
+          ir = desc%ir
+          ic = desc%ic
+          DO j = 1, desc%nc
+             DO i = 1, desc%nr
+                lambda_dist( i, j ) = lambda_repl( i + ir - 1, j + ic - 1 )
+             END DO
+          END DO
+       END IF
+       RETURN
+    END SUBROUTINE distribute_lambda_x
+    !
+!------------------------------------------------------------------------
+    SUBROUTINE distribute_bec_x( bec_repl, bec_dist, desc, nspin )
+!------------------------------------------------------------------------
+       USE kinds,       ONLY : DP
+       USE descriptors
+       REAL(DP), INTENT(IN)  :: bec_repl(:,:)
+       REAL(DP), INTENT(OUT) :: bec_dist(:,:)
+       TYPE(la_descriptor), INTENT(IN)  :: desc(:)
+       INTEGER,  INTENT(IN)  :: nspin
+       INTEGER :: i, ir, n, nrcx
+       !
+       IF( desc( 1 )%active_node > 0 ) THEN
+          !
+          bec_dist = 0.0d0
+          !
+          ir = desc( 1 )%ir
+          DO i = 1, desc( 1 )%nr
+             bec_dist( :, i ) = bec_repl( :, i + ir - 1 )
+          END DO
+          !
+          IF( nspin == 2 ) THEN
+             n     = desc( 1 )%n  !  number of states with spin 1 ( nupdw(1) )
+             nrcx  = desc( 1 )%nrcx   !  array elements reserved for each spin ( bec(:,2*nrcx) )
+             ir = desc( 2 )%ir
+             DO i = 1, desc( 2 )%nr
+                bec_dist( :, i + nrcx ) = bec_repl( :, i + ir - 1 + n )
+             END DO
+          END IF
+          !
+       END IF
+       RETURN
+    END SUBROUTINE distribute_bec_x
+    !
+!------------------------------------------------------------------------
+    SUBROUTINE distribute_zmat_x( zmat_repl, zmat_dist, desc )
+!------------------------------------------------------------------------
+       USE kinds,       ONLY : DP
+       USE descriptors
+       REAL(DP), INTENT(IN)  :: zmat_repl(:,:)
+       REAL(DP), INTENT(OUT) :: zmat_dist(:,:)
+       TYPE(la_descriptor), INTENT(IN)  :: desc
+       INTEGER :: i, ii, j, me, np
+       me = desc%mype
+       np = desc%npc * desc%npr
+       IF( desc%active_node > 0 ) THEN
+          DO j = 1, desc%n
+             ii = me + 1
+             DO i = 1, desc%nrl
+                zmat_dist( i, j ) = zmat_repl( ii, j )
+                ii = ii + np
+             END DO
+          END DO
+       END IF
+       RETURN
+    END SUBROUTINE distribute_zmat_x
+    !
+!------------------------------------------------------------------------
+    SUBROUTINE collect_lambda_x( lambda_repl, lambda_dist, desc )
+!------------------------------------------------------------------------
+       USE kinds,       ONLY : DP
+       USE mp_global,   ONLY: intra_bgrp_comm
+       USE mp,          ONLY: mp_sum
+       USE descriptors
+       REAL(DP), INTENT(OUT) :: lambda_repl(:,:)
+       REAL(DP), INTENT(IN)  :: lambda_dist(:,:)
+       TYPE(la_descriptor), INTENT(IN)  :: desc
+       INTEGER :: i, j, ic, ir
+       lambda_repl = 0.0d0
+       IF( desc%active_node > 0 ) THEN
+          ir = desc%ir
+          ic = desc%ic
+          DO j = 1, desc%nc
+             DO i = 1, desc%nr
+                lambda_repl( i + ir - 1, j + ic - 1 ) = lambda_dist( i, j )
+             END DO
+          END DO
+       END IF
+       CALL mp_sum( lambda_repl, intra_bgrp_comm )
+       RETURN
+    END SUBROUTINE collect_lambda_x
+    !
+!------------------------------------------------------------------------
+    SUBROUTINE collect_zmat_x( zmat_repl, zmat_dist, desc )
+!------------------------------------------------------------------------
+       USE kinds,       ONLY : DP
+       USE mp_global,   ONLY: intra_bgrp_comm
+       USE mp,          ONLY: mp_sum
+       USE descriptors
+       REAL(DP), INTENT(OUT) :: zmat_repl(:,:)
+       REAL(DP), INTENT(IN)  :: zmat_dist(:,:)
+       TYPE(la_descriptor), INTENT(IN)  :: desc
+       INTEGER :: i, ii, j, me, np, nrl
+       zmat_repl = 0.0d0
+       me = desc%mype
+       np = desc%npc * desc%npr
+       nrl = desc%nrl
+       IF( desc%active_node > 0 ) THEN
+          DO j = 1, desc%n
+             ii = me + 1
+             DO i = 1, nrl
+                zmat_repl( ii, j ) = zmat_dist( i, j )
+                ii = ii + np
+             END DO
+          END DO
+       END IF
+       CALL mp_sum( zmat_repl, intra_bgrp_comm )
+       RETURN
+    END SUBROUTINE collect_zmat_x
+    !
+!------------------------------------------------------------------------
+    SUBROUTINE setval_lambda_x( lambda_dist, i, j, val, desc )
+!------------------------------------------------------------------------
+       USE kinds,       ONLY : DP
+       USE descriptors
+       REAL(DP), INTENT(OUT) :: lambda_dist(:,:)
+       INTEGER,  INTENT(IN)  :: i, j
+       REAL(DP), INTENT(IN)  :: val
+       TYPE(la_descriptor), INTENT(IN)  :: desc
+       IF( desc%active_node > 0 ) THEN
+          IF( ( i >= desc%ir ) .AND. ( i - desc%ir + 1 <= desc%nr ) ) THEN
+             IF( ( j >= desc%ic ) .AND. ( j - desc%ic + 1 <= desc%nc ) ) THEN
+                lambda_dist( i - desc%ir + 1, j - desc%ic + 1 ) = val
+             END IF
+          END IF
+       END IF
+       RETURN
+    END SUBROUTINE setval_lambda_x
+
+
+!------------------------------------------------------------------------
+

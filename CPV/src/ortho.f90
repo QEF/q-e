@@ -253,9 +253,8 @@
       USE control_flags,  ONLY: iprint, iverbosity, ortho_max
       USE control_flags,  ONLY: force_pairing
       USE io_global,      ONLY: stdout, ionode
-      USE cp_interfaces,  ONLY: ortho_gamma, c_bgrp_expand, c_bgrp_pack, nlsm1
+      USE cp_interfaces,  ONLY: ortho_gamma, c_bgrp_expand, c_bgrp_pack, nlsm1, collect_bec
       USE descriptors,    ONLY: la_descriptor
-      USE cp_main_variables,  ONLY: collect_bec
       USE mp_global,          ONLY: nproc_bgrp, me_bgrp, intra_bgrp_comm, inter_bgrp_comm  ! DEBUG
       USE orthogonalize_base, ONLY: bec_bgrp2ortho
       USE mp,                 ONLY : mp_sum
@@ -312,6 +311,9 @@
       !
       IF( nvb > 0 ) THEN
          ALLOCATE( bec_col ( nkbx, nrcx*nspin ) )
+!open(2000+descla(1)%mype)
+!write(2000+descla(1)%mype,*) descla(1)%mype, size(bephi), size(bephi,1), size(bephi,2), nkbx, nrcx
+!close(2000+descla(1)%mype)
          CALL redist_row2col( nupdwn(1), bephi, bec_col, nkbx, nrcx, descla(1) )
          IF( nspin == 2 ) THEN
             CALL redist_row2col( nupdwn(2), bephi(1,nrcx+1), bec_col(1,nrcx+1), nkbx, nrcx, descla(2) )

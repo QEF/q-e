@@ -760,19 +760,19 @@ END SUBROUTINE diagonalize_parallel
 
             IF( MOD( root , nbgrp ) == my_bgrp_id ) THEN
 
-            root = root * leg_ortho
+               root = root * leg_ortho
 
-            CALL dgemm( 'T', 'N',  nr, nc, 2*ngw, -2.0d0, cp( 1, ist + ir - 1), 2*ngwx, &
-                        cp( 1, ist + ic - 1 ), 2*ngwx, 0.0d0, sigp, nx )
-            !
-            !     q = 0  components has weight 1.0
-            !
-            IF ( gstart == 2 ) THEN
-               CALL DGER( nr, nc, 1.D0, cp(1,ist+ir-1), 2*ngwx, cp(1,ist+ic-1), 2*ngwx, sigp, nx )
-            END IF
-            !
-            CALL mp_root_sum( sigp, sig, root, intra_bgrp_comm )
-            !
+               CALL dgemm( 'T', 'N',  nr, nc, 2*ngw, -2.0d0, cp( 1, ist + ir - 1), 2*ngwx, &
+                           cp( 1, ist + ic - 1 ), 2*ngwx, 0.0d0, sigp, nx )
+               !
+               !     q = 0  components has weight 1.0
+               !
+               IF ( gstart == 2 ) THEN
+                  CALL DGER( nr, nc, 1.D0, cp(1,ist+ir-1), 2*ngwx, cp(1,ist+ic-1), 2*ngwx, sigp, nx )
+               END IF
+               !
+               CALL mp_root_sum( sigp, sig, root, intra_bgrp_comm )
+               !
             ENDIF
             !
          END DO
