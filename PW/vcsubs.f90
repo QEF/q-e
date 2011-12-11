@@ -773,7 +773,7 @@ subroutine vcmove (mxdtyp, mxdatm, ntype, ityp, rat, avec, vcell, &
      !
      !       with the new definition of tolp, this is the test to perform
      !
-     if ( ( ABS (tnew - temp ) > tolp) .and. ( abs(ntimes > 0) ) ) then
+     if ( ( ABS (tnew - temp ) > tolp) .and. ( abs(ntimes) > 0) )  then
         !
         if ( tnew < 1.0d-12) then
            alpha = 1.0_dp
