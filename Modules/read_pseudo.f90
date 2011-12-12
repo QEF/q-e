@@ -66,7 +66,7 @@ SUBROUTINE readpp ( input_dft, printout )
         CALL nullify_radial_grid( rgrid( nt ) )
      END DO
      DEALLOCATE( rgrid )
-     DEALLOCATE( msh )
+     if(allocated(msh)) DEALLOCATE( msh )
   END IF
 
   ALLOCATE( rgrid( ntyp ), msh( ntyp ) )

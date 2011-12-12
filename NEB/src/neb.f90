@@ -55,7 +55,7 @@ PROGRAM neb
   INTEGER :: i, iimage
   CHARACTER(len=10) :: a_tmp
   !
-  INTEGER :: mpime, nproc, neb_comm
+  INTEGER :: mpime = 0, nproc = 1, neb_comm = 0
   INTEGER :: root = 0 
   !
   CHARACTER(len=256) :: parsing_file_name
