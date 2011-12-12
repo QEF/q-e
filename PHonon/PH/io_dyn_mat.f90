@@ -40,6 +40,8 @@ MODULE io_dyn_mat
                celldm, at, bg, omega, atm, amass, tau, ityp, m_loc, &
                nqs, epsil, zstareu, lraman, ramtns)
     !
+  USE constants,     ONLY : FPI, BOHR_RADIUS_ANGS
+
     INTEGER, INTENT(IN) :: ntyp, nat, ibrav, nspin_mag, nqs
     CHARACTER(LEN=256), INTENT(IN) :: fildyn
     CHARACTER(LEN=3), INTENT(IN) :: atm(ntyp)
@@ -59,6 +61,8 @@ MODULE io_dyn_mat
 
     INTEGER :: ierr, na, nt, kc
     REAL(DP) :: aux(3,3)
+    REAL (DP), PARAMETER ::   convfact = BOHR_RADIUS_ANGS**2
+
 
     IF ( ionode ) THEN
        !
@@ -125,7 +129,7 @@ MODULE io_dyn_mat
                 CALL iotk_write_begin(iunout,"RAMAN_TENSOR_A2")
                 DO na = 1, nat
                    DO kc = 1, 3
-                      aux(:,:) = ramtns(:, :, kc, na)
+                      aux(:,:) = ramtns(:, :, kc, na)*omega/fpi*convfact
                       CALL iotk_write_dat(iunout, &
                              "RAMAN_S_ALPHA"//TRIM(iotk_index(na)) &
                               // TRIM(iotk_index(kc)),aux, COLUMNS=3)

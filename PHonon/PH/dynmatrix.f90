@@ -50,7 +50,6 @@ subroutine dynmatrix
   ! isq: index of q in the star of a given sym.op.
   ! imq: index of -q in the star of q (0 if not present)
 
-  real (DP), parameter ::   convfact = BOHR_RADIUS_ANGS**2
   real(DP) :: sxq (3, 48), work(3)
   ! list of vectors in the star of q
   real(DP), allocatable :: zstar(:,:,:)
@@ -149,7 +148,7 @@ subroutine dynmatrix
      IF (lgamma.AND.done_epsil.AND.done_zeu) THEN
         CALL write_dyn_mat_header( fildyn, ntyp, nat, ibrav, nspin_mag, &
              celldm, at, bg, omega, atm, amass, tau, ityp, m_loc, &
-             nqq, epsilon, zstareu, lraman, ramtns*omega/fpi*convfact)
+             nqq, epsilon, zstareu, lraman, ramtns)
      ELSE
         CALL write_dyn_mat_header( fildyn, ntyp, nat, ibrav, nspin_mag, &
              celldm, at, bg, omega, atm, amass, tau,ityp,m_loc,nqq)
