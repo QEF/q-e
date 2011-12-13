@@ -76,6 +76,14 @@
 !   The fft along xy is done only on planes that have components on the
 !   dense grid for each processor. Note that the final array will no
 !   longer be the same on all processors.
+! grid_type = 'Custom'
+!   inverse fourier transform of potentials and charge density
+!   on a custom defined grid specified by dfft. On output, f 
+!   is overwritten
+! grid_type = 'CustomWave'
+!   inverse fourier transform of  wave functions
+!   on a custom defined grid specified by dfft. On output, f 
+!   is overwritten
 !
 !
       USE kinds,         ONLY: DP
@@ -123,6 +131,10 @@
          !
          call start_clock( 'fftb' )
 !$omp end master 
+      ELSE IF( grid_type == 'Custom' ) THEN
+         call start_clock('fftc')
+      ELSE IF( grid_type == 'CustomWave' ) THEN
+         call start_clock('fftcw')
       ELSE 
          call errore( ' invfft ', ' unknown grid: '//grid_type , 1 )
       END IF
@@ -135,6 +147,10 @@
          call tg_cft3s( f, dffts, 1 )
       ELSE IF( grid_type == 'Wave' ) THEN
          call tg_cft3s( f, dffts, 2, dffts%have_task_groups )
+      ELSE IF( grid_type == 'Custom' ) THEN
+         CALL tg_cft3s( f, dfft, 1 )
+      ELSE IF( grid_type == 'CustomWave' ) THEN
+         CALL tg_cft3s( f, dfft, 2, dfft%have_task_groups )
       ELSE IF( grid_type == 'Box' .AND.  dfftb%np3( ia ) > 0 ) THEN
 #if defined __OPENMP && defined __FFTW
          call cft_b_omp( f, dfftb%nr1, dfftb%nr2, dfftb%nr3, &
@@ -173,7 +189,20 @@
          call cfft3d( f, dfftb%nr1, dfftb%nr2, dfftb%nr3, &
                          dfftb%nr1x, dfftb%nr2x, dfftb%nr3x, 1)
 #endif
+      ELSE  IF( grid_type == 'Custom' ) THEN
+         CALL cfft3d( f, dfft%nr1, dfft%nr2, dfft%nr3, &
+              dfft%nr1x, dfft%nr2x, dfft%nr3x, 1)
+      ELSE IF( grid_type == 'CustomWave' ) THEN
+#if defined __PARA && defined __USE_3D_FFT
+         CALL cfft3d( f, dfft%nr1, dfft%nr2, dfft%nr3, &
+              dfft%nr1x, dfft%nr2x, dfft%nr3x, 1)
+#else
+         CALL cfft3ds( f, dfft%nr1, dfft%nr2, dfft%nr3, &
+              dfft%nr1x, dfft%nr2x, dfft%nr3x, 1, &
+              dfft%isind, dfft%iplw )
+#endif
       END IF
+
 
 #endif
 
@@ -187,6 +216,10 @@
 !$omp master
          call stop_clock( 'fftb' )
 !$omp end master
+      ELSE IF( grid_type == 'Custom' ) THEN
+         call stop_clock('fftc')
+      ELSE IF( grid_type == 'CustomWave' ) THEN
+         call stop_clock('fftcw')
       END IF
 !
       return
@@ -204,6 +237,14 @@
 ! grid_type = 'Wave'
 !   forward fourier transform of  wave functions
 !   on the smooth grid . On output, f is overwritten
+! grid_type = 'Custom'
+!   forward fourier transform of potentials and charge density
+!   on a custom defined grid specified by dfft. On output, f 
+!   is overwritten
+! grid_type = 'CustomWave'
+!   forward fourier transform of  wave functions
+!   on a custom defined grid specified by dfft. On output, f 
+!   is overwritten
 ! 
       USE kinds,         ONLY: DP
       use fft_base,      only: dfftp, dffts
@@ -235,6 +276,10 @@
             dfft%nr2x /= dffts%nr2x .OR. dfft%nr3x /= dffts%nr3x ) &
          CALL errore( ' fwfft ', ' inconsistent descriptor for Wave fft ', 1 )
          call start_clock( 'fftw' )
+      ELSE IF( grid_type == 'Custom' ) THEN
+         call start_clock('fftc')
+      ELSE IF( grid_type == 'CustomWave' ) THEN
+         call start_clock('fftcw')
       ELSE
          call errore( ' fwfft ', ' unknown grid: '//grid_type , 1 )
       END IF
@@ -247,6 +292,10 @@
          call tg_cft3s(f,dffts,-1)
       ELSE IF( grid_type == 'Wave' ) THEN
          call tg_cft3s(f,dffts,-2, dffts%have_task_groups )
+      ELSE  IF( grid_type == 'Custom' ) THEN
+         CALL tg_cft3s( f, dfft, -1 )
+      ELSE IF( grid_type == 'CustomWave' ) THEN
+         CALL tg_cft3s( f, dfft, -2, dfft%have_task_groups )
       END IF
 
 #else 
@@ -266,8 +315,19 @@
                           dffts%nr1x, dffts%nr2x, dffts%nr3x, -1, &
                           dffts%isind, dffts%iplw )
 #endif
+      ELSE IF( grid_type == 'Custom' ) THEN
+         CALL cfft3d( f, dfft%nr1, dfft%nr2, dfft%nr3, &
+              dfft%nr1x, dfft%nr2x, dfft%nr3x, -1)
+      ELSE IF( grid_type == 'CustomWave' ) THEN
+#if defined __PARA && defined __USE_3D_FFT
+         CALL cfft3d( f, dfft%nr1, dfft%nr2, dfft%nr3, &
+              dfft%nr1x, dfft%nr2x, dfft%nr3x, -1)
+#else
+         CALL cfft3ds( f, dfft%nr1, dfft%nr2, dfft%nr3, &
+              dfft%nr1x, dfft%nr2x, dfft%nr3x, -1, &
+              dfft%isind, dfft%iplw )
+#endif
       END IF
-
 #endif
 
       IF( grid_type == 'Dense' ) THEN
@@ -276,6 +336,10 @@
          call stop_clock( 'ffts' )
       ELSE IF( grid_type == 'Wave' ) THEN
          call stop_clock( 'fftw' )
+      ELSE IF( grid_type == 'Custom' ) THEN
+         call stop_clock('fftc')
+      ELSE IF( grid_type == 'CustomWave' ) THEN
+         call stop_clock('fftcw')
       END IF
 
       return

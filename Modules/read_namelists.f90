@@ -459,6 +459,7 @@ MODULE read_namelists_module
        adaptive_thr   =  .false.
        conv_thr_init  =  0.1E-2_DP
        conv_thr_multi =  0.1_DP
+       ecutfock       =  -1.0_DP
 #endif
        RETURN
        !
@@ -839,6 +840,7 @@ MODULE read_namelists_module
        CALL mp_bcast( x_gamma_extrapolation,  ionode_id )
        CALL mp_bcast( yukawa,                 ionode_id )
        CALL mp_bcast( ecutvcut,               ionode_id )
+       CALL mp_bcast( ecutfock,               ionode_id )
 #endif
        CALL mp_bcast( starting_magnetization, ionode_id )
        CALL mp_bcast( starting_ns_eigenvalue, ionode_id )
@@ -1080,6 +1082,7 @@ MODULE read_namelists_module
        CALL mp_bcast( adaptive_thr,       ionode_id )
        CALL mp_bcast( conv_thr_init,      ionode_id )
        CALL mp_bcast( conv_thr_multi,     ionode_id )
+       CALL mp_bcast( ecutfock,           ionode_id )
 #endif
        RETURN
        !

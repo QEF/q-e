@@ -407,6 +407,7 @@ MODULE input_parameters
         LOGICAL  :: adaptive_thr = .FALSE.
         REAL(DP) :: conv_thr_init = 0.001_DP
         REAL(DP) :: conv_thr_multi = 0.1_DP
+        REAL(DP) :: ecutfock = -1.d0
 #endif
 
         INTEGER  :: edir = 0
@@ -954,7 +955,7 @@ MODULE input_parameters
           tqr, diago_cg_maxiter, diago_david_ndim, diagonalization ,   &
           startingpot, startingwfc , conv_thr,                         &
 #if defined (EXX)
-          adaptive_thr, conv_thr_init, conv_thr_multi,                 &
+          adaptive_thr, conv_thr_init, conv_thr_multi, ecutfock,       &
 #endif
           diago_thr_init, n_inner, fermi_energy, rotmass, occmass,     &
           rotation_damping, occupation_damping, rotation_dynamics,     &
