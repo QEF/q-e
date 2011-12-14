@@ -1871,6 +1871,13 @@ fi
 
 echo setting RANLIB... $ranlib
 
+# check if wget or curl work  
+AC_CHECK_PROG(wget, wget, wget -O)
+if test "$wget" = ""; then
+   AC_CHECK_PROG(wget, curl, curl -o)
+fi
+echo setting WGET... $wget
+
 # configure output messages
 blas_line="BLAS_LIBS=$blas_libs"
 if test "$have_scalapack" -eq 1; then
@@ -1946,6 +1953,7 @@ AC_SUBST(fft_line)
 AC_SUBST(mpi_line)
 AC_SUBST(mass_line)
 AC_SUBST(parallel_report)
+AC_SUBST(wget)
 AC_SUBST(topdir)
 AC_SUBST(extlib_flags)
 
