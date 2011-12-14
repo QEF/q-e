@@ -11,7 +11,7 @@ compute_scf.o : ../../Modules/kind.o
 compute_scf.o : ../../Modules/mp.o
 compute_scf.o : ../../Modules/mp_image_global_module.o
 compute_scf.o : ../../Modules/recvec.o
-compute_scf.o : ../../PW/pwcom.o
+compute_scf.o : ../../PW/src/pwcom.o
 compute_scf.o : path_formats.o
 compute_scf.o : path_io_routines.o
 compute_scf.o : path_io_units_module.o

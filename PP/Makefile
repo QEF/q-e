@@ -4,7 +4,7 @@ include ../make.sys
 
 # location of needed modules
 MODFLAGS= $(MOD_FLAG)../iotk/src $(MOD_FLAG)../Modules \
-          $(MOD_FLAG)../PW $(MOD_FLAG).
+          $(MOD_FLAG)../PW/src $(MOD_FLAG).
 
 PPOBJS = \
 addusdens1d.o \
@@ -41,7 +41,7 @@ write_p_avg.o \
 xsf.o \
 wannier_hamiltonians.o 
 
-PWOBJS = ../PW/libpw.a
+PWOBJS = ../PW/src/libpw.a
 QEOBJS = ../Modules/libqemod.a
 
 MODULES = $(PWOBJS) $(QEOBJS)

@@ -4,7 +4,7 @@ include ../../make.sys
 
 # location of needed modules
 MODFLAGS= $(MOD_FLAG)../../iotk/src $(MOD_FLAG)../../Modules \
-          $(MOD_FLAG)../../PW $(MOD_FLAG).
+          $(MOD_FLAG)../../PW/src $(MOD_FLAG).
 
 LIBOBJS        = ../../flib/ptools.a ../../flib/flib.a ../../clib/clib.a ../../iotk/src/libiotk.a
 
@@ -38,7 +38,7 @@ solve_ph.o \
 writedyn.o \
 zvscal.o
 
-PWOBJS = ../../PW/libpw.a
+PWOBJS = ../../PW/src/libpw.a
 QEMODS = ../../Modules/libqemod.a
 
 TLDEPS= bindir mods libs pw

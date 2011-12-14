@@ -5,7 +5,7 @@ include ../../make.sys
 # location of needed modules
 MODFLAGS= $(MOD_FLAG)../../iotk/src \
 	  $(MOD_FLAG)../../Modules \
-	  $(MOD_FLAG)../../PW $(MOD_FLAG).
+	  $(MOD_FLAG)../../PW/src $(MOD_FLAG).
 
 #location of needed libraries
 LIBOBJS= ../../iotk/src/libiotk.a ../../flib/flib.a \
@@ -39,7 +39,7 @@ set_defaults.o \
 stop_run_path.o 
 
 QEMODS=../../Modules/libqemod.a
-PWOBJS= ../../PW/libpw.a
+PWOBJS= ../../PW/src/libpw.a
 
 TLDEPS=bindir mods libs liblapack libblas pw
 

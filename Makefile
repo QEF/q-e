@@ -20,11 +20,10 @@ default :
 	@echo '  gipaw        NMR and EPR spectra'
 	@echo '  epw          Electron-Phonon Coupling'
 	@echo '  yambo        electronic excitations with plane waves'
-	@echo '  tools        misc tools for data analysis'
 	@echo '  ld1          utilities for pseudopotential generation'
 	@echo '  upf          utilities for pseudopotential conversion'
 	@echo '  xspectra     X-ray core-hole spectroscopy calculations '
-	@echo '  pwall        same as "make pw ph pp pwcond tools"'
+	@echo '  pwall        same as "make pw ph pp pwcond"'
 	@echo '  all          same as "make pwall cp ld1 upf tddfpt"'
 	@echo '  clean        remove executables and objects'
 	@echo '  veryclean    revert distribution to the original status'
@@ -92,11 +91,6 @@ gww   : bindir pw ph
 	( cd GWW ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= all ; \
 	else $(MAKE) $(MFLAGS) TLDEPS= all ; fi ) ; fi
 
-tools : bindir mods libs pw
-	if test -d pwtools ; then \
-	( cd pwtools ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= all ; \
-	else $(MAKE) $(MFLAGS) TLDEPS= all ; fi ) ; fi
-
 ld1 : bindir mods libs
 	if test -d atomic ; then \
 	( cd atomic ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= all ; \
@@ -117,7 +111,7 @@ xspectra : bindir mods libs pw
 	( cd XSpectra ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= all ; \
 	else $(MAKE) $(MFLAGS) TLDEPS= all ; fi ) ; fi
 
-pwall : pw neb ph pp pwcond vdw tools acfdt
+pwall : pw neb ph pp pwcond vdw acfdt
 all   : pwall cp ld1 upf gww tddfpt
 
 ###########################################################

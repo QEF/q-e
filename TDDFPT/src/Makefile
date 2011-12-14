@@ -9,11 +9,11 @@ LIBOBJS        = ../../flib/ptools.a ../../flib/flib.a ../../clib/clib.a ../../i
 
 # location of needed modules
 MODFLAGS= $(MOD_FLAG)../../iotk/src $(MOD_FLAG)../../Modules \
-          $(MOD_FLAG) . $(MOD_FLAG)../../PW \
+          $(MOD_FLAG) . $(MOD_FLAG)../../PW/src \
           $(MOD_FLAG)../../PHonon/PH
 
 QEMODS = ../../Modules/libqemod.a
-PWOBJS = ../../PW/libpw.a
+PWOBJS = ../../PW/src/libpw.a
 PHOBJS=../../PHonon/PH/libph.a
 
 LROBJS= \

@@ -9,7 +9,7 @@ LIBOBJS        = ../../flib/ptools.a ../../flib/flib.a ../../clib/clib.a ../../i
 MODFLAGS= $(MOD_FLAG)../../iotk/src $(MOD_FLAG)../../Modules $(MOD_FLAG).
 
 QEMODS = ../../Modules/libqemod.a
-PWOBJS = ../../PW/libpw.a
+PWOBJS = ../../PW/src/libpw.a
 
 TLDEPS=bindir libs pw
 

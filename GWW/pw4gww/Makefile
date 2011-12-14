@@ -8,7 +8,7 @@ IFLAGS=-I../../include
 
 # location of needed modules
 MODFLAGS= $(MOD_FLAG)../../iotk/src $(MOD_FLAG)../../Modules \
-          $(MOD_FLAG)../../PW $(MOD_FLAG).
+          $(MOD_FLAG)../../PW/src $(MOD_FLAG).
 
 #location of needed libraries
 LIBOBJS= ../../iotk/src/libiotk.a ../../flib/flib.a \
@@ -54,7 +54,7 @@ write_wannier_matrix_c.o \
 write_wannier_products.o 
 
 QEMODS = ../../Modules/libqemod.a
-PWOBJS = ../../PW/libpw.a
+PWOBJS = ../../PW/src/libpw.a
 
 LIBMIN= ../minpack/minpacklib.a
 

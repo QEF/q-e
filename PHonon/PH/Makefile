@@ -4,7 +4,7 @@ include ../../make.sys
 
 # location of needed modules
 MODFLAGS= $(MOD_FLAG)../../iotk/src $(MOD_FLAG)../../Modules \
-          $(MOD_FLAG)../../PW $(MOD_FLAG).
+          $(MOD_FLAG)../../PW/src $(MOD_FLAG).
 
 PHOBJS = \
 acfdtest.o \
@@ -188,7 +188,7 @@ raman.o    \
 dhdrhopsi.o\
 set_dvscf.o
 
-PWOBJS = ../../PW/libpw.a
+PWOBJS = ../../PW/src/libpw.a
 QEMODS = ../../Modules/libqemod.a
 
 

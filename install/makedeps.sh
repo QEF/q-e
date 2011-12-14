@@ -11,9 +11,9 @@ TOPDIR=`pwd`
 
 if test $# = 0
 then
-    dirs=" Modules clib PW CPV/src flib pwtools upftools PP PWCOND/src \
+    dirs=" Modules clib PW/src CPV/src flib PW/tools upftools PP PWCOND/src \
            PHonon/Gamma PHonon/PH PHonon/D3 atomic/src VdW XSpectra/src \
-	   GWW/gww GWW/pw4gww GWW/head ACFDT NEB/src Solvent" 
+	   GWW/gww GWW/pw4gww GWW/head ACFDT NEB/src Solvent TDDFPT/src" 
           
 else
     dirs=$*
@@ -34,25 +34,33 @@ for dir in $dirs; do
     LEVEL2=../..
     DEPENDS="$LEVEL1/include $LEVEL1/iotk/src"
     case $DIR in 
-        EE | flib | upftools | Solvent | PW )
+        EE | flib | upftools | Solvent )
              DEPENDS="$LEVEL1/include $LEVEL1/iotk/src $LEVEL1/Modules" ;;
-	PP | PWCOND | pwtools )
+	PP  )
              DEPENDS="$LEVEL1/include $LEVEL1/iotk/src $LEVEL1/Modules \
-                      $LEVEL1/PW" ;;
+                      $LEVEL1/PW/src" ;;
 	VdW | ACFDT ) 
              DEPENDS="$LEVEL1/include $LEVEL1/iotk/src $LEVEL1/Modules \
-                      $LEVEL1/PW $LEVEL1/PHonon/PH" ;;
+                      $LEVEL1/PW/src $LEVEL1/PHonon/PH" ;;
+	PW/src )
+	     DEPENDS="$LEVEL2/include $LEVEL2/iotk/src $LEVEL2/Modules" ;;
+	PW/tools | PWCOND/src )
+	     DEPENDS="$LEVEL2/include $LEVEL2/PW/src $LEVEL2/iotk/src $LEVEL2/Modules" ;;
 	CPV/src | atomic/src | GWW/gww )
              DEPENDS="$LEVEL2/include $LEVEL2/iotk/src $LEVEL2/Modules" ;;
 	PHonon/PH | PHonon/Gamma | XSpectra/src  | PWCOND/src | GWW/pw4gww | NEB/src )
              DEPENDS="$LEVEL2/include $LEVEL2/iotk/src $LEVEL2/Modules \
-                      $LEVEL2/PW" ;;
+                      $LEVEL2/PW/src" ;;
 	PHonon/D3 )
 	     DEPENDS="$LEVEL2/include $LEVEL2/iotk/src $LEVEL2/Modules \
-	              $LEVEL2/PW $LEVEL2/PHonon/PH" ;;	
+	              $LEVEL2/PW/src $LEVEL2/PHonon/PH" ;;	
 	GWW/head )
              DEPENDS="$LEVEL2/include $LEVEL2/iotk/src $LEVEL2/Modules \
-                      $LEVEL2/PW $LEVEL2/PHonon/PH $LEVEL1/pw4gww " ;;
+                      $LEVEL2/PW/src $LEVEL2/PHonon/PH $LEVEL1/pw4gww " ;;
+	TDDFPT/src )
+             DEPENDS="$LEVEL2/include $LEVEL2/iotk/src $LEVEL2/Modules \
+                      $LEVEL2/PW/src $LEVEL2/PHonon/PH" ;;
+
     esac
 
     # generate dependencies file (only for directories that are present)
@@ -74,7 +82,7 @@ for dir in $dirs; do
             sed 's/@fftw.c@/fftw.c/' make.depend.tmp > make.depend
         fi
 
-        if test "$DIR" = "PW"
+        if test "$DIR" = "PW/src"
         then
             mv make.depend make.depend.tmp
             sed '/@solvent_base@/d' make.depend.tmp > make.depend

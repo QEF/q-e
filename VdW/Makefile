@@ -4,7 +4,7 @@ include ../make.sys
 
 # location of needed modules
 MODFLAGS= $(MOD_FLAG)../iotk/src $(MOD_FLAG)../Modules \
-          $(MOD_FLAG)../PW $(MOD_FLAG)../PHonon/PH $(MOD_FLAG).
+          $(MOD_FLAG)../PW/src $(MOD_FLAG)../PHonon/PH $(MOD_FLAG).
 
 VdWOBJS = \
 allocate_vdw.o \
@@ -27,7 +27,7 @@ PPOBJS = \
 ../PP/openfil_pp.o
 
 QEMODS = ../Modules/libqemod.a
-PWOBJS = ../PW/libpw.a
+PWOBJS = ../PW/src/libpw.a
 PHOBJS = ../PHonon/PH/libph.a
 
 TLDEPS= bindir mods libs pw ph pp
