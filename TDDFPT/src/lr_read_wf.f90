@@ -98,7 +98,6 @@ USE lr_variables, ONLY: check_all_bands_gamma, check_density_gamma,&
   IF (gamma_only) THEN
    WRITE( stdout, '(/5x,"Gamma point algorithm")' )
   ELSE
-   CALL errore('lr_read_wfc', 'k-point algorithm is not tested yet',1)
    WRITE( stdout, '(/5x,"Generalised algorithm !warning")' )
   ENDIF
 
@@ -360,7 +359,6 @@ USE lr_variables, ONLY: check_all_bands_gamma, check_density_gamma,&
   IF (gamma_only) THEN
    WRITE( stdout, '(/5x,"Gamma point algorithm")' )
   ELSE
-   CALL errore('lr_read_wfc', 'k-point algorithm is not tested yet',1)
    WRITE( stdout, '(/5x,"Generalised algorithm !warning")' )
   ENDIF
 
