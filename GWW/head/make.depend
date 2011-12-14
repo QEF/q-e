@@ -5,6 +5,7 @@ bcast_ph_input.o : ../../Modules/io_global.o
 bcast_ph_input.o : ../../Modules/ions_base.o
 bcast_ph_input.o : ../../Modules/mp.o
 bcast_ph_input.o : ../../Modules/run_info.o
+bcast_ph_input.o : ../../PHonon/PH/elph.o
 bcast_ph_input.o : ../../PHonon/PH/phcom.o
 bcast_ph_input.o : ../../PHonon/PH/ramanm.o
 bcast_ph_input.o : ../pw4gww/wannier_gw.o

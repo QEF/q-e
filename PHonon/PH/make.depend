@@ -225,6 +225,7 @@ close_phq.o : ../../Modules/io_global.o
 close_phq.o : ../../Modules/mp_global.o
 close_phq.o : ../../Modules/paw_variables.o
 close_phq.o : ../../Modules/uspp.o
+close_phq.o : elph.o
 close_phq.o : phcom.o
 close_phq.o : ramanm.o
 close_phq.o : write_rec.o
@@ -613,8 +614,6 @@ elphon.o : elph.o
 elphon.o : phcom.o
 elphon.o : save_ph_input.o
 ep_matrix_element_wannier.o : ../../Modules/cell_base.o
-ep_matrix_element_wannier.o : ../../Modules/constants.o
-ep_matrix_element_wannier.o : ../../Modules/control_flags.o
 ep_matrix_element_wannier.o : ../../Modules/fft_base.o
 ep_matrix_element_wannier.o : ../../Modules/fft_interfaces.o
 ep_matrix_element_wannier.o : ../../Modules/io_files.o
@@ -873,6 +872,7 @@ phq_init.o : ../../PW/becmod.o
 phq_init.o : ../../PW/noncol.o
 phq_init.o : ../../PW/pwcom.o
 phq_init.o : acfdtest.o
+phq_init.o : elph.o
 phq_init.o : phcom.o
 phq_readin.o : ../../Modules/constants.o
 phq_readin.o : ../../Modules/control_flags.o

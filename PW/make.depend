@@ -670,10 +670,14 @@ hinit1.o : ../Modules/cell_base.o
 hinit1.o : ../Modules/control_flags.o
 hinit1.o : ../Modules/fft_base.o
 hinit1.o : ../Modules/ions_base.o
+hinit1.o : ../Modules/paw_variables.o
 hinit1.o : ../Modules/recvec.o
 hinit1.o : ../Modules/wannier_new.o
 hinit1.o : martyna_tuckerman.o
 hinit1.o : newd.o
+hinit1.o : paw_init.o
+hinit1.o : paw_onecenter.o
+hinit1.o : paw_symmetry.o
 hinit1.o : pwcom.o
 hinit1.o : realus.o
 hinit1.o : scf_mod.o
@@ -1194,6 +1198,7 @@ read_file.o : ../Modules/uspp.o
 read_file.o : ../Modules/wavefunctions.o
 read_file.o : ../Modules/xml_io_base.o
 read_file.o : buffers.o
+read_file.o : esm.o
 read_file.o : newd.o
 read_file.o : noncol.o
 read_file.o : paw_init.o

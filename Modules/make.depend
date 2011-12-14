@@ -221,6 +221,7 @@ recvec.o : mp.o
 recvec_subs.o : constants.o
 recvec_subs.o : fft_base.o
 recvec_subs.o : kind.o
+recvec_subs.o : mp.o
 recvec_subs.o : recvec.o
 set_signal.o : io_global.o
 set_signal.o : mp_global.o

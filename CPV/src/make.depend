@@ -133,6 +133,7 @@ cp_restart.o : ../../Modules/uspp.o
 cp_restart.o : ../../Modules/version.o
 cp_restart.o : ../../Modules/xml_io_base.o
 cp_restart.o : ../../iotk/src/iotk_module.o
+cp_restart.o : cp_interfaces.o
 cp_restart.o : energies.o
 cp_restart.o : gvecw.o
 cp_restart.o : mainvar.o
@@ -158,7 +159,6 @@ cplib.o : cp_interfaces.o
 cplib.o : cpr_mod.o
 cplib.o : gvecw.o
 cplib.o : ions_nose.o
-cplib.o : mainvar.o
 cplib.o : modules.o
 cplib.o : pseudo_base.o
 cplib.o : pseudopot.o
@@ -634,7 +634,6 @@ mainvar.o : ../../Modules/descriptors.o
 mainvar.o : ../../Modules/electrons_base.o
 mainvar.o : ../../Modules/fft_base.o
 mainvar.o : ../../Modules/funct.o
-mainvar.o : ../../Modules/io_global.o
 mainvar.o : ../../Modules/kind.o
 mainvar.o : ../../Modules/mp.o
 mainvar.o : ../../Modules/mp_global.o
@@ -706,7 +705,6 @@ nl_base.o : ../../Modules/recvec.o
 nl_base.o : ../../Modules/uspp.o
 nl_base.o : cp_interfaces.o
 nl_base.o : gvecw.o
-nl_base.o : mainvar.o
 nlcc.o : ../../Modules/atom.o
 nlcc.o : ../../Modules/cell_base.o
 nlcc.o : ../../Modules/control_flags.o
@@ -737,7 +735,6 @@ ortho.o : ../../Modules/mp_global.o
 ortho.o : ../../Modules/uspp.o
 ortho.o : cp_interfaces.o
 ortho.o : gvecw.o
-ortho.o : mainvar.o
 ortho.o : ortho_base.o
 ortho_base.o : ../../Modules/constants.o
 ortho_base.o : ../../Modules/control_flags.o
@@ -899,7 +896,6 @@ restart.o : cp_restart.o
 restart.o : electrons.o
 restart.o : ensemble_dft.o
 restart.o : gvecw.o
-restart.o : mainvar.o
 restart_sub.o : ../../Modules/cell_base.o
 restart_sub.o : ../../Modules/control_flags.o
 restart_sub.o : ../../Modules/electrons_base.o
@@ -1063,6 +1059,7 @@ wf.o : ../../Modules/mp_wave.o
 wf.o : ../../Modules/parallel_include.o
 wf.o : ../../Modules/recvec.o
 wf.o : ../../Modules/uspp.o
+wf.o : cp_interfaces.o
 wf.o : gvecw.o
 wf.o : mainvar.o
 wf.o : modules.o

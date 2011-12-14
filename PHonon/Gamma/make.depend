@@ -128,6 +128,7 @@ phcg.o : ../../Modules/funct.o
 phcg.o : ../../Modules/io_files.o
 phcg.o : ../../Modules/io_global.o
 phcg.o : ../../Modules/ions_base.o
+phcg.o : ../../Modules/kind.o
 phcg.o : ../../Modules/mp_global.o
 phcg.o : ../../PW/noncol.o
 phcg.o : ../../PW/pwcom.o
