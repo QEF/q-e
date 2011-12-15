@@ -1988,15 +1988,15 @@ Nota Bene 1:   For calwf = 5, wffort is not used. The
 	    	cols -start 1 -end nbnd {
 	    	    row f_inp1 -type REAL {
 	    		info { 
-	    		    Occupations of individual states. 
-	    		    For spin-polarized calculation, these are majority spin states. 
+	    		    Occupations of individual states (MAX 10 PER LINE). 
+	    		    For spin-polarized calculations, these are majority spin states. 
 	    		}
 	    	    }
 	    	    conditional {
 	    		row f_inp2 -type REAL {
 	    		    info { 				
-	    			Occupations of minority spin states for spin-polarized calculation; 
-	    			specify only for spin-polarized calculation.
+	    			Occupations of minority spin states (MAX 10 PER LINE)
+	    			To be specified only for spin-polarized calculations.
 	    		    }
 	    		}
 	    	    }
