@@ -89,7 +89,7 @@ SUBROUTINE iosys()
   USE fft_base, ONLY : dfftp
   USE fft_base, ONLY : dffts
   !
-  USE klist,         ONLY : ngauss, two_fermi_energies, &
+  USE klist,         ONLY : lgauss, ngauss, two_fermi_energies, &
                             smearing_          => smearing, &
                             degauss_           => degauss, &
                             tot_charge_        => tot_charge, &
@@ -501,12 +501,12 @@ SUBROUTINE iosys()
   !
   tfixed_occ = .false.
   ltetra     = .false.
+  lgauss     = .false.
   !
   SELECT CASE( trim( occupations ) )
   CASE( 'fixed' )
      !
      ngauss = 0
-     !
      IF ( degauss /= 0.D0 ) THEN
         CALL errore( ' iosys ', &
                    & ' fixed occupations, gauss. broadening ignored', -1 )
@@ -515,7 +515,8 @@ SUBROUTINE iosys()
      !
   CASE( 'smearing' )
      !
-     IF ( degauss == 0.D0 ) &
+     lgauss = ( degauss > 0.0_dp ) 
+     IF ( .NOT. lgauss ) &
         CALL errore( ' iosys ', &
                    & ' smearing requires gaussian broadening', 1 )
      !
@@ -1055,10 +1056,19 @@ SUBROUTINE iosys()
   tmp_dir = trimcheck ( outdir )
   lstres = ( tstress .and. lscf )
   !
-  IF ( lberry .and. npool > 1 ) &
-     CALL errore( 'iosys', 'Berry Phase not implemented with pools', 1 )
-  IF ( lberry .and. noncolin ) &
-     CALL errore( 'iosys', 'Noncolinear Berry Phase not implemented', 1 )
+  IF ( lberry ) THEN
+     IF ( npool > 1 ) &
+        CALL errore( 'iosys', 'Berry Phase not implemented with pools', 1 )
+     IF ( noncolin )  &
+        CALL errore( 'iosys', 'Noncolinear Berry Phase not implemented', 1 )
+     IF ( lgauss .OR. ltetra ) &
+        CALL errore( 'iosys', 'Berry Phase only for insulators!', 1 )
+  END IF
+  !
+  IF ( lelfield ) THEN
+     IF ( lgauss .OR. ltetra ) &
+        CALL errore( 'iosys', 'electric fields only for insulators!', 1 )
+  END IF
   !
   ! ... Copy values from input module to PW internals
   !

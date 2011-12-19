@@ -250,30 +250,19 @@ SUBROUTINE setup()
      !
   END IF
   !
-  ! ... For metals: check whether Gaussian broadening or Tetrahedron method
-  ! ...             is used
-  !
-  lgauss = ( ( degauss /= 0.D0 ) .AND. ( .NOT. tfixed_occ ) )
-  !
   ! ... Check: if there is an odd number of electrons, the crystal is a metal
   !
   IF ( lscf .AND. ABS( NINT( nelec / 2.D0 ) - nelec / 2.D0 ) > eps8 &
             .AND. .NOT. lgauss .AND. .NOT. ltetra .AND. .NOT. tfixed_occ ) &
       CALL infomsg( 'setup', 'the system is metallic, specify occupations' )
   !
-  ! ... Check: spin-polarized calculations require tetrahedra or broadening
-  !            or fixed occupation - the simple filling of levels is not
-  !            implemented right now (it will yield an unpolarized system)
+  ! ... Check: spin-polarized calculations require either broadening or
+  !             fixed occupation
   !
   IF ( lscf .AND. lsda &
             .AND. .NOT. lgauss .AND. .NOT. ltetra &
             .AND. .NOT. tfixed_occ .AND. .NOT. two_fermi_energies ) &
       CALL errore( 'setup', 'spin-polarized system, specify occupations', 1 )
-  !
-  ! ... Check: modern theory of polarization (lefield) does not apply to metals
-  !
-  IF(lgauss .and. lelfield) &
-          CALL errore("setup", "lelfield cannot be used with smearing", 1)
   !
   ! ... setting nelup/neldw 
   !
