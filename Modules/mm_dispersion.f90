@@ -5,6 +5,7 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+! Z=55-86 contributed by Martin Andersson (2011)
 !------------------------------------------------------------------------------
 !
 MODULE london_module
@@ -71,9 +72,12 @@ MODULE london_module
       !
       IMPLICIT NONE
       !
-      INTEGER, PARAMETER :: maxZ = 54
+      INTEGER, PARAMETER :: maxZ = 86
       REAL (DP) :: vdw_coeffs(2,maxZ)
-      ! vdw C6 and radii for the first 54 atoms
+      ! vdw C6 and radii for the first 86 atoms for the DFTD2 method
+      ! data taken from the DFTD2 sections of the dftd3.f file found
+      ! on S.Grimmes home page for the DFTD3 method 
+      ! http://toc.uni-muenster.de/DFTD3/index.html
       DATA vdw_coeffs / &
          4.857,    1.892,&
          2.775,    1.912,&
@@ -128,7 +132,39 @@ MODULE london_module
       1333.532,    3.555,&
       1101.101,    3.575,&
       1092.775,    3.575,&
-      1040.391,    3.555/
+      1040.391,    3.555,&
+     10937.246,    3.405,&
+      7874.678,    3.330,&
+      6114.381,    3.251,&
+      4880.348,    3.313,&
+      4880.348,    3.313,&
+      4880.348,    3.313,&
+      4880.348,    3.313,&
+      4880.348,    3.313,&
+      4880.348,    3.313,&
+      4880.348,    3.313,&
+      4880.348,    3.313,&
+      4880.348,    3.313,&
+      4880.348,    3.313,&
+      4880.348,    3.313,&
+      4880.348,    3.313,&
+      4880.348,    3.313,&
+      4880.348,    3.313,&
+      3646.454,    3.378,&
+      2818.308,    3.349,&
+      2818.308,    3.349,&
+      2818.308,    3.349,&
+      2818.308,    3.349,&
+      2818.308,    3.349,&
+      2818.308,    3.349,&
+      2818.308,    3.349,&
+      1990.022,    3.322,&
+      1986.206,    3.752,&
+      2191.161,    3.673,&
+      2204.274,    3.586,&
+      1917.830,    3.789,&
+      1983.327,    3.762,&
+      1964.906,    3.636/
       !
       INTEGER :: ilab , ata , atb , i
       ! local : counter of atom type
@@ -161,7 +197,7 @@ MODULE london_module
          DO ilab = 1 , ntyp
            !
            i = atomic_number ( atom_label ( ilab ) )
-           IF ( i > 0 .AND. i < 55 ) THEN
+           IF ( i > 0 .AND. i < 87 ) THEN
               C6_i  ( ilab )  = vdw_coeffs(1,i)
               R_vdw ( ilab )  = vdw_coeffs(2,i)
            ELSE
@@ -206,7 +242,7 @@ MODULE london_module
                           & /, 5X, "  atom      VdW radius       C_6     " , / )' )
          DO ata = 1 , ntyp
             !
-            WRITE (stdout , '( 8X, A3 , 6X , F7.3 , 6X , F9.3 )' ) &
+            WRITE (stdout , '( 8X, A3 , 6X , F7.3 , 8X , F7.3 )' ) &
                                atom_label ( ata ) , R_vdw ( ata ) , C6_i ( ata )
             !
          END DO
