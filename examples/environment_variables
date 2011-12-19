@@ -21,10 +21,19 @@ PSEUDO_DIR=$PREFIX/pseudo
 # Beware: everything in $TMP_DIR will be destroyed !
 TMP_DIR=$HOME/tmp
 
-# needed if some PP has to be downloaded from web site
-WGET="wget -O"
-# for machines that do not have wget (e.g. Mac OS-X)
-#WGET="curl -o"
+# wget or curl needed if some PP has to be downloaded from web site
+# script wizard will surely find a better way to find what is available
+if test "`which curl`" = "" ; then
+   if test "`which wget`" = "" ; then
+      echo "wget or curl not found: will not be able to download missing PP"
+   else
+      WGET="wget -O"
+      echo "wget found"
+   fi
+else
+   WGET="curl -o"
+   echo "curl found"
+fi
 
 # To run the ESPRESSO programs on a parallel machine, you may have to
 # add the appropriate commands (poe, mpirun, mpprun...) and/or options
