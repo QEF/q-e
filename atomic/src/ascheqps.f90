@@ -179,12 +179,12 @@ subroutine ascheqps(nam,lam,jam,e0,mesh,ndm,grid,vpot,thresh,y,beta,ddd,&
 !  node theorem so strictly speaking the following instructions are
 !  wrong but sometimes they help so we keep them here.
 !
-  if(ndcr /= ncross .and. first(nam,lam)) then
-  write(stdout,'(/,7x,5(a,i3))') 'WARNING! Expected number of nodes: ',ndcr, '=   ',nam,'-',lam,&
-                                 '-  1, number of nodes found:', ncross,'.'
-  write(stdout,'(7x,a,/,7x,a,/)') 'Setting wfc to zero for this iteration.',&
-                                 '(This warning will only be printed once per wavefunction)'
-  first(nam,lam) = .false.
+  if( ndcr /= ncross .and. first(nam,lam) ) then
+      write(stdout,"(/,7x,'Warning: n=',i1,', l=',i1,' expected ',i1,' nodes,',&
+        & ' found ',i1')") nam,lam,ndcr,ncross
+      write(stdout,'(7x,a,/,7x,a,/)') 'Setting wfc to zero for this iteration',&
+                    '(This warning will only be printed once per wavefunction)'
+      first(nam,lam) = .false.
   endif
 
   if(ndcr < ncross) then
@@ -192,7 +192,6 @@ subroutine ascheqps(nam,lam,jam,e0,mesh,ndm,grid,vpot,thresh,y,beta,ddd,&
      !  too many crossings. e is an upper bound to the true eigen-
      !  value. increase abs(e)
      !
-
      eup=e
      e=0.9_dp*elw+0.1_dp*eup
 !     write(6,*) 'too many crossing', ncross, ndcr
@@ -265,7 +264,6 @@ subroutine ascheqps(nam,lam,jam,e0,mesh,ndm,grid,vpot,thresh,y,beta,ddd,&
   nstop=1
   if (nstart==0) goto 900
 600 continue
-
   !
   !   exponential tail of the solution if it was not computed
   !

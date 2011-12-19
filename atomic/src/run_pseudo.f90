@@ -144,11 +144,10 @@ SUBROUTINE run_pseudo
         !
      ENDIF
 
-!            write(6,*) 'iteration number',iter, eps0
      IF (conv) THEN
         IF (nerr /= 0) THEN
            IF (iswitch==2) THEN
-              CALL infomsg ('run_pseudo','Errors in PS-KS equations')
+              CALL infomsg ('run_pseudo','BEWARE! Errors in PS-KS equations')
            ELSE
               CALL errore ('run_pseudo','Errors in PS-KS equation', 1)
            ENDIF
@@ -156,7 +155,7 @@ SUBROUTINE run_pseudo
         GOTO 900
      ENDIF
   ENDDO
-  CALL infomsg('run_pseudo','convergence not achieved')
+  CALL infomsg('run_pseudo','Warning: convergence not achieved')
   !
   !    final calculation with all states
   !
