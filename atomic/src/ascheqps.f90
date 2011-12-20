@@ -181,7 +181,7 @@ subroutine ascheqps(nam,lam,jam,e0,mesh,ndm,grid,vpot,thresh,y,beta,ddd,&
 !
   if( ndcr /= ncross .and. first(nam,lam) ) then
       write(stdout,"(/,7x,'Warning: n=',i1,', l=',i1,' expected ',i1,' nodes,',&
-        & ' found ',i1')") nam,lam,ndcr,ncross
+        & ' found ',i1)") nam,lam,ndcr,ncross
       write(stdout,'(7x,a,/,7x,a,/)') 'Setting wfc to zero for this iteration',&
                     '(This warning will only be printed once per wavefunction)'
       first(nam,lam) = .false.
