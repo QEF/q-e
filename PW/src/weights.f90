@@ -21,7 +21,7 @@ SUBROUTINE weights()
                                    two_fermi_energies
   USE ktetra,               ONLY : ltetra, ntetra, tetra
   USE lsda_mod,             ONLY : nspin, current_spin, isk
-  USE noncollin_module,     ONLY : bfield, nspin_lsda
+  USE noncollin_module,     ONLY : bfield
   USE wvfct,                ONLY : nbnd, wg, et
   USE mp_global,            ONLY : intra_image_comm, inter_pool_comm
   USE mp,                   ONLY : mp_bcast, mp_sum
@@ -66,14 +66,14 @@ SUBROUTINE weights()
            !
            IF (two_fermi_energies) THEN
               !
-              CALL tweights( nkstot, nspin_lsda, nbnd, nelup, &
+              CALL tweights( nkstot, nspin, nbnd, nelup, &
                              ntetra, tetra, et, ef_up, wg, 1, isk )
-              CALL tweights( nkstot, nspin_lsda, nbnd, neldw, &
+              CALL tweights( nkstot, nspin, nbnd, neldw, &
                              ntetra, tetra, et, ef_dw, wg, 2, isk )
               !
            ELSE
               !
-              CALL tweights( nkstot, nspin_lsda, nbnd, nelec, &
+              CALL tweights( nkstot, nspin, nbnd, nelec, &
                              ntetra, tetra, et, ef, wg, 0, isk )
               !
            END IF

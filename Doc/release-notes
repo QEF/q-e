@@ -14,6 +14,8 @@ Incompatible changes in svn version:
 
 Fixed in svn version
 
+   * PW: tetrahedra were not yet working in the +noncolinear case!
+     I hope this time they are fized for good.
    * Velocity rescaling in variable-cell MD wasn't really working
    * Workaround for frequent crashes in PAW with vc-relax
    * In some cases spin-polarized HSE was yielding NaN's
@@ -148,7 +150,7 @@ Fixed in 4.3 version:
         calculations with non-orthorhombic simulation cells. Also fixed 
         an old but minor bug on averaging of Berry phases between strings
   * PW: problem with symmetrization in the noncollinear case
-  * PW: tetraheadr+noncolinear case fixed (courtesy of Yurii Timrov)
+  * PW: tetrahedra+noncolinear case fixed (courtesy of Yurii Timrov)
   * option -D__USE_3D_FFT wasn't working any longer in v.4.2.x
   * PP: calculation of ILDOS with USPP wasn't working in v.4.2.x
   * PH: elph=.true. and trans=.false. was not working any longer. 
