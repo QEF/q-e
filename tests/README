@@ -38,7 +38,7 @@ noncolin  Fe bcc   noncollinear magnetization
                    davidson and cg diagonalizations
                    constraints: atomic, atomic direction, total magnetization
                    noncollinear stress
-                   non-scf calculation
+                   non-scf calculation, tetrahedra
 paw-atom  O, Cu    PAW   
 paw-bfgs    H2O    PAW with bfgs    
 paw-vcbfgs  H2O    PAW with variable-cell bfgs    
@@ -56,7 +56,7 @@ scf       Si fcc   davidson and cg diagonalizations
                    old "ncpp" format for pseudopotentials
 spinorbit Pt fcc   spin-orbit + noncollinear magnetization
                    spin-orbit stress
-                   non-scf calculation
+                   non-scf calculation, tetrahedra
 uspp      Cu fcc   US PP, both single and double grid
                    davidson and cg diagonalizations
                    simple, TF, local-TF mixing, ndim=4,8
