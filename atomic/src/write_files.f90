@@ -6,46 +6,45 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !-------------------------------------------------------------------------
-subroutine write_wfcfile(filename,wfc,elaux,num)
+SUBROUTINE write_wfcfile(filename,wfc,elaux,num)
 !-------------------------------------------------------------------------
 !
 !  This subroutine writes a formatted wavefunction file
 !
-USE kinds, ONLY : DP
-USE io_global, ONLY : ionode, ionode_id
-USE ld1inc, ONLY  : grid
-USE radial_grids, ONLY  : ndmx
-USE mp,      ONLY : mp_bcast
+  USE kinds, ONLY : DP
+  USE io_global, ONLY : ionode, ionode_id
+  USE ld1inc, ONLY  : grid
+  USE radial_grids, ONLY  : ndmx
+  USE mp,      ONLY : mp_bcast
 
-implicit none
-integer, intent(in) :: num   ! the number of wavefunctions to write  
-real(DP), intent(in) :: wfc(ndmx,num)
-character(len=2), intent(in) :: elaux(num)
-character(len=256), intent(in) :: filename
-integer :: ios, n, ns
+  IMPLICIT NONE
+  INTEGER, INTENT(in) :: num   ! the number of wavefunctions to write
+  REAL(DP), INTENT(in) :: wfc(ndmx,num)
+  CHARACTER(len=2), INTENT(in) :: elaux(num)
+  CHARACTER(len=256), INTENT(in) :: filename
+  INTEGER :: ios, n, ns
 
-if (filename .eq. ' ') return
+  IF (filename == ' ') RETURN
 
-if (ionode) &
-   open(unit=19,file=filename, status='unknown', iostat=ios, err=800)
-800  call mp_bcast(ios, ionode_id)
-call errore('write_wfcfile','opening file '//TRIM(filename),abs(ios))
-if (ionode) then
-   write(19,'("#     r  ",38(14x,a2))') (elaux(n),n=1,num)
-   do n=1,grid%mesh
-      write(19,'(38f20.12)') grid%r(n), (wfc(n,ns), ns=1,num)
-   enddo
-   close(19)
-endif
-
-return
-end subroutine write_wfcfile
+  IF (ionode) &
+     OPEN(unit=19,file=filename, status='unknown', iostat=ios, err=80)
+80 CALL mp_bcast(ios, ionode_id)
+  CALL errore('write_wfcfile','opening file '//trim(filename),abs(ios))
+  IF (ionode) THEN
+     WRITE(19,'("#",12x,"r",38(18x,a2))') (elaux(n),n=1,num)
+     DO n=1,grid%mesh
+        WRITE(19,'(38f20.12)') grid%r(n), (wfc(n,ns), ns=1,num)
+     ENDDO
+     CLOSE(19)
+  ENDIF
+  RETURN
+END SUBROUTINE write_wfcfile
 
 !-------------------------------------------------------------------------
-subroutine write_wfcfile_ft(filename_in,wfc,num)
+SUBROUTINE write_wfcfile_ft(filename_in,wfc,num)
 !-------------------------------------------------------------------------
 !
-! calculate and print the fourier transform of wfc and the  
+! calculate and print the fourier transform of wfc and the
 ! convergence of their norm with cutoff
 !
 USE kinds, ONLY : DP
@@ -54,55 +53,55 @@ USE ld1inc, ONLY  : grid, lls
 USE radial_grids, ONLY  : ndmx
 USE mp,      ONLY : mp_bcast
 
-implicit none
-integer, intent(in) :: num   ! the number of wavefunctions to write  
-real(DP), intent(in) :: wfc(ndmx,num)
-character(len=256), intent(in) :: filename_in
+IMPLICIT NONE
+INTEGER, INTENT(in) :: num   ! the number of wavefunctions to write
+real(DP), INTENT(in) :: wfc(ndmx,num)
+CHARACTER(len=256), INTENT(in) :: filename_in
 
-integer :: ios, n, ns, nmax
-character(len=256) :: filename
+INTEGER :: ios, n, ns, nmax
+CHARACTER(len=256) :: filename
 real(DP) :: q, fac, pi, wrk(ndmx), jlq(ndmx), norm(num), normr(num), work(num)
-real(DP), external :: int_0_inf_dr   ! the function calculating the integral 
+real(DP), EXTERNAL :: int_0_inf_dr   ! the function calculating the integral
 
-IF (filename_in .eq. ' ') RETURN
+IF (filename_in == ' ') RETURN
 
 IF (ionode) THEN
    filename = trim(filename_in)//'.q'
-   open(unit=19,file=filename, status='unknown', iostat=ios)
+   OPEN(unit=19,file=filename, status='unknown', iostat=ios)
    filename = trim(filename_in)//'.norm_q'
-   open(unit=29,file=filename, status='unknown', iostat=ios)
+   OPEN(unit=29,file=filename, status='unknown', iostat=ios)
    pi = 4._dp*atan(1._dp)
-   do ns=1,num
+   DO ns=1,num
       wrk(1:grid%mesh)=(wfc(1:grid%mesh,ns)*exp(-0.04*grid%r2(1:grid%mesh)))**2
       normr(ns) = int_0_inf_dr ( wrk, grid, grid%mesh, 2*lls(ns)+2 )
-   end do
+   ENDDO
    !write (*,*) normr(1:num)
    fac = pi /grid%r(grid%mesh) * 2._dp/pi
    norm(:) = 0._dp
    nmax = int (10 * grid%r(grid%mesh) /pi)
-   do n=1,nmax 
+   DO n=1,nmax
       q=n * pi /grid%r(grid%mesh)
-      do ns=1,num
-         call sph_bes ( grid%mesh, grid%r, q, lls(ns), jlq )
+      DO ns=1,num
+         CALL sph_bes ( grid%mesh, grid%r, q, lls(ns), jlq )
          wrk(1:grid%mesh)=jlq(1:grid%mesh)*wfc(1:grid%mesh,ns)*  &
                exp(-0.04*grid%r2(1:grid%mesh))*grid%r(1:grid%mesh)
          work(ns) = int_0_inf_dr ( wrk, grid, grid%mesh, 2*lls(ns)+2 )
-      end do
+      ENDDO
       norm(1:num) = norm(1:num) + work(1:num)*work(1:num)*q*q*fac
-      write (19,'(15f12.6)') q, (work(ns), ns=1,num)
-      write (29,'(15f12.6)') q, (norm(ns)/normr(ns), ns=1,num)
-   end do
-   close (29)
-   close (19)
+      WRITE (19,'(15f12.6)') q, (work(ns), ns=1,num)
+      WRITE (29,'(15f12.6)') q, (norm(ns)/normr(ns), ns=1,num)
+   ENDDO
+   CLOSE (29)
+   CLOSE (19)
    !
    ! end of Fourier analysis
    !
-endif
-return
-end subroutine write_wfcfile_ft
+ENDIF
+RETURN
+END SUBROUTINE write_wfcfile_ft
 !
 !-------------------------------------------------------------------------
-subroutine write_efun(filename,fun,x,npte,num)
+SUBROUTINE write_efun(filename,fun,x,npte,num)
 !-------------------------------------------------------------------------
 !
 !  This subroutine writes a functions defined on the energy grid
@@ -111,26 +110,26 @@ USE kinds, ONLY : DP
 USE io_global, ONLY : ionode, ionode_id
 USE mp,      ONLY : mp_bcast
 
-implicit none
-integer, intent(in) :: num   ! the number of wavefunctions to write  
-integer, intent(in) :: npte   ! the number of energies  
-real(DP), intent(in) :: fun(npte,num), x(npte)
-character(len=256), intent(in) :: filename
-integer :: ios, n, ns
+IMPLICIT NONE
+INTEGER, INTENT(in) :: num   ! the number of wavefunctions to write
+INTEGER, INTENT(in) :: npte   ! the number of energies
+real(DP), INTENT(in) :: fun(npte,num), x(npte)
+CHARACTER(len=256), INTENT(in) :: filename
+INTEGER :: ios, n, ns
 
-if (filename .eq. ' ') return
+IF (filename == ' ') RETURN
 
-if (ionode) &
-   open(unit=19,file=filename, status='unknown', iostat=ios, err=800)
-800  call mp_bcast(ios, ionode_id)
-call errore('write_wfcfile','opening file '//TRIM(filename),abs(ios))
-if (ionode) then
-   do n=1,npte
-      write(19,'(38f20.12)') x(n), (max(min(fun(n,ns),9.d4),-9d4), ns=1,num)
-   enddo
-   close(19)
-endif
+IF (ionode) &
+   OPEN(unit=19,file=filename, status='unknown', iostat=ios, err=800)
+800  CALL mp_bcast(ios, ionode_id)
+CALL errore('write_wfcfile','opening file '//trim(filename),abs(ios))
+IF (ionode) THEN
+   DO n=1,npte
+      WRITE(19,'(38f20.12)') x(n), (max(min(fun(n,ns),9.d4),-9d4), ns=1,num)
+   ENDDO
+   CLOSE(19)
+ENDIF
 
-return
-end subroutine write_efun
+RETURN
+END SUBROUTINE write_efun
 
