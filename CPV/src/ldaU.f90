@@ -618,7 +618,7 @@ end function set_Hubbard_l
 !
       dns(:,:,:,:) = 0.d0
 !
-          call dprojdtau(c,wfc,becwfc,spsi,bp,dbp,wdb,eigr,alpha_a,     &
+      call dprojdtau(c,wfc,becwfc,spsi,bp,dbp,wdb,eigr,alpha_a,     &
      &                   alpha_s,ipol,offset(alpha_s,alpha_a),dproj)
 !
 ! compute the derivative of occupation numbers (the quantities dn(m1,m2))
@@ -696,29 +696,24 @@ end function set_Hubbard_l
       real(kind=8), allocatable :: gk(:)
 !
       complex (DP), allocatable :: dwfc(:,:)
-      real (DP), allocatable :: betapsi(:,:),                       &
-     &                              dbetapsi(:,:),                      &
-     &                              wfcbeta(:,:),wfcdbeta(:,:),temp(:)
+      real (DP), allocatable :: betapsi(:,:), dbetapsi(:,:), &
+     &                          wfcbeta(:,:),wfcdbeta(:,:)
 !      dwfc(ngw,ldmx),             ! the derivative of the atomic d wfc
-!      betapsi(nh,n),              ! <beta|evc>
-!      dbetapsi(nh,n),             ! <dbeta|evc>
+!      betapsi(n,nh),              ! <evc|beta>
+!      dbetapsi(n,nh),             ! <evc|dbeta>
 !      wfcbeta(n_atomic_wfc,nh),   ! <wfc|beta>
 !      wfcdbeta(n_atomic_wfc,nh),  ! <wfc|dbeta>
 
       ldim = 2 * Hubbard_l(alpha_s) + 1
-      allocate ( dwfc(ngw,ldim),betapsi(nh(alpha_s),n))
-      allocate ( dbetapsi(nh(alpha_s),n),                               &
-     &           wfcbeta(n_atomic_wfc,nh(alpha_s)))
-      allocate (wfcdbeta(n_atomic_wfc,nh(alpha_s)) )
       dproj(:,:)=0.d0
 !
 ! At first the derivative of the atomic wfc is computed
 !
-      allocate(gk(ngw))
-      allocate(temp(ngw))
-!
       if (Hubbard_U(alpha_s).ne.0.d0) then
-!
+         !
+         allocate ( dwfc(ngw,ldim) )
+         allocate ( gk(ngw) )
+         !
          do ig=1,ngw
             gk(ig)=g(ipol,ig)*tpiba 
             do m1=1,ldim
@@ -733,40 +728,52 @@ end function set_Hubbard_l
             CALL dger( n, ldim, -1.0_DP, spsi, 2*ngw, dwfc, 2*ngw, &
                        dproj(1,offset+1), n )
          call mp_sum( dproj, intra_bgrp_comm )
+         !
+         deallocate (gk)
+         deallocate (dwfc)
+         !
       end if
+      !
+      allocate (  betapsi(n,nh(alpha_s)) )
+      allocate ( dbetapsi(n,nh(alpha_s)) )
+      allocate (  wfcbeta(n_atomic_wfc,nh(alpha_s)) )
+      allocate ( wfcdbeta(n_atomic_wfc,nh(alpha_s)) )
+      !
+      wfcbeta (:,:)=0.0_dp
+      wfcdbeta(:,:)=0.0_dp
+      !
       do iv=1,nh(alpha_s)
          inl=ish(alpha_s)+(iv-1)*na(alpha_s)+alpha_a
          do i=1,n
-            betapsi(iv,i)=bp(inl,i)
-            dbetapsi(iv,i)=dbp(inl,i,ipol)
+            betapsi(i,iv)=bp(inl,i)
+            dbetapsi(i,iv)=dbp(inl,i,ipol)
          end do
-         do m=1,n_atomic_wfc
-            wfcbeta(m,iv)=becwfc(inl,m)
-            wfcdbeta(m,iv)=wdb(inl,m,ipol)
-         end do
-      end do
-      do ibnd=1,n
-         do iv=1,nh(alpha_s)
-            do jv=1,nh(alpha_s)
-               do m=1,n_atomic_wfc
-                  dproj(ibnd,m) =                                       &
-     &                        dproj(ibnd,m) + qq(iv,jv,alpha_s) *       &
-     &                         ( wfcdbeta(m,iv)*betapsi(jv,ibnd) +      &
-     &                           wfcbeta(m,iv)*dbetapsi(jv,ibnd) )
-               end do
+         !
+         do jv=1,nh(alpha_s)
+            inl=ish(alpha_s)+(jv-1)*na(alpha_s)+alpha_a
+            do m=1,n_atomic_wfc
+               wfcbeta(m,iv) = wfcbeta(m,iv) + qq(iv,jv,alpha_s)*becwfc(inl,m)
+               wfcdbeta(m,iv)=wfcdbeta(m,iv) + qq(iv,jv,alpha_s)*wdb(inl,m,ipol)
             end do
          end do
       end do
-      deallocate(temp, gk)
+      !
+      do iv=1,nh(alpha_s)
+         do m=1,n_atomic_wfc
+            do ibnd=1,n
+               dproj(ibnd,m) =dproj(ibnd,m) +                           &
+     &                         ( wfcdbeta(m,iv)*betapsi(ibnd,iv) +      &
+     &                           wfcbeta(m,iv)*dbetapsi(ibnd,iv) )
+            end do
+         end do
+      end do
+      !
       deallocate (betapsi)
-      deallocate (dwfc)
       deallocate (dbetapsi)
       deallocate (wfcbeta)
       deallocate (wfcdbeta)
       return
       end subroutine dprojdtau
-!
-!
 !-----------------------------------------------------------------------
       subroutine stepfn(A,sigma,x_value,g_value,step_value)
 !-----------------------------------------------------------------------
