@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2008 Quantum ESPRESSO group
+! Copyright (C) 2002-2011 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -384,17 +384,6 @@ MODULE read_namelists_module
        fnosee = 1.0_DP
        ampre  = 0.0_DP
        grease = 1.0_DP
-       IF ( prog == 'PW' ) THEN
-          !
-          startingwfc = 'atomic+random'
-          startingpot = 'atomic'
-          !
-       ELSE
-          !
-          startingwfc = 'random'
-          startingpot = ' '
-          !
-       END IF
        conv_thr = 1.E-6_DP
        diis_size = 4
        diis_nreset = 3
@@ -1806,11 +1795,11 @@ MODULE read_namelists_module
           IF ( calculation == 'nscf' .OR. calculation == 'bands'  ) THEN
              !
              startingpot = 'file'
-             startingwfc = 'atomic'
+             startingwfc = 'atomic+random'
              !
           ELSE IF ( restart_mode == "from_scratch" ) THEN
              !
-             startingwfc = 'atomic'
+             startingwfc = 'atomic+random'
              startingpot = 'atomic'
              !
           ELSE
@@ -1819,6 +1808,11 @@ MODULE read_namelists_module
              startingpot = 'file'
              !
           END IF
+          !
+       ELSE IF ( prog == 'CP' ) THEN
+          !
+          startingwfc = 'random'
+          startingpot = ' '
           !
        END IF
        !
