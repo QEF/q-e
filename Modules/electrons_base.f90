@@ -313,7 +313,7 @@
       END IF
 
       IF( nupdwn(1) < nupdwn(2) ) &
-        CALL errore(' electrons_base_initval ',' nupdwn(1) should be greather or equal nupdwn(2) ', 1 )
+        CALL errore(' electrons_base_initval ',' nupdwn(1) should be greater or equal nupdwn(2) ', 1 )
 
       IF( nbnd < nupdwn(1) ) &
         CALL errore(' electrons_base_initval ',' inconsistent nbnd, should be .GE. than  nupdwn(1) ', 1 )
