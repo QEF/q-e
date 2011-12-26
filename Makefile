@@ -91,7 +91,7 @@ gww   : bindir pw ph
 	( cd GWW ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= all ; \
 	else $(MAKE) $(MFLAGS) TLDEPS= all ; fi ) ; fi
 
-ld1 : bindir mods libs
+ld1 : bindir liblapack libblas mods libs
 	if test -d atomic ; then \
 	( cd atomic ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= all ; \
 	else $(MAKE) $(MFLAGS) TLDEPS= all ; fi ) ; fi
