@@ -1279,8 +1279,8 @@ MODULE pw_restart
       USE symm_base,        ONLY : nsym
       USE gvect,            ONLY : ngm_g, ecutrho
       USE fft_base,         ONLY : dfftp
-      USE gvecs,          ONLY : ngms_g, dual
-      USE fft_base,         ONLY: dffts
+      USE gvecs,            ONLY : ngms_g, dual
+      USE fft_base,         ONLY : dffts
       USE lsda_mod,         ONLY : lsda
       USE noncollin_module, ONLY : noncolin
       USE ktetra,           ONLY : ntetra
@@ -1447,6 +1447,7 @@ MODULE pw_restart
       CALL mp_bcast( nsp,        ionode_id, intra_image_comm )
       CALL mp_bcast( nsym,       ionode_id, intra_image_comm )
       CALL mp_bcast( ecutwfc,    ionode_id, intra_image_comm )
+      CALL mp_bcast( ecutrho,    ionode_id, intra_image_comm )
       CALL mp_bcast( dual,       ionode_id, intra_image_comm )
       CALL mp_bcast( npwx_,      ionode_id, intra_image_comm )
       CALL mp_bcast( gamma_only, ionode_id, intra_image_comm )
@@ -1957,12 +1958,12 @@ MODULE pw_restart
     SUBROUTINE read_planewaves( dirname, ierr )
       !------------------------------------------------------------------------
       !
-      USE gvect,   ONLY : ngm_g, ecutrho
-      USE gvecs, ONLY : ngms_g, dual
+      USE gvect,           ONLY : ngm_g, ecutrho
+      USE gvecs,           ONLY : ngms_g, dual
       USE fft_base,        ONLY : dfftp
       USE fft_base,        ONLY : dffts
-      USE wvfct,   ONLY : npwx, g2kin, ecutwfc
-      USE control_flags, ONLY : gamma_only
+      USE wvfct,           ONLY : npwx, g2kin, ecutwfc
+      USE control_flags,   ONLY : gamma_only
       !
       IMPLICIT NONE
       !
@@ -2020,6 +2021,7 @@ MODULE pw_restart
       END IF
       !
       CALL mp_bcast( ecutwfc,    ionode_id, intra_image_comm )
+      CALL mp_bcast( ecutrho,    ionode_id, intra_image_comm )
       CALL mp_bcast( dual,       ionode_id, intra_image_comm )
       CALL mp_bcast( npwx_,      ionode_id, intra_image_comm )
       CALL mp_bcast( gamma_only, ionode_id, intra_image_comm )
