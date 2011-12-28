@@ -60,6 +60,7 @@ subroutine addusdens_g(rho)
   integer :: ig, na, nt, ih, jh, ijh, is
   ! counters
 
+  real(DP) :: tbecsum(nspin_mag)  
   real(DP), allocatable :: qmod (:), ylmk0 (:,:)
   ! the modulus of G
   ! the spherical harmonics
@@ -100,18 +101,24 @@ subroutine addusdens_g(rho)
                  if (ityp (na) .eq.nt) then
                     !
                     !  Multiply becsum and qg with the correct structure factor
+                    tbecsum(:) = becsum(ijh,na,:)
                     !
 #ifdef DEBUG_ADDUSDENS
   call start_clock ('addus:aux')
 #endif
-                    do is = 1, nspin_mag
-                       do ig = 1, ngm
-                          skk = eigts1 (mill (1,ig), na) * &
-                                eigts2 (mill (2,ig), na) * &
-                                eigts3 (mill (3,ig), na)
-                          aux(ig,is)=aux(ig,is) + qgm(ig)*skk*becsum(ijh,na,is)
+
+!$OMP PARALLEL DO DEFAULT(SHARED) PRIVATE(ig, is, skk)
+                    do ig = 1, ngm
+                       skk = eigts1 (mill (1,ig), na) * &
+                             eigts2 (mill (2,ig), na) * &
+                             eigts3 (mill (3,ig), na)
+
+                       do is = 1, nspin_mag
+                          aux(ig,is) = aux(ig,is) + qgm(ig)*skk*tbecsum(is)
                        enddo
                     enddo
+!$OMP END PARALLEL DO
+
 #ifdef DEBUG_ADDUSDENS
   call stop_clock ('addus:aux')
 #endif
