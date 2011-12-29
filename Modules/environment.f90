@@ -5,6 +5,7 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+!
 !==-----------------------------------------------------------------------==!
 MODULE environment
   !==-----------------------------------------------------------------------==!
@@ -77,9 +78,9 @@ CONTAINS
        ! ... one processor per image (other than meta_ionode)
        ! ... or, for debugging purposes, all processors,
        ! ... open their own standard output file
-#  if defined (DEBUG)
+#if defined(DEBUG)
        debug = .true.
-#  endif
+#endif
        IF (me_image == root_image .OR. debug ) THEN
           uname = 'out.' // trim(int_to_char( my_image_id )) // '_' // &
                trim(int_to_char( me_image))
@@ -93,6 +94,8 @@ CONTAINS
     CALL opening_message( code_version )
 #ifdef __PARA
     CALL parallel_info ( )
+#else
+    CALL serial_info()
 #endif
   END SUBROUTINE environment_start
 
@@ -167,12 +170,12 @@ CONTAINS
 
   !==-----------------------------------------------------------------------==!
   SUBROUTINE parallel_info ( )
-
-#if defined __OPENMP
+    !
+#if defined(__OPENMP)
     INTEGER, EXTERNAL :: omp_get_max_threads
 #endif
-
-#if defined __OPENMP
+    !
+#if defined(__OPENMP)
     WRITE( stdout, '(/5X,"Parallel version (MPI & OpenMP), running on ",&
          &I5," processor cores")' ) nproc * omp_get_max_threads()
     !
@@ -194,9 +197,27 @@ CONTAINS
     IF ( nproc_pool > 1 ) WRITE( stdout, &
          '(5X,"R & G space division:  proc/pool = ",I4)' ) nproc_pool
     IF ( get_ntask_groups() > 1 ) WRITE( stdout, &
-         '(5X,"wavefunctions fft division:  fft/group = ",I4)' ) get_ntask_groups()
+         '(5X,"wavefunctions fft division:  fft/group = ",I4)' ) &
+         get_ntask_groups()
     !
   END SUBROUTINE parallel_info
+
+  !==-----------------------------------------------------------------------==!
+  SUBROUTINE serial_info ( )
+    !
+#if defined(__OPENMP)
+    INTEGER, EXTERNAL :: omp_get_max_threads
+#endif
+    !
+#if defined(__OPENMP)
+    WRITE( stdout, '(/5X,"Serial multi-threaded version, running on ",&
+         &I3," processor cores")' ) omp_get_max_threads()
+    !
+#else
+    WRITE( stdout, '(/5X,"Serial version")' )
+#endif
+    !
+  END SUBROUTINE serial_info
   !==-----------------------------------------------------------------------==!
 END MODULE environment
 !==-----------------------------------------------------------------------==!
