@@ -269,8 +269,8 @@ END SUBROUTINE PAW_potential
 !!! As rho_ddot in mix_rho for radial grids
 !!
 FUNCTION PAW_ddot(bec1,bec2)
-    USE constants,         ONLY : pi
-    USE noncollin_module,  ONLY : nspin_lsda
+    USE constants,         ONLY : e2, pi
+    USE noncollin_module,  ONLY : nspin_lsda, nspin_mag
     USE lsda_mod,          ONLY : nspin
     USE ions_base,         ONLY : nat, ityp
     USE atom,              ONLY : g => rgrid
@@ -290,6 +290,7 @@ FUNCTION PAW_ddot(bec1,bec2)
 
     ! hartree energy scalar fields expanded on Y_lm
     REAL(DP), ALLOCATABLE   :: rho_lm(:,:,:) ! radial density expanded on Y_lm
+    REAL(DP), ALLOCATABLE   :: rho_lm_save(:,:,:) ! radial density expanded on Y_lm
     REAL(DP), ALLOCATABLE   :: v_lm(:,:)     ! hartree potential, summed on spins (from bec1)
     !
     REAL(DP)                :: i_sign        ! +1 for AE, -1 for PS
@@ -313,6 +314,7 @@ FUNCTION PAW_ddot(bec1,bec2)
     !
     ifpaw: IF (upf(i%t)%tpawp) THEN
         !
+        IF (nspin_mag>1) ALLOCATE(rho_lm_save(i%m,i%l**2,nspin))
         ALLOCATE(rho_lm(i%m,i%l**2,nspin))
         ALLOCATE(v_lm(i%m,i%l**2))
         !
@@ -325,6 +327,7 @@ FUNCTION PAW_ddot(bec1,bec2)
                 CALL PAW_rho_lm(i, bec1, upf(i%t)%paw%ptfunc, rho_lm, upf(i%t)%qfuncl)
                 i_sign = -1._dp
             ENDIF
+            IF (nspin_mag>1) rho_lm_save=rho_lm
             !
             ! Compute the hartree potential from bec1
             CALL PAW_h_potential(i, rho_lm, v_lm)
@@ -348,11 +351,45 @@ FUNCTION PAW_ddot(bec1,bec2)
                 PAW_ddot = PAW_ddot + i_sign * integral * 0.5_DP
                 !
             ENDDO
+            IF (nspin_mag==2) THEN
+               DO lm = 1, i%l**2
+                  ! I can use rho_lm_save as workspace
+                  DO k = 1, i%m
+                      rho_lm_save(k,lm,1) = (rho_lm_save(k,lm,1)- &
+                      rho_lm_save(k,lm,2)) * (rho_lm(k,lm,1)-rho_lm(k,lm,2))
+                  ENDDO
+                  CALL simpson (upf(i%t)%kkbeta,rho_lm_save(:,lm,1),&
+                                                g(i%t)%rab,integral)
+                  !
+                  ! Sum all the energies in PAW_ddot
+                  PAW_ddot = PAW_ddot + i_sign * integral * 0.5_DP* e2/pi
+                  !
+               ENDDO
+
+            ELSEIF (nspin_mag==4) THEN
+               DO lm = 1, i%l**2
+                  ! I can use rho_lm_save as workspace
+                  DO k = 1, i%m
+                      rho_lm_save(k,lm,1) = &
+                         rho_lm_save(k,lm,2)*rho_lm(k,lm,2)+ &
+                         rho_lm_save(k,lm,3)*rho_lm(k,lm,3)+ &
+                         rho_lm_save(k,lm,4)*rho_lm(k,lm,4)
+                  ENDDO
+                  CALL simpson (upf(i%t)%kkbeta,rho_lm_save(:,lm,1),&
+                                                g(i%t)%rab,integral)
+                  !
+                  ! Sum all the energies in PAW_ddot
+                  PAW_ddot = PAW_ddot + i_sign * integral * 0.5_DP *e2 /pi
+                  !
+               ENDDO
+
+            ENDIF
+
         ENDDO whattodo
         !
         DEALLOCATE(v_lm)
         DEALLOCATE(rho_lm)
-        !
+        IF (nspin_mag>1) DEALLOCATE(rho_lm_save)
     ENDIF ifpaw
     ENDDO atoms
 
