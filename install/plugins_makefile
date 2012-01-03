@@ -8,7 +8,6 @@
 
 include ../make.sys
 include plugins_list
-W90=wannier90-latest
 PLUMED=PLUMED-latest
 GIPAW=qe-gipaw-latest
 #
@@ -52,20 +51,24 @@ epw:
 # wannier90
 ###########################################################
 
-w90: test-w90 uncompress-w90 configure-w90
+w90: uncompress-w90 configure-w90
 	if test -d ../W90; then \
 	cd ../W90; $(MAKE) all; cd ../bin; ln -fs ../W90/wannier90.x . ; fi
-#	-(cd ../bin; ln -fs ../W90/wannier90.x .)
+	-(cd ../bin; ln -fs ../W90/wannier90.x .)
 	touch make-w90
-test-w90: touch-dummy
-	@(if test ! -e ../archive/$(W90).tar.gz && test ! -d ../W90; then \
-	echo "The release contains no Wannier90 package"; fi) 
-	touch ./test-w90
 uncompress-w90: touch-dummy
-	if (test -e archive/$(W90).tar.gz) || (test ! -d ../W90); then \
-	( gzip -dc ../archive/$(W90).tar.gz | (cd ../; tar -xvf -)) ; \
-	( cd ../; ln -s wannier90* W90; cd install) ; fi
-	touch ./uncompress-w90
+	@(if test ! -e ../archive/$(W90).tar.gz && test ! -d ../W90 ; then \
+	wget -O ../archive/$(W90).tar.gz $(W90_URL) > /dev/null 2>&1; \
+	if test "`echo $$?`" -ne "0" ; then \
+	curl -o ../archive/$(W90).tar.gz $(W90_URL) > /dev/null 2>&1; \
+	if test "`echo $$?`" -ne "0" ; then \
+	echo "unable to download wannier90. Test whether curl or wget is installed in your computer." ; \
+	fi ; fi ; fi) 
+	if test ! -d ../W90; then \
+	(gzip -dc ../archive/$(W90).tar.gz | (cd ../ ; tar -xvf -)) ; \
+	(cd ../ ; ln -s $(W90) W90) ; fi 
+	touch uncompress-w90
+
 configure-w90: touch-dummy
 	cd ../W90 ; \
 	if (test -e ../install/make_wannier90.sys) || (test -d ../W90); then \
@@ -84,13 +87,13 @@ uncompress-want: touch-dummy
 	@(if test ! -e ../archive/$(WANT).tar.gz && test ! -d ../WANT ; then \
 	wget -O ../archive/$(WANT).tar.gz $(WANT_URL) > /dev/null 2>&1; \
 	if test "`echo $$?`" -ne "0" ; then \
-	curl -o ../archive/$(WANT) $(WANT_URL) > /dev/null 2>&1; \
+	curl -o ../archive/$(WANT).tar.gz $(WANT_URL) > /dev/null 2>&1; \
 	if test "`echo $$?`" -ne "0" ; then \
 	echo "unable to download want. Test whether curl or wget is installed in your computer." ; \
 	fi ; fi ; fi) 
 	if test ! -d ../WANT; then \
 	(gzip -dc ../archive/$(WANT).tar.gz | (cd ../ ; tar -xvf -)) ; \
-	(cd ../ ; ln -s want* WANT) ; fi 
+	(cd ../ ; ln -s $(WANT) WANT) ; fi 
 	touch uncompress-want
 
 configure-want: touch-dummy
@@ -130,13 +133,13 @@ uncompress-yambo: touch-dummy
 	@(if test ! -e ../archive/$(YAMBO).tar.gz && test ! -d ../YAMBO ; then \
 	wget -O ../archive/$(YAMBO).tar.gz $(YAMBO_URL) > /dev/null 2>&1; \
 	if test "`echo $$?`" -ne "0" ; then \
-	curl -o ../archive/$(YAMBO) $(YAMBO_URL) > /dev/null 2>&1; \
+	curl -o ../archive/$(YAMBO).tar.gz $(YAMBO_URL) > /dev/null 2>&1; \
 	if test "`echo $$?`" -ne "0" ; then \
 	echo "unable to download yambo. Test whether curl or wget is installed in your computer." ; \
 	fi ; fi ; fi) 
 	if test ! -d ../YAMBO; then \
 	(gzip -dc ../archive/$(YAMBO).tar.gz | (cd ../ ; tar -xvf -)) ; \
-	(cd ../ ; ln -s yambo* YAMBO) ; fi 
+	(cd ../ ; ln -s $(YAMBO) YAMBO) ; fi 
 	touch uncompress-yambo
 
 configure-yambo: touch-dummy
@@ -210,7 +213,7 @@ w90_clean:
 	rm -rf ./make-w90 ./configure-w90
 w90_veryclean: w90_clean
 	if test -d ../W90; then (rm -R -f ../W90); fi
-	if test -d ../wannier90*; then (rm -R -f ../wannier90*); fi
+	if test -d ../$(W90); then (rm -R -f ../$(W90)); fi
 	rm -f ../bin/wannier90.x
 	rm -rf ./make-w90 ./configure-w90 ./uncompress-w90
 want_clean:
@@ -220,7 +223,7 @@ want_clean:
 
 want_veryclean: want_clean
 	if test -d ../WANT; then (rm -R -f ../WANT); fi
-	if test -d ../want*; then (rm -R -f ../want*); fi
+	if test -d ../$(WANT); then (rm -R -f ../$(WANT)); fi
 	- rm -rf ./make-want ./configure-want ./uncompress-want
 yambo_clean:
 	if test -d ../YAMBO; then (cd ../YAMBO; \
@@ -229,7 +232,7 @@ yambo_clean:
 
 yambo_veryclean: yambo_clean
 	if test -d ../YAMBO; then (rm -R -f ../YAMBO); fi
-	if test -d ../yambo*; then (rm -R -f ../yambo*); fi
+	if test -d ../$(YAMBO); then (rm -R -f ../$(YAMBO)); fi
 	- rm -rf ./make-yambo ./configure-yambo ./uncompress-yambo
 plumed_clean:
 	if test -d ../PLUMED; then (cd ../PLUMED; \
