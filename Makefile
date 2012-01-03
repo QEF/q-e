@@ -137,17 +137,15 @@ bindir :
 #############################################################
 # Targets for external libraries
 ############################################################
-libblas:
-	if test -e extlibs/archive/blas-1.tar.gz ; then \
-	( cd extlibs ; $(MAKE) $(MFLAGS) $@) ; fi
+libblas : touch-dummy
+	cd install ; $(MAKE) $(MFLAGS) -f extlibs_makefile $@
 
-liblapack:
-	if test -e extlibs/archive/lapack-3.2.tar.gz ; then \
-	( cd extlibs ; $(MAKE) $(MFLAGS) $@) ; fi
+liblapack: touch-dummy
+	cd install ; $(MAKE) $(MFLAGS) -f extlibs_makefile $@
 
-libiotk:
-	if test -e extlibs/archive/iotk-1.2.beta.tar.gz ; then \
-	( cd extlibs ; $(MAKE) $(MFLAGS) $@) ; fi
+libiotk: touch-dummy
+	cd install ; $(MAKE) $(MFLAGS) -f extlibs_makefile $@
+
 # In case of trouble with iotk and compilers, add
 # FFLAGS="$(FFLAGS_NOOPT)" after $(MFLAGS)
 
@@ -218,8 +216,8 @@ clean :
 
 # remove configuration files too
 distclean veryclean : clean
-	- test -d extlibs && ( cd extlibs ; $(MAKE) veryclean)
-	- rm -rf make.sys
+	- @(cd install ; $(MAKE) $(MFLAGS) -f plugins_makefile veryclean)
+	- @(cd install ; $(MAKE) $(MFLAGS) -f extlibs_makefile veryclean)
 	- rm -rf install/patch-plumed
 	- cd install ; rm -f config.log configure.msg config.status autom4te.cache \
 	CPV/version.h ChangeLog* intel.pcl */intel.pcl
@@ -231,6 +229,7 @@ distclean veryclean : clean
 	    test -d $$dir && ( cd $$dir ; $(MAKE) $(MFLAGS) TLDEPS= clean ) \
 	done
 	- test -d GUI && ( cd GUI ;  $(MAKE) $(MFLAGS) TLDEPS= veryclean )
+	- rm -rf make.sys
 
 tar :
 	@if test -f espresso.tar.gz ; then /bin/rm espresso.tar.gz ; fi

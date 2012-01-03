@@ -24,9 +24,9 @@ fake_blas_external :
 
 libblas_internal:
 	if test ! -d ../BLAS; then \
-	( gzip -dc archive/blas-1.tar.gz |(cd ../; tar -xvf -)); fi
-	if test -e install/make_blas.inc; then \
-	(cp install/make_blas.inc ../BLAS/make.inc; \
+	( gzip -dc ../archive/blas-1.tar.gz |(cd ../; tar -xvf -)); fi
+	if test -e make_blas.inc; then \
+	(cp make_blas.inc ../BLAS/make.inc; \
 	cd ../BLAS; $(MAKE) $(BLASLIB)); else \
         (echo "no configuration file found for blas"; \
 	echo "run configure from main QE dir"); fi
@@ -42,21 +42,21 @@ fake_lapack_external :
 
 liblapack_internal:
 	if test ! -d ../lapack-3.2; then \
-	( gzip -dc archive/lapack-3.2.tar.gz | (cd ../; tar -xvf -)); fi
-	if test -e install/make_lapack.inc; then \
-	(cp install/make_lapack.inc ../lapack-3.2/make.inc; \
-	cp install/Makefile_lapack ../lapack-3.2/SRC/Makefile; \
-        cp install/Makefile_lapack_testing_lin ../lapack-3.2/TESTING/LIN/Makefile; \
+	( gzip -dc ../archive/lapack-3.2.tar.gz | (cd ../; tar -xvf -)); fi
+	if test -e make_lapack.inc; then \
+	(cp make_lapack.inc ../lapack-3.2/make.inc; \
+	cp Makefile_lapack ../lapack-3.2/SRC/Makefile; \
+        cp Makefile_lapack_testing_lin ../lapack-3.2/TESTING/LIN/Makefile; \
 	cd ../lapack-3.2; $(MAKE) lapacklib); else \
         (echo "no configuration file found for lapack"; \
         echo "run configure from main QE dir"); fi
 libiotk:
 	if test ! -d ../S3DE; then \
-	(gzip -dc archive/iotk-1.2.beta.tar.gz | (cd ../; tar -xvf -)) ; \
-	if test -e install/Makefile_iotk; then \
-        (cp install/Makefile_iotk ../S3DE/iotk/src/Makefile); fi; \
-	if test -e install/iotk_config.h; then \
-	(cp install/iotk_config.h ../S3DE/iotk/include/iotk_config.h); fi; fi
+	(gzip -dc ../archive/iotk-1.2.beta.tar.gz | (cd ../; tar -xvf -)) ; \
+	if test -e Makefile_iotk; then \
+        (cp Makefile_iotk ../S3DE/iotk/src/Makefile); fi; \
+	if test -e iotk_config.h; then \
+	(cp iotk_config.h ../S3DE/iotk/include/iotk_config.h); fi; fi
 	cd ../S3DE/iotk/src; $(MAKE) lib+util; 
 	cd ../bin; ln -fs ../S3DE/iotk/tools/iotk .; \
 	ln -fs ../S3DE/iotk/src/iotk.x .; \

@@ -242,7 +242,7 @@ plumed_clean:
 	rm -rf ./make-plumed ./patch-plumed
 plumed_veryclean: plumed_clean
 	if test -d ../PLUMED; then (rm -R -f ../PLUMED); fi
-	rm -rf ./uncompress-plumed
+	rm -rf ./uncompress-plumed ../plumedpatch_qespresso.sh
 
 ##########################################################
 # general cleaning

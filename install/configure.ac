@@ -1963,8 +1963,8 @@ AC_CONFIG_FILES(configure.msg)
 
 AC_CONFIG_FILES(install/make_wannier90.sys)
 
-AC_CONFIG_FILES(extlibs/install/make_blas.inc)
-AC_CONFIG_FILES(extlibs/install/make_lapack.inc)
+AC_CONFIG_FILES(install/make_blas.inc)
+AC_CONFIG_FILES(install/make_lapack.inc)
 
 
 AC_OUTPUT

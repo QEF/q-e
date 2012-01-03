@@ -10416,9 +10416,9 @@ ac_config_files="$ac_config_files configure.msg"
 ac_config_files="$ac_config_files install/make_wannier90.sys"
 
 
-ac_config_files="$ac_config_files extlibs/install/make_blas.inc"
+ac_config_files="$ac_config_files install/make_blas.inc"
 
-ac_config_files="$ac_config_files extlibs/install/make_lapack.inc"
+ac_config_files="$ac_config_files install/make_lapack.inc"
 
 
 
@@ -10979,8 +10979,8 @@ do
     "make.sys") CONFIG_FILES="$CONFIG_FILES make.sys" ;;
     "configure.msg") CONFIG_FILES="$CONFIG_FILES configure.msg" ;;
     "install/make_wannier90.sys") CONFIG_FILES="$CONFIG_FILES install/make_wannier90.sys" ;;
-    "extlibs/install/make_blas.inc") CONFIG_FILES="$CONFIG_FILES extlibs/install/make_blas.inc" ;;
-    "extlibs/install/make_lapack.inc") CONFIG_FILES="$CONFIG_FILES extlibs/install/make_lapack.inc" ;;
+    "install/make_blas.inc") CONFIG_FILES="$CONFIG_FILES install/make_blas.inc" ;;
+    "install/make_lapack.inc") CONFIG_FILES="$CONFIG_FILES install/make_lapack.inc" ;;
 
   *) { { echo "$as_me:$LINENO: error: invalid argument: $ac_config_target" >&5
 echo "$as_me: error: invalid argument: $ac_config_target" >&2;}
