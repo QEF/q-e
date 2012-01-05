@@ -310,7 +310,9 @@ SUBROUTINE setup()
   ! ... iteration of for the first ionic step
   ! ... for subsequent steps ethr is automatically updated in electrons
   !
-  IF ( .NOT. lscf ) THEN
+  IF ( nat==0 ) THEN
+     ethr=1.0D-8
+  ELSE IF ( .NOT. lscf ) THEN
      !
      IF ( ethr == 0.D0 ) ethr = 0.1D0 * MIN( 1.D-2, tr2 / nelec )
      !
@@ -337,15 +339,6 @@ SUBROUTINE setup()
         !
      END IF
      !
-  END IF
-  !
-  IF (nat==0) THEN
-     ethr=1.0D-8
-!
-!  In this case, print the Hartree-Fock energy of free electrons per cell
-!  (not per electron).
-!
-     CALL set_dft_from_name('sla-noc-nogx-nogc')
   END IF
   !
   IF ( .NOT. lscf ) niter = 1
@@ -483,15 +476,15 @@ SUBROUTINE setup()
      CALL find_sym ( nat, tau, ityp, dfftp%nr1, dfftp%nr2, dfftp%nr3, &
                   magnetic_sym, m_loc )
      !
-     ! ... Input k-points are assumed to be  given in the IBZ of the Bravais
-     ! ... lattice, with the full point symmetry of the lattice.
-     ! ... If some symmetries of the lattice are missing in the crystal,
-     ! ... "irreducible_BZ" computes the missing k-points.
-     !
-     IF ( .NOT. lbands ) CALL irreducible_BZ (nrot, s, nsym, time_reversal, &
-                            magnetic_sym, at, bg, npk, nkstot, xk, wk, t_rev)
-     !
   END IF
+  !
+  ! ... Input k-points are assumed to be  given in the IBZ of the Bravais
+  ! ... lattice, with the full point symmetry of the lattice.
+  ! ... If some symmetries of the lattice are missing in the crystal,
+  ! ... "irreducible_BZ" computes the missing k-points.
+  !
+  IF ( .NOT. lbands ) CALL irreducible_BZ (nrot, s, nsym, time_reversal, &
+                            magnetic_sym, at, bg, npk, nkstot, xk, wk, t_rev)
   !
   ! ... if dynamics is done the system should have no symmetries
   ! ... (inversion symmetry alone is allowed)
