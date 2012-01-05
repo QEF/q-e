@@ -55,7 +55,7 @@ SUBROUTINE rdiaghg( n, m, h, s, ldh, e, v )
   IF ( me_bgrp == root_bgrp ) THEN
 #else
   IF ( me_pool == root_pool ) THEN
-#endif§
+#endif
      !
      ! ... save the diagonal of input S (it will be overwritten)
      !
