@@ -54,6 +54,7 @@ SUBROUTINE force_hub(forceh)
    IF (U_projection .NE. "atomic") CALL errore("force_hub", &
                    " forces for this U_projection_type not implemented",1)
 
+   call start_clock('force_hub')
    ldim= 2 * Hubbard_lmax + 1
    ALLOCATE ( dns(ldim,ldim,nspin,nat), spsi(npwx,nbnd) )
    call allocate_bec_type ( nkb, nbnd, becp) 
@@ -67,7 +68,6 @@ SUBROUTINE force_hub(forceh)
    !
    IF (nks > 1) REWIND (iunigk)
    DO ik = 1, nks
-
       IF (lsda) current_spin = isk(ik)
       !
       ! now we need the first derivative of proj with respect to tau(alpha,ipol)
@@ -297,7 +297,7 @@ SUBROUTINE dprojdtau_k (wfcatom, spsi, alpha, ipol, offset, dproj)
    USE uspp,                 ONLY : nkb, vkb, qq
    USE uspp_param,           ONLY : nhm, nh
    USE wavefunctions_module, ONLY : evc
-   USE becmod,               ONLY : bec_type, becp
+   USE becmod,               ONLY : bec_type, becp, calbec
    USE mp_global,            ONLY : intra_pool_comm
    USE mp,                   ONLY : mp_sum
    
@@ -314,30 +314,27 @@ SUBROUTINE dprojdtau_k (wfcatom, spsi, alpha, ipol, offset, dproj)
    !
    INTEGER :: ig, jkb2, na, m1, ibnd, iwf, nt, ih, jh, ldim
    REAL (DP) :: gvec
-   COMPLEX (DP), EXTERNAL :: zdotc
-   COMPLEX (DP), ALLOCATABLE :: dwfc(:,:), work(:), dbeta(:), &
-                                     betapsi(:,:), dbetapsi(:,:), &
-                                     wfatbeta(:,:), wfatdbeta(:,:)
+   COMPLEX (DP), ALLOCATABLE :: dwfc(:,:), dbeta(:,:), &
+                                betapsi(:,:), dbetapsi(:,:), &
+                                wfatbeta(:,:), wfatdbeta(:,:)
    !      dwfc(npwx,ldim),       ! the derivative of the atomic d wfc
-   !      work(npwx),            ! the beta function
-   !      dbeta(npwx),           ! the derivative of the beta function
+   !      dbeta(npwx,nhm),       ! the derivative of the beta function
    !      betapsi(nhm,nbnd),     ! <beta|evc>
    !      dbetapsi(nhm,nbnd),    ! <dbeta|evc>
    !      wfatbeta(natomwfc,nhm),! <wfc|beta>
    !      wfatdbeta(natomwfc,nhm)! <wfc|dbeta>
 
+   call start_clock('dprojdtau')
    nt = ityp(alpha)
 
    ldim = 2 * Hubbard_l(nt) + 1
-
-   ALLOCATE ( dwfc(npwx,ldim), work(npwx), dbeta(npwx), betapsi(nhm,nbnd), &
-         dbetapsi(nhm,nbnd), wfatbeta(natomwfc,nhm), wfatdbeta(natomwfc,nhm) )
 
    dproj(:,:) = (0.d0, 0.d0)
    !
    ! At first the derivatives of the atomic wfc and the beta are computed
    !
    IF (Hubbard_U(nt) /= 0.d0 .OR. Hubbard_alpha(nt) /= 0.d0) THEN
+      ALLOCATE ( dwfc(npwx,ldim) )
       DO ig = 1,npw
          gvec = g(ipol,igk(ig)) * tpiba
 
@@ -353,8 +350,9 @@ SUBROUTINE dprojdtau_k (wfcatom, spsi, alpha, ipol, offset, dproj)
       CALL ZGEMM('C','N',ldim, nbnd, npw, (1.d0,0.d0), &
                   dwfc, npwx, spsi, npwx, (0.d0,0.d0), &
                   dproj(offset+1,1), natomwfc)
-   END IF
 
+      DEALLOCATE ( dwfc ) 
+   END IF
 #ifdef __PARA
    CALL mp_sum( dproj, intra_pool_comm )
 #endif
@@ -363,48 +361,70 @@ SUBROUTINE dprojdtau_k (wfcatom, spsi, alpha, ipol, offset, dproj)
    DO nt=1,ntyp
       DO na=1,nat
          IF ( ityp(na) .EQ. nt ) THEN
+         IF ( na.EQ.alpha ) THEN
+            ALLOCATE (dbetapsi(nh(nt),nbnd) ) 
+            ALLOCATE (wfatdbeta(natomwfc,nh(nt)) )
+            ALLOCATE ( wfatbeta(natomwfc,nh(nt)) )
+            ALLOCATE ( dbeta(npwx,nh(nt)) )
             DO ih=1,nh(nt)
-               jkb2 = jkb2 + 1
-               IF (na.EQ.alpha) THEN
-                  DO ig = 1, npw
-                     gvec = g(ipol,igk(ig)) * tpiba
-                     dbeta(ig) = (0.d0,-1.d0) * vkb(ig,jkb2) * gvec
-                     work(ig) = vkb(ig,jkb2)
-                  END DO
-                  DO ibnd=1,nbnd
-                     dbetapsi(ih,ibnd)= zdotc(npw,dbeta,1,evc(1,ibnd),1)
-                     betapsi(ih,ibnd) = becp%k(jkb2,ibnd)
-                  END DO
-                  DO iwf=1,natomwfc
-                     wfatbeta(iwf,ih) = zdotc(npw,wfcatom(1,iwf),1,work,1)
-                     wfatdbeta(iwf,ih)= zdotc(npw,wfcatom(1,iwf),1,dbeta,1)
-                  END DO
-               END IF
+               DO ig = 1, npw
+                  gvec = g(ipol,igk(ig)) * tpiba
+                  dbeta(ig,ih) = (0.d0,-1.d0) * vkb(ig,jkb2+ih) * gvec
+               END DO
             END DO
-#ifdef __PARA
-            CALL mp_sum( dbetapsi, intra_pool_comm )
-            CALL mp_sum( wfatbeta, intra_pool_comm )
-            CALL mp_sum( wfatdbeta, intra_pool_comm )
-#endif
-            IF (na.EQ.alpha) THEN
+            CALL calbec ( npw, dbeta, evc, dbetapsi ) 
+            CALL calbec ( npw, wfcatom, dbeta, wfatdbeta ) 
+            DO ih=1,nh(nt)
+               DO ig = 1, npw
+                  dbeta(ig,ih) = vkb(ig,jkb2+ih)
+               END DO
+            END DO
+            CALL calbec ( npw, wfcatom, dbeta, wfatbeta ) 
+            DEALLOCATE ( dbeta )
+            ! calculate \sum_j qq(i,j)*dbetapsi(j)
+            ! betapsi is used here as work space 
+            ALLOCATE ( betapsi(nh(nt), nbnd) ) 
+            betapsi(:,:) = (0.0_dp, 0.0_dp)
+            DO ih=1,nh(nt)
                DO ibnd=1,nbnd
-                  DO ih=1,nh(nt)
-                     DO jh=1,nh(nt)
-                        DO iwf=1,natomwfc
-                           dproj(iwf,ibnd) = &
-                               dproj(iwf,ibnd) + qq(ih,jh,nt) *         &
-                               ( wfatdbeta(iwf,ih)*betapsi(jh,ibnd) +   &
-                                  wfatbeta(iwf,ih)*dbetapsi(jh,ibnd) )
-                        END DO
-                     END DO
+                  DO jh=1,nh(nt)
+                      betapsi(ih,ibnd) = betapsi(ih,ibnd) + &
+                                         qq(ih,jh,nt) * dbetapsi(jh,ibnd)
                   END DO
                END DO
-            END IF
+            END DO
+            dbetapsi(:,:) = betapsi(:,:)
+            ! calculate \sum_j qq(i,j)*betapsi(j)
+            betapsi(:,:) = (0.0_dp, 0.0_dp)
+            DO ih=1,nh(nt)
+               DO ibnd=1,nbnd
+                  DO jh=1,nh(nt)
+                      betapsi(ih,ibnd) = betapsi(ih,ibnd) + &
+                                         qq(ih,jh,nt) * becp%k(jkb2+jh,ibnd)
+                  END DO
+               END DO
+            END DO
+            !
+            DO ibnd=1,nbnd
+               DO ih=1,nh(nt)
+                  DO iwf=1,natomwfc
+                      dproj(iwf,ibnd) = dproj(iwf,ibnd) +            &
+                            ( wfatdbeta(iwf,ih)*betapsi(ih,ibnd) +   &
+                               wfatbeta(iwf,ih)*dbetapsi(ih,ibnd) )
+                  END DO
+               END DO
+            END DO
+            DEALLOCATE ( betapsi )
+            DEALLOCATE ( wfatbeta ) 
+            DEALLOCATE (wfatdbeta )
+            DEALLOCATE (dbetapsi )
+         END IF
+         jkb2 = jkb2 + nh(nt)
          END IF
       END DO
    END DO
 
-   DEALLOCATE ( dwfc, work, dbeta, betapsi, dbetapsi, wfatbeta, wfatdbeta )
+   call stop_clock('dprojdtau')
 
    RETURN
 END SUBROUTINE dprojdtau_k
@@ -429,7 +449,7 @@ SUBROUTINE dprojdtau_gamma (wfcatom, spsi, alpha, ipol, offset, dproj)
    USE uspp,                 ONLY : nkb, vkb, qq
    USE uspp_param,           ONLY : nhm, nh
    USE wavefunctions_module, ONLY : evc
-   USE becmod,               ONLY : bec_type, becp
+   USE becmod,               ONLY : bec_type, becp, calbec
    USE mp_global,            ONLY : intra_pool_comm
    USE mp,                   ONLY : mp_sum
    
@@ -446,24 +466,22 @@ SUBROUTINE dprojdtau_gamma (wfcatom, spsi, alpha, ipol, offset, dproj)
    !
    INTEGER :: ig, jkb2, na, m1, ibnd, iwf, nt, ih, jh, ldim
    REAL (DP) :: gvec
-   REAL (DP), EXTERNAL :: ddot
-   COMPLEX (DP), ALLOCATABLE :: dwfc(:,:), work(:), dbeta(:), &
-                                     betapsi(:,:), dbetapsi(:,:), &
-                                     wfatbeta(:,:), wfatdbeta(:,:)
+   COMPLEX (DP), ALLOCATABLE :: dwfc(:,:), dbeta(:,:)
+   REAL (DP), ALLOCATABLE ::    betapsi(:,:), dbetapsi(:,:), &
+                                wfatbeta(:,:), wfatdbeta(:,:)
    !      dwfc(npwx,ldim),       ! the derivative of the atomic d wfc
-   !      work(npwx),            ! the beta function
-   !      dbeta(npwx),           ! the derivative of the beta function
+   !      dbeta(npwx,nhm),       ! the derivative of the beta function
    !      betapsi(nhm,nbnd),     ! <beta|evc>
    !      dbetapsi(nhm,nbnd),    ! <dbeta|evc>
    !      wfatbeta(natomwfc,nhm),! <wfc|beta>
    !      wfatdbeta(natomwfc,nhm)! <wfc|dbeta>
 
+   call start_clock('dprojdtau')
    nt = ityp(alpha)
 
    ldim = 2 * Hubbard_l(nt) + 1
 
-   ALLOCATE ( dwfc(npwx,ldim), work(npwx), dbeta(npwx), betapsi(nhm,nbnd), &
-         dbetapsi(nhm,nbnd), wfatbeta(natomwfc,nhm), wfatdbeta(natomwfc,nhm) )
+   ALLOCATE ( dwfc(npwx,ldim) )
 
    dproj(:,:) = (0.d0, 0.d0)
    !
@@ -485,6 +503,7 @@ SUBROUTINE dprojdtau_gamma (wfcatom, spsi, alpha, ipol, offset, dproj)
       CALL DGEMM('T','N',ldim, nbnd, 2*npw, 2.0_dp,  &
                   dwfc, 2*npwx, spsi, 2*npwx, 0.0_dp,&
                   dproj(offset+1,1), natomwfc)
+      DEALLOCATE ( dwfc ) 
    END IF
 
 #ifdef __PARA
@@ -494,53 +513,70 @@ SUBROUTINE dprojdtau_gamma (wfcatom, spsi, alpha, ipol, offset, dproj)
    DO nt=1,ntyp
       DO na=1,nat
          IF ( ityp(na) .EQ. nt ) THEN
+         IF ( na.EQ.alpha ) THEN
+            ALLOCATE (dbetapsi(nh(nt),nbnd) ) 
+            ALLOCATE (wfatdbeta(natomwfc,nh(nt)) )
+            ALLOCATE ( wfatbeta(natomwfc,nh(nt)) )
+            ALLOCATE ( dbeta(npwx,nh(nt)) )
             DO ih=1,nh(nt)
-               jkb2 = jkb2 + 1
-               IF (na.EQ.alpha) THEN
-                  DO ig = 1, npw
-                     gvec = g(ipol,igk(ig)) * tpiba
-                     dbeta(ig) = (0.d0,-1.d0) * vkb(ig,jkb2) * gvec
-                     work(ig) = vkb(ig,jkb2)
-                  END DO
-                  DO ibnd=1,nbnd
-                     dbetapsi(ih,ibnd)= &
-                        2.0_dp*ddot (2*npw, dbeta, 1, evc(1,ibnd), 1)
-                     betapsi(ih,ibnd) = becp%r(jkb2,ibnd)
-                  END DO
-                  DO iwf=1,natomwfc
-                     wfatbeta(iwf,ih) = &
-                        2.0_dp*ddot (2*npw, wfcatom(1,iwf), 1, work, 1)
-                     IF (gstart == 2) wfatbeta(iwf,ih) = &
-                        wfatbeta(iwf,ih) - wfcatom(1,iwf)*work(1)
-                     wfatdbeta(iwf,ih) =&
-                       2.0_dp*ddot (2*npw, wfcatom(1,iwf), 1,dbeta, 1)
-                  END DO
-               END IF
+               DO ig = 1, npw
+                  gvec = g(ipol,igk(ig)) * tpiba
+                  dbeta(ig,ih) = (0.d0,-1.d0) * vkb(ig,jkb2+ih) * gvec
+               END DO
             END DO
-#ifdef __PARA
-            CALL mp_sum( dbetapsi, intra_pool_comm )
-            CALL mp_sum( wfatbeta, intra_pool_comm )
-            CALL mp_sum( wfatdbeta, intra_pool_comm )
-#endif
-            IF (na.EQ.alpha) THEN
+            CALL calbec ( npw, dbeta, evc, dbetapsi ) 
+            CALL calbec ( npw, wfcatom, dbeta, wfatdbeta ) 
+            DO ih=1,nh(nt)
+               DO ig = 1, npw
+                  dbeta(ig,ih) = vkb(ig,jkb2+ih)
+               END DO
+            END DO
+            CALL calbec ( npw, wfcatom, dbeta, wfatbeta ) 
+            DEALLOCATE ( dbeta )
+            ! calculate \sum_j qq(i,j)*dbetapsi(j)
+            ! betapsi is used here as work space 
+            ALLOCATE ( betapsi(nh(nt), nbnd) ) 
+            betapsi(:,:) = (0.0_dp, 0.0_dp)
+            DO ih=1,nh(nt)
                DO ibnd=1,nbnd
-                  DO ih=1,nh(nt)
-                     DO jh=1,nh(nt)
-                        DO iwf=1,natomwfc
-                           dproj(iwf,ibnd) = &
-                               dproj(iwf,ibnd) + qq(ih,jh,nt) *         &
-                               ( wfatdbeta(iwf,ih)*betapsi(jh,ibnd) +   &
-                                  wfatbeta(iwf,ih)*dbetapsi(jh,ibnd) )
-                        END DO
-                     END DO
+                  DO jh=1,nh(nt)
+                      betapsi(ih,ibnd) = betapsi(ih,ibnd) + &
+                                         qq(ih,jh,nt) * dbetapsi(jh,ibnd)
                   END DO
                END DO
-            END IF
+            END DO
+            dbetapsi(:,:) = betapsi(:,:)
+            ! calculate \sum_j qq(i,j)*betapsi(j)
+            betapsi(:,:) = (0.0_dp, 0.0_dp)
+            DO ih=1,nh(nt)
+               DO ibnd=1,nbnd
+                  DO jh=1,nh(nt)
+                      betapsi(ih,ibnd) = betapsi(ih,ibnd) + &
+                                         qq(ih,jh,nt) * becp%r(jkb2+jh,ibnd)
+                  END DO
+               END DO
+            END DO
+            !
+            DO ibnd=1,nbnd
+               DO ih=1,nh(nt)
+                  DO iwf=1,natomwfc
+                        dproj(iwf,ibnd) = dproj(iwf,ibnd) +           &
+                             ( wfatdbeta(iwf,ih)*betapsi(ih,ibnd) +   &
+                                wfatbeta(iwf,ih)*dbetapsi(ih,ibnd) )
+                  END DO
+               END DO
+            END DO
+            DEALLOCATE ( betapsi )
+            DEALLOCATE ( wfatbeta ) 
+            DEALLOCATE (wfatdbeta )
+            DEALLOCATE (dbetapsi )
+         END IF
+         jkb2 = jkb2 + nh(nt)
          END IF
       END DO
    END DO
 
-   DEALLOCATE ( dwfc, work, dbeta, betapsi, dbetapsi, wfatbeta, wfatdbeta )
+   call stop_clock('dprojdtau')
 
    RETURN
 END SUBROUTINE dprojdtau_gamma
