@@ -1719,9 +1719,9 @@ MODULE pw_restart
             CALL iotk_scan_attr( attr, "tau",    tau(:,i) )
             CALL iotk_scan_attr( attr, "if_pos", if_pos(:,i) )
             !
+            tau(:,i) = tau(:,i) / alat
+            !
          END DO
-         !
-         if (nat > 0) tau(:,:) = tau(:,:) / alat
          !
          CALL iotk_scan_end( iunpun, "IONS" )
          !

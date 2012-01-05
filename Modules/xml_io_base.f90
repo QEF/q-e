@@ -966,7 +966,9 @@ MODULE xml_io_base
          !
          CALL iotk_write_dat( iunpun, "ROTATION", s(:,:,i), COLUMNS=3 )
          CALL iotk_write_dat( iunpun, "FRACTIONAL_TRANSLATION", ft(:,i), COLUMNS=3 )
-         CALL iotk_write_dat( iunpun, "EQUIVALENT_IONS", irt(i,1:nat), COLUMNS=8 )
+         !
+         IF ( nat > 0 ) &
+            CALL iotk_write_dat( iunpun, "EQUIVALENT_IONS", irt(i,1:nat), COLUMNS=8 )
          !
          CALL iotk_write_end( iunpun, "SYMM" // TRIM( iotk_index( i ) ) )
          !

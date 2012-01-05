@@ -59,7 +59,7 @@ SUBROUTINE setup()
   USE ktetra,             ONLY : tetra, ntetra, ltetra
   USE symm_base,          ONLY : s, t_rev, irt, nrot, nsym, invsym, nosym, &
                                  d1,d2,d3, time_reversal, sname, set_sym_bl, &
-                                 find_sym
+                                 find_sym, inverse_s
   USE wvfct,              ONLY : nbnd, nbndx, ecutwfc
   USE control_flags,      ONLY : tr2, ethr, lscf, lmd, david, lecrpa,  &
                                  isolve, niter, noinv, &
@@ -474,6 +474,7 @@ SUBROUTINE setup()
      !
      nsym=nrot
      invsym=.true.
+     CALL inverse_s ( ) 
      !
   ELSE
      !
