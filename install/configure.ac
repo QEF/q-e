@@ -1812,7 +1812,16 @@ fi
        AC_SEARCH_LIBS(pdgemr2d, "" , have_scalapack=1
                       try_dflags="$try_dflags -D__SCALAPACK")
        test "$have_scalapack" -eq 1 && break
-# scalapack + blacs
+# scalapack + blacs, no -L options
+       unset ac_cv_search_pdgemr2d # clear cached value
+       blacs_libs="-lblacs -lblacsF77init -lblacs"
+       scalapack_libs="-lscalapack $blacs_libs"
+       LIBS="$mpi_libs $scalapack_libs"
+       LDFLAGS=""
+       AC_SEARCH_LIBS(pdgemr2d, "" , have_scalapack=1
+                   try_dflags="$try_dflags -D__SCALAPACK")
+       test "$have_scalapack" -eq 1 && break
+# scalapack + blacs with -L options
        unset ac_cv_search_pdgemr2d # clear cached value
        if test "$scalapack_dir" = ""; then scalapack_dir="/bgsys/local/scalapack/lib"; fi
        if test "$blacs_dir" = ""; then blacs_dir="/bgsys/local/blacs/lib"; fi
