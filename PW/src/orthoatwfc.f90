@@ -101,87 +101,74 @@ SUBROUTINE orthoatwfc
      ! write atomic wfc on unit iunat
      !
      CALL davcio (wfcatom, nwordatwfc, iunat, ik, 1)
-     
      CALL init_us_2 (npw, igk, xk (1, ik), vkb)
-     
-     IF ( gamma_only ) THEN 
-        CALL calbec (npw, vkb, wfcatom, becp) 
-     ELSE
-        IF (noncolin) THEN
-           CALL calbec (npw, vkb, wfcatom, becp)
-        ELSE
-           CALL calbec (npw, vkb, wfcatom, becp)
-        END IF
-     ENDIF
-
+     CALL calbec (npw, vkb, wfcatom, becp) 
      CALL s_psi (npwx, npw, natomwfc, wfcatom, swfcatom)
 
-   IF (orthogonalize_wfc) THEN
-     !
-     ! calculate overlap matrix
-     !
-     IF (noncolin) THEN
-        CALL zgemm ('c', 'n', natomwfc, natomwfc, npwx*npol, (1.d0, 0.d0), &
+     IF (orthogonalize_wfc) THEN
+        !
+        ! calculate overlap matrix
+        !
+        IF (noncolin) THEN
+           CALL zgemm ('c', 'n', natomwfc, natomwfc, npwx*npol, (1.d0, 0.d0), &
              wfcatom, npwx*npol, swfcatom, npwx*npol, (0.d0,0.d0), overlap, &
                                                                    natomwfc)
-     ELSE
-         CALL zgemm ('c', 'n', natomwfc, natomwfc, npw, (1.d0, 0.d0), &
+        ELSE
+           CALL zgemm ('c', 'n', natomwfc, natomwfc, npw, (1.d0, 0.d0), &
              wfcatom, npwx, swfcatom, npwx, (0.d0, 0.d0), overlap, natomwfc)
-     END IF
+        END IF
 #ifdef __PARA
 #ifdef __BANDS
-     CALL mp_sum(  overlap, intra_bgrp_comm )
+        CALL mp_sum(  overlap, intra_bgrp_comm )
 #else
-     CALL mp_sum(  overlap, intra_pool_comm )
+        CALL mp_sum(  overlap, intra_pool_comm )
 #endif
 #endif
-     IF (U_projection=="norm-atomic") THEN
-        DO i = 1, natomwfc
-           DO j = i+1, natomwfc
-              overlap(i,j) = CMPLX(0.d0,0.d0, kind=dp)
-              overlap(j,i) = CMPLX(0.d0,0.d0, kind=dp)
+        IF (U_projection=="norm-atomic") THEN
+           DO i = 1, natomwfc
+              DO j = i+1, natomwfc
+                 overlap(i,j) = CMPLX(0.d0,0.d0, kind=dp)
+                 overlap(j,i) = CMPLX(0.d0,0.d0, kind=dp)
+              ENDDO
            ENDDO
-        ENDDO
-     END IF
-     !
-     ! find O^-.5
-     !
-     CALL cdiagh (natomwfc, overlap, natomwfc, e, work)
-     DO i = 1, natomwfc
-        e (i) = 1.d0 / dsqrt (e (i) )
-     ENDDO
-     DO i = 1, natomwfc
-        DO j = i, natomwfc
-           temp = (0.d0, 0.d0)
-           DO k = 1, natomwfc
-              temp = temp + e (k) * work (j, k) * CONJG (work (i, k) )
-           ENDDO
-           overlap (i, j) = temp
-           IF (j.NE.i) overlap (j, i) = CONJG (temp)
-        ENDDO
-     ENDDO
-     !
-     ! trasform atomic orbitals O^-.5 psi
-     !
-     DO i = 1, npw
-        work(:,1) = (0.d0,0.d0)
-        IF (noncolin) THEN
-           DO ipol=1,npol
-              j = i + (ipol-1)*npwx
-              CALL zgemv ('n',natomwfc,natomwfc,(1.d0,0.d0),overlap, &
-                   natomwfc,swfcatom(j,1),npwx*npol, &
-                                       (0.d0,0.d0),work,1)
-              CALL zcopy (natomwfc,work,1,swfcatom(j,1),npwx*npol)
-           END DO
-        ELSE
-           CALL zgemv ('n', natomwfc, natomwfc, (1.d0, 0.d0) , overlap, &
-                natomwfc, swfcatom (i, 1) , npwx, (0.d0, 0.d0) , work, 1)
-           CALL zcopy (natomwfc, work, 1, swfcatom (i, 1), npwx)
         END IF
-     ENDDO
+        !
+        ! find O^-.5
+        !
+        CALL cdiagh (natomwfc, overlap, natomwfc, e, work)
+        DO i = 1, natomwfc
+           e (i) = 1.d0 / dsqrt (e (i) )
+        ENDDO
+        DO i = 1, natomwfc
+           DO j = i, natomwfc
+              temp = (0.d0, 0.d0)
+              DO k = 1, natomwfc
+                 temp = temp + e (k) * work (j, k) * CONJG (work (i, k) )
+              ENDDO
+              overlap (i, j) = temp
+              IF (j.NE.i) overlap (j, i) = CONJG (temp)
+           ENDDO
+        ENDDO
+        !
+        ! trasform atomic orbitals O^-.5 psi
+        !
+        DO i = 1, npw
+           work(:,1) = (0.d0,0.d0)
+           IF (noncolin) THEN
+              DO ipol=1,npol
+                 j = i + (ipol-1)*npwx
+                 CALL zgemv ('n',natomwfc,natomwfc,(1.d0,0.d0),overlap, &
+                      natomwfc,swfcatom(j,1),npwx*npol, (0.d0,0.d0),work,1)
+                 CALL zcopy (natomwfc,work,1,swfcatom(j,1),npwx*npol)
+              END DO
+           ELSE
+              CALL zgemv ('n', natomwfc, natomwfc, (1.d0, 0.d0) , overlap, &
+                   natomwfc, swfcatom (i, 1) , npwx, (0.d0, 0.d0) , work, 1)
+              CALL zcopy (natomwfc, work, 1, swfcatom (i, 1), npwx)
+           END IF
+        ENDDO
         
-   END IF ! orthogonalize_wfc
-
+     END IF ! orthogonalize_wfc
      !
      ! write S * atomic wfc to unit iunsat
      !
