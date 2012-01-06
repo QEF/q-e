@@ -28,11 +28,11 @@ if test "`which curl`" = "" ; then
       echo "wget or curl not found: will not be able to download missing PP"
    else
       WGET="wget -O"
-      echo "wget found"
+      # echo "wget found"
    fi
 else
    WGET="curl -o"
-   echo "curl found"
+   # echo "curl found"
 fi
 
 # To run the ESPRESSO programs on a parallel machine, you may have to
