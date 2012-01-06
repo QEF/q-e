@@ -9,7 +9,7 @@
     starting_magnetization(1)= 0.0,
     starting_magnetization(2)= 0.5,
     starting_magnetization(3)=-0.5,
-    occupations='smearing', smearing='gauss', degauss=0.01,
+    occupations='smearing', smearing='gauss', degauss=0.02,
     nspin=2,
     lda_plus_u=.true.  Hubbard_U(2)=4.3, Hubbard_U(3)=4.3,
  /

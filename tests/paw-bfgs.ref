@@ -1,33 +1,33 @@
 
-     Program PWSCF v.4.3b       starts on 25Mar2011 at  7:47:15 
+     Program PWSCF v.4.99       starts on  6Jan2012 at 11:21: 0 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
          "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
           URL http://www.quantum-espresso.org", 
      in publications or presentations arising from this work. More details at
-     http://www.quantum-espresso.org/wiki/index.php/Citing_Quantum-ESPRESSO
+     http://www.quantum-espresso.org/quote.php
+
+     Serial version
 
      Current dimensions of program PWSCF are:
      Max number of different atomic species (ntypx) = 10
      Max number of k-points (npk) =  40000
      Max angular momentum in pseudopotentials (lmaxx) =  3
-     Waiting for input...
+     Reading input from /home/giannozz/trunk/espresso/tests/paw-bfgs.in
 
      gamma-point specific algorithms are used
  
-   Stick Mesh
-   ----------
-   nst =  1081,  nstw =   274, nsts =  1081
-               n.st   n.stw   n.sts    n.g    n.gw   n.gs
-   min        2161     547    2161   65955    8291   65955
-   max        2161     547    2161   65955    8291   65955
-       2161     547    2161   65955    8291   65955
+     G-vector sticks info
+     --------------------
+     sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
+     Sum        2161    2161    547                65955    65955    8291
+     Tot        1081    1081    274
  
 
 
      bravais-lattice index     =            2
-     lattice parameter (a_0)   =      25.0000  a.u.
+     lattice parameter (alat)  =      25.0000  a.u.
      unit-cell volume          =    3906.2500 (a.u.)^3
      number of atoms/cell      =            3
      number of atomic types    =            2
@@ -38,7 +38,7 @@
      convergence threshold     =      1.0E-06
      mixing beta               =       0.7000
      number of iterations used =            8  plain     mixing
-     Exchange-correlation      =  SLA  PW   PBX  PBC (1434)
+     Exchange-correlation      =  SLA  PW   PBX  PBC ( 1 4 3 4 0)
      EXX-fraction              =        0.00
      nstep                     =           50
 
@@ -46,18 +46,19 @@
      celldm(1)=  25.000000  celldm(2)=   0.000000  celldm(3)=   0.000000
      celldm(4)=   0.000000  celldm(5)=   0.000000  celldm(6)=   0.000000
 
-     crystal axes: (cart. coord. in units of a_0)
+     crystal axes: (cart. coord. in units of alat)
                a(1) = (  -0.500000   0.000000   0.500000 )  
                a(2) = (   0.000000   0.500000   0.500000 )  
                a(3) = (  -0.500000   0.500000   0.000000 )  
 
-     reciprocal axes: (cart. coord. in units 2 pi/a_0)
+     reciprocal axes: (cart. coord. in units 2 pi/alat)
                b(1) = ( -1.000000 -1.000000  1.000000 )  
                b(2) = (  1.000000  1.000000  1.000000 )  
                b(3) = ( -1.000000  1.000000 -1.000000 )  
 
 
-     PseudoPot. # 1 for  O read from file O.pbe-paw_kj.UPF
+     PseudoPot. # 1 for  O read from file:
+     /home/giannozz/trunk/espresso/pseudo/O.pbe-kjpaw.UPF
      MD5 check sum: 90f4868982d1b5f8aada8373f3a0510a
      Pseudo is Projector augmented-wave + core cor, Zval =  6.0
      Generated using "atomic" code by A. Dal Corso (espresso distribution)
@@ -70,7 +71,8 @@
      Q(r) pseudized with 0 coefficients 
 
 
-     PseudoPot. # 2 for  H read from file H.pbe-paw_kj.UPF
+     PseudoPot. # 2 for  H read from file:
+     /home/giannozz/trunk/espresso/pseudo/H.pbe-kjpaw.UPF
      MD5 check sum: b6732a8c2b51919c45a22ac3ed50cb01
      Pseudo is Projector augmented-wave, Zval =  1.0
      Generated using "atomic" code by A. Dal Corso (espresso distribution)
@@ -90,33 +92,34 @@
         O            0.100
         H           -0.100
 
-      4 Sym.Ops. (no inversion)
+      4 Sym. Ops. (no inversion) found
+
 
 
    Cartesian axes
 
-     site n.     atom                  positions (a_0 units)
-         1           H   tau(  1) = (   0.0446536  -0.0583088   0.0000000  )
-         2           H   tau(  2) = (   0.0446536   0.0583088   0.0000000  )
-         3           O   tau(  3) = (  -0.0005072   0.0000000   0.0000000  )
+     site n.     atom                  positions (alat units)
+         1           H   tau(   1) = (   0.0446536  -0.0583088   0.0000000  )
+         2           H   tau(   2) = (   0.0446536   0.0583088   0.0000000  )
+         3           O   tau(   3) = (  -0.0005072   0.0000000   0.0000000  )
 
      number of k points=     2  gaussian smearing, width (Ry)=  0.0050
-                       cart. coord. in units 2pi/a_0
+                       cart. coord. in units 2pi/alat
         k(    1) = (   0.0000000   0.0000000   0.0000000), wk =   1.0000000
         k(    2) = (   0.0000000   0.0000000   0.0000000), wk =   1.0000000
 
-     G cutoff = 1583.1435  (  32978 G-vectors)     FFT grid: ( 60, 60, 60)
+     Dense  grid:    32978 G-vectors     FFT dimensions: (  60,  60,  60)
 
      Largest allocated arrays     est. size (Mb)     dimensions
-        Kohn-Sham Wavefunctions         0.51 Mb     (   4146,   8)
-        NL pseudopotentials             0.76 Mb     (   4146,  12)
+        Kohn-Sham Wavefunctions         0.51 Mb     (   4146,    8)
+        NL pseudopotentials             0.76 Mb     (   4146,   12)
         Each V/rho on FFT grid          6.59 Mb     ( 216000,   2)
         Each G-vector array             0.25 Mb     (  32978)
         G-vector shells                 0.00 Mb     (    530)
      Largest temporary arrays     est. size (Mb)     dimensions
-        Auxiliary wavefunctions         1.01 Mb     (   4146,  32)
-        Each subspace H/S matrix        0.01 Mb     (     32,  32)
-        Each <psi_i|beta_j> matrix      0.00 Mb     (     12,   8)
+        Auxiliary wavefunctions         1.01 Mb     (   4146,   32)
+        Each subspace H/S matrix        0.01 Mb     (  32,  32)
+        Each <psi_i|beta_j> matrix      0.00 Mb     (     12,    8)
         Arrays for rho mixing          26.37 Mb     ( 216000,   8)
 
      Initial potential from superposition of free atoms
@@ -126,111 +129,115 @@
      starting charge    7.99999, renormalised to    8.00000
 
      negative rho (up, down):  0.736E-02 0.681E-02
-     Starting wfc are    6 atomic +    2 random wfc
+     Starting wfc are    6 randomized atomic wfcs
 
-     total cpu time spent up to now is      1.91 secs
+     total cpu time spent up to now is        1.8 secs
 
-     per-process dynamical memory:    47.0 Mb
+     per-process dynamical memory:    52.0 Mb
 
      Self-consistent Calculation
 
      iteration #  1     ecut=    25.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  1.00E-02,  avg # of iterations =  5.0
+     ethr =  1.00E-02,  avg # of iterations =  6.0
 
      negative rho (up, down):  0.120E-01 0.116E-01
 
-     total cpu time spent up to now is      3.20 secs
+     total cpu time spent up to now is        2.8 secs
 
-     total energy              =     -43.79504584 Ry
-     Harris-Foulkes estimate   =     -44.11285405 Ry
-     estimated scf accuracy    <       0.44844063 Ry
+     total energy              =     -43.79412762 Ry
+     Harris-Foulkes estimate   =     -44.11329505 Ry
+     estimated scf accuracy    <       0.44982362 Ry
 
      total magnetization       =     0.00 Bohr mag/cell
      absolute magnetization    =     0.12 Bohr mag/cell
 
      iteration #  2     ecut=    25.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  5.61E-03,  avg # of iterations =  2.0
+     ethr =  5.62E-03,  avg # of iterations =  2.0
 
-     negative rho (up, down):  0.114E-01 0.112E-01
+     negative rho (up, down):  0.115E-01 0.112E-01
 
-     total cpu time spent up to now is      4.34 secs
+     total cpu time spent up to now is        3.7 secs
 
-     total energy              =     -43.87261575 Ry
-     Harris-Foulkes estimate   =     -44.10466917 Ry
-     estimated scf accuracy    <       0.48828674 Ry
+     total energy              =     -43.87263242 Ry
+     Harris-Foulkes estimate   =     -44.10508875 Ry
+     estimated scf accuracy    <       0.48922010 Ry
 
      total magnetization       =     0.00 Bohr mag/cell
-     absolute magnetization    =     0.08 Bohr mag/cell
+     absolute magnetization    =     0.09 Bohr mag/cell
 
      iteration #  3     ecut=    25.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  5.61E-03,  avg # of iterations =  2.0
+     ethr =  5.62E-03,  avg # of iterations =  2.0
 
-     negative rho (up, down):  0.135E-01 0.134E-01
+     negative rho (up, down):  0.134E-01 0.133E-01
 
-     total cpu time spent up to now is      5.46 secs
+     total cpu time spent up to now is        4.7 secs
 
-     total energy              =     -43.97643727 Ry
-     Harris-Foulkes estimate   =     -43.97935003 Ry
-     estimated scf accuracy    <       0.00742767 Ry
+     total energy              =     -43.97646787 Ry
+     Harris-Foulkes estimate   =     -43.97927672 Ry
+     estimated scf accuracy    <       0.00727435 Ry
 
      total magnetization       =     0.00 Bohr mag/cell
      absolute magnetization    =     0.06 Bohr mag/cell
 
      iteration #  4     ecut=    25.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  9.28E-05,  avg # of iterations =  7.5
+     ethr =  9.09E-05,  avg # of iterations =  5.0
 
      negative rho (up, down):  0.131E-01 0.131E-01
 
-     total cpu time spent up to now is      6.81 secs
+     total cpu time spent up to now is        5.7 secs
 
-     total energy              =     -43.97825693 Ry
-     Harris-Foulkes estimate   =     -43.97850592 Ry
-     estimated scf accuracy    <       0.00067675 Ry
+     total energy              =     -43.97825940 Ry
+     Harris-Foulkes estimate   =     -43.97850199 Ry
+     estimated scf accuracy    <       0.00065616 Ry
 
      total magnetization       =     0.00 Bohr mag/cell
      absolute magnetization    =     0.01 Bohr mag/cell
 
      iteration #  5     ecut=    25.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  8.46E-06,  avg # of iterations =  6.5
+     WARNING:     1 eigenvalues not converged in regterg
+     c_bands:  1 eigenvalues not converged
+     WARNING:     1 eigenvalues not converged in regterg
+     c_bands:  1 eigenvalues not converged
+     ethr =  8.20E-06,  avg # of iterations = 20.0
 
      negative rho (up, down):  0.130E-01 0.130E-01
 
-     total cpu time spent up to now is      8.07 secs
+     total cpu time spent up to now is        6.9 secs
 
-     total energy              =     -43.97828044 Ry
-     Harris-Foulkes estimate   =     -43.97829715 Ry
-     estimated scf accuracy    <       0.00007974 Ry
+     total energy              =     -43.97828148 Ry
+     Harris-Foulkes estimate   =     -43.97829755 Ry
+     estimated scf accuracy    <       0.00007798 Ry
 
      total magnetization       =     0.00 Bohr mag/cell
      absolute magnetization    =     0.01 Bohr mag/cell
 
      iteration #  6     ecut=    25.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  9.97E-07,  avg # of iterations =  6.0
+     ethr =  9.75E-07,  avg # of iterations = 15.5
 
      negative rho (up, down):  0.130E-01 0.130E-01
 
-     total cpu time spent up to now is      9.34 secs
+     total cpu time spent up to now is        8.1 secs
 
-     total energy              =     -43.97829534 Ry
-     Harris-Foulkes estimate   =     -43.97829292 Ry
-     estimated scf accuracy    <       0.00000164 Ry
+     total energy              =     -43.97829542 Ry
+     Harris-Foulkes estimate   =     -43.97829297 Ry
+     estimated scf accuracy    <       0.00000161 Ry
 
      total magnetization       =     0.00 Bohr mag/cell
      absolute magnetization    =     0.00 Bohr mag/cell
 
      iteration #  7     ecut=    25.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  2.05E-08,  avg # of iterations =  2.0
+     ethr =  2.01E-08,  avg # of iterations =  2.0
 
      negative rho (up, down):  0.130E-01 0.130E-01
 
-     total cpu time spent up to now is     10.37 secs
+     total cpu time spent up to now is        9.0 secs
 
      End of self-consistent calculation
 
@@ -239,30 +246,30 @@
 
           k = 0.0000 0.0000 0.0000 (  4146 PWs)   bands (ev):
 
-   -25.0563 -12.8493  -9.0709  -7.0271  -1.3048   0.6345   0.9065   1.4938
+   -25.0564 -12.8494  -9.0710  -7.0272  -1.3048   0.6344   0.9065   1.4937
 
  ------ SPIN DOWN ----------
 
 
           k = 0.0000 0.0000 0.0000 (  4146 PWs)   bands (ev):
 
-   -25.0555 -12.8493  -9.0706  -7.0270  -1.3048   0.6343   0.9064   1.4945
+   -25.0557 -12.8494  -9.0707  -7.0271  -1.3048   0.6342   0.9064   1.4941
 
-     the Fermi energy is    -5.0752 ev
+     the Fermi energy is    -5.0755 ev
 
 !    total energy              =     -43.97829666 Ry
-     Harris-Foulkes estimate   =     -43.97829707 Ry
-     estimated scf accuracy    <       0.00000087 Ry
+     Harris-Foulkes estimate   =     -43.97829708 Ry
+     estimated scf accuracy    <       0.00000090 Ry
 
      total all-electron energy =      -152.739043 Ry
 
      The total energy is the sum of the following terms:
 
-     one-electron contribution =     -58.59528526 Ry
-     hartree contribution      =      30.92277231 Ry
-     xc contribution           =      -8.39922884 Ry
+     one-electron contribution =     -58.59533286 Ry
+     hartree contribution      =      30.92282828 Ry
+     xc contribution           =      -8.39923742 Ry
      ewald contribution        =       2.01807976 Ry
-     one-center paw contrib.   =      -9.92463462 Ry
+     one-center paw contrib.   =      -9.92463442 Ry
      smearing contrib. (-TS)   =       0.00000000 Ry
 
      total magnetization       =     0.00 Bohr mag/cell
@@ -274,12 +281,12 @@
 
 
      negative rho (up, down):  0.130E-01 0.130E-01
-     atom   1 type  2   force =     0.00003759    0.00016087    0.00000000
-     atom   2 type  2   force =     0.00003759   -0.00016087    0.00000000
-     atom   3 type  1   force =    -0.00007518    0.00000000    0.00000000
+     atom    1 type  2   force =     0.00004132    0.00016234    0.00000000
+     atom    2 type  2   force =     0.00004132   -0.00016234    0.00000000
+     atom    3 type  1   force =    -0.00008265    0.00000000    0.00000000
 
-     Total force =     0.000245     Total SCF correction =     0.001193
-     SCF correction compared to forces is too large, reduce conv_thr
+     Total force =     0.000251     Total SCF correction =     0.001211
+     SCF correction compared to forces is large: reduce conv_thr to get better values
 
      BFGS Geometry Optimization
 
@@ -288,7 +295,7 @@
 
      End of BFGS Geometry Optimization
 
-     Final energy   =     -43.9782966594 Ry
+     Final energy   =     -43.9782966568 Ry
 Begin final coordinates
 
 ATOMIC_POSITIONS (bohr)
@@ -301,50 +308,50 @@ End final coordinates
 
      Writing output data file pwscf.save
  
-     init_run     :      1.58s CPU      1.62s WALL (       1 calls)
-     electrons    :      8.29s CPU      8.46s WALL (       1 calls)
-     forces       :      0.56s CPU      0.57s WALL (       1 calls)
+     init_run     :      1.44s CPU      1.49s WALL (       1 calls)
+     electrons    :      7.03s CPU      7.22s WALL (       1 calls)
+     forces       :      0.49s CPU      0.50s WALL (       1 calls)
 
      Called by init_run:
-     wfcinit      :      0.10s CPU      0.10s WALL (       1 calls)
-     potinit      :      0.61s CPU      0.64s WALL (       1 calls)
+     wfcinit      :      0.06s CPU      0.06s WALL (       1 calls)
+     potinit      :      0.57s CPU      0.59s WALL (       1 calls)
 
      Called by electrons:
-     c_bands      :      2.45s CPU      2.47s WALL (       7 calls)
-     sum_band     :      1.08s CPU      1.08s WALL (       7 calls)
-     v_of_rho     :      3.27s CPU      3.37s WALL (       8 calls)
-     newd         :      0.39s CPU      0.39s WALL (       8 calls)
-     mix_rho      :      0.31s CPU      0.32s WALL (       7 calls)
+     c_bands      :      1.97s CPU      1.98s WALL (       7 calls)
+     sum_band     :      0.73s CPU      0.75s WALL (       7 calls)
+     v_of_rho     :      2.80s CPU      2.90s WALL (       8 calls)
+     newd         :      0.32s CPU      0.33s WALL (       8 calls)
+     mix_rho      :      0.28s CPU      0.29s WALL (       7 calls)
 
      Called by c_bands:
-     init_us_2    :      0.06s CPU      0.06s WALL (      32 calls)
-     regterg      :      2.40s CPU      2.41s WALL (      14 calls)
+     init_us_2    :      0.05s CPU      0.06s WALL (      32 calls)
+     regterg      :      1.92s CPU      1.93s WALL (      14 calls)
 
      Called by *egterg:
-     h_psi        :      2.23s CPU      2.24s WALL (      78 calls)
-     s_psi        :      0.02s CPU      0.01s WALL (      78 calls)
-     g_psi        :      0.04s CPU      0.04s WALL (      62 calls)
-     rdiaghg      :      0.02s CPU      0.02s WALL (      76 calls)
+     h_psi        :      1.62s CPU      1.60s WALL (     121 calls)
+     s_psi        :      0.02s CPU      0.02s WALL (     121 calls)
+     g_psi        :      0.04s CPU      0.05s WALL (     105 calls)
+     rdiaghg      :      0.03s CPU      0.03s WALL (     119 calls)
 
      Called by h_psi:
-     add_vuspsi   :      0.01s CPU      0.01s WALL (      78 calls)
+     add_vuspsi   :      0.04s CPU      0.02s WALL (     121 calls)
 
      General routines
-     calbec       :      0.05s CPU      0.05s WALL (     100 calls)
-     fft          :      1.67s CPU      1.68s WALL (     215 calls)
-     fftw         :      2.07s CPU      2.07s WALL (     452 calls)
+     calbec       :      0.06s CPU      0.06s WALL (     143 calls)
+     fft          :      0.80s CPU      0.82s WALL (     215 calls)
+     fftw         :      1.13s CPU      1.17s WALL (     540 calls)
      davcio       :      0.00s CPU      0.01s WALL (      46 calls)
  
  
      PAW routines
-     PAW_pot      :      1.09s CPU      1.10s WALL (       8 calls)
+     PAW_pot      :      1.21s CPU      1.21s WALL (       8 calls)
      PAW_ddot     :      0.08s CPU      0.08s WALL (      57 calls)
      PAW_symme    :      0.00s CPU      0.00s WALL (      15 calls)
  
-     PWSCF        :    10.79s CPU        11.06s WALL
+     PWSCF        :     9.31s CPU         9.59s WALL
 
  
-   This run was terminated on:   7:47:26  25Mar2011            
+   This run was terminated on:  11:21:10   6Jan2012            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

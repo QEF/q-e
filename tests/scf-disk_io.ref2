@@ -1,5 +1,5 @@
 
-     Program PWSCF v.4.99       starts on  6Jan2012 at 11:28:18 
+     Program PWSCF v.4.99       starts on  6Jan2012 at 12:24:57 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -14,7 +14,7 @@
      Max number of different atomic species (ntypx) = 10
      Max number of k-points (npk) =  40000
      Max angular momentum in pseudopotentials (lmaxx) =  3
-     Reading input from /home/giannozz/trunk/espresso/tests/scf.in2
+     Reading input from /home/giannozz/trunk/espresso/tests/scf-disk_io.in2
 
      Atomic positions and unit cell read from directory:
      /home/giannozz/trunk/espresso/tmp/pwscf.save/
@@ -109,7 +109,7 @@
 
      total cpu time spent up to now is        0.2 secs
 
-     per-process dynamical memory:     1.1 Mb
+     per-process dynamical memory:     1.0 Mb
 
      Band Structure Calculation
      Davidson diagonalization with overlap
@@ -180,23 +180,24 @@
      cegterg      :      0.12s CPU      0.12s WALL (      10 calls)
 
      Called by *egterg:
-     h_psi        :      0.06s CPU      0.06s WALL (     150 calls)
-     g_psi        :      0.00s CPU      0.01s WALL (     130 calls)
+     h_psi        :      0.05s CPU      0.06s WALL (     150 calls)
+     g_psi        :      0.01s CPU      0.01s WALL (     130 calls)
      cdiaghg      :      0.04s CPU      0.04s WALL (     140 calls)
 
      Called by h_psi:
      add_vuspsi   :      0.00s CPU      0.00s WALL (     150 calls)
 
      General routines
-     calbec       :      0.01s CPU      0.00s WALL (     150 calls)
+     calbec       :      0.00s CPU      0.00s WALL (     150 calls)
      fft          :      0.00s CPU      0.00s WALL (       3 calls)
-     fftw         :      0.05s CPU      0.05s WALL (    1618 calls)
+     fftw         :      0.04s CPU      0.05s WALL (    1618 calls)
+     davcio       :      0.00s CPU      0.00s WALL (      10 calls)
  
  
-     PWSCF        :     0.32s CPU         0.33s WALL
+     PWSCF        :     0.34s CPU         0.35s WALL
 
  
-   This run was terminated on:  11:28:18   6Jan2012            
+   This run was terminated on:  12:24:58   6Jan2012            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

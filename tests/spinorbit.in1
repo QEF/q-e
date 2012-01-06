@@ -8,7 +8,7 @@
     occupations='tetrahedra', 
     ecutwfc =30.0,
     ecutrho =250.0,
-    nbnd = 12
+    nbnd = 16
  /
  &electrons
  /
