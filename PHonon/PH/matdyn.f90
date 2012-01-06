@@ -1770,7 +1770,7 @@ SUBROUTINE gen_qpoints (ibrav, at_, bg_, nat, tau, ityp, nk1, nk2, nk3, &
   IF (ntetra /= 6 * nk1 * nk2 * nk3) &
        CALL errore ('gen_qpoints','inconsistent ntetra',1)
   !
-  CALL tetrahedra (nsym, s, time_reversal, at, bg, nqx, 0, 0, 0, &
+  CALL tetrahedra (nsym, s, time_reversal, t_rev, at, bg, nqx, 0, 0, 0, &
        nk1, nk2, nk3, nq, q, wk, ntetra, tetra)
   !
   RETURN

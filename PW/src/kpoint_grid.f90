@@ -148,21 +148,22 @@ SUBROUTINE kpoint_grid ( nrot, time_reversal, skip_equivalence, s, t_rev, &
 END SUBROUTINE kpoint_grid
 !
 !-----------------------------------------------------------------------
-SUBROUTINE tetrahedra ( nsym, s, minus_q, at, bg, npk, k1,k2,k3, &
-     nk1,nk2,nk3, nks, xk, wk, ntetra, tetra )
+SUBROUTINE tetrahedra ( nsym, s, time_reversal, t_rev, at, bg, npk, &
+     k1,k2,k3, nk1,nk2,nk3, nks, xk, wk, ntetra, tetra )
   !-----------------------------------------------------------------------
   !
   ! Tetrahedron method according to P. E. Bloechl et al, PRB49, 16223 (1994)
   !
   USE kinds, ONLY: DP
   IMPLICIT NONE
-  ! INPUT:
-  INTEGER nks, nsym, s(3,3,48), npk, k1, k2, k3, nk1, nk2, nk3, ntetra
-  LOGICAL minus_q
-  real(DP) :: at(3,3), bg(3,3), xk(3,npk), wk(npk)
-  ! OUTPUT:
-  INTEGER tetra(4,ntetra)
-  ! LOCAL:
+  ! 
+  INTEGER, INTENT(IN):: nks, nsym, t_rev(48), s(3,3,48), npk, &
+                        k1, k2, k3, nk1, nk2, nk3, ntetra
+  LOGICAL, INTENT (IN) :: time_reversal
+  real(DP), INTENT(IN) :: at(3,3), bg(3,3), xk(3,npk), wk(npk)
+  !
+  INTEGER, INTENT(OUT) :: tetra(4,ntetra)
+  ! 
   real(DP) :: xkr(3), deltap(3), deltam(3)
   real(DP), PARAMETER:: eps=1.0d-5
   real(DP), ALLOCATABLE :: xkg(:,:)
@@ -204,6 +205,7 @@ SUBROUTINE tetrahedra ( nsym, s, minus_q, at, bg, npk, k1,k2,k3, &
                        s(i,2,ns) * xk(2,n) + &
                        s(i,3,ns) * xk(3,n)
            ENDDO
+           IF(t_rev(ns)==1) xkr = -xkr
            !  xkr is the n-th irreducible k-point rotated wrt the ns-th symmetry
            DO i=1,3
               deltap(i) = xkr(i)-xkg(i,nk) - nint (xkr(i)-xkg(i,nk) )
@@ -213,7 +215,7 @@ SUBROUTINE tetrahedra ( nsym, s, minus_q, at, bg, npk, k1,k2,k3, &
            !  deltam is the same but with k => -k (for time reversal)
            IF ( sqrt ( deltap(1)**2 + &
                        deltap(2)**2 + &
-                       deltap(3)**2 ) < eps .or. ( minus_q .and. &
+                       deltap(3)**2 ) < eps .or. ( time_reversal .and. &
                 sqrt ( deltam(1)**2 +  &
                        deltam(2)**2 +  &
                        deltam(3)**2 ) < eps ) ) THEN

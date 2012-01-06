@@ -14,8 +14,8 @@ Incompatible changes in svn version:
 
 Fixed in svn version
 
-   * PW: tetrahedra were not yet working in the +noncolinear case!
-     I hope this time they are fized for good.
+   * PW: tetrahedra were not working with magnetic symmetries, 
+     and not yet working in the noncolinear case as well.
    * Velocity rescaling in variable-cell MD wasn't really working
    * Workaround for frequent crashes in PAW with vc-relax
    * In some cases spin-polarized HSE was yielding NaN's
