@@ -670,6 +670,18 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
           }
       }
 
+       var use_all_frac -type LOGICAL { 
+           default { .FALSE. }
+           info {
+               if (.TRUE.) do not discard symmetry operations with an
+               associated fractionary translation that does not send the
+               real-space FFT grid into itself. These operations are 
+               incompatible with real-space symmetrization but not with the
+               new G-space symmetrization. BEWARE: do not use for phonons!
+               The phonon code still uses real-space symmetrization.
+          }
+      }
+
 	var occupations -type CHARACTER {
 	    info {
 		'smearing':     gaussian smearing for metals
