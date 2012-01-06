@@ -1,8 +1,8 @@
 #!/bin/sh
 
-# Automated checks for pw.x - PG 2007-2011
+# Automated checks for pw.x - PG 2007-2012
 #
-. ../examples/environment_variables
+. ../../examples/environment_variables
 #
 # You shouldn't need to modify anything below this line.
 #
@@ -36,7 +36,7 @@
 # taken from examples - not sure it is really needed
 if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
 
-ESPRESSO_ROOT=`cd .. ; pwd`
+ESPRESSO_ROOT=`cd ../../ ; pwd`
 ESPRESSO_TMPDIR=$ESPRESSO_ROOT/tmp/
 ESPRESSO_PSEUDO=$ESPRESSO_ROOT/pseudo/
 
@@ -232,7 +232,7 @@ do
   # run the code in the scratch directory
   #
   cd $ESPRESSO_TMPDIR
-  $PARA_PREFIX $ESPRESSO_ROOT/bin/pw.x $PARA_POSTFIX \
+  $PARA_PREFIX $ESPRESSO_ROOT/PW/src//pw.x $PARA_POSTFIX \
         -inp $TESTDIR/$name.in > $TESTDIR/$name.out
   if test $? != 0; then
      $ECHO "FAILED with error condition!"
@@ -266,7 +266,7 @@ do
      # run the code in the scratch directory
      #
      cd $ESPRESSO_TMPDIR
-     $PARA_PREFIX $ESPRESSO_ROOT/bin/pw.x $PARA_POSTFIX \
+     $PARA_PREFIX $ESPRESSO_ROOT/PW/src//pw.x $PARA_POSTFIX \
              -inp $TESTDIR/$name.in$n > $TESTDIR/$name.out$n
      if test $? != 0; then
         $ECHO "FAILED with error condition!"
