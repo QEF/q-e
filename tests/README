@@ -50,7 +50,7 @@ relax2    Al       forces in metals
 scf       Si fcc   davidson and cg diagonalizations
                    simple, TF, local-TF mixing, ndim=4,8
                    Gamma, automatic, list of k-points (tpiba, crystal, tpiba_b)
-                   wf_collect and disk_io options
+                   wf_collect, disk_io, force_symmorphic, use_all_frac options
                    stress with k-points and at Gamma
                    non-scf calculation
                    old "ncpp" format for pseudopotentials
