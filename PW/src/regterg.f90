@@ -28,7 +28,6 @@ SUBROUTINE regterg( npw, npwx, nvec, nvecx, evc, ethr, &
   USE mp,            ONLY : mp_sum 
   USE realus,        ONLY :  real_space, fft_orbital_gamma, initialisation_level,&
                              bfft_orbital_gamma, calbec_rs_gamma, s_psir_gamma
-  USE wvfct,         ONLY : nbnd
   USE control_flags, ONLY : gamma_only
   !
   IMPLICIT NONE
