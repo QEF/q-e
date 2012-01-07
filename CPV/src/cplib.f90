@@ -153,7 +153,7 @@
 
       SUBROUTINE cutoffs_print_info()
 
-        !  Print out informations about different cut-offs
+        !  Print out information about different cut-offs
 
         USE gvecw, ONLY: ecutwfc,  gcutw
         USE gvect, ONLY: ecutrho,  gcutm

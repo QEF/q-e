@@ -400,7 +400,7 @@ end subroutine write_upf_atomic
   subroutine write_pseudo_addinfo (ounps)  
 !---------------------------------------------------------------------
 !
-!     This routine writes the additional informations needed for the
+!     This routine writes the additional information needed for the
 !     fully relativistic pseudo-potential in the new UPF file
 !
     use ld1inc, only : nwfts, elts, nnts, llts, jjts, octs, nbeta, &
@@ -430,7 +430,7 @@ end subroutine write_pseudo_addinfo
   subroutine write_pseudo_gipaw (ounps)
 !---------------------------------------------------------------------
 !
-!     This routine writes the additional informations needed for GIPAW
+!     This routine writes the additional information needed for GIPAW
 !
     IMPLICIT NONE
     integer,intent(in) :: ounps

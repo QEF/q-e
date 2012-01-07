@@ -153,7 +153,7 @@ SUBROUTINE summary()
   !
   IF ( do_comp_esm )  CALL esm_summary()
 
-  IF ( lelfield ) THEN !here informations for berry's phase el. fields calculations
+  IF ( lelfield ) THEN !here information for berry's phase el. fields calculations
      WRITE(stdout, *)
      WRITE(stdout, '("     Using Berry phase electric field")')
      if(.not.l3dstring) then
@@ -192,7 +192,7 @@ SUBROUTINE summary()
   CALL print_ps_info ( )
   !
   !
-  ! ... print the vdw table informations if needed
+  ! ... print the vdw table information if needed
   CALL print_vdw_info ()
   !
   WRITE( stdout, '(/5x, "atomic species   valence    mass     pseudopotential")')

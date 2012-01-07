@@ -22,7 +22,7 @@ MODULE path_io_units_module
     dat_file      = 'os.dat',    &! file containing the enegy profile
     int_file      = 'os.int',    &! file containing the interpolated energy profile
     crd_file      = 'os.crd',    &! file containing path coordinates in pw.x input format
-    path_file     = 'os.path',   &! file containing informations needed to restart a path simulation
+    path_file     = 'os.path',   &! file containing information needed to restart a path simulation
     xyz_file      = 'os.xyz',    &! file containing coordinates of all images in xyz format
     axsf_file     = 'os.axsf',   &! file containing coordinates of all images in axsf format
     broy_file     = 'os.broyden'  ! file containing broyden's history

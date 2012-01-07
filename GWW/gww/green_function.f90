@@ -61,7 +61,7 @@
       TYPE(green) :: gr!the green function on output
       TYPE(wannier_u) :: wu!data on U and e_i
       REAL(kind=DP) :: time!imaginary time
-      LOGICAL :: debug!if true print debug informations on stdout
+      LOGICAL :: debug!if true print debug information on stdout
       LOGICAL :: zero_time_neg!if true and time==0, the negative form is forced
       LOGICAL, INTENT(in) :: l_hf_energies!if true uses HF energies
       REAL(kind=DP), INTENT(in) :: ene_hf(:)
@@ -164,7 +164,7 @@
       TYPE(green) :: gr!the green function on output
       TYPE(wannier_u) :: wu!data on U and e_i
       REAL(kind=DP) :: time!imaginary time
-      LOGICAL :: debug!if true print debug informations on stdout
+      LOGICAL :: debug!if true print debug information on stdout
       LOGICAL :: zero_time_neg!if true and time==0, the negative form is forced
       LOGICAL, INTENT(in) :: l_hf_energies!if true uses HF energies
       REAL(kind=DP), INTENT(in) :: ene_hf(:)

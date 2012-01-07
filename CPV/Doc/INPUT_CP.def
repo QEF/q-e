@@ -269,7 +269,7 @@ input_description -distribution {Quantum Espresso} -package CP -program cp.x {
                'high', 'default'
 
                'high': CP code will write Kohn-Sham wf files and additional
-                       informations in data-file.xml in order to restart
+                       information in data-file.xml in order to restart
                        with a PW calculation or to use postprocessing tools.
 	    }
 	}
