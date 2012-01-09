@@ -1,0 +1,591 @@
+#!/bin/sh
+
+# run from directory where this script is
+cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
+EXAMPLE_DIR=`pwd`
+
+# check whether echo has the -e option
+if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
+
+# function to test the exit status of a job
+. ../../../examples/check_failure.sh
+
+$ECHO
+$ECHO "$EXAMPLE_DIR : starting"
+$ECHO
+$ECHO "This example shows how to use pw.x to calculate the total energy and"
+$ECHO "the band structure of four simple systems: Si, Al, Cu, Ni."
+
+# set the needed environment variables
+cd ../
+. ../../examples/environment_variables
+cd example01
+
+# required executables and pseudopotentials
+BIN_LIST="pw.x"
+PSEUDO_LIST="Si.pz-vbc.UPF Al.pz-vbc.UPF Cu.pz-d-rrkjus.UPF Ni.pz-nd-rrkjus.UPF"
+
+$ECHO
+$ECHO "  executables directory: $BIN_DIR"
+$ECHO "  pseudo directory:      $PSEUDO_DIR"
+$ECHO "  temporary directory:   $TMP_DIR"
+$ECHO "  checking that needed directories and files exist...\c"
+
+# check for directories
+for DIR in "$BIN_DIR" "$PSEUDO_DIR" ; do
+    if test ! -d $DIR ; then
+        $ECHO
+        $ECHO "ERROR: $DIR not existent or not a directory"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+for DIR in "$TMP_DIR" "$EXAMPLE_DIR/results" ; do
+    if test ! -d $DIR ; then
+        mkdir $DIR
+    fi
+done
+cd $EXAMPLE_DIR/results
+
+# check for executables
+for FILE in $BIN_LIST ; do
+    if test ! -x $BIN_DIR/$FILE ; then
+        $ECHO
+        $ECHO "ERROR: $BIN_DIR/$FILE not existent or not executable"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+
+# check for pseudopotentials
+for FILE in $PSEUDO_LIST ; do
+    if test ! -r $PSEUDO_DIR/$FILE ; then
+       $ECHO
+       $ECHO "Downloading $FILE to $PSEUDO_DIR...\c"
+            $WGET $PSEUDO_DIR/$FILE \
+                http://www.quantum-espresso.org/pseudo/1.3/UPF/$FILE 2> /dev/null 
+    fi
+    if test $? != 0; then
+        $ECHO
+        $ECHO "ERROR: $PSEUDO_DIR/$FILE not existent or not readable"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+$ECHO " done"
+
+# how to run executables
+PW_COMMAND="$PARA_PREFIX $BIN_DIR/pw.x $PARA_POSTFIX"
+$ECHO
+$ECHO "  running pw.x as: $PW_COMMAND"
+$ECHO
+
+for diago in david cg ; do
+
+    # clean TMP_DIR
+    $ECHO "  cleaning $TMP_DIR...\c"
+    rm -rf $TMP_DIR/*
+    $ECHO " done"
+
+    # self-consistent calculation
+    cat > si.scf.$diago.in << EOF
+ &control
+    calculation = 'scf'
+    restart_mode='from_scratch',
+    prefix='silicon',
+    tstress = .true.
+    tprnfor = .true.
+    pseudo_dir = '$PSEUDO_DIR/',
+    outdir='$TMP_DIR/'
+ /
+ &system
+    ibrav=  2, celldm(1) =10.20, nat=  2, ntyp= 1,
+    ecutwfc =18.0,
+ /
+ &electrons
+    diagonalization='$diago'
+    mixing_mode = 'plain'
+    mixing_beta = 0.7
+    conv_thr =  1.0d-8
+ /
+ATOMIC_SPECIES
+ Si  28.086  Si.pz-vbc.UPF
+ATOMIC_POSITIONS
+ Si 0.00 0.00 0.00
+ Si 0.25 0.25 0.25
+K_POINTS
+  10
+   0.1250000  0.1250000  0.1250000   1.00
+   0.1250000  0.1250000  0.3750000   3.00
+   0.1250000  0.1250000  0.6250000   3.00
+   0.1250000  0.1250000  0.8750000   3.00
+   0.1250000  0.3750000  0.3750000   3.00
+   0.1250000  0.3750000  0.6250000   6.00
+   0.1250000  0.3750000  0.8750000   6.00
+   0.1250000  0.6250000  0.6250000   3.00
+   0.3750000  0.3750000  0.3750000   1.00
+   0.3750000  0.3750000  0.6250000   3.00
+EOF
+    $ECHO "  running the scf calculation for Si...\c"
+    $PW_COMMAND < si.scf.$diago.in > si.scf.$diago.out
+    check_failure $?
+    $ECHO " done"
+
+    # band structure calculation along delta, sigma and lambda lines
+    cat > si.band.$diago.in << EOF
+ &control
+    calculation='bands'
+    pseudo_dir = '$PSEUDO_DIR/',
+    outdir='$TMP_DIR/',
+    prefix='silicon'
+ /
+ &system
+    ibrav=  2, celldm(1) =10.20, nat=  2, ntyp= 1,
+    ecutwfc =18.0, nbnd = 8,
+ /
+ &electrons
+    diagonalization='$diago'
+ /
+ATOMIC_SPECIES
+ Si  28.086  Si.pz-vbc.UPF
+ATOMIC_POSITIONS
+ Si 0.00 0.00 0.00
+ Si 0.25 0.25 0.25
+K_POINTS
+ 28
+   0.0 0.0 0.0 1.0
+   0.0 0.0 0.1 1.0
+   0.0 0.0 0.2 1.0
+   0.0 0.0 0.3 1.0
+   0.0 0.0 0.4 1.0
+   0.0 0.0 0.5 1.0
+   0.0 0.0 0.6 1.0
+   0.0 0.0 0.7 1.0
+   0.0 0.0 0.8 1.0
+   0.0 0.0 0.9 1.0
+   0.0 0.0 1.0 1.0
+   0.0 0.0 0.0 1.0
+   0.0 0.1 0.1 1.0
+   0.0 0.2 0.2 1.0
+   0.0 0.3 0.3 1.0
+   0.0 0.4 0.4 1.0
+   0.0 0.5 0.5 1.0
+   0.0 0.6 0.6 1.0
+   0.0 0.7 0.7 1.0
+   0.0 0.8 0.8 1.0
+   0.0 0.9 0.9 1.0
+   0.0 1.0 1.0 1.0
+   0.0 0.0 0.0 1.0
+   0.1 0.1 0.1 1.0
+   0.2 0.2 0.2 1.0
+   0.3 0.3 0.3 1.0
+   0.4 0.4 0.4 1.0
+   0.5 0.5 0.5 1.0
+EOF
+    $ECHO "  running the band-structure calculation for Si...\c"
+    $PW_COMMAND < si.band.$diago.in > si.band.$diago.out
+    check_failure $?
+    $ECHO " done"
+
+    # clean TMP_DIR
+    $ECHO "  cleaning $TMP_DIR...\c"
+    rm -rf $TMP_DIR/*
+    $ECHO " done"
+
+    # self-consistent calculation
+    cat > al.scf.$diago.in << EOF
+ &control
+    calculation='scf'
+    restart_mode='from_scratch',
+    pseudo_dir = '$PSEUDO_DIR/',
+    outdir='$TMP_DIR/',
+    prefix='al'
+    tprnfor = .true.
+    tstress = .true.
+ /
+ &system
+    ibrav=  2, celldm(1) =7.50, nat=  1, ntyp= 1, ecutwfc =15.0,
+    occupations='smearing', smearing='marzari-vanderbilt', degauss=0.05
+ /
+ &electrons
+    diagonalization='$diago'
+    mixing_beta = 0.7
+ /
+ATOMIC_SPECIES
+ Al  26.98 Al.pz-vbc.UPF
+ATOMIC_POSITIONS
+ Al 0.00 0.00 0.00
+K_POINTS
+  60
+   0.0625000  0.0625000  0.0625000   1.00
+   0.0625000  0.0625000  0.1875000   3.00
+   0.0625000  0.0625000  0.3125000   3.00
+   0.0625000  0.0625000  0.4375000   3.00
+   0.0625000  0.0625000  0.5625000   3.00
+   0.0625000  0.0625000  0.6875000   3.00
+   0.0625000  0.0625000  0.8125000   3.00
+   0.0625000  0.0625000  0.9375000   3.00
+   0.0625000  0.1875000  0.1875000   3.00
+   0.0625000  0.1875000  0.3125000   6.00
+   0.0625000  0.1875000  0.4375000   6.00
+   0.0625000  0.1875000  0.5625000   6.00
+   0.0625000  0.1875000  0.6875000   6.00
+   0.0625000  0.1875000  0.8125000   6.00
+   0.0625000  0.1875000  0.9375000   6.00
+   0.0625000  0.3125000  0.3125000   3.00
+   0.0625000  0.3125000  0.4375000   6.00
+   0.0625000  0.3125000  0.5625000   6.00
+   0.0625000  0.3125000  0.6875000   6.00
+   0.0625000  0.3125000  0.8125000   6.00
+   0.0625000  0.3125000  0.9375000   6.00
+   0.0625000  0.4375000  0.4375000   3.00
+   0.0625000  0.4375000  0.5625000   6.00
+   0.0625000  0.4375000  0.6875000   6.00
+   0.0625000  0.4375000  0.8125000   6.00
+   0.0625000  0.4375000  0.9375000   6.00
+   0.0625000  0.5625000  0.5625000   3.00
+   0.0625000  0.5625000  0.6875000   6.00
+   0.0625000  0.5625000  0.8125000   6.00
+   0.0625000  0.6875000  0.6875000   3.00
+   0.0625000  0.6875000  0.8125000   6.00
+   0.0625000  0.8125000  0.8125000   3.00
+   0.1875000  0.1875000  0.1875000   1.00
+   0.1875000  0.1875000  0.3125000   3.00
+   0.1875000  0.1875000  0.4375000   3.00
+   0.1875000  0.1875000  0.5625000   3.00
+   0.1875000  0.1875000  0.6875000   3.00
+   0.1875000  0.1875000  0.8125000   3.00
+   0.1875000  0.3125000  0.3125000   3.00
+   0.1875000  0.3125000  0.4375000   6.00
+   0.1875000  0.3125000  0.5625000   6.00
+   0.1875000  0.3125000  0.6875000   6.00
+   0.1875000  0.3125000  0.8125000   6.00
+   0.1875000  0.4375000  0.4375000   3.00
+   0.1875000  0.4375000  0.5625000   6.00
+   0.1875000  0.4375000  0.6875000   6.00
+   0.1875000  0.4375000  0.8125000   6.00
+   0.1875000  0.5625000  0.5625000   3.00
+   0.1875000  0.5625000  0.6875000   6.00
+   0.1875000  0.6875000  0.6875000   3.00
+   0.3125000  0.3125000  0.3125000   1.00
+   0.3125000  0.3125000  0.4375000   3.00
+   0.3125000  0.3125000  0.5625000   3.00
+   0.3125000  0.3125000  0.6875000   3.00
+   0.3125000  0.4375000  0.4375000   3.00
+   0.3125000  0.4375000  0.5625000   6.00
+   0.3125000  0.4375000  0.6875000   6.00
+   0.3125000  0.5625000  0.5625000   3.00
+   0.4375000  0.4375000  0.4375000   1.00
+   0.4375000  0.4375000  0.5625000   3.00
+EOF
+    $ECHO "  running the scf calculation for Al...\c"
+    $PW_COMMAND < al.scf.$diago.in > al.scf.$diago.out
+    check_failure $?
+    $ECHO " done"
+
+    # band structure calculation along delta, sigma and lambda lines
+    cat > al.band.$diago.in << EOF
+ &control
+    calculation='bands'
+    pseudo_dir = '$PSEUDO_DIR/',
+    outdir='$TMP_DIR/'
+    prefix='al'
+ /
+ &system
+    ibrav= 2, celldm(1) =7.50, nat=  1, ntyp= 1,
+    ecutwfc =15.0, nbnd = 8
+ /
+ &electrons
+    diagonalization='$diago'
+ /
+ATOMIC_SPECIES
+ Al  26.98 Al.pz-vbc.UPF
+ATOMIC_POSITIONS
+ Al 0.00 0.00 0.00
+K_POINTS
+ 28
+   0.0 0.0 0.0 1.0
+   0.0 0.0 0.1 1.0
+   0.0 0.0 0.2 1.0
+   0.0 0.0 0.3 1.0
+   0.0 0.0 0.4 1.0
+   0.0 0.0 0.5 1.0
+   0.0 0.0 0.6 1.0
+   0.0 0.0 0.7 1.0
+   0.0 0.0 0.8 1.0
+   0.0 0.0 0.9 1.0
+   0.0 0.0 1.0 1.0
+   0.0 0.0 0.0 1.0
+   0.0 0.1 0.1 1.0
+   0.0 0.2 0.2 1.0
+   0.0 0.3 0.3 1.0
+   0.0 0.4 0.4 1.0
+   0.0 0.5 0.5 1.0
+   0.0 0.6 0.6 1.0
+   0.0 0.7 0.7 1.0
+   0.0 0.8 0.8 1.0
+   0.0 0.9 0.9 1.0
+   0.0 1.0 1.0 1.0
+   0.0 0.0 0.0 1.0
+   0.1 0.1 0.1 1.0
+   0.2 0.2 0.2 1.0
+   0.3 0.3 0.3 1.0
+   0.4 0.4 0.4 1.0
+   0.5 0.5 0.5 1.0
+EOF
+    $ECHO "  running the band-structure calculation for Al...\c"
+    $PW_COMMAND < al.band.$diago.in > al.band.$diago.out
+    check_failure $?
+    $ECHO " done"
+
+    # clean TMP_DIR
+    $ECHO "  cleaning $TMP_DIR...\c"
+    rm -rf $TMP_DIR/*
+    $ECHO " done"
+
+    # self-consistent calculation
+    cat > cu.scf.$diago.in << EOF
+ &control
+    calculation='scf'
+    restart_mode='from_scratch',
+    pseudo_dir = '$PSEUDO_DIR/',
+    outdir='$TMP_DIR/'
+    prefix='cu'
+    tstress = .true.
+    tprnfor = .true.
+ /
+ &system
+    ibrav = 2, celldm(1) =6.73, nat= 1, ntyp= 1,
+    ecutwfc = 25.0, ecutrho = 300.0
+    occupations='smearing', smearing='gaussian', degauss=0.02
+ /
+ &electrons
+    diagonalization='$diago'
+    conv_thr = 1.0e-8
+    mixing_beta = 0.7
+ /
+ATOMIC_SPECIES
+ Cu 63.55 Cu.pz-d-rrkjus.UPF
+ATOMIC_POSITIONS
+ Cu 0.0 0.0 0.0
+K_POINTS (automatic)
+ 8 8 8 0 0 0
+EOF
+    $ECHO "  running the scf calculation for Cu...\c"
+    $PW_COMMAND < cu.scf.$diago.in > cu.scf.$diago.out
+    check_failure $?
+    $ECHO " done"
+
+    # band structure calculation along delta, sigma and lambda lines
+    cat > cu.band.$diago.in << EOF
+ &control
+    calculation='bands'
+    pseudo_dir = '$PSEUDO_DIR/',
+    outdir='$TMP_DIR/',
+    prefix='cu'
+ /
+ &system
+    ibrav = 2, celldm(1) =6.73, nat= 1, ntyp= 1,
+    ecutwfc = 25.0, ecutrho = 300.0, nbnd = 8
+ /
+ &electrons
+    diagonalization='$diago'
+ /
+ATOMIC_SPECIES
+ Cu  63.55 Cu.pz-d-rrkjus.UPF
+ATOMIC_POSITIONS
+ Cu 0.0 0.0 0.0
+K_POINTS
+ 28
+   0.0 0.0 0.0 1.0
+   0.0 0.0 0.1 1.0
+   0.0 0.0 0.2 1.0
+   0.0 0.0 0.3 1.0
+   0.0 0.0 0.4 1.0
+   0.0 0.0 0.5 1.0
+   0.0 0.0 0.6 1.0
+   0.0 0.0 0.7 1.0
+   0.0 0.0 0.8 1.0
+   0.0 0.0 0.9 1.0
+   0.0 0.0 1.0 1.0
+   0.0 0.0 0.0 1.0
+   0.0 0.1 0.1 1.0
+   0.0 0.2 0.2 1.0
+   0.0 0.3 0.3 1.0
+   0.0 0.4 0.4 1.0
+   0.0 0.5 0.5 1.0
+   0.0 0.6 0.6 1.0
+   0.0 0.7 0.7 1.0
+   0.0 0.8 0.8 1.0
+   0.0 0.9 0.9 1.0
+   0.0 1.0 1.0 1.0
+   0.0 0.0 0.0 1.0
+   0.1 0.1 0.1 1.0
+   0.2 0.2 0.2 1.0
+   0.3 0.3 0.3 1.0
+   0.4 0.4 0.4 1.0
+   0.5 0.5 0.5 1.0
+EOF
+    $ECHO "  running the band-structure calculation for Cu...\c"
+    $PW_COMMAND < cu.band.$diago.in > cu.band.$diago.out
+    check_failure $?
+    $ECHO " done"
+
+    # clean TMP_DIR
+    $ECHO "  cleaning $TMP_DIR...\c"
+    rm -rf $TMP_DIR/*
+    $ECHO " done"
+
+    # self-consistent calculation
+    cat > ni.scf.$diago.in << EOF
+ &control
+    calculation='scf'
+    restart_mode='from_scratch',
+    pseudo_dir = '$PSEUDO_DIR/',
+    outdir='$TMP_DIR/'
+    prefix='ni'
+    tprnfor = .true.,
+    tstress = .true.
+ /
+ &system
+    ibrav=2, celldm(1) =6.48, nat=1, ntyp=1,
+    nspin = 2,  starting_magnetization(1)=0.7,
+    ecutwfc = 24.0, ecutrho = 288.0,
+    occupations='smearing', smearing='methfessel-paxton', degauss=0.02
+ /
+ &electrons
+    diagonalization='$diago'
+    conv_thr = 1.0e-8
+    mixing_beta = 0.7
+ /
+ATOMIC_SPECIES
+ Ni 58.69 Ni.pz-nd-rrkjus.UPF
+ATOMIC_POSITIONS
+ Ni 0.0 0.0 0.0
+K_POINTS
+ 60
+   0.0625000  0.0625000  0.0625000   1.00
+   0.0625000  0.0625000  0.1875000   3.00
+   0.0625000  0.0625000  0.3125000   3.00
+   0.0625000  0.0625000  0.4375000   3.00
+   0.0625000  0.0625000  0.5625000   3.00
+   0.0625000  0.0625000  0.6875000   3.00
+   0.0625000  0.0625000  0.8125000   3.00
+   0.0625000  0.0625000  0.9375000   3.00
+   0.0625000  0.1875000  0.1875000   3.00
+   0.0625000  0.1875000  0.3125000   6.00
+   0.0625000  0.1875000  0.4375000   6.00
+   0.0625000  0.1875000  0.5625000   6.00
+   0.0625000  0.1875000  0.6875000   6.00
+   0.0625000  0.1875000  0.8125000   6.00
+   0.0625000  0.1875000  0.9375000   6.00
+   0.0625000  0.3125000  0.3125000   3.00
+   0.0625000  0.3125000  0.4375000   6.00
+   0.0625000  0.3125000  0.5625000   6.00
+   0.0625000  0.3125000  0.6875000   6.00
+   0.0625000  0.3125000  0.8125000   6.00
+   0.0625000  0.3125000  0.9375000   6.00
+   0.0625000  0.4375000  0.4375000   3.00
+   0.0625000  0.4375000  0.5625000   6.00
+   0.0625000  0.4375000  0.6875000   6.00
+   0.0625000  0.4375000  0.8125000   6.00
+   0.0625000  0.4375000  0.9375000   6.00
+   0.0625000  0.5625000  0.5625000   3.00
+   0.0625000  0.5625000  0.6875000   6.00
+   0.0625000  0.5625000  0.8125000   6.00
+   0.0625000  0.6875000  0.6875000   3.00
+   0.0625000  0.6875000  0.8125000   6.00
+   0.0625000  0.8125000  0.8125000   3.00
+   0.1875000  0.1875000  0.1875000   1.00
+   0.1875000  0.1875000  0.3125000   3.00
+   0.1875000  0.1875000  0.4375000   3.00
+   0.1875000  0.1875000  0.5625000   3.00
+   0.1875000  0.1875000  0.6875000   3.00
+   0.1875000  0.1875000  0.8125000   3.00
+   0.1875000  0.3125000  0.3125000   3.00
+   0.1875000  0.3125000  0.4375000   6.00
+   0.1875000  0.3125000  0.5625000   6.00
+   0.1875000  0.3125000  0.6875000   6.00
+   0.1875000  0.3125000  0.8125000   6.00
+   0.1875000  0.4375000  0.4375000   3.00
+   0.1875000  0.4375000  0.5625000   6.00
+   0.1875000  0.4375000  0.6875000   6.00
+   0.1875000  0.4375000  0.8125000   6.00
+   0.1875000  0.5625000  0.5625000   3.00
+   0.1875000  0.5625000  0.6875000   6.00
+   0.1875000  0.6875000  0.6875000   3.00
+   0.3125000  0.3125000  0.3125000   1.00
+   0.3125000  0.3125000  0.4375000   3.00
+   0.3125000  0.3125000  0.5625000   3.00
+   0.3125000  0.3125000  0.6875000   3.00
+   0.3125000  0.4375000  0.4375000   3.00
+   0.3125000  0.4375000  0.5625000   6.00
+   0.3125000  0.4375000  0.6875000   6.00
+   0.3125000  0.5625000  0.5625000   3.00
+   0.4375000  0.4375000  0.4375000   1.00
+   0.4375000  0.4375000  0.5625000   3.00
+EOF
+    $ECHO "  running the scf calculation for Ni...\c"
+    $PW_COMMAND < ni.scf.$diago.in > ni.scf.$diago.out
+    check_failure $?
+    $ECHO " done"
+
+    # band structure calculation along delta, sigma and lambda lines
+    cat > ni.band.$diago.in << EOF
+ &control
+    calculation='bands'
+    pseudo_dir = '$PSEUDO_DIR/',
+    outdir='$TMP_DIR/'
+    prefix='ni'
+ /
+ &system
+    ibrav=2, celldm(1) =6.48, nat=1, ntyp=1,
+    nspin = 2,  starting_magnetization(1)=0.7,
+    ecutwfc = 24.0, ecutrho = 288.0, nbnd = 8
+ /
+ &electrons
+    diagonalization='$diago'
+ /
+ATOMIC_SPECIES
+ Ni 58.69 Ni.pz-nd-rrkjus.UPF
+ATOMIC_POSITIONS
+ Ni 0.0 0.0 0.0
+K_POINTS
+ 28
+   0.0 0.0 0.0 1.0
+   0.0 0.0 0.1 1.0
+   0.0 0.0 0.2 1.0
+   0.0 0.0 0.3 1.0
+   0.0 0.0 0.4 1.0
+   0.0 0.0 0.5 1.0
+   0.0 0.0 0.6 1.0
+   0.0 0.0 0.7 1.0
+   0.0 0.0 0.8 1.0
+   0.0 0.0 0.9 1.0
+   0.0 0.0 1.0 1.0
+   0.0 0.0 0.0 1.0
+   0.0 0.1 0.1 1.0
+   0.0 0.2 0.2 1.0
+   0.0 0.3 0.3 1.0
+   0.0 0.4 0.4 1.0
+   0.0 0.5 0.5 1.0
+   0.0 0.6 0.6 1.0
+   0.0 0.7 0.7 1.0
+   0.0 0.8 0.8 1.0
+   0.0 0.9 0.9 1.0
+   0.0 1.0 1.0 1.0
+   0.0 0.0 0.0 1.0
+   0.1 0.1 0.1 1.0
+   0.2 0.2 0.2 1.0
+   0.3 0.3 0.3 1.0
+   0.4 0.4 0.4 1.0
+   0.5 0.5 0.5 1.0
+EOF
+    $ECHO "  running the band-structure calculation for Ni...\c"
+    $PW_COMMAND < ni.band.$diago.in > ni.band.$diago.out|
+    check_failure $?
+    $ECHO " done"
+done
+
+$ECHO
+$ECHO "$EXAMPLE_DIR : done"
