@@ -8,15 +8,17 @@ EXAMPLE_DIR=`pwd`
 if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
 
 # function to test the exit status of a job
-. ../check_failure.sh
+. ../../../examples/check_failure.sh
 
 $ECHO
 $ECHO "$EXAMPLE_DIR : starting"
 $ECHO
-$ECHO "This example shows how to use pw.x to calculate the DOS of Ni."
+$ECHO "This example shows how to use PostProc codes to calculate the DOS of Ni."
 
 # set the needed environment variables
-. ../environment_variables
+cd ../
+. ../../examples/environment_variables
+cd example02
 
 # required executables and pseudopotentials
 BIN_LIST="pw.x dos.x projwfc.x kvecs_FS.x bands_FS.x"
