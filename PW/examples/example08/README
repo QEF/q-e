@@ -1,0 +1,104 @@
+
+A simplified rotational invariant LDA+U method is presently implemented in
+the pw.x code of the ESPRESSO package. The implemented functional is the
+one proposed, among others, by S.L.Dudarev et al. in PRB, 57, 1505 (1998).
+
+A discussion of the method, more details about the current implementation
+and a description of a method to compute the crucial U parameter
+are contained in Matteo Cococcioni's PhD thesis at SISSA and in the
+paper "Linear-response approach to the calculation of the effective"
+interaction parameters in the LDA+U method" by Matteo Cococcioni and
+Stefano de Gironcoli, PRB 71, 035105 (2005).
+
+A classical example for LDA+U method is FeO that is incorrectly predicted
+to be a metal by LDA and GGA while it is an insulating antiferromagnetic
+material in real world.
+
+In this example we use FeO in order to illustrate some of the input
+variables involved in LDA+U calculations.
+
+Computational parameters (as wfc and density cutoff, k-points grid etc.) 
+are set so as to make the example reasonably fast and the results are
+NOT meant to be converged in any sense.
+
+The first run is just plain LDA calculation for FeO in the rhombohedral
+(antiferromagnetic) cell. There are 2 types of Fe atoms in the input
+because the desired magnetic structure is antiferromagnetic and opposite
+starting_magnetization for the two types is suggested.  
+
+The lda_plus_u flag is enabled in the input and a tiny value is set
+for the Hubbard_U of the two Iron types in order to force the code to
+write out the occupation matrices for the localized Fe d-levels without
+affecting the LDA result.
+
+Looking at the output it is clear that the resulting solution is metallic:
+the "correction for metal" energy term is clearly non zero and the Fermi
+energy falls in the middle of the bands.
+
+Coming to the occupation of the localized d-level one can see that
+they are completely filled for the majority spin [spin 1(up) for atom
+3 and spin 2(down) for atom 4] while minority-spin components only are
+partially filled and with FRACTIONAL occupations.
+
+In the second run of the example a realistic value for the Hubbard_U
+parameter is adopted and the calculation is repeated. The LDA+U functional
+is now active and disfavors fractional occupations.
+
+In spite of that the system still, painfully, converges to a metallic
+solution with similar fractional occupations as the LDA solution.  
+This is due to the fact that LDA+U calculations can exhibit---even more
+than spin polarized calculations do---several solutions and one is not
+guaranteed to fall in the desired global minimum automatically.
+Though live! 
+
+We have to live with that and manage to explore several possibilities by 
+suggesting to the system different starting points.
+This can be done by setting the starting occupation matrices of the
+system in a user defined way. 
+
+This is done by exploiting the starting_ns_eigenvalue input variable as
+in the third calculation of this example.
+
+From literature or simple electron counting, one knows that in the
+minority spin component one would like to occupy completely a single state 
+leaving the other as empty as possible.
+
+So, in the third run, by mean of the starting_ns_eigenvalue variable,
+one enforces the complete occupation of the third eigenvalue of the
+minority spin components of each Fe atomic type.
+
+Why the third eigenvalue ? Because from the "standard LDA+U" run we know
+that at the first iteration this is the one that is non-degenerate and 
+if occupied completely could lead to an insulating result.
+
+This calculation converges rather easily to the desired insulating solution.
+In the output we can see that the "correction for metal" energy term is
+essentially zero and Fermi energy falls in a gap.
+
+A comment about energetics:
+Plain LDA calculation has the lowest energy, as expected, since the +U
+term is a positive defined penalty function added to it and energy can
+only go up.
+Notice however that the "standard LDA+U" calculation, the one with
+fractional occupation of minority-spin levels, has an higher energy than
+the "user defined ns" one, where one manages to completely fill the
+desired level. This shows that this later one is indeed the ground state,
+or at least, a better solution of the problem (still higher than plain
+LDA, of course).
+
+Looking at the output of these calculation one can notice that even in
+the insulating solution obtained starting with user-defined ns matrices,
+many of the minority spin occupations are still fractional while LDA+U
+functional would like them to be either 0 or 1.
+
+This is because the projector on localized d-level used in the calculation
+are based on atomic orbitals that are somehow different from the crystal
+wavefunctions. So some "spurious" d-level occupation comes from Oxygen
+2s and 2p states that protrude toward Iron sites.
+
+This is not wrong in general, the important thing is to be consistent
+and use the U parameter appropriate for the chosen projector, but for
+some applications it may be disturbing and one could like to have a
+"better" projector.
+
+See PP/examples/example06 for a calculation using localized wannier functions.
