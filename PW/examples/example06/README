@@ -1,0 +1,67 @@
+
+This example shows how to use pw.x to calculate the total energy
+and the band structure of four simple systems (Fe, Al, Cu, Ni, Fe)
+in the non collinear case.
+
+The calculation proceeds as follows (for the meaning of the cited input
+variables see the appropriate INPUT_* file)
+
+1) make a self-consistent calculation for Fe (input=fe.scf.in,
+   output=fe.scf.out). The number of computed bands is internally
+   computed as equal to the number of electrons in the unit cell
+   (16 in this case).
+
+2) make a band structure calculation for Fe (input=fe.band.in,
+   output=fe.band.out).
+   The variable nbnd is explicitly set = 16.
+   The list of k points given in input is the list of point where the
+   bands are computed, the k-point weight is arbitrary and is not used.
+
+3) make a self-consistent calculation for Fe with penalty functional
+   where each component of the magnetization of the two atoms
+   is constrained (input=fe.pen.in, output=fe.pen.out).
+   Iron is a metal : the smearing technique is used for the 
+   calculation of the Fermi energy (a value for the broadening
+   degauss is provided).
+
+4) make a self-consistent calculation for Fe with penalty functional
+   where the angle between the direction of the magnetization of each atom
+   and the z axis is constrained; mcons(1) = cosine of this angle.
+   (input=fe.angl.in, output=fe.angl.out).
+
+5) make a self-consistent calculation for Fe with penalty functional
+   where each component of the total magnetization is constrained; 
+   fixed_magnetization(ipol) = value of the magnetization.
+   (input=fe.total.in, output=fe.total.out).
+
+6) make a self-consistent calculation for Cu (input=cu.scf.in,
+   output=cu.scf.out).
+   Copper is also a metal. In this case the tetrahedron method is used
+   for the calculation of the Fermi energy. K-points are automatically
+   generated.
+
+7) make a band structure calculation for Cu (input=cu.band.in,
+   output=cu.band.out).
+   The variable nbnd is explicitly set = 8.
+   The list of k points given in input is the list of point where the
+   bands are computed, the k-point weight is arbitrary and is not used.
+
+8) make a self-consistent calculation for Cu (input=cu.cg.in,
+   output=cu.cg.out) with cg diagonalization.
+
+9) make a self-consistent calculation for Cu (input=cu.diis.in,
+   output=cu.diis.out) with diis diagonalization.
+
+
+10) make a self-consistent calculation for Ni (input=ni.scf.in,
+   output=ni.scf.out).
+   Nickel is a magnetic metal. A local-spin-density calculation is
+   performed by specifying nspin=2 and an initial guess for the
+   magnetization of each atomic species. This initial guess is used to
+   build spin-up and spin-down starting charges from superposition of
+   atomic charges.
+
+11) make a band structure calculation for Ni (input=ni.band.in,
+   output=ni.band.out).
+
+12) make a scf calculation of molecular oxygen relaxing the atoms.
