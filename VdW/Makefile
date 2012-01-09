@@ -24,7 +24,7 @@ stop_vdw.o \
 vdwcom.o
 
 PPOBJS = \
-../PP/openfil_pp.o
+../PP/src/openfil_pp.o
 
 QEMODS = ../Modules/libqemod.a
 PWOBJS = ../PW/src/libpw.a
