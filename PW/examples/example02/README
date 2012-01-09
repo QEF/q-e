@@ -1,0 +1,46 @@
+
+This example illustrates how to use pw.x to compute the equilibrium
+geometry of a simple molecule, CO, and of an Al (001) slab.
+
+The calculation proceeds as follows (for the meaning of the cited input
+variables see the appropriate INPUT_* file)
+
+1) make a geometry relaxation for CO molecule performing a series of
+   self-consistent calculations and computing the forces on atoms
+   (input=co.rx.in, output=co.rx.out).
+   The molecule is put in a cubic box of side 12 Bohr. 
+   Note that ibrav=0 therefore the Bravais lattice fundamental vectors
+   are read after cards 'CELL_PARAMETERS' (where we also specify the
+   type of symmetry, cubic or hexagonal). The cell parameter is not
+   specified in celldm(1), but deduced from Bravais lattice vectors.
+   Calculation is set to 'relax', so specifying that a structural 
+   relaxation is performed.
+   While approaching the minimum, the scf threshold (initially
+   conv_thr=1.0d-8)  will automatically become smaller (stricter
+   convergence) because of the need to evaluate correctly forces and
+   the tiny energy differences involved in the relaxation. This
+   tightening of the scf threshold is however limited by the upscale=10
+   statement that specifies that conv_thr ccannot become smaller than
+   its starting value / upscale**2 (=1.0d-10 in the present example).
+
+2) make a geometry relaxation for a Al (001) slab performing a series of
+   self-consistent calculations and computing the forces on atoms
+   (input=al001.rx.in, output=al001.rx.out).
+   This is a 7-atomic-layer slab separated by about 4 vacuum layers.
+   The unit cell in tetragonal (ibrav=6) with celldm(1)=alat_fcc/sqrt(2).
+   Calculation is set to 'relax'.
+   While approaching the minimum, the scf threshold (initially
+   conv_thr=1.0d-6)  will automatically become smaller (stricter
+   convergence) because of the need to evaluate correctly forces and
+   the tiny energy differences involved in the relaxation. This
+   tightening of the scf threshold is however limited by the upscale=10
+   statement that specifies that conv_thr ccannot become smaller than
+   its starting value / upscale**2 (=1.0d-8 in the present example).
+
+3) make a geometry relaxation for the same Al (001) slab used in step 2
+   performing a series of self-consistent calculations, computing the 
+   forces on atoms and evolving the atomic positions according to Newton 
+   equation. Whenever a velocity component is opposite to the corresponding
+   force component, the velocity is stopped. 
+   (input=al001.mm.in, output=al001.mm.out).
+
