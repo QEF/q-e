@@ -1412,8 +1412,8 @@ SUBROUTINE iosys()
   lconstrain = ( ncolvar_inp + nconstr_inp > 0 )
   !
   IF ( lconstrain ) THEN
-     IF ( .NOT. ldamped .OR. lmovecell ) CALL errore( 'iosys', &
-              'constraints only with damped dynamics and fixed cell', 1 )
+     IF ( lbfgs .OR. lmovecell ) CALL errore( 'iosys', &
+              'constraints only with fixed-cell dynamics', 1 )
      CALL init_constraint( nat, tau, ityp, alat )
   END IF
   !
