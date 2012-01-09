@@ -7,7 +7,7 @@ MODFLAGS= $(MOD_FLAG)../../iotk/src $(MOD_FLAG)../../Modules \
           $(MOD_FLAG)../../PW/src $(MOD_FLAG).
 
 PPOBJS = \
-../../PP/xsf.o
+../../PP/src/xsf.o
 
 PWCONDOBJS = \
 allocate_cond.o \
