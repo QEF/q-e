@@ -1,0 +1,21 @@
+To have 'better' projector in LDA+U calculations some localized Wannier functions of
+the relevant bands around the Fermi energy can be used. See for instance N.Marzari
+and D.Vanderbilt, PRB 56, 12847 (1997) and I. Sousa, N. Marzari, and
+D.Vanderbilt, PRB 65, 035109 (2001) for the definition and construction
+of Maximally Localized Wannier Functions (MLWF).
+
+Although it is possible to generate MLWF with the software distributed by
+Nicola Marzari at www.wannier.org, here we follow a simpler prescription
+and fix the phase-factor freedom---intrinsic in any Wannier function
+determination---in a sub-optimal but simple way using the atomic
+wavefunction as a guide.
+
+This is done as a post-processing step with a poormanwannier tool (pmw.x)
+that reads atomic wavefunctions and band structure of an LDA calculation
+and replaces the atomic wavefunctions with our simple Wannier functions.
+
+The subsequent LDA+U calculation is performed specifying in the system
+namelist U_projection_type='file' so that the freshly produced Wannier
+functions are used in the projection.
+The outcome of this calculation is an insulating state with d-level
+occupations really close to 0 or 1.

@@ -1,0 +1,13 @@
+This example shows how to use bands.x to check the band symmetry of
+fcc-Pt with a fully relativistic US-PP which includes spin-orbit effects.
+
+The calculation proceeds as follows:
+
+1) make a self-consistent calculation for Pt (input=pt.scf.in,
+   output=pt.scf.out). 
+
+2) make a band structure calculation for Pt (input=pt.nscf.in,
+   output=pt.nscf.out).
+
+3) use the bands.x program to check the band symmetry (input=pt.bands.in,
+   output=pt.bands.out).

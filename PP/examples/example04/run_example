@@ -8,17 +8,19 @@ EXAMPLE_DIR=`pwd`
 if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
 
 # function to test the exit status of a job
-. ../check_failure.sh
+. ../../../examples/check_failure.sh
 
 $ECHO
 $ECHO "$EXAMPLE_DIR : starting"
 $ECHO
-$ECHO "This example shows how to use pw.x to calculate the total energy"
-$ECHO "and the band structure of fcc-Pt with a fully relativistic "
+$ECHO "This example shows how to use bands.x to check the band symmetry"
+$ECHO "of fcc-Pt with a fully relativistic "
 $ECHO "pseudo-potential including spin-orbit coupling."
 
 # set the needed environment variables
-. ../environment_variables
+cd ../
+. ../../examples/environment_variables
+cd example04
 
 # required executables and pseudopotentials
 BIN_LIST="pw.x bands.x"
