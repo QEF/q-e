@@ -887,8 +887,8 @@ new_ns.o : ../../Modules/ions_base.o
 new_ns.o : ../../Modules/kind.o
 new_ns.o : ../../Modules/mp.o
 new_ns.o : ../../Modules/mp_global.o
-new_ns.o : ../../Modules/recvec.o
 new_ns.o : ../../Modules/wavefunctions.o
+new_ns.o : becmod.o
 new_ns.o : buffers.o
 new_ns.o : pwcom.o
 new_ns.o : symm_base.o
@@ -1236,7 +1236,6 @@ regterg.o : ../../Modules/kind.o
 regterg.o : ../../Modules/mp.o
 regterg.o : ../../Modules/mp_global.o
 regterg.o : ../../Modules/ptoolkit.o
-regterg.o : pwcom.o
 regterg.o : realus.o
 remove_atomic_rho.o : ../../Modules/fft_base.o
 remove_atomic_rho.o : ../../Modules/io_files.o

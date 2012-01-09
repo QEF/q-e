@@ -302,7 +302,6 @@ lr_normalise.o : ../../include/f_defs.h
 lr_ortho.o : ../../include/f_defs.h
 lr_read_d0psi.o : ../../include/f_defs.h
 lr_read_wf.o : ../../include/f_defs.h
-lr_readin.o : ../../include/f_defs.h
 lr_restart.o : ../../include/f_defs.h
 lr_set_boxes_density.o : ../../include/f_defs.h
 lr_solve_e.o : ../../include/f_defs.h
