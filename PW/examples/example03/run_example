@@ -1,0 +1,224 @@
+#!/bin/sh
+
+# run from directory where this script is
+cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
+EXAMPLE_DIR=`pwd`
+
+# check whether echo has the -e option
+if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
+
+# function to test the exit status of a job
+. ../../../examples/check_failure.sh
+
+$ECHO
+$ECHO "$EXAMPLE_DIR : starting"
+$ECHO
+$ECHO "This example shows how to use pw.x to perform molecular dynamics for"
+$ECHO "2- and 8-atom cells of Si starting with compressed bonds along (111)."
+
+# set the needed environment variables
+cd ../
+. ../../examples/environment_variables
+cd example03
+
+# required executables and pseudopotentials
+BIN_LIST="pw.x"
+PSEUDO_LIST="Si.pz-vbc.UPF"
+
+$ECHO
+$ECHO "  executables directory: $BIN_DIR"
+$ECHO "  pseudo directory:      $PSEUDO_DIR"
+$ECHO "  temporary directory:   $TMP_DIR"
+$ECHO "  checking that needed directories and files exist...\c"
+
+# check for directories
+for DIR in "$BIN_DIR" "$PSEUDO_DIR" ; do
+    if test ! -d $DIR ; then
+        $ECHO
+        $ECHO "ERROR: $DIR not existent or not a directory"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+for DIR in "$TMP_DIR" "$EXAMPLE_DIR/results" ; do
+    if test ! -d $DIR ; then
+        mkdir $DIR
+    fi
+done
+cd $EXAMPLE_DIR/results
+
+# check for executables
+for FILE in $BIN_LIST ; do
+    if test ! -x $BIN_DIR/$FILE ; then
+        $ECHO
+        $ECHO "ERROR: $BIN_DIR/$FILE not existent or not executable"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+
+# check for pseudopotentials
+for FILE in $PSEUDO_LIST ; do
+    if test ! -r $PSEUDO_DIR/$FILE ; then
+       $ECHO
+       $ECHO "Downloading $FILE to $PSEUDO_DIR...\c"
+            $WGET $PSEUDO_DIR/$FILE \
+                http://www.quantum-espresso.org/pseudo/1.3/UPF/$FILE 2> /dev/null 
+    fi
+    if test $? != 0; then
+        $ECHO
+        $ECHO "ERROR: $PSEUDO_DIR/$FILE not existent or not readable"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+$ECHO " done"
+
+# how to run executables
+PW_COMMAND="$PARA_PREFIX $BIN_DIR/pw.x $PARA_POSTFIX"
+$ECHO
+$ECHO "  running pw.x as: $PW_COMMAND"
+$ECHO
+
+# clean TMP_DIR
+$ECHO "  cleaning $TMP_DIR...\c"
+rm -rf $TMP_DIR/*
+$ECHO " done"
+
+# MD in a 2-atom cell
+cat > si.md2.in << EOF
+ &control
+    calculation='md'
+    restart_mode='from_scratch',
+    pseudo_dir = '$PSEUDO_DIR/',
+    outdir='$TMP_DIR/',
+    dt=20,
+    nstep=100,
+    disk_io='high'
+ /
+ &system
+    ibrav= 2, celldm(1)=10.18, nat=  2, ntyp= 1,
+    ecutwfc = 8.0, nosym=.true.
+ /
+ &electrons
+    conv_thr =  1.0d-8
+    mixing_beta = 0.7
+ /
+ &ions
+    pot_extrapolation='second-order'
+    wfc_extrapolation='second-order'
+ /
+ATOMIC_SPECIES
+ Si  28.086  Si.pz-vbc.UPF
+ATOMIC_POSITIONS
+ Si -0.123 -0.123 -0.123
+ Si  0.123  0.123  0.123
+K_POINTS {automatic}
+ 1 1 1 0 0 0
+EOF
+$ECHO "  running the MD calculation for Si in a 2 atom cell. G-point...\c"
+$PW_COMMAND < si.md2.in > si.md2.out
+check_failure $?
+$ECHO " done"
+
+awk '/Ekin/{ek=$3;et=$11; print it,time,ek,u,et}/Dynamics/{it=$5;time=$8}/^\!/{u=$5}' si.md2.out > MD2
+
+# clean TMP_DIR
+$ECHO "  cleaning $TMP_DIR...\c"
+rm -rf $TMP_DIR/*
+$ECHO " done"
+
+# MD in a 8-atom cell
+cat > si.md8.in << EOF
+ &control
+    calculation='md'
+    restart_mode='from_scratch',
+    pseudo_dir = '$PSEUDO_DIR/',
+    outdir='$TMP_DIR/',
+    dt=20,
+    nstep=100,
+    disk_io='high'
+ /
+ &system
+    ibrav= 1, celldm(1)=10.18, nat=  8, ntyp= 1,
+    ecutwfc = 8.0, nosym=.true.
+ /
+ &electrons
+    conv_thr =  1.0d-8,
+    mixing_beta = 0.7
+ /
+ &ions
+    pot_extrapolation='second-order'
+    wfc_extrapolation='second-order'
+ /
+ATOMIC_SPECIES
+ Si  28.086  Si.pz-vbc.UPF
+ATOMIC_POSITIONS
+ Si -0.123 -0.123 -0.123
+ Si  0.377  0.377 -0.123
+ Si  0.377 -0.123  0.377
+ Si -0.123  0.377  0.377
+ Si  0.123  0.123  0.123
+ Si  0.623  0.623  0.123
+ Si  0.623  0.123  0.623
+ Si  0.123  0.623  0.623
+K_POINTS {automatic}
+ 1 1 1 0 0 0
+EOF
+$ECHO "  running the MD calculation for Si in a 8 atom cell. G-point...\c"
+$PW_COMMAND < si.md8.in > si.md8.out
+check_failure $?
+$ECHO " done"
+
+awk '/Ekin/{ek=$3;et=$11; print it,time,ek,u,et}/Dynamics/{it=$5;time=$8}/^\!/{u=$5}' si.md8.out > MD8
+
+# clean TMP_DIR
+$ECHO "  cleaning $TMP_DIR...\c"
+rm -rf $TMP_DIR/*
+$ECHO " done"
+
+# MD in a 2-atom cell. Gamma+3X
+cat > si.md2_G3X.in << EOF
+ &control
+    calculation='md'
+    restart_mode='from_scratch',
+    pseudo_dir = '$PSEUDO_DIR/',
+    outdir='$TMP_DIR/',
+    dt=20,
+    nstep=100,
+    disk_io='high'
+  /
+ &system
+    ibrav= 2, celldm(1)=10.18, nat=  2, ntyp= 1,
+    ecutwfc = 8.0, nosym=.true.
+ /
+ &electrons
+    conv_thr =  1.0d-8,
+    mixing_beta = 0.7
+ /
+ &ions
+    pot_extrapolation='second-order'
+    wfc_extrapolation='second-order'
+ /
+ATOMIC_SPECIES
+ Si  28.086  Si.pz-vbc.UPF
+ATOMIC_POSITIONS
+ Si -0.123 -0.123 -0.123
+ Si  0.123  0.123  0.123
+K_POINTS
+ 4
+ 0.0 0.0 0.0 1.0
+ 1.0 0.0 0.0 1.0
+ 0.0 1.0 0.0 1.0
+ 0.0 0.0 1.0 1.0
+EOF
+$ECHO "  running the MD calculation for Si in a 2 atom cell. G3X-points...\c"
+$PW_COMMAND < si.md2_G3X.in > si.md2_G3X.out
+check_failure $?
+$ECHO " done"
+
+awk '/Ekin/{ek=$3;et=$11; print it,time,ek,u,et} \
+     /Dynamics/{it=$5;time=$8}/^\!/{u=$5}' si.md2_G3X.out > MD2_G3X
+
+$ECHO
+$ECHO "$EXAMPLE_DIR: done"
