@@ -1,0 +1,212 @@
+#!/bin/sh
+
+###
+### Initial file from QE modified by
+### G. Stenuit (06/08/2009)
+###
+
+# run from directory where this script is
+cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
+EXAMPLE_DIR=`pwd`
+
+# check whether ECHO has the -e option
+if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
+
+# function to test the exit status of a job
+. ../../../examples/check_failure.sh
+
+$ECHO
+$ECHO "$EXAMPLE_DIR : starting"
+$ECHO
+$ECHO "This example shows how to use projwfc.x to compute"
+$ECHO "the orbital decomposition of the total DOS from GWA energies"
+
+# set the needed environment variables
+cd ../
+. ../../examples/environment_variables
+cd example03
+
+# required executables and pseudopotentials
+BIN_LIST="pw.x projwfc.x"
+PSEUDO_LIST="C.pbe-rrkjus.UPF H.pbe-rrkjus.UPF"
+
+$ECHO
+$ECHO "  executables directory: $BIN_DIR"
+$ECHO "  pseudo directory:      $PSEUDO_DIR"
+$ECHO "  temporary directory:   $TMP_DIR"
+$ECHO
+$ECHO "  checking that needed directories and files exist...\c"
+
+# check for directories
+for DIR in "$BIN_DIR" "$PSEUDO_DIR" ; do
+    if test ! -d $DIR ; then
+        $ECHO
+        $ECHO "ERROR: $DIR not existent or not a directory"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+for DIR in "$TMP_DIR" "$EXAMPLE_DIR/results" ; do
+    if test ! -d $DIR ; then
+        mkdir $DIR
+    fi
+done
+cd $EXAMPLE_DIR/results
+
+# check for executables
+for FILE in $BIN_LIST ; do
+    if test ! -x $BIN_DIR/$FILE ; then
+        $ECHO
+        $ECHO "ERROR: $BIN_DIR/$FILE not existent or not executable"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+
+# check for pseudopotentials
+for FILE in $PSEUDO_LIST ; do
+    if test ! -r $PSEUDO_DIR/$FILE ; then
+        $ECHO
+        $ECHO "ERROR: $PSEUDO_DIR/$FILE not existent or not readable"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+$ECHO " done"
+
+# check if bands.dat exist !
+if test ! -r ../../example01/results/bands.dat ; then
+      $ECHO
+      $ECHO "ERROR: ../../example01/results/bands.dat not existent or not readable"
+      $ECHO "Please run example01 FIRST !!"
+      $ECHO "Aborting"
+      exit 1
+fi
+$ECHO " done"
+
+
+# how to run executables
+PW_COMMAND="$PARA_PREFIX $BIN_DIR/pw.x $PARA_POSTFIX"
+PROJWFC_COMMAND="$PARA_PREFIX $BIN_DIR/projwfc.x $PARA_POSTFIX"
+$ECHO
+$ECHO "  running pw.x as: $PW_COMMAND"
+$ECHO "  running projwfc.x as: $PROJWFC_COMMAND"
+$ECHO
+
+# clean TMP_DIR
+$ECHO "  cleaning $TMP_DIR...\c"
+rm -rf $TMP_DIR/*
+$ECHO " done"
+
+# self-consistent calculation at Gamma
+cat > benzene.scf.in << EOF
+ &control
+    calculation='scf'
+    restart_mode='from_scratch',
+    pseudo_dir = '$PSEUDO_DIR/',
+    prefix='benzene'
+    outdir='$TMP_DIR/'
+ /
+ &system
+    ibrav= 8, celldm(1)= 20,celldm(2)= 1, celldm(3)=1,
+    nat=  12, ntyp= 2,
+    ecutwfc = 25.0, nosym=.true.
+    ecutrho= 200.d0
+ /
+ &electrons
+    diagonalization='cg',
+    conv_thr =  1.0d-10,
+    mixing_beta = 0.5,
+    startingwfc='random',
+ /
+ATOMIC_SPECIES
+ C  1. C.pbe-rrkjus.UPF 
+ H   1.  H.pbe-rrkjus.UPF
+ATOMIC_POSITIONS {bohr}
+C   1.321864  2.289536  0.000
+C  -1.321864  2.289536  0.000
+C  -2.643728  0.000000  0.000
+C  -1.321865 -2.289535  0.000
+C   1.321864 -2.289536  0.000
+C   2.643728 -0.000001  0.000
+H   2.362159  4.091379  0.000
+H  -2.362158  4.091379  0.000
+H  -4.724317  0.000001  0.000
+H  -2.362160 -4.091378  0.000
+H   2.362158 -4.091379  0.000
+H   4.724317 -0.000001  0.000
+EOF
+$ECHO "  running the scf calculation for benzene molecule...\c"
+$PW_COMMAND < benzene.scf.in > benzene.scf.out
+check_failure $?
+$ECHO " done"
+
+
+# non self-consistent calculation at Gamma
+cat > benzene.nscf.in << EOF
+ &control
+    calculation='nscf'
+    restart_mode='from_scratch',
+    pseudo_dir = '$PSEUDO_DIR/',
+    prefix='benzene'
+    outdir='$TMP_DIR/'
+ /
+ &system
+    ibrav= 8, celldm(1)= 20,celldm(2)= 1, celldm(3)=1,
+    nat=  12, ntyp= 2,
+    ecutwfc = 25.0, nosym=.true., nbnd = 20
+    ecutrho= 200.d0
+ /
+ &electrons
+    diagonalization='cg',
+    conv_thr =  1.0d-10,
+    mixing_beta = 0.5,
+ /
+ATOMIC_SPECIES
+ C  1. C.pbe-rrkjus.UPF
+ H   1.  H.pbe-rrkjus.UPF
+ATOMIC_POSITIONS {bohr}
+C   1.321864  2.289536  0.000
+C  -1.321864  2.289536  0.000
+C  -2.643728  0.000000  0.000
+C  -1.321865 -2.289535  0.000
+C   1.321864 -2.289536  0.000
+C   2.643728 -0.000001  0.000
+H   2.362159  4.091379  0.000
+H  -2.362158  4.091379  0.000
+H  -4.724317  0.000001  0.000
+H  -2.362160 -4.091378  0.000
+H   2.362158 -4.091379  0.000
+H   4.724317 -0.000001  0.000
+EOF
+$ECHO "  running the non scf calculation for benzene molecule...\c"
+$PW_COMMAND < benzene.nscf.in > benzene.nscf.out
+check_failure $?
+$ECHO " done"
+
+# copy the bands.dat file from example01
+$ECHO "Copy the bands.dat file generated in example01 ...\c"
+cp ../../example01/results/bands.dat .
+
+# projwfc calculation at Gamma
+cat > benzene.pdos_pp.in << EOF
+&inputpp
+   outdir='$TMP_DIR/'
+   prefix='benzene'
+   lgww=.true.
+   Emin=-30.0, Emax=5.0, DeltaE=0.05,
+   ngauss=0, degauss=0.01559
+/
+EOF
+$ECHO "  running the projwfc calculation at Gamma for C6H6...\c"
+$PROJWFC_COMMAND < benzene.pdos_pp.in > benzene.pdos_pp.out
+check_failure $?
+$ECHO " done"
+
+# clean TMP_DIR
+$ECHO "  cleaning $TMP_DIR...\c"
+rm -rf $TMP_DIR/*
+$ECHO " done"
+
+$ECHO
+$ECHO "$EXAMPLE_DIR: done"

@@ -1,0 +1,199 @@
+#!/bin/sh
+
+###
+### Initial file from QE modified by
+### G. Stenuit (06/08/2009)
+###
+
+# run from directory where this script is
+cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
+EXAMPLE_DIR=`pwd`
+
+# check whether ECHO has the -e option
+if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
+
+# function to test the exit status of a job
+. ../../../examples/check_failure.sh
+
+$ECHO
+$ECHO "$EXAMPLE_DIR : starting"
+$ECHO
+$ECHO "This example shows how to use pw.x, pw4gww.x and gww.x to compute"
+$ECHO "the quasi-particle energies in C6H6 (benzene) molecule"
+
+# set the needed environment variables
+cd ../
+. ../../example01/environment_variables
+cd example01
+
+# required executables and pseudopotentials
+BIN_LIST="pw.x pw4gww.x gww.x"
+PSEUDO_LIST="C.pbe-rrkjus.UPF H.pbe-rrkjus.UPF"
+
+$ECHO
+$ECHO "  executables directory: $BIN_DIR"
+$ECHO "  pseudo directory:      $PSEUDO_DIR"
+$ECHO "  temporary directory:   $TMP_DIR"
+$ECHO
+$ECHO "  checking that needed directories and files exist...\c"
+
+# check for directories
+for DIR in "$BIN_DIR" "$PSEUDO_DIR" ; do
+    if test ! -d $DIR ; then
+        $ECHO
+        $ECHO "ERROR: $DIR not existent or not a directory"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+for DIR in "$TMP_DIR" "$EXAMPLE_DIR/results" ; do
+    if test ! -d $DIR ; then
+        mkdir $DIR
+    fi
+done
+cd $EXAMPLE_DIR/results
+
+# check for executables
+for FILE in $BIN_LIST ; do
+    if test ! -x $BIN_DIR/$FILE ; then
+        $ECHO
+        $ECHO "ERROR: $BIN_DIR/$FILE not existent or not executable"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+
+# check for pseudopotentials
+for FILE in $PSEUDO_LIST ; do
+    if test ! -r $PSEUDO_DIR/$FILE ; then
+        $ECHO
+        $ECHO "ERROR: $PSEUDO_DIR/$FILE not existent or not readable"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+$ECHO " done"
+
+# how to run executables
+PW_COMMAND="$PARA_PREFIX $BIN_DIR/pw.x $PARA_POSTFIX"
+PW4GWW_COMMAND="$PARA_PREFIX $BIN_DIR/pw4gww.x $PARA_POSTFIX"
+GWW_COMMAND="$PARA_PREFIX $BIN_DIR/gww.x $PARA_POSTFIX"
+$ECHO
+$ECHO "  running pw.x as: $PW_COMMAND"
+$ECHO "  running pw4gww.x as: $PW4GWW_COMMAND"
+$ECHO "  running gww.x as: $GWW_COMMAND"
+$ECHO
+
+# clean TMP_DIR
+$ECHO "  cleaning $TMP_DIR...\c"
+rm -rf $TMP_DIR/*
+$ECHO " done"
+
+# self-consistent calculation at Gamma
+cat > benzene.scf.in << EOF
+ &control
+    calculation='scf'
+    restart_mode='from_scratch',
+    pseudo_dir = '$PSEUDO_DIR/',
+    prefix='benzene'
+    outdir='$TMP_DIR/'
+ /
+ &system
+    ibrav= 8, celldm(1)= 20,celldm(2)= 1, celldm(3)=1,
+    nat=  12, ntyp= 2,
+    ecutwfc = 25.0, nosym=.true., nbnd = 115
+    ecutrho= 200.d0
+ /
+ &electrons
+    diagonalization='cg',
+    conv_thr =  1.0d-10,
+    mixing_beta = 0.5,
+    startingwfc='random',
+ /
+ATOMIC_SPECIES
+ C  1. C.pbe-rrkjus.UPF 
+ H   1.  H.pbe-rrkjus.UPF
+ATOMIC_POSITIONS {bohr}
+C   1.321864  2.289536  0.000
+C  -1.321864  2.289536  0.000
+C  -2.643728  0.000000  0.000
+C  -1.321865 -2.289535  0.000
+C   1.321864 -2.289536  0.000
+C   2.643728 -0.000001  0.000
+H   2.362159  4.091379  0.000
+H  -2.362158  4.091379  0.000
+H  -4.724317  0.000001  0.000
+H  -2.362160 -4.091378  0.000
+H   2.362158 -4.091379  0.000
+H   4.724317 -0.000001  0.000
+EOF
+$ECHO "  running the scf calculation for benzene molecule...\c"
+$PW_COMMAND < benzene.scf.in > benzene.scf.out
+check_failure $?
+$ECHO " done"
+
+# pw4gww calculation at Gamma
+cat > benzene.pw4gww.in << EOF
+&inputpw4gww    
+    prefix='benzene'
+    outdir='$TMP_DIR/',
+    lwannier=.true.,
+    cutoff_wpr_vc = 0.1d0
+    num_nbnd_first = 50
+    num_nbndv=15
+    num_nbnds=20
+    l_truncated_coulomb=.true.
+    truncation_radius=10d0
+    restart_gww=-1
+    numw_prod=1
+    cprim_first=1
+    cprim_last=20
+    cutoff_products=0.1
+    l_polarization_analysis=.true.
+    cutoff_polarization=0.1
+ /
+EOF
+$ECHO "  running the pw4gww calculation at Gamma for C6H6...\c"
+$PW4GWW_COMMAND < benzene.pw4gww.in > benzene.pw4gww.out
+$ECHO " done"
+
+# GWW calculation 
+cat > inputgww << EOF
+&inputgww
+ggwin%n=79,
+ggwin%n_fit=120,
+ggwin%tau=10.,
+ggwin%max_i=20,
+ggwin%prefix='benzene'
+ggwin%num_rows=50
+ggwin%starting_point=1
+ggwin%ending_point=7
+ggwin%fit_maxiter=1000
+ggwin%n_max_minpack=10000
+ggwin%lnonorthogonal=.false.
+ggwin%lconduction=.true.
+ggwin%grid_time=2
+ggwin%grid_freq=2
+ggwin%omega=20
+ggwin%omega_fit=20
+ggwin%n_grid_fit=240
+ggwin%i_min=1
+ggwin%i_max=20
+ggwin%l_head_epsilon=.false.
+ggwin%w_divergence=0
+ggwin%l_wing_epsilon=.false.
+/
+EOF
+$ECHO "  running the GWW calculation for C6H6...\c"
+$GWW_COMMAND < inputgww
+#check_failure $?
+$ECHO " done"
+
+
+# clean TMP_DIR
+$ECHO "  cleaning $TMP_DIR...\c"
+rm -rf $TMP_DIR/*
+$ECHO " done"
+
+$ECHO
+$ECHO "$EXAMPLE_DIR: done"

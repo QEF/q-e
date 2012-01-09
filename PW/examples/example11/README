@@ -1,0 +1,9 @@
+This example tests pw.x and ph.x for the noncollinear/spin-orbit case and PAW.
+
+The calculation proceeds as follows:
+
+1) make a self-consistent calculation for bcc-Fe
+   (input=Fe.scf_pbe.in, output=Fe.scf_pbe.out).
+
+2) make a band calculation for bcc-Fe
+   (input=Fe.band_pbe.in, output=Fe.band_pbe.out).
