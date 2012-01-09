@@ -48,7 +48,7 @@ SUBROUTINE regterg( npw, npwx, nvec, nvecx, evc, ethr, &
   INTEGER, INTENT(IN) :: btype(nvec)
     ! band type ( 1 = occupied, 0 = empty )
   LOGICAL, INTENT(IN) :: lrot
-    ! .TRUE. if the wfc have already be rotated
+    ! .TRUE. if the wfc have already been rotated
   REAL(DP), INTENT(OUT) :: e(nvec)
     ! contains the estimated roots.
   INTEGER, INTENT(OUT) :: dav_iter, notcnv
@@ -275,7 +275,7 @@ SUBROUTINE regterg( npw, npwx, nvec, nvecx, evc, ethr, &
      !
      ! ... "normalize" correction vectors psi(:,nb1:nbase+notcnv) in 
      ! ... order to improve numerical stability of subspace diagonalization 
-     ! ... (cdiaghg) ew is used as work array :
+     ! ... (rdiaghg) ew is used as work array :
      !
      ! ...         ew = <psi_i|psi_i>,  i = nbase + 1, nbase + notcnv
      !
@@ -751,7 +751,7 @@ SUBROUTINE pregterg( npw, npwx, nvec, nvecx, evc, ethr, &
      !
      ! ... update the reduced hamiltonian
      !
-     ! we need to save the old descriptor in order to redistribute marixes 
+     ! we need to save the old descriptor in order to redistribute matrices 
      !
      desc_old = desc
      !

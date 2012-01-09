@@ -510,7 +510,7 @@ SUBROUTINE pcegterg( npw, npwx, nvec, nvecx, npol, evc, ethr, &
   INTEGER, INTENT(IN) :: btype(nvec)
     ! band type ( 1 = occupied, 0 = empty )
   LOGICAL, INTENT(IN) :: lrot
-    ! .TRUE. if the wfc have already be rotated
+    ! .TRUE. if the wfc have already been rotated
   REAL(DP), INTENT(OUT) :: e(nvec)
     ! contains the estimated roots.
   INTEGER, INTENT(OUT) :: dav_iter, notcnv
@@ -737,7 +737,7 @@ SUBROUTINE pcegterg( npw, npwx, nvec, nvecx, npol, evc, ethr, &
      !
      ! ... update the reduced hamiltonian
      !
-     ! we need to save the old descriptor in order to redistribute marixes 
+     ! we need to save the old descriptor in order to redistribute matrices 
      !
      desc_old = desc
      !
