@@ -42,6 +42,7 @@ function w0gauss (x, n)
   ! counter on 2n values
 
   ! Fermi-Dirac smearing
+
   if (n.eq. - 99) then
      if (abs (x) .le.36.0) then
         w0gauss = 1.0d0 / (2.0d0 + exp ( - x) + exp ( + x) )
@@ -59,6 +60,9 @@ function w0gauss (x, n)
      return
 
   endif
+
+  if (n.gt.10 .or. n.lt.0) call errore('w0gauss','higher order smearing is untested and unstable',abs(n))
+
   ! Methfessel-Paxton
   arg = min (200.d0, x**2)
   w0gauss = exp ( - arg) * sqrtpm1
