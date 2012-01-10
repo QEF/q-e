@@ -1,0 +1,89 @@
+This example shows how to calculate final-state core-level-shift (CLS)
+using the core-excited pseudo-potential technique. The procedure has
+been used in several works and references for the underlying theoretical
+concepts can be found in the articles listed below.
+
+E. Pehlke and M. Scheffler - http://link.aps.org/doi/10.1103/PhysRevLett.71.2338
+J. N. Andersen, D. Hennig, E. Lundgren, M. Methfessel, R. Nyholm, and
+M. Scheffler  - http://link.aps.org/doi/10.1103/PhysRevB.50.17525
+
+The definition of a FS core-level-shift is based on a difference
+of energies and it's then necessary to take a reference atom in the
+configuration studied to obtain the relative core level shifts. In this
+example a very simple calculation regarding the SCLS (surface core level
+shift) in the rhodium 011 slab is presnted.
+
+First the slab has to be defined with the correct parameters (how many
+layers are needed to find a bulk-like atom, the separation between the
+periodic repetitions of the slab, DFT convergence parameters, ecc...) and
+the atomic positions have to be relaxed. All these steps are described
+in detail in other examples and are not treated here. The structure
+used in this example should not be taken as reference for an accurate
+calculation but the parameters are chosen in order to keep the example
+fast and instructive.
+
+In the slab geometry it's natural to take the atom in the central layer,
+that mimics the bulk environment, as refernce and calculate all CLS from
+the difference w.rt. this one. In this example the other interesting
+atoms are the atoms in the surface layer and  the one in the first
+subsurface layer.  Once the desired atoms are identified the procedure
+is straightforward and can be defined in few steps:
+
+ 1) Make a regular SCF calculation of the slab where the core-exited
+ pseudo-potential is used for the reference atom.
+
+ 2) Make several other SCF calculations, one for each selected atom in
+ which only this one is described by the core-excited pseudo-potential
+
+ 3) Calculate the ground state (GS) energy difference between each
+ of these SCF calculations and the one for the reference atom.
+ These differences are the FS core-level shifts.
+
+----------------
+
+1) For this simulation, and all the following ones, it's necessary to
+define a normal pseudo-potential and a core-exited one for Rhodium. The
+two potentials have to be consistent with each other (functional,
+parameters, ecc..), being the core-exited one a PP for the same atomic
+type with a different, core-exited, electronic configuration. (The
+instructions to generate of a core-exited PP can be found in the ld1.x
+manual.)
+
+Once the PP and the core-exited PP are defined the calculation is
+a regular SCF run with the only difference that the bulk atom, the
+reference, is defined by the core-excited PP. ONLY the reference atom
+is defined in this way and ntyp variable in the &system namelist has to
+be defined including the new core-excited type. All the other parameter
+are defined following the normal guidelines for a SCF calculation.
+
+*** Keep in mind that the core-excited atom is a new atomic type in
+the configuration and all the precautions of possible interaction have
+to be considered. In the example a slab 1x1 is used only to let the
+example run on an average single CPU, again this is just a reference
+structure. It's possible, and in fact true, that a bigger supercell is
+needed, for example a 2x2 or a 3x3, to keep all the core-exited atoms
+enough separated, avoid an interaction between them.
+
+    (input=rh011bulk.scf.in, output=rh011bulk.scf.out)
+
+2) All the other simulations are identical to the bulk-reference one but
+this time the atom defined with the excited PP is different. For every
+simulation ONLY ONE atom has to be defined by the core-excited PP and
+no relaxation as to be done, only one SCF calculation. (If one wants
+to calculate the CLS of three different atoms three SCF calculations
+are needed).
+
+It's clear that to keep consistency all the other SCF parameters
+(k-points, energy cut-offs, ecc..)  of these new calculations have to
+be identical to the reference SCF calculation.
+
+    (input=rh011surf.scf.in, output=rh011surf.scf.in)
+
+3) Once obtained the energy for all the atoms identified the CLS are
+defined as the difference between the GS energy of the particualar SCF
+calculation and the GS energy of the reference SCF one:
+
+    SCLS = energy_gs(surface core-excited) - energy_gs(bulk core-excited)
+    CLS = energy_gs(other atom core-excited) - energy_gs(bulk core-excited)
+
+    (see final-state.txt)
