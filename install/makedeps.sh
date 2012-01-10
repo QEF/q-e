@@ -12,7 +12,7 @@ TOPDIR=`pwd`
 if test $# = 0
 then
     dirs=" Modules clib PW/src CPV/src flib PW/tools upftools PP/src PWCOND/src \
-           PHonon/Gamma PHonon/PH PHonon/D3 atomic/src VdW XSpectra/src \
+           PHonon/Gamma PHonon/PH PHonon/D3 atomic/src VdW/src XSpectra/src \
 	   GWW/gww GWW/pw4gww GWW/head ACFDT NEB/src Solvent TDDFPT/src" 
           
 else
@@ -39,9 +39,13 @@ for dir in $dirs; do
 	PP/src  )
              DEPENDS="$LEVEL2/include $LEVEL2/iotk/src $LEVEL2/Modules \
                       $LEVEL2/PW/src" ;;
-	VdW | ACFDT ) 
+	VdW/src ) 
+	     DEPENDS="$LEVEL2/include $LEVEL2/iotk/src $LEVEL2/Modules \
+	              $LEVEL2/PW/src $LEVEL2/PHonon/PH" ;;
+	ACFDT ) 
              DEPENDS="$LEVEL1/include $LEVEL1/iotk/src $LEVEL1/Modules \
                       $LEVEL1/PW/src $LEVEL1/PHonon/PH" ;;
+
 	PW/src )
 	     DEPENDS="$LEVEL2/include $LEVEL2/iotk/src $LEVEL2/Modules" ;;
 	PW/tools | PWCOND/src )
