@@ -1,0 +1,16 @@
+This example shows how to use pw.x to calculate propeties of isolated
+systems decoupling periodic images by using Martyna-Tuckerman approach
+with truncated coulomb interaction.
+
+Three simple systems are considered:
+1) a N atom. 
+2) a NH4+ ion.
+3) a water molecule.
+
+The calculations are performed in a SC cell of dimension 16 bohr It
+is possible to explore convergence of the results w.r.t. box size by
+editing the script and addind/modifying the variable called BOX_SIZE_LIST.
+Values for BOX_SIZE_LIST = " 12 16 20 24" are provided in the reference
+
+Relevant variables in pw.x input are do_ee in namelist SYSTEM and
+which_compensation in namelist EE.
