@@ -22,7 +22,7 @@ $ECHO "of an Argon dimer, not activated by default in the distribution."
 # set the needed environment variables
 cd ../
 . ../../examples/environment_variables
-cd example_vwdDF
+cd vwdDF_example
 
 # required executables and pseudopotentials
 BIN_LIST="pw.x generate_vdW_kernel_table.x"
@@ -44,12 +44,12 @@ for DIR in "$BIN_DIR" "$PSEUDO_DIR" ; do
         exit 1
     fi
 done
-for DIR in "$TMP_DIR" "$EXAMPLE_DIR/results_dscf" ; do
+for DIR in "$TMP_DIR" "$EXAMPLE_DIR/results" ; do
     if test ! -d $DIR ; then
         mkdir $DIR
     fi
 done
-cd $EXAMPLE_DIR/results_dscf
+cd $EXAMPLE_DIR/results
 
 # check for executables
 for FILE in $BIN_LIST ; do
@@ -66,8 +66,8 @@ for FILE in $PSEUDO_LIST ; do
     if test ! -r $PSEUDO_DIR/$FILE ; then
        $ECHO
        $ECHO "Downloading $FILE to $PSEUDO_DIR...\c"
-            wget  http://www.quantum-espresso.org/pseudo/1.3/UPF/$FILE \
-                -O $PSEUDO_DIR/$FILE 2> /dev/null 
+            $WGET $PSEUDO_DIR/$FILE \
+                http://www.quantum-espresso.org/pseudo/1.3/UPF/$FILE 2> /dev/null 
     fi
     if test $? != 0; then
         $ECHO
@@ -117,17 +117,15 @@ $ECHO " done"
 #
 # Graphite cell relaxation
 #
-#
-cat > graphite.scf.0.in << EOF
+cat > graphite.scf.in << EOF
 &control
-   calculation = "scf"
+   calculation = 'vc-relax'
    restart_mode='from_scratch',
    prefix='graphite',
    tstress = .true.
    tprnfor = .true.
    pseudo_dir = '$PSEUDO_DIR',
    outdir='$TMP_DIR'
-   verbosity = 'high'
 
    forc_conv_thr = 1.0D-3
 
@@ -154,114 +152,13 @@ cat > graphite.scf.0.in << EOF
 &electrons
     conv_thr        = 1.0d-8
 /
-ATOMIC_SPECIES
-C   12.00   C.pbe-rrkjus.UPF
-
-ATOMIC_POSITIONS {alat}
-C      0.0000000000 0.0000000000 0.0000000000 
-C      0.0000000000 0.5773502692 0.0000000000
-C      0.0000000000 0.0000000000 1.3632000000
-C      0.5000000000 0.2886751346 1.3632000000
-
-K_POINTS automatic
-4 4 4 1 1 1
-EOF
-
-$ECHO "  running the graphite cell relaxation...\c"
-$PW_COMMAND < graphite.scf.0.in > graphite.scf.0.out
-check_failure $?
-$ECHO " done"
-
-#
-cat > graphite.scf.+1.in << EOF
-&control
-   calculation = "scf"
-   restart_mode='from_scratch',
-   prefix='graphite',
-   tstress = .true.
-   tprnfor = .true.
-   pseudo_dir = '$PSEUDO_DIR',
-   outdir='$TMP_DIR'
-   verbosity = 'high'
-
-   forc_conv_thr = 1.0D-3
-
+&ions
 /
-
-&system
-    ibrav           = 4 
-    celldm(1)       = 4.6511700000
-    celldm(3)       = 2.7264000000
-    
-    nat             = 4 
-    ntyp            = 1
-
-    occupations     = 'fixed'
-    smearing        = 'methfessel-paxton'
-    degauss         = 0.02
-
-    ecutwfc         = 29.87113860
-    ecutrho         = 179.22683160
-
-    input_dft  	    = 'vdW-DF'
-/
-
-&electrons
-    conv_thr        = 1.0d-8
-/
-ATOMIC_SPECIES
-C   12.00   C.pbe-rrkjus.UPF
-
-ATOMIC_POSITIONS {alat}
-C      0.0000000000 0.0000000000 0.0000000000 
-C      0.0000000000 0.5773502692 0.0000000000
-C      0.0000000000 0.0000000000 1.3632000000
-C      0.5000000000 0.2886751346 1.3632000000
-
-K_POINTS automatic
-4 4 4 1 1 1
-EOF
-
-$ECHO "  running the graphite cell relaxation...\c"
-$PW_COMMAND < graphite.scf.+1.in > graphite.scf.+1.out
-check_failure $?
-$ECHO " done"
-
-cat > graphite.scf.-1.in << EOF
-&control
-   calculation = "scf"
-   restart_mode='from_scratch',
-   prefix='graphite',
-   tstress = .true.
-   tprnfor = .true.
-   pseudo_dir = '$PSEUDO_DIR',
-   outdir='$TMP_DIR'
-   verbosity = 'high'
-
-   forc_conv_thr = 1.0D-3
-
-/
-
-&system
-    ibrav           = 4 
-    celldm(1)       = 4.6311700000
-    celldm(3)       = 2.7264000000
-    
-    nat             = 4 
-    ntyp            = 1
-
-    occupations     = 'fixed'
-    smearing        = 'methfessel-paxton'
-    degauss         = 0.02
-
-    ecutwfc         = 30.12969660
-    ecutrho         = 180.77817960
-
-    input_dft  	    = 'vdW-DF'
-/
-
-&electrons
-    conv_thr        = 1.0d-8
+&cell
+    press_conv_thr  = 0.5D0
+    press           = 0.D0
+    cell_dynamics   = 'bfgs'
+    cell_dofree     = 'z'
 /
 
 ATOMIC_SPECIES
@@ -278,15 +175,16 @@ K_POINTS automatic
 EOF
 
 $ECHO "  running the graphite cell relaxation...\c"
-$PW_COMMAND < graphite.scf.-1.in > graphite.scf.-1.out
+$PW_COMMAND < graphite.scf.in > graphite.scf.out
 check_failure $?
 $ECHO " done"
+
 
 #
 # self-consistent calculation
 # for water molecules 
 #
-cat > water.scf.0.in << EOF
+cat > water.scf.in << EOF
 &control
    calculation = 'scf'
    restart_mode='from_scratch',
@@ -300,7 +198,7 @@ cat > water.scf.0.in << EOF
 
 &system
     ibrav           = 8
-    celldm(1)       = 15.0
+    celldm(1)       = 15 
     celldm(2)       = 0.954545454545455
     celldm(3)       = 1.22727272727273
     nat             = 6
@@ -315,134 +213,80 @@ cat > water.scf.0.in << EOF
     conv_thr        = 1.0d-8
 /
 
+
 ATOMIC_SPECIES
    O   15.9994    O.pbe-rrkjus.UPF
    H   1.00794    H.pbe-rrkjus.UPF
  
-ATOMIC_POSITIONS {alat}
-O     0.0000000   0.0016540  -0.0072484  
-H     0.0000000   0.0981485  -0.0826521  
-H     0.0000000   0.0490883   0.1065556  
-O     0.0000000   0.1117595   0.3550478  
-H    -0.0975766   0.0656956   0.4133167  
-H     0.0975766   0.0656956   0.4133167  
-
-
+ATOMIC_POSITIONS {angstrom}
+O     -0.000000     0.013129    -0.057535
+H     -0.000000     0.779069    -0.656064
+H      0.000000     0.389646     0.845802
+O      0.000000     0.887109     2.818248
+H     -0.774530     0.521469     3.280767
+H      0.774530     0.521469     3.280767
 
 K_POINTS gamma
 
 EOF
 
 $ECHO "  running the scf calculation for water molecules...\c"
-$PW_COMMAND < water.scf.0.in > water.scf.0.out
+$PW_COMMAND < water.scf.in > water.scf.out
 check_failure $?
 $ECHO " done"
 
 #
 # self-consistent calculation
-# for water molecules 
+# for Argon dimer 
 #
-cat > water.scf.+1.in << EOF
+cat > Ar.scf.in << EOF
 &control
    calculation = 'scf'
    restart_mode='from_scratch',
-   prefix='water_vdw',
+   prefix='Ar_vdw',
    tstress = .true.
    tprnfor = .true.
    pseudo_dir = '$PSEUDO_DIR/',
    outdir='$TMP_DIR/'
    verbosity = 'high'
+   forc_conv_thr   = 1.0d-4
 /
 
 &system
     ibrav           = 8
-    celldm(1)       = 15.05
-    celldm(2)       = 0.954545454545455
-    celldm(3)       = 1.22727272727273
-    nat             = 6
-    ntyp            = 2
+    celldm(1)       = 19
+    celldm(2)       = 1
+    celldm(3)       = 1.47368421052632
+    nat             = 2
+    ntyp            = 1
     occupations     = 'fixed'
-    ecutwfc         = 29.80099530
-    ecutrho         = 178.80597180
-    input_dft       = 'vdW-DF'
+    ecutwfc         = 80.0
+    input_dft  	    = 'vdW-DF'
 /
 
 &electrons
-    conv_thr        = 1.0d-8
+    conv_thr        = 1.0d-11
+/
+
+&ions
+    ion_dynamics    = 'bfgs'
 /
 
 ATOMIC_SPECIES
-   O   15.9994    O.pbe-rrkjus.UPF
-   H   1.00794    H.pbe-rrkjus.UPF
- 
-ATOMIC_POSITIONS {alat}
-O     0.0000000   0.0016540  -0.0072484  
-H     0.0000000   0.0981485  -0.0826521  
-H     0.0000000   0.0490883   0.1065556  
-O     0.0000000   0.1117595   0.3550478  
-H    -0.0975766   0.0656956   0.4133167  
-H     0.0975766   0.0656956   0.4133167  
+    Ar   36.00    Ar.pz-rrkj.UPF
 
-K_POINTS gamma
+ATOMIC_POSITIONS {angstrom}
+Ar      0.000000     0.000000     0.000000
+Ar      0.000000     0.000000     4.500000
+
+K_POINTS gamma 
 
 EOF
 
-$ECHO "  running the scf calculation for water molecules...\c"
-$PW_COMMAND < water.scf.+1.in > water.scf.+1.out
-check_failure $?
-$ECHO " done"
+$ECHO "  running the scf calculation for argon dimer...\c"
+#$PW_COMMAND < Ar.scf.in > Ar.scf.out
+#check_failure $?
+#$ECHO " done"
 
-#
-# self-consistent calculation
-# for water molecules 
-#
-cat > water.scf.-1.in << EOF
-&control
-   calculation = 'scf'
-   restart_mode='from_scratch',
-   prefix='water_vdw',
-   tstress = .true.
-   tprnfor = .true.
-   pseudo_dir = '$PSEUDO_DIR/',
-   outdir='$TMP_DIR/'
-   verbosity = 'high'
-/
-
-&system
-    ibrav           = 8
-    celldm(1)       = 14.95
-    celldm(2)       = 0.954545454545455
-    celldm(3)       = 1.22727272727273
-    nat             = 6
-    ntyp            = 2
-    occupations     = 'fixed'
-    ecutwfc         = 30.20100420
-    ecutrho         = 181.20602520
-    input_dft       = 'vdW-DF'
-/
-
-&electrons
-    conv_thr        = 1.0d-8
-/
-
-ATOMIC_SPECIES
-   O   15.9994    O.pbe-rrkjus.UPF
-   H   1.00794    H.pbe-rrkjus.UPF
- 
-ATOMIC_POSITIONS {alat}
-O     0.0000000   0.0016540  -0.0072484  
-H     0.0000000   0.0981485  -0.0826521  
-H     0.0000000   0.0490883   0.1065556  
-O     0.0000000   0.1117595   0.3550478  
-H    -0.0975766   0.0656956   0.4133167  
-H     0.0975766   0.0656956   0.4133167  
-
-K_POINTS gamma
-
-EOF
-
-$ECHO "  running the scf calculation for water molecules...\c"
-$PW_COMMAND < water.scf.-1.in > water.scf.-1.out
-check_failure $?
-$ECHO " done"
-
+$ECHO
+$ECHO "$EXAMPLE_DIR : done"

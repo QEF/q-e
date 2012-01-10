@@ -14,7 +14,7 @@ EXAMPLE_DIR=`pwd`
 if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
 
 # function to test the exit status of a job
-. ../check_failure.sh
+. ../../../examples/check_failure.sh
 
 $ECHO
 $ECHO "$EXAMPLE_DIR : starting"
@@ -24,7 +24,9 @@ $ECHO "using the three available sets of boundary conditions."
 $ECHO
 
 # set the needed environment variables
-. ../environment_variables
+cd ../
+. ../../examples/environment_variables
+cd ESM_example
 
 # required executables and pseudopotentials
 BIN_LIST="pw.x"
