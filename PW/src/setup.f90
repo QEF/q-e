@@ -645,9 +645,15 @@ LOGICAL FUNCTION check_para_diag( nbnd )
      WRITE( stdout, '(/,5X,"Subspace diagonalization in iterative solution ",&
                      &     "of the eigenvalue problem:")' ) 
      IF ( check_para_diag ) THEN
-        WRITE( stdout, '(5X,"parallel, distributed-memory algorithm ", &
+#ifdef __SCALAPACK
+        WRITE( stdout, '(5X,"scalapack distributed-memory algorithm ", &
               & "(size of sub-group: ", I2, "*", I3, " procs)",/)') &
                np_ortho(1), np_ortho(2)
+#else
+        WRITE( stdout, '(5X,"custom distributed-memory algorithm ", &
+              & "(size of sub-group: ", I2, "*", I3, " procs)",/)') &
+               np_ortho(1), np_ortho(2)
+#endif
      ELSE
         WRITE( stdout, '(5X,"a serial algorithm will be used",/)' )
      END IF
