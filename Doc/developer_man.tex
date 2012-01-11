@@ -1,5 +1,5 @@
 \documentclass[12pt,a4paper]{article}
-\def\version{4.3.2}
+\def\version{4.99}
 \def\qe{{\sc Quantum ESPRESSO}}
 \def\qeforge{\texttt{qe-forge.org}}
 \textwidth = 17cm
@@ -18,7 +18,7 @@
 
 \def\configure{\texttt{configure}}
 \def\configurac{\texttt{configure.ac}}
-\def\autoconf{\texttt{autocon}}
+\def\autoconf{\texttt{autoconf}}
 
 \def\qeImage{quantum_espresso.pdf}
 \def\democritosImage{democritos.pdf}
@@ -79,7 +79,7 @@ not a full-fledged developer, by
   nonexistent bugs). See section \ref{SubSec:Bugs}, "Guidelines 
   for reporting bugs".
 \item improving the documentation (generic complaints or suggestions
-  that "there should be..." do not qualify as improvements). 
+  that "there should be this and that" do not qualify as improvements). 
 \item  suggesting changes: note however that suggestions requiring a
   significant amount of work are welcome only if accompanied by
   implementation or by a promise of future implementation (fulfilled
@@ -146,7 +146,6 @@ allowed by the project leader). The procedure is as follows:
 \item click on Edit Keys, follow the instructions to add your keys
 \item go back to your home page, click on SCM, follow instruction
 \end{itemize}
-
 Specific to the \qe\ project:
 \begin{itemize}
 \item If you want to receive an e-mail at each commit, subscribe to
@@ -171,11 +170,11 @@ subscribe to \texttt{q-e-developers@qe-forge.org} (low traffic)
 \begin{itemize}
 \item If you modify what a code can do, or introduce
 incompatibilities with previous versions (e.g. old data file 
-no longer readable, old input no longer valid), report it in 
+no longer readable, old input no longer valid), report it in
 file \texttt{Doc/release-notes}.
 \item If you add/modify/remove input variables, document
 it in the appropriate file \\
-\texttt{doc-def/INPUT\_*.def}; if
+\texttt{INPUT\_*.def}; if
 you remove an input variable, update tests and examples
 accordingly.
 \item All newly introduced features or variables must be 
@@ -274,20 +273,20 @@ except that:
 
 You may refer to the GNU \autoconf\ Manual for more info.
 
-\texttt{make.sys.in} is the source file for \texttt{make.sys}, that \configure
-generates: you might want to edit that file as well.  The generation
-procedure is as follows: if \configurac\ contains the macro
+\texttt{make.sys.in} is the source file for \texttt{make.sys}, that
+\configure\ generates: you might want to edit that file as well. 
+The generation procedure is as follows: if \configurac\ contains the macro
 "AC\_SUBST(name)", then every occurrence of "@name@" in the source
 file will be substituted with the value of the shell variable "name"
 at the point where AC\_SUBST was called.
 
-Similarly, \configure\texttt{msg} is generated from \configure\texttt{.msg.in}: this
+Similarly, \configure\texttt{.msg} is generated from \configure\texttt{.msg.in}: this
 file is only used by \configure\ to print its final report, and isn't
 needed for the compilation.  We did it this way so that our
 \configure\ may also be used by other projects, just by replacing the
 \qe-specific \configure\texttt{.msg.in} by your own.
 
-\configure\ writes a detailed log of its operation to "config.log".
+\configure\ writes a detailed log of its operation to \texttt{config.log}.
 When any configuration step fails, you may look there for the relevant
 error messages.  Note that it is normal for some checks to fail.
 
@@ -555,8 +554,9 @@ If you have another replacement for the above libraries, you'll have
 to insert a new entry in the appropriate place.
 
 This is unfortunately a little bit too complex to explain.
-Basic info: "AC\_SEARCH\_LIBS(function, name, ...)" looks for symbol
-"function" in library "libname".  If that is found, "-lname" is
+Basic info: \\
+"AC\_SEARCH\_LIBS(function, name, ...)" looks for symbol
+"function" in library "libname.a".  If that is found, "-lname" is
 appended to the LIBS environment variable (initially empty).
 The real thing is more complicated than just that because the
 "-Ldirectory" option must be added to search in a nonstandard
@@ -631,7 +631,7 @@ two underscores, as \texttt{\_\_expression} in the above example. Traditionally 
 
 \section{ Parallelization}
 
-In parallel execution, PW starts N independent processes (do not start more than one per processor!) that communicate via calls to MPI libraries. Each process has its own set of variables and knows nothing about other processes' variables. Variables that take little memory are replicated, those that take a lot of memory (wavefunctions, G-vectors, R-space grid) are distributed.
+In parallel execution (MPI only), PW starts N independent processes (do not start more than one per processor!) that communicate via calls to MPI libraries. Each process has its own set of variables and knows nothing about other processes' variables. Variables that take little memory are replicated, those that take a lot of memory (wavefunctions, G-vectors, R-space grid) are distributed.
     
 Beware: replicated calculations may either be performed independently on each processor, or performed on one processor and broadcast to all
 others. The first approach requires less programming, but it is unsafe: in principle all processors should yield exactly the same results, if they work on the same data, but sometimes they don't (depending on the machine, compiler, and libraries). Even a tiny difference in the last significant digit can eventually cause serious trouble if allowed to build up, especially when a replicated check is performed (in which
@@ -665,6 +665,7 @@ atoms). Partially scalable arrays contain none of the dimensions listed
 above, two of the following dimensions:
 \begin{itemize}
 \item number of states, nbnd
+\item number of atomic states, natomwfc
 \item number of projectors, nkb
 \end{itemize}
 Their size decreases linearly with the number of processors in a ortho
@@ -716,8 +717,8 @@ Integration with other packages:
 
 \subsubsection{General structure}
 
-Format name: '''QEXML''' \\
-Format version: '''1.4.0''' \\
+Format name: QEXML \\
+Format version: 1.4.0 \\
 
 The "restart file" is actually a "restart directory", containing several files and sub-directories. 
 For CP/FPMD, the restart directory is created as "\$prefix\_\$ndw/", where \$prefix is the value of the 
@@ -728,91 +729,97 @@ For PWscf, both input and output directories are called
 
 The content of the restart directory is as follows:
 \begin{verbatim}
-    ''data-file.xml''          which contains:
-                               - general information that doesn't require large data set: 
-                                 atomic structure, lattice, symmetries, parameters of the run, ...
-                               - pointers to other files or directories containing bulkier data:
-                                 such as grids, wavefunctions, charge density, potentials, ...
-      
-    ''charge_density.dat''     contains the charge density
-    ''spin_polarization.dat''  contains the spin polarization (rhoup-rhodw) (LSDA calculations)
-    ''magnetization.x.dat''    
-    ''magnetization.y.dat''    contain the spin polarization along x,y,z (noncollinear calculations)  
-    ''magnetization.z.dat'' 
-    ''lambda.dat''             contains occupations (Car-Parrinello dynamics only
-    ''mat_z.1''                contains occupations (ensemble-dynamics only)
+data-file.xml          which contains:
+                       - general information that doesn't require large data set: 
+                         atomic structure, lattice, symmetries, parameters of the run, ...
+                       - pointers to other files or directories containing bulkier data:
+                         such as grids, wavefunctions, charge density, potentials, ...
+  
+charge_density.dat     contains the charge density
+spin_polarization.dat  contains the spin polarization (rhoup-rhodw) (LSDA calculations)
+magnetization.x.dat    
+magnetization.y.dat    contain the spin polarization along x,y,z (noncollinear calculations)  
+magnetization.z.dat 
+lambda.dat             contains occupations (Car-Parrinello dynamics only
+mat_z.1                contains occupations (ensemble-dynamics only)
+
+<pseudopotentials>     A copy of all pseudopotential files given in input
     
-    <pseudopotentials>     A copy of all pseudopotential files given in input
-    
-    <k-point dirs>         One or more subdirectories ''K00001/'', ''K00002/'', etc, one per k-point.
+<k-point dirs>         Subdirectories K00001/, K00002/, etc, one per k-point.
 \end{verbatim}
 Each k-point directory contains:
 \begin{verbatim}
-    ''evc.dat''                containing the wavefunctions for spin-unpolarized calculations, OR
-    ''evc1.dat''
-    ''evc2.dat''               containing the spin-up and spin-down wavefunctions, respectively, 
+    evc.dat                wavefunctions for spin-unpolarized calculations, OR
+    evc1.dat
+    evc2.dat               spin-up and spin-down wavefunctions, respectively, 
                            for spin polarized (LSDA) calculations;
-  
-                           in a molecular dynamics run, also wavefunctions at the preceding time step:
-    ''evcm.dat''               for spin-unpolirized calculations OR
-    ''evcm1.dat''
-    ''evcm2.dat''              for spin polarized calculations;
-     
-    ''gkvectors.dat''          with the details of specific k+G grid;
-    ''eigenval.xml''           containing the eigenvalues for the corresponding k-point for spin-unpolarized calculations, OR
-    ''eigenval1.xml''      
-    ''eigenval2.xml''          for spin-polarized calculations;
+    gkvectors.dat          the details of specific k+G grid;
+    eigenval.xml           eigenvalues for the corresponding k-point
+                           for spin-unpolarized calculations, OR
+    eigenval1.xml          spin-up and spin-down eigenvalues,
+    eigenval2.xml          for spin-polarized calculations;
+\end{verbatim}
+in a molecular dynamics run, also wavefunctions at the preceding time step:
+\begin{verbatim}
+    evcm.dat               for spin-unpolarized calculations OR
+    evcm1.dat
+    evcm2.dat              for spin polarized calculations;
 \end{verbatim}
 
 \begin{itemize}
-\item All files ''*.xml'' are XML-compliant, formatted file;
-\item Files ''mat\_z.1'', ''lambda.dat'' are unformatted files, containing a single record;
-\item All other files ''*.dat'', are XML-compliant files, but they contain an unformatted record.
+\item All files "*.xml" are XML-compliant, formatted file;
+\item Files "mat\_z.1", "lambda.dat" are unformatted files, containing a single record;
+\item All other files "*.dat", are XML-compliant files, but they contain an unformatted record.
 \end{itemize}
 
 \subsubsection{ Structure of file "data-file.xml"}
 \begin{verbatim}
-* ''XML Header'': whatever is needed to have a well-formed XML file
+XML Header: whatever is needed to have a well-formed XML file
 
-* ''Body'': introduced by <Root>, terminated by </Root>. Contains first-level tags only. These contain only other tags, not values. XML syntax applies.
+Body: introduced by <Root>, terminated by </Root>. Contains first-level tags
+      only. These contain only other tags, not values. XML syntax applies.
 
-* ''First-level tags'': contain either
-** second-level tags
-** "data tags": tags containing data (values for a given variable)
-** "file tags": tags pointing to a file
-
-''data tags syntax'' ( [...] = optional ) :
+First-level tags: contain either
+     second-level tags, OR
+     data tags:   tags containing data (values for a given variable), OR
+     file tags:   tags pointing to a file
+\end{verbatim}
+data tags syntax ( [...] = optional ) :
+\begin{verbatim}
       <TAG type="vartype" size="n" [UNIT="units"] [LEN="k"]>
       values (in appropriate units) for variable corresponding to TAG:
       n elements of type vartype (if character, of lenght k)
       </TAG>
-where TAG describes the variable into which data must be read;<br>
-"vartype" may be "integer", "real", "character", "logical";<br>
+\end{verbatim}
+where TAG describes the variable into which data must be read;\\
+"vartype" may be "integer", "real", "character", "logical";\\
 if type="logical", LEN=k" must be used to specify the length
-of the variable character; size="n" is the dimension.<br>
+of the variable character; size="n" is the dimension.\\
 Acceptable values for "units" depend on the specific tag.
 
-''Short syntax'', used only in a few cases:
+Short syntax, used only in a few cases:
+\begin{verbatim}
       <TAG attribute="something"/> . 
+\end{verbatim}
 For instance:
+\begin{verbatim}
       <FFT_GRID nr1="NR1" nr2="NR2" nr3="NR3"/>
+\end{verbatim}
 defines the value of the FFT grid parameters nr1, nr2, nr3
 for the charge density
-\end{verbatim}
 
 \subsubsection{Sample}
+Header:
 \begin{verbatim}
-* Header:
-
  <?xml version="1.0"?>
  <?iotk version="1.0.0test"?>
  <?iotk file_version="1.0"?>
  <?iotk binary="F"?> 
-
+\end{verbatim}
 These are meant to be used only by iotk (actually they aren't)
 
-* First-level tags:
-
+First-level tags:
+\begin{verbatim}
   - <HEADER>         (global information about fmt version)
   - <CONTROL>        (miscellanea of internal information)
   - <STATUS>         (information about the status of the CP simulation)
@@ -1076,7 +1083,7 @@ These are meant to be used only by iotk (actually they aren't)
 
 \subsection{Restart files}
 
-\section{ Modifying/adding/extending \qe}
+\section{Modifying/adding/extending \qe}
 
 \subsection{Programming style (or lack of it)}
 
@@ -1089,7 +1096,11 @@ CALL something( )
 \item indent DO's and IF's with three white spaces (editors like emacs will do this automatically for you)
 \item do not write crammed code: leave spaces, insert empty separation lines
 \item comments (introduced by a !) should be used to explain what is not obvious from the code, not to repeat what is already evident. Obscure comments serve no purpose.
-\item do not use machine-dependent extensions or sloppy syntax. Standard f90 requires that a \& is needed both at end of line AND at the beginning of continuation line if there is a ' ' or " " spanning two lines. Some compilers do not complain if the latter \& is missing, others do.
+\item do not use machine-dependent extensions or sloppy syntax. Standard f90 
+requires that a \& is needed both at end of line AND at the beginning of 
+continuation line if there is a character variable (inside ' ' or " ")
+spanning two lines. Some compilers do not complain if the latter \& is 
+missing, others do.
 \item use DP (defined in module ''kinds'') to define the type of real and complex variables
 \item all constants should be defined to be of kind DP.  Preferred syntax: 0.0\_dp.
 \item use "generic" intrinsic functions: SIN, COS, etc.
@@ -1099,11 +1110,11 @@ CMPLX(...,...,KIND=dp). For complex conjugate, use CONJG.  For imaginary part,
 use AIMAG.  IMPORTANT: Do not use REAL or CMPLX without KIND=dp, or else you 
 will lose precision (except when you take the real part of a 
 double precision complex number).
-\item Do not use automatic arrays (e.g. \texttt{REAL(DP) :: A(N}} 
+\item Do not use automatic arrays (e.g. \texttt{REAL(DP) :: A(N)} 
 in a subroutine) except if you are sure that the array is small in all
 cases: you may easily exceed the stack size if the arrays are large.
 \item Do not use pointers unless you have a good reason to: 
-allocatable arrays should be used instead.
+pointers may hinder optimization, allocatable arrays should be used instead.
 \item If you use pointers, nullify them before performing tests on their
 status.
 \item Do not pass unallocated arrays ar arguments, even in those cases where
@@ -1117,7 +1128,7 @@ out-of-bounds error, even if no actual out-of-bound error takes place.
 New input variables should be added to 
 ''Modules/input\_parameters.f90'',
 then copied to the code internal variables in the ''input.f90''
-subroutine. The namelists and cards parsers are in :
+subroutine. The namelists and cards parsers are in
 ''Modules/read\_namelists.f90'' and ''Modules/read\_cards.f90''.
 Files ''input\_parameters.f90'', ''read\_namelists.f90'',
 ''read\_cards.f90'' are shared by all codes, while each code
