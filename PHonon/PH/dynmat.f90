@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2007 PWSCF group
+! Copyright (C) 2001-2012 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -70,8 +70,10 @@ end Module dynamical
 !                    (default: filmol='dynmat.axsf')
 !
       USE kinds, ONLY: DP
-      USE mp,         ONLY : mp_start, mp_end, mp_barrier
-      USE mp_global,  ONLY : nproc, mpime
+      USE mp,         ONLY : mp_bcast
+      USE mp_global,  ONLY : nproc, mpime, mp_startup, mp_global_end
+      USE io_global,  ONLY : ionode, ionode_id, stdout
+      USE environment, ONLY : environment_start, environment_end
       USE io_dyn_mat, ONLY : read_dyn_mat_param, read_dyn_mat_header, &
                              read_dyn_mat, read_dyn_mat_tail
       use dynamical
@@ -86,20 +88,21 @@ end Module dynamical
       real(DP) :: amass(ntypx), amass_(ntypx), eps0(3,3), a0, omega, &
            at(3,3), bg(3,3), amconv, q(3), q_(3)
       real(DP), allocatable :: w2(:)
-      integer :: gid
-      integer :: nat, na, nt, ntyp, iout, axis, nax, nspin_mag
+      integer :: nat, na, nt, ntyp, iout, axis, nax, nspin_mag, ios
       real(DP) :: celldm(6)
       logical :: xmldyn, lrigid, lraman
       logical, external :: has_xml
       integer :: ibrav, nqs
       integer, allocatable :: itau(:)
       namelist /input/ amass, asr, axis, fildyn, filout, filmol, filxsf, q
-!
-!
       !
-      CALL mp_start( nproc, mpime, gid )
-
-      IF (mpime==0) THEN
+      ! code is parallel-compatible but not parallel
+      !
+      CALL mp_startup()
+      CALL environment_start('DYNMAT')
+      !
+      IF (ionode) CALL input_from_file ( )
+      !
       asr  = 'no'
       axis = 3
       fildyn='matdyn'
@@ -107,21 +110,30 @@ end Module dynamical
       filmol='dynmat.mold'
       filxsf='dynmat.axsf'
       amass(:)=0.0d0
-      q(1)=0.0d0
-      q(2)=0.0d0
-      q(3)=0.0d0
-!
-      read (5,input)
-!
-      inquire(file=fildyn,exist=lread)
-      if (lread) then
-         write(6,'(/5x,a,a)') 'Reading Dynamical Matrix from file ',&
-              & TRIM(fildyn)
-      else
-         write(6,'(/5x,a,a)') 'File not found: ', TRIM(fildyn)
-         stop
-      end if
-!
+      q(:)=0.0d0
+      !
+      IF (ionode) read (5,input, iostat=ios)
+      CALL mp_bcast(ios, ionode_id)
+      CALL errore('dynmat', 'reading input namelist', ABS(ios))
+      !
+      CALL mp_bcast(asr,ionode_id)
+      CALL mp_bcast(axis,ionode_id)
+      CALL mp_bcast(amass,ionode_id)
+      CALL mp_bcast(fildyn,ionode_id)
+      CALL mp_bcast(filout,ionode_id)
+      CALL mp_bcast(filmol,ionode_id)
+      CALL mp_bcast(filxsf,ionode_id)
+      CALL mp_bcast(q,ionode_id)
+      !
+      IF (ionode) inquire(file=fildyn,exist=lread)
+      CALL mp_bcast(lread, ionode_id)
+      IF (lread) THEN
+         IF (ionode) WRITE(6,'(/5x,a,a)') 'Reading Dynamical Matrix from file '&
+                                         , TRIM(fildyn)
+      ELSE
+         CALL errore('dynmat', 'File '//TRIM(fildyn)//' not found', 1)
+      END IF
+      !
       ntyp = ntypx ! avoids spurious out-of-bound errors
       xmldyn=has_xml(fildyn)
       IF (xmldyn) THEN
@@ -145,46 +157,47 @@ end Module dynamical
          endif
          amconv = 1.0_DP
       ELSE
-         call readmat ( fildyn, asr, axis, nat, ntyp, atm, a0, &
+         IF (ionode) call readmat ( fildyn, asr, axis, nat, ntyp, atm, a0, &
               at, omega, amass_, eps0, q_ )
          amconv = 1.66042d-24/9.1095d-28*0.5d0 ! converts amu to au
       ENDIF
       !
-      gamma = ( abs( q_(1)**2+q_(2)**2+q_(3)**2 ) < 1.0d-8 )
-      do nt=1, ntyp
-         if (amass(nt) <= 0.0d0) amass(nt)=amass_(nt)/amconv
-      end do
-      !
-      if (gamma) then
-         allocate (itau(nat))
-         do na=1,nat
-            itau(na)=na
+      IF (ionode) THEN
+         !
+         ! from now on, execute on a single processor
+         !
+         gamma = ( abs( q_(1)**2+q_(2)**2+q_(3)**2 ) < 1.0d-8 )
+         do nt=1, ntyp
+            if (amass(nt) <= 0.0d0) amass(nt)=amass_(nt)/amconv
          end do
-         call nonanal ( nat, nat, itau, eps0, q, zstar,omega, dyn )
-         deallocate (itau)
-      end if
-!
-      nax = nat
-      allocate ( z(3*nat,3*nat), w2(3*nat) )
-      call dyndiag(nat,ntyp,amass,ityp,dyn,w2,z)
-!
-      if (filout.eq.' ') then
-         iout=6
-      else
-         iout=4
-         open (unit=iout,file=filout,status='unknown',form='formatted')
-      end if
-      call writemodes(nax,nat,q_,w2,z,iout)
-      if(iout .ne. 6) close(unit=iout)
-!
-      call writemolden (filmol, gamma, nat, atm, a0, tau, ityp, w2, z)
-!
-      call writexsf (filxsf, gamma, nat, atm, a0, at, tau, ityp, z)
-!
-      if (gamma) call RamanIR &
+         !
+         IF (gamma) THEN
+            allocate (itau(nat))
+            do na=1,nat
+               itau(na)=na
+            end do
+            call nonanal ( nat, nat, itau, eps0, q, zstar,omega, dyn )
+            deallocate (itau)
+         END IF
+         !
+         nax = nat
+         allocate ( z(3*nat,3*nat), w2(3*nat) )
+         call dyndiag(nat,ntyp,amass,ityp,dyn,w2,z)
+         !
+         if (filout.eq.' ') then
+            iout=6
+         else
+            iout=4
+            OPEN (unit=iout,file=filout,status='unknown',form='formatted')
+         end if
+         call writemodes(nax,nat,q_,w2,z,iout)
+         if(iout .ne. 6) close(unit=iout)
+         call writemolden (filmol, gamma, nat, atm, a0, tau, ityp, w2, z)
+         call writexsf (filxsf, gamma, nat, atm, a0, at, tau, ityp, z)
+         IF (gamma) call RamanIR &
            (nat, omega, w2, z, zstar, eps0, dchi_dtau)
       ENDIF
-!
+      !
       IF (xmldyn) THEN
          DEALLOCATE (m_loc)
          DEALLOCATE (tau)
@@ -194,9 +207,9 @@ end Module dynamical
          DEALLOCATE (dyn)
       ENDIF
 
-      CALL mp_barrier()
+      CALL environment_end('DYNMAT')
       !
-      CALL mp_end()
+      CALL mp_global_end()
 
       end program dynmat
 !
