@@ -8,7 +8,7 @@ EXAMPLE_DIR=`pwd`
 if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
 
 # function to test the exit status of a job
-. ../check_failure.sh
+. ../../../examples/check_failure.sh
 
 $ECHO
 $ECHO "$EXAMPLE_DIR : starting"
@@ -18,7 +18,9 @@ $ECHO "function on a Ni slab with a CO molecule adsorbed using the dipole"
 $ECHO "correction"
 
 # set the needed environment variables
-. ../environment_variables
+cd ../
+. ../../examples/environment_variables
+cd dipole_example
 
 # required executables and pseudopotentials
 BIN_LIST="pw.x pp.x average.x"
