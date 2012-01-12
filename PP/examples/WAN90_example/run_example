@@ -22,7 +22,9 @@ $ECHO "for library mode pw2wannier90 has to be compile with -D__WANLIB flag,"
 $ECHO "libwannier.a has to be linked. Uncomment related lines below."
 
 # set the needed environment variables 
-. ../environment_variables
+cd ../
+. ../../examples/environment_variables
+cd WAN90_example
 
 # required executables and pseudopotentials
 BIN_LIST="pw.x pw2wannier90.x"
