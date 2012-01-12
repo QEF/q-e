@@ -1229,14 +1229,12 @@ realus.o : becmod.o
 realus.o : noncol.o
 realus.o : pwcom.o
 realus.o : scf_mod.o
-regterg.o : ../../Modules/control_flags.o
 regterg.o : ../../Modules/descriptors.o
 regterg.o : ../../Modules/io_global.o
 regterg.o : ../../Modules/kind.o
 regterg.o : ../../Modules/mp.o
 regterg.o : ../../Modules/mp_global.o
 regterg.o : ../../Modules/ptoolkit.o
-regterg.o : realus.o
 remove_atomic_rho.o : ../../Modules/fft_base.o
 remove_atomic_rho.o : ../../Modules/io_files.o
 remove_atomic_rho.o : ../../Modules/io_global.o
@@ -1310,6 +1308,7 @@ s_psi.o : ../../Modules/uspp.o
 s_psi.o : becmod.o
 s_psi.o : noncol.o
 s_psi.o : pwcom.o
+s_psi.o : realus.o
 save_in_cbands.o : ../../Modules/control_flags.o
 save_in_cbands.o : ../../Modules/funct.o
 save_in_cbands.o : ../../Modules/io_files.o

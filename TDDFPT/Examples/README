@@ -6,7 +6,7 @@ Run examples after compiling by running "make"
 
 "make small_test" runs a short test
 
-each example can be run seperately by running "make" in its designated directory
+each example can be run separately by running "make" in its designated directory
 
 make.sys can be edited for parallel executions of tests by editing "RUNNER" variable (i.e. RUNNER=mpirun -np 4)
 

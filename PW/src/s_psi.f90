@@ -33,13 +33,16 @@ SUBROUTINE s_psi( lda, n, m, psi, spsi )
   USE ions_base,  ONLY : nat, nsp, ityp
   USE control_flags,    ONLY: gamma_only 
   USE noncollin_module, ONLY: npol, noncolin
+  USE realus,     ONLY :  real_space, fft_orbital_gamma, initialisation_level,&
+                          bfft_orbital_gamma, calbec_rs_gamma, s_psir_gamma
   !
   IMPLICIT NONE
   !
-  ! ... First the dummy variables
+  INTEGER, INTENT(IN) :: lda, n, m
+  COMPLEX(DP), INTENT(IN) :: psi(lda*npol,m)
+  COMPLEX(DP), INTENT(OUT)::spsi(lda*npol,m)
   !
-  INTEGER          :: lda, n, m
-  COMPLEX(DP) :: psi(lda*npol,m), spsi(lda*npol,m)
+  INTEGER :: ibnd
   !
   ! ... initialize  spsi
   !
@@ -53,7 +56,20 @@ SUBROUTINE s_psi( lda, n, m, psi, spsi )
   !
   IF ( gamma_only ) THEN
      !
-     CALL s_psi_gamma()
+     IF (real_space ) THEN
+        !
+        DO ibnd = 1, m, 2
+           !   transform the orbital to real space
+           CALL  fft_orbital_gamma(psi,ibnd,m) 
+           CALL s_psir_gamma(ibnd,m)
+           CALL bfft_orbital_gamma(spsi,ibnd,m)
+        END DO
+        !
+     ELSE
+        !
+        CALL s_psi_gamma()
+        !
+     END IF
      !
   ELSE IF ( noncolin ) THEN
      !

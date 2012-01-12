@@ -503,6 +503,8 @@ dyndia.o : ../../Modules/kind.o
 dyndia.o : io_dyn_mat.o
 dyndia.o : phcom.o
 dynmat.o : ../../Modules/constants.o
+dynmat.o : ../../Modules/environment.o
+dynmat.o : ../../Modules/io_global.o
 dynmat.o : ../../Modules/kind.o
 dynmat.o : ../../Modules/mp.o
 dynmat.o : ../../Modules/mp_global.o

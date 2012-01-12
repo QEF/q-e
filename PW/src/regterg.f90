@@ -26,9 +26,6 @@ SUBROUTINE regterg( npw, npwx, nvec, nvecx, evc, ethr, &
   USE io_global,     ONLY : stdout
   USE mp_global,     ONLY : intra_pool_comm, intra_bgrp_comm
   USE mp,            ONLY : mp_sum 
-  USE realus,        ONLY :  real_space, fft_orbital_gamma, initialisation_level,&
-                             bfft_orbital_gamma, calbec_rs_gamma, s_psir_gamma
-  USE control_flags, ONLY : gamma_only
   !
   IMPLICIT NONE
   !
@@ -130,23 +127,7 @@ SUBROUTINE regterg( npw, npwx, nvec, nvecx, evc, ethr, &
   !
   CALL h_psi( npwx, npw, nvec, psi, hpsi )
   !
-  IF ( uspp ) then 
-   if (real_space ) then
-    !print *, "regterg in real space"
-    if (gamma_only) then
-     do ibnd = 1 , nvec , 2
-       call fft_orbital_gamma(psi,ibnd,nvec) !transform the orbital to real space
-       call s_psir_gamma(ibnd,nvec)  
-       call bfft_orbital_gamma(spsi,ibnd,nvec)
-    enddo
-    else
-     CALL errore( 'regter', 'k-point real space implementation under development', 1 )
-    endif
-   else
-    CALL s_psi( npwx, npw, nvec, psi, spsi )
-   endif
-   
-  endif
+  IF ( uspp ) CALL s_psi( npwx, npw, nvec, psi, spsi )
   !
   ! ... hr contains the projection of the hamiltonian onto the reduced
   ! ... space vr contains the eigenvectors of hr
@@ -305,23 +286,7 @@ SUBROUTINE regterg( npw, npwx, nvec, nvecx, evc, ethr, &
      !
      CALL h_psi( npwx, npw, notcnv, psi(1,nb1), hpsi(1,nb1) )
      !
-     IF ( uspp ) then 
-      if (real_space ) then
-       !print *, "regterg in real space"
-       if (gamma_only) then
-        do ibnd = 1 , notcnv , 2
-          call fft_orbital_gamma(psi(1:,nb1:),ibnd,notcnv) !transform the orbital to real space
-          call s_psir_gamma(ibnd,notcnv)  
-          call bfft_orbital_gamma(spsi(1:,nb1:),ibnd,notcnv)
-       enddo
-       else
-        CALL errore( 'regter', 'k-point real space implementation under development', 1 )
-       endif
-      else
-       CALL s_psi( npwx, npw, notcnv, psi(1,nb1), spsi(1,nb1) )
-      endif
-     endif
-
+     IF ( uspp ) CALL s_psi( npwx, npw, notcnv, psi(1,nb1), spsi(1,nb1) )
      !
      ! ... update the reduced hamiltonian
      !
