@@ -705,10 +705,10 @@ SUBROUTINE iosys()
      DO nt = 1, ntyp
         !
         ! ... angle between the magnetic moments and the z-axis is
-        ! ... constrained. Transform angle from degrees to radiants
+        ! ... constrained
         !
         theta = angle1(nt)
-        mcons(3,nt) = cos(theta) * pi / 180.0_dp
+        mcons(3,nt) = cos(theta)
         !
      ENDDO
      !

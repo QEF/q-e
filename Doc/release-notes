@@ -14,6 +14,8 @@ Incompatible changes in svn version:
 
 Fixed in svn version
 
+   * PW: constraint 'atomic direction' on noncolinear magnetization
+     wasn't working properly
    * PW: tetrahedra were not working with magnetic symmetries, 
      and not yet working in the noncolinear case as well.
    * Velocity rescaling in variable-cell MD wasn't really working
