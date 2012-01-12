@@ -15,8 +15,10 @@ $ECHO "at 2 different pressures, 0 kbar and 500 kbar. At those pressures"
 $ECHO "As relax to different structures, sc and A7."
 $ECHO "Two strategies are used: Wentzcovitch damped dynamics and bfgs."
 
-# set the needed environment variables 
-. ../environment_variables
+# set the needed environment variables
+cd ../ 
+. ../../examples/environment_variables
+cd VCSexample
 
 # required executables and pseudopotentials
 BIN_LIST="pw.x"

@@ -58,9 +58,9 @@ INPUT_D3.txt: %.txt: %.def
 	$(HELPDOC) $<
 
 link_on_main_doc:
-	-( cd ../../Doc ; ln -fs ../PH/Doc/INPUT_PH.html . ; \
-	ln -fs ../PH/Doc/INPUT_PH.xml . ; \
-	ln -fs ../PH/Doc/INPUT_PH.txt . ; \
-	ln -fs ../PH/Doc/INPUT_D3.html . ; \
-	ln -fs ../PH/Doc/INPUT_D3.xml . ; \
-	ln -fs ../PH/Doc/INPUT_D3.txt)
+	-( cd ../../Doc ; ln -fs ../PHonon/Doc/INPUT_PH.html . ; \
+	ln -fs ../PHonon/Doc/INPUT_PH.xml . ; \
+	ln -fs ../PHonon/Doc/INPUT_PH.txt . ; \
+	ln -fs ../PHonon/Doc/INPUT_D3.html . ; \
+	ln -fs ../PHonon/Doc/INPUT_D3.xml . ; \
+	ln -fs ../PHonon/Doc/INPUT_D3.txt)
