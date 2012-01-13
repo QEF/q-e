@@ -247,8 +247,10 @@ SUBROUTINE electrons()
      IF ( iter > 1 .AND. ik_ == 0 ) THEN
         !
         IF ( iter == 2 ) ethr = 1.D-2
-        !
         ethr = MIN( ethr, 0.1D0*dr2 / MAX( 1.D0, nelec ) )
+        ! ... do not allow convergence threshold to become too small:
+        ! ... iterative diagonalization may become unstable
+        ethr = MAX( ethr, 1.D-13 )
         !
      END IF
      !
