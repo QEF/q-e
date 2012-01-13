@@ -2715,8 +2715,8 @@ $$T_h = a_1 M N + a_2 M N_1 N_2 N_3 log(N_1 N_2 N_3 ) + a_3 M P N. $$
 The first term comes from the kinetic term and is usually much smaller
 than the others. The second and third terms come respectively from local
 and nonlocal potential. $a_1, a_2, a_3$ are prefactors (i.e.
-small numbers ${\cal O}(1)$), M = number of valence
-bands (\texttt{nbnd}), N = number of PW (basis set dimension: \texttt{npw}), $N_1, N_2, N_3$ =
+small numbers ${\cal O}(1)$), $M$ = number of valence
+bands (\texttt{nbnd}), $N$ = number of PW (basis set dimension: \texttt{npw}), $N_1, N_2, N_3$ =
 dimensions of the FFT grid for wavefunctions (\texttt{nr1s}, \texttt{nr2s},
 \texttt{nr3s}; $N_1 N_2 N_3 \sim 8N$ ), 
 P = number of pseudopotential projectors, summed on all atoms, on all values of the
@@ -2734,7 +2734,7 @@ $$T_{rho} = c_1 M N_{r1} N_{r2}N_{r3} log(N_{r1} N_{r2} N_{r3}) +
             c_2 M N_{r1} N_{r2} N_{r3} + T_{us}$$
 where $c_1, c_2, c_3$ are prefactors, $N_{r1}, N_{r2}, N_{r3}$ =
 dimensions of the FFT grid for charge density (\texttt{nr1},
-\texttt{nr2}, \texttt{nr3}; $N_{r1} N_{r2} N_r3 \sim 8N_g$,
+\texttt{nr2}, \texttt{nr3}; $N_{r1} N_{r2} N_{r3} \sim 8N_g$,
 where $N_g$ = number of G-vectors for the charge density,
 \texttt{ngm}), and 
 $T_{us}$ = time required by PAW/USPPs contribution (if any).
@@ -2856,6 +2856,160 @@ have just one memory bus for all processors. This dramatically
 slows down any code doing massive access to memory (as most codes 
 in the \qe\ distribution do) that runs on processors of the same
 motherboard.
+
+\subsection{Understanding the time report}
+
+The time report printed at the end of a \pwx\ run contains a lot of useful 
+information that can be used to understand bottlenecks and improve 
+performances.
+
+\subsubsection{Serial execution}
+The following applies to calculations taking a sizable amount of time
+(at least minutes): for short calculations (seconds), the time spent in 
+the various initializations dominates. Any discrepancy with the following
+picture signals some anomaly.
+
+\begin{itemize}
+\item
+  For a typical job with norm-conserving PPs, the total (wall) time is mostly 
+  spent in routine "electrons", calculating the self-consistent solution. 
+\item
+  Most of the time spent in "electrons" is used by routine "c\_bands", 
+  calculating Kohn-Sham states. "sum\_band" (calculating the charge density),
+  "v\_of\_rho" (calculating the potential), "mix\_rho" (charge density mixing)
+  should take a small fraction of the time.
+\item
+  Most of the time spent in "c\_bands" is used by routines "cegterg" (k-points)
+  or "regterg" (Gamma-point only), perfoming iterative diagonalization of
+  the Kohn-Sham Hamiltonian in the PW basis set. 
+\item
+  Most of the time spent in "*egterg" is used by routine "h\_psi",
+  calculating $H\psi$ products. "cdiaghg" (k-points) or "rdiaghg" (Gamma-only), 
+  performing subspace diagonalization, should take only a small fraction.
+\item
+  Among the "general routines", most of the time is spent in FFT on Kohn-Sham
+  states: "fftw", and to a smaller extent in other FFTs, "fft" and "ffts", 
+  and in "calbec", calculating $\langle\psi|\beta\rangle$ products. 
+\item
+  Forces and stresses typically take a fraction of the order of 10 to 20\%
+  of the total time.
+\end{itemize}
+For PAW and Ultrasoft PP, you will see a larger contribution by "sum\_band" 
+and a nonnegligible "newd" contribution to the time spent in "electrons", 
+but the overall picture is unchanged. You may drastically reduce the
+overhead of Ultrasoft PPs by using input option "tqr=.true.".
+
+\subsubsection{Parallel execution}
+
+The various parallelization levels should be used wisely in order to 
+achieve good results. Let us summarize the effects of them on CPU:
+\begin{itemize}
+\item
+  Parallelization on FFT speeds up (with varying efficiency) almost 
+  all routines, with the notable exception of "cdiaghg" and "rdiaghg".
+\item
+  Parallelization on k-points speeds up (almost linearly) "c\_bands" and 
+  called routines; speeds up partially "sum\_band"; does not speed up
+  at all "v\_of\_rho", "newd", "mix\_rho".
+\item
+  Linear-algebra parallelization speeds up (not always) "cdiaghg" and "rdiaghg" 
+\item
+  "task-group" parallelization speeds up "fftw"
+\item
+  OpenMP parallelization speeds up "fftw", plus selected parts of the 
+  calculation, plus (depending on the availability of OpenMP-aware
+  libraries) some linear algebra operations
+\end{itemize}
+and on RAM:
+\begin{itemize}
+\item
+  Parallelization on FFT distributes most arrays across processors
+  (i.e. all G-space and R-spaces arrays) but not all of them (in
+  particular, not subspace Hamiltonian and overlap matrices)
+\item
+  Linear-algebra parallelization also distributes subspace Hamiltonian
+  and overlap matrices.
+\item
+  All other parallelization levels do not distribute any memory
+\end{itemize}
+In an ideally parallelized run, you should observe the following:
+\begin{itemize}
+\item
+  CPU and wall time do not differ by much
+\item
+  Time usage is still dominated by the same routines as for the serial run
+\item
+  Routine "fft\_scatter" (called by parallel FFT) takes a sizable part of
+  the time spent in FFTs but does not dominate it.
+\end{itemize}
+
+\paragraph{ Quick estimate of parallelization parameters}
+
+You need to know
+\begin{itemize}
+\item 
+  the number of k-points, $N_k$
+\item
+  the third dimension of the (smooth) FFT grid, $N_3$
+\item
+  the number of Kohn-Sham states, $M$
+\end{itemize}
+These data allow to set bounds on parallelization:
+\begin{itemize}
+\item 
+  k-point parallelization is limited to $N_k$ processor pools: 
+  \texttt{-npool Nk}
+\item
+  FFT parallelization shouldn't exceed $N_3$ processors, i.e. if you
+  run with \texttt{-npool Nk}, use $N=N_k\times N_3$ MPI processes at most (\texttt{mpirun -np N ...})
+\item
+  Unless $M$ is a few hundreds or more, don't bother using linear-algebra
+  parallelization
+\end{itemize}
+You will need to experiment a bit to find the best compromise. In order
+to have good load balancing among MPI processes, the number of k-point
+pools should be an integer divisor of $N_k$; the number of processors for
+FFT parallelization should be an integer divisor of $N_3$. 
+
+\paragraph{Typical symptoms of bad/inadequate parallelization}
+
+\begin{itemize}
+\item 
+{\em  a large fraction of time is spent in "v\_of\_rho", "newd", "mix\_rho"}, or\\
+{\em  the time doesn't scale well or doesn't scale at all by increasing the 
+  number of processors for k-point parallelization.}  Solution:
+\begin{itemize}
+\item 
+  use (also) FFT parallelization if possible
+\end{itemize}
+\item
+{\em  a disproportionate time is spent in "cdiaghg"/"rdiaghg".} Solutions:
+\begin{itemize}
+\item 
+   use (also) k-point parallelization if possible
+\item 
+   use linear-algebra parallelization, with scalapack if possible.
+\end{itemize}
+\item
+{\em a disproportionate time is spent in "fft\_scatter"}, or
+{\em in "fft\_scatter" the difference between CPU and wall time is large.} Solutions:
+\begin{itemize}
+\item 
+    if you do not have fast (better than Gigabit ethernet) communication
+    hardware, do not try FFT parallelization on more than 4 or 8 procs.
+\item 
+    use (also) k-point parallelization if possible
+\end{itemize}
+\item
+{\em  the time doesn't scale well or doesn't scale at all by increasing the 
+  number of processors for FFT parallelization.}
+    Solutions:
+\begin{itemize}
+\item 
+    use "task groups": try command-line option \texttt{-ntg 4} or
+    \texttt{-ntg 8}. This may improve your scaling.
+\end{itemize}
+\end{itemize}
 
 \section{Troubleshooting}
 
