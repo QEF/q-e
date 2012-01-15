@@ -71,10 +71,14 @@ SUBROUTINE add_vuspsi( lda, n, m, hpsi )
        !
        IMPLICIT NONE
        REAL(DP), ALLOCATABLE :: ps (:,:)
+       INTEGER :: ierr
        !
        IF ( nkb == 0 ) RETURN
        !
-       ALLOCATE (ps (nkb,m))
+       ALLOCATE (ps (nkb,m), STAT=ierr )
+       IF( ierr /= 0 ) &
+          CALL errore( ' add_vuspsi_gamma ', ' cannot allocate ps ', ABS( ierr ) )
+       !
        ps(:,:) = 0.D0
        !
        ijkb0 = 0
@@ -127,10 +131,13 @@ SUBROUTINE add_vuspsi( lda, n, m, hpsi )
        !
        IMPLICIT NONE
        COMPLEX(DP), ALLOCATABLE :: ps (:,:)
+       INTEGER :: ierr
        !
        IF ( nkb == 0 ) RETURN
        !
-       ALLOCATE (ps (nkb,m))
+       ALLOCATE (ps (nkb,m), STAT=ierr )
+       IF( ierr /= 0 ) &
+          CALL errore( ' add_vuspsi_k ', ' cannot allocate ps ', ABS( ierr ) )
        ps(:,:) = ( 0.D0, 0.D0 )
        !
        ijkb0 = 0
@@ -184,10 +191,14 @@ SUBROUTINE add_vuspsi( lda, n, m, hpsi )
        !
        IMPLICIT NONE
        COMPLEX(DP), ALLOCATABLE :: ps (:,:,:)
+       INTEGER :: ierr
        !
        IF ( nkb == 0 ) RETURN
        !
-       ALLOCATE (ps(  nkb,npol, m))    
+       ALLOCATE (ps(  nkb,npol, m), STAT=ierr )    
+       IF( ierr /= 0 ) &
+          CALL errore( ' add_vuspsi_nc ', ' error allocating ps ', ABS( ierr ) )
+       !
        ps (:,:,:) = (0.d0, 0.d0)
        !
        ijkb0 = 0

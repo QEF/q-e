@@ -200,12 +200,18 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
   ! number of iterations in Davidson
   ! number or repeated call to diagonalization in case of non convergence
   ! number of notconverged elements
+  INTEGER :: ierr
   !
   LOGICAL :: lrot
   ! .TRUE. if the wfc have already be rotated
   !
-  ALLOCATE( h_diag( npwx, npol ) )
-  ALLOCATE( s_diag( npwx, npol ) )
+  ALLOCATE( h_diag( npwx, npol ), STAT=ierr )
+  IF( ierr /= 0 ) &
+     CALL errore( ' diag_bands ', ' cannot allocate h_diag ', ABS(ierr) )
+  !
+  ALLOCATE( s_diag( npwx, npol ), STAT=ierr )
+  IF( ierr /= 0 ) &
+     CALL errore( ' diag_bands ', ' cannot allocate s_diag ', ABS(ierr) )
   !
   ! ... allocate space for <beta_i|psi_j> - used in h_psi and s_psi
   !
@@ -354,7 +360,7 @@ CONTAINS
     !
     ! ... here the local variables
     !
-    INTEGER :: ipol
+    INTEGER :: ipol, ierr
     !
     IF ( lelfield ) THEN
        !
@@ -378,7 +384,10 @@ CONTAINS
        !
        IF ( okvan ) THEN
           !
-          ALLOCATE( bec_evcel ( nkb, nbnd ) )
+          ALLOCATE( bec_evcel ( nkb, nbnd ), STAT=ierr )
+          IF( ierr /= 0 ) &
+             CALL errore( ' c_bands_k ', ' cannot allocate bec_evcel ', ABS( ierr ) )
+          !
           CALL calbec(npw, vkb, evcel, bec_evcel)
           !
        ENDIF
@@ -524,13 +533,21 @@ SUBROUTINE c_bands_efield ( iter, ik_, dr2 )
   INTEGER, INTENT (in) :: iter, ik_
   REAL(DP), INTENT (in) :: dr2
   !
-  INTEGER :: inberry, ipol
+  INTEGER :: inberry, ipol, ierr
   !
   !
-  ALLOCATE( evcel ( npwx, nbnd ) )
-  ALLOCATE( evcelm( npwx, nbnd, 3  ) )
-  ALLOCATE( evcelp( npwx, nbnd, 3 ) )
-  ALLOCATE( fact_hepsi(nks, 3) )
+  ALLOCATE( evcel ( npwx, nbnd ), STAT=ierr )
+  IF( ierr /= 0 ) &
+     CALL errore( ' c_bands_efield ', ' cannot allocate evcel ', ABS( ierr ) )
+  ALLOCATE( evcelm( npwx, nbnd, 3  ), STAT=ierr )
+  IF( ierr /= 0 ) &
+     CALL errore( ' c_bands_efield ', ' cannot allocate evcelm ', ABS( ierr ) )
+  ALLOCATE( evcelp( npwx, nbnd, 3 ), STAT=ierr )
+  IF( ierr /= 0 ) &
+     CALL errore( ' c_bands_efield ', ' cannot allocate evcelp ', ABS( ierr ) )
+  ALLOCATE( fact_hepsi(nks, 3), STAT=ierr )
+  IF( ierr /= 0 ) &
+     CALL errore( ' c_bands_efield ', ' cannot allocate fact_hepsi ', ABS( ierr ) )
   !
   DO inberry = 1, nberrycyc
      !

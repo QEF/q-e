@@ -283,6 +283,7 @@ CONTAINS
     IMPLICIT NONE
     TYPE (bec_type) :: bec
     INTEGER, INTENT (in) :: nkb, nbnd
+    INTEGER :: ierr
     !
 #ifdef __STD_F95
     NULLIFY(bec%r)
@@ -291,17 +292,26 @@ CONTAINS
 #endif
     IF ( gamma_only ) THEN
        !
-       ALLOCATE( bec%r( nkb, nbnd ) )
+       ALLOCATE( bec%r( nkb, nbnd ), STAT=ierr )
+       IF( ierr /= 0 ) &
+          CALL errore( ' allocate_bec_type ', ' cannot allocate bec%r ', ABS(ierr) )
+       !
        bec%r(:,:)=0.0D0
        !
     ELSEIF ( noncolin) THEN
        !
-       ALLOCATE( bec%nc( nkb, npol, nbnd ) )
+       ALLOCATE( bec%nc( nkb, npol, nbnd ), STAT=ierr )
+       IF( ierr /= 0 ) &
+          CALL errore( ' allocate_bec_type ', ' cannot allocate bec%nc ', ABS(ierr) )
+       !
        bec%nc(:,:,:)=(0.0D0,0.0D0)
        !
     ELSE
        !
-       ALLOCATE( bec%k( nkb, nbnd ) )
+       ALLOCATE( bec%k( nkb, nbnd ), STAT=ierr )
+       IF( ierr /= 0 ) &
+          CALL errore( ' allocate_bec_type ', ' cannot allocate bec%k ', ABS(ierr) )
+       !
        bec%k(:,:)=(0.0D0,0.0D0)
        !
     ENDIF

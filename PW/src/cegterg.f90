@@ -63,6 +63,7 @@ SUBROUTINE cegterg( npw, npwx, nvec, nvecx, npol, evc, ethr, &
     ! counter on the reduced basis vectors
     ! adapted npw and npwx
     ! do-loop counters
+  INTEGER :: ierr
   COMPLEX(DP), ALLOCATABLE :: hc(:,:), sc(:,:), vc(:,:)
     ! Hamiltonian on the reduced basis
     ! S matrix on the reduced basis
@@ -110,16 +111,34 @@ SUBROUTINE cegterg( npw, npwx, nvec, nvecx, npol, evc, ethr, &
      !
   END IF
   !
-  ALLOCATE(  psi( npwx, npol, nvecx ) )
-  ALLOCATE( hpsi( npwx, npol, nvecx ) )
+  ALLOCATE(  psi( npwx, npol, nvecx ), STAT=ierr )
+  IF( ierr /= 0 ) &
+     CALL errore( ' cegterg ',' cannot allocate psi ', ABS(ierr) )
+  ALLOCATE( hpsi( npwx, npol, nvecx ), STAT=ierr )
+  IF( ierr /= 0 ) &
+     CALL errore( ' cegterg ',' cannot allocate hpsi ', ABS(ierr) )
   !
-  IF ( uspp ) ALLOCATE( spsi( npwx, npol, nvecx ) )
+  IF ( uspp ) THEN
+     ALLOCATE( spsi( npwx, npol, nvecx ), STAT=ierr )
+     IF( ierr /= 0 ) &
+        CALL errore( ' cegterg ',' cannot allocate spsi ', ABS(ierr) )
+  END IF
   !
-  ALLOCATE( sc( nvecx, nvecx ) )
-  ALLOCATE( hc( nvecx, nvecx ) )
-  ALLOCATE( vc( nvecx, nvecx ) )
-  ALLOCATE( ew( nvecx ) )
-  ALLOCATE( conv( nvec ) )
+  ALLOCATE( sc( nvecx, nvecx ), STAT=ierr )
+  IF( ierr /= 0 ) &
+     CALL errore( ' cegterg ',' cannot allocate sc ', ABS(ierr) )
+  ALLOCATE( hc( nvecx, nvecx ), STAT=ierr )
+  IF( ierr /= 0 ) &
+     CALL errore( ' cegterg ',' cannot allocate hc ', ABS(ierr) )
+  ALLOCATE( vc( nvecx, nvecx ), STAT=ierr )
+  IF( ierr /= 0 ) &
+     CALL errore( ' cegterg ',' cannot allocate vc ', ABS(ierr) )
+  ALLOCATE( ew( nvecx ), STAT=ierr )
+  IF( ierr /= 0 ) &
+     CALL errore( ' cegterg ',' cannot allocate ew ', ABS(ierr) )
+  ALLOCATE( conv( nvec ), STAT=ierr )
+  IF( ierr /= 0 ) &
+     CALL errore( ' cegterg ',' cannot allocate conv ', ABS(ierr) )
   !
   notcnv = nvec
   nbase  = nvec
@@ -527,6 +546,7 @@ SUBROUTINE pcegterg( npw, npwx, nvec, nvecx, npol, evc, ethr, &
     ! dimension of the reduced basis
     ! counter on the reduced basis vectors
     ! do-loop counters
+  INTEGER :: ierr
   REAL(DP), ALLOCATABLE :: ew(:)
   COMPLEX(DP), ALLOCATABLE :: hl(:,:), sl(:,:), vl(:,:)
     ! Hamiltonian on the reduced basis
@@ -586,18 +606,41 @@ SUBROUTINE pcegterg( npw, npwx, nvec, nvecx, npol, evc, ethr, &
      !
   END IF
 
-  ALLOCATE(  psi( npwx, npol, nvecx ) )
-  ALLOCATE( hpsi( npwx, npol, nvecx ) )
+  ALLOCATE(  psi( npwx, npol, nvecx ), STAT=ierr )
+  IF( ierr /= 0 ) &
+     CALL errore( ' pcegterg ',' cannot allocate psi ', ABS(ierr) )
   !
-  IF ( uspp ) ALLOCATE( spsi( npwx, npol, nvecx ) )
+  ALLOCATE( hpsi( npwx, npol, nvecx ), STAT=ierr )
+  IF( ierr /= 0 ) &
+     CALL errore( ' pcegterg ',' cannot allocate hpsi ', ABS(ierr) )
+  !
+  IF ( uspp ) THEN
+     ALLOCATE( spsi( npwx, npol, nvecx ), STAT=ierr )
+     IF( ierr /= 0 ) &
+        CALL errore( ' pcegterg ',' cannot allocate spsi ', ABS(ierr) )
+  END IF
   !
   ! ... Initialize the matrix descriptor
   !
-  ALLOCATE( ic_notcnv( np_ortho(2) ) )
-  ALLOCATE( notcnv_ip( np_ortho(2) ) )
-  ALLOCATE( irc_ip( np_ortho(1) ) )
-  ALLOCATE( nrc_ip( np_ortho(1) ) )
-  ALLOCATE( rank_ip( np_ortho(1), np_ortho(2) ) )
+  ALLOCATE( ic_notcnv( np_ortho(2) ), STAT=ierr )
+  IF( ierr /= 0 ) &
+     CALL errore( ' pcegterg ',' cannot allocate ic_notcnv ', ABS(ierr) )
+  !
+  ALLOCATE( notcnv_ip( np_ortho(2) ), STAT=ierr )
+  IF( ierr /= 0 ) &
+     CALL errore( ' pcegterg ',' cannot allocate notcnv_ip ', ABS(ierr) )
+  !
+  ALLOCATE( irc_ip( np_ortho(1) ), STAT=ierr )
+  IF( ierr /= 0 ) &
+     CALL errore( ' pcegterg ',' cannot allocate irc_ip ', ABS(ierr) )
+  !
+  ALLOCATE( nrc_ip( np_ortho(1) ), STAT=ierr )
+  IF( ierr /= 0 ) &
+     CALL errore( ' pcegterg ',' cannot allocate nrc_ip ', ABS(ierr) )
+  !
+  ALLOCATE( rank_ip( np_ortho(1), np_ortho(2) ), STAT=ierr )
+  IF( ierr /= 0 ) &
+     CALL errore( ' pcegterg ',' cannot allocate rank_ip ', ABS(ierr) )
   !
   CALL desc_init( nvec, desc, irc_ip, nrc_ip )
   !
@@ -606,20 +649,41 @@ SUBROUTINE pcegterg( npw, npwx, nvec, nvecx, npol, evc, ethr, &
      ! only procs involved in the diagonalization need to allocate local 
      ! matrix block.
      !
-     ALLOCATE( vl( nx , nx ) )
-     ALLOCATE( sl( nx , nx ) )
-     ALLOCATE( hl( nx , nx ) )
+     ALLOCATE( vl( nx , nx ), STAT=ierr )
+     IF( ierr /= 0 ) &
+        CALL errore( ' pcegterg ',' cannot allocate vl ', ABS(ierr) )
+     !
+     ALLOCATE( sl( nx , nx ), STAT=ierr )
+     IF( ierr /= 0 ) &
+        CALL errore( ' pcegterg ',' cannot allocate sl ', ABS(ierr) )
+     !
+     ALLOCATE( hl( nx , nx ), STAT=ierr )
+     IF( ierr /= 0 ) &
+        CALL errore( ' pcegterg ',' cannot allocate hl ', ABS(ierr) )
      !
   ELSE
      !
-     ALLOCATE( vl( 1 , 1 ) )
-     ALLOCATE( sl( 1 , 1 ) )
-     ALLOCATE( hl( 1 , 1 ) )
+     ALLOCATE( vl( 1 , 1 ), STAT=ierr )
+     IF( ierr /= 0 ) &
+        CALL errore( ' pcegterg ',' cannot allocate vl ', ABS(ierr) )
+     !
+     ALLOCATE( sl( 1 , 1 ), STAT=ierr )
+     IF( ierr /= 0 ) &
+        CALL errore( ' pcegterg ',' cannot allocate sl ', ABS(ierr) )
+     !
+     ALLOCATE( hl( 1 , 1 ), STAT=ierr )
+     IF( ierr /= 0 ) &
+        CALL errore( ' pcegterg ',' cannot allocate hl ', ABS(ierr) )
      !
   END IF
   !
-  ALLOCATE( ew( nvecx ) )
-  ALLOCATE( conv( nvec ) )
+  ALLOCATE( ew( nvecx ), STAT=ierr )
+  IF( ierr /= 0 ) &
+     CALL errore( ' pcegterg ',' cannot allocate ew ', ABS(ierr) )
+  !
+  ALLOCATE( conv( nvec ), STAT=ierr )
+  IF( ierr /= 0 ) &
+     CALL errore( ' pcegterg ',' cannot allocate conv ', ABS(ierr) )
   !
   notcnv = nvec
   nbase  = nvec
@@ -751,16 +815,24 @@ SUBROUTINE pcegterg( npw, npwx, nvec, nvecx, npol, evc, ethr, &
         !
         vl = hl
         DEALLOCATE( hl )
-        ALLOCATE( hl( nx , nx ) )
+        ALLOCATE( hl( nx , nx ), STAT=ierr )
+        IF( ierr /= 0 ) &
+           CALL errore( ' pcegterg ',' cannot allocate hl ', ABS(ierr) )
+
         CALL zsqmred( nbase, vl, desc_old%nrcx, desc_old, nbase+notcnv, hl, nx, desc )
 
         vl = sl
         DEALLOCATE( sl )
-        ALLOCATE( sl( nx , nx ) )
+        ALLOCATE( sl( nx , nx ), STAT=ierr )
+        IF( ierr /= 0 ) &
+           CALL errore( ' pcegterg ',' cannot allocate sl ', ABS(ierr) )
+
         CALL zsqmred( nbase, vl, desc_old%nrcx, desc_old, nbase+notcnv, sl, nx, desc )
 
         DEALLOCATE( vl )
-        ALLOCATE( vl( nx , nx ) )
+        ALLOCATE( vl( nx , nx ), STAT=ierr )
+        IF( ierr /= 0 ) &
+           CALL errore( ' pcegterg ',' cannot allocate vl ', ABS(ierr) )
 
      END IF
      !
@@ -860,9 +932,15 @@ SUBROUTINE pcegterg( npw, npwx, nvec, nvecx, npol, evc, ethr, &
            ! we need to re-alloc with the new size.
            !
            DEALLOCATE( vl, hl, sl )
-           ALLOCATE( vl( nx, nx ) )
-           ALLOCATE( hl( nx, nx ) )
-           ALLOCATE( sl( nx, nx ) )
+           ALLOCATE( vl( nx, nx ), STAT=ierr )
+           IF( ierr /= 0 ) &
+              CALL errore( ' pcegterg ',' cannot allocate vl ', ABS(ierr) )
+           ALLOCATE( hl( nx, nx ), STAT=ierr )
+           IF( ierr /= 0 ) &
+              CALL errore( ' pcegterg ',' cannot allocate hl ', ABS(ierr) )
+           ALLOCATE( sl( nx, nx ), STAT=ierr )
+           IF( ierr /= 0 ) &
+              CALL errore( ' pcegterg ',' cannot allocate sl ', ABS(ierr) )
            !
         END IF
         !
