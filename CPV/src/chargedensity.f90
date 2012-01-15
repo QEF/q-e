@@ -154,7 +154,6 @@
       LOGICAL :: ttstress
       
       !
-
       CALL start_clock( 'rhoofr' )
 
       ttstress = tpre
@@ -815,33 +814,46 @@ SUBROUTINE drhov(irb,eigrb,rhovan,drhovan,rhog,rhor,drhog,drhor)
       COMPLEX(DP), INTENT(OUT) :: drhog(ngm,nspin,3,3)
 ! local
       INTEGER i, j, isup, isdw, nfft, ifft, iv, jv, ig, ijv, is, iss,   &
-     &     isa, ia, ir
+     &     isa, ia, ir, ijs
       REAL(DP) :: asumt, dsumt
       COMPLEX(DP) fp, fm, ci
       COMPLEX(DP), ALLOCATABLE :: v(:)
       COMPLEX(DP), ALLOCATABLE:: dqgbt(:,:)
       COMPLEX(DP), ALLOCATABLE :: qv(:)
 !
-#ifdef __OPENMP
       INTEGER  :: itid, mytid, ntids
+#ifdef __OPENMP
       INTEGER  :: omp_get_thread_num, omp_get_num_threads
       EXTERNAL :: omp_get_thread_num, omp_get_num_threads
 #endif
 !
+!$omp parallel default(none), private(i,j,iss,ir,ig,mytid,ntids,itid), shared(nspin,dfftp,drhor,drhog,rhor,rhog,ainv,ngm) 
+#ifdef __OPENMP
+      mytid = omp_get_thread_num()  ! take the thread ID
+      ntids = omp_get_num_threads() ! take the number of threads
+#else
+      mytid = 0
+      ntids = 1
+#endif
+      itid  = 0
       DO j=1,3
          DO i=1,3
             DO iss=1,nspin
-               DO ir=1,dfftp%nnr
-                  drhor(ir,iss,i,j)=-rhor(ir,iss)*ainv(j,i)
-               END DO
-               DO ig=1,ngm
-                  drhog(ig,iss,i,j)=-rhog(ig,iss)*ainv(j,i)
-               END DO
+               IF( MOD( itid,  ntids ) == mytid ) THEN
+                  DO ir=1,dfftp%nnr
+                     drhor(ir,iss,i,j)=-rhor(ir,iss)*ainv(j,i)
+                  END DO
+                  DO ig=1,ngm
+                     drhog(ig,iss,i,j)=-rhog(ig,iss)*ainv(j,i)
+                  END DO
+               END IF
+               itid = itid + 1 
             END DO
          END DO
       END DO
+!$omp end parallel
 
-      IF ( nvb < 0 ) RETURN
+      IF ( nvb <= 0 ) RETURN
 
       ALLOCATE( v( dfftp%nnr ) )
 
@@ -858,7 +870,7 @@ SUBROUTINE drhov(irb,eigrb,rhovan,drhovan,rhog,rhor,drhog,drhor)
 
 !$omp parallel default(none) &
 !$omp          shared(nvb, na, ngb, nh, eigrb, dfftb, irb, v, &
-!$omp                 nmb, ci, npb, i, j, dqgb, qgb, nhm, rhovan, drhovan, my_bgrp_id, nbgrp ) &
+!$omp                 nmb, ci, npb, i, j, dqgb, qgb, nhm, rhovan, drhovan ) &
 !$omp          private(mytid, ntids, is, ia, nfft, ifft, iv, jv, ijv, ig, iss, isa, &
 !$omp                  qv, itid, dqgbt, dsumt, asumt )
 
@@ -878,7 +890,7 @@ SUBROUTINE drhov(irb,eigrb,rhovan,drhovan,rhog,rhor,drhog,drhor)
 #ifdef __PARA
                   DO ia=1,na(is)
                      nfft=1
-                     IF ( ( dfftb%np3( isa ) <= 0 ) .OR. ( my_bgrp_id /= MOD( ia, nbgrp ) ) ) THEN
+                     IF ( ( dfftb%np3( isa ) <= 0 ) ) THEN
                         isa = isa + nfft
                         CYCLE
                      END IF
@@ -958,7 +970,6 @@ SUBROUTINE drhov(irb,eigrb,rhovan,drhovan,rhog,rhor,drhog,drhor)
 !
 !$omp end parallel
 
-               CALL mp_sum( v, inter_bgrp_comm )
 
                iss = 1
 
@@ -1059,7 +1070,6 @@ SUBROUTINE drhov(irb,eigrb,rhovan,drhovan,rhog,rhor,drhog,drhor)
             END DO
          END DO
       ENDIF
-
 
       DEALLOCATE( v )
 !

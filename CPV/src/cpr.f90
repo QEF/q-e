@@ -959,6 +959,9 @@ SUBROUTINE terminate_run()
   CALL print_clock( 'fft_scatter' )
   CALL print_clock( 'betagx' )
   CALL print_clock( 'qradx' )
+  CALL print_clock( 'tmp_clk1' )
+  CALL print_clock( 'tmp_clk2' )
+  CALL print_clock( 'tmp_clk3' )
 !==============================================================
 ! Lingzhu Kong
   CALL print_clock( 'wf' )

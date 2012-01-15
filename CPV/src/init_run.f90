@@ -190,9 +190,6 @@ SUBROUTINE init_run()
   !
   ALLOCATE( becsum(  nhm*(nhm+1)/2, nat, nspin ) )
   ALLOCATE( deeq( nhm, nhm, nat, nspin ) )
-  IF ( tpre ) THEN
-     ! ALLOCATE( drhovan( nhm*(nhm+1)/2, nat, nspin, 3, 3 ) )
-  END IF
   !
   ALLOCATE( vkb( ngw, nkb ) )
   !
