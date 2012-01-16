@@ -629,6 +629,54 @@ two underscores, as \texttt{\_\_expression} in the above example. Traditionally 
 % \subsection{Performance issues}
 % \subsection{Portability issues}
 
+\section{Format of arrays containing charge density, potential, etc.}
+The index of arrays used to store functions defined on 3D meshes is
+actually a shorthand for three indices, following the FORTRAN convention
+("leftmost index runs faster"). An example will explain this better.
+Suppose you have a 3D array \texttt{psi(nr1x,nr2x,nr3x)}. FORTRAN
+compilers store this array sequentially  in the computer RAM in the following way:
+\begin{verbatim}
+        psi(   1,   1,   1)
+        psi(   2,   1,   1)
+        ...
+        psi(nr1x,   1,   1)
+        psi(   1,   2,   1)
+        psi(   2,   2,   1)
+        ...
+        psi(nr1x,   2,   1)
+        ...
+        ...
+        psi(nr1x,nr2x,   1)
+        ...
+        psi(nr1x,nr2x,nr3x)
+etc
+\end{verbatim}
+Let \texttt{ind} be the position of the \texttt{(i,j,k)} element in the above list:
+the following relation
+\begin{verbatim}
+        ind = i + (j - 1) * nr1x + (k - 1) *  nr2x * nr1x
+\end{verbatim}
+holds. This should clarify the relation between 1D and 3D indexing. In real
+space, the \texttt{(i,j,k)} point of the FFT grid with dimensions
+\texttt{nr1} ($\le$\texttt{nr1x}),
+\texttt{nr2}  ($\le$\texttt{nr2x}), , \texttt{nr3} ($\le$\texttt{nr3x}), is
+$$
+r_{ijk}=\frac{i-1}{nr1} \tau_1  +  \frac{j-1}{nr2} \tau_2 +
+\frac{k-1}{nr3} \tau_3
+$$
+where the $\tau_i$ are the basis vectors of the Bravais lattice.
+The latter are stored row-wise in the \texttt{at} array:
+$\tau_1 = $ \texttt{at(:, 1)},
+$\tau_2 = $ \texttt{at(:, 2)},
+$\tau_3 = $ \texttt{at(:, 3)}.
+
+The distinction between the dimensions of the FFT grid,
+\texttt{(nr1,nr2,nr3)} and the physical dimensions of the array,
+\texttt{(nr1x,nr2x,nr3x)} is done only because it is computationally
+convenient in some cases that the two sets are not the same.
+In particular, it is often convenient to have \texttt{nrx1}=\texttt{nr1}+1
+to reduce memory conflicts.
+
 \section{ Parallelization}
 
 In parallel execution (MPI only), PW starts N independent processes (do not start more than one per processor!) that communicate via calls to MPI libraries. Each process has its own set of variables and knows nothing about other processes' variables. Variables that take little memory are replicated, those that take a lot of memory (wavefunctions, G-vectors, R-space grid) are distributed.

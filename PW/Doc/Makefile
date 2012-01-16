@@ -22,6 +22,7 @@ $(PDFS): %.pdf: %.tex
 clean:
 	- rm -f $(PDFS) $(AUXS) $(LOGS) $(OUTS) $(TOCS) *~
 	- rm -rf user_guide/
+	- rm -rf input_xx.xsl
 	- rm -f INPUT_*.html INPUT_*.txt INPUT_*.xml
 	- rm -rf ../../Doc/INPUT_PW.*
 
@@ -47,7 +48,17 @@ user_guide: user_guide.pdf
 	@echo ""
 
 
-defs: INPUT_PW.html INPUT_PW.txt link_on_main_doc
+defs: link_input_xx INPUT_PW.html INPUT_PW.txt link_on_main_doc
+
+link_input_xx:
+	if test -f ../../doc-def/input_xx.xsl ; then \
+	(ln -s ../../doc-def/input_xx.xsl input_xx.xsl) ; \
+	else \
+	echo ; \
+	echo "  Sorry, can not find input_xx.xsl html style file !!!" ; \
+	echo ; \
+	fi
+
 INPUT_PW.html: %.html: %.def
 	$(HELPDOC) $<
 INPUT_PW.txt: %.txt: %.def
