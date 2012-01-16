@@ -32,6 +32,7 @@ compute_q_3bess.o \
 compute_relpert.o \
 compute_solution.o \
 descreening.o \
+default_conf.o \
 dfx_new.o \
 dir_outward.o \
 dirsol.o \

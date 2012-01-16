@@ -301,6 +301,9 @@ subroutine ld1_readin
      call errore('ld1_readin','lsd not correct',1)
   endif
 
+ 
+  if (config == 'default') CALL default_conf(zed,config)
+
   if (config == ' ') then
      if (ionode) call read_config (rel, lsd, nwf, el, nn, ll, oc, isw, jj)
      call bcast_config()

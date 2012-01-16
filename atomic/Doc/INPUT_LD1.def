@@ -300,6 +300,9 @@ input_description -distribution {Quantum Espresso} -program ld1.x {
 		  (Use rel_dist if you want to average the electrons
 		  over all available states.)
 
+                * If config='default' the code uses zed to set the ground
+                  state electronic configuration for the atom.
+
 		Negative occupancies are used to flag unbound states;
 		they are not actually used.
 	    }
