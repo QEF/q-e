@@ -57,32 +57,33 @@
 
 \section{Introduction}
 
-This guide covers the installation and usage of \PHonon\ (opEn-Source 
-Package for the calculation of vibrational properties through 
-Density Functional Perturbation Theory)
-, version \version.
+This guide covers the usage of the \PHonon\ package, a
+part of the \qe\ distribution. 
+Further documentation, beyond what is provided 
+in this guide, can be found in the directory
+\texttt{PHonon/Doc/}, containing a copy of this guide.
 
-\PHonon\ is part of the \qe\ distribution and can not be compiled 
-nor used independently.
+This guide assumes that you know the contents of 
+the general User's Guide for \qe\ and of the User's 
+Guide for \PWscf. It also assumes that you have
+already installed \qe (\PHonon\ is not a stand-alone
+package: it requires \PWscf to be compiled and used).
+If not, please locate the general User's Guide in directory 
+\texttt{Doc/} two levels above the one containing this guide,
+and the User's Guide for \PWscf\ in \texttt{PW/Doc/};
+or consult the web site:\\
+\texttt{http://www.quantum-espresso.org}.
+It is also assumed that you know the physics behing \qe,
+the methods it implements, and in particular the physics
+and the methods of \PHonon.
 
-Further documentation, beyond what is provided in this guide, can be found in:
-\begin{itemize}
-\item the \texttt{pw\_forum} mailing list (\texttt{pw\_forum@pwscf.org}).
-   You can subscribe to this list, browse and search its archives
-   (links in \texttt{http://www.quantum-espresso.org/contacts.php}).
-   See section \ref{SubSec:Contacts}, ``Contacts'', for more info.
-  \item the \texttt{Doc/} directory. It
-   contains a detailed description of the \PHonon\ codes input data
-   in files \texttt{INPUT\_*.txt} and \texttt{INPUT\_*.html},
-   plus and a few additional pdf documents.
-  \item the \qe\ web site:\\
-   \texttt{http://www.quantum-espresso.org}.
-\end{itemize}
+People who want to modify or contribute to 
+\PHonon\ should read the Developer Manual: 
+\texttt{Doc/developer\_man.pdf}.
 
-All trademarks mentioned in this guide belong to their respective owners. \\
-
-
-\PHonon\ has the following directory structure:
+\PHonon\ has the following directory structure,
+contained in a subdirectory \texttt{PHonon/}
+of the main \qe\ tree:
 
 \begin{tabular}{ll}
 \texttt{Doc/} & : contains the user\_guide and input data description \\
@@ -93,8 +94,7 @@ All trademarks mentioned in this guide belong to their respective owners. \\
                   (\texttt{phcg.x})\\
 \texttt{D3/}     & : source files for third-order derivative
                   calculations (\texttt{d3.x})\\
-\end{tabular}
-
+\end{tabular}\\
 The codes availables inside \PHonon\ can perform the following types of calculations:
 \begin{itemize}
   \item phonon frequencies and eigenvectors at a generic wave vector,
@@ -114,13 +114,11 @@ updated list of what \PHonon\ can and cannot do.
 Calculations, in the Quasi-Harmonic approximations, of the vibrational 
 free energy can be performed using the \texttt{QHA}  package.
 
-In the following, the cited affiliation is either the current one 
-or the one where the last known contribution was done.
-
 \section{People}
 The \PHonon\ package
 was originally developed by Stefano Baroni, Stefano
-de Gironcoli, Andrea Dal Corso (SISSA), Paolo Giannozzi, and many others.
+de Gironcoli, Andrea Dal Corso (SISSA), Paolo Giannozzi (Univ. Udine), 
+and many others.
 We quote in particular:
 \begin{itemize}
   \item Michele Lazzeri (Univ.Paris VI) for the 2n+1 code and Raman 
@@ -178,7 +176,7 @@ Typing \texttt{make} from the \PHonon\ directory produces the following codes:
   not support USPP and PAW.
 \end{itemize}
 
-Links from the main \qe\ texttt{bin} directory are automatically generated.
+Links from the main \qe\ \texttt{bin/} directory are automatically generated.
    
 \subsection{Running examples}
 \label{SubSec:Examples}
