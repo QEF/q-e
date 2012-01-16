@@ -804,7 +804,11 @@ endif
 #endif
                 h_ibnd = h_ibnd + 1
                 x1 = x_occupation(ibnd,  ik)
+#ifdef __BANDS
                 IF (ibnd < ibnd_end) THEN
+#else
+                IF (ibnd < nbnd) THEN
+#endif
                    x2 = x_occupation(ibnd + 1,ik)
                 ELSE
                    x2 = 0.d0
