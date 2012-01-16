@@ -1,6 +1,13 @@
+!
+! Copyright (C) 2012 Quantum ESPRESSO group
+! This file is distributed under the terms of the
+! GNU General Public License. See the file `License'
+! in the root directory of the present distribution,
+! or http://www.gnu.org/copyleft/gpl.txt .
+!
 SUBROUTINE default_conf(zed,config)
 !
-!  This subroutine provides a default electronc configuration for each atom.
+!  This subroutine provides a default electronic configuration for each atom.
 !
 USE kinds, ONLY : DP
 IMPLICIT NONE
