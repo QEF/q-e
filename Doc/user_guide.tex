@@ -1,5 +1,5 @@
 \documentclass[12pt,a4paper]{article}
-\def\version{4.3.2}
+\def\version{5.0}
 \def\qe{{\sc Quantum ESPRESSO}}
 
 \usepackage{html}
@@ -62,37 +62,30 @@
 
 \section{Introduction}
 
-This guide covers the installation and usage of \qe\ (opEn-Source 
-Package for Research in Electronic Structure, Simulation,
+This guide gives a general overview of the contents and of the installation 
+of \qe\ (opEn-Source Package for Research in Electronic Structure, Simulation,
 and Optimization), version \version.
 
-The \qe\ distribution contains the following core packages 
-for the calculation of electronic-structure properties within
+The \qe\ distribution contains the core packages \PWscf\ (Plane-Wave 
+Self-Consistent Field) and \CP\ (Car-Parrinello) for the calculation
+of electronic-structure properties within
 Density-Functional Theory (DFT), using a Plane-Wave (PW) basis set 
-and pseudopotentials (PP):
-\begin{itemize}
-  \item \PWscf\ (Plane-Wave Self-Consistent Field).
-  \item \CP\ (Car-Parrinello).
-\end{itemize}
-It also includes the following more specialized packages:
+and pseudopotentials (PP). It also includes more specialized packages:
 \begin{itemize}
   \item \texttt{NEB}:
         energy barriers and reaction pathways through the Nudged Elastic Band method.
   \item \PHonon:
         phonons with Density-Functional Perturbation Theory.
-  \item \PostProc: various utilities for data postprocessing.
-  \item \texttt{PWcond}:
-        ballistic conductance (\texttt{http://people.sissa.it/\~{}smogunov/PWCOND/pwcond.html}).
-  \item \texttt{XSPECTRA}:
-        K-edge X-ray adsorption spectra.
-  \item \texttt{vdW}:
-        (experimental) dynamic polarizability. 
+  \item \PostProc: 
+        various utilities for data postprocessing.
+  \item \texttt{PWcond}: 
+        ballistic conductance.
+  \item \texttt{XSPECTRA}: K-edge X-ray adsorption spectra.
   \item \texttt{GWW}:
-        (experimental) GW calculation using Wannier functions
-        (http://gww.qe-forge.org/).
+        GW calculation using Wannier functions
   \item \texttt{TD-DFPT}:
         calculations of spectra using Time-Dependent 
-        Density-Functional Perturbation Theory (see \texttt{TDDFPT/README} for a list of reference papers).
+        Density-Functional Perturbation Theory.
 \end{itemize}
 The following auxiliary codes are included as well:
 \begin{itemize}
@@ -109,39 +102,26 @@ The following auxiliary codes are included as well:
       phonon dispersion plotting utility (to be
       used in conjunction with \PHonon).
 \end{itemize}
-A copy of required external libraries are included:
-\begin{itemize}
-\item \texttt{iotk}:
-      an Input-Output ToolKit.
-\item BLAS and LAPACK
-\end{itemize}
+A copy of required external libraries is also included.
 Finally, several additional packages that exploit data produced by \qe\ 
 or patch some \qe\ routines can be installed as {\em plug-ins}:
 \begin{itemize}
 \item \texttt{Wannier90}:
-      maximally localized Wannier functions
-      (\texttt{http://www.wannier.org/}), written by A. Mostofi, 
-     J. Yates, Y.-S Lee.
+      maximally localized Wannier functions.
 \item \texttt{WanT}:
-      quantum transport properties with Wannier functions \\
-      (\texttt{http://www.wannier-transport.org}), originally written by 
-      A. Ferretti, A. Calzolari and M. Buongiorno Nardelli.
+      quantum transport properties with Wannier functions.
 \item \texttt{YAMBO}:
-      electronic excitations within Many-Body Perturbation Theory: GW and Bethe-Salpeter equation 
-      (\texttt{http://www.yambo-code.org}), originally written by A. Marini.
+      electronic excitations within Many-Body Perturbation Theory:
+      GW and Bethe-Salpeter equation.
 \item \texttt{PLUMED}:
-      calculation of free-energy surface through metadynamics \\
-      M. Bonomi {\it et al}, Comp. Phys. Comm. {\bf 180}, 1961 (2009) \\
-      (\texttt{http://merlino.mi.infm.it/\~{}plumed/PLUMED}).
+      calculation of free-energy surface through metadynamics.
 \item \texttt{GIPAW} (Gauge-Independent Projector Augmented Waves):
-      NMR chemical shifts and EPR g-tensor, written by Davide Ceresoli 
-      (Univ. Oxford), Emine Kucukbenli (SISSA), Ari Seitsonen (Univ.Zurich),
-      Uwe Gerstmann,  Francesco Mauri (Univ. Paris VI).
-      Available at \texttt{http://qe-forge.org/frs/?group\_id=37}
-      (see also \texttt{http://www.gipaw.net}).
+      NMR chemical shifts and EPR g-tensor.
 \end{itemize}
-
-We refer the reader to the pachage-specific documentation for more information.
+Documentation on single packages can be found in the \texttt{Doc/} or
+\texttt{doc/} directory of each package. A detailed description of input
+data is available for most packages in files \texttt{INPUT\_*.txt} and 
+\texttt{INPUT\_*.html}.
 
 The \qe\ codes work on many different types of Unix machines,
 including parallel machines using both OpenMP and MPI 
@@ -151,18 +131,10 @@ see section \ref{Sec:Installation}.
 
 Further documentation, beyond what is provided in this guide, can be found in:
 \begin{itemize}
-\item the \texttt{pw\_forum} mailing list (\texttt{pw\_forum@pwscf.org}).
-   You can subscribe to this list, browse and search its archives
-   (links in \texttt{http://www.quantum-espresso.org/contacts.php}).
+  \item the \texttt{Doc/} directory of the \qe\ distribution;
+  \item the \qe\ web site \texttt{http://www.quantum-espresso.org};
+  \item the \texttt{pw\_forum} mailing list (\texttt{pw\_forum@pwscf.org}).
    See section \ref{SubSec:Contacts}, ``Contacts'', for more info.
-  \item the \texttt{Doc/} directory of the \qe\ distribution,
-   containing a detailed description of input data for most codes
-   in files \texttt{INPUT\_*.txt} and \texttt{INPUT\_*.html},
-   plus and a few additional pdf documents
-  \item the \qe\ web site:\\
-   \texttt{http://www.quantum-espresso.org};
-  \item the \qe\ Wiki:\\
-   \texttt{http://www.quantum-espresso.org/wiki/index.php/Main\_Page}.
 \end{itemize}
 People who want to contribute to \qe\ should read the 
 Developer Manual: \texttt{Doc/developer\_man.pdf}.
@@ -170,7 +142,7 @@ Developer Manual: \texttt{Doc/developer\_man.pdf}.
 This guide does not explain the basic Unix concepts (shell, execution 
 path, directories etc.) and utilities needed to run \qe; it does not 
 explain either solid state physics and its computational methods.
-If you want to learn the latter, you should read a good textbook, 
+If you want to learn the latter, you should first read a good textbook, 
 such as e.g. the book by Richard Martin:
 {\em Electronic Structure: Basic Theory and Practical Methods},
 Cambridge University Press (2004); or:
@@ -178,198 +150,42 @@ Cambridge University Press (2004); or:
 D. S. Sholl, J. A. Steckel (Wiley, 2009); or
 {\em Electronic Structure Calculations for Solids and Molecules:
 Theory and Computational Methods}, 
-J. Kohanoff (Cambridge University Press, 2006). 
-
-See also the ``Learn'' section in
-the \qe\ web site; the ``Reference Papers'' 
-section in the Wiki.
+J. Kohanoff (Cambridge University Press, 2006). Then you should consult
+the documentation of the package you want to use for more specific references.
 
 All trademarks mentioned in this guide belong to their respective owners.
 
-\subsection{What can \qe\ do}
-
-\PWscf\ can currently perform the following kinds of calculations:
-\begin{itemize}
-  \item ground-state energy and one-electron (Kohn-Sham) orbitals;
-  \item atomic forces, stresses, and structural optimization;
-  \item molecular dynamics on the ground-state Born-Oppenheimer surface,  also with variable cell;
-  \item macroscopic polarization and finite electric fields via 
-  the modern theory of polarization (Berry Phases).
-  \item the modern theory of polarization (Berry Phases).
-  \item free-energy surface calculation at fixed cell through meta-dynamics, if patched with PLUMED.
-\end{itemize}
-All of the above works for both insulators and metals, 
-in any crystal structure, for many exchange-correlation (XC) functionals
-(including spin polarization, DFT+U, nonlocal VdW functional,
-hybrid functionals), for
-norm-conserving (Hamann-Schluter-Chiang) PPs (NCPPs) in 
-separable form or Ultrasoft (Vanderbilt) PPs (USPPs)
-or Projector Augmented Waves (PAW) method.
-Non-collinear magnetism and spin-orbit interactions 
-are also implemented.  An implementation of finite electric 
-fields with a sawtooth potential in a supercell is also available.
-
-\texttt{NEB} calculates reaction pathways and energy barriers 
-using the Nudged Elastic Band (NEB) and Fourier String Method Dynamics 
-(SMD) methods. Note that these calculations are no longer performed
-by the \pwx\ executable of \PWscf. Also note that NEB with Car-Parrinello
-Molecular Dynamics is currently not implemented.
-
-\PostProc\ can perform the following types of calculations:
-\begin{itemize}
-  \item Scanning Tunneling Microscopy (STM) images;
-  \item plots of Electron Localization Functions (ELF);
-  \item Density of States (DOS) and Projected DOS (PDOS);
-  \item L\"owdin charges;
-  \item planar and spherical averages;
-\end{itemize}
-plus interfacing with a number of graphical utilities and with 
-external codes.
-
-\CP\ can perform Car-Parrinello molecular dynamics, including
-variable-cell dynamics, and free-energy surface calculation at 
-fixed cell through meta-dynamics, if patched with PLUMED.
-
 \subsection{People}
-
-In the following, the cited affiliation is either the current one 
-or the one where the last known contribution was done.
 
 The maintenance and further development of the \qe\ distribution
 is promoted by the DEMOCRITOS National Simulation Center 
 of IOM-CNR under the coordination of
 Paolo Giannozzi (Univ.Udine, Italy) and Layla Martin-Samos 
-(Democritos) with the strong support
+(Univ.Nova Gorica) with the strong support
 of the CINECA National Supercomputing Center in Bologna under 
 the responsibility of Carlo Cavazzoni.
 
-The \PWscf\ package (which included \PostProc\
-in earlier releases)
-was originally developed by Stefano Baroni, Stefano
-de Gironcoli, Andrea Dal Corso (SISSA), Paolo Giannozzi, and many others.
-We quote in particular:
-\begin{itemize}
-  \item Matteo Cococcioni (Univ. Minnesota) for DFT+U implementation;
-  \item David Vanderbilt's group at Rutgers for Berry's phase
-  calculations;
-  \item Ralph Gebauer (ICTP, Trieste) and Adriano Mosca Conte
-  (SISSA, Trieste) for noncolinear magnetism;
-  \item Andrea Dal Corso for spin-orbit interactions;
-  \item Carlo Sbraccia (Princeton) for NEB, Strings method,
-  for improvements to structural optimization
-  and to many other parts;
-  \item Paolo Umari (Univ. Padua) for finite electric fields;
-  \item Renata Wentzcovitch and collaborators (Univ. Minnesota)
-  for variable-cell molecular dynamics;
-  \item Lorenzo Paulatto (Univ.Paris VI) for PAW implementation, 
-  built  upon previous work by Guido Fratesi (Univ.Milano Bicocca)
-  and Riccardo Mazzarello (ETHZ-USI Lugano);
- \item Ismaila Dabo (INRIA, Palaiseau) for electrostatics with
- free boundary conditions;
- \item Norbert Nemec and Mike Towler (U.Cambridge) for interface with \texttt{CASINO}.
-\end{itemize}
-For \PostProc, we mention:
-\begin{itemize}
-\item Andrea Benassi (SISSA) for the \texttt{epsilon} utility;
-\item Dmitry Korotin (Inst. Met. Phys. Ekaterinburg) for the
-\texttt{wannier\_ham} utility.
-\end{itemize}
-
-The \CP\ package is based on the original code written by
- Roberto Car
-and Michele Parrinello. \CP\ was developed by Alfredo Pasquarello
-(IRRMA, Lausanne), Kari Laasonen (Oulu), Andrea Trave, Roberto
-Car (Princeton), Nicola Marzari (Univ. Oxford), Paolo Giannozzi, and others.
-FPMD, later merged with \CP, was developed by Carlo
-Cavazzoni, 
-Gerardo Ballabio (CINECA), Sandro Scandolo (ICTP), 
-Guido Chiarotti (SISSA), Paolo Focher, and others.
-We quote in particular:
-\begin{itemize}
-  \item Manu Sharma (Princeton) and Yudong Wu (Princeton) for
-   maximally localized Wannier functions and dynamics with 
-   Wannier functions;
-  \item Paolo Umari (Univ. Padua) for finite electric fields and conjugate
-   gradients;
-  \item Paolo Umari and Ismaila Dabo for ensemble-DFT;
-  \item Xiaofei Wang (Princeton) for META-GGA;
-  \item The Autopilot feature was implemented by Targacept, Inc.
-\end{itemize}
-Other packages in \qe:
-\begin{itemize}
-\item
-\texttt{PWcond} was written by Alexander Smogunov (CEA) and Andrea 
-Dal Corso. For an introduction, see 
-\texttt{http://people.sissa.it/\~{}smogunov/PWCOND/pwcond.html}
-\item
-\texttt{PWgui} was written by Anton Kokalj (IJS Ljubljana) and is 
-based on his GUIB concept (\texttt{http://www-k3.ijs.si/kokalj/guib/}).
-\item
-\texttt{atomic} was written by Andrea Dal Corso and it is the result 
-of many additions to the original code by Paolo Giannozzi 
-and others. Lorenzo Paulatto wrote the PAW extension.
-\item
-\texttt{iotk} (\texttt{http://www.s3.infm.it/iotk}) was written by Giovanni Bussi  (SISSA)  .
-\item
-\texttt{XSPECTRA} was written by Matteo Calandra (Univ. Paris VI)
-and collaborators.
-\item \texttt{VdW} was contributed by Huy-Viet Nguyen (SISSA).
-\item \texttt{GWW} was written by Paolo Umari and Geoffrey Stenuit (Democritos).
-\item
-\texttt{QHA} and \texttt{PlotPhon} were contributed by Eyvaz Isaev
- (Moscow Steel and Alloy Inst. and Linkoping and Uppsala Univ.).
-\item \texttt{TD-DFPT} written by Stefano Baroni (SISSA), Ralph Gebauer (ICTP), 
-Baris Malcioglu, Dario Rocca, Brent Walker.
-\end{itemize}
-Other relevant contributions to \qe:
-\begin{itemize}
-  \item Minoru Otani (AIST), Yoshio Miura (Tohoku U.), 
-  Nicephore Bonet (MIT), Nicola Marzari (Univ. Oxford), 
-  Brandon Wood (LLNL), Tadashi Ogitsu (LLNL), contributed
-  Effective Screening Method (PRB 73, 115407 [2006])
-  \item Brian Kolb and Timo Thonhauser (Wake Forest University)
-  implemented the vdW-DF and vdW-DF2 functionals, with support from
-  Riccardo Sabatini and Stefano de Gironcoli (SISSA and DEMOCRITOS);
-  \item Andrea Ferretti (Univ. Oxford) contributed the \texttt{qexml} and
-  \texttt{sumpdos} utility,
-  helped with file formats and with various problems;
-  \item Hannu-Pekka Komsa (CSEA/Lausanne) contributed
-  the HSE functional;
-  \item Dispersions interaction in the framework of DFT-D were
-  contributed by Daniel Forrer (Padua Univ.) and Michele Pavone
-  (Naples Univ. Federico II);
- \item Filippo Spiga (Univ. Milano Bicocca) contributed the
-  mixed MPI-OpenMP parallelization;
-  \item The initial BlueGene porting was done by Costas Bekas and
-  Alessandro Curioni (IBM Zurich);
-  \item Gerardo Ballabio wrote the first \configure\ for \qe
-  \item Audrius Alkauskas (IRRMA), Uli Aschauer (Princeton),
-Simon Binnie (Univ. College London), Guido Fratesi, Axel Kohlmeyer (UPenn),
-Konstantin Kudin (Princeton), Sergey Lisenkov (Univ.Arkansas), 
-Nicolas Mounet (MIT), William Parker (Ohio State Univ), 
-Guido Roma (CEA), Gabriele Sclauzero (IRRMA), Sylvie Stucki (IRRMA), 
-Pascal Thibaudeau (CEA), Vittorio Zecca, Federico Zipoli (Princeton)
-answered questions on the mailing list, found bugs, helped in 
-porting to new architectures, wrote some code.
-\end{itemize}
-
-An alphabetical list of further contributors includes: Dario Alf\`e, 
-Alain Allouche, Francesco Antoniella, Francesca Baletto,
-Mauro Boero, Nicola Bonini, Claudia Bungaro, 
-Paolo Cazzato, Gabriele Cipriani, Jiayu Dai, Cesar Da Silva, 
-Alberto Debernardi, Gernot Deinzer, Yves Ferro,
-Martin Hilgeman,  Yosuke Kanai, Nicolas Lacorne, Stephane Lefranc,
-Kurt Maeder, Andrea Marini, 
-Pasquale Pavone,  Mickael Profeta, Kurt Stokbro, 
-Paul Tangney, 
-Antonio Tilocca, Jaro Tobik, 
-Malgorzata Wierzbowska, Silviu Zilberman, 
+Main contributors to \qe, in addition to the authors of the paper 
+mentioned in Sect.\ref{SubSec:Terms}, are acknowledged in the 
+documentation of each package. An alphabetic list of further
+contributors who answered questions on the mailing list, found 
+bugs, helped in porting to new architectures, wrote some code,
+contributed in some way or another at some stage:
+\begin{quote}
+  Dario Alf\`e, Audrius Alkauskas, Alain Allouche, Francesco Antoniella,
+  Uli Aschauer,  Francesca Baletto, Gerardo Ballabio, Mauro Boero, 
+  Claudia Bungaro, Paolo Cazzato, Gabriele Cipriani, Jiayu Dai,
+  Cesar Da Silva, Alberto Debernardi, Gernot Deinzer, Yves Ferro,
+  Martin Hilgeman, Yosuke Kanai, Axel Kohlmeyer, Konstantin Kudin,
+  Nicolas Lacorne, Stephane Lefranc, Sergey Lisenkov, 
+  Kurt Maeder, Andrea Marini, Nicolas Mounet, William Parker,
+  Pasquale Pavone, Mickael Profeta, Guido Roma, Kurt Stokbro, 
+  Sylvie Stucki, Paul Tangney,  Pascal Thibaudeau, Antonio Tilocca,
+  Jaro Tobik, Malgorzata Wierzbowska, Vittorio Zecca,
+  Silviu Zilberman, Federico Zipoli,
+\end{quote}
 and let us apologize to everybody we have forgotten.
  
-This guide was mostly written by Paolo Giannozzi.
-Gerardo Ballabio and Carlo Cavazzoni wrote the section on \CP. Mike Towler
-wrote the \PWscf\ to \texttt{CASINO} subsection.
-
 \subsection{Contacts}
 \label{SubSec:Contacts}
 
@@ -386,8 +202,9 @@ news about \qe\ and obtain help from the developers and from
 knowledgeable users. Please read the guidelines for posting,
 section \ref{SubSec:Guidelines}!
 
-You have to be subscribed in order to post to the  \texttt{pw\_forum}
-list. NOTA BENE: only messages that appear to come from the 
+You have to be subscribed (see ``Contacts'' section of the \qe\ web site)
+in order to post to the  \texttt{pw\_forum} list. 
+NOTA BENE: only messages that appear to come from the 
 registered user's e-mail address, in its {\em exact form}, will be
 accepted. Messages "waiting for moderator approval" are
 automatically deleted with no further processing (sorry, too 
@@ -399,23 +216,23 @@ low-traffic mailing list,\\
 \texttt{pw\_users@pwscf.org}, is provided for
 those interested only in \qe-related news, such as e.g. announcements 
 of new versions, tutorials, etc.. You can subscribe (but not post) to 
-this list from the \qe\ web site (``Contacts'' section).
+this list from the \qe\ web site, ``Contacts'' section.
 
 If you need to contact the developers for {\em specific} questions 
-about coding, proposals, offers of help, etc., send a message to the
-developers' mailing list: user \texttt{q-e-developers}, address
+about coding, proposals, offers of help, etc., please send a message
+to the developers' mailing list: user \texttt{q-e-developers}, address
 \texttt{qe-forge.org}.
 
-\subsubsection{Guidelines for posting to the mailing list}
+\subsection{Guidelines for posting to the mailing list}
 \label{SubSec:Guidelines}
 Life for subscribers of \texttt{pw\_forum} will be easier if everybody 
 complies with the following guidelines:
 \begin{itemize}
 \item Before posting, {\em please}: browse or search the archives -- 
-  links are available in the "Contacts" page  of the \qe\ web site:\\
-  \texttt{http://www.quantum-espresso.org/contacts.php}. Most questions 
-  are asked over and over again. Also: make an attempt to search the
-  available documentation, notably the FAQs and the User Guide.
+  links are available in the ``Contacts'' section  of the \qe\ web site.
+  Most questions are asked over and over again. Also: make an attempt
+  to search the
+  available documentation, notably the FAQs and the User Guide(s).
   The answer to most questions is already there.
 \item Sign your post with your name and affiliation.
 \item Choose a meaningful subject. Do not use "reply" to start a new
@@ -437,6 +254,7 @@ complies with the following guidelines:
 \end{itemize}
  
 \subsection{Terms of use}
+\label{SubSec:Terms}
 
 \qe\ is free software, released under the 
 GNU General Public License. See
@@ -462,6 +280,7 @@ Pseudopotentials should be cited as (for instance)
 and O.pbe-vbc.UPF from\\
 \texttt{http://www.quantum-espresso.org}.
 \end{quote}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Installation}
 
 \subsection{Download}
@@ -870,7 +689,7 @@ generation (see specific documentation in \texttt{atomic\_doc/}).
 \item \texttt{make plumed} uncompress and move/rename \texttt{PLUMED} , patches \texttt{PW},
 \texttt{CPV} and \texttt{clib} routines and compiles \texttt{PW} and \texttt{CPV}.
 \item \texttt{make w90} uncompress and move/rename \texttt{wannier90}, copy an appropriate
-make.sys and produces all executables in texttt{W90/wannier90.x} and in \texttt{bin}.
+make.sys and produces all executables in \texttt{W90/wannier90.x} and in \texttt{bin}.
 \item \texttt{make want} uncompress and move/rename \texttt{want}, run \texttt{want}'s configure
 and produces all \texttt{want} executables in \texttt{WANT/bin}
 \item \texttt{make yambo} uncompress and move/rename \texttt{yambo}, run \texttt{yambo}'s configure
