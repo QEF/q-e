@@ -23,8 +23,8 @@ clean:
 	- rm -f $(PDFS) $(AUXS) $(LOGS) $(OUTS) $(TOCS) *~
 	- rm -rf user_guide/
 	- rm -f INPUT_*.html INPUT_*.txt INPUT_*.xml
+	- rm -rf input_xx.xsl
 	- rm -rf ../../Doc/INPUT_PH.* ../../Doc/INPUT_D3.*
-
 
 user_guide: user_guide.pdf
 	rm -rf user_guide/
@@ -47,14 +47,23 @@ user_guide: user_guide.pdf
 	@echo ""
 
 
-defs: INPUT_PH.html INPUT_PH.txt INPUT_D3.html INPUT_D3.txt link_on_main_doc
-INPUT_PH.html: %.html: %.def
-	$(HELPDOC) $<
+defs: link_input_xx INPUT_PH.txt INPUT_D3.txt INPUT_PH.html INPUT_D3.html link_on_main_doc
 INPUT_PH.txt: %.txt: %.def
 	$(HELPDOC) $<
-INPUT_D3.html: %.html: %.def
-	$(HELPDOC) $<
 INPUT_D3.txt: %.txt: %.def
+	$(HELPDOC) $<
+link_input_xx:
+	if test -f ../../doc-def/input_xx.xsl ; then \
+	(ln -s ../../doc-def/input_xx.xsl input_xx.xsl) ; \
+	else \
+	echo ; \
+	echo "  Sorry, can not find input_xx.xsl html style file !!!" ; \
+	echo ; \
+	fi
+
+INPUT_PH.html: %.html: %.def input_xx.xsl
+	$(HELPDOC) $<
+INPUT_D3.html: %.html: %.def input_xx.xsl
 	$(HELPDOC) $<
 
 link_on_main_doc:
