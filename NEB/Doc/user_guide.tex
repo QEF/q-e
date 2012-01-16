@@ -1,5 +1,5 @@
 \documentclass[12pt,a4paper]{article}
-\def\version{4.3.2}
+\def\version{5.0.0}
 \def\qe{{\sc Quantum ESPRESSO}}
 \def\neb{{\sc NEB}}
 \usepackage{html}
@@ -75,6 +75,7 @@ using the Nudged Elastic Band (NEB) and Fourier String Method Dynamics
 by the \pwx\ executable of \PWscf. Also note that NEB with Car-Parrinello
 Molecular Dynamics is currently not implemented.
 
+\section{People}
 The original \qe \ implementation of the Nudged Elastic Band and 
 String Method Dynamics was developed by Carlo Sbraccia (Princeton).
 
@@ -102,7 +103,7 @@ All trademarks mentioned in this guide belong to their respective owners.
 
 \subsection{Download}
  
-is automatically downloaded from \texttt{http://qe-forge.org/frs/?group\_id=37}
+\neb\ is included inside the \qe\ distribution.
 
 
 \subsection{Prerequisites}
@@ -124,7 +125,9 @@ can be done just typing \texttt{make neb} from the main espresso directory.
 
 \subsection{Compilation}
 
-Typing \texttt{make neb} will produce the following codes in \texttt{NEB/src}:
+Typing \texttt{make neb} from the main \qe\ directory or
+typing \texttt{make} from the NEB directory  will produce 
+the following codes in \texttt{NEB/src}:
 \begin{itemize}
 \item \nebx: calculates reaction barriers and pathways using NEB.
 \item \texttt{path\_int.x}: used by utility \texttt{path\_int.sh}
@@ -134,7 +137,7 @@ Typing \texttt{make neb} will produce the following codes in \texttt{NEB/src}:
 \end{itemize}
 
 Symlinks to executable programs will be placed in the
-\texttt{bin/} subdirectory.
+\texttt{bin/} subdirectory of the main espresso directory.
 
 \subsection{Running examples}
 \label{SubSec:Examples}
@@ -273,7 +276,8 @@ Default value is: \texttt{-nimage 1} ;
 
 {\bf Reminder 1:} NEB calculations are no longer performed by \pwx.
 In order to perform a NEB calculation, you should compile
-\texttt{NEB/neb.x} (command \texttt{make neb}). 
+\texttt{NEB/src/neb.x} (command \texttt{make neb} from the main
+\qe\ directory, or commend \texttt{make} from the \texttt{NEB} directory). 
 
 \noindent {\bf  Reminder 2:} \nebx\ does not read from standard input.
 You cannot use input redirection, as in \texttt{neb.x < neb.in ...}.
@@ -408,14 +412,8 @@ performed on a subsection of the old path. The input file needed by
 
 \section{Performances}
 
-\subsection{Execution time}
-
-\neb \ spends roughly \texttt{num\_of\_images} times a scf calculation.
-\subsection{File space requirements}
-
-A typical \texttt{neb.x} run will require an amount of temporary disk space in the
-order of O double precision complex numbers:
-$$O = N_k M N + q N_{r1} N_{r2}N_{r3}$$
+\neb \ spends roughly \texttt{num\_of\_images} times a scf calculation. We
+refer the reader to the PW user\_guide for more information.
 
 \section{Troubleshooting}
 
