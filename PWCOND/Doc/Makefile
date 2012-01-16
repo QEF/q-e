@@ -4,10 +4,20 @@ doc:  all
 all:  defs
 clean:
 	- rm -f INPUT_*.html INPUT_*.txt INPUT_*.xml
+	- rm -rf input_xx.xsl
 	- rm -rf ../../Doc/INPUT_PWCOND.*
 
-defs: INPUT_PWCOND.html INPUT_PWCOND.txt link_on_main_doc
-INPUT_PWCOND.html: %.html: %.def
+defs: link_input_xx INPUT_PWCOND.html INPUT_PWCOND.txt link_on_main_doc
+link_input_xx:
+	if test -f ../../doc-def/input_xx.xsl ; then \
+	(ln -s ../../doc-def/input_xx.xsl input_xx.xsl) ; \
+	else \
+	echo ; \
+	echo "  Sorry, can not find input_xx.xsl html style file !!!" ; \
+	echo ; \
+	fi
+
+INPUT_PWCOND.html: %.html: %.def input_xx.xsl
 	$(HELPDOC) $<
 INPUT_PWCOND.txt: %.txt: %.def
 	$(HELPDOC) $<
