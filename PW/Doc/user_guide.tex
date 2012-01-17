@@ -194,20 +194,20 @@ and O.pbe-vbc.UPF from\\
 \texttt{http://www.quantum-espresso.org}.
 \end{quote}
 
-\section{Installation}
+\section{Compilation}
 
-\PWscf\ is included inside the \qe\ distribution.
-For instruction on how to install the \qe\ source package please refer to
-the \qe\ general documentation (user\_guide).
-
-\subsection{Compilation}
+\PWscf\ is included in the core \qe\ distribution.
+Instruction on how to install it can be found in the
+general documentation (User's Guide) for \qe.
 
 Typing \texttt{make pw} from the main \qe\ directory or
-typing \texttt{make} from the \texttt{PW} directory  will produce
-the following codes and program utilities in \texttt{PW/src} and in PW/tools:
+\texttt{make} from the \texttt{PW/} subdirectory produces
+the \pwx\ executable in \texttt{PW/src} and a link to the
+\texttt{bin/} directory. In addition, several utility
+programs, and related links in \texttt{bin/}, are produced 
+in \texttt{PW/tools}:
 
 \begin{itemize}
-\item \texttt{PW/pw.x} calculates electronic structure, structural optimization, molecular dynamics. \\
 \item  \texttt{PW/tools/dist.x} calculates distances and angles between atoms in a cell,
   taking into account periodicity 
 \item  \texttt{PW/tools/ev.x} fits energy-vs-volume data to an equation of state
@@ -244,9 +244,9 @@ separate package):
 will unpack several subdirectories into \texttt{espresso-X.Y.Z/}.
 There are two different types of examples: 
 \begin{itemize}
-\item automated tests (in directories \texttt{tests/} 
-and \texttt{cptests/}). Quick and exhaustive, but not
-meant to be realistic, implemented only for \pwx\ and \cpx.
+\item automated tests (in directories \texttt{PW/tests/})
+Quick and exhaustive, but not
+meant to be realistic, implemented only for \pwx.
 \item examples (in directory \texttt{examples/}).
 Cover many more programs and features of the \qe\ distribution,
 but they require manual inspection of the results. 
