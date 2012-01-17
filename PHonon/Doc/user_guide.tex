@@ -67,19 +67,18 @@ This guide assumes that you know the contents of
 the general User's Guide for \qe\ and of the User's 
 Guide for \PWscf. It also assumes that you have
 already installed \qe (\PHonon\ is not a stand-alone
-package: it requires \PWscf to be compiled and used).
+package: it requires \PWscf\ to be compiled and used).
 If not, please locate the general User's Guide in directory 
 \texttt{Doc/} two levels above the one containing this guide,
 and the User's Guide for \PWscf\ in \texttt{PW/Doc/};
 or consult the web site:\\
 \texttt{http://www.quantum-espresso.org}.
-It is also assumed that you know the physics behing \qe,
+It is also assumed that you know the physics behind \qe,
 the methods it implements, and in particular the physics
 and the methods of \PHonon.
 
-People who want to modify or contribute to 
-\PHonon\ should read the Developer Manual: 
-\texttt{Doc/developer\_man.pdf}.
+% People who want to modify or contribute to \PHonon\ should read 
+% the Developer Manual: \texttt{Doc/developer\_man.pdf}.
 
 \PHonon\ has the following directory structure,
 contained in a subdirectory \texttt{PHonon/}
@@ -149,9 +148,10 @@ the instructions for downloading and compiling the \qe\ distribution.
 
 \subsection{Compilation}
 
-Typing \texttt{make} from the \PHonon\ directory produces the following codes:
+Typing \texttt{make ph} from the root \qe\ directory, or \texttt{make} 
+from the \PHonon\ directory, produces the following codes:
 \begin{itemize}
-  \item \phx\ : Calculates phonon frequencies and displacement patterns,
+  \item \texttt{PH/ph.x}: Calculates phonon frequencies and displacement patterns,
     dielectric tensors, effective charges (uses data produced by \pwx). 
   \item \texttt{PH/dynmat.x}: applies various kinds of Acoustic Sum Rule (ASR),
     calculates LO-TO splitting at ${\bf q} = 0$ in insulators, IR and Raman
@@ -175,8 +175,7 @@ Typing \texttt{make} from the \PHonon\ directory produces the following codes:
   integration. It is faster and takes less memory than \phx, but does
   not support USPP and PAW.
 \end{itemize}
-
-Links from the main \qe\ \texttt{bin/} directory are automatically generated.
+Links to the main \qe\ \texttt{bin/} directory are automatically generated.
    
 \subsection{Running examples}
 \label{SubSec:Examples}
@@ -184,38 +183,36 @@ Links from the main \qe\ \texttt{bin/} directory are automatically generated.
 \section{Parallelism}
 \label{Sec:para}
 
-\subsection{Parallelization levels}
+We refer to the corresponding section of the \PWscf\ guide for
+an explanation of how parallelism work. 
 
-{\bf images}: Processors can then be divided into different "images",
-corresponding to one (or more than one) "irrep" or wave-vector in phonon
-calculations.
+\phx\ may take advantage 
+of MPI parallelization on plane waves (PW) and on k-points (''pools''). 
+Moreover.
+it may take advantage of another parallelization level on 
+``images''. All other MPI and explicit OpenMP parallelizations
+have very limited to nonexistent implementation.
+\texttt{phcg.x} implements only PW parallelization.
+All other codes may be launched in parallel, but will execute 
+on a single processor.
 
-{\bf pools}: When k-point sampling is used, each image group can be 
-subpartitioned into "pools", and k-points can distributed to pools.
-Within each pool, reciprocal space basis set (PWs)
-and real-space grids are distributed across processors.
-This is usually referred to as "PW parallelization".
-All linear-algebra operations on array of  PW / 
-real-space grids are automatically and effectively parallelized.
-3D FFT is used to transform electronic wave functions from
-reciprocal to real space and vice versa. The 3D FFT is
-parallelized by distributing planes of the 3D grid in real
-space to processors (in reciprocal space, it is columns of
-G-vectors that are distributed to processors). 
+In  ``image'' parallelization, processors can be divided into different 
+"images", corresponding to one (or more than one) "irrep" or wave-vector 
+in phonon calculations. Images are loosely coupled: processors communicate
+between different images only once in a while, so image parallelization
+is suitable for cheap communication hardware (e.g. Gigabit Ethernet).
+Image parallelization is activated by specifying option 
+\texttt{-nimage N} to \phx. Inside an image, PW and k-point parallelization
+can be performed: for instance,
+\begin{verbatim}
+   mpirun -np 64 ph.x -nimage 8 -npool 2 ...
+\end{verbatim}
+will run 8 images on 8 processors each, subdivided into 2 pools of 4
+processors.
 
-{\bf Communications}:
-Images and pools are loosely coupled and processors communicate
-between different images and pools only once in a while, whereas
-processors within each pool are tightly coupled and communications
-are significant. This means that Gigabit ethernet (typical for
-cheap PC clusters) is ok up to 4-8 processors per pool, but {\em fast}
-communication hardware (e.g. Mirynet or comparable) is absolutely 
-needed beyond 8 processors per pool.
-
-Default values are: \texttt{-nimage 1 -npool 1} ; 
-
-\subsection{Distributed Phonon calculations}
-A complete phonon dispersion calculation can be quite long and
+A different paradigm is the usage of the GRID concept, instead of MPI,
+to achieve parallelization over irreps and wave-vectors.
+Complete phonon dispersion calculation can be quite long and
 expensive, but it can be split into a number of semi-independent
 calculations, using options \texttt{start\_q}, \texttt{last\_q},
 \texttt{start\_irr}, \texttt{last\_irr}. An example on how to
