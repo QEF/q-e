@@ -120,19 +120,20 @@ by solving a self-consistent radial Schr\"odinger-like (Kohn-Sham)
 equation.
 
 The second step exists in many variants. One can generate ``traditional'' 
-single-projector NC-PP's; multiple-projector NC-PP's; or US-PP's.
+single-projector NC-PP's; multiple-projector US-PP's, or PAW sets.
 The crucial step is in all cases the generation of smooth
 ``pseudo-orbitals''  from atomic all-electron (AE) orbitals. 
 Two popular pseudization
 methods are presently implemented: Troullier-Martins \cite{TM}
 and Rappe-Rabe-Kaxiras-Joannopoulos \cite{RRKJ} (RRKJ).
 
-The third step is closer to cooking than to science. There is a
+The second and third steps are closer to cooking than to science. 
+There is a
 large arbitrariness in the preceding step that one would like to 
 exploit in order to get the "best" PP, but there is no well-defined
 way to do this. Moreover one is often forced to strike a compromise
 between transferability (thus accuracy) and hardness (i.e. computer 
-time). This last step is the main focus of these notes.
+time). These two steps are the main focus of these notes.
 
 \section{Step-by-step Pseudopotential generation} 
 
@@ -239,9 +240,9 @@ their inclusion in fact makes your PP harder (unless you resort to
 US pseudization) and increases the number of electrons. In principle 
 you should also use more than one projector per angular momentum, 
 because the energy range to be covered by the PP with semicore electrons 
-is much wider than without. If you don't, the transferability of your PP 
-may suffer (a typical phenomenon:
-the error on the lattice parameter of a simple metal gets worse).
+is much wider than without. For instance, it may happen that the error 
+on the lattice parameter of a simple metal is larger
+with a semicore PP than with a valence-only PP.
 
 \subsubsection{Electronic reference configuration}
 \label{RefConf}
@@ -393,7 +394,7 @@ In all such cases, one should consider
 to NC-PP's. For the specific case of rare earths, however, remember 
 that the problem of DFT reliability preempts the (tough) problem of 
 generating a PP. With US-PP's one can give up the NC requirement
-and get much software PP's, at the price of introducing an augmentation 
+and get much softer PP's, at the price of introducing an augmentation 
 charge that compensates for the missing charge. 
 
 Currently, the \texttt{atomic} package generates US-PP's on top of
@@ -421,26 +422,11 @@ It is possible to generate PP's by pseudizing atomic waves,
 i.e. regular solutions of the radial Kohn-Sham equation, at any
 energy. More than one such atomic waves of different energy can be
 pseudized for the same $l$, resulting in a PP with more than one 
-projector per $l$. Note that the resulting PP is directly produced
-in the separable form. 
-
-Such possibility considerably extends the transferability, but also the 
-number of ``degrees of freedom'' in the generation of a PP. As a rule of 
-thumb: 
-\begin{itemize}
-\item start with one projector per $l$, at the energy of the bound state;
-\item add a second projector at a second, higher energy not too far above 
-the former. 
-\end{itemize}
-The latter hint seems to be counterintuitive if you have semicore states 
-in valence: the obvious choice would be to include two projectors, using 
-both bound states energies. Unfortunately this is currently not possible 
-with the \texttt{atomic} package, because the state pseudized at the upper 
-bound-state energy will necessarily have a node (in order to be orthogonal 
-to the one with lower energy).
-
-For US-PP pseudization, you should first find a suitable multi-projector 
-NC-PP as above, than turn on the US-PP pseudization. This is done by
+projector per $l$ (directly produced in the separable form). Note
+however that the implementation of multiple-projector PP's is
+correct for US pseudization: NC pseudization is not properly done
+(a generalized norm-conservation requirement is not accounted for).
+US pseudization is achieved by
 setting different NC and US pseudization radii (see Sec.\ref{radii}),
 
 \subsubsection{Pseudization radii}
@@ -471,9 +457,9 @@ for $3d$ transition metals, the same $r_c$ will require $> 80$ Ry cutoff
 estimates are for TM pseudization. RRKJ pseudization will yield an
 estimate of the required cutoff.
 
-For multiple-projectors NC-PP's, the $r_c$ of unbound states may be chosen 
-in the same range as for bound states. If this is the first step for US-PP 
-generation, use small $r_c$ and don't try to push them outwards: the
+For multiple-projectors PP's, the $r_c$ of unbound states may be chosen 
+in the same range as for bound states. Use small $r_c$ and don't try to 
+push them outwards: the
 US pseudization will take care of softness. US pseudization radii can 
 be chosen much larger than NC ones (e.g. 1.3$\div$ 1.5 a.u. for second-row
 $2p$ elements, 1.7$\div$ 2.2 a.u. for $3d$ transition metals), but do not
@@ -506,8 +492,7 @@ correct ground state (unlike the semilocal form, which, by construction,
 has the correct ground states): ``ghost'' states, having the wrong number 
 of nodes, 
 can appear among the occupied states or close to them, making the 
-PP completely useless. This problem may show up in multiple-projectors 
-NC-PP's and in US-PP's as well.
+PP completely useless. This problem may show up in US-PP's as well.
 
 The freedom in choosing the local part can (and usually must) be used 
 in order to avoid the appearance of ghosts. For PW calculations it is 
@@ -643,16 +628,16 @@ several possibilities:
 with nonlinear core correction;
 \item single-projector NC-PP with 12 electrons in valence 
 ($3s^2 3p^6 3d^2 4s^2$);
-\item multiple-projector NC-PP with 12 electrons in valence;
-\item US-PP with 12 electrons in valence;
-\item US-PP with 4 electrons in valence and nonlinear core correction;
+\item multiple-projector US-PP with 12 electrons in valence;
+\item multiple-projector US-PP with 4 electrons in valence and 
+      nonlinear core correction;
 \item ...
 \end{enumerate}
 The PP of case 1) will be hard due to the presence of $3d$ states, and 
 its transferability may turn out not be sufficient for all purposes;
-PP's for 2) and 3) will be even harder due to the presence of $3d$ and
-semicore $3s$ and $3p$ states; PP 4) can be made soft, but generating
-one is not trivial; PP 5) may suffer from insufficient transferability.
+PP's for 2) will be even harder due to the presence of $3d$ and
+semicore $3s$ and $3p$ states; PP 3) can be made soft, but generating
+one is not trivial; PP 4) may suffer from insufficient transferability.
 
 \subsection {Single-projector, norm-conserving, no semicore}
 
