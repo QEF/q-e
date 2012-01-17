@@ -1819,17 +1819,5 @@ and at line 961
   void init_metadyn_(int *atoms, real *ddt, real *mass, 
   void init_metadyn_(int *atoms, real *ddt, real *mass, 
 \end{verbatim}
-\subsection{Compilation problems with \texttt{YAMBO}}
-
-If simply typing \texttt{make yambo} produces an error such as : 
-\begin{verbatim}
-undefined reference to `MAIN__'
-\end{verbatim}
-you need to run the \texttt{YAMBO} configure by yourself specifying the 
-appropriate compiler option, for instance,
-\texttt{-nofor\_main} for intel compiler or \texttt{-Mnomain} 
-for PGI. If you do not manage to solve
-the problem, consult the official \texttt{YAMBO} web site
-(\texttt{http://www.yambo-code.org}) for specific information.
 
 \end{document}
