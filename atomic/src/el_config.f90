@@ -40,10 +40,10 @@ subroutine el_config &
   integer :: nwfc, nnc(15), llc(15)
   real(DP) :: occ(15)
   data elc/'1S','2S','2P','3S','3P','4S','4P','3D','5S','5P','4D', &
-       &   '6S','6P','5D','4F'/
-  data nnc/1 ,2 ,2 ,3 ,3 ,4 ,4 ,3 ,5 ,5 ,4 ,6 ,6 ,5 ,4 /
-  data llc/0, 0, 1, 0, 1, 0, 1, 2, 0, 1, 2, 0, 1, 2, 3/
-  data occ/2.0,2.0,6.0,2.0,6.0,2.0,6.0,10.0,2.0,6.0,10.0,2.0,6.0,10.0,14.0/
+       &   '6S','5D','4F','6P'/
+  data nnc/1 ,2 ,2 ,3 ,3 ,4 ,4 ,3 ,5 ,5 ,4 ,6 ,5 ,4 ,6 /
+  data llc/0, 0, 1, 0, 1, 0, 1, 2, 0, 1, 2, 0, 2, 3 ,1 /
+  data occ/2.0,2.0,6.0,2.0,6.0,2.0,6.0,10.0,2.0,6.0,10.0,2.0,10.0,14.0,6.0/
   !
   ! len is the length of the string, excluding trailing blanks
   !
@@ -73,6 +73,8 @@ subroutine el_config &
         nwfc =8
      else if (core == 'Xe'.or.core == 'xe'.or.core == 'XE') then
         nwfc =11
+     else if (core == 'Hg'.or.core == 'hg'.or.core == 'HG') then
+        nwfc =14
      else if (core == 'Rn'.or.core == 'rn'.or.core == 'RN') then
         nwfc =15
      else
