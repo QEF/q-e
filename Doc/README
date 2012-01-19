@@ -1,29 +1,19 @@
-Available documentation for the Quantum ESPRESSO package in Doc/
-(additional documentation is available from the QE wiki:
-http://www.quantum-espresso.org/wiki/index.php/Main_Page)
+This directory contains the general Quantum ESPRESSO documentation.
+Package-specific documentation is available in the Doc/ subdirectories
+of each pakacge, or on the web site http://www.quantum-espresso.org
 
-The following files are always present in the CVS repository:
+The following files are always present in the repository:
 
 release-notes      What is new in the current release + list of fixed bugs
                    (only those found in some official release)
 user-guide.tex     User guide
 developer-man.tex  Developers' manual
-INPUT_Gamma        Documentation of input data for the specialized phonon code
-                   (Gamma-only and q=0 phonons only) phcg.x
-INPUT_WFDD         Input data doc for dynamics with Wannier functions (cp.x)
-INPUT_XSPECTRA     Input data doc for X-ray adsorption spectra (xspectra.x)
-eps_man.tex        Documentation for code epsilon.x, performing
-                   dielectric function calculation with RPA
 plumed_quick_ref.tex 
                    An introduction to the usage of PLUMED with QE
-README.AUTOPILOT   Notes on the "autopilot" feature, by Targacept, Inc.
-nomefile.upf       Naming convention for UPF pseudopotentials
-                   The UPF format is described in the Quantum ESPRESSO wiki,
-                   in page "Unified_pseudopotential_format"
 constraints_HOWTO.tex
                    Documentation for constraints
 ChangeLog.old      ChangeLog for the Quantum-ESPRESSO suite after aug. 2004
-                   NO LONGER UPDATED - see below for the updated version
+                   NO LONGER UPDATED
 ChangeLog.pw       ChangeLog before aug 2004 for PWscf
 ChangeLog.cp       ChangeLog before aug 2004 for CP
 
@@ -32,28 +22,6 @@ Printable versions of the *tex files are present in the released version
 user-guide.pdf        User guide, printable version
 developer-man.pdf     Developers' manual, printable version
 plumed_quick_ref.pdf  
-
-The following files are present in the released version (obtained 
-from the "helpdoc" utility: go into the ../doc-def/ directory, type
-"make all". Note that "tcl", "tcllib", "xsltproc" are needed)
-
-INPUT_*.txt,html Description of input parameters (text and html) for:
-      CP         Car-Parrinello molecular dynamics code (cp.x)
-      CPPP       Car-Parrinello postprocessing (cppp.x)
-      PW         PWscf self-consistent code (pw.x)
-      NEB        Nudged Elastic Band (NEB) code (neb.x)
-      PP         Postprocessing code (pp.x)
-      BANDS      Band reordering and plotting utility (bands.x)
-      PROJWFC    Projection over atomic wfcs (projwave.x)
-      DOS        Density of state calculation (dos.x)
-      PH         Phonon calculations (ph.x)
-      D3         3rd-order energy derivatives (d3.x)
-      LD1        atomic pseudopotential generation code (ld1.x) 
-      PWCOND     Ballistic conductance (pwcond.x)
-      pw_export  pw_export utility (pw_export.x)
-
-More documentation for the "atomic" pseudopotential generation code 
-can be found in directory ../atomic_doc/
 
 All the material included in this distribution is free software;
 you can redistribute it and/or modify it under the terms of the GNU
