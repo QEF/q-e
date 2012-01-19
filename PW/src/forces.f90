@@ -40,7 +40,7 @@ SUBROUTINE forces()
   USE control_flags, ONLY : gamma_only, remove_rigid_rot, textfor, &
                             iverbosity, llondon
 #ifdef __SOLVENT
-  USE solvent_base,  ONLY : do_solvent, epsinfty, eps_mode, rhopol
+  USE solvent_base,  ONLY : do_solvent, epszero, eps_mode, rhopol
 #endif
   USE bp,            ONLY : lelfield, forces_bp_efield, gdir, &
                             l3dstring,efield_cart,efield_cry,efield
@@ -135,7 +135,7 @@ SUBROUTINE forces()
     !
     force_solvent = 0.0_DP
     !
-    IF ( epsinfty .GT. 1.D0 ) THEN
+    IF ( epszero .GT. 1.D0 ) THEN
       !
       IF ( TRIM(eps_mode) .NE. 'ionic' ) THEN
         CALL force_lc( nat, tau, ityp, alat, omega, ngm, ngl, igtongl, &
@@ -282,6 +282,14 @@ SUBROUTINE forces()
      DO na = 1, nat
         WRITE( stdout, 9035) na, ityp(na), ( forcescc(ipol,na), ipol = 1, 3 )
      END DO
+#ifdef __SOLVENT
+     IF ( do_solvent ) THEN
+        WRITE( stdout, '(5x,"The continuum solvent correction to forces")')
+        DO na = 1, nat
+           WRITE( stdout, 9035) na, ityp(na), ( force_solvent(ipol,na), ipol = 1, 3 )
+        END DO
+     END IF  
+#endif
      !
      IF ( llondon) THEN
         WRITE( stdout, '(/,5x,"Dispersion contribution to forces:")')

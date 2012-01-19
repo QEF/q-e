@@ -517,7 +517,7 @@ SUBROUTINE compute_pol_dipole( x0, pol_dipole, pol_quadrupole )
   USE kinds,      ONLY : DP
   USE ions_base,  ONLY : nat, tau
   USE cell_base,  ONLY : at, bg, omega, alat
-  USE solvent_base, ONLY : epsinfty, rhopol
+  USE solvent_base, ONLY : epszero, rhopol
   USE fft_base,   ONLY : dfftp
   USE mp_global,  ONLY : me_pool, intra_pool_comm, &
                          me_bgrp, intra_bgrp_comm
@@ -540,7 +540,7 @@ SUBROUTINE compute_pol_dipole( x0, pol_dipole, pol_quadrupole )
   pol_dipole(:)  = 0.D0
   pol_quadrupole = 0.D0
   !
-  IF ( epsinfty .LE. 1.D0 ) RETURN
+  IF ( epszero .LE. 1.D0 ) RETURN
   !
   index0 = 0
   !

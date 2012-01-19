@@ -105,15 +105,16 @@ SUBROUTINE iosys()
   !
   USE martyna_tuckerman, ONLY: do_comp_mt
 #ifdef __SOLVENT
+  USE control_flags, ONLY : save_vltot
   USE constants,     ONLY : rydberg_si, bohr_radius_si
   USE solvent_base,  ONLY : do_solvent_ => do_solvent,        &
                             verbose_ => verbose,              &
                             solvent_thr_ => solvent_thr,      &
                             stype_ => stype,                  &
-                            rhozero_ => rhozero,              &
+                            rhomax_ => rhomax,                &
                             rhomin_ => rhomin,                &
                             tbeta_ => tbeta,                  &
-                            epsinfty_ => epsinfty,            &
+                            epszero_ => epszero,              &
                             eps_mode_ => eps_mode,            &
                             solvationrad_ => solvationrad,    &
                             atomicspread_ => atomicspread,    &
@@ -258,8 +259,8 @@ SUBROUTINE iosys()
   ! ... SOLVENT namelist
   !
   USE input_parameters, ONLY : verbose, solvent_thr,                          &
-                               stype, rhozero, rhomin, tbeta,                 &
-                               epsinfty, eps_mode, solvationrad, atomicspread,&
+                               stype, rhomax, rhomin, tbeta,                  &
+                               epszero, eps_mode, solvationrad, atomicspread, &
                                ifdtype, nfdpoint,                             &
                                mixrhopol, tolrhopol,                          &
                                gamma, delta,                                  &
@@ -1201,18 +1202,20 @@ SUBROUTINE iosys()
   ! ...  Solvent
   !
   do_solvent_ = do_solvent
+  save_vltot = .false.
+  IF ( do_solvent ) save_vltot = .true.
   verbose_  = verbose
   solvent_thr_  = solvent_thr
   !
   stype_    = stype
-  rhozero_  = rhozero
+  rhomax_   = rhomax
   rhomin_   = rhomin
   tbeta_    = tbeta
   IF ( stype .EQ. 1 ) THEN
-    tbeta_  = LOG( rhozero / rhomin )
+    tbeta_  = LOG( rhomax / rhomin )
   END IF
   !
-  epsinfty_ = epsinfty
+  epszero_ = epszero
   eps_mode_ = eps_mode
   ALLOCATE( solvationrad_( ntyp ) )
   solvationrad_( 1:ntyp ) = solvationrad( 1:ntyp )

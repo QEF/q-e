@@ -26,6 +26,10 @@ SUBROUTINE allocate_fft
   USE scf,       ONLY : rho, v, vnew, vltot, vrs, rho_core, rhog_core, &
                         kedtau, create_scf_type
   USE control_flags, ONLY : gamma_only
+#ifdef __SOLVENT
+  USE control_flags, ONLY : save_vltot
+  USE scf,           ONLY : vltot_zero
+#endif
   USE noncollin_module, ONLY : pointlist, factlist, r_loc, &
       report, i_cons, noncolin, npol
   USE wavefunctions_module, ONLY : psic, psic_nc
@@ -64,6 +68,9 @@ SUBROUTINE allocate_fft
   CALL create_scf_type(v,    do_not_allocate_becsum = .true.)
   CALL create_scf_type(vnew, do_not_allocate_becsum = .true.)
   ALLOCATE (vltot( dfftp%nnr))
+#ifdef __SOLVENT
+  IF ( save_vltot ) ALLOCATE ( vltot_zero( dfftp%nnr ))
+#endif
   ALLOCATE (rho_core( dfftp%nnr))
   IF (dft_is_meta() ) THEN
      ALLOCATE ( kedtau(dffts%nnr,nspin) )

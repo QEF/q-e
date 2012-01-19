@@ -17,7 +17,7 @@ SUBROUTINE print_clock_pw()
    USE paw_variables,      ONLY : okpaw
    USE realus,             ONLY : real_space
 #ifdef __SOLVENT
-   USE solvent_base,       ONLY : do_solvent, epsinfty, gamma, extpressure
+   USE solvent_base,       ONLY : do_solvent, epszero, gamma, extpressure
 #endif
    !
    IMPLICIT NONE
@@ -205,7 +205,7 @@ SUBROUTINE print_clock_pw()
       WRITE( stdout, * )
       WRITE( stdout, '(5X,"Solvent routines")' )
       ! dielectric subroutines
-      IF ( epsinfty .GT. 1.D0 ) THEN
+      IF ( epszero .GT. 1.D0 ) THEN
          CALL print_clock ('calc_esolv')
          CALL print_clock ('calc_vsolv')
          CALL print_clock ('dielectric') 

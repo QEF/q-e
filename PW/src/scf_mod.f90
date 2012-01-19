@@ -85,6 +85,9 @@ MODULE scf
   REAL(DP) :: v_of_0    ! vltot(G=0)      
   REAL(DP), ALLOCATABLE :: &
        vltot(:),       &! the local potential in real space
+#ifdef __SOLVENT
+       vltot_zero(:),  &! backup of local potential in real space
+#endif
        vrs(:,:),       &! the total pot. in real space (smooth grid)
        rho_core(:),    &! the core charge in real space
        kedtau(:,:)      ! position dependent kinetic energy enhancement factor

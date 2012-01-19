@@ -25,6 +25,9 @@ SUBROUTINE clean_pw( lflag )
   USE force_mod,            ONLY : force
   USE scf,                  ONLY : rho, v, vltot, rho_core, rhog_core, &
                                    vrs, kedtau, destroy_scf_type, vnew
+#ifdef __SOLVENT
+  USE scf,                  ONLY : vltot_zero
+#endif
   USE symm_base,            ONLY : irt
   USE symme,                ONLY : sym_rho_deallocate
   USE wavefunctions_module, ONLY : evc, psic, psic_nc
@@ -112,6 +115,9 @@ SUBROUTINE clean_pw( lflag )
   call destroy_scf_type(vnew)
   IF ( ALLOCATED( kedtau ) )     DEALLOCATE( kedtau )
   IF ( ALLOCATED( vltot ) )      DEALLOCATE( vltot )
+#ifdef __SOLVENT
+  IF ( ALLOCATED( vltot_zero ) ) DEALLOCATE( vltot_zero )
+#endif
   IF ( ALLOCATED( rho_core ) )   DEALLOCATE( rho_core )
   IF ( ALLOCATED( rhog_core ) )  DEALLOCATE( rhog_core )
   IF ( ALLOCATED( psic ) )       DEALLOCATE( psic )

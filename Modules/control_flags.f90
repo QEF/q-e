@@ -217,6 +217,11 @@ MODULE control_flags
     tr2_multi          ! the dexx multiplier for adaptive thresholds
                        ! tr2 = tr2_multi * dexx after each V_exx update 
 #endif
+#ifdef __SOLVENT
+  LOGICAL, PUBLIC :: &
+    save_vltot         ! .TRUE. if a real space correction of the potential needs 
+                       ! to be added to vltot during SCF (solvent or slab calculations)
+#endif
   !
   ! ... pw diagonalization
   !

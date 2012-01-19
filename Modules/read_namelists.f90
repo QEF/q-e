@@ -273,25 +273,25 @@ MODULE read_namelists_module
        solvent_thr = 1.D-1
        !
        stype   = 1
-       rhozero = 0.001
+       rhomax  = 0.005
        rhomin  = 0.0001
        tbeta   = 4.8
        !
-       epsinfty        = 78.D0
+       epszero         = 78.D0
        eps_mode        = 'electronic'
        solvationrad(:) = 3.D0
        atomicspread(:) = 0.5D0
        !
        ifdtype  = 1
-       nfdpoint = 1
+       nfdpoint = 2
        !
        mixrhopol = 0.5
        tolrhopol = 1.D-10
        !
-       gamma = 0.D0
+       gamma = 50.D0
        delta = 0.00001D0
        !
-       extpressure = 0.D0
+       extpressure = -0.35D0
        !
        RETURN
        !
@@ -905,11 +905,11 @@ MODULE read_namelists_module
        CALL mp_bcast( solvent_thr,                ionode_id )
        !
        CALL mp_bcast( stype,                      ionode_id )
-       CALL mp_bcast( rhozero,                    ionode_id )
+       CALL mp_bcast( rhomax,                    ionode_id )
        CALL mp_bcast( rhomin,                     ionode_id )
        CALL mp_bcast( tbeta,                      ionode_id )
        !
-       CALL mp_bcast( epsinfty,                   ionode_id )
+       CALL mp_bcast( epszero,                    ionode_id )
        CALL mp_bcast( eps_mode,                   ionode_id )
        CALL mp_bcast( solvationrad,               ionode_id )
        CALL mp_bcast( atomicspread,               ionode_id )

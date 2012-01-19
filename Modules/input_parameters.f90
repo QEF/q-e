@@ -528,7 +528,7 @@ MODULE input_parameters
         ! type of switching functions used in the solvation models
         !    0: original Fattebert-Gygi
         !    1: ultrasoft dielectric function as defined in Andreussi et al.
-        REAL(DP) :: rhozero = 0.001
+        REAL(DP) :: rhomax = 0.001
         ! first parameter of the sw function, roughly corresponding 
         ! to the density threshold of the solvation model
         REAL(DP) :: rhomin = 0.0001
@@ -538,8 +538,8 @@ MODULE input_parameters
 !
 ! Dielectric solvent parameters
 !
-        REAL(DP) :: epsinfty = 78.D0
-        ! epsinfty dielectric permittivity of the solvation model. If set equal
+        REAL(DP) :: epszero = 78.D0
+        ! static dielectric permittivity of the solvation model. If set equal
         ! to one (=vacuum) no dielectric effects
         CHARACTER( LEN = 256 ) :: eps_mode = 'electronic'
         !  eps_mode method for calculating the density that sets 
@@ -589,8 +589,8 @@ MODULE input_parameters
 
         NAMELIST / solvent /                                           &
              verbose, solvent_thr,                                     &
-             stype, rhozero, rhomin, tbeta,                            &
-             epsinfty, eps_mode, solvationrad, atomicspread,           &
+             stype, rhomax, rhomin, tbeta,                             &
+             epszero, eps_mode, solvationrad, atomicspread,            &
              ifdtype, nfdpoint,                                        &
              mixrhopol, tolrhopol,                                     &
              gamma, delta,                                             &
