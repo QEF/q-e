@@ -165,6 +165,7 @@ SUBROUTINE transform_int4_nc(int4,na)
 USE kinds,                ONLY : DP
 USE ions_base,            ONLY : nat, ityp
 USE uspp_param,           ONLY : nh, nhm
+USE uspp,                 ONLY : ijtoh
 USE noncollin_module,     ONLY : nspin_mag
 USE spin_orb,             ONLY : domag
 USE phus,                 ONLY : int4_nc
@@ -177,12 +178,12 @@ COMPLEX(DP) :: int4(nhm*(nhm+1)/2,3,3,nat,nspin_mag)
 ! ... local variables
 !
 INTEGER :: ih, jh, ipol, jpol, np
-INTEGER :: find_ijh, ijh
+INTEGER :: ijh
 
 np=ityp(na)
 DO ih = 1, nh(np)
    DO jh = 1, nh(np)
-      ijh=find_ijh(ih,jh,nh(np))
+      ijh=ijtoh(ih,jh,np)
       DO ipol=1,3
          DO jpol=1,3
             IF (domag) THEN
@@ -215,6 +216,7 @@ SUBROUTINE transform_int5_nc(int5, nb)
 !
 USE kinds,                ONLY : DP
 USE ions_base,            ONLY : nat, ityp
+USE uspp,                 ONLY : ijtoh
 USE uspp_param,           ONLY : nh, nhm
 USE phus,                 ONLY : int5_so
 !
@@ -225,12 +227,12 @@ COMPLEX(DP) :: int5(nhm*(nhm+1)/2,3,3,nat,nat)
 ! ... local variables
 !
 INTEGER :: ih, jh, np, na, ipol, jpol
-INTEGER :: find_ijh, ijh
+INTEGER :: ijh
 
 np=ityp(nb)
 DO ih = 1, nh(np)
    DO jh = 1, nh(np)
-      ijh=find_ijh(ih,jh,nh(np))
+      ijh=ijtoh(ih,jh,np)
       DO na=1,nat
          DO ipol=1,3
             DO jpol=1,3

@@ -19,6 +19,7 @@ USE kinds,                ONLY : DP
 USE ions_base,            ONLY : nat, ntyp => nsp, ityp
 USE uspp_param,           ONLY : nh, nhm
 USE lsda_mod,             ONLY : nspin
+USE uspp,                 ONLY : ijtoh
 USE noncollin_module,     ONLY : npol, nspin_mag
 USE spin_orb,             ONLY : fcoef, domag
 !
@@ -31,26 +32,19 @@ INTEGER :: na
 ! ... local variables
 !
 INTEGER :: ih, jh, lh, kh, ijh, np, is1, is2
-INTEGER, ALLOCATABLE :: ijh_save(:,:)
 COMPLEX(DP) :: fac
-INTEGER :: find_ijh, ijh_l
+INTEGER :: ijh_l
 LOGICAL :: same_lj
 
-ALLOCATE(ijh_save(nhm,nhm))
 np=ityp(na)
-DO ih=1,nh(np)
-   DO jh=1,nh(np)
-      ijh_save(ih,jh)=find_ijh(ih,jh,nh(np))
-   END DO
-END DO
 DO ih = 1, nh(np)
    DO jh = 1, nh(np)
-      ijh=ijh_save(ih,jh)
+      ijh=ijtoh(ih,jh,np)
       DO kh = 1, nh(np)
          IF (same_lj(kh,ih,np)) THEN
             DO lh=1,nh(np)
                IF (same_lj(lh,jh,np)) THEN
-                  ijh_l=ijh_save(kh,lh)
+                  ijh_l=ijtoh(kh,lh,np)
                   DO is1=1,npol
                      DO is2=1,npol
                         IF (kh <= lh) THEN
@@ -81,7 +75,6 @@ DO ih = 1, nh(np)
    END DO
 END DO
        !
-DEALLOCATE(ijh_save)
 RETURN
 END SUBROUTINE transform_becsum_so
 
@@ -100,29 +93,4 @@ same_lj = ((nhtol(ih,np)==nhtol(jh,np)).AND. &
 
 RETURN
 END FUNCTION same_lj
-
-FUNCTION find_ijh(ih,jh,nh)
-IMPLICIT NONE
-INTEGER :: find_ijh, ih, jh, nh
-INTEGER :: ih0, jh0, ijh, i, j
-
-if (jh > ih) then
-   ih0=ih
-   jh0=jh
-else
-   ih0=jh
-   jh0=ih
-end if
-
-ijh=0
-do i=1, ih0-1
-   do j=i, nh
-      ijh=ijh+1
-   enddo
-enddo
-do j=ih0, jh0
-   ijh=ijh+1
-enddo
-find_ijh=ijh
-end function find_ijh
 

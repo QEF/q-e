@@ -20,6 +20,7 @@ USE ions_base,            ONLY : nat, ntyp => nsp, ityp
 USE uspp_param,           ONLY : nh, nhm
 USE noncollin_module,     ONLY : npol
 USE spin_orb,             ONLY : fcoef, domag
+USE uspp,                 ONLY : ijtoh
 USE phus,                 ONLY : alphasum
 !
 IMPLICIT NONE
@@ -30,27 +31,20 @@ INTEGER :: na
 ! ... local variables
 !
 INTEGER :: ih, jh, lh, kh, ijh, np, is1, is2, ipol
-INTEGER, ALLOCATABLE :: ijh_save(:,:)
 COMPLEX(DP) :: fac
-INTEGER :: find_ijh, ijh_l
+INTEGER :: ijh_l
 LOGICAL :: same_lj
 
-ALLOCATE(ijh_save(nhm,nhm))
 np=ityp(na)
-DO ih=1,nh(np)
-   DO jh=1,nh(np)
-      ijh_save(ih,jh)=find_ijh(ih,jh,nh(np))
-   END DO
-END DO
 DO ipol=1,3
    DO ih = 1, nh(np)
       DO kh = 1, nh(np)
          IF (same_lj(kh,ih,np)) THEN
             DO jh = 1, nh(np)
-               ijh=ijh_save(ih,jh)
+               ijh=ijtoh(ih,jh,np)
                DO lh=1,nh(np)
                   IF (same_lj(lh,jh,np)) THEN
-                     ijh_l=ijh_save(kh,lh)
+                     ijh_l=ijtoh(kh,lh,np)
                      DO is1=1,npol
                         DO is2=1,npol
                            IF (kh <= lh) THEN
@@ -85,7 +79,6 @@ DO ipol=1,3
    END DO
 END DO
        !
-DEALLOCATE(ijh_save)
 RETURN
 END SUBROUTINE transform_alphasum_so
 

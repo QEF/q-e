@@ -231,6 +231,7 @@ USE kinds,                ONLY : DP
 USE ions_base,            ONLY : nat, ityp
 USE uspp_param,           ONLY : nh, nhm
 USE noncollin_module,     ONLY : npol, nspin_mag
+USE uspp,                 ONLY : ijtoh
 USE spin_orb,             ONLY : fcoef, domag
 USE phus,                 ONLY : int4_nc
 !
@@ -242,17 +243,10 @@ COMPLEX(DP) :: int4(nhm*(nhm+1)/2,3,3,nat,nspin_mag)
 ! ... local variables
 !
 INTEGER :: ih, jh, lh, kh, ipol, jpol, np, is1, is2, ijs
-INTEGER, ALLOCATABLE :: ijh_save(:,:)
-INTEGER :: find_ijh, ijh_l
+INTEGER :: ijh_l
 LOGICAL :: same_lj
 
-ALLOCATE(ijh_save(nhm,nhm))
 np=ityp(na)
-DO ih=1,nh(np)
-   DO jh=1,nh(np)
-      ijh_save(ih,jh)=find_ijh(ih,jh,nh(np))
-   END DO
-END DO
 
 DO ih = 1, nh(np)
    DO kh = 1, nh(np)
@@ -260,7 +254,7 @@ DO ih = 1, nh(np)
          DO jh = 1, nh(np)
             DO lh= 1, nh(np)
                IF (same_lj(lh,jh,np)) THEN
-                  ijh_l=ijh_save(kh,lh)
+                  ijh_l=ijtoh(kh,lh,np)
                   DO ipol=1,3
                      DO jpol=1,3
                         ijs=0
@@ -295,7 +289,6 @@ DO ih = 1, nh(np)
       END IF
    END DO
 END DO
-DEALLOCATE(ijh_save)
        !
 RETURN
 END SUBROUTINE transform_int4_so
@@ -310,6 +303,7 @@ SUBROUTINE transform_int5_so(int5,nb)
 USE kinds,                ONLY : DP
 USE ions_base,            ONLY : nat, ityp
 USE uspp_param,           ONLY : nh, nhm
+USE uspp,                 ONLY : ijtoh
 USE noncollin_module,     ONLY : npol
 USE spin_orb,             ONLY : fcoef
 USE phus,                 ONLY : int5_so
@@ -322,17 +316,10 @@ COMPLEX(DP) :: int5(nhm*(nhm+1)/2,3,3,nat,nat)
 !
 INTEGER :: ih, jh, lh, kh, ijs, np, is1, is2, na, ipol, jpol
 
-INTEGER, ALLOCATABLE :: ijh_save(:,:)
-INTEGER :: find_ijh, ijh_l
+INTEGER :: ijh_l
 LOGICAL :: same_lj
 
-ALLOCATE(ijh_save(nhm,nhm))
 np=ityp(nb)
-DO ih=1,nh(np)
-   DO jh=1,nh(np)
-      ijh_save(ih,jh)=find_ijh(ih,jh,nh(np))
-   END DO
-END DO
 
 DO ih = 1, nh(np)
    DO kh = 1, nh(np)
@@ -340,7 +327,7 @@ DO ih = 1, nh(np)
          DO jh = 1, nh(np)
             DO lh= 1, nh(np)
                IF (same_lj(lh,jh,np)) THEN
-                  ijh_l=ijh_save(kh,lh)
+                  ijh_l=ijtoh(kh,lh,np)
                   DO na=1,nat
                      DO ipol=1,3
                         DO jpol=1,3
@@ -364,7 +351,6 @@ DO ih = 1, nh(np)
       END IF
    END DO
 END DO
-DEALLOCATE(ijh_save)
        !
 RETURN
 END SUBROUTINE transform_int5_so

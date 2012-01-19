@@ -19,6 +19,7 @@ USE kinds,                ONLY : DP
 USE ions_base,            ONLY : nat, ntyp => nsp, ityp
 USE uspp_param,           ONLY : nh, nhm
 USE lsda_mod,             ONLY : nspin
+USE uspp,                 ONLY : ijtoh
 USE noncollin_module,     ONLY : npol, nspin_mag
 USE spin_orb,             ONLY : fcoef, domag
 !
@@ -32,24 +33,16 @@ INTEGER :: na, modes
 ! ... local variables
 !
 INTEGER :: ih, jh, lh, kh, ijh, np, is1, is2, ijs, mode
-INTEGER, ALLOCATABLE :: ijh_save(:,:)
 COMPLEX(DP) :: fac
-INTEGER :: find_ijh
 LOGICAL :: same_lj
 
-ALLOCATE(ijh_save(nhm,nhm))
 np=ityp(na)
-DO ih=1,nh(np)
-   DO jh=1,nh(np)
-      ijh_save(ih,jh)=find_ijh(ih,jh,nh(np))
-   END DO
-END DO
 DO mode=1,modes
    DO ih = 1, nh(np)
       DO kh = 1, nh(np)
          IF (same_lj(kh,ih,np)) THEN
             DO jh = 1, nh(np)
-               ijh=ijh_save(ih,jh)
+               ijh=ijtoh(ih,jh,np)
                DO lh=1,nh(np)
                   IF (same_lj(lh,jh,np)) THEN
                      ijs=0
@@ -83,6 +76,5 @@ DO mode=1,modes
       END DO
    END DO
 END DO
-DEALLOCATE(ijh_save)
 RETURN
 END SUBROUTINE transform_dbecsum_so
