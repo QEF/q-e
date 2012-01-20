@@ -1314,14 +1314,18 @@ input_description -distribution {Quantum Espresso} -package CP -program cp.x {
 	    info {
                Select which of the cell parameters should be moved:
 
-               all     = all axis and angles are moved 
-               x       = only the x axis is moved
-               y       = only the y axis is moved
-               z       = only the z axis is moved
-               xy      = only the x and y axis are moved, angles are unchanged
-               xz      = only the x and z axis are moved, angles are unchanged
-               yz      = only the y and z axis are moved, angles are unchanged
-               xyz     = x, y and z axis are moved, angles are unchanged
+               all     = all axis and angles are moved
+               x       = only the x component of axis 1 (v1_x) is moved
+               y       = only the y component of axis 2 (v2_y) is moved
+               z       = only the z component of axis 3 (v3_z) is moved
+               xy      = only v1_x and v_2y are moved
+               xz      = only v1_x and v_3z are moved
+               yz      = only v2_x and v_3z are moved
+               xyz     = only v1_x, v2_x, v_3z are moved
+               shape   = all axis and angles, keeping the volume fixed
+
+               Beware: if axis are not orthogonal, some of the above options
+                       will break symmetry
 	    }
 	}
     }
