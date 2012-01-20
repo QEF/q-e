@@ -1,15 +1,15 @@
 This is the distribution of the Quantum ESPRESSO suite of codes (ESPRESSO: 
 opEn-Source Package for Research in Electronic Structure, Simulation, 
-and Optimization), promoted by the DEMOCRITOS National Simulation Center 
-of the Italian INFM (http://www.democritos.it). 
+and Optimization), promoted by the IOM-DEMOCRITOS National Simulation Center 
+of the Italian CNR (http://www.democritos.it). 
 
 Quick installation instructions for the impatient:
    ./configure [options]
    make all
 ("make" alone prints a list of acceptable targets). Binaries go in bin/.
-For more information, see the documentation contained in directory Doc/,
-consult the web site http://www.quantum-espresso.org/ and in particular
-the Wiki page http://www.quantum-espresso.org/wiki/index.php/Main_Page .
+For more information, see the general documentation in directory Doc/, 
+package-specific documentation in */Doc/, and the web site
+http://www.quantum-espresso.org/
 
 All the material included in this distribution is free software;
 you can redistribute it and/or modify it under the terms of the GNU
