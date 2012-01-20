@@ -1,0 +1,29 @@
+ &input
+        title='Pt',
+        zed=78.0,
+        rel=2,
+        iswitch=3,
+        rlderiv=2.50,
+        eminld=-4.0,
+        emaxld=4.0,
+        deld=0.02,
+        nld=5,
+        config='[Xe] 4f14. 5d8 6s2 6p0',
+        dft='LDA'
+ /
+ &inputp
+        pseudotype=3,
+        lloc=0,
+        file_pseudopw='Ptrel.RRKJ3',
+        nlcc=.true.,
+        rcore=1.2,
+        rcloc=2.5
+ /
+7
+5D  3  2  4.00  0.00  2.10  2.40  1.50
+5D  3  2  0.00 -0.20  2.10  2.40  1.50
+5D  3  2  4.00  0.00  2.10  2.40  2.50
+5D  3  2  0.00 -0.20  2.10  2.40  2.50
+6P  2  1  0.00 -0.00  3.30  3.30  0.50
+6P  2  1  0.00 -0.00  3.40  3.40  1.50
+6S  1  0  2.00  0.00  2.60  2.60  0.50

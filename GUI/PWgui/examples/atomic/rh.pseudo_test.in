@@ -1,0 +1,18 @@
+ &input
+   title='Rh',
+   zed=45.,
+   rel=1,
+   rlderiv=2.50,
+   eminld=-4.0,
+   emaxld=4.0,
+   deld=0.02,
+   nld=3,
+   iswitch=2,
+   config='[Kr] 4d7 5s2 5p0'
+   dft='PBE',
+ /
+ &test
+   nconf=1,
+   file_pseudo='RhUSPBEnlcc.RRKJ3.UPF',
+   configts(1)= '4d7 5s2 5p0'
+ /

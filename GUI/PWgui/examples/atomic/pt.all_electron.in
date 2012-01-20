@@ -1,0 +1,12 @@
+ &input
+        title='Pt',
+        zed=78.,
+        rel=2,
+        xmin=-6.0,
+        isic=0,
+        lsd=0,
+        latt=1,
+        iswitch=1,
+        config='[Xe] 4f14. 5d9 6s1',
+        dft='SL1-NOC'
+ /
