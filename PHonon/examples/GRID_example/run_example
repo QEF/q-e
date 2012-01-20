@@ -8,16 +8,18 @@ EXAMPLE_DIR=`pwd`
 if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
 
 # function to test the exit status of a job
-. ../check_failure.sh
+. ../../../examples/check_failure.sh
 
 $ECHO
 $ECHO "$EXAMPLE_DIR : starting"
 $ECHO
 $ECHO "This example shows how to calculate the phonon dispersion on a GRID"
-$ECHO "for AlAs in zincblende structure. Only q-points are split."
+$ECHO "for AlAs in zincblende structure. Both q-points and irreps are split."
 
 # set the needed environment variables
-. ../environment_variables
+cd ../
+. ../../examples/environment_variables
+cd GRID_example
 
 # required executables and pseudopotentials
 BIN_LIST="pw.x ph.x q2r.x matdyn.x"
@@ -38,12 +40,12 @@ for DIR in "$BIN_DIR" "$PSEUDO_DIR" ; do
         exit 1
     fi
 done
-for DIR in "$TMP_DIR" "$EXAMPLE_DIR/results_1" ; do
+for DIR in "$TMP_DIR" "$EXAMPLE_DIR/results" ; do
     if test ! -d $DIR ; then
         mkdir $DIR
     fi
 done
-cd $EXAMPLE_DIR/results_1
+cd $EXAMPLE_DIR/results
 
 # check for executables
 for FILE in $BIN_LIST ; do
@@ -58,6 +60,12 @@ done
 # check for pseudopotentials
 for FILE in $PSEUDO_LIST ; do
     if test ! -r $PSEUDO_DIR/$FILE ; then
+       $ECHO
+       $ECHO "Downloading $FILE to $PSEUDO_DIR...\c"
+            $WGET $PSEUDO_DIR/$FILE \
+                http://www.quantum-espresso.org/pseudo/1.3/UPF/$FILE 2> /dev/null 
+    fi
+    if test $? != 0; then
         $ECHO
         $ECHO "ERROR: $PSEUDO_DIR/$FILE not existent or not readable"
         $ECHO "Aborting"
@@ -83,6 +91,8 @@ $ECHO "  cleaning $TMP_DIR...\c"
 rm -rf $TMP_DIR/*
 $ECHO " done"
 
+PREFIX='alas'
+
 # self-consistent calculation
 cat > alas.scf.in << EOF
  &control
@@ -90,7 +100,7 @@ cat > alas.scf.in << EOF
     restart_mode='from_scratch',
     tstress = .true.
     tprnfor = .true.
-    prefix='alas',
+    prefix='$PREFIX',
     pseudo_dir = '$PSEUDO_DIR/',
     outdir='$TMP_DIR/'
  /
@@ -118,42 +128,105 @@ $PW_COMMAND < alas.scf.in > alas.scf.out
 check_failure $?
 $ECHO " done"
 
-for q in `seq 1 8 ` ; do
-
-cat > input.$q << EOF
+# phonon calculation on a (444) uniform grid of q-points
+cat > alas.ph.in0 << EOF
 phonons of AlAs
  &inputph
   tr2_ph=1.0d-12,
-  prefix='alas',
+  prefix='$PREFIX',
+  ldisp=.true.,
+  nq1=4, nq2=4, nq3=4
+  amass(1)=26.98,
+  amass(2)=74.92,
+  start_irr=0,
+  last_irr=0,
+  outdir='$TMP_DIR/',
+  fildyn='$PREFIX.dyn',
+ /
+EOF
+$ECHO "  running the phonon calculation ...\c"
+$PH_COMMAND < alas.ph.in0 > alas.ph.out0
+check_failure $?
+$ECHO " done"
+
+for q in `seq 1 8 ` ; do
+
+for irr in `seq 1 6` ; do
+
+cat > input.$q.$irr << EOF
+phonons of AlAs
+ &inputph
+  tr2_ph=1.0d-12,
+  prefix='$PREFIX',
   ldisp=.true.,
   nq1=4, nq2=4, nq3=4
   start_q=$q
   last_q=$q
+  start_irr=$irr
+  last_irr=$irr
   recover=.true.,
   amass(1)=26.98,
   amass(2)=74.92,
-  outdir="$TMP_DIR/$q",
-  fildyn='alas.dyn',
+  outdir="$TMP_DIR/$q.$irr",
+  fildyn='$PREFIX.dyn',
  /
 EOF
 
-mkdir $TMP_DIR/$q
-cp -r $TMP_DIR/alas.* $TMP_DIR/$q
+mkdir $TMP_DIR/$q.$irr
+cp -r $TMP_DIR/$PREFIX.* $TMP_DIR/$q.$irr
+mkdir -p $TMP_DIR/$q.$irr/_ph0/$PREFIX.phsave
+cp -r $TMP_DIR/_ph0/$PREFIX.phsave/* $TMP_DIR/$q.$irr/_ph0/$PREFIX.phsave
 
-$ECHO "  running the phonon calculation for q= " $q " ...\c"
-$PH_COMMAND < input.$q > output.$q
+$ECHO "  running the phonon calculation for q= " $q " irr=" $irr "...\c"
+$PH_COMMAND < input.$q.$irr > output.$q.$irr
 $ECHO " done"
 
 done
+done 
 #
-# Please note: if the previous step was done in different machines
-# here you should copy all the dynamical matrices in the same directory
-# in which you run q2r.x
+#  Collecting all results in a single directory:
 #
+
+for q in `seq 1 8 ` ; do
+for irr in `seq 1 6` ; do
+
+\cp -f $TMP_DIR/$q.$irr/_ph0/$PREFIX.phsave/data-file.$q.$irr.xml $TMP_DIR/_ph0/$PREFIX.phsave >& /dev/null
+
+done 
+#
+#  collect also the representation 0 (contribution to the dynamical 
+#  matrix independent from the induced charge).
+#
+\cp -f $TMP_DIR/$q.1/_ph0/$PREFIX.phsave/data-file.$q.0.xml $TMP_DIR/_ph0/$PREFIX.phsave >& /dev/null
+
+done 
+#
+# cp electric field part
+#
+\cp -f $TMP_DIR/1.1/_ph0/$PREFIX.phsave/data-file.1.xml $TMP_DIR/_ph0/$PREFIX.phsave >& /dev/null
+
+cat > alas.ph.in << EOF
+phonons of AlAs
+ &inputph
+  tr2_ph=1.0d-12,
+  prefix='$PREFIX',
+  ldisp=.true.,
+  nq1=4, nq2=4, nq3=4
+  amass(1)=26.98,
+  amass(2)=74.92,
+  recover=.true.,
+  outdir='$TMP_DIR/',
+  fildyn='$PREFIX.dyn',
+ /
+EOF
+$ECHO "  running the phonon calculation to collect the results...\c"
+$PH_COMMAND < alas.ph.in > alas.ph.out
+check_failure $?
+$ECHO " done"
 
 cat > q2r.in <<EOF
  &input
-   fildyn='alas.dyn', zasr='simple', flfrc='alas444.fc'
+   fildyn='$PREFIX.dyn', zasr='simple', flfrc='$PREFIX.444.fc'
  /
 EOF
 
@@ -165,7 +238,7 @@ $ECHO " done"
 cat > matdyn.in <<EOF
  &input
     asr='simple',  amass(1)=26.98, amass(2)=74.922,
-    flfrc='alas444.fc', flfrq='alas.freq'
+    flfrc='$PREFIX.444.fc', flfrq='$PREFIX.freq'
  /
  9
   0.000 0.0 0.0  0.0
@@ -187,7 +260,7 @@ $ECHO " done"
 cat > phdos.in <<EOF
  &input
     asr='simple',  dos=.true. amass(1)=26.98, amass(2)=74.922,
-    flfrc='alas444.fc', fldos='alas.phdos', nk1=6,nk2=6,nk3=6
+    flfrc='$PREFIX.444.fc', fldos='$PREFIX.phdos', nk1=6,nk2=6,nk3=6
  /
 EOF
 
