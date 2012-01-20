@@ -51,13 +51,14 @@ user_guide: user_guide.pdf
 defs: link_input_xx INPUT_PW.html INPUT_PW.txt link_on_main_doc
 
 link_input_xx:
-	if test -f ../../doc-def/input_xx.xsl ; then \
+	@(if test ! -f input_xx.xsl; then \
+	(if test -f ../../doc-def/input_xx.xsl; then \
 	(ln -s ../../doc-def/input_xx.xsl input_xx.xsl) ; \
 	else \
 	echo ; \
 	echo "  Sorry, can not find input_xx.xsl html style file !!!" ; \
 	echo ; \
-	fi
+	fi) ; fi)
 
 INPUT_PW.html: %.html: %.def
 	$(HELPDOC) $<
@@ -65,6 +66,6 @@ INPUT_PW.txt: %.txt: %.def
 	$(HELPDOC) $<
 
 link_on_main_doc:
-	-( cd ../../Doc ; ln -fs ../PW/Doc/INPUT_PW.html . ; \
+	-@( cd ../../Doc ; ln -fs ../PW/Doc/INPUT_PW.html . ; \
 	ln -fs ../PW/Doc/INPUT_PW.xml . ; \
 	ln -fs ../PW/Doc/INPUT_PW.txt .) 

@@ -24,7 +24,7 @@ clean:
 	- rm -rf user_guide/
 	- rm -f INPUT_*.html INPUT_*.txt INPUT_*.xml
 	- rm -rf ../../Doc/INPUT_CP*.*
-
+	- rm -rf ../../Doc/input_xx.xsl
 
 user_guide: user_guide.pdf
 	rm -rf user_guide/
@@ -47,7 +47,7 @@ user_guide: user_guide.pdf
 	@echo ""
 
 
-defs: INPUT_CP.html INPUT_CP.txt INPUT_CPPP.html INPUT_CPPP.txt link_on_main_doc
+defs: link_input_xx INPUT_CP.html INPUT_CP.txt INPUT_CPPP.html INPUT_CPPP.txt link_on_main_doc
 INPUT_CP.html: %.html: %.def
 	$(HELPDOC) $<
 INPUT_CP.txt: %.txt: %.def
@@ -57,8 +57,18 @@ INPUT_CPPP.html: %.html: %.def
 INPUT_CPPP.txt: %.txt: %.def
 	$(HELPDOC) $<
 
+link_input_xx:
+	@(if test ! -f input_xx.xsl; then \
+	(if test -f ../../doc-def/input_xx.xsl; then \
+	(ln -s ../../doc-def/input_xx.xsl input_xx.xsl) ; \
+	else \
+	echo ; \
+	echo "  Sorry, can not find input_xx.xsl html style file !!!" ; \
+	echo ; \
+	fi) ; fi)
+
 link_on_main_doc:
-	-( cd ../../Doc ; ln -fs ../CPV/Doc/INPUT_CP.html . ; \
+	-@( cd ../../Doc ; ln -fs ../CPV/Doc/INPUT_CP.html . ; \
 	ln -fs ../CPV/Doc/INPUT_CP.xml . ; \
 	ln -fs ../CPV/Doc/INPUT_CP.txt . ; \
 	ln -fs ../CPV/Doc/INPUT_CPPP.html . ; \

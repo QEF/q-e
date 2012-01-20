@@ -8,7 +8,6 @@ HTMLS = INPUT_PP.html \
 	INPUT_pw_export.html
 
 PDFS = eps_man.pdf
-
 AUXS = $(PDFS:.pdf=.aux)
 LOGS = $(PDFS:.pdf=.log)
 OUTS = $(PDFS:.pdf=.out)
@@ -17,8 +16,15 @@ TOCS = $(PDFS:.pdf=.toc)
 XMLS = $(HTMLS:.html=.xml)
 TXTS = $(HTMLS:.html=.txt)
 
-all: link_input_xx doc
-doc: $(HTMLS) $(TXTS) $(PDFS) 
+doc: all
+all: pdf defs 
+pdf: $(PDFS)
+
+$(PDFS): %.pdf: %.tex
+	$(LATEX)  $<
+	$(LATEX)  $<
+
+defs: link_input_xx $(HTMLS) link_on_main_doc
 
 $(HTMLS): %.html: %.def
 	$(HELPDOC) $<
@@ -26,19 +32,36 @@ $(HTMLS): %.html: %.def
 $(TXTS): %.txt: %.def
 	$(HELPDOC) $<
 
-$(PDFS): %.pdf: %.tex
-	$(LATEX)  $<
-	$(LATEX)  $<
-
 link_input_xx:
-	if test -f ../../doc-def/input_xx.xsl ; then \
+	@(if test ! -f input_xx.xsl; then \
+	(if test -f ../../doc-def/input_xx.xsl; then \
         (ln -s ../../doc-def/input_xx.xsl input_xx.xsl) ; \
         else \
         echo ; \
         echo "  Sorry, can not find input_xx.xsl html style file !!!" ; \
         echo ; \
-        fi
+        fi) ; fi)
+
+link_on_main_doc:
+	-@( cd ../../Doc ; ln -fs ../PP/Doc/INPUT_PP.html . ; \
+	ln -fs ../PP/Doc/INPUT_PP.xml . ; \
+	ln -fs ../PP/Doc/INPUT_PP.txt . ; \
+	ln -fs ../PP/Doc/INPUT_PROJWFC.html . ; \
+	ln -fs ../PP/Doc/INPUT_PROJWFC.xml . ; \
+	ln -fs ../PP/Doc/INPUT_PROJWFC.txt . ; \
+	ln -fs ../PP/Doc/INPUT_DOS.html . ; \
+	ln -fs ../PP/Doc/INPUT_DOS.xml . ; \
+	ln -fs ../PP/Doc/INPUT_DOS.txt . ; \
+	ln -fs ../PP/Doc/INPUT_BANDS.html . ; \
+	ln -fs ../PP/Doc/INPUT_BANDS.xml . ; \
+	ln -fs ../PP/Doc/INPUT_BANDS.txt . ; \
+	ln -fs ../PP/Doc/INPUT_pw_export.html . ; \
+	ln -fs ../PP/Doc/INPUT_pw_export.xml . ; \
+	ln -fs ../PP/Doc/INPUT_pw_export.txt .)
 
 clean:
 	- rm -f $(PDFS) $(AUXS) $(LOGS) $(OUTS) $(TOCS)
 	- rm -f $(HTMLS) $(TXTS) $(XMLS) input_xx.xsl *~
+	- rm -rf ../../Doc/$(HTMLS)
+	- rm -rf ../../Doc/$(XMLS)
+	- rm -rf ../../Doc/$(TXTS)
