@@ -39,7 +39,6 @@ fi
 # produce documentation
 if test "$do_doc" = "yes" ; then
   make doc
-  cd doc-def/; make clean ; cd ../
 fi
 
 # package using Makefile
