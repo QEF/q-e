@@ -382,18 +382,18 @@ proc ::pwscf::pwReadFilter {moduleObj channel} {
 	}
     }
 
-    #
-    # count the number of intermediate images
-    #
-    seek $channel 0 start
-    set ni 0
-    while { ! [eof $channel] } {
-	gets $channel _line
-	if { [string match "*intermediate_image*" $_line] } {
-	    incr ni
-	}
-    }
-    $moduleObj varset path_inter_nimages -value $ni
+    ##
+    ## count the number of intermediate images
+    ##
+    #seek $channel 0 start
+    #set ni 0
+    #while { ! [eof $channel] } {
+    #	gets $channel _line
+    #	if { [string match "*intermediate_image*" $_line] } {
+    #	    incr ni
+    #	}
+    #}
+    #$moduleObj varset path_inter_nimages -value $ni
 
     #if { ! [info exists SYSTEM_namelist_content] } {	
     #	# there is no SYSTEM namlist. The input file is not a pw.x

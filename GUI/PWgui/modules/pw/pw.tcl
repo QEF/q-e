@@ -368,6 +368,13 @@ module PW -title "PWSCF GUI: module PW.x" -script {
 		    -value     { .true. .false. }
 		}
 
+		var use_all_frac { 
+		    -label     "Use all symmetry operations with fractionary translations (use_all_frac):"
+		    -widget    radiobox
+		    -textvalue { Yes No }	      
+		    -value     { .true. .false. }
+		}
+
 		var nbnd {
 		    -label    "Number of electronic states (nbnd):"
 		    -widget   spinint
@@ -628,14 +635,43 @@ module PW -title "PWSCF GUI: module PW.x" -script {
 			"Makov-Payne <makov-payne>"
 			"Martyna-Tuckerman <martyna-tuckerman>"
 			"Density Counter Charge <dcc>"
+			"Effective Screening Medium <esm>"
                         "No correction <none>"
 		    }
-		    -value {'makov-payne' 'martyna-tuckerman' 'dcc' 'none'}
+		    -value {'makov-payne' 'martyna-tuckerman' 'dcc' 'esm' 'none'}
 		}	
-	    
-		separator -label "--- Semi-empirical van der Waals ---"
 
-		group vdW -name vdW {
+		separator -label "--- Effective screening medium ---"
+	    
+		group ESM {
+		    var esm_bc {
+			-label "Boundary conditions for ESM (esm_bc):"
+			-widget    radiobox
+			-textvalue {
+			    "vacuum-slab-vacuum (open boundary conditions) <bc1>"
+			    "metal-slab-metal (dual electrode configuration) <bc2>"
+			    "vacuum-slab-metal <bc3>"
+			    "regular periodic calculation (no ESM) <pbc>"
+			}
+			-value {'bc1' 'bc2' 'bc3' 'pbc'}
+		    }	
+		    var esm_w {
+			-label    "Position offset [in a.u.] of the start of the ESM region (esm_w):"
+			-validate fortranreal
+		    }
+		    var esm_efield {
+			-label    "Magnitude of the applied electric field [Ryd/a.u.] (esm_efield):"
+			-validate fortranreal
+		    }
+		    var esm_nfit {
+			-label    "Number of z-grid points for the polynomial fit @ cell edge (esm_nfit):"
+			-validate posint
+		    }		    		    
+		}
+
+		separator -label "--- Semi-empirical van der Waals (aka DFT-D) ---"
+
+		group vdW {
 		    var london {
 			-label "Compute the semi-empirical dispersion term \[aka DFT-D\] (london):"
 			-textvalue {Yes No}
@@ -682,7 +718,25 @@ module PW -title "PWSCF GUI: module PW.x" -script {
 		    -label     "Convergence threshold for selfconsistency (conv_thr):"
 		    -validate  fortranposreal
 		}
+
+		var adaptive_thr {
+		    -label     "Use adaptive convergence threshold for EXX (adaptive_thr):"
+		    -widget    radiobox
+		    -textvalue { Yes No }	      
+		    -value     { .true. .false. }
+		}
 	       
+		group adaptive_thr_group -name "Adaptive convergence threshold setup:" {
+		    var conv_thr_init  {
+			-label     "Convergence threshold used for the first scf cycle (conv_thr_init):"
+			-validate  fortranposreal
+		    }		    
+		    var conv_thr_multi {
+			-label     "Convergence threshold factor for the rest of scf cycles (conv_thr_multi):"
+			-validate  fortranposreal
+		    }
+		}
+
 		var startingpot {
 		    -label    "Type of starting potential (startingpot):"
 		    -widget   optionmenu

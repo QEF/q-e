@@ -57,10 +57,14 @@ help verbosity -helpfmt helpdoc -helptext {
 <li> <em>Variable: </em><big><b>verbosity</b></big>
 </li>
 <br><li> <em>Type: </em>CHARACTER</li>
+<br><li> <em>Default: </em> 'low'
+         </li>
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-'high' | 'default' | 'low' | 'minimal'
+Currently two verbosity levels are implemented:
+  'high' and 'low'. 'debug' and 'medium' have the same
+  effect as 'high'; 'default' and 'minimal', as 'low'
          </pre></blockquote>
 </ul>      
       
@@ -78,14 +82,12 @@ help restart_mode -helpfmt helpdoc -helptext {
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-'from_scratch'  : from scratch
-                  NEB and SMD only: the starting path is obtained
-                  with a linear interpolation between the images
-                  specified in the ATOMIC_POSITIONS card.
-                  Note that in the linear interpolation
-                  periodic boundary conditions ARE NON USED.
-
-'restart'       : from previous interrupted run
+'from_scratch'  : from scratch. This is the normal way
+                  to perform a PWscf calculation
+'restart'       : from previous interrupted run. Use this
+                  switch only if you want to continue an
+                  interrupted calculation, not to start a
+                  new one. See also startingpot, startingwfc
          </pre></blockquote>
 </ul>      
       
@@ -105,8 +107,10 @@ help wf_collect -helpfmt helpdoc -helptext {
 <blockquote><pre>
 This flag controls the way wavefunctions are stored to disk :
 
-.TRUE.  collect wavefunctions from all processors and store
-        them into the output data directory outdir/prefix.save
+.TRUE.  collect wavefunctions from all processors, store them
+        into the output data directory outdir/prefix.save,
+        one wavefunction per k-point in subdirs K000001/,
+        K000001/, etc.
 
 .FALSE. do not collect wavefunctions, leave them in temporary
         local files (one per processor). The resulting format
@@ -205,7 +209,7 @@ help dt -helpfmt helpdoc -helptext {
 </li>
 <blockquote><pre>
 time step for molecular dynamics, in Rydberg atomic units
-(1 a.u.=4.8378 * 10^-17 s : beware, CP and FPMD codes use
+(1 a.u.=4.8378 * 10^-17 s : beware, the CP code use
  Hartree atomic units, half that much!!!)
          </pre></blockquote>
 </ul>      
@@ -286,8 +290,10 @@ help lkpoint_dir -helpfmt helpdoc -helptext {
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-If .false. it does not open a subdirectory for each k_point
-in the prefix.save directory.
+If .false. a subdirectory for each k_point is not opened
+in the prefix.save directory; Kohn-Sham eigenvalues are
+stored instead in a single file for all k-points. Currently
+doesnh't work together with wf_collect
          </pre></blockquote>
 </ul>      
       
@@ -562,110 +568,99 @@ help ibrav -helpfmt helpdoc -helptext {
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-Bravais-lattice index:
+  Bravais-lattice index. In all cases except ibrav=0,
+  either [celldm(1)-celldm(6)] or [a,b,c,cosab,cosac,cosbc]
+  must be specified: see their description. For ibrav=0
+  you may specify the lattice parameter celldm(1) or a.
 
-  ibrav        structure                   celldm(2)-celldm(6)
+ibrav      structure                   celldm(2)-celldm(6)
+                                     or: b,c,cosab,cosac,cosbc
+  0          free
+      crystal axis provided in input: see card CELL_PARAMETERS
 
-    0          "free", see above                 not used
-    1          cubic P (sc)                      not used
-    2          cubic F (fcc)                     not used
-    3          cubic I (bcc)                     not used
-    4          Hexagonal and Trigonal P        celldm(3)=c/a
-    5          Trigonal R                      celldm(4)=cos(alpha)
-    6          Tetragonal P (st)               celldm(3)=c/a
-    7          Tetragonal I (bct)              celldm(3)=c/a
-    8          Orthorhombic P                  celldm(2)=b/a,celldm(3)=c/a
-    9          Orthorhombic base-centered(bco) celldm(2)=b/a,celldm(3)=c/a
-   10          Orthorhombic face-centered      celldm(2)=b/a,celldm(3)=c/a
-   11          Orthorhombic body-centered      celldm(2)=b/a,celldm(3)=c/a
-   12          Monoclinic P                    celldm(2)=b/a,celldm(3)=c/a,
-                                               celldm(4)=cos(ab)
-   13          Monoclinic base-centered        celldm(2)=b/a,celldm(3)=c/a,
-                                               celldm(4)=cos(ab)
-   14          Triclinic                       celldm(2)= b/a,
-                                               celldm(3)= c/a,
-                                               celldm(4)= cos(bc),
-                                               celldm(5)= cos(ac),
-                                               celldm(6)= cos(ab)
+  1          cubic P (sc)
+      v1 = a(1,0,0),  v2 = a(0,1,0),  v3 = a(0,0,1)
 
-For P lattices: the special axis (c) is the z-axis, one basal-plane
-vector (a) is along x, the other basal-plane vector (b) is at angle
-gamma for monoclinic, at 120 degrees for trigonal and hexagonal
-lattices, at 90 degrees for cubic, tetragonal, orthorhombic lattices
+  2          cubic F (fcc)
+      v1 = (a/2)(-1,0,1),  v2 = (a/2)(0,1,1), v3 = (a/2)(-1,1,0)
 
-sc simple cubic
-====================
-v1 = a(1,0,0),  v2 = a(0,1,0),  v3 = a(0,0,1)
+  3          cubic I (bcc)
+      v1 = (a/2)(1,1,1),  v2 = (a/2)(-1,1,1),  v3 = (a/2)(-1,-1,1)
 
-fcc face centered cubic
-====================
-v1 = (a/2)(-1,0,1),  v2 = (a/2)(0,1,1), v3 = (a/2)(-1,1,0).
+  4          Hexagonal and Trigonal P        celldm(3)=c/a
+      v1 = a(1,0,0),  v2 = a(-1/2,sqrt(3)/2,0),  v3 = a(0,0,c/a)
 
-bcc body entered cubic
-====================
-v1 = (a/2)(1,1,1),  v2 = (a/2)(-1,1,1),  v3 = (a/2)(-1,-1,1).
+  5          Trigonal R, 3fold axis c        celldm(4)=cos(alpha)
+      The crystallographic vectors form a three-fold star around
+      the z-axis, the primitive cell is a simple rhombohedron:
+      v1 = a(tx,-ty,tz),   v2 = a(0,2ty,tz),   v3 = a(-tx,-ty,tz)
+      where c=cos(alpha) is the cosine of the angle alpha between
+      any pair of crystallographic vectors, tx, ty, tz are:
+        tx=sqrt((1-c)/2), ty=sqrt((1-c)/6), tz=sqrt((1+2c)/3)
+ -5          Trigonal R, 3fold axis &lt;111&gt;    celldm(4)=cos(alpha)
+      The crystallographic vectors form a three-fold star around
+      &lt;111&gt;. Defining a' = a/sqrt(3) :
+      v1 = a' (u,v,v),   v2 = a' (v,u,v),   v3 = a' (v,v,u)
+      where u and v are defined as
+        u = tz - 2*sqrt(2)*ty,  v = tz + sqrt(2)*ty
+      and tx, ty, tz as for case ibrav=5
 
-simple hexagonal and trigonal(p)
-====================
-v1 = a(1,0,0),  v2 = a(-1/2,sqrt(3)/2,0),  v3 = a(0,0,c/a).
+  6          Tetragonal P (st)               celldm(3)=c/a
+      v1 = a(1,0,0),  v2 = a(0,1,0),  v3 = a(0,0,c/a)
 
-trigonal(r)
-===================
-for these groups, the z-axis is chosen as the 3-fold axis, but the
-crystallographic vectors form a three-fold star around the z-axis,
-and the primitive cell is a simple rhombohedron. The crystallographic
-vectors are:
-      v1 = a(tx,-ty,tz),   v2 = a(0,2ty,tz),   v3 = a(-tx,-ty,tz).
-where c=cos(alpha) is the cosine of the angle alpha between any pair
-of crystallographic vectors, tc, ty, tz are defined as
-     tx=sqrt((1-c)/2), ty=sqrt((1-c)/6), tz=sqrt((1+2c)/3)
+  7          Tetragonal I (bct)              celldm(3)=c/a
+      v1=(a/2)(1,-1,c/a),  v2=(a/2)(1,1,c/a),  v3=(a/2)(-1,-1,c/a)
 
-simple tetragonal (p)
-====================
-   v1 = a(1,0,0),  v2 = a(0,1,0),  v3 = a(0,0,c/a)
+  8          Orthorhombic P                  celldm(2)=b/a
+                                             celldm(3)=c/a
+      v1 = (a,0,0),  v2 = (0,b,0), v3 = (0,0,c)
 
-body centered tetragonal (i)
-================================
-   v1 = (a/2)(1,-1,c/a),  v2 = (a/2)(1,1,c/a),  v3 = (a/2)(-1,-1,c/a).
+  9          Orthorhombic base-centered(bco) celldm(2)=b/a
+                                             celldm(3)=c/a
+      v1 = (a/2, b/2,0),  v2 = (-a/2,b/2,0),  v3 = (0,0,c)
+ -9          as 9, alternate description
+      v1 = (a/2,-b/2,0),  v2 = (a/2,-b/2,0),  v3 = (0,0,c)
 
-simple orthorhombic (p)
-=============================
-   v1 = (a,0,0),  v2 = (0,b,0), v3 = (0,0,c)
+ 10          Orthorhombic face-centered      celldm(2)=b/a
+                                             celldm(3)=c/a
+      v1 = (a/2,0,c/2),  v2 = (a/2,b/2,0),  v3 = (0,b/2,c/2)
 
-bco base centered orthorhombic
-=============================
-   v1 = (a/2,b/2,0),  v2 = (-a/2,b/2,0),  v3 = (0,0,c)
+ 11          Orthorhombic body-centered      celldm(2)=b/a
+                                             celldm(3)=c/a
+      v1=(a/2,b/2,c/2),  v2=(-a/2,b/2,c/2),  v3=(-a/2,-b/2,c/2)
 
-face centered orthorhombic
-=============================
-   v1 = (a/2,0,c/2),  v2 = (a/2,b/2,0),  v3 = (0,b/2,c/2)
+ 12          Monoclinic P, unique axis c     celldm(2)=b/a
+                                             celldm(3)=c/a,
+                                             celldm(4)=cos(ab)
+      v1=(a,0,0), v2=(b*cos(gamma),b*sin(gamma),0),  v3 = (0,0,c)
+      where gamma is the angle between axis a and b.
+-12          Monoclinic P, unique axis b     celldm(2)=b/a
+                                             celldm(3)=c/a,
+                                             celldm(5)=cos(ac)
+      v1 = (a,0,0), v2 = (0,b,0), v3 = (c*sin(beta),0,c*cos(beta))
+      where beta is the angle between axis a and c
 
-body centered orthorhombic
-=============================
-   v1 = (a/2,b/2,c/2),  v2 = (-a/2,b/2,c/2),  v3 = (-a/2,-b/2,c/2)
+ 13          Monoclinic base-centered        celldm(2)=b/a
+                                             celldm(3)=c/a,
+                                             celldm(4)=cos(ab)
+      v1 = (  a/2,         0,                -c/2),
+      v2 = (b*cos(gamma), b*sin(gamma), 0),
+      v3 = (  a/2,         0,                  c/2),
+      where gamma is the angle between axis a and b
 
-monoclinic (p)
-=============================
-   v1 = (a,0,0), v2= (b*cos(gamma), b*sin(gamma), 0),  v3 = (0, 0, c)
-where gamma is the angle between axis a and b
-
-base centered monoclinic
-=============================
-   v1 = (  a/2,         0,                -c/2),
-   v2 = (b*cos(gamma), b*sin(gamma), 0),
-   v3 = (  a/2,         0,                  c/2),
-where gamma is the angle between axis a and b
-
-triclinic
-=============================
-   v1 = (a, 0, 0),
-   v2 = (b*cos(gamma), b*sin(gamma), 0)
-   v3 = (c*cos(beta),  c*(cos(alpha)-cos(beta)cos(gamma))/sin(gamma),
-         c*sqrt( 1 + 2*cos(alpha)cos(beta)cos(gamma)
-                   - cos(alpha)^2-cos(beta)^2-cos(gamma)^2 )/sin(gamma) )
-where alpha is the angle between axis b and c
-       beta is the angle between axis a and c
-      gamma is the angle between axis a and b
+ 14          Triclinic                       celldm(2)= b/a,
+                                             celldm(3)= c/a,
+                                             celldm(4)= cos(bc),
+                                             celldm(5)= cos(ac),
+                                             celldm(6)= cos(ab)
+      v1 = (a, 0, 0),
+      v2 = (b*cos(gamma), b*sin(gamma), 0)
+      v3 = (c*cos(beta),  c*(cos(alpha)-cos(beta)cos(gamma))/sin(gamma),
+           c*sqrt( 1 + 2*cos(alpha)cos(beta)cos(gamma)
+                     - cos(alpha)^2-cos(beta)^2-cos(gamma)^2 )/sin(gamma) )
+  where alpha is the angle between axis b and c
+         beta is the angle between axis a and c
+        gamma is the angle between axis a and b
          </pre></blockquote>
 </ul>      
       
@@ -703,8 +698,10 @@ grouphelp {A B C cosAB cosAC cosBC} -helpfmt helpdoc -helptext {
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-Traditional crystallographic constants (a,b,c in ANGSTROM),
-cosab = cosine of the angle between axis a and b
+Traditional crystallographic constants: a,b,c in ANGSTROM
+cosAB = cosine of the angle between axis a and b (gamma)
+cosAC = cosine of the angle between axis a and c (beta)
+cosBC = cosine of the angle between axis b and c (alpha)
 specify either these OR celldm but NOT both.
 
 The axis are chosen according to the value of ibrav.
@@ -949,11 +946,17 @@ help nosym -helpfmt helpdoc -helptext {
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-if (.TRUE.) symmetry is not used. Note that a k-point grid
-provided in input is used "as is"; an automatically generated
-k-point grid will contain only points in the irreducible BZ
-of the lattice.  Use with care in low-symmetry large cells
-if you cannot afford a k-point grid with the correct symmetry.
+if (.TRUE.) symmetry is not used. Note that
+- if the k-point grid is provided in input, it is used "as is"
+  and symmetry-inequivalent k-points are not generated;
+- if the k-point grid is automatically generated, it will
+  contain only points in the irreducible BZ for the bravais
+  lattice, irrespective of the actual crystal symmetry.
+A careful usage of this option can be advantageous
+- in low-symmetry large cells, if you cannot afford a k-point
+  grid with the correct symmetry
+- in MD simulations
+- in calculations for isolated atoms
          </pre></blockquote>
 </ul>      
       
@@ -997,8 +1000,8 @@ help noinv -helpfmt helpdoc -helptext {
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-if (.TRUE.) disable the usage of time reversal (q =&gt; -q)
-symmetry in k-point generation
+if (.TRUE.) disable the usage of k =&gt; -k symmetry
+(time reversal) in k-point generation
          </pre></blockquote>
 </ul>      
       
@@ -1016,8 +1019,8 @@ help no_t_rev -helpfmt helpdoc -helptext {
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-if (.TRUE.) disable the usage of symmetry operations that
-require time reversal.
+if (.TRUE.) disable the usage of magnetic symmetry operations
+that consist in a rotation + time reversal.
          </pre></blockquote>
 </ul>      
       
@@ -1037,6 +1040,29 @@ help force_symmorphic -helpfmt helpdoc -helptext {
 <blockquote><pre>
 if (.TRUE.) force the symmetry group to be symmorphic by disabling
 symmetry operations having an associated fractionary translation
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help use_all_frac -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>use_all_frac</b></big>
+</li>
+<br><li> <em>Type: </em>LOGICAL</li>
+<br><li> <em>Default: </em> .FALSE.
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+if (.TRUE.) do not discard symmetry operations with an
+associated fractionary translation that does not send the
+real-space FFT grid into itself. These operations are
+incompatible with real-space symmetrization but not with the
+new G-space symmetrization. BEWARE: do not use for phonons!
+The phonon code still uses real-space symmetrization.
          </pre></blockquote>
 </ul>      
       
@@ -1065,8 +1091,7 @@ help occupations -helpfmt helpdoc -helptext {
 'fixed' :       for insulators with a gap
 
 'from_input' :  The occupation are read from input file.
-                Presently works only with one k-point
-                (LSDA, noncolinear allowed).
+                Requires "nbnd" to be set in input
          </pre></blockquote>
 </ul>      
       
@@ -1706,16 +1731,13 @@ Currently available choices:
          "Periodic boundary conditions in ab initio
          calculations" , Phys.Rev.B 51, 4014 (1995)
 
-'dcc' :  density counter charge correction.
+'dcc' :  density counter charge correction CURRENTLY DISABLED
          The electrostatic problem is solved in open boundary
          conditions (OBC). This approach provides the correct
          scf potential and energies (not just a correction to
          energies as 'mp'). BEWARE: the molecule should be
          centered around the middle of the cell, not around
          the origin (0,0,0).
-         The OBC problem is solved using a multi-grid algorithm
-         that requires additional input provided in the separate
-         namelist EE (see later).
          Theory described in:
          I.Dabo, B.Kozinsky, N.E.Singh-Miller and N.Marzari,
          "Electrostatic periodic boundary conditions and
@@ -1728,6 +1750,125 @@ Currently available choices:
          "A reciprocal space based method for treating long
          range interactions in ab-initio and force-field-based
          calculation in clusters", J.Chem.Phys. 110, 2810 (1999)
+
+'esm' :  Effective Screening Medium Method.
+         For polarized or charged slab calculation, embeds
+         the simulation cell within an effective semi-
+         infinite medium in the perpendicular direction
+         (along z). Embedding regions can be vacuum or
+         semi-infinite metal electrodes (use 'esm_bc' to
+         choose boundary conditions). If between two
+         electrodes, an optional electric field
+         ('esm_efield') may be applied. Method described in
+         M. Otani and O. Sugino, "First-principles
+         calculations of charged surfaces and interfaces:
+         A plane-wave nonrepeated slab approach," PRB 73,
+         115407 (2006).
+         NB: Requires cell with a_3 lattice vector along z,
+         normal to the xy plane, with the slab centered
+         around z=0. Also requires symmetry checking to be
+         disabled along z, either by setting 'nosym' = .TRUE.
+         or by very slight displacement (i.e., 5e-4 a.u.)
+         of the slab along z.
+         See 'esm_bc', 'esm_efield', 'esm_w', 'esm_nfit'.
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help esm_bc -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>esm_bc</b></big>
+</li>
+<br><li> <em>Type: </em>CHARACTER</li>
+<br><li> <em>Default: </em> 'pbc'
+         </li>
+<br><li> <em>See: </em> assume_isolated
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+If assume_isolated = 'esm', determines the boundary
+conditions used for either side of the slab.
+
+Currently available choices:
+
+'pbc' (default): regular periodic calculation (no ESM).
+
+'bc1' : Vacuum-slab-vacuum (open boundary conditions)
+
+'bc2' : Metal-slab-metal (dual electrode configuration).
+        See also 'esm_efield'.
+
+'bc3' : Vacuum-slab-metal
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help esm_w -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>esm_w</b></big>
+</li>
+<br><li> <em>Type: </em>REAL</li>
+<br><li> <em>Default: </em> 0.d0
+         </li>
+<br><li> <em>See: </em> assume_isolated
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+If assume_isolated = 'esm', determines the position offset
+[in a.u.] of the start of the effective screening region,
+measured relative to the cell edge. (ESM region begins at
+z = +/- [L_z/2 + esm_w] ).
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help esm_efield -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>esm_efield</b></big>
+</li>
+<br><li> <em>Type: </em>REAL</li>
+<br><li> <em>Default: </em> 0.d0
+         </li>
+<br><li> <em>See: </em> assume_isolated, esm_bc
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+If assume_isolated = 'esm' and esm_bc = 'bc2', gives the
+magnitude of the electric field [Ryd/a.u.] to be applied
+between semi-infinite ESM electrodes.
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help esm_nfit -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>esm_nfit</b></big>
+</li>
+<br><li> <em>Type: </em>INTEGER</li>
+<br><li> <em>Default: </em> 4
+         </li>
+<br><li> <em>See: </em> assume_isolated
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+If assume_isolated = 'esm', gives the number of z-grid points
+for the polynomial fit along the cell edge.
          </pre></blockquote>
 </ul>      
       
@@ -1821,6 +1962,64 @@ help conv_thr -helpfmt helpdoc -helptext {
 <blockquote><pre>
 Convergence threshold for selfconsistency:
 estimated energy error &lt; conv_thr
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help adaptive_thr -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>adaptive_thr</b></big>
+</li>
+<br><li> <em>Type: </em>LOGICAL</li>
+<br><li> <em>Default: </em> .FALSE
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+If .TRUE. this turns on the use of an adaptive conv_thr for
+the inner scf loops when using EXX.
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help conv_thr_init -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>conv_thr_init</b></big>
+</li>
+<br><li> <em>Type: </em>REAL</li>
+<br><li> <em>Default: </em> 1.D-3
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+When adaptive_thr = .TRUE. this is the convergence threshold
+used for the first scf cycle.
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help conv_thr_multi -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>conv_thr_multi</b></big>
+</li>
+<br><li> <em>Type: </em>REAL</li>
+<br><li> <em>Default: </em> 1.D-1
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+When adaptive_thr = .TRUE. the convergence threshold for
+each scf cycle is given by:
+min( conv_thr, conv_thr_multi * dexx )
          </pre></blockquote>
 </ul>      
       
@@ -2096,7 +2295,8 @@ help startingpot -helpfmt helpdoc -helptext {
           ( default for scf, *relax, *md )
 
 'file'  : start from existing "charge-density.xml" file
-          ( default, only possibility for nscf, bands )
+          For nscf and bands alculation this is the default
+          and the only sensible possibility.
          </pre></blockquote>
 </ul>      
       
@@ -2348,8 +2548,9 @@ help ion_temperature -helpfmt helpdoc -helptext {
 </li>
 <blockquote><pre>
 'rescaling'   control ionic temperature via velocity rescaling
-              (first method) see parameters "tempw" and "tolp"
-              This is the only method implemented in VC-MD
+              (first method) see parameters "tempw", "tolp", and
+              "nraise" (for VC-MD only). This rescaling method
+              is the only one currently implemented in VC-MD
 
 'rescale-v'   control ionic temperature via velocity rescaling
               (second method) see parameters "tempw" and "nraise"
@@ -2465,6 +2666,10 @@ if ion_temperature='reduce-T':
 if ion_temperature='rescale-v':
        every 'nraise' steps the average temperature, computed from
        the last nraise steps, is rescaled to tempw
+
+if ion_temperature='rescaling' and calculation='vc-md':
+       every 'nraise' steps the instantaneous temperature
+       is rescaled to tempw
 
 if ion_temperature='berendsen':
        the "rise time" parameter is given in units of the time step:
@@ -2962,13 +3167,14 @@ help kpoints -helpfmt helpdoc -helptext {
 </li>
 <blockquote><pre>
 Special k-points (xk_x/y/z) in the irreducible Brillouin Zone
-of the lattice (with all symmetries) and weights (wk)
+(IBZ) of the lattice (with all symmetries) and weights (wk)
 See the literature for lists of special points and
 the corresponding weights.
 
 If the symmetry is lower than the full symmetry
 of the lattice, additional points with appropriate
-weights are generated.
+weights are generated. Notice that such procedure
+assumes that ONLY k-points in the IBZ are provided in input
 
 In a non-scf calculation, weights do not affect the results.
 If you just need eigenvalues and eigenvectors (for instance,
@@ -3018,9 +3224,10 @@ half a grid step in the corresponding direction ).
 # ------------------------------------------------------------------------
 help CELL_PARAMETERS_flags -helpfmt helpdoc -helptext {
       <h2>Description of CELL_PARAMETERS card's flags</h2><pre>
-Flag "cubic" or "hexagonal" specify if you want to look for symmetries
-derived from the cubic symmetry group (default) or from the hexagonal
-symmetry group (assuming c axis as the z axis, a axis along the x axis).
+bohr / angstrom: lattice vectors in bohr radii / angstrom.
+nothing specified: if a lattice constant (celldm(1) or a)
+is present, lattice vectors are in units of the lattice
+constant; otherwise, in bohr radii.
          </pre>
       
 }
@@ -3035,12 +3242,10 @@ help lattice -helpfmt helpdoc -helptext {
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-Crystal lattice vectors:
+Crystal lattice vectors (in cartesian axis):
     v1(1)  v1(2)  v1(3)    ... 1st lattice vector
     v2(1)  v2(2)  v2(3)    ... 2nd lattice vector
     v3(1)  v3(2)  v3(3)    ... 3rd lattice vector
-
-In alat units if celldm(1) was specified or in a.u. otherwise.
                   </pre></blockquote>
 </ul>   
     
@@ -3182,8 +3387,8 @@ help occupations_table -helpfmt helpdoc -helptext {
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-Occupations of individual states.
-For spin-polarized calculation, these are majority spin states.
+Occupations of individual states (MAX 10 PER ROW).
+For spin-polarized calculations, these are majority spin states.
                   </pre></blockquote>
 </ul><ul>
 <li> <em>Variable: </em><big><b>f_inp2</b></big>
@@ -3192,8 +3397,8 @@ For spin-polarized calculation, these are majority spin states.
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-Occupations of minority spin states for spin-polarized calculation;
-specify only for spin-polarized calculation.
+Occupations of minority spin states (MAX 10 PER ROW)
+To be specified only for spin-polarized calculations.
                      </pre></blockquote>
 </ul>   
     

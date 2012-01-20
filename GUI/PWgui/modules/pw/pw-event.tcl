@@ -1,4 +1,5 @@
-
+# TODO: handle ESM and ESM_efield only for bc2
+#       adaptive convergence threshold setup:
 # ------------------------------------------------------------------------
 #  Page: CONTROL
 # ------------------------------------------------------------------------
@@ -11,7 +12,7 @@ tracevar calculation w {
     set ion_dynamics [varvalue ion_dynamics] 
     set widget       [getWidgetFromVarident ion_dynamics]
     
-    set all {ions cell vc_md path neb constraints_card}
+    set all {ions cell vc_md constraints_card}
     
     set disable {}
     set enable  {}
@@ -24,7 +25,7 @@ tracevar calculation w {
 	}
 	'relax' {
 	    set enable  {ions constraints_card}
-	    set disable {cell vc_md path neb}
+	    set disable {cell vc_md}
 	    
 	    widget ion_dynamics enable
 	    widgetconfigure ion_dynamics -textvalues {
@@ -38,7 +39,6 @@ tracevar calculation w {
 	}
 	'vc-relax' {
 	    set enable  {ions cell vc_md constraints_card}
-	    set disable {path neb}
 
 	    widget ion_dynamics enable
 	    widgetconfigure ion_dynamics -textvalues {
@@ -60,7 +60,7 @@ tracevar calculation w {
 	}
 	'md' {
 	    set enable  {ions constraints_card}
-	    set disable {cell vc_md path neb}	
+	    set disable {cell vc_md}	
 	    
 	    widget ion_dynamics enable
 	    widgetconfigure ion_dynamics -textvalues {
@@ -74,7 +74,6 @@ tracevar calculation w {
 	}
 	'vc-md' {
 	    set enable  {ions cell vc_md constraints_card}
-	    set disable {path neb}
 
 	    widget ion_dynamics enable
 	    widgetconfigure ion_dynamics -textvalues {
@@ -186,13 +185,13 @@ tracevar ibrav w {
 tracevar nat w {
     set nat [varvalue nat]
     widgetconfigure atomic_coordinates  -rows $nat
-    widgetconfigure atomic_coordinates_last_image -rows $nat
-
-    set ni [varvalue path_inter_nimages]
-    if { $ni == "" } { set ni 0 }
-    for {set i 1} {$i <= $ni} {incr i} {
-	widgetconfigure atomic_coordinates_${i}_inter -rows $nat
-    }
+    #widgetconfigure atomic_coordinates_last_image -rows $nat
+    #
+    #set ni [varvalue path_inter_nimages]
+    #if { $ni == "" } { set ni 0 }
+    #for {set i 1} {$i <= $ni} {incr i} {
+    #	widgetconfigure atomic_coordinates_${i}_inter -rows $nat
+    #}
 }
 tracevar ntyp w {
     set ntyp [varvalue ntyp]
@@ -293,9 +292,37 @@ tracevar occupations w {
 }
 
 
+tracevar assume_isolated w {
+    if { [varvalue assume_isolated] == "'esm'" } {
+	groupwidget ESM enable
+    } else {
+	groupwidget ESM disable
+    }
+}
+
+tracevar london w {
+    if { [vartextvalue london] == "Yes" } { 
+	widget london_s6   enable 
+	widget london_rcut enable
+    } else  {
+	widget london_s6   disable 
+	widget london_rcut disable
+    }
+}
+
+
 # ------------------------------------------------------------------------
 #  Page: ELECTRONS
 # ------------------------------------------------------------------------
+
+tracevar adaptive_thr w {
+    if { [vartextvalue adaptive_thr] == "Yes" } { 
+	groupwidget adaptive_thr_group enable 
+    } else  {
+	groupwidget adaptive_thr_group disable
+    }
+}
+
 
 tracevar diagonalization w {
     switch -glob -- [varvalue diagonalization] {
@@ -331,7 +358,7 @@ tracevar ion_dynamics w {
 
     # MD
     switch -exact -- $calc {
-	'scf' - 'nscf' - 'bands' - 'neb' - 'smd' {
+	'scf' - 'nscf' - 'bands' {
 	    groupwidget md disable
 	}
 	'relax' - 'vc-relax' {	    
@@ -463,6 +490,9 @@ postprocess {
     varset tefield         -value {}
     varset lda_plus_u      -value {}
     varset occupations     -value {}
+    varset assume_isolated -value {}
+    varset london          -value {}
+    varset adaptive_thr    -value {}
     varset diagonalization -value {}
     varset ion_dynamics    -value {}
     varset K_POINTS_flags  -value automatic
