@@ -35,7 +35,7 @@ $(TXTS): %.txt: %.def
 link_input_xx:
 	@(if test ! -f input_xx.xsl; then \
 	(if test -f ../../doc-def/input_xx.xsl; then \
-        (ln -s ../../doc-def/input_xx.xsl input_xx.xsl) ; \
+        (ln -sf ../../doc-def/input_xx.xsl input_xx.xsl) ; \
         else \
         echo ; \
         echo "  Sorry, can not find input_xx.xsl html style file !!!" ; \
