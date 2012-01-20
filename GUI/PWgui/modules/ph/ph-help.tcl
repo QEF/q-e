@@ -257,6 +257,26 @@ File where the the potential variation is written
 
 
 # ------------------------------------------------------------------------
+help dvscf_dir -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>dvscf_dir</b></big>
+</li>
+<br><li> <em>Type: </em>CHARACTER</li>
+<br><li> <em>Default: </em> ' '
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+Directory from where the file fildvscf is read
+(used in electron-phonon calculation). If not
+specified the fildvscf is read from outdir.
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
 help epsil -helpfmt helpdoc -helptext {
       <ul>
 <li> <em>Variable: </em><big><b>epsil</b></big>
@@ -424,9 +444,9 @@ help recover -helpfmt helpdoc -helptext {
 
 
 # ------------------------------------------------------------------------
-help elph -helpfmt helpdoc -helptext {
+help dvscf_star -helpfmt helpdoc -helptext {
       <ul>
-<li> <em>Variable: </em><big><b>elph</b></big>
+<li> <em>Variable: </em><big><b>dvscf_star</b></big>
 </li>
 <br><li> <em>Type: </em>LOGICAL</li>
 <br><li> <em>Default: </em> .false.
@@ -434,13 +454,41 @@ help elph -helpfmt helpdoc -helptext {
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-If .true. electron-phonon lambda coefficients are computed.
+If .true. the potential variations at all q-points in the
+star of xq are obtained by using symmetry and written in
+the subdirectory outdir/_ph0/Rotated_DVSCF/ . The
+potential variations written out are in real space and in
+the cartesian basis.
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help electron_phonon -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>electron_phonon</b></big>
+</li>
+<br><li> <em>Type: </em>CHARACTER</li>
+<br><li> <em>Default: </em> ' '
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+If equal to 'simple' electron-phonon lambda coefficients
+are computed for a given q and a grid of k-points specified
+by the variables nk1, nk2, nk3, k1, k2, k3.
+
+If equal to 'interpolated' electron-phonon is calculated
+by interpolation over the Brillouin Zone as in
+M. Wierzbowska, et al. arXiv:cond-mat/0504077
 
 For metals only, requires gaussian smearing.
 
-If elph .and. trans, the lambdas are calculated in the same
-run, using the same k-point grid for phonons and lambdas
-If elph.and..not.trans, the lambdas are calculated using
+If trans=.true., the lambdas are calculated in the same
+run, using the same k-point grid for phonons and lambdas.
+If trans=.false., the lambdas are calculated using
 previously saved DeltaVscf in fildvscf, previously saved
 dynamical matrix, and the present punch file. This allows
 the use of a different (larger) k-point grid.
@@ -577,6 +625,71 @@ with d3.x for third-order terms calculation.
 
 
 # ------------------------------------------------------------------------
+help ldiag -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>ldiag</b></big>
+</li>
+<br><li> <em>Type: </em>LOGICAL</li>
+<br><li> <em>Default: </em> .false.
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+If .true. forces the diagonalization of the dynamical
+matrix also when only a part of the dynamical matrix
+has been calculated. It is used together with start_irr
+and last_irr. If all modes corresponding to a
+given irreducible representation have been calculated,
+the phonon frequencies of that representation are
+correct. The others are zero or wrong. Use with care.
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help lqdir -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>lqdir</b></big>
+</li>
+<br><li> <em>Type: </em>LOGICAL</li>
+<br><li> <em>Default: </em> .false.
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+If .true. ph.x creates inside outdir a separate subdirectory
+for each q vector. The flag is set to .true. when ldisp=
+.true. and fildvscf /= ' ' or when elph is true. The induced
+potential is saved separately for each q inside the
+subdirectories.
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help search_sym -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>search_sym</b></big>
+</li>
+<br><li> <em>Type: </em>LOGICAL</li>
+<br><li> <em>Default: </em> .true.
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+Set it to .false. if you want to disable the mode
+symmetry analysis.
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
 grouphelp {nq1 nq2 nq3} -helpfmt helpdoc -helptext {
     <ul>
 <li> <em>Variables: </em><big><b>nq1, nq2, nq3</b></big>
@@ -590,6 +703,29 @@ grouphelp {nq1 nq2 nq3} -helpfmt helpdoc -helptext {
 Parameters of the Monkhorst-Pack grid (no offset) used
 when ldisp=.true. Same meaning as for nk1, nk2, nk3
 in the input of pw.x.
+         </pre></blockquote>
+</ul>
+    
+}
+
+
+# ------------------------------------------------------------------------
+grouphelp {nk1 nk2 nk3 k1 k2 k3} -helpfmt helpdoc -helptext {
+    <ul>
+<li> <em>Variables: </em><big><b>nk1, nk2, nk3, k1, k2, k3</b></big>
+</li>
+<br><li> <em>Type: </em>INTEGER</li>
+<br><li> <em>Default: </em> 0,0,0,0,0,0
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+When these parameters are specified the phonon program
+runs a pw non-self consistent calculation with a different
+k-point grid thant that used for the charge density.
+This occurs even in the Gamma case.
+nk1,nk2,nk3 are the parameters of the Monkhorst-Pack grid
+with offset determined by k1,k2,k3.
          </pre></blockquote>
 </ul>
     

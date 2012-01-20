@@ -69,9 +69,7 @@ postprocess {
     varset elop   -value  .false.
     varset trans  -value  .true.
     varset epsil  -value  .false.
-    varset elph   -value  .false.
     varset recover -value .false.
     varset fpol   -value  .false.
-    #varset nat_todo -value 0
     varset reps_type -value {}
 }
