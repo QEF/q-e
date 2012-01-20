@@ -22,6 +22,7 @@ clean:
 	- rm -rf pseudo-gen/
 	- rm -f INPUT_*.html INPUT_*.txt INPUT_*.xml
 	- rm -rf ../../Doc/INPUT_LD1.*
+	- rm -rf ../../Doc/input_xx.xsl
 
 pseudo-gen: pseudo-gen.pdf
 	 rm -rf pseudo-gen/
@@ -43,13 +44,23 @@ pseudo-gen: pseudo-gen.pdf
 	@echo "***"
 	@echo ""
 
-defs: INPUT_LD1.html INPUT_LD1.txt link_on_main_doc
+defs: link_input_xx INPUT_LD1.html INPUT_LD1.txt link_on_main_doc
+
+link_input_xx:
+	@(if test ! -f input_xx.xsl; then \
+	(if test -f ../../doc-def/input_xx.xsl; then \
+	(ln -s ../../doc-def/input_xx.xsl input_xx.xsl) ; \
+	else \
+	echo ; \
+	echo "  Sorry, can not find input_xx.xsl html style file !!!" ; \
+	echo ; \
+	fi) ; fi)
 
 INPUT_LD1.html: %.html: %.def
 	$(HELPDOC) $<
 INPUT_LD1.txt: %.txt: %.def
 	$(HELPDOC) $<
 link_on_main_doc:
-	-( cd ../../Doc ; ln -fs ../atomic/Doc/INPUT_LD1.html . ; \
+	-@( cd ../../Doc ; ln -fs ../atomic/Doc/INPUT_LD1.html . ; \
         ln -fs ../atomic/Doc/INPUT_LD1.xml . ; \
         ln -fs ../atomic/Doc/INPUT_LD1.txt .)
