@@ -22,7 +22,7 @@ $(PDFS): %.pdf: %.tex
 clean:
 	- rm -f $(PDFS) $(AUXS) $(LOGS) $(OUTS) $(TOCS) *~
 	- rm -rf user_guide/
-	- rm -f INPUT_*.html INPUT_*.txt INPUT_*.xml
+	- rm -f INPUT_*.html INPUT_*.txt INPUT_*.xml input_xx.xsl
 	- rm -rf ../../Doc/INPUT_CP*.*
 	- rm -rf ../../Doc/input_xx.xsl
 
@@ -59,8 +59,8 @@ INPUT_CPPP.txt: %.txt: %.def
 
 link_input_xx:
 	@(if test ! -f input_xx.xsl; then \
-	(if test -f ../../doc-def/input_xx.xsl; then \
-	(ln -s ../../doc-def/input_xx.xsl input_xx.xsl) ; \
+	(if test -f ../../dev-tools/input_xx.xsl; then \
+	(ln -sf ../../dev-tools/input_xx.xsl input_xx.xsl) ; \
 	else \
 	echo ; \
 	echo "  Sorry, can not find input_xx.xsl html style file !!!" ; \
