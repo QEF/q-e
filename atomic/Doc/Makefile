@@ -20,7 +20,7 @@ $(PDFS): %.pdf: %.tex
 clean:
 	- rm -f $(PDFS) $(AUXS) $(LOGS) $(OUTS) $(TOCS) *~
 	- rm -rf pseudo-gen/
-	- rm -f INPUT_*.html INPUT_*.txt INPUT_*.xml
+	- rm -f INPUT_*.html INPUT_*.txt INPUT_*.xml input_xx.xsl
 	- rm -rf ../../Doc/INPUT_LD1.*
 	- rm -rf ../../Doc/input_xx.xsl
 
@@ -48,8 +48,8 @@ defs: link_input_xx INPUT_LD1.html INPUT_LD1.txt link_on_main_doc
 
 link_input_xx:
 	@(if test ! -f input_xx.xsl; then \
-	(if test -f ../../doc-def/input_xx.xsl; then \
-	(ln -s ../../doc-def/input_xx.xsl input_xx.xsl) ; \
+	(if test -f ../../dev-tools/input_xx.xsl; then \
+	(ln -sf ../../dev-tools/input_xx.xsl input_xx.xsl) ; \
 	else \
 	echo ; \
 	echo "  Sorry, can not find input_xx.xsl html style file !!!" ; \
