@@ -165,3 +165,122 @@ file containing the projections
       
 }
 
+
+# ------------------------------------------------------------------------
+help kresolveddos -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>kresolveddos</b></big>
+</li>
+<br><li> <em>Type: </em>LOGICAL</li>
+<br><li> <em>Default: </em> .false.
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+if .true. the k-resolved DOS is computed: not summed over
+all k-points but written as a function of the k-point index.
+In this case all k-point weights are set to unity
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help tdosinboxes -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>tdosinboxes</b></big>
+</li>
+<br><li> <em>Type: </em>LOGICAL</li>
+<br><li> <em>Default: </em> .false.
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+if .true. compute the local DOS integrated in volumes
+volumes are defined as boxes with edges parallel
+to the unit cell, containing the points of the
+(charge density) FFT grid included within
+irmin and irmax, in the three dimensions:
+from irmin(j,n) to irmax(j,n) for j=1,2,3
+(n=1,n_proj_boxes)
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help n_proj_boxes -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>n_proj_boxes</b></big>
+</li>
+<br><li> <em>Type: </em>INTEGER</li>
+<br><li> <em>Default: </em> 1
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+number of boxes where the local DOS is computed
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help irmin -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>irmin</b></big>
+</li>
+<br><li> <em>Type: </em>INTEGER</li>
+<br><li> <em>Default: </em> 1
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+first point to be included in the box
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help irmax -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>irmax</b></big>
+</li>
+<br><li> <em>Type: </em>INTEGER</li>
+<br><li> <em>Default: </em> 0
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+last point to be included in the box
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help plotboxes -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>plotboxes</b></big>
+</li>
+<br><li> <em>Type: </em>LOGICAL</li>
+<br><li> <em>Default: </em> .false.
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+if .true., the boxes are written in output as
+as xsf files with 3D datagrids, valued 1.0
+inside the box volume and 0 outside
+(visualize them as isosurfaces with isovalue 0.5)
+         </pre></blockquote>
+</ul>      
+      
+}
+

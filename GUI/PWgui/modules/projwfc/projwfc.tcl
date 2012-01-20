@@ -4,7 +4,7 @@ module ProjWfc\#auto -title "PWSCF GUI: module ProjWfc.x" -script {
 
     readfilter ::pwscf::projwfcReadFilter
 
-    namelist inputpp -name "INPUTPP" {
+    namelist projwfc -name "PROJWFC" {
 	optional {
 	    var prefix {
 		-label    "Prefix of punch file saved by program PW.X (prefix):" 
@@ -59,6 +59,13 @@ module ProjWfc\#auto -title "PWSCF GUI: module ProjWfc.x" -script {
 		-widget radiobox
 	    }	
 
+	    var kresolveddos {
+		-label "Compute k-resolved DOS (kresolveddos):"
+		-value { 1 0 }
+		-textvalue { Yes No }
+		-widget radiobox
+	    }	
+
 	    separator -label "--- Energy window for PDOS ---"
 
 	    var Emin {
@@ -69,9 +76,50 @@ module ProjWfc\#auto -title "PWSCF GUI: module ProjWfc.x" -script {
 	    var Emax {
 		-label    "Maximum energy \[in eV\] (Emin):"
 		-validate fortranreal
+	    }	    
+
+	    separator -label "--- Local DOS options ---"
+	    
+	     var tdosinboxes {
+		-label "Compute the local DOS computed in volumes (tdosinboxes):"
+		-value { 1 0 }
+		-textvalue { Yes No }
+		-widget radiobox
+	    }
+
+	    group local_dos {
+		var n_proj_boxes {
+		    -label   "Number of boxes where the local DOS is computed (n_proj_boxes):"
+		    -widget   spinint
+		    -validate nonnegint
+		}	    
+		
+		var irmin {
+		    -label   "First point to be included in the box (irmin):"
+		    -widget   spinint
+		    -validate nonnegint
+		}	    
+		
+		var irmax {
+		    -label   "Last point to be included in the box (irmax):"
+		    -widget   spinint
+		    -validate nonnegint
+		}	    
+		
+		var plotboxes {
+		    -label "Write the boxes into XSF 3D datagrid file (plotboxes):"
+		    -value { 1 0 }
+		    -textvalue { Yes No }
+		    -widget radiobox
+		}
 	    }
 	}
     }
+
+    # ----------------------------------------------------------------------
+    # take care of specialties
+    # ----------------------------------------------------------------------
+    source projwfc-event.tcl
 
     # ------------------------------------------------------------------------
     # source the HELP file
