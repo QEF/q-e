@@ -1535,7 +1535,7 @@ itcl::body ::guib::moduleObj::_groupwidget {obj action} {
 		if { [info exists widgetPackInfo($widget)] } {
 		    eval pack $widget $widgetPackInfo($widget)
 		} else {
-		    pack $widget -fill x -expand
+		    pack $widget -fill x -expand 1
 		}
 	    }
 	    
