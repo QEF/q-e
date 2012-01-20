@@ -54,8 +54,8 @@ INPUT_D3.txt: %.txt: %.def
 	$(HELPDOC) $<
 link_input_xx:
 	@(if test ! -f input_xx.xsl; then \
-	(if test -f ../../doc-def/input_xx.xsl; then \
-	(ln -s ../../doc-def/input_xx.xsl input_xx.xsl) ; \
+	(if test -f ../../dev-tools/input_xx.xsl; then \
+	(ln -sf ../../dev-tools/input_xx.xsl input_xx.xsl) ; \
 	else \
 	echo ; \
 	echo "  Sorry, can not find input_xx.xsl html style file !!!" ; \
