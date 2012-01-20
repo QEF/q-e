@@ -10,10 +10,12 @@ if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
 $ECHO
 $ECHO "$EXAMPLE_DIR : starting"
 $ECHO
-$ECHO "This example shows how pw.x and cp.x can read their respective data."
+$ECHO "This example shows how pw.x can restart from cp.x data and viceversa."
 
 # set the needed environment variables 
-. ../environment_variables
+cd ../
+. ../../examples/environment_variables
+cd Restart_example
 
 # required executables and pseudopotentials
 BIN_LIST="pw.x cp.x"

@@ -3,7 +3,7 @@
     restart_mode='from_scratch',
     prefix='silicon',
     tprnfor = .true.
-    pseudo_dir = '../../pseudo/'
+    pseudo_dir = '../../../pseudo/'
     outdir = './'
     wf_collect = .TRUE.
  /
