@@ -1,4 +1,4 @@
- &INPUTPP
+ &PROJWFC
                       prefix = 'pwscf' ,
                       outdir = '/scratch/tone/test/' ,
                       ngauss = 1 ,
