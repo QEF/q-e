@@ -15,6 +15,14 @@ pwtools:
 	( cd tools ; if test "$(MAKE)" = "" ; then make $(MFLAGS) $@; \
 	else $(MAKE) $(MFLAGS) ; fi ) ; fi ; \
 
+doc:
+	if test -d Doc ; then \
+	(cd Doc ; if test "$(MAKE)" = "" ; then make $(MFLAGS) all ; \
+	else $(MAKE) $(MFLAGS) all ; fi ) ; fi
+doc_clean:
+	if test -d Doc ; then \
+	(cd Doc ; if test "$(MAKE)" = "" ; then make $(MFLAGS) clean ; \
+	else $(MAKE) $(MFLAGS) clean ; fi ) ; fi
 
 clean :
 	if test -d src ; then \
@@ -24,5 +32,4 @@ clean :
 	( cd tools ; if test "$(MAKE)" = "" ; then make clean ; \
 	else $(MAKE) clean ; fi ) ; fi ;\
 
-
-distclean: clean
+distclean: clean doc_clean

@@ -35,4 +35,13 @@ third_order_clean:
 	( cd D3 ; if test "$(MAKE)" = ""; then make clean; \
 	else $(MAKE) clean ; fi ) ; fi
 
-distclean: clean
+doc:
+	if test -d Doc ; then \
+	(cd Doc ; if test "$(MAKE)" = "" ; then make $(MFLAGS) all ; \
+	else $(MAKE) $(MFLAGS) all ; fi ) ; fi
+doc_clean:
+	if test -d Doc ; then \
+	(cd Doc ; if test "$(MAKE)" = "" ; then make $(MFLAGS) clean ; \
+	else $(MAKE) $(MFLAGS) clean ; fi ) ; fi
+
+distclean: clean doc_clean
