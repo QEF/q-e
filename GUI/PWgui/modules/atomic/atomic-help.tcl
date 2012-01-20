@@ -301,6 +301,25 @@ if .true. writes on files the small component
 
 
 # ------------------------------------------------------------------------
+help max_out_wfc -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>max_out_wfc</b></big>
+</li>
+<br><li> <em>Type: </em>INTEGER</li>
+<br><li> <em>Default: </em> 7
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+Maximum number of atomic wavefunctions written in the output
+file.
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
 help noscf -helpfmt helpdoc -helptext {
       <ul>
 <li> <em>Variable: </em><big><b>noscf</b></big>
@@ -560,6 +579,9 @@ Example:
   (Use rel_dist if you want to average the electrons
   over all available states.)
 
+* If config='default' the code uses zed to set the ground
+  state electronic configuration for the atom.
+
 Negative occupancies are used to flag unbound states;
 they are not actually used.
          </pre></blockquote>
@@ -723,11 +745,14 @@ help pseudotype -helpfmt helpdoc -helptext {
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-1 ... norm-conserving, single-projector PP (old format)
-      IMPORTANT: if pseudotype=1 all calculations are done using
-      the SEMILOCAL form, not the separable nonlocal form
+1 ... norm-conserving, single-projector PP
+      IMPORTANT: if pseudotype=1 all calculations are done
+      using the SEMILOCAL form, not the separable nonlocal form
 
-2 ... norm-conserving, multiple-projector PP in separable form
+2 ... norm-conserving PP in separable form (obsolescent)
+      All calculations are done using SEPARABLE non-local form
+      INMPORTANT: multiple projectors allowed but not properly
+      implemented, use only if you know what you are doing
 
 3 ... ultrasoft PP
          </pre></blockquote>
@@ -747,8 +772,8 @@ help upf_v1_format -helpfmt helpdoc -helptext {
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-.true. generates pseudo-potential file in UPF version 1 format,
-       compatible with QE version 3
+.true. generates pseudo-potential file in UPF version 1 format
+       Do not use except if you need GIPAW reconstruction info
          </pre></blockquote>
 </ul>      
       
@@ -987,17 +1012,14 @@ help which_augfun -helpfmt helpdoc -helptext {
 If different from 'AE' the augmentation functions are pseudized
 before rmatch_augfun. The pseudization options are:
 
-* 'BESSEL'     Use Bessel functions to pseudize the Q.
+* 'PSQ'        Use Bessel functions to pseudize Q
+               from the origin to rmatch_augfun.
 
 These features are available only for PAW:
 
+* 'BESSEL'     Use Bessel functions to pseudize the Q.
 * 'GAUSS'      Use 2 Gaussian functions to pseudize the Q.
 * 'BG'         Use original Bloechl's recipy with a single gaussian.
-
-This feature is available only for US-PP:
-* 'PSQ'        Use Bessel functions to pseudize Q from the origin
-               to min(rcut(ns),rcut(ns1)) where ns and ns1 are
-               the two channels for that Q.
 
 Note: if lpaw is true and which_augfun is set to AE real all-
 electron charge will be used, which will produce extremely
@@ -1023,6 +1045,29 @@ help rmatch_augfun -helpfmt helpdoc -helptext {
 <blockquote><pre>
 Pseudization radius for the augmentation functions. Presently
 it has the same value for all L.
+            </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help rmatch_augfun_nc -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>rmatch_augfun_nc</b></big>
+</li>
+<br><li> <em>Type: </em>REAL</li>
+<br><li> <em>Default: </em> .false.
+            </li>
+<br><li> <em>Status: </em> Used only if which_augfun is 'PSQ'.
+            </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+If .true. the augmetation functions are pseudized
+from the origin to min(rcut(ns),rcut(ns1)) where ns
+and ns1 are the two channels for that Q. In this case
+rmatch_augfun is not used.
             </pre></blockquote>
 </ul>      
       

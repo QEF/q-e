@@ -31,9 +31,9 @@ tracevar iswitch w {
             groupwidget AE_cards disable	    
 
             groupwidget inputp     enable
-            groupwidget test       enable
             groupwidget PP_cards   enable
-	    groupwidget test_cards enable; # this enables all test_conf_#; disable those with indices > nconf
+            groupwidget test       disable
+	    groupwidget test_cards disable; # this enables all test_conf_#; disable those with indices > nconf
 	    for {set i [expr [varvalue nconf] + 1]} {$i <= $::pwscf::atomic_max_nconf} {incr i} {
 		groupwidget test_conf_$i forget
 	    }
@@ -203,6 +203,16 @@ tracevar lsd w {
     }
 }
 
+tracevar rmatch_augfun_nc w {
+    if { [vartextvalue rmatch_augfun_nc] == "Yes" } {
+	widget rmatch_augfun disable
+    } else {
+	if { [varvalue iswitch] == 3 } {
+	    widget rmatch_augfun enable
+	}
+    }
+}
+
 postprocess {
     varset old_nconf -value $::pwscf::atomic_max_nconf; # this is dirty
     varset nconf -value 1
@@ -215,4 +225,6 @@ postprocess {
     varset nlcc -value .false.
     varset lpaw -value .false.
     varset tm   -value .false.
+
+    varset rmatch_augfun_nc -value {}
 }

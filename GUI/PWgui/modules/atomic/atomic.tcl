@@ -70,6 +70,13 @@ module LD1\#auto -title "PWSCF GUI: module LD1.x" -script {
 		    -widget   radiobox
 		    -textvalue {Yes No} -value {.true. .false.}
 		}
+		var max_out_wfc {
+		    -label    "Maximum number of atomic wavefunctions written (max_out_wfc):"
+		    -validate posint 
+		    -widget spinint
+		}
+
+		
 		var noscf {
 		    -label    "Skip charge calculation and ignore the occupations (noscf):"
 		    -widget    radiobox
@@ -314,6 +321,12 @@ module LD1\#auto -title "PWSCF GUI: module LD1.x" -script {
 		var rmatch_augfun {
 		    -label "Pseudization radius for the augmentation functions (rmatch_augfun):"
 		    -validate fortranposreal
+		}
+		var rmatch_augfun_nc {
+		    -label "Pseudize augmentation functions from origin to min(rcut(ns),rcut(ns1) (rmatch_augfun_nc):"
+		    -widget   radiobox
+		    -textvalue {"No" "Yes"}
+		    -value     {.false. .true.}
 		}
 		
 		var lsave_wfc {
