@@ -14,6 +14,10 @@ if { ! [info exists env(PWGUI)] } {
 	# try with: ../GUI/PWgui
 	set env(PWGUI) [file normalize [file join .. GUI PWgui]]
 }
+if { ! [info exists env(GUIB)] } {
+	# try with: ../GUI/Guib
+	set env(GUIB) [file normalize [file join .. GUI Guib]]
+}
 
 proc Usage {} {
     global argv0
@@ -67,13 +71,13 @@ source [file join $pwguidir init.tcl]
 # map from module to def- and module-file
 
 set mappings {
-    pw        doc-def   INPUT_PW 
-    neb       doc-def   INPUT_NEB
-    ph        doc-def   INPUT_PH
-    pp        doc-def   INPUT_PP
-    projwfc   doc-def   INPUT_PROJWFC
-    atomic    doc-def   INPUT_LD1
-    d3        doc-def   INPUT_D3
+    pw        PW/Doc     INPUT_PW 
+    neb       NEB/Doc    INPUT_NEB
+    ph        PHonon/Doc INPUT_PH
+    pp        PP/Doc     INPUT_PP
+    projwfc   PP/Doc     INPUT_PROJWFC
+    atomic    atomic/Doc INPUT_LD1
+    d3        PHonon/Doc INPUT_D3
 }
 
 foreach {mod subdir def_prefix} $mappings {
@@ -82,7 +86,7 @@ foreach {mod subdir def_prefix} $mappings {
 	set modulefile [file join  $moduledir $mod $mod.tcl]
 
 	# compile the $deffile
-	cd [file join $topdir doc-def]
+	cd [file join $topdir $subdir]
 	catch {exec make $def_prefix.html}
 	cd $basedir
 	
