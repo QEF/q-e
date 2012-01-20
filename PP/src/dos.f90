@@ -7,45 +7,14 @@
 !
 !
 !--------------------------------------------------------------------
-PROGRAM dos
+PROGRAM do_dos
   !--------------------------------------------------------------------
   !
   ! Calculates the Density of States (DOS),
   ! separated into up and down components for LSDA
   !
-  ! Input (namelist &inputpp ... / ):                         Default value
-  !
-  !    prefix        prefix of input file produced by pw.x    'pwscf'
-  !                    (wavefunctions are not needed)
-  !    outdir        directory containing the input file       ./
-  !    ngauss        Type of gaussian broadening (optional)    0
-  !            =  0  Simple Gaussian (default)
-  !            =  1  Methfessel-Paxton of order 1
-  !            = -1  Marzari-Vanderbilt "cold smearing"
-  !            =-99  Fermi-Dirac function
-  !    degauss       gaussian broadening, Ry (not eV!)          see below
-  !    Emin, Emax    min, max energy (eV) for DOS plot          band extrema
-  !    DeltaE        energy grid step (eV)                      none
-  !    fildos        output file containing DOS(E)              "prefix".dos
-  !
-  ! Output:
-  !
-  !   The total DOS (states/eV plotted vs E in eV) is written to file "fildos"
-  !
-  ! Important notice:
-  !    The tetrahedron method is used if
-  !    - the input data file has been produced by pw.x using the option
-  !      occupations='tetrahedra', AND
-  !    - a value for degauss is not given as input to namelist &inputpp
-  !    Gaussian broadening is used in all other cases:
-  !    - if degauss is set to some value in namelist &inputpp, that value
-  !      (and the optional value for ngauss) is used
-  !    - if degauss is NOT set to any value in namelist &inputpp, the
-  !      value of degauss and of ngauss are read from the input data
-  !      file (they will be the same used in the pw.x calculations)
-  !    - if degauss is NOT set to any value in namelist &inputpp, AND
-  !      there is no value of degauss and of ngauss in the input data
-  !      file, degauss=DeltaE (in Ry) and ngauss=0 will be used
+  ! See files INPUT_DOS.* in Doc/ directory for usage
+  ! IMPORTANT: since v.5 namelist name is &dos and no longer &inputpp
   !
   USE io_global,  ONLY : stdout, ionode, ionode_id
   USE io_files,   ONLY : prefix, tmp_dir
@@ -68,7 +37,7 @@ PROGRAM dos
   REAL(DP) :: E, DOSofE (2), DOSint, Elw, Eup, DeltaE, Emin, Emax, &
                    degauss1
   INTEGER :: ik, n, ndos, ngauss1, ios
-  NAMELIST /inputpp/ outdir, prefix, fildos, degauss, ngauss, &
+  NAMELIST /dos/ outdir, prefix, fildos, degauss, ngauss, &
        Emin, Emax, DeltaE
   !
   ! initialise environment
@@ -96,7 +65,7 @@ PROGRAM dos
      !
      CALL input_from_file ( )
      !
-     READ (5, inputpp, iostat=ios )
+     READ (5, dos, iostat=ios )
      !
      tmp_dir = trimcheck (outdir)
      ! save the value of degauss and ngauss: they are read from file
@@ -106,7 +75,9 @@ PROGRAM dos
   ENDIF
   !
   CALL mp_bcast( ios, ionode_id )
-  IF ( ios /= 0 ) CALL errore('dos','reading inputpp namelist',abs(ios))
+  IF (ios /= 0) WRITE (stdout, &
+    '("*** namelist &inputpp no longer valid: please use &dos instead")')
+  IF ( ios /= 0 ) CALL errore('dos','reading dos namelist',abs(ios))
   !
   ! ... Broadcast variables
   !
@@ -189,5 +160,5 @@ PROGRAM dos
   !
   CALL stop_pp
   !
-END PROGRAM dos
+END PROGRAM do_dos
 

@@ -22,12 +22,12 @@ input_description -distribution {Quantum Espresso} -package PWscf -program bands
         Structure of the input data:
 	============================
 
-	   &INPUTPP
+	   &BANDS
 	     ...
 	   /
     }
 
-    namelist INPUTPP {
+    namelist BANDS {
 
 	var prefix -type CHARACTER {   
 	    info {

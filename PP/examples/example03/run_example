@@ -276,7 +276,7 @@ $ECHO " done"
 
 # Projection of the DOS on volumes (boxes)
 cat > AlAs110.box.projwfc.in << EOF
- &inputpp
+ &projwfc
     prefix  = 'AlAs110'
     outdir='$TMP_DIR/',
     ngauss=0
@@ -311,7 +311,7 @@ $ECHO " done"
 
 # Projection of the DOS on atomic wavefunctions
 cat > AlAs110.projwfc.in << EOF
- &inputpp
+ &projwfc
     prefix  = 'AlAs110'
     outdir='$TMP_DIR/',
     ngauss=0

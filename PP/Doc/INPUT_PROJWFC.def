@@ -13,12 +13,12 @@ input_description -distribution {Quantum Espresso} -package PWscf -program projw
 	Structure of the input data:
 	============================
 
-	   &INPUTPP
+	   &PROJWFC
 	     ...
 	   /
     }
 
-    namelist INPUTPP {
+    namelist PROJWFC {
          
 	var prefix -type CHARACTER { 
 	    info { 
@@ -230,14 +230,14 @@ input_description -distribution {Quantum Espresso} -package PWscf -program projw
 		
 		* Gaussian broadening is used in all cases:
 
-		    - if degauss is set to some value in namelist &inputpp, that value
+		    - if degauss is set to some value in namelist &projwfc, that value
 		      (and the optional value for ngauss) is used
 
-		    - if degauss is NOT set to any value in namelist &inputpp, the 
+		    - if degauss is NOT set to any value in namelist &projwfc, the 
 		      value of degauss and of ngauss are read from the input data
 		      file (they will be the same used in the pw.x calculations)
 
-		    - if degauss is NOT set to any value in namelist &inputpp, AND
+		    - if degauss is NOT set to any value in namelist &projwfc, AND
 		      there is no value of degauss and of ngauss in the input data
 		      file, degauss=DeltaE (in Ry) and ngauss=0 will be used
 		

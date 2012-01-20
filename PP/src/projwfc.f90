@@ -6,123 +6,15 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !-----------------------------------------------------------------------
-PROGRAM projwfc
+PROGRAM do_projwfc
   !-----------------------------------------------------------------------
   !
   ! projects wavefunctions onto orthogonalized atomic wavefunctions,
   ! calculates Lowdin charges, spilling parameter, projected DOS
   ! or computes the LDOS in a volume given in input as function of energy
   !
-  !
-  ! Input (namelist &inputpp ... / ):                         Default value
-  !
-  !    prefix        prefix of input file produced by pw.x    'pwscf'
-  !                    (wavefunctions are needed)
-  !    outdir        directory containing the input file       ./
-  !    ngauss        type of gaussian broadening (optional)    0
-  !            =  0  Simple Gaussian (default)
-  !            =  1  Methfessel-Paxton of order 1
-  !            = -1  Marzari-Vanderbilt "cold smearing"
-  !            =-99  Fermi-Dirac function
-  !    degauss       gaussian broadening, Ry (not eV!)          0.0
-  !    Emin, Emax    min, max energy (eV) for DOS plot          band extrema
-  !    DeltaE        energy grid step (eV)                      none
-  !    lsym          if true the projections are symmetrized    .true.
-  !    filproj       file containing the projections            none
-  !    filpdos       prefix for output files containing PDOS(E) prefix
-  !    lgww          if .true. take energies from previous GWW calculation
-  !                  (file bands.dat)
-  !    kresolveddos  if .true. the DOS is written as function   .false.
-  !                  of the k-point (not summed over all of them)
-  !                  all k-points but results
-  !    tdosinboxes   if .true., the local DOS in specified      .false.
-  !                  volumes (boxes) is computed
-  !    n_proj_boxes  number of volumes for the local DOS        0
-  !    irmin, irmax  first and last point of the FFT grid       1, 0
-  !                  included in the volume
-  !    plotboxes     if .true., the volumes are given in output .false.
-  !
-  !
-  ! Output:
-  !
-  !   Projections are written to standard output,
-  !   and also to file filproj if given as input.
-  !   The total DOS and the sum of projected DOS are written to file
-  !   "filpdos".pdos_tot.
-  !   The format for the collinear, spin-unpolarized case and the
-  !   non-collinear, spin-orbit case is
-  !        E DOS(E) PDOS(E)
-  !   The format for the collinear, spin-polarized case is
-  !        E DOSup(E) DOSdw(E)  PDOSup(E) PDOSdw(E)
-  !   The format for the non-collinear, non spin-orbit case is
-  !        E DOS(E) PDOSup(E) PDOSdw(E)
-  !
-  !   In the collinear case and the non-collinear, non spin-orbit case
-  !   projected DOS are written to file "filpdos".pdos_atm#N(X)_wfc#M(l),
-  !   where N = atom number , X = atom symbol, M = wfc number, l=s,p,d,f
-  !   (one file per atomic wavefunction found in the pseudopotential file)
-  !   - The format for the collinear, spin-unpolarized case is
-  !        E LDOS(E) PDOS_1(E) ... PDOS_2l+1(E)
-  !     where LDOS = \sum m=1,2l+1 PDOS_m(E)
-  !     and PDOS_m(E) = projected DOS on atomic wfc with component m
-  !   - The format for the collinear, spin-polarized case and the
-  !     non-collinear, non spin-orbit case is as above with
-  !     two components for both  LDOS(E) and PDOS_m(E)
-  !
-  !   In the non-collinear, spin-orbit case (i.e. if there is at least one
-  !   fully relativistic pseudopotential) wavefunctions are projected
-  !   onto eigenstates of the total angular-momentum.
-  !   Projected DOS are written to file "filpdos".pdos_atm#N(X)_wfc#M(l_j),
-  !   where N = atom number , X = atom symbol, M = wfc number, l=s,p,d,f
-  !   and j is the value of the total angular momentum.
-  !   In this case the format is
-  !      E LDOS(E) PDOS_1(E) ... PDOS_2j+1(E)
-  !
-  !   All DOS(E) are in states/eV plotted vs E in eV
-  !
-  !   If the kresolveddos option is used, the k-point index is prepended
-  !   to the formats above, e.g. (collinear, spin-unpolarized case)
-  !        ik E DOS(E) PDOS(E)
-  !
-  !   If the local DOS(E) is computed (tdosinboxes),
-  !   projections are written to file "filproj" if given as input.
-  !   Volumes are written as xsf files with 3D datagrids, valued 1.0
-  !   inside the box volume and 0 outside, named filpdos.box#n.xsf
-  !   The local DOS(E) is written to file "filpdos".ldos_boxes, with format
-  !      E totDOS(E) SumLDOS(E) LDOS_1(E) ... LDOS_n(E)
-  !
-  !  Order of m-components for each l in the output:
-  !
-  !  1, cos(phi), sin(phi), cos(2*phi), sin(2*phi), .., cos(l*phi), sin(l*phi)
-  !
-  !  where phi is the polar angle:x=r cos(theta)cos(phi), y=r cos(theta)sin(phi)
-  !  This is determined in file flib/ylmr2.f90 that calculates spherical harm.
-  !      L=1 :
-  !  1 pz     (m=0)
-  !  2 px     (real combination of m=+/-1 with cosine)
-  !  3 py     (real combination of m=+/-1 with sine)
-  !      L=2 :
-  !  1 dz2    (m=0)
-  !  2 dzx    (real combination of m=+/-1 with cosine)
-  !  3 dzy    (real combination of m=+/-1 with sine)
-  !  4 dx2-y2 (real combination of m=+/-2 with cosine)
-  !  5 dxy    (real combination of m=+/-1 with sine)
-  !
-  ! Important notice:
-  !
-  !    The tetrahedron method is presently not implemented.
-  !    Gaussian broadening is used in all cases:
-  !    - if degauss is set to some value in namelist &inputpp, that value
-  !      (and the optional value for ngauss) is used
-  !    - if degauss is NOT set to any value in namelist &inputpp, the
-  !      value of degauss and of ngauss are read from the input data
-  !      file (they will be the same used in the pw.x calculations)
-  !    - if degauss is NOT set to any value in namelist &inputpp, AND
-  !      there is no value of degauss and of ngauss in the input data
-  !      file, degauss=DeltaE (in Ry) and ngauss=0 will be used
-  ! Obsolete variables, ignored:
-  !   io_choice
-  !   smoothing
+  ! See files INPUT_PROJWFC.* in Doc/ directory for usage
+  ! IMPORTANT: since v.5 namelist name is &projwfc and no longer &inputpp
   !
   USE io_global,  ONLY : stdout, ionode, ionode_id
   USE constants,  ONLY : rytoev
@@ -154,7 +46,7 @@ PROGRAM projwfc
   LOGICAL :: lex, lgww
   !
   !
-  NAMELIST / inputpp / outdir, prefix, ngauss, degauss, lsym, &
+  NAMELIST / projwfc / outdir, prefix, ngauss, degauss, lsym, &
              Emin, Emax, DeltaE, io_choice, smoothing, filpdos, filproj, &
              lgww, & !if .true. use GW QP energies from file bands.dat
              kresolveddos, tdosinboxes, n_proj_boxes, irmin, irmax, plotboxes
@@ -193,7 +85,7 @@ PROGRAM projwfc
      !
      CALL input_from_file ( )
      !
-     READ (5, inputpp, iostat = ios)
+     READ (5, projwfc, iostat = ios)
      !
      tmp_dir = trimcheck (outdir)
      ! save the value of degauss and ngauss: they are read from file
@@ -204,7 +96,9 @@ PROGRAM projwfc
   !
   CALL mp_bcast (ios, ionode_id )
   !
-  IF (ios /= 0) CALL errore ('projwfc', 'reading inputpp namelist', abs (ios) )
+  IF (ios /= 0) WRITE (stdout, &
+    '("*** namelist &inputpp no longer valid: please use &projwfc instead")')
+  IF (ios /= 0) CALL errore ('projwfc', 'reading projwfc namelist', abs (ios) )
   !
   ! ... Broadcast variables
   !
@@ -288,7 +182,7 @@ PROGRAM projwfc
   !
   CALL stop_pp
   !
-END PROGRAM projwfc
+END PROGRAM do_projwfc
 !
 MODULE projections
   USE kinds, ONLY : DP

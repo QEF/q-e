@@ -7,8 +7,11 @@
 !
 !
 !-----------------------------------------------------------------------
-PROGRAM bands
+PROGRAM do_bands
   !-----------------------------------------------------------------------
+  !
+  ! See files INPUT_BANDS.* in Doc/ directory for usage
+  ! IMPORTANT: since v.5 namelist name is &bands and no longer &inputpp
   !
   USE io_files,  ONLY : prefix, tmp_dir
   USE mp_global, ONLY : npool, nproc, nproc_pool, nproc_file, &
@@ -30,7 +33,7 @@ PROGRAM bands
   INTEGER :: spin_component, firstk, lastk
   INTEGER :: ios
   !
-  NAMELIST / inputpp / outdir, prefix, filband, filp, spin_component, lsigma,&
+  NAMELIST / bands / outdir, prefix, filband, filp, spin_component, lsigma,&
                        lsym, lp, filp, firstk, lastk, no_overlap
   !
   ! initialise environment
@@ -61,7 +64,7 @@ PROGRAM bands
      !
      CALL input_from_file ( )
      !
-     READ (5, inputpp, iostat = ios)
+     READ (5, bands, iostat = ios)
      !
      lsigma(4)=.false.
      tmp_dir = trimcheck (outdir)
@@ -70,7 +73,9 @@ PROGRAM bands
   !
   !
   CALL mp_bcast( ios, ionode_id )
-  IF (ios /= 0) CALL errore ('do_bands', 'reading inputpp namelist', abs(ios) )
+  IF (ios /= 0) WRITE (stdout, &
+    '("*** namelist &inputpp no longer valid: please use &bands instead")')
+  IF (ios /= 0) CALL errore ('bands', 'reading bands namelist', abs(ios) )
   !
   ! ... Broadcast variables
   !
@@ -110,7 +115,7 @@ PROGRAM bands
   !
   CALL stop_pp
   STOP
-END PROGRAM bands
+END PROGRAM do_bands
 !
 !-----------------------------------------------------------------------
 SUBROUTINE punch_band (filband, spin_component, lsigma, no_overlap)

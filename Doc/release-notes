@@ -4,6 +4,8 @@ New in svn version
 
 Incompatible changes in svn version:
 
+   * Postprocessing codes dos.x, bands.x, projwfc.x, now use
+     namelist &dos, &bands, &projwfc respectively, instead of &inputpp
    * Directory reorganization: whole packages into subdirectories,
      almost nothing is in the same directory where it used to be. 
    * atomic masses are in amu unless otherwise stated

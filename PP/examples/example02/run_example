@@ -322,7 +322,7 @@ $ECHO " done"
 
 # K-resolved PDOS calculation along Delta and Sigma lines computed above
 cat > ni.kpdos.in << EOF
- &inputpp
+ &projwfc
     outdir='$TMP_DIR/'
     prefix='ni'
     ngauss=0, degauss=0.036748
@@ -433,7 +433,7 @@ K_POINTS {automatic}
 EOF
 
 cat > ni.dos2.in << EOF
- &inputpp
+ &dos
     outdir='$TMP_DIR/'
     prefix='ni'
     fildos='ni.dos',
@@ -449,7 +449,7 @@ check_failure $?
 $ECHO " done"
 
 cat > ni.pdos.in << EOF
- &inputpp
+ &projwfc
     outdir='$TMP_DIR/'
     prefix='ni'
     Emin=5.0, Emax=25.0, DeltaE=0.1

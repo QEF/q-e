@@ -235,7 +235,7 @@ $ECHO " done"
 
 # post-processing for band structure
 cat > si.bands.in << EOF
- &inputpp
+ &bands
     prefix  = 'si'
     outdir = '$TMP_DIR/'
     filband = 'sibands.dat'

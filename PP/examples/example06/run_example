@@ -181,7 +181,7 @@ $ECHO " done"
 
 # self-consistent calculation for bcc-Fe with fully relativistic PAW-PP
 cat > Fe.bands.in << EOF
- &inputpp
+ &bands
     prefix='Fe',
     outdir='$TMP_DIR/'
     filband='fe.band'

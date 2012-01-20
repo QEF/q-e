@@ -177,7 +177,7 @@ check_failure $?
 $ECHO " done"
 
 cat > pt.bands.in << EOF
- &inputpp
+ &bands
     prefix='Pt',
     outdir='$TMP_DIR/'
     filband='pt.band'

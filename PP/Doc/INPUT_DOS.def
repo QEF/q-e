@@ -13,12 +13,12 @@ input_description -distribution {Quantum Espresso} -package PWscf -program dos.x
 	Structure of the input data:
 	============================
 
-	   &INPUTPP
+	   &DOS
 	     ...
 	   /
     }
 
-    namelist INPUTPP {
+    namelist DOS {
 
 	var prefix -type CHARACTER {
 	    default { 'pwscf' } 
@@ -94,19 +94,19 @@ input_description -distribution {Quantum Espresso} -package PWscf -program dos.x
 		    - the input data file has been produced by pw.x using the option
 		      occupations='tetrahedra', AND
 		    
-		    - a value for degauss is not given as input to namelist &inputpp
+		    - a value for degauss is not given as input to namelist &dos
 
 
 		Gaussian broadening is used in all other cases:
 
-		    - if degauss is set to some value in namelist &inputpp, that value
+		    - if degauss is set to some value in namelist &dos, that value
 		      (and the optional value for ngauss) is used
 		    
-		    - if degauss is NOT set to any value in namelist &inputpp, the 
+		    - if degauss is NOT set to any value in namelist &dos, the 
 		      value of degauss and of ngauss are read from the input data
 		      file (they will be the same used in the pw.x calculations)
 		    
-		    - if degauss is NOT set to any value in namelist &inputpp, AND
+		    - if degauss is NOT set to any value in namelist &dos, AND
 		      there is no value of degauss and of ngauss in the input data
 		      file, degauss=DeltaE (in Ry) and ngauss=0 will be used
 	    }
