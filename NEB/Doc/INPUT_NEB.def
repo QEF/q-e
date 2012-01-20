@@ -24,7 +24,7 @@ input_description -distribution {Quantum Espresso} -package NEB -program neb.x {
         and which part regards the energy/force engine (at the moment only PW).
         After the parsing different files are generated: neb.dat, with
         neb specific variables and a set of pw_*.in PWscf input files like
-        ,one for each input position. All options for a single SCF calculation apply.
+        one for each input position. All options for a single SCF calculation apply.
 
         The general structure of the file to be parsed is:
 
@@ -33,21 +33,20 @@ input_description -distribution {Quantum Espresso} -package NEB -program neb.x {
         ... neb specific namelists and cards
         END_PATH_INPUT
         BEGIN_ENGINE_INPUT
-        BEGIN_ENGINE_INPUT
         ...pw specific namelists and cards
         BEGIN_POSITIONS
         FIRST_IMAGE
         ...pw ATOMIC_POSITIONS card
         INTERMEDIATE_IMAGE
-       ...pw ATOMIC_POSITIONS card
-       LAST_IMAGE
-       ...pw ATOMIC_POSITIONS card
-      END_POSITIONS
-      ... other pw specific cards
-      END_ENGINE_INPUT
-      END
+        ...pw ATOMIC_POSITIONS card
+        LAST_IMAGE
+        ...pw ATOMIC_POSITIONS card
+        END_POSITIONS
+        ... other pw specific cards
+        END_ENGINE_INPUT
+        END
 
-For case 2) neb.dat and all pw_1.in, pw_2.in ... should be already present. 
+        For case 2) neb.dat and all pw_1.in, pw_2.in ... should be already present. 
 
 	Structure of the input data (file neb.dat) :
 	===============================================================================
