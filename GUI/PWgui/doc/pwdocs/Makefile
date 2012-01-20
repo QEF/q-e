@@ -1,5 +1,5 @@
 TOPDIR        = ../../../..
-PW_DOC_DIR    = $(TOPDIR)/Doc
+QE_DOC_DIR    = $(TOPDIR)/Doc
 
 INPUT_FILES_HTML = \
         INPUT_PW.html \
@@ -20,7 +20,7 @@ all: input_html make_user_guide
 links:
 	( cd $(TOPDIR); $(MAKE) doc )
 	for file in $(LINK_FILES); do \
-		if test ! -f $$file; then ln -sf $(PW_DOC_DIR)/$$file . ; fi; \
+		if test ! -f $$file; then ln -sf $(QE_DOC_DIR)/$$file . ; fi; \
 	done
 
 clean_links:
@@ -40,7 +40,7 @@ input_html: links
 
 make_user_guide: links
 	rm -rf user_guide/
-	cp -a $(PW_DOC_DIR)/user_guide .
+	cp -a $(QE_DOC_DIR)/user_guide .
 	cd user_guide/; \
 	for file in *.png; do \
 		convert $$file $${file%.png}.gif; \
