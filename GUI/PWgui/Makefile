@@ -27,6 +27,7 @@ DOC_FILES = \
 
 EXAMPLES_FILES = \
 	examples/pw/*.pw.inp examples/pw/*.in \
+	examples/neb.dat/*.dat \
 	examples/ph/*.ph.inp \
 	examples/pp/*.pp.inp \
 	examples/projwfc/*.pr.inp \
