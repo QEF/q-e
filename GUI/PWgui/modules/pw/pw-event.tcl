@@ -1,5 +1,4 @@
-# TODO: handle ESM and ESM_efield only for bc2
-#       adaptive convergence threshold setup:
+
 # ------------------------------------------------------------------------
 #  Page: CONTROL
 # ------------------------------------------------------------------------
