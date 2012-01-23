@@ -7,6 +7,8 @@ INPUT_FILES_HTML = \
         INPUT_PH.html \
         INPUT_PP.html \
         INPUT_PROJWFC.html \
+        INPUT_BANDS.html \
+        INPUT_DOS.html \
         INPUT_LD1.html \
         INPUT_D3.html
 
@@ -35,6 +37,8 @@ input_html: links
 	./htmlise.sh INPUT_PH.txt      > INPUT_PH.html
 	./htmlise.sh INPUT_PP.txt      > INPUT_PP.html
 	./htmlise.sh INPUT_PROJWFC.txt > INPUT_PROJWFC.html
+	./htmlise.sh INPUT_BANDS.txt   > INPUT_BANDS.html
+	./htmlise.sh INPUT_DOS.txt     > INPUT_DOS.html
 	./htmlise.sh INPUT_D3.txt      > INPUT_D3.html
 	./htmlise.sh INPUT_LD1.txt     > INPUT_LD1.html
 
