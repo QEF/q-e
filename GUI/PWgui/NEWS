@@ -1,3 +1,9 @@
+Version: 5.0svn
+        * adding bands.x and dos.x modules
+        * note the syntax change for projwfc.x, bands.x, and dos.x,
+          where the &INPUTPP namelist was changed to &PROJWFC, &BANDS,
+          and &DOS, respectively
+
 Version: 4.2
         * PWgui pages can be scrolled up and down with the mouse-bar
         * PWgui runs with Tcl/Tk 8.5

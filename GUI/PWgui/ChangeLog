@@ -1,7 +1,12 @@
+Jan 23 2012 Anton Kokalj (tone.kokalj@ijs.si)
+	* adding bands.x and dos.x modules
+	* editing of ChangeLog has been discontinued and in the meantime,
+		the pwgui was made syncronized with the incoming QE 5.0.
+
 Dec  2 2008 Anton Kokalj (tone.kokalj@ijs.si)
 	* syncronizing pwgui with QE CVS, i.e., updating pw, ph, and
 		atomic modules.
-	
+
 Jun  2 2008 Anton Kokalj (tone.kokalj@ijs.si)
 	* fixing a "recently introduced" bug: widgtes (enabled/disabled)
 		associated to various type of K_POINTS input were not
@@ -13,12 +18,12 @@ May  8 2008 Anton Kokalj (tone.kokalj@ijs.si)
 		utility)
 	* small updates to all modules
 	* changing the version number to 4.0
-	
+
 Jan/Feb 2008 Anton Kokalj (tone.kokalj@ijs.si)
 	* syncronizing PWgui modules with QE CVS (very many changes). The
 		ld1.x (atomic) module fully completed now. ph.x module
 		reorganized in different pages.
-	
+
 Tue May 23 2006 Anton Kokalj (tone.kokalj@ijs.si)
 	* synchronizing PWgui modules with QE-3.1
 
