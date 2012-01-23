@@ -36,7 +36,7 @@ module ProjWfc\#auto -title "PWSCF GUI: module ProjWfc.x" -script {
 		-textvalue {
 		    "Simple Gaussian (default)"
 		    "Methfessel-Paxton of order 1"
-		    " Marzari-Vanderbilt \"cold smearing\""
+		    "Marzari-Vanderbilt \"cold smearing\""
 		    "Fermi-Dirac function"
 		}
 	    }
