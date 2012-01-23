@@ -13,6 +13,12 @@ pp: makedoc
 projwfc: makedoc
 	./check_gui projwfc
 
+bands: makedoc
+	./check_gui bands
+
+dos: makedoc
+	./check_gui dos
+
 atomic: makedoc 
 	./check_gui atomic
 
