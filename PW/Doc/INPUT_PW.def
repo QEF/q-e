@@ -2108,9 +2108,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 			    'bennett_proj'    : constraint on the projection onto a given direction
                                                 of the vector defined by the position of one atom
                                                 minus the center of mass of the others.
-                                                ( Ch.H. Bennett in Diffusion in Solids, Recent
-                                                  Developments, Ed. by A.S. Nowick and J.J. Burton,
-                                                  New York 1975 ).
+                                                G.Roma,J.P.Crocombette: J.Nucl.Mater.403,32(2010)
 			}			
 		    }
 		    colgroup {
