@@ -110,6 +110,7 @@ CONTAINS
     INTEGER, ALLOCATABLE :: ln_g(:,:,:)
     INTEGER, ALLOCATABLE :: g_ln(:,:)
 
+    IF ( .NOT.lberry .AND. .NOT. lelfield ) RETURN
     ! set up correspondence ln_g ix,iy,iz ---> global g index in
     ! (for now...) coarse grid
     ! and inverse realtion global g (coarse) to ix,iy,iz
