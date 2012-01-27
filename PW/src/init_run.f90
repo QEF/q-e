@@ -21,14 +21,14 @@ SUBROUTINE init_run()
 #ifdef __PARA
   USE paw_init,           ONLY : paw_post_init
 #endif
-  USE bp,                 ONLY : lberry, lelfield
+  USE bp,                 ONLY : allocate_bp_efield, bp_global_map
 #ifdef __SOLVENT
   USE fft_base,           ONLY : dfftp
   USE solvent_base,       ONLY : do_solvent
 #endif
   USE recvec_subs,        ONLY : ggen
   USE wannier_new,        ONLY : use_wannier    
-  USE dfunct,                 only : newd
+  USE dfunct,             ONLY : newd
   USE esm,                ONLY : do_comp_esm, esm_ggen_2d
   !
   IMPLICIT NONE
@@ -66,7 +66,7 @@ SUBROUTINE init_run()
   CALL allocate_locpot()
   CALL allocate_wfc()
   CALL allocate_bp_efield()
-  IF( lberry .or. lelfield) call bp_global_map()
+  CALL bp_global_map()
 #ifdef __SOLVENT
   IF ( do_solvent ) CALL solvent_initbase( dfftp%nnr )
 #endif

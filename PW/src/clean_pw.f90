@@ -58,6 +58,7 @@ SUBROUTINE clean_pw( lflag )
   USE constraints_module,   ONLY : deallocate_constraint
   USE realus,               ONLY : deallocatenewdreal
   USE pseudo_types,         ONLY : deallocate_pseudo_upf
+  USE bp,                   ONLY : deallocate_bp_efield
 #ifdef EXX
   USE exx,                  ONLY : deallocate_exx
 #endif

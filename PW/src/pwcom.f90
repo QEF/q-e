@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2010 Quantum ESPRESSO group
+! Copyright (C) 2001-2012 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -424,47 +424,6 @@ MODULE spin_orb
                          ! account for spinors.
 END MODULE spin_orb
 !
-!
-MODULE bp
-  USE kinds, ONLY: DP
-  !
-  ! ... The variables needed for the Berry phase polarization calculation
-  !
-  SAVE
-  !
-  LOGICAL :: &
-       lberry  =.false., & ! if .TRUE. calculate polarization using Berry phase
-       lelfield=.false.    ! if .TRUE. finite electric field using Berry phase
-  INTEGER :: &
-       gdir,        &! G-vector for polarization calculation
-       nppstr,      &! number of k-points (parallel vector)
-       nberrycyc     !numer of cycles for cobergence in electric field without changing the selfconsistent charge
-  REAL(DP) :: efield ! electric field intensity in a.u.
-  COMPLEX(DP), ALLOCATABLE , TARGET :: evcel(:,:) ! wave function for calculating the electric field operator
-  COMPLEX(DP), ALLOCATABLE , TARGET :: evcelm(:,:,:) ! wave function for  storing projectors for  electric field operator
-  COMPLEX(DP), ALLOCATABLE , TARGET :: evcelp(:,:,:) ! wave function for  storing projectors for  electric field operator
-  COMPLEX(DP), ALLOCATABLE, TARGET :: fact_hepsi(:,:)!factors for hermitean electric field operators
-  COMPLEX(DP), ALLOCATABLE, TARGET :: bec_evcel(:,:)!for storing bec's factors with evcel
-  INTEGER, ALLOCATABLE, TARGET :: mapgp_global(:,:)! map for G'= G+1 correspondence
-  INTEGER, ALLOCATABLE, TARGET :: mapgm_global(:,:)! map for G'= G-1 correspondence
-  REAL(DP), ALLOCATABLE, TARGET :: forces_bp_efield(:,:)!ionic and US contributions to the atomic forces due to el. fields
-  REAL(DP) :: ion_pol(3)!the ionic polarization
-  REAL(DP) :: el_pol(3)!the electronic polarization
-  REAL(DP) :: fc_pol(3)!the prefactor for the electronic polarization
-  LOGICAL  :: l_el_pol_old!if true there is already stored a n older value for the polarization
-                          !neeeded for having correct polarization during MD
-  REAL(DP) :: el_pol_old(3)! the old  electronic polarization
-  REAL(DP) :: el_pol_acc(3)! accumulator for the electronic polarization
-
-  INTEGER :: nppstr_3d(3)!number of element of strings along the reciprocal directions
-  INTEGER, ALLOCATABLE :: nx_el(:,:)!index for string to k-point map, (nks*nspin,dir=3)
-  LOGICAL :: l3dstring!if true strings are on the 3 three directions
-  REAL(DP) :: efield_cart(3)!electric field vector in cartesian units
-  REAL(DP) :: efield_cry(3)!electric field vector in crystal units
-  REAL(DP) :: transform_el(3,3)!transformation matrix from cartesian coordinates to normed reciprocal space
-!
-END MODULE bp
-!
 MODULE pwcom
   !
   USE constants, ONLY : e2, rytoev, amconv, pi, tpi, fpi
@@ -483,7 +442,6 @@ MODULE pwcom
   USE us
   USE ldaU
   USE extfield
-  USE bp
   USE fixed_occ
   USE spin_orb
   !

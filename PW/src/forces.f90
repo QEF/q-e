@@ -42,8 +42,8 @@ SUBROUTINE forces()
 #ifdef __SOLVENT
   USE solvent_base,  ONLY : do_solvent, epszero, eps_mode, rhopol
 #endif
-  USE bp,            ONLY : lelfield, forces_bp_efield, gdir, &
-                            l3dstring,efield_cart,efield_cry,efield
+  USE bp,            ONLY : lelfield, gdir, l3dstring, efield_cart, &
+                            efield_cry,efield
   USE uspp,          ONLY : okvan
   USE mp_global,     ONLY : me_pool
   USE martyna_tuckerman, ONLY: do_comp_mt, wg_corr_force
@@ -58,6 +58,7 @@ SUBROUTINE forces()
                            force_disp(:,:),&
                            force_mt(:,:), &
                            forcescc(:,:), &
+                           forces_bp_efield(:,:), &
                            forceh(:,:)
     ! nonlocal, local, core-correction, ewald, scf correction terms, and hubbard
 #ifdef __SOLVENT
@@ -156,6 +157,7 @@ SUBROUTINE forces()
   ! Berry's phase electric field terms
   !
   if(lelfield) then
+     ALLOCATE ( forces_bp_efield (3,nat) )
      forces_bp_efield(:,:)=0.d0
      if(.not.l3dstring) then
         if(okvan) call  forces_us_efield(forces_bp_efield,gdir,efield)
@@ -329,7 +331,8 @@ SUBROUTINE forces()
   END IF
   !
   DEALLOCATE( forcenl, forcelc, forcecc, forceh, forceion, forcescc )
-  IF ( llondon ) DEALLOCATE ( force_disp )
+  IF ( llondon )  DEALLOCATE ( force_disp )
+  IF ( lelfield ) DEALLOCATE ( forces_bp_efield )
   !
   lforce = .TRUE.
   !

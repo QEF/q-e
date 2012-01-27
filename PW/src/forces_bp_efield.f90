@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2004 PWSCF group
+! Copyright (C) 2001-2012 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -7,11 +7,11 @@
 !
 
 SUBROUTINE forces_ion_efield (forces_bp, pdir, e_field)
-!calculte ionic contribution , which is in the 
+
+!calculate ionic contribution , which is in the 
 !a_gdir direction
 
   USE kinds,                ONLY : dp
-  USE bp,                   ONLY : forces_bp_efield
   USE cell_base,            ONLY : at
   USE ions_base,            ONLY : nat,zv, ityp
 
@@ -35,8 +35,6 @@ SUBROUTINE forces_ion_efield (forces_bp, pdir, e_field)
       forces_bp(pdir,i)=forces_bp(pdir,i)+ e*e_field*zv(ityp(i))
   enddo
   
-
-
   return
 
 

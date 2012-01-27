@@ -69,14 +69,6 @@ addusstress.o : ../../Modules/recvec.o
 addusstress.o : ../../Modules/uspp.o
 addusstress.o : pwcom.o
 addusstress.o : scf_mod.o
-allocate_bp_efield.o : ../../Modules/cell_base.o
-allocate_bp_efield.o : ../../Modules/fft_base.o
-allocate_bp_efield.o : ../../Modules/io_global.o
-allocate_bp_efield.o : ../../Modules/ions_base.o
-allocate_bp_efield.o : ../../Modules/kind.o
-allocate_bp_efield.o : ../../Modules/mp.o
-allocate_bp_efield.o : ../../Modules/recvec.o
-allocate_bp_efield.o : pwcom.o
 allocate_fft.o : ../../Modules/control_flags.o
 allocate_fft.o : ../../Modules/fft_base.o
 allocate_fft.o : ../../Modules/funct.o
@@ -151,6 +143,7 @@ bp_c_phase.o : ../../Modules/recvec.o
 bp_c_phase.o : ../../Modules/uspp.o
 bp_c_phase.o : ../../Modules/wavefunctions.o
 bp_c_phase.o : becmod.o
+bp_c_phase.o : bp_mod.o
 bp_c_phase.o : buffers.o
 bp_c_phase.o : pwcom.o
 bp_calc_btq.o : ../../Modules/atom.o
@@ -159,6 +152,11 @@ bp_calc_btq.o : ../../Modules/constants.o
 bp_calc_btq.o : ../../Modules/ions_base.o
 bp_calc_btq.o : ../../Modules/kind.o
 bp_calc_btq.o : ../../Modules/uspp.o
+bp_mod.o : ../../Modules/cell_base.o
+bp_mod.o : ../../Modules/fft_base.o
+bp_mod.o : ../../Modules/kind.o
+bp_mod.o : ../../Modules/mp.o
+bp_mod.o : ../../Modules/recvec.o
 bp_qvan3.o : ../../Modules/ions_base.o
 bp_qvan3.o : ../../Modules/kind.o
 bp_qvan3.o : ../../Modules/uspp.o
@@ -177,6 +175,7 @@ c_bands.o : ../../Modules/recvec.o
 c_bands.o : ../../Modules/uspp.o
 c_bands.o : ../../Modules/wavefunctions.o
 c_bands.o : becmod.o
+c_bands.o : bp_mod.o
 c_bands.o : buffers.o
 c_bands.o : g_psi_mod.o
 c_bands.o : noncol.o
@@ -195,6 +194,7 @@ c_phase_field.o : ../../Modules/recvec.o
 c_phase_field.o : ../../Modules/uspp.o
 c_phase_field.o : ../../Modules/wavefunctions.o
 c_phase_field.o : becmod.o
+c_phase_field.o : bp_mod.o
 c_phase_field.o : buffers.o
 c_phase_field.o : pwcom.o
 ccgdiagg.o : ../../Modules/constants.o
@@ -229,6 +229,7 @@ clean_pw.o : ../../Modules/stick_base.o
 clean_pw.o : ../../Modules/uspp.o
 clean_pw.o : ../../Modules/wannier_new.o
 clean_pw.o : ../../Modules/wavefunctions.o
+clean_pw.o : bp_mod.o
 clean_pw.o : dynamics_module.o
 clean_pw.o : exx.o
 clean_pw.o : noncol.o
@@ -243,6 +244,7 @@ close_files.o : ../../Modules/io_files.o
 close_files.o : ../../Modules/mp.o
 close_files.o : ../../Modules/mp_global.o
 close_files.o : ../../Modules/wannier_new.o
+close_files.o : bp_mod.o
 close_files.o : buffers.o
 close_files.o : pwcom.o
 commutator_Hx_psi.o : ../../Modules/cell_base.o
@@ -376,6 +378,7 @@ electrons.o : ../../Modules/paw_variables.o
 electrons.o : ../../Modules/recvec.o
 electrons.o : ../../Modules/uspp.o
 electrons.o : ../../Modules/wavefunctions.o
+electrons.o : bp_mod.o
 electrons.o : buffers.o
 electrons.o : esm.o
 electrons.o : exx.o
@@ -517,6 +520,7 @@ forces.o : ../../Modules/mm_dispersion.o
 forces.o : ../../Modules/mp_global.o
 forces.o : ../../Modules/recvec.o
 forces.o : ../../Modules/uspp.o
+forces.o : bp_mod.o
 forces.o : martyna_tuckerman.o
 forces.o : pwcom.o
 forces.o : scf_mod.o
@@ -534,6 +538,7 @@ forces_bp_efield.o : ../../Modules/recvec.o
 forces_bp_efield.o : ../../Modules/uspp.o
 forces_bp_efield.o : ../../Modules/wavefunctions.o
 forces_bp_efield.o : becmod.o
+forces_bp_efield.o : bp_mod.o
 forces_bp_efield.o : buffers.o
 forces_bp_efield.o : pwcom.o
 g2_kin.o : ../../Modules/cell_base.o
@@ -607,8 +612,8 @@ gradcorr.o : noncol.o
 gradcorr.o : pwcom.o
 gweights.o : ../../Modules/kind.o
 h_1psi.o : ../../Modules/kind.o
+h_1psi.o : bp_mod.o
 h_1psi.o : noncol.o
-h_1psi.o : pwcom.o
 h_1psi.o : realus.o
 h_epsi_her_apply.o : ../../Modules/cell_base.o
 h_epsi_her_apply.o : ../../Modules/constants.o
@@ -620,6 +625,7 @@ h_epsi_her_apply.o : ../../Modules/mp_global.o
 h_epsi_her_apply.o : ../../Modules/recvec.o
 h_epsi_her_apply.o : ../../Modules/uspp.o
 h_epsi_her_apply.o : becmod.o
+h_epsi_her_apply.o : bp_mod.o
 h_epsi_her_apply.o : pwcom.o
 h_epsi_her_apply.o : scf_mod.o
 h_epsi_her_set.o : ../../Modules/cell_base.o
@@ -633,6 +639,7 @@ h_epsi_her_set.o : ../../Modules/mp_global.o
 h_epsi_her_set.o : ../../Modules/recvec.o
 h_epsi_her_set.o : ../../Modules/uspp.o
 h_epsi_her_set.o : becmod.o
+h_epsi_her_set.o : bp_mod.o
 h_epsi_her_set.o : buffers.o
 h_epsi_her_set.o : pwcom.o
 h_epsi_her_set.o : scf_mod.o
@@ -643,6 +650,7 @@ h_psi.o : ../../Modules/kind.o
 h_psi.o : ../../Modules/recvec.o
 h_psi.o : ../../Modules/uspp.o
 h_psi.o : becmod.o
+h_psi.o : bp_mod.o
 h_psi.o : exx.o
 h_psi.o : noncol.o
 h_psi.o : pwcom.o
@@ -703,6 +711,7 @@ init_run.o : ../../Modules/paw_variables.o
 init_run.o : ../../Modules/recvec_subs.o
 init_run.o : ../../Modules/uspp.o
 init_run.o : ../../Modules/wannier_new.o
+init_run.o : bp_mod.o
 init_run.o : dynamics_module.o
 init_run.o : esm.o
 init_run.o : newd.o
@@ -761,6 +770,7 @@ input.o : ../../Modules/wannier_new.o
 input.o : ../../Modules/wrappers.o
 input.o : ../../Modules/xml_io_base.o
 input.o : a2fmod.o
+input.o : bp_mod.o
 input.o : dynamics_module.o
 input.o : esm.o
 input.o : exx.o
@@ -795,7 +805,7 @@ iweights.o : ../../Modules/mp_global.o
 iweights.o : noncol.o
 kpoint_grid.o : ../../Modules/io_global.o
 kpoint_grid.o : ../../Modules/kind.o
-kpoint_grid.o : pwcom.o
+kpoint_grid.o : bp_mod.o
 lchk_tauxk.o : ../../Modules/kind.o
 make_pointlists.o : ../../Modules/cell_base.o
 make_pointlists.o : ../../Modules/fft_base.o
@@ -924,6 +934,7 @@ non_scf.o : ../../Modules/io_files.o
 non_scf.o : ../../Modules/io_global.o
 non_scf.o : ../../Modules/kind.o
 non_scf.o : ../../Modules/wavefunctions.o
+non_scf.o : bp_mod.o
 non_scf.o : buffers.o
 non_scf.o : pwcom.o
 noncol.o : ../../Modules/kind.o
@@ -952,6 +963,7 @@ openfil.o : ../../Modules/io_files.o
 openfil.o : ../../Modules/io_global.o
 openfil.o : ../../Modules/kind.o
 openfil.o : ../../Modules/wannier_new.o
+openfil.o : bp_mod.o
 openfil.o : buffers.o
 openfil.o : noncol.o
 openfil.o : pw_restart.o
@@ -1412,6 +1424,7 @@ setup.o : ../../Modules/parameters.o
 setup.o : ../../Modules/paw_variables.o
 setup.o : ../../Modules/recvec.o
 setup.o : ../../Modules/uspp.o
+setup.o : bp_mod.o
 setup.o : exx.o
 setup.o : noncol.o
 setup.o : pw_restart.o
@@ -1533,6 +1546,7 @@ stress.o : ../../Modules/kind.o
 stress.o : ../../Modules/mm_dispersion.o
 stress.o : ../../Modules/recvec.o
 stress.o : ../../Modules/uspp.o
+stress.o : bp_mod.o
 stress.o : exx.o
 stress.o : noncol.o
 stress.o : pwcom.o
@@ -1582,6 +1596,7 @@ summary.o : ../../Modules/mp_global.o
 summary.o : ../../Modules/recvec.o
 summary.o : ../../Modules/run_info.o
 summary.o : ../../Modules/uspp.o
+summary.o : bp_mod.o
 summary.o : esm.o
 summary.o : noncol.o
 summary.o : pwcom.o
@@ -1752,6 +1767,7 @@ wfcinit.o : ../../Modules/uspp.o
 wfcinit.o : ../../Modules/wannier_new.o
 wfcinit.o : ../../Modules/wavefunctions.o
 wfcinit.o : becmod.o
+wfcinit.o : bp_mod.o
 wfcinit.o : buffers.o
 wfcinit.o : noncol.o
 wfcinit.o : pwcom.o
