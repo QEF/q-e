@@ -1,8 +1,8 @@
-New in svn version
+New in 5.0 version
 
    * More ways of calculating electron-phonon coefficients
 
-Incompatible changes in svn version:
+Incompatible changes in 5.0 version:
 
    * Postprocessing codes dos.x, bands.x, projwfc.x, now use
      namelist &dos, &bands, &projwfc respectively, instead of &inputpp
@@ -14,8 +14,10 @@ Incompatible changes in svn version:
    * Options 'bohr'/'angstrom'/'alat' to CELL_PARAMETERS implemented
    * PHonon: input variable 'elph' replaced by 'electron_phonon'
 
-Fixed in svn version
+Fixed in 5.0 version
 
+   * PW: LDA+U crash in the final step of a vc-relax run, due to a
+     premature deallocation of a variable
    * PW: constraint 'atomic direction' on noncolinear magnetization
      wasn't working properly
    * PW: tetrahedra were not working with magnetic symmetries, 
