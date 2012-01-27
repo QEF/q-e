@@ -1,5 +1,5 @@
-!
-! Copyright (C) 2001-2011 Quantum ESPRESSO group
+
+! Copyright (C) 2001-2012 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -9,7 +9,14 @@
 SUBROUTINE clean_pw( lflag )
   !----------------------------------------------------------------------
   !    
-  ! ... This routine deallocates most dynamically allocated arrays
+  ! ... This routine deallocates dynamically allocated arrays
+  ! ... if lflag=.TRUE.  all arrays are deallocated (end of calculation)
+  ! ... if lflag=.FALSE. ion-related variables and arrays allocated
+  ! ... at the very beginning of the calculation (routines iosys, read_file,
+  ! ... setup, read_pseudo) are not deallocated; all others arrayes are.
+  ! ... This is used when a new calculation has to be performed (e.g. in neb,
+  ! ... phonon, vc-relax). Beware: the new calculation should not call any
+  ! ... of the routines mentioned above
   !
   USE cellmd,               ONLY : lmovecell
   USE ions_base,            ONLY : deallocate_ions_base
@@ -61,15 +68,12 @@ SUBROUTINE clean_pw( lflag )
   IMPLICIT NONE
   !
   LOGICAL, INTENT(IN) :: lflag
-    ! if .TRUE. ion-related variables are also deallocated
-    ! as well as arrays allocated in iosys.
-    ! --> .TRUE. means the real end!!!
-    ! .FALSE. in  neb, smd, phonon calculations
+  !
   INTEGER :: nt
   !
-  ! ... arrays allocated in input.f90, read_file.f90 or setup.f90
-  !
   IF ( lflag ) THEN
+     !
+     ! ... arrays allocated at the very beginning of the calculation
      !
      IF( ALLOCATED( upf ) ) THEN
         DO nt = 1, SIZE( upf )
@@ -77,6 +81,8 @@ SUBROUTINE clean_pw( lflag )
         END DO
         DEALLOCATE( upf )
      END IF
+     DEALLOCATE (msh)
+     CALL deallocate_radial_grid(rgrid)
      !
      CALL deallocate_ions_base()
      !
@@ -84,6 +90,9 @@ SUBROUTINE clean_pw( lflag )
      IF ( ALLOCATED( forcefield ) ) DEALLOCATE( forcefield )
      IF ( ALLOCATED (irt) )         DEALLOCATE (irt)
      !
+     IF ( lda_plus_u ) THEN
+        IF ( ALLOCATED( oatwfc ) )     DEALLOCATE( oatwfc )
+     END IF
      CALL deallocate_bp_efield()
      CALL dealloca_london()
      CALL deallocate_constraint()
@@ -150,11 +159,6 @@ SUBROUTINE clean_pw( lflag )
   END IF
   !
   CALL deallocate_uspp() 
-  IF (lflag) THEN
-     CALL deallocate_radial_grid(rgrid) !not required in phonons
-     DEALLOCATE (msh)
-  END IF 
-  !
   CALL deallocate_noncol() 
   !
   ! ... arrays allocated in init_run.f90 ( and never deallocated )
@@ -166,11 +170,7 @@ SUBROUTINE clean_pw( lflag )
   ! ... arrays allocated in allocate_wfc.f90 ( and never deallocated )
   !
   IF ( ALLOCATED( evc ) )        DEALLOCATE( evc )
-  !
-  ! ... arrays allocated for LDA+U calculations
-  !
   IF ( lda_plus_u ) THEN
-     IF ( ALLOCATED( oatwfc ) )     DEALLOCATE( oatwfc )
      IF ( ALLOCATED( swfcatom ) )   DEALLOCATE( swfcatom )
   ENDIF
   !

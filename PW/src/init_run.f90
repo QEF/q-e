@@ -27,11 +27,6 @@ SUBROUTINE init_run()
   USE solvent_base,       ONLY : do_solvent
 #endif
   USE recvec_subs,        ONLY : ggen
-! DCC
-!  USE grid_dimensions,    ONLY : nr1x, nr2x, nr3x, nr1, nr2, nr3
-!  USE gvect,              ONLY : ecutwfc
-!  USE ee_mod,             ONLY : do_comp, do_coarse
-! Wannier_ac
   USE wannier_new,        ONLY : use_wannier    
   USE dfunct,                 only : newd
   USE esm,                ONLY : do_comp_esm, esm_ggen_2d
@@ -75,16 +70,7 @@ SUBROUTINE init_run()
 #ifdef __SOLVENT
   IF ( do_solvent ) CALL solvent_initbase( dfftp%nnr )
 #endif
-! DCC
-  ! ... Initializes EE variables
   !
-!  IF ( do_comp ) CALL init_ee(nr1x,nr2x,nr3x)
-  !
-!  IF ( do_coarse )  THEN
-!    CALL ggen_coarse()
-!    CALL data_structure_coarse( gamma_only, nr1,nr2,nr3, ecutwfc )
-!  END IF
-
   CALL memory_report()
   !
   ALLOCATE( et( nbnd, nkstot ) , wg( nbnd, nkstot ), btype( nbnd, nkstot ) )
