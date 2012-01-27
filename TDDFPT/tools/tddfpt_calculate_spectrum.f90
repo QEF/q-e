@@ -243,10 +243,13 @@ IF (ionode) THEN !No need for parallelization in this code
     DO ip=1,n_ipol
         !
         DO ip2=1,n_ipol
-              !
-              WRITE(stdout,'(5x,"chi_",i1,"_",i1,"=",2x,e21.15," + i",e21.15)') &
+           !
+           IF(n_ipol == 3) WRITE(stdout,'(5x,"chi_",i1,"_",i1,"=",2x,e21.15," + i",e21.15)') &
                   ip2, ip, dble(green(ip,ip2)), aimag(green(ip,ip2))
-              !
+           !
+           IF(n_ipol == 1) WRITE(stdout,'(5x,"chi_",i1,"_",i1,"=",2x,e21.15," + i",e21.15)') &
+                   ipol, ipol, DBLE(green(ip,ip2)), AIMAG(green(ip,ip2))
+           !
            ENDDO
           !
       ENDDO
@@ -322,7 +325,7 @@ IF (ionode) THEN !No need for parallelization in this code
 
   !
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!FIRST STEP!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  IF (verbosity > 0 .and. n_ipol == 3) THEN ! In order to gain speed, I perform first term seperately
+  IF (verbosity > 0 .AND. n_ipol == 3) THEN ! In order to gain speed, I perform first term seperately
     !
     CALL calc_chi(omega(3),epsil,green(:,:))
     IF (units == 1 .or. units == 2) THEN
@@ -353,7 +356,7 @@ IF (ionode) THEN !No need for parallelization in this code
             start, alpha_temp(3)
     f_sum=0.3333333333333333d0*increment*alpha_temp(3)
     start=start+increment
-  ENDIF
+ ENDIF
 !!!!!!!!!!!!!!!!!!OMEGA LOOP!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   DO WHILE(start<end)
    !Units conversion and omega history
@@ -378,8 +381,10 @@ IF (ionode) THEN !No need for parallelization in this code
               !
               !eps(ip,ip2)=(1.d0,0.d0)-(32.d0*pi/omega)*green(ip,ip2)
               !
-              WRITE(17,'(5x,"chi_",i1,"_",i1,"=",2x,3(e21.15,2x))') &
+           IF(n_ipol == 3) WRITE(17,'(5x,"chi_",i1,"_",i1,"=",2x,3(e21.15,2x))') &
                   ip2, ip, start, dble(green(ip,ip2)), aimag(green(ip,ip2))
+           IF(n_ipol == 1) WRITE(17,'(5x,"chi_",i1,"_",i1,"=",2x,3(e21.15,2x))') &
+                  ipol, ipol, start, dble(green(ip,ip2)), aimag(green(ip,ip2))
 !              write(*,'(5x,"eps_",i1,"_",i1,"=",2x,3(e21.15,2x))') &
 !                  ip2, ip, ry*omeg, dble(eps), aimag(eps)
               !
