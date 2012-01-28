@@ -16,8 +16,8 @@ LIBOBJS        = ../../flib/ptools.a ../../flib/flib.a ../../clib/clib.a ../../i
 all : tldeps band_plot.x dist.x ev.x kpoints.x \
       pwi2xsf.x bands_FS.x kvecs_FS.x
 
-band_plot.x : band_plot.o $(LIBOBJS)
-	$(LD) $(LDFLAGS) -o $@ band_plot.o $(QEMODS) $(LIBOBJS) $(LIBS)
+band_plot.x : band_plot.o
+	$(LD) $(LDFLAGS) -o $@ band_plot.o
 	- ( cd ../../bin ; ln -fs ../PW/tools/$@ . )
 
 dist.x : dist.o $(PWOBJS) $(QEMODS) $(LIBOBJS)
