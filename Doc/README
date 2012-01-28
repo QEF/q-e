@@ -1,11 +1,11 @@
 This directory contains the general Quantum ESPRESSO documentation.
 Package-specific documentation is available in the Doc/ subdirectories
-of each pakacge, or on the web site http://www.quantum-espresso.org
+of each package, or in the web site http://www.quantum-espresso.org
 
 The following files are always present in the repository:
 
 release-notes      What is new in the current release + list of fixed bugs
-                   (only those found in some official release)
+                   (only those that were present in some official release)
 user-guide.tex     User guide
 developer-man.tex  Developers' manual
 plumed_quick_ref.tex 
@@ -17,10 +17,10 @@ ChangeLog.old      ChangeLog for the Quantum-ESPRESSO suite after aug. 2004
 ChangeLog.pw       ChangeLog before aug 2004 for PWscf
 ChangeLog.cp       ChangeLog before aug 2004 for CP
 
-Printable versions of the *tex files are present in the released version 
+Printable versions of the *tex files are present in the released version:
 
-user-guide.pdf        User guide, printable version
-developer-man.pdf     Developers' manual, printable version
+user-guide.pdf
+developer-man.pdf
 plumed_quick_ref.pdf  
 
 All the material included in this distribution is free software;

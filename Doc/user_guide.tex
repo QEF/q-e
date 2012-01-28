@@ -133,7 +133,7 @@ Further documentation, beyond what is provided in this guide, can be found in:
 \begin{itemize}
   \item the \texttt{Doc/} directory of the \qe\ distribution;
   \item the \qe\ web site \texttt{http://www.quantum-espresso.org};
-  \item the \texttt{pw\_forum} mailing list (\texttt{pw\_forum@pwscf.org}).
+  \item the archives of the  mailing list:
    See section \ref{SubSec:Contacts}, ``Contacts'', for more info.
 \end{itemize}
 People who want to contribute to \qe\ should read the 
@@ -170,7 +170,7 @@ mentioned in Sect.\ref{SubSec:Terms}, are acknowledged in the
 documentation of each package. An alphabetic list of further
 contributors who answered questions on the mailing list, found 
 bugs, helped in porting to new architectures, wrote some code,
-contributed in some way or another at some stage:
+contributed in some way or another at some stage, follows:
 \begin{quote}
   Dario Alf\`e, Audrius Alkauskas, Alain Allouche, Francesco Antoniella,
   Uli Aschauer,  Francesca Baletto, Gerardo Ballabio, Mauro Boero, 
@@ -193,7 +193,7 @@ The web site for \qe\ is \texttt{http://www.quantum-espresso.org/}.
 Releases and patches can be downloaded from this
 site or following the links contained in it. The main entry point for 
 developers is the QE-forge web site:
-\texttt{http://www.qe-forge.org/}.
+\texttt{http://qe-forge.org/}.
 
 The recommended place where to ask questions about installation 
 and usage of \qe, and to report bugs, is the \texttt{pw\_forum} 
@@ -211,17 +211,16 @@ automatically deleted with no further processing (sorry, too
 much spam). In case of trouble, carefully check that your return 
 e-mail is the correct one (i.e. the one you used to subscribe).
 
-Since \texttt{pw\_forum} averages $\sim 10$ message a day, an alternative
-low-traffic mailing list,\\
-\texttt{pw\_users@pwscf.org}, is provided for
+Since \texttt{pw\_forum} has a sizable traffic, an alternative
+low-traffic mailing list, \texttt{pw\_users@pwscf.org}, is provided for
 those interested only in \qe-related news, such as e.g. announcements 
 of new versions, tutorials, etc.. You can subscribe (but not post) to 
 this list from the \qe\ web site, ``Contacts'' section.
 
 If you need to contact the developers for {\em specific} questions 
 about coding, proposals, offers of help, etc., please send a message
-to the developers' mailing list: user \texttt{q-e-developers}, address
-\texttt{qe-forge.org}.
+to the developers' mailing list: \texttt{q-e-developers@qe-forge.org}.
+Inappropriate questions will be ignored.
 
 \subsection{Guidelines for posting to the mailing list}
 \label{SubSec:Guidelines}
@@ -246,11 +245,13 @@ complies with the following guidelines:
   message must be immediately visible and easily readable, not hidden
   into a sea of quoted text.
 \item Remember that even experts cannot guess where a problem lies in
-  the absence of sufficient information.
+  the absence of sufficient information. One piece of information that
+  {\em must} always be present is the versione number.
 \item Remember that the mailing list is a voluntary endeavor: nobody is 
   entitled to an answer, even less to an immediate answer.
 \item Finally, please note that the mailing list is not a replacement
-  for your own work, nor is it a replacement for your thesis director's work.
+  for your own work, nor is it a replacement for your thesis director's 
+  work.
 \end{itemize}
  
 \subsection{Terms of use}
@@ -289,8 +290,8 @@ Presently, \qe\ is only distributed in source form;
 some precompiled executables (binary files) are provided only for 
 \texttt{PWgui}. 
 Stable releases of the \qe\ source package (current version 
-is \version) can be downloaded from this URL: \\
-\texttt{http://www.quantum-espresso.org/download.php}.
+is \version) can be downloaded from the Download section
+ot \texttt{http://www.quantum-espresso.org}.
 
 Uncompress and unpack the core distribution using the command:
 \begin{verbatim}
@@ -357,8 +358,8 @@ while others are specific to a single package:
                    and analysis, gamma-only phonon calculations and third-order derivatives.\\
 \texttt{PWCOND/} &\texttt{PWcond}: source files for conductance calculations
                   (\texttt{pwcond.x})\\
-\texttt{vdW/}    &\texttt{VdW}: source files for molecular polarizability
-                  calculation at finite frequency\\
+% \texttt{vdW/}    &\texttt{VdW}: source files for molecular polarizability
+%                  calculation at finite frequency\\
 \texttt{CPV/}    &\CP: source files for Car-Parrinello code (\cpx)\\
 \texttt{atomic/} &\texttt{atomic}: source files for the pseudopotential
                    generation package (\texttt{ld1.x})\\
@@ -371,17 +372,17 @@ while others are specific to a single package:
 To install \qe\ from source, you need first of all a minimal Unix 
 environment: basically, a command shell (e.g.,
 bash or tcsh) and the utilities \make, \texttt{awk}, \texttt{sed}.
- MS-Windows users need
-to have Cygwin (a UNIX environment which runs under Windows) installed:
-see \texttt{http://www.cygwin.com/}. Note that the scripts contained in the distribution
-assume that the local  language is set to the standard, i.e. "C"; other
- settings 
+ MS-Windows users need to have Cygwin (a UNIX environment which
+ runs under Windows) installed:
+see \texttt{http://www.cygwin.com/}. Note that the scripts contained 
+in the distribution assume that the local  language is set to the 
+standard, i.e. "C"; other settings 
 may break them. Use \texttt{export LC\_ALL=C} (sh/bash) or
 \texttt{setenv LC\_ALL C} (csh/tcsh) to prevent any problem 
 when running scripts (including installation scripts).
 
 Second, you need C and Fortran-95 compilers. For parallel 
-execution, you will also need MPI libraries and a ``parallel''
+execution, you will also need MPI libraries and a parallel
 (i.e. MPI-aware) compiler. For massively parallel machines, or 
 for simple multicore parallelization, an OpenMP-aware compiler
 and libraries are also required.
@@ -406,7 +407,7 @@ your machine, and set up things accordingly. Presently it is expected
 to work on most Linux 32- and 64-bit PCs (all Intel and AMD CPUs) and 
 PC clusters, SGI Altix, IBM SP and BlueGene machines, NEC SX, Cray XT
 machines, Mac OS X, MS-Windows PCs. A GPU-enabled version is currently
-available as a separate branch of the svn repository. See the following 
+available as a separate branch of the SVN repository. See the following 
 message and instructions:\\
 \texttt{http://www.democritos.it/pipermail/pw\_forum/2011-May/020399.html}.
 
@@ -424,7 +425,7 @@ path, as specified in the PATH environment variable.
 Additional instructions for special machines:
 
 \begin{tabular}{ll}
-    \texttt{./configure ARCH=crayxt4r}& for CRAY XT machines \\
+    \texttt{./configure ARCH=crayxt4}& for CRAY XT machines \\
     \texttt{./configure ARCH=necsx}   & for NEC SX machines \\
     \texttt{./configure ARCH=ppc64-mn}& PowerPC Linux + xlf (Marenostrum) \\
     \texttt{./configure ARCH=ppc64-bg}& IBM BG/P (BlueGene)
@@ -433,7 +434,7 @@ Additional instructions for special machines:
 \configure\ Generates the following files:
 
 \begin{tabular}{ll}
-\texttt{install/make.sys} &      compilation rules and flags (used by \texttt{Makefile})\\
+\texttt{make.sys} &      compilation rules and flags (used by \texttt{Makefile})\\
 \texttt{install/configure.msg} & a report of the configuration run (not needed for compilation)\\
 \texttt{install/config.log} & detailed log of the configuration run (may be needed for debugging)\\
 \texttt{include/fft\_defs.h} &    defines fortran variable for C pointer (used only by FFTW)\\
@@ -513,12 +514,13 @@ for NEC SX6 on a PC). Currently supported architectures are:\\
 {\em Note}: \texttt{x86\_64} replaces \texttt{amd64} since v.4.1. 
 Cray Unicos machines, SGI 
 machines with MIPS architecture, HP-Compaq Alphas are no longer supported
-since v.\version.
+since v.4.2.
 Finally, \configure\ recognizes the following command-line options:\\
 \begin{tabular}{ll}
 \texttt{--enable-parallel}&     compile for parallel execution if possible (default: yes)\\
 \texttt{--enable-openmp}&       compile for openmp execution if possible (default: no)\\
-\texttt{--enable-shared}&       use shared libraries if available (default: yes)\\
+\texttt{--enable-shared}&       use shared libraries if available (default: yes;\\
+                        &       "no" is implemented, untested, in only a few cases)\\
 \texttt{--disable-wrappers}&    disable C to fortran wrapper check (default: enabled)\\
 \texttt{--enable-signals}&      enable signal trapping (default: disabled)\\
 \end{tabular}\\
@@ -541,14 +543,12 @@ For the latter two files, follow the explanations in
 \texttt{include/defs.h.README}.
 
 If \configure\ has run till the end, you should need only to
-edit \texttt{make.sys}. A few templates (each for a different 
-machine type)
-are provided in the \texttt{install/} directory: they have names of the
-form \texttt{Make.}{\em system}, where {\em system} is a string identifying the 
-architecture and compiler. The template used by \configure\ is also found
-there as \texttt{make.sys.in} and contains explanations of the meaning
-of the various variables. The difficult part will be to locate libraries.
-Note that you will need to select appropriate preprocessing flags
+edit \texttt{make.sys}. A few sample \texttt{make.sys} files
+are provided in \texttt{install/Make.}{\em system}. The template used 
+by \configure\ is also found there as \texttt{install/make.sys.in} 
+and contains explanations of the meaning
+of the various variables. The nonobvious part is to locate the
+best libraries. You may need to select appropriate preprocessing flags
 in conjunction with the desired or available
 libraries (e.g. you need to add \texttt{-D\_\_FFTW}) to \texttt{DFLAGS}
 if you want to link internal FFTW). For a correct choice of preprocessing 

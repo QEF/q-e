@@ -1,6 +1,6 @@
 ---------------------------------------------------------------------------
-      NO LONGER UPDATED - Please use the "cvs2cl.pl" script in the root
-      directory of the distribution to produce a detailed ChangeLog
+      NO LONGER UPDATED - Please use the web-svn interface:
+      http://qe-forge.org/scm/browser.php?group_id=10
 ---------------------------------------------------------------------------
 
 08 Feb 2005 Added to the atomic code the generation of Projector Augmented

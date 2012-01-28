@@ -1,4 +1,4 @@
-See file ChangeLog for changes after aug. 2004
+See file ChangeLog.old for changes after aug. 2004
 
 24-jul-04  few changes in module usage, sort of workaround for ifc 7.1 (CC)
 
