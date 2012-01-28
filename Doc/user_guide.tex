@@ -72,7 +72,7 @@ of electronic-structure properties within
 Density-Functional Theory (DFT), using a Plane-Wave (PW) basis set 
 and pseudopotentials (PP). It also includes more specialized packages:
 \begin{itemize}
-  \item \texttt{NEB}:
+  \item \texttt{NEB {\bf OPPURE PWneb? COME LO CHIAMIAMO?}}:
         energy barriers and reaction pathways through the Nudged Elastic Band method.
   \item \PHonon:
         phonons with Density-Functional Perturbation Theory.
@@ -246,7 +246,7 @@ complies with the following guidelines:
   into a sea of quoted text.
 \item Remember that even experts cannot guess where a problem lies in
   the absence of sufficient information. One piece of information that
-  {\em must} always be present is the versione number.
+  must {\em always} be provided is the version number of \qe.
 \item Remember that the mailing list is a voluntary endeavor: nobody is 
   entitled to an answer, even less to an immediate answer.
 \item Finally, please note that the mailing list is not a replacement
@@ -291,7 +291,7 @@ some precompiled executables (binary files) are provided only for
 \texttt{PWgui}. 
 Stable releases of the \qe\ source package (current version 
 is \version) can be downloaded from the Download section
-ot \texttt{http://www.quantum-espresso.org}.
+of \texttt{http://www.quantum-espresso.org}.
 
 Uncompress and unpack the core distribution using the command:
 \begin{verbatim}
@@ -309,7 +309,7 @@ and to unpack them following the same procedure (they will unpack into
 the same directory). 
 
 Plug-ins such as \texttt{YAMBO} or \texttt{PLUMED} should instead be downloaded into
-subdirectory \texttt{archive} but \uppercase{not unpacked or uncompressed}:
+subdirectory \texttt{archive} but {\em not unpacked or uncompressed}:
 command \texttt{make} will take care of this during installation. \texttt{GIPAW}
 is automatically downloaded from \texttt{http://qe-forge.org/frs/?group\_id=37}
 and compiled by typing \texttt{make gipaw} from the main espresso directory.
@@ -350,10 +350,10 @@ common to all packages:
 while others are specific to a single package:
 
 \begin{tabular}{ll}
-\texttt{PW/}      &\PWscf: source files for scf calculations (\pwx)\\
-\texttt{NEB/}     &\texttt{PWneb}: source files for NEB calculations (\nebx)\\
-\texttt{PP/}      &\PostProc: source files for post-processing of \pwx\
-                   data file\\
+\texttt{PW/}      & \PWscf\ package\\
+\texttt{NEB/}     & \texttt{PWneb} package\\
+\texttt{PP/}      & \PostProc: utilities for post-processing of 
+                    data produced by \PWscf \\
 \texttt{PHonon/}      &\PHonon: source files for phonon calculations (\phx)
                    and analysis, gamma-only phonon calculations and third-order derivatives.\\
 \texttt{PWCOND/} &\texttt{PWcond}: source files for conductance calculations
@@ -655,23 +655,14 @@ The
 present values will work for most cases. All other variables are dynamically
 allocated: you do not need to recompile your code for a different system.
     
-At your option, you may compile the complete \qe\ suite of programs 
+At your choice, you may compile the complete \qe\ suite of programs 
 (with \texttt{make all}), or only some specific programs.
 
 \texttt{make} with no arguments yields a list of valid compilation targets. 
 Here is a list:
 \begin{itemize}
-\item \texttt{make pw} produces \texttt{PW/pw.x} \\
-\pwx\ calculates electronic structure, structural optimization, molecular dynamics.
-\item \texttt{make neb} produces the following codes in \texttt{NEB/}
-for NEB calculations:
-\begin{itemize}
-\item \nebx: calculates reaction barriers and pathways using NEB.
-\item \texttt{path\_int.x}: used by utility \texttt{path\_int.sh}
-  that generates, starting from a path (a set of images), a new one with a 
-  different number of images. The initial and final points of the new
- path can differ from those in the original one. 
-\end{itemize}
+\item \texttt{make pw} compiles the \PWscf\ package.
+\item \texttt{make neb} compiles the NEB package.
 \item \texttt{make ph} produces several codes for the calculation of vibrational properties 
 and third-order derivatives.
 \item  \texttt{make pp} produces several codes for data postprocessing, in 
