@@ -1,5 +1,5 @@
 \documentclass[12pt,a4paper]{article}
-\def\version{4.3.2}
+\def\version{5.0}
 \def\qe{{\sc Quantum ESPRESSO}}
 
 \usepackage{html}
@@ -41,20 +41,10 @@
   \includegraphics[width=6cm]{\democritosImage}\\
   \vskip 1cm
   % title
-  \Huge User's Guide for \CP\ \smallskip
+  \Huge User's Guide for \CP\
   \Large (version \version)
 }
 %\endhtmlonly
-
-%\latexonly
-%\title{
-% \epsfig{figure=quantum_espresso.png,width=5cm}\hskip 2cm
-% \epsfig{figure=democritos.png,width=6cm}\vskip 1cm
-%  % title
-%  \Huge User's Guide for \qe \smallskip
-%  \Large (version \version)
-%}
-%\endlatexonly
 
 \maketitle
 
@@ -62,11 +52,25 @@
 
 \section{Introduction}
 
-This guide covers the installation and usage of \CP \ (opEn-Source
-Package for Car-Parrinello Molecular Dynamics.
-, version \version.
+This guide covers the  usage of the
+\CP\ package, version \version, a core component 
+of the \qe\ distribution.
+Further documentation, beyond what is provided 
+in this guide, can be found in the directory
+\texttt{CPV/Doc/}, containing a copy of this guide.
 
-\CP \ is part of the \qe \ distribution and can not be compiled nor used independently.
+This guide assumes that you know the physics 
+that \CP\ describes and the methods it implements.
+It also assumes  that you have already installed,
+or know how to install, \qe. If not, please read
+the general User's Guide for \qe, found in 
+directory \texttt{Doc/} two levels above the 
+one containing this guide; or consult the web site:\\
+\texttt{http://www.quantum-espresso.org}.
+
+People who want to modify or contribute to 
+\CP\ should read the Developer Manual: \\
+\texttt{Doc/developer\_man.pdf}.
 
 \CP\ can perform Car-Parrinello molecular dynamics, including
 variable-cell dynamics, and free-energy surface calculation at
@@ -112,429 +116,43 @@ P. Umari, R. M. Wentzcovitch, J.Phys.:Condens.Matter 21, 395502 (2009),
 http://arxiv.org/abs/0906.2569
 \end{quote}
 
-\section{Installation}
+\section{Compilation}
 
-\subsection{Download}
+\CP\ is included in the core \qe\ distribution.
+Instruction on how to install it can be found in the
+general documentation (User's Guide) for \qe.
 
-\CP is automatically downloaded from \texttt{http://qe-forge.org/frs/?group\_id=37}
-
-
-\subsection{Prerequisites}
-\label{Sec:Installation}
-
-To install \CP\ from source, you need first of all a minimal Unix
-environment and the \qe \ distribution.
-
-\subsection{\configure}
-
-For instruction on how to install the \qe\ source package please refer to
-the \qe \ general documentation (user\_guide) that is available at
-\begin{verbatim}
-http://www.quantum-espresso.org/wiki/index.php/Main_Page.
-\end{verbatim}
-
-After the correct installation of \qe \, the installation and compilation of \CP \
-can be done just typing \texttt{make cp} from the main espresso directory.
-
-\subsection{Compilation}
-
-Typing \texttt{make cp} will produce the following codes in \texttt{CPV/src}:
+Typing \texttt{make cp} from the main \qe\ directory
+or \make\ from the \texttt{CPV/} subdirectory produces the following codes in \texttt{CPV/src}:
 \begin{itemize}
-\item \cpx: calculates reaction barriers and pathways using NEB.
-\item \texttt{cppp.x}: postprocessing code for cp.
+\item \cpx: Car-Parrinello Molecular Dynamics
+code
+\item \texttt{cppp.x}: postprocessing code for \cpx.
 \end{itemize}
+Symlinks to executable programs will be placed in the \texttt{bin/} subdirectory. 
 
-Symlinks to executable programs will be placed in the
-\texttt{bin/} subdirectory.
+As a final check that compilation was successful,
+you may want to run some or all of the tests
+and examples. Please see the general User's Guide for their setup. Automated tests for \cpx\ are in directory 
+\texttt{tests/} and can be run via the
+script \texttt{check\_cp.x.j}
 
+You may take the tests and examples distributed 
+with \CP\ as templates for writing your own input
+files. Input files for tests are contained
+in \texttt{tests/} subdirectory with file type 
+{\texttt *.in1, *.in2, ...}/ Input file for examples
+are produced if you run the examples in the 
+\texttt{results/} subdirectories, with names ending
+with \texttt{.in}.
 
-\subsection{Running examples}
-\label{SubSec:Examples}
-As a final check that compilation was successful, you may want to run some or
-all of the examples. You should first of all ensure that you have downloaded
-
-To run the examples, you should follow this procedure:
-\begin{enumerate}
-\item Go to the \texttt{examples/} directory from the main \qe \ directory and edit the
-  \texttt{environment\_variables} file, setting the following variables as needed:
-\begin{quote}
-   BIN\_DIR: directory where executables reside\\
-   PSEUDO\_DIR: directory where pseudopotential files reside\\
-   TMP\_DIR: directory to be used as temporary storage area
-\end{quote}
-\end{enumerate}
-The default values of BIN\_DIR and PSEUDO\_DIR should be fine,
-unless you have installed things in nonstandard places. TMP\_DIR
-must be a directory where you have read and write access to, with
-enough available space to host the temporary files produced by the
-example runs, and possibly offering high I/O performance (i.e., don't
-use an NFS-mounted directory). NOTA BENE: do not use a
-directory containing other data, the examples will clean it!
-If you have compiled the parallel version of \qe\ (this
-is the default if parallel libraries are detected), you will usually
-have to specify a driver program (such as \texttt{mpirun} or \texttt{mpiexec})
-and the number of processors: see Sec.\ref{SubSec:para} for
-details. In order to do that, edit again the \texttt{environment\_variables}
-file
-and set the PARA\_PREFIX and PARA\_POSTFIX variables as needed.
-Parallel executables will be run by a command like this:
-\begin{verbatim}
-      $PARA_PREFIX cp.x $PARA_POSTFIX < file.in > file.out
-\end{verbatim}
-For example, if the command line is like this (as for an IBM SP):
-\begin{verbatim}
-      poe cp.x -procs 4 < file.in > file.out
-\end{verbatim}
-you should set PARA\_PREFIX="poe", PARA\_POSTFIX="-procs
-4". Furthermore, if your machine does not support interactive use, you
-must run the commands specified below through the batch queuing
-system installed on that machine. Ask your system administrator for
-instructions.
-
-Go to CPV/examples/example* and execute:
-\begin{verbatim}
-      ./run_example
-\end{verbatim}
-This will create a subdirectory results, containing the input and
-output files generated by the calculation.
-
-The \texttt{reference/} subdirectory contains
-verified output files, that you can check your results against. They
-were generated on a Linux PC using the Intel compiler. On different
-architectures the precise numbers could be slightly different, in
-particular if different FFT dimensions are automatically selected. For
-this reason, a plain diff of your results against the reference data
-doesn't work, or at least, it requires human inspection of the
-results.
-
-To run tests, go to directory \texttt{tests} and follow the directions in the header of file 
-\texttt{tests/check\_cp.x.j}, editing variables PARA\_PREFIX, PARA\_POSTFIX 
-if needed (see below).
-
-Let us now consider examples.
-The \texttt{README} file in each example's directory contains a detailed information of
-what the particular example does. 
-If you find that any relevant feature isn't being tested, please contact us 
-(or even better, write and send us a new example yourself !).
-
-\section{Parallelism}
-\label{Sec:para}
-
-\subsection{Understanding Parallelism}
-
-Two different parallelization paradigms are currently implemented 
-in \qe:
-\begin{enumerate}
-\item {\em Message-Passing (MPI)}. A copy of the executable runs 
-on each CPU; each copy lives in a different world, with its own
-private set of data, and communicates with other executables only
-via calls to MPI libraries. MPI parallelization requires compilation 
-for parallel execution, linking with MPI libraries, execution using 
-a launcher program (depending upon the specific machine). The number of CPUs used
-is specified at run-time either as an option to the launcher or
-by the batch queue system. 
-\item {\em OpenMP}.  A single executable spawn subprocesses
-(threads) that perform in parallel specific tasks. 
-OpenMP can be implemented via compiler directives ({\em explicit} 
-OpenMP) or via {\em multithreading} libraries  ({\em library} OpenMP).
-Explicit OpenMP require compilation for OpenMP execution;
-library OpenMP requires only linking to a multithreading
-version of mathematical libraries, e.g.:
-ESSLSMP, ACML\_MP, MKL (the latter is natively multithreading).
-The number of threads is specified at run-time in the environment 
-variable OMP\_NUM\_THREADS. 
-\end{enumerate}
-
-MPI is the well-established, general-purpose parallelization.
-In \qe\ several parallelization levels, specified at run-time
-via command-line options to the executable, are implemented
-with MPI. This is your first choice for execution on a parallel 
-machine.
-
-Library OpenMP is a low-effort parallelization suitable for
-multicore CPUs. Its effectiveness relies upon the quality of 
-the multithreading libraries and the availability of 
-multithreading FFTs. If you are using MKL,\footnote{Beware: 
-MKL v.10.2.2 has a buggy \texttt{dsyev} yielding wrong results 
-with more than one thread; fixed in v.10.2.4}
-you may want to select FFTW3 (set \texttt{CPPFLAGS=-D\_\_FFTW3...}
-in \texttt{make.sys}) and to link with the MKL interface to FFTW3. 
-You will get a decent speedup ($\sim 25$\%) on two cores.
-
-Explicit OpenMP is a very recent addition, still at an 
-experimental stage, devised to increase scalability on
-large multicore parallel machines. Explicit OpenMP is 
-devised to be run together with MPI and also together 
-with multithreaded libraries. BEWARE: you have to be VERY 
-careful to prevent conflicts between the various kinds of
-parallelization. If you don't know how to run MPI processes
-and OpenMP threads in a controlled manner, forget about mixed 
-OpenMP-MPI parallelization.
-
-\subsection{Running on parallel machines}
-\label{SubSec:para}
-
-Parallel execution is strongly system- and installation-dependent. 
-Typically one has to specify:
-\begin{enumerate}
-\item a launcher program (not always needed), 
-such as \texttt{poe}, \texttt{mpirun}, \texttt{mpiexec},
-  with the  appropriate options (if any);
-\item the number of processors, typically as an option to the launcher
-  program, but in some cases to be specified after the name of the
-  program to be
-  executed; 
-\item the program to be executed, with the proper path if needed: for
-  instance, \cpx, or \texttt{./cp.x}, or \texttt{\$HOME/bin/cp.x}, or
-  whatever applies; 
-\item other \qe-specific parallelization options, to be
-  read and interpreted by the running code: 
-\begin{itemize}
-\item the number of ``task groups'' into which processors are to be
-  grouped;
-\item the number of processors performing iterative orthonormalization.
-\end{itemize}
-\end{enumerate}
-Items 1) and 2) are machine- and installation-dependent, and may be 
-different for interactive and batch execution. Note that large
-parallel machines are  often configured so as to disallow interactive
-execution: if in doubt, ask your system administrator.
-Item 3) also depend on your specific configuration (shell, execution
-path, etc). 
-Item 4) is optional but may be important: see the following section
-for the meaning of the various options.
-
-For illustration, here is how to run \cpx\ on 16 processors with 4 processors for the
-iterative orthonormalization, for several typical cases.
-
-IBM SP machines, batch:
-\begin{verbatim}
-   cp.x -ndiag 4 < input
-\end{verbatim}
-This should also work interactively, with environment variables NPROC
-set to 16, MP\_HOSTFILE set to the file containing a list of processors.
-
-IBM SP machines, interactive, using \texttt{poe}:
-\begin{verbatim}
-   poe cp.x -ndiag 4 < input
-\end{verbatim}
-PC clusters using \texttt{mpiexec}:
-\begin{verbatim}
-   mpiexec -n 16 cp.x -ndiag 4 < input
-\end{verbatim}
-SGI Altix and PC clusters using \texttt{mpirun}:
-\begin{verbatim}   mpirun -np 16 cp.x -ndiag 4 < input
-\end{verbatim}
-IBM BlueGene using \texttt{mpirun}:
- \begin{verbatim}
-  mpirun -np 16 -exe /path/to/executable/cp.x -args "-ndiag 4" \
-    -in /path/to/input -cwd /path/to/work/directory
-\end{verbatim}
-If you want to run in parallel the examples distributed with \qe\
-(see Sec.\ref{SubSec:Examples}), set PARA\_PREFIX to everything
-before the executable (\pwx\ in the above examples),
-PARA\_POSTFIX to what follows it until the first redirection sign 
-($<, >, |,..$), if any. For execution using OpenMP on N threads, 
-set  PARA\_PREFIX to \texttt{env OMP\_NUM\_THREADS=N}.
-
-\subsection{Parallelization levels}
-
-Data structures are distributed across processors.
-Processors are organized in a hierarchy of groups, 
-which are identified by different MPI communicators level.
-The groups hierarchy is as follow:
-\begin{verbatim}
-                 /   task   groups
-  world _ images
-                 \ linear-algebra  groups
-\end{verbatim}
-
-{\bf world}: is the group of all processors (MPI\_COMM\_WORLD).
-
-{\bf images}: Processors can then be divided into different "images",
-corresponding to a point in configuration space (i.e. to
-a different set of atomic positions) for NEB calculations;
-to one (or more than one) "irrep" or wave-vector in phonon
-calculations.
-
-{\bf task groups}: 
-In order to allow good parallelization of the 3D FFT when 
-the number of processors exceeds the number of FFT planes,
-data can be redistributed to "task groups" so that each group 
-can process several wavefunctions at the same time.
-
-{\bf linear-algebra group}:
-A further level of parallelization, independent on
-PW or k-point parallelization, is the parallelization of
-iterative orthonormalization
-(\cpx). The procedure requires the diagonalization of 
-arrays whose dimension is the number of Kohn-Sham states
-(or a small multiple). All such arrays are distributed block-like
-across the ``linear-algebra group'', a subgroup of the pool of processors,
-organized in a square 2D grid. As a consequence the number of processors
-in the linear-algebra group is given by $n^2$, where $n$ is an integer;
-$n^2$ must be smaller than the number of processors of a single pool.
-The diagonalization is then performed
-in parallel using standard linear algebra operations.
-(This diagonalization is used by, but should not be confused with,
-the iterative Davidson algorithm). One can choose to compile
-ScaLAPACK if available, internal built-in algorithms otherwise.
-
-{\bf Communications}:
-Images and pools are loosely coupled and processors communicate
-between different images and pools only once in a while, whereas
-processors within each pool are tightly coupled and communications
-are significant. This means that Gigabit ethernet (typical for
-cheap PC clusters) is ok up to 4-8 processors per pool, but {\em fast}
-communication hardware (e.g. Mirynet or comparable) is absolutely 
-needed beyond 8 processors per pool.
-
-{\bf Choosing parameters}:
-To control the number of processors in each group,
-command line switches: \texttt{-nimage}, \texttt{-npools},
-\texttt{-ntg}, \texttt{northo} are used.
-
-Default values are: \texttt{-nimage 1 -npool 1 -ntg 1} ; 
-\texttt{ndiag} is set to 1 if ScaLAPACK is not compiled,
-it is set to the square integer smaller than or equal to  half the number 
-of processors of each pool.
-
-\paragraph{Massively parallel calculations}
-For very large jobs (i.e. O(1000) atoms or so) or for very long jobs
-to be run on massively parallel  machines (e.g. IBM BlueGene) it is
-crucial to use in an effective way both the "task group" and the
-"linear-algebra" parallelization. Without a judicious choice of
-parameters, large jobs will find a stumbling block in either memory or 
-CPU requirements. In particular, the linear-algebra parallelization is
-used in the diagonalization  of matrices in the subspace of Kohn-Sham
-states (whose dimension is as a strict minimum equal to the number of
-occupied states). These are stored as block-distributed matrices
-(distributed across processors) and diagonalized using custom-tailored
-diagonalization algorithms that work on block-distributed matrices.
-
-Since v.4.1, ScaLAPACK can be used to diagonalize block distributed
-matrices, yielding better speed-up than the default algorithms for
-large ($ > 1000$) matrices, when using a large number of processors 
-($> 512$). If you want to test ScaLAPACK,
-use \texttt{configure --with-scalapack}. This
-will add
-\texttt{-D\_\_SCALAPACK} to DFLAGS in \texttt{make.sys} and set LAPACK\_LIBS to something
-like:
-\begin{verbatim}
-    LAPACK_LIBS = -lscalapack -lblacs -lblacsF77init -lblacs -llapack
-\end{verbatim}
-The repeated \texttt{-lblacs} is not an error, it is needed! If \configure\ does not recognize
-ScaLAPACK, inquire with your system manager
-on the correct way to link them.
-
-A further possibility to expand scalability, especially on machines
-like IBM BlueGene, is to use mixed MPI-OpenMP. The idea is to have
-one (or more) MPI process(es) per multicore node, with OpenMP
-parallelization inside a same node. This option is activated by  \texttt{configure --with-openmp},
-which adds preprocessing flag -D\_\_OPENMP
-and one  of the following compiler options:
-\begin{quote}
- ifort: \texttt{-openmp}\\
- xlf:   \texttt{-qsmp=omp}\\
- PGI:   \texttt{-mp}\\
- ftn:   \texttt{-mp=nonuma}
-\end{quote}
-OpenMP parallelization is currently implemented and tested for the following combinations of FFTs
-and libraries:
-\begin{quote}
- internal FFTW copy: \texttt{-D\_\_FFTW}\\
- ESSL: \texttt{-D\_\_ESSL} or \texttt{-D\_\_LINUX\_ESSL}, link 
- with \texttt{-lesslsmp}\\
- ACML: \texttt{-D\_\_ACML}, link with \texttt{-lacml\_mp}.
-\end{quote}
-Currently, ESSL (when available) are faster than internal FFTW,
-which in turn are faster than ACML.
-
-\subsubsection{Understanding parallel I/O}
-In parallel execution, each processor has its own slice of wavefunctions, 
-to be written to temporary files during the calculation. The way wavefunctions 
-are written by \pwx\ is governed by variable \texttt{wf\_collect}, 
-in namelist \&CONTROL 
-If \texttt{wf\_collect=.true.}, the final wavefunctions are collected into a single 
-directory, written by a single processor, whose format is independent on 
-the number of processors. If \texttt{wf\_collect=.false.} (default) each processor
-writes its own slice of the final 
-wavefunctions to disk in the internal format used by \PWscf. 
-
-The former case requires more
-disk I/O and disk space, but produces portable data files; the latter case
-requires less I/O and disk space, but the data so produced can be read only
-by a job running on the same number of processors and pools, and if
-all files are on a file system that is visible to all processors
-(i.e., you cannot use local scratch directories: there is presently no
-way to ensure that the distribution of processes on processors will
-follow the same pattern for different jobs).
-
-\cpx\ instead always collects the final wavefunctions into a single directory.
-Files written by \pwx\ can be read by \cpx\ only if \texttt{wf\_collect=.true.} (and if
-produced for $k=0$ case). 
-The directory for data is specified in input variables
-\texttt{outdir} and \texttt{prefix} (the former can be specified
-as well in environment variable ESPRESSO\_TMPDIR):
-\texttt{outdir/prefix.save}. A copy of pseudopotential files
-is also written there. If some processor cannot access the
-data directory, the pseudopotential files are read instead
-from the pseudopotential directory specified in input data.
-Unpredictable results may follow if those files
-are not the same as those in the data directory!
-
-{\em IMPORTANT:}
-Avoid I/O to network-mounted disks (via NFS) as much as you can! 
-Ideally the scratch directory \texttt{outdir} should be a modern 
-Parallel File System. If you do not have any, you can use local
-scratch disks (i.e. each node is physically connected to a disk
-and writes to it) but you may run into trouble anyway if you 
-need to access your files that are scattered in an unpredictable
-way across disks residing on different nodes.
-
-You can use input variable \texttt{disk\_io='minimal'}, or even 
-\texttt{'none'}, if you run
-into trouble (or into angry system managers) with excessive I/O with \pwx. 
-The code will store wavefunctions into RAM during the calculation.
-Note however that this will increase your memory usage and may limit 
-or prevent restarting from interrupted runs.
-\paragraph{Cray XT3}
-On the cray xt3 there is a special hack to keep files in
-memory instead of writing them without changes to the code.
-You have to do a: 
-module load iobuf
-before compiling and then add liobuf at link time.
-If you run a job you set the environment variable 
-IOBUF\_PARAMS to proper numbers and you can gain a lot.
-Here is one example:
-\begin{verbatim}
-env IOBUF_PARAMS='*.wfc*:noflush:count=1:size=15M:verbose,\
-*.dat:count=2:size=50M:lazyflush:lazyclose:verbose,\
-*.UPF*.xml:count=8:size=8M:verbose' pbsyod =\
-\~{}/espresso/bin/pw.x npool 4 in si64pw2x2x2.inp > & \
-si64pw2x2x232moreiobuf.out &
-\end{verbatim}
-This will ignore all flushes on the *wfc* (scratch files) using a
-single i/o buffer large enough to contain the whole file ($\sim 12$ Mb here).
-this way they are actually never(!) written to disk.
-The *.dat files are part of the restart, so needed, but you can be
-'lazy' since they are writeonly. .xml files have a lot of accesses
-(due to iotk), but with a few rather small buffers, this can be
-handled as well. You have to pay attention not to make the buffers
-too large, if the code needs a lot of memory, too and in this example
-there is a lot of room for improvement. After you have tuned those
-parameters, you can remove the 'verboses' and enjoy the fast execution.
-Apart from the i/o issues the cray xt3 is a really nice and fast machine.
-(Info by Axel Kohlmeyer, maybe obsolete)
+For general information on parallelism and how 
+to run in parallel execution, please see the general User's Guide. \CP\  currently can take advantage
+of both MPI and OpenMP parallelization. The
+``plane-wave'', ``linear-algebra'' and ``task-group''
+parallelization levels are implemented.
 
 \section{Using \CP}
-
-You may take the examples distributed with \CP\ as
-templates for writing your own input files: see Sec.\ref{SubSec:Examples}.
-In the following, whenever we mention "Example N", we refer to those. 
-Input files are those in the \texttt{results/} subdirectories, with names ending
-with \texttt{.in} 
-(they will appear after you have run the examples).
 
 It is important to understand that a CP simulation is a sequence of different 
 runs, some of them used to "prepare" the initial state of the system, and 
@@ -1263,15 +881,14 @@ some numerical advantages in going to higher cut-offs." (info by Nicola Marzari)
 
 \section{Performances}
 
-\subsection{Execution time}
+% \subsection{Execution time}
 
-\subsection{Memory requirements}
+% \subsection{Memory requirements}
 
-\subsection{File space requirements}
+% \subsection{File space requirements}
 
-
-\subsection{Parallelization issues}
-\label{SubSec:badpara}
+% \subsection{Parallelization issues}
+% \label{SubSec:badpara}
 
 \cpx\ can run in principle on any number of processors.
 The effectiveness of parallelization is ultimately judged by the 
@@ -1356,7 +973,5 @@ have just one memory bus for all processors. This dramatically
 slows down any code doing massive access to memory (as most codes 
 in the \qe\ distribution do) that runs on processors of the same
 motherboard.
-
-\section{Troubleshooting}
 
 \end{document}
