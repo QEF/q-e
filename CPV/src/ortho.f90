@@ -273,9 +273,9 @@
       REAL(DP), ALLOCATABLE :: qbephi(:,:,:), qbecp(:,:,:), bec_col(:,:)
 
       INTEGER :: nkbx
-      INTEGER :: istart, nss, ifail, i, j, iss, iv, jv, ia, is, inl, jnl
+      INTEGER :: ifail, i, j, iss, iv, jv, ia, is, inl, jnl
       INTEGER :: n1, n2, m1, m2
-      INTEGER :: nspin_sub, nx0, nc, ic, icc, nr, ir, ngwx, nrcx
+      INTEGER :: nspin_sub, nx0, ngwx, nrcx
       REAL(DP) :: qqf, dum
       !
       nkbx = nkb
@@ -330,12 +330,8 @@
                qqf = qq(iv,jv,is)
                IF( ABS( qqf ) > 1.D-5 ) THEN
                   DO iss = 1, nspin
-                     istart = iupdwn(iss)
-                     nc     = descla( iss )%nc
-                     ic     = descla( iss )%ic + istart - 1
                      IF( descla( iss )%active_node > 0 ) THEN
-                        DO i = 1, nc
-                           icc=i+ic-1
+                        DO i = 1, descla( iss )%nc
                            CALL daxpy( na(is), qqf, bec_col(jnl+1,i+(iss-1)*nrcx),1,qbephi(inl+1,i,iss), 1 ) 
                         END DO
                      END IF
@@ -365,11 +361,8 @@
                qqf = qq(iv,jv,is)
                IF( ABS( qqf ) > 1.D-5 ) THEN
                   DO iss = 1, nspin
-                     istart = iupdwn(iss)
-                     nc     = descla( iss )%nc
-                     ic     = descla( iss )%ic + istart - 1
                      IF( descla( iss )%active_node > 0 ) THEN
-                        DO i = 1, nc
+                        DO i = 1, descla( iss )%nc
                            CALL daxpy( na(is), qqf, bec_col(jnl+1,i+(iss-1)*nrcx),1, qbecp(inl+1,i,iss), 1 )
                         END DO
                      END IF
@@ -393,14 +386,11 @@
       !
       DO iss = 1, nspin_sub
 
-         nss    = nupdwn(iss)
-         istart = iupdwn(iss)
-
          IF( descla( iss )%active_node > 0 ) xloc = x0(:,:,iss) * ccc
 
          CALL ortho_gamma( 0, cp_bgrp, ngwx, phi_bgrp, becp_dist(:,(iss-1)*nrcx+1:iss*nrcx), qbecp(:,:,iss), nkbx, &
                            bephi(:,((iss-1)*nrcx+1):iss*nrcx), &
-                           qbephi(:,:,iss), xloc, nx0, descla(iss), diff, iter, nbsp, nss, istart )
+                           qbephi(:,:,iss), xloc, nx0, descla(iss), diff, iter, nbsp, nupdwn(iss), iupdwn(iss) )
 
          IF( iter > ortho_max ) THEN
             WRITE( stdout, 100 ) diff, iter
