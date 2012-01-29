@@ -22,6 +22,7 @@
 \def\PHonon{\texttt{PHonon}}
 \def\CP{\texttt{CP}}
 \def\PostProc{\texttt{PostProc}}
+\def\NEB{\texttt{PWneb}} % to be decided
 \def\make{\texttt{make}}
 
 \begin{document} 
@@ -70,30 +71,33 @@ The \qe\ distribution contains the core packages \PWscf\ (Plane-Wave
 Self-Consistent Field) and \CP\ (Car-Parrinello) for the calculation
 of electronic-structure properties within
 Density-Functional Theory (DFT), using a Plane-Wave (PW) basis set 
-and pseudopotentials (PP). It also includes more specialized packages:
+and pseudopotentials (PP). It also includes other packages for
+more specialized calculations:
 \begin{itemize}
-  \item \texttt{NEB {\bf OPPURE PWneb? COME LO CHIAMIAMO?}}:
-        energy barriers and reaction pathways through the Nudged Elastic Band method.
+  \item \NEB:
+        energy barriers and reaction pathways through the Nudged Elastic Band 
+        (NEB) method.
   \item \PHonon:
-        phonons with Density-Functional Perturbation Theory.
+        vibrational properties  with Density-Functional Perturbation Theory.
   \item \PostProc: 
-        various utilities for data postprocessing.
+        codes and utilities for data postprocessing.
   \item \texttt{PWcond}: 
         ballistic conductance.
-  \item \texttt{XSPECTRA}: K-edge X-ray adsorption spectra.
+  \item \texttt{XSPECTRA}:
+        K-edge X-ray adsorption spectra.
   \item \texttt{GWW}:
-        GW calculation using Wannier functions
+        GW calculations using Wannier functions
   \item \texttt{TD-DFPT}:
-        calculations of spectra using Time-Dependent 
+        spectra from Time-Dependent 
         Density-Functional Perturbation Theory.
 \end{itemize}
-The following auxiliary codes are included as well:
+The following auxiliary packages are included as well:
 \begin{itemize}
 \item \texttt{PWgui}:
       a Graphical User Interface, producing input data files for 
-      \PWscf.
+      \PWscf\ and some \PostProc\ codes.
 \item \texttt{atomic}:
-      a program for atomic calculations and generation of pseudopotentials.
+      atomic calculations and pseudopotential generation.
 \item \texttt{QHA}:
       utilities for the calculation of projected density of states (PDOS)
       and of the free energy in the Quasi-Harmonic Approximation (to be
@@ -308,11 +312,10 @@ of the complete distribution, you may need to download more packages
 and to unpack them following the same procedure (they will unpack into 
 the same directory). 
 
-Plug-ins such as \texttt{YAMBO} or \texttt{PLUMED} should instead be downloaded into
+Plug-ins such as \texttt{YAMBO} or \texttt{PLUMED} should be downloaded into
 subdirectory \texttt{archive} but {\em not unpacked or uncompressed}:
-command \texttt{make} will take care of this during installation. \texttt{GIPAW}
-is automatically downloaded from \texttt{http://qe-forge.org/frs/?group\_id=37}
-and compiled by typing \texttt{make gipaw} from the main espresso directory.
+command \texttt{make} will take care of this during installation. 
+\texttt{GIPAW} is instead automatically downloaded on demand.
 
 Occasionally, patches for the current version, fixing some errors and bugs,
 may be distributed as a "diff" file. In order to install a patch (for 
@@ -351,19 +354,13 @@ while others are specific to a single package:
 
 \begin{tabular}{ll}
 \texttt{PW/}      & \PWscf\ package\\
-\texttt{NEB/}     & \texttt{PWneb} package\\
-\texttt{PP/}      & \PostProc: utilities for post-processing of 
-                    data produced by \PWscf \\
-\texttt{PHonon/}      &\PHonon: source files for phonon calculations (\phx)
-                   and analysis, gamma-only phonon calculations and third-order derivatives.\\
-\texttt{PWCOND/} &\texttt{PWcond}: source files for conductance calculations
-                  (\texttt{pwcond.x})\\
-% \texttt{vdW/}    &\texttt{VdW}: source files for molecular polarizability
-%                  calculation at finite frequency\\
-\texttt{CPV/}    &\CP: source files for Car-Parrinello code (\cpx)\\
-\texttt{atomic/} &\texttt{atomic}: source files for the pseudopotential
-                   generation package (\texttt{ld1.x})\\
-\texttt{GUI/}    & \texttt{PWGui}: Graphical User Interface\\
+\texttt{NEB/}     & \NEB\ package\\
+\texttt{PP/}      & \PostProc\ package\\
+\texttt{PHonon/}  & \PHonon\ package\\
+\texttt{PWCOND/}  & \texttt{PWcond}\ package\\
+\texttt{CPV/}     & \CP\ package\\
+\texttt{atomic/}  & \texttt{atomic} package\\
+\texttt{GUI/}     & \texttt{PWGui} package\
 \end{tabular}
 
 \subsection{Prerequisites}
@@ -661,72 +658,40 @@ At your choice, you may compile the complete \qe\ suite of programs
 \texttt{make} with no arguments yields a list of valid compilation targets. 
 Here is a list:
 \begin{itemize}
-\item \texttt{make pw} compiles the \PWscf\ package.
-\item \texttt{make neb} compiles the NEB package.
-\item \texttt{make ph} produces several codes for the calculation of vibrational properties 
-and third-order derivatives.
-\item  \texttt{make pp} produces several codes for data postprocessing, in 
-  \texttt{PP/}  (see list below). 
-\item \texttt{make pwcond} produces \texttt{PWCOND/pwcond.x}
- for ballistic conductance calculations.
+\item \texttt{make pw}  compiles the self-consistent-field package \PWscf
+\item \texttt{make cp}  compiles the Car-Parrinello package \CP
+\item \texttt{make neb} compiles the \NEB\ package.
+\item \texttt{make ph}  compiles the \PHonon package
+\item \texttt{make pp}  compiles the postprocessing package \PostProc
+\item \texttt{make pwcond} compiles the ballistic conductance package 
+                           \texttt{PWcond}
 \item \texttt{make pwall} produces all of the above.
-\item \texttt{make ld1} produces code \texttt{atomic/ld1.x} for pseudopotential
-generation (see specific documentation in \texttt{atomic\_doc/}).
+\item \texttt{make ld1} compiles the pseudopotential package \texttt{atomic}
 \item \texttt{make upf} produces utilities for pseudopotential conversion in
-  directory \texttt{upftools/}.
-\item \texttt{make cp} produces the Car-Parrinello code \texttt{CPV/cp.x}
-  and the postprocessing code \texttt{CPV/cppp.x}. 
+                        directory \texttt{upftools/}.
 \item \texttt{make all} produces all of the above.
-\item \texttt{make plumed} uncompress and move/rename \texttt{PLUMED} , patches \texttt{PW},
-\texttt{CPV} and \texttt{clib} routines and compiles \texttt{PW} and \texttt{CPV}.
-\item \texttt{make w90} uncompress and move/rename \texttt{wannier90}, copy an appropriate
-make.sys and produces all executables in \texttt{W90/wannier90.x} and in \texttt{bin}.
-\item \texttt{make want} uncompress and move/rename \texttt{want}, run \texttt{want}'s configure
-and produces all \texttt{want} executables in \texttt{WANT/bin}
-\item \texttt{make yambo} uncompress and move/rename \texttt{yambo}, run \texttt{yambo}'s configure
-and produces all \texttt{yambo} executables in \texttt{YAMBO/bin}.
-\item \texttt{make gipaw} download QE-GIPAW, uncompress and move/rename \texttt{gipaw}, run \texttt{gipaw}'s configure
-and produces all \texttt{gipaw} executables in \texttt{GIPAW/bin} and in \texttt{bin}.
+\item \texttt{make plumed} unpacks \texttt{PLUMED}, patches several routines
+                           in \texttt{PW/}, \texttt{CPV/} and \texttt{clib/},
+                           recompiles \PWscf\ and \CP\ with PLUMED support.
+\item \texttt{make w90} unpacks \texttt{wannier90}, copies an appropriate
+                       \texttt{make.sys} file,  produces all executables
+                       in \texttt{W90/wannier90.x} and in \texttt{bin}.
+\item \texttt{make want} unpacks \texttt{want}, runs its \configure,
+                         produces all executables for \texttt{want} in 
+                         \texttt{WANT/bin}.
+\item \texttt{make yambo} unpacks \texttt{yambo}, runs its \configure,
+                          produces all \texttt{yambo} executables in 
+                          \texttt{YAMBO/bin}.
+\item \texttt{make gipaw} downloads \texttt{GIPAW} from \texttt{qe-forge},
+                          unpacks it, runs its \configure,
+                          produces all \texttt{GIPAW} executables in 
+                          \texttt{GIPAW/bin} and in \texttt{bin}.
 \end{itemize}
 For the setup of the GUI, refer to the \texttt{PWgui-X.Y.Z /INSTALL} file, where
 X.Y.Z stands for the version number of the GUI (should be the same as the
 general version number). If you are using the SVN sources, see
 the \texttt{GUI/README} file instead.
    
-The codes for data postprocessing in \texttt{PP/} are:
-\begin{itemize}
-\item  \texttt{pp.x} extracts the specified data from files produced by \pwx,
-  prepares data for plotting by writing them into formats that can be
-  read by several plotting programs. 
-\item  \texttt{bands.x} extracts and reorders eigenvalues from files produced by
-  \pwx for band structure plotting 
-\item  \texttt{projwfc.x} calculates projections of wavefunction over atomic
-  orbitals, performs L\"owdin population analysis and calculates
-  projected density of states. These can be summed using auxiliary
-  code  \texttt{sumpdos.x}. 
-\item  \texttt{plotrho.x} produces PostScript 2-d contour plots
-\item  \texttt{plotband.x} reads the output of  \texttt{bands.x}, produces 
-  PostScript plots of the band structure
-\item  \texttt{average.x} calculates planar averages of quantities produced by
-   \texttt{pp.x} (potentials, charge, magnetization densities,...) 
-\item  \texttt{dos.x} calculates electronic Density of States (DOS)
-\item \texttt{epsilon.x} calculates RPA frequency-dependent complex dielectric function
-\item  \texttt{pw2wannier.x}: interface with Wannier90 package
-\item  \texttt{wannier\_ham.x}: generate a model Hamiltonian 
-in Wannier functions basis
-\item  \texttt{pmw.x} generates Poor Man's Wannier functions, to be used in
-  DFT+U calculations 
-\end{itemize}
-Note about Bader's analysis: on
-\texttt{http://theory.cm.utexas.edu/bader/} one can find a software that performs
-Bader's analysis starting from charge on a regular grid. The required 
-"cube" format can be produced by \qe\ using  \texttt{pp.x} (info by G. Lapenna
-who has successfully used this technique, but adds: ``Problems occur with polar 
-X-H bonds or in all cases where the zero-flux of density comes too close to 
-atoms described with pseudo-potentials"). This code should perform 
-decomposition into Voronoi polyhedra as well, in place of obsolete
-code  \texttt{voronoy.x} (removed from distribution since v.4.2).
-
 \subsection{Running examples}
 \label{SubSec:Examples}
 As a final check that compilation was successful, you may want to run some or
@@ -1444,8 +1409,8 @@ $n^2$ must be smaller than the number of processors of a single pool.
 The diagonalization is then performed
 in parallel using standard linear algebra operations.
 (This diagonalization is used by, but should not be confused with,
-the iterative Davidson algorithm). One can choose to compile
-ScaLAPACK if available, internal built-in algorithms otherwise.
+the iterative Davidson algorithm). The preferred option is to use
+ScaLAPACK; alternative built-in algorithms are anyway available.
 
 {\bf Communications}:
 Images and pools are loosely coupled and processors communicate
@@ -1492,19 +1457,18 @@ occupied states). These are stored as block-distributed matrices
 diagonalization algorithms that work on block-distributed matrices.
 
 Since v.4.1, ScaLAPACK can be used to diagonalize block distributed
-matrices, yielding better speed-up than the default algorithms for
+matrices, yielding better speed-up than the internal algorithms for
 large ($ > 1000$) matrices, when using a large number of processors 
-($> 512$). If you want to test ScaLAPACK,
-use \texttt{configure --with-scalapack}. This
-will add
-\texttt{-D\_\_SCALAPACK} to DFLAGS in \texttt{make.sys} and set LAPACK\_LIBS to something
-like:
+($> 512$). You need to have \texttt{-D\_\_SCALAPACK} added to DFLAGS 
+in \texttt{make.sys}, LAPACK\_LIBS set to something like:
 \begin{verbatim}
     LAPACK_LIBS = -lscalapack -lblacs -lblacsF77init -lblacs -llapack
 \end{verbatim}
-The repeated \texttt{-lblacs} is not an error, it is needed! If \configure\ does not recognize
-ScaLAPACK, inquire with your system manager
-on the correct way to link them.
+The repeated \texttt{-lblacs} is not an error, it is needed! 
+\configure\ tries to find a ScaLAPACK  library, unless 
+\texttt{configure --with-scalapack=no} is specified.
+If it doesn't, inquire with your system manager
+on the correct way to link it.
 
 A further possibility to expand scalability, especially on machines
 like IBM BlueGene, is to use mixed MPI-OpenMP. The idea is to have
@@ -1676,105 +1640,7 @@ execution have been reported, apparently correlated with ifort 10.1
 (info by Nathalie Vast and Jelena Sjakste, May 2008).
 \newpage
 
-\section{Post-processing}
-
-There are a number of auxiliary codes performing postprocessing tasks such
-as plotting, averaging, and so on, on the various quantities calculated by
-\pwx. Such quantities are saved by \pwx\ into the output data file(s). 
-Postprocessing codes are in the \texttt{PP/} directory. All codes for 
-which input documentation is not explicitly mentioned have documentation
-in the header of the fortran sources.
-
-\subsection{Plotting selected quantities}
-  
-The main postprocessing code \texttt{pp.x} reads data file(s), extracts or calculates 
-the selected quantity, writes it into a format that is suitable for plotting.
-
-Quantities that can be read or calculated are:
-\begin{quote}
-      charge density\\
-      spin polarization\\
-      various potentials\\
-      local density of states at $E_F$\\
-      local density of electronic entropy\\
-      STM images\\
-      selected squared wavefunction\\
-      ELF (electron localization function)\\
-      planar averages\\
-      integrated local density of states
-\end{quote}
-Various types of plotting (along a line, on a plane, three-dimensional, polar)
-and output formats (including the popular cube format) can be specified.
-The output files can be directly read by the free plotting system Gnuplot
-(1D or 2D plots), or by code \texttt{plotrho.x} that comes with \PostProc\ (2D plots),
-or by advanced plotting software XCrySDen and gOpenMol (3D plots).
-
-See file \texttt{Doc/INPUT\_PP.*} for a detailed description of the input for code \texttt{pp.x}.
-See Example 05 for an example of a charge density plot, Example 16
-for an example of STM image simulation.
-
-\subsection{Band structure, Fermi surface}
-
-The code \texttt{bands.x} reads data file(s), extracts eigenvalues,
-regroups them into bands (the algorithm used to order bands and to resolve
-crossings may not work in all circumstances, though). The output is written
-to a file in a simple format that can be directly read by plotting program
-\texttt{plotband.x}. Unpredictable plots may results if k-points are not in sequence
-along lines. See Example 05 directory for a simple band plot.
-
-The code \texttt{bands.x} performs as well a symmetry analysis of the band structure:
-see Example 01. 
-
-The calculation of Fermi surface can be performed using 
-\texttt{kvecs\_FS.x} and
-\texttt{bands\_FS.x}. The resulting file in .xsf format can be read and plotted
-using XCrySDen. See Example 08 for an example of Fermi surface 
-visualization (Ni, including the spin-polarized case).
-
-\subsection{Projection over atomic states, DOS}
-
-The code \texttt{projwfc.x} calculates projections of wavefunctions
-over atomic orbitals. The atomic wavefunctions are those contained
-in the pseudopotential file(s). The L\"owdin population analysis (similar to
-Mulliken analysis) is presently implemented. The projected DOS (or PDOS:
-the DOS projected onto atomic orbitals) can also be calculated and written
-to file(s). More details on the input data are found in file
-\texttt{Doc/INPUT\_PROJWFC.*}. The ordering of the various 
-angular momentum components (defined in routine \texttt{flib/ylmr2.f90})
-is as follows:
-$P_{0,0}(t)$, $P_{1,0}(t)$, $P_{1,1}(t)cos\phi$, $P_{1,1}(t)sin\phi$,
- $P_{2,0}(t)$, $P_{2,1}(t)cos\phi$, $P_{2,1}(t)sin\phi$, 
- $P_{2,2}(t)cos2\phi$, $P_{2,2}(t)sin2\phi$
-and so on, where $P_{l,m}$=Legendre Polynomials, 
-$t = cos\theta = z/r$, $\phi= atan(y /x)$.
-
-The total electronic DOS is instead calculated by code
-\texttt{dos.x}. See Example 08 for total and projected 
-electronic DOS calculations.
-
-\subsection{Wannier functions}
-
-There are several Wannier-related utilities in \PostProc:
-\begin{enumerate}
-\item The "Poor Man Wannier" code \texttt{pmw.x}, to be used
-in conjunction with DFT+U calculations (see Example 25)
-\item The interface with Wannier90 code, \texttt{pw2wannier.x}:
-see the documentation in \texttt{W90/} (you have to install the 
-Wannier90 plug-in)
-\item The \texttt{wannier\_ham.x} code generates a model Hamiltonian 
-in Wannier functions basis: see \texttt{examples/WannierHam\_example/}.
-\end{enumerate}
-
-\subsection{Other tools}
-
-Code \texttt{sumpdos.x} can be used to sum selected PDOS, produced by
-\texttt{projwfc.x}, by specifying the names of files
-containing the desired PDOS. Type \texttt{sumpdos.x -h} or look into the source
-code for more details. 
-
-Code \texttt{epsilon.x} calculates RPA frequency-dependent complex dielectric function. Documentation is in \texttt{Doc/eps\_man.tex}.
-
-\section{Performances}
+section{Performances}
 
 \subsection{Execution time}
 
@@ -1957,31 +1823,5 @@ have just one memory bus for all processors. This dramatically
 slows down any code doing massive access to memory (as most codes 
 in the \qe\ distribution do) that runs on processors of the same
 motherboard.
-
-\section{Troubleshooting}
-
-Almost all problems in \qe\ arise from incorrect input data 
-and result in
-error stops. Error messages should be self-explanatory, but unfortunately
-this is not always true. If the code issues a warning messages and continues,
-pay attention to it but do not assume that something is necessarily wrong in
-your calculation: most warning messages signal harmless problems.
-
-\subsection{PostProc}
-
-\paragraph{Some postprocessing codes complain that they do not find some files}
-For Linux PC clusters in parallel execution: in at least some versions
-of MPICH, the current directory is set to the directory where the executable
-code resides, instead of being set to the directory where the code is executed.
-This MPICH weirdness may cause unexpected failures in some postprocessing
-codes that expect a data file in the current directory. Workaround: use
-symbolic links, or copy the executable to the current directory.
-
-\paragraph{{\em error in davcio} in postprocessing codes}
-Most likely you are not reading the correct data files, or you are not
-following the correct procedure for postprocessing. In parallel execution: 
-if you did not set \texttt{wf\_collect=.true.}, the number of processors and 
-pools for the phonon run should be the same as for the
-self-consistent run; all files must be visible to all processors.
 
 \end{document}
