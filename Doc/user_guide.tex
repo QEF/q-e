@@ -1274,13 +1274,11 @@ you may want to select FFTW3 (set \texttt{CPPFLAGS=-D\_\_FFTW3...}
 in \texttt{make.sys}) and to link with the MKL interface to FFTW3. 
 You will get a decent speedup ($\sim 25$\%) on two cores.
 
-Explicit OpenMP is a very recent addition, still at an 
-experimental stage, devised to increase scalability on
-large multicore parallel machines. Explicit OpenMP is 
-devised to be run together with MPI and also together 
-with multithreaded libraries. BEWARE: you have to be 
-careful to prevent conflicts between the various kinds of
-parallelization. If you don't know how to run MPI processes
+Explicit OpenMP is a recent addition, still under
+development, devised to increase scalability on
+large multicore parallel machines. Explicit OpenMP can run together with MPI and also together 
+with multithreaded libraries. Beware conflicts between the various kinds of
+parallelization! If you don't know how to run MPI processes
 and OpenMP threads in a controlled manner, forget about mixed 
 OpenMP-MPI parallelization.
 
@@ -1313,29 +1311,31 @@ possibilities.
 
 \subsection{Parallelization levels}
 
- {\bf FIN QUI} 
-Data structures are distributed across processors.
+In \qe\ several MPI parallelization levels are 
+implemented, in which both calculations
+and data structures are distributed across processors.
 Processors are organized in a hierarchy of groups, 
 which are identified by different MPI communicators level.
 The groups hierarchy is as follow:
-\begin{verbatim}
-                 /  pools _ task   groups
-  world _ images
-                 \ linear-algebra  groups
-\end{verbatim}
-
-{\bf world}: is the group of all processors (MPI\_COMM\_WORLD).
-
-{\bf images}: Processors can then be divided into different "images",
-corresponding to a point in configuration space (i.e. to
-a different set of atomic positions) for NEB calculations;
-to one (or more than one) "irrep" or wave-vector in phonon
-calculations.
-
-{\bf pools}: When k-point sampling is used, each image group can be 
-subpartitioned into "pools", and k-points can distributed to pools.
-Within each pool, reciprocal space basis set (PWs)
-and real-space grids are distributed across processors.
+\begin{itemize}
+\item {\bf world}: is the group of all processors (MPI\_COMM\_WORLD).
+\item 
+{\bf images}: Processors can then be divided into different "images", each corresponding to a
+different self-consistent or linear-response
+calculation, loosely coupled to others.
+\item
+{\bf pools}: each image can be subpartitioned into
+"pools", each taking care of a group of k-points.
+\item
+{\bf bands}: each pool is subpartitioned into
+"band groups", each taking care of a group
+of Kohn-Sham orbitals (also called bands, or
+wavefunctions) (still experimental)
+\item
+{\bf PW}: orbitals in the PW basis set,
+as well as charges and density in either 
+reciprocal or real space, are distributed
+across processors.
 This is usually referred to as "PW parallelization".
 All linear-algebra operations on array of  PW / 
 real-space grids are automatically and effectively parallelized.
@@ -1344,31 +1344,35 @@ reciprocal to real space and vice versa. The 3D FFT is
 parallelized by distributing planes of the 3D grid in real
 space to processors (in reciprocal space, it is columns of
 G-vectors that are distributed to processors). 
-
-{\bf task groups}: 
+\item
+{\bf tasks}: 
 In order to allow good parallelization of the 3D FFT when 
 the number of processors exceeds the number of FFT planes,
-data can be redistributed to "task groups" so that each group 
+FFTs on Kohn-Sham states are redistributed to 
+"task" groups so that each group 
 can process several wavefunctions at the same time.
-
+\item
 {\bf linear-algebra group}:
 A further level of parallelization, independent on
 PW or k-point parallelization, is the parallelization of
-subspace diagonalization (\pwx) or iterative orthonormalization
-(\cpx). Both operations required the diagonalization of 
+subspace diagonalization / iterative orthonormalization.
+ Both operations required the diagonalization of 
 arrays whose dimension is the number of Kohn-Sham states
-(or a small multiple). All such arrays are distributed block-like
+(or a small multiple of it). All such arrays are distributed block-like
 across the ``linear-algebra group'', a subgroup of the pool of processors,
 organized in a square 2D grid. As a consequence the number of processors
 in the linear-algebra group is given by $n^2$, where $n$ is an integer;
-$n^2$ must be smaller than the number of processors of a single pool.
+$n^2$ must be smaller than the number of processors in the PW group.
 The diagonalization is then performed
 in parallel using standard linear algebra operations.
 (This diagonalization is used by, but should not be confused with,
 the iterative Davidson algorithm). The preferred option is to use
 ScaLAPACK; alternative built-in algorithms are anyway available.
+\end{itemize}
+Note however that not all parallelization levels 
+are implemented in all codes! 
 
-{\bf Communications}:
+\paragraph{Communications}
 Images and pools are loosely coupled and processors communicate
 between different images and pools only once in a while, whereas
 processors within each pool are tightly coupled and communications
@@ -1377,17 +1381,19 @@ cheap PC clusters) is ok up to 4-8 processors per pool, but {\em fast}
 communication hardware (e.g. Mirynet or comparable) is absolutely 
 needed beyond 8 processors per pool.
 
-{\bf Choosing parameters}:
+\paragraph{Choosing parameters}:
 To control the number of processors in each group,
-command line switches: \texttt{-nimage}, \texttt{-npools},
-\texttt{-ntg}, \texttt{northo} (for \cpx) or \texttt{-ndiag}
-(for \pwx) are used.
+command line switches: 
+\texttt{-nimage}, \texttt{-npools}, \texttt{-nband},
+\texttt{-ntg}, \texttt{-northo} or \texttt{-ndiag}
+are used.
 As an example consider the following command line:
 \begin{verbatim}
-mpirun -np 4096 ./pw.x -nimage 8 -npool 2 -ntg 8 -ndiag 144 -input my.input
+mpirun -np 4096 ./neb.x -nimage 8 -npool 2 -ntg 8 -ndiag 144 -input my.input
 \end{verbatim}
-This executes \PWscf\ on 4096 processors, to simulate a system
-with 8 images, each of which is distributed across 512 processors.
+This executes a NEB calculation on 4096 processors, 8 images (points in the configuration
+space in this case) at the same time, each of 
+which is distributed across 512 processors.
 k-points are distributed across 2 pools of 256 processors each, 
 3D FFT is performed using 8 task groups (64 processors each, so
 the 3D real-space grid is cut into 64 slices), and the diagonalization
@@ -1450,27 +1456,37 @@ Currently, ESSL (when available) are faster than internal FFTW,
 which in turn are faster than ACML.
 
 \subsubsection{Understanding parallel I/O}
-In parallel execution, each processor has its own slice of wavefunctions, 
-to be written to temporary files during the calculation. The way wavefunctions 
-are written by \pwx\ is governed by variable \texttt{wf\_collect}, 
-in namelist \&CONTROL 
-If \texttt{wf\_collect=.true.}, the final wavefunctions are collected into a single 
-directory, written by a single processor, whose format is independent on 
-the number of processors. If \texttt{wf\_collect=.false.} (default) each processor
-writes its own slice of the final 
-wavefunctions to disk in the internal format used by \PWscf. 
+In parallel execution, each processor has its own slice of wavefunctions, that have to be written
+to temporary files during the calculation,
+or to data files at the end of the calculation.
+This can be done in two different ways:
+\begin{itemize}
+\item ``distributed'': each processor
+writes its own slice to disk in its internal 
+format to a different file. 
+\item ``collected'': wavefunctions are
+collected by the code to a single processor
+that writes them to disk, in a single file,
+using a format that doesn't depend upon 
+the number of processors or their distribution.
+\end{itemize}
+\CP\ always uses the latter approach;
+\PWscf\ (and all other packages) the former, 
+but the final data can be written in ``collected''
+format if the input variable \texttt{wf\_collect}
+is set to \texttt{.true.} .
 
-The former case requires more
-disk I/O and disk space, but produces portable data files; the latter case
-requires less I/O and disk space, but the data so produced can be read only
-by a job running on the same number of processors and pools, and if
-all files are on a file system that is visible to all processors
-(i.e., you cannot use local scratch directories: there is presently no
-way to ensure that the distribution of processes on processors will
-follow the same pattern for different jobs).
+The ``distributed'' format is fast and simple,
+but the data so produced is readable only by 
+a job running on the same number of processors,
+with the same type of parallelization, as the
+job who wrote the data, and if all 
+files are on a file system that is visible to all
+processors (i.e., you cannot use local scratch directories: there is presently 
+no way to ensure that the distribution of processes on processors will follow the same pattern 
+for different jobs). 
 
-\cpx\ instead always collects the final wavefunctions into a single directory.
-Files written by \pwx\ can be read by \cpx\ only if \texttt{wf\_collect=.true.} (and if
+Files written by \PWscf\ can be read by \CP\ only if \texttt{wf\_collect=.true.} (and if
 produced for $k=0$ case). 
 The directory for data is specified in input variables
 \texttt{outdir} and \texttt{prefix} (the former can be specified
@@ -1497,34 +1513,6 @@ into trouble (or into angry system managers) with excessive I/O with \pwx.
 The code will store wavefunctions into RAM during the calculation.
 Note however that this will increase your memory usage and may limit 
 or prevent restarting from interrupted runs.
-\paragraph{Cray XT3}
-On the cray xt3 there is a special hack to keep files in
-memory instead of writing them without changes to the code.
-You have to do a: 
-module load iobuf
-before compiling and then add liobuf at link time.
-If you run a job you set the environment variable 
-IOBUF\_PARAMS to proper numbers and you can gain a lot.
-Here is one example:
-\begin{verbatim}
-env IOBUF_PARAMS='*.wfc*:noflush:count=1:size=15M:verbose,\
-*.dat:count=2:size=50M:lazyflush:lazyclose:verbose,\
-*.UPF*.xml:count=8:size=8M:verbose' pbsyod =\
-\~{}/espresso/bin/pw.x npool 4 in si64pw2x2x2.inp > & \
-si64pw2x2x232moreiobuf.out &
-\end{verbatim}
-This will ignore all flushes on the *wfc* (scratch files) using a
-single i/o buffer large enough to contain the whole file ($\sim 12$ Mb here).
-this way they are actually never(!) written to disk.
-The *.dat files are part of the restart, so needed, but you can be
-'lazy' since they are writeonly. .xml files have a lot of accesses
-(due to iotk), but with a few rather small buffers, this can be
-handled as well. You have to pay attention not to make the buffers
-too large, if the code needs a lot of memory, too and in this example
-there is a lot of room for improvement. After you have tuned those
-parameters, you can remove the 'verboses' and enjoy the fast execution.
-Apart from the i/o issues the cray xt3 is a really nice and fast machine.
-(Info by Axel Kohlmeyer, maybe obsolete)
 
 \subsection{Tricks and problems}
 
