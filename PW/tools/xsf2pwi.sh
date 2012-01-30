@@ -1,7 +1,9 @@
 #!/bin/sh
 
-# Usage: xsf2pwi.sh [-c] XSF2-file
-# Purpose: convert XSF2 file to PW.X input syntax
+# Usage: xsf2pwi.sh [-c] XSF-file
+#
+# Purpose: convert XSF file to PW.X input syntax
+#          if XSF-file is not specified read from stdin   
 
 coor_only=0
 if test x$1 = x"-c"; then
@@ -10,12 +12,10 @@ if test x$1 = x"-c"; then
     shift
 fi
 
-head=prefix
 if test $# -lt 1; then
     input=-
 else
     input=$1
-    head=${input%.xsf*}
 fi
 
 
