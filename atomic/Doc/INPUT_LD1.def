@@ -307,6 +307,26 @@ input_description -distribution {Quantum Espresso} -program ld1.x {
 		they are not actually used.
 	    }
 	}
+
+        var relpert  -type LOGICAL {
+            default { .false. }
+            info {
+                  If .true. the relativistic corrections to the non-relativistic 
+                  Kohn-Sham energy levels (rel=0 .and. lsd=0) are computed using 
+                  first-order perturbation theory in all-electron calculations.
+                  The corrections consist of the following terms:
+                     E_vel: velocity (p^4) correction
+                     E_Dar: Darwin term
+                     E_S-O: spin-orbit coupling
+                  The spin-orbit term vanishes for s-electron states and gives 
+                  rise to a splitting of (2*l+1)*E_S-O for the other states.
+                  The separate contributions are printed only if verbosity='high'.
+
+                  Formulas and notation are based on the Herman-Skillman book:
+                  F. Herman and S. Skillman, "Atomic Structure Calculations", 
+                  Prentice-Hall, Inc., Englewood Cliffs, New Jersey, 1963
+            }
+        }
 	
 	var rel_dist  -type CHARACTER {
 	    default { 'energy' }
