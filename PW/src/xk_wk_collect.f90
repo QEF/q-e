@@ -126,61 +126,6 @@ SUBROUTINE wg_all(wg_collect, wg, nkstot, nks )
   !
 END SUBROUTINE wg_all
 !
-!----------------------------------------------------------------------------
-SUBROUTINE ngk_isk_collect(ngk_all, ngk, nkstot, nks )
-!----------------------------------------------------------------------------
-  !
-  ! ... This routine collects all the ngk array in all pools.
-  !
-  USE kinds,     ONLY : DP
-  USE mp_global, ONLY : my_pool_id, npool, kunit
-  USE mp_global, ONLY : inter_pool_comm
-  USE mp,        ONLY : mp_sum
-  !
-  IMPLICIT NONE
-  !
-  INTEGER :: nkstot, nks
-    ! total number of k-points
-    ! number of k-points per pool
-  INTEGER :: ngk(nks)
-  INTEGER :: ngk_all(nkstot)
-    ! distributed ngk of the k points of this pool
-    ! collected ngk of all k points
-    !
-#if defined (__PARA)
-  !
-  INTEGER :: nbase, rest, nks1
-  !
-  ngk_all=(0.0_DP, 0.0_DP)
-  !
-  nks1    = ( nkstot / npool )
-  !
-  rest = ( nkstot - nks1 * npool ) 
-  !
-  IF ( ( my_pool_id + 1 ) <= rest ) nks1 = nks1 + 1
-  !
-  IF (nks1.ne.nks) &
-     call errore('ngk_isk_collect','problems with nks1',1)
-  !
-  ! ... calculates nbase = the position in the list of the first point that
-  ! ...                    belong to this npool - 1
-  !
-  nbase = nks * my_pool_id
-  !
-  IF ( ( my_pool_id + 1 ) > rest ) nbase = nbase + rest 
-  !
-  ! copy the original wavefunctions in the correct position of the list
-  !
-  ngk_all(nbase+1:nbase+nks) = ngk(1:nks)
-  !
-  CALL mp_sum( ngk_all, inter_pool_comm )
-  !
-#endif
-  !
-  RETURN
-  !
-END SUBROUTINE ngk_isk_collect
-!
 !
 INTEGER FUNCTION find_current_k(ik, nkstot, nks)
   !----------------------------------------------------------------------------
