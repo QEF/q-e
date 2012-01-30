@@ -71,7 +71,7 @@ The \qe\ distribution contains the core packages \PWscf\ (Plane-Wave
 Self-Consistent Field) and \CP\ (Car-Parrinello) for the calculation
 of electronic-structure properties within
 Density-Functional Theory (DFT), using a Plane-Wave (PW) basis set 
-and pseudopotentials (PP). It also includes other packages for
+and pseudopotentials. It also includes other packages for
 more specialized calculations:
 \begin{itemize}
   \item \NEB:
@@ -206,7 +206,7 @@ news about \qe\ and obtain help from the developers and from
 knowledgeable users. Please read the guidelines for posting,
 section \ref{SubSec:Guidelines}!
 
-You have to be subscribed (see ``Contacts'' section of the \qe\ web site)
+You have to be subscribed (see ``Contacts'' section of the web site)
 in order to post to the  \texttt{pw\_forum} list. 
 NOTA BENE: only messages that appear to come from the 
 registered user's e-mail address, in its {\em exact form}, will be
@@ -219,7 +219,7 @@ Since \texttt{pw\_forum} has a sizable traffic, an alternative
 low-traffic mailing list, \texttt{pw\_users@pwscf.org}, is provided for
 those interested only in \qe-related news, such as e.g. announcements 
 of new versions, tutorials, etc.. You can subscribe (but not post) to 
-this list from the \qe\ web site, ``Contacts'' section.
+this list from the web site, ``Contacts'' section.
 
 If you need to contact the developers for {\em specific} questions 
 about coding, proposals, offers of help, etc., please send a message
@@ -232,7 +232,7 @@ Life for subscribers of \texttt{pw\_forum} will be easier if everybody
 complies with the following guidelines:
 \begin{itemize}
 \item Before posting, {\em please}: browse or search the archives -- 
-  links are available in the ``Contacts'' section  of the \qe\ web site.
+  links are available in the ``Contacts'' section  of the   web site.
   Most questions are asked over and over again. Also: make an attempt
   to search the
   available documentation, notably the FAQs and the User Guide(s).
@@ -312,7 +312,7 @@ of the complete distribution, you may need to download more packages
 and to unpack them following the same procedure (they will unpack into 
 the same directory). 
 
-Plug-ins such as \texttt{YAMBO} or \texttt{PLUMED} should be downloaded into
+Plug-ins \texttt{YAMBO}, \texttt{PLUMED}, \texttt{W90}, \texttt{want} should be downloaded into
 subdirectory \texttt{archive} but {\em not unpacked or uncompressed}:
 command \texttt{make} will take care of this during installation. 
 \texttt{GIPAW} is instead automatically downloaded on demand.
@@ -326,13 +326,15 @@ instance):
 \end{verbatim}
 If more than one patch is present, they should be applied in the correct order.
 
-Daily snapshots of the development version can be downloaded from the
-developers' site \texttt{qe-forge.org}: follow the link ''Quantum ESPRESSO'', 
-then ''SCM''. Beware: the development version 
-is, well, under development: use at your own risk! The bravest 
+% Daily snapshots of the development version can be downloaded from the
+%developers' site \texttt{qe-forge.org}: follow the link ''Quantum ESPRESSO'', 
+%then ''SCM''.
+The bravest 
 may access the development version via anonymous access to the
 Subversion (SVN) repository : see the Developer Manual
 (\texttt{Doc/developer\_man.pdf}), section ''Using SVN''.
+Beware: the development version 
+is, well, under development: use at your own risk! 
 
 The \qe\ distribution contains several directories. Some of them are
 common to all packages:
@@ -472,7 +474,7 @@ For example, the following command line:
      ./configure MPIF90=mpf90 FFLAGS="-O2 -assume byterecl" \
                   CC=gcc CFLAGS=-O3 LDFLAGS=-static
 \end{verbatim}
-instructs \configure to use \texttt{mpf90} as Fortran 95 compiler 
+instructs \configure\ to use \texttt{mpf90} as Fortran 95 compiler 
 with flags \texttt{-O2 -assume byterecl}, \texttt{gcc} as C compiler with 
 flags \texttt{-O3}, and to link with flag \texttt{-static}. 
 Note that the value of \texttt{FFLAGS} must be quoted, because it contains
@@ -500,7 +502,6 @@ for NEC SX6 on a PC). Currently supported architectures are:\\
 \texttt{solaris}& PC's running SUN-Solaris\\
 \texttt{sparc}&   Sun SPARC machines\\
 \texttt{crayxt4}& Cray XT4/5 machines\\
-\texttt{macppc}&  Apple PowerPC machines running Mac OS X\\
 \texttt{mac686}&  Apple Intel machines running Mac OS X\\
 \texttt{cygwin}&  MS-Windows PCs with Cygwin\\
 \texttt{necsx}&   NEC SX-6 and SX-8 machines\\
@@ -511,7 +512,8 @@ for NEC SX6 on a PC). Currently supported architectures are:\\
 {\em Note}: \texttt{x86\_64} replaces \texttt{amd64} since v.4.1. 
 Cray Unicos machines, SGI 
 machines with MIPS architecture, HP-Compaq Alphas are no longer supported
-since v.4.2.
+since v.4.2; PowerPC Macs are no longer
+supported since v.5.0.
 Finally, \configure\ recognizes the following command-line options:\\
 \begin{tabular}{ll}
 \texttt{--enable-parallel}&     compile for parallel execution if possible (default: yes)\\
@@ -544,10 +546,10 @@ edit \texttt{make.sys}. A few sample \texttt{make.sys} files
 are provided in \texttt{install/Make.}{\em system}. The template used 
 by \configure\ is also found there as \texttt{install/make.sys.in} 
 and contains explanations of the meaning
-of the various variables. The nonobvious part is to locate the
-best libraries. You may need to select appropriate preprocessing flags
+of the various variables. Note thaty ou may need 
+to select appropriate preprocessing flags
 in conjunction with the desired or available
-libraries (e.g. you need to add \texttt{-D\_\_FFTW}) to \texttt{DFLAGS}
+libraries (e.g. you need to add \texttt{-D\_\_FFTW} to \texttt{DFLAGS}
 if you want to link internal FFTW). For a correct choice of preprocessing 
 flags, refer to the documentation in \texttt{include/defs.h.README}.
 
@@ -653,29 +655,27 @@ present values will work for most cases. All other variables are dynamically
 allocated: you do not need to recompile your code for a different system.
     
 At your choice, you may compile the complete \qe\ suite of programs 
-(with \texttt{make all}), or only some specific programs.
-
-\texttt{make} with no arguments yields a list of valid compilation targets. 
-Here is a list:
+(with \texttt{make all}), or only some specific programs. \texttt{make} with no arguments yields a list of valid compilation targets:
 \begin{itemize}
 \item \texttt{make pw}  compiles the self-consistent-field package \PWscf
 \item \texttt{make cp}  compiles the Car-Parrinello package \CP
 \item \texttt{make neb} compiles the \NEB\ package.
-\item \texttt{make ph}  compiles the \PHonon package
+\item \texttt{make ph}  compiles the \PHonon\
+package
 \item \texttt{make pp}  compiles the postprocessing package \PostProc
 \item \texttt{make pwcond} compiles the ballistic conductance package 
                            \texttt{PWcond}
 \item \texttt{make pwall} produces all of the above.
-\item \texttt{make ld1} compiles the pseudopotential package \texttt{atomic}
+\item \texttt{make ld1} compiles the pseudopotential package \texttt{atomic} s
 \item \texttt{make upf} produces utilities for pseudopotential conversion in
                         directory \texttt{upftools/}.
 \item \texttt{make all} produces all of the above.
 \item \texttt{make plumed} unpacks \texttt{PLUMED}, patches several routines
                            in \texttt{PW/}, \texttt{CPV/} and \texttt{clib/},
-                           recompiles \PWscf\ and \CP\ with PLUMED support.
+                           recompiles \PWscf\ and \CP\ with \texttt{PLUMED} support.
 \item \texttt{make w90} unpacks \texttt{wannier90}, copies an appropriate
                        \texttt{make.sys} file,  produces all executables
-                       in \texttt{W90/wannier90.x} and in \texttt{bin}.
+                       in \texttt{W90/wannier90.x} and in \texttt{bin/}.
 \item \texttt{make want} unpacks \texttt{want}, runs its \configure,
                          produces all executables for \texttt{want} in 
                          \texttt{WANT/bin}.
@@ -695,35 +695,22 @@ the \texttt{GUI/README} file instead.
 \subsection{Running examples}
 \label{SubSec:Examples}
 As a final check that compilation was successful, you may want to run some or
-all of the examples. You should first of all ensure that you have downloaded 
-and correctly unpacked the package containing examples (since v.4.1 in a
-separate package):
-\begin{verbatim}
-     tar -zxvf /path/to/package/espresso-X.Y.Z-examples.tar.gz
-\end{verbatim}
-will unpack several subdirectories into \texttt{espresso-X.Y.Z/}.
+all of the examples. 
+%You should first of all ensure that you have downloaded 
+%and correctly unpacked the package containing examples (since v.4.1 in a
+%separate package):
+%\begin{verbatim}
+%     tar -zxvf /path/to/package/espresso-X.Y.Z-examples.tar.gz
+%\end{verbatim}
+%will unpack several subdirectories into \texttt{espresso-X.Y.Z/}.
 There are two different types of examples: 
 \begin{itemize}
-\item automated tests (in directories \texttt{tests/} 
-and \texttt{cptests/}). Quick and exhaustive, but not
-meant to be realistic, implemented only for \pwx\ and \cpx.
-\item examples (in directory \texttt{examples/}).
+\item automated tests. Quick and exhaustive, but not
+meant to be realistic, implemented only for \PWscf\ and \CP.
+\item examples.
 Cover many more programs and features of the \qe\ distribution,
 but they require manual inspection of the results. 
 \end{itemize}
-
-Let us first consider the tests. Automated tests for \pwx\ are in directory 
-\texttt{tests/}. File \texttt{tests/README} contains a list of what is tested.
-To run tests, follow the directions in the header if file 
-\texttt{check\_pw.x.j}, edit variables PARA\_PREFIX, PARA\_POSTFIX 
-if needed (see below). Same for \cpx, this time in directory 
-\texttt{cptests/}.
-
-Let us now consider examples. A list of examples and of what each example
-does is contained in \texttt{examples/README}. 
-For details, see the \texttt{README} file in each example's directory. 
-If you find that any relevant feature isn't being tested, please contact us 
-(or even better, write and send us a new example yourself !).
 
 To run the examples, you should follow this procedure:
 \begin{enumerate}   
@@ -761,12 +748,12 @@ you should set PARA\_PREFIX="poe", PARA\_POSTFIX="-procs
 must run the commands specified below through the batch queuing
 system installed on that machine. Ask your system administrator for
 instructions. 
-\item To run a single example, go to the corresponding directory (e.g.
+\item {\bf TO BE CHANGED} To run a single example, go to the corresponding directory (e.g.
  \texttt{example/example01}) and execute: 
 \begin{verbatim}
       ./run_example
 \end{verbatim}
-This will create a subdirectory results, containing the input and
+This will create a subdirectory \texttt{results/}, containing the input and
 output files generated by the calculation. Some examples take only a
 few seconds to run, while others may require several minutes depending
 on your system. To run all the examples in one go, execute:
@@ -802,7 +789,7 @@ If \configure\ says that you have no working compiler, well,
 you have no working compiler, at least not in your PATH, and
 not among those recognized by \configure.
 
-If you get {\em Compiler Internal Error}' or similar messages: your
+If you get {\em Compiler Internal Error} or similar messages: your
 compiler version is buggy. Try to lower the optimization level, or to
 remove optimization just for the routine that has problems. If it
 doesn't work, or if you experience weird problems at run time, try to 
@@ -841,7 +828,7 @@ that this happens on the provided tests and examples.
 
 \subsubsection{Cray XT machines}
 
-Use \texttt{./configure ARCH=crayxt4} or else \configure will
+Use \texttt{./configure ARCH=crayxt4} or else \configure\ will
 not recognize the Cray-specific software environment. Older Cray 
 machines: T3D, T3E, X1, are no longer supported.
 
@@ -879,7 +866,8 @@ can address a much larger memory space than 32-bit executable, but
 there is no gain in speed.
 Beware: the default integer type for 64-bit machine is typically
 32-bit long. You should be able to use 64-bit integers as well, 
-but it will not give you any advantage and you may run into trouble.
+but it is not guaranteed to work and will not give 
+any advantage anyway.
 
 Currently the following compilers are supported by \configure:
 Intel (ifort), Portland (pgf90), gfortran, g95, Pathscale (pathf95), 
@@ -1008,7 +996,9 @@ initialization files. Consult the documentation provided by Intel.
     
 The warning: {\em feupdateenv is not implemented and will always fail}, 
 showing up in recent versions, can be safely ignored. Warnings on
-"bad preprocessing option" when compiling iotk should also be ignored.
+"bad preprocessing option" when compiling iotk
+and complains about ``recommanded formats''
+should also be ignored.
 
 {\bf ifort v.12}: release 12.0.0 miscompiles iotk, leading to 
 mysterious errors when reading data files. Workaround: increase 
@@ -1089,7 +1079,7 @@ Unfortunately this not always happens. In fact:
 \item \configure\ tests that the compiler and the libraries are
   compatible (i.e. the compiler may link the libraries without
   conflicts and without missing symbols). If they aren't and the
-  compilation fail, \configure\ will revert to serial compilation. 
+  compilation fails, \configure\ will revert to serial compilation. 
 \end{itemize}
 
 Apart from such problems, \qe\ compiles and works on all non-buggy, properly
@@ -1152,10 +1142,10 @@ Configure \qe\  using
 \end{verbatim}
 
 Intel:
-Use Version >11.1.088
-Use 32 bit compilers
+Use Version $>11.1.088$,
+Use 32 bit compilers,
 Install MPI environment,
-install macports provided cpp (optional)
+install macports provided cpp (optional),
 Configure \qe\ using
 \begin{verbatim}
  ./configure CC=icc CXX=icpc F77=ifort F90=ifort FC=ifort CPP=cpp-mp-4.3
@@ -1225,11 +1215,6 @@ MacOs 10.6 comes with a disabled firewall. Preparing a ipfw based firewall is re
 Open source and free GUIs such as "WaterRoof" and "NoobProof" are available that may help 
 you in the process.
 
-\subsubsection{SGI, Alpha}
-
-SGI Mips machines (e.g. Origin) and HP-Compaq Alpha machines are
-no longer supported since v.4.2.
-
 \newpage
 
 \section{Parallelism}
@@ -1280,7 +1265,7 @@ Explicit OpenMP is a very recent addition, still at an
 experimental stage, devised to increase scalability on
 large multicore parallel machines. Explicit OpenMP is 
 devised to be run together with MPI and also together 
-with multithreaded libraries. BEWARE: you have to be VERY 
+with multithreaded libraries. BEWARE: you have to be 
 careful to prevent conflicts between the various kinds of
 parallelization. If you don't know how to run MPI processes
 and OpenMP threads in a controlled manner, forget about mixed 
@@ -1303,7 +1288,8 @@ such as \texttt{poe}, \texttt{mpirun}, \texttt{mpiexec},
   instance, \pwx, or \texttt{./pw.x}, or \texttt{\$HOME/bin/pw.x}, or
   whatever applies; 
 \item other \qe-specific parallelization options, to be
-  read and interpreted by the running code: 
+  read and interpreted by the running code:
+  {\bf TO BE VERIFIED} 
 \begin{itemize}
 \item the number of ``images'' used by NEB or phonon calculations;
 \item the number of ``pools'' into which processors are to be grouped
@@ -1358,6 +1344,7 @@ set  PARA\_PREFIX to \texttt{env OMP\_NUM\_THREADS=N}.
 
 \subsection{Parallelization levels}
 
+ {\bf FIN QUI} 
 Data structures are distributed across processors.
 Processors are organized in a hierarchy of groups, 
 which are identified by different MPI communicators level.
@@ -1647,7 +1634,8 @@ section{Performances}
 Since v.4.2 \qe\ prints real (wall) time instead of CPU time.
 
 The following is a rough estimate of the complexity of a plain
-scf calculation with \pwx, for NCPP. USPP and PAW 
+scf calculation with \pwx, for Norm-Conserving pseudopotentials. Ultrasoft pseudopotentials
+nd PAW 
 give raise additional terms to be calculated, that may add from a 
 few percent 
 up to 30-40\% to execution time. For phonon calculations, each of the
@@ -1704,8 +1692,9 @@ dimensions of the FFT grid for charge density (\texttt{nr1},
 \texttt{nr2}, \texttt{nr3}; $N_{r1} N_{r2} N_r3 \sim 8N_g$,
 where $N_g$ = number of G-vectors for the charge density,
 \texttt{ngm}), and 
-$T_{us}$ = time required by PAW/USPPs contribution (if any).
-Note that for NCPPs the FFT grids for charge and
+$T_{us}$ = time required by PAW/Ultrasoft contribution (if any).
+Note that for Norm-Conserving pseudopotentials
+the FFT grids for charge and
 wavefunctions are the same.
  
 The time $T_{scf}$ for calculation of potential from charge density is
@@ -1777,7 +1766,7 @@ Parallelization on PWs:
 \begin{itemize}
 \item yields good to very good scaling, especially if the number of processors
 in a pool is a divisor of $N_3$ and $N_{r3}$ (the dimensions along the z-axis 
-of the FFT grids, \texttt{nr3} and \texttt{nr3s}, which coincide for NCPPs);
+of the FFT grids, \texttt{nr3} and \texttt{nr3s}, which coincide for Norm-Conserving pseudopotentials);
 \item requires heavy communications (suitable for Gigabit ethernet up to 
 4, 8 CPUs at most, specialized communication hardware needed for 8 or more
 processors );
