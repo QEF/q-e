@@ -48,7 +48,14 @@ MODULE exx
   INTEGER, ALLOCATABLE :: index_xkq(:,:) ! index_xkq(nks,nqs) 
   INTEGER, ALLOCATABLE :: index_xk(:)    ! index_xk(nkqs)  
   INTEGER, ALLOCATABLE :: index_sym(:)   ! index_sym(nkqs)
-
+!
+!  Used for k points pool paralellization. All pools needs these quantities.
+!  They are allocated only if needed.
+!
+  REAL(DP),    ALLOCATABLE :: xk_collect(:,:)
+  REAL(DP),    ALLOCATABLE :: wk_collect(:)
+  REAL(DP),    ALLOCATABLE :: wg_collect(:,:)
+  LOGICAL :: pool_para=.FALSE.
   !
   ! variables to deal with Coulomb divergence
   ! and related issues
@@ -92,12 +99,20 @@ CONTAINS
   !------------------------------------------------------------------------
   SUBROUTINE deallocate_exx ()
   !------------------------------------------------------------------------
+  !
   IF ( ALLOCATED (index_xkq) ) DEALLOCATE (index_xkq)
   IF ( ALLOCATED (index_xk ) ) DEALLOCATE (index_xk )
   IF ( ALLOCATED (index_sym) ) DEALLOCATE (index_sym)
   IF ( ALLOCATED (x_occupation) ) DEALLOCATE (x_occupation)
   IF ( ALLOCATED (xkq) ) DEALLOCATE (xkq)
   IF ( ALLOCATED (exxbuff) ) DEALLOCATE (exxbuff)
+  !
+  !  Pool variables deallocation
+  !
+  IF ( ALLOCATED (xk_collect) )  DEALLOCATE ( xk_collect )
+  IF ( ALLOCATED (wk_collect) )  DEALLOCATE ( wk_collect )
+  IF ( ALLOCATED (wg_collect) )  DEALLOCATE ( wg_collect )
+  !
   !
   END SUBROUTINE deallocate_exx
   !------------------------------------------------------------------------
@@ -107,12 +122,13 @@ CONTAINS
   USE symm_base,  ONLY : nsym, s
   USE cell_base,  ONLY : bg, at, alat
   USE lsda_mod,   ONLY : nspin
-  USE klist,      ONLY : xk
+  USE noncollin_module, ONLY : nspin_lsda
+  USE klist,      ONLY : xk, wk
   USE wvfct,      ONLY : nbnd
   USE io_global,  ONLY : stdout
   !
   USE mp_global,  ONLY : nproc, npool, nimage
-  USE klist,      ONLY : nkstot 
+  USE klist,      ONLY : nkstot, nks
   !
   IMPLICIT NONE
   !
@@ -125,6 +141,7 @@ CONTAINS
   real (DP)     :: sxk(3), dxk(3), xk_cryst(3)
   real (DP)     :: dq1, dq2, dq3
   logical       :: no_pool_para
+  integer       :: find_current_k
 
   CALL start_clock ('exx_grid')
 
@@ -147,24 +164,15 @@ CONTAINS
   ENDIF
  
   !
-  ! parallelism over q
-  !
   nqs = nq1 * nq2 * nq3
-!
-! old check for parallelization on images  
-!  IF( MOD(nqs,nimage) /= 0 ) THEN
-!      CALl errore(sub_name, 'The total number of q points must be multiple of nimage', mod(nqs,nimage))
-!  ENDIF
-!
   !
   ! all processors need to have access to all k+q points
   !
-  no_pool_para =  (nq1*nq2*nq3 /= 1) .and. (npool>nspin) .and. ( nsym > 1 )
-  if (no_pool_para ) then
-     write(stdout,'(5x,a)') &
-         '(nq1*nq2*nq3 /= 1) .and. (npool>nspin) .and. ( nsym > 1 )'
-     call errore(sub_name,&
-              'pool parallelization not possible in this case', npool)
+  pool_para =  npool>1
+  if (pool_para ) then
+     IF ( .NOT.ALLOCATED (xk_collect) )  ALLOCATE (xk_collect(3,nkstot))
+     IF ( .NOT.ALLOCATED (wk_collect) )  ALLOCATE (wk_collect(nkstot))
+     CALL xk_wk_collect(xk_collect, wk_collect, xk, wk, nkstot, nks)
   end if
   !
   ! set a safe limit as the maximum number of auxiliary points we may need
@@ -180,7 +188,13 @@ CONTAINS
   temp_nkqs = 0
   do isym=1,nsym
      do ik =1, nkstot
-        xk_cryst(:) = at(1,:)*xk(1,ik) + at(2,:)*xk(2,ik) + at(3,:)*xk(3,ik)
+        IF (pool_para) THEN
+           xk_cryst(:) = at(1,:)*xk_collect(1,ik) + at(2,:)*xk_collect(2,ik)&
+                       + at(3,:)*xk_collect(3,ik)
+        ELSE
+           xk_cryst(:) = at(1,:)*xk(1,ik) + at(2,:)*xk(2,ik) &
+                       + at(3,:)*xk(3,ik)
+        ENDIF
         sxk(:) = s(:,1,isym)*xk_cryst(1) + &
                  s(:,2,isym)*xk_cryst(2) + &
                  s(:,3,isym)*xk_cryst(3)
@@ -230,17 +244,17 @@ CONTAINS
   !
   ! allocate and fill the array index_xkq(nkstot,nqs)
   !
-  if ( nspin == 2 ) then
-     if(.not.ALLOCATED(index_xkq)) allocate ( index_xkq(2*nkstot,nqs) )
-     if(.not.ALLOCATED(x_occupation)) allocate ( x_occupation(nbnd,2*nkstot) )
-  else
-     if(.not.ALLOCATED(index_xkq)) allocate ( index_xkq(nkstot,nqs) )
-     if(.not.ALLOCATED(x_occupation)) allocate ( x_occupation(nbnd,nkstot) )
-  end if
+  if(.not.ALLOCATED(index_xkq)) allocate ( index_xkq(nkstot,nqs) )
+  if(.not.ALLOCATED(x_occupation)) allocate ( x_occupation(nbnd,nkstot) )
   nkqs = 0
   new_ikq(:) = 0
   do ik=1,nkstot 
-     xk_cryst(:) = at(1,:)*xk(1,ik) + at(2,:)*xk(2,ik) + at(3,:)*xk(3,ik)
+     IF (pool_para) THEN
+        xk_cryst(:) = at(1,:)*xk_collect(1,ik) + at(2,:)*xk_collect(2,ik)&
+                    + at(3,:)*xk_collect(3,ik)
+     ELSE
+        xk_cryst(:) = at(1,:)*xk(1,ik) + at(2,:)*xk(2,ik) + at(3,:)*xk(3,ik)
+     ENDIF
 
      iq = 0
      do iq1=1, nq1
@@ -286,11 +300,8 @@ CONTAINS
   !
   ! allocate and fill the arrays xkq(3,nkqs), index_xk(nkqs) and index_sym(nkqs)
   !
-  if ( nspin == 2 ) then
-     allocate ( xkq(3,2*nkqs), index_xk(2*nkqs), index_sym(2*nkqs) )
-  else
-     allocate ( xkq(3,nkqs), index_xk(nkqs), index_sym(nkqs) )
-  end if
+  allocate ( xkq(3,nspin_lsda*nkqs), index_xk(nspin_lsda*nkqs),  &
+             index_sym(nspin_lsda*nkqs) )
 
   do ik =1, nkqs
      ikq = temp_index_ikq(ik)
@@ -300,6 +311,20 @@ CONTAINS
      index_xk(ik)  = temp_index_xk(ikq)
      index_sym(ik) = temp_index_sym(ikq)
   end do
+
+  IF (nspin == 2) THEN
+     DO ik = 1, nkstot/2
+        DO iq =1, nqs
+           index_xkq(nkstot/2+ik,iq) = index_xkq(ik,iq) + nkqs
+        END DO
+     ENDDO
+     do ikq=1,nkqs
+        xkq(:,ikq + nkqs)     = xkq(:,ikq)
+        index_xk(ikq + nkqs)  = index_xk(ikq) + nkstot/2
+        index_sym(ikq + nkqs) = index_sym(ikq)
+     end do
+     nkqs = 2 * nkqs
+  ENDIF
   !
   ! clean up
   !
@@ -408,7 +433,12 @@ CONTAINS
   dq3= 1.d0/DBLE(nq3)
 
   do ik =1, nkstot
-     xk_cryst(:) = at(1,:)*xk(1,ik) + at(2,:)*xk(2,ik) + at(3,:)*xk(3,ik)
+     IF (pool_para) THEN
+        xk_cryst(:) = at(1,:)*xk_collect(1,ik) + at(2,:)*xk_collect(2,ik) + &
+                      at(3,:)*xk_collect(3,ik)
+     ELSE
+        xk_cryst(:) = at(1,:)*xk(1,ik) + at(2,:)*xk(2,ik) + at(3,:)*xk(3,ik)
+     ENDIF
 
      iq = 0
      do iq1=1, nq1
@@ -423,7 +453,14 @@ CONTAINS
             ikk  = index_xk(ikq)
             isym = index_sym(ikq)
 
-            xkk_cryst(:)=at(1,:)*xk(1,ikk)+at(2,:)*xk(2,ikk)+at(3,:)*xk(3,ikk)
+            IF (pool_para) THEN
+               xkk_cryst(:) = at(1,:)*xk_collect(1,ikk)+at(2,:)* &
+                                xk_collect(2,ikk)+at(3,:)*xk_collect(3,ikk)
+            ELSE
+               xkk_cryst(:) = at(1,:)*xk(1,ikk)+at(2,:)*xk(2,ikk) &
+                            + at(3,:)*xk(3,ikk)
+            ENDIF
+
             if (isym < 0 ) xkk_cryst(:) = - xkk_cryst(:)
             isym = abs (isym)
             dxk(:) = s(:,1,isym)*xkk_cryst(1) + &
@@ -498,12 +535,13 @@ CONTAINS
     USE gvecs,              ONLY : nls, nlsm, doublegrid
     USE wvfct,                ONLY : nbnd, npwx, npw, igk, wg, et
     USE control_flags,        ONLY : gamma_only
-    USE klist,                ONLY : wk, ngk, nks
+    USE klist,                ONLY : wk, ngk, nks, nkstot
     USE symm_base,            ONLY : nsym, s, ftau
 
     use mp_global,            ONLY : nproc_pool, me_pool, nproc_bgrp, me_bgrp, &
                                      init_index_over_band, inter_bgrp_comm, &
-                                     mpime
+                                     mpime, inter_pool_comm
+    use mp,                   ONLY : mp_sum
     use funct,                ONLY : get_exx_fraction, start_exx, exx_is_active, &
                                      get_screening_parameter 
     use fft_base,             ONLY : cgather_smooth, cscatter_smooth, dffts
@@ -517,9 +555,12 @@ CONTAINS
 #ifdef __PARA
     COMPLEX(DP),allocatable :: temppsic_all(:), psic_all(:)
 #endif
+    INTEGER :: current_ik
     logical, allocatable :: present(:)
     logical :: exst
     integer, allocatable :: rir(:,:)
+    integer       :: find_current_k
+
 
     call start_clock ('exxinit')
     ! Beware: not the same as nrxxs in parallel case
@@ -553,6 +594,13 @@ write(stdout,*) "exxinit, yukawa set to: ", yukawa
        call start_exx
     endif
 
+#ifdef __PARA
+    IF (pool_para) THEN
+       IF ( .NOT.ALLOCATED (wg_collect) ) ALLOCATE(wg_collect(nbnd,nkstot))
+       CALL wg_all(wg_collect, wg, nkstot, nks)
+    ENDIF
+#endif
+
     IF ( nks > 1 ) REWIND( iunigk )
 
     present(1:nsym) = .false.
@@ -585,6 +633,18 @@ write(stdout,*) "exxinit, yukawa set to: ", yukawa
        end if
     end do
 
+    exxbuff=(0.0_DP,0.0_DP)
+    ! set appropriately the x_occupation
+    do ik =1,nkstot
+       IF (pool_para) THEN
+          x_occupation(1:nbnd,ik) = wg_collect (1:nbnd, ik) / wk_collect(ik)
+       ELSE
+          x_occupation(1:nbnd,ik) = wg(1:nbnd, ik) / wk(ik)
+       ENDIF
+    end do
+!
+!   This is parallelized over pool. Each pool computes only its k-points
+!
     DO ik = 1, nks
        npw = ngk (ik)
        IF ( nks > 1 ) THEN
@@ -592,6 +652,11 @@ write(stdout,*) "exxinit, yukawa set to: ", yukawa
           CALL get_buffer (tempevc, nwordwfc, iunwfc, ik)
        ELSE
           tempevc(1:npwx,1:nbnd) = evc(1:npwx,1:nbnd)
+       ENDIF
+       IF (pool_para) THEN
+          current_ik=find_current_k(ik, nkstot, nks)
+       ELSE
+          current_ik=ik
        ENDIF
 
        if (gamma_only) then
@@ -614,7 +679,7 @@ write(stdout,*) "exxinit, yukawa set to: ", yukawa
              CALL invfft ('Wave', temppsic, dffts)
 
              do ikq=1,nkqs
-                if (index_xk(ikq) .ne. ik) cycle
+                if (index_xk(ikq) .ne. current_ik) cycle
 
                 isym = abs(index_sym(ikq) )
 #ifdef __PARA
@@ -646,7 +711,7 @@ write(stdout,*) "exxinit, yukawa set to: ", yukawa
              CALL invfft ('Wave', temppsic, dffts)
 
              do ikq=1,nkqs
-                if (index_xk(ikq) .ne. ik) cycle
+                if (index_xk(ikq) .ne. current_ik) cycle
 
                 isym = abs(index_sym(ikq) )
 #ifdef __PARA
@@ -672,16 +737,14 @@ write(stdout,*) "exxinit, yukawa set to: ", yukawa
        end if
     end do
 
+    IF (pool_para) CALL mp_sum(exxbuff, inter_pool_comm)
+
     deallocate(temppsic, psic,tempevc)
     deallocate(present,rir)
 #ifdef __PARA
     deallocate(temppsic_all, psic_all)
 #endif 
 
-    ! set appropriately the x_occupation
-    do ik =1,nks
-       x_occupation(1:nbnd,ik) = wg (1:nbnd, ik) / wk(ik) 
-    end do
     call stop_clock ('exxinit')  
 
     
@@ -712,7 +775,7 @@ write(stdout,*) "exxinit, yukawa set to: ", yukawa
     USE gvecs,   ONLY : nls, nlsm, doublegrid
     USE wvfct,     ONLY : nbnd, npwx, npw, igk, current_k
     USE control_flags, ONLY : gamma_only
-    USE klist,     ONLY : xk
+    USE klist,     ONLY : xk, nks, nkstot
     USE lsda_mod,  ONLY : lsda, current_spin, isk
     USE gvect,     ONLY : g, nl
     use fft_base,  ONLY : dffts
@@ -736,10 +799,12 @@ write(stdout,*) "exxinit, yukawa set to: ", yukawa
     REAL (DP),   ALLOCATABLE :: fac(:)
     INTEGER          :: ibnd, ik, im , ig, ikq, iq, isym, iqi
     INTEGER          :: h_ibnd, half_nbnd, ierr, nrxxs
+    INTEGER          :: current_ik
     REAL(DP) :: x1, x2
     REAL(DP) :: qq, xk_cryst(3), sxk(3), xkq(3), x, q(3)
     ! <LMS> temp array for vcut_spheric
     REAL(DP) :: atws(3,3)
+    integer       :: find_current_k
 
     CALL start_clock ('vexx')
     nrxxs = dffts%nnr
@@ -752,6 +817,11 @@ write(stdout,*) "exxinit, yukawa set to: ", yukawa
 !    nqi=nqs/nimage
     nqi=nqs
 !
+    IF (pool_para) THEN
+       current_ik=find_current_k(current_k,nkstot,nks)
+    ELSE
+       current_ik = current_k
+    ENDIF
 
 #ifdef __BANDS
 if(my_bgrp_id>0) then
@@ -778,11 +848,17 @@ endif
 !          iq=iqi+nqi*my_image_id
           iq=iqi
 !
-          ikq  = index_xkq(current_k,iq)
+          ikq  = index_xkq(current_ik,iq)
           ik   = index_xk(ikq)
           isym = ABS(index_sym(ikq))
 
-          xk_cryst(:) = at(1,:)*xk(1,ik) + at(2,:)*xk(2,ik) + at(3,:)*xk(3,ik)
+          IF (pool_para) THEN
+             xk_cryst(:) = at(1,:)*xk_collect(1,ik) + at(2,:)*xk_collect(2,ik)&
+                         + at(3,:)*xk_collect(3,ik)
+          ELSE
+             xk_cryst(:) = at(1,:)*xk(1,ik) + at(2,:)*xk(2,ik) &
+                         + at(3,:)*xk(3,ik)
+          ENDIF
           IF (index_sym(ikq) < 0 ) xk_cryst = - xk_cryst
           sxk(:) = s(:,1,isym)*xk_cryst(1) + &
                s(:,2,isym)*xk_cryst(2) + &
@@ -1059,7 +1135,7 @@ END SUBROUTINE g2_convolution
     USE wvfct,     ONLY : nbnd, npwx, npw, igk, wg, current_k
     USE control_flags, ONLY : gamma_only
     USE wavefunctions_module, ONLY : evc
-    USE klist,     ONLY : xk, ngk, nks
+    USE klist,     ONLY : xk, ngk, nks, nkstot
     USE lsda_mod,  ONLY : lsda, current_spin, isk
     USE gvect,     ONLY : g, nl
     USE mp_global, ONLY : inter_pool_comm, intra_pool_comm, inter_image_comm, inter_bgrp_comm, intra_bgrp_comm, nbgrp
@@ -1081,6 +1157,7 @@ END SUBROUTINE g2_convolution
     real(DP) :: qq, xk_cryst(3), sxk(3), xkq(3), vc, x, q(3)
     ! temp array for vcut_spheric
     real(DP) :: atws(3,3) 
+    integer       :: find_current_k
 
     call start_clock ('exxen2')
 
@@ -1095,7 +1172,11 @@ END SUBROUTINE g2_convolution
 !
     IF ( nks > 1 ) REWIND( iunigk )
     do ikk=1,nks
-       current_k = ikk
+       IF (pool_para) THEN
+          current_k=find_current_k(ikk,nkstot,nks)
+       ELSE
+          current_k = ikk
+       ENDIF
        IF ( lsda ) current_spin = isk(ikk)
        npw = ngk (ikk)
        IF ( nks > 1 ) THEN
@@ -1123,7 +1204,15 @@ END SUBROUTINE g2_convolution
              ik   = index_xk(ikq)
              isym = abs(index_sym(ikq))
 
-             xk_cryst(:)=at(1,:)*xk(1,ik)+at(2,:)*xk(2,ik)+at(3,:)*xk(3,ik)
+             IF (pool_para) THEN
+                xk_cryst(:) = at(1,:)*xk_collect(1,ik) + &
+                              at(2,:)*xk_collect(2,ik) + &
+                              at(3,:)*xk_collect(3,ik)
+             ELSE
+                xk_cryst(:) = at(1,:)*xk(1,ik) + at(2,:)*xk(2,ik) + &
+                              at(3,:)*xk(3,ik)
+             ENDIF
+
              if (index_sym(ikq) < 0 ) xk_cryst = - xk_cryst
              sxk(:) = s(:,1,isym)*xk_cryst(1) + &
                       s(:,2,isym)*xk_cryst(2) + &
@@ -1133,9 +1222,15 @@ END SUBROUTINE g2_convolution
              !CALL start_clock ('exxen2_ngmloop')
              DO ig=1,ngm
                 !
-                q(1)= xk(1,current_k) - xkq(1) + g(1,ig)
-                q(2)= xk(2,current_k) - xkq(2) + g(2,ig)
-                q(3)= xk(3,current_k) - xkq(3) + g(3,ig)
+                IF (pool_para) THEN
+                   q(1)= xk_collect(1,current_k) - xkq(1) + g(1,ig)
+                   q(2)= xk_collect(2,current_k) - xkq(2) + g(2,ig)
+                   q(3)= xk_collect(3,current_k) - xkq(3) + g(3,ig)
+                ELSE
+                   q(1)= xk(1,current_k) - xkq(1) + g(1,ig)
+                   q(2)= xk(2,current_k) - xkq(2) + g(2,ig)
+                   q(3)= xk(3,current_k) - xkq(3) + g(3,ig)
+                ENDIF
                 !
                 q = q * tpiba
                 ! 
@@ -1448,6 +1543,7 @@ END SUBROUTINE g2_convolution
  
   call start_clock ('exx_stress')
 
+  IF (pool_para) call errore('exx_stress','stress not available with pools',1)
   nrxxs = dffts%nnr
   delta = reshape( (/1.d0,0.d0,0.d0, 0.d0,1.d0,0.d0, 0.d0,0.d0,1.d0/), (/3,3/))
   exx_stress_ = 0.d0

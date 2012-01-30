@@ -21,10 +21,6 @@ SUBROUTINE divide_et_impera( xk, wk, isk, lsda, nkstot, nks )
   USE io_global, only : stdout
   USE kinds,     ONLY : DP
   USE mp_global, ONLY : my_pool_id, npool, kunit
-#if defined (EXX)
-  USE exx,       ONLY : index_xk, index_xkq, nkqs, nqs
-  USE funct,     ONLY : dft_is_hybrid
-#endif
   !
   IMPLICIT NONE
   !
@@ -39,9 +35,6 @@ SUBROUTINE divide_et_impera( xk, wk, isk, lsda, nkstot, nks )
   REAL (DP), INTENT(INOUT) :: xk(3,nkstot), wk(nkstot)
     ! k-points
     ! k-point weights
-#if defined (EXX)
-  INTEGER :: ikk, iq
-#endif
   !
 #if defined (__PARA)
   !
@@ -76,25 +69,6 @@ SUBROUTINE divide_et_impera( xk, wk, isk, lsda, nkstot, nks )
      !
      IF ( lsda ) isk(1:nks) = isk(nbase+1:nbase+nks)
      !
-#if defined (EXX)
-     IF ( dft_is_hybrid() ) THEN
-        index_xk(1:nkqs) = index_xk(1:nkqs) - nbase
-        index_xkq(1:nks,1:nqs) = index_xkq(nbase+1:nbase+nks,1:nqs)
-        !
-        ! consistency check
-        !
-        do ik=1,nks
-           do iq =1,nqs
-              ikk = index_xk(index_xkq(ik,iq))
-              if ( ikk < 1 .or. ikk > nks ) then
-                 write (stdout,*) ik, iq, index_xkq(ik,iq), ikk
-                 call errore ('d_&_i',' error in EXX indexing',1)
-              end if
-           end do
-        end do
-        
-     END IF
-#endif
   !
   END IF
   !

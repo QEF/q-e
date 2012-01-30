@@ -17,11 +17,6 @@ subroutine set_kup_and_kdw (xk, wk, isk, nkstot, npk)
   !                those in the second (nkstot/2) ones correspond to down spin
   !
   USE kinds, ONLY : DP
-#if defined (EXX)
-  USE exx, ONLY : exx_grid_check, xkq, index_xkq, index_xk, index_sym, nkqs, nqs
-  USE funct, ONLY: dft_is_hybrid
-  USE klist, ONLY: nkstot_ => nkstot
-#endif
   implicit none
   !
   ! I/O variables first
@@ -44,28 +39,7 @@ subroutine set_kup_and_kdw (xk, wk, isk, nkstot, npk)
      isk(ik)     = 1
      isk(ik+nkstot) = 2
   enddo
-#if defined (EXX)
-  if (dft_is_hybrid()) then
-     if (nkstot /= nkstot_) call errore ('set_kup_and_kdw', 'wrong nkstot', 1)
-     do ik =1, nkstot
-        do iq =1, nqs
-           index_xkq(ik + nkstot,iq) = index_xkq(ik,iq) + nkqs
-        end do
-     end do
-     do ikq=1,nkqs
-        xkq(:,ikq + nkqs)     = xkq(:,ikq)
-        index_xk(ikq + nkqs)  = index_xk(ikq) + nkstot
-        index_sym(ikq + nkqs) = index_sym(ikq)
-     end do
-  
-     nkqs = 2 * nkqs
-  end if
-#endif
   nkstot = 2 * nkstot
-
-#if defined (EXX)
-  if (dft_is_hybrid()) call exx_grid_check
-#endif
 
   return
 
