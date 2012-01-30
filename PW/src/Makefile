@@ -213,6 +213,7 @@ vcsubs.o \
 vhpsi.o \
 vloc_of_g.o \
 vloc_psi.o \
+xk_wk_collect.o \
 wfcinit.o \
 write_ns.o \
 wsweight.o \

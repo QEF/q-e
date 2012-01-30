@@ -164,7 +164,6 @@ write_dyn_on_file.o \
 write_epsilon_and_zeu.o \
 write_matrix.o \
 write_rec.o \
-xk_wk_collect.o \
 zstar_eu.o \
 zstar_eu_us.o
 
