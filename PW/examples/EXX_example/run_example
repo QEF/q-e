@@ -10,8 +10,8 @@ if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
 $ECHO
 $ECHO "$EXAMPLE_DIR : starting"
 $ECHO
-$ECHO "This example shows how to use pw.x to calculate the total energy and"
-$ECHO "of silicon and a few small molecules using hybrid functionals."
+$ECHO "This example shows how to use pw.x to calculate the total energy"
+$ECHO "of silicon and of a few small molecules using hybrid functionals."
 
 # set the needed environment variables
 cd ../ 
