@@ -173,7 +173,8 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
 
   ELSEIF (plot_num == 9) THEN
 
-     CALL errore('punch_plot','no longer implemented, see PP/plan_avg.f90',1)
+     IF (noncolin) CALL errore('punch_plot','rdg+noncolin not yet implemented',1)
+     CALL do_rdg (raux)           ! in elf.f90
 
   ELSEIF (plot_num == 10) THEN
 

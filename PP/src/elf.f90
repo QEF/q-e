@@ -180,3 +180,53 @@ SUBROUTINE do_elf (elf)
   DEALLOCATE (aux, aux2, tbos, kkin)
   RETURN
 END SUBROUTINE do_elf
+
+
+
+!-----------------------------------------------------------------------
+SUBROUTINE do_rdg (rdg)
+  !-----------------------------------------------------------------------
+  !
+  !  reduced density gradient
+  !     rdg(r) = (1/2) (1/(3*pi**2))**(1/3) * |\nabla rho(r)|/rho(r)**(4/3)
+  !
+  USE kinds,                ONLY: DP
+  USE constants,            ONLY: pi
+  USE cell_base,            ONLY: omega, tpiba, tpiba2
+  USE fft_base,             ONLY: dfftp
+  USE scf,                  ONLY: rho
+  USE gvect,                ONLY: g, ngm, nl
+  USE lsda_mod,             ONLY: nspin
+  IMPLICIT NONE
+  real(dp), intent(out) :: rdg (dfftp%nnr)
+  real(dp), allocatable :: grho(:,:)
+  real(dp), parameter :: fac = (1.d0/2.d0) * 1.d0/(3.d0*pi**2)**(1.d0/3.d0)
+  real(dp), parameter :: rho_cut = 0.05d0
+  integer :: is, i
+
+  ! gradient of rho
+  allocate( grho(3,dfftp%nnr) )
+
+  ! put the total (up+down) charge density in rho%of_r(*,1)
+  do is = 2, nspin
+     rho%of_g(:,1) =  rho%of_g(:,1) + rho%of_g(:,is)
+     rho%of_r(:,1) =  rho%of_r(:,1) + rho%of_r(:,is)
+  enddo
+
+  ! gradient of rho
+  call gradrho(dfftp%nnr, rho%of_g(1,1), ngm, g, nl, grho)
+
+  ! calculate rdg
+  do i = 1, dfftp%nnr
+    if (rho%of_r(i,1) > rho_cut) then
+      rdg(i) = fac * 100.d0 / abs(rho%of_r(i,1))**(4.d0/3.d0)
+    else
+      rdg(i) = fac * sqrt(grho(1,i)**2 + grho(2,i)**2 + grho(3,i)**2) / abs(rho%of_r(i,1))**(4.d0/3.d0)
+    endif
+  enddo
+
+  deallocate( grho )
+  
+  return
+
+END SUBROUTINE do_rdg
