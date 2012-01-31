@@ -1349,10 +1349,6 @@ write_rec.o : ../../PW/src/noncol.o
 write_rec.o : ../../PW/src/pwcom.o
 write_rec.o : ph_restart.o
 write_rec.o : phcom.o
-xk_wk_collect.o : ../../Modules/io_global.o
-xk_wk_collect.o : ../../Modules/kind.o
-xk_wk_collect.o : ../../Modules/mp.o
-xk_wk_collect.o : ../../Modules/mp_global.o
 zstar_eu.o : ../../Modules/cell_base.o
 zstar_eu.o : ../../Modules/io_files.o
 zstar_eu.o : ../../Modules/io_global.o

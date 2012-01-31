@@ -35,7 +35,7 @@ end Module dynamical
 !  fildyn  character input file containing the dynamical matrix
 !                    (default: fildyn='matdyn')
 !  q(3)      real    calculate LO modes (add nonanalytic terms) along
-!                    the direction q (default: q=(0,0,0) )
+!                    the direction q (cartesian axis, default: q=(0,0,0) )
 !  amass(nt) real    mass for atom type nt, amu
 !                    (default: amass is read from file fildyn)
 !  asr   character   indicates the type of Acoustic Sum Rule imposed

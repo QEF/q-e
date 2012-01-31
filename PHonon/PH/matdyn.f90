@@ -91,12 +91,13 @@ PROGRAM matdyn
   !     (tau(i,na),i=1,3), ityp(na)
   !  IF (q_in_band_form.and..not.dos) THEN
   !     nq     ! number of q points
-  !     (q(i,n),i=1,3), nptq   nptq is the number of points between this
-  !                            point and the next. These points are generated
-  !                            automatically
+  !     (q(i,n),i=1,3), nptq   nptq is the number of points between this point
+  !                            and the next. These points are automatically
+  !                            generated. the q points are given in Cartesian
+  !                            coordinates, 2pi/a units (a=lattice parameters)
   !  ELSE, if (.not.dos) :
   !     nq         number of q-points
-  !     (q(i,n), i=1,3)    nq q-points in 2pi/a units
+  !     (q(i,n), i=1,3)    nq q-points in cartesian coordinates, 2pi/a units
   !  If q = 0, the direction qhat (q=>0) for the non-analytic part
   !  is extracted from the sequence of q-points as follows:
   !     qhat = q(n) - q(n-1)  or   qhat = q(n) - q(n+1)
