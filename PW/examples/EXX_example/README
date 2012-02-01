@@ -2,11 +2,6 @@
  Hybrid Hartree-Fock+DFT functionals are a still evolving feature in PWscf.
  Only a few functionalities are implemented.
 
- HOW TO COMPILE : 
-  i) if you have already compiled once PWscf, issue command "make clean"
-  ii) edit file make.sys and add to variable DFLAGS the -DEXX option
-  iii) "make pw" .
-
  WHICH FUNCTIONALS ARE IMPLEMENTED ?
   The following hybrid functionals are implemented: Hartree-Fock, PBE0,
   B3LYP, HSE (see Modules/functionals.f90 for updated info and more details). 

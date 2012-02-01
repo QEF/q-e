@@ -1314,7 +1314,6 @@ Optional Features:
   --disable-wrappers      disable C to fortran wrapper check (default:
                           enabled)
   --enable-signals        enable signal trapping (default: no)
-  --enable-exx            compile with exact exchange enabled (default: no)
 
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
@@ -1897,21 +1896,9 @@ else
 fi
 
 # -----------------------------
-# non standard features
+# more options (currently none)
 # ----------------------------
 
-# Check whether --enable-exx was given.
-if test "${enable_exx+set}" = set; then
-  enableval=$enable_exx; if   test "$enableval" = "yes" ; then
-      enable_exx=1
-   else
-      enable_exx=0
-   fi
-else
-  enable_exx=0
-fi
-
-# -----------------------------
 # store variables from the environment, if set (may be or not be set)
 # If set, they take precedence over configure internal choice.
 # Flags and libraries are accepted without further testing;
@@ -2149,11 +2136,6 @@ ppc64-bg )
 echo "$as_me: WARNING: $arch : unsupported architecture?" >&2;}
         ;;
 esac
-
-if test "$enable_exx" -eq 1 ;
-then
-        try_dflags="$try_dflags -DEXX"
-fi
 
 # check serial Fortran 90 compiler. This must be done before performing
 # the check for the parallel compiler (section below) because option

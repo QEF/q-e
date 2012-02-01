@@ -105,19 +105,9 @@ AC_ARG_WITH(internal-lapack,
    fi],
    [use_internal_lapack=0])
 # -----------------------------
-# non standard features
+# more options (currently none)
 # ----------------------------
 
-AC_ARG_ENABLE(exx,
-   [AS_HELP_STRING([--enable-exx],
-       [compile with exact exchange enabled (default: no)])],
-    [if   test "$enableval" = "yes" ; then
-      enable_exx=1
-   else
-      enable_exx=0
-   fi],
-   [enable_exx=0])
-# -----------------------------
 # store variables from the environment, if set (may be or not be set)
 # If set, they take precedence over configure internal choice.
 # Flags and libraries are accepted without further testing;
@@ -277,11 +267,6 @@ ppc64-bg )
         AC_MSG_WARN($arch : unsupported architecture?)
         ;;
 esac
-
-if test "$enable_exx" -eq 1 ;
-then
-        try_dflags="$try_dflags -DEXX"
-fi
 
 # check serial Fortran 90 compiler. This must be done before performing
 # the check for the parallel compiler (section below) because option

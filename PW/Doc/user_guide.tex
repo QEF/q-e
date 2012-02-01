@@ -793,13 +793,9 @@ description of input variables \texttt{london*}, sample files
 
 \paragraph{Hartree-Fock and Hybrid functionals}
 
-Calculations in the Hartree-Fock approximation, or using hybrid XC functionals 
-that include some Hartree-Fock exchange, currently require that
-\texttt{-DEXX} is added to the preprocessing options \texttt{DFLAGS} in file 
-\texttt{make.sys} before compilation (if you change this after the first
-compilation, \texttt{make clean}, recompile). 
-Documentation on usage can be found in subdirectory 
-\texttt{examples/EXX\_example/}.
+Since v.5.0, calculations in the Hartree-Fock approximation, or using 
+hybrid XC functionals that include some Hartree-Fock exchange, no longer
+require a special preprocessing before compilation.
 
 The algorithm is quite standard: see for instance Chawla and Voth, 
 JCP {bf 108}, 4697 (1998); Sorouri, Foulkes and Hine, JCP {\bf 124}, 
