@@ -65,13 +65,25 @@
          !
       END IF
       !
-      ALLOCATE( rhos( nx0, nx0 ) )
-      ALLOCATE( rhoa( nx0, nx0 ) )   !   antisymmetric part of rho
-      ALLOCATE( s( nx0, nx0 ) ) 
-      ALLOCATE( sig( nx0, nx0 ) ) 
-      ALLOCATE( tau( nx0, nx0 ) ) 
+      ALLOCATE( rhos( nx0, nx0 ), STAT = info )
+      IF( info /= 0 ) &
+         CALL errore( ' ortho_gamma ', ' allocating rhos ', ABS( info ) )
+      ALLOCATE( rhoa( nx0, nx0 ), STAT = info )   !   antisymmetric part of rho
+      IF( info /= 0 ) &
+         CALL errore( ' ortho_gamma ', ' allocating rhoa ', ABS( info ) )
+      ALLOCATE( s( nx0, nx0 ), STAT = info ) 
+      IF( info /= 0 ) &
+         CALL errore( ' ortho_gamma ', ' allocating s ', ABS( info ) )
+      ALLOCATE( sig( nx0, nx0 ), STAT = info ) 
+      IF( info /= 0 ) &
+         CALL errore( ' ortho_gamma ', ' allocating sig ', ABS( info ) )
+      ALLOCATE( tau( nx0, nx0 ), STAT = info ) 
+      IF( info /= 0 ) &
+         CALL errore( ' ortho_gamma ', ' allocating tau ', ABS( info ) )
       !
-      ALLOCATE( rhod( nss ) )
+      ALLOCATE( rhod( nss ), STAT = info )
+      IF( info /= 0 ) &
+         CALL errore( ' ortho_gamma ', ' allocating tau ', ABS( rhod ) )
       !
       !     rho = <s'c0|s|cp>
       !
@@ -81,7 +93,9 @@
       !
       IF( descla%active_node > 0 ) THEN
          !
-         ALLOCATE( rhot( nx0, nx0 ) )   !   transpose of rho
+         ALLOCATE( rhot( nx0, nx0 ), STAT = info )   !   transpose of rho
+         IF( info /= 0 ) &
+            CALL errore( ' ortho_gamma ', ' allocating rhot ', ABS( rhod ) )
          !
          !    distributed array rhos contains "rho", 
          !    now transpose rhos and store the result in distributed array rhot
@@ -129,7 +143,7 @@
          IF( descla%active_node > 0 ) THEN
             !
             ALLOCATE( wrk( nss, nss ), STAT = info )
-            IF( info /= 0 ) CALL errore( ' ortho ', ' allocating matrixes ', 1 )
+            IF( info /= 0 ) CALL errore( ' ortho_gamma ', ' allocating wrk ', 1 )
             !
             CALL collect_matrix( wrk, rhos )
             !
@@ -273,7 +287,7 @@
       REAL(DP), ALLOCATABLE :: qbephi(:,:,:), qbecp(:,:,:), bec_col(:,:)
 
       INTEGER :: nkbx
-      INTEGER :: ifail, i, j, iss, iv, jv, ia, is, inl, jnl
+      INTEGER :: info, i, j, iss, iv, jv, ia, is, inl, jnl
       INTEGER :: n1, n2, m1, m2
       INTEGER :: nspin_sub, nx0, ngwx, nrcx
       REAL(DP) :: qqf, dum
@@ -289,7 +303,9 @@
 
       nrcx = MAXVAL( descla( : )%nrcx )
 
-      ALLOCATE( becp_dist( nkbx, nrcx*nspin ) )
+      ALLOCATE( becp_dist( nkbx, nrcx*nspin ), STAT = info )
+      IF( info /= 0 ) &
+         CALL errore( ' ortho ', ' allocating becp_dist ', ABS( info ) )
 
       IF( nvb > 0 ) THEN
          !
@@ -307,13 +323,14 @@
       !
       !     calculation of qbephi and qbecp
       !
-      ALLOCATE( qbephi( nkbx, nx0, nspin ) )
+      ALLOCATE( qbephi( nkbx, nx0, nspin ), STAT = info )
+      IF( info /= 0 ) &
+         CALL errore( ' ortho ', ' allocating qbephi ', ABS( info ) )
       !
       IF( nvb > 0 ) THEN
-         ALLOCATE( bec_col ( nkbx, nrcx*nspin ) )
-!open(2000+descla(1)%mype)
-!write(2000+descla(1)%mype,*) descla(1)%mype, size(bephi), size(bephi,1), size(bephi,2), nkbx, nrcx
-!close(2000+descla(1)%mype)
+         ALLOCATE( bec_col ( nkbx, nrcx*nspin ), STAT = info )
+         IF( info /= 0 ) &
+            CALL errore( ' ortho ', ' allocating bec_col ', ABS( info ) )
          CALL redist_row2col( nupdwn(1), bephi, bec_col, nkbx, nrcx, descla(1) )
          IF( nspin == 2 ) THEN
             CALL redist_row2col( nupdwn(2), bephi(1,nrcx+1), bec_col(1,nrcx+1), nkbx, nrcx, descla(2) )
@@ -332,7 +349,7 @@
                   DO iss = 1, nspin
                      IF( descla( iss )%active_node > 0 ) THEN
                         DO i = 1, descla( iss )%nc
-                           CALL daxpy( na(is), qqf, bec_col(jnl+1,i+(iss-1)*nrcx),1,qbephi(inl+1,i,iss), 1 ) 
+                           CALL daxpy( na(is), qqf, bec_col(jnl+1,i+(iss-1)*nrcx),1,qbephi(inl+1,i,iss), 1 )
                         END DO
                      END IF
                   END DO
@@ -340,9 +357,10 @@
             END DO
          END DO
       END DO
-
       !
-      ALLOCATE( qbecp ( nkbx, nx0, nspin ) )
+      ALLOCATE( qbecp ( nkbx, nx0, nspin ), STAT = info )
+      IF( info /= 0 ) &
+         CALL errore( ' ortho ', ' allocating qbecp ', ABS( info ) )
 
       qbecp  = 0.d0
 
@@ -379,7 +397,9 @@
       CALL c_bgrp_expand( cp_bgrp )
       CALL c_bgrp_expand( phi_bgrp )
       !
-      ALLOCATE( xloc( nx0, nx0 ) )
+      ALLOCATE( xloc( nx0, nx0 ), STAT = info )
+      IF( info /= 0 ) &
+         CALL errore( ' ortho ', ' allocating xloc ', ABS( info ) )
       !
       nspin_sub = nspin 
       if( force_pairing ) nspin_sub = 1
