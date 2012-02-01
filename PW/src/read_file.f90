@@ -253,9 +253,7 @@ SUBROUTINE read_file()
      !
   END DO
 
-#ifdef EXX
   call pw_readfile('exx', ierr)
-#endif
   !
   ! ... recalculate the potential
   !

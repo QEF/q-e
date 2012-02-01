@@ -109,6 +109,10 @@ FUNCTION hubbard_occ ( psd )
      CASE( 'H'  )
         hubbard_occ = 1.d0
      !
+     CASE( 'Ga', 'In'  )
+        hubbard_occ = 10.d0
+     !
+     !
      ! NOT INSERTED
      !
      CASE DEFAULT

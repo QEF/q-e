@@ -384,15 +384,13 @@ MODULE input_parameters
         REAL(DP) :: sigma_pen(10) = 0.01_DP
         REAL(DP) :: alpha_pen(10) = 0.0_DP
 
-#if defined (EXX)
-          ! All the variables here are PWSCF ONLY
+          ! next group of variables PWSCF ONLY
           !
         INTEGER  :: nqx1 = 1, nqx2 = 1, nqx3=1
           !
         REAL(DP) :: exx_fraction = -1.0_DP      ! if negative, use defaults
         REAL(DP) :: screening_parameter = -1.0_DP
           !
-
         CHARACTER(len=80) :: exxdiv_treatment = 'gygi-baldereschi'
           ! define how ro cure the Coulomb divergence in EXX
           ! Allowed values are:
@@ -408,14 +406,14 @@ MODULE input_parameters
         REAL(DP) :: conv_thr_init = 0.001_DP
         REAL(DP) :: conv_thr_multi = 0.1_DP
         REAL(DP) :: ecutfock = -1.d0
-#endif
 
+          ! parameters for external electric field
         INTEGER  :: edir = 0
         REAL(DP) :: emaxpos = 0.0_DP
         REAL(DP) :: eopreg = 0.0_DP
         REAL(DP) :: eamp = 0.0_DP
-          ! parameters for external electroc field
 
+          ! Various parameters for noncollinear calculations
         LOGICAL  :: noncolin = .false.
         LOGICAL  :: lspinorb = .false.
         LOGICAL  :: starting_spin_angle=.FALSE.
@@ -424,22 +422,19 @@ MODULE input_parameters
         REAL(DP) :: angle1(nsx) = 0.0_DP
         REAL(DP) :: angle2(nsx) = 0.0_DP
         INTEGER  :: report = 1
-          ! Various parameters for noncollinear calculationso
         LOGICAL  :: no_t_rev = .FALSE.
 
         CHARACTER(len=80) :: constrained_magnetization = 'none'
-          ! Used to perform constrained calculations in magnetic systems
         REAL(DP) :: B_field(3) = 0.0_DP
           ! A fixed magnetic field defined by the vector B_field is added
           ! to the exchange and correlation magnetic field.
 
         CHARACTER(len=80) :: sic = 'none'
           ! CP only - SIC correction (D'avezac Mauri)
-
+          ! Parameters for SIC calculation
         REAL(DP) :: sic_epsilon = 0.0_DP
         REAL(DP) :: sic_alpha   = 0.0_DP
         LOGICAL   :: force_pairing = .false.
-          ! Parameters for SIC calculation
 
         LOGICAL :: spline_ps = .false.
           ! use spline interpolation for pseudopotential
@@ -484,18 +479,16 @@ MODULE input_parameters
           ! for abs(gp)<=esm_debug_gpmax (gp is integer and has tpiba unit)
 
         NAMELIST / system / ibrav, celldm, a, b, c, cosab, cosac, cosbc, nat, &
-             ntyp, nbnd, ecutwfc, ecutrho, nr1, nr2, nr3, nr1s, nr2s,  &
+             ntyp, nbnd, ecutwfc, ecutrho, nr1, nr2, nr3, nr1s, nr2s,         &
              nr3s, nr1b, nr2b, nr3b, nosym, nosym_evc, noinv, use_all_frac,   &
              force_symmorphic, starting_magnetization,                        &
-             occupations, degauss, nspin, ecfixed,              &
+             occupations, degauss, nspin, ecfixed,                            &
              qcutz, q2sigma, lda_plus_U, Hubbard_U, Hubbard_alpha,            &
              edir, emaxpos, eopreg, eamp, smearing, starting_ns_eigenvalue,   &
              U_projection_type, input_dft, la2F, assume_isolated,             &
-#if defined (EXX)
-             nqx1, nqx2, nqx3,                         &
+             nqx1, nqx2, nqx3,                                                &
              exxdiv_treatment, x_gamma_extrapolation, yukawa, ecutvcut,       &
              exx_fraction, screening_parameter,                               &
-#endif
 #ifdef __SOLVENT
              do_solvent,                                                      &
 #endif
@@ -954,9 +947,7 @@ MODULE input_parameters
           mixing_mode, mixing_beta, mixing_ndim, mixing_fixed_ns,      &
           tqr, diago_cg_maxiter, diago_david_ndim, diagonalization ,   &
           startingpot, startingwfc , conv_thr,                         &
-#if defined (EXX)
           adaptive_thr, conv_thr_init, conv_thr_multi, ecutfock,       &
-#endif
           diago_thr_init, n_inner, fermi_energy, rotmass, occmass,     &
           rotation_damping, occupation_damping, rotation_dynamics,     &
           occupation_dynamics, tcg, maxiter, etresh, passop, epol,     &

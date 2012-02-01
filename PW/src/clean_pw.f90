@@ -59,9 +59,7 @@ SUBROUTINE clean_pw( lflag )
   USE realus,               ONLY : deallocatenewdreal
   USE pseudo_types,         ONLY : deallocate_pseudo_upf
   USE bp,                   ONLY : deallocate_bp_efield
-#ifdef EXX
   USE exx,                  ONLY : deallocate_exx
-#endif
 #ifdef __SOLVENT
   USE solvent_base,         ONLY : do_solvent
 #endif
@@ -199,9 +197,7 @@ SUBROUTINE clean_pw( lflag )
   ! for Wannier_ac
   if (use_wannier) CALL wannier_clean()
   !
-#ifdef EXX
   CALL deallocate_exx ( ) 
-#endif
 #ifdef __SOLVENT
   ! ... additional arrays for solvent medium
   !

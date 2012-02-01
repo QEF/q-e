@@ -37,10 +37,8 @@ SUBROUTINE h_psi( lda, n, m, psi, hpsi )
                        bfft_orbital_gamma, calbec_rs_gamma, &
                        add_vuspsir_gamma, v_loc_psir
   USE fft_base, ONLY : dffts
-#ifdef EXX
   USE exx,      ONLY : vexx
   USE funct,    ONLY : exx_is_active
-#endif
   !
   IMPLICIT NONE
   !
@@ -117,9 +115,7 @@ SUBROUTINE h_psi( lda, n, m, psi, hpsi )
      CALL stop_clock( 'h_psi:vnl' )
      !
   END IF
-#ifdef EXX
   IF ( exx_is_active() ) CALL vexx( lda, n, m, psi, hpsi )
-#endif
   !
   ! ... electric enthalpy if required
   !

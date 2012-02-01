@@ -13,10 +13,8 @@ subroutine save_in_ions
   USE klist,         ONLY: nks
   USE control_flags, ONLY: io_level, lscf, tr2, ethr
   USE wvfct,         ONLY: nbnd, et
-#ifdef EXX
   USE funct,         ONLY: exx_is_active
   USE exx,           ONLY: fock0, fock1, fock2, dexx, x_occupation
-#endif
   implicit none
   character :: where * 20
   ! are we in the right place?
@@ -45,13 +43,11 @@ subroutine save_in_ions
 
   write (iunres) iter, ik_, dr2, tr2, ethr
 
-#ifdef EXX
   lexx=exx_is_active()
   write (iunres) lexx, fock0, fock1, fock2, dexx
   if(lexx) then
     write (iunres) ( (x_occupation (ibnd, ik), ibnd = 1, nbnd), ik = 1, nks)
   endif
-#endif
 
   close (unit = iunres, status = 'keep')
   !

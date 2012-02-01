@@ -444,12 +444,11 @@ MODULE read_namelists_module
        !
        occupation_constraints = .false.
        !
-#if defined (EXX)
        adaptive_thr   =  .false.
        conv_thr_init  =  0.1E-2_DP
        conv_thr_multi =  0.1_DP
        ecutfock       =  -1.0_DP
-#endif
+       !
        RETURN
        !
      END SUBROUTINE
@@ -819,7 +818,6 @@ MODULE read_namelists_module
        CALL mp_bcast( qcutz,             ionode_id )
        CALL mp_bcast( q2sigma,           ionode_id )
        CALL mp_bcast( input_dft,         ionode_id )
-#ifdef EXX
        CALL mp_bcast( nqx1,                   ionode_id )
        CALL mp_bcast( nqx2,                   ionode_id )
        CALL mp_bcast( nqx3,                   ionode_id )
@@ -830,7 +828,6 @@ MODULE read_namelists_module
        CALL mp_bcast( yukawa,                 ionode_id )
        CALL mp_bcast( ecutvcut,               ionode_id )
        CALL mp_bcast( ecutfock,               ionode_id )
-#endif
        CALL mp_bcast( starting_magnetization, ionode_id )
        CALL mp_bcast( starting_ns_eigenvalue, ionode_id )
        CALL mp_bcast( U_projection_type,      ionode_id )
@@ -1067,12 +1064,10 @@ MODULE read_namelists_module
        !
        ! ... real space ...
        CALL mp_bcast( real_space, ionode_id)
-#if defined (EXX)
        CALL mp_bcast( adaptive_thr,       ionode_id )
        CALL mp_bcast( conv_thr_init,      ionode_id )
        CALL mp_bcast( conv_thr_multi,     ionode_id )
        CALL mp_bcast( ecutfock,           ionode_id )
-#endif
        RETURN
        !
      END SUBROUTINE
@@ -1401,10 +1396,8 @@ MODULE read_namelists_module
        !
        CHARACTER(LEN=2)  :: prog   ! ... specify the calling program
        CHARACTER(LEN=20) :: sub_name = ' system_checkin '
-#ifdef EXX
        INTEGER           :: i
        LOGICAL           :: allowed
-#endif
        !
        !
        IF( ( ibrav /= 0 ) .AND. (celldm(1) == 0.0_DP) .AND. ( a == 0.0_DP ) ) &
@@ -1490,8 +1483,6 @@ MODULE read_namelists_module
        !
        ! ... control on EXX variables
        !
-#ifdef EXX       
-       !
        DO i = 1, SIZE( exxdiv_treatment_allowed )
           IF( TRIM(exxdiv_treatment) == exxdiv_treatment_allowed(i) ) allowed = .TRUE.
        END DO
@@ -1508,7 +1499,6 @@ MODULE read_namelists_module
                                           TRIM(exxdiv_treatment) == "vcut_spherical" ) ) &
           CALL errore(sub_name, ' x_gamma_extrapolation cannot be used with vcut', 1 )
        !
-#endif
        RETURN
        !
      END SUBROUTINE

@@ -326,10 +326,8 @@ CONTAINS
 
    SUBROUTINE calc_energies
       USE becmod, ONLY: becp, calbec, allocate_bec_type, deallocate_bec_type
-#ifdef EXX
       USE exx,    ONLY : exxenergy2, fock2
       USE funct,  ONLY : dft_is_hybrid
-#endif
 
       COMPLEX(DP), ALLOCATABLE :: aux(:)
       INTEGER :: ibnd, j, ig, ik, ikk, ispin, na, nt, ijkb0, ikb, ih, jh, jkb
@@ -343,9 +341,7 @@ CONTAINS
       eloc= 0.d0
       enl = 0.d0
       demet=0.d0
-#ifdef EXX
       fock2=0.d0
-#endif
       !
       DO ispin = 1, nspin
          !
@@ -456,16 +452,12 @@ CONTAINS
       CALL v_of_rho( rho, rho_core, rhog_core, &
                      ehart, etxc, vtxc, eth, etotefield, charge, v )
       !
-#ifdef EXX      
-      !
-      ! compute exact exchange contribution
+      ! compute exact exchange contribution (if present)
       !
       IF(dft_is_hybrid()) fock2 = 0.5_DP * exxenergy2()
       !
       etot=(ek + (etxc-etxcc)+ehart+eloc+enl+ewld)+demet+fock2
-#else
-      etot=(ek + (etxc-etxcc)+ehart+eloc+enl+ewld)+demet
-#endif
+      !
       CALL deallocate_bec_type (becp)
       DEALLOCATE (aux)
 

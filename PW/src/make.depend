@@ -328,11 +328,9 @@ divide_class_so.o : ../../Modules/io_global.o
 divide_class_so.o : ../../Modules/kind.o
 divide_class_so.o : noncol.o
 divide_class_so.o : pwcom.o
-divide_et_impera.o : ../../Modules/funct.o
 divide_et_impera.o : ../../Modules/io_global.o
 divide_et_impera.o : ../../Modules/kind.o
 divide_et_impera.o : ../../Modules/mp_global.o
-divide_et_impera.o : exx.o
 dqvan2.o : ../../Modules/kind.o
 dqvan2.o : ../../Modules/recvec.o
 dqvan2.o : ../../Modules/uspp.o
@@ -434,6 +432,7 @@ exx.o : ../../Modules/parallel_include.o
 exx.o : ../../Modules/recvec.o
 exx.o : ../../Modules/wavefunctions.o
 exx.o : buffers.o
+exx.o : noncol.o
 exx.o : pwcom.o
 exx.o : symm_base.o
 find_group.o : ../../Modules/kind.o
@@ -1371,10 +1370,7 @@ seqopn.o : ../../Modules/io_files.o
 seqopn.o : ../../Modules/kind.o
 set_hubbard_l.o : ../../Modules/io_global.o
 set_kplusq.o : ../../Modules/kind.o
-set_kup_and_kdw.o : ../../Modules/funct.o
 set_kup_and_kdw.o : ../../Modules/kind.o
-set_kup_and_kdw.o : exx.o
-set_kup_and_kdw.o : pwcom.o
 set_rhoc.o : ../../Modules/atom.o
 set_rhoc.o : ../../Modules/cell_base.o
 set_rhoc.o : ../../Modules/control_flags.o
@@ -1778,3 +1774,8 @@ write_ns.o : ../../Modules/kind.o
 write_ns.o : pwcom.o
 write_ns.o : scf_mod.o
 wsweight.o : ../../Modules/kind.o
+xk_wk_collect.o : ../../Modules/io_global.o
+xk_wk_collect.o : ../../Modules/kind.o
+xk_wk_collect.o : ../../Modules/mp.o
+xk_wk_collect.o : ../../Modules/mp_global.o
+xk_wk_collect.o : pwcom.o

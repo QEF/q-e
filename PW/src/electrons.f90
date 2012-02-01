@@ -56,12 +56,10 @@ SUBROUTINE electrons()
   USE spin_orb,             ONLY : domag
   USE io_rho_xml,           ONLY : write_rho
   USE uspp,                 ONLY : okvan
-#if defined (EXX)
   USE exx,                  ONLY : exxinit, exxenergy, exxenergy2, &
                                    fock0, fock1, fock2, dexx, exx_restart
   USE funct,                ONLY : dft_is_hybrid, exx_is_active
   USE control_flags,        ONLY : adapt_thr, tr2_init, tr2_multi
-#endif
   USE funct,                ONLY : dft_is_meta
   USE mp_global,            ONLY : intra_pool_comm, npool, intra_bgrp_comm, nbgrp, mpime, &
                                    inter_bgrp_comm, my_bgrp_id
@@ -115,20 +113,15 @@ SUBROUTINE electrons()
   ! ... external functions
   !
   REAL(DP), EXTERNAL :: ewald, get_clock
-#if defined (EXX)
-  REAL(DP) :: tr2_final !final threshold for exx minimization 
-  !when using adaptive thresholds.
-#endif
-  !
+  REAL(DP) :: tr2_final ! final threshold for exx minimization 
+                        ! when using adaptive thresholds.
   iter = 0
   ik_  = 0
   dr2  = 0.0_dp
-#if defined (EXX)
   tr2_final = tr2
   IF (dft_is_hybrid() .AND. adapt_thr ) THEN
      tr2= tr2_init
   ENDIF
-#endif
   !
   IF ( restart ) THEN
      !
@@ -144,7 +137,6 @@ SUBROUTINE electrons()
         !
      END IF
      !
-#ifdef EXX
      IF( exx_is_active() ) THEN
        iter = 0
        call save_in_electrons( iter, dr2 )
@@ -157,7 +149,6 @@ SUBROUTINE electrons()
        call exx_restart(.true.)
        WRITE( stdout, '(5x,"EXX: now go back to refine exchange calculation")')
      ENDIF
-#endif
   END IF
   !
   WRITE( stdout, 9000 ) get_clock( 'PWSCF' )
@@ -179,13 +170,12 @@ SUBROUTINE electrons()
   END IF
   !
   CALL start_clock( 'electrons' )
-#ifdef EXX
+  !
   if ( exx_is_active())  then
      CALL v_of_rho( rho, rho_core, rhog_core, &
                     ehart, etxc, vtxc, eth, etotefield, charge, v)
      CALL set_vrs( vrs, vltot, v%of_r, kedtau, v%kin_r, dfftp%nnr, nspin, doublegrid )
   end if
-#endif
   !  
 #ifdef __SOLVENT
   IF ( do_solvent ) THEN
@@ -215,9 +205,7 @@ SUBROUTINE electrons()
   !
   call create_scf_type ( rhoin )
   !
-#if defined (EXX)
 10 CONTINUE
-#endif
   !
   ! ... Convergence threshold for iterative diagonalization
   !
@@ -427,7 +415,6 @@ SUBROUTINE electrons()
            !
         END IF not_converged_electrons
         !
-#if defined (EXX)
         IF ( exx_is_active() ) THEN
            !
            fock1 = exxenergy2()
@@ -440,7 +427,6 @@ SUBROUTINE electrons()
            fock2 = 0.D0
            !
         END IF
-#endif
         !
         ! ... if we didn't cycle before we can exit the do-loop
         !
@@ -534,8 +520,6 @@ SUBROUTINE electrons()
         hwf_energy = hwf_energy + elondon
      END IF
      !
-#if defined (EXX)
-     !
      etot = etot - 0.5D0*fock0
      hwf_energy = hwf_energy -0.5D0*fock0
      !
@@ -579,8 +563,6 @@ SUBROUTINE electrons()
         !
      END IF
      !
-#endif
-     !
      IF ( lda_plus_u ) etot = etot + eth
      IF ( tefield ) THEN
         etot = etot + etotefield
@@ -608,14 +590,10 @@ SUBROUTINE electrons()
         !
         IF ( llondon ) WRITE ( stdout , 9074 ) elondon
         !
-#if defined (EXX)
-        !
         IF ( dft_is_hybrid()) THEN
            WRITE( stdout, 9062 ) - fock1
            WRITE( stdout, 9064 ) 0.5D0*fock2
         ENDIF
-        !
-#endif
         !
         IF ( textfor)             WRITE( stdout, &
             '(/5x,"Energy of the external Forces = ", F18.8)' ) eext
@@ -668,8 +646,6 @@ SUBROUTINE electrons()
      !
      IF ( conv_elec ) THEN
         !
-#if defined (EXX)
-        !
         IF ( dft_is_hybrid() .AND. dexx > tr2_final ) THEN  
            !
            conv_elec = .false.
@@ -687,7 +663,6 @@ SUBROUTINE electrons()
            GO TO 10
            !
         END IF
-#endif
         !
         ! ... if system is charged add a Makov-Payne correction to the energy
         !

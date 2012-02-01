@@ -208,7 +208,7 @@ MODULE control_flags
 
   LOGICAL, PUBLIC :: &
     conv_elec          ! if .TRUE. electron convergence has been reached
-#if defined (EXX)
+  ! next 3 variables used for EXX calculations
   LOGICAL, PUBLIC :: &
     adapt_thr       ! if .TRUE. an adaptive convergence threshold is used
                        ! for the scf cycle in an EXX calculation.
@@ -216,7 +216,6 @@ MODULE control_flags
     tr2_init,         &! initial value of tr2 for adaptive thresholds
     tr2_multi          ! the dexx multiplier for adaptive thresholds
                        ! tr2 = tr2_multi * dexx after each V_exx update 
-#endif
 #ifdef __SOLVENT
   LOGICAL, PUBLIC :: &
     save_vltot         ! .TRUE. if a real space correction of the potential needs 

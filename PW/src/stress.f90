@@ -28,10 +28,8 @@ subroutine stress ( sigma )
   USE bp,            ONLY : lelfield
   USE uspp,          ONLY : okvan
   USE london_module, ONLY : stres_london
-#ifdef EXX
   USE exx,           ONLY : exx_stress
-  USE funct,         ONLY : dft_is_hybrid, exx_is_active
-#endif
+  USE funct,         ONLY : dft_is_hybrid
   !
   IMPLICIT NONE
   !
@@ -40,10 +38,7 @@ subroutine stress ( sigma )
   real(DP) :: sigmakin (3, 3), sigmaloc (3, 3), sigmahar (3, 3), &
        sigmaxc (3, 3), sigmaxcc (3, 3), sigmaewa (3, 3), sigmanlc (3, 3), &
        sigmabare (3, 3), sigmah (3, 3), sigmael( 3, 3), sigmaion(3, 3), &
-       sigmalon ( 3 , 3 ), sigma_nonloc_dft (3 ,3)
-#ifdef EXX
-  real(DP) :: sigmaexx(3,3)
-#endif
+       sigmalon ( 3 , 3 ), sigma_nonloc_dft (3 ,3), sigmaexx(3,3)
   integer :: l, m
   !
   WRITE( stdout, '(//5x,"entering subroutine stress ..."/)')
@@ -137,15 +132,14 @@ subroutine stress ( sigma )
                sigmaxc(:,:) + sigmaxcc(:,:) + sigmaewa(:,:) + &
                sigmanlc(:,:) + sigmah(:,:) + sigmael(:,:) +  &
                sigmaion(:,:) + sigmalon(:,:) + sigma_nonloc_dft(:,:)
-#ifdef EXX
-  if (dft_is_hybrid()) then
-    sigmaexx = exx_stress()
-    CALL symmatrix ( sigmaexx )
-    sigma(:,:) = sigma(:,:) + sigmaexx(:,:)
-  else
-    sigmaexx = 0.d0
-  endif
-#endif
+  !
+  IF (dft_is_hybrid()) THEN
+     sigmaexx = exx_stress()
+     CALL symmatrix ( sigmaexx )
+     sigma(:,:) = sigma(:,:) + sigmaexx(:,:)
+  ELSE
+     sigmaexx = 0.d0
+  ENDIF
   ! Resymmetrize the total stress. This should not be strictly necessary,
   ! but prevents loss of symmetry in long vc-bfgs runs
 
@@ -169,11 +163,9 @@ subroutine stress ( sigma )
      (sigmalon(l,1)*ry_kbar,sigmalon(l,2)*ry_kbar,sigmalon(l,3)*ry_kbar, l=1,3), &
      (sigma_nonloc_dft(l,1)*ry_kbar,sigma_nonloc_dft(l,2)*ry_kbar,sigma_nonloc_dft(l,3)*ry_kbar, l=1,3)
 
-#ifdef EXX
-  if ( iverbosity > 0 ) WRITE( stdout, 9006) &
+  IF ( dft_is_hybrid() .AND. (iverbosity > 0) ) WRITE( stdout, 9006) &
      (sigmaexx(l,1)*ry_kbar,sigmaexx(l,2)*ry_kbar,sigmaexx(l,3)*ry_kbar, l=1,3)
 9006 format (5x,'EXX     stress (kbar)',3f10.2/2(26x,3f10.2/)/ )
-#endif
 
   if( lelfield .and. iverbosity > 0 ) then
      write(stdout,*) "Stress tensor electronic el field part:"

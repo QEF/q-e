@@ -355,7 +355,6 @@ CONTAINS
   !
   ! EXX singularity treatment
   !
-  !
   SELECT CASE ( TRIM(exxdiv_treatment) ) 
   CASE ( "gygi-baldereschi", "gygi-bald", "g-b" )
      !

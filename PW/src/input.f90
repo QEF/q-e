@@ -23,10 +23,8 @@ SUBROUTINE iosys()
   USE kinds,         ONLY : DP
   USE funct,         ONLY : dft_has_finite_size_correction, &
                             set_finite_size_volume, get_inlc 
-#if defined(EXX)
   USE funct,         ONLY: set_exx_fraction, set_screening_parameter
   USE control_flags, ONLY: adapt_thr, tr2_init, tr2_multi
-#endif
   USE constants,     ONLY : autoev, eV_to_kelvin, pi, rytoev, &
                             ry_kbar, amconv, bohr_radius_angs, eps8
   USE mp_global,     ONLY : npool, nproc_pool
@@ -239,11 +237,9 @@ SUBROUTINE iosys()
                                ecfixed, qcutz, q2sigma, lda_plus_U,         &
                                Hubbard_U, Hubbard_alpha, input_dft, la2F,   &
                                starting_ns_eigenvalue, U_projection_type,   &
-#if defined (EXX)
                                x_gamma_extrapolation, nqx1, nqx2, nqx3,     &
                                exxdiv_treatment, yukawa, ecutvcut,          &
                                exx_fraction, screening_parameter,           &
-#endif
 #ifdef __SOLVENT
                                do_solvent,                                  &
 #endif
@@ -275,9 +271,7 @@ SUBROUTINE iosys()
                                diago_david_ndim, diagonalization,          &
                                diago_full_acc, startingwfc, startingpot,   &
                                real_space
-#if defined (EXX)
   USE input_parameters, ONLY : adaptive_thr, conv_thr_init, conv_thr_multi
-#endif
   !
   ! ... IONS namelist
   !
@@ -893,11 +887,9 @@ SUBROUTINE iosys()
   !
   tr2   = conv_thr
   niter = electron_maxstep
-#if defined (EXX)
   adapt_thr = adaptive_thr
   tr2_init  = conv_thr_init
   tr2_multi = conv_thr_multi
-#endif
   !
   pot_order = 1
   SELECT CASE( trim( pot_extrapolation ) )
@@ -1153,8 +1145,6 @@ SUBROUTINE iosys()
   nofrac                  = force_symmorphic
   nbnd_                   = nbnd
   !
-#if defined (EXX)
-  !
   x_gamma_extrapolation_ = x_gamma_extrapolation
   !
   nqx1_ = nqx1
@@ -1164,8 +1154,6 @@ SUBROUTINE iosys()
   exxdiv_treatment_ = trim(exxdiv_treatment)
   yukawa_   = yukawa
   ecutvcut_ = ecutvcut
-  !
-#endif
   !
   vdw_table_name_  = vdw_table_name
   !
@@ -1365,15 +1353,11 @@ SUBROUTINE iosys()
   !
   CALL readpp ( input_dft )
   !
-#if defined(EXX)
-    !
-    ! Set variables for hybrid functional HSE
-    !
-    IF (exx_fraction >= 0.0_DP) CALL set_exx_fraction (exx_fraction)
-    IF (screening_parameter >= 0.0_DP) &
+  ! Set variables for hybrid functional HSE
+  !
+  IF (exx_fraction >= 0.0_DP) CALL set_exx_fraction (exx_fraction)
+  IF (screening_parameter >= 0.0_DP) &
         & CALL set_screening_parameter (screening_parameter)
-    !
-#endif
   !
   ! ... read the vdw kernel table if needed
   !

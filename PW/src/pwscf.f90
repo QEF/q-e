@@ -47,16 +47,8 @@ PROGRAM pwscf
 #endif
   CALL environment_start ( 'PWSCF' )
   !
-  IF ( ionode ) THEN
-     !
-#if defined (EXX)
-     WRITE( UNIT = stdout, &
-         & FMT = '(/,5X,"EXPERIMENTAL VERSION WITH EXACT EXCHANGE")' )
-#endif
-     WRITE( unit = stdout, FMT = 9010 ) &
+  IF ( ionode ) WRITE( unit = stdout, FMT = 9010 ) &
          ntypx, npk, lmaxx
-     !
-  END IF   
   !
   IF (ionode) CALL plugin_arguments()
   CALL plugin_arguments_bcast( ionode_id, intra_image_comm )

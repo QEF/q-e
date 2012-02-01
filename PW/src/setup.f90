@@ -78,14 +78,9 @@ SUBROUTINE setup()
                                  angle1, angle2, bfield, ux, nspin_lsda, &
                                  nspin_gga, nspin_mag
   USE pw_restart,         ONLY : pw_readfile
-#if defined (EXX)
   USE exx,                ONLY : exx_grid_init, exx_div_check
-#endif
   USE funct,              ONLY : dft_is_meta, dft_is_hybrid, dft_is_gradient
   USE paw_variables,      ONLY : okpaw
-! DCC
-!  USE ee_mod,             ONLY : do_coarse, do_mltgrid
-
   !
   IMPLICIT NONE
   !
@@ -103,10 +98,6 @@ SUBROUTINE setup()
   IF ( dft_is_meta() .AND. okvan ) &
      CALL errore( 'setup', 'US and Meta-GGA not yet implemented', 1 )
 
-#if ! defined (EXX)
-  IF ( dft_is_hybrid() ) CALL errore( 'setup ', &
-                         'PWscf not compiled for hybrid functionals', 1 )
-#else
   IF ( dft_is_hybrid() ) THEN
      IF (.NOT. lscf) CALL errore( 'setup ', &
                          'HYBRID XC not allowed in non-scf calculations', 1 )
@@ -115,7 +106,6 @@ SUBROUTINE setup()
      IF ( noncolin ) CALL errore( 'setup ', &
                       'HYBRID XC not implemented for noncolinear magnetism', 1 )
   END IF
-#endif
   !
   ! ... Compute the ionic charge for each atom type and the total ionic charge
   !
@@ -366,10 +356,8 @@ SUBROUTINE setup()
   ! ... Compute the cut-off of the G vectors
   !
   doublegrid = ( dual > 4.D0 )
-#if defined (EXX)
   IF ( doublegrid .and.  dft_is_hybrid() ) &
      CALL errore('setup','ecutrho>4*ecutwfc and exact exchange not allowed',1)
-#endif
   IF ( doublegrid .AND. (.NOT.okvan .AND. .not.okpaw) ) &
      CALL infomsg ( 'setup', 'no reason to have ecutrho>4*ecutwfc' )
   gcutm = dual * ecutwfc / tpiba2
@@ -565,12 +553,11 @@ SUBROUTINE setup()
   !
 #endif
 
-#if defined (EXX)
   IF ( dft_is_hybrid() ) THEN
      CALL exx_grid_init()
      CALL exx_div_check()
   ENDIF
-#endif
+
   IF (one_atom_occupations) THEN
      DO ik=1,nkstot
         DO ibnd=natomwfc+1, nbnd
