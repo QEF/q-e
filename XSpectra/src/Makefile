@@ -4,7 +4,7 @@ include ../../make.sys
 
 # location of needed modules
 MODFLAGS= $(MOD_FLAG)../../iotk/src $(MOD_FLAG)../../Modules \
-          $(MOD_FLAG)../../PW $(MOD_FLAG).
+          $(MOD_FLAG)../../PW/src $(MOD_FLAG).
 
 XOBJS = \
 ./xspectra_mod.o \
@@ -21,7 +21,7 @@ GIPAWOBJS=./paw_gipaw.o \
 ./init_gipaw_2.o
 
 QEMODS = ../../Modules/libqemod.a
-PWOBJS = ../../PW/libpw.a 
+PWOBJS = ../../PW/src/libpw.a 
 
 LIBOBJS = ../../iotk/src/libiotk.a ../../flib/flib.a \
          ../../clib/clib.a ../../flib/ptools.a
