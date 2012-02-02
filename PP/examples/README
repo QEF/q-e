@@ -1,15 +1,13 @@
-These are instructions on how to run some or all of the examples
-contained within the "examples" directory of the ESPRESSO distribution
-(the one where this file should be).  These examples try to exercise
-some the programs and features of the ESPRESSO package: for details, 
-see the "README" file in each example's directory. If you find that 
-any relevant feature isn't being tested, please contact us (or even 
-better, write and send us a new example).
-
+These are instructions on how to run the examples for some PostProc
+programs included in the Quantum ESPRESSO distribution.
+These examples try to exercise all the programs and features
+of the PP package.
+If you find that any relevant feature isn't being tested,
+please contact us (or even better, write and send us a new example).
 To run the examples, you should follow this procedure:
 
-1) Edit the "environment_variables" in the main ESPRESSO directory
-   , setting the following variables as needed:
+1) Edit the "environment_variables" file from the main 
+   ESPRESSO directory, setting the following variables as needed:
 
      BIN_DIR = directory where ESPRESSO executables reside
      PSEUDO_DIR = directory where pseudopotential files reside
@@ -54,17 +52,6 @@ To run the examples, you should follow this procedure:
 
    Some examples take only a few seconds to run, while others may
    require several minutes depending on your system.
-
-   To run all the examples in one go, execute:
-
-     ./run_all_examples
-
-   from the "examples" directory.  On a single-processor machine, this
-   typically takes one to three hours.
-
-   The "make_clean" script cleans the examples tree, by removing all
-   the "results" subdirectories.  However, if additional
-   subdirectories have been created, they aren't deleted.
 
 4) In each example's directory, the "reference" subdirectory contains
    verified output files, that you can check your results against.
